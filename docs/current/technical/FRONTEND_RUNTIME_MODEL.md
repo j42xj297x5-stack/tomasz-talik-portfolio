@@ -3,15 +3,19 @@
 Current runtime: Vite + Vanilla JavaScript modules + vendored Three.js.
 
 Layers:
-1. Scene layer (WebGL/Three.js) — scaffolded import path only, scene not implemented yet.
-2. Interaction bridge (events/select state) — planned.
-3. Overlay UI layer (HTML/CSS panels) — scaffolded shell only.
-4. Content layer (editable text/data modules) — planned.
+1. Scene layer (`src/scene/*`) — renderer, camera drift, lighting, particles, central placeholder object, interactive orbit nodes.
+2. Interaction bridge (`src/scene/raycaster.js`) — pointer raycast selection and hover/click targeting.
+3. Overlay UI layer (`src/ui/*` + `src/styles/main.css`) — readable HTML hover label + overlay detail panel.
+4. Content layer (`src/content/portfolioNodes.js`) — draft node content model.
 
-## Runtime scaffold status
-- `index.html` mounts `src/main.js` via Vite module loading.
-- `src/main.js` currently renders a placeholder app shell and confirms runtime startup in console.
-- Three.js is imported from local vendor path: `vendor/three/three.module.js`.
+## MVP runtime status (2026-05-22)
+- `index.html` mounts `src/main.js` via Vite.
+- First interactive Three.js MVP scene is implemented.
+- Three.js imports are centralized through `src/vendor/three.js`, which re-exports `vendor/three/three.module.js`.
+- Overlay copy is intentionally draft-only.
+- Mobile fallback notice is present; scene remains desktop-first.
 
 ## Deferred implementation
-- Central 3D object, interactive nodes, hover labels, and overlay panels are intentionally deferred to the next MVP scene task.
+- Final meditating monkey GLB asset.
+- Visual polish pass and transition refinement.
+- Final branded copy/content.

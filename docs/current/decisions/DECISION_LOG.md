@@ -20,3 +20,12 @@
 3. Three.js remains vendored under `vendor/three`; npm package `three` is intentionally not installed.
 4. Runtime currently imports Three.js from `vendor/three/three.module.js` as the MVP-safe path.
 5. Portfolio scene implementation remains intentionally deferred; next step is first MVP Three.js scene modules.
+
+## 2026-05-22 — First Three.js MVP scene implementation
+
+1. Implemented first runtime scene modules under `src/scene/*` with dark atmospheric baseline, soft lighting, placeholder center object, particles, and camera drift.
+2. Implemented five interactive orbit nodes representing portfolio gates, with hover highlight and HTML hover label.
+3. Implemented HTML/CSS overlay panel with draft title/text, close button, and Escape close behavior.
+4. Node content is centralized in `src/content/portfolioNodes.js` and intentionally remains draft.
+5. Added `src/vendor/three.js` re-export bridge to keep module imports clean while preserving vendored dependency policy.
+6. Next step: visual refinement, transitions, and replacement of placeholder center geometry with meditating monkey GLB asset.

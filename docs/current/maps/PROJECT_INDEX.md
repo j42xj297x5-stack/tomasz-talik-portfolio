@@ -11,39 +11,20 @@
 
 ## Technical
 - `docs/current/technical/README.md` — technical section overview.
-- `docs/current/technical/ARCHITECTURE.md` — current scaffold and planned runtime structure.
-- `docs/current/technical/FRONTEND_RUNTIME_MODEL.md` — runtime layering, scaffold behavior, and Three.js import policy.
-- `docs/current/technical/THREE_SCENE_MODEL.md` — scene responsibilities.
-- `docs/current/technical/CONTENT_MODEL.md` — content/text and panel model.
+- `docs/current/technical/ARCHITECTURE.md` — implemented runtime module structure.
+- `docs/current/technical/FRONTEND_RUNTIME_MODEL.md` — runtime layering and vendored Three.js import policy.
+- `docs/current/technical/THREE_SCENE_MODEL.md` — scene modules and MVP behavior.
+- `docs/current/technical/CONTENT_MODEL.md` — content schema and draft gate text model.
 - `docs/current/technical/DEPLOYMENT_MODEL.md` — deployment direction.
 
-## Concept
-- `docs/current/concept/README.md` — concept section overview.
-- `docs/current/concept/CONCEPT_AND_ROADMAP.md` — normalized source concept/roadmap.
-- `docs/current/concept/NAMES_AND_LANGUAGE.md` — naming/language working space.
-- `docs/current/concept/INTERACTION_MODEL.md` — interaction flow.
-- `docs/current/concept/VISUAL_DIRECTION.md` — style and visual principles.
-
-## Operations
-- `docs/current/operations/README.md` — operations section overview.
-- `docs/current/operations/DOCUMENTATION_WORKFLOW.md` — doc lifecycle workflow.
-- `docs/current/operations/AUDIT_WORKFLOW.md` — audit types and naming convention.
-- `docs/current/operations/SNAPSHOT_WORKFLOW.md` — snapshot policy and format.
-- `docs/current/operations/GITHUB_WORKFLOW.md` — branch/commit/doc hygiene.
-
 ## Decisions
-- `docs/current/decisions/README.md` — decisions section overview.
-- `docs/current/decisions/DECISION_LOG.md` — decision records including Vite tooling and vendored Three.js policy.
+- `docs/current/decisions/DECISION_LOG.md` — includes MVP scene runtime decision update.
 
-## Runtime scaffold files
+## Runtime files
 - `index.html` — Vite entry HTML.
-- `src/main.js` — current runtime scaffold entrypoint.
-- `src/styles/main.css` — minimal runtime scaffold styling.
-
-## Audits
-- `docs/current/audits/README.md` — audit storage conventions.
-- `docs/current/audits/snapshots/` — checkpoint snapshots.
-- `docs/current/audits/snapshots/2026-05-22_04-42-35__snapshot__initial-docs-baseline.md` — initial pre-runtime baseline snapshot.
-- `docs/current/audits/code/` — code audits.
-- `docs/current/audits/documentation/` — documentation audits.
-- `docs/current/audits/full/` — full repository audits.
+- `src/main.js` — runtime bootstrap, scene wiring, animation loop.
+- `src/vendor/three.js` — bridge to vendored Three.js module.
+- `src/scene/*` — Three.js scene modules.
+- `src/ui/*` — HTML overlay and hover label modules.
+- `src/content/portfolioNodes.js` — draft portfolio gate content.
+- `src/styles/main.css` — dark atmospheric base + UI styles.
