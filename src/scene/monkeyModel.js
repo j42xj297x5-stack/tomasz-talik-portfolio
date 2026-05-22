@@ -6,6 +6,7 @@ const VENDORED_GLTF_LOADER_PATH = '../../vendor/three/examples/jsm/loaders/GLTFL
 async function resolveGLTFLoader() {
   try {
     const module = await import(VENDORED_GLTF_LOADER_PATH);
+    console.info(`[monkeyModel] GLTFLoader import succeeded from ${VENDORED_GLTF_LOADER_PATH}.`);
     return module.GLTFLoader;
   } catch (error) {
     console.warn(
@@ -44,7 +45,10 @@ function placeModelAtFallback(model, fallbackObject) {
 
 export async function loadMonkeyModel({ scene, fallbackObject }) {
   const GLTFLoader = await resolveGLTFLoader();
-  if (!GLTFLoader) return null;
+  if (!GLTFLoader) {
+    console.info(`[monkeyModel] Placeholder fallback retained because GLTFLoader was unavailable.`);
+    return null;
+  }
 
   const loader = new GLTFLoader();
 
@@ -56,6 +60,7 @@ export async function loadMonkeyModel({ scene, fallbackObject }) {
         placeModelAtFallback(model, fallbackObject);
         scene.add(model);
         fallbackObject.visible = false;
+        console.info(`[monkeyModel] Monkey model loaded from ${MONKEY_GLB_URL}. Placeholder hidden.`);
         resolve(model);
       },
       undefined,
