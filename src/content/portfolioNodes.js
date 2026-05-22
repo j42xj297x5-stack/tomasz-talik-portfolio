@@ -23,6 +23,8 @@ export const portfolioNodes = [
     id: 'creative-ai',
     title: 'Creative AI',
     shortLabel: 'Creative AI',
+    modelPath: '/glb/glyph_2.glb',
+    modelKind: 'glyph',
     draftText: 'Draft narrative for Creative AI explorations. Final project grouping and framing are not locked yet.'
   },
   {

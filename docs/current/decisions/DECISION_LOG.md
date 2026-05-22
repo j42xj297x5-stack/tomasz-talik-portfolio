@@ -69,3 +69,11 @@
 2. Extended orbit node runtime to attempt GLB load per node via vendored GLTFLoader r184 path, without introducing npm `three`.
 3. Kept the original orbit sphere mesh as the interaction target (raycast metadata + hover/click behavior) and as visual fallback if GLB load fails.
 4. Other four portfolio nodes intentionally remain sphere visuals to preserve incremental rollout scope.
+
+
+## 2026-05-22 — Creative AI per-node glyph visual with preserved collider fallback
+
+1. Assigned optional node visual metadata to `Creative AI` only (`modelPath: /glb/glyph_2.glb`, `modelKind: glyph`) while keeping existing node copy/content unchanged.
+2. Reused the existing orbit-node per-node GLB loading path via vendored GLTFLoader r184; no npm `three` dependency was introduced.
+3. Preserved the sphere mesh/collider as the interaction target and fallback visual if `/glb/glyph_2.glb` fails to load.
+4. Kept AI Guide on `/glb/glyph_1.glb` and left all remaining nodes as sphere placeholders.

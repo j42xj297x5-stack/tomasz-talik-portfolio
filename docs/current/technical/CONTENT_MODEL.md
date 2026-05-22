@@ -20,4 +20,6 @@ Rules in current MVP:
 - Content is intentionally draft and non-final.
 - Scene and UI read node metadata directly from the content module.
 - Overlay displays draft status note: "Draft content — final copy pending".
-- `AI Guide` now declares a glyph visual model at runtime path `/glb/glyph_1.glb` (expected local binary: `public/glb/glyph_1.glb`), while other nodes remain sphere-only placeholders.
+- `AI Guide` declares a glyph visual model at runtime path `/glb/glyph_1.glb` (expected local binary: `public/glb/glyph_1.glb`).
+- `Creative AI` now declares a glyph visual model at runtime path `/glb/glyph_2.glb` (expected local binary: `public/glb/glyph_2.glb`).
+- Remaining nodes stay sphere-only placeholders.
