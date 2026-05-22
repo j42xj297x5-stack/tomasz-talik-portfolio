@@ -38,6 +38,7 @@
 ## Audits
 - `docs/current/audits/README.md` — audit storage conventions.
 - `docs/current/audits/snapshots/` — checkpoint snapshots.
+- `docs/current/audits/snapshots/2026-05-22_04-42-35__snapshot__initial-docs-baseline.md` — initial pre-runtime baseline snapshot.
 - `docs/current/audits/code/` — code audits.
 - `docs/current/audits/documentation/` — documentation audits.
 - `docs/current/audits/full/` — full repository audits.
