@@ -9,7 +9,7 @@ Layers:
 4. Content layer (`src/content/portfolioNodes.js`) — draft node content model.
 
 ## MVP runtime status (2026-05-22)
-- Monkey runtime loader calls `/glb/monkey.glb` and keeps placeholder fallback if GLTFLoader or asset loading fails.
+- Monkey runtime loader now successfully resolves `/glb/monkey.glb` locally and keeps placeholder fallback if GLTFLoader or asset loading fails.
 - GLTFLoader import target is vendored: `vendor/three/examples/jsm/loaders/GLTFLoader.js` (if present).
 - Three.js npm package remains intentionally unused.
 - `index.html` mounts `src/main.js` via Vite.
@@ -20,7 +20,7 @@ Layers:
 
 ## Deferred implementation
 - Final meditating monkey GLB asset.
-- Visual polish pass and transition refinement.
+- Post-MVP snapshot pass and minor interaction polish.
 - Final branded copy/content.
 
 - Vendored Three.js baseline is `r184`; GLTFLoader must also be sourced from `r184` only.

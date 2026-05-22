@@ -16,7 +16,10 @@ Current status note:
 - Monkey GLB binary is expected at `public/glb/monkey.glb` and is managed manually outside Codex PR flow.
 - Central object is explicitly temporary and only represents the future meditating monkey model.
 - Node interactions use HTML overlay and hover label for readability instead of in-scene text.
-- Next scene step is visual refinement + eventual GLB monkey integration.
+- Monkey GLB now loads successfully in local runtime and hides the central placeholder only on successful load; placeholder fallback remains mandatory.
+- Current visual tuning keeps the monkey centered, camera-facing, and slightly smaller for clean orbit separation.
+- Orbit radius and light intensities were minimally increased to improve readability while preserving the calm dark atmosphere.
+- Next scene step may be post-MVP snapshot capture or small interaction polish.
 
 - Vendored Three.js baseline is `r184`; GLTFLoader must also be sourced from `r184` only.
 - Required loader file path: `vendor/three/examples/jsm/loaders/GLTFLoader.js`.

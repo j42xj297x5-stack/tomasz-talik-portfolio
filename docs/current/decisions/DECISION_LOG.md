@@ -47,3 +47,12 @@
 - GLTFLoader r184 is vendored at `vendor/three/examples/jsm/loaders/GLTFLoader.js`.
 - Required GLTFLoader utilities are vendored at `vendor/three/examples/jsm/utils/BufferGeometryUtils.js` and `vendor/three/examples/jsm/utils/SkeletonUtils.js`.
 - Vite resolve alias maps bare `three` imports to local vendored module `vendor/three/three.module.js` via `vite.config.js`.
+
+
+## 2026-05-22 — Monkey visual tuning pass after successful GLB load
+
+1. Monkey GLB local load is confirmed in runtime; placeholder remains mandatory fallback and is hidden only on successful load callback.
+2. Monkey transform tuning keeps center alignment, rotates monkey to face camera, and slightly reduces target model dimension for cleaner composition.
+3. Orbit node radius is increased to reduce central overlap risk while preserving five-node behavior and existing hover/click/raycast interaction model.
+4. Lighting receives minimal ambient/key/fill intensity and placement adjustments to improve monkey readability without breaking dark atmospheric mood.
+5. Next likely step is post-MVP snapshot capture and/or small interaction polish, not architectural rewrite.
