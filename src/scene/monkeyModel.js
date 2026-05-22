@@ -9,8 +9,8 @@ async function resolveGLTFLoader() {
     return module.GLTFLoader;
   } catch (error) {
     console.warn(
-      `[monkeyModel] GLTFLoader is not available at ${VENDORED_GLTF_LOADER_PATH}. ` +
-        'Monkey GLB loading is skipped and the fallback placeholder remains active.',
+      `[monkeyModel] GLTFLoader is missing. Expected loader path: ${VENDORED_GLTF_LOADER_PATH}. ` +
+        `Expected model path: ${MONKEY_GLB_URL}. Placeholder fallback retained.`,
       error
     );
     return null;
@@ -60,7 +60,10 @@ export async function loadMonkeyModel({ scene, fallbackObject }) {
       },
       undefined,
       (error) => {
-        console.warn('[monkeyModel] Failed to load monkey GLB. Fallback placeholder remains visible.', error);
+        console.warn(
+          `[monkeyModel] Failed to load monkey model at ${MONKEY_GLB_URL}. Placeholder fallback retained.`,
+          error
+        );
         resolve(null);
       }
     );

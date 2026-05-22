@@ -17,3 +17,9 @@ Current status note:
 - Central object is explicitly temporary and only represents the future meditating monkey model.
 - Node interactions use HTML overlay and hover label for readability instead of in-scene text.
 - Next scene step is visual refinement + eventual GLB monkey integration.
+
+- Vendored Three.js baseline is `r184`; GLTFLoader must also be sourced from `r184` only.
+- Required loader file path: `vendor/three/examples/jsm/loaders/GLTFLoader.js`.
+- Runtime monkey asset URL: `/glb/monkey.glb` (local file: `public/glb/monkey.glb`, manually managed binary).
+- Placeholder fallback is mandatory when loader or GLB is unavailable.
+- npm `three` dependency remains intentionally unused in runtime integration.

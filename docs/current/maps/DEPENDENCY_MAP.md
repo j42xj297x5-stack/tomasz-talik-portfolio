@@ -24,3 +24,9 @@ Concept docs -> Technical model -> Runtime implementation -> Decision updates ->
 - Scene content depends on `src/content/portfolioNodes.js`.
 - UI overlay/hover depends on node metadata and raycast picking.
 - Next dependency step: visual refinement and replacement of placeholder center with a real GLB meditating monkey asset.
+
+- Vendored Three.js baseline is `r184`; GLTFLoader must also be sourced from `r184` only.
+- Required loader file path: `vendor/three/examples/jsm/loaders/GLTFLoader.js`.
+- Runtime monkey asset URL: `/glb/monkey.glb` (local file: `public/glb/monkey.glb`, manually managed binary).
+- Placeholder fallback is mandatory when loader or GLB is unavailable.
+- npm `three` dependency remains intentionally unused in runtime integration.
