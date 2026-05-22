@@ -31,6 +31,8 @@ export const portfolioNodes = [
     id: 'ethics-life-protection',
     title: 'Ethics / Life Protection',
     shortLabel: 'Ethics / Life',
+    modelPath: '/glb/glyph_3.glb',
+    modelKind: 'glyph',
     draftText: 'Draft narrative for Ethics / Life Protection. Final principles, references, and commitments are pending review.'
   }
 ];

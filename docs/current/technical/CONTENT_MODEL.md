@@ -22,4 +22,6 @@ Rules in current MVP:
 - Overlay displays draft status note: "Draft content — final copy pending".
 - `AI Guide` declares a glyph visual model at runtime path `/glb/glyph_1.glb` (expected local binary: `public/glb/glyph_1.glb`).
 - `Creative AI` now declares a glyph visual model at runtime path `/glb/glyph_2.glb` (expected local binary: `public/glb/glyph_2.glb`).
+- `Ethics / Life Protection` now declares a glyph visual model at runtime path `/glb/glyph_3.glb` (expected local binary: `public/glb/glyph_3.glb`).
+- `Ethics / Life Protection` may be referenced internally as `AI Dharma`, while user-facing copy remains unchanged.
 - Remaining nodes stay sphere-only placeholders.
