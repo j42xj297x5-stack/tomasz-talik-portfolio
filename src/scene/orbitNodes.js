@@ -32,6 +32,12 @@ const WOOD_TREE_EMISSIVE_ACTIVE_BOTTOM = new THREE.Color('#1d7f1d');
 const WOOD_TREE_EMISSIVE_ACTIVE_TOP = new THREE.Color('#55ff22');
 const WOOD_TREE_POINT_LIGHT_COLOR = '#55ff22';
 const WOOD_TREE_POINT_LIGHT_INTENSITY = 1.0;
+const WOOD_TREE_POST_REVEAL_GLOW_INTENSITY = 0.22;
+const WOOD_TREE_POST_REVEAL_PULSE_INTENSITY = 0.04;
+const WOOD_TREE_ORBIT_ENABLED = true;
+const WOOD_TREE_ORBIT_SPEED = 0.48;
+const WOOD_TREE_ORBIT_BOBBING_AMPLITUDE = 0.04;
+const WOOD_TREE_ORBIT_BOBBING_SPEED = 0.95;
 
 
 function createWoodTreeEffectRuntime() {
@@ -46,12 +52,26 @@ function createWoodTreeEffectRuntime() {
     maxY: 0.5,
     treePointLight: null,
     pulsePhase: Math.random() * Math.PI * 2,
-    branchDelayPhase: Math.random() * 10
+    branchDelayPhase: Math.random() * 10,
+    phase: 'inactive',
+    orbitAngle: Math.random() * Math.PI * 2,
+    orbitRadius: 0,
+    orbitHeightOffset: 0,
+    orbitCenter: new THREE.Vector3(0, 0, 0),
+    lastElapsed: null
   };
 }
 
 function applyWoodTreeActivation(runtime, elapsed) {
   if (!runtime?.treeGroup || !runtime.treeMaterials.length) return;
+
+  if (runtime.revealTarget > 0.5) {
+    runtime.phase = runtime.revealProgress >= 0.999 ? 'activeOrbit' : 'revealing';
+  } else if (runtime.revealProgress > 0.001) {
+    runtime.phase = 'fadingOut';
+  } else {
+    runtime.phase = 'inactive';
+  }
 
   const revealDuration = runtime.revealTarget > runtime.revealProgress
     ? WOOD_TREE_REVEAL_DURATION_IN
@@ -63,8 +83,10 @@ function applyWoodTreeActivation(runtime, elapsed) {
   const revealRadius = THREE.MathUtils.lerp(WOOD_TREE_REVEAL_RADIUS_MIN, WOOD_TREE_REVEAL_RADIUS_MAX, easedProgress);
 
   const span = Math.max(0.0001, runtime.maxY - runtime.minY);
-  const pulse = runtime.revealProgress > 0.98 && runtime.revealTarget > 0.5
-    ? 1 + Math.sin(elapsed * WOOD_TREE_PULSE_SPEED + runtime.pulsePhase) * WOOD_TREE_PULSE_INTENSITY
+  const isActiveOrbit = runtime.phase === 'activeOrbit';
+  const pulse = runtime.revealTarget > 0.5
+    ? 1 + Math.sin(elapsed * WOOD_TREE_PULSE_SPEED + runtime.pulsePhase)
+      * (isActiveOrbit ? WOOD_TREE_POST_REVEAL_PULSE_INTENSITY : WOOD_TREE_PULSE_INTENSITY)
     : 1;
 
   runtime.shaderEntries.forEach((entry) => {
@@ -81,20 +103,39 @@ function applyWoodTreeActivation(runtime, elapsed) {
 
     entry.material.color.copy(WOOD_TREE_BASE_COLOR);
     entry.material.emissive.copy(WOOD_TREE_EMISSIVE_BASE).lerp(activeColor, fill);
-    entry.material.emissiveIntensity = fill > 0.001
-      ? (0.04 + fill * WOOD_TREE_EMISSIVE_INTENSITY_ACTIVE * WOOD_TREE_GLOW_INTENSITY) * pulse
+    const activeRevealIntensity = fill > 0.001
+      ? (0.04 + fill * WOOD_TREE_EMISSIVE_INTENSITY_ACTIVE * WOOD_TREE_GLOW_INTENSITY)
       : 0;
+    const postRevealGlow = runtime.revealTarget > 0.5
+      ? WOOD_TREE_POST_REVEAL_GLOW_INTENSITY * (0.5 + 0.5 * yRatio)
+      : 0;
+
+    entry.material.emissiveIntensity = Math.max(activeRevealIntensity, postRevealGlow) * pulse;
   });
 
   runtime.treeGroup.visible = runtime.revealProgress > 0.001;
 
   if (runtime.treePointLight) {
-    runtime.treePointLight.intensity = easedProgress > 0.001
-      ? easedProgress * WOOD_TREE_POINT_LIGHT_INTENSITY * pulse
-      : 0;
+    const baseLightIntensity = runtime.revealTarget > 0.5
+      ? WOOD_TREE_POINT_LIGHT_INTENSITY
+      : easedProgress * WOOD_TREE_POINT_LIGHT_INTENSITY;
+    runtime.treePointLight.intensity = THREE.MathUtils.clamp(baseLightIntensity * pulse, 0, WOOD_TREE_POINT_LIGHT_INTENSITY * 1.25);
+
+    if (WOOD_TREE_ORBIT_ENABLED && isActiveOrbit && runtime.orbitRadius > 0.0001) {
+      const delta = runtime.lastElapsed === null ? 0 : Math.max(0, elapsed - runtime.lastElapsed);
+      runtime.orbitAngle += WOOD_TREE_ORBIT_SPEED * delta;
+      runtime.treePointLight.position.set(
+        runtime.orbitCenter.x + Math.cos(runtime.orbitAngle) * runtime.orbitRadius,
+        runtime.orbitCenter.y + runtime.orbitHeightOffset + Math.sin(elapsed * WOOD_TREE_ORBIT_BOBBING_SPEED + runtime.pulsePhase) * WOOD_TREE_ORBIT_BOBBING_AMPLITUDE,
+        runtime.orbitCenter.z + Math.sin(runtime.orbitAngle) * runtime.orbitRadius
+      );
+    }
+
     runtime.treePointLight.visible = runtime.treePointLight.intensity > 0.01;
+    runtime.lastElapsed = elapsed;
   }
 }
+
 
 async function resolveGLTFLoader() {
   try {
@@ -108,6 +149,7 @@ async function resolveGLTFLoader() {
     return null;
   }
 }
+
 
 function fitModelToNode(model) {
   const box = new THREE.Box3().setFromObject(model);
@@ -212,6 +254,11 @@ totalEmissiveRadiance *= finalRevealMask;
             treePointLight.visible = false;
             treeModel.add(treePointLight);
             runtime.treePointLight = treePointLight;
+            runtime.orbitCenter.set(0, 0, 0);
+            const orbitOffset = treePointLight.position.clone().sub(runtime.orbitCenter);
+            runtime.orbitRadius = Math.max(0.08, Math.sqrt(orbitOffset.x ** 2 + orbitOffset.z ** 2));
+            runtime.orbitHeightOffset = orbitOffset.y;
+            runtime.orbitAngle = Math.atan2(orbitOffset.z, orbitOffset.x);
 
             treeModel.visible = false;
             node.add(treeModel);
@@ -367,5 +414,7 @@ export function setNodeHoverState(node, isHovered) {
   node.userData.targetHoverLightIntensity = 0;
   if (node.userData.woodTreeEffectRuntime) {
     node.userData.woodTreeEffectRuntime.revealTarget = 0;
+    runtime.lastElapsed = elapsed;
   }
 }
+
