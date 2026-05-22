@@ -25,4 +25,5 @@ Rules in current MVP:
 - `Creative AI` now declares a glyph visual model at runtime path `/glb/glyph_2.glb` (expected local binary: `public/glb/glyph_2.glb`).
 - `Ethics / Life Protection` now declares a glyph visual model at runtime path `/glb/glyph_3.glb` (expected local binary: `public/glb/glyph_3.glb`).
 - `Ethics / Life Protection` may be referenced internally as `AI Dharma`, while user-facing copy remains unchanged.
-- Remaining node (`Haiku Cosmos`) stays sphere-only placeholder.
+- `Haiku Cosmos` now declares a glyph visual model at runtime path `/glb/glyph_5.glb` (expected local binary: `public/glb/glyph_5.glb`).
+- All five portfolio nodes now declare GLB glyph visuals while retaining sphere collider/fallback behavior.

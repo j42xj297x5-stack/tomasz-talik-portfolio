@@ -92,3 +92,11 @@
 2. Reused the existing orbit-node per-node GLB loading path via vendored GLTFLoader r184; no npm `three` dependency was introduced.
 3. Preserved the sphere mesh/collider as the interaction target and fallback visual if `/glb/glyph_4.glb` fails to load.
 4. Kept AI Guide on `/glb/glyph_1.glb`, Creative AI on `/glb/glyph_2.glb`, Ethics / Life Protection on `/glb/glyph_3.glb`, and left Haiku Cosmos as sphere placeholder.
+
+
+## 2026-05-22 — Haiku Cosmos per-node glyph visual with preserved collider fallback
+
+1. Assigned optional node visual metadata to `Haiku Cosmos` only (`modelPath: /glb/glyph_5.glb`, `modelKind: glyph`) while keeping existing node copy/content unchanged.
+2. Reused the existing orbit-node per-node GLB loading path via vendored GLTFLoader r184; no npm `three` dependency was introduced.
+3. Preserved the sphere mesh/collider as the interaction target and fallback visual if `/glb/glyph_5.glb` fails to load.
+4. All five orbit nodes now have GLB glyph visuals: AI Guide `/glb/glyph_1.glb`, Creative AI `/glb/glyph_2.glb`, Ethics / Life Protection `/glb/glyph_3.glb`, Spotify Digger `/glb/glyph_4.glb`, and Haiku Cosmos `/glb/glyph_5.glb`.
