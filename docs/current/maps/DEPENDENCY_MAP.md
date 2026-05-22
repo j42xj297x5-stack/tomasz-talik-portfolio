@@ -1,4 +1,4 @@
-# Dependency Map (Initial)
+# Dependency Map
 
 ## High-level flow
 Concept docs -> Technical model -> Runtime implementation -> Audits/Snapshots -> Decision updates
@@ -9,8 +9,11 @@ Concept docs -> Technical model -> Runtime implementation -> Audits/Snapshots ->
   - informs `concept/INTERACTION_MODEL.md`
   - informs `concept/VISUAL_DIRECTION.md`
 - `technical/ARCHITECTURE.md`
-  - informs future `src/` and `public/assets/` structure
+  - informs current `index.html` and `src/*` scaffold
   - informs deployment requirements in `technical/DEPLOYMENT_MODEL.md`
+- `technical/FRONTEND_RUNTIME_MODEL.md`
+  - defines current runtime scaffold behavior
+  - defines vendored Three.js import policy for MVP phase
 - `operations/*.md`
   - govern how docs, audits, and snapshots are produced
 - `audits/*`
@@ -18,4 +21,5 @@ Concept docs -> Technical model -> Runtime implementation -> Audits/Snapshots ->
   - feed next actions into snapshots
 
 ## Runtime status dependency
-No runtime code exists yet; technical docs currently define planned structure only.
+- Runtime scaffold now exists (`index.html`, `src/main.js`, `src/styles/main.css`).
+- Next dependency step: first Three.js MVP scene modules using vendored `vendor/three/three.module.js`.

@@ -11,8 +11,8 @@
 
 ## Technical
 - `docs/current/technical/README.md` — technical section overview.
-- `docs/current/technical/ARCHITECTURE.md` — planned repo/runtime architecture.
-- `docs/current/technical/FRONTEND_RUNTIME_MODEL.md` — runtime layering and modules.
+- `docs/current/technical/ARCHITECTURE.md` — current scaffold and planned runtime structure.
+- `docs/current/technical/FRONTEND_RUNTIME_MODEL.md` — runtime layering, scaffold behavior, and Three.js import policy.
 - `docs/current/technical/THREE_SCENE_MODEL.md` — scene responsibilities.
 - `docs/current/technical/CONTENT_MODEL.md` — content/text and panel model.
 - `docs/current/technical/DEPLOYMENT_MODEL.md` — deployment direction.
@@ -33,7 +33,12 @@
 
 ## Decisions
 - `docs/current/decisions/README.md` — decisions section overview.
-- `docs/current/decisions/DECISION_LOG.md` — initial decision records.
+- `docs/current/decisions/DECISION_LOG.md` — decision records including Vite tooling and vendored Three.js policy.
+
+## Runtime scaffold files
+- `index.html` — Vite entry HTML.
+- `src/main.js` — current runtime scaffold entrypoint.
+- `src/styles/main.css` — minimal runtime scaffold styling.
 
 ## Audits
 - `docs/current/audits/README.md` — audit storage conventions.
