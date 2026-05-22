@@ -15,20 +15,20 @@ const WOOD_NODE_HOVER_LIGHT_INTENSITY_TARGET = 3.3;
 
 const WOOD_TREE_EFFECT_MODEL_PATH = '/glb/glyph_1-tree.glb';
 const WOOD_TREE_EFFECT_FALLBACK_MODEL_PATH = '/glb/glyph_1.glb';
-const WOOD_TREE_ACTIVATION_DURATION = 1.6;
-const WOOD_TREE_VERTICAL_SOFTNESS = 0.42;
-const WOOD_TREE_EMISSIVE_INTENSITY_ACTIVE = 1.55;
-const WOOD_TREE_GLOW_INTENSITY = 1.3;
-const WOOD_TREE_PULSE_INTENSITY = 0.16;
-const WOOD_TREE_PULSE_SPEED = 1.45;
-const WOOD_TREE_SCALE = 0.95;
-const WOOD_TREE_Y_OFFSET = -0.14;
-const WOOD_TREE_BASE_COLOR = new THREE.Color('#1b2318');
-const WOOD_TREE_EMISSIVE_BASE = new THREE.Color('#0f150d');
-const WOOD_TREE_EMISSIVE_ACTIVE_BOTTOM = new THREE.Color('#2d8f49');
-const WOOD_TREE_EMISSIVE_ACTIVE_TOP = new THREE.Color('#d7aa4e');
-const WOOD_TREE_POINT_LIGHT_COLOR = '#9fce70';
-const WOOD_TREE_POINT_LIGHT_INTENSITY = 1.15;
+const WOOD_TREE_ACTIVATION_DURATION = 3.2;
+const WOOD_TREE_VERTICAL_SOFTNESS = 0.56;
+const WOOD_TREE_EMISSIVE_INTENSITY_ACTIVE = 1.35;
+const WOOD_TREE_GLOW_INTENSITY = 1.15;
+const WOOD_TREE_PULSE_INTENSITY = 0.09;
+const WOOD_TREE_PULSE_SPEED = 0.95;
+const WOOD_TREE_SCALE = 1.24;
+const WOOD_TREE_Y_OFFSET = 0.02;
+const WOOD_TREE_BASE_COLOR = new THREE.Color('#162111');
+const WOOD_TREE_EMISSIVE_BASE = new THREE.Color('#0f1e0e');
+const WOOD_TREE_EMISSIVE_ACTIVE_BOTTOM = new THREE.Color('#1d7f1d');
+const WOOD_TREE_EMISSIVE_ACTIVE_TOP = new THREE.Color('#55ff22');
+const WOOD_TREE_POINT_LIGHT_COLOR = '#55ff22';
+const WOOD_TREE_POINT_LIGHT_INTENSITY = 1.0;
 
 
 function createWoodTreeEffectRuntime() {
@@ -40,7 +40,8 @@ function createWoodTreeEffectRuntime() {
     minY: -0.5,
     maxY: 0.5,
     treePointLight: null,
-    pulsePhase: Math.random() * Math.PI * 2
+    pulsePhase: Math.random() * Math.PI * 2,
+    branchDelayPhase: Math.random() * 10
   };
 }
 
@@ -49,28 +50,30 @@ function applyWoodTreeActivation(runtime, elapsed) {
 
   const activationLerp = 1 / Math.max(1, 60 * WOOD_TREE_ACTIVATION_DURATION);
   runtime.activationProgress = THREE.MathUtils.lerp(runtime.activationProgress, runtime.activationTarget, activationLerp);
+  const easedProgress = THREE.MathUtils.smoothstep(runtime.activationProgress, 0, 1);
 
   const span = Math.max(0.0001, runtime.maxY - runtime.minY);
-  const revealY = runtime.minY + span * runtime.activationProgress;
   const pulse = runtime.activationProgress > 0.98
     ? 1 + Math.sin(elapsed * WOOD_TREE_PULSE_SPEED + runtime.pulsePhase) * WOOD_TREE_PULSE_INTENSITY
     : 1;
 
   runtime.treeMaterials.forEach((entry) => {
-    const yRatio = (entry.centerY - runtime.minY) / span;
+    const yRatio = THREE.MathUtils.clamp((entry.centerY - runtime.minY) / span, 0, 1);
+    const branchDelay = 0.08 + (Math.sin(yRatio * 12.7 + runtime.branchDelayPhase) * 0.5 + 0.5) * 0.16;
+    const delayedRevealY = runtime.minY + span * THREE.MathUtils.clamp(easedProgress - branchDelay * yRatio, 0, 1);
     const softnessRange = WOOD_TREE_VERTICAL_SOFTNESS * span;
-    const fill = THREE.MathUtils.smoothstep(entry.centerY, revealY - softnessRange, revealY + softnessRange);
+    const fill = THREE.MathUtils.smoothstep(entry.centerY, delayedRevealY - softnessRange, delayedRevealY + softnessRange);
     const activeColor = WOOD_TREE_EMISSIVE_ACTIVE_BOTTOM.clone().lerp(WOOD_TREE_EMISSIVE_ACTIVE_TOP, yRatio);
 
     entry.material.color.copy(WOOD_TREE_BASE_COLOR);
     entry.material.emissive.copy(WOOD_TREE_EMISSIVE_BASE).lerp(activeColor, fill);
-    entry.material.emissiveIntensity = (0.05 + fill * WOOD_TREE_EMISSIVE_INTENSITY_ACTIVE * WOOD_TREE_GLOW_INTENSITY) * pulse;
+    entry.material.emissiveIntensity = (0.04 + fill * WOOD_TREE_EMISSIVE_INTENSITY_ACTIVE * WOOD_TREE_GLOW_INTENSITY) * pulse;
   });
 
   runtime.treeGroup.visible = runtime.activationProgress > 0.001;
 
   if (runtime.treePointLight) {
-    runtime.treePointLight.intensity = runtime.activationProgress * WOOD_TREE_POINT_LIGHT_INTENSITY * pulse;
+    runtime.treePointLight.intensity = (0.35 + easedProgress * 0.65) * WOOD_TREE_POINT_LIGHT_INTENSITY * pulse;
     runtime.treePointLight.visible = runtime.treePointLight.intensity > 0.01;
   }
 }
