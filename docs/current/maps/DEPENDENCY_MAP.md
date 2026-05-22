@@ -16,6 +16,8 @@ Concept docs -> Technical model -> Runtime implementation -> Decision updates ->
   - maps scene responsibilities to concrete modules
 - `technical/CONTENT_MODEL.md`
   - defines gate metadata used by orbit nodes and overlays
+- `technical/GLYPH_HOVER_EFFECTS_MODEL.md`
+  - defines the canonical five-glyph hover-effects language (element mapping, motion symbolism, consistency rules, and implementation order) for visual polish stages
 
 ## Runtime status dependency
 - Monkey model loading depends on the vendored GLTFLoader module path `vendor/three/examples/jsm/loaders/GLTFLoader.js` and asset path `/glb/monkey.glb`.
