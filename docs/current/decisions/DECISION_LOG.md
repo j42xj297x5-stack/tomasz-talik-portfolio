@@ -37,3 +37,9 @@
 2. Placeholder center object remains mandatory fallback and is hidden only after a successful GLB load callback.
 3. GLTFLoader lookup is constrained to vendored Three.js path `vendor/three/examples/jsm/loaders/GLTFLoader.js`; npm `three` remains intentionally unused.
 4. If vendored GLTFLoader is missing, runtime logs a warning and continues with placeholder-only rendering.
+
+- Vendored Three.js baseline is `r184`; GLTFLoader must also be sourced from `r184` only.
+- Required loader file path: `vendor/three/examples/jsm/loaders/GLTFLoader.js`.
+- Runtime monkey asset URL: `/glb/monkey.glb` (local file: `public/glb/monkey.glb`, manually managed binary).
+- Placeholder fallback is mandatory when loader or GLB is unavailable.
+- npm `three` dependency remains intentionally unused in runtime integration.
