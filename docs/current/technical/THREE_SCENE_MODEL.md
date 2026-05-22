@@ -49,3 +49,11 @@ Current status note:
 - Mouse-driven camera orbit remains pivot-locked to monkey center without OrbitControls.
 - Hover labels, overlays, and sphere collider fallback behavior remain active.
 - Full checkpoint snapshot recorded at `docs/current/audits/snapshots/2026-05-22_15-38-35__snapshot__monkey-five-glyphs-runtime-baseline.md`.
+
+
+## Checkpoint update — AI Guide tree effect in scene runtime (2026-05-22)
+- Scene runtime for node `ai-guide` includes dedicated tree effect model `/glb/glyph_1-tree.glb` plus safe fallback `/glb/glyph_1.glb`.
+- Tree effect is reveal-mask/shader based (visual growth), not runtime boolean/CSG geometry synthesis.
+- Lighting baseline for this effect is green emissive + orbiting green point light that persists while hover/active remains true.
+- Interaction safety remains mandatory: tree model/lights/helpers do not become raycast targets; collider ownership remains on node sphere/glyph node.
+- Full checkpoint details and parameter list are recorded in `docs/current/audits/snapshots/2026-05-22_18-18-33__snapshot__glyph-1-tree-effect-baseline.md`.

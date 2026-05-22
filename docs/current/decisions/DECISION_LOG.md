@@ -116,3 +116,13 @@
 1. Final element mapping for the five glyphs is fixed from current visual appearance and existing glyph-to-node assignments (glyph_1/AI Guide = Wood, glyph_2/Creative AI = Fire, glyph_3/Ethics = Earth, glyph_4/Spotify Digger = Metal, glyph_5/Haiku Cosmos = Water).
 2. `docs/current/technical/GLYPH_HOVER_EFFECTS_MODEL.md` is established as the active working canon for hover-only effect language, symbolism, consistency rules, and implementation order.
 3. This step is documentation-only and does not modify runtime, scene architecture, shader stack, interaction baseline, or node naming/mapping.
+
+
+## 2026-05-22 — Glyph 1 tree hover effect accepted baseline (documentation snapshot)
+
+1. For first glyph (`AI Guide`), runtime baseline is the GLB tree effect (`/glb/glyph_1-tree.glb`) with safe fallback path to `/glb/glyph_1.glb`; previous procedural/non-solid variant is superseded.
+2. Reveal model is documented as visual mask/shader growth from base (non-CSG), with slower reveal-in pacing and responsive fade-out on mouse-off.
+3. Green emissive/glow/light direction is fixed as baseline for glyph 1; previous yellow direction is rejected for this checkpoint.
+4. Point light remains active after full reveal during hover/active and transitions into orbit (with faster orbit than the earliest orbit pass); orbit radius is treated as stable unless a future explicit decision changes it.
+5. Interaction safety is reaffirmed: tree visual meshes/helpers/lights are not raycast targets; collider/interactive target remains the glyph node.
+6. Snapshot recorded: `docs/current/audits/snapshots/2026-05-22_18-18-33__snapshot__glyph-1-tree-effect-baseline.md`.

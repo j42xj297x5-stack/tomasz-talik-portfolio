@@ -134,3 +134,11 @@ Należy unikać:
 Status: **aktywny dokument kierujący dalszymi wdrożeniami visual polish hover effects**.
 
 `GLYPH_HOVER_EFFECTS_MODEL.md` jest punktem odniesienia dla kolejnych implementacji, review i decyzji dotyczących efektów hover pięciu glifów.
+
+
+## 11. Checkpoint implementacyjny — Glif 1 (`glyph_1-tree`) [2026-05-22]
+- Dla glifu 1 baseline runtime jest oparty o rzeczywisty asset `glyph_1-tree.glb` (z fallbackiem do `glyph_1.glb`), a wcześniejszy kierunek proceduralny/bez bryły jest uznany za zastąpiony.
+- Efekt działa wyłącznie jako emanacja wizualna przypisana do node `AI Guide`; nie zastępuje interaktywnego glyph node jako targetu hover/click/raycast.
+- Reveal/wzrost realizowany jest wizualnie (mask/shader) od podstawy ku górze, z zielonym emissive glow i orbitującym point light po pełnym reveal.
+- Mouse off/hover cleanup jest częścią baseline: reset kursora, wygaszanie efektu i poprawny restart przy ponownym hoverze.
+- Szczegóły parametrów i lifecycle opisuje snapshot: `docs/current/audits/snapshots/2026-05-22_18-18-33__snapshot__glyph-1-tree-effect-baseline.md`.
