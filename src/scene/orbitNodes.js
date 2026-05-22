@@ -17,24 +17,24 @@ const FIRE_NODE_HOVER_LIGHT_COLOR = '#ff9f4f';
 const FIRE_NODE_HOVER_LIGHT_INTENSITY_TARGET = 3.15;
 const FIRE_LOWER_EMBER_FADE_IN_DURATION = 0.22;
 const FIRE_SPARKS_START_DELAY = 0.24;
-const FIRE_BURST_DURATION = 0.95;
+const FIRE_BURST_DURATION = 1.02;
 const FIRE_UPPER_EMBER_START_DELAY = 0.68;
 const FIRE_UPPER_EMBER_FADE_IN_DURATION = 0.36;
 const FIRE_EFFECT_FADE_OUT_DURATION = 0.2;
 const FIRE_SPARK_COUNT = 100;
 const FIRE_SPARK_LIFETIME = 0.95;
-const FIRE_SPIRAL_HEIGHT = 0.86;
-const FIRE_SPIRAL_CENTER_Y = -0.05;
-const FIRE_SPIRAL_RADIUS_MIN = 0.05;
-const FIRE_SPIRAL_RADIUS_MAX = 0.16;
-const FIRE_SPARK_SIZE_MIN = 0.013;
-const FIRE_SPARK_SIZE_MAX = 0.028;
+const FIRE_SPIRAL_HEIGHT = 0.84;
+const FIRE_SPIRAL_CENTER_Y = -0.08;
+const FIRE_SPIRAL_RADIUS_MIN = 0.028;
+const FIRE_SPIRAL_RADIUS_MAX = 0.085;
+const FIRE_SPARK_SIZE_MIN = 0.0055;
+const FIRE_SPARK_SIZE_MAX = 0.0135;
 const FIRE_SPARK_ANGULAR_SPEED_MIN = 5.4;
 const FIRE_SPARK_ANGULAR_SPEED_MAX = 10.8;
 const FIRE_SPARK_FADE_OUT_START = 0.64;
-const FIRE_LOWER_EMBER_RADIUS = 0.16;
-const FIRE_UPPER_EMBER_RADIUS = 0.11;
-const FIRE_UPPER_EMBER_Y_OFFSET = 0.61;
+const FIRE_LOWER_EMBER_RADIUS = 0.07;
+const FIRE_UPPER_EMBER_RADIUS = 0.048;
+const FIRE_UPPER_EMBER_Y_OFFSET = 0.57;
 
 const WOOD_TREE_EFFECT_MODEL_PATH = '/glb/glyph_1-tree.glb';
 const WOOD_TREE_EFFECT_FALLBACK_MODEL_PATH = '/glb/glyph_1.glb';
@@ -294,15 +294,15 @@ function applyFireActivation(runtime, elapsed) {
   const pulseHeavy = 0.88 + Math.sin(elapsed * 2.1) * 0.12;
   const pulseUpper = 0.92 + Math.sin(elapsed * 3.4 + 1.2) * 0.16;
 
-  runtime.lowerEmber.material.uniforms.uOpacity.value = 0.22 * lowerActivation * activationEase * pulseHeavy;
+  runtime.lowerEmber.material.uniforms.uOpacity.value = 0.13 * lowerActivation * activationEase * pulseHeavy;
   runtime.lowerEmber.scale.setScalar(FIRE_LOWER_EMBER_RADIUS * (0.92 + lowerActivation * 0.2 + pulseHeavy * 0.08));
 
-  runtime.upperEmber.material.uniforms.uOpacity.value = 0.28 * upperActivation * activationEase * pulseUpper;
+  runtime.upperEmber.material.uniforms.uOpacity.value = 0.1 * upperActivation * activationEase * pulseUpper;
   runtime.upperEmber.scale.setScalar(FIRE_UPPER_EMBER_RADIUS * (0.88 + upperActivation * 0.38 + pulseUpper * 0.1));
 
   const burstNormalized = THREE.MathUtils.clamp(burstElapsed / FIRE_BURST_DURATION, 0, 1);
   const burstFade = runtime.hasBurstFired ? (1 - burstNormalized) : 0;
-  runtime.sparkMaterial.uniforms.uOpacity.value = 0.42 * sparkActivation * activationEase * burstFade;
+  runtime.sparkMaterial.uniforms.uOpacity.value = 0.24 * sparkActivation * activationEase * burstFade;
   const temp = new THREE.Object3D();
   runtime.sparkParams.forEach((spark, index) => {
     if (!runtime.hasBurstFired) {
