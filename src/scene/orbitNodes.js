@@ -3,7 +3,7 @@ import * as THREE from '../vendor/three.js';
 export function createOrbitNodes(nodeContent) {
   const group = new THREE.Group();
   const nodes = [];
-  const radius = 3.2;
+  const radius = 3.8;
 
   nodeContent.forEach((item, index) => {
     const angle = (Math.PI * 2 * index) / nodeContent.length;

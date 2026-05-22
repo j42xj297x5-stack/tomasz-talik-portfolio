@@ -2,6 +2,8 @@ import * as THREE from '../vendor/three.js';
 
 const MONKEY_GLB_URL = '/glb/monkey.glb';
 const VENDORED_GLTF_LOADER_PATH = '../../vendor/three/examples/jsm/loaders/GLTFLoader.js';
+const MONKEY_TARGET_DIMENSION = 2.0;
+const MONKEY_YAW_TO_CAMERA = 0;
 
 async function resolveGLTFLoader() {
   try {
@@ -27,8 +29,7 @@ function placeModelAtFallback(model, fallbackObject) {
   box.getSize(size);
 
   const maxDimension = Math.max(size.x, size.y, size.z) || 1;
-  const targetDimension = 2.2;
-  const uniformScale = targetDimension / maxDimension;
+  const uniformScale = MONKEY_TARGET_DIMENSION / maxDimension;
 
   model.scale.setScalar(uniformScale);
   model.updateMatrixWorld(true);
@@ -40,7 +41,7 @@ function placeModelAtFallback(model, fallbackObject) {
   model.position.sub(center);
   model.position.add(fallbackPosition);
 
-  model.rotation.y = Math.PI;
+  model.rotation.y = MONKEY_YAW_TO_CAMERA;
 }
 
 export async function loadMonkeyModel({ scene, fallbackObject }) {
