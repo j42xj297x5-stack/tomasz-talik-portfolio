@@ -5,6 +5,7 @@ import { createScene } from './scene/createScene.js';
 import { addLights } from './scene/lights.js';
 import { createCentralObject } from './scene/centralObject.js';
 import { createParticles } from './scene/particles.js';
+import { loadMonkeyModel } from './scene/monkeyModel.js';
 import { createOrbitNodes, setNodeHoverState, updateOrbitNodes } from './scene/orbitNodes.js';
 import { pickNode } from './scene/raycaster.js';
 import { updateCameraDrift } from './scene/cameraRig.js';
@@ -31,8 +32,11 @@ const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerH
 camera.position.set(0, 1.8, 6);
 
 addLights(scene);
-scene.add(createCentralObject());
+const centralPlaceholder = createCentralObject();
+scene.add(centralPlaceholder);
 scene.add(createParticles());
+
+void loadMonkeyModel({ scene, fallbackObject: centralPlaceholder });
 
 const { group: orbitGroup, nodes } = createOrbitNodes(portfolioNodes);
 scene.add(orbitGroup);

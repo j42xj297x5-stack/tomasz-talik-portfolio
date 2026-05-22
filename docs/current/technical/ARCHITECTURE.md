@@ -1,6 +1,7 @@
 # Architecture
 
 ## Current repository state
+- Central model loader is isolated in `src/scene/monkeyModel.js` and invoked from `src/main.js` after placeholder creation.
 - Frontend runtime is active with first Three.js MVP scene.
 - `vendor/three` remains the dependency source for Three.js runtime files.
 - Overlay UX is HTML/CSS for text readability.
@@ -18,6 +19,7 @@ src/
     cameraRig.js
     lights.js
     centralObject.js
+    monkeyModel.js
     orbitNodes.js
     particles.js
     raycaster.js
