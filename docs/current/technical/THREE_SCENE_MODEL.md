@@ -19,7 +19,7 @@ Current status note:
 - Monkey GLB now loads successfully in local runtime and hides the central placeholder only on successful load; placeholder fallback remains mandatory.
 - Current visual tuning keeps the monkey centered, camera-facing, and slightly smaller for clean orbit separation.
 - Orbit radius and light intensities were minimally increased to improve readability while preserving the calm dark atmosphere.
-- Orbit node visuals now support optional per-node GLB attachments (currently AI Guide only) while preserving the sphere mesh as the raycast/collider and visual fallback.
+- Orbit node visuals now support optional per-node GLB attachments (AI Guide and Creative AI) while preserving the sphere mesh as the raycast/collider and visual fallback.
 - Next scene step may be post-MVP snapshot capture or small interaction polish.
 
 - Vendored Three.js baseline is `r184`; GLTFLoader must also be sourced from `r184` only.
@@ -37,3 +37,4 @@ Current status note:
 - Subtle idle drift remains as a secondary additive influence when mouse input is present and as primary fallback when it is not.
 - Desktop/fine-pointer devices get cursor-driven orbit; non-fine/touch pointer contexts keep neutral/idle behavior.
 - AI Guide node can load `/glb/glyph_1.glb` as a visual override; if loader or asset fails, the original orbit sphere remains visible and interactive.
+- Creative AI node can load `/glb/glyph_2.glb` with the same fallback behavior and collider/raycast preservation.
