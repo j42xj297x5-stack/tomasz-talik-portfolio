@@ -56,3 +56,9 @@
 3. Orbit node radius is increased to reduce central overlap risk while preserving five-node behavior and existing hover/click/raycast interaction model.
 4. Lighting receives minimal ambient/key/fill intensity and placement adjustments to improve monkey readability without breaking dark atmospheric mood.
 5. Next likely step is post-MVP snapshot capture and/or small interaction polish, not architectural rewrite.
+## 2026-05-22 — Mouse-driven monkey-pivot camera orbit (no OrbitControls)
+
+1. Replaced pure time-based camera drift with a camera rig that orbits around fixed monkey pivot coordinates and always calls `camera.lookAt(pivot)`.
+2. Chose explicit named orbit limits: horizontal yaw ±45° (`MAX_YAW_DEG`) and vertical pitch limit (`MAX_PITCH_DEG`) set to 30° default for calmer framing while keeping 45° as the upper design bound.
+3. Preserved subtle idle drift as secondary additive motion and fallback when no fine-pointer mouse input is active.
+4. Kept mobile/touch behavior intentionally simple (neutral/idle fallback), avoided OrbitControls, and preserved existing raycast-driven nodes, hover labels, and overlays.

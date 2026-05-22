@@ -32,3 +32,7 @@ Layers:
 - GLTFLoader r184 is vendored at `vendor/three/examples/jsm/loaders/GLTFLoader.js`.
 - Required GLTFLoader utilities are vendored at `vendor/three/examples/jsm/utils/BufferGeometryUtils.js` and `vendor/three/examples/jsm/utils/SkeletonUtils.js`.
 - Vite resolve alias maps bare `three` imports to local vendored module `vendor/three/three.module.js` via `vite.config.js`.
+- Camera interaction layer now combines raycast input with a mouse-driven orbital camera rig around the monkey pivot while keeping Vanilla JS modules.
+- Orbit constants are explicit and configurable (`MAX_YAW_DEG = 45`, `MAX_PITCH_DEG = 30`) with damping-based smoothing.
+- Camera always resolves position from orbit math and continuously `lookAt`s the monkey pivot.
+- Mobile/touch behavior remains fallback-safe: no complex gesture controls added, neutral/idle drift remains available.
