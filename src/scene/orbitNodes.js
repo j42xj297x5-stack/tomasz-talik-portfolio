@@ -22,12 +22,12 @@ const FIRE_UPPER_EMBER_START_DELAY = 0.68;
 const FIRE_UPPER_EMBER_FADE_IN_DURATION = 0.36;
 const FIRE_EFFECT_FADE_OUT_DURATION = 0.2;
 const FIRE_SPARK_COUNT = 100;
-const FIRE_SPIRAL_HEIGHT = 1.35;
-const FIRE_SPIRAL_CENTER_Y = 0.02;
+const FIRE_SPIRAL_HEIGHT = 0.92;
+const FIRE_SPIRAL_CENTER_Y = -0.05;
 const FIRE_SPIRAL_RADIUS_MIN = 0.08;
-const FIRE_SPIRAL_RADIUS_MAX = 0.34;
-const FIRE_SPARK_SIZE_MIN = 0.034;
-const FIRE_SPARK_SIZE_MAX = 0.072;
+const FIRE_SPIRAL_RADIUS_MAX = 0.2;
+const FIRE_SPARK_SIZE_MIN = 0.014;
+const FIRE_SPARK_SIZE_MAX = 0.034;
 
 const WOOD_TREE_EFFECT_MODEL_PATH = '/glb/glyph_1-tree.glb';
 const WOOD_TREE_EFFECT_FALLBACK_MODEL_PATH = '/glb/glyph_1.glb';
@@ -169,14 +169,14 @@ function initializeFireEffect(node, runtime) {
   fireGroup.userData.isNonInteractiveEffect = true;
 
   const emberGeometry = new THREE.SphereGeometry(0.5, 24, 18);
-  const lowerEmber = new THREE.Mesh(emberGeometry, createSoftGlowMaterial('#ff8c3a', 0, 1.25));
-  lowerEmber.scale.setScalar(0.86);
-  lowerEmber.position.set(0, -0.2, 0);
+  const lowerEmber = new THREE.Mesh(emberGeometry, createSoftGlowMaterial('#ff8c3a', 0, 1.55));
+  lowerEmber.scale.setScalar(0.36);
+  lowerEmber.position.set(0, -0.19, 0);
   lowerEmber.renderOrder = 3;
 
-  const upperEmber = new THREE.Mesh(emberGeometry, createSoftGlowMaterial('#ffc16a', 0, 1.9));
-  upperEmber.scale.setScalar(0.54);
-  upperEmber.position.set(0, FIRE_SPIRAL_CENTER_Y + FIRE_SPIRAL_HEIGHT * 0.8, 0);
+  const upperEmber = new THREE.Mesh(emberGeometry, createSoftGlowMaterial('#ffc16a', 0, 1.75));
+  upperEmber.scale.setScalar(0.26);
+  upperEmber.position.set(0, FIRE_SPIRAL_CENTER_Y + FIRE_SPIRAL_HEIGHT * 0.68, 0);
   upperEmber.renderOrder = 4;
 
   const sparkGeometry = new THREE.PlaneGeometry(1, 1);
@@ -195,13 +195,13 @@ function initializeFireEffect(node, runtime) {
       angularSpeed: THREE.MathUtils.lerp(4.3, 8.8, Math.random()),
       riseSpeed: THREE.MathUtils.lerp(0.72, 1.25, Math.random()),
       radiusBase: THREE.MathUtils.lerp(FIRE_SPIRAL_RADIUS_MIN, FIRE_SPIRAL_RADIUS_MAX, Math.random()),
-      radiusVariation: THREE.MathUtils.lerp(0.03, 0.11, Math.random()),
+      radiusVariation: THREE.MathUtils.lerp(0.02, 0.07, Math.random()),
       phaseOffset: Math.random(),
       pulsePhase: Math.random() * Math.PI * 2,
       pulseSpeed: THREE.MathUtils.lerp(7.5, 13.5, Math.random()),
       pulseAmplitude: THREE.MathUtils.lerp(0.2, 0.5, Math.random()),
       pulseBase: THREE.MathUtils.lerp(0.24, 0.46, Math.random()),
-      sizeBase: THREE.MathUtils.lerp(FIRE_SPARK_SIZE_MIN * 0.72, FIRE_SPARK_SIZE_MAX * 0.8, Math.random())
+      sizeBase: THREE.MathUtils.lerp(FIRE_SPARK_SIZE_MIN, FIRE_SPARK_SIZE_MAX, Math.random())
     });
 
     temp.position.set(0, -10, 0);
@@ -274,27 +274,27 @@ function applyFireActivation(runtime, elapsed) {
   const pulseHeavy = 0.88 + Math.sin(elapsed * 2.1) * 0.12;
   const pulseUpper = 0.92 + Math.sin(elapsed * 3.4 + 1.2) * 0.16;
 
-  runtime.lowerEmber.material.uniforms.uOpacity.value = 0.33 * lowerActivation * activationEase * pulseHeavy;
-  runtime.lowerEmber.scale.setScalar(0.8 + lowerActivation * 0.24 + pulseHeavy * 0.05);
+  runtime.lowerEmber.material.uniforms.uOpacity.value = 0.22 * lowerActivation * activationEase * pulseHeavy;
+  runtime.lowerEmber.scale.setScalar(0.28 + lowerActivation * 0.1 + pulseHeavy * 0.02);
 
-  runtime.upperEmber.material.uniforms.uOpacity.value = 0.38 * upperActivation * activationEase * pulseUpper;
-  runtime.upperEmber.scale.setScalar(0.4 + upperActivation * 0.2 + pulseUpper * 0.06);
+  runtime.upperEmber.material.uniforms.uOpacity.value = 0.28 * upperActivation * activationEase * pulseUpper;
+  runtime.upperEmber.scale.setScalar(0.18 + upperActivation * 0.09 + pulseUpper * 0.03);
 
-  runtime.sparkMaterial.uniforms.uOpacity.value = 0.26 * sparkActivation * activationEase;
+  runtime.sparkMaterial.uniforms.uOpacity.value = 0.2 * sparkActivation * activationEase;
   const temp = new THREE.Object3D();
   runtime.sparkParams.forEach((spark, index) => {
     const progress = (elapsed * spark.riseSpeed + spark.phaseOffset) % 1;
     const height = FIRE_SPIRAL_CENTER_Y + progress * FIRE_SPIRAL_HEIGHT;
-    const swirl = elapsed * spark.angularSpeed + spark.angleOffset + progress * Math.PI * 5.6;
+    const swirl = elapsed * spark.angularSpeed + spark.angleOffset + progress * Math.PI * 6.2;
     const radiusMod = Math.sin(elapsed * 1.8 + index * 0.31) * spark.radiusVariation;
     const taper = 1 - Math.pow(progress - 0.5, 2) * 1.8;
-    const radius = Math.max(0.04, spark.radiusBase + radiusMod) * THREE.MathUtils.clamp(taper, 0.45, 1);
+    const radius = Math.max(0.025, spark.radiusBase + radiusMod) * THREE.MathUtils.clamp(taper, 0.5, 1);
 
     const x = Math.cos(swirl) * radius;
     const z = Math.sin(swirl) * radius;
     const pulse = spark.pulseBase + Math.sin(elapsed * spark.pulseSpeed + spark.pulsePhase) * spark.pulseAmplitude;
     const intensity = THREE.MathUtils.clamp(pulse, 0.08, 1);
-    const size = spark.sizeBase * (0.68 + intensity * 0.72) * (0.68 + sparkActivation * 0.45);
+    const size = spark.sizeBase * (0.56 + intensity * 0.52) * (0.6 + sparkActivation * 0.32);
 
     temp.position.set(x, height, z);
     temp.scale.setScalar(size);
