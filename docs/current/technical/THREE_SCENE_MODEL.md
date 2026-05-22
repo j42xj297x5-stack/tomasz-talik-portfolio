@@ -19,7 +19,7 @@ Current status note:
 - Monkey GLB now loads successfully in local runtime and hides the central placeholder only on successful load; placeholder fallback remains mandatory.
 - Current visual tuning keeps the monkey centered, camera-facing, and slightly smaller for clean orbit separation.
 - Orbit radius and light intensities were minimally increased to improve readability while preserving the calm dark atmosphere.
-- Orbit node visuals now support optional per-node GLB attachments (AI Guide and Creative AI) while preserving the sphere mesh as the raycast/collider and visual fallback.
+- Orbit node visuals now support optional per-node GLB attachments for all five nodes while preserving the sphere mesh as the raycast/collider and visual fallback.
 - Next scene step may be post-MVP snapshot capture or small interaction polish.
 
 - Vendored Three.js baseline is `r184`; GLTFLoader must also be sourced from `r184` only.
@@ -40,3 +40,4 @@ Current status note:
 - Spotify Digger node can load `/glb/glyph_4.glb` as a visual override; if loader or asset fails, the original orbit sphere remains visible and interactive.
 - Creative AI node can load `/glb/glyph_2.glb` with the same fallback behavior and collider/raycast preservation.
 - Ethics / Life Protection node can load `/glb/glyph_3.glb` with the same fallback behavior and collider/raycast preservation (internal concept note: AI Dharma).
+- Haiku Cosmos node can load `/glb/glyph_5.glb` with the same fallback behavior and collider/raycast preservation.

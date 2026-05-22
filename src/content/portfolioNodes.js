@@ -19,6 +19,8 @@ export const portfolioNodes = [
     id: 'haiku-cosmos',
     title: 'Haiku Cosmos',
     shortLabel: 'Haiku Cosmos',
+    modelPath: '/glb/glyph_5.glb',
+    modelKind: 'glyph',
     draftText: 'Draft narrative for Haiku Cosmos. Final text, visual examples, and process details are still in progress.'
   },
   {
