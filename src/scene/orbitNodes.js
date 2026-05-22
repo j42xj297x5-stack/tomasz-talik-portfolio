@@ -15,8 +15,11 @@ const WOOD_NODE_HOVER_LIGHT_INTENSITY_TARGET = 3.3;
 
 const WOOD_TREE_EFFECT_MODEL_PATH = '/glb/glyph_1-tree.glb';
 const WOOD_TREE_EFFECT_FALLBACK_MODEL_PATH = '/glb/glyph_1.glb';
-const WOOD_TREE_ACTIVATION_DURATION = 3.2;
-const WOOD_TREE_VERTICAL_SOFTNESS = 0.56;
+const WOOD_TREE_REVEAL_DURATION_IN = 3.2;
+const WOOD_TREE_REVEAL_DURATION_OUT = 0.7;
+const WOOD_TREE_REVEAL_RADIUS_MIN = 0.06;
+const WOOD_TREE_REVEAL_RADIUS_MAX = 1.42;
+const WOOD_TREE_REVEAL_SOFTNESS = 0.24;
 const WOOD_TREE_EMISSIVE_INTENSITY_ACTIVE = 1.35;
 const WOOD_TREE_GLOW_INTENSITY = 1.15;
 const WOOD_TREE_PULSE_INTENSITY = 0.09;
@@ -33,10 +36,12 @@ const WOOD_TREE_POINT_LIGHT_INTENSITY = 1.0;
 
 function createWoodTreeEffectRuntime() {
   return {
-    activationProgress: 0,
-    activationTarget: 0,
+    revealProgress: 0,
+    revealTarget: 0,
     treeGroup: null,
     treeMaterials: [],
+    shaderEntries: [],
+    revealCenterLocal: new THREE.Vector3(0, -0.38, 0),
     minY: -0.5,
     maxY: 0.5,
     treePointLight: null,
@@ -48,32 +53,45 @@ function createWoodTreeEffectRuntime() {
 function applyWoodTreeActivation(runtime, elapsed) {
   if (!runtime?.treeGroup || !runtime.treeMaterials.length) return;
 
-  const activationLerp = 1 / Math.max(1, 60 * WOOD_TREE_ACTIVATION_DURATION);
-  runtime.activationProgress = THREE.MathUtils.lerp(runtime.activationProgress, runtime.activationTarget, activationLerp);
-  const easedProgress = THREE.MathUtils.smoothstep(runtime.activationProgress, 0, 1);
+  const revealDuration = runtime.revealTarget > runtime.revealProgress
+    ? WOOD_TREE_REVEAL_DURATION_IN
+    : WOOD_TREE_REVEAL_DURATION_OUT;
+  const revealLerp = 1 / Math.max(1, 60 * revealDuration);
+  runtime.revealProgress = THREE.MathUtils.lerp(runtime.revealProgress, runtime.revealTarget, revealLerp);
+  if (Math.abs(runtime.revealProgress - runtime.revealTarget) < 0.0005) runtime.revealProgress = runtime.revealTarget;
+  const easedProgress = THREE.MathUtils.smoothstep(runtime.revealProgress, 0, 1);
+  const revealRadius = THREE.MathUtils.lerp(WOOD_TREE_REVEAL_RADIUS_MIN, WOOD_TREE_REVEAL_RADIUS_MAX, easedProgress);
 
   const span = Math.max(0.0001, runtime.maxY - runtime.minY);
-  const pulse = runtime.activationProgress > 0.98
+  const pulse = runtime.revealProgress > 0.98 && runtime.revealTarget > 0.5
     ? 1 + Math.sin(elapsed * WOOD_TREE_PULSE_SPEED + runtime.pulsePhase) * WOOD_TREE_PULSE_INTENSITY
     : 1;
 
+  runtime.shaderEntries.forEach((entry) => {
+    entry.uniforms.uRevealCenter.value.copy(runtime.revealCenterLocal);
+    entry.uniforms.uRevealRadius.value = revealRadius;
+    entry.uniforms.uRevealSoftness.value = WOOD_TREE_REVEAL_SOFTNESS;
+  });
+
   runtime.treeMaterials.forEach((entry) => {
     const yRatio = THREE.MathUtils.clamp((entry.centerY - runtime.minY) / span, 0, 1);
-    const branchDelay = 0.08 + (Math.sin(yRatio * 12.7 + runtime.branchDelayPhase) * 0.5 + 0.5) * 0.16;
-    const delayedRevealY = runtime.minY + span * THREE.MathUtils.clamp(easedProgress - branchDelay * yRatio, 0, 1);
-    const softnessRange = WOOD_TREE_VERTICAL_SOFTNESS * span;
-    const fill = THREE.MathUtils.smoothstep(entry.centerY, delayedRevealY - softnessRange, delayedRevealY + softnessRange);
+    const localYReveal = THREE.MathUtils.smoothstep(yRatio, -0.16 + easedProgress * 0.9, 0.2 + easedProgress * 1.08);
+    const fill = THREE.MathUtils.clamp(localYReveal, 0, 1);
     const activeColor = WOOD_TREE_EMISSIVE_ACTIVE_BOTTOM.clone().lerp(WOOD_TREE_EMISSIVE_ACTIVE_TOP, yRatio);
 
     entry.material.color.copy(WOOD_TREE_BASE_COLOR);
     entry.material.emissive.copy(WOOD_TREE_EMISSIVE_BASE).lerp(activeColor, fill);
-    entry.material.emissiveIntensity = (0.04 + fill * WOOD_TREE_EMISSIVE_INTENSITY_ACTIVE * WOOD_TREE_GLOW_INTENSITY) * pulse;
+    entry.material.emissiveIntensity = fill > 0.001
+      ? (0.04 + fill * WOOD_TREE_EMISSIVE_INTENSITY_ACTIVE * WOOD_TREE_GLOW_INTENSITY) * pulse
+      : 0;
   });
 
-  runtime.treeGroup.visible = runtime.activationProgress > 0.001;
+  runtime.treeGroup.visible = runtime.revealProgress > 0.001;
 
   if (runtime.treePointLight) {
-    runtime.treePointLight.intensity = (0.35 + easedProgress * 0.65) * WOOD_TREE_POINT_LIGHT_INTENSITY * pulse;
+    runtime.treePointLight.intensity = easedProgress > 0.001
+      ? easedProgress * WOOD_TREE_POINT_LIGHT_INTENSITY * pulse
+      : 0;
     runtime.treePointLight.visible = runtime.treePointLight.intensity > 0.01;
   }
 }
@@ -137,13 +155,47 @@ async function attachNodeModel(node, item) {
             const minY = bounds.min.y;
             const maxY = bounds.max.y;
             const treeMaterials = [];
+            const shaderEntries = [];
             const center = new THREE.Vector3();
 
             treeModel.traverse((child) => {
               if (!child.isMesh || !child.material) return;
               child.material = child.material.clone();
-              child.material.transparent = false;
+              child.material.transparent = true;
               child.material.depthWrite = true;
+              const shaderUniforms = {
+                uRevealCenter: { value: new THREE.Vector3(0, -0.38, 0) },
+                uRevealRadius: { value: WOOD_TREE_REVEAL_RADIUS_MIN },
+                uRevealSoftness: { value: WOOD_TREE_REVEAL_SOFTNESS }
+              };
+              child.material.onBeforeCompile = (shader) => {
+                shader.uniforms.uRevealCenter = shaderUniforms.uRevealCenter;
+                shader.uniforms.uRevealRadius = shaderUniforms.uRevealRadius;
+                shader.uniforms.uRevealSoftness = shaderUniforms.uRevealSoftness;
+                shader.vertexShader = shader.vertexShader.replace(
+                  '#include <common>',
+                  '#include <common>\nvarying vec3 vRevealLocalPosition;'
+                ).replace(
+                  '#include <begin_vertex>',
+                  '#include <begin_vertex>\nvRevealLocalPosition = transformed;'
+                );
+                shader.fragmentShader = shader.fragmentShader.replace(
+                  '#include <common>',
+                  '#include <common>\nvarying vec3 vRevealLocalPosition;\nuniform vec3 uRevealCenter;\nuniform float uRevealRadius;\nuniform float uRevealSoftness;'
+                ).replace(
+                  '#include <dithering_fragment>',
+                  `float revealDist = distance(vRevealLocalPosition, uRevealCenter);
+float revealMask = 1.0 - smoothstep(uRevealRadius - uRevealSoftness, uRevealRadius + uRevealSoftness, revealDist);
+float yMask = smoothstep(uRevealCenter.y - 0.06, uRevealCenter.y + uRevealRadius + 0.08, vRevealLocalPosition.y);
+float finalRevealMask = clamp(revealMask * (0.55 + 0.45 * yMask), 0.0, 1.0);
+if (finalRevealMask < 0.02) discard;
+diffuseColor.rgb = mix(vec3(0.0), diffuseColor.rgb, finalRevealMask);
+totalEmissiveRadiance *= finalRevealMask;
+#include <dithering_fragment>`
+                );
+              };
+              child.material.needsUpdate = true;
+              shaderEntries.push({ uniforms: shaderUniforms });
               child.getWorldPosition(center);
               treeMaterials.push({ material: child.material, centerY: center.y });
             });
@@ -151,6 +203,7 @@ async function attachNodeModel(node, item) {
             const runtime = node.userData.woodTreeEffectRuntime;
             runtime.treeGroup = treeModel;
             runtime.treeMaterials = treeMaterials;
+            runtime.shaderEntries = shaderEntries;
             runtime.minY = minY;
             runtime.maxY = maxY;
 
@@ -305,7 +358,7 @@ export function setNodeHoverState(node, isHovered) {
       node.userData.hoverPointLight.color.copy(node.material.color);
     }
     if (node.userData.woodTreeEffectRuntime) {
-      node.userData.woodTreeEffectRuntime.activationTarget = 1;
+      node.userData.woodTreeEffectRuntime.revealTarget = 1;
     }
     return;
   }
@@ -313,6 +366,6 @@ export function setNodeHoverState(node, isHovered) {
   node.userData.targetScale = 1;
   node.userData.targetHoverLightIntensity = 0;
   if (node.userData.woodTreeEffectRuntime) {
-    node.userData.woodTreeEffectRuntime.activationTarget = 0;
+    node.userData.woodTreeEffectRuntime.revealTarget = 0;
   }
 }
