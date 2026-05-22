@@ -46,27 +46,31 @@ const hoverLabel = createHoverLabel();
 
 let hoveredNode = null;
 
+function syncHoverState(nextHoveredNode, event = null) {
+  if (hoveredNode && hoveredNode !== nextHoveredNode) {
+    setNodeHoverState(hoveredNode, false);
+  }
+
+  hoveredNode = nextHoveredNode;
+
+  if (hoveredNode) {
+    setNodeHoverState(hoveredNode, true);
+    if (event) {
+      hoverLabel.show(hoveredNode.userData, event.clientX, event.clientY);
+    }
+  } else {
+    hoverLabel.hide();
+  }
+
+  document.body.style.cursor = hoveredNode ? 'pointer' : 'default';
+}
+
 const cameraRig = createCameraRig();
 
 window.addEventListener('pointermove', (event) => {
   cameraRig.onPointerMove(event);
   const hit = pickNode(event, canvas, camera, nodes);
-
-  if (hoveredNode && hoveredNode !== hit) {
-    setNodeHoverState(hoveredNode, false);
-    hoveredNode = null;
-    hoverLabel.hide();
-    document.body.style.cursor = 'default';
-  }
-
-  if (hit) {
-    if (hoveredNode !== hit) {
-      hoveredNode = hit;
-      setNodeHoverState(hoveredNode, true);
-    }
-    hoverLabel.show(hit.userData, event.clientX, event.clientY);
-    document.body.style.cursor = 'pointer';
-  }
+  syncHoverState(hit, event);
 });
 
 window.addEventListener('click', (event) => {
@@ -78,6 +82,11 @@ window.addEventListener('click', (event) => {
 
 window.addEventListener('pointerleave', () => {
   cameraRig.onPointerLeave();
+  syncHoverState(null);
+});
+
+canvas.addEventListener('pointerleave', () => {
+  syncHoverState(null);
 });
 
 window.addEventListener('resize', () => {

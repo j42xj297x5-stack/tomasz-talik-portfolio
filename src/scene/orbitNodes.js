@@ -35,7 +35,7 @@ const WOOD_TREE_POINT_LIGHT_INTENSITY = 1.0;
 const WOOD_TREE_POST_REVEAL_GLOW_INTENSITY = 0.22;
 const WOOD_TREE_POST_REVEAL_PULSE_INTENSITY = 0.04;
 const WOOD_TREE_ORBIT_ENABLED = true;
-const WOOD_TREE_ORBIT_SPEED = 0.48;
+const WOOD_TREE_ORBIT_SPEED = 0.96;
 const WOOD_TREE_ORBIT_BOBBING_AMPLITUDE = 0.04;
 const WOOD_TREE_ORBIT_BOBBING_SPEED = 0.95;
 
@@ -414,7 +414,7 @@ export function setNodeHoverState(node, isHovered) {
   node.userData.targetHoverLightIntensity = 0;
   if (node.userData.woodTreeEffectRuntime) {
     node.userData.woodTreeEffectRuntime.revealTarget = 0;
-    runtime.lastElapsed = elapsed;
+    node.userData.woodTreeEffectRuntime.lastElapsed = null;
   }
 }
 
