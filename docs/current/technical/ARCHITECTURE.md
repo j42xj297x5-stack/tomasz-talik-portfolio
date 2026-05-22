@@ -1,9 +1,9 @@
 # Architecture
 
 ## Current repository state
-- Frontend scaffold initialized with Vite-compatible layout.
-- Runtime entrypoints now exist: `index.html`, `src/main.js`, `src/styles/main.css`.
-- `vendor/three` remains the source of Three.js runtime files.
+- Frontend runtime is active with first Three.js MVP scene.
+- `vendor/three` remains the dependency source for Three.js runtime files.
+- Overlay UX is HTML/CSS for text readability.
 
 ## Current runtime structure
 
@@ -11,6 +11,21 @@
 index.html
 src/
   main.js
+  vendor/
+    three.js
+  scene/
+    createScene.js
+    cameraRig.js
+    lights.js
+    centralObject.js
+    orbitNodes.js
+    particles.js
+    raycaster.js
+  ui/
+    overlay.js
+    hoverLabel.js
+  content/
+    portfolioNodes.js
   styles/
     main.css
 vendor/
@@ -19,31 +34,8 @@ vendor/
     ...
 ```
 
-## Planned near-term runtime structure
-
-```text
-src/
-  main.js
-  scene/
-    createScene.js
-    cameraRig.js
-    lights.js
-    particles.js
-    monkey.js
-    nodes.js
-  ui/
-    overlay.js
-    panels.js
-    navigation.js
-  content/
-    portfolioNodes.js
-    draftTexts.js
-  styles/
-    main.css
-```
-
 ## Architecture principles
-- Keep Three.js scene logic modular (`scene/*`).
-- Keep readable UI as HTML/CSS overlays (`ui/*`, `styles/*`).
-- Keep textual/content payload separate from scene logic (`content/*`).
-- Keep vendored Three.js as the current dependency source until an explicit decision changes it.
+- Keep scene logic modular under `scene/*`.
+- Keep readable UI in HTML/CSS layers (`ui/*` + `styles/*`).
+- Keep content payload separate from behavior (`content/*`).
+- Keep vendored Three.js as current dependency source until a later decision changes it.

@@ -1,39 +1,65 @@
 :root {
   font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
   color: #e6edf3;
-  background: #0b0f14;
+  background: #05070b;
 }
 
-* {
-  box-sizing: border-box;
+* { box-sizing: border-box; }
+html, body { margin: 0; min-height: 100%; }
+body { min-height: 100vh; overflow: hidden; }
+
+.runtime-shell,
+#scene-canvas {
+  width: 100vw;
+  height: 100vh;
+  display: block;
 }
 
-html,
-body {
+.mobile-notice {
+  display: none;
+  position: fixed;
+  left: 50%;
+  bottom: 1rem;
+  transform: translateX(-50%);
   margin: 0;
-  min-height: 100%;
+  padding: 0.6rem 0.85rem;
+  border: 1px solid #364257;
+  border-radius: 10px;
+  background: rgba(8, 11, 17, 0.85);
+  color: #b7c3d4;
+  font-size: 0.8rem;
 }
 
-body {
-  min-height: 100vh;
-  display: grid;
-  place-items: center;
+.hover-label {
+  position: fixed;
+  pointer-events: none;
+  z-index: 15;
+  padding: 0.35rem 0.55rem;
+  border-radius: 8px;
+  border: 1px solid #556380;
+  background: rgba(7, 10, 16, 0.9);
+  font-size: 0.8rem;
+  color: #d7e4f8;
 }
 
-.app-shell {
-  width: min(680px, 92vw);
-  padding: 2rem;
-  border: 1px solid #2f3a48;
-  border-radius: 12px;
-  background: #111720;
+.overlay { position: fixed; inset: 0; z-index: 20; }
+.overlay__backdrop { position: absolute; inset: 0; background: rgba(2, 4, 7, 0.72); }
+.overlay__panel {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: min(520px, calc(100vw - 2rem));
+  transform: translate(-50%, -50%);
+  padding: 1.25rem;
+  border-radius: 14px;
+  border: 1px solid #3b475b;
+  background: #0b111a;
 }
+.overlay__close { float: right; }
+.overlay__status { margin: 0 0 0.6rem; color: #8fa1b9; font-size: 0.82rem; }
+.overlay__title { margin: 0 0 0.7rem; font-size: 1.4rem; }
+.overlay__text { margin: 0; color: #c4d1e2; line-height: 1.45; }
 
-h1 {
-  margin: 0 0 0.75rem;
-  font-size: 1.5rem;
-}
-
-p {
-  margin: 0;
-  color: #9fb0c2;
+@media (max-width: 900px), (hover: none) {
+  .mobile-notice { display: block; }
 }
