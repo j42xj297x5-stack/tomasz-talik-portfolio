@@ -37,5 +37,6 @@ Current status note:
 - Subtle idle drift remains as a secondary additive influence when mouse input is present and as primary fallback when it is not.
 - Desktop/fine-pointer devices get cursor-driven orbit; non-fine/touch pointer contexts keep neutral/idle behavior.
 - AI Guide node can load `/glb/glyph_1.glb` as a visual override; if loader or asset fails, the original orbit sphere remains visible and interactive.
+- Spotify Digger node can load `/glb/glyph_4.glb` as a visual override; if loader or asset fails, the original orbit sphere remains visible and interactive.
 - Creative AI node can load `/glb/glyph_2.glb` with the same fallback behavior and collider/raycast preservation.
 - Ethics / Life Protection node can load `/glb/glyph_3.glb` with the same fallback behavior and collider/raycast preservation (internal concept note: AI Dharma).

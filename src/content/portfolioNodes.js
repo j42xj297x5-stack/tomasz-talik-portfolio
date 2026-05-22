@@ -11,6 +11,8 @@ export const portfolioNodes = [
     id: 'spotify-digger',
     title: 'Spotify Digger',
     shortLabel: 'Spotify Digger',
+    modelPath: '/glb/glyph_4.glb',
+    modelKind: 'glyph',
     draftText: 'Draft narrative for Spotify Digger. Final user story, architecture notes, and outcomes will be added later.'
   },
   {
