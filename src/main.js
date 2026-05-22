@@ -87,10 +87,11 @@ window.addEventListener('resize', () => {
 });
 
 const clock = new THREE.Clock();
+const orbitCenterWorldPosition = new THREE.Vector3();
 
 function tick() {
   const elapsed = clock.getElapsedTime();
-  updateOrbitNodes(nodes, elapsed);
+  updateOrbitNodes(nodes, elapsed, orbitGroup.getWorldPosition(orbitCenterWorldPosition));
   cameraRig.update(camera, elapsed);
   renderer.render(scene, camera);
   requestAnimationFrame(tick);
