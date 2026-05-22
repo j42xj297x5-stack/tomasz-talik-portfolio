@@ -55,3 +55,8 @@ vendor/
 - `src/main.js` forwards pointer movement to the camera rig while preserving existing node raycast hover/click event flow.
 - Orbit node visual overrides currently map to AI Guide (`/glb/glyph_1.glb`), Spotify Digger (`/glb/glyph_4.glb`), Creative AI (`/glb/glyph_2.glb`), Ethics / Life Protection (`/glb/glyph_3.glb`), and Haiku Cosmos (`/glb/glyph_5.glb`) while retaining sphere colliders/fallbacks.
 - Idle drift behavior is retained as a low-amplitude secondary signal to avoid static framing while preventing seasick motion.
+
+## Milestone checkpoint
+- The current architecture now represents the first complete symbolic baseline: fixed central monkey + five GLB glyph orbit nodes.
+- Scene composition remains modular (`scene/*`), content-driven (`content/*`), and UI-readable (`ui/*`).
+- Integration and polish are intentionally decoupled: runtime wiring is complete for this milestone, while final visual tuning remains a follow-up pass.

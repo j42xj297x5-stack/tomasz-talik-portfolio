@@ -41,3 +41,11 @@ Current status note:
 - Creative AI node can load `/glb/glyph_2.glb` with the same fallback behavior and collider/raycast preservation.
 - Ethics / Life Protection node can load `/glb/glyph_3.glb` with the same fallback behavior and collider/raycast preservation (internal concept note: AI Dharma).
 - Haiku Cosmos node can load `/glb/glyph_5.glb` with the same fallback behavior and collider/raycast preservation.
+
+## Milestone checkpoint — central monkey + five glyph orbit nodes
+- First complete symbolic scene baseline is reached: central monkey + five GLB glyph orbit nodes.
+- Monkey runtime asset: `/glb/monkey.glb` (source `public/glb/monkey.glb`).
+- Node glyph runtime assets: `/glb/glyph_1.glb` through `/glb/glyph_5.glb` mapped from content metadata.
+- Mouse-driven camera orbit remains pivot-locked to monkey center without OrbitControls.
+- Hover labels, overlays, and sphere collider fallback behavior remain active.
+- Full checkpoint snapshot recorded at `docs/current/audits/snapshots/2026-05-22_15-38-35__snapshot__monkey-five-glyphs-runtime-baseline.md`.

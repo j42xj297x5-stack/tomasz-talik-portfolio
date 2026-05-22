@@ -27,3 +27,8 @@ Rules in current MVP:
 - `Ethics / Life Protection` may be referenced internally as `AI Dharma`, while user-facing copy remains unchanged.
 - `Haiku Cosmos` now declares a glyph visual model at runtime path `/glb/glyph_5.glb` (expected local binary: `public/glb/glyph_5.glb`).
 - All five portfolio nodes now declare GLB glyph visuals while retaining sphere collider/fallback behavior.
+
+## Milestone content mapping checkpoint
+- All five portfolio nodes now declare GLB glyph visuals via `modelPath` metadata in `portfolioNodes`.
+- Active runtime mapping: AI Guide -> `/glb/glyph_1.glb`, Creative AI -> `/glb/glyph_2.glb`, Ethics / Life Protection -> `/glb/glyph_3.glb`, Spotify Digger -> `/glb/glyph_4.glb`, Haiku Cosmos -> `/glb/glyph_5.glb`.
+- Mapping remains content-driven while renderer preserves sphere fallback/collider behavior for hover/click safety.
