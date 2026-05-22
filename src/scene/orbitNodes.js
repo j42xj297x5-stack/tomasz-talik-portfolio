@@ -104,39 +104,6 @@ function createFireEffectRuntime() {
   };
 }
 
-function createSoftGlowMaterial(color = '#ff9b4d', opacity = 0.5, concentration = 1.4) {
-  return new THREE.ShaderMaterial({
-    transparent: true,
-    depthWrite: false,
-    depthTest: true,
-    blending: THREE.AdditiveBlending,
-    uniforms: {
-      uColor: { value: new THREE.Color(color) },
-      uOpacity: { value: opacity },
-      uConcentration: { value: concentration }
-    },
-    vertexShader: `
-      varying vec3 vNormal;
-      void main() {
-        vNormal = normalize(normalMatrix * normal);
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-      }
-    `,
-    fragmentShader: `
-      uniform vec3 uColor;
-      uniform float uOpacity;
-      uniform float uConcentration;
-      varying vec3 vNormal;
-      void main() {
-        float ndv = max(dot(vNormal, vec3(0.0, 0.0, 1.0)), 0.0);
-        float glow = pow(ndv, uConcentration);
-        float alpha = smoothstep(0.0, 1.0, glow) * uOpacity;
-        gl_FragColor = vec4(uColor * (0.6 + glow * 1.25), alpha);
-      }
-    `
-  });
-}
-
 function createSoftSparkMaterial() {
   return new THREE.ShaderMaterial({
     uniforms: {
@@ -177,13 +144,21 @@ function initializeFireEffect(node, runtime) {
   fireGroup.visible = false;
   fireGroup.userData.isNonInteractiveEffect = true;
 
-  const emberGeometry = new THREE.SphereGeometry(0.5, 24, 18);
-  const lowerEmber = new THREE.Mesh(emberGeometry, createSoftGlowMaterial('#ff8c3a', 0, 1.55));
+  const emberGeometry = new THREE.SphereGeometry(0.5, 18, 14);
+  const lowerEmber = new THREE.Mesh(emberGeometry, new THREE.MeshBasicMaterial({
+    color: '#ff9a43',
+    transparent: true,
+    opacity: 0
+  }));
   lowerEmber.scale.setScalar(FIRE_LOWER_EMBER_RADIUS);
   lowerEmber.position.set(0, -0.19, 0);
   lowerEmber.renderOrder = 3;
 
-  const upperEmber = new THREE.Mesh(emberGeometry, createSoftGlowMaterial('#ffc16a', 0, 1.75));
+  const upperEmber = new THREE.Mesh(emberGeometry, new THREE.MeshBasicMaterial({
+    color: '#ffc06a',
+    transparent: true,
+    opacity: 0
+  }));
   upperEmber.scale.setScalar(FIRE_UPPER_EMBER_RADIUS);
   upperEmber.position.set(0, FIRE_SPIRAL_CENTER_Y + FIRE_SPIRAL_HEIGHT * FIRE_UPPER_EMBER_Y_OFFSET, 0);
   upperEmber.renderOrder = 4;
@@ -294,10 +269,10 @@ function applyFireActivation(runtime, elapsed) {
   const pulseHeavy = 0.88 + Math.sin(elapsed * 2.1) * 0.12;
   const pulseUpper = 0.92 + Math.sin(elapsed * 3.4 + 1.2) * 0.16;
 
-  runtime.lowerEmber.material.uniforms.uOpacity.value = 0.13 * lowerActivation * activationEase * pulseHeavy;
+  runtime.lowerEmber.material.opacity = 0.24 * lowerActivation * activationEase * pulseHeavy;
   runtime.lowerEmber.scale.setScalar(FIRE_LOWER_EMBER_RADIUS * (0.92 + lowerActivation * 0.2 + pulseHeavy * 0.08));
 
-  runtime.upperEmber.material.uniforms.uOpacity.value = 0.1 * upperActivation * activationEase * pulseUpper;
+  runtime.upperEmber.material.opacity = 0.16 * upperActivation * activationEase * pulseUpper;
   runtime.upperEmber.scale.setScalar(FIRE_UPPER_EMBER_RADIUS * (0.88 + upperActivation * 0.38 + pulseUpper * 0.1));
 
   const burstNormalized = THREE.MathUtils.clamp(burstElapsed / FIRE_BURST_DURATION, 0, 1);
