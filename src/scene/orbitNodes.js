@@ -10,152 +10,69 @@ const HOVER_LIGHT_DISTANCE = 5.5;
 const HOVER_LIGHT_DECAY = 2;
 const HOVER_LIGHT_RADIAL_T = 0.7;
 const WOOD_NODE_ID = 'ai-guide';
-const WOOD_AURA_THREAD_COUNT = 7;
-const WOOD_AURA_IDLE_OPACITY = 0.0;
-const WOOD_AURA_HOVER_OPACITY = 0.7;
-const WOOD_AURA_FADE_SPEED = 0.05;
-const WOOD_AURA_SCALE_IDLE = 0.98;
-const WOOD_AURA_SCALE_HOVER = 1.07;
-const WOOD_AURA_SCALE_LERP = 0.05;
-const WOOD_AURA_PULSE_SPEED = 0.78;
-const WOOD_AURA_SWAY_SPEED_BASE = 0.15;
-const WOOD_AURA_SWAY_SPEED_VARIANCE = 0.14;
-const WOOD_AURA_SWAY_AMPLITUDE = 0.045;
-const WOOD_AURA_COLOR_PRIMARY = '#b8ff6a';
-const WOOD_AURA_COLOR_SECONDARY = '#e4ff88';
-const WOOD_AURA_COLOR_ACCENT = '#f4ef9a';
-const WOOD_AURA_REVEAL_SPEED_BASE = 0.033;
-const WOOD_AURA_REVEAL_SPEED_VARIANCE = 0.024;
-const WOOD_AURA_REVEAL_DELAY_VARIANCE = 0.28;
-const WOOD_AURA_HEIGHT_BASE = 1.12;
-const WOOD_AURA_HEIGHT_VARIANCE = 0.52;
-const WOOD_AURA_END_GLOW_BOOST = 0.18;
 const WOOD_NODE_HOVER_LIGHT_COLOR = '#cbff74';
 const WOOD_NODE_HOVER_LIGHT_INTENSITY_TARGET = 3.3;
 
-function createWoodAuraEffect() {
-  const auraGroup = new THREE.Group();
-  const threadRuntimes = [];
+const WOOD_TREE_EFFECT_MODEL_PATH = '/glb/glyph_1-tree.glb';
+const WOOD_TREE_EFFECT_FALLBACK_MODEL_PATH = '/glb/glyph_1.glb';
+const WOOD_TREE_ACTIVATION_DURATION = 1.6;
+const WOOD_TREE_VERTICAL_SOFTNESS = 0.42;
+const WOOD_TREE_EMISSIVE_INTENSITY_ACTIVE = 1.55;
+const WOOD_TREE_GLOW_INTENSITY = 1.3;
+const WOOD_TREE_PULSE_INTENSITY = 0.16;
+const WOOD_TREE_PULSE_SPEED = 1.45;
+const WOOD_TREE_SCALE = 0.95;
+const WOOD_TREE_Y_OFFSET = -0.14;
+const WOOD_TREE_BASE_COLOR = new THREE.Color('#1b2318');
+const WOOD_TREE_EMISSIVE_BASE = new THREE.Color('#0f150d');
+const WOOD_TREE_EMISSIVE_ACTIVE_BOTTOM = new THREE.Color('#2d8f49');
+const WOOD_TREE_EMISSIVE_ACTIVE_TOP = new THREE.Color('#d7aa4e');
+const WOOD_TREE_POINT_LIGHT_COLOR = '#9fce70';
+const WOOD_TREE_POINT_LIGHT_INTENSITY = 1.15;
 
-  for (let index = 0; index < WOOD_AURA_THREAD_COUNT; index += 1) {
-    const spread = (index / Math.max(1, WOOD_AURA_THREAD_COUNT - 1) - 0.5) * 0.36;
-    const sideDirection = index % 2 === 0 ? 1 : -1;
-    const startHeight = -0.17 + (index % 3) * 0.02;
-    const topHeight = 0.29 + (index % 3) * 0.07;
-    const points = [
-      new THREE.Vector3(spread * 0.25, startHeight, spread * 0.22),
-      new THREE.Vector3(spread * 0.45 + sideDirection * 0.03, -0.03 + (index % 2) * 0.03, spread * 0.38),
-      new THREE.Vector3(spread * 0.72 + sideDirection * 0.06, 0.11 + (index % 4) * 0.03, spread * 0.54),
-      new THREE.Vector3(spread + sideDirection * 0.1, topHeight, spread * 0.75)
-    ];
 
-    const curve = new THREE.CatmullRomCurve3(points);
-    const geometry = new THREE.TubeGeometry(curve, 18, 0.007 + (index % 3) * 0.0015, 5, false);
-    const color = index % 5 === 0 ? WOOD_AURA_COLOR_ACCENT : index % 2 === 0 ? WOOD_AURA_COLOR_PRIMARY : WOOD_AURA_COLOR_SECONDARY;
-    const material = new THREE.MeshBasicMaterial({
-      color,
-      transparent: true,
-      opacity: 0,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false
-    });
-
-    const thread = new THREE.Mesh(geometry, material);
-    thread.rotation.y = spread * 0.6;
-    thread.scale.y = 0.01;
-    auraGroup.add(thread);
-    threadRuntimes.push({
-      mesh: thread,
-      material,
-      growthProgress: 0,
-      growthSpeed: WOOD_AURA_REVEAL_SPEED_BASE + Math.random() * WOOD_AURA_REVEAL_SPEED_VARIANCE,
-      revealDelay: Math.random() * WOOD_AURA_REVEAL_DELAY_VARIANCE,
-      maxHeight: WOOD_AURA_HEIGHT_BASE + Math.random() * WOOD_AURA_HEIGHT_VARIANCE,
-      swayPhase: Math.random() * Math.PI * 2,
-      swaySpeed: WOOD_AURA_SWAY_SPEED_BASE + Math.random() * WOOD_AURA_SWAY_SPEED_VARIANCE,
-      swayAmplitude: 0.01 + Math.random() * 0.018,
-      baseRotationY: thread.rotation.y,
-      isBranch: false
-    });
-
-    if (index % 3 === 0) {
-      const branchCurve = new THREE.CatmullRomCurve3([
-        points[1].clone(),
-        points[2].clone().add(new THREE.Vector3(sideDirection * 0.04, 0.04, sideDirection * 0.01)),
-        points[2].clone().add(new THREE.Vector3(sideDirection * 0.09, 0.1, sideDirection * 0.04))
-      ]);
-      const branchGeometry = new THREE.TubeGeometry(branchCurve, 10, 0.0045, 4, false);
-      const branchMaterial = material.clone();
-      const branch = new THREE.Mesh(branchGeometry, branchMaterial);
-      branch.scale.y = 0.01;
-      auraGroup.add(branch);
-      threadRuntimes.push({
-        mesh: branch,
-        material: branchMaterial,
-        growthProgress: 0,
-        growthSpeed: WOOD_AURA_REVEAL_SPEED_BASE * 0.82 + Math.random() * WOOD_AURA_REVEAL_SPEED_VARIANCE,
-        revealDelay: 0.06 + Math.random() * (WOOD_AURA_REVEAL_DELAY_VARIANCE + 0.12),
-        maxHeight: (WOOD_AURA_HEIGHT_BASE - 0.24) + Math.random() * (WOOD_AURA_HEIGHT_VARIANCE * 0.7),
-        swayPhase: Math.random() * Math.PI * 2,
-        swaySpeed: WOOD_AURA_SWAY_SPEED_BASE + Math.random() * WOOD_AURA_SWAY_SPEED_VARIANCE,
-        swayAmplitude: 0.006 + Math.random() * 0.01,
-        baseRotationY: branch.rotation.y,
-        isBranch: true
-      });
-    }
-  }
-
-  auraGroup.position.set(0, 0.01, 0);
-  auraGroup.scale.setScalar(WOOD_AURA_SCALE_IDLE);
-
+function createWoodTreeEffectRuntime() {
   return {
-    auraGroup,
-    threadRuntimes,
-    auraCurrentOpacity: WOOD_AURA_IDLE_OPACITY,
-    auraTargetOpacity: WOOD_AURA_IDLE_OPACITY,
-    auraCurrentScale: WOOD_AURA_SCALE_IDLE,
-    auraTargetScale: WOOD_AURA_SCALE_IDLE,
-    auraPulsePhase: Math.random() * Math.PI * 2
+    activationProgress: 0,
+    activationTarget: 0,
+    treeGroup: null,
+    treeMaterials: [],
+    minY: -0.5,
+    maxY: 0.5,
+    treePointLight: null,
+    pulsePhase: Math.random() * Math.PI * 2
   };
 }
 
-function updateWoodAuraEffect(runtime, elapsed) {
-  runtime.auraCurrentOpacity = THREE.MathUtils.lerp(
-    runtime.auraCurrentOpacity,
-    runtime.auraTargetOpacity,
-    WOOD_AURA_FADE_SPEED
-  );
-  runtime.auraCurrentScale = THREE.MathUtils.lerp(runtime.auraCurrentScale, runtime.auraTargetScale, WOOD_AURA_SCALE_LERP);
+function applyWoodTreeActivation(runtime, elapsed) {
+  if (!runtime?.treeGroup || !runtime.treeMaterials.length) return;
 
-  const pulse = 0.9 + Math.sin(elapsed * WOOD_AURA_PULSE_SPEED + runtime.auraPulsePhase) * 0.1;
-  const auraOpacity = runtime.auraCurrentOpacity * pulse;
-  const isRevealing = runtime.auraTargetOpacity > runtime.auraCurrentOpacity;
-  runtime.threadRuntimes.forEach((threadRuntime) => {
-    const revealTarget = isRevealing ? 1 : 0;
-    const delayedTarget = isRevealing
-      ? THREE.MathUtils.smoothstep(runtime.auraCurrentOpacity, threadRuntime.revealDelay, 1)
-      : revealTarget;
-    threadRuntime.growthProgress = THREE.MathUtils.lerp(
-      threadRuntime.growthProgress,
-      delayedTarget,
-      threadRuntime.growthSpeed
-    );
+  const activationLerp = 1 / Math.max(1, 60 * WOOD_TREE_ACTIVATION_DURATION);
+  runtime.activationProgress = THREE.MathUtils.lerp(runtime.activationProgress, runtime.activationTarget, activationLerp);
 
-    const easedGrowth = THREE.MathUtils.smootherstep(threadRuntime.growthProgress, 0, 1);
-    threadRuntime.mesh.scale.y = Math.max(0.01, easedGrowth * threadRuntime.maxHeight);
+  const span = Math.max(0.0001, runtime.maxY - runtime.minY);
+  const revealY = runtime.minY + span * runtime.activationProgress;
+  const pulse = runtime.activationProgress > 0.98
+    ? 1 + Math.sin(elapsed * WOOD_TREE_PULSE_SPEED + runtime.pulsePhase) * WOOD_TREE_PULSE_INTENSITY
+    : 1;
 
-    const tipBoost = threadRuntime.isBranch ? WOOD_AURA_END_GLOW_BOOST * 0.65 : WOOD_AURA_END_GLOW_BOOST;
-    threadRuntime.material.opacity = auraOpacity * (0.78 + easedGrowth * tipBoost);
+  runtime.treeMaterials.forEach((entry) => {
+    const yRatio = (entry.centerY - runtime.minY) / span;
+    const softnessRange = WOOD_TREE_VERTICAL_SOFTNESS * span;
+    const fill = THREE.MathUtils.smoothstep(entry.centerY, revealY - softnessRange, revealY + softnessRange);
+    const activeColor = WOOD_TREE_EMISSIVE_ACTIVE_BOTTOM.clone().lerp(WOOD_TREE_EMISSIVE_ACTIVE_TOP, yRatio);
 
-    threadRuntime.mesh.rotation.y =
-      threadRuntime.baseRotationY +
-      Math.sin(elapsed * threadRuntime.swaySpeed + threadRuntime.swayPhase) * threadRuntime.swayAmplitude;
+    entry.material.color.copy(WOOD_TREE_BASE_COLOR);
+    entry.material.emissive.copy(WOOD_TREE_EMISSIVE_BASE).lerp(activeColor, fill);
+    entry.material.emissiveIntensity = (0.05 + fill * WOOD_TREE_EMISSIVE_INTENSITY_ACTIVE * WOOD_TREE_GLOW_INTENSITY) * pulse;
   });
 
-  runtime.auraGroup.scale.setScalar(runtime.auraCurrentScale);
-  runtime.auraGroup.rotation.y = Math.sin(elapsed * WOOD_AURA_SWAY_SPEED_BASE + runtime.auraPulsePhase * 0.5) * WOOD_AURA_SWAY_AMPLITUDE;
-  runtime.auraGroup.rotation.z = Math.sin(elapsed * (WOOD_AURA_SWAY_SPEED_BASE * 0.8) + runtime.auraPulsePhase) * (WOOD_AURA_SWAY_AMPLITUDE * 0.55);
-  runtime.auraGroup.visible = auraOpacity > 0.002;
+  runtime.treeGroup.visible = runtime.activationProgress > 0.001;
+
+  if (runtime.treePointLight) {
+    runtime.treePointLight.intensity = runtime.activationProgress * WOOD_TREE_POINT_LIGHT_INTENSITY * pulse;
+    runtime.treePointLight.visible = runtime.treePointLight.intensity > 0.01;
+  }
 }
 
 async function resolveGLTFLoader() {
@@ -202,6 +119,63 @@ async function attachNodeModel(node, item) {
       node.add(model);
       node.material.visible = false;
       node.userData.visualModel = model;
+
+      if (item.id === WOOD_NODE_ID && node.userData.woodTreeEffectRuntime) {
+        const treeLoader = new GLTFLoader();
+        const attachTreeEffectModel = (path) => treeLoader.load(
+          path,
+          (treeGltf) => {
+            const treeModel = treeGltf.scene;
+            fitModelToNode(treeModel);
+            treeModel.scale.multiplyScalar(WOOD_TREE_SCALE);
+            treeModel.position.y += WOOD_TREE_Y_OFFSET;
+
+            const bounds = new THREE.Box3().setFromObject(treeModel);
+            const minY = bounds.min.y;
+            const maxY = bounds.max.y;
+            const treeMaterials = [];
+            const center = new THREE.Vector3();
+
+            treeModel.traverse((child) => {
+              if (!child.isMesh || !child.material) return;
+              child.material = child.material.clone();
+              child.material.transparent = false;
+              child.material.depthWrite = true;
+              child.getWorldPosition(center);
+              treeMaterials.push({ material: child.material, centerY: center.y });
+            });
+
+            const runtime = node.userData.woodTreeEffectRuntime;
+            runtime.treeGroup = treeModel;
+            runtime.treeMaterials = treeMaterials;
+            runtime.minY = minY;
+            runtime.maxY = maxY;
+
+            const treePointLight = new THREE.PointLight(WOOD_TREE_POINT_LIGHT_COLOR, 0, 2.4, 2);
+            treePointLight.position.set(0, -0.06, 0);
+            treePointLight.visible = false;
+            treeModel.add(treePointLight);
+            runtime.treePointLight = treePointLight;
+
+            treeModel.visible = false;
+            node.add(treeModel);
+            console.info(`[orbitNodes] Loaded wood tree effect model for ${item.id} from ${path}.`);
+          },
+          undefined,
+          (error) => {
+            if (path !== WOOD_TREE_EFFECT_FALLBACK_MODEL_PATH) {
+              console.warn(`[orbitNodes] Failed to load wood tree effect model for ${item.id} at ${path}. Trying fallback ${WOOD_TREE_EFFECT_FALLBACK_MODEL_PATH}.`, error);
+              attachTreeEffectModel(WOOD_TREE_EFFECT_FALLBACK_MODEL_PATH);
+              return;
+            }
+
+            console.warn(`[orbitNodes] Failed to load fallback wood tree effect model for ${item.id}. Wood tree visual effect disabled safely.`, error);
+          }
+        );
+
+        attachTreeEffectModel(WOOD_TREE_EFFECT_MODEL_PATH);
+      }
+
       console.info(`[orbitNodes] Loaded node model for ${item.id} from ${item.modelPath}.`);
     },
     undefined,
@@ -280,18 +254,17 @@ export function createOrbitNodes(nodeContent) {
         node.material.emissive.set(node.userData.baseEmissive).lerp(new THREE.Color(node.userData.hoverEmissive), hoverBlend);
         node.material.emissiveIntensity = THREE.MathUtils.lerp(0.45, 0.95, hoverBlend);
 
-        if (node.userData.woodAuraRuntime) {
-          updateWoodAuraEffect(node.userData.woodAuraRuntime, elapsed);
+        if (node.userData.woodTreeEffectRuntime) {
+          applyWoodTreeActivation(node.userData.woodTreeEffectRuntime, elapsed);
         }
       }
     };
 
     if (item.id === WOOD_NODE_ID) {
       try {
-        node.userData.woodAuraRuntime = createWoodAuraEffect();
-        node.add(node.userData.woodAuraRuntime.auraGroup);
+        node.userData.woodTreeEffectRuntime = createWoodTreeEffectRuntime();
       } catch (error) {
-        console.warn('[orbitNodes] Failed to initialize wood aura effect for AI Guide node.', error);
+        console.warn('[orbitNodes] Failed to initialize wood tree effect runtime for AI Guide node.', error);
       }
     }
 
@@ -328,17 +301,15 @@ export function setNodeHoverState(node, isHovered) {
       node.userData.targetHoverLightIntensity = HOVER_LIGHT_INTENSITY_TARGET;
       node.userData.hoverPointLight.color.copy(node.material.color);
     }
-    if (node.userData.woodAuraRuntime) {
-      node.userData.woodAuraRuntime.auraTargetOpacity = WOOD_AURA_HOVER_OPACITY;
-      node.userData.woodAuraRuntime.auraTargetScale = WOOD_AURA_SCALE_HOVER;
+    if (node.userData.woodTreeEffectRuntime) {
+      node.userData.woodTreeEffectRuntime.activationTarget = 1;
     }
     return;
   }
 
   node.userData.targetScale = 1;
   node.userData.targetHoverLightIntensity = 0;
-  if (node.userData.woodAuraRuntime) {
-    node.userData.woodAuraRuntime.auraTargetOpacity = WOOD_AURA_IDLE_OPACITY;
-    node.userData.woodAuraRuntime.auraTargetScale = WOOD_AURA_SCALE_IDLE;
+  if (node.userData.woodTreeEffectRuntime) {
+    node.userData.woodTreeEffectRuntime.activationTarget = 0;
   }
 }
