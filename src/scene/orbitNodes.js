@@ -10,8 +10,20 @@ const HOVER_LIGHT_DISTANCE = 5.5;
 const HOVER_LIGHT_DECAY = 2;
 const HOVER_LIGHT_RADIAL_T = 0.7;
 const WOOD_NODE_ID = 'ai-guide';
+const FIRE_NODE_ID = 'creative-ai';
 const WOOD_NODE_HOVER_LIGHT_COLOR = '#cbff74';
 const WOOD_NODE_HOVER_LIGHT_INTENSITY_TARGET = 3.3;
+const FIRE_NODE_HOVER_LIGHT_COLOR = '#ff9f4f';
+const FIRE_NODE_HOVER_LIGHT_INTENSITY_TARGET = 3.15;
+const FIRE_EFFECT_FADE_IN_DURATION = 0.24;
+const FIRE_EFFECT_FADE_OUT_DURATION = 0.2;
+const FIRE_SPARK_COUNT = 100;
+const FIRE_SPIRAL_HEIGHT = 1.35;
+const FIRE_SPIRAL_CENTER_Y = 0.02;
+const FIRE_SPIRAL_RADIUS_MIN = 0.08;
+const FIRE_SPIRAL_RADIUS_MAX = 0.34;
+const FIRE_SPARK_SIZE_MIN = 0.034;
+const FIRE_SPARK_SIZE_MAX = 0.072;
 
 const WOOD_TREE_EFFECT_MODEL_PATH = '/glb/glyph_1-tree.glb';
 const WOOD_TREE_EFFECT_FALLBACK_MODEL_PATH = '/glb/glyph_1.glb';
@@ -60,6 +72,158 @@ function createWoodTreeEffectRuntime() {
     orbitCenter: new THREE.Vector3(0, 0, 0),
     lastElapsed: null
   };
+}
+
+function createFireEffectRuntime() {
+  return {
+    group: null,
+    lowerEmber: null,
+    upperEmber: null,
+    sparkMesh: null,
+    sparkMaterial: null,
+    sparkParams: [],
+    activation: 0,
+    targetActivation: 0,
+    initialized: false
+  };
+}
+
+function createSoftGlowSpriteMaterial(color = '#ff9b4d', opacity = 0.5) {
+  return new THREE.SpriteMaterial({
+    color: new THREE.Color(color),
+    transparent: true,
+    opacity,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+    depthTest: true
+  });
+}
+
+function initializeFireEffect(node, runtime) {
+  if (!runtime || runtime.initialized) return;
+
+  const fireGroup = new THREE.Group();
+  fireGroup.visible = false;
+  fireGroup.userData.isNonInteractiveEffect = true;
+
+  const lowerEmber = new THREE.Sprite(createSoftGlowSpriteMaterial('#ff8c3a', 0));
+  lowerEmber.scale.setScalar(0.9);
+  lowerEmber.position.set(0, -0.2, 0);
+  lowerEmber.renderOrder = 3;
+
+  const upperEmber = new THREE.Sprite(createSoftGlowSpriteMaterial('#ffc16a', 0));
+  upperEmber.scale.setScalar(0.58);
+  upperEmber.position.set(0, FIRE_SPIRAL_CENTER_Y + FIRE_SPIRAL_HEIGHT * 0.8, 0);
+  upperEmber.renderOrder = 4;
+
+  const sparkGeometry = new THREE.PlaneGeometry(1, 1);
+  const sparkMaterial = new THREE.MeshBasicMaterial({
+    color: '#ffad62',
+    transparent: true,
+    opacity: 0,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+    depthTest: true
+  });
+  const sparkMesh = new THREE.InstancedMesh(sparkGeometry, sparkMaterial, FIRE_SPARK_COUNT);
+  sparkMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+  sparkMesh.frustumCulled = false;
+  sparkMesh.renderOrder = 5;
+  sparkMesh.userData.isNonInteractiveEffect = true;
+
+  const temp = new THREE.Object3D();
+  const sparkParams = [];
+  for (let i = 0; i < FIRE_SPARK_COUNT; i += 1) {
+    sparkParams.push({
+      angleOffset: Math.random() * Math.PI * 2,
+      angularSpeed: THREE.MathUtils.lerp(4.3, 8.8, Math.random()),
+      riseSpeed: THREE.MathUtils.lerp(0.72, 1.25, Math.random()),
+      radiusBase: THREE.MathUtils.lerp(FIRE_SPIRAL_RADIUS_MIN, FIRE_SPIRAL_RADIUS_MAX, Math.random()),
+      radiusVariation: THREE.MathUtils.lerp(0.03, 0.11, Math.random()),
+      phaseOffset: Math.random(),
+      pulsePhase: Math.random() * Math.PI * 2,
+      pulseSpeed: THREE.MathUtils.lerp(7.5, 13.5, Math.random()),
+      pulseAmplitude: THREE.MathUtils.lerp(0.2, 0.5, Math.random()),
+      pulseBase: THREE.MathUtils.lerp(0.24, 0.46, Math.random()),
+      sizeBase: THREE.MathUtils.lerp(FIRE_SPARK_SIZE_MIN, FIRE_SPARK_SIZE_MAX, Math.random())
+    });
+
+    temp.position.set(0, -10, 0);
+    temp.scale.setScalar(0.0001);
+    temp.rotation.set(0, 0, 0);
+    temp.updateMatrix();
+    sparkMesh.setMatrixAt(i, temp.matrix);
+  }
+  sparkMesh.instanceMatrix.needsUpdate = true;
+
+  [lowerEmber, upperEmber, sparkMesh].forEach((object) => {
+    object.traverse?.((child) => {
+      if (!child.isMesh && !child.isSprite) return;
+      child.raycast = () => null;
+    });
+    object.raycast = () => null;
+  });
+
+  fireGroup.add(lowerEmber);
+  fireGroup.add(upperEmber);
+  fireGroup.add(sparkMesh);
+  node.add(fireGroup);
+
+  runtime.group = fireGroup;
+  runtime.lowerEmber = lowerEmber;
+  runtime.upperEmber = upperEmber;
+  runtime.sparkMesh = sparkMesh;
+  runtime.sparkMaterial = sparkMaterial;
+  runtime.sparkParams = sparkParams;
+  runtime.initialized = true;
+}
+
+function applyFireActivation(runtime, elapsed) {
+  if (!runtime?.initialized) return;
+  const fadeDuration = runtime.targetActivation > runtime.activation
+    ? FIRE_EFFECT_FADE_IN_DURATION
+    : FIRE_EFFECT_FADE_OUT_DURATION;
+  const lerp = 1 / Math.max(1, 60 * fadeDuration);
+  runtime.activation = THREE.MathUtils.lerp(runtime.activation, runtime.targetActivation, lerp);
+  if (Math.abs(runtime.activation - runtime.targetActivation) < 0.001) runtime.activation = runtime.targetActivation;
+
+  const activation = THREE.MathUtils.clamp(runtime.activation, 0, 1);
+  const active = activation > 0.001;
+  runtime.group.visible = active;
+  if (!active) return;
+
+  const activationEase = THREE.MathUtils.smoothstep(activation, 0, 1);
+  const pulseHeavy = 0.88 + Math.sin(elapsed * 2.1) * 0.12;
+  const pulseUpper = 0.92 + Math.sin(elapsed * 3.4 + 1.2) * 0.16;
+
+  runtime.lowerEmber.material.opacity = 0.28 * activationEase * pulseHeavy;
+  runtime.lowerEmber.scale.setScalar(0.84 + activationEase * 0.22 + pulseHeavy * 0.06);
+
+  runtime.upperEmber.material.opacity = 0.34 * activationEase * pulseUpper;
+  runtime.upperEmber.scale.setScalar(0.46 + activationEase * 0.2 + pulseUpper * 0.08);
+
+  runtime.sparkMaterial.opacity = 0.22 * activationEase;
+  const temp = new THREE.Object3D();
+  runtime.sparkParams.forEach((spark, index) => {
+    const progress = (elapsed * spark.riseSpeed + spark.phaseOffset) % 1;
+    const height = FIRE_SPIRAL_CENTER_Y + progress * FIRE_SPIRAL_HEIGHT;
+    const swirl = elapsed * spark.angularSpeed + spark.angleOffset + progress * Math.PI * 5.6;
+    const radiusMod = Math.sin(elapsed * 1.8 + index * 0.31) * spark.radiusVariation;
+    const taper = 1 - Math.pow(progress - 0.5, 2) * 1.8;
+    const radius = Math.max(0.04, spark.radiusBase + radiusMod) * THREE.MathUtils.clamp(taper, 0.45, 1);
+
+    const x = Math.cos(swirl) * radius;
+    const z = Math.sin(swirl) * radius;
+    const pulse = spark.pulseBase + Math.sin(elapsed * spark.pulseSpeed + spark.pulsePhase) * spark.pulseAmplitude;
+    const intensity = THREE.MathUtils.clamp(pulse, 0.08, 1);
+    const size = spark.sizeBase * (0.72 + intensity * 0.9) * (0.68 + activationEase * 0.5);
+
+    temp.position.set(x, height, z);
+    temp.scale.setScalar(size);
+    temp.updateMatrix();
+    runtime.sparkMesh.setMatrixAt(index, temp.matrix);
+  });
+  runtime.sparkMesh.instanceMatrix.needsUpdate = true;
 }
 
 function applyWoodTreeActivation(runtime, elapsed) {
@@ -360,6 +524,9 @@ export function createOrbitNodes(nodeContent) {
         if (node.userData.woodTreeEffectRuntime) {
           applyWoodTreeActivation(node.userData.woodTreeEffectRuntime, elapsed);
         }
+        if (node.userData.fireEffectRuntime) {
+          applyFireActivation(node.userData.fireEffectRuntime, elapsed);
+        }
       }
     };
 
@@ -369,6 +536,10 @@ export function createOrbitNodes(nodeContent) {
       } catch (error) {
         console.warn('[orbitNodes] Failed to initialize wood tree effect runtime for AI Guide node.', error);
       }
+    }
+    if (item.id === FIRE_NODE_ID) {
+      node.userData.fireEffectRuntime = createFireEffectRuntime();
+      initializeFireEffect(node, node.userData.fireEffectRuntime);
     }
 
     nodes.push(node);
@@ -400,12 +571,18 @@ export function setNodeHoverState(node, isHovered) {
     if (node.userData.id === WOOD_NODE_ID) {
       node.userData.targetHoverLightIntensity = WOOD_NODE_HOVER_LIGHT_INTENSITY_TARGET;
       node.userData.hoverPointLight.color.set(WOOD_NODE_HOVER_LIGHT_COLOR);
+    } else if (node.userData.id === FIRE_NODE_ID) {
+      node.userData.targetHoverLightIntensity = FIRE_NODE_HOVER_LIGHT_INTENSITY_TARGET;
+      node.userData.hoverPointLight.color.set(FIRE_NODE_HOVER_LIGHT_COLOR);
     } else {
       node.userData.targetHoverLightIntensity = HOVER_LIGHT_INTENSITY_TARGET;
       node.userData.hoverPointLight.color.copy(node.material.color);
     }
     if (node.userData.woodTreeEffectRuntime) {
       node.userData.woodTreeEffectRuntime.revealTarget = 1;
+    }
+    if (node.userData.fireEffectRuntime) {
+      node.userData.fireEffectRuntime.targetActivation = 1;
     }
     return;
   }
@@ -416,5 +593,7 @@ export function setNodeHoverState(node, isHovered) {
     node.userData.woodTreeEffectRuntime.revealTarget = 0;
     node.userData.woodTreeEffectRuntime.lastElapsed = null;
   }
+  if (node.userData.fireEffectRuntime) {
+    node.userData.fireEffectRuntime.targetActivation = 0;
+  }
 }
-
