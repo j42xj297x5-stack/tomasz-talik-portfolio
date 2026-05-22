@@ -3,6 +3,8 @@ export const portfolioNodes = [
     id: 'ai-guide',
     title: 'AI Guide',
     shortLabel: 'AI Guide',
+    modelPath: '/glb/glyph_1.glb',
+    modelKind: 'glyph',
     draftText: 'Draft narrative for the AI Guide gate. Final case-study copy and metrics are pending.'
   },
   {
