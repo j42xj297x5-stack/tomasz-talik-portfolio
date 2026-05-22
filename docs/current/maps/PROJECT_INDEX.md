@@ -21,6 +21,7 @@
 - `docs/current/decisions/DECISION_LOG.md` — includes MVP scene runtime decision update.
 
 ## Runtime files
+- `src/scene/monkeyModel.js` — async GLB loading orchestration with placeholder fallback safety.
 - `index.html` — Vite entry HTML.
 - `src/main.js` — runtime bootstrap, scene wiring, animation loop.
 - `src/vendor/three.js` — bridge to vendored Three.js module.

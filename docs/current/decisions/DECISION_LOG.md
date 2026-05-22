@@ -29,3 +29,11 @@
 4. Node content is centralized in `src/content/portfolioNodes.js` and intentionally remains draft.
 5. Added `src/vendor/three.js` re-export bridge to keep module imports clean while preserving vendored dependency policy.
 6. Next step: visual refinement, transitions, and replacement of placeholder center geometry with meditating monkey GLB asset.
+
+
+## 2026-05-22 — Central monkey GLB runtime integration path
+
+1. Runtime integration targets monkey GLB at `/glb/monkey.glb` (expected source: `public/glb/monkey.glb`, managed manually outside Codex PR flow).
+2. Placeholder center object remains mandatory fallback and is hidden only after a successful GLB load callback.
+3. GLTFLoader lookup is constrained to vendored Three.js path `vendor/three/examples/jsm/loaders/GLTFLoader.js`; npm `three` remains intentionally unused.
+4. If vendored GLTFLoader is missing, runtime logs a warning and continues with placeholder-only rendering.
