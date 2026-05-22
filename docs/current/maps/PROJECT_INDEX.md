@@ -16,6 +16,7 @@
 - `docs/current/technical/THREE_SCENE_MODEL.md` — scene modules and MVP behavior.
 - `docs/current/technical/CONTENT_MODEL.md` — content schema and draft gate text model.
 - `docs/current/technical/DEPLOYMENT_MODEL.md` — deployment direction.
+- `docs/current/technical/GLYPH_HOVER_EFFECTS_MODEL.md` — working canon for five-glyph hover-only effect language, symbolism, and rollout order.
 
 ## Decisions
 - `docs/current/decisions/DECISION_LOG.md` — includes MVP scene runtime decision update.

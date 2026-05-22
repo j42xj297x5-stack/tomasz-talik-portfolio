@@ -109,3 +109,10 @@
 3. Fallback/collider model remains required: monkey placeholder fallback and per-node sphere collider/fallback are non-optional runtime safety behavior.
 4. Final visual polish (scale/orientation/lighting/composition refinement) remains intentionally separate from integration completion.
 5. Snapshot recorded: `docs/current/audits/snapshots/2026-05-22_15-38-35__snapshot__monkey-five-glyphs-runtime-baseline.md`.
+
+
+## 2026-05-22 — Canonical five-glyph hover effects model (documentation decision)
+
+1. Final element mapping for the five glyphs is fixed from current visual appearance and existing glyph-to-node assignments (glyph_1/AI Guide = Wood, glyph_2/Creative AI = Fire, glyph_3/Ethics = Earth, glyph_4/Spotify Digger = Metal, glyph_5/Haiku Cosmos = Water).
+2. `docs/current/technical/GLYPH_HOVER_EFFECTS_MODEL.md` is established as the active working canon for hover-only effect language, symbolism, consistency rules, and implementation order.
+3. This step is documentation-only and does not modify runtime, scene architecture, shader stack, interaction baseline, or node naming/mapping.

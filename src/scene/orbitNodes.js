@@ -9,6 +9,99 @@ const HOVER_LIGHT_INTENSITY_LERP = 0.08;
 const HOVER_LIGHT_DISTANCE = 5.5;
 const HOVER_LIGHT_DECAY = 2;
 const HOVER_LIGHT_RADIAL_T = 0.7;
+const WOOD_NODE_ID = 'ai-guide';
+const WOOD_AURA_THREAD_COUNT = 7;
+const WOOD_AURA_IDLE_OPACITY = 0.0;
+const WOOD_AURA_HOVER_OPACITY = 0.58;
+const WOOD_AURA_FADE_SPEED = 0.09;
+const WOOD_AURA_SCALE_IDLE = 0.98;
+const WOOD_AURA_SCALE_HOVER = 1.06;
+const WOOD_AURA_SCALE_LERP = 0.08;
+const WOOD_AURA_PULSE_SPEED = 1.05;
+const WOOD_AURA_SWAY_SPEED = 0.18;
+const WOOD_AURA_SWAY_AMPLITUDE = 0.045;
+const WOOD_AURA_COLOR_PRIMARY = '#9dff6a';
+const WOOD_AURA_COLOR_SECONDARY = '#d7ff6a';
+const WOOD_AURA_COLOR_ACCENT = '#f3e86a';
+
+function createWoodAuraEffect() {
+  const auraGroup = new THREE.Group();
+  const threadMaterials = [];
+
+  for (let index = 0; index < WOOD_AURA_THREAD_COUNT; index += 1) {
+    const spread = (index / Math.max(1, WOOD_AURA_THREAD_COUNT - 1) - 0.5) * 0.36;
+    const sideDirection = index % 2 === 0 ? 1 : -1;
+    const startHeight = -0.17 + (index % 3) * 0.02;
+    const points = [
+      new THREE.Vector3(spread * 0.25, startHeight, spread * 0.22),
+      new THREE.Vector3(spread * 0.45 + sideDirection * 0.03, -0.03 + (index % 2) * 0.03, spread * 0.38),
+      new THREE.Vector3(spread * 0.72 + sideDirection * 0.06, 0.11 + (index % 4) * 0.03, spread * 0.54),
+      new THREE.Vector3(spread + sideDirection * 0.1, 0.26 + (index % 3) * 0.05, spread * 0.75)
+    ];
+
+    const curve = new THREE.CatmullRomCurve3(points);
+    const geometry = new THREE.TubeGeometry(curve, 18, 0.007 + (index % 3) * 0.0015, 5, false);
+    const color = index % 5 === 0 ? WOOD_AURA_COLOR_ACCENT : index % 2 === 0 ? WOOD_AURA_COLOR_PRIMARY : WOOD_AURA_COLOR_SECONDARY;
+    const material = new THREE.MeshBasicMaterial({
+      color,
+      transparent: true,
+      opacity: 0,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false
+    });
+
+    const thread = new THREE.Mesh(geometry, material);
+    thread.rotation.y = spread * 0.6;
+    auraGroup.add(thread);
+    threadMaterials.push(material);
+
+    if (index % 3 === 0) {
+      const branchCurve = new THREE.CatmullRomCurve3([
+        points[1].clone(),
+        points[2].clone().add(new THREE.Vector3(sideDirection * 0.04, 0.04, sideDirection * 0.01)),
+        points[2].clone().add(new THREE.Vector3(sideDirection * 0.09, 0.1, sideDirection * 0.04))
+      ]);
+      const branchGeometry = new THREE.TubeGeometry(branchCurve, 10, 0.0045, 4, false);
+      const branchMaterial = material.clone();
+      const branch = new THREE.Mesh(branchGeometry, branchMaterial);
+      auraGroup.add(branch);
+      threadMaterials.push(branchMaterial);
+    }
+  }
+
+  auraGroup.position.set(0, 0.01, 0);
+  auraGroup.scale.setScalar(WOOD_AURA_SCALE_IDLE);
+
+  return {
+    auraGroup,
+    threadMaterials,
+    auraCurrentOpacity: WOOD_AURA_IDLE_OPACITY,
+    auraTargetOpacity: WOOD_AURA_IDLE_OPACITY,
+    auraCurrentScale: WOOD_AURA_SCALE_IDLE,
+    auraTargetScale: WOOD_AURA_SCALE_IDLE,
+    auraPulsePhase: Math.random() * Math.PI * 2
+  };
+}
+
+function updateWoodAuraEffect(runtime, elapsed) {
+  runtime.auraCurrentOpacity = THREE.MathUtils.lerp(
+    runtime.auraCurrentOpacity,
+    runtime.auraTargetOpacity,
+    WOOD_AURA_FADE_SPEED
+  );
+  runtime.auraCurrentScale = THREE.MathUtils.lerp(runtime.auraCurrentScale, runtime.auraTargetScale, WOOD_AURA_SCALE_LERP);
+
+  const pulse = 0.9 + Math.sin(elapsed * WOOD_AURA_PULSE_SPEED + runtime.auraPulsePhase) * 0.1;
+  const opacity = runtime.auraCurrentOpacity * pulse;
+  runtime.threadMaterials.forEach((material) => {
+    material.opacity = opacity;
+  });
+
+  runtime.auraGroup.scale.setScalar(runtime.auraCurrentScale);
+  runtime.auraGroup.rotation.y = Math.sin(elapsed * WOOD_AURA_SWAY_SPEED + runtime.auraPulsePhase * 0.5) * WOOD_AURA_SWAY_AMPLITUDE;
+  runtime.auraGroup.rotation.z = Math.sin(elapsed * (WOOD_AURA_SWAY_SPEED * 0.8) + runtime.auraPulsePhase) * (WOOD_AURA_SWAY_AMPLITUDE * 0.55);
+  runtime.auraGroup.visible = opacity > 0.002;
+}
 
 async function resolveGLTFLoader() {
   try {
@@ -107,7 +200,7 @@ export function createOrbitNodes(nodeContent) {
       hoverColor: '#c8deff',
       baseEmissive: '#21365f',
       hoverEmissive: '#6ba7ff',
-      updateHoverEffects: (centerWorldPosition) => {
+      updateHoverEffects: (centerWorldPosition, elapsed) => {
         node.getWorldPosition(worldPosition);
         lightPosition.copy(centerWorldPosition).lerp(worldPosition, HOVER_LIGHT_RADIAL_T);
         node.worldToLocal(lightPosition);
@@ -131,8 +224,21 @@ export function createOrbitNodes(nodeContent) {
         node.material.color.set(node.userData.baseColor).lerp(new THREE.Color(node.userData.hoverColor), hoverBlend);
         node.material.emissive.set(node.userData.baseEmissive).lerp(new THREE.Color(node.userData.hoverEmissive), hoverBlend);
         node.material.emissiveIntensity = THREE.MathUtils.lerp(0.45, 0.95, hoverBlend);
+
+        if (node.userData.woodAuraRuntime) {
+          updateWoodAuraEffect(node.userData.woodAuraRuntime, elapsed);
+        }
       }
     };
+
+    if (item.id === WOOD_NODE_ID) {
+      try {
+        node.userData.woodAuraRuntime = createWoodAuraEffect();
+        node.add(node.userData.woodAuraRuntime.auraGroup);
+      } catch (error) {
+        console.warn('[orbitNodes] Failed to initialize wood aura effect for AI Guide node.', error);
+      }
+    }
 
     nodes.push(node);
     group.add(node);
@@ -153,7 +259,7 @@ export function updateOrbitNodes(nodes, elapsed, centerWorldPosition = new THREE
     node.position.x = Math.cos(angle) * node.userData.orbitRadius;
     node.position.z = Math.sin(angle) * node.userData.orbitRadius;
     node.position.y = node.userData.yOffset + wobble;
-    node.userData.updateHoverEffects(centerWorldPosition);
+    node.userData.updateHoverEffects(centerWorldPosition, elapsed);
   });
 }
 
@@ -162,9 +268,17 @@ export function setNodeHoverState(node, isHovered) {
     node.userData.targetScale = HOVER_SCALE_TARGET;
     node.userData.targetHoverLightIntensity = HOVER_LIGHT_INTENSITY_TARGET;
     node.userData.hoverPointLight.color.copy(node.material.color);
+    if (node.userData.woodAuraRuntime) {
+      node.userData.woodAuraRuntime.auraTargetOpacity = WOOD_AURA_HOVER_OPACITY;
+      node.userData.woodAuraRuntime.auraTargetScale = WOOD_AURA_SCALE_HOVER;
+    }
     return;
   }
 
   node.userData.targetScale = 1;
   node.userData.targetHoverLightIntensity = 0;
+  if (node.userData.woodAuraRuntime) {
+    node.userData.woodAuraRuntime.auraTargetOpacity = WOOD_AURA_IDLE_OPACITY;
+    node.userData.woodAuraRuntime.auraTargetScale = WOOD_AURA_SCALE_IDLE;
+  }
 }
