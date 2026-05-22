@@ -1,11 +1,25 @@
-# Architecture (Planned)
+# Architecture
 
 ## Current repository state
-- No `package.json` detected.
-- No Vite runtime initialized yet.
-- This file defines the planned structure for the first MVP implementation task.
+- Frontend scaffold initialized with Vite-compatible layout.
+- Runtime entrypoints now exist: `index.html`, `src/main.js`, `src/styles/main.css`.
+- `vendor/three` remains the source of Three.js runtime files.
 
-## Proposed runtime structure
+## Current runtime structure
+
+```text
+index.html
+src/
+  main.js
+  styles/
+    main.css
+vendor/
+  three/
+    three.module.js
+    ...
+```
+
+## Planned near-term runtime structure
 
 ```text
 src/
@@ -26,22 +40,10 @@ src/
     draftTexts.js
   styles/
     main.css
-
-public/
-  assets/
-    models/
-    textures/
-    images/
-    audio/
 ```
 
 ## Architecture principles
 - Keep Three.js scene logic modular (`scene/*`).
 - Keep readable UI as HTML/CSS overlays (`ui/*`, `styles/*`).
 - Keep textual/content payload separate from scene logic (`content/*`).
-- Delay final branding/copy decisions until after MVP usability checks.
-
-## Out of scope in this phase
-- Runtime code implementation.
-- Package installation.
-- Final model/art pipeline decisions.
+- Keep vendored Three.js as the current dependency source until an explicit decision changes it.
