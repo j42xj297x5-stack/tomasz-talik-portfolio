@@ -30,3 +30,8 @@ Current status note:
 - GLTFLoader r184 is vendored at `vendor/three/examples/jsm/loaders/GLTFLoader.js`.
 - Required GLTFLoader utilities are vendored at `vendor/three/examples/jsm/utils/BufferGeometryUtils.js` and `vendor/three/examples/jsm/utils/SkeletonUtils.js`.
 - Vite resolve alias maps bare `three` imports to local vendored module `vendor/three/three.module.js` via `vite.config.js`.
+- Camera rig now uses mouse-driven orbital motion around a fixed monkey pivot (`0, 0.8, 0`) with smooth damping and continuous `lookAt` target lock.
+- Horizontal orbit is clamped by named constant to ±45° (`MAX_YAW_DEG`).
+- Vertical orbit uses named configurable limit (`MAX_PITCH_DEG`) currently set to 30° as a calmer default than the 45° upper bound.
+- Subtle idle drift remains as a secondary additive influence when mouse input is present and as primary fallback when it is not.
+- Desktop/fine-pointer devices get cursor-driven orbit; non-fine/touch pointer contexts keep neutral/idle behavior.

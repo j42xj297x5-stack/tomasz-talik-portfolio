@@ -51,3 +51,6 @@ vendor/
 - GLTFLoader r184 is vendored at `vendor/three/examples/jsm/loaders/GLTFLoader.js`.
 - Required GLTFLoader utilities are vendored at `vendor/three/examples/jsm/utils/BufferGeometryUtils.js` and `vendor/three/examples/jsm/utils/SkeletonUtils.js`.
 - Vite resolve alias maps bare `three` imports to local vendored module `vendor/three/three.module.js` via `vite.config.js`.
+- `src/scene/cameraRig.js` now owns pointer-normalization, yaw/pitch targeting, easing, and orbit-position solving around the monkey pivot without OrbitControls.
+- `src/main.js` forwards pointer movement to the camera rig while preserving existing node raycast hover/click event flow.
+- Idle drift behavior is retained as a low-amplitude secondary signal to avoid static framing while preventing seasick motion.

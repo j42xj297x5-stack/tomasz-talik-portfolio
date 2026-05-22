@@ -8,7 +8,7 @@ import { createParticles } from './scene/particles.js';
 import { loadMonkeyModel } from './scene/monkeyModel.js';
 import { createOrbitNodes, setNodeHoverState, updateOrbitNodes } from './scene/orbitNodes.js';
 import { pickNode } from './scene/raycaster.js';
-import { updateCameraDrift } from './scene/cameraRig.js';
+import { createCameraRig } from './scene/cameraRig.js';
 import { createOverlay } from './ui/overlay.js';
 import { createHoverLabel } from './ui/hoverLabel.js';
 
@@ -46,7 +46,10 @@ const hoverLabel = createHoverLabel();
 
 let hoveredNode = null;
 
+const cameraRig = createCameraRig();
+
 window.addEventListener('pointermove', (event) => {
+  cameraRig.onPointerMove(event);
   const hit = pickNode(event, canvas, camera, nodes);
 
   if (hoveredNode && hoveredNode !== hit) {
@@ -73,6 +76,10 @@ window.addEventListener('click', (event) => {
   }
 });
 
+window.addEventListener('pointerleave', () => {
+  cameraRig.onPointerLeave();
+});
+
 window.addEventListener('resize', () => {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
@@ -84,7 +91,7 @@ const clock = new THREE.Clock();
 function tick() {
   const elapsed = clock.getElapsedTime();
   updateOrbitNodes(nodes, elapsed);
-  updateCameraDrift(camera, elapsed);
+  cameraRig.update(camera, elapsed);
   renderer.render(scene, camera);
   requestAnimationFrame(tick);
 }
