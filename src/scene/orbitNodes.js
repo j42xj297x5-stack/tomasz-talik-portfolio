@@ -15,7 +15,11 @@ const WOOD_NODE_HOVER_LIGHT_COLOR = '#cbff74';
 const WOOD_NODE_HOVER_LIGHT_INTENSITY_TARGET = 3.3;
 const FIRE_NODE_HOVER_LIGHT_COLOR = '#ff9f4f';
 const FIRE_NODE_HOVER_LIGHT_INTENSITY_TARGET = 3.15;
-const FIRE_EFFECT_FADE_IN_DURATION = 0.24;
+const FIRE_LOWER_EMBER_FADE_IN_DURATION = 0.22;
+const FIRE_SPARKS_START_DELAY = 0.24;
+const FIRE_SPARKS_RAMP_UP_DURATION = 0.45;
+const FIRE_UPPER_EMBER_START_DELAY = 0.68;
+const FIRE_UPPER_EMBER_FADE_IN_DURATION = 0.36;
 const FIRE_EFFECT_FADE_OUT_DURATION = 0.2;
 const FIRE_SPARK_COUNT = 100;
 const FIRE_SPIRAL_HEIGHT = 1.35;
@@ -84,18 +88,76 @@ function createFireEffectRuntime() {
     sparkParams: [],
     activation: 0,
     targetActivation: 0,
+    phase: 'inactive',
+    phaseStartedAt: 0,
+    introStartedAt: 0,
     initialized: false
   };
 }
 
-function createSoftGlowSpriteMaterial(color = '#ff9b4d', opacity = 0.5) {
-  return new THREE.SpriteMaterial({
-    color: new THREE.Color(color),
+function createSoftGlowMaterial(color = '#ff9b4d', opacity = 0.5, concentration = 1.4) {
+  return new THREE.ShaderMaterial({
     transparent: true,
-    opacity,
+    depthWrite: false,
+    depthTest: true,
+    blending: THREE.AdditiveBlending,
+    uniforms: {
+      uColor: { value: new THREE.Color(color) },
+      uOpacity: { value: opacity },
+      uConcentration: { value: concentration }
+    },
+    vertexShader: `
+      varying vec3 vNormal;
+      void main() {
+        vNormal = normalize(normalMatrix * normal);
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    `,
+    fragmentShader: `
+      uniform vec3 uColor;
+      uniform float uOpacity;
+      uniform float uConcentration;
+      varying vec3 vNormal;
+      void main() {
+        float ndv = max(dot(vNormal, vec3(0.0, 0.0, 1.0)), 0.0);
+        float glow = pow(ndv, uConcentration);
+        float alpha = smoothstep(0.0, 1.0, glow) * uOpacity;
+        gl_FragColor = vec4(uColor * (0.6 + glow * 1.25), alpha);
+      }
+    `
+  });
+}
+
+function createSoftSparkMaterial() {
+  return new THREE.ShaderMaterial({
+    uniforms: {
+      uColor: { value: new THREE.Color('#ffad62') },
+      uOpacity: { value: 0 }
+    },
+    transparent: true,
     blending: THREE.AdditiveBlending,
     depthWrite: false,
-    depthTest: true
+    depthTest: true,
+    vertexShader: `
+      varying vec2 vUv;
+      void main() {
+        vUv = uv;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    `,
+    fragmentShader: `
+      uniform vec3 uColor;
+      uniform float uOpacity;
+      varying vec2 vUv;
+      void main() {
+        vec2 centered = vUv - 0.5;
+        float dist = length(centered);
+        float radial = smoothstep(0.52, 0.05, dist);
+        float alpha = radial * uOpacity;
+        if (alpha < 0.001) discard;
+        gl_FragColor = vec4(uColor, alpha);
+      }
+    `
   });
 }
 
@@ -106,25 +168,19 @@ function initializeFireEffect(node, runtime) {
   fireGroup.visible = false;
   fireGroup.userData.isNonInteractiveEffect = true;
 
-  const lowerEmber = new THREE.Sprite(createSoftGlowSpriteMaterial('#ff8c3a', 0));
-  lowerEmber.scale.setScalar(0.9);
+  const emberGeometry = new THREE.SphereGeometry(0.5, 24, 18);
+  const lowerEmber = new THREE.Mesh(emberGeometry, createSoftGlowMaterial('#ff8c3a', 0, 1.25));
+  lowerEmber.scale.setScalar(0.86);
   lowerEmber.position.set(0, -0.2, 0);
   lowerEmber.renderOrder = 3;
 
-  const upperEmber = new THREE.Sprite(createSoftGlowSpriteMaterial('#ffc16a', 0));
-  upperEmber.scale.setScalar(0.58);
+  const upperEmber = new THREE.Mesh(emberGeometry, createSoftGlowMaterial('#ffc16a', 0, 1.9));
+  upperEmber.scale.setScalar(0.54);
   upperEmber.position.set(0, FIRE_SPIRAL_CENTER_Y + FIRE_SPIRAL_HEIGHT * 0.8, 0);
   upperEmber.renderOrder = 4;
 
   const sparkGeometry = new THREE.PlaneGeometry(1, 1);
-  const sparkMaterial = new THREE.MeshBasicMaterial({
-    color: '#ffad62',
-    transparent: true,
-    opacity: 0,
-    blending: THREE.AdditiveBlending,
-    depthWrite: false,
-    depthTest: true
-  });
+  const sparkMaterial = createSoftSparkMaterial();
   const sparkMesh = new THREE.InstancedMesh(sparkGeometry, sparkMaterial, FIRE_SPARK_COUNT);
   sparkMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
   sparkMesh.frustumCulled = false;
@@ -145,7 +201,7 @@ function initializeFireEffect(node, runtime) {
       pulseSpeed: THREE.MathUtils.lerp(7.5, 13.5, Math.random()),
       pulseAmplitude: THREE.MathUtils.lerp(0.2, 0.5, Math.random()),
       pulseBase: THREE.MathUtils.lerp(0.24, 0.46, Math.random()),
-      sizeBase: THREE.MathUtils.lerp(FIRE_SPARK_SIZE_MIN, FIRE_SPARK_SIZE_MAX, Math.random())
+      sizeBase: THREE.MathUtils.lerp(FIRE_SPARK_SIZE_MIN * 0.72, FIRE_SPARK_SIZE_MAX * 0.8, Math.random())
     });
 
     temp.position.set(0, -10, 0);
@@ -180,14 +236,36 @@ function initializeFireEffect(node, runtime) {
 
 function applyFireActivation(runtime, elapsed) {
   if (!runtime?.initialized) return;
-  const fadeDuration = runtime.targetActivation > runtime.activation
-    ? FIRE_EFFECT_FADE_IN_DURATION
-    : FIRE_EFFECT_FADE_OUT_DURATION;
-  const lerp = 1 / Math.max(1, 60 * fadeDuration);
-  runtime.activation = THREE.MathUtils.lerp(runtime.activation, runtime.targetActivation, lerp);
-  if (Math.abs(runtime.activation - runtime.targetActivation) < 0.001) runtime.activation = runtime.targetActivation;
+  if (runtime.targetActivation > 0.5 && runtime.phase === 'inactive') {
+    runtime.phase = 'lowerEmberIntro';
+    runtime.phaseStartedAt = elapsed;
+    runtime.introStartedAt = elapsed;
+  } else if (runtime.targetActivation < 0.5 && runtime.phase !== 'inactive' && runtime.phase !== 'fadingOut') {
+    runtime.phase = 'fadingOut';
+    runtime.phaseStartedAt = elapsed;
+  }
 
-  const activation = THREE.MathUtils.clamp(runtime.activation, 0, 1);
+  const introElapsed = Math.max(0, elapsed - runtime.introStartedAt);
+  const lowerActivation = runtime.phase === 'fadingOut' ? runtime.activation : THREE.MathUtils.clamp(introElapsed / FIRE_LOWER_EMBER_FADE_IN_DURATION, 0, 1);
+  const sparkActivation = runtime.phase === 'fadingOut' ? runtime.activation : THREE.MathUtils.clamp((introElapsed - FIRE_SPARKS_START_DELAY) / FIRE_SPARKS_RAMP_UP_DURATION, 0, 1);
+  const upperActivation = runtime.phase === 'fadingOut' ? runtime.activation : THREE.MathUtils.clamp((introElapsed - FIRE_UPPER_EMBER_START_DELAY) / FIRE_UPPER_EMBER_FADE_IN_DURATION, 0, 1);
+
+  if (runtime.phase === 'lowerEmberIntro' && sparkActivation > 0.02) runtime.phase = 'sparksRise';
+  if (runtime.phase === 'sparksRise' && upperActivation > 0.02) runtime.phase = 'upperEmberBuild';
+  if (runtime.phase === 'upperEmberBuild' && upperActivation >= 0.999) runtime.phase = 'active';
+
+  if (runtime.phase === 'fadingOut') {
+    const out = 1 / Math.max(1, 60 * FIRE_EFFECT_FADE_OUT_DURATION);
+    runtime.activation = THREE.MathUtils.lerp(runtime.activation, 0, out);
+    if (runtime.activation < 0.001) {
+      runtime.activation = 0;
+      runtime.phase = 'inactive';
+    }
+  } else {
+    runtime.activation = 1;
+  }
+
+  const activation = runtime.phase === 'fadingOut' ? runtime.activation : 1;
   const active = activation > 0.001;
   runtime.group.visible = active;
   if (!active) return;
@@ -196,13 +274,13 @@ function applyFireActivation(runtime, elapsed) {
   const pulseHeavy = 0.88 + Math.sin(elapsed * 2.1) * 0.12;
   const pulseUpper = 0.92 + Math.sin(elapsed * 3.4 + 1.2) * 0.16;
 
-  runtime.lowerEmber.material.opacity = 0.28 * activationEase * pulseHeavy;
-  runtime.lowerEmber.scale.setScalar(0.84 + activationEase * 0.22 + pulseHeavy * 0.06);
+  runtime.lowerEmber.material.uniforms.uOpacity.value = 0.33 * lowerActivation * activationEase * pulseHeavy;
+  runtime.lowerEmber.scale.setScalar(0.8 + lowerActivation * 0.24 + pulseHeavy * 0.05);
 
-  runtime.upperEmber.material.opacity = 0.34 * activationEase * pulseUpper;
-  runtime.upperEmber.scale.setScalar(0.46 + activationEase * 0.2 + pulseUpper * 0.08);
+  runtime.upperEmber.material.uniforms.uOpacity.value = 0.38 * upperActivation * activationEase * pulseUpper;
+  runtime.upperEmber.scale.setScalar(0.4 + upperActivation * 0.2 + pulseUpper * 0.06);
 
-  runtime.sparkMaterial.opacity = 0.22 * activationEase;
+  runtime.sparkMaterial.uniforms.uOpacity.value = 0.26 * sparkActivation * activationEase;
   const temp = new THREE.Object3D();
   runtime.sparkParams.forEach((spark, index) => {
     const progress = (elapsed * spark.riseSpeed + spark.phaseOffset) % 1;
@@ -216,7 +294,7 @@ function applyFireActivation(runtime, elapsed) {
     const z = Math.sin(swirl) * radius;
     const pulse = spark.pulseBase + Math.sin(elapsed * spark.pulseSpeed + spark.pulsePhase) * spark.pulseAmplitude;
     const intensity = THREE.MathUtils.clamp(pulse, 0.08, 1);
-    const size = spark.sizeBase * (0.72 + intensity * 0.9) * (0.68 + activationEase * 0.5);
+    const size = spark.sizeBase * (0.68 + intensity * 0.72) * (0.68 + sparkActivation * 0.45);
 
     temp.position.set(x, height, z);
     temp.scale.setScalar(size);
