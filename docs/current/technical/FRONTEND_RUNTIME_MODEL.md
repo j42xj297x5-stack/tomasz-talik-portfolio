@@ -43,3 +43,10 @@ Layers:
 - Monkey and all five node glyph assets are now integrated in runtime with fallback-safe behavior.
 - Camera interaction model is mouse-driven orbital movement around monkey pivot with constrained yaw/pitch and no OrbitControls dependency.
 - Milestone snapshot: `docs/current/audits/snapshots/2026-05-22_15-38-35__snapshot__monkey-five-glyphs-runtime-baseline.md`.
+
+
+## Checkpoint update — glyph_1 tree hover baseline (2026-05-22)
+- First glyph (`AI Guide`) now uses accepted hover-effect baseline based on `/glb/glyph_1-tree.glb` visual effect runtime (with fallback to `/glb/glyph_1.glb` for safe degradation).
+- Hover lifecycle baseline is explicit: enter => reveal-in + glow-up, active => sustain + orbit light, leave/off-canvas => fade-out + cursor reset + clean re-entry readiness.
+- Raycast/click contract is unchanged: only glyph node collider stays interactive; tree effect visuals (mesh/shader reveal helpers/light) are non-interactive.
+- Technical snapshot reference: `docs/current/audits/snapshots/2026-05-22_18-18-33__snapshot__glyph-1-tree-effect-baseline.md`.
