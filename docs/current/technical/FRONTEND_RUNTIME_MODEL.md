@@ -9,6 +9,9 @@ Layers:
 4. Content layer (`src/content/portfolioNodes.js`) — draft node content model.
 
 ## MVP runtime status (2026-05-22)
+- Monkey runtime loader calls `/glb/monkey.glb` and keeps placeholder fallback if GLTFLoader or asset loading fails.
+- GLTFLoader import target is vendored: `vendor/three/examples/jsm/loaders/GLTFLoader.js` (if present).
+- Three.js npm package remains intentionally unused.
 - `index.html` mounts `src/main.js` via Vite.
 - First interactive Three.js MVP scene is implemented.
 - Three.js imports are centralized through `src/vendor/three.js`, which re-exports `vendor/three/three.module.js`.

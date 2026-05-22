@@ -18,6 +18,8 @@ Concept docs -> Technical model -> Runtime implementation -> Decision updates ->
   - defines gate metadata used by orbit nodes and overlays
 
 ## Runtime status dependency
+- Monkey model loading depends on the vendored GLTFLoader module path `vendor/three/examples/jsm/loaders/GLTFLoader.js` and asset path `/glb/monkey.glb`.
+- Placeholder fallback remains a required runtime dependency when loader/asset resolution fails.
 - MVP scene exists with placeholder center object and five interactive gates.
 - Scene content depends on `src/content/portfolioNodes.js`.
 - UI overlay/hover depends on node metadata and raycast picking.
