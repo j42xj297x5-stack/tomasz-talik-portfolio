@@ -34,3 +34,9 @@ Concept docs -> Technical model -> Runtime implementation -> Decision updates ->
 - GLTFLoader r184 is vendored at `vendor/three/examples/jsm/loaders/GLTFLoader.js`.
 - Required GLTFLoader utilities are vendored at `vendor/three/examples/jsm/utils/BufferGeometryUtils.js` and `vendor/three/examples/jsm/utils/SkeletonUtils.js`.
 - Vite resolve alias maps bare `three` imports to local vendored module `vendor/three/three.module.js` via `vite.config.js`.
+
+## Milestone dependency status — monkey + five glyph baseline
+- Runtime scene baseline now depends on one central monkey GLB (`/glb/monkey.glb`) and five content-mapped glyph GLBs (`/glb/glyph_1.glb` … `/glb/glyph_5.glb`).
+- Content metadata (`modelPath`) is the source of truth for glyph binding per portfolio node.
+- Fallback dependencies remain mandatory: monkey placeholder fallback and per-node sphere collider fallback.
+- Visual polish (scale/orientation/lighting tuning) remains a separate, downstream dependency phase.

@@ -100,3 +100,12 @@
 2. Reused the existing orbit-node per-node GLB loading path via vendored GLTFLoader r184; no npm `three` dependency was introduced.
 3. Preserved the sphere mesh/collider as the interaction target and fallback visual if `/glb/glyph_5.glb` fails to load.
 4. All five orbit nodes now have GLB glyph visuals: AI Guide `/glb/glyph_1.glb`, Creative AI `/glb/glyph_2.glb`, Ethics / Life Protection `/glb/glyph_3.glb`, Spotify Digger `/glb/glyph_4.glb`, and Haiku Cosmos `/glb/glyph_5.glb`.
+
+
+## 2026-05-22 — Milestone: central monkey + five glyph orbit-node runtime baseline
+
+1. All five portfolio nodes now use GLB glyph visuals in runtime (AI Guide `glyph_1`, Creative AI `glyph_2`, Ethics / Life Protection `glyph_3`, Spotify Digger `glyph_4`, Haiku Cosmos `glyph_5`).
+2. Glyph mapping is content-driven via `src/content/portfolioNodes.js` metadata (`modelPath`, `modelKind`).
+3. Fallback/collider model remains required: monkey placeholder fallback and per-node sphere collider/fallback are non-optional runtime safety behavior.
+4. Final visual polish (scale/orientation/lighting/composition refinement) remains intentionally separate from integration completion.
+5. Snapshot recorded: `docs/current/audits/snapshots/2026-05-22_15-38-35__snapshot__monkey-five-glyphs-runtime-baseline.md`.

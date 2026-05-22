@@ -36,3 +36,10 @@ Layers:
 - Orbit constants are explicit and configurable (`MAX_YAW_DEG = 45`, `MAX_PITCH_DEG = 30`) with damping-based smoothing.
 - Camera always resolves position from orbit math and continuously `lookAt`s the monkey pivot.
 - Mobile/touch behavior remains fallback-safe: no complex gesture controls added, neutral/idle drift remains available.
+
+## Milestone status — monkey + five glyph runtime baseline
+- Vite + Vanilla JS runtime baseline is stable locally with vendored Three.js r184 and vendored GLTFLoader r184.
+- Vite alias continues resolving bare `three` imports to `vendor/three/three.module.js`; npm `three` remains unused.
+- Monkey and all five node glyph assets are now integrated in runtime with fallback-safe behavior.
+- Camera interaction model is mouse-driven orbital movement around monkey pivot with constrained yaw/pitch and no OrbitControls dependency.
+- Milestone snapshot: `docs/current/audits/snapshots/2026-05-22_15-38-35__snapshot__monkey-five-glyphs-runtime-baseline.md`.
