@@ -14,7 +14,19 @@ const FIRE_NODE_ID = 'creative-ai';
 const WOOD_NODE_HOVER_LIGHT_COLOR = '#cbff74';
 const WOOD_NODE_HOVER_LIGHT_INTENSITY_TARGET = 3.3;
 const FIRE_NODE_HOVER_LIGHT_COLOR = '#ff9f4f';
-const FIRE_NODE_HOVER_LIGHT_INTENSITY_TARGET = 3.15;
+const FIRE_SPARK_COUNT = 100;
+const FIRE_SPARK_SIZE = 0.018;
+const FIRE_SPARK_COLOR = '#fff1a8';
+const FIRE_SPARK_RISE_HEIGHT = 1.25;
+const FIRE_SPARK_SPIRAL_RADIUS_MIN = 0.08;
+const FIRE_SPARK_SPIRAL_RADIUS_MAX = 0.24;
+const FIRE_SPARK_ANGULAR_SPEED_MIN = 4.2;
+const FIRE_SPARK_ANGULAR_SPEED_MAX = 8.6;
+const FIRE_SPARK_LIFETIME_MIN = 0.82;
+const FIRE_SPARK_LIFETIME_MAX = 1.28;
+const FIRE_SPARK_FADE_OUT_START = 0.72;
+const FIRE_BURST_DURATION = 1.34;
+const FIRE_BURST_START_OFFSET_RANGE = 0.22;
 
 const WOOD_TREE_EFFECT_MODEL_PATH = '/glb/glyph_1-tree.glb';
 const WOOD_TREE_EFFECT_FALLBACK_MODEL_PATH = '/glb/glyph_1.glb';
@@ -63,6 +75,119 @@ function createWoodTreeEffectRuntime() {
     orbitCenter: new THREE.Vector3(0, 0, 0),
     lastElapsed: null
   };
+}
+
+function createFireSparkRuntime() {
+  return {
+    group: null,
+    sparksMesh: null,
+    active: false,
+    burstStartTime: -Infinity,
+    sparkData: []
+  };
+}
+
+function initializeFireSparkSystem(node, runtime) {
+  const group = new THREE.Group();
+  group.name = 'fireSparkGroup';
+  group.renderOrder = 3;
+
+  const geometry = new THREE.SphereGeometry(FIRE_SPARK_SIZE, 6, 6);
+  const material = new THREE.MeshBasicMaterial({
+    color: FIRE_SPARK_COLOR,
+    transparent: true,
+    opacity: 1,
+    depthWrite: false,
+    toneMapped: false
+  });
+  const sparksMesh = new THREE.InstancedMesh(geometry, material, FIRE_SPARK_COUNT);
+  sparksMesh.frustumCulled = false;
+  sparksMesh.count = FIRE_SPARK_COUNT;
+  sparksMesh.raycast = () => {};
+  sparksMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+  group.add(sparksMesh);
+  group.visible = false;
+
+  const hidden = new THREE.Matrix4().makeScale(0, 0, 0);
+  for (let i = 0; i < FIRE_SPARK_COUNT; i += 1) {
+    sparksMesh.setMatrixAt(i, hidden);
+  }
+  sparksMesh.instanceMatrix.needsUpdate = true;
+
+  runtime.group = group;
+  runtime.sparksMesh = sparksMesh;
+  runtime.sparkData = new Array(FIRE_SPARK_COUNT).fill(null).map(() => ({
+    angleOffset: 0,
+    angularSpeed: 0,
+    radius: 0,
+    launchOffset: 0,
+    lifetime: 1,
+    startHeight: 0,
+    driftX: 0,
+    driftZ: 0
+  }));
+  node.add(group);
+}
+
+function startFireSparkBurst(runtime, elapsed) {
+  if (!runtime?.sparksMesh) return;
+  runtime.active = true;
+  runtime.burstStartTime = elapsed;
+  runtime.group.visible = true;
+
+  runtime.sparkData.forEach((spark) => {
+    spark.angleOffset = Math.random() * Math.PI * 2;
+    spark.angularSpeed = THREE.MathUtils.lerp(FIRE_SPARK_ANGULAR_SPEED_MIN, FIRE_SPARK_ANGULAR_SPEED_MAX, Math.random());
+    spark.radius = THREE.MathUtils.lerp(FIRE_SPARK_SPIRAL_RADIUS_MIN, FIRE_SPARK_SPIRAL_RADIUS_MAX, Math.random());
+    spark.launchOffset = Math.random() * FIRE_BURST_START_OFFSET_RANGE;
+    spark.lifetime = THREE.MathUtils.lerp(FIRE_SPARK_LIFETIME_MIN, FIRE_SPARK_LIFETIME_MAX, Math.random());
+    spark.startHeight = THREE.MathUtils.lerp(-0.2, 0.02, Math.random());
+    spark.driftX = THREE.MathUtils.lerp(-0.035, 0.035, Math.random());
+    spark.driftZ = THREE.MathUtils.lerp(-0.035, 0.035, Math.random());
+  });
+}
+
+function updateFireSparkBurst(runtime, elapsed) {
+  if (!runtime?.active || !runtime.sparksMesh) return;
+  const elapsedSinceBurst = elapsed - runtime.burstStartTime;
+  const matrix = new THREE.Matrix4();
+  const pos = new THREE.Vector3();
+  const quat = new THREE.Quaternion();
+  const scale = new THREE.Vector3(1, 1, 1);
+  const hidden = new THREE.Vector3(0, 0, 0);
+  let visibleCount = 0;
+
+  runtime.sparkData.forEach((spark, index) => {
+    const localT = (elapsedSinceBurst - spark.launchOffset) / spark.lifetime;
+    if (localT <= 0 || localT >= 1) {
+      matrix.compose(pos.set(0, -999, 0), quat, hidden);
+      runtime.sparksMesh.setMatrixAt(index, matrix);
+      return;
+    }
+
+    const spiralAngle = spark.angleOffset + localT * spark.angularSpeed * Math.PI * 2;
+    const currentRadius = spark.radius * (1 - localT * 0.35);
+    const y = spark.startHeight + localT * FIRE_SPARK_RISE_HEIGHT;
+    pos.set(
+      Math.cos(spiralAngle) * currentRadius + spark.driftX * localT,
+      y,
+      Math.sin(spiralAngle) * currentRadius + spark.driftZ * localT
+    );
+    matrix.compose(pos, quat, scale);
+    runtime.sparksMesh.setMatrixAt(index, matrix);
+    visibleCount += 1;
+  });
+
+  runtime.sparksMesh.material.opacity = elapsedSinceBurst > FIRE_BURST_DURATION * FIRE_SPARK_FADE_OUT_START
+    ? THREE.MathUtils.clamp(1 - ((elapsedSinceBurst / FIRE_BURST_DURATION) - FIRE_SPARK_FADE_OUT_START) / (1 - FIRE_SPARK_FADE_OUT_START), 0, 1)
+    : 1;
+  runtime.sparksMesh.instanceMatrix.needsUpdate = true;
+
+  if (elapsedSinceBurst >= FIRE_BURST_DURATION || visibleCount === 0) {
+    runtime.active = false;
+    runtime.group.visible = false;
+    runtime.sparksMesh.material.opacity = 1;
+  }
 }
 
 function applyWoodTreeActivation(runtime, elapsed) {
@@ -363,6 +488,9 @@ export function createOrbitNodes(nodeContent) {
         if (node.userData.woodTreeEffectRuntime) {
           applyWoodTreeActivation(node.userData.woodTreeEffectRuntime, elapsed);
         }
+        if (node.userData.fireSparkRuntime) {
+          updateFireSparkBurst(node.userData.fireSparkRuntime, elapsed);
+        }
       }
     };
 
@@ -371,6 +499,14 @@ export function createOrbitNodes(nodeContent) {
         node.userData.woodTreeEffectRuntime = createWoodTreeEffectRuntime();
       } catch (error) {
         console.warn('[orbitNodes] Failed to initialize wood tree effect runtime for AI Guide node.', error);
+      }
+    }
+    if (item.id === FIRE_NODE_ID) {
+      try {
+        node.userData.fireSparkRuntime = createFireSparkRuntime();
+        initializeFireSparkSystem(node, node.userData.fireSparkRuntime);
+      } catch (error) {
+        console.warn('[orbitNodes] Failed to initialize fire spark runtime for Creative AI node.', error);
       }
     }
     nodes.push(node);
@@ -403,8 +539,9 @@ export function setNodeHoverState(node, isHovered) {
       node.userData.targetHoverLightIntensity = WOOD_NODE_HOVER_LIGHT_INTENSITY_TARGET;
       node.userData.hoverPointLight.color.set(WOOD_NODE_HOVER_LIGHT_COLOR);
     } else if (node.userData.id === FIRE_NODE_ID) {
-      node.userData.targetHoverLightIntensity = FIRE_NODE_HOVER_LIGHT_INTENSITY_TARGET;
+      node.userData.targetHoverLightIntensity = 0;
       node.userData.hoverPointLight.color.set(FIRE_NODE_HOVER_LIGHT_COLOR);
+      startFireSparkBurst(node.userData.fireSparkRuntime, performance.now() * 0.001);
     } else {
       node.userData.targetHoverLightIntensity = HOVER_LIGHT_INTENSITY_TARGET;
       node.userData.hoverPointLight.color.copy(node.material.color);
