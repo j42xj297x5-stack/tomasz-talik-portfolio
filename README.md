@@ -13,6 +13,10 @@ This repository is being prepared for an interactive Three.js-based portfolio ce
 
 No Vite/Three.js runtime has been initialized in this task.
 
+## Vite module resolution note
+
+This project vendors Three.js r184 under `vendor/three` and uses a Vite alias so bare imports of `three` (including inside vendored `GLTFLoader.js`) resolve to `vendor/three/three.module.js`.
+
 ## Local setup (placeholder)
 
 Runtime setup will be added once the first MVP implementation task starts.
