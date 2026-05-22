@@ -21,7 +21,7 @@ Concept docs -> Technical model -> Runtime implementation -> Decision updates ->
 - Monkey model loading depends on the vendored GLTFLoader module path `vendor/three/examples/jsm/loaders/GLTFLoader.js` and asset path `/glb/monkey.glb`.
 - Placeholder fallback remains a required runtime dependency when loader/asset resolution fails.
 - MVP scene exists with placeholder center object and five interactive gates.
-- Scene content depends on `src/content/portfolioNodes.js` (including per-node optional glyph metadata such as AI Guide `/glb/glyph_1.glb`, Creative AI `/glb/glyph_2.glb`, and Ethics / Life Protection `/glb/glyph_3.glb`).
+- Scene content depends on `src/content/portfolioNodes.js` (including per-node optional glyph metadata such as AI Guide `/glb/glyph_1.glb`, Spotify Digger `/glb/glyph_4.glb`, Creative AI `/glb/glyph_2.glb`, and Ethics / Life Protection `/glb/glyph_3.glb`).
 - UI overlay/hover depends on node metadata and raycast picking.
 - Next dependency step: visual refinement and replacement of placeholder center with a real GLB meditating monkey asset.
 

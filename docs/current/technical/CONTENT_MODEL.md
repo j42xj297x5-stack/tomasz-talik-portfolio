@@ -21,7 +21,8 @@ Rules in current MVP:
 - Scene and UI read node metadata directly from the content module.
 - Overlay displays draft status note: "Draft content — final copy pending".
 - `AI Guide` declares a glyph visual model at runtime path `/glb/glyph_1.glb` (expected local binary: `public/glb/glyph_1.glb`).
+- `Spotify Digger` now declares a glyph visual model at runtime path `/glb/glyph_4.glb` (expected local binary: `public/glb/glyph_4.glb`).
 - `Creative AI` now declares a glyph visual model at runtime path `/glb/glyph_2.glb` (expected local binary: `public/glb/glyph_2.glb`).
 - `Ethics / Life Protection` now declares a glyph visual model at runtime path `/glb/glyph_3.glb` (expected local binary: `public/glb/glyph_3.glb`).
 - `Ethics / Life Protection` may be referenced internally as `AI Dharma`, while user-facing copy remains unchanged.
-- Remaining nodes stay sphere-only placeholders.
+- Remaining node (`Haiku Cosmos`) stays sphere-only placeholder.

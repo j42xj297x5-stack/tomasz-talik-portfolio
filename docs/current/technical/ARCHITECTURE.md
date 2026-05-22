@@ -53,5 +53,5 @@ vendor/
 - Vite resolve alias maps bare `three` imports to local vendored module `vendor/three/three.module.js` via `vite.config.js`.
 - `src/scene/cameraRig.js` now owns pointer-normalization, yaw/pitch targeting, easing, and orbit-position solving around the monkey pivot without OrbitControls.
 - `src/main.js` forwards pointer movement to the camera rig while preserving existing node raycast hover/click event flow.
-- Orbit node visual overrides currently map to AI Guide (`/glb/glyph_1.glb`), Creative AI (`/glb/glyph_2.glb`), and Ethics / Life Protection (`/glb/glyph_3.glb`) while retaining sphere colliders/fallbacks.
+- Orbit node visual overrides currently map to AI Guide (`/glb/glyph_1.glb`), Spotify Digger (`/glb/glyph_4.glb`), Creative AI (`/glb/glyph_2.glb`), and Ethics / Life Protection (`/glb/glyph_3.glb`) while retaining sphere colliders/fallbacks.
 - Idle drift behavior is retained as a low-amplitude secondary signal to avoid static framing while preventing seasick motion.
