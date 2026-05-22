@@ -62,3 +62,10 @@
 2. Chose explicit named orbit limits: horizontal yaw ±45° (`MAX_YAW_DEG`) and vertical pitch limit (`MAX_PITCH_DEG`) set to 30° default for calmer framing while keeping 45° as the upper design bound.
 3. Preserved subtle idle drift as secondary additive motion and fallback when no fine-pointer mouse input is active.
 4. Kept mobile/touch behavior intentionally simple (neutral/idle fallback), avoided OrbitControls, and preserved existing raycast-driven nodes, hover labels, and overlays.
+
+## 2026-05-22 — AI Guide per-node glyph visual with safe sphere fallback
+
+1. Added optional per-node visual model metadata in content (`modelPath`, `modelKind`) and assigned it only to `AI Guide` with runtime URL `/glb/glyph_1.glb`.
+2. Extended orbit node runtime to attempt GLB load per node via vendored GLTFLoader r184 path, without introducing npm `three`.
+3. Kept the original orbit sphere mesh as the interaction target (raycast metadata + hover/click behavior) and as visual fallback if GLB load fails.
+4. Other four portfolio nodes intentionally remain sphere visuals to preserve incremental rollout scope.
