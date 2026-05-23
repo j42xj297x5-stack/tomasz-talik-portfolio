@@ -83,6 +83,7 @@ function createFireSparkRuntime() {
     sparksMesh: null,
     active: false,
     burstStartTime: -Infinity,
+    pendingBurst: false,
     sparkData: []
   };
 }
@@ -115,6 +116,7 @@ function initializeFireSparkSystem(node, runtime) {
   sparksMesh.instanceMatrix.needsUpdate = true;
 
   runtime.group = group;
+  console.debug('[orbitNodes] glyph2 sparks created');
   runtime.sparksMesh = sparksMesh;
   runtime.sparkData = new Array(FIRE_SPARK_COUNT).fill(null).map(() => ({
     angleOffset: 0,
@@ -132,7 +134,9 @@ function initializeFireSparkSystem(node, runtime) {
 function startFireSparkBurst(runtime, elapsed) {
   if (!runtime?.sparksMesh) return;
   runtime.active = true;
+  runtime.pendingBurst = false;
   runtime.burstStartTime = elapsed;
+  console.debug('[orbitNodes] glyph2 burst start', { elapsed });
   runtime.group.visible = true;
 
   runtime.sparkData.forEach((spark) => {
@@ -148,7 +152,9 @@ function startFireSparkBurst(runtime, elapsed) {
 }
 
 function updateFireSparkBurst(runtime, elapsed) {
-  if (!runtime?.active || !runtime.sparksMesh) return;
+  if (!runtime?.sparksMesh) return;
+  if (runtime.pendingBurst) startFireSparkBurst(runtime, elapsed);
+  if (!runtime.active) return;
   const elapsedSinceBurst = elapsed - runtime.burstStartTime;
   const matrix = new THREE.Matrix4();
   const pos = new THREE.Vector3();
@@ -182,6 +188,7 @@ function updateFireSparkBurst(runtime, elapsed) {
     ? THREE.MathUtils.clamp(1 - ((elapsedSinceBurst / FIRE_BURST_DURATION) - FIRE_SPARK_FADE_OUT_START) / (1 - FIRE_SPARK_FADE_OUT_START), 0, 1)
     : 1;
   runtime.sparksMesh.instanceMatrix.needsUpdate = true;
+  console.debug('[orbitNodes] glyph2 update active', { elapsedSinceBurst, visibleCount });
 
   if (elapsedSinceBurst >= FIRE_BURST_DURATION || visibleCount === 0) {
     runtime.active = false;
@@ -541,7 +548,10 @@ export function setNodeHoverState(node, isHovered) {
     } else if (node.userData.id === FIRE_NODE_ID) {
       node.userData.targetHoverLightIntensity = 0;
       node.userData.hoverPointLight.color.set(FIRE_NODE_HOVER_LIGHT_COLOR);
-      startFireSparkBurst(node.userData.fireSparkRuntime, performance.now() * 0.001);
+      if (node.userData.fireSparkRuntime) {
+        node.userData.fireSparkRuntime.pendingBurst = true;
+        console.debug('[orbitNodes] glyph2 hover enter');
+      }
     } else {
       node.userData.targetHoverLightIntensity = HOVER_LIGHT_INTENSITY_TARGET;
       node.userData.hoverPointLight.color.copy(node.material.color);
@@ -554,6 +564,12 @@ export function setNodeHoverState(node, isHovered) {
 
   node.userData.targetScale = 1;
   node.userData.targetHoverLightIntensity = 0;
+  if (node.userData.id === FIRE_NODE_ID && node.userData.fireSparkRuntime) {
+    node.userData.fireSparkRuntime.pendingBurst = false;
+    node.userData.fireSparkRuntime.active = false;
+    if (node.userData.fireSparkRuntime.group) node.userData.fireSparkRuntime.group.visible = false;
+    console.debug('[orbitNodes] glyph2 hover leave');
+  }
   if (node.userData.woodTreeEffectRuntime) {
     node.userData.woodTreeEffectRuntime.revealTarget = 0;
     node.userData.woodTreeEffectRuntime.lastElapsed = null;
