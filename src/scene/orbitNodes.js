@@ -34,6 +34,10 @@ const TEST_SPARK_SECOND_SPIRAL_OFFSET = Math.PI / 6;
 const TEST_SPARK_ANGULAR_SPEED = 2.6 * 0.8;
 const TEST_SPARK_RISE_HEIGHT = 1.35;
 const TEST_SPARK_START_YOFFSET = -0.2;
+const TEST_SPARK_TRAJECTORY_VARIANTS = [
+  { rotationDirection: 1, angularSpeedMultiplier: 1 },
+  { rotationDirection: -1, angularSpeedMultiplier: 0.5 }
+];
 
 function getSparkOpacityByHeight(heightProgress) {
   const clampedHeight = THREE.MathUtils.clamp(heightProgress, 0, 1);
@@ -127,27 +131,31 @@ function initializeFireSparkSystem(node, runtime) {
   const sparkMeshes = [];
   const sparkEntries = [];
 
-  TEST_SPARK_BURST_SEQUENCE.forEach(({ delay, angleOffset }) => {
-    [0, TEST_SPARK_SECOND_SPIRAL_OFFSET].forEach((spiralOffset) => {
-      for (let index = 0; index < TEST_SPARK_COUNT; index += 1) {
-        const material = new THREE.MeshBasicMaterial({
-        color: TEST_SPARK_COLOR,
-        transparent: true,
-        opacity: 1
+  TEST_SPARK_TRAJECTORY_VARIANTS.forEach(({ rotationDirection, angularSpeedMultiplier }) => {
+    TEST_SPARK_BURST_SEQUENCE.forEach(({ delay, angleOffset }) => {
+      [0, TEST_SPARK_SECOND_SPIRAL_OFFSET].forEach((spiralOffset) => {
+        for (let index = 0; index < TEST_SPARK_COUNT; index += 1) {
+          const material = new THREE.MeshBasicMaterial({
+            color: TEST_SPARK_COLOR,
+            transparent: true,
+            opacity: 1
+          });
+          const sparkMesh = new THREE.Mesh(geometry, material);
+          sparkMesh.visible = false;
+          sparkMesh.raycast = () => {};
+          group.add(sparkMesh);
+          sparkMeshes.push(sparkMesh);
+          sparkEntries.push({
+            mesh: sparkMesh,
+            phaseOffset: TEST_SPARK_PHASE_OFFSETS[index] ?? 0,
+            burstDelay: delay,
+            burstAngleOffset: angleOffset + spiralOffset,
+            rotationDirection,
+            angularSpeedMultiplier,
+            startTime: -Infinity
+          });
+        }
       });
-        const sparkMesh = new THREE.Mesh(geometry, material);
-        sparkMesh.visible = false;
-        sparkMesh.raycast = () => {};
-        group.add(sparkMesh);
-        sparkMeshes.push(sparkMesh);
-        sparkEntries.push({
-          mesh: sparkMesh,
-          phaseOffset: TEST_SPARK_PHASE_OFFSETS[index] ?? 0,
-          burstDelay: delay,
-          burstAngleOffset: angleOffset + spiralOffset,
-          startTime: -Infinity
-        });
-      }
     });
   });
 
@@ -196,7 +204,7 @@ function updateFireSparkBurst(runtime, elapsed) {
 
     const progress = THREE.MathUtils.clamp(elapsedSinceBurst / TEST_SPARK_DURATION, 0, 1);
     const opacity = getSparkOpacityByHeight(progress);
-    const baseAngle = progress * Math.PI * 2 * TEST_SPARK_ANGULAR_SPEED;
+    const baseAngle = progress * Math.PI * 2 * TEST_SPARK_ANGULAR_SPEED * entry.angularSpeedMultiplier * entry.rotationDirection;
     const y = TEST_SPARK_START_YOFFSET + progress * TEST_SPARK_RISE_HEIGHT;
     const angle = baseAngle + entry.phaseOffset + entry.burstAngleOffset;
     const radius = getSpiralRadiusByHeight(progress);
