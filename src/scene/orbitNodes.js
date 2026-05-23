@@ -13,7 +13,9 @@ const WOOD_NODE_ID = 'ai-guide';
 const FIRE_NODE_ID = 'creative-ai';
 const WOOD_NODE_HOVER_LIGHT_COLOR = '#cbff74';
 const WOOD_NODE_HOVER_LIGHT_INTENSITY_TARGET = 3.3;
-const TEST_SPARK_RADIUS = 0.05;
+const TEST_SPARK_RADIUS = 0.005;
+const TEST_SPARK_COUNT = 3;
+const TEST_SPARK_PHASE_OFFSETS = [0, (Math.PI * 2) / 3, (Math.PI * 4) / 3];
 const TEST_SPARK_COLOR = '#fff36b';
 const TEST_SPARK_DURATION = 1.5;
 const TEST_SPARK_SPIRAL_RADIUS = 0.22;
@@ -80,7 +82,7 @@ function createWoodTreeEffectRuntime() {
 function createFireSparkRuntime() {
   return {
     group: null,
-    sparkMesh: null,
+    sparkMeshes: [],
     active: false,
     startTime: -Infinity,
     pendingStart: false
@@ -93,53 +95,72 @@ function initializeFireSparkSystem(node, runtime) {
   group.renderOrder = 3;
 
   const geometry = new THREE.SphereGeometry(TEST_SPARK_RADIUS, 12, 12);
-  const material = new THREE.MeshBasicMaterial({
-    color: TEST_SPARK_COLOR,
-    transparent: true,
-    opacity: 1
-  });
-  const sparkMesh = new THREE.Mesh(geometry, material);
-  sparkMesh.visible = false;
-  sparkMesh.raycast = () => {};
-  group.add(sparkMesh);
+  const sparkMeshes = [];
+
+  for (let index = 0; index < TEST_SPARK_COUNT; index += 1) {
+    const material = new THREE.MeshBasicMaterial({
+      color: TEST_SPARK_COLOR,
+      transparent: true,
+      opacity: 1
+    });
+    const sparkMesh = new THREE.Mesh(geometry, material);
+    sparkMesh.visible = false;
+    sparkMesh.raycast = () => {};
+    group.add(sparkMesh);
+    sparkMeshes.push(sparkMesh);
+  }
+
   group.visible = false;
 
   runtime.group = group;
-  runtime.sparkMesh = sparkMesh;
+  runtime.sparkMeshes = sparkMeshes;
   node.add(group);
 }
 
 function startFireSparkBurst(runtime, elapsed) {
-  if (!runtime?.sparkMesh) return;
+  if (!runtime?.sparkMeshes?.length) return;
   runtime.active = true;
   runtime.pendingStart = false;
   runtime.startTime = elapsed;
   runtime.group.visible = true;
-  runtime.sparkMesh.visible = true;
-  runtime.sparkMesh.position.set(TEST_SPARK_SPIRAL_RADIUS, TEST_SPARK_START_YOFFSET, 0);
+  runtime.sparkMeshes.forEach((sparkMesh, index) => {
+    const phaseOffset = TEST_SPARK_PHASE_OFFSETS[index] ?? 0;
+    sparkMesh.visible = true;
+    sparkMesh.position.set(
+      Math.cos(phaseOffset) * TEST_SPARK_SPIRAL_RADIUS,
+      TEST_SPARK_START_YOFFSET,
+      Math.sin(phaseOffset) * TEST_SPARK_SPIRAL_RADIUS
+    );
+  });
 }
 
 function updateFireSparkBurst(runtime, elapsed) {
-  if (!runtime?.sparkMesh) return;
+  if (!runtime?.sparkMeshes?.length) return;
   if (runtime.pendingStart) startFireSparkBurst(runtime, elapsed);
   if (!runtime.active) return;
   const elapsedSinceBurst = elapsed - runtime.startTime;
   const progress = THREE.MathUtils.clamp(elapsedSinceBurst / TEST_SPARK_DURATION, 0, 1);
   const opacity = getSparkOpacityByHeight(progress);
 
-  const angle = progress * Math.PI * 2 * TEST_SPARK_ANGULAR_SPEED;
+  const baseAngle = progress * Math.PI * 2 * TEST_SPARK_ANGULAR_SPEED;
   const y = TEST_SPARK_START_YOFFSET + progress * TEST_SPARK_RISE_HEIGHT;
-  runtime.sparkMesh.position.set(
-    Math.cos(angle) * TEST_SPARK_SPIRAL_RADIUS,
-    y,
-    Math.sin(angle) * TEST_SPARK_SPIRAL_RADIUS
-  );
-  runtime.sparkMesh.material.opacity = opacity;
+
+  runtime.sparkMeshes.forEach((sparkMesh, index) => {
+    const angle = baseAngle + (TEST_SPARK_PHASE_OFFSETS[index] ?? 0);
+    sparkMesh.position.set(
+      Math.cos(angle) * TEST_SPARK_SPIRAL_RADIUS,
+      y,
+      Math.sin(angle) * TEST_SPARK_SPIRAL_RADIUS
+    );
+    sparkMesh.material.opacity = opacity;
+  });
 
   if (progress >= 1) {
     runtime.active = false;
     runtime.group.visible = false;
-    runtime.sparkMesh.visible = false;
+    runtime.sparkMeshes.forEach((sparkMesh) => {
+      sparkMesh.visible = false;
+    });
   }
 }
 
