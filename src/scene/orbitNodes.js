@@ -16,11 +16,15 @@ const WOOD_NODE_HOVER_LIGHT_INTENSITY_TARGET = 3.3;
 const TEST_SPARK_RADIUS = 0.005;
 const TEST_SPARK_COUNT = 2;
 const TEST_SPARK_PHASE_OFFSETS = [0, Math.PI];
-const TEST_SPARK_BURST_SEQUENCE = [
-  { delay: 0, angleOffset: 0 },
-  { delay: 0.1, angleOffset: Math.PI / 6 },
-  { delay: 0.2, angleOffset: -Math.PI / 6 }
-];
+const TEST_SPARK_SEQUENCE_BASE_OFFSETS = [0, Math.PI / 2, -Math.PI / 2];
+const TEST_SPARK_BURST_OFFSETS_WITHIN_SEQUENCE = [0, Math.PI / 6, -Math.PI / 6];
+const TEST_SPARK_BURST_DELAYS_WITHIN_SEQUENCE = [0, 0.1, 0.2];
+const TEST_SPARK_BURST_SEQUENCE = TEST_SPARK_SEQUENCE_BASE_OFFSETS.flatMap((sequenceBaseOffset) =>
+  TEST_SPARK_BURST_OFFSETS_WITHIN_SEQUENCE.map((burstOffsetWithinSequence, burstIndex) => ({
+    delay: TEST_SPARK_BURST_DELAYS_WITHIN_SEQUENCE[burstIndex] ?? 0,
+    angleOffset: sequenceBaseOffset + burstOffsetWithinSequence
+  }))
+);
 const TEST_SPARK_COLOR = '#fff36b';
 const TEST_SPARK_DURATION = 1.5;
 const TEST_SPARK_SPIRAL_RADIUS = 0.22;
