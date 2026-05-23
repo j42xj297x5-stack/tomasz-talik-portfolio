@@ -13,13 +13,20 @@ const WOOD_NODE_ID = 'ai-guide';
 const FIRE_NODE_ID = 'creative-ai';
 const WOOD_NODE_HOVER_LIGHT_COLOR = '#cbff74';
 const WOOD_NODE_HOVER_LIGHT_INTENSITY_TARGET = 3.3;
-const TEST_SPARK_RADIUS = 0.08;
+const TEST_SPARK_RADIUS = 0.05;
 const TEST_SPARK_COLOR = '#fff36b';
 const TEST_SPARK_DURATION = 1.5;
 const TEST_SPARK_SPIRAL_RADIUS = 0.22;
 const TEST_SPARK_ANGULAR_SPEED = 2.6;
 const TEST_SPARK_RISE_HEIGHT = 1.35;
 const TEST_SPARK_START_YOFFSET = -0.2;
+
+function getSparkOpacityByHeight(heightProgress) {
+  const clampedHeight = THREE.MathUtils.clamp(heightProgress, 0, 1);
+  if (clampedHeight <= 0.5) return 1;
+  if (clampedHeight <= 0.6) return THREE.MathUtils.lerp(0.9, 0.7, (clampedHeight - 0.5) / 0.1);
+  return THREE.MathUtils.lerp(0.7, 0, THREE.MathUtils.smoothstep((clampedHeight - 0.6) / 0.4, 0, 1));
+}
 
 const WOOD_TREE_EFFECT_MODEL_PATH = '/glb/glyph_1-tree.glb';
 const WOOD_TREE_EFFECT_FALLBACK_MODEL_PATH = '/glb/glyph_1.glb';
@@ -87,7 +94,9 @@ function initializeFireSparkSystem(node, runtime) {
 
   const geometry = new THREE.SphereGeometry(TEST_SPARK_RADIUS, 12, 12);
   const material = new THREE.MeshBasicMaterial({
-    color: TEST_SPARK_COLOR
+    color: TEST_SPARK_COLOR,
+    transparent: true,
+    opacity: 1
   });
   const sparkMesh = new THREE.Mesh(geometry, material);
   sparkMesh.visible = false;
@@ -116,6 +125,7 @@ function updateFireSparkBurst(runtime, elapsed) {
   if (!runtime.active) return;
   const elapsedSinceBurst = elapsed - runtime.startTime;
   const progress = THREE.MathUtils.clamp(elapsedSinceBurst / TEST_SPARK_DURATION, 0, 1);
+  const opacity = getSparkOpacityByHeight(progress);
 
   const angle = progress * Math.PI * 2 * TEST_SPARK_ANGULAR_SPEED;
   const y = TEST_SPARK_START_YOFFSET + progress * TEST_SPARK_RISE_HEIGHT;
@@ -124,6 +134,7 @@ function updateFireSparkBurst(runtime, elapsed) {
     y,
     Math.sin(angle) * TEST_SPARK_SPIRAL_RADIUS
   );
+  runtime.sparkMesh.material.opacity = opacity;
 
   if (progress >= 1) {
     runtime.active = false;
