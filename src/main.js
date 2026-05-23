@@ -39,14 +39,14 @@ const sceneRuntimeConfig = {
   backgroundAtmosphere: {
     enabled: true,
     safeRadius: 3.5,
-    shellInnerRadius: 5.0,
-    shellOuterRadius: 13.0,
+    shellInnerRadius: 4.8,
+    shellOuterRadius: 10.5,
     dust: {
       enabled: true,
-      count: 500,
-      idleOpacity: 0.06,
-      rotationSpeed: 0.015,
-      pointSize: 0.025
+      count: 1000,
+      idleOpacity: 0.12,
+      rotationSpeed: 0.012,
+      pointSize: 0.055
     }
   }
 };
