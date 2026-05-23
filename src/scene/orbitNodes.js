@@ -36,6 +36,15 @@ const TEST_SPARK_BASE_ANGULAR_VELOCITY = (Math.PI * 2 * TEST_SPARK_ANGULAR_SPEED
 const TEST_SPARK_BASE_ROTATION_TURNS = TEST_SPARK_ANGULAR_SPEED;
 const TEST_SPARK_RISE_HEIGHT = 1.35;
 const TEST_SPARK_START_YOFFSET = -0.2;
+const EMBER_SPHERE_ENABLED = true;
+const EMBER_SPHERE_IGNITE_DELAY = 2.0;
+const EMBER_SPHERE_FADE_IN_DURATION = 0.75;
+const EMBER_SPHERE_RADIUS = TEST_SPARK_SPIRAL_RADIUS / 3;
+const EMBER_SPHERE_Y_FACTOR = 0.66;
+const EMBER_SPHERE_CENTER_COLOR = new THREE.Color('#fff36b');
+const EMBER_SPHERE_EDGE_COLOR = new THREE.Color('#ff4a1f');
+const EMBER_SPHERE_MAX_OPACITY = 0.72;
+const EMBER_SPHERE_PULSE_INTENSITY = 0.0;
 const TEST_SPARK_TRAJECTORY_VARIANTS = [
   { rotationDirection: 1, angularSpeedMultiplier: 1 },
   { rotationDirection: -1, angularSpeedMultiplier: 0.5 }
@@ -166,8 +175,50 @@ function createFireSparkRuntime() {
     active: false,
     sequenceStartTime: -Infinity,
     pendingStart: false,
-    hasLoggedAngularDiagnostics: false
+    hasLoggedAngularDiagnostics: false,
+    emberSphere: null,
+    emberIgniteStartTime: -Infinity
   };
+}
+
+
+function createEmberSphere() {
+  const geometry = new THREE.SphereGeometry(EMBER_SPHERE_RADIUS, 24, 24);
+  const material = new THREE.ShaderMaterial({
+    transparent: true,
+    depthWrite: false,
+    uniforms: {
+      uCenterColor: { value: EMBER_SPHERE_CENTER_COLOR.clone() },
+      uEdgeColor: { value: EMBER_SPHERE_EDGE_COLOR.clone() },
+      uOpacity: { value: 0 }
+    },
+    vertexShader: `
+      varying vec3 vNormal;
+      void main() {
+        vNormal = normalize(normalMatrix * normal);
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    `,
+    fragmentShader: `
+      varying vec3 vNormal;
+      uniform vec3 uCenterColor;
+      uniform vec3 uEdgeColor;
+      uniform float uOpacity;
+
+      void main() {
+        float rim = pow(1.0 - abs(dot(vNormal, vec3(0.0, 0.0, 1.0))), 1.5);
+        vec3 color = mix(uCenterColor, uEdgeColor, smoothstep(0.2, 0.95, rim));
+        float alphaMask = smoothstep(1.0, 0.15, rim);
+        gl_FragColor = vec4(color, alphaMask * uOpacity);
+      }
+    `
+  });
+
+  const mesh = new THREE.Mesh(geometry, material);
+  mesh.visible = false;
+  mesh.renderOrder = 4;
+  mesh.raycast = () => {};
+  return mesh;
 }
 
 function initializeFireSparkSystem(node, runtime) {
@@ -215,6 +266,13 @@ function initializeFireSparkSystem(node, runtime) {
     node.add(group);
     return { config: layerConfig, group, sparkMeshes, sparkEntries };
   });
+
+  if (EMBER_SPHERE_ENABLED) {
+    const emberSphere = createEmberSphere();
+    emberSphere.position.set(0, TEST_SPARK_START_YOFFSET + TEST_SPARK_RISE_HEIGHT * EMBER_SPHERE_Y_FACTOR, 0);
+    node.add(emberSphere);
+    runtime.emberSphere = emberSphere;
+  }
 }
 
 function startFireSparkBurst(runtime, elapsed) {
@@ -222,6 +280,11 @@ function startFireSparkBurst(runtime, elapsed) {
   runtime.active = true;
   runtime.pendingStart = false;
   runtime.sequenceStartTime = elapsed;
+  runtime.emberIgniteStartTime = elapsed + EMBER_SPHERE_IGNITE_DELAY;
+  if (runtime.emberSphere) {
+    runtime.emberSphere.visible = false;
+    runtime.emberSphere.material.uniforms.uOpacity.value = 0;
+  }
   runtime.layers.forEach((layer) => {
     layer.group.visible = true;
 
@@ -313,7 +376,18 @@ function updateFireSparkBurst(runtime, elapsed) {
     runtimeHasPendingBursts = runtimeHasPendingBursts || hasPendingBursts;
   });
 
-  runtime.active = runtimeHasVisibleSparks || runtimeHasPendingBursts;
+  if (runtime.emberSphere && EMBER_SPHERE_ENABLED) {
+    const igniteT = (elapsed - runtime.emberIgniteStartTime) / Math.max(0.001, EMBER_SPHERE_FADE_IN_DURATION);
+    const clampedIgnite = THREE.MathUtils.clamp(igniteT, 0, 1);
+    const pulse = EMBER_SPHERE_PULSE_INTENSITY > 0
+      ? 1 + Math.sin(elapsed * 4.0) * EMBER_SPHERE_PULSE_INTENSITY
+      : 1;
+    const opacity = EMBER_SPHERE_MAX_OPACITY * THREE.MathUtils.smoothstep(clampedIgnite, 0, 1) * pulse;
+    runtime.emberSphere.visible = opacity > 0.001;
+    runtime.emberSphere.material.uniforms.uOpacity.value = opacity;
+  }
+
+  runtime.active = runtimeHasVisibleSparks || runtimeHasPendingBursts || (runtime.emberSphere?.visible ?? false);
 }
 
 function applyWoodTreeActivation(runtime, elapsed) {
@@ -694,6 +768,10 @@ export function setNodeHoverState(node, isHovered) {
         sparkMesh.visible = false;
       });
     });
+    if (node.userData.fireSparkRuntime.emberSphere) {
+      node.userData.fireSparkRuntime.emberSphere.visible = false;
+      node.userData.fireSparkRuntime.emberSphere.material.uniforms.uOpacity.value = 0;
+    }
   }
   if (node.userData.woodTreeEffectRuntime) {
     node.userData.woodTreeEffectRuntime.revealTarget = 0;
