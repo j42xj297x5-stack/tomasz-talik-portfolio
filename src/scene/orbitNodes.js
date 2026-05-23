@@ -13,20 +13,13 @@ const WOOD_NODE_ID = 'ai-guide';
 const FIRE_NODE_ID = 'creative-ai';
 const WOOD_NODE_HOVER_LIGHT_COLOR = '#cbff74';
 const WOOD_NODE_HOVER_LIGHT_INTENSITY_TARGET = 3.3;
-const FIRE_NODE_HOVER_LIGHT_COLOR = '#ff9f4f';
-const FIRE_SPARK_COUNT = 100;
-const FIRE_SPARK_SIZE = 0.018;
-const FIRE_SPARK_COLOR = '#fff1a8';
-const FIRE_SPARK_RISE_HEIGHT = 1.25;
-const FIRE_SPARK_SPIRAL_RADIUS_MIN = 0.08;
-const FIRE_SPARK_SPIRAL_RADIUS_MAX = 0.24;
-const FIRE_SPARK_ANGULAR_SPEED_MIN = 4.2;
-const FIRE_SPARK_ANGULAR_SPEED_MAX = 8.6;
-const FIRE_SPARK_LIFETIME_MIN = 0.82;
-const FIRE_SPARK_LIFETIME_MAX = 1.28;
-const FIRE_SPARK_FADE_OUT_START = 0.72;
-const FIRE_BURST_DURATION = 1.34;
-const FIRE_BURST_START_OFFSET_RANGE = 0.22;
+const TEST_SPARK_RADIUS = 0.08;
+const TEST_SPARK_COLOR = '#fff36b';
+const TEST_SPARK_DURATION = 1.5;
+const TEST_SPARK_SPIRAL_RADIUS = 0.22;
+const TEST_SPARK_ANGULAR_SPEED = 2.6;
+const TEST_SPARK_RISE_HEIGHT = 1.35;
+const TEST_SPARK_START_YOFFSET = -0.2;
 
 const WOOD_TREE_EFFECT_MODEL_PATH = '/glb/glyph_1-tree.glb';
 const WOOD_TREE_EFFECT_FALLBACK_MODEL_PATH = '/glb/glyph_1.glb';
@@ -80,120 +73,62 @@ function createWoodTreeEffectRuntime() {
 function createFireSparkRuntime() {
   return {
     group: null,
-    sparksMesh: null,
+    sparkMesh: null,
     active: false,
-    burstStartTime: -Infinity,
-    pendingBurst: false,
-    sparkData: []
+    startTime: -Infinity,
+    pendingStart: false
   };
 }
 
 function initializeFireSparkSystem(node, runtime) {
   const group = new THREE.Group();
-  group.name = 'fireSparkGroup';
+  group.name = 'testSpiralSparkGroup';
   group.renderOrder = 3;
 
-  const geometry = new THREE.SphereGeometry(FIRE_SPARK_SIZE, 6, 6);
+  const geometry = new THREE.SphereGeometry(TEST_SPARK_RADIUS, 12, 12);
   const material = new THREE.MeshBasicMaterial({
-    color: FIRE_SPARK_COLOR,
-    transparent: true,
-    opacity: 1,
-    depthWrite: false,
-    toneMapped: false
+    color: TEST_SPARK_COLOR
   });
-  const sparksMesh = new THREE.InstancedMesh(geometry, material, FIRE_SPARK_COUNT);
-  sparksMesh.frustumCulled = false;
-  sparksMesh.count = FIRE_SPARK_COUNT;
-  sparksMesh.raycast = () => {};
-  sparksMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
-  group.add(sparksMesh);
+  const sparkMesh = new THREE.Mesh(geometry, material);
+  sparkMesh.visible = false;
+  sparkMesh.raycast = () => {};
+  group.add(sparkMesh);
   group.visible = false;
 
-  const hidden = new THREE.Matrix4().makeScale(0, 0, 0);
-  for (let i = 0; i < FIRE_SPARK_COUNT; i += 1) {
-    sparksMesh.setMatrixAt(i, hidden);
-  }
-  sparksMesh.instanceMatrix.needsUpdate = true;
-
   runtime.group = group;
-  console.debug('[orbitNodes] glyph2 sparks created');
-  runtime.sparksMesh = sparksMesh;
-  runtime.sparkData = new Array(FIRE_SPARK_COUNT).fill(null).map(() => ({
-    angleOffset: 0,
-    angularSpeed: 0,
-    radius: 0,
-    launchOffset: 0,
-    lifetime: 1,
-    startHeight: 0,
-    driftX: 0,
-    driftZ: 0
-  }));
+  runtime.sparkMesh = sparkMesh;
   node.add(group);
 }
 
 function startFireSparkBurst(runtime, elapsed) {
-  if (!runtime?.sparksMesh) return;
+  if (!runtime?.sparkMesh) return;
   runtime.active = true;
-  runtime.pendingBurst = false;
-  runtime.burstStartTime = elapsed;
-  console.debug('[orbitNodes] glyph2 burst start', { elapsed });
+  runtime.pendingStart = false;
+  runtime.startTime = elapsed;
   runtime.group.visible = true;
-
-  runtime.sparkData.forEach((spark) => {
-    spark.angleOffset = Math.random() * Math.PI * 2;
-    spark.angularSpeed = THREE.MathUtils.lerp(FIRE_SPARK_ANGULAR_SPEED_MIN, FIRE_SPARK_ANGULAR_SPEED_MAX, Math.random());
-    spark.radius = THREE.MathUtils.lerp(FIRE_SPARK_SPIRAL_RADIUS_MIN, FIRE_SPARK_SPIRAL_RADIUS_MAX, Math.random());
-    spark.launchOffset = Math.random() * FIRE_BURST_START_OFFSET_RANGE;
-    spark.lifetime = THREE.MathUtils.lerp(FIRE_SPARK_LIFETIME_MIN, FIRE_SPARK_LIFETIME_MAX, Math.random());
-    spark.startHeight = THREE.MathUtils.lerp(-0.2, 0.02, Math.random());
-    spark.driftX = THREE.MathUtils.lerp(-0.035, 0.035, Math.random());
-    spark.driftZ = THREE.MathUtils.lerp(-0.035, 0.035, Math.random());
-  });
+  runtime.sparkMesh.visible = true;
+  runtime.sparkMesh.position.set(TEST_SPARK_SPIRAL_RADIUS, TEST_SPARK_START_YOFFSET, 0);
 }
 
 function updateFireSparkBurst(runtime, elapsed) {
-  if (!runtime?.sparksMesh) return;
-  if (runtime.pendingBurst) startFireSparkBurst(runtime, elapsed);
+  if (!runtime?.sparkMesh) return;
+  if (runtime.pendingStart) startFireSparkBurst(runtime, elapsed);
   if (!runtime.active) return;
-  const elapsedSinceBurst = elapsed - runtime.burstStartTime;
-  const matrix = new THREE.Matrix4();
-  const pos = new THREE.Vector3();
-  const quat = new THREE.Quaternion();
-  const scale = new THREE.Vector3(1, 1, 1);
-  const hidden = new THREE.Vector3(0, 0, 0);
-  let visibleCount = 0;
+  const elapsedSinceBurst = elapsed - runtime.startTime;
+  const progress = THREE.MathUtils.clamp(elapsedSinceBurst / TEST_SPARK_DURATION, 0, 1);
 
-  runtime.sparkData.forEach((spark, index) => {
-    const localT = (elapsedSinceBurst - spark.launchOffset) / spark.lifetime;
-    if (localT <= 0 || localT >= 1) {
-      matrix.compose(pos.set(0, -999, 0), quat, hidden);
-      runtime.sparksMesh.setMatrixAt(index, matrix);
-      return;
-    }
+  const angle = progress * Math.PI * 2 * TEST_SPARK_ANGULAR_SPEED;
+  const y = TEST_SPARK_START_YOFFSET + progress * TEST_SPARK_RISE_HEIGHT;
+  runtime.sparkMesh.position.set(
+    Math.cos(angle) * TEST_SPARK_SPIRAL_RADIUS,
+    y,
+    Math.sin(angle) * TEST_SPARK_SPIRAL_RADIUS
+  );
 
-    const spiralAngle = spark.angleOffset + localT * spark.angularSpeed * Math.PI * 2;
-    const currentRadius = spark.radius * (1 - localT * 0.35);
-    const y = spark.startHeight + localT * FIRE_SPARK_RISE_HEIGHT;
-    pos.set(
-      Math.cos(spiralAngle) * currentRadius + spark.driftX * localT,
-      y,
-      Math.sin(spiralAngle) * currentRadius + spark.driftZ * localT
-    );
-    matrix.compose(pos, quat, scale);
-    runtime.sparksMesh.setMatrixAt(index, matrix);
-    visibleCount += 1;
-  });
-
-  runtime.sparksMesh.material.opacity = elapsedSinceBurst > FIRE_BURST_DURATION * FIRE_SPARK_FADE_OUT_START
-    ? THREE.MathUtils.clamp(1 - ((elapsedSinceBurst / FIRE_BURST_DURATION) - FIRE_SPARK_FADE_OUT_START) / (1 - FIRE_SPARK_FADE_OUT_START), 0, 1)
-    : 1;
-  runtime.sparksMesh.instanceMatrix.needsUpdate = true;
-  console.debug('[orbitNodes] glyph2 update active', { elapsedSinceBurst, visibleCount });
-
-  if (elapsedSinceBurst >= FIRE_BURST_DURATION || visibleCount === 0) {
+  if (progress >= 1) {
     runtime.active = false;
     runtime.group.visible = false;
-    runtime.sparksMesh.material.opacity = 1;
+    runtime.sparkMesh.visible = false;
   }
 }
 
@@ -547,10 +482,12 @@ export function setNodeHoverState(node, isHovered) {
       node.userData.hoverPointLight.color.set(WOOD_NODE_HOVER_LIGHT_COLOR);
     } else if (node.userData.id === FIRE_NODE_ID) {
       node.userData.targetHoverLightIntensity = 0;
-      node.userData.hoverPointLight.color.set(FIRE_NODE_HOVER_LIGHT_COLOR);
+      node.userData.hoverPointLight.color.copy(node.material.color);
       if (node.userData.fireSparkRuntime) {
-        node.userData.fireSparkRuntime.pendingBurst = true;
-        console.debug('[orbitNodes] glyph2 hover enter');
+        const { active, pendingStart } = node.userData.fireSparkRuntime;
+        if (!active && !pendingStart) {
+          node.userData.fireSparkRuntime.pendingStart = true;
+        }
       }
     } else {
       node.userData.targetHoverLightIntensity = HOVER_LIGHT_INTENSITY_TARGET;
@@ -565,10 +502,10 @@ export function setNodeHoverState(node, isHovered) {
   node.userData.targetScale = 1;
   node.userData.targetHoverLightIntensity = 0;
   if (node.userData.id === FIRE_NODE_ID && node.userData.fireSparkRuntime) {
-    node.userData.fireSparkRuntime.pendingBurst = false;
+    node.userData.fireSparkRuntime.pendingStart = false;
     node.userData.fireSparkRuntime.active = false;
     if (node.userData.fireSparkRuntime.group) node.userData.fireSparkRuntime.group.visible = false;
-    console.debug('[orbitNodes] glyph2 hover leave');
+    if (node.userData.fireSparkRuntime.sparkMesh) node.userData.fireSparkRuntime.sparkMesh.visible = false;
   }
   if (node.userData.woodTreeEffectRuntime) {
     node.userData.woodTreeEffectRuntime.revealTarget = 0;
