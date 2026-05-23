@@ -33,6 +33,7 @@ const TEST_SPARK_RADIUS_AT_TOP_FACTOR = 1.3;
 const TEST_SPARK_SECOND_SPIRAL_OFFSET = Math.PI / 6;
 const TEST_SPARK_ANGULAR_SPEED = 2.6 * 0.8;
 const TEST_SPARK_BASE_ANGULAR_VELOCITY = (Math.PI * 2 * TEST_SPARK_ANGULAR_SPEED) / TEST_SPARK_DURATION;
+const TEST_SPARK_BASE_ROTATION_TURNS = TEST_SPARK_ANGULAR_SPEED;
 const TEST_SPARK_RISE_HEIGHT = 1.35;
 const TEST_SPARK_START_YOFFSET = -0.2;
 const TEST_SPARK_TRAJECTORY_VARIANTS = [
@@ -43,6 +44,7 @@ const BASELINE_SPARK_LAYER_CONFIG = Object.freeze({
   layerName: 'baseline',
   groupName: 'testSpiralSparkGroup',
   angularSpeedMultiplier: 1,
+  rotationTurnsMultiplier: 1,
   radiusProfile: Object.freeze({
     mode: 'baseline',
     baseRadiusMultiplier: 1,
@@ -58,7 +60,8 @@ const BASELINE_SPARK_LAYER_CONFIG = Object.freeze({
 const SLOW_MOTION_SPARK_LAYER_CONFIG = Object.freeze({
   layerName: 'slowmotion',
   groupName: 'slowMotionSparkGroup',
-  angularSpeedMultiplier: 0.5,
+  angularSpeedMultiplier: 1,
+  rotationTurnsMultiplier: 0.25,
   radiusProfile: Object.freeze({
     mode: 'cone',
     baseRadiusMultiplier: 2,
@@ -228,15 +231,21 @@ function startFireSparkBurst(runtime, elapsed) {
         * diagnosticEntry.angularSpeedMultiplier
         * diagnosticEntry.rotationDirection
         * layer.config.angularSpeedMultiplier;
-      const sampleAngleAtHalfSecond = 0.5 * effectiveAngularVelocity
+      const effectiveRotationTurns = TEST_SPARK_BASE_ROTATION_TURNS
+        * diagnosticEntry.angularSpeedMultiplier
+        * diagnosticEntry.rotationDirection
+        * layer.config.rotationTurnsMultiplier;
+      const sampleAngleAtHalfSecond = 0.5 * effectiveRotationTurns * Math.PI * 2
         + diagnosticEntry.phaseOffset
         + diagnosticEntry.burstAngleOffset;
       console.info('[FireSparkBurst] rotation diagnostics', {
         layerName: layer.config.layerName,
         layerAngularSpeedMultiplier: layer.config.angularSpeedMultiplier,
+        layerRotationTurnsMultiplier: layer.config.rotationTurnsMultiplier,
         entryAngularSpeedMultiplier: diagnosticEntry.angularSpeedMultiplier,
         rotationDirection: diagnosticEntry.rotationDirection,
         effectiveAngularVelocity,
+        effectiveRotationTurns,
         lifetime: TEST_SPARK_DURATION,
         sampleAngleAtHalfSecond
       });
@@ -279,12 +288,11 @@ function updateFireSparkBurst(runtime, elapsed) {
 
       const progress = THREE.MathUtils.clamp(elapsedSinceBurst / TEST_SPARK_DURATION, 0, 1);
       const opacity = getSparkOpacityByHeight(progress);
-      const localTime = elapsedSinceBurst;
-      const effectiveAngularVelocity = TEST_SPARK_BASE_ANGULAR_VELOCITY
+      const effectiveRotationTurns = TEST_SPARK_BASE_ROTATION_TURNS
         * entry.angularSpeedMultiplier
         * entry.rotationDirection
-        * layer.config.angularSpeedMultiplier;
-      const baseAngle = localTime * effectiveAngularVelocity;
+        * layer.config.rotationTurnsMultiplier;
+      const baseAngle = progress * effectiveRotationTurns * Math.PI * 2;
       const y = TEST_SPARK_START_YOFFSET + progress * TEST_SPARK_RISE_HEIGHT;
       const angle = baseAngle + entry.phaseOffset + entry.burstAngleOffset;
       const radius = getSparkLayerRadius(progress, layer.config);
