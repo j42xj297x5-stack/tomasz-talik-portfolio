@@ -28,7 +28,10 @@ const TEST_SPARK_BURST_SEQUENCE = TEST_SPARK_SEQUENCE_BASE_OFFSETS.flatMap((sequ
 const TEST_SPARK_COLOR = '#fff36b';
 const TEST_SPARK_DURATION = 1.5;
 const TEST_SPARK_SPIRAL_RADIUS = 0.22;
-const TEST_SPARK_ANGULAR_SPEED = 2.6;
+const TEST_SPARK_RADIUS_AT_MID_HEIGHT_FACTOR = 0.72;
+const TEST_SPARK_RADIUS_AT_TOP_FACTOR = 1.3;
+const TEST_SPARK_SECOND_SPIRAL_OFFSET = Math.PI / 6;
+const TEST_SPARK_ANGULAR_SPEED = 2.6 * 0.8;
 const TEST_SPARK_RISE_HEIGHT = 1.35;
 const TEST_SPARK_START_YOFFSET = -0.2;
 
@@ -39,6 +42,22 @@ function getSparkOpacityByHeight(heightProgress) {
   return THREE.MathUtils.lerp(0.7, 0, THREE.MathUtils.smoothstep((clampedHeight - 0.6) / 0.4, 0, 1));
 }
 
+
+
+function getSpiralRadiusByHeight(heightProgress) {
+  const clampedHeight = THREE.MathUtils.clamp(heightProgress, 0, 1);
+  const baseRadius = TEST_SPARK_SPIRAL_RADIUS;
+  const minRadius = baseRadius * TEST_SPARK_RADIUS_AT_MID_HEIGHT_FACTOR;
+  const topRadius = baseRadius * TEST_SPARK_RADIUS_AT_TOP_FACTOR;
+
+  if (clampedHeight <= 0.5) {
+    const t = THREE.MathUtils.smoothstep(clampedHeight / 0.5, 0, 1);
+    return THREE.MathUtils.lerp(baseRadius, minRadius, t);
+  }
+
+  const t = THREE.MathUtils.smoothstep((clampedHeight - 0.5) / 0.5, 0, 1);
+  return THREE.MathUtils.lerp(minRadius, topRadius, t);
+}
 const WOOD_TREE_EFFECT_MODEL_PATH = '/glb/glyph_1-tree.glb';
 const WOOD_TREE_EFFECT_FALLBACK_MODEL_PATH = '/glb/glyph_1.glb';
 const WOOD_TREE_REVEAL_DURATION_IN = 9.6;
@@ -109,25 +128,27 @@ function initializeFireSparkSystem(node, runtime) {
   const sparkEntries = [];
 
   TEST_SPARK_BURST_SEQUENCE.forEach(({ delay, angleOffset }) => {
-    for (let index = 0; index < TEST_SPARK_COUNT; index += 1) {
-      const material = new THREE.MeshBasicMaterial({
+    [0, TEST_SPARK_SECOND_SPIRAL_OFFSET].forEach((spiralOffset) => {
+      for (let index = 0; index < TEST_SPARK_COUNT; index += 1) {
+        const material = new THREE.MeshBasicMaterial({
         color: TEST_SPARK_COLOR,
         transparent: true,
         opacity: 1
       });
-      const sparkMesh = new THREE.Mesh(geometry, material);
-      sparkMesh.visible = false;
-      sparkMesh.raycast = () => {};
-      group.add(sparkMesh);
-      sparkMeshes.push(sparkMesh);
-      sparkEntries.push({
-        mesh: sparkMesh,
-        phaseOffset: TEST_SPARK_PHASE_OFFSETS[index] ?? 0,
-        burstDelay: delay,
-        burstAngleOffset: angleOffset,
-        startTime: -Infinity
-      });
-    }
+        const sparkMesh = new THREE.Mesh(geometry, material);
+        sparkMesh.visible = false;
+        sparkMesh.raycast = () => {};
+        group.add(sparkMesh);
+        sparkMeshes.push(sparkMesh);
+        sparkEntries.push({
+          mesh: sparkMesh,
+          phaseOffset: TEST_SPARK_PHASE_OFFSETS[index] ?? 0,
+          burstDelay: delay,
+          burstAngleOffset: angleOffset + spiralOffset,
+          startTime: -Infinity
+        });
+      }
+    });
   });
 
   group.visible = false;
@@ -149,10 +170,11 @@ function startFireSparkBurst(runtime, elapsed) {
     entry.mesh.visible = false;
     entry.mesh.material.opacity = 1;
     const startAngle = entry.phaseOffset + entry.burstAngleOffset;
+    const startRadius = getSpiralRadiusByHeight(0);
     entry.mesh.position.set(
-      Math.cos(startAngle) * TEST_SPARK_SPIRAL_RADIUS,
+      Math.cos(startAngle) * startRadius,
       TEST_SPARK_START_YOFFSET,
-      Math.sin(startAngle) * TEST_SPARK_SPIRAL_RADIUS
+      Math.sin(startAngle) * startRadius
     );
   });
 }
@@ -177,12 +199,13 @@ function updateFireSparkBurst(runtime, elapsed) {
     const baseAngle = progress * Math.PI * 2 * TEST_SPARK_ANGULAR_SPEED;
     const y = TEST_SPARK_START_YOFFSET + progress * TEST_SPARK_RISE_HEIGHT;
     const angle = baseAngle + entry.phaseOffset + entry.burstAngleOffset;
+    const radius = getSpiralRadiusByHeight(progress);
 
     entry.mesh.visible = progress < 1;
     entry.mesh.position.set(
-      Math.cos(angle) * TEST_SPARK_SPIRAL_RADIUS,
+      Math.cos(angle) * radius,
       y,
-      Math.sin(angle) * TEST_SPARK_SPIRAL_RADIUS
+      Math.sin(angle) * radius
     );
     entry.mesh.material.opacity = opacity;
 
