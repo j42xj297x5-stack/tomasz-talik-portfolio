@@ -32,6 +32,7 @@ const TEST_SPARK_RADIUS_AT_MID_HEIGHT_FACTOR = 0.72;
 const TEST_SPARK_RADIUS_AT_TOP_FACTOR = 1.3;
 const TEST_SPARK_SECOND_SPIRAL_OFFSET = Math.PI / 6;
 const TEST_SPARK_ANGULAR_SPEED = 2.6 * 0.8;
+const TEST_SPARK_BASE_ANGULAR_VELOCITY = (Math.PI * 2 * TEST_SPARK_ANGULAR_SPEED) / TEST_SPARK_DURATION;
 const TEST_SPARK_RISE_HEIGHT = 1.35;
 const TEST_SPARK_START_YOFFSET = -0.2;
 const TEST_SPARK_TRAJECTORY_VARIANTS = [
@@ -255,8 +256,12 @@ function updateFireSparkBurst(runtime, elapsed) {
 
       const progress = THREE.MathUtils.clamp(elapsedSinceBurst / TEST_SPARK_DURATION, 0, 1);
       const opacity = getSparkOpacityByHeight(progress);
-      const layerAngularSpeed = layer.config.angularSpeedMultiplier;
-      const baseAngle = progress * Math.PI * 2 * TEST_SPARK_ANGULAR_SPEED * entry.angularSpeedMultiplier * entry.rotationDirection * layerAngularSpeed;
+      const localTime = elapsedSinceBurst;
+      const effectiveAngularVelocity = TEST_SPARK_BASE_ANGULAR_VELOCITY
+        * entry.angularSpeedMultiplier
+        * entry.rotationDirection
+        * layer.config.angularSpeedMultiplier;
+      const baseAngle = localTime * effectiveAngularVelocity;
       const y = TEST_SPARK_START_YOFFSET + progress * TEST_SPARK_RISE_HEIGHT;
       const angle = baseAngle + entry.phaseOffset + entry.burstAngleOffset;
       const radius = getSparkLayerRadius(progress, layer.config);
