@@ -162,7 +162,8 @@ function createFireSparkRuntime() {
     layers: [],
     active: false,
     sequenceStartTime: -Infinity,
-    pendingStart: false
+    pendingStart: false,
+    hasLoggedAngularDiagnostics: false
   };
 }
 
@@ -220,6 +221,26 @@ function startFireSparkBurst(runtime, elapsed) {
   runtime.sequenceStartTime = elapsed;
   runtime.layers.forEach((layer) => {
     layer.group.visible = true;
+
+    if (!runtime.hasLoggedAngularDiagnostics && layer.sparkEntries.length) {
+      const diagnosticEntry = layer.sparkEntries[0];
+      const effectiveAngularVelocity = TEST_SPARK_BASE_ANGULAR_VELOCITY
+        * diagnosticEntry.angularSpeedMultiplier
+        * diagnosticEntry.rotationDirection
+        * layer.config.angularSpeedMultiplier;
+      const sampleAngleAtHalfSecond = 0.5 * effectiveAngularVelocity
+        + diagnosticEntry.phaseOffset
+        + diagnosticEntry.burstAngleOffset;
+      console.info('[FireSparkBurst] rotation diagnostics', {
+        layerName: layer.config.layerName,
+        layerAngularSpeedMultiplier: layer.config.angularSpeedMultiplier,
+        entryAngularSpeedMultiplier: diagnosticEntry.angularSpeedMultiplier,
+        rotationDirection: diagnosticEntry.rotationDirection,
+        effectiveAngularVelocity,
+        lifetime: TEST_SPARK_DURATION,
+        sampleAngleAtHalfSecond
+      });
+    }
     layer.sparkEntries.forEach((entry) => {
       entry.startTime = elapsed + entry.burstDelay;
       entry.mesh.visible = false;
@@ -233,6 +254,8 @@ function startFireSparkBurst(runtime, elapsed) {
       );
     });
   });
+
+  runtime.hasLoggedAngularDiagnostics = true;
 }
 
 function updateFireSparkBurst(runtime, elapsed) {
