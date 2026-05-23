@@ -38,6 +38,38 @@ const TEST_SPARK_TRAJECTORY_VARIANTS = [
   { rotationDirection: 1, angularSpeedMultiplier: 1 },
   { rotationDirection: -1, angularSpeedMultiplier: 0.5 }
 ];
+const BASELINE_SPARK_LAYER_CONFIG = Object.freeze({
+  layerName: 'baseline',
+  groupName: 'testSpiralSparkGroup',
+  angularSpeedMultiplier: 1,
+  radiusProfile: Object.freeze({
+    mode: 'baseline',
+    baseRadiusMultiplier: 1,
+    topRadiusMultiplier: TEST_SPARK_RADIUS_AT_TOP_FACTOR
+  }),
+  randomness: Object.freeze({
+    angleJitter: 0,
+    speedJitter: 0,
+    radiusJitter: 0,
+    startDelayJitter: 0
+  })
+});
+const SLOW_MOTION_SPARK_LAYER_CONFIG = Object.freeze({
+  layerName: 'slowmotion',
+  groupName: 'slowMotionSparkGroup',
+  angularSpeedMultiplier: 0.5,
+  radiusProfile: Object.freeze({
+    mode: 'cone',
+    baseRadiusMultiplier: 2,
+    topRadiusRatio: 0.05
+  }),
+  randomness: Object.freeze({
+    angleJitter: 0,
+    speedJitter: 0,
+    radiusJitter: 0,
+    startDelayJitter: 0
+  })
+});
 
 function getSparkOpacityByHeight(heightProgress) {
   const clampedHeight = THREE.MathUtils.clamp(heightProgress, 0, 1);
@@ -61,6 +93,19 @@ function getSpiralRadiusByHeight(heightProgress) {
 
   const t = THREE.MathUtils.smoothstep((clampedHeight - 0.5) / 0.5, 0, 1);
   return THREE.MathUtils.lerp(minRadius, topRadius, t);
+}
+
+function getSlowMotionSpiralRadius(heightProgress) {
+  const clampedHeight = THREE.MathUtils.clamp(heightProgress, 0, 1);
+  const baseRadius = TEST_SPARK_SPIRAL_RADIUS * SLOW_MOTION_SPARK_LAYER_CONFIG.radiusProfile.baseRadiusMultiplier;
+  const topRadius = baseRadius * SLOW_MOTION_SPARK_LAYER_CONFIG.radiusProfile.topRadiusRatio;
+  const t = THREE.MathUtils.smoothstep(clampedHeight, 0, 1);
+  return THREE.MathUtils.lerp(baseRadius, topRadius, t);
+}
+
+function getSparkLayerRadius(heightProgress, layerConfig) {
+  if (layerConfig?.radiusProfile?.mode === 'cone') return getSlowMotionSpiralRadius(heightProgress);
+  return getSpiralRadiusByHeight(heightProgress);
 }
 const WOOD_TREE_EFFECT_MODEL_PATH = '/glb/glyph_1-tree.glb';
 const WOOD_TREE_EFFECT_FALLBACK_MODEL_PATH = '/glb/glyph_1.glb';
@@ -113,9 +158,7 @@ function createWoodTreeEffectRuntime() {
 
 function createFireSparkRuntime() {
   return {
-    group: null,
-    sparkMeshes: [],
-    sparkEntries: [],
+    layers: [],
     active: false,
     sequenceStartTime: -Infinity,
     pendingStart: false
@@ -123,105 +166,118 @@ function createFireSparkRuntime() {
 }
 
 function initializeFireSparkSystem(node, runtime) {
-  const group = new THREE.Group();
-  group.name = 'testSpiralSparkGroup';
-  group.renderOrder = 3;
-
   const geometry = new THREE.SphereGeometry(TEST_SPARK_RADIUS, 12, 12);
-  const sparkMeshes = [];
-  const sparkEntries = [];
+  const layerConfigs = [
+    { ...BASELINE_SPARK_LAYER_CONFIG, radiusProfile: { ...BASELINE_SPARK_LAYER_CONFIG.radiusProfile }, randomness: { ...BASELINE_SPARK_LAYER_CONFIG.randomness } },
+    { ...SLOW_MOTION_SPARK_LAYER_CONFIG, radiusProfile: { ...SLOW_MOTION_SPARK_LAYER_CONFIG.radiusProfile }, randomness: { ...SLOW_MOTION_SPARK_LAYER_CONFIG.randomness } }
+  ];
 
-  TEST_SPARK_TRAJECTORY_VARIANTS.forEach(({ rotationDirection, angularSpeedMultiplier }) => {
-    TEST_SPARK_BURST_SEQUENCE.forEach(({ delay, angleOffset }) => {
-      [0, TEST_SPARK_SECOND_SPIRAL_OFFSET].forEach((spiralOffset) => {
-        for (let index = 0; index < TEST_SPARK_COUNT; index += 1) {
-          const material = new THREE.MeshBasicMaterial({
-            color: TEST_SPARK_COLOR,
-            transparent: true,
-            opacity: 1
-          });
-          const sparkMesh = new THREE.Mesh(geometry, material);
-          sparkMesh.visible = false;
-          sparkMesh.raycast = () => {};
-          group.add(sparkMesh);
-          sparkMeshes.push(sparkMesh);
-          sparkEntries.push({
-            mesh: sparkMesh,
-            phaseOffset: TEST_SPARK_PHASE_OFFSETS[index] ?? 0,
-            burstDelay: delay,
-            burstAngleOffset: angleOffset + spiralOffset,
-            rotationDirection,
-            angularSpeedMultiplier,
-            startTime: -Infinity
-          });
-        }
+  runtime.layers = layerConfigs.map((layerConfig) => {
+    const group = new THREE.Group();
+    group.name = layerConfig.groupName;
+    group.renderOrder = 3;
+
+    const sparkMeshes = [];
+    const sparkEntries = [];
+    TEST_SPARK_TRAJECTORY_VARIANTS.forEach(({ rotationDirection, angularSpeedMultiplier }) => {
+      TEST_SPARK_BURST_SEQUENCE.forEach(({ delay, angleOffset }) => {
+        [0, TEST_SPARK_SECOND_SPIRAL_OFFSET].forEach((spiralOffset) => {
+          for (let index = 0; index < TEST_SPARK_COUNT; index += 1) {
+            const material = new THREE.MeshBasicMaterial({
+              color: TEST_SPARK_COLOR,
+              transparent: true,
+              opacity: 1
+            });
+            const sparkMesh = new THREE.Mesh(geometry, material);
+            sparkMesh.visible = false;
+            sparkMesh.raycast = () => {};
+            group.add(sparkMesh);
+            sparkMeshes.push(sparkMesh);
+            sparkEntries.push({
+              mesh: sparkMesh,
+              phaseOffset: TEST_SPARK_PHASE_OFFSETS[index] ?? 0,
+              burstDelay: delay,
+              burstAngleOffset: angleOffset + spiralOffset,
+              rotationDirection,
+              angularSpeedMultiplier,
+              startTime: -Infinity
+            });
+          }
+        });
       });
     });
+    group.visible = false;
+    node.add(group);
+    return { config: layerConfig, group, sparkMeshes, sparkEntries };
   });
-
-  group.visible = false;
-
-  runtime.group = group;
-  runtime.sparkMeshes = sparkMeshes;
-  runtime.sparkEntries = sparkEntries;
-  node.add(group);
 }
 
 function startFireSparkBurst(runtime, elapsed) {
-  if (!runtime?.sparkEntries?.length) return;
+  if (!runtime?.layers?.length) return;
   runtime.active = true;
   runtime.pendingStart = false;
   runtime.sequenceStartTime = elapsed;
-  runtime.group.visible = true;
-  runtime.sparkEntries.forEach((entry) => {
-    entry.startTime = elapsed + entry.burstDelay;
-    entry.mesh.visible = false;
-    entry.mesh.material.opacity = 1;
-    const startAngle = entry.phaseOffset + entry.burstAngleOffset;
-    const startRadius = getSpiralRadiusByHeight(0);
-    entry.mesh.position.set(
-      Math.cos(startAngle) * startRadius,
-      TEST_SPARK_START_YOFFSET,
-      Math.sin(startAngle) * startRadius
-    );
+  runtime.layers.forEach((layer) => {
+    layer.group.visible = true;
+    layer.sparkEntries.forEach((entry) => {
+      entry.startTime = elapsed + entry.burstDelay;
+      entry.mesh.visible = false;
+      entry.mesh.material.opacity = 1;
+      const startAngle = entry.phaseOffset + entry.burstAngleOffset;
+      const startRadius = getSparkLayerRadius(0, layer.config);
+      entry.mesh.position.set(
+        Math.cos(startAngle) * startRadius,
+        TEST_SPARK_START_YOFFSET,
+        Math.sin(startAngle) * startRadius
+      );
+    });
   });
 }
 
 function updateFireSparkBurst(runtime, elapsed) {
-  if (!runtime?.sparkEntries?.length) return;
+  if (!runtime?.layers?.length) return;
   if (runtime.pendingStart) startFireSparkBurst(runtime, elapsed);
   if (!runtime.active) return;
-  let hasVisibleSparks = false;
-  let hasPendingBursts = false;
+  let runtimeHasVisibleSparks = false;
+  let runtimeHasPendingBursts = false;
 
-  runtime.sparkEntries.forEach((entry) => {
-    const elapsedSinceBurst = elapsed - entry.startTime;
-    if (elapsedSinceBurst < 0) {
-      hasPendingBursts = true;
-      entry.mesh.visible = false;
-      return;
-    }
+  runtime.layers.forEach((layer) => {
+    let hasVisibleSparks = false;
+    let hasPendingBursts = false;
 
-    const progress = THREE.MathUtils.clamp(elapsedSinceBurst / TEST_SPARK_DURATION, 0, 1);
-    const opacity = getSparkOpacityByHeight(progress);
-    const baseAngle = progress * Math.PI * 2 * TEST_SPARK_ANGULAR_SPEED * entry.angularSpeedMultiplier * entry.rotationDirection;
-    const y = TEST_SPARK_START_YOFFSET + progress * TEST_SPARK_RISE_HEIGHT;
-    const angle = baseAngle + entry.phaseOffset + entry.burstAngleOffset;
-    const radius = getSpiralRadiusByHeight(progress);
+    layer.sparkEntries.forEach((entry) => {
+      const elapsedSinceBurst = elapsed - entry.startTime;
+      if (elapsedSinceBurst < 0) {
+        hasPendingBursts = true;
+        entry.mesh.visible = false;
+        return;
+      }
 
-    entry.mesh.visible = progress < 1;
-    entry.mesh.position.set(
-      Math.cos(angle) * radius,
-      y,
-      Math.sin(angle) * radius
-    );
-    entry.mesh.material.opacity = opacity;
+      const progress = THREE.MathUtils.clamp(elapsedSinceBurst / TEST_SPARK_DURATION, 0, 1);
+      const opacity = getSparkOpacityByHeight(progress);
+      const layerAngularSpeed = layer.config.angularSpeedMultiplier;
+      const baseAngle = progress * Math.PI * 2 * TEST_SPARK_ANGULAR_SPEED * entry.angularSpeedMultiplier * entry.rotationDirection * layerAngularSpeed;
+      const y = TEST_SPARK_START_YOFFSET + progress * TEST_SPARK_RISE_HEIGHT;
+      const angle = baseAngle + entry.phaseOffset + entry.burstAngleOffset;
+      const radius = getSparkLayerRadius(progress, layer.config);
 
-    if (progress < 1) hasVisibleSparks = true;
+      entry.mesh.visible = progress < 1;
+      entry.mesh.position.set(
+        Math.cos(angle) * radius,
+        y,
+        Math.sin(angle) * radius
+      );
+      entry.mesh.material.opacity = opacity;
+
+      if (progress < 1) hasVisibleSparks = true;
+    });
+
+    layer.group.visible = hasVisibleSparks || hasPendingBursts;
+    runtimeHasVisibleSparks = runtimeHasVisibleSparks || hasVisibleSparks;
+    runtimeHasPendingBursts = runtimeHasPendingBursts || hasPendingBursts;
   });
 
-  runtime.group.visible = hasVisibleSparks || hasPendingBursts;
-  runtime.active = hasVisibleSparks || hasPendingBursts;
+  runtime.active = runtimeHasVisibleSparks || runtimeHasPendingBursts;
 }
 
 function applyWoodTreeActivation(runtime, elapsed) {
@@ -596,12 +652,12 @@ export function setNodeHoverState(node, isHovered) {
   if (node.userData.id === FIRE_NODE_ID && node.userData.fireSparkRuntime) {
     node.userData.fireSparkRuntime.pendingStart = false;
     node.userData.fireSparkRuntime.active = false;
-    if (node.userData.fireSparkRuntime.group) node.userData.fireSparkRuntime.group.visible = false;
-    if (node.userData.fireSparkRuntime.sparkMeshes?.length) {
-      node.userData.fireSparkRuntime.sparkMeshes.forEach((sparkMesh) => {
+    node.userData.fireSparkRuntime.layers?.forEach((layer) => {
+      if (layer.group) layer.group.visible = false;
+      layer.sparkMeshes?.forEach((sparkMesh) => {
         sparkMesh.visible = false;
       });
-    }
+    });
   }
   if (node.userData.woodTreeEffectRuntime) {
     node.userData.woodTreeEffectRuntime.revealTarget = 0;
