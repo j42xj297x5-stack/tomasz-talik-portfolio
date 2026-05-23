@@ -4,7 +4,7 @@ import { portfolioNodes } from './content/portfolioNodes.js';
 import { createScene } from './scene/createScene.js';
 import { addLights } from './scene/lights.js';
 import { createCentralObject } from './scene/centralObject.js';
-import { createParticles } from './scene/particles.js';
+import { createBackgroundAtmosphere } from './scene/atmosphere.js';
 import { loadMonkeyModel } from './scene/monkeyModel.js';
 import { createOrbitNodes, setNodeHoverState, updateOrbitNodes } from './scene/orbitNodes.js';
 import { pickNode } from './scene/raycaster.js';
@@ -34,7 +34,25 @@ camera.position.set(0, 1.8, 6);
 addLights(scene);
 const centralPlaceholder = createCentralObject();
 scene.add(centralPlaceholder);
-scene.add(createParticles());
+
+const sceneRuntimeConfig = {
+  backgroundAtmosphere: {
+    enabled: true,
+    safeRadius: 3.5,
+    shellInnerRadius: 5.0,
+    shellOuterRadius: 13.0,
+    dust: {
+      enabled: true,
+      count: 500,
+      idleOpacity: 0.06,
+      rotationSpeed: 0.015,
+      pointSize: 0.025
+    }
+  }
+};
+
+const atmosphere = createBackgroundAtmosphere(sceneRuntimeConfig.backgroundAtmosphere);
+if (atmosphere.object3d) scene.add(atmosphere.object3d);
 
 void loadMonkeyModel({ scene, fallbackObject: centralPlaceholder });
 
@@ -99,9 +117,11 @@ const clock = new THREE.Clock();
 const orbitCenterWorldPosition = new THREE.Vector3();
 
 function tick() {
-  const elapsed = clock.getElapsedTime();
+  const delta = clock.getDelta();
+  const elapsed = clock.elapsedTime;
   updateOrbitNodes(nodes, elapsed, orbitGroup.getWorldPosition(orbitCenterWorldPosition));
   cameraRig.update(camera, elapsed);
+  atmosphere.update(delta);
   renderer.render(scene, camera);
   requestAnimationFrame(tick);
 }
