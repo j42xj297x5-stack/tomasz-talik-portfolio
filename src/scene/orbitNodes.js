@@ -14,8 +14,13 @@ const FIRE_NODE_ID = 'creative-ai';
 const WOOD_NODE_HOVER_LIGHT_COLOR = '#cbff74';
 const WOOD_NODE_HOVER_LIGHT_INTENSITY_TARGET = 3.3;
 const TEST_SPARK_RADIUS = 0.005;
-const TEST_SPARK_COUNT = 3;
-const TEST_SPARK_PHASE_OFFSETS = [0, (Math.PI * 2) / 3, (Math.PI * 4) / 3];
+const TEST_SPARK_COUNT = 2;
+const TEST_SPARK_PHASE_OFFSETS = [0, Math.PI];
+const TEST_SPARK_BURST_SEQUENCE = [
+  { delay: 0, angleOffset: 0 },
+  { delay: 0.1, angleOffset: Math.PI / 6 },
+  { delay: 0.2, angleOffset: -Math.PI / 6 }
+];
 const TEST_SPARK_COLOR = '#fff36b';
 const TEST_SPARK_DURATION = 1.5;
 const TEST_SPARK_SPIRAL_RADIUS = 0.22;
@@ -83,8 +88,9 @@ function createFireSparkRuntime() {
   return {
     group: null,
     sparkMeshes: [],
+    sparkEntries: [],
     active: false,
-    startTime: -Infinity,
+    sequenceStartTime: -Infinity,
     pendingStart: false
   };
 }
@@ -96,72 +102,91 @@ function initializeFireSparkSystem(node, runtime) {
 
   const geometry = new THREE.SphereGeometry(TEST_SPARK_RADIUS, 12, 12);
   const sparkMeshes = [];
+  const sparkEntries = [];
 
-  for (let index = 0; index < TEST_SPARK_COUNT; index += 1) {
-    const material = new THREE.MeshBasicMaterial({
-      color: TEST_SPARK_COLOR,
-      transparent: true,
-      opacity: 1
-    });
-    const sparkMesh = new THREE.Mesh(geometry, material);
-    sparkMesh.visible = false;
-    sparkMesh.raycast = () => {};
-    group.add(sparkMesh);
-    sparkMeshes.push(sparkMesh);
-  }
+  TEST_SPARK_BURST_SEQUENCE.forEach(({ delay, angleOffset }) => {
+    for (let index = 0; index < TEST_SPARK_COUNT; index += 1) {
+      const material = new THREE.MeshBasicMaterial({
+        color: TEST_SPARK_COLOR,
+        transparent: true,
+        opacity: 1
+      });
+      const sparkMesh = new THREE.Mesh(geometry, material);
+      sparkMesh.visible = false;
+      sparkMesh.raycast = () => {};
+      group.add(sparkMesh);
+      sparkMeshes.push(sparkMesh);
+      sparkEntries.push({
+        mesh: sparkMesh,
+        phaseOffset: TEST_SPARK_PHASE_OFFSETS[index] ?? 0,
+        burstDelay: delay,
+        burstAngleOffset: angleOffset,
+        startTime: -Infinity
+      });
+    }
+  });
 
   group.visible = false;
 
   runtime.group = group;
   runtime.sparkMeshes = sparkMeshes;
+  runtime.sparkEntries = sparkEntries;
   node.add(group);
 }
 
 function startFireSparkBurst(runtime, elapsed) {
-  if (!runtime?.sparkMeshes?.length) return;
+  if (!runtime?.sparkEntries?.length) return;
   runtime.active = true;
   runtime.pendingStart = false;
-  runtime.startTime = elapsed;
+  runtime.sequenceStartTime = elapsed;
   runtime.group.visible = true;
-  runtime.sparkMeshes.forEach((sparkMesh, index) => {
-    const phaseOffset = TEST_SPARK_PHASE_OFFSETS[index] ?? 0;
-    sparkMesh.visible = true;
-    sparkMesh.position.set(
-      Math.cos(phaseOffset) * TEST_SPARK_SPIRAL_RADIUS,
+  runtime.sparkEntries.forEach((entry) => {
+    entry.startTime = elapsed + entry.burstDelay;
+    entry.mesh.visible = false;
+    entry.mesh.material.opacity = 1;
+    const startAngle = entry.phaseOffset + entry.burstAngleOffset;
+    entry.mesh.position.set(
+      Math.cos(startAngle) * TEST_SPARK_SPIRAL_RADIUS,
       TEST_SPARK_START_YOFFSET,
-      Math.sin(phaseOffset) * TEST_SPARK_SPIRAL_RADIUS
+      Math.sin(startAngle) * TEST_SPARK_SPIRAL_RADIUS
     );
   });
 }
 
 function updateFireSparkBurst(runtime, elapsed) {
-  if (!runtime?.sparkMeshes?.length) return;
+  if (!runtime?.sparkEntries?.length) return;
   if (runtime.pendingStart) startFireSparkBurst(runtime, elapsed);
   if (!runtime.active) return;
-  const elapsedSinceBurst = elapsed - runtime.startTime;
-  const progress = THREE.MathUtils.clamp(elapsedSinceBurst / TEST_SPARK_DURATION, 0, 1);
-  const opacity = getSparkOpacityByHeight(progress);
+  let hasVisibleSparks = false;
+  let hasPendingBursts = false;
 
-  const baseAngle = progress * Math.PI * 2 * TEST_SPARK_ANGULAR_SPEED;
-  const y = TEST_SPARK_START_YOFFSET + progress * TEST_SPARK_RISE_HEIGHT;
+  runtime.sparkEntries.forEach((entry) => {
+    const elapsedSinceBurst = elapsed - entry.startTime;
+    if (elapsedSinceBurst < 0) {
+      hasPendingBursts = true;
+      entry.mesh.visible = false;
+      return;
+    }
 
-  runtime.sparkMeshes.forEach((sparkMesh, index) => {
-    const angle = baseAngle + (TEST_SPARK_PHASE_OFFSETS[index] ?? 0);
-    sparkMesh.position.set(
+    const progress = THREE.MathUtils.clamp(elapsedSinceBurst / TEST_SPARK_DURATION, 0, 1);
+    const opacity = getSparkOpacityByHeight(progress);
+    const baseAngle = progress * Math.PI * 2 * TEST_SPARK_ANGULAR_SPEED;
+    const y = TEST_SPARK_START_YOFFSET + progress * TEST_SPARK_RISE_HEIGHT;
+    const angle = baseAngle + entry.phaseOffset + entry.burstAngleOffset;
+
+    entry.mesh.visible = progress < 1;
+    entry.mesh.position.set(
       Math.cos(angle) * TEST_SPARK_SPIRAL_RADIUS,
       y,
       Math.sin(angle) * TEST_SPARK_SPIRAL_RADIUS
     );
-    sparkMesh.material.opacity = opacity;
+    entry.mesh.material.opacity = opacity;
+
+    if (progress < 1) hasVisibleSparks = true;
   });
 
-  if (progress >= 1) {
-    runtime.active = false;
-    runtime.group.visible = false;
-    runtime.sparkMeshes.forEach((sparkMesh) => {
-      sparkMesh.visible = false;
-    });
-  }
+  runtime.group.visible = hasVisibleSparks || hasPendingBursts;
+  runtime.active = hasVisibleSparks || hasPendingBursts;
 }
 
 function applyWoodTreeActivation(runtime, elapsed) {
@@ -537,7 +562,11 @@ export function setNodeHoverState(node, isHovered) {
     node.userData.fireSparkRuntime.pendingStart = false;
     node.userData.fireSparkRuntime.active = false;
     if (node.userData.fireSparkRuntime.group) node.userData.fireSparkRuntime.group.visible = false;
-    if (node.userData.fireSparkRuntime.sparkMesh) node.userData.fireSparkRuntime.sparkMesh.visible = false;
+    if (node.userData.fireSparkRuntime.sparkMeshes?.length) {
+      node.userData.fireSparkRuntime.sparkMeshes.forEach((sparkMesh) => {
+        sparkMesh.visible = false;
+      });
+    }
   }
   if (node.userData.woodTreeEffectRuntime) {
     node.userData.woodTreeEffectRuntime.revealTarget = 0;
