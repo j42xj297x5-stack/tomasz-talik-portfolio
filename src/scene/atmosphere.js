@@ -1,18 +1,19 @@
 import * as THREE from '../vendor/three.js';
 
 // NOTE: This local config can be moved to a shared scene config once one exists.
+// Ultra subtle preset (previous): count 500, opacity 0.06, pointSize 0.025, shell 5.0-13.0, color #9aa9be.
 const DEFAULT_BACKGROUND_ATMOSPHERE_CONFIG = Object.freeze({
   enabled: true,
   safeRadius: 3.5,
-  shellInnerRadius: 5.0,
-  shellOuterRadius: 13.0,
+  shellInnerRadius: 4.8,
+  shellOuterRadius: 10.5,
   dust: Object.freeze({
     enabled: true,
-    count: 500,
-    idleOpacity: 0.06,
-    rotationSpeed: 0.015,
-    pointSize: 0.025,
-    color: '#9aa9be'
+    count: 1000,
+    idleOpacity: 0.12,
+    rotationSpeed: 0.012,
+    pointSize: 0.055,
+    color: '#b8c6da'
   })
 });
 
@@ -62,6 +63,9 @@ function createDustField(config) {
     size: config.pointSize,
     transparent: true,
     opacity: config.idleOpacity,
+    blending: THREE.NormalBlending,
+    sizeAttenuation: true,
+    depthTest: true,
     depthWrite: false
   });
 
