@@ -3,7 +3,8 @@ function deepClone(value) {
 }
 
 const OPTIONS_STORAGE_KEY = 'portfolio.options.runtimeState.v1';
-const OPTIONS_DEFAULTS_VERSION = '2026-05-24-atmosphere-relics-tuned-defaults-v2';
+const OPTIONS_DEFAULTS_VERSION = '2026-05-24-atmosphere-full-preset-v3';
+const PRESET_SLOT_KEYS = ['portfolio.optionsPreset.1', 'portfolio.optionsPreset.2', 'portfolio.optionsPreset.3'];
 
 function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value));
@@ -12,30 +13,30 @@ function clamp(value, min, max) {
 function normalizeRuntimeState(state) {
   const bg = state.backgroundAtmosphere;
   if (!bg.smallGlyphRelics) bg.smallGlyphRelics = {};
-  bg.safeRadius = clamp(bg.safeRadius, 0, 10);
-  bg.shellInnerRadius = clamp(bg.shellInnerRadius, 0, 20);
-  bg.shellOuterRadius = Math.max(clamp(bg.shellOuterRadius, 1, 30), bg.shellInnerRadius + 0.1);
+  bg.safeRadius = clamp(bg.safeRadius, 0, 15);
+  bg.shellInnerRadius = clamp(bg.shellInnerRadius, 0, 30);
+  bg.shellOuterRadius = Math.max(clamp(bg.shellOuterRadius, 1, 40), bg.shellInnerRadius + 0.1);
 
   bg.dust.count = Math.max(0, Math.round(bg.dust.count));
   bg.dust.idleOpacity = clamp(bg.dust.idleOpacity, 0, 1);
   bg.dust.pointSize = clamp(bg.dust.pointSize, 0.001, 0.3);
   bg.dust.rotationSpeed = clamp(bg.dust.rotationSpeed, 0, 0.1);
 
-  const normalizeRelics = (relics, speedMax, orbitMax) => {
-    relics.count = clamp(Math.round(relics.count), 0, 120);
-    relics.minScale = clamp(relics.minScale, 0.05, 8);
-    relics.maxScale = Math.max(clamp(relics.maxScale, 0.05, 10), relics.minScale);
-    relics.shellInnerRadius = clamp(relics.shellInnerRadius, 0, 20);
-    relics.shellOuterRadius = Math.max(clamp(relics.shellOuterRadius, 1, 30), relics.shellInnerRadius + 0.1);
-    relics.rotationSpeedMin = clamp(relics.rotationSpeedMin, 0, speedMax);
-    relics.rotationSpeedMax = Math.max(clamp(relics.rotationSpeedMax, 0, speedMax), relics.rotationSpeedMin);
-    relics.orbitSpeed = clamp(relics.orbitSpeed, 0, orbitMax);
+  const normalizeRelics = (relics, limits) => {
+    relics.count = clamp(Math.round(relics.count), 0, 200);
+    relics.minScale = clamp(relics.minScale, limits.minScaleMin, limits.minScaleMax);
+    relics.maxScale = Math.max(clamp(relics.maxScale, limits.maxScaleMin, limits.maxScaleMax), relics.minScale);
+    relics.shellInnerRadius = clamp(relics.shellInnerRadius, 0, 30);
+    relics.shellOuterRadius = Math.max(clamp(relics.shellOuterRadius, 1, 40), relics.shellInnerRadius + 0.1);
+    relics.rotationSpeedMin = clamp(relics.rotationSpeedMin, 0, limits.rotationMax);
+    relics.rotationSpeedMax = Math.max(clamp(relics.rotationSpeedMax, 0, limits.rotationMax), relics.rotationSpeedMin);
+    relics.orbitSpeed = clamp(relics.orbitSpeed, 0, limits.orbitMax);
     relics.opacity = clamp(relics.opacity, 0, 1);
   };
 
-  normalizeRelics(bg.stoneRelics, 0.3, 0.1);
-  normalizeRelics(bg.shellRelics, 0.5, 0.15);
-  normalizeRelics(bg.smallGlyphRelics, 0.5, 0.15);
+  normalizeRelics(bg.stoneRelics, { minScaleMin: 0.01, minScaleMax: 8, maxScaleMin: 0.01, maxScaleMax: 10, rotationMax: 0.5, orbitMax: 0.15 });
+  normalizeRelics(bg.shellRelics, { minScaleMin: 0.01, minScaleMax: 8, maxScaleMin: 0.01, maxScaleMax: 10, rotationMax: 0.8, orbitMax: 0.2 });
+  normalizeRelics(bg.smallGlyphRelics, { minScaleMin: 0.01, minScaleMax: 4, maxScaleMin: 0.01, maxScaleMax: 6, rotationMax: 0.5, orbitMax: 0.15 });
 }
 
 function isEditableTarget(target) {
@@ -119,6 +120,61 @@ export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere }
   });
   actions.append(resetAll);
   panel.append(actions);
+  const presetSection = createSection('Presets', true);
+  const presetStatus = document.createElement('p');
+  presetStatus.className = 'options-panel__preset-status';
+  presetSection.body.append(presetStatus);
+  let presetStatusTimer = null;
+  const setPresetStatus = (message) => {
+    presetStatus.textContent = message;
+    if (presetStatusTimer) clearTimeout(presetStatusTimer);
+    presetStatusTimer = setTimeout(() => { presetStatus.textContent = ''; }, 3000);
+  };
+  const makePresetRow = (slot) => {
+    const row = document.createElement('div');
+    row.className = 'options-panel__preset-row';
+    const label = document.createElement('span');
+    label.className = 'options-panel__preset-label';
+    label.textContent = `Slot ${slot}`;
+    const saveButton = document.createElement('button');
+    saveButton.type = 'button';
+    saveButton.textContent = `Save ${slot}`;
+    saveButton.className = 'options-panel__preset-btn';
+    saveButton.addEventListener('click', () => {
+      localStorage.setItem(PRESET_SLOT_KEYS[slot - 1], JSON.stringify({ version: OPTIONS_DEFAULTS_VERSION, runtimeState: { backgroundAtmosphere: deepClone(runtimeState.backgroundAtmosphere) } }));
+      setPresetStatus(`Zapisano slot ${slot}`);
+    });
+    const loadButton = document.createElement('button');
+    loadButton.type = 'button';
+    loadButton.textContent = `Load ${slot}`;
+    loadButton.className = 'options-panel__preset-btn';
+    loadButton.addEventListener('click', () => {
+      const raw = localStorage.getItem(PRESET_SLOT_KEYS[slot - 1]);
+      if (!raw) {
+        console.info(`[options] Slot ${slot} is empty.`);
+        setPresetStatus(`Slot ${slot} jest pusty`);
+        return;
+      }
+      try {
+        const parsed = JSON.parse(raw);
+        if (!parsed?.runtimeState?.backgroundAtmosphere) throw new Error('Invalid preset shape');
+        Object.assign(runtimeState.backgroundAtmosphere, parsed.runtimeState.backgroundAtmosphere);
+        normalizeRuntimeState(runtimeState);
+        onChange({ type: 'rebuild' });
+        persistState();
+        renderAll();
+        setPresetStatus(`Wczytano slot ${slot}`);
+      } catch (error) {
+        console.warn(`[options] Failed to load preset slot ${slot}.`, error);
+        setPresetStatus(`Błąd slotu ${slot}`);
+      }
+    });
+    row.append(label, saveButton, loadButton);
+    presetSection.body.append(row);
+  };
+  makePresetRow(1);
+  makePresetRow(2);
+  makePresetRow(3);
 
   const atmosphereSection = createSection('Atmosphere', true);
   const stoneSection = createSection('Stone Relics', true);
@@ -298,12 +354,12 @@ export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere }
 
   bind(checkbox(path(() => bg.enabled, (v) => { bg.enabled = v; }, 'rebuild'), atmosphereSection.body, 'backgroundAtmosphere.enabled'));
   bind(checkbox(path(() => bg.debugVisible, (v) => { bg.debugVisible = v; }, 'rebuild'), atmosphereSection.body, 'backgroundAtmosphere.debugVisible'));
-  bind(range(path(() => bg.safeRadius, (v) => { bg.safeRadius = v; }, 'rebuild'), atmosphereSection.body, 'backgroundAtmosphere.safeRadius', 0, 10, 0.1));
-  bind(range(path(() => bg.shellInnerRadius, (v) => { bg.shellInnerRadius = v; }, 'rebuild'), atmosphereSection.body, 'backgroundAtmosphere.shellInnerRadius', 0, 20, 0.1));
-  bind(range(path(() => bg.shellOuterRadius, (v) => { bg.shellOuterRadius = v; }, 'rebuild'), atmosphereSection.body, 'backgroundAtmosphere.shellOuterRadius', 1, 30, 0.1));
+  bind(range(path(() => bg.safeRadius, (v) => { bg.safeRadius = v; }, 'rebuild'), atmosphereSection.body, 'backgroundAtmosphere.safeRadius', 0, 15, 0.1));
+  bind(range(path(() => bg.shellInnerRadius, (v) => { bg.shellInnerRadius = v; }, 'rebuild'), atmosphereSection.body, 'backgroundAtmosphere.shellInnerRadius', 0, 30, 0.1));
+  bind(range(path(() => bg.shellOuterRadius, (v) => { bg.shellOuterRadius = v; }, 'rebuild'), atmosphereSection.body, 'backgroundAtmosphere.shellOuterRadius', 1, 40, 0.1));
 
   bind(checkbox(path(() => bg.dust.enabled, (v) => { bg.dust.enabled = v; }, 'rebuild'), atmosphereSection.body, 'dust.enabled'));
-  bind(range(path(() => bg.dust.count, (v) => { bg.dust.count = Math.round(v); }, 'rebuild'), atmosphereSection.body, 'dust.count', 0, 6000, 50));
+  bind(range(path(() => bg.dust.count, (v) => { bg.dust.count = Math.round(v); }, 'rebuild'), atmosphereSection.body, 'dust.count', 0, 10000, 100));
   bind(range(path(() => bg.dust.idleOpacity, (v) => { bg.dust.idleOpacity = v; }, 'material'), atmosphereSection.body, 'dust.idleOpacity', 0, 1, 0.01));
   bind(range(path(() => bg.dust.pointSize, (v) => { bg.dust.pointSize = v; }, 'material'), atmosphereSection.body, 'dust.pointSize', 0.001, 0.3, 0.001));
   bind(range(path(() => bg.dust.rotationSpeed, (v) => { bg.dust.rotationSpeed = v; }, 'runtime'), atmosphereSection.body, 'dust.rotationSpeed', 0, 0.1, 0.001));
@@ -312,35 +368,35 @@ export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere }
   bind(checkbox(path(() => bg.dust.depthTest, (v) => { bg.dust.depthTest = v; }, 'material'), atmosphereSection.body, 'dust.depthTest'));
   const stone = bg.stoneRelics;
   bind(checkbox(path(() => stone.enabled, (v) => { stone.enabled = v; }, 'stone-runtime'), stoneSection.body, 'stoneRelics.enabled'));
-  bind(range(path(() => stone.count, (v) => { stone.count = Math.round(v); }, 'stone-rebuild'), stoneSection.body, 'stoneRelics.count', 0, 120, 1));
-  bind(range(path(() => stone.minScale, (v) => { stone.minScale = v; }, 'stone-rebuild'), stoneSection.body, 'stoneRelics.minScale', 0.05, 8, 0.05));
-  bind(range(path(() => stone.maxScale, (v) => { stone.maxScale = v; }, 'stone-rebuild'), stoneSection.body, 'stoneRelics.maxScale', 0.05, 10, 0.05));
-  bind(range(path(() => stone.shellInnerRadius, (v) => { stone.shellInnerRadius = v; }, 'stone-rebuild'), stoneSection.body, 'stoneRelics.shellInnerRadius', 0, 20, 0.1));
-  bind(range(path(() => stone.shellOuterRadius, (v) => { stone.shellOuterRadius = v; }, 'stone-rebuild'), stoneSection.body, 'stoneRelics.shellOuterRadius', 1, 30, 0.1));
-  bind(range(path(() => stone.rotationSpeedMin, (v) => { stone.rotationSpeedMin = v; }, 'stone-runtime'), stoneSection.body, 'stoneRelics.rotationSpeedMin', 0, 0.2, 0.001));
-  bind(range(path(() => stone.rotationSpeedMax, (v) => { stone.rotationSpeedMax = v; }, 'stone-runtime'), stoneSection.body, 'stoneRelics.rotationSpeedMax', 0, 0.3, 0.001));
-  bind(range(path(() => stone.orbitSpeed, (v) => { stone.orbitSpeed = v; }, 'stone-runtime'), stoneSection.body, 'stoneRelics.orbitSpeed', 0, 0.1, 0.001));
+  bind(range(path(() => stone.count, (v) => { stone.count = Math.round(v); }, 'stone-rebuild'), stoneSection.body, 'stoneRelics.count', 0, 200, 1));
+  bind(range(path(() => stone.minScale, (v) => { stone.minScale = v; }, 'stone-rebuild'), stoneSection.body, 'stoneRelics.minScale', 0.01, 8, 0.01));
+  bind(range(path(() => stone.maxScale, (v) => { stone.maxScale = v; }, 'stone-rebuild'), stoneSection.body, 'stoneRelics.maxScale', 0.01, 10, 0.01));
+  bind(range(path(() => stone.shellInnerRadius, (v) => { stone.shellInnerRadius = v; }, 'stone-rebuild'), stoneSection.body, 'stoneRelics.shellInnerRadius', 0, 30, 0.1));
+  bind(range(path(() => stone.shellOuterRadius, (v) => { stone.shellOuterRadius = v; }, 'stone-rebuild'), stoneSection.body, 'stoneRelics.shellOuterRadius', 1, 40, 0.1));
+  bind(range(path(() => stone.rotationSpeedMin, (v) => { stone.rotationSpeedMin = v; }, 'stone-runtime'), stoneSection.body, 'stoneRelics.rotationSpeedMin', 0, 0.3, 0.001));
+  bind(range(path(() => stone.rotationSpeedMax, (v) => { stone.rotationSpeedMax = v; }, 'stone-runtime'), stoneSection.body, 'stoneRelics.rotationSpeedMax', 0, 0.5, 0.001));
+  bind(range(path(() => stone.orbitSpeed, (v) => { stone.orbitSpeed = v; }, 'stone-runtime'), stoneSection.body, 'stoneRelics.orbitSpeed', 0, 0.15, 0.001));
   bind(range(path(() => stone.opacity, (v) => { stone.opacity = v; }, 'material'), stoneSection.body, 'stoneRelics.opacity', 0, 1, 0.01));
   bind(checkbox(path(() => stone.debugVisible, (v) => { stone.debugVisible = v; }, 'stone-rebuild'), stoneSection.body, 'stoneRelics.debugVisible'));
   const shell = bg.shellRelics;
   bind(checkbox(path(() => shell.enabled, (v) => { shell.enabled = v; }, 'shell-runtime'), shellSection.body, 'shellRelics.enabled'));
-  bind(range(path(() => shell.count, (v) => { shell.count = Math.round(v); }, 'shell-rebuild'), shellSection.body, 'shellRelics.count', 0, 120, 1));
-  bind(range(path(() => shell.minScale, (v) => { shell.minScale = v; }, 'shell-rebuild'), shellSection.body, 'shellRelics.minScale', 0.05, 8, 0.05));
-  bind(range(path(() => shell.maxScale, (v) => { shell.maxScale = v; }, 'shell-rebuild'), shellSection.body, 'shellRelics.maxScale', 0.05, 10, 0.05));
-  bind(range(path(() => shell.shellInnerRadius, (v) => { shell.shellInnerRadius = v; }, 'shell-rebuild'), shellSection.body, 'shellRelics.shellInnerRadius', 0, 20, 0.1));
-  bind(range(path(() => shell.shellOuterRadius, (v) => { shell.shellOuterRadius = v; }, 'shell-rebuild'), shellSection.body, 'shellRelics.shellOuterRadius', 1, 30, 0.1));
+  bind(range(path(() => shell.count, (v) => { shell.count = Math.round(v); }, 'shell-rebuild'), shellSection.body, 'shellRelics.count', 0, 200, 1));
+  bind(range(path(() => shell.minScale, (v) => { shell.minScale = v; }, 'shell-rebuild'), shellSection.body, 'shellRelics.minScale', 0.01, 8, 0.01));
+  bind(range(path(() => shell.maxScale, (v) => { shell.maxScale = v; }, 'shell-rebuild'), shellSection.body, 'shellRelics.maxScale', 0.01, 10, 0.01));
+  bind(range(path(() => shell.shellInnerRadius, (v) => { shell.shellInnerRadius = v; }, 'shell-rebuild'), shellSection.body, 'shellRelics.shellInnerRadius', 0, 30, 0.1));
+  bind(range(path(() => shell.shellOuterRadius, (v) => { shell.shellOuterRadius = v; }, 'shell-rebuild'), shellSection.body, 'shellRelics.shellOuterRadius', 1, 40, 0.1));
   bind(range(path(() => shell.rotationSpeedMin, (v) => { shell.rotationSpeedMin = v; }, 'shell-runtime'), shellSection.body, 'shellRelics.rotationSpeedMin', 0, 0.3, 0.001));
-  bind(range(path(() => shell.rotationSpeedMax, (v) => { shell.rotationSpeedMax = v; }, 'shell-runtime'), shellSection.body, 'shellRelics.rotationSpeedMax', 0, 0.5, 0.001));
-  bind(range(path(() => shell.orbitSpeed, (v) => { shell.orbitSpeed = v; }, 'shell-runtime'), shellSection.body, 'shellRelics.orbitSpeed', 0, 0.15, 0.001));
+  bind(range(path(() => shell.rotationSpeedMax, (v) => { shell.rotationSpeedMax = v; }, 'shell-runtime'), shellSection.body, 'shellRelics.rotationSpeedMax', 0, 0.8, 0.001));
+  bind(range(path(() => shell.orbitSpeed, (v) => { shell.orbitSpeed = v; }, 'shell-runtime'), shellSection.body, 'shellRelics.orbitSpeed', 0, 0.2, 0.001));
   bind(range(path(() => shell.opacity, (v) => { shell.opacity = v; }, 'material'), shellSection.body, 'shellRelics.opacity', 0, 1, 0.01));
   bind(checkbox(path(() => shell.debugVisible, (v) => { shell.debugVisible = v; }, 'shell-rebuild'), shellSection.body, 'shellRelics.debugVisible'));
   const smallGlyph = bg.smallGlyphRelics;
   bind(checkbox(path(() => smallGlyph.enabled, (v) => { smallGlyph.enabled = v; }, 'small-glyph-runtime'), smallGlyphSection.body, 'smallGlyphRelics.enabled'));
-  bind(range(path(() => smallGlyph.count, (v) => { smallGlyph.count = Math.round(v); }, 'small-glyph-rebuild'), smallGlyphSection.body, 'smallGlyphRelics.count', 0, 120, 1));
-  bind(range(path(() => smallGlyph.minScale, (v) => { smallGlyph.minScale = v; }, 'small-glyph-rebuild'), smallGlyphSection.body, 'smallGlyphRelics.minScale', 0.05, 8, 0.05));
-  bind(range(path(() => smallGlyph.maxScale, (v) => { smallGlyph.maxScale = v; }, 'small-glyph-rebuild'), smallGlyphSection.body, 'smallGlyphRelics.maxScale', 0.05, 10, 0.05));
-  bind(range(path(() => smallGlyph.shellInnerRadius, (v) => { smallGlyph.shellInnerRadius = v; }, 'small-glyph-rebuild'), smallGlyphSection.body, 'smallGlyphRelics.shellInnerRadius', 0, 20, 0.1));
-  bind(range(path(() => smallGlyph.shellOuterRadius, (v) => { smallGlyph.shellOuterRadius = v; }, 'small-glyph-rebuild'), smallGlyphSection.body, 'smallGlyphRelics.shellOuterRadius', 1, 30, 0.1));
+  bind(range(path(() => smallGlyph.count, (v) => { smallGlyph.count = Math.round(v); }, 'small-glyph-rebuild'), smallGlyphSection.body, 'smallGlyphRelics.count', 0, 200, 1));
+  bind(range(path(() => smallGlyph.minScale, (v) => { smallGlyph.minScale = v; }, 'small-glyph-rebuild'), smallGlyphSection.body, 'smallGlyphRelics.minScale', 0.01, 4, 0.01));
+  bind(range(path(() => smallGlyph.maxScale, (v) => { smallGlyph.maxScale = v; }, 'small-glyph-rebuild'), smallGlyphSection.body, 'smallGlyphRelics.maxScale', 0.01, 6, 0.01));
+  bind(range(path(() => smallGlyph.shellInnerRadius, (v) => { smallGlyph.shellInnerRadius = v; }, 'small-glyph-rebuild'), smallGlyphSection.body, 'smallGlyphRelics.shellInnerRadius', 0, 30, 0.1));
+  bind(range(path(() => smallGlyph.shellOuterRadius, (v) => { smallGlyph.shellOuterRadius = v; }, 'small-glyph-rebuild'), smallGlyphSection.body, 'smallGlyphRelics.shellOuterRadius', 1, 40, 0.1));
   bind(range(path(() => smallGlyph.rotationSpeedMin, (v) => { smallGlyph.rotationSpeedMin = v; }, 'small-glyph-runtime'), smallGlyphSection.body, 'smallGlyphRelics.rotationSpeedMin', 0, 0.3, 0.001));
   bind(range(path(() => smallGlyph.rotationSpeedMax, (v) => { smallGlyph.rotationSpeedMax = v; }, 'small-glyph-runtime'), smallGlyphSection.body, 'smallGlyphRelics.rotationSpeedMax', 0, 0.5, 0.001));
   bind(range(path(() => smallGlyph.orbitSpeed, (v) => { smallGlyph.orbitSpeed = v; }, 'small-glyph-runtime'), smallGlyphSection.body, 'smallGlyphRelics.orbitSpeed', 0, 0.15, 0.001));
@@ -360,7 +416,7 @@ export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere }
   futureText.textContent = 'Reserved for: micro relics, mist shell, gate aura, camera tuning, labels/UI debug, lighting, motion.';
   futureSection.body.append(futureText);
 
-  panel.append(atmosphereSection.details, stoneSection.details, shellSection.details, smallGlyphSection.details, debugSection.details, futureSection.details);
+  panel.append(presetSection.details, atmosphereSection.details, stoneSection.details, shellSection.details, smallGlyphSection.details, debugSection.details, futureSection.details);
   root.append(button, panel);
   document.body.append(root);
 

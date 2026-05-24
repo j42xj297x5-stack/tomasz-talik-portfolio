@@ -145,4 +145,8 @@ body { min-height: 100vh; overflow: hidden; }
 }
 
 .options-panel__section-reset { margin-bottom: 0.45rem; }
+.options-panel__preset-status { margin: 0 0 0.45rem; font-size: 0.74rem; color: #8fc2ff; min-height: 1.1em; }
+.options-panel__preset-row { display: grid; grid-template-columns: minmax(0,1fr) auto auto; gap: 0.35rem; align-items: center; margin-bottom: 0.38rem; }
+.options-panel__preset-label { font-size: 0.76rem; color: #aebfd8; }
+.options-panel__preset-btn { border: 1px solid #43506a; border-radius: 6px; background: rgba(10, 15, 24, 0.92); color: #d8e3f5; font-size: 0.75rem; padding: 0.28rem 0.45rem; cursor: pointer; white-space: nowrap; }
 .options-panel__placeholder { margin: 0; font-size: 0.75rem; color: #8ca1c1; line-height: 1.4; }
