@@ -46,8 +46,12 @@ function normalizeRuntimeState(state) {
   sun.radius = clamp(sun.radius ?? 5, 1, 30);
   sun.angularSpeed = clamp(sun.angularSpeed ?? 0.08, 0, 1);
   sun.scale = clamp(sun.scale ?? 1, 0.05, 10);
+  sun.debugScaleMultiplier = clamp(sun.debugScaleMultiplier ?? 3, 0.01, 20);
   sun.selfRotationSpeed = clamp(sun.selfRotationSpeed ?? 0.05, 0, 1);
   sun.emissiveIntensity = clamp(sun.emissiveIntensity ?? 1.8, 0, 10);
+  sun.debugVisible = Boolean(sun.debugVisible);
+  sun.debugShowFallback = sun.debugShowFallback !== false;
+  sun.debugForceBasicMaterial = Boolean(sun.debugForceBasicMaterial);
   sun.direction = Number(sun.direction) >= 0 ? 1 : -1;
   sun.spotlight.intensity = clamp(sun.spotlight.intensity ?? 2.5, 0, 20);
   sun.spotlight.angleDegrees = clamp(sun.spotlight.angleDegrees ?? 90, 1, 120);
@@ -392,7 +396,8 @@ export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere }
   bind(range(path(() => sun.radius, (v) => { sun.radius = v; }, 'sun-cycle'), sunCycleSection.body, 'sunCycle.radius', 1, 30, 0.1));
   bind(range(path(() => sun.angularSpeed, (v) => { sun.angularSpeed = v; }, 'sun-cycle'), sunCycleSection.body, 'sunCycle.angularSpeed', 0, 1, 0.001));
   bind(select(path(() => String(sun.direction), (v) => { sun.direction = Number(v); }, 'sun-cycle'), sunCycleSection.body, 'sunCycle.direction', [{ value: '1', label: 'Forward' }, { value: '-1', label: 'Reverse' }]));
-  bind(range(path(() => sun.scale, (v) => { sun.scale = v; }, 'sun-cycle'), sunCycleSection.body, 'sunCycle.scale', 0.05, 10, 0.05));
+  bind(range(path(() => sun.scale, (v) => { sun.scale = v; }, 'sun-cycle'), sunCycleSection.body, 'sunCycle.scale', 0.01, 20, 0.01));
+  bind(range(path(() => sun.debugScaleMultiplier, (v) => { sun.debugScaleMultiplier = v; }, 'sun-cycle'), sunCycleSection.body, 'sunCycle.debugScaleMultiplier', 0.01, 20, 0.01));
   bind(range(path(() => sun.selfRotationSpeed, (v) => { sun.selfRotationSpeed = v; }, 'sun-cycle'), sunCycleSection.body, 'sunCycle.selfRotationSpeed', 0, 1, 0.001));
   bind(range(path(() => sun.emissiveIntensity, (v) => { sun.emissiveIntensity = v; }, 'sun-cycle'), sunCycleSection.body, 'sunCycle.emissiveIntensity', 0, 10, 0.1));
   bind(checkbox(path(() => sun.spotlight.enabled, (v) => { sun.spotlight.enabled = v; }, 'sun-cycle'), sunCycleSection.body, 'sunCycle.spotlight.enabled'));
@@ -401,6 +406,8 @@ export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere }
   bind(range(path(() => sun.spotlight.penumbra, (v) => { sun.spotlight.penumbra = v; }, 'sun-cycle'), sunCycleSection.body, 'sunCycle.spotlight.penumbra', 0, 1, 0.01));
   bind(range(path(() => sun.spotlight.distance, (v) => { sun.spotlight.distance = v; }, 'sun-cycle'), sunCycleSection.body, 'sunCycle.spotlight.distance', 0, 100, 1));
   bind(checkbox(path(() => sun.debugVisible, (v) => { sun.debugVisible = v; }, 'sun-cycle'), sunCycleSection.body, 'sunCycle.debugVisible'));
+  bind(checkbox(path(() => sun.debugShowFallback, (v) => { sun.debugShowFallback = v; }, 'sun-cycle'), sunCycleSection.body, 'sunCycle.debugShowFallback'));
+  bind(checkbox(path(() => sun.debugForceBasicMaterial, (v) => { sun.debugForceBasicMaterial = v; }, 'sun-cycle'), sunCycleSection.body, 'sunCycle.debugForceBasicMaterial'));
   bind(checkbox(path(() => bg.debugVisible, (v) => { bg.debugVisible = v; }, 'rebuild'), atmosphereSection.body, 'backgroundAtmosphere.debugVisible'));
   bind(range(path(() => bg.safeRadius, (v) => { bg.safeRadius = v; }, 'rebuild'), atmosphereSection.body, 'backgroundAtmosphere.safeRadius', 0, 15, 0.1));
   bind(range(path(() => bg.shellInnerRadius, (v) => { bg.shellInnerRadius = v; }, 'rebuild'), atmosphereSection.body, 'backgroundAtmosphere.shellInnerRadius', 0, 30, 0.1));
