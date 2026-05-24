@@ -11,6 +11,7 @@ import { pickNode } from './scene/raycaster.js';
 import { createCameraRig } from './scene/cameraRig.js';
 import { createOverlay } from './ui/overlay.js';
 import { createHoverLabel } from './ui/hoverLabel.js';
+import { createOptionsPanel } from './ui/optionsPanel.js';
 
 const app = document.querySelector('#app');
 if (!app) throw new Error('Missing #app mount element.');
@@ -39,6 +40,8 @@ const sceneRuntimeConfig = {
   backgroundAtmosphere: {
     enabled: true,
     debugVisible: true,
+    showShellHelpers: true,
+    showAtmosphereLogs: true,
     debugBlendingMode: 'normal',
     debugIgnoreFog: true,
     safeRadius: 3.5,
@@ -55,22 +58,7 @@ const sceneRuntimeConfig = {
 };
 
 const atmosphere = createBackgroundAtmosphere(sceneRuntimeConfig.backgroundAtmosphere);
-if (atmosphere.object3d) {
-  scene.add(atmosphere.object3d);
-  if (sceneRuntimeConfig.backgroundAtmosphere.debugVisible) {
-    atmosphere.object3d.updateMatrixWorld(true);
-    console.info('[backgroundAtmosphere][debug] integration', {
-      createBackgroundAtmosphereCalled: true,
-      objectAddedToScene: scene.children.includes(atmosphere.object3d),
-      objectName: atmosphere.object3d.name,
-      objectVisible: atmosphere.object3d.visible,
-      objectScale: atmosphere.object3d.scale.toArray(),
-      objectWorldPosition: atmosphere.object3d.getWorldPosition(new THREE.Vector3()).toArray(),
-      rendererAutoClear: renderer.autoClear,
-      sceneFogPresent: Boolean(scene.fog)
-    });
-  }
-}
+scene.add(atmosphere.object3d);
 
 void loadMonkeyModel({ scene, fallbackObject: centralPlaceholder });
 
@@ -79,6 +67,16 @@ scene.add(orbitGroup);
 
 const overlay = createOverlay();
 const hoverLabel = createHoverLabel();
+
+const optionsPanel = createOptionsPanel({
+  runtimeState: sceneRuntimeConfig,
+  onChange: ({ type }) => {
+    atmosphere.applySettings(sceneRuntimeConfig.backgroundAtmosphere, type);
+  },
+  onResetAtmosphere: () => {
+    atmosphere.applySettings(sceneRuntimeConfig.backgroundAtmosphere, 'rebuild');
+  }
+});
 
 let hoveredNode = null;
 
