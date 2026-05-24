@@ -71,11 +71,16 @@ export function createSunCycle(options = {}) {
   const object3d = new THREE.Group();
   object3d.name = 'SunCycleGroup';
   const center = new THREE.Vector3();
-  const sunPosition = new THREE.Vector3();
+  const centerWorldPosition = new THREE.Vector3();
+  const worldSunPosition = new THREE.Vector3();
   let angle = settings.startAngle;
   let sunModel = null;
   let boxHelper = null;
   const debugBasicMaterial = new THREE.MeshBasicMaterial({ color: '#ffd31a' });
+
+  const sunBodyGroup = new THREE.Group();
+  sunBodyGroup.name = 'SunCycleBodyGroup';
+  object3d.add(sunBodyGroup);
 
   const debugOrbit = new THREE.LineLoop(
     new THREE.BufferGeometry(),
@@ -85,7 +90,7 @@ export function createSunCycle(options = {}) {
 
   const spotlight = new THREE.SpotLight();
   const spotlightTarget = new THREE.Object3D();
-  object3d.add(spotlight);
+  sunBodyGroup.add(spotlight);
   object3d.add(spotlightTarget);
   spotlight.target = spotlightTarget;
 
@@ -95,7 +100,7 @@ export function createSunCycle(options = {}) {
   );
   fallbackSphere.name = 'SunCycleDebugFallbackMarker';
   fallbackSphere.visible = false;
-  object3d.add(fallbackSphere);
+  sunBodyGroup.add(fallbackSphere);
 
   function setDebugMaterialState(forceBasic) {
     if (!sunModel) return;
@@ -139,9 +144,9 @@ export function createSunCycle(options = {}) {
     for (let i = 0; i < 64; i += 1) {
       const a = (i / 64) * Math.PI * 2;
       points.push(new THREE.Vector3(
-        center.x + Math.cos(a) * settings.radius,
-        center.y + Math.sin(a) * settings.radius,
-        center.z + settings.zOffset
+        Math.cos(a) * settings.radius,
+        Math.sin(a) * settings.radius,
+        settings.zOffset
       ));
     }
     debugOrbit.geometry.dispose();
@@ -161,6 +166,7 @@ export function createSunCycle(options = {}) {
 
     center.set(settings.center.x, settings.center.y, settings.center.z);
     object3d.visible = settings.enabled;
+    object3d.position.copy(center);
     const effectiveScale = settings.scale * ((settings.debugVisible && settings.debugScaleMultiplier > 0) ? settings.debugScaleMultiplier : 1);
     if (sunModel) sunModel.scale.setScalar(effectiveScale);
     fallbackSphere.scale.setScalar(settings.scale);
@@ -181,17 +187,18 @@ export function createSunCycle(options = {}) {
     const loader = new GLTFLoader();
     loader.load(settings.modelPath, (gltf) => {
       sunModel = gltf.scene;
-      object3d.add(sunModel);
+      sunBodyGroup.add(sunModel);
       boxHelper = new THREE.BoxHelper(sunModel, 0x00ffff);
       boxHelper.name = 'SunCycleModelBoxHelper';
       boxHelper.visible = false;
-      object3d.add(boxHelper);
+      sunBodyGroup.add(boxHelper);
       if (settings.debugVisible) {
         const meshCount = sunModel ? sunModel.getObjectsByProperty('isMesh', true).length : 0;
         const bbox = new THREE.Box3().setFromObject(sunModel);
         const size = bbox.getSize(new THREE.Vector3());
         const sphere = bbox.getBoundingSphere(new THREE.Sphere());
         const sunGroupWorld = object3d.getWorldPosition(new THREE.Vector3());
+        const sunBodyWorld = sunBodyGroup.getWorldPosition(new THREE.Vector3());
         const modelWorld = sunModel.getWorldPosition(new THREE.Vector3());
         sunModel.traverse((child) => {
           if (!child.isMesh) return;
@@ -206,6 +213,7 @@ export function createSunCycle(options = {}) {
           boundingBox: { min: bbox.min.toArray(), max: bbox.max.toArray(), size: size.toArray() },
           boundingSphereRadius: sphere.radius,
           sunGroupWorldPosition: sunGroupWorld.toArray(),
+          sunBodyWorldPosition: sunBodyWorld.toArray(),
           modelWorldPosition: modelWorld.toArray(),
           sunGroupScale: object3d.scale.toArray(),
           modelScale: sunModel.scale.toArray(),
@@ -227,17 +235,18 @@ export function createSunCycle(options = {}) {
     update(delta) {
       if (!settings.enabled) return;
       angle += delta * settings.angularSpeed * (settings.direction >= 0 ? 1 : -1);
-      sunPosition.set(
-        center.x + Math.cos(angle) * settings.radius,
-        center.y + Math.sin(angle) * settings.radius,
-        center.z + settings.zOffset
+      sunBodyGroup.position.set(
+        Math.cos(angle) * settings.radius,
+        Math.sin(angle) * settings.radius,
+        settings.zOffset
       );
-      object3d.position.copy(sunPosition);
       spotlight.position.set(0, 0, 0);
-      spotlightTarget.position.copy(center);
+      spotlightTarget.position.set(0, 0, 0);
       spotlightTarget.updateMatrixWorld();
 
-      const above = sunPosition.y > center.y;
+      sunBodyGroup.getWorldPosition(worldSunPosition);
+      object3d.getWorldPosition(centerWorldPosition);
+      const above = worldSunPosition.y > centerWorldPosition.y;
       if (settings.spotlight.enabled && above) {
         spotlight.visible = true;
         spotlight.intensity = settings.spotlight.intensity;
@@ -258,7 +267,7 @@ export function createSunCycle(options = {}) {
     getOptions() { return settings; },
     dispose() {
       if (boxHelper) {
-        object3d.remove(boxHelper);
+        sunBodyGroup.remove(boxHelper);
         boxHelper.geometry.dispose();
         boxHelper.material.dispose();
       }
