@@ -63,6 +63,20 @@ const sceneRuntimeConfig = {
       debugVisible: false,
       colorPalette: ['#d9a441','#4db6ac','#6ec6ff','#6bcf8e','#9c7bff','#f0a6a6']
     },
+    smallGlyphRelics: {
+      enabled: true,
+      count: 24,
+      models: ['/glb/small_glyph_01.glb','/glb/small_glyph_02.glb','/glb/small_glyph_03.glb','/glb/small_glyph_04.glb','/glb/small_glyph_05.glb','/glb/small_glyph_06.glb'],
+      minScale: 0.3,
+      maxScale: 1,
+      shellInnerRadius: 4,
+      shellOuterRadius: 8.5,
+      rotationSpeedMin: 0.075,
+      rotationSpeedMax: 0.187,
+      orbitSpeed: 0.022,
+      opacity: 0.75,
+      debugVisible: false
+    },
     dust: {
       enabled: true,
       count: 2650,
