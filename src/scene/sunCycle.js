@@ -60,7 +60,10 @@ export const SUN_CYCLE_DEFAULTS = {
     horizonFade: false,
     horizonFadeHeight: 0.5
   },
-  debugVisible: false
+  debugVisible: true,
+  debugShowFallback: true,
+  debugForceBasicMaterial: false,
+  debugScaleMultiplier: 3
 };
 
 export function createSunCycle(options = {}) {
@@ -71,6 +74,8 @@ export function createSunCycle(options = {}) {
   const sunPosition = new THREE.Vector3();
   let angle = settings.startAngle;
   let sunModel = null;
+  let boxHelper = null;
+  const debugBasicMaterial = new THREE.MeshBasicMaterial({ color: '#ffd31a' });
 
   const debugOrbit = new THREE.LineLoop(
     new THREE.BufferGeometry(),
@@ -86,10 +91,33 @@ export function createSunCycle(options = {}) {
 
   const fallbackSphere = new THREE.Mesh(
     new THREE.SphereGeometry(0.25, 16, 16),
-    new THREE.MeshStandardMaterial({ color: '#ffcc55', emissive: '#ffe36e', emissiveIntensity: 1.2 })
+    new THREE.MeshBasicMaterial({ color: '#fff200' })
   );
+  fallbackSphere.name = 'SunCycleDebugFallbackMarker';
   fallbackSphere.visible = false;
   object3d.add(fallbackSphere);
+
+  function setDebugMaterialState(forceBasic) {
+    if (!sunModel) return;
+    sunModel.traverse((child) => {
+      if (!child.isMesh || !child.material) return;
+      if (forceBasic) {
+        if (!child.userData._sunCycleOriginalMaterial) child.userData._sunCycleOriginalMaterial = child.material;
+        child.material = debugBasicMaterial;
+        child.visible = true;
+      } else if (child.userData._sunCycleOriginalMaterial) {
+        child.material = child.userData._sunCycleOriginalMaterial;
+        delete child.userData._sunCycleOriginalMaterial;
+      }
+    });
+  }
+
+  function updateDebugState() {
+    const debugOn = settings.debugVisible;
+    fallbackSphere.visible = debugOn && settings.debugShowFallback;
+    if (boxHelper) boxHelper.visible = debugOn;
+    setDebugMaterialState(debugOn && settings.debugForceBasicMaterial);
+  }
 
   function applyModelEmissive() {
     if (!sunModel) return;
@@ -133,7 +161,8 @@ export function createSunCycle(options = {}) {
 
     center.set(settings.center.x, settings.center.y, settings.center.z);
     object3d.visible = settings.enabled;
-    if (sunModel) sunModel.scale.setScalar(settings.scale);
+    const effectiveScale = settings.scale * ((settings.debugVisible && settings.debugScaleMultiplier > 0) ? settings.debugScaleMultiplier : 1);
+    if (sunModel) sunModel.scale.setScalar(effectiveScale);
     fallbackSphere.scale.setScalar(settings.scale);
     spotlight.color.set(settings.spotlight.color);
     spotlight.distance = settings.spotlight.distance;
@@ -144,6 +173,7 @@ export function createSunCycle(options = {}) {
     debugOrbit.visible = settings.debugVisible;
     updateDebugOrbit();
     applyModelEmissive();
+    updateDebugState();
   }
 
   void resolveGLTFLoader().then((GLTFLoader) => {
@@ -152,9 +182,40 @@ export function createSunCycle(options = {}) {
     loader.load(settings.modelPath, (gltf) => {
       sunModel = gltf.scene;
       object3d.add(sunModel);
+      boxHelper = new THREE.BoxHelper(sunModel, 0x00ffff);
+      boxHelper.name = 'SunCycleModelBoxHelper';
+      boxHelper.visible = false;
+      object3d.add(boxHelper);
+      if (settings.debugVisible) {
+        const meshCount = sunModel ? sunModel.getObjectsByProperty('isMesh', true).length : 0;
+        const bbox = new THREE.Box3().setFromObject(sunModel);
+        const size = bbox.getSize(new THREE.Vector3());
+        const sphere = bbox.getBoundingSphere(new THREE.Sphere());
+        const sunGroupWorld = object3d.getWorldPosition(new THREE.Vector3());
+        const modelWorld = sunModel.getWorldPosition(new THREE.Vector3());
+        sunModel.traverse((child) => {
+          if (!child.isMesh) return;
+          child.visible = true;
+          if (Array.isArray(child.material)) child.material.forEach((m) => { if (m) m.visible = true; });
+          else if (child.material) child.material.visible = true;
+        });
+        console.info('[sunCycle][debug] load success', {
+          path: settings.modelPath,
+          hasScene: Boolean(gltf.scene),
+          meshCount,
+          boundingBox: { min: bbox.min.toArray(), max: bbox.max.toArray(), size: size.toArray() },
+          boundingSphereRadius: sphere.radius,
+          sunGroupWorldPosition: sunGroupWorld.toArray(),
+          modelWorldPosition: modelWorld.toArray(),
+          sunGroupScale: object3d.scale.toArray(),
+          modelScale: sunModel.scale.toArray(),
+          visibleFlags: { sunGroup: object3d.visible, sunModel: sunModel.visible, debugOrbit: debugOrbit.visible, fallback: fallbackSphere.visible },
+          sunGroupChildrenCount: object3d.children.length
+        });
+      }
       applySettings();
     }, undefined, (error) => {
-      console.warn(`[sunCycle] Failed to load model: ${settings.modelPath}`, error);
+      console.warn(`[sunCycle][debug] Failed to load model from path: ${settings.modelPath}`, error);
       fallbackSphere.visible = true;
     });
   });
@@ -173,7 +234,7 @@ export function createSunCycle(options = {}) {
       );
       object3d.position.copy(sunPosition);
       spotlight.position.set(0, 0, 0);
-      spotlightTarget.position.copy(center).sub(sunPosition);
+      spotlightTarget.position.copy(center);
       spotlightTarget.updateMatrixWorld();
 
       const above = sunPosition.y > center.y;
@@ -188,6 +249,7 @@ export function createSunCycle(options = {}) {
       const spin = delta * settings.selfRotationSpeed;
       if (sunModel) sunModel.rotation.y += spin;
       fallbackSphere.rotation.y += spin;
+      if (boxHelper && settings.debugVisible) boxHelper.update();
     },
     setOptions(partialOptions) {
       settings = sanitizeSunCycleSettings(deepMerge(settings, partialOptions));
@@ -195,6 +257,12 @@ export function createSunCycle(options = {}) {
     },
     getOptions() { return settings; },
     dispose() {
+      if (boxHelper) {
+        object3d.remove(boxHelper);
+        boxHelper.geometry.dispose();
+        boxHelper.material.dispose();
+      }
+      debugBasicMaterial.dispose();
       debugOrbit.geometry.dispose();
       debugOrbit.material.dispose();
     }
