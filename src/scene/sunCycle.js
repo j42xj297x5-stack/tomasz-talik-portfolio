@@ -1,6 +1,7 @@
 import * as THREE from '../vendor/three.js';
 
 const VENDORED_GLTF_LOADER_PATH = '../../vendor/three/examples/jsm/loaders/GLTFLoader.js';
+const SUN_MODEL_PATH = '/glb/sun.glb';
 
 function deepMerge(base, patch) {
   const out = { ...base };
@@ -16,6 +17,15 @@ function deepMerge(base, patch) {
 
 function clamp(v, min, max) { return Math.min(max, Math.max(min, v)); }
 
+function sanitizeSunModelPath(modelPath) {
+  return typeof modelPath === 'string' && modelPath.trim() === SUN_MODEL_PATH ? SUN_MODEL_PATH : SUN_MODEL_PATH;
+}
+
+function sanitizeSunCycleSettings(settings) {
+  settings.modelPath = sanitizeSunModelPath(settings.modelPath);
+  return settings;
+}
+
 async function resolveGLTFLoader() {
   try {
     const module = await import(VENDORED_GLTF_LOADER_PATH);
@@ -28,7 +38,7 @@ async function resolveGLTFLoader() {
 
 export const SUN_CYCLE_DEFAULTS = {
   enabled: true,
-  modelPath: '/glb/sun.glb',
+  modelPath: SUN_MODEL_PATH,
   center: { x: 0, y: 0, z: 0 },
   radius: 5,
   zOffset: 0,
@@ -54,7 +64,7 @@ export const SUN_CYCLE_DEFAULTS = {
 };
 
 export function createSunCycle(options = {}) {
-  let settings = deepMerge(SUN_CYCLE_DEFAULTS, options);
+  let settings = sanitizeSunCycleSettings(deepMerge(SUN_CYCLE_DEFAULTS, options));
   const object3d = new THREE.Group();
   object3d.name = 'SunCycleGroup';
   const center = new THREE.Vector3();
@@ -180,7 +190,7 @@ export function createSunCycle(options = {}) {
       fallbackSphere.rotation.y += spin;
     },
     setOptions(partialOptions) {
-      settings = deepMerge(settings, partialOptions);
+      settings = sanitizeSunCycleSettings(deepMerge(settings, partialOptions));
       applySettings();
     },
     getOptions() { return settings; },

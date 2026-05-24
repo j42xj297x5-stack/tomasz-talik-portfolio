@@ -5,6 +5,7 @@ function deepClone(value) {
 const OPTIONS_STORAGE_KEY = 'portfolio.options.runtimeState.v1';
 const OPTIONS_DEFAULTS_VERSION = '2026-05-24-atmosphere-suncycle-v4';
 const PRESET_SLOT_KEYS = ['portfolio.optionsPreset.1', 'portfolio.optionsPreset.2', 'portfolio.optionsPreset.3'];
+const SUN_MODEL_PATH = '/glb/sun.glb';
 
 function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value));
@@ -41,6 +42,7 @@ function normalizeRuntimeState(state) {
   normalizeRelics(bg.smallGlyphRelics, { minScaleMin: 0.01, minScaleMax: 4, maxScaleMin: 0.01, maxScaleMax: 6, rotationMax: 0.5, orbitMax: 0.15 });
 
   const sun = state.sunCycle;
+  sun.modelPath = typeof sun.modelPath === 'string' && sun.modelPath.trim() === SUN_MODEL_PATH ? SUN_MODEL_PATH : SUN_MODEL_PATH;
   sun.radius = clamp(sun.radius ?? 5, 1, 30);
   sun.angularSpeed = clamp(sun.angularSpeed ?? 0.08, 0, 1);
   sun.scale = clamp(sun.scale ?? 1, 0.05, 10);
