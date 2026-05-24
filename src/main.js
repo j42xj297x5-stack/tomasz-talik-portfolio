@@ -38,6 +38,9 @@ scene.add(centralPlaceholder);
 const sceneRuntimeConfig = {
   backgroundAtmosphere: {
     enabled: true,
+    debugVisible: true,
+    debugBlendingMode: 'normal',
+    debugIgnoreFog: true,
     safeRadius: 3.5,
     shellInnerRadius: 4.8,
     shellOuterRadius: 10.5,
@@ -52,7 +55,22 @@ const sceneRuntimeConfig = {
 };
 
 const atmosphere = createBackgroundAtmosphere(sceneRuntimeConfig.backgroundAtmosphere);
-if (atmosphere.object3d) scene.add(atmosphere.object3d);
+if (atmosphere.object3d) {
+  scene.add(atmosphere.object3d);
+  if (sceneRuntimeConfig.backgroundAtmosphere.debugVisible) {
+    atmosphere.object3d.updateMatrixWorld(true);
+    console.info('[backgroundAtmosphere][debug] integration', {
+      createBackgroundAtmosphereCalled: true,
+      objectAddedToScene: scene.children.includes(atmosphere.object3d),
+      objectName: atmosphere.object3d.name,
+      objectVisible: atmosphere.object3d.visible,
+      objectScale: atmosphere.object3d.scale.toArray(),
+      objectWorldPosition: atmosphere.object3d.getWorldPosition(new THREE.Vector3()).toArray(),
+      rendererAutoClear: renderer.autoClear,
+      sceneFogPresent: Boolean(scene.fog)
+    });
+  }
+}
 
 void loadMonkeyModel({ scene, fallbackObject: centralPlaceholder });
 
@@ -122,6 +140,9 @@ function tick() {
   updateOrbitNodes(nodes, elapsed, orbitGroup.getWorldPosition(orbitCenterWorldPosition));
   cameraRig.update(camera, elapsed);
   atmosphere.update(delta);
+  if (sceneRuntimeConfig.backgroundAtmosphere.debugVisible && elapsed < 0.25) {
+    console.info('[backgroundAtmosphere][debug] tick/update active', { delta, elapsed });
+  }
   renderer.render(scene, camera);
   requestAnimationFrame(tick);
 }
