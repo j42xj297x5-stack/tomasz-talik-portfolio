@@ -47,6 +47,7 @@ const sceneRuntimeConfig = {
     safeRadius: 3.5,
     shellInnerRadius: 4.8,
     shellOuterRadius: 10.5,
+    stoneRelics: { enabled: true, count: 18, models: ['/glb/stone_01.glb','/glb/stone_02.glb','/glb/stone_03.glb','/glb/stone_04.glb','/glb/stone_05.glb','/glb/stone_06.glb'], safeRadius: 3.5, shellInnerRadius: 5.2, shellOuterRadius: 11.0, minScale: 0.035, maxScale: 0.12, rotationSpeedMin: 0.003, rotationSpeedMax: 0.018, orbitSpeed: 0.003, opacity: 0.85, debugVisible: false },
     dust: {
       enabled: true,
       count: 1000,
