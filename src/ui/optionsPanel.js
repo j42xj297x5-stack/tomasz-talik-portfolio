@@ -70,6 +70,7 @@ export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere }
 
   const atmosphereSection = createSection('Atmosphere', true);
   const stoneSection = createSection('Stone Relics', true);
+  const shellSection = createSection('Shell Relics', true);
   const debugSection = createSection('Debug Visuals', true);
   const futureSection = createSection('Future / Reserved', false);
 
@@ -90,6 +91,23 @@ export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere }
   stoneRebuild.className = 'options-panel__section-reset';
   stoneRebuild.addEventListener('click', () => onChange({ type: 'stone-rebuild' }));
   stoneSection.body.append(stoneRebuild);
+  const shellRebuild = document.createElement('button');
+  shellRebuild.type = 'button';
+  shellRebuild.textContent = 'Rebuild Shell Relics';
+  shellRebuild.className = 'options-panel__section-reset';
+  shellRebuild.addEventListener('click', () => onChange({ type: 'shell-rebuild' }));
+  shellSection.body.append(shellRebuild);
+
+  const shellReset = document.createElement('button');
+  shellReset.type = 'button';
+  shellReset.textContent = 'Reset Shell Relics';
+  shellReset.className = 'options-panel__section-reset';
+  shellReset.addEventListener('click', () => {
+    bg.shellRelics = deepClone(defaults.backgroundAtmosphere.shellRelics);
+    onChange({ type: 'shell-rebuild' });
+    renderAll();
+  });
+  shellSection.body.append(shellReset);
 
   function checkbox(path, parent, labelText) {
     let input;
@@ -212,6 +230,18 @@ export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere }
   bind(range(path(() => stone.orbitSpeed, (v) => { stone.orbitSpeed = v; }, 'stone-runtime'), stoneSection.body, 'stoneRelics.orbitSpeed', 0, 0.03, 0.001));
   bind(range(path(() => stone.opacity, (v) => { stone.opacity = v; }, 'material'), stoneSection.body, 'stoneRelics.opacity', 0, 1, 0.01));
   bind(checkbox(path(() => stone.debugVisible, (v) => { stone.debugVisible = v; }, 'stone-rebuild'), stoneSection.body, 'stoneRelics.debugVisible'));
+  const shell = bg.shellRelics;
+  bind(checkbox(path(() => shell.enabled, (v) => { shell.enabled = v; }, 'shell-runtime'), shellSection.body, 'shellRelics.enabled'));
+  bind(range(path(() => shell.count, (v) => { shell.count = Math.round(v); }, 'shell-rebuild'), shellSection.body, 'shellRelics.count', 0, 80, 1));
+  bind(range(path(() => shell.minScale, (v) => { shell.minScale = v; }, 'shell-rebuild'), shellSection.body, 'shellRelics.minScale', 0.2, 8, 0.1));
+  bind(range(path(() => shell.maxScale, (v) => { shell.maxScale = v; }, 'shell-rebuild'), shellSection.body, 'shellRelics.maxScale', 0.5, 10, 0.1));
+  bind(range(path(() => shell.shellInnerRadius, (v) => { shell.shellInnerRadius = v; }, 'shell-rebuild'), shellSection.body, 'shellRelics.shellInnerRadius', 1, 15, 0.1));
+  bind(range(path(() => shell.shellOuterRadius, (v) => { shell.shellOuterRadius = v; }, 'shell-rebuild'), shellSection.body, 'shellRelics.shellOuterRadius', 2, 20, 0.1));
+  bind(range(path(() => shell.rotationSpeedMin, (v) => { shell.rotationSpeedMin = v; }, 'shell-runtime'), shellSection.body, 'shellRelics.rotationSpeedMin', 0, 0.2, 0.001));
+  bind(range(path(() => shell.rotationSpeedMax, (v) => { shell.rotationSpeedMax = v; }, 'shell-runtime'), shellSection.body, 'shellRelics.rotationSpeedMax', 0, 0.3, 0.001));
+  bind(range(path(() => shell.orbitSpeed, (v) => { shell.orbitSpeed = v; }, 'shell-runtime'), shellSection.body, 'shellRelics.orbitSpeed', 0, 0.08, 0.001));
+  bind(range(path(() => shell.opacity, (v) => { shell.opacity = v; }, 'material'), shellSection.body, 'shellRelics.opacity', 0, 1, 0.01));
+  bind(checkbox(path(() => shell.debugVisible, (v) => { shell.debugVisible = v; }, 'shell-rebuild'), shellSection.body, 'shellRelics.debugVisible'));
 
 
   bind(select(path(() => bg.debugBlendingMode, (v) => { bg.debugBlendingMode = v; }, 'material'), debugSection.body, 'debugBlendingMode', [
@@ -226,7 +256,7 @@ export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere }
   futureText.textContent = 'Reserved for: micro relics, mist shell, gate aura, camera tuning, labels/UI debug, lighting, motion.';
   futureSection.body.append(futureText);
 
-  panel.append(atmosphereSection.details, stoneSection.details, debugSection.details, futureSection.details);
+  panel.append(atmosphereSection.details, stoneSection.details, shellSection.details, debugSection.details, futureSection.details);
   root.append(button, panel);
   document.body.append(root);
 

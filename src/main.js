@@ -48,6 +48,21 @@ const sceneRuntimeConfig = {
     shellInnerRadius: 6.1,
     shellOuterRadius: 14.6,
     stoneRelics: { enabled: true, count: 18, models: ['/glb/stone_01.glb','/glb/stone_02.glb','/glb/stone_03.glb','/glb/stone_04.glb','/glb/stone_05.glb','/glb/stone_06.glb'], safeRadius: 3.5, shellInnerRadius: 5.2, shellOuterRadius: 11.0, minScale: 0.035, maxScale: 0.12, rotationSpeedMin: 0.003, rotationSpeedMax: 0.018, orbitSpeed: 0.003, opacity: 0.85, debugVisible: false },
+    shellRelics: {
+      enabled: true,
+      count: 35,
+      models: ['/glb/shell_01.glb','/glb/shell_02.glb','/glb/shell_03.glb','/glb/shell_04.glb','/glb/shell_05.glb','/glb/shell_06.glb'],
+      minScale: 2,
+      maxScale: 5,
+      shellInnerRadius: 3,
+      shellOuterRadius: 8,
+      rotationSpeedMin: 0.005,
+      rotationSpeedMax: 0.08,
+      orbitSpeed: 0.03,
+      opacity: 0.85,
+      debugVisible: false,
+      colorPalette: ['#d9a441','#4db6ac','#6ec6ff','#6bcf8e','#9c7bff','#f0a6a6']
+    },
     dust: {
       enabled: true,
       count: 2650,
