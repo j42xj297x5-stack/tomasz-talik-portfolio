@@ -11,6 +11,7 @@ function clamp(value, min, max) {
 
 function normalizeRuntimeState(state) {
   const bg = state.backgroundAtmosphere;
+  if (!bg.smallGlyphRelics) bg.smallGlyphRelics = {};
   bg.safeRadius = clamp(bg.safeRadius, 0, 10);
   bg.shellInnerRadius = clamp(bg.shellInnerRadius, 0, 20);
   bg.shellOuterRadius = Math.max(clamp(bg.shellOuterRadius, 1, 30), bg.shellInnerRadius + 0.1);
@@ -34,6 +35,7 @@ function normalizeRuntimeState(state) {
 
   normalizeRelics(bg.stoneRelics, 0.3, 0.1);
   normalizeRelics(bg.shellRelics, 0.5, 0.15);
+  normalizeRelics(bg.smallGlyphRelics, 0.5, 0.15);
 }
 
 function isEditableTarget(target) {
@@ -79,6 +81,11 @@ export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere }
     }
   } catch {}
 
+  runtimeState.backgroundAtmosphere.smallGlyphRelics = {
+    ...deepClone(defaults.backgroundAtmosphere.smallGlyphRelics),
+    ...(runtimeState.backgroundAtmosphere.smallGlyphRelics ?? {})
+  };
+
   normalizeRuntimeState(runtimeState);
 
   const root = document.createElement('div');
@@ -116,6 +123,7 @@ export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere }
   const atmosphereSection = createSection('Atmosphere', true);
   const stoneSection = createSection('Stone Relics', true);
   const shellSection = createSection('Shell Relics', true);
+  const smallGlyphSection = createSection('Small Glyph Relics', true);
   const debugSection = createSection('Debug Visuals', true);
   const futureSection = createSection('Future / Reserved', false);
 
@@ -170,6 +178,26 @@ export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere }
     renderAll();
   });
   shellSection.body.append(shellReset);
+
+  const smallGlyphRebuild = document.createElement('button');
+  smallGlyphRebuild.type = 'button';
+  smallGlyphRebuild.textContent = 'Rebuild Small Glyph Relics';
+  smallGlyphRebuild.className = 'options-panel__section-reset';
+  smallGlyphRebuild.addEventListener('click', () => onChange({ type: 'small-glyph-rebuild' }));
+  smallGlyphSection.body.append(smallGlyphRebuild);
+
+  const smallGlyphReset = document.createElement('button');
+  smallGlyphReset.type = 'button';
+  smallGlyphReset.textContent = 'Reset Small Glyph Relics';
+  smallGlyphReset.className = 'options-panel__section-reset';
+  smallGlyphReset.addEventListener('click', () => {
+    bg.smallGlyphRelics = deepClone(defaults.backgroundAtmosphere.smallGlyphRelics);
+    normalizeRuntimeState(runtimeState);
+    onChange({ type: 'small-glyph-rebuild' });
+    persistState();
+    renderAll();
+  });
+  smallGlyphSection.body.append(smallGlyphReset);
 
   function checkbox(path, parent, labelText) {
     let input;
@@ -306,6 +334,18 @@ export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere }
   bind(range(path(() => shell.orbitSpeed, (v) => { shell.orbitSpeed = v; }, 'shell-runtime'), shellSection.body, 'shellRelics.orbitSpeed', 0, 0.15, 0.001));
   bind(range(path(() => shell.opacity, (v) => { shell.opacity = v; }, 'material'), shellSection.body, 'shellRelics.opacity', 0, 1, 0.01));
   bind(checkbox(path(() => shell.debugVisible, (v) => { shell.debugVisible = v; }, 'shell-rebuild'), shellSection.body, 'shellRelics.debugVisible'));
+  const smallGlyph = bg.smallGlyphRelics;
+  bind(checkbox(path(() => smallGlyph.enabled, (v) => { smallGlyph.enabled = v; }, 'small-glyph-runtime'), smallGlyphSection.body, 'smallGlyphRelics.enabled'));
+  bind(range(path(() => smallGlyph.count, (v) => { smallGlyph.count = Math.round(v); }, 'small-glyph-rebuild'), smallGlyphSection.body, 'smallGlyphRelics.count', 0, 120, 1));
+  bind(range(path(() => smallGlyph.minScale, (v) => { smallGlyph.minScale = v; }, 'small-glyph-rebuild'), smallGlyphSection.body, 'smallGlyphRelics.minScale', 0.05, 8, 0.05));
+  bind(range(path(() => smallGlyph.maxScale, (v) => { smallGlyph.maxScale = v; }, 'small-glyph-rebuild'), smallGlyphSection.body, 'smallGlyphRelics.maxScale', 0.05, 10, 0.05));
+  bind(range(path(() => smallGlyph.shellInnerRadius, (v) => { smallGlyph.shellInnerRadius = v; }, 'small-glyph-rebuild'), smallGlyphSection.body, 'smallGlyphRelics.shellInnerRadius', 0, 20, 0.1));
+  bind(range(path(() => smallGlyph.shellOuterRadius, (v) => { smallGlyph.shellOuterRadius = v; }, 'small-glyph-rebuild'), smallGlyphSection.body, 'smallGlyphRelics.shellOuterRadius', 1, 30, 0.1));
+  bind(range(path(() => smallGlyph.rotationSpeedMin, (v) => { smallGlyph.rotationSpeedMin = v; }, 'small-glyph-runtime'), smallGlyphSection.body, 'smallGlyphRelics.rotationSpeedMin', 0, 0.3, 0.001));
+  bind(range(path(() => smallGlyph.rotationSpeedMax, (v) => { smallGlyph.rotationSpeedMax = v; }, 'small-glyph-runtime'), smallGlyphSection.body, 'smallGlyphRelics.rotationSpeedMax', 0, 0.5, 0.001));
+  bind(range(path(() => smallGlyph.orbitSpeed, (v) => { smallGlyph.orbitSpeed = v; }, 'small-glyph-runtime'), smallGlyphSection.body, 'smallGlyphRelics.orbitSpeed', 0, 0.15, 0.001));
+  bind(range(path(() => smallGlyph.opacity, (v) => { smallGlyph.opacity = v; }, 'material'), smallGlyphSection.body, 'smallGlyphRelics.opacity', 0, 1, 0.01));
+  bind(checkbox(path(() => smallGlyph.debugVisible, (v) => { smallGlyph.debugVisible = v; }, 'small-glyph-rebuild'), smallGlyphSection.body, 'smallGlyphRelics.debugVisible'));
 
 
   bind(select(path(() => bg.debugBlendingMode, (v) => { bg.debugBlendingMode = v; }, 'material'), debugSection.body, 'debugBlendingMode', [
@@ -320,7 +360,7 @@ export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere }
   futureText.textContent = 'Reserved for: micro relics, mist shell, gate aura, camera tuning, labels/UI debug, lighting, motion.';
   futureSection.body.append(futureText);
 
-  panel.append(atmosphereSection.details, stoneSection.details, shellSection.details, debugSection.details, futureSection.details);
+  panel.append(atmosphereSection.details, stoneSection.details, shellSection.details, smallGlyphSection.details, debugSection.details, futureSection.details);
   root.append(button, panel);
   document.body.append(root);
 
