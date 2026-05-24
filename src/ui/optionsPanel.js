@@ -3,7 +3,7 @@ function deepClone(value) {
 }
 
 const OPTIONS_STORAGE_KEY = 'portfolio.options.runtimeState.v1';
-const OPTIONS_DEFAULTS_VERSION = '2026-05-24-atmosphere-full-preset-v3';
+const OPTIONS_DEFAULTS_VERSION = '2026-05-24-atmosphere-suncycle-v4';
 const PRESET_SLOT_KEYS = ['portfolio.optionsPreset.1', 'portfolio.optionsPreset.2', 'portfolio.optionsPreset.3'];
 
 function clamp(value, min, max) {
@@ -12,6 +12,8 @@ function clamp(value, min, max) {
 
 function normalizeRuntimeState(state) {
   const bg = state.backgroundAtmosphere;
+  if (!state.sunCycle) state.sunCycle = {};
+  if (!state.sunCycle.spotlight) state.sunCycle.spotlight = {};
   if (!bg.smallGlyphRelics) bg.smallGlyphRelics = {};
   bg.safeRadius = clamp(bg.safeRadius, 0, 15);
   bg.shellInnerRadius = clamp(bg.shellInnerRadius, 0, 30);
@@ -37,6 +39,18 @@ function normalizeRuntimeState(state) {
   normalizeRelics(bg.stoneRelics, { minScaleMin: 0.01, minScaleMax: 8, maxScaleMin: 0.01, maxScaleMax: 10, rotationMax: 0.5, orbitMax: 0.15 });
   normalizeRelics(bg.shellRelics, { minScaleMin: 0.01, minScaleMax: 8, maxScaleMin: 0.01, maxScaleMax: 10, rotationMax: 0.8, orbitMax: 0.2 });
   normalizeRelics(bg.smallGlyphRelics, { minScaleMin: 0.01, minScaleMax: 4, maxScaleMin: 0.01, maxScaleMax: 6, rotationMax: 0.5, orbitMax: 0.15 });
+
+  const sun = state.sunCycle;
+  sun.radius = clamp(sun.radius ?? 5, 1, 30);
+  sun.angularSpeed = clamp(sun.angularSpeed ?? 0.08, 0, 1);
+  sun.scale = clamp(sun.scale ?? 1, 0.05, 10);
+  sun.selfRotationSpeed = clamp(sun.selfRotationSpeed ?? 0.05, 0, 1);
+  sun.emissiveIntensity = clamp(sun.emissiveIntensity ?? 1.8, 0, 10);
+  sun.direction = Number(sun.direction) >= 0 ? 1 : -1;
+  sun.spotlight.intensity = clamp(sun.spotlight.intensity ?? 2.5, 0, 20);
+  sun.spotlight.angleDegrees = clamp(sun.spotlight.angleDegrees ?? 90, 1, 120);
+  sun.spotlight.penumbra = clamp(sun.spotlight.penumbra ?? 0.45, 0, 1);
+  sun.spotlight.distance = clamp(sun.spotlight.distance ?? 20, 0, 100);
 }
 
 function isEditableTarget(target) {
@@ -79,6 +93,8 @@ export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere }
     const stored = JSON.parse(localStorage.getItem(OPTIONS_STORAGE_KEY) ?? 'null');
     if (stored?.version === OPTIONS_DEFAULTS_VERSION && stored?.runtimeState) {
       Object.assign(runtimeState.backgroundAtmosphere, stored.runtimeState.backgroundAtmosphere ?? {});
+      Object.assign(runtimeState.sunCycle, stored.runtimeState.sunCycle ?? {});
+      runtimeState.sunCycle.spotlight = { ...runtimeState.sunCycle.spotlight, ...(stored.runtimeState.sunCycle?.spotlight ?? {}) };
     }
   } catch {}
 
@@ -113,6 +129,7 @@ export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere }
   resetAll.textContent = 'Reset all';
   resetAll.addEventListener('click', () => {
     Object.assign(runtimeState.backgroundAtmosphere, deepClone(defaults.backgroundAtmosphere));
+    runtimeState.sunCycle = deepClone(defaults.sunCycle);
     normalizeRuntimeState(runtimeState);
     onChange({ type: 'reset-all' });
     persistState();
@@ -141,7 +158,7 @@ export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere }
     saveButton.textContent = `Save ${slot}`;
     saveButton.className = 'options-panel__preset-btn';
     saveButton.addEventListener('click', () => {
-      localStorage.setItem(PRESET_SLOT_KEYS[slot - 1], JSON.stringify({ version: OPTIONS_DEFAULTS_VERSION, runtimeState: { backgroundAtmosphere: deepClone(runtimeState.backgroundAtmosphere) } }));
+      localStorage.setItem(PRESET_SLOT_KEYS[slot - 1], JSON.stringify({ version: OPTIONS_DEFAULTS_VERSION, runtimeState: { backgroundAtmosphere: deepClone(runtimeState.backgroundAtmosphere), sunCycle: deepClone(runtimeState.sunCycle) } }));
       setPresetStatus(`Zapisano slot ${slot}`);
     });
     const loadButton = document.createElement('button');
@@ -159,6 +176,8 @@ export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere }
         const parsed = JSON.parse(raw);
         if (!parsed?.runtimeState?.backgroundAtmosphere) throw new Error('Invalid preset shape');
         Object.assign(runtimeState.backgroundAtmosphere, parsed.runtimeState.backgroundAtmosphere);
+        Object.assign(runtimeState.sunCycle, parsed.runtimeState.sunCycle ?? defaults.sunCycle);
+        runtimeState.sunCycle.spotlight = { ...deepClone(defaults.sunCycle.spotlight), ...(parsed.runtimeState.sunCycle?.spotlight ?? {}) };
         normalizeRuntimeState(runtimeState);
         onChange({ type: 'rebuild' });
         persistState();
@@ -177,6 +196,7 @@ export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere }
   makePresetRow(3);
 
   const atmosphereSection = createSection('Atmosphere', true);
+  const sunCycleSection = createSection('Sun Cycle', true);
   const stoneSection = createSection('Stone Relics', true);
   const shellSection = createSection('Shell Relics', true);
   const smallGlyphSection = createSection('Small Glyph Relics', true);
@@ -195,6 +215,18 @@ export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere }
     renderAll();
   });
   atmosphereSection.body.append(atmosphereReset);
+  const sunCycleReset = document.createElement('button');
+  sunCycleReset.type = 'button';
+  sunCycleReset.textContent = 'Reset Sun Cycle';
+  sunCycleReset.className = 'options-panel__section-reset';
+  sunCycleReset.addEventListener('click', () => {
+    runtimeState.sunCycle = deepClone(defaults.sunCycle);
+    normalizeRuntimeState(runtimeState);
+    onChange({ type: 'sun-cycle' });
+    persistState();
+    renderAll();
+  });
+  sunCycleSection.body.append(sunCycleReset);
 
   const stoneRebuild = document.createElement('button');
   stoneRebuild.type = 'button';
@@ -340,6 +372,7 @@ export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere }
   const binders = [];
   const bind = (fn) => binders.push(fn);
   const bg = runtimeState.backgroundAtmosphere;
+  const sun = runtimeState.sunCycle;
 
   const path = (getter, setter, type) => ({
     get: getter,
@@ -353,6 +386,19 @@ export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere }
   });
 
   bind(checkbox(path(() => bg.enabled, (v) => { bg.enabled = v; }, 'rebuild'), atmosphereSection.body, 'backgroundAtmosphere.enabled'));
+  bind(checkbox(path(() => sun.enabled, (v) => { sun.enabled = v; }, 'sun-cycle'), sunCycleSection.body, 'sunCycle.enabled'));
+  bind(range(path(() => sun.radius, (v) => { sun.radius = v; }, 'sun-cycle'), sunCycleSection.body, 'sunCycle.radius', 1, 30, 0.1));
+  bind(range(path(() => sun.angularSpeed, (v) => { sun.angularSpeed = v; }, 'sun-cycle'), sunCycleSection.body, 'sunCycle.angularSpeed', 0, 1, 0.001));
+  bind(select(path(() => String(sun.direction), (v) => { sun.direction = Number(v); }, 'sun-cycle'), sunCycleSection.body, 'sunCycle.direction', [{ value: '1', label: 'Forward' }, { value: '-1', label: 'Reverse' }]));
+  bind(range(path(() => sun.scale, (v) => { sun.scale = v; }, 'sun-cycle'), sunCycleSection.body, 'sunCycle.scale', 0.05, 10, 0.05));
+  bind(range(path(() => sun.selfRotationSpeed, (v) => { sun.selfRotationSpeed = v; }, 'sun-cycle'), sunCycleSection.body, 'sunCycle.selfRotationSpeed', 0, 1, 0.001));
+  bind(range(path(() => sun.emissiveIntensity, (v) => { sun.emissiveIntensity = v; }, 'sun-cycle'), sunCycleSection.body, 'sunCycle.emissiveIntensity', 0, 10, 0.1));
+  bind(checkbox(path(() => sun.spotlight.enabled, (v) => { sun.spotlight.enabled = v; }, 'sun-cycle'), sunCycleSection.body, 'sunCycle.spotlight.enabled'));
+  bind(range(path(() => sun.spotlight.intensity, (v) => { sun.spotlight.intensity = v; }, 'sun-cycle'), sunCycleSection.body, 'sunCycle.spotlight.intensity', 0, 20, 0.1));
+  bind(range(path(() => sun.spotlight.angleDegrees, (v) => { sun.spotlight.angleDegrees = v; }, 'sun-cycle'), sunCycleSection.body, 'sunCycle.spotlight.angleDegrees', 1, 120, 1));
+  bind(range(path(() => sun.spotlight.penumbra, (v) => { sun.spotlight.penumbra = v; }, 'sun-cycle'), sunCycleSection.body, 'sunCycle.spotlight.penumbra', 0, 1, 0.01));
+  bind(range(path(() => sun.spotlight.distance, (v) => { sun.spotlight.distance = v; }, 'sun-cycle'), sunCycleSection.body, 'sunCycle.spotlight.distance', 0, 100, 1));
+  bind(checkbox(path(() => sun.debugVisible, (v) => { sun.debugVisible = v; }, 'sun-cycle'), sunCycleSection.body, 'sunCycle.debugVisible'));
   bind(checkbox(path(() => bg.debugVisible, (v) => { bg.debugVisible = v; }, 'rebuild'), atmosphereSection.body, 'backgroundAtmosphere.debugVisible'));
   bind(range(path(() => bg.safeRadius, (v) => { bg.safeRadius = v; }, 'rebuild'), atmosphereSection.body, 'backgroundAtmosphere.safeRadius', 0, 15, 0.1));
   bind(range(path(() => bg.shellInnerRadius, (v) => { bg.shellInnerRadius = v; }, 'rebuild'), atmosphereSection.body, 'backgroundAtmosphere.shellInnerRadius', 0, 30, 0.1));
@@ -416,14 +462,14 @@ export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere }
   futureText.textContent = 'Reserved for: micro relics, mist shell, gate aura, camera tuning, labels/UI debug, lighting, motion.';
   futureSection.body.append(futureText);
 
-  panel.append(presetSection.details, atmosphereSection.details, stoneSection.details, shellSection.details, smallGlyphSection.details, debugSection.details, futureSection.details);
+  panel.append(presetSection.details, atmosphereSection.details, sunCycleSection.details, stoneSection.details, shellSection.details, smallGlyphSection.details, debugSection.details, futureSection.details);
   root.append(button, panel);
   document.body.append(root);
 
   function persistState() {
     localStorage.setItem(OPTIONS_STORAGE_KEY, JSON.stringify({
       version: OPTIONS_DEFAULTS_VERSION,
-      runtimeState: { backgroundAtmosphere: deepClone(runtimeState.backgroundAtmosphere) }
+      runtimeState: { backgroundAtmosphere: deepClone(runtimeState.backgroundAtmosphere), sunCycle: deepClone(runtimeState.sunCycle) }
     }));
   }
 

@@ -12,6 +12,7 @@ import { createCameraRig } from './scene/cameraRig.js';
 import { createOverlay } from './ui/overlay.js';
 import { createHoverLabel } from './ui/hoverLabel.js';
 import { createOptionsPanel } from './ui/optionsPanel.js';
+import { createSunCycle, SUN_CYCLE_DEFAULTS } from './scene/sunCycle.js';
 
 const app = document.querySelector('#app');
 if (!app) throw new Error('Missing #app mount element.');
@@ -37,6 +38,9 @@ const centralPlaceholder = createCentralObject();
 scene.add(centralPlaceholder);
 
 const sceneRuntimeConfig = {
+  sunCycle: {
+    ...SUN_CYCLE_DEFAULTS
+  },
   backgroundAtmosphere: {
     enabled: true,
     debugVisible: false,
@@ -92,6 +96,8 @@ const sceneRuntimeConfig = {
 
 const atmosphere = createBackgroundAtmosphere(sceneRuntimeConfig.backgroundAtmosphere);
 scene.add(atmosphere.object3d);
+const sunCycle = createSunCycle(sceneRuntimeConfig.sunCycle);
+scene.add(sunCycle.object3d);
 
 void loadMonkeyModel({ scene, fallbackObject: centralPlaceholder });
 
@@ -105,6 +111,7 @@ const optionsPanel = createOptionsPanel({
   runtimeState: sceneRuntimeConfig,
   onChange: ({ type }) => {
     atmosphere.applySettings(sceneRuntimeConfig.backgroundAtmosphere, type);
+    sunCycle.setOptions(sceneRuntimeConfig.sunCycle);
   },
   onResetAtmosphere: () => {
     atmosphere.applySettings(sceneRuntimeConfig.backgroundAtmosphere, 'rebuild');
@@ -171,6 +178,7 @@ function tick() {
   updateOrbitNodes(nodes, elapsed, orbitGroup.getWorldPosition(orbitCenterWorldPosition));
   cameraRig.update(camera, elapsed);
   atmosphere.update(delta);
+  sunCycle.update(delta);
   if (sceneRuntimeConfig.backgroundAtmosphere.debugVisible && elapsed < 0.25) {
     console.info('[backgroundAtmosphere][debug] tick/update active', { delta, elapsed });
   }
