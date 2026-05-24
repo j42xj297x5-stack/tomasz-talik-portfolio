@@ -43,17 +43,18 @@ function normalizeRuntimeState(state) {
 
   const sun = state.sunCycle;
   sun.modelPath = typeof sun.modelPath === 'string' && sun.modelPath.trim() === SUN_MODEL_PATH ? SUN_MODEL_PATH : SUN_MODEL_PATH;
-  sun.radius = clamp(sun.radius ?? 5, 1, 30);
+  sun.radius = clamp(sun.radius ?? 3, 1, 30);
   sun.angularSpeed = clamp(sun.angularSpeed ?? 0.08, 0, 1);
-  sun.scale = clamp(sun.scale ?? 1, 0.05, 10);
-  sun.debugScaleMultiplier = clamp(sun.debugScaleMultiplier ?? 3, 0.01, 20);
+  sun.scale = clamp(sun.scale ?? 0.2, 0.05, 10);
+  sun.debugScaleMultiplier = clamp(sun.debugScaleMultiplier ?? 1, 0.01, 20);
   sun.selfRotationSpeed = clamp(sun.selfRotationSpeed ?? 0.05, 0, 1);
-  sun.emissiveIntensity = clamp(sun.emissiveIntensity ?? 1.8, 0, 10);
+  sun.emissiveIntensity = clamp(sun.emissiveIntensity ?? 1.5, 0, 10);
   sun.debugVisible = Boolean(sun.debugVisible);
-  sun.debugShowFallback = sun.debugShowFallback !== false;
+  sun.debugShowFallback = Boolean(sun.debugShowFallback);
   sun.debugForceBasicMaterial = Boolean(sun.debugForceBasicMaterial);
+  sun.debugShowBounds = Boolean(sun.debugShowBounds);
   sun.direction = Number(sun.direction) >= 0 ? 1 : -1;
-  sun.spotlight.intensity = clamp(sun.spotlight.intensity ?? 2.5, 0, 20);
+  sun.spotlight.intensity = clamp(sun.spotlight.intensity ?? 13.2, 0, 20);
   sun.spotlight.angleDegrees = clamp(sun.spotlight.angleDegrees ?? 90, 1, 120);
   sun.spotlight.penumbra = clamp(sun.spotlight.penumbra ?? 0.45, 0, 1);
   sun.spotlight.distance = clamp(sun.spotlight.distance ?? 20, 0, 100);
@@ -408,6 +409,7 @@ export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere }
   bind(checkbox(path(() => sun.debugVisible, (v) => { sun.debugVisible = v; }, 'sun-cycle'), sunCycleSection.body, 'sunCycle.debugVisible'));
   bind(checkbox(path(() => sun.debugShowFallback, (v) => { sun.debugShowFallback = v; }, 'sun-cycle'), sunCycleSection.body, 'sunCycle.debugShowFallback'));
   bind(checkbox(path(() => sun.debugForceBasicMaterial, (v) => { sun.debugForceBasicMaterial = v; }, 'sun-cycle'), sunCycleSection.body, 'sunCycle.debugForceBasicMaterial'));
+  bind(checkbox(path(() => sun.debugShowBounds, (v) => { sun.debugShowBounds = v; }, 'sun-cycle'), sunCycleSection.body, 'sunCycle.debugShowBounds'));
   bind(checkbox(path(() => bg.debugVisible, (v) => { bg.debugVisible = v; }, 'rebuild'), atmosphereSection.body, 'backgroundAtmosphere.debugVisible'));
   bind(range(path(() => bg.safeRadius, (v) => { bg.safeRadius = v; }, 'rebuild'), atmosphereSection.body, 'backgroundAtmosphere.safeRadius', 0, 15, 0.1));
   bind(range(path(() => bg.shellInnerRadius, (v) => { bg.shellInnerRadius = v; }, 'rebuild'), atmosphereSection.body, 'backgroundAtmosphere.shellInnerRadius', 0, 30, 0.1));

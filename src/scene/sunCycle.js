@@ -40,19 +40,19 @@ export const SUN_CYCLE_DEFAULTS = {
   enabled: true,
   modelPath: SUN_MODEL_PATH,
   center: { x: 0, y: 0, z: 0 },
-  radius: 5,
+  radius: 3,
   zOffset: 0,
   startAngle: 0,
   angularSpeed: 0.08,
   direction: 1,
-  scale: 1,
+  scale: 0.2,
   selfRotationSpeed: 0.05,
-  emissiveColor: '#ffe36e',
-  emissiveIntensity: 1.8,
+  emissiveColor: '#ffd21f',
+  emissiveIntensity: 1.5,
   spotlight: {
     enabled: true,
-    color: '#ffe36e',
-    intensity: 2.5,
+    color: '#ffd21f',
+    intensity: 13.2,
     distance: 20,
     angleDegrees: 90,
     penumbra: 0.45,
@@ -60,10 +60,11 @@ export const SUN_CYCLE_DEFAULTS = {
     horizonFade: false,
     horizonFadeHeight: 0.5
   },
-  debugVisible: true,
-  debugShowFallback: true,
+  debugVisible: false,
+  debugShowFallback: false,
   debugForceBasicMaterial: false,
-  debugScaleMultiplier: 3
+  debugShowBounds: false,
+  debugScaleMultiplier: 1
 };
 
 export function createSunCycle(options = {}) {
@@ -77,6 +78,19 @@ export function createSunCycle(options = {}) {
   let sunModel = null;
   let boxHelper = null;
   const debugBasicMaterial = new THREE.MeshBasicMaterial({ color: '#ffd31a' });
+  const stableSunMaterial = new THREE.MeshStandardMaterial({
+    color: '#ffd21f',
+    emissive: '#ffd21f',
+    emissiveIntensity: 1.5,
+    roughness: 0.65,
+    metalness: 0.0,
+    transparent: false,
+    opacity: 1,
+    alphaTest: 0,
+    side: THREE.DoubleSide,
+    depthWrite: true,
+    depthTest: true
+  });
 
   const sunBodyGroup = new THREE.Group();
   sunBodyGroup.name = 'SunCycleBodyGroup';
@@ -102,6 +116,26 @@ export function createSunCycle(options = {}) {
   fallbackSphere.visible = false;
   sunBodyGroup.add(fallbackSphere);
 
+  function applyStableSunMaterial() {
+    if (!sunModel) return;
+    sunModel.traverse((child) => {
+      if (!child.isMesh) return;
+      child.material = stableSunMaterial;
+      child.visible = true;
+      child.castShadow = false;
+      child.receiveShadow = false;
+      if (child.material) {
+        child.material.transparent = false;
+        child.material.opacity = 1;
+        child.material.alphaTest = 0;
+        child.material.depthWrite = true;
+        child.material.depthTest = true;
+        child.material.side = THREE.DoubleSide;
+        child.material.needsUpdate = true;
+      }
+    });
+  }
+
   function setDebugMaterialState(forceBasic) {
     if (!sunModel) return;
     sunModel.traverse((child) => {
@@ -113,6 +147,8 @@ export function createSunCycle(options = {}) {
       } else if (child.userData._sunCycleOriginalMaterial) {
         child.material = child.userData._sunCycleOriginalMaterial;
         delete child.userData._sunCycleOriginalMaterial;
+      } else {
+        child.material = stableSunMaterial;
       }
     });
   }
@@ -120,7 +156,7 @@ export function createSunCycle(options = {}) {
   function updateDebugState() {
     const debugOn = settings.debugVisible;
     fallbackSphere.visible = debugOn && settings.debugShowFallback;
-    if (boxHelper) boxHelper.visible = debugOn;
+    if (boxHelper) boxHelper.visible = debugOn && settings.debugShowBounds;
     setDebugMaterialState(debugOn && settings.debugForceBasicMaterial);
   }
 
@@ -129,13 +165,16 @@ export function createSunCycle(options = {}) {
     const emissiveColor = new THREE.Color(settings.emissiveColor);
     sunModel.traverse((child) => {
       if (!child.isMesh || !child.material) return;
-      const materials = Array.isArray(child.material) ? child.material : [child.material];
-      child.material = materials.map((m) => {
-        const cloned = m.clone();
-        if ('emissive' in cloned) cloned.emissive = emissiveColor.clone();
-        if ('emissiveIntensity' in cloned) cloned.emissiveIntensity = settings.emissiveIntensity;
-        return cloned;
-      });
+      if ('color' in child.material) child.material.color.set(settings.emissiveColor);
+      if ('emissive' in child.material) child.material.emissive = emissiveColor.clone();
+      if ('emissiveIntensity' in child.material) child.material.emissiveIntensity = settings.emissiveIntensity;
+      child.material.transparent = false;
+      child.material.opacity = 1;
+      child.material.alphaTest = 0;
+      child.material.depthWrite = true;
+      child.material.depthTest = true;
+      child.material.side = THREE.DoubleSide;
+      child.material.needsUpdate = true;
     });
   }
 
@@ -187,11 +226,13 @@ export function createSunCycle(options = {}) {
     const loader = new GLTFLoader();
     loader.load(settings.modelPath, (gltf) => {
       sunModel = gltf.scene;
+      sunModel.position.set(0, 0, 0);
       sunBodyGroup.add(sunModel);
       boxHelper = new THREE.BoxHelper(sunModel, 0x00ffff);
       boxHelper.name = 'SunCycleModelBoxHelper';
       boxHelper.visible = false;
       sunBodyGroup.add(boxHelper);
+      applyStableSunMaterial();
       if (settings.debugVisible) {
         const meshCount = sunModel ? sunModel.getObjectsByProperty('isMesh', true).length : 0;
         const bbox = new THREE.Box3().setFromObject(sunModel);
@@ -272,6 +313,7 @@ export function createSunCycle(options = {}) {
         boxHelper.material.dispose();
       }
       debugBasicMaterial.dispose();
+      stableSunMaterial.dispose();
       debugOrbit.geometry.dispose();
       debugOrbit.material.dispose();
     }
