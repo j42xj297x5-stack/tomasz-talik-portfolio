@@ -2,6 +2,40 @@ function deepClone(value) {
   return JSON.parse(JSON.stringify(value));
 }
 
+const OPTIONS_STORAGE_KEY = 'portfolio.options.runtimeState.v1';
+const OPTIONS_DEFAULTS_VERSION = '2026-05-24-atmosphere-relics-tuned-defaults-v2';
+
+function clamp(value, min, max) {
+  return Math.min(max, Math.max(min, value));
+}
+
+function normalizeRuntimeState(state) {
+  const bg = state.backgroundAtmosphere;
+  bg.safeRadius = clamp(bg.safeRadius, 0, 10);
+  bg.shellInnerRadius = clamp(bg.shellInnerRadius, 0, 20);
+  bg.shellOuterRadius = Math.max(clamp(bg.shellOuterRadius, 1, 30), bg.shellInnerRadius + 0.1);
+
+  bg.dust.count = Math.max(0, Math.round(bg.dust.count));
+  bg.dust.idleOpacity = clamp(bg.dust.idleOpacity, 0, 1);
+  bg.dust.pointSize = clamp(bg.dust.pointSize, 0.001, 0.3);
+  bg.dust.rotationSpeed = clamp(bg.dust.rotationSpeed, 0, 0.1);
+
+  const normalizeRelics = (relics, speedMax, orbitMax) => {
+    relics.count = clamp(Math.round(relics.count), 0, 120);
+    relics.minScale = clamp(relics.minScale, 0.05, 8);
+    relics.maxScale = Math.max(clamp(relics.maxScale, 0.05, 10), relics.minScale);
+    relics.shellInnerRadius = clamp(relics.shellInnerRadius, 0, 20);
+    relics.shellOuterRadius = Math.max(clamp(relics.shellOuterRadius, 1, 30), relics.shellInnerRadius + 0.1);
+    relics.rotationSpeedMin = clamp(relics.rotationSpeedMin, 0, speedMax);
+    relics.rotationSpeedMax = Math.max(clamp(relics.rotationSpeedMax, 0, speedMax), relics.rotationSpeedMin);
+    relics.orbitSpeed = clamp(relics.orbitSpeed, 0, orbitMax);
+    relics.opacity = clamp(relics.opacity, 0, 1);
+  };
+
+  normalizeRelics(bg.stoneRelics, 0.3, 0.1);
+  normalizeRelics(bg.shellRelics, 0.5, 0.15);
+}
+
 function isEditableTarget(target) {
   if (!(target instanceof HTMLElement)) return false;
   const tag = target.tagName;
@@ -38,6 +72,15 @@ function addRow(sectionBody, labelText, controlBuilder) {
 export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere }) {
   const defaults = deepClone(runtimeState);
 
+  try {
+    const stored = JSON.parse(localStorage.getItem(OPTIONS_STORAGE_KEY) ?? 'null');
+    if (stored?.version === OPTIONS_DEFAULTS_VERSION && stored?.runtimeState) {
+      Object.assign(runtimeState.backgroundAtmosphere, stored.runtimeState.backgroundAtmosphere ?? {});
+    }
+  } catch {}
+
+  normalizeRuntimeState(runtimeState);
+
   const root = document.createElement('div');
   root.className = 'options-panel';
 
@@ -62,7 +105,9 @@ export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere }
   resetAll.textContent = 'Reset all';
   resetAll.addEventListener('click', () => {
     Object.assign(runtimeState.backgroundAtmosphere, deepClone(defaults.backgroundAtmosphere));
+    normalizeRuntimeState(runtimeState);
     onChange({ type: 'reset-all' });
+    persistState();
     renderAll();
   });
   actions.append(resetAll);
@@ -80,7 +125,9 @@ export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere }
   atmosphereReset.className = 'options-panel__section-reset';
   atmosphereReset.addEventListener('click', () => {
     Object.assign(runtimeState.backgroundAtmosphere, deepClone(defaults.backgroundAtmosphere));
+    normalizeRuntimeState(runtimeState);
     onResetAtmosphere();
+    persistState();
     renderAll();
   });
   atmosphereSection.body.append(atmosphereReset);
@@ -91,6 +138,19 @@ export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere }
   stoneRebuild.className = 'options-panel__section-reset';
   stoneRebuild.addEventListener('click', () => onChange({ type: 'stone-rebuild' }));
   stoneSection.body.append(stoneRebuild);
+  const stoneReset = document.createElement('button');
+  stoneReset.type = 'button';
+  stoneReset.textContent = 'Reset Stone Relics';
+  stoneReset.className = 'options-panel__section-reset';
+  stoneReset.addEventListener('click', () => {
+    bg.stoneRelics = deepClone(defaults.backgroundAtmosphere.stoneRelics);
+    normalizeRuntimeState(runtimeState);
+    onChange({ type: 'stone-rebuild' });
+    persistState();
+    renderAll();
+  });
+  stoneSection.body.append(stoneReset);
+
   const shellRebuild = document.createElement('button');
   shellRebuild.type = 'button';
   shellRebuild.textContent = 'Rebuild Shell Relics';
@@ -104,7 +164,9 @@ export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere }
   shellReset.className = 'options-panel__section-reset';
   shellReset.addEventListener('click', () => {
     bg.shellRelics = deepClone(defaults.backgroundAtmosphere.shellRelics);
+    normalizeRuntimeState(runtimeState);
     onChange({ type: 'shell-rebuild' });
+    persistState();
     renderAll();
   });
   shellSection.body.append(shellReset);
@@ -199,47 +261,49 @@ export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere }
     get: getter,
     set: (value) => {
       setter(value);
+      normalizeRuntimeState(runtimeState);
       onChange({ type });
+      persistState();
       renderAll();
     }
   });
 
   bind(checkbox(path(() => bg.enabled, (v) => { bg.enabled = v; }, 'rebuild'), atmosphereSection.body, 'backgroundAtmosphere.enabled'));
   bind(checkbox(path(() => bg.debugVisible, (v) => { bg.debugVisible = v; }, 'rebuild'), atmosphereSection.body, 'backgroundAtmosphere.debugVisible'));
-  bind(range(path(() => bg.safeRadius, (v) => { bg.safeRadius = v; }, 'rebuild'), atmosphereSection.body, 'backgroundAtmosphere.safeRadius', 0.5, 8, 0.1));
-  bind(range(path(() => bg.shellInnerRadius, (v) => { bg.shellInnerRadius = v; }, 'rebuild'), atmosphereSection.body, 'backgroundAtmosphere.shellInnerRadius', 1, 15, 0.1));
-  bind(range(path(() => bg.shellOuterRadius, (v) => { bg.shellOuterRadius = v; }, 'rebuild'), atmosphereSection.body, 'backgroundAtmosphere.shellOuterRadius', 2, 20, 0.1));
+  bind(range(path(() => bg.safeRadius, (v) => { bg.safeRadius = v; }, 'rebuild'), atmosphereSection.body, 'backgroundAtmosphere.safeRadius', 0, 10, 0.1));
+  bind(range(path(() => bg.shellInnerRadius, (v) => { bg.shellInnerRadius = v; }, 'rebuild'), atmosphereSection.body, 'backgroundAtmosphere.shellInnerRadius', 0, 20, 0.1));
+  bind(range(path(() => bg.shellOuterRadius, (v) => { bg.shellOuterRadius = v; }, 'rebuild'), atmosphereSection.body, 'backgroundAtmosphere.shellOuterRadius', 1, 30, 0.1));
 
   bind(checkbox(path(() => bg.dust.enabled, (v) => { bg.dust.enabled = v; }, 'rebuild'), atmosphereSection.body, 'dust.enabled'));
-  bind(range(path(() => bg.dust.count, (v) => { bg.dust.count = Math.round(v); }, 'rebuild'), atmosphereSection.body, 'dust.count', 100, 4000, 50));
+  bind(range(path(() => bg.dust.count, (v) => { bg.dust.count = Math.round(v); }, 'rebuild'), atmosphereSection.body, 'dust.count', 0, 6000, 50));
   bind(range(path(() => bg.dust.idleOpacity, (v) => { bg.dust.idleOpacity = v; }, 'material'), atmosphereSection.body, 'dust.idleOpacity', 0, 1, 0.01));
-  bind(range(path(() => bg.dust.pointSize, (v) => { bg.dust.pointSize = v; }, 'material'), atmosphereSection.body, 'dust.pointSize', 0.005, 0.5, 0.005));
-  bind(range(path(() => bg.dust.rotationSpeed, (v) => { bg.dust.rotationSpeed = v; }, 'runtime'), atmosphereSection.body, 'dust.rotationSpeed', 0, 0.08, 0.001));
+  bind(range(path(() => bg.dust.pointSize, (v) => { bg.dust.pointSize = v; }, 'material'), atmosphereSection.body, 'dust.pointSize', 0.001, 0.3, 0.001));
+  bind(range(path(() => bg.dust.rotationSpeed, (v) => { bg.dust.rotationSpeed = v; }, 'runtime'), atmosphereSection.body, 'dust.rotationSpeed', 0, 0.1, 0.001));
   bind(color(path(() => bg.dust.color, (v) => { bg.dust.color = v; }, 'material'), atmosphereSection.body, 'dust.color'));
   bind(checkbox(path(() => bg.dust.sizeAttenuation, (v) => { bg.dust.sizeAttenuation = v; }, 'material'), atmosphereSection.body, 'dust.sizeAttenuation'));
   bind(checkbox(path(() => bg.dust.depthTest, (v) => { bg.dust.depthTest = v; }, 'material'), atmosphereSection.body, 'dust.depthTest'));
   const stone = bg.stoneRelics;
   bind(checkbox(path(() => stone.enabled, (v) => { stone.enabled = v; }, 'stone-runtime'), stoneSection.body, 'stoneRelics.enabled'));
-  bind(range(path(() => stone.count, (v) => { stone.count = Math.round(v); }, 'stone-rebuild'), stoneSection.body, 'stoneRelics.count', 0, 60, 1));
-  bind(range(path(() => stone.minScale, (v) => { stone.minScale = v; }, 'stone-rebuild'), stoneSection.body, 'stoneRelics.minScale', 0.01, 0.3, 0.005));
-  bind(range(path(() => stone.maxScale, (v) => { stone.maxScale = v; }, 'stone-rebuild'), stoneSection.body, 'stoneRelics.maxScale', 0.02, 0.4, 0.005));
-  bind(range(path(() => stone.shellInnerRadius, (v) => { stone.shellInnerRadius = v; }, 'stone-rebuild'), stoneSection.body, 'stoneRelics.shellInnerRadius', 1, 15, 0.1));
-  bind(range(path(() => stone.shellOuterRadius, (v) => { stone.shellOuterRadius = v; }, 'stone-rebuild'), stoneSection.body, 'stoneRelics.shellOuterRadius', 2, 20, 0.1));
-  bind(range(path(() => stone.rotationSpeedMin, (v) => { stone.rotationSpeedMin = v; }, 'stone-runtime'), stoneSection.body, 'stoneRelics.rotationSpeedMin', 0, 0.06, 0.001));
-  bind(range(path(() => stone.rotationSpeedMax, (v) => { stone.rotationSpeedMax = v; }, 'stone-runtime'), stoneSection.body, 'stoneRelics.rotationSpeedMax', 0, 0.08, 0.001));
-  bind(range(path(() => stone.orbitSpeed, (v) => { stone.orbitSpeed = v; }, 'stone-runtime'), stoneSection.body, 'stoneRelics.orbitSpeed', 0, 0.03, 0.001));
+  bind(range(path(() => stone.count, (v) => { stone.count = Math.round(v); }, 'stone-rebuild'), stoneSection.body, 'stoneRelics.count', 0, 120, 1));
+  bind(range(path(() => stone.minScale, (v) => { stone.minScale = v; }, 'stone-rebuild'), stoneSection.body, 'stoneRelics.minScale', 0.05, 8, 0.05));
+  bind(range(path(() => stone.maxScale, (v) => { stone.maxScale = v; }, 'stone-rebuild'), stoneSection.body, 'stoneRelics.maxScale', 0.05, 10, 0.05));
+  bind(range(path(() => stone.shellInnerRadius, (v) => { stone.shellInnerRadius = v; }, 'stone-rebuild'), stoneSection.body, 'stoneRelics.shellInnerRadius', 0, 20, 0.1));
+  bind(range(path(() => stone.shellOuterRadius, (v) => { stone.shellOuterRadius = v; }, 'stone-rebuild'), stoneSection.body, 'stoneRelics.shellOuterRadius', 1, 30, 0.1));
+  bind(range(path(() => stone.rotationSpeedMin, (v) => { stone.rotationSpeedMin = v; }, 'stone-runtime'), stoneSection.body, 'stoneRelics.rotationSpeedMin', 0, 0.2, 0.001));
+  bind(range(path(() => stone.rotationSpeedMax, (v) => { stone.rotationSpeedMax = v; }, 'stone-runtime'), stoneSection.body, 'stoneRelics.rotationSpeedMax', 0, 0.3, 0.001));
+  bind(range(path(() => stone.orbitSpeed, (v) => { stone.orbitSpeed = v; }, 'stone-runtime'), stoneSection.body, 'stoneRelics.orbitSpeed', 0, 0.1, 0.001));
   bind(range(path(() => stone.opacity, (v) => { stone.opacity = v; }, 'material'), stoneSection.body, 'stoneRelics.opacity', 0, 1, 0.01));
   bind(checkbox(path(() => stone.debugVisible, (v) => { stone.debugVisible = v; }, 'stone-rebuild'), stoneSection.body, 'stoneRelics.debugVisible'));
   const shell = bg.shellRelics;
   bind(checkbox(path(() => shell.enabled, (v) => { shell.enabled = v; }, 'shell-runtime'), shellSection.body, 'shellRelics.enabled'));
-  bind(range(path(() => shell.count, (v) => { shell.count = Math.round(v); }, 'shell-rebuild'), shellSection.body, 'shellRelics.count', 0, 80, 1));
-  bind(range(path(() => shell.minScale, (v) => { shell.minScale = v; }, 'shell-rebuild'), shellSection.body, 'shellRelics.minScale', 0.2, 8, 0.1));
-  bind(range(path(() => shell.maxScale, (v) => { shell.maxScale = v; }, 'shell-rebuild'), shellSection.body, 'shellRelics.maxScale', 0.5, 10, 0.1));
-  bind(range(path(() => shell.shellInnerRadius, (v) => { shell.shellInnerRadius = v; }, 'shell-rebuild'), shellSection.body, 'shellRelics.shellInnerRadius', 1, 15, 0.1));
-  bind(range(path(() => shell.shellOuterRadius, (v) => { shell.shellOuterRadius = v; }, 'shell-rebuild'), shellSection.body, 'shellRelics.shellOuterRadius', 2, 20, 0.1));
-  bind(range(path(() => shell.rotationSpeedMin, (v) => { shell.rotationSpeedMin = v; }, 'shell-runtime'), shellSection.body, 'shellRelics.rotationSpeedMin', 0, 0.2, 0.001));
-  bind(range(path(() => shell.rotationSpeedMax, (v) => { shell.rotationSpeedMax = v; }, 'shell-runtime'), shellSection.body, 'shellRelics.rotationSpeedMax', 0, 0.3, 0.001));
-  bind(range(path(() => shell.orbitSpeed, (v) => { shell.orbitSpeed = v; }, 'shell-runtime'), shellSection.body, 'shellRelics.orbitSpeed', 0, 0.08, 0.001));
+  bind(range(path(() => shell.count, (v) => { shell.count = Math.round(v); }, 'shell-rebuild'), shellSection.body, 'shellRelics.count', 0, 120, 1));
+  bind(range(path(() => shell.minScale, (v) => { shell.minScale = v; }, 'shell-rebuild'), shellSection.body, 'shellRelics.minScale', 0.05, 8, 0.05));
+  bind(range(path(() => shell.maxScale, (v) => { shell.maxScale = v; }, 'shell-rebuild'), shellSection.body, 'shellRelics.maxScale', 0.05, 10, 0.05));
+  bind(range(path(() => shell.shellInnerRadius, (v) => { shell.shellInnerRadius = v; }, 'shell-rebuild'), shellSection.body, 'shellRelics.shellInnerRadius', 0, 20, 0.1));
+  bind(range(path(() => shell.shellOuterRadius, (v) => { shell.shellOuterRadius = v; }, 'shell-rebuild'), shellSection.body, 'shellRelics.shellOuterRadius', 1, 30, 0.1));
+  bind(range(path(() => shell.rotationSpeedMin, (v) => { shell.rotationSpeedMin = v; }, 'shell-runtime'), shellSection.body, 'shellRelics.rotationSpeedMin', 0, 0.3, 0.001));
+  bind(range(path(() => shell.rotationSpeedMax, (v) => { shell.rotationSpeedMax = v; }, 'shell-runtime'), shellSection.body, 'shellRelics.rotationSpeedMax', 0, 0.5, 0.001));
+  bind(range(path(() => shell.orbitSpeed, (v) => { shell.orbitSpeed = v; }, 'shell-runtime'), shellSection.body, 'shellRelics.orbitSpeed', 0, 0.15, 0.001));
   bind(range(path(() => shell.opacity, (v) => { shell.opacity = v; }, 'material'), shellSection.body, 'shellRelics.opacity', 0, 1, 0.01));
   bind(checkbox(path(() => shell.debugVisible, (v) => { shell.debugVisible = v; }, 'shell-rebuild'), shellSection.body, 'shellRelics.debugVisible'));
 
@@ -259,6 +323,13 @@ export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere }
   panel.append(atmosphereSection.details, stoneSection.details, shellSection.details, debugSection.details, futureSection.details);
   root.append(button, panel);
   document.body.append(root);
+
+  function persistState() {
+    localStorage.setItem(OPTIONS_STORAGE_KEY, JSON.stringify({
+      version: OPTIONS_DEFAULTS_VERSION,
+      runtimeState: { backgroundAtmosphere: deepClone(runtimeState.backgroundAtmosphere) }
+    }));
+  }
 
   function renderAll() {
     binders.forEach((b) => b());
@@ -284,6 +355,8 @@ export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere }
     }
   });
 
+  onChange({ type: 'rebuild' });
+  persistState();
   renderAll();
   setOpen(false);
 

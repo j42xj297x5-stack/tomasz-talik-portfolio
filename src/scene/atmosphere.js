@@ -9,21 +9,21 @@ const DEFAULT_BACKGROUND_ATMOSPHERE_CONFIG = Object.freeze({
   debugIgnoreFog: true,
   showShellHelpers: false,
   showAtmosphereLogs: false,
-  safeRadius: 3.5,
-  shellInnerRadius: 4.8,
-  shellOuterRadius: 10.5,
-  dust: Object.freeze({ enabled: true, count: 1000, idleOpacity: 0.12, rotationSpeed: 0.012, pointSize: 0.055, color: '#b8c6da', sizeAttenuation: true, depthTest: true, depthWrite: false }),
+  safeRadius: 4,
+  shellInnerRadius: 6.1,
+  shellOuterRadius: 14.6,
+  dust: Object.freeze({ enabled: true, count: 2650, idleOpacity: 0.85, rotationSpeed: 0.02, pointSize: 0.07, color: '#05070a', sizeAttenuation: true, depthTest: true, depthWrite: false }),
   stoneRelics: Object.freeze({
-    enabled: true, count: 18,
+    enabled: true, count: 60,
     models: Object.freeze(['/glb/stone_01.glb','/glb/stone_02.glb','/glb/stone_03.glb','/glb/stone_04.glb','/glb/stone_05.glb','/glb/stone_06.glb']),
-    safeRadius: 3.5, shellInnerRadius: 5.2, shellOuterRadius: 11, minScale: 0.035, maxScale: 0.12,
+    safeRadius: 3.5, shellInnerRadius: 5, shellOuterRadius: 8, minScale: 1, maxScale: 2,
     rotationSpeedMin: 0.003, rotationSpeedMax: 0.018, orbitSpeed: 0.003, opacity: 0.85, debugVisible: false
   }),
   shellRelics: Object.freeze({
     enabled: true, count: 35,
     models: Object.freeze(['/glb/shell_01.glb','/glb/shell_02.glb','/glb/shell_03.glb','/glb/shell_04.glb','/glb/shell_05.glb','/glb/shell_06.glb']),
-    minScale: 2, maxScale: 5, shellInnerRadius: 3, shellOuterRadius: 8,
-    rotationSpeedMin: 0.005, rotationSpeedMax: 0.08, orbitSpeed: 0.03, opacity: 0.85, debugVisible: false,
+    minScale: 0.3, maxScale: 1, shellInnerRadius: 4, shellOuterRadius: 8.5,
+    rotationSpeedMin: 0.075, rotationSpeedMax: 0.187, orbitSpeed: 0.022, opacity: 0.51, debugVisible: false,
     colorPalette: Object.freeze(['#d9a441','#4db6ac','#6ec6ff','#6bcf8e','#9c7bff','#f0a6a6'])
   })
 });
