@@ -39,21 +39,23 @@ scene.add(centralPlaceholder);
 const sceneRuntimeConfig = {
   backgroundAtmosphere: {
     enabled: true,
-    debugVisible: true,
-    showShellHelpers: true,
-    showAtmosphereLogs: true,
+    debugVisible: false,
+    showShellHelpers: false,
+    showAtmosphereLogs: false,
     debugBlendingMode: 'normal',
     debugIgnoreFog: true,
-    safeRadius: 3.5,
-    shellInnerRadius: 4.8,
-    shellOuterRadius: 10.5,
+    safeRadius: 4.0,
+    shellInnerRadius: 6.1,
+    shellOuterRadius: 14.6,
     stoneRelics: { enabled: true, count: 18, models: ['/glb/stone_01.glb','/glb/stone_02.glb','/glb/stone_03.glb','/glb/stone_04.glb','/glb/stone_05.glb','/glb/stone_06.glb'], safeRadius: 3.5, shellInnerRadius: 5.2, shellOuterRadius: 11.0, minScale: 0.035, maxScale: 0.12, rotationSpeedMin: 0.003, rotationSpeedMax: 0.018, orbitSpeed: 0.003, opacity: 0.85, debugVisible: false },
     dust: {
       enabled: true,
-      count: 1000,
-      idleOpacity: 0.12,
-      rotationSpeed: 0.012,
-      pointSize: 0.055
+      count: 2650,
+      idleOpacity: 0.85,
+      rotationSpeed: 0.02,
+      pointSize: 0.07,
+      sizeAttenuation: true,
+      depthTest: true
     }
   }
 };
