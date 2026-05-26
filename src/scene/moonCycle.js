@@ -44,7 +44,9 @@ export const MOON_CYCLE_DEFAULTS = {
   zOffset: 0,
   phaseOffset: Math.PI,
   scale: 0.2,
-  selfRotationSpeed: 0.05,
+  selfRotationSpeed: 0,
+  lockFacing: true,
+  frontRotation: { x: 0, y: 0, z: 0 },
   spotlight: {
     enabled: true,
     color: '#8ecbff',
@@ -141,6 +143,7 @@ export function createMoonCycle(options = {}) {
     settings.radius = clamp(settings.radius, 1, 30);
     settings.scale = clamp(settings.scale, 0.05, 10);
     settings.selfRotationSpeed = clamp(settings.selfRotationSpeed, 0, 1);
+    settings.lockFacing = settings.lockFacing !== false;
     settings.debugScaleMultiplier = clamp(settings.debugScaleMultiplier, 0.1, 10);
     settings.spotlight.intensity = clamp(settings.spotlight.intensity, 0, 20);
     settings.spotlight.angleDegrees = clamp(settings.spotlight.angleDegrees, 1, 120);
@@ -152,6 +155,9 @@ export function createMoonCycle(options = {}) {
     object3d.position.copy(center);
     const effectiveScale = settings.scale * ((settings.debugVisible && settings.debugScaleMultiplier > 0) ? settings.debugScaleMultiplier : 1);
     if (moonModel) moonModel.scale.setScalar(effectiveScale);
+    if (moonModel && settings.lockFacing) {
+      moonModel.rotation.set(settings.frontRotation.x, settings.frontRotation.y, settings.frontRotation.z);
+    }
     fallbackSphere.scale.setScalar(settings.scale);
     spotlight.color.set(settings.spotlight.color);
     spotlight.distance = settings.spotlight.distance;
@@ -206,8 +212,14 @@ export function createMoonCycle(options = {}) {
         spotlight.intensity = 0;
       }
       const spin = delta * settings.selfRotationSpeed;
-      if (moonModel) moonModel.rotation.y += spin;
-      fallbackSphere.rotation.y += spin;
+      if (moonModel) {
+        if (settings.lockFacing) {
+          moonModel.rotation.set(settings.frontRotation.x, settings.frontRotation.y, settings.frontRotation.z);
+        } else {
+          moonModel.rotation.y += spin;
+        }
+      }
+      if (!settings.lockFacing) fallbackSphere.rotation.y += spin;
       if (boxHelper && settings.debugVisible) boxHelper.update();
     },
     setOptions(partialOptions) {

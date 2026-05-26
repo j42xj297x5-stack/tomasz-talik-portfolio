@@ -3,7 +3,7 @@ function deepClone(value) {
 }
 
 const OPTIONS_STORAGE_KEY = 'portfolio.options.runtimeState.v1';
-const OPTIONS_DEFAULTS_VERSION = '2026-05-26-atmosphere-suncycle-mooncycle-v5';
+const OPTIONS_DEFAULTS_VERSION = '2026-05-26-atmosphere-suncycle-mooncycle-v6';
 const PRESET_SLOT_KEYS = ['portfolio.optionsPreset.1', 'portfolio.optionsPreset.2', 'portfolio.optionsPreset.3'];
 const SUN_MODEL_PATH = '/glb/sun.glb';
 
@@ -47,7 +47,8 @@ function normalizeRuntimeState(state) {
   sun.angularSpeed = clamp(sun.angularSpeed ?? 0.08, 0, 1);
   sun.scale = clamp(sun.scale ?? 0.2, 0.05, 10);
   sun.debugScaleMultiplier = clamp(sun.debugScaleMultiplier ?? 1, 0.01, 20);
-  sun.selfRotationSpeed = clamp(sun.selfRotationSpeed ?? 0.05, 0, 1);
+  sun.selfRotationSpeed = clamp(sun.selfRotationSpeed ?? 0, 0, 1);
+  sun.lockFacing = Boolean(sun.lockFacing ?? true);
   sun.emissiveIntensity = clamp(sun.emissiveIntensity ?? 1.5, 0, 10);
   sun.debugVisible = Boolean(sun.debugVisible);
   sun.debugShowFallback = Boolean(sun.debugShowFallback);
@@ -67,7 +68,8 @@ function normalizeRuntimeState(state) {
   moon.angularSpeed = clamp(moon.angularSpeed ?? 0.08, 0, 1);
   moon.scale = clamp(moon.scale ?? 0.2, 0.05, 10);
   moon.debugScaleMultiplier = clamp(moon.debugScaleMultiplier ?? 1, 0.1, 10);
-  moon.selfRotationSpeed = clamp(moon.selfRotationSpeed ?? 0.05, 0, 1);
+  moon.selfRotationSpeed = clamp(moon.selfRotationSpeed ?? 0, 0, 1);
+  moon.lockFacing = Boolean(moon.lockFacing ?? true);
   moon.direction = Number(moon.direction) >= 0 ? 1 : -1;
   moon.debugVisible = Boolean(moon.debugVisible);
   moon.debugShowFallback = Boolean(moon.debugShowFallback);
@@ -438,6 +440,7 @@ export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere }
   bind(select(path(() => String(sun.direction), (v) => { sun.direction = Number(v); }, 'sun-cycle'), sunCycleSection.body, 'sunCycle.direction', [{ value: '1', label: 'Forward' }, { value: '-1', label: 'Reverse' }]));
   bind(range(path(() => sun.scale, (v) => { sun.scale = v; }, 'sun-cycle'), sunCycleSection.body, 'sunCycle.scale', 0.01, 20, 0.01));
   bind(range(path(() => sun.debugScaleMultiplier, (v) => { sun.debugScaleMultiplier = v; }, 'sun-cycle'), sunCycleSection.body, 'sunCycle.debugScaleMultiplier', 0.01, 20, 0.01));
+  bind(checkbox(path(() => sun.lockFacing, (v) => { sun.lockFacing = v; }, 'sun-cycle'), sunCycleSection.body, 'sunCycle.lockFacing'));
   bind(range(path(() => sun.selfRotationSpeed, (v) => { sun.selfRotationSpeed = v; }, 'sun-cycle'), sunCycleSection.body, 'sunCycle.selfRotationSpeed', 0, 1, 0.001));
   bind(range(path(() => sun.emissiveIntensity, (v) => { sun.emissiveIntensity = v; }, 'sun-cycle'), sunCycleSection.body, 'sunCycle.emissiveIntensity', 0, 10, 0.1));
   bind(checkbox(path(() => sun.spotlight.enabled, (v) => { sun.spotlight.enabled = v; }, 'sun-cycle'), sunCycleSection.body, 'sunCycle.spotlight.enabled'));
@@ -456,6 +459,7 @@ export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere }
   bind(select(path(() => String(moon.direction), (v) => { moon.direction = Number(v); }, 'moon-cycle'), moonCycleSection.body, 'moonCycle.direction', [{ value: '1', label: 'Forward' }, { value: '-1', label: 'Reverse' }]));
   bind(range(path(() => moon.scale, (v) => { moon.scale = v; }, 'moon-cycle'), moonCycleSection.body, 'moonCycle.scale', 0.05, 10, 0.05));
   bind(range(path(() => moon.debugScaleMultiplier, (v) => { moon.debugScaleMultiplier = v; }, 'moon-cycle'), moonCycleSection.body, 'moonCycle.debugScaleMultiplier', 0.1, 10, 0.1));
+  bind(checkbox(path(() => moon.lockFacing, (v) => { moon.lockFacing = v; }, 'moon-cycle'), moonCycleSection.body, 'moonCycle.lockFacing'));
   bind(range(path(() => moon.selfRotationSpeed, (v) => { moon.selfRotationSpeed = v; }, 'moon-cycle'), moonCycleSection.body, 'moonCycle.selfRotationSpeed', 0, 1, 0.001));
   bind(checkbox(path(() => moon.spotlight.enabled, (v) => { moon.spotlight.enabled = v; }, 'moon-cycle'), moonCycleSection.body, 'moonCycle.spotlight.enabled'));
   bind(range(path(() => moon.spotlight.intensity, (v) => { moon.spotlight.intensity = v; }, 'moon-cycle'), moonCycleSection.body, 'moonCycle.spotlight.intensity', 0, 20, 0.1));
