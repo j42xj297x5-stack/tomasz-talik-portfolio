@@ -196,6 +196,122 @@ HTML/CSS odpowiada za:
 
 ---
 
+# 5A. Layered Portfolio Reception Model / Trójwarstwowy model odbioru portfolio
+
+To jest roboczy model projektowy, który porządkuje sposób odbioru portfolio na trzech głębokościach doświadczenia.
+
+Nie są to trzy osobne strony, tylko trzy warstwy jednego przepływu:
+
+* scena startowa przyciąga,
+* panel wyjaśnia,
+* case study pogłębia i potwierdza wartość.
+
+## 5A.1. Warstwa Byka / Wagi — piękny, spokojny pierwszy kontakt
+
+Ta warstwa odpowiada na pytanie:
+
+> Czy chcę tu zostać?
+
+Jej celem jest zbudowanie zaufania przez estetykę i jakość pierwszego kontaktu:
+
+* proporcja,
+* oddech,
+* jakość,
+* kilka mocnych obrazów,
+* spokojna scena,
+* zaufanie przez estetykę,
+* brak nadmiaru tekstu na wejściu.
+
+W implementacji oznacza to:
+
+* atmospheric 3D scene,
+* central symbolic object,
+* soft light,
+* controlled motion,
+* minimal text,
+* clear visual hierarchy,
+* five calm portfolio gates.
+
+## 5A.2. Warstwa Skorpiona / 3 domu — głębsze case studies
+
+Ta warstwa odpowiada na pytanie:
+
+> Jak ta osoba myśli?
+
+Jej celem jest zejście pod powierzchnię i pokazanie procesu:
+
+* proces,
+* symbolika,
+* mechanika,
+* transformacja projektu,
+* zejście pod powierzchnię,
+* pokazanie sposobu myślenia,
+* pokazanie tego, jak chaos zamienia się w system.
+
+W implementacji oznacza to:
+
+* overlay panels after clicking portfolio gates,
+* symbolic project summaries,
+* short process narratives,
+* transformation diagrams,
+* links to deeper case studies,
+* case studies prowadzone przez problem, proces, decyzje i przemianę projektu.
+
+## 5A.3. Warstwa Panny / 2 domu — konkret i wartość
+
+Ta warstwa odpowiada na pytanie:
+
+> Co dokładnie zostało zrobione i dlaczego to ma wartość?
+
+Jej celem jest pokazanie dowiezionego konkretu i użyteczności zawodowej:
+
+* co realnie zostało zrobione,
+* jakie narzędzia zostały użyte,
+* jaki problem został rozwiązany,
+* jaka jest praktyczna wartość,
+* co zostało dowiezione,
+* jak projekt może być użyteczny zawodowo.
+
+W implementacji oznacza to, że każde case study powinno zawierać:
+
+* problem solved,
+* role and responsibilities,
+* tools used,
+* technical stack,
+* decisions made,
+* artifacts delivered,
+* practical value,
+* next possible development.
+
+## 5A.4. Zasada projektowa przepływu
+
+Portfolio should move through three depths of reception:
+
+```text
+Beauty → Depth → Concrete Value
+```
+
+or in Polish:
+
+```text
+Piękno → Głębia → Konkret
+```
+
+Te trzy poziomy nie działają jako osobne byty, tylko jako płynna sekwencja jednego doświadczenia:
+
+* Start scene attracts.
+* Panel explains.
+* Case study deepens and proves value.
+
+Formuła robocza:
+
+> Z chaosu robię przestrzeń.
+> Z przestrzeni robię proces.
+> Z procesu robię narzędzie.
+> Z narzędzia robię wartość.
+
+---
+
 # 6. Główne orbity / bramy portfolio
 
 Wokół centralnej małpy mogą znajdować się główne bramy tematyczne. Na tym etapie nie wybieramy finalnych nazw, tylko zbieramy kierunki.
