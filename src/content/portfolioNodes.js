@@ -2,10 +2,10 @@ export const portfolioNodes = [
   {
     id: 'ai-guide',
     title: 'AI Guide',
-    shortLabel: 'AI Guide',
+    shortLabel: 'Oswajanie AI',
     modelPath: '/glb/glyph_1.glb',
     modelKind: 'glyph',
-    draftText: 'Draft narrative for the AI Guide gate. Final case-study copy and metrics are pending.'
+    draftText: 'Pomagam ludziom oswoić AI tam, gdzie technologia spotyka lęk, chaos i potrzebę sensu. Tłumaczę narzędzia, projektuję proste workflowy i prowadzę przez pierwsze kroki tak, żeby człowiek odzyskał sprawczość, zamiast czuć się przytłoczony rewolucją technologiczną. Z chaosu narzędzi powstaje spokojny proces.'
   },
   {
     id: 'spotify-digger',
