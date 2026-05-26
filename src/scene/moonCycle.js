@@ -65,6 +65,7 @@ export const MOON_CYCLE_DEFAULTS = {
 
 export function createMoonCycle(options = {}) {
   let settings = sanitizeMoonCycleSettings(deepMerge(MOON_CYCLE_DEFAULTS, options));
+  let progressionMultiplier = 1;
   const object3d = new THREE.Group();
   object3d.name = 'MoonCycleGroup';
   const center = new THREE.Vector3();
@@ -164,7 +165,7 @@ export function createMoonCycle(options = {}) {
     spotlight.angle = THREE.MathUtils.degToRad(settings.spotlight.angleDegrees);
     spotlight.penumbra = settings.spotlight.penumbra;
     spotlight.decay = settings.spotlight.decay;
-    spotlight.visible = settings.spotlight.enabled;
+    spotlight.visible = settings.spotlight.enabled && progressionMultiplier > 0.001;
     debugOrbit.visible = settings.debugVisible;
     updateDebugOrbit();
     enforceMoonMaterialVisibility();
@@ -206,7 +207,7 @@ export function createMoonCycle(options = {}) {
       const above = worldMoonPosition.y > centerWorldPosition.y;
       if (settings.spotlight.enabled && above) {
         spotlight.visible = true;
-        spotlight.intensity = settings.spotlight.intensity;
+        spotlight.intensity = settings.spotlight.intensity * progressionMultiplier;
       } else {
         spotlight.visible = false;
         spotlight.intensity = 0;
@@ -221,6 +222,10 @@ export function createMoonCycle(options = {}) {
       }
       if (!settings.lockFacing) fallbackSphere.rotation.y += spin;
       if (boxHelper && settings.debugVisible) boxHelper.update();
+    },
+    setProgressionMultiplier(nextMultiplier = 1) {
+      progressionMultiplier = clamp(nextMultiplier, 0, 1);
+      applySettings();
     },
     setOptions(partialOptions) {
       settings = sanitizeMoonCycleSettings(deepMerge(settings, partialOptions));

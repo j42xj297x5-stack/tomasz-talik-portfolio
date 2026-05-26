@@ -14,6 +14,7 @@ import { createHoverLabel } from './ui/hoverLabel.js';
 import { createOptionsPanel } from './ui/optionsPanel.js';
 import { createSunCycle, SUN_CYCLE_DEFAULTS } from './scene/sunCycle.js';
 import { createMoonCycle, MOON_CYCLE_DEFAULTS } from './scene/moonCycle.js';
+import { createAtmosphereProgression } from './scene/atmosphere/atmosphereProgression.js';
 
 const app = document.querySelector('#app');
 if (!app) throw new Error('Missing #app mount element.');
@@ -109,12 +110,15 @@ void loadMonkeyModel({ scene, fallbackObject: centralPlaceholder });
 
 const { group: orbitGroup, nodes } = createOrbitNodes(portfolioNodes);
 scene.add(orbitGroup);
+const atmosphereProgression = createAtmosphereProgression({ gateIds: portfolioNodes.map((node) => node.id) });
 
 const overlay = createOverlay();
 const hoverLabel = createHoverLabel();
 
 const optionsPanel = createOptionsPanel({
   runtimeState: sceneRuntimeConfig,
+  atmosphereProgression,
+  gateNodes: portfolioNodes,
   onChange: ({ type }) => {
     atmosphere.applySettings(sceneRuntimeConfig.backgroundAtmosphere, type);
     sunCycle.setOptions(sceneRuntimeConfig.sunCycle);
@@ -157,6 +161,7 @@ window.addEventListener('pointermove', (event) => {
 window.addEventListener('click', (event) => {
   const hit = pickNode(event, canvas, camera, nodes);
   if (hit) {
+    atmosphereProgression.handleGateVisited(hit.userData?.id);
     overlay.open(hit.userData);
   }
 });
@@ -185,6 +190,11 @@ function tick() {
   updateOrbitNodes(nodes, elapsed, orbitGroup.getWorldPosition(orbitCenterWorldPosition));
   cameraRig.update(camera, elapsed);
   atmosphere.update(delta);
+  atmosphereProgression.updateAtmosphereProgression(delta);
+  const multipliers = atmosphereProgression.getProgressionMultipliers();
+  atmosphere.setProgressionMultipliers(multipliers);
+  sunCycle.setProgressionMultiplier(multipliers.sunMoon);
+  moonCycle.setProgressionMultiplier(multipliers.sunMoon);
   sunCycle.update(delta);
   moonCycle.update(delta, sunCycle.getAngle());
   if (sceneRuntimeConfig.backgroundAtmosphere.debugVisible && elapsed < 0.25) {

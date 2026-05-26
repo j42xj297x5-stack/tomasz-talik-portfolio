@@ -71,6 +71,7 @@ export const SUN_CYCLE_DEFAULTS = {
 
 export function createSunCycle(options = {}) {
   let settings = sanitizeSunCycleSettings(deepMerge(SUN_CYCLE_DEFAULTS, options));
+  let progressionMultiplier = 1;
   const object3d = new THREE.Group();
   object3d.name = 'SunCycleGroup';
   const center = new THREE.Vector3();
@@ -187,7 +188,7 @@ export function createSunCycle(options = {}) {
     spotlight.angle = THREE.MathUtils.degToRad(settings.spotlight.angleDegrees);
     spotlight.penumbra = settings.spotlight.penumbra;
     spotlight.decay = settings.spotlight.decay;
-    spotlight.visible = settings.spotlight.enabled;
+    spotlight.visible = settings.spotlight.enabled && progressionMultiplier > 0.001;
     debugOrbit.visible = settings.debugVisible;
     updateDebugOrbit();
     enforceSunMaterialVisibility();
@@ -264,7 +265,7 @@ export function createSunCycle(options = {}) {
       const above = worldSunPosition.y > centerWorldPosition.y;
       if (settings.spotlight.enabled && above) {
         spotlight.visible = true;
-        spotlight.intensity = settings.spotlight.intensity;
+        spotlight.intensity = settings.spotlight.intensity * progressionMultiplier;
       } else {
         spotlight.visible = false;
         spotlight.intensity = 0;
@@ -280,6 +281,10 @@ export function createSunCycle(options = {}) {
       }
       if (!settings.lockFacing) fallbackSphere.rotation.y += spin;
       if (boxHelper && settings.debugVisible) boxHelper.update();
+    },
+    setProgressionMultiplier(nextMultiplier = 1) {
+      progressionMultiplier = clamp(nextMultiplier, 0, 1);
+      applySettings();
     },
     setOptions(partialOptions) {
       settings = sanitizeSunCycleSettings(deepMerge(settings, partialOptions));
