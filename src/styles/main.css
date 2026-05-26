@@ -92,39 +92,59 @@ body { min-height: 100vh; overflow: hidden; }
 }
 
 .overlay__panel--ai-guide .overlay__close {
-  position: absolute;
-  top: clamp(18px, 2.2vw, 30px);
-  right: clamp(18px, 2.2vw, 30px);
+  position: relative;
+  inset: auto;
   float: none;
+  margin-top: clamp(24px, 4vw, 38px);
+  align-self: flex-end;
   z-index: 4;
-  border: 1px solid rgba(178, 205, 167, 0.65);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 0.92rem;
+  letter-spacing: 0.04em;
+  color: rgba(235, 244, 214, 0.92);
+  background: rgba(8, 24, 16, 0.38);
+  border: 1px solid rgba(211, 190, 121, 0.42);
   border-radius: 999px;
-  background: rgba(7, 18, 12, 0.62);
-  color: rgba(233, 244, 220, 0.95);
-  padding: 0.35rem 0.8rem;
+  padding: 0.65rem 1.15rem;
+  text-shadow: none;
+  box-shadow: 0 0 18px rgba(91, 148, 93, 0.12);
+}
+
+.overlay__panel--ai-guide .overlay__close:hover,
+.overlay__panel--ai-guide .overlay__close:focus-visible {
+  color: rgba(250, 246, 220, 0.98);
+  border-color: rgba(222, 205, 139, 0.72);
+  background: rgba(16, 43, 27, 0.54);
 }
 
 .overlay__panel--ai-guide .overlay__content {
   height: 100%;
-  margin: clamp(60px, 6.2vw, 80px) clamp(70px, 7vw, 90px);
-  padding: clamp(18px, 2.4vw, 30px);
-  border-radius: 24px;
+  display: flex;
+  flex-direction: column;
+  margin: clamp(88px, 9vw, 132px) clamp(82px, 8vw, 124px) clamp(72px, 7vw, 108px);
+  padding: 0;
   overflow-y: auto;
-  background: radial-gradient(circle at 50% 22%, rgba(20, 50, 35, 0.2), rgba(4, 12, 8, 0.42));
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
 }
 
 .overlay__panel--ai-guide .overlay__status {
   margin-bottom: 0.8rem;
-  color: rgba(238, 246, 229, 0.92);
+  font-size: 0.86rem;
+  letter-spacing: 0.05em;
+  color: rgba(224, 240, 214, 0.84);
 }
 
 .overlay__panel--ai-guide .overlay__title {
   margin-bottom: 0.95rem;
-  font-size: clamp(1.8rem, 4vw, 3.2rem);
-  line-height: 1;
-  letter-spacing: 0.04em;
+  font-family: Georgia, 'Times New Roman', ui-serif, serif;
+  font-weight: 700;
+  font-size: clamp(2.4rem, 5vw, 4.4rem);
+  line-height: 0.95;
+  letter-spacing: 0.035em;
   color: rgba(235, 244, 214, 0.96);
-  text-shadow: 0 0 18px rgba(116, 184, 123, 0.24);
+  text-shadow: 0 0 18px rgba(116, 184, 123, 0.22);
 }
 
 .overlay__panel--ai-guide .overlay__lead {
@@ -136,13 +156,14 @@ body { min-height: 100vh; overflow: hidden; }
 
 .overlay__panel--ai-guide .overlay__text {
   margin-bottom: 0.95rem;
-  font-size: clamp(0.95rem, 1.2vw, 1.05rem);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: clamp(0.98rem, 1.2vw, 1.08rem);
   line-height: 1.72;
-  color: rgba(230, 238, 221, 0.88);
+  color: rgba(230, 238, 221, 0.9);
 }
 
 .overlay__panel--ai-guide .overlay__closing {
-  color: rgba(211, 190, 121, 0.9);
+  color: rgba(211, 190, 121, 0.92);
   font-style: italic;
   letter-spacing: 0.02em;
 }
@@ -157,8 +178,15 @@ body { min-height: 100vh; overflow: hidden; }
   }
 
   .overlay__panel--ai-guide .overlay__content {
-    margin: clamp(40px, 8vw, 52px) clamp(34px, 8.5vw, 44px);
-    padding: clamp(16px, 4vw, 22px);
+    margin: clamp(64px, 14vw, 88px) clamp(38px, 9vw, 56px) clamp(52px, 12vw, 72px);
+  }
+
+  .overlay__panel--ai-guide .overlay__title {
+    font-size: clamp(2rem, 12vw, 3rem);
+  }
+
+  .overlay__panel--ai-guide .overlay__close {
+    align-self: center;
   }
 }
 

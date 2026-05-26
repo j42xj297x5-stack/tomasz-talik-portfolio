@@ -5,7 +5,7 @@ export function createOverlay({ onClose } = {}) {
   root.innerHTML = `
     <div class="overlay__backdrop" data-close-overlay></div>
     <article class="overlay__panel" role="dialog" aria-modal="true" aria-label="Portfolio gate details">
-      <button class="overlay__close" type="button" data-close-overlay aria-label="Close panel">Close</button>
+      <button class="overlay__close" type="button" data-close-overlay aria-label="Zamknij panel">Zamknij</button>
       <div class="overlay__content">
         <p class="overlay__status">Draft content — final copy pending</p>
         <h2 class="overlay__title"></h2>
