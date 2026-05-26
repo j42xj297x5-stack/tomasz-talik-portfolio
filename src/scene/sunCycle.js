@@ -46,7 +46,9 @@ export const SUN_CYCLE_DEFAULTS = {
   angularSpeed: 0.08,
   direction: 1,
   scale: 0.2,
-  selfRotationSpeed: 0.05,
+  selfRotationSpeed: 0,
+  lockFacing: true,
+  frontRotation: { x: 0, y: 0, z: 0 },
   emissiveColor: '#ffd21f',
   emissiveIntensity: 1.5,
   spotlight: {
@@ -164,6 +166,7 @@ export function createSunCycle(options = {}) {
     settings.angularSpeed = clamp(settings.angularSpeed, 0, 1);
     settings.scale = clamp(settings.scale, 0.05, 10);
     settings.selfRotationSpeed = clamp(settings.selfRotationSpeed, 0, 1);
+    settings.lockFacing = settings.lockFacing !== false;
     settings.emissiveIntensity = clamp(settings.emissiveIntensity, 0, 10);
     settings.spotlight.intensity = clamp(settings.spotlight.intensity, 0, 20);
     settings.spotlight.angleDegrees = clamp(settings.spotlight.angleDegrees, 1, 120);
@@ -175,6 +178,9 @@ export function createSunCycle(options = {}) {
     object3d.position.copy(center);
     const effectiveScale = settings.scale * ((settings.debugVisible && settings.debugScaleMultiplier > 0) ? settings.debugScaleMultiplier : 1);
     if (sunModel) sunModel.scale.setScalar(effectiveScale);
+    if (sunModel && settings.lockFacing) {
+      sunModel.rotation.set(settings.frontRotation.x, settings.frontRotation.y, settings.frontRotation.z);
+    }
     fallbackSphere.scale.setScalar(settings.scale);
     spotlight.color.set(settings.spotlight.color);
     spotlight.distance = settings.spotlight.distance;
@@ -265,8 +271,14 @@ export function createSunCycle(options = {}) {
       }
 
       const spin = delta * settings.selfRotationSpeed;
-      if (sunModel) sunModel.rotation.y += spin;
-      fallbackSphere.rotation.y += spin;
+      if (sunModel) {
+        if (settings.lockFacing) {
+          sunModel.rotation.set(settings.frontRotation.x, settings.frontRotation.y, settings.frontRotation.z);
+        } else {
+          sunModel.rotation.y += spin;
+        }
+      }
+      if (!settings.lockFacing) fallbackSphere.rotation.y += spin;
       if (boxHelper && settings.debugVisible) boxHelper.update();
     },
     setOptions(partialOptions) {
