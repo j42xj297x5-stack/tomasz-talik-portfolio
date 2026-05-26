@@ -3,7 +3,7 @@ function deepClone(value) {
 }
 
 const OPTIONS_STORAGE_KEY = 'portfolio.options.runtimeState.v1';
-const OPTIONS_DEFAULTS_VERSION = '2026-05-24-atmosphere-suncycle-v4';
+const OPTIONS_DEFAULTS_VERSION = '2026-05-26-atmosphere-suncycle-mooncycle-v5';
 const PRESET_SLOT_KEYS = ['portfolio.optionsPreset.1', 'portfolio.optionsPreset.2', 'portfolio.optionsPreset.3'];
 const SUN_MODEL_PATH = '/glb/sun.glb';
 
@@ -58,7 +58,28 @@ function normalizeRuntimeState(state) {
   sun.spotlight.angleDegrees = clamp(sun.spotlight.angleDegrees ?? 90, 1, 120);
   sun.spotlight.penumbra = clamp(sun.spotlight.penumbra ?? 0.45, 0, 1);
   sun.spotlight.distance = clamp(sun.spotlight.distance ?? 20, 0, 100);
+
+  if (!state.moonCycle) state.moonCycle = {};
+  const moon = state.moonCycle;
+  if (!moon.spotlight) moon.spotlight = {};
+  moon.modelPath = typeof moon.modelPath === 'string' && moon.modelPath.trim().length > 0 ? moon.modelPath.trim() : '/glb/moon.glb';
+  moon.radius = clamp(moon.radius ?? 3, 1, 30);
+  moon.angularSpeed = clamp(moon.angularSpeed ?? 0.08, 0, 1);
+  moon.scale = clamp(moon.scale ?? 0.2, 0.05, 10);
+  moon.debugScaleMultiplier = clamp(moon.debugScaleMultiplier ?? 1, 0.1, 10);
+  moon.selfRotationSpeed = clamp(moon.selfRotationSpeed ?? 0.05, 0, 1);
+  moon.direction = Number(moon.direction) >= 0 ? 1 : -1;
+  moon.debugVisible = Boolean(moon.debugVisible);
+  moon.debugShowFallback = Boolean(moon.debugShowFallback);
+  moon.debugForceBasicMaterial = Boolean(moon.debugForceBasicMaterial);
+  moon.debugShowBounds = Boolean(moon.debugShowBounds);
+  moon.spotlight.enabled = Boolean(moon.spotlight.enabled ?? true);
+  moon.spotlight.intensity = clamp(moon.spotlight.intensity ?? 10, 0, 20);
+  moon.spotlight.angleDegrees = clamp(moon.spotlight.angleDegrees ?? 90, 1, 120);
+  moon.spotlight.penumbra = clamp(moon.spotlight.penumbra ?? 0.45, 0, 1);
+  moon.spotlight.distance = clamp(moon.spotlight.distance ?? 20, 0, 100);
 }
+
 
 function isEditableTarget(target) {
   if (!(target instanceof HTMLElement)) return false;
@@ -102,6 +123,8 @@ export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere }
       Object.assign(runtimeState.backgroundAtmosphere, stored.runtimeState.backgroundAtmosphere ?? {});
       Object.assign(runtimeState.sunCycle, stored.runtimeState.sunCycle ?? {});
       runtimeState.sunCycle.spotlight = { ...runtimeState.sunCycle.spotlight, ...(stored.runtimeState.sunCycle?.spotlight ?? {}) };
+      Object.assign(runtimeState.moonCycle, stored.runtimeState.moonCycle ?? {});
+      runtimeState.moonCycle.spotlight = { ...runtimeState.moonCycle.spotlight, ...(stored.runtimeState.moonCycle?.spotlight ?? {}) };
     }
   } catch {}
 
@@ -137,6 +160,7 @@ export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere }
   resetAll.addEventListener('click', () => {
     Object.assign(runtimeState.backgroundAtmosphere, deepClone(defaults.backgroundAtmosphere));
     runtimeState.sunCycle = deepClone(defaults.sunCycle);
+    runtimeState.moonCycle = deepClone(defaults.moonCycle);
     normalizeRuntimeState(runtimeState);
     onChange({ type: 'reset-all' });
     persistState();
@@ -165,7 +189,7 @@ export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere }
     saveButton.textContent = `Save ${slot}`;
     saveButton.className = 'options-panel__preset-btn';
     saveButton.addEventListener('click', () => {
-      localStorage.setItem(PRESET_SLOT_KEYS[slot - 1], JSON.stringify({ version: OPTIONS_DEFAULTS_VERSION, runtimeState: { backgroundAtmosphere: deepClone(runtimeState.backgroundAtmosphere), sunCycle: deepClone(runtimeState.sunCycle) } }));
+      localStorage.setItem(PRESET_SLOT_KEYS[slot - 1], JSON.stringify({ version: OPTIONS_DEFAULTS_VERSION, runtimeState: { backgroundAtmosphere: deepClone(runtimeState.backgroundAtmosphere), sunCycle: deepClone(runtimeState.sunCycle), moonCycle: deepClone(runtimeState.moonCycle) } }));
       setPresetStatus(`Zapisano slot ${slot}`);
     });
     const loadButton = document.createElement('button');
@@ -204,6 +228,7 @@ export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere }
 
   const atmosphereSection = createSection('Atmosphere', true);
   const sunCycleSection = createSection('Sun Cycle', true);
+  const moonCycleSection = createSection('Moon Cycle', true);
   const stoneSection = createSection('Stone Relics', true);
   const shellSection = createSection('Shell Relics', true);
   const smallGlyphSection = createSection('Small Glyph Relics', true);
@@ -228,12 +253,25 @@ export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere }
   sunCycleReset.className = 'options-panel__section-reset';
   sunCycleReset.addEventListener('click', () => {
     runtimeState.sunCycle = deepClone(defaults.sunCycle);
+    runtimeState.moonCycle = deepClone(defaults.moonCycle);
     normalizeRuntimeState(runtimeState);
     onChange({ type: 'sun-cycle' });
     persistState();
     renderAll();
   });
   sunCycleSection.body.append(sunCycleReset);
+  const moonCycleReset = document.createElement('button');
+  moonCycleReset.type = 'button';
+  moonCycleReset.textContent = 'Reset Moon Cycle';
+  moonCycleReset.className = 'options-panel__section-reset';
+  moonCycleReset.addEventListener('click', () => {
+    runtimeState.moonCycle = deepClone(defaults.moonCycle);
+    normalizeRuntimeState(runtimeState);
+    onChange({ type: 'moon-cycle' });
+    persistState();
+    renderAll();
+  });
+  moonCycleSection.body.append(moonCycleReset);
 
   const stoneRebuild = document.createElement('button');
   stoneRebuild.type = 'button';
@@ -380,6 +418,7 @@ export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere }
   const bind = (fn) => binders.push(fn);
   const bg = runtimeState.backgroundAtmosphere;
   const sun = runtimeState.sunCycle;
+  const moon = runtimeState.moonCycle;
 
   const path = (getter, setter, type) => ({
     get: getter,
@@ -410,6 +449,24 @@ export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere }
   bind(checkbox(path(() => sun.debugShowFallback, (v) => { sun.debugShowFallback = v; }, 'sun-cycle'), sunCycleSection.body, 'sunCycle.debugShowFallback'));
   bind(checkbox(path(() => sun.debugForceBasicMaterial, (v) => { sun.debugForceBasicMaterial = v; }, 'sun-cycle'), sunCycleSection.body, 'sunCycle.debugForceBasicMaterial'));
   bind(checkbox(path(() => sun.debugShowBounds, (v) => { sun.debugShowBounds = v; }, 'sun-cycle'), sunCycleSection.body, 'sunCycle.debugShowBounds'));
+
+  bind(checkbox(path(() => moon.enabled, (v) => { moon.enabled = v; }, 'moon-cycle'), moonCycleSection.body, 'moonCycle.enabled'));
+  bind(range(path(() => moon.radius, (v) => { moon.radius = v; }, 'moon-cycle'), moonCycleSection.body, 'moonCycle.radius', 1, 30, 0.1));
+  bind(range(path(() => moon.angularSpeed, (v) => { moon.angularSpeed = v; }, 'moon-cycle'), moonCycleSection.body, 'moonCycle.angularSpeed', 0, 1, 0.001));
+  bind(select(path(() => String(moon.direction), (v) => { moon.direction = Number(v); }, 'moon-cycle'), moonCycleSection.body, 'moonCycle.direction', [{ value: '1', label: 'Forward' }, { value: '-1', label: 'Reverse' }]));
+  bind(range(path(() => moon.scale, (v) => { moon.scale = v; }, 'moon-cycle'), moonCycleSection.body, 'moonCycle.scale', 0.05, 10, 0.05));
+  bind(range(path(() => moon.debugScaleMultiplier, (v) => { moon.debugScaleMultiplier = v; }, 'moon-cycle'), moonCycleSection.body, 'moonCycle.debugScaleMultiplier', 0.1, 10, 0.1));
+  bind(range(path(() => moon.selfRotationSpeed, (v) => { moon.selfRotationSpeed = v; }, 'moon-cycle'), moonCycleSection.body, 'moonCycle.selfRotationSpeed', 0, 1, 0.001));
+  bind(checkbox(path(() => moon.spotlight.enabled, (v) => { moon.spotlight.enabled = v; }, 'moon-cycle'), moonCycleSection.body, 'moonCycle.spotlight.enabled'));
+  bind(range(path(() => moon.spotlight.intensity, (v) => { moon.spotlight.intensity = v; }, 'moon-cycle'), moonCycleSection.body, 'moonCycle.spotlight.intensity', 0, 20, 0.1));
+  bind(range(path(() => moon.spotlight.angleDegrees, (v) => { moon.spotlight.angleDegrees = v; }, 'moon-cycle'), moonCycleSection.body, 'moonCycle.spotlight.angleDegrees', 1, 120, 1));
+  bind(range(path(() => moon.spotlight.penumbra, (v) => { moon.spotlight.penumbra = v; }, 'moon-cycle'), moonCycleSection.body, 'moonCycle.spotlight.penumbra', 0, 1, 0.01));
+  bind(range(path(() => moon.spotlight.distance, (v) => { moon.spotlight.distance = v; }, 'moon-cycle'), moonCycleSection.body, 'moonCycle.spotlight.distance', 0, 100, 1));
+  bind(checkbox(path(() => moon.debugVisible, (v) => { moon.debugVisible = v; }, 'moon-cycle'), moonCycleSection.body, 'moonCycle.debugVisible'));
+  bind(checkbox(path(() => moon.debugShowFallback, (v) => { moon.debugShowFallback = v; }, 'moon-cycle'), moonCycleSection.body, 'moonCycle.debugShowFallback'));
+  bind(checkbox(path(() => moon.debugForceBasicMaterial, (v) => { moon.debugForceBasicMaterial = v; }, 'moon-cycle'), moonCycleSection.body, 'moonCycle.debugForceBasicMaterial'));
+  bind(checkbox(path(() => moon.debugShowBounds, (v) => { moon.debugShowBounds = v; }, 'moon-cycle'), moonCycleSection.body, 'moonCycle.debugShowBounds'));
+
   bind(checkbox(path(() => bg.debugVisible, (v) => { bg.debugVisible = v; }, 'rebuild'), atmosphereSection.body, 'backgroundAtmosphere.debugVisible'));
   bind(range(path(() => bg.safeRadius, (v) => { bg.safeRadius = v; }, 'rebuild'), atmosphereSection.body, 'backgroundAtmosphere.safeRadius', 0, 15, 0.1));
   bind(range(path(() => bg.shellInnerRadius, (v) => { bg.shellInnerRadius = v; }, 'rebuild'), atmosphereSection.body, 'backgroundAtmosphere.shellInnerRadius', 0, 30, 0.1));
@@ -473,14 +530,14 @@ export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere }
   futureText.textContent = 'Reserved for: micro relics, mist shell, gate aura, camera tuning, labels/UI debug, lighting, motion.';
   futureSection.body.append(futureText);
 
-  panel.append(presetSection.details, atmosphereSection.details, sunCycleSection.details, stoneSection.details, shellSection.details, smallGlyphSection.details, debugSection.details, futureSection.details);
+  panel.append(presetSection.details, atmosphereSection.details, sunCycleSection.details, moonCycleSection.details, stoneSection.details, shellSection.details, smallGlyphSection.details, debugSection.details, futureSection.details);
   root.append(button, panel);
   document.body.append(root);
 
   function persistState() {
     localStorage.setItem(OPTIONS_STORAGE_KEY, JSON.stringify({
       version: OPTIONS_DEFAULTS_VERSION,
-      runtimeState: { backgroundAtmosphere: deepClone(runtimeState.backgroundAtmosphere), sunCycle: deepClone(runtimeState.sunCycle) }
+      runtimeState: { backgroundAtmosphere: deepClone(runtimeState.backgroundAtmosphere), sunCycle: deepClone(runtimeState.sunCycle), moonCycle: deepClone(runtimeState.moonCycle) }
     }));
   }
 
