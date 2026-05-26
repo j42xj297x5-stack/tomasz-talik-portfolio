@@ -116,7 +116,7 @@ function addRow(sectionBody, labelText, controlBuilder) {
   sectionBody.append(row);
 }
 
-export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere }) {
+export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere, atmosphereProgression, gateNodes = [] }) {
   const defaults = deepClone(runtimeState);
 
   try {
@@ -235,6 +235,7 @@ export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere }
   const shellSection = createSection('Shell Relics', true);
   const smallGlyphSection = createSection('Small Glyph Relics', true);
   const debugSection = createSection('Debug Visuals', true);
+  const progressionSection = createSection('Atmosphere Progression', true);
   const futureSection = createSection('Future / Reserved', false);
 
   const atmosphereReset = document.createElement('button');
@@ -421,6 +422,7 @@ export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere }
   const bg = runtimeState.backgroundAtmosphere;
   const sun = runtimeState.sunCycle;
   const moon = runtimeState.moonCycle;
+  const progression = atmosphereProgression?.state;
 
   const path = (getter, setter, type) => ({
     get: getter,
@@ -434,6 +436,36 @@ export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere }
   });
 
   bind(checkbox(path(() => bg.enabled, (v) => { bg.enabled = v; }, 'rebuild'), atmosphereSection.body, 'backgroundAtmosphere.enabled'));
+  if (progression) {
+    bind(checkbox(path(() => progression.progressionEnabled, (v) => { atmosphereProgression.setProgressionEnabled(v); }, 'runtime'), progressionSection.body, 'Enable atmosphere progression'));
+    bind(checkbox(path(() => progression.autoProgressOnUniqueGateClick, (v) => { atmosphereProgression.setAutoProgressOnUniqueGateClick(v); }, 'runtime'), progressionSection.body, 'Auto progress on unique gate click'));
+    bind(range(path(() => progression.progressLevel, (v) => { atmosphereProgression.setProgressLevel(v); }, 'runtime'), progressionSection.body, 'Atmosphere progress', 0, 5, 1));
+    bind(range(path(() => progression.transitionTimes.starsDust, (v) => { progression.transitionTimes.starsDust = v; }, 'runtime'), progressionSection.body, 'transition time layer 1', 0.1, 20, 0.1));
+    bind(range(path(() => progression.transitionTimes.shells, (v) => { progression.transitionTimes.shells = v; }, 'runtime'), progressionSection.body, 'transition time layer 2', 0.1, 20, 0.1));
+    bind(range(path(() => progression.transitionTimes.miniGlyphs, (v) => { progression.transitionTimes.miniGlyphs = v; }, 'runtime'), progressionSection.body, 'transition time layer 3', 0.1, 20, 0.1));
+    bind(range(path(() => progression.transitionTimes.sunMoon, (v) => { progression.transitionTimes.sunMoon = v; }, 'runtime'), progressionSection.body, 'transition time layer 4', 0.1, 20, 0.1));
+    bind(range(path(() => progression.transitionTimes.finalAura, (v) => { progression.transitionTimes.finalAura = v; }, 'runtime'), progressionSection.body, 'transition time layer 5', 0.1, 20, 0.1));
+
+    const resetProgressionButton = document.createElement('button');
+    resetProgressionButton.type = 'button';
+    resetProgressionButton.textContent = 'Reset atmosphere progression';
+    resetProgressionButton.className = 'options-panel__section-reset';
+    resetProgressionButton.addEventListener('click', () => { atmosphereProgression.resetProgression(); onChange({ type: 'runtime' }); renderAll(); });
+    progressionSection.body.append(resetProgressionButton);
+    const unlockProgressionButton = document.createElement('button');
+    unlockProgressionButton.type = 'button';
+    unlockProgressionButton.textContent = 'Unlock full atmosphere';
+    unlockProgressionButton.className = 'options-panel__section-reset';
+    unlockProgressionButton.addEventListener('click', () => { atmosphereProgression.unlockFullProgression(); onChange({ type: 'runtime' }); renderAll(); });
+    progressionSection.body.append(unlockProgressionButton);
+    gateNodes.forEach((node) => {
+      const status = document.createElement('p');
+      status.className = 'options-panel__placeholder';
+      const binder = () => { status.textContent = `${node.title}: ${progression.visitedGateIds.has(node.id) ? 'visited' : 'not visited'}`; };
+      binders.push(binder);
+      progressionSection.body.append(status);
+    });
+  }
   bind(checkbox(path(() => sun.enabled, (v) => { sun.enabled = v; }, 'sun-cycle'), sunCycleSection.body, 'sunCycle.enabled'));
   bind(range(path(() => sun.radius, (v) => { sun.radius = v; }, 'sun-cycle'), sunCycleSection.body, 'sunCycle.radius', 1, 30, 0.1));
   bind(range(path(() => sun.angularSpeed, (v) => { sun.angularSpeed = v; }, 'sun-cycle'), sunCycleSection.body, 'sunCycle.angularSpeed', 0, 1, 0.001));
@@ -534,7 +566,7 @@ export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere }
   futureText.textContent = 'Reserved for: micro relics, mist shell, gate aura, camera tuning, labels/UI debug, lighting, motion.';
   futureSection.body.append(futureText);
 
-  panel.append(presetSection.details, atmosphereSection.details, sunCycleSection.details, moonCycleSection.details, stoneSection.details, shellSection.details, smallGlyphSection.details, debugSection.details, futureSection.details);
+  panel.append(presetSection.details, progressionSection.details, atmosphereSection.details, sunCycleSection.details, moonCycleSection.details, stoneSection.details, shellSection.details, smallGlyphSection.details, debugSection.details, futureSection.details);
   root.append(button, panel);
   document.body.append(root);
 
