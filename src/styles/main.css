@@ -55,13 +55,111 @@ body { min-height: 100vh; overflow: hidden; }
   border: 1px solid #3b475b;
   background: #0b111a;
 }
-.overlay__close { float: right; }
+.overlay__content { position: relative; z-index: 1; }
+.overlay__close { float: right; position: relative; z-index: 3; }
 .overlay__status { margin: 0 0 0.6rem; color: #8fa1b9; font-size: 0.82rem; }
 .overlay__title { margin: 0 0 0.7rem; font-size: 1.4rem; }
-.overlay__text { margin: 0; color: #c4d1e2; line-height: 1.45; }
+.overlay__lead,
+.overlay__text,
+.overlay__closing { margin: 0; color: #c4d1e2; line-height: 1.45; }
+.overlay__lead,
+.overlay__closing { margin-bottom: 0.7rem; }
+
+.overlay__panel--ai-guide {
+  position: absolute;
+  width: min(760px, 92vw);
+  min-height: min(780px, 86vh);
+  max-height: 88vh;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  overflow: visible;
+  isolation: isolate;
+}
+
+.overlay__panel--ai-guide::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url('/png/ai_guide.png');
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  background-position: center;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.overlay__panel--ai-guide .overlay__close {
+  position: absolute;
+  top: clamp(18px, 2.2vw, 30px);
+  right: clamp(18px, 2.2vw, 30px);
+  float: none;
+  z-index: 4;
+  border: 1px solid rgba(178, 205, 167, 0.65);
+  border-radius: 999px;
+  background: rgba(7, 18, 12, 0.62);
+  color: rgba(233, 244, 220, 0.95);
+  padding: 0.35rem 0.8rem;
+}
+
+.overlay__panel--ai-guide .overlay__content {
+  height: 100%;
+  margin: clamp(60px, 6.2vw, 80px) clamp(70px, 7vw, 90px);
+  padding: clamp(18px, 2.4vw, 30px);
+  border-radius: 24px;
+  overflow-y: auto;
+  background: radial-gradient(circle at 50% 22%, rgba(20, 50, 35, 0.2), rgba(4, 12, 8, 0.42));
+}
+
+.overlay__panel--ai-guide .overlay__status {
+  margin-bottom: 0.8rem;
+  color: rgba(238, 246, 229, 0.92);
+}
+
+.overlay__panel--ai-guide .overlay__title {
+  margin-bottom: 0.95rem;
+  font-size: clamp(1.8rem, 4vw, 3.2rem);
+  line-height: 1;
+  letter-spacing: 0.04em;
+  color: rgba(235, 244, 214, 0.96);
+  text-shadow: 0 0 18px rgba(116, 184, 123, 0.24);
+}
+
+.overlay__panel--ai-guide .overlay__lead {
+  margin-bottom: 0.9rem;
+  font-size: clamp(1rem, 1.6vw, 1.22rem);
+  line-height: 1.55;
+  color: rgba(224, 240, 214, 0.92);
+}
+
+.overlay__panel--ai-guide .overlay__text {
+  margin-bottom: 0.95rem;
+  font-size: clamp(0.95rem, 1.2vw, 1.05rem);
+  line-height: 1.72;
+  color: rgba(230, 238, 221, 0.88);
+}
+
+.overlay__panel--ai-guide .overlay__closing {
+  color: rgba(211, 190, 121, 0.9);
+  font-style: italic;
+  letter-spacing: 0.02em;
+}
 
 @media (max-width: 900px), (hover: none) {
   .mobile-notice { display: block; }
+}
+
+@media (max-width: 680px) {
+  .overlay__panel--ai-guide {
+    min-height: min(700px, 88vh);
+  }
+
+  .overlay__panel--ai-guide .overlay__content {
+    margin: clamp(40px, 8vw, 52px) clamp(34px, 8.5vw, 44px);
+    padding: clamp(16px, 4vw, 22px);
+  }
 }
 
 .options-panel {

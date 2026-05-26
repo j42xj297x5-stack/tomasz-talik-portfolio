@@ -5,7 +5,10 @@ export const portfolioNodes = [
     shortLabel: 'Oswajanie AI',
     modelPath: '/glb/glyph_1.glb',
     modelKind: 'glyph',
-    draftText: 'Pomagam ludziom oswoić AI tam, gdzie technologia spotyka lęk, chaos i potrzebę sensu. Tłumaczę narzędzia, projektuję proste workflowy i prowadzę przez pierwsze kroki tak, żeby człowiek odzyskał sprawczość, zamiast czuć się przytłoczony rewolucją technologiczną. Z chaosu narzędzi powstaje spokojny proces.'
+    draftText: 'Pomagam ludziom oswoić AI tam, gdzie technologia spotyka lęk, chaos i potrzebę sensu. Tłumaczę narzędzia, projektuję proste workflowy i prowadzę przez pierwsze kroki tak, żeby człowiek odzyskał sprawczość, zamiast czuć się przytłoczony rewolucją technologiczną. Z chaosu narzędzi powstaje spokojny proces.',
+    leadText: 'Pomagam ludziom oswoić AI tam, gdzie technologia spotyka lęk, chaos i potrzebę sensu.',
+    bodyText: 'Tłumaczę narzędzia, projektuję proste workflowy i prowadzę przez pierwsze kroki tak, żeby człowiek odzyskał sprawczość, zamiast czuć się przytłoczony rewolucją technologiczną.',
+    closingText: 'Z chaosu narzędzi powstaje spokojny proces.'
   },
   {
     id: 'spotify-digger',
