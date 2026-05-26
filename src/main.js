@@ -13,6 +13,7 @@ import { createOverlay } from './ui/overlay.js';
 import { createHoverLabel } from './ui/hoverLabel.js';
 import { createOptionsPanel } from './ui/optionsPanel.js';
 import { createSunCycle, SUN_CYCLE_DEFAULTS } from './scene/sunCycle.js';
+import { createMoonCycle, MOON_CYCLE_DEFAULTS } from './scene/moonCycle.js';
 
 const app = document.querySelector('#app');
 if (!app) throw new Error('Missing #app mount element.');
@@ -40,6 +41,9 @@ scene.add(centralPlaceholder);
 const sceneRuntimeConfig = {
   sunCycle: {
     ...SUN_CYCLE_DEFAULTS
+  },
+  moonCycle: {
+    ...MOON_CYCLE_DEFAULTS
   },
   backgroundAtmosphere: {
     enabled: true,
@@ -98,6 +102,8 @@ const atmosphere = createBackgroundAtmosphere(sceneRuntimeConfig.backgroundAtmos
 scene.add(atmosphere.object3d);
 const sunCycle = createSunCycle(sceneRuntimeConfig.sunCycle);
 scene.add(sunCycle.object3d);
+const moonCycle = createMoonCycle(sceneRuntimeConfig.moonCycle);
+scene.add(moonCycle.object3d);
 
 void loadMonkeyModel({ scene, fallbackObject: centralPlaceholder });
 
@@ -112,6 +118,7 @@ const optionsPanel = createOptionsPanel({
   onChange: ({ type }) => {
     atmosphere.applySettings(sceneRuntimeConfig.backgroundAtmosphere, type);
     sunCycle.setOptions(sceneRuntimeConfig.sunCycle);
+    moonCycle.setOptions(sceneRuntimeConfig.moonCycle);
   },
   onResetAtmosphere: () => {
     atmosphere.applySettings(sceneRuntimeConfig.backgroundAtmosphere, 'rebuild');
@@ -179,6 +186,7 @@ function tick() {
   cameraRig.update(camera, elapsed);
   atmosphere.update(delta);
   sunCycle.update(delta);
+  moonCycle.update(delta, sunCycle.getAngle());
   if (sceneRuntimeConfig.backgroundAtmosphere.debugVisible && elapsed < 0.25) {
     console.info('[backgroundAtmosphere][debug] tick/update active', { delta, elapsed });
   }
