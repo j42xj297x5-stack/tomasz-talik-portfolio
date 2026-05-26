@@ -438,7 +438,7 @@ export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere, 
   bind(checkbox(path(() => bg.enabled, (v) => { bg.enabled = v; }, 'rebuild'), atmosphereSection.body, 'backgroundAtmosphere.enabled'));
   if (progression) {
     bind(checkbox(path(() => progression.progressionEnabled, (v) => { atmosphereProgression.setProgressionEnabled(v); }, 'runtime'), progressionSection.body, 'Enable atmosphere progression'));
-    bind(checkbox(path(() => progression.autoProgressOnUniqueGateClick, (v) => { atmosphereProgression.setAutoProgressOnUniqueGateClick(v); }, 'runtime'), progressionSection.body, 'Auto progress on unique gate click'));
+    bind(checkbox(path(() => progression.autoProgressOnUniqueGateClose, (v) => { atmosphereProgression.setAutoProgressOnUniqueGateClose(v); }, 'runtime'), progressionSection.body, 'Auto progress after panel close'));
     bind(range(path(() => progression.progressLevel, (v) => { atmosphereProgression.setProgressLevel(v); }, 'runtime'), progressionSection.body, 'Atmosphere progress', 0, 5, 1));
     bind(range(path(() => progression.transitionTimes.starsDust, (v) => { progression.transitionTimes.starsDust = v; }, 'runtime'), progressionSection.body, 'transition time layer 1', 0.1, 20, 0.1));
     bind(range(path(() => progression.transitionTimes.shells, (v) => { progression.transitionTimes.shells = v; }, 'runtime'), progressionSection.body, 'transition time layer 2', 0.1, 20, 0.1));
@@ -458,6 +458,24 @@ export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere, 
     unlockProgressionButton.className = 'options-panel__section-reset';
     unlockProgressionButton.addEventListener('click', () => { atmosphereProgression.unlockFullProgression(); onChange({ type: 'runtime' }); renderAll(); });
     progressionSection.body.append(unlockProgressionButton);
+    const progressionDebugState = document.createElement('pre');
+    progressionDebugState.className = 'options-panel__placeholder';
+    const progressionDebugBinder = () => {
+      const debugState = atmosphereProgression.getProgressionDebugState();
+      progressionDebugState.textContent = [
+        `progression enabled: ${debugState.progressionEnabled}`,
+        `auto progress after panel close: ${debugState.autoProgressOnUniqueGateClose}`,
+        `current progressLevel: ${debugState.progressLevel}`,
+        `pendingGateId: ${debugState.pendingGateId ?? 'none'}`,
+        `visitedGateIds: ${debugState.visitedGateIds.length ? debugState.visitedGateIds.join(', ') : '[]'}`,
+        `effectiveProgressLevel: ${debugState.effectiveProgressLevel}`,
+        `transition status: ${debugState.isTransitioning ? 'transitioning' : 'idle'}`,
+        `active layer index: ${debugState.activeTransitionLayer ?? 'none'}`,
+        `transition progress: ${debugState.transitionProgress.toFixed(3)}`
+      ].join('\n');
+    };
+    binders.push(progressionDebugBinder);
+    progressionSection.body.append(progressionDebugState);
     gateNodes.forEach((node) => {
       const status = document.createElement('p');
       status.className = 'options-panel__placeholder';
@@ -580,6 +598,10 @@ export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere, 
   function renderAll() {
     binders.forEach((b) => b());
   }
+
+  atmosphereProgression?.onStateChange(() => {
+    renderAll();
+  });
 
   let isOpen = false;
   function setOpen(next) {

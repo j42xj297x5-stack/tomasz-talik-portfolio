@@ -1,4 +1,4 @@
-export function createOverlay() {
+export function createOverlay({ onClose } = {}) {
   const root = document.createElement('section');
   root.className = 'overlay';
   root.hidden = true;
@@ -16,8 +16,10 @@ export function createOverlay() {
   const textEl = root.querySelector('.overlay__text');
 
   const close = () => {
+    if (root.hidden) return;
     root.hidden = true;
     document.body.classList.remove('overlay-open');
+    onClose?.();
   };
 
   root.addEventListener('click', (event) => {

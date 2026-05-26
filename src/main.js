@@ -112,7 +112,11 @@ const { group: orbitGroup, nodes } = createOrbitNodes(portfolioNodes);
 scene.add(orbitGroup);
 const atmosphereProgression = createAtmosphereProgression({ gateIds: portfolioNodes.map((node) => node.id) });
 
-const overlay = createOverlay();
+const overlay = createOverlay({
+  onClose: () => {
+    atmosphereProgression.handleOverlayClosed();
+  }
+});
 const hoverLabel = createHoverLabel();
 
 const optionsPanel = createOptionsPanel({
@@ -161,7 +165,7 @@ window.addEventListener('pointermove', (event) => {
 window.addEventListener('click', (event) => {
   const hit = pickNode(event, canvas, camera, nodes);
   if (hit) {
-    atmosphereProgression.handleGateVisited(hit.userData?.id);
+    atmosphereProgression.prepareGateProgression(hit.userData?.id);
     overlay.open(hit.userData);
   }
 });
