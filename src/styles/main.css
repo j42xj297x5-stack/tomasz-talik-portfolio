@@ -66,6 +66,10 @@ body { min-height: 100vh; overflow: hidden; }
 .overlay__closing { margin: 0; color: #c4d1e2; line-height: 1.45; }
 .overlay__lead,
 .overlay__closing { margin-bottom: 0.7rem; }
+.overlay__closing {
+  color: #d3be79;
+  font-style: italic;
+}
 
 .overlay__panel--ai-guide {
   position: absolute;
