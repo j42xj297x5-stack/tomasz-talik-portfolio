@@ -71,7 +71,23 @@ body { min-height: 100vh; overflow: hidden; }
   font-style: italic;
 }
 
-.overlay__panel--ai-guide {
+.overlay__panel--ai-guide,
+.overlay__panel--creative-ai {
+  --overlay-panel-bg-image: url('/png/ai_guide.png');
+  --overlay-panel-scrollbar: rgba(211, 190, 121, 0.28);
+  --overlay-panel-close-color: rgba(235, 244, 214, 0.92);
+  --overlay-panel-close-bg: rgba(8, 24, 16, 0.28);
+  --overlay-panel-close-border: rgba(211, 190, 121, 0.42);
+  --overlay-panel-close-shadow: rgba(91, 148, 93, 0.12);
+  --overlay-panel-close-hover-color: rgba(250, 246, 220, 0.98);
+  --overlay-panel-close-hover-border: rgba(222, 205, 139, 0.72);
+  --overlay-panel-close-hover-bg: rgba(16, 43, 27, 0.46);
+  --overlay-panel-status-color: rgba(224, 240, 214, 0.84);
+  --overlay-panel-title-color: rgba(235, 244, 214, 0.96);
+  --overlay-panel-title-shadow: rgba(116, 184, 123, 0.22);
+  --overlay-panel-lead-color: rgba(224, 240, 214, 0.92);
+  --overlay-panel-text-color: rgba(230, 238, 221, 0.9);
+  --overlay-panel-closing-color: rgba(211, 190, 121, 0.92);
   position: absolute;
   width: min(760px, calc(90vh * 561 / 701), 94vw);
   aspect-ratio: 561 / 701;
@@ -84,11 +100,30 @@ body { min-height: 100vh; overflow: hidden; }
   isolation: isolate;
 }
 
-.overlay__panel--ai-guide::before {
+.overlay__panel--creative-ai {
+  --overlay-panel-bg-image: url('/png/creative_ai.png');
+  --overlay-panel-scrollbar: rgba(224, 180, 95, 0.32);
+  --overlay-panel-close-color: #f3e6c8;
+  --overlay-panel-close-bg: rgba(20, 12, 8, 0.46);
+  --overlay-panel-close-border: rgba(224, 180, 95, 0.45);
+  --overlay-panel-close-shadow: rgba(240, 160, 64, 0.18);
+  --overlay-panel-close-hover-color: #fff3d2;
+  --overlay-panel-close-hover-border: rgba(240, 196, 106, 0.68);
+  --overlay-panel-close-hover-bg: rgba(54, 25, 10, 0.58);
+  --overlay-panel-status-color: #d8a85a;
+  --overlay-panel-title-color: #fff3d2;
+  --overlay-panel-title-shadow: rgba(240, 160, 64, 0.18);
+  --overlay-panel-lead-color: #f3efe4;
+  --overlay-panel-text-color: rgba(243, 239, 228, 0.92);
+  --overlay-panel-closing-color: #e0b45f;
+}
+
+.overlay__panel--ai-guide::before,
+.overlay__panel--creative-ai::before {
   content: '';
   position: absolute;
   inset: 0;
-  background-image: url('/png/ai_guide.png');
+  background-image: var(--overlay-panel-bg-image);
   background-size: 100% 100%;
   background-repeat: no-repeat;
   background-position: center;
@@ -96,7 +131,8 @@ body { min-height: 100vh; overflow: hidden; }
   z-index: 0;
 }
 
-.overlay__panel--ai-guide .overlay__content {
+.overlay__panel--ai-guide .overlay__content,
+.overlay__panel--creative-ai .overlay__content {
   position: absolute;
   z-index: 1;
   left: 24%;
@@ -113,7 +149,8 @@ body { min-height: 100vh; overflow: hidden; }
   backdrop-filter: none;
 }
 
-.overlay__panel--ai-guide .overlay__scroll {
+.overlay__panel--ai-guide .overlay__scroll,
+.overlay__panel--creative-ai .overlay__scroll {
   flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
@@ -124,14 +161,18 @@ body { min-height: 100vh; overflow: hidden; }
   scrollbar-width: thin;
 }
 
-.overlay__panel--ai-guide .overlay__scroll::-webkit-scrollbar { width: 6px; }
-.overlay__panel--ai-guide .overlay__scroll::-webkit-scrollbar-thumb {
-  background: rgba(211, 190, 121, 0.28);
+.overlay__panel--ai-guide .overlay__scroll::-webkit-scrollbar,
+.overlay__panel--creative-ai .overlay__scroll::-webkit-scrollbar { width: 6px; }
+.overlay__panel--ai-guide .overlay__scroll::-webkit-scrollbar-thumb,
+.overlay__panel--creative-ai .overlay__scroll::-webkit-scrollbar-thumb {
+  background: var(--overlay-panel-scrollbar);
   border-radius: 999px;
 }
-.overlay__panel--ai-guide .overlay__scroll::-webkit-scrollbar-track { background: transparent; }
+.overlay__panel--ai-guide .overlay__scroll::-webkit-scrollbar-track,
+.overlay__panel--creative-ai .overlay__scroll::-webkit-scrollbar-track { background: transparent; }
 
-.overlay__panel--ai-guide .overlay__actions {
+.overlay__panel--ai-guide .overlay__actions,
+.overlay__panel--creative-ai .overlay__actions {
   flex: 0 0 auto;
   display: flex;
   justify-content: flex-end;
@@ -139,90 +180,103 @@ body { min-height: 100vh; overflow: hidden; }
   margin-top: 0;
 }
 
-.overlay__panel--ai-guide .overlay__close {
+.overlay__panel--ai-guide .overlay__close,
+.overlay__panel--creative-ai .overlay__close {
   position: relative;
   inset: auto;
   z-index: 2;
   font-family: inherit;
   font-size: 0.92rem;
   letter-spacing: 0.04em;
-  color: rgba(235, 244, 214, 0.92);
-  background: rgba(8, 24, 16, 0.28);
-  border: 1px solid rgba(211, 190, 121, 0.42);
+  color: var(--overlay-panel-close-color);
+  background: var(--overlay-panel-close-bg);
+  border: 1px solid var(--overlay-panel-close-border);
   border-radius: 999px;
   padding: 0.65rem 1.15rem;
   text-shadow: none;
-  box-shadow: 0 0 18px rgba(91, 148, 93, 0.12);
+  box-shadow: 0 0 18px var(--overlay-panel-close-shadow);
 }
 
 .overlay__panel--ai-guide .overlay__close:hover,
-.overlay__panel--ai-guide .overlay__close:focus-visible {
-  color: rgba(250, 246, 220, 0.98);
-  border-color: rgba(222, 205, 139, 0.72);
-  background: rgba(16, 43, 27, 0.46);
+.overlay__panel--ai-guide .overlay__close:focus-visible,
+.overlay__panel--creative-ai .overlay__close:hover,
+.overlay__panel--creative-ai .overlay__close:focus-visible {
+  color: var(--overlay-panel-close-hover-color);
+  border-color: var(--overlay-panel-close-hover-border);
+  background: var(--overlay-panel-close-hover-bg);
 }
 
-.overlay__panel--ai-guide .overlay__status {
+.overlay__panel--ai-guide .overlay__status,
+.overlay__panel--creative-ai .overlay__status {
   margin-bottom: 0.5rem;
   font-size: 0.86rem;
   letter-spacing: 0.05em;
-  color: rgba(224, 240, 214, 0.84);
+  color: var(--overlay-panel-status-color);
 }
 
-.overlay__panel--ai-guide .overlay__title {
+.overlay__panel--ai-guide .overlay__title,
+.overlay__panel--creative-ai .overlay__title {
   margin: 0 0 clamp(18px, 2.4vw, 28px);
   font-family: Georgia, 'Times New Roman', ui-serif, serif;
   font-weight: 700;
   font-size: clamp(2.1rem, 4.6vw, 3.7rem);
   line-height: 0.95;
   letter-spacing: 0.035em;
-  color: rgba(235, 244, 214, 0.96);
-  text-shadow: 0 0 18px rgba(116, 184, 123, 0.22);
+  color: var(--overlay-panel-title-color);
+  text-shadow: 0 0 18px var(--overlay-panel-title-shadow);
 }
 
-.overlay__panel--ai-guide .overlay__lead {
+.overlay__panel--ai-guide .overlay__lead,
+.overlay__panel--creative-ai .overlay__lead {
   margin-bottom: 0.9rem;
   font-size: clamp(0.96rem, 1.25vw, 1.08rem);
   line-height: 1.62;
-  color: rgba(224, 240, 214, 0.92);
+  color: var(--overlay-panel-lead-color);
 }
 
-.overlay__panel--ai-guide .overlay__text {
+.overlay__panel--ai-guide .overlay__text,
+.overlay__panel--creative-ai .overlay__text {
   margin-bottom: 0.95rem;
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   font-size: clamp(0.92rem, 1.05vw, 1rem);
   line-height: 1.72;
-  color: rgba(230, 238, 221, 0.9);
+  color: var(--overlay-panel-text-color);
 }
 
-.overlay__panel--ai-guide .overlay__closing {
-  color: rgba(211, 190, 121, 0.92);
+.overlay__panel--ai-guide .overlay__closing,
+.overlay__panel--creative-ai .overlay__closing {
+  color: var(--overlay-panel-closing-color);
   font-style: italic;
   letter-spacing: 0.02em;
 }
 
 @media (max-width: 640px) {
-  .overlay__panel--ai-guide {
+  .overlay__panel--ai-guide,
+  .overlay__panel--creative-ai {
     width: min(94vw, calc(88vh * 561 / 701));
     max-height: 88vh;
   }
 
-  .overlay__panel--ai-guide .overlay__content {
+  .overlay__panel--ai-guide .overlay__content,
+  .overlay__panel--creative-ai .overlay__content {
     left: 17%;
     right: 15%;
     top: 16%;
     bottom: 12%;
   }
 
-  .overlay__panel--ai-guide .overlay__title {
+  .overlay__panel--ai-guide .overlay__title,
+  .overlay__panel--creative-ai .overlay__title {
     font-size: clamp(1.8rem, 9.5vw, 2.7rem);
   }
 
-  .overlay__panel--ai-guide .overlay__text {
+  .overlay__panel--ai-guide .overlay__text,
+  .overlay__panel--creative-ai .overlay__text {
     font-size: clamp(0.9rem, 3.3vw, 0.98rem);
   }
 
-  .overlay__panel--ai-guide .overlay__actions {
+  .overlay__panel--ai-guide .overlay__actions,
+  .overlay__panel--creative-ai .overlay__actions {
     justify-content: center;
   }
 }

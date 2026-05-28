@@ -51,9 +51,11 @@ export function createOverlay({ onClose } = {}) {
   return {
     open(nodeData) {
       const isAIGuide = nodeData.id === 'ai-guide';
+      const isCreativeAI = nodeData.id === 'creative-ai';
       const hasStructuredCopy = Boolean(nodeData.leadText || nodeData.bodyText || nodeData.closingText);
 
       panelEl.classList.toggle('overlay__panel--ai-guide', isAIGuide);
+      panelEl.classList.toggle('overlay__panel--creative-ai', isCreativeAI);
       statusEl.textContent = nodeData.eyebrow ?? (isAIGuide ? nodeData.shortLabel : 'Draft content — final copy pending');
 
       titleEl.textContent = nodeData.title;
