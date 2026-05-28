@@ -30,9 +30,13 @@ export const portfolioNodes = [
     id: 'creative-ai',
     title: 'Creative AI',
     shortLabel: 'Creative AI',
+    eyebrow: 'Tworzenie z AI',
     modelPath: '/glb/glyph_2.glb',
     modelKind: 'glyph',
-    draftText: 'Draft narrative for Creative AI explorations. Final project grouping and framing are not locked yet.'
+    draftText: 'Pracuję z AI jak z żywym szkicownikiem, laboratorium obrazu i drugim obiegiem wyobraźni. Tworzę plakaty, grafiki, fotoedycje, cenniki, koncepcje wizualne i małe artefakty codziennego użytku — prowadząc proces od intuicji, przez prompt, obraz, korektę i kompozycję, aż do gotowej formy. AI nie zastępuje twórcy. Pomaga szybciej wydobyć z pomysłu jego kształt, ton i emocję.',
+    leadText: 'Pracuję z AI jak z żywym szkicownikiem, laboratorium obrazu i drugim obiegiem wyobraźni.',
+    bodyText: 'Tworzę plakaty, grafiki, fotoedycje, cenniki, koncepcje wizualne i małe artefakty codziennego użytku — prowadząc proces od intuicji, przez prompt, obraz, korektę i kompozycję, aż do gotowej formy.',
+    closingText: 'AI nie zastępuje twórcy. Pomaga szybciej wydobyć z pomysłu jego kształt, ton i emocję.'
   },
   {
     id: 'ethics-life-protection',

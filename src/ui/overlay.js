@@ -51,19 +51,20 @@ export function createOverlay({ onClose } = {}) {
   return {
     open(nodeData) {
       const isAIGuide = nodeData.id === 'ai-guide';
+      const hasStructuredCopy = Boolean(nodeData.leadText || nodeData.bodyText || nodeData.closingText);
 
       panelEl.classList.toggle('overlay__panel--ai-guide', isAIGuide);
-      statusEl.textContent = isAIGuide ? nodeData.shortLabel : 'Draft content — final copy pending';
+      statusEl.textContent = nodeData.eyebrow ?? (isAIGuide ? nodeData.shortLabel : 'Draft content — final copy pending');
 
       titleEl.textContent = nodeData.title;
 
-      if (isAIGuide) {
-        leadEl.hidden = false;
+      if (hasStructuredCopy) {
+        leadEl.hidden = !nodeData.leadText;
         leadEl.textContent = nodeData.leadText ?? '';
 
         textEl.textContent = nodeData.bodyText ?? nodeData.draftText;
 
-        closingEl.hidden = false;
+        closingEl.hidden = !nodeData.closingText;
         closingEl.textContent = nodeData.closingText ?? '';
       } else {
         leadEl.hidden = true;
