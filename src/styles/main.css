@@ -69,7 +69,7 @@ body { min-height: 100vh; overflow: hidden; }
 
 .overlay__panel--ai-guide {
   position: absolute;
-  width: min(720px, calc(90vh * 561 / 701), 92vw);
+  width: min(760px, calc(90vh * 561 / 701), 94vw);
   aspect-ratio: 561 / 701;
   padding: 0;
   border: 0;
@@ -95,10 +95,10 @@ body { min-height: 100vh; overflow: hidden; }
 .overlay__panel--ai-guide .overlay__content {
   position: absolute;
   z-index: 1;
-  left: 18%;
-  right: 16%;
+  left: 24%;
+  right: 21%;
   top: 18%;
-  bottom: 14%;
+  bottom: 13%;
   display: flex;
   flex-direction: column;
   min-height: 0;
@@ -113,7 +113,7 @@ body { min-height: 100vh; overflow: hidden; }
   flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
-  padding-right: 0.65rem;
+  padding-right: 0.75rem;
   background: transparent;
   box-shadow: none;
   backdrop-filter: none;
@@ -169,7 +169,7 @@ body { min-height: 100vh; overflow: hidden; }
   margin: 0 0 clamp(18px, 2.4vw, 28px);
   font-family: Georgia, 'Times New Roman', ui-serif, serif;
   font-weight: 700;
-  font-size: clamp(2.2rem, 5vw, 4rem);
+  font-size: clamp(2.1rem, 4.6vw, 3.7rem);
   line-height: 0.95;
   letter-spacing: 0.035em;
   color: rgba(235, 244, 214, 0.96);
@@ -178,15 +178,15 @@ body { min-height: 100vh; overflow: hidden; }
 
 .overlay__panel--ai-guide .overlay__lead {
   margin-bottom: 0.9rem;
-  font-size: clamp(0.98rem, 1.35vw, 1.12rem);
-  line-height: 1.6;
+  font-size: clamp(0.96rem, 1.25vw, 1.08rem);
+  line-height: 1.62;
   color: rgba(224, 240, 214, 0.92);
 }
 
 .overlay__panel--ai-guide .overlay__text {
   margin-bottom: 0.95rem;
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  font-size: clamp(0.94rem, 1.1vw, 1.02rem);
+  font-size: clamp(0.92rem, 1.05vw, 1rem);
   line-height: 1.72;
   color: rgba(230, 238, 221, 0.9);
 }
@@ -204,14 +204,14 @@ body { min-height: 100vh; overflow: hidden; }
   }
 
   .overlay__panel--ai-guide .overlay__content {
-    left: 15%;
-    right: 14%;
+    left: 17%;
+    right: 15%;
     top: 16%;
     bottom: 12%;
   }
 
   .overlay__panel--ai-guide .overlay__title {
-    font-size: clamp(1.9rem, 10vw, 2.8rem);
+    font-size: clamp(1.8rem, 9.5vw, 2.7rem);
   }
 
   .overlay__panel--ai-guide .overlay__text {
