@@ -1,6 +1,7 @@
 import * as THREE from '../vendor/three.js';
+import { resolveVendoredGLTFLoader } from '../utils/gltfLoader.js';
+import { publicPath } from '../utils/publicPath.js';
 
-const VENDORED_GLTF_LOADER_PATH = '../../vendor/three/examples/jsm/loaders/GLTFLoader.js';
 const MOON_MODEL_PATH = '/glb/moon.glb';
 
 function deepMerge(base, patch) {
@@ -24,16 +25,6 @@ function sanitizeMoonModelPath(modelPath) {
 function sanitizeMoonCycleSettings(settings) {
   settings.modelPath = sanitizeMoonModelPath(settings.modelPath);
   return settings;
-}
-
-async function resolveGLTFLoader() {
-  try {
-    const module = await import(VENDORED_GLTF_LOADER_PATH);
-    return module.GLTFLoader;
-  } catch (error) {
-    console.warn('[moonCycle] GLTFLoader unavailable.', error);
-    return null;
-  }
 }
 
 export const MOON_CYCLE_DEFAULTS = {
@@ -172,10 +163,13 @@ export function createMoonCycle(options = {}) {
     updateDebugState();
   }
 
-  void resolveGLTFLoader().then((GLTFLoader) => {
-    if (!GLTFLoader) { fallbackSphere.visible = true; return; }
+  const modelUrl = publicPath(settings.modelPath);
+  console.info(`[moonCycle] GLB load URL: ${modelUrl}`);
+
+  void resolveVendoredGLTFLoader('moonCycle').then((GLTFLoader) => {
+    if (!GLTFLoader) { fallbackSphere.visible = true; console.info('[moonCycle] Fallback sphere active because GLTFLoader was unavailable.'); return; }
     const loader = new GLTFLoader();
-    loader.load(settings.modelPath, (gltf) => {
+    loader.load(modelUrl, (gltf) => {
       moonModel = gltf.scene;
       moonModel.position.set(0, 0, 0);
       moonBodyGroup.add(moonModel);
@@ -185,8 +179,9 @@ export function createMoonCycle(options = {}) {
       moonBodyGroup.add(boxHelper);
       enforceMoonMaterialVisibility();
       applySettings();
+      console.info(`[moonCycle] Moon model loaded from ${modelUrl}.`);
     }, undefined, (error) => {
-      console.warn(`[moonCycle][debug] Failed to load model from path: ${settings.modelPath}`, error);
+      console.warn(`[moonCycle][debug] Failed to load model from URL: ${modelUrl}. Fallback sphere retained.`, error);
       fallbackSphere.visible = true;
     });
   });
