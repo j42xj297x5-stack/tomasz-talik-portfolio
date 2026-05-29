@@ -133,20 +133,6 @@ body {
   line-height: 1.45;
 }
 
-.mobile-notice {
-  display: none;
-  position: fixed;
-  left: 50%;
-  bottom: 1rem;
-  transform: translateX(-50%);
-  margin: 0;
-  padding: 0.6rem 0.85rem;
-  border: 1px solid #364257;
-  border-radius: 10px;
-  background: rgba(8, 11, 17, 0.85);
-  color: #b7c3d4;
-  font-size: 0.8rem;
-}
 
 .hover-label {
   position: fixed;
@@ -399,9 +385,6 @@ body {
   }
 }
 
-@media (max-width: 900px), (hover: none) {
-  .mobile-notice { display: block; }
-}
 
 .options-panel {
   position: fixed;

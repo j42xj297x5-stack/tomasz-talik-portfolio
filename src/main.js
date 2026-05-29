@@ -26,7 +26,6 @@ if (!app) throw new Error('Missing #app mount element.');
 app.innerHTML = `
   <main class="runtime-shell runtime-shell--loading">
     <canvas id="scene-canvas" aria-label="Interactive AI portfolio MVP scene"></canvas>
-    <p class="mobile-notice">Desktop-first MVP scene. Mobile interaction fallback is active.</p>
   </main>
 `;
 
