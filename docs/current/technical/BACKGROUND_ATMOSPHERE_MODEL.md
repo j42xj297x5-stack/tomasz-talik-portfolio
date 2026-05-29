@@ -454,3 +454,13 @@ Uwaga: to propozycja struktury. Ten dokument **nie wdraża** runtime.
 - Status: **Draft v1 (kontrakt roboczy)**.
 - Charakter: dokument kierunkowy do kolejnych etapów implementacyjnych.
 - Priorytet decyzji: rytm interakcji i czytelność nad widowiskowością.
+
+## Runtime addition — distant galaxy alpha sprites (2026-05-29)
+- New module: `src/scene/galaxySprites.js`.
+- Expected manual assets: `public/png/galaxy_01.png`, `public/png/galaxy_02.png`, `public/png/galaxy_03.png`, `public/png/galaxy_04.png`, and `public/png/galaxy_05.png`.
+- Browser/runtime paths stay logical public paths (`/png/galaxy_01.png` etc.) and are normalized with `publicPath(...)` before `THREE.TextureLoader.load(...)`; browser URLs must never include the `public/` folder segment.
+- The PNGs are treated as real transparent-alpha cutouts. `THREE.SpriteMaterial` defaults to `transparent: true`, `depthWrite: false`, `depthTest: true`, `NormalBlending`, configurable `alphaTest`, and subtle opacity.
+- Missing galaxy PNGs are non-fatal: the loader logs a clear warning and skips only the missing texture source. If all are missing, the layer remains empty while the rest of the scene continues.
+- Debug/runtime config is exposed under `galaxySprites`: `enabled`, `totalMax`, `copiesPerTextureMin`, `copiesPerTextureMax`, `minScale`, `maxScale`, `opacity`, `opacityVariance`, `innerRadius`, `outerRadius`, `verticalSpread`, `orbitSpeedMin`, `orbitSpeedMax`, `ownSpinSpeedMin`, `ownSpinSpeedMax`, `additiveBlending`, `alphaTest`, and `randomSeed`, plus a rebuild button in the Options panel.
+- The layer is visual-only, non-interactive, conservative by default (`totalMax: 14`), avoids the center, performs no raycasting/postprocessing, and uses reduced-motion speed scaling.
+- Known limitation: texture paths are intentionally fixed in runtime config/code rather than editable as text fields in the current Options panel; replacing sources requires editing config or asset files.

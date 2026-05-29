@@ -126,3 +126,17 @@
 4. Point light remains active after full reveal during hover/active and transitions into orbit (with faster orbit than the earliest orbit pass); orbit radius is treated as stable unless a future explicit decision changes it.
 5. Interaction safety is reaffirmed: tree visual meshes/helpers/lights are not raycast targets; collider/interactive target remains the glyph node.
 6. Snapshot recorded: `docs/current/audits/snapshots/2026-05-22_18-18-33__snapshot__glyph-1-tree-effect-baseline.md`.
+
+## 2026-05-29 — First working dual-runtime deployment snapshot (documentation-only)
+
+1. The active deployment model supports both local Vite runtime and GitHub Pages runtime from the same codebase.
+2. GitHub Pages deployment is documented under the repository base path `/tomasz-talik-portfolio/`.
+3. Vite `base` / `import.meta.env.BASE_URL` is the source of truth for browser-visible public asset URLs.
+4. Runtime asset references should use logical public paths such as `/glb/...` and `/png/...`, then normalize them through `publicPath(...)` before loading.
+5. Browser URLs must not include the `public/` segment.
+6. Vendored Three.js r184 and vendored `GLTFLoader` remain the runtime dependency source; npm `three` remains intentionally unused for runtime integration.
+7. GLB model loading and PNG public asset loading share the same base-aware public path convention.
+8. Fallback behavior remains required for deployment safety: monkey placeholder, node sphere/collider fallback, optional hover-effect degradation, and non-crashing loader failure handling.
+9. Known risks are GitHub Pages cache, browser cache, case-sensitive filenames, large GLB size, and missing manually managed binary assets.
+10. Snapshot recorded: `docs/current/audits/snapshots/2026-05-29_19-59-42__snapshot__dual-runtime-github-pages-deployment.md`.
+11. This decision is documentation-only and does not change runtime code, visuals, scene behavior, content, assets, camera, lighting, or animation.

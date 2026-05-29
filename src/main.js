@@ -15,6 +15,7 @@ import { createOptionsPanel } from './ui/optionsPanel.js';
 import { createSunCycle, SUN_CYCLE_DEFAULTS } from './scene/sunCycle.js';
 import { createMoonCycle, MOON_CYCLE_DEFAULTS } from './scene/moonCycle.js';
 import { createAtmosphereProgression } from './scene/atmosphere/atmosphereProgression.js';
+import { createGalaxySpritesLayer, GALAXY_SPRITES_DEFAULTS } from './scene/galaxySprites.js';
 
 const app = document.querySelector('#app');
 if (!app) throw new Error('Missing #app mount element.');
@@ -45,6 +46,9 @@ const sceneRuntimeConfig = {
   },
   moonCycle: {
     ...MOON_CYCLE_DEFAULTS
+  },
+  galaxySprites: {
+    ...GALAXY_SPRITES_DEFAULTS
   },
   backgroundAtmosphere: {
     enabled: true,
@@ -105,6 +109,8 @@ const sunCycle = createSunCycle(sceneRuntimeConfig.sunCycle);
 scene.add(sunCycle.object3d);
 const moonCycle = createMoonCycle(sceneRuntimeConfig.moonCycle);
 scene.add(moonCycle.object3d);
+const galaxyLayer = createGalaxySpritesLayer(sceneRuntimeConfig.galaxySprites);
+scene.add(galaxyLayer.group);
 
 void loadMonkeyModel({ scene, fallbackObject: centralPlaceholder });
 
@@ -127,6 +133,11 @@ const optionsPanel = createOptionsPanel({
     atmosphere.applySettings(sceneRuntimeConfig.backgroundAtmosphere, type);
     sunCycle.setOptions(sceneRuntimeConfig.sunCycle);
     moonCycle.setOptions(sceneRuntimeConfig.moonCycle);
+    if (type === 'galaxy-sprites-rebuild' || type === 'reset-all' || type === 'rebuild') {
+      galaxyLayer.rebuild(sceneRuntimeConfig.galaxySprites);
+    } else {
+      galaxyLayer.applyRuntimeOptions(sceneRuntimeConfig.galaxySprites);
+    }
   },
   onResetAtmosphere: () => {
     atmosphere.applySettings(sceneRuntimeConfig.backgroundAtmosphere, 'rebuild');
@@ -201,6 +212,7 @@ function tick() {
   moonCycle.setProgressionMultiplier(multipliers.sunMoon);
   sunCycle.update(delta);
   moonCycle.update(delta, sunCycle.getAngle());
+  galaxyLayer.update(delta, elapsed, camera);
   if (sceneRuntimeConfig.backgroundAtmosphere.debugVisible && elapsed < 0.25) {
     console.info('[backgroundAtmosphere][debug] tick/update active', { delta, elapsed });
   }
