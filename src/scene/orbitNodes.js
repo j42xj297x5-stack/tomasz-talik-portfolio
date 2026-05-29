@@ -1,6 +1,5 @@
 import * as THREE from '../vendor/three.js';
-import { resolveVendoredGLTFLoader } from '../utils/gltfLoader.js';
-import { publicPath } from '../utils/publicPath.js';
+import { assetManifest } from '../assets/assetManifest.js';
 const NODE_MODEL_TARGET_DIMENSION = 0.6;
 const HOVER_SCALE_TARGET = 1.06;
 const HOVER_SCALE_LERP = 0.08;
@@ -481,75 +480,64 @@ function fitModelToNode(model) {
   model.position.sub(center);
 }
 
-async function attachNodeModel(node, item) {
-  if (!item.modelPath) return;
+async function attachWoodTreeEffectModel(node, item, assetManager) {
+  if (item.id !== WOOD_NODE_ID || !node.userData.woodTreeEffectRuntime) return;
 
-  const modelUrl = publicPath(item.modelPath);
-  console.info(`[orbitNodes] GLB load URL for ${item.id}: ${modelUrl}`);
+  const treeAsset = assetManifest.optionalLate.find((asset) => asset.id === 'wood-tree-effect');
+  if (!treeAsset || !assetManager) return;
 
-  const GLTFLoader = await resolveVendoredGLTFLoader('orbitNodes');
-  if (!GLTFLoader) {
-    console.info(`[orbitNodes] Sphere fallback retained for ${item.id} because GLTFLoader was unavailable.`);
+  try {
+    await assetManager.loadAsset(treeAsset);
+  } catch (error) {
+    console.warn(`[orbitNodes] Failed to late-load optional wood tree effect model for ${item.id}. Wood tree visual effect disabled safely.`, error);
     return;
   }
 
-  const loader = new GLTFLoader();
-  loader.load(
-    modelUrl,
-    (gltf) => {
-      const model = gltf.scene;
-      fitModelToNode(model);
-      node.add(model);
-      node.material.visible = false;
-      node.userData.visualModel = model;
+  const treeModel = assetManager.cloneGltfScene(treeAsset.id);
 
-      if (item.id === WOOD_NODE_ID && node.userData.woodTreeEffectRuntime) {
-        const treeLoader = new GLTFLoader();
-        const attachTreeEffectModel = (path) => {
-          const treeModelUrl = publicPath(path);
-          console.info(`[orbitNodes] Wood tree effect GLB load URL for ${item.id}: ${treeModelUrl}`);
-          treeLoader.load(
-            treeModelUrl,
-          (treeGltf) => {
-            const treeModel = treeGltf.scene;
-            fitModelToNode(treeModel);
-            treeModel.scale.multiplyScalar(WOOD_TREE_SCALE);
-            treeModel.position.y += WOOD_TREE_Y_OFFSET;
+  if (!treeModel) {
+    console.warn(`[orbitNodes] Wood tree effect model for ${item.id} is optionalLate and was not available. Wood tree visual effect disabled safely.`);
+    return;
+  }
 
-            const bounds = new THREE.Box3().setFromObject(treeModel);
-            const minY = bounds.min.y;
-            const maxY = bounds.max.y;
-            const treeMaterials = [];
-            const shaderEntries = [];
-            const center = new THREE.Vector3();
+  fitModelToNode(treeModel);
+  treeModel.scale.multiplyScalar(WOOD_TREE_SCALE);
+  treeModel.position.y += WOOD_TREE_Y_OFFSET;
 
-            treeModel.traverse((child) => {
-              if (!child.isMesh || !child.material) return;
-              child.material = child.material.clone();
-              child.material.transparent = true;
-              child.material.depthWrite = true;
-              const shaderUniforms = {
-                uRevealCenter: { value: new THREE.Vector3(0, -0.38, 0) },
-                uRevealRadius: { value: WOOD_TREE_REVEAL_RADIUS_MIN },
-                uRevealSoftness: { value: WOOD_TREE_REVEAL_SOFTNESS }
-              };
-              child.material.onBeforeCompile = (shader) => {
-                shader.uniforms.uRevealCenter = shaderUniforms.uRevealCenter;
-                shader.uniforms.uRevealRadius = shaderUniforms.uRevealRadius;
-                shader.uniforms.uRevealSoftness = shaderUniforms.uRevealSoftness;
-                shader.vertexShader = shader.vertexShader.replace(
-                  '#include <common>',
-                  '#include <common>\nvarying vec3 vRevealLocalPosition;'
-                ).replace(
-                  '#include <begin_vertex>',
-                  '#include <begin_vertex>\nvRevealLocalPosition = transformed;'
-                );
-                shader.fragmentShader = shader.fragmentShader.replace(
-                  '#include <common>',
-                  '#include <common>\nvarying vec3 vRevealLocalPosition;\nuniform vec3 uRevealCenter;\nuniform float uRevealRadius;\nuniform float uRevealSoftness;'
-                ).replace(
-                  '#include <dithering_fragment>',
-                  `float revealDist = distance(vRevealLocalPosition, uRevealCenter);
+  const bounds = new THREE.Box3().setFromObject(treeModel);
+  const minY = bounds.min.y;
+  const maxY = bounds.max.y;
+  const treeMaterials = [];
+  const shaderEntries = [];
+  const center = new THREE.Vector3();
+
+  treeModel.traverse((child) => {
+    if (!child.isMesh || !child.material) return;
+    child.material = child.material.clone();
+    child.material.transparent = true;
+    child.material.depthWrite = true;
+    const shaderUniforms = {
+      uRevealCenter: { value: new THREE.Vector3(0, -0.38, 0) },
+      uRevealRadius: { value: WOOD_TREE_REVEAL_RADIUS_MIN },
+      uRevealSoftness: { value: WOOD_TREE_REVEAL_SOFTNESS }
+    };
+    child.material.onBeforeCompile = (shader) => {
+      shader.uniforms.uRevealCenter = shaderUniforms.uRevealCenter;
+      shader.uniforms.uRevealRadius = shaderUniforms.uRevealRadius;
+      shader.uniforms.uRevealSoftness = shaderUniforms.uRevealSoftness;
+      shader.vertexShader = shader.vertexShader.replace(
+        '#include <common>',
+        '#include <common>\nvarying vec3 vRevealLocalPosition;'
+      ).replace(
+        '#include <begin_vertex>',
+        '#include <begin_vertex>\nvRevealLocalPosition = transformed;'
+      );
+      shader.fragmentShader = shader.fragmentShader.replace(
+        '#include <common>',
+        '#include <common>\nvarying vec3 vRevealLocalPosition;\nuniform vec3 uRevealCenter;\nuniform float uRevealRadius;\nuniform float uRevealSoftness;'
+      ).replace(
+        '#include <dithering_fragment>',
+        `float revealDist = distance(vRevealLocalPosition, uRevealCenter);
 float revealMask = 1.0 - smoothstep(uRevealRadius - uRevealSoftness, uRevealRadius + uRevealSoftness, revealDist);
 float yMask = smoothstep(uRevealCenter.y - 0.06, uRevealCenter.y + uRevealRadius + 0.08, vRevealLocalPosition.y);
 float finalRevealMask = clamp(revealMask * (0.55 + 0.45 * yMask), 0.0, 1.0);
@@ -557,65 +545,56 @@ if (finalRevealMask < 0.02) discard;
 diffuseColor.rgb = mix(vec3(0.0), diffuseColor.rgb, finalRevealMask);
 totalEmissiveRadiance *= finalRevealMask;
 #include <dithering_fragment>`
-                );
-              };
-              child.material.needsUpdate = true;
-              shaderEntries.push({ uniforms: shaderUniforms });
-              child.getWorldPosition(center);
-              treeMaterials.push({ material: child.material, centerY: center.y });
-            });
-
-            const runtime = node.userData.woodTreeEffectRuntime;
-            runtime.treeGroup = treeModel;
-            runtime.treeMaterials = treeMaterials;
-            runtime.shaderEntries = shaderEntries;
-            runtime.minY = minY;
-            runtime.maxY = maxY;
-
-            const treePointLight = new THREE.PointLight(WOOD_TREE_POINT_LIGHT_COLOR, 0, 2.4, 2);
-            treePointLight.position.set(0, -0.06, 0);
-            treePointLight.visible = false;
-            treeModel.add(treePointLight);
-            runtime.treePointLight = treePointLight;
-            runtime.orbitCenter.set(0, 0, 0);
-            const orbitOffset = treePointLight.position.clone().sub(runtime.orbitCenter);
-            runtime.orbitRadius = Math.max(0.08, Math.sqrt(orbitOffset.x ** 2 + orbitOffset.z ** 2));
-            runtime.orbitHeightOffset = orbitOffset.y;
-            runtime.orbitAngle = Math.atan2(orbitOffset.z, orbitOffset.x);
-
-            treeModel.visible = false;
-            node.add(treeModel);
-            console.info(`[orbitNodes] Loaded wood tree effect model for ${item.id} from ${treeModelUrl}.`);
-          },
-          undefined,
-          (error) => {
-            if (path !== WOOD_TREE_EFFECT_FALLBACK_MODEL_PATH) {
-              console.warn(`[orbitNodes] Failed to load wood tree effect model for ${item.id} at ${treeModelUrl}. Trying fallback ${publicPath(WOOD_TREE_EFFECT_FALLBACK_MODEL_PATH)}.`, error);
-              attachTreeEffectModel(WOOD_TREE_EFFECT_FALLBACK_MODEL_PATH);
-              return;
-            }
-
-            console.warn(`[orbitNodes] Failed to load fallback wood tree effect model for ${item.id} at ${treeModelUrl}. Wood tree visual effect disabled safely.`, error);
-          }
-        );
-        };
-
-        attachTreeEffectModel(WOOD_TREE_EFFECT_MODEL_PATH);
-      }
-
-      console.info(`[orbitNodes] Loaded node model for ${item.id} from ${modelUrl}.`);
-    },
-    undefined,
-    (error) => {
-      console.warn(
-        `[orbitNodes] Failed to load node model for ${item.id} at ${modelUrl}. Sphere fallback retained.`,
-        error
       );
-    }
-  );
+    };
+    child.material.needsUpdate = true;
+    shaderEntries.push({ uniforms: shaderUniforms });
+    child.getWorldPosition(center);
+    treeMaterials.push({ material: child.material, centerY: center.y });
+  });
+
+  const runtime = node.userData.woodTreeEffectRuntime;
+  runtime.treeGroup = treeModel;
+  runtime.treeMaterials = treeMaterials;
+  runtime.shaderEntries = shaderEntries;
+  runtime.minY = minY;
+  runtime.maxY = maxY;
+
+  const treePointLight = new THREE.PointLight(WOOD_TREE_POINT_LIGHT_COLOR, 0, 2.4, 2);
+  treePointLight.position.set(0, -0.06, 0);
+  treePointLight.visible = false;
+  treeModel.add(treePointLight);
+  runtime.treePointLight = treePointLight;
+  runtime.orbitCenter.set(0, 0, 0);
+  const orbitOffset = treePointLight.position.clone().sub(runtime.orbitCenter);
+  runtime.orbitRadius = Math.max(0.08, Math.sqrt(orbitOffset.x ** 2 + orbitOffset.z ** 2));
+  runtime.orbitHeightOffset = orbitOffset.y;
+  runtime.orbitAngle = Math.atan2(orbitOffset.z, orbitOffset.x);
+
+  treeModel.visible = false;
+  node.add(treeModel);
+  console.info(`[orbitNodes] Attached optionalLate wood tree effect model for ${item.id} from AssetManager.`);
 }
 
-export function createOrbitNodes(nodeContent) {
+async function attachNodeModel(node, item, assetManager = null) {
+  if (!item.modelPath) return;
+
+  const model = assetManager?.cloneGltfScene?.(`glyph-${item.id}`);
+  if (!model) {
+    console.info(`[orbitNodes] Sphere fallback retained for ${item.id} because the glyph model was not in AssetManager cache.`);
+    return;
+  }
+
+  fitModelToNode(model);
+  node.add(model);
+  node.material.visible = false;
+  node.userData.visualModel = model;
+  console.info(`[orbitNodes] Attached node model for ${item.id} from AssetManager cache.`);
+
+  await attachWoodTreeEffectModel(node, item, assetManager);
+}
+
+export function createOrbitNodes(nodeContent, { assetManager = null } = {}) {
   const group = new THREE.Group();
   const nodes = [];
   const radius = 3.8;
@@ -708,7 +687,7 @@ export function createOrbitNodes(nodeContent) {
     nodes.push(node);
     group.add(node);
 
-    attachNodeModel(node, item);
+    void attachNodeModel(node, item, assetManager);
   });
 
   group.userData.getCenterWorldPosition = () => group.getWorldPosition(centerPosition);

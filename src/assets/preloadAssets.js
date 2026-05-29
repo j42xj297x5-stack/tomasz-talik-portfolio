@@ -11,6 +11,16 @@ export function formatBytes(bytes, { compactUnknown = true } = {}) {
 
 export function createLoadingDiagnostics(assets = []) {
   const listeners = new Set();
+  let runtimeStats = {
+    runtimeLoadedAssets: 0,
+    parsedGltfCount: 0,
+    decodedImageCount: 0,
+    textureLoadedCount: 0,
+    shaderCompileComplete: false,
+    warmupFrameComplete: false,
+    cacheHits: 0,
+    cacheMisses: 0
+  };
   const records = assets.map((asset) => ({
     ...asset,
     url: publicPath(asset.path),
@@ -45,6 +55,7 @@ export function createLoadingDiagnostics(assets = []) {
       unknownTotalAssets,
       lastLoaded,
       currentAsset,
+      runtimeStats: { ...runtimeStats },
       records: records.map((record) => ({ ...record }))
     };
   }
@@ -57,85 +68,22 @@ export function createLoadingDiagnostics(assets = []) {
       listener(getSnapshot());
       return () => listeners.delete(listener);
     },
+    setRuntimeStats(nextStats = {}) {
+      runtimeStats = { ...runtimeStats, ...nextStats };
+      notify();
+    },
     update(record, patch) {
+      if (!record) return;
       Object.assign(record, patch);
       notify();
     }
   };
 }
 
-async function decodeImageFromCache(asset, url) {
-  if (!asset.decode) return;
-
-  const image = new Image();
-  try {
-    image.decoding = 'async';
-    image.src = url;
-    if (typeof image.decode === 'function') {
-      await image.decode();
-    } else {
-      await new Promise((resolve, reject) => {
-        image.onload = resolve;
-        image.onerror = reject;
-      });
-    }
-  } catch (error) {
-    console.warn(`[preloadAssets] Loaded ${url}, but image decode failed. Browser cache may still prevent a visible panel gap.`, error);
-  }
-}
-
-async function fetchAsset(record, diagnostics) {
-  diagnostics.update(record, { status: 'loading' });
-
-  const response = await fetch(record.url, { cache: 'force-cache' });
-  if (!response.ok) {
-    throw new Error(`HTTP ${response.status} while preloading ${record.url}`);
+export async function preloadAssets(assets, { diagnostics = createLoadingDiagnostics(assets), assetManager = null, concurrency = 4 } = {}) {
+  if (assetManager?.preload) {
+    return assetManager.preload(assets, { concurrency });
   }
 
-  const contentLength = Number(response.headers.get('content-length'));
-  if (Number.isFinite(contentLength) && contentLength > 0) {
-    diagnostics.update(record, { totalBytes: contentLength });
-  }
-
-  const blob = await response.blob();
-  const byteSize = blob.size || (Number.isFinite(contentLength) ? contentLength : 0);
-
-  if (record.type === 'image') {
-    await decodeImageFromCache(record, record.url);
-  }
-
-  diagnostics.update(record, {
-    status: 'loaded',
-    loadedBytes: byteSize,
-    totalBytes: Number.isFinite(contentLength) && contentLength > 0 ? contentLength : byteSize
-  });
-}
-
-export async function preloadAssets(assets, { diagnostics = createLoadingDiagnostics(assets), concurrency = 4 } = {}) {
-  const queue = diagnostics.records.slice();
-  const failures = [];
-
-  async function worker() {
-    while (queue.length > 0) {
-      const record = queue.shift();
-      try {
-        await fetchAsset(record, diagnostics);
-      } catch (error) {
-        const normalizedError = error instanceof Error ? error : new Error(String(error));
-        diagnostics.update(record, { status: 'failed', error: normalizedError.message });
-        failures.push({ record, error: normalizedError });
-        console.warn(`[preloadAssets] Failed to preload ${record.label ?? record.id} from ${record.url}.`, normalizedError);
-      }
-    }
-  }
-
-  await Promise.all(Array.from({ length: Math.min(concurrency, queue.length || 1) }, () => worker()));
-
-  const criticalFailures = failures.filter(({ record }) => record.critical);
-  if (criticalFailures.length > 0) {
-    const message = criticalFailures.map(({ record }) => `${record.label ?? record.id} (${record.url})`).join(', ');
-    throw new Error(`Critical preload asset(s) failed: ${message}`);
-  }
-
-  return diagnostics.getSnapshot();
+  throw new Error('preloadAssets now requires an AssetManager instance so assets are hydrated through runtime loaders.');
 }

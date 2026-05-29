@@ -1,5 +1,4 @@
 import * as THREE from '../vendor/three.js';
-import { publicPath } from '../utils/publicPath.js';
 
 export const GALAXY_SPRITES_DEFAULTS = {
   enabled: true,
@@ -155,11 +154,10 @@ function detectReducedMotion() {
   return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 }
 
-export function createGalaxySpritesLayer(options = {}) {
+export function createGalaxySpritesLayer(options = {}, { assetManager = null } = {}) {
   const group = new THREE.Group();
   group.name = 'GalaxySpritesLayer';
 
-  const textureLoader = new THREE.TextureLoader();
   const instances = [];
   const ownedTextures = new Set();
   const tempPosition = new THREE.Vector3();
@@ -185,29 +183,18 @@ export function createGalaxySpritesLayer(options = {}) {
   }
 
   function loadTexture(logicalPath, currentBuildId) {
-    const url = publicPath(logicalPath);
-    return new Promise((resolve) => {
-      textureLoader.load(
-        url,
-        (texture) => {
-          if (disposed || currentBuildId !== buildId) {
-            texture.dispose();
-            resolve(null);
-            return;
-          }
-          texture.colorSpace = THREE.SRGBColorSpace;
-          texture.generateMipmaps = true;
-          texture.needsUpdate = true;
-          ownedTextures.add(texture);
-          resolve({ texture, logicalPath, url });
-        },
-        undefined,
-        (error) => {
-          console.warn(`[galaxySprites] Failed to load galaxy texture ${logicalPath} from ${url}. Skipping that sprite source.`, error);
-          resolve(null);
-        }
-      );
-    });
+    const cachedRecord = assetManager?.getAssetByPath?.(logicalPath);
+    const cachedTexture = cachedRecord?.texture;
+    if (cachedTexture) {
+      return Promise.resolve({ texture: cachedTexture, logicalPath, url: cachedRecord.url ?? logicalPath, cached: true });
+    }
+
+    if (assetManager?.isPreloadComplete?.()) {
+      console.warn(`[galaxySprites] Texture ${logicalPath} was not in AssetManager cache after preload. Skipping late runtime load.`);
+      return Promise.resolve(null);
+    }
+
+    return Promise.resolve(null);
   }
 
   function makeInstanceDescriptor(random, textureRecord, textureIndex) {
@@ -338,10 +325,11 @@ export function createGalaxySpritesLayer(options = {}) {
     clearInstances();
   }
 
-  void rebuild();
+  const ready = rebuild();
 
   return {
     group,
+    ready,
     update,
     setEnabled,
     rebuild,

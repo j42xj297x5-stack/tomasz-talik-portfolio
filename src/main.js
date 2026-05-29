@@ -18,6 +18,7 @@ import { createAtmosphereProgression } from './scene/atmosphere/atmosphereProgre
 import { createGalaxySpritesLayer, GALAXY_SPRITES_DEFAULTS } from './scene/galaxySprites.js';
 import { INITIAL_PRELOAD_GROUPS, getPreloadAssets } from './assets/assetManifest.js';
 import { createLoadingDiagnostics, preloadAssets } from './assets/preloadAssets.js';
+import { createAssetManager } from './assets/assetManager.js';
 import { createLoaderOverlay } from './ui/loaderOverlay.js';
 
 const app = document.querySelector('#app');
@@ -35,11 +36,12 @@ const debugLoading = new URLSearchParams(window.location.search).has('debug');
 const debugInput = debugLoading;
 const preloadAssetsList = getPreloadAssets(INITIAL_PRELOAD_GROUPS);
 const loadingDiagnostics = createLoadingDiagnostics(preloadAssetsList);
+const assetManager = createAssetManager({ diagnostics: loadingDiagnostics });
 const loaderOverlay = createLoaderOverlay({ debug: debugLoading });
 loadingDiagnostics.subscribe((snapshot) => loaderOverlay.update(snapshot));
 
 try {
-  await preloadAssets(preloadAssetsList, { diagnostics: loadingDiagnostics });
+  await preloadAssets(preloadAssetsList, { diagnostics: loadingDiagnostics, assetManager });
 } catch (error) {
   const message = error instanceof Error ? error.message : String(error);
   loaderOverlay.showError('Nie udało się załadować krytycznych zasobów. Odśwież stronę lub sprawdź połączenie.');
@@ -121,22 +123,23 @@ const sceneRuntimeConfig = {
   }
 };
 
-const atmosphere = createBackgroundAtmosphere(sceneRuntimeConfig.backgroundAtmosphere);
+const atmosphere = createBackgroundAtmosphere(sceneRuntimeConfig.backgroundAtmosphere, { assetManager });
 scene.add(atmosphere.object3d);
-const sunCycle = createSunCycle(sceneRuntimeConfig.sunCycle);
+const sunCycle = createSunCycle(sceneRuntimeConfig.sunCycle, { assetManager });
 scene.add(sunCycle.object3d);
-const moonCycle = createMoonCycle(sceneRuntimeConfig.moonCycle);
+const moonCycle = createMoonCycle(sceneRuntimeConfig.moonCycle, { assetManager });
 scene.add(moonCycle.object3d);
-const galaxyLayer = createGalaxySpritesLayer(sceneRuntimeConfig.galaxySprites);
+const galaxyLayer = createGalaxySpritesLayer(sceneRuntimeConfig.galaxySprites, { assetManager });
 scene.add(galaxyLayer.group);
 
-void loadMonkeyModel({ scene, fallbackObject: centralPlaceholder });
+await loadMonkeyModel({ scene, fallbackObject: centralPlaceholder, assetManager });
 
-const { group: orbitGroup, nodes } = createOrbitNodes(portfolioNodes);
+const { group: orbitGroup, nodes } = createOrbitNodes(portfolioNodes, { assetManager });
 scene.add(orbitGroup);
 const atmosphereProgression = createAtmosphereProgression({ gateIds: portfolioNodes.map((node) => node.id) });
 
 const overlay = createOverlay({
+  assetManager,
   onClose: () => {
     atmosphereProgression.handleOverlayClosed();
   }
@@ -339,6 +342,11 @@ window.addEventListener('orientationchange', () => {
   orientationResizeSettledTimer = window.setTimeout(() => handleResize({ fromOrientationChange: true }), 600);
 });
 handleResize();
+await Promise.all([atmosphere.ready, galaxyLayer.ready]);
+renderer.compile(scene, camera);
+assetManager.markWarmup({ shaderCompileComplete: true });
+renderer.render(scene, camera);
+assetManager.markWarmup({ warmupFrameComplete: true });
 
 const timer = new THREE.Timer();
 timer.connect(document);

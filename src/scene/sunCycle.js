@@ -1,6 +1,4 @@
 import * as THREE from '../vendor/three.js';
-import { resolveVendoredGLTFLoader } from '../utils/gltfLoader.js';
-import { publicPath } from '../utils/publicPath.js';
 
 const SUN_MODEL_PATH = '/glb/sun.glb';
 
@@ -60,7 +58,7 @@ export const SUN_CYCLE_DEFAULTS = {
   debugScaleMultiplier: 1
 };
 
-export function createSunCycle(options = {}) {
+export function createSunCycle(options = {}, { assetManager = null } = {}) {
   let settings = sanitizeSunCycleSettings(deepMerge(SUN_CYCLE_DEFAULTS, options));
   let progressionMultiplier = 1;
   const object3d = new THREE.Group();
@@ -186,57 +184,21 @@ export function createSunCycle(options = {}) {
     updateDebugState();
   }
 
-  const modelUrl = publicPath(settings.modelPath);
-  console.info(`[sunCycle] GLB load URL: ${modelUrl}`);
-
-  void resolveVendoredGLTFLoader('sunCycle').then((GLTFLoader) => {
-    if (!GLTFLoader) { fallbackSphere.visible = true; console.info('[sunCycle] Fallback sphere active because GLTFLoader was unavailable.'); return; }
-    const loader = new GLTFLoader();
-    loader.load(modelUrl, (gltf) => {
-      sunModel = gltf.scene;
-      sunModel.position.set(0, 0, 0);
-      sunBodyGroup.add(sunModel);
-      boxHelper = new THREE.BoxHelper(sunModel, 0x00ffff);
-      boxHelper.name = 'SunCycleModelBoxHelper';
-      boxHelper.visible = false;
-      sunBodyGroup.add(boxHelper);
-      enforceSunMaterialVisibility();
-      if (settings.debugVisible) {
-        const meshCount = sunModel ? sunModel.getObjectsByProperty('isMesh', true).length : 0;
-        const bbox = new THREE.Box3().setFromObject(sunModel);
-        const size = bbox.getSize(new THREE.Vector3());
-        const sphere = bbox.getBoundingSphere(new THREE.Sphere());
-        const sunGroupWorld = object3d.getWorldPosition(new THREE.Vector3());
-        const sunBodyWorld = sunBodyGroup.getWorldPosition(new THREE.Vector3());
-        const modelWorld = sunModel.getWorldPosition(new THREE.Vector3());
-        sunModel.traverse((child) => {
-          if (!child.isMesh) return;
-          child.visible = true;
-          if (Array.isArray(child.material)) child.material.forEach((m) => { if (m) m.visible = true; });
-          else if (child.material) child.material.visible = true;
-        });
-        console.info('[sunCycle][debug] load success', {
-          path: modelUrl,
-          hasScene: Boolean(gltf.scene),
-          meshCount,
-          boundingBox: { min: bbox.min.toArray(), max: bbox.max.toArray(), size: size.toArray() },
-          boundingSphereRadius: sphere.radius,
-          sunGroupWorldPosition: sunGroupWorld.toArray(),
-          sunBodyWorldPosition: sunBodyWorld.toArray(),
-          modelWorldPosition: modelWorld.toArray(),
-          sunGroupScale: object3d.scale.toArray(),
-          modelScale: sunModel.scale.toArray(),
-          visibleFlags: { sunGroup: object3d.visible, sunModel: sunModel.visible, debugOrbit: debugOrbit.visible, fallback: fallbackSphere.visible },
-          sunGroupChildrenCount: object3d.children.length
-        });
-      }
-      applySettings();
-      console.info(`[sunCycle] Sun model loaded from ${modelUrl}.`);
-    }, undefined, (error) => {
-      console.warn(`[sunCycle][debug] Failed to load model from URL: ${modelUrl}. Fallback sphere retained.`, error);
-      fallbackSphere.visible = true;
-    });
-  });
+  const cachedModel = assetManager?.cloneGltfScene?.('sun-model');
+  if (cachedModel) {
+    sunModel = cachedModel;
+    sunModel.position.set(0, 0, 0);
+    sunBodyGroup.add(sunModel);
+    boxHelper = new THREE.BoxHelper(sunModel, 0x00ffff);
+    boxHelper.name = 'SunCycleModelBoxHelper';
+    boxHelper.visible = false;
+    sunBodyGroup.add(boxHelper);
+    enforceSunMaterialVisibility();
+    console.info('[sunCycle] Sun model attached from AssetManager cache.');
+  } else {
+    fallbackSphere.visible = true;
+    console.info('[sunCycle] Fallback sphere active because the sun model was not in AssetManager cache.');
+  }
 
   applySettings();
 

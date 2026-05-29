@@ -1,6 +1,5 @@
 import { GLYPH_PANEL_BACKGROUNDS } from '../assets/assetManifest.js';
-import { publicPath } from '../utils/publicPath.js';
-export function createOverlay({ onClose } = {}) {
+export function createOverlay({ onClose, assetManager = null } = {}) {
   const root = document.createElement('section');
   root.className = 'overlay';
   root.hidden = true;
@@ -60,7 +59,11 @@ export function createOverlay({ onClose } = {}) {
       panelEl.classList.toggle('overlay__panel--creative-ai', isCreativeAI);
       const panelBackgroundPath = GLYPH_PANEL_BACKGROUNDS[nodeData.id];
       if (panelBackgroundPath) {
-        panelEl.style.setProperty('--overlay-panel-bg-image', `url("${publicPath(panelBackgroundPath)}")`);
+        const cachedUrl = assetManager?.getImageUrlByPath?.(panelBackgroundPath);
+        if (!cachedUrl) {
+          console.warn(`[overlay] Panel background cache miss for ${nodeData.id}: ${panelBackgroundPath}`);
+        }
+        panelEl.style.setProperty('--overlay-panel-bg-image', `url("${cachedUrl ?? panelBackgroundPath}")`);
       } else {
         panelEl.style.removeProperty('--overlay-panel-bg-image');
       }

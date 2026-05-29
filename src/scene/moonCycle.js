@@ -1,6 +1,4 @@
 import * as THREE from '../vendor/three.js';
-import { resolveVendoredGLTFLoader } from '../utils/gltfLoader.js';
-import { publicPath } from '../utils/publicPath.js';
 
 const MOON_MODEL_PATH = '/glb/moon.glb';
 
@@ -54,7 +52,7 @@ export const MOON_CYCLE_DEFAULTS = {
   debugScaleMultiplier: 1
 };
 
-export function createMoonCycle(options = {}) {
+export function createMoonCycle(options = {}, { assetManager = null } = {}) {
   let settings = sanitizeMoonCycleSettings(deepMerge(MOON_CYCLE_DEFAULTS, options));
   let progressionMultiplier = 1;
   const object3d = new THREE.Group();
@@ -163,28 +161,21 @@ export function createMoonCycle(options = {}) {
     updateDebugState();
   }
 
-  const modelUrl = publicPath(settings.modelPath);
-  console.info(`[moonCycle] GLB load URL: ${modelUrl}`);
-
-  void resolveVendoredGLTFLoader('moonCycle').then((GLTFLoader) => {
-    if (!GLTFLoader) { fallbackSphere.visible = true; console.info('[moonCycle] Fallback sphere active because GLTFLoader was unavailable.'); return; }
-    const loader = new GLTFLoader();
-    loader.load(modelUrl, (gltf) => {
-      moonModel = gltf.scene;
-      moonModel.position.set(0, 0, 0);
-      moonBodyGroup.add(moonModel);
-      boxHelper = new THREE.BoxHelper(moonModel, 0x00ffff);
-      boxHelper.name = 'MoonCycleModelBoxHelper';
-      boxHelper.visible = false;
-      moonBodyGroup.add(boxHelper);
-      enforceMoonMaterialVisibility();
-      applySettings();
-      console.info(`[moonCycle] Moon model loaded from ${modelUrl}.`);
-    }, undefined, (error) => {
-      console.warn(`[moonCycle][debug] Failed to load model from URL: ${modelUrl}. Fallback sphere retained.`, error);
-      fallbackSphere.visible = true;
-    });
-  });
+  const cachedModel = assetManager?.cloneGltfScene?.('moon-model');
+  if (cachedModel) {
+    moonModel = cachedModel;
+    moonModel.position.set(0, 0, 0);
+    moonBodyGroup.add(moonModel);
+    boxHelper = new THREE.BoxHelper(moonModel, 0x00ffff);
+    boxHelper.name = 'MoonCycleModelBoxHelper';
+    boxHelper.visible = false;
+    moonBodyGroup.add(boxHelper);
+    enforceMoonMaterialVisibility();
+    console.info('[moonCycle] Moon model attached from AssetManager cache.');
+  } else {
+    fallbackSphere.visible = true;
+    console.info('[moonCycle] Fallback sphere active because the moon model was not in AssetManager cache.');
+  }
 
   applySettings();
 

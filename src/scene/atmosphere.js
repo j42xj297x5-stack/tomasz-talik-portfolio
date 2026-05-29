@@ -1,6 +1,4 @@
 import * as THREE from '../vendor/three.js';
-import { resolveVendoredGLTFLoader } from '../utils/gltfLoader.js';
-import { publicPath } from '../utils/publicPath.js';
 
 const DEFAULT_BACKGROUND_ATMOSPHERE_CONFIG = Object.freeze({
   enabled: true,
@@ -41,40 +39,23 @@ function resolveAtmosphereConfig(overrides = {}) { return { ...DEFAULT_BACKGROUN
 function createDustField(config) { const positions=new Float32Array(config.dust.count*3); for(let i=0;i<config.dust.count;i+=1){const idx=i*3;let p=randomPointInShell(config.shellInnerRadius,config.shellOuterRadius); while(p.length()<config.safeRadius){p=randomPointInShell(config.shellInnerRadius,config.shellOuterRadius);} positions[idx]=p.x;positions[idx+1]=p.y;positions[idx+2]=p.z;} const g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.BufferAttribute(positions,3)); const m=new THREE.PointsMaterial(); const points=new THREE.Points(g,m); points.raycast=()=>{}; return { points, material:m }; }
 function createShellDebugHelpers(config){ const g=new THREE.Group(); const mk=(r,c)=>new THREE.Mesh(new THREE.SphereGeometry(r,24,18),new THREE.MeshBasicMaterial({color:c,wireframe:true,transparent:true,opacity:0.35,depthTest:false,depthWrite:false})); g.add(mk(config.shellInnerRadius,0x66e0ff),mk(config.shellOuterRadius,0xffffff)); return g; }
 
-async function loadModelSet({ label, models, cache, loadedFlagSetter }) {
-  const GLTFLoader = await resolveVendoredGLTFLoader('backgroundAtmosphere');
-  if (!GLTFLoader) {
-    console.info(`[backgroundAtmosphere][${label}] Fallback/no-relic state retained because GLTFLoader was unavailable.`);
-    loadedFlagSetter();
-    return;
-  }
-
-  const loader = new GLTFLoader();
-  await Promise.all(models.map((path) => {
-    const modelUrl = publicPath(path);
-    console.info(`[backgroundAtmosphere][${label}] GLB load URL: ${modelUrl}`);
-
-    return new Promise((resolve) => loader.load(
-      modelUrl,
-      (gltf) => {
-        cache.set(path, gltf.scene);
-        console.info(`[backgroundAtmosphere][${label}] Loaded model from ${modelUrl}.`);
-        resolve();
-      },
-      undefined,
-      (error) => {
-        console.warn(`[backgroundAtmosphere][${label}] Failed to load model from ${modelUrl}. Relic fallback/no-relic state retained.`, error);
-        resolve();
-      }
-    ));
-  }));
+async function loadModelSet({ label, models, cache, loadedFlagSetter, assetManager }) {
+  models.forEach((path) => {
+    const gltf = assetManager?.getGltfByPath?.(path);
+    if (gltf?.scene) {
+      cache.set(path, gltf.scene);
+      console.info(`[backgroundAtmosphere][${label}] Using model ${path} from AssetManager cache.`);
+    } else {
+      console.warn(`[backgroundAtmosphere][${label}] Model ${path} was not in AssetManager cache. Relic fallback/no-relic state retained for this source.`);
+    }
+  });
   loadedFlagSetter();
 }
 
 function cloneRelicModel(source, opacity){ const clone=source.clone(true); clone.traverse((child)=>{ if(!child.isMesh) return; const apply=(mat)=>{const m=mat.clone();m.transparent=true;m.opacity=opacity;return m;}; child.material=Array.isArray(child.material)?child.material.map(apply):apply(child.material); }); return clone; }
 function cloneShellRelicModel(source, config, colorHex){ const clone=source.clone(true); const tint=new THREE.Color(colorHex); clone.traverse((child)=>{ if(!child.isMesh) return; const apply=(mat)=>{const m=mat.clone();m.color?.multiply?.(tint);m.transparent=true;m.opacity=config.debugVisible?1:config.opacity;m.roughness=Math.min(1,Math.max(0,m.roughness ?? 0.35));m.roughness=Math.max(0.08,m.roughness*0.7);m.metalness=Math.min(0.18,Math.max(0,m.metalness ?? 0.05));m.depthWrite=false;return m;}; child.material=Array.isArray(child.material)?child.material.map(apply):apply(child.material); }); return clone; }
 
-export function createBackgroundAtmosphere(configOverrides = {}) {
+export function createBackgroundAtmosphere(configOverrides = {}, { assetManager = null } = {}) {
   let config = resolveAtmosphereConfig(configOverrides);
   const root = new THREE.Group();
   const stoneRelicsGroup = new THREE.Group();
@@ -95,9 +76,9 @@ export function createBackgroundAtmosphere(configOverrides = {}) {
 
   function applyDustMaterialOptions(){ if(!dustField) return; Object.assign(dustField.material,{size:config.dust.pointSize,transparent:true,opacity:config.dust.idleOpacity*(progressionMultipliers.stars ?? progressionMultipliers.starsDust ?? 1),sizeAttenuation:config.dust.sizeAttenuation,depthTest:config.dust.depthTest,depthWrite:config.dust.depthWrite,fog:config.debugIgnoreFog ? !config.debugVisible : true}); dustField.material.color.set(config.dust.color); dustField.material.blending=config.debugBlendingMode==='additive'?THREE.AdditiveBlending:THREE.NormalBlending; dustField.material.needsUpdate=true; }
   function setHelpersVisible(){ if(helperGroup) helperGroup.visible=Boolean(config.showShellHelpers||config.debugVisible); }
-  async function loadRelicModels(){ if(relicModelsLoaded) return; await loadModelSet({ label: 'stoneRelics', models: config.stoneRelics.models, cache: relicModelCache, loadedFlagSetter: () => { relicModelsLoaded = true; } }); }
-  async function loadShellModels(){ if(shellModelsLoaded) return; await loadModelSet({ label: 'shellRelics', models: config.shellRelics.models, cache: shellModelCache, loadedFlagSetter: () => { shellModelsLoaded = true; } }); }
-  async function loadSmallGlyphModels(){ if(smallGlyphModelsLoaded) return; await loadModelSet({ label: 'smallGlyphRelics', models: config.smallGlyphRelics.models, cache: smallGlyphModelCache, loadedFlagSetter: () => { smallGlyphModelsLoaded = true; } }); }
+  async function loadRelicModels(){ if(relicModelsLoaded) return; await loadModelSet({ label: 'stoneRelics', models: config.stoneRelics.models, cache: relicModelCache, loadedFlagSetter: () => { relicModelsLoaded = true; }, assetManager }); }
+  async function loadShellModels(){ if(shellModelsLoaded) return; await loadModelSet({ label: 'shellRelics', models: config.shellRelics.models, cache: shellModelCache, loadedFlagSetter: () => { shellModelsLoaded = true; }, assetManager }); }
+  async function loadSmallGlyphModels(){ if(smallGlyphModelsLoaded) return; await loadModelSet({ label: 'smallGlyphRelics', models: config.smallGlyphRelics.models, cache: smallGlyphModelCache, loadedFlagSetter: () => { smallGlyphModelsLoaded = true; }, assetManager }); }
   function clearRelics(){ while(stoneRelicsGroup.children.length>0){ const c=stoneRelicsGroup.children.pop(); c.traverse?.((m)=>{ if(!m.isMesh) return; (Array.isArray(m.material)?m.material:[m.material]).forEach((mat)=>mat?.dispose?.());}); } stoneRelicStates.length=0; }
   function clearShellRelics(){ while(shellRelicsGroup.children.length>0){ const c=shellRelicsGroup.children.pop(); c.traverse?.((m)=>{ if(!m.isMesh) return; (Array.isArray(m.material)?m.material:[m.material]).forEach((mat)=>mat?.dispose?.());}); } shellRelicStates.length=0; }
   function clearSmallGlyphRelics(){ while(smallGlyphRelicsGroup.children.length>0){ const c=smallGlyphRelicsGroup.children.pop(); c.traverse?.((m)=>{ if(!m.isMesh) return; (Array.isArray(m.material)?m.material:[m.material]).forEach((mat)=>mat?.dispose?.());}); } smallGlyphRelicStates.length=0; }
@@ -111,6 +92,6 @@ export function createBackgroundAtmosphere(configOverrides = {}) {
   async function rebuild(){ while(root.children.length>0) root.remove(root.children[0]); dustField=null; helperGroup=null; clearRelics(); clearShellRelics(); clearSmallGlyphRelics(); if(!config.enabled) return; if(config.dust.enabled){dustField=createDustField(config);root.add(dustField.points);applyDustMaterialOptions();} helperGroup=createShellDebugHelpers(config);root.add(helperGroup);setHelpersVisible(); await loadRelicModels(); await loadShellModels(); await loadSmallGlyphModels(); root.add(stoneRelicsGroup); root.add(shellRelicsGroup); root.add(smallGlyphRelicsGroup); rebuildStoneRelics(); rebuildShellRelics(); rebuildSmallGlyphRelics(); applyStoneMaterial(); applyShellMaterial(); applySmallGlyphMaterial(); }
   function applySettings(next={},type='rebuild'){ config=resolveAtmosphereConfig({ ...config, ...next }); if(type==='material'){applyDustMaterialOptions();applyStoneMaterial();applyShellMaterial();applySmallGlyphMaterial();return;} if(type==='helpers'){setHelpersVisible();return;} if(type==='stone-runtime'){applyStoneMaterial();return;} if(type==='stone-rebuild'){rebuildStoneRelics();applyStoneMaterial();return;} if(type==='shell-runtime'){applyShellMaterial();return;} if(type==='shell-rebuild'){rebuildShellRelics();applyShellMaterial();return;} if(type==='small-glyph-runtime'){applySmallGlyphMaterial();return;} if(type==='small-glyph-rebuild'){rebuildSmallGlyphRelics();applySmallGlyphMaterial();return;} void rebuild(); }
 
-  void rebuild();
-  return { object3d: root, applySettings, rebuild, setProgressionMultipliers(next={}){ progressionMultipliers={...progressionMultipliers,...next}; applyDustMaterialOptions(); applyShellMaterial(); applySmallGlyphMaterial(); }, update(deltaSeconds = 0){ if(!root.parent) return; if(dustField) root.rotation.y += config.dust.rotationSpeed*deltaSeconds; stoneRelicsGroup.rotation.y += config.stoneRelics.orbitSpeed*deltaSeconds; shellRelicsGroup.rotation.y += config.shellRelics.orbitSpeed*deltaSeconds; smallGlyphRelicsGroup.rotation.y += config.smallGlyphRelics.orbitSpeed*deltaSeconds; stoneRelicStates.forEach((r,i)=>{r.object.rotation.x += r.spin.x*deltaSeconds; r.object.rotation.y += r.spin.y*deltaSeconds; r.object.rotation.z += r.spin.z*deltaSeconds; const drift=Math.sin(performance.now()*0.0002+i)*0.01; r.object.position.copy(r.basePosition).addScaledVector(r.basePosition.clone().normalize(),drift);}); shellRelicStates.forEach((r,i)=>{r.object.rotation.x += r.spin.x*deltaSeconds; r.object.rotation.y += r.spin.y*deltaSeconds; r.object.rotation.z += r.spin.z*deltaSeconds; const drift=Math.sin(performance.now()*0.00017+i)*0.008; r.object.position.copy(r.basePosition).addScaledVector(r.basePosition.clone().normalize(),drift);}); smallGlyphRelicStates.forEach((r,i)=>{r.object.rotation.x += r.spin.x*deltaSeconds; r.object.rotation.y += r.spin.y*deltaSeconds; r.object.rotation.z += r.spin.z*deltaSeconds; const drift=Math.sin(performance.now()*0.00016+i)*0.007; r.object.position.copy(r.basePosition).addScaledVector(r.basePosition.clone().normalize(),drift);}); } };
+  const ready = rebuild();
+  return { object3d: root, ready, applySettings, rebuild, setProgressionMultipliers(next={}){ progressionMultipliers={...progressionMultipliers,...next}; applyDustMaterialOptions(); applyShellMaterial(); applySmallGlyphMaterial(); }, update(deltaSeconds = 0){ if(!root.parent) return; if(dustField) root.rotation.y += config.dust.rotationSpeed*deltaSeconds; stoneRelicsGroup.rotation.y += config.stoneRelics.orbitSpeed*deltaSeconds; shellRelicsGroup.rotation.y += config.shellRelics.orbitSpeed*deltaSeconds; smallGlyphRelicsGroup.rotation.y += config.smallGlyphRelics.orbitSpeed*deltaSeconds; stoneRelicStates.forEach((r,i)=>{r.object.rotation.x += r.spin.x*deltaSeconds; r.object.rotation.y += r.spin.y*deltaSeconds; r.object.rotation.z += r.spin.z*deltaSeconds; const drift=Math.sin(performance.now()*0.0002+i)*0.01; r.object.position.copy(r.basePosition).addScaledVector(r.basePosition.clone().normalize(),drift);}); shellRelicStates.forEach((r,i)=>{r.object.rotation.x += r.spin.x*deltaSeconds; r.object.rotation.y += r.spin.y*deltaSeconds; r.object.rotation.z += r.spin.z*deltaSeconds; const drift=Math.sin(performance.now()*0.00017+i)*0.008; r.object.position.copy(r.basePosition).addScaledVector(r.basePosition.clone().normalize(),drift);}); smallGlyphRelicStates.forEach((r,i)=>{r.object.rotation.x += r.spin.x*deltaSeconds; r.object.rotation.y += r.spin.y*deltaSeconds; r.object.rotation.z += r.spin.z*deltaSeconds; const drift=Math.sin(performance.now()*0.00016+i)*0.007; r.object.position.copy(r.basePosition).addScaledVector(r.basePosition.clone().normalize(),drift);}); } };
 }
