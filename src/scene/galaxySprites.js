@@ -168,6 +168,7 @@ export function createGalaxySpritesLayer(options = {}) {
   let buildId = 0;
   let disposed = false;
   let reducedMotion = detectReducedMotion();
+  let progressionMultiplier = 1;
 
   function clearInstances({ disposeTextures = true } = {}) {
     while (group.children.length > 0) {
@@ -240,7 +241,7 @@ export function createGalaxySpritesLayer(options = {}) {
   }
 
   function createSprite(textureRecord, state) {
-    const material = makeSpriteMaterial(textureRecord.texture, config, clamp(config.opacity * state.opacity, 0, 1));
+    const material = makeSpriteMaterial(textureRecord.texture, config, clamp(config.opacity * state.opacity * progressionMultiplier, 0, 1));
     material.rotation = state.spinPhase;
 
     const sprite = new THREE.Sprite(material);
@@ -298,7 +299,7 @@ export function createGalaxySpritesLayer(options = {}) {
     instances.forEach((instance) => {
       const { sprite, material } = instance;
       sprite.scale.setScalar(clamp(instance.scale, config.minScale, config.maxScale));
-      material.opacity = clamp(instance.opacity * config.opacity, 0, 1);
+      material.opacity = clamp(instance.opacity * config.opacity * progressionMultiplier, 0, 1);
       material.alphaTest = config.alphaTest;
       material.blending = config.additiveBlending ? THREE.AdditiveBlending : THREE.NormalBlending;
       material.needsUpdate = true;
@@ -346,6 +347,10 @@ export function createGalaxySpritesLayer(options = {}) {
     rebuild,
     dispose,
     applyRuntimeOptions,
+    setProgressionMultiplier(nextMultiplier = 1) {
+      progressionMultiplier = clamp(Number(nextMultiplier) || 0, 0, 1);
+      applyRuntimeOptions(config);
+    },
     getOptions: () => ({ ...config, texturePaths: config.texturePaths.slice() }),
     getInstanceCount: () => instances.length
   };

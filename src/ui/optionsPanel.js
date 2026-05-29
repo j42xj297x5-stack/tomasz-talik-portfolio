@@ -1,10 +1,11 @@
 import { formatBytes } from '../assets/preloadAssets.js';
+import { ATMOSPHERE_PROGRESSION_MAPPING, SUN_MOON_LIGHT_MULTIPLIERS } from '../scene/atmosphere/atmosphereProgression.js';
 function deepClone(value) {
   return JSON.parse(JSON.stringify(value));
 }
 
 const OPTIONS_STORAGE_KEY = 'portfolio.options.runtimeState.v1';
-const OPTIONS_DEFAULTS_VERSION = '2026-05-29-atmosphere-suncycle-mooncycle-galaxy-v7';
+const OPTIONS_DEFAULTS_VERSION = '2026-05-29-atmosphere-progression-json-v8';
 const PRESET_SLOT_KEYS = ['portfolio.optionsPreset.1', 'portfolio.optionsPreset.2', 'portfolio.optionsPreset.3'];
 const SUN_MODEL_PATH = '/glb/sun.glb';
 
@@ -24,6 +25,59 @@ function clampedNumber(value, fallback, min, max) {
 
 function clampedInteger(value, fallback, min, max) {
   return clamp(Math.round(finiteNumber(value, fallback)), min, max);
+}
+
+function timestampForFilename(date = new Date()) {
+  const pad = (value) => String(value).padStart(2, '0');
+  return [
+    date.getFullYear(),
+    pad(date.getMonth() + 1),
+    pad(date.getDate())
+  ].join('-') + '-' + [
+    pad(date.getHours()),
+    pad(date.getMinutes()),
+    pad(date.getSeconds())
+  ].join('-');
+}
+
+function downloadJsonFile(filename, data) {
+  const blob = new Blob([`${JSON.stringify(data, null, 2)}\n`], { type: 'application/json;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  link.style.display = 'none';
+  document.body.append(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+
+function toThresholdSeconds(transitionTimes = {}) {
+  return {
+    threshold1: finiteNumber(transitionTimes.stones, 10),
+    threshold2: finiteNumber(transitionTimes.shells, 10),
+    threshold3: finiteNumber(transitionTimes.smallGlyphs, 10),
+    threshold4: finiteNumber(transitionTimes.stars, 10),
+    threshold5: finiteNumber(transitionTimes.galaxies, 10)
+  };
+}
+
+function pickRuntimeStateFromImport(parsed) {
+  if (parsed?.rawDebugState?.runtimeState) return parsed.rawDebugState.runtimeState;
+  if (parsed?.runtimeState) return parsed.runtimeState;
+  return {
+    backgroundAtmosphere: parsed?.backgroundAtmosphere ?? parsed?.layers ? {
+      ...(parsed?.backgroundAtmosphere ?? {}),
+      stoneRelics: parsed?.layers?.stones ?? parsed?.backgroundAtmosphere?.stoneRelics,
+      shellRelics: parsed?.layers?.shells ?? parsed?.backgroundAtmosphere?.shellRelics,
+      smallGlyphRelics: parsed?.layers?.smallGlyphs ?? parsed?.backgroundAtmosphere?.smallGlyphRelics,
+      dust: parsed?.layers?.stars ?? parsed?.backgroundAtmosphere?.dust
+    } : undefined,
+    sunCycle: parsed?.sunCycle ?? parsed?.celestial?.sun,
+    moonCycle: parsed?.moonCycle ?? parsed?.celestial?.moon,
+    galaxySprites: parsed?.galaxySprites ?? parsed?.layers?.galaxies
+  };
 }
 
 function normalizeRuntimeState(state) {
@@ -279,6 +333,116 @@ export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere, 
   makePresetRow(2);
   makePresetRow(3);
 
+  const exportDebugSettings = () => {
+    const progressionDebugState = atmosphereProgression?.getProgressionDebugState?.() ?? null;
+    const transitionSeconds = toThresholdSeconds(progressionDebugState?.transitionTimes);
+    const exportPayload = {
+      schemaVersion: 1,
+      exportedAt: new Date().toISOString(),
+      source: 'portfolio-debug-panel',
+      progression: {
+        enabled: progressionDebugState?.progressionEnabled ?? true,
+        autoProgressOnUniqueGateClose: progressionDebugState?.autoProgressOnUniqueGateClose ?? true,
+        progressLevel: progressionDebugState?.progressLevel ?? 0,
+        effectiveProgressLevel: progressionDebugState?.effectiveProgressLevel ?? 0,
+        pendingGateId: progressionDebugState?.pendingGateId ?? null,
+        visitedGateIds: progressionDebugState?.visitedGateIds ?? [],
+        activeTransition: progressionDebugState ? {
+          isTransitioning: progressionDebugState.isTransitioning,
+          activeLayerIndex: progressionDebugState.activeTransitionLayer,
+          activeLayerKey: progressionDebugState.activeTransitionLayerKey,
+          transitionProgress: progressionDebugState.transitionProgress,
+          layerTransitionProgress: progressionDebugState.layerTransitionProgress
+        } : null,
+        transitionSeconds,
+        mapping: ATMOSPHERE_PROGRESSION_MAPPING,
+        sunMoonLightMultiplier: progressionDebugState?.sunMoonLightMultiplier ?? 1,
+        sunMoonLightMultipliers: SUN_MOON_LIGHT_MULTIPLIERS
+      },
+      layers: {
+        stones: deepClone(runtimeState.backgroundAtmosphere.stoneRelics),
+        shells: deepClone(runtimeState.backgroundAtmosphere.shellRelics),
+        smallGlyphs: deepClone(runtimeState.backgroundAtmosphere.smallGlyphRelics),
+        stars: deepClone(runtimeState.backgroundAtmosphere.dust),
+        galaxies: deepClone(runtimeState.galaxySprites)
+      },
+      atmosphere: deepClone(runtimeState.backgroundAtmosphere),
+      celestial: {
+        sun: deepClone(runtimeState.sunCycle),
+        moon: deepClone(runtimeState.moonCycle)
+      },
+      lights: {
+        sunSpotlight: deepClone(runtimeState.sunCycle.spotlight),
+        moonSpotlight: deepClone(runtimeState.moonCycle.spotlight)
+      },
+      camera: {},
+      rawDebugState: {
+        runtimeState: deepClone(runtimeState),
+        progression: progressionDebugState
+      }
+    };
+
+    downloadJsonFile(`portfolio-debug-settings-${timestampForFilename()}.json`, exportPayload);
+    setPresetStatus('Wyeksportowano debug JSON');
+  };
+
+  const importInput = document.createElement('input');
+  importInput.type = 'file';
+  importInput.accept = 'application/json,.json';
+  importInput.style.display = 'none';
+  importInput.addEventListener('change', () => {
+    const file = importInput.files?.[0];
+    importInput.value = '';
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.addEventListener('load', () => {
+      try {
+        const parsed = JSON.parse(String(reader.result ?? '{}'));
+        const importedState = pickRuntimeStateFromImport(parsed);
+        if (!importedState?.backgroundAtmosphere && !importedState?.sunCycle && !importedState?.moonCycle && !importedState?.galaxySprites && !parsed?.progression) {
+          throw new Error('Invalid debug settings JSON shape');
+        }
+
+        if (importedState.backgroundAtmosphere) Object.assign(runtimeState.backgroundAtmosphere, importedState.backgroundAtmosphere);
+        if (importedState.sunCycle) Object.assign(runtimeState.sunCycle, importedState.sunCycle);
+        if (importedState.moonCycle) Object.assign(runtimeState.moonCycle, importedState.moonCycle);
+        if (importedState.galaxySprites) Object.assign(runtimeState.galaxySprites, importedState.galaxySprites);
+        runtimeState.sunCycle.spotlight = { ...deepClone(defaults.sunCycle.spotlight), ...(runtimeState.sunCycle.spotlight ?? {}) };
+        runtimeState.moonCycle.spotlight = { ...deepClone(defaults.moonCycle.spotlight), ...(runtimeState.moonCycle.spotlight ?? {}) };
+        normalizeRuntimeState(runtimeState);
+        atmosphereProgression?.importProgressionSettings?.(parsed.progression ?? parsed.rawDebugState?.progression ?? {});
+        onChange({ type: 'rebuild' });
+        persistState();
+        renderAll();
+        setPresetStatus(`Zaimportowano ${file.name}`);
+      } catch (error) {
+        console.warn('[options] Failed to import debug settings JSON.', error);
+        setPresetStatus('Błąd importu JSON');
+      }
+    });
+    reader.addEventListener('error', () => {
+      console.warn('[options] Failed to read debug settings JSON file.', reader.error);
+      setPresetStatus('Błąd odczytu JSON');
+    });
+    reader.readAsText(file);
+  });
+  presetSection.body.append(importInput);
+
+  const exportButton = document.createElement('button');
+  exportButton.type = 'button';
+  exportButton.textContent = 'Eksportuj ustawienia debug JSON';
+  exportButton.className = 'options-panel__section-reset';
+  exportButton.addEventListener('click', exportDebugSettings);
+  presetSection.body.append(exportButton);
+
+  const importButton = document.createElement('button');
+  importButton.type = 'button';
+  importButton.textContent = 'Importuj ustawienia debug JSON';
+  importButton.className = 'options-panel__section-reset';
+  importButton.addEventListener('click', () => importInput.click());
+  presetSection.body.append(importButton);
+
   const atmosphereSection = createSection('Atmosphere', true);
   const sunCycleSection = createSection('Sun Cycle', true);
   const moonCycleSection = createSection('Moon Cycle', true);
@@ -515,11 +679,11 @@ export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere, 
     bind(checkbox(path(() => progression.progressionEnabled, (v) => { atmosphereProgression.setProgressionEnabled(v); }, 'runtime'), progressionSection.body, 'Enable atmosphere progression'));
     bind(checkbox(path(() => progression.autoProgressOnUniqueGateClose, (v) => { atmosphereProgression.setAutoProgressOnUniqueGateClose(v); }, 'runtime'), progressionSection.body, 'Auto progress after panel close'));
     bind(range(path(() => progression.progressLevel, (v) => { atmosphereProgression.setProgressLevel(v); }, 'runtime'), progressionSection.body, 'Atmosphere progress', 0, 5, 1));
-    bind(range(path(() => progression.transitionTimes.starsDust, (v) => { progression.transitionTimes.starsDust = v; }, 'runtime'), progressionSection.body, 'transition time layer 1', 0.1, 20, 0.1));
-    bind(range(path(() => progression.transitionTimes.shells, (v) => { progression.transitionTimes.shells = v; }, 'runtime'), progressionSection.body, 'transition time layer 2', 0.1, 20, 0.1));
-    bind(range(path(() => progression.transitionTimes.miniGlyphs, (v) => { progression.transitionTimes.miniGlyphs = v; }, 'runtime'), progressionSection.body, 'transition time layer 3', 0.1, 20, 0.1));
-    bind(range(path(() => progression.transitionTimes.sunMoon, (v) => { progression.transitionTimes.sunMoon = v; }, 'runtime'), progressionSection.body, 'transition time layer 4', 0.1, 20, 0.1));
-    bind(range(path(() => progression.transitionTimes.finalAura, (v) => { progression.transitionTimes.finalAura = v; }, 'runtime'), progressionSection.body, 'transition time layer 5', 0.1, 20, 0.1));
+    bind(range(path(() => progression.transitionTimes.stones, (v) => { progression.transitionTimes.stones = v; }, 'runtime'), progressionSection.body, 'transition time threshold 1 / stones', 0.1, 20, 0.1));
+    bind(range(path(() => progression.transitionTimes.shells, (v) => { progression.transitionTimes.shells = v; }, 'runtime'), progressionSection.body, 'transition time threshold 2 / shells', 0.1, 20, 0.1));
+    bind(range(path(() => progression.transitionTimes.smallGlyphs, (v) => { progression.transitionTimes.smallGlyphs = v; }, 'runtime'), progressionSection.body, 'transition time threshold 3 / small glyphs', 0.1, 20, 0.1));
+    bind(range(path(() => progression.transitionTimes.stars, (v) => { progression.transitionTimes.stars = v; }, 'runtime'), progressionSection.body, 'transition time threshold 4 / stars', 0.1, 20, 0.1));
+    bind(range(path(() => progression.transitionTimes.galaxies, (v) => { progression.transitionTimes.galaxies = v; }, 'runtime'), progressionSection.body, 'transition time threshold 5 / galaxies', 0.1, 20, 0.1));
 
     const resetProgressionButton = document.createElement('button');
     resetProgressionButton.type = 'button';
@@ -537,16 +701,30 @@ export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere, 
     progressionDebugState.className = 'options-panel__placeholder';
     const progressionDebugBinder = () => {
       const debugState = atmosphereProgression.getProgressionDebugState();
+      const layerProgress = Object.entries(debugState.layerTransitionProgress ?? {})
+        .map(([key, value]) => `${key}: ${Number(value).toFixed(3)}`)
+        .join(', ');
       progressionDebugState.textContent = [
+        'mapping:',
+        'progress 0: Core only — monkey, main glyphs, sun, moon',
+        'progress 1: Stones + sun/moon light 30%',
+        'progress 2: Shells + sun/moon light 60%',
+        'progress 3: Small glyphs + sun/moon light 100%',
+        'progress 4: Stars',
+        'progress 5: Galaxies',
+        '',
         `progression enabled: ${debugState.progressionEnabled}`,
         `auto progress after panel close: ${debugState.autoProgressOnUniqueGateClose}`,
         `current progressLevel: ${debugState.progressLevel}`,
+        `effectiveProgressLevel: ${debugState.effectiveProgressLevel}`,
         `pendingGateId: ${debugState.pendingGateId ?? 'none'}`,
         `visitedGateIds: ${debugState.visitedGateIds.length ? debugState.visitedGateIds.join(', ') : '[]'}`,
-        `effectiveProgressLevel: ${debugState.effectiveProgressLevel}`,
         `transition status: ${debugState.isTransitioning ? 'transitioning' : 'idle'}`,
         `active layer index: ${debugState.activeTransitionLayer ?? 'none'}`,
-        `transition progress: ${debugState.transitionProgress.toFixed(3)}`
+        `active layer key: ${debugState.activeTransitionLayerKey ?? 'none'}`,
+        `transition progress: ${debugState.transitionProgress.toFixed(3)}`,
+        `layer transition progress: ${layerProgress || 'none'}`,
+        `sun/moon light multiplier: ${Number(debugState.sunMoonLightMultiplier).toFixed(2)}`
       ].join('\n');
     };
     binders.push(progressionDebugBinder);
