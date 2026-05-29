@@ -139,3 +139,9 @@ For each deployment validation pass:
 - confirm `GLTFLoader` loads from `/tomasz-talik-portfolio/vendor/three/examples/jsm/loaders/GLTFLoader.js` on GitHub Pages;
 - confirm GLB and PNG assets load under `/tomasz-talik-portfolio/glb/...` and `/tomasz-talik-portfolio/png/...`;
 - hard-refresh GitHub Pages when validating fixes, because GitHub Pages cache and browser cache can temporarily show stale behavior.
+
+## Galaxy sprite public asset deployment note (2026-05-29)
+- Galaxy source files are manually managed public assets under `public/png/galaxy_01.png` through `public/png/galaxy_05.png`.
+- Runtime code keeps logical paths such as `/png/galaxy_01.png` in config, then resolves them with `src/utils/publicPath.js`, which prepends `import.meta.env.BASE_URL` and strips any accidental leading `public/` segment.
+- Local Vite runtime can resolve the files as Vite public assets, while the GitHub Pages production runtime resolves them below `/tomasz-talik-portfolio/png/...` because the project base is `/tomasz-talik-portfolio/`.
+- Deployment QA should confirm no runtime request points to `/public/png/...` and no galaxy loader call bypasses `publicPath(...)` with a raw absolute `/png/...` URL.
