@@ -33,6 +33,7 @@ app.innerHTML = `
 const canvas = document.querySelector('#scene-canvas');
 const shell = document.querySelector('.runtime-shell');
 const debugLoading = new URLSearchParams(window.location.search).has('debug');
+const debugInput = debugLoading;
 const preloadAssetsList = getPreloadAssets(INITIAL_PRELOAD_GROUPS);
 const loadingDiagnostics = createLoadingDiagnostics(preloadAssetsList);
 const loaderOverlay = createLoaderOverlay({ debug: debugLoading });
@@ -48,8 +49,7 @@ try {
 }
 
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-renderer.setSize(window.innerWidth, window.innerHeight);
+
 
 const scene = createScene();
 const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 100);
@@ -185,21 +185,111 @@ function syncHoverState(nextHoveredNode, event = null) {
   document.body.style.cursor = hoveredNode ? 'pointer' : 'default';
 }
 
-const cameraRig = createCameraRig();
+const cameraRig = createCameraRig(canvas);
+const TAP_MOVE_THRESHOLD_PX = 10;
+const MAX_TAP_DURATION_MS = 500;
+let activePointer = null;
+let orientationResizeTimer = null;
 
-window.addEventListener('pointermove', (event) => {
-  cameraRig.onPointerMove(event);
-  const hit = pickNode(event, canvas, camera, nodes);
-  syncHoverState(hit, event);
-});
-
-window.addEventListener('click', (event) => {
-  const hit = pickNode(event, canvas, camera, nodes);
-  if (hit) {
-    atmosphereProgression.prepareGateProgression(hit.userData?.id);
-    overlay.open(hit.userData);
+function debugInteraction(message, details = {}) {
+  if (debugInput) {
+    console.info(`[interaction][debug] ${message}`, details);
   }
-});
+}
+
+function openNodePanel(node) {
+  if (!node) return;
+  debugInteraction('raycast hit', {
+    objectName: node.name || null,
+    objectId: node.id,
+    nodeId: node.userData?.id ?? null
+  });
+  atmosphereProgression.prepareGateProgression(node.userData?.id);
+  overlay.open(node.userData);
+}
+
+function getPointerDistanceFromStart(event) {
+  if (!activePointer) return 0;
+  return Math.hypot(event.clientX - activePointer.startX, event.clientY - activePointer.startY);
+}
+
+function handlePointerDown(event) {
+  if (!event.isPrimary || activePointer) return;
+
+  activePointer = {
+    id: event.pointerId,
+    pointerType: event.pointerType,
+    startX: event.clientX,
+    startY: event.clientY,
+    startTime: performance.now(),
+    dragged: false
+  };
+
+  debugInteraction('pointer down', { pointerType: event.pointerType });
+
+  if (canvas.setPointerCapture) {
+    canvas.setPointerCapture(event.pointerId);
+  }
+}
+
+function handlePointerMove(event) {
+  cameraRig.onPointerMove(event);
+
+  if (activePointer?.id === event.pointerId) {
+    const distance = getPointerDistanceFromStart(event);
+    if (distance > TAP_MOVE_THRESHOLD_PX) {
+      activePointer.dragged = true;
+    }
+  }
+
+  if (event.pointerType === 'mouse' || window.matchMedia('(hover: hover)').matches) {
+    const hit = pickNode(event, canvas, camera, nodes);
+    syncHoverState(hit, event);
+  }
+}
+
+function finishPointer(event, { cancelled = false } = {}) {
+  if (activePointer?.id !== event.pointerId) return;
+
+  const distance = getPointerDistanceFromStart(event);
+  const duration = performance.now() - activePointer.startTime;
+  const isTap = !cancelled && !activePointer.dragged && distance <= TAP_MOVE_THRESHOLD_PX && duration <= MAX_TAP_DURATION_MS;
+
+  if (canvas.releasePointerCapture && canvas.hasPointerCapture?.(event.pointerId)) {
+    canvas.releasePointerCapture(event.pointerId);
+  }
+
+  if (isTap) {
+    debugInteraction('tap detected', { pointerType: activePointer.pointerType, distance, duration });
+    openNodePanel(pickNode(event, canvas, camera, nodes));
+  } else {
+    debugInteraction(cancelled ? 'pointer cancelled' : 'drag detected', {
+      pointerType: activePointer.pointerType,
+      distance,
+      duration
+    });
+  }
+
+  activePointer = null;
+}
+
+function handleResize({ fromOrientationChange = false } = {}) {
+  const width = window.innerWidth || canvas.clientWidth || 1;
+  const height = window.innerHeight || canvas.clientHeight || 1;
+  camera.aspect = width / height;
+  camera.updateProjectionMatrix();
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.setSize(width, height, false);
+
+  if (fromOrientationChange) {
+    debugInteraction('orientation resize', { width, height, pixelRatio: renderer.getPixelRatio() });
+  }
+}
+
+canvas.addEventListener('pointerdown', handlePointerDown);
+canvas.addEventListener('pointermove', handlePointerMove);
+canvas.addEventListener('pointerup', (event) => finishPointer(event));
+canvas.addEventListener('pointercancel', (event) => finishPointer(event, { cancelled: true }));
 
 window.addEventListener('pointerleave', () => {
   cameraRig.onPointerLeave();
@@ -210,11 +300,12 @@ canvas.addEventListener('pointerleave', () => {
   syncHoverState(null);
 });
 
-window.addEventListener('resize', () => {
-  camera.aspect = window.innerWidth / window.innerHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
+window.addEventListener('resize', () => handleResize());
+window.addEventListener('orientationchange', () => {
+  window.clearTimeout(orientationResizeTimer);
+  orientationResizeTimer = window.setTimeout(() => handleResize({ fromOrientationChange: true }), 250);
 });
+handleResize();
 
 const timer = new THREE.Timer();
 timer.connect(document);

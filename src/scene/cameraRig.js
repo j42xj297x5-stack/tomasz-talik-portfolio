@@ -18,7 +18,7 @@ const IDLE_PITCH_AMPLITUDE_RAD = 2 * DEG_TO_RAD;
 
 const INVERT_YAW = false;
 
-export function createCameraRig() {
+export function createCameraRig(pointerElement = document.documentElement) {
   const supportsFinePointer = window.matchMedia('(pointer:fine)').matches;
 
   const state = {
@@ -30,8 +30,11 @@ export function createCameraRig() {
   };
 
   function normalizePointer(event) {
-    const mouseX = (event.clientX / window.innerWidth) * 2 - 1;
-    const mouseY = (event.clientY / window.innerHeight) * 2 - 1;
+    const rect = pointerElement.getBoundingClientRect();
+    const width = rect.width || window.innerWidth || 1;
+    const height = rect.height || window.innerHeight || 1;
+    const mouseX = ((event.clientX - rect.left) / width) * 2 - 1;
+    const mouseY = ((event.clientY - rect.top) / height) * 2 - 1;
     return {
       mouseX: THREE.MathUtils.clamp(mouseX, -1, 1),
       mouseY: THREE.MathUtils.clamp(mouseY, -1, 1)
