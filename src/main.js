@@ -52,7 +52,7 @@ const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
 
 
 const scene = createScene();
-const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 100);
+const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 100);
 camera.position.set(0, 1.8, 6);
 
 addLights(scene);
@@ -188,8 +188,10 @@ function syncHoverState(nextHoveredNode, event = null) {
 const cameraRig = createCameraRig(canvas);
 const TAP_MOVE_THRESHOLD_PX = 10;
 const MAX_TAP_DURATION_MS = 500;
+const coarsePointerQuery = window.matchMedia('(pointer: coarse)');
 let activePointer = null;
 let orientationResizeTimer = null;
+let orientationResizeSettledTimer = null;
 
 function debugInteraction(message, details = {}) {
   if (debugInput) {
@@ -213,6 +215,18 @@ function getPointerDistanceFromStart(event) {
   return Math.hypot(event.clientX - activePointer.startX, event.clientY - activePointer.startY);
 }
 
+function isTouchCameraPointer(event) {
+  return event.pointerType === 'touch' || coarsePointerQuery.matches;
+}
+
+function getCanvasRectSize() {
+  const rect = canvas.getBoundingClientRect();
+  return {
+    width: rect.width || window.innerWidth || 1,
+    height: rect.height || window.innerHeight || 1
+  };
+}
+
 function handlePointerDown(event) {
   if (!event.isPrimary || activePointer) return;
 
@@ -222,7 +236,9 @@ function handlePointerDown(event) {
     startX: event.clientX,
     startY: event.clientY,
     startTime: performance.now(),
-    dragged: false
+    dragged: false,
+    suppressTap: false,
+    usesTouchCameraDrag: isTouchCameraPointer(event)
   };
 
   debugInteraction('pointer down', { pointerType: event.pointerType });
@@ -239,6 +255,17 @@ function handlePointerMove(event) {
     const distance = getPointerDistanceFromStart(event);
     if (distance > TAP_MOVE_THRESHOLD_PX) {
       activePointer.dragged = true;
+      activePointer.suppressTap = true;
+    }
+
+    if (activePointer.usesTouchCameraDrag && activePointer.dragged) {
+      const { width, height } = getCanvasRectSize();
+      cameraRig.setTouchDragTarget({
+        deltaX: event.clientX - activePointer.startX,
+        deltaY: event.clientY - activePointer.startY,
+        width,
+        height
+      });
     }
   }
 
@@ -253,7 +280,11 @@ function finishPointer(event, { cancelled = false } = {}) {
 
   const distance = getPointerDistanceFromStart(event);
   const duration = performance.now() - activePointer.startTime;
-  const isTap = !cancelled && !activePointer.dragged && distance <= TAP_MOVE_THRESHOLD_PX && duration <= MAX_TAP_DURATION_MS;
+  const isTap = !cancelled && !activePointer.suppressTap && !activePointer.dragged && distance <= TAP_MOVE_THRESHOLD_PX && duration <= MAX_TAP_DURATION_MS;
+
+  if (activePointer.usesTouchCameraDrag) {
+    cameraRig.releaseTouchTarget();
+  }
 
   if (canvas.releasePointerCapture && canvas.hasPointerCapture?.(event.pointerId)) {
     canvas.releasePointerCapture(event.pointerId);
@@ -274,8 +305,9 @@ function finishPointer(event, { cancelled = false } = {}) {
 }
 
 function handleResize({ fromOrientationChange = false } = {}) {
-  const width = window.innerWidth || canvas.clientWidth || 1;
-  const height = window.innerHeight || canvas.clientHeight || 1;
+  const rect = shell?.getBoundingClientRect();
+  const width = rect?.width || canvas.clientWidth || window.innerWidth || 1;
+  const height = rect?.height || canvas.clientHeight || window.innerHeight || 1;
   camera.aspect = width / height;
   camera.updateProjectionMatrix();
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
@@ -303,7 +335,9 @@ canvas.addEventListener('pointerleave', () => {
 window.addEventListener('resize', () => handleResize());
 window.addEventListener('orientationchange', () => {
   window.clearTimeout(orientationResizeTimer);
+  window.clearTimeout(orientationResizeSettledTimer);
   orientationResizeTimer = window.setTimeout(() => handleResize({ fromOrientationChange: true }), 250);
+  orientationResizeSettledTimer = window.setTimeout(() => handleResize({ fromOrientationChange: true }), 600);
 });
 handleResize();
 

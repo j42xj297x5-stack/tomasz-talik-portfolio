@@ -10,6 +10,10 @@ const MAX_YAW_DEG = 45;
 const MAX_PITCH_DEG = 30;
 const MAX_YAW_RAD = MAX_YAW_DEG * DEG_TO_RAD;
 const MAX_PITCH_RAD = MAX_PITCH_DEG * DEG_TO_RAD;
+const MOBILE_MAX_YAW_DEG = 24;
+const MOBILE_MAX_PITCH_DEG = 16;
+const MOBILE_MAX_YAW_RAD = MOBILE_MAX_YAW_DEG * DEG_TO_RAD;
+const MOBILE_MAX_PITCH_RAD = MOBILE_MAX_PITCH_DEG * DEG_TO_RAD;
 
 const MOUSE_ORBIT_DAMPING = 0.08;
 const IDLE_DRIFT_DAMPING = 0.02;
@@ -23,6 +27,8 @@ export function createCameraRig(pointerElement = document.documentElement) {
 
   const state = {
     hasMouseInput: false,
+    hasTouchInput: false,
+    touchReturnActive: false,
     targetYaw: 0,
     targetPitch: 0,
     currentYaw: 0,
@@ -42,7 +48,7 @@ export function createCameraRig(pointerElement = document.documentElement) {
   }
 
   function onPointerMove(event) {
-    if (!supportsFinePointer) return;
+    if (event.pointerType === 'touch' || !supportsFinePointer) return;
 
     const { mouseX, mouseY } = normalizePointer(event);
     const yawDirection = INVERT_YAW ? -1 : 1;
@@ -50,6 +56,23 @@ export function createCameraRig(pointerElement = document.documentElement) {
     state.targetYaw = mouseX * MAX_YAW_RAD * yawDirection;
     state.targetPitch = -mouseY * MAX_PITCH_RAD;
     state.hasMouseInput = true;
+  }
+
+  function setTouchDragTarget({ deltaX, deltaY, width, height }) {
+    const normalizedX = THREE.MathUtils.clamp(deltaX / ((width || window.innerWidth || 1) * 0.5), -1, 1);
+    const normalizedY = THREE.MathUtils.clamp(deltaY / ((height || window.innerHeight || 1) * 0.5), -1, 1);
+
+    state.targetYaw = normalizedX * MOBILE_MAX_YAW_RAD;
+    state.targetPitch = THREE.MathUtils.clamp(-normalizedY * MOBILE_MAX_PITCH_RAD, -MOBILE_MAX_PITCH_RAD, MOBILE_MAX_PITCH_RAD);
+    state.hasTouchInput = true;
+    state.touchReturnActive = false;
+  }
+
+  function releaseTouchTarget() {
+    state.hasTouchInput = false;
+    state.touchReturnActive = true;
+    state.targetYaw = 0;
+    state.targetPitch = 0;
   }
 
   function onPointerLeave() {
@@ -62,13 +85,18 @@ export function createCameraRig(pointerElement = document.documentElement) {
     const idleYaw = Math.sin(elapsed * 0.25) * IDLE_YAW_AMPLITUDE_RAD;
     const idlePitch = Math.sin(elapsed * 0.32) * IDLE_PITCH_AMPLITUDE_RAD;
 
-    const inputDamping = state.hasMouseInput ? MOUSE_ORBIT_DAMPING : IDLE_DRIFT_DAMPING;
+    const hasDirectInput = state.hasMouseInput || state.hasTouchInput || state.touchReturnActive;
+    const inputDamping = hasDirectInput ? MOUSE_ORBIT_DAMPING : IDLE_DRIFT_DAMPING;
 
     const desiredYaw = state.targetYaw + idleYaw;
     const desiredPitch = state.targetPitch + idlePitch;
 
     state.currentYaw = THREE.MathUtils.lerp(state.currentYaw, desiredYaw, inputDamping);
     state.currentPitch = THREE.MathUtils.lerp(state.currentPitch, desiredPitch, inputDamping);
+
+    if (state.touchReturnActive && Math.abs(state.currentYaw - desiredYaw) < 0.002 && Math.abs(state.currentPitch - desiredPitch) < 0.002) {
+      state.touchReturnActive = false;
+    }
 
     const x = PIVOT.x + Math.sin(state.currentYaw) * CAMERA_RADIUS;
     const z = PIVOT.z + Math.cos(state.currentYaw) * CAMERA_RADIUS;
@@ -81,6 +109,8 @@ export function createCameraRig(pointerElement = document.documentElement) {
   return {
     onPointerMove,
     onPointerLeave,
+    setTouchDragTarget,
+    releaseTouchTarget,
     update
   };
 }
