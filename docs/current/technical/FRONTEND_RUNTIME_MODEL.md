@@ -50,3 +50,15 @@ Layers:
 - Hover lifecycle baseline is explicit: enter => reveal-in + glow-up, active => sustain + orbit light, leave/off-canvas => fade-out + cursor reset + clean re-entry readiness.
 - Raycast/click contract is unchanged: only glyph node collider stays interactive; tree effect visuals (mesh/shader reveal helpers/light) are non-interactive.
 - Technical snapshot reference: `docs/current/audits/snapshots/2026-05-22_18-18-33__snapshot__glyph-1-tree-effect-baseline.md`.
+
+## Checkpoint update — dual-runtime Vite + GitHub Pages baseline (2026-05-29)
+
+- The same frontend runtime now supports local Vite development, production builds, and GitHub Pages deployment under `/tomasz-talik-portfolio/`.
+- Runtime public asset URLs must be normalized through the Vite base-aware `publicPath(...)` helper before dynamic imports or asset loads.
+- Logical content/model paths may remain readable (`/glb/...`, `/png/...`), but browser URLs must resolve with `import.meta.env.BASE_URL` and must not include `public/`.
+- GLTFLoader remains dynamically imported from the vendored r184 path `vendor/three/examples/jsm/loaders/GLTFLoader.js` through the same public path model.
+- GLB model loading now has a documented deployment contract for central monkey, five glyphs, AI Guide tree hover effect, sun/moon, stones, shells, and small glyph binaries.
+- PNG-backed UI/panel assets follow the same public asset convention as GLB assets.
+- Fallback behavior remains part of the runtime model: monkey placeholder, node sphere/collider fallback, hover-effect degradation, and loader failure safety are mandatory.
+- Known deployment risks are GitHub Pages cache, browser cache, case-sensitive filenames, large GLB payloads, and missing manually managed binary assets.
+- Milestone snapshot: `docs/current/audits/snapshots/2026-05-29_19-59-42__snapshot__dual-runtime-github-pages-deployment.md`.
