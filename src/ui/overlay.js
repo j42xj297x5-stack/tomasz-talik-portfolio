@@ -1,3 +1,5 @@
+import { GLYPH_PANEL_BACKGROUNDS } from '../assets/assetManifest.js';
+import { publicPath } from '../utils/publicPath.js';
 export function createOverlay({ onClose } = {}) {
   const root = document.createElement('section');
   root.className = 'overlay';
@@ -56,6 +58,12 @@ export function createOverlay({ onClose } = {}) {
 
       panelEl.classList.toggle('overlay__panel--ai-guide', isAIGuide);
       panelEl.classList.toggle('overlay__panel--creative-ai', isCreativeAI);
+      const panelBackgroundPath = GLYPH_PANEL_BACKGROUNDS[nodeData.id];
+      if (panelBackgroundPath) {
+        panelEl.style.setProperty('--overlay-panel-bg-image', `url("${publicPath(panelBackgroundPath)}")`);
+      } else {
+        panelEl.style.removeProperty('--overlay-panel-bg-image');
+      }
       statusEl.textContent = nodeData.eyebrow ?? (isAIGuide ? nodeData.shortLabel : 'Draft content — final copy pending');
 
       titleEl.textContent = nodeData.title;

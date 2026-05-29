@@ -16,18 +16,37 @@ import { createSunCycle, SUN_CYCLE_DEFAULTS } from './scene/sunCycle.js';
 import { createMoonCycle, MOON_CYCLE_DEFAULTS } from './scene/moonCycle.js';
 import { createAtmosphereProgression } from './scene/atmosphere/atmosphereProgression.js';
 import { createGalaxySpritesLayer, GALAXY_SPRITES_DEFAULTS } from './scene/galaxySprites.js';
+import { INITIAL_PRELOAD_GROUPS, getPreloadAssets } from './assets/assetManifest.js';
+import { createLoadingDiagnostics, preloadAssets } from './assets/preloadAssets.js';
+import { createLoaderOverlay } from './ui/loaderOverlay.js';
 
 const app = document.querySelector('#app');
 if (!app) throw new Error('Missing #app mount element.');
 
 app.innerHTML = `
-  <main class="runtime-shell">
+  <main class="runtime-shell runtime-shell--loading">
     <canvas id="scene-canvas" aria-label="Interactive AI portfolio MVP scene"></canvas>
     <p class="mobile-notice">Desktop-first MVP scene. Mobile interaction fallback is active.</p>
   </main>
 `;
 
 const canvas = document.querySelector('#scene-canvas');
+const shell = document.querySelector('.runtime-shell');
+const debugLoading = new URLSearchParams(window.location.search).has('debug');
+const preloadAssetsList = getPreloadAssets(INITIAL_PRELOAD_GROUPS);
+const loadingDiagnostics = createLoadingDiagnostics(preloadAssetsList);
+const loaderOverlay = createLoaderOverlay({ debug: debugLoading });
+loadingDiagnostics.subscribe((snapshot) => loaderOverlay.update(snapshot));
+
+try {
+  await preloadAssets(preloadAssetsList, { diagnostics: loadingDiagnostics });
+} catch (error) {
+  const message = error instanceof Error ? error.message : String(error);
+  loaderOverlay.showError('Nie udało się załadować krytycznych zasobów. Odśwież stronę lub sprawdź połączenie.');
+  console.warn('[loading] Critical asset preload failed. Scene reveal blocked.', { message, diagnostics: loadingDiagnostics.getSnapshot() });
+  throw error;
+}
+
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.setSize(window.innerWidth, window.innerHeight);
@@ -127,6 +146,7 @@ const hoverLabel = createHoverLabel();
 
 const optionsPanel = createOptionsPanel({
   runtimeState: sceneRuntimeConfig,
+  loadingDiagnostics,
   atmosphereProgression,
   gateNodes: portfolioNodes,
   onChange: ({ type }) => {
@@ -222,4 +242,6 @@ function tick(timestamp) {
   requestAnimationFrame(tick);
 }
 
+shell?.classList.remove('runtime-shell--loading');
+await loaderOverlay.complete();
 tick();

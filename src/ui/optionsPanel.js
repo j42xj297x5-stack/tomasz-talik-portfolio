@@ -1,3 +1,4 @@
+import { formatBytes } from '../assets/preloadAssets.js';
 function deepClone(value) {
   return JSON.parse(JSON.stringify(value));
 }
@@ -157,7 +158,7 @@ function addRow(sectionBody, labelText, controlBuilder) {
   sectionBody.append(row);
 }
 
-export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere, atmosphereProgression, gateNodes = [] }) {
+export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere, atmosphereProgression, gateNodes = [], loadingDiagnostics = null }) {
   const defaults = deepClone(runtimeState);
 
   try {
@@ -285,6 +286,7 @@ export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere, 
   const shellSection = createSection('Shell Relics', true);
   const smallGlyphSection = createSection('Small Glyph Relics', true);
   const galaxySection = createSection('Galaxy Sprites', true);
+  const loadingSection = createSection('Loading / Assets', true);
   const debugSection = createSection('Debug Visuals', true);
   const progressionSection = createSection('Atmosphere Progression', true);
   const futureSection = createSection('Future / Reserved', false);
@@ -665,6 +667,37 @@ export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere, 
   bind(range(path(() => galaxy.alphaTest, (v) => { galaxy.alphaTest = v; }, 'galaxy-sprites-rebuild'), galaxySection.body, 'galaxySprites.alphaTest', 0, 1, 0.001));
   bind(range(path(() => galaxy.randomSeed, (v) => { galaxy.randomSeed = Math.round(v); }, 'galaxy-sprites-rebuild'), galaxySection.body, 'galaxySprites.randomSeed', 1, 999999, 1));
 
+
+  const loadingReadout = document.createElement('div');
+  loadingReadout.className = 'options-panel__loading-readout';
+  loadingSection.body.append(loadingReadout);
+
+  function renderLoadingReadout(snapshot = loadingDiagnostics?.getSnapshot?.()) {
+    if (!snapshot) {
+      loadingReadout.textContent = 'No loading diagnostics available.';
+      return;
+    }
+
+    const totalText = snapshot.knownTotalBytes > 0 ? formatBytes(snapshot.knownTotalBytes) : 'unknown total';
+    const unknownNote = snapshot.unknownTotalAssets > 0 ? `${snapshot.unknownTotalAssets} unknown-size asset(s)` : 'all preload sizes known';
+    const lastLoaded = snapshot.lastLoaded?.path ?? '—';
+    const failedItems = snapshot.failedRecords.map((record) => `<li>${record.path}</li>`).join('');
+
+    loadingReadout.innerHTML = `
+      <p><strong>Assets:</strong> ${snapshot.completedAssets}/${snapshot.totalAssets} loaded · ${snapshot.failedAssets} failed</p>
+      <p><strong>Bytes:</strong> ${formatBytes(snapshot.loadedBytes)} / ${totalText}</p>
+      <p><strong>Size note:</strong> ${unknownNote}</p>
+      <p><strong>Last loaded:</strong> <span>${lastLoaded}</span></p>
+      ${snapshot.failedAssets > 0 ? `<p><strong>Failed:</strong></p><ul>${failedItems}</ul>` : ''}
+    `;
+  }
+
+  if (loadingDiagnostics?.subscribe) {
+    loadingDiagnostics.subscribe(renderLoadingReadout);
+  } else {
+    renderLoadingReadout();
+  }
+
   bind(select(path(() => bg.debugBlendingMode, (v) => { bg.debugBlendingMode = v; }, 'material'), debugSection.body, 'debugBlendingMode', [
     { value: 'normal', label: 'Normal' },
     { value: 'additive', label: 'Additive' }
@@ -677,7 +710,7 @@ export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere, 
   futureText.textContent = 'Reserved for: micro relics, mist shell, gate aura, camera tuning, labels/UI debug, lighting, motion.';
   futureSection.body.append(futureText);
 
-  panel.append(presetSection.details, progressionSection.details, atmosphereSection.details, sunCycleSection.details, moonCycleSection.details, stoneSection.details, shellSection.details, smallGlyphSection.details, galaxySection.details, debugSection.details, futureSection.details);
+  panel.append(presetSection.details, progressionSection.details, atmosphereSection.details, sunCycleSection.details, moonCycleSection.details, stoneSection.details, shellSection.details, smallGlyphSection.details, galaxySection.details, loadingSection.details, debugSection.details, futureSection.details);
   root.append(button, panel);
   document.body.append(root);
 
