@@ -39,7 +39,9 @@ export function createLoaderOverlay({ debug = false } = {}) {
       bytesEl.textContent = `${formatBytes(snapshot.loadedBytes)} / ${snapshot.knownTotalBytes > 0 ? formatBytes(snapshot.knownTotalBytes) : 'unknown total'}`;
       if (debug && debugEl) {
         const current = snapshot.currentAsset ?? snapshot.lastLoaded;
-        debugEl.textContent = current ? `${current.status}: ${current.path}` : `${snapshot.completedAssets}/${snapshot.totalAssets} assets`;
+        const stats = snapshot.runtimeStats ?? {};
+        const phase = current ? `${current.status}: ${current.path}` : `${snapshot.completedAssets}/${snapshot.totalAssets} assets`;
+        debugEl.textContent = `${phase} · runtime=${stats.runtimeLoadedAssets ?? 0} · gltf=${stats.parsedGltfCount ?? 0} · textures=${stats.textureLoadedCount ?? 0} · images=${stats.decodedImageCount ?? 0} · hits/misses=${stats.cacheHits ?? 0}/${stats.cacheMisses ?? 0} · compile=${stats.shaderCompileComplete ? 'yes' : 'no'} · warmup=${stats.warmupFrameComplete ? 'yes' : 'no'}`;
       }
     },
     showError(message) {

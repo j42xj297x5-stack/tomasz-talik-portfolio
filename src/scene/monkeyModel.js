@@ -1,6 +1,4 @@
 import * as THREE from '../vendor/three.js';
-import { resolveVendoredGLTFLoader } from '../utils/gltfLoader.js';
-import { publicPath } from '../utils/publicPath.js';
 
 const MONKEY_GLB_PATH = 'glb/monkey.glb';
 const MONKEY_TARGET_DIMENSION = 2.0;
@@ -30,36 +28,16 @@ function placeModelAtFallback(model, fallbackObject) {
   model.rotation.y = MONKEY_YAW_TO_CAMERA;
 }
 
-export async function loadMonkeyModel({ scene, fallbackObject }) {
-  const monkeyUrl = publicPath(MONKEY_GLB_PATH);
-  const GLTFLoader = await resolveVendoredGLTFLoader('monkeyModel');
-  if (!GLTFLoader) {
-    console.info(`[monkeyModel] Placeholder fallback retained because GLTFLoader was unavailable. Expected model URL: ${monkeyUrl}`);
+export async function loadMonkeyModel({ scene, fallbackObject, assetManager = null }) {
+  const model = assetManager?.cloneGltfScene?.('monkey-model');
+  if (!model) {
+    console.info('[monkeyModel] Placeholder fallback retained because the monkey model was not in AssetManager cache.');
     return null;
   }
 
-  const loader = new GLTFLoader();
-  console.info(`[monkeyModel] Monkey GLB load URL: ${monkeyUrl}`);
-
-  return new Promise((resolve) => {
-    loader.load(
-      monkeyUrl,
-      (gltf) => {
-        const model = gltf.scene;
-        placeModelAtFallback(model, fallbackObject);
-        scene.add(model);
-        fallbackObject.visible = false;
-        console.info(`[monkeyModel] Monkey model loaded from ${monkeyUrl}. Placeholder hidden.`);
-        resolve(model);
-      },
-      undefined,
-      (error) => {
-        console.warn(
-          `[monkeyModel] Failed to load monkey model at ${monkeyUrl}. Placeholder fallback retained.`,
-          error
-        );
-        resolve(null);
-      }
-    );
-  });
+  placeModelAtFallback(model, fallbackObject);
+  scene.add(model);
+  fallbackObject.visible = false;
+  console.info('[monkeyModel] Monkey model attached from AssetManager cache. Placeholder hidden.');
+  return model;
 }

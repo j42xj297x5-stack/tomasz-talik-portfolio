@@ -859,6 +859,7 @@ export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere, 
     const totalText = snapshot.knownTotalBytes > 0 ? formatBytes(snapshot.knownTotalBytes) : 'unknown total';
     const unknownNote = snapshot.unknownTotalAssets > 0 ? `${snapshot.unknownTotalAssets} unknown-size asset(s)` : 'all preload sizes known';
     const lastLoaded = snapshot.lastLoaded?.path ?? '—';
+    const stats = snapshot.runtimeStats ?? {};
     const failedItems = snapshot.failedRecords.map((record) => `<li>${record.path}</li>`).join('');
 
     loadingReadout.innerHTML = `
@@ -866,6 +867,12 @@ export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere, 
       <p><strong>Bytes:</strong> ${formatBytes(snapshot.loadedBytes)} / ${totalText}</p>
       <p><strong>Size note:</strong> ${unknownNote}</p>
       <p><strong>Last loaded:</strong> <span>${lastLoaded}</span></p>
+      <p><strong>Runtime hydrated:</strong> ${stats.runtimeLoadedAssets ?? 0} asset(s)</p>
+      <p><strong>Parsed GLTF:</strong> ${stats.parsedGltfCount ?? 0}</p>
+      <p><strong>Texture-loaded:</strong> ${stats.textureLoadedCount ?? 0}</p>
+      <p><strong>Decoded images:</strong> ${stats.decodedImageCount ?? 0}</p>
+      <p><strong>Shader compile / warm-up:</strong> ${stats.shaderCompileComplete ? 'yes' : 'no'} / ${stats.warmupFrameComplete ? 'yes' : 'no'}</p>
+      <p><strong>Cache hits / misses:</strong> ${stats.cacheHits ?? 0} / ${stats.cacheMisses ?? 0}</p>
       ${snapshot.failedAssets > 0 ? `<p><strong>Failed:</strong></p><ul>${failedItems}</ul>` : ''}
     `;
   }

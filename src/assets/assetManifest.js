@@ -41,7 +41,7 @@ export const assetManifest = Object.freeze({
       id: `galaxy-sprite-${index + 1}`,
       label: `Galaxy sprite ${index + 1}`,
       path,
-      type: 'image',
+      type: 'texture',
       critical: true,
       decode: true
     }))
@@ -53,14 +53,14 @@ export const assetManifest = Object.freeze({
       label: `${prefix} relic ${index + 1}`,
       path: `/glb/${prefix}_${String(index + 1).padStart(2, '0')}.glb`,
       type: 'model',
-      critical: false
+      critical: true
     }))),
     ...Array.from({ length: 6 }, (_, index) => ({
       id: `small-glyph-relic-${index + 1}`,
       label: `small glyph relic ${index + 1}`,
       path: `/glb/small_glyph_${String(index + 1).padStart(2, '0')}.glb`,
       type: 'model',
-      critical: false
+      critical: true
     }))
   ]),
   optionalLate: Object.freeze([
@@ -68,7 +68,7 @@ export const assetManifest = Object.freeze({
   ])
 });
 
-export const INITIAL_PRELOAD_GROUPS = Object.freeze(['coreScene', 'glyphPanels']);
+export const INITIAL_PRELOAD_GROUPS = Object.freeze(['coreScene', 'glyphPanels', 'atmosphere']);
 
 export function getPreloadAssets(groupNames = INITIAL_PRELOAD_GROUPS) {
   const seen = new Set();
