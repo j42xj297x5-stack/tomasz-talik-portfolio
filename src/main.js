@@ -196,12 +196,14 @@ window.addEventListener('resize', () => {
   renderer.setSize(window.innerWidth, window.innerHeight);
 });
 
-const clock = new THREE.Clock();
+const timer = new THREE.Timer();
+timer.connect(document);
 const orbitCenterWorldPosition = new THREE.Vector3();
 
-function tick() {
-  const delta = clock.getDelta();
-  const elapsed = clock.elapsedTime;
+function tick(timestamp) {
+  timer.update(timestamp);
+  const delta = timer.getDelta();
+  const elapsed = timer.getElapsed();
   updateOrbitNodes(nodes, elapsed, orbitGroup.getWorldPosition(orbitCenterWorldPosition));
   cameraRig.update(camera, elapsed);
   atmosphere.update(delta);

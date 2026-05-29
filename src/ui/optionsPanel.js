@@ -11,6 +11,20 @@ function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value));
 }
 
+function finiteNumber(value, fallback) {
+  if (typeof value === 'string' && value.trim() === '') return fallback;
+  const numeric = Number(value);
+  return Number.isFinite(numeric) ? numeric : fallback;
+}
+
+function clampedNumber(value, fallback, min, max) {
+  return clamp(finiteNumber(value, fallback), min, max);
+}
+
+function clampedInteger(value, fallback, min, max) {
+  return clamp(Math.round(finiteNumber(value, fallback)), min, max);
+}
+
 function normalizeRuntimeState(state) {
   const bg = state.backgroundAtmosphere;
   if (!state.sunCycle) state.sunCycle = {};
@@ -87,24 +101,26 @@ function normalizeRuntimeState(state) {
   galaxy.texturePaths = Array.isArray(galaxy.texturePaths) && galaxy.texturePaths.length > 0
     ? galaxy.texturePaths
     : ['/png/galaxy_01.png', '/png/galaxy_02.png', '/png/galaxy_03.png', '/png/galaxy_04.png', '/png/galaxy_05.png'];
-  galaxy.copiesPerTextureMin = clamp(Math.round(galaxy.copiesPerTextureMin ?? 1), 0, 10);
-  galaxy.copiesPerTextureMax = Math.max(galaxy.copiesPerTextureMin, clamp(Math.round(galaxy.copiesPerTextureMax ?? 3), 0, 10));
-  galaxy.totalMax = clamp(Math.round(galaxy.totalMax ?? 14), 0, 30);
-  galaxy.minScale = clamp(galaxy.minScale ?? 0.65, 0.01, 12);
-  galaxy.maxScale = Math.max(galaxy.minScale, clamp(galaxy.maxScale ?? 2.8, 0.01, 16));
-  galaxy.opacity = clamp(galaxy.opacity ?? 0.42, 0, 1);
-  galaxy.opacityVariance = clamp(galaxy.opacityVariance ?? 0.18, 0, 1);
-  galaxy.innerRadius = clamp(galaxy.innerRadius ?? 11, 0, 60);
-  galaxy.outerRadius = Math.max(galaxy.innerRadius + 0.1, clamp(galaxy.outerRadius ?? 26, 0.1, 80));
-  galaxy.verticalSpread = clamp(galaxy.verticalSpread ?? 8, 0, 30);
-  galaxy.safeRadius = clamp(galaxy.safeRadius ?? 6.5, 0, 30);
-  galaxy.orbitSpeedMin = clamp(galaxy.orbitSpeedMin ?? 0.0015, 0, 0.1);
-  galaxy.orbitSpeedMax = Math.max(galaxy.orbitSpeedMin, clamp(galaxy.orbitSpeedMax ?? 0.006, 0, 0.1));
-  galaxy.ownSpinSpeedMin = clamp(galaxy.ownSpinSpeedMin ?? 0.002, 0, 0.1);
-  galaxy.ownSpinSpeedMax = Math.max(galaxy.ownSpinSpeedMin, clamp(galaxy.ownSpinSpeedMax ?? 0.012, 0, 0.1));
+  galaxy.copiesPerTextureMin = clampedInteger(galaxy.copiesPerTextureMin, 1, 0, 10);
+  galaxy.copiesPerTextureMax = Math.max(galaxy.copiesPerTextureMin, clampedInteger(galaxy.copiesPerTextureMax, 3, 0, 10));
+  galaxy.totalMax = clampedInteger(galaxy.totalMax, 14, 0, 30);
+  galaxy.minScale = clampedNumber(galaxy.minScale, 0.65, 0.01, 12);
+  galaxy.maxScale = Math.max(galaxy.minScale, clampedNumber(galaxy.maxScale, 2.8, 0.01, 16));
+  galaxy.opacity = clampedNumber(galaxy.opacity, 0.42, 0, 1);
+  galaxy.opacityVariance = clampedNumber(galaxy.opacityVariance, 0.18, 0, 1);
+  galaxy.innerRadius = clampedNumber(galaxy.innerRadius, 11, 0, 60);
+  galaxy.outerRadius = Math.max(galaxy.innerRadius + 0.1, clampedNumber(galaxy.outerRadius, 26, 0.1, 80));
+  galaxy.verticalSpread = clampedNumber(galaxy.verticalSpread, 8, 0, 30);
+  galaxy.safeRadius = clampedNumber(galaxy.safeRadius, 6.5, 0, 30);
+  galaxy.orbitSpeedMin = clampedNumber(galaxy.orbitSpeedMin, 0.0015, 0, 0.1);
+  galaxy.orbitSpeedMax = Math.max(galaxy.orbitSpeedMin, clampedNumber(galaxy.orbitSpeedMax, 0.006, 0, 0.1));
+  galaxy.ownSpinSpeedMin = clampedNumber(galaxy.ownSpinSpeedMin, 0.002, 0, 0.1);
+  galaxy.ownSpinSpeedMax = Math.max(galaxy.ownSpinSpeedMin, clampedNumber(galaxy.ownSpinSpeedMax, 0.012, 0, 0.1));
+  galaxy.orbitSpeedMultiplier = clampedNumber(galaxy.orbitSpeedMultiplier, 1, 0, 5);
+  galaxy.ownSpinSpeedMultiplier = clampedNumber(galaxy.ownSpinSpeedMultiplier, 1, 0, 5);
   galaxy.additiveBlending = Boolean(galaxy.additiveBlending ?? false);
-  galaxy.alphaTest = clamp(galaxy.alphaTest ?? 0.01, 0, 1);
-  galaxy.randomSeed = Number.isFinite(Number(galaxy.randomSeed)) ? Number(galaxy.randomSeed) : 1337;
+  galaxy.alphaTest = clampedNumber(galaxy.alphaTest, 0.01, 0, 1);
+  galaxy.randomSeed = finiteNumber(galaxy.randomSeed, 1337);
 }
 
 
@@ -409,8 +425,9 @@ export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere, 
     let slider;
     let number;
     const syncFromUi = (nextRaw) => {
+      if (String(nextRaw).trim() === '') return;
       const next = Number(nextRaw);
-      if (Number.isNaN(next)) return;
+      if (!Number.isFinite(next)) return;
       path.set(next);
       slider.value = String(next);
       number.value = String(next);
@@ -634,14 +651,16 @@ export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere, 
   bind(range(path(() => galaxy.minScale, (v) => { galaxy.minScale = v; }, 'galaxy-sprites-rebuild'), galaxySection.body, 'galaxySprites.minScale', 0.01, 12, 0.01));
   bind(range(path(() => galaxy.maxScale, (v) => { galaxy.maxScale = v; }, 'galaxy-sprites-rebuild'), galaxySection.body, 'galaxySprites.maxScale', 0.01, 16, 0.01));
   bind(range(path(() => galaxy.opacity, (v) => { galaxy.opacity = v; }, 'galaxy-sprites-runtime'), galaxySection.body, 'galaxySprites.opacity', 0, 1, 0.01));
-  bind(range(path(() => galaxy.opacityVariance, (v) => { galaxy.opacityVariance = v; }, 'galaxy-sprites-runtime'), galaxySection.body, 'galaxySprites.opacityVariance', 0, 1, 0.01));
+  bind(range(path(() => galaxy.opacityVariance, (v) => { galaxy.opacityVariance = v; }, 'galaxy-sprites-rebuild'), galaxySection.body, 'galaxySprites.opacityVariance', 0, 1, 0.01));
   bind(range(path(() => galaxy.innerRadius, (v) => { galaxy.innerRadius = v; }, 'galaxy-sprites-rebuild'), galaxySection.body, 'galaxySprites.innerRadius', 0, 60, 0.1));
   bind(range(path(() => galaxy.outerRadius, (v) => { galaxy.outerRadius = v; }, 'galaxy-sprites-rebuild'), galaxySection.body, 'galaxySprites.outerRadius', 0.1, 80, 0.1));
   bind(range(path(() => galaxy.verticalSpread, (v) => { galaxy.verticalSpread = v; }, 'galaxy-sprites-rebuild'), galaxySection.body, 'galaxySprites.verticalSpread', 0, 30, 0.1));
-  bind(range(path(() => galaxy.orbitSpeedMin, (v) => { galaxy.orbitSpeedMin = v; }, 'galaxy-sprites-runtime'), galaxySection.body, 'galaxySprites.orbitSpeedMin', 0, 0.1, 0.0005));
-  bind(range(path(() => galaxy.orbitSpeedMax, (v) => { galaxy.orbitSpeedMax = v; }, 'galaxy-sprites-runtime'), galaxySection.body, 'galaxySprites.orbitSpeedMax', 0, 0.1, 0.0005));
-  bind(range(path(() => galaxy.ownSpinSpeedMin, (v) => { galaxy.ownSpinSpeedMin = v; }, 'galaxy-sprites-runtime'), galaxySection.body, 'galaxySprites.ownSpinSpeedMin', 0, 0.1, 0.0005));
-  bind(range(path(() => galaxy.ownSpinSpeedMax, (v) => { galaxy.ownSpinSpeedMax = v; }, 'galaxy-sprites-runtime'), galaxySection.body, 'galaxySprites.ownSpinSpeedMax', 0, 0.1, 0.0005));
+  bind(range(path(() => galaxy.orbitSpeedMin, (v) => { galaxy.orbitSpeedMin = v; }, 'galaxy-sprites-rebuild'), galaxySection.body, 'galaxySprites.orbitSpeedMin', 0, 0.1, 0.0005));
+  bind(range(path(() => galaxy.orbitSpeedMax, (v) => { galaxy.orbitSpeedMax = v; }, 'galaxy-sprites-rebuild'), galaxySection.body, 'galaxySprites.orbitSpeedMax', 0, 0.1, 0.0005));
+  bind(range(path(() => galaxy.orbitSpeedMultiplier, (v) => { galaxy.orbitSpeedMultiplier = v; }, 'galaxy-sprites-runtime'), galaxySection.body, 'galaxySprites.orbitSpeedMultiplier', 0, 5, 0.05));
+  bind(range(path(() => galaxy.ownSpinSpeedMin, (v) => { galaxy.ownSpinSpeedMin = v; }, 'galaxy-sprites-rebuild'), galaxySection.body, 'galaxySprites.ownSpinSpeedMin', 0, 0.1, 0.0005));
+  bind(range(path(() => galaxy.ownSpinSpeedMax, (v) => { galaxy.ownSpinSpeedMax = v; }, 'galaxy-sprites-rebuild'), galaxySection.body, 'galaxySprites.ownSpinSpeedMax', 0, 0.1, 0.0005));
+  bind(range(path(() => galaxy.ownSpinSpeedMultiplier, (v) => { galaxy.ownSpinSpeedMultiplier = v; }, 'galaxy-sprites-runtime'), galaxySection.body, 'galaxySprites.ownSpinSpeedMultiplier', 0, 5, 0.05));
   bind(checkbox(path(() => galaxy.additiveBlending, (v) => { galaxy.additiveBlending = v; }, 'galaxy-sprites-rebuild'), galaxySection.body, 'galaxySprites.additiveBlending'));
   bind(range(path(() => galaxy.alphaTest, (v) => { galaxy.alphaTest = v; }, 'galaxy-sprites-rebuild'), galaxySection.body, 'galaxySprites.alphaTest', 0, 1, 0.001));
   bind(range(path(() => galaxy.randomSeed, (v) => { galaxy.randomSeed = Math.round(v); }, 'galaxy-sprites-rebuild'), galaxySection.body, 'galaxySprites.randomSeed', 1, 999999, 1));

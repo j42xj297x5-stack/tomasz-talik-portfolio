@@ -25,6 +25,8 @@ export const GALAXY_SPRITES_DEFAULTS = {
   orbitSpeedMax: 0.006,
   ownSpinSpeedMin: 0.002,
   ownSpinSpeedMax: 0.012,
+  orbitSpeedMultiplier: 1,
+  ownSpinSpeedMultiplier: 1,
   orbitInclinationMin: -0.35,
   orbitInclinationMax: 0.35,
   parallaxStrength: 1,
@@ -42,6 +44,20 @@ function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value));
 }
 
+function readFiniteNumber(value, fallback) {
+  if (typeof value === 'string' && value.trim() === '') return fallback;
+  const numeric = Number(value);
+  return Number.isFinite(numeric) ? numeric : fallback;
+}
+
+function readClampedNumber(value, fallback, min, max) {
+  return clamp(readFiniteNumber(value, fallback), min, max);
+}
+
+function readClampedInteger(value, fallback, min, max) {
+  return clamp(Math.round(readFiniteNumber(value, fallback)), min, max);
+}
+
 function normalizeOptions(options = {}) {
   const config = {
     ...GALAXY_SPRITES_DEFAULTS,
@@ -52,31 +68,33 @@ function normalizeOptions(options = {}) {
   };
 
   config.enabled = Boolean(config.enabled);
-  config.copiesPerTextureMin = clamp(Math.round(config.copiesPerTextureMin), 0, 10);
+  config.copiesPerTextureMin = readClampedInteger(config.copiesPerTextureMin, GALAXY_SPRITES_DEFAULTS.copiesPerTextureMin, 0, 10);
   config.copiesPerTextureMax = Math.max(
     config.copiesPerTextureMin,
-    clamp(Math.round(config.copiesPerTextureMax), 0, 10)
+    readClampedInteger(config.copiesPerTextureMax, GALAXY_SPRITES_DEFAULTS.copiesPerTextureMax, 0, 10)
   );
-  config.totalMax = clamp(Math.round(config.totalMax), 0, 30);
-  config.minScale = clamp(config.minScale, 0.01, 12);
-  config.maxScale = Math.max(config.minScale, clamp(config.maxScale, 0.01, 16));
-  config.opacity = clamp(config.opacity, 0, 1);
-  config.opacityVariance = clamp(config.opacityVariance, 0, 1);
-  config.innerRadius = clamp(config.innerRadius, 0, 60);
-  config.outerRadius = Math.max(config.innerRadius + 0.1, clamp(config.outerRadius, 0.1, 80));
-  config.verticalSpread = clamp(config.verticalSpread, 0, 30);
-  config.safeRadius = clamp(config.safeRadius, 0, 30);
-  config.orbitSpeedMin = clamp(config.orbitSpeedMin, 0, 0.1);
-  config.orbitSpeedMax = Math.max(config.orbitSpeedMin, clamp(config.orbitSpeedMax, 0, 0.1));
-  config.ownSpinSpeedMin = clamp(config.ownSpinSpeedMin, 0, 0.1);
-  config.ownSpinSpeedMax = Math.max(config.ownSpinSpeedMin, clamp(config.ownSpinSpeedMax, 0, 0.1));
-  config.orbitInclinationMin = clamp(config.orbitInclinationMin, -HALF_PI, HALF_PI);
-  config.orbitInclinationMax = Math.max(config.orbitInclinationMin, clamp(config.orbitInclinationMax, -HALF_PI, HALF_PI));
-  config.parallaxStrength = clamp(config.parallaxStrength, 0, 1);
-  config.randomSeed = Number.isFinite(Number(config.randomSeed)) ? Number(config.randomSeed) : GALAXY_SPRITES_DEFAULTS.randomSeed;
+  config.totalMax = readClampedInteger(config.totalMax, GALAXY_SPRITES_DEFAULTS.totalMax, 0, 30);
+  config.minScale = readClampedNumber(config.minScale, GALAXY_SPRITES_DEFAULTS.minScale, 0.01, 12);
+  config.maxScale = Math.max(config.minScale, readClampedNumber(config.maxScale, GALAXY_SPRITES_DEFAULTS.maxScale, 0.01, 16));
+  config.opacity = readClampedNumber(config.opacity, GALAXY_SPRITES_DEFAULTS.opacity, 0, 1);
+  config.opacityVariance = readClampedNumber(config.opacityVariance, GALAXY_SPRITES_DEFAULTS.opacityVariance, 0, 1);
+  config.innerRadius = readClampedNumber(config.innerRadius, GALAXY_SPRITES_DEFAULTS.innerRadius, 0, 60);
+  config.outerRadius = Math.max(config.innerRadius + 0.1, readClampedNumber(config.outerRadius, GALAXY_SPRITES_DEFAULTS.outerRadius, 0.1, 80));
+  config.verticalSpread = readClampedNumber(config.verticalSpread, GALAXY_SPRITES_DEFAULTS.verticalSpread, 0, 30);
+  config.safeRadius = readClampedNumber(config.safeRadius, GALAXY_SPRITES_DEFAULTS.safeRadius, 0, 30);
+  config.orbitSpeedMin = readClampedNumber(config.orbitSpeedMin, GALAXY_SPRITES_DEFAULTS.orbitSpeedMin, 0, 0.1);
+  config.orbitSpeedMax = Math.max(config.orbitSpeedMin, readClampedNumber(config.orbitSpeedMax, GALAXY_SPRITES_DEFAULTS.orbitSpeedMax, 0, 0.1));
+  config.ownSpinSpeedMin = readClampedNumber(config.ownSpinSpeedMin, GALAXY_SPRITES_DEFAULTS.ownSpinSpeedMin, 0, 0.1);
+  config.ownSpinSpeedMax = Math.max(config.ownSpinSpeedMin, readClampedNumber(config.ownSpinSpeedMax, GALAXY_SPRITES_DEFAULTS.ownSpinSpeedMax, 0, 0.1));
+  config.orbitSpeedMultiplier = readClampedNumber(config.orbitSpeedMultiplier, GALAXY_SPRITES_DEFAULTS.orbitSpeedMultiplier, 0, 5);
+  config.ownSpinSpeedMultiplier = readClampedNumber(config.ownSpinSpeedMultiplier, GALAXY_SPRITES_DEFAULTS.ownSpinSpeedMultiplier, 0, 5);
+  config.orbitInclinationMin = readClampedNumber(config.orbitInclinationMin, GALAXY_SPRITES_DEFAULTS.orbitInclinationMin, -HALF_PI, HALF_PI);
+  config.orbitInclinationMax = Math.max(config.orbitInclinationMin, readClampedNumber(config.orbitInclinationMax, GALAXY_SPRITES_DEFAULTS.orbitInclinationMax, -HALF_PI, HALF_PI));
+  config.parallaxStrength = readClampedNumber(config.parallaxStrength, GALAXY_SPRITES_DEFAULTS.parallaxStrength, 0, 1);
+  config.randomSeed = readFiniteNumber(config.randomSeed, GALAXY_SPRITES_DEFAULTS.randomSeed);
   config.additiveBlending = Boolean(config.additiveBlending);
-  config.alphaTest = clamp(config.alphaTest, 0, 1);
-  config.reducedMotionSpeedMultiplier = clamp(config.reducedMotionSpeedMultiplier, 0, 1);
+  config.alphaTest = readClampedNumber(config.alphaTest, GALAXY_SPRITES_DEFAULTS.alphaTest, 0, 1);
+  config.reducedMotionSpeedMultiplier = readClampedNumber(config.reducedMotionSpeedMultiplier, GALAXY_SPRITES_DEFAULTS.reducedMotionSpeedMultiplier, 0, 1);
 
   return config;
 }
@@ -109,10 +127,10 @@ function isInCentralReadingCone(position, safeRadius) {
 }
 
 function computeOrbitalPosition(state, target) {
-  const ellipticalRadius = state.radius * (1 + state.eccentricity * Math.cos(state.angle + state.eccentricityPhase));
-  const x = Math.cos(state.angle) * ellipticalRadius;
-  const z = Math.sin(state.angle) * ellipticalRadius;
-  const tiltedY = state.verticalOffset + Math.sin(state.angle) * Math.sin(state.inclination) * state.radius * 0.34;
+  const ellipticalRadius = state.radius * (1 + state.eccentricity * Math.cos(state.orbitAngle + state.eccentricityPhase));
+  const x = Math.cos(state.orbitAngle) * ellipticalRadius;
+  const z = Math.sin(state.orbitAngle) * ellipticalRadius;
+  const tiltedY = state.yOffset + Math.sin(state.orbitAngle) * Math.sin(state.inclination) * state.radius * 0.34;
 
   target.set(x, tiltedY, z);
 }
@@ -193,16 +211,16 @@ export function createGalaxySpritesLayer(options = {}) {
 
   function makeInstanceDescriptor(random, textureRecord, textureIndex) {
     const state = {
-      angle: randomBetween(random, 0, TWO_PI),
+      orbitAngle: randomBetween(random, 0, TWO_PI),
       radius: randomBetween(random, config.innerRadius, config.outerRadius),
-      verticalOffset: randomBetween(random, -config.verticalSpread, config.verticalSpread),
+      yOffset: randomBetween(random, -config.verticalSpread, config.verticalSpread),
       scale: randomBetween(random, config.minScale, config.maxScale),
-      opacityMultiplier: randomBetween(random, 1 - config.opacityVariance, 1 + config.opacityVariance),
+      opacity: clamp(randomBetween(random, 1 - config.opacityVariance, 1 + config.opacityVariance), 0, 2),
       orbitDirection: randomSign(random),
       orbitSpeed: randomBetween(random, config.orbitSpeedMin, config.orbitSpeedMax),
-      ownSpinDirection: randomSign(random),
-      ownSpinSpeed: randomBetween(random, config.ownSpinSpeedMin, config.ownSpinSpeedMax),
-      ownSpinPhase: randomBetween(random, 0, TWO_PI),
+      spinDirection: randomSign(random),
+      spinSpeed: randomBetween(random, config.ownSpinSpeedMin, config.ownSpinSpeedMax),
+      spinPhase: randomBetween(random, 0, TWO_PI),
       inclination: randomBetween(random, config.orbitInclinationMin, config.orbitInclinationMax),
       eccentricity: randomBetween(random, -0.08, 0.12),
       eccentricityPhase: randomBetween(random, 0, TWO_PI),
@@ -213,18 +231,17 @@ export function createGalaxySpritesLayer(options = {}) {
     for (let attempt = 0; attempt < CENTRAL_CONE_ATTEMPTS; attempt += 1) {
       computeOrbitalPosition(state, tempPosition);
       if (!isInCentralReadingCone(tempPosition, config.safeRadius)) break;
-      state.angle = randomBetween(random, 0, TWO_PI);
+      state.orbitAngle = randomBetween(random, 0, TWO_PI);
       state.radius = randomBetween(random, Math.max(config.innerRadius, config.safeRadius + 1), config.outerRadius);
-      state.verticalOffset = randomBetween(random, -config.verticalSpread, config.verticalSpread);
+      state.yOffset = randomBetween(random, -config.verticalSpread, config.verticalSpread);
     }
 
     return state;
   }
 
   function createSprite(textureRecord, state) {
-    const opacity = clamp(config.opacity * state.opacityMultiplier, 0, 1);
-    const material = makeSpriteMaterial(textureRecord.texture, config, opacity);
-    material.rotation = state.ownSpinPhase;
+    const material = makeSpriteMaterial(textureRecord.texture, config, clamp(config.opacity * state.opacity, 0, 1));
+    material.rotation = state.spinPhase;
 
     const sprite = new THREE.Sprite(material);
     sprite.name = `GalaxySprite:${state.texturePath}`;
@@ -233,7 +250,7 @@ export function createGalaxySpritesLayer(options = {}) {
     computeOrbitalPosition(state, sprite.position);
     group.add(sprite);
 
-    instances.push({ sprite, material, state });
+    instances.push({ sprite, material, ...state });
   }
 
   async function rebuild(nextOptions = {}) {
@@ -269,14 +286,19 @@ export function createGalaxySpritesLayer(options = {}) {
         total += 1;
       }
     });
+
+    if (import.meta.env?.DEV) {
+      console.info(`[galaxySprites] Rebuilt layer: count=${instances.length}, orbitSpeedRange=[${config.orbitSpeedMin}, ${config.orbitSpeedMax}], spinSpeedRange=[${config.ownSpinSpeedMin}, ${config.ownSpinSpeedMax}], orbitMultiplier=${config.orbitSpeedMultiplier}, spinMultiplier=${config.ownSpinSpeedMultiplier}`);
+    }
   }
 
   function applyRuntimeOptions(nextOptions = {}) {
     config = normalizeOptions({ ...config, ...nextOptions });
     group.visible = config.enabled;
-    instances.forEach(({ sprite, material, state }) => {
-      sprite.scale.setScalar(clamp(state.scale, config.minScale, config.maxScale));
-      material.opacity = clamp(config.opacity * state.opacityMultiplier, 0, 1);
+    instances.forEach((instance) => {
+      const { sprite, material } = instance;
+      sprite.scale.setScalar(clamp(instance.scale, config.minScale, config.maxScale));
+      material.opacity = clamp(instance.opacity * config.opacity, 0, 1);
       material.alphaTest = config.alphaTest;
       material.blending = config.additiveBlending ? THREE.AdditiveBlending : THREE.NormalBlending;
       material.needsUpdate = true;
@@ -295,10 +317,12 @@ export function createGalaxySpritesLayer(options = {}) {
     const speedMultiplier = reducedMotion ? config.reducedMotionSpeedMultiplier : 1;
     const scaledDelta = delta * speedMultiplier;
 
-    instances.forEach(({ sprite, material, state }) => {
-      state.angle += state.orbitSpeed * state.orbitDirection * scaledDelta;
-      computeOrbitalPosition(state, sprite.position);
-      material.rotation = state.ownSpinPhase + elapsed * state.ownSpinSpeed * state.ownSpinDirection * speedMultiplier;
+    instances.forEach((instance) => {
+      const { sprite, material } = instance;
+      instance.orbitAngle += instance.orbitSpeed * config.orbitSpeedMultiplier * instance.orbitDirection * scaledDelta;
+      instance.spinPhase += instance.spinSpeed * config.ownSpinSpeedMultiplier * instance.spinDirection * scaledDelta;
+      computeOrbitalPosition(instance, sprite.position);
+      material.rotation = instance.spinPhase;
     });
 
     if (camera) {
