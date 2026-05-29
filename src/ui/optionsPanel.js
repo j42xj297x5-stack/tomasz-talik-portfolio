@@ -3,7 +3,7 @@ function deepClone(value) {
 }
 
 const OPTIONS_STORAGE_KEY = 'portfolio.options.runtimeState.v1';
-const OPTIONS_DEFAULTS_VERSION = '2026-05-26-atmosphere-suncycle-mooncycle-v6';
+const OPTIONS_DEFAULTS_VERSION = '2026-05-29-atmosphere-suncycle-mooncycle-galaxy-v7';
 const PRESET_SLOT_KEYS = ['portfolio.optionsPreset.1', 'portfolio.optionsPreset.2', 'portfolio.optionsPreset.3'];
 const SUN_MODEL_PATH = '/glb/sun.glb';
 
@@ -80,6 +80,31 @@ function normalizeRuntimeState(state) {
   moon.spotlight.angleDegrees = clamp(moon.spotlight.angleDegrees ?? 90, 1, 120);
   moon.spotlight.penumbra = clamp(moon.spotlight.penumbra ?? 0.45, 0, 1);
   moon.spotlight.distance = clamp(moon.spotlight.distance ?? 20, 0, 100);
+
+  if (!state.galaxySprites) state.galaxySprites = {};
+  const galaxy = state.galaxySprites;
+  galaxy.enabled = Boolean(galaxy.enabled ?? true);
+  galaxy.texturePaths = Array.isArray(galaxy.texturePaths) && galaxy.texturePaths.length > 0
+    ? galaxy.texturePaths
+    : ['/png/galaxy_01.png', '/png/galaxy_02.png', '/png/galaxy_03.png', '/png/galaxy_04.png', '/png/galaxy_05.png'];
+  galaxy.copiesPerTextureMin = clamp(Math.round(galaxy.copiesPerTextureMin ?? 1), 0, 10);
+  galaxy.copiesPerTextureMax = Math.max(galaxy.copiesPerTextureMin, clamp(Math.round(galaxy.copiesPerTextureMax ?? 3), 0, 10));
+  galaxy.totalMax = clamp(Math.round(galaxy.totalMax ?? 14), 0, 30);
+  galaxy.minScale = clamp(galaxy.minScale ?? 0.65, 0.01, 12);
+  galaxy.maxScale = Math.max(galaxy.minScale, clamp(galaxy.maxScale ?? 2.8, 0.01, 16));
+  galaxy.opacity = clamp(galaxy.opacity ?? 0.42, 0, 1);
+  galaxy.opacityVariance = clamp(galaxy.opacityVariance ?? 0.18, 0, 1);
+  galaxy.innerRadius = clamp(galaxy.innerRadius ?? 11, 0, 60);
+  galaxy.outerRadius = Math.max(galaxy.innerRadius + 0.1, clamp(galaxy.outerRadius ?? 26, 0.1, 80));
+  galaxy.verticalSpread = clamp(galaxy.verticalSpread ?? 8, 0, 30);
+  galaxy.safeRadius = clamp(galaxy.safeRadius ?? 6.5, 0, 30);
+  galaxy.orbitSpeedMin = clamp(galaxy.orbitSpeedMin ?? 0.0015, 0, 0.1);
+  galaxy.orbitSpeedMax = Math.max(galaxy.orbitSpeedMin, clamp(galaxy.orbitSpeedMax ?? 0.006, 0, 0.1));
+  galaxy.ownSpinSpeedMin = clamp(galaxy.ownSpinSpeedMin ?? 0.002, 0, 0.1);
+  galaxy.ownSpinSpeedMax = Math.max(galaxy.ownSpinSpeedMin, clamp(galaxy.ownSpinSpeedMax ?? 0.012, 0, 0.1));
+  galaxy.additiveBlending = Boolean(galaxy.additiveBlending ?? false);
+  galaxy.alphaTest = clamp(galaxy.alphaTest ?? 0.01, 0, 1);
+  galaxy.randomSeed = Number.isFinite(Number(galaxy.randomSeed)) ? Number(galaxy.randomSeed) : 1337;
 }
 
 
@@ -127,12 +152,17 @@ export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere, 
       runtimeState.sunCycle.spotlight = { ...runtimeState.sunCycle.spotlight, ...(stored.runtimeState.sunCycle?.spotlight ?? {}) };
       Object.assign(runtimeState.moonCycle, stored.runtimeState.moonCycle ?? {});
       runtimeState.moonCycle.spotlight = { ...runtimeState.moonCycle.spotlight, ...(stored.runtimeState.moonCycle?.spotlight ?? {}) };
+      Object.assign(runtimeState.galaxySprites, stored.runtimeState.galaxySprites ?? {});
     }
   } catch {}
 
   runtimeState.backgroundAtmosphere.smallGlyphRelics = {
     ...deepClone(defaults.backgroundAtmosphere.smallGlyphRelics),
     ...(runtimeState.backgroundAtmosphere.smallGlyphRelics ?? {})
+  };
+  runtimeState.galaxySprites = {
+    ...deepClone(defaults.galaxySprites),
+    ...(runtimeState.galaxySprites ?? {})
   };
 
   normalizeRuntimeState(runtimeState);
@@ -163,6 +193,7 @@ export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere, 
     Object.assign(runtimeState.backgroundAtmosphere, deepClone(defaults.backgroundAtmosphere));
     runtimeState.sunCycle = deepClone(defaults.sunCycle);
     runtimeState.moonCycle = deepClone(defaults.moonCycle);
+    Object.assign(runtimeState.galaxySprites, deepClone(defaults.galaxySprites));
     normalizeRuntimeState(runtimeState);
     onChange({ type: 'reset-all' });
     persistState();
@@ -191,7 +222,7 @@ export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere, 
     saveButton.textContent = `Save ${slot}`;
     saveButton.className = 'options-panel__preset-btn';
     saveButton.addEventListener('click', () => {
-      localStorage.setItem(PRESET_SLOT_KEYS[slot - 1], JSON.stringify({ version: OPTIONS_DEFAULTS_VERSION, runtimeState: { backgroundAtmosphere: deepClone(runtimeState.backgroundAtmosphere), sunCycle: deepClone(runtimeState.sunCycle), moonCycle: deepClone(runtimeState.moonCycle) } }));
+      localStorage.setItem(PRESET_SLOT_KEYS[slot - 1], JSON.stringify({ version: OPTIONS_DEFAULTS_VERSION, runtimeState: { backgroundAtmosphere: deepClone(runtimeState.backgroundAtmosphere), sunCycle: deepClone(runtimeState.sunCycle), moonCycle: deepClone(runtimeState.moonCycle), galaxySprites: deepClone(runtimeState.galaxySprites) } }));
       setPresetStatus(`Zapisano slot ${slot}`);
     });
     const loadButton = document.createElement('button');
@@ -210,7 +241,10 @@ export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere, 
         if (!parsed?.runtimeState?.backgroundAtmosphere) throw new Error('Invalid preset shape');
         Object.assign(runtimeState.backgroundAtmosphere, parsed.runtimeState.backgroundAtmosphere);
         Object.assign(runtimeState.sunCycle, parsed.runtimeState.sunCycle ?? defaults.sunCycle);
+        Object.assign(runtimeState.moonCycle, parsed.runtimeState.moonCycle ?? defaults.moonCycle);
+        Object.assign(runtimeState.galaxySprites, parsed.runtimeState.galaxySprites ?? defaults.galaxySprites);
         runtimeState.sunCycle.spotlight = { ...deepClone(defaults.sunCycle.spotlight), ...(parsed.runtimeState.sunCycle?.spotlight ?? {}) };
+        runtimeState.moonCycle.spotlight = { ...deepClone(defaults.moonCycle.spotlight), ...(parsed.runtimeState.moonCycle?.spotlight ?? {}) };
         normalizeRuntimeState(runtimeState);
         onChange({ type: 'rebuild' });
         persistState();
@@ -234,6 +268,7 @@ export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere, 
   const stoneSection = createSection('Stone Relics', true);
   const shellSection = createSection('Shell Relics', true);
   const smallGlyphSection = createSection('Small Glyph Relics', true);
+  const galaxySection = createSection('Galaxy Sprites', true);
   const debugSection = createSection('Debug Visuals', true);
   const progressionSection = createSection('Atmosphere Progression', true);
   const futureSection = createSection('Future / Reserved', false);
@@ -335,6 +370,26 @@ export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere, 
   });
   smallGlyphSection.body.append(smallGlyphReset);
 
+  const galaxyRebuild = document.createElement('button');
+  galaxyRebuild.type = 'button';
+  galaxyRebuild.textContent = 'Rebuild Galaxy Sprites';
+  galaxyRebuild.className = 'options-panel__section-reset';
+  galaxyRebuild.addEventListener('click', () => onChange({ type: 'galaxy-sprites-rebuild' }));
+  galaxySection.body.append(galaxyRebuild);
+
+  const galaxyReset = document.createElement('button');
+  galaxyReset.type = 'button';
+  galaxyReset.textContent = 'Reset Galaxy Sprites';
+  galaxyReset.className = 'options-panel__section-reset';
+  galaxyReset.addEventListener('click', () => {
+    Object.assign(runtimeState.galaxySprites, deepClone(defaults.galaxySprites));
+    normalizeRuntimeState(runtimeState);
+    onChange({ type: 'galaxy-sprites-rebuild' });
+    persistState();
+    renderAll();
+  });
+  galaxySection.body.append(galaxyReset);
+
   function checkbox(path, parent, labelText) {
     let input;
     addRow(parent, labelText, (el) => {
@@ -422,6 +477,7 @@ export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere, 
   const bg = runtimeState.backgroundAtmosphere;
   const sun = runtimeState.sunCycle;
   const moon = runtimeState.moonCycle;
+  const galaxy = runtimeState.galaxySprites;
   const progression = atmosphereProgression?.state;
 
   const path = (getter, setter, type) => ({
@@ -571,6 +627,24 @@ export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere, 
   bind(range(path(() => smallGlyph.opacity, (v) => { smallGlyph.opacity = v; }, 'material'), smallGlyphSection.body, 'smallGlyphRelics.opacity', 0, 1, 0.01));
   bind(checkbox(path(() => smallGlyph.debugVisible, (v) => { smallGlyph.debugVisible = v; }, 'small-glyph-rebuild'), smallGlyphSection.body, 'smallGlyphRelics.debugVisible'));
 
+  bind(checkbox(path(() => galaxy.enabled, (v) => { galaxy.enabled = v; }, 'galaxy-sprites-runtime'), galaxySection.body, 'galaxySprites.enabled'));
+  bind(range(path(() => galaxy.totalMax, (v) => { galaxy.totalMax = Math.round(v); }, 'galaxy-sprites-rebuild'), galaxySection.body, 'galaxySprites.totalMax', 0, 30, 1));
+  bind(range(path(() => galaxy.copiesPerTextureMin, (v) => { galaxy.copiesPerTextureMin = Math.round(v); }, 'galaxy-sprites-rebuild'), galaxySection.body, 'galaxySprites.copiesPerTextureMin', 0, 10, 1));
+  bind(range(path(() => galaxy.copiesPerTextureMax, (v) => { galaxy.copiesPerTextureMax = Math.round(v); }, 'galaxy-sprites-rebuild'), galaxySection.body, 'galaxySprites.copiesPerTextureMax', 0, 10, 1));
+  bind(range(path(() => galaxy.minScale, (v) => { galaxy.minScale = v; }, 'galaxy-sprites-rebuild'), galaxySection.body, 'galaxySprites.minScale', 0.01, 12, 0.01));
+  bind(range(path(() => galaxy.maxScale, (v) => { galaxy.maxScale = v; }, 'galaxy-sprites-rebuild'), galaxySection.body, 'galaxySprites.maxScale', 0.01, 16, 0.01));
+  bind(range(path(() => galaxy.opacity, (v) => { galaxy.opacity = v; }, 'galaxy-sprites-runtime'), galaxySection.body, 'galaxySprites.opacity', 0, 1, 0.01));
+  bind(range(path(() => galaxy.opacityVariance, (v) => { galaxy.opacityVariance = v; }, 'galaxy-sprites-runtime'), galaxySection.body, 'galaxySprites.opacityVariance', 0, 1, 0.01));
+  bind(range(path(() => galaxy.innerRadius, (v) => { galaxy.innerRadius = v; }, 'galaxy-sprites-rebuild'), galaxySection.body, 'galaxySprites.innerRadius', 0, 60, 0.1));
+  bind(range(path(() => galaxy.outerRadius, (v) => { galaxy.outerRadius = v; }, 'galaxy-sprites-rebuild'), galaxySection.body, 'galaxySprites.outerRadius', 0.1, 80, 0.1));
+  bind(range(path(() => galaxy.verticalSpread, (v) => { galaxy.verticalSpread = v; }, 'galaxy-sprites-rebuild'), galaxySection.body, 'galaxySprites.verticalSpread', 0, 30, 0.1));
+  bind(range(path(() => galaxy.orbitSpeedMin, (v) => { galaxy.orbitSpeedMin = v; }, 'galaxy-sprites-runtime'), galaxySection.body, 'galaxySprites.orbitSpeedMin', 0, 0.1, 0.0005));
+  bind(range(path(() => galaxy.orbitSpeedMax, (v) => { galaxy.orbitSpeedMax = v; }, 'galaxy-sprites-runtime'), galaxySection.body, 'galaxySprites.orbitSpeedMax', 0, 0.1, 0.0005));
+  bind(range(path(() => galaxy.ownSpinSpeedMin, (v) => { galaxy.ownSpinSpeedMin = v; }, 'galaxy-sprites-runtime'), galaxySection.body, 'galaxySprites.ownSpinSpeedMin', 0, 0.1, 0.0005));
+  bind(range(path(() => galaxy.ownSpinSpeedMax, (v) => { galaxy.ownSpinSpeedMax = v; }, 'galaxy-sprites-runtime'), galaxySection.body, 'galaxySprites.ownSpinSpeedMax', 0, 0.1, 0.0005));
+  bind(checkbox(path(() => galaxy.additiveBlending, (v) => { galaxy.additiveBlending = v; }, 'galaxy-sprites-rebuild'), galaxySection.body, 'galaxySprites.additiveBlending'));
+  bind(range(path(() => galaxy.alphaTest, (v) => { galaxy.alphaTest = v; }, 'galaxy-sprites-rebuild'), galaxySection.body, 'galaxySprites.alphaTest', 0, 1, 0.001));
+  bind(range(path(() => galaxy.randomSeed, (v) => { galaxy.randomSeed = Math.round(v); }, 'galaxy-sprites-rebuild'), galaxySection.body, 'galaxySprites.randomSeed', 1, 999999, 1));
 
   bind(select(path(() => bg.debugBlendingMode, (v) => { bg.debugBlendingMode = v; }, 'material'), debugSection.body, 'debugBlendingMode', [
     { value: 'normal', label: 'Normal' },
@@ -584,14 +658,14 @@ export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere, 
   futureText.textContent = 'Reserved for: micro relics, mist shell, gate aura, camera tuning, labels/UI debug, lighting, motion.';
   futureSection.body.append(futureText);
 
-  panel.append(presetSection.details, progressionSection.details, atmosphereSection.details, sunCycleSection.details, moonCycleSection.details, stoneSection.details, shellSection.details, smallGlyphSection.details, debugSection.details, futureSection.details);
+  panel.append(presetSection.details, progressionSection.details, atmosphereSection.details, sunCycleSection.details, moonCycleSection.details, stoneSection.details, shellSection.details, smallGlyphSection.details, galaxySection.details, debugSection.details, futureSection.details);
   root.append(button, panel);
   document.body.append(root);
 
   function persistState() {
     localStorage.setItem(OPTIONS_STORAGE_KEY, JSON.stringify({
       version: OPTIONS_DEFAULTS_VERSION,
-      runtimeState: { backgroundAtmosphere: deepClone(runtimeState.backgroundAtmosphere), sunCycle: deepClone(runtimeState.sunCycle), moonCycle: deepClone(runtimeState.moonCycle) }
+      runtimeState: { backgroundAtmosphere: deepClone(runtimeState.backgroundAtmosphere), sunCycle: deepClone(runtimeState.sunCycle), moonCycle: deepClone(runtimeState.moonCycle), galaxySprites: deepClone(runtimeState.galaxySprites) }
     }));
   }
 

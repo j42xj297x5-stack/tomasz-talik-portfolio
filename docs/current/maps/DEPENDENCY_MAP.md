@@ -52,3 +52,8 @@ Concept docs -> Technical model -> Runtime implementation -> Decision updates ->
 - Local development, production preview, and GitHub Pages should share the same logical asset conventions: files live under `public/`, browser URLs omit `public/`, and final URLs include the Vite base.
 - Remaining operational dependencies include GitHub Pages cache invalidation, browser cache checks, GLB size monitoring, and verification that manually managed binary assets are present before deployment.
 - Snapshot reference: `docs/current/audits/snapshots/2026-05-29_19-59-42__snapshot__dual-runtime-github-pages-deployment.md`.
+
+## Galaxy sprite dependency status (2026-05-29)
+- `src/main.js` depends on `src/scene/galaxySprites.js` for the distant background galaxy layer and keeps it outside orbit-node/raycast ownership.
+- `src/scene/galaxySprites.js` depends on `src/utils/publicPath.js` to resolve `/png/galaxy_01.png` through `/png/galaxy_05.png` under both local Vite and GitHub Pages base-path runtimes.
+- The layer depends on manually supplied transparent PNG assets in `public/png/` and must degrade to warnings/empty sprites when those files are absent.

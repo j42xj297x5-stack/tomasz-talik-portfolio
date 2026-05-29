@@ -57,3 +57,11 @@ Current status note:
 - Lighting baseline for this effect is green emissive + orbiting green point light that persists while hover/active remains true.
 - Interaction safety remains mandatory: tree model/lights/helpers do not become raycast targets; collider ownership remains on node sphere/glyph node.
 - Full checkpoint details and parameter list are recorded in `docs/current/audits/snapshots/2026-05-22_18-18-33__snapshot__glyph-1-tree-effect-baseline.md`.
+
+## Checkpoint update — distant galaxy sprite layer (2026-05-29)
+- `src/scene/galaxySprites.js` owns the distant galaxy sprite layer as an isolated, visual-only `THREE.Group`; it is added by `src/main.js` after the scene, sun, and moon setup and is updated from the main animation loop.
+- The layer uses `THREE.Sprite` + `THREE.SpriteMaterial`, so each transparent PNG sprite billboards toward the camera while retaining a per-material center spin via `SpriteMaterial.rotation`.
+- Galaxy sprites are not included in raycaster target lists and carry `userData.nonInteractive = true`; they must remain background atmosphere only and must not replace HTML overlay/hover interactions.
+- Instance generation is deterministic through `galaxySprites.randomSeed`, bounded by `totalMax`, and rejects the protected central reading cone so the monkey and five primary glyphs stay readable.
+- Motion is deliberately slow: each instance has independent radius, orbit angle, direction, speed, inclination, vertical offset, eccentricity, opacity variance, scale, and spin speed.
+- Reduced-motion users keep the layer visible, but orbit and spin speed are multiplied by `reducedMotionSpeedMultiplier` rather than removed.

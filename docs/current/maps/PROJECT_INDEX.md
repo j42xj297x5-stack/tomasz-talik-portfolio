@@ -48,3 +48,7 @@
 
 - `docs/current/audits/snapshots/2026-05-28_18-08-09__snapshot__portfolio-ai-guide-progression-sun-moon.md` — documentation checkpoint for AI Guide panel direction, scene progression, sun/moon orbit state, and related protective decisions.
 - `docs/current/audits/snapshots/2026-05-29_19-59-42__snapshot__dual-runtime-github-pages-deployment.md` — first working dual-runtime deployment snapshot for local Vite and GitHub Pages, including base/public asset rules, GLTFLoader/GLB loading, fallback behavior, QA checklist, and deployment risks.
+
+## Runtime files update — galaxy sprite atmosphere
+- `src/scene/galaxySprites.js` — deterministic distant-galaxy sprite layer using transparent PNG public assets and deployment-safe `publicPath(...)` texture URLs.
+- `src/utils/publicPath.js` — shared helper for local Vite + GitHub Pages public asset URL normalization.
