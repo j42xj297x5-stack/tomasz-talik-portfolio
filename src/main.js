@@ -79,11 +79,11 @@ const sceneRuntimeConfig = {
     safeRadius: 5,
     shellInnerRadius: 8,
     shellOuterRadius: 20,
-    stoneRelics: { enabled: true, count: 80, models: ['/glb/stone_01.glb','/glb/stone_02.glb','/glb/stone_03.glb','/glb/stone_04.glb','/glb/stone_05.glb','/glb/stone_06.glb'], safeRadius: 3.5, shellInnerRadius: 4.7, shellOuterRadius: 10.3, minScale: 0.5, maxScale: 1, rotationSpeedMin: 0.003, rotationSpeedMax: 0.018, orbitSpeed: 0.003, opacity: 1, debugVisible: false },
+    stoneRelics: { enabled: true, count: 80, models: ['glb/stone_01.glb','glb/stone_02.glb','glb/stone_03.glb','glb/stone_04.glb','glb/stone_05.glb','glb/stone_06.glb'], safeRadius: 3.5, shellInnerRadius: 4.7, shellOuterRadius: 10.3, minScale: 0.5, maxScale: 1, rotationSpeedMin: 0.003, rotationSpeedMax: 0.018, orbitSpeed: 0.003, opacity: 1, debugVisible: false },
     shellRelics: {
       enabled: true,
       count: 100,
-      models: ['/glb/shell_01.glb','/glb/shell_02.glb','/glb/shell_03.glb','/glb/shell_04.glb','/glb/shell_05.glb','/glb/shell_06.glb'],
+      models: ['glb/shell_01.glb','glb/shell_02.glb','glb/shell_03.glb','glb/shell_04.glb','glb/shell_05.glb','glb/shell_06.glb'],
       minScale: 0.3,
       maxScale: 0.7,
       shellInnerRadius: 10,
@@ -98,7 +98,7 @@ const sceneRuntimeConfig = {
     smallGlyphRelics: {
       enabled: true,
       count: 100,
-      models: ['/glb/small_glyph_01.glb','/glb/small_glyph_02.glb','/glb/small_glyph_03.glb','/glb/small_glyph_04.glb','/glb/small_glyph_05.glb','/glb/small_glyph_06.glb'],
+      models: ['glb/small_glyph_01.glb','glb/small_glyph_02.glb','glb/small_glyph_03.glb','glb/small_glyph_04.glb','glb/small_glyph_05.glb','glb/small_glyph_06.glb'],
       minScale: 0.1,
       maxScale: 0.3,
       shellInnerRadius: 5,
@@ -234,6 +234,7 @@ function tick(timestamp) {
   moonCycle.setProgressionMultiplier(multipliers.sunMoon);
   sunCycle.update(delta);
   moonCycle.update(delta, sunCycle.getAngle());
+  galaxyLayer.setProgressionMultiplier(multipliers.galaxies);
   galaxyLayer.update(delta, elapsed, camera);
   if (sceneRuntimeConfig.backgroundAtmosphere.debugVisible && elapsed < 0.25) {
     console.info('[backgroundAtmosphere][debug] tick/update active', { delta, elapsed });
