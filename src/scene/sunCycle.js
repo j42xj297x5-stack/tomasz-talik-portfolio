@@ -1,6 +1,7 @@
 import * as THREE from '../vendor/three.js';
+import { resolveVendoredGLTFLoader } from '../utils/gltfLoader.js';
+import { publicPath } from '../utils/publicPath.js';
 
-const VENDORED_GLTF_LOADER_PATH = '../../vendor/three/examples/jsm/loaders/GLTFLoader.js';
 const SUN_MODEL_PATH = '/glb/sun.glb';
 
 function deepMerge(base, patch) {
@@ -24,16 +25,6 @@ function sanitizeSunModelPath(modelPath) {
 function sanitizeSunCycleSettings(settings) {
   settings.modelPath = sanitizeSunModelPath(settings.modelPath);
   return settings;
-}
-
-async function resolveGLTFLoader() {
-  try {
-    const module = await import(VENDORED_GLTF_LOADER_PATH);
-    return module.GLTFLoader;
-  } catch (error) {
-    console.warn('[sunCycle] GLTFLoader unavailable.', error);
-    return null;
-  }
 }
 
 export const SUN_CYCLE_DEFAULTS = {
@@ -195,10 +186,13 @@ export function createSunCycle(options = {}) {
     updateDebugState();
   }
 
-  void resolveGLTFLoader().then((GLTFLoader) => {
-    if (!GLTFLoader) { fallbackSphere.visible = true; return; }
+  const modelUrl = publicPath(settings.modelPath);
+  console.info(`[sunCycle] GLB load URL: ${modelUrl}`);
+
+  void resolveVendoredGLTFLoader('sunCycle').then((GLTFLoader) => {
+    if (!GLTFLoader) { fallbackSphere.visible = true; console.info('[sunCycle] Fallback sphere active because GLTFLoader was unavailable.'); return; }
     const loader = new GLTFLoader();
-    loader.load(settings.modelPath, (gltf) => {
+    loader.load(modelUrl, (gltf) => {
       sunModel = gltf.scene;
       sunModel.position.set(0, 0, 0);
       sunBodyGroup.add(sunModel);
@@ -222,7 +216,7 @@ export function createSunCycle(options = {}) {
           else if (child.material) child.material.visible = true;
         });
         console.info('[sunCycle][debug] load success', {
-          path: settings.modelPath,
+          path: modelUrl,
           hasScene: Boolean(gltf.scene),
           meshCount,
           boundingBox: { min: bbox.min.toArray(), max: bbox.max.toArray(), size: size.toArray() },
@@ -237,8 +231,9 @@ export function createSunCycle(options = {}) {
         });
       }
       applySettings();
+      console.info(`[sunCycle] Sun model loaded from ${modelUrl}.`);
     }, undefined, (error) => {
-      console.warn(`[sunCycle][debug] Failed to load model from path: ${settings.modelPath}`, error);
+      console.warn(`[sunCycle][debug] Failed to load model from URL: ${modelUrl}. Fallback sphere retained.`, error);
       fallbackSphere.visible = true;
     });
   });

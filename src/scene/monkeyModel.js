@@ -1,24 +1,10 @@
 import * as THREE from '../vendor/three.js';
+import { resolveVendoredGLTFLoader } from '../utils/gltfLoader.js';
+import { publicPath } from '../utils/publicPath.js';
 
-const MONKEY_GLB_URL = '/glb/monkey.glb';
-const VENDORED_GLTF_LOADER_PATH = '../../vendor/three/examples/jsm/loaders/GLTFLoader.js';
+const MONKEY_GLB_PATH = 'glb/monkey.glb';
 const MONKEY_TARGET_DIMENSION = 2.0;
 const MONKEY_YAW_TO_CAMERA = 0;
-
-async function resolveGLTFLoader() {
-  try {
-    const module = await import(VENDORED_GLTF_LOADER_PATH);
-    console.info(`[monkeyModel] GLTFLoader import succeeded from ${VENDORED_GLTF_LOADER_PATH}.`);
-    return module.GLTFLoader;
-  } catch (error) {
-    console.warn(
-      `[monkeyModel] GLTFLoader is missing. Expected loader path: ${VENDORED_GLTF_LOADER_PATH}. ` +
-        `Expected model path: ${MONKEY_GLB_URL}. Placeholder fallback retained.`,
-      error
-    );
-    return null;
-  }
-}
 
 function placeModelAtFallback(model, fallbackObject) {
   const fallbackPosition = new THREE.Vector3();
@@ -45,29 +31,31 @@ function placeModelAtFallback(model, fallbackObject) {
 }
 
 export async function loadMonkeyModel({ scene, fallbackObject }) {
-  const GLTFLoader = await resolveGLTFLoader();
+  const monkeyUrl = publicPath(MONKEY_GLB_PATH);
+  const GLTFLoader = await resolveVendoredGLTFLoader('monkeyModel');
   if (!GLTFLoader) {
-    console.info(`[monkeyModel] Placeholder fallback retained because GLTFLoader was unavailable.`);
+    console.info(`[monkeyModel] Placeholder fallback retained because GLTFLoader was unavailable. Expected model URL: ${monkeyUrl}`);
     return null;
   }
 
   const loader = new GLTFLoader();
+  console.info(`[monkeyModel] Monkey GLB load URL: ${monkeyUrl}`);
 
   return new Promise((resolve) => {
     loader.load(
-      MONKEY_GLB_URL,
+      monkeyUrl,
       (gltf) => {
         const model = gltf.scene;
         placeModelAtFallback(model, fallbackObject);
         scene.add(model);
         fallbackObject.visible = false;
-        console.info(`[monkeyModel] Monkey model loaded from ${MONKEY_GLB_URL}. Placeholder hidden.`);
+        console.info(`[monkeyModel] Monkey model loaded from ${monkeyUrl}. Placeholder hidden.`);
         resolve(model);
       },
       undefined,
       (error) => {
         console.warn(
-          `[monkeyModel] Failed to load monkey model at ${MONKEY_GLB_URL}. Placeholder fallback retained.`,
+          `[monkeyModel] Failed to load monkey model at ${monkeyUrl}. Placeholder fallback retained.`,
           error
         );
         resolve(null);

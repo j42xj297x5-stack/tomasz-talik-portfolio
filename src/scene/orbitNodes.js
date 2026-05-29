@@ -1,6 +1,6 @@
 import * as THREE from '../vendor/three.js';
-
-const VENDORED_GLTF_LOADER_PATH = '../../vendor/three/examples/jsm/loaders/GLTFLoader.js';
+import { resolveVendoredGLTFLoader } from '../utils/gltfLoader.js';
+import { publicPath } from '../utils/publicPath.js';
 const NODE_MODEL_TARGET_DIMENSION = 0.6;
 const HOVER_SCALE_TARGET = 1.06;
 const HOVER_SCALE_LERP = 0.08;
@@ -120,8 +120,8 @@ function getSparkLayerRadius(heightProgress, layerConfig) {
   if (layerConfig?.radiusProfile?.mode === 'cone') return getSlowMotionSpiralRadius(heightProgress);
   return getSpiralRadiusByHeight(heightProgress);
 }
-const WOOD_TREE_EFFECT_MODEL_PATH = '/glb/glyph_1-tree.glb';
-const WOOD_TREE_EFFECT_FALLBACK_MODEL_PATH = '/glb/glyph_1.glb';
+const WOOD_TREE_EFFECT_MODEL_PATH = 'glb/glyph_1-tree.glb';
+const WOOD_TREE_EFFECT_FALLBACK_MODEL_PATH = 'glb/glyph_1.glb';
 const WOOD_TREE_REVEAL_DURATION_IN = 9.6;
 const WOOD_TREE_REVEAL_DURATION_OUT = 0.7;
 const WOOD_TREE_REVEAL_RADIUS_MIN = 0.06;
@@ -465,20 +465,6 @@ function applyWoodTreeActivation(runtime, elapsed) {
 }
 
 
-async function resolveGLTFLoader() {
-  try {
-    const module = await import(VENDORED_GLTF_LOADER_PATH);
-    return module.GLTFLoader;
-  } catch (error) {
-    console.warn(
-      `[orbitNodes] GLTFLoader import failed for node model visuals at ${VENDORED_GLTF_LOADER_PATH}. Sphere fallback retained.`,
-      error
-    );
-    return null;
-  }
-}
-
-
 function fitModelToNode(model) {
   const box = new THREE.Box3().setFromObject(model);
   const size = new THREE.Vector3();
@@ -498,12 +484,18 @@ function fitModelToNode(model) {
 async function attachNodeModel(node, item) {
   if (!item.modelPath) return;
 
-  const GLTFLoader = await resolveGLTFLoader();
-  if (!GLTFLoader) return;
+  const modelUrl = publicPath(item.modelPath);
+  console.info(`[orbitNodes] GLB load URL for ${item.id}: ${modelUrl}`);
+
+  const GLTFLoader = await resolveVendoredGLTFLoader('orbitNodes');
+  if (!GLTFLoader) {
+    console.info(`[orbitNodes] Sphere fallback retained for ${item.id} because GLTFLoader was unavailable.`);
+    return;
+  }
 
   const loader = new GLTFLoader();
   loader.load(
-    item.modelPath,
+    modelUrl,
     (gltf) => {
       const model = gltf.scene;
       fitModelToNode(model);
@@ -513,8 +505,11 @@ async function attachNodeModel(node, item) {
 
       if (item.id === WOOD_NODE_ID && node.userData.woodTreeEffectRuntime) {
         const treeLoader = new GLTFLoader();
-        const attachTreeEffectModel = (path) => treeLoader.load(
-          path,
+        const attachTreeEffectModel = (path) => {
+          const treeModelUrl = publicPath(path);
+          console.info(`[orbitNodes] Wood tree effect GLB load URL for ${item.id}: ${treeModelUrl}`);
+          treeLoader.load(
+            treeModelUrl,
           (treeGltf) => {
             const treeModel = treeGltf.scene;
             fitModelToNode(treeModel);
@@ -590,29 +585,30 @@ totalEmissiveRadiance *= finalRevealMask;
 
             treeModel.visible = false;
             node.add(treeModel);
-            console.info(`[orbitNodes] Loaded wood tree effect model for ${item.id} from ${path}.`);
+            console.info(`[orbitNodes] Loaded wood tree effect model for ${item.id} from ${treeModelUrl}.`);
           },
           undefined,
           (error) => {
             if (path !== WOOD_TREE_EFFECT_FALLBACK_MODEL_PATH) {
-              console.warn(`[orbitNodes] Failed to load wood tree effect model for ${item.id} at ${path}. Trying fallback ${WOOD_TREE_EFFECT_FALLBACK_MODEL_PATH}.`, error);
+              console.warn(`[orbitNodes] Failed to load wood tree effect model for ${item.id} at ${treeModelUrl}. Trying fallback ${publicPath(WOOD_TREE_EFFECT_FALLBACK_MODEL_PATH)}.`, error);
               attachTreeEffectModel(WOOD_TREE_EFFECT_FALLBACK_MODEL_PATH);
               return;
             }
 
-            console.warn(`[orbitNodes] Failed to load fallback wood tree effect model for ${item.id}. Wood tree visual effect disabled safely.`, error);
+            console.warn(`[orbitNodes] Failed to load fallback wood tree effect model for ${item.id} at ${treeModelUrl}. Wood tree visual effect disabled safely.`, error);
           }
         );
+        };
 
         attachTreeEffectModel(WOOD_TREE_EFFECT_MODEL_PATH);
       }
 
-      console.info(`[orbitNodes] Loaded node model for ${item.id} from ${item.modelPath}.`);
+      console.info(`[orbitNodes] Loaded node model for ${item.id} from ${modelUrl}.`);
     },
     undefined,
     (error) => {
       console.warn(
-        `[orbitNodes] Failed to load node model for ${item.id} at ${item.modelPath}. Sphere fallback retained.`,
+        `[orbitNodes] Failed to load node model for ${item.id} at ${modelUrl}. Sphere fallback retained.`,
         error
       );
     }
