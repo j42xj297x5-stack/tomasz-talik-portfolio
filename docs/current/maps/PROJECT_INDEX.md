@@ -48,7 +48,13 @@
 
 - `docs/current/audits/snapshots/2026-05-28_18-08-09__snapshot__portfolio-ai-guide-progression-sun-moon.md` — documentation checkpoint for AI Guide panel direction, scene progression, sun/moon orbit state, and related protective decisions.
 - `docs/current/audits/snapshots/2026-05-29_19-59-42__snapshot__dual-runtime-github-pages-deployment.md` — first working dual-runtime deployment snapshot for local Vite and GitHub Pages, including base/public asset rules, GLTFLoader/GLB loading, fallback behavior, QA checklist, and deployment risks.
+- `docs/current/audits/snapshots/2026-05-30_07-10-52__snapshot__galaxy-progress-loader-mobile-runtime.md` — documentation checkpoint for current galaxy sprites, atmosphere progression, loading diagnostics, debug import/export, deployment-safe public asset paths, and mobile pointer/orientation/input runtime baseline.
 
 ## Runtime files update — galaxy sprite atmosphere
 - `src/scene/galaxySprites.js` — deterministic distant-galaxy sprite layer using transparent PNG public assets and deployment-safe `publicPath(...)` texture URLs.
 - `src/utils/publicPath.js` — shared helper for local Vite + GitHub Pages public asset URL normalization.
+
+
+## Current runtime baseline update — galaxy/progression/loader/mobile (2026-05-30)
+- Galaxy sprites, atmosphere progression, loading diagnostics, debug settings import/export, deployment-safe public asset paths, and mobile pointer/orientation handling are part of the current runtime baseline.
+- Loader performance and mobile staged loading remain open follow-up topics; next investigation should distinguish critical initial assets from deferred warmup and optional late assets.

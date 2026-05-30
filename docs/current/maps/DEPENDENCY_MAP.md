@@ -57,3 +57,13 @@ Concept docs -> Technical model -> Runtime implementation -> Decision updates ->
 - `src/main.js` depends on `src/scene/galaxySprites.js` for the distant background galaxy layer and keeps it outside orbit-node/raycast ownership.
 - `src/scene/galaxySprites.js` depends on `src/utils/publicPath.js` to resolve `/png/galaxy_01.png` through `/png/galaxy_05.png` under both local Vite and GitHub Pages base-path runtimes.
 - The layer depends on manually supplied transparent PNG assets in `public/png/` and must degrade to warnings/empty sprites when those files are absent.
+
+
+## Current runtime baseline dependency status (2026-05-30)
+- `src/main.js` now depends on current runtime services for galaxy sprite updates, atmosphere progression multipliers, loader diagnostics, debug settings import/export, base-aware public asset paths, and mobile pointer/orientation handling.
+- Galaxy sprite textures depend on logical `/png/galaxy_*.png` config paths resolved through `src/utils/publicPath.js` for local Vite and GitHub Pages compatibility.
+- Atmosphere visibility now depends on progression multipliers layered over debug opacity/visibility settings rather than replacing those debug values.
+- Loader readiness depends on `src/assets/assetManifest.js`, `src/assets/preloadAssets.js`, `src/assets/assetManager.js`, and `src/ui/loaderOverlay.js` for staged asset groups, byte/count diagnostics, cache hydration, and critical-failure blocking.
+- Mobile input correctness depends on Pointer Events, canvas-bound raycaster/camera coordinate normalization, centralized resize/orientation handling, and CSS pointer-event hardening.
+- Open dependency risk: loader performance on mobile may need stricter staging (`criticalInitial` / `deferredWarm` / `optionalLate`) and concurrency limits.
+- Snapshot reference: `docs/current/audits/snapshots/2026-05-30_07-10-52__snapshot__galaxy-progress-loader-mobile-runtime.md`.
