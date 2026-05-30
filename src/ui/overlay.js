@@ -1,4 +1,16 @@
 import { GLYPH_PANEL_BACKGROUNDS } from '../assets/assetManifest.js';
+import { publicPath } from '../utils/publicPath.js';
+
+const MOBILE_FRAME_ASSETS = {
+  lu: publicPath('svg/portfolio_frame_mobile_corner_lu.svg'),
+  ru: publicPath('svg/portfolio_frame_mobile_corner_ru.svg'),
+  ld: publicPath('svg/portfolio_frame_mobile_corner_ld.svg'),
+  rd: publicPath('svg/portfolio_frame_mobile_corner_rd.svg'),
+  u: publicPath('svg/portfolio_frame_mobile_line_u.svg'),
+  d: publicPath('svg/portfolio_frame_mobile_line_d.svg'),
+  l: publicPath('svg/portfolio_frame_mobile_line_l.svg'),
+  r: publicPath('svg/portfolio_frame_mobile_line_r.svg')
+};
 export function createOverlay({ onClose, assetManager = null } = {}) {
   const root = document.createElement('section');
   root.className = 'overlay';
@@ -6,6 +18,16 @@ export function createOverlay({ onClose, assetManager = null } = {}) {
   root.innerHTML = `
     <div class="overlay__backdrop" data-close-overlay></div>
     <article class="overlay__panel" role="dialog" aria-modal="true" aria-label="Portfolio gate details">
+      <div class="mobile-svg-frame" aria-hidden="true">
+        <span class="mobile-svg-frame__piece mobile-svg-frame__corner mobile-svg-frame__corner--lu" style="--mobile-frame-mask: url('${MOBILE_FRAME_ASSETS.lu}')"></span>
+        <span class="mobile-svg-frame__piece mobile-svg-frame__corner mobile-svg-frame__corner--ru" style="--mobile-frame-mask: url('${MOBILE_FRAME_ASSETS.ru}')"></span>
+        <span class="mobile-svg-frame__piece mobile-svg-frame__corner mobile-svg-frame__corner--ld" style="--mobile-frame-mask: url('${MOBILE_FRAME_ASSETS.ld}')"></span>
+        <span class="mobile-svg-frame__piece mobile-svg-frame__corner mobile-svg-frame__corner--rd" style="--mobile-frame-mask: url('${MOBILE_FRAME_ASSETS.rd}')"></span>
+        <span class="mobile-svg-frame__piece mobile-svg-frame__line mobile-svg-frame__line--u" style="--mobile-frame-mask: url('${MOBILE_FRAME_ASSETS.u}')"></span>
+        <span class="mobile-svg-frame__piece mobile-svg-frame__line mobile-svg-frame__line--d" style="--mobile-frame-mask: url('${MOBILE_FRAME_ASSETS.d}')"></span>
+        <span class="mobile-svg-frame__piece mobile-svg-frame__line mobile-svg-frame__line--l" style="--mobile-frame-mask: url('${MOBILE_FRAME_ASSETS.l}')"></span>
+        <span class="mobile-svg-frame__piece mobile-svg-frame__line mobile-svg-frame__line--r" style="--mobile-frame-mask: url('${MOBILE_FRAME_ASSETS.r}')"></span>
+      </div>
       <div class="overlay__content">
         <div class="overlay__scroll">
           <p class="overlay__status">Draft content — final copy pending</p>
