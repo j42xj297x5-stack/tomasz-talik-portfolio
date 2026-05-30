@@ -140,3 +140,12 @@
 9. Known risks are GitHub Pages cache, browser cache, case-sensitive filenames, large GLB size, and missing manually managed binary assets.
 10. Snapshot recorded: `docs/current/audits/snapshots/2026-05-29_19-59-42__snapshot__dual-runtime-github-pages-deployment.md`.
 11. This decision is documentation-only and does not change runtime code, visuals, scene behavior, content, assets, camera, lighting, or animation.
+
+
+## 2026-05-30 — Current runtime baseline: galaxy/progression/loader/debug/mobile (documentation-only)
+
+1. Galaxy sprites, atmosphere progression, loading diagnostics, debug import/export, and mobile pointer handling are now part of the current runtime baseline.
+2. Deployment-safe public asset paths remain baseline behavior: logical public paths are resolved through base-aware runtime helpers for local Vite and GitHub Pages compatibility.
+3. Loader performance/mobile staging remains an open issue; next investigation should evaluate staged preload groups and mobile concurrency limits before further loader optimization.
+4. Snapshot recorded: `docs/current/audits/snapshots/2026-05-30_07-10-52__snapshot__galaxy-progress-loader-mobile-runtime.md`.
+5. This decision is documentation-only and does not change runtime code, scene logic, runtime configuration, assets, loader optimization, mobile performance, or visual tuning.
