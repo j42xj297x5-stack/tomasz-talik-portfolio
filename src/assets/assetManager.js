@@ -57,7 +57,15 @@ export function createAssetManager({ diagnostics = null } = {}) {
     cacheHits: 0,
     cacheMisses: 0,
     shaderCompileComplete: false,
-    warmupFrameComplete: false
+    warmupFrameComplete: false,
+    mobileWarmupReduced: false,
+    activeStage: null,
+    queueLength: 0,
+    activeLoads: 0,
+    concurrency: 0,
+    networkLoadMs: 0,
+    parseHydrateMs: 0,
+    compileWarmupMs: 0
   };
 
   const emitStats = () => diagnostics?.setRuntimeStats?.(stats);
@@ -94,6 +102,7 @@ export function createAssetManager({ diagnostics = null } = {}) {
     diagnostics?.update?.(record, { status: 'loading', url });
 
     const promise = (async () => {
+      const startedAt = performance.now();
       try {
         let result;
         if (kind === 'gltf') {
@@ -127,9 +136,18 @@ export function createAssetManager({ diagnostics = null } = {}) {
           result = { kind, key, url, path: asset.path, blob };
         }
 
+        const hydrateStartedAt = performance.now();
         cacheResult(asset, result);
+        const finishedAt = performance.now();
+        const loadMs = finishedAt - startedAt;
+        const parseHydrateMs = finishedAt - hydrateStartedAt;
+        stats.networkLoadMs += loadMs;
+        stats.parseHydrateMs += parseHydrateMs;
+        emitStats();
         diagnostics?.update?.(record, {
           status: 'loaded',
+          loadMs,
+          parseHydrateMs,
           loadedBytes: record?.loadedBytes || record?.totalBytes || 0,
           totalBytes: record?.totalBytes ?? record?.loadedBytes ?? null
         });
@@ -144,12 +162,23 @@ export function createAssetManager({ diagnostics = null } = {}) {
     return promise;
   }
 
-  async function preload(assets, { concurrency = 4 } = {}) {
+  async function preload(assets, { concurrency = 4, stage = null, markComplete = false } = {}) {
     const queue = assets.slice();
     const failures = [];
+    let activeLoads = 0;
+    const updateQueueStats = () => {
+      stats.activeStage = stage;
+      stats.queueLength = queue.length;
+      stats.activeLoads = activeLoads;
+      stats.concurrency = concurrency;
+      emitStats();
+    };
+    updateQueueStats();
     async function worker() {
       while (queue.length > 0) {
         const asset = queue.shift();
+        activeLoads += 1;
+        updateQueueStats();
         const record = diagnostics?.records?.find((candidate) => candidate.id === asset.id) ?? null;
         try {
           await loadAsset(asset, { record });
@@ -158,11 +187,17 @@ export function createAssetManager({ diagnostics = null } = {}) {
           diagnostics?.update?.(record, { status: 'failed', error: normalizedError.message });
           failures.push({ record: asset, error: normalizedError });
           console.warn(`[AssetManager] Failed to hydrate ${asset.label ?? asset.id} from ${publicPath(asset.path)}.`, normalizedError);
+        } finally {
+          activeLoads -= 1;
+          updateQueueStats();
         }
       }
     }
     await Promise.all(Array.from({ length: Math.min(concurrency, queue.length || 1) }, () => worker()));
-    preloadComplete = true;
+    stats.activeStage = null;
+    stats.queueLength = 0;
+    stats.activeLoads = 0;
+    if (markComplete) preloadComplete = true;
     emitStats();
     const criticalFailures = failures.filter(({ record }) => record.critical);
     if (criticalFailures.length > 0) {
@@ -205,9 +240,11 @@ export function createAssetManager({ diagnostics = null } = {}) {
     return scene.clone(true);
   }
 
-  function markWarmup({ shaderCompileComplete, warmupFrameComplete }) {
+  function markWarmup({ shaderCompileComplete, warmupFrameComplete, mobileWarmupReduced, compileWarmupMs }) {
     if (typeof shaderCompileComplete === 'boolean') stats.shaderCompileComplete = shaderCompileComplete;
     if (typeof warmupFrameComplete === 'boolean') stats.warmupFrameComplete = warmupFrameComplete;
+    if (typeof mobileWarmupReduced === 'boolean') stats.mobileWarmupReduced = mobileWarmupReduced;
+    if (Number.isFinite(compileWarmupMs)) stats.compileWarmupMs += compileWarmupMs;
     emitStats();
   }
 

@@ -862,16 +862,26 @@ export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere, 
     const stats = snapshot.runtimeStats ?? {};
     const failedItems = snapshot.failedRecords.map((record) => `<li>${record.path}</li>`).join('');
 
+    const critical = snapshot.stageStats?.criticalInitial ?? { loaded: 0, total: 0, loadedBytes: 0, knownTotalBytes: 0 };
+    const deferred = snapshot.stageStats?.deferredWarm ?? { loaded: 0, total: 0, loadedBytes: 0, knownTotalBytes: 0, queued: 0, loading: 0 };
+    const optional = snapshot.stageStats?.optionalLate ?? { loaded: 0, total: 0, loadedBytes: 0, knownTotalBytes: 0 };
+    const formatStageBytes = (stage) => `${formatBytes(stage.loadedBytes)} / ${stage.knownTotalBytes > 0 ? formatBytes(stage.knownTotalBytes) : 'unknown total'}`;
+
     loadingReadout.innerHTML = `
       <p><strong>Assets:</strong> ${snapshot.completedAssets}/${snapshot.totalAssets} loaded · ${snapshot.failedAssets} failed</p>
-      <p><strong>Bytes:</strong> ${formatBytes(snapshot.loadedBytes)} / ${totalText}</p>
+      <p><strong>Critical initial:</strong> ${critical.loaded}/${critical.total} · ${formatStageBytes(critical)}</p>
+      <p><strong>Deferred warm:</strong> ${deferred.loaded}/${deferred.total} · ${formatStageBytes(deferred)}</p>
+      <p><strong>Optional late:</strong> ${optional.loaded}/${optional.total} · ${formatStageBytes(optional)}</p>
+      <p><strong>Background queue:</strong> stage ${stats.activeStage ?? 'idle'} · queued ${stats.queueLength ?? 0} · active ${stats.activeLoads ?? 0} · concurrency ${stats.concurrency ?? 0}</p>
+      <p><strong>Bytes total:</strong> ${formatBytes(snapshot.loadedBytes)} / ${totalText}</p>
       <p><strong>Size note:</strong> ${unknownNote}</p>
       <p><strong>Last loaded:</strong> <span>${lastLoaded}</span></p>
       <p><strong>Runtime hydrated:</strong> ${stats.runtimeLoadedAssets ?? 0} asset(s)</p>
       <p><strong>Parsed GLTF:</strong> ${stats.parsedGltfCount ?? 0}</p>
       <p><strong>Texture-loaded:</strong> ${stats.textureLoadedCount ?? 0}</p>
       <p><strong>Decoded images:</strong> ${stats.decodedImageCount ?? 0}</p>
-      <p><strong>Shader compile / warm-up:</strong> ${stats.shaderCompileComplete ? 'yes' : 'no'} / ${stats.warmupFrameComplete ? 'yes' : 'no'}</p>
+      <p><strong>Shader compile / warm-up:</strong> ${stats.shaderCompileComplete ? 'yes' : 'no'} / ${stats.warmupFrameComplete ? 'yes' : 'no'} · mobile reduced: ${stats.mobileWarmupReduced ? 'yes' : 'no'}</p>
+      <p><strong>Timing:</strong> load ${Math.round(stats.networkLoadMs ?? 0)}ms · parse/hydrate ${Math.round(stats.parseHydrateMs ?? 0)}ms · compile/warm-up ${Math.round(stats.compileWarmupMs ?? 0)}ms</p>
       <p><strong>Cache hits / misses:</strong> ${stats.cacheHits ?? 0} / ${stats.cacheMisses ?? 0}</p>
       ${snapshot.failedAssets > 0 ? `<p><strong>Failed:</strong></p><ul>${failedItems}</ul>` : ''}
     `;
