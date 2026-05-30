@@ -150,6 +150,18 @@ body {
 .overlay[hidden] { pointer-events: none; }
 .overlay__backdrop { position: absolute; inset: 0; background: rgba(2, 4, 7, 0.72); }
 .overlay__panel {
+  --mobile-frame-color: rgba(255, 255, 255, 0.88);
+  --mobile-frame-glow: rgba(255, 255, 255, 0.18);
+  --mobile-frame-opacity: 0.9;
+  --mobile-frame-inset: 10px;
+  --mobile-frame-corner-size: clamp(72px, 22vw, 118px);
+  --mobile-frame-line-thickness: clamp(8px, 2.4vw, 12px);
+  --mobile-frame-pivot-left-x: clamp(6px, 1.85vw, 10px);
+  --mobile-frame-pivot-right-x: clamp(6px, 1.95vw, 11px);
+  --mobile-frame-top-line-height: clamp(15px, 4.6vw, 25px);
+  --mobile-frame-bottom-line-height: clamp(10px, 2.9vw, 16px);
+  --mobile-frame-side-line-start: clamp(40px, 12.3vw, 66px);
+  --mobile-frame-side-line-end: clamp(39px, 11.9vw, 64px);
   position: absolute;
   pointer-events: auto;
   top: 50%;
@@ -161,10 +173,77 @@ body {
   border: 1px solid #3b475b;
   background: #0b111a;
 }
-.overlay__content { position: relative; z-index: 1; }
+.overlay__content { position: relative; z-index: 2; }
 .overlay__scroll { min-height: 0; }
 .overlay__actions { display: flex; justify-content: flex-end; margin-top: 0.9rem; }
 .overlay__close { position: relative; z-index: 3; }
+
+.mobile-svg-frame {
+  display: none;
+}
+
+.mobile-svg-frame__piece {
+  position: absolute;
+  display: block;
+  background: var(--mobile-frame-color);
+  opacity: var(--mobile-frame-opacity);
+  pointer-events: none;
+  -webkit-mask-image: var(--mobile-frame-mask);
+  mask-image: var(--mobile-frame-mask);
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+  filter: drop-shadow(0 0 5px var(--mobile-frame-glow));
+}
+
+.mobile-svg-frame__corner {
+  /* Width clamps are derived from --mobile-frame-corner-size and each viewBox ratio. */
+}
+
+/* Mobile frame source viewBoxes: lu 57.058x99.868, ru 54.147x99.821,
+   ld 57.086x98.871, rd 54.210x98.801; line_u 159.544x33.445,
+   line_d 159.544x21.212, line_l 12.334x134.673, line_r 12.436x134.673.
+   Pivot math keeps the stretchable lines meeting the guide-point area while
+   corners retain their own viewBox aspect ratios and are never stretched. */
+.mobile-svg-frame__corner--lu { top: 0; left: 0; width: clamp(41px, 12.6vw, 67px); aspect-ratio: 57.058022 / 99.868042; }
+.mobile-svg-frame__corner--ru { top: 0; right: 0; width: clamp(39px, 11.9vw, 64px); aspect-ratio: 54.147251 / 99.821289; }
+.mobile-svg-frame__corner--ld { bottom: 0; left: 0; width: clamp(42px, 12.7vw, 68px); aspect-ratio: 57.08634 / 98.870922; }
+.mobile-svg-frame__corner--rd { right: 0; bottom: 0; width: clamp(40px, 12.1vw, 65px); aspect-ratio: 54.210148 / 98.801094; }
+
+.mobile-svg-frame__line--u,
+.mobile-svg-frame__line--d {
+  left: var(--mobile-frame-pivot-left-x);
+  right: var(--mobile-frame-pivot-right-x);
+}
+
+.mobile-svg-frame__line--u {
+  top: -3px;
+  height: var(--mobile-frame-top-line-height);
+}
+
+.mobile-svg-frame__line--d {
+  bottom: 2px;
+  height: var(--mobile-frame-bottom-line-height);
+}
+
+.mobile-svg-frame__line--l,
+.mobile-svg-frame__line--r {
+  top: var(--mobile-frame-side-line-start);
+  bottom: var(--mobile-frame-side-line-end);
+  width: var(--mobile-frame-line-thickness);
+}
+
+.mobile-svg-frame__line--l {
+  left: clamp(1px, 0.32vw, 3px);
+}
+
+.mobile-svg-frame__line--r {
+  right: clamp(1px, 0.34vw, 3px);
+}
+
 .overlay__status { margin: 0 0 0.6rem; color: #8fa1b9; font-size: 0.82rem; }
 .overlay__title { margin: 0 0 0.7rem; font-size: 1.4rem; }
 .overlay__lead,
@@ -382,6 +461,99 @@ body {
   .overlay__panel--ai-guide .overlay__actions,
   .overlay__panel--creative-ai .overlay__actions {
     justify-content: center;
+  }
+}
+
+
+@media (max-width: 768px) {
+  .overlay__panel,
+  .overlay__panel--ai-guide,
+  .overlay__panel--creative-ai {
+    width: calc(100vw - 20px);
+    height: calc(100vh - 20px);
+    height: calc(100dvh - 20px);
+    max-height: none;
+    padding: 0;
+    border: 0;
+    border-radius: 18px;
+    background: rgba(7, 11, 18, 0.92);
+    box-shadow: 0 0 44px rgba(255, 255, 255, 0.08);
+    overflow: hidden;
+    isolation: isolate;
+  }
+
+  .overlay__panel--ai-guide::before,
+  .overlay__panel--creative-ai::before {
+    display: none;
+  }
+
+  .mobile-svg-frame {
+    position: absolute;
+    inset: var(--mobile-frame-inset);
+    z-index: 1;
+    display: block;
+    pointer-events: none;
+  }
+
+  .overlay__panel .overlay__content,
+  .overlay__panel--ai-guide .overlay__content,
+  .overlay__panel--creative-ai .overlay__content {
+    position: absolute;
+    z-index: 2;
+    inset: clamp(64px, 17vw, 92px) clamp(36px, 10vw, 74px) clamp(34px, 10vw, 62px);
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    box-shadow: none;
+    backdrop-filter: none;
+  }
+
+  .overlay__panel .overlay__scroll,
+  .overlay__panel--ai-guide .overlay__scroll,
+  .overlay__panel--creative-ai .overlay__scroll {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    padding-right: 0.55rem;
+    background: transparent;
+    box-shadow: none;
+    backdrop-filter: none;
+    scrollbar-width: thin;
+  }
+
+  .overlay__panel .overlay__actions,
+  .overlay__panel--ai-guide .overlay__actions,
+  .overlay__panel--creative-ai .overlay__actions {
+    position: relative;
+    z-index: 3;
+    flex: 0 0 auto;
+    display: flex;
+    justify-content: center;
+    padding-top: clamp(14px, 4vw, 22px);
+    margin-top: 0;
+  }
+
+  .overlay__panel .overlay__close,
+  .overlay__panel--ai-guide .overlay__close,
+  .overlay__panel--creative-ai .overlay__close {
+    position: relative;
+    z-index: 4;
+    min-height: 44px;
+  }
+
+  .overlay__panel .overlay__title,
+  .overlay__panel--ai-guide .overlay__title,
+  .overlay__panel--creative-ai .overlay__title {
+    font-size: clamp(1.8rem, 9.5vw, 2.8rem);
+  }
+
+  .overlay__panel .overlay__text,
+  .overlay__panel--ai-guide .overlay__text,
+  .overlay__panel--creative-ai .overlay__text {
+    font-size: clamp(0.9rem, 3.3vw, 1rem);
   }
 }
 
