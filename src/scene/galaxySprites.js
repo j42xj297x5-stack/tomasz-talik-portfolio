@@ -154,7 +154,7 @@ function detectReducedMotion() {
   return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 }
 
-export function createGalaxySpritesLayer(options = {}, { assetManager = null } = {}) {
+export function createGalaxySpritesLayer(options = {}, { assetManager = null, deferUntilWarm = false } = {}) {
   const group = new THREE.Group();
   group.name = 'GalaxySpritesLayer';
 
@@ -167,6 +167,8 @@ export function createGalaxySpritesLayer(options = {}, { assetManager = null } =
   let disposed = false;
   let reducedMotion = detectReducedMotion();
   let progressionMultiplier = 1;
+  let revealProgress = 0;
+  let hasHydratedDeferred = false;
 
   function clearInstances({ disposeTextures = true } = {}) {
     while (group.children.length > 0) {
@@ -228,7 +230,8 @@ export function createGalaxySpritesLayer(options = {}, { assetManager = null } =
   }
 
   function createSprite(textureRecord, state) {
-    const material = makeSpriteMaterial(textureRecord.texture, config, clamp(config.opacity * state.opacity * progressionMultiplier, 0, 1));
+    const targetOpacity = clamp(config.opacity * state.opacity * progressionMultiplier, 0, 1);
+    const material = makeSpriteMaterial(textureRecord.texture, config, 0);
     material.rotation = state.spinPhase;
 
     const sprite = new THREE.Sprite(material);
@@ -238,7 +241,7 @@ export function createGalaxySpritesLayer(options = {}, { assetManager = null } =
     computeOrbitalPosition(state, sprite.position);
     group.add(sprite);
 
-    instances.push({ sprite, material, ...state });
+    instances.push({ sprite, material, targetOpacity, ...state });
   }
 
   async function rebuild(nextOptions = {}) {
@@ -285,8 +288,9 @@ export function createGalaxySpritesLayer(options = {}, { assetManager = null } =
     group.visible = config.enabled;
     instances.forEach((instance) => {
       const { sprite, material } = instance;
-      sprite.scale.setScalar(clamp(instance.scale, config.minScale, config.maxScale));
-      material.opacity = clamp(instance.opacity * config.opacity * progressionMultiplier, 0, 1);
+      sprite.scale.setScalar(clamp(instance.scale, config.minScale, config.maxScale) * (0.88 + 0.12 * revealProgress));
+      instance.targetOpacity = clamp(instance.opacity * config.opacity * progressionMultiplier, 0, 1);
+      material.opacity = instance.targetOpacity * revealProgress;
       material.alphaTest = config.alphaTest;
       material.blending = config.additiveBlending ? THREE.AdditiveBlending : THREE.NormalBlending;
       material.needsUpdate = true;
@@ -305,12 +309,17 @@ export function createGalaxySpritesLayer(options = {}, { assetManager = null } =
     const speedMultiplier = reducedMotion ? config.reducedMotionSpeedMultiplier : 1;
     const scaledDelta = delta * speedMultiplier;
 
+    const revealTarget = progressionMultiplier > 0 ? 1 : 0;
+    revealProgress += (revealTarget - revealProgress) * Math.min(1, scaledDelta / 0.65);
+
     instances.forEach((instance) => {
       const { sprite, material } = instance;
       instance.orbitAngle += instance.orbitSpeed * config.orbitSpeedMultiplier * instance.orbitDirection * scaledDelta;
       instance.spinPhase += instance.spinSpeed * config.ownSpinSpeedMultiplier * instance.spinDirection * scaledDelta;
       computeOrbitalPosition(instance, sprite.position);
+      sprite.scale.setScalar(clamp(instance.scale, config.minScale, config.maxScale) * (0.88 + 0.12 * revealProgress));
       material.rotation = instance.spinPhase;
+      material.opacity = (instance.targetOpacity ?? clamp(instance.opacity * config.opacity * progressionMultiplier, 0, 1)) * revealProgress;
     });
 
     if (camera) {
@@ -325,7 +334,13 @@ export function createGalaxySpritesLayer(options = {}, { assetManager = null } =
     clearInstances();
   }
 
-  const ready = rebuild();
+  async function hydrateDeferred() {
+    if (hasHydratedDeferred) return;
+    hasHydratedDeferred = true;
+    await rebuild();
+  }
+
+  const ready = deferUntilWarm ? Promise.resolve() : hydrateDeferred();
 
   return {
     group,
@@ -333,6 +348,7 @@ export function createGalaxySpritesLayer(options = {}, { assetManager = null } =
     update,
     setEnabled,
     rebuild,
+    hydrateDeferred,
     dispose,
     applyRuntimeOptions,
     setProgressionMultiplier(nextMultiplier = 1) {

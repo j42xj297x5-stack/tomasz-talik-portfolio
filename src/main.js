@@ -16,7 +16,7 @@ import { createSunCycle, SUN_CYCLE_DEFAULTS } from './scene/sunCycle.js';
 import { createMoonCycle, MOON_CYCLE_DEFAULTS } from './scene/moonCycle.js';
 import { createAtmosphereProgression } from './scene/atmosphere/atmosphereProgression.js';
 import { createGalaxySpritesLayer, GALAXY_SPRITES_DEFAULTS } from './scene/galaxySprites.js';
-import { INITIAL_PRELOAD_GROUPS, getPreloadAssets } from './assets/assetManifest.js';
+import { ASSET_STAGES, INITIAL_PRELOAD_GROUPS, DEFERRED_PRELOAD_GROUPS, OPTIONAL_PRELOAD_GROUPS, getPreloadAssets, getAllPreloadAssets } from './assets/assetManifest.js';
 import { createLoadingDiagnostics, preloadAssets } from './assets/preloadAssets.js';
 import { createAssetManager } from './assets/assetManager.js';
 import { createLoaderOverlay } from './ui/loaderOverlay.js';
@@ -34,14 +34,27 @@ const canvas = document.querySelector('#scene-canvas');
 const shell = document.querySelector('.runtime-shell');
 const debugLoading = new URLSearchParams(window.location.search).has('debug');
 const debugInput = debugLoading;
-const preloadAssetsList = getPreloadAssets(INITIAL_PRELOAD_GROUPS);
-const loadingDiagnostics = createLoadingDiagnostics(preloadAssetsList);
+const criticalAssetsList = getPreloadAssets(INITIAL_PRELOAD_GROUPS);
+const deferredWarmAssetsList = getPreloadAssets(DEFERRED_PRELOAD_GROUPS);
+const optionalLateAssetsList = getPreloadAssets(OPTIONAL_PRELOAD_GROUPS);
+const loadingDiagnostics = createLoadingDiagnostics(getAllPreloadAssets());
+loadingDiagnostics.markEvent('appStart');
+const mobileQuery = window.matchMedia('(pointer: coarse), (max-width: 767px)');
+const isMobileRuntime = mobileQuery.matches;
+const preloadConcurrency = isMobileRuntime ? 2 : 4;
 const assetManager = createAssetManager({ diagnostics: loadingDiagnostics });
 const loaderOverlay = createLoaderOverlay({ debug: debugLoading });
 loadingDiagnostics.subscribe((snapshot) => loaderOverlay.update(snapshot));
 
 try {
-  await preloadAssets(preloadAssetsList, { diagnostics: loadingDiagnostics, assetManager });
+  loadingDiagnostics.markEvent('criticalPreloadStart');
+  await preloadAssets(criticalAssetsList, {
+    diagnostics: loadingDiagnostics,
+    assetManager,
+    concurrency: preloadConcurrency,
+    stage: ASSET_STAGES.CRITICAL_INITIAL
+  });
+  loadingDiagnostics.markEvent('criticalPreloadEnd');
 } catch (error) {
   const message = error instanceof Error ? error.message : String(error);
   loaderOverlay.showError('Nie udało się załadować krytycznych zasobów. Odśwież stronę lub sprawdź połączenie.');
@@ -123,13 +136,14 @@ const sceneRuntimeConfig = {
   }
 };
 
-const atmosphere = createBackgroundAtmosphere(sceneRuntimeConfig.backgroundAtmosphere, { assetManager });
+loadingDiagnostics.markEvent('sceneAttachStart');
+const atmosphere = createBackgroundAtmosphere(sceneRuntimeConfig.backgroundAtmosphere, { assetManager, deferRelicsUntilWarm: true });
 scene.add(atmosphere.object3d);
 const sunCycle = createSunCycle(sceneRuntimeConfig.sunCycle, { assetManager });
 scene.add(sunCycle.object3d);
 const moonCycle = createMoonCycle(sceneRuntimeConfig.moonCycle, { assetManager });
 scene.add(moonCycle.object3d);
-const galaxyLayer = createGalaxySpritesLayer(sceneRuntimeConfig.galaxySprites, { assetManager });
+const galaxyLayer = createGalaxySpritesLayer(sceneRuntimeConfig.galaxySprites, { assetManager, deferUntilWarm: true });
 scene.add(galaxyLayer.group);
 
 await loadMonkeyModel({ scene, fallbackObject: centralPlaceholder, assetManager });
@@ -137,6 +151,12 @@ await loadMonkeyModel({ scene, fallbackObject: centralPlaceholder, assetManager 
 const { group: orbitGroup, nodes } = createOrbitNodes(portfolioNodes, { assetManager });
 scene.add(orbitGroup);
 const atmosphereProgression = createAtmosphereProgression({ gateIds: portfolioNodes.map((node) => node.id) });
+const initialProgressionMultipliers = atmosphereProgression.getProgressionMultipliers();
+atmosphere.setProgressionMultipliers(initialProgressionMultipliers);
+sunCycle.setProgressionMultiplier(initialProgressionMultipliers.sunMoon);
+moonCycle.setProgressionMultiplier(initialProgressionMultipliers.sunMoon);
+galaxyLayer.setProgressionMultiplier(initialProgressionMultipliers.galaxies);
+loadingDiagnostics.markEvent('sceneAttachEnd');
 
 const overlay = createOverlay({
   assetManager,
@@ -343,10 +363,18 @@ window.addEventListener('orientationchange', () => {
 });
 handleResize();
 await Promise.all([atmosphere.ready, galaxyLayer.ready]);
-renderer.compile(scene, camera);
-assetManager.markWarmup({ shaderCompileComplete: true });
+loadingDiagnostics.markEvent('rendererCompileStart');
+const compileStartedAt = performance.now();
+if (isMobileRuntime) {
+  assetManager.markWarmup({ shaderCompileComplete: false, mobileWarmupReduced: true });
+} else {
+  renderer.compile(scene, camera);
+  assetManager.markWarmup({ shaderCompileComplete: true, mobileWarmupReduced: false });
+}
+loadingDiagnostics.markEvent('rendererCompileEnd');
 renderer.render(scene, camera);
-assetManager.markWarmup({ warmupFrameComplete: true });
+assetManager.markWarmup({ warmupFrameComplete: true, compileWarmupMs: performance.now() - compileStartedAt });
+loadingDiagnostics.markEvent('firstWarmupRender');
 
 const timer = new THREE.Timer();
 timer.connect(document);
@@ -375,6 +403,34 @@ function tick(timestamp) {
   requestAnimationFrame(tick);
 }
 
+loadingDiagnostics.markEvent('loaderFadeStart');
 shell?.classList.remove('runtime-shell--loading');
 await loaderOverlay.complete();
+loadingDiagnostics.markEvent('loaderFadeEnd');
 tick();
+
+queueMicrotask(() => {
+  loadingDiagnostics.markEvent('deferredWarmStart');
+  preloadAssets(deferredWarmAssetsList, {
+    diagnostics: loadingDiagnostics,
+    assetManager,
+    concurrency: preloadConcurrency,
+    stage: ASSET_STAGES.DEFERRED_WARM
+  })
+    .then(async () => {
+      loadingDiagnostics.markEvent('deferredWarmEnd');
+      await Promise.all([atmosphere.hydrateDeferredRelics?.(), galaxyLayer.hydrateDeferred?.()]);
+      assetManager.markPreloadComplete();
+      return preloadAssets(optionalLateAssetsList, {
+        diagnostics: loadingDiagnostics,
+        assetManager,
+        concurrency: 1,
+        stage: ASSET_STAGES.OPTIONAL_LATE,
+        markComplete: true
+      });
+    })
+    .catch((error) => {
+      console.warn('[loading] Deferred warm preload failed after reveal.', error);
+      assetManager.markPreloadComplete();
+    });
+});
