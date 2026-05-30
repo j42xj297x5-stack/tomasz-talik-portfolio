@@ -150,9 +150,9 @@ body {
 .overlay[hidden] { pointer-events: none; }
 .overlay__backdrop { position: absolute; inset: 0; background: rgba(2, 4, 7, 0.72); }
 .overlay__panel {
-  --mobile-frame-color: rgba(255, 255, 255, 0.88);
-  --mobile-frame-glow: rgba(255, 255, 255, 0.18);
-  --mobile-frame-opacity: 0.9;
+  --mobile-frame-color: rgba(255,255,255,0.92);
+  --mobile-frame-glow: rgba(255,255,255,0.16);
+  --mobile-frame-opacity: 1;
   --mobile-frame-inset: 10px;
   --mobile-frame-corner-size: clamp(72px, 22vw, 118px);
   --mobile-frame-line-thickness: clamp(8px, 2.4vw, 12px);
@@ -185,7 +185,8 @@ body {
 .mobile-svg-frame__piece {
   position: absolute;
   display: block;
-  background: var(--mobile-frame-color);
+  background-color: var(--mobile-frame-color);
+  background-image: none;
   opacity: var(--mobile-frame-opacity);
   pointer-events: none;
   -webkit-mask-image: var(--mobile-frame-mask);
@@ -196,6 +197,7 @@ body {
   mask-position: center;
   -webkit-mask-size: 100% 100%;
   mask-size: 100% 100%;
+  mask-mode: alpha;
   filter: drop-shadow(0 0 5px var(--mobile-frame-glow));
 }
 
