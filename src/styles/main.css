@@ -152,7 +152,7 @@ body {
 .overlay__panel {
   --mobile-frame-color: rgba(255,255,255,0.92);
   --mobile-frame-glow: rgba(255,255,255,0.16);
-  --mobile-frame-opacity: 1;
+  --mobile-frame-opacity: 0.92;
   --mobile-frame-inset: 10px;
   --mobile-frame-corner-size: clamp(72px, 22vw, 118px);
   --mobile-frame-line-thickness: clamp(8px, 2.4vw, 12px);
@@ -185,20 +185,38 @@ body {
 .mobile-svg-frame__piece {
   position: absolute;
   display: block;
-  background-color: var(--mobile-frame-color);
-  background-image: none;
+  color: var(--mobile-frame-color);
   opacity: var(--mobile-frame-opacity);
   pointer-events: none;
-  -webkit-mask-image: var(--mobile-frame-mask);
-  mask-image: var(--mobile-frame-mask);
-  -webkit-mask-repeat: no-repeat;
-  mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-  mask-position: center;
-  -webkit-mask-size: 100% 100%;
-  mask-size: 100% 100%;
-  mask-mode: alpha;
   filter: drop-shadow(0 0 5px var(--mobile-frame-glow));
+}
+
+.mobile-svg-frame__piece svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  color: var(--mobile-frame-color);
+  fill: currentColor;
+  stroke: none;
+  overflow: visible;
+}
+
+.mobile-svg-frame__piece svg path,
+.mobile-svg-frame__piece svg polygon,
+.mobile-svg-frame__piece svg rect,
+.mobile-svg-frame__piece svg circle,
+.mobile-svg-frame__piece svg ellipse,
+.mobile-svg-frame__piece svg line,
+.mobile-svg-frame__piece svg polyline {
+  fill: currentColor;
+  stroke: none;
+}
+
+.mobile-svg-frame__piece svg .frame-pivot-reference {
+  fill: none;
+  stroke: none;
+  opacity: 0;
+  pointer-events: none;
 }
 
 .mobile-svg-frame__corner {
