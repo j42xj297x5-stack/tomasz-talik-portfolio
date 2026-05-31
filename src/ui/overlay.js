@@ -14,6 +14,7 @@ const MOBILE_FRAME_ASSETS = {
 
 const SVG_VISIBLE_ELEMENTS = 'path, rect, circle, ellipse, polygon, polyline, line, g, use';
 const SVG_RENDERED_SHAPES = ['path', 'rect', 'circle', 'ellipse', 'polygon', 'polyline', 'line'];
+const LINE_FRAME_CLASS_PATTERN = /(?:^|\s)frame-line(?:\s|$)/;
 const MOBILE_FRAME_COLOR_VALUE = 'var(--mobile-frame-color, rgba(255,255,255,0.92))';
 const BLACK_COLOR_PATTERN = /(?:^|[\s:;,(])(?:#(?:000|000000)\b|black\b|rgb\(\s*0\s*,\s*0\s*,\s*0\s*\)|rgba\(\s*0\s*,\s*0\s*,\s*0\s*,\s*(?:0?\.\d+|1(?:\.0+)?)\s*\))/i;
 const PIVOT_REFERENCE_PATTERN = /(?:pivot|reference|guide)/i;
@@ -61,6 +62,45 @@ function stripPaintDeclarations(element) {
   element.style.removeProperty('paint-order');
 }
 
+function getPaintValue(element, property) {
+  const attributeValue = element.getAttribute(property);
+  if (attributeValue) return attributeValue.trim();
+
+  const inlineValue = element.style.getPropertyValue(property);
+  if (inlineValue) return inlineValue.trim();
+
+  const styleText = element.getAttribute('style') ?? '';
+  const match = styleText.match(new RegExp(`(?:^|;)\\s*${property}\\s*:\\s*([^;]+)`, 'i'));
+  return match?.[1]?.trim() ?? '';
+}
+
+function hasVisiblePaintValue(value) {
+  return Boolean(value) && !/^(?:none|transparent)$/i.test(value);
+}
+
+function hasUsableStrokeWidth(element) {
+  const width = element.getAttribute('stroke-width')
+    ?? element.style.getPropertyValue('stroke-width')
+    ?? '';
+
+  if (!width) return true;
+
+  const numericWidth = Number.parseFloat(width);
+  return Number.isNaN(numericWidth) || numericWidth > 0;
+}
+
+function detectPaintMode(element, preferStroke = false) {
+  const fill = getPaintValue(element, 'fill');
+  const stroke = getPaintValue(element, 'stroke');
+  const hasFill = hasVisiblePaintValue(fill);
+  const hasStroke = hasVisiblePaintValue(stroke) && hasUsableStrokeWidth(element);
+
+  if (preferStroke && hasStroke && !hasFill) return 'stroke';
+  if (hasFill) return 'fill';
+  if (hasStroke) return 'stroke';
+  return preferStroke && element.tagName.toLowerCase() === 'line' ? 'stroke' : 'fill';
+}
+
 function forcePivotReference(element) {
   element.classList.add('frame-pivot-reference');
   element.dataset.framePivot = 'true';
@@ -76,11 +116,26 @@ function forcePivotReference(element) {
   element.style.setProperty('stroke', 'none', 'important');
 }
 
-function forceVisiblePaint(element) {
+function forceVisiblePaint(element, paintMode = 'fill') {
   stripPaintDeclarations(element);
+  element.dataset.mobileFramePaintMode = paintMode;
+  element.style.setProperty('color', MOBILE_FRAME_COLOR_VALUE, 'important');
+
+  if (paintMode === 'stroke') {
+    if (!hasUsableStrokeWidth(element)) {
+      element.removeAttribute('stroke-width');
+      element.style.removeProperty('stroke-width');
+    }
+
+    element.setAttribute('fill', 'none');
+    element.setAttribute('stroke', 'currentColor');
+    element.style.setProperty('fill', 'none', 'important');
+    element.style.setProperty('stroke', 'currentColor', 'important');
+    return;
+  }
+
   element.setAttribute('fill', 'currentColor');
   element.setAttribute('stroke', 'none');
-  element.style.setProperty('color', MOBILE_FRAME_COLOR_VALUE, 'important');
   element.style.setProperty('fill', 'currentColor', 'important');
   element.style.setProperty('stroke', 'none', 'important');
 }
@@ -254,6 +309,7 @@ function logMobileFrameDiagnostics(assetFilename, svg, normalizedCount, pivotCou
 function normalizeInlineSvg(svg, className, assetFilename) {
   let normalizedCount = 0;
   let pivotCount = 0;
+  const preferStroke = LINE_FRAME_CLASS_PATTERN.test(className);
 
   svg.querySelectorAll('style').forEach((styleElement) => styleElement.remove());
 
@@ -266,8 +322,6 @@ function normalizeInlineSvg(svg, className, assetFilename) {
   svg.removeAttribute('fill');
   svg.removeAttribute('stroke');
   svg.style.setProperty('color', MOBILE_FRAME_COLOR_VALUE, 'important');
-  svg.style.setProperty('fill', 'currentColor', 'important');
-  svg.style.setProperty('stroke', 'none', 'important');
   svg.style.setProperty('opacity', 'var(--mobile-frame-opacity, 0.92)', 'important');
   svg.style.setProperty('overflow', 'visible');
 
@@ -278,7 +332,7 @@ function normalizeInlineSvg(svg, className, assetFilename) {
       return;
     }
 
-    forceVisiblePaint(element);
+    forceVisiblePaint(element, detectPaintMode(element, preferStroke));
     normalizedCount += 1;
   });
 
@@ -386,18 +440,19 @@ export function createOverlay({ onClose, assetManager = null } = {}) {
 
   return {
     open(nodeData) {
-      const isAIGuide = nodeData.id === 'ai-guide';
-      const isCreativeAI = nodeData.id === 'creative-ai';
+      const gateId = nodeData.id;
+      const isAIGuide = gateId === 'ai-guide';
+      const isCreativeAI = gateId === 'creative-ai';
       const hasStructuredCopy = Boolean(nodeData.leadText || nodeData.bodyText || nodeData.closingText);
 
-      panelEl.dataset.gateId = nodeData.id;
+      panelEl.dataset.gateId = gateId;
       panelEl.classList.toggle('overlay__panel--ai-guide', isAIGuide);
       panelEl.classList.toggle('overlay__panel--creative-ai', isCreativeAI);
-      const panelBackgroundPath = GLYPH_PANEL_BACKGROUNDS[nodeData.id];
+      const panelBackgroundPath = GLYPH_PANEL_BACKGROUNDS[gateId];
       if (panelBackgroundPath) {
         const cachedUrl = assetManager?.getImageUrlByPath?.(panelBackgroundPath);
         if (!cachedUrl) {
-          console.warn(`[overlay] Panel background cache miss for ${nodeData.id}: ${panelBackgroundPath}`);
+          console.warn(`[overlay] Panel background cache miss for ${gateId}: ${panelBackgroundPath}`);
         }
         panelEl.style.setProperty('--overlay-panel-bg-image', `url("${cachedUrl ?? panelBackgroundPath}")`);
       } else {
@@ -428,7 +483,7 @@ export function createOverlay({ onClose, assetManager = null } = {}) {
       root.hidden = false;
       document.body.classList.add('overlay-open');
       mobileFrameReady.finally(() => {
-        logOverlayFrameDiagnostics(root, panelEl, nodeData.id);
+        logOverlayFrameDiagnostics(root, panelEl, gateId);
       });
     },
     close
