@@ -279,8 +279,18 @@ body {
   font-style: italic;
 }
 
+.overlay__feature {
+  margin: 0;
+}
+
+.overlay__feature-label,
+.overlay__feature-text {
+  margin: 0;
+}
+
 .overlay__panel--ai-guide,
-.overlay__panel--creative-ai {
+.overlay__panel--creative-ai,
+.overlay__panel--haiku-cosmos {
   --overlay-panel-scrollbar: rgba(211, 190, 121, 0.28);
   --overlay-panel-close-color: rgba(235, 244, 214, 0.92);
   --overlay-panel-close-bg: rgba(8, 24, 16, 0.28);
@@ -325,7 +335,8 @@ body {
 }
 
 .overlay__panel--ai-guide::before,
-.overlay__panel--creative-ai::before {
+.overlay__panel--creative-ai::before,
+.overlay__panel--haiku-cosmos::before {
   content: '';
   position: absolute;
   inset: 0;
@@ -338,7 +349,8 @@ body {
 }
 
 .overlay__panel--ai-guide .overlay__content,
-.overlay__panel--creative-ai .overlay__content {
+.overlay__panel--creative-ai .overlay__content,
+.overlay__panel--haiku-cosmos .overlay__content {
   position: absolute;
   z-index: 1;
   left: 24%;
@@ -356,7 +368,8 @@ body {
 }
 
 .overlay__panel--ai-guide .overlay__scroll,
-.overlay__panel--creative-ai .overlay__scroll {
+.overlay__panel--creative-ai .overlay__scroll,
+.overlay__panel--haiku-cosmos .overlay__scroll {
   flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
@@ -368,17 +381,21 @@ body {
 }
 
 .overlay__panel--ai-guide .overlay__scroll::-webkit-scrollbar,
-.overlay__panel--creative-ai .overlay__scroll::-webkit-scrollbar { width: 6px; }
+.overlay__panel--creative-ai .overlay__scroll::-webkit-scrollbar,
+.overlay__panel--haiku-cosmos .overlay__scroll::-webkit-scrollbar { width: 6px; }
 .overlay__panel--ai-guide .overlay__scroll::-webkit-scrollbar-thumb,
-.overlay__panel--creative-ai .overlay__scroll::-webkit-scrollbar-thumb {
+.overlay__panel--creative-ai .overlay__scroll::-webkit-scrollbar-thumb,
+.overlay__panel--haiku-cosmos .overlay__scroll::-webkit-scrollbar-thumb {
   background: var(--overlay-panel-scrollbar);
   border-radius: 999px;
 }
 .overlay__panel--ai-guide .overlay__scroll::-webkit-scrollbar-track,
-.overlay__panel--creative-ai .overlay__scroll::-webkit-scrollbar-track { background: transparent; }
+.overlay__panel--creative-ai .overlay__scroll::-webkit-scrollbar-track,
+.overlay__panel--haiku-cosmos .overlay__scroll::-webkit-scrollbar-track { background: transparent; }
 
 .overlay__panel--ai-guide .overlay__actions,
-.overlay__panel--creative-ai .overlay__actions {
+.overlay__panel--creative-ai .overlay__actions,
+.overlay__panel--haiku-cosmos .overlay__actions {
   flex: 0 0 auto;
   display: flex;
   justify-content: flex-end;
@@ -387,7 +404,8 @@ body {
 }
 
 .overlay__panel--ai-guide .overlay__close,
-.overlay__panel--creative-ai .overlay__close {
+.overlay__panel--creative-ai .overlay__close,
+.overlay__panel--haiku-cosmos .overlay__close {
   position: relative;
   inset: auto;
   z-index: 2;
@@ -406,14 +424,17 @@ body {
 .overlay__panel--ai-guide .overlay__close:hover,
 .overlay__panel--ai-guide .overlay__close:focus-visible,
 .overlay__panel--creative-ai .overlay__close:hover,
-.overlay__panel--creative-ai .overlay__close:focus-visible {
+.overlay__panel--creative-ai .overlay__close:focus-visible,
+.overlay__panel--haiku-cosmos .overlay__close:hover,
+.overlay__panel--haiku-cosmos .overlay__close:focus-visible {
   color: var(--overlay-panel-close-hover-color);
   border-color: var(--overlay-panel-close-hover-border);
   background: var(--overlay-panel-close-hover-bg);
 }
 
 .overlay__panel--ai-guide .overlay__status,
-.overlay__panel--creative-ai .overlay__status {
+.overlay__panel--creative-ai .overlay__status,
+.overlay__panel--haiku-cosmos .overlay__status {
   margin-bottom: 0.5rem;
   font-size: 0.86rem;
   letter-spacing: 0.05em;
@@ -421,7 +442,8 @@ body {
 }
 
 .overlay__panel--ai-guide .overlay__title,
-.overlay__panel--creative-ai .overlay__title {
+.overlay__panel--creative-ai .overlay__title,
+.overlay__panel--haiku-cosmos .overlay__title {
   margin: 0 0 clamp(18px, 2.4vw, 28px);
   font-family: Georgia, 'Times New Roman', ui-serif, serif;
   font-weight: 700;
@@ -433,7 +455,8 @@ body {
 }
 
 .overlay__panel--ai-guide .overlay__lead,
-.overlay__panel--creative-ai .overlay__lead {
+.overlay__panel--creative-ai .overlay__lead,
+.overlay__panel--haiku-cosmos .overlay__lead {
   margin-bottom: 0.9rem;
   font-size: clamp(0.96rem, 1.25vw, 1.08rem);
   line-height: 1.62;
@@ -441,7 +464,8 @@ body {
 }
 
 .overlay__panel--ai-guide .overlay__text,
-.overlay__panel--creative-ai .overlay__text {
+.overlay__panel--creative-ai .overlay__text,
+.overlay__panel--haiku-cosmos .overlay__text {
   margin-bottom: 0.95rem;
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   font-size: clamp(0.92rem, 1.05vw, 1rem);
@@ -450,10 +474,113 @@ body {
 }
 
 .overlay__panel--ai-guide .overlay__closing,
-.overlay__panel--creative-ai .overlay__closing {
+.overlay__panel--creative-ai .overlay__closing,
+.overlay__panel--haiku-cosmos .overlay__closing {
   color: var(--overlay-panel-closing-color);
   font-style: italic;
   letter-spacing: 0.02em;
+}
+
+
+.overlay__panel--haiku-cosmos {
+  --mobile-frame-color: #4bd6ed;
+  --mobile-frame-glow: rgba(30, 190, 225, 0.2);
+  --overlay-panel-scrollbar: rgba(19, 126, 174, 0.28);
+  --overlay-panel-close-color: #08365a;
+  --overlay-panel-close-bg: rgba(247, 253, 255, 0.78);
+  --overlay-panel-close-border: rgba(22, 163, 205, 0.48);
+  --overlay-panel-close-shadow: rgba(23, 196, 223, 0.24);
+  --overlay-panel-close-hover-color: #042947;
+  --overlay-panel-close-hover-border: rgba(6, 128, 184, 0.68);
+  --overlay-panel-close-hover-bg: rgba(227, 249, 255, 0.94);
+  --overlay-panel-status-color: #087dae;
+  --overlay-panel-title-color: #062e52;
+  --overlay-panel-title-shadow: rgba(115, 223, 244, 0.34);
+  --overlay-panel-lead-color: #0b466c;
+  --overlay-panel-text-color: #123d5f;
+  --overlay-panel-closing-color: #075f8d;
+  width: min(700px, calc(92vh * 700 / 1000), 92vw);
+  aspect-ratio: 700 / 1000;
+  max-height: 92vh;
+}
+
+.overlay__panel--haiku-cosmos .overlay__content {
+  left: 20.5%;
+  right: 20.5%;
+  top: 16.5%;
+  bottom: 10.5%;
+  padding: clamp(12px, 1.35vw, 20px) clamp(10px, 1.25vw, 18px) clamp(8px, 1vw, 14px);
+  border-radius: 28px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.38), rgba(232, 250, 255, 0.2));
+  box-shadow: inset 0 0 34px rgba(255, 255, 255, 0.3), 0 0 32px rgba(72, 210, 235, 0.08);
+}
+
+.overlay__panel--haiku-cosmos .overlay__scroll {
+  padding: clamp(2px, 0.4vw, 6px) 0.65rem clamp(6px, 1vw, 12px) 0;
+}
+
+.overlay__panel--haiku-cosmos .overlay__actions {
+  justify-content: center;
+  padding-top: clamp(12px, 1.8vw, 18px);
+}
+
+.overlay__panel--haiku-cosmos .overlay__close {
+  min-width: 132px;
+  font-weight: 700;
+}
+
+.overlay__panel--haiku-cosmos .overlay__status {
+  margin-bottom: 0.45rem;
+  font-size: clamp(0.68rem, 0.85vw, 0.82rem);
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  line-height: 1.3;
+  text-transform: uppercase;
+}
+
+.overlay__panel--haiku-cosmos .overlay__title {
+  margin-bottom: clamp(10px, 1.4vw, 16px);
+  font-size: clamp(2rem, 3.2vw, 3rem);
+  line-height: 0.98;
+  letter-spacing: 0.02em;
+}
+
+.overlay__panel--haiku-cosmos .overlay__lead {
+  margin-bottom: 0.72rem;
+  font-family: Georgia, 'Times New Roman', ui-serif, serif;
+  font-size: clamp(0.9rem, 1.05vw, 1rem);
+  font-style: italic;
+  line-height: 1.48;
+}
+
+.overlay__panel--haiku-cosmos .overlay__text {
+  margin-bottom: 0.82rem;
+  font-size: clamp(0.76rem, 0.88vw, 0.88rem);
+  line-height: 1.45;
+  white-space: pre-line;
+}
+
+.overlay__panel--haiku-cosmos .overlay__feature {
+  padding: 0.72rem 0.78rem;
+  border: 1px solid rgba(21, 159, 204, 0.24);
+  border-radius: 18px;
+  background: rgba(239, 252, 255, 0.52);
+  box-shadow: inset 0 0 18px rgba(255, 255, 255, 0.34);
+}
+
+.overlay__panel--haiku-cosmos .overlay__feature-label {
+  margin-bottom: 0.28rem;
+  color: #075f8d;
+  font-size: clamp(0.68rem, 0.78vw, 0.78rem);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.overlay__panel--haiku-cosmos .overlay__feature-text {
+  color: #0f466b;
+  font-size: clamp(0.76rem, 0.86vw, 0.88rem);
+  line-height: 1.45;
 }
 
 .overlay__panel--ethics {
@@ -652,6 +779,7 @@ body {
   .overlay__panel,
   .overlay__panel--ai-guide,
   .overlay__panel--creative-ai,
+  .overlay__panel--haiku-cosmos,
   .overlay__panel--ethics {
     width: calc(100vw - 20px);
     height: calc(100vh - 20px);
@@ -670,8 +798,13 @@ body {
     background: linear-gradient(180deg, rgba(246, 235, 211, 0.97), rgba(225, 202, 162, 0.95));
   }
 
+  .overlay__panel--haiku-cosmos {
+    background: linear-gradient(180deg, rgba(247, 253, 255, 0.97), rgba(216, 245, 255, 0.94));
+  }
+
   .overlay__panel--ai-guide::before,
   .overlay__panel--creative-ai::before,
+  .overlay__panel--haiku-cosmos::before,
   .overlay__panel--ethics::before {
     display: none;
   }
@@ -701,6 +834,7 @@ body {
   .overlay__panel .overlay__content,
   .overlay__panel--ai-guide .overlay__content,
   .overlay__panel--creative-ai .overlay__content,
+  .overlay__panel--haiku-cosmos .overlay__content,
   .overlay__panel--ethics .overlay__content {
     position: absolute;
     z-index: 2;
@@ -718,6 +852,7 @@ body {
   .overlay__panel .overlay__scroll,
   .overlay__panel--ai-guide .overlay__scroll,
   .overlay__panel--creative-ai .overlay__scroll,
+  .overlay__panel--haiku-cosmos .overlay__scroll,
   .overlay__panel--ethics .overlay__scroll {
     flex: 1 1 auto;
     min-height: 0;
@@ -732,6 +867,7 @@ body {
   .overlay__panel .overlay__actions,
   .overlay__panel--ai-guide .overlay__actions,
   .overlay__panel--creative-ai .overlay__actions,
+  .overlay__panel--haiku-cosmos .overlay__actions,
   .overlay__panel--ethics .overlay__actions {
     position: relative;
     z-index: 3;
@@ -745,6 +881,7 @@ body {
   .overlay__panel .overlay__close,
   .overlay__panel--ai-guide .overlay__close,
   .overlay__panel--creative-ai .overlay__close,
+  .overlay__panel--haiku-cosmos .overlay__close,
   .overlay__panel--ethics .overlay__close {
     position: relative;
     z-index: 4;
@@ -754,13 +891,15 @@ body {
   .overlay__panel .overlay__title,
   .overlay__panel--ai-guide .overlay__title,
   .overlay__panel--creative-ai .overlay__title,
+  .overlay__panel--haiku-cosmos .overlay__title,
   .overlay__panel--ethics .overlay__title {
     font-size: clamp(1.8rem, 9.5vw, 2.8rem);
   }
 
   .overlay__panel .overlay__text,
   .overlay__panel--ai-guide .overlay__text,
-  .overlay__panel--creative-ai .overlay__text {
+  .overlay__panel--creative-ai .overlay__text,
+  .overlay__panel--haiku-cosmos .overlay__text {
     font-size: clamp(0.9rem, 3.3vw, 1rem);
   }
 }

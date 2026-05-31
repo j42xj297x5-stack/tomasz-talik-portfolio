@@ -1123,6 +1123,10 @@ export function createOverlay({ onClose, assetManager = null } = {}) {
           <h2 class="overlay__title"></h2>
           <p class="overlay__lead" hidden></p>
           <p class="overlay__text"></p>
+          <div class="overlay__feature" hidden>
+            <p class="overlay__feature-label"></p>
+            <p class="overlay__feature-text"></p>
+          </div>
           <p class="overlay__closing" hidden></p>
         </div>
         <div class="overlay__actions">
@@ -1138,6 +1142,9 @@ export function createOverlay({ onClose, assetManager = null } = {}) {
   const leadEl = root.querySelector('.overlay__lead');
   const textEl = root.querySelector('.overlay__text');
   const closingEl = root.querySelector('.overlay__closing');
+  const featureEl = root.querySelector('.overlay__feature');
+  const featureLabelEl = root.querySelector('.overlay__feature-label');
+  const featureTextEl = root.querySelector('.overlay__feature-text');
   const mobileFrameEl = root.querySelector('.mobile-svg-frame');
   const mobileOrnamentEl = root.querySelector('.overlay__mobile-ornament');
 
@@ -1172,12 +1179,14 @@ export function createOverlay({ onClose, assetManager = null } = {}) {
       const isAIGuide = gateId === 'ai-guide';
       const isCreativeAI = gateId === 'creative-ai';
       const isEthics = gateId === 'ethics-life-protection';
-      const hasStructuredCopy = Boolean(nodeData.leadText || nodeData.bodyText || nodeData.closingText);
+      const isHaikuCosmos = gateId === 'haiku-cosmos';
+      const hasStructuredCopy = Boolean(nodeData.leadText || nodeData.bodyText || nodeData.closingText || nodeData.featureText);
 
       panelEl.dataset.gateId = gateId;
       panelEl.classList.toggle('overlay__panel--ai-guide', isAIGuide);
       panelEl.classList.toggle('overlay__panel--creative-ai', isCreativeAI);
       panelEl.classList.toggle('overlay__panel--ethics', isEthics);
+      panelEl.classList.toggle('overlay__panel--haiku-cosmos', isHaikuCosmos);
       const panelBackgroundPath = GLYPH_PANEL_BACKGROUNDS[gateId];
       if (panelBackgroundPath) {
         const cachedUrl = assetManager?.getImageUrlByPath?.(panelBackgroundPath);
@@ -1207,6 +1216,10 @@ export function createOverlay({ onClose, assetManager = null } = {}) {
 
         textEl.textContent = nodeData.bodyText ?? nodeData.draftText;
 
+        featureEl.hidden = !nodeData.featureText;
+        featureLabelEl.textContent = nodeData.featureLabel ?? '';
+        featureTextEl.textContent = nodeData.featureText ?? '';
+
         closingEl.hidden = !nodeData.closingText;
         closingEl.textContent = nodeData.closingText ?? '';
       } else {
@@ -1214,6 +1227,10 @@ export function createOverlay({ onClose, assetManager = null } = {}) {
         leadEl.textContent = '';
 
         textEl.textContent = nodeData.draftText;
+
+        featureEl.hidden = true;
+        featureLabelEl.textContent = '';
+        featureTextEl.textContent = '';
 
         closingEl.hidden = true;
         closingEl.textContent = '';
