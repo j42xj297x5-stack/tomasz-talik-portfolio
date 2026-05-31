@@ -18,6 +18,27 @@ const LINE_FRAME_CLASS_PATTERN = /(?:^|\s)frame-line(?:\s|$)/;
 const MOBILE_FRAME_COLOR_VALUE = 'var(--mobile-frame-color, rgba(255,255,255,0.92))';
 const BLACK_COLOR_PATTERN = /(?:^|[\s:;,(])(?:#(?:000|000000)\b|black\b|rgb\(\s*0\s*,\s*0\s*,\s*0\s*\)|rgba\(\s*0\s*,\s*0\s*,\s*0\s*,\s*(?:0?\.\d+|1(?:\.0+)?)\s*\))/i;
 const PIVOT_REFERENCE_PATTERN = /(?:pivot|reference|guide)/i;
+const MOBILE_FRAME_PIECE_KEYS = ['lu', 'ru', 'ld', 'rd', 'u', 'd', 'l', 'r'];
+const MOBILE_FRAME_CORNER_KEYS = ['lu', 'ru', 'ld', 'rd'];
+const MOBILE_FRAME_DEBUG_PARAM = 'debugFramePieces';
+const MOBILE_FRAME_DEBUG_COLORS = {
+  lu: 'red',
+  ru: 'orange',
+  ld: 'lime',
+  rd: 'cyan',
+  u: 'magenta',
+  d: 'yellow',
+  l: 'blue',
+  r: 'green'
+};
+
+function clamp(value, min, max) {
+  return Math.min(Math.max(value, min), max);
+}
+
+function isFrameDebugEnabled() {
+  return new URLSearchParams(window.location.search).get(MOBILE_FRAME_DEBUG_PARAM) === '1';
+}
 
 function getAssetFilename(url) {
   const [path] = url.split('?');
@@ -209,6 +230,312 @@ function getFirstVisibleSvgShape(svg) {
       && rect.width > 0
       && rect.height > 0;
   }) ?? null;
+}
+
+function getSvgViewBox(svg) {
+  const viewBox = svg.viewBox?.baseVal;
+  if (viewBox && viewBox.width > 0 && viewBox.height > 0) {
+    return { x: viewBox.x, y: viewBox.y, width: viewBox.width, height: viewBox.height };
+  }
+
+  const parts = (svg.getAttribute('viewBox') ?? '').trim().split(/[\s,]+/).map(Number);
+  if (parts.length === 4 && parts.every((part) => Number.isFinite(part)) && parts[2] > 0 && parts[3] > 0) {
+    return { x: parts[0], y: parts[1], width: parts[2], height: parts[3] };
+  }
+
+  return { x: 0, y: 0, width: 1, height: 1 };
+}
+
+function transformSvgPoint(svg, element, x, y) {
+  const point = svg.createSVGPoint();
+  point.x = x;
+  point.y = y;
+
+  let matrix = svg.createSVGMatrix();
+  let current = element;
+
+  while (current && current !== svg) {
+    const localMatrix = current.transform?.baseVal?.consolidate()?.matrix;
+    if (localMatrix) {
+      matrix = localMatrix.multiply(matrix);
+    }
+    current = current.parentNode;
+  }
+
+  const transformed = point.matrixTransform(matrix);
+  return { x: transformed.x, y: transformed.y };
+}
+
+function detectSvgPivots(svg) {
+  return [...svg.querySelectorAll('circle.frame-pivot-reference, circle[data-frame-pivot="true"]')].map((circle) => {
+    const cx = Number.parseFloat(circle.getAttribute('cx') ?? '0');
+    const cy = Number.parseFloat(circle.getAttribute('cy') ?? '0');
+    const center = transformSvgPoint(svg, circle, cx, cy);
+
+    return {
+      id: circle.id || null,
+      x: center.x,
+      y: center.y,
+      rawX: cx,
+      rawY: cy
+    };
+  });
+}
+
+function choosePivot(pivots, role, viewBox) {
+  if (!pivots.length) {
+    return { id: null, x: viewBox.width / 2, y: viewBox.height / 2, fallback: true, role };
+  }
+
+  // Pivot SVG circles do not currently expose semantic role IDs beyond the asset name.
+  // Infer the intended connection point from its position: top/bottom use the closest
+  // Y axis, left/right use the closest X axis. Assets with a single pivot naturally
+  // choose that pivot for every role.
+  const target = {
+    top: { axis: 'y', value: viewBox.y },
+    bottom: { axis: 'y', value: viewBox.y + viewBox.height },
+    left: { axis: 'x', value: viewBox.x },
+    right: { axis: 'x', value: viewBox.x + viewBox.width },
+    center: { axis: 'x', value: viewBox.x + viewBox.width / 2 }
+  }[role] ?? { axis: 'x', value: viewBox.x + viewBox.width / 2 };
+
+  const chosen = pivots.reduce((best, pivot) => {
+    const distance = Math.abs(pivot[target.axis] - target.value);
+    const bestDistance = Math.abs(best[target.axis] - target.value);
+    return distance < bestDistance ? pivot : best;
+  }, pivots[0]);
+
+  return { ...chosen, role };
+}
+
+function getMobileFrameMetrics(frameElement) {
+  return Object.fromEntries(MOBILE_FRAME_PIECE_KEYS.map((key) => {
+    const wrapper = frameElement.querySelector(`[data-mobile-frame-piece="${key}"]`);
+    const svg = wrapper?.querySelector('svg') ?? null;
+    const viewBox = svg ? getSvgViewBox(svg) : { x: 0, y: 0, width: 1, height: 1 };
+    const pivots = svg ? detectSvgPivots(svg) : [];
+
+    return [key, { key, wrapper, svg, viewBox, pivots }];
+  }));
+}
+
+function setFramePieceRect(piece, rect) {
+  const { wrapper } = piece;
+  if (!wrapper) return;
+
+  wrapper.style.left = `${rect.x}px`;
+  wrapper.style.top = `${rect.y}px`;
+  wrapper.style.width = `${Math.max(0, rect.width)}px`;
+  wrapper.style.height = `${Math.max(0, rect.height)}px`;
+  wrapper.style.right = 'auto';
+  wrapper.style.bottom = 'auto';
+  wrapper.style.transform = 'none';
+}
+
+function getRectSnapshot(element, frameRect) {
+  if (!element) return null;
+  const rect = element.getBoundingClientRect();
+  return {
+    x: rect.x,
+    y: rect.y,
+    width: rect.width,
+    height: rect.height,
+    insideFrame: rect.width > 0
+      && rect.height > 0
+      && rect.left >= frameRect.left - 1
+      && rect.top >= frameRect.top - 1
+      && rect.right <= frameRect.right + 1
+      && rect.bottom <= frameRect.bottom + 1
+  };
+}
+
+function getPaintSnapshot(piece) {
+  const shape = piece.svg ? getFirstVisibleSvgShape(piece.svg) : null;
+  if (!shape) return null;
+  const styles = getComputedStyle(shape);
+  return {
+    selector: `${shape.tagName.toLowerCase()}${shape.id ? `#${shape.id}` : ''}`,
+    fill: styles.fill,
+    stroke: styles.stroke,
+    opacity: styles.opacity,
+    visibility: styles.visibility,
+    display: styles.display
+  };
+}
+
+function applyMobileFrameLayout(frameElement) {
+  const frameRect = frameElement.getBoundingClientRect();
+  if (frameRect.width <= 0 || frameRect.height <= 0) return;
+
+  const pieces = getMobileFrameMetrics(frameElement);
+  if (MOBILE_FRAME_PIECE_KEYS.some((key) => !pieces[key].svg || !pieces[key].wrapper)) return;
+
+  const maxCornerViewBoxWidth = Math.max(...MOBILE_FRAME_CORNER_KEYS.map((key) => pieces[key].viewBox.width));
+  const cornerWidth = clamp(frameRect.width * 0.22, Math.min(72, frameRect.width * 0.25), frameRect.width * 0.25);
+  const cornerScale = cornerWidth / maxCornerViewBoxWidth;
+  const cornerRects = {
+    lu: { x: 0, y: 0, width: pieces.lu.viewBox.width * cornerScale, height: pieces.lu.viewBox.height * cornerScale },
+    ru: { x: frameRect.width - pieces.ru.viewBox.width * cornerScale, y: 0, width: pieces.ru.viewBox.width * cornerScale, height: pieces.ru.viewBox.height * cornerScale },
+    ld: { x: 0, y: frameRect.height - pieces.ld.viewBox.height * cornerScale, width: pieces.ld.viewBox.width * cornerScale, height: pieces.ld.viewBox.height * cornerScale },
+    rd: { x: frameRect.width - pieces.rd.viewBox.width * cornerScale, y: frameRect.height - pieces.rd.viewBox.height * cornerScale, width: pieces.rd.viewBox.width * cornerScale, height: pieces.rd.viewBox.height * cornerScale }
+  };
+
+  Object.entries(cornerRects).forEach(([key, rect]) => setFramePieceRect(pieces[key], rect));
+
+  const chosenPivots = {
+    luTop: choosePivot(pieces.lu.pivots, 'top', pieces.lu.viewBox),
+    luLeft: choosePivot(pieces.lu.pivots, 'left', pieces.lu.viewBox),
+    ruTop: choosePivot(pieces.ru.pivots, 'top', pieces.ru.viewBox),
+    ruRight: choosePivot(pieces.ru.pivots, 'right', pieces.ru.viewBox),
+    ldBottom: choosePivot(pieces.ld.pivots, 'bottom', pieces.ld.viewBox),
+    ldLeft: choosePivot(pieces.ld.pivots, 'left', pieces.ld.viewBox),
+    rdBottom: choosePivot(pieces.rd.pivots, 'bottom', pieces.rd.viewBox),
+    rdRight: choosePivot(pieces.rd.pivots, 'right', pieces.rd.viewBox),
+    lineU: choosePivot(pieces.u.pivots, 'top', pieces.u.viewBox),
+    lineD: choosePivot(pieces.d.pivots, 'bottom', pieces.d.viewBox),
+    lineL: choosePivot(pieces.l.pivots, 'left', pieces.l.viewBox),
+    lineR: choosePivot(pieces.r.pivots, 'right', pieces.r.viewBox)
+  };
+
+  const topLeftAnchor = {
+    x: cornerRects.lu.x + chosenPivots.luTop.x * cornerScale,
+    y: cornerRects.lu.y + chosenPivots.luTop.y * cornerScale
+  };
+  const topRightAnchor = {
+    x: cornerRects.ru.x + chosenPivots.ruTop.x * cornerScale,
+    y: cornerRects.ru.y + chosenPivots.ruTop.y * cornerScale
+  };
+  const bottomLeftAnchor = {
+    x: cornerRects.ld.x + chosenPivots.ldBottom.x * cornerScale,
+    y: cornerRects.ld.y + chosenPivots.ldBottom.y * cornerScale
+  };
+  const bottomRightAnchor = {
+    x: cornerRects.rd.x + chosenPivots.rdBottom.x * cornerScale,
+    y: cornerRects.rd.y + chosenPivots.rdBottom.y * cornerScale
+  };
+  const leftTopAnchor = {
+    x: cornerRects.lu.x + chosenPivots.luLeft.x * cornerScale,
+    y: cornerRects.lu.y + chosenPivots.luLeft.y * cornerScale
+  };
+  const leftBottomAnchor = {
+    x: cornerRects.ld.x + chosenPivots.ldLeft.x * cornerScale,
+    y: cornerRects.ld.y + chosenPivots.ldLeft.y * cornerScale
+  };
+  const rightTopAnchor = {
+    x: cornerRects.ru.x + chosenPivots.ruRight.x * cornerScale,
+    y: cornerRects.ru.y + chosenPivots.ruRight.y * cornerScale
+  };
+  const rightBottomAnchor = {
+    x: cornerRects.rd.x + chosenPivots.rdRight.x * cornerScale,
+    y: cornerRects.rd.y + chosenPivots.rdRight.y * cornerScale
+  };
+
+  const topLineWidth = Math.max(0, topRightAnchor.x - topLeftAnchor.x);
+  const bottomLineWidth = Math.max(0, bottomRightAnchor.x - bottomLeftAnchor.x);
+  const leftLineHeight = Math.max(0, leftBottomAnchor.y - leftTopAnchor.y);
+  const rightLineHeight = Math.max(0, rightBottomAnchor.y - rightTopAnchor.y);
+  const topLineHeight = pieces.u.viewBox.height * cornerScale;
+  const bottomLineHeight = pieces.d.viewBox.height * cornerScale;
+  const leftLineWidth = pieces.l.viewBox.width * cornerScale;
+  const rightLineWidth = pieces.r.viewBox.width * cornerScale;
+
+  const lineRects = {
+    u: {
+      x: topLeftAnchor.x,
+      y: topLeftAnchor.y - chosenPivots.lineU.y * cornerScale,
+      width: topLineWidth,
+      height: topLineHeight
+    },
+    d: {
+      x: bottomLeftAnchor.x,
+      y: bottomLeftAnchor.y - chosenPivots.lineD.y * cornerScale,
+      width: bottomLineWidth,
+      height: bottomLineHeight
+    },
+    l: {
+      x: leftTopAnchor.x - chosenPivots.lineL.x * cornerScale,
+      y: leftTopAnchor.y,
+      width: leftLineWidth,
+      height: leftLineHeight
+    },
+    r: {
+      x: rightTopAnchor.x - chosenPivots.lineR.x * cornerScale,
+      y: rightTopAnchor.y,
+      width: rightLineWidth,
+      height: rightLineHeight
+    }
+  };
+
+  Object.entries(lineRects).forEach(([key, rect]) => setFramePieceRect(pieces[key], rect));
+
+  requestAnimationFrame(() => {
+    const updatedFrameRect = frameElement.getBoundingClientRect();
+    const rects = Object.fromEntries(MOBILE_FRAME_PIECE_KEYS.map((key) => [
+      key,
+      {
+        wrapper: getRectSnapshot(pieces[key].wrapper, updatedFrameRect),
+        svg: getRectSnapshot(pieces[key].svg, updatedFrameRect),
+        wrapperStyles: getStyleSnapshot(pieces[key].wrapper),
+        svgStyles: getStyleSnapshot(pieces[key].svg),
+        firstPaintedShape: getPaintSnapshot(pieces[key])
+      }
+    ]));
+
+    console.debug('[overlay][frame-layout]', {
+      frameRect: { width: frameRect.width, height: frameRect.height },
+      viewBoxes: Object.fromEntries(MOBILE_FRAME_PIECE_KEYS.map((key) => [key, pieces[key].viewBox])),
+      detectedPivots: Object.fromEntries(MOBILE_FRAME_PIECE_KEYS.map((key) => [key, pieces[key].pivots])),
+      chosenPivots,
+      cornerScale,
+      cornerWidthFormula: 'cornerScale = clamp(frameRect.width * 0.22, min(72px, frameRect.width * 0.25), frameRect.width * 0.25) / max(corner viewBox widths)',
+      cornerRendered: cornerRects,
+      lineRendered: lineRects,
+      lineTargetSizes: {
+        top: { width: topLineWidth, height: topLineHeight, x: lineRects.u.x, y: lineRects.u.y },
+        bottom: { width: bottomLineWidth, height: bottomLineHeight, x: lineRects.d.x, y: lineRects.d.y },
+        left: { width: leftLineWidth, height: leftLineHeight, x: lineRects.l.x, y: lineRects.l.y },
+        right: { width: rightLineWidth, height: rightLineHeight, x: lineRects.r.x, y: lineRects.r.y }
+      },
+      boundingClientRects: rects
+    });
+  });
+}
+
+function createMobileFrameLayoutController(frameElement, panelElement) {
+  if (!frameElement) return { schedule: () => {}, destroy: () => {} };
+
+  const debugEnabled = isFrameDebugEnabled();
+  frameElement.classList.toggle('mobile-svg-frame--debug', debugEnabled);
+  panelElement?.classList.toggle('overlay__panel--debug-frame-pieces', debugEnabled);
+  Object.entries(MOBILE_FRAME_DEBUG_COLORS).forEach(([key, color]) => {
+    frameElement.querySelector(`[data-mobile-frame-piece="${key}"]`)?.style.setProperty('--mobile-frame-debug-color', color);
+  });
+
+  let frame = 0;
+  const schedule = () => {
+    if (frame) return;
+    frame = requestAnimationFrame(() => {
+      frame = 0;
+      applyMobileFrameLayout(frameElement);
+    });
+  };
+
+  const resizeObserver = 'ResizeObserver' in window ? new ResizeObserver(schedule) : null;
+  resizeObserver?.observe(frameElement);
+  if (panelElement) resizeObserver?.observe(panelElement);
+
+  window.addEventListener('resize', schedule);
+  window.addEventListener('orientationchange', schedule);
+
+  return {
+    schedule,
+    destroy() {
+      if (frame) cancelAnimationFrame(frame);
+      resizeObserver?.disconnect();
+      window.removeEventListener('resize', schedule);
+      window.removeEventListener('orientationchange', schedule);
+    }
+  };
 }
 
 function describeSvgDiagnostics(svg) {
@@ -414,7 +741,8 @@ export function createOverlay({ onClose, assetManager = null } = {}) {
   const closingEl = root.querySelector('.overlay__closing');
   const mobileFrameEl = root.querySelector('.mobile-svg-frame');
 
-  const mobileFrameReady = mobileFrameEl ? loadMobileFrameSvgs(mobileFrameEl) : Promise.resolve();
+  const mobileFrameLayout = createMobileFrameLayoutController(mobileFrameEl, panelEl);
+  const mobileFrameReady = mobileFrameEl ? loadMobileFrameSvgs(mobileFrameEl).finally(mobileFrameLayout.schedule) : Promise.resolve();
 
   const close = () => {
     if (root.hidden) return;
@@ -485,6 +813,7 @@ export function createOverlay({ onClose, assetManager = null } = {}) {
       root.hidden = false;
       document.body.classList.add('overlay-open');
       mobileFrameReady.finally(() => {
+        mobileFrameLayout.schedule();
         logOverlayFrameDiagnostics(root, panelEl, gateId);
       });
     },
