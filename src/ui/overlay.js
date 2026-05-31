@@ -11,10 +11,6 @@ const createMobileFrameAsset = (filename, className) => {
   };
 };
 
-const OPTIONAL_PANEL_BACKGROUNDS = Object.freeze({
-  'spotify-digger': '/png/spotify_digger.png'
-});
-
 const MOBILE_FRAME_ASSETS = {
   lu: createMobileFrameAsset('portfolio_frame_mobile_corner_lu.svg', 'frame-corner frame-corner-lu'),
   ru: createMobileFrameAsset('portfolio_frame_mobile_corner_ru.svg', 'frame-corner frame-corner-ru'),
@@ -1193,7 +1189,7 @@ export function createOverlay({ onClose, assetManager = null } = {}) {
       panelEl.classList.toggle('overlay__panel--ethics', isEthics);
       panelEl.classList.toggle('overlay__panel--haiku-cosmos', isHaikuCosmos);
       panelEl.classList.toggle('overlay__panel--spotify-digger', isSpotifyDigger);
-      const panelBackgroundPath = GLYPH_PANEL_BACKGROUNDS[gateId] ?? OPTIONAL_PANEL_BACKGROUNDS[gateId];
+      const panelBackgroundPath = GLYPH_PANEL_BACKGROUNDS[gateId];
       if (panelBackgroundPath) {
         const cachedUrl = assetManager?.getImageUrlByPath?.(panelBackgroundPath);
         if (!cachedUrl) {

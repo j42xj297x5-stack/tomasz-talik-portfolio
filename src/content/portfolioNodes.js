@@ -19,7 +19,7 @@ export const portfolioNodes = [
     eyebrow: 'Metal / Data Resonance',
     modelPath: '/glb/glyph_4.glb',
     modelKind: 'glyph',
-    ornamentPath: '/png/spotify_digger_ornament.png',
+    ornamentPath: '/png/digger_ornament.png',
     ornamentMobileOnly: true,
     draftText: 'Spotify Digger to system eksploracji muzyki, który łączy dane, API i intuicję słuchacza.',
     leadText: 'Spotify Digger to system eksploracji muzyki, który łączy dane, API i intuicję słuchacza.',
