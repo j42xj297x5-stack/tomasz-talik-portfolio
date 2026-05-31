@@ -179,6 +179,10 @@ body {
 .overlay__actions { display: flex; justify-content: flex-end; margin-top: 0.9rem; }
 .overlay__close { position: relative; z-index: 3; }
 
+.overlay__mobile-ornament {
+  display: none;
+}
+
 .mobile-svg-frame {
   display: none;
   color: var(--mobile-frame-color, rgba(255,255,255,0.92));
@@ -678,6 +682,20 @@ body {
     z-index: 1;
     display: block;
     pointer-events: none;
+  }
+
+  .overlay__mobile-ornament:not([hidden]) {
+    position: absolute;
+    left: calc(var(--mobile-frame-inset) + var(--mobile-frame-top-line-center-x, 50%));
+    top: calc(var(--mobile-frame-inset) + var(--mobile-frame-top-line-y, var(--mobile-frame-top-line-height)));
+    z-index: 2;
+    display: block;
+    width: auto;
+    height: auto;
+    max-width: none;
+    object-fit: contain;
+    pointer-events: none;
+    transform: translateX(-50%);
   }
 
   .overlay__panel .overlay__content,

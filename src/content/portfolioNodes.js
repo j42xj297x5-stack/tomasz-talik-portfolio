@@ -5,6 +5,8 @@ export const portfolioNodes = [
     shortLabel: 'Oswajanie AI',
     modelPath: '/glb/glyph_1.glb',
     modelKind: 'glyph',
+    ornamentPath: '/png/ai_guide_ornament.png',
+    ornamentMobileOnly: true,
     draftText: 'Pomagam ludziom oswoić AI tam, gdzie technologia spotyka lęk, chaos i potrzebę sensu. Tłumaczę narzędzia, projektuję proste workflowy i prowadzę przez pierwsze kroki tak, żeby człowiek odzyskał sprawczość, zamiast czuć się przytłoczony rewolucją technologiczną. Z chaosu narzędzi powstaje spokojny proces.',
     leadText: 'Pomagam ludziom oswoić AI tam, gdzie technologia spotyka lęk, chaos i potrzebę sensu.',
     bodyText: 'Tłumaczę narzędzia, projektuję proste workflowy i prowadzę przez pierwsze kroki tak, żeby człowiek odzyskał sprawczość, zamiast czuć się przytłoczony rewolucją technologiczną.',
@@ -33,6 +35,8 @@ export const portfolioNodes = [
     eyebrow: 'Tworzenie z AI',
     modelPath: '/glb/glyph_2.glb',
     modelKind: 'glyph',
+    ornamentPath: '/png/creative_ai_ornament.png',
+    ornamentMobileOnly: true,
     draftText: 'Pracuję z AI jak z żywym szkicownikiem, laboratorium obrazu i drugim obiegiem wyobraźni. Tworzę plakaty, grafiki, fotoedycje, cenniki, koncepcje wizualne i małe artefakty codziennego użytku — prowadząc proces od intuicji, przez prompt, obraz, korektę i kompozycję, aż do gotowej formy. AI nie zastępuje twórcy. Pomaga szybciej wydobyć z pomysłu jego kształt, ton i emocję.',
     leadText: 'Pracuję z AI jak z żywym szkicownikiem, laboratorium obrazu i drugim obiegiem wyobraźni.',
     bodyText: 'Tworzę plakaty, grafiki, fotoedycje, cenniki, koncepcje wizualne i małe artefakty codziennego użytku — prowadząc proces od intuicji, przez prompt, obraz, korektę i kompozycję, aż do gotowej formy.',
@@ -45,6 +49,8 @@ export const portfolioNodes = [
     eyebrow: 'Ziemia',
     modelPath: '/glb/glyph_3.glb',
     modelKind: 'glyph',
+    ornamentPath: '/png/ai_ethics_ornament.png',
+    ornamentMobileOnly: true,
     draftText: 'AI nie jest tylko narzędziem przyspieszania pracy. Jest siłą, która wzmacnia intencje człowieka — dobre i złe.',
     bodyText: `AI nie jest tylko narzędziem przyspieszania pracy.
 Jest siłą, która wzmacnia intencje człowieka — dobre i złe.

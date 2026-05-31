@@ -646,6 +646,13 @@ function applyMobileFrameLayout(frameElement) {
 
   Object.entries(lineRects).forEach(([key, rect]) => setFramePieceRect(pieces[key], rect));
 
+  const topLineCenterX = `${lineRects.u.x + lineRects.u.width / 2}px`;
+  const topLineY = `${guideRect.topY}px`;
+  frameElement.style.setProperty('--mobile-frame-top-line-center-x', topLineCenterX);
+  frameElement.style.setProperty('--mobile-frame-top-line-y', topLineY);
+  frameElement.parentElement?.style.setProperty('--mobile-frame-top-line-center-x', topLineCenterX);
+  frameElement.parentElement?.style.setProperty('--mobile-frame-top-line-y', topLineY);
+
   const renderedRects = { ...cornerRects, ...lineRects };
   const pivotTargets = {
     lu: { x: guideRect.leftX, y: guideRect.topY },
@@ -1109,6 +1116,7 @@ export function createOverlay({ onClose, assetManager = null } = {}) {
         <span class="mobile-svg-frame__piece mobile-svg-frame__line mobile-svg-frame__line--l frame-line frame-line-l" data-mobile-frame-piece="l"></span>
         <span class="mobile-svg-frame__piece mobile-svg-frame__line mobile-svg-frame__line--r frame-line frame-line-r" data-mobile-frame-piece="r"></span>
       </div>
+      <img class="overlay__mobile-ornament" alt="" aria-hidden="true" hidden>
       <div class="overlay__content">
         <div class="overlay__scroll">
           <p class="overlay__status">Draft content — final copy pending</p>
@@ -1131,6 +1139,7 @@ export function createOverlay({ onClose, assetManager = null } = {}) {
   const textEl = root.querySelector('.overlay__text');
   const closingEl = root.querySelector('.overlay__closing');
   const mobileFrameEl = root.querySelector('.mobile-svg-frame');
+  const mobileOrnamentEl = root.querySelector('.overlay__mobile-ornament');
 
   const mobileFrameLayout = createMobileFrameLayoutController(mobileFrameEl, panelEl);
   const mobileFrameReady = mobileFrameEl ? loadMobileFrameSvgs(mobileFrameEl).finally(mobileFrameLayout.schedule) : Promise.resolve();
@@ -1179,6 +1188,15 @@ export function createOverlay({ onClose, assetManager = null } = {}) {
       } else {
         panelEl.style.removeProperty('--overlay-panel-bg-image');
       }
+
+      if (nodeData.ornamentPath && nodeData.ornamentMobileOnly) {
+        mobileOrnamentEl.src = publicPath(nodeData.ornamentPath);
+        mobileOrnamentEl.hidden = false;
+      } else {
+        mobileOrnamentEl.hidden = true;
+        mobileOrnamentEl.removeAttribute('src');
+      }
+
       statusEl.textContent = nodeData.eyebrow ?? (isAIGuide ? nodeData.shortLabel : 'Draft content — final copy pending');
 
       titleEl.textContent = nodeData.title;
