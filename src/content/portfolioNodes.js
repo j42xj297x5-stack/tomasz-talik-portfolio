@@ -16,9 +16,22 @@ export const portfolioNodes = [
     id: 'spotify-digger',
     title: 'Spotify Digger',
     shortLabel: 'Spotify Digger',
+    eyebrow: 'Metal / Data Resonance',
     modelPath: '/glb/glyph_4.glb',
     modelKind: 'glyph',
-    draftText: 'Draft narrative for Spotify Digger. Final user story, architecture notes, and outcomes will be added later.'
+    ornamentPath: '/png/spotify_digger_ornament.png',
+    ornamentMobileOnly: true,
+    draftText: 'Spotify Digger to system eksploracji muzyki, który łączy dane, API i intuicję słuchacza.',
+    leadText: 'Spotify Digger to system eksploracji muzyki, który łączy dane, API i intuicję słuchacza.',
+    bodyText: `Nie jest tylko narzędziem do playlist.
+To laboratorium porządkowania muzycznego chaosu — miejsce, gdzie Spotify, Last.fm i Discogs zaczynają pracować razem.
+
+System pomaga odkrywać powiązania między artystami, albumami, tagami, wydaniami i playlistami.
+Z luźnych tropów buduje proces: wyszukiwanie, filtrowanie, porównywanie, decyzję i gotowy rezultat.
+
+Ten projekt pokazuje moje podejście do narzędzi użytkowych:
+dane mają być czytelne, workflow zrozumiały, a automatyzacja ma wspierać człowieka — nie zasłaniać mu sensu pracy.`,
+    closingText: 'Integracje API. Workflow. GUI. Dane muzyczne. Automatyzacja playlist.'
   },
   {
     id: 'haiku-cosmos',
