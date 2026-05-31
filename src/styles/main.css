@@ -819,8 +819,8 @@ body {
 
   .overlay__mobile-ornament:not([hidden]) {
     position: absolute;
-    left: calc(var(--mobile-frame-inset) + var(--mobile-frame-top-line-center-x, 50%));
-    top: calc(var(--mobile-frame-inset) + var(--mobile-frame-top-line-y, var(--mobile-frame-top-line-height)));
+    left: 50%;
+    top: 0;
     z-index: 2;
     display: block;
     width: auto;
