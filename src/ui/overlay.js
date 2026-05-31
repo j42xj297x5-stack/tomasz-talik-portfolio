@@ -1178,6 +1178,7 @@ export function createOverlay({ onClose, assetManager = null } = {}) {
     if (root.hidden) return;
     root.hidden = true;
     panelEl.removeAttribute('data-gate-id');
+    root.classList.remove('overlay--ethics');
     document.body.classList.remove('overlay-open');
     onClose?.();
   };
@@ -1210,6 +1211,7 @@ export function createOverlay({ onClose, assetManager = null } = {}) {
       panelEl.classList.toggle('overlay__panel--ai-guide', isAIGuide);
       panelEl.classList.toggle('overlay__panel--creative-ai', isCreativeAI);
       panelEl.classList.toggle('overlay__panel--ethics', isEthics);
+      root.classList.toggle('overlay--ethics', isEthics);
       panelEl.classList.toggle('overlay__panel--haiku-cosmos', isHaikuCosmos);
       panelEl.classList.toggle('overlay__panel--spotify-digger', isSpotifyDigger);
       panelEl.classList.remove(
