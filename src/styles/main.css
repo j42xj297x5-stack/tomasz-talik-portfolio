@@ -263,8 +263,8 @@ body {
    lines receive stretched height only. */
 
 .overlay__panel[data-gate-id="ai-guide"] {
-  --mobile-frame-color: #9be66f;
-  --mobile-frame-glow: rgba(155, 230, 111, 0.22);
+  --mobile-frame-color: rgba(106, 174, 83, 0.62);
+  --mobile-frame-glow: rgba(84, 140, 72, 0.1);
 }
 
 .overlay__status { margin: 0 0 0.6rem; color: #8fa1b9; font-size: 0.82rem; }
@@ -802,6 +802,42 @@ body {
     background: linear-gradient(180deg, rgba(247, 253, 255, 0.97), rgba(216, 245, 255, 0.94));
   }
 
+  .overlay__panel--ai-guide {
+    --mobile-frame-color: rgba(106, 174, 83, 0.62);
+    --mobile-frame-glow: rgba(84, 140, 72, 0.1);
+    --mobile-frame-opacity: 0.82;
+    --overlay-panel-close-color: rgba(235, 244, 214, 0.92);
+    --overlay-panel-close-bg: rgba(8, 24, 16, 0.32);
+    --overlay-panel-close-border: rgba(190, 170, 92, 0.42);
+    --overlay-panel-close-shadow: rgba(84, 140, 72, 0.1);
+    --overlay-panel-close-hover-color: rgba(239, 246, 219, 0.96);
+    --overlay-panel-close-hover-border: rgba(196, 174, 96, 0.54);
+    --overlay-panel-close-hover-bg: rgba(16, 43, 27, 0.42);
+    --overlay-panel-status-color: rgba(216, 235, 205, 0.82);
+    --overlay-panel-title-color: rgba(235, 244, 214, 0.96);
+    --overlay-panel-title-shadow: rgba(72, 126, 67, 0.18);
+    --overlay-panel-lead-color: rgba(230, 238, 221, 0.9);
+    --overlay-panel-text-color: rgba(230, 238, 221, 0.9);
+    --overlay-panel-closing-color: rgba(211, 190, 121, 0.9);
+    background:
+      radial-gradient(circle at 50% 18%,
+        rgba(42, 82, 45, 0.18),
+        rgba(8, 18, 13, 0.42) 42%,
+        rgba(2, 7, 6, 0.72) 100%);
+    box-shadow: 0 0 34px rgba(72, 126, 67, 0.08);
+  }
+
+  .overlay__panel--ai-guide .mobile-svg-frame__piece {
+    color: rgba(106, 174, 83, 0.62);
+    opacity: 0.82;
+    filter: drop-shadow(0 0 4px rgba(84, 140, 72, 0.1));
+  }
+
+  .overlay__panel--ai-guide .overlay__mobile-ornament:not([hidden]) {
+    opacity: 0.72;
+    filter: brightness(0.68) saturate(0.72) hue-rotate(-4deg);
+  }
+
   .overlay__panel--ai-guide::before,
   .overlay__panel--creative-ai::before,
   .overlay__panel--haiku-cosmos::before,
@@ -849,6 +885,11 @@ body {
     backdrop-filter: none;
   }
 
+  .overlay__panel--ai-guide .overlay__content {
+    z-index: 3;
+    inset: clamp(72px, 18vw, 102px) clamp(38px, 10.5vw, 78px) clamp(42px, 11vw, 68px);
+  }
+
   .overlay__panel .overlay__scroll,
   .overlay__panel--ai-guide .overlay__scroll,
   .overlay__panel--creative-ai .overlay__scroll,
@@ -886,6 +927,13 @@ body {
     position: relative;
     z-index: 4;
     min-height: 44px;
+  }
+
+  .overlay__panel--ai-guide .overlay__close {
+    color: rgba(235, 244, 214, 0.92);
+    background: rgba(8, 24, 16, 0.32);
+    border-color: rgba(190, 170, 92, 0.42);
+    box-shadow: 0 0 14px rgba(84, 140, 72, 0.1);
   }
 
   .overlay__panel .overlay__title,
