@@ -762,26 +762,26 @@ body {
 
 .overlay__panel--ethics,
 .overlay__panel.theme-ethics-life-protection {
-  --panel-mobile-bg: linear-gradient(180deg, rgba(20, 18, 15, 0.68), rgba(42, 33, 21, 0.74));
-  --panel-mobile-content-bg: linear-gradient(180deg, rgba(30, 25, 18, 0.36), rgba(22, 19, 16, 0.5));
-  --panel-mobile-content-border: rgba(216, 179, 106, 0.2);
-  --panel-mobile-shadow: 0 0 34px rgba(184, 135, 42, 0.1);
-  --mobile-frame-color: #d8b36a;
-  --mobile-frame-glow: rgba(184, 135, 42, 0.18);
-  --overlay-panel-scrollbar: rgba(151, 105, 34, 0.34);
-  --overlay-panel-close-color: #3d3022;
-  --overlay-panel-close-bg: rgba(245, 229, 190, 0.68);
-  --overlay-panel-close-border: rgba(166, 121, 42, 0.46);
-  --overlay-panel-close-shadow: rgba(166, 121, 42, 0.12);
-  --overlay-panel-close-hover-color: #211b16;
-  --overlay-panel-close-hover-border: rgba(164, 112, 28, 0.72);
-  --overlay-panel-close-hover-bg: rgba(239, 211, 151, 0.82);
-  --overlay-panel-status-color: #93651f;
-  --overlay-panel-title-color: #30281f;
-  --overlay-panel-title-shadow: rgba(255, 246, 216, 0.82);
-  --overlay-panel-lead-color: #3c3023;
-  --overlay-panel-text-color: #352d24;
-  --overlay-panel-closing-color: #6e4b18;
+  --panel-mobile-bg: linear-gradient(180deg, rgba(250, 244, 229, 0.98), rgba(232, 214, 177, 0.96));
+  --panel-mobile-content-bg: linear-gradient(145deg, rgba(255, 250, 236, 0.92), rgba(246, 235, 209, 0.88));
+  --panel-mobile-content-border: rgba(150, 109, 39, 0.35);
+  --panel-mobile-shadow: 0 18px 50px rgba(30, 20, 10, 0.28);
+  --mobile-frame-color: #c79a44;
+  --mobile-frame-glow: rgba(154, 111, 38, 0.22);
+  --overlay-panel-scrollbar: rgba(154, 111, 38, 0.45);
+  --overlay-panel-close-color: #34291f;
+  --overlay-panel-close-bg: rgba(255, 250, 236, 0.94);
+  --overlay-panel-close-border: rgba(150, 109, 39, 0.42);
+  --overlay-panel-close-shadow: rgba(30, 20, 10, 0.1);
+  --overlay-panel-close-hover-color: #2f261d;
+  --overlay-panel-close-hover-border: rgba(154, 111, 38, 0.68);
+  --overlay-panel-close-hover-bg: rgba(239, 218, 174, 0.96);
+  --overlay-panel-status-color: #9c6f25;
+  --overlay-panel-title-color: #2f261d;
+  --overlay-panel-title-shadow: rgba(255, 250, 236, 0.82);
+  --overlay-panel-lead-color: #3a3128;
+  --overlay-panel-text-color: #3a3128;
+  --overlay-panel-closing-color: #9c6f25;
   position: absolute;
   width: min(680px, calc(90vh * 700 / 1000), 92vw);
   aspect-ratio: 700 / 1000;
@@ -978,8 +978,16 @@ body {
   }
 
   .overlay__panel--ethics {
-    --panel-mobile-content-bg: linear-gradient(145deg, rgba(255, 248, 229, 0.9), rgba(239, 218, 174, 0.82) 58%, rgba(250, 238, 204, 0.88));
-    --panel-mobile-shadow: 0 0 28px rgba(184, 135, 42, 0.12);
+    --panel-mobile-bg: linear-gradient(180deg, rgba(250, 244, 229, 0.98), rgba(232, 214, 177, 0.96));
+    --panel-mobile-content-bg: linear-gradient(145deg, rgba(255, 250, 236, 0.92), rgba(246, 235, 209, 0.88));
+    --panel-mobile-content-border: rgba(150, 109, 39, 0.35);
+    --panel-mobile-shadow: 0 18px 50px rgba(30, 20, 10, 0.28);
+    background:
+      radial-gradient(circle at 18% 10%, rgba(255, 255, 246, 0.72), transparent 30%),
+      radial-gradient(circle at 82% 88%, rgba(198, 147, 58, 0.18), transparent 36%),
+      var(--panel-mobile-bg);
+    border: 1px solid rgba(150, 109, 39, 0.26);
+    box-shadow: var(--panel-mobile-shadow);
     text-shadow: none;
   }
 
@@ -1018,7 +1026,10 @@ body {
 
   .overlay__panel--ethics .overlay__status,
   .overlay__panel--ethics .overlay__title,
-  .overlay__panel--ethics .overlay__text {
+  .overlay__panel--ethics .overlay__lead,
+  .overlay__panel--ethics .overlay__text,
+  .overlay__panel--ethics .overlay__closing,
+  .overlay__panel--ethics .overlay__close {
     text-shadow: none;
   }
 
@@ -1085,6 +1096,13 @@ body {
   .overlay__panel--ai-guide .overlay__content {
     z-index: 3;
     inset: clamp(72px, 18vw, 102px) clamp(38px, 10.5vw, 78px) clamp(42px, 11vw, 68px);
+  }
+
+
+  .overlay__panel--ethics .overlay__content {
+    background: var(--panel-mobile-content-bg);
+    border: 1px solid var(--panel-mobile-content-border);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 246, 0.58), 0 12px 34px rgba(85, 55, 20, 0.16);
   }
 
   .overlay__panel .overlay__scroll,
