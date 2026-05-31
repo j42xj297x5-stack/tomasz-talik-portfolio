@@ -992,33 +992,29 @@ body {
   }
 
   .overlay__panel--haiku-cosmos {
-    --panel-mobile-bg: linear-gradient(180deg, #f8fdff 0%, #edf8ff 42%, #e4f3ff 100%);
-    --panel-mobile-content-bg:
-      radial-gradient(circle at 50% 0%, rgba(104, 190, 255, 0.22), rgba(255, 255, 255, 0) 44%),
-      linear-gradient(180deg, #f8fdff 0%, #edf8ff 42%, #e4f3ff 100%);
-    --panel-mobile-content-border: rgba(71, 157, 214, 0.38);
-    --panel-mobile-shadow: inset 0 0 0 1px rgba(48, 184, 232, 0.22), 0 0 30px rgba(48, 184, 232, 0.18);
-    --mobile-frame-color: #30b8e8;
-    --mobile-frame-glow: rgba(48, 184, 232, 0.18);
-    --overlay-panel-scrollbar: rgba(48, 184, 232, 0.38);
+    --panel-mobile-bg: #f6fbff;
+    --panel-mobile-content-bg: transparent;
+    --panel-mobile-content-border: transparent;
+    --panel-mobile-shadow: none;
+    --mobile-frame-color: #12324a;
+    --mobile-frame-glow: transparent;
+    --overlay-panel-scrollbar: #12324a;
     --overlay-panel-close-color: #063b72;
-    --overlay-panel-close-bg: #ffffff;
-    --overlay-panel-close-border: rgba(48, 184, 232, 0.55);
-    --overlay-panel-close-shadow: rgba(48, 184, 232, 0.18);
+    --overlay-panel-close-bg: #f6fbff;
+    --overlay-panel-close-border: #0f466b;
+    --overlay-panel-close-shadow: transparent;
     --overlay-panel-close-hover-color: #063b72;
-    --overlay-panel-close-hover-border: rgba(48, 184, 232, 0.78);
-    --overlay-panel-close-hover-bg: #ffffff;
-    --overlay-panel-status-color: #0b7db8;
+    --overlay-panel-close-hover-border: #063b72;
+    --overlay-panel-close-hover-bg: #eef7ff;
+    --overlay-panel-status-color: #0b5f86;
     --overlay-panel-title-color: #063b72;
-    --overlay-panel-title-shadow: rgba(48, 184, 232, 0.2);
+    --overlay-panel-title-shadow: transparent;
     --overlay-panel-lead-color: #102a43;
     --overlay-panel-text-color: #12324a;
-    --overlay-panel-closing-color: #1d5f8f;
-    background:
-      radial-gradient(circle at 50% 0%, rgba(104, 190, 255, 0.22), rgba(255, 255, 255, 0) 44%),
-      var(--panel-mobile-bg);
-    border: 1px solid rgba(71, 157, 214, 0.38);
-    box-shadow: 0 0 18px rgba(48, 184, 232, 0.18);
+    --overlay-panel-closing-color: #0f466b;
+    background: var(--panel-mobile-bg);
+    border: 0;
+    box-shadow: none;
     opacity: 1;
   }
 
@@ -1064,6 +1060,14 @@ body {
   .overlay__panel--haiku-cosmos::before,
   .overlay__panel--ethics::before {
     display: none;
+  }
+
+  .overlay__panel--haiku-cosmos::before,
+  .overlay__panel--haiku-cosmos::after {
+    content: none;
+    display: none !important;
+    background: transparent;
+    background-image: none !important;
   }
 
   .overlay__panel.overlay__panel--spotify-digger::before,
@@ -1133,10 +1137,36 @@ body {
 
 
   .overlay__panel--haiku-cosmos .overlay__content {
-    background: var(--panel-mobile-content-bg);
-    border: 1px solid var(--panel-mobile-content-border);
-    box-shadow: var(--panel-mobile-shadow);
+    z-index: 3;
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
     opacity: 1;
+  }
+
+  .overlay__panel--haiku-cosmos .overlay__status,
+  .overlay__panel--haiku-cosmos .overlay__title,
+  .overlay__panel--haiku-cosmos .overlay__lead,
+  .overlay__panel--haiku-cosmos .overlay__text,
+  .overlay__panel--haiku-cosmos .overlay__feature,
+  .overlay__panel--haiku-cosmos .overlay__feature-label,
+  .overlay__panel--haiku-cosmos .overlay__feature-text,
+  .overlay__panel--haiku-cosmos .overlay__closing,
+  .overlay__panel--haiku-cosmos .overlay__actions {
+    text-shadow: none;
+    background: transparent;
+    box-shadow: none;
+    backdrop-filter: none;
+    opacity: 1;
+    mix-blend-mode: normal;
+  }
+
+  .overlay__panel--haiku-cosmos .overlay__close {
+    text-shadow: none;
+    box-shadow: none;
+    opacity: 1;
+    mix-blend-mode: normal;
   }
 
   .overlay__panel--haiku-cosmos .overlay__feature-label {
@@ -1149,7 +1179,7 @@ body {
 
   .overlay__panel--haiku-cosmos .overlay__close:hover,
   .overlay__panel--haiku-cosmos .overlay__close:focus-visible {
-    box-shadow: 0 0 22px rgba(48, 184, 232, 0.28);
+    box-shadow: none;
   }
 
   .overlay__panel .overlay__scroll,
