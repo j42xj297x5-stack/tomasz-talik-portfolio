@@ -195,28 +195,37 @@ body {
   display: block;
   width: 100%;
   height: 100%;
-  color: var(--mobile-frame-color);
-  fill: currentColor;
-  stroke: none;
+  color: var(--mobile-frame-color, rgba(255,255,255,0.92)) !important;
+  fill: currentColor !important;
+  stroke: none !important;
+  opacity: var(--mobile-frame-opacity, 0.92) !important;
   overflow: visible;
+  mix-blend-mode: normal;
 }
 
-.mobile-svg-frame__piece svg path,
-.mobile-svg-frame__piece svg polygon,
-.mobile-svg-frame__piece svg rect,
-.mobile-svg-frame__piece svg circle,
-.mobile-svg-frame__piece svg ellipse,
-.mobile-svg-frame__piece svg line,
-.mobile-svg-frame__piece svg polyline {
-  fill: currentColor;
-  stroke: none;
+.mobile-svg-frame svg,
+.mobile-svg-frame svg * {
+  color: var(--mobile-frame-color, rgba(255,255,255,0.92)) !important;
 }
 
-.mobile-svg-frame__piece svg .frame-pivot-reference {
-  fill: none;
-  stroke: none;
-  opacity: 0;
-  pointer-events: none;
+.mobile-svg-frame svg path,
+.mobile-svg-frame svg rect,
+.mobile-svg-frame svg polygon,
+.mobile-svg-frame svg polyline,
+.mobile-svg-frame svg line,
+.mobile-svg-frame svg circle,
+.mobile-svg-frame svg ellipse {
+  fill: currentColor !important;
+  stroke: none !important;
+}
+
+.mobile-svg-frame .frame-pivot-reference,
+.mobile-svg-frame [data-frame-pivot="true"] {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  fill: none !important;
+  stroke: none !important;
 }
 
 .mobile-svg-frame__corner {
