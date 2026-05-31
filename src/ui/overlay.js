@@ -2,14 +2,14 @@ import { GLYPH_PANEL_BACKGROUNDS } from '../assets/assetManifest.js';
 import { publicPath } from '../utils/publicPath.js';
 
 const MOBILE_FRAME_ASSETS = {
-  lu: { url: publicPath('svg/portfolio_frame_mobile_corner_lu.svg'), className: 'frame-corner frame-corner-lu' },
-  ru: { url: publicPath('svg/portfolio_frame_mobile_corner_ru.svg'), className: 'frame-corner frame-corner-ru' },
-  ld: { url: publicPath('svg/portfolio_frame_mobile_corner_ld.svg'), className: 'frame-corner frame-corner-ld' },
-  rd: { url: publicPath('svg/portfolio_frame_mobile_corner_rd.svg'), className: 'frame-corner frame-corner-rd' },
-  u: { url: publicPath('svg/portfolio_frame_mobile_line_u.svg'), className: 'frame-line frame-line-u' },
-  d: { url: publicPath('svg/portfolio_frame_mobile_line_d.svg'), className: 'frame-line frame-line-d' },
-  l: { url: publicPath('svg/portfolio_frame_mobile_line_l.svg'), className: 'frame-line frame-line-l' },
-  r: { url: publicPath('svg/portfolio_frame_mobile_line_r.svg'), className: 'frame-line frame-line-r' }
+  lu: { url: publicPath('svg/portfolio_frame_mobile_corner_lu.svg'), className: 'frame-corner frame-corner-lu', role: 'corner' },
+  ru: { url: publicPath('svg/portfolio_frame_mobile_corner_ru.svg'), className: 'frame-corner frame-corner-ru', role: 'corner' },
+  ld: { url: publicPath('svg/portfolio_frame_mobile_corner_ld.svg'), className: 'frame-corner frame-corner-ld', role: 'corner' },
+  rd: { url: publicPath('svg/portfolio_frame_mobile_corner_rd.svg'), className: 'frame-corner frame-corner-rd', role: 'corner' },
+  u: { url: publicPath('svg/portfolio_frame_mobile_line_u.svg'), className: 'frame-line frame-line-u', role: 'line' },
+  d: { url: publicPath('svg/portfolio_frame_mobile_line_d.svg'), className: 'frame-line frame-line-d', role: 'line' },
+  l: { url: publicPath('svg/portfolio_frame_mobile_line_l.svg'), className: 'frame-line frame-line-l', role: 'line' },
+  r: { url: publicPath('svg/portfolio_frame_mobile_line_r.svg'), className: 'frame-line frame-line-r', role: 'line' }
 };
 
 const SVG_VISIBLE_ELEMENTS = 'path, rect, circle, ellipse, polygon, polyline, line, g, use';
@@ -76,13 +76,62 @@ function forcePivotReference(element) {
   element.style.setProperty('stroke', 'none', 'important');
 }
 
-function forceVisiblePaint(element) {
+function getInlineStyleValue(element, propertyName) {
+  return element.style.getPropertyValue(propertyName).trim();
+}
+
+function getPaintAttribute(element, propertyName) {
+  let currentElement = element;
+
+  while (currentElement instanceof SVGElement) {
+    const inlineStyleValue = getInlineStyleValue(currentElement, propertyName);
+    const attributeValue = currentElement.getAttribute(propertyName);
+    const paintValue = (inlineStyleValue || attributeValue || '').trim().toLowerCase();
+
+    if (paintValue) return paintValue;
+
+    currentElement = currentElement.parentElement;
+  }
+
+  return '';
+}
+
+function isPaintEnabled(value) {
+  return Boolean(value) && value !== 'none' && value !== 'transparent';
+}
+
+function getSourcePaintMode(element, assetRole) {
+  if (assetRole === 'corner') return 'fill';
+
+  const sourceFill = getPaintAttribute(element, 'fill');
+  const sourceStroke = getPaintAttribute(element, 'stroke');
+  const hasFill = isPaintEnabled(sourceFill);
+  const hasStroke = isPaintEnabled(sourceStroke);
+
+  if (hasStroke && !hasFill) return 'stroke';
+  return 'fill';
+}
+
+function forceVisiblePaint(element, assetRole) {
+  const paintMode = getSourcePaintMode(element, assetRole);
+
   stripPaintDeclarations(element);
-  element.setAttribute('fill', 'currentColor');
-  element.setAttribute('stroke', 'none');
+  element.dataset.framePaintMode = paintMode;
   element.style.setProperty('color', MOBILE_FRAME_COLOR_VALUE, 'important');
-  element.style.setProperty('fill', 'currentColor', 'important');
-  element.style.setProperty('stroke', 'none', 'important');
+
+  if (paintMode === 'stroke') {
+    element.setAttribute('fill', 'none');
+    element.setAttribute('stroke', 'currentColor');
+    element.style.setProperty('fill', 'none', 'important');
+    element.style.setProperty('stroke', 'currentColor', 'important');
+  } else {
+    element.setAttribute('fill', 'currentColor');
+    element.setAttribute('stroke', 'none');
+    element.style.setProperty('fill', 'currentColor', 'important');
+    element.style.setProperty('stroke', 'none', 'important');
+  }
+
+  return paintMode;
 }
 
 function findRemainingBlackPaint(svg) {
@@ -99,46 +148,91 @@ function findRemainingBlackPaint(svg) {
     .map((element) => `${element.tagName.toLowerCase()}${element.id ? `#${element.id}` : ''}`);
 }
 
+function getVisibleShapeSelector() {
+  return SVG_RENDERED_SHAPES
+    .map((shape) => `${shape}:not([data-frame-pivot="true"]):not(.frame-pivot-reference)`)
+    .join(', ');
+}
+
+function getPivotReferenceStatus(svg) {
+  const pivotElements = [...svg.querySelectorAll('[data-frame-pivot="true"], .frame-pivot-reference')];
+  return {
+    count: pivotElements.length,
+    hidden: pivotElements.every((element) => {
+      const styles = getComputedStyle(element);
+      return styles.opacity === '0'
+        && styles.visibility === 'hidden'
+        && styles.fill === 'none'
+        && styles.stroke === 'none';
+    })
+  };
+}
+
+function getFrameAssetDiagnostics(svg) {
+  const firstVisibleShape = svg.querySelector(getVisibleShapeSelector());
+  const svgStyles = getComputedStyle(svg);
+  const shapeStyles = firstVisibleShape ? getComputedStyle(firstVisibleShape) : null;
+  const pivotReferences = getPivotReferenceStatus(svg);
+
+  return {
+    filename: svg.dataset.frameAssetFilename,
+    assetRole: svg.dataset.frameAssetRole,
+    firstVisibleElementTag: firstVisibleShape?.tagName.toLowerCase() ?? null,
+    computedFill: shapeStyles?.fill ?? null,
+    computedStroke: shapeStyles?.stroke ?? null,
+    visibleElementUses: firstVisibleShape?.dataset.framePaintMode ?? null,
+    pivotReferenceElementsRemainHidden: pivotReferences.hidden,
+    pivotReferenceElementCount: pivotReferences.count,
+    svgComputedColor: svgStyles.color,
+    svgComputedFill: svgStyles.fill,
+    svgComputedStroke: svgStyles.stroke
+  };
+}
+
 function logMobileFrameDiagnostics(assetFilename, svg, normalizedCount, pivotCount, remainingBlackPaint) {
   if (!import.meta.env.DEV) return;
 
   requestAnimationFrame(() => {
-    const visibleShapeSelector = SVG_RENDERED_SHAPES
-      .map((shape) => `${shape}:not([data-frame-pivot="true"]):not(.frame-pivot-reference)`)
-      .join(', ');
-    const firstVisibleShape = svg.querySelector(visibleShapeSelector);
-    const svgStyles = getComputedStyle(svg);
-    const shapeStyles = firstVisibleShape ? getComputedStyle(firstVisibleShape) : null;
+    const panelEl = svg.closest('.overlay__panel');
+    const frameEl = svg.closest('.mobile-svg-frame');
+    const panelStyles = panelEl ? getComputedStyle(panelEl) : null;
+    const frameStyles = frameEl ? getComputedStyle(frameEl) : null;
 
     console.debug('[mobile-svg-frame] injected SVG diagnostics', {
-      asset: assetFilename,
+      activeGateId: panelEl?.dataset.gateId ?? null,
+      panelResolvedMobileFrameColor: panelStyles?.getPropertyValue('--mobile-frame-color').trim() ?? null,
+      frameResolvedColor: frameStyles?.color ?? null,
       normalizedVisibleElements: normalizedCount,
       protectedPivotReferences: pivotCount,
       remainingBlackPaint,
-      svgComputed: {
-        color: svgStyles.color,
-        fill: svgStyles.fill,
-        stroke: svgStyles.stroke,
-        opacity: svgStyles.opacity,
-        filter: svgStyles.filter,
-        mixBlendMode: svgStyles.mixBlendMode,
-        zIndex: svgStyles.zIndex
-      },
-      firstVisibleShape: firstVisibleShape
-        ? {
-            selector: `${firstVisibleShape.tagName.toLowerCase()}${firstVisibleShape.id ? `#${firstVisibleShape.id}` : ''}`,
-            color: shapeStyles.color,
-            fill: shapeStyles.fill,
-            stroke: shapeStyles.stroke,
-            opacity: shapeStyles.opacity,
-            visibility: shapeStyles.visibility
-          }
-        : null
+      asset: getFrameAssetDiagnostics(svg)
     });
   });
 }
 
-function normalizeInlineSvg(svg, className, assetFilename) {
+function logMobileFramePanelDiagnostics(panelEl) {
+  if (!import.meta.env.DEV) return;
+
+  requestAnimationFrame(() => {
+    const frameEl = panelEl.querySelector('.mobile-svg-frame');
+    const panelStyles = getComputedStyle(panelEl);
+    const frameStyles = frameEl ? getComputedStyle(frameEl) : null;
+    const svgs = frameEl ? [...frameEl.querySelectorAll('svg')] : [];
+
+    console.debug('[mobile-svg-frame] open panel diagnostics', {
+      activeGateId: panelEl.dataset.gateId ?? null,
+      panelResolvedMobileFrameColor: panelStyles.getPropertyValue('--mobile-frame-color').trim(),
+      frameResolvedColor: frameStyles?.color ?? null,
+      injectedSvgResolvedColors: svgs.map((svg) => ({
+        filename: svg.dataset.frameAssetFilename,
+        color: getComputedStyle(svg).color
+      })),
+      assets: svgs.map(getFrameAssetDiagnostics)
+    });
+  });
+}
+
+function normalizeInlineSvg(svg, className, assetFilename, assetRole) {
   let normalizedCount = 0;
   let pivotCount = 0;
 
@@ -153,10 +247,11 @@ function normalizeInlineSvg(svg, className, assetFilename) {
   svg.removeAttribute('fill');
   svg.removeAttribute('stroke');
   svg.style.setProperty('color', MOBILE_FRAME_COLOR_VALUE, 'important');
-  svg.style.setProperty('fill', 'currentColor', 'important');
-  svg.style.setProperty('stroke', 'none', 'important');
+
   svg.style.setProperty('opacity', 'var(--mobile-frame-opacity, 0.92)', 'important');
   svg.style.setProperty('overflow', 'visible');
+  svg.dataset.frameAssetFilename = assetFilename;
+  svg.dataset.frameAssetRole = assetRole;
 
   svg.querySelectorAll(SVG_VISIBLE_ELEMENTS).forEach((element) => {
     if (isInvisiblePivotElement(element)) {
@@ -165,7 +260,7 @@ function normalizeInlineSvg(svg, className, assetFilename) {
       return;
     }
 
-    forceVisiblePaint(element);
+    forceVisiblePaint(element, assetRole);
     normalizedCount += 1;
   });
 
@@ -174,7 +269,7 @@ function normalizeInlineSvg(svg, className, assetFilename) {
   return svg;
 }
 
-async function loadInlineSvg(url, targetElement, className) {
+async function loadInlineSvg(url, targetElement, className, assetRole) {
   try {
     const response = await fetch(url);
     if (!response.ok) {
@@ -190,7 +285,7 @@ async function loadInlineSvg(url, targetElement, className) {
       throw new Error('Invalid SVG markup');
     }
 
-    targetElement.replaceChildren(normalizeInlineSvg(svg, className, getAssetFilename(url)));
+    targetElement.replaceChildren(normalizeInlineSvg(svg, className, getAssetFilename(url), assetRole));
     targetElement.classList.add('mobile-svg-frame__piece--loaded');
   } catch (error) {
     console.warn(`[overlay] Failed to inline mobile frame SVG: ${url}`, error);
@@ -203,7 +298,7 @@ function loadMobileFrameSvgs(frameElement) {
     const targetElement = frameElement.querySelector(`[data-mobile-frame-piece="${key}"]`);
     if (!targetElement) return;
 
-    loadInlineSvg(asset.url, targetElement, asset.className);
+    loadInlineSvg(asset.url, targetElement, asset.className, asset.role);
   });
 }
 
@@ -278,6 +373,7 @@ export function createOverlay({ onClose, assetManager = null } = {}) {
       const isCreativeAI = nodeData.id === 'creative-ai';
       const hasStructuredCopy = Boolean(nodeData.leadText || nodeData.bodyText || nodeData.closingText);
 
+      panelEl.dataset.gateId = nodeData.id;
       panelEl.classList.toggle('overlay__panel--ai-guide', isAIGuide);
       panelEl.classList.toggle('overlay__panel--creative-ai', isCreativeAI);
       const panelBackgroundPath = GLYPH_PANEL_BACKGROUNDS[nodeData.id];
@@ -314,6 +410,7 @@ export function createOverlay({ onClose, assetManager = null } = {}) {
 
       root.hidden = false;
       document.body.classList.add('overlay-open');
+      logMobileFramePanelDiagnostics(panelEl);
     },
     close
   };

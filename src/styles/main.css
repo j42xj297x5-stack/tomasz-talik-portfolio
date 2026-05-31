@@ -173,6 +173,13 @@ body {
   border: 1px solid #3b475b;
   background: #0b111a;
 }
+
+
+.overlay__panel[data-gate-id="ai-guide"] {
+  --mobile-frame-color: #9be66f;
+  --mobile-frame-glow: rgba(155, 230, 111, 0.22);
+}
+
 .overlay__content { position: relative; z-index: 2; }
 .overlay__scroll { min-height: 0; }
 .overlay__actions { display: flex; justify-content: flex-end; margin-top: 0.9rem; }
@@ -180,6 +187,7 @@ body {
 
 .mobile-svg-frame {
   display: none;
+  color: var(--mobile-frame-color, rgba(255,255,255,0.92));
 }
 
 .mobile-svg-frame__piece {
@@ -196,8 +204,6 @@ body {
   width: 100%;
   height: 100%;
   color: var(--mobile-frame-color, rgba(255,255,255,0.92)) !important;
-  fill: currentColor !important;
-  stroke: none !important;
   opacity: var(--mobile-frame-opacity, 0.92) !important;
   overflow: visible;
   mix-blend-mode: normal;
@@ -208,15 +214,20 @@ body {
   color: var(--mobile-frame-color, rgba(255,255,255,0.92)) !important;
 }
 
-.mobile-svg-frame svg path,
-.mobile-svg-frame svg rect,
-.mobile-svg-frame svg polygon,
-.mobile-svg-frame svg polyline,
-.mobile-svg-frame svg line,
-.mobile-svg-frame svg circle,
-.mobile-svg-frame svg ellipse {
+.mobile-svg-frame svg .frame-pivot-reference,
+.mobile-svg-frame svg [data-frame-pivot="true"] {
+  fill: none !important;
+  stroke: none !important;
+}
+
+.mobile-svg-frame svg [data-frame-paint-mode="fill"] {
   fill: currentColor !important;
   stroke: none !important;
+}
+
+.mobile-svg-frame svg [data-frame-paint-mode="stroke"] {
+  fill: none !important;
+  stroke: currentColor !important;
 }
 
 .mobile-svg-frame .frame-pivot-reference,
