@@ -992,8 +992,34 @@ body {
   }
 
   .overlay__panel--haiku-cosmos {
-    --panel-mobile-content-bg: linear-gradient(150deg, rgba(248, 253, 255, 0.92), rgba(218, 246, 255, 0.84) 55%, rgba(237, 251, 255, 0.9));
-    --panel-mobile-shadow: 0 0 30px rgba(75, 214, 237, 0.14);
+    --panel-mobile-bg: linear-gradient(180deg, #f8fdff 0%, #edf8ff 42%, #e4f3ff 100%);
+    --panel-mobile-content-bg:
+      radial-gradient(circle at 50% 0%, rgba(104, 190, 255, 0.22), rgba(255, 255, 255, 0) 44%),
+      linear-gradient(180deg, #f8fdff 0%, #edf8ff 42%, #e4f3ff 100%);
+    --panel-mobile-content-border: rgba(71, 157, 214, 0.38);
+    --panel-mobile-shadow: inset 0 0 0 1px rgba(48, 184, 232, 0.22), 0 0 30px rgba(48, 184, 232, 0.18);
+    --mobile-frame-color: #30b8e8;
+    --mobile-frame-glow: rgba(48, 184, 232, 0.18);
+    --overlay-panel-scrollbar: rgba(48, 184, 232, 0.38);
+    --overlay-panel-close-color: #063b72;
+    --overlay-panel-close-bg: #ffffff;
+    --overlay-panel-close-border: rgba(48, 184, 232, 0.55);
+    --overlay-panel-close-shadow: rgba(48, 184, 232, 0.18);
+    --overlay-panel-close-hover-color: #063b72;
+    --overlay-panel-close-hover-border: rgba(48, 184, 232, 0.78);
+    --overlay-panel-close-hover-bg: #ffffff;
+    --overlay-panel-status-color: #0b7db8;
+    --overlay-panel-title-color: #063b72;
+    --overlay-panel-title-shadow: rgba(48, 184, 232, 0.2);
+    --overlay-panel-lead-color: #102a43;
+    --overlay-panel-text-color: #12324a;
+    --overlay-panel-closing-color: #1d5f8f;
+    background:
+      radial-gradient(circle at 50% 0%, rgba(104, 190, 255, 0.22), rgba(255, 255, 255, 0) 44%),
+      var(--panel-mobile-bg);
+    border: 1px solid rgba(71, 157, 214, 0.38);
+    box-shadow: 0 0 18px rgba(48, 184, 232, 0.18);
+    opacity: 1;
   }
 
   .overlay__panel.overlay__panel--spotify-digger,
@@ -1103,6 +1129,27 @@ body {
     background: var(--panel-mobile-content-bg);
     border: 1px solid var(--panel-mobile-content-border);
     box-shadow: inset 0 1px 0 rgba(255, 255, 246, 0.58), 0 12px 34px rgba(85, 55, 20, 0.16);
+  }
+
+
+  .overlay__panel--haiku-cosmos .overlay__content {
+    background: var(--panel-mobile-content-bg);
+    border: 1px solid var(--panel-mobile-content-border);
+    box-shadow: var(--panel-mobile-shadow);
+    opacity: 1;
+  }
+
+  .overlay__panel--haiku-cosmos .overlay__feature-label {
+    color: #0b7db8;
+  }
+
+  .overlay__panel--haiku-cosmos .overlay__feature-text {
+    color: #3e6177;
+  }
+
+  .overlay__panel--haiku-cosmos .overlay__close:hover,
+  .overlay__panel--haiku-cosmos .overlay__close:focus-visible {
+    box-shadow: 0 0 22px rgba(48, 184, 232, 0.28);
   }
 
   .overlay__panel .overlay__scroll,
