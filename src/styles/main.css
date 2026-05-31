@@ -247,8 +247,10 @@ body {
   stroke: none !important;
 }
 
-/* Mobile frame geometry is set by the JS edge-to-edge pivot solver in overlay.js.
-   Line wrappers use corner wrapper edges as their start/end points, with
+/* Mobile frame geometry is set by the JS guide-rectangle pivot solver in
+   overlay.js. Every wrapper position is derived from
+   wrapper.left/top = targetGuide - localPivot * scale on the relevant axes. Line
+   wrappers use corner wrapper edges as their start/end points, with
    --frame-line-overlap defaulting to 0px for no corner-wrapper overlap. Source
    viewBoxes: lu 57.058x99.868, ru 54.147x99.821, ld 57.086x98.871,
    rd 54.210x98.801; line_u 159.544x33.445, line_d 159.544x21.212,

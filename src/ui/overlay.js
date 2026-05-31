@@ -368,6 +368,10 @@ function choosePivot(pivots, role, viewBox) {
     return { id: null, x: viewBox.width / 2, y: viewBox.height / 2, fallback: true, role };
   }
 
+  if (pivots.length === 1) {
+    return { ...pivots[0], role };
+  }
+
   // Pivot SVG circles do not currently expose semantic role IDs beyond the asset name.
   // Infer the intended connection point from its position: top/bottom use the closest
   // Y axis, left/right use the closest X axis. Assets with a single pivot naturally
@@ -387,6 +391,31 @@ function choosePivot(pivots, role, viewBox) {
   }, pivots[0]);
 
   return { ...chosen, role };
+}
+
+function chooseCornerPivot(pivots, corner, viewBox) {
+  if (!pivots.length) {
+    return { id: null, x: viewBox.width / 2, y: viewBox.height / 2, fallback: true, role: corner };
+  }
+
+  if (pivots.length === 1) {
+    return { ...pivots[0], role: corner };
+  }
+
+  const target = {
+    lu: { x: viewBox.x, y: viewBox.y },
+    ru: { x: viewBox.x + viewBox.width, y: viewBox.y },
+    ld: { x: viewBox.x, y: viewBox.y + viewBox.height },
+    rd: { x: viewBox.x + viewBox.width, y: viewBox.y + viewBox.height }
+  }[corner] ?? { x: viewBox.x + viewBox.width / 2, y: viewBox.y + viewBox.height / 2 };
+
+  const chosen = pivots.reduce((best, pivot) => {
+    const distance = Math.hypot(pivot.x - target.x, pivot.y - target.y);
+    const bestDistance = Math.hypot(best.x - target.x, best.y - target.y);
+    return distance < bestDistance ? pivot : best;
+  }, pivots[0]);
+
+  return { ...chosen, role: corner };
 }
 
 function getMobileFrameMetrics(frameElement) {
@@ -474,6 +503,36 @@ function getPaintSnapshot(piece) {
   };
 }
 
+function getPieceScale(piece, rect) {
+  return {
+    x: rect.width / piece.viewBox.width,
+    y: rect.height / piece.viewBox.height
+  };
+}
+
+function getScreenPivot(rect, pivot, scale) {
+  return {
+    x: rect.x + pivot.x * scale.x,
+    y: rect.y + pivot.y * scale.y
+  };
+}
+
+function getPivotAlignmentDiagnostics(piece, rect, pivot, targetGuide) {
+  const scale = getPieceScale(piece, rect);
+  const screenPivot = getScreenPivot(rect, pivot, scale);
+
+  return {
+    localPivot: { x: pivot.x, y: pivot.y, rawX: pivot.rawX ?? null, rawY: pivot.rawY ?? null, id: pivot.id ?? null, role: pivot.role ?? null },
+    scaleX: scale.x,
+    scaleY: scale.y,
+    wrapper: { left: rect.x, top: rect.y, width: rect.width, height: rect.height },
+    screenPivot,
+    targetGuide: { x: targetGuide.x ?? null, y: targetGuide.y ?? null },
+    deltaX: targetGuide.x == null ? null : screenPivot.x - targetGuide.x,
+    deltaY: targetGuide.y == null ? null : screenPivot.y - targetGuide.y
+  };
+}
+
 function applyMobileFrameLayout(frameElement) {
   const frameRect = frameElement.getBoundingClientRect();
   if (frameRect.width <= 0 || frameRect.height <= 0) return;
@@ -487,54 +546,68 @@ function applyMobileFrameLayout(frameElement) {
   const maxCornerViewBoxWidth = Math.max(...MOBILE_FRAME_CORNER_KEYS.map((key) => pieces[key].viewBox.width));
   const desiredCornerWidth = clamp(frameRect.width * 0.22, Math.min(72, frameRect.width * 0.25), frameRect.width * 0.25);
   const cornerScale = desiredCornerWidth / maxCornerViewBoxWidth;
+  const chosenPivots = {
+    lu: chooseCornerPivot(pieces.lu.pivots, 'lu', pieces.lu.viewBox),
+    ru: chooseCornerPivot(pieces.ru.pivots, 'ru', pieces.ru.viewBox),
+    ld: chooseCornerPivot(pieces.ld.pivots, 'ld', pieces.ld.viewBox),
+    rd: chooseCornerPivot(pieces.rd.pivots, 'rd', pieces.rd.viewBox),
+    u: choosePivot(pieces.u.pivots, 'top', pieces.u.viewBox),
+    d: choosePivot(pieces.d.pivots, 'bottom', pieces.d.viewBox),
+    l: choosePivot(pieces.l.pivots, 'left', pieces.l.viewBox),
+    r: choosePivot(pieces.r.pivots, 'right', pieces.r.viewBox)
+  };
+
+  const cornerSizes = Object.fromEntries(MOBILE_FRAME_CORNER_KEYS.map((key) => [
+    key,
+    {
+      width: pieces[key].viewBox.width * cornerScale,
+      height: pieces[key].viewBox.height * cornerScale
+    }
+  ]));
+
+  const guideRect = {
+    leftX: Math.max(chosenPivots.lu.x, chosenPivots.ld.x) * cornerScale,
+    rightX: frameRect.width - Math.max(
+      (pieces.ru.viewBox.width - chosenPivots.ru.x) * cornerScale,
+      (pieces.rd.viewBox.width - chosenPivots.rd.x) * cornerScale
+    ),
+    topY: Math.max(chosenPivots.lu.y, chosenPivots.ru.y) * cornerScale,
+    bottomY: frameRect.height - Math.max(
+      (pieces.ld.viewBox.height - chosenPivots.ld.y) * cornerScale,
+      (pieces.rd.viewBox.height - chosenPivots.rd.y) * cornerScale
+    )
+  };
+
   const cornerRects = {
-    lu: { x: 0, y: 0, width: pieces.lu.viewBox.width * cornerScale, height: pieces.lu.viewBox.height * cornerScale },
-    ru: { x: frameRect.width - pieces.ru.viewBox.width * cornerScale, y: 0, width: pieces.ru.viewBox.width * cornerScale, height: pieces.ru.viewBox.height * cornerScale },
-    ld: { x: 0, y: frameRect.height - pieces.ld.viewBox.height * cornerScale, width: pieces.ld.viewBox.width * cornerScale, height: pieces.ld.viewBox.height * cornerScale },
-    rd: { x: frameRect.width - pieces.rd.viewBox.width * cornerScale, y: frameRect.height - pieces.rd.viewBox.height * cornerScale, width: pieces.rd.viewBox.width * cornerScale, height: pieces.rd.viewBox.height * cornerScale }
+    lu: {
+      x: guideRect.leftX - chosenPivots.lu.x * cornerScale,
+      y: guideRect.topY - chosenPivots.lu.y * cornerScale,
+      ...cornerSizes.lu
+    },
+    ru: {
+      x: guideRect.rightX - chosenPivots.ru.x * cornerScale,
+      y: guideRect.topY - chosenPivots.ru.y * cornerScale,
+      ...cornerSizes.ru
+    },
+    ld: {
+      x: guideRect.leftX - chosenPivots.ld.x * cornerScale,
+      y: guideRect.bottomY - chosenPivots.ld.y * cornerScale,
+      ...cornerSizes.ld
+    },
+    rd: {
+      x: guideRect.rightX - chosenPivots.rd.x * cornerScale,
+      y: guideRect.bottomY - chosenPivots.rd.y * cornerScale,
+      ...cornerSizes.rd
+    }
   };
 
   Object.entries(cornerRects).forEach(([key, rect]) => setFramePieceRect(pieces[key], rect));
-
-  const chosenPivots = {
-    luTop: choosePivot(pieces.lu.pivots, 'top', pieces.lu.viewBox),
-    luLeft: choosePivot(pieces.lu.pivots, 'left', pieces.lu.viewBox),
-    ruTop: choosePivot(pieces.ru.pivots, 'top', pieces.ru.viewBox),
-    ruRight: choosePivot(pieces.ru.pivots, 'right', pieces.ru.viewBox),
-    ldBottom: choosePivot(pieces.ld.pivots, 'bottom', pieces.ld.viewBox),
-    ldLeft: choosePivot(pieces.ld.pivots, 'left', pieces.ld.viewBox),
-    rdBottom: choosePivot(pieces.rd.pivots, 'bottom', pieces.rd.viewBox),
-    rdRight: choosePivot(pieces.rd.pivots, 'right', pieces.rd.viewBox),
-    lineU: choosePivot(pieces.u.pivots, 'top', pieces.u.viewBox),
-    lineD: choosePivot(pieces.d.pivots, 'bottom', pieces.d.viewBox),
-    lineL: choosePivot(pieces.l.pivots, 'left', pieces.l.viewBox),
-    lineR: choosePivot(pieces.r.pivots, 'right', pieces.r.viewBox)
-  };
 
   const edgeGaps = {
     u: { start: getRectRight(cornerRects.lu), end: cornerRects.ru.x },
     d: { start: getRectRight(cornerRects.ld), end: cornerRects.rd.x },
     l: { start: getRectBottom(cornerRects.lu), end: cornerRects.ld.y },
     r: { start: getRectBottom(cornerRects.ru), end: cornerRects.rd.y }
-  };
-
-  const axes = {
-    topY: average(
-      cornerRects.lu.y + chosenPivots.luTop.y * cornerScale,
-      cornerRects.ru.y + chosenPivots.ruTop.y * cornerScale
-    ),
-    bottomY: average(
-      cornerRects.ld.y + chosenPivots.ldBottom.y * cornerScale,
-      cornerRects.rd.y + chosenPivots.rdBottom.y * cornerScale
-    ),
-    leftX: average(
-      cornerRects.lu.x + chosenPivots.luLeft.x * cornerScale,
-      cornerRects.ld.x + chosenPivots.ldLeft.x * cornerScale
-    ),
-    rightX: average(
-      cornerRects.ru.x + chosenPivots.ruRight.x * cornerScale,
-      cornerRects.rd.x + chosenPivots.rdRight.x * cornerScale
-    )
   };
 
   const lineScales = {
@@ -544,60 +617,57 @@ function applyMobileFrameLayout(frameElement) {
     r: { x: cornerScale, y: Math.max(0, edgeGaps.r.end - edgeGaps.r.start + lineOverlap * 2) / pieces.r.viewBox.height }
   };
 
-  const unclampedLineRects = {
+  const lineRects = {
     u: {
       x: edgeGaps.u.start - lineOverlap,
-      y: axes.topY - chosenPivots.lineU.y * lineScales.u.y,
+      y: guideRect.topY - chosenPivots.u.y * lineScales.u.y,
       width: Math.max(0, edgeGaps.u.end - edgeGaps.u.start + lineOverlap * 2),
       height: pieces.u.viewBox.height * lineScales.u.y
     },
     d: {
       x: edgeGaps.d.start - lineOverlap,
-      y: axes.bottomY - chosenPivots.lineD.y * lineScales.d.y,
+      y: guideRect.bottomY - chosenPivots.d.y * lineScales.d.y,
       width: Math.max(0, edgeGaps.d.end - edgeGaps.d.start + lineOverlap * 2),
       height: pieces.d.viewBox.height * lineScales.d.y
     },
     l: {
-      x: axes.leftX - chosenPivots.lineL.x * lineScales.l.x,
+      x: guideRect.leftX - chosenPivots.l.x * lineScales.l.x,
       y: edgeGaps.l.start - lineOverlap,
       width: pieces.l.viewBox.width * lineScales.l.x,
       height: Math.max(0, edgeGaps.l.end - edgeGaps.l.start + lineOverlap * 2)
     },
     r: {
-      x: axes.rightX - chosenPivots.lineR.x * lineScales.r.x,
+      x: guideRect.rightX - chosenPivots.r.x * lineScales.r.x,
       y: edgeGaps.r.start - lineOverlap,
       width: pieces.r.viewBox.width * lineScales.r.x,
       height: Math.max(0, edgeGaps.r.end - edgeGaps.r.start + lineOverlap * 2)
     }
   };
 
-  const lineRects = {
-    u: {
-      ...unclampedLineRects.u,
-      y: clamp(unclampedLineRects.u.y, 0, Math.max(0, Math.min(getRectBottom(cornerRects.lu), getRectBottom(cornerRects.ru)) - unclampedLineRects.u.height))
-    },
-    d: {
-      ...unclampedLineRects.d,
-      y: clamp(unclampedLineRects.d.y, Math.max(cornerRects.ld.y, cornerRects.rd.y), Math.max(0, frameRect.height - unclampedLineRects.d.height))
-    },
-    l: {
-      ...unclampedLineRects.l,
-      x: clamp(unclampedLineRects.l.x, 0, Math.max(0, Math.min(getRectRight(cornerRects.lu), getRectRight(cornerRects.ld)) - unclampedLineRects.l.width))
-    },
-    r: {
-      ...unclampedLineRects.r,
-      x: clamp(unclampedLineRects.r.x, Math.max(cornerRects.ru.x, cornerRects.rd.x), Math.max(0, frameRect.width - unclampedLineRects.r.width))
-    }
-  };
-
   Object.entries(lineRects).forEach(([key, rect]) => setFramePieceRect(pieces[key], rect));
+
+  const renderedRects = { ...cornerRects, ...lineRects };
+  const pivotTargets = {
+    lu: { x: guideRect.leftX, y: guideRect.topY },
+    ru: { x: guideRect.rightX, y: guideRect.topY },
+    ld: { x: guideRect.leftX, y: guideRect.bottomY },
+    rd: { x: guideRect.rightX, y: guideRect.bottomY },
+    u: { y: guideRect.topY },
+    d: { y: guideRect.bottomY },
+    l: { x: guideRect.leftX },
+    r: { x: guideRect.rightX }
+  };
+  const pivotAlignment = Object.fromEntries(MOBILE_FRAME_PIECE_KEYS.map((key) => [
+    key,
+    getPivotAlignmentDiagnostics(pieces[key], renderedRects[key], chosenPivots[key], pivotTargets[key])
+  ]));
 
   requestAnimationFrame(() => {
     const updatedFrameRect = frameElement.getBoundingClientRect();
     const rects = Object.fromEntries(MOBILE_FRAME_PIECE_KEYS.map((key) => {
       const wrapperSnapshot = getRectSnapshot(pieces[key].wrapper, updatedFrameRect);
       const svgSnapshot = getRectSnapshot(pieces[key].svg, updatedFrameRect);
-      const localWrapperRect = key in cornerRects ? cornerRects[key] : lineRects[key];
+      const localWrapperRect = renderedRects[key];
       const overlapsCorners = MOBILE_FRAME_CORNER_KEYS
         .filter((cornerKey) => cornerKey !== key)
         .filter((cornerKey) => rectsOverlap(localWrapperRect, cornerRects[cornerKey]));
@@ -614,14 +684,24 @@ function applyMobileFrameLayout(frameElement) {
           wrapperStyles: getStyleSnapshot(pieces[key].wrapper),
           svgStyles: getStyleSnapshot(pieces[key].svg),
           firstVisibleNonPivotGeometry: firstPaintedShape,
-          visibleGeometryInsideWrapper: firstPaintedShape?.insideWrapper ?? false
+          visibleGeometryInsideWrapper: firstPaintedShape?.insideWrapper ?? false,
+          pivotAlignment: pivotAlignment[key]
         }
       ];
     }));
 
     console.debug('[overlay][frame-layout]', {
-      mode: 'edge-to-edge',
+      mode: 'guide-rectangle-pivot-alignment',
       frameRect: { width: frameRect.width, height: frameRect.height },
+      guideRectangle: {
+        guideLeftX: guideRect.leftX,
+        guideRightX: guideRect.rightX,
+        guideTopY: guideRect.topY,
+        guideBottomY: guideRect.bottomY,
+        width: guideRect.rightX - guideRect.leftX,
+        height: guideRect.bottomY - guideRect.topY
+      },
+      guideRectangleFormula: 'guideLeftX = max(left corner pivot.x) * cornerScale; guideRightX = frameWidth - max(right corner trailing pivot distance) * cornerScale; guideTopY = max(upper corner pivot.y) * cornerScale; guideBottomY = frameHeight - max(lower corner trailing pivot distance) * cornerScale',
       viewBoxes: Object.fromEntries(MOBILE_FRAME_PIECE_KEYS.map((key) => [key, pieces[key].viewBox])),
       detectedPivots: Object.fromEntries(MOBILE_FRAME_PIECE_KEYS.map((key) => [key, pieces[key].pivots])),
       chosenPivots,
@@ -631,21 +711,20 @@ function applyMobileFrameLayout(frameElement) {
       lineOverlap,
       cornerRendered: cornerRects,
       edgeGaps,
-      pivotAxisTargets: axes,
+      edgeGapFormula: 'horizontal lines span from the right edge of the matching left corner wrapper to the left edge of the matching right corner wrapper; vertical lines span from the bottom edge of the matching upper corner wrapper to the top edge of the matching lower corner wrapper; lineOverlap expands each span symmetrically when non-zero',
       lineScales,
-      unclampedLineRendered: unclampedLineRects,
       lineRendered: lineRects,
+      pivotAlignment,
       lineDiagnostics: {
-        u: { expectedEdgeGap: edgeGaps.u.end - edgeGaps.u.start, actualWrapperWidth: lineRects.u.width, actualWrapperHeight: lineRects.u.height, lineScaleX: lineScales.u.x, lineScaleY: lineScales.u.y, pivotAxisTarget: axes.topY, finalTop: lineRects.u.y, finalLeft: lineRects.u.x, graphicVisible: Boolean(rects.u.firstVisibleNonPivotGeometry) },
-        d: { expectedEdgeGap: edgeGaps.d.end - edgeGaps.d.start, actualWrapperWidth: lineRects.d.width, actualWrapperHeight: lineRects.d.height, lineScaleX: lineScales.d.x, lineScaleY: lineScales.d.y, pivotAxisTarget: axes.bottomY, finalTop: lineRects.d.y, finalLeft: lineRects.d.x, graphicVisible: Boolean(rects.d.firstVisibleNonPivotGeometry) },
-        l: { expectedEdgeGap: edgeGaps.l.end - edgeGaps.l.start, actualWrapperWidth: lineRects.l.width, actualWrapperHeight: lineRects.l.height, lineScaleX: lineScales.l.x, lineScaleY: lineScales.l.y, pivotAxisTarget: axes.leftX, finalTop: lineRects.l.y, finalLeft: lineRects.l.x, graphicVisible: Boolean(rects.l.firstVisibleNonPivotGeometry) },
-        r: { expectedEdgeGap: edgeGaps.r.end - edgeGaps.r.start, actualWrapperWidth: lineRects.r.width, actualWrapperHeight: lineRects.r.height, lineScaleX: lineScales.r.x, lineScaleY: lineScales.r.y, pivotAxisTarget: axes.rightX, finalTop: lineRects.r.y, finalLeft: lineRects.r.x, graphicVisible: Boolean(rects.r.firstVisibleNonPivotGeometry) }
+        u: { expectedEdgeGap: edgeGaps.u.end - edgeGaps.u.start, actualWrapperWidth: lineRects.u.width, actualWrapperHeight: lineRects.u.height, lineScaleX: lineScales.u.x, lineScaleY: lineScales.u.y, pivotAxisTarget: guideRect.topY, finalTop: lineRects.u.y, finalLeft: lineRects.u.x, graphicVisible: Boolean(rects.u.firstVisibleNonPivotGeometry), pivotDeltaY: pivotAlignment.u.deltaY },
+        d: { expectedEdgeGap: edgeGaps.d.end - edgeGaps.d.start, actualWrapperWidth: lineRects.d.width, actualWrapperHeight: lineRects.d.height, lineScaleX: lineScales.d.x, lineScaleY: lineScales.d.y, pivotAxisTarget: guideRect.bottomY, finalTop: lineRects.d.y, finalLeft: lineRects.d.x, graphicVisible: Boolean(rects.d.firstVisibleNonPivotGeometry), pivotDeltaY: pivotAlignment.d.deltaY },
+        l: { expectedEdgeGap: edgeGaps.l.end - edgeGaps.l.start, actualWrapperWidth: lineRects.l.width, actualWrapperHeight: lineRects.l.height, lineScaleX: lineScales.l.x, lineScaleY: lineScales.l.y, pivotAxisTarget: guideRect.leftX, finalTop: lineRects.l.y, finalLeft: lineRects.l.x, graphicVisible: Boolean(rects.l.firstVisibleNonPivotGeometry), pivotDeltaX: pivotAlignment.l.deltaX },
+        r: { expectedEdgeGap: edgeGaps.r.end - edgeGaps.r.start, actualWrapperWidth: lineRects.r.width, actualWrapperHeight: lineRects.r.height, lineScaleX: lineScales.r.x, lineScaleY: lineScales.r.y, pivotAxisTarget: guideRect.rightX, finalTop: lineRects.r.y, finalLeft: lineRects.r.x, graphicVisible: Boolean(rects.r.firstVisibleNonPivotGeometry), pivotDeltaX: pivotAlignment.r.deltaX }
       },
       pieces: rects
     });
   });
 }
-
 function createMobileFrameLayoutController(frameElement, panelElement) {
   if (!frameElement) return { schedule: () => {}, destroy: () => {} };
 
