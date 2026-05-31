@@ -10,7 +10,7 @@ export const GLYPH_PANEL_BACKGROUNDS = Object.freeze({
   'ai-guide': '/png/ai_guide.png',
   'creative-ai': '/png/creative_ai.png',
   'ethics-life-protection': '/png/ai_ethics.png',
-  'haiku-cosmos': '/svg/haiku_cosmos_light_portrait.svg'
+  'haiku-cosmos': '/png/haiku_cosmos.png'
 });
 
 export const GALAXY_SPRITE_PATHS = Object.freeze([

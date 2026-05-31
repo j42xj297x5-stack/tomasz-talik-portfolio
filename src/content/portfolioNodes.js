@@ -27,6 +27,8 @@ export const portfolioNodes = [
     eyebrow: 'INTERACTIVE WORLD SYSTEM',
     modelPath: '/glb/glyph_5.glb',
     modelKind: 'glyph',
+    ornamentPath: '/png/haiku_cosmos_ornament.png',
+    ornamentMobileOnly: true,
     draftText: 'Haiku Cosmos to projekt świata, w którym gra nie jest tylko zbiorem ekranów i mechanik.',
     leadText: 'Gra, interfejs i dokumentacja jako jeden kosmos zależności.',
     bodyText: `Haiku Cosmos to projekt świata, w którym gra nie jest tylko zbiorem ekranów i mechanik.
