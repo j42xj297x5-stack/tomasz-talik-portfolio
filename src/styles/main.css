@@ -180,12 +180,13 @@ body {
 
 .mobile-svg-frame {
   display: none;
+  color: var(--mobile-frame-color, rgba(255,255,255,0.92));
 }
 
 .mobile-svg-frame__piece {
   position: absolute;
   display: block;
-  color: var(--mobile-frame-color);
+  color: var(--mobile-frame-color, rgba(255,255,255,0.92));
   opacity: var(--mobile-frame-opacity);
   pointer-events: none;
   filter: drop-shadow(0 0 5px var(--mobile-frame-glow));
@@ -196,8 +197,6 @@ body {
   width: 100%;
   height: 100%;
   color: var(--mobile-frame-color, rgba(255,255,255,0.92)) !important;
-  fill: currentColor !important;
-  stroke: none !important;
   opacity: var(--mobile-frame-opacity, 0.92) !important;
   overflow: visible;
   mix-blend-mode: normal;
@@ -208,15 +207,14 @@ body {
   color: var(--mobile-frame-color, rgba(255,255,255,0.92)) !important;
 }
 
-.mobile-svg-frame svg path,
-.mobile-svg-frame svg rect,
-.mobile-svg-frame svg polygon,
-.mobile-svg-frame svg polyline,
-.mobile-svg-frame svg line,
-.mobile-svg-frame svg circle,
-.mobile-svg-frame svg ellipse {
+.mobile-svg-frame svg [data-mobile-frame-paint-mode="fill"] {
   fill: currentColor !important;
   stroke: none !important;
+}
+
+.mobile-svg-frame svg [data-mobile-frame-paint-mode="stroke"] {
+  fill: none !important;
+  stroke: currentColor !important;
 }
 
 .mobile-svg-frame .frame-pivot-reference,
@@ -271,6 +269,11 @@ body {
 
 .mobile-svg-frame__line--r {
   right: clamp(1px, 0.34vw, 3px);
+}
+
+.overlay__panel[data-gate-id="ai-guide"] {
+  --mobile-frame-color: #9be66f;
+  --mobile-frame-glow: rgba(155, 230, 111, 0.22);
 }
 
 .overlay__status { margin: 0 0 0.6rem; color: #8fa1b9; font-size: 0.82rem; }
