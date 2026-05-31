@@ -1,19 +1,30 @@
 import { GLYPH_PANEL_BACKGROUNDS } from '../assets/assetManifest.js';
 import { publicPath } from '../utils/publicPath.js';
 
+const createMobileFrameAsset = (filename, className) => {
+  const logicalPath = `svg/${filename}`;
+  return {
+    filename,
+    logicalPath: `/${logicalPath}`,
+    url: publicPath(logicalPath),
+    className
+  };
+};
+
 const MOBILE_FRAME_ASSETS = {
-  lu: { url: publicPath('svg/portfolio_frame_mobile_corner_lu.svg'), className: 'frame-corner frame-corner-lu' },
-  ru: { url: publicPath('svg/portfolio_frame_mobile_corner_ru.svg'), className: 'frame-corner frame-corner-ru' },
-  ld: { url: publicPath('svg/portfolio_frame_mobile_corner_ld.svg'), className: 'frame-corner frame-corner-ld' },
-  rd: { url: publicPath('svg/portfolio_frame_mobile_corner_rd.svg'), className: 'frame-corner frame-corner-rd' },
-  u: { url: publicPath('svg/portfolio_frame_mobile_line_u.svg'), className: 'frame-line frame-line-u' },
-  d: { url: publicPath('svg/portfolio_frame_mobile_line_d.svg'), className: 'frame-line frame-line-d' },
-  l: { url: publicPath('svg/portfolio_frame_mobile_line_l.svg'), className: 'frame-line frame-line-l' },
-  r: { url: publicPath('svg/portfolio_frame_mobile_line_r.svg'), className: 'frame-line frame-line-r' }
+  lu: createMobileFrameAsset('portfolio_frame_mobile_corner_lu.svg', 'frame-corner frame-corner-lu'),
+  ru: createMobileFrameAsset('portfolio_frame_mobile_corner_ru.svg', 'frame-corner frame-corner-ru'),
+  ld: createMobileFrameAsset('portfolio_frame_mobile_corner_ld.svg', 'frame-corner frame-corner-ld'),
+  rd: createMobileFrameAsset('portfolio_frame_mobile_corner_rd.svg', 'frame-corner frame-corner-rd'),
+  u: createMobileFrameAsset('portfolio_frame_mobile_line_u.svg', 'frame-line frame-line-u'),
+  d: createMobileFrameAsset('portfolio_frame_mobile_line_d.svg', 'frame-line frame-line-d'),
+  l: createMobileFrameAsset('portfolio_frame_mobile_line_l.svg', 'frame-line frame-line-l'),
+  r: createMobileFrameAsset('portfolio_frame_mobile_line_r.svg', 'frame-line frame-line-r')
 };
 
 const SVG_VISIBLE_ELEMENTS = 'path, rect, circle, ellipse, polygon, polyline, line, g, use';
 const SVG_RENDERED_SHAPES = ['path', 'rect', 'circle', 'ellipse', 'polygon', 'polyline', 'line'];
+const SVG_VISIBLE_GEOMETRY_SELECTOR = 'path, rect, circle, ellipse, polygon, polyline, line, use';
 const LINE_FRAME_CLASS_PATTERN = /(?:^|\s)frame-line(?:\s|$)/;
 const MOBILE_FRAME_COLOR_VALUE = 'var(--mobile-frame-color, rgba(255,255,255,0.92))';
 const BLACK_COLOR_PATTERN = /(?:^|[\s:;,(])(?:#(?:000|000000)\b|black\b|rgb\(\s*0\s*,\s*0\s*,\s*0\s*\)|rgba\(\s*0\s*,\s*0\s*,\s*0\s*,\s*(?:0?\.\d+|1(?:\.0+)?)\s*\))/i;
@@ -65,9 +76,54 @@ function isFrameDebugEnabled() {
   return new URLSearchParams(window.location.search).get(MOBILE_FRAME_DEBUG_PARAM) === '1';
 }
 
+function isLineFramePiece(pieceId) {
+  return ['u', 'd', 'l', 'r'].includes(pieceId);
+}
+
+function shouldLogFrameFetches() {
+  return import.meta.env.DEV || isFrameDebugEnabled();
+}
+
+function shouldBypassLineClipMasksForDebug() {
+  const params = new URLSearchParams(window.location.search);
+  return params.get(MOBILE_FRAME_DEBUG_PARAM) === '1' && params.get('debugFrameBypassLineClips') === '1';
+}
+
 function getAssetFilename(url) {
   const [path] = url.split('?');
   return path.split('/').pop() || url;
+}
+
+function getSvgReferenceAttributes(svg) {
+  const references = [];
+
+  svg.querySelectorAll('*').forEach((element) => {
+    [...element.attributes].forEach((attribute) => {
+      if (!attribute.value.includes('#') && !attribute.value.includes('url(')) return;
+      references.push({
+        tag: element.tagName.toLowerCase(),
+        id: element.id || null,
+        name: attribute.name,
+        value: attribute.value
+      });
+    });
+  });
+
+  return references;
+}
+
+function detectSvgFeatureUsage(svg) {
+  const allAttributes = [...svg.querySelectorAll('*')].flatMap((element) => [...element.attributes]);
+
+  return {
+    defs: Boolean(svg.querySelector('defs')),
+    clipPath: Boolean(svg.querySelector('clipPath, [clip-path]')),
+    mask: Boolean(svg.querySelector('mask, [mask]')),
+    use: Boolean(svg.querySelector('use')),
+    href: allAttributes.some((attribute) => attribute.name === 'href'),
+    xlinkHref: allAttributes.some((attribute) => attribute.name === 'xlink:href'),
+    urlReference: allAttributes.some((attribute) => /url\(\s*#/.test(attribute.value))
+  };
 }
 
 function getElementDescriptor(element) {
@@ -723,7 +779,7 @@ function logMobileFrameDiagnostics(assetFilename, svg, normalizedCount, pivotCou
 }
 
 
-function uniquifyInlineSvgReferences(svg, assetFilename) {
+function uniquifyInlineSvgReferences(svg, assetFilename, { logReferences = false, pieceId = null } = {}) {
   const prefix = `mobile-frame-${assetFilename.replace(/[^a-z0-9_-]/gi, '-')}-${Math.random().toString(36).slice(2)}-`;
   const idMap = new Map();
 
@@ -734,7 +790,9 @@ function uniquifyInlineSvgReferences(svg, assetFilename) {
     element.id = newId;
   });
 
-  if (!idMap.size) return;
+  if (!idMap.size) return { idMap, beforeReferences: [], afterReferences: [] };
+
+  const beforeReferences = logReferences ? getSvgReferenceAttributes(svg) : [];
 
   const rewriteValue = (value) => {
     let nextValue = value;
@@ -751,18 +809,58 @@ function uniquifyInlineSvgReferences(svg, assetFilename) {
   svg.querySelectorAll('*').forEach((element) => {
     [...element.attributes].forEach((attribute) => {
       if (!attribute.value.includes('#') && !attribute.value.includes('url(')) return;
-      element.setAttribute(attribute.name, rewriteValue(attribute.value));
+
+      const rewrittenValue = rewriteValue(attribute.value);
+      if (attribute.name === 'xlink:href') {
+        element.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href', rewrittenValue);
+        element.setAttribute('href', rewrittenValue);
+        return;
+      }
+
+      element.setAttribute(attribute.name, rewrittenValue);
     });
   });
+
+  const afterReferences = logReferences ? getSvgReferenceAttributes(svg) : [];
+
+  if (logReferences && shouldLogFrameFetches()) {
+    console.debug('[overlay][frame-fetch]', {
+      phase: 'id-rewrite',
+      piece: pieceId,
+      assetFilename,
+      ids: [...idMap.entries()].map(([before, after]) => ({ before, after })),
+      beforeReferences,
+      afterReferences
+    });
+  }
+
+  return { idMap, beforeReferences, afterReferences };
 }
 
-function normalizeInlineSvg(svg, className, assetFilename) {
+function normalizeInlineSvg(svg, className, assetFilename, { pieceId = null } = {}) {
   let normalizedCount = 0;
   let pivotCount = 0;
   const preferStroke = LINE_FRAME_CLASS_PATTERN.test(className);
+  const isLinePiece = isLineFramePiece(pieceId);
+  const featureUsage = detectSvgFeatureUsage(svg);
 
   svg.querySelectorAll('style').forEach((styleElement) => styleElement.remove());
-  uniquifyInlineSvgReferences(svg, assetFilename);
+  const rewriteDiagnostics = uniquifyInlineSvgReferences(svg, assetFilename, { logReferences: isLinePiece, pieceId });
+
+  if (isLinePiece && shouldBypassLineClipMasksForDebug()) {
+    svg.querySelectorAll(`${SVG_VISIBLE_GEOMETRY_SELECTOR}, g`).forEach((element) => {
+      element.removeAttribute('clip-path');
+      element.removeAttribute('mask');
+      element.style.removeProperty('clip-path');
+      element.style.removeProperty('mask');
+    });
+    console.debug('[overlay][frame-fetch]', {
+      phase: 'debug-clip-mask-bypass',
+      piece: pieceId,
+      assetFilename,
+      note: 'Removed clip-path and mask attributes because ?debugFramePieces=1&debugFrameBypassLineClips=1 is active.'
+    });
+  }
 
   svg.classList.add(...className.split(' '));
   svg.setAttribute('aria-hidden', 'true');
@@ -789,17 +887,97 @@ function normalizeInlineSvg(svg, className, assetFilename) {
 
   logMobileFrameDiagnostics(assetFilename, svg, normalizedCount, pivotCount, findRemainingBlackPaint(svg));
 
+  svg.dataset.frameFeatureUsage = JSON.stringify(featureUsage);
+  svg.dataset.frameIdRewriteCount = String(rewriteDiagnostics?.idMap?.size ?? 0);
+
   return svg;
 }
 
-async function loadInlineSvg(url, targetElement, className) {
+function isInsideSvgDefinition(element) {
+  return Boolean(element.closest('defs, clipPath, mask, symbol'));
+}
+
+function getNonPivotGeometry(svg) {
+  return [...svg.querySelectorAll(SVG_VISIBLE_GEOMETRY_SELECTOR)]
+    .filter((element) => !isInsideSvgDefinition(element))
+    .filter((element) => !element.dataset.framePivot && !element.classList.contains('frame-pivot-reference'));
+}
+
+function logParsedLineSvgDiagnostics({ pieceId, asset, svg, parseDiagnostics }) {
+  if (!isLineFramePiece(pieceId) || !shouldLogFrameFetches()) return;
+
+  requestAnimationFrame(() => {
+    const nonPivotGeometry = getNonPivotGeometry(svg);
+    const firstGeometry = nonPivotGeometry[0] ?? null;
+    const bbox = firstGeometry ? getSvgBBoxSnapshot(firstGeometry) : null;
+    const rect = firstGeometry?.getBoundingClientRect();
+
+    console.debug('[overlay][frame-fetch]', {
+      phase: 'line-dom-parse',
+      piece: pieceId,
+      assetFilename: asset.filename,
+      logicalPath: asset.logicalPath,
+      resolvedUrl: asset.url,
+      injectedSvgInDom: targetElementContainsSvg(svg),
+      rootSvg: svg.tagName.toLowerCase() === 'svg',
+      hasViewBox: Boolean(svg.getAttribute('viewBox')),
+      viewBox: svg.getAttribute('viewBox'),
+      visibleCandidateCount: parseDiagnostics.visibleCandidateCount,
+      nonPivotVisibleCandidateCount: nonPivotGeometry.length,
+      allVisibleCandidatesClassifiedAsPivot: parseDiagnostics.visibleCandidateCount > 0 && nonPivotGeometry.length === 0,
+      firstNonPivotGeometry: firstGeometry ? {
+        tag: firstGeometry.tagName.toLowerCase(),
+        id: firstGeometry.id || null,
+        bbox,
+        clientRect: rect ? { x: rect.x, y: rect.y, width: rect.width, height: rect.height } : null,
+        nonZeroBBox: Boolean(bbox && !bbox.error && bbox.width > 0 && bbox.height > 0),
+        clipPath: firstGeometry.getAttribute('clip-path') || firstGeometry.style.getPropertyValue('clip-path') || null,
+        mask: firstGeometry.getAttribute('mask') || firstGeometry.style.getPropertyValue('mask') || null
+      } : null,
+      featureUsage: detectSvgFeatureUsage(svg),
+      referencesAfterRewrite: getSvgReferenceAttributes(svg)
+    });
+  });
+}
+
+function targetElementContainsSvg(svg) {
+  return Boolean(svg?.isConnected && svg.closest('[data-mobile-frame-piece]'));
+}
+
+async function loadInlineSvg(asset, targetElement) {
+  const { url, className } = asset;
+  const pieceId = targetElement.dataset.mobileFramePiece ?? null;
+
   try {
     const response = await fetch(url);
+    const contentType = response.headers.get('content-type') ?? '';
+    const svgText = await response.text();
+    const trimmedText = svgText.trimStart();
+    const appearsToBeSvg = /^<\?xml[\s\S]*?<svg[\s>]/i.test(trimmedText) || /^<svg[\s>]/i.test(trimmedText);
+
+    if (shouldLogFrameFetches()) {
+      console.debug('[overlay][frame-fetch]', {
+        phase: 'fetch',
+        piece: pieceId,
+        assetFilename: asset.filename,
+        logicalPath: asset.logicalPath,
+        resolvedUrl: url,
+        httpStatus: response.status,
+        ok: response.ok,
+        contentType,
+        textLength: svgText.length,
+        first120Chars: !response.ok || !appearsToBeSvg ? svgText.slice(0, 120) : undefined
+      });
+    }
+
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}`);
     }
 
-    const svgText = await response.text();
+    if (!appearsToBeSvg) {
+      throw new Error(`Expected SVG markup but received ${contentType || 'unknown content type'}`);
+    }
+
     const documentFromSvg = new DOMParser().parseFromString(svgText, 'image/svg+xml');
     const parserError = documentFromSvg.querySelector('parsererror');
     const svg = documentFromSvg.querySelector('svg');
@@ -808,8 +986,18 @@ async function loadInlineSvg(url, targetElement, className) {
       throw new Error('Invalid SVG markup');
     }
 
-    targetElement.replaceChildren(normalizeInlineSvg(svg, className, getAssetFilename(url)));
+    const parseDiagnostics = {
+      rootSvg: svg.tagName.toLowerCase() === 'svg',
+      hasViewBox: Boolean(svg.getAttribute('viewBox')),
+      visibleCandidateCount: svg.querySelectorAll(SVG_VISIBLE_GEOMETRY_SELECTOR).length,
+      featureUsage: detectSvgFeatureUsage(svg),
+      referencesBeforeRewrite: getSvgReferenceAttributes(svg)
+    };
+
+    const normalizedSvg = normalizeInlineSvg(svg, className, asset.filename ?? getAssetFilename(url), { pieceId });
+    targetElement.replaceChildren(normalizedSvg);
     targetElement.classList.add('mobile-svg-frame__piece--loaded');
+    logParsedLineSvgDiagnostics({ pieceId, asset, svg: normalizedSvg, parseDiagnostics });
   } catch (error) {
     console.warn(`[overlay] Failed to inline mobile frame SVG: ${url}`, error);
     targetElement.classList.add('mobile-svg-frame__piece--failed');
@@ -821,7 +1009,7 @@ function loadMobileFrameSvgs(frameElement) {
     const targetElement = frameElement.querySelector(`[data-mobile-frame-piece="${key}"]`);
     if (!targetElement) return Promise.resolve();
 
-    return loadInlineSvg(asset.url, targetElement, asset.className);
+    return loadInlineSvg(asset, targetElement);
   }));
 }
 
