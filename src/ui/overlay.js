@@ -1149,6 +1149,30 @@ export function createOverlay({ onClose, assetManager = null } = {}) {
 
   const mobileFrameLayout = createMobileFrameLayoutController(mobileFrameEl, panelEl);
   const mobileFrameReady = mobileFrameEl ? loadMobileFrameSvgs(mobileFrameEl).finally(mobileFrameLayout.schedule) : Promise.resolve();
+  const spotifyDiggerMobileMedia = window.matchMedia('(max-width: 768px)');
+  let activeGateId = null;
+
+  const applyPanelBackground = (gateId) => {
+    const panelBackgroundPath = GLYPH_PANEL_BACKGROUNDS[gateId];
+    const shouldSuppressDesktopBackground = gateId === 'spotify-digger' && spotifyDiggerMobileMedia.matches;
+
+    if (!panelBackgroundPath || shouldSuppressDesktopBackground) {
+      panelEl.style.removeProperty('--overlay-panel-bg-image');
+      return;
+    }
+
+    const cachedUrl = assetManager?.getImageUrlByPath?.(panelBackgroundPath);
+    if (!cachedUrl) {
+      console.warn(`[overlay] Panel background cache miss for ${gateId}: ${panelBackgroundPath}`);
+    }
+    panelEl.style.setProperty('--overlay-panel-bg-image', `url("${cachedUrl ?? publicPath(panelBackgroundPath)}")`);
+  };
+
+  spotifyDiggerMobileMedia.addEventListener('change', () => {
+    if (activeGateId) {
+      applyPanelBackground(activeGateId);
+    }
+  });
 
   const close = () => {
     if (root.hidden) return;
@@ -1196,16 +1220,8 @@ export function createOverlay({ onClose, assetManager = null } = {}) {
         'theme-spotify-digger'
       );
       panelEl.classList.add(`theme-${gateId}`);
-      const panelBackgroundPath = GLYPH_PANEL_BACKGROUNDS[gateId];
-      if (panelBackgroundPath) {
-        const cachedUrl = assetManager?.getImageUrlByPath?.(panelBackgroundPath);
-        if (!cachedUrl) {
-          console.warn(`[overlay] Panel background cache miss for ${gateId}: ${panelBackgroundPath}`);
-        }
-        panelEl.style.setProperty('--overlay-panel-bg-image', `url("${cachedUrl ?? publicPath(panelBackgroundPath)}")`);
-      } else {
-        panelEl.style.removeProperty('--overlay-panel-bg-image');
-      }
+      activeGateId = gateId;
+      applyPanelBackground(gateId);
 
       if (nodeData.ornamentPath && nodeData.ornamentMobileOnly) {
         mobileOrnamentEl.src = publicPath(nodeData.ornamentPath);

@@ -988,10 +988,13 @@ body {
     --panel-mobile-shadow: 0 0 30px rgba(75, 214, 237, 0.14);
   }
 
-  .overlay__panel--spotify-digger {
+  .overlay__panel.overlay__panel--spotify-digger,
+  .overlay__panel.theme-spotify-digger {
     --mobile-frame-color: #9fdcff;
     --mobile-frame-glow: rgba(90, 169, 255, 0.12);
-    background-image: none;
+    --overlay-panel-bg-image: none !important;
+    background: transparent;
+    background-image: none !important;
   }
 
   .overlay__panel--ai-guide {
@@ -1022,10 +1025,18 @@ body {
   .overlay__panel--ai-guide::before,
   .overlay__panel--creative-ai::before,
   .overlay__panel--haiku-cosmos::before,
-  .overlay__panel--spotify-digger::before,
-  .overlay__panel--spotify-digger::after,
   .overlay__panel--ethics::before {
     display: none;
+  }
+
+  .overlay__panel.overlay__panel--spotify-digger::before,
+  .overlay__panel.overlay__panel--spotify-digger::after,
+  .overlay__panel.theme-spotify-digger::before,
+  .overlay__panel.theme-spotify-digger::after {
+    content: none;
+    display: none !important;
+    background: transparent;
+    background-image: none !important;
   }
 
   .mobile-svg-frame {
