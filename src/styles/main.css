@@ -181,6 +181,15 @@ body {
 .mobile-svg-frame {
   display: none;
   color: var(--mobile-frame-color, rgba(255,255,255,0.92));
+  overflow: visible;
+}
+
+.overlay__panel--debug-frame-pieces .mobile-svg-frame {
+  position: absolute;
+  inset: var(--mobile-frame-inset);
+  z-index: 1;
+  display: block;
+  pointer-events: none;
 }
 
 .mobile-svg-frame__piece {
@@ -190,6 +199,17 @@ body {
   opacity: var(--mobile-frame-opacity);
   pointer-events: none;
   filter: drop-shadow(0 0 5px var(--mobile-frame-glow));
+  overflow: visible;
+}
+
+.mobile-svg-frame--debug .mobile-svg-frame__piece {
+  outline: 1px dashed var(--mobile-frame-debug-color, magenta);
+  background: color-mix(in srgb, var(--mobile-frame-debug-color, magenta) 12%, transparent);
+}
+
+.mobile-svg-frame--debug .mobile-svg-frame__piece svg,
+.mobile-svg-frame--debug .mobile-svg-frame__piece svg *:not(.frame-pivot-reference):not([data-frame-pivot="true"]) {
+  color: var(--mobile-frame-debug-color, magenta) !important;
 }
 
 .mobile-svg-frame__piece svg {
@@ -226,50 +246,12 @@ body {
   stroke: none !important;
 }
 
-.mobile-svg-frame__corner {
-  /* Width clamps are derived from --mobile-frame-corner-size and each viewBox ratio. */
-}
-
-/* Mobile frame source viewBoxes: lu 57.058x99.868, ru 54.147x99.821,
-   ld 57.086x98.871, rd 54.210x98.801; line_u 159.544x33.445,
-   line_d 159.544x21.212, line_l 12.334x134.673, line_r 12.436x134.673.
-   Pivot math keeps the stretchable lines meeting the guide-point area while
-   corners retain their own viewBox aspect ratios and are never stretched. */
-.mobile-svg-frame__corner--lu { top: 0; left: 0; width: clamp(41px, 12.6vw, 67px); aspect-ratio: 57.058022 / 99.868042; }
-.mobile-svg-frame__corner--ru { top: 0; right: 0; width: clamp(39px, 11.9vw, 64px); aspect-ratio: 54.147251 / 99.821289; }
-.mobile-svg-frame__corner--ld { bottom: 0; left: 0; width: clamp(42px, 12.7vw, 68px); aspect-ratio: 57.08634 / 98.870922; }
-.mobile-svg-frame__corner--rd { right: 0; bottom: 0; width: clamp(40px, 12.1vw, 65px); aspect-ratio: 54.210148 / 98.801094; }
-
-.mobile-svg-frame__line--u,
-.mobile-svg-frame__line--d {
-  left: var(--mobile-frame-pivot-left-x);
-  right: var(--mobile-frame-pivot-right-x);
-}
-
-.mobile-svg-frame__line--u {
-  top: -3px;
-  height: var(--mobile-frame-top-line-height);
-}
-
-.mobile-svg-frame__line--d {
-  bottom: 2px;
-  height: var(--mobile-frame-bottom-line-height);
-}
-
-.mobile-svg-frame__line--l,
-.mobile-svg-frame__line--r {
-  top: var(--mobile-frame-side-line-start);
-  bottom: var(--mobile-frame-side-line-end);
-  width: var(--mobile-frame-line-thickness);
-}
-
-.mobile-svg-frame__line--l {
-  left: clamp(1px, 0.32vw, 3px);
-}
-
-.mobile-svg-frame__line--r {
-  right: clamp(1px, 0.34vw, 3px);
-}
+/* Mobile frame geometry is set by the JS pivot solver in overlay.js. Source
+   viewBoxes: lu 57.058x99.868, ru 54.147x99.821, ld 57.086x98.871,
+   rd 54.210x98.801; line_u 159.544x33.445, line_d 159.544x21.212,
+   line_l 12.334x134.673, line_r 12.436x134.673. Corners receive uniform
+   scaled width/height; horizontal lines receive stretched width only; vertical
+   lines receive stretched height only. */
 
 .overlay__panel[data-gate-id="ai-guide"] {
   --mobile-frame-color: #9be66f;
