@@ -819,9 +819,7 @@ body {
   min-height: 0;
   margin: 0;
   padding: 0;
-  background: transparent;
   box-shadow: none;
-  backdrop-filter: none;
 }
 
 .overlay__panel--ethics .overlay__scroll {
@@ -831,9 +829,7 @@ body {
   flex-direction: column;
   overflow-y: auto;
   padding: clamp(4px, 0.8vw, 10px) 0.75rem clamp(6px, 1vw, 12px);
-  background: transparent;
   box-shadow: none;
-  backdrop-filter: none;
   scrollbar-width: thin;
 }
 
@@ -842,7 +838,7 @@ body {
   background: var(--overlay-panel-scrollbar);
   border-radius: 999px;
 }
-.overlay__panel--ethics .overlay__scroll::-webkit-scrollbar-track { background: transparent; }
+.overlay__panel--ethics .overlay__scroll::-webkit-scrollbar-track { background: #efe0bf; }
 
 .overlay__panel--ethics .overlay__actions {
   flex: 0 0 auto;
@@ -957,12 +953,11 @@ body {
 
 
 @media (max-width: 768px) {
-  .overlay__panel,
+  .overlay__panel:not(.overlay__panel--ethics),
   .overlay__panel--ai-guide,
   .overlay__panel--creative-ai,
   .overlay__panel--haiku-cosmos,
-  .overlay__panel--spotify-digger,
-  .overlay__panel--ethics {
+  .overlay__panel--spotify-digger {
     width: calc(100vw - 20px);
     height: calc(100vh - 20px);
     height: calc(100dvh - 20px);
@@ -977,17 +972,41 @@ body {
     isolation: isolate;
   }
 
+  .overlay--ethics .overlay__backdrop {
+    display: none;
+    background: #f4ead6;
+  }
+
   .overlay__panel--ethics {
-    --panel-mobile-bg: linear-gradient(180deg, rgba(250, 244, 229, 0.98), rgba(232, 214, 177, 0.96));
-    --panel-mobile-content-bg: transparent;
-    --panel-mobile-content-border: transparent;
-    --panel-mobile-shadow: 0 18px 50px rgba(30, 20, 10, 0.28);
-    background:
-      radial-gradient(circle at 18% 10%, rgba(255, 255, 246, 0.72), transparent 30%),
-      radial-gradient(circle at 82% 88%, rgba(198, 147, 58, 0.18), transparent 36%),
-      var(--panel-mobile-bg);
-    border: 1px solid rgba(150, 109, 39, 0.26);
+    --panel-mobile-bg: linear-gradient(180deg, #fbf4e5 0%, #f1dfbd 52%, #e8d0a4 100%);
+    --panel-mobile-shadow: 0 18px 50px #8a6a3a;
+    --mobile-frame-color: #6f5425;
+    --mobile-frame-glow: #8b6828;
+    --overlay-panel-scrollbar: #8b6828;
+    --overlay-panel-close-color: #2d241b;
+    --overlay-panel-close-bg: #efe0bf;
+    --overlay-panel-close-border: #6f5425;
+    --overlay-panel-close-shadow: #8b6828;
+    --overlay-panel-close-hover-color: #2d241b;
+    --overlay-panel-close-hover-border: #2d241b;
+    --overlay-panel-close-hover-bg: #f4ead6;
+    --overlay-panel-status-color: #7a551c;
+    --overlay-panel-title-color: #2d241b;
+    --overlay-panel-title-shadow: #fbf4e5;
+    --overlay-panel-lead-color: #352a20;
+    --overlay-panel-text-color: #352a20;
+    --overlay-panel-closing-color: #7a551c;
+    width: calc(100vw - 20px);
+    height: calc(100vh - 20px);
+    height: calc(100dvh - 20px);
+    max-height: none;
+    padding: 0;
+    border: 1px solid #8b6828;
+    border-radius: 18px;
+    background: var(--panel-mobile-bg);
     box-shadow: var(--panel-mobile-shadow);
+    overflow: hidden;
+    isolation: isolate;
     text-shadow: none;
   }
 
@@ -1057,12 +1076,17 @@ body {
 
   .overlay__panel--ai-guide::before,
   .overlay__panel--creative-ai::before,
-  .overlay__panel--haiku-cosmos::before,
+  .overlay__panel--haiku-cosmos::before {
+    content: none;
+    display: none !important;
+    background-image: none !important;
+  }
+
   .overlay__panel--ethics::before,
   .overlay__panel--ethics::after {
     content: none;
     display: none !important;
-    background: transparent;
+    background: #f4ead6;
     background-image: none !important;
   }
 
@@ -1106,12 +1130,11 @@ body {
     transform: translateX(-50%);
   }
 
-  .overlay__panel .overlay__content,
+  .overlay__panel:not(.overlay__panel--ethics) .overlay__content,
   .overlay__panel--ai-guide .overlay__content,
   .overlay__panel--creative-ai .overlay__content,
   .overlay__panel--haiku-cosmos .overlay__content,
-  .overlay__panel--spotify-digger .overlay__content,
-  .overlay__panel--ethics .overlay__content {
+  .overlay__panel--spotify-digger .overlay__content {
     position: absolute;
     z-index: 2;
     inset: clamp(64px, 17vw, 92px) clamp(36px, 10vw, 74px) clamp(34px, 10vw, 62px);
@@ -1134,13 +1157,17 @@ body {
 
 
   .overlay__panel--ethics .overlay__content {
+    position: absolute;
     z-index: 3;
+    inset: clamp(64px, 17vw, 92px) clamp(36px, 10vw, 74px) clamp(34px, 10vw, 62px);
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    margin: 0;
     padding: clamp(18px, 4.8vw, 28px) clamp(16px, 4.6vw, 26px) clamp(14px, 4vw, 22px);
-    background: transparent;
     border: 0;
     border-radius: 0;
     box-shadow: none;
-    backdrop-filter: none;
   }
 
 
@@ -1190,12 +1217,11 @@ body {
     box-shadow: none;
   }
 
-  .overlay__panel .overlay__scroll,
+  .overlay__panel:not(.overlay__panel--ethics) .overlay__scroll,
   .overlay__panel--ai-guide .overlay__scroll,
   .overlay__panel--creative-ai .overlay__scroll,
   .overlay__panel--haiku-cosmos .overlay__scroll,
-  .overlay__panel--spotify-digger .overlay__scroll,
-  .overlay__panel--ethics .overlay__scroll {
+  .overlay__panel--spotify-digger .overlay__scroll {
     flex: 1 1 auto;
     min-height: 0;
     overflow-y: auto;
@@ -1206,12 +1232,11 @@ body {
     scrollbar-width: thin;
   }
 
-  .overlay__panel .overlay__actions,
+  .overlay__panel:not(.overlay__panel--ethics) .overlay__actions,
   .overlay__panel--ai-guide .overlay__actions,
   .overlay__panel--creative-ai .overlay__actions,
   .overlay__panel--haiku-cosmos .overlay__actions,
-  .overlay__panel--spotify-digger .overlay__actions,
-  .overlay__panel--ethics .overlay__actions {
+  .overlay__panel--spotify-digger .overlay__actions {
     position: relative;
     z-index: 3;
     flex: 0 0 auto;
@@ -1221,12 +1246,11 @@ body {
     margin-top: 0;
   }
 
-  .overlay__panel .overlay__close,
+  .overlay__panel:not(.overlay__panel--ethics) .overlay__close,
   .overlay__panel--ai-guide .overlay__close,
   .overlay__panel--creative-ai .overlay__close,
   .overlay__panel--haiku-cosmos .overlay__close,
-  .overlay__panel--spotify-digger .overlay__close,
-  .overlay__panel--ethics .overlay__close {
+  .overlay__panel--spotify-digger .overlay__close {
     position: relative;
     z-index: 4;
     min-height: 44px;
@@ -1240,21 +1264,59 @@ body {
     color: #eaf7ff;
   }
 
-  .overlay__panel .overlay__title,
+  .overlay__panel:not(.overlay__panel--ethics) .overlay__title,
   .overlay__panel--ai-guide .overlay__title,
   .overlay__panel--creative-ai .overlay__title,
   .overlay__panel--haiku-cosmos .overlay__title,
-  .overlay__panel--spotify-digger .overlay__title,
-  .overlay__panel--ethics .overlay__title {
+  .overlay__panel--spotify-digger .overlay__title {
     font-size: clamp(1.8rem, 9.5vw, 2.8rem);
   }
 
-  .overlay__panel .overlay__text,
+  .overlay__panel:not(.overlay__panel--ethics) .overlay__text,
   .overlay__panel--ai-guide .overlay__text,
   .overlay__panel--creative-ai .overlay__text,
   .overlay__panel--haiku-cosmos .overlay__text {
     font-size: clamp(0.9rem, 3.3vw, 1rem);
   }
+
+  .overlay__panel--ethics .overlay__scroll {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    padding-right: 0.55rem;
+    box-shadow: none;
+    scrollbar-width: thin;
+  }
+
+  .overlay__panel--ethics .overlay__scroll::-webkit-scrollbar-track {
+    background: #efe0bf;
+  }
+
+  .overlay__panel--ethics .overlay__actions {
+    position: relative;
+    z-index: 4;
+    flex: 0 0 auto;
+    display: flex;
+    justify-content: center;
+    padding-top: clamp(14px, 4vw, 22px);
+    margin-top: 0;
+  }
+
+  .overlay__panel--ethics .overlay__close {
+    position: relative;
+    z-index: 5;
+    min-height: 44px;
+    color: var(--overlay-panel-close-color);
+    background: var(--overlay-panel-close-bg);
+    border-color: var(--overlay-panel-close-border);
+    box-shadow: 0 0 14px var(--overlay-panel-close-shadow);
+    text-shadow: none;
+  }
+
+  .overlay__panel--ethics .overlay__title {
+    font-size: clamp(1.8rem, 9.5vw, 2.8rem);
+  }
+
 }
 
 
