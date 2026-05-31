@@ -10,6 +10,7 @@ export const GLYPH_PANEL_BACKGROUNDS = Object.freeze({
   'ai-guide': '/png/ai_guide.png',
   'creative-ai': '/png/creative_ai.png',
   'ethics-life-protection': '/png/ai_ethics.png',
+  'spotify-digger': '/png/digger.png',
   'haiku-cosmos': '/png/haiku_cosmos.png'
 });
 
