@@ -42,8 +42,18 @@ export const portfolioNodes = [
     id: 'ethics-life-protection',
     title: 'Ethics / Life Protection',
     shortLabel: 'Ethics / Life',
+    eyebrow: 'Ziemia',
     modelPath: '/glb/glyph_3.glb',
     modelKind: 'glyph',
-    draftText: 'Draft narrative for Ethics / Life Protection. Final principles, references, and commitments are pending review.'
+    draftText: 'AI nie jest tylko narzędziem przyspieszania pracy. Jest siłą, która wzmacnia intencje człowieka — dobre i złe.',
+    bodyText: `AI nie jest tylko narzędziem przyspieszania pracy.
+Jest siłą, która wzmacnia intencje człowieka — dobre i złe.
+
+Dlatego technologia potrzebuje fundamentu:
+uważności, odpowiedzialności, edukacji i troski o życie.
+
+Ten filar mówi o AI jako narzędziu służby, nie dominacji.
+O ochronie człowieczeństwa w czasie przyspieszenia.
+O tym, żeby transformacja nie była dostępna tylko dla elit.`
   }
 ];

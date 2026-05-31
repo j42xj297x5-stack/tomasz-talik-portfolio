@@ -443,18 +443,20 @@ export function createOverlay({ onClose, assetManager = null } = {}) {
       const gateId = nodeData.id;
       const isAIGuide = gateId === 'ai-guide';
       const isCreativeAI = gateId === 'creative-ai';
+      const isEthics = gateId === 'ethics-life-protection';
       const hasStructuredCopy = Boolean(nodeData.leadText || nodeData.bodyText || nodeData.closingText);
 
       panelEl.dataset.gateId = gateId;
       panelEl.classList.toggle('overlay__panel--ai-guide', isAIGuide);
       panelEl.classList.toggle('overlay__panel--creative-ai', isCreativeAI);
+      panelEl.classList.toggle('overlay__panel--ethics', isEthics);
       const panelBackgroundPath = GLYPH_PANEL_BACKGROUNDS[gateId];
       if (panelBackgroundPath) {
         const cachedUrl = assetManager?.getImageUrlByPath?.(panelBackgroundPath);
         if (!cachedUrl) {
           console.warn(`[overlay] Panel background cache miss for ${gateId}: ${panelBackgroundPath}`);
         }
-        panelEl.style.setProperty('--overlay-panel-bg-image', `url("${cachedUrl ?? panelBackgroundPath}")`);
+        panelEl.style.setProperty('--overlay-panel-bg-image', `url("${cachedUrl ?? publicPath(panelBackgroundPath)}")`);
       } else {
         panelEl.style.removeProperty('--overlay-panel-bg-image');
       }
