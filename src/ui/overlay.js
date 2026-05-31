@@ -1189,6 +1189,14 @@ export function createOverlay({ onClose, assetManager = null } = {}) {
       panelEl.classList.toggle('overlay__panel--ethics', isEthics);
       panelEl.classList.toggle('overlay__panel--haiku-cosmos', isHaikuCosmos);
       panelEl.classList.toggle('overlay__panel--spotify-digger', isSpotifyDigger);
+      panelEl.classList.remove(
+        'theme-ai-guide',
+        'theme-creative-ai',
+        'theme-ethics-life-protection',
+        'theme-haiku-cosmos',
+        'theme-spotify-digger'
+      );
+      panelEl.classList.add(`theme-${gateId}`);
       const panelBackgroundPath = GLYPH_PANEL_BACKGROUNDS[gateId];
       if (panelBackgroundPath) {
         const cachedUrl = assetManager?.getImageUrlByPath?.(panelBackgroundPath);
