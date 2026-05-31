@@ -24,9 +24,25 @@ export const portfolioNodes = [
     id: 'haiku-cosmos',
     title: 'Haiku Cosmos',
     shortLabel: 'Haiku Cosmos',
+    eyebrow: 'INTERACTIVE WORLD SYSTEM',
     modelPath: '/glb/glyph_5.glb',
     modelKind: 'glyph',
-    draftText: 'Draft narrative for Haiku Cosmos. Final text, visual examples, and process details are still in progress.'
+    draftText: 'Haiku Cosmos to projekt świata, w którym gra nie jest tylko zbiorem ekranów i mechanik.',
+    leadText: 'Gra, interfejs i dokumentacja jako jeden kosmos zależności.',
+    bodyText: `Haiku Cosmos to projekt świata, w którym gra nie jest tylko zbiorem ekranów i mechanik.
+
+To system żywych zależności:
+kart, sekwencji, progów, obiektów, rytmu, interfejsu i symboli.
+
+Projekt łączy projektowanie gry, dokumentację, debugowanie, UI, ekonomię, warstwę wizualną i techniczne prowadzenie runtime’u.
+
+Najważniejsze nie było samo „dodanie funkcji”.
+Najważniejsze było utrzymanie sensu całości:
+żeby mechanika, obraz, decyzje gracza i architektura projektu mówiły tym samym językiem.
+
+Haiku Cosmos pokazuje, że potrafię prowadzić złożony projekt kreatywno-techniczny przez wiele warstw naraz — od intuicyjnej wizji świata, przez dokumentację i testy, aż po działający interaktywny system.`,
+    featureLabel: 'Co pokazuje ten projekt:',
+    featureText: 'mechanika · UI · runtime · debug · dokumentacja · visual pipeline'
   },
   {
     id: 'creative-ai',
