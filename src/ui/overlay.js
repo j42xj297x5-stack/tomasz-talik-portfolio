@@ -26,7 +26,7 @@ const SVG_VISIBLE_ELEMENTS = 'path, rect, circle, ellipse, polygon, polyline, li
 const SVG_RENDERED_SHAPES = ['path', 'rect', 'circle', 'ellipse', 'polygon', 'polyline', 'line'];
 const SVG_VISIBLE_GEOMETRY_SELECTOR = 'path, rect, circle, ellipse, polygon, polyline, line, use';
 const LINE_FRAME_CLASS_PATTERN = /(?:^|\s)frame-line(?:\s|$)/;
-const MOBILE_FRAME_COLOR_VALUE = 'var(--mobile-frame-color, rgba(255,255,255,0.92))';
+const MOBILE_FRAME_COLOR_VALUE = 'var(--mobile-frame-color, #ffffff)';
 const BLACK_COLOR_PATTERN = /(?:^|[\s:;,(])(?:#(?:000|000000)\b|black\b|rgb\(\s*0\s*,\s*0\s*,\s*0\s*\)|rgba\(\s*0\s*,\s*0\s*,\s*0\s*,\s*(?:0?\.\d+|1(?:\.0+)?)\s*\))/i;
 const PIVOT_REFERENCE_PATTERN = /(?:pivot|reference|guide)/i;
 const MOBILE_FRAME_PIECE_KEYS = ['lu', 'ru', 'ld', 'rd', 'u', 'd', 'l', 'r'];
@@ -957,7 +957,6 @@ function normalizeInlineSvg(svg, className, assetFilename, { pieceId = null } = 
   svg.removeAttribute('fill');
   svg.removeAttribute('stroke');
   svg.style.setProperty('color', MOBILE_FRAME_COLOR_VALUE, 'important');
-  svg.style.setProperty('opacity', 'var(--mobile-frame-opacity, 0.92)', 'important');
   svg.style.setProperty('overflow', 'visible');
 
   svg.querySelectorAll(SVG_VISIBLE_ELEMENTS).forEach((element) => {

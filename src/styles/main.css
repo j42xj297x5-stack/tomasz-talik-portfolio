@@ -162,9 +162,8 @@ body {
   --panel-button-text: #e6edf3;
   --panel-button-border: #3b475b;
   --panel-glow: rgba(255,255,255,0.08);
-  --mobile-frame-color: rgba(255,255,255,0.92);
+  --mobile-frame-color: #ffffff;
   --mobile-frame-glow: rgba(255,255,255,0.16);
-  --mobile-frame-opacity: 0.92;
   --mobile-frame-inset: 10px;
   --frame-line-overlap: 0px;
   --mobile-frame-corner-size: clamp(72px, 22vw, 118px);
@@ -197,7 +196,7 @@ body {
 
 .mobile-svg-frame {
   display: none;
-  color: var(--mobile-frame-color, rgba(255,255,255,0.92));
+  color: var(--mobile-frame-color, #ffffff);
   overflow: visible;
 }
 
@@ -212,10 +211,8 @@ body {
 .mobile-svg-frame__piece {
   position: absolute;
   display: block;
-  color: var(--mobile-frame-color, rgba(255,255,255,0.92));
-  opacity: var(--mobile-frame-opacity);
+  color: var(--mobile-frame-color, #ffffff);
   pointer-events: none;
-  filter: drop-shadow(0 0 5px var(--mobile-frame-glow));
   overflow: visible;
 }
 
@@ -233,15 +230,13 @@ body {
   display: block;
   width: 100%;
   height: 100%;
-  color: var(--mobile-frame-color, rgba(255,255,255,0.92)) !important;
-  opacity: var(--mobile-frame-opacity, 0.92) !important;
+  color: var(--mobile-frame-color, #ffffff) !important;
   overflow: visible;
-  mix-blend-mode: normal;
 }
 
 .mobile-svg-frame svg,
 .mobile-svg-frame svg * {
-  color: var(--mobile-frame-color, rgba(255,255,255,0.92)) !important;
+  color: var(--mobile-frame-color, #ffffff) !important;
 }
 
 .mobile-svg-frame svg [data-mobile-frame-paint-mode="fill"] {
@@ -275,7 +270,7 @@ body {
    lines receive stretched height only. */
 
 .overlay__panel[data-gate-id="ai-guide"] {
-  --mobile-frame-color: rgba(106, 174, 83, 0.62);
+  --mobile-frame-color: #6aae53;
   --mobile-frame-glow: rgba(84, 140, 72, 0.1);
 }
 
@@ -346,9 +341,8 @@ body {
   --panel-mobile-content-bg: linear-gradient(180deg, rgba(34, 14, 5, 0.34), rgba(14, 8, 5, 0.5));
   --panel-mobile-content-border: rgba(224, 180, 95, 0.18);
   --panel-mobile-shadow: 0 0 34px rgba(240, 160, 64, 0.12);
-  --mobile-frame-color: rgba(224, 180, 95, 0.68);
+  --mobile-frame-color: #e0b45f;
   --mobile-frame-glow: rgba(240, 160, 64, 0.14);
-  --mobile-frame-opacity: 0.82;
   --panel-eyebrow: #d8a85a;
   --panel-title: #fff3d2;
   --panel-text: #f3efe4;
@@ -451,12 +445,12 @@ body {
   font-size: 0.92rem;
   letter-spacing: 0.04em;
   color: var(--overlay-panel-close-color);
-  background: transparent;
-  border: 0;
-  border-radius: 0;
+  background: var(--overlay-panel-close-bg);
+  border: 1px solid var(--overlay-panel-close-border);
+  border-radius: 999px;
   padding: 0.65rem 1.15rem;
   text-shadow: 0 0 10px var(--overlay-panel-close-shadow);
-  box-shadow: none;
+  box-shadow: 0 0 14px var(--overlay-panel-close-shadow);
 }
 
 .overlay__panel--ai-guide .overlay__close:hover,
@@ -466,7 +460,8 @@ body {
 .overlay__panel--haiku-cosmos .overlay__close:hover,
 .overlay__panel--haiku-cosmos .overlay__close:focus-visible {
   color: var(--overlay-panel-close-hover-color);
-  background: transparent;
+  background: var(--overlay-panel-close-hover-bg);
+  border-color: var(--overlay-panel-close-hover-border);
 }
 
 .overlay__panel--ai-guide .overlay__status,
@@ -524,9 +519,8 @@ body {
   --panel-mobile-content-bg: linear-gradient(180deg, rgba(6, 14, 26, 0.5), rgba(10, 17, 29, 0.56));
   --panel-mobile-content-border: rgba(160, 220, 255, 0.22);
   --panel-mobile-shadow: 0 0 34px rgba(90, 169, 255, 0.1);
-  --mobile-frame-color: rgba(159, 220, 255, 0.68);
+  --mobile-frame-color: #9fdcff;
   --mobile-frame-glow: rgba(90, 169, 255, 0.14);
-  --mobile-frame-opacity: 0.78;
   --overlay-panel-scrollbar: rgba(159, 220, 255, 0.32);
   --overlay-panel-close-color: #eaf7ff;
   --overlay-panel-close-bg: rgba(8, 20, 34, 0.58);
@@ -542,13 +536,13 @@ body {
   --overlay-panel-text-color: rgba(234, 247, 255, 0.92);
   --overlay-panel-closing-color: #b8e8ff;
   position: absolute;
-  width: min(760px, calc(90vh * 561 / 701), 94vw);
-  aspect-ratio: 561 / 701;
+  width: min(700px, calc(90vh * 700 / 1083), 94vw);
+  aspect-ratio: 700 / 1083;
   padding: 0;
   border: 0;
   border-radius: 0;
   background-image: var(--overlay-panel-bg-image);
-  background-size: 100% 100%;
+  background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
   box-shadow: none;
@@ -605,18 +599,19 @@ body {
   font-size: 0.92rem;
   letter-spacing: 0.04em;
   color: var(--overlay-panel-close-color);
-  background: transparent;
-  border: 0;
-  border-radius: 0;
+  background: var(--overlay-panel-close-bg);
+  border: 1px solid var(--overlay-panel-close-border);
+  border-radius: 999px;
   padding: 0.65rem 1.15rem;
   text-shadow: 0 0 10px var(--overlay-panel-close-shadow);
-  box-shadow: none;
+  box-shadow: 0 0 14px var(--overlay-panel-close-shadow);
 }
 
 .overlay__panel--spotify-digger .overlay__close:hover,
 .overlay__panel--spotify-digger .overlay__close:focus-visible {
   color: var(--overlay-panel-close-hover-color);
-  background: transparent;
+  background: var(--overlay-panel-close-hover-bg);
+  border-color: var(--overlay-panel-close-hover-border);
 }
 
 .overlay__panel--spotify-digger .overlay__status {
@@ -865,18 +860,19 @@ body {
   font-size: 0.9rem;
   letter-spacing: 0.04em;
   color: var(--overlay-panel-close-color);
-  background: transparent;
-  border: 0;
-  border-radius: 0;
+  background: var(--overlay-panel-close-bg);
+  border: 1px solid var(--overlay-panel-close-border);
+  border-radius: 999px;
   padding: 0.62rem 1.08rem;
   text-shadow: 0 0 10px var(--overlay-panel-close-shadow);
-  box-shadow: none;
+  box-shadow: 0 0 14px var(--overlay-panel-close-shadow);
 }
 
 .overlay__panel--ethics .overlay__close:hover,
 .overlay__panel--ethics .overlay__close:focus-visible {
   color: var(--overlay-panel-close-hover-color);
-  background: transparent;
+  background: var(--overlay-panel-close-hover-bg);
+  border-color: var(--overlay-panel-close-hover-border);
 }
 
 .overlay__panel--ethics .overlay__status {
@@ -982,57 +978,25 @@ body {
   }
 
   .overlay__panel--ethics {
-    --overlay-panel-close-color: #f3e6c8;
-    --overlay-panel-close-bg: rgba(36, 27, 18, 0.42);
-    --overlay-panel-close-border: rgba(216, 179, 106, 0.38);
-    --overlay-panel-close-hover-color: #fff3d2;
-    --overlay-panel-close-hover-border: rgba(224, 180, 95, 0.58);
-    --overlay-panel-close-hover-bg: rgba(60, 43, 24, 0.54);
-    --overlay-panel-status-color: #d8b36a;
-    --overlay-panel-title-color: #fff3d2;
-    --overlay-panel-title-shadow: rgba(216, 179, 106, 0.18);
-    --overlay-panel-lead-color: #f3efe4;
-    --overlay-panel-text-color: rgba(243, 239, 228, 0.92);
-    --overlay-panel-closing-color: #e0b45f;
+    --panel-mobile-content-bg: linear-gradient(145deg, rgba(255, 248, 229, 0.9), rgba(239, 218, 174, 0.82) 58%, rgba(250, 238, 204, 0.88));
+    --panel-mobile-shadow: 0 0 28px rgba(184, 135, 42, 0.12);
     text-shadow: none;
   }
 
   .overlay__panel--haiku-cosmos {
-    --overlay-panel-close-color: #dff8ff;
-    --overlay-panel-close-bg: rgba(8, 18, 44, 0.4);
-    --overlay-panel-close-border: rgba(75, 214, 237, 0.36);
-    --overlay-panel-close-hover-color: #f2fcff;
-    --overlay-panel-close-hover-border: rgba(115, 223, 244, 0.58);
-    --overlay-panel-close-hover-bg: rgba(13, 31, 64, 0.56);
-    --overlay-panel-status-color: #7de6f7;
-    --overlay-panel-title-color: #f2fcff;
-    --overlay-panel-title-shadow: rgba(75, 214, 237, 0.2);
-    --overlay-panel-lead-color: #dff8ff;
-    --overlay-panel-text-color: rgba(223, 248, 255, 0.92);
-    --overlay-panel-closing-color: #8feaff;
+    --panel-mobile-content-bg: linear-gradient(150deg, rgba(248, 253, 255, 0.92), rgba(218, 246, 255, 0.84) 55%, rgba(237, 251, 255, 0.9));
+    --panel-mobile-shadow: 0 0 30px rgba(75, 214, 237, 0.14);
   }
 
   .overlay__panel--spotify-digger {
-    --mobile-frame-color: rgba(159, 220, 255, 0.66);
+    --mobile-frame-color: #9fdcff;
     --mobile-frame-glow: rgba(90, 169, 255, 0.12);
-    --mobile-frame-opacity: 0.78;
-  }
-
-  .overlay__panel--spotify-digger .mobile-svg-frame__piece {
-    color: rgba(159, 220, 255, 0.66);
-    opacity: 0.78;
-    filter: drop-shadow(0 0 4px rgba(90, 169, 255, 0.12));
-  }
-
-  .overlay__panel--spotify-digger .overlay__mobile-ornament:not([hidden]) {
-    opacity: 0.76;
-    filter: brightness(0.86) saturate(0.82) hue-rotate(8deg) drop-shadow(0 0 6px rgba(90, 169, 255, 0.12));
+    background-image: none;
   }
 
   .overlay__panel--ai-guide {
-    --mobile-frame-color: rgba(106, 174, 83, 0.62);
+    --mobile-frame-color: #6aae53;
     --mobile-frame-glow: rgba(84, 140, 72, 0.1);
-    --mobile-frame-opacity: 0.82;
     --overlay-panel-close-color: rgba(235, 244, 214, 0.92);
     --overlay-panel-close-bg: rgba(8, 24, 16, 0.32);
     --overlay-panel-close-border: rgba(190, 170, 92, 0.42);
@@ -1048,27 +1012,6 @@ body {
     --overlay-panel-closing-color: rgba(211, 190, 121, 0.9);
   }
 
-  .overlay__panel--ai-guide .mobile-svg-frame__piece {
-    color: rgba(106, 174, 83, 0.62);
-    opacity: 0.82;
-    filter: drop-shadow(0 0 4px rgba(84, 140, 72, 0.1));
-  }
-
-  .overlay__panel--ai-guide .overlay__mobile-ornament:not([hidden]) {
-    opacity: 0.72;
-    filter: brightness(0.68) saturate(0.72) hue-rotate(-4deg);
-  }
-
-  .overlay__panel--creative-ai .mobile-svg-frame__piece {
-    color: rgba(224, 180, 95, 0.68);
-    opacity: 0.82;
-    filter: drop-shadow(0 0 4px rgba(240, 160, 64, 0.14));
-  }
-
-  .overlay__panel--creative-ai .overlay__mobile-ornament:not([hidden]) {
-    opacity: 0.76;
-    filter: brightness(0.82) saturate(0.9) sepia(0.08) drop-shadow(0 0 6px rgba(240, 160, 64, 0.12));
-  }
 
   .overlay__panel--ethics .overlay__status,
   .overlay__panel--ethics .overlay__title,
@@ -1121,8 +1064,10 @@ body {
     min-height: 0;
     margin: 0;
     padding: clamp(14px, 4vw, 22px);
-    background: transparent;
-    box-shadow: none;
+    background: var(--panel-mobile-content-bg);
+    border: 0;
+    border-radius: clamp(18px, 5vw, 28px);
+    box-shadow: var(--panel-mobile-shadow);
     backdrop-filter: none;
   }
 
@@ -1175,16 +1120,10 @@ body {
 
   .overlay__panel--ai-guide .overlay__close {
     color: rgba(235, 244, 214, 0.92);
-    background: transparent;
-    border: 0;
-    box-shadow: none;
   }
 
   .overlay__panel--spotify-digger .overlay__close {
     color: #eaf7ff;
-    background: transparent;
-    border: 0;
-    box-shadow: none;
   }
 
   .overlay__panel .overlay__title,
