@@ -21,6 +21,7 @@ const PIVOT_REFERENCE_PATTERN = /(?:pivot|reference|guide)/i;
 const MOBILE_FRAME_PIECE_KEYS = ['lu', 'ru', 'ld', 'rd', 'u', 'd', 'l', 'r'];
 const MOBILE_FRAME_CORNER_KEYS = ['lu', 'ru', 'ld', 'rd'];
 const MOBILE_FRAME_DEBUG_PARAM = 'debugFramePieces';
+const MOBILE_FRAME_LINE_OVERLAP_PROPERTY = '--frame-line-overlap';
 const MOBILE_FRAME_DEBUG_COLORS = {
   lu: 'red',
   ru: 'orange',
@@ -34,6 +35,30 @@ const MOBILE_FRAME_DEBUG_COLORS = {
 
 function clamp(value, min, max) {
   return Math.min(Math.max(value, min), max);
+}
+
+function average(...values) {
+  return values.reduce((total, value) => total + value, 0) / values.length;
+}
+
+function parseCssPixelValue(value, fallback = 0) {
+  const parsed = Number.parseFloat(value);
+  return Number.isFinite(parsed) ? parsed : fallback;
+}
+
+function getRectRight(rect) {
+  return rect.x + rect.width;
+}
+
+function getRectBottom(rect) {
+  return rect.y + rect.height;
+}
+
+function rectsOverlap(a, b, epsilon = 0.5) {
+  return a.x < b.x + b.width - epsilon
+    && a.x + a.width > b.x + epsilon
+    && a.y < b.y + b.height - epsilon
+    && a.y + a.height > b.y + epsilon;
 }
 
 function isFrameDebugEnabled() {
@@ -349,14 +374,44 @@ function getRectSnapshot(element, frameRect) {
   };
 }
 
+function getSvgBBoxSnapshot(element) {
+  if (!element || typeof element.getBBox !== 'function') return null;
+
+  try {
+    const bbox = element.getBBox();
+    return { x: bbox.x, y: bbox.y, width: bbox.width, height: bbox.height };
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : String(error) };
+  }
+}
+
+function isGeometryInsideWrapper(shape, wrapper) {
+  if (!shape || !wrapper) return false;
+
+  const shapeRect = shape.getBoundingClientRect();
+  const wrapperRect = wrapper.getBoundingClientRect();
+  return shapeRect.width > 0
+    && shapeRect.height > 0
+    && shapeRect.left >= wrapperRect.left - 1
+    && shapeRect.top >= wrapperRect.top - 1
+    && shapeRect.right <= wrapperRect.right + 1
+    && shapeRect.bottom <= wrapperRect.bottom + 1;
+}
+
 function getPaintSnapshot(piece) {
   const shape = piece.svg ? getFirstVisibleSvgShape(piece.svg) : null;
   if (!shape) return null;
   const styles = getComputedStyle(shape);
+  const rect = shape.getBoundingClientRect();
   return {
     selector: `${shape.tagName.toLowerCase()}${shape.id ? `#${shape.id}` : ''}`,
+    tag: shape.tagName.toLowerCase(),
+    rect: { x: rect.x, y: rect.y, width: rect.width, height: rect.height },
+    bbox: getSvgBBoxSnapshot(shape),
+    insideWrapper: isGeometryInsideWrapper(shape, piece.wrapper),
     fill: styles.fill,
     stroke: styles.stroke,
+    color: styles.color,
     opacity: styles.opacity,
     visibility: styles.visibility,
     display: styles.display
@@ -370,9 +425,12 @@ function applyMobileFrameLayout(frameElement) {
   const pieces = getMobileFrameMetrics(frameElement);
   if (MOBILE_FRAME_PIECE_KEYS.some((key) => !pieces[key].svg || !pieces[key].wrapper)) return;
 
+  const frameStyles = getComputedStyle(frameElement);
+  const requestedLineOverlap = parseCssPixelValue(frameStyles.getPropertyValue(MOBILE_FRAME_LINE_OVERLAP_PROPERTY), 0);
+  const lineOverlap = Math.max(0, requestedLineOverlap);
   const maxCornerViewBoxWidth = Math.max(...MOBILE_FRAME_CORNER_KEYS.map((key) => pieces[key].viewBox.width));
-  const cornerWidth = clamp(frameRect.width * 0.22, Math.min(72, frameRect.width * 0.25), frameRect.width * 0.25);
-  const cornerScale = cornerWidth / maxCornerViewBoxWidth;
+  const desiredCornerWidth = clamp(frameRect.width * 0.22, Math.min(72, frameRect.width * 0.25), frameRect.width * 0.25);
+  const cornerScale = desiredCornerWidth / maxCornerViewBoxWidth;
   const cornerRects = {
     lu: { x: 0, y: 0, width: pieces.lu.viewBox.width * cornerScale, height: pieces.lu.viewBox.height * cornerScale },
     ru: { x: frameRect.width - pieces.ru.viewBox.width * cornerScale, y: 0, width: pieces.ru.viewBox.width * cornerScale, height: pieces.ru.viewBox.height * cornerScale },
@@ -397,72 +455,82 @@ function applyMobileFrameLayout(frameElement) {
     lineR: choosePivot(pieces.r.pivots, 'right', pieces.r.viewBox)
   };
 
-  const topLeftAnchor = {
-    x: cornerRects.lu.x + chosenPivots.luTop.x * cornerScale,
-    y: cornerRects.lu.y + chosenPivots.luTop.y * cornerScale
-  };
-  const topRightAnchor = {
-    x: cornerRects.ru.x + chosenPivots.ruTop.x * cornerScale,
-    y: cornerRects.ru.y + chosenPivots.ruTop.y * cornerScale
-  };
-  const bottomLeftAnchor = {
-    x: cornerRects.ld.x + chosenPivots.ldBottom.x * cornerScale,
-    y: cornerRects.ld.y + chosenPivots.ldBottom.y * cornerScale
-  };
-  const bottomRightAnchor = {
-    x: cornerRects.rd.x + chosenPivots.rdBottom.x * cornerScale,
-    y: cornerRects.rd.y + chosenPivots.rdBottom.y * cornerScale
-  };
-  const leftTopAnchor = {
-    x: cornerRects.lu.x + chosenPivots.luLeft.x * cornerScale,
-    y: cornerRects.lu.y + chosenPivots.luLeft.y * cornerScale
-  };
-  const leftBottomAnchor = {
-    x: cornerRects.ld.x + chosenPivots.ldLeft.x * cornerScale,
-    y: cornerRects.ld.y + chosenPivots.ldLeft.y * cornerScale
-  };
-  const rightTopAnchor = {
-    x: cornerRects.ru.x + chosenPivots.ruRight.x * cornerScale,
-    y: cornerRects.ru.y + chosenPivots.ruRight.y * cornerScale
-  };
-  const rightBottomAnchor = {
-    x: cornerRects.rd.x + chosenPivots.rdRight.x * cornerScale,
-    y: cornerRects.rd.y + chosenPivots.rdRight.y * cornerScale
+  const edgeGaps = {
+    u: { start: getRectRight(cornerRects.lu), end: cornerRects.ru.x },
+    d: { start: getRectRight(cornerRects.ld), end: cornerRects.rd.x },
+    l: { start: getRectBottom(cornerRects.lu), end: cornerRects.ld.y },
+    r: { start: getRectBottom(cornerRects.ru), end: cornerRects.rd.y }
   };
 
-  const topLineWidth = Math.max(0, topRightAnchor.x - topLeftAnchor.x);
-  const bottomLineWidth = Math.max(0, bottomRightAnchor.x - bottomLeftAnchor.x);
-  const leftLineHeight = Math.max(0, leftBottomAnchor.y - leftTopAnchor.y);
-  const rightLineHeight = Math.max(0, rightBottomAnchor.y - rightTopAnchor.y);
-  const topLineHeight = pieces.u.viewBox.height * cornerScale;
-  const bottomLineHeight = pieces.d.viewBox.height * cornerScale;
-  const leftLineWidth = pieces.l.viewBox.width * cornerScale;
-  const rightLineWidth = pieces.r.viewBox.width * cornerScale;
+  const axes = {
+    topY: average(
+      cornerRects.lu.y + chosenPivots.luTop.y * cornerScale,
+      cornerRects.ru.y + chosenPivots.ruTop.y * cornerScale
+    ),
+    bottomY: average(
+      cornerRects.ld.y + chosenPivots.ldBottom.y * cornerScale,
+      cornerRects.rd.y + chosenPivots.rdBottom.y * cornerScale
+    ),
+    leftX: average(
+      cornerRects.lu.x + chosenPivots.luLeft.x * cornerScale,
+      cornerRects.ld.x + chosenPivots.ldLeft.x * cornerScale
+    ),
+    rightX: average(
+      cornerRects.ru.x + chosenPivots.ruRight.x * cornerScale,
+      cornerRects.rd.x + chosenPivots.rdRight.x * cornerScale
+    )
+  };
+
+  const lineScales = {
+    u: { x: Math.max(0, edgeGaps.u.end - edgeGaps.u.start + lineOverlap * 2) / pieces.u.viewBox.width, y: cornerScale },
+    d: { x: Math.max(0, edgeGaps.d.end - edgeGaps.d.start + lineOverlap * 2) / pieces.d.viewBox.width, y: cornerScale },
+    l: { x: cornerScale, y: Math.max(0, edgeGaps.l.end - edgeGaps.l.start + lineOverlap * 2) / pieces.l.viewBox.height },
+    r: { x: cornerScale, y: Math.max(0, edgeGaps.r.end - edgeGaps.r.start + lineOverlap * 2) / pieces.r.viewBox.height }
+  };
+
+  const unclampedLineRects = {
+    u: {
+      x: edgeGaps.u.start - lineOverlap,
+      y: axes.topY - chosenPivots.lineU.y * lineScales.u.y,
+      width: Math.max(0, edgeGaps.u.end - edgeGaps.u.start + lineOverlap * 2),
+      height: pieces.u.viewBox.height * lineScales.u.y
+    },
+    d: {
+      x: edgeGaps.d.start - lineOverlap,
+      y: axes.bottomY - chosenPivots.lineD.y * lineScales.d.y,
+      width: Math.max(0, edgeGaps.d.end - edgeGaps.d.start + lineOverlap * 2),
+      height: pieces.d.viewBox.height * lineScales.d.y
+    },
+    l: {
+      x: axes.leftX - chosenPivots.lineL.x * lineScales.l.x,
+      y: edgeGaps.l.start - lineOverlap,
+      width: pieces.l.viewBox.width * lineScales.l.x,
+      height: Math.max(0, edgeGaps.l.end - edgeGaps.l.start + lineOverlap * 2)
+    },
+    r: {
+      x: axes.rightX - chosenPivots.lineR.x * lineScales.r.x,
+      y: edgeGaps.r.start - lineOverlap,
+      width: pieces.r.viewBox.width * lineScales.r.x,
+      height: Math.max(0, edgeGaps.r.end - edgeGaps.r.start + lineOverlap * 2)
+    }
+  };
 
   const lineRects = {
     u: {
-      x: topLeftAnchor.x,
-      y: topLeftAnchor.y - chosenPivots.lineU.y * cornerScale,
-      width: topLineWidth,
-      height: topLineHeight
+      ...unclampedLineRects.u,
+      y: clamp(unclampedLineRects.u.y, 0, Math.max(0, Math.min(getRectBottom(cornerRects.lu), getRectBottom(cornerRects.ru)) - unclampedLineRects.u.height))
     },
     d: {
-      x: bottomLeftAnchor.x,
-      y: bottomLeftAnchor.y - chosenPivots.lineD.y * cornerScale,
-      width: bottomLineWidth,
-      height: bottomLineHeight
+      ...unclampedLineRects.d,
+      y: clamp(unclampedLineRects.d.y, Math.max(cornerRects.ld.y, cornerRects.rd.y), Math.max(0, frameRect.height - unclampedLineRects.d.height))
     },
     l: {
-      x: leftTopAnchor.x - chosenPivots.lineL.x * cornerScale,
-      y: leftTopAnchor.y,
-      width: leftLineWidth,
-      height: leftLineHeight
+      ...unclampedLineRects.l,
+      x: clamp(unclampedLineRects.l.x, 0, Math.max(0, Math.min(getRectRight(cornerRects.lu), getRectRight(cornerRects.ld)) - unclampedLineRects.l.width))
     },
     r: {
-      x: rightTopAnchor.x - chosenPivots.lineR.x * cornerScale,
-      y: rightTopAnchor.y,
-      width: rightLineWidth,
-      height: rightLineHeight
+      ...unclampedLineRects.r,
+      x: clamp(unclampedLineRects.r.x, Math.max(cornerRects.ru.x, cornerRects.rd.x), Math.max(0, frameRect.width - unclampedLineRects.r.width))
     }
   };
 
@@ -470,33 +538,54 @@ function applyMobileFrameLayout(frameElement) {
 
   requestAnimationFrame(() => {
     const updatedFrameRect = frameElement.getBoundingClientRect();
-    const rects = Object.fromEntries(MOBILE_FRAME_PIECE_KEYS.map((key) => [
-      key,
-      {
-        wrapper: getRectSnapshot(pieces[key].wrapper, updatedFrameRect),
-        svg: getRectSnapshot(pieces[key].svg, updatedFrameRect),
-        wrapperStyles: getStyleSnapshot(pieces[key].wrapper),
-        svgStyles: getStyleSnapshot(pieces[key].svg),
-        firstPaintedShape: getPaintSnapshot(pieces[key])
-      }
-    ]));
+    const rects = Object.fromEntries(MOBILE_FRAME_PIECE_KEYS.map((key) => {
+      const wrapperSnapshot = getRectSnapshot(pieces[key].wrapper, updatedFrameRect);
+      const svgSnapshot = getRectSnapshot(pieces[key].svg, updatedFrameRect);
+      const localWrapperRect = key in cornerRects ? cornerRects[key] : lineRects[key];
+      const overlapsCorners = MOBILE_FRAME_CORNER_KEYS
+        .filter((cornerKey) => cornerKey !== key)
+        .filter((cornerKey) => rectsOverlap(localWrapperRect, cornerRects[cornerKey]));
+      const firstPaintedShape = getPaintSnapshot(pieces[key]);
+
+      return [
+        key,
+        {
+          wrapper: wrapperSnapshot,
+          wrapperLayout: localWrapperRect,
+          overlapsCornerWrappers: overlapsCorners,
+          injectedSvgRect: svgSnapshot,
+          preserveAspectRatio: pieces[key].svg.getAttribute('preserveAspectRatio'),
+          wrapperStyles: getStyleSnapshot(pieces[key].wrapper),
+          svgStyles: getStyleSnapshot(pieces[key].svg),
+          firstVisibleNonPivotGeometry: firstPaintedShape,
+          visibleGeometryInsideWrapper: firstPaintedShape?.insideWrapper ?? false
+        }
+      ];
+    }));
 
     console.debug('[overlay][frame-layout]', {
+      mode: 'edge-to-edge',
       frameRect: { width: frameRect.width, height: frameRect.height },
       viewBoxes: Object.fromEntries(MOBILE_FRAME_PIECE_KEYS.map((key) => [key, pieces[key].viewBox])),
       detectedPivots: Object.fromEntries(MOBILE_FRAME_PIECE_KEYS.map((key) => [key, pieces[key].pivots])),
       chosenPivots,
+      desiredCornerWidth,
       cornerScale,
-      cornerWidthFormula: 'cornerScale = clamp(frameRect.width * 0.22, min(72px, frameRect.width * 0.25), frameRect.width * 0.25) / max(corner viewBox widths)',
+      cornerWidthFormula: 'desiredCornerWidth = clamp(frameWidth * 0.22, min(72px, frameWidth * 0.25), frameWidth * 0.25); cornerScale = desiredCornerWidth / max(corner viewBox widths)',
+      lineOverlap,
       cornerRendered: cornerRects,
+      edgeGaps,
+      pivotAxisTargets: axes,
+      lineScales,
+      unclampedLineRendered: unclampedLineRects,
       lineRendered: lineRects,
-      lineTargetSizes: {
-        top: { width: topLineWidth, height: topLineHeight, x: lineRects.u.x, y: lineRects.u.y },
-        bottom: { width: bottomLineWidth, height: bottomLineHeight, x: lineRects.d.x, y: lineRects.d.y },
-        left: { width: leftLineWidth, height: leftLineHeight, x: lineRects.l.x, y: lineRects.l.y },
-        right: { width: rightLineWidth, height: rightLineHeight, x: lineRects.r.x, y: lineRects.r.y }
+      lineDiagnostics: {
+        u: { expectedEdgeGap: edgeGaps.u.end - edgeGaps.u.start, actualWrapperWidth: lineRects.u.width, actualWrapperHeight: lineRects.u.height, lineScaleX: lineScales.u.x, lineScaleY: lineScales.u.y, pivotAxisTarget: axes.topY, finalTop: lineRects.u.y, finalLeft: lineRects.u.x, graphicVisible: Boolean(rects.u.firstVisibleNonPivotGeometry) },
+        d: { expectedEdgeGap: edgeGaps.d.end - edgeGaps.d.start, actualWrapperWidth: lineRects.d.width, actualWrapperHeight: lineRects.d.height, lineScaleX: lineScales.d.x, lineScaleY: lineScales.d.y, pivotAxisTarget: axes.bottomY, finalTop: lineRects.d.y, finalLeft: lineRects.d.x, graphicVisible: Boolean(rects.d.firstVisibleNonPivotGeometry) },
+        l: { expectedEdgeGap: edgeGaps.l.end - edgeGaps.l.start, actualWrapperWidth: lineRects.l.width, actualWrapperHeight: lineRects.l.height, lineScaleX: lineScales.l.x, lineScaleY: lineScales.l.y, pivotAxisTarget: axes.leftX, finalTop: lineRects.l.y, finalLeft: lineRects.l.x, graphicVisible: Boolean(rects.l.firstVisibleNonPivotGeometry) },
+        r: { expectedEdgeGap: edgeGaps.r.end - edgeGaps.r.start, actualWrapperWidth: lineRects.r.width, actualWrapperHeight: lineRects.r.height, lineScaleX: lineScales.r.x, lineScaleY: lineScales.r.y, pivotAxisTarget: axes.rightX, finalTop: lineRects.r.y, finalLeft: lineRects.r.x, graphicVisible: Boolean(rects.r.firstVisibleNonPivotGeometry) }
       },
-      boundingClientRects: rects
+      pieces: rects
     });
   });
 }
@@ -633,12 +722,47 @@ function logMobileFrameDiagnostics(assetFilename, svg, normalizedCount, pivotCou
   });
 }
 
+
+function uniquifyInlineSvgReferences(svg, assetFilename) {
+  const prefix = `mobile-frame-${assetFilename.replace(/[^a-z0-9_-]/gi, '-')}-${Math.random().toString(36).slice(2)}-`;
+  const idMap = new Map();
+
+  svg.querySelectorAll('[id]').forEach((element) => {
+    const oldId = element.id;
+    const newId = `${prefix}${oldId}`;
+    idMap.set(oldId, newId);
+    element.id = newId;
+  });
+
+  if (!idMap.size) return;
+
+  const rewriteValue = (value) => {
+    let nextValue = value;
+    idMap.forEach((newId, oldId) => {
+      const escapedOldId = oldId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      nextValue = nextValue
+        .replace(new RegExp(`url\\(\\s*#${escapedOldId}\\s*\\)`, 'g'), `url(#${newId})`)
+        .replace(new RegExp(`(["'])#${escapedOldId}\\1`, 'g'), `$1#${newId}$1`);
+      if (nextValue === `#${oldId}`) nextValue = `#${newId}`;
+    });
+    return nextValue;
+  };
+
+  svg.querySelectorAll('*').forEach((element) => {
+    [...element.attributes].forEach((attribute) => {
+      if (!attribute.value.includes('#') && !attribute.value.includes('url(')) return;
+      element.setAttribute(attribute.name, rewriteValue(attribute.value));
+    });
+  });
+}
+
 function normalizeInlineSvg(svg, className, assetFilename) {
   let normalizedCount = 0;
   let pivotCount = 0;
   const preferStroke = LINE_FRAME_CLASS_PATTERN.test(className);
 
   svg.querySelectorAll('style').forEach((styleElement) => styleElement.remove());
+  uniquifyInlineSvgReferences(svg, assetFilename);
 
   svg.classList.add(...className.split(' '));
   svg.setAttribute('aria-hidden', 'true');
