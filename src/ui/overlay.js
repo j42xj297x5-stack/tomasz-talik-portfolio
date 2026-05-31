@@ -99,6 +99,119 @@ function findRemainingBlackPaint(svg) {
     .map((element) => `${element.tagName.toLowerCase()}${element.id ? `#${element.id}` : ''}`);
 }
 
+function getStyleSnapshot(element) {
+  if (!element) return null;
+
+  const styles = getComputedStyle(element);
+  return {
+    display: styles.display,
+    visibility: styles.visibility,
+    opacity: styles.opacity,
+    zIndex: styles.zIndex,
+    position: styles.position,
+    color: styles.color,
+    fill: styles.fill,
+    stroke: styles.stroke,
+    filter: styles.filter,
+    mixBlendMode: styles.mixBlendMode,
+    pointerEvents: styles.pointerEvents
+  };
+}
+
+function getElementLayerSnapshot(element) {
+  if (!element) return null;
+
+  const rect = element.getBoundingClientRect();
+  const centerX = rect.left + rect.width / 2;
+  const centerY = rect.top + rect.height / 2;
+  const elementFromPoint = document.elementFromPoint(centerX, centerY);
+
+  return {
+    rect: {
+      x: rect.x,
+      y: rect.y,
+      width: rect.width,
+      height: rect.height
+    },
+    centerElement: elementFromPoint
+      ? `${elementFromPoint.tagName.toLowerCase()}${elementFromPoint.id ? `#${elementFromPoint.id}` : ''}${elementFromPoint.className ? `.${String(elementFromPoint.className).trim().replace(/\s+/g, '.')}` : ''}`
+      : null,
+    containsCenterElement: elementFromPoint ? element.contains(elementFromPoint) : false
+  };
+}
+
+function getFirstVisibleSvgShape(svg) {
+  const visibleShapeSelector = SVG_RENDERED_SHAPES
+    .map((shape) => `${shape}:not([data-frame-pivot="true"]):not(.frame-pivot-reference)`)
+    .join(', ');
+
+  return [...svg.querySelectorAll(visibleShapeSelector)].find((shape) => {
+    const styles = getComputedStyle(shape);
+    const rect = shape.getBoundingClientRect();
+    return styles.display !== 'none'
+      && styles.visibility !== 'hidden'
+      && Number(styles.opacity) > 0
+      && rect.width > 0
+      && rect.height > 0;
+  }) ?? null;
+}
+
+function describeSvgDiagnostics(svg) {
+  const firstVisibleShape = getFirstVisibleSvgShape(svg);
+  const shapeStyles = firstVisibleShape ? getComputedStyle(firstVisibleShape) : null;
+
+  return {
+    piece: svg.closest('[data-mobile-frame-piece]')?.dataset.mobileFramePiece ?? null,
+    classes: [...svg.classList],
+    computed: getStyleSnapshot(svg),
+    layer: getElementLayerSnapshot(svg),
+    firstVisibleShape: firstVisibleShape
+      ? {
+          selector: `${firstVisibleShape.tagName.toLowerCase()}${firstVisibleShape.id ? `#${firstVisibleShape.id}` : ''}`,
+          color: shapeStyles.color,
+          fill: shapeStyles.fill,
+          stroke: shapeStyles.stroke,
+          opacity: shapeStyles.opacity,
+          visibility: shapeStyles.visibility,
+          display: shapeStyles.display
+        }
+      : null
+  };
+}
+
+function logOverlayFrameDiagnostics(root, panelEl, nodeId) {
+  if (!import.meta.env.DEV) return;
+
+  requestAnimationFrame(() => {
+    const panelStyles = getComputedStyle(panelEl);
+    const mobileFrameEl = panelEl.querySelector('.mobile-svg-frame');
+    const mobileSvgs = [...panelEl.querySelectorAll('.mobile-svg-frame svg')];
+
+    console.debug('[overlay][frame-diagnostics]', {
+      nodeId,
+      activePanelGateId: panelEl.dataset.gateId ?? null,
+      isAiGuidePanel: panelEl.dataset.gateId === 'ai-guide',
+      media: {
+        viewport: { width: window.innerWidth, height: window.innerHeight },
+        maxWidth768: window.matchMedia('(max-width: 768px)').matches,
+        maxWidth640: window.matchMedia('(max-width: 640px)').matches,
+        pointerCoarse: window.matchMedia('(pointer: coarse)').matches
+      },
+      overlayHidden: root.hidden,
+      panel: {
+        mobileFrameColorProperty: panelStyles.getPropertyValue('--mobile-frame-color').trim(),
+        computed: getStyleSnapshot(panelEl),
+        layer: getElementLayerSnapshot(panelEl)
+      },
+      mobileFrame: {
+        computed: getStyleSnapshot(mobileFrameEl),
+        layer: getElementLayerSnapshot(mobileFrameEl)
+      },
+      injectedSvgs: mobileSvgs.map(describeSvgDiagnostics)
+    });
+  });
+}
+
 function logMobileFrameDiagnostics(assetFilename, svg, normalizedCount, pivotCount, remainingBlackPaint) {
   if (!import.meta.env.DEV) return;
 
@@ -199,12 +312,12 @@ async function loadInlineSvg(url, targetElement, className) {
 }
 
 function loadMobileFrameSvgs(frameElement) {
-  Object.entries(MOBILE_FRAME_ASSETS).forEach(([key, asset]) => {
+  return Promise.all(Object.entries(MOBILE_FRAME_ASSETS).map(([key, asset]) => {
     const targetElement = frameElement.querySelector(`[data-mobile-frame-piece="${key}"]`);
-    if (!targetElement) return;
+    if (!targetElement) return Promise.resolve();
 
-    loadInlineSvg(asset.url, targetElement, asset.className);
-  });
+    return loadInlineSvg(asset.url, targetElement, asset.className);
+  }));
 }
 
 export function createOverlay({ onClose, assetManager = null } = {}) {
@@ -247,13 +360,12 @@ export function createOverlay({ onClose, assetManager = null } = {}) {
   const closingEl = root.querySelector('.overlay__closing');
   const mobileFrameEl = root.querySelector('.mobile-svg-frame');
 
-  if (mobileFrameEl) {
-    loadMobileFrameSvgs(mobileFrameEl);
-  }
+  const mobileFrameReady = mobileFrameEl ? loadMobileFrameSvgs(mobileFrameEl) : Promise.resolve();
 
   const close = () => {
     if (root.hidden) return;
     root.hidden = true;
+    panelEl.removeAttribute('data-gate-id');
     document.body.classList.remove('overlay-open');
     onClose?.();
   };
@@ -278,6 +390,7 @@ export function createOverlay({ onClose, assetManager = null } = {}) {
       const isCreativeAI = nodeData.id === 'creative-ai';
       const hasStructuredCopy = Boolean(nodeData.leadText || nodeData.bodyText || nodeData.closingText);
 
+      panelEl.dataset.gateId = nodeData.id;
       panelEl.classList.toggle('overlay__panel--ai-guide', isAIGuide);
       panelEl.classList.toggle('overlay__panel--creative-ai', isCreativeAI);
       const panelBackgroundPath = GLYPH_PANEL_BACKGROUNDS[nodeData.id];
@@ -314,6 +427,9 @@ export function createOverlay({ onClose, assetManager = null } = {}) {
 
       root.hidden = false;
       document.body.classList.add('overlay-open');
+      mobileFrameReady.finally(() => {
+        logOverlayFrameDiagnostics(root, panelEl, nodeData.id);
+      });
     },
     close
   };
