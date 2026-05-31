@@ -154,6 +154,7 @@ body {
   --mobile-frame-glow: rgba(255,255,255,0.16);
   --mobile-frame-opacity: 0.92;
   --mobile-frame-inset: 10px;
+  --frame-line-overlap: 0px;
   --mobile-frame-corner-size: clamp(72px, 22vw, 118px);
   --mobile-frame-line-thickness: clamp(8px, 2.4vw, 12px);
   --mobile-frame-pivot-left-x: clamp(6px, 1.85vw, 10px);
@@ -246,7 +247,9 @@ body {
   stroke: none !important;
 }
 
-/* Mobile frame geometry is set by the JS pivot solver in overlay.js. Source
+/* Mobile frame geometry is set by the JS edge-to-edge pivot solver in overlay.js.
+   Line wrappers use corner wrapper edges as their start/end points, with
+   --frame-line-overlap defaulting to 0px for no corner-wrapper overlap. Source
    viewBoxes: lu 57.058x99.868, ru 54.147x99.821, ld 57.086x98.871,
    rd 54.210x98.801; line_u 159.544x33.445, line_d 159.544x21.212,
    line_l 12.334x134.673, line_r 12.436x134.673. Corners receive uniform
