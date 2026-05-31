@@ -451,12 +451,12 @@ body {
   font-size: 0.92rem;
   letter-spacing: 0.04em;
   color: var(--overlay-panel-close-color);
-  background: var(--overlay-panel-close-bg);
-  border: 1px solid var(--overlay-panel-close-border);
-  border-radius: 999px;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
   padding: 0.65rem 1.15rem;
-  text-shadow: none;
-  box-shadow: 0 0 18px var(--overlay-panel-close-shadow);
+  text-shadow: 0 0 10px var(--overlay-panel-close-shadow);
+  box-shadow: none;
 }
 
 .overlay__panel--ai-guide .overlay__close:hover,
@@ -466,8 +466,7 @@ body {
 .overlay__panel--haiku-cosmos .overlay__close:hover,
 .overlay__panel--haiku-cosmos .overlay__close:focus-visible {
   color: var(--overlay-panel-close-hover-color);
-  border-color: var(--overlay-panel-close-hover-border);
-  background: var(--overlay-panel-close-hover-bg);
+  background: transparent;
 }
 
 .overlay__panel--ai-guide .overlay__status,
@@ -546,44 +545,17 @@ body {
   width: min(760px, calc(90vh * 561 / 701), 94vw);
   aspect-ratio: 561 / 701;
   padding: 0;
-  border: 1px solid rgba(160, 220, 255, 0.34);
-  border-radius: 28px;
-  background:
-    linear-gradient(180deg, rgba(6, 12, 22, 0.72), rgba(11, 18, 29, 0.86)),
-    radial-gradient(circle at 50% 12%, rgba(90, 169, 255, 0.18), transparent 42%),
-    rgba(5, 8, 14, 0.94);
-  box-shadow: 0 0 42px rgba(90, 169, 255, 0.12), inset 0 0 42px rgba(184, 232, 255, 0.05);
-  overflow: hidden;
+  border: 0;
+  border-radius: 0;
+  background-image: var(--overlay-panel-bg-image);
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  background-position: center;
+  box-shadow: none;
+  overflow: visible;
   isolation: isolate;
 }
 
-.overlay__panel--spotify-digger::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  background-image:
-    linear-gradient(180deg, rgba(5, 10, 18, 0.2), rgba(5, 10, 18, 0.76)),
-    var(--overlay-panel-bg-image);
-  background-size: 100% 100%, cover;
-  background-repeat: no-repeat;
-  background-position: center;
-  opacity: 0.48;
-  pointer-events: none;
-}
-
-.overlay__panel--spotify-digger::after {
-  content: '';
-  position: absolute;
-  inset: 1px;
-  z-index: 0;
-  border: 1px solid rgba(160, 220, 255, 0.18);
-  border-radius: 27px;
-  background:
-    linear-gradient(90deg, transparent, rgba(184, 232, 255, 0.08), transparent) 0 0 / 100% 1px no-repeat,
-    radial-gradient(circle at 82% 20%, rgba(159, 220, 255, 0.12), transparent 22rem);
-  pointer-events: none;
-}
 
 .overlay__panel--spotify-digger .overlay__content {
   position: absolute;
@@ -597,11 +569,9 @@ body {
   min-height: 0;
   margin: 0;
   padding: clamp(18px, 2.2vw, 28px);
-  border: 1px solid rgba(160, 220, 255, 0.28);
-  border-radius: 24px;
-  background: linear-gradient(180deg, rgba(7, 15, 27, 0.78), rgba(12, 19, 30, 0.7));
-  box-shadow: inset 0 0 30px rgba(184, 232, 255, 0.06), 0 0 30px rgba(90, 169, 255, 0.08);
-  backdrop-filter: blur(10px);
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
 }
 
 .overlay__panel--spotify-digger .overlay__scroll {
@@ -635,19 +605,18 @@ body {
   font-size: 0.92rem;
   letter-spacing: 0.04em;
   color: var(--overlay-panel-close-color);
-  background: var(--overlay-panel-close-bg);
-  border: 1px solid var(--overlay-panel-close-border);
-  border-radius: 999px;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
   padding: 0.65rem 1.15rem;
-  text-shadow: none;
-  box-shadow: 0 0 18px var(--overlay-panel-close-shadow);
+  text-shadow: 0 0 10px var(--overlay-panel-close-shadow);
+  box-shadow: none;
 }
 
 .overlay__panel--spotify-digger .overlay__close:hover,
 .overlay__panel--spotify-digger .overlay__close:focus-visible {
   color: var(--overlay-panel-close-hover-color);
-  border-color: var(--overlay-panel-close-hover-border);
-  background: var(--overlay-panel-close-hover-bg);
+  background: transparent;
 }
 
 .overlay__panel--spotify-digger .overlay__status {
@@ -726,9 +695,8 @@ body {
   top: 16.5%;
   bottom: 10.5%;
   padding: clamp(12px, 1.35vw, 20px) clamp(5px, 0.65vw, 9px) clamp(8px, 1vw, 14px);
-  border-radius: 28px;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.38), rgba(232, 250, 255, 0.2));
-  box-shadow: inset 0 0 34px rgba(255, 255, 255, 0.3), 0 0 32px rgba(72, 210, 235, 0.08);
+  background: transparent;
+  box-shadow: none;
 }
 
 .overlay__panel--haiku-cosmos .overlay__scroll {
@@ -777,11 +745,9 @@ body {
 }
 
 .overlay__panel--haiku-cosmos .overlay__feature {
-  padding: 0.72rem 0.78rem;
-  border: 1px solid rgba(21, 159, 204, 0.24);
-  border-radius: 18px;
-  background: rgba(239, 252, 255, 0.52);
-  box-shadow: inset 0 0 18px rgba(255, 255, 255, 0.34);
+  padding: 0.72rem 0;
+  background: transparent;
+  box-shadow: none;
 }
 
 .overlay__panel--haiku-cosmos .overlay__feature-label {
@@ -870,9 +836,8 @@ body {
   flex-direction: column;
   overflow-y: auto;
   padding: clamp(4px, 0.8vw, 10px) 0.75rem clamp(6px, 1vw, 12px);
-  border-radius: 22px;
-  background: linear-gradient(180deg, rgba(255, 249, 232, 0.18), rgba(244, 225, 186, 0.08));
-  box-shadow: inset 0 0 28px rgba(255, 248, 224, 0.18);
+  background: transparent;
+  box-shadow: none;
   backdrop-filter: none;
   scrollbar-width: thin;
 }
@@ -900,19 +865,18 @@ body {
   font-size: 0.9rem;
   letter-spacing: 0.04em;
   color: var(--overlay-panel-close-color);
-  background: var(--overlay-panel-close-bg);
-  border: 1px solid var(--overlay-panel-close-border);
-  border-radius: 999px;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
   padding: 0.62rem 1.08rem;
-  text-shadow: none;
-  box-shadow: 0 0 16px var(--overlay-panel-close-shadow);
+  text-shadow: 0 0 10px var(--overlay-panel-close-shadow);
+  box-shadow: none;
 }
 
 .overlay__panel--ethics .overlay__close:hover,
 .overlay__panel--ethics .overlay__close:focus-visible {
   color: var(--overlay-panel-close-hover-color);
-  border-color: var(--overlay-panel-close-hover-border);
-  background: var(--overlay-panel-close-hover-bg);
+  background: transparent;
 }
 
 .overlay__panel--ethics .overlay__status {
@@ -1010,9 +974,9 @@ body {
     padding: 0;
     border: 0;
     border-radius: 18px;
-    background: var(--panel-mobile-bg);
-    box-shadow: var(--panel-mobile-shadow);
-    backdrop-filter: var(--panel-mobile-backdrop-filter);
+    background: transparent;
+    box-shadow: none;
+    backdrop-filter: none;
     overflow: hidden;
     isolation: isolate;
   }
@@ -1157,23 +1121,14 @@ body {
     min-height: 0;
     margin: 0;
     padding: clamp(14px, 4vw, 22px);
-    border: 1px solid var(--panel-mobile-content-border);
-    border-radius: 20px;
-    background: var(--panel-mobile-content-bg);
-    box-shadow: inset 0 0 24px rgba(255, 255, 255, 0.04);
-    backdrop-filter: blur(3px);
+    background: transparent;
+    box-shadow: none;
+    backdrop-filter: none;
   }
 
   .overlay__panel--ai-guide .overlay__content {
     z-index: 3;
     inset: clamp(72px, 18vw, 102px) clamp(38px, 10.5vw, 78px) clamp(42px, 11vw, 68px);
-  }
-
-  .overlay__panel--spotify-digger .overlay__content {
-    border-color: var(--panel-mobile-content-border);
-    background: var(--panel-mobile-content-bg);
-    box-shadow: inset 0 0 24px rgba(184, 232, 255, 0.05);
-    backdrop-filter: blur(4px);
   }
 
   .overlay__panel .overlay__scroll,
@@ -1220,16 +1175,16 @@ body {
 
   .overlay__panel--ai-guide .overlay__close {
     color: rgba(235, 244, 214, 0.92);
-    background: rgba(8, 24, 16, 0.32);
-    border-color: rgba(190, 170, 92, 0.42);
-    box-shadow: 0 0 14px rgba(84, 140, 72, 0.1);
+    background: transparent;
+    border: 0;
+    box-shadow: none;
   }
 
   .overlay__panel--spotify-digger .overlay__close {
     color: #eaf7ff;
-    background: rgba(8, 20, 34, 0.52);
-    border-color: rgba(160, 220, 255, 0.36);
-    box-shadow: 0 0 14px rgba(90, 169, 255, 0.12);
+    background: transparent;
+    border: 0;
+    box-shadow: none;
   }
 
   .overlay__panel .overlay__title,
