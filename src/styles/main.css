@@ -928,11 +928,37 @@ body {
 
 
 @media (max-width: 768px) {
+  .overlay__panel {
+    --panel-bg: linear-gradient(160deg, #f3f7ef 0%, #d8e1cf 50%, #aab99d 100%);
+    --panel-text: #15202a;
+    --panel-heading: #172334;
+    --panel-frame: #4f6878;
+    --panel-muted: #3f5f6d;
+    --panel-link: #244f68;
+    --mobile-frame-color: var(--panel-frame);
+    --mobile-frame-glow: transparent;
+    --overlay-panel-scrollbar: var(--panel-frame);
+    --overlay-panel-close-color: var(--panel-text);
+    --overlay-panel-close-bg: #f5f8fb;
+    --overlay-panel-close-border: var(--panel-frame);
+    --overlay-panel-close-shadow: transparent;
+    --overlay-panel-close-hover-color: #ffffff;
+    --overlay-panel-close-hover-border: var(--panel-frame);
+    --overlay-panel-close-hover-bg: var(--panel-frame);
+    --overlay-panel-status-color: var(--panel-muted);
+    --overlay-panel-title-color: var(--panel-heading);
+    --overlay-panel-title-shadow: transparent;
+    --overlay-panel-lead-color: var(--panel-text);
+    --overlay-panel-text-color: var(--panel-text);
+    --overlay-panel-closing-color: var(--panel-muted);
+  }
+
   .overlay__panel:not(.overlay__panel--ethics),
   .overlay__panel--ai-guide,
   .overlay__panel--creative-ai,
   .overlay__panel--haiku-cosmos,
-  .overlay__panel--spotify-digger {
+  .overlay__panel--spotify-digger,
+  .overlay__panel--ethics {
     width: calc(100vw - 20px);
     height: calc(100vh - 20px);
     height: calc(100dvh - 20px);
@@ -940,126 +966,77 @@ body {
     padding: 0;
     border: 0;
     border-radius: 18px;
-    background: none;
-    background-image: none;
+    background: var(--panel-bg);
+    color: var(--panel-text);
     box-shadow: none;
-    backdrop-filter: none;
     overflow: hidden;
     isolation: isolate;
+    text-shadow: none;
   }
 
   .overlay__backdrop {
     display: none;
   }
 
-  .overlay__panel--ethics {
-    --mobile-frame-color: #6f5425;
-    --mobile-frame-glow: #8b6828;
-    --overlay-panel-scrollbar: #8b6828;
-    --overlay-panel-close-color: #2d241b;
-    --overlay-panel-close-bg: #efe0bf;
-    --overlay-panel-close-border: #6f5425;
-    --overlay-panel-close-shadow: #8b6828;
-    --overlay-panel-close-hover-color: #2d241b;
-    --overlay-panel-close-hover-border: #2d241b;
-    --overlay-panel-close-hover-bg: #f4ead6;
-    --overlay-panel-status-color: #7a551c;
-    --overlay-panel-title-color: #2d241b;
-    --overlay-panel-title-shadow: #fbf4e5;
-    --overlay-panel-lead-color: #352a20;
-    --overlay-panel-text-color: #352a20;
-    --overlay-panel-closing-color: #7a551c;
-    width: calc(100vw - 20px);
-    height: calc(100vh - 20px);
-    height: calc(100dvh - 20px);
-    max-height: none;
-    padding: 0;
-    border: 0;
-    border-radius: 18px;
-    background: none;
-    background-image: none;
-    box-shadow: none;
-    backdrop-filter: none;
-    overflow: hidden;
-    isolation: isolate;
-    text-shadow: none;
+  .overlay__panel--ai-guide,
+  .overlay__panel.theme-ai-guide {
+    --panel-bg: linear-gradient(160deg, #eef8dc 0%, #cfe7a6 48%, #8fb66a 100%);
+    --panel-text: #172112;
+    --panel-heading: #263815;
+    --panel-frame: #5f7f37;
+    --panel-muted: #49672d;
+    --panel-link: #3f6427;
   }
 
-  .overlay__panel--haiku-cosmos {
-    --mobile-frame-color: #12324a;
-    --mobile-frame-glow: transparent;
-    --overlay-panel-scrollbar: #12324a;
-    --overlay-panel-close-color: #063b72;
-    --overlay-panel-close-bg: #f6fbff;
-    --overlay-panel-close-border: #0f466b;
-    --overlay-panel-close-shadow: transparent;
-    --overlay-panel-close-hover-color: #063b72;
-    --overlay-panel-close-hover-border: #063b72;
-    --overlay-panel-close-hover-bg: #eef7ff;
-    --overlay-panel-status-color: #0b5f86;
-    --overlay-panel-title-color: #063b72;
-    --overlay-panel-title-shadow: transparent;
-    --overlay-panel-lead-color: #102a43;
-    --overlay-panel-text-color: #12324a;
-    --overlay-panel-closing-color: #0f466b;
+  .overlay__panel--creative-ai,
+  .overlay__panel.theme-creative-ai {
+    --panel-bg: linear-gradient(160deg, #fff0d2 0%, #f5b860 48%, #b9582f 100%);
+    --panel-text: #24140d;
+    --panel-heading: #4c1f12;
+    --panel-frame: #8a3f20;
+    --panel-muted: #693018;
+    --panel-link: #7c351b;
+  }
+
+  .overlay__panel--ethics,
+  .overlay__panel.theme-ethics-life-protection {
+    --panel-bg: linear-gradient(160deg, #fbf4df 0%, #dec48d 52%, #9d7a42 100%);
+    --panel-text: #211a10;
+    --panel-heading: #3b2b14;
+    --panel-frame: #8f6d2e;
+    --panel-muted: #6f5429;
+    --panel-link: #70501f;
+  }
+
+  .overlay__panel--spotify-digger,
+  .overlay__panel.theme-spotify-digger {
+    --panel-bg: linear-gradient(160deg, #eef8ff 0%, #b9d8e8 50%, #668da4 100%);
+    --panel-text: #0f1d26;
+    --panel-heading: #122733;
+    --panel-frame: #47748b;
+    --panel-muted: #2f637d;
+    --panel-link: #245b75;
+    --overlay-panel-bg-image: none !important;
+  }
+
+  .overlay__panel--haiku-cosmos,
+  .overlay__panel.theme-haiku-cosmos {
+    --panel-bg: linear-gradient(160deg, #eaf5ff 0%, #8fbbe4 45%, #4f5fa8 100%);
+    --panel-text: #0e1630;
+    --panel-heading: #142659;
+    --panel-frame: #3f6fc2;
+    --panel-muted: #334b9a;
+    --panel-link: #234eaf;
     border: 0;
     opacity: 1;
   }
 
-  .overlay__panel.overlay__panel--spotify-digger,
-  .overlay__panel.theme-spotify-digger {
-    --mobile-frame-color: #9fdcff;
-    --mobile-frame-glow: rgba(90, 169, 255, 0.12);
-    --overlay-panel-bg-image: none !important;
-  }
-
-  .overlay__panel--ai-guide {
-    --mobile-frame-color: #6aae53;
-    --mobile-frame-glow: rgba(84, 140, 72, 0.1);
-    --overlay-panel-close-color: rgba(235, 244, 214, 0.92);
-    --overlay-panel-close-bg: rgba(8, 24, 16, 0.32);
-    --overlay-panel-close-border: rgba(190, 170, 92, 0.42);
-    --overlay-panel-close-shadow: rgba(84, 140, 72, 0.1);
-    --overlay-panel-close-hover-color: rgba(239, 246, 219, 0.96);
-    --overlay-panel-close-hover-border: rgba(196, 174, 96, 0.54);
-    --overlay-panel-close-hover-bg: rgba(16, 43, 27, 0.42);
-    --overlay-panel-status-color: rgba(216, 235, 205, 0.82);
-    --overlay-panel-title-color: rgba(235, 244, 214, 0.96);
-    --overlay-panel-title-shadow: rgba(72, 126, 67, 0.18);
-    --overlay-panel-lead-color: rgba(230, 238, 221, 0.9);
-    --overlay-panel-text-color: rgba(230, 238, 221, 0.9);
-    --overlay-panel-closing-color: rgba(211, 190, 121, 0.9);
-  }
-
-
-  .overlay__panel--ethics .overlay__status,
-  .overlay__panel--ethics .overlay__title,
-  .overlay__panel--ethics .overlay__lead,
-  .overlay__panel--ethics .overlay__text,
-  .overlay__panel--ethics .overlay__closing,
-  .overlay__panel--ethics .overlay__close {
-    text-shadow: none;
-  }
-
   .overlay__panel--ai-guide::before,
   .overlay__panel--creative-ai::before,
-  .overlay__panel--haiku-cosmos::before {
-    content: none;
-    display: none !important;
-  }
-
-  .overlay__panel--ethics::before,
-  .overlay__panel--ethics::after {
-    content: none;
-    display: none !important;
-  }
-
   .overlay__panel--haiku-cosmos::before,
-  .overlay__panel--haiku-cosmos::after {
-    content: none;
-    display: none !important;
-  }
-
+  .overlay__panel--ethics::before,
+  .overlay__panel--ethics::after,
+  .overlay__panel--haiku-cosmos::after,
   .overlay__panel.overlay__panel--spotify-digger::before,
   .overlay__panel.overlay__panel--spotify-digger::after,
   .overlay__panel.theme-spotify-digger::before,
@@ -1073,6 +1050,7 @@ body {
     inset: var(--mobile-frame-inset);
     z-index: 1;
     display: block;
+    color: var(--panel-frame);
     pointer-events: none;
   }
 
@@ -1096,7 +1074,7 @@ body {
   .overlay__panel--haiku-cosmos .overlay__content,
   .overlay__panel--spotify-digger .overlay__content {
     position: absolute;
-    z-index: 2;
+    z-index: 3;
     inset: clamp(64px, 17vw, 92px) clamp(36px, 10vw, 74px) clamp(34px, 10vw, 62px);
     display: flex;
     flex-direction: column;
@@ -1105,13 +1083,13 @@ body {
     padding: clamp(14px, 4vw, 22px);
     border: 0;
     border-radius: clamp(18px, 5vw, 28px);
+    background: none;
+    box-shadow: none;
   }
 
   .overlay__panel--ai-guide .overlay__content {
-    z-index: 3;
     inset: clamp(72px, 18vw, 102px) clamp(38px, 10.5vw, 78px) clamp(42px, 11vw, 68px);
   }
-
 
   .overlay__panel--ethics .overlay__content {
     position: absolute;
@@ -1124,16 +1102,31 @@ body {
     padding: clamp(18px, 4.8vw, 28px) clamp(16px, 4.6vw, 26px) clamp(14px, 4vw, 22px);
     border: 0;
     border-radius: 0;
+    background: none;
+    box-shadow: none;
   }
 
-
   .overlay__panel--haiku-cosmos .overlay__content {
-    z-index: 3;
     border: 0;
     border-radius: 0;
     opacity: 1;
   }
 
+  .overlay__panel--ai-guide .overlay__status,
+  .overlay__panel--ai-guide .overlay__title,
+  .overlay__panel--ai-guide .overlay__lead,
+  .overlay__panel--ai-guide .overlay__text,
+  .overlay__panel--ai-guide .overlay__closing,
+  .overlay__panel--creative-ai .overlay__status,
+  .overlay__panel--creative-ai .overlay__title,
+  .overlay__panel--creative-ai .overlay__lead,
+  .overlay__panel--creative-ai .overlay__text,
+  .overlay__panel--creative-ai .overlay__closing,
+  .overlay__panel--ethics .overlay__status,
+  .overlay__panel--ethics .overlay__title,
+  .overlay__panel--ethics .overlay__lead,
+  .overlay__panel--ethics .overlay__text,
+  .overlay__panel--ethics .overlay__closing,
   .overlay__panel--haiku-cosmos .overlay__status,
   .overlay__panel--haiku-cosmos .overlay__title,
   .overlay__panel--haiku-cosmos .overlay__lead,
@@ -1142,45 +1135,66 @@ body {
   .overlay__panel--haiku-cosmos .overlay__feature-label,
   .overlay__panel--haiku-cosmos .overlay__feature-text,
   .overlay__panel--haiku-cosmos .overlay__closing,
-  .overlay__panel--haiku-cosmos .overlay__actions {
+  .overlay__panel--spotify-digger .overlay__status,
+  .overlay__panel--spotify-digger .overlay__title,
+  .overlay__panel--spotify-digger .overlay__lead,
+  .overlay__panel--spotify-digger .overlay__text,
+  .overlay__panel--spotify-digger .overlay__closing,
+  .overlay__panel .overlay__actions {
     text-shadow: none;
     opacity: 1;
     mix-blend-mode: normal;
   }
 
-  .overlay__panel--haiku-cosmos .overlay__close {
-    text-shadow: none;
-    opacity: 1;
-    mix-blend-mode: normal;
+  .overlay__panel--haiku-cosmos .overlay__feature {
+    background: none;
+    box-shadow: none;
   }
 
-  .overlay__panel--haiku-cosmos .overlay__feature-label {
-    color: #0b7db8;
+  .overlay__panel--haiku-cosmos .overlay__feature-label,
+  .overlay__panel--spotify-digger .overlay__status,
+  .overlay__panel--ai-guide .overlay__status,
+  .overlay__panel--creative-ai .overlay__status,
+  .overlay__panel--ethics .overlay__status {
+    color: var(--panel-muted);
   }
 
   .overlay__panel--haiku-cosmos .overlay__feature-text {
-    color: #3e6177;
+    color: var(--panel-text);
   }
 
   .overlay__panel:not(.overlay__panel--ethics) .overlay__scroll,
   .overlay__panel--ai-guide .overlay__scroll,
   .overlay__panel--creative-ai .overlay__scroll,
   .overlay__panel--haiku-cosmos .overlay__scroll,
-  .overlay__panel--spotify-digger .overlay__scroll {
+  .overlay__panel--spotify-digger .overlay__scroll,
+  .overlay__panel--ethics .overlay__scroll {
     flex: 1 1 auto;
     min-height: 0;
     overflow-y: auto;
     padding-right: 0.55rem;
     scrollbar-width: thin;
+    background: none;
+    box-shadow: none;
+  }
+
+  .overlay__panel--ethics .overlay__scroll {
+    display: block;
+    padding-top: 0;
+  }
+
+  .overlay__panel--ethics .overlay__scroll::-webkit-scrollbar-track {
+    background: none;
   }
 
   .overlay__panel:not(.overlay__panel--ethics) .overlay__actions,
   .overlay__panel--ai-guide .overlay__actions,
   .overlay__panel--creative-ai .overlay__actions,
   .overlay__panel--haiku-cosmos .overlay__actions,
-  .overlay__panel--spotify-digger .overlay__actions {
+  .overlay__panel--spotify-digger .overlay__actions,
+  .overlay__panel--ethics .overlay__actions {
     position: relative;
-    z-index: 3;
+    z-index: 4;
     flex: 0 0 auto;
     display: flex;
     justify-content: center;
@@ -1192,26 +1206,37 @@ body {
   .overlay__panel--ai-guide .overlay__close,
   .overlay__panel--creative-ai .overlay__close,
   .overlay__panel--haiku-cosmos .overlay__close,
-  .overlay__panel--spotify-digger .overlay__close {
+  .overlay__panel--spotify-digger .overlay__close,
+  .overlay__panel--ethics .overlay__close {
     position: relative;
-    z-index: 4;
+    z-index: 5;
     min-height: 44px;
+    color: var(--overlay-panel-close-color);
+    background: var(--overlay-panel-close-bg);
+    border-color: var(--overlay-panel-close-border);
+    box-shadow: none;
+    text-shadow: none;
+    opacity: 1;
+    mix-blend-mode: normal;
   }
 
-  .overlay__panel--ai-guide .overlay__close {
-    color: rgba(235, 244, 214, 0.92);
-  }
-
-  .overlay__panel--spotify-digger .overlay__close {
-    color: #eaf7ff;
+  .overlay__panel:not(.overlay__panel--ethics) .overlay__close:hover,
+  .overlay__panel:not(.overlay__panel--ethics) .overlay__close:focus-visible,
+  .overlay__panel--ethics .overlay__close:hover,
+  .overlay__panel--ethics .overlay__close:focus-visible {
+    color: var(--overlay-panel-close-hover-color);
+    background: var(--overlay-panel-close-hover-bg);
+    border-color: var(--overlay-panel-close-hover-border);
   }
 
   .overlay__panel:not(.overlay__panel--ethics) .overlay__title,
   .overlay__panel--ai-guide .overlay__title,
   .overlay__panel--creative-ai .overlay__title,
   .overlay__panel--haiku-cosmos .overlay__title,
-  .overlay__panel--spotify-digger .overlay__title {
+  .overlay__panel--spotify-digger .overlay__title,
+  .overlay__panel--ethics .overlay__title {
     font-size: clamp(1.8rem, 9.5vw, 2.8rem);
+    color: var(--panel-heading);
   }
 
   .overlay__panel:not(.overlay__panel--ethics) .overlay__text,
@@ -1220,45 +1245,8 @@ body {
   .overlay__panel--haiku-cosmos .overlay__text {
     font-size: clamp(0.9rem, 3.3vw, 1rem);
   }
-
-  .overlay__panel--ethics .overlay__scroll {
-    flex: 1 1 auto;
-    min-height: 0;
-    overflow-y: auto;
-    padding-right: 0.55rem;
-    scrollbar-width: thin;
-  }
-
-  .overlay__panel--ethics .overlay__scroll::-webkit-scrollbar-track {
-    background: none;
-  }
-
-  .overlay__panel--ethics .overlay__actions {
-    position: relative;
-    z-index: 4;
-    flex: 0 0 auto;
-    display: flex;
-    justify-content: center;
-    padding-top: clamp(14px, 4vw, 22px);
-    margin-top: 0;
-  }
-
-  .overlay__panel--ethics .overlay__close {
-    position: relative;
-    z-index: 5;
-    min-height: 44px;
-    color: var(--overlay-panel-close-color);
-    background: var(--overlay-panel-close-bg);
-    border-color: var(--overlay-panel-close-border);
-    box-shadow: 0 0 14px var(--overlay-panel-close-shadow);
-    text-shadow: none;
-  }
-
-  .overlay__panel--ethics .overlay__title {
-    font-size: clamp(1.8rem, 9.5vw, 2.8rem);
-  }
-
 }
+
 
 
 .options-panel {
