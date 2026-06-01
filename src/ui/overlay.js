@@ -1149,14 +1149,14 @@ export function createOverlay({ onClose, assetManager = null } = {}) {
 
   const mobileFrameLayout = createMobileFrameLayoutController(mobileFrameEl, panelEl);
   const mobileFrameReady = mobileFrameEl ? loadMobileFrameSvgs(mobileFrameEl).finally(mobileFrameLayout.schedule) : Promise.resolve();
-  const spotifyDiggerMobileMedia = window.matchMedia('(max-width: 768px)');
+  const mobilePanelMedia = window.matchMedia('(max-width: 768px)');
   let activeGateId = null;
 
   const applyPanelBackground = (gateId) => {
     const panelBackgroundPath = GLYPH_PANEL_BACKGROUNDS[gateId];
-    const shouldSuppressDesktopBackground = gateId === 'spotify-digger' && spotifyDiggerMobileMedia.matches;
+    const shouldSuppressPanelBackground = mobilePanelMedia.matches;
 
-    if (!panelBackgroundPath || shouldSuppressDesktopBackground) {
+    if (!panelBackgroundPath || shouldSuppressPanelBackground) {
       panelEl.style.removeProperty('--overlay-panel-bg-image');
       return;
     }
@@ -1168,7 +1168,7 @@ export function createOverlay({ onClose, assetManager = null } = {}) {
     panelEl.style.setProperty('--overlay-panel-bg-image', `url("${cachedUrl ?? publicPath(panelBackgroundPath)}")`);
   };
 
-  spotifyDiggerMobileMedia.addEventListener('change', () => {
+  mobilePanelMedia.addEventListener('change', () => {
     if (activeGateId) {
       applyPanelBackground(activeGateId);
     }

@@ -150,11 +150,6 @@ body {
 .overlay[hidden] { pointer-events: none; }
 .overlay__backdrop { position: absolute; inset: 0; background: rgba(2, 4, 7, 0.72); }
 .overlay__panel {
-  --panel-mobile-bg: linear-gradient(180deg, rgba(5, 10, 12, 0.68), rgba(10, 18, 18, 0.78));
-  --panel-mobile-content-bg: linear-gradient(180deg, rgba(5, 10, 12, 0.36), rgba(10, 18, 18, 0.48));
-  --panel-mobile-content-border: rgba(216, 226, 232, 0.12);
-  --panel-mobile-shadow: 0 0 44px rgba(255, 255, 255, 0.08);
-  --panel-mobile-backdrop-filter: blur(5px);
   --panel-eyebrow: #8fa1b9;
   --panel-title: #e6edf3;
   --panel-text: #c4d1e2;
@@ -298,10 +293,6 @@ body {
 .overlay__panel--ai-guide,
 .overlay__panel--creative-ai,
 .overlay__panel--haiku-cosmos {
-  --panel-mobile-bg: linear-gradient(180deg, rgba(5, 12, 10, 0.68), rgba(9, 20, 15, 0.78));
-  --panel-mobile-content-bg: linear-gradient(180deg, rgba(5, 15, 10, 0.32), rgba(8, 20, 14, 0.46));
-  --panel-mobile-content-border: rgba(211, 190, 121, 0.14);
-  --panel-mobile-shadow: 0 0 34px rgba(72, 126, 67, 0.08);
   --panel-eyebrow: rgba(224, 240, 214, 0.84);
   --panel-title: rgba(235, 244, 214, 0.96);
   --panel-text: rgba(230, 238, 221, 0.9);
@@ -337,10 +328,6 @@ body {
 
 .overlay__panel--creative-ai,
 .overlay__panel.theme-creative-ai {
-  --panel-mobile-bg: linear-gradient(160deg, rgba(20, 10, 4, 0.66), rgba(35, 16, 6, 0.72) 58%, rgba(13, 8, 6, 0.76));
-  --panel-mobile-content-bg: linear-gradient(180deg, rgba(34, 14, 5, 0.34), rgba(14, 8, 5, 0.5));
-  --panel-mobile-content-border: rgba(224, 180, 95, 0.18);
-  --panel-mobile-shadow: 0 0 34px rgba(240, 160, 64, 0.12);
   --mobile-frame-color: #e0b45f;
   --mobile-frame-glow: rgba(240, 160, 64, 0.14);
   --panel-eyebrow: #d8a85a;
@@ -515,10 +502,6 @@ body {
 
 .overlay__panel--spotify-digger,
 .overlay__panel.theme-spotify-digger {
-  --panel-mobile-bg: linear-gradient(180deg, rgba(6, 12, 22, 0.68), rgba(11, 18, 30, 0.76));
-  --panel-mobile-content-bg: linear-gradient(180deg, rgba(6, 14, 26, 0.5), rgba(10, 17, 29, 0.56));
-  --panel-mobile-content-border: rgba(160, 220, 255, 0.22);
-  --panel-mobile-shadow: 0 0 34px rgba(90, 169, 255, 0.1);
   --mobile-frame-color: #9fdcff;
   --mobile-frame-glow: rgba(90, 169, 255, 0.14);
   --overlay-panel-scrollbar: rgba(159, 220, 255, 0.32);
@@ -659,10 +642,6 @@ body {
 
 .overlay__panel--haiku-cosmos,
 .overlay__panel.theme-haiku-cosmos {
-  --panel-mobile-bg: linear-gradient(180deg, rgba(6, 11, 30, 0.66), rgba(22, 14, 48, 0.74) 58%, rgba(5, 19, 36, 0.78));
-  --panel-mobile-content-bg: linear-gradient(180deg, rgba(8, 18, 44, 0.36), rgba(16, 10, 36, 0.48));
-  --panel-mobile-content-border: rgba(75, 214, 237, 0.18);
-  --panel-mobile-shadow: 0 0 34px rgba(30, 190, 225, 0.12);
   --mobile-frame-color: #4bd6ed;
   --mobile-frame-glow: rgba(30, 190, 225, 0.2);
   --overlay-panel-scrollbar: rgba(19, 126, 174, 0.28);
@@ -762,10 +741,6 @@ body {
 
 .overlay__panel--ethics,
 .overlay__panel.theme-ethics-life-protection {
-  --panel-mobile-bg: linear-gradient(180deg, rgba(250, 244, 229, 0.98), rgba(232, 214, 177, 0.96));
-  --panel-mobile-content-bg: linear-gradient(145deg, rgba(255, 250, 236, 0.92), rgba(246, 235, 209, 0.88));
-  --panel-mobile-content-border: rgba(150, 109, 39, 0.35);
-  --panel-mobile-shadow: 0 18px 50px rgba(30, 20, 10, 0.28);
   --mobile-frame-color: #c79a44;
   --mobile-frame-glow: rgba(154, 111, 38, 0.22);
   --overlay-panel-scrollbar: rgba(154, 111, 38, 0.45);
@@ -965,21 +940,19 @@ body {
     padding: 0;
     border: 0;
     border-radius: 18px;
-    background: transparent;
+    background: none;
+    background-image: none;
     box-shadow: none;
     backdrop-filter: none;
     overflow: hidden;
     isolation: isolate;
   }
 
-  .overlay--ethics .overlay__backdrop {
+  .overlay__backdrop {
     display: none;
-    background: #f4ead6;
   }
 
   .overlay__panel--ethics {
-    --panel-mobile-bg: linear-gradient(180deg, #fbf4e5 0%, #f1dfbd 52%, #e8d0a4 100%);
-    --panel-mobile-shadow: 0 18px 50px #8a6a3a;
     --mobile-frame-color: #6f5425;
     --mobile-frame-glow: #8b6828;
     --overlay-panel-scrollbar: #8b6828;
@@ -1001,20 +974,18 @@ body {
     height: calc(100dvh - 20px);
     max-height: none;
     padding: 0;
-    border: 1px solid #8b6828;
+    border: 0;
     border-radius: 18px;
-    background: var(--panel-mobile-bg);
-    box-shadow: var(--panel-mobile-shadow);
+    background: none;
+    background-image: none;
+    box-shadow: none;
+    backdrop-filter: none;
     overflow: hidden;
     isolation: isolate;
     text-shadow: none;
   }
 
   .overlay__panel--haiku-cosmos {
-    --panel-mobile-bg: #f6fbff;
-    --panel-mobile-content-bg: transparent;
-    --panel-mobile-content-border: transparent;
-    --panel-mobile-shadow: none;
     --mobile-frame-color: #12324a;
     --mobile-frame-glow: transparent;
     --overlay-panel-scrollbar: #12324a;
@@ -1031,9 +1002,7 @@ body {
     --overlay-panel-lead-color: #102a43;
     --overlay-panel-text-color: #12324a;
     --overlay-panel-closing-color: #0f466b;
-    background: var(--panel-mobile-bg);
     border: 0;
-    box-shadow: none;
     opacity: 1;
   }
 
@@ -1042,8 +1011,6 @@ body {
     --mobile-frame-color: #9fdcff;
     --mobile-frame-glow: rgba(90, 169, 255, 0.12);
     --overlay-panel-bg-image: none !important;
-    background: transparent;
-    background-image: none !important;
   }
 
   .overlay__panel--ai-guide {
@@ -1079,23 +1046,18 @@ body {
   .overlay__panel--haiku-cosmos::before {
     content: none;
     display: none !important;
-    background-image: none !important;
   }
 
   .overlay__panel--ethics::before,
   .overlay__panel--ethics::after {
     content: none;
     display: none !important;
-    background: #f4ead6;
-    background-image: none !important;
   }
 
   .overlay__panel--haiku-cosmos::before,
   .overlay__panel--haiku-cosmos::after {
     content: none;
     display: none !important;
-    background: transparent;
-    background-image: none !important;
   }
 
   .overlay__panel.overlay__panel--spotify-digger::before,
@@ -1104,8 +1066,6 @@ body {
   .overlay__panel.theme-spotify-digger::after {
     content: none;
     display: none !important;
-    background: transparent;
-    background-image: none !important;
   }
 
   .mobile-svg-frame {
@@ -1143,11 +1103,8 @@ body {
     min-height: 0;
     margin: 0;
     padding: clamp(14px, 4vw, 22px);
-    background: var(--panel-mobile-content-bg);
     border: 0;
     border-radius: clamp(18px, 5vw, 28px);
-    box-shadow: var(--panel-mobile-shadow);
-    backdrop-filter: none;
   }
 
   .overlay__panel--ai-guide .overlay__content {
@@ -1167,16 +1124,13 @@ body {
     padding: clamp(18px, 4.8vw, 28px) clamp(16px, 4.6vw, 26px) clamp(14px, 4vw, 22px);
     border: 0;
     border-radius: 0;
-    box-shadow: none;
   }
 
 
   .overlay__panel--haiku-cosmos .overlay__content {
     z-index: 3;
-    background: transparent;
     border: 0;
     border-radius: 0;
-    box-shadow: none;
     opacity: 1;
   }
 
@@ -1190,16 +1144,12 @@ body {
   .overlay__panel--haiku-cosmos .overlay__closing,
   .overlay__panel--haiku-cosmos .overlay__actions {
     text-shadow: none;
-    background: transparent;
-    box-shadow: none;
-    backdrop-filter: none;
     opacity: 1;
     mix-blend-mode: normal;
   }
 
   .overlay__panel--haiku-cosmos .overlay__close {
     text-shadow: none;
-    box-shadow: none;
     opacity: 1;
     mix-blend-mode: normal;
   }
@@ -1212,11 +1162,6 @@ body {
     color: #3e6177;
   }
 
-  .overlay__panel--haiku-cosmos .overlay__close:hover,
-  .overlay__panel--haiku-cosmos .overlay__close:focus-visible {
-    box-shadow: none;
-  }
-
   .overlay__panel:not(.overlay__panel--ethics) .overlay__scroll,
   .overlay__panel--ai-guide .overlay__scroll,
   .overlay__panel--creative-ai .overlay__scroll,
@@ -1226,9 +1171,6 @@ body {
     min-height: 0;
     overflow-y: auto;
     padding-right: 0.55rem;
-    background: transparent;
-    box-shadow: none;
-    backdrop-filter: none;
     scrollbar-width: thin;
   }
 
@@ -1284,12 +1226,11 @@ body {
     min-height: 0;
     overflow-y: auto;
     padding-right: 0.55rem;
-    box-shadow: none;
     scrollbar-width: thin;
   }
 
   .overlay__panel--ethics .overlay__scroll::-webkit-scrollbar-track {
-    background: #efe0bf;
+    background: none;
   }
 
   .overlay__panel--ethics .overlay__actions {
