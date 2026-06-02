@@ -37,3 +37,24 @@ Rules in current MVP:
 - Gate/content metadata remains the source of the active panel topic and runtime `gateId`.
 - The overlay UI maps each `gateId` to a stable `data-panel-theme` value for CSS-owned mobile panel theming.
 - In particular, the content/runtime gate `ethics-life-protection` maps to `data-panel-theme="ethics"` so mobile CSS can avoid conflicts between long-form gate IDs, legacy `theme-*` classes, and `.overlay__panel--ethics` selectors.
+
+
+## Planned shared PL/EN content model for dual modes
+
+Status: planned / documentation-only. The current active source remains `src/content/portfolioNodes.js`.
+
+Future direction:
+- The content model should support bilingual PL/EN content in a structured model.
+- `Classic 2D` and `Experience 3D` should consume the same gate IDs and the same content records.
+- Text must not be duplicated separately across 2D and 3D implementations.
+- The current five portfolio gates remain the conceptual mapping:
+  1. AI Guide
+  2. DIG Engine / Spotify Digger, preserving current legacy naming where applicable
+  3. Haiku Cosmos
+  4. Creative AI
+  5. Ethics / Life Protection
+- Runtime IDs must not be renamed unless a separate migration task is created.
+- User-facing labels may evolve before final copy is locked.
+- Current copy remains draft; final Polish and English text is not accepted yet.
+
+Planned rule: content records should become the source of truth for both the future flat `Classic 2D` panels and the current `Experience 3D` overlay panels.

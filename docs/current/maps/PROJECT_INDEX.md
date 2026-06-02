@@ -69,7 +69,8 @@ Do not read the whole `docs/current` tree by default.
 ### Technical docs
 - `docs/current/technical/README.md` — technical section overview.
 - `docs/current/technical/ARCHITECTURE.md` — implemented runtime module structure.
-- `docs/current/technical/FRONTEND_RUNTIME_MODEL.md` — runtime layering, vendored Three.js import policy, and Vite/GitHub Pages dual-runtime asset model.
+- `docs/current/technical/ENTRY_FLOW_AND_MODES_MODEL.md` — planned language/mode entry flow and dual Classic 2D / Experience 3D contract.
+- `docs/current/technical/FRONTEND_RUNTIME_MODEL.md` — runtime layering, vendored Three.js import policy, planned pre-runtime entry shell, and Vite/GitHub Pages dual-runtime asset model.
 - `docs/current/technical/THREE_SCENE_MODEL.md` — scene modules and MVP behavior.
 - `docs/current/technical/CONTENT_MODEL.md` — content schema and draft gate text model.
 - `docs/current/technical/DEPLOYMENT_MODEL.md` — Vite local/build and GitHub Pages deployment model under `/tomasz-talik-portfolio/`.
@@ -103,6 +104,9 @@ UI/content/style files:
 - `src/ui/*` — HTML overlay and hover label modules.
 - `src/content/portfolioNodes.js` — draft portfolio gate content.
 - `src/styles/main.css` — atmospheric base and UI styles.
+
+
+Future/planned entry-shell candidates are conceptual only at this stage. No current implemented file exists yet for language selection, mode selection, `Classic 2D` boot, or conditional `Experience 3D` boot. Do not treat those candidates as current runtime entrypoints until a separate implementation task creates them.
 
 Vendored Three.js files:
 - `src/vendor/three.js` — bridge to vendored Three.js module.

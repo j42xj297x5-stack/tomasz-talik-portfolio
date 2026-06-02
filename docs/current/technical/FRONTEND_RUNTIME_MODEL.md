@@ -8,6 +8,21 @@ Layers:
 3. Overlay UI layer (`src/ui/*` + `src/styles/main.css`) — readable HTML hover label + overlay detail panel.
 4. Content layer (`src/content/portfolioNodes.js`) — draft node content model.
 
+## Planned pre-runtime entry shell (documentation-only)
+
+Future direction adds a lightweight layer before the current Three.js runtime:
+
+1. Entry shell / pre-runtime UI — the first visible UI, loaded before heavy 3D assets.
+2. Language state — stores either `Polski` or `English` for the current visit.
+3. Mode state — stores either `Classic 2D` / `Klasyczne 2D` or `Experience 3D` / `Doświadczenie 3D`.
+4. Conditional runtime boot:
+   - `Classic 2D` boot — future lightweight, flat, symbolic UI path that should avoid Three.js unless a later decision changes that.
+   - `Experience 3D` boot — current Three.js runtime starts, loader runs, assets load, and existing scene behavior continues.
+
+Status of this layer: planned / documentation-only. The active implemented runtime remains the current Three.js experience described below. No runtime code, CSS, assets, Vite config, public-path rules, or deployment rules are changed by this document update.
+
+Planned loading rule: heavy 3D assets should eventually load only after the visitor selects `Experience 3D`; they should not be eagerly loaded by the entry shell or by `Classic 2D`. GitHub Pages compatibility and the existing base-path/public asset model must remain unchanged.
+
 ## MVP runtime status (2026-05-22)
 - Monkey runtime loader now successfully resolves `/glb/monkey.glb` locally and keeps placeholder fallback if GLTFLoader or asset loading fails.
 - GLTFLoader import target is vendored: `vendor/three/examples/jsm/loaders/GLTFLoader.js` (if present).
