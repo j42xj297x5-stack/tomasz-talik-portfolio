@@ -74,3 +74,14 @@ Concept docs -> Technical model -> Runtime implementation -> Decision updates ->
 - Mobile panel backgrounds/contrast are CSS/UI dependencies and must not depend on Three.js scene visibility.
 - Desktop panel background behavior and mobile panel background behavior must remain separated.
 - Snapshot reference: `docs/current/audits/snapshots/2026-06-02_17-36-03__snapshot__mobile-glyph-panels-baseline.md`.
+
+
+## Planned entry flow and dual-mode dependency direction
+
+- Concept docs (`concept/CONCEPT_AND_ROADMAP.md`, `concept/INTERACTION_MODEL.md`, and visual tone documents when needed) inform `technical/ENTRY_FLOW_AND_MODES_MODEL.md`.
+- `technical/ENTRY_FLOW_AND_MODES_MODEL.md` informs the planned pre-runtime layer in `technical/FRONTEND_RUNTIME_MODEL.md`.
+- `technical/CONTENT_MODEL.md` informs both future `Classic 2D` and current/future `Experience 3D` content rendering.
+- Future entry shell implementation must not break the current Three.js runtime.
+- Future `Experience 3D` boot depends on mode selection and should start loading 3D assets only after that mode is selected.
+- Future `Classic 2D` mode depends on shared content records, stable gate IDs, and lightweight UI assets rather than the current Three.js scene unless a later explicit decision changes that.
+- The current Vite/GitHub Pages base-path and public asset rules remain dependencies for any implementation path.

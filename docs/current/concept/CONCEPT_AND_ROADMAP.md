@@ -145,9 +145,33 @@ Kolorystyczne kierunki:
 
 ---
 
+# 4A. Planowany przepływ wejścia: język → tryb → doświadczenie
+
+Portfolio ewoluuje z założenia pojedynczego wejścia 3D-first w świadomy model dwóch doświadczeń. Poprzedni koncept sceny 3D pozostaje ważny jako pełne, atmosferyczne `Experience 3D`, ale przyszła strona nie powinna zakładać, że każdy użytkownik od razu uruchamia ciężką scenę 3D.
+
+Planowany przepływ wejścia:
+
+1. Najpierw użytkownik wybiera język:
+   - `Polski`,
+   - `English`.
+2. Następnie użytkownik wybiera tryb doświadczenia:
+   - po polsku: `Klasyczne 2D` albo `Doświadczenie 3D`,
+   - po angielsku: `Classic 2D` albo `Experience 3D`.
+3. Dopiero potem uruchamia się właściwa ścieżka:
+   - `Classic 2D` — przyszły lekki, płaski, retro-symboliczny tryb portfolio,
+   - `Experience 3D` — obecna scena Three.js z loaderem, centralną małpą, orbitującymi glifami i panelami.
+
+`Classic 2D` nie jest awaryjnym fallbackiem ani uboższą kopią sceny 3D. To celowo zaprojektowane drugie doświadczenie: szybkie, czytelne, spokojne, symboliczne i inspirowane dawnymi interfejsami Atari/Commodore bez memiczności, hałasu i żartu. Powinno odpowiadać wersji 3D przez centralną medytującą małpę widzianą z przodu, pięć glifów na płaskim okręgu oraz czytelne panele otwierane z tych samych bram portfolio.
+
+`Experience 3D` zachowuje dotychczasowy kierunek: pełna scena Three.js pozostaje głównym doświadczeniem atmosferycznym, ale w przyszłej architekturze jej boot powinien nastąpić dopiero po wyborze tego trybu.
+
+Model treści powinien ewoluować w stronę wspólnego źródła prawdy dla obu trybów i przyszłej struktury PL/EN. Nie należy dublować tekstów między 2D i 3D, a finalna kopia pozostaje na tym etapie niezamknięta.
+
+---
+
 # 5. Model interakcji
 
-Strona startuje jako scena 3D.
+W dotychczasowym koncepcie strona startowała jako scena 3D. W przyszłym modelu scena 3D pozostaje trybem `Experience 3D`, uruchamianym po wyborze języka i trybu w lekkiej warstwie wejściowej.
 
 Proponowany przebieg wejścia:
 

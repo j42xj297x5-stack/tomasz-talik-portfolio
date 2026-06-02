@@ -149,3 +149,24 @@
 3. Loader performance/mobile staging remains an open issue; next investigation should evaluate staged preload groups and mobile concurrency limits before further loader optimization.
 4. Snapshot recorded: `docs/current/audits/snapshots/2026-05-30_07-10-52__snapshot__galaxy-progress-loader-mobile-runtime.md`.
 5. This decision is documentation-only and does not change runtime code, scene logic, runtime configuration, assets, loader optimization, mobile performance, or visual tuning.
+
+
+## 2026-06-02 — Portfolio direction expands to language-first, dual-mode entry
+
+Status: planned / documentation accepted.
+
+Decision: The portfolio direction expands from a single 3D-first entry into a language-first entry shell followed by a dual-mode choice: `Classic 2D` / `Klasyczne 2D` or `Experience 3D` / `Doświadczenie 3D`.
+
+Rationale:
+1. Improves accessibility by giving visitors a readable language and mode choice before the experience starts.
+2. Avoids forcing heavy 3D on every visitor or device.
+3. Preserves the full atmospheric current Three.js experience as `Experience 3D`.
+4. Creates a deliberate lightweight `Classic 2D` path that is fast, readable, calm, retro-symbolic, and first-class rather than degraded fallback.
+5. Prepares the content model for future PL/EN bilingual structure.
+
+Consequences:
+1. Future runtime needs a pre-runtime entry shell.
+2. 3D boot should become conditional on selecting `Experience 3D`.
+3. Content model should evolve toward a shared PL/EN source of truth consumed by both modes.
+4. `Classic 2D` becomes a first-class experience, not a degraded fallback.
+5. Current Three.js runtime, deployment/public-path rules, runtime IDs, assets, CSS, and implementation remain unchanged until separate implementation tasks are accepted.
