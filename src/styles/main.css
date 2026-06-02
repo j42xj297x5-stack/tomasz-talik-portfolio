@@ -1330,6 +1330,10 @@ body {
     --panel-frame: #959661;
   }
 
+  .overlay__panel[data-panel-theme="ai-guide"] .overlay__close {
+    color: #172218;
+  }
+
   .overlay__panel[data-panel-theme="creative-ai"] {
     --panel-bg: linear-gradient(160deg, #13130d 0%, #1a130b 45%, #56280c 78%, #9c5517 100%);
     --panel-text: #fff0d2;
