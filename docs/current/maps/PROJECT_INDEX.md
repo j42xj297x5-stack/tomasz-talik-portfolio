@@ -84,6 +84,7 @@ Do not read the whole `docs/current` tree by default.
 - `docs/current/audits/snapshots/2026-05-28_18-08-09__snapshot__portfolio-ai-guide-progression-sun-moon.md` — documentation checkpoint for AI Guide panel direction, scene progression, sun/moon orbit state, and related protective decisions.
 - `docs/current/audits/snapshots/2026-05-29_19-59-42__snapshot__dual-runtime-github-pages-deployment.md` — first working dual-runtime deployment snapshot for local Vite and GitHub Pages.
 - `docs/current/audits/snapshots/2026-05-30_07-10-52__snapshot__galaxy-progress-loader-mobile-runtime.md` — documentation checkpoint for galaxy sprites, atmosphere progression, loading diagnostics, debug import/export, deployment-safe public asset paths, and mobile pointer/orientation/input runtime baseline.
+- `docs/current/audits/snapshots/2026-06-02_17-36-03__snapshot__mobile-glyph-panels-baseline.md` — checkpoint dla mobilnych paneli pięciu glifów, data-panel-theme, nieprzezroczystych teł, kontrastu tekstu, SVG frame/ornament layering i no-regression zasad.
 
 ## Runtime entrypoints
 

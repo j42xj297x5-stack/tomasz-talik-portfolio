@@ -32,3 +32,8 @@ Rules in current MVP:
 - All five portfolio nodes now declare GLB glyph visuals via `modelPath` metadata in `portfolioNodes`.
 - Active runtime mapping: AI Guide -> `/glb/glyph_1.glb`, Creative AI -> `/glb/glyph_2.glb`, Ethics / Life Protection -> `/glb/glyph_3.glb`, DIG Engine -> `/glb/glyph_4.glb`, Haiku Cosmos -> `/glb/glyph_5.glb`.
 - Mapping remains content-driven while renderer preserves sphere fallback/collider behavior for hover/click safety.
+
+## Mobile panel theme mapping checkpoint (2026-06-02)
+- Gate/content metadata remains the source of the active panel topic and runtime `gateId`.
+- The overlay UI maps each `gateId` to a stable `data-panel-theme` value for CSS-owned mobile panel theming.
+- In particular, the content/runtime gate `ethics-life-protection` maps to `data-panel-theme="ethics"` so mobile CSS can avoid conflicts between long-form gate IDs, legacy `theme-*` classes, and `.overlay__panel--ethics` selectors.

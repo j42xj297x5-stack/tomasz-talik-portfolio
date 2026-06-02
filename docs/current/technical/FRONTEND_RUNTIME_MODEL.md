@@ -62,3 +62,12 @@ Layers:
 - Fallback behavior remains part of the runtime model: monkey placeholder, node sphere/collider fallback, hover-effect degradation, and loader failure safety are mandatory.
 - Known deployment risks are GitHub Pages cache, browser cache, case-sensitive filenames, large GLB payloads, and missing manually managed binary assets.
 - Milestone snapshot: `docs/current/audits/snapshots/2026-05-29_19-59-42__snapshot__dual-runtime-github-pages-deployment.md`.
+
+## Checkpoint update — mobile glyph panels baseline (2026-06-02)
+- Mobile glyph panels for the five portfolio gates are now documented as a closed readability/theming baseline.
+- The overlay remains an HTML/CSS layer above the Three.js scene; panel readability is handled in `src/styles/main.css` and `src/ui/overlay.js`, not in Three.js.
+- Mobile panel themes use stable `data-panel-theme` values so CSS can style `ai-guide`, `creative-ai`, `ethics`, `spotify-digger`, and `haiku-cosmos` without depending on legacy desktop class names.
+- Text/readability and panel contrast are CSS responsibilities and must not depend on Three.js scene visibility behind the overlay.
+- Mobile panels must not add extra text overlays, glass layers, `backdrop-filter`, or pseudo-element backgrounds.
+- Layering contract: opaque panel background first, SVG frame above it, optional ornament above the frame, and text/controls at the highest readable layer.
+- Snapshot reference: `docs/current/audits/snapshots/2026-06-02_17-36-03__snapshot__mobile-glyph-panels-baseline.md`.

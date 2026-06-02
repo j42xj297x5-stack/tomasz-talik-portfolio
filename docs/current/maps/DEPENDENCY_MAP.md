@@ -67,3 +67,10 @@ Concept docs -> Technical model -> Runtime implementation -> Decision updates ->
 - Mobile input correctness depends on Pointer Events, canvas-bound raycaster/camera coordinate normalization, centralized resize/orientation handling, and CSS pointer-event hardening.
 - Open dependency risk: loader performance on mobile may need stricter staging (`criticalInitial` / `deferredWarm` / `optionalLate`) and concurrency limits.
 - Snapshot reference: `docs/current/audits/snapshots/2026-05-30_07-10-52__snapshot__galaxy-progress-loader-mobile-runtime.md`.
+
+## Mobile glyph panel dependency status (2026-06-02)
+- Mobile panel readability depends on `src/styles/main.css` and `src/ui/overlay.js`.
+- `data-panel-theme` is now the stable mobile theming contract for five glyph panels.
+- Mobile panel backgrounds/contrast are CSS/UI dependencies and must not depend on Three.js scene visibility.
+- Desktop panel background behavior and mobile panel background behavior must remain separated.
+- Snapshot reference: `docs/current/audits/snapshots/2026-06-02_17-36-03__snapshot__mobile-glyph-panels-baseline.md`.
