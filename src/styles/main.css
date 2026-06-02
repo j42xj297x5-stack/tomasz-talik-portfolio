@@ -1838,14 +1838,56 @@ body {
   position: absolute;
   display: grid;
   place-items: center;
-  width: clamp(8.5rem, 24vw, 13.5rem);
+  width: clamp(10rem, 22vw, 18.75rem);
+  max-height: 26.25rem;
+  filter: drop-shadow(0 0 28px rgba(211, 190, 121, 0.1));
+  transform: rotate(var(--monkey-tilt));
+  transform-origin: 50% 82%;
+  transition: filter 0.18s ease, transform 0.26s ease;
+}
+
+.classic-2d__monkey::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  width: min(78%, 15rem);
+  aspect-ratio: 1;
+  border: 1px solid rgba(213, 190, 121, 0.18);
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(213, 190, 121, 0.1), rgba(98, 130, 170, 0.06) 56%, transparent 72%);
+  box-shadow: 0 0 46px rgba(211, 190, 121, 0.08);
+}
+
+.classic-2d__monkey--active {
+  filter: drop-shadow(0 0 32px rgba(213, 190, 121, 0.16));
+}
+
+.classic-2d__monkey-image {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: inherit;
+  object-fit: contain;
+}
+
+.classic-2d__monkey-fallback {
+  position: relative;
+  display: none;
+  place-items: center;
+  width: clamp(8.5rem, 20vw, 13.5rem);
   aspect-ratio: 1;
   border: 1px solid rgba(213, 190, 121, 0.34);
   border-radius: 45% 45% 48% 48%;
   background: radial-gradient(circle at 50% 36%, rgba(159, 124, 80, 0.72), rgba(65, 49, 42, 0.95) 67%);
   box-shadow: 0 0 46px rgba(211, 190, 121, 0.1);
-  transform: rotate(var(--monkey-tilt));
-  transition: transform 0.26s ease;
+}
+
+.classic-2d__monkey--image-error .classic-2d__monkey-image {
+  display: none;
+}
+
+.classic-2d__monkey--image-error .classic-2d__monkey-fallback {
+  display: grid;
 }
 
 .classic-2d__monkey-ear {
@@ -2008,6 +2050,15 @@ body {
     font-size: 0.7rem;
   }
 
+  .classic-2d__monkey {
+    width: clamp(8.125rem, 38vw, 13.75rem);
+    max-height: 19rem;
+  }
+
+  .classic-2d__monkey-fallback {
+    width: clamp(7.5rem, 34vw, 11rem);
+  }
+
   .classic-2d-panel {
     inset: auto 1rem 1rem 1rem;
     width: auto;
@@ -2021,5 +2072,9 @@ body {
   .classic-2d-gate,
   .classic-2d__monkey {
     transition: none;
+  }
+
+  .classic-2d__monkey--active {
+    transform: none;
   }
 }
