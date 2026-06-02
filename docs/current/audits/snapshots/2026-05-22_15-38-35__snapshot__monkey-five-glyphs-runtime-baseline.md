@@ -27,7 +27,7 @@ Glyphs:
 - `public/glb/glyph_1.glb` -> `/glb/glyph_1.glb` -> AI Guide
 - `public/glb/glyph_2.glb` -> `/glb/glyph_2.glb` -> Creative AI
 - `public/glb/glyph_3.glb` -> `/glb/glyph_3.glb` -> Ethics / Life Protection / AI Dharma
-- `public/glb/glyph_4.glb` -> `/glb/glyph_4.glb` -> Spotify Digger
+- `public/glb/glyph_4.glb` -> `/glb/glyph_4.glb` -> DIG Engine
 - `public/glb/glyph_5.glb` -> `/glb/glyph_5.glb` -> Haiku Cosmos
 
 ## 4. TECHNICAL STRUCTURE

@@ -341,7 +341,7 @@ Umiem tłumaczyć AI ludziom, którzy nie wiedzą, od czego zacząć.
 
 ---
 
-## 6.2. Spotify Digger
+## 6.2. DIG Engine
 
 Temat:
 
@@ -597,7 +597,7 @@ AI Guide
   Jak pomagam ludziom
   Praktyczne wdrożenia
 
-Spotify Digger
+DIG Engine
   System muzyczny
   Workflowy
   Integracje API
@@ -730,7 +730,7 @@ Nie wybieramy jeszcze finalnych sformułowań.
 
 Dopiero po potwierdzeniu klimatu i interakcji dodajemy głębsze podstrony / sekcje:
 
-* Spotify Digger,
+* DIG Engine,
 * Haiku Cosmos,
 * AI Workflow,
 * Creative AI,
@@ -1004,7 +1004,7 @@ Cel:
 
 Cel:
 
-* Spotify Digger,
+* DIG Engine,
 * Haiku Cosmos,
 * Creative AI,
 * AI Guide,
@@ -1095,7 +1095,7 @@ Requirements:
 - Add 5 interactive orbiting nodes around the central object.
 - Each node represents a portfolio gate:
   1. AI Guide
-  2. Spotify Digger
+  2. DIG Engine
   3. Haiku Cosmos
   4. Creative AI
   5. Ethics / Life Protection

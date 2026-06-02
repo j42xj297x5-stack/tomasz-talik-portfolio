@@ -87,7 +87,7 @@ Bez przeładowania cyberpunkowego, bez „dyskoteki”, bez zasłaniania central
 - Kolorystyka: złoto + ciepłe białe światło, sakralny blask.
 - Reakcja tła: miękkie złote halo, rozjaśnianie cienia bez tonu apokaliptycznego.
 
-### 4.4 Spotify Digger / API / Programming / Office Systems
+### 4.4 DIG Engine / API / Programming / Office Systems
 - Symbol: biało-niebieski glif techniczny.
 - Znaczenie: API, skrypty, programowanie, automatyzacje, biuro, dane, workflow.
 - Kolorystyka: biel + chłodny błękit, techniczna czytelność.
@@ -295,7 +295,7 @@ gateThemes: {
   },
   spotifyDigger: {
     symbol: "api-glif",
-    label: "Spotify Digger",
+    label: "DIG Engine",
     color: "#b8e8ff",
     secondaryColor: "#5aa9ff",
     atmosphere: "data-network"
