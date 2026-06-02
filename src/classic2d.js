@@ -25,6 +25,20 @@ const CLASSIC_COPY = {
 };
 
 const GLYPH_SYMBOLS = ['☉', '◇', '✦', '△', '☽'];
+const GLYPH_SPRITES_BY_GATE_ID = {
+  'ai-guide': '/png/glif_ai_guide.png',
+  'spotify-digger': '/png/glif_dig_engine.png',
+  'haiku-cosmos': '/png/glif_haiku_cosmos.png',
+  'creative-ai': '/png/glif_creative_ai.png',
+  'ethics-life-protection': '/png/glif_ethics.png'
+};
+const GATE_THEME_COLORS_BY_GATE_ID = {
+  'ai-guide': '#d5be79',
+  'spotify-digger': '#7fc8ff',
+  'haiku-cosmos': '#c9a7ff',
+  'creative-ai': '#ffb86f',
+  'ethics-life-protection': '#9ce0bb'
+};
 const MONKEY_TILTS = ['-5deg', '4deg', '-3deg', '5deg', '-4deg'];
 const CLASSIC_MONKEY_IMAGE_PATH = '/png/monkey_small.png';
 
@@ -144,13 +158,33 @@ export function startClassic2D({ container, language = 'en', onBackToModes }) {
     button.type = 'button';
     button.dataset.gateId = node.id;
     button.setAttribute('aria-pressed', 'false');
+    const glyphSymbol = GLYPH_SYMBOLS[index] || '✧';
+    const glyphSpritePath = GLYPH_SPRITES_BY_GATE_ID[node.id];
+    const gateThemeColor = GATE_THEME_COLORS_BY_GATE_ID[node.id];
+
     button.style.setProperty('--gate-index', String(index));
     button.style.setProperty('--gate-total', String(portfolioNodes.length));
+    if (gateThemeColor) button.style.setProperty('--gate-theme-color', gateThemeColor);
     button.innerHTML = `
-      <span class="classic-2d-gate__glyph" aria-hidden="true">${escapeHtml(GLYPH_SYMBOLS[index] || '✧')}</span>
+      <span class="classic-2d-gate__glyph" aria-hidden="true">
+        ${glyphSpritePath ? `
+          <img
+            class="classic-2d-gate__glyph-image"
+            src="${publicPath(glyphSpritePath)}"
+            alt=""
+            loading="eager"
+            decoding="async"
+          >
+        ` : ''}
+        <span class="classic-2d-gate__glyph-fallback">${escapeHtml(glyphSymbol)}</span>
+      </span>
       <span class="classic-2d-gate__title">${escapeHtml(node.title)}</span>
       <span class="classic-2d-gate__label">${escapeHtml(node.shortLabel || copy.gateHelp)}</span>
     `;
+
+    button.querySelector('.classic-2d-gate__glyph-image')?.addEventListener('error', (event) => {
+      event.currentTarget.closest('.classic-2d-gate__glyph')?.classList.add('classic-2d-gate__glyph--image-error');
+    });
 
     button.addEventListener('click', () => {
       activeGateId = node.id;
