@@ -86,9 +86,9 @@
 4. Kept AI Guide on `/glb/glyph_1.glb`, Creative AI on `/glb/glyph_2.glb`, and left remaining nodes as sphere placeholders.
 5. Internal concept note allows association with `AI Dharma` without changing user-facing overlay labels/copy.
 
-## 2026-05-22 — Spotify Digger per-node glyph visual with preserved collider fallback
+## 2026-05-22 — DIG Engine per-node glyph visual with preserved collider fallback
 
-1. Assigned optional node visual metadata to `Spotify Digger` only (`modelPath: /glb/glyph_4.glb`, `modelKind: glyph`) while keeping existing node copy/content unchanged.
+1. Assigned optional node visual metadata to `DIG Engine` only (`modelPath: /glb/glyph_4.glb`, `modelKind: glyph`) while keeping existing node copy/content unchanged.
 2. Reused the existing orbit-node per-node GLB loading path via vendored GLTFLoader r184; no npm `three` dependency was introduced.
 3. Preserved the sphere mesh/collider as the interaction target and fallback visual if `/glb/glyph_4.glb` fails to load.
 4. Kept AI Guide on `/glb/glyph_1.glb`, Creative AI on `/glb/glyph_2.glb`, Ethics / Life Protection on `/glb/glyph_3.glb`, and left Haiku Cosmos as sphere placeholder.
@@ -99,12 +99,12 @@
 1. Assigned optional node visual metadata to `Haiku Cosmos` only (`modelPath: /glb/glyph_5.glb`, `modelKind: glyph`) while keeping existing node copy/content unchanged.
 2. Reused the existing orbit-node per-node GLB loading path via vendored GLTFLoader r184; no npm `three` dependency was introduced.
 3. Preserved the sphere mesh/collider as the interaction target and fallback visual if `/glb/glyph_5.glb` fails to load.
-4. All five orbit nodes now have GLB glyph visuals: AI Guide `/glb/glyph_1.glb`, Creative AI `/glb/glyph_2.glb`, Ethics / Life Protection `/glb/glyph_3.glb`, Spotify Digger `/glb/glyph_4.glb`, and Haiku Cosmos `/glb/glyph_5.glb`.
+4. All five orbit nodes now have GLB glyph visuals: AI Guide `/glb/glyph_1.glb`, Creative AI `/glb/glyph_2.glb`, Ethics / Life Protection `/glb/glyph_3.glb`, DIG Engine `/glb/glyph_4.glb`, and Haiku Cosmos `/glb/glyph_5.glb`.
 
 
 ## 2026-05-22 — Milestone: central monkey + five glyph orbit-node runtime baseline
 
-1. All five portfolio nodes now use GLB glyph visuals in runtime (AI Guide `glyph_1`, Creative AI `glyph_2`, Ethics / Life Protection `glyph_3`, Spotify Digger `glyph_4`, Haiku Cosmos `glyph_5`).
+1. All five portfolio nodes now use GLB glyph visuals in runtime (AI Guide `glyph_1`, Creative AI `glyph_2`, Ethics / Life Protection `glyph_3`, DIG Engine `glyph_4`, Haiku Cosmos `glyph_5`).
 2. Glyph mapping is content-driven via `src/content/portfolioNodes.js` metadata (`modelPath`, `modelKind`).
 3. Fallback/collider model remains required: monkey placeholder fallback and per-node sphere collider/fallback are non-optional runtime safety behavior.
 4. Final visual polish (scale/orientation/lighting/composition refinement) remains intentionally separate from integration completion.
@@ -113,7 +113,7 @@
 
 ## 2026-05-22 — Canonical five-glyph hover effects model (documentation decision)
 
-1. Final element mapping for the five glyphs is fixed from current visual appearance and existing glyph-to-node assignments (glyph_1/AI Guide = Wood, glyph_2/Creative AI = Fire, glyph_3/Ethics = Earth, glyph_4/Spotify Digger = Metal, glyph_5/Haiku Cosmos = Water).
+1. Final element mapping for the five glyphs is fixed from current visual appearance and existing glyph-to-node assignments (glyph_1/AI Guide = Wood, glyph_2/Creative AI = Fire, glyph_3/Ethics = Earth, glyph_4/DIG Engine = Metal, glyph_5/Haiku Cosmos = Water).
 2. `docs/current/technical/GLYPH_HOVER_EFFECTS_MODEL.md` is established as the active working canon for hover-only effect language, symbolism, consistency rules, and implementation order.
 3. This step is documentation-only and does not modify runtime, scene architecture, shader stack, interaction baseline, or node naming/mapping.
 

@@ -2,7 +2,7 @@
 
 Status: **Vite + Vanilla JS + Three.js runtime initialized**.
 
-This repository is being prepared for an interactive Three.js-based portfolio centered on a symbolic meditating monkey and interactive portfolio gates (AI Guide, Spotify Digger, Haiku Cosmos, Creative AI, Ethics / Life Protection).
+This repository is being prepared for an interactive Three.js-based portfolio centered on a symbolic meditating monkey and interactive portfolio gates (AI Guide, DIG Engine, Haiku Cosmos, Creative AI, Ethics / Life Protection).
 
 ## Documentation entrypoint
 

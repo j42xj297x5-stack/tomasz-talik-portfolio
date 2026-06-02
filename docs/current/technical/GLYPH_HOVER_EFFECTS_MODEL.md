@@ -23,7 +23,7 @@ Ten dokument porządkuje i kanonizuje finalne decyzje dot. symboliki i języka r
 - `glyph_1` = AI Guide
 - `glyph_2` = Creative AI
 - `glyph_3` = Ethics / Life Protection
-- `glyph_4` = Spotify Digger
+- `glyph_4` = DIG Engine
 - `glyph_5` = Haiku Cosmos
 
 ## 4. Ostateczne przypisanie żywiołów
@@ -31,7 +31,7 @@ Na podstawie bieżącego wyglądu glifów i ich aktualnego przypisania do node�
 - Glif 1 (AI Guide) → **Drewno**
 - Glif 2 (Creative AI) → **Ogień**
 - Glif 3 (Ethics / Life Protection) → **Ziemia**
-- Glif 4 (Spotify Digger) → **Metal**
+- Glif 4 (DIG Engine) → **Metal**
 - Glif 5 (Haiku Cosmos) → **Woda** (wariant kosmicznego nurtu / wiru)
 
 ## 5. Szczegółowy opis 5 glifów
@@ -63,7 +63,7 @@ Na podstawie bieżącego wyglądu glifów i ich aktualnego przypisania do node�
 - **Kolorystyka:** biel, jasny beż, ochra, kamienne złoto, lekko pyłowe tony.
 - **Charakter:** spokojny, cięższy, stabilny, ochronny, fundamentowy.
 
-### 5.4 Glif 4 — Spotify Digger
+### 5.4 Glif 4 — DIG Engine
 - **Żywioł:** Metal
 - **Uzasadnienie wizualne:** koncentryczne, techniczne, sygnałowe formy (rezonator / radar / struktura danych).
 - **Sens symboliczny:** precyzja, narzędzie, integracja danych, porządkowanie, rezonans, workflow.
@@ -115,7 +115,7 @@ Sugerowana kolejność implementacji efektów:
 1. Glif 1 — AI Guide / Drewno
 2. Glif 2 — Creative AI / Ogień
 3. Glif 3 — Ethics / Ziemia
-4. Glif 4 — Spotify Digger / Metal
+4. Glif 4 — DIG Engine / Metal
 5. Glif 5 — Haiku Cosmos / Woda
 
 Uzasadnienie:

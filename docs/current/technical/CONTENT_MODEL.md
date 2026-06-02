@@ -11,7 +11,7 @@ Each gate node contains:
 
 Current draft gates:
 1. AI Guide
-2. Spotify Digger
+2. DIG Engine
 3. Haiku Cosmos
 4. Creative AI
 5. Ethics / Life Protection
@@ -21,7 +21,7 @@ Rules in current MVP:
 - Scene and UI read node metadata directly from the content module.
 - Overlay displays draft status note: "Draft content — final copy pending".
 - `AI Guide` declares a glyph visual model at runtime path `/glb/glyph_1.glb` (expected local binary: `public/glb/glyph_1.glb`).
-- `Spotify Digger` now declares a glyph visual model at runtime path `/glb/glyph_4.glb` (expected local binary: `public/glb/glyph_4.glb`).
+- `DIG Engine` now declares a glyph visual model at runtime path `/glb/glyph_4.glb` (expected local binary: `public/glb/glyph_4.glb`).
 - `Creative AI` now declares a glyph visual model at runtime path `/glb/glyph_2.glb` (expected local binary: `public/glb/glyph_2.glb`).
 - `Ethics / Life Protection` now declares a glyph visual model at runtime path `/glb/glyph_3.glb` (expected local binary: `public/glb/glyph_3.glb`).
 - `Ethics / Life Protection` may be referenced internally as `AI Dharma`, while user-facing copy remains unchanged.
@@ -30,5 +30,5 @@ Rules in current MVP:
 
 ## Milestone content mapping checkpoint
 - All five portfolio nodes now declare GLB glyph visuals via `modelPath` metadata in `portfolioNodes`.
-- Active runtime mapping: AI Guide -> `/glb/glyph_1.glb`, Creative AI -> `/glb/glyph_2.glb`, Ethics / Life Protection -> `/glb/glyph_3.glb`, Spotify Digger -> `/glb/glyph_4.glb`, Haiku Cosmos -> `/glb/glyph_5.glb`.
+- Active runtime mapping: AI Guide -> `/glb/glyph_1.glb`, Creative AI -> `/glb/glyph_2.glb`, Ethics / Life Protection -> `/glb/glyph_3.glb`, DIG Engine -> `/glb/glyph_4.glb`, Haiku Cosmos -> `/glb/glyph_5.glb`.
 - Mapping remains content-driven while renderer preserves sphere fallback/collider behavior for hover/click safety.
