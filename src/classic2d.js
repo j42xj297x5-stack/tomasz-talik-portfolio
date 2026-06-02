@@ -1,4 +1,5 @@
 import { portfolioNodes } from './content/portfolioNodes.js';
+import { publicPath } from './utils/publicPath.js';
 
 const CLASSIC_COPY = {
   pl: {
@@ -25,6 +26,7 @@ const CLASSIC_COPY = {
 
 const GLYPH_SYMBOLS = ['☉', '◇', '✦', '△', '☽'];
 const MONKEY_TILTS = ['-5deg', '4deg', '-3deg', '5deg', '-4deg'];
+const CLASSIC_MONKEY_IMAGE_PATH = '/png/monkey_small.png';
 
 function escapeHtml(value) {
   return String(value)
@@ -98,13 +100,23 @@ export function startClassic2D({ container, language = 'en', onBackToModes }) {
       <section class="classic-2d__stage" aria-label="${escapeHtml(copy.title)}">
         <div class="classic-2d__orbit" data-classic-orbit></div>
         <div class="classic-2d__monkey" data-classic-monkey aria-label="${escapeHtml(copy.centralLabel)}" role="img">
-          <span class="classic-2d__monkey-ear classic-2d__monkey-ear--left" aria-hidden="true"></span>
-          <span class="classic-2d__monkey-ear classic-2d__monkey-ear--right" aria-hidden="true"></span>
-          <span class="classic-2d__monkey-face" aria-hidden="true">
-            <span class="classic-2d__monkey-brow"></span>
-            <span class="classic-2d__monkey-eye classic-2d__monkey-eye--left"></span>
-            <span class="classic-2d__monkey-eye classic-2d__monkey-eye--right"></span>
-            <span class="classic-2d__monkey-mark"></span>
+          <img
+            class="classic-2d__monkey-image"
+            src="${publicPath(CLASSIC_MONKEY_IMAGE_PATH)}"
+            alt=""
+            aria-hidden="true"
+            loading="eager"
+            decoding="async"
+          >
+          <span class="classic-2d__monkey-fallback" aria-hidden="true">
+            <span class="classic-2d__monkey-ear classic-2d__monkey-ear--left"></span>
+            <span class="classic-2d__monkey-ear classic-2d__monkey-ear--right"></span>
+            <span class="classic-2d__monkey-face">
+              <span class="classic-2d__monkey-brow"></span>
+              <span class="classic-2d__monkey-eye classic-2d__monkey-eye--left"></span>
+              <span class="classic-2d__monkey-eye classic-2d__monkey-eye--right"></span>
+              <span class="classic-2d__monkey-mark"></span>
+            </span>
           </span>
         </div>
       </section>
@@ -116,6 +128,15 @@ export function startClassic2D({ container, language = 'en', onBackToModes }) {
   const orbit = container.querySelector('[data-classic-orbit]');
   const panel = container.querySelector('[data-classic-panel]');
   const monkey = container.querySelector('[data-classic-monkey]');
+  const monkeyImage = container.querySelector('.classic-2d__monkey-image');
+
+  monkeyImage?.addEventListener('load', () => {
+    monkey?.classList.remove('classic-2d__monkey--image-error');
+  });
+
+  monkeyImage?.addEventListener('error', () => {
+    monkey?.classList.add('classic-2d__monkey--image-error');
+  });
 
   portfolioNodes.forEach((node, index) => {
     const button = document.createElement('button');
@@ -138,6 +159,7 @@ export function startClassic2D({ container, language = 'en', onBackToModes }) {
         gate.classList.toggle('classic-2d-gate--active', isActive);
         gate.setAttribute('aria-pressed', String(isActive));
       });
+      monkey.classList.add('classic-2d__monkey--active');
       monkey.style.setProperty('--monkey-tilt', MONKEY_TILTS[index] || '3deg');
       renderPanel(panel, node, copy);
     });
@@ -154,6 +176,7 @@ export function startClassic2D({ container, language = 'en', onBackToModes }) {
     panel.hidden = true;
     panel.innerHTML = '';
     activeGateId = null;
+    monkey.classList.remove('classic-2d__monkey--active');
     monkey.style.removeProperty('--monkey-tilt');
     orbit.querySelectorAll('.classic-2d-gate').forEach((gate) => {
       gate.classList.remove('classic-2d-gate--active');
