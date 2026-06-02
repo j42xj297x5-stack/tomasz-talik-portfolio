@@ -170,3 +170,23 @@ Consequences:
 3. Content model should evolve toward a shared PL/EN source of truth consumed by both modes.
 4. `Classic 2D` becomes a first-class experience, not a degraded fallback.
 5. Current Three.js runtime, deployment/public-path rules, runtime IDs, assets, CSS, and implementation remain unchanged until separate implementation tasks are accepted.
+
+
+## 2026-06-02 — Entry shell and conditional Experience 3D boot implemented
+
+Status: accepted / implemented.
+
+Decision: The lightweight language/mode entry shell and conditional Experience 3D boot are now implemented. `src/main.js` owns entry shell orchestration, and `src/experience3d.js` owns the current Experience 3D runtime bootstrap.
+
+Rationale:
+1. Prevents eager 3D startup before the visitor chooses a mode.
+2. Preserves the existing Three.js runtime and its scene, loader, glyph, panel, camera, debug, mobile input, deployment path, asset, and content behavior.
+3. Creates a stable branch point for future Classic 2D implementation.
+4. Keeps the architecture in vanilla JavaScript rather than introducing a framework.
+
+Consequences:
+1. `src/main.js` is no longer the direct 3D runtime bootstrap.
+2. `src/experience3d.js` is now the Experience 3D bootstrap.
+3. Future runtime tasks must check both `src/main.js` and `src/experience3d.js`.
+4. Classic 2D remains future work and is currently placeholder-only.
+5. Current deployment/public-path rules, Vite config, assets, package files, and content remain unchanged.

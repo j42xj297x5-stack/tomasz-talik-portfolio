@@ -27,6 +27,8 @@ The current known runtime baseline includes:
 - debug settings import/export
 - deployment-safe public asset paths
 - mobile pointer/orientation/input handling
+- implemented language/mode entry shell with conditional Experience 3D boot
+- Classic 2D placeholder branch, not a finished Classic 2D runtime
 
 Open follow-ups remain listed in [Known open topics / next audit targets](#known-open-topics--next-audit-targets).
 
@@ -36,6 +38,7 @@ For most architecture/runtime tasks, start with only this pack:
 - `docs/current/maps/PROJECT_INDEX.md`
 - `docs/current/maps/DEPENDENCY_MAP.md`
 - `src/main.js`
+- `src/experience3d.js`
 - `docs/current/technical/FRONTEND_RUNTIME_MODEL.md`
 - `docs/current/technical/THREE_SCENE_MODEL.md`
 
@@ -69,8 +72,8 @@ Do not read the whole `docs/current` tree by default.
 ### Technical docs
 - `docs/current/technical/README.md` — technical section overview.
 - `docs/current/technical/ARCHITECTURE.md` — implemented runtime module structure.
-- `docs/current/technical/ENTRY_FLOW_AND_MODES_MODEL.md` — planned language/mode entry flow and dual Classic 2D / Experience 3D contract.
-- `docs/current/technical/FRONTEND_RUNTIME_MODEL.md` — runtime layering, vendored Three.js import policy, planned pre-runtime entry shell, and Vite/GitHub Pages dual-runtime asset model.
+- `docs/current/technical/ENTRY_FLOW_AND_MODES_MODEL.md` — language/mode entry flow and dual Classic 2D / Experience 3D contract; Classic 2D remains placeholder-only in runtime.
+- `docs/current/technical/FRONTEND_RUNTIME_MODEL.md` — runtime layering, implemented entry shell baseline, conditional Experience 3D boot, vendored Three.js import policy, and Vite/GitHub Pages dual-runtime asset model.
 - `docs/current/technical/THREE_SCENE_MODEL.md` — scene modules and MVP behavior.
 - `docs/current/technical/CONTENT_MODEL.md` — content schema and draft gate text model.
 - `docs/current/technical/DEPLOYMENT_MODEL.md` — Vite local/build and GitHub Pages deployment model under `/tomasz-talik-portfolio/`.
@@ -86,13 +89,15 @@ Do not read the whole `docs/current` tree by default.
 - `docs/current/audits/snapshots/2026-05-29_19-59-42__snapshot__dual-runtime-github-pages-deployment.md` — first working dual-runtime deployment snapshot for local Vite and GitHub Pages.
 - `docs/current/audits/snapshots/2026-05-30_07-10-52__snapshot__galaxy-progress-loader-mobile-runtime.md` — documentation checkpoint for galaxy sprites, atmosphere progression, loading diagnostics, debug import/export, deployment-safe public asset paths, and mobile pointer/orientation/input runtime baseline.
 - `docs/current/audits/snapshots/2026-06-02_17-36-03__snapshot__mobile-glyph-panels-baseline.md` — checkpoint dla mobilnych paneli pięciu glifów, data-panel-theme, nieprzezroczystych teł, kontrastu tekstu, SVG frame/ornament layering i no-regression zasad.
+- `docs/current/audits/snapshots/2026-06-02_18-18-09__snapshot__entry-shell-conditional-3d-boot.md` — implemented lightweight language/mode entry shell, conditional Experience 3D boot, and placeholder-only Classic 2D branch.
 
 ## Runtime entrypoints
 
 Primary runtime files:
 - `index.html` — Vite entry HTML.
 - `vite.config.js` — Vite configuration, including GitHub Pages base path and vendored Three.js aliasing.
-- `src/main.js` — runtime bootstrap, scene wiring, input handling, loading/progression orchestration, and animation loop.
+- `src/main.js` — entry shell / language and mode selection / conditional boot orchestration.
+- `src/experience3d.js` — current Experience 3D runtime bootstrap, scene wiring, input handling, loading/progression orchestration, and animation loop.
 - `src/utils/publicPath.js` — shared helper for local Vite + GitHub Pages public asset URL normalization.
 
 Scene/runtime files:
@@ -106,7 +111,7 @@ UI/content/style files:
 - `src/styles/main.css` — atmospheric base and UI styles.
 
 
-Future/planned entry-shell candidates are conceptual only at this stage. No current implemented file exists yet for language selection, mode selection, `Classic 2D` boot, or conditional `Experience 3D` boot. Do not treat those candidates as current runtime entrypoints until a separate implementation task creates them.
+Classic 2D status: the runtime branch currently renders only a lightweight placeholder with a back flow to mode selection. Do not treat Classic 2D as a finished portfolio mode until a separate implementation task creates it.
 
 Vendored Three.js files:
 - `src/vendor/three.js` — bridge to vendored Three.js module.

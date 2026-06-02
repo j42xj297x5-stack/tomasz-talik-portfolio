@@ -8,27 +8,33 @@ Layers:
 3. Overlay UI layer (`src/ui/*` + `src/styles/main.css`) — readable HTML hover label + overlay detail panel.
 4. Content layer (`src/content/portfolioNodes.js`) — draft node content model.
 
-## Planned pre-runtime entry shell (documentation-only)
+## Implemented entry shell and conditional Experience 3D boot baseline
 
-Future direction adds a lightweight layer before the current Three.js runtime:
+Status: implemented baseline as of 2026-06-02. The entry shell is no longer documentation-only or only planned.
 
-1. Entry shell / pre-runtime UI — the first visible UI, loaded before heavy 3D assets.
-2. Language state — stores either `Polski` or `English` for the current visit.
-3. Mode state — stores either `Classic 2D` / `Klasyczne 2D` or `Experience 3D` / `Doświadczenie 3D`.
+The active frontend runtime now starts with a lightweight vanilla-JavaScript entry layer before the heavy Three.js runtime:
+
+1. Entry shell / pre-runtime UI (`src/main.js`) — first visible UI, loaded before Experience 3D assets.
+2. Language state (`src/main.js`) — stores either `Polski` or `English` for the entry flow.
+3. Mode state (`src/main.js`) — stores either `Classic 2D` / `Klasyczne 2D` or `Experience 3D` / `Doświadczenie 3D`.
 4. Conditional runtime boot:
-   - `Classic 2D` boot — future lightweight, flat, symbolic UI path that should avoid Three.js unless a later decision changes that.
-   - `Experience 3D` boot — current Three.js runtime starts, loader runs, assets load, and existing scene behavior continues.
+   - `Classic 2D` branch — currently a lightweight placeholder-only UI with a back flow to mode selection; it is not a finished Classic 2D portfolio runtime yet.
+   - `Experience 3D` branch — dynamically imports `src/experience3d.js`, where the current Three.js runtime starts, loader runs, assets load, and existing scene behavior continues.
 
-Status of this layer: planned / documentation-only. The active implemented runtime remains the current Three.js experience described below. No runtime code, CSS, assets, Vite config, public-path rules, or deployment rules are changed by this document update.
+Ownership model:
+- `src/main.js` owns entry shell orchestration, simple frontend state, optional `localStorage` persistence, language selection, mode selection, placeholder rendering, and conditional Experience 3D import.
+- `src/experience3d.js` owns the current Experience 3D runtime bootstrap: canvas shell, renderer, scene wiring, loader diagnostics, asset preload stages, glyphs, panels, camera/input, debug tooling, and animation loop.
+- The current deployment/public-path rules remain unchanged. Runtime public assets still resolve through the existing Vite base-aware model; the entry shell implementation does not change Vite config, GitHub Pages base path, assets, content, or package files.
 
-Planned loading rule: heavy 3D assets should eventually load only after the visitor selects `Experience 3D`; they should not be eagerly loaded by the entry shell or by `Classic 2D`. GitHub Pages compatibility and the existing base-path/public asset model must remain unchanged.
+Loading rule: heavy 3D assets start only after the visitor selects `Experience 3D` / `Doświadczenie 3D`. They are not eagerly loaded by the initial language-selection screen, the mode-selection screen, or the current Classic 2D placeholder branch.
 
 ## MVP runtime status (2026-05-22)
 - Monkey runtime loader now successfully resolves `/glb/monkey.glb` locally and keeps placeholder fallback if GLTFLoader or asset loading fails.
 - GLTFLoader import target is vendored: `vendor/three/examples/jsm/loaders/GLTFLoader.js` (if present).
 - Three.js npm package remains intentionally unused.
 - `index.html` mounts `src/main.js` via Vite.
-- First interactive Three.js MVP scene is implemented.
+- `src/main.js` now orchestrates the entry shell; `src/experience3d.js` owns the Experience 3D bootstrap.
+- First interactive Three.js MVP scene is implemented and now starts conditionally after Experience 3D selection.
 - Three.js imports are centralized through `src/vendor/three.js`, which re-exports `vendor/three/three.module.js`.
 - Overlay copy is intentionally draft-only.
 - Mobile fallback notice is present; scene remains desktop-first.
