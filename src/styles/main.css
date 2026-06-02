@@ -1016,7 +1016,7 @@ body {
     --panel-frame: #47748b;
     --panel-muted: #2f637d;
     --panel-link: #245b75;
-    --overlay-panel-bg-image: none !important;
+    --overlay-panel-bg-image: none;
   }
 
   .overlay__panel--haiku-cosmos,
@@ -1042,7 +1042,7 @@ body {
   .overlay__panel.theme-spotify-digger::before,
   .overlay__panel.theme-spotify-digger::after {
     content: none;
-    display: none !important;
+    display: none;
   }
 
   .mobile-svg-frame {
@@ -1244,6 +1244,113 @@ body {
   .overlay__panel--creative-ai .overlay__text,
   .overlay__panel--haiku-cosmos .overlay__text {
     font-size: clamp(0.9rem, 3.3vw, 1rem);
+  }
+
+
+  .overlay__panel {
+    background: var(--panel-bg);
+    color: var(--panel-text);
+    opacity: 1;
+    backdrop-filter: none;
+    --mobile-frame-color: var(--panel-frame);
+    --overlay-panel-scrollbar: var(--panel-frame);
+    --overlay-panel-close-color: var(--panel-text);
+    --overlay-panel-close-bg: #f5f8fb;
+    --overlay-panel-close-border: var(--panel-frame);
+    --overlay-panel-close-shadow: transparent;
+    --overlay-panel-close-hover-color: #ffffff;
+    --overlay-panel-close-hover-border: var(--panel-frame);
+    --overlay-panel-close-hover-bg: var(--panel-frame);
+    --overlay-panel-status-color: var(--panel-muted);
+    --overlay-panel-title-color: var(--panel-heading);
+    --overlay-panel-title-shadow: transparent;
+    --overlay-panel-lead-color: var(--panel-text);
+    --overlay-panel-text-color: var(--panel-text);
+    --overlay-panel-closing-color: var(--panel-muted);
+  }
+
+  .overlay__panel::before,
+  .overlay__panel::after {
+    content: none;
+    display: none;
+  }
+
+  .overlay__panel :where(p, li, span, div) {
+    color: inherit;
+  }
+
+  .overlay__panel :where(h1, h2, h3, .overlay__title) {
+    color: var(--panel-heading);
+  }
+
+  .overlay__panel :where(.overlay__lead, .overlay__meta, .overlay__eyebrow, .overlay__status, .overlay__closing, .overlay__feature-label) {
+    color: var(--panel-muted);
+  }
+
+  .overlay__panel :where(.overlay__text, .overlay__feature-text) {
+    color: var(--panel-text);
+  }
+
+  .overlay__panel a {
+    color: var(--panel-link);
+  }
+
+  .overlay__panel[data-panel-theme="ai-guide"] {
+    --panel-bg: linear-gradient(160deg, #eef8dc 0%, #cfe7a6 48%, #8fb66a 100%);
+    --panel-text: #172112;
+    --panel-heading: #263815;
+    --panel-muted: #49672d;
+    --panel-link: #3f6427;
+    --panel-frame: #5f7f37;
+  }
+
+  .overlay__panel[data-panel-theme="creative-ai"] {
+    --panel-bg: linear-gradient(160deg, #fff0d2 0%, #f5b860 48%, #b9582f 100%);
+    --panel-text: #24140d;
+    --panel-heading: #4c1f12;
+    --panel-muted: #693018;
+    --panel-link: #7c351b;
+    --panel-frame: #8a3f20;
+  }
+
+  .overlay__panel[data-panel-theme="ethics"] {
+    --panel-bg: linear-gradient(160deg, #fff7df 0%, #ead39a 52%, #c49a4e 100%);
+    --panel-text: #241a0d;
+    --panel-heading: #3a250f;
+    --panel-muted: #5d4724;
+    --panel-link: #5b3a12;
+    --panel-frame: #8a6424;
+  }
+
+  .overlay__panel[data-panel-theme="haiku-cosmos"] {
+    --panel-bg: linear-gradient(160deg, #eaf5ff 0%, #8fbbe4 45%, #4f5fa8 100%);
+    --panel-text: #0e1630;
+    --panel-heading: #142659;
+    --panel-muted: #334b9a;
+    --panel-link: #234eaf;
+    --panel-frame: #3f6fc2;
+  }
+
+  .overlay__panel[data-panel-theme="spotify-digger"] {
+    --panel-bg: linear-gradient(160deg, #eaf7ff 0%, #bad8e8 52%, #8fb5c8 100%);
+    --panel-text: #0d2230;
+    --panel-heading: #071b26;
+    --panel-muted: #25485a;
+    --panel-link: #123d56;
+    --panel-frame: #4b8ead;
+  }
+
+  .overlay__panel[data-panel-theme="ethics"] .mobile-svg-frame,
+  .overlay__panel[data-panel-theme="spotify-digger"] .mobile-svg-frame {
+    color: var(--panel-frame);
+    opacity: 1;
+    mix-blend-mode: normal;
+  }
+
+  .overlay__mobile-ornament:not([hidden]) {
+    background: none;
+    opacity: 1;
+    mix-blend-mode: normal;
   }
 }
 

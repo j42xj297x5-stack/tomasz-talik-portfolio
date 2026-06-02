@@ -1151,6 +1151,13 @@ export function createOverlay({ onClose, assetManager = null } = {}) {
   const mobileFrameReady = mobileFrameEl ? loadMobileFrameSvgs(mobileFrameEl).finally(mobileFrameLayout.schedule) : Promise.resolve();
   const mobilePanelMedia = window.matchMedia('(max-width: 768px)');
   let activeGateId = null;
+  const panelThemeByGateId = {
+    'ai-guide': 'ai-guide',
+    'creative-ai': 'creative-ai',
+    'ethics-life-protection': 'ethics',
+    'haiku-cosmos': 'haiku-cosmos',
+    'spotify-digger': 'spotify-digger'
+  };
 
   const applyPanelBackground = (gateId) => {
     const panelBackgroundPath = GLYPH_PANEL_BACKGROUNDS[gateId];
@@ -1178,6 +1185,7 @@ export function createOverlay({ onClose, assetManager = null } = {}) {
     if (root.hidden) return;
     root.hidden = true;
     panelEl.removeAttribute('data-gate-id');
+    panelEl.removeAttribute('data-panel-theme');
     root.classList.remove('overlay--ethics');
     document.body.classList.remove('overlay-open');
     onClose?.();
@@ -1208,6 +1216,7 @@ export function createOverlay({ onClose, assetManager = null } = {}) {
       const hasStructuredCopy = Boolean(nodeData.leadText || nodeData.bodyText || nodeData.closingText || nodeData.featureText);
 
       panelEl.dataset.gateId = gateId;
+      panelEl.dataset.panelTheme = panelThemeByGateId[gateId] ?? gateId;
       panelEl.classList.toggle('overlay__panel--ai-guide', isAIGuide);
       panelEl.classList.toggle('overlay__panel--creative-ai', isCreativeAI);
       panelEl.classList.toggle('overlay__panel--ethics', isEthics);
