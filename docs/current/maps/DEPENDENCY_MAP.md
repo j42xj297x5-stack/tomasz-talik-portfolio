@@ -76,12 +76,15 @@ Concept docs -> Technical model -> Runtime implementation -> Decision updates ->
 - Snapshot reference: `docs/current/audits/snapshots/2026-06-02_17-36-03__snapshot__mobile-glyph-panels-baseline.md`.
 
 
-## Planned entry flow and dual-mode dependency direction
+## Implemented entry shell and dual-mode dependency status (2026-06-02)
 
 - Concept docs (`concept/CONCEPT_AND_ROADMAP.md`, `concept/INTERACTION_MODEL.md`, and visual tone documents when needed) inform `technical/ENTRY_FLOW_AND_MODES_MODEL.md`.
-- `technical/ENTRY_FLOW_AND_MODES_MODEL.md` informs the planned pre-runtime layer in `technical/FRONTEND_RUNTIME_MODEL.md`.
+- `technical/ENTRY_FLOW_AND_MODES_MODEL.md` now informs the implemented entry shell baseline in `technical/FRONTEND_RUNTIME_MODEL.md`, while future Classic 2D/content work remains downstream.
+- `src/main.js` depends on entry shell state and mode selection for language choice, mode choice, optional persistence, Classic 2D placeholder rendering, and conditional Experience 3D launch.
+- `src/experience3d.js` depends on the existing 3D runtime modules for scene creation, lights, monkey/glyph loading, overlays, panels, camera/input, atmosphere progression, galaxy sprites, asset preloading, diagnostics, and debug tooling.
+- Experience 3D boot depends on selecting `Experience 3D` / `Doświadczenie 3D`; the initial entry shell and Classic 2D placeholder must not eagerly start the 3D runtime.
+- Classic 2D currently depends only on the lightweight placeholder UI in `src/main.js`; it is not a completed portfolio runtime.
+- Future Classic 2D implementation should depend on shared content records, stable gate IDs, and lightweight UI assets rather than the current Three.js scene unless a later explicit decision changes that.
 - `technical/CONTENT_MODEL.md` informs both future `Classic 2D` and current/future `Experience 3D` content rendering.
-- Future entry shell implementation must not break the current Three.js runtime.
-- Future `Experience 3D` boot depends on mode selection and should start loading 3D assets only after that mode is selected.
-- Future `Classic 2D` mode depends on shared content records, stable gate IDs, and lightweight UI assets rather than the current Three.js scene unless a later explicit decision changes that.
 - The current Vite/GitHub Pages base-path and public asset rules remain dependencies for any implementation path.
+- Snapshot reference: `docs/current/audits/snapshots/2026-06-02_18-18-09__snapshot__entry-shell-conditional-3d-boot.md`.
