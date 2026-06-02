@@ -1,436 +1,195 @@
 import './styles/main.css';
-import * as THREE from './vendor/three.js';
-import { portfolioNodes } from './content/portfolioNodes.js';
-import { createScene } from './scene/createScene.js';
-import { addLights } from './scene/lights.js';
-import { createCentralObject } from './scene/centralObject.js';
-import { createBackgroundAtmosphere } from './scene/atmosphere.js';
-import { loadMonkeyModel } from './scene/monkeyModel.js';
-import { createOrbitNodes, setNodeHoverState, updateOrbitNodes } from './scene/orbitNodes.js';
-import { pickNode } from './scene/raycaster.js';
-import { createCameraRig } from './scene/cameraRig.js';
-import { createOverlay } from './ui/overlay.js';
-import { createHoverLabel } from './ui/hoverLabel.js';
-import { createOptionsPanel } from './ui/optionsPanel.js';
-import { createSunCycle, SUN_CYCLE_DEFAULTS } from './scene/sunCycle.js';
-import { createMoonCycle, MOON_CYCLE_DEFAULTS } from './scene/moonCycle.js';
-import { createAtmosphereProgression } from './scene/atmosphere/atmosphereProgression.js';
-import { createGalaxySpritesLayer, GALAXY_SPRITES_DEFAULTS } from './scene/galaxySprites.js';
-import { ASSET_STAGES, INITIAL_PRELOAD_GROUPS, DEFERRED_PRELOAD_GROUPS, OPTIONAL_PRELOAD_GROUPS, getPreloadAssets, getAllPreloadAssets } from './assets/assetManifest.js';
-import { createLoadingDiagnostics, preloadAssets } from './assets/preloadAssets.js';
-import { createAssetManager } from './assets/assetManager.js';
-import { createLoaderOverlay } from './ui/loaderOverlay.js';
 
 const app = document.querySelector('#app');
 if (!app) throw new Error('Missing #app mount element.');
 
-app.innerHTML = `
-  <main class="runtime-shell runtime-shell--loading">
-    <canvas id="scene-canvas" aria-label="Interactive AI portfolio MVP scene"></canvas>
-  </main>
-`;
+const STORAGE_KEY = 'portfolioEntrySelection';
 
-const canvas = document.querySelector('#scene-canvas');
-const shell = document.querySelector('.runtime-shell');
-const debugLoading = new URLSearchParams(window.location.search).has('debug');
-const debugInput = debugLoading;
-const criticalAssetsList = getPreloadAssets(INITIAL_PRELOAD_GROUPS);
-const deferredWarmAssetsList = getPreloadAssets(DEFERRED_PRELOAD_GROUPS);
-const optionalLateAssetsList = getPreloadAssets(OPTIONAL_PRELOAD_GROUPS);
-const loadingDiagnostics = createLoadingDiagnostics(getAllPreloadAssets());
-loadingDiagnostics.markEvent('appStart');
-const mobileQuery = window.matchMedia('(pointer: coarse), (max-width: 767px)');
-const isMobileRuntime = mobileQuery.matches;
-const preloadConcurrency = isMobileRuntime ? 2 : 4;
-const assetManager = createAssetManager({ diagnostics: loadingDiagnostics });
-const loaderOverlay = createLoaderOverlay({ debug: debugLoading });
-loadingDiagnostics.subscribe((snapshot) => loaderOverlay.update(snapshot));
-
-try {
-  loadingDiagnostics.markEvent('criticalPreloadStart');
-  await preloadAssets(criticalAssetsList, {
-    diagnostics: loadingDiagnostics,
-    assetManager,
-    concurrency: preloadConcurrency,
-    stage: ASSET_STAGES.CRITICAL_INITIAL
-  });
-  loadingDiagnostics.markEvent('criticalPreloadEnd');
-} catch (error) {
-  const message = error instanceof Error ? error.message : String(error);
-  loaderOverlay.showError('Nie udało się załadować krytycznych zasobów. Odśwież stronę lub sprawdź połączenie.');
-  console.warn('[loading] Critical asset preload failed. Scene reveal blocked.', { message, diagnostics: loadingDiagnostics.getSnapshot() });
-  throw error;
-}
-
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
-
-
-const scene = createScene();
-const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 100);
-camera.position.set(0, 1.8, 6);
-
-addLights(scene);
-const centralPlaceholder = createCentralObject();
-scene.add(centralPlaceholder);
-
-const sceneRuntimeConfig = {
-  sunCycle: {
-    ...SUN_CYCLE_DEFAULTS
+const COPY = {
+  pl: {
+    languageName: 'Polski',
+    introEyebrow: 'Portfolio Tomasza Talika',
+    languageTitle: 'Wybierz język',
+    languageText: 'Najpierw wybierz język interfejsu wejściowego.',
+    modeEyebrow: 'Tryb doświadczenia',
+    modeTitle: 'Wybierz tryb',
+    modeText: 'Możesz uruchomić obecne doświadczenie 3D albo zobaczyć planowany tryb 2D.',
+    classicTitle: 'Klasyczne 2D',
+    classicDescription: 'Ten tryb jest przygotowywany jako lekka, płaska, retro-symboliczna wersja portfolio.',
+    classicButton: 'Klasyczne 2D',
+    experienceButton: 'Doświadczenie 3D',
+    placeholderBack: 'Wróć do wyboru trybu',
+    backLanguage: 'Wróć do wyboru języka',
+    launchStatus: 'Uruchamianie doświadczenia 3D…'
   },
-  moonCycle: {
-    ...MOON_CYCLE_DEFAULTS
-  },
-  galaxySprites: {
-    ...GALAXY_SPRITES_DEFAULTS
-  },
-  backgroundAtmosphere: {
-    enabled: true,
-    debugVisible: false,
-    showShellHelpers: false,
-    showAtmosphereLogs: false,
-    debugBlendingMode: 'normal',
-    debugIgnoreFog: true,
-    safeRadius: 5,
-    shellInnerRadius: 8,
-    shellOuterRadius: 20,
-    stoneRelics: { enabled: true, count: 80, models: ['glb/stone_01.glb','glb/stone_02.glb','glb/stone_03.glb','glb/stone_04.glb','glb/stone_05.glb','glb/stone_06.glb'], safeRadius: 3.5, shellInnerRadius: 4.7, shellOuterRadius: 10.3, minScale: 0.5, maxScale: 1, rotationSpeedMin: 0.003, rotationSpeedMax: 0.018, orbitSpeed: 0.003, opacity: 1, debugVisible: false },
-    shellRelics: {
-      enabled: true,
-      count: 100,
-      models: ['glb/shell_01.glb','glb/shell_02.glb','glb/shell_03.glb','glb/shell_04.glb','glb/shell_05.glb','glb/shell_06.glb'],
-      minScale: 0.3,
-      maxScale: 0.7,
-      shellInnerRadius: 10,
-      shellOuterRadius: 13,
-      rotationSpeedMin: 0.024,
-      rotationSpeedMax: 0.373,
-      orbitSpeed: 0.012,
-      opacity: 1,
-      debugVisible: false,
-      colorPalette: ['#d9a441','#4db6ac','#6ec6ff','#6bcf8e','#9c7bff','#f0a6a6']
-    },
-    smallGlyphRelics: {
-      enabled: true,
-      count: 100,
-      models: ['glb/small_glyph_01.glb','glb/small_glyph_02.glb','glb/small_glyph_03.glb','glb/small_glyph_04.glb','glb/small_glyph_05.glb','glb/small_glyph_06.glb'],
-      minScale: 0.1,
-      maxScale: 0.3,
-      shellInnerRadius: 5,
-      shellOuterRadius: 10,
-      rotationSpeedMin: 0.01,
-      rotationSpeedMax: 0.028,
-      orbitSpeed: 0.005,
-      opacity: 0.53,
-      debugVisible: false
-    },
-    dust: {
-      enabled: true,
-      count: 6000,
-      idleOpacity: 1,
-      rotationSpeed: 0.018,
-      pointSize: 0.055,
-      color: '#cfe2ff',
-      sizeAttenuation: true,
-      depthTest: true
-    }
+  en: {
+    languageName: 'English',
+    introEyebrow: 'Tomasz Talik Portfolio',
+    languageTitle: 'Choose language / Wybierz język',
+    languageText: 'Select the language for this entry flow. Wybierz język interfejsu wejściowego.',
+    modeEyebrow: 'Experience mode',
+    modeTitle: 'Choose mode',
+    modeText: 'Launch the current 3D experience or preview the planned 2D mode placeholder.',
+    classicTitle: 'Classic 2D',
+    classicDescription: 'This mode is planned as a lightweight, flat, retro-symbolic version of the portfolio.',
+    classicButton: 'Classic 2D',
+    experienceButton: 'Experience 3D',
+    placeholderBack: 'Back to mode selection',
+    backLanguage: 'Back to language selection',
+    launchStatus: 'Starting Experience 3D…'
   }
 };
 
-loadingDiagnostics.markEvent('sceneAttachStart');
-const atmosphere = createBackgroundAtmosphere(sceneRuntimeConfig.backgroundAtmosphere, { assetManager, deferRelicsUntilWarm: true });
-scene.add(atmosphere.object3d);
-const sunCycle = createSunCycle(sceneRuntimeConfig.sunCycle, { assetManager });
-scene.add(sunCycle.object3d);
-const moonCycle = createMoonCycle(sceneRuntimeConfig.moonCycle, { assetManager });
-scene.add(moonCycle.object3d);
-const galaxyLayer = createGalaxySpritesLayer(sceneRuntimeConfig.galaxySprites, { assetManager, deferUntilWarm: true });
-scene.add(galaxyLayer.group);
+const state = {
+  language: null,
+  mode: null,
+  runtimeStarted: false
+};
 
-await loadMonkeyModel({ scene, fallbackObject: centralPlaceholder, assetManager });
+function loadStoredSelection() {
+  try {
+    const rawSelection = window.localStorage?.getItem(STORAGE_KEY);
+    if (!rawSelection) return;
 
-const { group: orbitGroup, nodes } = createOrbitNodes(portfolioNodes, { assetManager });
-scene.add(orbitGroup);
-const atmosphereProgression = createAtmosphereProgression({ gateIds: portfolioNodes.map((node) => node.id) });
-const initialProgressionMultipliers = atmosphereProgression.getProgressionMultipliers();
-atmosphere.setProgressionMultipliers(initialProgressionMultipliers);
-sunCycle.setProgressionMultiplier(initialProgressionMultipliers.sunMoon);
-moonCycle.setProgressionMultiplier(initialProgressionMultipliers.sunMoon);
-galaxyLayer.setProgressionMultiplier(initialProgressionMultipliers.galaxies);
-loadingDiagnostics.markEvent('sceneAttachEnd');
-
-const overlay = createOverlay({
-  assetManager,
-  onClose: () => {
-    atmosphereProgression.handleOverlayClosed();
-  }
-});
-const hoverLabel = createHoverLabel();
-
-const optionsPanel = createOptionsPanel({
-  runtimeState: sceneRuntimeConfig,
-  loadingDiagnostics,
-  atmosphereProgression,
-  gateNodes: portfolioNodes,
-  onChange: ({ type }) => {
-    atmosphere.applySettings(sceneRuntimeConfig.backgroundAtmosphere, type);
-    sunCycle.setOptions(sceneRuntimeConfig.sunCycle);
-    moonCycle.setOptions(sceneRuntimeConfig.moonCycle);
-    if (type === 'galaxy-sprites-rebuild' || type === 'reset-all' || type === 'rebuild') {
-      galaxyLayer.rebuild(sceneRuntimeConfig.galaxySprites);
-    } else {
-      galaxyLayer.applyRuntimeOptions(sceneRuntimeConfig.galaxySprites);
+    const parsedSelection = JSON.parse(rawSelection);
+    if (parsedSelection?.language === 'pl' || parsedSelection?.language === 'en') {
+      state.language = parsedSelection.language;
     }
-  },
-  onResetAtmosphere: () => {
-    atmosphere.applySettings(sceneRuntimeConfig.backgroundAtmosphere, 'rebuild');
-  }
-});
-
-let hoveredNode = null;
-
-function syncHoverState(nextHoveredNode, event = null) {
-  if (hoveredNode && hoveredNode !== nextHoveredNode) {
-    setNodeHoverState(hoveredNode, false);
-  }
-
-  hoveredNode = nextHoveredNode;
-
-  if (hoveredNode) {
-    setNodeHoverState(hoveredNode, true);
-    if (event) {
-      hoverLabel.show(hoveredNode.userData, event.clientX, event.clientY);
-    }
-  } else {
-    hoverLabel.hide();
-  }
-
-  document.body.style.cursor = hoveredNode ? 'pointer' : 'default';
-}
-
-const cameraRig = createCameraRig(canvas);
-const TAP_MOVE_THRESHOLD_PX = 10;
-const MAX_TAP_DURATION_MS = 500;
-const coarsePointerQuery = window.matchMedia('(pointer: coarse)');
-let activePointer = null;
-let orientationResizeTimer = null;
-let orientationResizeSettledTimer = null;
-
-function debugInteraction(message, details = {}) {
-  if (debugInput) {
-    console.info(`[interaction][debug] ${message}`, details);
+  } catch (error) {
+    console.warn('[entry] Stored entry selection could not be read.', error);
   }
 }
 
-function openNodePanel(node) {
-  if (!node) return;
-  debugInteraction('raycast hit', {
-    objectName: node.name || null,
-    objectId: node.id,
-    nodeId: node.userData?.id ?? null
-  });
-  atmosphereProgression.prepareGateProgression(node.userData?.id);
-  overlay.open(node.userData);
-}
-
-function getPointerDistanceFromStart(event) {
-  if (!activePointer) return 0;
-  return Math.hypot(event.clientX - activePointer.startX, event.clientY - activePointer.startY);
-}
-
-function isTouchCameraPointer(event) {
-  return event.pointerType === 'touch' || coarsePointerQuery.matches;
-}
-
-function getCanvasRectSize() {
-  const rect = canvas.getBoundingClientRect();
-  return {
-    width: rect.width || window.innerWidth || 1,
-    height: rect.height || window.innerHeight || 1
-  };
-}
-
-function handlePointerDown(event) {
-  if (!event.isPrimary || activePointer) return;
-
-  activePointer = {
-    id: event.pointerId,
-    pointerType: event.pointerType,
-    startX: event.clientX,
-    startY: event.clientY,
-    startTime: performance.now(),
-    dragged: false,
-    suppressTap: false,
-    usesTouchCameraDrag: isTouchCameraPointer(event)
-  };
-
-  debugInteraction('pointer down', { pointerType: event.pointerType });
-
-  if (canvas.setPointerCapture) {
-    canvas.setPointerCapture(event.pointerId);
+function saveSelection() {
+  try {
+    window.localStorage?.setItem(STORAGE_KEY, JSON.stringify({
+      language: state.language,
+      mode: state.mode
+    }));
+  } catch (error) {
+    console.warn('[entry] Entry selection could not be saved.', error);
   }
 }
 
-function handlePointerMove(event) {
-  cameraRig.onPointerMove(event);
-
-  if (activePointer?.id === event.pointerId) {
-    const distance = getPointerDistanceFromStart(event);
-    if (distance > TAP_MOVE_THRESHOLD_PX) {
-      activePointer.dragged = true;
-      activePointer.suppressTap = true;
-    }
-
-    if (activePointer.usesTouchCameraDrag && activePointer.dragged) {
-      const { width, height } = getCanvasRectSize();
-      cameraRig.setTouchDragTarget({
-        deltaX: event.clientX - activePointer.startX,
-        deltaY: event.clientY - activePointer.startY,
-        width,
-        height
-      });
-    }
-  }
-
-  if (event.pointerType === 'mouse' || window.matchMedia('(hover: hover)').matches) {
-    const hit = pickNode(event, canvas, camera, nodes);
-    syncHoverState(hit, event);
-  }
+function setLanguage(language) {
+  state.language = language;
+  state.mode = null;
+  saveSelection();
+  renderModeSelection();
 }
 
-function finishPointer(event, { cancelled = false } = {}) {
-  if (activePointer?.id !== event.pointerId) return;
-
-  const distance = getPointerDistanceFromStart(event);
-  const duration = performance.now() - activePointer.startTime;
-  const isTap = !cancelled && !activePointer.suppressTap && !activePointer.dragged && distance <= TAP_MOVE_THRESHOLD_PX && duration <= MAX_TAP_DURATION_MS;
-
-  if (activePointer.usesTouchCameraDrag) {
-    cameraRig.releaseTouchTarget();
-  }
-
-  if (canvas.releasePointerCapture && canvas.hasPointerCapture?.(event.pointerId)) {
-    canvas.releasePointerCapture(event.pointerId);
-  }
-
-  if (isTap) {
-    debugInteraction('tap detected', { pointerType: activePointer.pointerType, distance, duration });
-    openNodePanel(pickNode(event, canvas, camera, nodes));
-  } else {
-    debugInteraction(cancelled ? 'pointer cancelled' : 'drag detected', {
-      pointerType: activePointer.pointerType,
-      distance,
-      duration
-    });
-  }
-
-  activePointer = null;
+function renderEntryShell(content) {
+  app.innerHTML = `
+    <main class="entry-shell" aria-live="polite">
+      <section class="entry-shell__panel" aria-labelledby="entry-title">
+        <div class="entry-shell__sigil" aria-hidden="true"></div>
+        ${content}
+      </section>
+    </main>
+  `;
 }
 
-function handleResize({ fromOrientationChange = false } = {}) {
-  const rect = shell?.getBoundingClientRect();
-  const width = rect?.width || canvas.clientWidth || window.innerWidth || 1;
-  const height = rect?.height || canvas.clientHeight || window.innerHeight || 1;
-  camera.aspect = width / height;
-  camera.updateProjectionMatrix();
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-  renderer.setSize(width, height, false);
+function createChoiceButton({ label, value, onClick, modifier = '' }) {
+  const button = document.createElement('button');
+  button.className = `entry-choice ${modifier}`.trim();
+  button.type = 'button';
+  button.dataset.value = value;
+  button.textContent = label;
+  button.addEventListener('click', onClick);
+  return button;
+}
 
-  if (fromOrientationChange) {
-    debugInteraction('orientation resize', { width, height, pixelRatio: renderer.getPixelRatio() });
+function renderLanguageSelection() {
+  const copy = COPY.en;
+  renderEntryShell(`
+    <p class="entry-shell__eyebrow">${copy.introEyebrow}</p>
+    <h1 class="entry-shell__title" id="entry-title">${copy.languageTitle}</h1>
+    <p class="entry-shell__text">${copy.languageText}</p>
+    <div class="entry-shell__choices" data-entry-choices></div>
+  `);
+
+  const choices = app.querySelector('[data-entry-choices]');
+  choices.append(
+    createChoiceButton({ label: COPY.pl.languageName, value: 'pl', onClick: () => setLanguage('pl') }),
+    createChoiceButton({ label: COPY.en.languageName, value: 'en', onClick: () => setLanguage('en') })
+  );
+}
+
+function renderModeSelection() {
+  if (!state.language) {
+    renderLanguageSelection();
+    return;
   }
-}
 
-canvas.addEventListener('pointerdown', handlePointerDown);
-canvas.addEventListener('pointermove', handlePointerMove);
-canvas.addEventListener('pointerup', (event) => finishPointer(event));
-canvas.addEventListener('pointercancel', (event) => finishPointer(event, { cancelled: true }));
+  const copy = COPY[state.language];
+  renderEntryShell(`
+    <p class="entry-shell__eyebrow">${copy.modeEyebrow}</p>
+    <h1 class="entry-shell__title" id="entry-title">${copy.modeTitle}</h1>
+    <p class="entry-shell__text">${copy.modeText}</p>
+    <div class="entry-shell__choices" data-entry-choices></div>
+    <button class="entry-shell__back" type="button" data-entry-back>${copy.backLanguage}</button>
+  `);
 
-window.addEventListener('pointerleave', () => {
-  cameraRig.onPointerLeave();
-  syncHoverState(null);
-});
-
-canvas.addEventListener('pointerleave', () => {
-  syncHoverState(null);
-});
-
-window.addEventListener('resize', () => handleResize());
-window.addEventListener('orientationchange', () => {
-  window.clearTimeout(orientationResizeTimer);
-  window.clearTimeout(orientationResizeSettledTimer);
-  orientationResizeTimer = window.setTimeout(() => handleResize({ fromOrientationChange: true }), 250);
-  orientationResizeSettledTimer = window.setTimeout(() => handleResize({ fromOrientationChange: true }), 600);
-});
-handleResize();
-await Promise.all([atmosphere.ready, galaxyLayer.ready]);
-loadingDiagnostics.markEvent('rendererCompileStart');
-const compileStartedAt = performance.now();
-if (isMobileRuntime) {
-  assetManager.markWarmup({ shaderCompileComplete: false, mobileWarmupReduced: true });
-} else {
-  renderer.compile(scene, camera);
-  assetManager.markWarmup({ shaderCompileComplete: true, mobileWarmupReduced: false });
-}
-loadingDiagnostics.markEvent('rendererCompileEnd');
-renderer.render(scene, camera);
-assetManager.markWarmup({ warmupFrameComplete: true, compileWarmupMs: performance.now() - compileStartedAt });
-loadingDiagnostics.markEvent('firstWarmupRender');
-
-const timer = new THREE.Timer();
-timer.connect(document);
-const orbitCenterWorldPosition = new THREE.Vector3();
-
-function tick(timestamp) {
-  timer.update(timestamp);
-  const delta = timer.getDelta();
-  const elapsed = timer.getElapsed();
-  updateOrbitNodes(nodes, elapsed, orbitGroup.getWorldPosition(orbitCenterWorldPosition));
-  cameraRig.update(camera, elapsed);
-  atmosphere.update(delta);
-  atmosphereProgression.updateAtmosphereProgression(delta);
-  const multipliers = atmosphereProgression.getProgressionMultipliers();
-  atmosphere.setProgressionMultipliers(multipliers);
-  sunCycle.setProgressionMultiplier(multipliers.sunMoon);
-  moonCycle.setProgressionMultiplier(multipliers.sunMoon);
-  sunCycle.update(delta);
-  moonCycle.update(delta, sunCycle.getAngle());
-  galaxyLayer.setProgressionMultiplier(multipliers.galaxies);
-  galaxyLayer.update(delta, elapsed, camera);
-  if (sceneRuntimeConfig.backgroundAtmosphere.debugVisible && elapsed < 0.25) {
-    console.info('[backgroundAtmosphere][debug] tick/update active', { delta, elapsed });
-  }
-  renderer.render(scene, camera);
-  requestAnimationFrame(tick);
-}
-
-loadingDiagnostics.markEvent('loaderFadeStart');
-shell?.classList.remove('runtime-shell--loading');
-await loaderOverlay.complete();
-loadingDiagnostics.markEvent('loaderFadeEnd');
-tick();
-
-queueMicrotask(() => {
-  loadingDiagnostics.markEvent('deferredWarmStart');
-  preloadAssets(deferredWarmAssetsList, {
-    diagnostics: loadingDiagnostics,
-    assetManager,
-    concurrency: preloadConcurrency,
-    stage: ASSET_STAGES.DEFERRED_WARM
-  })
-    .then(async () => {
-      loadingDiagnostics.markEvent('deferredWarmEnd');
-      await Promise.all([atmosphere.hydrateDeferredRelics?.(), galaxyLayer.hydrateDeferred?.()]);
-      assetManager.markPreloadComplete();
-      return preloadAssets(optionalLateAssetsList, {
-        diagnostics: loadingDiagnostics,
-        assetManager,
-        concurrency: 1,
-        stage: ASSET_STAGES.OPTIONAL_LATE,
-        markComplete: true
-      });
+  const choices = app.querySelector('[data-entry-choices]');
+  choices.append(
+    createChoiceButton({
+      label: copy.classicButton,
+      value: 'classic-2d',
+      onClick: () => {
+        state.mode = 'classic-2d';
+        saveSelection();
+        renderClassicPlaceholder();
+      }
+    }),
+    createChoiceButton({
+      label: copy.experienceButton,
+      value: 'experience-3d',
+      modifier: 'entry-choice--primary',
+      onClick: startExperience3d
     })
-    .catch((error) => {
-      console.warn('[loading] Deferred warm preload failed after reveal.', error);
-      assetManager.markPreloadComplete();
-    });
-});
+  );
+
+  app.querySelector('[data-entry-back]').addEventListener('click', () => {
+    state.language = null;
+    state.mode = null;
+    saveSelection();
+    renderLanguageSelection();
+  });
+}
+
+function renderClassicPlaceholder() {
+  const copy = COPY[state.language || 'en'];
+  renderEntryShell(`
+    <p class="entry-shell__eyebrow">${copy.modeEyebrow}</p>
+    <h1 class="entry-shell__title" id="entry-title">${copy.classicTitle}</h1>
+    <p class="entry-shell__text">${copy.classicDescription}</p>
+    <button class="entry-choice entry-choice--primary" type="button" data-entry-back>${copy.placeholderBack}</button>
+  `);
+
+  app.querySelector('[data-entry-back]').addEventListener('click', renderModeSelection);
+}
+
+async function startExperience3d() {
+  if (state.runtimeStarted) return;
+
+  state.mode = 'experience-3d';
+  state.runtimeStarted = true;
+  saveSelection();
+
+  const copy = COPY[state.language || 'en'];
+  renderEntryShell(`
+    <p class="entry-shell__eyebrow">${copy.modeEyebrow}</p>
+    <h1 class="entry-shell__title" id="entry-title">${copy.experienceButton}</h1>
+    <p class="entry-shell__text">${copy.launchStatus}</p>
+  `);
+
+  await import('./experience3d.js');
+}
+
+loadStoredSelection();
+
+if (state.language) {
+  renderModeSelection();
+} else {
+  renderLanguageSelection();
+}
