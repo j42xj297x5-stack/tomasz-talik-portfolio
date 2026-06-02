@@ -1,4 +1,5 @@
 import './styles/main.css';
+import { startClassic2D } from './classic2d.js';
 
 const app = document.querySelector('#app');
 if (!app) throw new Error('Missing #app mount element.');
@@ -13,9 +14,9 @@ const COPY = {
     languageText: 'Najpierw wybierz język interfejsu wejściowego.',
     modeEyebrow: 'Tryb doświadczenia',
     modeTitle: 'Wybierz tryb',
-    modeText: 'Możesz uruchomić obecne doświadczenie 3D albo zobaczyć planowany tryb 2D.',
+    modeText: 'Możesz uruchomić obecne doświadczenie 3D albo wejść do lekkiego trybu 2D.',
     classicTitle: 'Klasyczne 2D',
-    classicDescription: 'Ten tryb jest przygotowywany jako lekka, płaska, retro-symboliczna wersja portfolio.',
+    classicDescription: 'Lekka, płaska, retro-symboliczna wersja portfolio z pięcioma bramami treści.',
     classicButton: 'Klasyczne 2D',
     experienceButton: 'Doświadczenie 3D',
     placeholderBack: 'Wróć do wyboru trybu',
@@ -29,9 +30,9 @@ const COPY = {
     languageText: 'Select the language for this entry flow. Wybierz język interfejsu wejściowego.',
     modeEyebrow: 'Experience mode',
     modeTitle: 'Choose mode',
-    modeText: 'Launch the current 3D experience or preview the planned 2D mode placeholder.',
+    modeText: 'Launch the current 3D experience or enter the lightweight 2D mode.',
     classicTitle: 'Classic 2D',
-    classicDescription: 'This mode is planned as a lightweight, flat, retro-symbolic version of the portfolio.',
+    classicDescription: 'A lightweight, flat, retro-symbolic version of the portfolio with five content gates.',
     classicButton: 'Classic 2D',
     experienceButton: 'Experience 3D',
     placeholderBack: 'Back to mode selection',
@@ -138,7 +139,7 @@ function renderModeSelection() {
       onClick: () => {
         state.mode = 'classic-2d';
         saveSelection();
-        renderClassicPlaceholder();
+        renderClassic2D();
       }
     }),
     createChoiceButton({
@@ -157,16 +158,12 @@ function renderModeSelection() {
   });
 }
 
-function renderClassicPlaceholder() {
-  const copy = COPY[state.language || 'en'];
-  renderEntryShell(`
-    <p class="entry-shell__eyebrow">${copy.modeEyebrow}</p>
-    <h1 class="entry-shell__title" id="entry-title">${copy.classicTitle}</h1>
-    <p class="entry-shell__text">${copy.classicDescription}</p>
-    <button class="entry-choice entry-choice--primary" type="button" data-entry-back>${copy.placeholderBack}</button>
-  `);
-
-  app.querySelector('[data-entry-back]').addEventListener('click', renderModeSelection);
+function renderClassic2D() {
+  startClassic2D({
+    container: app,
+    language: state.language || 'en',
+    onBackToModes: renderModeSelection
+  });
 }
 
 async function startExperience3d() {
