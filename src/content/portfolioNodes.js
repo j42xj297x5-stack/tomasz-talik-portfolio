@@ -111,28 +111,32 @@ Projekt pokazuje moje podejście do narzędzi użytkowych: dane mają być czyte
   {
     id: 'haiku-cosmos',
     title: 'Haiku Cosmos',
-    shortLabel: 'Haiku Cosmos',
+    shortLabel: 'INTERACTIVE WORLD SYSTEM',
     eyebrow: 'INTERACTIVE WORLD SYSTEM',
     modelPath: '/glb/glyph_5.glb',
     modelKind: 'glyph',
     ornamentPath: '/png/haiku_cosmos_ornament.png',
     ornamentMobileOnly: true,
-    draftText: 'Haiku Cosmos to projekt świata, w którym gra nie jest tylko zbiorem ekranów i mechanik.',
+    draftText: 'Gra, interfejs i dokumentacja jako jeden kosmos zależności.',
     leadText: 'Gra, interfejs i dokumentacja jako jeden kosmos zależności.',
-    bodyText: `Haiku Cosmos to projekt świata, w którym gra nie jest tylko zbiorem ekranów i mechanik.
+    bodyText: `Haiku Cosmos to autorski projekt interaktywnego świata, w którym gra nie jest tylko zbiorem ekranów, efektów i mechanik.
 
-To system żywych zależności:
-kart, sekwencji, progów, obiektów, rytmu, interfejsu i symboli.
+To żywy system zależności: kart, sekwencji, progów, obiektów, ekonomii, rytmu, interfejsu, symboli, dokumentacji i runtime’u.
 
-Projekt łączy projektowanie gry, dokumentację, debugowanie, UI, ekonomię, warstwę wizualną i techniczne prowadzenie runtime’u.
+Projekt łączy game design, system design, UI/UX, debugowanie, dokumentację projektową, visual pipeline oraz pracę z AI/Codexem jako narzędziem produkcyjnym.
 
-Najważniejsze nie było samo „dodanie funkcji”.
-Najważniejsze było utrzymanie sensu całości:
-żeby mechanika, obraz, decyzje gracza i architektura projektu mówiły tym samym językiem.
+Najważniejsze nie było samo „dodawanie funkcji”.
 
-Haiku Cosmos pokazuje, że potrafię prowadzić złożony projekt kreatywno-techniczny przez wiele warstw naraz — od intuicyjnej wizji świata, przez dokumentację i testy, aż po działający interaktywny system.`,
-    featureLabel: 'Co pokazuje ten projekt:',
-    featureText: 'mechanika · UI · runtime · debug · dokumentacja · visual pipeline'
+Najważniejsze było utrzymanie sensu całości: żeby mechanika, obraz, decyzje gracza, architektura kodu i dokumentacja projektu mówiły tym samym językiem.
+
+Rdzeniem Haiku Cosmos jest relacja między decyzją gracza a przemianą świata.
+
+Gracz buduje sekwencje, zdobywa karty, zarządza ekonomią RP, konfiguruje SUB-META i wpływa na zachowanie świata przez PRG — Player Reaction Field.
+
+Równolegle projekt rozwija się jako uporządkowany system dokumentów: mapy zależności, kanon mechanik, specyfikacje UI, snapshoty, decyzje architektoniczne i instrukcje dla Codexa.`,
+    closingText: 'Haiku Cosmos pokazuje, że potrafię prowadzić złożony projekt kreatywno-techniczny przez wiele warstw naraz — od intuicyjnej wizji świata, przez projektowanie mechanik, dokumentację i testy, aż po działający interaktywny prototyp.',
+    featureLabel: 'Skills / scope:',
+    featureText: 'game design · system design · UI/UX · runtime · debug · documentation · visual pipeline · AI-assisted workflow'
   },
   {
     id: 'creative-ai',
