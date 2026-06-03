@@ -935,9 +935,16 @@ body {
 }
 
 .overlay__case-shot figcaption {
+  display: grid;
+  gap: 0.32rem;
   color: rgba(212, 232, 243, 0.76);
   font-size: clamp(0.78rem, 1.4vw, 0.88rem);
   line-height: 1.45;
+}
+
+.overlay__case-shot figcaption strong {
+  color: #c9efff;
+  letter-spacing: 0.04em;
 }
 
 @media (max-width: 760px) {
@@ -2800,6 +2807,158 @@ body.classic-2d-panel-open {
 .classic-2d-panel__demo-lightbox-close:focus-visible {
   background: rgba(30, 58, 70, 0.9);
   border-color: rgba(232, 246, 255, 0.76);
+}
+
+
+.classic-2d-panel__case-actions {
+  display: flex;
+  justify-content: flex-start;
+  margin-top: clamp(1.1rem, 3vw, 1.6rem);
+}
+
+.classic-2d-panel__case-toggle {
+  position: relative;
+  z-index: 3;
+  min-height: 44px;
+  border: 1px solid color-mix(in srgb, var(--panel-frame) 58%, transparent);
+  border-radius: 999px;
+  padding: 0.68rem 1.05rem;
+  color: var(--panel-text);
+  background: color-mix(in srgb, var(--panel-bg) 44%, rgba(8, 20, 30, 0.78));
+  box-shadow: 0 0 18px color-mix(in srgb, var(--panel-frame) 18%, transparent);
+  font: inherit;
+  font-size: clamp(0.78rem, 1.8vw, 0.9rem);
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.classic-2d-panel__case-toggle:hover,
+.classic-2d-panel__case-toggle:focus-visible,
+.classic-2d-panel__case-shot-button:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--panel-frame) 72%, #ffffff);
+  outline-offset: 3px;
+}
+
+.classic-2d-panel__case-toggle:hover,
+.classic-2d-panel__case-toggle:focus-visible {
+  color: #ffffff;
+  background: var(--panel-frame);
+  border-color: color-mix(in srgb, var(--panel-frame) 78%, #ffffff);
+}
+
+.classic-2d-panel__case-study {
+  display: grid;
+  gap: clamp(1rem, 2.2vw, 1.45rem);
+  margin-top: clamp(1rem, 2.6vw, 1.55rem);
+  padding: clamp(1rem, 2.4vw, 1.35rem);
+  border: 1px solid color-mix(in srgb, var(--panel-frame) 34%, transparent);
+  border-radius: 20px;
+  background:
+    radial-gradient(circle at top left, color-mix(in srgb, var(--panel-frame) 14%, transparent), transparent 44%),
+    color-mix(in srgb, var(--panel-bg) 22%, rgba(6, 12, 18, 0.72));
+  color: var(--panel-text);
+}
+
+.classic-2d-panel__case-study[hidden] {
+  display: none;
+}
+
+.classic-2d-panel__case-header,
+.classic-2d-panel__case-block,
+.classic-2d-panel__case-process-item,
+.classic-2d-panel__case-gallery-section,
+.classic-2d-panel__case-shot,
+.classic-2d-panel__case-shot figcaption {
+  display: grid;
+  gap: 0.58rem;
+}
+
+.classic-2d-panel__case-title {
+  color: var(--panel-muted);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.classic-2d-panel__case-study h3,
+.classic-2d-panel__case-study h4,
+.classic-2d-panel__case-study h5,
+.classic-2d-panel__case-study p,
+.classic-2d-panel__case-shot {
+  margin: 0;
+}
+
+.classic-2d-panel__case-study h3 {
+  color: var(--panel-heading);
+  font-family: Georgia, 'Times New Roman', ui-serif, serif;
+  font-size: clamp(1.35rem, 3.2vw, 1.95rem);
+  line-height: 1.15;
+}
+
+.classic-2d-panel__case-study h4 {
+  color: var(--panel-heading);
+  font-size: clamp(1rem, 2vw, 1.16rem);
+  letter-spacing: 0.05em;
+}
+
+.classic-2d-panel__case-study h5 {
+  color: var(--panel-text);
+  font-size: clamp(0.92rem, 1.8vw, 1.02rem);
+}
+
+.classic-2d-panel__case-process,
+.classic-2d-panel__case-gallery-section {
+  gap: 0.86rem;
+}
+
+.classic-2d-panel__case-process-item {
+  padding: 0.78rem 0.85rem;
+  border: 1px solid color-mix(in srgb, var(--panel-frame) 22%, transparent);
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--panel-bg) 18%, rgba(4, 10, 16, 0.46));
+}
+
+.classic-2d-panel__case-gallery {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(0.85rem, 2vw, 1.15rem);
+}
+
+.classic-2d-panel__case-shot-button {
+  width: 100%;
+  padding: 0.42rem;
+  border: 1px solid color-mix(in srgb, var(--panel-frame) 34%, transparent);
+  border-radius: 16px;
+  background: rgba(2, 6, 10, 0.62);
+  cursor: zoom-in;
+}
+
+.classic-2d-panel__case-shot img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 11px;
+  object-fit: contain;
+}
+
+.classic-2d-panel__case-shot figcaption {
+  color: var(--panel-muted);
+  font-size: clamp(0.78rem, 1.5vw, 0.88rem);
+  line-height: 1.45;
+}
+
+.classic-2d-panel__case-shot figcaption strong {
+  color: var(--panel-heading);
+  letter-spacing: 0.04em;
+}
+
+@media (max-width: 760px) {
+  .classic-2d-panel__case-gallery {
+    grid-template-columns: 1fr;
+  }
 }
 
 .classic-2d-panel__body {

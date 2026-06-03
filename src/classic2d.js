@@ -80,6 +80,73 @@ function renderDemoMarkup(node) {
   `;
 }
 
+function renderCaseBlockMarkup(title, value) {
+  if (!value || (Array.isArray(value) && !value.length)) return '';
+  const paragraphs = Array.isArray(value) ? value : createParagraphs(value);
+
+  return `
+    <section class="classic-2d-panel__case-block">
+      <h4>${escapeHtml(title)}</h4>
+      ${paragraphs.map((paragraph) => `<p>${escapeHtml(paragraph)}</p>`).join('')}
+    </section>
+  `;
+}
+
+function renderCaseStudyMarkup(caseStudy) {
+  if (!caseStudy) return '';
+
+  const introParagraphs = Array.isArray(caseStudy.intro) ? caseStudy.intro : createParagraphs(caseStudy.intro || '');
+  const processMarkup = caseStudy.processSections?.length ? `
+    <section class="classic-2d-panel__case-block classic-2d-panel__case-process">
+      <h4>Proces</h4>
+      ${caseStudy.processSections.map((section, index) => `
+        <article class="classic-2d-panel__case-process-item">
+          <h5>${index + 1}. ${escapeHtml(section.title || '')}</h5>
+          ${createParagraphs(section.text || '').map((paragraph) => `<p>${escapeHtml(paragraph)}</p>`).join('')}
+        </article>
+      `).join('')}
+    </section>
+  ` : '';
+  const galleryMarkup = caseStudy.gallery?.length ? `
+    <section class="classic-2d-panel__case-gallery-section">
+      <h4>Galeria screenshotów</h4>
+      <div class="classic-2d-panel__case-gallery">
+        ${caseStudy.gallery.map((item, index) => `
+          <figure class="classic-2d-panel__case-shot">
+            <button class="classic-2d-panel__case-shot-button" type="button" data-classic-media-open data-classic-media-index="${index}" aria-label="Powiększ screenshot: ${escapeHtml(item.title || item.alt || item.caption || caseStudy.title || '')}">
+              <img src="${escapeHtml(publicPath(item.src))}" alt="${escapeHtml(item.alt || item.caption || '')}" loading="lazy" decoding="async">
+            </button>
+            <figcaption>
+              ${item.title ? `<strong>${escapeHtml(item.title)}</strong>` : ''}
+              ${item.caption ? `<span>${escapeHtml(item.caption)}</span>` : ''}
+            </figcaption>
+          </figure>
+        `).join('')}
+      </div>
+    </section>
+  ` : '';
+
+  return `
+    <div class="classic-2d-panel__case-actions">
+      <button class="classic-2d-panel__case-toggle" type="button" data-classic-case-toggle aria-expanded="false">Czytaj case study</button>
+    </div>
+    <section class="classic-2d-panel__case-study" data-classic-case-study hidden>
+      <div class="classic-2d-panel__case-header">
+        ${caseStudy.title ? `<p class="classic-2d-panel__case-title">${escapeHtml(caseStudy.title)}</p>` : ''}
+        ${caseStudy.heading ? `<h3>${escapeHtml(caseStudy.heading)}</h3>` : ''}
+        ${introParagraphs.map((paragraph) => `<p>${escapeHtml(paragraph)}</p>`).join('')}
+      </div>
+      ${renderCaseBlockMarkup('Problem', caseStudy.problem)}
+      ${renderCaseBlockMarkup('Rozwiązanie', caseStudy.solution)}
+      ${processMarkup}
+      ${renderCaseBlockMarkup('AI workflow', caseStudy.aiWorkflow)}
+      ${renderCaseBlockMarkup('Rezultat', caseStudy.result)}
+      ${renderCaseBlockMarkup('Następne kroki', caseStudy.nextSteps)}
+      ${galleryMarkup}
+    </section>
+  `;
+}
+
 function closeClassicDemoLightbox(panel, { restoreFocus = true } = {}) {
   const lightbox = panel.querySelector('.classic-2d-panel__demo-lightbox');
   if (!lightbox || lightbox.hidden) return false;
@@ -102,6 +169,7 @@ function renderPanel(panel, node, copy) {
   const lead = node.leadText || '';
   const bodyParagraphs = createParagraphs(getNodeText(node));
   const demoMarkup = renderDemoMarkup(node);
+  const caseStudyMarkup = renderCaseStudyMarkup(node.caseStudy);
   const subtitle = getNodeSubtitle(node);
 
   panel.dataset.panelTheme = getPanelThemeForGate(node.id);
@@ -124,12 +192,13 @@ function renderPanel(panel, node, copy) {
           ${node.featureText ? `<span>${escapeHtml(node.featureText)}</span>` : ''}
         </p>
       ` : ''}
+      ${caseStudyMarkup}
       <button class="classic-2d-panel__close" type="button" data-classic-panel-close>${escapeHtml(copy.closePanel)}</button>
     </div>
-    <div class="classic-2d-panel__demo-lightbox" role="dialog" aria-modal="true" aria-label="Powiększone demo ${escapeHtml(node.title)}" hidden>
-      <button class="classic-2d-panel__demo-lightbox-backdrop" type="button" data-classic-demo-close aria-label="Zamknij powiększone demo"></button>
+    <div class="classic-2d-panel__demo-lightbox" role="dialog" aria-modal="true" aria-label="Powiększone media ${escapeHtml(node.title)}" hidden>
+      <button class="classic-2d-panel__demo-lightbox-backdrop" type="button" data-classic-demo-close aria-label="Zamknij powiększone media"></button>
       <div class="classic-2d-panel__demo-lightbox-frame">
-        <button class="classic-2d-panel__demo-lightbox-close" type="button" data-classic-demo-close aria-label="Zamknij powiększone demo">×</button>
+        <button class="classic-2d-panel__demo-lightbox-close" type="button" data-classic-demo-close aria-label="Zamknij powiększone media">×</button>
         <img class="classic-2d-panel__demo-lightbox-image" alt="">
       </div>
     </div>
@@ -303,6 +372,42 @@ export function startClassic2D({ container, language = 'en', onBackToModes }) {
         lightbox.hidden = false;
         document.body.classList.add('demo-lightbox-open');
         lightboxClose?.focus();
+      }
+      return;
+    }
+
+    const openMediaButton = event.target.closest('[data-classic-media-open]');
+    if (openMediaButton) {
+      const previewImage = openMediaButton.querySelector('img');
+      const lightbox = panel.querySelector('.classic-2d-panel__demo-lightbox');
+      const lightboxImage = panel.querySelector('.classic-2d-panel__demo-lightbox-image');
+      const lightboxClose = panel.querySelector('.classic-2d-panel__demo-lightbox-close');
+      if (previewImage?.src && lightbox && lightboxImage) {
+        lightboxImage.src = previewImage.src;
+        lightboxImage.alt = previewImage.alt;
+        lightbox.dataset.openerSelector = `[data-classic-media-index="${openMediaButton.dataset.classicMediaIndex}"]`;
+        lightbox.hidden = false;
+        document.body.classList.add('demo-lightbox-open');
+        lightboxClose?.focus();
+      }
+      return;
+    }
+
+    const caseToggleButton = event.target.closest('[data-classic-case-toggle]');
+    if (caseToggleButton) {
+      const caseStudy = panel.querySelector('[data-classic-case-study]');
+      if (caseStudy) {
+        const shouldOpen = caseStudy.hidden;
+        caseStudy.hidden = !shouldOpen;
+        caseToggleButton.setAttribute('aria-expanded', String(shouldOpen));
+        caseToggleButton.textContent = shouldOpen ? 'Ukryj case study' : 'Czytaj case study';
+        if (shouldOpen) {
+          caseStudy.setAttribute('tabindex', '-1');
+          caseStudy.focus({ preventScroll: true });
+          caseStudy.scrollIntoView({ block: 'start', behavior: 'smooth' });
+        } else {
+          caseStudy.removeAttribute('tabindex');
+        }
       }
       return;
     }
