@@ -706,6 +706,7 @@ body {
   flex: 0 0 auto;
   display: flex;
   justify-content: flex-end;
+  gap: 0.72rem;
   padding-top: clamp(14px, 2vw, 22px);
   margin-top: 0;
 }
@@ -782,6 +783,176 @@ body {
   color: var(--overlay-panel-closing-color);
   font-style: normal;
   letter-spacing: 0.04em;
+}
+
+.overlay__panel--spotify-digger .overlay__case-toggle {
+  position: relative;
+  inset: auto;
+  z-index: 2;
+  font-family: inherit;
+  font-size: 0.88rem;
+  letter-spacing: 0.04em;
+  color: rgba(234, 247, 255, 0.88);
+  background: rgba(10, 28, 43, 0.36);
+  border: 1px solid rgba(159, 220, 255, 0.26);
+  border-radius: 999px;
+  padding: 0.65rem 1rem;
+  box-shadow: 0 0 14px rgba(88, 172, 255, 0.08);
+  cursor: pointer;
+}
+
+.overlay__panel--spotify-digger .overlay__case-toggle:hover,
+.overlay__panel--spotify-digger .overlay__case-toggle:focus-visible {
+  color: #f4fbff;
+  background: rgba(16, 43, 66, 0.54);
+  border-color: rgba(184, 232, 255, 0.48);
+}
+
+.overlay__case-study {
+  margin-top: clamp(1.4rem, 3vw, 2.2rem);
+  padding: clamp(1rem, 2.5vw, 1.45rem);
+  border: 1px solid rgba(159, 220, 255, 0.22);
+  border-radius: 22px;
+  background:
+    radial-gradient(circle at top left, rgba(95, 180, 230, 0.12), transparent 42%),
+    linear-gradient(145deg, rgba(7, 19, 31, 0.72), rgba(3, 9, 16, 0.56));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 18px 44px rgba(0, 0, 0, 0.22),
+    0 0 34px rgba(80, 180, 235, 0.08);
+  color: rgba(234, 247, 255, 0.9);
+}
+
+.overlay__case-study[hidden] {
+  display: none;
+}
+
+.overlay__case-header,
+.overlay__case-block,
+.overlay__case-gallery-section {
+  display: grid;
+  gap: 0.72rem;
+}
+
+.overlay__case-block,
+.overlay__case-gallery-section {
+  margin-top: clamp(1.1rem, 2.4vw, 1.7rem);
+}
+
+.overlay__case-title {
+  margin: 0;
+  color: #9fdcff;
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.overlay__case-study h3,
+.overlay__case-study h4,
+.overlay__case-study h5,
+.overlay__case-study p {
+  margin: 0;
+}
+
+.overlay__case-study h3 {
+  color: #f4fbff;
+  font-family: Georgia, 'Times New Roman', ui-serif, serif;
+  font-size: clamp(1.45rem, 3.2vw, 2rem);
+  line-height: 1.14;
+  letter-spacing: 0.02em;
+}
+
+.overlay__case-study h4 {
+  color: #c9efff;
+  font-size: clamp(1rem, 1.8vw, 1.15rem);
+  letter-spacing: 0.05em;
+}
+
+.overlay__case-study h5 {
+  color: rgba(234, 247, 255, 0.96);
+  font-size: clamp(0.92rem, 1.6vw, 1.02rem);
+  letter-spacing: 0.03em;
+}
+
+.overlay__case-study p {
+  color: rgba(234, 247, 255, 0.86);
+  font-size: clamp(0.92rem, 1.1vw, 1rem);
+  line-height: 1.68;
+}
+
+.overlay__case-process {
+  gap: 0.86rem;
+}
+
+.overlay__case-process-item {
+  display: grid;
+  gap: 0.38rem;
+  padding: 0.78rem 0.85rem;
+  border: 1px solid rgba(159, 220, 255, 0.14);
+  border-radius: 16px;
+  background: rgba(6, 18, 29, 0.34);
+}
+
+.overlay__case-gallery {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(0.85rem, 2vw, 1.2rem);
+}
+
+.overlay__case-shot {
+  display: grid;
+  gap: 0.58rem;
+  margin: 0;
+}
+
+.overlay__case-shot-button {
+  width: 100%;
+  padding: 0.42rem;
+  border: 1px solid rgba(159, 220, 255, 0.26);
+  border-radius: 16px;
+  background:
+    linear-gradient(145deg, rgba(6, 15, 24, 0.82), rgba(20, 42, 58, 0.5)),
+    rgba(3, 9, 14, 0.76);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 14px 30px rgba(0, 0, 0, 0.24),
+    0 0 24px rgba(116, 205, 255, 0.08);
+  cursor: zoom-in;
+}
+
+.overlay__case-shot-button:focus-visible {
+  outline: 2px solid rgba(184, 232, 255, 0.92);
+  outline-offset: 3px;
+}
+
+.overlay__case-shot img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 11px;
+  object-fit: contain;
+}
+
+.overlay__case-shot figcaption {
+  color: rgba(212, 232, 243, 0.76);
+  font-size: clamp(0.78rem, 1.4vw, 0.88rem);
+  line-height: 1.45;
+}
+
+@media (max-width: 760px) {
+  .overlay__case-gallery {
+    grid-template-columns: 1fr;
+  }
+
+  .overlay__panel--spotify-digger .overlay__actions {
+    align-items: stretch;
+  }
+
+  .overlay__panel--spotify-digger .overlay__case-toggle,
+  .overlay__panel--spotify-digger .overlay__close {
+    width: 100%;
+  }
 }
 
 .overlay__demo {

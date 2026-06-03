@@ -24,18 +24,83 @@ export const portfolioNodes = [
     ornamentMobileOnly: true,
     demoGifPath: '/gif/DIG_engine.gif',
     demoGifAlt: 'Animated DIG Engine interface demo',
-    draftText: 'DIG Engine to system eksploracji muzyki, który łączy dane, API i intuicję słuchacza.',
-    bodyText: `DIG Engine to system eksploracji muzyki, który łączy dane, API i intuicję słuchacza.
+    draftText: 'DIG Engine to lokalny system eksploracji muzyki, który łączy workflow, API, metadane, bazę SQLite i intuicję słuchacza.',
+    bodyText: `DIG Engine to lokalny system eksploracji muzyki, który łączy workflow, API, metadane, bazę SQLite i intuicję słuchacza.
 
-Nie jest tylko narzędziem do playlist.
-To laboratorium porządkowania muzycznego chaosu — miejsce, gdzie serwisy muzyczne, historia odsłuchów, metadane i własna baza danych zaczynają pracować razem.
+Nie jest prostym generatorem playlist. Działa jak laboratorium danych muzycznych: zbiera kandydatów, wzbogaca metadane, porównuje źródła, pozwala filtrować wyniki i zamienia luźne tropy w gotowy rezultat.
 
-System pomaga odkrywać powiązania między artystami, albumami, tagami, wydaniami i playlistami.
-Z luźnych tropów buduje proces: wyszukiwanie, filtrowanie, porównywanie, decyzję i gotowy rezultat.
-
-Ten projekt pokazuje moje podejście do narzędzi użytkowych:
-dane mają być czytelne, workflow zrozumiały, a automatyzacja ma wspierać człowieka — nie zasłaniać mu sensu pracy.`,
-    closingText: 'Integracje API. Workflow. GUI. Dane muzyczne. Baza SQLite. Automatyzacja playlist. Przyszłe wyszukiwanie wspierane przez AI.'
+Projekt pokazuje moje podejście do narzędzi użytkowych: dane mają być czytelne, workflow zrozumiały, a automatyzacja ma wspierać decyzje człowieka — nie zasłaniać sensu pracy.`,
+    closingText: 'Workflow. API. GUI. SQLite. Discogs. Last.fm. Automatyzacja playlist. Projektowanie procesu z AI.',
+    caseStudy: {
+      title: 'DIG Engine — Music Data Resonance',
+      heading: 'Od chaosu muzycznego do systemu eksploracji danych',
+      intro: [
+        'DIG Engine powstał jako lokalne narzędzie do eksploracji muzyki, ale szybko przerósł prosty generator playlist. Punktem wyjścia była potrzeba uporządkowania dużej ilości muzycznych tropów: artystów, albumów, tagów, historii odsłuchów, wydań, playlist i zewnętrznych źródeł danych.',
+        'Projekt odpowiada na praktyczne pytanie: jak zamienić intuicyjne słuchanie muzyki w czytelny, powtarzalny i rozwijalny proces?'
+      ],
+      problem: 'Zamiast polegać wyłącznie na automatycznych rekomendacjach, potraktowałem muzykę jak przestrzeń danych. Luźne tropy, historia odsłuchów, metadane i playlisty potrzebowały systemu, który pozwala je porządkować, porównywać i rozwijać bez odbierania słuchaczowi kontroli.',
+      solution: 'DIG Engine łączy lokalne workflow, API serwisów muzycznych, dane Last.fm, bazę Discogs, własną bazę SQLite oraz warstwę projektowaną jako DNA użytkownika — pamięć preferencji, decyzji i relacji między trackami, artystami, tagami i playlistami.',
+      processSections: [
+        {
+          title: 'Stabilizacja pipeline’u',
+          text: 'Najpierw powstał deterministyczny przepływ pracy: indeksowanie, budowanie puli kandydatów, selekcja, eksport i opcjonalne zastosowanie wyników w playlistach.'
+        },
+        {
+          title: 'Warstwa danych i metadanych',
+          text: 'Do systemu została dołączona lokalna baza Discogs Offline oparta o SQLite i FTS5. Dzięki temu DIG Engine może lokalnie przeszukiwać wydania, artystów, labele i metadane, bez opierania całego procesu wyłącznie na requestach online.'
+        },
+        {
+          title: 'GUI jako cienka warstwa nad backendem',
+          text: 'Interfejs nie zastępuje logiki systemu. GUI czyta kontrakty runu, pokazuje postęp, wyniki i statusy, ale źródłem prawdy pozostaje backend oraz artefakty runtime.'
+        },
+        {
+          title: 'Workflow Composer',
+          text: 'Powstała warstwa komponowania presetów. Użytkownik może składać proces z bloków takich jak input CSV, Last.fm query, Spotify cross, apply playlist czy export CSV. To przesuwa projekt z poziomu pojedynczych skryptów w stronę narzędzia operatorskiego.'
+        },
+        {
+          title: 'Dokumentacja i granice odpowiedzialności',
+          text: 'Duża część pracy polegała na dokumentowaniu architektury, mapowaniu przepływów danych i pilnowaniu granic między modułami. Szczególnie ważne było rozdzielenie bieżącego stanu runu od długoterminowej pamięci DNA oraz oddzielenie runtime od przyszłych modułów AI.'
+        }
+      ],
+      aiWorkflow: [
+        'AI nie było w tym projekcie magicznym generatorem kodu, ale partnerem w procesie projektowym. ChatGPT pomagał analizować pomysły, porządkować architekturę, zadawać pytania decyzyjne, przygotowywać prompty dla Codexa i oceniać ryzyka przed implementacją.',
+        'Codex wykonywał zawężone zadania implementacyjne: funkcje, refaktoryzacje, poprawki GUI, aktualizacje dokumentacji, audyty i testy. Po każdym kroku wracałem do analizy: co zostało zmienione, czy nie naruszono granic architektury i co wymaga następnego kroku.'
+      ],
+      result: 'DIG Engine pokazuje moje podejście do tworzenia oprogramowania z AI: nie chodzi o automatyczne generowanie kodu, ale o budowanie procesu, w którym człowiek prowadzi projekt, a AI pomaga szybciej analizować, wdrażać, porządkować i rozwijać złożony system.',
+      nextSteps: 'W przyszłości DIG Engine może rozwinąć się w system bardziej inteligentnej eksploracji muzyki: z pełniejszą pamięcią DNA, scoringiem kandydatów, wyszukiwaniem wspieranym przez modele AI i lepszym wyjaśnianiem, dlaczego dany utwór, artysta lub wydanie pojawia się w konkretnym kontekście.',
+      gallery: [
+        {
+          src: '/png/dig_engine-screenshot_01.png',
+          alt: 'Główny widok systemu i roboczy interfejs DIG Engine.',
+          caption: 'Główny widok systemu i roboczy interfejs DIG Engine.'
+        },
+        {
+          src: '/png/dig_engine-screenshot_02.png',
+          alt: 'Przepływ pracy i stan bieżącego runu.',
+          caption: 'Przepływ pracy i stan bieżącego runu.'
+        },
+        {
+          src: '/png/dig_engine-screenshot_03.png',
+          alt: 'Wyniki, kandydaci i decyzje użytkownika.',
+          caption: 'Wyniki, kandydaci i decyzje użytkownika.'
+        },
+        {
+          src: '/png/dig_engine-screenshot_04.png',
+          alt: 'Warstwa metadanych i źródeł zewnętrznych.',
+          caption: 'Warstwa metadanych i źródeł zewnętrznych.'
+        },
+        {
+          src: '/png/dig_engine-screenshot_05.png',
+          alt: 'Workflow Composer / preset workflow.',
+          caption: 'Workflow Composer / preset workflow.'
+        },
+        {
+          src: '/png/dig_engine-screenshot_06.png',
+          alt: 'Debug, settings albo widok pomocniczy procesu.',
+          caption: 'Debug, settings albo widok pomocniczy procesu.'
+        }
+      ]
+    }
   },
   {
     id: 'haiku-cosmos',

@@ -1137,13 +1137,15 @@ export function createOverlay({ onClose, assetManager = null } = {}) {
             <p class="overlay__feature-text"></p>
           </div>
           <p class="overlay__closing" hidden></p>
+          <section class="overlay__case-study" hidden></section>
         </div>
         <div class="overlay__actions">
+          <button class="overlay__case-toggle" type="button" hidden aria-expanded="false">Czytaj case study</button>
           <button class="overlay__close" type="button" data-close-overlay aria-label="Zamknij panel">Zamknij</button>
         </div>
       </div>
     </article>
-    <div class="overlay__demo-lightbox" role="dialog" aria-modal="true" aria-label="Powiększone demo DIG Engine" hidden>
+    <div class="overlay__demo-lightbox" role="dialog" aria-modal="true" aria-label="Powiększone media DIG Engine" hidden>
       <button class="overlay__demo-lightbox-backdrop" type="button" data-close-demo aria-label="Zamknij powiększone demo"></button>
       <div class="overlay__demo-lightbox-frame">
         <button class="overlay__demo-lightbox-close" type="button" data-close-demo aria-label="Zamknij powiększone demo">×</button>
@@ -1162,6 +1164,8 @@ export function createOverlay({ onClose, assetManager = null } = {}) {
   const featureEl = root.querySelector('.overlay__feature');
   const featureLabelEl = root.querySelector('.overlay__feature-label');
   const featureTextEl = root.querySelector('.overlay__feature-text');
+  const caseStudyEl = root.querySelector('.overlay__case-study');
+  const caseToggleEl = root.querySelector('.overlay__case-toggle');
   const demoEl = root.querySelector('.overlay__demo');
   const demoPreviewEl = root.querySelector('.overlay__demo-preview');
   const demoEnlargeEl = root.querySelector('.overlay__demo-enlarge');
@@ -1178,6 +1182,130 @@ export function createOverlay({ onClose, assetManager = null } = {}) {
   let activeGateId = null;
   let demoLightboxOpener = null;
 
+  const appendParagraphs = (parent, paragraphs) => {
+    const normalized = Array.isArray(paragraphs) ? paragraphs : [paragraphs];
+    normalized.filter(Boolean).forEach((text) => {
+      const paragraph = document.createElement('p');
+      paragraph.textContent = text;
+      parent.append(paragraph);
+    });
+  };
+
+  const appendCaseBlock = (parent, title, paragraphs, { isProcess = false } = {}) => {
+    const block = document.createElement('section');
+    block.className = isProcess ? 'overlay__case-block overlay__case-block--process' : 'overlay__case-block';
+    const heading = document.createElement('h4');
+    heading.textContent = title;
+    block.append(heading);
+    appendParagraphs(block, paragraphs);
+    parent.append(block);
+  };
+
+  const renderCaseStudy = (caseStudy) => {
+    if (!caseStudyEl) return;
+
+    caseStudyEl.replaceChildren();
+    caseStudyEl.hidden = true;
+
+    if (!caseStudy) return;
+
+    const header = document.createElement('div');
+    header.className = 'overlay__case-header';
+
+    const title = document.createElement('p');
+    title.className = 'overlay__case-title';
+    title.textContent = caseStudy.title ?? '';
+    header.append(title);
+
+    const heading = document.createElement('h3');
+    heading.textContent = caseStudy.heading ?? '';
+    header.append(heading);
+
+    appendParagraphs(header, caseStudy.intro ?? []);
+    caseStudyEl.append(header);
+
+    appendCaseBlock(caseStudyEl, 'Problem', caseStudy.problem);
+    appendCaseBlock(caseStudyEl, 'Rozwiązanie', caseStudy.solution);
+
+    if (caseStudy.processSections?.length) {
+      const process = document.createElement('section');
+      process.className = 'overlay__case-block overlay__case-process';
+      const processHeading = document.createElement('h4');
+      processHeading.textContent = 'Proces';
+      process.append(processHeading);
+
+      caseStudy.processSections.forEach((section, index) => {
+        const item = document.createElement('article');
+        item.className = 'overlay__case-process-item';
+        const itemHeading = document.createElement('h5');
+        itemHeading.textContent = `${index + 1}. ${section.title}`;
+        item.append(itemHeading);
+        appendParagraphs(item, section.text);
+        process.append(item);
+      });
+
+      caseStudyEl.append(process);
+    }
+
+    appendCaseBlock(caseStudyEl, 'AI workflow', caseStudy.aiWorkflow);
+    appendCaseBlock(caseStudyEl, 'Rezultat', caseStudy.result);
+    appendCaseBlock(caseStudyEl, 'Następne kroki', caseStudy.nextSteps);
+
+    if (caseStudy.gallery?.length) {
+      const gallerySection = document.createElement('section');
+      gallerySection.className = 'overlay__case-gallery-section';
+      const galleryHeading = document.createElement('h4');
+      galleryHeading.textContent = 'Galeria screenshotów';
+      gallerySection.append(galleryHeading);
+
+      const gallery = document.createElement('div');
+      gallery.className = 'overlay__case-gallery';
+
+      caseStudy.gallery.forEach((item) => {
+        const figure = document.createElement('figure');
+        figure.className = 'overlay__case-shot';
+
+        const button = document.createElement('button');
+        button.className = 'overlay__case-shot-button';
+        button.type = 'button';
+        button.dataset.mediaOpen = '';
+        button.setAttribute('aria-label', `Powiększ screenshot: ${item.caption ?? item.alt ?? caseStudy.title}`);
+
+        const image = document.createElement('img');
+        image.src = publicPath(item.src);
+        image.alt = item.alt ?? item.caption ?? '';
+        image.loading = 'lazy';
+        image.decoding = 'async';
+        button.append(image);
+
+        const caption = document.createElement('figcaption');
+        caption.textContent = item.caption ?? '';
+
+        figure.append(button, caption);
+        gallery.append(figure);
+      });
+
+      gallerySection.append(gallery);
+      caseStudyEl.append(gallerySection);
+    }
+  };
+
+  const setCaseStudyOpen = (isOpen, { focusCaseStudy = false } = {}) => {
+    if (!caseStudyEl || !caseToggleEl || !caseStudyEl.childElementCount) return;
+
+    caseStudyEl.hidden = !isOpen;
+    caseToggleEl.setAttribute('aria-expanded', String(isOpen));
+    caseToggleEl.textContent = isOpen ? 'Ukryj case study' : 'Czytaj case study';
+
+    if (isOpen && focusCaseStudy) {
+      caseStudyEl.setAttribute('tabindex', '-1');
+      caseStudyEl.focus({ preventScroll: true });
+      caseStudyEl.scrollIntoView({ block: 'start', behavior: 'smooth' });
+    } else if (!isOpen) {
+      caseStudyEl.removeAttribute('tabindex');
+    }
+  };
+
   const closeDemoLightbox = () => {
     if (!demoLightboxEl || demoLightboxEl.hidden) return;
 
@@ -1191,15 +1319,25 @@ export function createOverlay({ onClose, assetManager = null } = {}) {
     demoLightboxOpener = null;
   };
 
-  const openDemoLightbox = (event) => {
-    if (!demoLightboxEl || !demoLightboxImageEl || !demoImageEl?.src) return;
+  const openMediaLightbox = ({ src, alt, opener }) => {
+    if (!demoLightboxEl || !demoLightboxImageEl || !src) return;
 
-    demoLightboxOpener = event?.currentTarget instanceof HTMLElement ? event.currentTarget : document.activeElement;
-    demoLightboxImageEl.src = demoImageEl.src;
-    demoLightboxImageEl.alt = demoImageEl.alt;
+    demoLightboxOpener = opener instanceof HTMLElement ? opener : document.activeElement;
+    demoLightboxImageEl.src = src;
+    demoLightboxImageEl.alt = alt ?? '';
     demoLightboxEl.hidden = false;
     document.body.classList.add('demo-lightbox-open');
     demoLightboxCloseEl?.focus();
+  };
+
+  const openDemoLightbox = (event) => {
+    if (!demoImageEl?.src) return;
+
+    openMediaLightbox({
+      src: demoImageEl.src,
+      alt: demoImageEl.alt,
+      opener: event?.currentTarget
+    });
   };
 
   const applyPanelBackground = (gateId) => {
@@ -1230,6 +1368,7 @@ export function createOverlay({ onClose, assetManager = null } = {}) {
     root.hidden = true;
     panelEl.removeAttribute('data-gate-id');
     panelEl.removeAttribute('data-panel-theme');
+    setCaseStudyOpen(false);
     root.classList.remove('overlay--ethics');
     document.body.classList.remove('overlay-open');
     onClose?.();
@@ -1237,10 +1376,25 @@ export function createOverlay({ onClose, assetManager = null } = {}) {
 
   demoPreviewEl?.addEventListener('click', openDemoLightbox);
   demoEnlargeEl?.addEventListener('click', openDemoLightbox);
+  caseToggleEl?.addEventListener('click', () => {
+    const shouldOpen = caseStudyEl?.hidden;
+    setCaseStudyOpen(Boolean(shouldOpen), { focusCaseStudy: Boolean(shouldOpen) });
+  });
 
   root.addEventListener('click', (event) => {
     if (event.target instanceof HTMLElement && event.target.dataset.closeDemo !== undefined) {
       closeDemoLightbox();
+      return;
+    }
+
+    const mediaButton = event.target instanceof Element ? event.target.closest('[data-media-open]') : null;
+    if (mediaButton instanceof HTMLElement) {
+      const image = mediaButton.querySelector('img');
+      openMediaLightbox({
+        src: image?.src,
+        alt: image?.alt,
+        opener: mediaButton
+      });
       return;
     }
 
@@ -1306,6 +1460,13 @@ export function createOverlay({ onClose, assetManager = null } = {}) {
       titleEl.textContent = nodeData.title;
       subtitleEl.hidden = !subtitle;
       subtitleEl.textContent = subtitle;
+
+      renderCaseStudy(nodeData.caseStudy);
+      if (caseToggleEl) {
+        caseToggleEl.hidden = !nodeData.caseStudy;
+        caseToggleEl.setAttribute('aria-expanded', 'false');
+        caseToggleEl.textContent = 'Czytaj case study';
+      }
 
       if (nodeData.demoGifPath) {
         const demoGifUrl = publicPath(nodeData.demoGifPath);
