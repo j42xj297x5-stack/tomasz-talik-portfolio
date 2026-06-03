@@ -135,6 +135,221 @@ Gracz buduje sekwencje, zdobywa karty, zarządza ekonomią RP, konfiguruje SUB-M
 
 Równolegle projekt rozwija się jako uporządkowany system dokumentów: mapy zależności, kanon mechanik, specyfikacje UI, snapshoty, decyzje architektoniczne i instrukcje dla Codexa.`,
     closingText: 'Haiku Cosmos pokazuje, że potrafię prowadzić złożony projekt kreatywno-techniczny przez wiele warstw naraz — od intuicyjnej wizji świata, przez projektowanie mechanik, dokumentację i testy, aż po działający interaktywny prototyp.',
+    caseStudy: {
+      title: 'Haiku Cosmos — Interactive World System',
+      heading: 'Gra-system o relacji między decyzją gracza a przemianą świata',
+      intro: [
+        'Haiku Cosmos to kontemplacyjna gra-system, w której gracz oddziałuje na żywy kosmos obiektów: meteory, asteroidy, planety, komety, gwiazdy, orbitujące struktury i późniejsze warstwy wizualne.',
+        'Rdzeniem projektu nie jest klasyczna fabuła, ale relacja między decyzją gracza a przemianą świata. Gracz buduje sekwencje, zdobywa karty, konfiguruje META/SUB-META i wpływa na zachowanie świata przez system PRG — Player Reaction Field.',
+        'Projekt rozwija się jako działający prototyp, ale równolegle posiada uporządkowaną dokumentację: kanon systemów, mapę zależności, roadmapę, dokumenty UI, visual direction, specyfikacje techniczne i instrukcje dla Codexa.'
+      ],
+      problem: `Największym wyzwaniem nie było stworzenie pojedynczej mechaniki, tylko utrzymanie spójności między wieloma warstwami projektu.
+
+Haiku Cosmos musiał jednocześnie odpowiadać na pytania:
+
+- Jak działa gra?
+- Jak gracz podejmuje decyzje?
+- Jak system rozpoznaje sekwencje?
+- Jak ekonomia nagradza koncentrację i ryzyko?
+- Jak UI pokazuje stan bez zalewania gracza tekstem?
+- Jak dokumentacja prowadzi dalszy rozwój?
+- Jak współpracować z AI/Codexem bez rozjechania architektury?
+- Jak utrzymać styl wizualny, który nie jest generycznym sci-fi ani fantasy UI?
+
+To był projekt nie tylko implementacyjny, ale przede wszystkim systemowo-architektoniczny.`,
+      solution: `Haiku Cosmos opiera się na założeniu, że gra jest procesem rezonansu.
+
+Gracz nie tylko „zbiera punkty”. Gracz buduje ciągi decyzji. Każde trafienie, kolor, rytm i przerwanie sekwencji ma znaczenie.
+
+System kart tworzy podstawowy język progresji:
+
+R1 — Wejście: podstawowa karta, możliwa do aktywacji w trakcie RUN.
+
+R2 — Ustabilizowanie: karta relacyjna, łącząca elementy systemu.
+
+R3 — Uciszenie: karta stabilizacji, przeznaczona pod głębsze strategie META.
+
+R4 — Jedność: pełna sekwencja, rzadka karta integrująca strukturę.
+
+Sekwencja działa jako proces ryzyka. Gracz może wcześniej aktywować lub zebrać kartę, ale może też kontynuować, ryzykując przerwanie ścieżki. Ekonomia RP nagradza nie przypadek, tylko koncentrację, ciągłość i decyzję.`,
+      processSections: [
+        {
+          title: 'Moja rola',
+          text: `W projekcie pełniłem rolę projektanta i prowadzącego całość systemu.
+
+Łączyłem kilka poziomów pracy:
+
+- Game/system design — projekt kart R1–R4, sekwencji, ryzyka, ekonomii RP, SUB-META i PRG.
+- Technical direction — określanie struktury runtime’u, zależności między modułami, zasad aktualizacji świata i renderowania.
+- UI/UX design — projekt HUD, panelu SUB-META, decyzji sekwencyjnych, informacji zwrotnej i warstw interfejsu.
+- Documentation architecture — tworzenie dokumentów kanonicznych, map zależności, indeksów i instrukcji pracy.
+- AI-assisted production — prowadzenie Codexa przez precyzyjne prompty, ograniczenia, checklisty, zakresy zmian i walidację efektów.
+- Visual pipeline — definiowanie kierunku „rytualnego minimalizmu kosmicznego”, SVG, ramek, ornamentów, Inkscape/FrameComposer i zasad assetów.
+
+Najbliżej tej roli jest: creative technical designer / system designer / project integrator / AI workflow lead.`
+        },
+        {
+          title: 'Cards System',
+          text: `System kart jest głównym językiem progresji. Karty powstają w trakcie RUN, ale ich wzmacnianie i osadzanie odbywa się w META/SUB-META.
+
+Najważniejsza decyzja projektowa: karty nie są tylko nagrodami — są stanami świata i narzędziami konfiguracji.
+
+R1 działa w RUN.
+R2–R4 są kartami sekwencyjnymi i systemowymi.
+R2 tworzy relacje.
+R3 stabilizuje.
+R4 integruje.
+
+Dzięki temu prosty system kolorów rozwija się w strukturę strategiczną.`
+        },
+        {
+          title: 'Economy System',
+          text: `Ekonomia opiera się na RP — Resonance Points.
+
+RP nie są losową walutą. Są odzwierciedleniem jakości gry: trafień, sekwencji, ciągłości i ryzyka. Gracz zdobywa RP w RUN, a wydaje je w META na sloty, konfigurację i wzmacnianie kart.
+
+To pozwala połączyć zręczność, uwagę i długofalowe planowanie.`
+        },
+        {
+          title: 'SUB-META',
+          text: `SUB-META to warstwa konfiguracji świadomości gracza.
+
+Nie jest zwykłym inventory. To panel, w którym karty przestają być tylko zdobytymi obiektami, a stają się trybami działania świata i gracza.
+
+SUB-META ma dwie główne gałęzie:
+
+- ŚWIAT — jak świat reaguje na działania gracza.
+- PRG — jak gracz oddziałuje na świat.
+
+To właśnie tutaj projekt zaczyna przypominać nie „menu gry”, ale system zależności i pamięć decyzji.`
+        },
+        {
+          title: 'PRG — Player Reaction Field',
+          text: `PRG to system pola wpływu gracza na obiekty świata.
+
+Określa:
+
+- jaki jest zasięg oddziaływania,
+- czy obiekty są przyciągane lub odpychane,
+- jak zmienia się ich prędkość,
+- na jakie klasy obiektów gracz może wpływać.
+
+PRG jest warstwą pomiędzy decyzją gracza a zachowaniem kosmosu. Dzięki temu input nie jest tylko sterowaniem, ale sposobem kształtowania świata.`
+        },
+        {
+          title: 'UI i doświadczenie gracza',
+          text: `UI w Haiku Cosmos zostało zaprojektowane jako część świata, nie jako osobna nakładka informacyjna.
+
+Interfejs składa się z trzech głównych warstw:
+
+- RUN HUD — informacje podczas aktywnej gry: RP, karty, sekwencje, aktywne stany.
+- SUB-META Overlay — panel konfiguracji dostępny w trakcie RUN.
+- META Overlay — panel końca cyklu / EONU.
+
+Ważną zasadą było ograniczenie nadmiaru komunikatów tekstowych. System powinien mówić przez kolor, puls, rytm, ramki, halo, decyzje i stan obiektów.
+
+To projekt UI, który nie tylko informuje, ale buduje atmosferę i sens systemu.`
+        },
+        {
+          title: 'Runtime i architektura techniczna',
+          text: `Projekt był rozwijany jako modularny runtime JavaScript.
+
+Świat gry został rozbity na moduły odpowiedzialne między innymi za:
+
+- meteory,
+- komety,
+- asteroidy,
+- planety,
+- gwiazdy i epoki,
+- kolizje,
+- kamerę,
+- input,
+- render,
+- debug UI,
+- CardEngine,
+- SUB-META.
+
+W późniejszym etapie projekt zaczął przechodzić z renderowania canvas2D w kierunku hybrydowego modelu z Three.js. Three obsługuje warstwę świata, a HUD, SUB-META i META pozostają poza Three jako overlay/UI.
+
+To ważna decyzja architektoniczna: render może się rozwijać, ale mechanika, fizyka, input i system kart pozostają stabilne.`
+        },
+        {
+          title: 'Dokumentacja jako część systemu',
+          text: `Jednym z najważniejszych elementów projektu była dokumentacja.
+
+Haiku Cosmos posiada:
+
+- mapę projektu,
+- mapę zależności,
+- kanoniczne dokumenty systemów,
+- dokumenty UI,
+- visual direction,
+- standardy SVG,
+- specyfikacje techniczne,
+- roadmapę,
+- snapshoty stanu,
+- instrukcje dla Codexa.
+
+Dokumentacja nie była dodatkiem po fakcie. Była narzędziem prowadzenia projektu.
+
+Dzięki temu możliwe było pracowanie z AI/Codexem w sposób kontrolowany: z jasnym zakresem zmian, zakazami, zależnościami, testami, ryzykami i oczekiwanym podsumowaniem.
+
+To pokazuje umiejętność prowadzenia złożonego projektu nie tylko „w głowie”, ale w formie, którą mogą czytać ludzie, zespoły i narzędzia AI.`
+        },
+        {
+          title: 'Visual pipeline',
+          text: `Warstwa wizualna projektu została opisana jako: rytualny minimalizm kosmiczny.
+
+Czyli połączenie:
+
+- czytelności gameplayowej,
+- kontemplacyjnej przestrzeni,
+- subtelnej sakralności form,
+- geometrii,
+- rezonansu,
+- oszczędnej symboliki.
+
+UI nie miało wyglądać jak typowy panel sci-fi ani fantasy inventory. Karty, ramki i SUB-META miały przypominać system znaczeń: astrolabium, rytuał, mapa zależności, pole rezonansu.
+
+Pipeline wizualny obejmował:
+
+- generowanie referencji rastrowych,
+- wektoryzację i cleanup w Inkscape,
+- SVG jako kandydat produkcyjny,
+- modularne ramki i ornamenty,
+- standardy viewBox/warstw/tintingu,
+- przygotowanie pod FrameComposer.`
+        },
+        {
+          title: 'What this project shows',
+          text: `- System thinking
+- Game design
+- Technical design
+- UI/UX architecture
+- Documentation strategy
+- AI-assisted production
+- Runtime debugging
+- Creative direction
+- Cross-layer project leadership`
+        }
+      ],
+      aiWorkflow: [
+        'Projekt był również praktycznym laboratorium pracy z AI jako narzędziem produkcyjnym.',
+        'Moim zadaniem było nie tylko „poprosić AI o kod”, ale prowadzić proces: określić kontekst, wskazać dokumenty źródłowe, ograniczyć zakres zmian, zabronić naruszania mechaniki, wymusić raport zmian, sprawdzić rozjazdy, zaktualizować dokumentację i utrzymać kanon projektu.',
+        'W praktyce oznaczało to rolę osoby, która tłumaczy wizję na instrukcje wykonawcze dla narzędzi technicznych — i pilnuje, żeby system nie rozpadł się na przypadkowe patche.',
+        'To jest bardzo mocny element portfolio, szczególnie pod firmy, które dopiero uczą się sensownej pracy z AI.'
+      ],
+      result: `Efektem jest działający interaktywny prototyp oraz rozbudowany system projektowy, który obejmuje gameplay, UI, ekonomię, dokumentację, debug, asset pipeline i runtime.
+
+Haiku Cosmos pokazuje, że potrafię:
+
+- prowadzić złożony projekt przez wiele warstw naraz,
+- łączyć intuicyjną wizję z techniczną strukturą,
+- projektować systemy zależności,
+- pracować z dokumentacją jako narzędziem produkcji,
+- koordynować pracę z AI/Codexem,
+- myśleć jednocześnie jak projektant, techniczny lider i osoba odpowiedzialna za spójność całości.`
+    },
     featureLabel: 'Skills / scope:',
     featureText: 'game design · system design · UI/UX · runtime · debug · documentation · visual pipeline · AI-assisted workflow'
   },
