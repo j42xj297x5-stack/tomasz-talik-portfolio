@@ -1127,6 +1127,15 @@ export function createOverlay({ onClose, assetManager = null } = {}) {
             <p class="overlay__feature-label"></p>
             <p class="overlay__feature-text"></p>
           </div>
+          <figure class="overlay__demo" hidden>
+            <button class="overlay__demo-preview" type="button" aria-label="Powiększ demo DIG Engine">
+              <img class="overlay__demo-image" alt="">
+            </button>
+            <figcaption class="overlay__demo-caption">
+              <span>Loop demo</span>
+              <button class="overlay__demo-enlarge" type="button">Powiększ demo</button>
+            </figcaption>
+          </figure>
           <p class="overlay__closing" hidden></p>
         </div>
         <div class="overlay__actions">
@@ -1134,6 +1143,13 @@ export function createOverlay({ onClose, assetManager = null } = {}) {
         </div>
       </div>
     </article>
+    <div class="overlay__demo-lightbox" role="dialog" aria-modal="true" aria-label="Powiększone demo DIG Engine" hidden>
+      <button class="overlay__demo-lightbox-backdrop" type="button" data-close-demo aria-label="Zamknij powiększone demo"></button>
+      <div class="overlay__demo-lightbox-frame">
+        <button class="overlay__demo-lightbox-close" type="button" data-close-demo aria-label="Zamknij powiększone demo">×</button>
+        <img class="overlay__demo-lightbox-image" alt="">
+      </div>
+    </div>
   `;
 
   const panelEl = root.querySelector('.overlay__panel');
@@ -1145,6 +1161,13 @@ export function createOverlay({ onClose, assetManager = null } = {}) {
   const featureEl = root.querySelector('.overlay__feature');
   const featureLabelEl = root.querySelector('.overlay__feature-label');
   const featureTextEl = root.querySelector('.overlay__feature-text');
+  const demoEl = root.querySelector('.overlay__demo');
+  const demoPreviewEl = root.querySelector('.overlay__demo-preview');
+  const demoEnlargeEl = root.querySelector('.overlay__demo-enlarge');
+  const demoImageEl = root.querySelector('.overlay__demo-image');
+  const demoLightboxEl = root.querySelector('.overlay__demo-lightbox');
+  const demoLightboxImageEl = root.querySelector('.overlay__demo-lightbox-image');
+  const demoLightboxCloseEl = root.querySelector('.overlay__demo-lightbox-close');
   const mobileFrameEl = root.querySelector('.mobile-svg-frame');
   const mobileOrnamentEl = root.querySelector('.overlay__mobile-ornament');
 
@@ -1152,6 +1175,32 @@ export function createOverlay({ onClose, assetManager = null } = {}) {
   const mobileFrameReady = mobileFrameEl ? loadMobileFrameSvgs(mobileFrameEl).finally(mobileFrameLayout.schedule) : Promise.resolve();
   const mobilePanelMedia = window.matchMedia('(max-width: 768px)');
   let activeGateId = null;
+  let demoLightboxOpener = null;
+
+  const closeDemoLightbox = () => {
+    if (!demoLightboxEl || demoLightboxEl.hidden) return;
+
+    demoLightboxEl.hidden = true;
+    document.body.classList.remove('demo-lightbox-open');
+
+    if (demoLightboxOpener instanceof HTMLElement && demoLightboxOpener.isConnected) {
+      demoLightboxOpener.focus();
+    }
+
+    demoLightboxOpener = null;
+  };
+
+  const openDemoLightbox = (event) => {
+    if (!demoLightboxEl || !demoLightboxImageEl || !demoImageEl?.src) return;
+
+    demoLightboxOpener = event?.currentTarget instanceof HTMLElement ? event.currentTarget : document.activeElement;
+    demoLightboxImageEl.src = demoImageEl.src;
+    demoLightboxImageEl.alt = demoImageEl.alt;
+    demoLightboxEl.hidden = false;
+    document.body.classList.add('demo-lightbox-open');
+    demoLightboxCloseEl?.focus();
+  };
+
   const applyPanelBackground = (gateId) => {
     const panelBackgroundPath = GLYPH_PANEL_BACKGROUNDS[gateId];
     const shouldSuppressPanelBackground = mobilePanelMedia.matches;
@@ -1176,6 +1225,7 @@ export function createOverlay({ onClose, assetManager = null } = {}) {
 
   const close = () => {
     if (root.hidden) return;
+    closeDemoLightbox();
     root.hidden = true;
     panelEl.removeAttribute('data-gate-id');
     panelEl.removeAttribute('data-panel-theme');
@@ -1184,7 +1234,15 @@ export function createOverlay({ onClose, assetManager = null } = {}) {
     onClose?.();
   };
 
+  demoPreviewEl?.addEventListener('click', openDemoLightbox);
+  demoEnlargeEl?.addEventListener('click', openDemoLightbox);
+
   root.addEventListener('click', (event) => {
+    if (event.target instanceof HTMLElement && event.target.dataset.closeDemo !== undefined) {
+      closeDemoLightbox();
+      return;
+    }
+
     if (event.target instanceof HTMLElement && event.target.dataset.closeOverlay !== undefined) {
       close();
     }
@@ -1192,6 +1250,11 @@ export function createOverlay({ onClose, assetManager = null } = {}) {
 
   window.addEventListener('keydown', (event) => {
     if (event.key === 'Escape') {
+      if (demoLightboxEl && !demoLightboxEl.hidden) {
+        closeDemoLightbox();
+        return;
+      }
+
       close();
     }
   });
@@ -1238,6 +1301,21 @@ export function createOverlay({ onClose, assetManager = null } = {}) {
       statusEl.textContent = nodeData.eyebrow ?? (isAIGuide ? nodeData.shortLabel : 'Draft content — final copy pending');
 
       titleEl.textContent = nodeData.title;
+
+      if (nodeData.demoGifPath) {
+        const demoGifUrl = publicPath(nodeData.demoGifPath);
+        const demoAlt = nodeData.demoGifAlt ?? `${nodeData.title} demo`;
+        demoImageEl.src = demoGifUrl;
+        demoImageEl.alt = demoAlt;
+        demoLightboxImageEl.alt = demoAlt;
+        demoEl.hidden = false;
+      } else {
+        demoEl.hidden = true;
+        demoImageEl.removeAttribute('src');
+        demoImageEl.alt = '';
+        demoLightboxImageEl.removeAttribute('src');
+        demoLightboxImageEl.alt = '';
+      }
 
       if (hasStructuredCopy) {
         leadEl.hidden = !nodeData.leadText;
