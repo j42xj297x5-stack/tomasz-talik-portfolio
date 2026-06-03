@@ -166,20 +166,25 @@ export function startClassic2D({ container, language = 'en', onBackToModes }) {
     button.style.setProperty('--gate-total', String(portfolioNodes.length));
     if (gateThemeColor) button.style.setProperty('--gate-theme-color', gateThemeColor);
     button.innerHTML = `
-      <span class="classic-2d-gate__glyph" aria-hidden="true">
-        ${glyphSpritePath ? `
-          <img
-            class="classic-2d-gate__glyph-image"
-            src="${publicPath(glyphSpritePath)}"
-            alt=""
-            loading="eager"
-            decoding="async"
-          >
-        ` : ''}
-        <span class="classic-2d-gate__glyph-fallback">${escapeHtml(glyphSymbol)}</span>
+      <span class="classic-2d-gate__glyph-shell" aria-hidden="true">
+        <span class="classic-2d-gate__halo"></span>
+        <span class="classic-2d-gate__glyph">
+          ${glyphSpritePath ? `
+            <img
+              class="classic-2d-gate__glyph-image"
+              src="${publicPath(glyphSpritePath)}"
+              alt=""
+              loading="eager"
+              decoding="async"
+            >
+          ` : ''}
+          <span class="classic-2d-gate__glyph-fallback">${escapeHtml(glyphSymbol)}</span>
+        </span>
       </span>
-      <span class="classic-2d-gate__title">${escapeHtml(node.title)}</span>
-      <span class="classic-2d-gate__label">${escapeHtml(node.shortLabel || copy.gateHelp)}</span>
+      <span class="classic-2d-gate__text">
+        <span class="classic-2d-gate__title">${escapeHtml(node.title)}</span>
+        <span class="classic-2d-gate__label">${escapeHtml(node.shortLabel || copy.gateHelp)}</span>
+      </span>
     `;
 
     button.querySelector('.classic-2d-gate__glyph-image')?.addEventListener('error', (event) => {
