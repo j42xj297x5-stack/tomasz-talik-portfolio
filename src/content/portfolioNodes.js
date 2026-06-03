@@ -21,6 +21,8 @@ export const portfolioNodes = [
     modelKind: 'glyph',
     ornamentPath: '/png/digger_ornament.png',
     ornamentMobileOnly: true,
+    demoGifPath: '/gif/DIG_engine.gif',
+    demoGifAlt: 'Animated DIG Engine interface demo',
     draftText: 'DIG Engine to system eksploracji muzyki, który łączy dane, API i intuicję słuchacza.',
     leadText: 'DIG Engine to system eksploracji muzyki, który łączy dane, API i intuicję słuchacza.',
     bodyText: `Nie jest tylko narzędziem do playlist.
