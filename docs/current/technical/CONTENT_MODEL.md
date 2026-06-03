@@ -39,6 +39,17 @@ Rules in current MVP:
 - In particular, the content/runtime gate `ethics-life-protection` maps to `data-panel-theme="ethics"` so mobile CSS can avoid conflicts between long-form gate IDs, legacy `theme-*` classes, and `.overlay__panel--ethics` selectors.
 
 
+## Classic 2D usage checkpoint (2026-06-03)
+
+- Classic 2D now consumes the current `portfolioNodes` records directly from `src/content/portfolioNodes.js`.
+- Gate IDs remain stable across the flat Classic 2D MVP and the Experience 3D gate model.
+- Text is not duplicated for 2D; Classic 2D panels derive their readable content from the existing shared record fields such as `leadText`, `bodyText`, `draftText`, `closingText`, and feature metadata where present.
+- Flat glyph sprite mapping is a UI/visual mapping in `src/classic2d.js`, not a content rename and not a replacement for the GLB glyph metadata used by Experience 3D.
+- Current Classic 2D flat sprite mapping: AI Guide -> `/png/glif_ai_guide.png`, DIG Engine -> `/png/glif_dig_engine.png`, Haiku Cosmos -> `/png/glif_haiku_cosmos.png`, Creative AI -> `/png/glif_creative_ai.png`, Ethics / Life Protection -> `/png/glif_ethics.png`.
+- Browser/runtime asset paths must remain logical public paths such as `/png/glif_ai_guide.png`, not `public/png/glif_ai_guide.png`.
+- Full PL/EN content modeling, final bilingual copy, and content-locking remain future work.
+
+
 ## Planned shared PL/EN content model for dual modes
 
 Status: planned / documentation-only. The current active source remains `src/content/portfolioNodes.js`.

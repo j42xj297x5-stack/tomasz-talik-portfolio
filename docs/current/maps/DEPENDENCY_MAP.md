@@ -53,6 +53,16 @@ Concept docs -> Technical model -> Runtime implementation -> Decision updates ->
 - Remaining operational dependencies include GitHub Pages cache invalidation, browser cache checks, GLB size monitoring, and verification that manually managed binary assets are present before deployment.
 - Snapshot reference: `docs/current/audits/snapshots/2026-05-29_19-59-42__snapshot__dual-runtime-github-pages-deployment.md`.
 
+## Classic 2D MVP dependency status (2026-06-03)
+
+- `src/main.js` depends on `src/classic2d.js` for the Classic 2D branch and on dynamic import of `src/experience3d.js` for Experience 3D.
+- `src/classic2d.js` depends on `src/content/portfolioNodes.js` so Classic 2D panels use the same shared portfolio records as the 3D overlay model.
+- Classic 2D depends on PNG assets under `public/png`, referenced at runtime as logical public paths: `/png/monkey_small.png`, `/png/glif_ai_guide.png`, `/png/glif_dig_engine.png`, `/png/glif_haiku_cosmos.png`, `/png/glif_creative_ai.png`, and `/png/glif_ethics.png`.
+- Classic 2D depends on `src/styles/main.css` for layout, floating hotspot positioning, hover/focus halo and glow, crisp text behavior, responsive behavior, and reduced-motion transition handling.
+- Experience 3D remains separate and unchanged; it continues to depend on the existing Three.js, GLB, scene, loader, overlay, and deployment-safe public-path contracts.
+- Future Classic 2D polish may depend on a dedicated visual contract or snapshot before adding larger retro effects.
+- Future polish should preserve shared content usage and should not reintroduce persistent heavy card/tile gate visuals unless a later decision explicitly accepts that change.
+
 ## Galaxy sprite dependency status (2026-05-29)
 - `src/main.js` depends on `src/scene/galaxySprites.js` for the distant background galaxy layer and keeps it outside orbit-node/raycast ownership.
 - `src/scene/galaxySprites.js` depends on `src/utils/publicPath.js` to resolve `/png/galaxy_01.png` through `/png/galaxy_05.png` under both local Vite and GitHub Pages base-path runtimes.
@@ -79,12 +89,12 @@ Concept docs -> Technical model -> Runtime implementation -> Decision updates ->
 ## Implemented entry shell and dual-mode dependency status (2026-06-02)
 
 - Concept docs (`concept/CONCEPT_AND_ROADMAP.md`, `concept/INTERACTION_MODEL.md`, and visual tone documents when needed) inform `technical/ENTRY_FLOW_AND_MODES_MODEL.md`.
-- `technical/ENTRY_FLOW_AND_MODES_MODEL.md` now informs the implemented entry shell baseline in `technical/FRONTEND_RUNTIME_MODEL.md`, while future Classic 2D/content work remains downstream.
-- `src/main.js` depends on entry shell state and mode selection for language choice, mode choice, optional persistence, Classic 2D placeholder rendering, and conditional Experience 3D launch.
+- `technical/ENTRY_FLOW_AND_MODES_MODEL.md` now informs the implemented entry shell baseline in `technical/FRONTEND_RUNTIME_MODEL.md`; Classic 2D MVP implementation and future content work remain downstream dependencies.
+- `src/main.js` depends on entry shell state and mode selection for language choice, mode choice, optional persistence, Classic 2D startup, and conditional Experience 3D launch.
 - `src/experience3d.js` depends on the existing 3D runtime modules for scene creation, lights, monkey/glyph loading, overlays, panels, camera/input, atmosphere progression, galaxy sprites, asset preloading, diagnostics, and debug tooling.
-- Experience 3D boot depends on selecting `Experience 3D` / `Doświadczenie 3D`; the initial entry shell and Classic 2D placeholder must not eagerly start the 3D runtime.
-- Classic 2D currently depends only on the lightweight placeholder UI in `src/main.js`; it is not a completed portfolio runtime.
-- Future Classic 2D implementation should depend on shared content records, stable gate IDs, and lightweight UI assets rather than the current Three.js scene unless a later explicit decision changes that.
+- Experience 3D boot depends on selecting `Experience 3D` / `Doświadczenie 3D`; the initial entry shell and Classic 2D branch must not eagerly start the 3D runtime.
+- Classic 2D currently depends on `src/classic2d.js`, shared `src/content/portfolioNodes.js` records, flat public PNG assets, and `src/styles/main.css`.
+- Future Classic 2D polish should continue to depend on shared content records, stable gate IDs, and lightweight UI assets rather than the current Three.js scene unless a later explicit decision changes that.
 - `technical/CONTENT_MODEL.md` informs both future `Classic 2D` and current/future `Experience 3D` content rendering.
 - The current Vite/GitHub Pages base-path and public asset rules remain dependencies for any implementation path.
 - Snapshot reference: `docs/current/audits/snapshots/2026-06-02_18-18-09__snapshot__entry-shell-conditional-3d-boot.md`.

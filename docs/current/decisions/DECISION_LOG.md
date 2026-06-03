@@ -190,3 +190,26 @@ Consequences:
 3. Future runtime tasks must check both `src/main.js` and `src/experience3d.js`.
 4. Classic 2D remains future work and is currently placeholder-only.
 5. Current deployment/public-path rules, Vite config, assets, package files, and content remain unchanged.
+
+
+## 2026-06-03 — Classic 2D MVP with floating glyph hotspots implemented
+
+Status: accepted / implemented.
+
+Decision: Classic 2D is now an implemented MVP lightweight flat portfolio experience with a central monkey PNG, five floating flat PNG glyph hotspots, shared-content readable panels, and subtle no-ring hover/focus glow behavior.
+
+Rationale:
+1. Turns Classic 2D from a placeholder into a functional lightweight portfolio path.
+2. Keeps 2D fast, accessible, and readable without forcing the 3D runtime for visitors choosing the flat mode.
+3. Reuses the existing shared `src/content/portfolioNodes.js` records rather than duplicating content for 2D.
+4. Preserves the conditional boot boundary: Experience 3D still starts only after explicit Experience 3D selection.
+5. Removes or reduces heavy persistent tile/card visuals in favor of symbolic floating glyph hotspots.
+6. Addresses hover text blur by keeping text layers unscaled and limiting transform motion to glyph/halo layers.
+
+Consequences:
+1. Classic 2D is now part of the current runtime baseline.
+2. Future tasks must preserve shared content usage and stable gate IDs across Classic 2D and Experience 3D.
+3. Future visual polish should not reintroduce heavy persistent cards or tiles for glyph hotspots unless explicitly decided.
+4. Ring/orbital outline effects are deferred and were intentionally not added in this pass.
+5. Browser/runtime public paths must remain logical paths such as `/png/monkey_small.png` and `/png/glif_ai_guide.png`, not `public/png/...` paths.
+6. Experience 3D remains separate and unchanged by this Classic 2D MVP decision.
