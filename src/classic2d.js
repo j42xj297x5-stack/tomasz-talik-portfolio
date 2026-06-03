@@ -1,5 +1,6 @@
 import { portfolioNodes } from './content/portfolioNodes.js';
 import { publicPath } from './utils/publicPath.js';
+import { getGateAccentColor, getPanelThemeForGate } from './ui/panelThemes.js';
 
 const CLASSIC_COPY = {
   pl: {
@@ -32,13 +33,6 @@ const GLYPH_SPRITES_BY_GATE_ID = {
   'creative-ai': '/png/glif_creative_ai.png',
   'ethics-life-protection': '/png/glif_ethics.png'
 };
-const GATE_THEME_COLORS_BY_GATE_ID = {
-  'ai-guide': '#d5be79',
-  'spotify-digger': '#7fc8ff',
-  'haiku-cosmos': '#c9a7ff',
-  'creative-ai': '#ffb86f',
-  'ethics-life-protection': '#9ce0bb'
-};
 const MONKEY_TILTS = ['-5deg', '4deg', '-3deg', '5deg', '-4deg'];
 const CLASSIC_MONKEY_IMAGE_PATH = '/png/monkey_small.png';
 
@@ -70,9 +64,13 @@ function renderPanel(panel, node, copy) {
   const lead = node.leadText || node.draftText || '';
   const bodyParagraphs = createParagraphs(getNodeText(node));
 
+  panel.dataset.panelTheme = getPanelThemeForGate(node.id);
+  panel.dataset.gateId = node.id;
   panel.innerHTML = `
-    <div class="classic-2d-panel__card" role="dialog" aria-modal="false" aria-labelledby="classic-2d-panel-title">
-      <p class="classic-2d-panel__status">${escapeHtml(copy.panelStatus)}</p>
+    <div class="classic-2d-panel__card" role="dialog" aria-modal="true" aria-labelledby="classic-2d-panel-title" aria-describedby="classic-2d-panel-status">
+      <span class="classic-2d-panel__ornament classic-2d-panel__ornament--top" aria-hidden="true"></span>
+      <span class="classic-2d-panel__ornament classic-2d-panel__ornament--bottom" aria-hidden="true"></span>
+      <p class="classic-2d-panel__status" id="classic-2d-panel-status">${escapeHtml(copy.panelStatus)}</p>
       <h2 class="classic-2d-panel__title" id="classic-2d-panel-title">${escapeHtml(node.title)}</h2>
       <p class="classic-2d-panel__label">${escapeHtml(node.shortLabel || node.title)}</p>
       ${lead ? `<p class="classic-2d-panel__lead">${escapeHtml(lead)}</p>` : ''}
@@ -91,6 +89,7 @@ function renderPanel(panel, node, copy) {
   `;
 
   panel.hidden = false;
+  document.body.classList.add('classic-2d-panel-open');
   panel.querySelector('[data-classic-panel-close]')?.focus();
 }
 
@@ -99,6 +98,7 @@ export function startClassic2D({ container, language = 'en', onBackToModes }) {
 
   const copy = resolveCopy(language);
   let activeGateId = null;
+  let lastFocusedGate = null;
 
   container.innerHTML = `
     <main class="classic-2d" aria-labelledby="classic-2d-title">
@@ -160,7 +160,7 @@ export function startClassic2D({ container, language = 'en', onBackToModes }) {
     button.setAttribute('aria-pressed', 'false');
     const glyphSymbol = GLYPH_SYMBOLS[index] || '✧';
     const glyphSpritePath = GLYPH_SPRITES_BY_GATE_ID[node.id];
-    const gateThemeColor = GATE_THEME_COLORS_BY_GATE_ID[node.id];
+    const gateThemeColor = getGateAccentColor(node.id);
 
     button.style.setProperty('--gate-index', String(index));
     button.style.setProperty('--gate-total', String(portfolioNodes.length));
@@ -192,6 +192,7 @@ export function startClassic2D({ container, language = 'en', onBackToModes }) {
     });
 
     button.addEventListener('click', () => {
+      lastFocusedGate = button;
       activeGateId = node.id;
       orbit.querySelectorAll('.classic-2d-gate').forEach((gate) => {
         const isActive = gate.dataset.gateId === activeGateId;
@@ -206,14 +207,13 @@ export function startClassic2D({ container, language = 'en', onBackToModes }) {
     orbit.append(button);
   });
 
-  container.querySelector('[data-classic-back]')?.addEventListener('click', () => {
-    if (typeof onBackToModes === 'function') onBackToModes();
-  });
-
-  panel.addEventListener('click', (event) => {
-    if (!event.target.closest('[data-classic-panel-close]')) return;
+  const closePanel = ({ restoreFocus = true } = {}) => {
+    if (panel.hidden) return;
     panel.hidden = true;
     panel.innerHTML = '';
+    panel.removeAttribute('data-panel-theme');
+    panel.removeAttribute('data-gate-id');
+    document.body.classList.remove('classic-2d-panel-open');
     activeGateId = null;
     monkey.classList.remove('classic-2d__monkey--active');
     monkey.style.removeProperty('--monkey-tilt');
@@ -221,11 +221,53 @@ export function startClassic2D({ container, language = 'en', onBackToModes }) {
       gate.classList.remove('classic-2d-gate--active');
       gate.setAttribute('aria-pressed', 'false');
     });
-    orbit.querySelector('.classic-2d-gate')?.focus();
+
+    if (restoreFocus && lastFocusedGate?.isConnected) {
+      lastFocusedGate.focus();
+    }
+  };
+
+
+
+  container.querySelector('[data-classic-back]')?.addEventListener('click', () => {
+    closePanel({ restoreFocus: false });
+    if (typeof onBackToModes === 'function') onBackToModes();
   });
+
+  panel.addEventListener('click', (event) => {
+    if (!event.target.closest('[data-classic-panel-close]')) return;
+    closePanel();
+  });
+
+  const handleKeydown = (event) => {
+    if (event.key === 'Escape') {
+      closePanel();
+      return;
+    }
+
+    if (event.key !== 'Tab' || panel.hidden) return;
+
+    const focusableElements = [...panel.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])')]
+      .filter((element) => !element.disabled && element.offsetParent !== null);
+    if (!focusableElements.length) return;
+
+    const firstFocusable = focusableElements[0];
+    const lastFocusable = focusableElements.at(-1);
+    if (event.shiftKey && document.activeElement === firstFocusable) {
+      event.preventDefault();
+      lastFocusable.focus();
+    } else if (!event.shiftKey && document.activeElement === lastFocusable) {
+      event.preventDefault();
+      firstFocusable.focus();
+    }
+  };
+
+  window.addEventListener('keydown', handleKeydown);
 
   return {
     destroy() {
+      window.removeEventListener('keydown', handleKeydown);
+      document.body.classList.remove('classic-2d-panel-open');
       container.innerHTML = '';
     }
   };
