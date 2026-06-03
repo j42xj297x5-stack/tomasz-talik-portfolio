@@ -753,6 +753,15 @@ body {
   text-shadow: 0 0 18px var(--overlay-panel-title-shadow);
 }
 
+.overlay__panel--spotify-digger .overlay__subtitle {
+  margin: -0.8rem 0 clamp(16px, 2vw, 24px);
+  color: var(--overlay-panel-status-color);
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
 .overlay__panel--spotify-digger .overlay__lead {
   margin-bottom: 0.9rem;
   font-size: clamp(0.96rem, 1.18vw, 1.08rem);
@@ -835,7 +844,7 @@ body {
 .overlay__demo-caption {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   gap: 0.8rem;
   margin-top: 0.62rem;
   color: rgba(212, 232, 243, 0.78);
@@ -2492,22 +2501,132 @@ body.classic-2d-panel-open {
   overflow: hidden;
 }
 
+.classic-2d-panel__demo-preview {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  min-height: clamp(180px, 32vh, 360px);
+  padding: 0;
+  border: 1px solid color-mix(in srgb, var(--panel-frame) 46%, transparent);
+  border-radius: clamp(10px, 1.6vw, 14px);
+  background: rgba(2, 6, 10, 0.62);
+  cursor: zoom-in;
+  overflow: hidden;
+}
+
+.classic-2d-panel__demo-preview:focus-visible,
+.classic-2d-panel__demo-enlarge:focus-visible,
+.classic-2d-panel__demo-lightbox-close:focus-visible,
+.classic-2d-panel__demo-lightbox-backdrop:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--panel-frame) 72%, #ffffff);
+  outline-offset: 3px;
+}
+
 .classic-2d-panel__demo-image {
   display: block;
   width: 100%;
-  max-height: clamp(170px, 34vh, 360px);
-  border-radius: clamp(10px, 1.6vw, 14px);
+  max-width: 100%;
+  min-height: clamp(180px, 32vh, 360px);
+  max-height: clamp(180px, 32vh, 360px);
   object-fit: contain;
-  background: rgba(2, 6, 10, 0.62);
 }
 
 .classic-2d-panel__demo-caption {
+  display: flex;
+  justify-content: flex-end;
   margin-top: 0.62rem;
-  color: var(--panel-muted);
+}
+
+.classic-2d-panel__demo-enlarge {
+  border: 1px solid color-mix(in srgb, var(--panel-frame) 52%, transparent);
+  border-radius: 999px;
+  padding: 0.48rem 0.78rem;
+  color: var(--panel-text);
+  background: color-mix(in srgb, var(--panel-bg) 52%, rgba(6, 12, 18, 0.78));
+  font: inherit;
   font-size: clamp(0.72rem, 1.8vw, 0.82rem);
   font-weight: 800;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
+  cursor: zoom-in;
+}
+
+.classic-2d-panel__demo-enlarge:hover,
+.classic-2d-panel__demo-enlarge:focus-visible {
+  border-color: color-mix(in srgb, var(--panel-frame) 78%, #ffffff);
+  background: color-mix(in srgb, var(--panel-bg) 28%, rgba(22, 48, 38, 0.82));
+}
+
+.classic-2d-panel__demo-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 5;
+  display: grid;
+  place-items: center;
+  padding: 4vh 2vw;
+}
+
+.classic-2d-panel__demo-lightbox[hidden] {
+  display: none;
+}
+
+.classic-2d-panel__demo-lightbox-backdrop {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  border: 0;
+  background: rgba(1, 5, 9, 0.84);
+  backdrop-filter: blur(8px);
+  cursor: zoom-out;
+}
+
+.classic-2d-panel__demo-lightbox-frame {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  max-width: 96vw;
+  max-height: 90vh;
+  border: 1px solid color-mix(in srgb, var(--panel-frame) 58%, transparent);
+  border-radius: 18px;
+  background: linear-gradient(145deg, rgba(8, 15, 22, 0.94), rgba(33, 45, 54, 0.88));
+  box-shadow: 0 28px 80px rgba(0, 0, 0, 0.58), 0 0 42px rgba(80, 210, 132, 0.13), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  overflow: hidden;
+  animation: demo-lightbox-in 160ms ease-out;
+}
+
+.classic-2d-panel__demo-lightbox-image {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: 96vw;
+  max-height: 90vh;
+  object-fit: contain;
+}
+
+.classic-2d-panel__demo-lightbox-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border: 1px solid rgba(202, 225, 236, 0.48);
+  border-radius: 999px;
+  color: #f4fbff;
+  background: rgba(5, 13, 19, 0.74);
+  font: inherit;
+  font-size: 1.6rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.classic-2d-panel__demo-lightbox-close:hover,
+.classic-2d-panel__demo-lightbox-close:focus-visible {
+  background: rgba(30, 58, 70, 0.9);
+  border-color: rgba(232, 246, 255, 0.76);
 }
 
 .classic-2d-panel__body {
@@ -2629,6 +2748,12 @@ body.classic-2d-panel-open {
 
   .classic-2d-panel__title {
     font-size: clamp(2rem, 12vw, 3.25rem);
+  }
+
+  .classic-2d-panel__demo-preview,
+  .classic-2d-panel__demo-image {
+    min-height: clamp(180px, 30vh, 300px);
+    max-height: clamp(180px, 30vh, 300px);
   }
 }
 

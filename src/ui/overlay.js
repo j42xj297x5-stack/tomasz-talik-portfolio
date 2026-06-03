@@ -1121,13 +1121,13 @@ export function createOverlay({ onClose, assetManager = null } = {}) {
         <div class="overlay__scroll">
           <p class="overlay__status">Draft content — final copy pending</p>
           <h2 class="overlay__title"></h2>
+          <p class="overlay__subtitle" hidden></p>
           <p class="overlay__lead" hidden></p>
           <figure class="overlay__demo" hidden>
             <button class="overlay__demo-preview" type="button" aria-label="Powiększ demo DIG Engine">
               <img class="overlay__demo-image" alt="">
             </button>
             <figcaption class="overlay__demo-caption">
-              <span>Loop demo</span>
               <button class="overlay__demo-enlarge" type="button">Powiększ demo</button>
             </figcaption>
           </figure>
@@ -1155,6 +1155,7 @@ export function createOverlay({ onClose, assetManager = null } = {}) {
   const panelEl = root.querySelector('.overlay__panel');
   const statusEl = root.querySelector('.overlay__status');
   const titleEl = root.querySelector('.overlay__title');
+  const subtitleEl = root.querySelector('.overlay__subtitle');
   const leadEl = root.querySelector('.overlay__lead');
   const textEl = root.querySelector('.overlay__text');
   const closingEl = root.querySelector('.overlay__closing');
@@ -1298,9 +1299,13 @@ export function createOverlay({ onClose, assetManager = null } = {}) {
         mobileOrnamentEl.removeAttribute('src');
       }
 
-      statusEl.textContent = nodeData.eyebrow ?? (isAIGuide ? nodeData.shortLabel : 'Draft content — final copy pending');
+      const subtitle = nodeData.subtitle ?? '';
+      statusEl.hidden = Boolean(subtitle);
+      statusEl.textContent = subtitle ? '' : (nodeData.eyebrow ?? (isAIGuide ? nodeData.shortLabel : 'Draft content — final copy pending'));
 
       titleEl.textContent = nodeData.title;
+      subtitleEl.hidden = !subtitle;
+      subtitleEl.textContent = subtitle;
 
       if (nodeData.demoGifPath) {
         const demoGifUrl = publicPath(nodeData.demoGifPath);

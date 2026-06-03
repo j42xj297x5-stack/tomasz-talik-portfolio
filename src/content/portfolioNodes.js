@@ -16,7 +16,8 @@ export const portfolioNodes = [
     id: 'spotify-digger',
     title: 'DIG Engine',
     shortLabel: 'DIG Engine',
-    eyebrow: 'Metal / Music Data Resonance',
+    eyebrow: 'Music Data Resonance',
+    subtitle: 'Music Data Resonance',
     modelPath: '/glb/glyph_4.glb',
     modelKind: 'glyph',
     ornamentPath: '/png/digger_ornament.png',
@@ -24,8 +25,9 @@ export const portfolioNodes = [
     demoGifPath: '/gif/DIG_engine.gif',
     demoGifAlt: 'Animated DIG Engine interface demo',
     draftText: 'DIG Engine to system eksploracji muzyki, który łączy dane, API i intuicję słuchacza.',
-    leadText: 'DIG Engine to system eksploracji muzyki, który łączy dane, API i intuicję słuchacza.',
-    bodyText: `Nie jest tylko narzędziem do playlist.
+    bodyText: `DIG Engine to system eksploracji muzyki, który łączy dane, API i intuicję słuchacza.
+
+Nie jest tylko narzędziem do playlist.
 To laboratorium porządkowania muzycznego chaosu — miejsce, gdzie serwisy muzyczne, historia odsłuchów, metadane i własna baza danych zaczynają pracować razem.
 
 System pomaga odkrywać powiązania między artystami, albumami, tagami, wydaniami i playlistami.
