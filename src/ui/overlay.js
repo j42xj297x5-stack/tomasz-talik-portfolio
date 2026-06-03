@@ -1269,7 +1269,7 @@ export function createOverlay({ onClose, assetManager = null } = {}) {
         button.className = 'overlay__case-shot-button';
         button.type = 'button';
         button.dataset.mediaOpen = '';
-        button.setAttribute('aria-label', `Powiększ screenshot: ${item.caption ?? item.alt ?? caseStudy.title}`);
+        button.setAttribute('aria-label', `Powiększ screenshot: ${item.title ?? item.alt ?? item.caption ?? caseStudy.title}`);
 
         const image = document.createElement('img');
         image.src = publicPath(item.src);
@@ -1279,7 +1279,16 @@ export function createOverlay({ onClose, assetManager = null } = {}) {
         button.append(image);
 
         const caption = document.createElement('figcaption');
-        caption.textContent = item.caption ?? '';
+        if (item.title) {
+          const captionTitle = document.createElement('strong');
+          captionTitle.textContent = item.title;
+          caption.append(captionTitle);
+        }
+        if (item.caption) {
+          const captionText = document.createElement('span');
+          captionText.textContent = item.caption;
+          caption.append(captionText);
+        }
 
         figure.append(button, caption);
         gallery.append(figure);

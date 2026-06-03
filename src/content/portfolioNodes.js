@@ -71,33 +71,39 @@ Projekt pokazuje moje podejście do narzędzi użytkowych: dane mają być czyte
       gallery: [
         {
           src: '/png/dig_engine-screenshot_01.png',
-          alt: 'Główny widok systemu i roboczy interfejs DIG Engine.',
-          caption: 'Główny widok systemu i roboczy interfejs DIG Engine.'
+          title: 'Progress',
+          alt: 'Progress view in DIG Engine',
+          caption: 'Okno pokazuje aktualny stan działania diggera: wykonane i bieżące zadania, kroki wymagające decyzji użytkownika oraz pola wejściowe, np. plik z utworami bazowymi, nazwę playlisty albo zatwierdzenie wyborów w trakcie procesu.'
         },
         {
           src: '/png/dig_engine-screenshot_02.png',
-          alt: 'Przepływ pracy i stan bieżącego runu.',
-          caption: 'Przepływ pracy i stan bieżącego runu.'
+          title: 'Discogs Browser',
+          alt: 'Discogs Browser in DIG Engine',
+          caption: 'Panel pracy z lokalną bazą Discogs. Umożliwia ręczne przeszukiwanie bazy po słowach kluczowych, takich jak wykonawca lub album, zawężanie wyników według lat i kraju wydania oraz tworzenie plików preseed.csv używanych później w modułach wyszukiwania podobnych artystów i utworów.'
         },
         {
           src: '/png/dig_engine-screenshot_03.png',
-          alt: 'Wyniki, kandydaci i decyzje użytkownika.',
-          caption: 'Wyniki, kandydaci i decyzje użytkownika.'
+          title: 'Workflow Composer',
+          alt: 'Workflow Composer in DIG Engine',
+          caption: 'Miejsce budowania własnych workflowów z dostępnych modułów. Pozwala zmieniać parametry filtrowania, kolejność działania elementów diggera, generować plik CSV albo automatycznie opublikować playlistę w Spotify.'
         },
         {
           src: '/png/dig_engine-screenshot_04.png',
-          alt: 'Warstwa metadanych i źródeł zewnętrznych.',
-          caption: 'Warstwa metadanych i źródeł zewnętrznych.'
+          title: 'Results',
+          alt: 'Results view in DIG Engine',
+          caption: 'Okno podsumowujące wynik uruchomionego procesu: czas startu, użyte pliki i źródła danych, liczbę odnalezionych utworów, status publikacji playlisty lub zapisu pliku oraz czas pracy diggera.'
         },
         {
           src: '/png/dig_engine-screenshot_05.png',
-          alt: 'Workflow Composer / preset workflow.',
-          caption: 'Workflow Composer / preset workflow.'
+          title: 'Settings',
+          alt: 'Settings view in DIG Engine',
+          caption: 'Centrum konfiguracji aplikacji: zapisywanie i wczytywanie plików konfiguracyjnych, budowanie i przebudowa lokalnej bazy Discogs/FTS, ustawianie lokalizacji danych, tworzenie bazy DNA oraz konfiguracja API używanych serwisów.'
         },
         {
           src: '/png/dig_engine-screenshot_06.png',
-          alt: 'Debug, settings albo widok pomocniczy procesu.',
-          caption: 'Debug, settings albo widok pomocniczy procesu.'
+          title: 'Spotify output',
+          alt: 'Spotify playlist created by DIG Engine',
+          caption: 'Przykładowa playlista w aplikacji Spotify, utworzona automatycznie przez DIG Engine jako rezultat zakończonego workflowu.'
         }
       ]
     }
