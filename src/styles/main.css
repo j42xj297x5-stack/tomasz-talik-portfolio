@@ -1742,11 +1742,15 @@ body {
 .classic-2d-panel__close,
 .classic-2d-gate {
   appearance: none;
-  border: 1px solid rgba(151, 171, 202, 0.36);
-  background: rgba(8, 14, 24, 0.78);
   color: #edf4ff;
   cursor: pointer;
   font: inherit;
+}
+
+.classic-2d__mode-back,
+.classic-2d-panel__close {
+  border: 1px solid rgba(151, 171, 202, 0.36);
+  background: rgba(8, 14, 24, 0.78);
   transition: border-color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
 }
 
@@ -1761,12 +1765,14 @@ body {
 .classic-2d__mode-back:hover,
 .classic-2d__mode-back:focus-visible,
 .classic-2d-panel__close:hover,
-.classic-2d-panel__close:focus-visible,
-.classic-2d-gate:hover,
-.classic-2d-gate:focus-visible {
+.classic-2d-panel__close:focus-visible {
   border-color: rgba(213, 190, 121, 0.72);
   background: rgba(17, 27, 42, 0.92);
   box-shadow: 0 0 28px rgba(99, 132, 174, 0.16);
+  outline: none;
+}
+
+.classic-2d-gate:focus-visible {
   outline: none;
 }
 
@@ -1782,11 +1788,14 @@ body {
 .classic-2d__stage::before {
   content: '';
   position: absolute;
-  width: min(66vh, 68vw, 620px);
+  width: min(70vh, 72vw, 660px);
   aspect-ratio: 1;
-  border: 1px solid rgba(170, 190, 220, 0.16);
-  border-radius: 999px;
-  box-shadow: inset 0 0 42px rgba(98, 130, 170, 0.08), 0 0 54px rgba(211, 190, 121, 0.06);
+  background:
+    radial-gradient(circle at 50% 48%, rgba(213, 190, 121, 0.075), transparent 37%),
+    radial-gradient(circle at 50% 52%, rgba(98, 130, 170, 0.08), transparent 62%);
+  filter: blur(18px);
+  opacity: 0.78;
+  pointer-events: none;
 }
 
 .classic-2d__orbit {
@@ -1797,37 +1806,63 @@ body {
 
 .classic-2d-gate {
   --gate-angle: calc((360deg / var(--gate-total)) * var(--gate-index) - 90deg);
-  --gate-scale: 1;
   --gate-theme-color: #d5be79;
+  --gate-glyph-lift: 0px;
+  --gate-glyph-scale: 1;
+  --gate-halo-opacity: 0.16;
+  --gate-halo-scale: 0.72;
   position: absolute;
   top: 50%;
   left: 50%;
   display: grid;
   align-content: center;
-  gap: 0.28rem;
-  width: clamp(8rem, 17vw, 10.35rem);
-  min-height: 7.2rem;
-  padding: 0.72rem 0.68rem 0.78rem;
-  border-color: color-mix(in srgb, var(--gate-theme-color) 28%, rgba(151, 171, 202, 0.36));
-  border-radius: 20px;
-  background: rgba(8, 14, 24, 0.66);
+  justify-items: center;
+  gap: 0.34rem;
+  width: clamp(8.2rem, 17vw, 10.7rem);
+  min-height: 7.45rem;
+  padding: 0.72rem 0.7rem 0.8rem;
+  border: 0;
+  background: transparent;
   text-align: center;
-  box-shadow: inset 0 0 18px rgba(255, 255, 255, 0.025);
-  transform: translate(-50%, -50%) rotate(var(--gate-angle)) translateY(calc(-1 * min(29vh, 30vw, 270px))) rotate(calc(-1 * var(--gate-angle))) scale(var(--gate-scale));
+  transform: translate(-50%, -50%) rotate(var(--gate-angle)) translateY(calc(-1 * min(29vh, 30vw, 270px))) rotate(calc(-1 * var(--gate-angle)));
 }
 
 .classic-2d-gate:hover,
 .classic-2d-gate:focus-visible {
-  --gate-scale: 1.015;
-  border-color: color-mix(in srgb, var(--gate-theme-color) 72%, #edf4ff 8%);
-  box-shadow: 0 0 28px color-mix(in srgb, var(--gate-theme-color) 20%, transparent), inset 0 0 20px rgba(255, 255, 255, 0.035);
+  --gate-glyph-lift: -4px;
+  --gate-glyph-scale: 1.055;
+  --gate-halo-opacity: 0.54;
+  --gate-halo-scale: 1.08;
 }
 
 .classic-2d-gate--active {
-  --gate-scale: 1.025;
-  border-color: color-mix(in srgb, var(--gate-theme-color) 82%, #edf4ff 10%);
-  background: rgba(20, 28, 40, 0.88);
-  box-shadow: 0 0 30px color-mix(in srgb, var(--gate-theme-color) 24%, transparent), inset 0 0 24px rgba(255, 255, 255, 0.04);
+  --gate-glyph-lift: -2px;
+  --gate-glyph-scale: 1.035;
+  --gate-halo-opacity: 0.66;
+  --gate-halo-scale: 1.14;
+}
+
+.classic-2d-gate__glyph-shell {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: clamp(52px, 7vw, 96px);
+  transform: translateY(var(--gate-glyph-lift)) scale(var(--gate-glyph-scale));
+  transform-origin: 50% 60%;
+  transition: transform 0.22s ease;
+}
+
+.classic-2d-gate__halo {
+  position: absolute;
+  inset: 8%;
+  background:
+    radial-gradient(circle, color-mix(in srgb, var(--gate-theme-color) 34%, transparent) 0%, transparent 68%),
+    radial-gradient(circle, rgba(237, 244, 255, 0.14), transparent 48%);
+  filter: blur(13px);
+  opacity: var(--gate-halo-opacity);
+  transform: scale(var(--gate-halo-scale));
+  transition: opacity 0.22s ease, transform 0.22s ease;
+  pointer-events: none;
 }
 
 .classic-2d-gate__glyph {
@@ -1848,15 +1883,14 @@ body {
   object-fit: contain;
   filter: drop-shadow(0 0 12px color-mix(in srgb, var(--gate-theme-color) 18%, transparent));
   opacity: 0.9;
-  transition: filter 0.18s ease, opacity 0.18s ease, transform 0.18s ease;
+  transition: filter 0.18s ease, opacity 0.18s ease;
 }
 
 .classic-2d-gate:hover .classic-2d-gate__glyph-image,
 .classic-2d-gate:focus-visible .classic-2d-gate__glyph-image,
 .classic-2d-gate--active .classic-2d-gate__glyph-image {
   opacity: 1;
-  filter: drop-shadow(0 0 16px color-mix(in srgb, var(--gate-theme-color) 30%, transparent));
-  transform: scale(1.025);
+  filter: drop-shadow(0 0 18px color-mix(in srgb, var(--gate-theme-color) 36%, transparent));
 }
 
 .classic-2d-gate__glyph-fallback {
@@ -1871,6 +1905,22 @@ body {
   display: inline;
 }
 
+.classic-2d-gate__text {
+  display: grid;
+  gap: 0.14rem;
+  max-width: 100%;
+  color: rgba(237, 244, 255, 0.9);
+  text-shadow: 0 1px 12px rgba(3, 6, 12, 0.82);
+  transition: color 0.18s ease, text-shadow 0.18s ease;
+}
+
+.classic-2d-gate:hover .classic-2d-gate__text,
+.classic-2d-gate:focus-visible .classic-2d-gate__text,
+.classic-2d-gate--active .classic-2d-gate__text {
+  color: #ffffff;
+  text-shadow: 0 0 14px color-mix(in srgb, var(--gate-theme-color) 28%, transparent), 0 1px 14px rgba(3, 6, 12, 0.9);
+}
+
 .classic-2d-gate__title {
   font-weight: 720;
   line-height: 1.15;
@@ -1880,6 +1930,12 @@ body {
   color: rgba(220, 232, 248, 0.72);
   font-size: 0.78rem;
   line-height: 1.25;
+}
+
+.classic-2d-gate:hover .classic-2d-gate__label,
+.classic-2d-gate:focus-visible .classic-2d-gate__label,
+.classic-2d-gate--active .classic-2d-gate__label {
+  color: rgba(237, 244, 255, 0.86);
 }
 
 .classic-2d__monkey {
@@ -1901,10 +1957,8 @@ body {
   z-index: -1;
   width: min(78%, 15rem);
   aspect-ratio: 1;
-  border: 1px solid rgba(213, 190, 121, 0.18);
-  border-radius: 999px;
   background: radial-gradient(circle, rgba(213, 190, 121, 0.1), rgba(98, 130, 170, 0.06) 56%, transparent 72%);
-  box-shadow: 0 0 46px rgba(211, 190, 121, 0.08);
+  filter: blur(2px);
 }
 
 .classic-2d__monkey--active {
@@ -2089,9 +2143,10 @@ body {
     min-height: 6.35rem;
     padding: 0.52rem 0.48rem 0.6rem;
     gap: 0.18rem;
-    transform: translate(-50%, -50%) rotate(var(--gate-angle)) translateY(calc(-1 * min(11.2rem, 39vw))) rotate(calc(-1 * var(--gate-angle))) scale(var(--gate-scale));
+    transform: translate(-50%, -50%) rotate(var(--gate-angle)) translateY(calc(-1 * min(11.2rem, 39vw))) rotate(calc(-1 * var(--gate-angle)));
   }
 
+  .classic-2d-gate__glyph-shell,
   .classic-2d-gate__glyph {
     min-height: clamp(42px, 14vw, 72px);
   }
@@ -2128,8 +2183,10 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .classic-2d__mode-back,
   .classic-2d-panel__close,
-  .classic-2d-gate,
+  .classic-2d-gate__glyph-shell,
+  .classic-2d-gate__halo,
   .classic-2d-gate__glyph-image,
+  .classic-2d-gate__text,
   .classic-2d__monkey {
     transition: none;
   }
