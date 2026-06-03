@@ -60,9 +60,24 @@ function createParagraphs(text) {
     .filter(Boolean);
 }
 
+function renderDemoMarkup(node) {
+  if (!node.demoGifPath) return '';
+
+  const demoGifUrl = publicPath(node.demoGifPath);
+  const demoAlt = node.demoGifAlt || `${node.title} demo`;
+
+  return `
+    <figure class="classic-2d-panel__demo">
+      <img class="classic-2d-panel__demo-image" src="${escapeHtml(demoGifUrl)}" alt="${escapeHtml(demoAlt)}" loading="lazy" decoding="async">
+      <figcaption class="classic-2d-panel__demo-caption">Loop demo</figcaption>
+    </figure>
+  `;
+}
+
 function renderPanel(panel, node, copy) {
   const lead = node.leadText || node.draftText || '';
   const bodyParagraphs = createParagraphs(getNodeText(node));
+  const demoMarkup = renderDemoMarkup(node);
 
   panel.dataset.panelTheme = getPanelThemeForGate(node.id);
   panel.dataset.gateId = node.id;
@@ -74,6 +89,7 @@ function renderPanel(panel, node, copy) {
       <h2 class="classic-2d-panel__title" id="classic-2d-panel-title">${escapeHtml(node.title)}</h2>
       <p class="classic-2d-panel__label">${escapeHtml(node.shortLabel || node.title)}</p>
       ${lead ? `<p class="classic-2d-panel__lead">${escapeHtml(lead)}</p>` : ''}
+      ${demoMarkup}
       <div class="classic-2d-panel__body">
         ${bodyParagraphs.map((paragraph) => `<p>${escapeHtml(paragraph)}</p>`).join('')}
       </div>

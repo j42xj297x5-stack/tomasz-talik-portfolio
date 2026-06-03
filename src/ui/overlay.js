@@ -1122,11 +1122,6 @@ export function createOverlay({ onClose, assetManager = null } = {}) {
           <p class="overlay__status">Draft content — final copy pending</p>
           <h2 class="overlay__title"></h2>
           <p class="overlay__lead" hidden></p>
-          <p class="overlay__text"></p>
-          <div class="overlay__feature" hidden>
-            <p class="overlay__feature-label"></p>
-            <p class="overlay__feature-text"></p>
-          </div>
           <figure class="overlay__demo" hidden>
             <button class="overlay__demo-preview" type="button" aria-label="Powiększ demo DIG Engine">
               <img class="overlay__demo-image" alt="">
@@ -1136,6 +1131,11 @@ export function createOverlay({ onClose, assetManager = null } = {}) {
               <button class="overlay__demo-enlarge" type="button">Powiększ demo</button>
             </figcaption>
           </figure>
+          <p class="overlay__text"></p>
+          <div class="overlay__feature" hidden>
+            <p class="overlay__feature-label"></p>
+            <p class="overlay__feature-text"></p>
+          </div>
           <p class="overlay__closing" hidden></p>
         </div>
         <div class="overlay__actions">
