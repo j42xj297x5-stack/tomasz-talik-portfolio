@@ -9,7 +9,6 @@ const CLASSIC_COPY = {
     intro: 'Wybierz jeden z pięciu znaków wokół spokojnego centrum, aby otworzyć krótki panel projektu.',
     returnToModes: 'Wróć do wyboru trybu',
     closePanel: 'Zamknij panel',
-    panelStatus: 'Treść robocza — finalny tekst w przygotowaniu',
     centralLabel: 'Symboliczna kotwica 2D',
     gateHelp: 'Otwórz panel'
   },
@@ -19,7 +18,6 @@ const CLASSIC_COPY = {
     intro: 'Choose one of the five signs around the calm center to open a short project panel.',
     returnToModes: 'Back to mode selection',
     closePanel: 'Close panel',
-    panelStatus: 'Draft content — final copy pending',
     centralLabel: 'Symbolic 2D anchor',
     gateHelp: 'Open panel'
   }
@@ -53,6 +51,10 @@ function getNodeText(node) {
   return node.bodyText || node.draftText || node.leadText || '';
 }
 
+function getNodeSubtitle(node) {
+  return node.subtitle || node.eyebrow || node.shortLabel || '';
+}
+
 function createParagraphs(text) {
   return String(text)
     .split(/\n{2,}|\n/)
@@ -68,26 +70,48 @@ function renderDemoMarkup(node) {
 
   return `
     <figure class="classic-2d-panel__demo">
-      <img class="classic-2d-panel__demo-image" src="${escapeHtml(demoGifUrl)}" alt="${escapeHtml(demoAlt)}" loading="lazy" decoding="async">
-      <figcaption class="classic-2d-panel__demo-caption">Loop demo</figcaption>
+      <button class="classic-2d-panel__demo-preview" type="button" data-classic-demo-open aria-label="Powiększ demo ${escapeHtml(node.title)}">
+        <img class="classic-2d-panel__demo-image" src="${escapeHtml(demoGifUrl)}" alt="${escapeHtml(demoAlt)}" loading="lazy" decoding="async">
+      </button>
+      <figcaption class="classic-2d-panel__demo-caption">
+        <button class="classic-2d-panel__demo-enlarge" type="button" data-classic-demo-open>Powiększ demo</button>
+      </figcaption>
     </figure>
   `;
 }
 
+function closeClassicDemoLightbox(panel, { restoreFocus = true } = {}) {
+  const lightbox = panel.querySelector('.classic-2d-panel__demo-lightbox');
+  if (!lightbox || lightbox.hidden) return false;
+
+  lightbox.hidden = true;
+  document.body.classList.remove('demo-lightbox-open');
+
+  if (restoreFocus) {
+    const openerSelector = lightbox.dataset.openerSelector;
+    const opener = openerSelector ? panel.querySelector(openerSelector) : panel.querySelector('[data-classic-demo-open]');
+    if (opener instanceof HTMLElement) opener.focus();
+  }
+
+  delete lightbox.dataset.openerSelector;
+  return true;
+}
+
+
 function renderPanel(panel, node, copy) {
-  const lead = node.leadText || node.draftText || '';
+  const lead = node.leadText || '';
   const bodyParagraphs = createParagraphs(getNodeText(node));
   const demoMarkup = renderDemoMarkup(node);
+  const subtitle = getNodeSubtitle(node);
 
   panel.dataset.panelTheme = getPanelThemeForGate(node.id);
   panel.dataset.gateId = node.id;
   panel.innerHTML = `
-    <div class="classic-2d-panel__card" role="dialog" aria-modal="true" aria-labelledby="classic-2d-panel-title" aria-describedby="classic-2d-panel-status">
+    <div class="classic-2d-panel__card" role="dialog" aria-modal="true" aria-labelledby="classic-2d-panel-title">
       <span class="classic-2d-panel__ornament classic-2d-panel__ornament--top" aria-hidden="true"></span>
       <span class="classic-2d-panel__ornament classic-2d-panel__ornament--bottom" aria-hidden="true"></span>
-      <p class="classic-2d-panel__status" id="classic-2d-panel-status">${escapeHtml(copy.panelStatus)}</p>
       <h2 class="classic-2d-panel__title" id="classic-2d-panel-title">${escapeHtml(node.title)}</h2>
-      <p class="classic-2d-panel__label">${escapeHtml(node.shortLabel || node.title)}</p>
+      ${subtitle ? `<p class="classic-2d-panel__label">${escapeHtml(subtitle)}</p>` : ''}
       ${lead ? `<p class="classic-2d-panel__lead">${escapeHtml(lead)}</p>` : ''}
       ${demoMarkup}
       <div class="classic-2d-panel__body">
@@ -101,6 +125,13 @@ function renderPanel(panel, node, copy) {
         </p>
       ` : ''}
       <button class="classic-2d-panel__close" type="button" data-classic-panel-close>${escapeHtml(copy.closePanel)}</button>
+    </div>
+    <div class="classic-2d-panel__demo-lightbox" role="dialog" aria-modal="true" aria-label="Powiększone demo ${escapeHtml(node.title)}" hidden>
+      <button class="classic-2d-panel__demo-lightbox-backdrop" type="button" data-classic-demo-close aria-label="Zamknij powiększone demo"></button>
+      <div class="classic-2d-panel__demo-lightbox-frame">
+        <button class="classic-2d-panel__demo-lightbox-close" type="button" data-classic-demo-close aria-label="Zamknij powiększone demo">×</button>
+        <img class="classic-2d-panel__demo-lightbox-image" alt="">
+      </div>
     </div>
   `;
 
@@ -199,7 +230,7 @@ export function startClassic2D({ container, language = 'en', onBackToModes }) {
       </span>
       <span class="classic-2d-gate__text">
         <span class="classic-2d-gate__title">${escapeHtml(node.title)}</span>
-        <span class="classic-2d-gate__label">${escapeHtml(node.shortLabel || copy.gateHelp)}</span>
+        <span class="classic-2d-gate__label">${escapeHtml(getNodeSubtitle(node) || copy.gateHelp)}</span>
       </span>
     `;
 
@@ -229,7 +260,7 @@ export function startClassic2D({ container, language = 'en', onBackToModes }) {
     panel.innerHTML = '';
     panel.removeAttribute('data-panel-theme');
     panel.removeAttribute('data-gate-id');
-    document.body.classList.remove('classic-2d-panel-open');
+    document.body.classList.remove('classic-2d-panel-open', 'demo-lightbox-open');
     activeGateId = null;
     monkey.classList.remove('classic-2d__monkey--active');
     monkey.style.removeProperty('--monkey-tilt');
@@ -251,12 +282,38 @@ export function startClassic2D({ container, language = 'en', onBackToModes }) {
   });
 
   panel.addEventListener('click', (event) => {
+    const closeDemoButton = event.target.closest('[data-classic-demo-close]');
+    if (closeDemoButton) {
+      closeClassicDemoLightbox(panel);
+      return;
+    }
+
+    const openDemoButton = event.target.closest('[data-classic-demo-open]');
+    if (openDemoButton) {
+      const previewImage = panel.querySelector('.classic-2d-panel__demo-image');
+      const lightbox = panel.querySelector('.classic-2d-panel__demo-lightbox');
+      const lightboxImage = panel.querySelector('.classic-2d-panel__demo-lightbox-image');
+      const lightboxClose = panel.querySelector('.classic-2d-panel__demo-lightbox-close');
+      if (previewImage?.src && lightbox && lightboxImage) {
+        lightboxImage.src = previewImage.src;
+        lightboxImage.alt = previewImage.alt;
+        lightbox.dataset.openerSelector = openDemoButton.classList.contains('classic-2d-panel__demo-enlarge')
+          ? '.classic-2d-panel__demo-enlarge'
+          : '.classic-2d-panel__demo-preview';
+        lightbox.hidden = false;
+        document.body.classList.add('demo-lightbox-open');
+        lightboxClose?.focus();
+      }
+      return;
+    }
+
     if (!event.target.closest('[data-classic-panel-close]')) return;
     closePanel();
   });
 
   const handleKeydown = (event) => {
     if (event.key === 'Escape') {
+      if (closeClassicDemoLightbox(panel)) return;
       closePanel();
       return;
     }
@@ -283,7 +340,7 @@ export function startClassic2D({ container, language = 'en', onBackToModes }) {
   return {
     destroy() {
       window.removeEventListener('keydown', handleKeydown);
-      document.body.classList.remove('classic-2d-panel-open');
+      document.body.classList.remove('classic-2d-panel-open', 'demo-lightbox-open');
       container.innerHTML = '';
     }
   };
