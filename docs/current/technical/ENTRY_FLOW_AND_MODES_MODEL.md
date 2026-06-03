@@ -1,6 +1,6 @@
 # Entry Flow and Modes Model
 
-Status: implemented baseline for entry shell and conditional Experience 3D boot; Classic 2D remains placeholder/future work.
+Status: implemented baseline for entry shell, conditional Experience 3D boot, and Classic 2D MVP; full Classic 2D retro-polish remains future work.
 
 ## Purpose and scope
 
@@ -10,12 +10,12 @@ Scope:
 - implemented first-screen language selection,
 - implemented second-screen mode selection,
 - implemented conditional boot into `Experience 3D`,
-- current placeholder-only `Classic 2D` branch,
+- implemented `Classic 2D` MVP branch,
 - contract between `Classic 2D` and `Experience 3D`,
 - shared content and future PL/EN direction,
 - loading, accessibility, and performance rules for current behavior and later refinement.
 
-This remains a documentation-only contract update. It does not change UI, runtime boot logic, styles, assets, routing, framework usage, or final copy.
+This document records the current implemented contract. This documentation update does not change UI, runtime boot logic, styles, assets, routing, framework usage, or final copy.
 
 ## Current status
 
@@ -25,12 +25,15 @@ Implemented now:
 - Entry shell is implemented in `src/main.js`.
 - Language selection is implemented.
 - Mode selection is implemented.
+- `Classic 2D` MVP is implemented in `src/classic2d.js`.
+- `Classic 2D` shows a central monkey PNG, five floating glyph hotspots, and readable project panels.
+- `Classic 2D` consumes the existing shared content records from `src/content/portfolioNodes.js`.
 - `Experience 3D` conditional boot is implemented.
 - The current Experience 3D runtime bootstrap is owned by `src/experience3d.js`.
 
 Still not implemented:
-- `Classic 2D` is currently a placeholder-only branch.
-- A full Classic 2D portfolio experience is not implemented yet.
+- Full Classic 2D retro-polish and final visual language are not complete yet.
+- Ring/orbital outline hover effects are intentionally deferred and were not added in this pass.
 - Shared PL/EN content records and a final bilingual content source-of-truth remain future work.
 
 The active implemented 3D runtime remains the current desktop/mobile Three.js portfolio based on the central monkey, orbiting glyphs, loader, scene atmosphere, and HTML overlay panels. The entry shell must continue to preserve that runtime after `Experience 3D` selection.
@@ -60,11 +63,11 @@ Visitor opens portfolio
         +----------------------------------------------+
         |                                              |
         v                                              v
-[Classic 2D placeholder]                       [Experience 3D conditional boot]
-placeholder-only branch now                    implemented dynamic boot via src/experience3d.js
-future full lightweight symbolic UI            current Three.js loader/assets/runtime start
-future shared gate content                      current scene behavior continues
-future flat monkey + glyph loop                 current 3D behavior is preserved
+[Classic 2D MVP]                               [Experience 3D conditional boot]
+implemented src/classic2d.js                    implemented dynamic boot via src/experience3d.js
+flat monkey + floating glyph hotspots           current Three.js loader/assets/runtime start
+shared gate content panels                      current scene behavior continues
+future full retro-polish                         current 3D behavior is preserved
 ```
 
 ## Language selection contract
@@ -97,17 +100,17 @@ Implemented behavior:
 - Use `Experience`, not `Expirience`.
 - Mode selection is a deliberate design choice, not an error/fallback prompt.
 - Selecting `Experience 3D` / `Doświadczenie 3D` starts the current Three.js runtime conditionally through `src/experience3d.js`.
-- Selecting `Classic 2D` / `Klasyczne 2D` currently opens a placeholder-only branch.
+- Selecting `Classic 2D` / `Klasyczne 2D` opens the implemented lightweight Classic 2D MVP branch.
 
 Future refinements:
-- `Classic 2D` should become a finished lightweight, flat, symbolic portfolio mode.
+- `Classic 2D` should receive a separate full retro-polish and final visual-language pass.
 - Mode selection should receive continued accessibility and reduced-motion verification as the visual treatment is refined.
 
 ## Classic 2D experience model
 
-Current status: `Classic 2D` is placeholder-only. It is a stable branch point for future work, not a finished 2D portfolio runtime.
+Current status: `Classic 2D` is an implemented MVP lightweight flat portfolio runtime. It is no longer placeholder-only.
 
-Future `Classic 2D` direction: it should become a first-class second experience. It should not be a plain fallback, degraded copy, or simplified broken version of the 3D scene.
+`Classic 2D` is a first-class second experience. It is not a plain fallback, degraded copy, or simplified broken version of the 3D scene.
 
 Design qualities:
 - fast,
@@ -117,7 +120,7 @@ Design qualities:
 - focused,
 - retro-symbolic.
 
-Future visual direction:
+Current MVP and future visual direction:
 - retro mystic interface,
 - inspired by old Atari/Commodore-era computer aesthetics,
 - not comedic,
@@ -125,12 +128,16 @@ Future visual direction:
 - not noisy,
 - symbolic and readable rather than visually overloaded.
 
-Future relationship to the 3D version:
-- a central meditating monkey is shown from the front,
-- five glyphs orbit around the monkey on a flat circle,
-- clicking a glyph subtly rotates or tilts the monkey and opens or slides out a readable panel,
-- each glyph opens the same portfolio content as the matching 3D gate,
-- the monkey remains an archetypal symbolic anchor, not a joke mascot.
+Current relationship to the 3D version:
+- a central monkey PNG is shown as the flat symbolic anchor,
+- five floating glyph hotspots sit around the monkey on a flat circle,
+- clicking a glyph subtly tilts the monkey and opens a readable panel,
+- each glyph opens the same portfolio content record as the matching 3D gate,
+- the monkey remains an archetypal symbolic anchor, not a joke mascot,
+- glyph hotspots use flat PNG sprites and transparent button backgrounds rather than persistent rectangular cards or tiles,
+- hover/focus uses a soft halo, subtle glyph glow, possible glyph-only lift/scale, and slightly brighter text,
+- ring/orbital outline effects were intentionally not added in this pass,
+- the text layer must not be scaled during hover/focus so labels remain crisp.
 
 ## Experience 3D relationship to current runtime
 
@@ -168,14 +175,14 @@ Current status: shared PL/EN content records remain future work.
 Implemented loading baseline:
 - The entry shell loads before heavy 3D assets.
 - The 3D runtime does not eagerly load before the user selects `Experience 3D` / `Doświadczenie 3D`.
-- The current Classic 2D placeholder branch does not start the 3D runtime.
+- The current Classic 2D MVP branch does not start the 3D runtime.
 - The current Three.js runtime remains intact and starts from `src/experience3d.js` after selection.
 - Current deployment, public path, and base-path rules remain unchanged.
 
 Known and future work:
 - The existing large 3D chunk warning remains known and unchanged.
 - Further loader staging and chunk optimization are future performance work.
-- Future Classic 2D implementation should stay lightweight and avoid Three.js unless a future explicit decision changes that.
+- Future Classic 2D polish should stay lightweight and avoid Three.js unless a future explicit decision changes that.
 - Future implementation must preserve GitHub Pages compatibility under the existing deployment model.
 
 ## Accessibility rules
