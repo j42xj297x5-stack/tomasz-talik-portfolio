@@ -321,23 +321,22 @@ Pipeline wizualny obejmował:
 - przygotowanie pod FrameComposer.`
         },
         {
-          title: 'What this project shows',
-          text: `- System thinking
-- Game design
-- Technical design
-- UI/UX architecture
-- Documentation strategy
-- AI-assisted production
-- Runtime debugging
-- Creative direction
-- Cross-layer project leadership`
+          title: 'Co pokazuje ten projekt',
+          text: `- Myślenie systemowe
+- Projektowanie gry
+- Projektowanie techniczne
+- Architektura UI/UX
+- Strategia dokumentacji
+- Produkcja wspierana przez AI
+- Debugowanie runtime’u
+- Kierunek kreatywny
+- Prowadzenie projektu przez wiele warstw jednocześnie`
         }
       ],
       aiWorkflow: [
         'Projekt był również praktycznym laboratorium pracy z AI jako narzędziem produkcyjnym.',
         'Moim zadaniem było nie tylko „poprosić AI o kod”, ale prowadzić proces: określić kontekst, wskazać dokumenty źródłowe, ograniczyć zakres zmian, zabronić naruszania mechaniki, wymusić raport zmian, sprawdzić rozjazdy, zaktualizować dokumentację i utrzymać kanon projektu.',
-        'W praktyce oznaczało to rolę osoby, która tłumaczy wizję na instrukcje wykonawcze dla narzędzi technicznych — i pilnuje, żeby system nie rozpadł się na przypadkowe patche.',
-        'To jest bardzo mocny element portfolio, szczególnie pod firmy, które dopiero uczą się sensownej pracy z AI.'
+        'W praktyce oznaczało to rolę osoby, która tłumaczy wizję na instrukcje wykonawcze dla narzędzi technicznych — i pilnuje, żeby system nie rozpadł się na przypadkowe patche.'
       ],
       result: `Efektem jest działający interaktywny prototyp oraz rozbudowany system projektowy, który obejmuje gameplay, UI, ekonomię, dokumentację, debug, asset pipeline i runtime.
 
