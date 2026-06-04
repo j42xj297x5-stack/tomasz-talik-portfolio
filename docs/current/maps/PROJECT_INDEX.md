@@ -85,6 +85,9 @@ Do not read the whole `docs/current` tree by default.
 ### Decisions
 - `docs/current/decisions/DECISION_LOG.md` — decision log, including MVP scene runtime decision updates.
 
+### Technical audits
+- `docs/current/audits/technical/portfolio-three-lighting-and-glb-rendering-audit.md` — technical audit of the portfolio Three.js renderer, camera, lighting, GLB loading, materials, shadows, and 3D shape presentation.
+
 ### Snapshots/evidence
 - `docs/current/audits/snapshots/2026-05-22_15-38-35__snapshot__monkey-five-glyphs-runtime-baseline.md` — milestone checkpoint for central monkey + five glyph orbit-node runtime baseline.
 - `docs/current/audits/snapshots/2026-05-22_18-18-33__snapshot__glyph-1-tree-effect-baseline.md` — accepted technical checkpoint for glyph_1 tree-based hover effect baseline.
