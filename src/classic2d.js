@@ -33,6 +33,16 @@ const GLYPH_SPRITES_BY_GATE_ID = {
 };
 const MONKEY_TILTS = ['-5deg', '4deg', '-3deg', '5deg', '-4deg'];
 const CLASSIC_MONKEY_IMAGE_PATH = '/png/monkey_small.png';
+const CLASSIC_ORBIT_RADIUS_PERCENT = 34;
+const CLASSIC_ORBIT_START_ANGLE_DEGREES = -90;
+const CLASSIC_ORBIT_STEP_ANGLE_DEGREES = 72;
+const CLASSIC_ORBIT_ORDER = [
+  'spotify-digger',
+  'haiku-cosmos',
+  'creative-ai',
+  'ethics-life-protection',
+  'ai-guide'
+];
 
 function escapeHtml(value) {
   return String(value)
@@ -296,8 +306,15 @@ export function startClassic2D({ container, language = 'en', onBackToModes }) {
     const glyphSpritePath = GLYPH_SPRITES_BY_GATE_ID[node.id];
     const gateThemeColor = getGateAccentColor(node.id);
 
-    button.style.setProperty('--gate-index', String(index));
-    button.style.setProperty('--gate-total', String(portfolioNodes.length));
+    const orbitIndex = CLASSIC_ORBIT_ORDER.indexOf(node.id);
+    const regularPentagonIndex = orbitIndex >= 0 ? orbitIndex : index;
+    const orbitAngle = CLASSIC_ORBIT_START_ANGLE_DEGREES
+      + regularPentagonIndex * CLASSIC_ORBIT_STEP_ANGLE_DEGREES;
+    const orbitAngleRadians = orbitAngle * Math.PI / 180;
+
+    button.dataset.orbitIndex = String(regularPentagonIndex);
+    button.style.setProperty('--gate-x', `${50 + CLASSIC_ORBIT_RADIUS_PERCENT * Math.cos(orbitAngleRadians)}%`);
+    button.style.setProperty('--gate-y', `${50 + CLASSIC_ORBIT_RADIUS_PERCENT * Math.sin(orbitAngleRadians)}%`);
     if (gateThemeColor) button.style.setProperty('--gate-theme-color', gateThemeColor);
     button.innerHTML = `
       <span class="classic-2d-gate__glyph-shell" aria-hidden="true">
