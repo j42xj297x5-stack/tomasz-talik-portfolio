@@ -2096,7 +2096,7 @@ body {
   inset: 0;
   z-index: 200;
   display: grid;
-  grid-template-rows: auto 1fr;
+  grid-template-rows: auto minmax(0, 1fr) auto;
   gap: clamp(0.45rem, 1.2vh, 0.9rem);
   width: 100vw;
   height: 100vh;
@@ -2113,15 +2113,14 @@ body {
 .classic-2d__header {
   position: relative;
   z-index: 3;
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
-  width: min(1120px, 100%);
+  width: min(1180px, 100%);
   margin: 0 auto;
+  text-align: center;
 }
 
-.classic-2d__header > div {
+.classic-2d__intro-copy {
+  width: min(100%, 58rem);
+  margin: 0 auto;
   min-width: 0;
 }
 
@@ -2135,24 +2134,25 @@ body {
 }
 
 .classic-2d__title {
-  max-width: 18ch;
-  margin: clamp(0.35rem, 0.9vh, 0.65rem) 0 0;
+  max-width: 30ch;
+  margin: clamp(0.35rem, 0.9vh, 0.65rem) auto 0;
   font-family: Georgia, 'Times New Roman', ui-serif, serif;
-  font-size: clamp(1.65rem, 3.3vw, 3rem);
-  font-weight: 500;
-  line-height: 1.02;
+  font-size: clamp(1.25rem, 2vw, 1.85rem);
+  font-weight: 650;
+  line-height: 1.12;
 }
 
 .classic-2d__name {
   margin: 0;
   font-family: Georgia, 'Times New Roman', ui-serif, serif;
-  font-size: clamp(1rem, 1.5vw, 1.3rem);
-  font-weight: 600;
+  font-size: clamp(1.85rem, 3.4vw, 3.25rem);
+  font-weight: 700;
+  line-height: 1.05;
 }
 
 .classic-2d__role {
   max-width: 42ch;
-  margin: 0.12rem 0 0;
+  margin: 0.3rem auto 0;
   color: rgba(237, 244, 255, 0.88);
   font-size: clamp(0.78rem, 1.1vw, 0.95rem);
   font-weight: 600;
@@ -2161,7 +2161,7 @@ body {
 
 .classic-2d__lead {
   max-width: 65ch;
-  margin: clamp(0.35rem, 0.8vh, 0.6rem) 0 0;
+  margin: clamp(0.35rem, 0.8vh, 0.6rem) auto 0;
   color: rgba(220, 232, 248, 0.84);
   font-size: clamp(0.78rem, 1vw, 0.95rem);
   line-height: 1.4;
@@ -2169,7 +2169,7 @@ body {
 
 .classic-2d__intro {
   max-width: 62ch;
-  margin: clamp(0.25rem, 0.65vh, 0.5rem) 0 0;
+  margin: clamp(0.25rem, 0.65vh, 0.5rem) auto 0;
   color: rgba(220, 232, 248, 0.78);
   font-size: clamp(0.72rem, 0.9vw, 0.86rem);
   line-height: 1.35;
@@ -2207,6 +2207,15 @@ body {
   background: rgba(17, 27, 42, 0.92);
   box-shadow: 0 0 28px rgba(99, 132, 174, 0.16);
   outline: none;
+}
+
+.classic-2d__footer {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  padding-top: clamp(0.15rem, 0.7vh, 0.55rem);
 }
 
 .classic-2d-gate:focus-visible {
@@ -3077,12 +3086,11 @@ body.classic-2d-panel-open {
   }
 
   .classic-2d__header {
-    display: grid;
-    gap: 0.55rem;
+    width: 100%;
   }
 
-  .classic-2d__mode-back {
-    justify-self: start;
+  .classic-2d__footer {
+    padding: clamp(0.9rem, 4vw, 1.5rem) 0 max(0.25rem, env(safe-area-inset-bottom));
   }
 
   .classic-2d__stage-slot {
@@ -3204,7 +3212,11 @@ body.classic-2d-panel-open {
 
 @media (max-height: 800px) {
   .classic-2d__title {
-    font-size: clamp(1.5rem, 4.2vh, 2.25rem);
+    font-size: clamp(1.15rem, 2.8vh, 1.55rem);
+  }
+
+  .classic-2d__name {
+    font-size: clamp(1.65rem, 4.6vh, 2.65rem);
   }
 
   .classic-2d__lead,

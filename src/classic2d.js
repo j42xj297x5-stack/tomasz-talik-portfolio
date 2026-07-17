@@ -243,7 +243,7 @@ export function startClassic2D({ container, language = 'en', onBackToModes }) {
   container.innerHTML = `
     <main class="classic-2d" aria-labelledby="classic-2d-title">
       <header class="classic-2d__header">
-        <div>
+        <div class="classic-2d__intro-copy">
           <p class="classic-2d__eyebrow">${escapeHtml(copy.eyebrow)}</p>
           ${isPolishIntro ? `
             <p class="classic-2d__name">${escapeHtml(copy.name)}</p>
@@ -253,7 +253,6 @@ export function startClassic2D({ container, language = 'en', onBackToModes }) {
           ` : `<h1 class="classic-2d__title" id="classic-2d-title">${escapeHtml(copy.title)}</h1>`}
           <p class="classic-2d__intro">${escapeHtml(copy.intro)}</p>
         </div>
-        <button class="classic-2d__mode-back" type="button" data-classic-back>${escapeHtml(copy.returnToModes)}</button>
       </header>
 
       <div class="classic-2d__stage-slot" data-classic-stage-slot>
@@ -285,6 +284,10 @@ export function startClassic2D({ container, language = 'en', onBackToModes }) {
         </div>
       </section>
       </div>
+
+      <footer class="classic-2d__footer">
+        <button class="classic-2d__mode-back" type="button" data-classic-back>${escapeHtml(copy.returnToModes)}</button>
+      </footer>
 
       <aside class="classic-2d-panel" data-classic-panel hidden></aside>
     </main>
