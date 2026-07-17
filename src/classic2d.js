@@ -175,9 +175,8 @@ function renderPanel(panel, node, copy) {
   panel.dataset.panelTheme = getPanelThemeForGate(node.id);
   panel.dataset.gateId = node.id;
   panel.innerHTML = `
-    <div class="classic-2d-panel__card" role="dialog" aria-modal="true" aria-labelledby="classic-2d-panel-title">
-      <span class="classic-2d-panel__ornament classic-2d-panel__ornament--top" aria-hidden="true"></span>
-      <span class="classic-2d-panel__ornament classic-2d-panel__ornament--bottom" aria-hidden="true"></span>
+    <div class="classic-2d-panel__viewport">
+      <div class="classic-2d-panel__card" role="dialog" aria-modal="true" aria-labelledby="classic-2d-panel-title">
       <h2 class="classic-2d-panel__title" id="classic-2d-panel-title">${escapeHtml(node.title)}</h2>
       ${subtitle ? `<p class="classic-2d-panel__label">${escapeHtml(subtitle)}</p>` : ''}
       ${lead ? `<p class="classic-2d-panel__lead">${escapeHtml(lead)}</p>` : ''}
@@ -193,8 +192,11 @@ function renderPanel(panel, node, copy) {
         </p>
       ` : ''}
       ${caseStudyMarkup}
-      <button class="classic-2d-panel__close" type="button" data-classic-panel-close>${escapeHtml(copy.closePanel)}</button>
+        <button class="classic-2d-panel__close" type="button" data-classic-panel-close>${escapeHtml(copy.closePanel)}</button>
+      </div>
     </div>
+    <span class="classic-2d-panel__ornament classic-2d-panel__ornament--top" aria-hidden="true"></span>
+    <span class="classic-2d-panel__ornament classic-2d-panel__ornament--bottom" aria-hidden="true"></span>
     <div class="classic-2d-panel__demo-lightbox" role="dialog" aria-modal="true" aria-label="Powiększone media ${escapeHtml(node.title)}" hidden>
       <button class="classic-2d-panel__demo-lightbox-backdrop" type="button" data-classic-demo-close aria-label="Zamknij powiększone media"></button>
       <div class="classic-2d-panel__demo-lightbox-frame">
@@ -227,6 +229,7 @@ export function startClassic2D({ container, language = 'en', onBackToModes }) {
         <button class="classic-2d__mode-back" type="button" data-classic-back>${escapeHtml(copy.returnToModes)}</button>
       </header>
 
+      <div class="classic-2d__stage-slot" data-classic-stage-slot>
       <section class="classic-2d__stage" aria-label="${escapeHtml(copy.title)}">
         <div class="classic-2d__orbit" data-classic-orbit></div>
         <div class="classic-2d__monkey" data-classic-monkey aria-label="${escapeHtml(copy.centralLabel)}" role="img">
@@ -250,15 +253,26 @@ export function startClassic2D({ container, language = 'en', onBackToModes }) {
           </span>
         </div>
       </section>
+      </div>
 
       <aside class="classic-2d-panel" data-classic-panel hidden></aside>
     </main>
   `;
 
   const orbit = container.querySelector('[data-classic-orbit]');
+  const stageSlot = container.querySelector('[data-classic-stage-slot]');
   const panel = container.querySelector('[data-classic-panel]');
   const monkey = container.querySelector('[data-classic-monkey]');
   const monkeyImage = container.querySelector('.classic-2d__monkey-image');
+  const resizeStage = ({ width, height }) => {
+    stageSlot?.style.setProperty('--classic-stage-size', `${Math.max(0, Math.min(width, height))}px`);
+  };
+  const stageResizeObserver = typeof ResizeObserver === 'function'
+    ? new ResizeObserver(([entry]) => resizeStage(entry.contentRect))
+    : null;
+
+  stageResizeObserver?.observe(stageSlot);
+  if (!stageResizeObserver && stageSlot) resizeStage(stageSlot.getBoundingClientRect());
 
   monkeyImage?.addEventListener('load', () => {
     monkey?.classList.remove('classic-2d__monkey--image-error');
@@ -444,6 +458,7 @@ export function startClassic2D({ container, language = 'en', onBackToModes }) {
 
   return {
     destroy() {
+      stageResizeObserver?.disconnect();
       window.removeEventListener('keydown', handleKeydown);
       document.body.classList.remove('classic-2d-panel-open', 'demo-lightbox-open');
       container.innerHTML = '';
