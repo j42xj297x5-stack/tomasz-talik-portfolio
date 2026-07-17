@@ -2216,6 +2216,7 @@ body {
 .classic-2d__orbit {
   position: absolute;
   inset: 0;
+  z-index: 2;
 }
 
 .classic-2d-gate {
@@ -2343,13 +2344,26 @@ body {
 .classic-2d-gate:focus-visible .classic-2d-gate__label,
 .classic-2d-gate--active .classic-2d-gate__label { color: rgba(237, 244, 255, 0.86); }
 
-.classic-2d__monkey {
-  --monkey-tilt: 0deg;
+.classic-2d__central-anchor {
   position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 1;
   display: grid;
   place-items: center;
   width: 34%;
   max-height: 48%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.classic-2d__monkey {
+  --monkey-tilt: 0deg;
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  max-height: inherit;
   filter: drop-shadow(0 0 28px rgba(211, 190, 121, 0.1));
   transform: rotate(var(--monkey-tilt));
   transform-origin: 50% 82%;

@@ -232,25 +232,27 @@ export function startClassic2D({ container, language = 'en', onBackToModes }) {
       <div class="classic-2d__stage-slot" data-classic-stage-slot>
       <section class="classic-2d__stage" aria-label="${escapeHtml(copy.title)}">
         <div class="classic-2d__orbit" data-classic-orbit></div>
-        <div class="classic-2d__monkey" data-classic-monkey aria-label="${escapeHtml(copy.centralLabel)}" role="img">
-          <img
-            class="classic-2d__monkey-image"
-            src="${publicPath(CLASSIC_MONKEY_IMAGE_PATH)}"
-            alt=""
-            aria-hidden="true"
-            loading="eager"
-            decoding="async"
-          >
-          <span class="classic-2d__monkey-fallback" aria-hidden="true">
-            <span class="classic-2d__monkey-ear classic-2d__monkey-ear--left"></span>
-            <span class="classic-2d__monkey-ear classic-2d__monkey-ear--right"></span>
-            <span class="classic-2d__monkey-face">
-              <span class="classic-2d__monkey-brow"></span>
-              <span class="classic-2d__monkey-eye classic-2d__monkey-eye--left"></span>
-              <span class="classic-2d__monkey-eye classic-2d__monkey-eye--right"></span>
-              <span class="classic-2d__monkey-mark"></span>
+        <div class="classic-2d__central-anchor">
+          <div class="classic-2d__monkey" data-classic-monkey aria-label="${escapeHtml(copy.centralLabel)}" role="img">
+            <img
+              class="classic-2d__monkey-image"
+              src="${publicPath(CLASSIC_MONKEY_IMAGE_PATH)}"
+              alt=""
+              aria-hidden="true"
+              loading="eager"
+              decoding="async"
+            >
+            <span class="classic-2d__monkey-fallback" aria-hidden="true">
+              <span class="classic-2d__monkey-ear classic-2d__monkey-ear--left"></span>
+              <span class="classic-2d__monkey-ear classic-2d__monkey-ear--right"></span>
+              <span class="classic-2d__monkey-face">
+                <span class="classic-2d__monkey-brow"></span>
+                <span class="classic-2d__monkey-eye classic-2d__monkey-eye--left"></span>
+                <span class="classic-2d__monkey-eye classic-2d__monkey-eye--right"></span>
+                <span class="classic-2d__monkey-mark"></span>
+              </span>
             </span>
-          </span>
+          </div>
         </div>
       </section>
       </div>
