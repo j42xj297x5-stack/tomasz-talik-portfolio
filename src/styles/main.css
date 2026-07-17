@@ -2206,16 +2206,22 @@ body {
   position: absolute;
   inset: 3%;
   background:
-    radial-gradient(circle at 50% 48%, rgba(213, 190, 121, 0.075), transparent 37%),
-    radial-gradient(circle at 50% 52%, rgba(98, 130, 170, 0.08), transparent 62%);
+    radial-gradient(circle at 50% 50%, rgba(213, 190, 121, 0.075), transparent 37%),
+    radial-gradient(circle at 50% 50%, rgba(98, 130, 170, 0.08), transparent 62%);
   filter: blur(18px);
   opacity: 0.78;
   pointer-events: none;
 }
 
-.classic-2d__orbit {
+.classic-2d__orbit-layer,
+.classic-2d__center-layer {
   position: absolute;
   inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.classic-2d__orbit-layer {
   z-index: 2;
 }
 
@@ -2344,33 +2350,34 @@ body {
 .classic-2d-gate:focus-visible .classic-2d-gate__label,
 .classic-2d-gate--active .classic-2d-gate__label { color: rgba(237, 244, 255, 0.86); }
 
-.classic-2d__central-anchor {
-  position: absolute;
-  top: 50%;
-  left: 50%;
+.classic-2d__center-layer {
   z-index: 1;
   display: grid;
   place-items: center;
-  width: 34%;
-  max-height: 48%;
-  transform: translate(-50%, -50%);
   pointer-events: none;
 }
 
-.classic-2d__monkey {
-  --monkey-tilt: 0deg;
+.classic-2d__monkey-optical {
+  --classic-monkey-optical-y: -8.75%;
+  width: 34%;
+  max-height: 48%;
+  transform: translateY(var(--classic-monkey-optical-y));
+}
+
+.classic-2d__monkey-rotation {
+  --classic-monkey-rotation: 0deg;
   position: relative;
   display: grid;
   place-items: center;
   width: 100%;
   max-height: inherit;
   filter: drop-shadow(0 0 28px rgba(211, 190, 121, 0.1));
-  transform: rotate(var(--monkey-tilt));
-  transform-origin: 50% 82%;
+  transform: rotate(var(--classic-monkey-rotation));
+  transform-origin: center;
   transition: filter 0.18s ease, transform 0.26s ease;
 }
 
-.classic-2d__monkey::before {
+.classic-2d__monkey-rotation::before {
   content: '';
   position: absolute;
   z-index: -1;
@@ -3046,7 +3053,7 @@ body.classic-2d-panel-open {
   .classic-2d-gate__halo,
   .classic-2d-gate__glyph-image,
   .classic-2d-gate__text,
-  .classic-2d__monkey {
+  .classic-2d__monkey-rotation {
     transition: none;
   }
 

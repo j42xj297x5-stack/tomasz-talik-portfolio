@@ -231,27 +231,29 @@ export function startClassic2D({ container, language = 'en', onBackToModes }) {
 
       <div class="classic-2d__stage-slot" data-classic-stage-slot>
       <section class="classic-2d__stage" aria-label="${escapeHtml(copy.title)}">
-        <div class="classic-2d__orbit" data-classic-orbit></div>
-        <div class="classic-2d__central-anchor">
-          <div class="classic-2d__monkey" data-classic-monkey aria-label="${escapeHtml(copy.centralLabel)}" role="img">
-            <img
-              class="classic-2d__monkey-image"
-              src="${publicPath(CLASSIC_MONKEY_IMAGE_PATH)}"
-              alt=""
-              aria-hidden="true"
-              loading="eager"
-              decoding="async"
-            >
-            <span class="classic-2d__monkey-fallback" aria-hidden="true">
-              <span class="classic-2d__monkey-ear classic-2d__monkey-ear--left"></span>
-              <span class="classic-2d__monkey-ear classic-2d__monkey-ear--right"></span>
-              <span class="classic-2d__monkey-face">
-                <span class="classic-2d__monkey-brow"></span>
-                <span class="classic-2d__monkey-eye classic-2d__monkey-eye--left"></span>
-                <span class="classic-2d__monkey-eye classic-2d__monkey-eye--right"></span>
-                <span class="classic-2d__monkey-mark"></span>
+        <div class="classic-2d__orbit-layer" data-classic-orbit></div>
+        <div class="classic-2d__center-layer">
+          <div class="classic-2d__monkey-optical">
+            <div class="classic-2d__monkey-rotation" data-classic-monkey aria-label="${escapeHtml(copy.centralLabel)}" role="img">
+              <img
+                class="classic-2d__monkey-image"
+                src="${publicPath(CLASSIC_MONKEY_IMAGE_PATH)}"
+                alt=""
+                aria-hidden="true"
+                loading="eager"
+                decoding="async"
+              >
+              <span class="classic-2d__monkey-fallback" aria-hidden="true">
+                <span class="classic-2d__monkey-ear classic-2d__monkey-ear--left"></span>
+                <span class="classic-2d__monkey-ear classic-2d__monkey-ear--right"></span>
+                <span class="classic-2d__monkey-face">
+                  <span class="classic-2d__monkey-brow"></span>
+                  <span class="classic-2d__monkey-eye classic-2d__monkey-eye--left"></span>
+                  <span class="classic-2d__monkey-eye classic-2d__monkey-eye--right"></span>
+                  <span class="classic-2d__monkey-mark"></span>
+                </span>
               </span>
-            </span>
+            </div>
           </div>
         </div>
       </section>
@@ -332,7 +334,7 @@ export function startClassic2D({ container, language = 'en', onBackToModes }) {
         gate.setAttribute('aria-pressed', String(isActive));
       });
       monkey.classList.add('classic-2d__monkey--active');
-      monkey.style.setProperty('--monkey-tilt', MONKEY_TILTS[index] || '3deg');
+      monkey.style.setProperty('--classic-monkey-rotation', MONKEY_TILTS[index] || '3deg');
       renderPanel(panel, node, copy);
     });
 
@@ -348,7 +350,7 @@ export function startClassic2D({ container, language = 'en', onBackToModes }) {
     document.body.classList.remove('classic-2d-panel-open', 'demo-lightbox-open');
     activeGateId = null;
     monkey.classList.remove('classic-2d__monkey--active');
-    monkey.style.removeProperty('--monkey-tilt');
+    monkey.style.removeProperty('--classic-monkey-rotation');
     orbit.querySelectorAll('.classic-2d-gate').forEach((gate) => {
       gate.classList.remove('classic-2d-gate--active');
       gate.setAttribute('aria-pressed', 'false');
