@@ -5,8 +5,11 @@ import { getGateAccentColor, getPanelThemeForGate } from './ui/panelThemes.js';
 const CLASSIC_COPY = {
   pl: {
     eyebrow: 'Klasyczne 2D',
-    title: 'Symboliczny krąg portfolio',
-    intro: 'Wybierz jeden z pięciu znaków wokół spokojnego centrum, aby otworzyć krótki panel projektu.',
+    name: 'Tomasz Talik',
+    role: 'Creative Technologist & Game Systems Designer',
+    title: 'Interaktywne światy, gry i systemy',
+    lead: 'Łączę technologię, mechanikę, obraz i dźwięk, przekładając złożone pomysły na modularne, działające systemy.',
+    intro: 'Wybierz jeden z pięciu symboli, aby poznać projekty i obszary mojej pracy.',
     returnToModes: 'Wróć do wyboru trybu',
     closePanel: 'Zamknij panel',
     centralLabel: 'Symboliczna kotwica 2D',
@@ -225,6 +228,8 @@ export function startClassic2D({ container, language = 'en', onBackToModes }) {
   if (!container) throw new Error('Classic 2D requires a container.');
 
   const copy = resolveCopy(language);
+  const isPolishIntro = language === 'pl';
+  const polishTitleLines = isPolishIntro ? copy.title.split(', ') : [];
   let activeGateId = null;
   let lastFocusedGate = null;
 
@@ -233,7 +238,12 @@ export function startClassic2D({ container, language = 'en', onBackToModes }) {
       <header class="classic-2d__header">
         <div>
           <p class="classic-2d__eyebrow">${escapeHtml(copy.eyebrow)}</p>
-          <h1 class="classic-2d__title" id="classic-2d-title">${escapeHtml(copy.title)}</h1>
+          ${isPolishIntro ? `
+            <p class="classic-2d__name">${escapeHtml(copy.name)}</p>
+            <p class="classic-2d__role">${escapeHtml(copy.role)}</p>
+            <h1 class="classic-2d__title" id="classic-2d-title">${escapeHtml(`${polishTitleLines[0]},`)}<br>${escapeHtml(polishTitleLines[1])}</h1>
+            <p class="classic-2d__lead">${escapeHtml(copy.lead)}</p>
+          ` : `<h1 class="classic-2d__title" id="classic-2d-title">${escapeHtml(copy.title)}</h1>`}
           <p class="classic-2d__intro">${escapeHtml(copy.intro)}</p>
         </div>
         <button class="classic-2d__mode-back" type="button" data-classic-back>${escapeHtml(copy.returnToModes)}</button>
