@@ -2349,7 +2349,7 @@ body {
 
 .classic-2d-gate__text {
   position: absolute;
-  top: calc(100% + 0.6cqh);
+  top: calc(100% + 1.1cqh);
   left: 50%;
   display: grid;
   gap: 0.14rem;
@@ -2360,10 +2360,26 @@ body {
   transition: color 0.18s ease, text-shadow 0.18s ease;
 }
 
-.classic-2d-gate[data-orbit-index='2'] .classic-2d-gate__text,
-.classic-2d-gate[data-orbit-index='3'] .classic-2d-gate__text {
+.classic-2d-gate[data-label-side='top'] .classic-2d-gate__text {
   top: auto;
-  bottom: calc(100% + 0.6cqh);
+  bottom: calc(100% + 1.1cqh);
+}
+
+.classic-2d-gate[data-label-side='left'] .classic-2d-gate__text {
+  top: 50%;
+  right: calc(100% + 1.4cqh);
+  left: auto;
+  width: 25cqh;
+  text-align: right;
+  transform: translateY(-50%);
+}
+
+.classic-2d-gate[data-label-side='right'] .classic-2d-gate__text {
+  top: 50%;
+  left: calc(100% + 1.4cqh);
+  width: 25cqh;
+  text-align: left;
+  transform: translateY(-50%);
 }
 
 .classic-2d-gate:hover .classic-2d-gate__text,
@@ -3056,6 +3072,10 @@ body.classic-2d-panel-open {
 }
 
 @media (max-width: 760px) {
+  .classic-2d {
+    overflow: auto;
+  }
+
   .classic-2d__header {
     display: grid;
     gap: 0.55rem;
@@ -3063,6 +3083,102 @@ body.classic-2d-panel-open {
 
   .classic-2d__mode-back {
     justify-self: start;
+  }
+
+  .classic-2d__stage-slot {
+    display: block;
+    height: auto;
+    min-height: 0;
+    overflow: visible;
+  }
+
+  .classic-2d__stage {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(1.4rem, 6vw, 2.25rem);
+    width: min(100%, 34rem);
+    height: auto;
+    margin: 0 auto;
+    aspect-ratio: auto;
+    container-type: inline-size;
+  }
+
+  .classic-2d__stage::before {
+    inset: 0;
+  }
+
+  .classic-2d__center-layer,
+  .classic-2d__orbit-layer {
+    position: relative;
+    inset: auto;
+    width: 100%;
+    height: auto;
+  }
+
+  .classic-2d__center-layer {
+    order: 1;
+    min-height: clamp(12rem, 56vw, 18rem);
+  }
+
+  .classic-2d__orbit-layer {
+    z-index: 2;
+    order: 2;
+    display: grid;
+    gap: clamp(0.8rem, 3vw, 1.15rem);
+    padding: 0 0 1.5rem;
+  }
+
+  .classic-2d__monkey-optical {
+    width: min(72vw, 18rem);
+    max-height: none;
+    transform: none;
+  }
+
+  .classic-2d-gate {
+    position: relative;
+    top: auto;
+    left: auto;
+    display: grid;
+    grid-template-columns: clamp(4.75rem, 22vw, 6.25rem) minmax(0, 1fr);
+    gap: clamp(0.9rem, 4vw, 1.4rem);
+    place-items: center start;
+    width: min(100%, 29rem);
+    height: auto;
+    min-height: clamp(5.25rem, 24vw, 6.5rem);
+    margin: 0 auto;
+    text-align: left;
+    transform: none;
+  }
+
+  .classic-2d-gate__glyph-shell {
+    width: clamp(4.75rem, 22vw, 6.25rem);
+    height: clamp(4.75rem, 22vw, 6.25rem);
+  }
+
+  .classic-2d-gate__glyph,
+  .classic-2d-gate__glyph-image {
+    min-height: 0;
+    height: clamp(4.25rem, 20vw, 5.75rem);
+  }
+
+  .classic-2d-gate__text,
+  .classic-2d-gate[data-label-side] .classic-2d-gate__text {
+    position: static;
+    display: grid;
+    align-self: center;
+    gap: 0.25rem;
+    width: auto;
+    color: rgba(237, 244, 255, 0.9);
+    text-align: left;
+    transform: none;
+  }
+
+  .classic-2d-gate__title {
+    font-size: clamp(0.92rem, 4.3vw, 1.12rem);
+  }
+
+  .classic-2d-gate__label {
+    font-size: clamp(0.72rem, 3.3vw, 0.86rem);
   }
 
   .classic-2d-panel {

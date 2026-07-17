@@ -46,6 +46,13 @@ const CLASSIC_ORBIT_ORDER = [
   'ethics-life-protection',
   'ai-guide'
 ];
+const CLASSIC_LABEL_SIDE_BY_GATE_ID = {
+  'spotify-digger': 'top',
+  'ai-guide': 'left',
+  'haiku-cosmos': 'right',
+  'creative-ai': 'bottom',
+  'ethics-life-protection': 'bottom'
+};
 
 function escapeHtml(value) {
   return String(value)
@@ -311,6 +318,7 @@ export function startClassic2D({ container, language = 'en', onBackToModes }) {
     button.className = 'classic-2d-gate';
     button.type = 'button';
     button.dataset.gateId = node.id;
+    button.dataset.labelSide = CLASSIC_LABEL_SIDE_BY_GATE_ID[node.id] || 'bottom';
     button.setAttribute('aria-pressed', 'false');
     const glyphSymbol = GLYPH_SYMBOLS[index] || '✧';
     const glyphSpritePath = GLYPH_SPRITES_BY_GATE_ID[node.id];
