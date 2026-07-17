@@ -49,6 +49,13 @@ Rules in current MVP:
 - Browser/runtime asset paths must remain logical public paths such as `/png/glif_ai_guide.png`, not `public/png/glif_ai_guide.png`.
 - Full PL/EN content modeling, final bilingual copy, and content-locking remain future work.
 
+## Haiku Cosmos content checkpoint (2026-07-17)
+
+- Polska treść Haiku Cosmos została zaktualizowana.
+- Główny opis i pełne case study znajdują się w rekordzie `haiku-cosmos` w `src/content/portfolioNodes.js`.
+- Classic 2D i Experience 3D konsumują ten sam rekord.
+- Treść nie jest duplikowana pomiędzy trybami.
+
 
 ## Planned shared PL/EN content model for dual modes
 
