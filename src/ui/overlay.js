@@ -1191,7 +1191,17 @@ export function createOverlay({ onClose, assetManager = null } = {}) {
     });
   };
 
+  const hasCaseContent = (value) => {
+    if (Array.isArray(value)) {
+      return value.some((item) => String(item ?? '').trim());
+    }
+
+    return Boolean(String(value ?? '').trim());
+  };
+
   const appendCaseBlock = (parent, title, paragraphs, { isProcess = false } = {}) => {
+    if (!hasCaseContent(paragraphs)) return;
+
     const block = document.createElement('section');
     block.className = isProcess ? 'overlay__case-block overlay__case-block--process' : 'overlay__case-block';
     const heading = document.createElement('h4');

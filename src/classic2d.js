@@ -101,7 +101,10 @@ function renderDemoMarkup(node) {
 }
 
 function renderCaseBlockMarkup(title, value) {
-  if (!value || (Array.isArray(value) && !value.length)) return '';
+  const hasContent = Array.isArray(value)
+    ? value.some((item) => String(item ?? '').trim())
+    : Boolean(String(value ?? '').trim());
+  if (!hasContent) return '';
   const paragraphs = Array.isArray(value) ? value : createParagraphs(value);
 
   return `
