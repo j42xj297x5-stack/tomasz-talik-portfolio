@@ -2051,6 +2051,7 @@ body {
 }
 
 .overlay__panel[data-panel-theme] .overlay__actions { justify-content: flex-end; }
+.overlay__panel[data-panel-theme] .overlay__scroll > :is(.overlay__title, .overlay__subtitle, .overlay__status) { text-align: center; }
 .overlay__panel[data-panel-theme] :where(h1, h2, h3, .overlay__title) { color: var(--panel-heading); }
 .overlay__panel[data-panel-theme] :where(.overlay__lead, .overlay__meta, .overlay__eyebrow, .overlay__status, .overlay__closing) { color: var(--panel-muted); }
 .overlay__panel[data-panel-theme] a { color: var(--panel-link); }
