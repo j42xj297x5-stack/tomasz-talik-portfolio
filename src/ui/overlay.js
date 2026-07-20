@@ -1138,6 +1138,7 @@ export function createOverlay({ onClose } = {}) {
             <p class="overlay__feature-text"></p>
           </div>
           <p class="overlay__closing" hidden></p>
+          <nav class="overlay__project-links" aria-label="Linki projektu" hidden></nav>
           <section class="overlay__case-study" hidden></section>
         </div>
         <div class="overlay__actions">
@@ -1162,6 +1163,7 @@ export function createOverlay({ onClose } = {}) {
   const leadEl = root.querySelector('.overlay__lead');
   const textEl = root.querySelector('.overlay__text');
   const closingEl = root.querySelector('.overlay__closing');
+  const projectLinksEl = root.querySelector('.overlay__project-links');
   const featureEl = root.querySelector('.overlay__feature');
   const featureLabelEl = root.querySelector('.overlay__feature-label');
   const featureTextEl = root.querySelector('.overlay__feature-text');
@@ -1208,6 +1210,40 @@ export function createOverlay({ onClose } = {}) {
     block.append(heading);
     appendParagraphs(block, paragraphs);
     parent.append(block);
+  };
+
+  const renderProjectLinks = (projectLinks) => {
+    if (!projectLinksEl) return;
+
+    projectLinksEl.replaceChildren();
+    projectLinksEl.hidden = true;
+
+    if (!Array.isArray(projectLinks)) return;
+
+    projectLinks.forEach((projectLink) => {
+      if (!projectLink || typeof projectLink.label !== 'string' || typeof projectLink.url !== 'string') return;
+
+      let url;
+      try {
+        url = new URL(projectLink.url);
+      } catch {
+        return;
+      }
+
+      if (!['http:', 'https:'].includes(url.protocol)) return;
+
+      const kind = ['demo', 'repository'].includes(projectLink.kind) ? projectLink.kind : 'default';
+      const link = document.createElement('a');
+      link.className = `overlay__project-link overlay__project-link--${kind}`;
+      link.textContent = projectLink.label;
+      link.href = projectLink.url;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      link.setAttribute('aria-label', `${projectLink.label} — otwiera się w nowej karcie`);
+      projectLinksEl.append(link);
+    });
+
+    projectLinksEl.hidden = !projectLinksEl.childElementCount;
   };
 
   const renderCaseStudy = (caseStudy) => {
@@ -1454,6 +1490,7 @@ export function createOverlay({ onClose } = {}) {
       subtitleEl.hidden = !subtitle;
       subtitleEl.textContent = subtitle;
 
+      renderProjectLinks(nodeData.projectLinks);
       renderCaseStudy(nodeData.caseStudy);
       if (caseToggleEl) {
         caseToggleEl.hidden = !nodeData.caseStudy;

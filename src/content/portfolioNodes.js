@@ -128,6 +128,18 @@ Równolegle rozwijam dokumentację i pracuję z AI/Codexem jako narzędziem prod
 
 Haiku Cosmos nie jest wyłącznie koncepcją. To działający interaktywny prototyp, w którym wizja świata została przeprowadzona przez projektowanie systemów, implementację, walidację i deployment.`,
     closingText: 'Haiku Cosmos pokazuje, że potrafię prowadzić złożony projekt kreatywno-techniczny przez wiele warstw naraz — od intuicyjnej wizji świata, przez projektowanie systemów i oprawy wizualnej, aż po działający interaktywny prototyp.',
+    projectLinks: [
+      {
+        kind: 'demo',
+        label: 'DEMO',
+        url: 'https://j42xj297x5-stack.github.io/Haiku-Cosmos'
+      },
+      {
+        kind: 'repository',
+        label: 'REPOZYTORIUM',
+        url: 'https://github.com/j42xj297x5-stack/Haiku-Cosmos'
+      }
+    ],
     caseStudy: {
       title: 'Haiku Cosmos — Interactive World System',
       heading: 'Gra-system o relacji między decyzją gracza a przemianą świata',
