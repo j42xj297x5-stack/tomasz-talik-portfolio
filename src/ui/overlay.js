@@ -33,6 +33,7 @@ const MOBILE_FRAME_PIECE_KEYS = ['lu', 'ru', 'ld', 'rd', 'u', 'd', 'l', 'r'];
 const MOBILE_FRAME_CORNER_KEYS = ['lu', 'ru', 'ld', 'rd'];
 const MOBILE_FRAME_DEBUG_PARAM = 'debugFramePieces';
 const MOBILE_FRAME_LINE_OVERLAP_PROPERTY = '--frame-line-overlap';
+const MOBILE_FRAME_CORNER_VISUAL_SCALE = 1 / 3;
 const MOBILE_FRAME_DEBUG_COLORS = {
   lu: 'red',
   ru: 'orange',
@@ -544,7 +545,8 @@ function applyMobileFrameLayout(frameElement) {
   const requestedLineOverlap = parseCssPixelValue(frameStyles.getPropertyValue(MOBILE_FRAME_LINE_OVERLAP_PROPERTY), 0);
   const lineOverlap = Math.max(0, requestedLineOverlap);
   const maxCornerViewBoxWidth = Math.max(...MOBILE_FRAME_CORNER_KEYS.map((key) => pieces[key].viewBox.width));
-  const desiredCornerWidth = clamp(frameRect.width * 0.22, Math.min(72, frameRect.width * 0.25), frameRect.width * 0.25);
+  const baseCornerWidth = clamp(frameRect.width * 0.22, Math.min(72, frameRect.width * 0.25), frameRect.width * 0.25);
+  const desiredCornerWidth = baseCornerWidth * MOBILE_FRAME_CORNER_VISUAL_SCALE;
   const cornerScale = desiredCornerWidth / maxCornerViewBoxWidth;
   const chosenPivots = {
     lu: chooseCornerPivot(pieces.lu.pivots, 'lu', pieces.lu.viewBox),
@@ -714,7 +716,7 @@ function applyMobileFrameLayout(frameElement) {
       chosenPivots,
       desiredCornerWidth,
       cornerScale,
-      cornerWidthFormula: 'desiredCornerWidth = clamp(frameWidth * 0.22, min(72px, frameWidth * 0.25), frameWidth * 0.25); cornerScale = desiredCornerWidth / max(corner viewBox widths)',
+      cornerWidthFormula: 'baseCornerWidth = clamp(frameWidth * 0.22, min(72px, frameWidth * 0.25), frameWidth * 0.25); desiredCornerWidth = baseCornerWidth * MOBILE_FRAME_CORNER_VISUAL_SCALE (1 / 3); cornerScale = desiredCornerWidth / max(corner viewBox widths)',
       lineOverlap,
       cornerRendered: cornerRects,
       edgeGaps,
