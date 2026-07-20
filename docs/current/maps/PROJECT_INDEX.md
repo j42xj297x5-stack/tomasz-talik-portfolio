@@ -3,6 +3,8 @@
 Status: canonical architect entrypoint.
 Purpose: route humans and Codex to the smallest relevant documentation/runtime file pack for the task at hand.
 
+> **Repository entrypoint:** Read [`PROJECT_ENTRY.md`](../../../PROJECT_ENTRY.md) before this index for the canonical access card and mandatory project-window order.
+
 ## Purpose
 
 Use this document first when planning architecture, runtime, deployment, content, or documentation work. Its job is to prevent future sessions from reading the whole documentation tree by selecting the minimum useful file pack for each task type.
