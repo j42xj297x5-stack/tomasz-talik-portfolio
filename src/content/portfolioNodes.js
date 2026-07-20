@@ -114,6 +114,8 @@ Projekt pokazuje moje podejście do narzędzi użytkowych: dane mają być czyte
     modelPath: '/glb/glyph_5.glb',
     modelKind: 'glyph',
     ornamentPath: '/png/haiku_cosmos_ornament.png',
+    demoGifPath: '/gif/Haiku_Cosmos.gif',
+    demoGifAlt: 'Animowane demo Haiku Cosmos prezentujące świat gry i narzędzia debugowe',
     draftText: 'Gra, interfejs i dokumentacja jako jeden kosmos zależności.',
     leadText: 'Gra, interfejs i dokumentacja jako jeden kosmos zależności.',
     bodyText: `Haiku Cosmos to autorski projekt kontemplacyjnej gry-systemu, w której decyzje gracza prowadzą do przemian żywego, trójwymiarowego świata.
