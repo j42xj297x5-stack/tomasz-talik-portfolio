@@ -1123,15 +1123,15 @@ export function createOverlay({ onClose } = {}) {
           <p class="overlay__status">Draft content — final copy pending</p>
           <h2 class="overlay__title"></h2>
           <p class="overlay__subtitle" hidden></p>
-          <p class="overlay__lead" hidden></p>
           <figure class="overlay__demo" hidden>
-            <button class="overlay__demo-preview" type="button" aria-label="Powiększ demo DIG Engine">
+            <button class="overlay__demo-preview" type="button">
               <img class="overlay__demo-image" alt="">
             </button>
             <figcaption class="overlay__demo-caption">
               <button class="overlay__demo-enlarge" type="button">Powiększ demo</button>
             </figcaption>
           </figure>
+          <p class="overlay__lead" hidden></p>
           <p class="overlay__text"></p>
           <div class="overlay__feature" hidden>
             <p class="overlay__feature-label"></p>
@@ -1147,7 +1147,7 @@ export function createOverlay({ onClose } = {}) {
         </div>
       </div>
     </article>
-    <div class="overlay__demo-lightbox" role="dialog" aria-modal="true" aria-label="Powiększone media DIG Engine" hidden>
+    <div class="overlay__demo-lightbox" role="dialog" aria-modal="true" hidden>
       <button class="overlay__demo-lightbox-backdrop" type="button" data-close-demo aria-label="Zamknij powiększone demo"></button>
       <div class="overlay__demo-lightbox-frame">
         <button class="overlay__demo-lightbox-close" type="button" data-close-demo aria-label="Zamknij powiększone demo">×</button>
@@ -1512,6 +1512,8 @@ export function createOverlay({ onClose } = {}) {
         demoLightboxImageEl.removeAttribute('src');
         demoLightboxImageEl.alt = '';
       }
+      demoPreviewEl?.setAttribute('aria-label', `Powiększ demo: ${nodeData.title}`);
+      demoLightboxEl?.setAttribute('aria-label', `Powiększone demo: ${nodeData.title}`);
 
       if (hasStructuredCopy) {
         leadEl.hidden = !nodeData.leadText;

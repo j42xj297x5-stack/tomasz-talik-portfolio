@@ -2146,6 +2146,11 @@ body {
   color: var(--panel-link);
 }
 
+.overlay__panel[data-panel-theme="haiku-cosmos"] .overlay__case-process-item {
+  border-color: color-mix(in srgb, var(--panel-frame) 38%, transparent);
+  background: linear-gradient(145deg, rgba(244, 252, 255, 0.46), rgba(191, 228, 250, 0.3));
+}
+
 .overlay__panel[data-panel-theme] .overlay__actions { justify-content: flex-end; }
 .overlay__panel[data-panel-theme] .overlay__scroll > :is(.overlay__title, .overlay__subtitle, .overlay__status) { text-align: center; }
 .overlay__panel[data-panel-theme] :where(h1, h2, h3, .overlay__title) { color: var(--panel-heading); }
