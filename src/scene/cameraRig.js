@@ -16,6 +16,7 @@ const MOBILE_MAX_YAW_RAD = MOBILE_MAX_YAW_DEG * DEG_TO_RAD;
 const MOBILE_MAX_PITCH_RAD = MOBILE_MAX_PITCH_DEG * DEG_TO_RAD;
 
 const MOUSE_ORBIT_DAMPING = 0.08;
+const MOUSE_RESUME_DURATION_MS = 1500;
 const IDLE_DRIFT_DAMPING = 0.02;
 const IDLE_YAW_AMPLITUDE_RAD = 4 * DEG_TO_RAD;
 const IDLE_PITCH_AMPLITUDE_RAD = 2 * DEG_TO_RAD;
@@ -29,6 +30,8 @@ export function createCameraRig(pointerElement = document.documentElement) {
     hasMouseInput: false,
     hasTouchInput: false,
     touchReturnActive: false,
+    mouseControlPaused: false,
+    mouseResumeTransition: null,
     targetYaw: 0,
     targetPitch: 0,
     currentYaw: 0,
@@ -53,6 +56,8 @@ export function createCameraRig(pointerElement = document.documentElement) {
     const { mouseX, mouseY } = normalizePointer(event);
     const yawDirection = INVERT_YAW ? -1 : 1;
 
+    if (state.mouseControlPaused) return;
+
     state.targetYaw = mouseX * MAX_YAW_RAD * yawDirection;
     state.targetPitch = -mouseY * MAX_PITCH_RAD;
     state.hasMouseInput = true;
@@ -76,20 +81,74 @@ export function createCameraRig(pointerElement = document.documentElement) {
   }
 
   function onPointerLeave() {
+    if (state.mouseControlPaused) return;
+
     state.hasMouseInput = false;
     state.targetYaw = 0;
     state.targetPitch = 0;
+  }
+
+  function pauseMouseControl() {
+    const mouseTarget = getMouseTarget();
+    state.targetYaw = mouseTarget.yaw;
+    state.targetPitch = mouseTarget.pitch;
+    state.mouseResumeTransition = null;
+    state.mouseControlPaused = true;
+  }
+
+  function resumeMouseControl(pointerPosition) {
+    state.mouseControlPaused = false;
+
+    if (!pointerPosition || !Number.isFinite(pointerPosition.clientX) || !Number.isFinite(pointerPosition.clientY)) {
+      state.mouseResumeTransition = null;
+      return;
+    }
+
+    const { mouseX, mouseY } = normalizePointer(pointerPosition);
+    const yawDirection = INVERT_YAW ? -1 : 1;
+    const fromYaw = state.targetYaw;
+    const fromPitch = state.targetPitch;
+
+    state.targetYaw = mouseX * MAX_YAW_RAD * yawDirection;
+    state.targetPitch = -mouseY * MAX_PITCH_RAD;
+    state.hasMouseInput = true;
+    state.mouseResumeTransition = {
+      fromYaw,
+      fromPitch,
+      startedAt: performance.now()
+    };
+  }
+
+  function getMouseTarget() {
+    const transition = state.mouseResumeTransition;
+    if (!transition) {
+      return { yaw: state.targetYaw, pitch: state.targetPitch };
+    }
+
+    const progress = THREE.MathUtils.clamp((performance.now() - transition.startedAt) / MOUSE_RESUME_DURATION_MS, 0, 1);
+    const easedProgress = progress * progress * (3 - 2 * progress);
+    const target = {
+      yaw: THREE.MathUtils.lerp(transition.fromYaw, state.targetYaw, easedProgress),
+      pitch: THREE.MathUtils.lerp(transition.fromPitch, state.targetPitch, easedProgress)
+    };
+
+    if (progress === 1) {
+      state.mouseResumeTransition = null;
+    }
+
+    return target;
   }
 
   function update(camera, elapsed) {
     const idleYaw = Math.sin(elapsed * 0.25) * IDLE_YAW_AMPLITUDE_RAD;
     const idlePitch = Math.sin(elapsed * 0.32) * IDLE_PITCH_AMPLITUDE_RAD;
 
+    const mouseTarget = getMouseTarget();
     const hasDirectInput = state.hasMouseInput || state.hasTouchInput || state.touchReturnActive;
     const inputDamping = hasDirectInput ? MOUSE_ORBIT_DAMPING : IDLE_DRIFT_DAMPING;
 
-    const desiredYaw = state.targetYaw + idleYaw;
-    const desiredPitch = state.targetPitch + idlePitch;
+    const desiredYaw = mouseTarget.yaw + idleYaw;
+    const desiredPitch = mouseTarget.pitch + idlePitch;
 
     state.currentYaw = THREE.MathUtils.lerp(state.currentYaw, desiredYaw, inputDamping);
     state.currentPitch = THREE.MathUtils.lerp(state.currentPitch, desiredPitch, inputDamping);
@@ -109,6 +168,8 @@ export function createCameraRig(pointerElement = document.documentElement) {
   return {
     onPointerMove,
     onPointerLeave,
+    pauseMouseControl,
+    resumeMouseControl,
     setTouchDragTarget,
     releaseTouchTarget,
     update
