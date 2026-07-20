@@ -1123,21 +1123,22 @@ export function createOverlay({ onClose } = {}) {
           <p class="overlay__status">Draft content — final copy pending</p>
           <h2 class="overlay__title"></h2>
           <p class="overlay__subtitle" hidden></p>
-          <p class="overlay__lead" hidden></p>
           <figure class="overlay__demo" hidden>
-            <button class="overlay__demo-preview" type="button" aria-label="Powiększ demo DIG Engine">
+            <button class="overlay__demo-preview" type="button">
               <img class="overlay__demo-image" alt="">
             </button>
             <figcaption class="overlay__demo-caption">
               <button class="overlay__demo-enlarge" type="button">Powiększ demo</button>
             </figcaption>
           </figure>
+          <p class="overlay__lead" hidden></p>
           <p class="overlay__text"></p>
           <div class="overlay__feature" hidden>
             <p class="overlay__feature-label"></p>
             <p class="overlay__feature-text"></p>
           </div>
           <p class="overlay__closing" hidden></p>
+          <nav class="overlay__project-links" aria-label="Linki projektu" hidden></nav>
           <section class="overlay__case-study" hidden></section>
         </div>
         <div class="overlay__actions">
@@ -1146,7 +1147,7 @@ export function createOverlay({ onClose } = {}) {
         </div>
       </div>
     </article>
-    <div class="overlay__demo-lightbox" role="dialog" aria-modal="true" aria-label="Powiększone media DIG Engine" hidden>
+    <div class="overlay__demo-lightbox" role="dialog" aria-modal="true" hidden>
       <button class="overlay__demo-lightbox-backdrop" type="button" data-close-demo aria-label="Zamknij powiększone demo"></button>
       <div class="overlay__demo-lightbox-frame">
         <button class="overlay__demo-lightbox-close" type="button" data-close-demo aria-label="Zamknij powiększone demo">×</button>
@@ -1162,6 +1163,7 @@ export function createOverlay({ onClose } = {}) {
   const leadEl = root.querySelector('.overlay__lead');
   const textEl = root.querySelector('.overlay__text');
   const closingEl = root.querySelector('.overlay__closing');
+  const projectLinksEl = root.querySelector('.overlay__project-links');
   const featureEl = root.querySelector('.overlay__feature');
   const featureLabelEl = root.querySelector('.overlay__feature-label');
   const featureTextEl = root.querySelector('.overlay__feature-text');
@@ -1208,6 +1210,40 @@ export function createOverlay({ onClose } = {}) {
     block.append(heading);
     appendParagraphs(block, paragraphs);
     parent.append(block);
+  };
+
+  const renderProjectLinks = (projectLinks) => {
+    if (!projectLinksEl) return;
+
+    projectLinksEl.replaceChildren();
+    projectLinksEl.hidden = true;
+
+    if (!Array.isArray(projectLinks)) return;
+
+    projectLinks.forEach((projectLink) => {
+      if (!projectLink || typeof projectLink.label !== 'string' || typeof projectLink.url !== 'string') return;
+
+      let url;
+      try {
+        url = new URL(projectLink.url);
+      } catch {
+        return;
+      }
+
+      if (!['http:', 'https:'].includes(url.protocol)) return;
+
+      const kind = ['demo', 'repository'].includes(projectLink.kind) ? projectLink.kind : 'default';
+      const link = document.createElement('a');
+      link.className = `overlay__project-link overlay__project-link--${kind}`;
+      link.textContent = projectLink.label;
+      link.href = projectLink.url;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      link.setAttribute('aria-label', `${projectLink.label} — otwiera się w nowej karcie`);
+      projectLinksEl.append(link);
+    });
+
+    projectLinksEl.hidden = !projectLinksEl.childElementCount;
   };
 
   const renderCaseStudy = (caseStudy) => {
@@ -1454,6 +1490,7 @@ export function createOverlay({ onClose } = {}) {
       subtitleEl.hidden = !subtitle;
       subtitleEl.textContent = subtitle;
 
+      renderProjectLinks(nodeData.projectLinks);
       renderCaseStudy(nodeData.caseStudy);
       if (caseToggleEl) {
         caseToggleEl.hidden = !nodeData.caseStudy;
@@ -1475,6 +1512,8 @@ export function createOverlay({ onClose } = {}) {
         demoLightboxImageEl.removeAttribute('src');
         demoLightboxImageEl.alt = '';
       }
+      demoPreviewEl?.setAttribute('aria-label', `Powiększ demo: ${nodeData.title}`);
+      demoLightboxEl?.setAttribute('aria-label', `Powiększone demo: ${nodeData.title}`);
 
       if (hasStructuredCopy) {
         leadEl.hidden = !nodeData.leadText;

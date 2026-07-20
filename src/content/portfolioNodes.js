@@ -114,6 +114,8 @@ Projekt pokazuje moje podejście do narzędzi użytkowych: dane mają być czyte
     modelPath: '/glb/glyph_5.glb',
     modelKind: 'glyph',
     ornamentPath: '/png/haiku_cosmos_ornament.png',
+    demoGifPath: '/gif/Haiku_Cosmos.gif',
+    demoGifAlt: 'Animowane demo Haiku Cosmos prezentujące świat gry i narzędzia debugowe',
     draftText: 'Gra, interfejs i dokumentacja jako jeden kosmos zależności.',
     leadText: 'Gra, interfejs i dokumentacja jako jeden kosmos zależności.',
     bodyText: `Haiku Cosmos to autorski projekt kontemplacyjnej gry-systemu, w której decyzje gracza prowadzą do przemian żywego, trójwymiarowego świata.
@@ -128,6 +130,18 @@ Równolegle rozwijam dokumentację i pracuję z AI/Codexem jako narzędziem prod
 
 Haiku Cosmos nie jest wyłącznie koncepcją. To działający interaktywny prototyp, w którym wizja świata została przeprowadzona przez projektowanie systemów, implementację, walidację i deployment.`,
     closingText: 'Haiku Cosmos pokazuje, że potrafię prowadzić złożony projekt kreatywno-techniczny przez wiele warstw naraz — od intuicyjnej wizji świata, przez projektowanie systemów i oprawy wizualnej, aż po działający interaktywny prototyp.',
+    projectLinks: [
+      {
+        kind: 'demo',
+        label: 'DEMO',
+        url: 'https://j42xj297x5-stack.github.io/Haiku-Cosmos'
+      },
+      {
+        kind: 'repository',
+        label: 'REPOZYTORIUM',
+        url: 'https://github.com/j42xj297x5-stack/Haiku-Cosmos'
+      }
+    ],
     caseStudy: {
       title: 'Haiku Cosmos — Interactive World System',
       heading: 'Gra-system o relacji między decyzją gracza a przemianą świata',
