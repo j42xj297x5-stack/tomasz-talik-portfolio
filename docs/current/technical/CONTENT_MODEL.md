@@ -8,6 +8,7 @@ Each gate node contains:
 - `shortLabel`
 - `draftText`
 - Optional visual model metadata (`modelPath`, `modelKind`) for per-node GLB visuals.
+- Optional `projectLinks` array for Experience 3D overlay links. Each valid entry contains `kind`, `label`, and an absolute `http` or `https` `url`; the overlay renders these as safe external links and does not pass their URLs through the public-path helper.
 
 Current draft gates:
 1. AI Guide
@@ -55,6 +56,7 @@ Rules in current MVP:
 - Główny opis i pełne case study znajdują się w rekordzie `haiku-cosmos` w `src/content/portfolioNodes.js`.
 - Classic 2D i Experience 3D konsumują ten sam rekord.
 - Treść nie jest duplikowana pomiędzy trybami.
+- Rekord `haiku-cosmos` deklaruje `projectLinks` dla publicznego demo i repozytorium; Experience 3D renderuje je przed case study, a Classic 2D nie zmienia swojego interfejsu.
 
 
 ## Planned shared PL/EN content model for dual modes

@@ -2074,6 +2074,55 @@ body {
   background-color: var(--panel-scrollbar-thumb-hover);
 }
 
+.overlay__panel[data-panel-theme] .overlay__project-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  margin: 1rem 0 1.2rem;
+}
+
+.overlay__panel[data-panel-theme] .overlay__project-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.5rem;
+  padding: 0.6rem 0.95rem;
+  border: 1px solid color-mix(in srgb, var(--panel-frame) 76%, transparent);
+  border-radius: 0.5rem;
+  background: color-mix(in srgb, var(--panel-frame) 16%, transparent);
+  color: var(--panel-text);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  line-height: 1;
+  text-align: center;
+  text-decoration: none;
+  transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease, transform 160ms ease;
+}
+
+.overlay__panel[data-panel-theme] .overlay__project-link--demo {
+  border-color: var(--panel-link);
+  background: var(--panel-link);
+  color: #fff;
+}
+
+.overlay__panel[data-panel-theme] .overlay__project-link:hover {
+  border-color: var(--panel-link);
+  background: color-mix(in srgb, var(--panel-link) 24%, transparent);
+  color: var(--panel-text);
+  transform: translateY(-1px);
+}
+
+.overlay__panel[data-panel-theme] .overlay__project-link--demo:hover {
+  background: color-mix(in srgb, var(--panel-link) 84%, #000);
+  color: #fff;
+}
+
+.overlay__panel[data-panel-theme] .overlay__project-link:focus-visible {
+  outline: 3px solid var(--panel-text);
+  outline-offset: 3px;
+}
+
 .overlay__panel[data-panel-theme="haiku-cosmos"] .overlay__case-study {
   border-color: color-mix(in srgb, var(--panel-frame) 44%, transparent);
   background:
@@ -2111,6 +2160,7 @@ body {
     padding: clamp(14px, 4vw, 22px);
   }
   .overlay__panel[data-panel-theme] .overlay__actions { justify-content: center; }
+  .overlay__panel[data-panel-theme] .overlay__project-link { flex: 1 1 100%; }
 }
 
 @media (orientation: landscape) and (max-height: 520px) {
