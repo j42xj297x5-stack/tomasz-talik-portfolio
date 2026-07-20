@@ -1954,6 +1954,9 @@ body {
 /* Unified Experience 3D glyph-panel system. The opaque CSS background, SVG frame,
    ornament, and content use the same layer contract at every viewport size. */
 .overlay__panel[data-panel-theme] {
+  --panel-scrollbar-thumb: color-mix(in srgb, var(--panel-frame) 62%, transparent);
+  --panel-scrollbar-thumb-hover: color-mix(in srgb, var(--panel-frame) 82%, transparent);
+  --panel-scrollbar-track: color-mix(in srgb, var(--panel-frame) 12%, transparent);
   position: absolute;
   top: 50%;
   left: 50%;
@@ -2046,8 +2049,52 @@ body {
   overflow-y: auto;
   padding-right: 0.75rem;
   scrollbar-width: thin;
+  scrollbar-color: var(--panel-scrollbar-thumb) var(--panel-scrollbar-track);
   background: none;
   box-shadow: none;
+}
+
+.overlay__panel[data-panel-theme] .overlay__scroll::-webkit-scrollbar {
+  width: 8px;
+}
+
+.overlay__panel[data-panel-theme] .overlay__scroll::-webkit-scrollbar-track {
+  background: var(--panel-scrollbar-track);
+  border-radius: 999px;
+}
+
+.overlay__panel[data-panel-theme] .overlay__scroll::-webkit-scrollbar-thumb {
+  background: var(--panel-scrollbar-thumb);
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background-clip: padding-box;
+}
+
+.overlay__panel[data-panel-theme] .overlay__scroll::-webkit-scrollbar-thumb:hover {
+  background-color: var(--panel-scrollbar-thumb-hover);
+}
+
+.overlay__panel[data-panel-theme="haiku-cosmos"] .overlay__case-study {
+  border-color: color-mix(in srgb, var(--panel-frame) 44%, transparent);
+  background:
+    radial-gradient(circle at top left, rgba(47, 112, 190, 0.14), transparent 42%),
+    linear-gradient(145deg, rgba(40, 102, 178, 0.16), rgba(25, 77, 145, 0.1));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.26),
+    0 12px 28px rgba(20, 67, 123, 0.12);
+  color: var(--panel-text);
+}
+
+.overlay__panel[data-panel-theme="haiku-cosmos"] .overlay__case-study :is(h3, h4, h5) {
+  color: var(--panel-heading);
+}
+
+.overlay__panel[data-panel-theme="haiku-cosmos"] .overlay__case-study :is(p, .overlay__case-shot figcaption) {
+  color: var(--panel-text);
+}
+
+.overlay__panel[data-panel-theme="haiku-cosmos"] .overlay__case-study :is(.overlay__case-title, .overlay__case-shot figcaption strong) {
+  color: var(--panel-link);
 }
 
 .overlay__panel[data-panel-theme] .overlay__actions { justify-content: flex-end; }
