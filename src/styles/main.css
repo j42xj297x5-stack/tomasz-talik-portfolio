@@ -293,18 +293,6 @@ body {
   --panel-button-text: #e6edf3;
   --panel-button-border: #3b475b;
   --panel-glow: rgba(255,255,255,0.08);
-  --mobile-frame-color: #ffffff;
-  --mobile-frame-glow: rgba(255,255,255,0.16);
-  --mobile-frame-inset: 10px;
-  --frame-line-overlap: 0px;
-  --mobile-frame-corner-size: clamp(72px, 22vw, 118px);
-  --mobile-frame-line-thickness: clamp(8px, 2.4vw, 12px);
-  --mobile-frame-pivot-left-x: clamp(6px, 1.85vw, 10px);
-  --mobile-frame-pivot-right-x: clamp(6px, 1.95vw, 11px);
-  --mobile-frame-top-line-height: clamp(15px, 4.6vw, 25px);
-  --mobile-frame-bottom-line-height: clamp(10px, 2.9vw, 16px);
-  --mobile-frame-side-line-start: clamp(40px, 12.3vw, 66px);
-  --mobile-frame-side-line-end: clamp(39px, 11.9vw, 64px);
   position: absolute;
   pointer-events: auto;
   top: 50%;
@@ -323,86 +311,6 @@ body {
 
 .overlay__ornament {
   display: none;
-}
-
-.mobile-svg-frame {
-  display: none;
-  color: var(--mobile-frame-color, #ffffff);
-  overflow: visible;
-}
-
-.overlay__panel--debug-frame-pieces .mobile-svg-frame {
-  position: absolute;
-  inset: var(--mobile-frame-inset);
-  z-index: 1;
-  display: block;
-  pointer-events: none;
-}
-
-.mobile-svg-frame__piece {
-  position: absolute;
-  display: block;
-  color: var(--mobile-frame-color, #ffffff);
-  pointer-events: none;
-  overflow: visible;
-}
-
-.mobile-svg-frame--debug .mobile-svg-frame__piece {
-  outline: 1px dashed var(--mobile-frame-debug-color, magenta);
-  background: color-mix(in srgb, var(--mobile-frame-debug-color, magenta) 12%, transparent);
-}
-
-.mobile-svg-frame--debug .mobile-svg-frame__piece svg,
-.mobile-svg-frame--debug .mobile-svg-frame__piece svg *:not(.frame-pivot-reference):not([data-frame-pivot="true"]) {
-  color: var(--mobile-frame-debug-color, magenta) !important;
-}
-
-.mobile-svg-frame__piece svg {
-  display: block;
-  width: 100%;
-  height: 100%;
-  color: var(--mobile-frame-color, #ffffff) !important;
-  overflow: visible;
-}
-
-.mobile-svg-frame svg,
-.mobile-svg-frame svg * {
-  color: var(--mobile-frame-color, #ffffff) !important;
-}
-
-.mobile-svg-frame svg [data-mobile-frame-paint-mode="fill"] {
-  fill: currentColor !important;
-  stroke: none !important;
-}
-
-.mobile-svg-frame svg [data-mobile-frame-paint-mode="stroke"] {
-  fill: none !important;
-  stroke: currentColor !important;
-}
-
-.mobile-svg-frame .frame-pivot-reference,
-.mobile-svg-frame [data-frame-pivot="true"] {
-  opacity: 0 !important;
-  visibility: hidden !important;
-  pointer-events: none !important;
-  fill: none !important;
-  stroke: none !important;
-}
-
-/* Mobile frame geometry is set by the JS guide-rectangle pivot solver in
-   overlay.js. Every wrapper position is derived from
-   wrapper.left/top = targetGuide - localPivot * scale on the relevant axes. Line
-   wrappers use corner wrapper edges as their start/end points, with
-   --frame-line-overlap defaulting to 0px for no corner-wrapper overlap. Source
-   viewBoxes: lu 57.058x99.868, ru 54.147x99.821, ld 57.086x98.871,
-   rd 54.210x98.801; line_u 159.544x33.445, line_d 159.544x21.212,
-   line_l 12.334x134.673, line_r 12.436x134.673. Corners receive uniform
-   scaled width/height; horizontal lines receive stretched width only; vertical
-   lines receive stretched height only. */
-
-.overlay__panel[data-gate-id="ai-guide"] {
-  --mobile-frame-color: #6aae53;
-  --mobile-frame-glow: rgba(84, 140, 72, 0.1);
 }
 
 .overlay__status { margin: 0 0 0.6rem; color: #8fa1b9; font-size: 0.82rem; }
@@ -464,8 +372,6 @@ body {
 
 .overlay__panel--creative-ai,
 .overlay__panel.theme-creative-ai {
-  --mobile-frame-color: #e0b45f;
-  --mobile-frame-glow: rgba(240, 160, 64, 0.14);
   --panel-eyebrow: #d8a85a;
   --panel-title: #fff3d2;
   --panel-text: #f3efe4;
@@ -624,8 +530,6 @@ body {
 
 .overlay__panel--spotify-digger,
 .overlay__panel.theme-spotify-digger {
-  --mobile-frame-color: #9fdcff;
-  --mobile-frame-glow: rgba(90, 169, 255, 0.14);
   --overlay-panel-scrollbar: rgba(159, 220, 255, 0.32);
   --overlay-panel-close-color: #eaf7ff;
   --overlay-panel-close-bg: rgba(8, 20, 34, 0.58);
@@ -1179,8 +1083,6 @@ body {
 
 .overlay__panel--haiku-cosmos,
 .overlay__panel.theme-haiku-cosmos {
-  --mobile-frame-color: #4bd6ed;
-  --mobile-frame-glow: rgba(30, 190, 225, 0.2);
   --overlay-panel-scrollbar: rgba(19, 126, 174, 0.28);
   --overlay-panel-close-color: #08365a;
   --overlay-panel-close-bg: rgba(247, 253, 255, 0.78);
@@ -1278,8 +1180,6 @@ body {
 
 .overlay__panel--ethics,
 .overlay__panel.theme-ethics-life-protection {
-  --mobile-frame-color: #c79a44;
-  --mobile-frame-glow: rgba(154, 111, 38, 0.22);
   --overlay-panel-scrollbar: rgba(154, 111, 38, 0.45);
   --overlay-panel-close-color: #34291f;
   --overlay-panel-close-bg: rgba(255, 250, 236, 0.94);
@@ -1460,8 +1360,6 @@ body {
     --panel-frame: #4f6878;
     --panel-muted: #3f5f6d;
     --panel-link: #244f68;
-    --mobile-frame-color: var(--panel-frame);
-    --mobile-frame-glow: transparent;
     --overlay-panel-scrollbar: var(--panel-frame);
     --overlay-panel-close-color: var(--panel-text);
     --overlay-panel-close-bg: #f5f8fb;
@@ -1567,15 +1465,6 @@ body {
   .overlay__panel.theme-spotify-digger::after {
     content: none;
     display: none;
-  }
-
-  .mobile-svg-frame {
-    position: absolute;
-    inset: var(--mobile-frame-inset);
-    z-index: 1;
-    display: block;
-    color: var(--panel-frame);
-    pointer-events: none;
   }
 
   .overlay__ornament:not([hidden]) {
@@ -1777,7 +1666,6 @@ body {
     opacity: 1;
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
-    --mobile-frame-color: var(--panel-frame);
     --overlay-panel-scrollbar: var(--panel-frame);
     --overlay-panel-close-color: var(--panel-text);
     --overlay-panel-close-bg: #f5f8fb;
@@ -1920,13 +1808,6 @@ body {
     color: var(--panel-link);
   }
 
-  .overlay__panel[data-panel-theme="ethics"] .mobile-svg-frame {
-    color: var(--panel-frame);
-    opacity: 1;
-    mix-blend-mode: normal;
-    filter: none;
-  }
-
   .overlay__panel[data-panel-theme="haiku-cosmos"] {
     --panel-bg: linear-gradient(160deg, #f3f7fc 0%, #d9ecfb 38%, #aad2f4 72%, #689ddb 100%);
     --panel-text: #0e1d33;
@@ -1945,14 +1826,6 @@ body {
     --panel-frame: #6d8a9a;
   }
 
-  .mobile-svg-frame {
-    color: var(--panel-frame);
-    opacity: 1;
-    mix-blend-mode: normal;
-    filter: none;
-  }
-
-  .mobile-panel-ornament,
   .overlay__ornament:not([hidden]) {
     background: none;
     opacity: 1;
@@ -1964,8 +1837,8 @@ body {
 
 
 
-/* Unified Experience 3D glyph-panel system. The opaque CSS background, SVG frame,
-   ornament, and content use the same layer contract at every viewport size. */
+/* Unified Experience 3D glyph-panel system. The opaque CSS background, ornament,
+   and content use the same layer contract at every viewport size. */
 .overlay__panel[data-panel-theme] {
   --panel-scrollbar-thumb: color-mix(in srgb, var(--panel-frame) 62%, transparent);
   --panel-scrollbar-thumb-hover: color-mix(in srgb, var(--panel-frame) 82%, transparent);
@@ -2012,16 +1885,6 @@ body {
 .overlay__panel[data-panel-theme="haiku-cosmos"] {
   --panel-bg: linear-gradient(160deg, #f3f7fc 0%, #d9ecfb 38%, #aad2f4 72%, #689ddb 100%);
   --panel-text: #0e1d33; --panel-heading: #102f63; --panel-muted: #244f7e; --panel-link: #1c57a3; --panel-frame: #4d71c4;
-}
-
-.overlay__panel[data-panel-theme] .mobile-svg-frame {
-  position: absolute;
-  inset: var(--mobile-frame-inset);
-  z-index: 1;
-  display: block;
-  color: var(--panel-frame);
-  overflow: visible;
-  pointer-events: none;
 }
 
 .overlay__panel[data-panel-theme] .overlay__ornament:not([hidden]) {

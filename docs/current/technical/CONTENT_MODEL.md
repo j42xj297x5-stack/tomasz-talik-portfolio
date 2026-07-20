@@ -82,4 +82,4 @@ Planned rule: content records should become the source of truth for both the fut
 ## Unified Experience 3D ornament checkpoint (2026-07-20)
 - Each of the five portfolio records retains its `ornamentPath` for the Experience 3D overlay.
 - Ornaments are viewport-independent overlay metadata; `ornamentMobileOnly` has been removed.
-- The content/runtime gate still maps to the same stable `data-panel-theme` values, while Classic 2D continues to consume the shared records without adopting the Experience 3D frame system.
+- The content/runtime gate still maps to the same stable `data-panel-theme` values, while Classic 2D continues to consume the shared records without adopting Experience 3D overlay styling.

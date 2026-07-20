@@ -218,14 +218,15 @@ Consequences:
 
 Status: accepted / implemented.
 
-Decision: The five Experience 3D glyph panels use one opaque, full-viewport CSS-gradient layout on desktop and mobile, with the existing eight-piece SVG frame solver and each record's existing ornament.
+Decision: The five Experience 3D glyph panels use one opaque, full-viewport CSS-gradient layout on desktop and mobile, without an SVG frame. Each record's existing ornament remains unchanged.
 
 Rationale:
 1. The legacy desktop vertical PNG panels constrained Full HD text to roughly 420–500px.
 2. A shared layout allows centred, internally scrolling content up to 1200px wide without relying on the Three.js scene for contrast.
-3. Reusing the current SVG loader and geometry solver avoids frame regressions while preserving undeformed corners and visible overflow.
+3. Removing the eight-piece SVG frame eliminates its runtime asset loading and geometry maintenance without changing the ornament treatment.
 
 Consequences:
 1. Legacy vertical panel PNGs are no longer rendered or included in `criticalInitial` preload, though their physical public files remain available.
-2. `ornamentPath` is universal Experience 3D metadata; the mobile-only ornament flag was removed.
-3. Classic 2D is intentionally unchanged.
+2. The `portfolio_frame_mobile_*` SVG files remain in `public/svg/` but are no longer runtime dependencies.
+3. `ornamentPath` is universal Experience 3D metadata; the mobile-only ornament flag was removed, and ornament placement, proportions, and responsive scaling are retained.
+4. Classic 2D is intentionally unchanged.
