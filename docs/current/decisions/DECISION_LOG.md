@@ -213,3 +213,19 @@ Consequences:
 4. Ring/orbital outline effects are deferred and were intentionally not added in this pass.
 5. Browser/runtime public paths must remain logical paths such as `/png/monkey_small.png` and `/png/glif_ai_guide.png`, not `public/png/...` paths.
 6. Experience 3D remains separate and unchanged by this Classic 2D MVP decision.
+
+## 2026-07-20 — Unified Experience 3D glyph panel system implemented
+
+Status: accepted / implemented.
+
+Decision: The five Experience 3D glyph panels use one opaque, full-viewport CSS-gradient layout on desktop and mobile, with the existing eight-piece SVG frame solver and each record's existing ornament.
+
+Rationale:
+1. The legacy desktop vertical PNG panels constrained Full HD text to roughly 420–500px.
+2. A shared layout allows centred, internally scrolling content up to 1200px wide without relying on the Three.js scene for contrast.
+3. Reusing the current SVG loader and geometry solver avoids frame regressions while preserving undeformed corners and visible overflow.
+
+Consequences:
+1. Legacy vertical panel PNGs are no longer rendered or included in `criticalInitial` preload, though their physical public files remain available.
+2. `ornamentPath` is universal Experience 3D metadata; the mobile-only ornament flag was removed.
+3. Classic 2D is intentionally unchanged.

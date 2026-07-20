@@ -1,4 +1,3 @@
-import { GLYPH_PANEL_BACKGROUNDS } from '../assets/assetManifest.js';
 import { publicPath } from '../utils/publicPath.js';
 import { getPanelThemeForGate } from './panelThemes.js';
 
@@ -1099,7 +1098,7 @@ function loadMobileFrameSvgs(frameElement) {
   }));
 }
 
-export function createOverlay({ onClose, assetManager = null } = {}) {
+export function createOverlay({ onClose } = {}) {
   const root = document.createElement('section');
   root.className = 'overlay';
   root.hidden = true;
@@ -1116,7 +1115,7 @@ export function createOverlay({ onClose, assetManager = null } = {}) {
         <span class="mobile-svg-frame__piece mobile-svg-frame__line mobile-svg-frame__line--l frame-line frame-line-l" data-mobile-frame-piece="l"></span>
         <span class="mobile-svg-frame__piece mobile-svg-frame__line mobile-svg-frame__line--r frame-line frame-line-r" data-mobile-frame-piece="r"></span>
       </div>
-      <img class="overlay__mobile-ornament" alt="" aria-hidden="true" hidden>
+      <img class="overlay__ornament" alt="" aria-hidden="true" hidden>
       <div class="overlay__content">
         <div class="overlay__scroll">
           <p class="overlay__status">Draft content — final copy pending</p>
@@ -1174,12 +1173,10 @@ export function createOverlay({ onClose, assetManager = null } = {}) {
   const demoLightboxImageEl = root.querySelector('.overlay__demo-lightbox-image');
   const demoLightboxCloseEl = root.querySelector('.overlay__demo-lightbox-close');
   const mobileFrameEl = root.querySelector('.mobile-svg-frame');
-  const mobileOrnamentEl = root.querySelector('.overlay__mobile-ornament');
+  const ornamentEl = root.querySelector('.overlay__ornament');
 
   const mobileFrameLayout = createMobileFrameLayoutController(mobileFrameEl, panelEl);
   const mobileFrameReady = mobileFrameEl ? loadMobileFrameSvgs(mobileFrameEl).finally(mobileFrameLayout.schedule) : Promise.resolve();
-  const mobilePanelMedia = window.matchMedia('(max-width: 768px)');
-  let activeGateId = null;
   let demoLightboxOpener = null;
 
   const appendParagraphs = (parent, paragraphs) => {
@@ -1359,28 +1356,6 @@ export function createOverlay({ onClose, assetManager = null } = {}) {
     });
   };
 
-  const applyPanelBackground = (gateId) => {
-    const panelBackgroundPath = GLYPH_PANEL_BACKGROUNDS[gateId];
-    const shouldSuppressPanelBackground = mobilePanelMedia.matches;
-
-    if (!panelBackgroundPath || shouldSuppressPanelBackground) {
-      panelEl.style.removeProperty('--overlay-panel-bg-image');
-      return;
-    }
-
-    const cachedUrl = assetManager?.getImageUrlByPath?.(panelBackgroundPath);
-    if (!cachedUrl) {
-      console.warn(`[overlay] Panel background cache miss for ${gateId}: ${panelBackgroundPath}`);
-    }
-    panelEl.style.setProperty('--overlay-panel-bg-image', `url("${cachedUrl ?? publicPath(panelBackgroundPath)}")`);
-  };
-
-  mobilePanelMedia.addEventListener('change', () => {
-    if (activeGateId) {
-      applyPanelBackground(activeGateId);
-    }
-  });
-
   const close = () => {
     if (root.hidden) return;
     closeDemoLightbox();
@@ -1461,15 +1436,12 @@ export function createOverlay({ onClose, assetManager = null } = {}) {
         'theme-spotify-digger'
       );
       panelEl.classList.add(`theme-${gateId}`);
-      activeGateId = gateId;
-      applyPanelBackground(gateId);
-
-      if (nodeData.ornamentPath && nodeData.ornamentMobileOnly) {
-        mobileOrnamentEl.src = publicPath(nodeData.ornamentPath);
-        mobileOrnamentEl.hidden = false;
+      if (nodeData.ornamentPath) {
+        ornamentEl.src = publicPath(nodeData.ornamentPath);
+        ornamentEl.hidden = false;
       } else {
-        mobileOrnamentEl.hidden = true;
-        mobileOrnamentEl.removeAttribute('src');
+        ornamentEl.hidden = true;
+        ornamentEl.removeAttribute('src');
       }
 
       const subtitle = nodeData.subtitle ?? '';

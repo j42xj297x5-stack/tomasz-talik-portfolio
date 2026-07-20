@@ -98,3 +98,8 @@ Concept docs -> Technical model -> Runtime implementation -> Decision updates ->
 - `technical/CONTENT_MODEL.md` informs both future `Classic 2D` and current/future `Experience 3D` content rendering.
 - The current Vite/GitHub Pages base-path and public asset rules remain dependencies for any implementation path.
 - Snapshot reference: `docs/current/audits/snapshots/2026-06-02_18-18-09__snapshot__entry-shell-conditional-3d-boot.md`.
+
+## Unified Experience 3D glyph-panel dependency status (2026-07-20)
+- `src/ui/overlay.js` depends on each node's `ornamentPath`, the base-aware `publicPath(...)` helper, and the existing eight SVG frame assets/geometry solver.
+- `src/styles/main.css` owns the shared desktop/mobile opaque gradients, frame/content/ornament layering, and the 1200px content constraint for Experience 3D only.
+- `src/assets/assetManifest.js` no longer makes the five legacy vertical panel PNGs critical runtime dependencies; Classic 2D's separate PNG dependencies are unchanged.

@@ -158,7 +158,6 @@ galaxyLayer.setProgressionMultiplier(initialProgressionMultipliers.galaxies);
 loadingDiagnostics.markEvent('sceneAttachEnd');
 
 const overlay = createOverlay({
-  assetManager,
   onClose: () => {
     atmosphereProgression.handleOverlayClosed();
   }

@@ -105,3 +105,9 @@ Loading rule: heavy 3D assets start only after the visitor selects `Experience 3
 - Mobile panels must not add extra text overlays, glass layers, `backdrop-filter`, or pseudo-element backgrounds.
 - Layering contract: opaque panel background first, SVG frame above it, optional ornament above the frame, and text/controls at the highest readable layer.
 - Snapshot reference: `docs/current/audits/snapshots/2026-06-02_17-36-03__snapshot__mobile-glyph-panels-baseline.md`.
+
+## Checkpoint update — unified Experience 3D glyph panels (2026-07-20)
+- All five Experience 3D overlays now use the same opaque CSS-gradient panel contract on desktop and mobile; readability never depends on the visible Three.js scene.
+- The shared panel is inset by approximately 10px (`calc(100vw - 20px)` and `calc(100dvh - 20px)`, with a `100vh` fallback), uses the existing eight-piece resize-aware SVG frame, and preserves visible frame overflow.
+- `overlay.js` renders the existing per-node ornament at the top frame centre for every viewport. The content layer sits above it, remains internally scrollable, and is centred with a maximum width of 1200px.
+- The five legacy vertical raster panel backgrounds have been removed from runtime preload and rendering; this does not affect Classic 2D.
