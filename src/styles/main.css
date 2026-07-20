@@ -984,6 +984,19 @@ body {
   overflow: hidden;
 }
 
+.overlay__panel[data-panel-theme="haiku-cosmos"] .overlay__demo {
+  border: 0;
+  background: transparent;
+  background-image: none;
+  box-shadow: none;
+}
+
+.overlay__panel[data-panel-theme="haiku-cosmos"] .overlay__demo-preview {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
 .overlay__demo-preview:focus-visible,
 .overlay__demo-enlarge:focus-visible,
 .overlay__demo-lightbox-close:focus-visible,
