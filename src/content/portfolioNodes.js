@@ -6,7 +6,6 @@ export const portfolioNodes = [
     modelPath: '/glb/glyph_1.glb',
     modelKind: 'glyph',
     ornamentPath: '/png/ai_guide_ornament.png',
-    ornamentMobileOnly: true,
     draftText: 'Pomagam ludziom oswoić AI tam, gdzie technologia spotyka lęk, chaos i potrzebę sensu. Tłumaczę narzędzia, projektuję proste workflowy i prowadzę przez pierwsze kroki tak, żeby człowiek odzyskał sprawczość, zamiast czuć się przytłoczony rewolucją technologiczną. Z chaosu narzędzi powstaje spokojny proces.',
     leadText: 'Pomagam ludziom oswoić AI tam, gdzie technologia spotyka lęk, chaos i potrzebę sensu.',
     bodyText: 'Tłumaczę narzędzia, projektuję proste workflowy i prowadzę przez pierwsze kroki tak, żeby człowiek odzyskał sprawczość, zamiast czuć się przytłoczony rewolucją technologiczną.',
@@ -21,7 +20,6 @@ export const portfolioNodes = [
     modelPath: '/glb/glyph_4.glb',
     modelKind: 'glyph',
     ornamentPath: '/png/digger_ornament.png',
-    ornamentMobileOnly: true,
     demoGifPath: '/gif/DIG_engine.gif',
     demoGifAlt: 'Animated DIG Engine interface demo',
     draftText: 'DIG Engine to lokalny system eksploracji muzyki, który łączy workflow, API, metadane, bazę SQLite i intuicję słuchacza.',
@@ -116,7 +114,6 @@ Projekt pokazuje moje podejście do narzędzi użytkowych: dane mają być czyte
     modelPath: '/glb/glyph_5.glb',
     modelKind: 'glyph',
     ornamentPath: '/png/haiku_cosmos_ornament.png',
-    ornamentMobileOnly: true,
     draftText: 'Gra, interfejs i dokumentacja jako jeden kosmos zależności.',
     leadText: 'Gra, interfejs i dokumentacja jako jeden kosmos zależności.',
     bodyText: `Haiku Cosmos to autorski projekt kontemplacyjnej gry-systemu, w której decyzje gracza prowadzą do przemian żywego, trójwymiarowego świata.
@@ -311,7 +308,6 @@ Projekt pokazuje kompetencje w game designie, system designie, Three.js, pipelin
     modelPath: '/glb/glyph_2.glb',
     modelKind: 'glyph',
     ornamentPath: '/png/creative_ai_ornament.png',
-    ornamentMobileOnly: true,
     draftText: 'Pracuję z AI jak z żywym szkicownikiem, laboratorium obrazu i drugim obiegiem wyobraźni. Tworzę plakaty, grafiki, fotoedycje, cenniki, koncepcje wizualne i małe artefakty codziennego użytku — prowadząc proces od intuicji, przez prompt, obraz, korektę i kompozycję, aż do gotowej formy. AI nie zastępuje twórcy. Pomaga szybciej wydobyć z pomysłu jego kształt, ton i emocję.',
     leadText: 'Pracuję z AI jak z żywym szkicownikiem, laboratorium obrazu i drugim obiegiem wyobraźni.',
     bodyText: 'Tworzę plakaty, grafiki, fotoedycje, cenniki, koncepcje wizualne i małe artefakty codziennego użytku — prowadząc proces od intuicji, przez prompt, obraz, korektę i kompozycję, aż do gotowej formy.',
@@ -325,7 +321,6 @@ Projekt pokazuje kompetencje w game designie, system designie, Three.js, pipelin
     modelPath: '/glb/glyph_3.glb',
     modelKind: 'glyph',
     ornamentPath: '/png/ai_ethics_ornament.png',
-    ornamentMobileOnly: true,
     draftText: 'AI nie jest tylko narzędziem przyspieszania pracy. Jest siłą, która wzmacnia intencje człowieka — dobre i złe.',
     bodyText: `AI nie jest tylko narzędziem przyspieszania pracy.
 Jest siłą, która wzmacnia intencje człowieka — dobre i złe.

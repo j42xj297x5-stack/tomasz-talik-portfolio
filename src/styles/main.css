@@ -321,7 +321,7 @@ body {
 .overlay__actions { display: flex; justify-content: flex-end; margin-top: 0.9rem; }
 .overlay__close { position: relative; z-index: 3; }
 
-.overlay__mobile-ornament {
+.overlay__ornament {
   display: none;
 }
 
@@ -489,20 +489,6 @@ body {
   --overlay-panel-closing-color: var(--panel-accent);
 }
 
-.overlay__panel--ai-guide::before,
-.overlay__panel--creative-ai::before,
-.overlay__panel--haiku-cosmos::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background-image: var(--overlay-panel-bg-image);
-  background-size: 100% 100%;
-  background-repeat: no-repeat;
-  background-position: center;
-  pointer-events: none;
-  z-index: 0;
-}
-
 .overlay__panel--ai-guide .overlay__content,
 .overlay__panel--creative-ai .overlay__content,
 .overlay__panel--haiku-cosmos .overlay__content {
@@ -660,10 +646,6 @@ body {
   padding: 0;
   border: 0;
   border-radius: 0;
-  background-image: var(--overlay-panel-bg-image);
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
   box-shadow: none;
   overflow: visible;
   isolation: isolate;
@@ -1312,18 +1294,6 @@ body {
   isolation: isolate;
 }
 
-.overlay__panel--ethics::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background-image: var(--overlay-panel-bg-image);
-  background-size: 100% 100%;
-  background-repeat: no-repeat;
-  background-position: center;
-  pointer-events: none;
-  z-index: 0;
-}
-
 .overlay__panel--ethics .overlay__content {
   position: absolute;
   z-index: 1;
@@ -1558,8 +1528,7 @@ body {
     --panel-frame: #6d8a9a;
     --panel-muted: #b9d8e8;
     --panel-link: #9fdcff;
-    --overlay-panel-bg-image: none;
-  }
+    }
 
   .overlay__panel--haiku-cosmos,
   .overlay__panel.theme-haiku-cosmos {
@@ -1596,7 +1565,7 @@ body {
     pointer-events: none;
   }
 
-  .overlay__mobile-ornament:not([hidden]) {
+  .overlay__ornament:not([hidden]) {
     position: absolute;
     left: 50%;
     top: 0;
@@ -1971,7 +1940,7 @@ body {
   }
 
   .mobile-panel-ornament,
-  .overlay__mobile-ornament:not([hidden]) {
+  .overlay__ornament:not([hidden]) {
     background: none;
     opacity: 1;
     mix-blend-mode: normal;
@@ -1980,6 +1949,129 @@ body {
 }
 
 
+
+
+/* Unified Experience 3D glyph-panel system. The opaque CSS background, SVG frame,
+   ornament, and content use the same layer contract at every viewport size. */
+.overlay__panel[data-panel-theme] {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: calc(100vw - 20px);
+  height: calc(100vh - 20px);
+  height: calc(100dvh - 20px);
+  max-height: none;
+  aspect-ratio: auto;
+  padding: 0;
+  border: 0;
+  border-radius: 18px;
+  background: var(--panel-bg);
+  color: var(--panel-text);
+  box-shadow: none;
+  overflow: hidden;
+  isolation: isolate;
+  text-shadow: none;
+}
+
+.overlay__panel[data-panel-theme="ai-guide"] {
+  --panel-bg: linear-gradient(160deg, #172218 0%, #17241a 45%, #35462d 78%, #4f5833 100%);
+  --panel-text: #edf6df;
+  --panel-heading: #f4e8a8;
+  --panel-muted: #c8d4b3;
+  --panel-link: #e0d482;
+  --panel-frame: #959661;
+}
+.overlay__panel[data-panel-theme="creative-ai"] {
+  --panel-bg: linear-gradient(160deg, #13130d 0%, #1a130b 45%, #56280c 78%, #9c5517 100%);
+  --panel-text: #fff0d2; --panel-heading: #ffd37a; --panel-muted: #e7b56f; --panel-link: #ffcf70; --panel-frame: #e3941e;
+}
+.overlay__panel[data-panel-theme="ethics"] {
+  --panel-bg: linear-gradient(160deg, #f4ead4 0%, #e7d2ad 42%, #d2b784 72%, #b4935d 100%);
+  --panel-text: #24180b; --panel-heading: #3a240c; --panel-muted: #5b4220; --panel-link: #6f4a18; --panel-frame: #8f754b;
+}
+.overlay__panel[data-panel-theme="spotify-digger"] {
+  --panel-bg: linear-gradient(160deg, #0f151a 0%, #16242e 42%, #2a3944 72%, #4f5d67 100%);
+  --panel-text: #eaf7ff; --panel-heading: #f4fbff; --panel-muted: #b9d8e8; --panel-link: #9fdcff; --panel-frame: #6d8a9a;
+}
+.overlay__panel[data-panel-theme="haiku-cosmos"] {
+  --panel-bg: linear-gradient(160deg, #f3f7fc 0%, #d9ecfb 38%, #aad2f4 72%, #689ddb 100%);
+  --panel-text: #0e1d33; --panel-heading: #102f63; --panel-muted: #244f7e; --panel-link: #1c57a3; --panel-frame: #4d71c4;
+}
+
+.overlay__panel[data-panel-theme] .mobile-svg-frame {
+  position: absolute;
+  inset: var(--mobile-frame-inset);
+  z-index: 1;
+  display: block;
+  color: var(--panel-frame);
+  overflow: visible;
+  pointer-events: none;
+}
+
+.overlay__panel[data-panel-theme] .overlay__ornament:not([hidden]) {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  z-index: 2;
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: min(42vw, 420px);
+  max-height: clamp(54px, 12vh, 132px);
+  object-fit: contain;
+  pointer-events: none;
+  transform: translateX(-50%);
+}
+
+.overlay__panel[data-panel-theme] .overlay__content {
+  position: absolute;
+  z-index: 3;
+  top: clamp(88px, 14vh, 150px);
+  bottom: clamp(30px, 6vh, 72px);
+  left: 50%;
+  width: min(1200px, calc(100% - clamp(72px, 12vw, 220px)));
+  min-height: 0;
+  margin: 0;
+  padding: clamp(12px, 1.5vw, 24px);
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  transform: translateX(-50%);
+}
+
+.overlay__panel[data-panel-theme] .overlay__scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 0.75rem;
+  scrollbar-width: thin;
+  background: none;
+  box-shadow: none;
+}
+
+.overlay__panel[data-panel-theme] .overlay__actions { justify-content: flex-end; }
+.overlay__panel[data-panel-theme] :where(h1, h2, h3, .overlay__title) { color: var(--panel-heading); }
+.overlay__panel[data-panel-theme] :where(.overlay__lead, .overlay__meta, .overlay__eyebrow, .overlay__status, .overlay__closing) { color: var(--panel-muted); }
+.overlay__panel[data-panel-theme] a { color: var(--panel-link); }
+
+@media (max-width: 768px) {
+  .overlay__panel[data-panel-theme] .overlay__content {
+    top: clamp(72px, 18vw, 102px);
+    bottom: clamp(34px, 10vw, 62px);
+    width: calc(100% - clamp(72px, 20vw, 156px));
+    padding: clamp(14px, 4vw, 22px);
+  }
+  .overlay__panel[data-panel-theme] .overlay__actions { justify-content: center; }
+}
+
+@media (orientation: landscape) and (max-height: 520px) {
+  .overlay__panel[data-panel-theme] .overlay__content {
+    top: clamp(52px, 14vh, 76px);
+    bottom: 22px;
+  }
+  .overlay__panel[data-panel-theme] .overlay__ornament:not([hidden]) { max-height: 64px; }
+}
 
 .options-panel {
   position: fixed;

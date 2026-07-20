@@ -176,3 +176,4 @@ Current known open targets:
 - mobile performance tuning
 - critical initial assets vs optional late assets
 - debug settings import/export documentation freshness
+- `docs/current/audits/snapshots/2026-07-20_07-20-00__snapshot__unified-3d-glyph-panels.md` — shared desktop/mobile Experience 3D glyph-panel, SVG-frame, ornament, and preload-retirement checkpoint.

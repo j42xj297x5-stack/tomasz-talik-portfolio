@@ -6,14 +6,6 @@ export const ASSET_STAGES = Object.freeze({
   OPTIONAL_LATE: 'optionalLate'
 });
 
-export const GLYPH_PANEL_BACKGROUNDS = Object.freeze({
-  'ai-guide': '/png/ai_guide.png',
-  'creative-ai': '/png/creative_ai.png',
-  'ethics-life-protection': '/png/ai_ethics.png',
-  'spotify-digger': '/png/digger.png',
-  'haiku-cosmos': '/png/haiku_cosmos.png'
-});
-
 export const GALAXY_SPRITE_PATHS = Object.freeze([
   '/png/galaxy_01.png',
   '/png/galaxy_02.png',
@@ -33,14 +25,6 @@ const glyphModelAssets = portfolioNodes.map((node) => withStage({
   label: `${node.title} glyph model`,
   path: node.modelPath,
   type: 'model'
-}, ASSET_STAGES.CRITICAL_INITIAL));
-
-const glyphPanelAssets = Object.entries(GLYPH_PANEL_BACKGROUNDS).map(([nodeId, path]) => withStage({
-  id: `panel-bg-${nodeId}`,
-  label: `${nodeId} panel background`,
-  path,
-  type: 'image',
-  decode: true
 }, ASSET_STAGES.CRITICAL_INITIAL));
 
 const atmosphereRelicAssets = Object.freeze([
@@ -67,12 +51,11 @@ const galaxySpriteAssets = GALAXY_SPRITE_PATHS.map((path, index) => withStage({
 }, ASSET_STAGES.DEFERRED_WARM));
 
 const criticalInitialAssets = Object.freeze([
-    withStage({ id: 'gltf-loader-module', label: 'Vendored GLTFLoader module', path: '/vendor/three/examples/jsm/loaders/GLTFLoader.js', type: 'script' }, ASSET_STAGES.CRITICAL_INITIAL),
-    withStage({ id: 'monkey-model', label: 'Central monkey model', path: '/glb/monkey.glb', type: 'model' }, ASSET_STAGES.CRITICAL_INITIAL),
-    ...glyphModelAssets,
-    withStage({ id: 'sun-model', label: 'Sun model', path: '/glb/sun.glb', type: 'model' }, ASSET_STAGES.CRITICAL_INITIAL),
-    withStage({ id: 'moon-model', label: 'Moon model', path: '/glb/moon.glb', type: 'model' }, ASSET_STAGES.CRITICAL_INITIAL),
-    ...glyphPanelAssets
+  withStage({ id: 'gltf-loader-module', label: 'Vendored GLTFLoader module', path: '/vendor/three/examples/jsm/loaders/GLTFLoader.js', type: 'script' }, ASSET_STAGES.CRITICAL_INITIAL),
+  withStage({ id: 'monkey-model', label: 'Central monkey model', path: '/glb/monkey.glb', type: 'model' }, ASSET_STAGES.CRITICAL_INITIAL),
+  ...glyphModelAssets,
+  withStage({ id: 'sun-model', label: 'Sun model', path: '/glb/sun.glb', type: 'model' }, ASSET_STAGES.CRITICAL_INITIAL),
+  withStage({ id: 'moon-model', label: 'Moon model', path: '/glb/moon.glb', type: 'model' }, ASSET_STAGES.CRITICAL_INITIAL)
 ]);
 
 const deferredWarmAssets = Object.freeze([
@@ -81,7 +64,7 @@ const deferredWarmAssets = Object.freeze([
 ]);
 
 const optionalLateAssets = Object.freeze([
-    withStage({ id: 'wood-tree-effect', label: 'Wood glyph tree effect', path: '/glb/glyph_1-tree.glb', type: 'model' }, ASSET_STAGES.OPTIONAL_LATE)
+  withStage({ id: 'wood-tree-effect', label: 'Wood glyph tree effect', path: '/glb/glyph_1-tree.glb', type: 'model' }, ASSET_STAGES.OPTIONAL_LATE)
 ]);
 
 export const assetManifest = Object.freeze({
@@ -91,7 +74,6 @@ export const assetManifest = Object.freeze({
 
   // Backwards-compatible group aliases. Prefer stage names for new preload code.
   coreScene: criticalInitialAssets,
-  glyphPanels: Object.freeze(glyphPanelAssets),
   atmosphere: atmosphereRelicAssets
 });
 
