@@ -160,6 +160,7 @@ loadingDiagnostics.markEvent('sceneAttachEnd');
 const overlay = createOverlay({
   onClose: () => {
     atmosphereProgression.handleOverlayClosed();
+    cameraRig.resumeMouseControl(lastFinePointerPosition);
   }
 });
 const hoverLabel = createHoverLabel();
@@ -210,6 +211,7 @@ const TAP_MOVE_THRESHOLD_PX = 10;
 const MAX_TAP_DURATION_MS = 500;
 const coarsePointerQuery = window.matchMedia('(pointer: coarse)');
 let activePointer = null;
+let lastFinePointerPosition = null;
 let orientationResizeTimer = null;
 let orientationResizeSettledTimer = null;
 
@@ -227,7 +229,17 @@ function openNodePanel(node) {
     nodeId: node.userData?.id ?? null
   });
   atmosphereProgression.prepareGateProgression(node.userData?.id);
+  cameraRig.pauseMouseControl();
   overlay.open(node.userData);
+}
+
+function rememberFinePointerPosition(event) {
+  if (event.pointerType !== 'mouse' || !window.matchMedia('(pointer: fine)').matches) return;
+
+  lastFinePointerPosition = {
+    clientX: event.clientX,
+    clientY: event.clientY
+  };
 }
 
 function getPointerDistanceFromStart(event) {
@@ -351,6 +363,9 @@ window.addEventListener('pointerleave', () => {
 canvas.addEventListener('pointerleave', () => {
   syncHoverState(null);
 });
+
+window.addEventListener('pointermove', rememberFinePointerPosition);
+window.addEventListener('pointerdown', rememberFinePointerPosition);
 
 window.addEventListener('resize', () => handleResize());
 window.addEventListener('orientationchange', () => {

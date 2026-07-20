@@ -36,6 +36,7 @@ Current status note:
 - Vertical orbit uses named configurable limit (`MAX_PITCH_DEG`) currently set to 30° as a calmer default than the 45° upper bound.
 - Subtle idle drift remains as a secondary additive influence when mouse input is present and as primary fallback when it is not.
 - Desktop/fine-pointer devices get cursor-driven orbit; non-fine/touch pointer contexts keep neutral/idle behavior.
+- Opening a project overlay pauses fine-pointer camera targeting at its current direction. Pointer movement over the overlay is remembered without steering the camera; when any overlay close path completes, the rig smoothsteps to the latest cursor target over 1500 ms, updating that endpoint during the transition before returning to normal mouse damping.
 - AI Guide node can load `/glb/glyph_1.glb` as a visual override; if loader or asset fails, the original orbit sphere remains visible and interactive.
 - DIG Engine node can load `/glb/glyph_4.glb` as a visual override; if loader or asset fails, the original orbit sphere remains visible and interactive.
 - Creative AI node can load `/glb/glyph_2.glb` with the same fallback behavior and collider/raycast preservation.
