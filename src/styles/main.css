@@ -2019,8 +2019,9 @@ body {
   display: block;
   width: auto;
   height: auto;
-  max-width: min(42vw, 420px);
-  max-height: clamp(54px, 12vh, 132px);
+  max-width: min(clamp(220px, 37vw, 693px), calc(100% - 32px));
+  max-height: min(31vh, 306px);
+  max-height: min(31dvh, 306px);
   object-fit: contain;
   pointer-events: none;
   transform: translateX(-50%);
@@ -2029,7 +2030,8 @@ body {
 .overlay__panel[data-panel-theme] .overlay__content {
   position: absolute;
   z-index: 3;
-  top: clamp(88px, 14vh, 150px);
+  top: min(clamp(122px, 20vw, 324px), calc(min(31vh, 306px) + 18px));
+  top: min(clamp(122px, 20vw, 324px), calc(min(31dvh, 306px) + 18px));
   bottom: clamp(30px, 6vh, 72px);
   left: 50%;
   width: min(1200px, calc(100% - clamp(72px, 12vw, 220px)));
@@ -2159,7 +2161,6 @@ body {
 
 @media (max-width: 768px) {
   .overlay__panel[data-panel-theme] .overlay__content {
-    top: clamp(72px, 18vw, 102px);
     bottom: clamp(34px, 10vw, 62px);
     width: calc(100% - clamp(72px, 20vw, 156px));
     padding: clamp(14px, 4vw, 22px);
@@ -2170,7 +2171,7 @@ body {
 
 @media (orientation: landscape) and (max-height: 520px) {
   .overlay__panel[data-panel-theme] .overlay__content {
-    top: clamp(52px, 14vh, 76px);
+    top: clamp(72px, 14vh, 82px);
     bottom: 22px;
   }
   .overlay__panel[data-panel-theme] .overlay__ornament:not([hidden]) { max-height: 64px; }
