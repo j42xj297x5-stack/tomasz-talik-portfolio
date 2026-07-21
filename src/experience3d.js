@@ -248,6 +248,7 @@ function releaseActivePointer() {
 
 function restoreInteractionSafely() {
   interactionState = 'idle';
+  cameraRig.resetHomePose(camera, orbitGroup.getWorldPosition(new THREE.Vector3()));
   cameraRig.setInteractionLocked(false);
   orbit.resumeOrbit();
   cameraRig.resumeMouseControl(lastFinePointerPosition);
