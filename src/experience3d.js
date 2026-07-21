@@ -5,7 +5,7 @@ import { addLights } from './scene/lights.js';
 import { createCentralObject } from './scene/centralObject.js';
 import { createBackgroundAtmosphere } from './scene/atmosphere.js';
 import { loadMonkeyModel } from './scene/monkeyModel.js';
-import { createOrbitNodes, setNodeHoverState, updateOrbitNodes } from './scene/orbitNodes.js';
+import { createOrbitNodes, setNodeHoverState, triggerNodeHoverAnimation, updateOrbitNodes } from './scene/orbitNodes.js';
 import { pickNode } from './scene/raycaster.js';
 import { createCameraRig } from './scene/cameraRig.js';
 import { createOverlay } from './ui/overlay.js';
@@ -39,6 +39,7 @@ const optionalLateAssetsList = getPreloadAssets(OPTIONAL_PRELOAD_GROUPS);
 const loadingDiagnostics = createLoadingDiagnostics(getAllPreloadAssets());
 loadingDiagnostics.markEvent('appStart');
 const mobileQuery = window.matchMedia('(pointer: coarse), (max-width: 767px)');
+const fineHoverQuery = window.matchMedia('(hover: hover) and (pointer: fine)');
 const isMobileRuntime = mobileQuery.matches;
 const preloadConcurrency = isMobileRuntime ? 2 : 4;
 const assetManager = createAssetManager({ diagnostics: loadingDiagnostics });
@@ -188,7 +189,9 @@ const optionsPanel = createOptionsPanel({
 let hoveredNode = null;
 
 function syncHoverState(nextHoveredNode, event = null) {
-  if (hoveredNode && hoveredNode !== nextHoveredNode) {
+  const previousHoveredNode = hoveredNode;
+
+  if (previousHoveredNode && previousHoveredNode !== nextHoveredNode) {
     setNodeHoverState(hoveredNode, false);
   }
 
@@ -196,6 +199,9 @@ function syncHoverState(nextHoveredNode, event = null) {
 
   if (hoveredNode) {
     setNodeHoverState(hoveredNode, true);
+    if (hoveredNode !== previousHoveredNode) {
+      triggerNodeHoverAnimation(hoveredNode);
+    }
     if (event) {
       hoverLabel.show(hoveredNode.userData, event.clientX, event.clientY);
     }
@@ -301,7 +307,7 @@ function handlePointerMove(event) {
     }
   }
 
-  if (event.pointerType === 'mouse' || window.matchMedia('(hover: hover)').matches) {
+  if (event.pointerType === 'mouse' && fineHoverQuery.matches) {
     const hit = pickNode(event, canvas, camera, nodes);
     syncHoverState(hit, event);
   }

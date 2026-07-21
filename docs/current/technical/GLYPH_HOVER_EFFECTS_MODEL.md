@@ -4,8 +4,8 @@
 Ten dokument ustala roboczy kanon dla kolejnych etapów visual polish efektów hover dla 5 glifów orbitujących wokół centralnej małpy.
 
 Zakres dokumentu jest wyłącznie koncepcyjno-systemowy:
-- bez zmian runtime,
-- bez zmian sceny,
+- kontrakt lifecycle efektów runtime dla hovera,
+- bez zmian geometrii sceny,
 - bez zmian shaderów,
 - bez zmian interakcji bazowych (hover/click/raycast).
 
@@ -86,19 +86,23 @@ Aby zachować spójny system zamiast 5 przypadkowych efektów:
 
 1. Efekty pojawiają się tylko po hoverze na danym glifie.
 2. Efekty nie działają stale na wszystkich glifach równocześnie.
-3. Każdy glif zachowuje wspólny rdzeń interakcji:
-   - hover light / punktowe światło,
-   - łagodny fade-in i fade-out,
-   - ewentualnie minimalny płynny scale-up bez skoku,
-   - lokalna aura / nici / cząstki aktywowane na hover.
-4. Zmieniają się wyłącznie:
+3. Bieżąca obecność kursora steruje wyłącznie etykietą hover i kursorem. Wejście na glif jest osobnym triggerem jednorazowej animacji per node:
+   - trigger występuje tylko przy zmianie trafionego glifu, nie przy kolejnych `pointermove` nad tym samym targetem;
+   - rozpoczęty efekt kończy własny lifecycle po opuszczeniu glifu i nie jest restartowany ani kolejkowany przez ponowne wejście w trakcie odtwarzania;
+   - po zakończeniu ponowne wejście może uruchomić nowy przebieg;
+   - glify mogą odtwarzać swoje przebiegi równolegle.
+4. Każdy glif zachowuje wspólny rdzeń efektu:
+   - punktowe światło,
+   - łagodny wzrost i powrót skali,
+   - lokalna aura / nici / cząstki aktywowane przez trigger.
+5. Zmieniają się wyłącznie:
    - kolor,
    - kierunek ruchu,
    - charakter nici / cząstek,
    - rytm,
    - symboliczna „fizyka” żywiołu.
-5. Efekty mają być subtelne, eleganckie i atmosferyczne.
-6. Celem nie jest spektakl; celem jest czytelne ożywienie symboliki glifu.
+6. Efekty mają być subtelne, eleganckie i atmosferyczne.
+7. Celem nie jest spektakl; celem jest czytelne ożywienie symboliki glifu.
 
 ## 7. Język ruchu 5 żywiołów
 Żywioły w tym projekcie są używane jako **język ruchu efektów**, a nie sztywna doktryna.
@@ -140,5 +144,5 @@ Status: **aktywny dokument kierujący dalszymi wdrożeniami visual polish hover 
 - Dla glifu 1 baseline runtime jest oparty o rzeczywisty asset `glyph_1-tree.glb` (z fallbackiem do `glyph_1.glb`), a wcześniejszy kierunek proceduralny/bez bryły jest uznany za zastąpiony.
 - Efekt działa wyłącznie jako emanacja wizualna przypisana do node `AI Guide`; nie zastępuje interaktywnego glyph node jako targetu hover/click/raycast.
 - Reveal/wzrost realizowany jest wizualnie (mask/shader) od podstawy ku górze, z zielonym emissive glow i orbitującym point light po pełnym reveal.
-- Mouse off/hover cleanup jest częścią baseline: reset kursora, wygaszanie efektu i poprawny restart przy ponownym hoverze.
+- Mouse off/hover cleanup resetuje tylko kursor i etykietę; nie przerywa aktywnego reveal. Po pełnym reveal drzewo samo wygasa do stanu gotowego na następny trigger.
 - Szczegóły parametrów i lifecycle opisuje snapshot: `docs/current/audits/snapshots/2026-05-22_18-18-33__snapshot__glyph-1-tree-effect-baseline.md`.
