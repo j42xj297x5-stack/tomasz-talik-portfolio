@@ -16,10 +16,17 @@ function cloneMaterials(root) {
     const source = Array.isArray(child.material) ? child.material : [child.material];
     const copies = source.map((material) => {
       const copy = material.clone();
-      copy.transparent = true;
-      copy.opacity = 1;
-      copy.depthWrite = false;
-      materials.push(copy);
+      materials.push({
+        material: copy,
+        original: {
+          opacity: copy.opacity,
+          transparent: copy.transparent,
+          depthWrite: copy.depthWrite,
+          depthTest: copy.depthTest,
+          alphaTest: copy.alphaTest,
+          side: copy.side
+        }
+      });
       return copy;
     });
     child.material = Array.isArray(child.material) ? copies : copies[0];
@@ -91,7 +98,31 @@ export function createPlaqueTransition({ scene, assetManager }) {
     return instance;
   }
 
-  function setOpacity(materials, opacity) { materials.forEach((material) => { material.opacity = opacity; material.needsUpdate = true; }); }
+  function setFadeMode(materials) {
+    materials.forEach(({ material }) => {
+      material.transparent = true;
+      material.depthWrite = false;
+      material.depthTest = true;
+      material.needsUpdate = true;
+    });
+  }
+  function setStableMode(materials) {
+    materials.forEach(({ material, original }) => {
+      material.opacity = original.opacity;
+      material.transparent = original.transparent;
+      material.depthWrite = original.depthWrite;
+      material.depthTest = original.depthTest;
+      material.alphaTest = original.alphaTest;
+      material.side = original.side;
+      material.needsUpdate = true;
+    });
+  }
+  function setFadeOpacity(materials, amount) {
+    materials.forEach(({ material, original }) => {
+      material.opacity = original.opacity * amount;
+      material.needsUpdate = true;
+    });
+  }
   function setGlyphFade(glyph, opacity) {
     glyph.materials.forEach(({ material }) => {
       material.transparent = true;
@@ -122,7 +153,8 @@ export function createPlaqueTransition({ scene, assetManager }) {
       plaque.glyphMaterials.visualModel.visible = true;
       setGlyphFade(plaque.glyphMaterials, 1);
       active = { node, plaque, startedAt: performance.now(), duration: durationFor(false), reverse: false, resolve: null };
-      setOpacity(plaque.materials, 0);
+      setFadeMode(plaque.materials);
+      setFadeOpacity(plaque.materials, 0);
       return new Promise((resolve) => { active.resolve = () => resolve(plaque.wrapper); });
     } catch (error) { warn(error); reset(node); return null; }
   }
@@ -132,6 +164,9 @@ export function createPlaqueTransition({ scene, assetManager }) {
     instance.glyphMaterials ??= glyphMaterials(node);
     instance.glyphMaterials.visualModel.visible = true;
     setGlyphFade(instance.glyphMaterials, 0);
+    // Dolly-out keeps the original depth-buffer state. Switch only when the
+    // reverse fade actually begins, preserving its already-stable first frame.
+    setFadeMode(instance.materials);
     active = { node, plaque: instance, startedAt: performance.now(), duration: durationFor(true), reverse: true, resolve: null };
     return new Promise((resolve) => { active.resolve = resolve; });
   }
@@ -141,7 +176,7 @@ export function createPlaqueTransition({ scene, assetManager }) {
     const progress = THREE.MathUtils.clamp((performance.now() - active.startedAt) / active.duration, 0, 1);
     const eased = progress * progress * (3 - 2 * progress);
     const amount = active.reverse ? 1 - eased : eased;
-    setOpacity(active.plaque.materials, amount);
+    setFadeOpacity(active.plaque.materials, amount);
     const flash = Math.sin(Math.PI * progress);
     active.plaque.glow.material.opacity = flash * 0.45;
     active.plaque.warmLight.intensity = flash * 2.2;
@@ -153,13 +188,15 @@ export function createPlaqueTransition({ scene, assetManager }) {
       const finished = active;
       // A fully revealed glyph must not leave either color or depth behind.
       finished.plaque.glyphMaterials.visualModel.visible = false;
+      // Restore GLB material semantics before plaqueHold and the dolly-in.
+      setStableMode(finished.plaque.materials);
       active = null;
       finished.resolve?.();
       return;
     }
     const finished = active;
     finished.plaque.wrapper.visible = false;
-    setOpacity(finished.plaque.materials, 1);
+    setStableMode(finished.plaque.materials);
     finished.plaque.glow.material.opacity = 0;
     finished.plaque.warmLight.intensity = 0;
     restoreGlyphMaterials(finished.plaque.glyphMaterials);
@@ -170,7 +207,7 @@ export function createPlaqueTransition({ scene, assetManager }) {
   }
 
   function reset(node) {
-    if (instance) { instance.wrapper.visible = false; setOpacity(instance.materials, 1); instance.glow.material.opacity = 0; instance.warmLight.intensity = 0; }
+    if (instance) { instance.wrapper.visible = false; setStableMode(instance.materials); instance.glow.material.opacity = 0; instance.warmLight.intensity = 0; }
     if (instance?.glyphMaterials) {
       restoreGlyphMaterials(instance.glyphMaterials);
       instance.glyphMaterials.visualModel.visible = instance.glyphMaterials.visible;
