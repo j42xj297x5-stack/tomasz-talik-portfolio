@@ -8,6 +8,12 @@ const HOVER_LIGHT_INTENSITY_LERP = 0.08;
 const HOVER_LIGHT_DISTANCE = 5.5;
 const HOVER_LIGHT_DECAY = 2;
 const HOVER_LIGHT_RADIAL_T = 0.7;
+const FALLBACK_HOVER_ANIMATION_DURATION = 0.9;
+const REDUCED_MOTION_HOVER_ANIMATION_DURATION = 0.22;
+const WOOD_TREE_REVEAL_HOLD_DURATION = 1.1;
+const FIRE_EMBER_FADE_OUT_DURATION = 0.75;
+const prefersReducedMotion = typeof window !== 'undefined'
+  && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 const WOOD_NODE_ID = 'ai-guide';
 const FIRE_NODE_ID = 'creative-ai';
 const WOOD_NODE_HOVER_LIGHT_COLOR = '#cbff74';
@@ -165,6 +171,14 @@ function createWoodTreeEffectRuntime() {
     orbitHeightOffset: 0,
     orbitCenter: new THREE.Vector3(0, 0, 0),
     lastElapsed: null
+  };
+}
+
+function createHoverAnimationRuntime() {
+  return {
+    state: 'idle',
+    startedAt: null,
+    progress: 0
   };
 }
 
@@ -377,11 +391,11 @@ function updateFireSparkBurst(runtime, elapsed) {
 
   if (runtime.emberSphere && EMBER_SPHERE_ENABLED) {
     const igniteT = (elapsed - runtime.emberIgniteStartTime) / Math.max(0.001, EMBER_SPHERE_FADE_IN_DURATION);
-    const clampedIgnite = THREE.MathUtils.clamp(igniteT, 0, 1);
-    const pulse = EMBER_SPHERE_PULSE_INTENSITY > 0
-      ? 1 + Math.sin(elapsed * 4.0) * EMBER_SPHERE_PULSE_INTENSITY
-      : 1;
-    const opacity = EMBER_SPHERE_MAX_OPACITY * THREE.MathUtils.smoothstep(clampedIgnite, 0, 1) * pulse;
+    const fadeOutStart = runtime.emberIgniteStartTime + EMBER_SPHERE_FADE_IN_DURATION;
+    const fadeOutT = (elapsed - fadeOutStart) / Math.max(0.001, FIRE_EMBER_FADE_OUT_DURATION);
+    const opacity = EMBER_SPHERE_MAX_OPACITY
+      * THREE.MathUtils.smoothstep(THREE.MathUtils.clamp(igniteT, 0, 1), 0, 1)
+      * (1 - THREE.MathUtils.smoothstep(THREE.MathUtils.clamp(fadeOutT, 0, 1), 0, 1));
     runtime.emberSphere.visible = opacity > 0.001;
     runtime.emberSphere.material.uniforms.uOpacity.value = opacity;
   }
@@ -389,80 +403,52 @@ function updateFireSparkBurst(runtime, elapsed) {
   runtime.active = runtimeHasVisibleSparks || runtimeHasPendingBursts || (runtime.emberSphere?.visible ?? false);
 }
 
-function applyWoodTreeActivation(runtime, elapsed) {
+function applyWoodTreeActivation(runtime, elapsed, isPlaying) {
   if (!runtime?.treeGroup || !runtime.treeMaterials.length) return;
 
-  if (runtime.revealTarget > 0.5) {
-    runtime.phase = runtime.revealProgress >= 0.999 ? 'activeOrbit' : 'revealing';
-  } else if (runtime.revealProgress > 0.001) {
-    runtime.phase = 'fadingOut';
-  } else {
-    runtime.phase = 'inactive';
-  }
+  const elapsedSinceStart = runtime.animationStartedAt === null ? 0 : elapsed - runtime.animationStartedAt;
+  const revealEnd = WOOD_TREE_REVEAL_DURATION_IN;
+  const fadeStart = revealEnd + WOOD_TREE_REVEAL_HOLD_DURATION;
+  const revealProgress = !isPlaying ? 0
+    : elapsedSinceStart < revealEnd ? elapsedSinceStart / revealEnd
+      : elapsedSinceStart < fadeStart ? 1
+        : 1 - THREE.MathUtils.clamp((elapsedSinceStart - fadeStart) / WOOD_TREE_REVEAL_DURATION_OUT, 0, 1);
+  runtime.revealProgress = THREE.MathUtils.clamp(revealProgress, 0, 1);
+  runtime.phase = runtime.revealProgress <= 0 ? 'inactive'
+    : elapsedSinceStart < revealEnd ? 'revealing'
+      : elapsedSinceStart < fadeStart ? 'activeOrbit' : 'fadingOut';
 
-  const revealDuration = runtime.revealTarget > runtime.revealProgress
-    ? WOOD_TREE_REVEAL_DURATION_IN
-    : WOOD_TREE_REVEAL_DURATION_OUT;
-  const revealLerp = 1 / Math.max(1, 60 * revealDuration);
-  runtime.revealProgress = THREE.MathUtils.lerp(runtime.revealProgress, runtime.revealTarget, revealLerp);
-  if (Math.abs(runtime.revealProgress - runtime.revealTarget) < 0.0005) runtime.revealProgress = runtime.revealTarget;
   const easedProgress = THREE.MathUtils.smoothstep(runtime.revealProgress, 0, 1);
   const revealRadius = THREE.MathUtils.lerp(WOOD_TREE_REVEAL_RADIUS_MIN, WOOD_TREE_REVEAL_RADIUS_MAX, easedProgress);
-
   const span = Math.max(0.0001, runtime.maxY - runtime.minY);
   const isActiveOrbit = runtime.phase === 'activeOrbit';
-  const pulse = runtime.revealTarget > 0.5
-    ? 1 + Math.sin(elapsed * WOOD_TREE_PULSE_SPEED + runtime.pulsePhase)
-      * (isActiveOrbit ? WOOD_TREE_POST_REVEAL_PULSE_INTENSITY : WOOD_TREE_PULSE_INTENSITY)
-    : 1;
+  const pulse = 1 + Math.sin(elapsed * WOOD_TREE_PULSE_SPEED + runtime.pulsePhase)
+    * (isActiveOrbit ? WOOD_TREE_POST_REVEAL_PULSE_INTENSITY : WOOD_TREE_PULSE_INTENSITY);
 
   runtime.shaderEntries.forEach((entry) => {
     entry.uniforms.uRevealCenter.value.copy(runtime.revealCenterLocal);
     entry.uniforms.uRevealRadius.value = revealRadius;
     entry.uniforms.uRevealSoftness.value = WOOD_TREE_REVEAL_SOFTNESS;
   });
-
   runtime.treeMaterials.forEach((entry) => {
     const yRatio = THREE.MathUtils.clamp((entry.centerY - runtime.minY) / span, 0, 1);
-    const localYReveal = THREE.MathUtils.smoothstep(yRatio, -0.16 + easedProgress * 0.9, 0.2 + easedProgress * 1.08);
-    const fill = THREE.MathUtils.clamp(localYReveal, 0, 1);
+    const fill = THREE.MathUtils.clamp(THREE.MathUtils.smoothstep(yRatio, -0.16 + easedProgress * 0.9, 0.2 + easedProgress * 1.08), 0, 1);
     const activeColor = WOOD_TREE_EMISSIVE_ACTIVE_BOTTOM.clone().lerp(WOOD_TREE_EMISSIVE_ACTIVE_TOP, yRatio);
-
     entry.material.color.copy(WOOD_TREE_BASE_COLOR);
     entry.material.emissive.copy(WOOD_TREE_EMISSIVE_BASE).lerp(activeColor, fill);
-    const activeRevealIntensity = fill > 0.001
-      ? (0.04 + fill * WOOD_TREE_EMISSIVE_INTENSITY_ACTIVE * WOOD_TREE_GLOW_INTENSITY)
-      : 0;
-    const postRevealGlow = runtime.revealTarget > 0.5
-      ? WOOD_TREE_POST_REVEAL_GLOW_INTENSITY * (0.5 + 0.5 * yRatio)
-      : 0;
-
-    entry.material.emissiveIntensity = Math.max(activeRevealIntensity, postRevealGlow) * pulse;
+    entry.material.emissiveIntensity = (fill > 0.001 ? 0.04 + fill * WOOD_TREE_EMISSIVE_INTENSITY_ACTIVE * WOOD_TREE_GLOW_INTENSITY : 0) * pulse;
   });
-
   runtime.treeGroup.visible = runtime.revealProgress > 0.001;
-
   if (runtime.treePointLight) {
-    const baseLightIntensity = runtime.revealTarget > 0.5
-      ? WOOD_TREE_POINT_LIGHT_INTENSITY
-      : easedProgress * WOOD_TREE_POINT_LIGHT_INTENSITY;
-    runtime.treePointLight.intensity = THREE.MathUtils.clamp(baseLightIntensity * pulse, 0, WOOD_TREE_POINT_LIGHT_INTENSITY * 1.25);
-
+    runtime.treePointLight.intensity = runtime.revealProgress * WOOD_TREE_POINT_LIGHT_INTENSITY * pulse;
     if (WOOD_TREE_ORBIT_ENABLED && isActiveOrbit && runtime.orbitRadius > 0.0001) {
-      const delta = runtime.lastElapsed === null ? 0 : Math.max(0, elapsed - runtime.lastElapsed);
-      runtime.orbitAngle += WOOD_TREE_ORBIT_SPEED * delta;
-      runtime.treePointLight.position.set(
-        runtime.orbitCenter.x + Math.cos(runtime.orbitAngle) * runtime.orbitRadius,
-        runtime.orbitCenter.y + runtime.orbitHeightOffset + Math.sin(elapsed * WOOD_TREE_ORBIT_BOBBING_SPEED + runtime.pulsePhase) * WOOD_TREE_ORBIT_BOBBING_AMPLITUDE,
-        runtime.orbitCenter.z + Math.sin(runtime.orbitAngle) * runtime.orbitRadius
-      );
+      runtime.orbitAngle += WOOD_TREE_ORBIT_SPEED * Math.max(0, elapsed - (runtime.lastElapsed ?? elapsed));
+      runtime.treePointLight.position.set(runtime.orbitCenter.x + Math.cos(runtime.orbitAngle) * runtime.orbitRadius, runtime.orbitCenter.y + runtime.orbitHeightOffset + Math.sin(elapsed * WOOD_TREE_ORBIT_BOBBING_SPEED + runtime.pulsePhase) * WOOD_TREE_ORBIT_BOBBING_AMPLITUDE, runtime.orbitCenter.z + Math.sin(runtime.orbitAngle) * runtime.orbitRadius);
     }
-
     runtime.treePointLight.visible = runtime.treePointLight.intensity > 0.01;
     runtime.lastElapsed = elapsed;
   }
 }
-
 
 function fitModelToNode(model) {
   const box = new THREE.Box3().setFromObject(model);
@@ -594,6 +580,29 @@ async function attachNodeModel(node, item, assetManager = null) {
   await attachWoodTreeEffectModel(node, item, assetManager);
 }
 
+function getHoverAnimationDuration(nodeId) {
+  if (prefersReducedMotion) return REDUCED_MOTION_HOVER_ANIMATION_DURATION;
+  if (nodeId === WOOD_NODE_ID) return WOOD_TREE_REVEAL_DURATION_IN + WOOD_TREE_REVEAL_HOLD_DURATION + WOOD_TREE_REVEAL_DURATION_OUT;
+  if (nodeId === FIRE_NODE_ID) return EMBER_SPHERE_IGNITE_DELAY + EMBER_SPHERE_FADE_IN_DURATION + FIRE_EMBER_FADE_OUT_DURATION;
+  return FALLBACK_HOVER_ANIMATION_DURATION;
+}
+
+function updateNodeHoverAnimation(node, elapsed) {
+  const runtime = node.userData.hoverAnimationRuntime;
+  if (!runtime || runtime.state !== 'playing') return 0;
+  if (runtime.startedAt === null) {
+    runtime.startedAt = elapsed;
+    if (node.userData.woodTreeEffectRuntime) node.userData.woodTreeEffectRuntime.animationStartedAt = elapsed;
+    if (node.userData.fireSparkRuntime && !prefersReducedMotion) node.userData.fireSparkRuntime.pendingStart = true;
+  }
+  runtime.progress = THREE.MathUtils.clamp((elapsed - runtime.startedAt) / getHoverAnimationDuration(node.userData.id), 0, 1);
+  if (runtime.progress >= 1) {
+    runtime.state = 'idle';
+    runtime.startedAt = null;
+  }
+  return runtime.progress;
+}
+
 export function createOrbitNodes(nodeContent, { assetManager = null } = {}) {
   const group = new THREE.Group();
   const nodes = [];
@@ -635,12 +644,20 @@ export function createOrbitNodes(nodeContent, { assetManager = null } = {}) {
       hoverColor: '#c8deff',
       baseEmissive: '#21365f',
       hoverEmissive: '#6ba7ff',
+      hoverAnimationRuntime: createHoverAnimationRuntime(),
       updateHoverEffects: (centerWorldPosition, elapsed) => {
         node.getWorldPosition(worldPosition);
         lightPosition.copy(centerWorldPosition).lerp(worldPosition, HOVER_LIGHT_RADIAL_T);
         node.worldToLocal(lightPosition);
         hoverPointLight.position.copy(lightPosition);
 
+        const animationProgress = updateNodeHoverAnimation(node, elapsed);
+        const animationPulse = Math.sin(Math.PI * animationProgress);
+        const isSpecialEffect = node.userData.id === WOOD_NODE_ID || node.userData.id === FIRE_NODE_ID;
+        node.userData.targetScale = 1 + (isSpecialEffect ? 0.035 : HOVER_SCALE_TARGET - 1) * animationPulse;
+        node.userData.targetHoverLightIntensity = node.userData.id === WOOD_NODE_ID
+          ? WOOD_NODE_HOVER_LIGHT_INTENSITY_TARGET * animationPulse
+          : node.userData.id === FIRE_NODE_ID ? 0 : HOVER_LIGHT_INTENSITY_TARGET * animationPulse;
         scaleTarget.setScalar(node.userData.baseScale * node.userData.targetScale);
         node.scale.lerp(scaleTarget, HOVER_SCALE_LERP);
 
@@ -661,7 +678,7 @@ export function createOrbitNodes(nodeContent, { assetManager = null } = {}) {
         node.material.emissiveIntensity = THREE.MathUtils.lerp(0.45, 0.95, hoverBlend);
 
         if (node.userData.woodTreeEffectRuntime) {
-          applyWoodTreeActivation(node.userData.woodTreeEffectRuntime, elapsed);
+          applyWoodTreeActivation(node.userData.woodTreeEffectRuntime, elapsed, node.userData.hoverAnimationRuntime.state === 'playing' && !prefersReducedMotion);
         }
         if (node.userData.fireSparkRuntime) {
           updateFireSparkBurst(node.userData.fireSparkRuntime, elapsed);
@@ -670,6 +687,7 @@ export function createOrbitNodes(nodeContent, { assetManager = null } = {}) {
     };
 
     if (item.id === WOOD_NODE_ID) {
+      hoverPointLight.color.set(WOOD_NODE_HOVER_LIGHT_COLOR);
       try {
         node.userData.woodTreeEffectRuntime = createWoodTreeEffectRuntime();
       } catch (error) {
@@ -707,49 +725,17 @@ export function updateOrbitNodes(nodes, elapsed, centerWorldPosition = new THREE
   });
 }
 
-export function setNodeHoverState(node, isHovered) {
-  if (isHovered) {
-    node.userData.targetScale = HOVER_SCALE_TARGET;
-    if (node.userData.id === WOOD_NODE_ID) {
-      node.userData.targetHoverLightIntensity = WOOD_NODE_HOVER_LIGHT_INTENSITY_TARGET;
-      node.userData.hoverPointLight.color.set(WOOD_NODE_HOVER_LIGHT_COLOR);
-    } else if (node.userData.id === FIRE_NODE_ID) {
-      node.userData.targetHoverLightIntensity = 0;
-      node.userData.hoverPointLight.color.copy(node.material.color);
-      if (node.userData.fireSparkRuntime) {
-        const { active, pendingStart } = node.userData.fireSparkRuntime;
-        if (!active && !pendingStart) {
-          node.userData.fireSparkRuntime.pendingStart = true;
-        }
-      }
-    } else {
-      node.userData.targetHoverLightIntensity = HOVER_LIGHT_INTENSITY_TARGET;
-      node.userData.hoverPointLight.color.copy(node.material.color);
-    }
-    if (node.userData.woodTreeEffectRuntime) {
-      node.userData.woodTreeEffectRuntime.revealTarget = 1;
-    }
-    return;
-  }
+export function triggerNodeHoverAnimation(node) {
+  const runtime = node?.userData?.hoverAnimationRuntime;
+  if (!runtime || runtime.state === 'playing') return false;
+  runtime.state = 'playing';
+  runtime.startedAt = null;
+  runtime.progress = 0;
+  return true;
+}
 
-  node.userData.targetScale = 1;
-  node.userData.targetHoverLightIntensity = 0;
-  if (node.userData.id === FIRE_NODE_ID && node.userData.fireSparkRuntime) {
-    node.userData.fireSparkRuntime.pendingStart = false;
-    node.userData.fireSparkRuntime.active = false;
-    node.userData.fireSparkRuntime.layers?.forEach((layer) => {
-      if (layer.group) layer.group.visible = false;
-      layer.sparkMeshes?.forEach((sparkMesh) => {
-        sparkMesh.visible = false;
-      });
-    });
-    if (node.userData.fireSparkRuntime.emberSphere) {
-      node.userData.fireSparkRuntime.emberSphere.visible = false;
-      node.userData.fireSparkRuntime.emberSphere.material.uniforms.uOpacity.value = 0;
-    }
-  }
-  if (node.userData.woodTreeEffectRuntime) {
-    node.userData.woodTreeEffectRuntime.revealTarget = 0;
-    node.userData.woodTreeEffectRuntime.lastElapsed = null;
-  }
+export function setNodeHoverState(node, isHovered) {
+  if (!node?.userData) return;
+  // Cursor/label presence is intentionally separate from the one-shot animation lifecycle.
+  node.userData.isHovered = isHovered;
 }
