@@ -321,6 +321,12 @@ Projekt pokazuje kompetencje w game designie, system designie, Three.js, pipelin
     eyebrow: 'Tworzenie z AI',
     modelPath: '/glb/glyph_2.glb',
     modelKind: 'glyph',
+    plaqueModelPath: '/glb/plaque_creative.glb',
+    plaqueVisual: {
+      scale: 1,
+      position: [0, 0, 0],
+      frontYawOffset: 0
+    },
     ornamentPath: '/png/creative_ai_ornament.png',
     draftText: 'Pracuję z AI jak z żywym szkicownikiem, laboratorium obrazu i drugim obiegiem wyobraźni. Tworzę plakaty, grafiki, fotoedycje, cenniki, koncepcje wizualne i małe artefakty codziennego użytku — prowadząc proces od intuicji, przez prompt, obraz, korektę i kompozycję, aż do gotowej formy. AI nie zastępuje twórcy. Pomaga szybciej wydobyć z pomysłu jego kształt, ton i emocję.',
     leadText: 'Pracuję z AI jak z żywym szkicownikiem, laboratorium obrazu i drugim obiegiem wyobraźni.',

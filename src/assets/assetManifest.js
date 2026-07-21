@@ -59,6 +59,12 @@ const criticalInitialAssets = Object.freeze([
 ]);
 
 const deferredWarmAssets = Object.freeze([
+  ...portfolioNodes.filter((node) => node.plaqueModelPath).map((node) => withStage({
+    id: `plaque-${node.id}`,
+    label: `${node.title} plaque model`,
+    path: node.plaqueModelPath,
+    type: 'model'
+  }, ASSET_STAGES.DEFERRED_WARM)),
     ...atmosphereRelicAssets,
     ...galaxySpriteAssets
 ]);

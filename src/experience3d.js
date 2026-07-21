@@ -8,6 +8,7 @@ import { loadMonkeyModel } from './scene/monkeyModel.js';
 import { createOrbitNodes, setNodeHoverState, triggerNodeHoverAnimation, updateOrbitNodes } from './scene/orbitNodes.js';
 import { pickNode } from './scene/raycaster.js';
 import { createCameraRig } from './scene/cameraRig.js';
+import { createPlaqueTransition } from './scene/plaqueTransition.js';
 import { createOverlay } from './ui/overlay.js';
 import { createHoverLabel } from './ui/hoverLabel.js';
 import { createOptionsPanel } from './ui/optionsPanel.js';
@@ -150,6 +151,7 @@ await loadMonkeyModel({ scene, fallbackObject: centralPlaceholder, assetManager 
 
 const { group: orbitGroup, nodes, orbit } = createOrbitNodes(portfolioNodes, { assetManager });
 scene.add(orbitGroup);
+const plaqueTransition = createPlaqueTransition({ scene, assetManager });
 const atmosphereProgression = createAtmosphereProgression({ gateIds: portfolioNodes.map((node) => node.id) });
 const initialProgressionMultipliers = atmosphereProgression.getProgressionMultipliers();
 atmosphere.setProgressionMultipliers(initialProgressionMultipliers);
@@ -185,6 +187,7 @@ const optionsPanel = createOptionsPanel({
 
 let hoveredNode = null;
 let interactionState = 'idle';
+let activePanelNode = null;
 
 function syncHoverState(nextHoveredNode, event = null) {
   const previousHoveredNode = hoveredNode;
@@ -247,6 +250,12 @@ function releaseActivePointer() {
 }
 
 function restoreInteractionSafely() {
+  plaqueTransition.reset(activePanelNode);
+  if (activePanelNode?.userData) {
+    activePanelNode.userData.transitionActive = false;
+    activePanelNode.userData.plaqueTransitionReady = false;
+  }
+  activePanelNode = null;
   interactionState = 'idle';
   cameraRig.resetHomePose(camera);
   cameraRig.setInteractionLocked(false);
@@ -262,10 +271,24 @@ async function focusNodePanel(node) {
   cameraRig.pauseMouseControl();
   cameraRig.setInteractionLocked(true);
   atmosphereProgression.prepareGateProgression(node.userData?.id);
+  activePanelNode = node;
 
   try {
     await cameraRig.focusOnNode(camera, node);
     if (interactionState !== 'focusing') return;
+    if (node.userData?.plaqueModelPath) {
+      node.userData.transitionActive = true;
+      interactionState = 'revealingPlaque';
+      const plaque = await plaqueTransition.reveal(node, camera);
+      if (plaque) {
+        node.userData.plaqueTransitionReady = true;
+        interactionState = 'dollyIn';
+        await cameraRig.dollyToPlaque(camera, plaque);
+      } else {
+        node.userData.transitionActive = false;
+      }
+    }
+    if (!activePanelNode) return;
     overlay.open(node.userData);
     interactionState = 'panelOpen';
   } catch (error) {
@@ -276,15 +299,25 @@ async function focusNodePanel(node) {
 
 async function returnFromNodePanel() {
   if (interactionState !== 'panelOpen') return;
-  interactionState = 'returning';
+  const node = activePanelNode;
+  interactionState = node?.userData?.plaqueTransitionReady ? 'dollyOut' : 'returning';
   clearInteractiveHover();
   try {
+    if (node?.userData?.plaqueTransitionReady) {
+      await cameraRig.dollyOut(camera);
+      interactionState = 'restoringGlyph';
+      await plaqueTransition.restore(node);
+      node.userData.transitionActive = false;
+      node.userData.plaqueTransitionReady = false;
+    }
+    interactionState = 'returning';
     await cameraRig.returnHome(camera);
     if (interactionState !== 'returning') return;
     orbit.resumeOrbit();
     cameraRig.setInteractionLocked(false);
     cameraRig.resumeMouseControl(lastFinePointerPosition);
     interactionState = 'idle';
+    activePanelNode = null;
     atmosphereProgression.handleOverlayClosed();
   } catch (error) {
     console.warn('[interaction] Failed to return camera home after closing panel.', error);
@@ -461,6 +494,7 @@ function tick(timestamp) {
   const elapsed = timer.getElapsed();
   const orbitPhase = orbit.update(delta);
   updateOrbitNodes(nodes, elapsed, orbitGroup.getWorldPosition(orbitCenterWorldPosition), orbitPhase);
+  plaqueTransition.update();
   cameraRig.update(camera, elapsed);
   atmosphere.update(delta);
   atmosphereProgression.updateAtmosphereProgression(delta);

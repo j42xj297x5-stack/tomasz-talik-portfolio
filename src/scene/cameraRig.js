@@ -134,6 +134,24 @@ export function createCameraRig(pointerElement = document.documentElement) {
     return startTransition('return', { yaw: 0, pitch: 0, radius: CAMERA_RADIUS, pivot: PIVOT, lookAt: PIVOT }, duration);
   }
 
+  function dollyToPlaque(camera, plaque, { duration = supportsFinePointer ? 800 : 450, cover = 1.1 } = {}) {
+    if (!plaque) return Promise.reject(new Error('Cannot dolly without plaque.'));
+    const bounds = new THREE.Box3().setFromObject(plaque);
+    const size = bounds.getSize(new THREE.Vector3());
+    if (bounds.isEmpty() || size.x <= 0 || size.y <= 0) return Promise.reject(new Error('Plaque bounds unavailable.'));
+    const verticalFov = THREE.MathUtils.degToRad(camera.fov);
+    const horizontalFov = 2 * Math.atan(Math.tan(verticalFov / 2) * camera.aspect);
+    const distance = Math.max(camera.near * 2.5, Math.max(size.y / (2 * Math.tan(verticalFov / 2)), size.x / (2 * Math.tan(horizontalFov / 2))) / cover);
+    const focusPose = { yaw: pose.yaw, pitch: pose.pitch, radius: pose.radius, pivot: pose.pivot.clone(), lookAt: pose.lookAt.clone() };
+    return startTransition('dollyIn', { yaw: pose.yaw, pitch: pose.pitch, radius: distance, pivot: PIVOT, lookAt: plaque.getWorldPosition(new THREE.Vector3()), focusPose }, duration);
+  }
+
+  function dollyOut(camera, { duration = supportsFinePointer ? 800 : 450 } = {}) {
+    const focusPose = state.lastFocusPose;
+    if (!focusPose) return Promise.reject(new Error('No stored focus pose for dolly out.'));
+    return startTransition('dollyOut', focusPose, duration);
+  }
+
   function updateCinematic(camera) {
     const transition = state.transition;
     if (!transition) return false;
@@ -151,6 +169,7 @@ export function createCameraRig(pointerElement = document.documentElement) {
     pose.radius = transition.targetPose.radius;
     pose.pivot.copy(transition.targetPose.pivot);
     pose.lookAt.copy(transition.targetPose.lookAt);
+    if (state.mode === 'dollyIn') state.lastFocusPose = transition.targetPose.focusPose;
     if (state.mode === 'return') setHomePose(camera);
     else {
       state.currentYaw = pose.yaw;
@@ -208,5 +227,5 @@ export function createCameraRig(pointerElement = document.documentElement) {
     applyPose(camera);
   }
 
-  return { onPointerMove, onPointerLeave, pauseMouseControl, resumeMouseControl, setTouchDragTarget, releaseTouchTarget, setInteractionLocked: (locked) => { state.interactionLocked = locked; }, focusOnNode, returnHome, resetHomePose: setHomePose, isTransitioning: () => Boolean(state.transition), update };
+  return { onPointerMove, onPointerLeave, pauseMouseControl, resumeMouseControl, setTouchDragTarget, releaseTouchTarget, setInteractionLocked: (locked) => { state.interactionLocked = locked; }, focusOnNode, dollyToPlaque, dollyOut, returnHome, resetHomePose: setHomePose, isTransitioning: () => Boolean(state.transition), update };
 }

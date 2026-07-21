@@ -636,6 +636,7 @@ export function createOrbitNodes(nodeContent, { assetManager = null } = {}) {
       orbitRadius: radius,
       yOffset: node.position.y,
       baseScale: 1,
+      transitionActive: false,
       targetScale: 1,
       currentHoverLightIntensity: 0,
       targetHoverLightIntensity: 0,
@@ -651,6 +652,12 @@ export function createOrbitNodes(nodeContent, { assetManager = null } = {}) {
         node.worldToLocal(lightPosition);
         hoverPointLight.position.copy(lightPosition);
 
+        if (node.userData.transitionActive) {
+          node.scale.setScalar(node.userData.baseScale);
+          hoverPointLight.intensity = 0;
+          hoverPointLight.visible = false;
+          return;
+        }
         const animationProgress = updateNodeHoverAnimation(node, elapsed);
         const animationPulse = Math.sin(Math.PI * animationProgress);
         const isSpecialEffect = node.userData.id === WOOD_NODE_ID || node.userData.id === FIRE_NODE_ID;
