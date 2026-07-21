@@ -41,13 +41,13 @@ export function createCameraRig(pointerElement = document.documentElement) {
     camera.lookAt(pose.lookAt);
   }
 
-  function setHomePose(camera, centerWorldPosition = PIVOT) {
+  function setHomePose(camera) {
     const interruptedTransition = state.transition;
     pose.yaw = 0;
     pose.pitch = 0;
     pose.radius = CAMERA_RADIUS;
-    pose.pivot.copy(centerWorldPosition);
-    pose.lookAt.copy(centerWorldPosition);
+    pose.pivot.copy(PIVOT);
+    pose.lookAt.copy(PIVOT);
     state.currentYaw = 0;
     state.currentPitch = 0;
     state.targetYaw = 0;
@@ -123,17 +123,15 @@ export function createCameraRig(pointerElement = document.documentElement) {
     });
   }
 
-  function focusOnNode(camera, node, centerWorldPosition = PIVOT, { duration = supportsFinePointer ? 1050 : 550 } = {}) {
+  function focusOnNode(camera, node, { duration = supportsFinePointer ? 1050 : 550 } = {}) {
     if (!node) return Promise.reject(new Error('Cannot focus camera without a node.'));
     const nodePosition = node.getWorldPosition(new THREE.Vector3());
-    const center = centerWorldPosition.clone();
-    const yaw = Math.atan2(nodePosition.x - center.x, nodePosition.z - center.z);
-    return startTransition('focus', { yaw, pitch: 0, radius: CAMERA_RADIUS, pivot: center, lookAt: nodePosition }, duration);
+    const yaw = Math.atan2(nodePosition.x - PIVOT.x, nodePosition.z - PIVOT.z);
+    return startTransition('focus', { yaw, pitch: 0, radius: CAMERA_RADIUS, pivot: PIVOT, lookAt: nodePosition }, duration);
   }
 
-  function returnHome(camera, centerWorldPosition = PIVOT, { duration = supportsFinePointer ? 600 : 550 } = {}) {
-    const center = centerWorldPosition.clone();
-    return startTransition('return', { yaw: 0, pitch: 0, radius: CAMERA_RADIUS, pivot: center, lookAt: center }, duration);
+  function returnHome(camera, { duration = supportsFinePointer ? 600 : 550 } = {}) {
+    return startTransition('return', { yaw: 0, pitch: 0, radius: CAMERA_RADIUS, pivot: PIVOT, lookAt: PIVOT }, duration);
   }
 
   function updateCinematic(camera) {
@@ -144,7 +142,7 @@ export function createCameraRig(pointerElement = document.documentElement) {
     pose.yaw = transition.startPose.yaw + transition.yawDelta * eased;
     pose.pitch = THREE.MathUtils.lerp(transition.startPose.pitch, transition.targetPose.pitch, eased);
     pose.radius = THREE.MathUtils.lerp(transition.startPose.radius, transition.targetPose.radius, eased);
-    pose.pivot.lerpVectors(transition.startPose.pivot, transition.targetPose.pivot, eased);
+    pose.pivot.copy(PIVOT);
     pose.lookAt.lerpVectors(transition.startPose.lookAt, transition.targetPose.lookAt, eased);
     applyPose(camera);
     if (progress < 1) return true;
@@ -153,7 +151,7 @@ export function createCameraRig(pointerElement = document.documentElement) {
     pose.radius = transition.targetPose.radius;
     pose.pivot.copy(transition.targetPose.pivot);
     pose.lookAt.copy(transition.targetPose.lookAt);
-    if (state.mode === 'return') setHomePose(camera, transition.targetPose.pivot);
+    if (state.mode === 'return') setHomePose(camera);
     else {
       state.currentYaw = pose.yaw;
       state.currentPitch = pose.pitch;
@@ -171,7 +169,8 @@ export function createCameraRig(pointerElement = document.documentElement) {
     pose.yaw = THREE.MathUtils.lerp(resume.startYaw, resume.targetYaw, eased);
     pose.pitch = THREE.MathUtils.lerp(resume.startPitch, resume.targetPitch, eased);
     pose.radius = CAMERA_RADIUS;
-    pose.lookAt.copy(pose.pivot);
+    pose.pivot.copy(PIVOT);
+    pose.lookAt.copy(PIVOT);
     applyPose(camera);
     if (progress < 1) return;
     state.currentYaw = pose.yaw;

@@ -248,7 +248,7 @@ function releaseActivePointer() {
 
 function restoreInteractionSafely() {
   interactionState = 'idle';
-  cameraRig.resetHomePose(camera, orbitGroup.getWorldPosition(new THREE.Vector3()));
+  cameraRig.resetHomePose(camera);
   cameraRig.setInteractionLocked(false);
   orbit.resumeOrbit();
   cameraRig.resumeMouseControl(lastFinePointerPosition);
@@ -264,7 +264,7 @@ async function focusNodePanel(node) {
   atmosphereProgression.prepareGateProgression(node.userData?.id);
 
   try {
-    await cameraRig.focusOnNode(camera, node, orbitGroup.getWorldPosition(orbitCenterWorldPosition));
+    await cameraRig.focusOnNode(camera, node);
     if (interactionState !== 'focusing') return;
     overlay.open(node.userData);
     interactionState = 'panelOpen';
@@ -279,7 +279,7 @@ async function returnFromNodePanel() {
   interactionState = 'returning';
   clearInteractiveHover();
   try {
-    await cameraRig.returnHome(camera, orbitGroup.getWorldPosition(orbitCenterWorldPosition));
+    await cameraRig.returnHome(camera);
     if (interactionState !== 'returning') return;
     orbit.resumeOrbit();
     cameraRig.setInteractionLocked(false);
