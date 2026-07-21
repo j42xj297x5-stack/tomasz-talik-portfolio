@@ -5,6 +5,12 @@ export const portfolioNodes = [
     shortLabel: 'Oswajanie AI',
     modelPath: '/glb/glyph_1.glb',
     modelKind: 'glyph',
+    plaqueModelPath: '/glb/plaque_ai_guide.glb',
+    plaqueVisual: {
+      scale: 1,
+      position: [0, 0, 0],
+      frontYawOffset: 0
+    },
     ornamentPath: '/png/ai_guide_ornament.png',
     draftText: 'Pomagam ludziom oswoić AI tam, gdzie technologia spotyka lęk, chaos i potrzebę sensu. Tłumaczę narzędzia, projektuję proste workflowy i prowadzę przez pierwsze kroki tak, żeby człowiek odzyskał sprawczość, zamiast czuć się przytłoczony rewolucją technologiczną. Z chaosu narzędzi powstaje spokojny proces.',
     leadText: 'Pomagam ludziom oswoić AI tam, gdzie technologia spotyka lęk, chaos i potrzebę sensu.',
