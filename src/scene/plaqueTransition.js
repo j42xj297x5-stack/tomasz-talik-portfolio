@@ -53,21 +53,30 @@ function glyphMaterials(node) {
 }
 
 export function createPlaqueTransition({ scene, assetManager }) {
-  let instance = null;
+  const instances = new Map();
+  const warnedNodeIds = new Set();
   let active = null;
-  let warned = false;
 
-  function warn(error) {
-    if (!warned) console.warn('[plaqueTransition] Creative AI plaque unavailable; continuing with panel fallback.', error);
-    warned = true;
+  function nodeIdFor(node) {
+    return node?.userData?.id;
+  }
+
+  function warn(node, error) {
+    const nodeId = nodeIdFor(node) ?? 'unknown';
+    if (warnedNodeIds.has(nodeId)) return;
+    const nodeLabel = node?.userData?.title ?? nodeId;
+    console.warn(`[plaqueTransition] Plaque unavailable for ${nodeLabel} (${nodeId}); continuing with panel fallback.`, error);
+    warnedNodeIds.add(nodeId);
   }
 
   async function ensure(node) {
     const data = node.userData;
+    const nodeId = nodeIdFor(node);
     if (!data.plaqueModelPath) return null;
-    if (instance?.nodeId === data.id) return instance;
-    const asset = assetManifest.deferredWarm.find((entry) => entry.id === `plaque-${data.id}`);
-    let source = assetManager.getGltf(`plaque-${data.id}`)?.scene;
+    if (instances.has(nodeId)) return instances.get(nodeId);
+    const assetId = `plaque-${nodeId}`;
+    const asset = assetManifest.deferredWarm.find((entry) => entry.id === assetId);
+    let source = assetManager.getGltf(assetId)?.scene;
     if (!source && asset) source = (await assetManager.loadAsset(asset)).scene;
     if (!source) throw new Error('Plaque GLB missing scene.');
     const wrapper = new THREE.Group();
@@ -94,7 +103,8 @@ export function createPlaqueTransition({ scene, assetManager }) {
     wrapper.visible = false;
     wrapper.raycast = () => {};
     scene.add(wrapper);
-    instance = { nodeId: data.id, wrapper, model, materials, glyphMaterials: null, glow, warmLight };
+    const instance = { nodeId, wrapper, model, materials, glyphMaterials: null, glow, warmLight };
+    instances.set(nodeId, instance);
     return instance;
   }
 
@@ -156,18 +166,19 @@ export function createPlaqueTransition({ scene, assetManager }) {
       setFadeMode(plaque.materials);
       setFadeOpacity(plaque.materials, 0);
       return new Promise((resolve) => { active.resolve = () => resolve(plaque.wrapper); });
-    } catch (error) { warn(error); reset(node); return null; }
+    } catch (error) { warn(node, error); reset(node); return null; }
   }
 
   function restore(node) {
-    if (!instance) return Promise.resolve();
-    instance.glyphMaterials ??= glyphMaterials(node);
-    instance.glyphMaterials.visualModel.visible = true;
-    setGlyphFade(instance.glyphMaterials, 0);
+    const plaque = instances.get(nodeIdFor(node));
+    if (!plaque) return Promise.resolve();
+    plaque.glyphMaterials ??= glyphMaterials(node);
+    plaque.glyphMaterials.visualModel.visible = true;
+    setGlyphFade(plaque.glyphMaterials, 0);
     // Dolly-out keeps the original depth-buffer state. Switch only when the
     // reverse fade actually begins, preserving its already-stable first frame.
-    setFadeMode(instance.materials);
-    active = { node, plaque: instance, startedAt: performance.now(), duration: durationFor(true), reverse: true, resolve: null };
+    setFadeMode(plaque.materials);
+    active = { node, plaque, startedAt: performance.now(), duration: durationFor(true), reverse: true, resolve: null };
     return new Promise((resolve) => { active.resolve = resolve; });
   }
 
@@ -207,13 +218,19 @@ export function createPlaqueTransition({ scene, assetManager }) {
   }
 
   function reset(node) {
-    if (instance) { instance.wrapper.visible = false; setStableMode(instance.materials); instance.glow.material.opacity = 0; instance.warmLight.intensity = 0; }
-    if (instance?.glyphMaterials) {
-      restoreGlyphMaterials(instance.glyphMaterials);
-      instance.glyphMaterials.visualModel.visible = instance.glyphMaterials.visible;
+    const plaque = instances.get(nodeIdFor(node));
+    if (plaque) {
+      plaque.wrapper.visible = false;
+      setStableMode(plaque.materials);
+      plaque.glow.material.opacity = 0;
+      plaque.warmLight.intensity = 0;
+    }
+    if (plaque?.glyphMaterials) {
+      restoreGlyphMaterials(plaque.glyphMaterials);
+      plaque.glyphMaterials.visualModel.visible = plaque.glyphMaterials.visible;
     }
     if (node) node.scale.setScalar(node.userData.baseScale ?? 1);
-    active = null;
+    if (active?.node === node) active = null;
   }
 
   return { reveal, restore, reset, update };
