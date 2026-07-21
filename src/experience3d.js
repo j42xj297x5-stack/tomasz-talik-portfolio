@@ -148,7 +148,7 @@ scene.add(galaxyLayer.group);
 
 await loadMonkeyModel({ scene, fallbackObject: centralPlaceholder, assetManager });
 
-const { group: orbitGroup, nodes } = createOrbitNodes(portfolioNodes, { assetManager });
+const { group: orbitGroup, nodes, orbit } = createOrbitNodes(portfolioNodes, { assetManager });
 scene.add(orbitGroup);
 const atmosphereProgression = createAtmosphereProgression({ gateIds: portfolioNodes.map((node) => node.id) });
 const initialProgressionMultipliers = atmosphereProgression.getProgressionMultipliers();
@@ -159,10 +159,7 @@ galaxyLayer.setProgressionMultiplier(initialProgressionMultipliers.galaxies);
 loadingDiagnostics.markEvent('sceneAttachEnd');
 
 const overlay = createOverlay({
-  onClose: () => {
-    atmosphereProgression.handleOverlayClosed();
-    cameraRig.resumeMouseControl(lastFinePointerPosition);
-  }
+  onClose: () => void returnFromNodePanel()
 });
 const hoverLabel = createHoverLabel();
 
@@ -187,6 +184,7 @@ const optionsPanel = createOptionsPanel({
 });
 
 let hoveredNode = null;
+let interactionState = 'idle';
 
 function syncHoverState(nextHoveredNode, event = null) {
   const previousHoveredNode = hoveredNode;
@@ -228,15 +226,70 @@ function debugInteraction(message, details = {}) {
 }
 
 function openNodePanel(node) {
-  if (!node) return;
+  if (!node || interactionState !== 'idle') return;
   debugInteraction('raycast hit', {
     objectName: node.name || null,
     objectId: node.id,
     nodeId: node.userData?.id ?? null
   });
-  atmosphereProgression.prepareGateProgression(node.userData?.id);
+  void focusNodePanel(node);
+}
+
+function clearInteractiveHover() {
+  syncHoverState(null);
+  document.body.style.cursor = 'default';
+}
+
+function releaseActivePointer() {
+  if (!activePointer) return;
+  if (canvas.releasePointerCapture && canvas.hasPointerCapture?.(activePointer.id)) canvas.releasePointerCapture(activePointer.id);
+  activePointer = null;
+}
+
+function restoreInteractionSafely() {
+  interactionState = 'idle';
+  cameraRig.setInteractionLocked(false);
+  orbit.resumeOrbit();
+  cameraRig.resumeMouseControl(lastFinePointerPosition);
+}
+
+async function focusNodePanel(node) {
+  interactionState = 'focusing';
+  clearInteractiveHover();
+  releaseActivePointer();
+  orbit.pauseOrbit();
   cameraRig.pauseMouseControl();
-  overlay.open(node.userData);
+  cameraRig.setInteractionLocked(true);
+  atmosphereProgression.prepareGateProgression(node.userData?.id);
+
+  try {
+    await cameraRig.focusOnNode(camera, node, orbitGroup.getWorldPosition(orbitCenterWorldPosition));
+    if (interactionState !== 'focusing') return;
+    overlay.open(node.userData);
+    interactionState = 'panelOpen';
+  } catch (error) {
+    console.warn('[interaction] Failed to focus selected glyph.', error);
+    restoreInteractionSafely();
+  }
+}
+
+async function returnFromNodePanel() {
+  if (interactionState !== 'panelOpen') return;
+  interactionState = 'returning';
+  clearInteractiveHover();
+  try {
+    await cameraRig.returnHome(camera, orbitGroup.getWorldPosition(orbitCenterWorldPosition));
+    if (interactionState !== 'returning') return;
+    orbit.resumeOrbit();
+    cameraRig.setInteractionLocked(false);
+    cameraRig.resumeMouseControl(lastFinePointerPosition);
+    interactionState = 'idle';
+    atmosphereProgression.handleOverlayClosed();
+  } catch (error) {
+    console.warn('[interaction] Failed to return camera home after closing panel.', error);
+    restoreInteractionSafely();
+    atmosphereProgression.handleOverlayClosed();
+  }
 }
 
 function rememberFinePointerPosition(event) {
@@ -266,7 +319,7 @@ function getCanvasRectSize() {
 }
 
 function handlePointerDown(event) {
-  if (!event.isPrimary || activePointer) return;
+  if (!event.isPrimary || activePointer || interactionState !== 'idle') return;
 
   activePointer = {
     id: event.pointerId,
@@ -287,6 +340,7 @@ function handlePointerDown(event) {
 }
 
 function handlePointerMove(event) {
+  if (interactionState !== 'idle') return;
   cameraRig.onPointerMove(event);
 
   if (activePointer?.id === event.pointerId) {
@@ -314,6 +368,7 @@ function handlePointerMove(event) {
 }
 
 function finishPointer(event, { cancelled = false } = {}) {
+  if (interactionState !== 'idle') return;
   if (activePointer?.id !== event.pointerId) return;
 
   const distance = getPointerDistanceFromStart(event);
@@ -363,11 +418,11 @@ canvas.addEventListener('pointercancel', (event) => finishPointer(event, { cance
 
 window.addEventListener('pointerleave', () => {
   cameraRig.onPointerLeave();
-  syncHoverState(null);
+  if (interactionState === 'idle') syncHoverState(null);
 });
 
 canvas.addEventListener('pointerleave', () => {
-  syncHoverState(null);
+  if (interactionState === 'idle') syncHoverState(null);
 });
 
 window.addEventListener('pointermove', rememberFinePointerPosition);
@@ -403,7 +458,8 @@ function tick(timestamp) {
   timer.update(timestamp);
   const delta = timer.getDelta();
   const elapsed = timer.getElapsed();
-  updateOrbitNodes(nodes, elapsed, orbitGroup.getWorldPosition(orbitCenterWorldPosition));
+  const orbitPhase = orbit.update(delta);
+  updateOrbitNodes(nodes, elapsed, orbitGroup.getWorldPosition(orbitCenterWorldPosition), orbitPhase);
   cameraRig.update(camera, elapsed);
   atmosphere.update(delta);
   atmosphereProgression.updateAtmosphereProgression(delta);
