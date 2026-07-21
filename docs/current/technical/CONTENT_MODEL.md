@@ -83,3 +83,9 @@ Planned rule: content records should become the source of truth for both the fut
 - Each of the five portfolio records retains its `ornamentPath` for the Experience 3D overlay.
 - Ornaments are viewport-independent overlay metadata; `ornamentMobileOnly` has been removed.
 - The content/runtime gate still maps to the same stable `data-panel-theme` values, while Classic 2D continues to consume the shared records without adopting Experience 3D overlay styling.
+
+## Current Haiku Cosmos and conditional-detail contract
+
+- The `haiku-cosmos` record is the shared source for its full case study, `projectLinks`, demo GIF metadata (`demoGifPath` and `demoGifAlt`), and `ornamentPath`; neither presentation mode receives a separate content record.
+- `src/ui/overlay.js` resets and conditionally renders demo media, project links, case-study blocks, and ornament data for the selected record. Missing optional fields leave the relevant element hidden or empty, so a prior panel's GIF, links, or case-study state cannot leak into another panel.
+- External project links are validated as absolute HTTP(S) URLs; demo, ornaments, and gallery media use `publicPath(...)` where they are public assets.

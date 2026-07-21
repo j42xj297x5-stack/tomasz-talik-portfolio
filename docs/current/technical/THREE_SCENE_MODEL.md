@@ -2,7 +2,7 @@
 
 Current scene responsibilities:
 - Central GLB loader module in `src/scene/monkeyModel.js` attempts to load `/glb/monkey.glb` via vendored GLTFLoader path (`vendor/three/examples/jsm/loaders/GLTFLoader.js`).
-- Renderer + animation loop managed from `src/main.js`.
+- Renderer + animation loop managed from `src/experience3d.js`.
 - Scene bootstrap in `src/scene/createScene.js` with dark background and fog.
 - Soft lighting setup in `src/scene/lights.js`.
 - Temporary central symbolic placeholder in `src/scene/centralObject.js`.
@@ -60,9 +60,15 @@ Current status note:
 - Full checkpoint details and parameter list are recorded in `docs/current/audits/snapshots/2026-05-22_18-18-33__snapshot__glyph-1-tree-effect-baseline.md`.
 
 ## Checkpoint update — distant galaxy sprite layer (2026-05-29)
-- `src/scene/galaxySprites.js` owns the distant galaxy sprite layer as an isolated, visual-only `THREE.Group`; it is added by `src/main.js` after the scene, sun, and moon setup and is updated from the main animation loop.
+- `src/scene/galaxySprites.js` owns the distant galaxy sprite layer as an isolated, visual-only `THREE.Group`; it is added by `src/experience3d.js` after the scene, sun, and moon setup and is updated from the main animation loop.
 - The layer uses `THREE.Sprite` + `THREE.SpriteMaterial`, so each transparent PNG sprite billboards toward the camera while retaining a per-material center spin via `SpriteMaterial.rotation`.
 - Galaxy sprites are not included in raycaster target lists and carry `userData.nonInteractive = true`; they must remain background atmosphere only and must not replace HTML overlay/hover interactions.
 - Instance generation is deterministic through `galaxySprites.randomSeed`, bounded by `totalMax`, and rejects the protected central reading cone so the monkey and five primary glyphs stay readable.
 - Motion is deliberately slow: each instance has independent radius, orbit angle, direction, speed, inclination, vertical offset, eccentricity, opacity variance, scale, and spin speed.
 - Reduced-motion users keep the layer visible, but orbit and spin speed are multiplied by `reducedMotionSpeedMultiplier` rather than removed.
+
+## Current renderer, loop and panel-camera contract
+
+- `src/experience3d.js` owns the Experience 3D renderer and its `requestAnimationFrame` animation loop; `src/main.js` only selects and launches the mode.
+- The camera remains pivoted on the monkey with the existing yaw/pitch limits and touch fallback behavior.
+- Opening an overlay pauses fine-pointer steering at the current camera direction. Pointer movement is remembered while the panel is open. On close, `experience3d.js` calls `cameraRig.resumeMouseControl(...)`, which smoothsteps toward the latest cursor target for **1500 ms** before returning to normal pointer damping.
