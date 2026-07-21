@@ -103,6 +103,7 @@ Aby zachować spójny system zamiast 5 przypadkowych efektów:
    - symboliczna „fizyka” żywiołu.
 6. Efekty mają być subtelne, eleganckie i atmosferyczne.
 7. Celem nie jest spektakl; celem jest czytelne ożywienie symboliki glifu.
+8. Sekwencja focus → plaque → panel blokuje wyłącznie nowe triggery hover oraz standardowy scale/pulse i zwykłe światło hover wybranego glifu. Nie zatrzymuje czasu już uruchomionego one-shota: jego runtime i osobna grupa efektu nadal aktualizują się aż do naturalnego powrotu do `idle`. Ukrycie `visualModel` podczas reveal plaque nie ukrywa ani nie resetuje osobnej grupy efektu.
 
 ## 7. Język ruchu 5 żywiołów
 Żywioły w tym projekcie są używane jako **język ruchu efektów**, a nie sztywna doktryna.

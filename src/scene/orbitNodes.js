@@ -658,6 +658,18 @@ export function createOrbitNodes(nodeContent, { assetManager = null } = {}) {
         node.worldToLocal(lightPosition);
         hoverPointLight.position.copy(lightPosition);
 
+        // One-shot runtimes remain clock-driven while a plaque transition locks
+        // interaction. Their effect groups are siblings of visualModel, so they
+        // can finish even after the glyph model is hidden for the plaque reveal.
+        const animationProgress = updateNodeHoverAnimation(node, elapsed);
+        const isHoverAnimationPlaying = node.userData.hoverAnimationRuntime.state === 'playing';
+        if (node.userData.woodTreeEffectRuntime) {
+          applyWoodTreeActivation(node.userData.woodTreeEffectRuntime, elapsed, isHoverAnimationPlaying && !prefersReducedMotion);
+        }
+        if (node.userData.fireSparkRuntime) {
+          updateFireSparkBurst(node.userData.fireSparkRuntime, elapsed);
+        }
+
         if (node.userData.transitionActive || node.userData.transitionLightState === 'fading') {
           node.scale.setScalar(node.userData.baseScale);
           const duration = node.userData.transitionLightState === 'fading'
@@ -674,7 +686,6 @@ export function createOrbitNodes(nodeContent, { assetManager = null } = {}) {
           if (progress >= 1 && node.userData.transitionLightState === 'fading') node.userData.transitionLightState = 'idle';
           return;
         }
-        const animationProgress = updateNodeHoverAnimation(node, elapsed);
         const animationPulse = Math.sin(Math.PI * animationProgress);
         const isSpecialEffect = node.userData.id === WOOD_NODE_ID || node.userData.id === FIRE_NODE_ID;
         node.userData.targetScale = 1 + (isSpecialEffect ? 0.035 : HOVER_SCALE_TARGET - 1) * animationPulse;
@@ -700,12 +711,6 @@ export function createOrbitNodes(nodeContent, { assetManager = null } = {}) {
         node.material.emissive.set(node.userData.baseEmissive).lerp(new THREE.Color(node.userData.hoverEmissive), hoverBlend);
         node.material.emissiveIntensity = THREE.MathUtils.lerp(0.45, 0.95, hoverBlend);
 
-        if (node.userData.woodTreeEffectRuntime) {
-          applyWoodTreeActivation(node.userData.woodTreeEffectRuntime, elapsed, node.userData.hoverAnimationRuntime.state === 'playing' && !prefersReducedMotion);
-        }
-        if (node.userData.fireSparkRuntime) {
-          updateFireSparkBurst(node.userData.fireSparkRuntime, elapsed);
-        }
       }
     };
 
@@ -768,7 +773,7 @@ export function updateOrbitNodes(nodes, elapsed, centerWorldPosition = new THREE
 
 export function triggerNodeHoverAnimation(node) {
   const runtime = node?.userData?.hoverAnimationRuntime;
-  if (!runtime || runtime.state === 'playing') return false;
+  if (!runtime || runtime.state === 'playing' || node.userData.transitionActive || node.userData.transitionLightState !== 'idle') return false;
   runtime.state = 'playing';
   runtime.startedAt = null;
   runtime.progress = 0;
