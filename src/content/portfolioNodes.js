@@ -25,6 +25,12 @@ export const portfolioNodes = [
     subtitle: 'Music Data Resonance',
     modelPath: '/glb/glyph_4.glb',
     modelKind: 'glyph',
+    plaqueModelPath: '/glb/plaque_dig_engine.glb',
+    plaqueVisual: {
+      scale: 1,
+      position: [0, 0, 0],
+      frontYawOffset: 0
+    },
     ornamentPath: '/png/digger_ornament.png',
     demoGifPath: '/gif/DIG_engine.gif',
     demoGifAlt: 'Animated DIG Engine interface demo',
