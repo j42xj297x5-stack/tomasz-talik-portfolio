@@ -710,13 +710,32 @@ export function createOrbitNodes(nodeContent, { assetManager = null } = {}) {
 
   group.userData.getCenterWorldPosition = () => group.getWorldPosition(centerPosition);
 
-  return { group, nodes };
+  return { group, nodes, orbit: createOrbitController() };
 }
 
-export function updateOrbitNodes(nodes, elapsed, centerWorldPosition = new THREE.Vector3()) {
+export function createOrbitController() {
+  let orbitPhase = 0;
+  let isPaused = false;
+
+  return {
+    pauseOrbit() {
+      isPaused = true;
+    },
+    resumeOrbit() {
+      isPaused = false;
+    },
+    update(delta) {
+      if (!isPaused) orbitPhase += Math.max(0, delta);
+      return orbitPhase;
+    },
+    isPaused: () => isPaused
+  };
+}
+
+export function updateOrbitNodes(nodes, elapsed, centerWorldPosition = new THREE.Vector3(), orbitPhase = elapsed) {
   nodes.forEach((node, index) => {
-    const angle = node.userData.orbitAngle + elapsed * 0.14;
-    const wobble = Math.sin(elapsed * 0.9 + index * 1.8) * 0.08;
+    const angle = node.userData.orbitAngle + orbitPhase * 0.14;
+    const wobble = Math.sin(orbitPhase * 0.9 + index * 1.8) * 0.08;
 
     node.position.x = Math.cos(angle) * node.userData.orbitRadius;
     node.position.z = Math.sin(angle) * node.userData.orbitRadius;

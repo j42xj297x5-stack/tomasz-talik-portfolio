@@ -71,4 +71,8 @@ Current status note:
 
 - `src/experience3d.js` owns the Experience 3D renderer and its `requestAnimationFrame` animation loop; `src/main.js` only selects and launches the mode.
 - The camera remains pivoted on the monkey with the existing yaw/pitch limits and touch fallback behavior.
-- Opening an overlay pauses fine-pointer steering at the current camera direction. Pointer movement is remembered while the panel is open. On close, `experience3d.js` calls `cameraRig.resumeMouseControl(...)`, which smoothsteps toward the latest cursor target for **1500 ms** before returning to normal pointer damping.
+- Glyph panel entry is a guarded runtime state sequence in `src/experience3d.js`: `idle` → `focusing` → `panelOpen` → `returning` → `idle`. Only `idle` accepts hover, click/tap, or touch-drag interaction.
+- On entry, the orbit controller returned by `createOrbitNodes()` pauses its accumulated orbit phase. This freezes both the glyph angle and wobble without using global elapsed time; hover one-shots already running still receive animation updates, but no new hover trigger can start during the sequence.
+- `cameraRig.focusOnNode(...)` moves from the current camera position on an eased azimuth arc around the monkey pivot, maintains the base radius, and moves the look target to the frozen selected glyph. The HTML overlay opens only after this operation resolves.
+- Overlay close starts `cameraRig.returnHome(...)` first. It returns on an eased arc to yaw `0`, pitch `0`, the standard radius, and the monkey pivot. Only after that promise resolves does the runtime resume the glyph orbit and unlock camera input.
+- Pointer movement is remembered while locked. After return, `cameraRig.resumeMouseControl(...)` retains the existing **1500 ms** smooth handoff to the last fine-pointer target. Coarse-pointer transitions use shorter timings; reduced-motion transitions retain the same state ordering but are capped at 150 ms.
