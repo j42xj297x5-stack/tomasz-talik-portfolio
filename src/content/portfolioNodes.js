@@ -321,7 +321,7 @@ Projekt pokazuje kompetencje w game designie, system designie, Three.js, pipelin
     eyebrow: 'Tworzenie z AI',
     modelPath: '/glb/glyph_2.glb',
     modelKind: 'glyph',
-    plaqueModelPath: '/glb/plaque_creative.glb',
+    plaqueModelPath: '/glb/plaque_creative_ai.glb',
     plaqueVisual: {
       scale: 1,
       position: [0, 0, 0],
