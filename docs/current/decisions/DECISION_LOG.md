@@ -188,7 +188,7 @@ Consequences:
 1. `src/main.js` is no longer the direct 3D runtime bootstrap.
 2. `src/experience3d.js` is now the Experience 3D bootstrap.
 3. Future runtime tasks must check both `src/main.js` and `src/experience3d.js`.
-4. Classic 2D remains future work and is currently placeholder-only.
+4. At the time of this entry Classic 2D was future/placeholder-only; this consequence is superseded by the implemented Classic 2D decision dated 2026-06-03.
 5. Current deployment/public-path rules, Vite config, assets, package files, and content remain unchanged.
 
 
@@ -230,3 +230,16 @@ Consequences:
 2. The `portfolio_frame_mobile_*` SVG files remain in `public/svg/` but are no longer runtime dependencies.
 3. `ornamentPath` is universal Experience 3D metadata; the mobile-only ornament flag was removed, and ornament placement, proportions, and responsive scaling are retained.
 4. Classic 2D is intentionally unchanged.
+
+## 2026-07-21 — Smooth camera handoff after Experience 3D panels
+
+Status: accepted / implemented.
+
+Decision: Fine-pointer camera control pauses while an Experience 3D detail panel is open and, after any normal overlay close path, smoothly resumes toward the latest remembered cursor target over 1500 ms.
+
+Rationale: The panel must be readable without camera movement, while closing it should not cause an abrupt visual jump if the visitor moved the cursor during reading.
+
+Consequences:
+1. `src/ui/overlay.js` exposes a single close callback to the Experience 3D runtime.
+2. `src/experience3d.js` coordinates the close callback with `cameraRig.resumeMouseControl(...)`.
+3. `src/scene/cameraRig.js` owns the transition timing and preserves the existing yaw/pitch limits and normal damping outside the handoff.
