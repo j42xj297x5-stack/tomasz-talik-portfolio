@@ -69,9 +69,7 @@ const deferredWarmAssets = Object.freeze([
     ...galaxySpriteAssets
 ]);
 
-const optionalLateAssets = Object.freeze([
-  withStage({ id: 'wood-tree-effect', label: 'Wood glyph tree effect', path: '/glb/glyph_1-tree.glb', type: 'model' }, ASSET_STAGES.OPTIONAL_LATE)
-]);
+const optionalLateAssets = Object.freeze([]);
 
 export const assetManifest = Object.freeze({
   criticalInitial: criticalInitialAssets,
