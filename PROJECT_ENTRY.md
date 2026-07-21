@@ -10,7 +10,7 @@
 
 - **Nazwa:** `tomasz-talik-portfolio`.
 - **Repozytorium:** `https://github.com/j42xj297x5-stack/tomasz-talik-portfolio`.
-- **Główna gałąź:** nieustalona wiarygodnie w lokalnym checkoutcie.
+- **Główna gałąź:** `porfolio`.
 
 Portfolio prezentuje interaktywną pracę i projekty Tomasza Talika. Udostępnia lekki tryb Classic 2D oraz immersyjny tryb Experience 3D. Wspólne dane portfolio zasilają oba tryby prezentacji.
 

@@ -99,7 +99,10 @@ Concept docs -> Technical model -> Runtime implementation -> Decision updates ->
 - The current Vite/GitHub Pages base-path and public asset rules remain dependencies for any implementation path.
 - Snapshot reference: `docs/current/audits/snapshots/2026-06-02_18-18-09__snapshot__entry-shell-conditional-3d-boot.md`.
 
-## Unified Experience 3D glyph-panel dependency status (2026-07-20)
-- `src/ui/overlay.js` depends on each node's `ornamentPath`, the base-aware `publicPath(...)` helper, and the existing eight SVG frame assets/geometry solver.
-- `src/styles/main.css` owns the shared desktop/mobile opaque gradients, frame/content/ornament layering, and the 1200px content constraint for Experience 3D only.
-- `src/assets/assetManifest.js` no longer makes the five legacy vertical panel PNGs critical runtime dependencies; Classic 2D's separate PNG dependencies are unchanged.
+## Current Experience 3D panel and camera dependency status
+
+- `src/ui/overlay.js` renders the shared full-viewport panel from node metadata in `src/content/portfolioNodes.js`; `data-panel-theme` selects its opaque CSS gradient and `ornamentPath` is resolved through `publicPath(...)`.
+- `src/styles/main.css` owns the responsive panel layout, ornament placement, internal scrolling and clipping viewport. The readable panel does not depend on the Three.js scene for contrast.
+- `src/assets/assetManifest.js` contains no Experience 3D panel-frame or legacy vertical-panel assets. The legacy vertical PNG panel files and `portfolio_frame_mobile_*` SVG files may remain physically in `public/`, but they are not runtime dependencies.
+- No SVG-frame loader, SVG-frame geometry solver, resize solver, or related frame diagnostic participates in the current Experience 3D runtime.
+- `src/experience3d.js` pauses `src/scene/cameraRig.js` when it opens an overlay. The `onClose` callback from `src/ui/overlay.js` resumes it toward the last fine-pointer position; `cameraRig.js` performs the 1500 ms smooth transition.

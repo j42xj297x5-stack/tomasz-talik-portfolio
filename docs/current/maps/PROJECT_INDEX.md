@@ -18,24 +18,15 @@ For Codex sessions:
 
 ## Current runtime baseline
 
-The current known runtime baseline includes:
-- central monkey GLB with placeholder/fallback behavior
-- five orbiting portfolio gates
-- hover labels / click overlay panels
-- sun/moon orbit lighting
-- atmosphere progression
-- galaxy sprite layer
-- loading diagnostics
-- debug settings import/export
-- deployment-safe public asset paths
-- mobile pointer/orientation/input handling
-- implemented language/mode entry shell with conditional Experience 3D boot
-- implemented Classic 2D MVP as a lightweight flat portfolio path
-- Classic 2D central monkey PNG (`/png/monkey_small.png`)
-- five Classic 2D floating glyph hotspots using flat PNG sprites
-- Classic 2D readable project panels using shared `src/content/portfolioNodes.js` records
+The current runtime baseline includes:
+- entry shell in `src/main.js` with conditional Experience 3D boot;
+- implemented Classic 2D: a responsive square/pentagon desktop composition, optically corrected central monkey, outward glyph labels, mobile monkey-plus-list layout, readable full-screen scrolling panels, and footer return CTA;
+- Experience 3D scene with central monkey, five glyph gates, loading diagnostics, atmosphere, galaxy sprites, mobile input, and base-aware public paths;
+- one full-screen Experience 3D panel system with opaque CSS gradients keyed by `data-panel-theme`, responsive `ornamentPath`, internal scrolling, and no SVG frame;
+- shared `portfolioNodes` content, including Haiku Cosmos case study, demo GIF, project links, and ornament metadata;
+- paused camera steering while an Experience 3D panel is open, followed by a 1500 ms smooth handoff to the latest cursor target after close.
 
-Open follow-ups remain listed in [Known open topics / next audit targets](#known-open-topics--next-audit-targets).
+The former SVG-frame checkpoint is historical evidence, not the current baseline. Open follow-ups remain in [Known open topics / next audit targets](#known-open-topics--next-audit-targets).
 
 ## Read-this-first minimal pack
 
@@ -96,9 +87,11 @@ Do not read the whole `docs/current` tree by default.
 - `docs/current/audits/snapshots/2026-05-28_18-08-09__snapshot__portfolio-ai-guide-progression-sun-moon.md` — documentation checkpoint for AI Guide panel direction, scene progression, sun/moon orbit state, and related protective decisions.
 - `docs/current/audits/snapshots/2026-05-29_19-59-42__snapshot__dual-runtime-github-pages-deployment.md` — first working dual-runtime deployment snapshot for local Vite and GitHub Pages.
 - `docs/current/audits/snapshots/2026-05-30_07-10-52__snapshot__galaxy-progress-loader-mobile-runtime.md` — documentation checkpoint for galaxy sprites, atmosphere progression, loading diagnostics, debug import/export, deployment-safe public asset paths, and mobile pointer/orientation/input runtime baseline.
-- `docs/current/audits/snapshots/2026-06-02_17-36-03__snapshot__mobile-glyph-panels-baseline.md` — checkpoint dla mobilnych paneli pięciu glifów, data-panel-theme, nieprzezroczystych teł, kontrastu tekstu, SVG frame/ornament layering i no-regression zasad.
-- `docs/current/audits/snapshots/2026-06-02_18-18-09__snapshot__entry-shell-conditional-3d-boot.md` — implemented lightweight language/mode entry shell, conditional Experience 3D boot, and placeholder-only Classic 2D branch.
+- `docs/current/audits/snapshots/2026-06-02_17-36-03__snapshot__mobile-glyph-panels-baseline.md` — historical mobile-panel checkpoint; its SVG-frame layering is superseded by the current frameless panel baseline.
+- `docs/current/audits/snapshots/2026-06-02_18-18-09__snapshot__entry-shell-conditional-3d-boot.md` — historical entry-shell checkpoint; its placeholder-only Classic 2D note is superseded.
 - `docs/current/audits/snapshots/2026-06-03_17-29-26__snapshot__classic-2d-floating-glyph-hotspots.md` — implemented Classic 2D MVP with central monkey PNG, five floating flat PNG glyph hotspots, shared content panels, no-ring hover/focus glow, and no text scaling.
+- `docs/current/audits/snapshots/2026-07-20_07-20-00__snapshot__unified-3d-glyph-panels.md` — historical intermediate checkpoint; its SVG-frame statement is superseded by the current panel baseline.
+- `docs/current/audits/snapshots/2026-07-21_00-00-00__snapshot__current-dual-mode-panels-and-camera.md` — current consolidated checkpoint for refined Classic 2D, shared content, frameless Experience 3D panels, Haiku Cosmos details, responsive ornaments, and camera resumption.
 
 ## Runtime entrypoints
 
@@ -121,7 +114,7 @@ UI/content/style files:
 - `src/styles/main.css` — atmospheric base and UI styles.
 
 
-Classic 2D status: the runtime branch is now an implemented MVP lightweight flat portfolio experience. It shows `/png/monkey_small.png`, five floating flat PNG glyph hotspots, readable panels sourced from `src/content/portfolioNodes.js`, and a back flow to mode selection. Full retro-polish and final visual language remain future work.
+Classic 2D status: the runtime is implemented and refined: its square desktop stage uses an optically corrected monkey and five glyphs on a regular pentagon; mobile uses a top monkey and vertical glyph list. It uses shared content panels and a footer return CTA. Further polish is optional, not a missing MVP.
 
 Vendored Three.js files:
 - `src/vendor/three.js` — bridge to vendored Three.js module.
@@ -173,9 +166,9 @@ Every Codex audit or implementation pass should:
 ## Known open topics / next audit targets
 
 Current known open targets:
-- loader performance
-- staged/deferred asset loading
-- mobile performance tuning
-- critical initial assets vs optional late assets
-- debug settings import/export documentation freshness
-- `docs/current/audits/snapshots/2026-07-20_07-20-00__snapshot__unified-3d-glyph-panels.md` — shared desktop/mobile Experience 3D glyph-panel, SVG-frame, ornament, and preload-retirement checkpoint.
+- loader performance, staged/deferred asset loading, and mobile performance tuning;
+- critical initial assets versus optional late assets;
+- debug settings import/export documentation freshness;
+- final structured PL/EN content records and optional further visual/accessibility polish.
+
+Completed panel and Classic 2D implementation work is not an open topic. The 2026-07-20 SVG-frame snapshot is historical intermediate evidence; consult the current consolidated snapshot for the active baseline.

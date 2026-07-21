@@ -2,6 +2,8 @@
 
 Date: 2026-07-20
 
+> **Historical intermediate state:** This snapshot records a prior SVG-frame implementation. It is evidence only and is superseded as the active baseline by `2026-07-21_00-00-00__snapshot__current-dual-mode-panels-and-camera.md`.
+
 ## Recorded state
 
 - The five Experience 3D glyph panels share one full-viewport CSS layout on desktop and mobile: `calc(100vw - 20px)` wide and `calc(100dvh - 20px)` high, with a preceding `100vh` fallback.
