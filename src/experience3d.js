@@ -5,7 +5,7 @@ import { addLights } from './scene/lights.js';
 import { createCentralObject } from './scene/centralObject.js';
 import { createBackgroundAtmosphere } from './scene/atmosphere.js';
 import { loadMonkeyModel } from './scene/monkeyModel.js';
-import { createOrbitNodes, setNodeHoverState, triggerNodeHoverAnimation, updateOrbitNodes } from './scene/orbitNodes.js';
+import { createOrbitNodes, fadeNodeTransitionLight, resetNodeTransitionLight, setNodeHoverState, startNodeTransitionLight, triggerNodeHoverAnimation, updateOrbitNodes } from './scene/orbitNodes.js';
 import { pickNode } from './scene/raycaster.js';
 import { createCameraRig } from './scene/cameraRig.js';
 import { createPlaqueTransition } from './scene/plaqueTransition.js';
@@ -252,7 +252,7 @@ function releaseActivePointer() {
 function restoreInteractionSafely() {
   plaqueTransition.reset(activePanelNode);
   if (activePanelNode?.userData) {
-    activePanelNode.userData.transitionActive = false;
+    resetNodeTransitionLight(activePanelNode);
     activePanelNode.userData.plaqueTransitionReady = false;
   }
   activePanelNode = null;
@@ -272,20 +272,25 @@ async function focusNodePanel(node) {
   cameraRig.setInteractionLocked(true);
   atmosphereProgression.prepareGateProgression(node.userData?.id);
   activePanelNode = node;
+  // Start independently of camera focus, so every orbit side receives the
+  // complete neutral-light ramp before the plaque sequence needs it.
+  startNodeTransitionLight(node);
 
   try {
     await cameraRig.focusOnNode(camera, node);
     if (interactionState !== 'focusing') return;
     if (node.userData?.plaqueModelPath) {
-      node.userData.transitionActive = true;
       interactionState = 'revealingPlaque';
       const plaque = await plaqueTransition.reveal(node, camera);
       if (plaque) {
         node.userData.plaqueTransitionReady = true;
+        interactionState = 'plaqueHold';
+        await new Promise((resolve) => window.setTimeout(resolve, window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 120 : 500));
+        if (interactionState !== 'plaqueHold') return;
         interactionState = 'dollyIn';
         await cameraRig.dollyToPlaque(camera, plaque);
       } else {
-        node.userData.transitionActive = false;
+        // Keep the click light active for the fallback panel path as well.
       }
     }
     if (!activePanelNode) return;
@@ -306,9 +311,11 @@ async function returnFromNodePanel() {
     if (node?.userData?.plaqueTransitionReady) {
       await cameraRig.dollyOut(camera);
       interactionState = 'restoringGlyph';
+      fadeNodeTransitionLight(node);
       await plaqueTransition.restore(node);
-      node.userData.transitionActive = false;
       node.userData.plaqueTransitionReady = false;
+    } else if (node) {
+      fadeNodeTransitionLight(node);
     }
     interactionState = 'returning';
     await cameraRig.returnHome(camera);

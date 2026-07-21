@@ -29,18 +29,20 @@ function cloneMaterials(root) {
 
 function glyphMaterials(node) {
   const materials = [];
-  (node.userData.visualModel ?? node).traverse((child) => {
+  const visualModel = node.userData.visualModel ?? node;
+  visualModel.traverse((child) => {
     if (!child.isMesh || !child.material) return;
     const source = Array.isArray(child.material) ? child.material : [child.material];
     const copies = source.map((material) => {
       const copy = material.clone();
       copy.transparent = true;
-      materials.push(copy);
+      copy.depthWrite = false;
+      materials.push({ material: copy, opacity: material.opacity, transparent: material.transparent, depthWrite: material.depthWrite });
       return copy;
     });
     child.material = Array.isArray(child.material) ? copies : copies[0];
   });
-  return materials;
+  return { visualModel, visible: visualModel.visible, materials };
 }
 
 export function createPlaqueTransition({ scene, assetManager }) {
@@ -90,6 +92,22 @@ export function createPlaqueTransition({ scene, assetManager }) {
   }
 
   function setOpacity(materials, opacity) { materials.forEach((material) => { material.opacity = opacity; material.needsUpdate = true; }); }
+  function setGlyphFade(glyph, opacity) {
+    glyph.materials.forEach(({ material }) => {
+      material.transparent = true;
+      material.depthWrite = false;
+      material.opacity = opacity;
+      material.needsUpdate = true;
+    });
+  }
+  function restoreGlyphMaterials(glyph) {
+    glyph.materials.forEach(({ material, opacity, transparent, depthWrite }) => {
+      material.opacity = opacity;
+      material.transparent = transparent;
+      material.depthWrite = depthWrite;
+      material.needsUpdate = true;
+    });
+  }
 
   async function reveal(node, camera) {
     try {
@@ -101,6 +119,8 @@ export function createPlaqueTransition({ scene, assetManager }) {
       plaque.wrapper.rotateY(node.userData.plaqueVisual?.frontYawOffset ?? 0);
       plaque.wrapper.visible = true;
       plaque.glyphMaterials ??= glyphMaterials(node);
+      plaque.glyphMaterials.visualModel.visible = true;
+      setGlyphFade(plaque.glyphMaterials, 1);
       active = { node, plaque, startedAt: performance.now(), duration: durationFor(false), reverse: false, resolve: null };
       setOpacity(plaque.materials, 0);
       return new Promise((resolve) => { active.resolve = () => resolve(plaque.wrapper); });
@@ -109,6 +129,9 @@ export function createPlaqueTransition({ scene, assetManager }) {
 
   function restore(node) {
     if (!instance) return Promise.resolve();
+    instance.glyphMaterials ??= glyphMaterials(node);
+    instance.glyphMaterials.visualModel.visible = true;
+    setGlyphFade(instance.glyphMaterials, 0);
     active = { node, plaque: instance, startedAt: performance.now(), duration: durationFor(true), reverse: true, resolve: null };
     return new Promise((resolve) => { active.resolve = resolve; });
   }
@@ -123,16 +146,24 @@ export function createPlaqueTransition({ scene, assetManager }) {
     active.plaque.glow.material.opacity = flash * 0.45;
     active.plaque.warmLight.intensity = flash * 2.2;
     active.plaque.model.scale.setScalar(THREE.MathUtils.lerp(0.75, 1, amount));
-    setOpacity(active.plaque.glyphMaterials, 1 - amount);
+    setGlyphFade(active.plaque.glyphMaterials, 1 - amount);
     active.node.scale.setScalar(THREE.MathUtils.lerp(0.94, 1, 1 - amount));
     if (progress < 1) return;
-    if (!active.reverse) { const finished = active; active = null; finished.resolve?.(); return; }
+    if (!active.reverse) {
+      const finished = active;
+      // A fully revealed glyph must not leave either color or depth behind.
+      finished.plaque.glyphMaterials.visualModel.visible = false;
+      active = null;
+      finished.resolve?.();
+      return;
+    }
     const finished = active;
     finished.plaque.wrapper.visible = false;
     setOpacity(finished.plaque.materials, 1);
     finished.plaque.glow.material.opacity = 0;
     finished.plaque.warmLight.intensity = 0;
-    setOpacity(finished.plaque.glyphMaterials, 1);
+    restoreGlyphMaterials(finished.plaque.glyphMaterials);
+    finished.plaque.glyphMaterials.visualModel.visible = finished.plaque.glyphMaterials.visible;
     finished.node.scale.setScalar(finished.node.userData.baseScale);
     active = null;
     finished.resolve?.();
@@ -140,7 +171,10 @@ export function createPlaqueTransition({ scene, assetManager }) {
 
   function reset(node) {
     if (instance) { instance.wrapper.visible = false; setOpacity(instance.materials, 1); instance.glow.material.opacity = 0; instance.warmLight.intensity = 0; }
-    if (instance?.glyphMaterials) setOpacity(instance.glyphMaterials, 1);
+    if (instance?.glyphMaterials) {
+      restoreGlyphMaterials(instance.glyphMaterials);
+      instance.glyphMaterials.visualModel.visible = instance.glyphMaterials.visible;
+    }
     if (node) node.scale.setScalar(node.userData.baseScale ?? 1);
     active = null;
   }

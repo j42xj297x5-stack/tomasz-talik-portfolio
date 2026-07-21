@@ -14,6 +14,7 @@ const IDLE_DRIFT_DAMPING = 0.02;
 const IDLE_YAW_AMPLITUDE_RAD = 4 * DEG_TO_RAD;
 const IDLE_PITCH_AMPLITUDE_RAD = 2 * DEG_TO_RAD;
 const INVERT_YAW = false;
+const DOLLY_NEAR_PLANE_MARGIN = 0.15;
 
 const smoothstep = (value) => value * value * (3 - 2 * value);
 const shortestAngularDelta = (from, to) => Math.atan2(Math.sin(to - from), Math.cos(to - from));
@@ -141,9 +142,19 @@ export function createCameraRig(pointerElement = document.documentElement) {
     if (bounds.isEmpty() || size.x <= 0 || size.y <= 0) return Promise.reject(new Error('Plaque bounds unavailable.'));
     const verticalFov = THREE.MathUtils.degToRad(camera.fov);
     const horizontalFov = 2 * Math.atan(Math.tan(verticalFov / 2) * camera.aspect);
-    const distance = Math.max(camera.near * 2.5, Math.max(size.y / (2 * Math.tan(verticalFov / 2)), size.x / (2 * Math.tan(horizontalFov / 2))) / cover);
+    const requiredCameraToPlaqueDistance = Math.max(
+      size.y / (2 * Math.tan(verticalFov / 2)),
+      size.x / (2 * Math.tan(horizontalFov / 2))
+    ) / cover;
+    const plaqueCenter = bounds.getCenter(new THREE.Vector3());
+    // Camera radius is measured from the immutable pivot, whereas the cover
+    // distance is measured from the plaque. Keeping them separate preserves
+    // the focused side of the orbit and prevents crossing the plaque plane.
+    const plaqueRadialDistance = Math.hypot(plaqueCenter.x - PIVOT.x, plaqueCenter.z - PIVOT.z);
+    const safeRadius = plaqueRadialDistance + requiredCameraToPlaqueDistance;
+    const distance = Math.max(safeRadius, plaqueRadialDistance + camera.near + DOLLY_NEAR_PLANE_MARGIN);
     const focusPose = { yaw: pose.yaw, pitch: pose.pitch, radius: pose.radius, pivot: pose.pivot.clone(), lookAt: pose.lookAt.clone() };
-    return startTransition('dollyIn', { yaw: pose.yaw, pitch: pose.pitch, radius: distance, pivot: PIVOT, lookAt: plaque.getWorldPosition(new THREE.Vector3()), focusPose }, duration);
+    return startTransition('dollyIn', { yaw: pose.yaw, pitch: pose.pitch, radius: distance, pivot: PIVOT, lookAt: plaqueCenter, focusPose }, duration);
   }
 
   function dollyOut(camera, { duration = supportsFinePointer ? 800 : 450 } = {}) {

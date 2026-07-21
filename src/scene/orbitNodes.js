@@ -3,11 +3,15 @@ import { assetManifest } from '../assets/assetManifest.js';
 const NODE_MODEL_TARGET_DIMENSION = 0.6;
 const HOVER_SCALE_TARGET = 1.06;
 const HOVER_SCALE_LERP = 0.08;
+export const TRANSITION_LIGHT_FULL_INTENSITY = 3;
 const HOVER_LIGHT_INTENSITY_TARGET = 2.8;
 const HOVER_LIGHT_INTENSITY_LERP = 0.08;
 const HOVER_LIGHT_DISTANCE = 5.5;
 const HOVER_LIGHT_DECAY = 2;
-const HOVER_LIGHT_RADIAL_T = 0.7;
+const HOVER_LIGHT_RADIAL_T = 1.16;
+const TRANSITION_LIGHT_RAMP_DURATION_MS = 1000;
+const TRANSITION_LIGHT_FADE_DURATION_MS = 370;
+const SHARED_GLYPH_LIGHT_COLOR = '#fffaf2';
 const FALLBACK_HOVER_ANIMATION_DURATION = 0.9;
 const REDUCED_MOTION_HOVER_ANIMATION_DURATION = 0.22;
 const WOOD_TREE_REVEAL_HOLD_DURATION = 1.1;
@@ -16,7 +20,6 @@ const prefersReducedMotion = typeof window !== 'undefined'
   && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 const WOOD_NODE_ID = 'ai-guide';
 const FIRE_NODE_ID = 'creative-ai';
-const WOOD_NODE_HOVER_LIGHT_COLOR = '#cbff74';
 const WOOD_NODE_HOVER_LIGHT_INTENSITY_TARGET = 3.3;
 const TEST_SPARK_RADIUS = 0.005;
 const TEST_SPARK_COUNT = 2;
@@ -626,7 +629,7 @@ export function createOrbitNodes(nodeContent, { assetManager = null } = {}) {
     );
 
     node.position.set(Math.cos(angle) * radius, 0.65 + Math.sin(index * 1.2) * 0.25, Math.sin(angle) * radius);
-    const hoverPointLight = new THREE.PointLight(node.material.color.clone(), 0, HOVER_LIGHT_DISTANCE, HOVER_LIGHT_DECAY);
+    const hoverPointLight = new THREE.PointLight(SHARED_GLYPH_LIGHT_COLOR, 0, HOVER_LIGHT_DISTANCE, HOVER_LIGHT_DECAY);
     hoverPointLight.visible = false;
     node.add(hoverPointLight);
 
@@ -637,6 +640,9 @@ export function createOrbitNodes(nodeContent, { assetManager = null } = {}) {
       yOffset: node.position.y,
       baseScale: 1,
       transitionActive: false,
+      transitionLightState: 'idle',
+      transitionLightStartedAt: 0,
+      transitionLightStartIntensity: 0,
       targetScale: 1,
       currentHoverLightIntensity: 0,
       targetHoverLightIntensity: 0,
@@ -652,10 +658,20 @@ export function createOrbitNodes(nodeContent, { assetManager = null } = {}) {
         node.worldToLocal(lightPosition);
         hoverPointLight.position.copy(lightPosition);
 
-        if (node.userData.transitionActive) {
+        if (node.userData.transitionActive || node.userData.transitionLightState === 'fading') {
           node.scale.setScalar(node.userData.baseScale);
-          hoverPointLight.intensity = 0;
-          hoverPointLight.visible = false;
+          const duration = node.userData.transitionLightState === 'fading'
+            ? TRANSITION_LIGHT_FADE_DURATION_MS
+            : TRANSITION_LIGHT_RAMP_DURATION_MS;
+          const progress = THREE.MathUtils.clamp((performance.now() - node.userData.transitionLightStartedAt) / duration, 0, 1);
+          const eased = progress * progress * (3 - 2 * progress);
+          const intensity = node.userData.transitionLightState === 'fading'
+            ? THREE.MathUtils.lerp(node.userData.transitionLightStartIntensity, 0, eased)
+            : THREE.MathUtils.lerp(node.userData.transitionLightStartIntensity, TRANSITION_LIGHT_FULL_INTENSITY, eased);
+          node.userData.currentHoverLightIntensity = intensity;
+          hoverPointLight.intensity = intensity;
+          hoverPointLight.visible = intensity > 0.01;
+          if (progress >= 1 && node.userData.transitionLightState === 'fading') node.userData.transitionLightState = 'idle';
           return;
         }
         const animationProgress = updateNodeHoverAnimation(node, elapsed);
@@ -694,7 +710,6 @@ export function createOrbitNodes(nodeContent, { assetManager = null } = {}) {
     };
 
     if (item.id === WOOD_NODE_ID) {
-      hoverPointLight.color.set(WOOD_NODE_HOVER_LIGHT_COLOR);
       try {
         node.userData.woodTreeEffectRuntime = createWoodTreeEffectRuntime();
       } catch (error) {
@@ -764,4 +779,31 @@ export function setNodeHoverState(node, isHovered) {
   if (!node?.userData) return;
   // Cursor/label presence is intentionally separate from the one-shot animation lifecycle.
   node.userData.isHovered = isHovered;
+}
+
+export function startNodeTransitionLight(node) {
+  if (!node?.userData) return;
+  node.userData.transitionActive = true;
+  node.userData.transitionLightState = 'ramping';
+  node.userData.transitionLightStartedAt = performance.now();
+  node.userData.transitionLightStartIntensity = node.userData.currentHoverLightIntensity ?? 0;
+}
+
+export function fadeNodeTransitionLight(node) {
+  if (!node?.userData) return;
+  node.userData.transitionActive = false;
+  node.userData.transitionLightState = 'fading';
+  node.userData.transitionLightStartedAt = performance.now();
+  node.userData.transitionLightStartIntensity = node.userData.currentHoverLightIntensity ?? 0;
+}
+
+export function resetNodeTransitionLight(node) {
+  if (!node?.userData) return;
+  node.userData.transitionActive = false;
+  node.userData.transitionLightState = 'idle';
+  node.userData.transitionLightStartIntensity = 0;
+  node.userData.currentHoverLightIntensity = 0;
+  node.userData.targetHoverLightIntensity = 0;
+  node.userData.hoverPointLight.intensity = 0;
+  node.userData.hoverPointLight.visible = false;
 }
