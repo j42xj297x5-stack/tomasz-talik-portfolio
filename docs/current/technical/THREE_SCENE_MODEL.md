@@ -9,6 +9,7 @@
 - `src/scene/cameraRig.js` owns interactive orbit, focus, plaque dolly, return-home, and fine-pointer handoff.
 - `src/scene/plaqueTransition.js` owns the per-node plaque model lifecycle and glyph/plaque cross-fade.
 - `src/ui/overlay.js` owns readable project content in HTML/CSS; text content is not rendered inside the scene.
+- Sun and moon SpotLights retain targets at the central monkey pivot, but move outside their visual body bounds using radial and camera-relative offsets. Their horizon intensity changes use a synchronized, eased fade rather than an instant day/night switch.
 
 ## Interaction sequence
 
