@@ -5,7 +5,7 @@ function deepClone(value) {
 }
 
 const OPTIONS_STORAGE_KEY = 'portfolio.options.runtimeState.v1';
-const OPTIONS_DEFAULTS_VERSION = '2026-05-29-atmosphere-progression-json-v8';
+const OPTIONS_DEFAULTS_VERSION = '2026-07-22-experience3d-baseline-v1';
 const PRESET_SLOT_KEYS = ['portfolio.optionsPreset.1', 'portfolio.optionsPreset.2', 'portfolio.optionsPreset.3'];
 const SUN_MODEL_PATH = '/glb/sun.glb';
 
@@ -55,11 +55,11 @@ function downloadJsonFile(filename, data) {
 
 function toThresholdSeconds(transitionTimes = {}) {
   return {
-    threshold1: finiteNumber(transitionTimes.stones, 10),
-    threshold2: finiteNumber(transitionTimes.shells, 10),
-    threshold3: finiteNumber(transitionTimes.smallGlyphs, 10),
-    threshold4: finiteNumber(transitionTimes.stars, 10),
-    threshold5: finiteNumber(transitionTimes.galaxies, 10)
+    threshold1: finiteNumber(transitionTimes.stones, 5),
+    threshold2: finiteNumber(transitionTimes.shells, 5),
+    threshold3: finiteNumber(transitionTimes.smallGlyphs, 5),
+    threshold4: finiteNumber(transitionTimes.stars, 5),
+    threshold5: finiteNumber(transitionTimes.galaxies, 5)
   };
 }
 
@@ -78,6 +78,21 @@ function pickRuntimeStateFromImport(parsed) {
     moonCycle: parsed?.moonCycle ?? parsed?.celestial?.moon,
     galaxySprites: parsed?.galaxySprites ?? parsed?.layers?.galaxies
   };
+}
+
+function mergeRuntimeState(target, source, defaults) {
+  const merge = (base, patch) => ({ ...deepClone(base), ...(patch ?? {}) });
+  const background = merge(defaults.backgroundAtmosphere, source?.backgroundAtmosphere);
+  background.dust = merge(defaults.backgroundAtmosphere.dust, source?.backgroundAtmosphere?.dust);
+  background.stoneRelics = merge(defaults.backgroundAtmosphere.stoneRelics, source?.backgroundAtmosphere?.stoneRelics);
+  background.shellRelics = merge(defaults.backgroundAtmosphere.shellRelics, source?.backgroundAtmosphere?.shellRelics);
+  background.smallGlyphRelics = merge(defaults.backgroundAtmosphere.smallGlyphRelics, source?.backgroundAtmosphere?.smallGlyphRelics);
+  Object.assign(target.backgroundAtmosphere, background);
+  Object.assign(target.sunCycle, merge(defaults.sunCycle, source?.sunCycle));
+  target.sunCycle.spotlight = merge(defaults.sunCycle.spotlight, source?.sunCycle?.spotlight);
+  Object.assign(target.moonCycle, merge(defaults.moonCycle, source?.moonCycle));
+  target.moonCycle.spotlight = merge(defaults.moonCycle.spotlight, source?.moonCycle?.spotlight);
+  Object.assign(target.galaxySprites, merge(defaults.galaxySprites, source?.galaxySprites));
 }
 
 function normalizeRuntimeState(state) {
@@ -134,12 +149,12 @@ function normalizeRuntimeState(state) {
   if (!moon.spotlight) moon.spotlight = {};
   moon.modelPath = typeof moon.modelPath === 'string' && moon.modelPath.trim().length > 0 ? moon.modelPath.trim() : '/glb/moon.glb';
   moon.radius = clamp(moon.radius ?? 3, 1, 30);
-  moon.angularSpeed = clamp(moon.angularSpeed ?? 0.08, 0, 1);
+  delete moon.angularSpeed;
   moon.scale = clamp(moon.scale ?? 0.2, 0.05, 10);
   moon.debugScaleMultiplier = clamp(moon.debugScaleMultiplier ?? 1, 0.1, 10);
   moon.selfRotationSpeed = clamp(moon.selfRotationSpeed ?? 0, 0, 1);
   moon.lockFacing = Boolean(moon.lockFacing ?? true);
-  moon.direction = Number(moon.direction) >= 0 ? 1 : -1;
+  delete moon.direction;
   moon.debugVisible = Boolean(moon.debugVisible);
   moon.debugShowFallback = Boolean(moon.debugShowFallback);
   moon.debugForceBasicMaterial = Boolean(moon.debugForceBasicMaterial);
@@ -156,25 +171,25 @@ function normalizeRuntimeState(state) {
   galaxy.texturePaths = Array.isArray(galaxy.texturePaths) && galaxy.texturePaths.length > 0
     ? galaxy.texturePaths
     : ['/png/galaxy_01.png', '/png/galaxy_02.png', '/png/galaxy_03.png', '/png/galaxy_04.png', '/png/galaxy_05.png'];
-  galaxy.copiesPerTextureMin = clampedInteger(galaxy.copiesPerTextureMin, 1, 0, 10);
-  galaxy.copiesPerTextureMax = Math.max(galaxy.copiesPerTextureMin, clampedInteger(galaxy.copiesPerTextureMax, 3, 0, 10));
+  galaxy.copiesPerTextureMin = clampedInteger(galaxy.copiesPerTextureMin, 2, 0, 10);
+  galaxy.copiesPerTextureMax = Math.max(galaxy.copiesPerTextureMin, clampedInteger(galaxy.copiesPerTextureMax, 4, 0, 10));
   galaxy.totalMax = clampedInteger(galaxy.totalMax, 14, 0, 30);
-  galaxy.minScale = clampedNumber(galaxy.minScale, 0.65, 0.01, 12);
-  galaxy.maxScale = Math.max(galaxy.minScale, clampedNumber(galaxy.maxScale, 2.8, 0.01, 16));
-  galaxy.opacity = clampedNumber(galaxy.opacity, 0.42, 0, 1);
+  galaxy.minScale = clampedNumber(galaxy.minScale, 1, 0.01, 12);
+  galaxy.maxScale = Math.max(galaxy.minScale, clampedNumber(galaxy.maxScale, 5, 0.01, 16));
+  galaxy.opacity = clampedNumber(galaxy.opacity, 1, 0, 1);
   galaxy.opacityVariance = clampedNumber(galaxy.opacityVariance, 0.18, 0, 1);
-  galaxy.innerRadius = clampedNumber(galaxy.innerRadius, 11, 0, 60);
+  galaxy.innerRadius = clampedNumber(galaxy.innerRadius, 18, 0, 60);
   galaxy.outerRadius = Math.max(galaxy.innerRadius + 0.1, clampedNumber(galaxy.outerRadius, 26, 0.1, 80));
   galaxy.verticalSpread = clampedNumber(galaxy.verticalSpread, 8, 0, 30);
   galaxy.safeRadius = clampedNumber(galaxy.safeRadius, 6.5, 0, 30);
-  galaxy.orbitSpeedMin = clampedNumber(galaxy.orbitSpeedMin, 0.0015, 0, 0.1);
-  galaxy.orbitSpeedMax = Math.max(galaxy.orbitSpeedMin, clampedNumber(galaxy.orbitSpeedMax, 0.006, 0, 0.1));
-  galaxy.ownSpinSpeedMin = clampedNumber(galaxy.ownSpinSpeedMin, 0.002, 0, 0.1);
-  galaxy.ownSpinSpeedMax = Math.max(galaxy.ownSpinSpeedMin, clampedNumber(galaxy.ownSpinSpeedMax, 0.012, 0, 0.1));
-  galaxy.orbitSpeedMultiplier = clampedNumber(galaxy.orbitSpeedMultiplier, 1, 0, 5);
+  galaxy.orbitSpeedMin = clampedNumber(galaxy.orbitSpeedMin, 0.002, 0, 0.1);
+  galaxy.orbitSpeedMax = Math.max(galaxy.orbitSpeedMin, clampedNumber(galaxy.orbitSpeedMax, 0.005, 0, 0.1));
+  galaxy.ownSpinSpeedMin = clampedNumber(galaxy.ownSpinSpeedMin, 0.0635, 0, 0.1);
+  galaxy.ownSpinSpeedMax = Math.max(galaxy.ownSpinSpeedMin, clampedNumber(galaxy.ownSpinSpeedMax, 0.0815, 0, 0.1));
+  galaxy.orbitSpeedMultiplier = clampedNumber(galaxy.orbitSpeedMultiplier, 0, 0, 5);
   galaxy.ownSpinSpeedMultiplier = clampedNumber(galaxy.ownSpinSpeedMultiplier, 1, 0, 5);
-  galaxy.additiveBlending = Boolean(galaxy.additiveBlending ?? false);
-  galaxy.alphaTest = clampedNumber(galaxy.alphaTest, 0.01, 0, 1);
+  galaxy.additiveBlending = Boolean(galaxy.additiveBlending ?? true);
+  galaxy.alphaTest = clampedNumber(galaxy.alphaTest, 1, 0, 1);
   galaxy.randomSeed = finiteNumber(galaxy.randomSeed, 1337);
 }
 
@@ -218,24 +233,13 @@ export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere, 
   try {
     const stored = JSON.parse(localStorage.getItem(OPTIONS_STORAGE_KEY) ?? 'null');
     if (stored?.version === OPTIONS_DEFAULTS_VERSION && stored?.runtimeState) {
-      Object.assign(runtimeState.backgroundAtmosphere, stored.runtimeState.backgroundAtmosphere ?? {});
-      Object.assign(runtimeState.sunCycle, stored.runtimeState.sunCycle ?? {});
-      runtimeState.sunCycle.spotlight = { ...runtimeState.sunCycle.spotlight, ...(stored.runtimeState.sunCycle?.spotlight ?? {}) };
-      Object.assign(runtimeState.moonCycle, stored.runtimeState.moonCycle ?? {});
-      runtimeState.moonCycle.spotlight = { ...runtimeState.moonCycle.spotlight, ...(stored.runtimeState.moonCycle?.spotlight ?? {}) };
-      Object.assign(runtimeState.galaxySprites, stored.runtimeState.galaxySprites ?? {});
+      mergeRuntimeState(runtimeState, stored.runtimeState, defaults);
     }
-  } catch {}
+  } catch (error) {
+    console.warn('[options] Ignoring unreadable saved runtime state.', error);
+  }
 
-  runtimeState.backgroundAtmosphere.smallGlyphRelics = {
-    ...deepClone(defaults.backgroundAtmosphere.smallGlyphRelics),
-    ...(runtimeState.backgroundAtmosphere.smallGlyphRelics ?? {})
-  };
-  runtimeState.galaxySprites = {
-    ...deepClone(defaults.galaxySprites),
-    ...(runtimeState.galaxySprites ?? {})
-  };
-
+  mergeRuntimeState(runtimeState, runtimeState, defaults);
   normalizeRuntimeState(runtimeState);
 
   const root = document.createElement('div');
@@ -262,10 +266,11 @@ export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere, 
   resetAll.textContent = 'Reset all';
   resetAll.addEventListener('click', () => {
     Object.assign(runtimeState.backgroundAtmosphere, deepClone(defaults.backgroundAtmosphere));
-    runtimeState.sunCycle = deepClone(defaults.sunCycle);
-    runtimeState.moonCycle = deepClone(defaults.moonCycle);
+    Object.assign(runtimeState.sunCycle, deepClone(defaults.sunCycle));
+    Object.assign(runtimeState.moonCycle, deepClone(defaults.moonCycle));
     Object.assign(runtimeState.galaxySprites, deepClone(defaults.galaxySprites));
     normalizeRuntimeState(runtimeState);
+    atmosphereProgression?.resetProgression?.();
     onChange({ type: 'reset-all' });
     persistState();
     renderAll();
@@ -293,7 +298,7 @@ export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere, 
     saveButton.textContent = `Save ${slot}`;
     saveButton.className = 'options-panel__preset-btn';
     saveButton.addEventListener('click', () => {
-      localStorage.setItem(PRESET_SLOT_KEYS[slot - 1], JSON.stringify({ version: OPTIONS_DEFAULTS_VERSION, runtimeState: { backgroundAtmosphere: deepClone(runtimeState.backgroundAtmosphere), sunCycle: deepClone(runtimeState.sunCycle), moonCycle: deepClone(runtimeState.moonCycle), galaxySprites: deepClone(runtimeState.galaxySprites) } }));
+      localStorage.setItem(PRESET_SLOT_KEYS[slot - 1], JSON.stringify({ version: OPTIONS_DEFAULTS_VERSION, runtimeState: deepClone(runtimeState), progression: getProgressionSettings() }));
       setPresetStatus(`Zapisano slot ${slot}`);
     });
     const loadButton = document.createElement('button');
@@ -309,14 +314,11 @@ export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere, 
       }
       try {
         const parsed = JSON.parse(raw);
+        if (parsed?.version !== OPTIONS_DEFAULTS_VERSION) { setPresetStatus(`Slot ${slot} ma niezgodną wersję — nie zastosowano`); return; }
         if (!parsed?.runtimeState?.backgroundAtmosphere) throw new Error('Invalid preset shape');
-        Object.assign(runtimeState.backgroundAtmosphere, parsed.runtimeState.backgroundAtmosphere);
-        Object.assign(runtimeState.sunCycle, parsed.runtimeState.sunCycle ?? defaults.sunCycle);
-        Object.assign(runtimeState.moonCycle, parsed.runtimeState.moonCycle ?? defaults.moonCycle);
-        Object.assign(runtimeState.galaxySprites, parsed.runtimeState.galaxySprites ?? defaults.galaxySprites);
-        runtimeState.sunCycle.spotlight = { ...deepClone(defaults.sunCycle.spotlight), ...(parsed.runtimeState.sunCycle?.spotlight ?? {}) };
-        runtimeState.moonCycle.spotlight = { ...deepClone(defaults.moonCycle.spotlight), ...(parsed.runtimeState.moonCycle?.spotlight ?? {}) };
+        mergeRuntimeState(runtimeState, parsed.runtimeState, defaults);
         normalizeRuntimeState(runtimeState);
+        atmosphereProgression?.importProgressionSettings?.(parsed.progression ?? {});
         onChange({ type: 'rebuild' });
         persistState();
         renderAll();
@@ -333,11 +335,20 @@ export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere, 
   makePresetRow(2);
   makePresetRow(3);
 
+  const getProgressionSettings = () => {
+    const state = atmosphereProgression?.getProgressionDebugState?.();
+    return {
+      progressionEnabled: state?.progressionEnabled ?? true,
+      autoProgressOnUniqueGateClose: state?.autoProgressOnUniqueGateClose ?? true,
+      transitionTimes: deepClone(state?.transitionTimes ?? {})
+    };
+  };
+
   const exportDebugSettings = () => {
     const progressionDebugState = atmosphereProgression?.getProgressionDebugState?.() ?? null;
     const transitionSeconds = toThresholdSeconds(progressionDebugState?.transitionTimes);
     const exportPayload = {
-      schemaVersion: 1,
+      schemaVersion: 2,
       exportedAt: new Date().toISOString(),
       source: 'portfolio-debug-panel',
       progression: {
@@ -375,7 +386,6 @@ export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere, 
         sunSpotlight: deepClone(runtimeState.sunCycle.spotlight),
         moonSpotlight: deepClone(runtimeState.moonCycle.spotlight)
       },
-      camera: {},
       rawDebugState: {
         runtimeState: deepClone(runtimeState),
         progression: progressionDebugState
@@ -404,12 +414,7 @@ export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere, 
           throw new Error('Invalid debug settings JSON shape');
         }
 
-        if (importedState.backgroundAtmosphere) Object.assign(runtimeState.backgroundAtmosphere, importedState.backgroundAtmosphere);
-        if (importedState.sunCycle) Object.assign(runtimeState.sunCycle, importedState.sunCycle);
-        if (importedState.moonCycle) Object.assign(runtimeState.moonCycle, importedState.moonCycle);
-        if (importedState.galaxySprites) Object.assign(runtimeState.galaxySprites, importedState.galaxySprites);
-        runtimeState.sunCycle.spotlight = { ...deepClone(defaults.sunCycle.spotlight), ...(runtimeState.sunCycle.spotlight ?? {}) };
-        runtimeState.moonCycle.spotlight = { ...deepClone(defaults.moonCycle.spotlight), ...(runtimeState.moonCycle.spotlight ?? {}) };
+        mergeRuntimeState(runtimeState, importedState, defaults);
         normalizeRuntimeState(runtimeState);
         atmosphereProgression?.importProgressionSettings?.(parsed.progression ?? parsed.rawDebugState?.progression ?? {});
         onChange({ type: 'rebuild' });
@@ -472,8 +477,8 @@ export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere, 
   sunCycleReset.textContent = 'Reset Sun Cycle';
   sunCycleReset.className = 'options-panel__section-reset';
   sunCycleReset.addEventListener('click', () => {
-    runtimeState.sunCycle = deepClone(defaults.sunCycle);
-    runtimeState.moonCycle = deepClone(defaults.moonCycle);
+    Object.assign(runtimeState.sunCycle, deepClone(defaults.sunCycle));
+    Object.assign(runtimeState.moonCycle, deepClone(defaults.moonCycle));
     normalizeRuntimeState(runtimeState);
     onChange({ type: 'sun-cycle' });
     persistState();
@@ -485,7 +490,7 @@ export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere, 
   moonCycleReset.textContent = 'Reset Moon Cycle';
   moonCycleReset.className = 'options-panel__section-reset';
   moonCycleReset.addEventListener('click', () => {
-    runtimeState.moonCycle = deepClone(defaults.moonCycle);
+    Object.assign(runtimeState.moonCycle, deepClone(defaults.moonCycle));
     normalizeRuntimeState(runtimeState);
     onChange({ type: 'moon-cycle' });
     persistState();
@@ -504,7 +509,7 @@ export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere, 
   stoneReset.textContent = 'Reset Stone Relics';
   stoneReset.className = 'options-panel__section-reset';
   stoneReset.addEventListener('click', () => {
-    bg.stoneRelics = deepClone(defaults.backgroundAtmosphere.stoneRelics);
+    Object.assign(bg.stoneRelics, deepClone(defaults.backgroundAtmosphere.stoneRelics));
     normalizeRuntimeState(runtimeState);
     onChange({ type: 'stone-rebuild' });
     persistState();
@@ -524,7 +529,7 @@ export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere, 
   shellReset.textContent = 'Reset Shell Relics';
   shellReset.className = 'options-panel__section-reset';
   shellReset.addEventListener('click', () => {
-    bg.shellRelics = deepClone(defaults.backgroundAtmosphere.shellRelics);
+    Object.assign(bg.shellRelics, deepClone(defaults.backgroundAtmosphere.shellRelics));
     normalizeRuntimeState(runtimeState);
     onChange({ type: 'shell-rebuild' });
     persistState();
@@ -544,7 +549,7 @@ export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere, 
   smallGlyphReset.textContent = 'Reset Small Glyph Relics';
   smallGlyphReset.className = 'options-panel__section-reset';
   smallGlyphReset.addEventListener('click', () => {
-    bg.smallGlyphRelics = deepClone(defaults.backgroundAtmosphere.smallGlyphRelics);
+    Object.assign(bg.smallGlyphRelics, deepClone(defaults.backgroundAtmosphere.smallGlyphRelics));
     normalizeRuntimeState(runtimeState);
     onChange({ type: 'small-glyph-rebuild' });
     persistState();
@@ -758,8 +763,6 @@ export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere, 
 
   bind(checkbox(path(() => moon.enabled, (v) => { moon.enabled = v; }, 'moon-cycle'), moonCycleSection.body, 'moonCycle.enabled'));
   bind(range(path(() => moon.radius, (v) => { moon.radius = v; }, 'moon-cycle'), moonCycleSection.body, 'moonCycle.radius', 1, 30, 0.1));
-  bind(range(path(() => moon.angularSpeed, (v) => { moon.angularSpeed = v; }, 'moon-cycle'), moonCycleSection.body, 'moonCycle.angularSpeed', 0, 1, 0.001));
-  bind(select(path(() => String(moon.direction), (v) => { moon.direction = Number(v); }, 'moon-cycle'), moonCycleSection.body, 'moonCycle.direction', [{ value: '1', label: 'Forward' }, { value: '-1', label: 'Reverse' }]));
   bind(range(path(() => moon.scale, (v) => { moon.scale = v; }, 'moon-cycle'), moonCycleSection.body, 'moonCycle.scale', 0.05, 10, 0.05));
   bind(range(path(() => moon.debugScaleMultiplier, (v) => { moon.debugScaleMultiplier = v; }, 'moon-cycle'), moonCycleSection.body, 'moonCycle.debugScaleMultiplier', 0.1, 10, 0.1));
   bind(checkbox(path(() => moon.lockFacing, (v) => { moon.lockFacing = v; }, 'moon-cycle'), moonCycleSection.body, 'moonCycle.lockFacing'));
@@ -912,7 +915,8 @@ export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere, 
   function persistState() {
     localStorage.setItem(OPTIONS_STORAGE_KEY, JSON.stringify({
       version: OPTIONS_DEFAULTS_VERSION,
-      runtimeState: { backgroundAtmosphere: deepClone(runtimeState.backgroundAtmosphere), sunCycle: deepClone(runtimeState.sunCycle), moonCycle: deepClone(runtimeState.moonCycle), galaxySprites: deepClone(runtimeState.galaxySprites) }
+      runtimeState: deepClone(runtimeState),
+      progression: getProgressionSettings()
     }));
   }
 

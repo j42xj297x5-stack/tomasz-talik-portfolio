@@ -20,7 +20,7 @@ export const SUN_MOON_LIGHT_MULTIPLIERS = Object.freeze({
 
 const clampLevel = (value) => THREE.MathUtils.clamp(Math.round(Number(value) || 0), 0, 5);
 const clamp01 = (value) => THREE.MathUtils.clamp(Number(value) || 0, 0, 1);
-const DEFAULT_TRANSITION_SECONDS = 10;
+const DEFAULT_TRANSITION_SECONDS = 5;
 
 function createTransitionTimes(overrides = {}) {
   return ATMOSPHERE_PROGRESSION_LAYER_ORDER.reduce((times, key, index) => {
@@ -196,8 +196,9 @@ export function createAtmosphereProgression({ gateIds = [] } = {}) {
     importProgressionSettings(next = {}) {
       if ('enabled' in next || 'progressionEnabled' in next) state.progressionEnabled = Boolean(next.enabled ?? next.progressionEnabled);
       if ('autoProgressOnUniqueGateClose' in next) state.autoProgressOnUniqueGateClose = Boolean(next.autoProgressOnUniqueGateClose);
-      if ('progressLevel' in next) state.progressLevel = clampLevel(next.progressLevel);
-      if (Array.isArray(next.visitedGateIds)) state.visitedGateIds = new Set(next.visitedGateIds.filter(Boolean));
+      // Exported progression session state is diagnostic only; imports begin at the clean baseline.
+      state.visitedGateIds.clear();
+      state.progressLevel = 0;
       if (next.transitionSeconds || next.transitionTimes) state.transitionTimes = createTransitionTimes(next.transitionSeconds ?? next.transitionTimes);
       state.pendingGateId = null;
       setCurrentToTargets();
