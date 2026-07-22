@@ -125,6 +125,12 @@ Projekt pokazuje moje podejście do narzędzi użytkowych: dane mają być czyte
     eyebrow: 'INTERACTIVE WORLD SYSTEM',
     modelPath: '/glb/glyph_5.glb',
     modelKind: 'glyph',
+    plaqueModelPath: '/glb/plaque_haiku_cosmos.glb',
+    plaqueVisual: {
+      scale: 1,
+      position: [0, 0, 0],
+      frontYawOffset: 0
+    },
     ornamentPath: '/png/haiku_cosmos_ornament.png',
     demoGifPath: '/gif/Haiku_Cosmos.gif',
     demoGifAlt: 'Animowane demo Haiku Cosmos prezentujące świat gry i narzędzia debugowe',
@@ -352,6 +358,12 @@ Projekt pokazuje kompetencje w game designie, system designie, Three.js, pipelin
     eyebrow: 'Ziemia',
     modelPath: '/glb/glyph_3.glb',
     modelKind: 'glyph',
+    plaqueModelPath: '/glb/plaque_ethics.glb',
+    plaqueVisual: {
+      scale: 1,
+      position: [0, 0, 0],
+      frontYawOffset: 0
+    },
     ornamentPath: '/png/ai_ethics_ornament.png',
     draftText: 'AI nie jest tylko narzędziem przyspieszania pracy. Jest siłą, która wzmacnia intencje człowieka — dobre i złe.',
     bodyText: `AI nie jest tylko narzędziem przyspieszania pracy.
