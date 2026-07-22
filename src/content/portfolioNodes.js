@@ -9,7 +9,8 @@ export const portfolioNodes = [
     plaqueVisual: {
       scale: 1,
       position: [0, 0, 0],
-      frontYawOffset: 0
+      frontYawOffset: 0,
+      plaqueGlowColor: '#72D6B0'
     },
     ornamentPath: '/png/ai_guide_ornament.png',
     draftText: 'Pomagam ludziom oswoić AI tam, gdzie technologia spotyka lęk, chaos i potrzebę sensu. Tłumaczę narzędzia, projektuję proste workflowy i prowadzę przez pierwsze kroki tak, żeby człowiek odzyskał sprawczość, zamiast czuć się przytłoczony rewolucją technologiczną. Z chaosu narzędzi powstaje spokojny proces.',
@@ -29,7 +30,8 @@ export const portfolioNodes = [
     plaqueVisual: {
       scale: 1,
       position: [0, 0, 0],
-      frontYawOffset: 0
+      frontYawOffset: 0,
+      plaqueGlowColor: '#5FB8FF'
     },
     ornamentPath: '/png/digger_ornament.png',
     demoGifPath: '/gif/DIG_engine.gif',
@@ -129,7 +131,8 @@ Projekt pokazuje moje podejście do narzędzi użytkowych: dane mają być czyte
     plaqueVisual: {
       scale: 1,
       position: [0, 0, 0],
-      frontYawOffset: 0
+      frontYawOffset: 0,
+      plaqueGlowColor: '#7B8DFF'
     },
     ornamentPath: '/png/haiku_cosmos_ornament.png',
     demoGifPath: '/gif/Haiku_Cosmos.gif',
@@ -343,7 +346,8 @@ Projekt pokazuje kompetencje w game designie, system designie, Three.js, pipelin
     plaqueVisual: {
       scale: 1,
       position: [0, 0, 0],
-      frontYawOffset: 0
+      frontYawOffset: 0,
+      plaqueGlowColor: '#FF9C47'
     },
     ornamentPath: '/png/creative_ai_ornament.png',
     draftText: 'Pracuję z AI jak z żywym szkicownikiem, laboratorium obrazu i drugim obiegiem wyobraźni. Tworzę plakaty, grafiki, fotoedycje, cenniki, koncepcje wizualne i małe artefakty codziennego użytku — prowadząc proces od intuicji, przez prompt, obraz, korektę i kompozycję, aż do gotowej formy. AI nie zastępuje twórcy. Pomaga szybciej wydobyć z pomysłu jego kształt, ton i emocję.',
@@ -362,7 +366,8 @@ Projekt pokazuje kompetencje w game designie, system designie, Three.js, pipelin
     plaqueVisual: {
       scale: 1,
       position: [0, 0, 0],
-      frontYawOffset: 0
+      frontYawOffset: 0,
+      plaqueGlowColor: '#E7D6A3'
     },
     ornamentPath: '/png/ai_ethics_ornament.png',
     draftText: 'AI nie jest tylko narzędziem przyspieszania pracy. Jest siłą, która wzmacnia intencje człowieka — dobre i złe.',

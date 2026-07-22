@@ -94,7 +94,7 @@ export function createPlaqueTransition({ scene, assetManager }) {
     wrapper.add(model);
     const glow = new THREE.Mesh(
       new THREE.SphereGeometry(Math.max(size.x, size.y, size.z) * 0.55, 20, 16),
-      new THREE.MeshBasicMaterial({ color: '#ff9c47', transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false })
+      new THREE.MeshBasicMaterial({ color: visual.plaqueGlowColor ?? '#FF9C47', transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false })
     );
     glow.raycast = () => {};
     wrapper.add(glow);
