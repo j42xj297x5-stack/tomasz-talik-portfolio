@@ -1,25 +1,25 @@
 # Frontend Runtime Model
 
-## Current runtime
+## Runtime ownership
 
-The application uses Vite, vanilla JavaScript and vendored Three.js. `src/main.js` owns the entry shell: language and mode selection, small persisted selection state, Classic 2D routing, and the conditional dynamic import of Experience 3D. It does not own the Experience 3D renderer or animation loop.
+The application uses Vite, vanilla JavaScript, and vendored Three.js. `src/main.js` owns language/mode selection and conditionally imports Experience 3D. `src/experience3d.js` then owns the canvas shell, renderer, scene wiring, staged asset loading, input, overlay coordination, and animation loop. Public runtime paths use `publicPath(...)` for local Vite and GitHub Pages compatibility.
 
-`src/experience3d.js` owns the Experience 3D canvas shell, renderer, scene wiring, loading and asset-preload stages, camera/input, overlays, debug tooling, and animation loop. Experience 3D starts only after its explicit mode selection. Public runtime paths use `publicPath(...)` for local Vite and GitHub Pages compatibility.
+Classic 2D remains a separate lightweight runtime in `src/classic2d.js`; it consumes the same `portfolioNodes` records without loading Three.js.
 
-## Classic 2D
+## Experience 3D project opening
 
-`src/classic2d.js` is an implemented, polished lightweight portfolio path. It uses the shared `portfolioNodes` records, the central monkey PNG and five glyph sprites. On desktop its square scene scales to the available shorter dimension; the monkey is centred with an optical correction and the five glyph controls form a regular pentagon with labels facing outward. On mobile the monkey is at the top and the glyphs become a vertical list. Its readable, internally scrolling panels, hero hierarchy and footer return CTA are CSS/HTML owned. Classic 2D remains separate from Three.js and does not duplicate portfolio content.
+The Experience 3D project detail flow is a single serialized interaction. Selecting a glyph blocks new interaction and pauses its orbit. The runtime focuses the camera on that node, reveals the configured plaque, holds, and performs a safe dolly-in. The HTML/CSS overlay opens only after that sequence completes.
 
-## Experience 3D panels
+Closing the overlay keeps the selected node context long enough to dolly out, perform the reverse plaque reveal, return the camera home, resume orbit, unlock interaction, and smoothly hand the camera to the latest remembered fine-pointer target. Fine-pointer handoff takes 1500 ms. Coarse-pointer and reduced-motion contexts use shortened transition timings while preserving the same ordering.
 
-Experience 3D uses one shared, full-viewport overlay contract on desktop and mobile. `src/ui/overlay.js` derives panel content from `portfolioNodes`, applies `data-panel-theme`, resolves `ornamentPath` through `publicPath(...)`, and renders an opaque CSS gradient panel with an internal scrolling content region and clipping viewport. Responsive ornaments sit in that CSS/HTML layer.
+If an individual plaque cannot load, the same node's HTML/CSS overlay opens through an isolated fallback; the failure does not block other nodes.
 
-The SVG frame, its fetch, geometry and resize solvers, and frame diagnostics have been removed from runtime. Legacy vertical panel PNGs and `portfolio_frame_mobile_*` SVGs can remain in `public/` as historical files, but they are not runtime dependencies or preload inputs.
+## Overlay and content boundary
 
-## Camera and interaction
+`src/ui/overlay.js` derives project detail from `portfolioNodes`, applies `data-panel-theme`, resolves `ornamentPath` through `publicPath(...)`, and renders an opaque, responsive CSS/HTML panel with internal scrolling. Plaque models are transitional 3D presentation, not a replacement for readable panel content.
 
-When an Experience 3D panel opens, `experience3d.js` pauses fine-pointer camera control through `cameraRig.js`. The overlay close callback resumes toward the latest remembered fine-pointer position; the rig smoothsteps the handoff for 1500 ms before normal mouse damping resumes. Existing yaw and pitch limits and touch fallback behavior remain unchanged.
+The removed SVG-frame runtime, its fetch/geometry/resize solvers, and legacy vertical panel assets are not active dependencies.
 
-## Runtime safety
+## Asset and rendering safety
 
-Vendored Three.js r184 and the matching GLTFLoader remain runtime sources of truth; npm `three` is intentionally not the runtime source. The monkey and glyph model paths retain fallbacks. Asset loading, diagnostics, and base-aware public paths remain part of the Experience 3D contract.
+`src/assets/assetManifest.js` derives five plaque GLB entries from `portfolioNodes` into the `deferredWarm` stage. `src/scene/plaqueTransition.js` caches a cloned plaque wrapper per node and ensures only one transition is active. Glyph and monkey model fallbacks remain mandatory. Vendored Three.js r184 with matching GLTFLoader remains the runtime source of truth; npm `three` is intentionally not the runtime source.

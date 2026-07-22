@@ -1,90 +1,63 @@
 # Three Scene Model
 
-Current scene responsibilities:
-- Central GLB loader module in `src/scene/monkeyModel.js` attempts to load `/glb/monkey.glb` via vendored GLTFLoader path (`vendor/three/examples/jsm/loaders/GLTFLoader.js`).
-- Renderer + animation loop managed from `src/experience3d.js`.
-- Scene bootstrap in `src/scene/createScene.js` with dark background and fog.
-- Soft lighting setup in `src/scene/lights.js`.
-- Temporary central symbolic placeholder in `src/scene/centralObject.js`.
-- Five interactive orbit nodes in `src/scene/orbitNodes.js`.
-- Lightweight atmospheric particles in `src/scene/particles.js`.
-- Raycast picking in `src/scene/raycaster.js`.
-- Calm camera idle drift in `src/scene/cameraRig.js`.
+## Scene responsibilities
 
-Current status note:
-- Central placeholder remains mandatory fallback and is hidden only after successful monkey GLB load.
-- Monkey GLB binary is expected at `public/glb/monkey.glb` and is managed manually outside Codex PR flow.
-- Central object is explicitly temporary and only represents the future meditating monkey model.
-- Node interactions use HTML overlay and hover label for readability instead of in-scene text.
-- Monkey GLB now loads successfully in local runtime and hides the central placeholder only on successful load; placeholder fallback remains mandatory.
-- Current visual tuning keeps the monkey centered, camera-facing, and slightly smaller for clean orbit separation.
-- Orbit radius and light intensities were minimally increased to improve readability while preserving the calm dark atmosphere.
-- Orbit node visuals now support optional per-node GLB attachments for all five nodes while preserving the sphere mesh as the raycast/collider and visual fallback.
-- Next scene step may be post-MVP snapshot capture or small interaction polish.
+- `src/experience3d.js` owns the renderer, animation loop, scene wiring, input routing, preload stages, and guarded project interaction state.
+- `src/scene/createScene.js`, `lights.js`, `particles.js`, and the sun/moon/galaxy modules provide the atmospheric scene.
+- `src/scene/monkeyModel.js` loads `/glb/monkey.glb` through vendored Three.js r184 GLTFLoader; the central placeholder remains the safe visual fallback.
+- `src/scene/orbitNodes.js` creates five GLB glyph visuals while keeping the node sphere as raycast collider and fallback. It owns orbit motion plus the shared hover and transition lights.
+- `src/scene/cameraRig.js` owns interactive orbit, focus, plaque dolly, return-home, and fine-pointer handoff.
+- `src/scene/plaqueTransition.js` owns the per-node plaque model lifecycle and glyph/plaque cross-fade.
+- `src/ui/overlay.js` owns readable project content in HTML/CSS; text content is not rendered inside the scene.
 
-- Vendored Three.js baseline is `r184`; GLTFLoader must also be sourced from `r184` only.
-- Required loader file path: `vendor/three/examples/jsm/loaders/GLTFLoader.js`.
-- Runtime monkey asset URL: `/glb/monkey.glb` (local file: `public/glb/monkey.glb`, manually managed binary).
-- Placeholder fallback is mandatory when loader or GLB is unavailable.
-- npm `three` dependency remains intentionally unused in runtime integration.
+## Interaction sequence
 
-- GLTFLoader r184 is vendored at `vendor/three/examples/jsm/loaders/GLTFLoader.js`.
-- Required GLTFLoader utilities are vendored at `vendor/three/examples/jsm/utils/BufferGeometryUtils.js` and `vendor/three/examples/jsm/utils/SkeletonUtils.js`.
-- Vite resolve alias maps bare `three` imports to local vendored module `vendor/three/three.module.js` via `vite.config.js`.
-- Camera rig now uses mouse-driven orbital motion around a fixed monkey pivot (`0, 0.8, 0`) with smooth damping and continuous `lookAt` target lock.
-- Horizontal orbit is clamped by named constant to ±45° (`MAX_YAW_DEG`).
-- Vertical orbit uses named configurable limit (`MAX_PITCH_DEG`) currently set to 30° as a calmer default than the 45° upper bound.
-- Subtle idle drift remains as a secondary additive influence when mouse input is present and as primary fallback when it is not.
-- Desktop/fine-pointer devices get cursor-driven orbit; non-fine/touch pointer contexts keep neutral/idle behavior.
-- Opening a project overlay pauses fine-pointer camera targeting at its current direction. Pointer movement over the overlay is remembered without steering the camera; when any overlay close path completes, the rig smoothsteps to the latest cursor target over 1500 ms, updating that endpoint during the transition before returning to normal mouse damping.
-- AI Guide node can load `/glb/glyph_1.glb` as a visual override; if loader or asset fails, the original orbit sphere remains visible and interactive.
-- DIG Engine node can load `/glb/glyph_4.glb` as a visual override; if loader or asset fails, the original orbit sphere remains visible and interactive.
-- Creative AI node can load `/glb/glyph_2.glb` with the same fallback behavior and collider/raycast preservation.
-- Ethics / Life Protection node can load `/glb/glyph_3.glb` with the same fallback behavior and collider/raycast preservation (internal concept note: AI Dharma).
-- Haiku Cosmos node can load `/glb/glyph_5.glb` with the same fallback behavior and collider/raycast preservation.
+Only `idle` accepts normal hover and click/tap interaction. Clicking a glyph locks interaction and pauses orbit, then follows this guarded sequence:
 
-## Milestone checkpoint — central monkey + five glyph orbit nodes
-- First complete symbolic scene baseline is reached: central monkey + five GLB glyph orbit nodes.
-- Monkey runtime asset: `/glb/monkey.glb` (source `public/glb/monkey.glb`).
-- Node glyph runtime assets: `/glb/glyph_1.glb` through `/glb/glyph_5.glb` mapped from content metadata.
-- Mouse-driven camera orbit remains pivot-locked to monkey center without OrbitControls.
-- Hover labels, overlays, and sphere collider fallback behavior remain active.
-- Full checkpoint snapshot recorded at `docs/current/audits/snapshots/2026-05-22_15-38-35__snapshot__monkey-five-glyphs-runtime-baseline.md`.
+`idle → focusing → revealingPlaque → plaqueHold → dollyIn → panelOpen → dollyOut → restoringGlyph → returning → idle`.
 
+1. `cameraRig.focusOnNode(...)` moves on an eased azimuth arc around the fixed monkey pivot and targets the selected frozen glyph.
+2. `plaqueTransition.reveal(...)` cross-fades the glyph into its plaque.
+3. The plaque holds briefly, then `cameraRig.dollyToPlaque(...)` performs a bounds- and near-plane-safe dolly-in while retaining the focused camera side.
+4. Only after the dolly completes does the HTML/CSS overlay open.
+5. On close, the runtime dollies out, fades the transition light, reverses the plaque reveal, returns the camera home, resumes orbit and unlocks interaction.
+6. Fine-pointer movement remembered while locked is handed back over a 1500 ms smooth camera transition. Coarse-pointer and reduced-motion contexts retain this order with shorter timings; reduced motion caps camera transitions at 150 ms and plaque hold at 120 ms.
 
-## Checkpoint update — AI Guide tree effect in scene runtime (2026-05-22)
-- Scene runtime for node `ai-guide` includes dedicated tree effect model `/glb/glyph_1-tree.glb` plus safe fallback `/glb/glyph_1.glb`.
-- Tree effect is reveal-mask/shader based (visual growth), not runtime boolean/CSG geometry synthesis.
-- Lighting baseline for this effect is green emissive + orbiting green point light that persists while hover/active remains true.
-- Interaction safety remains mandatory: tree model/lights/helpers do not become raycast targets; collider ownership remains on node sphere/glyph node.
-- Full checkpoint details and parameter list are recorded in `docs/current/audits/snapshots/2026-05-22_18-18-33__snapshot__glyph-1-tree-effect-baseline.md`.
+## Plaque system
 
-## Checkpoint update — distant galaxy sprite layer (2026-05-29)
-- `src/scene/galaxySprites.js` owns the distant galaxy sprite layer as an isolated, visual-only `THREE.Group`; it is added by `src/experience3d.js` after the scene, sun, and moon setup and is updated from the main animation loop.
-- The layer uses `THREE.Sprite` + `THREE.SpriteMaterial`, so each transparent PNG sprite billboards toward the camera while retaining a per-material center spin via `SpriteMaterial.rotation`.
-- Galaxy sprites are not included in raycaster target lists and carry `userData.nonInteractive = true`; they must remain background atmosphere only and must not replace HTML overlay/hover interactions.
-- Instance generation is deterministic through `galaxySprites.randomSeed`, bounded by `totalMax`, and rejects the protected central reading cone so the monkey and five primary glyphs stay readable.
-- Motion is deliberately slow: each instance has independent radius, orbit angle, direction, speed, inclination, vertical offset, eccentricity, opacity variance, scale, and spin speed.
-- Reduced-motion users keep the layer visible, but orbit and spin speed are multiplied by `reducedMotionSpeedMultiplier` rather than removed.
+`portfolioNodes` is the configuration source for all five plaques. `assetManifest` derives the following `deferredWarm` entries from each node's `plaqueModelPath`:
 
-## Current renderer, loop and panel-camera contract
+| Node | Asset ID | GLB |
+| --- | --- | --- |
+| AI Guide (`ai-guide`) | `plaque-ai-guide` | `/glb/plaque_ai_guide.glb` |
+| Creative AI (`creative-ai`) | `plaque-creative-ai` | `/glb/plaque_creative_ai.glb` |
+| DIG Engine (`spotify-digger`) | `plaque-spotify-digger` | `/glb/plaque_dig_engine.glb` |
+| Ethics / Life Protection (`ethics-life-protection`) | `plaque-ethics-life-protection` | `/glb/plaque_ethics.glb` |
+| Haiku Cosmos (`haiku-cosmos`) | `plaque-haiku-cosmos` | `/glb/plaque_haiku_cosmos.glb` |
 
-- `src/experience3d.js` owns the Experience 3D renderer and its `requestAnimationFrame` animation loop; `src/main.js` only selects and launches the mode.
-- The camera remains pivoted on the monkey with the existing yaw/pitch limits and touch fallback behavior.
-- Glyph panel entry is a guarded runtime state sequence in `src/experience3d.js`: `idle` → `focusing` → `panelOpen` → `returning` → `idle`. Only `idle` accepts hover, click/tap, or touch-drag interaction.
-- On entry, the orbit controller returned by `createOrbitNodes()` pauses its accumulated orbit phase. This freezes both the glyph angle and wobble without using global elapsed time; hover one-shots already running still receive animation updates, but no new hover trigger can start during the sequence.
-- `cameraRig` owns one canonical camera pose (`yaw`, `pitch`, `radius`, `pivot`, and `lookAt`) for interactive orbit, cinematic focus/return, and pointer-resume handoff. Its immutable home pivot is `(0, 0.8, 0)`; orbit-group positions are never supplied as camera-home positions. Interactive yaw/pitch limits constrain only pointer input, never a cinematic pose.
-- `cameraRig.focusOnNode(...)` moves the canonical pose from its current position on an eased azimuth arc around the home pivot, maintains the base radius and home pivot, and moves the look target to the frozen selected glyph. The HTML overlay opens only after this operation resolves.
-- All five nodes opt into the same plaque sequence through their content metadata. The data-driven `deferredWarm` manifest derives every plaque asset from `plaqueModelPath`, without per-asset manifest entries:
-  - `ai-guide` → `plaque-ai-guide` → `/glb/plaque_ai_guide.glb`
-  - `creative-ai` → `plaque-creative-ai` → `/glb/plaque_creative_ai.glb`
-  - `spotify-digger` → `plaque-spotify-digger` → `/glb/plaque_dig_engine.glb`
-  - `haiku-cosmos` → `plaque-haiku-cosmos` → `/glb/plaque_haiku_cosmos.glb`
-  - `ethics-life-protection` → `plaque-ethics-life-protection` → `/glb/plaque_ethics.glb`
-  `src/scene/plaqueTransition.js` obtains a requested plaque only through `AssetManager` (or its on-demand `loadAsset` cache path).
-- The plaque controller keeps a reusable cloned wrapper in a `Map` per node id, so each of the five plaques can have at most one scene wrapper and reopening a node does not overwrite another model. It retains a single globally active transition because the interaction runtime serializes panel opening. Restore and reset resolve the passed node id, while fallback warnings are also tracked per node; a failure of one plaque therefore leaves the other plaques available.
-- `plaqueVisual.plaqueGlowColor` is a per-node visual token assigned while its cached plaque wrapper is created. It controls only the visible additive glow mesh used during the plaque transition, never the plaque GLB material or any scene, hover, transition, or plaque `PointLight`. The complete palette is: AI Guide `#72D6B0`; Creative AI `#FF9C47`; DIG Engine `#5FB8FF`; Ethics / Life Protection `#E7D6A3`; Haiku Cosmos `#7B8DFF`. A missing token falls back to `#FF9C47`.
-- The guarded plaque sequence for every enabled node is `focusing` → `revealingPlaque` → `plaqueHold` → `dollyIn` → `panelOpen` → `dollyOut` → `restoringGlyph` → `returning` → `idle`. Each controller instance normalizes its Box3 bounds, uses independent clone materials, disables raycasting, and cross-fades with the cloned-material glyph during the local warm transition. Plaque materials use fade mode during reveal and reverse, stable mode during the hold, dolly-in, panel-open, and dolly-out phases, then fully restore after reverse or reset. `plaqueHold` keeps plaque and camera still for 500 ms (120 ms with reduced motion). The overlay opens only after the plaque reveal and camera dolly; closing keeps the selected node reference, reverses the dolly and cross-fade (at roughly half duration), then uses the existing return-home and 1500 ms pointer handoff contract.
-- `cameraRig.dollyToPlaque(...)` changes only camera radius while retaining the canonical pivot, focused yaw, and pitch. It adds the plaque's radial distance from the pivot to the camera-to-plaque cover distance derived from world bounds, vertical/horizontal FOV, and aspect, then protects a near-plane margin. This keeps the camera on the exterior side of the plaque and stores the exact focus pose used by `dollyOut(...)`; resize does not recompute an open-panel pose.
-- Overlay close starts `cameraRig.returnHome(...)` first. It starts from that exact canonical focus pose and returns on an eased azimuth arc to yaw `0`, pitch `0`, the standard radius, and the canonical home pivot while interpolating the look target. Only after that promise resolves does the runtime resume the glyph orbit and unlock camera input.
-- Pointer movement is remembered while locked. After return, `cameraRig.resumeMouseControl(...)` retains the existing **1500 ms** smooth handoff from home to the last fine-pointer target; it explicitly keeps both the pose pivot and look target at the canonical home pivot until complete, and pointer updates change only its endpoint. Coarse-pointer transitions use shorter timings; reduced-motion transitions retain the same state ordering but are capped at 150 ms.
+The plaque controller caches one independently cloned wrapper per node ID in a `Map`. Interaction serialization allows only one active plaque animation at a time. A missing or failed plaque model produces an isolated panel fallback for that node; it does not invalidate cached or future plaques for other nodes.
+
+For each cached wrapper, `plaqueVisual` configures:
+
+- `scale` — model scale after bounds normalization;
+- `position` — local positional offset;
+- `frontYawOffset` — final front orientation relative to the camera-facing wrapper;
+- `plaqueGlowColor` — color of the visible additive glow mesh only.
+
+| Node | `plaqueGlowColor` |
+| --- | --- |
+| AI Guide | `#72D6B0` |
+| Creative AI | `#FF9C47` |
+| DIG Engine | `#5FB8FF` |
+| Ethics / Life Protection | `#E7D6A3` |
+| Haiku Cosmos | `#7B8DFF` |
+
+`plaqueGlowColor` does **not** change the neutral hover light, transition light, plaque `PointLight`, or GLB materials. Those lighting and material systems remain neutral/shared.
+
+## Material lifecycle and reset
+
+During reveal and reverse reveal, plaque GLB materials use **FADE MODE** so opacity and depth semantics support the cross-fade. After reveal, materials switch to **STABLE MODE** for `plaqueHold`, `dollyIn`, `panelOpen`, and `dollyOut`. Reverse reveal returns to FADE MODE, then restores the glyph and original plaque material state. `reset(...)` also hides the plaque, clears glow and plaque light, restores cloned glyph materials/visibility, and resets the node scale.
+
+## Hover contract
+
+All five glyphs use a shared one-shot scale pulse and neutral hover light. There are no active per-glyph tree, fire, spark, or ember-sphere effects. See [`GLYPH_HOVER_EFFECTS_MODEL.md`](GLYPH_HOVER_EFFECTS_MODEL.md) for the focused contract.
