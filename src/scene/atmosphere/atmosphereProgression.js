@@ -20,14 +20,20 @@ export const SUN_MOON_LIGHT_MULTIPLIERS = Object.freeze({
 
 const clampLevel = (value) => THREE.MathUtils.clamp(Math.round(Number(value) || 0), 0, 5);
 const clamp01 = (value) => THREE.MathUtils.clamp(Number(value) || 0, 0, 1);
-const DEFAULT_TRANSITION_SECONDS = 5;
+const DEFAULT_TRANSITION_TIMES = Object.freeze({
+  stones: 5,
+  shells: 5,
+  smallGlyphs: 5,
+  stars: 5,
+  galaxies: 10
+});
 
 function createTransitionTimes(overrides = {}) {
   return ATMOSPHERE_PROGRESSION_LAYER_ORDER.reduce((times, key, index) => {
     const legacyKeys = ['starsDust', 'shells', 'miniGlyphs', 'sunMoon', 'finalAura'];
-    const fallback = overrides[key] ?? overrides[`threshold${index + 1}`] ?? overrides[legacyKeys[index]] ?? DEFAULT_TRANSITION_SECONDS;
+    const fallback = overrides[key] ?? overrides[`threshold${index + 1}`] ?? overrides[legacyKeys[index]] ?? DEFAULT_TRANSITION_TIMES[key];
     const numeric = Number(fallback);
-    times[key] = Number.isFinite(numeric) && numeric > 0 ? numeric : DEFAULT_TRANSITION_SECONDS;
+    times[key] = Number.isFinite(numeric) && numeric > 0 ? numeric : DEFAULT_TRANSITION_TIMES[key];
     return times;
   }, {});
 }
@@ -211,7 +217,7 @@ export function createAtmosphereProgression({ gateIds = [] } = {}) {
 
       ATMOSPHERE_PROGRESSION_LAYER_ORDER.forEach((key) => {
         const target = targets[key];
-        const duration = Math.max(0.0001, Number(state.transitionTimes[key]) || DEFAULT_TRANSITION_SECONDS);
+        const duration = Math.max(0.0001, Number(state.transitionTimes[key]) || DEFAULT_TRANSITION_TIMES[key]);
         const step = delta / duration;
         const current = state.current[key];
         const next = target > current

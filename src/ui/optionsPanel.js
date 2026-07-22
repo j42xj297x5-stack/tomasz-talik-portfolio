@@ -5,7 +5,7 @@ function deepClone(value) {
 }
 
 const OPTIONS_STORAGE_KEY = 'portfolio.options.runtimeState.v1';
-const OPTIONS_DEFAULTS_VERSION = '2026-07-22-experience3d-baseline-v1';
+const OPTIONS_DEFAULTS_VERSION = '2026-07-22-experience3d-baseline-v2';
 const PRESET_SLOT_KEYS = ['portfolio.optionsPreset.1', 'portfolio.optionsPreset.2', 'portfolio.optionsPreset.3'];
 const SUN_MODEL_PATH = '/glb/sun.glb';
 
@@ -59,7 +59,7 @@ function toThresholdSeconds(transitionTimes = {}) {
     threshold2: finiteNumber(transitionTimes.shells, 5),
     threshold3: finiteNumber(transitionTimes.smallGlyphs, 5),
     threshold4: finiteNumber(transitionTimes.stars, 5),
-    threshold5: finiteNumber(transitionTimes.galaxies, 5)
+    threshold5: finiteNumber(transitionTimes.galaxies, 10)
   };
 }
 
