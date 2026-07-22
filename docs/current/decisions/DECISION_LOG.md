@@ -243,3 +243,13 @@ Consequences:
 1. `src/ui/overlay.js` exposes a single close callback to the Experience 3D runtime.
 2. `src/experience3d.js` coordinates the close callback with `cameraRig.resumeMouseControl(...)`.
 3. `src/scene/cameraRig.js` owns the transition timing and preserves the existing yaw/pitch limits and normal damping outside the handoff.
+
+## 2026-07-22 — Shared five-glyph plaque interaction
+
+Status: accepted / implemented.
+
+1. All five Experience 3D glyphs use one shared, data-driven plaque system; `portfolioNodes` supplies each plaque model and visual configuration.
+2. Unique hover effects are replaced by a common light scale/light one-shot for every glyph.
+3. Project detail remains in the readable HTML/CSS overlay; plaques are a scene transition rather than a content surface.
+4. Visible additive plaque glow is configured per node, while hover, transition, and plaque lighting plus GLB materials remain neutral/shared.
+5. Plaques are cached as one cloned instance per node, and interaction serialization permits one active plaque animation at a time.

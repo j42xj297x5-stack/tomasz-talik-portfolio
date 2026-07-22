@@ -1,174 +1,64 @@
 # Project Documentation Index
 
 Status: canonical architect entrypoint.
-Purpose: route humans and Codex to the smallest relevant documentation/runtime file pack for the task at hand.
+Purpose: route a task to the smallest current documentation and runtime evidence pack.
 
-> **Repository entrypoint:** Read [`PROJECT_ENTRY.md`](../../../PROJECT_ENTRY.md) before this index for the canonical access card and mandatory project-window order.
-
-## Purpose
-
-Use this document first when planning architecture, runtime, deployment, content, or documentation work. Its job is to prevent future sessions from reading the whole documentation tree by selecting the minimum useful file pack for each task type.
-
-For Codex sessions:
-- Start here before opening additional documentation.
-- Pick the task route that best matches the request.
-- Open only the files listed under **read first** unless the task requires deeper evidence.
-- Treat snapshots as evidence, not default context.
-- Do not scan `docs/current` recursively.
+> Read [`PROJECT_ENTRY.md`](../../../PROJECT_ENTRY.md) before this index.
 
 ## Current runtime baseline
 
-The current runtime baseline includes:
-- entry shell in `src/main.js` with conditional Experience 3D boot;
-- implemented Classic 2D: a responsive square/pentagon desktop composition, optically corrected central monkey, outward glyph labels, mobile monkey-plus-list layout, readable full-screen scrolling panels, and footer return CTA;
-- Experience 3D scene with central monkey, five glyph gates, loading diagnostics, atmosphere, galaxy sprites, mobile input, and base-aware public paths;
-- one full-screen Experience 3D panel system with opaque CSS gradients keyed by `data-panel-theme`, responsive `ornamentPath`, internal scrolling, and no SVG frame;
-- shared `portfolioNodes` content, including Haiku Cosmos case study, demo GIF, project links, and ornament metadata;
-- paused camera steering while an Experience 3D panel is open, followed by a 1500 ms smooth handoff to the latest cursor target after close.
+The project has a conditional Classic 2D / Experience 3D entry shell. Experience 3D is a Three.js scene with five GLB glyphs, a shared data-driven plaque transition for every glyph, and HTML/CSS detail panels. The plaque sequence focuses the camera, reveals the selected plaque, holds, dollies in safely, and only then opens the panel. Closing reverses that sequence before returning the camera and handing cursor control back smoothly.
 
-The former SVG-frame checkpoint is historical evidence, not the current baseline. Open follow-ups remain in [Known open topics / next audit targets](#known-open-topics--next-audit-targets).
+Hover is deliberately shared and light: every glyph uses the same one-shot scale/light response. Tree, fire, spark, and ember-sphere hover systems are not active runtime behavior.
 
 ## Read-this-first minimal pack
 
-For most architecture/runtime tasks, start with only this pack:
+For a general Experience 3D architecture task, read:
+
 - `docs/current/maps/PROJECT_INDEX.md`
 - `docs/current/maps/DEPENDENCY_MAP.md`
-- `src/main.js`
-- `src/experience3d.js`
 - `docs/current/technical/FRONTEND_RUNTIME_MODEL.md`
 - `docs/current/technical/THREE_SCENE_MODEL.md`
+- `src/experience3d.js`
 
-Do not read the whole `docs/current` tree by default.
+Do not scan `docs/current` recursively. Read an additional module only when the route below identifies it.
 
-## Task-based routing table
+## Task routes
 
-| Task type | Read first | Read only if needed | Do not read by default | Likely runtime files | Likely documentation files |
-| --- | --- | --- | --- | --- | --- |
-| Scene/bootstrap/runtime wiring | `src/main.js`; `docs/current/technical/ARCHITECTURE.md`; `docs/current/technical/THREE_SCENE_MODEL.md` | Specific imported modules from `src/scene/*`, `src/ui/*`, or `src/content/portfolioNodes.js` | Concept docs; old snapshots; glyph effect docs unless glyph behavior is touched | `src/main.js`; `src/scene/*`; `src/ui/*`; `src/content/portfolioNodes.js` | `docs/current/technical/ARCHITECTURE.md`; `docs/current/technical/THREE_SCENE_MODEL.md`; `docs/current/maps/DEPENDENCY_MAP.md` |
-| Galaxy sprites | `src/scene/galaxySprites.js`; `src/utils/publicPath.js`; `src/main.js`; latest galaxy/progression/mobile snapshot | `docs/current/technical/FRONTEND_RUNTIME_MODEL.md`; `docs/current/technical/DEPLOYMENT_MODEL.md` | `CONTENT_MODEL`; `GLYPH_HOVER_EFFECTS_MODEL`; concept/roadmap docs | `src/scene/galaxySprites.js`; `src/utils/publicPath.js`; `src/main.js`; `public/png/galaxy_01.png` through `public/png/galaxy_05.png` | `docs/current/audits/snapshots/2026-05-30_07-10-52__snapshot__galaxy-progress-loader-mobile-runtime.md`; `docs/current/technical/FRONTEND_RUNTIME_MODEL.md`; `docs/current/technical/DEPLOYMENT_MODEL.md` |
-| Deployment / public assets / GitHub Pages | `vite.config.js`; `src/utils/publicPath.js`; `docs/current/technical/DEPLOYMENT_MODEL.md`; `docs/current/technical/FRONTEND_RUNTIME_MODEL.md` | `index.html`; `src/main.js`; latest deployment snapshot | Scene effect docs; content docs; concept docs | `vite.config.js`; `index.html`; `src/utils/publicPath.js`; `src/main.js`; `public/glb/monkey.glb`; `public/png/*` | `docs/current/technical/DEPLOYMENT_MODEL.md`; `docs/current/technical/FRONTEND_RUNTIME_MODEL.md`; `docs/current/audits/snapshots/2026-05-29_19-59-42__snapshot__dual-runtime-github-pages-deployment.md` |
-| Mobile input/orientation | `src/main.js`; relevant input/camera modules discovered from imports; latest galaxy/progression/loader/mobile snapshot | `docs/current/technical/FRONTEND_RUNTIME_MODEL.md`; `docs/current/technical/THREE_SCENE_MODEL.md` | Deployment docs unless path/build issue appears; content/copy docs | `src/main.js`; relevant `src/scene/*` camera/input modules; relevant `src/ui/*` modules | `docs/current/audits/snapshots/2026-05-30_07-10-52__snapshot__galaxy-progress-loader-mobile-runtime.md`; `docs/current/technical/FRONTEND_RUNTIME_MODEL.md`; `docs/current/technical/THREE_SCENE_MODEL.md` |
-| Overlay/content panels | `src/ui/*`; `src/content/portfolioNodes.js`; `src/styles/main.css`; `docs/current/technical/CONTENT_MODEL.md` | `src/main.js`; concept docs for tone only | Deployment docs; galaxy sprite docs; loader snapshots | `src/ui/*`; `src/content/portfolioNodes.js`; `src/styles/main.css`; `src/main.js` | `docs/current/technical/CONTENT_MODEL.md`; source concept document only if changing meaning/tone |
-| Glyph hover/effects | `docs/current/technical/GLYPH_HOVER_EFFECTS_MODEL.md`; `src/main.js`; relevant glyph/hover/effect modules discovered from imports | Glyph effect snapshots | Deployment docs; content docs; concept docs | `src/main.js`; relevant `src/scene/*` glyph/effect modules; relevant `src/ui/*` hover label modules | `docs/current/technical/GLYPH_HOVER_EFFECTS_MODEL.md`; `docs/current/audits/snapshots/2026-05-22_18-18-33__snapshot__glyph-1-tree-effect-baseline.md` |
-| Progression/loading performance | `src/main.js`; modules responsible for staged/progression config discovered from imports; latest galaxy/progression/loader/mobile snapshot | `docs/current/technical/FRONTEND_RUNTIME_MODEL.md`; `docs/current/technical/THREE_SCENE_MODEL.md`; `docs/current/technical/DEPLOYMENT_MODEL.md` | Content model; concept docs; old baseline snapshots | `src/main.js`; loader/progression modules discovered from imports; `src/scene/monkeyModel.js`; `src/scene/galaxySprites.js`; `src/utils/publicPath.js` | `docs/current/audits/snapshots/2026-05-30_07-10-52__snapshot__galaxy-progress-loader-mobile-runtime.md`; `docs/current/technical/FRONTEND_RUNTIME_MODEL.md`; `docs/current/technical/THREE_SCENE_MODEL.md`; `docs/current/technical/DEPLOYMENT_MODEL.md` |
-| Documentation snapshot | `docs/current/maps/PROJECT_INDEX.md`; `docs/current/maps/DEPENDENCY_MAP.md`; `docs/current/decisions/DECISION_LOG.md`; most recent relevant snapshot | Technical doc directly affected by the snapshot | All snapshots; all technical docs; legacy docs | Only runtime files directly referenced by the snapshot/audit | `docs/current/maps/PROJECT_INDEX.md`; `docs/current/maps/DEPENDENCY_MAP.md`; `docs/current/decisions/DECISION_LOG.md`; relevant file under `docs/current/audits/snapshots/` |
-| Visual/concept/copy | `docs/current/technical/CONTENT_MODEL.md`; source concept document only if copy/meaning is being changed; `src/content/portfolioNodes.js` | Visual direction notes; interaction model notes | Deployment docs; runtime loader docs; galaxy sprite code | `src/content/portfolioNodes.js`; `src/ui/*`; `src/styles/main.css` | `docs/current/technical/CONTENT_MODEL.md`; relevant concept/visual direction doc only when changing copy, meaning, or visual language |
+| Task | Read first | Add only when needed |
+| --- | --- | --- |
+| Experience 3D bootstrap, input, interaction state, panel timing | `src/experience3d.js`; `technical/FRONTEND_RUNTIME_MODEL.md`; `technical/THREE_SCENE_MODEL.md` | `src/scene/cameraRig.js`; `src/ui/overlay.js` |
+| Plaque asset/config/cache/material lifecycle | `src/content/portfolioNodes.js`; `src/assets/assetManifest.js`; `src/scene/plaqueTransition.js`; `technical/THREE_SCENE_MODEL.md` | `src/scene/orbitNodes.js`; `src/experience3d.js` |
+| Camera focus, dolly, return, cursor handoff | `src/scene/cameraRig.js`; `src/experience3d.js`; `technical/THREE_SCENE_MODEL.md` | `src/scene/orbitNodes.js` |
+| Glyph hover behavior | `src/scene/orbitNodes.js`; `src/experience3d.js`; `technical/GLYPH_HOVER_EFFECTS_MODEL.md` | `src/ui/hoverLabel.js` |
+| Overlay/content panels | `src/content/portfolioNodes.js`; `src/ui/overlay.js`; `technical/FRONTEND_RUNTIME_MODEL.md` | `src/styles/main.css`; `technical/CONTENT_MODEL.md` |
+| Asset staging or public paths | `src/assets/assetManifest.js`; `src/assets/assetManager.js`; `src/utils/publicPath.js`; `technical/DEPLOYMENT_MODEL.md` | `src/experience3d.js` |
+| Classic 2D | `src/classic2d.js`; `src/content/portfolioNodes.js`; `technical/ENTRY_FLOW_AND_MODES_MODEL.md` | `src/styles/main.css` |
+| Documentation synchronization | affected canonical technical doc; `maps/DEPENDENCY_MAP.md`; `decisions/DECISION_LOG.md` | only the runtime files that prove the changed contract |
 
-## Canonical docs by category
+## Canonical documentation
 
-### Core hubs
-- `docs/README.md` — top-level documentation entrypoint.
-- `docs/current/README.md` — active documentation hub.
-
-### Maps
-- `docs/current/maps/PROJECT_INDEX.md` — this architect/Codex routing guide.
-- `docs/current/maps/DOCUMENTATION_MAP.md` — where each doc type belongs.
-- `docs/current/maps/DEPENDENCY_MAP.md` — high-level dependency graph.
-
-### Technical docs
-- `docs/current/technical/README.md` — technical section overview.
-- `docs/current/technical/ARCHITECTURE.md` — implemented runtime module structure.
-- `docs/current/technical/ENTRY_FLOW_AND_MODES_MODEL.md` — language/mode entry flow and dual Classic 2D / Experience 3D contract; Classic 2D is now an implemented MVP with central monkey, floating glyph hotspots, and readable panels.
-- `docs/current/technical/FRONTEND_RUNTIME_MODEL.md` — runtime layering, implemented entry shell baseline, conditional Experience 3D boot, vendored Three.js import policy, and Vite/GitHub Pages dual-runtime asset model.
-- `docs/current/technical/THREE_SCENE_MODEL.md` — scene modules and MVP behavior.
-- `docs/current/technical/CONTENT_MODEL.md` — content schema and draft gate text model.
-- `docs/current/technical/DEPLOYMENT_MODEL.md` — Vite local/build and GitHub Pages deployment model under `/tomasz-talik-portfolio/`.
-- `docs/current/technical/GLYPH_HOVER_EFFECTS_MODEL.md` — working canon for five-glyph hover-only effect language, symbolism, and rollout order.
-
-### Decisions
-- `docs/current/decisions/DECISION_LOG.md` — decision log, including MVP scene runtime decision updates.
-
-### Technical audits
-- `docs/current/audits/technical/portfolio-three-lighting-and-glb-rendering-audit.md` — technical audit of the portfolio Three.js renderer, camera, lighting, GLB loading, materials, shadows, and 3D shape presentation.
-
-### Snapshots/evidence
-- `docs/current/audits/snapshots/2026-05-22_15-38-35__snapshot__monkey-five-glyphs-runtime-baseline.md` — milestone checkpoint for central monkey + five glyph orbit-node runtime baseline.
-- `docs/current/audits/snapshots/2026-05-22_18-18-33__snapshot__glyph-1-tree-effect-baseline.md` — accepted technical checkpoint for glyph_1 tree-based hover effect baseline.
-- `docs/current/audits/snapshots/2026-05-28_18-08-09__snapshot__portfolio-ai-guide-progression-sun-moon.md` — documentation checkpoint for AI Guide panel direction, scene progression, sun/moon orbit state, and related protective decisions.
-- `docs/current/audits/snapshots/2026-05-29_19-59-42__snapshot__dual-runtime-github-pages-deployment.md` — first working dual-runtime deployment snapshot for local Vite and GitHub Pages.
-- `docs/current/audits/snapshots/2026-05-30_07-10-52__snapshot__galaxy-progress-loader-mobile-runtime.md` — documentation checkpoint for galaxy sprites, atmosphere progression, loading diagnostics, debug import/export, deployment-safe public asset paths, and mobile pointer/orientation/input runtime baseline.
-- `docs/current/audits/snapshots/2026-06-02_17-36-03__snapshot__mobile-glyph-panels-baseline.md` — historical mobile-panel checkpoint; its SVG-frame layering is superseded by the current frameless panel baseline.
-- `docs/current/audits/snapshots/2026-06-02_18-18-09__snapshot__entry-shell-conditional-3d-boot.md` — historical entry-shell checkpoint; its placeholder-only Classic 2D note is superseded.
-- `docs/current/audits/snapshots/2026-06-03_17-29-26__snapshot__classic-2d-floating-glyph-hotspots.md` — implemented Classic 2D MVP with central monkey PNG, five floating flat PNG glyph hotspots, shared content panels, no-ring hover/focus glow, and no text scaling.
-- `docs/current/audits/snapshots/2026-07-20_07-20-00__snapshot__unified-3d-glyph-panels.md` — historical intermediate checkpoint; its SVG-frame statement is superseded by the current panel baseline.
-- `docs/current/audits/snapshots/2026-07-21_00-00-00__snapshot__current-dual-mode-panels-and-camera.md` — current consolidated checkpoint for refined Classic 2D, shared content, frameless Experience 3D panels, Haiku Cosmos details, responsive ornaments, and camera resumption.
+- [`README.md`](../README.md) — active documentation hub.
+- [`maps/DOCUMENTATION_MAP.md`](DOCUMENTATION_MAP.md) — document placement rules.
+- [`maps/DEPENDENCY_MAP.md`](DEPENDENCY_MAP.md) — current high-level runtime dependency graph.
+- [`technical/ARCHITECTURE.md`](../technical/ARCHITECTURE.md) — module boundaries.
+- [`technical/FRONTEND_RUNTIME_MODEL.md`](../technical/FRONTEND_RUNTIME_MODEL.md) — entry shell, Experience 3D runtime, overlay contract.
+- [`technical/THREE_SCENE_MODEL.md`](../technical/THREE_SCENE_MODEL.md) — scene, camera, plaque, material and fallback contract.
+- [`technical/GLYPH_HOVER_EFFECTS_MODEL.md`](../technical/GLYPH_HOVER_EFFECTS_MODEL.md) — concise active hover contract.
+- [`technical/CONTENT_MODEL.md`](../technical/CONTENT_MODEL.md) — portfolio record schema and panel content.
+- [`decisions/DECISION_LOG.md`](../decisions/DECISION_LOG.md) — accepted project decisions.
 
 ## Runtime entrypoints
 
-Primary runtime files:
-- `index.html` — Vite entry HTML.
-- `vite.config.js` — Vite configuration, including GitHub Pages base path and vendored Three.js aliasing.
-- `src/main.js` — entry shell / language and mode selection / conditional boot orchestration for Classic 2D or Experience 3D.
-- `src/classic2d.js` — Classic 2D lightweight flat portfolio experience with central monkey PNG, five floating glyph hotspots, shared content panels, and back flow to mode selection.
-- `src/experience3d.js` — current Experience 3D runtime bootstrap, scene wiring, input handling, loading/progression orchestration, and animation loop.
-- `src/utils/publicPath.js` — shared helper for local Vite + GitHub Pages public asset URL normalization.
+- `src/main.js` selects the mode and conditionally launches Experience 3D.
+- `src/experience3d.js` owns the Experience 3D scene wiring, interaction sequence, renderer, preload stages, and animation loop.
+- `src/content/portfolioNodes.js` is the source of truth for glyph, plaque, and panel metadata.
+- `src/assets/assetManifest.js` derives staged plaque assets from the portfolio records.
+- `src/scene/plaqueTransition.js`, `src/scene/cameraRig.js`, and `src/scene/orbitNodes.js` implement the plaque, camera, and hover/orbit portions of that interaction.
 
-Scene/runtime files:
-- `src/scene/monkeyModel.js` — async GLB loading orchestration with placeholder fallback safety.
-- `src/scene/galaxySprites.js` — deterministic distant-galaxy sprite layer using transparent PNG public assets and deployment-safe URLs.
-- `src/scene/*` — Three.js scene modules.
+## Scope rules
 
-UI/content/style files:
-- `src/ui/*` — HTML overlay and hover label modules.
-- `src/content/portfolioNodes.js` — draft portfolio gate content.
-- `src/styles/main.css` — atmospheric base and UI styles.
-
-
-Classic 2D status: the runtime is implemented and refined: its square desktop stage uses an optically corrected monkey and five glyphs on a regular pentagon; mobile uses a top monkey and vertical glyph list. It uses shared content panels and a footer return CTA. Further polish is optional, not a missing MVP.
-
-Vendored Three.js files:
-- `src/vendor/three.js` — bridge to vendored Three.js module.
-- `vendor/three/three.module.js` — vendored Three.js runtime source of truth.
-- `vendor/three/examples/jsm/loaders/GLTFLoader.js` — required vendored GLTFLoader.
-- `vendor/three/examples/jsm/utils/BufferGeometryUtils.js` — required GLTFLoader utility.
-- `vendor/three/examples/jsm/utils/SkeletonUtils.js` — required GLTFLoader utility.
-
-## Asset/deployment rules
-
-- Runtime stack is Vite + vanilla JavaScript + vendored Three.js.
-- GitHub Pages base path must remain compatible with `/tomasz-talik-portfolio/`.
-- Public assets must use deployment-safe URL handling.
-- Runtime logical paths may look like `/glb/...` or `/png/...`, but final URLs must be normalized through the project public path helper where applicable.
-- Manually managed binary/static assets live under `public/`.
-- Monkey asset path: `public/glb/monkey.glb` (runtime logical URL `/glb/monkey.glb`).
-- Galaxy sprite asset paths: `public/png/galaxy_01.png` through `public/png/galaxy_05.png`.
-- Placeholder/fallback behavior is mandatory when the loader or GLB is unavailable.
-- Vendored Three.js baseline is `r184`; GLTFLoader and related utilities must be sourced from the matching vendored files.
-- npm `three` dependency is intentionally not the runtime source of truth.
-
-## Snapshots are evidence, not default reading
-
-Snapshots record historical checkpoints and milestone evidence. Read only the latest snapshot relevant to the current task unless investigating historical drift, regressions, or the evidence trail behind a specific decision.
-
-Do not start by reading all snapshots. Prefer canonical technical docs and runtime files first, then consult snapshots only when the task needs historical proof or a milestone comparison.
-
-## Do not read by default
-
-Codex should not read these unless the task directly needs them:
-- all snapshots
-- all concept docs
-- all visual direction docs
-- all legacy docs
-- all `src/scene` files
-- all `src/ui` files
-- all technical docs
-
-## Codex context budget rules
-
-Every Codex audit or implementation pass should:
-- Start from `docs/current/maps/PROJECT_INDEX.md`.
-- Select the smallest task-specific file pack from the routing table.
-- Before opening additional files, state why they are needed, which question they answer, and whether they are canonical, runtime, or evidence.
-- Report files read, files changed, and files intentionally skipped.
-- Avoid recursive scans of `docs/current`.
-- Prefer targeted `rg --files` or known paths over broad documentation tree reads.
-
-## Known open topics / next audit targets
-
-Current known open targets:
-- loader performance, staged/deferred asset loading, and mobile performance tuning;
-- critical initial assets versus optional late assets;
-- debug settings import/export documentation freshness;
-- final structured PL/EN content records and optional further visual/accessibility polish.
-
-Completed panel and Classic 2D implementation work is not an open topic. The 2026-07-20 SVG-frame snapshot is historical intermediate evidence; consult the current consolidated snapshot for the active baseline.
+- Canonical documents describe the current model; code is implementation evidence.
+- Snapshots and audits are evidence, not default reading.
+- Do not read `docs/legacy/` by default.
+- Update `DEPENDENCY_MAP.md` when runtime dependencies materially change and add a dated entry to `DECISION_LOG.md` for accepted design decisions.
