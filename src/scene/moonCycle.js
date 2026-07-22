@@ -22,6 +22,9 @@ function sanitizeMoonModelPath(modelPath) {
 
 function sanitizeMoonCycleSettings(settings) {
   settings.modelPath = sanitizeMoonModelPath(settings.modelPath);
+  // The moon is driven exclusively by the sun angle plus phaseOffset.
+  delete settings.angularSpeed;
+  delete settings.direction;
   return settings;
 }
 

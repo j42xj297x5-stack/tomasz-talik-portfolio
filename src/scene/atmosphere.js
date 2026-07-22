@@ -7,28 +7,28 @@ const DEFAULT_BACKGROUND_ATMOSPHERE_CONFIG = Object.freeze({
   debugIgnoreFog: true,
   showShellHelpers: false,
   showAtmosphereLogs: false,
-  safeRadius: 4,
-  shellInnerRadius: 6.1,
-  shellOuterRadius: 14.6,
-  dust: Object.freeze({ enabled: true, count: 2650, idleOpacity: 0.85, rotationSpeed: 0.02, pointSize: 0.07, color: '#05070a', sizeAttenuation: true, depthTest: true, depthWrite: false }),
+  safeRadius: 3,
+  shellInnerRadius: 15,
+  shellOuterRadius: 25,
+  dust: Object.freeze({ enabled: true, count: 6000, idleOpacity: 1, rotationSpeed: 0.018, pointSize: 0.07, color: '#cfe2ff', sizeAttenuation: true, depthTest: true, depthWrite: false }),
   stoneRelics: Object.freeze({
-    enabled: true, count: 60,
+    enabled: true, count: 80,
     models: Object.freeze(['/glb/stone_01.glb','/glb/stone_02.glb','/glb/stone_03.glb','/glb/stone_04.glb','/glb/stone_05.glb','/glb/stone_06.glb']),
-    safeRadius: 3.5, shellInnerRadius: 5, shellOuterRadius: 8, minScale: 1, maxScale: 2,
-    rotationSpeedMin: 0.003, rotationSpeedMax: 0.018, orbitSpeed: 0.003, opacity: 0.85, debugVisible: false
+    safeRadius: 3.5, shellInnerRadius: 15, shellOuterRadius: 18, minScale: 3, maxScale: 4.27,
+    rotationSpeedMin: 0.05, rotationSpeedMax: 0.09, orbitSpeed: 0.003, opacity: 1, debugVisible: false
   }),
   shellRelics: Object.freeze({
-    enabled: true, count: 35,
+    enabled: true, count: 100,
     models: Object.freeze(['/glb/shell_01.glb','/glb/shell_02.glb','/glb/shell_03.glb','/glb/shell_04.glb','/glb/shell_05.glb','/glb/shell_06.glb']),
-    minScale: 0.3, maxScale: 1, shellInnerRadius: 4, shellOuterRadius: 8.5,
-    rotationSpeedMin: 0.075, rotationSpeedMax: 0.187, orbitSpeed: 0.022, opacity: 0.51, debugVisible: false,
+    minScale: 0.4, maxScale: 0.7, shellInnerRadius: 10, shellOuterRadius: 13,
+    rotationSpeedMin: 0.047, rotationSpeedMax: 0.486, orbitSpeed: 0.013, opacity: 1, debugVisible: false,
     colorPalette: Object.freeze(['#d9a441','#4db6ac','#6ec6ff','#6bcf8e','#9c7bff','#f0a6a6'])
   }),
   smallGlyphRelics: Object.freeze({
-    enabled: true, count: 24,
+    enabled: true, count: 50,
     models: Object.freeze(['/glb/small_glyph_01.glb','/glb/small_glyph_02.glb','/glb/small_glyph_03.glb','/glb/small_glyph_04.glb','/glb/small_glyph_05.glb','/glb/small_glyph_06.glb']),
-    minScale: 0.3, maxScale: 1, shellInnerRadius: 4, shellOuterRadius: 8.5,
-    rotationSpeedMin: 0.075, rotationSpeedMax: 0.187, orbitSpeed: 0.022, opacity: 0.75, debugVisible: false
+    minScale: 0.5, maxScale: 0.8, shellInnerRadius: 8, shellOuterRadius: 10,
+    rotationSpeedMin: 0.01, rotationSpeedMax: 0.028, orbitSpeed: 0.005, opacity: 0.53, debugVisible: false
   })
 });
 
