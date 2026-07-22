@@ -2622,28 +2622,43 @@ body.classic-2d-panel-open {
 }
 
 .classic-2d-panel::before {
-  inset: clamp(14px, 2.6vw, 28px);
+  top: clamp(14px, 2.6vw, 28px);
+  right: auto;
+  bottom: clamp(14px, 2.6vw, 28px);
+  left: 50%;
+  width: min(1200px, calc(100vw - clamp(14px, 2.6vw, 28px) - clamp(14px, 2.6vw, 28px)));
   border: clamp(2px, 0.6vw, 5px) double var(--panel-frame);
   border-radius: clamp(18px, 3vw, 30px);
   box-shadow:
     inset 0 0 0 1px color-mix(in srgb, var(--panel-frame) 45%, transparent),
     inset 0 0 42px color-mix(in srgb, var(--panel-frame) 10%, transparent);
+  transform: translateX(-50%);
 }
 
 .classic-2d-panel::after {
-  inset: clamp(26px, 4vw, 46px);
+  top: clamp(26px, 4vw, 46px);
+  right: auto;
+  bottom: clamp(26px, 4vw, 46px);
+  left: 50%;
+  width: min(1164px, calc(100vw - clamp(26px, 4vw, 46px) - clamp(26px, 4vw, 46px)));
   border: 1px solid color-mix(in srgb, var(--panel-frame) 42%, transparent);
   border-radius: clamp(14px, 2.4vw, 24px);
+  transform: translateX(-50%);
 }
 
 .classic-2d-panel__viewport {
   position: fixed;
-  inset: clamp(14px, 2.6vw, 28px);
+  top: clamp(14px, 2.6vw, 28px);
+  right: auto;
+  bottom: clamp(14px, 2.6vw, 28px);
+  left: 50%;
   z-index: 1;
+  width: min(1200px, calc(100vw - clamp(14px, 2.6vw, 28px) - clamp(14px, 2.6vw, 28px)));
   min-width: 0;
   min-height: 0;
   border-radius: clamp(18px, 3vw, 30px);
   overflow: hidden;
+  transform: translateX(-50%);
 }
 
 .classic-2d-panel[data-panel-theme="ai-guide"] {
@@ -2772,6 +2787,7 @@ body.classic-2d-panel-open {
   font-size: clamp(2.25rem, 8vw, 5rem);
   font-weight: 500;
   line-height: 0.96;
+  text-align: center;
 }
 
 .classic-2d-panel__label {
@@ -2781,6 +2797,7 @@ body.classic-2d-panel-open {
   color: var(--panel-muted);
   font-weight: 800;
   letter-spacing: 0.05em;
+  text-align: center;
 }
 
 .classic-2d-panel__lead,
@@ -2800,6 +2817,22 @@ body.classic-2d-panel-open {
   margin: 0 0 1rem;
   font-size: clamp(1.08rem, 2.6vw, 1.45rem);
   line-height: 1.52;
+}
+
+.classic-2d-panel[data-gate-id="ai-guide"] .classic-2d-panel__lead,
+.classic-2d-panel[data-gate-id="ai-guide"] .classic-2d-panel__body p,
+.classic-2d-panel[data-gate-id="ai-guide"] .classic-2d-panel__closing,
+.classic-2d-panel[data-gate-id="ai-guide"] .classic-2d-panel__feature,
+.classic-2d-panel[data-gate-id="creative-ai"] .classic-2d-panel__lead,
+.classic-2d-panel[data-gate-id="creative-ai"] .classic-2d-panel__body p,
+.classic-2d-panel[data-gate-id="creative-ai"] .classic-2d-panel__closing,
+.classic-2d-panel[data-gate-id="creative-ai"] .classic-2d-panel__feature,
+.classic-2d-panel[data-gate-id="ethics-life-protection"] .classic-2d-panel__lead,
+.classic-2d-panel[data-gate-id="ethics-life-protection"] .classic-2d-panel__body p,
+.classic-2d-panel[data-gate-id="ethics-life-protection"] .classic-2d-panel__closing,
+.classic-2d-panel[data-gate-id="ethics-life-protection"] .classic-2d-panel__feature {
+  margin-inline: auto;
+  text-align: center;
 }
 
 
