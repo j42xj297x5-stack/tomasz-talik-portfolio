@@ -40,18 +40,18 @@ const CLASSIC_ORBIT_RADIUS_PERCENT = 34;
 const CLASSIC_ORBIT_START_ANGLE_DEGREES = -90;
 const CLASSIC_ORBIT_STEP_ANGLE_DEGREES = 72;
 const CLASSIC_ORBIT_ORDER = [
+  'ethics-life-protection',
+  'ai-guide',
   'spotify-digger',
   'haiku-cosmos',
-  'creative-ai',
-  'ethics-life-protection',
-  'ai-guide'
+  'creative-ai'
 ];
 const CLASSIC_LABEL_SIDE_BY_GATE_ID = {
-  'spotify-digger': 'top',
-  'ai-guide': 'left',
-  'haiku-cosmos': 'right',
-  'creative-ai': 'bottom',
-  'ethics-life-protection': 'bottom'
+  'ethics-life-protection': 'top',
+  'creative-ai': 'left',
+  'ai-guide': 'right',
+  'haiku-cosmos': 'bottom',
+  'spotify-digger': 'bottom'
 };
 
 function escapeHtml(value) {

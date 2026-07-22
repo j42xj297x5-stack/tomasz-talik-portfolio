@@ -3164,7 +3164,7 @@ body.classic-2d-panel-open {
 .classic-2d-panel__close {
   position: relative;
   z-index: 3;
-  align-self: flex-start;
+  align-self: center;
   min-height: 44px;
   margin-top: clamp(1.2rem, 4vw, 2rem);
   color: var(--panel-text);
