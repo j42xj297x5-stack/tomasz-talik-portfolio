@@ -1,36 +1,25 @@
-# Glyph Hover Effects Model (Working Canon)
+# Glyph Hover Effects Model
 
-## Cel i zakres
+## Active contract
 
-Ten dokument definiuje aktywny kontrakt hovera dla pięciu glifów orbitujących wokół centralnej małpy w Experience 3D. Hover ma charakter jednolity i informacyjny: potwierdza interaktywny target bez budowania osobnej narracji wizualnej dla pojedynczego node'a.
+All five Experience 3D glyphs use one shared, subtle hover response: a one-shot scale pulse with a neutral hover light. There are no special hover effects selected by glyph identity.
 
-Zakres obejmuje wyłącznie standardowy lifecycle hovera. Nie zmienia geometrii sceny, raycastingu, orbit, kamery ani sekwencji kliknięcia.
+## Lifecycle
 
-## Wspólny kontrakt pięciu glifów
+1. Pointer entry onto a new glyph starts `idle → playing → idle`.
+2. While `playing`, pointer movement over the same glyph does not restart the one-shot.
+3. `pointerleave` clears hover/label state, but the running one-shot completes naturally.
+4. Once the runtime returns to `idle`, a later pointer entry may start a new one-shot.
+5. Hover state is stored per node, so a completed or departing node does not reset another node's lifecycle.
 
-Każdy glif korzysta z tego samego one-shota:
+## Transition safety
 
-1. Wejście kursora na nowy glif uruchamia krótki scale pulse i neutralne światło hover.
-2. Runtime przechodzi przez wspólny lifecycle `idle → playing → idle`.
-3. Kolejne `pointermove` nad tym samym glifem nie restartują przebiegu.
-4. `pointerleave` usuwa wyłącznie stan kursora i etykietę; rozpoczęty one-shot wybrzmiewa do końca.
-5. Po powrocie runtime'u do `idle` kolejne wejście może uruchomić nowy przebieg.
-6. Wszystkie glify używają tego samego czasu, skali i neutralnego koloru światła; nie ma wyjątków zależnych od identyfikatora node'a.
+When a plaque/camera transition begins, new hover triggers are blocked. The selected node leaves the common hover treatment and uses the separate neutral transition-light lifecycle. This prevents hover restarts while interaction is locked, orbit is paused, the plaque sequence runs, or the panel is open.
 
-Przebiegi hover różnych glifów mogą kończyć się niezależnie, ponieważ ich stan jest przechowywany per node.
+## Exclusions
 
-## Relacja z kliknięciem i plaque transition
+Tree growth, fire, sparks, and ember-sphere effects are outside the active runtime. They are not loaded, attached, triggered, or updated by the current Experience 3D hover path.
 
-`transitionActive` blokuje nowe triggery hover oraz zatrzymuje standardowy scale/light wybranego node'a. Nie zmienia pozostałej sekwencji kliknięcia: focus kamery, transition light, plaque reveal/reverse, panel, hold, dolly oraz return zachowują dotychczasowy kontrakt.
+## Guardrail
 
-## Usunięte efekty specjalne
-
-Aktywny runtime nie zawiera efektów żywiołów ani unikalnych animacji hover. Historyczne wizualizacje wzrostu drzewa oraz ognia (wirujące kulki, iskry i żarząca się kula) nie są ładowane, attachowane ani aktualizowane. Powiązany binarny asset pozostaje w repozytorium poza aktywnym runtime'em.
-
-## Zasady ochronne
-
-Należy zachować subtelność: bez nowych cząstek, aury, elementów żywiołów, efektów postprocessingu i wyjątków per glif. Celem hovera jest czytelne, lekkie potwierdzenie interakcji, a nie spektakl.
-
-## Status
-
-Status: **aktywny working canon** dla hovera pięciu glifów Experience 3D.
+Keep hover informative and light: do not add per-glyph particles, auras, elemental effects, postprocessing, or unique motion without an explicit new interaction decision.
