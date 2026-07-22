@@ -48,6 +48,9 @@ export const SUN_CYCLE_DEFAULTS = {
     angleDegrees: 90,
     penumbra: 0.45,
     decay: 1.5,
+    fadeDurationSeconds: 3,
+    cameraOffsetFactor: 0.2,
+    radialOffsetMultiplier: 1.25,
     horizonFade: false,
     horizonFadeHeight: 0.5
   },
@@ -58,7 +61,7 @@ export const SUN_CYCLE_DEFAULTS = {
   debugScaleMultiplier: 1
 };
 
-export function createSunCycle(options = {}, { assetManager = null } = {}) {
+export function createSunCycle(options = {}, { assetManager = null, camera = null } = {}) {
   let settings = sanitizeSunCycleSettings(deepMerge(SUN_CYCLE_DEFAULTS, options));
   let progressionMultiplier = 1;
   const object3d = new THREE.Group();
@@ -69,6 +72,14 @@ export function createSunCycle(options = {}, { assetManager = null } = {}) {
   let angle = settings.startAngle;
   let sunModel = null;
   let boxHelper = null;
+  let visualRadius = 0.25;
+  let lastVisualScale = null;
+  let horizonLightFactor = 1;
+  let horizonTargetFactor = 1;
+  const cameraWorldPosition = new THREE.Vector3();
+  const radial = new THREE.Vector3();
+  const cameraSide = new THREE.Vector3();
+  const lightWorldPosition = new THREE.Vector3();
   const debugBasicMaterial = new THREE.MeshBasicMaterial({ color: '#ffd31a' });
   const sunBodyGroup = new THREE.Group();
   sunBodyGroup.name = 'SunCycleBodyGroup';
@@ -151,6 +162,20 @@ export function createSunCycle(options = {}, { assetManager = null } = {}) {
     debugOrbit.geometry = new THREE.BufferGeometry().setFromPoints(points);
   }
 
+  function updateVisualRadius(effectiveScale) {
+    if (lastVisualScale === effectiveScale) return;
+    lastVisualScale = effectiveScale;
+    if (sunModel) {
+      sunModel.updateWorldMatrix(true, true);
+      const bounds = new THREE.Box3().setFromObject(sunModel);
+      const sphere = new THREE.Sphere();
+      bounds.getBoundingSphere(sphere);
+      visualRadius = sphere.radius;
+    } else {
+      visualRadius = 0.25 * effectiveScale;
+    }
+  }
+
   function applySettings() {
     settings.radius = clamp(settings.radius, 1, 30);
     settings.angularSpeed = clamp(settings.angularSpeed, 0, 1);
@@ -162,22 +187,25 @@ export function createSunCycle(options = {}, { assetManager = null } = {}) {
     settings.spotlight.angleDegrees = clamp(settings.spotlight.angleDegrees, 1, 120);
     settings.spotlight.penumbra = clamp(settings.spotlight.penumbra, 0, 1);
     settings.spotlight.distance = clamp(settings.spotlight.distance, 0, 100);
+    settings.spotlight.fadeDurationSeconds = clamp(settings.spotlight.fadeDurationSeconds, 0, 10);
+    settings.spotlight.cameraOffsetFactor = clamp(settings.spotlight.cameraOffsetFactor, 0, 0.5);
+    settings.spotlight.radialOffsetMultiplier = clamp(settings.spotlight.radialOffsetMultiplier, 1, 4);
 
     center.set(settings.center.x, settings.center.y, settings.center.z);
     object3d.visible = settings.enabled;
     object3d.position.copy(center);
     const effectiveScale = settings.scale * ((settings.debugVisible && settings.debugScaleMultiplier > 0) ? settings.debugScaleMultiplier : 1);
     if (sunModel) sunModel.scale.setScalar(effectiveScale);
+    updateVisualRadius(effectiveScale);
     if (sunModel && settings.lockFacing) {
       sunModel.rotation.set(settings.frontRotation.x, settings.frontRotation.y, settings.frontRotation.z);
     }
-    fallbackSphere.scale.setScalar(settings.scale);
+    fallbackSphere.scale.setScalar(effectiveScale);
     spotlight.color.set(settings.spotlight.color);
     spotlight.distance = settings.spotlight.distance;
     spotlight.angle = THREE.MathUtils.degToRad(settings.spotlight.angleDegrees);
     spotlight.penumbra = settings.spotlight.penumbra;
     spotlight.decay = settings.spotlight.decay;
-    spotlight.visible = settings.spotlight.enabled && progressionMultiplier > 0.001;
     debugOrbit.visible = settings.debugVisible;
     updateDebugOrbit();
     enforceSunMaterialVisibility();
@@ -213,20 +241,39 @@ export function createSunCycle(options = {}, { assetManager = null } = {}) {
         Math.sin(angle) * settings.radius,
         settings.zOffset
       );
-      spotlight.position.set(0, 0, 0);
       spotlightTarget.position.set(0, 0, 0);
+      object3d.updateMatrixWorld(true);
       spotlightTarget.updateMatrixWorld();
 
       sunBodyGroup.getWorldPosition(worldSunPosition);
       object3d.getWorldPosition(centerWorldPosition);
-      const above = worldSunPosition.y > centerWorldPosition.y;
-      if (settings.spotlight.enabled && above) {
-        spotlight.visible = true;
-        spotlight.intensity = settings.spotlight.intensity * progressionMultiplier;
-      } else {
-        spotlight.visible = false;
-        spotlight.intensity = 0;
+      radial.subVectors(worldSunPosition, centerWorldPosition).normalize();
+      if (camera) {
+        camera.getWorldPosition(cameraWorldPosition);
+        cameraSide.subVectors(cameraWorldPosition, centerWorldPosition);
+        cameraSide.addScaledVector(radial, -cameraSide.dot(radial));
       }
+      if (cameraSide.lengthSq() < 1e-8) {
+        cameraSide.set(0, 0, 1).addScaledVector(radial, -radial.z);
+        if (cameraSide.lengthSq() < 1e-8) cameraSide.set(1, 0, 0).addScaledVector(radial, -radial.x);
+      }
+      cameraSide.normalize();
+      const cameraDistance = camera ? cameraWorldPosition.distanceTo(centerWorldPosition) : 0;
+      lightWorldPosition.copy(worldSunPosition)
+        .addScaledVector(radial, visualRadius * settings.spotlight.radialOffsetMultiplier)
+        .addScaledVector(cameraSide, cameraDistance * settings.spotlight.cameraOffsetFactor);
+      spotlight.position.copy(sunBodyGroup.worldToLocal(lightWorldPosition));
+
+      const horizonEpsilon = 0.01;
+      const height = worldSunPosition.y - centerWorldPosition.y;
+      if (height > horizonEpsilon) horizonTargetFactor = 1;
+      else if (height < -horizonEpsilon) horizonTargetFactor = 0;
+      const fadeDuration = settings.spotlight.fadeDurationSeconds;
+      const factorStep = fadeDuration > 0 ? delta / fadeDuration : 1;
+      horizonLightFactor += clamp(horizonTargetFactor - horizonLightFactor, -factorStep, factorStep);
+      const easedHorizonFactor = horizonLightFactor * horizonLightFactor * (3 - 2 * horizonLightFactor);
+      spotlight.intensity = settings.spotlight.intensity * progressionMultiplier * easedHorizonFactor;
+      spotlight.visible = settings.spotlight.enabled && spotlight.intensity > 0.001;
 
       const spin = delta * settings.selfRotationSpeed;
       if (sunModel) {
@@ -241,7 +288,6 @@ export function createSunCycle(options = {}, { assetManager = null } = {}) {
     },
     setProgressionMultiplier(nextMultiplier = 1) {
       progressionMultiplier = clamp(nextMultiplier, 0, 1);
-      applySettings();
     },
     setOptions(partialOptions) {
       settings = sanitizeSunCycleSettings(deepMerge(settings, partialOptions));

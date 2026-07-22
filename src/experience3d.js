@@ -91,9 +91,9 @@ const sceneRuntimeConfig = {
 loadingDiagnostics.markEvent('sceneAttachStart');
 const atmosphere = createBackgroundAtmosphere(sceneRuntimeConfig.backgroundAtmosphere, { assetManager, deferRelicsUntilWarm: true });
 scene.add(atmosphere.object3d);
-const sunCycle = createSunCycle(sceneRuntimeConfig.sunCycle, { assetManager });
+const sunCycle = createSunCycle(sceneRuntimeConfig.sunCycle, { assetManager, camera });
 scene.add(sunCycle.object3d);
-const moonCycle = createMoonCycle(sceneRuntimeConfig.moonCycle, { assetManager });
+const moonCycle = createMoonCycle(sceneRuntimeConfig.moonCycle, { assetManager, camera });
 scene.add(moonCycle.object3d);
 const galaxyLayer = createGalaxySpritesLayer(sceneRuntimeConfig.galaxySprites, { assetManager, deferUntilWarm: true });
 scene.add(galaxyLayer.group);

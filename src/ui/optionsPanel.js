@@ -143,6 +143,9 @@ function normalizeRuntimeState(state) {
   sun.spotlight.angleDegrees = clamp(sun.spotlight.angleDegrees ?? 90, 1, 120);
   sun.spotlight.penumbra = clamp(sun.spotlight.penumbra ?? 0.45, 0, 1);
   sun.spotlight.distance = clamp(sun.spotlight.distance ?? 20, 0, 100);
+  sun.spotlight.fadeDurationSeconds = clamp(sun.spotlight.fadeDurationSeconds ?? 3, 0, 10);
+  sun.spotlight.cameraOffsetFactor = clamp(sun.spotlight.cameraOffsetFactor ?? 0.2, 0, 0.5);
+  sun.spotlight.radialOffsetMultiplier = clamp(sun.spotlight.radialOffsetMultiplier ?? 1.25, 1, 4);
 
   if (!state.moonCycle) state.moonCycle = {};
   const moon = state.moonCycle;
@@ -164,6 +167,9 @@ function normalizeRuntimeState(state) {
   moon.spotlight.angleDegrees = clamp(moon.spotlight.angleDegrees ?? 90, 1, 120);
   moon.spotlight.penumbra = clamp(moon.spotlight.penumbra ?? 0.45, 0, 1);
   moon.spotlight.distance = clamp(moon.spotlight.distance ?? 20, 0, 100);
+  moon.spotlight.fadeDurationSeconds = clamp(moon.spotlight.fadeDurationSeconds ?? 3, 0, 10);
+  moon.spotlight.cameraOffsetFactor = clamp(moon.spotlight.cameraOffsetFactor ?? 0.2, 0, 0.5);
+  moon.spotlight.radialOffsetMultiplier = clamp(moon.spotlight.radialOffsetMultiplier ?? 1.25, 1, 4);
 
   if (!state.galaxySprites) state.galaxySprites = {};
   const galaxy = state.galaxySprites;
@@ -756,6 +762,9 @@ export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere, 
   bind(range(path(() => sun.spotlight.angleDegrees, (v) => { sun.spotlight.angleDegrees = v; }, 'sun-cycle'), sunCycleSection.body, 'sunCycle.spotlight.angleDegrees', 1, 120, 1));
   bind(range(path(() => sun.spotlight.penumbra, (v) => { sun.spotlight.penumbra = v; }, 'sun-cycle'), sunCycleSection.body, 'sunCycle.spotlight.penumbra', 0, 1, 0.01));
   bind(range(path(() => sun.spotlight.distance, (v) => { sun.spotlight.distance = v; }, 'sun-cycle'), sunCycleSection.body, 'sunCycle.spotlight.distance', 0, 100, 1));
+  bind(range(path(() => sun.spotlight.fadeDurationSeconds, (v) => { sun.spotlight.fadeDurationSeconds = v; }, 'sun-cycle'), sunCycleSection.body, 'sunCycle.spotlight.fadeDurationSeconds', 0, 10, 0.1));
+  bind(range(path(() => sun.spotlight.cameraOffsetFactor, (v) => { sun.spotlight.cameraOffsetFactor = v; }, 'sun-cycle'), sunCycleSection.body, 'sunCycle.spotlight.cameraOffsetFactor', 0, 0.5, 0.01));
+  bind(range(path(() => sun.spotlight.radialOffsetMultiplier, (v) => { sun.spotlight.radialOffsetMultiplier = v; }, 'sun-cycle'), sunCycleSection.body, 'sunCycle.spotlight.radialOffsetMultiplier', 1, 4, 0.05));
   bind(checkbox(path(() => sun.debugVisible, (v) => { sun.debugVisible = v; }, 'sun-cycle'), sunCycleSection.body, 'sunCycle.debugVisible'));
   bind(checkbox(path(() => sun.debugShowFallback, (v) => { sun.debugShowFallback = v; }, 'sun-cycle'), sunCycleSection.body, 'sunCycle.debugShowFallback'));
   bind(checkbox(path(() => sun.debugForceBasicMaterial, (v) => { sun.debugForceBasicMaterial = v; }, 'sun-cycle'), sunCycleSection.body, 'sunCycle.debugForceBasicMaterial'));
@@ -772,6 +781,9 @@ export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere, 
   bind(range(path(() => moon.spotlight.angleDegrees, (v) => { moon.spotlight.angleDegrees = v; }, 'moon-cycle'), moonCycleSection.body, 'moonCycle.spotlight.angleDegrees', 1, 120, 1));
   bind(range(path(() => moon.spotlight.penumbra, (v) => { moon.spotlight.penumbra = v; }, 'moon-cycle'), moonCycleSection.body, 'moonCycle.spotlight.penumbra', 0, 1, 0.01));
   bind(range(path(() => moon.spotlight.distance, (v) => { moon.spotlight.distance = v; }, 'moon-cycle'), moonCycleSection.body, 'moonCycle.spotlight.distance', 0, 100, 1));
+  bind(range(path(() => moon.spotlight.fadeDurationSeconds, (v) => { moon.spotlight.fadeDurationSeconds = v; }, 'moon-cycle'), moonCycleSection.body, 'moonCycle.spotlight.fadeDurationSeconds', 0, 10, 0.1));
+  bind(range(path(() => moon.spotlight.cameraOffsetFactor, (v) => { moon.spotlight.cameraOffsetFactor = v; }, 'moon-cycle'), moonCycleSection.body, 'moonCycle.spotlight.cameraOffsetFactor', 0, 0.5, 0.01));
+  bind(range(path(() => moon.spotlight.radialOffsetMultiplier, (v) => { moon.spotlight.radialOffsetMultiplier = v; }, 'moon-cycle'), moonCycleSection.body, 'moonCycle.spotlight.radialOffsetMultiplier', 1, 4, 0.05));
   bind(checkbox(path(() => moon.debugVisible, (v) => { moon.debugVisible = v; }, 'moon-cycle'), moonCycleSection.body, 'moonCycle.debugVisible'));
   bind(checkbox(path(() => moon.debugShowFallback, (v) => { moon.debugShowFallback = v; }, 'moon-cycle'), moonCycleSection.body, 'moonCycle.debugShowFallback'));
   bind(checkbox(path(() => moon.debugForceBasicMaterial, (v) => { moon.debugForceBasicMaterial = v; }, 'moon-cycle'), moonCycleSection.body, 'moonCycle.debugForceBasicMaterial'));
