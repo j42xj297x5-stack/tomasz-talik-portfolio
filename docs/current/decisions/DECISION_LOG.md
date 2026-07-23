@@ -270,4 +270,13 @@ Status: accepted / implemented.
 1. `ethics-life-protection` now uses the existing shared `translations.pl` and `translations.en` model and resolver.
 2. Classic 2D and Experience 3D consume the same localized record, without duplicating Ethics content between presentation modes.
 3. The stable runtime ID `ethics-life-protection` and its scene metadata remain unchanged.
-4. The migration remains incremental: the three remaining records continue to use their existing top-level fallback fields until separately localized.
+4. The migration remains incremental: the two remaining records continue to use their existing top-level fallback fields until separately localized.
+
+## 2026-07-23 — AI Guide shared PL/EN localization
+
+Status: accepted / implemented.
+
+1. `ai-guide` now uses the existing shared `translations.pl` and `translations.en` model and resolver for its panel copy.
+2. Classic 2D and Experience 3D consume the same localized record without duplicating AI Guide content between presentation modes.
+3. The stable runtime ID `ai-guide` and all scene metadata remain unchanged.
+4. The migration remains incremental: three of five portfolio records are localized, while DIG Engine and Haiku Cosmos retain their base fields as fallback.
