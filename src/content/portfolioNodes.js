@@ -357,7 +357,7 @@ Projekt pokazuje kompetencje w game designie, system designie, Three.js, pipelin
 
 AI jest dla mnie czymś więcej niż narzędziem. To żywy szkicownik, laboratorium i przestrzeń twórczego sprzężenia zwrotnego. To, co powstaje na styku człowieka i maszyny, często prowadzi mnie dalej, niż początkowo planowałem. Obraz, dźwięk, fragment tekstu, rozwiązanie w kodzie albo nieoczekiwany rezultat mogą stać się początkiem kolejnego pomysłu, nowego kierunku lub całego projektu.
 
-Przez ponad dwa lata nauczyłem się zostawiać AI swobodę tam, gdzie efekt ma być świeży, nieoczywisty i niezależny od zamkniętej wizji. Nie próbuję kontrolować każdego szczegółu. Pytam, próbuję, doświadczam, wskazuję kierunek, zatrzymuję się, sprawdzam i pozwalam, aby proces również mnie zaskakiwał. Dzięki temu odkrywam nowe miejsca, obszary i możliwości, których wcześniej nie potrafiłbym świadomie zaprojektować.
+Nauczyłem się zostawiać AI swobodę tam, gdzie efekt ma być świeży, nieoczywisty i niezależny od zamkniętej wizji. Nie próbuję kontrolować każdego szczegółu. Pytam, próbuję, doświadczam, wskazuję kierunek, zatrzymuję się, sprawdzam i pozwalam, aby proces również mnie zaskakiwał. Dzięki temu odkrywam nowe miejsca, obszary i możliwości, których wcześniej nie potrafiłbym świadomie zaprojektować.
 
 Kiedy dokładnie wiem, jaki rezultat chcę osiągnąć, próbuję tyle razy, ile potrzeba. Poprawiam prompty, zmieniam narzędzia, łączę techniki i szukam właściwej formy. Nie każda droga prowadzi do oczekiwanego efektu. Czasem ujawnia własne ograniczenia — wtedy zmieniam ścieżkę, ale nie porzucam kierunku.
 
@@ -371,7 +371,7 @@ AI nie zastępuje twórcy. Poszerza przestrzeń, w której twórca może pytać,
 
 AI is more than a tool to me. It is a living sketchbook, a laboratory, and a space for creative feedback. What emerges at the meeting point between human and machine often takes me beyond what I originally planned. An image, a sound, a fragment of text, a solution in code, or an unexpected result can become the beginning of another idea, a new direction, or an entire project.
 
-Over more than two years, I have learned to give AI freedom wherever the result should feel fresh, unexpected, and unconstrained by my own artistic vision. I do not try to control every detail. I ask, experiment, experience, point the way, pause, examine, and allow the process to surprise me. This is how I discover new places, fields, and possibilities that I would not have been able to design consciously in advance.
+I have learned to give AI freedom wherever the result should feel fresh, unexpected, and unconstrained by a fixed artistic vision. I do not try to control every detail. I ask, experiment, experience, point the way, pause, examine, and allow the process to surprise me. This is how I discover new places, fields, and possibilities that I would not have been able to design consciously in advance.
 
 When I know exactly what result I want to achieve, I try as many times as necessary. I refine prompts, change tools, combine techniques, and search for the right form. Not every path leads to the intended result. Sometimes it reveals its own limitations — then I change the path without abandoning the direction.
 
