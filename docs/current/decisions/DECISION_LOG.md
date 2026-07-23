@@ -262,3 +262,12 @@ Status: accepted / implemented.
 2. Translation content is not duplicated in either presentation runtime; both resolve the same source record before rendering.
 3. Remaining portfolio records retain their existing top-level content as fallback and will migrate incrementally in separate tasks.
 4. Runtime IDs, including `creative-ai`, remain stable throughout the migration.
+
+## 2026-07-23 — Ethics / Life Protection shared PL/EN localization
+
+Status: accepted / implemented.
+
+1. `ethics-life-protection` now uses the existing shared `translations.pl` and `translations.en` model and resolver.
+2. Classic 2D and Experience 3D consume the same localized record, without duplicating Ethics content between presentation modes.
+3. The stable runtime ID `ethics-life-protection` and its scene metadata remain unchanged.
+4. The migration remains incremental: the three remaining records continue to use their existing top-level fallback fields until separately localized.

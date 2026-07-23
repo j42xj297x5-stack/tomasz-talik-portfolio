@@ -384,7 +384,6 @@ AI does not replace the creator. It expands the space in which the creator can a
     id: 'ethics-life-protection',
     title: 'Ethics / Life Protection',
     shortLabel: 'Ethics / Life',
-    eyebrow: 'Ziemia',
     modelPath: '/glb/glyph_3.glb',
     modelKind: 'glyph',
     plaqueModelPath: '/glb/plaque_ethics.glb',
@@ -395,15 +394,43 @@ AI does not replace the creator. It expands the space in which the creator can a
       plaqueGlowColor: '#E7D6A3'
     },
     ornamentPath: '/png/ai_ethics_ornament.png',
-    draftText: 'AI nie jest tylko narzędziem przyspieszania pracy. Jest siłą, która wzmacnia intencje człowieka — dobre i złe.',
-    bodyText: `AI nie jest tylko narzędziem przyspieszania pracy.
-Jest siłą, która wzmacnia intencje człowieka — dobre i złe.
+    translations: {
+      pl: {
+        eyebrow: 'Ziemia',
+        leadText: 'AI nie jest tylko narzędziem przyspieszania pracy.',
+        bodyText: `Jest siłą, która wzmacnia intencje człowieka — zarówno te, które służą życiu, jak i te, które prowadzą do krzywdy.
 
 Dlatego technologia potrzebuje fundamentu:
+
 uważności, odpowiedzialności, edukacji i troski o życie.
 
-Ten filar mówi o AI jako narzędziu służby, nie dominacji.
-O ochronie człowieczeństwa w czasie przyspieszenia.
-O tym, żeby transformacja nie była dostępna tylko dla elit.`
+AI może być narzędziem służby, nie dominacji.
+
+Może wzmacniać to, co pomaga nam chronić siebie nawzajem: miłość, współczucie, empatię, przebaczenie, cierpliwość i zdolność nieodpowiadania krzywdą na krzywdę.
+
+Rozwój nie powinien oznaczać wyłącznie większej mocy.
+
+Powinien także zmniejszać cierpienie, poszerzać zrozumienie i pomagać nam troszczyć się o ludzi, inne istoty oraz świat, którego jesteśmy częścią.`,
+        closingText: 'Transformacja technologiczna powinna służyć wielu, nie tylko nielicznym.'
+      },
+      en: {
+        eyebrow: 'Earth',
+        leadText: 'AI is not only a tool for accelerating work.',
+        bodyText: `It is a force that amplifies human intentions — both those that serve life and those that lead to harm.
+
+That is why technology needs a foundation:
+
+mindfulness, responsibility, education, and care for life.
+
+AI can be a tool of service, not domination.
+
+It can strengthen what helps us protect one another: love, compassion, empathy, forgiveness, patience, and the ability not to answer harm with harm.
+
+Progress should not mean greater power alone.
+
+It should also reduce suffering, deepen understanding, and help us care for people, other beings, and the world of which we are a part.`,
+        closingText: 'Technological transformation should serve the many, not only the few.'
+      }
+    }
   }
 ];
