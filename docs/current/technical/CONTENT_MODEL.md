@@ -65,11 +65,13 @@ Rules in current MVP:
 Status: partially implemented. The current active source remains `src/content/portfolioNodes.js`, with `src/content/resolvePortfolioNodes.js` as the shared language resolver.
 
 Current direction:
-- `AI Guide` (`ai-guide`), `Creative AI` (`creative-ai`), and `Ethics / Life Protection` (`ethics-life-protection`) use the optional `translations.pl` and `translations.en` fields for their panel copy.
+- `AI Guide` (`ai-guide`), `DIG Engine` (`spotify-digger`), `Creative AI` (`creative-ai`), and `Ethics / Life Protection` (`ethics-life-protection`) use the optional `translations.pl` and `translations.en` fields for their panel copy.
 - `Classic 2D` and `Experience 3D` both use the same resolver and the same stable record IDs; neither mode owns a copy of the translation.
 - The resolver applies translated text fields when a selected language is present. Records not yet translated retain their existing top-level fields as a fallback.
-- This is an incremental migration of three of five records, not a completed bilingual model for all portfolio content.
+- The resolver shallowly overlays a selected translation with `{ ...node, ...translation }`; therefore each localized `caseStudy` object must be complete rather than partial.
+- This is an incremental migration of four of five records, not a completed bilingual model for all portfolio content.
 - `AI Guide`, `Creative AI`, and `Ethics / Life Protection` preserve multi-paragraph body copy in template literals so both panel implementations retain the same paragraph boundaries.
+- `DIG Engine` localizes its main panel (`draftText`, `bodyText`, and `closingText`), full case study, and six-item gallery in both languages; its GLB, GIF, plaque, ornament, and other runtime metadata remain shared at record level.
 - The current five portfolio gates remain the conceptual mapping:
   1. AI Guide
   2. DIG Engine / Spotify Digger, preserving current legacy naming where applicable
@@ -78,7 +80,7 @@ Current direction:
   5. Ethics / Life Protection
 - Runtime IDs must not be renamed unless a separate migration task is created.
 - User-facing labels may evolve before final copy is locked.
-- The two remaining records (`spotify-digger` and `haiku-cosmos`) still use their existing top-level fields as fallback while their PL/EN migrations are pending.
+- `Haiku Cosmos` (`haiku-cosmos`) is the final record using its existing Polish top-level content as fallback while its PL/EN migration is pending.
 
 Shared rule: content records remain the source of truth for both `Classic 2D` panels and `Experience 3D` overlay panels.
 

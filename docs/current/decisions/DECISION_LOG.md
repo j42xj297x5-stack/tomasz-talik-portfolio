@@ -280,3 +280,13 @@ Status: accepted / implemented.
 2. Classic 2D and Experience 3D consume the same localized record without duplicating AI Guide content between presentation modes.
 3. The stable runtime ID `ai-guide` and all scene metadata remain unchanged.
 4. The migration remains incremental: three of five portfolio records are localized, while DIG Engine and Haiku Cosmos retain their base fields as fallback.
+
+## 2026-07-23 — DIG Engine shared PL/EN localization
+
+Status: accepted / implemented.
+
+1. `spotify-digger` now uses the existing shared `translations.pl` and `translations.en` model for its complete main panel, case study, and six-item gallery.
+2. The stable runtime ID `spotify-digger` and its shared GLB, GIF, plaque, ornament, visual, and runtime metadata remain unchanged.
+3. Classic 2D and Experience 3D resolve the same localized record through the shared resolver, without duplicating DIG Engine content between presentation modes.
+4. Both translations provide complete `caseStudy` objects because the resolver's `{ ...node, ...translation }` contract is shallow.
+5. The incremental migration now covers four of five portfolio records; Haiku Cosmos remains on Polish fallback pending a separate task.
