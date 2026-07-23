@@ -75,6 +75,7 @@ function saveSelection() {
 function setLanguage(language) {
   state.language = language;
   state.mode = null;
+  document.documentElement.lang = language;
   saveSelection();
   renderModeSelection();
 }
@@ -159,6 +160,7 @@ function renderModeSelection() {
 }
 
 function renderClassic2D() {
+  document.documentElement.lang = state.language || 'en';
   startClassic2D({
     container: app,
     language: state.language || 'en',
@@ -171,6 +173,7 @@ async function startExperience3d() {
 
   state.mode = 'experience-3d';
   state.runtimeStarted = true;
+  document.documentElement.lang = state.language || 'en';
   saveSelection();
 
   const copy = COPY[state.language || 'en'];
@@ -186,6 +189,7 @@ async function startExperience3d() {
 loadStoredSelection();
 
 if (state.language) {
+  document.documentElement.lang = state.language;
   renderModeSelection();
 } else {
   renderLanguageSelection();
