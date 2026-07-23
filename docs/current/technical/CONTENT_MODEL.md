@@ -6,7 +6,8 @@ Each gate node contains:
 - `id`
 - `title`
 - `shortLabel`
-- `draftText`
+- Base content fields such as `draftText`, `leadText`, `bodyText`, and `closingText`, used as fallback when a record has no translation for the resolved language.
+- Optional `translations.pl` and `translations.en` content objects, which override localized panel fields while retaining the base record's shared metadata.
 - Optional visual model metadata (`modelPath`, `modelKind`) for per-node GLB visuals.
 - Optional `projectLinks` array for Experience 3D overlay links. Each valid entry contains `kind`, `label`, and an absolute `http` or `https` `url`; the overlay renders these as safe external links and does not pass their URLs through the public-path helper.
 
@@ -48,7 +49,7 @@ Rules in current MVP:
 - Flat glyph sprite mapping is a UI/visual mapping in `src/classic2d.js`, not a content rename and not a replacement for the GLB glyph metadata used by Experience 3D.
 - Current Classic 2D flat sprite mapping: AI Guide -> `/png/glif_ai_guide.png`, DIG Engine -> `/png/glif_dig_engine.png`, Haiku Cosmos -> `/png/glif_haiku_cosmos.png`, Creative AI -> `/png/glif_creative_ai.png`, Ethics / Life Protection -> `/png/glif_ethics.png`.
 - Browser/runtime asset paths must remain logical public paths such as `/png/glif_ai_guide.png`, not `public/png/glif_ai_guide.png`.
-- Full PL/EN content modeling and content-locking remain future work; `creative-ai` and `ethics-life-protection` currently have accepted bilingual copy.
+- Full PL/EN content modeling and content-locking remain future work; `ai-guide`, `creative-ai`, and `ethics-life-protection` currently have accepted bilingual copy.
 
 ## Haiku Cosmos content checkpoint (2026-07-17)
 
@@ -64,11 +65,11 @@ Rules in current MVP:
 Status: partially implemented. The current active source remains `src/content/portfolioNodes.js`, with `src/content/resolvePortfolioNodes.js` as the shared language resolver.
 
 Current direction:
-- `Creative AI` (`creative-ai`) and `Ethics / Life Protection` (`ethics-life-protection`) use the optional `translations.pl` and `translations.en` fields for their panel copy.
+- `AI Guide` (`ai-guide`), `Creative AI` (`creative-ai`), and `Ethics / Life Protection` (`ethics-life-protection`) use the optional `translations.pl` and `translations.en` fields for their panel copy.
 - `Classic 2D` and `Experience 3D` both use the same resolver and the same stable record IDs; neither mode owns a copy of the translation.
 - The resolver applies translated text fields when a selected language is present. Records not yet translated retain their existing top-level fields as a fallback.
-- This is an incremental migration of two of five records, not a completed bilingual model for all portfolio content.
-- `Creative AI` and `Ethics / Life Protection` preserve multi-paragraph body copy in template literals so both panel implementations retain the same paragraph boundaries.
+- This is an incremental migration of three of five records, not a completed bilingual model for all portfolio content.
+- `AI Guide`, `Creative AI`, and `Ethics / Life Protection` preserve multi-paragraph body copy in template literals so both panel implementations retain the same paragraph boundaries.
 - The current five portfolio gates remain the conceptual mapping:
   1. AI Guide
   2. DIG Engine / Spotify Digger, preserving current legacy naming where applicable
@@ -77,7 +78,7 @@ Current direction:
   5. Ethics / Life Protection
 - Runtime IDs must not be renamed unless a separate migration task is created.
 - User-facing labels may evolve before final copy is locked.
-- The three remaining records (`ai-guide`, `spotify-digger`, and `haiku-cosmos`) still use their existing top-level draft fields as fallback while their PL/EN migrations are pending.
+- The two remaining records (`spotify-digger` and `haiku-cosmos`) still use their existing top-level fields as fallback while their PL/EN migrations are pending.
 
 Shared rule: content records remain the source of truth for both `Classic 2D` panels and `Experience 3D` overlay panels.
 

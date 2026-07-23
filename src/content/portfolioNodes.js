@@ -13,10 +13,32 @@ export const portfolioNodes = [
       plaqueGlowColor: '#72D6B0'
     },
     ornamentPath: '/png/ai_guide_ornament.png',
-    draftText: 'Pomagam ludziom oswoić AI tam, gdzie technologia spotyka lęk, chaos i potrzebę sensu. Tłumaczę narzędzia, projektuję proste workflowy i prowadzę przez pierwsze kroki tak, żeby człowiek odzyskał sprawczość, zamiast czuć się przytłoczony rewolucją technologiczną. Z chaosu narzędzi powstaje spokojny proces.',
-    leadText: 'Pomagam ludziom oswoić AI tam, gdzie technologia spotyka lęk, chaos i potrzebę sensu.',
-    bodyText: 'Tłumaczę narzędzia, projektuję proste workflowy i prowadzę przez pierwsze kroki tak, żeby człowiek odzyskał sprawczość, zamiast czuć się przytłoczony rewolucją technologiczną.',
-    closingText: 'Z chaosu narzędzi powstaje spokojny proces.'
+    translations: {
+      pl: {
+        eyebrow: 'Oswajanie AI',
+        leadText: 'Pomagam ludziom oswoić AI tam, gdzie technologia spotyka lęk, chaos i poczucie, że wszystko zmienia się zbyt szybko.',
+        bodyText: `Nie da się znać każdego narzędzia ani nadążać za każdą nową możliwością. Można jednak nauczyć się sposobu pracy, który pozostaje użyteczny także wtedy, gdy narzędzia się zmieniają.
+
+Pokazuję, jak nazwać cel, przygotować właściwy kontekst, rozmawiać z AI, oceniać jego odpowiedzi i zamieniać luźną potrzebę w świadomy, powtarzalny proces. Czasem wystarczy opisać, co naprawdę chce się przekazać, określić ton, poprosić o kilka wariantów i dokonać własnego wyboru.
+
+Doświadczenie zdobyte w wielu branżach, zawodach i środowiskach pomaga mi rozpoznawać, gdzie człowiek traci sprawczość: czy przeszkodą jest samo narzędzie, brak wiedzy o jego możliwościach, trudność w sformułowaniu intencji, czy niewyrażona jeszcze wizja.
+
+Nie uczę bezmyślnego korzystania z technologii. Pomagam budować relację, w której człowiek nadal wyznacza kierunek, podejmuje decyzje i rozumie proces, a AI pomaga mu szybciej próbować, porównywać, tworzyć i rozwijać własne możliwości.`,
+        closingText: 'Z chaosu narzędzi powstaje spokojny proces.'
+      },
+      en: {
+        eyebrow: 'Making AI approachable',
+        leadText: 'I help people become comfortable with AI where technology meets fear, chaos, and the feeling that everything is changing too quickly.',
+        bodyText: `No one can know every tool or keep up with every new possibility. It is possible, however, to learn a way of working that remains useful even as the tools continue to change.
+
+I show people how to define their goal, provide the right context, communicate with AI, evaluate its responses, and turn a vague need into a deliberate, repeatable process. Sometimes it is enough to describe what truly needs to be communicated, define the tone, ask for several alternatives, and make an informed choice.
+
+My experience across many industries, professions, and working environments helps me recognize where a person loses their sense of agency: whether the obstacle is the tool itself, limited knowledge of its possibilities, difficulty expressing an intention, or a vision that has not yet found its form.
+
+I do not teach people to use technology without reflection. I help build a relationship in which the human still sets the direction, makes decisions, and understands the process, while AI helps them experiment, compare, create, and develop their own capabilities more quickly.`,
+        closingText: 'From the chaos of tools, a calm process emerges.'
+      }
+    }
   },
   {
     id: 'spotify-digger',
