@@ -1,5 +1,5 @@
 import * as THREE from './vendor/three.js';
-import { portfolioNodes } from './content/portfolioNodes.js';
+import { resolvePortfolioNodes } from './content/resolvePortfolioNodes.js';
 import { createScene } from './scene/createScene.js';
 import { addLights } from './scene/lights.js';
 import { createCentralObject } from './scene/centralObject.js';
@@ -23,6 +23,8 @@ import { createLoaderOverlay } from './ui/loaderOverlay.js';
 
 const app = document.querySelector('#app');
 if (!app) throw new Error('Missing #app mount element.');
+
+const portfolioNodes = resolvePortfolioNodes(document.documentElement.lang);
 
 app.innerHTML = `
   <main class="runtime-shell runtime-shell--loading">

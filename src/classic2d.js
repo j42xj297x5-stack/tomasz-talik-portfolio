@@ -1,4 +1,4 @@
-import { portfolioNodes } from './content/portfolioNodes.js';
+import { resolvePortfolioNodes } from './content/resolvePortfolioNodes.js';
 import { publicPath } from './utils/publicPath.js';
 import { getGateAccentColor, getPanelThemeForGate } from './ui/panelThemes.js';
 
@@ -237,7 +237,9 @@ function renderPanel(panel, node, copy) {
 export function startClassic2D({ container, language = 'en', onBackToModes }) {
   if (!container) throw new Error('Classic 2D requires a container.');
 
+  document.documentElement.lang = language;
   const copy = resolveCopy(language);
+  const localizedPortfolioNodes = resolvePortfolioNodes(language);
   const isPolishIntro = language === 'pl';
   const polishTitleLines = isPolishIntro ? copy.title.split(', ') : [];
   let activeGateId = null;
@@ -319,7 +321,7 @@ export function startClassic2D({ container, language = 'en', onBackToModes }) {
     monkey?.classList.add('classic-2d__monkey--image-error');
   });
 
-  portfolioNodes.forEach((node, index) => {
+  localizedPortfolioNodes.forEach((node, index) => {
     const button = document.createElement('button');
     button.className = 'classic-2d-gate';
     button.type = 'button';

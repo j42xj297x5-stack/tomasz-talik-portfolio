@@ -253,3 +253,12 @@ Status: accepted / implemented.
 3. Project detail remains in the readable HTML/CSS overlay; plaques are a scene transition rather than a content surface.
 4. Visible additive plaque glow is configured per node, while hover, transition, and plaque lighting plus GLB materials remain neutral/shared.
 5. Plaques are cached as one cloned instance per node, and interaction serialization permits one active plaque animation at a time.
+
+## 2026-07-23 — Incremental shared PL/EN content resolver
+
+Status: accepted / implemented.
+
+1. `creative-ai` is the first portfolio record with shared `translations.pl` and `translations.en` panel copy consumed by both Classic 2D and Experience 3D.
+2. Translation content is not duplicated in either presentation runtime; both resolve the same source record before rendering.
+3. Remaining portfolio records retain their existing top-level content as fallback and will migrate incrementally in separate tasks.
+4. Runtime IDs, including `creative-ai`, remain stable throughout the migration.

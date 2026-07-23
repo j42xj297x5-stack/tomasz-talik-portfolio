@@ -48,7 +48,7 @@ Rules in current MVP:
 - Flat glyph sprite mapping is a UI/visual mapping in `src/classic2d.js`, not a content rename and not a replacement for the GLB glyph metadata used by Experience 3D.
 - Current Classic 2D flat sprite mapping: AI Guide -> `/png/glif_ai_guide.png`, DIG Engine -> `/png/glif_dig_engine.png`, Haiku Cosmos -> `/png/glif_haiku_cosmos.png`, Creative AI -> `/png/glif_creative_ai.png`, Ethics / Life Protection -> `/png/glif_ethics.png`.
 - Browser/runtime asset paths must remain logical public paths such as `/png/glif_ai_guide.png`, not `public/png/glif_ai_guide.png`.
-- Full PL/EN content modeling, final bilingual copy, and content-locking remain future work.
+- Full PL/EN content modeling and content-locking remain future work; only `creative-ai` currently has accepted bilingual copy.
 
 ## Haiku Cosmos content checkpoint (2026-07-17)
 
@@ -59,14 +59,16 @@ Rules in current MVP:
 - Rekord `haiku-cosmos` deklaruje `projectLinks` dla publicznego demo i repozytorium; Experience 3D renderuje je przed case study, a Classic 2D nie zmienia swojego interfejsu.
 
 
-## Planned shared PL/EN content model for dual modes
+## Incremental shared PL/EN content model for dual modes
 
-Status: planned / documentation-only. The current active source remains `src/content/portfolioNodes.js`.
+Status: partially implemented. The current active source remains `src/content/portfolioNodes.js`, with `src/content/resolvePortfolioNodes.js` as the shared language resolver.
 
-Future direction:
-- The content model should support bilingual PL/EN content in a structured model.
-- `Classic 2D` and `Experience 3D` should consume the same gate IDs and the same content records.
-- Text must not be duplicated separately across 2D and 3D implementations.
+Current direction:
+- `Creative AI` (`creative-ai`) is the first record using optional `translations.pl` and `translations.en` fields for its panel copy.
+- `Classic 2D` and `Experience 3D` both use the same resolver and the same stable record IDs; neither mode owns a copy of the translation.
+- The resolver applies translated text fields when a selected language is present. Records not yet translated retain their existing top-level fields as a fallback.
+- This is an incremental migration, not a completed bilingual model for all portfolio content.
+- `Creative AI` preserves multi-paragraph body copy in template literals so both panel implementations retain the same paragraph boundaries.
 - The current five portfolio gates remain the conceptual mapping:
   1. AI Guide
   2. DIG Engine / Spotify Digger, preserving current legacy naming where applicable
@@ -75,9 +77,9 @@ Future direction:
   5. Ethics / Life Protection
 - Runtime IDs must not be renamed unless a separate migration task is created.
 - User-facing labels may evolve before final copy is locked.
-- Current copy remains draft; final Polish and English text is not accepted yet.
+- The remaining records still use their existing draft fields while their PL/EN migrations are pending.
 
-Planned rule: content records should become the source of truth for both the future flat `Classic 2D` panels and the current `Experience 3D` overlay panels.
+Shared rule: content records remain the source of truth for both `Classic 2D` panels and `Experience 3D` overlay panels.
 
 ## Unified Experience 3D ornament checkpoint (2026-07-20)
 - Each of the five portfolio records retains its `ornamentPath` for the Experience 3D overlay.
