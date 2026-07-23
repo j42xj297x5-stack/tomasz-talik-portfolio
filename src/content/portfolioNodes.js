@@ -58,14 +58,16 @@ I do not teach people to use technology without reflection. I help build a relat
     ornamentPath: '/png/digger_ornament.png',
     demoGifPath: '/gif/DIG_engine.gif',
     demoGifAlt: 'Animated DIG Engine interface demo',
-    draftText: 'DIG Engine to lokalny system eksploracji muzyki, który łączy workflow, API, metadane, bazę SQLite i intuicję słuchacza.',
-    bodyText: `DIG Engine to lokalny system eksploracji muzyki, który łączy workflow, API, metadane, bazę SQLite i intuicję słuchacza.
+    translations: {
+      pl: {
+        draftText: 'DIG Engine to lokalny system eksploracji muzyki, który łączy workflow, API, metadane, bazę SQLite i intuicję słuchacza.',
+        bodyText: `DIG Engine to lokalny system eksploracji muzyki, który łączy workflow, API, metadane, bazę SQLite i intuicję słuchacza.
 
 Nie jest prostym generatorem playlist. Działa jak laboratorium danych muzycznych: zbiera kandydatów, wzbogaca metadane, porównuje źródła, pozwala filtrować wyniki i zamienia luźne tropy w gotowy rezultat.
 
 Projekt pokazuje moje podejście do narzędzi użytkowych: dane mają być czytelne, workflow zrozumiały, a automatyzacja ma wspierać decyzje człowieka — nie zasłaniać sensu pracy.`,
-    closingText: 'Workflow. API. GUI. SQLite. Discogs. Last.fm. Automatyzacja playlist. Projektowanie procesu z AI.',
-    caseStudy: {
+        closingText: 'Workflow. API. GUI. SQLite. Discogs. Last.fm. Automatyzacja playlist. Projektowanie procesu z AI.',
+        caseStudy: {
       title: 'DIG Engine — Music Data Resonance',
       heading: 'Od chaosu muzycznego do systemu eksploracji danych',
       intro: [
@@ -140,6 +142,93 @@ Projekt pokazuje moje podejście do narzędzi użytkowych: dane mają być czyte
           caption: 'Przykładowa playlista w aplikacji Spotify, utworzona automatycznie przez DIG Engine jako rezultat zakończonego workflowu.'
         }
       ]
+        }
+      },
+      en: {
+        draftText: 'DIG Engine is a local music exploration system that combines workflows, APIs, metadata, a SQLite database, and the listener’s intuition.',
+        bodyText: `DIG Engine is a local music exploration system that combines workflows, APIs, metadata, a SQLite database, and the listener’s intuition.
+
+It is not a simple playlist generator. It works as a music data laboratory: gathering candidates, enriching metadata, comparing sources, filtering results, and turning loose musical leads into a finished outcome.
+
+The project reflects my approach to practical tools: data should remain readable, workflows should be understandable, and automation should support human decisions rather than obscure the purpose of the work.`,
+        closingText: 'Workflow. APIs. GUI. SQLite. Discogs. Last.fm. Playlist automation. Process design with AI.',
+        caseStudy: {
+          title: 'DIG Engine — Music Data Resonance',
+          heading: 'From musical chaos to a music data exploration system',
+          intro: [
+            'DIG Engine began as a local tool for exploring music, but it quickly grew beyond a simple playlist generator. The starting point was the need to organize a large number of musical leads: artists, albums, tags, listening history, releases, playlists, and external data sources.',
+            'The project addresses a practical question: how can intuitive music discovery be transformed into a clear, repeatable, and extensible process?'
+          ],
+          problem: 'Instead of relying exclusively on automated recommendations, I approached music as a data space. Loose leads, listening history, metadata, and playlists needed a system that could organize, compare, and develop them without taking control away from the listener.',
+          solution: 'DIG Engine combines local workflows, music-service APIs, Last.fm data, the Discogs database, a custom SQLite database, and a layer designed as the user’s DNA — a memory of preferences, decisions, and relationships between tracks, artists, tags, and playlists.',
+          processSections: [
+            {
+              title: 'Stabilizing the pipeline',
+              text: 'The first step was to create a deterministic workflow: indexing, building a candidate pool, selection, export, and the optional application of results to playlists.'
+            },
+            {
+              title: 'Data and metadata layer',
+              text: 'A local Discogs Offline database based on SQLite and FTS5 was integrated into the system. This allows DIG Engine to search releases, artists, labels, and metadata locally instead of making the entire process dependent on online requests.'
+            },
+            {
+              title: 'GUI as a thin layer over the backend',
+              text: 'The interface does not replace the system’s logic. The GUI reads run contracts and displays progress, results, and statuses, while the backend and runtime artifacts remain the source of truth.'
+            },
+            {
+              title: 'Workflow Composer',
+              text: 'A preset-composition layer was created. Users can build processes from blocks such as CSV input, Last.fm query, Spotify cross-checking, playlist application, or CSV export. This moves the project beyond individual scripts and toward an operational tool.'
+            },
+            {
+              title: 'Documentation and responsibility boundaries',
+              text: 'A significant part of the work involved documenting the architecture, mapping data flows, and maintaining clear boundaries between modules. It was particularly important to separate the current state of a run from the long-term DNA memory and to distinguish the active runtime from future AI modules.'
+            }
+          ],
+          aiWorkflow: [
+            'AI was not treated as a magical code generator in this project, but as a partner in the design process. ChatGPT helped analyze ideas, organize the architecture, ask decision-making questions, prepare prompts for Codex, and assess risks before implementation.',
+            'Codex carried out narrowly defined implementation tasks: building functions, refactoring, improving the GUI, updating documentation, performing audits, and running tests. After each step, I returned to the analysis: what had changed, whether the architectural boundaries remained intact, and what required further work.'
+          ],
+          result: 'DIG Engine demonstrates my approach to building software with AI. The aim is not automatic code generation, but the creation of a process in which the human leads the project while AI helps analyze, implement, organize, and develop a complex system more efficiently.',
+          nextSteps: 'In the future, DIG Engine can evolve into a more intelligent music exploration system, with a more complete DNA memory, candidate scoring, AI-assisted search, and clearer explanations of why a particular track, artist, or release appears in a given context.',
+          gallery: [
+            {
+              src: '/png/dig_engine-screenshot_01.png',
+              title: 'Progress',
+              alt: 'Progress view in DIG Engine',
+              caption: 'The window presents the current state of the digger: completed and active tasks, steps requiring user decisions, and input fields such as a source-track file, a playlist name, or the approval of selections made during the process.'
+            },
+            {
+              src: '/png/dig_engine-screenshot_02.png',
+              title: 'Discogs Browser',
+              alt: 'Discogs Browser in DIG Engine',
+              caption: 'A workspace for the local Discogs database. It supports manual keyword searches for artists or albums, filtering results by year and country of release, and creating `preseed.csv` files later used by modules that search for similar artists and tracks.'
+            },
+            {
+              src: '/png/dig_engine-screenshot_03.png',
+              title: 'Workflow Composer',
+              alt: 'Workflow Composer in DIG Engine',
+              caption: 'A space for building custom workflows from the available modules. It allows users to adjust filtering parameters, change the order of digger components, generate a CSV file, or automatically publish a playlist to Spotify.'
+            },
+            {
+              src: '/png/dig_engine-screenshot_04.png',
+              title: 'Results',
+              alt: 'Results view in DIG Engine',
+              caption: 'A summary of the completed process, including its start time, the files and data sources used, the number of tracks discovered, the status of playlist publication or file export, and the total execution time.'
+            },
+            {
+              src: '/png/dig_engine-screenshot_05.png',
+              title: 'Settings',
+              alt: 'Settings view in DIG Engine',
+              caption: 'The application’s configuration center: saving and loading configuration files, building and rebuilding the local Discogs/FTS database, defining data locations, creating the DNA database, and configuring the APIs used by the system.'
+            },
+            {
+              src: '/png/dig_engine-screenshot_06.png',
+              title: 'Spotify output',
+              alt: 'Spotify playlist created by DIG Engine',
+              caption: 'An example playlist in the Spotify application, created automatically by DIG Engine as the result of a completed workflow.'
+            }
+          ]
+        }
+      }
     }
   },
   {
