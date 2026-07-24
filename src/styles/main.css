@@ -2548,16 +2548,13 @@ body {
 }
 
 .classic-2d__monkey-rotation {
-  --classic-monkey-rotation: 0deg;
   position: relative;
   display: grid;
   place-items: center;
   width: 100%;
   max-height: inherit;
   filter: drop-shadow(0 0 28px rgba(211, 190, 121, 0.1));
-  transform: rotate(var(--classic-monkey-rotation));
-  transform-origin: center;
-  transition: filter 0.18s ease, transform 0.26s ease;
+  transition: filter 0.18s ease;
 }
 
 .classic-2d__monkey-rotation::before {

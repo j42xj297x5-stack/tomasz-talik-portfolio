@@ -36,7 +36,6 @@ const GLYPH_SPRITES_BY_GATE_ID = {
   'creative-ai': '/png/glif_creative_ai.png',
   'ethics-life-protection': '/png/glif_ethics.png'
 };
-const MONKEY_TILTS = ['-5deg', '4deg', '-3deg', '5deg', '-4deg'];
 const CLASSIC_MONKEY_IMAGE_PATH = '/png/monkey_small.png';
 const CLASSIC_ORBIT_RADIUS_PERCENT = 34;
 const CLASSIC_ORBIT_START_ANGLE_DEGREES = -90;
@@ -377,7 +376,6 @@ export function startClassic2D({ container, language = 'en', onBackToModes }) {
         gate.setAttribute('aria-pressed', String(isActive));
       });
       monkey.classList.add('classic-2d__monkey--active');
-      monkey.style.setProperty('--classic-monkey-rotation', MONKEY_TILTS[index] || '3deg');
       renderPanel(panel, node, copy, interfaceCopy);
     });
 
@@ -393,7 +391,6 @@ export function startClassic2D({ container, language = 'en', onBackToModes }) {
     document.body.classList.remove('classic-2d-panel-open', 'demo-lightbox-open');
     activeGateId = null;
     monkey.classList.remove('classic-2d__monkey--active');
-    monkey.style.removeProperty('--classic-monkey-rotation');
     orbit.querySelectorAll('.classic-2d-gate').forEach((gate) => {
       gate.classList.remove('classic-2d-gate--active');
       gate.setAttribute('aria-pressed', 'false');
