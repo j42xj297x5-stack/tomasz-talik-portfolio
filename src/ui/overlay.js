@@ -1,17 +1,19 @@
 import { publicPath } from '../utils/publicPath.js';
 import { getPanelThemeForGate } from './panelThemes.js';
+import { getInterfaceCopy } from '../i18n/interfaceCopy.js';
 
-export function createOverlay({ onClose } = {}) {
+export function createOverlay({ language, onClose } = {}) {
+  const copy = getInterfaceCopy(language);
   const root = document.createElement('section');
   root.className = 'overlay';
   root.hidden = true;
   root.innerHTML = `
     <div class="overlay__backdrop" data-close-overlay></div>
-    <article class="overlay__panel" role="dialog" aria-modal="true" aria-label="Portfolio gate details">
+    <article class="overlay__panel" role="dialog" aria-modal="true" aria-label="${copy.panelDialogLabel}">
       <img class="overlay__ornament" alt="" aria-hidden="true" hidden>
       <div class="overlay__content">
         <div class="overlay__scroll">
-          <p class="overlay__status">Draft content — final copy pending</p>
+          <p class="overlay__status">${copy.draftStatus}</p>
           <h2 class="overlay__title"></h2>
           <p class="overlay__subtitle" hidden></p>
           <figure class="overlay__demo" hidden>
@@ -19,7 +21,7 @@ export function createOverlay({ onClose } = {}) {
               <img class="overlay__demo-image" alt="">
             </button>
             <figcaption class="overlay__demo-caption">
-              <button class="overlay__demo-enlarge" type="button">Powiększ demo</button>
+              <button class="overlay__demo-enlarge" type="button">${copy.enlargeDemo}</button>
             </figcaption>
           </figure>
           <p class="overlay__lead" hidden></p>
@@ -29,19 +31,19 @@ export function createOverlay({ onClose } = {}) {
             <p class="overlay__feature-text"></p>
           </div>
           <p class="overlay__closing" hidden></p>
-          <nav class="overlay__project-links" aria-label="Linki projektu" hidden></nav>
+          <nav class="overlay__project-links" aria-label="${copy.projectLinksLabel}" hidden></nav>
           <section class="overlay__case-study" hidden></section>
         </div>
         <div class="overlay__actions">
-          <button class="overlay__case-toggle" type="button" hidden aria-expanded="false">Czytaj case study</button>
-          <button class="overlay__close" type="button" data-close-overlay aria-label="Zamknij panel">Zamknij</button>
+          <button class="overlay__case-toggle" type="button" hidden aria-expanded="false">${copy.readCaseStudy}</button>
+          <button class="overlay__close" type="button" data-close-overlay aria-label="${copy.closePanelAria}">${copy.closePanel}</button>
         </div>
       </div>
     </article>
     <div class="overlay__demo-lightbox" role="dialog" aria-modal="true" hidden>
-      <button class="overlay__demo-lightbox-backdrop" type="button" data-close-demo aria-label="Zamknij powiększone demo"></button>
+      <button class="overlay__demo-lightbox-backdrop" type="button" data-close-demo aria-label="${copy.closeEnlargedDemo}"></button>
       <div class="overlay__demo-lightbox-frame">
-        <button class="overlay__demo-lightbox-close" type="button" data-close-demo aria-label="Zamknij powiększone demo">×</button>
+        <button class="overlay__demo-lightbox-close" type="button" data-close-demo aria-label="${copy.closeEnlargedDemo}">×</button>
         <img class="overlay__demo-lightbox-image" alt="">
       </div>
     </div>
@@ -127,7 +129,7 @@ export function createOverlay({ onClose } = {}) {
       link.href = projectLink.url;
       link.target = '_blank';
       link.rel = 'noopener noreferrer';
-      link.setAttribute('aria-label', `${projectLink.label} — otwiera się w nowej karcie`);
+      link.setAttribute('aria-label', `${projectLink.label} — ${copy.opensInNewTab}`);
       projectLinksEl.append(link);
     });
 
@@ -157,14 +159,14 @@ export function createOverlay({ onClose } = {}) {
     appendParagraphs(header, caseStudy.intro ?? []);
     caseStudyEl.append(header);
 
-    appendCaseBlock(caseStudyEl, 'Problem', caseStudy.problem);
-    appendCaseBlock(caseStudyEl, 'Rozwiązanie', caseStudy.solution);
+    appendCaseBlock(caseStudyEl, copy.problem, caseStudy.problem);
+    appendCaseBlock(caseStudyEl, copy.solution, caseStudy.solution);
 
     if (caseStudy.processSections?.length) {
       const process = document.createElement('section');
       process.className = 'overlay__case-block overlay__case-process';
       const processHeading = document.createElement('h4');
-      processHeading.textContent = 'Proces';
+      processHeading.textContent = copy.process;
       process.append(processHeading);
 
       caseStudy.processSections.forEach((section, index) => {
@@ -180,15 +182,15 @@ export function createOverlay({ onClose } = {}) {
       caseStudyEl.append(process);
     }
 
-    appendCaseBlock(caseStudyEl, 'AI workflow', caseStudy.aiWorkflow);
-    appendCaseBlock(caseStudyEl, 'Rezultat', caseStudy.result);
-    appendCaseBlock(caseStudyEl, 'Następne kroki', caseStudy.nextSteps);
+    appendCaseBlock(caseStudyEl, copy.aiWorkflow, caseStudy.aiWorkflow);
+    appendCaseBlock(caseStudyEl, copy.result, caseStudy.result);
+    appendCaseBlock(caseStudyEl, copy.nextSteps, caseStudy.nextSteps);
 
     if (caseStudy.gallery?.length) {
       const gallerySection = document.createElement('section');
       gallerySection.className = 'overlay__case-gallery-section';
       const galleryHeading = document.createElement('h4');
-      galleryHeading.textContent = 'Galeria screenshotów';
+      galleryHeading.textContent = copy.screenshotGallery;
       gallerySection.append(galleryHeading);
 
       const gallery = document.createElement('div');
@@ -202,7 +204,7 @@ export function createOverlay({ onClose } = {}) {
         button.className = 'overlay__case-shot-button';
         button.type = 'button';
         button.dataset.mediaOpen = '';
-        button.setAttribute('aria-label', `Powiększ screenshot: ${item.title ?? item.alt ?? item.caption ?? caseStudy.title}`);
+        button.setAttribute('aria-label', `${copy.enlargeScreenshot}: ${item.title ?? item.alt ?? item.caption ?? caseStudy.title}`);
 
         const image = document.createElement('img');
         image.src = publicPath(item.src);
@@ -237,7 +239,7 @@ export function createOverlay({ onClose } = {}) {
 
     caseStudyEl.hidden = !isOpen;
     caseToggleEl.setAttribute('aria-expanded', String(isOpen));
-    caseToggleEl.textContent = isOpen ? 'Ukryj case study' : 'Czytaj case study';
+    caseToggleEl.textContent = isOpen ? copy.hideCaseStudy : copy.readCaseStudy;
 
     if (isOpen && focusCaseStudy) {
       caseStudyEl.setAttribute('tabindex', '-1');
@@ -372,7 +374,7 @@ export function createOverlay({ onClose } = {}) {
 
       const subtitle = nodeData.subtitle ?? '';
       statusEl.hidden = Boolean(subtitle);
-      statusEl.textContent = subtitle ? '' : (nodeData.eyebrow ?? (isAIGuide ? nodeData.shortLabel : 'Draft content — final copy pending'));
+      statusEl.textContent = subtitle ? '' : (nodeData.eyebrow ?? (isAIGuide ? nodeData.shortLabel : copy.draftStatus));
 
       titleEl.textContent = nodeData.title;
       subtitleEl.hidden = !subtitle;
@@ -383,7 +385,7 @@ export function createOverlay({ onClose } = {}) {
       if (caseToggleEl) {
         caseToggleEl.hidden = !nodeData.caseStudy;
         caseToggleEl.setAttribute('aria-expanded', 'false');
-        caseToggleEl.textContent = 'Czytaj case study';
+        caseToggleEl.textContent = copy.readCaseStudy;
       }
 
       if (nodeData.demoGifPath) {
@@ -400,8 +402,8 @@ export function createOverlay({ onClose } = {}) {
         demoLightboxImageEl.removeAttribute('src');
         demoLightboxImageEl.alt = '';
       }
-      demoPreviewEl?.setAttribute('aria-label', `Powiększ demo: ${nodeData.title}`);
-      demoLightboxEl?.setAttribute('aria-label', `Powiększone demo: ${nodeData.title}`);
+      demoPreviewEl?.setAttribute('aria-label', `${copy.enlargeDemo}: ${nodeData.title}`);
+      demoLightboxEl?.setAttribute('aria-label', `${copy.enlargedDemo}: ${nodeData.title}`);
 
       if (hasStructuredCopy) {
         leadEl.hidden = !nodeData.leadText;

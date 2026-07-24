@@ -2,7 +2,7 @@
 
 ## Current contract
 
-The lightweight entry shell in `src/main.js` first selects language and then mode. It routes `Classic 2D` directly to `src/classic2d.js`; it dynamically imports `src/experience3d.js` only after the visitor selects `Experience 3D`. The two modes share `src/content/portfolioNodes.js` and stable gate IDs, rather than separate 2D records.
+The lightweight entry shell in `src/main.js` first selects language and then mode. It routes `Classic 2D` directly to `src/classic2d.js`; it dynamically imports `src/experience3d.js` only after the visitor selects `Experience 3D`. The two modes share `src/content/portfolioNodes.js` and stable gate IDs, rather than separate 2D records. On the mode-selection screen, the return-to-language button intentionally uses the language opposite the active selection and declares that visible language with its `lang` attribute.
 
 ## Classic 2D
 

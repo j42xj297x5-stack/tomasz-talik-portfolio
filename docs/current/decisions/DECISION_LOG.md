@@ -290,3 +290,13 @@ Status: accepted / implemented.
 3. Classic 2D and Experience 3D resolve the same localized record through the shared resolver, without duplicating DIG Engine content between presentation modes.
 4. Both translations provide complete `caseStudy` objects because the resolver's `{ ...node, ...translation }` contract is shallow.
 5. The incremental migration now covers four of five portfolio records; Haiku Cosmos remains on Polish fallback pending a separate task.
+
+
+## 2026-07-23 — Shared panel-chrome localization and opposite-language return control
+
+Status: accepted / implemented.
+
+1. Generic Classic 2D and Experience 3D panel chrome uses the shared `src/i18n/interfaceCopy.js` PL/EN resolver, independently of portfolio-record translations.
+2. The shared copy covers visible controls and associated accessibility labels for panels, case studies, project links, demos, lightboxes, and screenshot galleries.
+3. The mode-selection return-to-language control intentionally displays the language opposite the active selection and sets `lang` to match its visible text.
+4. This change does not alter portfolio records, their resolver, or project-specific content.

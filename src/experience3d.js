@@ -114,6 +114,7 @@ galaxyLayer.setProgressionMultiplier(initialProgressionMultipliers.galaxies);
 loadingDiagnostics.markEvent('sceneAttachEnd');
 
 const overlay = createOverlay({
+  language: document.documentElement.lang,
   onClose: () => void returnFromNodePanel()
 });
 const hoverLabel = createHoverLabel();

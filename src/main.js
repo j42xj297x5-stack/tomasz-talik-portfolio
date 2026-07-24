@@ -20,7 +20,6 @@ const COPY = {
     classicButton: 'Klasyczne 2D',
     experienceButton: 'Doświadczenie 3D',
     placeholderBack: 'Wróć do wyboru trybu',
-    backLanguage: 'Wróć do wyboru języka',
     launchStatus: 'Uruchamianie doświadczenia 3D…'
   },
   en: {
@@ -36,7 +35,6 @@ const COPY = {
     classicButton: 'Classic 2D',
     experienceButton: 'Experience 3D',
     placeholderBack: 'Back to mode selection',
-    backLanguage: 'Back to language selection',
     launchStatus: 'Starting Experience 3D…'
   }
 };
@@ -124,12 +122,14 @@ function renderModeSelection() {
   }
 
   const copy = COPY[state.language];
+  const backLanguage = state.language === 'pl' ? 'en' : 'pl';
+  const backLabel = state.language === 'pl' ? 'Back to language selection' : 'Wróć do wyboru języka';
   renderEntryShell(`
     <p class="entry-shell__eyebrow">${copy.modeEyebrow}</p>
     <h1 class="entry-shell__title" id="entry-title">${copy.modeTitle}</h1>
     <p class="entry-shell__text">${copy.modeText}</p>
     <div class="entry-shell__choices" data-entry-choices></div>
-    <button class="entry-shell__back" type="button" data-entry-back>${copy.backLanguage}</button>
+    <button class="entry-shell__back" type="button" data-entry-back lang="${backLanguage}">${backLabel}</button>
   `);
 
   const choices = app.querySelector('[data-entry-choices]');
