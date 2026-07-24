@@ -300,3 +300,15 @@ Status: accepted / implemented.
 2. The shared copy covers visible controls and associated accessibility labels for panels, case studies, project links, demos, lightboxes, and screenshot galleries.
 3. The mode-selection return-to-language control intentionally displays the language opposite the active selection and sets `lang` to match its visible text.
 4. This change does not alter portfolio records, their resolver, or project-specific content.
+
+## 2026-07-24 — Complete Haiku Cosmos PL/EN localization and case-study replacement
+
+Status: accepted / implemented.
+
+1. Localization is complete for all five portfolio records: each has full PL and EN content resolved from the shared `portfolioNodes` source by the common resolver used by Classic 2D and Experience 3D.
+2. The stable runtime ID `haiku-cosmos` is preserved; its GLB, GIF path, plaque, ornament, links, and other shared runtime metadata remain at record level.
+3. The former extensive Haiku Cosmos case study has been replaced with a shorter approved version in both languages.
+4. The obsolete claim that an R1 card can be activated during RUN has been removed. Active prototype mechanics are described separately from designed systems and future directions.
+5. Both `translations.pl` and `translations.en` contain complete, independent `caseStudy` objects. This is required because the resolver uses the shallow overlay `{ ...node, ...translation }`.
+6. The case study presents active prototype capabilities distinctly from planned eons, collectible glyphs, special cards, artifacts, and other future development directions.
+7. Classic 2D and Experience 3D continue to use one content source and one resolver, with no duplicate record content between modes.

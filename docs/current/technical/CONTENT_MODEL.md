@@ -6,8 +6,8 @@ Each gate node contains:
 - `id`
 - `title`
 - `shortLabel`
-- Base content fields such as `draftText`, `leadText`, `bodyText`, and `closingText`, used as fallback when a record has no translation for the resolved language.
-- Optional `translations.pl` and `translations.en` content objects, which override localized panel fields while retaining the base record's shared metadata.
+- Base metadata such as IDs, visual assets, plaque configuration, and model paths remains shared at record level.
+- Required `translations.pl` and `translations.en` content objects provide complete localized panel content while retaining the base record's shared metadata.
 - Optional visual model metadata (`modelPath`, `modelKind`) for per-node GLB visuals.
 - Optional `projectLinks` array for Experience 3D overlay links. Each valid entry contains `kind`, `label`, and an absolute `http` or `https` `url`; the overlay renders these as safe external links and does not pass their URLs through the public-path helper.
 
@@ -49,40 +49,30 @@ Rules in current MVP:
 - Flat glyph sprite mapping is a UI/visual mapping in `src/classic2d.js`, not a content rename and not a replacement for the GLB glyph metadata used by Experience 3D.
 - Current Classic 2D flat sprite mapping: AI Guide -> `/png/glif_ai_guide.png`, DIG Engine -> `/png/glif_dig_engine.png`, Haiku Cosmos -> `/png/glif_haiku_cosmos.png`, Creative AI -> `/png/glif_creative_ai.png`, Ethics / Life Protection -> `/png/glif_ethics.png`.
 - Browser/runtime asset paths must remain logical public paths such as `/png/glif_ai_guide.png`, not `public/png/glif_ai_guide.png`.
-- Full PL/EN content modeling and content-locking remain future work; `ai-guide`, `creative-ai`, and `ethics-life-protection` currently have accepted bilingual copy.
+- All five records now use the complete shared PL/EN content model; Classic 2D continues to consume the same resolver output as Experience 3D.
 
-## Haiku Cosmos content checkpoint (2026-07-17)
+## Haiku Cosmos content checkpoint (2026-07-24)
 
-- Polska treść Haiku Cosmos została zaktualizowana.
-- Główny opis i pełne case study znajdują się w rekordzie `haiku-cosmos` w `src/content/portfolioNodes.js`.
-- Classic 2D i Experience 3D konsumują ten sam rekord.
-- Treść nie jest duplikowana pomiędzy trybami.
-- Rekord `haiku-cosmos` deklaruje `projectLinks` dla publicznego demo i repozytorium; Experience 3D renderuje je przed case study, a Classic 2D nie zmienia swojego interfejsu.
+- Haiku Cosmos has complete localized main-panel and case-study content in `translations.pl` and `translations.en` within `src/content/portfolioNodes.js`.
+- Classic 2D and Experience 3D consume the same resolved record; content is not duplicated between modes.
+- The shared record retains the project links for the public demo and repository. Experience 3D renders them before the case study, while Classic 2D retains its existing interface.
 
 
-## Incremental shared PL/EN content model for dual modes
+## Complete shared PL/EN content model for dual modes
 
-Status: partially implemented. The current active source remains `src/content/portfolioNodes.js`, with `src/content/resolvePortfolioNodes.js` as the shared language resolver.
+Status: implemented. The active source remains `src/content/portfolioNodes.js`, with `src/content/resolvePortfolioNodes.js` as the shared language resolver.
 
-Current direction:
-- `AI Guide` (`ai-guide`), `DIG Engine` (`spotify-digger`), `Creative AI` (`creative-ai`), and `Ethics / Life Protection` (`ethics-life-protection`) use the optional `translations.pl` and `translations.en` fields for their panel copy.
-- `Classic 2D` and `Experience 3D` both use the same resolver and the same stable record IDs; neither mode owns a copy of the translation.
-- The resolver applies translated text fields when a selected language is present. Records not yet translated retain their existing top-level fields as a fallback.
-- The resolver shallowly overlays a selected translation with `{ ...node, ...translation }`; therefore each localized `caseStudy` object must be complete rather than partial.
-- This is an incremental migration of four of five records, not a completed bilingual model for all portfolio content.
+Current contract:
+- All five portfolio records provide `translations.pl` and `translations.en`; no record uses Polish top-level content as a language fallback.
+- `Classic 2D` and `Experience 3D` use one source and one resolver with the same stable record IDs; neither mode owns a duplicate translation.
+- The resolver shallowly overlays a selected translation with `{ ...node, ...translation }`. Consequently, every localized nested object required by a panel, including `caseStudy`, must be complete and independent in both language variants.
+- `Haiku Cosmos` (`haiku-cosmos`) has a localized main panel and a complete localized case study in both languages. Its shared GLB, GIF, plaque, ornament, links, and other runtime metadata remain at record level.
 - `AI Guide`, `Creative AI`, and `Ethics / Life Protection` preserve multi-paragraph body copy in template literals so both panel implementations retain the same paragraph boundaries.
-- `DIG Engine` localizes its main panel (`draftText`, `bodyText`, and `closingText`), full case study, and six-item gallery in both languages; its GLB, GIF, plaque, ornament, and other runtime metadata remain shared at record level.
-- The current five portfolio gates remain the conceptual mapping:
-  1. AI Guide
-  2. DIG Engine / Spotify Digger, preserving current legacy naming where applicable
-  3. Haiku Cosmos
-  4. Creative AI
-  5. Ethics / Life Protection
+- `DIG Engine` localizes its main panel, full case study, and six-item gallery in both languages; its GLB, GIF, plaque, ornament, and other runtime metadata remain shared at record level.
+- The five portfolio gates remain the conceptual mapping: AI Guide; DIG Engine / Spotify Digger; Haiku Cosmos; Creative AI; and Ethics / Life Protection.
 - Runtime IDs must not be renamed unless a separate migration task is created.
-- User-facing labels may evolve before final copy is locked.
-- `Haiku Cosmos` (`haiku-cosmos`) is the final record using its existing Polish top-level content as fallback while its PL/EN migration is pending.
 
-Shared rule: content records remain the source of truth for both `Classic 2D` panels and `Experience 3D` overlay panels.
+Shared rule: content records remain the single source of truth for both `Classic 2D` panels and `Experience 3D` overlay panels.
 
 ## Unified Experience 3D ornament checkpoint (2026-07-20)
 - Each of the five portfolio records retains its `ornamentPath` for the Experience 3D overlay.
@@ -91,6 +81,6 @@ Shared rule: content records remain the source of truth for both `Classic 2D` pa
 
 ## Current Haiku Cosmos and conditional-detail contract
 
-- The `haiku-cosmos` record is the shared source for its full case study, `projectLinks`, demo GIF metadata (`demoGifPath` and `demoGifAlt`), and `ornamentPath`; neither presentation mode receives a separate content record.
+- The `haiku-cosmos` record retains shared runtime metadata for `projectLinks`, demo GIF path (`demoGifPath`), and `ornamentPath`; its localized `demoGifAlt`, project-link labels, main panel, and complete case-study objects reside in each PL/EN translation.
 - `src/ui/overlay.js` resets and conditionally renders demo media, project links, case-study blocks, and ornament data for the selected record. Missing optional fields leave the relevant element hidden or empty, so a prior panel's GIF, links, or case-study state cannot leak into another panel.
 - External project links are validated as absolute HTTP(S) URLs; demo, ornaments, and gallery media use `publicPath(...)` where they are public assets.
