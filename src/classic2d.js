@@ -17,8 +17,11 @@ const CLASSIC_COPY = {
   },
   en: {
     eyebrow: 'Classic 2D',
-    title: 'Symbolic portfolio circle',
-    intro: 'Choose one of the five signs around the calm center to open a short project panel.',
+    name: 'Tomasz Talik',
+    role: 'Creative Technologist & Game Systems Designer',
+    title: 'Interactive worlds, games and systems',
+    lead: 'I combine technology, mechanics, visuals, and sound, translating complex ideas into modular, functional systems.',
+    intro: 'Choose one of the five symbols to explore my projects and areas of work.',
     returnToModes: 'Back to mode selection',
     centralLabel: 'Symbolic 2D anchor',
     gateHelp: 'Open panel'
@@ -240,8 +243,7 @@ export function startClassic2D({ container, language = 'en', onBackToModes }) {
   const copy = resolveCopy(language);
   const interfaceCopy = getInterfaceCopy(language);
   const localizedPortfolioNodes = resolvePortfolioNodes(language);
-  const isPolishIntro = language === 'pl';
-  const polishTitleLines = isPolishIntro ? copy.title.split(', ') : [];
+  const titleLines = copy.title.split(', ');
   let activeGateId = null;
   let lastFocusedGate = null;
 
@@ -250,12 +252,10 @@ export function startClassic2D({ container, language = 'en', onBackToModes }) {
       <header class="classic-2d__header">
         <div class="classic-2d__intro-copy">
           <p class="classic-2d__eyebrow">${escapeHtml(copy.eyebrow)}</p>
-          ${isPolishIntro ? `
-            <p class="classic-2d__name">${escapeHtml(copy.name)}</p>
-            <p class="classic-2d__role">${escapeHtml(copy.role)}</p>
-            <h1 class="classic-2d__title" id="classic-2d-title">${escapeHtml(`${polishTitleLines[0]},`)}<br>${escapeHtml(polishTitleLines[1])}</h1>
-            <p class="classic-2d__lead">${escapeHtml(copy.lead)}</p>
-          ` : `<h1 class="classic-2d__title" id="classic-2d-title">${escapeHtml(copy.title)}</h1>`}
+          <p class="classic-2d__name">${escapeHtml(copy.name)}</p>
+          <p class="classic-2d__role">${escapeHtml(copy.role)}</p>
+          <h1 class="classic-2d__title" id="classic-2d-title">${escapeHtml(`${titleLines[0]},`)}<br>${escapeHtml(titleLines[1])}</h1>
+          <p class="classic-2d__lead">${escapeHtml(copy.lead)}</p>
           <p class="classic-2d__intro">${escapeHtml(copy.intro)}</p>
         </div>
       </header>
