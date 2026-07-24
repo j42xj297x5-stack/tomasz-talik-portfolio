@@ -235,7 +235,6 @@ The project reflects my approach to practical tools: data should remain readable
     id: 'haiku-cosmos',
     title: 'Haiku Cosmos',
     shortLabel: 'INTERACTIVE WORLD SYSTEM',
-    eyebrow: 'INTERACTIVE WORLD SYSTEM',
     modelPath: '/glb/glyph_5.glb',
     modelKind: 'glyph',
     plaqueModelPath: '/glb/plaque_haiku_cosmos.glb',
@@ -247,33 +246,64 @@ The project reflects my approach to practical tools: data should remain readable
     },
     ornamentPath: '/png/haiku_cosmos_ornament.png',
     demoGifPath: '/gif/Haiku_Cosmos.gif',
-    demoGifAlt: 'Animowane demo Haiku Cosmos prezentujące świat gry i narzędzia debugowe',
-    draftText: 'Gra, interfejs i dokumentacja jako jeden kosmos zależności.',
-    leadText: 'Gra, interfejs i dokumentacja jako jeden kosmos zależności.',
-    bodyText: `Haiku Cosmos to autorski projekt kontemplacyjnej gry-systemu, w której decyzje gracza prowadzą do przemian żywego, trójwymiarowego świata.
+    translations: {
+      pl: {
+        eyebrow: 'System interaktywnego świata',
+        draftText: 'Kontemplacyjna gra-system o kształtowaniu żywego kosmosu.',
+        leadText: 'Kontemplacyjna gra-system o kształtowaniu żywego kosmosu.',
+        bodyText: `Haiku Cosmos to autorski, stale rozwijany prototyp gry przeglądarkowej. W świecie renderowanym w Three.js meteory poruszają się, zderzają i przechodzą w kolejne stadia, a masa, kolor, materiały, światło i ruch wspólnie pokazują stan zachodzących przemian.
 
-Świat renderowany w Three.js jest żywym kosmosem brył, materiałów, tekstur i światła. Meteory zderzają się, łączą i przechodzą w kolejne stadia, a masa, kolor, ruch i relacje między obiektami budują czytelny język przemiany.
+Gracz nie realizuje klasycznej listy zadań. Obserwuje procesy, buduje sekwencje kart, zdobywa Punkty Rezonansu i wpływa na zachowanie świata przez PRG oraz konfigurację SUB-META.
 
-Rdzeniem projektu jest relacja między decyzją gracza a zmianą świata. Gracz buduje sekwencje kart, zdobywa Punkty Rezonansu, konfiguruje SUB-META i wpływa na zachowanie obiektów przez PRG — Player Reaction Field.
+Projekt łączy game design, system design, UI/UX, technical art direction, architekturę runtime’u i pipeline assetów 3D. Aktywne mechaniki są rozwijane w działającym prototypie, a kolejne systemy najpierw otrzymują spójny kontrakt projektowy i dopiero później trafiają do implementacji.
 
-Projekt łączy game design, system design, UI/UX i technical art direction z modularną architekturą runtime’u, pipeline’em assetów 3D oraz narzędziami debugowymi.
-
-Równolegle rozwijam dokumentację i pracuję z AI/Codexem jako narzędziem produkcyjnym. Dokumenty kanoniczne, mapy zależności, specyfikacje i checklisty pozwalają utrzymywać wspólny język mechaniki, obrazu, kodu i dokumentacji.
-
-Haiku Cosmos nie jest wyłącznie koncepcją. To działający interaktywny prototyp, w którym wizja świata została przeprowadzona przez projektowanie systemów, implementację, walidację i deployment.`,
-    closingText: 'Haiku Cosmos pokazuje, że potrafię prowadzić złożony projekt kreatywno-techniczny przez wiele warstw naraz — od intuicyjnej wizji świata, przez projektowanie systemów i oprawy wizualnej, aż po działający interaktywny prototyp.',
-    projectLinks: [
-      {
-        kind: 'demo',
-        label: 'DEMO',
-        url: 'https://j42xj297x5-stack.github.io/Haiku-Cosmos'
+Dokumentacja pełni rolę pamięci roboczej projektu. Porządkuje źródła prawdy, zależności, statusy systemów i bezpieczne punkty zmian, dzięki czemu mogę koordynować pracę ChatGPT i Codexa bez utraty spójności architektury całego świata.`,
+        featureLabel: 'Zakres / umiejętności',
+        featureText: 'game design · system design · Three.js · 3D asset pipeline · UI/UX · runtime architecture · technical art direction · documentation architecture · AI-assisted production',
+        closingText: 'Haiku Cosmos nie jest zamkniętym demem. To żywy projekt, w którym wizja, mechanika, kod i proces produkcyjny rozwijają się jako jeden system.',
+        demoGifAlt: 'Animowane demo Haiku Cosmos prezentujące świat gry i narzędzia debugowe',
+        projectLinks: [
+          {
+            kind: 'demo',
+            label: 'DEMO',
+            url: 'https://j42xj297x5-stack.github.io/Haiku-Cosmos'
+          },
+          {
+            kind: 'repository',
+            label: 'REPOZYTORIUM',
+            url: 'https://github.com/j42xj297x5-stack/Haiku-Cosmos'
+          }
+        ]
       },
-      {
-        kind: 'repository',
-        label: 'REPOZYTORIUM',
-        url: 'https://github.com/j42xj297x5-stack/Haiku-Cosmos'
+      en: {
+        eyebrow: 'Interactive World System',
+        draftText: 'A contemplative systems-driven game about shaping a living cosmos.',
+        leadText: 'A contemplative systems-driven game about shaping a living cosmos.',
+        bodyText: `Haiku Cosmos is an original, continuously evolving browser-game prototype. In a world rendered with Three.js, meteors move, collide, and progress through successive stages, while mass, color, materials, light, and motion together communicate the state of each transformation.
+
+The player does not follow a conventional task list. They observe processes, build card sequences, earn Resonance Points, and influence the world through PRG and SUB-META configuration.
+
+The project combines game design, system design, UI/UX, technical art direction, runtime architecture, and a 3D asset pipeline. Active mechanics are developed in the working prototype, while larger systems first receive a coherent design contract before moving into implementation.
+
+Documentation serves as the project’s operational memory. It organizes sources of truth, dependencies, system statuses, and safe change points, allowing me to coordinate the work of ChatGPT and Codex without losing the coherence of the world’s architecture.`,
+        featureLabel: 'Skills / scope',
+        featureText: 'game design · system design · Three.js · 3D asset pipeline · UI/UX · runtime architecture · technical art direction · documentation architecture · AI-assisted production',
+        closingText: 'Haiku Cosmos is not a self-contained demo. It is a living project in which vision, mechanics, code, and the production process evolve as one system.',
+        demoGifAlt: 'Animated Haiku Cosmos demo showing the game world and debug tools',
+        projectLinks: [
+          {
+            kind: 'demo',
+            label: 'DEMO',
+            url: 'https://j42xj297x5-stack.github.io/Haiku-Cosmos'
+          },
+          {
+            kind: 'repository',
+            label: 'REPOSITORY',
+            url: 'https://github.com/j42xj297x5-stack/Haiku-Cosmos'
+          }
+        ]
       }
-    ],
+    },
     caseStudy: {
       title: 'Haiku Cosmos — Interactive World System',
       heading: 'Gra-system o relacji między decyzją gracza a przemianą świata',
