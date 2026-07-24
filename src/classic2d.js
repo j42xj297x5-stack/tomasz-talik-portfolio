@@ -1,6 +1,7 @@
 import { resolvePortfolioNodes } from './content/resolvePortfolioNodes.js';
 import { publicPath } from './utils/publicPath.js';
 import { getGateAccentColor, getPanelThemeForGate } from './ui/panelThemes.js';
+import { getInterfaceCopy } from './i18n/interfaceCopy.js';
 
 const CLASSIC_COPY = {
   pl: {
@@ -11,7 +12,6 @@ const CLASSIC_COPY = {
     lead: 'Łączę technologię, mechanikę, obraz i dźwięk, przekładając złożone pomysły na modularne, działające systemy.',
     intro: 'Wybierz jeden z pięciu symboli, aby poznać projekty i obszary mojej pracy.',
     returnToModes: 'Wróć do wyboru trybu',
-    closePanel: 'Zamknij panel',
     centralLabel: 'Symboliczna kotwica 2D',
     gateHelp: 'Otwórz panel'
   },
@@ -20,7 +20,6 @@ const CLASSIC_COPY = {
     title: 'Symbolic portfolio circle',
     intro: 'Choose one of the five signs around the calm center to open a short project panel.',
     returnToModes: 'Back to mode selection',
-    closePanel: 'Close panel',
     centralLabel: 'Symbolic 2D anchor',
     gateHelp: 'Open panel'
   }
@@ -82,7 +81,7 @@ function createParagraphs(text) {
     .filter(Boolean);
 }
 
-function renderDemoMarkup(node) {
+function renderDemoMarkup(node, interfaceCopy) {
   if (!node.demoGifPath) return '';
 
   const demoGifUrl = publicPath(node.demoGifPath);
@@ -90,11 +89,11 @@ function renderDemoMarkup(node) {
 
   return `
     <figure class="classic-2d-panel__demo">
-      <button class="classic-2d-panel__demo-preview" type="button" data-classic-demo-open aria-label="Powiększ demo ${escapeHtml(node.title)}">
+      <button class="classic-2d-panel__demo-preview" type="button" data-classic-demo-open aria-label="${escapeHtml(interfaceCopy.enlargeDemo)}: ${escapeHtml(node.title)}">
         <img class="classic-2d-panel__demo-image" src="${escapeHtml(demoGifUrl)}" alt="${escapeHtml(demoAlt)}" loading="lazy" decoding="async">
       </button>
       <figcaption class="classic-2d-panel__demo-caption">
-        <button class="classic-2d-panel__demo-enlarge" type="button" data-classic-demo-open>Powiększ demo</button>
+        <button class="classic-2d-panel__demo-enlarge" type="button" data-classic-demo-open>${escapeHtml(interfaceCopy.enlargeDemo)}</button>
       </figcaption>
     </figure>
   `;
@@ -115,13 +114,13 @@ function renderCaseBlockMarkup(title, value) {
   `;
 }
 
-function renderCaseStudyMarkup(caseStudy) {
+function renderCaseStudyMarkup(caseStudy, interfaceCopy) {
   if (!caseStudy) return '';
 
   const introParagraphs = Array.isArray(caseStudy.intro) ? caseStudy.intro : createParagraphs(caseStudy.intro || '');
   const processMarkup = caseStudy.processSections?.length ? `
     <section class="classic-2d-panel__case-block classic-2d-panel__case-process">
-      <h4>Proces</h4>
+      <h4>${escapeHtml(interfaceCopy.process)}</h4>
       ${caseStudy.processSections.map((section, index) => `
         <article class="classic-2d-panel__case-process-item">
           <h5>${index + 1}. ${escapeHtml(section.title || '')}</h5>
@@ -132,11 +131,11 @@ function renderCaseStudyMarkup(caseStudy) {
   ` : '';
   const galleryMarkup = caseStudy.gallery?.length ? `
     <section class="classic-2d-panel__case-gallery-section">
-      <h4>Galeria screenshotów</h4>
+      <h4>${escapeHtml(interfaceCopy.screenshotGallery)}</h4>
       <div class="classic-2d-panel__case-gallery">
         ${caseStudy.gallery.map((item, index) => `
           <figure class="classic-2d-panel__case-shot">
-            <button class="classic-2d-panel__case-shot-button" type="button" data-classic-media-open data-classic-media-index="${index}" aria-label="Powiększ screenshot: ${escapeHtml(item.title || item.alt || item.caption || caseStudy.title || '')}">
+            <button class="classic-2d-panel__case-shot-button" type="button" data-classic-media-open data-classic-media-index="${index}" aria-label="${escapeHtml(interfaceCopy.enlargeScreenshot)}: ${escapeHtml(item.title || item.alt || item.caption || caseStudy.title || '')}">
               <img src="${escapeHtml(publicPath(item.src))}" alt="${escapeHtml(item.alt || item.caption || '')}" loading="lazy" decoding="async">
             </button>
             <figcaption>
@@ -151,7 +150,7 @@ function renderCaseStudyMarkup(caseStudy) {
 
   return `
     <div class="classic-2d-panel__case-actions">
-      <button class="classic-2d-panel__case-toggle" type="button" data-classic-case-toggle aria-expanded="false">Czytaj case study</button>
+      <button class="classic-2d-panel__case-toggle" type="button" data-classic-case-toggle aria-expanded="false">${escapeHtml(interfaceCopy.readCaseStudy)}</button>
     </div>
     <section class="classic-2d-panel__case-study" data-classic-case-study hidden>
       <div class="classic-2d-panel__case-header">
@@ -159,12 +158,12 @@ function renderCaseStudyMarkup(caseStudy) {
         ${caseStudy.heading ? `<h3>${escapeHtml(caseStudy.heading)}</h3>` : ''}
         ${introParagraphs.map((paragraph) => `<p>${escapeHtml(paragraph)}</p>`).join('')}
       </div>
-      ${renderCaseBlockMarkup('Problem', caseStudy.problem)}
-      ${renderCaseBlockMarkup('Rozwiązanie', caseStudy.solution)}
+      ${renderCaseBlockMarkup(interfaceCopy.problem, caseStudy.problem)}
+      ${renderCaseBlockMarkup(interfaceCopy.solution, caseStudy.solution)}
       ${processMarkup}
-      ${renderCaseBlockMarkup('AI workflow', caseStudy.aiWorkflow)}
-      ${renderCaseBlockMarkup('Rezultat', caseStudy.result)}
-      ${renderCaseBlockMarkup('Następne kroki', caseStudy.nextSteps)}
+      ${renderCaseBlockMarkup(interfaceCopy.aiWorkflow, caseStudy.aiWorkflow)}
+      ${renderCaseBlockMarkup(interfaceCopy.result, caseStudy.result)}
+      ${renderCaseBlockMarkup(interfaceCopy.nextSteps, caseStudy.nextSteps)}
       ${galleryMarkup}
     </section>
   `;
@@ -188,18 +187,18 @@ function closeClassicDemoLightbox(panel, { restoreFocus = true } = {}) {
 }
 
 
-function renderPanel(panel, node, copy) {
+function renderPanel(panel, node, copy, interfaceCopy) {
   const lead = node.leadText || '';
   const bodyParagraphs = createParagraphs(getNodeText(node));
-  const demoMarkup = renderDemoMarkup(node);
-  const caseStudyMarkup = renderCaseStudyMarkup(node.caseStudy);
+  const demoMarkup = renderDemoMarkup(node, interfaceCopy);
+  const caseStudyMarkup = renderCaseStudyMarkup(node.caseStudy, interfaceCopy);
   const subtitle = getNodeSubtitle(node);
 
   panel.dataset.panelTheme = getPanelThemeForGate(node.id);
   panel.dataset.gateId = node.id;
   panel.innerHTML = `
     <div class="classic-2d-panel__viewport">
-      <div class="classic-2d-panel__card" role="dialog" aria-modal="true" aria-labelledby="classic-2d-panel-title">
+      <div class="classic-2d-panel__card" role="dialog" aria-modal="true" aria-label="${escapeHtml(interfaceCopy.panelDialogLabel)}" aria-labelledby="classic-2d-panel-title">
       <h2 class="classic-2d-panel__title" id="classic-2d-panel-title">${escapeHtml(node.title)}</h2>
       ${subtitle ? `<p class="classic-2d-panel__label">${escapeHtml(subtitle)}</p>` : ''}
       ${lead ? `<p class="classic-2d-panel__lead">${escapeHtml(lead)}</p>` : ''}
@@ -215,15 +214,15 @@ function renderPanel(panel, node, copy) {
         </p>
       ` : ''}
       ${caseStudyMarkup}
-        <button class="classic-2d-panel__close" type="button" data-classic-panel-close>${escapeHtml(copy.closePanel)}</button>
+        <button class="classic-2d-panel__close" type="button" data-classic-panel-close aria-label="${escapeHtml(interfaceCopy.closePanelAria)}">${escapeHtml(interfaceCopy.closePanel)}</button>
       </div>
     </div>
     <span class="classic-2d-panel__ornament classic-2d-panel__ornament--top" aria-hidden="true"></span>
     <span class="classic-2d-panel__ornament classic-2d-panel__ornament--bottom" aria-hidden="true"></span>
-    <div class="classic-2d-panel__demo-lightbox" role="dialog" aria-modal="true" aria-label="Powiększone media ${escapeHtml(node.title)}" hidden>
-      <button class="classic-2d-panel__demo-lightbox-backdrop" type="button" data-classic-demo-close aria-label="Zamknij powiększone media"></button>
+    <div class="classic-2d-panel__demo-lightbox" role="dialog" aria-modal="true" aria-label="${escapeHtml(interfaceCopy.enlargedDemo)}: ${escapeHtml(node.title)}" hidden>
+      <button class="classic-2d-panel__demo-lightbox-backdrop" type="button" data-classic-demo-close aria-label="${escapeHtml(interfaceCopy.closeEnlargedDemo)}"></button>
       <div class="classic-2d-panel__demo-lightbox-frame">
-        <button class="classic-2d-panel__demo-lightbox-close" type="button" data-classic-demo-close aria-label="Zamknij powiększone media">×</button>
+        <button class="classic-2d-panel__demo-lightbox-close" type="button" data-classic-demo-close aria-label="${escapeHtml(interfaceCopy.closeEnlargedDemo)}">×</button>
         <img class="classic-2d-panel__demo-lightbox-image" alt="">
       </div>
     </div>
@@ -239,6 +238,7 @@ export function startClassic2D({ container, language = 'en', onBackToModes }) {
 
   document.documentElement.lang = language;
   const copy = resolveCopy(language);
+  const interfaceCopy = getInterfaceCopy(language);
   const localizedPortfolioNodes = resolvePortfolioNodes(language);
   const isPolishIntro = language === 'pl';
   const polishTitleLines = isPolishIntro ? copy.title.split(', ') : [];
@@ -378,7 +378,7 @@ export function startClassic2D({ container, language = 'en', onBackToModes }) {
       });
       monkey.classList.add('classic-2d__monkey--active');
       monkey.style.setProperty('--classic-monkey-rotation', MONKEY_TILTS[index] || '3deg');
-      renderPanel(panel, node, copy);
+      renderPanel(panel, node, copy, interfaceCopy);
     });
 
     orbit.append(button);
@@ -461,7 +461,7 @@ export function startClassic2D({ container, language = 'en', onBackToModes }) {
         const shouldOpen = caseStudy.hidden;
         caseStudy.hidden = !shouldOpen;
         caseToggleButton.setAttribute('aria-expanded', String(shouldOpen));
-        caseToggleButton.textContent = shouldOpen ? 'Ukryj case study' : 'Czytaj case study';
+        caseToggleButton.textContent = shouldOpen ? interfaceCopy.hideCaseStudy : interfaceCopy.readCaseStudy;
         if (shouldOpen) {
           caseStudy.setAttribute('tabindex', '-1');
           caseStudy.focus({ preventScroll: true });
