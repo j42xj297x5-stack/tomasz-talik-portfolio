@@ -261,6 +261,59 @@ Dokumentacja pełni rolę pamięci roboczej projektu. Porządkuje źródła praw
         featureLabel: 'Zakres / umiejętności',
         featureText: 'game design · system design · Three.js · 3D asset pipeline · UI/UX · runtime architecture · technical art direction · documentation architecture · AI-assisted production',
         closingText: 'Haiku Cosmos nie jest zamkniętym demem. To żywy projekt, w którym wizja, mechanika, kod i proces produkcyjny rozwijają się jako jeden system.',
+        caseStudy: {
+          title: 'Haiku Cosmos — Interactive World System',
+          heading: 'Rozwijany prototyp gry-systemu',
+          intro: [
+            'Haiku Cosmos jest projektem rozwijanym warstwowo. Część mechanik działa już w publicznym prototypie, inne są przygotowane jako systemy gotowe do kolejnych etapów implementacji.',
+            'Największym wyzwaniem jest utrzymanie spójności między szybko zmieniającą się wizją gry, mechaniką, interfejsem, warstwą 3D i produkcją wspieraną przez AI. Każda nowa funkcja musi pasować do istniejących zależności, zamiast tworzyć osobny, lokalny wyjątek.'
+          ],
+          processSections: [
+            { title: 'Moja rola', text: `Prowadzę projekt od koncepcji do implementacji, łącząc game design, system design, UI/UX, technical art direction i integrację techniczną.
+
+Projektuję mechaniki oraz ich zależności, określam kierunek wizualny, przygotowuję zakresy prac dla ChatGPT i Codexa, weryfikuję rezultaty oraz pilnuję spójności między runtime’em, assetami, interfejsem i dokumentacją.
+
+Haiku Cosmos jest dla mnie przede wszystkim ćwiczeniem w prowadzeniu złożonego projektu kreatywno-technicznego, a nie zbiorem niezależnych eksperymentów.` },
+            { title: 'Świat 3D i pipeline assetów', text: `Świat wykorzystuje modele GLB, materiały PBR, tekstury i mapy emisji przygotowane dla różnych rodzin obiektów.
+
+Ponieważ modele mają odmienne siatki UV, assety są grupowane w kompatybilne zestawy. Warianty mogą być losowane tylko wewnątrz właściwej rodziny model–tekstura, co pozwala zachować różnorodność bez wizualnych błędów.
+
+Modele i tekstury są cache’owane oraz ponownie wykorzystywane, aby utrzymać wiele aktywnych obiektów w środowisku przeglądarkowym. Rozwój warstwy wizualnej obejmuje również strojenie kamery, oświetlenia, materiałów, skali obiektów i czytelności kolejnych stadiów progresji.` },
+            { title: 'Sieć kart i stabilizacja konfiguracji', text: `Karty R1–R4 są zdobywane w sekwencjach i uruchamiane po osadzeniu w slotach SUB-META.
+
+Tworzą zależną sieć:
+
+R4 → R3 → R2 → R1
+
+Wyższe poziomy wzmacniają odpowiadające im karty niższego rzędu. Jednocześnie konfiguracja pozostaje zależna od swojego fundamentu. Zużycie lub utrata niższej karty może wywołać napięcie propagowane w górę systemu, przyspieszając degradację kolejnych elementów.
+
+Karty mają ograniczoną trwałość. Od chwili osadzenia działają, wzmacniają konfigurację i stopniowo się zużywają. Gracz nie buduje więc stałego zestawu bonusów — utrzymuje dynamiczny układ, który wymaga odnawiania i stabilizacji.` },
+            { title: 'Pył, SUB-META i PRG', text: `Harmoniczne zderzenia meteorów generują kolorowy pył, którego zbieranie działa już w prototypie.
+
+Rozwijana pętla zasobu prowadzi od jednokolorowego pyłu, przez depozyt i Kuźnię, do bardziej skondensowanych stabilizatorów:
+
+stosik pyłu → flakon → kryształ
+
+Stabilizatory przedłużają czas działania kart i ograniczają skutki napięcia. Dla kart R2–R4 projektowane są wielokolorowe warianty odpowiadające ich konfiguracji.
+
+SUB-META służy do budowania długoterminowej struktury kart i slotów. PRG — Player Reaction Field — odpowiada za bezpośrednie oddziaływanie gracza na obiekty świata. Oba systemy są rozwijane jako uzupełniające się warstwy: konfiguracja strategiczna i działanie w czasie rzeczywistym.` },
+            { title: 'Produkcja z AI i dokumentacja', text: `Przy skali Haiku Cosmos dokumentacja pełni funkcję pamięci operacyjnej projektu.
+
+Repozytorium zawiera mapy zależności, dokumenty źródłowe systemów, statusy implementacji i ograniczone pakiety kontekstu dla konkretnych zadań. Pozwala to odróżnić aktywny runtime od systemów roboczych, koncepcji przyszłościowych i materiałów historycznych.
+
+ChatGPT wspiera analizę architektury i przygotowanie zakresów prac. Codex realizuje ograniczone zadania implementacyjne, audyty i testy. Każdy krok ma określone źródła prawdy, granice zmian i kryteria akceptacji.
+
+Tak zorganizowany proces pozwala korzystać z szybkości AI bez utraty kontroli nad kierunkiem i strukturą projektu.` }
+          ],
+          result: `Haiku Cosmos jest publicznie dostępnym prototypem przeglądarkowym z trójwymiarowym światem, progresją ciał kosmicznych, systemem sekwencji kart, Punktami Rezonansu, PRG, RUN HUD, SUB-META, harmonicznym pyłem oraz rozbudowanym zapleczem debugowym.
+
+Projekt pokazuje mój sposób pracy nad systemami, które łączą mechanikę, oprawę wizualną, narzędzia produkcyjne i rozwój architektury w jednej spójnej strukturze.`,
+          nextSteps: `Dalszy rozwój obejmuje system eonów, w których gracz przechodzi przez kolejne etapy ewolucji świata, zachowując wybrane doświadczenia i ślady poprzednich konfiguracji.
+
+Projektowane są również kolekcjonowalne glify uwalniane podczas szczególnych zderzeń, karty specjalne modyfikujące ŚWIAT i PRG oraz artefakty przenoszące właściwości zdobyte bezpośrednio w kosmosie.
+
+Elementy te są opisane jako kierunek projektowy, nie jako ukończone funkcje runtime’u.`
+        },
         demoGifAlt: 'Animowane demo Haiku Cosmos prezentujące świat gry i narzędzia debugowe',
         projectLinks: [
           {
@@ -289,6 +342,59 @@ Documentation serves as the project’s operational memory. It organizes sources
         featureLabel: 'Skills / scope',
         featureText: 'game design · system design · Three.js · 3D asset pipeline · UI/UX · runtime architecture · technical art direction · documentation architecture · AI-assisted production',
         closingText: 'Haiku Cosmos is not a self-contained demo. It is a living project in which vision, mechanics, code, and the production process evolve as one system.',
+        caseStudy: {
+          title: 'Haiku Cosmos — Interactive World System',
+          heading: 'An evolving systems-driven game prototype',
+          intro: [
+            'Haiku Cosmos is being developed in layers. Some mechanics already operate in the public prototype, while others are prepared as coherent systems for future implementation stages.',
+            'The main challenge is maintaining consistency between a rapidly evolving game vision, mechanics, interface design, the 3D layer, and AI-assisted production. Every new feature must fit the existing network of dependencies rather than becoming an isolated exception.'
+          ],
+          processSections: [
+            { title: 'My role', text: `I lead the project from concept to implementation, combining game design, system design, UI/UX, technical art direction, and technical integration.
+
+I design mechanics and their dependencies, define the visual direction, prepare scoped tasks for ChatGPT and Codex, evaluate the results, and maintain consistency across the runtime, assets, interface, and documentation.
+
+Haiku Cosmos is primarily an exercise in leading a complex creative and technical project, rather than a collection of disconnected experiments.` },
+            { title: '3D world and asset pipeline', text: `The world uses GLB models, PBR materials, textures, and emission maps prepared for different object families.
+
+Because the models use different UV layouts, assets are organized into compatible sets. Variants can only be selected within the correct model–texture family, preserving visual variety without introducing mapping errors.
+
+Models and textures are cached and reused to support many active objects in a browser environment. Development of the visual layer also includes tuning the camera, lighting, materials, object scale, and the readability of successive progression stages.` },
+            { title: 'Card network and configuration stability', text: `R1–R4 cards are earned through sequences and become active when placed in SUB-META slots.
+
+They form a dependent network:
+
+R4 → R3 → R2 → R1
+
+Higher levels strengthen the corresponding lower-tier cards, while the entire configuration remains dependent on its foundation. The degradation or loss of a lower-tier card can generate strain that propagates upward through the system, accelerating the decay of connected elements.
+
+Cards have limited durability. From the moment they are placed, they operate, strengthen the configuration, and gradually wear out. The player is therefore not building a permanent set of bonuses, but maintaining a dynamic structure that requires renewal and stabilization.` },
+            { title: 'Dust, SUB-META, and PRG', text: `Harmonic meteor collisions generate colored dust, and its collection already operates in the prototype.
+
+The developing resource loop leads from single-color dust, through storage and the Forge, to increasingly condensed stabilizers:
+
+dust stack → flask → crystal
+
+Stabilizers extend card duration and reduce the effects of network strain. Multi-color variants corresponding to R2–R4 card configurations are being designed.
+
+SUB-META is used to build the long-term structure of cards and slots. PRG — the Player Reaction Field — governs the player’s direct influence on objects in the world. The two systems are developed as complementary layers: strategic configuration and real-time interaction.` },
+            { title: 'AI-assisted production and documentation', text: `At the scale of Haiku Cosmos, documentation serves as the project’s operational memory.
+
+The repository contains dependency maps, source documents for individual systems, implementation statuses, and limited context packages for specific tasks. This makes it possible to distinguish the active runtime from working systems, future concepts, and historical materials.
+
+ChatGPT supports architectural analysis and task scoping. Codex carries out constrained implementation tasks, audits, and tests. Each step has defined sources of truth, change boundaries, and acceptance criteria.
+
+This organization makes it possible to benefit from the speed of AI without losing control over the project’s direction and structure.` }
+          ],
+          result: `Haiku Cosmos is a publicly available browser prototype featuring a three-dimensional world, cosmic-body progression, card sequences, Resonance Points, PRG, the RUN HUD, SUB-META, harmonic dust, and an extensive debugging environment.
+
+The project demonstrates my approach to systems that combine mechanics, visual direction, production tooling, and architectural development within a single coherent structure.`,
+          nextSteps: `Further development includes an eon system in which the player moves through successive stages of the world’s evolution while preserving selected experiences and traces of previous configurations.
+
+The design also includes collectible glyphs released during special collisions, special cards that modify WORLD and PRG, and artifacts carrying properties acquired directly within the cosmos.
+
+These elements are presented as future design directions, not as completed runtime features.`
+        },
         demoGifAlt: 'Animated Haiku Cosmos demo showing the game world and debug tools',
         projectLinks: [
           {
@@ -303,175 +409,6 @@ Documentation serves as the project’s operational memory. It organizes sources
           }
         ]
       }
-    },
-    caseStudy: {
-      title: 'Haiku Cosmos — Interactive World System',
-      heading: 'Gra-system o relacji między decyzją gracza a przemianą świata',
-      intro: [
-        'Haiku Cosmos to autorska, kontemplacyjna gra-system. Zamiast prowadzić gracza przez klasyczną fabułę lub listę zadań, pozwala mu obserwować i kształtować żywy kosmos trójwymiarowych obiektów.',
-        'Meteory poruszają się, zderzają i tworzą większe ciała. Masa, kolor, ruch oraz relacje między obiektami mają znaczenie mechaniczne i wizualne, dlatego przemiana świata jest jednocześnie informacją, konsekwencją i nagrodą.',
-        'Świat powstaje w Three.js z rzeczywistych brył 3D, materiałów, tekstur, map emisji i oświetlenia. Logika gry pozostaje rozdzielona od renderowania, dzięki czemu rozwój obrazu nie wymaga przepisywania zasad ruchu, kolizji ani progresji.',
-        'Rdzeniem doświadczenia jest relacja decyzji gracza ze zmianą świata. Karty R1–R4, Punkty Rezonansu (RP), SUB-META i PRG — Player Reaction Field — tworzą wspólny system wpływu, ryzyka i długofalowej konfiguracji.',
-        'Prototyp i dokumentacja projektowa rozwijają się równolegle. Kanon mechanik, mapy zależności, specyfikacje UI i runtime’u oraz instrukcje dla Codexa są częścią tego samego procesu produkcyjnego.'
-      ],
-      problem: `Największym wyzwaniem było zaprojektowanie świata, który można nie tylko oglądać, lecz także świadomie kształtować, bez sprowadzania decyzji gracza do klasycznej listy zadań.
-
-Projekt wymagał odpowiedzi na pytania:
-
-- Jak połączyć ruch, kolizje, kolory, sekwencje i ekonomię w jeden czytelny system?
-- Jak pokazać, że decyzja gracza naprawdę zmienia świat?
-- Jak zastąpić umowne kształty rzeczywistymi bryłami 3D bez utraty czytelności mechaniki?
-- Jak pogodzić modele o różnych siatkach UV z rodzinami zgodnych tekstur i map emisji?
-- Jak skonfigurować renderer, światło i materiały, aby obiekty zachowały własny styl wizualny, a nie wyglądały jak generyczne sci-fi?
-- Jak zaprojektować UI, które przekazuje stan, ale nie zasłania świata?
-- Jak rozdzielić mechanikę od renderowania i zachować możliwość szybkiego debugowania?
-- Jak pracować z AI i Codexem tak, aby przyspieszać produkcję, nie rozbijając architektury na przypadkowe patche?
-- Jak sprawić, żeby dokumentacja była realnym narzędziem produkcji, a nie opisem dopisywanym po fakcie?
-
-Problem był więc jednocześnie projektowy, wizualny, techniczny i organizacyjny: wszystkie warstwy musiały mówić tym samym językiem.`,
-      solution: `Rozwiązaniem było potraktowanie gry jako procesu rezonansu. Świat pozostaje aktywny i zmienia się niezależnie, lecz decyzje gracza wpływają na kierunek i jakość jego przemian.
-
-Zderzenia zwiększają masę obiektów i prowadzą je przez kolejne stadia. Gracz oddziałuje na ten proces przez pole reakcji, karty i konfiguracje zachowane w SUB-META.
-
-Karty tworzą język progresji:
-
-- R1 — Wejście: podstawowa karta możliwa do aktywacji w trakcie RUN.
-- R2 — Ustabilizowanie: karta relacyjna, łącząca elementy systemu.
-- R3 — Uciszenie: karta stabilizacji przeznaczona pod głębsze strategie.
-- R4 — Jedność: rzadka, pełna sekwencja integrująca strukturę.
-
-Gracz może wcześniej aktywować lub zebrać kartę albo kontynuować sekwencję, ryzykując jej przerwanie. Ekonomia Punktów Rezonansu nie nagradza przypadku: wynika z koncentracji, ciągłości i świadomej decyzji.`,
-      processSections: [
-        {
-          title: 'Moja rola',
-          text: `Prowadzę projekt od koncepcji do działającego prototypu, łącząc odpowiedzialności kreatywne, systemowe, techniczne i produkcyjne.
-
-- Game design i system design — projekt progresji obiektów, kart R1–R4, sekwencji, ryzyka, ekonomii RP, SUB-META i PRG.
-- Creative i technical direction — utrzymywanie wizji świata oraz granic między mechaniką, rendererem, UI i assetami.
-- Projektowanie świata 3D — kierunek brył, materiałów, tekstur, emisji, światła i czytelności obiektów.
-- UI/UX design — RUN HUD, SUB-META, decyzje sekwencyjne i informacja zwrotna.
-- Documentation architecture — dokumenty kanoniczne, mapy zależności, specyfikacje i checkpointy.
-- AI-assisted production — przekładanie wizji na precyzyjne zadania dla ChatGPT i Codexa oraz kontrola rezultatów.
-- Debug i walidacja — narzędzia diagnostyczne, testowanie integracji i ochrona istniejącej mechaniki.
-
-Nazwy ról najlepiej opisujące zakres odpowiedzialności to: creative technical designer, game systems designer, technical art director, project integrator i AI workflow lead.`
-        },
-        {
-          title: 'Żywy świat i progresja obiektów',
-          text: `Świat nie jest statycznym tłem. Meteory poruszają się, zderzają i zwiększają masę, a następnie przechodzą w kolejne stadia: asteroidy, większe ciała i późniejsze formy kosmiczne.
-
-Każda przemiana łączy dane mechaniczne z czytelną zmianą obrazu. Masa wpływa na skalę i zachowanie, kolor niesie informację o stanie, ruch ujawnia relacje, a zderzenie staje się zdarzeniem widocznym zarówno w fizyce, jak i w materiale obiektu.
-
-Dzięki temu gracz obserwuje proces, a nie serię odizolowanych efektów. Kosmos ma własną dynamikę, lecz pozostaje podatny na świadome oddziaływanie.`
-        },
-        {
-          title: 'Świat 3D i system brył',
-          text: `Pierwsze wersje świata używały kształtów symbolicznych. Kolejnym krokiem było przejście do rzeczywistych modeli renderowanych w Three.js, bez przenoszenia zasad mechaniki do warstwy wizualnej.
-
-Modele pochodzą z różnych rodzin i mają różne siatki UV. Jedna przypadkowa tekstura nie może być poprawnie nakładana na każdą bryłę, dlatego assety zostały pogrupowane w rodziny: model korzysta ze zgodnego zestawu tekstur i map emisji przygotowanych dla jego UV.
-
-Warianty są losowane w sposób kontrolowany wewnątrz kompatybilnej rodziny. Kolor nie jest jedynie tintem na powierzchni — ma materialne znaczenie i współpracuje z teksturą, emisją oraz światłem.
-
-Modele pozostają lekkie, aby wiele obiektów mogło działać jednocześnie w przeglądarce. Dane mechaniczne — masa, typ, etap, prędkość i stan — są oddzielone od reprezentacji renderera. Dzięki temu ta sama logika może sterować różnymi bryłami, materiałami i wariantami bez naruszania reguł gry.`
-        },
-        {
-          title: 'System kart i sekwencji',
-          text: `Karty R1–R4 są językiem decyzji oraz progresji. Nie są wyłącznie nagrodami: reprezentują stany, relacje i możliwości konfiguracji świata.
-
-R1 otwiera sekwencję w RUN. R2 buduje relację, R3 stabilizuje, a R4 integruje pełną strukturę. Gracz może zabezpieczyć wcześniejszy rezultat albo kontynuować, licząc na bardziej wartościową kartę i akceptując ryzyko przerwania ciągu.
-
-Sekwencje łączą obserwację świata, timing, kolor i decyzję. Informacja zwrotna musi być czytelna bez odrywania uwagi od kosmosu.`
-        },
-        {
-          title: 'Ekonomia Punktów Rezonansu',
-          text: `RP — Resonance Points — są miarą jakości działania, a nie losową walutą. Powstają z trafień, koncentracji, ciągłości sekwencji i podejmowanego ryzyka.
-
-Gracz zdobywa RP podczas RUN, a wykorzystuje je do konfiguracji, slotów i wzmacniania kart w SUB-META. Ekonomia spina bieżące działanie z długofalowym planowaniem i sprawia, że ostrożne zakończenie sekwencji oraz ryzykowna kontynuacja mają realną wartość.`
-        },
-        {
-          title: 'Pył i materialna pamięć zderzeń',
-          text: `Zderzenie nie kończy się na zmianie liczby lub krótkiej animacji. Pozostawia harmoniczny pył — materialną pamięć zdarzenia, która wizualizuje energię, kolor i historię kontaktu obiektów.
-
-Pył pomaga czytać dynamikę kosmosu i wiąże fizykę z atmosferą. Jest śladem procesu: pokazuje, gdzie świat uległ zmianie, wzmacnia rytm kolejnych zdarzeń i buduje ciągłość wizualną bez dodatkowych komunikatów tekstowych.`
-        },
-        {
-          title: 'SUB-META',
-          text: `SUB-META jest warstwą konfiguracji dostępną w relacji z trwającym RUN. Nie działa jak zwykłe inventory: zdobyte karty stają się w nim trybami działania gracza i świata.
-
-Panel porządkuje konfigurację w gałęziach dotyczących reakcji świata oraz PRG. Pozwala osadzać i wzmacniać karty, planować zależności i zachowywać pamięć decyzji. Jest jednocześnie interfejsem strategicznym i czytelną mapą systemu.`
-        },
-        {
-          title: 'PRG — Player Reaction Field',
-          text: `PRG jest polem reakcji gracza i warstwą pomiędzy inputem a zachowaniem kosmosu. Określa zasięg oddziaływania, przyciąganie lub odpychanie, zmianę prędkości oraz klasy obiektów objęte wpływem.
-
-Konfiguracja PRG sprawia, że sterowanie nie jest tylko ruchem kursora. Gracz kształtuje warunki, w których dochodzi do spotkań, kolizji i progresji, a świat odpowiada na jego decyzje w sposób widoczny i systemowy.`
-        },
-        {
-          title: 'UI i doświadczenie gracza',
-          text: `UI zostało zaprojektowane jako część doświadczenia, nie jako ciężka nakładka zasłaniająca świat. RUN HUD pokazuje RP, karty, sekwencje i aktywne stany, a SUB-META udostępnia głębszą konfigurację.
-
-Kolor, puls, halo, rytm i stan ramek przejmują część informacji, która w tradycyjnym interfejsie byłaby tekstem. Nagłówki i komunikaty pozostają czytelne, ale wizualny język systemu utrzymuje uwagę na świecie.
-
-Responsywne skalowanie pozwala zachować hierarchię na desktopie i urządzeniach mobilnych.`
-        },
-        {
-          title: 'Runtime i architektura techniczna',
-          text: `Three.js jest obecnie głównym rendererem świata. Canvas2D pozostaje pomocniczą ścieżką testową i debugową, przydatną do walidowania zachowania bez kosztu pełnej warstwy wizualnej.
-
-HUD i SUB-META są osobnymi warstwami interfejsu, niezależnymi od sceny Three.js. Assety są ładowane przez wspólny system, a modele i tekstury są ponownie wykorzystywane zamiast tworzenia osobnych kopii dla każdego obiektu.
-
-Mechanika, fizyka, input i dane obiektów nie zależą od konkretnej reprezentacji renderera. Dzięki temu rozwój renderowania, materiałów i światła nie wymaga przepisywania mechaniki.`
-        },
-        {
-          title: 'Content Data System',
-          text: `Treści i parametry świata są przechowywane jako dane, a nie rozproszone między warstwami renderera i UI. Definicje obiektów, stadiów, kart oraz opisów mogą być odczytywane przez różne moduły bez powielania źródeł prawdy.
-
-To samo podejście obsługuje dynamiczne opisy i haiku. Warstwa prezentacji wybiera treść na podstawie stanu systemu, ale nie przejmuje odpowiedzialności za reguły gry. Ułatwia to walidację, rozbudowę i utrzymywanie zgodności między kodem a dokumentacją.`
-        },
-        {
-          title: 'Dokumentacja jako część systemu',
-          text: `Dokumentacja nie została dopisana po implementacji. Jest narzędziem prowadzenia projektu: obejmuje mapę projektu i zależności, dokumenty kanoniczne mechanik, specyfikacje UI i techniczne, visual direction, roadmapę, snapshoty oraz instrukcje dla Codexa.
-
-Każdy dokument ma określony zakres i status. Decyzje są zapisywane tak, aby kolejne zadania mogły odwoływać się do aktualnego kanonu zamiast odtwarzać intencję z kodu.
-
-Pozwala to utrzymywać wspólny język mechaniki, obrazu, kodu i dokumentacji oraz przekazywać kontekst ludziom i narzędziom AI.`
-        },
-        {
-          title: 'Visual pipeline',
-          text: `Kierunek wizualny określam jako rytualny minimalizm kosmiczny: połączenie czytelności gameplayowej, kontemplacyjnej przestrzeni, geometrii, subtelnej sakralności i rezonansu.
-
-Pipeline obejmuje modele GLB, lekkie bryły, rodziny tekstur dopasowane do UV, mapy emisji, materiały i oświetlenie. Referencje rastrowe, SVG, modularne ramki oraz ornamenty są przygotowywane według wspólnych standardów.
-
-Celem nie jest dekoracja sama w sobie, lecz obraz, który komunikuje stan świata i zachowuje własny charakter zamiast powielać typowy interfejs sci-fi lub fantasy.`
-        },
-        {
-          title: 'AI workflow',
-          text: `AI jest narzędziem produkcyjnym, a nie autonomicznym autorem projektu. ChatGPT pomaga analizować koncepcje, porządkować decyzje, wykrywać luki i przygotowywać precyzyjne zadania. Codex realizuje ograniczone zakresy implementacyjne, aktualizacje dokumentacji, audyty i testy.
-
-Każde zadanie otrzymuje kontekst źródłowy, granice zmian, zakazy regresji, kryteria akceptacji i listę kontroli. Po implementacji sprawdzam diff, testy, zgodność z kanonem i wpływ na sąsiednie systemy.
-
-Taki workflow pozwala zwiększać tempo bez oddawania odpowiedzialności za architekturę. Moją rolą jest tłumaczenie wizji na instrukcje wykonawcze i pilnowanie, aby mechanika, obraz, kod oraz dokumentacja nadal tworzyły jeden system.`
-        }
-      ],
-      result: `Rezultatem jest publicznie dostępny prototyp przeglądarkowy obejmujący:
-
-- świat renderowany w Three.js,
-- bryły meteorów i asteroid oraz modele GLB,
-- rodziny tekstur i map emisji zgodne z assetami,
-- wspólne ładowanie i ponowne wykorzystywanie modeli oraz tekstur,
-- ruch, kolizje, masę i progresję ciał,
-- karty R1–R4 i system sekwencji,
-- ekonomię Punktów Rezonansu,
-- PRG — Player Reaction Field,
-- harmoniczny pył jako pamięć zderzeń,
-- RUN HUD i SUB-META,
-- dynamiczne opisy i haiku,
-- debug tooling oraz pomocniczą ścieżkę Canvas2D,
-- responsywne skalowanie UI,
-- dokumentację projektową i techniczną,
-- build oraz deployment na GitHub Pages.
-
-Projekt pokazuje kompetencje w game designie, system designie, Three.js, pipeline’ie assetów 3D, UI/UX, architekturze runtime’u, debugowaniu, dokumentacji, technical art direction i produkcji wspieranej przez AI. Pokazuje też zdolność prowadzenia złożonej wizji przez wiele zależnych warstw aż do działającego, wdrożonego prototypu.`
     },
     featureLabel: 'Skills / scope:',
     featureText: 'game design · system design · Three.js · 3D asset pipeline · UI/UX · runtime architecture · debug tooling · documentation · technical art direction · AI-assisted production'
