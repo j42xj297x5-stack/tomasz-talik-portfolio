@@ -471,6 +471,7 @@ loadingDiagnostics.markEvent('firstWarmupRender');
 const timer = new THREE.Timer();
 timer.connect(document);
 const orbitCenterWorldPosition = new THREE.Vector3();
+const performanceDiagnostics = { elapsed: 0, frames: 0 };
 
 function tick(timestamp) {
   timer.update(timestamp);
@@ -480,10 +481,10 @@ function tick(timestamp) {
   updateOrbitNodes(nodes, elapsed, orbitGroup.getWorldPosition(orbitCenterWorldPosition), orbitPhase);
   plaqueTransition.update();
   cameraRig.update(camera, elapsed);
-  atmosphere.update(delta);
   atmosphereProgression.updateAtmosphereProgression(delta);
   const multipliers = atmosphereProgression.getProgressionMultipliers();
   atmosphere.setProgressionMultipliers(multipliers);
+  atmosphere.update(delta);
   sunCycle.setProgressionMultiplier(multipliers.sunMoon);
   moonCycle.setProgressionMultiplier(multipliers.sunMoon);
   sunCycle.update(delta);
@@ -494,6 +495,25 @@ function tick(timestamp) {
     console.info('[backgroundAtmosphere][debug] tick/update active', { delta, elapsed });
   }
   renderer.render(scene, camera);
+  if (debugLoading) {
+    performanceDiagnostics.elapsed += delta;
+    performanceDiagnostics.frames += 1;
+    if (performanceDiagnostics.elapsed >= 1.5) {
+      const atmosphereSnapshot = atmosphere.getPerformanceSnapshot();
+      const hiddenLayers = atmosphereSnapshot.hiddenLayers.slice();
+      if (!galaxyLayer.group.visible) hiddenLayers.push('galaxies');
+      console.info('[experience3d][performance]', {
+        averageFps: Number((performanceDiagnostics.frames / performanceDiagnostics.elapsed).toFixed(1)),
+        averageFrameMs: Number((performanceDiagnostics.elapsed * 1000 / performanceDiagnostics.frames).toFixed(2)),
+        renderCalls: renderer.info.render.calls,
+        triangles: renderer.info.render.triangles,
+        activeRelics: atmosphereSnapshot.activeObjects,
+        hiddenLayers
+      });
+      performanceDiagnostics.elapsed = 0;
+      performanceDiagnostics.frames = 0;
+    }
+  }
   requestAnimationFrame(tick);
 }
 
