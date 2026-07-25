@@ -32,9 +32,11 @@ export function createLoaderOverlay({ debug = false } = {}) {
   const errorEl = root.querySelector('.loader-overlay__error');
 
   document.body.append(root);
+  let completed = false;
 
   return {
     update(snapshot) {
+      if (completed) return;
       const percent = progressPercent(snapshot);
       barEl.style.width = `${percent}%`;
       progressEl.textContent = `${percent}%`;
@@ -56,8 +58,12 @@ export function createLoaderOverlay({ debug = false } = {}) {
       errorEl.textContent = message;
     },
     async complete() {
+      if (completed) return;
+      completed = true;
       root.classList.add('loader-overlay--complete');
       await new Promise((resolve) => setTimeout(resolve, 420));
+      root.hidden = true;
+      root.style.display = 'none';
       root.remove();
     }
   };

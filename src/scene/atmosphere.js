@@ -12,9 +12,9 @@ const DEFAULT_BACKGROUND_ATMOSPHERE_CONFIG = Object.freeze({
   shellOuterRadius: 25,
   dust: Object.freeze({ enabled: true, count: 6000, idleOpacity: 1, rotationSpeed: 0.018, pointSize: 0.07, color: '#cfe2ff', sizeAttenuation: true, depthTest: true, depthWrite: false }),
   stoneRelics: Object.freeze({
-    enabled: true, count: 80,
+    enabled: true, count: 30,
     models: Object.freeze(['/glb/stone_01.glb','/glb/stone_02.glb','/glb/stone_03.glb','/glb/stone_04.glb','/glb/stone_05.glb','/glb/stone_06.glb']),
-    safeRadius: 3.5, shellInnerRadius: 15, shellOuterRadius: 18, minScale: 3, maxScale: 4.27,
+    safeRadius: 3.5, shellInnerRadius: 18, shellOuterRadius: 20, minScale: 2, maxScale: 5,
     rotationSpeedMin: 0.05, rotationSpeedMax: 0.09, orbitSpeed: 0.003, opacity: 1, debugVisible: false
   }),
   shellRelics: Object.freeze({
@@ -60,8 +60,11 @@ export function createBackgroundAtmosphere(configOverrides = {}, { assetManager 
   let config = resolveAtmosphereConfig(configOverrides);
   const root = new THREE.Group();
   const stoneRelicsGroup = new THREE.Group();
+  stoneRelicsGroup.name = 'StoneRelicsGroup';
   const shellRelicsGroup = new THREE.Group();
+  shellRelicsGroup.name = 'ShellRelicsGroup';
   const smallGlyphRelicsGroup = new THREE.Group();
+  smallGlyphRelicsGroup.name = 'SmallGlyphRelicsGroup';
   const stoneRelicStates = [];
   const shellRelicStates = [];
   const smallGlyphRelicStates = [];
@@ -76,6 +79,7 @@ export function createBackgroundAtmosphere(configOverrides = {}, { assetManager 
   let progressionMultipliers = { stones: 1, shells: 1, smallGlyphs: 1, stars: 1, galaxies: 1 };
   let revealProgress = { stones: 0, shells: 0, smallGlyphs: 0 };
   let hasHydratedDeferredRelics = false;
+  const lifecycleCounts = { atmosphereRebuilds: 0, atmosphereHydrations: 0, stoneBuilds: 0, shellBuilds: 0, smallGlyphBuilds: 0 };
 
   function applyDustMaterialOptions(){ if(!dustField) return; Object.assign(dustField.material,{size:config.dust.pointSize,transparent:true,opacity:config.dust.idleOpacity*(progressionMultipliers.stars ?? progressionMultipliers.starsDust ?? 1),sizeAttenuation:config.dust.sizeAttenuation,depthTest:config.dust.depthTest,depthWrite:config.dust.depthWrite,fog:config.debugIgnoreFog ? !config.debugVisible : true}); dustField.material.color.set(config.dust.color); dustField.material.blending=config.debugBlendingMode==='additive'?THREE.AdditiveBlending:THREE.NormalBlending; dustField.material.needsUpdate=true; }
   function setHelpersVisible(){ if(helperGroup) helperGroup.visible=Boolean(config.showShellHelpers||config.debugVisible); }
@@ -86,18 +90,18 @@ export function createBackgroundAtmosphere(configOverrides = {}, { assetManager 
   function clearShellRelics(){ while(shellRelicsGroup.children.length>0){ const c=shellRelicsGroup.children.pop(); c.traverse?.((m)=>{ if(!m.isMesh) return; (Array.isArray(m.material)?m.material:[m.material]).forEach((mat)=>mat?.dispose?.());}); } shellRelicStates.length=0; }
   function clearSmallGlyphRelics(){ while(smallGlyphRelicsGroup.children.length>0){ const c=smallGlyphRelicsGroup.children.pop(); c.traverse?.((m)=>{ if(!m.isMesh) return; (Array.isArray(m.material)?m.material:[m.material]).forEach((mat)=>mat?.dispose?.());}); } smallGlyphRelicStates.length=0; }
   function setObjectReveal(state, reveal, updateMaterials){ if(updateMaterials){ state.materials.forEach((material)=>{ const opacity=(material.userData?.targetOpacity ?? 1)*reveal; if(Math.abs(material.opacity-opacity)>PROGRESSION_EPSILON) material.opacity=opacity; }); } state.object.scale.copy(state.targetScale).multiplyScalar(0.88+0.12*reveal); }
-  function rebuildStoneRelics(){ clearRelics(); const s=config.stoneRelics; if(!config.enabled||!s.enabled) return; const pool=s.models.filter((url)=>relicModelCache.has(url)); for(let i=0;i<s.count&&pool.length;i+=1){ const cloned=cloneRelicModel(relicModelCache.get(pool[Math.floor(Math.random()*pool.length)]), s.debugVisible?1:s.opacity); const model=cloned.object; const scale=randomBetween(s.minScale,s.maxScale)*(s.debugVisible?1.8:1); const outer=Math.max(0,s.shellOuterRadius); const inner=Math.min(outer,Math.max(s.shellInnerRadius,s.safeRadius)); const pos=randomPointInShell(inner,outer); model.position.copy(pos); model.rotation.set(Math.random()*Math.PI*2,Math.random()*Math.PI*2,Math.random()*Math.PI*2); model.scale.setScalar(scale); stoneRelicsGroup.add(model); stoneRelicStates.push({object:model,materials:cloned.materials,basePosition:pos.clone(),radialDirection:pos.clone().normalize(),targetScale:model.scale.clone(),spin:new THREE.Vector3(randomBetween(s.rotationSpeedMin,s.rotationSpeedMax),randomBetween(s.rotationSpeedMin,s.rotationSpeedMax),randomBetween(s.rotationSpeedMin,s.rotationSpeedMax))}); } }
+  function rebuildStoneRelics(){ lifecycleCounts.stoneBuilds += 1; clearRelics(); const s=config.stoneRelics; if(!config.enabled||!s.enabled) return; const pool=s.models.filter((url)=>relicModelCache.has(url)); for(let i=0;i<s.count&&pool.length;i+=1){ const cloned=cloneRelicModel(relicModelCache.get(pool[Math.floor(Math.random()*pool.length)]), s.debugVisible?1:s.opacity); const model=cloned.object; const scale=randomBetween(s.minScale,s.maxScale)*(s.debugVisible?1.8:1); const outer=Math.max(0,s.shellOuterRadius); const inner=Math.min(outer,Math.max(s.shellInnerRadius,s.safeRadius)); const pos=randomPointInShell(inner,outer); model.position.copy(pos); model.rotation.set(Math.random()*Math.PI*2,Math.random()*Math.PI*2,Math.random()*Math.PI*2); model.scale.setScalar(scale); stoneRelicsGroup.add(model); stoneRelicStates.push({object:model,materials:cloned.materials,basePosition:pos.clone(),radialDirection:pos.clone().normalize(),targetScale:model.scale.clone(),spin:new THREE.Vector3(randomBetween(s.rotationSpeedMin,s.rotationSpeedMax),randomBetween(s.rotationSpeedMin,s.rotationSpeedMax),randomBetween(s.rotationSpeedMin,s.rotationSpeedMax))}); } }
   function applyStoneMaterial(){ const s=config.stoneRelics; stoneRelicStates.forEach(({materials})=>materials.forEach((m)=>{m.userData.targetOpacity=s.debugVisible?1:s.opacity;})); }
 
-  function rebuildShellRelics(){ clearShellRelics(); const s=config.shellRelics; if(!config.enabled||!s.enabled) return; const pool=s.models.filter((url)=>shellModelCache.has(url)); for(let i=0;i<s.count&&pool.length;i+=1){ const palette=(Array.isArray(s.colorPalette)&&s.colorPalette.length>0)?s.colorPalette:DEFAULT_BACKGROUND_ATMOSPHERE_CONFIG.shellRelics.colorPalette; const tint=palette[Math.floor(Math.random()*palette.length)]; const cloned=cloneShellRelicModel(shellModelCache.get(pool[Math.floor(Math.random()*pool.length)]), s, tint); const model=cloned.object; const scale=randomBetween(s.minScale,s.maxScale)*(s.debugVisible?1.1:1); const inner=Math.max(s.shellInnerRadius,(config.safeRadius ?? 0)+scale*0.4); const pos=randomPointInShell(inner,s.shellOuterRadius); model.position.copy(pos); model.rotation.set(Math.random()*Math.PI*2,Math.random()*Math.PI*2,Math.random()*Math.PI*2); model.scale.setScalar(scale); shellRelicsGroup.add(model); shellRelicStates.push({object:model,materials:cloned.materials,basePosition:pos.clone(),radialDirection:pos.clone().normalize(),targetScale:model.scale.clone(),spin:new THREE.Vector3(randomBetween(s.rotationSpeedMin,s.rotationSpeedMax),randomBetween(s.rotationSpeedMin,s.rotationSpeedMax),randomBetween(s.rotationSpeedMin,s.rotationSpeedMax))}); } }
+  function rebuildShellRelics(){ lifecycleCounts.shellBuilds += 1; clearShellRelics(); const s=config.shellRelics; if(!config.enabled||!s.enabled) return; const pool=s.models.filter((url)=>shellModelCache.has(url)); for(let i=0;i<s.count&&pool.length;i+=1){ const palette=(Array.isArray(s.colorPalette)&&s.colorPalette.length>0)?s.colorPalette:DEFAULT_BACKGROUND_ATMOSPHERE_CONFIG.shellRelics.colorPalette; const tint=palette[Math.floor(Math.random()*palette.length)]; const cloned=cloneShellRelicModel(shellModelCache.get(pool[Math.floor(Math.random()*pool.length)]), s, tint); const model=cloned.object; const scale=randomBetween(s.minScale,s.maxScale)*(s.debugVisible?1.1:1); const inner=Math.max(s.shellInnerRadius,(config.safeRadius ?? 0)+scale*0.4); const pos=randomPointInShell(inner,s.shellOuterRadius); model.position.copy(pos); model.rotation.set(Math.random()*Math.PI*2,Math.random()*Math.PI*2,Math.random()*Math.PI*2); model.scale.setScalar(scale); shellRelicsGroup.add(model); shellRelicStates.push({object:model,materials:cloned.materials,basePosition:pos.clone(),radialDirection:pos.clone().normalize(),targetScale:model.scale.clone(),spin:new THREE.Vector3(randomBetween(s.rotationSpeedMin,s.rotationSpeedMax),randomBetween(s.rotationSpeedMin,s.rotationSpeedMax),randomBetween(s.rotationSpeedMin,s.rotationSpeedMax))}); } }
   function applyShellMaterial(){ const s=config.shellRelics; shellRelicStates.forEach(({materials})=>materials.forEach((m)=>{m.userData.targetOpacity=s.debugVisible?1:s.opacity;})); }
 
-  function rebuildSmallGlyphRelics(){ clearSmallGlyphRelics(); const s=config.smallGlyphRelics; if(!config.enabled||!s.enabled) return; const pool=s.models.filter((url)=>smallGlyphModelCache.has(url)); for(let i=0;i<s.count&&pool.length;i+=1){ const cloned=cloneRelicModel(smallGlyphModelCache.get(pool[Math.floor(Math.random()*pool.length)]), s.debugVisible?1:s.opacity); const model=cloned.object; const scale=randomBetween(s.minScale,s.maxScale)*(s.debugVisible?1.1:1); const inner=Math.max(s.shellInnerRadius,(config.safeRadius ?? 0)+scale*0.4); const pos=randomPointInShell(inner,s.shellOuterRadius); model.position.copy(pos); model.rotation.set(Math.random()*Math.PI*2,Math.random()*Math.PI*2,Math.random()*Math.PI*2); model.scale.setScalar(scale); smallGlyphRelicsGroup.add(model); smallGlyphRelicStates.push({object:model,materials:cloned.materials,basePosition:pos.clone(),radialDirection:pos.clone().normalize(),targetScale:model.scale.clone(),spin:new THREE.Vector3(randomBetween(s.rotationSpeedMin,s.rotationSpeedMax),randomBetween(s.rotationSpeedMin,s.rotationSpeedMax),randomBetween(s.rotationSpeedMin,s.rotationSpeedMax))}); } }
+  function rebuildSmallGlyphRelics(){ lifecycleCounts.smallGlyphBuilds += 1; clearSmallGlyphRelics(); const s=config.smallGlyphRelics; if(!config.enabled||!s.enabled) return; const pool=s.models.filter((url)=>smallGlyphModelCache.has(url)); for(let i=0;i<s.count&&pool.length;i+=1){ const cloned=cloneRelicModel(smallGlyphModelCache.get(pool[Math.floor(Math.random()*pool.length)]), s.debugVisible?1:s.opacity); const model=cloned.object; const scale=randomBetween(s.minScale,s.maxScale)*(s.debugVisible?1.1:1); const inner=Math.max(s.shellInnerRadius,(config.safeRadius ?? 0)+scale*0.4); const pos=randomPointInShell(inner,s.shellOuterRadius); model.position.copy(pos); model.rotation.set(Math.random()*Math.PI*2,Math.random()*Math.PI*2,Math.random()*Math.PI*2); model.scale.setScalar(scale); smallGlyphRelicsGroup.add(model); smallGlyphRelicStates.push({object:model,materials:cloned.materials,basePosition:pos.clone(),radialDirection:pos.clone().normalize(),targetScale:model.scale.clone(),spin:new THREE.Vector3(randomBetween(s.rotationSpeedMin,s.rotationSpeedMax),randomBetween(s.rotationSpeedMin,s.rotationSpeedMax),randomBetween(s.rotationSpeedMin,s.rotationSpeedMax))}); } }
   function applySmallGlyphMaterial(){ const s=config.smallGlyphRelics; smallGlyphRelicStates.forEach(({materials})=>materials.forEach((m)=>{m.userData.targetOpacity=s.debugVisible?1:s.opacity;})); }
 
 
-  async function rebuild(){ while(root.children.length>0) root.remove(root.children[0]); dustField=null; helperGroup=null; clearRelics(); clearShellRelics(); clearSmallGlyphRelics(); if(!config.enabled) return; if(config.dust.enabled){dustField=createDustField(config);root.add(dustField.points);applyDustMaterialOptions();} helperGroup=createShellDebugHelpers(config);root.add(helperGroup);setHelpersVisible(); root.add(stoneRelicsGroup); root.add(shellRelicsGroup); root.add(smallGlyphRelicsGroup); if(!deferRelicsUntilWarm){ await hydrateDeferredRelics(); } }
-  async function hydrateDeferredRelics(){ if(hasHydratedDeferredRelics) return; await loadRelicModels(); await loadShellModels(); await loadSmallGlyphModels(); rebuildStoneRelics(); rebuildShellRelics(); rebuildSmallGlyphRelics(); applyStoneMaterial(); applyShellMaterial(); applySmallGlyphMaterial(); hasHydratedDeferredRelics = true; }
+  async function rebuild(){ lifecycleCounts.atmosphereRebuilds += 1; while(root.children.length>0) root.remove(root.children[0]); dustField=null; helperGroup=null; clearRelics(); clearShellRelics(); clearSmallGlyphRelics(); if(!config.enabled) return; if(config.dust.enabled){dustField=createDustField(config);root.add(dustField.points);applyDustMaterialOptions();} helperGroup=createShellDebugHelpers(config);root.add(helperGroup);setHelpersVisible(); root.add(stoneRelicsGroup); root.add(shellRelicsGroup); root.add(smallGlyphRelicsGroup); if(!deferRelicsUntilWarm){ await hydrateDeferredRelics(); } }
+  async function hydrateDeferredRelics(){ lifecycleCounts.atmosphereHydrations += 1; if(hasHydratedDeferredRelics) return; await loadRelicModels(); await loadShellModels(); await loadSmallGlyphModels(); rebuildStoneRelics(); rebuildShellRelics(); rebuildSmallGlyphRelics(); applyStoneMaterial(); applyShellMaterial(); applySmallGlyphMaterial(); hasHydratedDeferredRelics = true; }
   function applySettings(next={},type='rebuild'){ config=resolveAtmosphereConfig({ ...config, ...next }); if(type==='material'){applyDustMaterialOptions();applyStoneMaterial();applyShellMaterial();applySmallGlyphMaterial();return;} if(type==='helpers'){setHelpersVisible();return;} if(type==='stone-runtime'){applyStoneMaterial();return;} if(type==='stone-rebuild'){rebuildStoneRelics();applyStoneMaterial();return;} if(type==='shell-runtime'){applyShellMaterial();return;} if(type==='shell-rebuild'){rebuildShellRelics();applyShellMaterial();return;} if(type==='small-glyph-runtime'){applySmallGlyphMaterial();return;} if(type==='small-glyph-rebuild'){rebuildSmallGlyphRelics();applySmallGlyphMaterial();return;} void rebuild(); }
 
   function updateRelicLayer(states, group, key, layerConfig, deltaSeconds, elapsedMs, driftSpeed, driftAmount) {
@@ -145,6 +149,7 @@ export function createBackgroundAtmosphere(configOverrides = {}, { assetManager 
         if (dustField.points.visible) root.rotation.y += config.dust.rotationSpeed * deltaSeconds;
       }
     },
+    getLifecycleCounts: () => ({ ...lifecycleCounts }),
     getPerformanceSnapshot() {
       return {
         activeObjects: {
@@ -159,6 +164,12 @@ export function createBackgroundAtmosphere(configOverrides = {}, { assetManager 
           dustField && !dustField.points.visible && 'stars'
         ].filter(Boolean)
       };
+    },
+    showAllForWarmup() {
+      const states = [stoneRelicsGroup, shellRelicsGroup, smallGlyphRelicsGroup, dustField?.points]
+        .filter(Boolean).map((object) => ({ object, visible: object.visible }));
+      states.forEach(({ object }) => { object.visible = true; });
+      return () => states.forEach(({ object, visible }) => { object.visible = visible; });
     }
   };
 }

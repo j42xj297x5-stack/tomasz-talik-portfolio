@@ -20,6 +20,7 @@ import { ASSET_STAGES, INITIAL_PRELOAD_GROUPS, DEFERRED_PRELOAD_GROUPS, OPTIONAL
 import { createLoadingDiagnostics, preloadAssets } from './assets/preloadAssets.js';
 import { createAssetManager } from './assets/assetManager.js';
 import { createLoaderOverlay } from './ui/loaderOverlay.js';
+import { createRuntimeDiagnostics } from './utils/runtimeDiagnostics.js';
 
 const app = document.querySelector('#app');
 if (!app) throw new Error('Missing #app mount element.');
@@ -47,7 +48,7 @@ const isMobileRuntime = mobileQuery.matches;
 const preloadConcurrency = isMobileRuntime ? 2 : 4;
 const assetManager = createAssetManager({ diagnostics: loadingDiagnostics });
 const loaderOverlay = createLoaderOverlay({ debug: debugLoading });
-loadingDiagnostics.subscribe((snapshot) => loaderOverlay.update(snapshot));
+const unsubscribeLoaderDiagnostics = loadingDiagnostics.subscribe((snapshot) => loaderOverlay.update(snapshot));
 
 try {
   loadingDiagnostics.markEvent('criticalPreloadStart');
@@ -98,7 +99,7 @@ const sceneRuntimeConfig = {
   backgroundAtmosphere: {
     enabled: true, debugVisible: false, showShellHelpers: false, showAtmosphereLogs: false,
     debugBlendingMode: 'normal', debugIgnoreFog: true, safeRadius: 3, shellInnerRadius: 15, shellOuterRadius: 25,
-    stoneRelics: { enabled: true, count: 100, models: ['glb/stone_01.glb','glb/stone_02.glb','glb/stone_03.glb','glb/stone_04.glb','glb/stone_05.glb','glb/stone_06.glb'], safeRadius: 3.5, shellInnerRadius: 10, shellOuterRadius: 13, minScale: 5, maxScale: 10, rotationSpeedMin: 0.05, rotationSpeedMax: 0.09, orbitSpeed: 0.003, opacity: 1, debugVisible: false },
+    stoneRelics: { enabled: true, count: 30, models: ['glb/stone_01.glb','glb/stone_02.glb','glb/stone_03.glb','glb/stone_04.glb','glb/stone_05.glb','glb/stone_06.glb'], safeRadius: 3.5, shellInnerRadius: 18, shellOuterRadius: 20, minScale: 2, maxScale: 5, rotationSpeedMin: 0.05, rotationSpeedMax: 0.09, orbitSpeed: 0.003, opacity: 1, debugVisible: false },
     shellRelics: { enabled: true, count: 100, models: ['glb/shell_01.glb','glb/shell_02.glb','glb/shell_03.glb','glb/shell_04.glb','glb/shell_05.glb','glb/shell_06.glb'], minScale: 0.4, maxScale: 0.7, shellInnerRadius: 10, shellOuterRadius: 13, rotationSpeedMin: 0.047, rotationSpeedMax: 0.486, orbitSpeed: 0.013, opacity: 1, debugVisible: false, colorPalette: ['#d9a441','#4db6ac','#6ec6ff','#6bcf8e','#9c7bff','#f0a6a6'] },
     smallGlyphRelics: { enabled: true, count: 50, models: ['glb/small_glyph_01.glb','glb/small_glyph_02.glb','glb/small_glyph_03.glb','glb/small_glyph_04.glb','glb/small_glyph_05.glb','glb/small_glyph_06.glb'], minScale: 0.3, maxScale: 0.5, shellInnerRadius: 13, shellOuterRadius: 15, rotationSpeedMin: 0.291, rotationSpeedMax: 0.5, orbitSpeed: 0.031, opacity: 0.62, debugVisible: false },
     dust: { enabled: true, count: 6000, idleOpacity: 1, rotationSpeed: 0.018, pointSize: 0.07, color: '#cfe2ff', sizeAttenuation: true, depthTest: true }
@@ -128,6 +129,24 @@ moonCycle.setProgressionMultiplier(initialProgressionMultipliers.sunMoon);
 galaxyLayer.setProgressionMultiplier(initialProgressionMultipliers.galaxies);
 loadingDiagnostics.markEvent('sceneAttachEnd');
 
+let interactionState = 'booting';
+const runtimeDiagnostics = createRuntimeDiagnostics({
+  enabled: debugLoading,
+  renderer,
+  scene,
+  getRuntimeState: () => interactionState,
+  getLayerSnapshot: () => ({ ...atmosphere.getPerformanceSnapshot(), galaxiesVisible: galaxyLayer.group.visible }),
+  getGalaxyCount: galaxyLayer.getInstanceCount,
+  getPlaqueCount: plaqueTransition.getInstanceCount,
+  getLifecycleCounts: () => ({ ...atmosphere.getLifecycleCounts(), ...galaxyLayer.getLifecycleCounts(), plaqueInstancesBuilt: plaqueTransition.getInstanceCount() })
+});
+runtimeDiagnostics.count('criticalPreload');
+runtimeDiagnostics.count('deferredPreload');
+runtimeDiagnostics.count('optionalPreload');
+runtimeDiagnostics.count('atmosphereCreate');
+runtimeDiagnostics.count('galaxyCreate');
+runtimeDiagnostics.census('sceneAttach');
+
 const overlay = createOverlay({
   language: document.documentElement.lang,
   onClose: () => void returnFromNodePanel()
@@ -137,9 +156,11 @@ const hoverLabel = createHoverLabel();
 const optionsPanel = createOptionsPanel({
   runtimeState: sceneRuntimeConfig,
   loadingDiagnostics,
+  getPerformanceSnapshot: runtimeDiagnostics.getSnapshot,
   atmosphereProgression,
   gateNodes: portfolioNodes,
   onChange: ({ type }) => {
+    if (type.includes('rebuild') || type === 'reset-all') runtimeDiagnostics.count(`options:${type}`);
     atmosphere.applySettings(sceneRuntimeConfig.backgroundAtmosphere, type);
     sunCycle.setOptions(sceneRuntimeConfig.sunCycle);
     moonCycle.setOptions(sceneRuntimeConfig.moonCycle);
@@ -155,7 +176,6 @@ const optionsPanel = createOptionsPanel({
 });
 
 let hoveredNode = null;
-let interactionState = 'booting';
 let activePanelNode = null;
 
 function syncHoverState(nextHoveredNode, event = null) {
@@ -265,6 +285,7 @@ async function focusNodePanel(node) {
     if (!activePanelNode) return;
     overlay.open(node.userData);
     interactionState = 'panelOpen';
+    runtimeDiagnostics.markPlaqueOpen(node.userData?.id ?? 'unknown');
   } catch (error) {
     console.warn('[interaction] Failed to focus selected glyph.', error);
     restoreInteractionSafely();
@@ -448,31 +469,48 @@ window.addEventListener('orientationchange', () => {
 handleResize();
 await Promise.all([atmosphere.ready, galaxyLayer.ready]);
 loadingDiagnostics.markEvent('sceneHydrationStart');
+runtimeDiagnostics.count('atmosphereHydration');
+runtimeDiagnostics.count('galaxyHydration');
 await Promise.all([atmosphere.hydrateDeferredRelics?.(), galaxyLayer.hydrateDeferred?.()]);
 loadingDiagnostics.markEvent('sceneHydrationEnd');
+runtimeDiagnostics.census('deferredHydration');
 loadingDiagnostics.markEvent('plaquePrewarmStart');
+runtimeDiagnostics.count('plaquePrewarm');
 await plaqueTransition.prewarm(nodes, camera);
 loadingDiagnostics.markEvent('plaquePrewarmEnd');
+runtimeDiagnostics.census('plaquePrewarm');
 loadingDiagnostics.markEvent('rendererCompileStart');
 const compileStartedAt = performance.now();
 plaqueTransition.setWarmupVisibility(true);
+const restoreAtmosphereWarmup = atmosphere.showAllForWarmup();
+const restoreGalaxyWarmup = galaxyLayer.showForWarmup();
 try {
-  renderer.compile(scene, camera);
+  plaqueTransition.setWarmupMaterialMode('fade');
+  runtimeDiagnostics.count('shaderCompile:fade');
+  if (typeof renderer.compileAsync === 'function') await renderer.compileAsync(scene, camera);
+  else renderer.compile(scene, camera);
+  plaqueTransition.setWarmupMaterialMode('stable');
+  runtimeDiagnostics.count('shaderCompile:stable');
+  if (typeof renderer.compileAsync === 'function') await renderer.compileAsync(scene, camera);
+  else renderer.compile(scene, camera);
   assetManager.markWarmup({ shaderCompileComplete: true, mobileWarmupReduced: isMobileRuntime });
+  runtimeDiagnostics.count('warmupRender');
   renderer.render(scene, camera);
 } finally {
+  plaqueTransition.setWarmupMaterialMode('stable');
   plaqueTransition.setWarmupVisibility(false);
+  restoreAtmosphereWarmup();
+  restoreGalaxyWarmup();
 }
 loadingDiagnostics.markEvent('rendererCompileEnd');
-renderer.render(scene, camera);
 assetManager.markWarmup({ warmupFrameComplete: true, compileWarmupMs: performance.now() - compileStartedAt });
 loadingDiagnostics.markEvent('firstWarmupRender');
+runtimeDiagnostics.markWarmupComplete();
+runtimeDiagnostics.census('warmupComplete');
 
 const timer = new THREE.Timer();
 timer.connect(document);
 const orbitCenterWorldPosition = new THREE.Vector3();
-const performanceDiagnostics = { elapsed: 0, frames: 0 };
-
 function tick(timestamp) {
   timer.update(timestamp);
   const delta = timer.getDelta();
@@ -495,32 +533,19 @@ function tick(timestamp) {
     console.info('[backgroundAtmosphere][debug] tick/update active', { delta, elapsed });
   }
   renderer.render(scene, camera);
-  if (debugLoading) {
-    performanceDiagnostics.elapsed += delta;
-    performanceDiagnostics.frames += 1;
-    if (performanceDiagnostics.elapsed >= 1.5) {
-      const atmosphereSnapshot = atmosphere.getPerformanceSnapshot();
-      const hiddenLayers = atmosphereSnapshot.hiddenLayers.slice();
-      if (!galaxyLayer.group.visible) hiddenLayers.push('galaxies');
-      console.info('[experience3d][performance]', {
-        averageFps: Number((performanceDiagnostics.frames / performanceDiagnostics.elapsed).toFixed(1)),
-        averageFrameMs: Number((performanceDiagnostics.elapsed * 1000 / performanceDiagnostics.frames).toFixed(2)),
-        renderCalls: renderer.info.render.calls,
-        triangles: renderer.info.render.triangles,
-        activeRelics: atmosphereSnapshot.activeObjects,
-        hiddenLayers
-      });
-      performanceDiagnostics.elapsed = 0;
-      performanceDiagnostics.frames = 0;
-    }
-  }
+  runtimeDiagnostics.frame(timestamp);
   requestAnimationFrame(tick);
 }
 
 loadingDiagnostics.markEvent('loaderFadeStart');
+runtimeDiagnostics.count('loaderComplete');
 shell?.classList.remove('runtime-shell--loading');
 await loaderOverlay.complete();
+unsubscribeLoaderDiagnostics();
 loadingDiagnostics.markEvent('loaderFadeEnd');
 interactionState = 'idle';
 loadingDiagnostics.markEvent('interactionReady');
+runtimeDiagnostics.markInteractionReady();
+runtimeDiagnostics.census('interactionReady');
+runtimeDiagnostics.count('tickStart');
 tick();

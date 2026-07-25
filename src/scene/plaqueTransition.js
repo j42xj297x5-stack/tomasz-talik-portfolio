@@ -101,6 +101,7 @@ export function createPlaqueTransition({ scene, assetManager }) {
     const warmLight = new THREE.PointLight('#ff9c47', 0, Math.max(size.x, size.y, size.z) * 4, 2);
     wrapper.add(warmLight);
     wrapper.visible = false;
+    wrapper.userData.plaqueInstance = true;
     wrapper.raycast = () => {};
     scene.add(wrapper);
     const instance = { nodeId, wrapper, model, materials, glyphMaterials: null, glow, warmLight };
@@ -130,6 +131,13 @@ export function createPlaqueTransition({ scene, assetManager }) {
       plaque.wrapper.visible = visible;
       plaque.glow.material.opacity = 0;
       plaque.warmLight.intensity = 0;
+    });
+  }
+
+  function setWarmupMaterialMode(mode) {
+    instances.forEach((plaque) => {
+      if (mode === 'fade') setFadeMode(plaque.materials);
+      else setStableMode(plaque.materials);
     });
   }
 
@@ -258,5 +266,5 @@ export function createPlaqueTransition({ scene, assetManager }) {
     if (active?.node === node) active = null;
   }
 
-  return { prewarm, setWarmupVisibility, reveal, restore, reset, update };
+  return { prewarm, setWarmupVisibility, setWarmupMaterialMode, reveal, restore, reset, update, getInstanceCount: () => instances.size };
 }
