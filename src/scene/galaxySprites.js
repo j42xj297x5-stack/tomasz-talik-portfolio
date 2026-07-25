@@ -170,6 +170,7 @@ export function createGalaxySpritesLayer(options = {}, { assetManager = null, de
   let progressionMultiplier = 1;
   let revealProgress = 0;
   let hasHydratedDeferred = false;
+  const lifecycleCounts = { galaxyRebuilds: 0, galaxyHydrations: 0 };
 
   function clearInstances({ disposeTextures = true } = {}) {
     while (group.children.length > 0) {
@@ -246,6 +247,7 @@ export function createGalaxySpritesLayer(options = {}, { assetManager = null, de
   }
 
   async function rebuild(nextOptions = {}) {
+    lifecycleCounts.galaxyRebuilds += 1;
     config = normalizeOptions({ ...config, ...nextOptions });
     const currentBuildId = ++buildId;
     clearInstances();
@@ -340,6 +342,7 @@ export function createGalaxySpritesLayer(options = {}, { assetManager = null, de
   }
 
   async function hydrateDeferred() {
+    lifecycleCounts.galaxyHydrations += 1;
     if (hasHydratedDeferred) return;
     hasHydratedDeferred = true;
     await rebuild();
@@ -361,6 +364,12 @@ export function createGalaxySpritesLayer(options = {}, { assetManager = null, de
       if (Math.abs(next - progressionMultiplier) > PROGRESSION_EPSILON) progressionMultiplier = next;
     },
     getOptions: () => ({ ...config, texturePaths: config.texturePaths.slice() }),
-    getInstanceCount: () => instances.length
+    getInstanceCount: () => instances.length,
+    getLifecycleCounts: () => ({ ...lifecycleCounts }),
+    showForWarmup() {
+      const visible = group.visible;
+      group.visible = true;
+      return () => { group.visible = visible; };
+    }
   };
 }

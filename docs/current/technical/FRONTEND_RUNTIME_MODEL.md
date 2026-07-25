@@ -6,7 +6,9 @@ The application uses Vite, vanilla JavaScript, and vendored Three.js. `src/main.
 
 Classic 2D remains a separate lightweight runtime in `src/classic2d.js`; it consumes the same `portfolioNodes` records without loading Three.js.
 
-The single Experience loader remains active through bounded critical/deferred preload (four concurrent operations on desktop, two on mobile/coarse pointers), scene attachment, deferred atmosphere/galaxy hydration, plaque prewarm, shader compilation, and a final warm-up render. Interaction and the animation loop are released only after those stages complete.
+The single Experience loader remains active through bounded critical/deferred preload (four concurrent operations on desktop, two on mobile/coarse pointers), scene attachment, deferred atmosphere/galaxy hydration, plaque prewarm, asynchronous shader compilation when supported, and a final warm-up render. Interaction and the animation loop are released only after those stages complete. The options panel no longer triggers an implicit rebuild during construction. When the loader completes, its diagnostics subscription is detached and its DOM layer is hidden and removed before interaction begins.
+
+With `?debug`, a persistent, non-interactive performance HUD samples frame timings and `renderer.info` every 1.25 seconds. The debug export includes the same snapshot, startup/build counters, shader-program milestones, and one-time scene censuses captured after scene attachment, deferred hydration, plaque prewarm, warm-up, and interaction release.
 
 ## Experience 3D project opening
 

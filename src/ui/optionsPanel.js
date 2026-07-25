@@ -5,7 +5,7 @@ function deepClone(value) {
 }
 
 const OPTIONS_STORAGE_KEY = 'portfolio.options.runtimeState.v1';
-const OPTIONS_DEFAULTS_VERSION = '2026-07-22-experience3d-baseline-v2';
+const OPTIONS_DEFAULTS_VERSION = '2026-07-25-experience3d-stones-v3';
 const PRESET_SLOT_KEYS = ['portfolio.optionsPreset.1', 'portfolio.optionsPreset.2', 'portfolio.optionsPreset.3'];
 const SUN_MODEL_PATH = '/glb/sun.glb';
 
@@ -233,7 +233,7 @@ function addRow(sectionBody, labelText, controlBuilder) {
   sectionBody.append(row);
 }
 
-export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere, atmosphereProgression, gateNodes = [], loadingDiagnostics = null }) {
+export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere, atmosphereProgression, gateNodes = [], loadingDiagnostics = null, getPerformanceSnapshot = null }) {
   const defaults = deepClone(runtimeState);
 
   try {
@@ -357,6 +357,7 @@ export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere, 
       schemaVersion: 2,
       exportedAt: new Date().toISOString(),
       source: 'portfolio-debug-panel',
+      performance: getPerformanceSnapshot?.() ?? null,
       progression: {
         enabled: progressionDebugState?.progressionEnabled ?? true,
         autoProgressOnUniqueGateClose: progressionDebugState?.autoProgressOnUniqueGateClose ?? true,
@@ -960,7 +961,6 @@ export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere, 
     }
   });
 
-  onChange({ type: 'rebuild' });
   persistState();
   renderAll();
   setOpen(false);
