@@ -6,6 +6,8 @@ The application uses Vite, vanilla JavaScript, and vendored Three.js. `src/main.
 
 Classic 2D remains a separate lightweight runtime in `src/classic2d.js`; it consumes the same `portfolioNodes` records without loading Three.js.
 
+The single Experience loader remains active through bounded critical/deferred preload (four concurrent operations on desktop, two on mobile/coarse pointers), scene attachment, deferred atmosphere/galaxy hydration, plaque prewarm, shader compilation, and a final warm-up render. Interaction and the animation loop are released only after those stages complete.
+
 ## Experience 3D project opening
 
 The Experience 3D project detail flow is a single serialized interaction. Selecting a glyph blocks new interaction and pauses its orbit. The runtime focuses the camera on that node, reveals the configured plaque, holds, and performs a safe dolly-in. The HTML/CSS overlay opens only after that sequence completes.
@@ -23,3 +25,5 @@ The removed SVG-frame runtime, its fetch/geometry/resize solvers, and legacy ver
 ## Asset and rendering safety
 
 `src/assets/assetManifest.js` derives five plaque GLB entries from `portfolioNodes` into the `deferredWarm` stage. `src/scene/plaqueTransition.js` caches a cloned plaque wrapper per node and ensures only one transition is active. Glyph and monkey model fallbacks remain mandatory. Vendored Three.js r184 with matching GLTFLoader remains the runtime source of truth; npm `three` is intentionally not the runtime source.
+
+Before reveal, the plaque controller prewarms a complete cloned wrapper (materials, bounds, glow, and light) for every node; the first selection therefore performs no plaque model parsing or construction. Optional asset failures remain isolated, while critical failures keep the loader in its error state.
