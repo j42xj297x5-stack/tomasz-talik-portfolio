@@ -38,6 +38,7 @@ export const GALAXY_SPRITES_DEFAULTS = {
 const TWO_PI = Math.PI * 2;
 const HALF_PI = Math.PI * 0.5;
 const CENTRAL_CONE_ATTEMPTS = 18;
+const PROGRESSION_EPSILON = 0.0001;
 
 function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value));
@@ -309,8 +310,12 @@ export function createGalaxySpritesLayer(options = {}, { assetManager = null, de
     const speedMultiplier = reducedMotion ? config.reducedMotionSpeedMultiplier : 1;
     const scaledDelta = delta * speedMultiplier;
 
-    const revealTarget = progressionMultiplier > 0 ? 1 : 0;
-    revealProgress += (revealTarget - revealProgress) * Math.min(1, scaledDelta / 0.65);
+    const previousReveal = revealProgress;
+    revealProgress += (progressionMultiplier - revealProgress) * Math.min(1, scaledDelta / 0.65);
+    if (Math.abs(revealProgress - progressionMultiplier) <= PROGRESSION_EPSILON) revealProgress = progressionMultiplier;
+    const opacityChanged = Math.abs(revealProgress - previousReveal) > PROGRESSION_EPSILON;
+    group.visible = revealProgress > PROGRESSION_EPSILON || progressionMultiplier > PROGRESSION_EPSILON;
+    if (!group.visible) return;
 
     instances.forEach((instance) => {
       const { sprite, material } = instance;
@@ -319,7 +324,7 @@ export function createGalaxySpritesLayer(options = {}, { assetManager = null, de
       computeOrbitalPosition(instance, sprite.position);
       sprite.scale.setScalar(clamp(instance.scale, config.minScale, config.maxScale) * (0.88 + 0.12 * revealProgress));
       material.rotation = instance.spinPhase;
-      material.opacity = (instance.targetOpacity ?? clamp(instance.opacity * config.opacity * progressionMultiplier, 0, 1)) * revealProgress;
+      if (opacityChanged) material.opacity = clamp(instance.opacity * config.opacity, 0, 1) * revealProgress;
     });
 
     if (camera) {
@@ -352,8 +357,8 @@ export function createGalaxySpritesLayer(options = {}, { assetManager = null, de
     dispose,
     applyRuntimeOptions,
     setProgressionMultiplier(nextMultiplier = 1) {
-      progressionMultiplier = clamp(Number(nextMultiplier) || 0, 0, 1);
-      applyRuntimeOptions(config);
+      const next = clamp(Number(nextMultiplier) || 0, 0, 1);
+      if (Math.abs(next - progressionMultiplier) > PROGRESSION_EPSILON) progressionMultiplier = next;
     },
     getOptions: () => ({ ...config, texturePaths: config.texturePaths.slice() }),
     getInstanceCount: () => instances.length
