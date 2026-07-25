@@ -9,6 +9,7 @@
 - `src/scene/cameraRig.js` owns interactive orbit, focus, plaque dolly, return-home, and fine-pointer handoff.
 - `src/scene/plaqueTransition.js` owns the per-node plaque model lifecycle and glyph/plaque cross-fade.
 - `src/ui/overlay.js` owns readable project content in HTML/CSS; text content is not rendered inside the scene.
+- Startup attaches and hydrates atmosphere relics, galaxy sprites, and all plaque wrappers before compiling the complete scene and issuing a controlled warm-up render. Warm-up visibility is temporary and plaque wrappers return to their hidden initial state before interaction is enabled.
 - Sun and moon SpotLights retain targets at the central monkey pivot, but move outside their visual body bounds using radial and camera-relative offsets. Their horizon intensity changes use a synchronized, eased fade rather than an instant day/night switch.
 
 ## Interaction sequence
@@ -36,7 +37,9 @@ Only `idle` accepts normal hover and click/tap interaction. Clicking a glyph loc
 | Ethics / Life Protection (`ethics-life-protection`) | `plaque-ethics-life-protection` | `/glb/plaque_ethics.glb` |
 | Haiku Cosmos (`haiku-cosmos`) | `plaque-haiku-cosmos` | `/glb/plaque_haiku_cosmos.glb` |
 
-The plaque controller caches one independently cloned wrapper per node ID in a `Map`. Interaction serialization allows only one active plaque animation at a time. A missing or failed plaque model produces an isolated panel fallback for that node; it does not invalidate cached or future plaques for other nodes.
+The plaque controller prewarms and caches one independently cloned wrapper per node ID in a `Map` while the loader is visible. Each wrapper already has cloned materials, validated bounds, glow, and light and is attached hidden to the scene, so first interaction only reveals the prepared instance. Interaction serialization allows only one active plaque animation at a time. A missing or failed plaque model produces an isolated panel fallback for that node; it does not invalidate cached or future plaques for other nodes.
+
+Atmosphere relic hydration also completes under the loader. Stone placement clamps the configured inner boundary to the outer shell boundary and no longer expands the radius by runtime model scale. Progression multiplier updates reapply stone materials as well as dust, shell, and small-glyph materials, allowing the stone layer to reveal normally without a debug-panel refresh.
 
 For each cached wrapper, `plaqueVisual` configures:
 

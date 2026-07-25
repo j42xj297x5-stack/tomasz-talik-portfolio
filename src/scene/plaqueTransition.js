@@ -108,6 +108,31 @@ export function createPlaqueTransition({ scene, assetManager }) {
     return instance;
   }
 
+  async function prewarm(nodes, camera) {
+    const prepared = [];
+    for (const node of nodes) {
+      try {
+        const plaque = await ensure(node);
+        if (!plaque) continue;
+        plaque.wrapper.position.copy(node.getWorldPosition(new THREE.Vector3()));
+        plaque.wrapper.lookAt(camera.position);
+        plaque.wrapper.rotateY(node.userData.plaqueVisual?.frontYawOffset ?? 0);
+        prepared.push(plaque);
+      } catch (error) {
+        warn(node, error);
+      }
+    }
+    return prepared;
+  }
+
+  function setWarmupVisibility(visible) {
+    instances.forEach((plaque) => {
+      plaque.wrapper.visible = visible;
+      plaque.glow.material.opacity = 0;
+      plaque.warmLight.intensity = 0;
+    });
+  }
+
   function setFadeMode(materials) {
     materials.forEach(({ material }) => {
       material.transparent = true;
@@ -233,5 +258,5 @@ export function createPlaqueTransition({ scene, assetManager }) {
     if (active?.node === node) active = null;
   }
 
-  return { reveal, restore, reset, update };
+  return { prewarm, setWarmupVisibility, reveal, restore, reset, update };
 }

@@ -58,6 +58,21 @@ try {
     stage: ASSET_STAGES.CRITICAL_INITIAL
   });
   loadingDiagnostics.markEvent('criticalPreloadEnd');
+  loadingDiagnostics.markEvent('deferredWarmStart');
+  await preloadAssets(deferredWarmAssetsList, {
+    diagnostics: loadingDiagnostics,
+    assetManager,
+    concurrency: preloadConcurrency,
+    stage: ASSET_STAGES.DEFERRED_WARM
+  });
+  loadingDiagnostics.markEvent('deferredWarmEnd');
+  await preloadAssets(optionalLateAssetsList, {
+    diagnostics: loadingDiagnostics,
+    assetManager,
+    concurrency: 1,
+    stage: ASSET_STAGES.OPTIONAL_LATE,
+    markComplete: true
+  });
 } catch (error) {
   const message = error instanceof Error ? error.message : String(error);
   loaderOverlay.showError('Nie udało się załadować krytycznych zasobów. Odśwież stronę lub sprawdź połączenie.');
@@ -140,7 +155,7 @@ const optionsPanel = createOptionsPanel({
 });
 
 let hoveredNode = null;
-let interactionState = 'idle';
+let interactionState = 'booting';
 let activePanelNode = null;
 
 function syncHoverState(nextHoveredNode, event = null) {
@@ -432,13 +447,21 @@ window.addEventListener('orientationchange', () => {
 });
 handleResize();
 await Promise.all([atmosphere.ready, galaxyLayer.ready]);
+loadingDiagnostics.markEvent('sceneHydrationStart');
+await Promise.all([atmosphere.hydrateDeferredRelics?.(), galaxyLayer.hydrateDeferred?.()]);
+loadingDiagnostics.markEvent('sceneHydrationEnd');
+loadingDiagnostics.markEvent('plaquePrewarmStart');
+await plaqueTransition.prewarm(nodes, camera);
+loadingDiagnostics.markEvent('plaquePrewarmEnd');
 loadingDiagnostics.markEvent('rendererCompileStart');
 const compileStartedAt = performance.now();
-if (isMobileRuntime) {
-  assetManager.markWarmup({ shaderCompileComplete: false, mobileWarmupReduced: true });
-} else {
+plaqueTransition.setWarmupVisibility(true);
+try {
   renderer.compile(scene, camera);
-  assetManager.markWarmup({ shaderCompileComplete: true, mobileWarmupReduced: false });
+  assetManager.markWarmup({ shaderCompileComplete: true, mobileWarmupReduced: isMobileRuntime });
+  renderer.render(scene, camera);
+} finally {
+  plaqueTransition.setWarmupVisibility(false);
 }
 loadingDiagnostics.markEvent('rendererCompileEnd');
 renderer.render(scene, camera);
@@ -478,30 +501,6 @@ loadingDiagnostics.markEvent('loaderFadeStart');
 shell?.classList.remove('runtime-shell--loading');
 await loaderOverlay.complete();
 loadingDiagnostics.markEvent('loaderFadeEnd');
+interactionState = 'idle';
+loadingDiagnostics.markEvent('interactionReady');
 tick();
-
-queueMicrotask(() => {
-  loadingDiagnostics.markEvent('deferredWarmStart');
-  preloadAssets(deferredWarmAssetsList, {
-    diagnostics: loadingDiagnostics,
-    assetManager,
-    concurrency: preloadConcurrency,
-    stage: ASSET_STAGES.DEFERRED_WARM
-  })
-    .then(async () => {
-      loadingDiagnostics.markEvent('deferredWarmEnd');
-      await Promise.all([atmosphere.hydrateDeferredRelics?.(), galaxyLayer.hydrateDeferred?.()]);
-      assetManager.markPreloadComplete();
-      return preloadAssets(optionalLateAssetsList, {
-        diagnostics: loadingDiagnostics,
-        assetManager,
-        concurrency: 1,
-        stage: ASSET_STAGES.OPTIONAL_LATE,
-        markComplete: true
-      });
-    })
-    .catch((error) => {
-      console.warn('[loading] Deferred warm preload failed after reveal.', error);
-      assetManager.markPreloadComplete();
-    });
-});
