@@ -21,6 +21,7 @@ import { createLoadingDiagnostics, preloadAssets } from './assets/preloadAssets.
 import { createAssetManager } from './assets/assetManager.js';
 import { createLoaderOverlay } from './ui/loaderOverlay.js';
 import { createRuntimeDiagnostics } from './utils/runtimeDiagnostics.js';
+import { routeOptionsEvent } from './utils/optionsEventRouter.js';
 
 const app = document.querySelector('#app');
 if (!app) throw new Error('Missing #app mount element.');
@@ -127,6 +128,9 @@ atmosphere.setProgressionMultipliers(initialProgressionMultipliers);
 sunCycle.setProgressionMultiplier(initialProgressionMultipliers.sunMoon);
 moonCycle.setProgressionMultiplier(initialProgressionMultipliers.sunMoon);
 galaxyLayer.setProgressionMultiplier(initialProgressionMultipliers.galaxies);
+let tuningMode = debugLoading;
+let effectiveLayerMultipliers = { ...initialProgressionMultipliers };
+let lastPanelEvent = null;
 loadingDiagnostics.markEvent('sceneAttachEnd');
 
 let interactionState = 'booting';
@@ -135,7 +139,7 @@ const runtimeDiagnostics = createRuntimeDiagnostics({
   renderer,
   scene,
   getRuntimeState: () => interactionState,
-  getLayerSnapshot: () => ({ ...atmosphere.getPerformanceSnapshot(), galaxiesVisible: galaxyLayer.group.visible }),
+  getLayerSnapshot: () => ({ ...atmosphere.getPerformanceSnapshot(), galaxiesVisible: galaxyLayer.group.visible, tuningMode, effectiveLayerMultipliers: { ...effectiveLayerMultipliers }, lastPanelEvent }),
   getGalaxyCount: galaxyLayer.getInstanceCount,
   getPlaqueCount: plaqueTransition.getInstanceCount,
   getLifecycleCounts: () => ({ ...atmosphere.getLifecycleCounts(), ...galaxyLayer.getLifecycleCounts(), plaqueInstancesBuilt: plaqueTransition.getInstanceCount() })
@@ -159,19 +163,29 @@ const optionsPanel = createOptionsPanel({
   getPerformanceSnapshot: runtimeDiagnostics.getSnapshot,
   atmosphereProgression,
   gateNodes: portfolioNodes,
-  onChange: ({ type }) => {
-    if (type.includes('rebuild') || type === 'reset-all') runtimeDiagnostics.count(`options:${type}`);
-    atmosphere.applySettings(sceneRuntimeConfig.backgroundAtmosphere, type);
-    sunCycle.setOptions(sceneRuntimeConfig.sunCycle);
-    moonCycle.setOptions(sceneRuntimeConfig.moonCycle);
-    if (type === 'galaxy-sprites-rebuild' || type === 'reset-all' || type === 'rebuild') {
-      galaxyLayer.rebuild(sceneRuntimeConfig.galaxySprites);
-    } else {
-      galaxyLayer.applyRuntimeOptions(sceneRuntimeConfig.galaxySprites);
+  debugMode: debugLoading,
+  getTuningMode: () => tuningMode,
+  onChange: (event) => {
+    const handled = routeOptionsEvent(event, {
+      atmosphere: ({ action }) => atmosphere.applySettings(sceneRuntimeConfig.backgroundAtmosphere, action),
+      sun: ({ action }) => action === 'apply' ? (sunCycle.setOptions(sceneRuntimeConfig.sunCycle), true) : false,
+      moon: ({ action }) => action === 'apply' ? (moonCycle.setOptions(sceneRuntimeConfig.moonCycle), true) : false,
+      galaxies: ({ action }) => {
+        if (action === 'rebuild') { void galaxyLayer.rebuild(sceneRuntimeConfig.galaxySprites); return true; }
+        if (action === 'runtime') { galaxyLayer.applyRuntimeOptions(sceneRuntimeConfig.galaxySprites); return true; }
+        return false;
+      },
+      progression: ({ action, value }) => {
+        if (action === 'tuning-mode') { tuningMode = Boolean(value); return true; }
+        return action === 'state-change';
+      }
+    }, { debug: debugLoading });
+    if (!handled) {
+      if (debugLoading) console.warn('[options] Event had no owner/action receiver.', event);
+      return;
     }
-  },
-  onResetAtmosphere: () => {
-    atmosphere.applySettings(sceneRuntimeConfig.backgroundAtmosphere, 'rebuild');
+    lastPanelEvent = { owner: event.owner, action: event.action };
+    if (event.action.includes('rebuild')) runtimeDiagnostics.count(`options:${event.owner}:${event.action}`);
   }
 });
 
@@ -520,14 +534,17 @@ function tick(timestamp) {
   plaqueTransition.update();
   cameraRig.update(camera, elapsed);
   atmosphereProgression.updateAtmosphereProgression(delta);
-  const multipliers = atmosphereProgression.getProgressionMultipliers();
-  atmosphere.setProgressionMultipliers(multipliers);
+  const progressionMultipliers = atmosphereProgression.getProgressionMultipliers();
+  effectiveLayerMultipliers = tuningMode
+    ? { ...progressionMultipliers, stones: 1, shells: 1, smallGlyphs: 1, stars: 1, galaxies: 1, starsDust: 1, miniGlyphs: 1, finalAura: 1 }
+    : progressionMultipliers;
+  atmosphere.setProgressionMultipliers(effectiveLayerMultipliers);
   atmosphere.update(delta);
-  sunCycle.setProgressionMultiplier(multipliers.sunMoon);
-  moonCycle.setProgressionMultiplier(multipliers.sunMoon);
+  sunCycle.setProgressionMultiplier(progressionMultipliers.sunMoon);
+  moonCycle.setProgressionMultiplier(progressionMultipliers.sunMoon);
   sunCycle.update(delta);
   moonCycle.update(delta, sunCycle.getAngle());
-  galaxyLayer.setProgressionMultiplier(multipliers.galaxies);
+  galaxyLayer.setProgressionMultiplier(effectiveLayerMultipliers.galaxies);
   galaxyLayer.update(delta, elapsed, camera);
   if (sceneRuntimeConfig.backgroundAtmosphere.debugVisible && elapsed < 0.25) {
     console.info('[backgroundAtmosphere][debug] tick/update active', { delta, elapsed });

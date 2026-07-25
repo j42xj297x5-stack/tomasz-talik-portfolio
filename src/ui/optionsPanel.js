@@ -233,7 +233,7 @@ function addRow(sectionBody, labelText, controlBuilder) {
   sectionBody.append(row);
 }
 
-export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere, atmosphereProgression, gateNodes = [], loadingDiagnostics = null, getPerformanceSnapshot = null }) {
+export function createOptionsPanel({ runtimeState, onChange, atmosphereProgression, gateNodes = [], loadingDiagnostics = null, getPerformanceSnapshot = null, debugMode = false, getTuningMode = () => false }) {
   const defaults = deepClone(runtimeState);
 
   try {
@@ -277,7 +277,10 @@ export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere, 
     Object.assign(runtimeState.galaxySprites, deepClone(defaults.galaxySprites));
     normalizeRuntimeState(runtimeState);
     atmosphereProgression?.resetProgression?.();
-    onChange({ type: 'reset-all' });
+    onChange({ owner: 'atmosphere', action: 'full-rebuild' });
+    onChange({ owner: 'sun', action: 'apply' });
+    onChange({ owner: 'moon', action: 'apply' });
+    onChange({ owner: 'galaxies', action: 'rebuild' });
     persistState();
     renderAll();
   });
@@ -325,7 +328,10 @@ export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere, 
         mergeRuntimeState(runtimeState, parsed.runtimeState, defaults);
         normalizeRuntimeState(runtimeState);
         atmosphereProgression?.importProgressionSettings?.(parsed.progression ?? {});
-        onChange({ type: 'rebuild' });
+        onChange({ owner: 'atmosphere', action: 'full-rebuild' });
+        onChange({ owner: 'sun', action: 'apply' });
+        onChange({ owner: 'moon', action: 'apply' });
+        onChange({ owner: 'galaxies', action: 'rebuild' });
         persistState();
         renderAll();
         setPresetStatus(`Wczytano slot ${slot}`);
@@ -353,11 +359,15 @@ export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere, 
   const exportDebugSettings = () => {
     const progressionDebugState = atmosphereProgression?.getProgressionDebugState?.() ?? null;
     const transitionSeconds = toThresholdSeconds(progressionDebugState?.transitionTimes);
+    const performanceSnapshot = getPerformanceSnapshot?.() ?? null;
     const exportPayload = {
       schemaVersion: 2,
       exportedAt: new Date().toISOString(),
       source: 'portfolio-debug-panel',
-      performance: getPerformanceSnapshot?.() ?? null,
+      performance: performanceSnapshot,
+      tuningMode: getTuningMode(),
+      effectiveLayerMultipliers: performanceSnapshot?.effectiveLayerMultipliers ?? null,
+      lastPanelEvent: performanceSnapshot?.lastPanelEvent ?? null,
       progression: {
         enabled: progressionDebugState?.progressionEnabled ?? true,
         autoProgressOnUniqueGateClose: progressionDebugState?.autoProgressOnUniqueGateClose ?? true,
@@ -424,7 +434,10 @@ export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere, 
         mergeRuntimeState(runtimeState, importedState, defaults);
         normalizeRuntimeState(runtimeState);
         atmosphereProgression?.importProgressionSettings?.(parsed.progression ?? parsed.rawDebugState?.progression ?? {});
-        onChange({ type: 'rebuild' });
+        onChange({ owner: 'atmosphere', action: 'full-rebuild' });
+        onChange({ owner: 'sun', action: 'apply' });
+        onChange({ owner: 'moon', action: 'apply' });
+        onChange({ owner: 'galaxies', action: 'rebuild' });
         persistState();
         renderAll();
         setPresetStatus(`Zaimportowano ${file.name}`);
@@ -474,7 +487,7 @@ export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere, 
   atmosphereReset.addEventListener('click', () => {
     Object.assign(runtimeState.backgroundAtmosphere, deepClone(defaults.backgroundAtmosphere));
     normalizeRuntimeState(runtimeState);
-    onResetAtmosphere();
+    onChange({ owner: 'atmosphere', action: 'full-rebuild' });
     persistState();
     renderAll();
   });
@@ -485,9 +498,8 @@ export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere, 
   sunCycleReset.className = 'options-panel__section-reset';
   sunCycleReset.addEventListener('click', () => {
     Object.assign(runtimeState.sunCycle, deepClone(defaults.sunCycle));
-    Object.assign(runtimeState.moonCycle, deepClone(defaults.moonCycle));
     normalizeRuntimeState(runtimeState);
-    onChange({ type: 'sun-cycle' });
+    onChange({ owner: 'sun', action: 'apply' });
     persistState();
     renderAll();
   });
@@ -499,7 +511,7 @@ export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere, 
   moonCycleReset.addEventListener('click', () => {
     Object.assign(runtimeState.moonCycle, deepClone(defaults.moonCycle));
     normalizeRuntimeState(runtimeState);
-    onChange({ type: 'moon-cycle' });
+    onChange({ owner: 'moon', action: 'apply' });
     persistState();
     renderAll();
   });
@@ -509,7 +521,7 @@ export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere, 
   stoneRebuild.type = 'button';
   stoneRebuild.textContent = 'Rebuild Stone Relics';
   stoneRebuild.className = 'options-panel__section-reset';
-  stoneRebuild.addEventListener('click', () => onChange({ type: 'stone-rebuild' }));
+  stoneRebuild.addEventListener('click', () => onChange({ owner: 'atmosphere', action: 'stone-rebuild' }));
   stoneSection.body.append(stoneRebuild);
   const stoneReset = document.createElement('button');
   stoneReset.type = 'button';
@@ -518,7 +530,7 @@ export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere, 
   stoneReset.addEventListener('click', () => {
     Object.assign(bg.stoneRelics, deepClone(defaults.backgroundAtmosphere.stoneRelics));
     normalizeRuntimeState(runtimeState);
-    onChange({ type: 'stone-rebuild' });
+    onChange({ owner: 'atmosphere', action: 'stone-rebuild' });
     persistState();
     renderAll();
   });
@@ -528,7 +540,7 @@ export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere, 
   shellRebuild.type = 'button';
   shellRebuild.textContent = 'Rebuild Shell Relics';
   shellRebuild.className = 'options-panel__section-reset';
-  shellRebuild.addEventListener('click', () => onChange({ type: 'shell-rebuild' }));
+  shellRebuild.addEventListener('click', () => onChange({ owner: 'atmosphere', action: 'shell-rebuild' }));
   shellSection.body.append(shellRebuild);
 
   const shellReset = document.createElement('button');
@@ -538,7 +550,7 @@ export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere, 
   shellReset.addEventListener('click', () => {
     Object.assign(bg.shellRelics, deepClone(defaults.backgroundAtmosphere.shellRelics));
     normalizeRuntimeState(runtimeState);
-    onChange({ type: 'shell-rebuild' });
+    onChange({ owner: 'atmosphere', action: 'shell-rebuild' });
     persistState();
     renderAll();
   });
@@ -548,7 +560,7 @@ export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere, 
   smallGlyphRebuild.type = 'button';
   smallGlyphRebuild.textContent = 'Rebuild Small Glyph Relics';
   smallGlyphRebuild.className = 'options-panel__section-reset';
-  smallGlyphRebuild.addEventListener('click', () => onChange({ type: 'small-glyph-rebuild' }));
+  smallGlyphRebuild.addEventListener('click', () => onChange({ owner: 'atmosphere', action: 'small-glyph-rebuild' }));
   smallGlyphSection.body.append(smallGlyphRebuild);
 
   const smallGlyphReset = document.createElement('button');
@@ -558,7 +570,7 @@ export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere, 
   smallGlyphReset.addEventListener('click', () => {
     Object.assign(bg.smallGlyphRelics, deepClone(defaults.backgroundAtmosphere.smallGlyphRelics));
     normalizeRuntimeState(runtimeState);
-    onChange({ type: 'small-glyph-rebuild' });
+    onChange({ owner: 'atmosphere', action: 'small-glyph-rebuild' });
     persistState();
     renderAll();
   });
@@ -568,7 +580,7 @@ export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere, 
   galaxyRebuild.type = 'button';
   galaxyRebuild.textContent = 'Rebuild Galaxy Sprites';
   galaxyRebuild.className = 'options-panel__section-reset';
-  galaxyRebuild.addEventListener('click', () => onChange({ type: 'galaxy-sprites-rebuild' }));
+  galaxyRebuild.addEventListener('click', () => onChange({ owner: 'galaxies', action: 'rebuild' }));
   galaxySection.body.append(galaxyRebuild);
 
   const galaxyReset = document.createElement('button');
@@ -578,7 +590,7 @@ export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere, 
   galaxyReset.addEventListener('click', () => {
     Object.assign(runtimeState.galaxySprites, deepClone(defaults.galaxySprites));
     normalizeRuntimeState(runtimeState);
-    onChange({ type: 'galaxy-sprites-rebuild' });
+    onChange({ owner: 'galaxies', action: 'rebuild' });
     persistState();
     renderAll();
   });
@@ -606,7 +618,7 @@ export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere, 
       if (String(nextRaw).trim() === '') return;
       const next = Number(nextRaw);
       if (!Number.isFinite(next)) return;
-      path.set(next);
+      path.set(next, { debounceStructural: true });
       slider.value = String(next);
       number.value = String(next);
     };
@@ -675,39 +687,51 @@ export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere, 
   const galaxy = runtimeState.galaxySprites;
   const progression = atmosphereProgression?.state;
 
-  const path = (getter, setter, type) => ({
+  const pendingChanges = new Map();
+  const emitChange = (event, debounceStructural = false) => {
+    const shouldDebounce = debounceStructural && event.action.includes('rebuild');
+    if (!shouldDebounce) { onChange(event); return; }
+    const key = `${event.owner}:${event.action}`;
+    clearTimeout(pendingChanges.get(key));
+    pendingChanges.set(key, setTimeout(() => {
+      pendingChanges.delete(key);
+      onChange(event);
+    }, 140));
+  };
+  const path = (getter, setter, event) => ({
     get: getter,
-    set: (value) => {
+    set: (value, { debounceStructural = false } = {}) => {
       setter(value);
       normalizeRuntimeState(runtimeState);
-      onChange({ type });
+      emitChange({ ...event, value }, debounceStructural);
       persistState();
       renderAll();
     }
   });
 
-  bind(checkbox(path(() => bg.enabled, (v) => { bg.enabled = v; }, 'rebuild'), atmosphereSection.body, 'backgroundAtmosphere.enabled'));
+  bind(checkbox(path(() => bg.enabled, (v) => { bg.enabled = v; }, { owner: 'atmosphere', action: 'full-rebuild' }), atmosphereSection.body, 'backgroundAtmosphere.enabled'));
   if (progression) {
-    bind(checkbox(path(() => progression.progressionEnabled, (v) => { atmosphereProgression.setProgressionEnabled(v); }, 'runtime'), progressionSection.body, 'Enable atmosphere progression'));
-    bind(checkbox(path(() => progression.autoProgressOnUniqueGateClose, (v) => { atmosphereProgression.setAutoProgressOnUniqueGateClose(v); }, 'runtime'), progressionSection.body, 'Auto progress after panel close'));
-    bind(range(path(() => progression.progressLevel, (v) => { atmosphereProgression.setProgressLevel(v); }, 'runtime'), progressionSection.body, 'Atmosphere progress', 0, 5, 1));
-    bind(range(path(() => progression.transitionTimes.stones, (v) => { progression.transitionTimes.stones = v; }, 'runtime'), progressionSection.body, 'transition time threshold 1 / stones', 0.1, 20, 0.1));
-    bind(range(path(() => progression.transitionTimes.shells, (v) => { progression.transitionTimes.shells = v; }, 'runtime'), progressionSection.body, 'transition time threshold 2 / shells', 0.1, 20, 0.1));
-    bind(range(path(() => progression.transitionTimes.smallGlyphs, (v) => { progression.transitionTimes.smallGlyphs = v; }, 'runtime'), progressionSection.body, 'transition time threshold 3 / small glyphs', 0.1, 20, 0.1));
-    bind(range(path(() => progression.transitionTimes.stars, (v) => { progression.transitionTimes.stars = v; }, 'runtime'), progressionSection.body, 'transition time threshold 4 / stars', 0.1, 20, 0.1));
-    bind(range(path(() => progression.transitionTimes.galaxies, (v) => { progression.transitionTimes.galaxies = v; }, 'runtime'), progressionSection.body, 'transition time threshold 5 / galaxies', 0.1, 20, 0.1));
+    if (debugMode) bind(checkbox(path(getTuningMode, () => {}, { owner: 'progression', action: 'tuning-mode' }), progressionSection.body, 'Tuning mode — show all adjustable layers'));
+    bind(checkbox(path(() => progression.progressionEnabled, (v) => { atmosphereProgression.setProgressionEnabled(v); }, { owner: 'progression', action: 'state-change' }), progressionSection.body, 'Enable atmosphere progression'));
+    bind(checkbox(path(() => progression.autoProgressOnUniqueGateClose, (v) => { atmosphereProgression.setAutoProgressOnUniqueGateClose(v); }, { owner: 'progression', action: 'state-change' }), progressionSection.body, 'Auto progress after panel close'));
+    bind(range(path(() => progression.progressLevel, (v) => { atmosphereProgression.setProgressLevel(v); }, { owner: 'progression', action: 'state-change' }), progressionSection.body, 'Atmosphere progress', 0, 5, 1));
+    bind(range(path(() => progression.transitionTimes.stones, (v) => { progression.transitionTimes.stones = v; }, { owner: 'progression', action: 'state-change' }), progressionSection.body, 'transition time threshold 1 / stones', 0.1, 20, 0.1));
+    bind(range(path(() => progression.transitionTimes.shells, (v) => { progression.transitionTimes.shells = v; }, { owner: 'progression', action: 'state-change' }), progressionSection.body, 'transition time threshold 2 / shells', 0.1, 20, 0.1));
+    bind(range(path(() => progression.transitionTimes.smallGlyphs, (v) => { progression.transitionTimes.smallGlyphs = v; }, { owner: 'progression', action: 'state-change' }), progressionSection.body, 'transition time threshold 3 / small glyphs', 0.1, 20, 0.1));
+    bind(range(path(() => progression.transitionTimes.stars, (v) => { progression.transitionTimes.stars = v; }, { owner: 'progression', action: 'state-change' }), progressionSection.body, 'transition time threshold 4 / stars', 0.1, 20, 0.1));
+    bind(range(path(() => progression.transitionTimes.galaxies, (v) => { progression.transitionTimes.galaxies = v; }, { owner: 'progression', action: 'state-change' }), progressionSection.body, 'transition time threshold 5 / galaxies', 0.1, 20, 0.1));
 
     const resetProgressionButton = document.createElement('button');
     resetProgressionButton.type = 'button';
     resetProgressionButton.textContent = 'Reset atmosphere progression';
     resetProgressionButton.className = 'options-panel__section-reset';
-    resetProgressionButton.addEventListener('click', () => { atmosphereProgression.resetProgression(); onChange({ type: 'runtime' }); renderAll(); });
+    resetProgressionButton.addEventListener('click', () => { atmosphereProgression.resetProgression(); onChange({ owner: 'progression', action: 'state-change' }); renderAll(); });
     progressionSection.body.append(resetProgressionButton);
     const unlockProgressionButton = document.createElement('button');
     unlockProgressionButton.type = 'button';
     unlockProgressionButton.textContent = 'Unlock full atmosphere';
     unlockProgressionButton.className = 'options-panel__section-reset';
-    unlockProgressionButton.addEventListener('click', () => { atmosphereProgression.unlockFullProgression(); onChange({ type: 'runtime' }); renderAll(); });
+    unlockProgressionButton.addEventListener('click', () => { atmosphereProgression.unlockFullProgression(); onChange({ owner: 'progression', action: 'state-change' }); renderAll(); });
     progressionSection.body.append(unlockProgressionButton);
     const progressionDebugState = document.createElement('pre');
     progressionDebugState.className = 'options-panel__placeholder';
@@ -749,117 +773,117 @@ export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere, 
       progressionSection.body.append(status);
     });
   }
-  bind(checkbox(path(() => sun.enabled, (v) => { sun.enabled = v; }, 'sun-cycle'), sunCycleSection.body, 'sunCycle.enabled'));
-  bind(range(path(() => sun.radius, (v) => { sun.radius = v; }, 'sun-cycle'), sunCycleSection.body, 'sunCycle.radius', 1, 30, 0.1));
-  bind(range(path(() => sun.angularSpeed, (v) => { sun.angularSpeed = v; }, 'sun-cycle'), sunCycleSection.body, 'sunCycle.angularSpeed', 0, 1, 0.001));
-  bind(select(path(() => String(sun.direction), (v) => { sun.direction = Number(v); }, 'sun-cycle'), sunCycleSection.body, 'sunCycle.direction', [{ value: '1', label: 'Forward' }, { value: '-1', label: 'Reverse' }]));
-  bind(range(path(() => sun.scale, (v) => { sun.scale = v; }, 'sun-cycle'), sunCycleSection.body, 'sunCycle.scale', 0.01, 20, 0.01));
-  bind(range(path(() => sun.debugScaleMultiplier, (v) => { sun.debugScaleMultiplier = v; }, 'sun-cycle'), sunCycleSection.body, 'sunCycle.debugScaleMultiplier', 0.01, 20, 0.01));
-  bind(checkbox(path(() => sun.lockFacing, (v) => { sun.lockFacing = v; }, 'sun-cycle'), sunCycleSection.body, 'sunCycle.lockFacing'));
-  bind(range(path(() => sun.selfRotationSpeed, (v) => { sun.selfRotationSpeed = v; }, 'sun-cycle'), sunCycleSection.body, 'sunCycle.selfRotationSpeed', 0, 1, 0.001));
-  bind(range(path(() => sun.emissiveIntensity, (v) => { sun.emissiveIntensity = v; }, 'sun-cycle'), sunCycleSection.body, 'sunCycle.emissiveIntensity', 0, 10, 0.1));
-  bind(checkbox(path(() => sun.spotlight.enabled, (v) => { sun.spotlight.enabled = v; }, 'sun-cycle'), sunCycleSection.body, 'sunCycle.spotlight.enabled'));
-  bind(range(path(() => sun.spotlight.intensity, (v) => { sun.spotlight.intensity = v; }, 'sun-cycle'), sunCycleSection.body, 'sunCycle.spotlight.intensity', 0, 20, 0.1));
-  bind(range(path(() => sun.spotlight.angleDegrees, (v) => { sun.spotlight.angleDegrees = v; }, 'sun-cycle'), sunCycleSection.body, 'sunCycle.spotlight.angleDegrees', 1, 120, 1));
-  bind(range(path(() => sun.spotlight.penumbra, (v) => { sun.spotlight.penumbra = v; }, 'sun-cycle'), sunCycleSection.body, 'sunCycle.spotlight.penumbra', 0, 1, 0.01));
-  bind(range(path(() => sun.spotlight.distance, (v) => { sun.spotlight.distance = v; }, 'sun-cycle'), sunCycleSection.body, 'sunCycle.spotlight.distance', 0, 100, 1));
-  bind(range(path(() => sun.spotlight.fadeDurationSeconds, (v) => { sun.spotlight.fadeDurationSeconds = v; }, 'sun-cycle'), sunCycleSection.body, 'sunCycle.spotlight.fadeDurationSeconds', 0, 10, 0.1));
-  bind(range(path(() => sun.spotlight.cameraOffsetFactor, (v) => { sun.spotlight.cameraOffsetFactor = v; }, 'sun-cycle'), sunCycleSection.body, 'sunCycle.spotlight.cameraOffsetFactor', 0, 0.5, 0.01));
-  bind(range(path(() => sun.spotlight.radialOffsetMultiplier, (v) => { sun.spotlight.radialOffsetMultiplier = v; }, 'sun-cycle'), sunCycleSection.body, 'sunCycle.spotlight.radialOffsetMultiplier', 1, 4, 0.05));
-  bind(checkbox(path(() => sun.debugVisible, (v) => { sun.debugVisible = v; }, 'sun-cycle'), sunCycleSection.body, 'sunCycle.debugVisible'));
-  bind(checkbox(path(() => sun.debugShowFallback, (v) => { sun.debugShowFallback = v; }, 'sun-cycle'), sunCycleSection.body, 'sunCycle.debugShowFallback'));
-  bind(checkbox(path(() => sun.debugForceBasicMaterial, (v) => { sun.debugForceBasicMaterial = v; }, 'sun-cycle'), sunCycleSection.body, 'sunCycle.debugForceBasicMaterial'));
-  bind(checkbox(path(() => sun.debugShowBounds, (v) => { sun.debugShowBounds = v; }, 'sun-cycle'), sunCycleSection.body, 'sunCycle.debugShowBounds'));
+  bind(checkbox(path(() => sun.enabled, (v) => { sun.enabled = v; }, { owner: 'sun', action: 'apply' }), sunCycleSection.body, 'sunCycle.enabled'));
+  bind(range(path(() => sun.radius, (v) => { sun.radius = v; }, { owner: 'sun', action: 'apply' }), sunCycleSection.body, 'sunCycle.radius', 1, 30, 0.1));
+  bind(range(path(() => sun.angularSpeed, (v) => { sun.angularSpeed = v; }, { owner: 'sun', action: 'apply' }), sunCycleSection.body, 'sunCycle.angularSpeed', 0, 1, 0.001));
+  bind(select(path(() => String(sun.direction), (v) => { sun.direction = Number(v); }, { owner: 'sun', action: 'apply' }), sunCycleSection.body, 'sunCycle.direction', [{ value: '1', label: 'Forward' }, { value: '-1', label: 'Reverse' }]));
+  bind(range(path(() => sun.scale, (v) => { sun.scale = v; }, { owner: 'sun', action: 'apply' }), sunCycleSection.body, 'sunCycle.scale', 0.01, 20, 0.01));
+  bind(range(path(() => sun.debugScaleMultiplier, (v) => { sun.debugScaleMultiplier = v; }, { owner: 'sun', action: 'apply' }), sunCycleSection.body, 'sunCycle.debugScaleMultiplier', 0.01, 20, 0.01));
+  bind(checkbox(path(() => sun.lockFacing, (v) => { sun.lockFacing = v; }, { owner: 'sun', action: 'apply' }), sunCycleSection.body, 'sunCycle.lockFacing'));
+  bind(range(path(() => sun.selfRotationSpeed, (v) => { sun.selfRotationSpeed = v; }, { owner: 'sun', action: 'apply' }), sunCycleSection.body, 'sunCycle.selfRotationSpeed', 0, 1, 0.001));
+  bind(range(path(() => sun.emissiveIntensity, (v) => { sun.emissiveIntensity = v; }, { owner: 'sun', action: 'apply' }), sunCycleSection.body, 'sunCycle.emissiveIntensity', 0, 10, 0.1));
+  bind(checkbox(path(() => sun.spotlight.enabled, (v) => { sun.spotlight.enabled = v; }, { owner: 'sun', action: 'apply' }), sunCycleSection.body, 'sunCycle.spotlight.enabled'));
+  bind(range(path(() => sun.spotlight.intensity, (v) => { sun.spotlight.intensity = v; }, { owner: 'sun', action: 'apply' }), sunCycleSection.body, 'sunCycle.spotlight.intensity', 0, 20, 0.1));
+  bind(range(path(() => sun.spotlight.angleDegrees, (v) => { sun.spotlight.angleDegrees = v; }, { owner: 'sun', action: 'apply' }), sunCycleSection.body, 'sunCycle.spotlight.angleDegrees', 1, 120, 1));
+  bind(range(path(() => sun.spotlight.penumbra, (v) => { sun.spotlight.penumbra = v; }, { owner: 'sun', action: 'apply' }), sunCycleSection.body, 'sunCycle.spotlight.penumbra', 0, 1, 0.01));
+  bind(range(path(() => sun.spotlight.distance, (v) => { sun.spotlight.distance = v; }, { owner: 'sun', action: 'apply' }), sunCycleSection.body, 'sunCycle.spotlight.distance', 0, 100, 1));
+  bind(range(path(() => sun.spotlight.fadeDurationSeconds, (v) => { sun.spotlight.fadeDurationSeconds = v; }, { owner: 'sun', action: 'apply' }), sunCycleSection.body, 'sunCycle.spotlight.fadeDurationSeconds', 0, 10, 0.1));
+  bind(range(path(() => sun.spotlight.cameraOffsetFactor, (v) => { sun.spotlight.cameraOffsetFactor = v; }, { owner: 'sun', action: 'apply' }), sunCycleSection.body, 'sunCycle.spotlight.cameraOffsetFactor', 0, 0.5, 0.01));
+  bind(range(path(() => sun.spotlight.radialOffsetMultiplier, (v) => { sun.spotlight.radialOffsetMultiplier = v; }, { owner: 'sun', action: 'apply' }), sunCycleSection.body, 'sunCycle.spotlight.radialOffsetMultiplier', 1, 4, 0.05));
+  bind(checkbox(path(() => sun.debugVisible, (v) => { sun.debugVisible = v; }, { owner: 'sun', action: 'apply' }), sunCycleSection.body, 'sunCycle.debugVisible'));
+  bind(checkbox(path(() => sun.debugShowFallback, (v) => { sun.debugShowFallback = v; }, { owner: 'sun', action: 'apply' }), sunCycleSection.body, 'sunCycle.debugShowFallback'));
+  bind(checkbox(path(() => sun.debugForceBasicMaterial, (v) => { sun.debugForceBasicMaterial = v; }, { owner: 'sun', action: 'apply' }), sunCycleSection.body, 'sunCycle.debugForceBasicMaterial'));
+  bind(checkbox(path(() => sun.debugShowBounds, (v) => { sun.debugShowBounds = v; }, { owner: 'sun', action: 'apply' }), sunCycleSection.body, 'sunCycle.debugShowBounds'));
 
-  bind(checkbox(path(() => moon.enabled, (v) => { moon.enabled = v; }, 'moon-cycle'), moonCycleSection.body, 'moonCycle.enabled'));
-  bind(range(path(() => moon.radius, (v) => { moon.radius = v; }, 'moon-cycle'), moonCycleSection.body, 'moonCycle.radius', 1, 30, 0.1));
-  bind(range(path(() => moon.scale, (v) => { moon.scale = v; }, 'moon-cycle'), moonCycleSection.body, 'moonCycle.scale', 0.05, 10, 0.05));
-  bind(range(path(() => moon.debugScaleMultiplier, (v) => { moon.debugScaleMultiplier = v; }, 'moon-cycle'), moonCycleSection.body, 'moonCycle.debugScaleMultiplier', 0.1, 10, 0.1));
-  bind(checkbox(path(() => moon.lockFacing, (v) => { moon.lockFacing = v; }, 'moon-cycle'), moonCycleSection.body, 'moonCycle.lockFacing'));
-  bind(range(path(() => moon.selfRotationSpeed, (v) => { moon.selfRotationSpeed = v; }, 'moon-cycle'), moonCycleSection.body, 'moonCycle.selfRotationSpeed', 0, 1, 0.001));
-  bind(checkbox(path(() => moon.spotlight.enabled, (v) => { moon.spotlight.enabled = v; }, 'moon-cycle'), moonCycleSection.body, 'moonCycle.spotlight.enabled'));
-  bind(range(path(() => moon.spotlight.intensity, (v) => { moon.spotlight.intensity = v; }, 'moon-cycle'), moonCycleSection.body, 'moonCycle.spotlight.intensity', 0, 20, 0.1));
-  bind(range(path(() => moon.spotlight.angleDegrees, (v) => { moon.spotlight.angleDegrees = v; }, 'moon-cycle'), moonCycleSection.body, 'moonCycle.spotlight.angleDegrees', 1, 120, 1));
-  bind(range(path(() => moon.spotlight.penumbra, (v) => { moon.spotlight.penumbra = v; }, 'moon-cycle'), moonCycleSection.body, 'moonCycle.spotlight.penumbra', 0, 1, 0.01));
-  bind(range(path(() => moon.spotlight.distance, (v) => { moon.spotlight.distance = v; }, 'moon-cycle'), moonCycleSection.body, 'moonCycle.spotlight.distance', 0, 100, 1));
-  bind(range(path(() => moon.spotlight.fadeDurationSeconds, (v) => { moon.spotlight.fadeDurationSeconds = v; }, 'moon-cycle'), moonCycleSection.body, 'moonCycle.spotlight.fadeDurationSeconds', 0, 10, 0.1));
-  bind(range(path(() => moon.spotlight.cameraOffsetFactor, (v) => { moon.spotlight.cameraOffsetFactor = v; }, 'moon-cycle'), moonCycleSection.body, 'moonCycle.spotlight.cameraOffsetFactor', 0, 0.5, 0.01));
-  bind(range(path(() => moon.spotlight.radialOffsetMultiplier, (v) => { moon.spotlight.radialOffsetMultiplier = v; }, 'moon-cycle'), moonCycleSection.body, 'moonCycle.spotlight.radialOffsetMultiplier', 1, 4, 0.05));
-  bind(checkbox(path(() => moon.debugVisible, (v) => { moon.debugVisible = v; }, 'moon-cycle'), moonCycleSection.body, 'moonCycle.debugVisible'));
-  bind(checkbox(path(() => moon.debugShowFallback, (v) => { moon.debugShowFallback = v; }, 'moon-cycle'), moonCycleSection.body, 'moonCycle.debugShowFallback'));
-  bind(checkbox(path(() => moon.debugForceBasicMaterial, (v) => { moon.debugForceBasicMaterial = v; }, 'moon-cycle'), moonCycleSection.body, 'moonCycle.debugForceBasicMaterial'));
-  bind(checkbox(path(() => moon.debugShowBounds, (v) => { moon.debugShowBounds = v; }, 'moon-cycle'), moonCycleSection.body, 'moonCycle.debugShowBounds'));
+  bind(checkbox(path(() => moon.enabled, (v) => { moon.enabled = v; }, { owner: 'moon', action: 'apply' }), moonCycleSection.body, 'moonCycle.enabled'));
+  bind(range(path(() => moon.radius, (v) => { moon.radius = v; }, { owner: 'moon', action: 'apply' }), moonCycleSection.body, 'moonCycle.radius', 1, 30, 0.1));
+  bind(range(path(() => moon.scale, (v) => { moon.scale = v; }, { owner: 'moon', action: 'apply' }), moonCycleSection.body, 'moonCycle.scale', 0.05, 10, 0.05));
+  bind(range(path(() => moon.debugScaleMultiplier, (v) => { moon.debugScaleMultiplier = v; }, { owner: 'moon', action: 'apply' }), moonCycleSection.body, 'moonCycle.debugScaleMultiplier', 0.1, 10, 0.1));
+  bind(checkbox(path(() => moon.lockFacing, (v) => { moon.lockFacing = v; }, { owner: 'moon', action: 'apply' }), moonCycleSection.body, 'moonCycle.lockFacing'));
+  bind(range(path(() => moon.selfRotationSpeed, (v) => { moon.selfRotationSpeed = v; }, { owner: 'moon', action: 'apply' }), moonCycleSection.body, 'moonCycle.selfRotationSpeed', 0, 1, 0.001));
+  bind(checkbox(path(() => moon.spotlight.enabled, (v) => { moon.spotlight.enabled = v; }, { owner: 'moon', action: 'apply' }), moonCycleSection.body, 'moonCycle.spotlight.enabled'));
+  bind(range(path(() => moon.spotlight.intensity, (v) => { moon.spotlight.intensity = v; }, { owner: 'moon', action: 'apply' }), moonCycleSection.body, 'moonCycle.spotlight.intensity', 0, 20, 0.1));
+  bind(range(path(() => moon.spotlight.angleDegrees, (v) => { moon.spotlight.angleDegrees = v; }, { owner: 'moon', action: 'apply' }), moonCycleSection.body, 'moonCycle.spotlight.angleDegrees', 1, 120, 1));
+  bind(range(path(() => moon.spotlight.penumbra, (v) => { moon.spotlight.penumbra = v; }, { owner: 'moon', action: 'apply' }), moonCycleSection.body, 'moonCycle.spotlight.penumbra', 0, 1, 0.01));
+  bind(range(path(() => moon.spotlight.distance, (v) => { moon.spotlight.distance = v; }, { owner: 'moon', action: 'apply' }), moonCycleSection.body, 'moonCycle.spotlight.distance', 0, 100, 1));
+  bind(range(path(() => moon.spotlight.fadeDurationSeconds, (v) => { moon.spotlight.fadeDurationSeconds = v; }, { owner: 'moon', action: 'apply' }), moonCycleSection.body, 'moonCycle.spotlight.fadeDurationSeconds', 0, 10, 0.1));
+  bind(range(path(() => moon.spotlight.cameraOffsetFactor, (v) => { moon.spotlight.cameraOffsetFactor = v; }, { owner: 'moon', action: 'apply' }), moonCycleSection.body, 'moonCycle.spotlight.cameraOffsetFactor', 0, 0.5, 0.01));
+  bind(range(path(() => moon.spotlight.radialOffsetMultiplier, (v) => { moon.spotlight.radialOffsetMultiplier = v; }, { owner: 'moon', action: 'apply' }), moonCycleSection.body, 'moonCycle.spotlight.radialOffsetMultiplier', 1, 4, 0.05));
+  bind(checkbox(path(() => moon.debugVisible, (v) => { moon.debugVisible = v; }, { owner: 'moon', action: 'apply' }), moonCycleSection.body, 'moonCycle.debugVisible'));
+  bind(checkbox(path(() => moon.debugShowFallback, (v) => { moon.debugShowFallback = v; }, { owner: 'moon', action: 'apply' }), moonCycleSection.body, 'moonCycle.debugShowFallback'));
+  bind(checkbox(path(() => moon.debugForceBasicMaterial, (v) => { moon.debugForceBasicMaterial = v; }, { owner: 'moon', action: 'apply' }), moonCycleSection.body, 'moonCycle.debugForceBasicMaterial'));
+  bind(checkbox(path(() => moon.debugShowBounds, (v) => { moon.debugShowBounds = v; }, { owner: 'moon', action: 'apply' }), moonCycleSection.body, 'moonCycle.debugShowBounds'));
 
-  bind(checkbox(path(() => bg.debugVisible, (v) => { bg.debugVisible = v; }, 'rebuild'), atmosphereSection.body, 'backgroundAtmosphere.debugVisible'));
-  bind(range(path(() => bg.safeRadius, (v) => { bg.safeRadius = v; }, 'rebuild'), atmosphereSection.body, 'backgroundAtmosphere.safeRadius', 0, 15, 0.1));
-  bind(range(path(() => bg.shellInnerRadius, (v) => { bg.shellInnerRadius = v; }, 'rebuild'), atmosphereSection.body, 'backgroundAtmosphere.shellInnerRadius', 0, 30, 0.1));
-  bind(range(path(() => bg.shellOuterRadius, (v) => { bg.shellOuterRadius = v; }, 'rebuild'), atmosphereSection.body, 'backgroundAtmosphere.shellOuterRadius', 1, 40, 0.1));
+  bind(checkbox(path(() => bg.debugVisible, (v) => { bg.debugVisible = v; }, { owner: 'atmosphere', action: 'full-rebuild' }), atmosphereSection.body, 'backgroundAtmosphere.debugVisible'));
+  bind(range(path(() => bg.safeRadius, (v) => { bg.safeRadius = v; }, { owner: 'atmosphere', action: 'full-rebuild' }), atmosphereSection.body, 'backgroundAtmosphere.safeRadius', 0, 15, 0.1));
+  bind(range(path(() => bg.shellInnerRadius, (v) => { bg.shellInnerRadius = v; }, { owner: 'atmosphere', action: 'full-rebuild' }), atmosphereSection.body, 'backgroundAtmosphere.shellInnerRadius', 0, 30, 0.1));
+  bind(range(path(() => bg.shellOuterRadius, (v) => { bg.shellOuterRadius = v; }, { owner: 'atmosphere', action: 'full-rebuild' }), atmosphereSection.body, 'backgroundAtmosphere.shellOuterRadius', 1, 40, 0.1));
 
-  bind(checkbox(path(() => bg.dust.enabled, (v) => { bg.dust.enabled = v; }, 'rebuild'), atmosphereSection.body, 'dust.enabled'));
-  bind(range(path(() => bg.dust.count, (v) => { bg.dust.count = Math.round(v); }, 'rebuild'), atmosphereSection.body, 'dust.count', 0, 10000, 100));
-  bind(range(path(() => bg.dust.idleOpacity, (v) => { bg.dust.idleOpacity = v; }, 'material'), atmosphereSection.body, 'dust.idleOpacity', 0, 1, 0.01));
-  bind(range(path(() => bg.dust.pointSize, (v) => { bg.dust.pointSize = v; }, 'material'), atmosphereSection.body, 'dust.pointSize', 0.001, 0.3, 0.001));
-  bind(range(path(() => bg.dust.rotationSpeed, (v) => { bg.dust.rotationSpeed = v; }, 'runtime'), atmosphereSection.body, 'dust.rotationSpeed', 0, 0.1, 0.001));
-  bind(color(path(() => bg.dust.color, (v) => { bg.dust.color = v; }, 'material'), atmosphereSection.body, 'dust.color'));
-  bind(checkbox(path(() => bg.dust.sizeAttenuation, (v) => { bg.dust.sizeAttenuation = v; }, 'material'), atmosphereSection.body, 'dust.sizeAttenuation'));
-  bind(checkbox(path(() => bg.dust.depthTest, (v) => { bg.dust.depthTest = v; }, 'material'), atmosphereSection.body, 'dust.depthTest'));
+  bind(checkbox(path(() => bg.dust.enabled, (v) => { bg.dust.enabled = v; }, { owner: 'atmosphere', action: 'dust-rebuild' }), atmosphereSection.body, 'dust.enabled'));
+  bind(range(path(() => bg.dust.count, (v) => { bg.dust.count = Math.round(v); }, { owner: 'atmosphere', action: 'dust-rebuild' }), atmosphereSection.body, 'dust.count', 0, 10000, 100));
+  bind(range(path(() => bg.dust.idleOpacity, (v) => { bg.dust.idleOpacity = v; }, { owner: 'atmosphere', action: 'material' }), atmosphereSection.body, 'dust.idleOpacity', 0, 1, 0.01));
+  bind(range(path(() => bg.dust.pointSize, (v) => { bg.dust.pointSize = v; }, { owner: 'atmosphere', action: 'material' }), atmosphereSection.body, 'dust.pointSize', 0.001, 0.3, 0.001));
+  bind(range(path(() => bg.dust.rotationSpeed, (v) => { bg.dust.rotationSpeed = v; }, { owner: 'atmosphere', action: 'dust-runtime' }), atmosphereSection.body, 'dust.rotationSpeed', 0, 0.1, 0.001));
+  bind(color(path(() => bg.dust.color, (v) => { bg.dust.color = v; }, { owner: 'atmosphere', action: 'material' }), atmosphereSection.body, 'dust.color'));
+  bind(checkbox(path(() => bg.dust.sizeAttenuation, (v) => { bg.dust.sizeAttenuation = v; }, { owner: 'atmosphere', action: 'material' }), atmosphereSection.body, 'dust.sizeAttenuation'));
+  bind(checkbox(path(() => bg.dust.depthTest, (v) => { bg.dust.depthTest = v; }, { owner: 'atmosphere', action: 'material' }), atmosphereSection.body, 'dust.depthTest'));
   const stone = bg.stoneRelics;
-  bind(checkbox(path(() => stone.enabled, (v) => { stone.enabled = v; }, 'stone-runtime'), stoneSection.body, 'stoneRelics.enabled'));
-  bind(range(path(() => stone.count, (v) => { stone.count = Math.round(v); }, 'stone-rebuild'), stoneSection.body, 'stoneRelics.count', 0, 200, 1));
-  bind(range(path(() => stone.minScale, (v) => { stone.minScale = v; }, 'stone-rebuild'), stoneSection.body, 'stoneRelics.minScale', 0.01, 8, 0.01));
-  bind(range(path(() => stone.maxScale, (v) => { stone.maxScale = v; }, 'stone-rebuild'), stoneSection.body, 'stoneRelics.maxScale', 0.01, 10, 0.01));
-  bind(range(path(() => stone.shellInnerRadius, (v) => { stone.shellInnerRadius = v; }, 'stone-rebuild'), stoneSection.body, 'stoneRelics.shellInnerRadius', 0, 30, 0.1));
-  bind(range(path(() => stone.shellOuterRadius, (v) => { stone.shellOuterRadius = v; }, 'stone-rebuild'), stoneSection.body, 'stoneRelics.shellOuterRadius', 1, 40, 0.1));
-  bind(range(path(() => stone.rotationSpeedMin, (v) => { stone.rotationSpeedMin = v; }, 'stone-runtime'), stoneSection.body, 'stoneRelics.rotationSpeedMin', 0, 0.3, 0.001));
-  bind(range(path(() => stone.rotationSpeedMax, (v) => { stone.rotationSpeedMax = v; }, 'stone-runtime'), stoneSection.body, 'stoneRelics.rotationSpeedMax', 0, 0.5, 0.001));
-  bind(range(path(() => stone.orbitSpeed, (v) => { stone.orbitSpeed = v; }, 'stone-runtime'), stoneSection.body, 'stoneRelics.orbitSpeed', 0, 0.15, 0.001));
-  bind(range(path(() => stone.opacity, (v) => { stone.opacity = v; }, 'material'), stoneSection.body, 'stoneRelics.opacity', 0, 1, 0.01));
-  bind(checkbox(path(() => stone.debugVisible, (v) => { stone.debugVisible = v; }, 'stone-rebuild'), stoneSection.body, 'stoneRelics.debugVisible'));
+  bind(checkbox(path(() => stone.enabled, (v) => { stone.enabled = v; }, { owner: 'atmosphere', action: 'stone-runtime' }), stoneSection.body, 'stoneRelics.enabled'));
+  bind(range(path(() => stone.count, (v) => { stone.count = Math.round(v); }, { owner: 'atmosphere', action: 'stone-rebuild' }), stoneSection.body, 'stoneRelics.count', 0, 200, 1));
+  bind(range(path(() => stone.minScale, (v) => { stone.minScale = v; }, { owner: 'atmosphere', action: 'stone-rebuild' }), stoneSection.body, 'stoneRelics.minScale', 0.01, 8, 0.01));
+  bind(range(path(() => stone.maxScale, (v) => { stone.maxScale = v; }, { owner: 'atmosphere', action: 'stone-rebuild' }), stoneSection.body, 'stoneRelics.maxScale', 0.01, 10, 0.01));
+  bind(range(path(() => stone.shellInnerRadius, (v) => { stone.shellInnerRadius = v; }, { owner: 'atmosphere', action: 'stone-rebuild' }), stoneSection.body, 'stoneRelics.shellInnerRadius', 0, 30, 0.1));
+  bind(range(path(() => stone.shellOuterRadius, (v) => { stone.shellOuterRadius = v; }, { owner: 'atmosphere', action: 'stone-rebuild' }), stoneSection.body, 'stoneRelics.shellOuterRadius', 1, 40, 0.1));
+  bind(range(path(() => stone.rotationSpeedMin, (v) => { stone.rotationSpeedMin = v; }, { owner: 'atmosphere', action: 'stone-rebuild' }), stoneSection.body, 'stoneRelics.rotationSpeedMin', 0, 0.3, 0.001));
+  bind(range(path(() => stone.rotationSpeedMax, (v) => { stone.rotationSpeedMax = v; }, { owner: 'atmosphere', action: 'stone-rebuild' }), stoneSection.body, 'stoneRelics.rotationSpeedMax', 0, 0.5, 0.001));
+  bind(range(path(() => stone.orbitSpeed, (v) => { stone.orbitSpeed = v; }, { owner: 'atmosphere', action: 'stone-runtime' }), stoneSection.body, 'stoneRelics.orbitSpeed', 0, 0.15, 0.001));
+  bind(range(path(() => stone.opacity, (v) => { stone.opacity = v; }, { owner: 'atmosphere', action: 'material' }), stoneSection.body, 'stoneRelics.opacity', 0, 1, 0.01));
+  bind(checkbox(path(() => stone.debugVisible, (v) => { stone.debugVisible = v; }, { owner: 'atmosphere', action: 'stone-rebuild' }), stoneSection.body, 'stoneRelics.debugVisible'));
   const shell = bg.shellRelics;
-  bind(checkbox(path(() => shell.enabled, (v) => { shell.enabled = v; }, 'shell-runtime'), shellSection.body, 'shellRelics.enabled'));
-  bind(range(path(() => shell.count, (v) => { shell.count = Math.round(v); }, 'shell-rebuild'), shellSection.body, 'shellRelics.count', 0, 200, 1));
-  bind(range(path(() => shell.minScale, (v) => { shell.minScale = v; }, 'shell-rebuild'), shellSection.body, 'shellRelics.minScale', 0.01, 8, 0.01));
-  bind(range(path(() => shell.maxScale, (v) => { shell.maxScale = v; }, 'shell-rebuild'), shellSection.body, 'shellRelics.maxScale', 0.01, 10, 0.01));
-  bind(range(path(() => shell.shellInnerRadius, (v) => { shell.shellInnerRadius = v; }, 'shell-rebuild'), shellSection.body, 'shellRelics.shellInnerRadius', 0, 30, 0.1));
-  bind(range(path(() => shell.shellOuterRadius, (v) => { shell.shellOuterRadius = v; }, 'shell-rebuild'), shellSection.body, 'shellRelics.shellOuterRadius', 1, 40, 0.1));
-  bind(range(path(() => shell.rotationSpeedMin, (v) => { shell.rotationSpeedMin = v; }, 'shell-runtime'), shellSection.body, 'shellRelics.rotationSpeedMin', 0, 0.3, 0.001));
-  bind(range(path(() => shell.rotationSpeedMax, (v) => { shell.rotationSpeedMax = v; }, 'shell-runtime'), shellSection.body, 'shellRelics.rotationSpeedMax', 0, 0.8, 0.001));
-  bind(range(path(() => shell.orbitSpeed, (v) => { shell.orbitSpeed = v; }, 'shell-runtime'), shellSection.body, 'shellRelics.orbitSpeed', 0, 0.2, 0.001));
-  bind(range(path(() => shell.opacity, (v) => { shell.opacity = v; }, 'material'), shellSection.body, 'shellRelics.opacity', 0, 1, 0.01));
-  bind(checkbox(path(() => shell.debugVisible, (v) => { shell.debugVisible = v; }, 'shell-rebuild'), shellSection.body, 'shellRelics.debugVisible'));
+  bind(checkbox(path(() => shell.enabled, (v) => { shell.enabled = v; }, { owner: 'atmosphere', action: 'shell-runtime' }), shellSection.body, 'shellRelics.enabled'));
+  bind(range(path(() => shell.count, (v) => { shell.count = Math.round(v); }, { owner: 'atmosphere', action: 'shell-rebuild' }), shellSection.body, 'shellRelics.count', 0, 200, 1));
+  bind(range(path(() => shell.minScale, (v) => { shell.minScale = v; }, { owner: 'atmosphere', action: 'shell-rebuild' }), shellSection.body, 'shellRelics.minScale', 0.01, 8, 0.01));
+  bind(range(path(() => shell.maxScale, (v) => { shell.maxScale = v; }, { owner: 'atmosphere', action: 'shell-rebuild' }), shellSection.body, 'shellRelics.maxScale', 0.01, 10, 0.01));
+  bind(range(path(() => shell.shellInnerRadius, (v) => { shell.shellInnerRadius = v; }, { owner: 'atmosphere', action: 'shell-rebuild' }), shellSection.body, 'shellRelics.shellInnerRadius', 0, 30, 0.1));
+  bind(range(path(() => shell.shellOuterRadius, (v) => { shell.shellOuterRadius = v; }, { owner: 'atmosphere', action: 'shell-rebuild' }), shellSection.body, 'shellRelics.shellOuterRadius', 1, 40, 0.1));
+  bind(range(path(() => shell.rotationSpeedMin, (v) => { shell.rotationSpeedMin = v; }, { owner: 'atmosphere', action: 'shell-rebuild' }), shellSection.body, 'shellRelics.rotationSpeedMin', 0, 0.3, 0.001));
+  bind(range(path(() => shell.rotationSpeedMax, (v) => { shell.rotationSpeedMax = v; }, { owner: 'atmosphere', action: 'shell-rebuild' }), shellSection.body, 'shellRelics.rotationSpeedMax', 0, 0.8, 0.001));
+  bind(range(path(() => shell.orbitSpeed, (v) => { shell.orbitSpeed = v; }, { owner: 'atmosphere', action: 'shell-runtime' }), shellSection.body, 'shellRelics.orbitSpeed', 0, 0.2, 0.001));
+  bind(range(path(() => shell.opacity, (v) => { shell.opacity = v; }, { owner: 'atmosphere', action: 'material' }), shellSection.body, 'shellRelics.opacity', 0, 1, 0.01));
+  bind(checkbox(path(() => shell.debugVisible, (v) => { shell.debugVisible = v; }, { owner: 'atmosphere', action: 'shell-rebuild' }), shellSection.body, 'shellRelics.debugVisible'));
   const smallGlyph = bg.smallGlyphRelics;
-  bind(checkbox(path(() => smallGlyph.enabled, (v) => { smallGlyph.enabled = v; }, 'small-glyph-runtime'), smallGlyphSection.body, 'smallGlyphRelics.enabled'));
-  bind(range(path(() => smallGlyph.count, (v) => { smallGlyph.count = Math.round(v); }, 'small-glyph-rebuild'), smallGlyphSection.body, 'smallGlyphRelics.count', 0, 200, 1));
-  bind(range(path(() => smallGlyph.minScale, (v) => { smallGlyph.minScale = v; }, 'small-glyph-rebuild'), smallGlyphSection.body, 'smallGlyphRelics.minScale', 0.01, 4, 0.01));
-  bind(range(path(() => smallGlyph.maxScale, (v) => { smallGlyph.maxScale = v; }, 'small-glyph-rebuild'), smallGlyphSection.body, 'smallGlyphRelics.maxScale', 0.01, 6, 0.01));
-  bind(range(path(() => smallGlyph.shellInnerRadius, (v) => { smallGlyph.shellInnerRadius = v; }, 'small-glyph-rebuild'), smallGlyphSection.body, 'smallGlyphRelics.shellInnerRadius', 0, 30, 0.1));
-  bind(range(path(() => smallGlyph.shellOuterRadius, (v) => { smallGlyph.shellOuterRadius = v; }, 'small-glyph-rebuild'), smallGlyphSection.body, 'smallGlyphRelics.shellOuterRadius', 1, 40, 0.1));
-  bind(range(path(() => smallGlyph.rotationSpeedMin, (v) => { smallGlyph.rotationSpeedMin = v; }, 'small-glyph-runtime'), smallGlyphSection.body, 'smallGlyphRelics.rotationSpeedMin', 0, 0.3, 0.001));
-  bind(range(path(() => smallGlyph.rotationSpeedMax, (v) => { smallGlyph.rotationSpeedMax = v; }, 'small-glyph-runtime'), smallGlyphSection.body, 'smallGlyphRelics.rotationSpeedMax', 0, 0.5, 0.001));
-  bind(range(path(() => smallGlyph.orbitSpeed, (v) => { smallGlyph.orbitSpeed = v; }, 'small-glyph-runtime'), smallGlyphSection.body, 'smallGlyphRelics.orbitSpeed', 0, 0.15, 0.001));
-  bind(range(path(() => smallGlyph.opacity, (v) => { smallGlyph.opacity = v; }, 'material'), smallGlyphSection.body, 'smallGlyphRelics.opacity', 0, 1, 0.01));
-  bind(checkbox(path(() => smallGlyph.debugVisible, (v) => { smallGlyph.debugVisible = v; }, 'small-glyph-rebuild'), smallGlyphSection.body, 'smallGlyphRelics.debugVisible'));
+  bind(checkbox(path(() => smallGlyph.enabled, (v) => { smallGlyph.enabled = v; }, { owner: 'atmosphere', action: 'small-glyph-runtime' }), smallGlyphSection.body, 'smallGlyphRelics.enabled'));
+  bind(range(path(() => smallGlyph.count, (v) => { smallGlyph.count = Math.round(v); }, { owner: 'atmosphere', action: 'small-glyph-rebuild' }), smallGlyphSection.body, 'smallGlyphRelics.count', 0, 200, 1));
+  bind(range(path(() => smallGlyph.minScale, (v) => { smallGlyph.minScale = v; }, { owner: 'atmosphere', action: 'small-glyph-rebuild' }), smallGlyphSection.body, 'smallGlyphRelics.minScale', 0.01, 4, 0.01));
+  bind(range(path(() => smallGlyph.maxScale, (v) => { smallGlyph.maxScale = v; }, { owner: 'atmosphere', action: 'small-glyph-rebuild' }), smallGlyphSection.body, 'smallGlyphRelics.maxScale', 0.01, 6, 0.01));
+  bind(range(path(() => smallGlyph.shellInnerRadius, (v) => { smallGlyph.shellInnerRadius = v; }, { owner: 'atmosphere', action: 'small-glyph-rebuild' }), smallGlyphSection.body, 'smallGlyphRelics.shellInnerRadius', 0, 30, 0.1));
+  bind(range(path(() => smallGlyph.shellOuterRadius, (v) => { smallGlyph.shellOuterRadius = v; }, { owner: 'atmosphere', action: 'small-glyph-rebuild' }), smallGlyphSection.body, 'smallGlyphRelics.shellOuterRadius', 1, 40, 0.1));
+  bind(range(path(() => smallGlyph.rotationSpeedMin, (v) => { smallGlyph.rotationSpeedMin = v; }, { owner: 'atmosphere', action: 'small-glyph-rebuild' }), smallGlyphSection.body, 'smallGlyphRelics.rotationSpeedMin', 0, 0.3, 0.001));
+  bind(range(path(() => smallGlyph.rotationSpeedMax, (v) => { smallGlyph.rotationSpeedMax = v; }, { owner: 'atmosphere', action: 'small-glyph-rebuild' }), smallGlyphSection.body, 'smallGlyphRelics.rotationSpeedMax', 0, 0.5, 0.001));
+  bind(range(path(() => smallGlyph.orbitSpeed, (v) => { smallGlyph.orbitSpeed = v; }, { owner: 'atmosphere', action: 'small-glyph-runtime' }), smallGlyphSection.body, 'smallGlyphRelics.orbitSpeed', 0, 0.15, 0.001));
+  bind(range(path(() => smallGlyph.opacity, (v) => { smallGlyph.opacity = v; }, { owner: 'atmosphere', action: 'material' }), smallGlyphSection.body, 'smallGlyphRelics.opacity', 0, 1, 0.01));
+  bind(checkbox(path(() => smallGlyph.debugVisible, (v) => { smallGlyph.debugVisible = v; }, { owner: 'atmosphere', action: 'small-glyph-rebuild' }), smallGlyphSection.body, 'smallGlyphRelics.debugVisible'));
 
-  bind(checkbox(path(() => galaxy.enabled, (v) => { galaxy.enabled = v; }, 'galaxy-sprites-runtime'), galaxySection.body, 'galaxySprites.enabled'));
-  bind(range(path(() => galaxy.totalMax, (v) => { galaxy.totalMax = Math.round(v); }, 'galaxy-sprites-rebuild'), galaxySection.body, 'galaxySprites.totalMax', 0, 30, 1));
-  bind(range(path(() => galaxy.copiesPerTextureMin, (v) => { galaxy.copiesPerTextureMin = Math.round(v); }, 'galaxy-sprites-rebuild'), galaxySection.body, 'galaxySprites.copiesPerTextureMin', 0, 10, 1));
-  bind(range(path(() => galaxy.copiesPerTextureMax, (v) => { galaxy.copiesPerTextureMax = Math.round(v); }, 'galaxy-sprites-rebuild'), galaxySection.body, 'galaxySprites.copiesPerTextureMax', 0, 10, 1));
-  bind(range(path(() => galaxy.minScale, (v) => { galaxy.minScale = v; }, 'galaxy-sprites-rebuild'), galaxySection.body, 'galaxySprites.minScale', 0.01, 12, 0.01));
-  bind(range(path(() => galaxy.maxScale, (v) => { galaxy.maxScale = v; }, 'galaxy-sprites-rebuild'), galaxySection.body, 'galaxySprites.maxScale', 0.01, 16, 0.01));
-  bind(range(path(() => galaxy.opacity, (v) => { galaxy.opacity = v; }, 'galaxy-sprites-runtime'), galaxySection.body, 'galaxySprites.opacity', 0, 1, 0.01));
-  bind(range(path(() => galaxy.opacityVariance, (v) => { galaxy.opacityVariance = v; }, 'galaxy-sprites-rebuild'), galaxySection.body, 'galaxySprites.opacityVariance', 0, 1, 0.01));
-  bind(range(path(() => galaxy.innerRadius, (v) => { galaxy.innerRadius = v; }, 'galaxy-sprites-rebuild'), galaxySection.body, 'galaxySprites.innerRadius', 0, 60, 0.1));
-  bind(range(path(() => galaxy.outerRadius, (v) => { galaxy.outerRadius = v; }, 'galaxy-sprites-rebuild'), galaxySection.body, 'galaxySprites.outerRadius', 0.1, 80, 0.1));
-  bind(range(path(() => galaxy.verticalSpread, (v) => { galaxy.verticalSpread = v; }, 'galaxy-sprites-rebuild'), galaxySection.body, 'galaxySprites.verticalSpread', 0, 30, 0.1));
-  bind(range(path(() => galaxy.orbitSpeedMin, (v) => { galaxy.orbitSpeedMin = v; }, 'galaxy-sprites-rebuild'), galaxySection.body, 'galaxySprites.orbitSpeedMin', 0, 0.1, 0.0005));
-  bind(range(path(() => galaxy.orbitSpeedMax, (v) => { galaxy.orbitSpeedMax = v; }, 'galaxy-sprites-rebuild'), galaxySection.body, 'galaxySprites.orbitSpeedMax', 0, 0.1, 0.0005));
-  bind(range(path(() => galaxy.orbitSpeedMultiplier, (v) => { galaxy.orbitSpeedMultiplier = v; }, 'galaxy-sprites-runtime'), galaxySection.body, 'galaxySprites.orbitSpeedMultiplier', 0, 5, 0.05));
-  bind(range(path(() => galaxy.ownSpinSpeedMin, (v) => { galaxy.ownSpinSpeedMin = v; }, 'galaxy-sprites-rebuild'), galaxySection.body, 'galaxySprites.ownSpinSpeedMin', 0, 0.1, 0.0005));
-  bind(range(path(() => galaxy.ownSpinSpeedMax, (v) => { galaxy.ownSpinSpeedMax = v; }, 'galaxy-sprites-rebuild'), galaxySection.body, 'galaxySprites.ownSpinSpeedMax', 0, 0.1, 0.0005));
-  bind(range(path(() => galaxy.ownSpinSpeedMultiplier, (v) => { galaxy.ownSpinSpeedMultiplier = v; }, 'galaxy-sprites-runtime'), galaxySection.body, 'galaxySprites.ownSpinSpeedMultiplier', 0, 5, 0.05));
-  bind(checkbox(path(() => galaxy.additiveBlending, (v) => { galaxy.additiveBlending = v; }, 'galaxy-sprites-rebuild'), galaxySection.body, 'galaxySprites.additiveBlending'));
-  bind(range(path(() => galaxy.alphaTest, (v) => { galaxy.alphaTest = v; }, 'galaxy-sprites-rebuild'), galaxySection.body, 'galaxySprites.alphaTest', 0, 1, 0.001));
-  bind(range(path(() => galaxy.randomSeed, (v) => { galaxy.randomSeed = Math.round(v); }, 'galaxy-sprites-rebuild'), galaxySection.body, 'galaxySprites.randomSeed', 1, 999999, 1));
+  bind(checkbox(path(() => galaxy.enabled, (v) => { galaxy.enabled = v; }, { owner: 'galaxies', action: 'runtime' }), galaxySection.body, 'galaxySprites.enabled'));
+  bind(range(path(() => galaxy.totalMax, (v) => { galaxy.totalMax = Math.round(v); }, { owner: 'galaxies', action: 'rebuild' }), galaxySection.body, 'galaxySprites.totalMax', 0, 30, 1));
+  bind(range(path(() => galaxy.copiesPerTextureMin, (v) => { galaxy.copiesPerTextureMin = Math.round(v); }, { owner: 'galaxies', action: 'rebuild' }), galaxySection.body, 'galaxySprites.copiesPerTextureMin', 0, 10, 1));
+  bind(range(path(() => galaxy.copiesPerTextureMax, (v) => { galaxy.copiesPerTextureMax = Math.round(v); }, { owner: 'galaxies', action: 'rebuild' }), galaxySection.body, 'galaxySprites.copiesPerTextureMax', 0, 10, 1));
+  bind(range(path(() => galaxy.minScale, (v) => { galaxy.minScale = v; }, { owner: 'galaxies', action: 'rebuild' }), galaxySection.body, 'galaxySprites.minScale', 0.01, 12, 0.01));
+  bind(range(path(() => galaxy.maxScale, (v) => { galaxy.maxScale = v; }, { owner: 'galaxies', action: 'rebuild' }), galaxySection.body, 'galaxySprites.maxScale', 0.01, 16, 0.01));
+  bind(range(path(() => galaxy.opacity, (v) => { galaxy.opacity = v; }, { owner: 'galaxies', action: 'runtime' }), galaxySection.body, 'galaxySprites.opacity', 0, 1, 0.01));
+  bind(range(path(() => galaxy.opacityVariance, (v) => { galaxy.opacityVariance = v; }, { owner: 'galaxies', action: 'rebuild' }), galaxySection.body, 'galaxySprites.opacityVariance', 0, 1, 0.01));
+  bind(range(path(() => galaxy.innerRadius, (v) => { galaxy.innerRadius = v; }, { owner: 'galaxies', action: 'rebuild' }), galaxySection.body, 'galaxySprites.innerRadius', 0, 60, 0.1));
+  bind(range(path(() => galaxy.outerRadius, (v) => { galaxy.outerRadius = v; }, { owner: 'galaxies', action: 'rebuild' }), galaxySection.body, 'galaxySprites.outerRadius', 0.1, 80, 0.1));
+  bind(range(path(() => galaxy.verticalSpread, (v) => { galaxy.verticalSpread = v; }, { owner: 'galaxies', action: 'rebuild' }), galaxySection.body, 'galaxySprites.verticalSpread', 0, 30, 0.1));
+  bind(range(path(() => galaxy.orbitSpeedMin, (v) => { galaxy.orbitSpeedMin = v; }, { owner: 'galaxies', action: 'rebuild' }), galaxySection.body, 'galaxySprites.orbitSpeedMin', 0, 0.1, 0.0005));
+  bind(range(path(() => galaxy.orbitSpeedMax, (v) => { galaxy.orbitSpeedMax = v; }, { owner: 'galaxies', action: 'rebuild' }), galaxySection.body, 'galaxySprites.orbitSpeedMax', 0, 0.1, 0.0005));
+  bind(range(path(() => galaxy.orbitSpeedMultiplier, (v) => { galaxy.orbitSpeedMultiplier = v; }, { owner: 'galaxies', action: 'runtime' }), galaxySection.body, 'galaxySprites.orbitSpeedMultiplier', 0, 5, 0.05));
+  bind(range(path(() => galaxy.ownSpinSpeedMin, (v) => { galaxy.ownSpinSpeedMin = v; }, { owner: 'galaxies', action: 'rebuild' }), galaxySection.body, 'galaxySprites.ownSpinSpeedMin', 0, 0.1, 0.0005));
+  bind(range(path(() => galaxy.ownSpinSpeedMax, (v) => { galaxy.ownSpinSpeedMax = v; }, { owner: 'galaxies', action: 'rebuild' }), galaxySection.body, 'galaxySprites.ownSpinSpeedMax', 0, 0.1, 0.0005));
+  bind(range(path(() => galaxy.ownSpinSpeedMultiplier, (v) => { galaxy.ownSpinSpeedMultiplier = v; }, { owner: 'galaxies', action: 'runtime' }), galaxySection.body, 'galaxySprites.ownSpinSpeedMultiplier', 0, 5, 0.05));
+  bind(checkbox(path(() => galaxy.additiveBlending, (v) => { galaxy.additiveBlending = v; }, { owner: 'galaxies', action: 'rebuild' }), galaxySection.body, 'galaxySprites.additiveBlending'));
+  bind(range(path(() => galaxy.alphaTest, (v) => { galaxy.alphaTest = v; }, { owner: 'galaxies', action: 'rebuild' }), galaxySection.body, 'galaxySprites.alphaTest', 0, 1, 0.001));
+  bind(range(path(() => galaxy.randomSeed, (v) => { galaxy.randomSeed = Math.round(v); }, { owner: 'galaxies', action: 'rebuild' }), galaxySection.body, 'galaxySprites.randomSeed', 1, 999999, 1));
 
 
   const loadingReadout = document.createElement('div');
@@ -909,12 +933,12 @@ export function createOptionsPanel({ runtimeState, onChange, onResetAtmosphere, 
     renderLoadingReadout();
   }
 
-  bind(select(path(() => bg.debugBlendingMode, (v) => { bg.debugBlendingMode = v; }, 'material'), debugSection.body, 'debugBlendingMode', [
+  bind(select(path(() => bg.debugBlendingMode, (v) => { bg.debugBlendingMode = v; }, { owner: 'atmosphere', action: 'material' }), debugSection.body, 'debugBlendingMode', [
     { value: 'normal', label: 'Normal' },
     { value: 'additive', label: 'Additive' }
   ]));
-  bind(checkbox(path(() => bg.showShellHelpers, (v) => { bg.showShellHelpers = v; }, 'helpers'), debugSection.body, 'showShellHelpers'));
-  bind(checkbox(path(() => bg.showAtmosphereLogs, (v) => { bg.showAtmosphereLogs = v; }, 'runtime'), debugSection.body, 'showAtmosphereLogs'));
+  bind(checkbox(path(() => bg.showShellHelpers, (v) => { bg.showShellHelpers = v; }, { owner: 'atmosphere', action: 'helpers' }), debugSection.body, 'showShellHelpers'));
+  bind(checkbox(path(() => bg.showAtmosphereLogs, (v) => { bg.showAtmosphereLogs = v; }, { owner: 'atmosphere', action: 'runtime' }), debugSection.body, 'showAtmosphereLogs'));
 
   const futureText = document.createElement('p');
   futureText.className = 'options-panel__placeholder';
