@@ -1,6 +1,7 @@
 import * as THREE from './vendor/three.js';
 import { resolvePortfolioNodes } from './content/resolvePortfolioNodes.js';
-import { applySceneFog, createScene } from './scene/createScene.js';
+import { createScene } from './scene/createScene.js';
+import { createFogRevealController } from './scene/fogRevealController.js';
 import { addLights } from './scene/lights.js';
 import { createCentralObject } from './scene/centralObject.js';
 import { createBackgroundAtmosphere } from './scene/atmosphere.js';
@@ -94,6 +95,7 @@ renderer.info.autoReset = false;
 renderer.setClearColor(EXPERIENCE_BACKGROUND_COLOR, 1);
 
 const scene = createScene(sceneRuntimeConfig.fog);
+const fogRevealController = createFogRevealController({ scene, settings: sceneRuntimeConfig.fog });
 const galaxyBackgroundScene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 100);
 camera.position.set(0, 1.8, 6);
@@ -137,7 +139,8 @@ const runtimeDiagnostics = createRuntimeDiagnostics({
   getLayerSnapshot: () => ({ ...atmosphere.getPerformanceSnapshot(), galaxiesVisible: galaxyLayer.group.visible, tuningMode, effectiveLayerMultipliers: { ...effectiveLayerMultipliers }, lastPanelEvent, settingsSource, ...(settingsLoadError ? { settingsLoadError } : {}) }),
   getGalaxyCount: galaxyLayer.getInstanceCount,
   getPlaqueCount: plaqueTransition.getInstanceCount,
-  getLifecycleCounts: () => ({ ...atmosphere.getLifecycleCounts(), ...galaxyLayer.getLifecycleCounts(), plaqueInstancesBuilt: plaqueTransition.getInstanceCount() })
+  getLifecycleCounts: () => ({ ...atmosphere.getLifecycleCounts(), ...galaxyLayer.getLifecycleCounts(), plaqueInstancesBuilt: plaqueTransition.getInstanceCount() }),
+  getFogRevealSnapshot: fogRevealController.getSnapshot
 });
 runtimeDiagnostics.count('criticalPreload');
 runtimeDiagnostics.count('deferredPreload');
@@ -171,7 +174,13 @@ const optionsPanel = createOptionsPanel({
         if (action === 'runtime') { galaxyLayer.applyRuntimeOptions(sceneRuntimeConfig.galaxySprites); return true; }
         return false;
       },
-      scene: ({ action }) => action === 'fog' ? (applySceneFog(scene, sceneRuntimeConfig.fog), true) : false,
+      scene: ({ action }) => {
+        if (action === 'fog') { fogRevealController.applySettings(sceneRuntimeConfig.fog); return true; }
+        if (action === 'fog-restart') { fogRevealController.applySettings(sceneRuntimeConfig.fog); fogRevealController.restart(); fogRevealController.start(); return true; }
+        if (action === 'fog-skip') { fogRevealController.skipToEnd(); return true; }
+        if (action === 'fog-import') { fogRevealController.applySettings(sceneRuntimeConfig.fog, { restartReveal: true }); return true; }
+        return false;
+      },
       progression: ({ action, value }) => {
         if (action === 'tuning-mode') { tuningMode = Boolean(value); return true; }
         return action === 'state-change';
@@ -513,6 +522,8 @@ try {
   restoreAtmosphereWarmup();
   restoreGalaxyWarmup();
 }
+// Warm-up may use the final shader variant, but it never consumes intro time.
+fogRevealController.restart();
 loadingDiagnostics.markEvent('rendererCompileEnd');
 assetManager.markWarmup({ warmupFrameComplete: true, compileWarmupMs: performance.now() - compileStartedAt });
 loadingDiagnostics.markEvent('firstWarmupRender');
@@ -526,6 +537,7 @@ function tick(timestamp) {
   timer.update(timestamp);
   const delta = timer.getDelta();
   const elapsed = timer.getElapsed();
+  fogRevealController.update(delta);
   const orbitPhase = orbit.update(delta);
   updateOrbitNodes(nodes, elapsed, orbitGroup.getWorldPosition(orbitCenterWorldPosition), orbitPhase);
   plaqueTransition.update();
@@ -562,4 +574,5 @@ loadingDiagnostics.markEvent('interactionReady');
 runtimeDiagnostics.markInteractionReady();
 runtimeDiagnostics.census('interactionReady');
 runtimeDiagnostics.count('tickStart');
+fogRevealController.start();
 tick();

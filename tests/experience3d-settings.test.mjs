@@ -34,7 +34,7 @@ for (const label of ['Enabled', 'Radius', 'Minimum size', 'Maximum size', 'Orbit
 for (const legacyLabel of ['Count', 'Inner radius', 'Outer radius', 'Vertical spread']) assert.doesNotMatch(galaxyPanelSource, new RegExp(`'${legacyLabel}'`));
 assert.equal(optionsPanelSource.split("'Light intensity'").length - 1, 1, 'shared Sun/Moon builder exposes Light intensity');
 assert.doesNotMatch(optionsPanelSource, /'Light distance'/, 'Sun/Moon panel does not expose Light distance');
-for (const event of ["owner: 'atmosphere', action: 'full-rebuild'", "owner: 'galaxies', action: 'rebuild'", "owner: 'scene', action: 'fog'", "owner: 'sun', action: 'apply'", "owner: 'moon', action: 'apply'"]) {
+for (const event of ["owner: 'atmosphere', action: 'full-rebuild'", "owner: 'galaxies', action: 'rebuild'", "owner: 'scene', action: 'fog-import'", "owner: 'sun', action: 'apply'", "owner: 'moon', action: 'apply'"]) {
   assert.equal(optionsPanelSource.split(event).length - 1, 1, `import dispatches ${event} exactly once`);
 }
 

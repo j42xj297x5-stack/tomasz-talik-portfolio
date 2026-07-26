@@ -104,6 +104,13 @@ export function createOptionsPanel({ runtimeState, onChange, onSettingsImported 
     parent.append(button);
   }
 
+  function actionButton(parent, label, owner, action) {
+    const button = document.createElement('button');
+    button.type = 'button'; button.className = 'options-panel__section-reset'; button.textContent = label;
+    button.addEventListener('click', () => emit(owner, action));
+    parent.append(button);
+  }
+
   function pairedRanges(parent, config, names, labels, limits, owner, action) {
     const output = readout(parent, '');
     const syncOutput = () => { output.textContent = `${labels.title}: ${config[names.min]}–${config[names.max]}`; };
@@ -173,16 +180,20 @@ export function createOptionsPanel({ runtimeState, onChange, onSettingsImported 
   const fog = runtimeState.fog;
   const fogSection = section('Fog');
   checkbox(fogSection.body, 'Enabled', () => fog.enabled, (v) => { fog.enabled = v; }, 'scene', 'fog');
+  checkbox(fogSection.body, 'Automated reveal', () => fog.reveal.enabled, (v) => { fog.reveal.enabled = v; }, 'scene', 'fog');
+  range(fogSection.body, 'Reveal duration', () => fog.reveal.durationSeconds, (v) => { fog.reveal.durationSeconds = v; }, 'scene', 'fog', 0, 600, 1);
   let fogFarInput;
-  const fogNearInput = range(fogSection.body, 'Start distance', () => fog.near, (v) => {
+  const fogNearInput = range(fogSection.body, 'Final start distance', () => fog.near, (v) => {
     fog.near = v;
     if (fog.near >= fog.far) { fog.far = fog.near + 0.1; if (fogFarInput) fogFarInput.value = fog.far; }
   }, 'scene', 'fog', 0, 100, 0.1);
-  fogFarInput = range(fogSection.body, 'End distance', () => fog.far, (v) => {
+  fogFarInput = range(fogSection.body, 'Final end distance', () => fog.far, (v) => {
     fog.far = v;
     if (fog.far <= fog.near) { fog.near = Math.max(0, fog.far - 0.1); fogNearInput.value = fog.near; }
   }, 'scene', 'fog', 0.1, 150, 0.1);
-  resetButton(fogSection.body, () => Object.assign(fog, clone(defaults.fog)), 'scene', 'fog');
+  actionButton(fogSection.body, 'Restart reveal', 'scene', 'fog-restart');
+  actionButton(fogSection.body, 'Skip reveal', 'scene', 'fog-skip');
+  resetButton(fogSection.body, () => Object.assign(fog, clone(defaults.fog)), 'scene', 'fog-restart');
   panel.append(fogSection.details);
 
   function celestial(title, key, owner, hasOrbitSpeed) {
@@ -223,7 +234,7 @@ export function createOptionsPanel({ runtimeState, onChange, onSettingsImported 
     if (parsed?.schemaVersion !== 1) throw new Error('Unsupported Experience 3D settings schema.');
     merge(runtimeState, toRuntimeSettings(normalizeExperience3dSettings(parsed)));
     controls.forEach((sync) => sync());
-    onChange({ owner: 'atmosphere', action: 'full-rebuild' }); onChange({ owner: 'galaxies', action: 'rebuild' }); onChange({ owner: 'scene', action: 'fog' }); onChange({ owner: 'sun', action: 'apply' }); onChange({ owner: 'moon', action: 'apply' });
+    onChange({ owner: 'atmosphere', action: 'full-rebuild' }); onChange({ owner: 'galaxies', action: 'rebuild' }); onChange({ owner: 'scene', action: 'fog-import' }); onChange({ owner: 'sun', action: 'apply' }); onChange({ owner: 'moon', action: 'apply' });
     onSettingsImported?.();
     importInput.value = '';
   });
