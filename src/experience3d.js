@@ -1,6 +1,6 @@
 import * as THREE from './vendor/three.js';
 import { resolvePortfolioNodes } from './content/resolvePortfolioNodes.js';
-import { createScene } from './scene/createScene.js';
+import { applySceneFog, createScene, SCENE_FOG_DEFAULTS } from './scene/createScene.js';
 import { addLights } from './scene/lights.js';
 import { createCentralObject } from './scene/centralObject.js';
 import { createBackgroundAtmosphere } from './scene/atmosphere.js';
@@ -94,16 +94,17 @@ const centralPlaceholder = createCentralObject();
 scene.add(centralPlaceholder);
 
 const sceneRuntimeConfig = {
+  fog: { ...SCENE_FOG_DEFAULTS },
   sunCycle: { ...SUN_CYCLE_DEFAULTS },
   moonCycle: { ...MOON_CYCLE_DEFAULTS },
   galaxySprites: { ...GALAXY_SPRITES_DEFAULTS },
   backgroundAtmosphere: {
     enabled: true, debugVisible: false, showShellHelpers: false, showAtmosphereLogs: false,
     debugBlendingMode: 'normal', debugIgnoreFog: true, safeRadius: 3, shellInnerRadius: 15, shellOuterRadius: 25,
-    stoneRelics: { enabled: true, count: 30, models: ['glb/stone_01.glb','glb/stone_02.glb','glb/stone_03.glb','glb/stone_04.glb','glb/stone_05.glb','glb/stone_06.glb'], safeRadius: 3.5, shellInnerRadius: 18, shellOuterRadius: 20, minScale: 2, maxScale: 5, rotationSpeedMin: 0.05, rotationSpeedMax: 0.09, orbitSpeed: 0.003, opacity: 1, debugVisible: false },
-    shellRelics: { enabled: true, count: 100, models: ['glb/shell_01.glb','glb/shell_02.glb','glb/shell_03.glb','glb/shell_04.glb','glb/shell_05.glb','glb/shell_06.glb'], minScale: 0.4, maxScale: 0.7, shellInnerRadius: 10, shellOuterRadius: 13, rotationSpeedMin: 0.047, rotationSpeedMax: 0.486, orbitSpeed: 0.013, opacity: 1, debugVisible: false, colorPalette: ['#d9a441','#4db6ac','#6ec6ff','#6bcf8e','#9c7bff','#f0a6a6'] },
-    smallGlyphRelics: { enabled: true, count: 50, models: ['glb/small_glyph_01.glb','glb/small_glyph_02.glb','glb/small_glyph_03.glb','glb/small_glyph_04.glb','glb/small_glyph_05.glb','glb/small_glyph_06.glb'], minScale: 0.3, maxScale: 0.5, shellInnerRadius: 13, shellOuterRadius: 15, rotationSpeedMin: 0.291, rotationSpeedMax: 0.5, orbitSpeed: 0.031, opacity: 0.62, debugVisible: false },
-    dust: { enabled: true, count: 6000, idleOpacity: 1, rotationSpeed: 0.018, pointSize: 0.07, color: '#cfe2ff', sizeAttenuation: true, depthTest: true }
+    stoneRelics: { enabled: true, count: 30, models: ['glb/stone_01.glb','glb/stone_02.glb','glb/stone_03.glb','glb/stone_04.glb','glb/stone_05.glb','glb/stone_06.glb'], safeRadius: 3.5, shellInnerRadius: 18, shellOuterRadius: 20, minScale: 2, maxScale: 5, rotationSpeedMin: 0.05, rotationSpeedMax: 0.09, selfRotationSpeedMultiplier: 1, orbitSpeed: 0.003, opacity: 1, debugVisible: false },
+    shellRelics: { enabled: true, count: 100, models: ['glb/shell_01.glb','glb/shell_02.glb','glb/shell_03.glb','glb/shell_04.glb','glb/shell_05.glb','glb/shell_06.glb'], minScale: 0.4, maxScale: 0.7, shellInnerRadius: 10, shellOuterRadius: 13, rotationSpeedMin: 0.047, rotationSpeedMax: 0.486, selfRotationSpeedMultiplier: 1, orbitSpeed: 0.013, opacity: 1, debugVisible: false, colorPalette: ['#d9a441','#4db6ac','#6ec6ff','#6bcf8e','#9c7bff','#f0a6a6'] },
+    smallGlyphRelics: { enabled: true, count: 50, models: ['glb/small_glyph_01.glb','glb/small_glyph_02.glb','glb/small_glyph_03.glb','glb/small_glyph_04.glb','glb/small_glyph_05.glb','glb/small_glyph_06.glb'], minScale: 0.3, maxScale: 0.5, shellInnerRadius: 13, shellOuterRadius: 15, rotationSpeedMin: 0.291, rotationSpeedMax: 0.5, selfRotationSpeedMultiplier: 1, orbitSpeed: 0.031, opacity: 0.62, debugVisible: false },
+    dust: { enabled: true, count: 6000, innerRadius: 15, outerRadius: 25, safeRadius: 3, idleOpacity: 1, rotationSpeed: 0.018, pointSize: 0.07, color: '#cfe2ff', sizeAttenuation: true, depthTest: true }
   }
 };
 
@@ -175,6 +176,7 @@ const optionsPanel = createOptionsPanel({
         if (action === 'runtime') { galaxyLayer.applyRuntimeOptions(sceneRuntimeConfig.galaxySprites); return true; }
         return false;
       },
+      scene: ({ action }) => action === 'fog' ? (applySceneFog(scene, sceneRuntimeConfig.fog), true) : false,
       progression: ({ action, value }) => {
         if (action === 'tuning-mode') { tuningMode = Boolean(value); return true; }
         return action === 'state-change';

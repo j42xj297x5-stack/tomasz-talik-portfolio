@@ -9,8 +9,6 @@ export const GALAXY_SPRITES_DEFAULTS = {
     '/png/galaxy_04.png',
     '/png/galaxy_05.png'
   ],
-  copiesPerTextureMin: 2,
-  copiesPerTextureMax: 4,
   totalMax: 14,
   minScale: 1,
   maxScale: 5,
@@ -68,11 +66,6 @@ function normalizeOptions(options = {}) {
   };
 
   config.enabled = Boolean(config.enabled);
-  config.copiesPerTextureMin = readClampedInteger(config.copiesPerTextureMin, GALAXY_SPRITES_DEFAULTS.copiesPerTextureMin, 0, 10);
-  config.copiesPerTextureMax = Math.max(
-    config.copiesPerTextureMin,
-    readClampedInteger(config.copiesPerTextureMax, GALAXY_SPRITES_DEFAULTS.copiesPerTextureMax, 0, 10)
-  );
   config.totalMax = readClampedInteger(config.totalMax, GALAXY_SPRITES_DEFAULTS.totalMax, 0, 30);
   config.minScale = readClampedNumber(config.minScale, GALAXY_SPRITES_DEFAULTS.minScale, 0.01, 12);
   config.maxScale = Math.max(config.minScale, readClampedNumber(config.maxScale, GALAXY_SPRITES_DEFAULTS.maxScale, 0.01, 16));
@@ -266,20 +259,11 @@ export function createGalaxySpritesLayer(options = {}, { assetManager = null, de
     }
 
     const random = createSeededRandom(config.randomSeed);
-    let total = 0;
-    textureRecords.forEach((textureRecord, textureIndex) => {
-      if (total >= config.totalMax) return;
-      const copies = clamp(
-        Math.round(randomBetween(random, config.copiesPerTextureMin, config.copiesPerTextureMax + 1)),
-        config.copiesPerTextureMin,
-        config.copiesPerTextureMax
-      );
-
-      for (let i = 0; i < copies && total < config.totalMax; i += 1) {
-        createSprite(textureRecord, makeInstanceDescriptor(random, textureRecord, textureIndex));
-        total += 1;
-      }
-    });
+    for (let total = 0; total < config.totalMax; total += 1) {
+      const textureIndex = total % textureRecords.length;
+      const textureRecord = textureRecords[textureIndex];
+      createSprite(textureRecord, makeInstanceDescriptor(random, textureRecord, textureIndex));
+    }
 
     if (import.meta.env?.DEV) {
       console.info(`[galaxySprites] Rebuilt layer: count=${instances.length}, orbitSpeedRange=[${config.orbitSpeedMin}, ${config.orbitSpeedMax}], spinSpeedRange=[${config.ownSpinSpeedMin}, ${config.ownSpinSpeedMax}], orbitMultiplier=${config.orbitSpeedMultiplier}, spinMultiplier=${config.ownSpinSpeedMultiplier}`);
