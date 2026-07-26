@@ -7,7 +7,7 @@ Purpose: route a task to the smallest current documentation and runtime evidence
 
 ## Current runtime baseline
 
-The project has a conditional Classic 2D / Experience 3D entry shell. Experience 3D is a Three.js scene with five GLB glyphs, a shared data-driven plaque transition for every glyph, and HTML/CSS detail panels. The plaque sequence focuses the camera, reveals the selected plaque, holds, dollies in safely, and only then opens the panel. Closing reverses that sequence before returning the camera and handing cursor control back smoothly.
+The project has a conditional Classic 2D / Experience 3D entry shell. Experience 3D uses one renderer/canvas/camera with a fog-free galaxy background pass followed by the fogged main scene. Server-loaded scene composition falls back to code defaults. An independent post-loader fog reveal opens the base scene core, while interaction-driven progression continues to control the farther atmosphere and galaxies. Five GLB glyphs share a data-driven plaque transition and HTML/CSS detail panels.
 
 Hover is deliberately shared and light: every glyph uses the same one-shot scale/light response. Tree, fire, spark, and ember-sphere hover systems are not active runtime behavior.
 
@@ -28,6 +28,11 @@ Do not scan `docs/current` recursively. Read an additional module only when the 
 | Task | Read first | Add only when needed |
 | --- | --- | --- |
 | Experience 3D bootstrap, input, interaction state, panel timing | `src/experience3d.js`; `technical/FRONTEND_RUNTIME_MODEL.md`; `technical/THREE_SCENE_MODEL.md` | `src/scene/cameraRig.js`; `src/ui/overlay.js` |
+| Scene configuration, fallback, import/export | `src/config/experience3dSettings.js`; `public/data/experience3d-settings.json`; `src/ui/optionsPanel.js`; `technical/FRONTEND_RUNTIME_MODEL.md` | `src/experience3d.js`; affected scene owner |
+| Tuning panel routing and local rebuilds | `src/ui/optionsPanel.js`; `src/utils/optionsEventRouter.js`; `src/experience3d.js`; `technical/FRONTEND_RUNTIME_MODEL.md` | `src/scene/atmosphere.js`; `src/scene/galaxySprites.js` |
+| Fog reveal versus world progression | `src/scene/fogRevealController.js`; `src/scene/atmosphere/atmosphereProgression.js`; `src/experience3d.js`; `technical/THREE_SCENE_MODEL.md` | `public/data/experience3d-settings.json`; `src/scene/atmosphere.js`; `src/scene/galaxySprites.js` |
+| Galaxy backdrop and two-pass rendering | `src/scene/galaxySprites.js`; `src/scene/renderScenePasses.js`; `src/experience3d.js`; `technical/THREE_SCENE_MODEL.md` | `public/data/experience3d-settings.json`; `src/utils/runtimeDiagnostics.js` |
+| Render-loop, startup warm-up, performance | `src/experience3d.js`; `src/scene/renderScenePasses.js`; `technical/FRONTEND_RUNTIME_MODEL.md` | `src/utils/runtimeDiagnostics.js`; preload modules when asset staging changes |
 | Plaque asset/config/cache/material lifecycle | `src/content/portfolioNodes.js`; `src/assets/assetManifest.js`; `src/scene/plaqueTransition.js`; `technical/THREE_SCENE_MODEL.md` | `src/scene/orbitNodes.js`; `src/experience3d.js` |
 | Camera focus, dolly, return, cursor handoff | `src/scene/cameraRig.js`; `src/experience3d.js`; `technical/THREE_SCENE_MODEL.md` | `src/scene/orbitNodes.js` |
 | Glyph hover behavior | `src/scene/orbitNodes.js`; `src/experience3d.js`; `technical/GLYPH_HOVER_EFFECTS_MODEL.md` | `src/ui/hoverLabel.js` |
@@ -52,6 +57,9 @@ Do not scan `docs/current` recursively. Read an additional module only when the 
 
 - `src/main.js` selects the mode and conditionally launches Experience 3D.
 - `src/experience3d.js` owns the Experience 3D scene wiring, interaction sequence, renderer, preload stages, and animation loop.
+- `src/config/experience3dSettings.js` owns defaults, schema normalization, server fallback, runtime mapping, and settings serialization; `public/data/experience3d-settings.json` is the deployed composition.
+- `src/scene/renderScenePasses.js` owns the galaxy-background/main-scene pass order; `src/scene/fogRevealController.js` owns the independent main-scene fog clock.
+- `src/ui/optionsPanel.js` emits owner-scoped tuning events routed by `src/utils/optionsEventRouter.js` to isolated scene systems.
 - `src/content/portfolioNodes.js` is the source of truth for glyph, plaque, and panel metadata.
 - `src/assets/assetManifest.js` derives staged plaque assets from the portfolio records.
 - `src/scene/plaqueTransition.js`, `src/scene/cameraRig.js`, and `src/scene/orbitNodes.js` implement the plaque, camera, and hover/orbit portions of that interaction.

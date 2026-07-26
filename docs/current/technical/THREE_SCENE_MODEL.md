@@ -1,75 +1,56 @@
 # Three Scene Model
 
-## Scene responsibilities
+## Scene composition
 
-- `src/experience3d.js` owns the renderer, animation loop, scene wiring, input routing, preload stages, and guarded project interaction state.
-- `src/scene/createScene.js`, `lights.js`, `particles.js`, and the sun/moon/galaxy modules provide the atmospheric scene.
-- `src/scene/monkeyModel.js` loads `/glb/monkey.glb` through vendored Three.js r184 GLTFLoader; the central placeholder remains the safe visual fallback.
-- `src/scene/orbitNodes.js` creates five GLB glyph visuals while keeping the node sphere as raycast collider and fallback. It owns orbit motion plus the shared hover and transition lights.
-- `src/scene/cameraRig.js` owns interactive orbit, focus, plaque dolly, return-home, and fine-pointer handoff.
-- `src/scene/plaqueTransition.js` owns the per-node plaque model lifecycle and glyph/plaque cross-fade.
-- `src/ui/overlay.js` owns readable project content in HTML/CSS; text content is not rendered inside the scene.
-- Startup attaches and hydrates atmosphere relics, galaxy sprites, and all plaque wrappers exactly once before compiling the complete scene and issuing a controlled warm-up render. Compilation prefers vendored Three.js `compileAsync`, covers both fade and stable plaque material modes, and temporarily exposes progression-hidden atmosphere/galaxy layers. All temporary visibility and plaque material state is restored before interaction is enabled.
-- Before any scene system is constructed, startup loads and normalizes the canonical `public/data/experience3d-settings.json`; only then does it create fog, atmosphere, galaxy sprites, sun, and moon. Code defaults are the non-blocking fallback, and the panel neither reads nor writes scene settings in `localStorage`.
-- Sun and moon SpotLights retain targets at the central monkey pivot, but move outside their visual body bounds using radial and camera-relative offsets. Their horizon intensity changes use a synchronized, eased fade rather than an instant day/night switch.
-- Sun and moon facing orientation is composed with a separately accumulated model spin, so the visible `Self rotation` control works while `lockFacing` remains enabled; zero speed stops that spin.
-- The galaxy background contains at most five sprites: one per unique configured PNG. They are distributed deterministically at equal angles on a single XY plane around the monkey, share one radius, use normal alpha blending with depth testing, and expose radius/orbit/spin/opacity as live controls while size changes rebuild only this layer. A dedicated scene renders them first; the renderer then clears only depth and renders the main scene, whose background remains null so every main-scene object can cover a galaxy.
-- `fogRevealController.js` owns the main-scene fog intro independently of layer progression. Its 180-second smoothstep clock starts only after loader completion and `interactionReady`, updates the existing fog from `0/0.1` to the configured final `0/150`, and supports live target/duration changes plus restart and skip. Warm-up restores the start state without advancing the clock. Galaxy sprites remain in their fog-free background scene and continue to use only their own progression threshold.
-- Relic materials write depth only once their effective opacity reaches `0.98`. This keeps stones, shells, and small glyphs from producing invisible depth occlusion during reveal while allowing fully opaque relics to occlude dust behind them.
-- Sun and moon tuning exposes spotlight intensity, cone angle, and horizon fade duration live. Spotlight distance remains an internal attenuation cutoff: in this scene its former 20-unit default already covered the central subjects, so changing it usually produced little visible feedback and it is no longer a panel control.
+`src/experience3d.js` wires one renderer, one canvas, one perspective camera, and two scenes:
 
-## Interaction sequence
+- the main scene contains the monkey, five interactive main glyphs, plaques, Sun, Moon, lights, stones, shells, small glyphs, dust/stars, and fog;
+- `galaxyBackgroundScene` contains only the galaxy sprite layer and has no fog.
 
-Only `idle` accepts normal hover and click/tap interaction. Clicking a glyph locks interaction and pauses orbit, then follows this guarded sequence:
+The monkey and main glyph loaders retain visual fallbacks. Main glyph sphere colliders remain the interaction targets. Readable project content belongs to `src/ui/overlay.js`; plaques are transitional scene presentation, not text surfaces.
+
+## Final two-pass render path
+
+`renderScenePasses(...)` is used by both every runtime frame and startup warm-up. With renderer auto-clear and info auto-reset disabled, it:
+
+1. resets renderer statistics once;
+2. clears color, depth, and stencil;
+3. renders `galaxyBackgroundScene`;
+4. clears depth only;
+5. renders the main scene with the same camera.
+
+This guarantees that galaxies are always a backdrop: every main-scene object can cover them regardless of physical distance. Main-scene fog never affects galaxies. `renderer.info` totals include both passes because the statistics reset occurs before the pair, not between them.
+
+## Atmospheric layers
+
+The tuning model exposes four independently owned atmosphere layers: **Stones**, **Shells**, **Small Glyphs**, and **Dust / Stars**. Each relic layer has its own inner/outer spherical-shell radii; positions are sampled volumetrically (uniform by shell volume), not placed only on a surface. Count, scale range, and shell/radius changes rebuild only the affected layer after local debounce. Enabled state, orbit, self-spin multiplier, and opacity apply live.
+
+Stone, shell, and small-glyph cloned materials use `depthTest: true`. Their `depthWrite` becomes active only when effective opacity is at least `0.98`, avoiding invisible occlusion during progression fades while allowing effectively opaque relics to cover dust. Dust uses `depthTest: true` and `depthWrite: false`.
+
+## Galaxy backdrop
+
+The canonical configuration names exactly five unique PNGs, `galaxy_01.png` through `galaxy_05.png`. Normalization de-duplicates paths and caps the layer at five; hydration creates one sprite per available unique texture, so every configured texture is used once. There are no copies, random cloud, vertical spread, or depth spread.
+
+Sprites are spaced at equal angles on one XY plane and one shared radius. The whole arrangement orbits by advancing each equal-angle position together, while every sprite also accumulates its own material rotation. Radius, orbit speed, self rotation, opacity, and enabled state update live; changing the size range rebuilds only galaxies. Materials use normal blending, premultiplied alpha, internal alpha cutoff `0.05`, `depthTest: true`, and `depthWrite: false`.
+
+Galaxies live in the separate `galaxyBackgroundScene`, outside main-scene fog. Their visibility nevertheless remains controlled by the galaxy progression multiplier (or tuning-mode visibility override).
+
+## Fog reveal boundary
+
+`src/scene/fogRevealController.js` owns only main-scene fog. After loader completion and `interactionReady`, its delta-driven clock expands fog from `near: 0`, `far: 0.1` to the canonical public JSON's `near: 0`, `far: 150` over **180 seconds** with `smoothstep`. It has restart and skip operations and no separate timer/RAF. Warm-up restores its start state and never advances it.
+
+Fog reveals the monkey, main glyphs, Sun, and Moon; it does not mutate or replace world progression. Stones, shells, small glyphs, dust/stars, and galaxies still unlock from interaction with main glyphs. An unlocked main-scene layer remains constrained by the current fog reach. Galaxies avoid fog due to the background pass but still obey their progression threshold.
+
+## Sun and Moon
+
+Sun and Moon compose camera/target-facing orientation with an independently accumulated self rotation, so self-spin remains effective while `lockFacing` is enabled. Their panel controls for `Light intensity`, `Light angle`, and `Fade duration` apply live, as do the other non-structural celestial values. `SpotLight.distance` remains an internal attenuation-range parameter in canonical settings and is deliberately absent from the simplified panel.
+
+Both lights retain targets at the central monkey pivot and keep their own eased fade behavior. Their effective intensity continues to include the `sunMoon` progression multiplier; fog reveal does not grant or alter progression.
+
+## Plaque and interaction lifecycle
+
+Startup prewarms and caches one independently cloned plaque wrapper per portfolio node, including cloned materials, validated bounds, glow, and light. Shader warm-up compiles fade and stable modes before interaction. A single serialized state flow remains active:
 
 `idle → focusing → revealingPlaque → plaqueHold → dollyIn → panelOpen → dollyOut → restoringGlyph → returning → idle`.
 
-1. `cameraRig.focusOnNode(...)` moves on an eased azimuth arc around the fixed monkey pivot and targets the selected frozen glyph.
-2. `plaqueTransition.reveal(...)` cross-fades the glyph into its plaque.
-3. The plaque holds briefly, then `cameraRig.dollyToPlaque(...)` performs a bounds- and near-plane-safe dolly-in while retaining the focused camera side.
-4. Only after the dolly completes does the HTML/CSS overlay open.
-5. On close, the runtime dollies out, fades the transition light, reverses the plaque reveal, returns the camera home, resumes orbit and unlocks interaction.
-6. Fine-pointer movement remembered while locked is handed back over a 1500 ms smooth camera transition. Coarse-pointer and reduced-motion contexts retain this order with shorter timings; reduced motion caps camera transitions at 150 ms and plaque hold at 120 ms.
-
-## Plaque system
-
-`portfolioNodes` is the configuration source for all five plaques. `assetManifest` derives the following `deferredWarm` entries from each node's `plaqueModelPath`:
-
-| Node | Asset ID | GLB |
-| --- | --- | --- |
-| AI Guide (`ai-guide`) | `plaque-ai-guide` | `/glb/plaque_ai_guide.glb` |
-| Creative AI (`creative-ai`) | `plaque-creative-ai` | `/glb/plaque_creative_ai.glb` |
-| DIG Engine (`spotify-digger`) | `plaque-spotify-digger` | `/glb/plaque_dig_engine.glb` |
-| Ethics / Life Protection (`ethics-life-protection`) | `plaque-ethics-life-protection` | `/glb/plaque_ethics.glb` |
-| Haiku Cosmos (`haiku-cosmos`) | `plaque-haiku-cosmos` | `/glb/plaque_haiku_cosmos.glb` |
-
-The plaque controller prewarms and caches one independently cloned wrapper per node ID in a `Map` while the loader is visible. Each wrapper already has cloned materials, validated bounds, glow, and light and is attached hidden to the scene, so first interaction only reveals the prepared instance. Interaction serialization allows only one active plaque animation at a time. A missing or failed plaque model produces an isolated panel fallback for that node; it does not invalidate cached or future plaques for other nodes.
-
-Atmosphere relic hydration also completes under the loader. Stone placement clamps the configured inner boundary to the outer shell boundary and no longer expands the radius by runtime model scale. Progression multiplier updates reapply stone materials as well as dust, shell, and small-glyph materials, allowing the stone layer to reveal normally without a debug-panel refresh.
-
-The current stone baseline is 30 cached clones distributed between radii 18 and 20, with scale 2–5, safe radius 3.5, rotation speed 0.05–0.09, orbit speed 0.003, full opacity, and the six `stone_01.glb` through `stone_06.glb` sources.
-
-For each cached wrapper, `plaqueVisual` configures:
-
-- `scale` — model scale after bounds normalization;
-- `position` — local positional offset;
-- `frontYawOffset` — final front orientation relative to the camera-facing wrapper;
-- `plaqueGlowColor` — color of the visible additive glow mesh only.
-
-| Node | `plaqueGlowColor` |
-| --- | --- |
-| AI Guide | `#72D6B0` |
-| Creative AI | `#FF9C47` |
-| DIG Engine | `#5FB8FF` |
-| Ethics / Life Protection | `#E7D6A3` |
-| Haiku Cosmos | `#7B8DFF` |
-
-`plaqueGlowColor` does **not** change the neutral hover light, transition light, plaque `PointLight`, or GLB materials. Those lighting and material systems remain neutral/shared.
-
-## Material lifecycle and reset
-
-During reveal and reverse reveal, plaque GLB materials use **FADE MODE** so opacity and depth semantics support the cross-fade. After reveal, materials switch to **STABLE MODE** for `plaqueHold`, `dollyIn`, `panelOpen`, and `dollyOut`. Reverse reveal returns to FADE MODE, then restores the glyph and original plaque material state. `reset(...)` also hides the plaque, clears glow and plaque light, restores cloned glyph materials/visibility, and resets the node scale.
-
-## Hover contract
-
-All five glyphs use a shared one-shot scale pulse and neutral hover light. There are no active per-glyph tree, fire, spark, or ember-sphere effects. See [`GLYPH_HOVER_EFFECTS_MODEL.md`](GLYPH_HOVER_EFFECTS_MODEL.md) for the focused contract.
+Only after dolly-in does the HTML/CSS overlay open. Closing reverses the plaque, returns the camera, resumes orbit, and restores pointer control. A missing plaque affects only that node and uses the panel fallback.

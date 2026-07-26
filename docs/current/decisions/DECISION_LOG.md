@@ -321,3 +321,15 @@ Status: accepted / implemented.
 2. Radius, orbit speed, self rotation, enabled state, and opacity update live. Minimum and maximum size retain a debounced galaxy-only rebuild.
 3. Schema-version-1 imports normalize the former inner/outer radius and speed multiplier fields into the new radius and direct-speed contract; canonical exports contain only the simplified fields.
 4. Sun and moon panels expose live spotlight intensity, angle, and fade duration. Spotlight distance remains an internal Three.js cutoff but is hidden because its effect is not useful at the current scene scale.
+
+## 2026-07-26 — Canonical Experience 3D configuration, background rendering, and reveal boundary
+
+Status: accepted / implemented.
+
+1. Scene composition is loaded from the deployed schema-version-1 `public/data/experience3d-settings.json`, normalized against complete defaults in `src/config/experience3dSettings.js`, and falls back to those defaults when the external file is absent or invalid.
+2. Scene settings have no automatic `localStorage` persistence. Tuning is session-only unless a user manually exports `experience3d-settings.json`; manual import applies composition but runtime diagnostics, loader state, progression, and fog progress are never serialized.
+3. Exactly five unique galaxy PNGs are used once each at equal angles on one plane and shared radius. They occupy a dedicated, fog-free background scene rather than a random spatial cloud.
+4. The final render path clears color/depth, renders the galaxy background, clears depth, and renders the main scene with the same renderer, canvas, and camera. Startup warm-up uses this same two-pass path, and renderer statistics span both passes.
+5. Fog reveal is an independent, delta-driven opening of the base scene core after loader completion and `interactionReady`; it does not replace preload/warm-up and does not modify world progression.
+6. Stones, shells, small glyphs, dust/stars, and galaxies remain gated by progression driven by main-glyph clicks. A layer unlocked during fog reveal follows the current fog range, except galaxies, which are outside fog but retain their progression threshold.
+7. The checked-in public configuration currently sets the smoothstep fog reveal to 180 seconds (`0/0.1` to `0/150`); documentation must follow that file unless the canonical composition is deliberately changed.

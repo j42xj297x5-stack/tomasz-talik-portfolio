@@ -2,48 +2,46 @@
 
 ## Documentation flow
 
-`PROJECT_ENTRY.md` → `maps/PROJECT_INDEX.md` → smallest task-specific technical model and runtime evidence.
+`PROJECT_ENTRY.md` → `maps/PROJECT_INDEX.md` → smallest task-specific technical model and runtime evidence. Canonical documents describe the present runtime; snapshots and legacy material are not default inputs.
 
-`maps/DOCUMENTATION_MAP.md` defines placement, while `decisions/DECISION_LOG.md` records accepted decisions. Canonical technical documents describe the present runtime; snapshots are supporting evidence only.
-
-## Experience 3D dependency graph
+## Experience 3D runtime graph
 
 ```text
-portfolioNodes
-  ├─> assetManifest (deferredWarm plaque entries)
-  ├─> orbitNodes (glyph metadata and shared hover)
-  └─> overlay (HTML/CSS panel content)
+experience3dSettings code defaults
+  + public/data/experience3d-settings.json
+  └─> load / normalize / runtime mapping
+      └─> experience3d
+          ├─> createScene ─> fogRevealController
+          ├─> atmosphere <─ atmosphereProgression <─ main-glyph interaction
+          ├─> sunCycle / moonCycle <─ atmosphereProgression
+          ├─> galaxySprites <─ atmosphereProgression
+          │   └─> galaxyBackgroundScene
+          ├─> optionsPanel ─> optionsEventRouter ─> owner-scoped systems
+          ├─> portfolioNodes ─> orbitNodes / overlay
+          └─> renderScenePasses(galaxyBackgroundScene, main scene, one camera)
 
-assetManifest ─> AssetManager ─> plaqueTransition
-plaqueTransition ─> experience3d interaction state ─> overlay
-cameraRig ────────> experience3d interaction state ─> overlay
-orbitNodes ───────> experience3d interaction state
+portfolioNodes ─> assetManifest ─> AssetManager ─> plaqueTransition
+cameraRig + plaqueTransition ─> serialized experience3d interaction ─> overlay
 ```
 
-The required plaque path is therefore: `portfolioNodes → assetManifest → plaqueTransition → cameraRig / experience3d → overlay`.
+## Minimal evidence routes
 
-## Current Experience 3D contracts
+| Future task | Smallest useful file set |
+| --- | --- |
+| Scene configuration, defaults, fallback, import/export | `src/config/experience3dSettings.js`; `public/data/experience3d-settings.json`; `src/ui/optionsPanel.js`; `src/experience3d.js` |
+| Tuning panel behavior or event isolation | `src/ui/optionsPanel.js`; `src/utils/optionsEventRouter.js`; `src/experience3d.js`; affected owner module |
+| World progression and tuning visibility | `src/scene/atmosphere/atmosphereProgression.js`; `src/experience3d.js`; `src/scene/atmosphere.js`; `src/scene/galaxySprites.js` |
+| Fog startup, timing, restart, or skip | `src/scene/fogRevealController.js`; `src/experience3d.js`; `src/config/experience3dSettings.js`; `public/data/experience3d-settings.json`; `src/scene/renderScenePasses.js` |
+| Galaxy layout, materials, progression, or pass order | `src/scene/galaxySprites.js`; `src/scene/renderScenePasses.js`; `src/experience3d.js`; `public/data/experience3d-settings.json` |
+| Atmosphere relic distribution/depth/rebuilds | `src/scene/atmosphere.js`; `src/ui/optionsPanel.js`; `src/config/experience3dSettings.js` |
+| Performance, startup, warm-up, or render loop | `src/experience3d.js`; `src/scene/renderScenePasses.js`; `src/utils/runtimeDiagnostics.js`; preload modules only when asset staging is involved |
+| Plaque/camera/detail flow | `src/content/portfolioNodes.js`; `src/assets/assetManifest.js`; `src/scene/plaqueTransition.js`; `src/scene/cameraRig.js`; `src/experience3d.js`; `src/ui/overlay.js` |
 
-- `src/content/portfolioNodes.js` supplies each node's glyph model, `plaqueModelPath`, and `plaqueVisual` (`scale`, `position`, `frontYawOffset`, `plaqueGlowColor`), as well as the HTML/CSS panel content.
-- `src/assets/assetManifest.js` derives `plaque-${node.id}` entries from every record with `plaqueModelPath` and stages them in `deferredWarm`.
-- `src/scene/plaqueTransition.js` obtains a plaque through `AssetManager`; it stores one cloned scene wrapper per node ID and permits one active transition at a time. A failed model logs an isolated warning and returns control to the panel fallback for that node without disabling other plaques.
-- `src/experience3d.js` serializes interaction. A click locks interaction and orbit, focuses the camera, runs plaque reveal/hold/dolly, and opens the overlay only after the sequence completes. Close performs dolly-out, reverse reveal, camera return, orbit resume, and cursor handoff.
-- `src/scene/cameraRig.js` owns focus, safe plaque dolly, return-home movement, and the remembered fine-pointer handoff. Reduced-motion and coarse-pointer contexts use shorter timings.
-- `src/scene/orbitNodes.js` owns the shared neutral hover scale/light and the neutral transition light. It does not select plaque glow colors.
-- `src/ui/overlay.js` renders readable project detail in HTML/CSS. Plaques are a scene transition and never replace panel content.
+## Active boundaries
 
-## Plaque asset mapping
-
-| Node ID | Asset ID | GLB path |
-| --- | --- | --- |
-| `ai-guide` | `plaque-ai-guide` | `/glb/plaque_ai_guide.glb` |
-| `creative-ai` | `plaque-creative-ai` | `/glb/plaque_creative_ai.glb` |
-| `spotify-digger` | `plaque-spotify-digger` | `/glb/plaque_dig_engine.glb` |
-| `ethics-life-protection` | `plaque-ethics-life-protection` | `/glb/plaque_ethics.glb` |
-| `haiku-cosmos` | `plaque-haiku-cosmos` | `/glb/plaque_haiku_cosmos.glb` |
-
-## Shared foundations
-
-- `src/main.js` conditionally imports `src/experience3d.js` after an Experience 3D selection; `src/classic2d.js` is a separate lightweight consumer of the same `portfolioNodes` data.
-- Vendored Three.js r184 and its matching GLTFLoader are runtime sources of truth. Public logical paths are normalized for Vite and GitHub Pages by `src/utils/publicPath.js`.
-- Monkey and glyph loading retain their visual fallbacks; orbit-node sphere colliders remain the interaction targets.
+- `src/config/experience3dSettings.js` owns schema defaults, normalization, server loading fallback, runtime mapping, and composition-only serialization. The public JSON is the deployed external scene composition; `localStorage` is not in this dependency path.
+- `src/ui/optionsPanel.js` mutates session runtime state and emits owner/action events. `src/utils/optionsEventRouter.js` isolates delivery; owners choose live application or local rebuild.
+- `src/scene/fogRevealController.js` changes main-scene fog only. `src/scene/atmosphere/atmosphereProgression.js` changes interaction-based layer multipliers only. Neither owns the other.
+- `src/scene/galaxySprites.js` owns five unique single-use sprites in `galaxyBackgroundScene`. `src/scene/renderScenePasses.js` makes them the first, fog-free background pass.
+- `src/experience3d.js` is the integration owner for loader ordering, hydration, plaque prewarm, compilation, final-path warm-up, `interactionReady`, fog-clock start, progression application, and the sole animation loop.
+- Vendored Three.js r184 and matching GLTFLoader remain runtime sources of truth. `src/utils/publicPath.js` normalizes public paths for Vite and GitHub Pages.

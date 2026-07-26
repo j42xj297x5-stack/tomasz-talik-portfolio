@@ -2,36 +2,64 @@
 
 ## Runtime ownership
 
-The application uses Vite, vanilla JavaScript, and vendored Three.js. `src/main.js` owns language/mode selection and conditionally imports Experience 3D. `src/experience3d.js` then owns the canvas shell, renderer, scene wiring, staged asset loading, input, overlay coordination, and animation loop. Public runtime paths use `publicPath(...)` for local Vite and GitHub Pages compatibility.
+The Vite/vanilla-JavaScript entry shell conditionally imports Experience 3D. `src/experience3d.js` owns its canvas, renderer, scene systems, staged loading, interaction state, panel coordination, and single animation loop. Classic 2D remains a separate lightweight consumer of the shared portfolio records. Public paths are resolved through `publicPath(...)` for local Vite and GitHub Pages.
 
-Classic 2D remains a separate lightweight runtime in `src/classic2d.js`; it consumes the same `portfolioNodes` records without loading Three.js.
+## Canonical configuration
 
-The single Experience loader remains active through bounded critical/deferred preload (four concurrent operations on desktop, two on mobile/coarse pointers), scene attachment, deferred atmosphere/galaxy hydration, plaque prewarm, asynchronous shader compilation when supported, and a final warm-up render. Interaction and the animation loop are released only after those stages complete. The options panel no longer triggers an implicit rebuild during construction. When the loader completes, its diagnostics subscription is detached and its DOM layer is hidden and removed before interaction begins.
+Scene composition has two canonical inputs:
 
-Experience 3D first fetches `public/data/experience3d-settings.json` through `publicPath(...)` while the loader is visible. Schema-version-1 known fields are normalized and merged with the code defaults before the scene, fog, atmosphere, galaxies, sun, moon, relic hydration, or shader warm-up is created. A missing, malformed, or incompatible file never blocks startup: the complete code defaults are used, while an invalid individual field falls back independently and unknown fields are ignored. The source order is server file, then code fallback; browser `localStorage` is not a scene-settings source and panel changes remain session-only.
+1. complete code defaults in `src/config/experience3dSettings.js`;
+2. the deployed schema-version-1 file `public/data/experience3d-settings.json`, fetched through `publicPath(...)` while the loader is visible.
 
-The tuning panel exports the canonical composition-only schema as `experience3d-settings.json`, with a trailing newline, for direct placement in `public/data/`. Import accepts schema version 1, normalizes it, and applies atmosphere, galaxies, fog, sun, and moon once each without changing progression or tuning mode. Debug diagnostics expose `settingsSource` (`server`, `defaults`, or `imported-session`) and an optional load error, but neither belongs to the exported settings.
+Known server fields are normalized and merged with defaults. A missing, malformed, or incompatible file does not block startup: complete defaults are used; an invalid individual field falls back independently and unknown fields are ignored. The current public file configures fog reveal for **180 seconds**, from `near: 0`, `far: 0.1` to final `near: 0`, `far: 150`, with `smoothstep`. This is the checked-in canonical value; it conflicts with an external expectation of 45 seconds and must not be silently documented as 45.
 
-Fog has an independent active-scene reveal clock. After preload, hydration, compilation, warm-up, loader completion, and `interactionReady`, the controller starts at near/far `0/0.1` and expands toward the configured final `0/150` over 180 active seconds using smoothstep easing. It advances only from the existing render-loop delta, so a hidden tab or stopped loop does not spend wall-clock intro time. It neither reads nor changes world progression, and tuning mode does not disable it. The Fog panel can restart or skip the intro; import restarts enabled reveal, while export contains only static `fog.reveal` configuration and never its elapsed time or progress.
+Scene settings are neither read from nor automatically written to `localStorage`. Panel edits affect only the current session. Manual import accepts schema version 1, normalizes it, and applies atmosphere, galaxies, fog, sun, and moon without changing progression or tuning mode. Manual export downloads the composition-only schema as `experience3d-settings.json` for placement in `public/data/`. Diagnostics, loader/runtime progress, fog elapsed time, and fog progress are not part of that JSON.
 
-With `?debug`, a persistent, non-interactive performance HUD samples frame timings and `renderer.info` every 1.25 seconds. The debug export includes the same snapshot, startup/build counters, shader-program milestones, and one-time scene censuses captured after scene attachment, deferred hydration, plaque prewarm, warm-up, and interaction release.
+## Startup and interaction release
 
-## Experience 3D project opening
+Experience 3D starts in this order:
 
-The Experience 3D project detail flow is a single serialized interaction. Selecting a glyph blocks new interaction and pauses its orbit. The runtime focuses the camera on that node, reveals the configured plaque, holds, and performs a safe dolly-in. The HTML/CSS overlay opens only after that sequence completes.
+1. show and subscribe the loader;
+2. fetch canonical server configuration, normalize it, and merge it with code defaults (or use defaults on failure);
+3. preload critical, deferred-warm, and optional assets with bounded concurrency;
+4. create the renderer, the main scene, the dedicated galaxy background scene, camera, and scene systems;
+5. attach the monkey, main glyphs, atmosphere, celestial bodies, progression, and plaque controller;
+6. hydrate deferred relic models and galaxy sprites;
+7. prewarm one complete plaque wrapper per glyph;
+8. compile both galaxy and main-scene shader variants, including plaque fade and stable modes;
+9. warm up the exact final two-pass render path;
+10. restore temporary warm-up visibility and the fog reveal start state;
+11. finish and remove the loader;
+12. set the interaction state to `idle` and record `interactionReady`;
+13. start the fog-reveal clock and the existing animation loop.
 
-Closing the overlay keeps the selected node context long enough to dolly out, perform the reverse plaque reveal, return the camera home, resume orbit, unlock interaction, and smoothly hand the camera to the latest remembered fine-pointer target. Fine-pointer handoff takes 1500 ms. Coarse-pointer and reduced-motion contexts use shortened transition timings while preserving the same ordering.
+Fog reveal is not asset preload, shader compilation, or render warm-up and does not replace any of them. Warm-up never consumes fog intro time.
 
-If an individual plaque cannot load, the same node's HTML/CSS overlay opens through an isolated fallback; the failure does not block other nodes.
+## Tuning panel contract
 
-## Overlay and content boundary
+The panel emits `{ owner, action, value }` events. `optionsEventRouter` dispatches each event only to its owner (`atmosphere`, `galaxies`, `scene`, `sun`, `moon`, or `progression`), preventing unrelated layer work. Orbit, self-spin, opacity, enabled state, galaxy radius, fog values, and celestial controls apply live where the underlying structure is unchanged. Count, shell/radius distribution, scale distribution, dust geometry, and galaxy-size changes use 140 ms debounced, layer-local rebuilds rather than rebuilding the whole world. Each composition section has its own reset.
 
-`src/ui/overlay.js` derives project detail from `portfolioNodes`, applies `data-panel-theme`, resolves `ornamentPath` through `publicPath(...)`, and renders an opaque, responsive CSS/HTML panel with internal scrolling. Plaque models are transitional 3D presentation, not a replacement for readable panel content. Generic panel chrome for both Experience 3D and Classic 2D is resolved from `src/i18n/interfaceCopy.js`; it is independent of portfolio-record translations.
+Tuning mode forces progression-controlled atmosphere and galaxy visibility for inspection. It ignores progression visibility only: it neither changes progression state nor bypasses main-scene fog. The panel supports manual JSON import/export. It has no scene presets or technical debug controls; performance is a read-only status section.
 
-The removed SVG-frame runtime, its fetch/geometry/resize solvers, and legacy vertical panel assets are not active dependencies.
+## Fog reveal and world progression
 
-## Asset and rendering safety
+`fogRevealController` is an independent runtime system. It starts only after loader completion and `interactionReady`, advances by delta from the existing loop, and creates no timer or second `requestAnimationFrame`. Because the Three.js timer is connected to the document and ticks only with that loop, a stopped loop or hidden tab does not spend reveal time.
 
-`src/assets/assetManifest.js` derives five plaque GLB entries from `portfolioNodes` into the `deferredWarm` stage. `src/scene/plaqueTransition.js` caches a cloned plaque wrapper per node and ensures only one transition is active. Glyph and monkey model fallbacks remain mandatory. Vendored Three.js r184 with matching GLTFLoader remains the runtime source of truth; npm `three` is intentionally not the runtime source.
+The reveal begins at `0/0.1`, eases with `smoothstep` toward the canonical JSON's final `0/150`, and supports restart and skip. Import can restart an enabled reveal. Tuning mode does not disable fog, and runtime progress is never exported.
 
-Before reveal, the plaque controller prewarms a complete cloned wrapper (materials, bounds, glow, and light) for every node; the first selection therefore performs no plaque model parsing or construction. Optional asset failures remain isolated, while critical failures keep the loader in its error state.
+Fog reveal opens the **base scene core**: the monkey, five main glyphs, Sun, and Moon. It does not automatically unlock the farther cosmos. Stones, shells, small glyphs, dust/stars, and galaxies remain controlled by the existing progression driven by user interaction with the main glyphs.
+
+The systems remain independent:
+
+- fog never reads or changes progression state;
+- glyph clicks may unlock a layer while fog is still expanding, and that main-scene layer is visible only within the current fog range;
+- after fog completes, later unlocked layers appear through their normal progression fade, with no additional automatic reveal;
+- galaxies are outside fog because they render in the background scene, but they still respect their own progression threshold.
+
+## Project-detail interaction
+
+Only `idle` accepts normal selection. A glyph click pauses orbit and serializes focus, plaque reveal, hold, safe dolly, and HTML/CSS panel opening. Close performs dolly-out, reverse plaque reveal, camera return, orbit resume, unlock, and a 1500 ms fine-pointer handoff. Coarse-pointer and reduced-motion contexts preserve the order with shorter timings. A plaque failure is isolated to that node and falls back to its readable panel.
+
+## Diagnostics boundary
+
+With `?debug`, runtime diagnostics sample frame timing, renderer totals, startup/build counters, program milestones, layer visibility, and fog state. Renderer totals cover both render passes. Diagnostics may report whether settings came from `server`, `defaults`, or `imported-session`, plus an optional load error; none of these values belongs to exported settings.
