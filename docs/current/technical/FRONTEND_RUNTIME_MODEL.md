@@ -12,6 +12,8 @@ Experience 3D first fetches `public/data/experience3d-settings.json` through `pu
 
 The tuning panel exports the canonical composition-only schema as `experience3d-settings.json`, with a trailing newline, for direct placement in `public/data/`. Import accepts schema version 1, normalizes it, and applies atmosphere, galaxies, fog, sun, and moon once each without changing progression or tuning mode. Debug diagnostics expose `settingsSource` (`server`, `defaults`, or `imported-session`) and an optional load error, but neither belongs to the exported settings.
 
+Fog has an independent active-scene reveal clock. After preload, hydration, compilation, warm-up, loader completion, and `interactionReady`, the controller starts at near/far `0/0.1` and expands toward the configured final `0/150` over 180 active seconds using smoothstep easing. It advances only from the existing render-loop delta, so a hidden tab or stopped loop does not spend wall-clock intro time. It neither reads nor changes world progression, and tuning mode does not disable it. The Fog panel can restart or skip the intro; import restarts enabled reveal, while export contains only static `fog.reveal` configuration and never its elapsed time or progress.
+
 With `?debug`, a persistent, non-interactive performance HUD samples frame timings and `renderer.info` every 1.25 seconds. The debug export includes the same snapshot, startup/build counters, shader-program milestones, and one-time scene censuses captured after scene attachment, deferred hydration, plaque prewarm, warm-up, and interaction release.
 
 ## Experience 3D project opening

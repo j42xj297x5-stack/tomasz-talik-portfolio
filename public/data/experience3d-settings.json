@@ -105,10 +105,17 @@
     "opacity": 1
   },
   "fog": {
-    "enabled": false,
+    "enabled": true,
     "color": "#05070b",
-    "near": 74.1,
-    "far": 150
+    "near": 0,
+    "far": 150,
+    "reveal": {
+      "enabled": true,
+      "durationSeconds": 180,
+      "startNear": 0,
+      "startFar": 0.1,
+      "easing": "smoothstep"
+    }
   },
   "sun": {
     "enabled": true,

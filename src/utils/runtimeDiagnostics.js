@@ -22,7 +22,7 @@ function sceneCensus(scene) {
   return { ...counts, uniqueGeometries: geometries.size, uniqueMaterials: materials.size, textures: textures.size, relicGroups, plaqueInstances };
 }
 
-export function createRuntimeDiagnostics({ enabled, renderer, scene, getRuntimeState, getLayerSnapshot, getGalaxyCount, getPlaqueCount, getLifecycleCounts }) {
+export function createRuntimeDiagnostics({ enabled, renderer, scene, getRuntimeState, getLayerSnapshot, getGalaxyCount, getPlaqueCount, getLifecycleCounts, getFogRevealSnapshot = () => null }) {
   const counters = {}; const censuses = {};
   const programs = { warmupComplete: null, afterFirstSeconds: null, afterFirstPlaqueOpen: {} };
   const frameTimes = [];
@@ -49,7 +49,7 @@ export function createRuntimeDiagnostics({ enabled, renderer, scene, getRuntimeS
       runtimeState: getRuntimeState(), counters: { ...counters, ...getLifecycleCounts() }, censuses: { ...censuses }, programs: { ...programs, afterFirstPlaqueOpen: { ...programs.afterFirstPlaqueOpen } },
       tuningMode: Boolean(layers.tuningMode), effectiveLayerMultipliers: { ...(layers.effectiveLayerMultipliers ?? {}) }, lastPanelEvent: layers.lastPanelEvent ?? null,
       builtObjects: { ...(layers.builtObjects ?? {}), galaxies: getGalaxyCount() },
-      plaqueInstances: getPlaqueCount(), sampledAt: new Date().toISOString(), sampleTime: Math.round(now)
+      plaqueInstances: getPlaqueCount(), fogReveal: getFogRevealSnapshot(), sampledAt: new Date().toISOString(), sampleTime: Math.round(now)
     };
   }
   function frame(now) {
@@ -59,7 +59,8 @@ export function createRuntimeDiagnostics({ enabled, renderer, scene, getRuntimeS
     if (now - lastPublishAt < 1250) return;
     latest = snapshot(now); frameTimes.length = 0; lastPublishAt = now;
     const p = latest;
-    hud.textContent = `FPS ${p.averageFps} · avg ${p.averageFrameMs}ms · p95 ${p.p95FrameMs}ms\n` + `calls ${p.renderer.calls} · tri ${p.renderer.triangles} · geo ${p.renderer.geometries} · tex ${p.renderer.textures} · programs ${p.renderer.programs ?? 'n/a'}\n` + `built stones ${p.builtObjects.stones ?? 0} · shells ${p.builtObjects.shells ?? 0} · glyphs ${p.builtObjects.smallGlyphs ?? 0} · stars ${p.builtObjects.stars ?? 0} · galaxies ${p.builtObjects.galaxies ?? 0}\n` + `visible ${Object.entries(p.layerVisibility).filter(([, value]) => value).map(([name]) => name).join(', ') || 'none'} · tuning ${p.tuningMode ? 'on' : 'off'} · multipliers ${JSON.stringify(p.effectiveLayerMultipliers)}\n` + `last panel ${p.lastPanelEvent ? `${p.lastPanelEvent.owner}:${p.lastPanelEvent.action}` : 'none'} · state ${p.runtimeState}`;
+    const fog = p.fogReveal;
+    hud.textContent = `FPS ${p.averageFps} · avg ${p.averageFrameMs}ms · p95 ${p.p95FrameMs}ms\n` + `calls ${p.renderer.calls} · tri ${p.renderer.triangles} · geo ${p.renderer.geometries} · tex ${p.renderer.textures} · programs ${p.renderer.programs ?? 'n/a'}\n` + `built stones ${p.builtObjects.stones ?? 0} · shells ${p.builtObjects.shells ?? 0} · glyphs ${p.builtObjects.smallGlyphs ?? 0} · stars ${p.builtObjects.stars ?? 0} · galaxies ${p.builtObjects.galaxies ?? 0}\n` + `visible ${Object.entries(p.layerVisibility).filter(([, value]) => value).map(([name]) => name).join(', ') || 'none'} · tuning ${p.tuningMode ? 'on' : 'off'} · multipliers ${JSON.stringify(p.effectiveLayerMultipliers)}\n` + (fog ? `Fog reveal: ${Math.round(fog.progress * 100)}% · far ${fog.currentFar.toFixed(1)} / ${fog.targetFar} · ${fog.running ? 'running' : 'complete'}\n` : '') + `last panel ${p.lastPanelEvent ? `${p.lastPanelEvent.owner}:${p.lastPanelEvent.action}` : 'none'} · state ${p.runtimeState}`;
     if (programs.afterFirstSeconds == null && now - (programs.readyAt ?? Infinity) >= 4000) programs.afterFirstSeconds = p.renderer.programs;
   }
   return { count, census, frame, markWarmupComplete() { programs.warmupComplete = programCount(renderer); }, markInteractionReady() { programs.readyAt = performance.now(); }, markPlaqueOpen(nodeId) { if (!(nodeId in programs.afterFirstPlaqueOpen)) programs.afterFirstPlaqueOpen[nodeId] = programCount(renderer); }, getSnapshot() { return latest ?? snapshot(); } };

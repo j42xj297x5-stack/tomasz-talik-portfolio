@@ -11,7 +11,7 @@ export const DEFAULT_EXPERIENCE3D_SETTINGS = Object.freeze({
     dust: { enabled: true, count: 6000, innerRadius: 15, outerRadius: 25, safeRadius: 3, pointSize: 0.07, rotationSpeed: 0.018, opacity: 1, color: '#cfe2ff', sizeAttenuation: true, depthTest: true, depthWrite: false }
   },
   galaxies: { enabled: true, texturePaths: ['/png/galaxy_01.png','/png/galaxy_02.png','/png/galaxy_03.png','/png/galaxy_04.png','/png/galaxy_05.png'], radius: 56.35, minScale: 7.73, maxScale: 10.56, orbitSpeed: 0, selfRotationSpeed: 0.0725, opacity: 1 },
-  fog: { enabled: true, color: '#05070b', near: 10, far: 28 },
+  fog: { enabled: true, color: '#05070b', near: 0, far: 150, reveal: { enabled: true, durationSeconds: 180, startNear: 0, startFar: 0.1, easing: 'smoothstep' } },
   sun: { enabled: true, modelPath: '/glb/sun.glb', center: { x: 0, y: 0, z: 0 }, radius: 3, zOffset: 0, startAngle: 0, angularSpeed: 0.08, direction: 1, scale: 0.2, selfRotationSpeed: 0, lockFacing: true, frontRotation: { x: 0, y: 0, z: 0 }, emissiveColor: '#ffd21f', emissiveIntensity: 1.5, spotlight: { enabled: true, color: '#ffd21f', intensity: 13.2, distance: 20, angleDegrees: 90, penumbra: 0.45, decay: 1.5, fadeDurationSeconds: 3, cameraOffsetFactor: 0.2, radialOffsetMultiplier: 1.25, horizonFade: false, horizonFadeHeight: 0.5 } },
   moon: { enabled: true, modelPath: '/glb/moon.glb', center: { x: 0, y: 0, z: 0 }, radius: 3, zOffset: 0, phaseOffset: Math.PI, scale: 0.2, selfRotationSpeed: 0, lockFacing: true, frontRotation: { x: 0, y: 0, z: 0 }, spotlight: { enabled: true, color: '#8ecbff', intensity: 10, distance: 20, angleDegrees: 90, penumbra: 0.45, decay: 1.5, fadeDurationSeconds: 3, cameraOffsetFactor: 0.2, radialOffsetMultiplier: 1.25 } }
 });
@@ -50,7 +50,14 @@ export function normalizeExperience3dSettings(candidate) {
       legacy.selfRotationSpeed = (Number.isFinite(base) ? base : 0.0725) * legacy.ownSpinSpeedMultiplier;
     }
   }
-  return normalizeKnown(DEFAULT_EXPERIENCE3D_SETTINGS, migrated);
+  const normalized = normalizeKnown(DEFAULT_EXPERIENCE3D_SETTINGS, migrated);
+  normalized.fog.near = Math.max(0, normalized.fog.near);
+  normalized.fog.far = Math.max(normalized.fog.near + 0.1, normalized.fog.far);
+  normalized.fog.reveal.durationSeconds = Math.max(0, normalized.fog.reveal.durationSeconds);
+  normalized.fog.reveal.startNear = Math.max(0, normalized.fog.reveal.startNear);
+  normalized.fog.reveal.startFar = Math.max(normalized.fog.reveal.startNear + 0.1, normalized.fog.reveal.startFar);
+  if (!['linear', 'smoothstep'].includes(normalized.fog.reveal.easing)) normalized.fog.reveal.easing = 'smoothstep';
+  return normalized;
 }
 
 export function mergeExperience3dSettings(candidate) { return normalizeExperience3dSettings(candidate); }
