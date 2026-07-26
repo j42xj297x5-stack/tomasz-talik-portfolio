@@ -13,6 +13,8 @@
 - Before any scene system is constructed, startup loads and normalizes the canonical `public/data/experience3d-settings.json`; only then does it create fog, atmosphere, galaxy sprites, sun, and moon. Code defaults are the non-blocking fallback, and the panel neither reads nor writes scene settings in `localStorage`.
 - Sun and moon SpotLights retain targets at the central monkey pivot, but move outside their visual body bounds using radial and camera-relative offsets. Their horizon intensity changes use a synchronized, eased fade rather than an instant day/night switch.
 - Sun and moon facing orientation is composed with a separately accumulated model spin, so the visible `Self rotation` control works while `lockFacing` remains enabled; zero speed stops that spin.
+- The galaxy background contains at most five sprites: one per unique configured PNG. They are distributed deterministically at equal angles on a single XY plane around the monkey, share one radius, use normal alpha blending with depth testing, and expose radius/orbit/spin/opacity as live controls while size changes rebuild only this layer.
+- Sun and moon tuning exposes spotlight intensity, cone angle, and horizon fade duration live. Spotlight distance remains an internal attenuation cutoff: in this scene its former 20-unit default already covered the central subjects, so changing it usually produced little visible feedback and it is no longer a panel control.
 
 ## Interaction sequence
 
