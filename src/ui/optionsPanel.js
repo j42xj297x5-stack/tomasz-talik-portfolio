@@ -162,12 +162,10 @@ export function createOptionsPanel({ runtimeState, onChange, onSettingsImported 
   const galaxy = runtimeState.galaxySprites;
   const galaxySection = section('Galaxies');
   checkbox(galaxySection.body, 'Enabled', () => galaxy.enabled, (v) => { galaxy.enabled = v; }, 'galaxies', 'runtime');
-  range(galaxySection.body, 'Count', () => galaxy.totalMax, (v) => { galaxy.totalMax = Math.round(v); }, 'galaxies', 'rebuild', 0, 30, 1, true);
+  range(galaxySection.body, 'Radius', () => galaxy.radius, (v) => { galaxy.radius = v; }, 'galaxies', 'runtime', 1, 90, 0.1);
   pairedRanges(galaxySection.body, galaxy, { min: 'minScale', max: 'maxScale' }, { min: 'Minimum size', max: 'Maximum size', title: 'Size range' }, [0.01, 16, 0.01], 'galaxies', 'rebuild');
-  pairedRanges(galaxySection.body, galaxy, { min: 'innerRadius', max: 'outerRadius' }, { min: 'Inner radius', max: 'Outer radius', title: 'Radius range' }, [0, 80, 0.1], 'galaxies', 'rebuild');
-  range(galaxySection.body, 'Vertical spread', () => galaxy.verticalSpread, (v) => { galaxy.verticalSpread = v; }, 'galaxies', 'rebuild', 0, 30, 0.1, true);
-  range(galaxySection.body, 'Orbit speed', () => galaxy.orbitSpeedMultiplier, (v) => { galaxy.orbitSpeedMultiplier = v; }, 'galaxies', 'runtime', 0, 5, 0.01);
-  range(galaxySection.body, 'Self rotation speed', () => galaxy.ownSpinSpeedMultiplier, (v) => { galaxy.ownSpinSpeedMultiplier = v; }, 'galaxies', 'runtime', 0, 5, 0.01);
+  range(galaxySection.body, 'Orbit speed', () => galaxy.orbitSpeed, (v) => { galaxy.orbitSpeed = v; }, 'galaxies', 'runtime', -0.1, 0.1, 0.001);
+  range(galaxySection.body, 'Self rotation speed', () => galaxy.selfRotationSpeed, (v) => { galaxy.selfRotationSpeed = v; }, 'galaxies', 'runtime', -1, 1, 0.001);
   range(galaxySection.body, 'Opacity', () => galaxy.opacity, (v) => { galaxy.opacity = v; }, 'galaxies', 'runtime', 0, 1, 0.01);
   resetButton(galaxySection.body, () => Object.assign(galaxy, clone(defaults.galaxySprites)), 'galaxies', 'rebuild');
   panel.append(galaxySection.details);
@@ -195,7 +193,6 @@ export function createOptionsPanel({ runtimeState, onChange, onSettingsImported 
     range(group.body, 'Scale', () => config.scale, (v) => { config.scale = v; }, owner, 'apply', 0.05, 10, 0.01);
     range(group.body, 'Self rotation', () => config.selfRotationSpeed, (v) => { config.selfRotationSpeed = v; }, owner, 'apply', 0, 1, 0.001);
     range(group.body, 'Light intensity', () => config.spotlight.intensity, (v) => { config.spotlight.intensity = v; }, owner, 'apply', 0, 20, 0.1);
-    range(group.body, 'Light distance', () => config.spotlight.distance, (v) => { config.spotlight.distance = v; }, owner, 'apply', 0, 100, 0.5);
     range(group.body, 'Light angle', () => config.spotlight.angleDegrees, (v) => { config.spotlight.angleDegrees = v; }, owner, 'apply', 1, 120, 1);
     range(group.body, 'Fade duration', () => config.spotlight.fadeDurationSeconds, (v) => { config.spotlight.fadeDurationSeconds = v; }, owner, 'apply', 0, 10, 0.1);
     resetButton(group.body, () => Object.assign(config, clone(defaults[key])), owner, 'apply');

@@ -312,3 +312,12 @@ Status: accepted / implemented.
 5. Both `translations.pl` and `translations.en` contain complete, independent `caseStudy` objects. This is required because the resolver uses the shallow overlay `{ ...node, ...translation }`.
 6. The case study presents active prototype capabilities distinctly from planned eons, collectible glyphs, special cards, artifacts, and other future development directions.
 7. Classic 2D and Experience 3D continue to use one content source and one resolver, with no duplicate record content between modes.
+
+## 2026-07-26 — Single-plane galaxy backdrop and direct celestial-light tuning
+
+Status: accepted / implemented.
+
+1. The galaxy layer uses each of the five unique PNG textures once, at equal angular intervals on one plane and one shared radius; random copies, vertical/depth spread, alpha threshold tuning, and additive blending are removed.
+2. Radius, orbit speed, self rotation, enabled state, and opacity update live. Minimum and maximum size retain a debounced galaxy-only rebuild.
+3. Schema-version-1 imports normalize the former inner/outer radius and speed multiplier fields into the new radius and direct-speed contract; canonical exports contain only the simplified fields.
+4. Sun and moon panels expose live spotlight intensity, angle, and fade duration. Spotlight distance remains an internal Three.js cutoff but is hidden because its effect is not useful at the current scene scale.

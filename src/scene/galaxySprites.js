@@ -1,248 +1,77 @@
 import * as THREE from '../vendor/three.js';
 import { DEFAULT_EXPERIENCE3D_SETTINGS } from '../config/experience3dSettings.js';
 
-export const GALAXY_SPRITES_DEFAULTS = {
-  ...DEFAULT_EXPERIENCE3D_SETTINGS.galaxies,
-  totalMax: DEFAULT_EXPERIENCE3D_SETTINGS.galaxies.count,
-  count: undefined,
-  /* Engine aliases are derived from the canonical settings above. */
-  /*
-  enabled: true,
-  texturePaths: [
-    '/png/galaxy_01.png',
-    '/png/galaxy_02.png',
-    '/png/galaxy_03.png',
-    '/png/galaxy_04.png',
-    '/png/galaxy_05.png'
-  ],
-  totalMax: 14,
-  minScale: 1,
-  maxScale: 5,
-  opacity: 1,
-  opacityVariance: 0.18,
-  innerRadius: 18,
-  outerRadius: 26,
-  verticalSpread: 8,
-  safeRadius: 6.5,
-  orbitSpeedMin: 0.002,
-  orbitSpeedMax: 0.005,
-  ownSpinSpeedMin: 0.0635,
-  ownSpinSpeedMax: 0.0815,
-  orbitSpeedMultiplier: 0,
-  ownSpinSpeedMultiplier: 1,
-  orbitInclinationMin: -0.35,
-  orbitInclinationMax: 0.35,
-  parallaxStrength: 1,
-  randomSeed: 1337,
-  additiveBlending: true,
-  alphaTest: 1,
-  reducedMotionSpeedMultiplier: 0.25 */
-};
+export const GALAXY_SPRITES_DEFAULTS = { ...DEFAULT_EXPERIENCE3D_SETTINGS.galaxies };
 
 const TWO_PI = Math.PI * 2;
-const HALF_PI = Math.PI * 0.5;
-const CENTRAL_CONE_ATTEMPTS = 18;
+const MAX_TEXTURES = 5;
+const PHASE_OFFSET = Math.PI / 2;
 const PROGRESSION_EPSILON = 0.0001;
 
-function clamp(value, min, max) {
-  return Math.min(max, Math.max(min, value));
-}
-
-function readFiniteNumber(value, fallback) {
-  if (typeof value === 'string' && value.trim() === '') return fallback;
-  const numeric = Number(value);
-  return Number.isFinite(numeric) ? numeric : fallback;
-}
-
-function readClampedNumber(value, fallback, min, max) {
-  return clamp(readFiniteNumber(value, fallback), min, max);
-}
-
-function readClampedInteger(value, fallback, min, max) {
-  return clamp(Math.round(readFiniteNumber(value, fallback)), min, max);
+function clamp(value, min, max) { return Math.min(max, Math.max(min, value)); }
+function finite(value, fallback) {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : fallback;
 }
 
 function normalizeOptions(options = {}) {
-  const config = {
-    ...GALAXY_SPRITES_DEFAULTS,
-    ...options,
-    texturePaths: Array.isArray(options.texturePaths)
-      ? options.texturePaths.slice()
-      : GALAXY_SPRITES_DEFAULTS.texturePaths.slice()
-  };
-
+  const config = { ...GALAXY_SPRITES_DEFAULTS, ...options };
+  const paths = Array.isArray(options.texturePaths) ? options.texturePaths : GALAXY_SPRITES_DEFAULTS.texturePaths;
+  config.texturePaths = [...new Set(paths.filter((path) => typeof path === 'string' && path.length > 0))].slice(0, MAX_TEXTURES);
   config.enabled = Boolean(config.enabled);
-  config.totalMax = readClampedInteger(config.totalMax, GALAXY_SPRITES_DEFAULTS.totalMax, 0, 30);
-  config.minScale = readClampedNumber(config.minScale, GALAXY_SPRITES_DEFAULTS.minScale, 0.01, 12);
-  config.maxScale = Math.max(config.minScale, readClampedNumber(config.maxScale, GALAXY_SPRITES_DEFAULTS.maxScale, 0.01, 16));
-  config.opacity = readClampedNumber(config.opacity, GALAXY_SPRITES_DEFAULTS.opacity, 0, 1);
-  config.opacityVariance = readClampedNumber(config.opacityVariance, GALAXY_SPRITES_DEFAULTS.opacityVariance, 0, 1);
-  config.innerRadius = readClampedNumber(config.innerRadius, GALAXY_SPRITES_DEFAULTS.innerRadius, 0, 60);
-  config.outerRadius = Math.max(config.innerRadius + 0.1, readClampedNumber(config.outerRadius, GALAXY_SPRITES_DEFAULTS.outerRadius, 0.1, 80));
-  config.verticalSpread = readClampedNumber(config.verticalSpread, GALAXY_SPRITES_DEFAULTS.verticalSpread, 0, 30);
-  config.safeRadius = readClampedNumber(config.safeRadius, GALAXY_SPRITES_DEFAULTS.safeRadius, 0, 30);
-  config.orbitSpeedMin = readClampedNumber(config.orbitSpeedMin, GALAXY_SPRITES_DEFAULTS.orbitSpeedMin, 0, 0.1);
-  config.orbitSpeedMax = Math.max(config.orbitSpeedMin, readClampedNumber(config.orbitSpeedMax, GALAXY_SPRITES_DEFAULTS.orbitSpeedMax, 0, 0.1));
-  config.ownSpinSpeedMin = readClampedNumber(config.ownSpinSpeedMin, GALAXY_SPRITES_DEFAULTS.ownSpinSpeedMin, 0, 0.1);
-  config.ownSpinSpeedMax = Math.max(config.ownSpinSpeedMin, readClampedNumber(config.ownSpinSpeedMax, GALAXY_SPRITES_DEFAULTS.ownSpinSpeedMax, 0, 0.1));
-  config.orbitSpeedMultiplier = readClampedNumber(config.orbitSpeedMultiplier, GALAXY_SPRITES_DEFAULTS.orbitSpeedMultiplier, 0, 5);
-  config.ownSpinSpeedMultiplier = readClampedNumber(config.ownSpinSpeedMultiplier, GALAXY_SPRITES_DEFAULTS.ownSpinSpeedMultiplier, 0, 5);
-  config.orbitInclinationMin = readClampedNumber(config.orbitInclinationMin, GALAXY_SPRITES_DEFAULTS.orbitInclinationMin, -HALF_PI, HALF_PI);
-  config.orbitInclinationMax = Math.max(config.orbitInclinationMin, readClampedNumber(config.orbitInclinationMax, GALAXY_SPRITES_DEFAULTS.orbitInclinationMax, -HALF_PI, HALF_PI));
-  config.parallaxStrength = readClampedNumber(config.parallaxStrength, GALAXY_SPRITES_DEFAULTS.parallaxStrength, 0, 1);
-  config.randomSeed = readFiniteNumber(config.randomSeed, GALAXY_SPRITES_DEFAULTS.randomSeed);
-  config.additiveBlending = Boolean(config.additiveBlending);
-  config.alphaTest = readClampedNumber(config.alphaTest, GALAXY_SPRITES_DEFAULTS.alphaTest, 0, 1);
-  config.reducedMotionSpeedMultiplier = readClampedNumber(config.reducedMotionSpeedMultiplier, GALAXY_SPRITES_DEFAULTS.reducedMotionSpeedMultiplier, 0, 1);
-
+  config.radius = clamp(finite(config.radius, GALAXY_SPRITES_DEFAULTS.radius), 1, 90);
+  config.minScale = clamp(finite(config.minScale, GALAXY_SPRITES_DEFAULTS.minScale), 0.01, 24);
+  config.maxScale = clamp(finite(config.maxScale, GALAXY_SPRITES_DEFAULTS.maxScale), config.minScale, 30);
+  config.orbitSpeed = clamp(finite(config.orbitSpeed, GALAXY_SPRITES_DEFAULTS.orbitSpeed), -0.1, 0.1);
+  config.selfRotationSpeed = clamp(finite(config.selfRotationSpeed, GALAXY_SPRITES_DEFAULTS.selfRotationSpeed), -1, 1);
+  config.opacity = clamp(finite(config.opacity, GALAXY_SPRITES_DEFAULTS.opacity), 0, 1);
   return config;
 }
 
-function createSeededRandom(seed) {
-  let state = Number(seed) >>> 0;
-  if (state === 0) state = 0x6d2b79f5;
-  return () => {
-    state += 0x6d2b79f5;
-    let t = state;
-    t = Math.imul(t ^ (t >>> 15), t | 1);
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
+function positionOnPlane(instance, radius) {
+  instance.sprite.position.set(Math.cos(instance.angle) * radius, Math.sin(instance.angle) * radius, 0);
 }
 
-function randomBetween(random, min, max) {
-  return min + (max - min) * random();
-}
-
-function randomSign(random) {
-  return random() < 0.5 ? -1 : 1;
-}
-
-function isInCentralReadingCone(position, safeRadius) {
-  return Math.abs(position.x) < safeRadius * 0.95
-    && Math.abs(position.y) < safeRadius * 0.55
-    && position.z > -safeRadius * 1.8
-    && position.z < safeRadius * 1.4;
-}
-
-function computeOrbitalPosition(state, target) {
-  const ellipticalRadius = state.radius * (1 + state.eccentricity * Math.cos(state.orbitAngle + state.eccentricityPhase));
-  const x = Math.cos(state.orbitAngle) * ellipticalRadius;
-  const z = Math.sin(state.orbitAngle) * ellipticalRadius;
-  const tiltedY = state.yOffset + Math.sin(state.orbitAngle) * Math.sin(state.inclination) * state.radius * 0.34;
-
-  target.set(x, tiltedY, z);
-}
-
-function makeSpriteMaterial(texture, config, opacity) {
+function makeSpriteMaterial(texture) {
   const material = new THREE.SpriteMaterial({
     map: texture,
     transparent: true,
-    depthWrite: false,
     depthTest: true,
-    opacity,
-    blending: config.additiveBlending ? THREE.AdditiveBlending : THREE.NormalBlending,
-    alphaTest: config.alphaTest
+    depthWrite: false,
+    blending: THREE.NormalBlending,
+    alphaTest: 0
   });
-
   if ('toneMapped' in material) material.toneMapped = false;
   return material;
-}
-
-function detectReducedMotion() {
-  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return false;
-  return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 }
 
 export function createGalaxySpritesLayer(options = {}, { assetManager = null, deferUntilWarm = false } = {}) {
   const group = new THREE.Group();
   group.name = 'GalaxySpritesLayer';
-
   const instances = [];
-  const ownedTextures = new Set();
-  const tempPosition = new THREE.Vector3();
-  const tempGroupPosition = new THREE.Vector3();
   let config = normalizeOptions(options);
   let buildId = 0;
   let disposed = false;
-  let reducedMotion = detectReducedMotion();
   let progressionMultiplier = 1;
   let revealProgress = 0;
   let hasHydratedDeferred = false;
   const lifecycleCounts = { galaxyRebuilds: 0, galaxyHydrations: 0 };
 
-  function clearInstances({ disposeTextures = true } = {}) {
-    while (group.children.length > 0) {
-      const child = group.children[group.children.length - 1];
-      group.remove(child);
-      if (child.material) child.material.dispose();
-    }
+  function clearInstances() {
+    instances.forEach(({ sprite, material }) => { group.remove(sprite); material.dispose(); });
     instances.length = 0;
-
-    if (disposeTextures) {
-      ownedTextures.forEach((texture) => texture.dispose());
-      ownedTextures.clear();
-    }
   }
 
-  function loadTexture(logicalPath, currentBuildId) {
-    const cachedRecord = assetManager?.getAssetByPath?.(logicalPath);
-    const cachedTexture = cachedRecord?.texture;
-    if (cachedTexture) {
-      return Promise.resolve({ texture: cachedTexture, logicalPath, url: cachedRecord.url ?? logicalPath, cached: true });
-    }
-
-    if (assetManager?.isPreloadComplete?.()) {
-      console.warn(`[galaxySprites] Texture ${logicalPath} was not in AssetManager cache after preload. Skipping late runtime load.`);
-      return Promise.resolve(null);
-    }
-
-    return Promise.resolve(null);
+  function loadTexture(texturePath) {
+    const record = assetManager?.getAssetByPath?.(texturePath);
+    if (record?.texture) return { texture: record.texture, texturePath };
+    if (assetManager?.isPreloadComplete?.()) console.warn(`[galaxySprites] Texture ${texturePath} was not in AssetManager cache. Skipping it.`);
+    return null;
   }
 
-  function makeInstanceDescriptor(random, textureRecord, textureIndex) {
-    const state = {
-      orbitAngle: randomBetween(random, 0, TWO_PI),
-      radius: randomBetween(random, config.innerRadius, config.outerRadius),
-      yOffset: randomBetween(random, -config.verticalSpread, config.verticalSpread),
-      scale: randomBetween(random, config.minScale, config.maxScale),
-      opacity: clamp(randomBetween(random, 1 - config.opacityVariance, 1 + config.opacityVariance), 0, 2),
-      orbitDirection: randomSign(random),
-      orbitSpeed: randomBetween(random, config.orbitSpeedMin, config.orbitSpeedMax),
-      spinDirection: randomSign(random),
-      spinSpeed: randomBetween(random, config.ownSpinSpeedMin, config.ownSpinSpeedMax),
-      spinPhase: randomBetween(random, 0, TWO_PI),
-      inclination: randomBetween(random, config.orbitInclinationMin, config.orbitInclinationMax),
-      eccentricity: randomBetween(random, -0.08, 0.12),
-      eccentricityPhase: randomBetween(random, 0, TWO_PI),
-      textureIndex,
-      texturePath: textureRecord.logicalPath
-    };
-
-    for (let attempt = 0; attempt < CENTRAL_CONE_ATTEMPTS; attempt += 1) {
-      computeOrbitalPosition(state, tempPosition);
-      if (!isInCentralReadingCone(tempPosition, config.safeRadius)) break;
-      state.orbitAngle = randomBetween(random, 0, TWO_PI);
-      state.radius = randomBetween(random, Math.max(config.innerRadius, config.safeRadius + 1), config.outerRadius);
-      state.yOffset = randomBetween(random, -config.verticalSpread, config.verticalSpread);
-    }
-
-    return state;
-  }
-
-  function createSprite(textureRecord, state) {
-    const targetOpacity = clamp(config.opacity * state.opacity * progressionMultiplier, 0, 1);
-    const material = makeSpriteMaterial(textureRecord.texture, config, 0);
-    material.rotation = state.spinPhase;
-
-    const sprite = new THREE.Sprite(material);
-    sprite.name = `GalaxySprite:${state.texturePath}`;
-    sprite.userData.nonInteractive = true;
-    sprite.scale.setScalar(state.scale);
-    computeOrbitalPosition(state, sprite.position);
-    group.add(sprite);
-
-    instances.push({ sprite, material, targetOpacity, ...state });
+  function scaleForIndex(index, count) {
+    if (count <= 1) return (config.minScale + config.maxScale) / 2;
+    return config.minScale + (config.maxScale - config.minScale) * (index / (count - 1));
   }
 
   async function rebuild(nextOptions = {}) {
@@ -251,84 +80,50 @@ export function createGalaxySpritesLayer(options = {}, { assetManager = null, de
     const currentBuildId = ++buildId;
     clearInstances();
     group.visible = config.enabled;
+    if (!config.enabled || config.texturePaths.length === 0) return;
 
-    if (!config.enabled || config.totalMax <= 0 || config.texturePaths.length === 0) return;
-
-    const textureRecords = (await Promise.all(
-      config.texturePaths.map((texturePath) => loadTexture(texturePath, currentBuildId))
-    )).filter(Boolean);
-
+    const textures = config.texturePaths.map(loadTexture).filter(Boolean);
     if (disposed || currentBuildId !== buildId) return;
-    if (textureRecords.length === 0) {
-      console.warn('[galaxySprites] No galaxy textures loaded. Layer remains empty until assets are available.');
-      return;
-    }
-
-    const random = createSeededRandom(config.randomSeed);
-    for (let total = 0; total < config.totalMax; total += 1) {
-      const textureIndex = total % textureRecords.length;
-      const textureRecord = textureRecords[textureIndex];
-      createSprite(textureRecord, makeInstanceDescriptor(random, textureRecord, textureIndex));
-    }
-
-    if (import.meta.env?.DEV) {
-      console.info(`[galaxySprites] Rebuilt layer: count=${instances.length}, orbitSpeedRange=[${config.orbitSpeedMin}, ${config.orbitSpeedMax}], spinSpeedRange=[${config.ownSpinSpeedMin}, ${config.ownSpinSpeedMax}], orbitMultiplier=${config.orbitSpeedMultiplier}, spinMultiplier=${config.ownSpinSpeedMultiplier}`);
-    }
+    textures.forEach((record, index) => {
+      const material = makeSpriteMaterial(record.texture);
+      material.opacity = config.opacity * revealProgress;
+      const sprite = new THREE.Sprite(material);
+      const angle = PHASE_OFFSET + (index / textures.length) * TWO_PI;
+      const scale = scaleForIndex(index, textures.length);
+      sprite.name = `GalaxySprite:${record.texturePath}`;
+      sprite.userData.nonInteractive = true;
+      sprite.userData.texturePath = record.texturePath;
+      sprite.scale.setScalar(scale);
+      const instance = { sprite, material, texturePath: record.texturePath, angle, rotation: angle, scale };
+      positionOnPlane(instance, config.radius);
+      material.rotation = instance.rotation;
+      group.add(sprite);
+      instances.push(instance);
+    });
   }
 
   function applyRuntimeOptions(nextOptions = {}) {
     config = normalizeOptions({ ...config, ...nextOptions });
-    group.visible = config.enabled;
+    group.visible = config.enabled && (revealProgress > PROGRESSION_EPSILON || progressionMultiplier > PROGRESSION_EPSILON);
     instances.forEach((instance) => {
-      const { sprite, material } = instance;
-      sprite.scale.setScalar(clamp(instance.scale, config.minScale, config.maxScale) * (0.88 + 0.12 * revealProgress));
-      instance.targetOpacity = clamp(instance.opacity * config.opacity * progressionMultiplier, 0, 1);
-      material.opacity = instance.targetOpacity * revealProgress;
-      material.alphaTest = config.alphaTest;
-      material.blending = config.additiveBlending ? THREE.AdditiveBlending : THREE.NormalBlending;
-      material.needsUpdate = true;
+      positionOnPlane(instance, config.radius);
+      instance.material.opacity = config.opacity * revealProgress;
     });
   }
 
-  function setEnabled(enabled) {
-    config.enabled = Boolean(enabled);
-    group.visible = config.enabled;
-  }
-
-  function update(delta = 0, elapsed = 0, camera = null) {
+  function update(delta = 0) {
     if (!config.enabled || disposed) return;
-
-    reducedMotion = detectReducedMotion();
-    const speedMultiplier = reducedMotion ? config.reducedMotionSpeedMultiplier : 1;
-    const scaledDelta = delta * speedMultiplier;
-
-    const previousReveal = revealProgress;
-    revealProgress += (progressionMultiplier - revealProgress) * Math.min(1, scaledDelta / 0.65);
+    revealProgress += (progressionMultiplier - revealProgress) * Math.min(1, delta / 0.65);
     if (Math.abs(revealProgress - progressionMultiplier) <= PROGRESSION_EPSILON) revealProgress = progressionMultiplier;
-    const opacityChanged = Math.abs(revealProgress - previousReveal) > PROGRESSION_EPSILON;
     group.visible = revealProgress > PROGRESSION_EPSILON || progressionMultiplier > PROGRESSION_EPSILON;
     if (!group.visible) return;
-
     instances.forEach((instance) => {
-      const { sprite, material } = instance;
-      instance.orbitAngle += instance.orbitSpeed * config.orbitSpeedMultiplier * instance.orbitDirection * scaledDelta;
-      instance.spinPhase += instance.spinSpeed * config.ownSpinSpeedMultiplier * instance.spinDirection * scaledDelta;
-      computeOrbitalPosition(instance, sprite.position);
-      sprite.scale.setScalar(clamp(instance.scale, config.minScale, config.maxScale) * (0.88 + 0.12 * revealProgress));
-      material.rotation = instance.spinPhase;
-      if (opacityChanged) material.opacity = clamp(instance.opacity * config.opacity, 0, 1) * revealProgress;
+      instance.angle += config.orbitSpeed * delta;
+      instance.rotation += config.selfRotationSpeed * delta;
+      positionOnPlane(instance, config.radius);
+      instance.material.rotation = instance.rotation;
+      instance.material.opacity = config.opacity * revealProgress;
     });
-
-    if (camera) {
-      tempGroupPosition.copy(camera.position).multiplyScalar(1 - config.parallaxStrength);
-      group.position.copy(tempGroupPosition);
-    }
-  }
-
-  function dispose() {
-    disposed = true;
-    buildId += 1;
-    clearInstances();
   }
 
   async function hydrateDeferred() {
@@ -339,27 +134,15 @@ export function createGalaxySpritesLayer(options = {}, { assetManager = null, de
   }
 
   const ready = deferUntilWarm ? Promise.resolve() : hydrateDeferred();
-
   return {
-    group,
-    ready,
-    update,
-    setEnabled,
-    rebuild,
-    hydrateDeferred,
-    dispose,
-    applyRuntimeOptions,
-    setProgressionMultiplier(nextMultiplier = 1) {
-      const next = clamp(Number(nextMultiplier) || 0, 0, 1);
-      if (Math.abs(next - progressionMultiplier) > PROGRESSION_EPSILON) progressionMultiplier = next;
-    },
+    group, ready, update, rebuild, hydrateDeferred, applyRuntimeOptions,
+    setEnabled(enabled) { applyRuntimeOptions({ enabled }); },
+    setProgressionMultiplier(value = 1) { progressionMultiplier = clamp(finite(value, 0), 0, 1); },
     getOptions: () => ({ ...config, texturePaths: config.texturePaths.slice() }),
     getInstanceCount: () => instances.length,
+    getInstanceTexturePaths: () => instances.map(({ texturePath }) => texturePath),
     getLifecycleCounts: () => ({ ...lifecycleCounts }),
-    showForWarmup() {
-      const visible = group.visible;
-      group.visible = true;
-      return () => { group.visible = visible; };
-    }
+    showForWarmup() { const visible = group.visible; group.visible = true; return () => { group.visible = visible; }; },
+    dispose() { disposed = true; buildId += 1; clearInstances(); }
   };
 }
