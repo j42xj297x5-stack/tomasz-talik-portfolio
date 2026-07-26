@@ -16,6 +16,7 @@ import { createSunCycle } from './scene/sunCycle.js';
 import { createMoonCycle } from './scene/moonCycle.js';
 import { createAtmosphereProgression } from './scene/atmosphere/atmosphereProgression.js';
 import { createGalaxySpritesLayer } from './scene/galaxySprites.js';
+import { EXPERIENCE_BACKGROUND_COLOR, renderScenePasses } from './scene/renderScenePasses.js';
 import { ASSET_STAGES, INITIAL_PRELOAD_GROUPS, DEFERRED_PRELOAD_GROUPS, OPTIONAL_PRELOAD_GROUPS, getPreloadAssets, getAllPreloadAssets } from './assets/assetManifest.js';
 import { createLoadingDiagnostics, preloadAssets } from './assets/preloadAssets.js';
 import { createAssetManager } from './assets/assetManager.js';
@@ -88,9 +89,12 @@ try {
 }
 
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
-
+renderer.autoClear = false;
+renderer.info.autoReset = false;
+renderer.setClearColor(EXPERIENCE_BACKGROUND_COLOR, 1);
 
 const scene = createScene(sceneRuntimeConfig.fog);
+const galaxyBackgroundScene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 100);
 camera.position.set(0, 1.8, 6);
 
@@ -106,7 +110,7 @@ scene.add(sunCycle.object3d);
 const moonCycle = createMoonCycle(sceneRuntimeConfig.moonCycle, { assetManager, camera });
 scene.add(moonCycle.object3d);
 const galaxyLayer = createGalaxySpritesLayer(sceneRuntimeConfig.galaxySprites, { assetManager, deferUntilWarm: true });
-scene.add(galaxyLayer.group);
+galaxyBackgroundScene.add(galaxyLayer.group);
 
 await loadMonkeyModel({ scene, fallbackObject: centralPlaceholder, assetManager });
 
@@ -494,15 +498,15 @@ const restoreGalaxyWarmup = galaxyLayer.showForWarmup();
 try {
   plaqueTransition.setWarmupMaterialMode('fade');
   runtimeDiagnostics.count('shaderCompile:fade');
-  if (typeof renderer.compileAsync === 'function') await renderer.compileAsync(scene, camera);
-  else renderer.compile(scene, camera);
+  if (typeof renderer.compileAsync === 'function') await Promise.all([renderer.compileAsync(galaxyBackgroundScene, camera), renderer.compileAsync(scene, camera)]);
+  else { renderer.compile(galaxyBackgroundScene, camera); renderer.compile(scene, camera); }
   plaqueTransition.setWarmupMaterialMode('stable');
   runtimeDiagnostics.count('shaderCompile:stable');
-  if (typeof renderer.compileAsync === 'function') await renderer.compileAsync(scene, camera);
-  else renderer.compile(scene, camera);
+  if (typeof renderer.compileAsync === 'function') await Promise.all([renderer.compileAsync(galaxyBackgroundScene, camera), renderer.compileAsync(scene, camera)]);
+  else { renderer.compile(galaxyBackgroundScene, camera); renderer.compile(scene, camera); }
   assetManager.markWarmup({ shaderCompileComplete: true, mobileWarmupReduced: isMobileRuntime });
   runtimeDiagnostics.count('warmupRender');
-  renderer.render(scene, camera);
+  renderScenePasses(renderer, galaxyBackgroundScene, scene, camera);
 } finally {
   plaqueTransition.setWarmupMaterialMode('stable');
   plaqueTransition.setWarmupVisibility(false);
@@ -542,7 +546,7 @@ function tick(timestamp) {
   if (sceneRuntimeConfig.backgroundAtmosphere.debugVisible && elapsed < 0.25) {
     console.info('[backgroundAtmosphere][debug] tick/update active', { delta, elapsed });
   }
-  renderer.render(scene, camera);
+  renderScenePasses(renderer, galaxyBackgroundScene, scene, camera);
   runtimeDiagnostics.frame(timestamp);
   requestAnimationFrame(tick);
 }

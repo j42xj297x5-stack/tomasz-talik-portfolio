@@ -8,7 +8,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "test:settings": "node tests/experience3d-settings.test.mjs",
-    "test:routing": "node tests/options-event-router.test.mjs"
+    "test:routing": "node tests/options-event-router.test.mjs",
+    "test:render-contract": "node tests/experience3d-render-contract.test.mjs"
   },
   "devDependencies": {
     "vite": "^7.2.0"

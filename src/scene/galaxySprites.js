@@ -7,6 +7,7 @@ const TWO_PI = Math.PI * 2;
 const MAX_TEXTURES = 5;
 const PHASE_OFFSET = Math.PI / 2;
 const PROGRESSION_EPSILON = 0.0001;
+const GALAXY_ALPHA_CUTOFF = 0.05;
 
 function clamp(value, min, max) { return Math.min(max, Math.max(min, value)); }
 function finite(value, fallback) {
@@ -33,13 +34,21 @@ function positionOnPlane(instance, radius) {
 }
 
 function makeSpriteMaterial(texture) {
+  // The source PNGs contain pale RGB values in nearly transparent pixels.
+  // Premultiplication plus a small cutoff removes that fringe while retaining
+  // the useful soft edge.
+  if (!texture.premultiplyAlpha) {
+    texture.premultiplyAlpha = true;
+    texture.needsUpdate = true;
+  }
   const material = new THREE.SpriteMaterial({
     map: texture,
     transparent: true,
     depthTest: true,
     depthWrite: false,
     blending: THREE.NormalBlending,
-    alphaTest: 0
+    alphaTest: GALAXY_ALPHA_CUTOFF,
+    premultipliedAlpha: true
   });
   if ('toneMapped' in material) material.toneMapped = false;
   return material;
