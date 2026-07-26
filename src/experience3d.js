@@ -17,6 +17,7 @@ import { createSunCycle } from './scene/sunCycle.js';
 import { createMoonCycle } from './scene/moonCycle.js';
 import { createAtmosphereProgression } from './scene/atmosphere/atmosphereProgression.js';
 import { createGalaxySpritesLayer } from './scene/galaxySprites.js';
+import { createMilkyWayBackground } from './scene/milkyWayBackground.js';
 import { EXPERIENCE_BACKGROUND_COLOR, renderScenePasses } from './scene/renderScenePasses.js';
 import { ASSET_STAGES, INITIAL_PRELOAD_GROUPS, DEFERRED_PRELOAD_GROUPS, OPTIONAL_PRELOAD_GROUPS, getPreloadAssets, getAllPreloadAssets } from './assets/assetManifest.js';
 import { createLoadingDiagnostics, preloadAssets } from './assets/preloadAssets.js';
@@ -112,6 +113,9 @@ scene.add(sunCycle.object3d);
 const moonCycle = createMoonCycle(sceneRuntimeConfig.moonCycle, { assetManager, camera });
 scene.add(moonCycle.object3d);
 const galaxyLayer = createGalaxySpritesLayer(sceneRuntimeConfig.galaxySprites, { assetManager, deferUntilWarm: true });
+const milkyWayBackground = createMilkyWayBackground({ assetManager });
+milkyWayBackground.update(0, camera);
+galaxyBackgroundScene.add(milkyWayBackground.group);
 galaxyBackgroundScene.add(galaxyLayer.group);
 
 await loadMonkeyModel({ scene, fallbackObject: centralPlaceholder, assetManager });
@@ -125,6 +129,7 @@ atmosphere.setProgressionMultipliers(initialProgressionMultipliers);
 sunCycle.setProgressionMultiplier(initialProgressionMultipliers.sunMoon);
 moonCycle.setProgressionMultiplier(initialProgressionMultipliers.sunMoon);
 galaxyLayer.setProgressionMultiplier(initialProgressionMultipliers.galaxies);
+milkyWayBackground.setProgressionMultiplier(initialProgressionMultipliers.galaxies);
 let tuningMode = debugLoading;
 let effectiveLayerMultipliers = { ...initialProgressionMultipliers };
 let lastPanelEvent = null;
@@ -504,6 +509,7 @@ const compileStartedAt = performance.now();
 plaqueTransition.setWarmupVisibility(true);
 const restoreAtmosphereWarmup = atmosphere.showAllForWarmup();
 const restoreGalaxyWarmup = galaxyLayer.showForWarmup();
+const restoreMilkyWayWarmup = milkyWayBackground.showForWarmup();
 try {
   plaqueTransition.setWarmupMaterialMode('fade');
   runtimeDiagnostics.count('shaderCompile:fade');
@@ -521,6 +527,7 @@ try {
   plaqueTransition.setWarmupVisibility(false);
   restoreAtmosphereWarmup();
   restoreGalaxyWarmup();
+  restoreMilkyWayWarmup();
 }
 // Warm-up may use the final shader variant, but it never consumes intro time.
 fogRevealController.restart();
@@ -555,6 +562,8 @@ function tick(timestamp) {
   moonCycle.update(delta, sunCycle.getAngle());
   galaxyLayer.setProgressionMultiplier(effectiveLayerMultipliers.galaxies);
   galaxyLayer.update(delta, elapsed, camera);
+  milkyWayBackground.setProgressionMultiplier(effectiveLayerMultipliers.galaxies);
+  milkyWayBackground.update(delta, camera);
   if (sceneRuntimeConfig.backgroundAtmosphere.debugVisible && elapsed < 0.25) {
     console.info('[backgroundAtmosphere][debug] tick/update active', { delta, elapsed });
   }
