@@ -43,18 +43,18 @@
         "#f0a6a6"
       ],
       "minScale": 1.29,
-      "maxScale": 2.62,
-      "innerRadius": 12.8,
-      "outerRadius": 29.4,
+      "maxScale": 1.88,
+      "innerRadius": 13.7,
+      "outerRadius": 23.7,
       "rotationSpeedMin": 0.047,
       "rotationSpeedMax": 0.486,
       "selfRotationSpeedMultiplier": 1.19,
       "orbitSpeed": 0.032,
-      "opacity": 0.72
+      "opacity": 1
     },
     "smallGlyphs": {
       "enabled": true,
-      "count": 14,
+      "count": 33,
       "models": [
         "/glb/small_glyph_01.glb",
         "/glb/small_glyph_02.glb",
@@ -65,22 +65,22 @@
       ],
       "minScale": 1.14,
       "maxScale": 3.06,
-      "innerRadius": 7.2,
-      "outerRadius": 22.6,
+      "innerRadius": 14,
+      "outerRadius": 19.9,
       "rotationSpeedMin": 0.291,
       "rotationSpeedMax": 0.5,
       "selfRotationSpeedMultiplier": 0.57,
-      "orbitSpeed": 0.042,
-      "opacity": 0.62
+      "orbitSpeed": 0.032,
+      "opacity": 1
     },
     "dust": {
       "enabled": true,
       "count": 10000,
-      "innerRadius": 20.8,
-      "outerRadius": 46.7,
+      "innerRadius": 25.6,
+      "outerRadius": 50,
       "safeRadius": 3,
-      "pointSize": 0.114,
-      "rotationSpeed": 0.002,
+      "pointSize": 0.143,
+      "rotationSpeed": 0.024,
       "opacity": 1,
       "color": "#cfe2ff",
       "sizeAttenuation": true,
@@ -97,10 +97,10 @@
       "/png/galaxy_04.png",
       "/png/galaxy_05.png"
     ],
-    "radius": 56.349999999999994,
-    "minScale": 7.73,
-    "maxScale": 10.56,
-    "orbitSpeed": 0,
+    "radius": 43.9,
+    "minScale": 3.59,
+    "maxScale": 7.02,
+    "orbitSpeed": -0.04,
     "selfRotationSpeed": 0.07250000000000001,
     "opacity": 1
   },
@@ -170,7 +170,7 @@
     "spotlight": {
       "enabled": true,
       "color": "#8ecbff",
-      "intensity": 10,
+      "intensity": 15.9,
       "distance": 20,
       "angleDegrees": 90,
       "penumbra": 0.45,
