@@ -1,6 +1,6 @@
 import * as THREE from './vendor/three.js';
 import { resolvePortfolioNodes } from './content/resolvePortfolioNodes.js';
-import { applySceneFog, createScene, SCENE_FOG_DEFAULTS } from './scene/createScene.js';
+import { applySceneFog, createScene } from './scene/createScene.js';
 import { addLights } from './scene/lights.js';
 import { createCentralObject } from './scene/centralObject.js';
 import { createBackgroundAtmosphere } from './scene/atmosphere.js';
@@ -12,16 +12,17 @@ import { createPlaqueTransition } from './scene/plaqueTransition.js';
 import { createOverlay } from './ui/overlay.js';
 import { createHoverLabel } from './ui/hoverLabel.js';
 import { createOptionsPanel } from './ui/optionsPanel.js';
-import { createSunCycle, SUN_CYCLE_DEFAULTS } from './scene/sunCycle.js';
-import { createMoonCycle, MOON_CYCLE_DEFAULTS } from './scene/moonCycle.js';
+import { createSunCycle } from './scene/sunCycle.js';
+import { createMoonCycle } from './scene/moonCycle.js';
 import { createAtmosphereProgression } from './scene/atmosphere/atmosphereProgression.js';
-import { createGalaxySpritesLayer, GALAXY_SPRITES_DEFAULTS } from './scene/galaxySprites.js';
+import { createGalaxySpritesLayer } from './scene/galaxySprites.js';
 import { ASSET_STAGES, INITIAL_PRELOAD_GROUPS, DEFERRED_PRELOAD_GROUPS, OPTIONAL_PRELOAD_GROUPS, getPreloadAssets, getAllPreloadAssets } from './assets/assetManifest.js';
 import { createLoadingDiagnostics, preloadAssets } from './assets/preloadAssets.js';
 import { createAssetManager } from './assets/assetManager.js';
 import { createLoaderOverlay } from './ui/loaderOverlay.js';
 import { createRuntimeDiagnostics } from './utils/runtimeDiagnostics.js';
 import { routeOptionsEvent } from './utils/optionsEventRouter.js';
+import { loadExperience3dSettings, toRuntimeSettings } from './config/experience3dSettings.js';
 
 const app = document.querySelector('#app');
 if (!app) throw new Error('Missing #app mount element.');
@@ -50,6 +51,10 @@ const preloadConcurrency = isMobileRuntime ? 2 : 4;
 const assetManager = createAssetManager({ diagnostics: loadingDiagnostics });
 const loaderOverlay = createLoaderOverlay({ debug: debugLoading });
 const unsubscribeLoaderDiagnostics = loadingDiagnostics.subscribe((snapshot) => loaderOverlay.update(snapshot));
+const loadedSettings = await loadExperience3dSettings({ debug: debugLoading });
+let settingsSource = loadedSettings.settingsSource;
+const settingsLoadError = loadedSettings.settingsLoadError;
+const sceneRuntimeConfig = toRuntimeSettings(loadedSettings.settings);
 
 try {
   loadingDiagnostics.markEvent('criticalPreloadStart');
@@ -85,28 +90,13 @@ try {
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
 
 
-const scene = createScene();
+const scene = createScene(sceneRuntimeConfig.fog);
 const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 100);
 camera.position.set(0, 1.8, 6);
 
 addLights(scene);
 const centralPlaceholder = createCentralObject();
 scene.add(centralPlaceholder);
-
-const sceneRuntimeConfig = {
-  fog: { ...SCENE_FOG_DEFAULTS },
-  sunCycle: { ...SUN_CYCLE_DEFAULTS },
-  moonCycle: { ...MOON_CYCLE_DEFAULTS },
-  galaxySprites: { ...GALAXY_SPRITES_DEFAULTS },
-  backgroundAtmosphere: {
-    enabled: true, debugVisible: false, showShellHelpers: false, showAtmosphereLogs: false,
-    debugBlendingMode: 'normal', debugIgnoreFog: true, safeRadius: 3, shellInnerRadius: 15, shellOuterRadius: 25,
-    stoneRelics: { enabled: true, count: 30, models: ['glb/stone_01.glb','glb/stone_02.glb','glb/stone_03.glb','glb/stone_04.glb','glb/stone_05.glb','glb/stone_06.glb'], safeRadius: 3.5, shellInnerRadius: 18, shellOuterRadius: 20, minScale: 2, maxScale: 5, rotationSpeedMin: 0.05, rotationSpeedMax: 0.09, selfRotationSpeedMultiplier: 1, orbitSpeed: 0.003, opacity: 1, debugVisible: false },
-    shellRelics: { enabled: true, count: 100, models: ['glb/shell_01.glb','glb/shell_02.glb','glb/shell_03.glb','glb/shell_04.glb','glb/shell_05.glb','glb/shell_06.glb'], minScale: 0.4, maxScale: 0.7, shellInnerRadius: 10, shellOuterRadius: 13, rotationSpeedMin: 0.047, rotationSpeedMax: 0.486, selfRotationSpeedMultiplier: 1, orbitSpeed: 0.013, opacity: 1, debugVisible: false, colorPalette: ['#d9a441','#4db6ac','#6ec6ff','#6bcf8e','#9c7bff','#f0a6a6'] },
-    smallGlyphRelics: { enabled: true, count: 50, models: ['glb/small_glyph_01.glb','glb/small_glyph_02.glb','glb/small_glyph_03.glb','glb/small_glyph_04.glb','glb/small_glyph_05.glb','glb/small_glyph_06.glb'], minScale: 0.3, maxScale: 0.5, shellInnerRadius: 13, shellOuterRadius: 15, rotationSpeedMin: 0.291, rotationSpeedMax: 0.5, selfRotationSpeedMultiplier: 1, orbitSpeed: 0.031, opacity: 0.62, debugVisible: false },
-    dust: { enabled: true, count: 6000, innerRadius: 15, outerRadius: 25, safeRadius: 3, idleOpacity: 1, rotationSpeed: 0.018, pointSize: 0.07, color: '#cfe2ff', sizeAttenuation: true, depthTest: true }
-  }
-};
 
 loadingDiagnostics.markEvent('sceneAttachStart');
 const atmosphere = createBackgroundAtmosphere(sceneRuntimeConfig.backgroundAtmosphere, { assetManager, deferRelicsUntilWarm: true });
@@ -140,7 +130,7 @@ const runtimeDiagnostics = createRuntimeDiagnostics({
   renderer,
   scene,
   getRuntimeState: () => interactionState,
-  getLayerSnapshot: () => ({ ...atmosphere.getPerformanceSnapshot(), galaxiesVisible: galaxyLayer.group.visible, tuningMode, effectiveLayerMultipliers: { ...effectiveLayerMultipliers }, lastPanelEvent }),
+  getLayerSnapshot: () => ({ ...atmosphere.getPerformanceSnapshot(), galaxiesVisible: galaxyLayer.group.visible, tuningMode, effectiveLayerMultipliers: { ...effectiveLayerMultipliers }, lastPanelEvent, settingsSource, ...(settingsLoadError ? { settingsLoadError } : {}) }),
   getGalaxyCount: galaxyLayer.getInstanceCount,
   getPlaqueCount: plaqueTransition.getInstanceCount,
   getLifecycleCounts: () => ({ ...atmosphere.getLifecycleCounts(), ...galaxyLayer.getLifecycleCounts(), plaqueInstancesBuilt: plaqueTransition.getInstanceCount() })
@@ -166,6 +156,7 @@ const optionsPanel = createOptionsPanel({
   gateNodes: portfolioNodes,
   debugMode: debugLoading,
   getTuningMode: () => tuningMode,
+  onSettingsImported: () => { settingsSource = 'imported-session'; },
   onChange: (event) => {
     const handled = routeOptionsEvent(event, {
       atmosphere: ({ action }) => atmosphere.applySettings(sceneRuntimeConfig.backgroundAtmosphere, action),

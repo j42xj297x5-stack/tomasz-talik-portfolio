@@ -10,7 +10,9 @@
 - `src/scene/plaqueTransition.js` owns the per-node plaque model lifecycle and glyph/plaque cross-fade.
 - `src/ui/overlay.js` owns readable project content in HTML/CSS; text content is not rendered inside the scene.
 - Startup attaches and hydrates atmosphere relics, galaxy sprites, and all plaque wrappers exactly once before compiling the complete scene and issuing a controlled warm-up render. Compilation prefers vendored Three.js `compileAsync`, covers both fade and stable plaque material modes, and temporarily exposes progression-hidden atmosphere/galaxy layers. All temporary visibility and plaque material state is restored before interaction is enabled.
+- Before any scene system is constructed, startup loads and normalizes the canonical `public/data/experience3d-settings.json`; only then does it create fog, atmosphere, galaxy sprites, sun, and moon. Code defaults are the non-blocking fallback, and the panel neither reads nor writes scene settings in `localStorage`.
 - Sun and moon SpotLights retain targets at the central monkey pivot, but move outside their visual body bounds using radial and camera-relative offsets. Their horizon intensity changes use a synchronized, eased fade rather than an instant day/night switch.
+- Sun and moon facing orientation is composed with a separately accumulated model spin, so the visible `Self rotation` control works while `lockFacing` remains enabled; zero speed stops that spin.
 
 ## Interaction sequence
 

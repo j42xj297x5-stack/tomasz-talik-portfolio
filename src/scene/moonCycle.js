@@ -1,4 +1,5 @@
 import * as THREE from '../vendor/three.js';
+import { DEFAULT_EXPERIENCE3D_SETTINGS, deepClone } from '../config/experience3dSettings.js';
 
 const MOON_MODEL_PATH = '/glb/moon.glb';
 
@@ -28,39 +29,13 @@ function sanitizeMoonCycleSettings(settings) {
   return settings;
 }
 
-export const MOON_CYCLE_DEFAULTS = {
-  enabled: true,
-  modelPath: MOON_MODEL_PATH,
-  center: { x: 0, y: 0, z: 0 },
-  radius: 3,
-  zOffset: 0,
-  phaseOffset: Math.PI,
-  scale: 0.2,
-  selfRotationSpeed: 0,
-  lockFacing: true,
-  frontRotation: { x: 0, y: 0, z: 0 },
-  spotlight: {
-    enabled: true,
-    color: '#8ecbff',
-    intensity: 10,
-    distance: 20,
-    angleDegrees: 90,
-    penumbra: 0.45,
-    decay: 1.5,
-    fadeDurationSeconds: 3,
-    cameraOffsetFactor: 0.2,
-    radialOffsetMultiplier: 1.25
-  },
-  debugVisible: false,
-  debugShowFallback: false,
-  debugForceBasicMaterial: false,
-  debugShowBounds: false,
-  debugScaleMultiplier: 1
-};
+export const MOON_CYCLE_DEFAULTS = deepClone(DEFAULT_EXPERIENCE3D_SETTINGS.moon);
+
 
 export function createMoonCycle(options = {}, { assetManager = null, camera = null } = {}) {
   let settings = sanitizeMoonCycleSettings(deepMerge(MOON_CYCLE_DEFAULTS, options));
   let progressionMultiplier = 1;
+  let spinAngle = 0;
   const object3d = new THREE.Group();
   object3d.name = 'MoonCycleGroup';
   const center = new THREE.Vector3();
@@ -249,14 +224,16 @@ export function createMoonCycle(options = {}, { assetManager = null, camera = nu
       spotlight.intensity = settings.spotlight.intensity * progressionMultiplier * easedHorizonFactor;
       spotlight.visible = settings.spotlight.enabled && spotlight.intensity > 0.001;
       const spin = delta * settings.selfRotationSpeed;
+      spinAngle += spin;
       if (moonModel) {
         if (settings.lockFacing) {
           moonModel.rotation.set(settings.frontRotation.x, settings.frontRotation.y, settings.frontRotation.z);
+          moonModel.rotateY(spinAngle);
         } else {
           moonModel.rotation.y += spin;
         }
       }
-      if (!settings.lockFacing) fallbackSphere.rotation.y += spin;
+      fallbackSphere.rotation.y += spin;
       if (boxHelper && settings.debugVisible) boxHelper.update();
     },
     setProgressionMultiplier(nextMultiplier = 1) {

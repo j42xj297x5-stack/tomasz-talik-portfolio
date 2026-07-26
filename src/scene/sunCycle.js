@@ -1,4 +1,5 @@
 import * as THREE from '../vendor/three.js';
+import { DEFAULT_EXPERIENCE3D_SETTINGS, deepClone } from '../config/experience3dSettings.js';
 
 const SUN_MODEL_PATH = '/glb/sun.glb';
 
@@ -25,41 +26,8 @@ function sanitizeSunCycleSettings(settings) {
   return settings;
 }
 
-export const SUN_CYCLE_DEFAULTS = {
-  enabled: true,
-  modelPath: SUN_MODEL_PATH,
-  center: { x: 0, y: 0, z: 0 },
-  radius: 3,
-  zOffset: 0,
-  startAngle: 0,
-  angularSpeed: 0.08,
-  direction: 1,
-  scale: 0.2,
-  selfRotationSpeed: 0,
-  lockFacing: true,
-  frontRotation: { x: 0, y: 0, z: 0 },
-  emissiveColor: '#ffd21f',
-  emissiveIntensity: 1.5,
-  spotlight: {
-    enabled: true,
-    color: '#ffd21f',
-    intensity: 13.2,
-    distance: 20,
-    angleDegrees: 90,
-    penumbra: 0.45,
-    decay: 1.5,
-    fadeDurationSeconds: 3,
-    cameraOffsetFactor: 0.2,
-    radialOffsetMultiplier: 1.25,
-    horizonFade: false,
-    horizonFadeHeight: 0.5
-  },
-  debugVisible: false,
-  debugShowFallback: false,
-  debugForceBasicMaterial: false,
-  debugShowBounds: false,
-  debugScaleMultiplier: 1
-};
+export const SUN_CYCLE_DEFAULTS = deepClone(DEFAULT_EXPERIENCE3D_SETTINGS.sun);
+
 
 export function createSunCycle(options = {}, { assetManager = null, camera = null } = {}) {
   let settings = sanitizeSunCycleSettings(deepMerge(SUN_CYCLE_DEFAULTS, options));
@@ -70,6 +38,7 @@ export function createSunCycle(options = {}, { assetManager = null, camera = nul
   const centerWorldPosition = new THREE.Vector3();
   const worldSunPosition = new THREE.Vector3();
   let angle = settings.startAngle;
+  let spinAngle = 0;
   let sunModel = null;
   let boxHelper = null;
   let visualRadius = 0.25;
@@ -276,14 +245,16 @@ export function createSunCycle(options = {}, { assetManager = null, camera = nul
       spotlight.visible = settings.spotlight.enabled && spotlight.intensity > 0.001;
 
       const spin = delta * settings.selfRotationSpeed;
+      spinAngle += spin;
       if (sunModel) {
         if (settings.lockFacing) {
           sunModel.rotation.set(settings.frontRotation.x, settings.frontRotation.y, settings.frontRotation.z);
+          sunModel.rotateY(spinAngle);
         } else {
           sunModel.rotation.y += spin;
         }
       }
-      if (!settings.lockFacing) fallbackSphere.rotation.y += spin;
+      fallbackSphere.rotation.y += spin;
       if (boxHelper && settings.debugVisible) boxHelper.update();
     },
     setProgressionMultiplier(nextMultiplier = 1) {

@@ -1,5 +1,5 @@
 export function publicPath(path = '') {
-  const base = import.meta.env.BASE_URL || '/';
+  const base = import.meta.env?.BASE_URL || '/';
   const cleanBase = base.endsWith('/') ? base : `${base}/`;
   const cleanPath = String(path)
     .replace(/^\/+/, '')
@@ -9,7 +9,7 @@ export function publicPath(path = '') {
 }
 
 export function describePublicPath(path = '') {
-  const base = import.meta.env.BASE_URL || '/';
+  const base = import.meta.env?.BASE_URL || '/';
   const cleanBase = base.endsWith('/') ? base : `${base}/`;
   const cleanPath = String(path)
     .replace(/^\/+/, '')

@@ -1,6 +1,12 @@
 import * as THREE from '../vendor/three.js';
+import { DEFAULT_EXPERIENCE3D_SETTINGS } from '../config/experience3dSettings.js';
 
 export const GALAXY_SPRITES_DEFAULTS = {
+  ...DEFAULT_EXPERIENCE3D_SETTINGS.galaxies,
+  totalMax: DEFAULT_EXPERIENCE3D_SETTINGS.galaxies.count,
+  count: undefined,
+  /* Engine aliases are derived from the canonical settings above. */
+  /*
   enabled: true,
   texturePaths: [
     '/png/galaxy_01.png',
@@ -30,7 +36,7 @@ export const GALAXY_SPRITES_DEFAULTS = {
   randomSeed: 1337,
   additiveBlending: true,
   alphaTest: 1,
-  reducedMotionSpeedMultiplier: 0.25
+  reducedMotionSpeedMultiplier: 0.25 */
 };
 
 const TWO_PI = Math.PI * 2;
