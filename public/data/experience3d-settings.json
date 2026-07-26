@@ -44,8 +44,8 @@
       ],
       "minScale": 1.29,
       "maxScale": 1.88,
-      "innerRadius": 13.7,
-      "outerRadius": 23.7,
+      "innerRadius": 9.3,
+      "outerRadius": 16.3,
       "rotationSpeedMin": 0.047,
       "rotationSpeedMax": 0.486,
       "selfRotationSpeedMultiplier": 1.19,
@@ -63,10 +63,10 @@
         "/glb/small_glyph_05.glb",
         "/glb/small_glyph_06.glb"
       ],
-      "minScale": 1.14,
-      "maxScale": 3.06,
-      "innerRadius": 14,
-      "outerRadius": 19.9,
+      "minScale": 0.33,
+      "maxScale": 1.07,
+      "innerRadius": 3.9,
+      "outerRadius": 9,
       "rotationSpeedMin": 0.291,
       "rotationSpeedMax": 0.5,
       "selfRotationSpeedMultiplier": 0.57,
@@ -100,7 +100,7 @@
     "radius": 43.9,
     "minScale": 3.59,
     "maxScale": 7.02,
-    "orbitSpeed": -0.04,
+    "orbitSpeed": 0.007,
     "selfRotationSpeed": 0.07250000000000001,
     "opacity": 1
   },
@@ -111,7 +111,7 @@
     "far": 150,
     "reveal": {
       "enabled": true,
-      "durationSeconds": 180,
+      "durationSeconds": 45,
       "startNear": 0,
       "startFar": 0.1,
       "easing": "smoothstep"
