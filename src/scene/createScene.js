@@ -15,7 +15,9 @@ export function applySceneFog(scene, options = SCENE_FOG_DEFAULTS) {
 
 export function createScene(fogOptions = SCENE_FOG_DEFAULTS) {
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color('#05070b');
+  // The renderer clears this color before the galaxy pass. Keeping the main
+  // scene transparent prevents its background from covering that pass.
+  scene.background = null;
   applySceneFog(scene, fogOptions);
   return scene;
 }
