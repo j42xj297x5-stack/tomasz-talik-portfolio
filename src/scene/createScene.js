@@ -1,6 +1,7 @@
 import * as THREE from '../vendor/three.js';
+import { DEFAULT_EXPERIENCE3D_SETTINGS } from '../config/experience3dSettings.js';
 
-export const SCENE_FOG_DEFAULTS = Object.freeze({ enabled: true, color: '#05070b', near: 10, far: 28 });
+export const SCENE_FOG_DEFAULTS = DEFAULT_EXPERIENCE3D_SETTINGS.fog;
 
 export function applySceneFog(scene, options = SCENE_FOG_DEFAULTS) {
   const near = Math.max(0, Number(options.near) || SCENE_FOG_DEFAULTS.near);

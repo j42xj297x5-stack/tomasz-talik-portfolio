@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test:settings": "node tests/experience3d-settings.test.mjs",
+    "test:routing": "node tests/options-event-router.test.mjs"
   },
   "devDependencies": {
     "vite": "^7.2.0"

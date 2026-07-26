@@ -1,4 +1,5 @@
-const STORAGE_KEY = 'portfolio.options.runtimeState.v1';
+import { normalizeExperience3dSettings, serializeExperience3dSettings, toRuntimeSettings } from '../config/experience3dSettings.js';
+
 const STRUCTURAL_DEBOUNCE_MS = 140;
 
 const clone = (value) => JSON.parse(JSON.stringify(value));
@@ -34,18 +35,11 @@ function row(parent, label, control) {
   parent.append(element);
 }
 
-export function createOptionsPanel({ runtimeState, onChange, atmosphereProgression, getPerformanceSnapshot = null, getTuningMode = () => false }) {
+export function createOptionsPanel({ runtimeState, onChange, onSettingsImported = null, atmosphereProgression, getPerformanceSnapshot = null, getTuningMode = () => false }) {
   const defaults = clone(runtimeState);
   const controls = [];
   const timers = new Map();
   let tuningMode = getTuningMode();
-
-  try {
-    const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
-    if (stored?.runtimeState) merge(runtimeState, stored.runtimeState);
-  } catch (error) {
-    console.warn('[options] Ignoring unreadable saved runtime state.', error);
-  }
 
   const root = document.createElement('aside');
   root.className = 'options-panel';
@@ -62,12 +56,7 @@ export function createOptionsPanel({ runtimeState, onChange, atmosphereProgressi
   panel.append(header);
   toggle.addEventListener('click', () => { panel.dataset.open = panel.dataset.open === 'true' ? 'false' : 'true'; });
 
-  function persist() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ runtimeState }));
-  }
-
   function emit(owner, action, value, debounce = false) {
-    persist();
     const send = () => onChange({ owner, action, value });
     if (!debounce) return send();
     const key = `${owner}:${action}`;
@@ -228,14 +217,18 @@ export function createOptionsPanel({ runtimeState, onChange, atmosphereProgressi
   const exportButton = document.createElement('button');
   exportButton.type = 'button'; exportButton.className = 'options-panel__section-reset'; exportButton.textContent = 'Export scene settings';
   exportButton.addEventListener('click', () => {
-    const blob = new Blob([JSON.stringify({ runtimeState }, null, 2)], { type: 'application/json' });
+    const blob = new Blob([`${JSON.stringify(serializeExperience3dSettings(runtimeState), null, 2)}\n`], { type: 'application/json' });
     const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = 'experience3d-settings.json'; link.click(); URL.revokeObjectURL(link.href);
   });
   const importInput = document.createElement('input'); importInput.type = 'file'; importInput.accept = 'application/json'; importInput.hidden = true;
   importInput.addEventListener('change', async () => {
-    const parsed = JSON.parse(await importInput.files[0].text()); merge(runtimeState, parsed.runtimeState ?? parsed);
-    controls.forEach((sync) => sync()); persist();
+    const parsed = JSON.parse(await importInput.files[0].text());
+    if (parsed?.schemaVersion !== 1) throw new Error('Unsupported Experience 3D settings schema.');
+    merge(runtimeState, toRuntimeSettings(normalizeExperience3dSettings(parsed)));
+    controls.forEach((sync) => sync());
     onChange({ owner: 'atmosphere', action: 'full-rebuild' }); onChange({ owner: 'galaxies', action: 'rebuild' }); onChange({ owner: 'scene', action: 'fog' }); onChange({ owner: 'sun', action: 'apply' }); onChange({ owner: 'moon', action: 'apply' });
+    onSettingsImported?.();
+    importInput.value = '';
   });
   const importButton = document.createElement('button');
   importButton.type = 'button'; importButton.className = 'options-panel__section-reset'; importButton.textContent = 'Import scene settings'; importButton.addEventListener('click', () => importInput.click());

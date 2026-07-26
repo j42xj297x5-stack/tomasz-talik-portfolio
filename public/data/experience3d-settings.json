@@ -1,0 +1,199 @@
+{
+  "schemaVersion": 1,
+  "atmosphere": {
+    "stones": {
+      "enabled": true,
+      "count": 30,
+      "models": [
+        "/glb/stone_01.glb",
+        "/glb/stone_02.glb",
+        "/glb/stone_03.glb",
+        "/glb/stone_04.glb",
+        "/glb/stone_05.glb",
+        "/glb/stone_06.glb"
+      ],
+      "safeRadius": 3.5,
+      "minScale": 2,
+      "maxScale": 5,
+      "innerRadius": 18,
+      "outerRadius": 20,
+      "rotationSpeedMin": 0.05,
+      "rotationSpeedMax": 0.09,
+      "selfRotationSpeedMultiplier": 1,
+      "orbitSpeed": 0.003,
+      "opacity": 1
+    },
+    "shells": {
+      "enabled": true,
+      "count": 100,
+      "models": [
+        "/glb/shell_01.glb",
+        "/glb/shell_02.glb",
+        "/glb/shell_03.glb",
+        "/glb/shell_04.glb",
+        "/glb/shell_05.glb",
+        "/glb/shell_06.glb"
+      ],
+      "colorPalette": [
+        "#d9a441",
+        "#4db6ac",
+        "#6ec6ff",
+        "#6bcf8e",
+        "#9c7bff",
+        "#f0a6a6"
+      ],
+      "minScale": 0.4,
+      "maxScale": 0.7,
+      "innerRadius": 10,
+      "outerRadius": 13,
+      "rotationSpeedMin": 0.047,
+      "rotationSpeedMax": 0.486,
+      "selfRotationSpeedMultiplier": 1,
+      "orbitSpeed": 0.013,
+      "opacity": 1
+    },
+    "smallGlyphs": {
+      "enabled": true,
+      "count": 50,
+      "models": [
+        "/glb/small_glyph_01.glb",
+        "/glb/small_glyph_02.glb",
+        "/glb/small_glyph_03.glb",
+        "/glb/small_glyph_04.glb",
+        "/glb/small_glyph_05.glb",
+        "/glb/small_glyph_06.glb"
+      ],
+      "minScale": 0.3,
+      "maxScale": 0.5,
+      "innerRadius": 13,
+      "outerRadius": 15,
+      "rotationSpeedMin": 0.291,
+      "rotationSpeedMax": 0.5,
+      "selfRotationSpeedMultiplier": 1,
+      "orbitSpeed": 0.031,
+      "opacity": 0.62
+    },
+    "dust": {
+      "enabled": true,
+      "count": 6000,
+      "innerRadius": 15,
+      "outerRadius": 25,
+      "safeRadius": 3,
+      "pointSize": 0.07,
+      "rotationSpeed": 0.018,
+      "opacity": 1,
+      "color": "#cfe2ff",
+      "sizeAttenuation": true,
+      "depthTest": true,
+      "depthWrite": false
+    }
+  },
+  "galaxies": {
+    "enabled": true,
+    "texturePaths": [
+      "/png/galaxy_01.png",
+      "/png/galaxy_02.png",
+      "/png/galaxy_03.png",
+      "/png/galaxy_04.png",
+      "/png/galaxy_05.png"
+    ],
+    "count": 14,
+    "minScale": 1,
+    "maxScale": 5,
+    "opacity": 1,
+    "opacityVariance": 0.18,
+    "innerRadius": 18,
+    "outerRadius": 26,
+    "verticalSpread": 8,
+    "safeRadius": 6.5,
+    "orbitSpeedMin": 0.002,
+    "orbitSpeedMax": 0.005,
+    "ownSpinSpeedMin": 0.0635,
+    "ownSpinSpeedMax": 0.0815,
+    "orbitSpeedMultiplier": 0,
+    "ownSpinSpeedMultiplier": 1,
+    "orbitInclinationMin": -0.35,
+    "orbitInclinationMax": 0.35,
+    "parallaxStrength": 1,
+    "randomSeed": 1337,
+    "additiveBlending": true,
+    "alphaTest": 1,
+    "reducedMotionSpeedMultiplier": 0.25
+  },
+  "fog": {
+    "enabled": true,
+    "color": "#05070b",
+    "near": 10,
+    "far": 28
+  },
+  "sun": {
+    "enabled": true,
+    "modelPath": "/glb/sun.glb",
+    "center": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "radius": 3,
+    "zOffset": 0,
+    "startAngle": 0,
+    "angularSpeed": 0.08,
+    "direction": 1,
+    "scale": 0.2,
+    "selfRotationSpeed": 0,
+    "lockFacing": true,
+    "frontRotation": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "emissiveColor": "#ffd21f",
+    "emissiveIntensity": 1.5,
+    "spotlight": {
+      "enabled": true,
+      "color": "#ffd21f",
+      "intensity": 13.2,
+      "distance": 20,
+      "angleDegrees": 90,
+      "penumbra": 0.45,
+      "decay": 1.5,
+      "fadeDurationSeconds": 3,
+      "cameraOffsetFactor": 0.2,
+      "radialOffsetMultiplier": 1.25,
+      "horizonFade": false,
+      "horizonFadeHeight": 0.5
+    }
+  },
+  "moon": {
+    "enabled": true,
+    "modelPath": "/glb/moon.glb",
+    "center": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "radius": 3,
+    "zOffset": 0,
+    "phaseOffset": 3.141592653589793,
+    "scale": 0.2,
+    "selfRotationSpeed": 0,
+    "lockFacing": true,
+    "frontRotation": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "spotlight": {
+      "enabled": true,
+      "color": "#8ecbff",
+      "intensity": 10,
+      "distance": 20,
+      "angleDegrees": 90,
+      "penumbra": 0.45,
+      "decay": 1.5,
+      "fadeDurationSeconds": 3,
+      "cameraOffsetFactor": 0.2,
+      "radialOffsetMultiplier": 1.25
+    }
+  }
+}
