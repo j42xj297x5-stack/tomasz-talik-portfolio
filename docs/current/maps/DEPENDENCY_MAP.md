@@ -15,6 +15,7 @@ portfolioNodes
   └─> overlay (HTML/CSS panel content)
 
 assetManifest ─> AssetManager ─> plaqueTransition
+              └─> milkyWayBackground ─> galaxyBackgroundScene
 plaqueTransition ─> experience3d interaction state ─> overlay
 cameraRig ────────> experience3d interaction state ─> overlay
 orbitNodes ───────> experience3d interaction state
@@ -31,6 +32,7 @@ The required plaque path is therefore: `portfolioNodes → assetManifest → pla
 - `src/scene/cameraRig.js` owns focus, safe plaque dolly, return-home movement, and the remembered fine-pointer handoff. Reduced-motion and coarse-pointer contexts use shorter timings.
 - `src/scene/orbitNodes.js` owns the shared neutral hover scale/light and the neutral transition light. It does not select plaque glow colors.
 - `src/ui/overlay.js` renders readable project detail in HTML/CSS. Plaques are a scene transition and never replace panel content.
+- `src/assets/assetManifest.js` stages `/png/milky_way.webp` in `deferredWarm`; `src/scene/milkyWayBackground.js` consumes only the cached texture. Its camera-centred, unlit inner sphere renders before galaxy sprites in `galaxyBackgroundScene`, shares their `galaxies` progression multiplier, and is independent of main-scene lights and fog.
 
 ## Plaque asset mapping
 

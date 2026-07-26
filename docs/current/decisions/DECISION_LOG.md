@@ -321,3 +321,12 @@ Status: accepted / implemented.
 2. Radius, orbit speed, self rotation, enabled state, and opacity update live. Minimum and maximum size retain a debounced galaxy-only rebuild.
 3. Schema-version-1 imports normalize the former inner/outer radius and speed multiplier fields into the new radius and direct-speed contract; canonical exports contain only the simplified fields.
 4. Sun and moon panels expose live spotlight intensity, angle, and fade duration. Spotlight distance remains an internal Three.js cutoff but is hidden because its effect is not useful at the current scene scale.
+
+## 2026-07-26 — Camera-centred Milky Way inner-sphere background
+
+Status: accepted / implemented.
+
+1. `/png/milky_way.webp` is loaded in `deferredWarm` by the shared AssetManager and mapped onto the inside of an unlit, transparent sphere in `galaxyBackgroundScene`.
+2. The sphere renders before the five existing galaxy sprites without adding a render pass, follows the camera position, and remains independent of main-scene lighting and fog.
+3. Its reveal uses the same `galaxies` progression multiplier and approximately 0.65-second interpolation as the sprite layer; missing optional texture data leaves the existing galaxies operational.
+4. Radius, base opacity, and initial X/Y/Z orientation remain named module constants for later visual tuning rather than settings-panel controls.

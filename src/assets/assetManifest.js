@@ -50,6 +50,13 @@ const galaxySpriteAssets = GALAXY_SPRITE_PATHS.map((path, index) => withStage({
   decode: true
 }, ASSET_STAGES.DEFERRED_WARM));
 
+const milkyWayBackgroundAsset = withStage({
+  id: 'milky-way-background',
+  label: 'Milky Way inner-sphere background',
+  path: '/png/milky_way.webp',
+  type: 'texture'
+}, ASSET_STAGES.DEFERRED_WARM);
+
 const criticalInitialAssets = Object.freeze([
   withStage({ id: 'gltf-loader-module', label: 'Vendored GLTFLoader module', path: '/vendor/three/examples/jsm/loaders/GLTFLoader.js', type: 'script' }, ASSET_STAGES.CRITICAL_INITIAL),
   withStage({ id: 'monkey-model', label: 'Central monkey model', path: '/glb/monkey.glb', type: 'model' }, ASSET_STAGES.CRITICAL_INITIAL),
@@ -66,7 +73,8 @@ const deferredWarmAssets = Object.freeze([
     type: 'model'
   }, ASSET_STAGES.DEFERRED_WARM)),
     ...atmosphereRelicAssets,
-    ...galaxySpriteAssets
+    ...galaxySpriteAssets,
+    milkyWayBackgroundAsset
 ]);
 
 const optionalLateAssets = Object.freeze([]);

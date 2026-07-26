@@ -2,13 +2,21 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
-const [runtime, passes, galaxies, atmosphere, settings] = await Promise.all([
+const [runtime, passes, galaxies, milkyWay, manifest, atmosphere, settings] = await Promise.all([
   read('src/experience3d.js'), read('src/scene/renderScenePasses.js'),
-  read('src/scene/galaxySprites.js'), read('src/scene/atmosphere.js'),
+  read('src/scene/galaxySprites.js'), read('src/scene/milkyWayBackground.js'), read('src/assets/assetManifest.js'), read('src/scene/atmosphere.js'),
   read('public/data/experience3d-settings.json')
 ]);
 
 assert.match(runtime, /galaxyBackgroundScene\.add\(galaxyLayer\.group\)/);
+assert.ok(runtime.indexOf('galaxyBackgroundScene.add(milkyWayBackground.group)') < runtime.indexOf('galaxyBackgroundScene.add(galaxyLayer.group)'));
+assert.match(runtime, /milkyWayBackground\.setProgressionMultiplier\(effectiveLayerMultipliers\.galaxies\)/);
+assert.match(manifest, /id: 'milky-way-background'[\s\S]*path: '\/png\/milky_way\.webp'[\s\S]*ASSET_STAGES\.DEFERRED_WARM/);
+assert.doesNotMatch(milkyWay, /TextureLoader/);
+assert.match(milkyWay, /side: THREE\.BackSide/);
+assert.match(milkyWay, /depthWrite: false/);
+assert.match(milkyWay, /depthTest: false/);
+assert.match(milkyWay, /const visible = group\.visible;[\s\S]*const opacity = mesh\.material\.opacity;[\s\S]*group\.visible = visible;[\s\S]*mesh\.material\.opacity = opacity;/);
 assert.ok(passes.indexOf('renderer.render(galaxyBackgroundScene, camera)') < passes.indexOf('renderer.clearDepth()'));
 assert.ok(passes.indexOf('renderer.clearDepth()') < passes.indexOf('renderer.render(mainScene, camera)'));
 assert.equal((runtime.match(/new THREE\.WebGLRenderer/g) ?? []).length, 1);
