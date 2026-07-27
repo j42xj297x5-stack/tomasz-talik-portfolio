@@ -335,6 +335,15 @@ Status: accepted / implemented.
 
 Status: accepted / implemented.
 
-1. Sun and moon continue to use one shared progression multiplier, now increasing evenly from 60% at level 0 through 70%, 80%, and 90% to 100% at the stars level, then remaining at 100% for galaxies.
+1. Sun and moon continue to use one shared progression multiplier, now increasing evenly from 60% at level 0 through 70%, 80%, and 90% to 100% at the stones level, then remaining at 100% for galaxies.
 2. Disabling progression still yields a multiplier of 100%.
 3. Base spotlight intensity, horizon fading, orbital behavior, layer thresholds, and progression commit timing remain unchanged.
+
+## 2026-07-27 — Progressive cosmic reveal and animated stone relics
+
+Status: accepted / implemented.
+
+1. The cumulative atmosphere reveal uses one order: shells, small glyphs, stars, animated stones, then galaxies together with the Milky Way. Stones occupy the fourth stage so that they do not dominate the beginning of the experience.
+2. Galaxy sprites and the Milky Way appear together at the fifth stage through the shared `galaxies` progression multiplier.
+3. The runtime automatically plays every non-empty animation clip embedded in a stone GLB on a per-instance mixer with indefinite repeat; no internal mesh, controller, or clip names need to be identified in code. GLBs without animation remain valid static relics.
+4. Each cloned animation root stays inside an outer wrapper that independently preserves random placement, scale, orientation, manual spin, orbit, and drift regardless of embedded GLB animation.

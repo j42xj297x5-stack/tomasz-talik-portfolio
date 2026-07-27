@@ -14,8 +14,16 @@ portfolioNodes
   ├─> orbitNodes (glyph metadata and shared hover)
   └─> overlay (HTML/CSS panel content)
 
-assetManifest ─> AssetManager ─> plaqueTransition
-              └─> milkyWayBackground ─> galaxyBackgroundScene
+assetManifest ─> AssetManager ─┬─> plaqueTransition
+                               ├─> atmosphere
+                               └─> milkyWayBackground ─> galaxyBackgroundScene
+assetManifest ─> AssetManager ───> galaxySprites ──────> galaxyBackgroundScene
+
+atmosphereProgression ─> experience3d ─┬─> atmosphere (shells, smallGlyphs, stars, stones)
+                                      ├─> galaxySprites (galaxies)
+                                      ├─> milkyWayBackground (galaxies)
+                                      └─> sunCycle + moonCycle (sunMoon)
+
 plaqueTransition ─> experience3d interaction state ─> overlay
 cameraRig ────────> experience3d interaction state ─> overlay
 orbitNodes ───────> experience3d interaction state
@@ -26,13 +34,16 @@ The required plaque path is therefore: `portfolioNodes → assetManifest → pla
 ## Current Experience 3D contracts
 
 - `src/content/portfolioNodes.js` supplies each node's glyph model, `plaqueModelPath`, and `plaqueVisual` (`scale`, `position`, `frontYawOffset`, `plaqueGlowColor`), as well as the HTML/CSS panel content.
-- `src/assets/assetManifest.js` derives `plaque-${node.id}` entries from every record with `plaqueModelPath` and stages them in `deferredWarm`.
+- `src/assets/assetManifest.js` stages plaque, atmosphere-relic, galaxy-sprite, and Milky Way assets. `AssetManager` is the shared cache boundary consumed by `plaqueTransition`, `atmosphere`, `galaxySprites`, and `milkyWayBackground`.
+- `src/scene/atmosphere/atmosphereProgression.js` owns the cumulative order `shells → smallGlyphs → stars → stones → galaxies`. `src/experience3d.js` reads its multipliers and passes them to atmosphere, galaxy sprites, the Milky Way, sun, and moon; galaxy sprites and the Milky Way receive the same `galaxies` value.
+- The stone-model flow is `AssetManager GLTF → cached scene + animations → cloned animation root → instance AnimationMixer`. A GLB with non-empty clips receives an instance mixer; a GLB without clips remains static and does not receive one.
+- Each animated stone's cloned root is nested in an outer wrapper. The wrapper owns random position, scale, orientation, manual spin, group orbit, and drift, keeping whole-relic placement independent of transforms authored inside the GLB.
 - `src/scene/plaqueTransition.js` obtains a plaque through `AssetManager`; it stores one cloned scene wrapper per node ID and permits one active transition at a time. A failed model logs an isolated warning and returns control to the panel fallback for that node without disabling other plaques.
 - `src/experience3d.js` serializes interaction. A click locks interaction and orbit, focuses the camera, runs plaque reveal/hold/dolly, and opens the overlay only after the sequence completes. Close performs dolly-out, reverse reveal, camera return, orbit resume, and cursor handoff.
 - `src/scene/cameraRig.js` owns focus, safe plaque dolly, return-home movement, and the remembered fine-pointer handoff. Reduced-motion and coarse-pointer contexts use shorter timings.
 - `src/scene/orbitNodes.js` owns the shared neutral hover scale/light and the neutral transition light. It does not select plaque glow colors.
 - `src/ui/overlay.js` renders readable project detail in HTML/CSS. Plaques are a scene transition and never replace panel content.
-- `src/assets/assetManifest.js` stages `/png/milky_way.webp` in `deferredWarm`; `src/scene/milkyWayBackground.js` consumes only the cached texture. Its camera-centred, unlit inner sphere renders before galaxy sprites in `galaxyBackgroundScene`, shares their `galaxies` progression multiplier, and is independent of main-scene lights and fog.
+- `src/scene/milkyWayBackground.js` consumes the cached `/png/milky_way.webp` texture. Its camera-centred, unlit inner sphere renders before galaxy sprites in `galaxyBackgroundScene` and is independent of main-scene lights and fog.
 
 ## Plaque asset mapping
 
