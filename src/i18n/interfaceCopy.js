@@ -1,5 +1,10 @@
 const INTERFACE_COPY = {
   pl: {
+    experienceIntro: [
+      ['Całkiem niedawno', 'w naszej rodzimej galaktyce', 'pojawiła się myśl.'],
+      ['Za nią podążyły:', 'intencja,', 'słowo,', 'akcja.'],
+      ['Utworzyłem portfolio.']
+    ],
     panelDialogLabel: 'Szczegóły projektu',
     draftStatus: 'Treść robocza — finalna redakcja w przygotowaniu',
     projectLinksLabel: 'Linki projektu',
@@ -21,6 +26,11 @@ const INTERFACE_COPY = {
     enlargeScreenshot: 'Powiększ screenshot'
   },
   en: {
+    experienceIntro: [
+      ['Not so long ago', 'in our home galaxy', 'a thought appeared.'],
+      ['Then came:', 'intention,', 'word,', 'action.'],
+      ['I created a portfolio.']
+    ],
     panelDialogLabel: 'Project details',
     draftStatus: 'Draft content — final copy pending',
     projectLinksLabel: 'Project links',

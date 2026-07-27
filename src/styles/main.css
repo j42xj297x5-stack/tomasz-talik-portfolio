@@ -176,6 +176,74 @@ body {
   visibility: hidden;
 }
 
+.experience-intro {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: grid;
+  place-items: center;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  background: #000;
+  color: #fff;
+  opacity: 1;
+  pointer-events: none;
+  perspective: 900px;
+  transition: opacity 525ms ease;
+}
+
+.experience-intro__text {
+  width: min(780px, calc(100vw - 2rem));
+  font-family: Georgia, 'Times New Roman', ui-serif, serif;
+  font-size: clamp(1.05rem, 2.6vw, 1.75rem);
+  font-weight: 400;
+  line-height: 1.42;
+  text-align: center;
+  opacity: 0;
+  transform: translateY(65dvh) rotateX(5deg) scale(1.16);
+  transform-origin: 50% 50%;
+  will-change: transform, opacity;
+}
+
+.experience-intro__stanza {
+  margin: 0 0 clamp(1.25rem, 3.2vh, 2.2rem);
+}
+
+.experience-intro__stanza:last-child { margin-bottom: 0; }
+
+.experience-intro--playing .experience-intro__text {
+  animation: experience-intro-journey 8.5s cubic-bezier(0.3, 0.02, 0.35, 1) both;
+}
+
+.experience-intro--fading { opacity: 0; }
+
+@keyframes experience-intro-journey {
+  0% { opacity: 0; transform: translateY(65dvh) rotateX(5deg) scale(1.16); }
+  9% { opacity: 1; }
+  72% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(0) rotateX(1deg) scale(0.62); }
+}
+
+@media (max-width: 600px) {
+  .experience-intro__text {
+    font-size: clamp(1rem, 4.7vw, 1.35rem);
+    line-height: 1.35;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .experience-intro__text { transform: none; }
+  .experience-intro--playing .experience-intro__text {
+    animation: experience-intro-reduced 1.35s ease both;
+  }
+  @keyframes experience-intro-reduced {
+    0%, 100% { opacity: 0; transform: none; }
+    20%, 72% { opacity: 1; transform: none; }
+  }
+}
+
 .loader-overlay {
   position: fixed;
   inset: 0;
