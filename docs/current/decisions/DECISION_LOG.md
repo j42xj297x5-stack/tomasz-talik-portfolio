@@ -330,3 +330,11 @@ Status: accepted / implemented.
 2. The sphere renders before the five existing galaxy sprites without adding a render pass, follows the camera position, and remains independent of main-scene lighting and fog.
 3. Its reveal uses the same `galaxies` progression multiplier and approximately 0.65-second interpolation as the sprite layer; missing optional texture data leaves the existing galaxies operational.
 4. Radius, base opacity, and initial X/Y/Z orientation remain named module constants for later visual tuning rather than settings-panel controls.
+
+## 2026-07-27 — Even shared sun/moon intensity progression
+
+Status: accepted / implemented.
+
+1. Sun and moon continue to use one shared progression multiplier, now increasing evenly from 60% at level 0 through 70%, 80%, and 90% to 100% at the stars level, then remaining at 100% for galaxies.
+2. Disabling progression still yields a multiplier of 100%.
+3. Base spotlight intensity, horizon fading, orbital behavior, layer thresholds, and progression commit timing remain unchanged.

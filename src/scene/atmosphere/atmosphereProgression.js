@@ -10,10 +10,10 @@ export const ATMOSPHERE_PROGRESSION_MAPPING = Object.freeze({
   5: Object.freeze(['galaxies'])
 });
 export const SUN_MOON_LIGHT_MULTIPLIERS = Object.freeze({
-  0: 1,
-  1: 0.3,
-  2: 0.6,
-  3: 1,
+  0: 0.6,
+  1: 0.7,
+  2: 0.8,
+  3: 0.9,
   4: 1,
   5: 1
 });
