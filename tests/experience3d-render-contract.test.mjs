@@ -2,10 +2,11 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
-const [runtime, passes, galaxies, milkyWay, manifest, atmosphere, settings, interfaceCopy] = await Promise.all([
+const [runtime, passes, galaxies, milkyWay, manifest, atmosphere, settings, interfaceCopy, experienceIntro, styles] = await Promise.all([
   read('src/experience3d.js'), read('src/scene/renderScenePasses.js'),
   read('src/scene/galaxySprites.js'), read('src/scene/milkyWayBackground.js'), read('src/assets/assetManifest.js'), read('src/scene/atmosphere.js'),
-  read('public/data/experience3d-settings.json'), read('src/i18n/interfaceCopy.js')
+  read('public/data/experience3d-settings.json'), read('src/i18n/interfaceCopy.js'),
+  read('src/ui/experienceIntro.js'), read('src/styles/main.css')
 ]);
 
 assert.match(runtime, /import \{ createExperienceIntro \} from '.\/ui\/experienceIntro\.js'/);
@@ -20,6 +21,12 @@ assert.ok(introPlay < firstTick);
 assert.match(runtime, /restoreMilkyWayWarmup\(\);\s*}\s*\/\/[^\n]*\n\s*fogRevealController\.restart\(\);\s*\/\/[^\n]*\n\s*renderScenePasses\(renderer, galaxyBackgroundScene, scene, camera\)/);
 assert.match(interfaceCopy, /Całkiem niedawno[\s\S]*w naszej rodzimej galaktyce[\s\S]*Utworzyłem portfolio\./);
 assert.match(interfaceCopy, /Not so long ago[\s\S]*in our home galaxy[\s\S]*I created a portfolio\./);
+assert.match(experienceIntro, /experience-intro__viewport[\s\S]*experience-intro__crawl/);
+assert.match(experienceIntro, /viewport\.append\(text\);\s*root\.append\(viewport\)/);
+assert.match(experienceIntro, /lineElement\.textContent = line/);
+assert.match(styles, /\.experience-intro__viewport\s*\{[\s\S]*?overflow: hidden;[\s\S]*?perspective: 720px;[\s\S]*?perspective-origin: 50% 33%/);
+assert.match(styles, /\.experience-intro__crawl\s*\{[\s\S]*transform-origin: 50% 100%[\s\S]*transform-style: preserve-3d/);
+assert.match(styles, /@keyframes experience-intro-journey[\s\S]*translate3d\([^)]*-620px\)[\s\S]*rotateX\(58deg\)/);
 
 assert.match(runtime, /galaxyBackgroundScene\.add\(galaxyLayer\.group\)/);
 assert.ok(runtime.indexOf('galaxyBackgroundScene.add(milkyWayBackground.group)') < runtime.indexOf('galaxyBackgroundScene.add(galaxyLayer.group)'));

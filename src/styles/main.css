@@ -180,8 +180,6 @@ body {
   position: fixed;
   inset: 0;
   z-index: 90;
-  display: grid;
-  place-items: center;
   width: 100vw;
   height: 100vh;
   height: 100dvh;
@@ -190,11 +188,24 @@ body {
   color: #fff;
   opacity: 1;
   pointer-events: none;
-  perspective: 900px;
   transition: opacity 525ms ease;
 }
 
-.experience-intro__text {
+.experience-intro__viewport {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  perspective: 720px;
+  perspective-origin: 50% 33%;
+}
+
+.experience-intro__crawl {
+  position: absolute;
+  top: 50%;
+  left: 50%;
   width: min(780px, calc(100vw - 2rem));
   font-family: Georgia, 'Times New Roman', ui-serif, serif;
   font-size: clamp(1.05rem, 2.6vw, 1.75rem);
@@ -202,8 +213,10 @@ body {
   line-height: 1.42;
   text-align: center;
   opacity: 0;
-  transform: translateY(65dvh) rotateX(5deg) scale(1.16);
-  transform-origin: 50% 50%;
+  transform: translate3d(-50%, 68dvh, 110px) rotateX(58deg) scaleX(1.05);
+  transform-origin: 50% 100%;
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
   will-change: transform, opacity;
 }
 
@@ -213,29 +226,52 @@ body {
 
 .experience-intro__stanza:last-child { margin-bottom: 0; }
 
-.experience-intro--playing .experience-intro__text {
+.experience-intro--playing .experience-intro__crawl {
   animation: experience-intro-journey 8.5s cubic-bezier(0.3, 0.02, 0.35, 1) both;
 }
 
 .experience-intro--fading { opacity: 0; }
 
 @keyframes experience-intro-journey {
-  0% { opacity: 0; transform: translateY(65dvh) rotateX(5deg) scale(1.16); }
+  0% { opacity: 0; transform: translate3d(-50%, 68dvh, 110px) rotateX(58deg) scaleX(1.05); }
   9% { opacity: 1; }
-  72% { opacity: 1; }
-  100% { opacity: 0; transform: translateY(0) rotateX(1deg) scale(0.62); }
+  76% { opacity: 1; }
+  100% { opacity: 0; transform: translate3d(-50%, -13dvh, -620px) rotateX(58deg) scaleX(1.02); }
 }
 
 @media (max-width: 600px) {
-  .experience-intro__text {
-    font-size: clamp(1rem, 4.7vw, 1.35rem);
+  .experience-intro__viewport {
+    perspective: 880px;
+    perspective-origin: 50% 35%;
+  }
+
+  .experience-intro__crawl {
+    width: min(88vw, 32rem);
+    font-size: clamp(0.95rem, 4.25vw, 1.25rem);
     line-height: 1.35;
+    transform: translate3d(-50%, 65dvh, 70px) rotateX(52deg) scaleX(1.03);
+  }
+
+  @keyframes experience-intro-journey {
+    0% { opacity: 0; transform: translate3d(-50%, 65dvh, 70px) rotateX(52deg) scaleX(1.03); }
+    9% { opacity: 1; }
+    76% { opacity: 1; }
+    100% { opacity: 0; transform: translate3d(-50%, -10dvh, -590px) rotateX(52deg); }
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .experience-intro__text { transform: none; }
-  .experience-intro--playing .experience-intro__text {
+  .experience-intro__viewport {
+    display: grid;
+    place-items: center;
+    perspective: none;
+  }
+  .experience-intro__crawl {
+    position: static;
+    transform: none;
+    transform-style: flat;
+  }
+  .experience-intro--playing .experience-intro__crawl {
     animation: experience-intro-reduced 1.35s ease both;
   }
   @keyframes experience-intro-reduced {
