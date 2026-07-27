@@ -352,7 +352,9 @@ Status: accepted / implemented.
 
 Status: accepted / implemented.
 
-1. Experience 3D creates a localized, opaque black intro below the loader and above the runtime shell during loading, preventing the warm-up canvas from becoming visible during loader fade.
-2. Once temporary warm-up visibility is restored, fog is reset and one correct scene frame replaces the warm-up buffer before the loader is removed.
-3. Startup awaits the intro in a dedicated `intro` interaction state. Fog reveal, orbit, atmosphere progression, celestial updates, user interaction, and the render loop begin only after the intro removes its DOM.
-4. The standard sequence uses an approximately 8.5-second readable depth motion followed by a short background fade; reduced-motion users receive a short, static fade-only presentation. Animation and transition events have one-shot timeout fallbacks.
+1. Every entry to Experience 3D includes a mandatory localized opening sequence after the loader; Classic 2D has no such intro.
+2. The intro is an opaque black DOM/CSS layer below the loader and above the scene. Its Polish or English white text travels as one perspective CSS 3D plane in a single continuous pass without pauses, and the background fades only after the text finishes.
+3. Once temporary shader warm-up visibility is restored, fog is reset and one correct scene frame replaces the warm-up buffer before the loader is removed and the intro begins.
+4. Startup awaits the intro in a dedicated `intro` interaction state. Scene clocks, fog reveal, orbit, atmosphere progression, celestial updates, user interaction, and the render loop remain stopped until the intro removes its DOM; only then does the state become `idle`, fog reveal start, and the main `tick()` run.
+5. `prefers-reduced-motion` receives a short static fade without the spatial journey.
+6. The intro intentionally has no skip control and stores no “already shown” state, so it replays on every Experience 3D entry.
