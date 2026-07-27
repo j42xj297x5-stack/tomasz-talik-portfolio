@@ -206,14 +206,14 @@ body {
   position: absolute;
   top: 50%;
   left: 50%;
-  width: min(780px, calc(100vw - 2rem));
+  width: 120vw;
   font-family: Georgia, 'Times New Roman', ui-serif, serif;
   font-size: clamp(1.05rem, 2.6vw, 1.75rem);
   font-weight: 400;
   line-height: 1.42;
   text-align: center;
   opacity: 0;
-  transform: translate3d(-50%, 68dvh, 110px) rotateX(58deg) scaleX(1.05);
+  transform: translate3d(-50%, 68dvh, 150px) rotateX(72deg) scale3d(3.35, 1.85, 1);
   transform-origin: 50% 100%;
   transform-style: preserve-3d;
   backface-visibility: hidden;
@@ -230,13 +230,26 @@ body {
   animation: experience-intro-journey 8.5s cubic-bezier(0.3, 0.02, 0.35, 1) both;
 }
 
+.experience-intro--playing .experience-intro__viewport {
+  animation: experience-intro-perspective 8.5s cubic-bezier(0.3, 0.02, 0.35, 1) both;
+}
+
 .experience-intro--fading { opacity: 0; }
 
 @keyframes experience-intro-journey {
-  0% { opacity: 0; transform: translate3d(-50%, 68dvh, 110px) rotateX(58deg) scaleX(1.05); }
+  0% { opacity: 0; transform: translate3d(-50%, 68dvh, 150px) rotateX(72deg) scale3d(3.35, 1.85, 1); }
   9% { opacity: 1; }
+  20% { transform: translate3d(-50%, 48dvh, 45px) rotateX(70deg) scale3d(2.75, 1.62, 1); }
+  55% { transform: translate3d(-50%, 12dvh, -255px) rotateX(64deg) scale3d(1.42, 1.16, 1); }
   76% { opacity: 1; }
+  80% { transform: translate3d(-50%, -4dvh, -455px) rotateX(59deg) scale3d(1.08, 1.03, 1); }
   100% { opacity: 0; transform: translate3d(-50%, -13dvh, -620px) rotateX(58deg) scaleX(1.02); }
+}
+
+@keyframes experience-intro-perspective {
+  0%, 55% { perspective: 470px; perspective-origin: 50% 30%; }
+  80% { perspective: 650px; perspective-origin: 50% 32%; }
+  100% { perspective: 720px; perspective-origin: 50% 33%; }
 }
 
 @media (max-width: 600px) {
@@ -246,17 +259,26 @@ body {
   }
 
   .experience-intro__crawl {
-    width: min(88vw, 32rem);
+    width: min(96vw, 34rem);
     font-size: clamp(0.95rem, 4.25vw, 1.25rem);
     line-height: 1.35;
-    transform: translate3d(-50%, 65dvh, 70px) rotateX(52deg) scaleX(1.03);
+    transform: translate3d(-50%, 65dvh, 85px) rotateX(58deg) scale3d(2.1, 1.4, 1);
   }
 
   @keyframes experience-intro-journey {
-    0% { opacity: 0; transform: translate3d(-50%, 65dvh, 70px) rotateX(52deg) scaleX(1.03); }
+    0% { opacity: 0; transform: translate3d(-50%, 65dvh, 85px) rotateX(58deg) scale3d(2.1, 1.4, 1); }
     9% { opacity: 1; }
+    20% { transform: translate3d(-50%, 47dvh, 20px) rotateX(57deg) scale3d(1.8, 1.3, 1); }
+    55% { transform: translate3d(-50%, 12dvh, -250px) rotateX(54deg) scale3d(1.24, 1.08, 1); }
     76% { opacity: 1; }
+    80% { transform: translate3d(-50%, -2dvh, -445px) rotateX(52deg) scale3d(1.04, 1.01, 1); }
     100% { opacity: 0; transform: translate3d(-50%, -10dvh, -590px) rotateX(52deg); }
+  }
+
+  @keyframes experience-intro-perspective {
+    0%, 55% { perspective: 760px; perspective-origin: 50% 33%; }
+    80% { perspective: 840px; perspective-origin: 50% 34%; }
+    100% { perspective: 880px; perspective-origin: 50% 35%; }
   }
 }
 
@@ -268,8 +290,12 @@ body {
   }
   .experience-intro__crawl {
     position: static;
+    width: min(780px, calc(100vw - 2rem));
     transform: none;
     transform-style: flat;
+  }
+  .experience-intro--playing .experience-intro__viewport {
+    animation: none;
   }
   .experience-intro--playing .experience-intro__crawl {
     animation: experience-intro-reduced 1.35s ease both;
@@ -277,6 +303,12 @@ body {
   @keyframes experience-intro-reduced {
     0%, 100% { opacity: 0; transform: none; }
     20%, 72% { opacity: 1; transform: none; }
+  }
+}
+
+@media (max-width: 600px) and (prefers-reduced-motion: reduce) {
+  .experience-intro__crawl {
+    width: min(88vw, 32rem);
   }
 }
 
