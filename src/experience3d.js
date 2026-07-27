@@ -23,6 +23,7 @@ import { ASSET_STAGES, INITIAL_PRELOAD_GROUPS, DEFERRED_PRELOAD_GROUPS, OPTIONAL
 import { createLoadingDiagnostics, preloadAssets } from './assets/preloadAssets.js';
 import { createAssetManager } from './assets/assetManager.js';
 import { createLoaderOverlay } from './ui/loaderOverlay.js';
+import { createExperienceIntro } from './ui/experienceIntro.js';
 import { createRuntimeDiagnostics } from './utils/runtimeDiagnostics.js';
 import { routeOptionsEvent } from './utils/optionsEventRouter.js';
 import { loadExperience3dSettings, toRuntimeSettings } from './config/experience3dSettings.js';
@@ -53,6 +54,7 @@ const isMobileRuntime = mobileQuery.matches;
 const preloadConcurrency = isMobileRuntime ? 2 : 4;
 const assetManager = createAssetManager({ diagnostics: loadingDiagnostics });
 const loaderOverlay = createLoaderOverlay({ debug: debugLoading });
+const experienceIntro = createExperienceIntro({ language: document.documentElement.lang });
 const unsubscribeLoaderDiagnostics = loadingDiagnostics.subscribe((snapshot) => loaderOverlay.update(snapshot));
 const loadedSettings = await loadExperience3dSettings({ debug: debugLoading });
 let settingsSource = loadedSettings.settingsSource;
@@ -531,14 +533,14 @@ try {
 }
 // Warm-up may use the final shader variant, but it never consumes intro time.
 fogRevealController.restart();
+// Replace the warm-up buffer (which exposed hidden layers) before either overlay is removed.
+renderScenePasses(renderer, galaxyBackgroundScene, scene, camera);
 loadingDiagnostics.markEvent('rendererCompileEnd');
 assetManager.markWarmup({ warmupFrameComplete: true, compileWarmupMs: performance.now() - compileStartedAt });
 loadingDiagnostics.markEvent('firstWarmupRender');
 runtimeDiagnostics.markWarmupComplete();
 runtimeDiagnostics.census('warmupComplete');
 
-const timer = new THREE.Timer();
-timer.connect(document);
 const orbitCenterWorldPosition = new THREE.Vector3();
 function tick(timestamp) {
   timer.update(timestamp);
@@ -578,10 +580,16 @@ shell?.classList.remove('runtime-shell--loading');
 await loaderOverlay.complete();
 unsubscribeLoaderDiagnostics();
 loadingDiagnostics.markEvent('loaderFadeEnd');
+interactionState = 'intro';
+loadingDiagnostics.markEvent('introStart');
+await experienceIntro.play();
+loadingDiagnostics.markEvent('introEnd');
 interactionState = 'idle';
 loadingDiagnostics.markEvent('interactionReady');
 runtimeDiagnostics.markInteractionReady();
 runtimeDiagnostics.census('interactionReady');
 runtimeDiagnostics.count('tickStart');
+const timer = new THREE.Timer();
+timer.connect(document);
 fogRevealController.start();
 tick();

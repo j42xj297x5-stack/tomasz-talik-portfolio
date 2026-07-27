@@ -2,11 +2,24 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
-const [runtime, passes, galaxies, milkyWay, manifest, atmosphere, settings] = await Promise.all([
+const [runtime, passes, galaxies, milkyWay, manifest, atmosphere, settings, interfaceCopy] = await Promise.all([
   read('src/experience3d.js'), read('src/scene/renderScenePasses.js'),
   read('src/scene/galaxySprites.js'), read('src/scene/milkyWayBackground.js'), read('src/assets/assetManifest.js'), read('src/scene/atmosphere.js'),
-  read('public/data/experience3d-settings.json')
+  read('public/data/experience3d-settings.json'), read('src/i18n/interfaceCopy.js')
 ]);
+
+assert.match(runtime, /import \{ createExperienceIntro \} from '.\/ui\/experienceIntro\.js'/);
+assert.match(runtime, /const experienceIntro = createExperienceIntro\(\{ language: document\.documentElement\.lang \}\)/);
+const loaderComplete = runtime.indexOf('await loaderOverlay.complete()');
+const introPlay = runtime.indexOf('await experienceIntro.play()');
+const fogStart = runtime.lastIndexOf('fogRevealController.start()');
+const firstTick = runtime.indexOf('tick();', introPlay);
+assert.ok(loaderComplete < introPlay);
+assert.ok(introPlay < fogStart);
+assert.ok(introPlay < firstTick);
+assert.match(runtime, /restoreMilkyWayWarmup\(\);\s*}\s*\/\/[^\n]*\n\s*fogRevealController\.restart\(\);\s*\/\/[^\n]*\n\s*renderScenePasses\(renderer, galaxyBackgroundScene, scene, camera\)/);
+assert.match(interfaceCopy, /Całkiem niedawno[\s\S]*w naszej rodzimej galaktyce[\s\S]*Utworzyłem portfolio\./);
+assert.match(interfaceCopy, /Not so long ago[\s\S]*in our home galaxy[\s\S]*I created a portfolio\./);
 
 assert.match(runtime, /galaxyBackgroundScene\.add\(galaxyLayer\.group\)/);
 assert.ok(runtime.indexOf('galaxyBackgroundScene.add(milkyWayBackground.group)') < runtime.indexOf('galaxyBackgroundScene.add(galaxyLayer.group)'));

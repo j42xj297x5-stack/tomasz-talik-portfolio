@@ -347,3 +347,12 @@ Status: accepted / implemented.
 2. Galaxy sprites and the Milky Way appear together at the fifth stage through the shared `galaxies` progression multiplier.
 3. The runtime automatically plays every non-empty animation clip embedded in a stone GLB on a per-instance mixer with indefinite repeat; no internal mesh, controller, or clip names need to be identified in code. GLBs without animation remain valid static relics.
 4. Each cloned animation root stays inside an outer wrapper that independently preserves random placement, scale, orientation, manual spin, orbit, and drift regardless of embedded GLB animation.
+
+## 2026-07-27 — Gated Experience 3D opening intro
+
+Status: accepted / implemented.
+
+1. Experience 3D creates a localized, opaque black intro below the loader and above the runtime shell during loading, preventing the warm-up canvas from becoming visible during loader fade.
+2. Once temporary warm-up visibility is restored, fog is reset and one correct scene frame replaces the warm-up buffer before the loader is removed.
+3. Startup awaits the intro in a dedicated `intro` interaction state. Fog reveal, orbit, atmosphere progression, celestial updates, user interaction, and the render loop begin only after the intro removes its DOM.
+4. The standard sequence uses an approximately 8.5-second readable depth motion followed by a short background fade; reduced-motion users receive a short, static fade-only presentation. Animation and transition events have one-shot timeout fallbacks.
