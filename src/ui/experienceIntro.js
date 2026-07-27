@@ -26,8 +26,11 @@ export function createExperienceIntro({ language } = {}) {
   root.className = 'experience-intro';
   root.setAttribute('aria-hidden', 'true');
 
+  const viewport = document.createElement('div');
+  viewport.className = 'experience-intro__viewport';
+
   const text = document.createElement('div');
-  text.className = 'experience-intro__text';
+  text.className = 'experience-intro__crawl';
   getInterfaceCopy(language).experienceIntro.forEach((lines) => {
     const stanza = document.createElement('p');
     stanza.className = 'experience-intro__stanza';
@@ -39,7 +42,8 @@ export function createExperienceIntro({ language } = {}) {
     });
     text.append(stanza);
   });
-  root.append(text);
+  viewport.append(text);
+  root.append(viewport);
   document.body.append(root);
 
   let playPromise;
