@@ -1,12 +1,12 @@
 import * as THREE from '../../vendor/three.js';
 
-export const ATMOSPHERE_PROGRESSION_LAYER_ORDER = Object.freeze(['stones', 'shells', 'smallGlyphs', 'stars', 'galaxies']);
+export const ATMOSPHERE_PROGRESSION_LAYER_ORDER = Object.freeze(['shells', 'smallGlyphs', 'stars', 'stones', 'galaxies']);
 export const ATMOSPHERE_PROGRESSION_MAPPING = Object.freeze({
   0: Object.freeze(['monkey', 'mainGlyphs', 'sun', 'moon']),
-  1: Object.freeze(['stones']),
-  2: Object.freeze(['shells']),
-  3: Object.freeze(['smallGlyphs']),
-  4: Object.freeze(['stars']),
+  1: Object.freeze(['shells']),
+  2: Object.freeze(['smallGlyphs']),
+  3: Object.freeze(['stars']),
+  4: Object.freeze(['stones']),
   5: Object.freeze(['galaxies'])
 });
 export const SUN_MOON_LIGHT_MULTIPLIERS = Object.freeze({
@@ -31,7 +31,7 @@ const DEFAULT_TRANSITION_TIMES = Object.freeze({
 function createTransitionTimes(overrides = {}) {
   return ATMOSPHERE_PROGRESSION_LAYER_ORDER.reduce((times, key, index) => {
     const legacyKeys = ['starsDust', 'shells', 'miniGlyphs', 'sunMoon', 'finalAura'];
-    const fallback = overrides[key] ?? overrides[`threshold${index + 1}`] ?? overrides[legacyKeys[index]] ?? DEFAULT_TRANSITION_TIMES[key];
+    const fallback = overrides[`threshold${index + 1}`] ?? overrides[key] ?? overrides[legacyKeys[index]] ?? DEFAULT_TRANSITION_TIMES[key];
     const numeric = Number(fallback);
     times[key] = Number.isFinite(numeric) && numeric > 0 ? numeric : DEFAULT_TRANSITION_TIMES[key];
     return times;
