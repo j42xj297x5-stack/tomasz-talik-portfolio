@@ -28,7 +28,7 @@ Do not scan `docs/current` recursively. Read an additional module only when the 
 | Task | Read first | Add only when needed |
 | --- | --- | --- |
 | Atmosphere/relics, layer progression, galaxies/Milky Way, embedded stone GLB animation | `technical/THREE_SCENE_MODEL.md`; `src/scene/atmosphere/atmosphereProgression.js`; `src/scene/atmosphere.js` | `src/scene/galaxySprites.js`; `src/scene/milkyWayBackground.js`; creation/progression/update sections of `src/experience3d.js`; `src/assets/assetManifest.js` |
-| Experience 3D bootstrap, input, interaction state, panel timing | `src/experience3d.js`; `technical/FRONTEND_RUNTIME_MODEL.md`; `technical/THREE_SCENE_MODEL.md` | `src/scene/cameraRig.js`; `src/ui/overlay.js` |
+| Experience 3D bootstrap, opening intro, input, interaction state, panel timing | `src/experience3d.js`; `technical/FRONTEND_RUNTIME_MODEL.md`; `technical/THREE_SCENE_MODEL.md` | `src/ui/experienceIntro.js`; `src/i18n/interfaceCopy.js`; intro section of `src/styles/main.css`; `src/scene/cameraRig.js`; `src/ui/overlay.js` |
 | Plaque asset/config/cache/material lifecycle | `src/content/portfolioNodes.js`; `src/assets/assetManifest.js`; `src/scene/plaqueTransition.js`; `technical/THREE_SCENE_MODEL.md` | `src/scene/orbitNodes.js`; `src/experience3d.js` |
 | Camera focus, dolly, return, cursor handoff | `src/scene/cameraRig.js`; `src/experience3d.js`; `technical/THREE_SCENE_MODEL.md` | `src/scene/orbitNodes.js` |
 | Glyph hover behavior | `src/scene/orbitNodes.js`; `src/experience3d.js`; `technical/GLYPH_HOVER_EFFECTS_MODEL.md` | `src/ui/hoverLabel.js` |

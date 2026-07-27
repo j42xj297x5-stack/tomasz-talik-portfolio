@@ -21,6 +21,10 @@
 - Atmosphere progression is cumulative and has one canonical order: **1. shells → 2. small glyphs → 3. stars → 4. animated stones → 5. galaxies and the Milky Way**. Level 0 shows only the base world—monkey, main glyphs, sun, and moon—and hides all five progressive atmosphere layers. Every earlier layer remains visible after a later level unlocks. Galaxy sprites and the Milky Way share the same `galaxies` multiplier at level 5.
 - Sun and moon share one progression multiplier applied to their configured base spotlight intensities. It starts at 60%, rises evenly through 70%, 80%, and 90% as the first three layers unlock, reaches 100% at the stones layer, and remains at 100% for galaxies; disabling progression returns the multiplier to 100%.
 
+## Startup rendering contract
+
+Shader warm-up may temporarily expose plaques, atmosphere layers, galaxy sprites, and the Milky Way so their render paths compile. The runtime must restore every temporary visibility and material state and then render the proper initial frame, replacing that exposed-layer buffer before the canvas can be uncovered. The loader remains above a fully black intro during this work; after loader completion the intro continues to cover the canvas until its sequence finishes. Only then may the real fog reveal and main scene loop begin. The intro itself is a DOM/CSS accessibility-aware presentation layer, not an object or pass in either Three.js scene.
+
 ## Interaction sequence
 
 Only `idle` accepts normal hover and click/tap interaction. Clicking a glyph locks interaction and pauses orbit, then follows this guarded sequence:

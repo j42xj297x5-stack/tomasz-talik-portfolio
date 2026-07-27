@@ -28,6 +28,11 @@ plaqueTransition ─> experience3d interaction state ─> overlay
 cameraRig ────────> experience3d interaction state ─> overlay
 orbitNodes ───────> experience3d interaction state
 interfaceCopy ────> experienceIntro ────────────────> experience3d startup gate
+loader completion ─────────────────────────────────> experience3d startup gate
+clean post-warm-up render ─────────────────────────> experience3d startup gate
+experience3d startup gate ─┬─> interactionReady
+                           ├─> fog reveal start
+                           └─> main tick start
 ```
 
 The required plaque path is therefore: `portfolioNodes → assetManifest → plaqueTransition → cameraRig / experience3d → overlay`.
@@ -44,7 +49,7 @@ The required plaque path is therefore: `portfolioNodes → assetManifest → pla
 - `src/scene/cameraRig.js` owns focus, safe plaque dolly, return-home movement, and the remembered fine-pointer handoff. Reduced-motion and coarse-pointer contexts use shorter timings.
 - `src/scene/orbitNodes.js` owns the shared neutral hover scale/light and the neutral transition light. It does not select plaque glow colors.
 - `src/ui/overlay.js` renders readable project detail in HTML/CSS. Plaques are a scene transition and never replace panel content.
-- `src/ui/experienceIntro.js` creates the localized black startup layer while loading is still active. After warm-up state restoration and a clean replacement render, `src/experience3d.js` removes the loader, awaits the intro, and only then releases interaction, fog reveal, and the animation loop.
+- `src/i18n/interfaceCopy.js → src/ui/experienceIntro.js → src/experience3d.js` is the opening-gate dependency. The Experience 3D-only intro is created while loading, below the loader and above the scene. Restored warm-up state and its clean replacement render are prerequisites; loader completion then hands control to the intro as a distinct gate before `interactionReady`, fog reveal, and the main `tick()`.
 - `src/scene/milkyWayBackground.js` consumes the cached `/png/milky_way.webp` texture. Its camera-centred, unlit inner sphere renders before galaxy sprites in `galaxyBackgroundScene` and is independent of main-scene lights and fog.
 
 ## Plaque asset mapping
