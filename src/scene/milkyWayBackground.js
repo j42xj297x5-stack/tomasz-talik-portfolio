@@ -1,7 +1,7 @@
 import * as THREE from '../vendor/three.js';
 
 export const MILKY_WAY_RADIUS = 80;
-export const MILKY_WAY_BASE_OPACITY = 0.75;
+export const MILKY_WAY_BASE_OPACITY = 0.5;
 export const MILKY_WAY_ROTATION_X = 0.18;
 export const MILKY_WAY_ROTATION_Y = Math.PI / 2;
 export const MILKY_WAY_ROTATION_Z = -0.22;
