@@ -51,6 +51,8 @@ Atmosphere relic hydration also completes under the loader. Stone placement clam
 
 The current stone baseline is 30 cached clones distributed between radii 18 and 20, with scale 2–5, safe radius 3.5, rotation speed 0.05–0.09, orbit speed 0.003, full opacity, and the six `stone_01.glb` through `stone_06.glb` sources.
 
+Each stone instance clones the cached GLTF scene into an inner animation root contained by a separate transform wrapper. When a stone GLB contains embedded animation clips, the atmosphere runtime automatically starts every non-empty clip on an instance-owned mixer, loops it indefinitely, and randomizes its initial time offset. Position, random orientation, scale, manual spin, orbit, and drift remain on the outer wrapper, so embedded animation cannot overwrite whole-stone placement. Stone GLBs without clips retain the same static-root behavior without creating a mixer.
+
 For each cached wrapper, `plaqueVisual` configures:
 
 - `scale` — model scale after bounds normalization;
