@@ -9,6 +9,65 @@ const PROGRESSION_EPSILON = 0.0001;
 const RELIC_DEPTH_WRITE_OPACITY_THRESHOLD = 0.98;
 function randomPointInShell(innerRadius, outerRadius) { const d = new THREE.Vector3(Math.random()*2-1,Math.random()*2-1,Math.random()*2-1).normalize(); const r = Math.cbrt(Math.random()*(outerRadius**3-innerRadius**3)+innerRadius**3); return d.multiplyScalar(r); }
 
+function shuffledCopy(items) {
+  const shuffled = [...items];
+  for (let i = shuffled.length - 1; i > 0; i -= 1) {
+    const swapIndex = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[swapIndex]] = [shuffled[swapIndex], shuffled[i]];
+  }
+  return shuffled;
+}
+
+function randomUnitQuaternion() {
+  const u1 = Math.random();
+  const u2 = Math.random() * Math.PI * 2;
+  const u3 = Math.random() * Math.PI * 2;
+  const root1 = Math.sqrt(1 - u1);
+  const root2 = Math.sqrt(u1);
+  return new THREE.Quaternion(
+    root1 * Math.sin(u2),
+    root1 * Math.cos(u2),
+    root2 * Math.sin(u3),
+    root2 * Math.cos(u3)
+  );
+}
+
+function createSphericalShellSlots(count, innerRadius, outerRadius) {
+  const instanceCount = Math.max(0, Math.floor(count));
+  if (instanceCount === 0) return [];
+  const rotation = randomUnitQuaternion();
+  const goldenAngle = Math.PI * (3 - Math.sqrt(5));
+  const innerCubed = innerRadius ** 3;
+  const radiusVolume = outerRadius ** 3 - innerCubed;
+
+  return Array.from({ length: instanceCount }, (_, index) => {
+    const y = 1 - (2 * (index + 0.5)) / instanceCount;
+    const horizontalRadius = Math.sqrt(Math.max(0, 1 - y * y));
+    const angle = goldenAngle * index;
+    const direction = new THREE.Vector3(
+      Math.cos(angle) * horizontalRadius,
+      y,
+      Math.sin(angle) * horizontalRadius
+    ).applyQuaternion(rotation);
+    const radius = Math.cbrt(innerCubed + Math.random() * radiusVolume);
+    return { direction, position: direction.clone().multiplyScalar(radius) };
+  });
+}
+
+function validateStoneRelicDistribution(slots, assignedSources, pool, innerRadius, outerRadius) {
+  const epsilon = 0.000001;
+  const sourceCounts = new Map(pool.map((source) => [source, 0]));
+  assignedSources.forEach((source) => sourceCounts.set(source, (sourceCounts.get(source) ?? 0) + 1));
+  const counts = [...sourceCounts.values()];
+  return slots.every(({ direction, position }) => (
+    Math.abs(direction.length() - 1) <= epsilon
+    && position.length() >= innerRadius - epsilon
+    && position.length() <= outerRadius + epsilon
+  ))
+    && (counts.length === 0 || Math.max(...counts) - Math.min(...counts) <= 1)
+    && (pool.length <= 1 || assignedSources.every((source, index) => index === 0 || source !== assignedSources[index - 1]));
+}
+
 function resolveAtmosphereConfig(overrides = {}) { return { ...DEFAULT_BACKGROUND_ATMOSPHERE_CONFIG, ...overrides, dust: { ...DEFAULT_BACKGROUND_ATMOSPHERE_CONFIG.dust, ...(overrides?.dust ?? {}) }, stoneRelics: { ...DEFAULT_BACKGROUND_ATMOSPHERE_CONFIG.stoneRelics, ...(overrides?.stoneRelics ?? {}) }, shellRelics: { ...DEFAULT_BACKGROUND_ATMOSPHERE_CONFIG.shellRelics, ...(overrides?.shellRelics ?? {}) }, smallGlyphRelics: { ...DEFAULT_BACKGROUND_ATMOSPHERE_CONFIG.smallGlyphRelics, ...(overrides?.smallGlyphRelics ?? {}) } }; }
 function createDustField(config) { const dust=config.dust; const outer=Math.max(0,dust.outerRadius); const inner=Math.min(outer,Math.max(0,dust.innerRadius,dust.safeRadius)); const positions=new Float32Array(dust.count*3); for(let i=0;i<dust.count;i+=1){const idx=i*3;const p=randomPointInShell(inner,outer); positions[idx]=p.x;positions[idx+1]=p.y;positions[idx+2]=p.z;} const g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.BufferAttribute(positions,3)); const m=new THREE.PointsMaterial(); const points=new THREE.Points(g,m); points.raycast=()=>{}; return { points, material:m }; }
 function createShellDebugHelpers(config){ const g=new THREE.Group(); const mk=(r,c)=>new THREE.Mesh(new THREE.SphereGeometry(r,24,18),new THREE.MeshBasicMaterial({color:c,wireframe:true,transparent:true,opacity:0.35,depthTest:false,depthWrite:false})); g.add(mk(config.shellInnerRadius,0x66e0ff),mk(config.shellOuterRadius,0xffffff)); return g; }
@@ -63,7 +122,7 @@ export function createBackgroundAtmosphere(configOverrides = {}, { assetManager 
   function clearShellRelics(){ while(shellRelicsGroup.children.length>0){ const c=shellRelicsGroup.children.pop(); c.traverse?.((m)=>{ if(!m.isMesh) return; (Array.isArray(m.material)?m.material:[m.material]).forEach((mat)=>mat?.dispose?.());}); } shellRelicStates.length=0; }
   function clearSmallGlyphRelics(){ while(smallGlyphRelicsGroup.children.length>0){ const c=smallGlyphRelicsGroup.children.pop(); c.traverse?.((m)=>{ if(!m.isMesh) return; (Array.isArray(m.material)?m.material:[m.material]).forEach((mat)=>mat?.dispose?.());}); } smallGlyphRelicStates.length=0; }
   function setObjectReveal(state, reveal, updateMaterials){ if(updateMaterials){ state.materials.forEach((material)=>{ const opacity=(material.userData?.targetOpacity ?? 1)*reveal; if(Math.abs(material.opacity-opacity)>PROGRESSION_EPSILON) material.opacity=opacity; const depthWrite=opacity>=RELIC_DEPTH_WRITE_OPACITY_THRESHOLD; if(material.depthWrite!==depthWrite) material.depthWrite=depthWrite; }); } state.object.scale.copy(state.targetScale).multiplyScalar(0.88+0.12*reveal); }
-  function rebuildStoneRelics(){ lifecycleCounts.stoneBuilds += 1; clearRelics(); const s=config.stoneRelics; if(!config.enabled||!s.enabled) return; const pool=s.models.filter((url)=>relicModelCache.has(url)); for(let i=0;i<s.count&&pool.length;i+=1){ const gltf=relicModelCache.get(pool[Math.floor(Math.random()*pool.length)]); const cloned=cloneRelicModel(gltf.scene, s.debugVisible?1:s.opacity); const animationRoot=cloned.object; const model=new THREE.Group(); model.add(animationRoot); const clips=(gltf.animations??[]).filter((clip)=>clip&&clip.duration>0&&clip.tracks?.length>0); const mixer=clips.length>0?new THREE.AnimationMixer(animationRoot):null; const actions=mixer?clips.map((clip)=>{ const action=mixer.clipAction(clip); action.setLoop(THREE.LoopRepeat,Infinity); action.clampWhenFinished=false; action.play(); action.time=Math.random()*clip.duration; return action; }):[]; const scale=randomBetween(s.minScale,s.maxScale)*(s.debugVisible?1.8:1); const outer=Math.max(0,s.shellOuterRadius); const inner=Math.min(outer,Math.max(s.shellInnerRadius,s.safeRadius)); const pos=randomPointInShell(inner,outer); model.position.copy(pos); model.rotation.set(Math.random()*Math.PI*2,Math.random()*Math.PI*2,Math.random()*Math.PI*2); model.scale.setScalar(scale); stoneRelicsGroup.add(model); stoneRelicStates.push({object:model,animationRoot,mixer,actions,materials:cloned.materials,basePosition:pos.clone(),radialDirection:pos.clone().normalize(),targetScale:model.scale.clone(),spin:new THREE.Vector3(randomBetween(s.rotationSpeedMin,s.rotationSpeedMax),randomBetween(s.rotationSpeedMin,s.rotationSpeedMax),randomBetween(s.rotationSpeedMin,s.rotationSpeedMax))}); } }
+  function rebuildStoneRelics(){ lifecycleCounts.stoneBuilds += 1; clearRelics(); const s=config.stoneRelics; if(!config.enabled||!s.enabled) return; const pool=shuffledCopy(s.models.filter((url)=>relicModelCache.has(url))); if(pool.length===0) return; const outer=Math.max(0,s.shellOuterRadius); const inner=Math.min(outer,Math.max(s.shellInnerRadius,s.safeRadius)); const slots=createSphericalShellSlots(s.count,inner,outer); const assignedSources=slots.map((_,index)=>pool[index%pool.length]); slots.forEach((slot,i)=>{ const gltf=relicModelCache.get(assignedSources[i]); const cloned=cloneRelicModel(gltf.scene, s.debugVisible?1:s.opacity); const animationRoot=cloned.object; const model=new THREE.Group(); model.add(animationRoot); const clips=(gltf.animations??[]).filter((clip)=>clip&&clip.duration>0&&clip.tracks?.length>0); const mixer=clips.length>0?new THREE.AnimationMixer(animationRoot):null; const actions=mixer?clips.map((clip)=>{ const action=mixer.clipAction(clip); action.setLoop(THREE.LoopRepeat,Infinity); action.clampWhenFinished=false; action.play(); action.time=Math.random()*clip.duration; return action; }):[]; const scale=randomBetween(s.minScale,s.maxScale)*(s.debugVisible?1.8:1); model.position.copy(slot.position); model.rotation.set(Math.random()*Math.PI*2,Math.random()*Math.PI*2,Math.random()*Math.PI*2); model.scale.setScalar(scale); stoneRelicsGroup.add(model); stoneRelicStates.push({object:model,animationRoot,mixer,actions,materials:cloned.materials,basePosition:slot.position.clone(),radialDirection:slot.direction.clone(),targetScale:model.scale.clone(),spin:new THREE.Vector3(randomBetween(s.rotationSpeedMin,s.rotationSpeedMax),randomBetween(s.rotationSpeedMin,s.rotationSpeedMax),randomBetween(s.rotationSpeedMin,s.rotationSpeedMax))}); }); if(import.meta.env?.DEV&&!validateStoneRelicDistribution(slots,assignedSources,pool,inner,outer)) console.warn('[backgroundAtmosphere][stoneRelics] Generated distribution failed its build-time contract check.'); }
   function applyStoneMaterial(){ applyRelicMaterial(stoneRelicStates, config.stoneRelics, revealProgress.stones); }
 
   function rebuildShellRelics(){ lifecycleCounts.shellBuilds += 1; clearShellRelics(); const s=config.shellRelics; if(!config.enabled||!s.enabled) return; const pool=s.models.filter((url)=>shellModelCache.has(url)); for(let i=0;i<s.count&&pool.length;i+=1){ const palette=(Array.isArray(s.colorPalette)&&s.colorPalette.length>0)?s.colorPalette:DEFAULT_BACKGROUND_ATMOSPHERE_CONFIG.shellRelics.colorPalette; const tint=palette[Math.floor(Math.random()*palette.length)]; const cloned=cloneShellRelicModel(shellModelCache.get(pool[Math.floor(Math.random()*pool.length)]), s, tint); const model=cloned.object; const scale=randomBetween(s.minScale,s.maxScale)*(s.debugVisible?1.1:1); const outer=Math.max(0,s.shellOuterRadius); const inner=Math.min(outer,Math.max(0,s.shellInnerRadius)); const pos=randomPointInShell(inner,outer); model.position.copy(pos); model.rotation.set(Math.random()*Math.PI*2,Math.random()*Math.PI*2,Math.random()*Math.PI*2); model.scale.setScalar(scale); shellRelicsGroup.add(model); shellRelicStates.push({object:model,materials:cloned.materials,basePosition:pos.clone(),radialDirection:pos.clone().normalize(),targetScale:model.scale.clone(),spin:new THREE.Vector3(randomBetween(s.rotationSpeedMin,s.rotationSpeedMax),randomBetween(s.rotationSpeedMin,s.rotationSpeedMax),randomBetween(s.rotationSpeedMin,s.rotationSpeedMax))}); } }
