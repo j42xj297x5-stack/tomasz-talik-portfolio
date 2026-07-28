@@ -11,6 +11,7 @@ import { loadExperienceVrSettings } from './config/experienceVrSettings.js';
 import { orientPlayerRig } from './xr/playerRigOrientation.js';
 import { createVrControllers } from './xr/createVrControllers.js';
 import { createVrGlyphInteraction } from './xr/createVrGlyphInteraction.js';
+import { createVrEntryTransition } from './xr/createVrEntryTransition.js';
 
 const app = document.querySelector('#app');
 if (!app) throw new Error('Missing #app mount element.');
@@ -94,13 +95,23 @@ await loadMonkeyModel({ scene: worldRoot, fallbackObject: centralPlaceholder, as
 const { group: glyphRing, nodes } = createOrbitNodes(resolvePortfolioNodes(language), { assetManager });
 worldRoot.add(glyphRing);
 let entryGlyphActivated = false;
+const entryTransition = createVrEntryTransition({
+  playerRig,
+  renderer,
+  camera,
+  settings: settings.entryTransition,
+  onComplete: () => {}
+});
 const glyphInteraction = createVrGlyphInteraction({
   controllers: vrControllers.controllers,
   nodes,
   playerRig,
   spawnPosition: settings.spawn.position,
   worldRoot,
-  onEntryGlyphActivated: () => { entryGlyphActivated = true; }
+  onEntryGlyphActivated: () => {
+    entryGlyphActivated = true;
+    entryTransition.start();
+  }
 });
 
 function resize() {
@@ -116,9 +127,11 @@ renderer.render(scene, camera);
 
 let activeSession = null;
 let hasEnteredSession = false;
+const clock = new THREE.Clock(false);
 
 function renderFrame() {
   glyphInteraction.update();
+  entryTransition.update(clock.getDelta());
   renderer.render(scene, camera);
 }
 
@@ -131,7 +144,9 @@ function showReadyState({ ended = false } = {}) {
 
 function handleSessionEnd() {
   renderer.setAnimationLoop(null);
+  clock.stop();
   activeSession = null;
+  entryTransition.reset();
   entryGlyphActivated = false;
   glyphInteraction.reset();
   showReadyState({ ended: hasEnteredSession });
@@ -139,6 +154,8 @@ function handleSessionEnd() {
 
 async function enterVr() {
   if (activeSession) return;
+  entryTransition.reset();
+  playerRig.position.set(settings.spawn.position.x, settings.spawn.position.y, settings.spawn.position.z);
   orientPlayerRig(playerRig, settings.spawn.lookAt);
   entryGlyphActivated = false;
   glyphInteraction.reset();
@@ -159,6 +176,7 @@ async function enterVr() {
     hasEnteredSession = true;
     status.textContent = copy.ready;
     exitButton.hidden = false;
+    clock.start();
     renderer.setAnimationLoop(renderFrame);
   } catch (error) {
     console.warn('[experience-vr] Session start failed.', error);
@@ -167,6 +185,8 @@ async function enterVr() {
     }
     activeSession = null;
     renderer.setAnimationLoop(null);
+    clock.stop();
+    entryTransition.reset();
     status.textContent = copy.error;
     enterButton.disabled = false;
     exitButton.hidden = true;

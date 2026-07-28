@@ -16,5 +16,11 @@
     "rayOpacity": 0.8,
     "idleScale": 1,
     "activeScale": 1.2
+  },
+  "entryTransition": {
+    "enabled": true,
+    "durationSeconds": 3,
+    "target": { "x": 0, "z": 1.8 },
+    "easing": "smoothstep"
   }
 }
