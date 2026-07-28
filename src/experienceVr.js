@@ -10,6 +10,7 @@ import { ASSET_STAGES, getPreloadAssets, INITIAL_PRELOAD_GROUPS } from './assets
 import { loadExperienceVrSettings } from './config/experienceVrSettings.js';
 import { orientPlayerRig } from './xr/playerRigOrientation.js';
 import { createVrControllers } from './xr/createVrControllers.js';
+import { createVrGlyphInteraction } from './xr/createVrGlyphInteraction.js';
 
 const app = document.querySelector('#app');
 if (!app) throw new Error('Missing #app mount element.');
@@ -66,7 +67,7 @@ camera.position.set(0, 1.6, 0);
 playerRig.add(camera);
 scene.add(playerRig);
 orientPlayerRig(playerRig, settings.spawn.lookAt);
-createVrControllers({ renderer, playerRig, settings: settings.controllers });
+const vrControllers = createVrControllers({ renderer, playerRig, settings: settings.controllers });
 
 addLights(scene);
 const centralPlaceholder = createCentralObject();
@@ -90,8 +91,17 @@ await preloadAssets(vrAssets, {
 });
 unsubscribe();
 await loadMonkeyModel({ scene: worldRoot, fallbackObject: centralPlaceholder, assetManager });
-const { group: glyphRing } = createOrbitNodes(resolvePortfolioNodes(language), { assetManager });
+const { group: glyphRing, nodes } = createOrbitNodes(resolvePortfolioNodes(language), { assetManager });
 worldRoot.add(glyphRing);
+let entryGlyphActivated = false;
+const glyphInteraction = createVrGlyphInteraction({
+  controllers: vrControllers.controllers,
+  nodes,
+  playerRig,
+  spawnPosition: settings.spawn.position,
+  worldRoot,
+  onEntryGlyphActivated: () => { entryGlyphActivated = true; }
+});
 
 function resize() {
   const width = canvas.clientWidth || innerWidth || 1;
@@ -108,6 +118,7 @@ let activeSession = null;
 let hasEnteredSession = false;
 
 function renderFrame() {
+  glyphInteraction.update();
   renderer.render(scene, camera);
 }
 
@@ -121,12 +132,16 @@ function showReadyState({ ended = false } = {}) {
 function handleSessionEnd() {
   renderer.setAnimationLoop(null);
   activeSession = null;
+  entryGlyphActivated = false;
+  glyphInteraction.reset();
   showReadyState({ ended: hasEnteredSession });
 }
 
 async function enterVr() {
   if (activeSession) return;
   orientPlayerRig(playerRig, settings.spawn.lookAt);
+  entryGlyphActivated = false;
+  glyphInteraction.reset();
   enterButton.disabled = true;
   status.textContent = copy.entering;
   let requestedSession = null;

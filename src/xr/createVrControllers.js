@@ -30,7 +30,11 @@ export function createVrControllers({ renderer, playerRig, settings }) {
       ray,
       handedness: '',
       isConnected: false,
-      isSelecting: false
+      isSelecting: false,
+      currentHit: null,
+      get currentRayLength() {
+        return settings.rayLength * (this.isSelecting ? settings.activeScale : settings.idleScale);
+      }
     };
 
     const setSelecting = (isSelecting) => {
@@ -53,6 +57,7 @@ export function createVrControllers({ renderer, playerRig, settings }) {
       ray.visible = false;
       record.handedness = '';
       record.isConnected = false;
+      record.currentHit = null;
       delete controller.userData.xrInput;
       setSelecting(false);
     };
@@ -84,6 +89,7 @@ export function createVrControllers({ renderer, playerRig, settings }) {
       record.handedness = '';
       record.isConnected = false;
       record.isSelecting = false;
+      record.currentHit = null;
     }
   }
 
