@@ -16,6 +16,10 @@ const normalized = normalizeExperienceVrSettings({
   renderer: { pixelRatioCap: 99, antialias: false },
   controllers: { enabled: false, rayLength: 0, rayOpacity: 4, idleScale: 'bad', activeScale: 99 },
   entryTransition: { enabled: false, durationSeconds: 99, target: { x: 2, z: 'bad' }, easing: 'linear' },
+  spatialPlaque: {
+    enabled: false, width: 0, height: 9, distance: 0, verticalOffset: -9,
+    canvasWidth: 3000.6, canvasHeight: 100, titleFontSize: 10, bodyFontSize: 200, maxBodyLines: 0
+  },
   ignored: true
 });
 assert.equal(normalized.referenceSpaceType, 'local');
@@ -34,6 +38,10 @@ assert.deepEqual(normalized.entryTransition, {
   durationSeconds: 30,
   target: { x: 2, z: 1.8 },
   easing: 'smoothstep'
+});
+assert.deepEqual(normalized.spatialPlaque, {
+  enabled: false, width: 0.5, height: 2, distance: 0.6, verticalOffset: -1,
+  canvasWidth: 2048, canvasHeight: 320, titleFontSize: 36, bodyFontSize: 72, maxBodyLines: 1
 });
 assert.equal('ignored' in normalized, false);
 

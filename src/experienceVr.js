@@ -12,6 +12,7 @@ import { orientPlayerRig } from './xr/playerRigOrientation.js';
 import { createVrControllers } from './xr/createVrControllers.js';
 import { createVrGlyphInteraction } from './xr/createVrGlyphInteraction.js';
 import { createVrEntryTransition } from './xr/createVrEntryTransition.js';
+import { createVrSpatialPlaque, resolveVrPlaqueContent } from './xr/createVrSpatialPlaque.js';
 
 const app = document.querySelector('#app');
 if (!app) throw new Error('Missing #app mount element.');
@@ -94,13 +95,16 @@ unsubscribe();
 await loadMonkeyModel({ scene: worldRoot, fallbackObject: centralPlaceholder, assetManager });
 const { group: glyphRing, nodes } = createOrbitNodes(resolvePortfolioNodes(language), { assetManager });
 worldRoot.add(glyphRing);
+const spatialPlaque = createVrSpatialPlaque({ scene, camera, renderer, settings: settings.spatialPlaque });
 let entryGlyphActivated = false;
 const entryTransition = createVrEntryTransition({
   playerRig,
   renderer,
   camera,
   settings: settings.entryTransition,
-  onComplete: () => {}
+  onComplete: () => {
+    spatialPlaque.show(resolveVrPlaqueContent(glyphInteraction.entryNode?.userData));
+  }
 });
 const glyphInteraction = createVrGlyphInteraction({
   controllers: vrControllers.controllers,
@@ -130,8 +134,10 @@ let hasEnteredSession = false;
 const clock = new THREE.Clock(false);
 
 function renderFrame() {
+  const delta = clock.getDelta();
   glyphInteraction.update();
-  entryTransition.update(clock.getDelta());
+  entryTransition.update(delta);
+  spatialPlaque.update(delta);
   renderer.render(scene, camera);
 }
 
@@ -147,6 +153,7 @@ function handleSessionEnd() {
   clock.stop();
   activeSession = null;
   entryTransition.reset();
+  spatialPlaque.reset();
   entryGlyphActivated = false;
   glyphInteraction.reset();
   showReadyState({ ended: hasEnteredSession });
@@ -155,6 +162,7 @@ function handleSessionEnd() {
 async function enterVr() {
   if (activeSession) return;
   entryTransition.reset();
+  spatialPlaque.reset();
   playerRig.position.set(settings.spawn.position.x, settings.spawn.position.y, settings.spawn.position.z);
   orientPlayerRig(playerRig, settings.spawn.lookAt);
   entryGlyphActivated = false;
@@ -187,6 +195,7 @@ async function enterVr() {
     renderer.setAnimationLoop(null);
     clock.stop();
     entryTransition.reset();
+    spatialPlaque.reset();
     status.textContent = copy.error;
     enterButton.disabled = false;
     exitButton.hidden = true;

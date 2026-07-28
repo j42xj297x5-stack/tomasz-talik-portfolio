@@ -4,13 +4,14 @@ import { calculatePlayerRigYaw } from '../src/xr/playerRigOrientation.js';
 import * as THREE from '../src/vendor/three.js';
 import { createVrControllers } from '../src/xr/createVrControllers.js';
 
-const [main, vr, experience3d, vrControllers, glyphInteraction, entryTransition] = await Promise.all([
+const [main, vr, experience3d, vrControllers, glyphInteraction, entryTransition, spatialPlaque] = await Promise.all([
   readFile(new URL('../src/main.js', import.meta.url), 'utf8'),
   readFile(new URL('../src/experienceVr.js', import.meta.url), 'utf8'),
   readFile(new URL('../src/experience3d.js', import.meta.url), 'utf8'),
   readFile(new URL('../src/xr/createVrControllers.js', import.meta.url), 'utf8'),
   readFile(new URL('../src/xr/createVrGlyphInteraction.js', import.meta.url), 'utf8'),
-  readFile(new URL('../src/xr/createVrEntryTransition.js', import.meta.url), 'utf8')
+  readFile(new URL('../src/xr/createVrEntryTransition.js', import.meta.url), 'utf8'),
+  readFile(new URL('../src/xr/createVrSpatialPlaque.js', import.meta.url), 'utf8')
 ]);
 
 assert.match(main, /await import\('\.\/experienceVr\.js'\)/);
@@ -21,6 +22,10 @@ assert.match(vr, /renderer\.setAnimationLoop\(renderFrame\)/);
 assert.match(vr, /renderer\.setAnimationLoop\(null\)/);
 assert.doesNotMatch(vr, /requestAnimationFrame/);
 assert.doesNotMatch(entryTransition, /requestAnimationFrame|performance\.now/);
+assert.match(spatialPlaque, /new THREE\.CanvasTexture\(canvas\)/);
+assert.match(spatialPlaque, /new THREE\.PlaneGeometry/);
+assert.doesNotMatch(spatialPlaque, /Raycaster|requestAnimationFrame|tween/i);
+assert.doesNotMatch(spatialPlaque, /DOMOverlay|iframe|createElement\(['"](?:div|style)/i);
 assert.doesNotMatch(vr, /cameraRig|createOverlay|createBackgroundAtmosphere|createGalaxySpritesLayer/);
 assert.doesNotMatch(experience3d, /renderer\.xr|VRButton|immersive-vr|setAnimationLoop/);
 
@@ -42,8 +47,10 @@ assert.doesNotMatch(vr, /camera\.rotation|camera\.quaternion|camera\.lookAt/);
 assert.doesNotMatch(entryTransition, /camera\.(position|rotation|quaternion)\.(set|copy)|playerRig\.rotation/);
 assert.match(vr, /onEntryGlyphActivated:[\s\S]*entryGlyphActivated = true;[\s\S]*entryTransition\.start\(\)/);
 assert.match(vr, /function handleSessionEnd\(\)[\s\S]*entryTransition\.reset\(\)/);
-assert.match(vr, /entryTransition\.reset\(\);\s*playerRig\.position\.set\(settings\.spawn\.position\.x/);
-assert.match(vr, /entryTransition\.update\(clock\.getDelta\(\)\)/);
+assert.match(vr, /entryTransition\.reset\(\);\s*spatialPlaque\.reset\(\);\s*playerRig\.position\.set\(settings\.spawn\.position\.x/);
+assert.match(vr, /entryTransition\.update\(delta\)/);
+assert.match(vr, /onComplete:[\s\S]*spatialPlaque\.show/);
+assert.match(vr, /function handleSessionEnd\(\)[\s\S]*spatialPlaque\.reset\(\)/);
 assert.match(vrControllers, /renderer\.xr\.getController\(0\)/);
 assert.match(vrControllers, /renderer\.xr\.getController\(1\)/);
 assert.match(glyphInteraction, /new THREE\.Raycaster\(\)/);
