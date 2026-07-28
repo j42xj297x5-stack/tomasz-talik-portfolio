@@ -35,7 +35,7 @@ function row(parent, label, control) {
   parent.append(element);
 }
 
-export function createOptionsPanel({ runtimeState, onChange, onSettingsImported = null, atmosphereProgression, getPerformanceSnapshot = null, getTuningMode = () => false }) {
+export function createOptionsPanel({ runtimeState, onChange, onSettingsImported = null, atmosphereProgression, getPerformanceSnapshot = null, getTuningMode = () => false, debugMode = false, audioManager = null }) {
   const defaults = clone(runtimeState);
   const controls = [];
   const timers = new Map();
@@ -135,6 +135,23 @@ export function createOptionsPanel({ runtimeState, onChange, onSettingsImported 
   resetProgression.addEventListener('click', () => { atmosphereProgression?.resetProgression?.(); emit('progression', 'state-change'); });
   tuning.body.append(resetProgression);
   panel.append(tuning.details);
+
+  if (debugMode && audioManager) {
+    const audio = section('Audio mixer');
+    const addAudioRange = (label, key, setter) => {
+      const wrapper = document.createElement('span');
+      wrapper.className = 'options-panel__audio-control';
+      const input = document.createElement('input');
+      input.type = 'range'; input.min = '0'; input.max = '1'; input.step = '0.01';
+      const output = document.createElement('output');
+      const sync = () => { input.value = String(audioManager.getState()[key]); output.value = Number(input.value).toFixed(2); };
+      input.addEventListener('input', () => { setter(Number(input.value)); output.value = Number(input.value).toFixed(2); });
+      wrapper.append(input, output); row(audio.body, label, wrapper); sync();
+    };
+    addAudioRange('Ambient', 'ambient', (value) => audioManager.setAmbientVolume(value));
+    addAudioRange('Effects', 'effects', (value) => audioManager.setEffectsVolume(value));
+    panel.append(audio.details);
+  }
 
   const relicSections = [
     ['Stones', 'stoneRelics', 'stone'],

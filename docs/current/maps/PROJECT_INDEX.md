@@ -35,6 +35,7 @@ Do not scan `docs/current` recursively. Read an additional module only when the 
 | Overlay/content panels | `src/content/portfolioNodes.js`; `src/ui/overlay.js`; `technical/FRONTEND_RUNTIME_MODEL.md` | `src/styles/main.css`; `technical/CONTENT_MODEL.md` |
 | Asset staging or public paths | `src/assets/assetManifest.js`; `src/assets/assetManager.js`; `src/utils/publicPath.js`; `technical/DEPLOYMENT_MODEL.md` | `src/experience3d.js` |
 | Classic 2D | `src/classic2d.js`; `src/content/portfolioNodes.js`; `technical/ENTRY_FLOW_AND_MODES_MODEL.md` | `src/styles/main.css` |
+| Shared audio, ambient progression, effects, master control, debug mixer | `technical/AUDIO_RUNTIME_MODEL.md`; `src/audio/audioManager.js`; `src/main.js` | `src/experience3d.js`; `src/ui/audioControl.js`; `src/ui/optionsPanel.js`; `src/scene/atmosphere/atmosphereProgression.js` |
 | Documentation synchronization | affected canonical technical doc; `maps/DEPENDENCY_MAP.md`; `decisions/DECISION_LOG.md` | only the runtime files that prove the changed contract |
 
 ## Canonical documentation
@@ -47,6 +48,7 @@ Do not scan `docs/current` recursively. Read an additional module only when the 
 - [`technical/THREE_SCENE_MODEL.md`](../technical/THREE_SCENE_MODEL.md) — scene, camera, plaque, material and fallback contract.
 - [`technical/GLYPH_HOVER_EFFECTS_MODEL.md`](../technical/GLYPH_HOVER_EFFECTS_MODEL.md) — concise active hover contract.
 - [`technical/CONTENT_MODEL.md`](../technical/CONTENT_MODEL.md) — portfolio record schema and panel content.
+- [`technical/AUDIO_RUNTIME_MODEL.md`](../technical/AUDIO_RUNTIME_MODEL.md) — shared Web Audio graph, streaming ambient, effects, and controls.
 - [`decisions/DECISION_LOG.md`](../decisions/DECISION_LOG.md) — accepted project decisions.
 
 ## Runtime entrypoints
