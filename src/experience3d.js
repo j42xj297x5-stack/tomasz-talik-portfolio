@@ -27,6 +27,7 @@ import { createExperienceIntro } from './ui/experienceIntro.js';
 import { createRuntimeDiagnostics } from './utils/runtimeDiagnostics.js';
 import { routeOptionsEvent } from './utils/optionsEventRouter.js';
 import { loadExperience3dSettings, toRuntimeSettings } from './config/experience3dSettings.js';
+import { audioManager } from './audio/audioManager.js';
 
 const app = document.querySelector('#app');
 if (!app) throw new Error('Missing #app mount element.');
@@ -126,6 +127,13 @@ const { group: orbitGroup, nodes, orbit } = createOrbitNodes(portfolioNodes, { a
 scene.add(orbitGroup);
 const plaqueTransition = createPlaqueTransition({ scene, assetManager });
 const atmosphereProgression = createAtmosphereProgression({ gateIds: portfolioNodes.map((node) => node.id) });
+let lastAudioProgressLevel = atmosphereProgression.state.progressLevel;
+atmosphereProgression.onStateChange(() => {
+  const nextLevel = atmosphereProgression.state.progressLevel;
+  if (nextLevel === lastAudioProgressLevel) return;
+  lastAudioProgressLevel = nextLevel;
+  audioManager.setProgressLevel(nextLevel);
+});
 const initialProgressionMultipliers = atmosphereProgression.getProgressionMultipliers();
 atmosphere.setProgressionMultipliers(initialProgressionMultipliers);
 sunCycle.setProgressionMultiplier(initialProgressionMultipliers.sunMoon);
@@ -158,7 +166,10 @@ runtimeDiagnostics.census('sceneAttach');
 
 const overlay = createOverlay({
   language: document.documentElement.lang,
-  onClose: () => void returnFromNodePanel()
+  onClose: () => {
+    if (activePanelNode?.userData?.plaqueTransitionReady) void audioManager.playEffect('glyphClose');
+    void returnFromNodePanel();
+  }
 });
 const hoverLabel = createHoverLabel();
 
@@ -168,8 +179,9 @@ const optionsPanel = createOptionsPanel({
   getPerformanceSnapshot: runtimeDiagnostics.getSnapshot,
   atmosphereProgression,
   gateNodes: portfolioNodes,
-  debugMode: debugLoading,
   getTuningMode: () => tuningMode,
+  debugMode: debugLoading,
+  audioManager,
   onSettingsImported: () => { settingsSource = 'imported-session'; },
   onChange: (event) => {
     const handled = routeOptionsEvent(event, {
@@ -246,6 +258,7 @@ function debugInteraction(message, details = {}) {
 
 function openNodePanel(node) {
   if (!node || interactionState !== 'idle') return;
+  void audioManager.playEffect('glyphClick');
   debugInteraction('raycast hit', {
     objectName: node.name || null,
     objectId: node.id,
@@ -295,8 +308,9 @@ async function focusNodePanel(node) {
   try {
     await cameraRig.focusOnNode(camera, node);
     if (interactionState !== 'focusing') return;
-    if (node.userData?.plaqueModelPath) {
+    if (node.userData?.plaqueModelPath && plaqueTransition.hasInstance(node)) {
       interactionState = 'revealingPlaque';
+      void audioManager.playEffect('glyphOpen');
       const plaque = await plaqueTransition.reveal(node, camera);
       if (plaque) {
         node.userData.plaqueTransitionReady = true;
@@ -574,6 +588,9 @@ function tick(timestamp) {
   requestAnimationFrame(tick);
 }
 
+// The attempt is bounded by the optional fetch/decode operations; every failure
+// settles inside the manager and therefore cannot block interaction readiness.
+await audioManager.preloadExperienceEffects();
 loadingDiagnostics.markEvent('loaderFadeStart');
 runtimeDiagnostics.count('loaderComplete');
 shell?.classList.remove('runtime-shell--loading');

@@ -358,3 +358,12 @@ Status: accepted / implemented.
 4. Startup awaits the intro in a dedicated `intro` interaction state. Scene clocks, fog reveal, orbit, atmosphere progression, celestial updates, user interaction, and the render loop remain stopped until the intro removes its DOM; only then does the state become `idle`, fog reveal start, and the main `tick()` run.
 5. `prefers-reduced-motion` receives a short static fade without the spatial journey.
 6. The intro intentionally has no skip control and stores no “already shown” state, so it replays on every Experience 3D entry.
+
+## 2026-07-28 — Shared portfolio audio runtime
+
+Status: accepted / implemented.
+
+1. One lazily unlocked Web Audio manager owns a persisted perceptual master gain plus independent ambient and effects buses; optional audio failures never block either portfolio mode.
+2. Long ambient files use two fixed looping media elements rather than decoded buffers. Experience 3D begins ambient from its explicit mode-selection gesture, and real progression-level changes alternate tracks from their beginning through interruptible five-second equal-power crossfades.
+3. Short effects are decoded and cached, with non-repeating shared glyph pools synchronized to hit, available-plaque reveal, and available-plaque close boundaries. A shared delegated click policy covers eligible dynamic buttons without range, disabled, canvas, or audio-control duplication.
+4. The master control persists outside `#app` for the complete entry/runtime lifetime. Debug ambient/effects gains are session-only Scene tuning controls and remain outside canonical scene-settings schema version 1.

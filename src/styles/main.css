@@ -3527,3 +3527,30 @@ body.classic-2d-panel-open {
     transform: none;
   }
 }
+/* Persistent audio control lives outside #app so entry-shell replacements cannot remove it. */
+.audio-control {
+  position: fixed;
+  z-index: 30;
+  left: 50%;
+  bottom: max(12px, env(safe-area-inset-bottom));
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: min(190px, calc(100vw - 32px));
+  padding: 7px 12px;
+  border: 1px solid rgba(205, 231, 255, 0.28);
+  border-radius: 999px;
+  background: rgba(4, 10, 17, 0.82);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.32);
+  backdrop-filter: blur(10px);
+  transform: translateX(-50%);
+}
+.audio-control__toggle { display: grid; place-items: center; flex: 0 0 32px; width: 32px; height: 32px; padding: 6px; border: 0; border-radius: 50%; color: #edf8ff; background: transparent; cursor: pointer; }
+.audio-control__toggle svg { width: 20px; height: 20px; fill: currentColor; }
+.audio-control__toggle.is-muted { color: rgba(237, 248, 255, 0.48); }
+.audio-control input[type='range'] { min-width: 0; width: 100%; accent-color: #bde8ff; }
+.audio-control__toggle:focus-visible, .audio-control input[type='range']:focus-visible { outline: 2px solid #d9f3ff; outline-offset: 3px; }
+.options-panel__audio-control { display: grid; grid-template-columns: minmax(80px, 1fr) 3ch; align-items: center; gap: 8px; }
+.options-panel__audio-control output { color: rgba(235, 247, 255, 0.82); font-variant-numeric: tabular-nums; }
+@media (max-width: 760px) { .audio-control { bottom: max(8px, env(safe-area-inset-bottom)); width: min(170px, calc(100vw - 24px)); } }
+@media (min-width: 761px) { body:has(.options-panel__panel[data-open='true']) .audio-control { translate: 0 -6px; } }

@@ -1,5 +1,7 @@
 import './styles/main.css';
 import { startClassic2D } from './classic2d.js';
+import { audioManager } from './audio/audioManager.js';
+import { createAudioControl } from './ui/audioControl.js';
 
 const app = document.querySelector('#app');
 if (!app) throw new Error('Missing #app mount element.');
@@ -45,6 +47,15 @@ const state = {
   runtimeStarted: false
 };
 
+const audioControl = createAudioControl({ audioManager, getLanguage: () => state.language || document.documentElement.lang });
+void audioManager.preloadEntryEffects();
+
+document.addEventListener('click', (event) => {
+  const button = event.target.closest?.('button');
+  if (!button || button.disabled || button.getAttribute('aria-disabled') === 'true' || button.closest('[data-audio-control]')) return;
+  void audioManager.playEffect(button.matches('.overlay__case-toggle') ? 'caseToggle' : 'click');
+});
+
 function loadStoredSelection() {
   try {
     const rawSelection = window.localStorage?.getItem(STORAGE_KEY);
@@ -74,6 +85,7 @@ function setLanguage(language) {
   state.language = language;
   state.mode = null;
   document.documentElement.lang = language;
+  audioControl.refresh();
   saveSelection();
   renderModeSelection();
 }
@@ -183,6 +195,8 @@ async function startExperience3d() {
     <p class="entry-shell__text">${copy.launchStatus}</p>
   `);
 
+  void audioManager.startAmbient();
+  void audioManager.preloadExperienceEffects();
   await import('./experience3d.js');
 }
 

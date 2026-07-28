@@ -266,5 +266,5 @@ export function createPlaqueTransition({ scene, assetManager }) {
     if (active?.node === node) active = null;
   }
 
-  return { prewarm, setWarmupVisibility, setWarmupMaterialMode, reveal, restore, reset, update, getInstanceCount: () => instances.size };
+  return { prewarm, setWarmupVisibility, setWarmupMaterialMode, reveal, restore, reset, update, hasInstance: (node) => instances.has(nodeIdFor(node)), getInstanceCount: () => instances.size };
 }
