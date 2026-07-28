@@ -5,11 +5,26 @@ export function smoothstep(progress) {
   return clamped * clamped * (3 - 2 * clamped);
 }
 
+export function calculateVrEntryTarget({ ringCenter, spawnPosition, effectiveRingRadius, targetRadiusFactor }) {
+  const centerX = Number.isFinite(ringCenter?.x) ? ringCenter.x : 0;
+  const centerZ = Number.isFinite(ringCenter?.z) ? ringCenter.z : 0;
+  let directionX = (spawnPosition?.x ?? 0) - centerX;
+  let directionZ = (spawnPosition?.z ?? 0) - centerZ;
+  const length = Math.hypot(directionX, directionZ);
+  if (length < 1e-8 || !Number.isFinite(length)) { directionX = 0; directionZ = 1; }
+  else { directionX /= length; directionZ /= length; }
+  const radius = effectiveRingRadius * targetRadiusFactor;
+  return { x: centerX + directionX * radius, z: centerZ + directionZ * radius };
+}
+
 export function createVrEntryTransition({
   playerRig,
   renderer,
   camera,
   settings,
+  ringCenter,
+  spawnPosition,
+  effectiveRingRadius,
   onComplete = () => {}
 }) {
   const headStartWorld = new THREE.Vector3();
@@ -38,8 +53,11 @@ export function createVrEntryTransition({
     xrCamera.getWorldPosition(headStartWorld);
     rigStartX = playerRig.position.x;
     rigStartZ = playerRig.position.z;
-    rigEndX = rigStartX + settings.target.x - headStartWorld.x;
-    rigEndZ = rigStartZ + settings.target.z - headStartWorld.z;
+    const target = Number.isFinite(effectiveRingRadius) && effectiveRingRadius > 0
+      ? calculateVrEntryTarget({ ringCenter, spawnPosition, effectiveRingRadius, targetRadiusFactor: settings.targetRadiusFactor })
+      : settings.target;
+    rigEndX = rigStartX + target.x - headStartWorld.x;
+    rigEndZ = rigStartZ + target.z - headStartWorld.z;
     elapsedSeconds = 0;
 
     if (!settings.enabled) {
