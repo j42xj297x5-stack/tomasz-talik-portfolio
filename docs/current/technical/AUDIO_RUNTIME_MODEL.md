@@ -6,11 +6,13 @@
 
 The persistent control is mounted once by `src/main.js` outside `#app`. It exposes localized mute semantics and a 0–100 master slider; its perceptual curve is applied at the master gain. Entry buttons remain usable without audio, and delegated button effects exclude range controls, disabled controls, the audio capsule itself, and canvas glyph selection.
 
-## Loading and ambient contract
+## Loading, intro, and ambient contract
 
-The two short UI clicks begin fetching at entry. Selecting Experience 3D is the required user gesture that unlocks/resumes the context, starts both looping media-element ambient channels with only `ambient_01` audible, and prepares the remaining short effects. Optional failures settle without blocking the page; Experience 3D awaits the preparation attempt before releasing its loader and interaction gate.
+The two short UI clicks begin fetching at entry. Selecting Experience 3D is the required user gesture that unlocks/resumes the context, creates and prepares the streaming media elements, begins their non-blocking preload, and prepares the remaining short effects. It does not start music. Classic 2D never starts the intro or ambient. Optional failures settle without blocking the page; Experience 3D awaits only the short-effect preparation attempt before releasing its loader and interaction gate.
 
-Ambient MP3 files remain streaming `HTMLAudioElement` loops connected through two fixed `MediaElementAudioSourceNode` channels. A real `atmosphereProgression.progressLevel` change selects ambient 01 for even levels and ambient 02 for odd levels, restarts the incoming track at zero, and schedules a five-second equal-power Web Audio crossfade. Scheduled automation is replaced from its held state when progression interrupts a transition; channels are reused rather than accumulated.
+Immediately after `loaderOverlay.complete()` and immediately before the text intro starts, Experience 3D makes its single playback attempt for the non-looping `/audio/start.mp3`. That element is connected to the ambient bus, so master volume, mute, and the Ambient session control apply to it. A successful playback starts the five-second delay; a rejected attempt instead measures five seconds from the attempt itself. The text intro is never delayed by audio success, failure, or loading.
+
+Five seconds after that boundary, looping `ambient_01` starts from zero with a five-second perceptual equal-power fade-in while the intro sound continues naturally. The five fixed looping ambient media elements use stable `MediaElementAudioSourceNode` and per-track gain channels. Levels 0 and 1 map to ambient 01, while levels 2–5 map in order to ambient 02–05. The incoming track always starts at zero and crossfades for exactly five seconds; selecting the already mapped track does not restart it. Reset and manual backward changes use the same mapping and crossfade. A newer progression request invalidates an older transition, and completion pauses and rewinds every inactive element so silent streams do not accumulate.
 
 ## Interaction synchronization and debug controls
 

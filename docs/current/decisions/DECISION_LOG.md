@@ -364,6 +364,7 @@ Status: accepted / implemented.
 Status: accepted / implemented.
 
 1. One lazily unlocked Web Audio manager owns a persisted perceptual master gain plus independent ambient and effects buses; optional audio failures never block either portfolio mode.
-2. Long ambient files use two fixed looping media elements rather than decoded buffers. Experience 3D begins ambient from its explicit mode-selection gesture, and real progression-level changes alternate tracks from their beginning through interruptible five-second equal-power crossfades.
-3. Short effects are decoded and cached, with non-repeating shared glyph pools synchronized to hit, available-plaque reveal, and available-plaque close boundaries. A shared delegated click policy covers eligible dynamic buttons without range, disabled, canvas, or audio-control duplication.
-4. The master control persists outside `#app` for the complete entry/runtime lifetime. Debug ambient/effects gains are session-only Scene tuning controls and remain outside canonical scene-settings schema version 1.
+2. Experience mode selection only unlocks and prepares streaming audio. After loader completion, one non-looping start channel begins with the text intro; ambient 01 enters five seconds later with a five-second perceptual fade while the start sound ends naturally.
+3. Five fixed looping ambient channels map levels 0–1 to ambient 01 and levels 2–5 to ambient 02–05. Forward, backward, and reset changes start the newly mapped track at zero through interruptible five-second equal-power crossfades, then stop and rewind inactive streams.
+4. Short effects are decoded and cached, with non-repeating shared glyph pools synchronized to hit, available-plaque reveal, and available-plaque close boundaries. A shared delegated click policy covers eligible dynamic buttons without range, disabled, canvas, or audio-control duplication.
+5. The master control persists outside `#app` for the complete entry/runtime lifetime. Intro and ambient streams share the ambient bus; debug ambient/effects gains remain session-only and outside canonical scene-settings schema version 1.

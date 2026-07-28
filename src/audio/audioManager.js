@@ -2,6 +2,14 @@ import { publicPath } from '../utils/publicPath.js';
 
 const DEFAULTS = Object.freeze({ master: 0.7, ambient: 0.4, effects: 0.85 });
 const CROSSFADE_SECONDS = 5;
+const INTRO_DELAY_SECONDS = 5;
+const AMBIENT_PATHS = Object.freeze([
+  '/audio/ambient_01.mp3',
+  '/audio/ambient_02.mp3',
+  '/audio/ambient_03.mp3',
+  '/audio/ambient_04.mp3',
+  '/audio/ambient_05.mp3'
+]);
 const STORAGE_KEY = 'portfolioAudioSettings';
 const EFFECT_PATHS = Object.freeze({
   click: ['/audio/click_01.wav'],
@@ -21,12 +29,18 @@ class AudioManager {
     this.ambientBusNode = null;
     this.effectsBusNode = null;
     this.ambientChannels = [];
+    this.introChannel = null;
     this.buffers = new Map();
     this.pendingBuffers = new Map();
     this.arrayBuffers = new Map();
     this.lastVariant = new Map();
-    this.activeAmbient = 0;
+    this.activeAmbient = null;
+    this.requestedAmbient = null;
     this.startedAmbient = false;
+    this.experienceSequenceStarted = false;
+    this.crossfadeVersion = 0;
+    this.ambientRequestVersion = 0;
+    this.crossfadeCleanupTimer = null;
     this.masterVolume = DEFAULTS.master;
     this.lastNonZeroVolume = DEFAULTS.master;
     this.muted = false;
@@ -69,7 +83,7 @@ class AudioManager {
       this.effectsBusNode.connect(this.masterNode);
       this.masterNode.connect(this.context.destination);
       this.applyGains();
-      this.createAmbientChannels();
+      this.createStreamingChannels();
       this.decodePendingArrays();
     } catch (error) {
       console.warn('[audio] Web Audio initialization failed.', error);
@@ -78,13 +92,19 @@ class AudioManager {
     return this.context;
   }
 
-  createAmbientChannels() {
-    ['/audio/ambient_01.mp3', '/audio/ambient_02.mp3'].forEach((path, index) => {
+  createStreamingChannels() {
+    const introElement = new Audio(publicPath('/audio/start.mp3'));
+    introElement.loop = false;
+    introElement.preload = 'auto';
+    this.context.createMediaElementSource(introElement).connect(this.ambientBusNode);
+    this.introChannel = { element: introElement };
+
+    AMBIENT_PATHS.forEach((path) => {
       const element = new Audio(publicPath(path));
       element.loop = true;
       element.preload = 'auto';
       const gain = this.context.createGain();
-      gain.gain.value = index === 0 ? 1 : 0;
+      gain.gain.value = 0;
       this.context.createMediaElementSource(element).connect(gain).connect(this.ambientBusNode);
       this.ambientChannels.push({ element, gain });
     });
@@ -112,6 +132,13 @@ class AudioManager {
 
   preloadEntryEffects() { return this.preloadPools(['click', 'caseToggle']); }
   preloadExperienceEffects() { return this.preloadPools(['glyphClick', 'glyphOpen', 'glyphClose']); }
+
+  prepareExperienceAudio() {
+    this.ensureContext();
+    [this.introChannel, ...this.ambientChannels].forEach((channel) => {
+      try { channel?.element.load(); } catch (error) { console.warn('[audio] Optional stream could not be prepared.', error); }
+    });
+  }
 
   preloadPools(names) {
     return Promise.allSettled(names.flatMap((name) => EFFECT_PATHS[name].map((path) => this.loadBuffer(path))));
@@ -169,42 +196,108 @@ class AudioManager {
     source.start();
   }
 
-  async startAmbient() {
-    if (!await this.unlock() || !this.ambientChannels.length) return;
-    if (!this.startedAmbient) {
-      this.startedAmbient = true;
-      this.activeAmbient = 0;
-      this.ambientChannels[0].element.currentTime = 0;
-      await Promise.allSettled(this.ambientChannels.map(({ element }) => element.play()));
+  startExperienceSequence() {
+    if (this.experienceSequenceStarted) return;
+    this.experienceSequenceStarted = true;
+    const attemptStartedAt = performance.now();
+    const startAmbientAfter = (delayMilliseconds) => window.setTimeout(() => this.startInitialAmbient(), delayMilliseconds);
+    const intro = this.introChannel?.element;
+    if (!intro) {
+      startAmbientAfter(INTRO_DELAY_SECONDS * 1000);
+      return;
+    }
+    const handleFailure = (error) => {
+      console.warn('[audio] Intro sound could not start.', error);
+      const elapsed = performance.now() - attemptStartedAt;
+      startAmbientAfter(Math.max(0, INTRO_DELAY_SECONDS * 1000 - elapsed));
+    };
+    try {
+      intro.currentTime = 0;
+      Promise.resolve(intro.play()).then(() => {
+        startAmbientAfter(INTRO_DELAY_SECONDS * 1000);
+      }).catch(handleFailure);
+    } catch (error) {
+      handleFailure(error);
     }
   }
 
-  setProgressLevel(level) {
-    const target = Math.abs(Math.round(Number(level) || 0)) % 2;
-    if (!this.startedAmbient || target === this.activeAmbient || !this.context) return;
+  async startInitialAmbient() {
+    if (this.startedAmbient || !this.context || !this.ambientChannels.length) return;
+    const channel = this.ambientChannels[0];
+    channel.element.currentTime = 0;
+    try {
+      await channel.element.play();
+    } catch (error) {
+      console.warn('[audio] Initial ambient could not start.', error);
+      return;
+    }
+    this.startedAmbient = true;
+    this.activeAmbient = 0;
+    this.requestedAmbient = 0;
     const now = this.context.currentTime;
-    const from = this.ambientChannels[this.activeAmbient];
+    channel.gain.gain.cancelScheduledValues(now);
+    channel.gain.gain.setValueAtTime(0, now);
+    channel.gain.gain.setValueCurveAtTime(this.createFadeCurve(0, 1, true), now, CROSSFADE_SECONDS);
+  }
+
+  setProgressLevel(level) {
+    const normalizedLevel = Math.min(5, Math.max(0, Math.round(Number(level) || 0)));
+    const target = normalizedLevel <= 1 ? 0 : normalizedLevel - 1;
+    if (target === this.requestedAmbient) return;
+    this.requestedAmbient = target;
+    const requestVersion = ++this.ambientRequestVersion;
+    if (!this.startedAmbient || target === this.activeAmbient || !this.context) return;
     const to = this.ambientChannels[target];
-    to.element.currentTime = 0;
-    void to.element.play().catch((error) => console.warn('[audio] Ambient could not start.', error));
+    try {
+      to.element.currentTime = 0;
+      void Promise.resolve(to.element.play()).then(() => {
+        if (requestVersion !== this.ambientRequestVersion) {
+          to.element.pause();
+          to.element.currentTime = 0;
+          return;
+        }
+        this.crossfadeTo(target);
+      }).catch((error) => console.warn('[audio] Ambient could not start.', error));
+    } catch (error) {
+      console.warn('[audio] Ambient could not start.', error);
+    }
+  }
+
+  createFadeCurve(start, end, fadeIn) {
     const samples = 128;
-    const fadeOut = new Float32Array(samples);
-    const fadeIn = new Float32Array(samples);
-    [from.gain.gain, to.gain.gain].forEach((gain) => {
-      if (typeof gain.cancelAndHoldAtTime === 'function') gain.cancelAndHoldAtTime(now);
-      else gain.cancelScheduledValues(now);
-    });
-    const startOut = Math.max(0, from.gain.gain.value);
-    const startIn = Math.max(0, to.gain.gain.value);
-    const startPhase = Math.atan2(startIn, startOut || 0.000001);
+    const curve = new Float32Array(samples);
+    const safeStart = clamp01(start);
+    const startPhase = fadeIn ? Math.asin(safeStart) : Math.acos(safeStart);
     for (let i = 0; i < samples; i += 1) {
       const phase = startPhase + (i / (samples - 1)) * (Math.PI / 2 - startPhase);
-      fadeOut[i] = Math.cos(phase);
-      fadeIn[i] = Math.sin(phase);
+      curve[i] = fadeIn ? Math.sin(phase) * end : Math.cos(phase) * end;
     }
-    from.gain.gain.setValueCurveAtTime(fadeOut, now, CROSSFADE_SECONDS);
-    to.gain.gain.setValueCurveAtTime(fadeIn, now, CROSSFADE_SECONDS);
+    return curve;
+  }
+
+  crossfadeTo(target) {
+    if (!this.context || target === this.activeAmbient) return;
+    const now = this.context.currentTime;
+    const version = ++this.crossfadeVersion;
+    if (this.crossfadeCleanupTimer) window.clearTimeout(this.crossfadeCleanupTimer);
+    this.ambientChannels.forEach((channel, index) => {
+      const parameter = channel.gain.gain;
+      if (typeof parameter.cancelAndHoldAtTime === 'function') parameter.cancelAndHoldAtTime(now);
+      else parameter.cancelScheduledValues(now);
+      const start = clamp01(parameter.value);
+      parameter.setValueCurveAtTime(this.createFadeCurve(start, 1, index === target), now, CROSSFADE_SECONDS);
+    });
     this.activeAmbient = target;
+    this.crossfadeCleanupTimer = window.setTimeout(() => {
+      if (version !== this.crossfadeVersion) return;
+      this.ambientChannels.forEach((channel, index) => {
+        if (index === target) return;
+        channel.element.pause();
+        channel.element.currentTime = 0;
+        channel.gain.gain.setValueAtTime(0, this.context.currentTime);
+      });
+      this.crossfadeCleanupTimer = null;
+    }, CROSSFADE_SECONDS * 1000);
   }
 
   setMasterVolume(value) {
