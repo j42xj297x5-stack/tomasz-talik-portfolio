@@ -375,3 +375,11 @@ Status: accepted / implemented.
 
 1. The shared delegated click policy applies the existing `click_01` effect to every project-panel link with the `overlay__project-link` class while preserving normal new-tab navigation; case-study toggles retain `click_02`, and other eligible buttons retain `click_01`.
 2. Each of the five cumulative atmosphere layers reveals over 10 seconds by default. Manual visual transition-time overrides remain supported, and ambient changes retain their independent five-second crossfade.
+
+## 2026-07-28 — Fine-pointer glyph-hover audio feedback
+
+Status: accepted / implemented.
+
+1. Entering a new Experience 3D glyph with a mouse/fine pointer starts one non-looping `glyph_on_hover` effect immediately at full local gain, without delay or fade-in; movement within the same glyph does not restart it.
+2. Leaving the glyph or interactive hover state fades the source for exactly 0.5 seconds, then stops and disconnects it. A directly entered glyph starts immediately while the preceding source fades, and delayed load/unlock completions cannot revive an ended hover.
+3. The effect uses the shared effects bus and its master, mute, and Effects controls. Touch/coarse-pointer input, dragging, locked or panel interaction, Classic 2D, and ordinary HTML hover do not trigger it.
