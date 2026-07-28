@@ -3,6 +3,8 @@ import { publicPath } from '../utils/publicPath.js';
 const DEFAULTS = Object.freeze({ master: 0.7, ambient: 0.4, effects: 0.85 });
 const CROSSFADE_SECONDS = 5;
 const INTRO_DELAY_SECONDS = 5;
+const GLYPH_HOVER_FADE_SECONDS = 0.5;
+const MAX_FADING_GLYPH_HOVERS = 4;
 const AMBIENT_PATHS = Object.freeze([
   '/audio/ambient_01.mp3',
   '/audio/ambient_02.mp3',
@@ -15,6 +17,7 @@ const EFFECT_PATHS = Object.freeze({
   click: ['/audio/click_01.wav'],
   caseToggle: ['/audio/click_02.wav'],
   glyphClick: ['/audio/click_long_01.wav', '/audio/click_long_02.wav'],
+  glyphHover: ['/audio/glyph_on_hover.wav'],
   glyphOpen: ['/audio/glyph_open_01.wav', '/audio/glyph_open_02.wav'],
   glyphClose: ['/audio/glyph_close_01.wav', '/audio/glyph_close_02.wav']
 });
@@ -41,6 +44,9 @@ class AudioManager {
     this.crossfadeVersion = 0;
     this.ambientRequestVersion = 0;
     this.crossfadeCleanupTimer = null;
+    this.activeGlyphHover = null;
+    this.fadingGlyphHovers = new Set();
+    this.glyphHoverRequestVersion = 0;
     this.masterVolume = DEFAULTS.master;
     this.lastNonZeroVolume = DEFAULTS.master;
     this.muted = false;
@@ -131,7 +137,7 @@ class AudioManager {
   }
 
   preloadEntryEffects() { return this.preloadPools(['click', 'caseToggle']); }
-  preloadExperienceEffects() { return this.preloadPools(['glyphClick', 'glyphOpen', 'glyphClose']); }
+  preloadExperienceEffects() { return this.preloadPools(['glyphClick', 'glyphHover', 'glyphOpen', 'glyphClose']); }
 
   prepareExperienceAudio() {
     this.ensureContext();
@@ -194,6 +200,62 @@ class AudioManager {
     source.buffer = buffer;
     source.connect(this.effectsBusNode);
     source.start();
+  }
+
+  cleanupGlyphHover(handle) {
+    if (!handle || handle.cleaned) return;
+    handle.cleaned = true;
+    if (this.activeGlyphHover === handle) this.activeGlyphHover = null;
+    this.fadingGlyphHovers.delete(handle);
+    try { handle.source.disconnect(); } catch (_) { /* The optional node may already be disconnected. */ }
+    try { handle.gain.disconnect(); } catch (_) { /* The optional node may already be disconnected. */ }
+  }
+
+  stopGlyphHoverHandle(handle, { immediate = false } = {}) {
+    if (!handle || handle.cleaned || handle.stopping || !this.context) return;
+    handle.stopping = true;
+    if (this.activeGlyphHover === handle) this.activeGlyphHover = null;
+    const now = this.context.currentTime;
+    const stopAt = immediate ? now : now + GLYPH_HOVER_FADE_SECONDS;
+    const parameter = handle.gain.gain;
+    if (typeof parameter.cancelAndHoldAtTime === 'function') parameter.cancelAndHoldAtTime(now);
+    else {
+      parameter.cancelScheduledValues(now);
+      parameter.setValueAtTime(parameter.value, now);
+    }
+    parameter.linearRampToValueAtTime(0, stopAt);
+    if (!immediate) this.fadingGlyphHovers.add(handle);
+    try { handle.source.stop(stopAt); } catch (_) { this.cleanupGlyphHover(handle); }
+  }
+
+  async startGlyphHover() {
+    const requestVersion = ++this.glyphHoverRequestVersion;
+    if (this.activeGlyphHover) this.stopGlyphHoverHandle(this.activeGlyphHover);
+    while (this.fadingGlyphHovers.size >= MAX_FADING_GLYPH_HOVERS) {
+      const oldest = this.fadingGlyphHovers.values().next().value;
+      try { oldest.source.stop(this.context?.currentTime); } catch (_) { /* The source already has a scheduled stop. */ }
+      this.cleanupGlyphHover(oldest);
+    }
+    if (!await this.unlock() || requestVersion !== this.glyphHoverRequestVersion) return;
+    const path = EFFECT_PATHS.glyphHover[0];
+    const buffer = this.buffers.get(path) || await this.loadBuffer(path);
+    if (requestVersion !== this.glyphHoverRequestVersion || !buffer || !this.context || !this.effectsBusNode) return;
+
+    const source = this.context.createBufferSource();
+    const gain = this.context.createGain();
+    const handle = { source, gain, stopping: false, cleaned: false };
+    source.buffer = buffer;
+    source.loop = false;
+    gain.gain.setValueAtTime(1, this.context.currentTime);
+    source.connect(gain).connect(this.effectsBusNode);
+    source.onended = () => this.cleanupGlyphHover(handle);
+    this.activeGlyphHover = handle;
+    source.start();
+  }
+
+  stopGlyphHover() {
+    this.glyphHoverRequestVersion += 1;
+    this.stopGlyphHoverHandle(this.activeGlyphHover);
   }
 
   startExperienceSequence() {
