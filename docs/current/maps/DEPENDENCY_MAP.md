@@ -33,6 +33,13 @@ clean post-warm-up render ──────────────────
 experience3d startup gate ─┬─> interactionReady
                            ├─> fog reveal start
                            └─> main tick start
+
+main ─> audioManager ─┬─> publicPath (all audio URLs)
+                     ├─> audioControl (persistent master/mute UI)
+                     └─> delegated entry / Classic 2D button effects
+atmosphereProgression ─> experience3d ─> audioManager (alternating ambient crossfade)
+experience3d interaction state ─> audioManager (glyph click/open/close effects)
+optionsPanel (?debug only) ─> audioManager (ambient/effects bus gains)
 ```
 
 The required plaque path is therefore: `portfolioNodes → assetManifest → plaqueTransition → cameraRig / experience3d → overlay`.
@@ -49,6 +56,7 @@ The required plaque path is therefore: `portfolioNodes → assetManifest → pla
 - `src/scene/cameraRig.js` owns focus, safe plaque dolly, return-home movement, and the remembered fine-pointer handoff. Reduced-motion and coarse-pointer contexts use shorter timings.
 - `src/scene/orbitNodes.js` owns the shared neutral hover scale/light and the neutral transition light. It does not select plaque glow colors.
 - `src/ui/overlay.js` renders readable project detail in HTML/CSS. Plaques are a scene transition and never replace panel content.
+- `src/audio/audioManager.js` owns the lazily unlocked Web Audio graph, two reused streaming ambient channels, decoded short-effect cache, non-repeating pools, persistence, and isolated optional-file errors. `main` mounts its control and delegates button clicks; Experience 3D supplies progression and glyph-sequence events; the debug-only `optionsPanel` changes bus gains without entering scene settings.
 - `src/i18n/interfaceCopy.js → src/ui/experienceIntro.js → src/experience3d.js` is the opening-gate dependency. The Experience 3D-only intro is created while loading, below the loader and above the scene. Restored warm-up state and its clean replacement render are prerequisites; loader completion then hands control to the intro as a distinct gate before `interactionReady`, fog reveal, and the main `tick()`.
 - `src/scene/milkyWayBackground.js` consumes the cached `/png/milky_way.webp` texture. Its camera-centred, unlit inner sphere renders before galaxy sprites in `galaxyBackgroundScene` and is independent of main-scene lights and fog.
 
