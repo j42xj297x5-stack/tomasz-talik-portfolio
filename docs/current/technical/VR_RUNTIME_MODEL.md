@@ -14,13 +14,21 @@ Selection does not request a session. It opens a dedicated preparation screen, l
 
 `src/experienceVr.js` owns its canvas, WebGLRenderer, PerspectiveCamera, player rig, scene, session state, resize listener, and XR animation loop. The renderer enables XR, prefers `local-floor`, and falls back to `local` when the session cannot supply floor space. The camera is a child of the configured player rig; tracked head rotation is never overwritten.
 
-The scene contains only a dark background, the existing base lights, the central monkey with its existing placeholder fallback, the five existing glyphs with their sphere fallbacks, and target rays for up to two connected controllers. Glyph positions are the static initial ring produced by `createOrbitNodes`; the orbit controller is not advanced. There is no hover, raycasting, glyph activation, plaque, panel, overlay, atmosphere, dust, relic, galaxy, Milky Way, sun, moon, or world progression runtime.
+The scene contains only a dark background, the existing base lights, the central monkey with its existing placeholder fallback, the five existing glyphs with their sphere fallbacks, target rays for up to two connected controllers, and one low-cost interaction marker. Glyph positions are the static initial ring produced by `createOrbitNodes`; the orbit controller is not advanced. There is no plaque, panel, overlay, atmosphere, dust, relic, galaxy, Milky Way, sun, moon, or world progression runtime.
 
 ## Controllers
 
 Experience VR creates two symmetric WebXR target-ray controllers through `renderer.xr.getController(0)` and `(1)` and attaches them to the player rig. WebXR supplies their transforms; the runtime does not update controller position or rotation. An input source's `handedness`, `targetRayMode`, and `profiles` are captured as runtime-only controller data on `connected`, without assuming that an index identifies a particular hand.
 
-Each connected source shows a thin, untextured line from the controller's local origin along local `-Z`. `selectstart` records that controller's `isSelecting` state and applies the configured active length scale; `selectend` restores its idle state and scale. `disconnected` hides its line and clears its input and trigger state. These events do not raycast, activate glyphs, or emit gameplay behavior. Controller models and hand tracking are not loaded.
+Each connected source shows a thin, untextured line from the controller's local origin along local `-Z`. `selectstart` records that controller's `isSelecting` state and applies the configured active length scale; `selectend` restores its idle state and scale. `disconnected` hides its line and clears its input, trigger, and hit state. Controller models and hand tracking are not loaded.
+
+## Entry glyph interaction
+
+After world matrices are current, the runtime compares every glyph's world position with the player rig's initial world position. The smallest squared distance selects the sole entry glyph; strict comparison preserves `nodes` array order for a tie. This remains valid when spawn position or world scale changes. The other four glyphs stay visible but are never raycast, hovered, or activated.
+
+Every frame, each connected controller independently stores `currentHit` as either `null` or the entry node. Its ray origin and world quaternion come from `controller.matrixWorld`; rotating local `(0, 0, -1)` by that quaternion supplies the world direction. The raycaster tests only the entry-node collider, and `far` equals the controller's current visible length (`rayLength × idleScale` or `rayLength × activeScale`).
+
+The aggregated interaction states are `idle`, `hovered`, and `activated`. A single transparent, unlit shell around the entry glyph is hidden while idle, blue and subtle while either controller hits, and stronger gold after activation. Losing one of two simultaneous hits does not remove hover. Only `selectstart` from a controller whose own `currentHit` is the entry node activates it. Activation invokes its callback once and remains latched until reset; it does not start movement, entry animation, panels, content, audio, or gameplay.
 
 ## Configuration
 
@@ -30,6 +38,6 @@ The initial floor is world `Y = 0`; the player rig starts at `(0, 0, 6)` and fac
 
 ## Session lifecycle
 
-The renderer uses `setAnimationLoop` only while a session is active. Session start stores one active session and exposes an exit control. Session end stops the loop, clears session state, and re-enables entry. Re-entry reuses the same scene, assets, renderer, camera, rig, controls, controller objects, rays, and listeners, and reapplies the configured player-rig yaw before each session request. Controller setup occurs once during runtime initialization, so another session does not add duplicate rays or handlers. It does not start Experience 3D.
+The renderer uses `setAnimationLoop` only while a session is active. Session start stores one active session and exposes an exit control. Session end stops the loop, clears session and glyph-interaction state, and re-enables entry. Session entry also resets both controller hits, the `idle` visual state, and the activation latch, so the callback can run once again in that new session. Re-entry reuses the same scene, assets, renderer, camera, rig, controls, controller objects, rays, marker, and listeners, and reapplies the configured player-rig yaw before each session request. Controller and glyph-interaction setup occurs once during runtime initialization, so another session does not add duplicate geometry or handlers. It does not start Experience 3D.
 
 Experience VR does not start Experience 3D ambient audio or its intro sequence. The existing delegated entry-button click effect remains the only inherited audio behavior.

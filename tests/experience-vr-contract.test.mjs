@@ -4,11 +4,12 @@ import { calculatePlayerRigYaw } from '../src/xr/playerRigOrientation.js';
 import * as THREE from '../src/vendor/three.js';
 import { createVrControllers } from '../src/xr/createVrControllers.js';
 
-const [main, vr, experience3d, vrControllers] = await Promise.all([
+const [main, vr, experience3d, vrControllers, glyphInteraction] = await Promise.all([
   readFile(new URL('../src/main.js', import.meta.url), 'utf8'),
   readFile(new URL('../src/experienceVr.js', import.meta.url), 'utf8'),
   readFile(new URL('../src/experience3d.js', import.meta.url), 'utf8'),
-  readFile(new URL('../src/xr/createVrControllers.js', import.meta.url), 'utf8')
+  readFile(new URL('../src/xr/createVrControllers.js', import.meta.url), 'utf8'),
+  readFile(new URL('../src/xr/createVrGlyphInteraction.js', import.meta.url), 'utf8')
 ]);
 
 assert.match(main, /await import\('\.\/experienceVr\.js'\)/);
@@ -38,7 +39,10 @@ assert.match(vr, /orientPlayerRig\(playerRig, settings\.spawn\.lookAt\)/);
 assert.doesNotMatch(vr, /camera\.rotation|camera\.quaternion|camera\.lookAt/);
 assert.match(vrControllers, /renderer\.xr\.getController\(0\)/);
 assert.match(vrControllers, /renderer\.xr\.getController\(1\)/);
-assert.doesNotMatch(`${vr}\n${vrControllers}`, /Raycaster|raycast|XRControllerModelFactory/);
+assert.match(glyphInteraction, /new THREE\.Raycaster\(\)/);
+assert.match(glyphInteraction, /intersectObject\(entryNode, false\)/);
+assert.doesNotMatch(glyphInteraction, /intersectObjects|playerRig\.position|playerRig\.rotation/);
+assert.doesNotMatch(`${vr}\n${vrControllers}`, /XRControllerModelFactory/);
 assert.doesNotMatch(vrControllers, /controller\.(position|rotation|quaternion)\.(set|copy)/);
 
 const controllerObjects = [new THREE.Group(), new THREE.Group()];
@@ -58,9 +62,11 @@ assert.equal(left.handedness, 'left');
 assert.deepEqual(left.controller.userData.xrInput.profiles, ['meta-quest-touch-plus']);
 assert.equal(right.handedness, '');
 assert.equal(left.ray.visible, true);
+assert.equal(left.currentRayLength, 1.6);
 left.controller.dispatchEvent({ type: 'selectstart' });
 assert.equal(left.isSelecting, true);
 assert.equal(left.ray.scale.z, 1.4);
+assert.equal(left.currentRayLength, 2.8);
 assert.equal(right.isSelecting, false);
 left.controller.dispatchEvent({ type: 'selectend' });
 assert.equal(left.isSelecting, false);
