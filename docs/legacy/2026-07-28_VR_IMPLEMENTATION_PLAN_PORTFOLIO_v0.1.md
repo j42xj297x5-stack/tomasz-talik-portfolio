@@ -1,3 +1,5 @@
+> **Superseded 2026-07-28.** Historical VR concept only; not a source of current architecture. Use [`../current/technical/VR_RUNTIME_MODEL.md`](../current/technical/VR_RUNTIME_MODEL.md) and [`../current/handoffs/EXPERIENCE_VR_HANDOFF.md`](../current/handoffs/EXPERIENCE_VR_HANDOFF.md).
+
 # PLAN WDROŻENIA TRYBU VR — TOMASZ TALIK PORTFOLIO
 
 **Status:** kanoniczny plan rozwoju, jeszcze nie opis stanu wdrożonego  

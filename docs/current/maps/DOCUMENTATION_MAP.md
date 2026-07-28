@@ -10,6 +10,7 @@
 - Technical architecture and runtime model → `docs/current/technical/`
 - Process/workflow docs → `docs/current/operations/`
 - Decision records → `docs/current/decisions/`
+- Current implementation handoffs → `docs/current/handoffs/`
 - Navigation/meta docs → `docs/current/maps/`
 
 ## Mandatory maintenance on every substantial update
