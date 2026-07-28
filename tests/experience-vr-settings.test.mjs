@@ -14,12 +14,20 @@ const normalized = normalizeExperienceVrSettings({
   worldScale: 2,
   spawn: { position: { x: 1, y: 'bad', z: 5 }, lookAt: { x: 0, y: 2, z: 0 } },
   renderer: { pixelRatioCap: 99, antialias: false },
+  controllers: { enabled: false, rayLength: 0, rayOpacity: 4, idleScale: 'bad', activeScale: 99 },
   ignored: true
 });
 assert.equal(normalized.referenceSpaceType, 'local');
 assert.deepEqual(normalized.spawn.position, { x: 1, y: 0, z: 5 });
 assert.equal(normalized.renderer.pixelRatioCap, 2);
 assert.equal(normalized.renderer.antialias, false);
+assert.deepEqual(normalized.controllers, {
+  enabled: false,
+  rayLength: 0.1,
+  rayOpacity: 1,
+  idleScale: 1,
+  activeScale: 5
+});
 assert.equal('ignored' in normalized, false);
 
 const server = await loadExperienceVrSettings({

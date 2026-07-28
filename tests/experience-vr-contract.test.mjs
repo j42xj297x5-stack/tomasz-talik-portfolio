@@ -1,11 +1,14 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { calculatePlayerRigYaw } from '../src/xr/playerRigOrientation.js';
+import * as THREE from '../src/vendor/three.js';
+import { createVrControllers } from '../src/xr/createVrControllers.js';
 
-const [main, vr, experience3d] = await Promise.all([
+const [main, vr, experience3d, vrControllers] = await Promise.all([
   readFile(new URL('../src/main.js', import.meta.url), 'utf8'),
   readFile(new URL('../src/experienceVr.js', import.meta.url), 'utf8'),
-  readFile(new URL('../src/experience3d.js', import.meta.url), 'utf8')
+  readFile(new URL('../src/experience3d.js', import.meta.url), 'utf8'),
+  readFile(new URL('../src/xr/createVrControllers.js', import.meta.url), 'utf8')
 ]);
 
 assert.match(main, /await import\('\.\/experienceVr\.js'\)/);
@@ -33,5 +36,43 @@ assertFacesTarget({ x: -4, y: 2, z: 3 }, { x: 2, y: -5, z: -1 });
 assert.equal(calculatePlayerRigYaw({ x: 1, y: 0, z: 1 }, { x: 1, y: 9, z: 1 }), 0);
 assert.match(vr, /orientPlayerRig\(playerRig, settings\.spawn\.lookAt\)/);
 assert.doesNotMatch(vr, /camera\.rotation|camera\.quaternion|camera\.lookAt/);
+assert.match(vrControllers, /renderer\.xr\.getController\(0\)/);
+assert.match(vrControllers, /renderer\.xr\.getController\(1\)/);
+assert.doesNotMatch(`${vr}\n${vrControllers}`, /Raycaster|raycast|XRControllerModelFactory/);
+assert.doesNotMatch(vrControllers, /controller\.(position|rotation|quaternion)\.(set|copy)/);
+
+const controllerObjects = [new THREE.Group(), new THREE.Group()];
+const playerRig = new THREE.Group();
+const controllerSystem = createVrControllers({
+  renderer: { xr: { getController: (index) => controllerObjects[index] } },
+  playerRig,
+  settings: { enabled: true, rayLength: 2, rayOpacity: 0.7, idleScale: 0.8, activeScale: 1.4 }
+});
+assert.equal(controllerSystem.controllers.length, 2);
+assert.equal(playerRig.children.length, 2);
+const [left, right] = controllerSystem.controllers;
+assert.equal(left.ray.visible, false);
+left.controller.dispatchEvent({ type: 'connected', data: { handedness: 'left', targetRayMode: 'tracked-pointer', profiles: ['meta-quest-touch-plus'] } });
+right.controller.dispatchEvent({ type: 'connected', data: { targetRayMode: 'tracked-pointer' } });
+assert.equal(left.handedness, 'left');
+assert.deepEqual(left.controller.userData.xrInput.profiles, ['meta-quest-touch-plus']);
+assert.equal(right.handedness, '');
+assert.equal(left.ray.visible, true);
+left.controller.dispatchEvent({ type: 'selectstart' });
+assert.equal(left.isSelecting, true);
+assert.equal(left.ray.scale.z, 1.4);
+assert.equal(right.isSelecting, false);
+left.controller.dispatchEvent({ type: 'selectend' });
+assert.equal(left.isSelecting, false);
+assert.equal(left.ray.scale.z, 0.8);
+left.controller.dispatchEvent({ type: 'disconnected' });
+assert.equal(left.ray.visible, false);
+assert.equal(left.isConnected, false);
+assert.equal('xrInput' in left.controller.userData, false);
+controllerSystem.dispose();
+controllerSystem.dispose();
+assert.equal(playerRig.children.length, 0);
+left.controller.dispatchEvent({ type: 'connected', data: { handedness: 'left' } });
+assert.equal(left.isConnected, false);
 
 console.log('Experience VR static contract assertions passed');

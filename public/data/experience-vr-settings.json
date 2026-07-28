@@ -9,5 +9,12 @@
   "renderer": {
     "pixelRatioCap": 1.5,
     "antialias": true
+  },
+  "controllers": {
+    "enabled": true,
+    "rayLength": 3,
+    "rayOpacity": 0.8,
+    "idleScale": 1,
+    "activeScale": 1.2
   }
 }
