@@ -3,7 +3,7 @@
   "referenceSpaceType": "local-floor",
   "worldScale": 1,
   "spawn": {
-    "position": { "x": 0, "y": 0, "z": 6 },
+    "position": { "x": 0, "y": 0, "z": 8.6 },
     "lookAt": { "x": 0, "y": 1, "z": 0 }
   },
   "renderer": {
@@ -16,6 +16,14 @@
     "rayOpacity": 0.8,
     "idleScale": 1,
     "activeScale": 1.2
+  },
+  "glyphRing": {
+    "enabled": true,
+    "radiusMultiplier": 2,
+    "angularSpeed": 0.14,
+    "direction": 1,
+    "entryAngleThreshold": 0.24,
+    "entryAngleHysteresis": 0.04
   },
   "entryTransition": {
     "enabled": true,

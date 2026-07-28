@@ -1,59 +1,43 @@
 # Experience VR Runtime Model
 
-## Status and target
+## Status and boundary
 
-Experience VR is an implemented, minimal WebXR proof of concept targeted exclusively at Meta Quest 3S in Meta Quest Browser. It is a third runtime, separate from Classic 2D and Experience 3D. Ordinary desktop and mobile browsers are not target VR devices; when they do not expose `immersive-vr`, the entry shell keeps the VR choice visible but disabled.
+Experience VR is a separate Meta Quest 3S WebXR runtime, loaded only after the VR choice. It reuses assets and small scene factories, but does not start or import the Experience 3D runtime. It owns one scene, renderer, XR animation loop, player rig, two target-ray controllers, one plaque, and VR-specific glyph orbit, lighting, and interaction controllers. It contains no joystick locomotion, teleportation, physics, grabbing, or DOM overlay.
 
-## Entry and capability contract
+## Ring and spawn
 
-The lightweight entry shell checks `window.isSecureContext`, `navigator.xr`, and `navigator.xr.isSessionSupported('immersive-vr')` without user-agent detection. Capability failure is isolated and never blocks Classic 2D or Experience 3D. The VR runtime is loaded only through the dynamic `import('./experienceVr.js')` after an enabled VR choice is selected.
+`createOrbitNodes` remains the source of the base glyph radius, `3.8` world units. The VR `glyphRing.radiusMultiplier` defaults to `2`, producing an effective radius of `7.6` without scaling glyphs, colliders, monkey, plaque, rig, or world. Since the former spawn `(0, 0, 6)` would be inside that orbit, VR spawn is `(0, 0, 8.6)`; height and `lookAt` remain unchanged.
 
-Selection does not request a session. It opens a dedicated preparation screen, loads the monkey and five glyph assets, builds one renderer and one minimal scene, and then enables the localized **Enter VR / Wejdź do VR** button. Only that direct user gesture calls `navigator.xr.requestSession('immersive-vr', { optionalFeatures: ['local-floor'] })`.
+`createVrGlyphOrbit` records the five initial, equally spaced angles, fixed heights, scales, and model rotations. On every existing `renderer.setAnimationLoop` frame it adds `delta * angularSpeed * direction` to one shared phase and recomputes X/Z on the common radius. It never pauses for hover, activation, transition, arrival, or plaque display. Model rotations remain at the orientation established by `createOrbitNodes`, matching Experience 3D's phase-independent glyph orientation.
 
-## Minimal scene
+## Dynamic entry zone
 
-`src/experienceVr.js` owns its canvas, WebGLRenderer, PerspectiveCamera, player rig, scene, session state, resize listener, and XR animation loop. The renderer enables XR, prefers `local-floor`, and falls back to `local` when the session cannot supply floor space. The camera is a child of the configured player rig; tracked head rotation is never overwritten.
+The horizontal direction from ring center toward the configured spawn defines the entry direction. The orbit controller compares each current glyph angle with that direction and selects at most the closest glyph within `entryAngleThreshold`. The current selection is retained inside the threshold plus `entryAngleHysteresis` unless another candidate is meaningfully closer; this prevents boundary flicker. Because every glyph shares the orbit, every glyph can become `entryReady` in turn.
 
-The scene contains a dark background, the existing base lights, the central monkey with its existing placeholder fallback, the five existing glyphs with their sphere fallbacks, target rays for up to two connected controllers, one low-cost interaction marker, and one spatial information plaque. Glyph positions are the static initial ring produced by `createOrbitNodes`; the orbit controller is not advanced. There is no HTML/DOM overlay, atmosphere, dust, relic, galaxy, Milky Way, sun, moon, or world progression runtime.
+A trigger is accepted only when that controller's current hit equals the current `entryReady` glyph and no glyph has already been activated. It latches that logical glyph as `activatedEntryGlyph` and starts the existing transition once. Hits outside the zone only contribute hover and cannot show the plaque or start movement.
 
-## Controllers
+## Moving-geometry raycasting
 
-Experience VR creates two symmetric WebXR target-ray controllers through `renderer.xr.getController(0)` and `(1)` and attaches them to the player rig. WebXR supplies their transforms; the runtime does not update controller position or rotation. An input source's `handedness`, `targetRayMode`, and `profiles` are captured as runtime-only controller data on `connected`, without assuming that an index identifies a particular hand.
+`createVrGlyphInteraction` builds one target record per logical glyph: `glyphRoot`, `raycastObjects`, and optional `fallbackCollider`. It recursively collects visible, renderable meshes from the loaded GLB hierarchy. When no useful mesh exists, it creates one invisible low-poly collider as a child of that glyph root, so normal parent transforms carry it through orbital position, rotation, scale, and world-root transforms.
 
-Each connected source shows a thin, untextured line from the controller's local origin along local `-Z`. `selectstart` records that controller's `isSelecting` state and applies the configured active length scale; `selectend` restores its idle state and scale. `disconnected` hides its line and clears its input, trigger, and hit state. Controller models and hand tracking are not loaded.
+An explicit object-to-glyph map resolves a hit mesh or collider back to its logical glyph. Each connected controller independently stores `currentHit` and `currentRayLength`; its world origin and quaternion transform local `(0, 0, -1)`, and `Raycaster.far` equals the visible ray length. Hover is aggregated as a set, so one controller losing a shared hit does not cancel the other.
 
-## Entry glyph interaction
+The frame order is: orbit update; `glyphRing.updateMatrixWorld(true)`; controller raycasts; dynamic entry-ready assignment; glyph-light update; entry-transition and plaque update; render. Raycasts therefore see the glyph transform from the same frame.
 
-After world matrices are current, the runtime compares every glyph's world position with the player rig's initial world position. The smallest squared distance selects the sole entry glyph; strict comparison preserves `nodes` array order for a tie. This remains valid when spawn position or world scale changes. The other four glyphs stay visible but are never raycast, hovered, or activated.
+## Light-only feedback
 
-Every frame, each connected controller independently stores `currentHit` as either `null` or the entry node. Its ray origin and world quaternion come from `controller.matrixWorld`; rotating local `(0, 0, -1)` by that quaternion supplies the world direction. The raycaster tests only the entry-node collider, and `far` equals the controller's current visible length (`rayLength × idleScale` or `rayLength × activeScale`).
+There is no blue/gold sphere, shell, ring, circle, or geometric halo. `createVrGlyphLights` owns one warm `PointLight` (`#fffaf2`, matching the Experience 3D glyph light) per glyph. Each light anchor is a child of its glyph. On update its local position is derived from the center-to-glyph radial direction at factor `1.16`, placing it beyond and in front of the visible glyph side while parent transforms make it follow the orbit.
 
-The aggregated interaction states are `idle`, `hovered`, and `activated`. A single transparent, unlit shell around the entry glyph is hidden while idle, blue and subtle while either controller hits, and stronger gold after activation. Losing one of two simultaneous hits does not remove hover. Only `selectstart` from a controller whose own `currentHit` is the entry node activates it. Activation invokes its callback once and remains latched until reset. That callback starts the one-shot entry transition; further activation attempts while the transition is `moving` or `arrived` cannot start another movement.
+Light states are `idle` (off), `hovered` (2.8), `entryReady` (subtle 1.15), and `activated` (3). Activated has precedence, then aggregated hover, then entry readiness. Hover continues after arrival and orbital motion never stops.
 
-## Entry transition
+## Transition, plaque, and lifecycle
 
-The first glyph moves the user from the spawn side of the ring to the configurable horizontal target `(0, 1.8)` in front of the central monkey. The transition moves `playerRig` only; it never positions or rotates the tracked XR camera. At start, it reads the active XR camera's world position and adds the horizontal offset required to place the user's current physical head position at the target, rather than treating the rig origin as the head position.
+Activation hides the reused plaque and starts `createVrEntryTransition`. Only its `onComplete`, after state `arrived`, calls `spatialPlaque.show` with content resolved from the latched `activatedEntryGlyph.userData`. Later hits cannot change that glyph, plaque content, or restart the transition.
 
-During the default three-second movement, delta time from the existing XR animation loop drives `smoothstep` interpolation of only the rig's `X` and `Z` coordinates. Rig `Y`, rig rotation, tracked head position/orientation, and controller orientation remain untouched. The terminal state is `arrived`, and completion runs once. Disabling the configured transition applies the same head-relative destination immediately and enters `arrived`. The completion callback is the only place that shows the spatial plaque; there is no plaque during hover, selection, or movement.
+Before a new session and after session end, the runtime restores spawn/yaw, resets the transition and plaque, restores initial orbital phase, clears `activatedEntryGlyph`, `entryReady`, and both controller hits, and turns off glyph lights. Existing controllers, listeners, colliders, lights, orbit controller, interaction system, and plaque are reused rather than duplicated.
 
-## Spatial information plaque
-
-`createVrSpatialPlaque` creates one world-space `PlaneGeometry` with an unlit `MeshBasicMaterial` and a single `CanvasTexture`. The default physical size is `1.35 × 0.85` world units and the canvas is `1024 × 640` pixels. Its dark high-contrast canvas uses the activated entry glyph's existing resolved `title` and short `leadText`, then `draftText` or `shortLabel` when needed. If those data are absent, the explicitly temporary fallback is the title **Brama** and the text **Pierwszy znak otwiera drogę do wnętrza kręgu.** The adapter does not import Experience 3D or establish another canonical content source.
-
-At `show`, the module reads the active XR camera's world position and direction, removes direction pitch by setting `Y` to zero, normalizes it, and places the plaque at the configured distance (default `1.4`) with the configured head-height offset (default `-0.05`). It aims the mesh at a target with the plaque's own `Y`, so only yaw changes and world-up remains vertical. The pose is calculated once; after showing, the plaque stays anchored in world space rather than following the head.
-
-Canvas text wrapping measures deterministic word-preserving candidates with `measureText`, applies bounded title and body line counts, and replaces overflow at the end of the last permitted line with an ellipsis. Missing text yields no lines and font sizes are never reduced automatically. The plaque lifecycle states are `hidden`, `appearing`, and `visible`; the 0.42-second `smoothstep` entrance changes scale from `0.92` to `1` and opacity from zero to one using the existing runtime delta.
-
-The plaque is visual only. It is absent from controller raycasting and has no hover, trigger, collider, grabbing, throwing, physics, bridge-building, or audio behavior. `show` redraws and reuses the same canvas, texture, material, geometry, and mesh. `reset` immediately returns it to `hidden`; `dispose` is idempotent and removes the mesh, disposes its geometry, material, and texture, clears the canvas, and releases its backing dimensions without affecting the scene, camera, rig, or XR session.
+Orbit and light `dispose()` methods are idempotent and do not remove glyph models. Light disposal removes module-owned anchors/lights. Interaction disposal removes its listeners and fallback colliders, clears mappings and hits, and disposes only module-owned fallback geometry/material—not GLB resources.
 
 ## Configuration
 
-`src/config/experienceVrSettings.js` defines and validates schema version 1. `public/data/experience-vr-settings.json` may override the reference-space preference, world scale, player spawn position/look target, pixel-ratio cap, antialias setting, bounded controller values, and the entry transition's enabled flag, duration, horizontal target, and easing, plus bounded spatial-plaque size, distance, vertical offset, canvas size, font sizes, and maximum body lines. The target intentionally has no public height coordinate. Missing, malformed, incompatible, or individually invalid data falls back safely to code defaults. VR settings do not use localStorage and do not copy the Experience 3D composition schema.
-
-The initial floor is world `Y = 0`; the player rig starts at `(0, 0, 6)` and faces the monkey. Its yaw is derived from the horizontal direction between `spawn.position` and `spawn.lookAt`, aligning the camera's local `-Z` forward axis without applying pitch or roll. These are proof-of-concept calibration values, not final comfort tuning.
-
-## Session lifecycle
-
-The renderer uses `setAnimationLoop` only while a session is active. Session start stores one active session and exposes an exit control. Before each session request, runtime cancellation resets the transition to `idle`, restores the rig to the configured spawn position, reapplies the accepted starting yaw, and resets controller hits, the glyph visual, and its activation latch. The callback can therefore run once again only in a new, reset session. Session end stops the loop and clock, cancels any `moving` transition back to `idle` without delayed completion, clears session and glyph-interaction state, and re-enables entry. Re-entry reuses the same transition, scene, assets, renderer, camera, rig, controls, controller objects, rays, marker, and listeners; it does not add callbacks or start Experience 3D.
-
-The plaque is reset before every session request, after `sessionend`, and after a failed request. Re-entry therefore reuses its existing mesh and canvas without leaving an `appearing` state or creating duplicates. Experience VR does not start Experience 3D ambient audio or its intro sequence. The existing delegated entry-button click effect remains the only inherited audio behavior.
+Schema version 1 accepts `glyphRing.enabled`, `radiusMultiplier`, `angularSpeed`, `direction`, `entryAngleThreshold`, and `entryAngleHysteresis`, in addition to renderer, controller, transition, plaque, spawn, reference-space, and world-scale settings. Invalid values fall back to bounded code defaults. Experience VR settings are not stored in localStorage and do not expose controller-axis movement.
