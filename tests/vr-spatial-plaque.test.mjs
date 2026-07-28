@@ -37,20 +37,20 @@ camera.rotation.set(0.6, Math.PI / 2, 0);
 scene.add(camera);
 scene.updateMatrixWorld(true);
 const settings = {
-  enabled: true, width: 1.35, height: 0.85, distance: 1.4, verticalOffset: -0.05,
+  enabled: true, width: 1.35, height: 0.85, distance: 1.4, monkeyVerticalGap: 0.4,
   canvasWidth: 1024, canvasHeight: 640, titleFontSize: 72, bodyFontSize: 42, maxBodyLines: 6
 };
 const plaque = createVrSpatialPlaque({
-  scene, camera, renderer: { xr: { getCamera: () => camera } }, settings, canvasFactory: fakeCanvas
+  scene, camera, renderer: { xr: { getCamera: () => camera } }, settings, anchorObject: new THREE.Mesh(new THREE.BoxGeometry(2, 2, 2)), canvasFactory: fakeCanvas
 });
 const sameObject = plaque.object;
 assert.equal(plaque.state, 'hidden');
 assert.equal(plaque.object.visible, false);
 assert.equal(plaque.show({ title: 'Title', body: 'Body' }), true);
 assert.equal(plaque.state, 'appearing');
-assert.ok(Math.abs(plaque.object.position.x - 0.6) < 1e-9);
-assert.ok(Math.abs(plaque.object.position.y - 1.65) < 1e-9);
-assert.ok(Math.abs(plaque.object.position.z - 3) < 1e-9);
+assert.ok(Math.abs(plaque.object.position.x) < 1e-9);
+assert.ok(Math.abs(plaque.object.position.y - 1.825) < 1e-9);
+assert.ok(Math.abs(plaque.object.position.z) < 1e-9);
 assert.ok(Math.abs(plaque.object.rotation.x) < 1e-9);
 assert.ok(Math.abs(plaque.object.rotation.z) < 1e-9);
 const anchoredPosition = plaque.object.position.clone();

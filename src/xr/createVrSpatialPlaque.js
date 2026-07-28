@@ -57,7 +57,7 @@ export function resolveVrPlaqueContent(glyphData) {
   };
 }
 
-export function createVrSpatialPlaque({ scene, camera, renderer, settings, canvasFactory }) {
+export function createVrSpatialPlaque({ scene, camera, renderer, settings, anchorObject, canvasFactory }) {
   const canvas = canvasFactory ? canvasFactory() : document.createElement('canvas');
   canvas.width = settings.canvasWidth;
   canvas.height = settings.canvasHeight;
@@ -82,6 +82,7 @@ export function createVrSpatialPlaque({ scene, camera, renderer, settings, canva
   const headPosition = new THREE.Vector3();
   const direction = new THREE.Vector3();
   const target = new THREE.Vector3();
+  const bounds = new THREE.Box3();
   let state = 'hidden';
   let elapsed = 0;
   let disposed = false;
@@ -121,16 +122,13 @@ export function createVrSpatialPlaque({ scene, camera, renderer, settings, canva
     texture.needsUpdate = true;
   }
 
-  function positionInFrontOfHead() {
+  function positionAboveMonkey() {
     const xrCamera = renderer.xr.getCamera(camera);
     xrCamera.updateWorldMatrix(true, false);
     xrCamera.getWorldPosition(headPosition);
-    xrCamera.getWorldDirection(direction);
-    direction.y = 0;
-    if (direction.lengthSq() < 1e-8) direction.set(0, 0, -1);
-    direction.normalize();
-    object.position.copy(headPosition).addScaledVector(direction, settings.distance);
-    object.position.y = headPosition.y + settings.verticalOffset;
+    bounds.setFromObject(anchorObject);
+    const center = bounds.getCenter(target);
+    object.position.set(center.x, bounds.max.y + settings.monkeyVerticalGap + settings.height / 2, center.z);
     target.set(headPosition.x, object.position.y, headPosition.z);
     object.lookAt(target);
   }
@@ -138,7 +136,7 @@ export function createVrSpatialPlaque({ scene, camera, renderer, settings, canva
   function show(content) {
     if (disposed || !settings.enabled) return false;
     draw(content);
-    positionInFrontOfHead();
+    positionAboveMonkey();
     elapsed = 0;
     state = 'appearing';
     object.visible = true;

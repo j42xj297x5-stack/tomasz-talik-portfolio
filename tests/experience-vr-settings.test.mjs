@@ -36,13 +36,15 @@ assert.deepEqual(normalized.controllers, {
 assert.deepEqual(normalized.entryTransition, {
   enabled: false,
   durationSeconds: 30,
+  targetRadiusFactor: 0.5,
   target: { x: 2, z: 1.8 },
   easing: 'smoothstep'
 });
 assert.deepEqual(normalized.spatialPlaque, {
-  enabled: false, width: 0.5, height: 2, distance: 0.6, verticalOffset: -1,
+  enabled: false, width: 0.5, height: 2, distance: 0.6, monkeyVerticalGap: 0.4,
   canvasWidth: 2048, canvasHeight: 320, titleFontSize: 36, bodyFontSize: 72, maxBodyLines: 1
 });
+assert.deepEqual(normalized.glyphPlaque, DEFAULT_EXPERIENCE_VR_SETTINGS.glyphPlaque);
 assert.equal('ignored' in normalized, false);
 
 const server = await loadExperienceVrSettings({

@@ -6,7 +6,7 @@ import { loadMonkeyModel } from './scene/monkeyModel.js';
 import { createOrbitNodes } from './scene/orbitNodes.js';
 import { createAssetManager } from './assets/assetManager.js';
 import { createLoadingDiagnostics, preloadAssets } from './assets/preloadAssets.js';
-import { ASSET_STAGES, getPreloadAssets, INITIAL_PRELOAD_GROUPS } from './assets/assetManifest.js';
+import { ASSET_STAGES, getPreloadAssets, INITIAL_PRELOAD_GROUPS, DEFERRED_PRELOAD_GROUPS } from './assets/assetManifest.js';
 import { loadExperienceVrSettings } from './config/experienceVrSettings.js';
 import { orientPlayerRig } from './xr/playerRigOrientation.js';
 import { createVrControllers } from './xr/createVrControllers.js';
@@ -15,6 +15,7 @@ import { createVrGlyphOrbit } from './xr/createVrGlyphOrbit.js';
 import { createVrGlyphLights } from './xr/createVrGlyphLights.js';
 import { createVrEntryTransition } from './xr/createVrEntryTransition.js';
 import { createVrSpatialPlaque, resolveVrPlaqueContent } from './xr/createVrSpatialPlaque.js';
+import { createVrGlyphPlaque } from './xr/createVrGlyphPlaque.js';
 
 const app = document.querySelector('#app');
 if (!app) throw new Error('Missing #app mount element.');
@@ -77,8 +78,8 @@ addLights(scene);
 const centralPlaceholder = createCentralObject();
 worldRoot.add(centralPlaceholder);
 
-const vrAssets = getPreloadAssets(INITIAL_PRELOAD_GROUPS)
-  .filter(({ id }) => id === 'gltf-loader-module' || id === 'monkey-model' || id.startsWith('glyph-'))
+const vrAssets = getPreloadAssets([...INITIAL_PRELOAD_GROUPS, ...DEFERRED_PRELOAD_GROUPS])
+  .filter(({ id }) => id === 'gltf-loader-module' || id === 'monkey-model' || id.startsWith('glyph-') || id.startsWith('plaque-'))
   .map((asset) => ({ ...asset, critical: asset.id === 'gltf-loader-module' }));
 const loadingDiagnostics = createLoadingDiagnostics(vrAssets);
 const assetManager = createAssetManager({ diagnostics: loadingDiagnostics });
@@ -94,20 +95,28 @@ await preloadAssets(vrAssets, {
   markComplete: true
 });
 unsubscribe();
-await loadMonkeyModel({ scene: worldRoot, fallbackObject: centralPlaceholder, assetManager });
+const monkeyModel = await loadMonkeyModel({ scene: worldRoot, fallbackObject: centralPlaceholder, assetManager });
 const { group: glyphRing, nodes } = createOrbitNodes(resolvePortfolioNodes(language), { assetManager });
 worldRoot.add(glyphRing);
 const entryDirection = new THREE.Vector3(settings.spawn.position.x, 0, settings.spawn.position.z).normalize();
 const glyphOrbit = createVrGlyphOrbit({ nodes, settings: settings.glyphRing, entryDirection });
 const glyphLights = createVrGlyphLights({ nodes });
-const spatialPlaque = createVrSpatialPlaque({ scene, camera, renderer, settings: settings.spatialPlaque });
+const monkeyAnchor = monkeyModel ?? centralPlaceholder;
+const spatialPlaque = createVrSpatialPlaque({ scene, camera, renderer, settings: settings.spatialPlaque, anchorObject: monkeyAnchor });
+const plaqueAssets = new Map(nodes.map((node) => [node.userData.id, assetManager.cloneGltfScene(`plaque-${node.userData.id}`)]));
+plaqueAssets.visuals = new Map(nodes.map((node) => [node.userData.id, node.userData.plaqueVisual]));
+const glyphPlaque = createVrGlyphPlaque({ scene, camera, renderer, settings: settings.glyphPlaque, plaqueAssets });
 let activatedEntryGlyph = null;
 const entryTransition = createVrEntryTransition({
   playerRig,
   renderer,
   camera,
   settings: settings.entryTransition,
+  ringCenter: new THREE.Vector3(),
+  spawnPosition: settings.spawn.position,
+  effectiveRingRadius: glyphOrbit.effectiveRadius,
   onComplete: () => {
+    glyphPlaque.showForGlyph(activatedEntryGlyph);
     spatialPlaque.show(resolveVrPlaqueContent(activatedEntryGlyph?.userData));
   }
 });
@@ -117,6 +126,7 @@ const glyphInteraction = createVrGlyphInteraction({
   onEntryGlyphActivated: () => {
     activatedEntryGlyph = glyphInteraction.activatedEntryGlyph;
     spatialPlaque.hide();
+    glyphPlaque.hide();
     entryTransition.start();
   }
 });
@@ -149,6 +159,7 @@ function renderFrame() {
   });
   entryTransition.update(delta);
   spatialPlaque.update(delta);
+  glyphPlaque.update(delta);
   renderer.render(scene, camera);
 }
 
@@ -165,6 +176,9 @@ function handleSessionEnd() {
   activeSession = null;
   entryTransition.reset();
   spatialPlaque.reset();
+  glyphPlaque.reset();
+  playerRig.position.set(settings.spawn.position.x, settings.spawn.position.y, settings.spawn.position.z);
+  orientPlayerRig(playerRig, settings.spawn.lookAt);
   activatedEntryGlyph = null;
   glyphOrbit.reset();
   glyphLights.reset();
@@ -176,6 +190,7 @@ async function enterVr() {
   if (activeSession) return;
   entryTransition.reset();
   spatialPlaque.reset();
+  glyphPlaque.reset();
   playerRig.position.set(settings.spawn.position.x, settings.spawn.position.y, settings.spawn.position.z);
   orientPlayerRig(playerRig, settings.spawn.lookAt);
   activatedEntryGlyph = null;
@@ -211,6 +226,7 @@ async function enterVr() {
     clock.stop();
     entryTransition.reset();
     spatialPlaque.reset();
+    glyphPlaque.reset();
     status.textContent = copy.error;
     enterButton.disabled = false;
     exitButton.hidden = true;

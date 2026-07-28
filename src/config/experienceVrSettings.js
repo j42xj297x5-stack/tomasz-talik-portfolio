@@ -32,6 +32,7 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
   entryTransition: {
     enabled: true,
     durationSeconds: 3,
+    targetRadiusFactor: 0.5,
     target: { x: 0, z: 1.8 },
     easing: 'smoothstep'
   },
@@ -40,12 +41,16 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
     width: 1.35,
     height: 0.85,
     distance: 1.4,
-    verticalOffset: -0.05,
+    monkeyVerticalGap: 0.4,
     canvasWidth: 1024,
     canvasHeight: 640,
     titleFontSize: 72,
     bodyFontSize: 42,
     maxBodyLines: 6
+  },
+  glyphPlaque: {
+    enabled: true, maxWidth: 1.35, maxHeight: 0.9, distance: 1.35,
+    verticalOffset: -0.42, appearDuration: 0.42, appearStartScale: 0.92
   }
 });
 
@@ -105,6 +110,7 @@ export function normalizeExperienceVrSettings(candidate) {
         ? candidate.entryTransition.enabled
         : defaults.entryTransition.enabled,
       durationSeconds: finiteNumber(candidate.entryTransition?.durationSeconds, defaults.entryTransition.durationSeconds, { min: 0.1, max: 30 }),
+      targetRadiusFactor: finiteNumber(candidate.entryTransition?.targetRadiusFactor, defaults.entryTransition.targetRadiusFactor, { min: 0.2, max: 0.8 }),
       target: {
         x: finiteNumber(candidate.entryTransition?.target?.x, defaults.entryTransition.target.x),
         z: finiteNumber(candidate.entryTransition?.target?.z, defaults.entryTransition.target.z)
@@ -120,12 +126,21 @@ export function normalizeExperienceVrSettings(candidate) {
       width: finiteNumber(candidate.spatialPlaque?.width, defaults.spatialPlaque.width, { min: 0.5, max: 3 }),
       height: finiteNumber(candidate.spatialPlaque?.height, defaults.spatialPlaque.height, { min: 0.3, max: 2 }),
       distance: finiteNumber(candidate.spatialPlaque?.distance, defaults.spatialPlaque.distance, { min: 0.6, max: 4 }),
-      verticalOffset: finiteNumber(candidate.spatialPlaque?.verticalOffset, defaults.spatialPlaque.verticalOffset, { min: -1, max: 1 }),
+      monkeyVerticalGap: finiteNumber(candidate.spatialPlaque?.monkeyVerticalGap, defaults.spatialPlaque.monkeyVerticalGap, { min: 0, max: 2 }),
       canvasWidth: Math.round(finiteNumber(candidate.spatialPlaque?.canvasWidth, defaults.spatialPlaque.canvasWidth, { min: 512, max: 2048 })),
       canvasHeight: Math.round(finiteNumber(candidate.spatialPlaque?.canvasHeight, defaults.spatialPlaque.canvasHeight, { min: 320, max: 1280 })),
       titleFontSize: Math.round(finiteNumber(candidate.spatialPlaque?.titleFontSize, defaults.spatialPlaque.titleFontSize, { min: 36, max: 128 })),
       bodyFontSize: Math.round(finiteNumber(candidate.spatialPlaque?.bodyFontSize, defaults.spatialPlaque.bodyFontSize, { min: 24, max: 72 })),
       maxBodyLines: Math.round(finiteNumber(candidate.spatialPlaque?.maxBodyLines, defaults.spatialPlaque.maxBodyLines, { min: 1, max: 10 }))
+    },
+    glyphPlaque: {
+      enabled: typeof candidate.glyphPlaque?.enabled === 'boolean' ? candidate.glyphPlaque.enabled : defaults.glyphPlaque.enabled,
+      maxWidth: finiteNumber(candidate.glyphPlaque?.maxWidth, defaults.glyphPlaque.maxWidth, { min: 0.2, max: 4 }),
+      maxHeight: finiteNumber(candidate.glyphPlaque?.maxHeight, defaults.glyphPlaque.maxHeight, { min: 0.2, max: 3 }),
+      distance: finiteNumber(candidate.glyphPlaque?.distance, defaults.glyphPlaque.distance, { min: 0.4, max: 4 }),
+      verticalOffset: finiteNumber(candidate.glyphPlaque?.verticalOffset, defaults.glyphPlaque.verticalOffset, { min: -2, max: 1 }),
+      appearDuration: finiteNumber(candidate.glyphPlaque?.appearDuration, defaults.glyphPlaque.appearDuration, { min: 0.05, max: 3 }),
+      appearStartScale: finiteNumber(candidate.glyphPlaque?.appearStartScale, defaults.glyphPlaque.appearStartScale, { min: 0.1, max: 1 })
     }
   };
 }

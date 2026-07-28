@@ -47,7 +47,7 @@ assert.doesNotMatch(vr, /camera\.rotation|camera\.quaternion|camera\.lookAt/);
 assert.doesNotMatch(entryTransition, /camera\.(position|rotation|quaternion)\.(set|copy)|playerRig\.rotation/);
 assert.match(vr, /onEntryGlyphActivated:[\s\S]*activatedEntryGlyph = glyphInteraction\.activatedEntryGlyph;[\s\S]*entryTransition\.start\(\)/);
 assert.match(vr, /function handleSessionEnd\(\)[\s\S]*entryTransition\.reset\(\)/);
-assert.match(vr, /entryTransition\.reset\(\);\s*spatialPlaque\.reset\(\);\s*playerRig\.position\.set\(settings\.spawn\.position\.x/);
+assert.match(vr, /entryTransition\.reset\(\);\s*spatialPlaque\.reset\(\);\s*glyphPlaque\.reset\(\);\s*playerRig\.position\.set\(settings\.spawn\.position\.x/);
 assert.match(vr, /entryTransition\.update\(delta\)/);
 assert.match(vr, /onComplete:[\s\S]*spatialPlaque\.show/);
 assert.match(vr, /function handleSessionEnd\(\)[\s\S]*spatialPlaque\.reset\(\)/);

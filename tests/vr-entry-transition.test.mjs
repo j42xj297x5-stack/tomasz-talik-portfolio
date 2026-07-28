@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import * as THREE from '../src/vendor/three.js';
-import { createVrEntryTransition, smoothstep } from '../src/xr/createVrEntryTransition.js';
+import { calculateVrEntryTarget, createVrEntryTransition, smoothstep } from '../src/xr/createVrEntryTransition.js';
 
 function fixture({ enabled = true } = {}) {
   const scene = new THREE.Scene();
@@ -68,3 +68,5 @@ immediate.transition.dispose();
 assert.equal(immediate.transition.start(), false);
 
 console.log('VR entry transition assertions passed');
+
+assert.deepEqual(calculateVrEntryTarget({ ringCenter: { x: 0, z: 0 }, spawnPosition: { x: 0, z: 8.6 }, effectiveRingRadius: 7.6, targetRadiusFactor: 0.5 }), { x: 0, z: 3.8 });
