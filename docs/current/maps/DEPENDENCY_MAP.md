@@ -76,3 +76,19 @@ The required plaque path is therefore: `portfolioNodes → assetManifest → pla
 - `src/main.js` conditionally imports `src/experience3d.js` after an Experience 3D selection; `src/classic2d.js` is a separate lightweight consumer of the same `portfolioNodes` data.
 - Vendored Three.js r184 and its matching GLTFLoader are runtime sources of truth. Public logical paths are normalized for Vite and GitHub Pages by `src/utils/publicPath.js`.
 - Monkey and glyph loading retain their visual fallbacks; orbit-node sphere colliders remain the interaction targets.
+
+## Experience VR dependency graph
+
+```text
+main ─> vrCapability ─> WebXR availability shown in the mode selector
+main ── dynamic import ─> experienceVr
+experienceVr ─┬─> experienceVrSettings ─> publicPath
+              ├─> AssetManager + critical monkey/glyph manifest subset
+              ├─> centralObject + monkeyModel
+              ├─> orbitNodes (creation and static initial placement only)
+              ├─> lights
+              └─> vendored Three.js WebXRManager
+direct Enter VR gesture ─> immersive-vr session ─> renderer.setAnimationLoop
+```
+
+Experience VR owns a renderer, camera, player rig, scene, session state, and animation loop independently of Experience 3D. It shares existing content and minimal scene/asset constructors but does not load the Experience 3D runtime, atmosphere, interaction state, panels, overlay, or audio sequence.
