@@ -45,7 +45,7 @@ assert.equal(calculatePlayerRigYaw({ x: 1, y: 0, z: 1 }, { x: 1, y: 9, z: 1 }), 
 assert.match(vr, /orientPlayerRig\(playerRig, settings\.spawn\.lookAt\)/);
 assert.doesNotMatch(vr, /camera\.rotation|camera\.quaternion|camera\.lookAt/);
 assert.doesNotMatch(entryTransition, /camera\.(position|rotation|quaternion)\.(set|copy)|playerRig\.rotation/);
-assert.match(vr, /onEntryGlyphActivated:[\s\S]*entryGlyphActivated = true;[\s\S]*entryTransition\.start\(\)/);
+assert.match(vr, /onEntryGlyphActivated:[\s\S]*activatedEntryGlyph = glyphInteraction\.activatedEntryGlyph;[\s\S]*entryTransition\.start\(\)/);
 assert.match(vr, /function handleSessionEnd\(\)[\s\S]*entryTransition\.reset\(\)/);
 assert.match(vr, /entryTransition\.reset\(\);\s*spatialPlaque\.reset\(\);\s*playerRig\.position\.set\(settings\.spawn\.position\.x/);
 assert.match(vr, /entryTransition\.update\(delta\)/);
@@ -54,8 +54,9 @@ assert.match(vr, /function handleSessionEnd\(\)[\s\S]*spatialPlaque\.reset\(\)/)
 assert.match(vrControllers, /renderer\.xr\.getController\(0\)/);
 assert.match(vrControllers, /renderer\.xr\.getController\(1\)/);
 assert.match(glyphInteraction, /new THREE\.Raycaster\(\)/);
-assert.match(glyphInteraction, /intersectObject\(entryNode, false\)/);
-assert.doesNotMatch(glyphInteraction, /intersectObjects|playerRig\.position|playerRig\.rotation/);
+assert.match(glyphInteraction, /intersectObjects\(allRaycastObjects, true\)/);
+assert.match(glyphInteraction, /objectToGlyph/);
+assert.doesNotMatch(glyphInteraction, /SphereGeometry\(0\.31|VrEntryGlyphMarker|playerRig\.position|playerRig\.rotation/);
 assert.doesNotMatch(`${vr}\n${vrControllers}`, /XRControllerModelFactory/);
 assert.doesNotMatch(vrControllers, /controller\.(position|rotation|quaternion)\.(set|copy)/);
 

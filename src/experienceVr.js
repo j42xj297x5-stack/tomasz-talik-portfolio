@@ -11,6 +11,8 @@ import { loadExperienceVrSettings } from './config/experienceVrSettings.js';
 import { orientPlayerRig } from './xr/playerRigOrientation.js';
 import { createVrControllers } from './xr/createVrControllers.js';
 import { createVrGlyphInteraction } from './xr/createVrGlyphInteraction.js';
+import { createVrGlyphOrbit } from './xr/createVrGlyphOrbit.js';
+import { createVrGlyphLights } from './xr/createVrGlyphLights.js';
 import { createVrEntryTransition } from './xr/createVrEntryTransition.js';
 import { createVrSpatialPlaque, resolveVrPlaqueContent } from './xr/createVrSpatialPlaque.js';
 
@@ -95,25 +97,26 @@ unsubscribe();
 await loadMonkeyModel({ scene: worldRoot, fallbackObject: centralPlaceholder, assetManager });
 const { group: glyphRing, nodes } = createOrbitNodes(resolvePortfolioNodes(language), { assetManager });
 worldRoot.add(glyphRing);
+const entryDirection = new THREE.Vector3(settings.spawn.position.x, 0, settings.spawn.position.z).normalize();
+const glyphOrbit = createVrGlyphOrbit({ nodes, settings: settings.glyphRing, entryDirection });
+const glyphLights = createVrGlyphLights({ nodes });
 const spatialPlaque = createVrSpatialPlaque({ scene, camera, renderer, settings: settings.spatialPlaque });
-let entryGlyphActivated = false;
+let activatedEntryGlyph = null;
 const entryTransition = createVrEntryTransition({
   playerRig,
   renderer,
   camera,
   settings: settings.entryTransition,
   onComplete: () => {
-    spatialPlaque.show(resolveVrPlaqueContent(glyphInteraction.entryNode?.userData));
+    spatialPlaque.show(resolveVrPlaqueContent(activatedEntryGlyph?.userData));
   }
 });
 const glyphInteraction = createVrGlyphInteraction({
   controllers: vrControllers.controllers,
   nodes,
-  playerRig,
-  spawnPosition: settings.spawn.position,
-  worldRoot,
   onEntryGlyphActivated: () => {
-    entryGlyphActivated = true;
+    activatedEntryGlyph = glyphInteraction.activatedEntryGlyph;
+    spatialPlaque.hide();
     entryTransition.start();
   }
 });
@@ -135,7 +138,15 @@ const clock = new THREE.Clock(false);
 
 function renderFrame() {
   const delta = clock.getDelta();
+  const entryReady = activatedEntryGlyph ? null : glyphOrbit.update(delta);
+  glyphRing.updateMatrixWorld(true);
   glyphInteraction.update();
+  glyphInteraction.setEntryReady(entryReady);
+  glyphLights.update({
+    hovered: glyphInteraction.hoveredGlyphs,
+    entryReady,
+    activated: activatedEntryGlyph
+  });
   entryTransition.update(delta);
   spatialPlaque.update(delta);
   renderer.render(scene, camera);
@@ -154,7 +165,9 @@ function handleSessionEnd() {
   activeSession = null;
   entryTransition.reset();
   spatialPlaque.reset();
-  entryGlyphActivated = false;
+  activatedEntryGlyph = null;
+  glyphOrbit.reset();
+  glyphLights.reset();
   glyphInteraction.reset();
   showReadyState({ ended: hasEnteredSession });
 }
@@ -165,7 +178,9 @@ async function enterVr() {
   spatialPlaque.reset();
   playerRig.position.set(settings.spawn.position.x, settings.spawn.position.y, settings.spawn.position.z);
   orientPlayerRig(playerRig, settings.spawn.lookAt);
-  entryGlyphActivated = false;
+  activatedEntryGlyph = null;
+  glyphOrbit.reset();
+  glyphLights.reset();
   glyphInteraction.reset();
   enterButton.disabled = true;
   status.textContent = copy.entering;

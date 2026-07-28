@@ -1,0 +1,11 @@
+import assert from 'node:assert/strict';
+import * as THREE from '../src/vendor/three.js';
+import { createVrGlyphLights } from '../src/xr/createVrGlyphLights.js';
+const glyph = new THREE.Group(); glyph.position.x = 4; const lights = createVrGlyphLights({ nodes: [glyph] });
+glyph.updateMatrixWorld(true); lights.update({ hovered: new Set([glyph]) });
+assert.equal(lights.records[0].state, 'hovered'); assert.equal(lights.records[0].light.intensity, 2.8);
+const first = lights.records[0].anchor.position.clone(); glyph.position.set(0, 0, 4); glyph.updateMatrixWorld(true); lights.update({ entryReady: glyph });
+assert.notDeepEqual(lights.records[0].anchor.position, first); assert.equal(lights.records[0].state, 'entryReady');
+lights.reset(); assert.equal(lights.records[0].light.visible, false);
+const anchor = lights.records[0].anchor; lights.dispose(); lights.dispose(); assert.equal(anchor.parent, null);
+console.log('VR glyph light assertions passed');

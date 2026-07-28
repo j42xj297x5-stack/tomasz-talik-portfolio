@@ -7,7 +7,7 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
   referenceSpaceType: 'local-floor',
   worldScale: 1,
   spawn: {
-    position: { x: 0, y: 0, z: 6 },
+    position: { x: 0, y: 0, z: 8.6 },
     lookAt: { x: 0, y: 1, z: 0 }
   },
   renderer: {
@@ -20,6 +20,14 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
     rayOpacity: 0.8,
     idleScale: 1,
     activeScale: 1.2
+  },
+  glyphRing: {
+    enabled: true,
+    radiusMultiplier: 2,
+    angularSpeed: 0.14,
+    direction: 1,
+    entryAngleThreshold: 0.24,
+    entryAngleHysteresis: 0.04
   },
   entryTransition: {
     enabled: true,
@@ -83,6 +91,14 @@ export function normalizeExperienceVrSettings(candidate) {
       rayOpacity: finiteNumber(candidate.controllers?.rayOpacity, defaults.controllers.rayOpacity, { min: 0.05, max: 1 }),
       idleScale: finiteNumber(candidate.controllers?.idleScale, defaults.controllers.idleScale, { min: 0.1, max: 5 }),
       activeScale: finiteNumber(candidate.controllers?.activeScale, defaults.controllers.activeScale, { min: 0.1, max: 5 })
+    },
+    glyphRing: {
+      enabled: typeof candidate.glyphRing?.enabled === 'boolean' ? candidate.glyphRing.enabled : defaults.glyphRing.enabled,
+      radiusMultiplier: finiteNumber(candidate.glyphRing?.radiusMultiplier, defaults.glyphRing.radiusMultiplier, { min: 0.25, max: 5 }),
+      angularSpeed: finiteNumber(candidate.glyphRing?.angularSpeed, defaults.glyphRing.angularSpeed, { min: 0, max: 2 }),
+      direction: candidate.glyphRing?.direction === -1 ? -1 : 1,
+      entryAngleThreshold: finiteNumber(candidate.glyphRing?.entryAngleThreshold, defaults.glyphRing.entryAngleThreshold, { min: 0.01, max: Math.PI }),
+      entryAngleHysteresis: finiteNumber(candidate.glyphRing?.entryAngleHysteresis, defaults.glyphRing.entryAngleHysteresis, { min: 0, max: 0.5 })
     },
     entryTransition: {
       enabled: typeof candidate.entryTransition?.enabled === 'boolean'
