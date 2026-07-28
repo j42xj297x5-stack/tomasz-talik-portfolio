@@ -17,7 +17,7 @@ const EFFECT_PATHS = Object.freeze({
   click: ['/audio/click_01.wav'],
   caseToggle: ['/audio/click_02.wav'],
   glyphClick: ['/audio/click_long_01.wav', '/audio/click_long_02.wav'],
-  glyphHover: ['/audio/glyph_on_hover.wav'],
+  glyphHover: ['/audio/glyph_on_hover.mp3'],
   glyphOpen: ['/audio/glyph_open_01.wav', '/audio/glyph_open_02.wav'],
   glyphClose: ['/audio/glyph_close_01.wav', '/audio/glyph_close_02.wav']
 });
