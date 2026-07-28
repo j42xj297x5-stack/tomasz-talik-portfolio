@@ -8,6 +8,27 @@ Classic 2D remains a separate lightweight runtime in `src/classic2d.js`; it cons
 
 The single Experience loader remains active through bounded critical/deferred preload (four concurrent operations on desktop, two on mobile/coarse pointers), scene attachment, deferred atmosphere/galaxy hydration, plaque prewarm, asynchronous shader compilation when supported, and a final warm-up render. A black, non-interactive intro layer is created beneath the loader and above the runtime shell during this work. After every temporary warm-up state is restored, fog is reset and one clean scene frame replaces the warm-up canvas buffer before the shell and loader are revealed. The loader is then removed and the localized intro is awaited in the `intro` interaction state. Only after its DOM is removed are interaction readiness, fog reveal, and the animation loop released, so no scene clock advances behind the intro.
 
+## Experience 3D startup gate
+
+The canonical startup order is:
+
+1. select the mode and language;
+2. preload assets;
+3. build and hydrate the scene;
+4. prewarm every plaque;
+5. compile shaders and issue the warm-up render;
+6. restore the proper visibility and material states of temporarily exposed layers;
+7. render the correct initial frame over the temporary warm-up image;
+8. complete and remove the loader;
+9. play the localized opening intro;
+10. enter `interactionReady` by changing the guarded state to `idle`;
+11. start fog reveal;
+12. create the scene timer and start the main `tick()`.
+
+The intro belongs only to Experience 3D and is replayed on every entry. `experienceIntro` builds its Polish or English text with DOM nodes and `textContent`, never unsanitized HTML. Its opaque black, pointer-inert DOM/CSS layer sits above the canvas but below the loader. While the runtime is in `intro`, input remains rejected and no scene timer exists, so fog reveal, orbit, atmosphere progression, celestial updates, and other active-scene clocks consume no time.
+
+The standard motion treats all stanzas as one white CSS 3D plane. It begins below the viewport with a broad, strongly enlarged lower edge; perspective narrows successive lines toward a central vanishing point while the plane travels continuously toward the centre and into depth, without pauses between intermediate transforms. The final text stays small and fades near the centre, then the black background fades only after the text animation ends. `prefers-reduced-motion` uses a shortened, static fade without the spatial journey.
+
 Experience 3D first fetches `public/data/experience3d-settings.json` through `publicPath(...)` while the loader is visible. Schema-version-1 known fields are normalized and merged with the code defaults before the scene, fog, atmosphere, galaxies, sun, moon, relic hydration, or shader warm-up is created. A missing, malformed, or incompatible file never blocks startup: the complete code defaults are used, while an invalid individual field falls back independently and unknown fields are ignored. The source order is server file, then code fallback; browser `localStorage` is not a scene-settings source and panel changes remain session-only.
 
 The tuning panel exports the canonical composition-only schema as `experience3d-settings.json`, with a trailing newline, for direct placement in `public/data/`. Import accepts schema version 1, normalizes it, and applies atmosphere, galaxies, fog, sun, and moon once each without changing progression or tuning mode. Debug diagnostics expose `settingsSource` (`server`, `defaults`, or `imported-session`) and an optional load error, but neither belongs to the exported settings.
