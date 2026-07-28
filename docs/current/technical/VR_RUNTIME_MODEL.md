@@ -1,49 +1,66 @@
 # Experience VR Runtime Model
 
-## Status and boundary
+## Boundary and lifecycle
 
-Experience VR is a separate Meta Quest 3S WebXR runtime, loaded only after the VR choice. It reuses assets and small scene factories, but does not start or import the Experience 3D runtime. It owns one scene, renderer, XR animation loop, player rig, two target-ray controllers, a readable canvas plaque, one stone-glyph-plaque controller, and VR-specific glyph orbit, lighting, and interaction controllers. It contains no joystick locomotion, teleportation, physics, grabbing, or DOM overlay.
+Experience VR is a separate Meta Quest 3S WebXR runtime, dynamically imported only after capability detection and VR selection. It does not import or start Experience 3D. `src/experienceVr.js` owns its renderer, scene, camera, `playerRig`, session state, lifecycle, and `renderer.setAnimationLoop`. The prepared runtime is reused after session end: transition, plaques, rig pose, orbit phase, lights, readiness, activation, and controller hits reset without duplicating models, listeners, controllers, or module-owned helpers.
 
-## Ring and spawn
+Entry is deliberately two-stage: prepare the independent runtime, then request `immersive-vr` from the direct **Enter VR** gesture. The runtime requests `local-floor`; if that reference space is unavailable it uses `local`. Capability probing checks secure context and `navigator.xr.isSessionSupported('immersive-vr')` without blocking other modes.
 
-`createOrbitNodes` remains the source of the base glyph radius, `3.8` world units. The VR `glyphRing.radiusMultiplier` defaults to `2`, producing an effective radius of `7.6` without scaling glyphs, colliders, monkey, plaque, rig, or world. Since the former spawn `(0, 0, 6)` would be inside that orbit, VR spawn is `(0, 0, 8.6)`; height and `lookAt` remain unchanged.
+## Ring, spawn, and dynamic readiness
 
-`createVrGlyphOrbit` records the five initial, equally spaced angles, fixed heights, scales, and model rotations. On every existing `renderer.setAnimationLoop` frame it adds `delta * angularSpeed * direction` to one shared phase and recomputes X/Z on the common radius. It never pauses for hover, activation, transition, arrival, or plaque display. Model rotations remain at the orientation established by `createOrbitNodes`, matching Experience 3D's phase-independent glyph orientation.
+`createOrbitNodes` supplies the base radius `3.8`. VR applies `radiusMultiplier = 2`, producing effective radius `7.6` without scaling the world, player, models, or colliders. Spawn is `(0, 0, 8.6)` and the rig initially faces the configured look-at point.
 
-## Dynamic entry zone
+`createVrGlyphOrbit` continuously advances one phase for five glyphs and recomputes their X/Z positions every XR frame. Orbit does not stop for hover, activation, movement, arrival, or plaque display. Every glyph can become `entryReady` as it crosses the spawn-facing entry direction. The angular threshold is `0.24` radians and hysteresis is `0.04` radians, retaining the current candidate near the boundary to prevent flicker.
 
-The horizontal direction from ring center toward the configured spawn defines the entry direction. The orbit controller compares each current glyph angle with that direction and selects at most the closest glyph within `entryAngleThreshold`. The current selection is retained inside the threshold plus `entryAngleHysteresis` unless another candidate is meaningfully closer; this prevents boundary flicker. Because every glyph shares the orbit, every glyph can become `entryReady` in turn.
+## Controllers, raycasting, and light feedback
 
-A trigger is accepted only when that controller's current hit equals the current `entryReady` glyph and no glyph has already been activated. It latches that logical glyph as `activatedEntryGlyph` and starts the existing transition once. Hits outside the zone only contribute hover and cannot show the plaque or start movement.
+`createVrControllers` owns two independent target-ray controllers. Each visible ray and its raycaster point down the controller's local `-Z` axis. Trigger handling remains independent per controller.
 
-## Moving-geometry raycasting
+`createVrGlyphInteraction` collects the current visible renderable meshes from each loaded GLB. If a glyph has no usable mesh, it adds an invisible child fallback collider. An explicit mapping resolves `hit.object → glyphRoot`; therefore parent transforms keep raycasting aligned with moving geometry, and interaction never tests stale/static orbital positions. On each frame the orbit updates and `glyphRing.updateMatrixWorld(true)` runs before raycasting.
 
-`createVrGlyphInteraction` builds one target record per logical glyph: `glyphRoot`, `raycastObjects`, and optional `fallbackCollider`. It recursively collects visible, renderable meshes from the loaded GLB hierarchy. When no useful mesh exists, it creates one invisible low-poly collider as a child of that glyph root, so normal parent transforms carry it through orbital position, rotation, scale, and world-root transforms.
+Hover/readiness/activation feedback is light-only. `createVrGlyphLights` attaches a warm `PointLight` to every glyph and follows current world transforms. No sphere, shell, ring, halo, or other geometric marker is used. Hover can continue after arrival and never pauses orbit.
 
-An explicit object-to-glyph map resolves a hit mesh or collider back to its logical glyph. Each connected controller independently stores `currentHit` and `currentRayLength`; its world origin and quaternion transform local `(0, 0, -1)`, and `Raycaster.far` equals the visible ray length. Hover is aggregated as a set, so one controller losing a shared hit does not cancel the other.
+## Entry transition
 
-The frame order is: orbit update; `glyphRing.updateMatrixWorld(true)`; controller raycasts; dynamic entry-ready assignment; glyph-light update; entry-transition and plaque update; render. Raycasts therefore see the glyph transform from the same frame.
+Only a trigger hit on the current `entryReady` glyph can latch `activatedEntryGlyph` and start one transition. `createVrEntryTransition` moves the `playerRig`, never the tracked camera. It treats the destination as a head destination and subtracts the physical XR head's starting X/Z offset. Y and orientation remain unchanged.
 
-## Light-only feedback
+The destination lies along the center-to-spawn direction at `effectiveRingRadius × targetRadiusFactor`. `targetRadiusFactor = 0.5`, so the current `7.6` ring stops the head about `3.8` units from its center.
 
-There is no blue/gold sphere, shell, ring, circle, or geometric halo. `createVrGlyphLights` owns one warm `PointLight` (`#fffaf2`, matching the Experience 3D glyph light) per glyph. Each light anchor is a child of its glyph. On update its local position is derived from the center-to-glyph radial direction at factor `1.16`, placing it beyond and in front of the visible glyph side while parent transforms make it follow the orbit.
+## Arrival plaques
 
-Light states are `idle` (off), `hovered` (2.8), `entryReady` (subtle 1.15), and `activated` (3). Activated has precedence, then aggregated hover, then entry readiness. Hover continues after arrival and orbital motion never stops.
+After transition state becomes `arrived`, two separate world-space objects appear:
 
-## Transition, plaque, and lifecycle
+- `createVrGlyphPlaque` places a proportionally scaled stone GLB in front of the player, based on the latched glyph;
+- `createVrSpatialPlaque` draws the glyph's readable text to canvas and anchors the plane above the monkey using its world bounds.
 
-Activation hides both reused plaques and starts `createVrEntryTransition`. The horizontal destination is the ring center plus the normalized center-to-spawn direction multiplied by `effectiveRingRadius * targetRadiusFactor`. The factor defaults to `0.5` (bounded to `0.2–0.8`), so radius `7.6` produces a `3.8`-unit stopping distance. The destination remains a head destination: the rig displacement subtracts the XR head's physical starting X/Z offset, while Y and orientation remain unchanged.
+Both face the player's head when shown and remain world-anchored. They are not raycast, grabbed, thrown, or physics-enabled.
 
-Only `onComplete`, after state `arrived`, shows both objects from the latched `activatedEntryGlyph`. The stone plaque is selected by stable portfolio ID, not orbit index: `ai-guide` → `/glb/plaque_ai_guide.glb`, `spotify-digger` → `/glb/plaque_dig_engine.glb`, `haiku-cosmos` → `/glb/plaque_haiku_cosmos.glb`, `creative-ai` → `/glb/plaque_creative_ai.glb`, and `ethics-life-protection` → `/glb/plaque_ethics.glb`. All five GLBs are included in VR preload and obtained through the existing AssetManager cache.
+### Stone asset mapping
 
-The stone instances retain shared geometry, textures, relief, ornament, and engraved asset text. Their meshes receive VR-owned cloned materials for fade animation. A `Box3` supplies dimensions and center; one uniform factor `min(maxWidth / width, maxHeight / height)` preserves proportions, and the centered model retains its configured front yaw. At show time the container is anchored `distance` along the XR camera's horizontal view direction and at `headY + verticalOffset`; it faces the head with world-up and does not follow later head motion. Its delta-driven smoothstep materialization moves from `hidden` through `appearing` to `visible`, restoring each cloned material's original opacity, transparency, and depth-write values at completion without modifying cached materials.
+| Stable glyph ID | Stone plaque GLB |
+| --- | --- |
+| `ai-guide` | `/glb/plaque_ai_guide.glb` |
+| `spotify-digger` | `/glb/plaque_dig_engine.glb` |
+| `haiku-cosmos` | `/glb/plaque_haiku_cosmos.glb` |
+| `creative-ai` | `/glb/plaque_creative_ai.glb` |
+| `ethics-life-protection` | `/glb/plaque_ethics.glb` |
 
-The separate canvas keeps its established dimensions, resolution, and typography. A world-space monkey `Box3` places its center at `monkeyBounds.max.y + monkeyVerticalGap + height / 2`; it faces the current horizontal head position and then remains world-anchored. Thus its lower edge clears the monkey while the stone artifact remains lower in front of the player. Neither plaque participates in raycasting, hover, grabbing, locomotion, or physics. Later glyph hits cannot change either visible object.
+`resolveVrGlyphPlaqueAsset` resolves by stable glyph ID, not orbital index; orbit order and current position cannot change content selection. All five assets are included in the VR preload subset and reused from `AssetManager`.
 
-Before a new session and after session end, the runtime restores spawn/yaw, resets the transition and both plaques to `hidden`, restores initial orbital phase, clears `activatedEntryGlyph`, `entryReady`, and both controller hits, and turns off glyph lights. Existing loaded plaque models, VR-owned material instances, controllers, listeners, colliders, lights, orbit controller, interaction system, and canvas are reused rather than duplicated. Moving-glyph orbit updates and real-mesh/fallback-collider raycasting retain their existing frame order and behavior.
+## Implementation status versus Quest 3S validation
 
-Orbit and light `dispose()` methods are idempotent and do not remove glyph models. Light disposal removes module-owned anchors/lights. Interaction disposal removes its listeners and fallback colliders, clears mappings and hits, and disposes only module-owned fallback geometry/material—not GLB resources.
+Implemented in code: the complete architecture and behavior above, including the half-radius target and both arrival plaques.
 
-## Configuration
+Confirmed on Meta Quest 3S before `280ceb7`: session start from Meta Quest Browser and GitHub Pages, head tracking and scene scale, correct starting orientation, two controller rays, independent triggers, glyph raycast/activation, comfortable transition, readable canvas, enlarged rotating ring, light hover, current moving-solid raycasting, and dynamic `entryReady`.
 
-Schema version 1 accepts `glyphRing.enabled`, `radiusMultiplier`, `angularSpeed`, `direction`, `entryAngleThreshold`, and `entryAngleHysteresis`; `entryTransition.targetRadiusFactor`; `spatialPlaque.monkeyVerticalGap`; and the stone plaque's enabled, size, distance, vertical-offset, duration, and start-scale values, in addition to renderer, controller, spawn, reference-space, and world-scale settings. Invalid values fall back to bounded code defaults. Experience VR settings are not stored in localStorage and do not expose controller-axis movement.
+Not yet confirmed on hardware from `280ceb7`: final half-radius destination, stone plaque in front of the player, canvas above the monkey, and their mutual composition. Thus `280ceb7` remains pending manual Quest 3S acceptance despite being implemented.
+
+## Next planned stage and exclusions
+
+After that acceptance, locomotion is a separate stage: right stick controls forward/back and left/right strafe; left stick controls smooth left/right rotation. It is not implemented now.
+
+Teleportation, jump, snap turn, physics, grabbing/throwing, plaque raycasting, bridge construction, VR audio, atmosphere, and galaxies remain out of scope.
+
+## Architectural prohibitions
+
+Experience VR must not become a shared runtime with Experience 3D, and a common world factory is not the binding direction. Do not modify protected `src/experience3d.js` for VR work; transfer the desktop HTML/CSS overlay into VR; steer the tracked camera; pause the glyph orbit during interaction; restore geometric markers; raycast static positions; or combine locomotion, physics, and grabbing in one stage.

@@ -12,11 +12,11 @@
 - **Repozytorium:** `https://github.com/j42xj297x5-stack/tomasz-talik-portfolio`.
 - **Główna gałąź:** `porfolio`.
 
-Portfolio prezentuje interaktywną pracę i projekty Tomasza Talika. Udostępnia lekki tryb Classic 2D oraz immersyjny tryb Experience 3D. Wspólne dane portfolio zasilają oba tryby prezentacji.
+Portfolio prezentuje interaktywną pracę i projekty Tomasza Talika. Udostępnia tryby Classic 2D, Experience 3D oraz osobny Experience VR. Wspólne dane portfolio zasilają trzy sposoby prezentacji.
 
 ## Aktualny świat projektu
 
-- **Tryby/runtime'y:** powłoka wejściowa wybiera Classic 2D lub warunkowo uruchamiane Experience 3D.
+- **Tryby/runtime'y:** powłoka wejściowa wybiera Classic 2D, warunkowo uruchamiane Experience 3D albo dostępny po sprawdzeniu WebXR, osobno importowany Experience VR.
 - **Stos:** Vite, vanilla JavaScript, CSS oraz lokalnie vendored Three.js dla Experience 3D.
 - **Publikacja:** GitHub Pages, z bazową ścieżką zgodną z nazwą repozytorium i bezpiecznym rozwiązywaniem ścieżek publicznych.
 - **Główne obszary:** runtime i scena w `src/`, zasoby statyczne w `public/` i `vendor/`, a aktualna dokumentacja w `docs/current/`.

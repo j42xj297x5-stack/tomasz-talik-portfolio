@@ -1,32 +1,35 @@
 # Entry Flow and Modes Model
 
-## Current contract
+## Shared entry shell
 
-The lightweight entry shell in `src/main.js` first selects language and then mode. It routes `Classic 2D` directly to `src/classic2d.js`; it dynamically imports `src/experience3d.js` only after the visitor selects `Experience 3D`, and dynamically imports the separate `src/experienceVr.js` only after a supported visitor selects Experience VR. The three modes share `src/content/portfolioNodes.js` and stable gate IDs. On the mode-selection screen, the return-to-language button intentionally uses the language opposite the active selection and declares that visible language with its `lang` attribute.
+`src/main.js` selects language and then exposes three modes. The modes share stable portfolio IDs and content data where applicable, but each presentation owns its runtime. Failure or lack of WebXR capability does not block Classic 2D or Experience 3D.
 
 ## Classic 2D
 
-Classic 2D is implemented—not a placeholder or a future MVP. It is a lightweight HTML/CSS/vanilla-JS portfolio experience with a readable hero and a clear footer CTA returning to mode selection.
-
-- On desktop, the scene is square and scales to the available shorter dimension.
-- The central monkey PNG is optically corrected in the centre.
-- Five glyphs sit at the points of a regular pentagon; their text labels face the outside of the scene.
-- On mobile, the monkey moves to the top and the glyphs become a vertical list.
-- A glyph opens a full-screen, scrollable panel with a clipping viewport; the panel reads from the same content record as Experience 3D.
-- The panels include the available structured project content, including a demo, links, and case-study material when the selected record supplies it.
+Classic 2D routes directly to `src/classic2d.js`. It is the lightweight HTML/CSS/JavaScript portfolio with responsive glyph navigation and readable shared-content panels; it does not boot Three.js.
 
 ## Experience 3D
 
-Experience 3D preserves the Three.js scene, conditional boot and readable HTML/CSS overlay. Its full-screen panels use opaque CSS gradients keyed by `data-panel-theme`, responsive `ornamentPath` artwork, and internal scrolling; they do not use an SVG frame. Opening a panel pauses fine-pointer camera steering. Closing it smoothly hands the camera to the latest cursor position over 1500 ms.
+Experience 3D is dynamically imported only after its selection. `src/experience3d.js` owns the desktop Three.js renderer, scene, camera interaction, animation lifecycle, plaque sequence, atmosphere, and HTML/CSS content overlay. It is not migrated into a VR world factory and remains protected from VR work.
 
-## Experience VR
+## Experience VR WebXR flow
 
-Experience VR is a third, separately loaded Meta Quest 3S proof-of-concept runtime. The entry shell detects secure-context and immersive WebXR capability without blocking the other modes. Selection prepares the minimal scene first; a second direct user gesture starts the immersive session. See `VR_RUNTIME_MODEL.md` for the implemented boundary.
+```text
+language → mode selection
+               ↓ capability available + Experience VR selected
+        dynamic import of src/experienceVr.js
+               ↓ prepare independent scene/runtime
+        enabled “Enter VR” control
+               ↓ second, direct user gesture
+        request immersive-vr session
+               ↓ request local-floor; fallback local
+        attach session + renderer.setAnimationLoop
+               ↓ session end
+        stop loop, reset state, offer re-entry using existing runtime objects
+```
 
-## Remaining work
+Capability detection checks the secure context and `navigator.xr.isSessionSupported('immersive-vr')`. Experience VR owns its renderer, scene, camera, `playerRig`, controllers, interaction, and lifecycle. Immersive content uses Three.js objects; the Experience 3D HTML/CSS overlay is not transferred into VR, and tracked-camera pose is never driven by application input.
 
-Only actual unfinished direction remains: a fully structured PL/EN content-record model, final bilingual copy, accessibility/performance verification, and optional further visual polish. No planned work should treat Classic 2D as unbuilt or reintroduce separate content records.
+## Current boundary
 
-## Constraints
-
-Maintain the conditional Experience 3D boot, GitHub Pages-compatible `publicPath(...)` contract, stable runtime IDs, shared content source, keyboard-readable entry controls, and reduced-motion support. This model does not prescribe a framework change, asset deletion, or a return to SVG-framed panels.
+Experience VR implements head tracking, two controller rays, moving-glyph raycasting, light-only hover/entry feedback, entry transition, a selected stone plaque, and a canvas plaque above the monkey. Joystick locomotion is the next separate stage, not current behavior.

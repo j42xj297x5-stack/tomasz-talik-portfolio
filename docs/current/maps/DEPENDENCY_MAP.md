@@ -2,93 +2,60 @@
 
 ## Documentation flow
 
-`PROJECT_ENTRY.md` → `maps/PROJECT_INDEX.md` → smallest task-specific technical model and runtime evidence.
+`PROJECT_ENTRY.md` → `maps/PROJECT_INDEX.md` → smallest task-specific current model. VR work always starts with `technical/VR_RUNTIME_MODEL.md`, then `handoffs/EXPERIENCE_VR_HANDOFF.md`.
 
-`maps/DOCUMENTATION_MAP.md` defines placement, while `decisions/DECISION_LOG.md` records accepted decisions. Canonical technical documents describe the present runtime; snapshots are supporting evidence only.
-
-## Experience 3D dependency graph
+## Runtime boundaries
 
 ```text
-portfolioNodes
-  ├─> assetManifest (deferredWarm plaque entries)
-  ├─> orbitNodes (glyph metadata and shared hover)
-  └─> overlay (HTML/CSS panel content)
-
-assetManifest ─> AssetManager ─┬─> plaqueTransition
-                               ├─> atmosphere
-                               └─> milkyWayBackground ─> galaxyBackgroundScene
-assetManifest ─> AssetManager ───> galaxySprites ──────> galaxyBackgroundScene
-
-atmosphereProgression ─> experience3d ─┬─> atmosphere (shells, smallGlyphs, stars, stones)
-                                      ├─> galaxySprites (galaxies)
-                                      ├─> milkyWayBackground (galaxies)
-                                      └─> sunCycle + moonCycle (sunMoon)
-
-plaqueTransition ─> experience3d interaction state ─> overlay
-cameraRig ────────> experience3d interaction state ─> overlay
-orbitNodes ───────> experience3d interaction state
-interfaceCopy ────> experienceIntro ────────────────> experience3d startup gate
-loader completion ─────────────────────────────────> experience3d startup gate
-clean post-warm-up render ─────────────────────────> experience3d startup gate
-experience3d startup gate ─┬─> interactionReady
-                           ├─> fog reveal start
-                           └─> main tick start
-
-main ─> audioManager ─┬─> publicPath (all audio URLs)
-                     ├─> audioControl (persistent master/mute UI)
-                     └─> delegated entry / Classic 2D button effects
-main ─> experience3d ─> audioManager (shared instance, preload, intro, glyph lifecycle)
-atmosphereProgression ─> experience3d ─> audioManager (level-to-track ambient crossfade)
-experience3d interaction state ─> audioManager (glyph click/hover/open/close effects)
-optionsPanel (?debug only) ─> audioManager (session-only ambient/effects bus gains)
+main
+├─> classic2d ────────────────> portfolioNodes
+├─ dynamic import ─> experience3d ─> Three.js desktop scene + HTML/CSS overlay
+└─ vrCapability
+   └─ dynamic import after VR selection ─> experienceVr ─> independent WebXR runtime
 ```
 
-The required plaque path is therefore: `portfolioNodes → assetManifest → plaqueTransition → cameraRig / experience3d → overlay`.
+Experience 3D and Experience VR are separate runtime owners. `src/experience3d.js` remains protected. There is no binding shared-world-factory migration direction.
 
-## Current Experience 3D contracts
-
-- `src/content/portfolioNodes.js` supplies each node's glyph model, `plaqueModelPath`, and `plaqueVisual` (`scale`, `position`, `frontYawOffset`, `plaqueGlowColor`), as well as the HTML/CSS panel content.
-- `src/assets/assetManifest.js` stages plaque, atmosphere-relic, galaxy-sprite, and Milky Way assets. `AssetManager` is the shared cache boundary consumed by `plaqueTransition`, `atmosphere`, `galaxySprites`, and `milkyWayBackground`.
-- `src/scene/atmosphere/atmosphereProgression.js` owns the cumulative order `shells → smallGlyphs → stars → stones → galaxies`. `src/experience3d.js` reads its multipliers and passes them to atmosphere, galaxy sprites, the Milky Way, sun, and moon; galaxy sprites and the Milky Way receive the same `galaxies` value.
-- The stone-model flow is `AssetManager GLTF → cached scene + animations → cloned animation root → instance AnimationMixer`. A GLB with non-empty clips receives an instance mixer; a GLB without clips remains static and does not receive one.
-- Each animated stone's cloned root is nested in an outer wrapper. The wrapper owns random position, scale, orientation, manual spin, group orbit, and drift, keeping whole-relic placement independent of transforms authored inside the GLB.
-- `src/scene/plaqueTransition.js` obtains a plaque through `AssetManager`; it stores one cloned scene wrapper per node ID and permits one active transition at a time. A failed model logs an isolated warning and returns control to the panel fallback for that node without disabling other plaques.
-- `src/experience3d.js` serializes interaction. A click locks interaction and orbit, focuses the camera, runs plaque reveal/hold/dolly, and opens the overlay only after the sequence completes. Close performs dolly-out, reverse reveal, camera return, orbit resume, and cursor handoff.
-- `src/scene/cameraRig.js` owns focus, safe plaque dolly, return-home movement, and the remembered fine-pointer handoff. Reduced-motion and coarse-pointer contexts use shorter timings.
-- `src/scene/orbitNodes.js` owns the shared neutral hover scale/light and the neutral transition light. It does not select plaque glow colors.
-- `src/ui/overlay.js` renders readable project detail in HTML/CSS. Plaques are a scene transition and never replace panel content.
-- `src/audio/audioManager.js` owns the lazily unlocked Web Audio graph, two reused streaming ambient channels, decoded short-effect cache, non-repeating pools, persistence, and isolated optional-file errors. `main` mounts its control and delegates button clicks; Experience 3D supplies progression and glyph-sequence events; the debug-only `optionsPanel` changes bus gains without entering scene settings.
-- `src/i18n/interfaceCopy.js → src/ui/experienceIntro.js → src/experience3d.js` is the opening-gate dependency. The Experience 3D-only intro is created while loading, below the loader and above the scene. Restored warm-up state and its clean replacement render are prerequisites; loader completion then hands control to the intro as a distinct gate before `interactionReady`, fog reveal, and the main `tick()`.
-- `src/scene/milkyWayBackground.js` consumes the cached `/png/milky_way.webp` texture. Its camera-centred, unlit inner sphere renders before galaxy sprites in `galaxyBackgroundScene` and is independent of main-scene lights and fog.
-
-## Plaque asset mapping
-
-| Node ID | Asset ID | GLB path |
-| --- | --- | --- |
-| `ai-guide` | `plaque-ai-guide` | `/glb/plaque_ai_guide.glb` |
-| `creative-ai` | `plaque-creative-ai` | `/glb/plaque_creative_ai.glb` |
-| `spotify-digger` | `plaque-spotify-digger` | `/glb/plaque_dig_engine.glb` |
-| `ethics-life-protection` | `plaque-ethics-life-protection` | `/glb/plaque_ethics.glb` |
-| `haiku-cosmos` | `plaque-haiku-cosmos` | `/glb/plaque_haiku_cosmos.glb` |
-
-## Shared foundations
-
-- `src/main.js` conditionally imports `src/experience3d.js` after an Experience 3D selection; `src/classic2d.js` is a separate lightweight consumer of the same `portfolioNodes` data.
-- Vendored Three.js r184 and its matching GLTFLoader are runtime sources of truth. Public logical paths are normalized for Vite and GitHub Pages by `src/utils/publicPath.js`.
-- Monkey and glyph loading retain their visual fallbacks; orbit-node sphere colliders remain the interaction targets.
-
-## Experience VR dependency graph
+## Experience VR graph
 
 ```text
-main ─> vrCapability ─> WebXR availability shown in the mode selector
+main ─> vrCapability ─> secure-context + immersive-vr support
 main ── dynamic import ─> experienceVr
-experienceVr ─┬─> experienceVrSettings ─> publicPath
-              ├─> AssetManager + critical monkey/glyph manifest subset
-              ├─> centralObject + monkeyModel
-              ├─> orbitNodes (creation and static initial placement only)
-              ├─> lights
-              └─> vendored Three.js WebXRManager
-direct Enter VR gesture ─> immersive-vr session ─> renderer.setAnimationLoop
+
+experienceVr
+├─> experienceVrSettings ─> publicPath
+├─> AssetManager + VR monkey/glyph/plaque preload subset
+├─> centralObject + monkeyModel + lights
+├─> orbitNodes (glyph construction and base radius 3.8)
+├─> playerRigOrientation
+├─> createVrControllers (two target rays, local -Z)
+├─> createVrGlyphOrbit (effective radius 7.6, continuous orbit, dynamic entryReady)
+├─> createVrGlyphInteraction (current GLB meshes/fallback colliders, object→glyphRoot)
+├─> createVrGlyphLights (warm PointLight feedback)
+├─> createVrEntryTransition (head-offset-compensated playerRig movement)
+├─> createVrGlyphPlaque ─> resolveVrGlyphPlaqueAsset
+└─> createVrSpatialPlaque (canvas above monkey)
+
+direct Enter VR gesture
+└─> immersive-vr session
+   ├─> local-floor, fallback local
+   └─> renderer.setAnimationLoop
 ```
 
-Experience VR owns a renderer, camera, player rig, scene, session state, and animation loop independently of Experience 3D. It shares existing content and minimal scene/asset constructors but does not load the Experience 3D runtime, atmosphere, interaction state, panels, overlay, or audio sequence.
+The per-frame interaction order is orbit, world-matrix refresh, raycast, dynamic entry assignment, light update, transition/plaque update, and render. Session reset reuses runtime objects and clears state instead of duplicating them.
+
+## Shared foundations, not a shared runtime
+
+The three modes consume stable portfolio IDs and content where applicable. Experience VR also reuses focused asset and scene constructors, the vendored Three.js build, and `publicPath`. It does not import Experience 3D interaction state, its HTML/CSS panels, atmosphere progression, or desktop animation loop.
+
+## VR plaque mapping
+
+| Stable glyph ID | GLB |
+| --- | --- |
+| `ai-guide` | `/glb/plaque_ai_guide.glb` |
+| `spotify-digger` | `/glb/plaque_dig_engine.glb` |
+| `haiku-cosmos` | `/glb/plaque_haiku_cosmos.glb` |
+| `creative-ai` | `/glb/plaque_creative_ai.glb` |
+| `ethics-life-protection` | `/glb/plaque_ethics.glb` |
+
+Resolution uses the stable glyph ID, never orbital index or current orbital position.
