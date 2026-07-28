@@ -51,9 +51,10 @@ const audioControl = createAudioControl({ audioManager, getLanguage: () => state
 void audioManager.preloadEntryEffects();
 
 document.addEventListener('click', (event) => {
-  const button = event.target.closest?.('button');
-  if (!button || button.disabled || button.getAttribute('aria-disabled') === 'true' || button.closest('[data-audio-control]')) return;
-  void audioManager.playEffect(button.matches('.overlay__case-toggle') ? 'caseToggle' : 'click');
+  const clickTarget = event.target.closest?.('button, .overlay__project-link');
+  if (!clickTarget || clickTarget.closest('[data-audio-control]')) return;
+  if (clickTarget.matches('button') && (clickTarget.disabled || clickTarget.getAttribute('aria-disabled') === 'true')) return;
+  void audioManager.playEffect(clickTarget.matches('.overlay__case-toggle') ? 'caseToggle' : 'click');
 });
 
 function loadStoredSelection() {

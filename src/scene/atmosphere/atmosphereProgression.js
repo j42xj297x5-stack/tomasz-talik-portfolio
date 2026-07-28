@@ -21,10 +21,10 @@ export const SUN_MOON_LIGHT_MULTIPLIERS = Object.freeze({
 const clampLevel = (value) => THREE.MathUtils.clamp(Math.round(Number(value) || 0), 0, 5);
 const clamp01 = (value) => THREE.MathUtils.clamp(Number(value) || 0, 0, 1);
 const DEFAULT_TRANSITION_TIMES = Object.freeze({
-  stones: 5,
-  shells: 5,
-  smallGlyphs: 5,
-  stars: 5,
+  stones: 10,
+  shells: 10,
+  smallGlyphs: 10,
+  stars: 10,
   galaxies: 10
 });
 
