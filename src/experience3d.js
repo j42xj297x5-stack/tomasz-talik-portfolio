@@ -216,9 +216,37 @@ const optionsPanel = createOptionsPanel({
 
 let hoveredNode = null;
 let activePanelNode = null;
+let hoverExitTimer = null;
+const HOVER_RAYCAST_GRACE_MS = 100;
 
-function syncHoverState(nextHoveredNode, event = null) {
+function glyphId(node) {
+  return node?.userData?.id ?? null;
+}
+
+function syncHoverState(nextHoveredNode, event = null, { immediateExit = false } = {}) {
   const previousHoveredNode = hoveredNode;
+  const previousId = glyphId(previousHoveredNode);
+  const nextId = glyphId(nextHoveredNode);
+
+  if (nextHoveredNode && hoverExitTimer) {
+    window.clearTimeout(hoverExitTimer);
+    hoverExitTimer = null;
+  }
+
+  if (!nextHoveredNode && previousHoveredNode && !immediateExit) {
+    if (!hoverExitTimer) {
+      hoverExitTimer = window.setTimeout(() => {
+        hoverExitTimer = null;
+        syncHoverState(null, null, { immediateExit: true });
+      }, HOVER_RAYCAST_GRACE_MS);
+    }
+    return;
+  }
+
+  if (previousId !== null && previousId === nextId) {
+    if (event) hoverLabel.show(previousHoveredNode.userData, event.clientX, event.clientY);
+    return;
+  }
 
   if (previousHoveredNode && previousHoveredNode !== nextHoveredNode) {
     setNodeHoverState(hoveredNode, false);
@@ -270,7 +298,9 @@ function openNodePanel(node) {
 }
 
 function clearInteractiveHover() {
-  syncHoverState(null);
+  if (hoverExitTimer) window.clearTimeout(hoverExitTimer);
+  hoverExitTimer = null;
+  syncHoverState(null, null, { immediateExit: true });
   document.body.style.cursor = 'default';
 }
 
@@ -493,11 +523,11 @@ canvas.addEventListener('pointercancel', (event) => finishPointer(event, { cance
 
 window.addEventListener('pointerleave', () => {
   cameraRig.onPointerLeave();
-  if (interactionState === 'idle') syncHoverState(null);
+  if (interactionState === 'idle') syncHoverState(null, null, { immediateExit: true });
 });
 
 canvas.addEventListener('pointerleave', () => {
-  if (interactionState === 'idle') syncHoverState(null);
+  if (interactionState === 'idle') syncHoverState(null, null, { immediateExit: true });
 });
 
 window.addEventListener('pointermove', rememberFinePointerPosition);

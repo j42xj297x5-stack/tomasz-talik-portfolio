@@ -6,7 +6,7 @@ const INTRO_DELAY_SECONDS = 5;
 const HOVER_FADE_IN_SECONDS = 0.5;
 const HOVER_FADE_OUT_SECONDS = 1;
 const HOVER_SILENT_HOLD_SECONDS = 0.5;
-const MAX_FADING_GLYPH_HOVERS = 4;
+const HOVER_EMERGENCY_FADE_SECONDS = 0.02;
 const AMBIENT_PATHS = Object.freeze([
   '/audio/ambient_01.mp3',
   '/audio/ambient_02.mp3',
@@ -47,7 +47,8 @@ class AudioManager {
     this.ambientRequestVersion = 0;
     this.crossfadeCleanupTimer = null;
     this.activeGlyphHover = null;
-    this.fadingGlyphHovers = new Set();
+    this.fadingGlyphHover = null;
+    this.preparedGlyphHoverBuffer = null;
     this.glyphHoverRequestVersion = 0;
     this.masterVolume = DEFAULTS.master;
     this.lastNonZeroVolume = DEFAULTS.master;
@@ -164,7 +165,7 @@ class AudioManager {
         const context = this.context;
         if (!context) return null;
         const buffer = await context.decodeAudioData(data.slice(0));
-        this.buffers.set(path, buffer);
+        this.cacheDecodedBuffer(path, buffer);
         return buffer;
       } catch (error) {
         console.warn(`[audio] Optional sound unavailable: ${path}`, error);
@@ -181,11 +182,41 @@ class AudioManager {
     for (const [path, data] of this.arrayBuffers) {
       if (this.buffers.has(path) || this.pendingBuffers.has(path)) continue;
       const pending = this.context.decodeAudioData(data.slice(0))
-        .then((buffer) => { this.buffers.set(path, buffer); return buffer; })
+        .then((buffer) => { this.cacheDecodedBuffer(path, buffer); return buffer; })
         .catch((error) => { console.warn(`[audio] Optional sound could not be decoded: ${path}`, error); return null; })
         .finally(() => this.pendingBuffers.delete(path));
       this.pendingBuffers.set(path, pending);
     }
+  }
+
+  cacheDecodedBuffer(path, buffer) {
+    this.buffers.set(path, buffer);
+    if (path === EFFECT_PATHS.glyphHover[0]) {
+      this.preparedGlyphHoverBuffer = this.createSafeGlyphHoverBuffer(buffer);
+    }
+  }
+
+  createSafeGlyphHoverBuffer(original) {
+    if (!this.context) return original;
+    const silentFrames = Math.ceil(HOVER_SILENT_HOLD_SECONDS * original.sampleRate);
+    const safeBuffer = this.context.createBuffer(
+      original.numberOfChannels,
+      original.length + silentFrames,
+      original.sampleRate
+    );
+    const fadeFrames = Math.min(original.length, Math.ceil(original.sampleRate));
+    const fadeStart = original.length - fadeFrames;
+    for (let channel = 0; channel < original.numberOfChannels; channel += 1) {
+      const input = original.getChannelData(channel);
+      const output = safeBuffer.getChannelData(channel);
+      output.set(input);
+      for (let frame = fadeStart; frame < original.length; frame += 1) {
+        const remaining = original.length - 1 - frame;
+        const multiplier = fadeFrames <= 1 ? 0 : remaining / (fadeFrames - 1);
+        output[frame] *= multiplier;
+      }
+    }
+    return safeBuffer;
   }
 
   async playEffect(poolName) {
@@ -208,7 +239,7 @@ class AudioManager {
     if (!handle || handle.cleaned) return;
     handle.cleaned = true;
     if (this.activeGlyphHover === handle) this.activeGlyphHover = null;
-    this.fadingGlyphHovers.delete(handle);
+    if (this.fadingGlyphHover === handle) this.fadingGlyphHover = null;
     const { source, gain } = handle;
     if (source) source.onended = null;
     try { source?.disconnect(); } catch (_) { /* The optional node may already be disconnected. */ }
@@ -217,13 +248,14 @@ class AudioManager {
     handle.gain = null;
   }
 
-  stopGlyphHoverHandle(handle, { immediate = false } = {}) {
-    if (!handle || handle.cleaned || handle.stopping || !this.context) return;
+  stopGlyphHoverHandle(handle, { emergency = false } = {}) {
+    if (!handle || handle.cleaned || !this.context || (handle.stopping && !emergency)) return;
     handle.stopping = true;
     if (this.activeGlyphHover === handle) this.activeGlyphHover = null;
     const now = this.context.currentTime;
-    const fadeEndsAt = immediate ? now : now + HOVER_FADE_OUT_SECONDS;
-    const stopAt = immediate ? now : fadeEndsAt + HOVER_SILENT_HOLD_SECONDS;
+    const fadeDuration = emergency ? HOVER_EMERGENCY_FADE_SECONDS : HOVER_FADE_OUT_SECONDS;
+    const fadeEndsAt = now + fadeDuration;
+    const stopAt = fadeEndsAt + (emergency ? 0 : HOVER_SILENT_HOLD_SECONDS);
     const parameter = handle.gain.gain;
     if (typeof parameter.cancelAndHoldAtTime === 'function') parameter.cancelAndHoldAtTime(now);
     else {
@@ -232,27 +264,21 @@ class AudioManager {
       parameter.setValueAtTime(currentGain, now);
     }
     const currentGain = clamp01(parameter.value);
-    if (immediate) parameter.setValueAtTime(0, now);
-    else {
-      parameter.setValueCurveAtTime(this.createFadeCurve(currentGain, 1, false), now, HOVER_FADE_OUT_SECONDS);
-      parameter.setValueAtTime(0, fadeEndsAt);
-    }
-    if (!immediate) this.fadingGlyphHovers.add(handle);
+    parameter.setValueCurveAtTime(this.createFadeCurve(currentGain, 1, false), now, fadeDuration);
+    parameter.setValueAtTime(0, fadeEndsAt);
+    this.fadingGlyphHover = handle;
     try { handle.source.stop(stopAt); } catch (_) { this.cleanupGlyphHover(handle); }
   }
 
   async startGlyphHover() {
     const requestVersion = ++this.glyphHoverRequestVersion;
+    if (this.fadingGlyphHover) this.stopGlyphHoverHandle(this.fadingGlyphHover, { emergency: true });
     if (this.activeGlyphHover) this.stopGlyphHoverHandle(this.activeGlyphHover);
-    while (this.fadingGlyphHovers.size >= MAX_FADING_GLYPH_HOVERS) {
-      const oldest = this.fadingGlyphHovers.values().next().value;
-      try { oldest.source.stop(this.context?.currentTime); } catch (_) { /* The source already has a scheduled stop. */ }
-      this.cleanupGlyphHover(oldest);
-    }
     if (!await this.unlock() || requestVersion !== this.glyphHoverRequestVersion) return;
     const path = EFFECT_PATHS.glyphHover[0];
-    const buffer = this.buffers.get(path) || await this.loadBuffer(path);
-    if (requestVersion !== this.glyphHoverRequestVersion || !buffer || !this.context || !this.effectsBusNode) return;
+    const decodedBuffer = this.buffers.get(path) || await this.loadBuffer(path);
+    const buffer = this.preparedGlyphHoverBuffer;
+    if (requestVersion !== this.glyphHoverRequestVersion || !decodedBuffer || !buffer || !this.context || !this.effectsBusNode) return;
 
     const source = this.context.createBufferSource();
     const gain = this.context.createGain();
