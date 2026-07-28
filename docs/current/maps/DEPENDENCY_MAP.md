@@ -37,9 +37,10 @@ experience3d startup gate ─┬─> interactionReady
 main ─> audioManager ─┬─> publicPath (all audio URLs)
                      ├─> audioControl (persistent master/mute UI)
                      └─> delegated entry / Classic 2D button effects
-atmosphereProgression ─> experience3d ─> audioManager (alternating ambient crossfade)
-experience3d interaction state ─> audioManager (glyph click/open/close effects)
-optionsPanel (?debug only) ─> audioManager (ambient/effects bus gains)
+main ─> experience3d ─> audioManager (shared instance, preload, intro, glyph lifecycle)
+atmosphereProgression ─> experience3d ─> audioManager (level-to-track ambient crossfade)
+experience3d interaction state ─> audioManager (glyph click/hover/open/close effects)
+optionsPanel (?debug only) ─> audioManager (session-only ambient/effects bus gains)
 ```
 
 The required plaque path is therefore: `portfolioNodes → assetManifest → plaqueTransition → cameraRig / experience3d → overlay`.

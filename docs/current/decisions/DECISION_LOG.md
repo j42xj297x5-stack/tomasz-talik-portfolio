@@ -359,27 +359,39 @@ Status: accepted / implemented.
 5. `prefers-reduced-motion` receives a short static fade without the spatial journey.
 6. The intro intentionally has no skip control and stores no “already shown” state, so it replays on every Experience 3D entry.
 
-## 2026-07-28 — Shared portfolio audio runtime
+## 2026-07-28 — Shared portfolio audio runtime and controls
 
 Status: accepted / implemented.
 
-1. One lazily unlocked Web Audio manager owns a persisted perceptual master gain plus independent ambient and effects buses; optional audio failures never block either portfolio mode.
-2. Experience mode selection only unlocks and prepares streaming audio. After loader completion, one non-looping start channel begins with the text intro; ambient 01 enters five seconds later with a five-second perceptual fade while the start sound ends naturally.
-3. Five fixed looping ambient channels map levels 0–1 to ambient 01 and levels 2–5 to ambient 02–05. Forward, backward, and reset changes start the newly mapped track at zero through interruptible five-second equal-power crossfades, then stop and rewind inactive streams.
-4. Short effects are decoded and cached, with non-repeating shared glyph pools synchronized to hit, available-plaque reveal, and available-plaque close boundaries. A shared delegated click policy covers eligible dynamic buttons without range, disabled, canvas, or audio-control duplication.
-5. The master control persists outside `#app` for the complete entry/runtime lifetime. Intro and ambient streams share the ambient bus; debug ambient/effects gains remain session-only and outside canonical scene-settings schema version 1.
+1. One lazily unlocked `AudioManager` instance is shared by the entry shell and Experience 3D. Its Web Audio graph has master, ambient, and effects buses; short effects are decoded and cached, while `/audio/start.mp3` and five ambient tracks remain streaming sources. Optional audio failures never block either portfolio mode.
+2. The localized master-volume/mute control persists outside `#app` from language selection onward. Only master and mute are stored in `localStorage`; the debug-only Ambient and Effects sliders appear in Scene tuning under `?debug`, remain session controls, and are excluded from `experience3d-settings.json`.
+3. The effects bus applies a fixed −3 dB trim after its perceptual control without changing slider values or storage. The intro alone has a dedicated +5 dB gain before the ambient bus; ambient tracks do not receive that trim.
 
-## 2026-07-28 — Project-link click feedback and slower visual progression
+## 2026-07-28 — Intro, ambient progression, and visual timing
 
 Status: accepted / implemented.
 
-1. The shared delegated click policy applies the existing `click_01` effect to every project-panel link with the `overlay__project-link` class while preserving normal new-tab navigation; case-study toggles retain `click_02`, and other eligible buttons retain `click_01`.
-2. Each of the five cumulative atmosphere layers reveals over 10 seconds by default. Manual visual transition-time overrides remain supported, and ambient changes retain their independent five-second crossfade.
+1. Immediately after loader completion, the non-looping `/audio/start.mp3` begins with the text intro and ends naturally. Five seconds after that boundary, looping `ambient_01` enters over five seconds.
+2. Progression levels 0–1 use `ambient_01`; levels 2–5 use `ambient_02` through `ambient_05` respectively. Forward, backward, reset, and interrupted changes use the same interruptible five-second equal-power crossfade, after which inactive streams are stopped and rewound.
+3. Each of the five cumulative visual atmosphere layers reveals over 10 seconds by default. Its visual timing remains independent of the five-second ambient transition.
 
-## 2026-07-28 — Fine-pointer glyph-hover audio feedback
+## 2026-07-28 — Interface and glyph effect boundaries
 
 Status: accepted / implemented.
 
-1. Entering a new Experience 3D glyph with a mouse/fine pointer starts one non-looping `glyph_on_hover` effect immediately at full local gain, without delay or fade-in; movement within the same glyph does not restart it.
-2. Leaving the glyph or interactive hover state fades the source for exactly 0.5 seconds, then stops and disconnects it. A directly entered glyph starts immediately while the preceding source fades, and delayed load/unlock completions cannot revive an ended hover.
-3. The effect uses the shared effects bus and its master, mute, and Effects controls. Touch/coarse-pointer input, dragging, locked or panel interaction, Classic 2D, and ordinary HTML hover do not trigger it.
+1. `click_01` covers ordinary eligible buttons and DEMO/REPOSITORY project links; `click_02` is reserved for the case-study button. Range inputs, disabled controls, the audio capsule, and canvas glyph selection do not duplicate delegated click feedback.
+2. A successful glyph selection starts the non-repeating `click_long` pool before camera focus. `glyph_open` plays after focus and before an available plaque reveal; `glyph_close` plays at the panel-to-plaque return boundary. Plaque fallbacks omit open/close sounds.
+
+## 2026-07-28 — Stable fine-pointer glyph-hover lifecycle
+
+Status: accepted / implemented.
+
+1. Mouse/fine-pointer entry uses the preloaded and decoded `/audio/glyph_on_hover.mp3`. The runtime copy fades its final up-to-one-second portion to exact zero and appends 0.5 seconds of silence; playback fades in over 0.5 seconds.
+2. A 100 ms grace period absorbs transient glyph-to-null raycasts. Sustained exit fades out over one second and holds silence for another 0.5 seconds; click, drag, canvas/window leave, and interaction locking bypass the grace period and begin the exit path immediately.
+3. Pending start, active playback, fade, and silent hold form one occupied lifecycle. Further entries are ignored rather than layered or queued, and no automatic retrigger occurs after cleanup; another sound requires cleanup followed by a fresh glyph entry.
+
+## 2026-07-28 — Audio-stage acceptance
+
+Status: accepted.
+
+The Designer accepted the completed audio stage in a manual listening test on 2026-07-28. This records the Designer's acceptance, not a test performed by Codex.

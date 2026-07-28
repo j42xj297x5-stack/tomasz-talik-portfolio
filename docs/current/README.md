@@ -17,6 +17,7 @@
 - [`maps/DEPENDENCY_MAP.md`](maps/DEPENDENCY_MAP.md)
 - [`technical/THREE_SCENE_MODEL.md`](technical/THREE_SCENE_MODEL.md)
 - [`technical/FRONTEND_RUNTIME_MODEL.md`](technical/FRONTEND_RUNTIME_MODEL.md)
+- [`technical/AUDIO_RUNTIME_MODEL.md`](technical/AUDIO_RUNTIME_MODEL.md)
 - [`technical/GLYPH_HOVER_EFFECTS_MODEL.md`](technical/GLYPH_HOVER_EFFECTS_MODEL.md)
 - [`operations/DOCUMENTATION_WORKFLOW.md`](operations/DOCUMENTATION_WORKFLOW.md)
 - [`decisions/DECISION_LOG.md`](decisions/DECISION_LOG.md)
