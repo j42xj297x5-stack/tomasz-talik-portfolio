@@ -368,3 +368,10 @@ Status: accepted / implemented.
 3. Five fixed looping ambient channels map levels 0–1 to ambient 01 and levels 2–5 to ambient 02–05. Forward, backward, and reset changes start the newly mapped track at zero through interruptible five-second equal-power crossfades, then stop and rewind inactive streams.
 4. Short effects are decoded and cached, with non-repeating shared glyph pools synchronized to hit, available-plaque reveal, and available-plaque close boundaries. A shared delegated click policy covers eligible dynamic buttons without range, disabled, canvas, or audio-control duplication.
 5. The master control persists outside `#app` for the complete entry/runtime lifetime. Intro and ambient streams share the ambient bus; debug ambient/effects gains remain session-only and outside canonical scene-settings schema version 1.
+
+## 2026-07-28 — Project-link click feedback and slower visual progression
+
+Status: accepted / implemented.
+
+1. The shared delegated click policy applies the existing `click_01` effect to every project-panel link with the `overlay__project-link` class while preserving normal new-tab navigation; case-study toggles retain `click_02`, and other eligible buttons retain `click_01`.
+2. Each of the five cumulative atmosphere layers reveals over 10 seconds by default. Manual visual transition-time overrides remain supported, and ambient changes retain their independent five-second crossfade.

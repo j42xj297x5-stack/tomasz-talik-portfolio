@@ -26,6 +26,13 @@ assert.deepEqual(ATMOSPHERE_PROGRESSION_MAPPING, {
 });
 
 const progression = createAtmosphereProgression();
+assert.deepEqual(progression.getProgressionDebugState().transitionTimes, {
+  shells: 10,
+  smallGlyphs: 10,
+  stars: 10,
+  stones: 10,
+  galaxies: 10
+});
 expectedLightMultipliers.forEach((expected, level) => {
   progression.setProgressLevel(level);
   assert.equal(progression.getProgressionMultipliers().sunMoon, expected, `shared multiplier updates at level ${level}`);
