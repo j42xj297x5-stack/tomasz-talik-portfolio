@@ -20,6 +20,12 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
     rayOpacity: 0.8,
     idleScale: 1,
     activeScale: 1.2
+  },
+  entryTransition: {
+    enabled: true,
+    durationSeconds: 3,
+    target: { x: 0, z: 1.8 },
+    easing: 'smoothstep'
   }
 });
 
@@ -65,6 +71,19 @@ export function normalizeExperienceVrSettings(candidate) {
       rayOpacity: finiteNumber(candidate.controllers?.rayOpacity, defaults.controllers.rayOpacity, { min: 0.05, max: 1 }),
       idleScale: finiteNumber(candidate.controllers?.idleScale, defaults.controllers.idleScale, { min: 0.1, max: 5 }),
       activeScale: finiteNumber(candidate.controllers?.activeScale, defaults.controllers.activeScale, { min: 0.1, max: 5 })
+    },
+    entryTransition: {
+      enabled: typeof candidate.entryTransition?.enabled === 'boolean'
+        ? candidate.entryTransition.enabled
+        : defaults.entryTransition.enabled,
+      durationSeconds: finiteNumber(candidate.entryTransition?.durationSeconds, defaults.entryTransition.durationSeconds, { min: 0.1, max: 30 }),
+      target: {
+        x: finiteNumber(candidate.entryTransition?.target?.x, defaults.entryTransition.target.x),
+        z: finiteNumber(candidate.entryTransition?.target?.z, defaults.entryTransition.target.z)
+      },
+      easing: candidate.entryTransition?.easing === 'smoothstep'
+        ? candidate.entryTransition.easing
+        : defaults.entryTransition.easing
     }
   };
 }

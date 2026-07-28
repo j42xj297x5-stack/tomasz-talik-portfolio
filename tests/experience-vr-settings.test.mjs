@@ -15,6 +15,7 @@ const normalized = normalizeExperienceVrSettings({
   spawn: { position: { x: 1, y: 'bad', z: 5 }, lookAt: { x: 0, y: 2, z: 0 } },
   renderer: { pixelRatioCap: 99, antialias: false },
   controllers: { enabled: false, rayLength: 0, rayOpacity: 4, idleScale: 'bad', activeScale: 99 },
+  entryTransition: { enabled: false, durationSeconds: 99, target: { x: 2, z: 'bad' }, easing: 'linear' },
   ignored: true
 });
 assert.equal(normalized.referenceSpaceType, 'local');
@@ -27,6 +28,12 @@ assert.deepEqual(normalized.controllers, {
   rayOpacity: 1,
   idleScale: 1,
   activeScale: 5
+});
+assert.deepEqual(normalized.entryTransition, {
+  enabled: false,
+  durationSeconds: 30,
+  target: { x: 2, z: 1.8 },
+  easing: 'smoothstep'
 });
 assert.equal('ignored' in normalized, false);
 
