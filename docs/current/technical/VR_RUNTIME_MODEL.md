@@ -20,10 +20,10 @@ The scene contains only a dark background, the existing base lights, the central
 
 `src/config/experienceVrSettings.js` defines and validates schema version 1. `public/data/experience-vr-settings.json` may override only the reference-space preference, world scale, player spawn position/look target, pixel-ratio cap, and antialias setting. Missing, malformed, incompatible, or individually invalid data falls back safely to code defaults. VR settings do not use localStorage and do not copy the Experience 3D composition schema.
 
-The initial floor is world `Y = 0`; the player rig starts at `(0, 0, 6)` and faces the monkey. These are proof-of-concept calibration values, not final comfort tuning.
+The initial floor is world `Y = 0`; the player rig starts at `(0, 0, 6)` and faces the monkey. Its yaw is derived from the horizontal direction between `spawn.position` and `spawn.lookAt`, aligning the camera's local `-Z` forward axis without applying pitch or roll. These are proof-of-concept calibration values, not final comfort tuning.
 
 ## Session lifecycle
 
-The renderer uses `setAnimationLoop` only while a session is active. Session start stores one active session and exposes an exit control. Session end stops the loop, clears session state, and re-enables entry. Re-entry reuses the same scene, assets, renderer, camera, rig, controls, and listeners. It does not start Experience 3D.
+The renderer uses `setAnimationLoop` only while a session is active. Session start stores one active session and exposes an exit control. Session end stops the loop, clears session state, and re-enables entry. Re-entry reuses the same scene, assets, renderer, camera, rig, controls, and listeners, and reapplies the configured player-rig yaw before each session request. It does not start Experience 3D.
 
 Experience VR does not start Experience 3D ambient audio or its intro sequence. The existing delegated entry-button click effect remains the only inherited audio behavior.

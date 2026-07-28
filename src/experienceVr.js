@@ -8,6 +8,7 @@ import { createAssetManager } from './assets/assetManager.js';
 import { createLoadingDiagnostics, preloadAssets } from './assets/preloadAssets.js';
 import { ASSET_STAGES, getPreloadAssets, INITIAL_PRELOAD_GROUPS } from './assets/assetManifest.js';
 import { loadExperienceVrSettings } from './config/experienceVrSettings.js';
+import { orientPlayerRig } from './xr/playerRigOrientation.js';
 
 const app = document.querySelector('#app');
 if (!app) throw new Error('Missing #app mount element.');
@@ -63,8 +64,7 @@ playerRig.position.set(settings.spawn.position.x, settings.spawn.position.y, set
 camera.position.set(0, 1.6, 0);
 playerRig.add(camera);
 scene.add(playerRig);
-const lookTarget = new THREE.Vector3(settings.spawn.lookAt.x, playerRig.position.y, settings.spawn.lookAt.z);
-playerRig.lookAt(lookTarget);
+orientPlayerRig(playerRig, settings.spawn.lookAt);
 
 addLights(scene);
 const centralPlaceholder = createCentralObject();
@@ -124,6 +124,7 @@ function handleSessionEnd() {
 
 async function enterVr() {
   if (activeSession) return;
+  orientPlayerRig(playerRig, settings.spawn.lookAt);
   enterButton.disabled = true;
   status.textContent = copy.entering;
   let requestedSession = null;
