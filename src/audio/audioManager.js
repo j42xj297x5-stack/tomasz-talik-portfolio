@@ -6,7 +6,8 @@ const INTRO_DELAY_SECONDS = 5;
 const HOVER_FADE_IN_SECONDS = 0.5;
 const HOVER_FADE_OUT_SECONDS = 1;
 const HOVER_SILENT_HOLD_SECONDS = 0.5;
-const HOVER_EMERGENCY_FADE_SECONDS = 0.02;
+const EFFECTS_TRIM_DB = -3;
+const INTRO_TRIM_DB = 5;
 const AMBIENT_PATHS = Object.freeze([
   '/audio/ambient_01.mp3',
   '/audio/ambient_02.mp3',
@@ -26,6 +27,7 @@ const EFFECT_PATHS = Object.freeze({
 
 const clamp01 = (value) => Math.min(1, Math.max(0, Number(value) || 0));
 const perceptualGain = (value) => Math.pow(clamp01(value), 2);
+const dbToGain = (db) => 10 ** (db / 20);
 
 class AudioManager {
   constructor() {
@@ -48,6 +50,7 @@ class AudioManager {
     this.crossfadeCleanupTimer = null;
     this.activeGlyphHover = null;
     this.fadingGlyphHover = null;
+    this.pendingGlyphHoverStart = false;
     this.preparedGlyphHoverBuffer = null;
     this.glyphHoverRequestVersion = 0;
     this.masterVolume = DEFAULTS.master;
@@ -105,8 +108,10 @@ class AudioManager {
     const introElement = new Audio(publicPath('/audio/start.mp3'));
     introElement.loop = false;
     introElement.preload = 'auto';
-    this.context.createMediaElementSource(introElement).connect(this.ambientBusNode);
-    this.introChannel = { element: introElement };
+    const introGain = this.context.createGain();
+    introGain.gain.value = dbToGain(INTRO_TRIM_DB);
+    this.context.createMediaElementSource(introElement).connect(introGain).connect(this.ambientBusNode);
+    this.introChannel = { element: introElement, gain: introGain };
 
     AMBIENT_PATHS.forEach((path) => {
       const element = new Audio(publicPath(path));
@@ -124,7 +129,7 @@ class AudioManager {
     const now = this.context.currentTime;
     this.masterNode.gain.setTargetAtTime(this.muted ? 0 : perceptualGain(this.masterVolume), now, 0.025);
     this.ambientBusNode.gain.setTargetAtTime(perceptualGain(this.ambientVolume), now, 0.025);
-    this.effectsBusNode.gain.setTargetAtTime(perceptualGain(this.effectsVolume), now, 0.025);
+    this.effectsBusNode.gain.setTargetAtTime(perceptualGain(this.effectsVolume) * dbToGain(EFFECTS_TRIM_DB), now, 0.025);
   }
 
   async unlock() {
@@ -248,14 +253,14 @@ class AudioManager {
     handle.gain = null;
   }
 
-  stopGlyphHoverHandle(handle, { emergency = false } = {}) {
-    if (!handle || handle.cleaned || !this.context || (handle.stopping && !emergency)) return;
+  stopGlyphHoverHandle(handle) {
+    if (!handle || handle.cleaned || !this.context || handle.stopping) return;
     handle.stopping = true;
     if (this.activeGlyphHover === handle) this.activeGlyphHover = null;
     const now = this.context.currentTime;
-    const fadeDuration = emergency ? HOVER_EMERGENCY_FADE_SECONDS : HOVER_FADE_OUT_SECONDS;
+    const fadeDuration = HOVER_FADE_OUT_SECONDS;
     const fadeEndsAt = now + fadeDuration;
-    const stopAt = fadeEndsAt + (emergency ? 0 : HOVER_SILENT_HOLD_SECONDS);
+    const stopAt = fadeEndsAt + HOVER_SILENT_HOLD_SECONDS;
     const parameter = handle.gain.gain;
     if (typeof parameter.cancelAndHoldAtTime === 'function') parameter.cancelAndHoldAtTime(now);
     else {
@@ -271,27 +276,31 @@ class AudioManager {
   }
 
   async startGlyphHover() {
+    if (this.pendingGlyphHoverStart || this.activeGlyphHover || this.fadingGlyphHover) return;
+    this.pendingGlyphHoverStart = true;
     const requestVersion = ++this.glyphHoverRequestVersion;
-    if (this.fadingGlyphHover) this.stopGlyphHoverHandle(this.fadingGlyphHover, { emergency: true });
-    if (this.activeGlyphHover) this.stopGlyphHoverHandle(this.activeGlyphHover);
-    if (!await this.unlock() || requestVersion !== this.glyphHoverRequestVersion) return;
-    const path = EFFECT_PATHS.glyphHover[0];
-    const decodedBuffer = this.buffers.get(path) || await this.loadBuffer(path);
-    const buffer = this.preparedGlyphHoverBuffer;
-    if (requestVersion !== this.glyphHoverRequestVersion || !decodedBuffer || !buffer || !this.context || !this.effectsBusNode) return;
+    try {
+      if (!await this.unlock() || requestVersion !== this.glyphHoverRequestVersion) return;
+      const path = EFFECT_PATHS.glyphHover[0];
+      const decodedBuffer = this.buffers.get(path) || await this.loadBuffer(path);
+      const buffer = this.preparedGlyphHoverBuffer;
+      if (requestVersion !== this.glyphHoverRequestVersion || !decodedBuffer || !buffer || !this.context || !this.effectsBusNode) return;
 
-    const source = this.context.createBufferSource();
-    const gain = this.context.createGain();
-    const handle = { source, gain, stopping: false, cleaned: false };
-    source.buffer = buffer;
-    source.loop = false;
-    const now = this.context.currentTime;
-    gain.gain.setValueAtTime(0, now);
-    gain.gain.setValueCurveAtTime(this.createFadeCurve(0, 1, true), now, HOVER_FADE_IN_SECONDS);
-    source.connect(gain).connect(this.effectsBusNode);
-    source.onended = () => this.cleanupGlyphHover(handle);
-    this.activeGlyphHover = handle;
-    source.start();
+      const source = this.context.createBufferSource();
+      const gain = this.context.createGain();
+      const handle = { source, gain, stopping: false, cleaned: false };
+      source.buffer = buffer;
+      source.loop = false;
+      const now = this.context.currentTime;
+      gain.gain.setValueAtTime(0, now);
+      gain.gain.setValueCurveAtTime(this.createFadeCurve(0, 1, true), now, HOVER_FADE_IN_SECONDS);
+      source.connect(gain).connect(this.effectsBusNode);
+      source.onended = () => this.cleanupGlyphHover(handle);
+      this.activeGlyphHover = handle;
+      source.start();
+    } finally {
+      this.pendingGlyphHoverStart = false;
+    }
   }
 
   stopGlyphHover() {
