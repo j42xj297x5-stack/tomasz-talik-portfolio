@@ -26,6 +26,18 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
     durationSeconds: 3,
     target: { x: 0, z: 1.8 },
     easing: 'smoothstep'
+  },
+  spatialPlaque: {
+    enabled: true,
+    width: 1.35,
+    height: 0.85,
+    distance: 1.4,
+    verticalOffset: -0.05,
+    canvasWidth: 1024,
+    canvasHeight: 640,
+    titleFontSize: 72,
+    bodyFontSize: 42,
+    maxBodyLines: 6
   }
 });
 
@@ -84,6 +96,20 @@ export function normalizeExperienceVrSettings(candidate) {
       easing: candidate.entryTransition?.easing === 'smoothstep'
         ? candidate.entryTransition.easing
         : defaults.entryTransition.easing
+    },
+    spatialPlaque: {
+      enabled: typeof candidate.spatialPlaque?.enabled === 'boolean'
+        ? candidate.spatialPlaque.enabled
+        : defaults.spatialPlaque.enabled,
+      width: finiteNumber(candidate.spatialPlaque?.width, defaults.spatialPlaque.width, { min: 0.5, max: 3 }),
+      height: finiteNumber(candidate.spatialPlaque?.height, defaults.spatialPlaque.height, { min: 0.3, max: 2 }),
+      distance: finiteNumber(candidate.spatialPlaque?.distance, defaults.spatialPlaque.distance, { min: 0.6, max: 4 }),
+      verticalOffset: finiteNumber(candidate.spatialPlaque?.verticalOffset, defaults.spatialPlaque.verticalOffset, { min: -1, max: 1 }),
+      canvasWidth: Math.round(finiteNumber(candidate.spatialPlaque?.canvasWidth, defaults.spatialPlaque.canvasWidth, { min: 512, max: 2048 })),
+      canvasHeight: Math.round(finiteNumber(candidate.spatialPlaque?.canvasHeight, defaults.spatialPlaque.canvasHeight, { min: 320, max: 1280 })),
+      titleFontSize: Math.round(finiteNumber(candidate.spatialPlaque?.titleFontSize, defaults.spatialPlaque.titleFontSize, { min: 36, max: 128 })),
+      bodyFontSize: Math.round(finiteNumber(candidate.spatialPlaque?.bodyFontSize, defaults.spatialPlaque.bodyFontSize, { min: 24, max: 72 })),
+      maxBodyLines: Math.round(finiteNumber(candidate.spatialPlaque?.maxBodyLines, defaults.spatialPlaque.maxBodyLines, { min: 1, max: 10 }))
     }
   };
 }
