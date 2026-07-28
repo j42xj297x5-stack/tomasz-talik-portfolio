@@ -222,6 +222,7 @@ function syncHoverState(nextHoveredNode, event = null) {
 
   if (previousHoveredNode && previousHoveredNode !== nextHoveredNode) {
     setNodeHoverState(hoveredNode, false);
+    audioManager.stopGlyphHover();
   }
 
   hoveredNode = nextHoveredNode;
@@ -230,6 +231,7 @@ function syncHoverState(nextHoveredNode, event = null) {
     setNodeHoverState(hoveredNode, true);
     if (hoveredNode !== previousHoveredNode) {
       triggerNodeHoverAnimation(hoveredNode);
+      void audioManager.startGlyphHover();
     }
     if (event) {
       hoverLabel.show(hoveredNode.userData, event.clientX, event.clientY);
@@ -420,6 +422,7 @@ function handlePointerMove(event) {
     if (distance > TAP_MOVE_THRESHOLD_PX) {
       activePointer.dragged = true;
       activePointer.suppressTap = true;
+      clearInteractiveHover();
     }
 
     if (activePointer.usesTouchCameraDrag && activePointer.dragged) {
@@ -433,7 +436,7 @@ function handlePointerMove(event) {
     }
   }
 
-  if (event.pointerType === 'mouse' && fineHoverQuery.matches) {
+  if (event.pointerType === 'mouse' && fineHoverQuery.matches && !activePointer?.dragged) {
     const hit = pickNode(event, canvas, camera, nodes);
     syncHoverState(hit, event);
   }
