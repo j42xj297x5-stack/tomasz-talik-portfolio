@@ -3,7 +3,9 @@ import { publicPath } from '../utils/publicPath.js';
 const DEFAULTS = Object.freeze({ master: 0.7, ambient: 0.4, effects: 0.85 });
 const CROSSFADE_SECONDS = 5;
 const INTRO_DELAY_SECONDS = 5;
-const GLYPH_HOVER_FADE_SECONDS = 0.5;
+const HOVER_FADE_IN_SECONDS = 0.5;
+const HOVER_FADE_OUT_SECONDS = 1;
+const HOVER_SILENT_HOLD_SECONDS = 0.5;
 const MAX_FADING_GLYPH_HOVERS = 4;
 const AMBIENT_PATHS = Object.freeze([
   '/audio/ambient_01.mp3',
@@ -207,8 +209,12 @@ class AudioManager {
     handle.cleaned = true;
     if (this.activeGlyphHover === handle) this.activeGlyphHover = null;
     this.fadingGlyphHovers.delete(handle);
-    try { handle.source.disconnect(); } catch (_) { /* The optional node may already be disconnected. */ }
-    try { handle.gain.disconnect(); } catch (_) { /* The optional node may already be disconnected. */ }
+    const { source, gain } = handle;
+    if (source) source.onended = null;
+    try { source?.disconnect(); } catch (_) { /* The optional node may already be disconnected. */ }
+    try { gain?.disconnect(); } catch (_) { /* The optional node may already be disconnected. */ }
+    handle.source = null;
+    handle.gain = null;
   }
 
   stopGlyphHoverHandle(handle, { immediate = false } = {}) {
@@ -216,14 +222,21 @@ class AudioManager {
     handle.stopping = true;
     if (this.activeGlyphHover === handle) this.activeGlyphHover = null;
     const now = this.context.currentTime;
-    const stopAt = immediate ? now : now + GLYPH_HOVER_FADE_SECONDS;
+    const fadeEndsAt = immediate ? now : now + HOVER_FADE_OUT_SECONDS;
+    const stopAt = immediate ? now : fadeEndsAt + HOVER_SILENT_HOLD_SECONDS;
     const parameter = handle.gain.gain;
     if (typeof parameter.cancelAndHoldAtTime === 'function') parameter.cancelAndHoldAtTime(now);
     else {
+      const currentGain = clamp01(parameter.value);
       parameter.cancelScheduledValues(now);
-      parameter.setValueAtTime(parameter.value, now);
+      parameter.setValueAtTime(currentGain, now);
     }
-    parameter.linearRampToValueAtTime(0, stopAt);
+    const currentGain = clamp01(parameter.value);
+    if (immediate) parameter.setValueAtTime(0, now);
+    else {
+      parameter.setValueCurveAtTime(this.createFadeCurve(currentGain, 1, false), now, HOVER_FADE_OUT_SECONDS);
+      parameter.setValueAtTime(0, fadeEndsAt);
+    }
     if (!immediate) this.fadingGlyphHovers.add(handle);
     try { handle.source.stop(stopAt); } catch (_) { this.cleanupGlyphHover(handle); }
   }
@@ -246,7 +259,9 @@ class AudioManager {
     const handle = { source, gain, stopping: false, cleaned: false };
     source.buffer = buffer;
     source.loop = false;
-    gain.gain.setValueAtTime(1, this.context.currentTime);
+    const now = this.context.currentTime;
+    gain.gain.setValueAtTime(0, now);
+    gain.gain.setValueCurveAtTime(this.createFadeCurve(0, 1, true), now, HOVER_FADE_IN_SECONDS);
     source.connect(gain).connect(this.effectsBusNode);
     source.onended = () => this.cleanupGlyphHover(handle);
     this.activeGlyphHover = handle;
