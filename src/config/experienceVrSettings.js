@@ -13,6 +13,13 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
   renderer: {
     pixelRatioCap: 1.5,
     antialias: true
+  },
+  controllers: {
+    enabled: true,
+    rayLength: 3,
+    rayOpacity: 0.8,
+    idleScale: 1,
+    activeScale: 1.2
   }
 });
 
@@ -49,6 +56,15 @@ export function normalizeExperienceVrSettings(candidate) {
       antialias: typeof candidate.renderer?.antialias === 'boolean'
         ? candidate.renderer.antialias
         : defaults.renderer.antialias
+    },
+    controllers: {
+      enabled: typeof candidate.controllers?.enabled === 'boolean'
+        ? candidate.controllers.enabled
+        : defaults.controllers.enabled,
+      rayLength: finiteNumber(candidate.controllers?.rayLength, defaults.controllers.rayLength, { min: 0.1, max: 20 }),
+      rayOpacity: finiteNumber(candidate.controllers?.rayOpacity, defaults.controllers.rayOpacity, { min: 0.05, max: 1 }),
+      idleScale: finiteNumber(candidate.controllers?.idleScale, defaults.controllers.idleScale, { min: 0.1, max: 5 }),
+      activeScale: finiteNumber(candidate.controllers?.activeScale, defaults.controllers.activeScale, { min: 0.1, max: 5 })
     }
   };
 }

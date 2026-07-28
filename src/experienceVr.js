@@ -9,6 +9,7 @@ import { createLoadingDiagnostics, preloadAssets } from './assets/preloadAssets.
 import { ASSET_STAGES, getPreloadAssets, INITIAL_PRELOAD_GROUPS } from './assets/assetManifest.js';
 import { loadExperienceVrSettings } from './config/experienceVrSettings.js';
 import { orientPlayerRig } from './xr/playerRigOrientation.js';
+import { createVrControllers } from './xr/createVrControllers.js';
 
 const app = document.querySelector('#app');
 if (!app) throw new Error('Missing #app mount element.');
@@ -65,6 +66,7 @@ camera.position.set(0, 1.6, 0);
 playerRig.add(camera);
 scene.add(playerRig);
 orientPlayerRig(playerRig, settings.spawn.lookAt);
+createVrControllers({ renderer, playerRig, settings: settings.controllers });
 
 addLights(scene);
 const centralPlaceholder = createCentralObject();
