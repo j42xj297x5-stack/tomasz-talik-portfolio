@@ -195,7 +195,8 @@ async function startExperience3d() {
     <p class="entry-shell__text">${copy.launchStatus}</p>
   `);
 
-  void audioManager.startAmbient();
+  void audioManager.unlock();
+  audioManager.prepareExperienceAudio();
   void audioManager.preloadExperienceEffects();
   await import('./experience3d.js');
 }

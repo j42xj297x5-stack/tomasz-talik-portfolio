@@ -599,6 +599,7 @@ unsubscribeLoaderDiagnostics();
 loadingDiagnostics.markEvent('loaderFadeEnd');
 interactionState = 'intro';
 loadingDiagnostics.markEvent('introStart');
+audioManager.startExperienceSequence();
 await experienceIntro.play();
 loadingDiagnostics.markEvent('introEnd');
 interactionState = 'idle';
