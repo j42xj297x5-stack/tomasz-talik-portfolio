@@ -395,3 +395,13 @@ Status: accepted / implemented.
 Status: accepted.
 
 The Designer accepted the completed audio stage in a manual listening test on 2026-07-28. This records the Designer's acceptance, not a test performed by Codex.
+
+## 2026-07-28 — Separate minimal Meta Quest 3S Experience VR runtime
+
+Status: accepted / implemented.
+
+1. Experience VR is a third runtime dynamically imported only after capability detection and explicit selection; it does not refactor or boot Experience 3D.
+2. The target device is Meta Quest 3S running Meta Quest Browser. Ordinary mobile and desktop devices are not VR fallback targets.
+3. The first WebXR scope contains one independently owned renderer, camera, player rig, scene and session lifecycle plus the existing monkey and five glyphs in static initial positions.
+4. Session entry is a second direct gesture after scene preparation. Session exit and re-entry reuse the same runtime objects and listeners.
+5. Existing Experience 3D HTML/CSS panels and overlays do not move into VR. Controllers, hand tracking, physics, locomotion, atmosphere, progression and Experience 3D audio remain outside this stage.

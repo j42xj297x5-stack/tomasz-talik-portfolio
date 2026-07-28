@@ -7,7 +7,7 @@ Purpose: route a task to the smallest current documentation and runtime evidence
 
 ## Current runtime baseline
 
-The project has a conditional Classic 2D / Experience 3D entry shell. Experience 3D is a Three.js scene with five GLB glyphs, a shared data-driven plaque transition for every glyph, and HTML/CSS detail panels. The plaque sequence focuses the camera, reveals the selected plaque, holds, dollies in safely, and only then opens the panel. Closing reverses that sequence before returning the camera and handing cursor control back smoothly.
+The project has a Classic 2D / Experience 3D / Experience VR entry shell. Experience 3D is a Three.js scene with five GLB glyphs, a shared data-driven plaque transition for every glyph, and HTML/CSS detail panels. Experience VR is a separately loaded Meta Quest 3S WebXR proof of concept containing only the monkey and a static ring of five glyphs.
 
 Hover is deliberately shared and light: every glyph uses the same one-shot scale/light response. Tree, fire, spark, and ember-sphere hover systems are not active runtime behavior.
 
@@ -35,6 +35,7 @@ Do not scan `docs/current` recursively. Read an additional module only when the 
 | Overlay/content panels | `src/content/portfolioNodes.js`; `src/ui/overlay.js`; `technical/FRONTEND_RUNTIME_MODEL.md` | `src/styles/main.css`; `technical/CONTENT_MODEL.md` |
 | Asset staging or public paths | `src/assets/assetManifest.js`; `src/assets/assetManager.js`; `src/utils/publicPath.js`; `technical/DEPLOYMENT_MODEL.md` | `src/experience3d.js` |
 | Classic 2D | `src/classic2d.js`; `src/content/portfolioNodes.js`; `technical/ENTRY_FLOW_AND_MODES_MODEL.md` | `src/styles/main.css` |
+| Experience VR, WebXR capability, session lifecycle | `technical/VR_RUNTIME_MODEL.md`; `src/experienceVr.js`; `src/xr/vrCapability.js`; `src/config/experienceVrSettings.js` | `src/main.js`; base scene, light, monkey, orbit-node, asset-manager and preload modules used directly by the VR runtime |
 | Shared audio, ambient progression, effects, master control, debug mixer | `technical/AUDIO_RUNTIME_MODEL.md`; `src/audio/audioManager.js`; `src/main.js` | `src/experience3d.js`; `src/ui/audioControl.js`; `src/ui/optionsPanel.js`; `src/scene/atmosphere/atmosphereProgression.js` |
 | Documentation synchronization | affected canonical technical doc; `maps/DEPENDENCY_MAP.md`; `decisions/DECISION_LOG.md` | only the runtime files that prove the changed contract |
 
@@ -49,11 +50,13 @@ Do not scan `docs/current` recursively. Read an additional module only when the 
 - [`technical/GLYPH_HOVER_EFFECTS_MODEL.md`](../technical/GLYPH_HOVER_EFFECTS_MODEL.md) — concise active hover contract.
 - [`technical/CONTENT_MODEL.md`](../technical/CONTENT_MODEL.md) — portfolio record schema and panel content.
 - [`technical/AUDIO_RUNTIME_MODEL.md`](../technical/AUDIO_RUNTIME_MODEL.md) — shared Web Audio graph, streaming ambient, effects, and controls.
+- [`technical/VR_RUNTIME_MODEL.md`](../technical/VR_RUNTIME_MODEL.md) — minimal separate Meta Quest 3S WebXR runtime and session contract.
 - [`decisions/DECISION_LOG.md`](../decisions/DECISION_LOG.md) — accepted project decisions.
 
 ## Runtime entrypoints
 
 - `src/main.js` selects the mode and conditionally launches Experience 3D.
+- `src/main.js` also detects immersive-VR capability and conditionally imports the separate `src/experienceVr.js` runtime only after VR selection.
 - `src/experience3d.js` owns the Experience 3D scene wiring, interaction sequence, renderer, preload stages, and animation loop.
 - `src/content/portfolioNodes.js` is the source of truth for glyph, plaque, and panel metadata.
 - `src/assets/assetManifest.js` derives staged plaque assets from the portfolio records.

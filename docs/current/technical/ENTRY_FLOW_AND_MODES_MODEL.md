@@ -2,7 +2,7 @@
 
 ## Current contract
 
-The lightweight entry shell in `src/main.js` first selects language and then mode. It routes `Classic 2D` directly to `src/classic2d.js`; it dynamically imports `src/experience3d.js` only after the visitor selects `Experience 3D`. The two modes share `src/content/portfolioNodes.js` and stable gate IDs, rather than separate 2D records. On the mode-selection screen, the return-to-language button intentionally uses the language opposite the active selection and declares that visible language with its `lang` attribute.
+The lightweight entry shell in `src/main.js` first selects language and then mode. It routes `Classic 2D` directly to `src/classic2d.js`; it dynamically imports `src/experience3d.js` only after the visitor selects `Experience 3D`, and dynamically imports the separate `src/experienceVr.js` only after a supported visitor selects Experience VR. The three modes share `src/content/portfolioNodes.js` and stable gate IDs. On the mode-selection screen, the return-to-language button intentionally uses the language opposite the active selection and declares that visible language with its `lang` attribute.
 
 ## Classic 2D
 
@@ -18,6 +18,10 @@ Classic 2D is implemented—not a placeholder or a future MVP. It is a lightweig
 ## Experience 3D
 
 Experience 3D preserves the Three.js scene, conditional boot and readable HTML/CSS overlay. Its full-screen panels use opaque CSS gradients keyed by `data-panel-theme`, responsive `ornamentPath` artwork, and internal scrolling; they do not use an SVG frame. Opening a panel pauses fine-pointer camera steering. Closing it smoothly hands the camera to the latest cursor position over 1500 ms.
+
+## Experience VR
+
+Experience VR is a third, separately loaded Meta Quest 3S proof-of-concept runtime. The entry shell detects secure-context and immersive WebXR capability without blocking the other modes. Selection prepares the minimal scene first; a second direct user gesture starts the immersive session. See `VR_RUNTIME_MODEL.md` for the implemented boundary.
 
 ## Remaining work
 
