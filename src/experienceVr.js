@@ -178,6 +178,7 @@ function renderFrame() {
   const entryReady = activatedEntryGlyph ? null : orbitEntryReady;
   glyphRing.updateMatrixWorld(true);
   glyphInteraction.update();
+  crystalCollection.update(delta);
   glyphInteraction.setEntryReady(entryReady);
   glyphLights.update({
     hovered: glyphInteraction.hoveredGlyphs,

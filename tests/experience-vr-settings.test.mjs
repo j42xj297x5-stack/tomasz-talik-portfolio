@@ -21,6 +21,7 @@ const normalized = normalizeExperienceVrSettings({
     enabled: false, width: 0, height: 9, distance: 0, verticalOffset: -9,
     canvasWidth: 3000.6, canvasHeight: 100, titleFontSize: 10, bodyFontSize: 200, maxBodyLines: 0
   },
+  crystals: { rayGrabMaxDistance: 99, pullDuration: 0, targetScale: 9 },
   ignored: true
 });
 assert.equal(normalized.referenceSpaceType, 'local');
@@ -51,7 +52,12 @@ assert.deepEqual(normalized.portalCanvas, {
   canvasWidth: 2048, canvasHeight: 320, titleFontSize: 36, bodyFontSize: 72, maxBodyLines: 1
 });
 assert.deepEqual(normalized.locomotion, DEFAULT_EXPERIENCE_VR_SETTINGS.locomotion);
-assert.deepEqual(normalized.crystals, DEFAULT_EXPERIENCE_VR_SETTINGS.crystals);
+assert.deepEqual(normalized.crystals, {
+  ...DEFAULT_EXPERIENCE_VR_SETTINGS.crystals,
+  rayGrabMaxDistance: 3,
+  pullDuration: 0.05,
+  targetScale: 1.15
+});
 assert.equal('ignored' in normalized, false);
 
 const server = await loadExperienceVrSettings({

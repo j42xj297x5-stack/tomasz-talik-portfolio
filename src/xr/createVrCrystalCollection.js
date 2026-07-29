@@ -27,32 +27,72 @@ export function createVrCrystalCollection({ scene, assetManager, controllers, po
   const instances = [];
   const listeners = [];
   const heldByController = new Map();
+  const objectToCrystal = new Map();
+  const raycaster = new THREE.Raycaster();
+  const rayOrigin = new THREE.Vector3();
+  const rayDirection = new THREE.Vector3();
+  const rayQuaternion = new THREE.Quaternion();
   const scratch = new THREE.Vector3();
+  const targetQuaternion = new THREE.Quaternion();
   let disposed = false;
 
-  function nearestAvailable(controllerRecord) {
-    controllerRecord.grip.updateWorldMatrix(true, false);
-    controllerRecord.grip.getWorldPosition(scratch);
-    let nearest = null;
-    let nearestDistance = settings.grabRadius;
-    for (const instance of instances) {
-      if (instance.state !== 'available') continue;
-      const distance = instance.object.getWorldPosition(new THREE.Vector3()).distanceTo(scratch);
-      if (distance <= nearestDistance) { nearest = instance; nearestDistance = distance; }
+  function clearControllerHit(controllerRecord) {
+    controllerRecord.currentCrystalHit = null;
+    controllerRecord.currentCrystalHitDistance = null;
+  }
+
+  function setHighlighted(instance, highlighted) {
+    if (!instance || instance.highlighted === highlighted) return;
+    instance.highlighted = highlighted;
+    instance.object.scale.setScalar(highlighted ? settings.targetScale : 1);
+  }
+
+  function updateTargets() {
+    const targeted = new Set();
+    const raycastObjects = instances.filter(({ state, object }) => state === 'available' && object.visible).map(({ object }) => object);
+    for (const controllerRecord of controllers) {
+      clearControllerHit(controllerRecord);
+      if (!raycastObjects.length) continue;
+      controllerRecord.controller.updateWorldMatrix(true, false);
+      controllerRecord.controller.getWorldPosition(rayOrigin);
+      controllerRecord.controller.getWorldQuaternion(rayQuaternion);
+      rayDirection.set(0, 0, -1).applyQuaternion(rayQuaternion).normalize();
+      raycaster.set(rayOrigin, rayDirection);
+      const intersections = raycaster.intersectObjects(raycastObjects, true);
+      for (const intersection of intersections) {
+        let object = intersection.object;
+        let instance = null;
+        while (object && !instance) {
+          instance = objectToCrystal.get(object) ?? null;
+          object = object.parent;
+        }
+        if (instance?.state === 'available') {
+          controllerRecord.currentCrystalHit = instance;
+          controllerRecord.currentCrystalHitDistance = intersection.distance;
+          targeted.add(instance);
+          break;
+        }
+      }
     }
-    return nearest;
+    for (const instance of instances) setHighlighted(instance, instance.state === 'available' && targeted.has(instance));
   }
 
   function grab(controllerRecord) {
     if (disposed || heldByController.has(controllerRecord)) return null;
-    const instance = nearestAvailable(controllerRecord);
-    if (!instance) return null;
-    instance.state = 'held';
+    const instance = controllerRecord.currentCrystalHit;
+    if (!instance || instance.state !== 'available'
+      || controllerRecord.currentCrystalHitDistance == null
+      || controllerRecord.currentCrystalHitDistance > settings.rayGrabMaxDistance
+      || instance.heldBy) return null;
+    setHighlighted(instance, false);
+    instance.state = 'pulling';
     instance.heldBy = controllerRecord;
     heldByController.set(controllerRecord, instance);
-    controllerRecord.holdSocket.add(instance.object);
-    instance.object.position.set(settings.holdOffset.x, settings.holdOffset.y, settings.holdOffset.z);
-    instance.object.rotation.set(0, 0, 0);
+    controllerRecord.holdSocket.attach(instance.object);
+    instance.pullElapsed = 0;
+    instance.pullStartPosition = instance.object.position.clone();
+    instance.pullStartQuaternion = instance.object.quaternion.clone();
+    clearControllerHit(controllerRecord);
     return instance;
   }
 
@@ -60,11 +100,16 @@ export function createVrCrystalCollection({ scene, assetManager, controllers, po
     const instance = heldByController.get(controllerRecord);
     if (!instance) return null;
     instance.object.updateWorldMatrix(true, false);
-    const socketPosition = portalDisplay.getSocketWorldPosition(scratch);
-    const inSocket = portalDisplay.object.visible
-      && instance.object.getWorldPosition(new THREE.Vector3()).distanceTo(socketPosition) <= portalDisplay.insertRadius;
     heldByController.delete(controllerRecord);
     instance.heldBy = null;
+    if (instance.state === 'pulling') {
+      scene.attach(instance.object);
+      instance.state = 'available';
+      return instance;
+    }
+    const socketPosition = portalDisplay.getSocketWorldPosition(scratch);
+    const inSocket = portalDisplay.object.visible
+      && instance.object.getWorldPosition(rayOrigin).distanceTo(socketPosition) <= portalDisplay.insertRadius;
     if (inSocket) {
       instance.state = 'consumed';
       instance.object.visible = false;
@@ -78,6 +123,7 @@ export function createVrCrystalCollection({ scene, assetManager, controllers, po
   }
 
   controllers.forEach((controllerRecord) => {
+    clearControllerHit(controllerRecord);
     const squeezeStart = () => grab(controllerRecord);
     const squeezeEnd = () => release(controllerRecord);
     controllerRecord.controller.addEventListener('squeezestart', squeezeStart);
@@ -125,25 +171,41 @@ export function createVrCrystalCollection({ scene, assetManager, controllers, po
       object.position.copy(center).addScaledVector(right, x).addScaledVector(forward, z + (index % 2) * 0.035);
       object.position.y = 0;
       scene.add(object);
-      instances.push({ page, object, model, state: 'available', heldBy: null, initialTransform: object.matrix.clone() });
+      const instance = { page, object, model, state: 'available', heldBy: null, highlighted: false, initialTransform: object.matrix.clone() };
+      instances.push(instance);
+      object.traverse((child) => objectToCrystal.set(child, instance));
     });
     return [...instances];
   }
 
-  function reset() {
-    for (const [controllerRecord, instance] of heldByController) {
-      scene.attach(instance.object);
-      instance.state = 'available';
-      instance.heldBy = null;
-      heldByController.delete(controllerRecord);
+  function update(delta = 0) {
+    if (disposed || !instances.length) {
+      controllers.forEach(clearControllerHit);
+      return;
     }
+    updateTargets();
+    for (const instance of heldByController.values()) {
+      if (instance.state !== 'pulling') continue;
+      instance.pullElapsed += Math.max(0, delta);
+      const progress = Math.min(1, instance.pullElapsed / settings.pullDuration);
+      const eased = progress * progress * (3 - 2 * progress);
+      instance.object.position.lerpVectors(instance.pullStartPosition, settings.holdOffset, eased);
+      instance.object.quaternion.slerpQuaternions(instance.pullStartQuaternion, targetQuaternion, eased);
+      if (progress === 1) instance.state = 'held';
+    }
+  }
+
+  function reset() {
+    controllers.forEach(clearControllerHit);
     heldByController.clear();
     for (const instance of instances) {
-      instance.state = 'available';
+      setHighlighted(instance, false);
       instance.heldBy = null;
+      instance.state = 'available';
       instance.object.visible = false;
       instance.object.removeFromParent();
     }
+    objectToCrystal.clear();
     instances.length = 0;
   }
 
@@ -158,5 +220,5 @@ export function createVrCrystalCollection({ scene, assetManager, controllers, po
     listeners.length = 0;
   }
 
-  return { instances, heldByController, spawn, grab, release, reset, dispose };
+  return { instances, heldByController, spawn, update, grab, release, reset, dispose };
 }
