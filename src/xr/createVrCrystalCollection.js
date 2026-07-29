@@ -23,7 +23,7 @@ export function getDeterministicCrystalTransform(pageId, settings) {
   };
 }
 
-export function createVrCrystalCollection({ scene, assetManager, controllers, portalDisplay, settings, onConsume }) {
+export function createVrCrystalCollection({ scene, assetManager, controllers, portalDisplay, insertionTarget, settings, onConsume }) {
   const instances = [];
   const listeners = [];
   const heldByController = new Map();
@@ -107,9 +107,15 @@ export function createVrCrystalCollection({ scene, assetManager, controllers, po
       instance.state = 'available';
       return instance;
     }
-    const socketPosition = portalDisplay.getSocketWorldPosition(scratch);
-    const inSocket = portalDisplay.object.visible
-      && instance.object.getWorldPosition(rayOrigin).distanceTo(socketPosition) <= portalDisplay.insertRadius;
+    instance.model.updateWorldMatrix(true, true);
+    const crystalCenter = new THREE.Box3().setFromObject(instance.model).getCenter(rayOrigin);
+    const insertionSphere = insertionTarget?.hasValidInsertZone
+      ? insertionTarget.getInsertZoneWorldSphere?.()
+      : null;
+    const inSocket = insertionSphere && insertionTarget.object.visible
+      ? insertionSphere.containsPoint(crystalCenter)
+      : portalDisplay.object.visible
+        && crystalCenter.distanceTo(portalDisplay.getSocketWorldPosition(scratch)) <= portalDisplay.insertRadius;
     if (inSocket) {
       instance.state = 'consumed';
       instance.object.visible = false;
