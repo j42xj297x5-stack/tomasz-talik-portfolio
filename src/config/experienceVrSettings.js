@@ -36,21 +36,31 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
     target: { x: 0, z: 1.8 },
     easing: 'smoothstep'
   },
-  spatialPlaque: {
+  portal: {
+    enabled: true,
+    maxWidth: 2.8,
+    maxHeight: 3.2,
+    distance: 2.15,
+    verticalOffset: -0.15,
+    appearDuration: 0.42,
+    appearStartScale: 0.92
+  },
+  portalCanvas: {
     enabled: true,
     width: 1.35,
     height: 0.85,
-    distance: 1.4,
-    monkeyVerticalGap: 0.4,
+    offset: { x: 0, y: 0.12, z: 0.018 },
     canvasWidth: 1024,
     canvasHeight: 640,
     titleFontSize: 72,
     bodyFontSize: 42,
     maxBodyLines: 6
   },
-  glyphPlaque: {
-    enabled: true, maxWidth: 1.35, maxHeight: 0.9, distance: 1.35,
-    verticalOffset: -0.42, appearDuration: 0.42, appearStartScale: 0.92
+  locomotion: {
+    enabled: true,
+    deadzone: 0.18,
+    moveSpeed: 1.8,
+    turnSpeed: 1.35
   }
 });
 
@@ -119,28 +129,31 @@ export function normalizeExperienceVrSettings(candidate) {
         ? candidate.entryTransition.easing
         : defaults.entryTransition.easing
     },
-    spatialPlaque: {
-      enabled: typeof candidate.spatialPlaque?.enabled === 'boolean'
-        ? candidate.spatialPlaque.enabled
-        : defaults.spatialPlaque.enabled,
-      width: finiteNumber(candidate.spatialPlaque?.width, defaults.spatialPlaque.width, { min: 0.5, max: 3 }),
-      height: finiteNumber(candidate.spatialPlaque?.height, defaults.spatialPlaque.height, { min: 0.3, max: 2 }),
-      distance: finiteNumber(candidate.spatialPlaque?.distance, defaults.spatialPlaque.distance, { min: 0.6, max: 4 }),
-      monkeyVerticalGap: finiteNumber(candidate.spatialPlaque?.monkeyVerticalGap, defaults.spatialPlaque.monkeyVerticalGap, { min: 0, max: 2 }),
-      canvasWidth: Math.round(finiteNumber(candidate.spatialPlaque?.canvasWidth, defaults.spatialPlaque.canvasWidth, { min: 512, max: 2048 })),
-      canvasHeight: Math.round(finiteNumber(candidate.spatialPlaque?.canvasHeight, defaults.spatialPlaque.canvasHeight, { min: 320, max: 1280 })),
-      titleFontSize: Math.round(finiteNumber(candidate.spatialPlaque?.titleFontSize, defaults.spatialPlaque.titleFontSize, { min: 36, max: 128 })),
-      bodyFontSize: Math.round(finiteNumber(candidate.spatialPlaque?.bodyFontSize, defaults.spatialPlaque.bodyFontSize, { min: 24, max: 72 })),
-      maxBodyLines: Math.round(finiteNumber(candidate.spatialPlaque?.maxBodyLines, defaults.spatialPlaque.maxBodyLines, { min: 1, max: 10 }))
+    portal: {
+      enabled: typeof candidate.portal?.enabled === 'boolean' ? candidate.portal.enabled : defaults.portal.enabled,
+      maxWidth: finiteNumber(candidate.portal?.maxWidth, defaults.portal.maxWidth, { min: 0.5, max: 8 }),
+      maxHeight: finiteNumber(candidate.portal?.maxHeight, defaults.portal.maxHeight, { min: 0.5, max: 8 }),
+      distance: finiteNumber(candidate.portal?.distance, defaults.portal.distance, { min: 0.6, max: 6 }),
+      verticalOffset: finiteNumber(candidate.portal?.verticalOffset, defaults.portal.verticalOffset, { min: -3, max: 3 }),
+      appearDuration: finiteNumber(candidate.portal?.appearDuration, defaults.portal.appearDuration, { min: 0.05, max: 3 }),
+      appearStartScale: finiteNumber(candidate.portal?.appearStartScale, defaults.portal.appearStartScale, { min: 0.1, max: 1 })
     },
-    glyphPlaque: {
-      enabled: typeof candidate.glyphPlaque?.enabled === 'boolean' ? candidate.glyphPlaque.enabled : defaults.glyphPlaque.enabled,
-      maxWidth: finiteNumber(candidate.glyphPlaque?.maxWidth, defaults.glyphPlaque.maxWidth, { min: 0.2, max: 4 }),
-      maxHeight: finiteNumber(candidate.glyphPlaque?.maxHeight, defaults.glyphPlaque.maxHeight, { min: 0.2, max: 3 }),
-      distance: finiteNumber(candidate.glyphPlaque?.distance, defaults.glyphPlaque.distance, { min: 0.4, max: 4 }),
-      verticalOffset: finiteNumber(candidate.glyphPlaque?.verticalOffset, defaults.glyphPlaque.verticalOffset, { min: -2, max: 1 }),
-      appearDuration: finiteNumber(candidate.glyphPlaque?.appearDuration, defaults.glyphPlaque.appearDuration, { min: 0.05, max: 3 }),
-      appearStartScale: finiteNumber(candidate.glyphPlaque?.appearStartScale, defaults.glyphPlaque.appearStartScale, { min: 0.1, max: 1 })
+    portalCanvas: {
+      enabled: typeof candidate.portalCanvas?.enabled === 'boolean' ? candidate.portalCanvas.enabled : defaults.portalCanvas.enabled,
+      width: finiteNumber(candidate.portalCanvas?.width, defaults.portalCanvas.width, { min: 0.5, max: 3 }),
+      height: finiteNumber(candidate.portalCanvas?.height, defaults.portalCanvas.height, { min: 0.3, max: 2 }),
+      offset: normalizeVector(candidate.portalCanvas?.offset, defaults.portalCanvas.offset),
+      canvasWidth: Math.round(finiteNumber(candidate.portalCanvas?.canvasWidth, defaults.portalCanvas.canvasWidth, { min: 512, max: 2048 })),
+      canvasHeight: Math.round(finiteNumber(candidate.portalCanvas?.canvasHeight, defaults.portalCanvas.canvasHeight, { min: 320, max: 1280 })),
+      titleFontSize: Math.round(finiteNumber(candidate.portalCanvas?.titleFontSize, defaults.portalCanvas.titleFontSize, { min: 36, max: 128 })),
+      bodyFontSize: Math.round(finiteNumber(candidate.portalCanvas?.bodyFontSize, defaults.portalCanvas.bodyFontSize, { min: 24, max: 72 })),
+      maxBodyLines: Math.round(finiteNumber(candidate.portalCanvas?.maxBodyLines, defaults.portalCanvas.maxBodyLines, { min: 1, max: 10 }))
+    },
+    locomotion: {
+      enabled: typeof candidate.locomotion?.enabled === 'boolean' ? candidate.locomotion.enabled : defaults.locomotion.enabled,
+      deadzone: finiteNumber(candidate.locomotion?.deadzone, defaults.locomotion.deadzone, { min: 0, max: 0.9 }),
+      moveSpeed: finiteNumber(candidate.locomotion?.moveSpeed, defaults.locomotion.moveSpeed, { min: 0, max: 10 }),
+      turnSpeed: finiteNumber(candidate.locomotion?.turnSpeed, defaults.locomotion.turnSpeed, { min: 0, max: 6 })
     }
   };
 }

@@ -37,7 +37,7 @@ camera.rotation.set(0.6, Math.PI / 2, 0);
 scene.add(camera);
 scene.updateMatrixWorld(true);
 const settings = {
-  enabled: true, width: 1.35, height: 0.85, distance: 1.4, monkeyVerticalGap: 0.4,
+  enabled: true, width: 1.35, height: 0.85, offset: { x: 0, y: 0.12, z: 0.018 },
   canvasWidth: 1024, canvasHeight: 640, titleFontSize: 72, bodyFontSize: 42, maxBodyLines: 6
 };
 const plaque = createVrSpatialPlaque({
@@ -46,12 +46,11 @@ const plaque = createVrSpatialPlaque({
 const sameObject = plaque.object;
 assert.equal(plaque.state, 'hidden');
 assert.equal(plaque.object.visible, false);
-const stoneBounds = new THREE.Box3(new THREE.Vector3(-0.6, -0.3, -0.1), new THREE.Vector3(0.6, 0.45, 0.1));
-assert.equal(plaque.show({ title: 'Title', body: 'Body' }, stoneBounds), true);
+assert.equal(plaque.show({ title: 'Title', body: 'Body' }), true);
 assert.equal(plaque.state, 'appearing');
 assert.ok(Math.abs(plaque.object.position.x) < 1e-9);
-assert.ok(Math.abs(plaque.object.position.y - 0.875) < 1e-9);
-assert.ok(Math.abs(plaque.object.position.z - 0.002) < 1e-9);
+assert.ok(Math.abs(plaque.object.position.y - 0.12) < 1e-9);
+assert.ok(Math.abs(plaque.object.position.z - 0.018) < 1e-9);
 assert.ok(Math.abs(plaque.object.rotation.x) < 1e-9);
 assert.ok(Math.abs(plaque.object.rotation.z) < 1e-9);
 const anchoredPosition = plaque.object.position.clone();
@@ -63,7 +62,7 @@ assert.equal(plaque.state, 'visible');
 assert.equal(plaque.object.material.opacity, 1);
 plaque.show({ title: 'Updated', body: 'Still one mesh' });
 assert.equal(plaque.object, sameObject);
-assert.equal(scene.children.filter((child) => child.name === 'VrSpatialPlaque').length, 1);
+assert.equal(scene.children.filter((child) => child.name === 'VrPortalCanvas').length, 1);
 plaque.reset();
 assert.equal(plaque.state, 'hidden');
 assert.equal(plaque.object.visible, false);
