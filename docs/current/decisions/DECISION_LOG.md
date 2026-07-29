@@ -35,3 +35,9 @@ Status: current binding decisions, not a patch chronology.
 1. Smooth joystick locomotion and deterministic squeeze crystal interaction are implemented as separate modules.
 2. Teleportation, jump, snap turn, physics, throwing, plaque raycasting, bridge building, VR audio, atmosphere, and galaxies remain excluded.
 3. Future stages must preserve the current separation between locomotion, crystal parenting, and any later world simulation.
+
+### 2026-07-29 — Widoczny kryształ pozostaje w relikwiarzu do jawnego release
+
+- **Decyzja:** insertion ustawia `inserted` i zachowuje widoczny obiekt także przy runtime fallback anchor; activation ustawia `active`, lecz nie usuwa obiektu. Tylko osobny przycisk release przechodzi do `released`, ukrywa i odpina kryształ.
+- **Powód:** rozdzielenie osadzenia, odczytu strony i opróżnienia socketu zapobiega natychmiastowej konsumpcji oraz pozwala użytkownikowi kontrolować cykl relikwiarza.
+- **Zakres:** informacja o przeczytaniu aktywnej strony pozostaje w `Set` bieżącego runtime'u i nie jest utrwalana.

@@ -36,6 +36,9 @@ export function createVrCrystalCollection({ scene, assetManager, controllers, po
   const targetQuaternion = new THREE.Quaternion();
   let disposed = false;
   let insertedInstance = null;
+  let fallbackAnchor = null;
+  let warnedFallbackAnchor = false;
+  const readPageIds = new Set();
   const activationCallback = onActivate ?? onConsume;
 
   function clearControllerHit(controllerRecord) {
@@ -118,13 +121,28 @@ export function createVrCrystalCollection({ scene, assetManager, controllers, po
       ? insertionSphere.containsPoint(crystalCenter)
       : portalDisplay.object.visible
         && crystalCenter.distanceTo(portalDisplay.getSocketWorldPosition(scratch)) <= portalDisplay.insertRadius;
-    if (inSocket && insertionSphere && insertionTarget?.crystalAnchor) {
+    if (inSocket) {
       if (insertedInstance) {
         scene.attach(instance.object);
         instance.state = 'available';
         return instance;
       }
-      const anchor = insertionTarget.crystalAnchor;
+      let anchor = insertionSphere && insertionTarget?.crystalAnchor ? insertionTarget.crystalAnchor : null;
+      if (!anchor) {
+        if (!warnedFallbackAnchor) {
+          console.warn('[Experience VR] Valid reliquary anchor is unavailable; using a visible runtime fallback anchor.');
+          warnedFallbackAnchor = true;
+        }
+        if (!fallbackAnchor) {
+          fallbackAnchor = new THREE.Object3D();
+          fallbackAnchor.name = 'VrReliquaryCrystalFallbackAnchor';
+          (insertionTarget?.object ?? scene).add(fallbackAnchor);
+        }
+        const worldPosition = insertionSphere?.center ?? portalDisplay.getSocketWorldPosition(scratch);
+        fallbackAnchor.position.copy(worldPosition);
+        fallbackAnchor.parent?.worldToLocal(fallbackAnchor.position);
+        anchor = fallbackAnchor;
+      }
       anchor.attach(instance.object);
       anchor.updateWorldMatrix(true, true);
       instance.model.updateWorldMatrix(true, true);
@@ -135,12 +153,6 @@ export function createVrCrystalCollection({ scene, assetManager, controllers, po
       instance.state = 'inserted';
       instance.object.visible = true;
       insertedInstance = instance;
-    } else if (inSocket) {
-      console.warn('[Experience VR] Valid reliquary anchor is unavailable; using immediate portal-socket crystal activation fallback.');
-      instance.state = 'consumed';
-      instance.object.visible = false;
-      instance.object.removeFromParent();
-      activationCallback?.(instance.page);
     } else {
       scene.attach(instance.object);
       instance.state = 'available';
@@ -264,6 +276,20 @@ export function createVrCrystalCollection({ scene, assetManager, controllers, po
     return true;
   }
 
+  function releaseInserted() {
+    const instance = insertedInstance;
+    if (!instance || !['inserted', 'active'].includes(instance.state)) return false;
+    if (instance.state === 'active') readPageIds.add(instance.page.id);
+    instance.state = 'released';
+    instance.object.visible = false;
+    instance.object.removeFromParent();
+    insertedInstance = null;
+    return true;
+  }
+
+  function hasReadPage(pageId) { return readPageIds.has(pageId); }
+  function getReadPageIds() { return [...readPageIds]; }
+
   function dispose() {
     if (disposed) return;
     reset();
@@ -275,5 +301,6 @@ export function createVrCrystalCollection({ scene, assetManager, controllers, po
     listeners.length = 0;
   }
 
-  return { instances, heldByController, spawn, update, grab, release, getInsertedInstance, activateInserted, reset, dispose };
+  return { instances, heldByController, spawn, update, grab, release, getInsertedInstance, activateInserted,
+    releaseInserted, hasReadPage, getReadPageIds, reset, dispose };
 }

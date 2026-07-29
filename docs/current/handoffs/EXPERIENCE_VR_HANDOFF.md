@@ -35,3 +35,7 @@ Previously confirmed hardware behavior includes session start, head tracking, sc
 ## Active exclusions and prohibitions
 
 A release/second button and read-page persistence remain deliberately outside this stage. Throwing, physics, collision, gravity, teleportation, jump, snap turn, bridge building, VR audio, atmosphere, and galaxies are outside this stage. Do not merge VR with Experience 3D, modify `src/experience3d.js`, move HTML/CSS overlays into VR, steer the tracked camera, stop glyph orbit, or restore geometric interaction markers.
+
+## Release kryształu relikwiarza
+
+Experience VR ładuje osobne modele activate i release przez `AssetManager`. Oba przyciski mają runtime scale `0.3` i symetryczne placementy (60° od osi portalu po każdej stronie, czyli 120° między kierunkami). Kryształ pozostaje widoczny po insertion i activation. Release po skonfigurowanym opóźnieniu usuwa wyłącznie osadzony kryształ, zwalnia socket oraz resetuje oba przyciski. Zbiór przeczytanych stron istnieje obecnie tylko w runtime, bez `localStorage` i UI.
