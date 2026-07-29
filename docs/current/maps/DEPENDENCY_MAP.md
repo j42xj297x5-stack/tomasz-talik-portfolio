@@ -63,3 +63,7 @@ The three modes consume stable portfolio IDs and content where applicable. Exper
 Resolution uses the stable glyph ID and page ID, never orbital index or current orbital position. Squeeze parenting is deterministic and contains no physics, gravity, collision, throw, or velocity dependency.
 
 - `experienceVr.js` → `createVrCrystalReliquary` authored root → `createVrReliquaryActivateButton` → `createVrCrystalCollection.activateInserted()` → portal canvas page update.
+
+- `experienceVr.js` → `createVrCrystalReliquary` → niezależne scale/placement rooty `createVrReliquaryActivateButton` i `createVrReliquaryReleaseButton`.
+- `createVrReliquaryReleaseButton` → `createVrCrystalCollection.releaseInserted()` → zwolnienie socketu i runtime'owy `readPageIds`.
+- Modele obu przycisków są dostarczane wyłącznie przez `assetManager` z manifestu deferred-warm.

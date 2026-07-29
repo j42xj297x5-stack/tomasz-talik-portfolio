@@ -52,13 +52,13 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
     distanceFromPortal: 0.5,
     forwardOffset: 1,
     floorOffset: 0,
+    buttons: { scale: 0.3, placementRadius: 0.9, placementAngleDegrees: 60, verticalOffset: 0 },
     activateButton: {
       enabled: true,
       rayMaxDistance: 3,
-      placementRadius: 1,
-      placementAngleDegrees: 45,
-      verticalOffset: 0
-    }
+      side: 'left'
+    },
+    releaseButton: { enabled: true, rayMaxDistance: 3, side: 'right', releaseDelaySeconds: 1 }
   },
   portalCanvas: {
     enabled: true,
@@ -183,17 +183,30 @@ export function normalizeExperienceVrSettings(candidate) {
       distanceFromPortal: finiteNumber(candidate.reliquary?.distanceFromPortal, defaults.reliquary.distanceFromPortal, { min: 0, max: 3 }),
       forwardOffset: finiteNumber(candidate.reliquary?.forwardOffset, defaults.reliquary.forwardOffset, { min: 0, max: 3 }),
       floorOffset: finiteNumber(candidate.reliquary?.floorOffset, defaults.reliquary.floorOffset, { min: -1, max: 1 }),
+      buttons: {
+        scale: finiteNumber(candidate.reliquary?.buttons?.scale, defaults.reliquary.buttons.scale, { min: 0.05, max: 1 }),
+        placementRadius: finiteNumber(candidate.reliquary?.buttons?.placementRadius
+          ?? candidate.reliquary?.activateButton?.placementRadius, defaults.reliquary.buttons.placementRadius, { min: 0, max: 3 }),
+        placementAngleDegrees: finiteNumber(candidate.reliquary?.buttons?.placementAngleDegrees
+          ?? candidate.reliquary?.activateButton?.placementAngleDegrees, defaults.reliquary.buttons.placementAngleDegrees, { min: 0, max: 89 }),
+        verticalOffset: finiteNumber(candidate.reliquary?.buttons?.verticalOffset
+          ?? candidate.reliquary?.activateButton?.verticalOffset, defaults.reliquary.buttons.verticalOffset, { min: -1, max: 1 })
+      },
       activateButton: {
         enabled: typeof candidate.reliquary?.activateButton?.enabled === 'boolean'
           ? candidate.reliquary.activateButton.enabled : defaults.reliquary.activateButton.enabled,
         rayMaxDistance: finiteNumber(candidate.reliquary?.activateButton?.rayMaxDistance,
           defaults.reliquary.activateButton.rayMaxDistance, { min: 0.3, max: 5 }),
-        placementRadius: finiteNumber(candidate.reliquary?.activateButton?.placementRadius,
-          defaults.reliquary.activateButton.placementRadius, { min: 0, max: 3 }),
-        placementAngleDegrees: finiteNumber(candidate.reliquary?.activateButton?.placementAngleDegrees,
-          defaults.reliquary.activateButton.placementAngleDegrees, { min: 0, max: 90 }),
-        verticalOffset: finiteNumber(candidate.reliquary?.activateButton?.verticalOffset,
-          defaults.reliquary.activateButton.verticalOffset, { min: -1, max: 1 })
+        side: candidate.reliquary?.activateButton?.side === 'right' ? 'right' : 'left'
+      },
+      releaseButton: {
+        enabled: typeof candidate.reliquary?.releaseButton?.enabled === 'boolean'
+          ? candidate.reliquary.releaseButton.enabled : defaults.reliquary.releaseButton.enabled,
+        rayMaxDistance: finiteNumber(candidate.reliquary?.releaseButton?.rayMaxDistance,
+          defaults.reliquary.releaseButton.rayMaxDistance, { min: 0.3, max: 5 }),
+        side: candidate.reliquary?.releaseButton?.side === 'left' ? 'left' : 'right',
+        releaseDelaySeconds: finiteNumber(candidate.reliquary?.releaseButton?.releaseDelaySeconds,
+          defaults.reliquary.releaseButton.releaseDelaySeconds, { min: 0, max: 3 })
       }
     },
     portalCanvas: {

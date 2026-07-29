@@ -14,13 +14,13 @@ assert.match(runtime, /cloneGltfScene\('vr-crystal-reliquary-model'\)/);
 assert.match(runtime, /insertionTarget: crystalReliquary/);
 assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.reliquary.forwardOffset, 1);
 assert.deepEqual(DEFAULT_EXPERIENCE_VR_SETTINGS.reliquary.activateButton, {
-  enabled: true, rayMaxDistance: 3, placementRadius: 1, placementAngleDegrees: 45, verticalOffset: 0
+  enabled: true, rayMaxDistance: 3, side: 'left'
 });
 const normalized = normalizeExperienceVrSettings({ schemaVersion: 1, reliquary: { enabled: false, distanceFromPortal: 0.75,
   forwardOffset: 9, floorOffset: 0.1, activateButton: { enabled: false, rayMaxDistance: 9, placementRadius: -2,
     placementAngleDegrees: 120, verticalOffset: -2 } } });
-assert.deepEqual(normalized.reliquary, { enabled: false, distanceFromPortal: 0.75, forwardOffset: 3, floorOffset: 0.1,
-  activateButton: { enabled: false, rayMaxDistance: 5, placementRadius: 0, placementAngleDegrees: 90, verticalOffset: -1 } });
+assert.deepEqual(normalized.reliquary.buttons, { scale: 0.3, placementRadius: 0, placementAngleDegrees: 89, verticalOffset: -1 });
+assert.deepEqual(normalized.reliquary.activateButton, { enabled: false, rayMaxDistance: 5, side: 'left' });
 
 const scene = new THREE.Scene();
 const portalObject = new THREE.Group();
@@ -61,10 +61,11 @@ assert.equal(reliquary.authoredRoot.name, 'VrCrystalReliquaryAuthoredRoot');
 assert.equal(source.parent, reliquary.authoredRoot);
 const companion = new THREE.Group(); companion.position.set(4, 5, 6); companion.rotation.set(0.1, 0.2, 0.3); companion.scale.set(2, 3, 4);
 const companionTransform = { position: companion.position.toArray(), rotation: companion.rotation.toArray(), scale: companion.scale.toArray() };
-assert.equal(reliquary.attachAuthoredCompanion(companion), companion);
+const attached = reliquary.attachCompanion({ id: 'activate', model: companion, settings: DEFAULT_EXPERIENCE_VR_SETTINGS.reliquary.buttons, side: 'left' });
+assert.equal(attached.model, companion);
 assert.equal(reliquary.buttonPlacementRoot.name, 'VrReliquaryActivateButtonPlacementRoot');
 assert.equal(reliquary.buttonPlacementRoot.parent, reliquary.authoredRoot);
-assert.equal(companion.parent, reliquary.buttonPlacementRoot);
+assert.equal(companion.parent, attached.scaleRoot);
 assert.deepEqual(companion.position.toArray(), companionTransform.position);
 assert.deepEqual(companion.rotation.toArray(), companionTransform.rotation);
 assert.deepEqual(companion.scale.toArray(), companionTransform.scale);
@@ -93,9 +94,9 @@ assert.ok(reliquary.getCrystalAnchorWorldPosition().distanceTo(anchor.getWorldPo
 const childCount = scene.children.length;
 const placementPosition = reliquary.buttonPlacementRoot.getWorldPosition(new THREE.Vector3());
 const buttonOffset = placementPosition.sub(reliquary.authoredRoot.getWorldPosition(new THREE.Vector3()));
-assert.ok(Math.abs(buttonOffset.dot(reliquary.portalLeft) - Math.SQRT1_2) < 1e-8);
-assert.ok(Math.abs(buttonOffset.dot(reliquary.portalForward) - Math.SQRT1_2) < 1e-8);
-assert.ok(Math.abs(Math.hypot(buttonOffset.x, buttonOffset.z) - 1) < 1e-8);
+assert.ok(Math.abs(buttonOffset.dot(reliquary.portalLeft) - Math.sin(Math.PI / 3) * 0.9) < 1e-8);
+assert.ok(Math.abs(buttonOffset.dot(reliquary.portalForward) - Math.cos(Math.PI / 3) * 0.9) < 1e-8);
+assert.ok(Math.abs(Math.hypot(buttonOffset.x, buttonOffset.z) - 0.9) < 1e-8);
 const placedOnce = reliquary.object.position.clone();
 const companionWorldOnce = companion.getWorldPosition(new THREE.Vector3());
 reliquary.reset(); reliquary.reset();
@@ -134,14 +135,14 @@ function testRelease({ target, releasePosition, expectedState }) {
   collection.dispose();
 }
 
-testRelease({ target: { object: { visible: true }, hasValidInsertZone: true,
+testRelease({ target: { object: Object.assign(new THREE.Group(), { visible: true }), hasValidInsertZone: true,
   getInsertZoneWorldSphere: () => new THREE.Sphere(new THREE.Vector3(4, 0, 0), 1) },
-releasePosition: new THREE.Vector3(4, 0, 0), expectedState: 'consumed' });
-testRelease({ target: { object: { visible: true }, hasValidInsertZone: true,
+releasePosition: new THREE.Vector3(4, 0, 0), expectedState: 'inserted' });
+testRelease({ target: { object: Object.assign(new THREE.Group(), { visible: true }), hasValidInsertZone: true,
   getInsertZoneWorldSphere: () => new THREE.Sphere(new THREE.Vector3(4, 0, 0), 0.1) },
 releasePosition: new THREE.Vector3(0, 0, 0), expectedState: 'available' });
-testRelease({ target: { object: { visible: false }, hasValidInsertZone: false },
-releasePosition: new THREE.Vector3(50, 0, 50), expectedState: 'consumed' });
+testRelease({ target: { object: Object.assign(new THREE.Group(), { visible: false }), hasValidInsertZone: false },
+releasePosition: new THREE.Vector3(50, 0, 50), expectedState: 'inserted' });
 
 reliquary.dispose();
 assert.equal(reliquary.object.parent, null);

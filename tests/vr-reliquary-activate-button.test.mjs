@@ -8,7 +8,7 @@ const asset = getPreloadAssets([ASSET_STAGES.DEFERRED_WARM]).find(({ id }) => id
 assert.deepEqual({ label: asset.label, path: asset.path, type: asset.type }, { label: 'VR crystal reliquary activate button', path: '/glb/portal_crystal_reliquary_button_activate.glb', type: 'model' });
 const runtime = await readFile(new URL('../src/experienceVr.js', import.meta.url), 'utf8');
 assert.match(runtime, /getGltf\('vr-crystal-reliquary-button-activate-model'\)/);
-assert.match(runtime, /attachAuthoredCompanion\(activateButtonModel, settings\.reliquary\.activateButton\)/);
+assert.match(runtime, /attachCompanion\(\{ id: 'activate', model: activateButtonModel, settings: settings\.reliquary\.buttons/);
 
 const scene = new THREE.Scene();
 const model = new THREE.Group();

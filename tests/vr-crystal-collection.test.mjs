@@ -26,7 +26,7 @@ const localizedPages = getExperienceVrPages('spotify-digger').map((page) => reso
 assert.ok(localizedPages.every(({ title, body }) => title.length > 0 && body.length > 0));
 assert.equal(localizedPages[0].title, localizedNode.title);
 assert.equal(localizedPages[0].body, localizedNode.leadText || localizedNode.draftText);
-const manifestCrystals = getPreloadAssets([ASSET_STAGES.DEFERRED_WARM]).filter(({ id }) => id.startsWith('vr-crystal-') && id !== 'vr-crystal-reliquary-model' && id !== 'vr-crystal-reliquary-button-activate-model');
+const manifestCrystals = getPreloadAssets([ASSET_STAGES.DEFERRED_WARM]).filter(({ id }) => id.startsWith('vr-crystal-') && !id.startsWith('vr-crystal-reliquary'));
 assert.deepEqual(manifestCrystals.map(({ id, path }) => ({ id, path })), experienceVrPages.map((page) => ({ id: page.crystalAssetId, path: page.crystalModelPath })));
 
 const settings = { enabled: true, rayGrabMaxDistance: 1.8, pullDuration: 0.25, targetScale: 1.04, scaleMin: 0.22, scaleMax: 0.28, spawnWidth: 1.45, spawnDepth: 0.85, minimumSpacing: 0.38, frontDistance: 1.55, materializeDuration: 0.55, materializeStagger: 0.12, materializeStartScale: 0.18, materializeRise: 0.12, materializeYaw: 0.35, holdOffset: { x: 0, y: 0, z: -0.09 } };
@@ -118,9 +118,12 @@ assert.equal(spawned[0].state, 'available');
 assert.ok(spawned[0].object.getWorldPosition(new THREE.Vector3()).distanceTo(beforeRelease) < 1e-8);
 right.grip.position.copy(portalObject.position).add(new THREE.Vector3(0, 0, 0.09)); scene.updateMatrixWorld(true);
 collection.release(right);
-assert.equal(spawned[1].state, 'consumed');
+assert.equal(spawned[1].state, 'inserted');
+assert.equal(spawned[1].object.visible, true);
+assert.deepEqual(consumed, []);
+assert.equal(collection.releaseInserted(), true);
+assert.equal(spawned[1].state, 'released');
 assert.equal(spawned[1].object.visible, false);
-assert.deepEqual(consumed, [spawned[1].page.id]);
 
 collection.reset();
 assert.equal(collection.instances.length, 0);
@@ -146,5 +149,8 @@ console.log('VR crystal collection assertions passed');
   assert.equal(second.state, 'available', 'a second crystal is rejected while occupied');
   assert.equal(insertedCollection.activateInserted(), true); assert.equal(first.state, 'active'); assert.deepEqual(activated, ['insert-one']);
   assert.equal(insertedCollection.activateInserted(), false); assert.deepEqual(activated, ['insert-one']);
+  assert.equal(insertedCollection.releaseInserted(), true); assert.equal(insertedCollection.getInsertedInstance(), null);
+  assert.equal(insertedCollection.hasReadPage('insert-one'), true);
+  assert.deepEqual(insertedCollection.getReadPageIds(), ['insert-one']);
   insertedCollection.dispose();
 }

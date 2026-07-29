@@ -20,6 +20,7 @@ import { createVrLocomotion } from './xr/createVrLocomotion.js';
 import { createVrCrystalCollection } from './xr/createVrCrystalCollection.js';
 import { createVrCrystalReliquary } from './xr/createVrCrystalReliquary.js';
 import { createVrReliquaryActivateButton } from './xr/createVrReliquaryActivateButton.js';
+import { createVrReliquaryReleaseButton } from './xr/createVrReliquaryReleaseButton.js';
 import { getExperienceVrPages, resolveExperienceVrPage } from './content/experienceVrPages.js';
 
 const app = document.querySelector('#app');
@@ -86,7 +87,7 @@ const centralPlaceholder = createCentralObject();
 worldRoot.add(centralPlaceholder);
 
 const vrAssets = getPreloadAssets([...INITIAL_PRELOAD_GROUPS, ...DEFERRED_PRELOAD_GROUPS])
-  .filter(({ id }) => id === 'gltf-loader-module' || id === 'monkey-model' || id === 'vr-portal-model' || id === 'vr-crystal-reliquary-model' || id === 'vr-crystal-reliquary-button-activate-model' || id.startsWith('glyph-') || id.startsWith('vr-crystal-'))
+  .filter(({ id }) => id === 'gltf-loader-module' || id === 'monkey-model' || id === 'vr-portal-model' || id === 'vr-crystal-reliquary-model' || id.startsWith('vr-crystal-reliquary-button-') || id.startsWith('glyph-') || id.startsWith('vr-crystal-'))
   .map((asset) => ({ ...asset, critical: asset.id === 'gltf-loader-module' }));
 const loadingDiagnostics = createLoadingDiagnostics(vrAssets);
 const assetManager = createAssetManager({ diagnostics: loadingDiagnostics });
@@ -143,7 +144,8 @@ const crystalCollection = createVrCrystalCollection({
 });
 const activateButtonGltf = assetManager.getGltf('vr-crystal-reliquary-button-activate-model');
 const activateButtonModel = assetManager.cloneGltfScene('vr-crystal-reliquary-button-activate-model');
-crystalReliquary.attachAuthoredCompanion(activateButtonModel, settings.reliquary.activateButton);
+crystalReliquary.attachCompanion({ id: 'activate', model: activateButtonModel, settings: settings.reliquary.buttons,
+  side: settings.reliquary.activateButton.side });
 const activateButton = createVrReliquaryActivateButton({
   buttonModel: activateButtonModel,
   animations: activateButtonGltf?.animations ?? [],
@@ -152,6 +154,20 @@ const activateButton = createVrReliquaryActivateButton({
   settings: settings.reliquary.activateButton,
   canActivate: () => crystalCollection.getInsertedInstance()?.state === 'inserted',
   onActivate: () => crystalCollection.activateInserted()
+});
+const releaseButtonGltf = assetManager.getGltf('vr-crystal-reliquary-button-release-model');
+const releaseButtonModel = assetManager.cloneGltfScene('vr-crystal-reliquary-button-release-model');
+crystalReliquary.attachCompanion({ id: 'release', model: releaseButtonModel, settings: settings.reliquary.buttons,
+  side: settings.reliquary.releaseButton.side });
+const releaseButton = createVrReliquaryReleaseButton({
+  buttonModel: releaseButtonModel,
+  animations: releaseButtonGltf?.animations ?? [],
+  reliquary: crystalReliquary,
+  controllers: vrControllers.controllers,
+  settings: settings.reliquary.releaseButton,
+  canRelease: () => ['inserted', 'active'].includes(crystalCollection.getInsertedInstance()?.state),
+  onRelease: () => crystalCollection.releaseInserted(),
+  onReleaseComplete: () => activateButton.reset()
 });
 let activatedEntryGlyph = null;
 const entryTransition = createVrEntryTransition({
@@ -202,6 +218,7 @@ function renderFrame() {
   glyphInteraction.update();
   crystalCollection.update(delta);
   activateButton.update(delta);
+  releaseButton.update(delta);
   glyphInteraction.setEntryReady(entryReady);
   glyphLights.update({
     hovered: glyphInteraction.hoveredGlyphs,
@@ -228,6 +245,7 @@ function handleSessionEnd() {
   entryTransition.reset();
   crystalCollection.reset();
   activateButton.reset();
+  releaseButton.reset();
   crystalReliquary.reset();
   restorePortalWaitingState();
   locomotion.reset();
@@ -245,6 +263,7 @@ async function enterVr() {
   entryTransition.reset();
   crystalCollection.reset();
   activateButton.reset();
+  releaseButton.reset();
   crystalReliquary.reset();
   restorePortalWaitingState();
   locomotion.reset();
@@ -284,6 +303,7 @@ async function enterVr() {
     entryTransition.reset();
     crystalCollection.reset();
     activateButton.reset();
+    releaseButton.reset();
     crystalReliquary.reset();
     restorePortalWaitingState();
     locomotion.reset();
@@ -295,4 +315,12 @@ async function enterVr() {
 
 enterButton.addEventListener('click', enterVr);
 exitButton.addEventListener('click', () => { void activeSession?.end(); });
+window.addEventListener('pagehide', () => {
+  activateButton.reset();
+  releaseButton.reset();
+  activateButton.dispose();
+  releaseButton.dispose();
+  crystalCollection.dispose();
+  crystalReliquary.dispose();
+}, { once: true });
 showReadyState();
