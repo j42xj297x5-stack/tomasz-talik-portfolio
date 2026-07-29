@@ -23,10 +23,10 @@ Status: current binding decisions, not a patch chronology.
 3. Two local-`-Z` controller rays hit current GLB meshes or child fallback colliders. Hits resolve through an explicit object-to-glyph-root mapping; static stored positions are not raycast targets.
 4. Feedback is provided by warm point lights. Geometric hover/readiness markers are not part of the accepted design.
 5. Entry moves the `playerRig`, compensating for the physical XR head offset. With `targetRadiusFactor = 0.76`, the current destination is about `5.8` units from ring center.
-6. Arrival shows one portal and its existing internal canvas; the selected stone plaque and separate canvas above the monkey are no longer part of this flow.
+6. One grounded portal and its existing internal canvas are visible from initial scene readiness, fixed about 2 m to the monkey’s right from the configured spawn view. Arrival never moves or hides it; the selected stone plaque and separate canvas above the monkey are not part of this flow.
 7. Session exit/re-entry resets mutable state and reuses runtime objects without duplication.
 8. VR pages are a separate variable-length mapping keyed by stable glyph ID. The MVP maps 15 preloaded crystal assets to concise selectors over localized shared portfolio content.
-9. Arrival spawns only the activated glyph's page crystals. Deterministic bounds-based placement keeps them on floor Y=0 with individual 0.22–0.28 scale.
+9. Arrival spawns only the activated glyph’s page crystals in front of the monkey toward configured spawn. Deterministic bounds-based placement keeps their authored models on floor Y=0 with individual 0.22–0.28 scale; staggered wrapper materialization precedes the interactive `available` state.
 10. Trigger remains glyph-ray activation. Squeeze performs nearest grip-space grab; release either preserves the crystal's world transform or consumes it at the invisible bounds-derived portal socket and updates the existing canvas.
 11. Crystal interaction is explicitly transform/parenting based: no physics engine, gravity, collision, throwing, or velocity.
 

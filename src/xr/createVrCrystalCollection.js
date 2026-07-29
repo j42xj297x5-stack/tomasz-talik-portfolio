@@ -131,15 +131,17 @@ export function createVrCrystalCollection({ scene, assetManager, controllers, po
     listeners.push({ controllerRecord, squeezeStart, squeezeEnd });
   });
 
-  function spawn(pages, { playerPosition, portalPosition }) {
+  function spawn(pages, { anchorObject, spawnPosition }) {
     reset();
     if (disposed || !settings.enabled) return [];
-    const forward = new THREE.Vector3().subVectors(portalPosition, playerPosition);
+    const anchorCenter = new THREE.Box3().setFromObject(anchorObject).getCenter(new THREE.Vector3());
+    const configuredSpawn = new THREE.Vector3(spawnPosition.x, spawnPosition.y, spawnPosition.z);
+    const forward = new THREE.Vector3().subVectors(configuredSpawn, anchorCenter);
     forward.y = 0;
     if (forward.lengthSq() < 1e-8) forward.set(0, 0, -1);
     forward.normalize();
     const right = new THREE.Vector3(-forward.z, 0, forward.x);
-    const center = new THREE.Vector3().lerpVectors(playerPosition, portalPosition, 0.52);
+    const center = anchorCenter.clone().addScaledVector(forward, settings.frontDistance);
     center.y = 0;
     const occupied = [];
     pages.forEach((page, index) => {
@@ -168,10 +170,16 @@ export function createVrCrystalCollection({ scene, assetManager, controllers, po
         z = Math.max(-settings.spawnDepth / 2, Math.min(settings.spawnDepth / 2, transform.z + Math.sin(angle) * settings.minimumSpacing));
       }
       occupied.push({ x, z });
-      object.position.copy(center).addScaledVector(right, x).addScaledVector(forward, z + (index % 2) * 0.035);
-      object.position.y = 0;
+      const targetPosition = center.clone().addScaledVector(right, x).addScaledVector(forward, z + (index % 2) * 0.035);
+      targetPosition.y = 0;
+      object.position.copy(targetPosition);
+      object.position.y -= settings.materializeRise;
+      object.scale.setScalar(settings.materializeStartScale);
+      const materializeYaw = (unit(hashVrPageId(page.id), 6) - 0.5) * 2 * settings.materializeYaw;
+      object.rotation.y = -materializeYaw;
       scene.add(object);
-      const instance = { page, object, model, state: 'available', heldBy: null, highlighted: false, initialTransform: object.matrix.clone() };
+      const instance = { page, object, model, state: 'materializing', heldBy: null, highlighted: false,
+        materializeElapsed: -index * settings.materializeStagger, materializeYaw, targetPosition, initialTransform: object.matrix.clone() };
       instances.push(instance);
       object.traverse((child) => objectToCrystal.set(child, instance));
     });
@@ -182,6 +190,17 @@ export function createVrCrystalCollection({ scene, assetManager, controllers, po
     if (disposed || !instances.length) {
       controllers.forEach(clearControllerHit);
       return;
+    }
+    const elapsedDelta = Math.max(0, delta);
+    for (const instance of instances) {
+      if (instance.state !== 'materializing') continue;
+      instance.materializeElapsed += elapsedDelta;
+      const progress = Math.max(0, Math.min(1, instance.materializeElapsed / settings.materializeDuration));
+      const eased = progress * progress * (3 - 2 * progress);
+      instance.object.scale.setScalar(settings.materializeStartScale + (1 - settings.materializeStartScale) * eased);
+      instance.object.position.y = instance.targetPosition.y - settings.materializeRise * (1 - eased);
+      instance.object.rotation.y = instance.materializeYaw * (eased - 1);
+      if (progress === 1) instance.state = 'available';
     }
     updateTargets();
     for (const instance of heldByController.values()) {
