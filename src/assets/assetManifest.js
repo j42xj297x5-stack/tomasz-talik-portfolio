@@ -68,6 +68,7 @@ const criticalInitialAssets = Object.freeze([
 
 const deferredWarmAssets = Object.freeze([
   withStage({ id: 'vr-portal-model', label: 'VR arrival portal model', path: '/glb/portal.glb', type: 'model' }, ASSET_STAGES.DEFERRED_WARM),
+  withStage({ id: 'vr-crystal-reliquary-model', label: 'VR crystal reliquary model', path: '/glb/portal_crystal_reliquary.glb', type: 'model' }, ASSET_STAGES.DEFERRED_WARM),
   ...experienceVrPages.map((page) => withStage({
     id: page.crystalAssetId,
     label: `${page.glyphId} VR crystal page ${page.order}`,

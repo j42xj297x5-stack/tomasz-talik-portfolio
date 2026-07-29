@@ -18,6 +18,7 @@ import { createVrSpatialPlaque } from './xr/createVrSpatialPlaque.js';
 import { createVrPortalDisplay } from './xr/createVrPortalDisplay.js';
 import { createVrLocomotion } from './xr/createVrLocomotion.js';
 import { createVrCrystalCollection } from './xr/createVrCrystalCollection.js';
+import { createVrCrystalReliquary } from './xr/createVrCrystalReliquary.js';
 import { getExperienceVrPages, resolveExperienceVrPage } from './content/experienceVrPages.js';
 
 const app = document.querySelector('#app');
@@ -84,7 +85,7 @@ const centralPlaceholder = createCentralObject();
 worldRoot.add(centralPlaceholder);
 
 const vrAssets = getPreloadAssets([...INITIAL_PRELOAD_GROUPS, ...DEFERRED_PRELOAD_GROUPS])
-  .filter(({ id }) => id === 'gltf-loader-module' || id === 'monkey-model' || id === 'vr-portal-model' || id.startsWith('glyph-') || id.startsWith('vr-crystal-'))
+  .filter(({ id }) => id === 'gltf-loader-module' || id === 'monkey-model' || id === 'vr-portal-model' || id === 'vr-crystal-reliquary-model' || id.startsWith('glyph-') || id.startsWith('vr-crystal-'))
   .map((asset) => ({ ...asset, critical: asset.id === 'gltf-loader-module' }));
 const loadingDiagnostics = createLoadingDiagnostics(vrAssets);
 const assetManager = createAssetManager({ diagnostics: loadingDiagnostics });
@@ -124,9 +125,16 @@ function restorePortalWaitingState() {
   portalCanvas.show({ title: copy.crystalInstructionTitle, body: copy.crystalInstructionBody });
 }
 restorePortalWaitingState();
+const crystalReliquary = createVrCrystalReliquary({
+  scene,
+  reliquaryModel: assetManager.cloneGltfScene('vr-crystal-reliquary-model'),
+  portalDisplay,
+  spawnPosition: settings.spawn.position,
+  settings: settings.reliquary
+});
 const locomotion = createVrLocomotion({ playerRig, renderer, camera, settings: settings.locomotion });
 const crystalCollection = createVrCrystalCollection({
-  scene, assetManager, controllers: vrControllers.controllers, portalDisplay, settings: settings.crystals,
+  scene, assetManager, controllers: vrControllers.controllers, portalDisplay, insertionTarget: crystalReliquary, settings: settings.crystals,
   onConsume: (page) => {
     const node = resolvedPortfolioNodes.find(({ id }) => id === page.glyphId);
     portalCanvas.show(resolveExperienceVrPage(page, node));
@@ -205,6 +213,7 @@ function handleSessionEnd() {
   activeSession = null;
   entryTransition.reset();
   crystalCollection.reset();
+  crystalReliquary.reset();
   restorePortalWaitingState();
   locomotion.reset();
   playerRig.position.set(settings.spawn.position.x, settings.spawn.position.y, settings.spawn.position.z);
@@ -220,6 +229,7 @@ async function enterVr() {
   if (activeSession) return;
   entryTransition.reset();
   crystalCollection.reset();
+  crystalReliquary.reset();
   restorePortalWaitingState();
   locomotion.reset();
   playerRig.position.set(settings.spawn.position.x, settings.spawn.position.y, settings.spawn.position.z);
@@ -257,6 +267,7 @@ async function enterVr() {
     clock.stop();
     entryTransition.reset();
     crystalCollection.reset();
+    crystalReliquary.reset();
     restorePortalWaitingState();
     locomotion.reset();
     status.textContent = copy.error;

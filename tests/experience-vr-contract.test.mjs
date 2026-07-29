@@ -49,7 +49,7 @@ assert.doesNotMatch(vr, /camera\.rotation|camera\.quaternion|camera\.lookAt/);
 assert.doesNotMatch(entryTransition, /camera\.(position|rotation|quaternion)\.(set|copy)|playerRig\.rotation/);
 assert.match(vr, /onEntryGlyphActivated:[\s\S]*activatedEntryGlyph = glyphInteraction\.activatedEntryGlyph;[\s\S]*entryTransition\.start\(\)/);
 assert.match(vr, /function handleSessionEnd\(\)[\s\S]*entryTransition\.reset\(\)/);
-assert.match(vr, /entryTransition\.reset\(\);\s*crystalCollection\.reset\(\);\s*restorePortalWaitingState\(\);\s*locomotion\.reset\(\);\s*playerRig\.position\.set\(settings\.spawn\.position\.x/);
+assert.match(vr, /entryTransition\.reset\(\);\s*crystalCollection\.reset\(\);\s*crystalReliquary\.reset\(\);\s*restorePortalWaitingState\(\);\s*locomotion\.reset\(\);\s*playerRig\.position\.set\(settings\.spawn\.position\.x/);
 assert.match(vr, /function handleSessionEnd\(\)[\s\S]*restorePortalWaitingState\(\)/);
 assert.match(vr, /entryTransition\.update\(delta\)/);
 assert.match(vr, /crystalCollection\.update\(delta\)/);

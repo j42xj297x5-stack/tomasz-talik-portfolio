@@ -47,6 +47,11 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
     appearStartScale: 0.92,
     socket: { xFactor: 0, yFactor: -0.34, zFactor: 0.58, insertRadius: 0.28 }
   },
+  reliquary: {
+    enabled: true,
+    distanceFromPortal: 0.5,
+    floorOffset: 0
+  },
   portalCanvas: {
     enabled: true,
     width: 1.35,
@@ -164,6 +169,11 @@ export function normalizeExperienceVrSettings(candidate) {
         zFactor: finiteNumber(candidate.portal?.socket?.zFactor, defaults.portal.socket.zFactor, { min: -2, max: 2 }),
         insertRadius: finiteNumber(candidate.portal?.socket?.insertRadius, defaults.portal.socket.insertRadius, { min: 0.05, max: 1 })
       }
+    },
+    reliquary: {
+      enabled: typeof candidate.reliquary?.enabled === 'boolean' ? candidate.reliquary.enabled : defaults.reliquary.enabled,
+      distanceFromPortal: finiteNumber(candidate.reliquary?.distanceFromPortal, defaults.reliquary.distanceFromPortal, { min: 0, max: 3 }),
+      floorOffset: finiteNumber(candidate.reliquary?.floorOffset, defaults.reliquary.floorOffset, { min: -1, max: 1 })
     },
     portalCanvas: {
       enabled: typeof candidate.portalCanvas?.enabled === 'boolean' ? candidate.portalCanvas.enabled : defaults.portalCanvas.enabled,
