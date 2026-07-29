@@ -17,6 +17,7 @@ const normalized = normalizeExperienceVrSettings({
   controllers: { enabled: false, rayLength: 0, rayOpacity: 4, idleScale: 'bad', activeScale: 99 },
   entryTransition: { enabled: false, durationSeconds: 99, target: { x: 2, z: 'bad' }, easing: 'linear' },
   portal: { enabled: false, maxWidth: 0, maxHeight: 20, distanceFromAnchor: 0, forwardBias: 9, floorOffset: -9, appearDuration: 0, appearStartScale: 9 },
+  reliquary: { forwardOffset: -3, activateButton: { placementRadius: 8, placementAngleDegrees: -4, verticalOffset: 7 } },
   portalCanvas: {
     enabled: false, width: 0, height: 9, distanceFromAnchor: 0, forwardBias: 9, floorOffset: -9,
     canvasWidth: 3000.6, canvasHeight: 100, titleFontSize: 10, bodyFontSize: 200, maxBodyLines: 0
@@ -50,6 +51,11 @@ assert.deepEqual(normalized.portal, {
 assert.deepEqual(normalized.portalCanvas, {
   enabled: false, width: 0.5, height: 2, offset: { x: 0, y: 0.12, z: 0.018 },
   canvasWidth: 2048, canvasHeight: 320, titleFontSize: 36, bodyFontSize: 72, maxBodyLines: 1
+});
+assert.deepEqual(normalized.reliquary, {
+  ...DEFAULT_EXPERIENCE_VR_SETTINGS.reliquary,
+  forwardOffset: 0,
+  activateButton: { ...DEFAULT_EXPERIENCE_VR_SETTINGS.reliquary.activateButton, placementRadius: 3, placementAngleDegrees: 0, verticalOffset: 1 }
 });
 assert.deepEqual(normalized.locomotion, DEFAULT_EXPERIENCE_VR_SETTINGS.locomotion);
 assert.deepEqual(normalized.crystals, {

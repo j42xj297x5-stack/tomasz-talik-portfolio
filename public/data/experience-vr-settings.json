@@ -46,8 +46,15 @@
   "reliquary": {
     "enabled": true,
     "distanceFromPortal": 0.5,
+    "forwardOffset": 1.0,
     "floorOffset": 0,
-    "activateButton": { "enabled": true, "rayMaxDistance": 3 }
+    "activateButton": {
+      "enabled": true,
+      "rayMaxDistance": 3,
+      "placementRadius": 1.0,
+      "placementAngleDegrees": 45,
+      "verticalOffset": 0
+    }
   },
   "portalCanvas": {
     "enabled": true,
