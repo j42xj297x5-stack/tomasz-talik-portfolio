@@ -61,25 +61,25 @@
   },
   "reliquary": {
     "enabled": true,
-    "distanceFromPortal": 0.5,
-    "forwardOffset": 1.0,
-    "floorOffset": 0,
+    "distanceFromPortal": 1.5,
+    "heightOffset": 0.5,
+    "buttons": {
+      "scale": 0.3,
+      "forwardDistance": 1.0,
+      "lateralOffset": 0.5,
+      "verticalOffset": 0
+    },
     "activateButton": {
       "enabled": true,
       "rayMaxDistance": 3,
       "side": "left"
     },
-    "buttons": {
-      "scale": 0.3,
-      "placementRadius": 0.9,
-      "placementAngleDegrees": 60,
-      "verticalOffset": 0
-    },
     "releaseButton": {
       "enabled": true,
       "rayMaxDistance": 3,
       "side": "right",
-      "releaseDelaySeconds": 1
+      "releaseDelaySeconds": 1,
+      "hitAreaScale": 2
     }
   },
   "portalCanvas": {

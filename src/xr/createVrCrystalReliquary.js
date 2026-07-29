@@ -44,9 +44,16 @@ export function createVrCrystalReliquary({ scene, reliquaryModel, portalDisplay,
   const object = new THREE.Group();
   object.name = 'VrCrystalReliquary';
   scene.add(object);
+  const modelRoot = new THREE.Group();
+  modelRoot.name = 'VrCrystalReliquaryModelRoot';
+  modelRoot.position.y = settings.heightOffset ?? 0.5;
+  object.add(modelRoot);
   const authoredRoot = new THREE.Group();
   authoredRoot.name = 'VrCrystalReliquaryAuthoredRoot';
-  object.add(authoredRoot);
+  modelRoot.add(authoredRoot);
+  const companionsRoot = new THREE.Group();
+  companionsRoot.name = 'VrCrystalReliquaryCompanionsRoot';
+  object.add(companionsRoot);
   const model = reliquaryModel ?? null;
   const insertZone = findNamedObject(model, INSERT_ZONE_NAME);
   const authoredCrystalAnchor = findNamedObject(model, ANCHOR_NAME);
@@ -76,7 +83,6 @@ export function createVrCrystalReliquary({ scene, reliquaryModel, portalDisplay,
   }
 
   const portalPosition = new THREE.Vector3();
-  const direction = new THREE.Vector3();
   const configuredSpawn = new THREE.Vector3(spawnPosition?.x ?? 0, spawnPosition?.y ?? 0, spawnPosition?.z ?? 1);
   const portalForward = new THREE.Vector3();
   const portalLeft = new THREE.Vector3();
@@ -90,14 +96,12 @@ export function createVrCrystalReliquary({ scene, reliquaryModel, portalDisplay,
   let disposed = false;
 
   function updateButtonPlacement() {
-    authoredRoot.getWorldQuaternion(inversePlacementQuaternion).invert();
+    companionsRoot.getWorldQuaternion(inversePlacementQuaternion).invert();
     for (const companion of companions.values()) {
       const placement = companion.settings ?? settings.buttons ?? {};
-      const radius = placement.placementRadius ?? 0.9;
-      const angle = THREE.MathUtils.degToRad(placement.placementAngleDegrees ?? 60);
       const sideSign = companion.side === 'right' ? -1 : 1;
-      buttonWorldOffset.copy(portalLeft).multiplyScalar(sideSign * Math.sin(angle) * radius)
-        .addScaledVector(portalForward, Math.cos(angle) * radius);
+      buttonWorldOffset.copy(portalForward).multiplyScalar(placement.forwardDistance ?? 1)
+        .addScaledVector(portalLeft, sideSign * (placement.lateralOffset ?? 0.5));
       buttonWorldOffset.y = placement.verticalOffset ?? 0;
       companion.placementRoot.position.copy(buttonWorldOffset).applyQuaternion(inversePlacementQuaternion);
     }
@@ -118,12 +122,9 @@ export function createVrCrystalReliquary({ scene, reliquaryModel, portalDisplay,
     portalForward.normalize();
     if (towardSpawn.lengthSq() > 1e-8 && portalForward.dot(towardSpawn) < 0) portalForward.negate();
     portalLeft.crossVectors(portalForward, worldUp).normalize();
-    direction.copy(towardSpawn);
-    if (direction.lengthSq() < 1e-8) direction.copy(portalForward);
-    direction.normalize();
-    object.position.copy(portalPosition).addScaledVector(direction, settings.distanceFromPortal)
-      .addScaledVector(portalForward, settings.forwardOffset ?? 1);
-    object.position.y = settings.floorOffset;
+    object.position.copy(portalPosition).addScaledVector(portalForward, settings.distanceFromPortal);
+    object.position.y = 0;
+    modelRoot.position.y = settings.heightOffset ?? 0.5;
     object.quaternion.copy(portalQuaternion);
     object.visible = true;
     object.updateWorldMatrix(true, true);
@@ -141,7 +142,7 @@ export function createVrCrystalReliquary({ scene, reliquaryModel, portalDisplay,
     const scaleRoot = new THREE.Group();
     scaleRoot.name = `VrReliquary${id[0].toUpperCase()}${id.slice(1)}ButtonScaleRoot`;
     placementRoot.add(scaleRoot);
-    authoredRoot.add(placementRoot);
+    companionsRoot.add(placementRoot);
     scaleRoot.add(companionModel);
     const companionBounds = getCompanionVisibleBounds(companionModel);
     if (!companionBounds.isEmpty()) {
@@ -184,7 +185,7 @@ export function createVrCrystalReliquary({ scene, reliquaryModel, portalDisplay,
   }
 
   place();
-  return { object, authoredRoot, model, insertZone, authoredCrystalAnchor, crystalAnchor: runtimeCrystalAnchor,
+  return { object, modelRoot, authoredRoot, companionsRoot, model, insertZone, authoredCrystalAnchor, crystalAnchor: runtimeCrystalAnchor,
     runtimeCrystalAnchor, hasValidInsertZone, portalForward, portalLeft, place, reset, dispose,
     attachCompanion,
     get buttonPlacementRoot() { return companions.get('activate')?.placementRoot ?? null; },

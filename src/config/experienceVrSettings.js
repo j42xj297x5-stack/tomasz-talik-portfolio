@@ -1,5 +1,7 @@
 import { publicPath } from '../utils/publicPath.js';
 
+const THREE_MATH_DEG_TO_RAD = Math.PI / 180;
+
 export const EXPERIENCE_VR_SETTINGS_SCHEMA_VERSION = 1;
 
 export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
@@ -49,10 +51,9 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
   },
   reliquary: {
     enabled: true,
-    distanceFromPortal: 0.5,
-    forwardOffset: 1,
-    floorOffset: 0,
-    buttons: { scale: 0.3, placementRadius: 0.9, placementAngleDegrees: 60, verticalOffset: 0 },
+    distanceFromPortal: 1.5,
+    heightOffset: 0.5,
+    buttons: { scale: 0.3, forwardDistance: 1, lateralOffset: 0.5, verticalOffset: 0 },
     activateButton: {
       enabled: true,
       rayMaxDistance: 3,
@@ -114,6 +115,23 @@ export function normalizeExperienceVrSettings(candidate) {
   if (!candidate || candidate.schemaVersion !== EXPERIENCE_VR_SETTINGS_SCHEMA_VERSION) {
     return structuredClone(defaults);
   }
+
+  const candidateReliquary = candidate.reliquary ?? {};
+  const hasLegacyForwardOffset = Number.isFinite(candidateReliquary.forwardOffset);
+  const legacyForwardOffset = hasLegacyForwardOffset ? candidateReliquary.forwardOffset : 0;
+  const distanceBase = Number.isFinite(candidateReliquary.distanceFromPortal)
+    ? candidateReliquary.distanceFromPortal
+    : (hasLegacyForwardOffset ? 0.5 : defaults.reliquary.distanceFromPortal);
+  const distanceFromPortal = finiteNumber(
+    distanceBase + legacyForwardOffset,
+    defaults.reliquary.distanceFromPortal,
+    { min: 0, max: 5 }
+  );
+  const legacyButtons = candidateReliquary.buttons ?? candidateReliquary.activateButton ?? {};
+  const hasLegacyAngularPlacement = Number.isFinite(legacyButtons.placementRadius)
+    || Number.isFinite(legacyButtons.placementAngleDegrees);
+  const legacyRadius = finiteNumber(legacyButtons.placementRadius, defaults.reliquary.buttons.forwardDistance, { min: 0, max: 3 });
+  const legacyAngle = THREE_MATH_DEG_TO_RAD * finiteNumber(legacyButtons.placementAngleDegrees, 0, { min: 0, max: 89 });
 
   return {
     schemaVersion: EXPERIENCE_VR_SETTINGS_SCHEMA_VERSION,
@@ -179,18 +197,20 @@ export function normalizeExperienceVrSettings(candidate) {
       }
     },
     reliquary: {
-      enabled: typeof candidate.reliquary?.enabled === 'boolean' ? candidate.reliquary.enabled : defaults.reliquary.enabled,
-      distanceFromPortal: finiteNumber(candidate.reliquary?.distanceFromPortal, defaults.reliquary.distanceFromPortal, { min: 0, max: 3 }),
-      forwardOffset: finiteNumber(candidate.reliquary?.forwardOffset, defaults.reliquary.forwardOffset, { min: 0, max: 3 }),
-      floorOffset: finiteNumber(candidate.reliquary?.floorOffset, defaults.reliquary.floorOffset, { min: -1, max: 1 }),
+      enabled: typeof candidateReliquary.enabled === 'boolean' ? candidateReliquary.enabled : defaults.reliquary.enabled,
+      distanceFromPortal,
+      heightOffset: finiteNumber(candidateReliquary.heightOffset ?? candidateReliquary.floorOffset,
+        defaults.reliquary.heightOffset, { min: -1, max: 2 }),
       buttons: {
-        scale: finiteNumber(candidate.reliquary?.buttons?.scale, defaults.reliquary.buttons.scale, { min: 0.05, max: 1 }),
-        placementRadius: finiteNumber(candidate.reliquary?.buttons?.placementRadius
-          ?? candidate.reliquary?.activateButton?.placementRadius, defaults.reliquary.buttons.placementRadius, { min: 0, max: 3 }),
-        placementAngleDegrees: finiteNumber(candidate.reliquary?.buttons?.placementAngleDegrees
-          ?? candidate.reliquary?.activateButton?.placementAngleDegrees, defaults.reliquary.buttons.placementAngleDegrees, { min: 0, max: 89 }),
-        verticalOffset: finiteNumber(candidate.reliquary?.buttons?.verticalOffset
-          ?? candidate.reliquary?.activateButton?.verticalOffset, defaults.reliquary.buttons.verticalOffset, { min: -1, max: 1 })
+        scale: finiteNumber(candidateReliquary.buttons?.scale, defaults.reliquary.buttons.scale, { min: 0.05, max: 1 }),
+        forwardDistance: finiteNumber(candidateReliquary.buttons?.forwardDistance
+          ?? (hasLegacyAngularPlacement ? Math.cos(legacyAngle) * legacyRadius : undefined),
+        defaults.reliquary.buttons.forwardDistance, { min: 0, max: 3 }),
+        lateralOffset: finiteNumber(candidateReliquary.buttons?.lateralOffset
+          ?? (hasLegacyAngularPlacement ? Math.sin(legacyAngle) * legacyRadius : undefined),
+        defaults.reliquary.buttons.lateralOffset, { min: 0, max: 2 }),
+        verticalOffset: finiteNumber(candidateReliquary.buttons?.verticalOffset
+          ?? candidateReliquary.activateButton?.verticalOffset, defaults.reliquary.buttons.verticalOffset, { min: -1, max: 1 })
       },
       activateButton: {
         enabled: typeof candidate.reliquary?.activateButton?.enabled === 'boolean'
