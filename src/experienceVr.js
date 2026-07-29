@@ -109,7 +109,7 @@ const glyphOrbit = createVrGlyphOrbit({ nodes, settings: settings.glyphRing, ent
 const glyphLights = createVrGlyphLights({ nodes });
 const monkeyAnchor = monkeyModel ?? centralPlaceholder;
 const portalDisplay = createVrPortalDisplay({
-  scene, camera, renderer, anchorObject: monkeyAnchor,
+  scene, anchorObject: monkeyAnchor, spawnPosition: settings.spawn.position,
   portalModel: assetManager.cloneGltfScene('vr-portal-model'), settings: settings.portal
 });
 const portalCanvas = createVrSpatialPlaque({
@@ -118,6 +118,12 @@ const portalCanvas = createVrSpatialPlaque({
   surface: portalDisplay.canvasSurface,
   settings: settings.portalCanvas
 });
+function restorePortalWaitingState() {
+  portalDisplay.reset();
+  portalCanvas.reset();
+  portalCanvas.show({ title: copy.crystalInstructionTitle, body: copy.crystalInstructionBody });
+}
+restorePortalWaitingState();
 const locomotion = createVrLocomotion({ playerRig, renderer, camera, settings: settings.locomotion });
 const crystalCollection = createVrCrystalCollection({
   scene, assetManager, controllers: vrControllers.controllers, portalDisplay, settings: settings.crystals,
@@ -136,13 +142,10 @@ const entryTransition = createVrEntryTransition({
   spawnPosition: settings.spawn.position,
   effectiveRingRadius: glyphOrbit.effectiveRadius,
   onComplete: () => {
-    if (!portalDisplay.place()) return;
-    portalCanvas.show({ title: copy.crystalInstructionTitle, body: copy.crystalInstructionBody });
     const glyphId = activatedEntryGlyph?.userData?.id;
-    const xrCamera = renderer.xr.getCamera(camera);
     crystalCollection.spawn(getExperienceVrPages(glyphId), {
-      playerPosition: xrCamera.getWorldPosition(new THREE.Vector3()),
-      portalPosition: portalDisplay.object.getWorldPosition(new THREE.Vector3())
+      anchorObject: monkeyAnchor,
+      spawnPosition: settings.spawn.position
     });
   }
 });
@@ -151,8 +154,6 @@ const glyphInteraction = createVrGlyphInteraction({
   nodes,
   onEntryGlyphActivated: () => {
     activatedEntryGlyph = glyphInteraction.activatedEntryGlyph;
-    portalCanvas.hide();
-    portalDisplay.reset();
     entryTransition.start();
   }
 });
@@ -204,8 +205,7 @@ function handleSessionEnd() {
   activeSession = null;
   entryTransition.reset();
   crystalCollection.reset();
-  portalCanvas.reset();
-  portalDisplay.reset();
+  restorePortalWaitingState();
   locomotion.reset();
   playerRig.position.set(settings.spawn.position.x, settings.spawn.position.y, settings.spawn.position.z);
   orientPlayerRig(playerRig, settings.spawn.lookAt);
@@ -220,8 +220,7 @@ async function enterVr() {
   if (activeSession) return;
   entryTransition.reset();
   crystalCollection.reset();
-  portalCanvas.reset();
-  portalDisplay.reset();
+  restorePortalWaitingState();
   locomotion.reset();
   playerRig.position.set(settings.spawn.position.x, settings.spawn.position.y, settings.spawn.position.z);
   orientPlayerRig(playerRig, settings.spawn.lookAt);
@@ -258,8 +257,7 @@ async function enterVr() {
     clock.stop();
     entryTransition.reset();
     crystalCollection.reset();
-    portalCanvas.reset();
-    portalDisplay.reset();
+    restorePortalWaitingState();
     locomotion.reset();
     status.textContent = copy.error;
     enterButton.disabled = false;

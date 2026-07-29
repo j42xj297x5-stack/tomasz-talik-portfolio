@@ -16,9 +16,9 @@ const normalized = normalizeExperienceVrSettings({
   renderer: { pixelRatioCap: 99, antialias: false },
   controllers: { enabled: false, rayLength: 0, rayOpacity: 4, idleScale: 'bad', activeScale: 99 },
   entryTransition: { enabled: false, durationSeconds: 99, target: { x: 2, z: 'bad' }, easing: 'linear' },
-  portal: { enabled: false, maxWidth: 0, maxHeight: 20, distance: 0, verticalOffset: -9, appearDuration: 0, appearStartScale: 9 },
+  portal: { enabled: false, maxWidth: 0, maxHeight: 20, distanceFromAnchor: 0, forwardBias: 9, floorOffset: -9, appearDuration: 0, appearStartScale: 9 },
   portalCanvas: {
-    enabled: false, width: 0, height: 9, distance: 0, verticalOffset: -9,
+    enabled: false, width: 0, height: 9, distanceFromAnchor: 0, forwardBias: 9, floorOffset: -9,
     canvasWidth: 3000.6, canvasHeight: 100, titleFontSize: 10, bodyFontSize: 200, maxBodyLines: 0
   },
   crystals: { rayGrabMaxDistance: 99, pullDuration: 0, targetScale: 9 },
@@ -43,7 +43,7 @@ assert.deepEqual(normalized.entryTransition, {
   easing: 'smoothstep'
 });
 assert.deepEqual(normalized.portal, {
-  enabled: false, maxWidth: 0.5, maxHeight: 8, distance: 0.6, verticalOffset: -3,
+  enabled: false, maxWidth: 0.5, maxHeight: 8, distanceFromAnchor: 0.5, forwardBias: 1, floorOffset: -1,
   appearDuration: 0.05, appearStartScale: 1,
   socket: DEFAULT_EXPERIENCE_VR_SETTINGS.portal.socket
 });

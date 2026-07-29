@@ -18,7 +18,7 @@ export function findPortalCanvasSurface(model) {
   return candidate;
 }
 
-export function createVrPortalDisplay({ scene, camera, renderer, anchorObject, portalModel, settings }) {
+export function createVrPortalDisplay({ scene, anchorObject, portalModel, spawnPosition, settings }) {
   const socketSettings = settings.socket ?? { xFactor: 0, yFactor: -0.34, zFactor: 0.58, insertRadius: 0.28 };
   const object = new THREE.Group();
   object.name = 'VrPortalDisplay';
@@ -54,24 +54,26 @@ export function createVrPortalDisplay({ scene, camera, renderer, anchorObject, p
     );
   }
 
-  const head = new THREE.Vector3();
   const anchorCenter = new THREE.Vector3();
+  const towardSpawn = new THREE.Vector3();
+  const rightFromSpawnView = new THREE.Vector3();
   const direction = new THREE.Vector3();
   const target = new THREE.Vector3();
+  const configuredSpawn = new THREE.Vector3(spawnPosition?.x ?? 0, spawnPosition?.y ?? 0, spawnPosition?.z ?? 1);
+  const localBounds = model ? new THREE.Box3().setFromObject(model) : null;
   let disposed = false;
 
   function place() {
     if (disposed || !settings.enabled || !model) return false;
-    const xrCamera = renderer.xr.getCamera(camera);
-    xrCamera.updateWorldMatrix(true, false);
-    xrCamera.getWorldPosition(head);
     new THREE.Box3().setFromObject(anchorObject).getCenter(anchorCenter);
-    direction.set(anchorCenter.x - head.x, 0, anchorCenter.z - head.z);
-    if (direction.lengthSq() < 1e-8) direction.set(0, 0, -1);
-    direction.normalize();
-    object.position.copy(head).addScaledVector(direction, settings.distance);
-    object.position.y = head.y + settings.verticalOffset;
-    target.set(head.x, object.position.y, head.z);
+    towardSpawn.subVectors(configuredSpawn, anchorCenter).setY(0);
+    if (towardSpawn.lengthSq() < 1e-8) towardSpawn.set(0, 0, 1);
+    towardSpawn.normalize();
+    rightFromSpawnView.set(-towardSpawn.z, 0, towardSpawn.x);
+    direction.copy(rightFromSpawnView).addScaledVector(towardSpawn, settings.forwardBias).normalize();
+    object.position.copy(anchorCenter).addScaledVector(direction, settings.distanceFromAnchor);
+    object.position.y = settings.floorOffset - localBounds.min.y;
+    target.set(configuredSpawn.x, object.position.y, configuredSpawn.z);
     object.lookAt(target);
     object.visible = true;
     return true;
@@ -79,14 +81,13 @@ export function createVrPortalDisplay({ scene, camera, renderer, anchorObject, p
 
   function reset() {
     if (disposed) return;
-    object.visible = false;
-    object.position.set(0, 0, 0);
-    object.rotation.set(0, 0, 0);
+    place();
   }
+  function hide() { if (!disposed) object.visible = false; }
   function getSocketWorldPosition(targetVector = new THREE.Vector3()) {
     object.updateWorldMatrix(true, true);
     return socket.getWorldPosition(targetVector);
   }
-  function dispose() { if (!disposed) { reset(); disposed = true; object.removeFromParent(); } }
-  return { object, model, canvasSurface, socket, insertRadius: socketSettings.insertRadius, getSocketWorldPosition, place, reset, dispose };
+  function dispose() { if (!disposed) { hide(); disposed = true; object.removeFromParent(); } }
+  return { object, model, canvasSurface, socket, insertRadius: socketSettings.insertRadius, getSocketWorldPosition, place, reset, hide, dispose };
 }
