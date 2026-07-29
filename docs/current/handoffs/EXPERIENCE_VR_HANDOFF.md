@@ -10,11 +10,11 @@ Experience VR is a separately and dynamically imported WebXR runtime, not a shar
 - `src/config/experienceVrSettings.js` normalizes the VR contract.
 - `src/xr/vrCapability.js` checks secure context and immersive-VR support.
 - `playerRigOrientation`, `createVrControllers`, `createVrGlyphOrbit`, `createVrGlyphInteraction`, `createVrGlyphLights`, and `createVrEntryTransition` own orientation, two rays, motion/readiness, current-mesh raycasts, warm-light feedback, and compensated rig motion.
-- `createVrGlyphPlaque` plus `resolveVrGlyphPlaqueAsset` own the selected stone plaque; `createVrSpatialPlaque` owns the canvas above the monkey.
+- `createVrPlaqueComposition` owns the shared world-space root positioned on the head-to-monkey line; `createVrGlyphPlaque` plus `resolveVrGlyphPlaqueAsset` own its selected lower stone, while `createVrSpatialPlaque` owns the canvas directly above the active stone bounds.
 
 ## Current user flow and parameters
 
-The visitor selects Experience VR, waits for its independent runtime, and uses a second direct gesture to request `immersive-vr`. The runtime requests `local-floor` and falls back to `local`. The player spawns at `(0, 0, 8.6)`. Five glyphs orbit continuously on base radius `3.8` multiplied by `2`, giving effective radius `7.6`. Dynamic entry readiness uses threshold `0.24` and hysteresis `0.04`. A trigger on the currently ready glyph latches that glyph and moves the `playerRig`, with physical head-offset compensation, to `targetRadiusFactor = 0.5` (about `3.8` from center). Arrival reveals the stone plaque in front of the player and canvas plaque above the monkey. Session end resets state; re-entry reuses the same runtime objects.
+The visitor selects Experience VR, waits for its independent runtime, and uses a second direct gesture to request `immersive-vr`. The runtime requests `local-floor` and falls back to `local`. The player spawns at `(0, 0, 8.6)`. Five glyphs orbit continuously on base radius `3.8` multiplied by `2`, giving effective radius `7.6`; their frame update continues during transition and after activation/arrival. Dynamic entry readiness uses threshold `0.24` and hysteresis `0.04`. A trigger on the currently ready glyph latches that glyph and moves the `playerRig`, with physical head-offset compensation, to `targetRadiusFactor = 0.76` (about `5.8` from center). Arrival reveals one gaze-independent, world-space composition between the head and monkey: the stone below and identically oriented canvas above it. Session end resets the shared root and state; re-entry reuses the same runtime objects without duplicates.
 
 ## Stone plaque mapping
 
@@ -32,7 +32,7 @@ Mapping is by stable glyph ID, never orbital index.
 
 Hardware-confirmed before `280ceb7`: Meta Quest Browser/GitHub Pages session start, head tracking and scene scale, start orientation, two controller rays, independent triggers, raycasting and glyph activation, comfortable transition, readable canvas, enlarged rotating ring, light hover, raycasting of moving solids, and dynamic `entryReady`.
 
-Still awaiting hardware acceptance from `280ceb7`: the final half-radius stopping point, stone plaque in front of the player, canvas placement above the monkey, and composition of both plaques. The code is implemented; this list records only the missing Quest 3S validation.
+Still awaiting hardware acceptance: the approximately `5.8` stopping point and the final shared stone/canvas composition (placement, common facing, and visibility from arrival). The code and automated tests are complete, but the result remains pending a Meta Quest 3S test.
 
 ## Next planned stage
 

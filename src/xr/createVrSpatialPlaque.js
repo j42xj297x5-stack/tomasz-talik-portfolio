@@ -57,7 +57,7 @@ export function resolveVrPlaqueContent(glyphData) {
   };
 }
 
-export function createVrSpatialPlaque({ scene, camera, renderer, settings, anchorObject, canvasFactory }) {
+export function createVrSpatialPlaque({ scene, parent = scene, settings, canvasFactory }) {
   const canvas = canvasFactory ? canvasFactory() : document.createElement('canvas');
   canvas.width = settings.canvasWidth;
   canvas.height = settings.canvasHeight;
@@ -77,12 +77,8 @@ export function createVrSpatialPlaque({ scene, camera, renderer, settings, ancho
   const object = new THREE.Mesh(geometry, material);
   object.name = 'VrSpatialPlaque';
   object.visible = false;
-  scene.add(object);
+  parent.add(object);
 
-  const headPosition = new THREE.Vector3();
-  const direction = new THREE.Vector3();
-  const target = new THREE.Vector3();
-  const bounds = new THREE.Box3();
   let state = 'hidden';
   let elapsed = 0;
   let disposed = false;
@@ -122,21 +118,12 @@ export function createVrSpatialPlaque({ scene, camera, renderer, settings, ancho
     texture.needsUpdate = true;
   }
 
-  function positionAboveMonkey() {
-    const xrCamera = renderer.xr.getCamera(camera);
-    xrCamera.updateWorldMatrix(true, false);
-    xrCamera.getWorldPosition(headPosition);
-    bounds.setFromObject(anchorObject);
-    const center = bounds.getCenter(target);
-    object.position.set(center.x, bounds.max.y + settings.monkeyVerticalGap + settings.height / 2, center.z);
-    target.set(headPosition.x, object.position.y, headPosition.z);
-    object.lookAt(target);
-  }
-
-  function show(content) {
+  function show(content, stoneBounds) {
     if (disposed || !settings.enabled) return false;
     draw(content);
-    positionAboveMonkey();
+    const stoneTop = Number.isFinite(stoneBounds?.max?.y) ? stoneBounds.max.y : 0;
+    object.position.set(0, stoneTop + settings.height / 2, 0.002);
+    object.rotation.set(0, 0, 0);
     elapsed = 0;
     state = 'appearing';
     object.visible = true;

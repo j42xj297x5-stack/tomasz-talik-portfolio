@@ -5,12 +5,11 @@ export function calculateUniformPlaqueScale(size, maxWidth, maxHeight) {
   return Math.min(maxWidth / size.x, maxHeight / size.y);
 }
 
-export function createVrGlyphPlaque({ scene, camera, renderer, settings, plaqueAssets }) {
+export function createVrGlyphPlaque({ scene, parent = scene, settings, plaqueAssets }) {
   const object = new THREE.Group();
-  object.name = 'VrGlyphPlaque'; object.visible = false; scene.add(object);
+  object.name = 'VrGlyphPlaque'; object.visible = false; parent.add(object);
   const instances = new Map();
   const ownedMaterials = [];
-  const head = new THREE.Vector3(); const direction = new THREE.Vector3(); const target = new THREE.Vector3();
   let state = 'hidden'; let elapsed = 0; let active = null; let disposed = false;
 
   plaqueAssets.forEach((source, id) => {
@@ -35,7 +34,9 @@ export function createVrGlyphPlaque({ scene, camera, renderer, settings, plaqueA
     const scaledBounds = new THREE.Box3().setFromObject(model);
     model.position.sub(scaledBounds.getCenter(new THREE.Vector3()));
     model.rotation.y += plaqueAssets.visuals?.get(id)?.frontYawOffset ?? 0;
-    model.visible = false; object.add(model); instances.set(id, { model, materials });
+    model.visible = false; object.add(model); model.updateMatrixWorld(true);
+    const localBounds = new THREE.Box3().setFromObject(model);
+    instances.set(id, { model, materials, localBounds });
   });
 
   function restore(record, amount = 1) {
@@ -55,11 +56,7 @@ export function createVrGlyphPlaque({ scene, camera, renderer, settings, plaqueA
     const id = glyphNode?.userData?.id; const record = source ? instances.get(id) : null;
     if (!record) { hide(); return false; }
     instances.forEach((item) => { item.model.visible = item === record; }); active = record;
-    const xrCamera = renderer.xr.getCamera(camera); xrCamera.updateWorldMatrix(true, false);
-    xrCamera.getWorldPosition(head); xrCamera.getWorldDirection(direction); direction.y = 0;
-    if (direction.lengthSq() < 1e-8) direction.set(0, 0, -1); direction.normalize();
-    object.position.copy(head).addScaledVector(direction, settings.distance); object.position.y = head.y + settings.verticalOffset;
-    target.set(head.x, object.position.y, head.z); object.lookAt(target);
+    object.position.set(0, 0, 0); object.rotation.set(0, 0, 0);
     elapsed = 0; state = 'appearing'; object.visible = true; object.scale.setScalar(settings.appearStartScale); restore(record, 0); return true;
   }
   function update(delta) {
@@ -71,5 +68,9 @@ export function createVrGlyphPlaque({ scene, camera, renderer, settings, plaqueA
   }
   function reset() { hide(); }
   function dispose() { if (disposed) return; hide(); disposed = true; object.clear(); object.removeFromParent(); ownedMaterials.forEach((m) => m.dispose()); instances.clear(); }
-  return { object, get state() { return state; }, showForGlyph, hide, update, reset, dispose };
+  function getActiveBounds(target = new THREE.Box3()) {
+    if (!active) return target.makeEmpty();
+    return target.copy(active.localBounds);
+  }
+  return { object, get state() { return state; }, showForGlyph, getActiveBounds, hide, update, reset, dispose };
 }

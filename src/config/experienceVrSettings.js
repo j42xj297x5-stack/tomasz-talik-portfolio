@@ -32,7 +32,7 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
   entryTransition: {
     enabled: true,
     durationSeconds: 3,
-    targetRadiusFactor: 0.5,
+    targetRadiusFactor: 0.76,
     target: { x: 0, z: 1.8 },
     easing: 'smoothstep'
   },
