@@ -36,7 +36,7 @@ assert.deepEqual(normalized.controllers, {
 assert.deepEqual(normalized.entryTransition, {
   enabled: false,
   durationSeconds: 30,
-  targetRadiusFactor: 0.5,
+  targetRadiusFactor: 0.76,
   target: { x: 2, z: 1.8 },
   easing: 'smoothstep'
 });

@@ -69,4 +69,6 @@ assert.equal(immediate.transition.start(), false);
 
 console.log('VR entry transition assertions passed');
 
-assert.deepEqual(calculateVrEntryTarget({ ringCenter: { x: 0, z: 0 }, spawnPosition: { x: 0, z: 8.6 }, effectiveRingRadius: 7.6, targetRadiusFactor: 0.5 }), { x: 0, z: 3.8 });
+const target = calculateVrEntryTarget({ ringCenter: { x: 0, z: 0 }, spawnPosition: { x: 0, z: 8.6 }, effectiveRingRadius: 7.6, targetRadiusFactor: 0.76 });
+assert.deepEqual(target, { x: 0, z: 5.776 });
+assert.ok(Math.abs(Math.hypot(target.x, target.z) - 5.8) < 0.03);
