@@ -41,16 +41,17 @@ const settings = {
   canvasWidth: 1024, canvasHeight: 640, titleFontSize: 72, bodyFontSize: 42, maxBodyLines: 6
 };
 const plaque = createVrSpatialPlaque({
-  scene, camera, renderer: { xr: { getCamera: () => camera } }, settings, anchorObject: new THREE.Mesh(new THREE.BoxGeometry(2, 2, 2)), canvasFactory: fakeCanvas
+  scene, settings, canvasFactory: fakeCanvas
 });
 const sameObject = plaque.object;
 assert.equal(plaque.state, 'hidden');
 assert.equal(plaque.object.visible, false);
-assert.equal(plaque.show({ title: 'Title', body: 'Body' }), true);
+const stoneBounds = new THREE.Box3(new THREE.Vector3(-0.6, -0.3, -0.1), new THREE.Vector3(0.6, 0.45, 0.1));
+assert.equal(plaque.show({ title: 'Title', body: 'Body' }, stoneBounds), true);
 assert.equal(plaque.state, 'appearing');
 assert.ok(Math.abs(plaque.object.position.x) < 1e-9);
-assert.ok(Math.abs(plaque.object.position.y - 1.825) < 1e-9);
-assert.ok(Math.abs(plaque.object.position.z) < 1e-9);
+assert.ok(Math.abs(plaque.object.position.y - 0.875) < 1e-9);
+assert.ok(Math.abs(plaque.object.position.z - 0.002) < 1e-9);
 assert.ok(Math.abs(plaque.object.rotation.x) < 1e-9);
 assert.ok(Math.abs(plaque.object.rotation.z) < 1e-9);
 const anchoredPosition = plaque.object.position.clone();

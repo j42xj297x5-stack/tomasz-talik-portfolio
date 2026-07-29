@@ -24,16 +24,13 @@ Hover/readiness/activation feedback is light-only. `createVrGlyphLights` attache
 
 Only a trigger hit on the current `entryReady` glyph can latch `activatedEntryGlyph` and start one transition. `createVrEntryTransition` moves the `playerRig`, never the tracked camera. It treats the destination as a head destination and subtracts the physical XR head's starting X/Z offset. Y and orientation remain unchanged.
 
-The destination lies along the center-to-spawn direction at `effectiveRingRadius × targetRadiusFactor`. `targetRadiusFactor = 0.5`, so the current `7.6` ring stops the head about `3.8` units from its center.
+The destination lies along the center-to-spawn direction at `effectiveRingRadius × targetRadiusFactor`. `targetRadiusFactor = 0.76`, so the current `7.6` ring stops the head about `5.8` units from its center (roughly two units earlier than the former destination).
 
 ## Arrival plaques
 
-After transition state becomes `arrived`, two separate world-space objects appear:
+After transition state becomes `arrived`, `createVrPlaqueComposition` places one world-space root on the horizontal line from the XR head to the central monkey, using the stone plaque's existing distance and height. Its placement is independent of head gaze direction, and the root faces the head position. `createVrGlyphPlaque` places the stable-ID-selected, proportionally scaled stone GLB in the lower part of that root. `createVrSpatialPlaque` draws the readable text to canvas and places its plane directly above the active stone bounds, with the same root orientation and a minimal local Z offset.
 
-- `createVrGlyphPlaque` places a proportionally scaled stone GLB in front of the player, based on the latched glyph;
-- `createVrSpatialPlaque` draws the glyph's readable text to canvas and anchors the plane above the monkey using its world bounds.
-
-Both face the player's head when shown and remain world-anchored. They are not raycast, grabbed, thrown, or physics-enabled.
+The composition is not camera-parented, raycast, grabbed, thrown, or physics-enabled. Its single root is hidden and reset on session end, then reused without duplicates on re-entry.
 
 ### Stone asset mapping
 
@@ -49,11 +46,11 @@ Both face the player's head when shown and remain world-anchored. They are not r
 
 ## Implementation status versus Quest 3S validation
 
-Implemented in code: the complete architecture and behavior above, including the half-radius target and both arrival plaques.
+Implemented in code: the complete architecture and behavior above, including the approximately `5.8` target, uninterrupted orbit after activation, and shared plaque composition root.
 
 Confirmed on Meta Quest 3S before `280ceb7`: session start from Meta Quest Browser and GitHub Pages, head tracking and scene scale, correct starting orientation, two controller rays, independent triggers, glyph raycast/activation, comfortable transition, readable canvas, enlarged rotating ring, light hover, current moving-solid raycasting, and dynamic `entryReady`.
 
-Not yet confirmed on hardware from `280ceb7`: final half-radius destination, stone plaque in front of the player, canvas above the monkey, and their mutual composition. Thus `280ceb7` remains pending manual Quest 3S acceptance despite being implemented.
+Not yet confirmed on hardware: the approximately `5.8` destination and the final shared stone/canvas composition, including visibility and placement from the arrival pose. The patch remains pending manual Meta Quest 3S acceptance despite automated coverage.
 
 ## Next planned stage and exclusions
 

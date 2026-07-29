@@ -16,6 +16,7 @@ import { createVrGlyphLights } from './xr/createVrGlyphLights.js';
 import { createVrEntryTransition } from './xr/createVrEntryTransition.js';
 import { createVrSpatialPlaque, resolveVrPlaqueContent } from './xr/createVrSpatialPlaque.js';
 import { createVrGlyphPlaque } from './xr/createVrGlyphPlaque.js';
+import { createVrPlaqueComposition } from './xr/createVrPlaqueComposition.js';
 
 const app = document.querySelector('#app');
 if (!app) throw new Error('Missing #app mount element.');
@@ -102,10 +103,14 @@ const entryDirection = new THREE.Vector3(settings.spawn.position.x, 0, settings.
 const glyphOrbit = createVrGlyphOrbit({ nodes, settings: settings.glyphRing, entryDirection });
 const glyphLights = createVrGlyphLights({ nodes });
 const monkeyAnchor = monkeyModel ?? centralPlaceholder;
-const spatialPlaque = createVrSpatialPlaque({ scene, camera, renderer, settings: settings.spatialPlaque, anchorObject: monkeyAnchor });
+const plaqueComposition = createVrPlaqueComposition({
+  scene, camera, renderer, anchorObject: monkeyAnchor,
+  distance: settings.glyphPlaque.distance, verticalOffset: settings.glyphPlaque.verticalOffset
+});
+const spatialPlaque = createVrSpatialPlaque({ scene, parent: plaqueComposition.object, settings: settings.spatialPlaque });
 const plaqueAssets = new Map(nodes.map((node) => [node.userData.id, assetManager.cloneGltfScene(`plaque-${node.userData.id}`)]));
 plaqueAssets.visuals = new Map(nodes.map((node) => [node.userData.id, node.userData.plaqueVisual]));
-const glyphPlaque = createVrGlyphPlaque({ scene, camera, renderer, settings: settings.glyphPlaque, plaqueAssets });
+const glyphPlaque = createVrGlyphPlaque({ scene, parent: plaqueComposition.object, settings: settings.glyphPlaque, plaqueAssets });
 let activatedEntryGlyph = null;
 const entryTransition = createVrEntryTransition({
   playerRig,
@@ -116,8 +121,9 @@ const entryTransition = createVrEntryTransition({
   spawnPosition: settings.spawn.position,
   effectiveRingRadius: glyphOrbit.effectiveRadius,
   onComplete: () => {
-    glyphPlaque.showForGlyph(activatedEntryGlyph);
-    spatialPlaque.show(resolveVrPlaqueContent(activatedEntryGlyph?.userData));
+    if (!glyphPlaque.showForGlyph(activatedEntryGlyph)) return;
+    plaqueComposition.place();
+    spatialPlaque.show(resolveVrPlaqueContent(activatedEntryGlyph?.userData), glyphPlaque.getActiveBounds());
   }
 });
 const glyphInteraction = createVrGlyphInteraction({
@@ -127,6 +133,7 @@ const glyphInteraction = createVrGlyphInteraction({
     activatedEntryGlyph = glyphInteraction.activatedEntryGlyph;
     spatialPlaque.hide();
     glyphPlaque.hide();
+    plaqueComposition.reset();
     entryTransition.start();
   }
 });
@@ -148,7 +155,8 @@ const clock = new THREE.Clock(false);
 
 function renderFrame() {
   const delta = clock.getDelta();
-  const entryReady = activatedEntryGlyph ? null : glyphOrbit.update(delta);
+  const orbitEntryReady = glyphOrbit.update(delta);
+  const entryReady = activatedEntryGlyph ? null : orbitEntryReady;
   glyphRing.updateMatrixWorld(true);
   glyphInteraction.update();
   glyphInteraction.setEntryReady(entryReady);
@@ -177,6 +185,7 @@ function handleSessionEnd() {
   entryTransition.reset();
   spatialPlaque.reset();
   glyphPlaque.reset();
+  plaqueComposition.reset();
   playerRig.position.set(settings.spawn.position.x, settings.spawn.position.y, settings.spawn.position.z);
   orientPlayerRig(playerRig, settings.spawn.lookAt);
   activatedEntryGlyph = null;
@@ -191,6 +200,7 @@ async function enterVr() {
   entryTransition.reset();
   spatialPlaque.reset();
   glyphPlaque.reset();
+  plaqueComposition.reset();
   playerRig.position.set(settings.spawn.position.x, settings.spawn.position.y, settings.spawn.position.z);
   orientPlayerRig(playerRig, settings.spawn.lookAt);
   activatedEntryGlyph = null;
@@ -227,6 +237,7 @@ async function enterVr() {
     entryTransition.reset();
     spatialPlaque.reset();
     glyphPlaque.reset();
+    plaqueComposition.reset();
     status.textContent = copy.error;
     enterButton.disabled = false;
     exitButton.hidden = true;
