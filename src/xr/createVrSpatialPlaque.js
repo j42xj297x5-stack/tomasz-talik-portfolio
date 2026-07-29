@@ -75,7 +75,7 @@ export function createVrSpatialPlaque({ scene, parent = scene, settings, canvasF
     depthWrite: false
   });
   const object = new THREE.Mesh(geometry, material);
-  object.name = 'VrSpatialPlaque';
+  object.name = 'VrPortalCanvas';
   object.visible = false;
   parent.add(object);
 
@@ -118,11 +118,10 @@ export function createVrSpatialPlaque({ scene, parent = scene, settings, canvasF
     texture.needsUpdate = true;
   }
 
-  function show(content, stoneBounds) {
+  function show(content) {
     if (disposed || !settings.enabled) return false;
     draw(content);
-    const stoneTop = Number.isFinite(stoneBounds?.max?.y) ? stoneBounds.max.y : 0;
-    object.position.set(0, stoneTop + settings.height / 2, 0.002);
+    object.position.set(settings.offset.x, settings.offset.y, settings.offset.z);
     object.rotation.set(0, 0, 0);
     elapsed = 0;
     state = 'appearing';

@@ -32,25 +32,30 @@
     "target": { "x": 0, "z": 1.8 },
     "easing": "smoothstep"
   },
-  "spatialPlaque": {
+  "portal": {
+    "enabled": true,
+    "maxWidth": 2.8,
+    "maxHeight": 3.2,
+    "distance": 2.15,
+    "verticalOffset": -0.15,
+    "appearDuration": 0.42,
+    "appearStartScale": 0.92
+  },
+  "portalCanvas": {
     "enabled": true,
     "width": 1.35,
     "height": 0.85,
-    "distance": 1.4,
-    "monkeyVerticalGap": 0.4,
+    "offset": { "x": 0, "y": 0.12, "z": 0.018 },
     "canvasWidth": 1024,
     "canvasHeight": 640,
     "titleFontSize": 72,
     "bodyFontSize": 42,
     "maxBodyLines": 6
   },
-  "glyphPlaque": {
+  "locomotion": {
     "enabled": true,
-    "maxWidth": 1.35,
-    "maxHeight": 0.9,
-    "distance": 1.35,
-    "verticalOffset": -0.42,
-    "appearDuration": 0.42,
-    "appearStartScale": 0.92
+    "deadzone": 0.18,
+    "moveSpeed": 1.8,
+    "turnSpeed": 1.35
   }
 }

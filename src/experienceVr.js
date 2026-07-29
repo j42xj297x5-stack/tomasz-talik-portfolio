@@ -15,8 +15,8 @@ import { createVrGlyphOrbit } from './xr/createVrGlyphOrbit.js';
 import { createVrGlyphLights } from './xr/createVrGlyphLights.js';
 import { createVrEntryTransition } from './xr/createVrEntryTransition.js';
 import { createVrSpatialPlaque, resolveVrPlaqueContent } from './xr/createVrSpatialPlaque.js';
-import { createVrGlyphPlaque } from './xr/createVrGlyphPlaque.js';
-import { createVrPlaqueComposition } from './xr/createVrPlaqueComposition.js';
+import { createVrPortalDisplay } from './xr/createVrPortalDisplay.js';
+import { createVrLocomotion } from './xr/createVrLocomotion.js';
 
 const app = document.querySelector('#app');
 if (!app) throw new Error('Missing #app mount element.');
@@ -80,7 +80,7 @@ const centralPlaceholder = createCentralObject();
 worldRoot.add(centralPlaceholder);
 
 const vrAssets = getPreloadAssets([...INITIAL_PRELOAD_GROUPS, ...DEFERRED_PRELOAD_GROUPS])
-  .filter(({ id }) => id === 'gltf-loader-module' || id === 'monkey-model' || id.startsWith('glyph-') || id.startsWith('plaque-'))
+  .filter(({ id }) => id === 'gltf-loader-module' || id === 'monkey-model' || id === 'vr-portal-model' || id.startsWith('glyph-'))
   .map((asset) => ({ ...asset, critical: asset.id === 'gltf-loader-module' }));
 const loadingDiagnostics = createLoadingDiagnostics(vrAssets);
 const assetManager = createAssetManager({ diagnostics: loadingDiagnostics });
@@ -103,14 +103,12 @@ const entryDirection = new THREE.Vector3(settings.spawn.position.x, 0, settings.
 const glyphOrbit = createVrGlyphOrbit({ nodes, settings: settings.glyphRing, entryDirection });
 const glyphLights = createVrGlyphLights({ nodes });
 const monkeyAnchor = monkeyModel ?? centralPlaceholder;
-const plaqueComposition = createVrPlaqueComposition({
+const portalDisplay = createVrPortalDisplay({
   scene, camera, renderer, anchorObject: monkeyAnchor,
-  distance: settings.glyphPlaque.distance, verticalOffset: settings.glyphPlaque.verticalOffset
+  portalModel: assetManager.cloneGltfScene('vr-portal-model'), settings: settings.portal
 });
-const spatialPlaque = createVrSpatialPlaque({ scene, parent: plaqueComposition.object, settings: settings.spatialPlaque });
-const plaqueAssets = new Map(nodes.map((node) => [node.userData.id, assetManager.cloneGltfScene(`plaque-${node.userData.id}`)]));
-plaqueAssets.visuals = new Map(nodes.map((node) => [node.userData.id, node.userData.plaqueVisual]));
-const glyphPlaque = createVrGlyphPlaque({ scene, parent: plaqueComposition.object, settings: settings.glyphPlaque, plaqueAssets });
+const portalCanvas = createVrSpatialPlaque({ scene, parent: portalDisplay.object, settings: settings.portalCanvas });
+const locomotion = createVrLocomotion({ playerRig, renderer, camera, settings: settings.locomotion });
 let activatedEntryGlyph = null;
 const entryTransition = createVrEntryTransition({
   playerRig,
@@ -121,9 +119,8 @@ const entryTransition = createVrEntryTransition({
   spawnPosition: settings.spawn.position,
   effectiveRingRadius: glyphOrbit.effectiveRadius,
   onComplete: () => {
-    if (!glyphPlaque.showForGlyph(activatedEntryGlyph)) return;
-    plaqueComposition.place();
-    spatialPlaque.show(resolveVrPlaqueContent(activatedEntryGlyph?.userData), glyphPlaque.getActiveBounds());
+    if (!portalDisplay.place()) return;
+    portalCanvas.show(resolveVrPlaqueContent(activatedEntryGlyph?.userData));
   }
 });
 const glyphInteraction = createVrGlyphInteraction({
@@ -131,9 +128,8 @@ const glyphInteraction = createVrGlyphInteraction({
   nodes,
   onEntryGlyphActivated: () => {
     activatedEntryGlyph = glyphInteraction.activatedEntryGlyph;
-    spatialPlaque.hide();
-    glyphPlaque.hide();
-    plaqueComposition.reset();
+    portalCanvas.hide();
+    portalDisplay.reset();
     entryTransition.start();
   }
 });
@@ -166,8 +162,8 @@ function renderFrame() {
     activated: activatedEntryGlyph
   });
   entryTransition.update(delta);
-  spatialPlaque.update(delta);
-  glyphPlaque.update(delta);
+  locomotion.update(delta);
+  portalCanvas.update(delta);
   renderer.render(scene, camera);
 }
 
@@ -183,9 +179,9 @@ function handleSessionEnd() {
   clock.stop();
   activeSession = null;
   entryTransition.reset();
-  spatialPlaque.reset();
-  glyphPlaque.reset();
-  plaqueComposition.reset();
+  portalCanvas.reset();
+  portalDisplay.reset();
+  locomotion.reset();
   playerRig.position.set(settings.spawn.position.x, settings.spawn.position.y, settings.spawn.position.z);
   orientPlayerRig(playerRig, settings.spawn.lookAt);
   activatedEntryGlyph = null;
@@ -198,9 +194,9 @@ function handleSessionEnd() {
 async function enterVr() {
   if (activeSession) return;
   entryTransition.reset();
-  spatialPlaque.reset();
-  glyphPlaque.reset();
-  plaqueComposition.reset();
+  portalCanvas.reset();
+  portalDisplay.reset();
+  locomotion.reset();
   playerRig.position.set(settings.spawn.position.x, settings.spawn.position.y, settings.spawn.position.z);
   orientPlayerRig(playerRig, settings.spawn.lookAt);
   activatedEntryGlyph = null;
@@ -235,9 +231,9 @@ async function enterVr() {
     renderer.setAnimationLoop(null);
     clock.stop();
     entryTransition.reset();
-    spatialPlaque.reset();
-    glyphPlaque.reset();
-    plaqueComposition.reset();
+    portalCanvas.reset();
+    portalDisplay.reset();
+    locomotion.reset();
     status.textContent = copy.error;
     enterButton.disabled = false;
     exitButton.hidden = true;

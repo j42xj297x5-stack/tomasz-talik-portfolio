@@ -66,6 +66,7 @@ const criticalInitialAssets = Object.freeze([
 ]);
 
 const deferredWarmAssets = Object.freeze([
+  withStage({ id: 'vr-portal-model', label: 'VR arrival portal model', path: '/glb/portal.glb', type: 'model' }, ASSET_STAGES.DEFERRED_WARM),
   ...portfolioNodes.filter((node) => node.plaqueModelPath).map((node) => withStage({
     id: `plaque-${node.id}`,
     label: `${node.title} plaque model`,
