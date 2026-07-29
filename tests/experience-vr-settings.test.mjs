@@ -43,13 +43,15 @@ assert.deepEqual(normalized.entryTransition, {
 });
 assert.deepEqual(normalized.portal, {
   enabled: false, maxWidth: 0.5, maxHeight: 8, distance: 0.6, verticalOffset: -3,
-  appearDuration: 0.05, appearStartScale: 1
+  appearDuration: 0.05, appearStartScale: 1,
+  socket: DEFAULT_EXPERIENCE_VR_SETTINGS.portal.socket
 });
 assert.deepEqual(normalized.portalCanvas, {
   enabled: false, width: 0.5, height: 2, offset: { x: 0, y: 0.12, z: 0.018 },
   canvasWidth: 2048, canvasHeight: 320, titleFontSize: 36, bodyFontSize: 72, maxBodyLines: 1
 });
 assert.deepEqual(normalized.locomotion, DEFAULT_EXPERIENCE_VR_SETTINGS.locomotion);
+assert.deepEqual(normalized.crystals, DEFAULT_EXPERIENCE_VR_SETTINGS.crystals);
 assert.equal('ignored' in normalized, false);
 
 const server = await loadExperienceVrSettings({

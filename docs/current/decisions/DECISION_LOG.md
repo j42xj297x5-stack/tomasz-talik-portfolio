@@ -22,12 +22,16 @@ Status: current binding decisions, not a patch chronology.
 2. `entryReady` is dynamic. Any glyph entering the configured angular zone can be activated; readiness is not tied to a fixed glyph or orbit index.
 3. Two local-`-Z` controller rays hit current GLB meshes or child fallback colliders. Hits resolve through an explicit object-to-glyph-root mapping; static stored positions are not raycast targets.
 4. Feedback is provided by warm point lights. Geometric hover/readiness markers are not part of the accepted design.
-5. Entry moves the `playerRig`, compensating for the physical XR head offset. With `targetRadiusFactor = 0.5`, the current destination is about `3.8` units from ring center.
-6. Arrival shows the selected stone plaque in front of the player and a separate canvas plaque above the monkey. Stone assets resolve by stable glyph ID, not orbit index; plaques are not raycast targets.
+5. Entry moves the `playerRig`, compensating for the physical XR head offset. With `targetRadiusFactor = 0.76`, the current destination is about `5.8` units from ring center.
+6. Arrival shows one portal and its existing internal canvas; the selected stone plaque and separate canvas above the monkey are no longer part of this flow.
 7. Session exit/re-entry resets mutable state and reuses runtime objects without duplication.
+8. VR pages are a separate variable-length mapping keyed by stable glyph ID. The MVP maps 15 preloaded crystal assets to concise selectors over localized shared portfolio content.
+9. Arrival spawns only the activated glyph's page crystals. Deterministic bounds-based placement keeps them on floor Y=0 with individual 0.22–0.28 scale.
+10. Trigger remains glyph-ray activation. Squeeze performs nearest grip-space grab; release either preserves the crystal's world transform or consumes it at the invisible bounds-derived portal socket and updates the existing canvas.
+11. Crystal interaction is explicitly transform/parenting based: no physics engine, gravity, collision, throwing, or velocity.
 
 ## Scope sequencing
 
-1. The next independent stage after manual acceptance of commit `280ceb7` is joystick locomotion: right stick forward/back and strafe; left stick smooth yaw.
-2. Teleportation, jump, snap turn, physics, grabbing/throwing, plaque raycasting, bridge building, VR audio, atmosphere, and galaxies remain outside that stage.
-3. Locomotion, physics, and grabbing must not be combined into one implementation stage.
+1. Smooth joystick locomotion and deterministic squeeze crystal interaction are implemented as separate modules.
+2. Teleportation, jump, snap turn, physics, throwing, plaque raycasting, bridge building, VR audio, atmosphere, and galaxies remain excluded.
+3. Future stages must preserve the current separation between locomotion, crystal parenting, and any later world simulation.

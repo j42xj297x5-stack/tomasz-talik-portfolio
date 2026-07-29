@@ -6,11 +6,16 @@ export function calculatePortalScale(size, maxWidth, maxHeight) {
 }
 
 export function createVrPortalDisplay({ scene, camera, renderer, anchorObject, portalModel, settings }) {
+  const socketSettings = settings.socket ?? { xFactor: 0, yFactor: -0.34, zFactor: 0.58, insertRadius: 0.28 };
   const object = new THREE.Group();
   object.name = 'VrPortalDisplay';
   object.visible = false;
   scene.add(object);
   const model = portalModel?.clone(true) ?? null;
+  const socket = new THREE.Object3D();
+  socket.name = 'VrPortalCrystalSocket';
+  socket.visible = false;
+  object.add(socket);
   if (model) {
     model.name = 'VrPortalModel';
     const bounds = new THREE.Box3().setFromObject(model);
@@ -21,6 +26,15 @@ export function createVrPortalDisplay({ scene, camera, renderer, anchorObject, p
     const center = scaledBounds.getCenter(new THREE.Vector3());
     model.position.set(-center.x, -center.y, -center.z);
     object.add(model);
+    model.updateMatrixWorld(true);
+    const localBounds = new THREE.Box3().setFromObject(model);
+    const localSize = localBounds.getSize(new THREE.Vector3());
+    const localCenter = localBounds.getCenter(new THREE.Vector3());
+    socket.position.set(
+      localCenter.x + localSize.x * socketSettings.xFactor,
+      localCenter.y + localSize.y * socketSettings.yFactor,
+      localBounds.max.z + localSize.z * socketSettings.zFactor
+    );
   }
 
   const head = new THREE.Vector3();
@@ -52,6 +66,10 @@ export function createVrPortalDisplay({ scene, camera, renderer, anchorObject, p
     object.position.set(0, 0, 0);
     object.rotation.set(0, 0, 0);
   }
+  function getSocketWorldPosition(targetVector = new THREE.Vector3()) {
+    object.updateWorldMatrix(true, true);
+    return socket.getWorldPosition(targetVector);
+  }
   function dispose() { if (!disposed) { reset(); disposed = true; object.removeFromParent(); } }
-  return { object, model, place, reset, dispose };
+  return { object, model, socket, insertRadius: socketSettings.insertRadius, getSocketWorldPosition, place, reset, dispose };
 }

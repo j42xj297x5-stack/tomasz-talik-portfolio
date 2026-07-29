@@ -28,13 +28,15 @@ experienceVr
 ├─> centralObject + monkeyModel + lights
 ├─> orbitNodes (glyph construction and base radius 3.8)
 ├─> playerRigOrientation
-├─> createVrControllers (two target rays, local -Z)
+├─> createVrControllers (two target rays plus two grip/hold sockets)
 ├─> createVrGlyphOrbit (effective radius 7.6, continuous orbit, dynamic entryReady)
 ├─> createVrGlyphInteraction (current GLB meshes/fallback colliders, object→glyphRoot)
 ├─> createVrGlyphLights (warm PointLight feedback)
 ├─> createVrEntryTransition (head-offset-compensated playerRig movement)
-├─> createVrGlyphPlaque ─> resolveVrGlyphPlaqueAsset
-└─> createVrSpatialPlaque (canvas above monkey)
+├─> createVrPortalDisplay (portal plus invisible bounds-derived crystal socket)
+├─> experienceVrPages ─> resolved portfolioNodes + 15 crystal asset mappings
+├─> createVrCrystalCollection ─> AssetManager clones + squeeze near-grab/insert
+└─> createVrSpatialPlaque (existing canvas inside portal)
 
 direct Enter VR gesture
 └─> immersive-vr session
@@ -48,14 +50,14 @@ The per-frame interaction order is orbit, world-matrix refresh, raycast, dynamic
 
 The three modes consume stable portfolio IDs and content where applicable. Experience VR also reuses focused asset and scene constructors, the vendored Three.js build, and `publicPath`. It does not import Experience 3D interaction state, its HTML/CSS panels, atmosphere progression, or desktop animation loop.
 
-## VR plaque mapping
+## VR crystal mapping
 
-| Stable glyph ID | GLB |
+| Stable glyph ID | Crystal GLBs |
 | --- | --- |
-| `ai-guide` | `/glb/plaque_ai_guide.glb` |
-| `spotify-digger` | `/glb/plaque_dig_engine.glb` |
-| `haiku-cosmos` | `/glb/plaque_haiku_cosmos.glb` |
-| `creative-ai` | `/glb/plaque_creative_ai.glb` |
-| `ethics-life-protection` | `/glb/plaque_ethics.glb` |
+| `ai-guide` | `/glb/crystal-ai_guide_01.glb` … `_03.glb` |
+| `spotify-digger` | `/glb/crystal-dig_engine_01.glb` … `_03.glb` |
+| `haiku-cosmos` | `/glb/crystal-haiku_cosmos_01.glb` … `_03.glb` |
+| `creative-ai` | `/glb/crystal-creative_ai_01.glb` … `_03.glb` |
+| `ethics-life-protection` | `/glb/crystal-ethics_01.glb` … `_03.glb` |
 
-Resolution uses the stable glyph ID, never orbital index or current orbital position.
+Resolution uses the stable glyph ID and page ID, never orbital index or current orbital position. Squeeze parenting is deterministic and contains no physics, gravity, collision, throw, or velocity dependency.

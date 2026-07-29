@@ -14,9 +14,11 @@ import { createVrGlyphInteraction } from './xr/createVrGlyphInteraction.js';
 import { createVrGlyphOrbit } from './xr/createVrGlyphOrbit.js';
 import { createVrGlyphLights } from './xr/createVrGlyphLights.js';
 import { createVrEntryTransition } from './xr/createVrEntryTransition.js';
-import { createVrSpatialPlaque, resolveVrPlaqueContent } from './xr/createVrSpatialPlaque.js';
+import { createVrSpatialPlaque } from './xr/createVrSpatialPlaque.js';
 import { createVrPortalDisplay } from './xr/createVrPortalDisplay.js';
 import { createVrLocomotion } from './xr/createVrLocomotion.js';
+import { createVrCrystalCollection } from './xr/createVrCrystalCollection.js';
+import { getExperienceVrPages, resolveExperienceVrPage } from './content/experienceVrPages.js';
 
 const app = document.querySelector('#app');
 if (!app) throw new Error('Missing #app mount element.');
@@ -25,12 +27,14 @@ const COPY = {
   pl: {
     title: 'Doświadczenie VR', loading: 'Przygotowywanie minimalnej sceny VR…', ready: 'Scena jest gotowa.',
     enter: 'Wejdź do VR', entering: 'Uruchamianie sesji…', exit: 'Zakończ VR', retry: 'Wejdź ponownie do VR',
-    error: 'Nie udało się uruchomić sesji VR. Możesz spróbować ponownie.'
+    error: 'Nie udało się uruchomić sesji VR. Możesz spróbować ponownie.',
+    crystalInstructionTitle: 'Portal czeka', crystalInstructionBody: 'Umieść kryształ w dolnym gnieździe portalu.'
   },
   en: {
     title: 'Experience VR', loading: 'Preparing the minimal VR scene…', ready: 'The scene is ready.',
     enter: 'Enter VR', entering: 'Starting session…', exit: 'Exit VR', retry: 'Enter VR again',
-    error: 'The VR session could not be started. You can try again.'
+    error: 'The VR session could not be started. You can try again.',
+    crystalInstructionTitle: 'The portal is waiting', crystalInstructionBody: 'Place a crystal in the lower portal socket.'
   }
 };
 
@@ -80,7 +84,7 @@ const centralPlaceholder = createCentralObject();
 worldRoot.add(centralPlaceholder);
 
 const vrAssets = getPreloadAssets([...INITIAL_PRELOAD_GROUPS, ...DEFERRED_PRELOAD_GROUPS])
-  .filter(({ id }) => id === 'gltf-loader-module' || id === 'monkey-model' || id === 'vr-portal-model' || id.startsWith('glyph-'))
+  .filter(({ id }) => id === 'gltf-loader-module' || id === 'monkey-model' || id === 'vr-portal-model' || id.startsWith('glyph-') || id.startsWith('vr-crystal-'))
   .map((asset) => ({ ...asset, critical: asset.id === 'gltf-loader-module' }));
 const loadingDiagnostics = createLoadingDiagnostics(vrAssets);
 const assetManager = createAssetManager({ diagnostics: loadingDiagnostics });
@@ -97,7 +101,8 @@ await preloadAssets(vrAssets, {
 });
 unsubscribe();
 const monkeyModel = await loadMonkeyModel({ scene: worldRoot, fallbackObject: centralPlaceholder, assetManager });
-const { group: glyphRing, nodes } = createOrbitNodes(resolvePortfolioNodes(language), { assetManager });
+const resolvedPortfolioNodes = resolvePortfolioNodes(language);
+const { group: glyphRing, nodes } = createOrbitNodes(resolvedPortfolioNodes, { assetManager });
 worldRoot.add(glyphRing);
 const entryDirection = new THREE.Vector3(settings.spawn.position.x, 0, settings.spawn.position.z).normalize();
 const glyphOrbit = createVrGlyphOrbit({ nodes, settings: settings.glyphRing, entryDirection });
@@ -109,6 +114,13 @@ const portalDisplay = createVrPortalDisplay({
 });
 const portalCanvas = createVrSpatialPlaque({ scene, parent: portalDisplay.object, settings: settings.portalCanvas });
 const locomotion = createVrLocomotion({ playerRig, renderer, camera, settings: settings.locomotion });
+const crystalCollection = createVrCrystalCollection({
+  scene, assetManager, controllers: vrControllers.controllers, portalDisplay, settings: settings.crystals,
+  onConsume: (page) => {
+    const node = resolvedPortfolioNodes.find(({ id }) => id === page.glyphId);
+    portalCanvas.show(resolveExperienceVrPage(page, node));
+  }
+});
 let activatedEntryGlyph = null;
 const entryTransition = createVrEntryTransition({
   playerRig,
@@ -120,7 +132,13 @@ const entryTransition = createVrEntryTransition({
   effectiveRingRadius: glyphOrbit.effectiveRadius,
   onComplete: () => {
     if (!portalDisplay.place()) return;
-    portalCanvas.show(resolveVrPlaqueContent(activatedEntryGlyph?.userData));
+    portalCanvas.show({ title: copy.crystalInstructionTitle, body: copy.crystalInstructionBody });
+    const glyphId = activatedEntryGlyph?.userData?.id;
+    const xrCamera = renderer.xr.getCamera(camera);
+    crystalCollection.spawn(getExperienceVrPages(glyphId), {
+      playerPosition: xrCamera.getWorldPosition(new THREE.Vector3()),
+      portalPosition: portalDisplay.object.getWorldPosition(new THREE.Vector3())
+    });
   }
 });
 const glyphInteraction = createVrGlyphInteraction({
@@ -179,6 +197,7 @@ function handleSessionEnd() {
   clock.stop();
   activeSession = null;
   entryTransition.reset();
+  crystalCollection.reset();
   portalCanvas.reset();
   portalDisplay.reset();
   locomotion.reset();
@@ -194,6 +213,7 @@ function handleSessionEnd() {
 async function enterVr() {
   if (activeSession) return;
   entryTransition.reset();
+  crystalCollection.reset();
   portalCanvas.reset();
   portalDisplay.reset();
   locomotion.reset();
@@ -231,6 +251,7 @@ async function enterVr() {
     renderer.setAnimationLoop(null);
     clock.stop();
     entryTransition.reset();
+    crystalCollection.reset();
     portalCanvas.reset();
     portalDisplay.reset();
     locomotion.reset();
