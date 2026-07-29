@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import * as THREE from '../src/vendor/three.js';
 import {
+  calculateSurfaceCanvasSize,
   createVrSpatialPlaque,
   resolveVrPlaqueContent,
   wrapCanvasText
@@ -40,6 +41,50 @@ const settings = {
   enabled: true, width: 1.35, height: 0.85, offset: { x: 0, y: 0.12, z: 0.018 },
   canvasWidth: 1024, canvasHeight: 640, titleFontSize: 72, bodyFontSize: 42, maxBodyLines: 6
 };
+const gltfParent = new THREE.Group();
+scene.add(gltfParent);
+const gltfSurface = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 0.9));
+gltfSurface.name = 'PORTAL_CANVAS_SURFACE';
+gltfSurface.position.set(3, 2, 1);
+gltfSurface.rotation.set(0.1, 0.2, 0.3);
+gltfSurface.scale.set(2, 2, 4);
+gltfParent.add(gltfSurface);
+const gltfGeometry = gltfSurface.geometry;
+let gltfGeometryDisposed = false;
+gltfGeometry.addEventListener('dispose', () => { gltfGeometryDisposed = true; });
+const originalParent = gltfSurface.parent;
+const originalPosition = gltfSurface.position.clone();
+const originalRotation = gltfSurface.rotation.clone();
+const originalScale = gltfSurface.scale.clone();
+assert.deepEqual(calculateSurfaceCanvasSize(gltfSurface, 1024, 640), { width: 1024, height: 576 });
+gltfSurface.scale.set(1, 1, 1);
+assert.deepEqual(calculateSurfaceCanvasSize(gltfSurface, 1024, 640), { width: 1024, height: 576 });
+gltfSurface.scale.copy(originalScale);
+const gltfPlaque = createVrSpatialPlaque({
+  scene, parent: new THREE.Group(), surface: gltfSurface, settings, canvasFactory: fakeCanvas
+});
+assert.equal(gltfPlaque.object, gltfSurface);
+assert.equal(gltfSurface.parent, originalParent);
+assert.equal(gltfSurface.material.map.image.width, 1024);
+assert.equal(gltfSurface.material.map.image.height, 576);
+assert.deepEqual(gltfSurface.position.toArray(), originalPosition.toArray());
+assert.deepEqual(gltfSurface.rotation.toArray(), originalRotation.toArray());
+assert.equal(gltfPlaque.show({ title: 'GLB', body: 'surface' }), true);
+assert.deepEqual(gltfSurface.scale.toArray(), originalScale.clone().multiplyScalar(0.92).toArray());
+gltfPlaque.update(0.42);
+assert.deepEqual(gltfSurface.scale.toArray(), originalScale.toArray());
+gltfPlaque.reset();
+assert.equal(gltfSurface.visible, false);
+assert.deepEqual(gltfSurface.scale.toArray(), originalScale.toArray());
+assert.equal(gltfPlaque.show({ title: 'Again', body: 'Reusable' }), true);
+gltfPlaque.dispose();
+gltfPlaque.dispose();
+assert.equal(gltfSurface.parent, originalParent);
+assert.deepEqual(gltfSurface.position.toArray(), originalPosition.toArray());
+assert.deepEqual(gltfSurface.rotation.toArray(), originalRotation.toArray());
+assert.deepEqual(gltfSurface.scale.toArray(), originalScale.toArray());
+assert.equal(gltfGeometryDisposed, false);
+
 const plaque = createVrSpatialPlaque({
   scene, settings, canvasFactory: fakeCanvas
 });

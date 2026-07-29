@@ -5,6 +5,19 @@ export function calculatePortalScale(size, maxWidth, maxHeight) {
   return Math.min(maxWidth / size.x, maxHeight / size.y);
 }
 
+export function findPortalCanvasSurface(model) {
+  let candidate = null;
+  model?.traverse((object) => {
+    if (!candidate && object.name === 'PORTAL_CANVAS_SURFACE') candidate = object;
+  });
+  const role = candidate?.userData?.portal_role;
+  if (!candidate?.isMesh || !candidate.geometry || !candidate.geometry.getAttribute?.('uv')
+    || (role !== undefined && role !== 'canvas_surface')) {
+    return null;
+  }
+  return candidate;
+}
+
 export function createVrPortalDisplay({ scene, camera, renderer, anchorObject, portalModel, settings }) {
   const socketSettings = settings.socket ?? { xFactor: 0, yFactor: -0.34, zFactor: 0.58, insertRadius: 0.28 };
   const object = new THREE.Group();
@@ -12,6 +25,10 @@ export function createVrPortalDisplay({ scene, camera, renderer, anchorObject, p
   object.visible = false;
   scene.add(object);
   const model = portalModel?.clone(true) ?? null;
+  const canvasSurface = findPortalCanvasSurface(model);
+  if (model && !canvasSurface) {
+    console.warn('[Experience VR] PORTAL_CANVAS_SURFACE is missing or invalid (expected a mesh with geometry, UVs, and portal_role="canvas_surface" when the role is present). Using the portal canvas fallback.');
+  }
   const socket = new THREE.Object3D();
   socket.name = 'VrPortalCrystalSocket';
   socket.visible = false;
@@ -71,5 +88,5 @@ export function createVrPortalDisplay({ scene, camera, renderer, anchorObject, p
     return socket.getWorldPosition(targetVector);
   }
   function dispose() { if (!disposed) { reset(); disposed = true; object.removeFromParent(); } }
-  return { object, model, socket, insertRadius: socketSettings.insertRadius, getSocketWorldPosition, place, reset, dispose };
+  return { object, model, canvasSurface, socket, insertRadius: socketSettings.insertRadius, getSocketWorldPosition, place, reset, dispose };
 }

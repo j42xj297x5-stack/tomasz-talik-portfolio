@@ -112,7 +112,12 @@ const portalDisplay = createVrPortalDisplay({
   scene, camera, renderer, anchorObject: monkeyAnchor,
   portalModel: assetManager.cloneGltfScene('vr-portal-model'), settings: settings.portal
 });
-const portalCanvas = createVrSpatialPlaque({ scene, parent: portalDisplay.object, settings: settings.portalCanvas });
+const portalCanvas = createVrSpatialPlaque({
+  scene,
+  parent: portalDisplay.object,
+  surface: portalDisplay.canvasSurface,
+  settings: settings.portalCanvas
+});
 const locomotion = createVrLocomotion({ playerRig, renderer, camera, settings: settings.locomotion });
 const crystalCollection = createVrCrystalCollection({
   scene, assetManager, controllers: vrControllers.controllers, portalDisplay, settings: settings.crystals,

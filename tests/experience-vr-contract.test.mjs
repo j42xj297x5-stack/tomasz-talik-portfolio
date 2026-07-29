@@ -25,6 +25,7 @@ assert.doesNotMatch(vr, /requestAnimationFrame/);
 assert.doesNotMatch(entryTransition, /requestAnimationFrame|performance\.now/);
 assert.match(spatialPlaque, /new THREE\.CanvasTexture\(canvas\)/);
 assert.match(spatialPlaque, /new THREE\.PlaneGeometry/);
+assert.match(vr, /surface: portalDisplay\.canvasSurface/);
 assert.doesNotMatch(spatialPlaque, /Raycaster|requestAnimationFrame|tween/i);
 assert.doesNotMatch(spatialPlaque, /DOMOverlay|iframe|createElement\(['"](?:div|style)/i);
 assert.doesNotMatch(vr, /cameraRig|createOverlay|createBackgroundAtmosphere|createGalaxySpritesLayer/);
