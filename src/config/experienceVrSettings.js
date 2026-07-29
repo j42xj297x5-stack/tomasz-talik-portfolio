@@ -58,7 +58,7 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
       rayMaxDistance: 3,
       side: 'left'
     },
-    releaseButton: { enabled: true, rayMaxDistance: 3, side: 'right', releaseDelaySeconds: 1 }
+    releaseButton: { enabled: true, rayMaxDistance: 3, side: 'right', releaseDelaySeconds: 1, hitAreaScale: 2 }
   },
   portalCanvas: {
     enabled: true,
@@ -206,7 +206,9 @@ export function normalizeExperienceVrSettings(candidate) {
           defaults.reliquary.releaseButton.rayMaxDistance, { min: 0.3, max: 5 }),
         side: candidate.reliquary?.releaseButton?.side === 'left' ? 'left' : 'right',
         releaseDelaySeconds: finiteNumber(candidate.reliquary?.releaseButton?.releaseDelaySeconds,
-          defaults.reliquary.releaseButton.releaseDelaySeconds, { min: 0, max: 3 })
+          defaults.reliquary.releaseButton.releaseDelaySeconds, { min: 0, max: 3 }),
+        hitAreaScale: finiteNumber(candidate.reliquary?.releaseButton?.hitAreaScale,
+          defaults.reliquary.releaseButton.hitAreaScale, { min: 1, max: 4 })
       }
     },
     portalCanvas: {

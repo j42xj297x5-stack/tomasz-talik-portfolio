@@ -49,10 +49,10 @@ export function createVrCrystalReliquary({ scene, reliquaryModel, portalDisplay,
   object.add(authoredRoot);
   const model = reliquaryModel ?? null;
   const insertZone = findNamedObject(model, INSERT_ZONE_NAME);
-  const crystalAnchor = findNamedObject(model, ANCHOR_NAME);
+  const authoredCrystalAnchor = findNamedObject(model, ANCHOR_NAME);
   const hasValidInsertZone = Boolean(insertZone?.isMesh && insertZone.geometry
     && roleIsValid(insertZone, 'crystal_insert_zone'));
-  const hasValidAnchor = Boolean(crystalAnchor && roleIsValid(crystalAnchor, 'crystal_display_anchor'));
+  const hasValidAnchor = Boolean(authoredCrystalAnchor && roleIsValid(authoredCrystalAnchor, 'crystal_display_anchor'));
   if (insertZone) insertZone.visible = false;
   if (!model || !hasValidInsertZone || !hasValidAnchor) {
     console.warn('[Experience VR] Crystal reliquary model, insert zone, or anchor is missing or invalid. The portal crystal socket remains available when the insert zone cannot be used.');
@@ -63,6 +63,16 @@ export function createVrCrystalReliquary({ scene, reliquaryModel, portalDisplay,
     const center = visibleBounds.getCenter(new THREE.Vector3());
     authoredRoot.position.set(-center.x, -visibleBounds.min.y, -center.z);
     authoredRoot.add(model);
+  }
+  const runtimeCrystalAnchor = new THREE.Object3D();
+  runtimeCrystalAnchor.name = 'VrReliquaryCrystalDisplayAnchor';
+  runtimeCrystalAnchor.visible = true;
+  authoredRoot.add(runtimeCrystalAnchor);
+  if (authoredCrystalAnchor && model?.parent) {
+    authoredRoot.updateWorldMatrix(true, false);
+    authoredCrystalAnchor.updateWorldMatrix(true, false);
+    const localMatrix = authoredRoot.matrixWorld.clone().invert().multiply(authoredCrystalAnchor.matrixWorld);
+    localMatrix.decompose(runtimeCrystalAnchor.position, runtimeCrystalAnchor.quaternion, runtimeCrystalAnchor.scale);
   }
 
   const portalPosition = new THREE.Vector3();
@@ -161,9 +171,9 @@ export function createVrCrystalReliquary({ scene, reliquaryModel, portalDisplay,
   }
 
   function getCrystalAnchorWorldPosition(targetVector = new THREE.Vector3()) {
-    if (!crystalAnchor || !hasValidAnchor) return null;
-    crystalAnchor.updateWorldMatrix(true, false);
-    return crystalAnchor.getWorldPosition(targetVector);
+    if (!hasValidAnchor) return null;
+    runtimeCrystalAnchor.updateWorldMatrix(true, false);
+    return runtimeCrystalAnchor.getWorldPosition(targetVector);
   }
 
   function dispose() {
@@ -174,7 +184,8 @@ export function createVrCrystalReliquary({ scene, reliquaryModel, portalDisplay,
   }
 
   place();
-  return { object, authoredRoot, model, insertZone, crystalAnchor, hasValidInsertZone, portalForward, portalLeft, place, reset, dispose,
+  return { object, authoredRoot, model, insertZone, authoredCrystalAnchor, crystalAnchor: runtimeCrystalAnchor,
+    runtimeCrystalAnchor, hasValidInsertZone, portalForward, portalLeft, place, reset, dispose,
     attachCompanion,
     get buttonPlacementRoot() { return companions.get('activate')?.placementRoot ?? null; },
     getInsertZoneWorldSphere, getCrystalAnchorWorldPosition };

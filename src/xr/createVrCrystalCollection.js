@@ -1,5 +1,12 @@
 import * as THREE from '../vendor/three.js';
 
+export function isEffectivelyVisible(object) {
+  for (let current = object; current; current = current.parent) {
+    if (current.visible === false) return false;
+  }
+  return true;
+}
+
 export function hashVrPageId(id) {
   let hash = 2166136261;
   for (const character of String(id)) {
@@ -153,6 +160,20 @@ export function createVrCrystalCollection({ scene, assetManager, controllers, po
       instance.state = 'inserted';
       instance.object.visible = true;
       insertedInstance = instance;
+      if (!isEffectivelyVisible(instance.object)) {
+        if (!warnedFallbackAnchor) {
+          console.warn('[Experience VR] Inserted crystal inherited an invisible parent; using a visible runtime fallback anchor.');
+          warnedFallbackAnchor = true;
+        }
+        if (!fallbackAnchor) {
+          fallbackAnchor = new THREE.Object3D();
+          fallbackAnchor.name = 'VrReliquaryCrystalFallbackAnchor';
+          fallbackAnchor.visible = true;
+          (insertionTarget?.authoredRoot ?? insertionTarget?.object ?? scene).add(fallbackAnchor);
+        }
+        fallbackAnchor.attach(instance.object);
+        instance.object.visible = true;
+      }
     } else {
       scene.attach(instance.object);
       instance.state = 'available';
