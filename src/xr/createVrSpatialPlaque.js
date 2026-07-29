@@ -57,16 +57,45 @@ export function resolveVrPlaqueContent(glyphData) {
   };
 }
 
-export function createVrSpatialPlaque({ scene, parent = scene, settings, canvasFactory }) {
+export function calculateSurfaceCanvasSize(surface, maxWidth, maxHeight) {
+  surface.geometry.computeBoundingBox();
+  const size = surface.geometry.boundingBox.getSize(new THREE.Vector3());
+  surface.updateWorldMatrix(true, false);
+  const scale = surface.getWorldScale(new THREE.Vector3());
+  const width = Math.abs(size.x * scale.x);
+  const height = Math.abs(size.y * scale.y);
+  if (!(width > 0) || !(height > 0)) return null;
+  const fit = Math.min(maxWidth / width, maxHeight / height);
+  return {
+    width: Math.max(1, Math.round(width * fit)),
+    height: Math.max(1, Math.round(height * fit))
+  };
+}
+
+function isValidSurface(surface) {
+  return Boolean(surface?.isMesh && surface.geometry && surface.geometry.getAttribute?.('uv'));
+}
+
+export function createVrSpatialPlaque({ scene, parent = scene, surface, settings, canvasFactory }) {
+  const usesGltfSurface = isValidSurface(surface);
+  if (!usesGltfSurface) {
+    console.warn('[Experience VR] A valid PORTAL_CANVAS_SURFACE was not provided. Creating the settings-based fallback plane.');
+  }
+  const surfaceCanvasSize = usesGltfSurface
+    ? calculateSurfaceCanvasSize(surface, settings.canvasWidth, settings.canvasHeight)
+    : null;
+  if (usesGltfSurface && !surfaceCanvasSize) {
+    console.warn('[Experience VR] PORTAL_CANVAS_SURFACE has empty local bounds. Canvas resolution is using the configured limits.');
+  }
   const canvas = canvasFactory ? canvasFactory() : document.createElement('canvas');
-  canvas.width = settings.canvasWidth;
-  canvas.height = settings.canvasHeight;
+  canvas.width = surfaceCanvasSize?.width ?? Math.max(1, Math.round(settings.canvasWidth));
+  canvas.height = surfaceCanvasSize?.height ?? Math.max(1, Math.round(settings.canvasHeight));
   const context = canvas.getContext('2d');
   const texture = new THREE.CanvasTexture(canvas);
   texture.colorSpace = THREE.SRGBColorSpace;
   texture.minFilter = THREE.LinearFilter;
   texture.magFilter = THREE.LinearFilter;
-  const geometry = new THREE.PlaneGeometry(settings.width, settings.height);
+  const geometry = usesGltfSurface ? surface.geometry : new THREE.PlaneGeometry(settings.width, settings.height);
   const material = new THREE.MeshBasicMaterial({
     map: texture,
     transparent: true,
@@ -74,10 +103,13 @@ export function createVrSpatialPlaque({ scene, parent = scene, settings, canvasF
     side: THREE.FrontSide,
     depthWrite: false
   });
-  const object = new THREE.Mesh(geometry, material);
-  object.name = 'VrPortalCanvas';
+  const object = usesGltfSurface ? surface : new THREE.Mesh(geometry, material);
+  const originalMaterial = usesGltfSurface ? object.material : null;
+  const baseScale = object.scale.clone();
+  if (!usesGltfSurface) object.name = 'VrPortalCanvas';
+  object.material = material;
   object.visible = false;
-  parent.add(object);
+  if (!usesGltfSurface) parent.add(object);
 
   let state = 'hidden';
   let elapsed = 0;
@@ -121,12 +153,14 @@ export function createVrSpatialPlaque({ scene, parent = scene, settings, canvasF
   function show(content) {
     if (disposed || !settings.enabled) return false;
     draw(content);
-    object.position.set(settings.offset.x, settings.offset.y, settings.offset.z);
-    object.rotation.set(0, 0, 0);
+    if (!usesGltfSurface) {
+      object.position.set(settings.offset.x, settings.offset.y, settings.offset.z);
+      object.rotation.set(0, 0, 0);
+    }
     elapsed = 0;
     state = 'appearing';
     object.visible = true;
-    object.scale.setScalar(START_SCALE);
+    object.scale.copy(baseScale).multiplyScalar(START_SCALE);
     material.opacity = 0;
     return true;
   }
@@ -136,7 +170,7 @@ export function createVrSpatialPlaque({ scene, parent = scene, settings, canvasF
     elapsed = 0;
     state = 'hidden';
     object.visible = false;
-    object.scale.setScalar(START_SCALE);
+    object.scale.copy(baseScale);
     material.opacity = 0;
   }
 
@@ -145,9 +179,12 @@ export function createVrSpatialPlaque({ scene, parent = scene, settings, canvasF
     elapsed += Number.isFinite(delta) && delta > 0 ? delta : 0;
     const progress = Math.min(1, elapsed / APPEAR_DURATION_SECONDS);
     const eased = progress * progress * (3 - 2 * progress);
-    object.scale.setScalar(START_SCALE + (1 - START_SCALE) * eased);
+    object.scale.copy(baseScale).multiplyScalar(START_SCALE + (1 - START_SCALE) * eased);
     material.opacity = eased;
-    if (progress === 1) state = 'visible';
+    if (progress === 1) {
+      object.scale.copy(baseScale);
+      state = 'visible';
+    }
   }
 
   function reset() { hide(); }
@@ -156,8 +193,11 @@ export function createVrSpatialPlaque({ scene, parent = scene, settings, canvasF
     if (disposed) return;
     hide();
     disposed = true;
-    object.removeFromParent();
-    geometry.dispose();
+    if (usesGltfSurface) object.material = originalMaterial;
+    else {
+      object.removeFromParent();
+      geometry.dispose();
+    }
     material.dispose();
     texture.dispose();
     context.clearRect(0, 0, canvas.width, canvas.height);
