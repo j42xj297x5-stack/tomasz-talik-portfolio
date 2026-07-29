@@ -17,7 +17,8 @@ const normalized = normalizeExperienceVrSettings({
   controllers: { enabled: false, rayLength: 0, rayOpacity: 4, idleScale: 'bad', activeScale: 99 },
   entryTransition: { enabled: false, durationSeconds: 99, target: { x: 2, z: 'bad' }, easing: 'linear' },
   portal: { enabled: false, maxWidth: 0, maxHeight: 20, distanceFromAnchor: 0, forwardBias: 9, floorOffset: -9, appearDuration: 0, appearStartScale: 9 },
-  reliquary: { forwardOffset: -3, activateButton: { placementRadius: 8, placementAngleDegrees: -4, verticalOffset: 7 } },
+  reliquary: { distanceFromPortal: 4, forwardOffset: -3, floorOffset: 9,
+    activateButton: { placementRadius: 8, placementAngleDegrees: -4, verticalOffset: 7 } },
   portalCanvas: {
     enabled: false, width: 0, height: 9, distanceFromAnchor: 0, forwardBias: 9, floorOffset: -9,
     canvasWidth: 3000.6, canvasHeight: 100, titleFontSize: 10, bodyFontSize: 200, maxBodyLines: 0
@@ -54,8 +55,20 @@ assert.deepEqual(normalized.portalCanvas, {
 });
 assert.deepEqual(normalized.reliquary, {
   ...DEFAULT_EXPERIENCE_VR_SETTINGS.reliquary,
-  forwardOffset: 0,
-  buttons: { ...DEFAULT_EXPERIENCE_VR_SETTINGS.reliquary.buttons, placementRadius: 3, placementAngleDegrees: 0, verticalOffset: 1 }
+  distanceFromPortal: 1,
+  heightOffset: 2,
+  buttons: { ...DEFAULT_EXPERIENCE_VR_SETTINGS.reliquary.buttons, forwardDistance: 3, lateralOffset: 0, verticalOffset: 1 }
+});
+
+const modernPlacement = normalizeExperienceVrSettings({ schemaVersion: 1, reliquary: {
+  distanceFromPortal: 9, heightOffset: -9,
+  buttons: { scale: 9, forwardDistance: 9, lateralOffset: 9, verticalOffset: -9 }
+} }).reliquary;
+assert.deepEqual(modernPlacement, {
+  ...DEFAULT_EXPERIENCE_VR_SETTINGS.reliquary,
+  distanceFromPortal: 5,
+  heightOffset: -1,
+  buttons: { scale: 1, forwardDistance: 3, lateralOffset: 2, verticalOffset: -1 }
 });
 assert.deepEqual(normalized.locomotion, DEFAULT_EXPERIENCE_VR_SETTINGS.locomotion);
 assert.deepEqual(normalized.crystals, {
