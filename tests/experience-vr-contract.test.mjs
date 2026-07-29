@@ -52,6 +52,7 @@ assert.match(vr, /function handleSessionEnd\(\)[\s\S]*entryTransition\.reset\(\)
 assert.match(vr, /entryTransition\.reset\(\);\s*crystalCollection\.reset\(\);\s*portalCanvas\.reset\(\);\s*portalDisplay\.reset\(\);\s*locomotion\.reset\(\);\s*playerRig\.position\.set\(settings\.spawn\.position\.x/);
 assert.match(vr, /function handleSessionEnd\(\)[\s\S]*portalDisplay\.reset\(\)/);
 assert.match(vr, /entryTransition\.update\(delta\)/);
+assert.match(vr, /crystalCollection\.update\(delta\)/);
 assert.match(vr, /const orbitEntryReady = glyphOrbit\.update\(delta\);\s*const entryReady = activatedEntryGlyph \? null : orbitEntryReady/);
 assert.match(vr, /onComplete:[\s\S]*portalDisplay\.place\(\)[\s\S]*portalCanvas\.show/);
 assert.match(vr, /function handleSessionEnd\(\)[\s\S]*portalCanvas\.reset\(\)/);
@@ -62,6 +63,9 @@ assert.match(vrControllers, /renderer\.xr\.getController\(1\)/);
 assert.match(glyphInteraction, /new THREE\.Raycaster\(\)/);
 assert.match(glyphInteraction, /intersectObjects\(allRaycastObjects, true\)/);
 assert.match(glyphInteraction, /objectToGlyph/);
+assert.match(crystalCollection, /new THREE\.Raycaster\(\)/);
+assert.match(crystalCollection, /currentCrystalHitDistance/);
+assert.doesNotMatch(crystalCollection, /currentHit\s*=/);
 assert.doesNotMatch(glyphInteraction, /SphereGeometry\(0\.31|VrEntryGlyphMarker|playerRig\.position|playerRig\.rotation/);
 assert.doesNotMatch(`${vr}\n${vrControllers}`, /XRControllerModelFactory/);
 assert.match(vr, /onConsume:[\s\S]*portalCanvas\.show\(resolveExperienceVrPage\(page, node\)\)/);
