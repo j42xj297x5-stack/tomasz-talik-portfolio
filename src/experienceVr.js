@@ -143,7 +143,7 @@ const crystalCollection = createVrCrystalCollection({
 });
 const activateButtonGltf = assetManager.getGltf('vr-crystal-reliquary-button-activate-model');
 const activateButtonModel = assetManager.cloneGltfScene('vr-crystal-reliquary-button-activate-model');
-crystalReliquary.attachAuthoredCompanion(activateButtonModel);
+crystalReliquary.attachAuthoredCompanion(activateButtonModel, settings.reliquary.activateButton);
 const activateButton = createVrReliquaryActivateButton({
   buttonModel: activateButtonModel,
   animations: activateButtonGltf?.animations ?? [],
