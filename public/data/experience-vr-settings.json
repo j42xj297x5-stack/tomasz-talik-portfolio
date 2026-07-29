@@ -3,8 +3,16 @@
   "referenceSpaceType": "local-floor",
   "worldScale": 1,
   "spawn": {
-    "position": { "x": 0, "y": 0, "z": 8.6 },
-    "lookAt": { "x": 0, "y": 1, "z": 0 }
+    "position": {
+      "x": 0,
+      "y": 0,
+      "z": 8.6
+    },
+    "lookAt": {
+      "x": 0,
+      "y": 1,
+      "z": 0
+    }
   },
   "renderer": {
     "pixelRatioCap": 1.5,
@@ -29,7 +37,10 @@
     "enabled": true,
     "durationSeconds": 3,
     "targetRadiusFactor": 0.76,
-    "target": { "x": 0, "z": 1.8 },
+    "target": {
+      "x": 0,
+      "z": 1.8
+    },
     "easing": "smoothstep"
   },
   "portal": {
@@ -41,7 +52,12 @@
     "floorOffset": 0,
     "appearDuration": 0.42,
     "appearStartScale": 0.92,
-    "socket": { "xFactor": 0, "yFactor": -0.34, "zFactor": 0.58, "insertRadius": 0.28 }
+    "socket": {
+      "xFactor": 0,
+      "yFactor": -0.34,
+      "zFactor": 0.58,
+      "insertRadius": 0.28
+    }
   },
   "reliquary": {
     "enabled": true,
@@ -51,16 +67,30 @@
     "activateButton": {
       "enabled": true,
       "rayMaxDistance": 3,
-      "placementRadius": 1.0,
-      "placementAngleDegrees": 45,
+      "side": "left"
+    },
+    "buttons": {
+      "scale": 0.3,
+      "placementRadius": 0.9,
+      "placementAngleDegrees": 60,
       "verticalOffset": 0
+    },
+    "releaseButton": {
+      "enabled": true,
+      "rayMaxDistance": 3,
+      "side": "right",
+      "releaseDelaySeconds": 1
     }
   },
   "portalCanvas": {
     "enabled": true,
     "width": 1.35,
     "height": 0.85,
-    "offset": { "x": 0, "y": 0.12, "z": 0.018 },
+    "offset": {
+      "x": 0,
+      "y": 0.12,
+      "z": 0.018
+    },
     "canvasWidth": 1024,
     "canvasHeight": 640,
     "titleFontSize": 72,
@@ -83,7 +113,11 @@
     "materializeStartScale": 0.18,
     "materializeRise": 0.12,
     "materializeYaw": 0.35,
-    "holdOffset": { "x": 0, "y": 0, "z": -0.09 }
+    "holdOffset": {
+      "x": 0,
+      "y": 0,
+      "z": -0.09
+    }
   },
   "locomotion": {
     "enabled": true,

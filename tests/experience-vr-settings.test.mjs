@@ -55,7 +55,7 @@ assert.deepEqual(normalized.portalCanvas, {
 assert.deepEqual(normalized.reliquary, {
   ...DEFAULT_EXPERIENCE_VR_SETTINGS.reliquary,
   forwardOffset: 0,
-  activateButton: { ...DEFAULT_EXPERIENCE_VR_SETTINGS.reliquary.activateButton, placementRadius: 3, placementAngleDegrees: 0, verticalOffset: 1 }
+  buttons: { ...DEFAULT_EXPERIENCE_VR_SETTINGS.reliquary.buttons, placementRadius: 3, placementAngleDegrees: 0, verticalOffset: 1 }
 });
 assert.deepEqual(normalized.locomotion, DEFAULT_EXPERIENCE_VR_SETTINGS.locomotion);
 assert.deepEqual(normalized.crystals, {

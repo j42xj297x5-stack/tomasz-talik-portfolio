@@ -3,7 +3,7 @@ import * as THREE from '../src/vendor/three.js';
 import { experienceVrPages, experienceVrPagesByGlyphId, getExperienceVrPages, resolveExperienceVrPage } from '../src/content/experienceVrPages.js';
 import { resolvePortfolioNodes } from '../src/content/resolvePortfolioNodes.js';
 import { ASSET_STAGES, getPreloadAssets } from '../src/assets/assetManifest.js';
-import { createVrCrystalCollection, getDeterministicCrystalTransform } from '../src/xr/createVrCrystalCollection.js';
+import { createVrCrystalCollection, getDeterministicCrystalTransform, isEffectivelyVisible } from '../src/xr/createVrCrystalCollection.js';
 
 const expected = {
   'ai-guide': 'crystal-ai_guide', 'creative-ai': 'crystal-creative_ai',
@@ -26,7 +26,7 @@ const localizedPages = getExperienceVrPages('spotify-digger').map((page) => reso
 assert.ok(localizedPages.every(({ title, body }) => title.length > 0 && body.length > 0));
 assert.equal(localizedPages[0].title, localizedNode.title);
 assert.equal(localizedPages[0].body, localizedNode.leadText || localizedNode.draftText);
-const manifestCrystals = getPreloadAssets([ASSET_STAGES.DEFERRED_WARM]).filter(({ id }) => id.startsWith('vr-crystal-') && id !== 'vr-crystal-reliquary-model' && id !== 'vr-crystal-reliquary-button-activate-model');
+const manifestCrystals = getPreloadAssets([ASSET_STAGES.DEFERRED_WARM]).filter(({ id }) => id.startsWith('vr-crystal-') && !id.startsWith('vr-crystal-reliquary'));
 assert.deepEqual(manifestCrystals.map(({ id, path }) => ({ id, path })), experienceVrPages.map((page) => ({ id: page.crystalAssetId, path: page.crystalModelPath })));
 
 const settings = { enabled: true, rayGrabMaxDistance: 1.8, pullDuration: 0.25, targetScale: 1.04, scaleMin: 0.22, scaleMax: 0.28, spawnWidth: 1.45, spawnDepth: 0.85, minimumSpacing: 0.38, frontDistance: 1.55, materializeDuration: 0.55, materializeStagger: 0.12, materializeStartScale: 0.18, materializeRise: 0.12, materializeYaw: 0.35, holdOffset: { x: 0, y: 0, z: -0.09 } };
@@ -118,9 +118,12 @@ assert.equal(spawned[0].state, 'available');
 assert.ok(spawned[0].object.getWorldPosition(new THREE.Vector3()).distanceTo(beforeRelease) < 1e-8);
 right.grip.position.copy(portalObject.position).add(new THREE.Vector3(0, 0, 0.09)); scene.updateMatrixWorld(true);
 collection.release(right);
-assert.equal(spawned[1].state, 'consumed');
+assert.equal(spawned[1].state, 'inserted');
+assert.equal(spawned[1].object.visible, true);
+assert.deepEqual(consumed, []);
+assert.equal(collection.releaseInserted(), true);
+assert.equal(spawned[1].state, 'released');
 assert.equal(spawned[1].object.visible, false);
-assert.deepEqual(consumed, [spawned[1].page.id]);
 
 collection.reset();
 assert.equal(collection.instances.length, 0);
@@ -134,17 +137,25 @@ console.log('VR crystal collection assertions passed');
 {
   const insertionScene = new THREE.Scene();
   const record = (() => { const controller = new THREE.Group(); const holdSocket = new THREE.Group(); controller.add(holdSocket); insertionScene.add(controller); return { controller, holdSocket }; })();
-  const anchor = new THREE.Group(); insertionScene.add(anchor);
+  const authoredRoot = new THREE.Group(); insertionScene.add(authoredRoot);
+  const insertZone = new THREE.Group(); insertZone.visible = false; authoredRoot.add(insertZone);
+  const authoredAnchor = new THREE.Group(); insertZone.add(authoredAnchor);
+  const anchor = new THREE.Group(); anchor.name = 'VrReliquaryCrystalDisplayAnchor'; authoredRoot.add(anchor);
   const portal = { object: new THREE.Group(), insertRadius: 0.2, getSocketWorldPosition: (out) => out.set(99, 0, 99) }; insertionScene.add(portal.object);
   const activated = [];
-  const insertedCollection = createVrCrystalCollection({ insertionTarget: { object: { visible: true }, hasValidInsertZone: true, crystalAnchor: anchor, getInsertZoneWorldSphere: () => new THREE.Sphere(new THREE.Vector3(), 10) }, scene: insertionScene, controllers: [record], portalDisplay: portal, settings, assetManager: { cloneGltfScene: () => new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.4, 0.2)) }, onActivate: (page) => activated.push(page.id) });
+  const insertedCollection = createVrCrystalCollection({ insertionTarget: { object: { visible: true }, authoredRoot, authoredCrystalAnchor: authoredAnchor, runtimeCrystalAnchor: anchor, crystalAnchor: anchor, hasValidInsertZone: true, getInsertZoneWorldSphere: () => new THREE.Sphere(new THREE.Vector3(), 10) }, scene: insertionScene, controllers: [record], portalDisplay: portal, settings, assetManager: { cloneGltfScene: () => new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.4, 0.2)) }, onActivate: (page) => activated.push(page.id) });
   const insertedPages = [{ id: 'insert-one' }, { id: 'insert-two' }];
   const [first, second] = insertedCollection.spawn(insertedPages, { anchorObject: portal.object, spawnPosition: { x: 0, y: 0, z: 2 } });
   insertedCollection.update(2); insertedCollection.update(2);
   for (const instance of [first, second]) { record.currentCrystalHit = instance; record.currentCrystalHitDistance = 0.1; insertedCollection.grab(record); insertedCollection.update(2); insertionScene.updateMatrixWorld(true); insertedCollection.release(record); }
-  assert.equal(first.state, 'inserted'); assert.equal(first.object.parent, anchor); assert.equal(first.object.visible, true); assert.equal(insertedCollection.getInsertedInstance(), first); assert.deepEqual(activated, []);
+  assert.equal(first.state, 'inserted'); assert.equal(first.object.parent, anchor); assert.equal(first.object.visible, true);
+  assert.equal(isEffectivelyVisible(first.object), true); assert.notEqual(anchor.parent, insertZone);
+  assert.equal(insertedCollection.getInsertedInstance(), first); assert.deepEqual(activated, []);
   assert.equal(second.state, 'available', 'a second crystal is rejected while occupied');
   assert.equal(insertedCollection.activateInserted(), true); assert.equal(first.state, 'active'); assert.deepEqual(activated, ['insert-one']);
   assert.equal(insertedCollection.activateInserted(), false); assert.deepEqual(activated, ['insert-one']);
+  assert.equal(insertedCollection.releaseInserted(), true); assert.equal(insertedCollection.getInsertedInstance(), null);
+  assert.equal(insertedCollection.hasReadPage('insert-one'), true);
+  assert.deepEqual(insertedCollection.getReadPageIds(), ['insert-one']);
   insertedCollection.dispose();
 }
