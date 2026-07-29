@@ -40,11 +40,17 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
     enabled: true,
     maxWidth: 2.8,
     maxHeight: 3.2,
-    distance: 2.15,
-    verticalOffset: -0.15,
+    distanceFromAnchor: 2,
+    forwardBias: 0.25,
+    floorOffset: 0,
     appearDuration: 0.42,
     appearStartScale: 0.92,
     socket: { xFactor: 0, yFactor: -0.34, zFactor: 0.58, insertRadius: 0.28 }
+  },
+  reliquary: {
+    enabled: true,
+    distanceFromPortal: 0.5,
+    floorOffset: 0
   },
   portalCanvas: {
     enabled: true,
@@ -67,6 +73,12 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
     spawnWidth: 1.45,
     spawnDepth: 0.85,
     minimumSpacing: 0.38,
+    frontDistance: 1.55,
+    materializeDuration: 0.55,
+    materializeStagger: 0.12,
+    materializeStartScale: 0.18,
+    materializeRise: 0.12,
+    materializeYaw: 0.35,
     holdOffset: { x: 0, y: 0, z: -0.09 }
   },
   locomotion: {
@@ -146,8 +158,9 @@ export function normalizeExperienceVrSettings(candidate) {
       enabled: typeof candidate.portal?.enabled === 'boolean' ? candidate.portal.enabled : defaults.portal.enabled,
       maxWidth: finiteNumber(candidate.portal?.maxWidth, defaults.portal.maxWidth, { min: 0.5, max: 8 }),
       maxHeight: finiteNumber(candidate.portal?.maxHeight, defaults.portal.maxHeight, { min: 0.5, max: 8 }),
-      distance: finiteNumber(candidate.portal?.distance, defaults.portal.distance, { min: 0.6, max: 6 }),
-      verticalOffset: finiteNumber(candidate.portal?.verticalOffset, defaults.portal.verticalOffset, { min: -3, max: 3 }),
+      distanceFromAnchor: finiteNumber(candidate.portal?.distanceFromAnchor, defaults.portal.distanceFromAnchor, { min: 0.5, max: 5 }),
+      forwardBias: finiteNumber(candidate.portal?.forwardBias, defaults.portal.forwardBias, { min: -0.5, max: 1 }),
+      floorOffset: finiteNumber(candidate.portal?.floorOffset, defaults.portal.floorOffset, { min: -1, max: 1 }),
       appearDuration: finiteNumber(candidate.portal?.appearDuration, defaults.portal.appearDuration, { min: 0.05, max: 3 }),
       appearStartScale: finiteNumber(candidate.portal?.appearStartScale, defaults.portal.appearStartScale, { min: 0.1, max: 1 }),
       socket: {
@@ -156,6 +169,11 @@ export function normalizeExperienceVrSettings(candidate) {
         zFactor: finiteNumber(candidate.portal?.socket?.zFactor, defaults.portal.socket.zFactor, { min: -2, max: 2 }),
         insertRadius: finiteNumber(candidate.portal?.socket?.insertRadius, defaults.portal.socket.insertRadius, { min: 0.05, max: 1 })
       }
+    },
+    reliquary: {
+      enabled: typeof candidate.reliquary?.enabled === 'boolean' ? candidate.reliquary.enabled : defaults.reliquary.enabled,
+      distanceFromPortal: finiteNumber(candidate.reliquary?.distanceFromPortal, defaults.reliquary.distanceFromPortal, { min: 0, max: 3 }),
+      floorOffset: finiteNumber(candidate.reliquary?.floorOffset, defaults.reliquary.floorOffset, { min: -1, max: 1 })
     },
     portalCanvas: {
       enabled: typeof candidate.portalCanvas?.enabled === 'boolean' ? candidate.portalCanvas.enabled : defaults.portalCanvas.enabled,
@@ -178,6 +196,12 @@ export function normalizeExperienceVrSettings(candidate) {
       spawnWidth: finiteNumber(candidate.crystals?.spawnWidth, defaults.crystals.spawnWidth, { min: 0.5, max: 3 }),
       spawnDepth: finiteNumber(candidate.crystals?.spawnDepth, defaults.crystals.spawnDepth, { min: 0.2, max: 2 }),
       minimumSpacing: finiteNumber(candidate.crystals?.minimumSpacing, defaults.crystals.minimumSpacing, { min: 0.1, max: 1 }),
+      frontDistance: finiteNumber(candidate.crystals?.frontDistance, defaults.crystals.frontDistance, { min: 0.5, max: 4 }),
+      materializeDuration: finiteNumber(candidate.crystals?.materializeDuration, defaults.crystals.materializeDuration, { min: 0.1, max: 2 }),
+      materializeStagger: finiteNumber(candidate.crystals?.materializeStagger, defaults.crystals.materializeStagger, { min: 0, max: 0.5 }),
+      materializeStartScale: finiteNumber(candidate.crystals?.materializeStartScale, defaults.crystals.materializeStartScale, { min: 0.05, max: 1 }),
+      materializeRise: finiteNumber(candidate.crystals?.materializeRise, defaults.crystals.materializeRise, { min: 0, max: 0.5 }),
+      materializeYaw: finiteNumber(candidate.crystals?.materializeYaw, defaults.crystals.materializeYaw, { min: 0, max: 1 }),
       holdOffset: normalizeVector(candidate.crystals?.holdOffset, defaults.crystals.holdOffset)
     },
     locomotion: {

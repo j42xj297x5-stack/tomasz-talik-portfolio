@@ -24,7 +24,7 @@ const noUvs = new THREE.Mesh(new THREE.BufferGeometry()); noUvs.name = 'PORTAL_C
 noUvs.geometry.setAttribute('position', new THREE.Float32BufferAttribute([0, 0, 0], 3));
 assert.equal(findPortalCanvasSurface(noUvs), null);
 scene.updateMatrixWorld(true);
-const portal = createVrPortalDisplay({ scene, camera, renderer: { xr: { getCamera: () => camera } }, anchorObject: monkey, portalModel: portalSource, settings: { enabled: true, maxWidth: 2.8, maxHeight: 3.2, distance: 2, verticalOffset: 0 } });
+const portal = createVrPortalDisplay({ scene, anchorObject: monkey, portalModel: portalSource, spawnPosition: { x: 0, y: 0, z: 5 }, settings: { enabled: true, maxWidth: 2.8, maxHeight: 3.2, distanceFromAnchor: 2, forwardBias: 0.25, floorOffset: 0 } });
 assert.equal(portal.canvasSurface.name, 'PORTAL_CANVAS_SURFACE');
 assert.equal(portal.canvasSurface.parent, portal.model);
 assert.deepEqual(portal.canvasSurface.position.toArray(), blenderSurface.position.toArray());
@@ -33,7 +33,17 @@ assert.equal(portal.place(), true);
 assert.equal(portal.object.visible, true);
 assert.equal(canvas.parent, portal.object);
 assert.ok(Math.abs(canvas.getWorldQuaternion(new THREE.Quaternion()).dot(portal.model.getWorldQuaternion(new THREE.Quaternion()))) > 0.999999);
-assert.ok(portal.object.position.distanceTo(camera.position) < camera.position.distanceTo(monkey.position));
-portal.reset(); assert.equal(portal.object.visible, false);
+const firstPosition = portal.object.position.clone();
+const anchorCenter = new THREE.Box3().setFromObject(monkey).getCenter(new THREE.Vector3());
+assert.ok(Math.abs(Math.hypot(firstPosition.x - anchorCenter.x, firstPosition.z - anchorCenter.z) - 2) < 1e-8);
+assert.ok(firstPosition.x < anchorCenter.x); // right side for a player looking from +Z toward the monkey.
+camera.position.set(99, 12, -40); camera.rotation.set(1, 2, 3);
+portal.place(); assert.ok(portal.object.position.distanceTo(firstPosition) < 1e-8);
+const floorBound = new THREE.Box3().setFromObject(portal.object);
+assert.ok(Math.abs(floorBound.min.y) < 1e-8);
+const portalForward = new THREE.Vector3(0, 0, 1).applyQuaternion(portal.object.quaternion);
+const towardSpawn = new THREE.Vector3(0, portal.object.position.y, 5).sub(portal.object.position).normalize();
+assert.ok(portalForward.dot(towardSpawn) > 0.999);
+portal.reset(); assert.equal(portal.object.visible, true); assert.ok(portal.object.position.distanceTo(firstPosition) < 1e-8);
 portal.dispose(); assert.equal(portal.object.parent, null);
 console.log('VR portal display assertions passed');

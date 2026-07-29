@@ -36,11 +36,17 @@
     "enabled": true,
     "maxWidth": 2.8,
     "maxHeight": 3.2,
-    "distance": 2.15,
-    "verticalOffset": -0.15,
+    "distanceFromAnchor": 2.0,
+    "forwardBias": 0.25,
+    "floorOffset": 0,
     "appearDuration": 0.42,
     "appearStartScale": 0.92,
     "socket": { "xFactor": 0, "yFactor": -0.34, "zFactor": 0.58, "insertRadius": 0.28 }
+  },
+  "reliquary": {
+    "enabled": true,
+    "distanceFromPortal": 0.5,
+    "floorOffset": 0
   },
   "portalCanvas": {
     "enabled": true,
@@ -63,6 +69,12 @@
     "spawnWidth": 1.45,
     "spawnDepth": 0.85,
     "minimumSpacing": 0.38,
+    "frontDistance": 1.55,
+    "materializeDuration": 0.55,
+    "materializeStagger": 0.12,
+    "materializeStartScale": 0.18,
+    "materializeRise": 0.12,
+    "materializeYaw": 0.35,
     "holdOffset": { "x": 0, "y": 0, "z": -0.09 }
   },
   "locomotion": {
