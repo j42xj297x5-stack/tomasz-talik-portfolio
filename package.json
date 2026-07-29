@@ -10,7 +10,7 @@
     "test:settings": "node tests/experience3d-settings.test.mjs && node tests/fog-reveal-controller.test.mjs",
     "test:routing": "node tests/options-event-router.test.mjs",
     "test:render-contract": "node tests/experience3d-render-contract.test.mjs",
-    "test:vr": "node tests/vr-capability.test.mjs && node tests/experience-vr-settings.test.mjs && node tests/vr-glyph-orbit.test.mjs && node tests/vr-glyph-lights.test.mjs && node tests/vr-glyph-interaction.test.mjs && node tests/vr-entry-transition.test.mjs && node tests/vr-spatial-plaque.test.mjs && node tests/vr-portal-display.test.mjs && node tests/vr-locomotion.test.mjs && node tests/experience-vr-contract.test.mjs"
+    "test:vr": "node tests/vr-capability.test.mjs && node tests/experience-vr-settings.test.mjs && node tests/vr-glyph-orbit.test.mjs && node tests/vr-glyph-lights.test.mjs && node tests/vr-glyph-interaction.test.mjs && node tests/vr-entry-transition.test.mjs && node tests/vr-spatial-plaque.test.mjs && node tests/vr-portal-display.test.mjs && node tests/vr-locomotion.test.mjs && node tests/vr-crystal-collection.test.mjs && node tests/experience-vr-contract.test.mjs"
   },
   "devDependencies": {
     "vite": "^7.2.0"

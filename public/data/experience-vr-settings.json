@@ -39,7 +39,8 @@
     "distance": 2.15,
     "verticalOffset": -0.15,
     "appearDuration": 0.42,
-    "appearStartScale": 0.92
+    "appearStartScale": 0.92,
+    "socket": { "xFactor": 0, "yFactor": -0.34, "zFactor": 0.58, "insertRadius": 0.28 }
   },
   "portalCanvas": {
     "enabled": true,
@@ -51,6 +52,16 @@
     "titleFontSize": 72,
     "bodyFontSize": 42,
     "maxBodyLines": 6
+  },
+  "crystals": {
+    "enabled": true,
+    "grabRadius": 0.32,
+    "scaleMin": 0.22,
+    "scaleMax": 0.28,
+    "spawnWidth": 1.45,
+    "spawnDepth": 0.85,
+    "minimumSpacing": 0.38,
+    "holdOffset": { "x": 0, "y": 0, "z": -0.09 }
   },
   "locomotion": {
     "enabled": true,

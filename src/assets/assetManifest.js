@@ -1,4 +1,5 @@
 import { portfolioNodes } from '../content/portfolioNodes.js';
+import { experienceVrPages } from '../content/experienceVrPages.js';
 
 export const ASSET_STAGES = Object.freeze({
   CRITICAL_INITIAL: 'criticalInitial',
@@ -67,6 +68,12 @@ const criticalInitialAssets = Object.freeze([
 
 const deferredWarmAssets = Object.freeze([
   withStage({ id: 'vr-portal-model', label: 'VR arrival portal model', path: '/glb/portal.glb', type: 'model' }, ASSET_STAGES.DEFERRED_WARM),
+  ...experienceVrPages.map((page) => withStage({
+    id: page.crystalAssetId,
+    label: `${page.glyphId} VR crystal page ${page.order}`,
+    path: page.crystalModelPath,
+    type: 'model'
+  }, ASSET_STAGES.DEFERRED_WARM)),
   ...portfolioNodes.filter((node) => node.plaqueModelPath).map((node) => withStage({
     id: `plaque-${node.id}`,
     label: `${node.title} plaque model`,

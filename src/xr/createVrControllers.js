@@ -9,6 +9,11 @@ export function createVrControllers({ renderer, playerRig, settings }) {
 
   let disposed = false;
   const controllers = [renderer.xr.getController(0), renderer.xr.getController(1)].map((controller, index) => {
+    const grip = renderer.xr.getControllerGrip(index);
+    grip.name = `VrControllerGrip${index}`;
+    const holdSocket = new THREE.Object3D();
+    holdSocket.name = `VrCrystalHoldSocket${index}`;
+    grip.add(holdSocket);
     const geometry = new THREE.BufferGeometry().setFromPoints([
       new THREE.Vector3(0, 0, 0),
       new THREE.Vector3(0, 0, -settings.rayLength)
@@ -27,6 +32,8 @@ export function createVrControllers({ renderer, playerRig, settings }) {
     const record = {
       index,
       controller,
+      grip,
+      holdSocket,
       ray,
       handedness: '',
       isConnected: false,
@@ -69,6 +76,7 @@ export function createVrControllers({ renderer, playerRig, settings }) {
     const listeners = { connected, disconnected, selectstart, selectend };
     for (const [type, listener] of Object.entries(listeners)) controller.addEventListener(type, listener);
     playerRig.add(controller);
+    playerRig.add(grip);
 
     return { ...record, listeners, record };
   });
@@ -78,13 +86,15 @@ export function createVrControllers({ renderer, playerRig, settings }) {
   function dispose() {
     if (disposed) return;
     disposed = true;
-    for (const { controller, ray, listeners, record } of controllers) {
+    for (const { controller, grip, holdSocket, ray, listeners, record } of controllers) {
       for (const [type, listener] of Object.entries(listeners)) controller.removeEventListener(type, listener);
       ray.visible = false;
       ray.geometry.dispose();
       ray.material.dispose();
       controller.remove(ray);
       playerRig.remove(controller);
+      grip.remove(holdSocket);
+      playerRig.remove(grip);
       delete controller.userData.xrInput;
       record.handedness = '';
       record.isConnected = false;
