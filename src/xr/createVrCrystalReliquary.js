@@ -31,6 +31,9 @@ export function createVrCrystalReliquary({ scene, reliquaryModel, portalDisplay,
   const object = new THREE.Group();
   object.name = 'VrCrystalReliquary';
   scene.add(object);
+  const authoredRoot = new THREE.Group();
+  authoredRoot.name = 'VrCrystalReliquaryAuthoredRoot';
+  object.add(authoredRoot);
   const model = reliquaryModel ?? null;
   const insertZone = findNamedObject(model, INSERT_ZONE_NAME);
   const crystalAnchor = findNamedObject(model, ANCHOR_NAME);
@@ -45,10 +48,8 @@ export function createVrCrystalReliquary({ scene, reliquaryModel, portalDisplay,
   const visibleBounds = getReliquaryVisibleBounds(model, insertZone);
   if (model && !visibleBounds.isEmpty()) {
     const center = visibleBounds.getCenter(new THREE.Vector3());
-    model.position.x -= center.x;
-    model.position.y -= visibleBounds.min.y;
-    model.position.z -= center.z;
-    object.add(model);
+    authoredRoot.position.set(-center.x, -visibleBounds.min.y, -center.z);
+    authoredRoot.add(model);
   }
 
   const portalPosition = new THREE.Vector3();
@@ -77,6 +78,12 @@ export function createVrCrystalReliquary({ scene, reliquaryModel, portalDisplay,
 
   function reset() { if (!disposed) place(); }
 
+  function attachAuthoredCompanion(companionModel) {
+    if (!companionModel) return null;
+    authoredRoot.add(companionModel);
+    return companionModel;
+  }
+
   function getInsertZoneWorldSphere(targetSphere = new THREE.Sphere()) {
     if (!hasValidInsertZone) return null;
     if (!insertZone.geometry.boundingSphere) insertZone.geometry.computeBoundingSphere();
@@ -103,6 +110,7 @@ export function createVrCrystalReliquary({ scene, reliquaryModel, portalDisplay,
   }
 
   place();
-  return { object, model, insertZone, crystalAnchor, hasValidInsertZone, place, reset, dispose,
+  return { object, authoredRoot, model, insertZone, crystalAnchor, hasValidInsertZone, place, reset, dispose,
+    attachAuthoredCompanion,
     getInsertZoneWorldSphere, getCrystalAnchorWorldPosition };
 }

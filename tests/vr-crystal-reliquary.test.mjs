@@ -12,9 +12,9 @@ assert.equal(reliquaryAsset.type, 'model');
 const runtime = await readFile(new URL('../src/experienceVr.js', import.meta.url), 'utf8');
 assert.match(runtime, /cloneGltfScene\('vr-crystal-reliquary-model'\)/);
 assert.match(runtime, /insertionTarget: crystalReliquary/);
-assert.deepEqual(DEFAULT_EXPERIENCE_VR_SETTINGS.reliquary, { enabled: true, distanceFromPortal: 0.5, floorOffset: 0 });
-const normalized = normalizeExperienceVrSettings({ schemaVersion: 1, reliquary: { enabled: false, distanceFromPortal: 0.75, floorOffset: 0.1 } });
-assert.deepEqual(normalized.reliquary, { enabled: false, distanceFromPortal: 0.75, floorOffset: 0.1 });
+assert.deepEqual(DEFAULT_EXPERIENCE_VR_SETTINGS.reliquary, { enabled: true, distanceFromPortal: 0.5, floorOffset: 0, activateButton: { enabled: true, rayMaxDistance: 3 } });
+const normalized = normalizeExperienceVrSettings({ schemaVersion: 1, reliquary: { enabled: false, distanceFromPortal: 0.75, floorOffset: 0.1, activateButton: { enabled: false, rayMaxDistance: 9 } } });
+assert.deepEqual(normalized.reliquary, { enabled: false, distanceFromPortal: 0.75, floorOffset: 0.1, activateButton: { enabled: false, rayMaxDistance: 5 } });
 
 const scene = new THREE.Scene();
 const portalObject = new THREE.Group();
@@ -45,19 +45,28 @@ const sourceScale = source.scale.clone();
 const stoneScale = stone.scale.clone();
 const reliquary = createVrCrystalReliquary({
   scene, reliquaryModel: source, portalDisplay, spawnPosition: { x: 2, y: 0, z: 7 },
-  settings: { enabled: true, distanceFromPortal: 0.5, floorOffset: 0 }
+  settings: { enabled: true, distanceFromPortal: 0.5, floorOffset: 0, activateButton: { enabled: true, rayMaxDistance: 3 } }
 });
 assert.equal(reliquary.object.name, 'VrCrystalReliquary');
 assert.equal(reliquary.insertZone, insertZone);
 assert.equal(reliquary.crystalAnchor, anchor);
 assert.equal(reliquary.hasValidInsertZone, true);
+assert.equal(reliquary.authoredRoot.name, 'VrCrystalReliquaryAuthoredRoot');
+assert.equal(source.parent, reliquary.authoredRoot);
+const companion = new THREE.Group(); companion.position.set(4, 5, 6); companion.rotation.set(0.1, 0.2, 0.3); companion.scale.set(2, 3, 4);
+const companionTransform = { position: companion.position.toArray(), rotation: companion.rotation.toArray(), scale: companion.scale.toArray() };
+assert.equal(reliquary.attachAuthoredCompanion(companion), companion);
+assert.equal(companion.parent, reliquary.authoredRoot);
+assert.deepEqual(companion.position.toArray(), companionTransform.position);
+assert.deepEqual(companion.rotation.toArray(), companionTransform.rotation);
+assert.deepEqual(companion.scale.toArray(), companionTransform.scale);
 assert.equal(insertZone.visible, false);
 assert.deepEqual(source.scale.toArray(), sourceScale.toArray());
 assert.deepEqual(stone.scale.toArray(), stoneScale.toArray());
 assert.deepEqual(reliquary.object.scale.toArray(), [1, 1, 1]);
 assert.ok(Math.abs(reliquary.object.position.distanceTo(new THREE.Vector3(2, 0, -2.5)) - 0) < 1e-10);
 assert.ok(Math.abs(reliquary.object.quaternion.dot(portalObject.getWorldQuaternion(new THREE.Quaternion()))) > 0.999999);
-const grounded = getReliquaryVisibleBounds(source, insertZone);
+const grounded = getReliquaryVisibleBounds(reliquary.object, insertZone);
 assert.ok(Math.abs(grounded.min.y) < 1e-8);
 
 scene.updateMatrixWorld(true);

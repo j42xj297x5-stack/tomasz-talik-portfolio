@@ -26,7 +26,7 @@ const localizedPages = getExperienceVrPages('spotify-digger').map((page) => reso
 assert.ok(localizedPages.every(({ title, body }) => title.length > 0 && body.length > 0));
 assert.equal(localizedPages[0].title, localizedNode.title);
 assert.equal(localizedPages[0].body, localizedNode.leadText || localizedNode.draftText);
-const manifestCrystals = getPreloadAssets([ASSET_STAGES.DEFERRED_WARM]).filter(({ id }) => id.startsWith('vr-crystal-') && id !== 'vr-crystal-reliquary-model');
+const manifestCrystals = getPreloadAssets([ASSET_STAGES.DEFERRED_WARM]).filter(({ id }) => id.startsWith('vr-crystal-') && id !== 'vr-crystal-reliquary-model' && id !== 'vr-crystal-reliquary-button-activate-model');
 assert.deepEqual(manifestCrystals.map(({ id, path }) => ({ id, path })), experienceVrPages.map((page) => ({ id: page.crystalAssetId, path: page.crystalModelPath })));
 
 const settings = { enabled: true, rayGrabMaxDistance: 1.8, pullDuration: 0.25, targetScale: 1.04, scaleMin: 0.22, scaleMax: 0.28, spawnWidth: 1.45, spawnDepth: 0.85, minimumSpacing: 0.38, frontDistance: 1.55, materializeDuration: 0.55, materializeStagger: 0.12, materializeStartScale: 0.18, materializeRise: 0.12, materializeYaw: 0.35, holdOffset: { x: 0, y: 0, z: -0.09 } };
@@ -129,3 +129,22 @@ assert.equal(left.currentCrystalHit, null);
 assert.equal(left.currentCrystalHitDistance, null);
 collection.dispose(); collection.dispose();
 console.log('VR crystal collection assertions passed');
+
+// A valid reliquary defers page activation and keeps one crystal visible in its authored anchor.
+{
+  const insertionScene = new THREE.Scene();
+  const record = (() => { const controller = new THREE.Group(); const holdSocket = new THREE.Group(); controller.add(holdSocket); insertionScene.add(controller); return { controller, holdSocket }; })();
+  const anchor = new THREE.Group(); insertionScene.add(anchor);
+  const portal = { object: new THREE.Group(), insertRadius: 0.2, getSocketWorldPosition: (out) => out.set(99, 0, 99) }; insertionScene.add(portal.object);
+  const activated = [];
+  const insertedCollection = createVrCrystalCollection({ insertionTarget: { object: { visible: true }, hasValidInsertZone: true, crystalAnchor: anchor, getInsertZoneWorldSphere: () => new THREE.Sphere(new THREE.Vector3(), 10) }, scene: insertionScene, controllers: [record], portalDisplay: portal, settings, assetManager: { cloneGltfScene: () => new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.4, 0.2)) }, onActivate: (page) => activated.push(page.id) });
+  const insertedPages = [{ id: 'insert-one' }, { id: 'insert-two' }];
+  const [first, second] = insertedCollection.spawn(insertedPages, { anchorObject: portal.object, spawnPosition: { x: 0, y: 0, z: 2 } });
+  insertedCollection.update(2); insertedCollection.update(2);
+  for (const instance of [first, second]) { record.currentCrystalHit = instance; record.currentCrystalHitDistance = 0.1; insertedCollection.grab(record); insertedCollection.update(2); insertionScene.updateMatrixWorld(true); insertedCollection.release(record); }
+  assert.equal(first.state, 'inserted'); assert.equal(first.object.parent, anchor); assert.equal(first.object.visible, true); assert.equal(insertedCollection.getInsertedInstance(), first); assert.deepEqual(activated, []);
+  assert.equal(second.state, 'available', 'a second crystal is rejected while occupied');
+  assert.equal(insertedCollection.activateInserted(), true); assert.equal(first.state, 'active'); assert.deepEqual(activated, ['insert-one']);
+  assert.equal(insertedCollection.activateInserted(), false); assert.deepEqual(activated, ['insert-one']);
+  insertedCollection.dispose();
+}
