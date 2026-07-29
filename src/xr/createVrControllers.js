@@ -39,6 +39,8 @@ export function createVrControllers({ renderer, playerRig, settings }) {
       isConnected: false,
       isSelecting: false,
       currentHit: null,
+      currentCrystalHit: null,
+      currentCrystalHitDistance: null,
       get currentRayLength() {
         return settings.rayLength * (this.isSelecting ? settings.activeScale : settings.idleScale);
       }
@@ -65,6 +67,8 @@ export function createVrControllers({ renderer, playerRig, settings }) {
       record.handedness = '';
       record.isConnected = false;
       record.currentHit = null;
+      record.currentCrystalHit = null;
+      record.currentCrystalHitDistance = null;
       delete controller.userData.xrInput;
       setSelecting(false);
     };
@@ -100,6 +104,8 @@ export function createVrControllers({ renderer, playerRig, settings }) {
       record.isConnected = false;
       record.isSelecting = false;
       record.currentHit = null;
+      record.currentCrystalHit = null;
+      record.currentCrystalHitDistance = null;
     }
   }
 

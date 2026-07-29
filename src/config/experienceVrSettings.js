@@ -59,7 +59,9 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
   },
   crystals: {
     enabled: true,
-    grabRadius: 0.32,
+    rayGrabMaxDistance: 1.8,
+    pullDuration: 0.25,
+    targetScale: 1.04,
     scaleMin: 0.22,
     scaleMax: 0.28,
     spawnWidth: 1.45,
@@ -168,7 +170,9 @@ export function normalizeExperienceVrSettings(candidate) {
     },
     crystals: {
       enabled: typeof candidate.crystals?.enabled === 'boolean' ? candidate.crystals.enabled : defaults.crystals.enabled,
-      grabRadius: finiteNumber(candidate.crystals?.grabRadius, defaults.crystals.grabRadius, { min: 0.05, max: 1 }),
+      rayGrabMaxDistance: finiteNumber(candidate.crystals?.rayGrabMaxDistance, defaults.crystals.rayGrabMaxDistance, { min: 0.3, max: 3 }),
+      pullDuration: finiteNumber(candidate.crystals?.pullDuration, defaults.crystals.pullDuration, { min: 0.05, max: 1 }),
+      targetScale: finiteNumber(candidate.crystals?.targetScale, defaults.crystals.targetScale, { min: 1, max: 1.15 }),
       scaleMin: finiteNumber(candidate.crystals?.scaleMin, defaults.crystals.scaleMin, { min: 0.1, max: 0.3 }),
       scaleMax: finiteNumber(candidate.crystals?.scaleMax, defaults.crystals.scaleMax, { min: 0.2, max: 0.4 }),
       spawnWidth: finiteNumber(candidate.crystals?.spawnWidth, defaults.crystals.spawnWidth, { min: 0.5, max: 3 }),

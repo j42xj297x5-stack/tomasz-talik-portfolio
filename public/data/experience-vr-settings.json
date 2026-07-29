@@ -55,7 +55,9 @@
   },
   "crystals": {
     "enabled": true,
-    "grabRadius": 0.32,
+    "rayGrabMaxDistance": 1.8,
+    "pullDuration": 0.25,
+    "targetScale": 1.04,
     "scaleMin": 0.22,
     "scaleMax": 0.28,
     "spawnWidth": 1.45,
