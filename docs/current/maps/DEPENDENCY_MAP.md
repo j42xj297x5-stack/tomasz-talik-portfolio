@@ -61,3 +61,5 @@ The three modes consume stable portfolio IDs and content where applicable. Exper
 | `ethics-life-protection` | `/glb/crystal-ethics_01.glb` … `_03.glb` |
 
 Resolution uses the stable glyph ID and page ID, never orbital index or current orbital position. Squeeze parenting is deterministic and contains no physics, gravity, collision, throw, or velocity dependency.
+
+- `experienceVr.js` → `createVrCrystalReliquary` authored root → `createVrReliquaryActivateButton` → `createVrCrystalCollection.activateInserted()` → portal canvas page update.

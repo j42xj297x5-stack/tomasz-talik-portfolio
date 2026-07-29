@@ -31,6 +31,9 @@ export function createVrCrystalReliquary({ scene, reliquaryModel, portalDisplay,
   const object = new THREE.Group();
   object.name = 'VrCrystalReliquary';
   scene.add(object);
+  const authoredRoot = new THREE.Group();
+  authoredRoot.name = 'VrCrystalReliquaryAuthoredRoot';
+  object.add(authoredRoot);
   const model = reliquaryModel ?? null;
   const insertZone = findNamedObject(model, INSERT_ZONE_NAME);
   const crystalAnchor = findNamedObject(model, ANCHOR_NAME);
@@ -45,17 +48,35 @@ export function createVrCrystalReliquary({ scene, reliquaryModel, portalDisplay,
   const visibleBounds = getReliquaryVisibleBounds(model, insertZone);
   if (model && !visibleBounds.isEmpty()) {
     const center = visibleBounds.getCenter(new THREE.Vector3());
-    model.position.x -= center.x;
-    model.position.y -= visibleBounds.min.y;
-    model.position.z -= center.z;
-    object.add(model);
+    authoredRoot.position.set(-center.x, -visibleBounds.min.y, -center.z);
+    authoredRoot.add(model);
   }
 
   const portalPosition = new THREE.Vector3();
   const direction = new THREE.Vector3();
   const configuredSpawn = new THREE.Vector3(spawnPosition?.x ?? 0, spawnPosition?.y ?? 0, spawnPosition?.z ?? 1);
+  const portalForward = new THREE.Vector3();
+  const portalLeft = new THREE.Vector3();
+  const towardSpawn = new THREE.Vector3();
+  const portalQuaternion = new THREE.Quaternion();
+  const inversePlacementQuaternion = new THREE.Quaternion();
+  const buttonWorldOffset = new THREE.Vector3();
+  const worldUp = new THREE.Vector3(0, 1, 0);
   const worldScale = new THREE.Vector3();
+  let buttonPlacementRoot = null;
+  let buttonPlacementSettings = null;
   let disposed = false;
+
+  function updateButtonPlacement() {
+    if (!buttonPlacementRoot || !buttonPlacementSettings) return;
+    const radius = buttonPlacementSettings.placementRadius ?? 1;
+    const angle = THREE.MathUtils.degToRad(buttonPlacementSettings.placementAngleDegrees ?? 45);
+    buttonWorldOffset.copy(portalLeft).multiplyScalar(Math.sin(angle) * radius)
+      .addScaledVector(portalForward, Math.cos(angle) * radius);
+    buttonWorldOffset.y = buttonPlacementSettings.verticalOffset ?? 0;
+    authoredRoot.getWorldQuaternion(inversePlacementQuaternion).invert();
+    buttonPlacementRoot.position.copy(buttonWorldOffset).applyQuaternion(inversePlacementQuaternion);
+  }
 
   function place() {
     if (disposed || !settings.enabled || !model || visibleBounds.isEmpty()) {
@@ -64,18 +85,43 @@ export function createVrCrystalReliquary({ scene, reliquaryModel, portalDisplay,
     }
     portalDisplay.object.updateWorldMatrix(true, false);
     portalDisplay.object.getWorldPosition(portalPosition);
-    direction.subVectors(configuredSpawn, portalPosition).setY(0);
-    if (direction.lengthSq() < 1e-8) direction.set(0, 0, 1);
+    portalDisplay.object.getWorldQuaternion(portalQuaternion);
+    portalForward.set(0, 0, 1).applyQuaternion(portalQuaternion).setY(0);
+    towardSpawn.subVectors(configuredSpawn, portalPosition).setY(0);
+    if (portalForward.lengthSq() < 1e-8) portalForward.copy(towardSpawn);
+    if (portalForward.lengthSq() < 1e-8) portalForward.set(1, 0, 0).applyQuaternion(portalQuaternion).setY(0);
+    portalForward.normalize();
+    if (towardSpawn.lengthSq() > 1e-8 && portalForward.dot(towardSpawn) < 0) portalForward.negate();
+    portalLeft.crossVectors(portalForward, worldUp).normalize();
+    direction.copy(towardSpawn);
+    if (direction.lengthSq() < 1e-8) direction.copy(portalForward);
     direction.normalize();
-    object.position.copy(portalPosition).addScaledVector(direction, settings.distanceFromPortal);
+    object.position.copy(portalPosition).addScaledVector(direction, settings.distanceFromPortal)
+      .addScaledVector(portalForward, settings.forwardOffset ?? 1);
     object.position.y = settings.floorOffset;
-    portalDisplay.object.getWorldQuaternion(object.quaternion);
+    object.quaternion.copy(portalQuaternion);
     object.visible = true;
+    object.updateWorldMatrix(true, true);
+    updateButtonPlacement();
     object.updateWorldMatrix(true, true);
     return true;
   }
 
   function reset() { if (!disposed) place(); }
+
+  function attachAuthoredCompanion(companionModel, placementSettings = settings.activateButton) {
+    if (!companionModel) return null;
+    if (!buttonPlacementRoot) {
+      buttonPlacementRoot = new THREE.Group();
+      buttonPlacementRoot.name = 'VrReliquaryActivateButtonPlacementRoot';
+      authoredRoot.add(buttonPlacementRoot);
+    }
+    buttonPlacementSettings = placementSettings;
+    buttonPlacementRoot.add(companionModel);
+    object.updateWorldMatrix(true, true);
+    updateButtonPlacement();
+    return companionModel;
+  }
 
   function getInsertZoneWorldSphere(targetSphere = new THREE.Sphere()) {
     if (!hasValidInsertZone) return null;
@@ -103,6 +149,8 @@ export function createVrCrystalReliquary({ scene, reliquaryModel, portalDisplay,
   }
 
   place();
-  return { object, model, insertZone, crystalAnchor, hasValidInsertZone, place, reset, dispose,
+  return { object, authoredRoot, model, insertZone, crystalAnchor, hasValidInsertZone, portalForward, portalLeft, place, reset, dispose,
+    attachAuthoredCompanion,
+    get buttonPlacementRoot() { return buttonPlacementRoot; },
     getInsertZoneWorldSphere, getCrystalAnchorWorldPosition };
 }

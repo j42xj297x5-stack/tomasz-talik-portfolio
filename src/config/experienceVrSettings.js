@@ -50,7 +50,15 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
   reliquary: {
     enabled: true,
     distanceFromPortal: 0.5,
-    floorOffset: 0
+    forwardOffset: 1,
+    floorOffset: 0,
+    activateButton: {
+      enabled: true,
+      rayMaxDistance: 3,
+      placementRadius: 1,
+      placementAngleDegrees: 45,
+      verticalOffset: 0
+    }
   },
   portalCanvas: {
     enabled: true,
@@ -173,7 +181,20 @@ export function normalizeExperienceVrSettings(candidate) {
     reliquary: {
       enabled: typeof candidate.reliquary?.enabled === 'boolean' ? candidate.reliquary.enabled : defaults.reliquary.enabled,
       distanceFromPortal: finiteNumber(candidate.reliquary?.distanceFromPortal, defaults.reliquary.distanceFromPortal, { min: 0, max: 3 }),
-      floorOffset: finiteNumber(candidate.reliquary?.floorOffset, defaults.reliquary.floorOffset, { min: -1, max: 1 })
+      forwardOffset: finiteNumber(candidate.reliquary?.forwardOffset, defaults.reliquary.forwardOffset, { min: 0, max: 3 }),
+      floorOffset: finiteNumber(candidate.reliquary?.floorOffset, defaults.reliquary.floorOffset, { min: -1, max: 1 }),
+      activateButton: {
+        enabled: typeof candidate.reliquary?.activateButton?.enabled === 'boolean'
+          ? candidate.reliquary.activateButton.enabled : defaults.reliquary.activateButton.enabled,
+        rayMaxDistance: finiteNumber(candidate.reliquary?.activateButton?.rayMaxDistance,
+          defaults.reliquary.activateButton.rayMaxDistance, { min: 0.3, max: 5 }),
+        placementRadius: finiteNumber(candidate.reliquary?.activateButton?.placementRadius,
+          defaults.reliquary.activateButton.placementRadius, { min: 0, max: 3 }),
+        placementAngleDegrees: finiteNumber(candidate.reliquary?.activateButton?.placementAngleDegrees,
+          defaults.reliquary.activateButton.placementAngleDegrees, { min: 0, max: 90 }),
+        verticalOffset: finiteNumber(candidate.reliquary?.activateButton?.verticalOffset,
+          defaults.reliquary.activateButton.verticalOffset, { min: -1, max: 1 })
+      }
     },
     portalCanvas: {
       enabled: typeof candidate.portalCanvas?.enabled === 'boolean' ? candidate.portalCanvas.enabled : defaults.portalCanvas.enabled,
