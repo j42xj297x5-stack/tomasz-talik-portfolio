@@ -55,7 +55,10 @@ const reliquary = createVrCrystalReliquary({
 });
 assert.equal(reliquary.object.name, 'VrCrystalReliquary');
 assert.equal(reliquary.insertZone, insertZone);
-assert.equal(reliquary.crystalAnchor, anchor);
+assert.equal(reliquary.authoredCrystalAnchor, anchor);
+assert.equal(reliquary.crystalAnchor, reliquary.runtimeCrystalAnchor);
+assert.equal(reliquary.runtimeCrystalAnchor.parent, reliquary.authoredRoot);
+assert.notEqual(reliquary.runtimeCrystalAnchor.parent, insertZone);
 assert.equal(reliquary.hasValidInsertZone, true);
 assert.equal(reliquary.authoredRoot.name, 'VrCrystalReliquaryAuthoredRoot');
 assert.equal(source.parent, reliquary.authoredRoot);

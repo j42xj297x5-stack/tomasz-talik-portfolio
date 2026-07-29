@@ -10,7 +10,15 @@ function findNamed(model, name) {
   model?.traverse((object) => { if (!found && object.name === name) found = object; });
   return found;
 }
-const validProperty = (object, key, expected) => object?.userData?.[key] === undefined || object.userData[key] === expected;
+function findTrigger(model, buttonRoot) {
+  const objects = [];
+  model?.traverse((object) => { if (object.isMesh && object.geometry) objects.push(object); });
+  return objects.find(({ name }) => name === TRIGGER_NAME)
+    ?? objects.find(({ userData }) => userData?.reliquary_role === 'crystal_release_trigger')
+    ?? objects.find(({ userData }) => userData?.reliquary_button_id === 'release' && userData?.reliquary_runtime_raycast === true)
+    ?? objects.find(({ name }) => name === buttonRoot?.userData?.reliquary_trigger_object)
+    ?? null;
+}
 function numericProperty(objects, key, fallback) {
   for (const object of objects) {
     const value = Number(object?.userData?.[key]);
@@ -23,17 +31,14 @@ export function createVrReliquaryReleaseButton({
   buttonModel, animations = [], reliquary, controllers = [], settings = {}, canRelease = () => false,
   onRelease = () => false, onReleaseComplete = () => {}
 }) {
-  const trigger = findNamed(buttonModel, TRIGGER_NAME);
   const buttonRoot = findNamed(buttonModel, ROOT_NAME);
+  const trigger = findTrigger(buttonModel, buttonRoot);
   const buttonFront = findNamed(buttonModel, FRONT_NAME);
-  const triggerValid = Boolean(trigger?.isMesh && trigger.geometry
-    && validProperty(trigger, 'reliquary_role', 'crystal_release_trigger')
-    && validProperty(trigger, 'reliquary_button_id', 'release')
-    && validProperty(trigger, 'reliquary_action', 'release_active_crystal'));
+  const triggerValid = Boolean(trigger?.isMesh && trigger.geometry);
   if (triggerValid) {
     trigger.material = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false, colorWrite: false });
     trigger.visible = true;
-  } else console.warn('[Experience VR] Reliquary release-button trigger is missing or invalid; release is disabled.');
+  } else console.warn('[Experience VR] Reliquary release-button authored trigger is missing; using visual bounds for the runtime hit area.');
 
   const visualNames = new Set([FRONT_NAME]);
   const configured = trigger?.userData?.reliquary_visual_objects ?? buttonRoot?.userData?.reliquary_visual_objects;
@@ -58,6 +63,31 @@ export function createVrReliquaryReleaseButton({
     hover: numericProperty(properties, 'reliquary_emission_hover', 1),
     pressed: numericProperty(properties, 'reliquary_emission_pressed', 5)
   };
+  buttonModel?.updateWorldMatrix(true, true);
+  const placementRoot = buttonModel?.parent?.parent ?? buttonModel;
+  const boundsSource = triggerValid ? trigger : visualMeshes.length ? visualMeshes : buttonModel;
+  const authoredBounds = Array.isArray(boundsSource)
+    ? boundsSource.reduce((box, mesh) => box.union(new THREE.Box3().setFromObject(mesh)), new THREE.Box3())
+    : new THREE.Box3().setFromObject(boundsSource);
+  const hitAreaScale = THREE.MathUtils.clamp(settings.hitAreaScale ?? 2, 1, 4);
+  const worldCenter = authoredBounds.isEmpty() ? buttonModel.getWorldPosition(new THREE.Vector3()) : authoredBounds.getCenter(new THREE.Vector3());
+  const worldSize = authoredBounds.isEmpty() ? new THREE.Vector3(0.16, 0.08, 0.16) : authoredBounds.getSize(new THREE.Vector3());
+  worldSize.multiplyScalar(hitAreaScale);
+  worldSize.x = Math.max(0.16, worldSize.x); worldSize.z = Math.max(0.16, worldSize.z);
+  worldSize.y = Math.max(0.04, worldSize.y);
+  placementRoot.updateWorldMatrix(true, false);
+  const placementScale = placementRoot.getWorldScale(new THREE.Vector3());
+  const localSize = worldSize.clone().divide(new THREE.Vector3(
+    Math.abs(placementScale.x) || 1, Math.abs(placementScale.y) || 1, Math.abs(placementScale.z) || 1
+  ));
+  const raycastTarget = new THREE.Mesh(new THREE.BoxGeometry(localSize.x, localSize.y, localSize.z), new THREE.MeshBasicMaterial({
+    transparent: true, opacity: 0, depthWrite: false, colorWrite: false
+  }));
+  raycastTarget.name = 'VrReliquaryReleaseButtonHitArea';
+  raycastTarget.position.copy(placementRoot.worldToLocal(worldCenter.clone()));
+  raycastTarget.visible = true; raycastTarget.frustumCulled = false;
+  raycastTarget.castShadow = false; raycastTarget.receiveShadow = false;
+  placementRoot.add(raycastTarget);
   const mixer = buttonModel ? new THREE.AnimationMixer(buttonModel) : null;
   const clip = THREE.AnimationClip.findByName(animations, PRESS_CLIP);
   const action = mixer && clip ? mixer.clipAction(clip) : null;
@@ -74,13 +104,28 @@ export function createVrReliquaryReleaseButton({
   let hovered = false;
   let elapsed = 0;
   let disposed = false;
+  let debugLogged = false;
   const setEmission = (value) => emissiveMaterials.forEach((material) => { material.emissiveIntensity = value; });
 
   function updateHits() {
     let anyHit = false;
-    for (const record of controllers) {
+    buttonModel?.updateWorldMatrix(true, true);
+    raycastTarget.updateWorldMatrix(true, false);
+    const releaseAvailable = Boolean(canRelease());
+    if (settings.debug && !debugLogged) {
+      debugLogged = true;
+      console.debug('[Experience VR][ReleaseButton]', {
+        resolvedTriggerName: trigger?.name ?? null, resolvedTriggerRole: trigger?.userData?.reliquary_role ?? null,
+        buttonModelChildrenNames: buttonModel?.children.map(({ name }) => name),
+        raycastProxyWorldPosition: raycastTarget.getWorldPosition(new THREE.Vector3()).toArray(),
+        raycastProxyWorldBox3: new THREE.Box3().setFromObject(raycastTarget), rayMaxDistance: settings.rayMaxDistance ?? 3,
+        canReleaseResult: releaseAvailable, insertedCrystalState: settings.getInsertedCrystalState?.() ?? null
+      });
+    }
+    controllers.forEach((record, index) => {
       let hit = false;
-      if (triggerValid && settings.enabled !== false && reliquary?.object?.visible !== false) {
+      let distance = null;
+      if (settings.enabled !== false && reliquary?.object?.visible !== false) {
         record.controller.updateWorldMatrix(true, false);
         record.controller.getWorldPosition(origin);
         record.controller.getWorldQuaternion(quaternion);
@@ -88,12 +133,14 @@ export function createVrReliquaryReleaseButton({
         raycaster.near = 0;
         raycaster.far = Math.min(record.currentRayLength ?? settings.rayMaxDistance, settings.rayMaxDistance ?? 3);
         raycaster.set(origin, direction);
-        hit = raycaster.intersectObject(trigger, true).length > 0;
+        const intersection = raycaster.intersectObject(raycastTarget, false)[0];
+        hit = Boolean(intersection); distance = intersection?.distance ?? null;
       }
+      if (settings.debug && hits.get(record) !== hit) console.debug('[Experience VR][ReleaseButton] hit changed', { controllerIndex: index, hit, intersectionDistance: distance });
       hits.set(record, hit);
       anyHit ||= hit;
-    }
-    hovered = state === 'idle' && Boolean(canRelease()) && anyHit;
+    });
+    hovered = state === 'idle' && releaseAvailable && anyHit;
     if (state === 'idle') setEmission(hovered ? emission.hover : emission.inactive);
   }
   function press(record) {
@@ -129,9 +176,10 @@ export function createVrReliquaryReleaseButton({
     if (disposed) return;
     reset(); disposed = true;
     listeners.forEach(({ record, selectStart }) => record.controller.removeEventListener('selectstart', selectStart));
+    raycastTarget.removeFromParent(); raycastTarget.geometry.dispose(); raycastTarget.material.dispose();
     trigger?.material?.dispose?.(); emissiveMaterials.forEach((material) => material.dispose?.());
   }
   reset();
-  return { buttonModel, trigger, buttonRoot, visualMeshes, mixer, action, hits, update, press, reset, dispose,
+  return { buttonModel, trigger, buttonRoot, visualMeshes, raycastTarget, mixer, action, hits, update, press, reset, dispose,
     get state() { return state; }, get hovered() { return hovered; } };
 }
