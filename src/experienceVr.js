@@ -19,6 +19,7 @@ import { createVrPortalDisplay } from './xr/createVrPortalDisplay.js';
 import { createVrLocomotion } from './xr/createVrLocomotion.js';
 import { createVrCrystalCollection } from './xr/createVrCrystalCollection.js';
 import { createVrCrystalReliquary } from './xr/createVrCrystalReliquary.js';
+import { createVrReliquaryActivateButton } from './xr/createVrReliquaryActivateButton.js';
 import { getExperienceVrPages, resolveExperienceVrPage } from './content/experienceVrPages.js';
 
 const app = document.querySelector('#app');
@@ -29,13 +30,13 @@ const COPY = {
     title: 'Doświadczenie VR', loading: 'Przygotowywanie minimalnej sceny VR…', ready: 'Scena jest gotowa.',
     enter: 'Wejdź do VR', entering: 'Uruchamianie sesji…', exit: 'Zakończ VR', retry: 'Wejdź ponownie do VR',
     error: 'Nie udało się uruchomić sesji VR. Możesz spróbować ponownie.',
-    crystalInstructionTitle: 'Portal czeka', crystalInstructionBody: 'Umieść kryształ w dolnym gnieździe portalu.'
+    crystalInstructionTitle: 'Portal czeka', crystalInstructionBody: 'Umieść kryształ w relikwiarzu i uruchom go przyciskiem.'
   },
   en: {
     title: 'Experience VR', loading: 'Preparing the minimal VR scene…', ready: 'The scene is ready.',
     enter: 'Enter VR', entering: 'Starting session…', exit: 'Exit VR', retry: 'Enter VR again',
     error: 'The VR session could not be started. You can try again.',
-    crystalInstructionTitle: 'The portal is waiting', crystalInstructionBody: 'Place a crystal in the lower portal socket.'
+    crystalInstructionTitle: 'The portal is waiting', crystalInstructionBody: 'Place a crystal in the reliquary and activate it with the button.'
   }
 };
 
@@ -85,7 +86,7 @@ const centralPlaceholder = createCentralObject();
 worldRoot.add(centralPlaceholder);
 
 const vrAssets = getPreloadAssets([...INITIAL_PRELOAD_GROUPS, ...DEFERRED_PRELOAD_GROUPS])
-  .filter(({ id }) => id === 'gltf-loader-module' || id === 'monkey-model' || id === 'vr-portal-model' || id === 'vr-crystal-reliquary-model' || id.startsWith('glyph-') || id.startsWith('vr-crystal-'))
+  .filter(({ id }) => id === 'gltf-loader-module' || id === 'monkey-model' || id === 'vr-portal-model' || id === 'vr-crystal-reliquary-model' || id === 'vr-crystal-reliquary-button-activate-model' || id.startsWith('glyph-') || id.startsWith('vr-crystal-'))
   .map((asset) => ({ ...asset, critical: asset.id === 'gltf-loader-module' }));
 const loadingDiagnostics = createLoadingDiagnostics(vrAssets);
 const assetManager = createAssetManager({ diagnostics: loadingDiagnostics });
@@ -135,10 +136,22 @@ const crystalReliquary = createVrCrystalReliquary({
 const locomotion = createVrLocomotion({ playerRig, renderer, camera, settings: settings.locomotion });
 const crystalCollection = createVrCrystalCollection({
   scene, assetManager, controllers: vrControllers.controllers, portalDisplay, insertionTarget: crystalReliquary, settings: settings.crystals,
-  onConsume: (page) => {
+  onActivate: (page) => {
     const node = resolvedPortfolioNodes.find(({ id }) => id === page.glyphId);
     portalCanvas.show(resolveExperienceVrPage(page, node));
   }
+});
+const activateButtonGltf = assetManager.getGltf('vr-crystal-reliquary-button-activate-model');
+const activateButtonModel = assetManager.cloneGltfScene('vr-crystal-reliquary-button-activate-model');
+crystalReliquary.attachAuthoredCompanion(activateButtonModel);
+const activateButton = createVrReliquaryActivateButton({
+  buttonModel: activateButtonModel,
+  animations: activateButtonGltf?.animations ?? [],
+  reliquary: crystalReliquary,
+  controllers: vrControllers.controllers,
+  settings: settings.reliquary.activateButton,
+  canActivate: () => crystalCollection.getInsertedInstance()?.state === 'inserted',
+  onActivate: () => crystalCollection.activateInserted()
 });
 let activatedEntryGlyph = null;
 const entryTransition = createVrEntryTransition({
@@ -188,6 +201,7 @@ function renderFrame() {
   glyphRing.updateMatrixWorld(true);
   glyphInteraction.update();
   crystalCollection.update(delta);
+  activateButton.update(delta);
   glyphInteraction.setEntryReady(entryReady);
   glyphLights.update({
     hovered: glyphInteraction.hoveredGlyphs,
@@ -213,6 +227,7 @@ function handleSessionEnd() {
   activeSession = null;
   entryTransition.reset();
   crystalCollection.reset();
+  activateButton.reset();
   crystalReliquary.reset();
   restorePortalWaitingState();
   locomotion.reset();
@@ -229,6 +244,7 @@ async function enterVr() {
   if (activeSession) return;
   entryTransition.reset();
   crystalCollection.reset();
+  activateButton.reset();
   crystalReliquary.reset();
   restorePortalWaitingState();
   locomotion.reset();
@@ -267,6 +283,7 @@ async function enterVr() {
     clock.stop();
     entryTransition.reset();
     crystalCollection.reset();
+    activateButton.reset();
     crystalReliquary.reset();
     restorePortalWaitingState();
     locomotion.reset();

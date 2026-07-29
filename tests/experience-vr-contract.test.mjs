@@ -49,7 +49,7 @@ assert.doesNotMatch(vr, /camera\.rotation|camera\.quaternion|camera\.lookAt/);
 assert.doesNotMatch(entryTransition, /camera\.(position|rotation|quaternion)\.(set|copy)|playerRig\.rotation/);
 assert.match(vr, /onEntryGlyphActivated:[\s\S]*activatedEntryGlyph = glyphInteraction\.activatedEntryGlyph;[\s\S]*entryTransition\.start\(\)/);
 assert.match(vr, /function handleSessionEnd\(\)[\s\S]*entryTransition\.reset\(\)/);
-assert.match(vr, /entryTransition\.reset\(\);\s*crystalCollection\.reset\(\);\s*crystalReliquary\.reset\(\);\s*restorePortalWaitingState\(\);\s*locomotion\.reset\(\);\s*playerRig\.position\.set\(settings\.spawn\.position\.x/);
+assert.match(vr, /entryTransition\.reset\(\);\s*crystalCollection\.reset\(\);\s*activateButton\.reset\(\);\s*crystalReliquary\.reset\(\);\s*restorePortalWaitingState\(\);\s*locomotion\.reset\(\);\s*playerRig\.position\.set\(settings\.spawn\.position\.x/);
 assert.match(vr, /function handleSessionEnd\(\)[\s\S]*restorePortalWaitingState\(\)/);
 assert.match(vr, /entryTransition\.update\(delta\)/);
 assert.match(vr, /crystalCollection\.update\(delta\)/);
@@ -68,7 +68,7 @@ assert.match(crystalCollection, /currentCrystalHitDistance/);
 assert.doesNotMatch(crystalCollection, /currentHit\s*=/);
 assert.doesNotMatch(glyphInteraction, /SphereGeometry\(0\.31|VrEntryGlyphMarker|playerRig\.position|playerRig\.rotation/);
 assert.doesNotMatch(`${vr}\n${vrControllers}`, /XRControllerModelFactory/);
-assert.match(vr, /onConsume:[\s\S]*portalCanvas\.show\(resolveExperienceVrPage\(page, node\)\)/);
+assert.match(vr, /onActivate:[\s\S]*portalCanvas\.show\(resolveExperienceVrPage\(page, node\)\)/);
 assert.doesNotMatch(crystalCollection, /CANNON|Ammo|Rapier|gravity|throwVelocity|linearVelocity|angularVelocity/i);
 assert.doesNotMatch(vrControllers, /controller\.(position|rotation|quaternion)\.(set|copy)/);
 

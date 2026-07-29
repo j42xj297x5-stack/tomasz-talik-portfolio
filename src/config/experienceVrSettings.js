@@ -50,7 +50,8 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
   reliquary: {
     enabled: true,
     distanceFromPortal: 0.5,
-    floorOffset: 0
+    floorOffset: 0,
+    activateButton: { enabled: true, rayMaxDistance: 3 }
   },
   portalCanvas: {
     enabled: true,
@@ -173,7 +174,13 @@ export function normalizeExperienceVrSettings(candidate) {
     reliquary: {
       enabled: typeof candidate.reliquary?.enabled === 'boolean' ? candidate.reliquary.enabled : defaults.reliquary.enabled,
       distanceFromPortal: finiteNumber(candidate.reliquary?.distanceFromPortal, defaults.reliquary.distanceFromPortal, { min: 0, max: 3 }),
-      floorOffset: finiteNumber(candidate.reliquary?.floorOffset, defaults.reliquary.floorOffset, { min: -1, max: 1 })
+      floorOffset: finiteNumber(candidate.reliquary?.floorOffset, defaults.reliquary.floorOffset, { min: -1, max: 1 }),
+      activateButton: {
+        enabled: typeof candidate.reliquary?.activateButton?.enabled === 'boolean'
+          ? candidate.reliquary.activateButton.enabled : defaults.reliquary.activateButton.enabled,
+        rayMaxDistance: finiteNumber(candidate.reliquary?.activateButton?.rayMaxDistance,
+          defaults.reliquary.activateButton.rayMaxDistance, { min: 0.3, max: 5 })
+      }
     },
     portalCanvas: {
       enabled: typeof candidate.portalCanvas?.enabled === 'boolean' ? candidate.portalCanvas.enabled : defaults.portalCanvas.enabled,
