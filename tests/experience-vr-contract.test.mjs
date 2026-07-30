@@ -4,7 +4,7 @@ import { calculatePlayerRigYaw } from '../src/xr/playerRigOrientation.js';
 import * as THREE from '../src/vendor/three.js';
 import { createVrControllers } from '../src/xr/createVrControllers.js';
 
-const [main, vr, experience3d, vrControllers, glyphInteraction, entryTransition, spatialPlaque, crystalCollection] = await Promise.all([
+const [main, vr, experience3d, vrControllers, glyphInteraction, entryTransition, spatialPlaque, crystalCollection, locomotion] = await Promise.all([
   readFile(new URL('../src/main.js', import.meta.url), 'utf8'),
   readFile(new URL('../src/experienceVr.js', import.meta.url), 'utf8'),
   readFile(new URL('../src/experience3d.js', import.meta.url), 'utf8'),
@@ -12,7 +12,8 @@ const [main, vr, experience3d, vrControllers, glyphInteraction, entryTransition,
   readFile(new URL('../src/xr/createVrGlyphInteraction.js', import.meta.url), 'utf8'),
   readFile(new URL('../src/xr/createVrEntryTransition.js', import.meta.url), 'utf8'),
   readFile(new URL('../src/xr/createVrSpatialPlaque.js', import.meta.url), 'utf8'),
-  readFile(new URL('../src/xr/createVrCrystalCollection.js', import.meta.url), 'utf8')
+  readFile(new URL('../src/xr/createVrCrystalCollection.js', import.meta.url), 'utf8'),
+  readFile(new URL('../src/xr/createVrLocomotion.js', import.meta.url), 'utf8')
 ]);
 
 assert.match(main, /await import\('\.\/experienceVr\.js'\)/);
@@ -56,6 +57,11 @@ assert.match(vr, /glyphOrbit\.update\(delta\)/);
 assert.doesNotMatch(vr.match(/onComplete:[\s\S]*?\n  }\n}/)?.[0] ?? '', /portalDisplay\.place|portalCanvas\.hide/);
 assert.match(vr, /function restorePortalWaitingState\(\)[\s\S]*portalCanvas\.show/);
 assert.match(vr, /locomotion\.update\(delta\)/);
+assert.match(locomotion, /renderer\.xr\.getCamera\(camera\)/);
+assert.match(locomotion, /renderer\.xr\.updateCamera\(camera\)/);
+assert.match(locomotion, /xrCamera\.isArrayCamera/);
+assert.match(locomotion, /playerRig\.position\.addScaledVector/);
+assert.doesNotMatch(locomotion, /(?:camera|xrCamera|viewerCamera)\.(?:position|rotation|quaternion)\.(?:set|copy|add)/);
 assert.doesNotMatch(vr, /createVrGlyphPlaque|createVrPlaqueComposition/);
 assert.match(vrControllers, /renderer\.xr\.getController\(0\)/);
 assert.match(vrControllers, /renderer\.xr\.getController\(1\)/);

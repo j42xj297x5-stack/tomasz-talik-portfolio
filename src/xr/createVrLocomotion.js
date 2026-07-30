@@ -5,9 +5,22 @@ export function applyDeadzone(value, deadzone) {
   return Math.sign(value) * (Math.abs(value) - deadzone) / (1 - deadzone);
 }
 
+export function getHorizontalViewerBasis(xrCamera, forward, right) {
+  const viewerCamera = xrCamera.isArrayCamera && xrCamera.cameras.length > 0
+    ? xrCamera.cameras[0]
+    : xrCamera;
+  forward.setFromMatrixColumn(viewerCamera.matrixWorld, 2).negate();
+  forward.y = 0;
+  if (forward.lengthSq() < 1e-8) forward.set(0, 0, -1);
+  forward.normalize();
+  right.set(-forward.z, 0, forward.x);
+  return { forward, right };
+}
+
 export function createVrLocomotion({ playerRig, renderer, camera, settings }) {
   const forward = new THREE.Vector3();
   const right = new THREE.Vector3();
+  const movement = new THREE.Vector3();
   let disposed = false;
 
   function axesFor(handedness) {
@@ -25,13 +38,13 @@ export function createVrLocomotion({ playerRig, renderer, camera, settings }) {
 
     const rightStick = axesFor('right');
     const xrCamera = renderer.xr.getCamera(camera);
-    xrCamera.getWorldDirection(forward);
-    forward.y = 0;
-    if (forward.lengthSq() < 1e-8) forward.set(0, 0, -1);
-    forward.normalize();
-    right.set(-forward.z, 0, forward.x);
-    playerRig.position.addScaledVector(forward, -rightStick.y * settings.moveSpeed * delta);
-    playerRig.position.addScaledVector(right, rightStick.x * settings.moveSpeed * delta);
+    playerRig.updateMatrixWorld(true);
+    if (typeof renderer.xr.updateCamera === 'function') renderer.xr.updateCamera(camera);
+    else xrCamera.updateMatrixWorld(true);
+    getHorizontalViewerBasis(xrCamera, forward, right);
+    movement.copy(forward).multiplyScalar(-rightStick.y).addScaledVector(right, rightStick.x);
+    if (movement.lengthSq() > 1) movement.normalize();
+    playerRig.position.addScaledVector(movement, settings.moveSpeed * delta);
     playerRig.position.y = y;
   }
 

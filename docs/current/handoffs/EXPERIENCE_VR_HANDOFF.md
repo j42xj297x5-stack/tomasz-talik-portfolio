@@ -4,6 +4,8 @@
 
 The player enters directly inside the glyph circle at `(0, 0, 5.8)`, looking toward the center. Session startup compensates the tracked head X/Z offset by moving only `playerRig`. The old entry-glyph/transition flow is not active.
 
+Smooth turn remains on the left joystick. Right-joystick movement is horizontal and relative to the current world-space tracked head direction, including physical head rotation combined with rig yaw; diagonal movement is speed-capped. Locomotion changes only `playerRig` and never writes the tracked camera pose.
+
 A trigger hold on a currently targeted glyph lasts `0.5 s`. Holds belong to individual controllers, are advanced by frame delta, complete once per `selectstart`, and cancel on target loss, trigger release, disconnect or reset. Completion selects the first page by `order` that is not activated and has no live crystal, then calls the additive single-instance spawn path.
 
 ## Crystal and progress contract
