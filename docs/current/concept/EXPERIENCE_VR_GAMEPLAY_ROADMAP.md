@@ -1,12 +1,12 @@
 # EXPERIENCE VR — PLAN ROZWOJU GRY I PROGRESJI
 
-**Projekt:** `tomasz-talik-portfolio`  
-**Tryb:** `Experience VR`  
-**Data opracowania:** 2026-07-30  
-**Status:** plan kierunkowy i operacyjna roadmapa; nie opisuje jeszcze w całości stanu wdrożonego  
-**Urządzenie docelowe:** Meta Quest 3S / Meta Quest Browser  
-**Technologia runtime:** Three.js + WebXR + Vite  
-**Narzędzia assetowe:** Blender 5.1.2, Inkscape, GIMP  
+**Projekt:** `tomasz-talik-portfolio`
+**Tryb:** `Experience VR`
+**Data opracowania:** 2026-07-30
+**Status:** zatwierdzony kierunek przyszłego gameplayu i operacyjna roadmapa; nie jest opisem bieżącego runtime
+**Urządzenie docelowe:** Meta Quest 3S / Meta Quest Browser
+**Technologia runtime:** Three.js + WebXR + Vite
+**Narzędzia assetowe:** Blender 5.1.2, Inkscape, GIMP
 **Dźwięk:** odroczony do późniejszego etapu
 
 ---
@@ -30,7 +30,7 @@ Dokument rozdziela:
 2. **kierunek docelowy** — mechaniki opisane i zaakceptowane w bieżącym wątku;
 3. **kolejność wdrożenia** — etapy, których nie należy realizować jednocześnie.
 
-Nie jest to jeszcze kanoniczny opis kodu. Po wdrożeniu większych etapów aktualny model techniczny VR i handoff projektu muszą zostać zsynchronizowane osobnym zadaniem dokumentacyjnym.
+Nie jest to kanoniczny opis kodu ani lista funkcji już wdrożonych. Wszystkie mechaniki docelowe i checklisty poniżej pozostają planem, dopóki osobne zadanie nie zmieni kodu i testów. Po wdrożeniu większych etapów aktualny model techniczny VR i handoff projektu muszą zostać zsynchronizowane osobnym zadaniem dokumentacyjnym.
 
 ---
 
@@ -79,23 +79,13 @@ Obowiązujące fundamenty:
 - reset i ponowne wejście do sesji nie mogą tworzyć duplikatów modeli, listenerów ani mixerów;
 - ręczne testy na Meta Quest są osobną bramką jakości i nie mogą być zastępowane testami automatycznymi.
 
-### 3.1. Potwierdzona rozbieżność względem planu docelowego
+### 3.1. Potwierdzone ograniczenie bieżącej implementacji
 
-Aktualny handoff z 2026-07-29 opisuje:
+Aktualny runtime zawiera **18 logicznych kart** w układzie `3 / 3 / 3 / 4 / 5` oraz **15 współdzielonych modeli GLB** — po trzy warianty wizualne na każdą z pięciu gałęzi. Karty 4 i 5 ponownie wykorzystują warianty danej gałęzi.
 
-- 15 stron: po 3 na każdy glif;
-- 15 modeli kryształów;
-- kryształ trwale powiązany z konkretnym `page.id`;
-- stronę pokazywaną po aktywacji tego konkretnego kryształu.
+Każda obecna instancja kryształu jest tworzona dla konkretnej strony i zawiera `page`, `cardId` oraz `crystalId`. Activate zapisuje i wyświetla `insertedInstance.page`. Kilka wcześniej zebranych kryształów może więc pokazać treść w kolejności fizycznego wkładania, a nie w sekwencji gałęzi.
 
-Docelowy model gry ustalony w bieżącym wątku wymaga:
-
-- 18 kart w układzie `3 / 3 / 3 / 4 / 5`;
-- kryształu powiązanego wyłącznie z gałęzią lub glifem;
-- wybrania kolejnej strony dopiero podczas Activate;
-- sekwencyjnego odczytu kart niezależnie od kolejności wkładania zgromadzonych kryształów.
-
-To jest pierwsza rzecz do naprawienia przed rozbudową progresji.
+Zatwierdzony model docelowy wymaga kryształu powiązanego z gałęzią oraz wyboru kolejnej nieaktywowanej strony dopiero podczas Activate. Ten branch-bound kontrakt **nie jest jeszcze zaimplementowany** i stanowi pierwszy osobny etap wdrożeniowy przed rozbudową progresji.
 
 ---
 
@@ -1366,7 +1356,7 @@ Nie należy od razu realizować całej roadmapy.
 Najbliższe kroki:
 
 ```text
-1. Audyt i naprawa sekwencyjnych kryształów.
+1. Osobne zadanie naprawiające sekwencyjne rozwiązywanie kart podczas Activate.
 2. Wprowadzenie modelu 18 kart i VrProgressionController.
 3. Przygotowanie assetów podłogi: GLB + pięć SVG.
 4. Integracja pól, sektorów i pierścieni.

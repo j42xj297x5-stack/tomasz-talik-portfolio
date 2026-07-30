@@ -1,21 +1,23 @@
 # Experience VR Handoff
 
-## Current gameplay baseline
+## Current state
 
-The player enters directly inside the glyph circle at `(0, 0, 5.8)`, looking toward the center. Session startup compensates the tracked head X/Z offset by moving only `playerRig`. The old entry-glyph/transition flow is not active.
+Experience VR is an independent, dynamically imported WebXR runtime. A session starts directly at `(0, 0, 5.8)` facing center; tracked-head X/Z compensation moves only `playerRig`. WebXR owns the tracked camera. Left-stick yaw and right-stick tracked-head-relative horizontal movement also modify only the rig. The repository's entry-transition module is not active.
 
-Smooth turn remains on the left joystick. Right-joystick movement is horizontal and relative to the current world-space tracked head direction, including physical head rotation combined with rig yaw; diagonal movement is speed-capped. Locomotion changes only `playerRig` and never writes the tracked camera pose.
+A `0.5 s` trigger hold on a targeted moving glyph spawns the first ordered page that is neither activated nor already represented by a live crystal. Branches contain `3 / 3 / 3 / 4 / 5` cards: **18 logical cards total**. Their visuals reuse **15 GLBs total**, exactly three variants per branch; cards 4 and 5 cycle back through those variants.
 
-A trigger hold on a currently targeted glyph lasts `0.5 s`. Holds belong to individual controllers, are advanced by frame delta, complete once per `selectstart`, and cancel on target loss, trigger release, disconnect or reset. Completion selects the first page by `order` that is not activated and has no live crystal, then calls the additive single-instance spawn path.
+## Current crystal contract and limitation
 
-## Crystal and progress contract
+Every spawned physical instance is currently created for a concrete page and contains `page`, `cardId` and `crystalId`. Instances materialize additively with deterministic spacing; both hands can hold different available crystals. One reliquary socket accepts one crystal through `available → pulling → held → inserted`. Activate changes it to `active`, records `insertedInstance.page.id` in `activatedPageIds` and displays that same `insertedInstance.page`. Release removes an inserted/active instance and frees the socket without undoing activation.
 
-All 18 unique card crystals can coexist. Repeated glyph holds advance through that branch; variants cycle `1, 2, 3`. Deterministic free spawn slots respect `minimumSpacing`. Both controllers can independently pull/hold one crystal, while the reliquary accepts only one `inserted`/`active` crystal. Dropping outside the socket returns a crystal to `available` without progress.
+This page-bound contract has a confirmed ordering limitation: if a player collects several crystals before using them, inserting them in a different physical order can display branch content in that insertion order rather than sequential card order. Activate does not currently choose the next page of the branch.
 
-`activateInserted()` records the card immediately in `activatedPageIds`; release removes the active crystal but keeps progress. The registry is readable through `hasActivatedPage()` / `getActivatedPageIds()`, with legacy read aliases retained. A glyph stays visible and orbiting but becomes non-interactive and unlit once it has no unactivated, unspawned page. `isLevelComplete()` requires all 18 unique activations.
+## Reset and progress lifetime
 
-## Reset and validation notes
+Session entry/end removes all live crystals, clears hand/socket ownership, hits and holds, resets the portal/buttons/reliquary/glyph presentation, and restores the rig. The activation Set survives those resets while the prepared page runtime remains alive, so activated pages cannot respawn on XR re-entry. Reload or navigation creates a fresh registry. The read-named APIs alias activation, and there is no durable save, separate read state, progress UI, full-game reset, victory sequence or next level.
 
-Session reset removes all crystal instances, clears controller hits and holds, restores player start/orientation and the portal waiting message, but preserves activation IDs for the lifetime of the prepared runtime. Consequently only unactivated cards can be generated after reset.
+## Approved direction not yet implemented
 
-No victory presentation, additional level, physics, collision, throwing, new assets, new dependency, card copy change, glyph orbit change, portal/reliquary/button redesign, Classic 2D change or Experience 3D change belongs to this handoff.
+The [gameplay roadmap](../concept/EXPERIENCE_VR_GAMEPLAY_ROADMAP.md) is approved direction only. Branch-bound crystals with Activate-time sequential resolution, `VrProgressionController`, progress floor and tiers, shells, orb, semantic hand tools, small glyphs, tilting floor, sector puzzles, runes, final radar, completion flow and persistent saves are absent from the runtime.
+
+The nearest approved implementation is a **separate task** that fixes sequential card resolution during Activate by moving content choice from the physical crystal's page to the next unactivated page of its branch. No part of that fix is included in this documentation-only handoff.
