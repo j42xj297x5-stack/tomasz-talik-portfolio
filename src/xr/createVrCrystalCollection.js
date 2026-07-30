@@ -30,6 +30,30 @@ export function getDeterministicCrystalTransform(pageId, settings) {
   };
 }
 
+export function getVrCrystalLayout(pageIds, settings) {
+  const count = pageIds.length;
+  const rowSizes = count <= 3 ? [count] : count === 4 ? [2, 2] : [3, count - 3];
+  const widestRow = Math.max(...rowSizes, 1);
+  const horizontalSpacing = widestRow > 1
+    ? Math.max(settings.minimumSpacing, settings.spawnWidth / (widestRow - 1) * 0.76)
+    : 0;
+  const depthSpacing = rowSizes.length > 1
+    ? Math.max(settings.minimumSpacing, settings.spawnDepth * 0.5)
+    : 0;
+  const positions = [];
+  rowSizes.forEach((rowSize, rowIndex) => {
+    const z = (rowIndex - (rowSizes.length - 1) / 2) * depthSpacing;
+    for (let column = 0; column < rowSize; column += 1) {
+      positions.push({
+        id: pageIds[positions.length],
+        x: (column - (rowSize - 1) / 2) * horizontalSpacing,
+        z
+      });
+    }
+  });
+  return positions;
+}
+
 export function createVrCrystalCollection({ scene, assetManager, controllers, portalDisplay, insertionTarget, settings, onActivate, onConsume }) {
   const instances = [];
   const listeners = [];
@@ -202,7 +226,7 @@ export function createVrCrystalCollection({ scene, assetManager, controllers, po
     const right = new THREE.Vector3(-forward.z, 0, forward.x);
     const center = anchorCenter.clone().addScaledVector(forward, settings.frontDistance);
     center.y = 0;
-    const occupied = [];
+    const layout = getVrCrystalLayout(pages.map(({ id }) => id), settings);
     pages.forEach((page, index) => {
       const source = assetManager.cloneGltfScene(page.crystalAssetId);
       if (!source) return;
@@ -221,15 +245,7 @@ export function createVrCrystalCollection({ scene, assetManager, controllers, po
       model.updateMatrixWorld(true);
       bounds = new THREE.Box3().setFromObject(model);
       model.position.y -= bounds.min.y;
-      let x = transform.x;
-      let z = transform.z;
-      for (let attempt = 0; occupied.some((point) => Math.hypot(point.x - x, point.z - z) < settings.minimumSpacing) && attempt < 8; attempt += 1) {
-        const angle = (hashVrPageId(page.id) * 0.00001) + attempt * 2.399;
-        x = Math.max(-settings.spawnWidth / 2, Math.min(settings.spawnWidth / 2, transform.x + Math.cos(angle) * settings.minimumSpacing));
-        z = Math.max(-settings.spawnDepth / 2, Math.min(settings.spawnDepth / 2, transform.z + Math.sin(angle) * settings.minimumSpacing));
-      }
-      occupied.push({ x, z });
-      const targetPosition = center.clone().addScaledVector(right, x).addScaledVector(forward, z + (index % 2) * 0.035);
+      const targetPosition = center.clone().addScaledVector(right, layout[index].x).addScaledVector(forward, layout[index].z);
       targetPosition.y = 0;
       object.position.copy(targetPosition);
       object.position.y -= settings.materializeRise;
@@ -237,7 +253,7 @@ export function createVrCrystalCollection({ scene, assetManager, controllers, po
       const materializeYaw = (unit(hashVrPageId(page.id), 6) - 0.5) * 2 * settings.materializeYaw;
       object.rotation.y = -materializeYaw;
       scene.add(object);
-      const instance = { page, object, model, state: 'materializing', heldBy: null, highlighted: false,
+      const instance = { page, cardId: page.cardId, crystalId: page.crystalId, object, model, state: 'materializing', heldBy: null, highlighted: false,
         materializeElapsed: -index * settings.materializeStagger, materializeYaw, targetPosition, initialTransform: object.matrix.clone() };
       instances.push(instance);
       object.traverse((child) => objectToCrystal.set(child, instance));

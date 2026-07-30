@@ -1,13 +1,15 @@
 # Content Model
 
-Current active content module: `src/content/portfolioNodes.js`.
+Current active content modules are mode-specific: `src/content/portfolioNodes.js` supplies Classic 2D and Experience 3D, while `src/content/portalCards.js` supplies Experience VR crystal-card content.
 
 ## Portal card registry contract
 
 - `src/content/portalCards.js` is the canonical content registry for the 18 bilingual portal cards across five glyph branches.
 - Every card has semantic, order-independent `id` and `crystalId` values. The separate `order` and `starter` fields prepare the records for a future progression model without defining or activating that progression now.
 - Each Polish and English translation includes `crystalLabel`, reserved for later dynamic labeling of crystal models.
-- The registry is not yet an active data source for the Experience VR runtime. Experience VR continues to use the existing `experienceVrPages.js` model of 15 pages and 15 materialized crystals.
+- The 18-card registry is the active source of localized crystal-card content for Experience VR.
+- `src/content/experienceVrPages.js` adapts those semantic records to runtime page and existing crystal-asset metadata; it does not own duplicate copy.
+- Resolved VR pages expose `crystalLabel` for a later visual-labeling stage, but the label is not rendered on the crystal model yet.
 
 Each gate node contains:
 - `id`
