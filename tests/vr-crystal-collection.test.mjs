@@ -171,6 +171,27 @@ sharedAssetCollection.reset();
 assert.equal(sharedAssetCollection.instances.length, 0);
 assert.ok(haikuInstances.every(({ object }) => object.parent === null));
 sharedAssetCollection.dispose();
+
+// Additive single spawning supports all cards, rejects duplicate cards and keeps deterministic spacing.
+const allScene = new THREE.Scene();
+const allCollection = createVrCrystalCollection({
+  scene: allScene, controllers: [], portalDisplay, settings,
+  assetManager: { cloneGltfScene: () => new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.2, 0.1)) }
+});
+const viewerFrame = { position: new THREE.Vector3(0, 1.6, 5.8), direction: new THREE.Vector3(0, 0, -1) };
+const allInstances = experienceVrPages.map((page) => allCollection.spawnOne(page, viewerFrame));
+assert.equal(allInstances.filter(Boolean).length, 18);
+assert.equal(allCollection.spawnOne(experienceVrPages[0], viewerFrame), null, 'one live instance per card');
+for (let a = 0; a < 18; a += 1) for (let b = a + 1; b < 18; b += 1) {
+  assert.ok(allInstances[a].targetPosition.distanceTo(allInstances[b].targetPosition) >= settings.minimumSpacing - 1e-8);
+}
+experienceVrPages.forEach(({ id }) => allCollection.activatedPageIds.add(id));
+assert.equal(allCollection.isLevelComplete(), true);
+allCollection.reset();
+assert.equal(allCollection.instances.length, 0);
+assert.equal(allCollection.getActivatedPageIds().length, 18, 'reset preserves activation progress');
+assert.equal(allCollection.spawnOne(experienceVrPages[0], viewerFrame), null, 'activated pages cannot respawn');
+allCollection.dispose();
 console.log('VR crystal collection assertions passed');
 
 // A valid reliquary defers page activation and keeps one crystal visible in its authored anchor.

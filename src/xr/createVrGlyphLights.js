@@ -15,12 +15,11 @@ export function createVrGlyphLights({ nodes, center = new THREE.Vector3() }) {
     glyphRoot.add(anchor);
     return { glyphRoot, anchor, light, state: 'idle' };
   });
-  function update({ hovered = new Set(), entryReady = null, activated = null } = {}) {
+  function update({ hovered = new Set(), exhausted = new Set() } = {}) {
     if (disposed) return;
     records.forEach((record) => {
       const { glyphRoot, anchor, light } = record;
-      record.state = glyphRoot === activated ? 'activated'
-        : hovered.has(glyphRoot) ? 'hovered' : glyphRoot === entryReady ? 'entryReady' : 'idle';
+      record.state = !exhausted.has(glyphRoot) && hovered.has(glyphRoot) ? 'hovered' : 'idle';
       glyphRoot.getWorldPosition(worldPosition);
       lightWorldPosition.copy(center).lerp(worldPosition, 1.16);
       glyphRoot.worldToLocal(lightWorldPosition);
