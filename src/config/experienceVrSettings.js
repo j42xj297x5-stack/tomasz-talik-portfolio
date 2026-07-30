@@ -9,7 +9,7 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
   referenceSpaceType: 'local-floor',
   worldScale: 1,
   spawn: {
-    position: { x: 0, y: 0, z: 8.6 },
+    position: { x: 0, y: 0, z: 5.8 },
     lookAt: { x: 0, y: 1, z: 0 }
   },
   renderer: {
@@ -23,6 +23,7 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
     idleScale: 1,
     activeScale: 1.2
   },
+  glyphInteraction: { holdDurationSeconds: 0.5 },
   glyphRing: {
     enabled: true,
     radiusMultiplier: 2,
@@ -157,6 +158,10 @@ export function normalizeExperienceVrSettings(candidate) {
       rayOpacity: finiteNumber(candidate.controllers?.rayOpacity, defaults.controllers.rayOpacity, { min: 0.05, max: 1 }),
       idleScale: finiteNumber(candidate.controllers?.idleScale, defaults.controllers.idleScale, { min: 0.1, max: 5 }),
       activeScale: finiteNumber(candidate.controllers?.activeScale, defaults.controllers.activeScale, { min: 0.1, max: 5 })
+    },
+    glyphInteraction: {
+      holdDurationSeconds: finiteNumber(candidate.glyphInteraction?.holdDurationSeconds,
+        defaults.glyphInteraction.holdDurationSeconds, { min: 0.1, max: 5 })
     },
     glyphRing: {
       enabled: typeof candidate.glyphRing?.enabled === 'boolean' ? candidate.glyphRing.enabled : defaults.glyphRing.enabled,

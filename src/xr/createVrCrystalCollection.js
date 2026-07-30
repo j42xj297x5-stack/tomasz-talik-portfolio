@@ -69,7 +69,7 @@ export function createVrCrystalCollection({ scene, assetManager, controllers, po
   let insertedInstance = null;
   let fallbackAnchor = null;
   let warnedFallbackAnchor = false;
-  const readPageIds = new Set();
+  const activatedPageIds = new Set();
   const activationCallback = onActivate ?? onConsume;
 
   function clearControllerHit(controllerRecord) {
@@ -214,22 +214,27 @@ export function createVrCrystalCollection({ scene, assetManager, controllers, po
     listeners.push({ controllerRecord, squeezeStart, squeezeEnd });
   });
 
-  function spawn(pages, { anchorObject, spawnPosition }) {
-    reset();
-    if (disposed || !settings.enabled) return [];
-    const anchorCenter = new THREE.Box3().setFromObject(anchorObject).getCenter(new THREE.Vector3());
-    const configuredSpawn = new THREE.Vector3(spawnPosition.x, spawnPosition.y, spawnPosition.z);
-    const forward = new THREE.Vector3().subVectors(configuredSpawn, anchorCenter);
-    forward.y = 0;
-    if (forward.lengthSq() < 1e-8) forward.set(0, 0, -1);
-    forward.normalize();
+  function spawnOne(page, viewerFrame) {
+    if (disposed || !settings.enabled || !page || activatedPageIds.has(page.id)
+      || instances.some((instance) => instance.page.id === page.id && instance.state !== 'released')) return null;
+    const origin = viewerFrame.position.clone();
+    const forward = viewerFrame.direction.clone(); forward.y = 0;
+    if (forward.lengthSq() < 1e-8) forward.set(0, 0, -1); forward.normalize();
     const right = new THREE.Vector3(-forward.z, 0, forward.x);
-    const center = anchorCenter.clone().addScaledVector(forward, settings.frontDistance);
-    center.y = 0;
-    const layout = getVrCrystalLayout(pages.map(({ id }) => id), settings);
-    pages.forEach((page, index) => {
+    const center = origin.clone().addScaledVector(forward, settings.frontDistance); center.y = 0;
+    let targetPosition = center.clone();
+    for (let slot = 0; slot < 200; slot += 1) {
+      const ring = Math.ceil(Math.sqrt(slot));
+      const angle = slot * Math.PI * (3 - Math.sqrt(5));
+      const candidate = center.clone().addScaledVector(right, Math.cos(angle) * ring * settings.minimumSpacing)
+        .addScaledVector(forward, Math.sin(angle) * ring * settings.minimumSpacing);
+      if (instances.every(({ state, targetPosition: occupied }) => state === 'released' || candidate.distanceTo(occupied) >= settings.minimumSpacing - 1e-8)) {
+        targetPosition = candidate; break;
+      }
+    }
+    {
       const source = assetManager.cloneGltfScene(page.crystalAssetId);
-      if (!source) return;
+      if (!source) return null;
       const object = new THREE.Group();
       object.name = `VrCrystal:${page.id}`;
       const model = source.clone(true);
@@ -245,7 +250,6 @@ export function createVrCrystalCollection({ scene, assetManager, controllers, po
       model.updateMatrixWorld(true);
       bounds = new THREE.Box3().setFromObject(model);
       model.position.y -= bounds.min.y;
-      const targetPosition = center.clone().addScaledVector(right, layout[index].x).addScaledVector(forward, layout[index].z);
       targetPosition.y = 0;
       object.position.copy(targetPosition);
       object.position.y -= settings.materializeRise;
@@ -254,11 +258,23 @@ export function createVrCrystalCollection({ scene, assetManager, controllers, po
       object.rotation.y = -materializeYaw;
       scene.add(object);
       const instance = { page, cardId: page.cardId, crystalId: page.crystalId, object, model, state: 'materializing', heldBy: null, highlighted: false,
-        materializeElapsed: -index * settings.materializeStagger, materializeYaw, targetPosition, initialTransform: object.matrix.clone() };
+        materializeElapsed: 0, materializeYaw, targetPosition, initialTransform: object.matrix.clone() };
       instances.push(instance);
       object.traverse((child) => objectToCrystal.set(child, instance));
-    });
-    return [...instances];
+      return instance;
+    }
+  }
+
+  function spawn(pages, { anchorObject, spawnPosition }) {
+    if (disposed || !settings.enabled) return [];
+    const anchorCenter = new THREE.Box3().setFromObject(anchorObject).getCenter(new THREE.Vector3());
+    const position = new THREE.Vector3(spawnPosition.x, spawnPosition.y, spawnPosition.z);
+    const direction = anchorCenter.clone().sub(position).normalize();
+    return pages.map((page, index) => {
+      const instance = spawnOne(page, { position, direction });
+      if (instance) instance.materializeElapsed = -index * settings.materializeStagger;
+      return instance;
+    }).filter(Boolean);
   }
 
   function update(delta = 0) {
@@ -309,6 +325,7 @@ export function createVrCrystalCollection({ scene, assetManager, controllers, po
   function activateInserted() {
     if (!insertedInstance || insertedInstance.state !== 'inserted') return false;
     insertedInstance.state = 'active';
+    activatedPageIds.add(insertedInstance.page.id);
     activationCallback?.(insertedInstance.page);
     return true;
   }
@@ -316,7 +333,6 @@ export function createVrCrystalCollection({ scene, assetManager, controllers, po
   function releaseInserted() {
     const instance = insertedInstance;
     if (!instance || !['inserted', 'active'].includes(instance.state)) return false;
-    if (instance.state === 'active') readPageIds.add(instance.page.id);
     instance.state = 'released';
     instance.object.visible = false;
     instance.object.removeFromParent();
@@ -324,8 +340,9 @@ export function createVrCrystalCollection({ scene, assetManager, controllers, po
     return true;
   }
 
-  function hasReadPage(pageId) { return readPageIds.has(pageId); }
-  function getReadPageIds() { return [...readPageIds]; }
+  function hasActivatedPage(pageId) { return activatedPageIds.has(pageId); }
+  function getActivatedPageIds() { return [...activatedPageIds]; }
+  function isLevelComplete() { return activatedPageIds.size === 18; }
 
   function dispose() {
     if (disposed) return;
@@ -338,6 +355,7 @@ export function createVrCrystalCollection({ scene, assetManager, controllers, po
     listeners.length = 0;
   }
 
-  return { instances, heldByController, spawn, update, grab, release, getInsertedInstance, activateInserted,
-    releaseInserted, hasReadPage, getReadPageIds, reset, dispose };
+  return { instances, heldByController, spawn, spawnOne, update, grab, release, getInsertedInstance, activateInserted,
+    releaseInserted, activatedPageIds, hasActivatedPage, getActivatedPageIds, isLevelComplete,
+    hasReadPage: hasActivatedPage, getReadPageIds: getActivatedPageIds, reset, dispose };
 }

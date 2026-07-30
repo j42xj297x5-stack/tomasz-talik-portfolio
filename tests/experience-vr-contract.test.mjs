@@ -47,13 +47,12 @@ assert.equal(calculatePlayerRigYaw({ x: 1, y: 0, z: 1 }, { x: 1, y: 9, z: 1 }), 
 assert.match(vr, /orientPlayerRig\(playerRig, settings\.spawn\.lookAt\)/);
 assert.doesNotMatch(vr, /camera\.rotation|camera\.quaternion|camera\.lookAt/);
 assert.doesNotMatch(entryTransition, /camera\.(position|rotation|quaternion)\.(set|copy)|playerRig\.rotation/);
-assert.match(vr, /onEntryGlyphActivated:[\s\S]*activatedEntryGlyph = glyphInteraction\.activatedEntryGlyph;[\s\S]*entryTransition\.start\(\)/);
-assert.match(vr, /function handleSessionEnd\(\)[\s\S]*entryTransition\.reset\(\)/);
-assert.match(vr, /entryTransition\.reset\(\);\s*crystalCollection\.reset\(\);\s*activateButton\.reset\(\);\s*releaseButton\.reset\(\);\s*crystalReliquary\.reset\(\);\s*restorePortalWaitingState\(\);\s*locomotion\.reset\(\);\s*playerRig\.position\.set\(settings\.spawn\.position\.x/);
+assert.doesNotMatch(vr, /createVrEntryTransition|activatedEntryGlyph|entryReady/);
+assert.match(vr, /onGlyphHoldComplete:[\s\S]*crystalCollection\.spawnOne/);
+assert.match(vr, /crystalCollection\.reset\(\);\s*activateButton\.reset\(\);\s*releaseButton\.reset\(\);\s*crystalReliquary\.reset\(\);\s*restorePortalWaitingState\(\);\s*locomotion\.reset\(\);\s*playerRig\.position\.set\(settings\.spawn\.position\.x/);
 assert.match(vr, /function handleSessionEnd\(\)[\s\S]*restorePortalWaitingState\(\)/);
-assert.match(vr, /entryTransition\.update\(delta\)/);
 assert.match(vr, /crystalCollection\.update\(delta\)/);
-assert.match(vr, /const orbitEntryReady = glyphOrbit\.update\(delta\);\s*const entryReady = activatedEntryGlyph \? null : orbitEntryReady/);
+assert.match(vr, /glyphOrbit\.update\(delta\)/);
 assert.doesNotMatch(vr.match(/onComplete:[\s\S]*?\n  }\n}/)?.[0] ?? '', /portalDisplay\.place|portalCanvas\.hide/);
 assert.match(vr, /function restorePortalWaitingState\(\)[\s\S]*portalCanvas\.show/);
 assert.match(vr, /locomotion\.update\(delta\)/);

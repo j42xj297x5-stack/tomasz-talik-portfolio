@@ -6,7 +6,7 @@
     "position": {
       "x": 0,
       "y": 0,
-      "z": 8.6
+      "z": 5.8
     },
     "lookAt": {
       "x": 0,
@@ -24,6 +24,9 @@
     "rayOpacity": 0.8,
     "idleScale": 1,
     "activeScale": 1.2
+  },
+  "glyphInteraction": {
+    "holdDurationSeconds": 0.5
   },
   "glyphRing": {
     "enabled": true,

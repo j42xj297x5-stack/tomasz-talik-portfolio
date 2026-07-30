@@ -13,7 +13,6 @@ import { createVrControllers } from './xr/createVrControllers.js';
 import { createVrGlyphInteraction } from './xr/createVrGlyphInteraction.js';
 import { createVrGlyphOrbit } from './xr/createVrGlyphOrbit.js';
 import { createVrGlyphLights } from './xr/createVrGlyphLights.js';
-import { createVrEntryTransition } from './xr/createVrEntryTransition.js';
 import { createVrSpatialPlaque } from './xr/createVrSpatialPlaque.js';
 import { createVrPortalDisplay } from './xr/createVrPortalDisplay.js';
 import { createVrLocomotion } from './xr/createVrLocomotion.js';
@@ -168,29 +167,24 @@ const releaseButton = createVrReliquaryReleaseButton({
   onRelease: () => crystalCollection.releaseInserted(),
   onReleaseComplete: () => activateButton.reset()
 });
-let activatedEntryGlyph = null;
-const entryTransition = createVrEntryTransition({
-  playerRig,
-  renderer,
-  camera,
-  settings: settings.entryTransition,
-  ringCenter: new THREE.Vector3(),
-  spawnPosition: settings.spawn.position,
-  effectiveRingRadius: glyphOrbit.effectiveRadius,
-  onComplete: () => {
-    const glyphId = activatedEntryGlyph?.userData?.id;
-    crystalCollection.spawn(getExperienceVrPages(glyphId), {
-      anchorObject: monkeyAnchor,
-      spawnPosition: settings.spawn.position
-    });
-  }
-});
+function getNextPage(node) {
+  return [...getExperienceVrPages(node?.userData?.id)].sort((a, b) => a.order - b.order)
+    .find((page) => !crystalCollection.hasActivatedPage(page.id)
+      && !crystalCollection.instances.some((instance) => instance.page.id === page.id && instance.state !== 'released')) ?? null;
+}
+function isGlyphActive(node) { return Boolean(getNextPage(node)); }
 const glyphInteraction = createVrGlyphInteraction({
   controllers: vrControllers.controllers,
   nodes,
-  onEntryGlyphActivated: () => {
-    activatedEntryGlyph = glyphInteraction.activatedEntryGlyph;
-    entryTransition.start();
+  settings: settings.glyphInteraction,
+  isGlyphActive,
+  onGlyphHoldComplete: ({ node }) => {
+    const page = getNextPage(node);
+    if (!page) return;
+    const xrCamera = renderer.xr.getCamera(camera);
+    const position = xrCamera.getWorldPosition(new THREE.Vector3());
+    const direction = xrCamera.getWorldDirection(new THREE.Vector3());
+    crystalCollection.spawnOne(page, { position, direction });
   }
 });
 
@@ -211,20 +205,16 @@ const clock = new THREE.Clock(false);
 
 function renderFrame() {
   const delta = clock.getDelta();
-  const orbitEntryReady = glyphOrbit.update(delta);
-  const entryReady = activatedEntryGlyph ? null : orbitEntryReady;
+  glyphOrbit.update(delta);
   glyphRing.updateMatrixWorld(true);
-  glyphInteraction.update();
+  glyphInteraction.update(delta);
   crystalCollection.update(delta);
   activateButton.update(delta);
   releaseButton.update(delta);
-  glyphInteraction.setEntryReady(entryReady);
   glyphLights.update({
     hovered: glyphInteraction.hoveredGlyphs,
-    entryReady,
-    activated: activatedEntryGlyph
+    exhausted: new Set(nodes.filter((node) => !isGlyphActive(node)))
   });
-  entryTransition.update(delta);
   locomotion.update(delta);
   portalCanvas.update(delta);
   renderer.render(scene, camera);
@@ -241,7 +231,6 @@ function handleSessionEnd() {
   renderer.setAnimationLoop(null);
   clock.stop();
   activeSession = null;
-  entryTransition.reset();
   crystalCollection.reset();
   activateButton.reset();
   releaseButton.reset();
@@ -250,7 +239,6 @@ function handleSessionEnd() {
   locomotion.reset();
   playerRig.position.set(settings.spawn.position.x, settings.spawn.position.y, settings.spawn.position.z);
   orientPlayerRig(playerRig, settings.spawn.lookAt);
-  activatedEntryGlyph = null;
   glyphOrbit.reset();
   glyphLights.reset();
   glyphInteraction.reset();
@@ -259,7 +247,6 @@ function handleSessionEnd() {
 
 async function enterVr() {
   if (activeSession) return;
-  entryTransition.reset();
   crystalCollection.reset();
   activateButton.reset();
   releaseButton.reset();
@@ -268,7 +255,6 @@ async function enterVr() {
   locomotion.reset();
   playerRig.position.set(settings.spawn.position.x, settings.spawn.position.y, settings.spawn.position.z);
   orientPlayerRig(playerRig, settings.spawn.lookAt);
-  activatedEntryGlyph = null;
   glyphOrbit.reset();
   glyphLights.reset();
   glyphInteraction.reset();
@@ -285,6 +271,9 @@ async function enterVr() {
     renderer.xr.setReferenceSpaceType(referenceSpaceType);
     requestedSession.addEventListener('end', handleSessionEnd, { once: true });
     await renderer.xr.setSession(requestedSession);
+    const trackedHead = renderer.xr.getCamera(camera).getWorldPosition(new THREE.Vector3());
+    playerRig.position.x += settings.spawn.position.x - trackedHead.x;
+    playerRig.position.z += settings.spawn.position.z - trackedHead.z;
     activeSession = requestedSession;
     hasEnteredSession = true;
     status.textContent = copy.ready;
@@ -299,7 +288,6 @@ async function enterVr() {
     activeSession = null;
     renderer.setAnimationLoop(null);
     clock.stop();
-    entryTransition.reset();
     crystalCollection.reset();
     activateButton.reset();
     releaseButton.reset();
