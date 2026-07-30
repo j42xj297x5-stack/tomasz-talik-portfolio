@@ -2,57 +2,89 @@
 
 ## Documentation flow
 
-`PROJECT_ENTRY.md` → `maps/PROJECT_INDEX.md` → smallest task-specific current model. VR work always starts with `technical/VR_RUNTIME_MODEL.md`, then `handoffs/EXPERIENCE_VR_HANDOFF.md`.
+`PROJECT_ENTRY.md` → `maps/PROJECT_INDEX.md` → smallest task-specific current model. VR work reads `technical/VR_RUNTIME_MODEL.md`, then `handoffs/EXPERIENCE_VR_HANDOFF.md`.
 
 ## Runtime boundaries
 
 ```text
 main
-├─> classic2d ────────────────> portfolioNodes
-├─ dynamic import ─> experience3d ─> Three.js desktop scene + HTML/CSS overlay
+├─ classic2d ────────────────────────────── portfolioNodes
+├─ dynamic import ─ experience3d ───────── desktop Three.js + HTML/CSS overlay
 └─ vrCapability
-   └─ dynamic import after VR selection ─> experienceVr ─> independent WebXR runtime
+   └─ dynamic import after VR selection ─ experienceVr (independent WebXR runtime)
 ```
 
-Experience 3D and Experience VR are separate runtime owners. `src/experience3d.js` remains protected. There is no binding shared-world-factory migration direction.
+Experience 3D and VR have separate owners. `src/experience3d.js` remains protected; no shared-world-factory migration is binding.
 
-## Experience VR graph
+## Experience VR composition
 
 ```text
-main ─> vrCapability ─> secure-context + immersive-vr support
-main ── dynamic import ─> experienceVr
+main → vrCapability → secure context + immersive-vr support
+main → dynamic import → experienceVr
 
 experienceVr
-├─> experienceVrSettings ─> publicPath
-├─> AssetManager + VR monkey/glyph/plaque preload subset
-├─> centralObject + monkeyModel + lights
-├─> orbitNodes (glyph construction and base radius 3.8)
-├─> playerRigOrientation
-├─> createVrControllers (two target rays plus two grip/hold sockets)
-├─> createVrGlyphOrbit (effective radius 7.6, continuous orbit, dynamic entryReady)
-├─> createVrGlyphInteraction (current GLB meshes/fallback colliders, object→glyphRoot)
-├─> createVrGlyphLights (warm PointLight feedback)
-├─> createVrEntryTransition (head-offset-compensated playerRig movement)
-├─> createVrPortalDisplay (portal plus invisible bounds-derived crystal socket)
-├─> experienceVrPages ─> resolved portfolioNodes + 15 crystal asset mappings
-├─> createVrCrystalCollection ─> AssetManager clones + squeeze near-grab/insert
-└─> createVrSpatialPlaque (existing canvas inside portal)
+├─ experienceVrSettings → publicPath → /data/experience-vr-settings.json
+├─ AssetManager → manifest-selected preloaded GLBs
+├─ centralObject + monkeyModel + lights
+├─ orbitNodes
+├─ playerRigOrientation
+├─ createVrControllers → two target rays + grips + holdSockets
+├─ createVrGlyphOrbit → effective radius 7.6 + continuous orbit + entryReady
+├─ createVrGlyphInteraction → moving meshes/fallback colliders
+├─ createVrGlyphLights → light-only feedback
+├─ createVrEntryTransition → head-offset-compensated playerRig movement
+├─ createVrPortalDisplay
+│  ├─ /glb/portal.glb
+│  ├─ PORTAL_CANVAS_SURFACE
+│  └─ compatibility crystal socket
+├─ createVrSpatialPlaque → CanvasTexture on authored surface / warned plane fallback
+├─ createVrLocomotion → right-stick move + left-stick yaw on playerRig
+├─ experienceVrPages → portfolioNodes selectors + 15 crystal mappings
+├─ createVrCrystalCollection → materialize + raycast target + pull-to-hand + state/read data
+├─ createVrCrystalReliquary
+│  ├─ /glb/portal_crystal_reliquary.glb
+│  ├─ insertion zone + authored anchor + visible runtime anchor
+│  └─ independent companion placement/scale roots
+├─ createVrReliquaryActivateButton
+└─ createVrReliquaryReleaseButton → VrReliquaryReleaseButtonHitArea
 
 direct Enter VR gesture
-└─> immersive-vr session
-   ├─> local-floor, fallback local
-   └─> renderer.setAnimationLoop
+└─ immersive-vr → local-floor (fallback local) → renderer.setAnimationLoop
 ```
 
-The per-frame interaction order is orbit, world-matrix refresh, raycast, dynamic entry assignment, light update, transition/plaque update, and render. Session reset reuses runtime objects and clears state instead of duplicating them.
+The active VR preload subset contains no per-glyph plaque models. AssetManager supplies every runtime model; crystal spawn performs no fetch.
 
-## Shared foundations, not a shared runtime
+## Interaction and data flow
 
-The three modes consume stable portfolio IDs and content where applicable. Experience VR also reuses focused asset and scene constructors, the vendored Three.js build, and `publicPath`. It does not import Experience 3D interaction state, its HTML/CSS panels, atmosphere progression, or desktop animation loop.
+```text
+controller local -Z ray
+├─ glyph currentHit → trigger/select → entry transition
+├─ crystal currentCrystalHit → squeeze → pull-to-hand → held → insertion
+├─ activate hit → select → activateInserted() → portal canvas update
+└─ release hit → select → delayed releaseInserted()
+```
 
-## VR crystal mapping
+Crystal and glyph hits are separate controller-record fields.
 
-| Stable glyph ID | Crystal GLBs |
+```text
+createVrCrystalCollection.inserted
+→ createVrReliquaryActivateButton
+→ activateInserted()
+→ active
+→ resolveExperienceVrPage(portfolioNodes)
+→ portal CanvasTexture update
+
+createVrReliquaryReleaseButton
+→ releaseInserted()
+→ readPageIds (only when released state was active)
+→ released + object removed
+→ socket available
+→ activate/release reset
+```
+
+## Asset/page mapping
+
+| Stable glyph ID | Three preloaded crystal GLBs |
 | --- | --- |
 | `ai-guide` | `/glb/crystal-ai_guide_01.glb` … `_03.glb` |
 | `spotify-digger` | `/glb/crystal-dig_engine_01.glb` … `_03.glb` |
@@ -60,10 +92,18 @@ The three modes consume stable portfolio IDs and content where applicable. Exper
 | `creative-ai` | `/glb/crystal-creative_ai_01.glb` … `_03.glb` |
 | `ethics-life-protection` | `/glb/crystal-ethics_01.glb` … `_03.glb` |
 
-Resolution uses the stable glyph ID and page ID, never orbital index or current orbital position. Squeeze parenting is deterministic and contains no physics, gravity, collision, throw, or velocity dependency.
+Resolution uses `glyphId` and `page.id`, never orbit index or current position.
 
-- `experienceVr.js` → `createVrCrystalReliquary` authored root → `createVrReliquaryActivateButton` → `createVrCrystalCollection.activateInserted()` → portal canvas page update.
+## State and placement dependencies
 
-- `experienceVr.js` → `createVrCrystalReliquary` → niezależne scale/placement rooty `createVrReliquaryActivateButton` i `createVrReliquaryReleaseButton`.
-- `createVrReliquaryReleaseButton` → `createVrCrystalCollection.releaseInserted()` → zwolnienie socketu i runtime'owy `readPageIds`.
-- Modele obu przycisków są dostarczane wyłącznie przez `assetManager` z manifestu deferred-warm.
+```text
+materializing → available → pulling → held → inserted → active → released
+```
+
+Only `available` is crystal-raycastable/grabbable. `inserted` and `active` remain visible and occupy the socket. Release alone removes the object and allows the next insertion.
+
+Portal quaternion + configured spawn define the horizontal front axis. Reliquary is `1.5 m` on-axis from portal; its model root is raised `0.5 m`. Sibling companion roots stay unraised, `1 m` forward and `0.5 m` left/right; each uses its own `0.3` scale root.
+
+## Shared foundations, not shared runtime
+
+All three modes may consume stable portfolio IDs/content. VR also reuses focused asset/scene constructors, vendored Three.js and `publicPath`. It does not import Experience 3D interaction, overlays, atmosphere state or animation loop. Crystal interaction and locomotion depend on transform hierarchy rather than physics, gravity, collision, velocity or throwing.

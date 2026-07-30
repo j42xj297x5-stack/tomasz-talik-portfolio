@@ -1,49 +1,110 @@
 # Experience VR Runtime Model
 
-## Boundary and lifecycle
+## Runtime boundary and lifecycle
 
-Experience VR is a separate Meta Quest 3S WebXR runtime, dynamically imported only after capability detection and VR selection. It does not import or start Experience 3D. `src/experienceVr.js` owns its renderer, scene, camera, `playerRig`, session state, lifecycle, and `renderer.setAnimationLoop`. A prepared runtime is reused after session end; portal, canvas, locomotion, transition, rig pose, orbit phase, lights, readiness, activation, and controller hits reset without duplicating runtime objects.
+Experience VR is dynamically imported after WebXR capability succeeds and the visitor selects VR. `src/experienceVr.js` owns an independent renderer, scene, base camera, `playerRig`, controller records, runtime modules and animation loop; it neither imports nor starts Experience 3D. WebXR owns the tracked-camera pose. Application motion transforms `playerRig` only.
 
-Entry remains two-stage: prepare the independent runtime, then request `immersive-vr` from the direct **Enter VR** gesture. The runtime requests `local-floor` and falls back to `local`.
+Preparation and immersive entry are separate user-flow stages. Models and reusable objects are prepared first; a second direct **Enter VR** gesture requests `immersive-vr`. The requested reference space is `local-floor`, with a tested fallback to `local`.
 
-## Ring, interaction, and entry
+The prepared runtime is reused across sessions. A common reset sequence runs before each request, on session end and after a failed request. It restores the rig, locomotion, orbit, lights, transition, activation, portal/canvas, reliquary, both buttons, crystals and both glyph/crystal controller-hit fields without re-creating models, listeners, animation mixers or the release proxy.
 
-The effective ring radius remains `7.6` (`3.8 × 2`) and spawn remains `(0, 0, 8.6)`. Five glyphs continue orbiting in every XR frame. Dynamic entry readiness uses threshold `0.24` and hysteresis `0.04`. Controller rays test current GLB meshes (or fallback colliders), and hover/readiness/activation feedback remains light-only.
+## Scene and entry invariants
 
-A trigger on the ready glyph latches it and starts `createVrEntryTransition`. The transition moves `playerRig`, never the tracked camera, compensates for the physical head's initial X/Z offset, preserves Y and orientation, and targets `effectiveRingRadius × 0.76` (about `5.8` from center).
+The configured spawn is `(0, 0, 8.6)`. Five glyphs have authored base radius `3.8` and runtime multiplier `2`, producing effective radius `7.6`. They continue orbiting during and after activation. `entryReady` uses threshold `0.24` and hysteresis `0.04`; trigger activation is resolved against current moving meshes/fallback colliders, never stored orbital positions.
 
-## Portal arrival display and crystal pages
+`createVrEntryTransition` computes the destination from ring center toward configured spawn using `targetRadiusFactor = 0.76`: `7.6 × 0.76 = 5.776`, approximately `5.8`. At start it obtains the XR camera's physical X/Z offset relative to the rig, then moves the rig so the head—not merely the rig origin—arrives at the target. Rig Y and orientation are preserved; the tracked camera is not written.
 
-`createVrPortalDisplay` presents the preloaded `/glb/portal.glb` from initial scene readiness. Its stable world-space position is about 2 m to the monkey’s right as seen from configured spawn, with a small bias toward spawn; it is grounded from local model bounds and faces the configured spawn on the horizontal plane. Placement never reads the XR head and arrival never moves or hides it. The asset contains the mesh `PORTAL_CANVAS_SURFACE`; its Blender-authored parent, local position, rotation, scale, geometry, aspect ratio, and UVs are the source of truth for the portal screen. Three.js assigns the runtime `CanvasTexture` material directly to that mesh and never adds a second screen when it is valid. The former per-glyph stone GLBs and separate plaque above the monkey are no longer used by the arrival flow.
+## Portal and canvas contract
 
-`experienceVrPages` maps stable glyph IDs to variable-length page arrays. The MVP has three pages per glyph and one preloaded crystal GLB per page (15 total); short localized title/body content is selected from the already resolved `portfolioNodes` record rather than duplicated. Before glyph selection the portal canvas shows the localized waiting title and insertion instruction. Its HTML-canvas resolution fits within `canvasWidth` × `canvasHeight` while preserving the GLB surface aspect ratio. Arrival only starts the activated glyph’s crystal spawn/materialization, and inserting later crystals replaces the content on that same canvas. If the named mesh, geometry, or UVs are missing, a clear runtime warning accompanies the compatibility plane built from `portalCanvas.width`, `height`, and `offset`.
+`createVrPortalDisplay` owns the preloaded `/glb/portal.glb`. It is placed and grounded once from the monkey bounds, configured spawn and portal settings. It stays in a fixed world-space composition, does not read XR head pose and is not moved or hidden by arrival.
 
-`createVrPortalDisplay` owns an invisible `VrPortalCrystalSocket` child. Its lower-central, player-facing local position is derived from centered portal-model bounds and configured factors; no marker is rendered. The socket exposes its world position and configured insertion radius.
+The valid asset contract is `PORTAL_CANVAS_SURFACE`. Blender owns its geometry, UVs, aspect, hierarchy and local transform. `createVrSpatialPlaque` keeps that mesh in its authored parent and replaces only its material with one backed by `CanvasTexture`; canvas pixels are fitted within configured maxima while preserving surface aspect. A warned generated plane using `portalCanvas.width`, `height` and `offset` exists only when the mesh/geometry/UV contract fails. `createVrSpatialPlaque` is therefore the canvas renderer despite its legacy generic name; no arrival stone object or above-monkey canvas belongs to the current composition.
 
-`createVrCrystalReliquary` presents the preloaded `/glb/portal_crystal_reliquary.glb` at authored scale, grounded and centered from visible geometry. Its placement root sits exactly 1.5 m from the portal along the portal's horizontal local-front axis toward the player, with no lateral offset. A dedicated model root raises the reliquary model, insertion zone, authored/runtime crystal anchors, and inserted crystal by 0.5 m without raising its companion buttons. That axis comes from the placed portal's world quaternion and is checked against configured spawn rather than assumed from world X/Z. The named `RELIQUARY_CRYSTAL_INSERT_ZONE` mesh is hidden, excluded from visible bounds and raycasts, and supplies the world insertion sphere from its unchanged Blender-authored transform. `RELIQUARY_CRYSTAL_ANCHOR` receives the inserted crystal and travels with the placement root.
+The portal also exposes an invisible, bounds-derived `VrPortalCrystalSocket`. It is only a compatibility insertion target when a valid reliquary zone is unavailable.
 
-The shared `VrCrystalReliquaryAuthoredRoot` retains the reliquary's centering/grounding and common Blender coordinate system beneath `VrCrystalReliquaryModelRoot`. A sibling `VrCrystalReliquaryCompanionsRoot` keeps both buttons at their previous height. Their placement roots sit 1 m portal-forward from the reliquary ground position and symmetrically 0.5 m portal-left/right, remain parallel to the portal, and use dedicated scale roots fixed at `0.3`. The button GLBs remain unchanged below those wrappers. Placement and reset recompute every transform without accumulating offsets. Missing or invalid reliquary insertion data warns once and retains the portal socket as a compatibility fallback.
+## Page data and asset ownership
 
-`createVrCrystalCollection` clones only preloaded AssetManager scenes. It deterministically derives authored-model scale (0.22–0.28), yaw, slight tilt, and an irregular XZ layout from `page.id`, centered about 1.55 m from the monkey toward configured spawn, and moves each model’s lowest bound to floor Y=0. State is explicit: `materializing`, then `available` → `pulling` → `held` → `inserted` → `active`. At most one crystal can be inserted; it stays visible, is centered in the authored anchor, and leaves the raycast/grab set. Materializing wrappers rise 0.12 m and smoothstep from scale 0.18 to 1 over 0.55 seconds, staggered by 0.12 seconds; they are excluded from raycast and squeeze interaction until available.
+`experienceVrPagesByGlyphId` maps five stable portfolio glyph IDs to three immutable page records each. Every record has stable `page.id`, matching `glyphId`, order, `crystalAssetId`, logical GLB path and a content selector. `resolveExperienceVrPage()` reads localized fields from the resolved shared `portfolioNodes` entry rather than copying portfolio content.
 
-Both target-ray controllers remain trigger-driven for glyph activation. A separate crystal raycaster follows each controller's local -Z axis, resolves descendants through a stable object-to-instance map, and records its nearest available hit without touching the glyph interaction's `currentHit`. Targeted wrappers receive a subtle scale highlight while the authored model scale stays unchanged. `squeezestart` starts a smooth, 0.25-second pull to that hand's existing invisible hold socket only when the ray intersection is within 1.8 m; hands remain independent and cannot share an instance. Releasing during `pulling` cancels it at the current world transform. Releasing a `held` crystal inside the reliquary sphere inserts it without changing the portal page. The activate button uses its visible-but-render-transparent raycast trigger, emits at intensity 0/1/5 for idle/hover/latched, and plays `Relic_Reliquary_ActivateButton_Press`; only a successful press changes the crystal to `active` and displays its portal page. The former portal insertion radius remains the fallback when no valid reliquary zone exists. There is deliberately no physics engine, gravity, world collision, throwing, or velocity.
+The deferred-warm manifest contains `/glb/portal.glb`, `/glb/portal_crystal_reliquary.glb`, both companion-button GLBs and all 15 crystal GLBs. `experienceVr.js` filters its VR preload set from the manifest. `AssetManager` is the sole source: spawn clones cached scenes and performs no network fetch.
 
-## Smooth locomotion
+## Deterministic materialization
 
-`createVrLocomotion` is a separate XR module updated by the VR animation loop. The right stick supplies forward/back movement and strafe using the tracked head's horizontal forward direction with pitch removed. The left stick supplies continuous yaw. Both transform `playerRig`, never the tracked camera, and movement preserves the rig's Y. Settings expose deadzone, movement speed, and turn speed. There is no collision, gravity, teleport, jump, or snap turn.
+Arrival completion calls `spawn()` with only the activated glyph's pages. An FNV-style hash of `page.id` provides stable scale in `0.22–0.28`, X/Z offsets, yaw and small X/Z tilt. The anchor-to-spawn horizontal direction places the group about `1.55 m` before the monkey. Collision-free spacing attempts are deterministic. Bounds center each authored model on X/Z and translate its lowest point to floor Y=0.
 
-## Reset and validation status
+Each wrapper begins in `materializing`: stagger `0.12 s`, duration `0.55 s`, scale `0.18 → 1` by smoothstep, rise `0.12 m`, and a small yaw settling to zero. Only `available` wrappers enter the target list, so incomplete materialization cannot be raycast or grabbed.
 
-Session end resets the latched activation button and releases both hands, removes the active crystal set, clears the current crystal set while preserving runtime read-page state, restores the fixed visible portal, reliquary, fallback socket, and waiting canvas instruction, resets locomotion, restores the rig spawn pose, and resets transition, orbit, lights, activation, and controller hits. Runtime objects and squeeze listeners are reused rather than duplicated. Orbit behavior and the entry flow remain intact.
+## Controller targeting and pull
 
-Automated coverage verifies the exact 15-asset/page mapping, variable page-count spawn, deterministic scale/layout, ray target selection, distance-limited independent pulling, preserved cancel/release transforms, insertion/activation/release/reset behavior, preload/runtime wiring, portal ownership and orientation, internal canvas placement, locomotion, and absence of tracked-camera steering. Crystal raycast precision, 1.8 m comfort, pull speed/orientation, hold-socket position, portal release comfort, canvas readability, Quest controller axis mapping, locomotion speed, and comfort have not been manually validated on Meta Quest 3S. Hardware validation must also confirm that the reliquary's 1.5 m portal distance is comfortable, both symmetrically placed buttons are comfortable, neither object obscures the portal, the button remains within raycast reach, and approaching with a crystal is comfortable.
+Each controller record owns `currentHit` for glyphs and separate `currentCrystalHit`/`currentCrystalHitDistance` for crystals. The crystal raycaster uses controller world position and local `-Z`, intersects available wrappers recursively, then resolves descendants through `objectToCrystal`. Target highlight changes wrapper scale to `1.04` without mutating model scale.
 
-## Exclusions and prohibitions
+On `squeezestart`, `grab()` accepts only that controller's available hit, only within `rayGrabMaxDistance = 1.8`, and prevents one hand or instance from being assigned twice. `holdSocket.attach()` preserves world transform. Position and quaternion then smoothstep to `holdOffset` and identity over `pullDuration = 0.25 s`. Early `squeezeend` while `pulling` uses `scene.attach()`, retaining the current world transform and returning to `available`; completion yields `held`.
 
-Persistent read-page storage and read-state UI are not implemented in this stage. Throwing, collision, gravity, physics, teleportation, jump, snap turn, bridge construction, VR audio, atmosphere, and galaxies remain out of scope. Do not merge Experience VR with Experience 3D, modify protected `src/experience3d.js`, transfer HTML/CSS overlays into VR, steer the tracked camera, pause glyph orbit, restore geometric interaction markers, or raycast static orbital positions.
+This is raycast plus hierarchy/parenting, not proximity selection. There is no rigid body, gravity, collision, velocity or throw behavior.
 
-### Cykl relikwiarza i przyciski companion
+## Reliquary hierarchy and authored/runtime anchors
 
-Kryształ przechodzi przez `available → pulling → held → inserted → active → released`. Stany `inserted` i `active` są widoczne; dopiero przycisk release usuwa kryształ i odblokowuje socket. Aktywna strona zostaje wtedy oznaczona jako przeczytana wyłącznie w pamięci bieżącego runtime'u.
+`createVrCrystalReliquary` builds:
 
-Przyciski activate/release są niezależnymi companionami relikwiarza. Ich placement rooty leżą symetrycznie przed relikwiarzem, pod kątem 120°, a oddzielne scale rooty mają skalę `0.3`; sam relikwiarz i wspólny authored root nie są skalowane. Release resetuje własną animację i przycisk activate.
+```text
+VrCrystalReliquary                         # shared placement root, Y=0
+├─ VrCrystalReliquaryModelRoot             # heightOffset = 0.5
+│  └─ VrCrystalReliquaryAuthoredRoot        # bounds centering/grounding
+│     ├─ authored GLB
+│     │  └─ RELIQUARY_CRYSTAL_INSERT_ZONE (hidden)
+│     │     └─ RELIQUARY_CRYSTAL_ANCHOR may occur here
+│     └─ VrReliquaryCrystalDisplayAnchor   # visible runtime anchor
+└─ VrCrystalReliquaryCompanionsRoot        # does not inherit heightOffset
+   ├─ ActivateButtonPlacementRoot → ActivateButtonScaleRoot → GLB
+   └─ ReleaseButtonPlacementRoot  → ReleaseButtonScaleRoot  → GLB
+```
+
+Visible bounds exclude the technical insertion subtree. The model root lifts model, insertion zone, anchors and inserted crystal by `0.5 m`. `RELIQUARY_CRYSTAL_INSERT_ZONE` remains hidden and non-raycastable but its authored geometry/transform yields the world insertion sphere.
+
+`RELIQUARY_CRYSTAL_ANCHOR` is retained as `authoredCrystalAnchor`, an authored transform marker. Its world matrix is copied into `VrReliquaryCrystalDisplayAnchor` under the visible authored root. `runtimeCrystalAnchor` and compatibility alias `crystalAnchor` refer to that visible object. This split is required because the authored marker may inherit `visible = false` from the insertion mesh. Before accepting insertion, the collection forces object visibility and checks effective visibility across all ancestors. A visible `VrReliquaryCrystalFallbackAnchor` is created when the runtime anchor is absent or its hierarchy is effectively hidden.
+
+Portal world quaternion supplies a horizontal local-front direction, corrected to face configured spawn. The reliquary placement is exactly `1.5 m` along that axis from portal, with no lateral component. Companion placement is computed independently: both are `1 m` farther front, activate `0.5 m` left and release `0.5 m` right. Dedicated scale roots use `0.3`; companions neither scale the reliquary nor inherit its `0.5 m` lift.
+
+## Insertion, activation and release
+
+On `squeezeend` from `held`, model bounds determine crystal center. If it lies inside the visible reliquary's authored insertion sphere (or portal compatibility sphere), and no instance is already inserted, the wrapper is attached to the visible anchor and centered there. State becomes `inserted`; visibility remains true. A failed zone test or occupied socket returns the instance to scene as `available`.
+
+The activate GLB exposes a render-transparent but raycast-active trigger. Per-controller hit maps are independent. Hover is enabled only when the inserted state is exactly `inserted`. Emissive intensity is `0 / 1 / 5` for idle / hover / latched. A successful `selectstart` calls `activateInserted()`, changes state to `active`, updates the existing canvas, and plays `Relic_Reliquary_ActivateButton_Press` with `LoopOnce` and `clampWhenFinished`. The crystal remains attached and visible.
+
+The release implementation resolves an authored trigger defensively, derives bounds, and creates exactly one transparent `VrReliquaryReleaseButtonHitArea` with `hitAreaScale = 2`. It is raycast-active even though it writes no color. Release is available in `inserted` or `active`; emissions are likewise `0 / 1 / 5`. Press enters a locked `releasing` state and, when the exact `Relic_Reliquary_ReleaseButton_Press` clip resolves, plays it once with clamping. After `releaseDelaySeconds = 1`, `releaseInserted()` removes only the current crystal, frees the socket and returns both buttons to idle.
+
+The current release GLB metadata declares that contract name, but its glTF animation is actually exported as `Animation`. Unlike activate, the release module has no sole-declared-clip fallback, so its `action` is `null` on the production asset even though raycast, emission, delay and release remain functional. Automated button tests use a correctly named fixture and do not catch this asset/runtime mismatch. This is a confirmed documentation-audit finding, not a failure of release-state mechanics, and is intentionally not repaired in this documentation-only task.
+
+## Complete crystal state machine
+
+```text
+materializing → available → pulling → held → inserted → active → released
+```
+
+- `materializing`: visible animation; excluded from raycast and squeeze.
+- `available`: visible, raycastable and grabbable.
+- `pulling`: visible under one hold socket; not targetable; early release restores `available` at the current world transform.
+- `held`: visible under one hold socket; not targetable; can be released to insertion or world.
+- `inserted`: visible on the runtime/fallback anchor; not targetable; socket occupied; page not newly activated.
+- `active`: visible on the anchor; not targetable; socket occupied; its page is displayed.
+- `released`: hidden and detached; socket free. Only this transition removes a crystal.
+
+## Runtime read state
+
+The collection owns `readPageIds`, `hasReadPage(pageId)` and copy-returning `getReadPageIds()`. Releasing an `active` instance records its page; releasing merely `inserted` does not. `reset()` deliberately does not clear the Set, so reads survive pre-entry reset, failed start, session end and re-entry within the same prepared page runtime. `dispose()` calls reset but also does not clear the Set; the disposed collection is not reusable. Navigation/reload creates a new instance and loses the data. There is no persistence, read UI or crystal marking.
+
+## Locomotion
+
+`createVrLocomotion` reads WebXR gamepad axes with deadzone `0.18`. Right-stick Y moves forward/back and X strafes using the tracked head's world forward projected onto XZ. Left-stick X applies continuous rig yaw. Speed settings are `1.8` movement and `1.35` turn. The module restores the captured rig Y after movement and never writes camera transforms. It intentionally has no collision, gravity, teleport, jump or snap turn.
+
+## Frame and reset ordering
+
+Each frame runs orbit/readiness; glyph world-matrix refresh and glyph raycast; crystal update/targeting; activate update; release update; readiness assignment and lights; entry transition; locomotion; canvas animation; render. This retains orbit movement after entry and keeps crystal/button hit states distinct.
+
+Reset order is transition, collection, activate, release, reliquary, portal/canvas waiting content, locomotion, rig spawn/orientation, activated glyph, orbit, lights and glyph interaction. Collection reset clears `currentCrystalHit`; glyph reset clears `currentHit`. `pagehide` additionally disposes both button listeners/mixers/materials, collection squeeze listeners, release runtime hit area and reliquary root.
+
+## Validation boundary and exclusions
+
+Automated VR tests validate capability, normalization, orbit, lights, moving glyph hits, head-offset entry, portal/canvas contracts, locomotion, all crystal behaviors, reliquary hierarchy/visibility, manifest wiring and both buttons. They do not substitute for Meta Quest 3S QA.
+
+Out of scope: persistent read storage/UI/marking, physics, gravity, collision, throwing, velocity, teleport, jump, snap turn, VR audio, atmosphere, galaxies and bridge construction. The release button and locomotion are implemented current behavior.
