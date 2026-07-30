@@ -1,56 +1,44 @@
 # Decision Log
 
-Status: current binding decisions, not a patch chronology.
+Status: current binding decisions, organized by implementation status rather than patch chronology.
 
-## Repository and delivery
+## Implemented and binding
 
-1. `docs/current/` is canonical. Superseded material belongs in `docs/legacy/` and is not default reading.
-2. The application remains Vite plus vanilla JavaScript, vendored Three.js r184 and GitHub Pages-safe public paths.
-3. Classic 2D, Experience 3D and Experience VR are distinct presentations over stable portfolio content IDs.
+### Repository and runtime ownership
 
-## Runtime ownership
+1. `docs/current/` is canonical; superseded material belongs in `docs/legacy/` and is not default reading.
+2. Classic 2D, Experience 3D and Experience VR are separate presentations over stable content IDs. `src/main.js` owns mode selection, capability gating and conditional imports.
+3. `src/experienceVr.js` owns a separate WebXR renderer, scene, base camera, `playerRig`, lifecycle and animation loop. It does not import Experience 3D.
+4. Runtime preparation precedes the direct session-entry gesture. `immersive-vr` requests `local-floor` with `local` fallback.
+5. WebXR owns the tracked camera. Session alignment and locomotion transform `playerRig`; application code does not steer the camera.
+6. The active session starts directly at `(0, 0, 5.8)` facing center. The repository's `createVrEntryTransition` module is not part of the active runtime.
 
-1. `src/main.js` owns language/mode selection, capability gating and conditional imports.
-2. `src/experience3d.js` owns Experience 3D and remains protected. VR neither imports it nor requires a shared world factory.
-3. `src/experienceVr.js` owns a separate renderer, scene, base camera, `playerRig`, lifecycle and animation loop.
-4. The tracked camera belongs to WebXR. Entry and locomotion transform `playerRig`; application code does not steer the camera.
-5. Immersive UI is rendered in Three.js and does not reuse the desktop HTML/CSS overlay.
-6. Runtime preparation precedes session entry; `immersive-vr` is requested only by the second direct gesture. `local-floor` falls back to `local`.
+### Current interaction and content loop
 
-## World and entry
+1. Five visible glyphs orbit continuously. A controller trigger hold on the current glyph target spawns one eligible card-bound crystal; an exhausted glyph remains visible but becomes non-interactive.
+2. There are **18 logical cards** in branch counts `3 / 3 / 3 / 4 / 5` and **15 physical crystal GLBs**: three shared visual variants for each of five branches. Card order selects variants cyclically.
+3. Each current crystal instance is bound at spawn to a concrete `page` and includes `cardId` and `crystalId`. Deterministic transforms derive from the page ID. This is the binding description of implementation, despite the different future contract below.
+4. `AssetManager` is the sole source of runtime models. Crystal spawn clones preload results and performs no fetch.
+5. Crystal handling is target-ray plus hierarchy parenting: squeeze pulls an available target to a hand socket. There is no physics, gravity, collision, velocity or throwing.
+6. Insertion, Activate and Release are explicit stages. One socket holds one visible `inserted` or `active` crystal. Activate displays `insertedInstance.page`; Release alone removes it and frees the socket.
+7. Because Activate uses the page already carried by the physical instance, pre-collected crystals can display a branch's content in insertion order rather than logical card order. This is an accepted description of a known limitation, not a desired gameplay rule.
 
-1. Five glyphs continuously orbit at effective radius `7.6`. Activation suppresses further readiness but never stops orbit.
-2. `entryReady` is dynamic and raycasting targets current GLB meshes/fallback colliders, not stored orbit positions.
-3. Warm point lights are the accepted glyph feedback; geometric hover/readiness markers are excluded.
-4. Entry compensates the physical head X/Z offset and targets `7.6 × 0.76 = 5.776` from center while preserving rig Y and orientation.
-5. Session reset reuses existing objects and does not duplicate models, listeners, mixers or runtime hit areas.
+### Progress, reset and persistence
 
-## Portal, pages and crystals
+1. `activatedPageIds` is the only progress registry. Activate records `insertedInstance.page.id`; the read-named APIs are compatibility aliases, not a separate read registry.
+2. Session entry/end reset transient crystals, hits, holds, buttons, reliquary, portal, glyph presentation and rig transform. Reset preserves activation IDs in the already prepared page runtime.
+3. Reload/navigation starts fresh. No persistent save, read UI, victory presentation or next level is implemented.
+4. Smooth locomotion is implemented: right-stick tracked-head-relative horizontal movement and left-stick continuous yaw modify `playerRig` while preserving Y.
 
-1. `/glb/portal.glb` is a fixed world-space composition present from scene readiness. Arrival neither moves nor hides it, and its placement does not depend on XR head pose.
-2. Blender-authored `PORTAL_CANVAS_SURFACE` geometry, UVs, aspect, hierarchy and transform are authoritative. Runtime assigns `CanvasTexture` directly; a generated plane is warning-only compatibility fallback.
-3. VR pages form a separate variable-length model keyed by stable `glyphId` and `page.id`. Current content is three pages per glyph and 15 preloaded crystal assets; localized portfolio data is selected rather than duplicated.
-4. Crystal spawn and authored-model transforms are deterministic from `page.id`, bounds-centered and floor-grounded. `materializing` completes before interaction.
-5. Crystal interaction is controller target-ray plus hierarchy parenting. Squeeze pulls the pointed available crystal to `holdSocket`; it is not a nearest-hand interaction. No physics, gravity, collision, velocity or throwing is implied.
-6. `AssetManager` is the sole source of runtime models. Spawn clones preload results and performs no fetch.
+## Approved future gameplay direction — not implemented
 
-## Reliquary and complete page cycle
+The [Experience VR Gameplay Roadmap](../concept/EXPERIENCE_VR_GAMEPLAY_ROADMAP.md) is the approved product and architecture direction. It does not override the current runtime model until separate implementation tasks change code and tests.
 
-1. Insertion, activation and release are separate explicit stages. Insertion attaches a visible crystal and occupies the socket; activate displays the page; release alone removes the crystal and frees the socket.
-2. The binding state machine is `materializing → available → pulling → held → inserted → active → released`. Only `available` is targetable/grabbable. Both `inserted` and `active` remain visible.
-3. The hidden Blender insertion zone owns insertion geometry. `RELIQUARY_CRYSTAL_ANCHOR` is only the authored marker; the visible crystal is parented to the separate `VrReliquaryCrystalDisplayAnchor` (or visible fallback), so it cannot inherit technical invisibility.
-4. Activate and release are independent preloaded companions with independent controller hits, placement roots, scale roots, animation mixers and reset behavior. Their binding animation contract uses named press clips; the current release asset/runtime name mismatch is an implementation inconsistency, not a replacement decision.
-5. The current placement is axial: the reliquary is `1.5 m` from portal with no lateral shift; model/insertion/anchors/crystal receive `heightOffset = 0.5`. Companion buttons remain unraised, lie `1 m` forward and `0.5 m` to either side, and use runtime scale `0.3`.
-6. Activate requires `inserted`; release accepts `inserted` or `active`. Release is delayed by `1 s`, locked against repeat clicks, and resets both buttons after freeing the socket.
-7. `readPageIds` is runtime memory only. Releasing `active` marks its page read; resets and re-entry within the prepared page retain the Set, while navigation/reload does not. No persistent storage, read UI or crystal marking is part of the contract.
+1. The first approved implementation task is to replace page-bound activation semantics with branch-bound crystals: a physical crystal will carry branch identity and visual variant, while Activate will resolve the next unactivated page of that branch in logical order.
+2. Later approved direction includes a single progression owner for 18 cards and five global tiers, progress floor/sectors/rings, shells and orb assembly, semantic hand tools, small glyphs, a controlled tilting-floor prototype, sector alignment, runes, final radar and completion presentation.
+3. Durable persistence and a controlled full-game reset are later roadmap work. They are not inferred from the current reset-surviving in-memory Set.
+4. Every roadmap stage requires its own implementation, automated validation where applicable and Meta Quest hardware gate. Documentation must not mark a planned capability as implemented before those gates are complete.
 
-## Scope
+## Explicitly excluded from current claims
 
-1. Smooth joystick locomotion is implemented: right-stick head-relative XZ movement and left-stick continuous yaw transform `playerRig` while preserving Y.
-2. Persistent read storage/UI/marking, physics, gravity, collision, throwing, velocity, teleport, jump, snap turn, VR audio, atmosphere, galaxies and bridge construction remain excluded.
-
-## 2026-07-29 — First complete reliquary cycle is binding
-
-- **Decision:** The accepted Experience VR content loop is deterministic materialization → target-ray pull → visible insertion → explicit activation → delayed explicit release → reusable socket, with runtime-only read tracking.
-- **Reason:** Separating insertion, display and release keeps the physical object legible, makes portal changes intentional and permits repeated pages without rebuilding runtime objects.
-- **Consequences:** Both buttons and the visible runtime anchor are required current architecture. Hardware QA may tune accepted settings but must not collapse these stages or infer hardware acceptance from automated tests.
+The current architecture makes no claim that the future progression controller, floor, shells, orb, hand tools, gameplay tiers, runes, finale or persistence modules exist. Audio, physics, teleport, jump and snap turn are likewise outside the implemented Experience VR gameplay contract.
