@@ -4,40 +4,53 @@ Status: current binding decisions, not a patch chronology.
 
 ## Repository and delivery
 
-1. `docs/current/` is canonical; superseded plans belong in `docs/legacy/` and are not default reading.
-2. The application remains Vite plus vanilla JavaScript with the vendored Three.js r184 toolchain and GitHub Pages-safe public paths.
-3. Classic 2D, Experience 3D, and Experience VR are three distinct presentation modes over stable portfolio content IDs.
+1. `docs/current/` is canonical. Superseded material belongs in `docs/legacy/` and is not default reading.
+2. The application remains Vite plus vanilla JavaScript, vendored Three.js r184 and GitHub Pages-safe public paths.
+3. Classic 2D, Experience 3D and Experience VR are distinct presentations over stable portfolio content IDs.
 
-## Runtime boundaries
+## Runtime ownership
 
-1. `src/main.js` owns language/mode selection and conditional imports.
-2. `src/experience3d.js` owns Experience 3D and remains protected. Experience VR must neither import it nor require its migration to a common world factory.
-3. `src/experienceVr.js` is a separate, dynamically imported WebXR runtime with its own renderer, scene, camera, `playerRig`, lifecycle, and `setAnimationLoop`.
-4. Experience 3D may use HTML/CSS panels; immersive VR content does not reuse that overlay and does not programmatically steer the tracked camera.
-5. A WebXR session begins only from the second direct user gesture after capability detection and runtime preparation. `local-floor` falls back to `local`.
+1. `src/main.js` owns language/mode selection, capability gating and conditional imports.
+2. `src/experience3d.js` owns Experience 3D and remains protected. VR neither imports it nor requires a shared world factory.
+3. `src/experienceVr.js` owns a separate renderer, scene, base camera, `playerRig`, lifecycle and animation loop.
+4. The tracked camera belongs to WebXR. Entry and locomotion transform `playerRig`; application code does not steer the camera.
+5. Immersive UI is rendered in Three.js and does not reuse the desktop HTML/CSS overlay.
+6. Runtime preparation precedes session entry; `immersive-vr` is requested only by the second direct gesture. `local-floor` falls back to `local`.
 
-## Current Experience VR interaction
+## World and entry
 
-1. Five glyphs continuously orbit at effective radius `7.6`; interaction never pauses the orbit.
-2. `entryReady` is dynamic. Any glyph entering the configured angular zone can be activated; readiness is not tied to a fixed glyph or orbit index.
-3. Two local-`-Z` controller rays hit current GLB meshes or child fallback colliders. Hits resolve through an explicit object-to-glyph-root mapping; static stored positions are not raycast targets.
-4. Feedback is provided by warm point lights. Geometric hover/readiness markers are not part of the accepted design.
-5. Entry moves the `playerRig`, compensating for the physical XR head offset. With `targetRadiusFactor = 0.76`, the current destination is about `5.8` units from ring center.
-6. One grounded portal and its existing internal canvas are visible from initial scene readiness, fixed about 2 m to the monkey’s right from the configured spawn view. Arrival never moves or hides it; the selected stone plaque and separate canvas above the monkey are not part of this flow.
-7. Session exit/re-entry resets mutable state and reuses runtime objects without duplication.
-8. VR pages are a separate variable-length mapping keyed by stable glyph ID. The MVP maps 15 preloaded crystal assets to concise selectors over localized shared portfolio content.
-9. Arrival spawns only the activated glyph’s page crystals in front of the monkey toward configured spawn. Deterministic bounds-based placement keeps their authored models on floor Y=0 with individual 0.22–0.28 scale; staggered wrapper materialization precedes the interactive `available` state.
-10. Trigger remains glyph-ray activation. Squeeze performs nearest grip-space grab; release either preserves the crystal's world transform or consumes it at the invisible bounds-derived portal socket and updates the existing canvas.
-11. Crystal interaction is explicitly transform/parenting based: no physics engine, gravity, collision, throwing, or velocity.
+1. Five glyphs continuously orbit at effective radius `7.6`. Activation suppresses further readiness but never stops orbit.
+2. `entryReady` is dynamic and raycasting targets current GLB meshes/fallback colliders, not stored orbit positions.
+3. Warm point lights are the accepted glyph feedback; geometric hover/readiness markers are excluded.
+4. Entry compensates the physical head X/Z offset and targets `7.6 × 0.76 = 5.776` from center while preserving rig Y and orientation.
+5. Session reset reuses existing objects and does not duplicate models, listeners, mixers or runtime hit areas.
 
-## Scope sequencing
+## Portal, pages and crystals
 
-1. Smooth joystick locomotion and deterministic squeeze crystal interaction are implemented as separate modules.
-2. Teleportation, jump, snap turn, physics, throwing, plaque raycasting, bridge building, VR audio, atmosphere, and galaxies remain excluded.
-3. Future stages must preserve the current separation between locomotion, crystal parenting, and any later world simulation.
+1. `/glb/portal.glb` is a fixed world-space composition present from scene readiness. Arrival neither moves nor hides it, and its placement does not depend on XR head pose.
+2. Blender-authored `PORTAL_CANVAS_SURFACE` geometry, UVs, aspect, hierarchy and transform are authoritative. Runtime assigns `CanvasTexture` directly; a generated plane is warning-only compatibility fallback.
+3. VR pages form a separate variable-length model keyed by stable `glyphId` and `page.id`. Current content is three pages per glyph and 15 preloaded crystal assets; localized portfolio data is selected rather than duplicated.
+4. Crystal spawn and authored-model transforms are deterministic from `page.id`, bounds-centered and floor-grounded. `materializing` completes before interaction.
+5. Crystal interaction is controller target-ray plus hierarchy parenting. Squeeze pulls the pointed available crystal to `holdSocket`; it is not a nearest-hand interaction. No physics, gravity, collision, velocity or throwing is implied.
+6. `AssetManager` is the sole source of runtime models. Spawn clones preload results and performs no fetch.
 
-### 2026-07-29 — Widoczny kryształ pozostaje w relikwiarzu do jawnego release
+## Reliquary and complete page cycle
 
-- **Decyzja:** insertion ustawia `inserted` i zachowuje widoczny obiekt także przy runtime fallback anchor; activation ustawia `active`, lecz nie usuwa obiektu. Tylko osobny przycisk release przechodzi do `released`, ukrywa i odpina kryształ.
-- **Powód:** rozdzielenie osadzenia, odczytu strony i opróżnienia socketu zapobiega natychmiastowej konsumpcji oraz pozwala użytkownikowi kontrolować cykl relikwiarza.
-- **Zakres:** informacja o przeczytaniu aktywnej strony pozostaje w `Set` bieżącego runtime'u i nie jest utrwalana.
+1. Insertion, activation and release are separate explicit stages. Insertion attaches a visible crystal and occupies the socket; activate displays the page; release alone removes the crystal and frees the socket.
+2. The binding state machine is `materializing → available → pulling → held → inserted → active → released`. Only `available` is targetable/grabbable. Both `inserted` and `active` remain visible.
+3. The hidden Blender insertion zone owns insertion geometry. `RELIQUARY_CRYSTAL_ANCHOR` is only the authored marker; the visible crystal is parented to the separate `VrReliquaryCrystalDisplayAnchor` (or visible fallback), so it cannot inherit technical invisibility.
+4. Activate and release are independent preloaded companions with independent controller hits, placement roots, scale roots, animation mixers and reset behavior. Their binding animation contract uses named press clips; the current release asset/runtime name mismatch is an implementation inconsistency, not a replacement decision.
+5. The current placement is axial: the reliquary is `1.5 m` from portal with no lateral shift; model/insertion/anchors/crystal receive `heightOffset = 0.5`. Companion buttons remain unraised, lie `1 m` forward and `0.5 m` to either side, and use runtime scale `0.3`.
+6. Activate requires `inserted`; release accepts `inserted` or `active`. Release is delayed by `1 s`, locked against repeat clicks, and resets both buttons after freeing the socket.
+7. `readPageIds` is runtime memory only. Releasing `active` marks its page read; resets and re-entry within the prepared page retain the Set, while navigation/reload does not. No persistent storage, read UI or crystal marking is part of the contract.
+
+## Scope
+
+1. Smooth joystick locomotion is implemented: right-stick head-relative XZ movement and left-stick continuous yaw transform `playerRig` while preserving Y.
+2. Persistent read storage/UI/marking, physics, gravity, collision, throwing, velocity, teleport, jump, snap turn, VR audio, atmosphere, galaxies and bridge construction remain excluded.
+
+## 2026-07-29 — First complete reliquary cycle is binding
+
+- **Decision:** The accepted Experience VR content loop is deterministic materialization → target-ray pull → visible insertion → explicit activation → delayed explicit release → reusable socket, with runtime-only read tracking.
+- **Reason:** Separating insertion, display and release keeps the physical object legible, makes portal changes intentional and permits repeated pages without rebuilding runtime objects.
+- **Consequences:** Both buttons and the visible runtime anchor are required current architecture. Hardware QA may tune accepted settings but must not collapse these stages or infer hardware acceptance from automated tests.

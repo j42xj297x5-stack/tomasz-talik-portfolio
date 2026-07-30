@@ -32,4 +32,4 @@ Capability detection checks the secure context and `navigator.xr.isSessionSuppor
 
 ## Current boundary
 
-Experience VR implements head tracking, two controller rays, moving-glyph raycasting, light-only hover/entry feedback, entry transition, a selected stone plaque, and a canvas plaque above the monkey. Joystick locomotion is the next separate stage, not current behavior.
+Experience VR implements head tracking, two controller target rays, moving-glyph raycasting, light-only hover/entry feedback, a compensated entry transition, a fixed world-space portal with Blender-authored canvas, smooth joystick locomotion, 15 deterministic page crystals, raycast pull-to-hand, and the complete reliquary insertion → activation → release cycle. Runtime read-state is memory-only. Physics, collision, throwing, teleport and persistent read UI remain outside this boundary.

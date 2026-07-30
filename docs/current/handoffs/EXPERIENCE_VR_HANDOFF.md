@@ -1,41 +1,203 @@
 # Experience VR Handoff
 
-## Binding decisions
+## Status dokumentu
 
-Experience VR remains a separately and dynamically imported WebXR runtime. It owns its renderer, scene, camera, `playerRig`, lifecycle, controllers, and animation loop. Immersive UI stays in Three.js and WebXR retains ownership of tracked-camera transforms.
+- **Status:** canonical current-state handoff.
+- **Synchronizacja:** 2026-07-29.
+- **Kod źródłowy:** `HEAD` `70311548899c4eb3c08f34c865f14ab3d04de88e` na gałęzi roboczej odpowiadającej głównej gałęzi `porfolio`.
+- Dokument zastępuje poprzedni handoff, który opisywał stan sprzed stałego portalu, smooth locomotion i kompletnego systemu 15 kryształów z relikwiarzem, activate oraz release.
 
-## Current architecture
+Kod na `HEAD` jest źródłem prawdy. Ten dokument jest samowystarczalnym wejściem do dalszej pracy i opisuje bieżący system, nie historię PR-ów.
 
-- `src/experienceVr.js` coordinates preparation, preload, session start/end, frame order, reset, and reuse.
-- `src/config/experienceVrSettings.js` normalizes the VR contract, including portal/canvas dimensions and locomotion deadzone/speeds.
-- Orbit, light feedback, moving-mesh interaction, controller rays, and compensated entry transition remain separate XR modules.
-- `createVrPortalDisplay` owns the always-visible world-space `/glb/portal.glb`, grounded and fixed about 2 m to the monkey’s right from the configured spawn view; placement is independent of the XR head.
-- `createVrCrystalReliquary` owns the always-visible, authored-scale `/glb/portal_crystal_reliquary.glb`. Its placement root is exactly 1.5 m along the portal's quaternion-derived horizontal front toward the player, without a lateral offset. A model root raises the authored model, hidden insertion sphere, named anchor, runtime anchor, and inserted crystal by 0.5 m. A sibling companions root keeps activate and release at their prior height; their placement roots are 1 m forward of the reliquary and 0.5 m left/right of the portal axis, with portal-parallel orientation and scale roots fixed at `0.3`, without modifying either GLB's authored transform.
-- `createVrSpatialPlaque` remains the active-glyph content renderer. It assigns its `CanvasTexture` directly to the portal's Blender-authored `PORTAL_CANVAS_SURFACE`, rather than creating a second plane when that mesh is valid.
-- `createVrLocomotion` owns stick-driven `playerRig` translation and smooth yaw without changing rig Y or tracked-camera transforms.
-- `experienceVrPages` owns the stable glyph-to-variable-pages mapping; each page points at one of 15 preloaded crystals and resolves concise localized text from `portfolioNodes`.
-- `createVrCrystalCollection` owns deterministic floor spawn, separate target-ray crystal hits, `materializing` plus `available` → `pulling` → `held` → `inserted` → `active` state, squeeze pull-to-hand, non-physical release, portal insertion, and reset.
+## Binding architecture
 
-## Current user flow and parameters
+Experience VR jest osobnym, dynamicznie importowanym runtime'em WebXR. Nie uruchamia Experience 3D i nie importuje jego stanu. `src/experienceVr.js` posiada renderer, scenę, kamerę bazową, `playerRig`, kontrolery, lifecycle sesji oraz `renderer.setAnimationLoop`.
 
-The visitor enters the independent immersive session, targets the dynamically ready orbiting glyph, and triggers the existing transition into the ring. Spawn is `(0, 0, 8.6)`, effective ring radius is `7.6`, readiness threshold/hysteresis are `0.24`/`0.04`, and arrival is about `5.8` from center.
+WebXR jest właścicielem pozy śledzonej kamery. Kod przemieszcza lub obraca `playerRig`, nigdy tracked camera. UI immersyjne pozostaje w Three.js; desktopowy HTML/CSS overlay nie jest współdzielony.
 
-The fixed portal, reliquary, and internal canvas are visible before glyph selection, showing the localized waiting title and crystal insertion instruction. Arrival does not alter them; it only spawns the activated glyph’s crystals in an irregular deterministic area about 1.55 m in front of the monkey toward configured spawn. Their wrappers materialize with a short staggered smoothstep scale, rise, and slight yaw, and remain non-interactive until `available`. Each controller retains its trigger ray and grip/hold socket. A dedicated raycaster selects the nearest available crystal along local -Z and highlights its outer wrapper; it never overwrites the glyph hit. Squeeze pulls that target smoothly to the hand in 0.25 seconds only when its intersection is within 1.8 m. Early release cancels the pull at its current world transform; held release inserts the visible crystal at `RELIQUARY_CRYSTAL_ANCHOR` when its center enters the Blender-authored hidden sphere. The portal page is deferred until a target-ray `selectstart` hits the render-transparent trigger and successfully activates it. The button emits 0/1/5 for idle/hover/latched and plays `Relic_Reliquary_ActivateButton_Press` once, clamped in its pressed pose. Missing or invalid reliquary data produces one warning and falls back to the old portal socket. Blender remains the source of truth for both this sphere and `PORTAL_CANVAS_SURFACE`. Runtime canvas resolution preserves that surface ratio within the configured pixel limits; manual `portalCanvas.width`, `height`, and `offset` remain only a warned fallback for an absent or invalid surface. The old stone plaque and separate above-monkey canvas are not used.
+## Current runtime composition
 
-The right stick moves forward/back and strafes on XZ from horizontal head direction. The left stick rotates the rig smoothly. Deadzone, move speed, and turn speed are configurable. Session end restores spawn, the fixed visible portal and waiting canvas, locomotion, transition, orbit, lights, activation, and controller state without duplicating objects.
+Scena jest przygotowana przed sesją: `VrWorldRoot`, małpa/fallback, pięć glifów, światła, stały portal z canvasem, relikwiarz, dwa przyciski companion, `playerRig`, dwa kontrolery i moduły interakcji. Assety VR są preloadowane przed udostępnieniem przycisku wejścia.
 
-## Asset and preload contract
+Pięć glifów orbituje bez przerwy — przed aktywacją, podczas przejścia i po arrival. Efektywny promień wynosi `3.8 × 2 = 7.6`; spawn gracza to `(0, 0, 8.6)`.
 
-The Experience VR preload subset includes the separate `/glb/portal_crystal_reliquary_button_activate.glb` activate button as well as `/glb/portal.glb` as `vr-portal-model` and `/glb/portal_crystal_reliquary.glb` as `vr-crystal-reliquary-model`. The portal provides `PORTAL_CANVAS_SURFACE`; the reliquary provides `RELIQUARY_CRYSTAL_INSERT_ZONE` and `RELIQUARY_CRYSTAL_ANCHOR`. The subset also includes all 15 page crystal GLBs and the loader, monkey, and glyph assets needed by this runtime. AssetManager is the sole model source and runtime creation performs no fetch. Per-glyph plaque models are no longer included in that subset.
+## Runtime module ownership
 
-## Meta Quest 3S validation status
+- `experienceVr.js`: composition root, preload, przepływ sesji, kolejność klatki, reset i reuse.
+- `experienceVrSettings.js`: defaulty, normalizacja i ładowanie `/data/experience-vr-settings.json`.
+- `createVrControllers`: dwa target rays, grips i niewidoczne `holdSocket`.
+- `createVrGlyphOrbit`, `createVrGlyphInteraction`, `createVrGlyphLights`: ciągły orbit, raycast glifów i light-only feedback.
+- `createVrEntryTransition`: skompensowane przejście `playerRig` do pierścienia.
+- `createVrPortalDisplay`: stały model portalu, Blenderowy surface oraz awaryjny socket.
+- `createVrSpatialPlaque`: `CanvasTexture`, rysowanie strony i fallback plane; nazwa modułu jest historyczna, lecz nie oznacza aktywnej kamiennej tabliczki.
+- `createVrLocomotion`: smooth move i smooth yaw `playerRig`.
+- `experienceVrPages`: dane stron i stabilne powiązanie 15 assetów.
+- `createVrCrystalCollection`: materializacja, raycast-pull, insertion, activation, release i runtime read-state.
+- `createVrCrystalReliquary`: model, insertion zone, widoczna kotwica i rozmieszczenie companionów.
+- `createVrReliquaryActivateButton` / `createVrReliquaryReleaseButton`: niezależny raycast, emisja, animacja i akcja każdego przycisku.
 
-Previously confirmed hardware behavior includes session start, head tracking, scene scale, controller rays/triggers, glyph interaction, transition, orbit, light feedback, and dynamic readiness. Actual portal position, front visibility, ground height, angled canvas readability, crystal placement in front of the monkey, materialization timing/readability, post-effect crystal raycast, comfort of the 1.8 m limit, pull speed, held orientation, socket-release comfort, Quest controller axis mapping, smooth-locomotion speed, and comfort remain unverified on Meta Quest 3S. The new placement additionally requires checking whether the 1.5 m portal distance and 1 m forward button distance are comfortable, whether both buttons are comfortable, whether neither object obscures the portal, whether the button remains in raycast range, and whether approaching with a held crystal is comfortable. Automated tests cover code contracts only.
+## Assets and preload contract
 
-## Active exclusions and prohibitions
+`AssetManager` jest jedynym źródłem modeli. Runtime klonuje już załadowane sceny i nie wykonuje fetchu podczas spawnu.
 
-A release/second button and read-page persistence remain deliberately outside this stage. Throwing, physics, collision, gravity, teleportation, jump, snap turn, bridge building, VR audio, atmosphere, and galaxies are outside this stage. Do not merge VR with Experience 3D, modify `src/experience3d.js`, move HTML/CSS overlays into VR, steer the tracked camera, stop glyph orbit, or restore geometric interaction markers.
+| Rola | Asset / kontrakt |
+| --- | --- |
+| Portal | `/glb/portal.glb`; mesh `PORTAL_CANVAS_SURFACE` |
+| Relikwiarz | `/glb/portal_crystal_reliquary.glb`; `RELIQUARY_CRYSTAL_INSERT_ZONE`, `RELIQUARY_CRYSTAL_ANCHOR` |
+| Activate | `/glb/portal_crystal_reliquary_button_activate.glb`; trigger i klip `Relic_Reliquary_ActivateButton_Press` |
+| Release | `/glb/portal_crystal_reliquary_button_release.glb`; odpornie rozwiązywany authored trigger i klip `Relic_Reliquary_ReleaseButton_Press` |
+| Strony | 15 modeli `crystal-*.glb`: po trzy dla każdego z pięciu stabilnych `glyphId` |
 
-## Release kryształu relikwiarza
+Preload obejmuje loader, małpę, glify, portal, relikwiarz, oba przyciski i wszystkie kryształy. Per-glyph plaque GLB nie należą do aktywnego podzbioru VR.
 
-Experience VR ładuje osobne modele activate i release przez `AssetManager`. Oba przyciski mają runtime scale `0.3` i symetryczne placementy 1 m przed relikwiarzem oraz 0,5 m po obu stronach osi portalu (1 m między środkami). Kryształ pozostaje widoczny po insertion i activation. Release po skonfigurowanym opóźnieniu usuwa wyłącznie osadzony kryształ, zwalnia socket oraz resetuje oba przyciski. Zbiór przeczytanych stron istnieje obecnie tylko w runtime, bez `localStorage` i UI.
+## Current player flow
+
+1. Shell sprawdza secure context i wsparcie `immersive-vr`, a po wyborze VR dynamicznie importuje runtime.
+2. Runtime przygotowuje scenę i preloaduje assety.
+3. Drugi, bezpośredni gest na **Enter VR** wywołuje `requestSession('immersive-vr')`.
+4. Gracz celuje target-rayem w glif będący w dynamicznej strefie `entryReady` i naciska trigger.
+5. `createVrEntryTransition` przesuwa `playerRig`, kompensując początkowy fizyczny offset głowy X/Z. Y i orientacja pozostają bez zmian. Cel to `effectiveRingRadius × 0.76 = 5.776`, czyli około `5.8` od środka.
+6. Po zakończeniu przejścia materializują się trzy kryształy aktywowanego glifu.
+7. Gracz wskazuje kryształ, przyciąga go squeeze do dłoni i puszcza w insertion zone relikwiarza.
+8. Activate przełącza `inserted → active` i dopiero wtedy pokazuje stronę na portalu.
+9. Release po 1 s przełącza kryształ do `released`, usuwa go, zwalnia socket i resetuje oba przyciski. Można włożyć następny kryształ.
+
+## Controls
+
+- Trigger/select: aktywacja gotowego glifu oraz przyciski activate/release.
+- Squeeze: rozpoczęcie pull-to-hand wskazanego kryształu; squeeze release anuluje pull albo puszcza held crystal.
+- Prawy joystick: ruch przód/tył i strafe lewo/prawo.
+- Lewy joystick: płynny obrót yaw.
+
+Ruch korzysta z poziomego kierunku śledzonej głowy (pitch jest usuwany), transformuje `playerRig` i zachowuje jego Y. Nie ma collision, gravity, physics, teleport, jump ani snap turn.
+
+## Portal and Blender-authored canvas
+
+Portal istnieje od przygotowania sceny. Ma stałą kompozycję world-space względem małpy i skonfigurowanego spawnu, nie czyta pozy ani obrotu głowy i nie jest przesuwany lub ukrywany podczas arrival.
+
+Geometria, UV, proporcje, transformacja, parent i skala `PORTAL_CANVAS_SURFACE` z Blendera są źródłem prawdy. `createVrSpatialPlaque` przypisuje `CanvasTexture` bezpośrednio do tego mesha, zachowując jego authored transform. Ręcznie tworzony plane z `portalCanvas.width`, `height` i `offset` jest wyłącznie ostrzeganym fallbackiem, gdy named mesh, geometria lub UV są nieprawidłowe. Aktywny flow nie ma osobnego canvasu nad małpą ani kamiennej tabliczki arrival.
+
+## Crystal page model and materialization
+
+`experienceVrPages` mapuje stabilne `glyphId` na tablice stron identyfikowane przez stabilne `page.id`. Bieżący model ma dokładnie trzy strony dla każdego z pięciu glifów, łącznie 15. Selektory treści pobierają zlokalizowany lead, detail lub fragment case study z rozwiązanego `portfolioNodes`, zamiast duplikować pełny content.
+
+Po arrival tylko strony aktywowanego glifu są spawnione. Hash `page.id` determinuje skalę `0.22–0.28`, yaw, niewielkie pochylenia oraz nieregularną pozycję przed małpą. Bounds centrują model w X/Z, a jego najniższy punkt trafia na Y=0. Wrapper zaczyna niżej o `0.12`, ze skalą `0.18`; stagger `0.12 s`, smoothstep przez `0.55 s`, lekkie wynurzenie i mały yaw prowadzą do finalnej pozy. `materializing` nie uczestniczy w raycaście ani grab.
+
+## Crystal targeting and pull-to-hand
+
+Każdy kontroler emituje ray w lokalnej osi `-Z`. Crystal hit (`currentCrystalHit` i dystans) jest niezależny od glyph hit (`currentHit`). Raycast rozwiązuje potomków przez stabilną mapę object-to-instance i wybiera najbliższy kryształ w stanie `available`. Subtelny highlight skaluje wrapper do `1.04`, bez zmiany authored model scale.
+
+`squeezestart` działa tylko dla wskazanego hitu nie dalej niż `1.8 m`. Kryształ jest przepinany do istniejącego `holdSocket` i przez smoothstep przez `0.25 s` przechodzi do dłoni. `squeezeend` w `pulling` przepina go do sceny, zachowuje aktualną world transform i wraca do `available`. Po ukończeniu pull stan to `held`. Nie ma nearest-hand/grip-space selection, fizyki, velocity ani throwing.
+
+## Reliquary architecture and placement
+
+Root `VrCrystalReliquary` jest placement rootem całego układu. `VrCrystalReliquaryModelRoot` podnosi o `heightOffset = 0.5` `VrCrystalReliquaryAuthoredRoot`, model, insertion zone, anchory i włożony kryształ. Sibling `VrCrystalReliquaryCompanionsRoot` nie dziedziczy tego podniesienia. Każdy button ma osobny placement root i osobny scale root.
+
+Relikwiarz leży dokładnie na poziomej osi frontu portalu w stronę skonfigurowanego spawnu, bez lateral offset, `1.5 m` od portalu. Portal quaternion wyznacza poziomy front; kod odwraca go, gdy nie wskazuje spawnu.
+
+Ukryty `RELIQUARY_CRYSTAL_INSERT_ZONE` zachowuje authored transform i wyznacza world-space sphere. `RELIQUARY_CRYSTAL_ANCHOR` jest `authoredCrystalAnchor`, czyli markerem z Blendera. Ponieważ może być potomkiem niewidocznego insertion zone, runtime kopiuje jego world transform do widocznego siblinga `VrReliquaryCrystalDisplayAnchor` (`runtimeCrystalAnchor`). Kompatybilny alias `crystalAnchor` wskazuje runtime anchor, nie authored marker. `isEffectivelyVisible()` sprawdza cały łańcuch rodziców; przy braku poprawnej lub efektywnie widocznej kotwicy tworzony jest widoczny `VrReliquaryCrystalFallbackAnchor`. Przy niepoprawnym insertion zone pozostaje również fallback do portalu.
+
+Oba przyciski są `1 m` przed relikwiarzem, równoległe do portalu. Activate leży `0.5 m` po lewej, release `0.5 m` po prawej; środki dzieli `1 m`. Ich scale rooty mają `0.3`; nie skalują relikwiarza i nie dziedziczą `heightOffset`.
+
+## Activate button
+
+Osobny preloadowany GLB dostarcza render-transparentny (`opacity: 0`, `colorWrite: false`), lecz widoczny dla raycastera trigger. Każdy kontroler ma oddzielny hit. Hover i press są dozwolone tylko, gdy socket zawiera kryształ dokładnie w stanie `inserted`.
+
+Materiały wizualne mają emisję `0` idle, `1` hover i `5` active/latched. Klip `Relic_Reliquary_ActivateButton_Press` działa jako `LoopOnce` z `clampWhenFinished`. Dopiero udany press wywołuje `activateInserted()`, ustawia `active` i aktualizuje canvas. Kryształ pozostaje widoczny.
+
+## Release button
+
+Osobny preloadowany GLB ma resolver authored triggera po nazwie, rolach, metadata i deklaracji button root. Niezależnie od wyniku runtime buduje jeden transparentny, raycastowalny proxy `VrReliquaryReleaseButtonHitArea` z `hitAreaScale = 2`; reset nie duplikuje proxy.
+
+Release działa dla `inserted` i `active`. Emisja wynosi `0` idle, `1` hover, `5` podczas press/releasing. Kontrakt metadata assetu deklaruje klip `Relic_Reliquary_ReleaseButton_Press`; akcja runtime, jeśli resolver znajdzie dokładnie tak nazwany klip, używa `LoopOnce` i `clampWhenFinished`. Stan `releasing` blokuje następne kliknięcia. Po `releaseDelaySeconds = 1` wywołane jest `releaseInserted()`: tylko aktualny kryształ jest usuwany, socket jest zwalniany, release wraca do idle, a activate jest resetowany. Bieżący GLB eksportuje jednak jedyną animację jako `Animation`, podczas gdy release resolver — inaczej niż activate resolver — szuka tylko nazwy kontraktowej. W rezultacie funkcjonalny raycast/release działa, ale `action` jest `null` i animacja press nie jest odtwarzana na `HEAD`. To potwierdzona sprzeczność asset–runtime pozostawiona bez naprawy w tym zadaniu dokumentacyjnym; nie jest regresją raycastu, emisji ani samego release.
+
+## Crystal state machine
+
+```text
+materializing → available → pulling → held → inserted → active → released
+```
+
+| Stan | Raycast / grab | Widoczność i własność | Portal / socket |
+| --- | --- | --- | --- |
+| `materializing` | nie / nie | widoczna animacja wrappera w scenie | socket wolny |
+| `available` | tak / tak, przez wskazany ray i squeeze | widoczny w scenie | socket wolny |
+| `pulling` | nie / już przypisany jednej dłoni | widoczny pod `holdSocket`; early release zachowuje world transform | socket wolny |
+| `held` | nie / trzymany przez jedną dłoń | widoczny pod `holdSocket` | insertion możliwe tylko po puszczeniu w zone |
+| `inserted` | nie / nie | widoczny na runtime/fallback anchor | socket zajęty; portal nadal pokazuje poprzedni/waiting content |
+| `active` | nie / nie | widoczny na anchor | socket zajęty; portal pokazuje jego stronę |
+| `released` | nie / nie | ukryty i odpięty | socket wolny; następny kryształ może być inserted |
+
+Próba włożenia drugiego kryształu przy zajętym sockecie zwraca go do `available`. Insertion ani activation nigdy nie konsumują kryształu; usuwa go dopiero release.
+
+## Portal page and runtime read state
+
+Canvas początkowo pokazuje lokalizowaną instrukcję. Insertion nie zmienia strony; robi to dopiero activate. `readPageIds` jest `Set` wewnątrz jednej instancji `createVrCrystalCollection`; `hasReadPage(pageId)` i `getReadPageIds()` udostępniają odczyt.
+
+Przy release **aktywnego** kryształu jego `page.id` jest dodawane do `readPageIds`. Release kryształu tylko `inserted` nie oznacza strony jako przeczytanej. `reset()` nie czyści Setu, więc read-state przeżywa reset przed wejściem, błąd startu, session end i kolejne sesje tak długo, jak istnieje przygotowany runtime strony. `dispose()` również wywołuje `reset()`, ale nie czyści Setu; po disposal instancja i jej API nie są jednak ponownie używane. Odświeżenie/nawigacja tworzy nowy runtime i pusty Set. Nie ma `localStorage`, UI read-state ani wizualnego oznaczenia kryształów.
+
+## Frame update order
+
+1. `glyphOrbit.update(delta)` i wyznaczenie dynamicznego `entryReady` (po aktywacji readiness jest blokowane, nie orbit).
+2. Odświeżenie world matrices pierścienia.
+3. Glyph raycast.
+4. Crystal materialization/pull/raycast.
+5. Activate-button update.
+6. Release-button update.
+7. Przypisanie glyph readiness i aktualizacja świateł.
+8. Entry transition.
+9. Locomotion.
+10. Portal canvas animation.
+11. Render.
+
+## Session reset and disposal
+
+Runtime jest przygotowany raz i ponownie używany. Reset jest wykonywany bezpośrednio przed request session, po `end` oraz po błędzie startu. Obejmuje entry transition, crystal collection i controller crystal hits, oba przyciski, relikwiarz, portal/canvas waiting state, locomotion, `playerRig` position/orientation, activated glyph, orbit, lights i glyph hits. Dzięki ponownemu użyciu nie powstają duplikaty modeli, listenerów, mixerów ani release hit area.
+
+Sesja prosi o `local-floor`; jawny test reference space może przełączyć runtime na `local`. `pagehide` resetuje/disponuje oba przyciski, kolekcję i relikwiarz, usuwa listenery oraz runtime proxy. Bazowy renderer i pozostałe obiekty kończą życie wraz ze stroną.
+
+## Current settings baseline
+
+- ring: multiplier `2`, angular speed `0.14`, readiness `0.24`, hysteresis `0.04`;
+- entry: `3 s`, smoothstep, `targetRadiusFactor = 0.76`;
+- controllers: ray `3 m`;
+- crystals: ray limit `1.8 m`, pull `0.25 s`, highlight `1.04`, materialization `0.55 s` / stagger `0.12 s`;
+- locomotion: deadzone `0.18`, move `1.8`, turn `1.35`;
+- reliquary: `1.5 m` from portal, `heightOffset = 0.5`;
+- buttons: `1 m` forward, `±0.5 m` lateral, scale `0.3`;
+- release: delay `1 s`, hit-area scale `2`.
+
+## Automated validation
+
+`npm run test:vr` obejmuje capability, settings/legacy normalization, orbit, lights, glyph raycast, compensated entry, authored canvas/fallback, portal placement, locomotion, deterministic strony/materializację/raycast-pull/stany/reset/read-state, relikwiarz i anchor visibility, integration/preload oraz oba przyciski. Są to testy kodu, nie hardware QA.
+
+## Meta Quest 3S hardware status
+
+### Potwierdzone sprzętowo wcześniej
+
+Uruchamianie sesji, head tracking, skala sceny, dwa kontrolery i promienie, glyph raycast, aktywacja glifu, przejście do pierścienia, ciągły orbit, light feedback, raycastowe chwytanie kryształu, insertion do relikwiarza, widoczność po korekcie runtime anchora oraz funkcjonalny release usuwający kryształ i zwalniający socket.
+
+### Wdrożone i automatycznie testowane, bez jednoznacznej akceptacji sprzętowej
+
+Blenderowy canvas/fallback, finalne placementy, mapping stron i 15 preloadów, deterministyczna materializacja, niezależne hit states, limit/pull/cancel, pełny state machine, activation-gated page update, release delay/proxy/lock/reset, runtime read-state, smooth locomotion i reset/reuse lifecycle. Test przycisku release używa fixture z poprawnie nazwanym klipem; nie waliduje nazwy animacji w produkcyjnym GLB.
+
+### Do ponownej walidacji na Quest
+
+- finalna pozycja portalu i czytelność Blenderowego canvasu;
+- mapping osi locomotion, prędkość oraz komfort smooth turn;
+- `distanceFromPortal = 1.5` i `heightOffset = 0.5`;
+- przyciski `1 m` przed relikwiarzem, `±0.5 m` od osi, wizualna skala `0.3`;
+- release hit area oraz emisja i animacja release po korekcie assetu;
+- wielokrotny cykl insert → activate → release → następny kryształ;
+- reset po wyjściu i ponownym wejściu do VR.
+
+## Known limitations
+
+Brak trwałego zapisu i UI przeczytanych stron oraz oznaczenia przeczytanych kryształów. Brak physics, gravity, collision, throwing, velocity, teleport, jump, snap turn, VR audio, atmosfery, galaktyk i bridge construction.
+
+## Active prohibitions
+
+Nie łączyć runtime'ów VR i 3D; nie modyfikować chronionego `src/experience3d.js`; nie sterować tracked camera; nie zatrzymywać orbity; nie przywracać arrival plaque/per-glyph plaque preload ani osobnego canvasu; nie zastępować raycast-pull nearest-hand; nie skalować relikwiarza przez button wrappers; nie podpinać widocznego kryształu bezpośrednio pod ukryty insertion zone; nie traktować testów automatycznych jako hardware QA.
+
+## Safe next implementation points
+
+Następna praca może rozszerzać istniejące publiczne granice modułów: trwałość/UI read-state przez `hasReadPage()` i `getReadPageIds()`, tuning wyłącznie po Quest QA, albo dalszy content przez stabilne `glyphId`/`page.id` i preload manifest. Musi zachować oddzielny runtime, `playerRig` ownership, authored portal surface, AssetManager-only models, kompletny cykl relikwiarza i brak duplikacji lifecycle.
