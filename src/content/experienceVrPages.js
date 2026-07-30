@@ -1,3 +1,5 @@
+import { portalCards, portalCardsByGlyphId, resolvePortalCard } from './portalCards.js';
+
 const CRYSTAL_PATHS = Object.freeze({
   'ai-guide': 'crystal-ai_guide',
   'creative-ai': 'crystal-creative_ai',
@@ -6,44 +8,40 @@ const CRYSTAL_PATHS = Object.freeze({
   'haiku-cosmos': 'crystal-haiku_cosmos'
 });
 
-const firstParagraph = (value) => String(value || '').split(/\n\s*\n/).find(Boolean)?.trim() || '';
+const toVrPage = (card) => {
+  const visualVariant = ((card.order - 1) % 3) + 1;
+  return Object.freeze({
+    id: card.id,
+    cardId: card.id,
+    crystalId: card.crystalId,
+    glyphId: card.glyphId,
+    elementId: card.elementId,
+    order: card.order,
+    starter: card.starter,
+    visualVariant,
+    crystalAssetId: `vr-crystal-${card.glyphId}-${visualVariant}`,
+    crystalModelPath: `/glb/${CRYSTAL_PATHS[card.glyphId]}_${String(visualVariant).padStart(2, '0')}.glb`,
+    translations: card.translations
+  });
+};
+
+const pagesByCardId = new Map(portalCards.map((card) => [card.id, toVrPage(card)]));
 
 export const experienceVrPagesByGlyphId = Object.freeze(Object.fromEntries(
-  Object.entries(CRYSTAL_PATHS).map(([glyphId, filename]) => [glyphId, Object.freeze(
-    Array.from({ length: 3 }, (_, index) => Object.freeze({
-      id: `${glyphId}-page-${index + 1}`,
-      glyphId,
-      order: index + 1,
-      crystalAssetId: `vr-crystal-${glyphId}-${index + 1}`,
-      crystalModelPath: `/glb/${filename}_${String(index + 1).padStart(2, '0')}.glb`,
-      contentSelector: index === 0 ? 'project-lead' : index === 1 ? 'project-detail' : 'case-study-fragment'
-    }))
-  )])
+  Object.entries(portalCardsByGlyphId).map(([glyphId, cards]) => [
+    glyphId,
+    Object.freeze(cards.map((card) => pagesByCardId.get(card.id)))
+  ])
 ));
 
-export const experienceVrPages = Object.freeze(Object.values(experienceVrPagesByGlyphId).flat());
+export const experienceVrPages = Object.freeze(portalCards.map((card) => pagesByCardId.get(card.id)));
 
 export function getExperienceVrPages(glyphId) {
   return experienceVrPagesByGlyphId[glyphId] ?? Object.freeze([]);
 }
 
-export function resolveExperienceVrPage(page, portfolioNode) {
-  if (!page || !portfolioNode || page.glyphId !== portfolioNode.id) return { title: '', body: '' };
-  if (page.contentSelector === 'project-lead') {
-    return { title: portfolioNode.title, body: portfolioNode.leadText || portfolioNode.draftText || portfolioNode.shortLabel };
-  }
-  if (page.contentSelector === 'project-detail') {
-    return {
-      title: portfolioNode.subtitle || portfolioNode.eyebrow || portfolioNode.shortLabel || portfolioNode.title,
-      body: firstParagraph(portfolioNode.bodyText) || portfolioNode.closingText || portfolioNode.draftText
-    };
-  }
-  const caseStudy = portfolioNode.caseStudy;
-  return {
-    title: caseStudy?.title || caseStudy?.heading || portfolioNode.title,
-    body: firstParagraph(Array.isArray(caseStudy?.intro) ? caseStudy.intro[0] : caseStudy?.intro)
-      || firstParagraph(caseStudy?.problem)
-      || portfolioNode.closingText
-      || firstParagraph(portfolioNode.bodyText)
-  };
+export function resolveExperienceVrPage(page, language) {
+  if (!page) return { title: '', body: '', crystalLabel: '' };
+  const resolved = resolvePortalCard(page, language);
+  return Object.freeze({ ...page, title: resolved.title, body: resolved.body, crystalLabel: resolved.crystalLabel });
 }

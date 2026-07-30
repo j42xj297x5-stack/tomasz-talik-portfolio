@@ -138,8 +138,7 @@ const locomotion = createVrLocomotion({ playerRig, renderer, camera, settings: s
 const crystalCollection = createVrCrystalCollection({
   scene, assetManager, controllers: vrControllers.controllers, portalDisplay, insertionTarget: crystalReliquary, settings: settings.crystals,
   onActivate: (page) => {
-    const node = resolvedPortfolioNodes.find(({ id }) => id === page.glyphId);
-    portalCanvas.show(resolveExperienceVrPage(page, node));
+    portalCanvas.show(resolveExperienceVrPage(page, language));
   }
 });
 const activateButtonGltf = assetManager.getGltf('vr-crystal-reliquary-button-activate-model');

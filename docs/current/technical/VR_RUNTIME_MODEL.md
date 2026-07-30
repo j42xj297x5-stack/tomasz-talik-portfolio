@@ -24,13 +24,13 @@ The portal also exposes an invisible, bounds-derived `VrPortalCrystalSocket`. It
 
 ## Page data and asset ownership
 
-`experienceVrPagesByGlyphId` maps five stable portfolio glyph IDs to three immutable page records each. Every record has stable `page.id`, matching `glyphId`, order, `crystalAssetId`, logical GLB path and a content selector. `resolveExperienceVrPage()` reads localized fields from the resolved shared `portfolioNodes` entry rather than copying portfolio content.
+`experienceVrPagesByGlyphId` adapts the 18 semantic records from `portalCards.js` into immutable runtime pages. The branch distribution is 3 / 3 / 3 / 4 / 5 for Ethics, Creative AI, AI Guide, DIG Engine and Haiku Cosmos. Every page retains its unique `cardId`, `crystalId`, glyph/element metadata, order and starter flag. `resolveExperienceVrPage()` reads the selected PL/EN translation (including regional language tags) directly from the card and exposes `title`, `body` and the not-yet-rendered `crystalLabel`.
 
-The deferred-warm manifest contains `/glb/portal.glb`, `/glb/portal_crystal_reliquary.glb`, both companion-button GLBs and all 15 crystal GLBs. `experienceVr.js` filters its VR preload set from the manifest. `AssetManager` is the sole source: spawn clones cached scenes and performs no network fetch.
+The deferred-warm manifest contains `/glb/portal.glb`, `/glb/portal_crystal_reliquary.glb`, both companion-button GLBs and the existing 15 crystal GLBs. Cards four and five reuse variants one and two cyclically within their own glyph; no `_04` or `_05` asset exists. `AssetManager` is the sole source and each of the 18 cards receives a separate cloned wrapper, model instance and runtime state even when its cached visual asset is shared.
 
 ## Deterministic materialization
 
-Arrival completion calls `spawn()` with only the activated glyph's pages. An FNV-style hash of `page.id` provides stable scale in `0.22–0.28`, X/Z offsets, yaw and small X/Z tilt. The anchor-to-spawn horizontal direction places the group about `1.55 m` before the monkey. Collision-free spacing attempts are deterministic. Bounds center each authored model on X/Z and translate its lowest point to floor Y=0.
+Arrival completion calls `spawn()` with only the activated glyph's 3–5 pages. An FNV-style hash of `page.id` provides stable scale in `0.22–0.28`, yaw and small X/Z tilt. A deterministic centered layout places three crystals in one row, four in two rows of two, and five in rows of three and two, respecting `minimumSpacing`; the anchor-to-spawn horizontal direction places the group about `1.55 m` before the monkey. Bounds center each authored model on X/Z and translate its lowest point to floor Y=0.
 
 Each wrapper begins in `materializing`: stagger `0.12 s`, duration `0.55 s`, scale `0.18 → 1` by smoothstep, rise `0.12 m`, and a small yaw settling to zero. Only `available` wrappers enter the target list, so incomplete materialization cannot be raycast or grabbed.
 

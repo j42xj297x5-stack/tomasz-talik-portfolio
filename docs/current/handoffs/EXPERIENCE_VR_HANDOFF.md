@@ -31,7 +31,7 @@ Pięć glifów orbituje bez przerwy — przed aktywacją, podczas przejścia i p
 - `createVrPortalDisplay`: stały model portalu, Blenderowy surface oraz awaryjny socket.
 - `createVrSpatialPlaque`: `CanvasTexture`, rysowanie strony i fallback plane; nazwa modułu jest historyczna, lecz nie oznacza aktywnej kamiennej tabliczki.
 - `createVrLocomotion`: smooth move i smooth yaw `playerRig`.
-- `experienceVrPages`: dane stron i stabilne powiązanie 15 assetów.
+- `experienceVrPages`: adapter 18 kart `portalCards` do stron runtime'u i 15 współdzielonych assetów.
 - `createVrCrystalCollection`: materializacja, raycast-pull, insertion, activation, release i runtime read-state.
 - `createVrCrystalReliquary`: model, insertion zone, widoczna kotwica i rozmieszczenie companionów.
 - `createVrReliquaryActivateButton` / `createVrReliquaryReleaseButton`: niezależny raycast, emisja, animacja i akcja każdego przycisku.
@@ -46,7 +46,7 @@ Pięć glifów orbituje bez przerwy — przed aktywacją, podczas przejścia i p
 | Relikwiarz | `/glb/portal_crystal_reliquary.glb`; `RELIQUARY_CRYSTAL_INSERT_ZONE`, `RELIQUARY_CRYSTAL_ANCHOR` |
 | Activate | `/glb/portal_crystal_reliquary_button_activate.glb`; trigger i klip `Relic_Reliquary_ActivateButton_Press` |
 | Release | `/glb/portal_crystal_reliquary_button_release.glb`; odpornie rozwiązywany authored trigger i klip `Relic_Reliquary_ReleaseButton_Press` |
-| Strony | 15 modeli `crystal-*.glb`: po trzy dla każdego z pięciu stabilnych `glyphId` |
+| Strony | 18 kart na 15 modelach `crystal-*.glb`: trzy warianty wizualne dla każdego stabilnego `glyphId` |
 
 Preload obejmuje loader, małpę, glify, portal, relikwiarz, oba przyciski i wszystkie kryształy. Per-glyph plaque GLB nie należą do aktywnego podzbioru VR.
 
@@ -57,7 +57,7 @@ Preload obejmuje loader, małpę, glify, portal, relikwiarz, oba przyciski i wsz
 3. Drugi, bezpośredni gest na **Enter VR** wywołuje `requestSession('immersive-vr')`.
 4. Gracz celuje target-rayem w glif będący w dynamicznej strefie `entryReady` i naciska trigger.
 5. `createVrEntryTransition` przesuwa `playerRig`, kompensując początkowy fizyczny offset głowy X/Z. Y i orientacja pozostają bez zmian. Cel to `effectiveRingRadius × 0.76 = 5.776`, czyli około `5.8` od środka.
-6. Po zakończeniu przejścia materializują się trzy kryształy aktywowanego glifu.
+6. Po zakończeniu przejścia materializuje się 3–5 kryształów aktywowanego glifu, zgodnie z rejestrem kart.
 7. Gracz wskazuje kryształ, przyciąga go squeeze do dłoni i puszcza w insertion zone relikwiarza.
 8. Activate przełącza `inserted → active` i dopiero wtedy pokazuje stronę na portalu.
 9. Release po 1 s przełącza kryształ do `released`, usuwa go, zwalnia socket i resetuje oba przyciski. Można włożyć następny kryształ.
@@ -79,9 +79,11 @@ Geometria, UV, proporcje, transformacja, parent i skala `PORTAL_CANVAS_SURFACE` 
 
 ## Crystal page model and materialization
 
-`experienceVrPages` mapuje stabilne `glyphId` na tablice stron identyfikowane przez stabilne `page.id`. Bieżący model ma dokładnie trzy strony dla każdego z pięciu glifów, łącznie 15. Selektory treści pobierają zlokalizowany lead, detail lub fragment case study z rozwiązanego `portfolioNodes`, zamiast duplikować pełny content.
+`experienceVrPages` adaptuje 18 rekordów `portalCards.js`, zachowując semantyczne `cardId`, `crystalId`, `glyphId`, `elementId`, kolejność i starter. Rozkład Ethics / Creative AI / AI Guide / DIG Engine / Haiku Cosmos wynosi `3 / 3 / 3 / 4 / 5`. Tytuł i treść portalu pochodzą bezpośrednio z wybranej translacji karty; `crystalLabel` przechodzi przez adapter, lecz nie jest jeszcze renderowany na modelu.
 
-Po arrival tylko strony aktywowanego glifu są spawnione. Hash `page.id` determinuje skalę `0.22–0.28`, yaw, niewielkie pochylenia oraz nieregularną pozycję przed małpą. Bounds centrują model w X/Z, a jego najniższy punkt trafia na Y=0. Wrapper zaczyna niżej o `0.12`, ze skalą `0.18`; stagger `0.12 s`, smoothstep przez `0.55 s`, lekkie wynurzenie i mały yaw prowadzą do finalnej pozy. `materializing` nie uczestniczy w raycaście ani grab.
+Istnieje nadal tylko 15 modeli GLB. Wariant wizualny jest wybierany cyklicznie `1, 2, 3, 1, 2` w obrębie glifu, dlatego dodatkowe karty nie tworzą ścieżek `_04` ani `_05`. Wspólny cache assetu nie oznacza wspólnego obiektu: każda karta otrzymuje własny klon, wrapper, pozycję, mapowanie raycastu i stan.
+
+Po arrival tylko strony aktywowanego glifu są spawnione. Deterministyczny, wycentrowany layout układa trzy kryształy w jednym rzędzie, cztery w dwóch rzędach po dwa, a pięć w rzędach trzy plus dwa, z zachowaniem `minimumSpacing`. Hash `page.id` determinuje skalę `0.22–0.28`, yaw i niewielkie pochylenia. Bounds centrują model w X/Z, a jego najniższy punkt trafia na Y=0. Wrapper zaczyna niżej o `0.12`, ze skalą `0.18`; stagger `0.12 s`, smoothstep przez `0.55 s`, lekkie wynurzenie i mały yaw prowadzą do finalnej pozy. `materializing` nie uczestniczy w raycaście ani grab.
 
 ## Crystal targeting and pull-to-hand
 
@@ -178,7 +180,7 @@ Uruchamianie sesji, head tracking, skala sceny, dwa kontrolery i promienie, glyp
 
 ### Wdrożone i automatycznie testowane, bez jednoznacznej akceptacji sprzętowej
 
-Blenderowy canvas/fallback, finalne placementy, mapping stron i 15 preloadów, deterministyczna materializacja, niezależne hit states, limit/pull/cancel, pełny state machine, activation-gated page update, release delay/proxy/lock/reset, runtime read-state, smooth locomotion i reset/reuse lifecycle. Test przycisku release używa fixture z poprawnie nazwanym klipem; nie waliduje nazwy animacji w produkcyjnym GLB.
+Blenderowy canvas/fallback, finalne placementy, mapping 18 stron na 15 preloadów, layouty 3–5, deterministyczna materializacja, niezależne hit states, limit/pull/cancel, pełny state machine, activation-gated page update, release delay/proxy/lock/reset, runtime read-state, smooth locomotion i reset/reuse lifecycle. Test przycisku release używa fixture z poprawnie nazwanym klipem; nie waliduje nazwy animacji w produkcyjnym GLB.
 
 ### Do ponownej walidacji na Quest
 
