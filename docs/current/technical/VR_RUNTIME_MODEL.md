@@ -4,6 +4,10 @@
 
 Experience VR is an independent, dynamically imported WebXR runtime owned by `src/experienceVr.js`. It requests `local-floor` (with `local` fallback), owns its renderer, `playerRig`, camera, controllers and modules, and never starts Experience 3D. The configured start is `(0, 0, 5.8)`, facing the world center. After WebXR starts, the runtime measures the tracked head X/Z and moves only `playerRig` so the physical head reaches that point; it never writes the tracked camera pose. There is no entry-glyph selection, `activatedEntryGlyph`, or `createVrEntryTransition` in the active runtime.
 
+## Locomotion
+
+The left joystick applies smooth yaw to `playerRig`. The right joystick translates only `playerRig`, with forward/backward and strafe directions derived every frame from the current world-space WebXR viewer pose. For an `ArrayCamera`, the current eye camera supplies that tracked orientation rather than the stale base camera. Head pitch is removed from the movement basis, diagonal input is capped to unit length, and the rig's Y coordinate is preserved. Thus physical head rotation and smooth rig yaw are both reflected immediately without writing position or quaternion values to the tracked camera.
+
 ## Glyph hold and exhaustion
 
 Each controller independently raycasts the moving glyph meshes. `selectstart` captures the currently hit, non-exhausted glyph; `update(delta)` accumulates `glyphInteraction.holdDurationSeconds` (public/default `0.5 s`). Losing the hit, `selectend`, controller disconnect or reset cancels the hold. Crossing the threshold calls `onGlyphHoldComplete({ node, controllerIndex, handedness })` once, and another completion requires a new `selectstart`.
