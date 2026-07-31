@@ -18,11 +18,20 @@ const SOURCE_CONTRACTS = Object.freeze({
       'VR_PROGRESS_CARD_WATER_04',
       'VR_PROGRESS_CARD_WATER_05'
     ])
+  }),
+  metal: Object.freeze({
+    baseName: 'VR_PROGRESS_SECTOR_METAL_BASE',
+    panelNames: Object.freeze([
+      'VR_PROGRESS_CARD_METAL_01',
+      'VR_PROGRESS_CARD_METAL_02',
+      'VR_PROGRESS_CARD_METAL_03',
+      'VR_PROGRESS_CARD_METAL_04'
+    ])
   })
 });
 
 const SECTOR_LAYOUT = Object.freeze([
-  Object.freeze({ glyphId: 'spotify-digger', branchId: 'metal', placeholder: true, sourceType: 'creative' }),
+  Object.freeze({ glyphId: 'spotify-digger', branchId: 'metal', placeholder: false, sourceType: 'metal' }),
   Object.freeze({ glyphId: 'haiku-cosmos', branchId: 'water', placeholder: false, sourceType: 'water' }),
   Object.freeze({ glyphId: 'ai-guide', branchId: 'wood', placeholder: true, sourceType: 'creative' }),
   Object.freeze({ glyphId: 'creative-ai', branchId: 'fire', placeholder: false, sourceType: 'creative' }),
@@ -35,7 +44,7 @@ export const VR_PROGRESS_FLOOR_EMISSION = Object.freeze({
   pulseIntensity: 2.8,
   pulseDuration: 0.22,
   responseSpeed: 14,
-  fallbackColors: Object.freeze({ creative: 0xff4b2b, ethics: 0xc8752a, water: 0x35a9ff })
+  fallbackColors: Object.freeze({ creative: 0xff4b2b, ethics: 0xc8752a, water: 0x35a9ff, metal: 0x8cd1ff })
 });
 
 export const FLOOR_WORLD_Y_OFFSET = -1.05;
@@ -99,6 +108,7 @@ export function createVrProgressFloor({
   creativeSectorModel,
   ethicsSectorModel,
   haikuSectorModel,
+  digSectorModel,
   emission = {},
   worldYOffset = FLOOR_WORLD_Y_OFFSET
 }) {
@@ -106,6 +116,7 @@ export function createVrProgressFloor({
   if (!creativeSectorModel?.clone) throw new Error('[VrProgressFloor] A valid Creative sector model is required.');
   if (!ethicsSectorModel?.clone) throw new Error('[VrProgressFloor] A valid Ethics sector model is required.');
   if (!haikuSectorModel?.clone) throw new Error('[VrProgressFloor] A valid Haiku Cosmos sector model is required.');
+  if (!digSectorModel?.clone) throw new Error('[VrProgressFloor] A valid DIG Engine sector model is required.');
 
   const config = {
     ...VR_PROGRESS_FLOOR_EMISSION,
@@ -116,7 +127,7 @@ export function createVrProgressFloor({
   object.name = 'VrTiltableFloorRoot';
   object.position.y = worldYOffset;
   const ownedMaterials = new Set();
-  const sourceModels = { creative: creativeSectorModel, ethics: ethicsSectorModel, water: haikuSectorModel };
+  const sourceModels = { creative: creativeSectorModel, ethics: ethicsSectorModel, water: haikuSectorModel, metal: digSectorModel };
   const sectorsByGlyphId = new Map();
   const activatedEntries = new Map();
   const pulseRemaining = new Map();
