@@ -16,7 +16,9 @@ This page-bound contract has a confirmed ordering limitation: if a player collec
 
 Session entry/end removes all live crystals, clears hand/socket ownership, hits and holds, resets the portal/buttons/reliquary/glyph presentation, and restores the rig. The activation Set survives those resets while the prepared page runtime remains alive, so activated pages cannot respawn on XR re-entry. Reload or navigation creates a fresh registry. The read-named APIs alias activation, and there is no durable save, separate read state, progress UI, full-game reset, victory sequence or next level.
 
-The runtime now includes a bounded progress-floor prototype: five copies of the single Creative AI `floor_creative.glb` sector share the world origin and are rotated every 72 degrees. Page activation globally maps `page.order` 1–3 to the matching emissive panel in every sector; illumination accumulates and survives XR session exit/re-entry with the prepared runtime. This is temporary visualization only, not the intended per-branch mapping or a central progression controller.
+The runtime now includes a bounded progress-floor prototype assembled from two authored sector models: Creative `floor_creative.glb` and Ethics `floor_ethic.glb`. Five unshifted sectors share the world origin and rotate every 72 degrees. Creative AI occupies the target upper-left slot, Ethics the target lower-left slot, and AI Guide has the target upper-right slot reserved. DIG Engine, Haiku Cosmos and AI Guide still use Creative as placeholders; consequently four sectors use Creative and one uses Ethics.
+
+Page activation globally maps `page.order` 1–3 to the matching emissive panel in every sector (Earth panels for Ethics and Fire panels elsewhere); illumination accumulates and survives XR session exit/re-entry with the prepared runtime. This remains temporary visualization only. Target mapping by branch or `glyphId` and a central progression controller are not implemented.
 
 ## Approved direction not yet implemented
 
