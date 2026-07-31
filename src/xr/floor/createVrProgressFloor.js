@@ -1,6 +1,7 @@
 import * as THREE from '../../vendor/three.js';
 
 const SECTOR_COUNT = 5;
+const SECTOR_BASE_NAME = 'VR_PROGRESS_SECTOR_FIRE_BASE';
 const PANEL_NAMES = Object.freeze([
   'VR_PROGRESS_CARD_FIRE_01',
   'VR_PROGRESS_CARD_FIRE_02',
@@ -14,6 +15,8 @@ export const VR_PROGRESS_FLOOR_EMISSION = Object.freeze({
   responseSpeed: 14,
   fallbackColor: 0xff4b2b
 });
+
+export const FLOOR_WORLD_Y_OFFSET = -1.05;
 
 function cloneMaterials(root, ownedMaterials) {
   root.traverse((object) => {
@@ -47,13 +50,29 @@ function getPanelMaterials(panel, fallbackColor) {
   return [...materials];
 }
 
-export function createVrProgressFloor({ parent, sectorModel, emission = {} }) {
+function makeSectorBaseTransparent(sector) {
+  const base = sector.getObjectByName(SECTOR_BASE_NAME);
+  if (!base) return;
+  base.traverse((object) => {
+    if (!object.isMesh || !object.material) return;
+    const materials = Array.isArray(object.material) ? object.material : [object.material];
+    materials.forEach((material) => {
+      material.transparent = true;
+      material.opacity = 0;
+      material.depthWrite = false;
+      material.needsUpdate = true;
+    });
+  });
+}
+
+export function createVrProgressFloor({ parent, sectorModel, emission = {}, worldYOffset = FLOOR_WORLD_Y_OFFSET }) {
   if (!parent?.add) throw new Error('[VrProgressFloor] A valid parent is required.');
   if (!sectorModel?.clone) throw new Error('[VrProgressFloor] A valid sector model is required.');
 
   const config = { ...VR_PROGRESS_FLOOR_EMISSION, ...emission };
   const object = new THREE.Group();
   object.name = 'VrTiltableFloorRoot';
+  object.position.y = worldYOffset;
   const ownedMaterials = new Set();
   const panelsByOrder = new Map(PANEL_NAMES.map((_, index) => [index + 1, []]));
   const activatedOrders = new Set();
@@ -67,6 +86,7 @@ export function createVrProgressFloor({ parent, sectorModel, emission = {} }) {
       sector.name = `VrProgressFloorSector:${String(sectorNumber).padStart(2, '0')}`;
       sector.rotation.y = index * (Math.PI * 2 / SECTOR_COUNT);
       cloneMaterials(sector, ownedMaterials);
+      makeSectorBaseTransparent(sector);
       PANEL_NAMES.forEach((panelName, panelIndex) => {
         const panel = sector.getObjectByName(panelName);
         if (!panel) throw new Error(`[VrProgressFloor] Missing required object "${panelName}" in sector ${sectorNumber}.`);
