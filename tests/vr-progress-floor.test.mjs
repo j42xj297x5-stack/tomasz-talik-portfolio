@@ -6,7 +6,8 @@ const CONTRACTS = {
   creative: { base: 'VR_PROGRESS_SECTOR_FIRE_BASE', prefix: 'VR_PROGRESS_CARD_FIRE_', panelCount: 3 },
   ethics: { base: 'VR_PROGRESS_SECTOR_EARTH_BASE', prefix: 'VR_PROGRESS_CARD_EARTH_', panelCount: 3 },
   water: { base: 'VR_PROGRESS_SECTOR_WATER_BASE', prefix: 'VR_PROGRESS_CARD_WATER_', panelCount: 5 },
-  metal: { base: 'VR_PROGRESS_SECTOR_METAL_BASE', prefix: 'VR_PROGRESS_CARD_METAL_', panelCount: 4 }
+  metal: { base: 'VR_PROGRESS_SECTOR_METAL_BASE', prefix: 'VR_PROGRESS_CARD_METAL_', panelCount: 4 },
+  wood: { base: 'VR_PROGRESS_SECTOR_WOOD_BASE', prefix: 'VR_PROGRESS_CARD_WOOD_', panelCount: 3 }
 };
 
 function createSectorModel(sourceType, { missingObject = null } = {}) {
@@ -45,16 +46,18 @@ const creativeSource = createSectorModel('creative');
 const ethicsSource = createSectorModel('ethics');
 const waterSource = createSectorModel('water');
 const metalSource = createSectorModel('metal');
+const woodSource = createSectorModel('wood');
 const floor = createVrProgressFloor({
   parent, creativeSectorModel: creativeSource, ethicsSectorModel: ethicsSource, haikuSectorModel: waterSource,
   digSectorModel: metalSource,
+  aiGuideSectorModel: woodSource,
   emission: { stableIntensity: 1.5, pulseIntensity: 3, pulseDuration: 0.1, responseSpeed: 100 }
 });
 const sectors = floor.object.children;
 const expected = [
   ['spotify-digger', 'metal', false, 'metal'],
   ['haiku-cosmos', 'water', false, 'water'],
-  ['ai-guide', 'wood', true, 'creative'],
+  ['ai-guide', 'wood', false, 'wood'],
   ['creative-ai', 'fire', false, 'creative'],
   ['ethics-life-protection', 'earth', false, 'ethics']
 ];
@@ -90,10 +93,13 @@ sectors.forEach((sector, index) => {
   });
   assert.equal(sector.getObjectByName(`${sourceType}Ornament`).material.opacity, 1);
 });
-assert.equal(sectors.filter(({ userData }) => userData.sourceType === 'creative').length, 2);
+assert.equal(new Set(sectors.map(({ userData }) => userData.sourceType)).size, 5);
+assert.equal(sectors.filter(({ userData }) => userData.sourceType === 'creative').length, 1);
 assert.equal(sectors.filter(({ userData }) => userData.sourceType === 'ethics').length, 1);
 assert.equal(sectors.filter(({ userData }) => userData.sourceType === 'water').length, 1);
 assert.equal(sectors.filter(({ userData }) => userData.sourceType === 'metal').length, 1);
+assert.equal(sectors.filter(({ userData }) => userData.sourceType === 'wood').length, 1);
+assert.equal(sectors.some(({ userData }) => userData.placeholder), false);
 
 for (let first = 0; first < sectors.length; first += 1) {
   for (let second = first + 1; second < sectors.length; second += 1) {
@@ -102,9 +108,11 @@ for (let first = 0; first < sectors.length; first += 1) {
 }
 assert.notEqual(panelMaterial(sectors[1], 1), waterSource.getObjectByName('VR_PROGRESS_CARD_WATER_01').material);
 assert.notEqual(panelMaterial(sectors[0], 1), metalSource.getObjectByName('VR_PROGRESS_CARD_METAL_01').material);
+assert.notEqual(panelMaterial(sectors[2], 1), woodSource.getObjectByName('VR_PROGRESS_CARD_WOOD_01').material);
 assert.equal(waterSource.getObjectByName('VR_PROGRESS_CARD_WATER_01').material.emissiveIntensity, 1);
 assert.equal(panelMaterial(sectors[1], 1).emissive.getHex(), 0x35a9ff, 'Water receives its cool fallback');
 assert.equal(panelMaterial(sectors[0], 1).emissive.getHex(), 0x8cd1ff, 'Metal receives its cool fallback');
+assert.equal(panelMaterial(sectors[2], 1).emissive.getHex(), 0x29e86f, 'Wood receives its green fallback');
 
 const assertOnlyLit = (targetSector, order) => sectors.forEach((sector) => {
   const count = CONTRACTS[sector.userData.sourceType].panelCount;
@@ -123,10 +131,23 @@ assert.equal(floor.activatePage({ glyphId: 'haiku-cosmos', order: 1 }), true);
 assert.equal(floor.activatePage({ glyphId: 'spotify-digger', order: 1 }), true);
 floor.update(0.05);
 assert.equal(panelMaterial(sectors[0], 1).emissiveIntensity > 0, true);
-assert.equal(panelMaterial(sectors[2], 1).emissiveIntensity, 0, 'METAL 01 does not light the AI Guide FIRE 01 placeholder');
+assert.equal(panelMaterial(sectors[2], 1).emissiveIntensity, 0, 'METAL 01 does not light WOOD 01');
 assert.equal(floor.activatePage({ glyphId: 'ai-guide', order: 1 }), true);
+floor.update(0.05);
+assert.equal(panelMaterial(sectors[2], 1).emissiveIntensity > 0, true);
+assert.equal(panelMaterial(sectors[3], 1).emissiveIntensity > 0, true, 'AI Guide does not alter FIRE 01');
+assert.equal(floor.activatePage({ glyphId: 'ai-guide', order: 1 }), false);
+for (let order = 2; order <= 3; order += 1) assert.equal(floor.activatePage({ glyphId: 'ai-guide', order }), true);
+assert.equal(floor.activatePage({ glyphId: 'ai-guide', order: 4 }), false);
 for (let order = 2; order <= 4; order += 1) assert.equal(floor.activatePage({ glyphId: 'spotify-digger', order }), true);
 for (let order = 2; order <= 5; order += 1) assert.equal(floor.activatePage({ glyphId: 'haiku-cosmos', order }), true);
+for (let order = 2; order <= 3; order += 1) {
+  assert.equal(floor.activatePage({ glyphId: 'creative-ai', order }), true);
+  assert.equal(floor.activatePage({ glyphId: 'ethics-life-protection', order }), true);
+}
+assert.equal(floor.activatePage({ glyphId: 'creative-ai', order: 4 }), false);
+assert.equal(floor.activatePage({ glyphId: 'ethics-life-protection', order: 4 }), false);
+assert.equal(floor.activatePage({ glyphId: 'haiku-cosmos', order: 6 }), false);
 const beforeUnsupported = floor.getActivatedEntries();
 assert.equal(floor.activatePage({ glyphId: 'spotify-digger', order: 4 }), false);
 assert.equal(floor.activatePage({ glyphId: 'spotify-digger', order: 5 }), false);
@@ -144,22 +165,35 @@ assert.ok(floor.getActivatedEntries().some(({ glyphId, order }) => glyphId === '
 for (const missingObject of ['VR_PROGRESS_CARD_WATER_04', 'VR_PROGRESS_CARD_WATER_05']) {
   assert.throws(() => createVrProgressFloor({
     parent: new THREE.Group(), creativeSectorModel: createSectorModel('creative'), ethicsSectorModel: createSectorModel('ethics'),
-    haikuSectorModel: createSectorModel('water', { missingObject }), digSectorModel: createSectorModel('metal')
+    haikuSectorModel: createSectorModel('water', { missingObject }), digSectorModel: createSectorModel('metal'),
+    aiGuideSectorModel: createSectorModel('wood')
   }), new RegExp(`Missing required object "${missingObject}" for sector "haiku-cosmos" \\(source: water\\)`));
 }
 assert.throws(() => createVrProgressFloor({
   parent: new THREE.Group(), creativeSectorModel: createSectorModel('creative'), ethicsSectorModel: createSectorModel('ethics'),
-  haikuSectorModel: createSectorModel('water'), digSectorModel: createSectorModel('metal', { missingObject: 'VR_PROGRESS_CARD_METAL_04' })
+  haikuSectorModel: createSectorModel('water'), digSectorModel: createSectorModel('metal', { missingObject: 'VR_PROGRESS_CARD_METAL_04' }),
+  aiGuideSectorModel: createSectorModel('wood')
 }), /Missing required object "VR_PROGRESS_CARD_METAL_04" for sector "spotify-digger" \(source: metal\)/);
+assert.throws(() => createVrProgressFloor({
+  parent: new THREE.Group(), creativeSectorModel: createSectorModel('creative'), ethicsSectorModel: createSectorModel('ethics'),
+  haikuSectorModel: createSectorModel('water'), digSectorModel: createSectorModel('metal'),
+  aiGuideSectorModel: createSectorModel('wood', { missingObject: 'VR_PROGRESS_CARD_WOOD_03' })
+}), /Missing required object "VR_PROGRESS_CARD_WOOD_03" for sector "ai-guide" \(source: wood\)/);
 assert.throws(() => createVrProgressFloor({
   parent: new THREE.Group(), creativeSectorModel: creativeSource, ethicsSectorModel: ethicsSource, haikuSectorModel: waterSource
 }), /valid DIG Engine sector model/);
+assert.throws(() => createVrProgressFloor({
+  parent: new THREE.Group(), creativeSectorModel: creativeSource, ethicsSectorModel: ethicsSource,
+  haikuSectorModel: waterSource, digSectorModel: metalSource
+}), /valid AI Guide sector model/);
 
 const ownedWaterMaterial = panelMaterial(sectors[1], 1);
 const ownedMetalMaterial = panelMaterial(sectors[0], 1);
+const ownedWoodMaterial = panelMaterial(sectors[2], 1);
 floor.dispose();
 assert.equal(floor.object.parent, null);
 assert.equal(ownedWaterMaterial.version > 0, true, 'owned cloned materials are disposed');
 assert.equal(ownedMetalMaterial.version > 0, true, 'owned cloned Metal materials are disposed');
+assert.equal(ownedWoodMaterial.version > 0, true, 'owned cloned Wood materials are disposed');
 floor.dispose();
 console.log('VR progress floor assertions passed');

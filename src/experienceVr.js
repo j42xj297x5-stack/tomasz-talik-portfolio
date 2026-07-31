@@ -109,6 +109,7 @@ const progressFloor = createVrProgressFloor({
   ethicsSectorModel: assetManager.cloneGltfScene('vr-progress-floor-ethics-model'),
   haikuSectorModel: assetManager.cloneGltfScene('vr-progress-floor-haiku-model'),
   digSectorModel: assetManager.cloneGltfScene('vr-progress-floor-dig-model'),
+  aiGuideSectorModel: assetManager.cloneGltfScene('vr-progress-floor-ai-guide-model'),
   worldYOffset: FLOOR_WORLD_Y_OFFSET
 });
 const monkeyModel = await loadMonkeyModel({ scene: worldRoot, fallbackObject: centralPlaceholder, assetManager });
