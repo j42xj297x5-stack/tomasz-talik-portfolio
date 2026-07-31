@@ -1,10 +1,16 @@
 import assert from 'node:assert/strict';
 import * as THREE from '../src/vendor/three.js';
-import { createVrProgressFloor } from '../src/xr/floor/createVrProgressFloor.js';
+import { createVrProgressFloor, FLOOR_WORLD_Y_OFFSET } from '../src/xr/floor/createVrProgressFloor.js';
 
 function createSectorModel({ missingPanel = null } = {}) {
   const source = new THREE.Group();
   source.name = 'CreativeFloorSource';
+  const sectorBase = new THREE.Mesh(
+    new THREE.BoxGeometry(1, 0.1, 1),
+    [new THREE.MeshStandardMaterial({ color: 0x440000 }), new THREE.MeshStandardMaterial({ color: 0x220000 })]
+  );
+  sectorBase.name = 'VR_PROGRESS_SECTOR_FIRE_BASE';
+  source.add(sectorBase);
   for (let order = 1; order <= 3; order += 1) {
     const name = `VR_PROGRESS_CARD_FIRE_${String(order).padStart(2, '0')}`;
     if (name === missingPanel) continue;
@@ -25,6 +31,10 @@ function panelMaterial(sector, order) {
   return sector.getObjectByName(`VR_PROGRESS_CARD_FIRE_${String(order).padStart(2, '0')}`).material;
 }
 
+function meshMaterials(object) {
+  return Array.isArray(object.material) ? object.material : [object.material];
+}
+
 const parent = new THREE.Group();
 const source = createSectorModel();
 const sourceMaterials = source.children.map(({ material }) => material);
@@ -36,7 +46,8 @@ const floor = createVrProgressFloor({
 const sectors = floor.object.children;
 assert.equal(parent.children[0], floor.object);
 assert.equal(floor.object.name, 'VrTiltableFloorRoot');
-assert.deepEqual(floor.object.position.toArray(), [0, 0, 0]);
+assert.equal(FLOOR_WORLD_Y_OFFSET, -1.05);
+assert.deepEqual(floor.object.position.toArray(), [0, -1.05, 0]);
 assert.deepEqual(floor.object.rotation.toArray().slice(0, 3), [0, 0, 0]);
 assert.deepEqual(floor.object.scale.toArray(), [1, 1, 1]);
 assert.equal(sectors.length, 5);
@@ -45,6 +56,19 @@ sectors.forEach((sector, index) => {
   assert.ok(Math.abs(sector.rotation.y - index * Math.PI * 2 / 5) < 1e-12);
   assert.deepEqual(sector.position.toArray(), [0, 0, 0]);
   for (let order = 1; order <= 3; order += 1) assert.ok(panelMaterial(sector, order));
+  meshMaterials(sector.getObjectByName('VR_PROGRESS_SECTOR_FIRE_BASE')).forEach((material) => {
+    assert.equal(material.transparent, true);
+    assert.equal(material.opacity, 0);
+    assert.equal(material.depthWrite, false);
+  });
+  for (let order = 1; order <= 3; order += 1) {
+    const material = panelMaterial(sector, order);
+    assert.equal(material.opacity, 1, 'progress panels remain visible');
+    assert.equal(material.depthWrite, true, 'progress panels retain depth writing');
+  }
+  const ornamentMaterial = sector.getObjectByName('Ornament').material;
+  assert.equal(ornamentMaterial.opacity, 1, 'ornament remains visible');
+  assert.equal(ornamentMaterial.depthWrite, true, 'ornament retains depth writing');
 });
 
 for (let index = 0; index < sectors.length; index += 1) {
@@ -54,7 +78,7 @@ for (let index = 0; index < sectors.length; index += 1) {
   });
 }
 assert.notEqual(panelMaterial(sectors[0], 1), panelMaterial(sectors[1], 1));
-assert.equal(sourceMaterials[0].emissiveIntensity, 1);
+assert.equal(source.getObjectByName('VR_PROGRESS_CARD_FIRE_01').material.emissiveIntensity, 1);
 assert.notEqual(panelMaterial(sectors[0], 1).emissive.getHex(), 0, 'black panel emission receives the warm fallback');
 
 assert.equal(floor.activateOrder(1), true);

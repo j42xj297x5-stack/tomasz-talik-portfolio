@@ -20,7 +20,7 @@ import { createVrCrystalCollection } from './xr/createVrCrystalCollection.js';
 import { createVrCrystalReliquary } from './xr/createVrCrystalReliquary.js';
 import { createVrReliquaryActivateButton } from './xr/createVrReliquaryActivateButton.js';
 import { createVrReliquaryReleaseButton } from './xr/createVrReliquaryReleaseButton.js';
-import { createVrProgressFloor } from './xr/floor/createVrProgressFloor.js';
+import { createVrProgressFloor, FLOOR_WORLD_Y_OFFSET } from './xr/floor/createVrProgressFloor.js';
 import { getExperienceVrPages, resolveExperienceVrPage } from './content/experienceVrPages.js';
 
 const app = document.querySelector('#app');
@@ -105,7 +105,8 @@ await preloadAssets(vrAssets, {
 unsubscribe();
 const progressFloor = createVrProgressFloor({
   parent: worldRoot,
-  sectorModel: assetManager.cloneGltfScene('vr-progress-floor-model')
+  sectorModel: assetManager.cloneGltfScene('vr-progress-floor-model'),
+  worldYOffset: FLOOR_WORLD_Y_OFFSET
 });
 const monkeyModel = await loadMonkeyModel({ scene: worldRoot, fallbackObject: centralPlaceholder, assetManager });
 const resolvedPortfolioNodes = resolvePortfolioNodes(language);
