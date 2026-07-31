@@ -42,8 +42,10 @@ Because each physical instance is assigned a concrete page at spawn and Activate
 
 `activatedPageIds` is the activation registry. Activation records a page immediately; `hasActivatedPage()` and copy-returning `getActivatedPageIds()` expose it. `hasReadPage()` and `getReadPageIds()` are compatibility aliases to the same registry, not a distinct read-progress system. `isLevelComplete()` checks for 18 activated IDs, but no victory sequence or next level exists.
 
+The scene also contains a prototype progress floor at the world origin. It assembles a full circle from five unshifted copies of the Creative AI `floor_creative.glb` sector, rotated at 72-degree intervals. Activating a page with `order` 1, 2 or 3 temporarily pulses and then steadily illuminates the corresponding authored panel in all five sectors. This global order-based mapping is deliberately temporary: it is not the final five-branch mapping and is not a central progression system.
+
 `createVrCrystalCollection.reset()` deliberately removes transient crystal instances while preserving `activatedPageIds` for the lifetime of the already prepared page runtime. Consequently activated pages cannot respawn after ending and re-entering an XR session on that page. Navigation or reload creates a fresh runtime. There is no `localStorage`, server save, versioned save data, persistent progress UI or full-game reset contract.
 
 ## Explicitly absent from the current runtime
 
-The approved roadmap's branch-bound crystals, Activate-time sequential page resolver, central progression controller, progress floor/sectors/rings, gameplay tiers, shells, assembly orb, hand tools, small glyphs, tilting floor, runes, final radar, completion sequence and durable save system are not implemented.
+The approved roadmap's branch-bound crystals, Activate-time sequential page resolver, central progression controller, final branch-mapped floor progression and global rings, gameplay tiers, shells, assembly orb, hand tools, small glyphs, floor tilting, runes, final radar, completion sequence and durable save system are not implemented. The current five-sector floor is only the bounded visual prototype described above.

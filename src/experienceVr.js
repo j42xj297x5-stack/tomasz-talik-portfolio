@@ -20,6 +20,7 @@ import { createVrCrystalCollection } from './xr/createVrCrystalCollection.js';
 import { createVrCrystalReliquary } from './xr/createVrCrystalReliquary.js';
 import { createVrReliquaryActivateButton } from './xr/createVrReliquaryActivateButton.js';
 import { createVrReliquaryReleaseButton } from './xr/createVrReliquaryReleaseButton.js';
+import { createVrProgressFloor, FLOOR_WORLD_Y_OFFSET } from './xr/floor/createVrProgressFloor.js';
 import { getExperienceVrPages, resolveExperienceVrPage } from './content/experienceVrPages.js';
 
 const app = document.querySelector('#app');
@@ -86,7 +87,7 @@ const centralPlaceholder = createCentralObject();
 worldRoot.add(centralPlaceholder);
 
 const vrAssets = getPreloadAssets([...INITIAL_PRELOAD_GROUPS, ...DEFERRED_PRELOAD_GROUPS])
-  .filter(({ id }) => id === 'gltf-loader-module' || id === 'monkey-model' || id === 'vr-portal-model' || id === 'vr-crystal-reliquary-model' || id.startsWith('vr-crystal-reliquary-button-') || id.startsWith('glyph-') || id.startsWith('vr-crystal-'))
+  .filter(({ id }) => id === 'gltf-loader-module' || id === 'monkey-model' || id === 'vr-portal-model' || id === 'vr-progress-floor-model' || id === 'vr-crystal-reliquary-model' || id.startsWith('vr-crystal-reliquary-button-') || id.startsWith('glyph-') || id.startsWith('vr-crystal-'))
   .map((asset) => ({ ...asset, critical: asset.id === 'gltf-loader-module' }));
 const loadingDiagnostics = createLoadingDiagnostics(vrAssets);
 const assetManager = createAssetManager({ diagnostics: loadingDiagnostics });
@@ -102,6 +103,11 @@ await preloadAssets(vrAssets, {
   markComplete: true
 });
 unsubscribe();
+const progressFloor = createVrProgressFloor({
+  parent: worldRoot,
+  sectorModel: assetManager.cloneGltfScene('vr-progress-floor-model'),
+  worldYOffset: FLOOR_WORLD_Y_OFFSET
+});
 const monkeyModel = await loadMonkeyModel({ scene: worldRoot, fallbackObject: centralPlaceholder, assetManager });
 const resolvedPortfolioNodes = resolvePortfolioNodes(language);
 const { group: glyphRing, nodes } = createOrbitNodes(resolvedPortfolioNodes, { assetManager });
@@ -138,6 +144,7 @@ const crystalCollection = createVrCrystalCollection({
   scene, assetManager, controllers: vrControllers.controllers, portalDisplay, insertionTarget: crystalReliquary, settings: settings.crystals,
   onActivate: (page) => {
     portalCanvas.show(resolveExperienceVrPage(page, language));
+    progressFloor.activateOrder(page.order);
   }
 });
 const activateButtonGltf = assetManager.getGltf('vr-crystal-reliquary-button-activate-model');
@@ -209,6 +216,7 @@ function renderFrame() {
   glyphRing.updateMatrixWorld(true);
   glyphInteraction.update(delta);
   crystalCollection.update(delta);
+  progressFloor.update(delta);
   activateButton.update(delta);
   releaseButton.update(delta);
   glyphLights.update({
@@ -309,5 +317,6 @@ window.addEventListener('pagehide', () => {
   releaseButton.dispose();
   crystalCollection.dispose();
   crystalReliquary.dispose();
+  progressFloor.dispose();
 }, { once: true });
 showReadyState();
