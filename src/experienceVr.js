@@ -107,6 +107,7 @@ const progressFloor = createVrProgressFloor({
   parent: worldRoot,
   creativeSectorModel: assetManager.cloneGltfScene('vr-progress-floor-creative-model'),
   ethicsSectorModel: assetManager.cloneGltfScene('vr-progress-floor-ethics-model'),
+  haikuSectorModel: assetManager.cloneGltfScene('vr-progress-floor-haiku-model'),
   worldYOffset: FLOOR_WORLD_Y_OFFSET
 });
 const monkeyModel = await loadMonkeyModel({ scene: worldRoot, fallbackObject: centralPlaceholder, assetManager });
@@ -145,7 +146,7 @@ const crystalCollection = createVrCrystalCollection({
   scene, assetManager, controllers: vrControllers.controllers, portalDisplay, insertionTarget: crystalReliquary, settings: settings.crystals,
   onActivate: (page) => {
     portalCanvas.show(resolveExperienceVrPage(page, language));
-    progressFloor.activateOrder(page.order);
+    progressFloor.activatePage(page);
   }
 });
 const activateButtonGltf = assetManager.getGltf('vr-crystal-reliquary-button-activate-model');
