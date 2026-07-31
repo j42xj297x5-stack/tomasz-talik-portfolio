@@ -69,6 +69,7 @@ const criticalInitialAssets = Object.freeze([
 const deferredWarmAssets = Object.freeze([
   withStage({ id: 'vr-progress-floor-creative-model', label: 'VR Creative progress floor sector model', path: '/glb/floor_creative.glb', type: 'model' }, ASSET_STAGES.DEFERRED_WARM),
   withStage({ id: 'vr-progress-floor-ethics-model', label: 'VR Ethics progress floor sector model', path: '/glb/floor_ethic.glb', type: 'model' }, ASSET_STAGES.DEFERRED_WARM),
+  withStage({ id: 'vr-progress-floor-haiku-model', label: 'VR Haiku Cosmos progress floor sector model', path: '/glb/floor_haicu_cosmos.glb', type: 'model' }, ASSET_STAGES.DEFERRED_WARM),
   withStage({ id: 'vr-portal-model', label: 'VR arrival portal model', path: '/glb/portal.glb', type: 'model' }, ASSET_STAGES.DEFERRED_WARM),
   withStage({ id: 'vr-crystal-reliquary-model', label: 'VR crystal reliquary model', path: '/glb/portal_crystal_reliquary.glb', type: 'model' }, ASSET_STAGES.DEFERRED_WARM),
   withStage({ id: 'vr-crystal-reliquary-button-activate-model', label: 'VR crystal reliquary activate button', path: '/glb/portal_crystal_reliquary_button_activate.glb', type: 'model' }, ASSET_STAGES.DEFERRED_WARM),
