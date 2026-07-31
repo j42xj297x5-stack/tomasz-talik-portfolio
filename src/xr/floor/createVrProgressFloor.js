@@ -1,12 +1,24 @@
 import * as THREE from '../../vendor/three.js';
 
-const SECTOR_COUNT = 5;
-const SECTOR_BASE_NAME = 'VR_PROGRESS_SECTOR_FIRE_BASE';
-const PANEL_NAMES = Object.freeze([
-  'VR_PROGRESS_CARD_FIRE_01',
-  'VR_PROGRESS_CARD_FIRE_02',
-  'VR_PROGRESS_CARD_FIRE_03'
+const SOURCE_CONTRACTS = Object.freeze({
+  creative: Object.freeze({
+    baseName: 'VR_PROGRESS_SECTOR_FIRE_BASE',
+    panelNames: Object.freeze(['VR_PROGRESS_CARD_FIRE_01', 'VR_PROGRESS_CARD_FIRE_02', 'VR_PROGRESS_CARD_FIRE_03'])
+  }),
+  ethics: Object.freeze({
+    baseName: 'VR_PROGRESS_SECTOR_EARTH_BASE',
+    panelNames: Object.freeze(['VR_PROGRESS_CARD_EARTH_01', 'VR_PROGRESS_CARD_EARTH_02', 'VR_PROGRESS_CARD_EARTH_03'])
+  })
+});
+
+const SECTOR_LAYOUT = Object.freeze([
+  Object.freeze({ glyphId: 'spotify-digger', branchId: 'metal', placeholder: true, sourceType: 'creative' }),
+  Object.freeze({ glyphId: 'haiku-cosmos', branchId: 'water', placeholder: true, sourceType: 'creative' }),
+  Object.freeze({ glyphId: 'ai-guide', branchId: 'wood', placeholder: true, sourceType: 'creative' }),
+  Object.freeze({ glyphId: 'creative-ai', branchId: 'fire', placeholder: false, sourceType: 'creative' }),
+  Object.freeze({ glyphId: 'ethics-life-protection', branchId: 'earth', placeholder: false, sourceType: 'ethics' })
 ]);
+const SECTOR_COUNT = SECTOR_LAYOUT.length;
 
 export const VR_PROGRESS_FLOOR_EMISSION = Object.freeze({
   stableIntensity: 1.35,
@@ -50,9 +62,16 @@ function getPanelMaterials(panel, fallbackColor) {
   return [...materials];
 }
 
-function makeSectorBaseTransparent(sector) {
-  const base = sector.getObjectByName(SECTOR_BASE_NAME);
-  if (!base) return;
+function requireSectorObject(sector, objectName, sectorConfig) {
+  const object = sector.getObjectByName(objectName);
+  if (!object) {
+    throw new Error(`[VrProgressFloor] Missing required object "${objectName}" for sector "${sectorConfig.glyphId}" (source: ${sectorConfig.sourceType}).`);
+  }
+  return object;
+}
+
+function makeSectorBaseTransparent(sector, baseName, sectorConfig) {
+  const base = requireSectorObject(sector, baseName, sectorConfig);
   base.traverse((object) => {
     if (!object.isMesh || !object.material) return;
     const materials = Array.isArray(object.material) ? object.material : [object.material];
@@ -65,38 +84,53 @@ function makeSectorBaseTransparent(sector) {
   });
 }
 
-export function createVrProgressFloor({ parent, sectorModel, emission = {}, worldYOffset = FLOOR_WORLD_Y_OFFSET }) {
+export function createVrProgressFloor({
+  parent,
+  creativeSectorModel,
+  ethicsSectorModel,
+  emission = {},
+  worldYOffset = FLOOR_WORLD_Y_OFFSET
+}) {
   if (!parent?.add) throw new Error('[VrProgressFloor] A valid parent is required.');
-  if (!sectorModel?.clone) throw new Error('[VrProgressFloor] A valid sector model is required.');
+  if (!creativeSectorModel?.clone) throw new Error('[VrProgressFloor] A valid Creative sector model is required.');
+  if (!ethicsSectorModel?.clone) throw new Error('[VrProgressFloor] A valid Ethics sector model is required.');
 
   const config = { ...VR_PROGRESS_FLOOR_EMISSION, ...emission };
   const object = new THREE.Group();
   object.name = 'VrTiltableFloorRoot';
   object.position.y = worldYOffset;
   const ownedMaterials = new Set();
-  const panelsByOrder = new Map(PANEL_NAMES.map((_, index) => [index + 1, []]));
+  const panelsByOrder = new Map([1, 2, 3].map((order) => [order, []]));
   const activatedOrders = new Set();
   const pulseRemaining = new Map();
   let disposed = false;
 
   try {
-    for (let index = 0; index < SECTOR_COUNT; index += 1) {
-      const sectorNumber = index + 1;
-      const sector = sectorModel.clone(true);
-      sector.name = `VrProgressFloorSector:${String(sectorNumber).padStart(2, '0')}`;
+    SECTOR_LAYOUT.forEach((sectorConfig, index) => {
+      const sourceModel = sectorConfig.sourceType === 'ethics' ? ethicsSectorModel : creativeSectorModel;
+      const contract = SOURCE_CONTRACTS[sectorConfig.sourceType];
+      const sector = sourceModel.clone(true);
+      sector.name = `VrProgressFloorSector:${sectorConfig.glyphId}`;
       sector.rotation.y = index * (Math.PI * 2 / SECTOR_COUNT);
+      sector.userData = {
+        ...sector.userData,
+        glyphId: sectorConfig.glyphId,
+        branchId: sectorConfig.branchId,
+        rotationIndex: index,
+        placeholder: sectorConfig.placeholder,
+        sourceType: sectorConfig.sourceType
+      };
       cloneMaterials(sector, ownedMaterials);
-      makeSectorBaseTransparent(sector);
-      PANEL_NAMES.forEach((panelName, panelIndex) => {
-        const panel = sector.getObjectByName(panelName);
-        if (!panel) throw new Error(`[VrProgressFloor] Missing required object "${panelName}" in sector ${sectorNumber}.`);
+      makeSectorBaseTransparent(sector, contract.baseName, sectorConfig);
+      contract.panelNames.forEach((panelName, panelIndex) => {
+        const panel = requireSectorObject(sector, panelName, sectorConfig);
         panelsByOrder.get(panelIndex + 1).push({
           object: panel,
           materials: getPanelMaterials(panel, config.fallbackColor)
         });
       });
       object.add(sector);
-    }
+    });
   } catch (error) {
     ownedMaterials.forEach((material) => material.dispose());
     throw error;

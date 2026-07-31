@@ -87,7 +87,7 @@ const centralPlaceholder = createCentralObject();
 worldRoot.add(centralPlaceholder);
 
 const vrAssets = getPreloadAssets([...INITIAL_PRELOAD_GROUPS, ...DEFERRED_PRELOAD_GROUPS])
-  .filter(({ id }) => id === 'gltf-loader-module' || id === 'monkey-model' || id === 'vr-portal-model' || id === 'vr-progress-floor-model' || id === 'vr-crystal-reliquary-model' || id.startsWith('vr-crystal-reliquary-button-') || id.startsWith('glyph-') || id.startsWith('vr-crystal-'))
+  .filter(({ id }) => id === 'gltf-loader-module' || id === 'monkey-model' || id === 'vr-portal-model' || id.startsWith('vr-progress-floor-') || id === 'vr-crystal-reliquary-model' || id.startsWith('vr-crystal-reliquary-button-') || id.startsWith('glyph-') || id.startsWith('vr-crystal-'))
   .map((asset) => ({ ...asset, critical: asset.id === 'gltf-loader-module' }));
 const loadingDiagnostics = createLoadingDiagnostics(vrAssets);
 const assetManager = createAssetManager({ diagnostics: loadingDiagnostics });
@@ -105,7 +105,8 @@ await preloadAssets(vrAssets, {
 unsubscribe();
 const progressFloor = createVrProgressFloor({
   parent: worldRoot,
-  sectorModel: assetManager.cloneGltfScene('vr-progress-floor-model'),
+  creativeSectorModel: assetManager.cloneGltfScene('vr-progress-floor-creative-model'),
+  ethicsSectorModel: assetManager.cloneGltfScene('vr-progress-floor-ethics-model'),
   worldYOffset: FLOOR_WORLD_Y_OFFSET
 });
 const monkeyModel = await loadMonkeyModel({ scene: worldRoot, fallbackObject: centralPlaceholder, assetManager });
