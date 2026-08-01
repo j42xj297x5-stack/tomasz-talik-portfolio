@@ -2,7 +2,7 @@
 
 **Projekt:** `tomasz-talik-portfolio`
 **Tryb:** `Experience VR`
-**Data opracowania:** 2026-07-30
+**Stan roadmapy:** 2026-08-01
 **Status:** zatwierdzony kierunek przyszłego gameplayu i operacyjna roadmapa; nie jest opisem bieżącego runtime
 **Urządzenie docelowe:** Meta Quest 3S / Meta Quest Browser
 **Technologia runtime:** Three.js + WebXR + Vite
@@ -30,7 +30,7 @@ Dokument rozdziela:
 2. **kierunek docelowy** — mechaniki opisane i zaakceptowane w bieżącym wątku;
 3. **kolejność wdrożenia** — etapy, których nie należy realizować jednocześnie.
 
-Nie jest to kanoniczny opis kodu ani lista funkcji już wdrożonych. Wszystkie mechaniki docelowe i checklisty poniżej pozostają planem, dopóki osobne zadanie nie zmieni kodu i testów. Po wdrożeniu większych etapów aktualny model techniczny VR i handoff projektu muszą zostać zsynchronizowane osobnym zadaniem dokumentacyjnym.
+Nie jest to kanoniczny opis kodu. Checklisty jawnie oznaczają elementy wykonane i nadal planowane; kontrakt bieżącego runtime opisują modele techniczne oraz handoff.
 
 ---
 
@@ -79,7 +79,7 @@ Obowiązujące fundamenty:
 - reset i ponowne wejście do sesji nie mogą tworzyć duplikatów modeli, listenerów ani mixerów;
 - ręczne testy na Meta Quest są osobną bramką jakości i nie mogą być zastępowane testami automatycznymi.
 
-### 3.1. Potwierdzone ograniczenie bieżącej implementacji
+### 3.1. Potwierdzony kontrakt bieżącej implementacji
 
 Aktualny runtime zawiera **18 logicznych kart** w układzie `3 / 3 / 3 / 4 / 5` oraz **15 współdzielonych modeli GLB** — po trzy warianty wizualne na każdą z pięciu gałęzi. Karty 4 i 5 ponownie wykorzystują warianty danej gałęzi.
 
@@ -133,7 +133,7 @@ Próg 5 zamyka Wodę i całą grę.
 
 ---
 
-## 5. Docelowy kontrakt kryształów
+## 5. Obowiązujący kontrakt kryształów
 
 ### 5.1. Kryształ jest nośnikiem gałęzi
 
@@ -144,7 +144,7 @@ Fizyczny kryształ nie posiada na stałe:
 - numeru części tekstu;
 - numeru kolejności odczytu.
 
-Powinien zawierać wyłącznie dane instancji:
+Zawiera wyłącznie dane instancji:
 
 ```js
 {
@@ -192,7 +192,7 @@ pozostałe karty gałęzi
 
 ### 5.4. Aktywacja i przeczytanie
 
-Rekomendowane osobne rejestry:
+Bieżący controller utrzymuje rejestr aktywowanych stron. Osobny rejestr odczytów pozostaje opcjonalnym kierunkiem:
 
 ```js
 activatedPageIds
@@ -651,11 +651,13 @@ Winieta, ograniczona amplituda lub stabilizacja mogą zostać dodane po testach,
 
 Nie należy implementować progów wewnątrz losowych modułów glifów, podłogi lub relikwiarza.
 
-Potrzebny jest jeden właściciel stanu, roboczo:
+Właścicielem zatwierdzonej progresji jest istniejący:
 
 ```text
 VrProgressionController
 ```
+
+Bieżący controller obejmuje aktywowane strony, walidację branch+tier, progi 1–5 i zapytania o ich ukończenie. Poniższy model pokazuje planowane rozszerzenie o późniejsze systemy gry:
 
 Przykładowy model:
 
@@ -900,14 +902,14 @@ Zdefiniować dane i zasady przed rozbudową grafiki i mechanik.
 
 ## TODO
 
-- [ ] Potwierdzić stabilne `branchId` pięciu gałęzi.
-- [ ] Ustalić docelowe 18 `page.id`.
-- [ ] Przypisać każdej stronie `branchId`, `order` i `tier`.
-- [ ] Potwierdzić mapowanie portfolio → element.
-- [ ] Zdefiniować warunki progów 1–5.
+- [x] Potwierdzić stabilne `branchId` pięciu gałęzi.
+- [x] Ustalić docelowe 18 `page.id`.
+- [x] Przypisać każdej stronie `branchId`, `order` i `tier`.
+- [x] Potwierdzić mapowanie portfolio → element.
+- [x] Zdefiniować warunki progów 1–5.
 - [ ] Zdefiniować odblokowywane możliwości.
 - [ ] Ustalić liczbę skorup potrzebnych do kuli.
-- [ ] Ustalić, które dane przeżywają reset sesji.
+- [x] Ustalić, które dane przeżywają reset sesji.
 - [ ] Ustalić późniejszą trwałość po odświeżeniu strony.
 - [ ] Przygotować tryb debug do ustawiania fazy gry.
 
@@ -925,19 +927,19 @@ Kryształ nie niesie strony; Activate wybiera następną kartę gałęzi.
 
 ## TODO
 
-- [ ] Wykonać punktowy audyt obecnego `experienceVrPages` i `createVrCrystalCollection`.
-- [ ] Usunąć trwałe powiązanie instancji kryształu z `page.id`.
-- [ ] Zachować `glyphId`, `branchId`, wariant modelu i stan instancji.
-- [ ] Dodać `getNextUnactivatedPage(branchId)`.
-- [ ] Rozwiązywać stronę dopiero w `activateInserted()`.
+- [x] Wykonać punktowy audyt `experienceVrPages` i `createVrCrystalCollection`.
+- [x] Usunąć trwałe powiązanie instancji kryształu z `page.id`.
+- [x] Zachować `glyphId`, `branchId`, tier, wariant modelu i stan instancji.
+- [x] Dodać resolver strony dla `branchId + tier` w controllerze.
+- [x] Rozwiązywać stronę dopiero w `activateInserted()`.
 - [x] Zapisywać progres podczas Release po Activate.
-- [ ] Nie zmieniać progresji podczas samego insertion.
-- [ ] Nie cofać progresji podczas Release.
-- [ ] Ograniczyć spawn nadmiarowych kryształów.
-- [ ] Obsłużyć ukończoną gałąź bez konsumpcji kryształu.
-- [ ] Dodać test wielu kryształów wkładanych w dowolnej kolejności.
-- [ ] Dodać test sekwencji 1 → 2 → 3 → 4 → 5.
-- [ ] Zachować pełny state machine kryształu.
+- [x] Nie zmieniać progresji podczas insertion ani Activate.
+- [x] Zatwierdzać progresję wyłącznie podczas Release po Activate.
+- [x] Ograniczyć spawn do kolejnych niepokrytych kart gałęzi.
+- [x] Zatrzymać spawn po pokryciu wszystkich kart gałęzi.
+- [x] Dodać test magazynowania i kolejności kryształów.
+- [x] Dodać test globalnej sekwencji tierów 1 → 2 → 3 → 4 → 5.
+- [x] Zachować state machine z `rejecting` i `consuming`.
 - [ ] Przetestować cykl na Quest.
 
 ## Bramka
@@ -954,16 +956,16 @@ Zbudować jednego właściciela progresji i progów.
 
 ## TODO
 
-- [ ] Utworzyć definicję 18 kart.
+- [x] Utworzyć definicję 18 kart.
 - [ ] Dodać `branchProgress`.
 - [ ] Dodać `completedTiers`.
 - [ ] Dodać `completedBranches`.
 - [ ] Dodać `capabilities`.
-- [ ] Podpiąć `cardActivated` do Activate.
-- [ ] Przeliczać postęp gałęzi po aktywacji.
-- [ ] Przeliczać globalne progi po aktywacji.
-- [ ] Emitować `tierCompleted` tylko raz.
-- [ ] Zachować progres podczas resetu przygotowanego runtime.
+- [x] Zatwierdzać stronę podczas Release po Activate.
+- [x] Przeliczać zatwierdzone strony gałęzi.
+- [x] Przeliczać globalne progi po commit podczas Release.
+- [x] Zapewnić idempotentne wizualne `completeTier()`.
+- [x] Zachować progres podczas resetu przygotowanego runtime.
 - [ ] Dodać kontrolowany pełny reset gry.
 - [ ] Dodać API debug do ustawiania postępu.
 
@@ -975,9 +977,9 @@ Testy mogą aktywować karty bez sceny 3D i poprawnie uzyskiwać progi oraz uko�
 
 # ETAP 3 — techniczny fundament podłogi
 
-## Stan implementacji na 2026-07-31
+## Stan implementacji na 2026-08-01
 
-Wizualny fundament powstał niezależnie od `VrProgressionController`. Pięć autorskich GLB jest preloadowanych przez `AssetManager` i złożonych co 72° pod wspólnym, nieruchomym rootem runtime `VrTiltableFloorRoot`. Stabilne identyfikatory baz i pól pozwalają mapować 18 pól do 18 kart oraz sterować każdym polem niezależnie. Szczegóły bieżącego kontraktu opisuje [VR Progress Floor Model](../technical/VR_PROGRESS_FLOOR_MODEL.md). Nie oznacza to wdrożenia progów, pierścieni ani ruchomej podłogi.
+Pięć autorskich GLB jest preloadowanych przez `AssetManager` i złożonych co 72° pod wspólnym, nieruchomym rootem `VrTiltableFloorRoot`. Stabilne identyfikatory mapują 18 pól do 18 kart. Controller obsługuje progi, a podłoga pięć pełnych globalnych ringów. Nie oznacza to wdrożenia progresywnego tła sektorów ani ruchomej podłogi. Szczegóły opisuje [VR Progress Floor Model](../technical/VR_PROGRESS_FLOOR_MODEL.md).
 
 ## Cel
 
@@ -1000,7 +1002,7 @@ Dodać stabilny root, powierzchnię, anchory i dane pięciu sektorów.
 - [x] Umieścić pięć sektorów bez lokalnego przesunięcia.
 - [x] Powiązać 18 pól z 18 kartami przez `glyphId + order`.
 - [x] Sterować polami niezależnie.
-- [ ] Dodać niezależną warstwę globalnych okręgów.
+- [x] Dodać pięć niezależnych pełnych globalnych okręgów.
 - [ ] Dodać tryb debugowego podświetlenia pól.
 - [ ] Zweryfikować brak z-fightingu na urządzeniu.
 - [ ] Zweryfikować czytelność na Meta Quest.
@@ -1015,7 +1017,7 @@ Kontrakt identyfikatorów, pozycji i niezależnego sterowania jest pokryty teste
 
 ## Cel
 
-Aktywacja karty docelowo zmienia odpowiadające pole, sektor i globalny okrąg. Bieżący runtime realizuje wyłącznie część dotyczącą właściwego pola.
+Commit karty podczas Release zmienia odpowiadające pole i po ukończeniu tieru jego globalny okrąg. Progresywne tło sektora pozostaje planem.
 
 ## TODO
 
@@ -1026,13 +1028,13 @@ Aktywacja karty docelowo zmienia odpowiadające pole, sektor i globalny okrąg. 
 - [x] Dodać niezależne kolory pięciu gałęzi.
 - [x] Podświetlać niezależnie właściwe pole przez `glyphId + order`.
 - [ ] Dodać prawie biały rdzeń i kolorowe halo.
-- [ ] Dodać globalne pierścienie i podświetlenie pełnego okręgu po `tierCompleted`.
+- [x] Dodać pięć pełnych pierścieni z impulsem po pierwszym ukończeniu tieru.
 - [ ] Zrobić wariant wydajnościowy bez pełnego postprocessingu.
 - [ ] Przetestować wydajność oraz limity przezroczystości i overdraw na Quest.
 
 ## Bramka
 
-Obecnie potwierdzony jest tylko łańcuch `Activate → page → glyphId + order → właściwe pole`. Docelowy łańcuch z kolejną kartą, sektorem, globalnym progiem i pełnym okręgiem pozostaje niewdrożony.
+Zaimplementowany łańcuch to `Activate preview → Release commit → glyphId + order → właściwe pole → test tieru → pełny ring`. Otwarte pozostają tło sektora, gradient i bramka sprzętowa Quest.
 
 ---
 
@@ -1338,35 +1340,17 @@ Dźwięk nie może być wymagany do zrozumienia mechaniki.
 
 ## 14. Najbliższa realna kolejka prac
 
-Nie należy od razu realizować całej roadmapy.
-
-Najbliższe kroki:
+Fundament `branch+tier → Activate preview → Release commit → panel → tier test → ring → consuming` jest wykonany. Kolejka dalszej wizji zaczyna się od niewdrożonych warstw:
 
 ```text
-1. Branch/tier resolver kart podczas Activate i commit podczas Release.
-2. Minimalny model 18 kart i `VrProgressionController` dla progów 1–5.
-3. Zachowanie istniejącego fundamentu pięciu GLB; przygotowanie nadal brakujących pięciu SVG.
-4. Integracja nadal brakujących warstw sektorów i globalnych pierścieni.
-5. Rozszerzenie istniejącego podłączenia pól do aktywacji kart o postęp kontrolera.
-6. Zdarzenie ukończenia progu 1.
-7. Testowa skorupa jako dowód zmiany świata.
-8. Dopiero potem narzędzie prawej ręki i budowa kuli.
+1. Progresywne tło sektorów i miękka granica gradientowa.
+2. Centralny progression core.
+3. Zdarzenie ukończenia tieru 1 i world transition.
+4. Testowa skorupa jako dowód zmiany świata.
+5. Dopiero potem narzędzia dłoni i budowa kuli.
 ```
 
-Pierwszym pełnym pionowym wycinkiem powinno być:
-
-```text
-pozyskanie kryształu
-→ włożenie do relikwiarza
-→ Activate wybiera następną kartę
-→ pole zapala się
-→ sektor rozwija podświetlenie
-→ po pięciu kartach próg 1 zamyka okrąg
-→ świat zmienia orbitę glifów
-→ pojawia się skorupa
-```
-
-Ten łańcuch jest kręgosłupem całej gry.
+Pierwszy niewykonany pionowy wycinek powinien połączyć ukończenie tieru 1 z czytelną zmianą świata, bez naruszania istniejącego kontraktu preview/commit.
 
 ---
 
@@ -1378,7 +1362,7 @@ Nie łączyć w jednym promptcie:
 
 - audytu kryształów;
 - zmiany modelu stron;
-- pełnego progression controllera;
+- rozszerzenia progression controllera o dalsze systemy;
 - assetów podłogi;
 - shaderów;
 - skorup;
@@ -1483,7 +1467,7 @@ Minimalizacja:
 
 ---
 
-## 17. Decyzje już przyjęte
+## 17. Przyjęty kierunek docelowy (nie oznacza implementacji)
 
 - [x] Experience VR pozostaje osobnym runtime’em.
 - [x] Gra ma 18 kart w układzie `3 / 3 / 3 / 4 / 5`.
@@ -1492,7 +1476,7 @@ Minimalizacja:
 - [x] Gracz może magazynować kryształy.
 - [x] Podłoga ma pięć sektorów po 72°.
 - [x] Podłoga ma pięć pasów progresji wyznaczonych czterema wewnętrznymi okręgami.
-- [x] Pola pulsują, a tło sektora podświetla się do aktualnego pola z gradientem.
+- [ ] Docelowo tło sektora podświetla się do aktualnego pola z gradientem; obecnie wykonane są impuls i stabilny blask pojedynczych pól.
 - [x] Globalne progi mają osobną warstwę kręgów.
 - [x] Próg 1 podnosi glify i uruchamia skorupy.
 - [x] Skorupy budują świetlistą kulę nad relikwiarzem.
@@ -1565,4 +1549,4 @@ Bez tej poprawki:
 - magazynowanie kryształów będzie niszczyło narrację progresji;
 - wszystkie dalsze mechaniki będą budowane na błędnym fundamencie.
 
-Podłoga podświetla pole dopiero po zatwierdzeniu strony przez Release. Minimalny `VrProgressionController` obsługuje karty i progi 1–5; globalne pierścienie, przechylanie i pełny system capabilities pozostają poza bieżącym runtime.
+Podłoga podświetla pole dopiero po zatwierdzeniu strony przez Release. Minimalny `VrProgressionController` obsługuje karty i progi 1–5, a pięć globalnych ringów wizualizuje ukończone tiery. Poza runtime pozostają progresywne tło sektorów, centralny core, world transition po tierze 1, przechylanie i pełny system capabilities.

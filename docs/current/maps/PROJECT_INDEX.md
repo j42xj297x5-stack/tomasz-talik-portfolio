@@ -28,7 +28,7 @@ The entry shell exposes three modes: Classic 2D, Experience 3D, and capability-g
 - [`technical/ARCHITECTURE.md`](../technical/ARCHITECTURE.md) — module boundaries.
 - [`technical/CONTENT_MODEL.md`](../technical/CONTENT_MODEL.md) — shared portfolio records.
 - [`decisions/DECISION_LOG.md`](../decisions/DECISION_LOG.md) — currently binding decisions.
-- [`concept/EXPERIENCE_VR_GAMEPLAY_ROADMAP.md`](../concept/EXPERIENCE_VR_GAMEPLAY_ROADMAP.md) — approved future gameplay direction; not current runtime state.
+- [`concept/EXPERIENCE_VR_GAMEPLAY_ROADMAP.md`](../concept/EXPERIENCE_VR_GAMEPLAY_ROADMAP.md) — future gameplay direction with implemented-stage status; technical models remain runtime authority.
 
 ## Scope rules
 

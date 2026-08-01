@@ -23,6 +23,6 @@
 - [`technical/VR_RUNTIME_MODEL.md`](technical/VR_RUNTIME_MODEL.md)
 - [`technical/VR_PROGRESS_FLOOR_MODEL.md`](technical/VR_PROGRESS_FLOOR_MODEL.md)
 - [`handoffs/EXPERIENCE_VR_HANDOFF.md`](handoffs/EXPERIENCE_VR_HANDOFF.md)
-- [`concept/EXPERIENCE_VR_GAMEPLAY_ROADMAP.md`](concept/EXPERIENCE_VR_GAMEPLAY_ROADMAP.md) — approved future direction, not implemented runtime.
+- [`concept/EXPERIENCE_VR_GAMEPLAY_ROADMAP.md`](concept/EXPERIENCE_VR_GAMEPLAY_ROADMAP.md) — future direction with explicit implemented/planned status.
 - [`operations/DOCUMENTATION_WORKFLOW.md`](operations/DOCUMENTATION_WORKFLOW.md)
 - [`decisions/DECISION_LOG.md`](decisions/DECISION_LOG.md)
