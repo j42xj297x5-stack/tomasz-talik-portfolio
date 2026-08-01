@@ -18,7 +18,7 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
   },
   controllers: {
     enabled: true,
-    rayLength: 2,
+    rayLength: 2.3,
     rayOpacity: 0.8,
     rayDiameter: 0.010,
     rayTipFraction: 0.08,

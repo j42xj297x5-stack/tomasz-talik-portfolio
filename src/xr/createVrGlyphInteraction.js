@@ -54,6 +54,7 @@ export function createVrGlyphInteraction({ controllers, nodes, settings = {}, ha
         let object = hit?.object; while (object && !objectToGlyph.has(object)) object = object.parent;
         const node = object ? objectToGlyph.get(object) ?? null : null;
         record.currentHit = node && isGlyphActive(node) ? node : null;
+        if (record.currentHit && hit.object.name !== 'VrGlyphFallbackCollider') record.reportRayHit?.(hit.distance);
       }
       const hold = holds.get(record);
       if (!hold) continue;

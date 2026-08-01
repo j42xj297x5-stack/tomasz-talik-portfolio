@@ -168,6 +168,7 @@ export function createVrCrystalCollection({ scene, assetManager, controllers, po
         if (instance?.state === 'available') {
           controllerRecord.currentCrystalHit = instance;
           controllerRecord.currentCrystalHitDistance = intersection.distance;
+          controllerRecord.reportRayHit?.(intersection.distance);
           targeted.add(instance);
           break;
         }

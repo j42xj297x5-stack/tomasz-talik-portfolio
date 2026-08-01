@@ -4,7 +4,7 @@ const RAY_COLOR = 0xd8e2ec;
 
 export function createVrControllers({ renderer, playerRig, settings }) {
   if (!settings.enabled) {
-    return { controllers: [], update() {}, dispose() {} };
+    return { controllers: [], beginRayHitFrame() {}, resolveVisualRayLength() {}, reset() {}, update() {}, dispose() {} };
   }
 
   let disposed = false;
@@ -14,11 +14,11 @@ export function createVrControllers({ renderer, playerRig, settings }) {
     const holdSocket = new THREE.Object3D();
     holdSocket.name = `VrCrystalHoldSocket${index}`;
     grip.add(holdSocket);
-    const tipLength = settings.rayLength * settings.rayTipFraction;
-    const shaftLength = settings.rayLength - tipLength;
+    const maxTipLength = settings.rayLength * settings.rayTipFraction;
+    const shaftLength = settings.rayLength - maxTipLength;
     const shaftGeometry = new THREE.CylinderGeometry(settings.rayDiameter / 2, settings.rayDiameter / 2,
       shaftLength, settings.rayRadialSegments, 1, true);
-    const tipGeometry = new THREE.ConeGeometry(settings.rayDiameter / 2, tipLength, settings.rayRadialSegments, 1, true);
+    const tipGeometry = new THREE.ConeGeometry(settings.rayDiameter / 2, maxTipLength, settings.rayRadialSegments, 1, true);
     const material = new THREE.MeshBasicMaterial({
       color: RAY_COLOR,
       transparent: true,
@@ -30,7 +30,7 @@ export function createVrControllers({ renderer, playerRig, settings }) {
     shaft.position.z = -shaftLength / 2;
     shaft.rotation.x = -Math.PI / 2;
     const tip = new THREE.Mesh(tipGeometry, material);
-    tip.position.z = -(shaftLength + tipLength / 2);
+    tip.position.z = -(shaftLength + maxTipLength / 2);
     tip.rotation.x = -Math.PI / 2;
     ray.add(shaft, tip);
     ray.name = `VrControllerRay${index}`;
@@ -50,9 +50,33 @@ export function createVrControllers({ renderer, playerRig, settings }) {
       currentHit: null,
       currentCrystalHit: null,
       currentCrystalHitDistance: null,
+      nearestRayHitDistance: null,
+      visualRayLength: settings.rayLength,
       get currentRayLength() {
         return settings.rayLength;
+      },
+      beginRayHitFrame() { this.nearestRayHitDistance = null; },
+      reportRayHit(distance) {
+        if (!Number.isFinite(distance) || distance < 0 || distance > settings.rayLength) return;
+        this.nearestRayHitDistance = this.nearestRayHitDistance == null
+          ? distance : Math.min(this.nearestRayHitDistance, distance);
       }
+    };
+
+    record.resolveVisualRayLength = () => {
+      const length = Math.min(settings.rayLength, record.nearestRayHitDistance ?? settings.rayLength);
+      const tipLength = Math.min(length, Math.max(settings.rayDiameter * 2, length * settings.rayTipFraction));
+      const currentShaftLength = Math.max(0, length - tipLength);
+      shaft.scale.y = shaftLength > 0 ? currentShaftLength / shaftLength : 0;
+      shaft.position.z = -currentShaftLength / 2;
+      tip.scale.y = maxTipLength > 0 ? tipLength / maxTipLength : 0;
+      tip.position.z = -(currentShaftLength + tipLength / 2);
+      record.visualRayLength = length;
+      return length;
+    };
+    record.resetVisualRay = () => {
+      record.beginRayHitFrame();
+      record.resolveVisualRayLength();
     };
 
     const setSelecting = (isSelecting) => {
@@ -77,6 +101,7 @@ export function createVrControllers({ renderer, playerRig, settings }) {
       record.currentHit = null;
       record.currentCrystalHit = null;
       record.currentCrystalHitDistance = null;
+      record.resetVisualRay();
       delete controller.userData.xrInput;
       setSelecting(false);
     };
@@ -115,8 +140,13 @@ export function createVrControllers({ renderer, playerRig, settings }) {
       record.currentHit = null;
       record.currentCrystalHit = null;
       record.currentCrystalHitDistance = null;
+      record.resetVisualRay();
     }
   }
 
-  return { controllers: publicControllers, update() {}, dispose };
+  function beginRayHitFrame() { publicControllers.forEach((record) => record.beginRayHitFrame()); }
+  function resolveVisualRayLength() { publicControllers.forEach((record) => record.resolveVisualRayLength()); }
+  function reset() { publicControllers.forEach((record) => record.resetVisualRay()); }
+
+  return { controllers: publicControllers, beginRayHitFrame, resolveVisualRayLength, reset, update() {}, dispose };
 }
