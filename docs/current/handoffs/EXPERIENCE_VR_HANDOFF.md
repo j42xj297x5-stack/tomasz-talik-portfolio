@@ -16,6 +16,8 @@ On a completed glyph hold, the crystal captures the moving glyph's current world
 
 The in-memory `VrProgressionController` owns committed pages. Tiers 1–3 require all five branches, tier 4 Metal and Water, and tier 5 Water. Only a crystal matching the current tier can be inserted. Activate resolves and previews the branch/tier page without progress or floor activation. Release after Activate commits exactly once, lights the matching floor panel, and may advance the tier. Release without Activate returns the crystal to `available`. Transient reset preserves controller progress for the prepared runtime only.
 
+The reliquary keeps its authored insertion-zone mesh hidden and mirrors its world sphere with a separate, translucent runtime halo while a held crystal is nearby. Green means Release can insert under the progression controller's current validation; red means it cannot. An invalid Release inside the zone moves the crystal through a temporary, non-targetable `rejecting` state and eases it deterministically beyond the capture sphere, then restores `available` without socket or progression changes. The halo and any rejection state are transient session state and are cleared by runtime reset and disposal.
+
 ## Complete five-sector visual floor
 
 `createVrProgressFloor` composes five authored, non-placeholder sectors under the stationary `VrTiltableFloorRoot`:

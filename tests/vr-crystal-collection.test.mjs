@@ -25,15 +25,21 @@ function harness() {
   const portalObject = new THREE.Group(); portalObject.visible = true; scene.add(portalObject);
   const portalDisplay = { object: portalObject, insertRadius: 10, getSocketWorldPosition: (out) => out.set(0, 0, 0) };
   const progressionController = createVrProgressionController({ pages: experienceVrPages });
+  const feedback = { state: null, history: [] };
+  const insertionTarget = { object: Object.assign(new THREE.Group(), { visible: true }), hasValidInsertZone: true,
+    portalForward: new THREE.Vector3(0, 0, 1),
+    getInsertZoneWorldSphere: () => new THREE.Sphere(new THREE.Vector3(), 10),
+    setInsertFeedback: (state) => { feedback.state = state; feedback.history.push(state); } };
   const previews = []; const commits = [];
-  const collection = createVrCrystalCollection({ scene, controllers: [record], portalDisplay, settings, pages: experienceVrPages,
+  const collection = createVrCrystalCollection({ scene, controllers: [record], portalDisplay, insertionTarget, settings,
+    insertFeedbackSettings: { proximityRadiusMultiplier: 1.25, rejectDuration: 0.35, rejectDistance: 0.25 }, pages: experienceVrPages,
     progressionController, assetManager: { cloneGltfScene: () => new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.1, 0.1)) },
     onPreview: (page) => previews.push(page.id), onCommit: (page) => commits.push(page.id) });
   function insert(instance) {
     collection.update(1); record.currentCrystalHit = instance; record.currentCrystalHitDistance = 0.1;
     collection.grab(record); collection.update(1); scene.updateMatrixWorld(true); collection.release(record);
   }
-  return { collection, progressionController, previews, commits, insert };
+  return { collection, progressionController, previews, commits, insert, record, scene, feedback };
 }
 
 const stocked = harness();
@@ -46,8 +52,15 @@ for (const crystal of crystals) {
 }
 assert.equal(stocked.collection.spawnOne('creative-ai', glyphFrame), null);
 stocked.insert(crystals[1]);
-assert.equal(crystals[1].state, 'available', 'future tier insertion is rejected');
+assert.ok(stocked.feedback.history.includes('INVALID'), 'future tier shows invalid feedback before release');
+assert.equal(crystals[1].state, 'rejecting', 'future tier insertion starts controlled rejection');
 assert.equal(stocked.collection.getInsertedInstance(), null);
+assert.equal(stocked.record.currentCrystalHit, null, 'rejecting crystal is not ray-targetable');
+assert.equal(stocked.collection.grab(stocked.record), null, 'rejecting crystal is not grabable');
+assert.equal(stocked.progressionController.getActivatedPageIds().length, 0, 'rejection does not change progress');
+stocked.collection.update(0.4);
+assert.equal(crystals[1].state, 'available', 'rejected crystal becomes available after interpolation');
+assert.ok(crystals[1].object.position.length() > 10, 'rejection finishes beyond the insert sphere');
 
 stocked.insert(crystals[0]);
 assert.equal(stocked.collection.activateInserted(), true);
@@ -67,4 +80,16 @@ assert.equal(noActivate.collection.releaseInserted(), true);
 assert.equal(crystal.state, 'available');
 assert.equal(noActivate.progressionController.getActivatedPageIds().length, 0);
 assert.deepEqual(noActivate.commits, []);
+
+const proximity = harness();
+const valid = proximity.collection.spawnOne('creative-ai', glyphFrame);
+proximity.collection.update(1);
+assert.equal(proximity.feedback.state, null, 'feedback starts hidden');
+proximity.record.currentCrystalHit = valid; proximity.record.currentCrystalHitDistance = 0.1;
+proximity.collection.grab(proximity.record); proximity.collection.update(1);
+assert.equal(proximity.feedback.state, 'VALID', 'eligible held crystal shows valid feedback in proximity');
+proximity.record.controller.position.set(30, 0, 0); proximity.scene.updateMatrixWorld(true); proximity.collection.update(0);
+assert.equal(proximity.feedback.state, null, 'moving away clears feedback');
+proximity.collection.reset();
+assert.equal(proximity.feedback.state, null, 'reset clears feedback');
 console.log('VR crystal collection assertions passed');
