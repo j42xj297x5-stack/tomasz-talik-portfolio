@@ -83,9 +83,7 @@ Obowiązujące fundamenty:
 
 Aktualny runtime zawiera **18 logicznych kart** w układzie `3 / 3 / 3 / 4 / 5` oraz **15 współdzielonych modeli GLB** — po trzy warianty wizualne na każdą z pięciu gałęzi. Karty 4 i 5 ponownie wykorzystują warianty danej gałęzi.
 
-Każda obecna instancja kryształu jest tworzona dla konkretnej strony i zawiera `page`, `cardId` oraz `crystalId`. Activate zapisuje i wyświetla `insertedInstance.page`. Kilka wcześniej zebranych kryształów może więc pokazać treść w kolejności fizycznego wkładania, a nie w sekwencji gałęzi.
-
-Zatwierdzony model docelowy wymaga kryształu powiązanego z gałęzią oraz wyboru kolejnej nieaktywowanej strony dopiero podczas Activate. Ten branch-bound kontrakt **nie jest jeszcze zaimplementowany** i stanowi pierwszy osobny etap wdrożeniowy przed rozbudową progresji.
+Obecna instancja kryształu przechowuje gałąź i tier, a nie stronę ani kartę. Activate rozwiązuje właściwą stronę jako preview, natomiast Release po Activate zatwierdza ją w centralnej progresji. Dzięki temu magazynowanie kryształów nie zmienia kolejności narracji.
 
 ---
 
@@ -153,6 +151,7 @@ Powinien zawierać wyłącznie dane instancji:
   crystalId,
   glyphId,
   branchId,
+  tier,
   visualVariant,
   state
 }
@@ -162,21 +161,12 @@ Powinien zawierać wyłącznie dane instancji:
 
 ### 5.2. Wybór strony podczas Activate
 
-Dopiero poprawne użycie przycisku Activate:
-
-1. odczytuje `branchId` włożonego kryształu;
-2. pobiera strony tej gałęzi;
-3. sortuje je według `order`;
-4. wybiera pierwszą nieaktywowaną stronę;
-5. zapisuje jej identyfikator w progresji;
-6. wyświetla ją na portalu;
-7. aktywuje odpowiadające pole podłogi;
-8. przelicza postęp gałęzi i globalnych progów.
+Poprawne Activate odczytuje `branchId + tier`, weryfikuje sekwencję i rozwiązuje odpowiadającą stronę wyłącznie jako preview portalu. Dopiero Release po Activate zapisuje identyfikator strony, aktywuje pole podłogi i przelicza globalny próg. Release bez Activate nie zmienia progresji.
 
 Schemat:
 
 ```js
-const nextPage = getNextUnactivatedPage(insertedCrystal.branchId);
+const nextPage = progressionController.getNextPage(insertedCrystal.branchId, insertedCrystal.tier);
 ```
 
 Kolejność fizycznego pozyskania i wkładania kryształów nie może wpływać na kolejność tekstu.
@@ -940,7 +930,7 @@ Kryształ nie niesie strony; Activate wybiera następną kartę gałęzi.
 - [ ] Zachować `glyphId`, `branchId`, wariant modelu i stan instancji.
 - [ ] Dodać `getNextUnactivatedPage(branchId)`.
 - [ ] Rozwiązywać stronę dopiero w `activateInserted()`.
-- [ ] Zapisywać progres podczas Activate.
+- [x] Zapisywać progres podczas Release po Activate.
 - [ ] Nie zmieniać progresji podczas samego insertion.
 - [ ] Nie cofać progresji podczas Release.
 - [ ] Ograniczyć spawn nadmiarowych kryształów.
@@ -987,7 +977,7 @@ Testy mogą aktywować karty bez sceny 3D i poprawnie uzyskiwać progi oraz uko�
 
 ## Stan implementacji na 2026-07-31
 
-Wizualny fundament powstał wcześniej niż `VrProgressionController`. Pięć autorskich GLB jest preloadowanych przez `AssetManager` i złożonych co 72° pod wspólnym, nieruchomym rootem runtime `VrTiltableFloorRoot`. Stabilne identyfikatory baz i pól pozwalają mapować 18 pól do 18 kart oraz sterować każdym polem niezależnie. Szczegóły bieżącego kontraktu opisuje [VR Progress Floor Model](../technical/VR_PROGRESS_FLOOR_MODEL.md). Nie oznacza to wdrożenia progów, pierścieni ani ruchomej podłogi.
+Wizualny fundament powstał niezależnie od `VrProgressionController`. Pięć autorskich GLB jest preloadowanych przez `AssetManager` i złożonych co 72° pod wspólnym, nieruchomym rootem runtime `VrTiltableFloorRoot`. Stabilne identyfikatory baz i pól pozwalają mapować 18 pól do 18 kart oraz sterować każdym polem niezależnie. Szczegóły bieżącego kontraktu opisuje [VR Progress Floor Model](../technical/VR_PROGRESS_FLOOR_MODEL.md). Nie oznacza to wdrożenia progów, pierścieni ani ruchomej podłogi.
 
 ## Cel
 
@@ -1353,8 +1343,8 @@ Nie należy od razu realizować całej roadmapy.
 Najbliższe kroki:
 
 ```text
-1. Osobne zadanie naprawiające sekwencyjne rozwiązywanie kart podczas Activate.
-2. Wprowadzenie modelu 18 kart i VrProgressionController.
+1. Branch/tier resolver kart podczas Activate i commit podczas Release.
+2. Minimalny model 18 kart i `VrProgressionController` dla progów 1–5.
 3. Zachowanie istniejącego fundamentu pięciu GLB; przygotowanie nadal brakujących pięciu SVG.
 4. Integracja nadal brakujących warstw sektorów i globalnych pierścieni.
 5. Rozszerzenie istniejącego podłączenia pól do aktywacji kart o postęp kontrolera.
@@ -1565,7 +1555,7 @@ Experience VR można uznać za funkcjonalnie ukończone, gdy:
 
 ## 20. Punkt startowy
 
-**Najbliższym zadaniem pozostaje naprawa kontraktu kryształów.**
+**Kontrakt kryształów i minimalna progresja progów są zaimplementowane.**
 
 Bez tej poprawki:
 
@@ -1575,4 +1565,4 @@ Bez tej poprawki:
 - magazynowanie kryształów będzie niszczyło narrację progresji;
 - wszystkie dalsze mechaniki będą budowane na błędnym fundamencie.
 
-Podłoga poprawnie podświetla pole strony faktycznie przekazanej przez Activate, więc nie należy implementować jej fundamentu ponownie. Nie naprawia to jednak semantyki page-bound crystals. Najpierw kryształ musi stać się branch-bound, a Activate ma wybierać kolejną nieaktywowaną stronę gałęzi. Dopiero potem kolejną warstwą jest `VrProgressionController`; globalne progi, pierścienie i przechylanie pozostają późniejszą integracją.
+Podłoga podświetla pole dopiero po zatwierdzeniu strony przez Release. Minimalny `VrProgressionController` obsługuje karty i progi 1–5; globalne pierścienie, przechylanie i pełny system capabilities pozostają poza bieżącym runtime.

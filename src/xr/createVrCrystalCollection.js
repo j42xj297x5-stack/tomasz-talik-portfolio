@@ -54,7 +54,7 @@ export function getVrCrystalLayout(pageIds, settings) {
   return positions;
 }
 
-export function createVrCrystalCollection({ scene, assetManager, controllers, portalDisplay, insertionTarget, settings, onActivate, onConsume }) {
+export function createVrCrystalCollection({ scene, assetManager, controllers, portalDisplay, insertionTarget, settings, pages = [], progressionController, onPreview, onCommit }) {
   const instances = [];
   const listeners = [];
   const heldByController = new Map();
@@ -69,8 +69,6 @@ export function createVrCrystalCollection({ scene, assetManager, controllers, po
   let insertedInstance = null;
   let fallbackAnchor = null;
   let warnedFallbackAnchor = false;
-  const activatedPageIds = new Set();
-  const activationCallback = onActivate ?? onConsume;
 
   function clearControllerHit(controllerRecord) {
     controllerRecord.currentCrystalHit = null;
@@ -158,6 +156,11 @@ export function createVrCrystalCollection({ scene, assetManager, controllers, po
         instance.state = 'available';
         return instance;
       }
+      if (progressionController && !progressionController.canInsertCrystal(instance.branchId, instance.tier)) {
+        scene.attach(instance.object);
+        instance.state = 'available';
+        return instance;
+      }
       let anchor = insertionSphere && insertionTarget?.crystalAnchor ? insertionTarget.crystalAnchor : null;
       if (!anchor) {
         if (!warnedFallbackAnchor) {
@@ -214,9 +217,17 @@ export function createVrCrystalCollection({ scene, assetManager, controllers, po
     listeners.push({ controllerRecord, squeezeStart, squeezeEnd });
   });
 
-  function spawnOne(page, viewerFrame) {
-    if (disposed || !settings.enabled || !page || activatedPageIds.has(page.id)
-      || instances.some((instance) => instance.page.id === page.id && instance.state !== 'released')) return null;
+  function spawnOne(branchId, viewerFrame) {
+    const requestedDefinition = typeof branchId === 'object' ? branchId : null;
+    branchId = requestedDefinition?.glyphId ?? requestedDefinition?.branchId ?? branchId;
+    const definition = pages.filter((page) => page.glyphId === branchId)
+      .sort((a, b) => a.order - b.order)
+      .find((page) => !progressionController?.hasActivatedPage(page.id)
+        && !instances.some((instance) => instance.branchId === branchId && instance.tier === page.order && instance.state !== 'released'))
+      ?? (requestedDefinition && !instances.some((instance) => instance.branchId === branchId
+        && instance.tier === (requestedDefinition.order ?? requestedDefinition.tier ?? 1) && instance.state !== 'released')
+        ? requestedDefinition : null);
+    if (disposed || !settings.enabled || !definition) return null;
     const origin = viewerFrame.position.clone();
     const forward = viewerFrame.direction.clone(); forward.y = 0;
     if (forward.lengthSq() < 1e-8) forward.set(0, 0, -1); forward.normalize();
@@ -233,13 +244,15 @@ export function createVrCrystalCollection({ scene, assetManager, controllers, po
       }
     }
     {
-      const source = assetManager.cloneGltfScene(page.crystalAssetId);
+      const source = assetManager.cloneGltfScene(definition.crystalAssetId);
       if (!source) return null;
       const object = new THREE.Group();
-      object.name = `VrCrystal:${page.id}`;
+      const tier = definition.order ?? definition.tier ?? 1;
+      const crystalId = `vr-crystal-instance-${branchId}-${tier}-${instances.length + 1}`;
+      object.name = `VrCrystal:${crystalId}`;
       const model = source.clone(true);
       object.add(model);
-      const transform = getDeterministicCrystalTransform(page.id, settings);
+      const transform = getDeterministicCrystalTransform(crystalId, settings);
       model.scale.setScalar(transform.scale);
       model.rotation.set(transform.tiltX, transform.yaw, transform.tiltZ);
       model.updateMatrixWorld(true);
@@ -254,10 +267,11 @@ export function createVrCrystalCollection({ scene, assetManager, controllers, po
       object.position.copy(targetPosition);
       object.position.y -= settings.materializeRise;
       object.scale.setScalar(settings.materializeStartScale);
-      const materializeYaw = (unit(hashVrPageId(page.id), 6) - 0.5) * 2 * settings.materializeYaw;
+      const materializeYaw = (unit(hashVrPageId(crystalId), 6) - 0.5) * 2 * settings.materializeYaw;
       object.rotation.y = -materializeYaw;
       scene.add(object);
-      const instance = { page, cardId: page.cardId, crystalId: page.crystalId, object, model, state: 'materializing', heldBy: null, highlighted: false,
+      const instance = { crystalId, glyphId: branchId, branchId, tier, visualVariant: definition.visualVariant,
+        crystalAssetId: definition.crystalAssetId, object, model, state: 'materializing', heldBy: null, highlighted: false,
         materializeElapsed: 0, materializeYaw, targetPosition, initialTransform: object.matrix.clone() };
       instances.push(instance);
       object.traverse((child) => objectToCrystal.set(child, instance));
@@ -265,13 +279,13 @@ export function createVrCrystalCollection({ scene, assetManager, controllers, po
     }
   }
 
-  function spawn(pages, { anchorObject, spawnPosition }) {
+  function spawn(branchIds, { anchorObject, spawnPosition }) {
     if (disposed || !settings.enabled) return [];
     const anchorCenter = new THREE.Box3().setFromObject(anchorObject).getCenter(new THREE.Vector3());
     const position = new THREE.Vector3(spawnPosition.x, spawnPosition.y, spawnPosition.z);
     const direction = anchorCenter.clone().sub(position).normalize();
-    return pages.map((page, index) => {
-      const instance = spawnOne(page, { position, direction });
+    return branchIds.map((branchId, index) => {
+      const instance = spawnOne(branchId, { position, direction });
       if (instance) instance.materializeElapsed = -index * settings.materializeStagger;
       return instance;
     }).filter(Boolean);
@@ -324,25 +338,32 @@ export function createVrCrystalCollection({ scene, assetManager, controllers, po
 
   function activateInserted() {
     if (!insertedInstance || insertedInstance.state !== 'inserted') return false;
+    const page = progressionController?.getNextPage(insertedInstance.branchId, insertedInstance.tier);
+    if (!page) return false;
     insertedInstance.state = 'active';
-    activatedPageIds.add(insertedInstance.page.id);
-    activationCallback?.(insertedInstance.page);
+    insertedInstance.previewPage = page;
+    onPreview?.(page);
     return true;
   }
 
   function releaseInserted() {
     const instance = insertedInstance;
     if (!instance || !['inserted', 'active'].includes(instance.state)) return false;
-    instance.state = 'released';
-    instance.object.visible = false;
-    instance.object.removeFromParent();
+    if (instance.state === 'inserted') {
+      scene.attach(instance.object);
+      instance.state = 'available';
+    } else {
+      const page = instance.previewPage;
+      if (!progressionController?.commitPage(page)) return false;
+      onCommit?.(page);
+      delete instance.previewPage;
+      instance.state = 'released';
+      instance.object.visible = false;
+      instance.object.removeFromParent();
+    }
     insertedInstance = null;
     return true;
   }
-
-  function hasActivatedPage(pageId) { return activatedPageIds.has(pageId); }
-  function getActivatedPageIds() { return [...activatedPageIds]; }
-  function isLevelComplete() { return activatedPageIds.size === 18; }
 
   function dispose() {
     if (disposed) return;
@@ -356,6 +377,5 @@ export function createVrCrystalCollection({ scene, assetManager, controllers, po
   }
 
   return { instances, heldByController, spawn, spawnOne, update, grab, release, getInsertedInstance, activateInserted,
-    releaseInserted, activatedPageIds, hasActivatedPage, getActivatedPageIds, isLevelComplete,
-    hasReadPage: hasActivatedPage, getReadPageIds: getActivatedPageIds, reset, dispose };
+    releaseInserted, reset, dispose };
 }

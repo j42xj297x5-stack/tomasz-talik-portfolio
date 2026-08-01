@@ -21,7 +21,8 @@ import { createVrCrystalReliquary } from './xr/createVrCrystalReliquary.js';
 import { createVrReliquaryActivateButton } from './xr/createVrReliquaryActivateButton.js';
 import { createVrReliquaryReleaseButton } from './xr/createVrReliquaryReleaseButton.js';
 import { createVrProgressFloor, FLOOR_WORLD_Y_OFFSET } from './xr/floor/createVrProgressFloor.js';
-import { getExperienceVrPages, resolveExperienceVrPage } from './content/experienceVrPages.js';
+import { createVrProgressionController } from './xr/progression/createVrProgressionController.js';
+import { experienceVrPages, getExperienceVrPages, resolveExperienceVrPage } from './content/experienceVrPages.js';
 
 const app = document.querySelector('#app');
 if (!app) throw new Error('Missing #app mount element.');
@@ -144,12 +145,12 @@ const crystalReliquary = createVrCrystalReliquary({
   settings: settings.reliquary
 });
 const locomotion = createVrLocomotion({ playerRig, renderer, camera, settings: settings.locomotion });
+const progressionController = createVrProgressionController({ pages: experienceVrPages });
 const crystalCollection = createVrCrystalCollection({
-  scene, assetManager, controllers: vrControllers.controllers, portalDisplay, insertionTarget: crystalReliquary, settings: settings.crystals,
-  onActivate: (page) => {
-    portalCanvas.show(resolveExperienceVrPage(page, language));
-    progressFloor.activatePage(page);
-  }
+  scene, assetManager, controllers: vrControllers.controllers, portalDisplay, insertionTarget: crystalReliquary,
+  settings: settings.crystals, pages: experienceVrPages, progressionController,
+  onPreview: (page) => portalCanvas.show(resolveExperienceVrPage(page, language)),
+  onCommit: (page) => progressFloor.activatePage(page)
 });
 const activateButtonGltf = assetManager.getGltf('vr-crystal-reliquary-button-activate-model');
 const activateButtonModel = assetManager.cloneGltfScene('vr-crystal-reliquary-button-activate-model');
@@ -178,24 +179,25 @@ const releaseButton = createVrReliquaryReleaseButton({
   onRelease: () => crystalCollection.releaseInserted(),
   onReleaseComplete: () => activateButton.reset()
 });
-function getNextPage(node) {
-  return [...getExperienceVrPages(node?.userData?.id)].sort((a, b) => a.order - b.order)
-    .find((page) => !crystalCollection.hasActivatedPage(page.id)
-      && !crystalCollection.instances.some((instance) => instance.page.id === page.id && instance.state !== 'released')) ?? null;
+function getNextCrystalTier(node) {
+  const branchId = node?.userData?.id;
+  return [...getExperienceVrPages(branchId)].sort((a, b) => a.order - b.order)
+    .find((page) => !progressionController.hasActivatedPage(page.id)
+      && !crystalCollection.instances.some((instance) => instance.branchId === branchId
+        && instance.tier === page.order && instance.state !== 'released'))?.order ?? null;
 }
-function isGlyphActive(node) { return Boolean(getNextPage(node)); }
+function isGlyphActive(node) { return getNextCrystalTier(node) !== null; }
 const glyphInteraction = createVrGlyphInteraction({
   controllers: vrControllers.controllers,
   nodes,
   settings: settings.glyphInteraction,
   isGlyphActive,
   onGlyphHoldComplete: ({ node }) => {
-    const page = getNextPage(node);
-    if (!page) return;
+    if (getNextCrystalTier(node) === null) return;
     const xrCamera = renderer.xr.getCamera(camera);
     const position = xrCamera.getWorldPosition(new THREE.Vector3());
     const direction = xrCamera.getWorldDirection(new THREE.Vector3());
-    crystalCollection.spawnOne(page, { position, direction });
+    crystalCollection.spawnOne(node.userData.id, { position, direction });
   }
 });
 
