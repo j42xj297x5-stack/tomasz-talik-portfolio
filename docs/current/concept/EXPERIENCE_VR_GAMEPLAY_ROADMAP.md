@@ -85,6 +85,12 @@ Aktualny runtime zawiera **18 logicznych kart** w układzie `3 / 3 / 3 / 4 / 5` 
 
 Obecna instancja kryształu przechowuje gałąź i tier, a nie stronę ani kartę. Activate rozwiązuje właściwą stronę jako preview, natomiast Release po Activate zatwierdza ją w centralnej progresji. Dzięki temu magazynowanie kryształów nie zmienia kolejności narracji.
 
+Podstawowa ergonomia targetowania jest już wykonanym fundamentem, a nie przyszłym narzędziem przyciągania. Oba kontrolery mają wspólny maksymalny zasięg `2.3 m` i przestrzenny mesh raya o średnicy `0.010 m`, który bez zmiany średnicy skraca się do najbliższego poprawnego trafienia raportowanego w danej klatce przez glify, kryształy lub dostępne przyciski Activate/Release. Brak poprawnego targetu przywraca pełną długość; globalny raycast sceny oraz helpery i fallback collidery nie sterują długością wskaźnika.
+
+Aktywny glif lub dostępny kryształ pod rayem otrzymuje subtelne pulsujące halo oznaczające rzeczywistą dostępność akcji. Jest to współdzielony `ShaderMaterial` na widocznej geometrii modelu, z grubością wyznaczaną w screen/viewport space i viewportem aktualizowanym per-eye, bez bloom, postprocessingu i `OutlinePass`. Glify są trafiane po rzeczywistych widocznych meshach; domyślny hold trwa `0.5 s`, a `holdLostGraceSeconds = 0.15` pauzuje naliczanie podczas krótkiej utraty tego samego celu. Ich aktywne światło leży około `1.0 m` w stronę środka ringu w płaszczyźnie X/Z, z zachowaniem Y.
+
+Dostępny kryształ z halo mieści się w tym samym kontrakcie targetowania i może zostać złapany squeeze. Chwyt stosuje na roocie konfigurowalną korektę `holdRotationDegrees = { x: 30, y: 0, z: 0 }`, nie przepisując lokalnych rotacji GLB. Jest to bazowy chwyt bezpośredni; planowane narzędzie attractor oraz semantyczne tryby A/X pozostają osobnymi, niewykonanymi etapami.
+
 ---
 
 ## 4. Pięć gałęzi i liczba kart
@@ -1295,7 +1301,7 @@ Doprowadzić grę do stabilnego działania na Meta Quest 3S.
 
 - [ ] Zmierzyć płynność w każdym progu.
 - [ ] Ograniczyć transparent overdraw podłogi.
-- [ ] Porównać halo geometryczne i bloom.
+- [ ] Zmierzyć koszt istniejącego screen-space halo bez bloom i postprocessingu.
 - [ ] Ograniczyć liczbę jednoczesnych świateł.
 - [ ] Używać współdzielonych materiałów, gdzie to bezpieczne.
 - [ ] Zwalniać zasoby przy disposal.
@@ -1482,6 +1488,10 @@ Minimalizacja:
 - [ ] Docelowo tło sektora podświetla się do aktualnego pola z gradientem; obecnie wykonane są impuls i stabilny blask pojedynczych pól.
 - [x] `VrProgressionController` jest właścicielem zatwierdzonych kart, globalnych tierów i insertion gating.
 - [x] Activate wykonuje preview, Release wykonuje commit; invalid insertion ma `rejecting`, a commit kończy się `consuming`.
+- [x] Bazowy ray ma wspólne `2.3 m`, stałą średnicę `0.010 m` i skraca się do najbliższego poprawnego hit distance raportowanego przez istniejące systemy interakcji.
+- [x] Aktywne glify i dostępne kryształy mają per-eye screen-space halo oznaczające faktyczną dostępność interakcji, bez bloom i postprocessingu.
+- [x] Glify korzystają z widocznych meshów, holda `0.5 s` oraz `0.15 s` grace period; ich aktywne światło jest przesunięte około `1.0 m` do środka w X/Z.
+- [x] Bazowy squeeze-grab kryształu respektuje `2.3 m` i korektę roota `{ x: 30, y: 0, z: 0 }` bez zmiany lokalnych rotacji GLB.
 - [ ] Próg 1 podnosi glify i uruchamia skorupy.
 - [ ] Skorupy budują świetlistą kulę nad relikwiarzem.
 - [ ] Gotowa kula materializuje się i staje się narzędziem lewej ręki.
