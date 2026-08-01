@@ -224,6 +224,7 @@ const clock = new THREE.Clock(false);
 
 function renderFrame() {
   const delta = clock.getDelta();
+  vrControllers.beginRayHitFrame();
   glyphOrbit.update(delta);
   glyphRing.updateMatrixWorld(true);
   glyphInteraction.update(delta);
@@ -231,6 +232,7 @@ function renderFrame() {
   progressFloor.update(delta);
   activateButton.update(delta);
   releaseButton.update(delta);
+  vrControllers.resolveVisualRayLength();
   glyphLights.update({
     hovered: glyphInteraction.hoveredGlyphs,
     exhausted: new Set(nodes.filter((node) => !isGlyphActive(node)))
@@ -262,6 +264,7 @@ function handleSessionEnd() {
   glyphOrbit.reset();
   glyphLights.reset();
   glyphInteraction.reset();
+  vrControllers.reset();
   showReadyState({ ended: hasEnteredSession });
 }
 
@@ -278,6 +281,7 @@ async function enterVr() {
   glyphOrbit.reset();
   glyphLights.reset();
   glyphInteraction.reset();
+  vrControllers.reset();
   enterButton.disabled = true;
   status.textContent = copy.entering;
   let requestedSession = null;
@@ -314,6 +318,7 @@ async function enterVr() {
     crystalReliquary.reset();
     restorePortalWaitingState();
     locomotion.reset();
+    vrControllers.reset();
     status.textContent = copy.error;
     enterButton.disabled = false;
     exitButton.hidden = true;

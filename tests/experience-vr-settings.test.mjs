@@ -9,7 +9,7 @@ assert.deepEqual(normalizeExperienceVrSettings(null), DEFAULT_EXPERIENCE_VR_SETT
 assert.deepEqual(DEFAULT_EXPERIENCE_VR_SETTINGS.spawn.position, { x: 0, y: 0, z: 5.8 });
 assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.glyphInteraction.holdDurationSeconds, 0.5);
 assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.glyphInteraction.holdLostGraceSeconds, 0.15);
-assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.controllers.rayLength, 2);
+assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.controllers.rayLength, 2.3);
 assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.controllers.rayDiameter, 0.01);
 assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.targetHalo.thicknessPixels, 3);
 assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.glyphLights.inwardOffset, 1);

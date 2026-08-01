@@ -135,6 +135,7 @@ export function createVrReliquaryReleaseButton({
         raycaster.set(origin, direction);
         const intersection = raycaster.intersectObject(raycastTarget, false)[0];
         hit = Boolean(intersection); distance = intersection?.distance ?? null;
+        if (hit && releaseAvailable) record.reportRayHit?.(distance);
       }
       if (settings.debug && hits.get(record) !== hit) console.debug('[Experience VR][ReleaseButton] hit changed', { controllerIndex: index, hit, intersectionDistance: distance });
       hits.set(record, hit);

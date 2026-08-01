@@ -88,7 +88,7 @@ const playerRig = new THREE.Group();
 const controllerSystem = createVrControllers({
   renderer: { xr: { getController: (index) => controllerObjects[index], getControllerGrip: (index) => controllerGrips[index] } },
   playerRig,
-  settings: { enabled: true, rayLength: 2, rayOpacity: 0.7, rayDiameter: 0.01, rayTipFraction: 0.08, rayRadialSegments: 6 }
+  settings: { enabled: true, rayLength: 2.3, rayOpacity: 0.7, rayDiameter: 0.01, rayTipFraction: 0.08, rayRadialSegments: 6 }
 });
 assert.equal(controllerSystem.controllers.length, 2);
 assert.equal(playerRig.children.length, 4);
@@ -102,13 +102,28 @@ assert.equal(left.handedness, 'left');
 assert.deepEqual(left.controller.userData.xrInput.profiles, ['meta-quest-touch-plus']);
 assert.equal(right.handedness, '');
 assert.equal(left.ray.visible, true);
-assert.equal(left.currentRayLength, 2);
+assert.equal(left.currentRayLength, 2.3);
 assert.equal(left.ray.children.length, 2, 'ray uses a shaft and tapered mesh tip');
 assert.equal(left.ray.children[0].geometry.parameters.radiusTop * 2, 0.01, 'ray shaft uses configured diameter');
+controllerSystem.beginRayHitFrame();
+left.reportRayHit(1.5);
+left.reportRayHit(0.9);
+right.reportRayHit(1.2);
+controllerSystem.resolveVisualRayLength();
+assert.equal(left.visualRayLength, 0.9, 'the nearest valid hit controls visual length');
+assert.equal(right.visualRayLength, 1.2);
+assert.equal(left.ray.children[0].scale.x, 1, 'shaft diameter scale remains constant');
+assert.equal(left.ray.children[0].scale.z, 1, 'shaft diameter scale remains constant');
+assert.ok(Math.abs(left.ray.children[1].position.z
+  - left.ray.children[1].geometry.parameters.height * left.ray.children[1].scale.y / 2 + 0.9) < 1e-12,
+  'tip ends at the resolved visual distance');
+controllerSystem.beginRayHitFrame();
+controllerSystem.resolveVisualRayLength();
+assert.equal(left.visualRayLength, 2.3, 'a frame without hits restores maximum length');
 left.controller.dispatchEvent({ type: 'selectstart' });
 assert.equal(left.isSelecting, true);
 assert.equal(left.ray.scale.z, 1);
-assert.equal(left.currentRayLength, 2, 'select does not extend interaction range');
+assert.equal(left.currentRayLength, 2.3, 'select does not extend interaction range');
 assert.equal(right.isSelecting, false);
 left.controller.dispatchEvent({ type: 'selectend' });
 assert.equal(left.isSelecting, false);
@@ -116,6 +131,8 @@ assert.equal(left.ray.scale.z, 1);
 left.controller.dispatchEvent({ type: 'disconnected' });
 assert.equal(left.ray.visible, false);
 assert.equal(left.isConnected, false);
+assert.equal(left.nearestRayHitDistance, null);
+assert.equal(left.visualRayLength, 2.3, 'disconnect clears shortened visual state');
 assert.equal('xrInput' in left.controller.userData, false);
 controllerSystem.dispose();
 controllerSystem.dispose();

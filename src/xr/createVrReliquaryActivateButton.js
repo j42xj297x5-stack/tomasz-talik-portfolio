@@ -104,7 +104,9 @@ export function createVrReliquaryActivateButton({
         raycaster.near = 0;
         raycaster.far = Math.min(record.currentRayLength ?? settings.rayMaxDistance, settings.rayMaxDistance);
         raycaster.set(origin, direction);
-        hit = raycaster.intersectObject(trigger, true).length > 0;
+        const intersection = raycaster.intersectObject(trigger, true)[0];
+        hit = Boolean(intersection);
+        if (hit && canActivate()) record.reportRayHit?.(intersection.distance);
       }
       hits.set(record, hit);
       anyHit ||= hit;

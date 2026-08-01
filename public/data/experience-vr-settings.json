@@ -20,7 +20,7 @@
   },
   "controllers": {
     "enabled": true,
-    "rayLength": 2,
+    "rayLength": 2.3,
     "rayOpacity": 0.8,
     "rayDiameter": 0.01,
     "rayTipFraction": 0.08,
