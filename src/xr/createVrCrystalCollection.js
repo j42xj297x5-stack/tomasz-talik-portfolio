@@ -18,6 +18,15 @@ export function hashVrPageId(id) {
 
 const unit = (hash, shift = 0) => ((hash >>> shift) & 0xff) / 255;
 
+// Matches the stable element colors used by the five progress-floor sectors.
+export const VR_CRYSTAL_CONSUME_COLORS = Object.freeze({
+  'ethics-life-protection': 0xc8752a,
+  'creative-ai': 0xff4b2b,
+  'ai-guide': 0x29e86f,
+  'spotify-digger': 0x8cd1ff,
+  'haiku-cosmos': 0x35a9ff
+});
+
 export function calculateVrCrystalSpawnPosition({ glyphWorldPosition, centerWorldPosition, inwardOffset }) {
   const position = glyphWorldPosition.clone();
   const inward = centerWorldPosition.clone().sub(glyphWorldPosition);
@@ -78,6 +87,45 @@ export function createVrCrystalCollection({ scene, assetManager, controllers, po
   let insertedInstance = null;
   let fallbackAnchor = null;
   let warnedFallbackAnchor = false;
+
+  function removeConsumeEffect(instance) {
+    const effect = instance.consumeEffect;
+    if (!effect) return;
+    effect.points.removeFromParent();
+    effect.geometry.dispose();
+    effect.material.dispose();
+    instance.consumeEffect = null;
+  }
+
+  function createConsumeEffect(instance) {
+    const count = Math.max(1, Math.round(settings.consumeParticleCount ?? 14));
+    const positions = new Float32Array(count * 3);
+    const phases = new Float32Array(count);
+    const radii = new Float32Array(count);
+    const heights = new Float32Array(count);
+    const seed = hashVrPageId(instance.crystalId);
+    for (let index = 0; index < count; index += 1) {
+      phases[index] = (index / count) * Math.PI * 2 + unit(seed, index % 24) * 0.35;
+      radii[index] = 0.075 + unit(seed, (index * 5) % 24) * 0.045;
+      heights[index] = (unit(seed, (index * 7) % 24) - 0.5) * 0.16;
+    }
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    const material = new THREE.PointsMaterial({
+      color: VR_CRYSTAL_CONSUME_COLORS[instance.branchId] ?? 0xffffff,
+      size: settings.consumeParticleSize ?? 0.025,
+      transparent: true,
+      opacity: 0.9,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending
+    });
+    const points = new THREE.Points(geometry, material);
+    points.name = `VrCrystalConsumeEffect:${instance.crystalId}`;
+    instance.object.parent.add(points);
+    points.position.copy(instance.object.position);
+    points.quaternion.copy(instance.object.quaternion);
+    instance.consumeEffect = { points, geometry, material, positions, phases, radii, heights };
+  }
 
   function clearControllerHit(controllerRecord) {
     controllerRecord.currentCrystalHit = null;
@@ -337,6 +385,34 @@ export function createVrCrystalCollection({ scene, assetManager, controllers, po
       instance.object.position.lerpVectors(instance.rejectStartPosition, instance.rejectEndPosition, eased);
       if (progress === 1) instance.state = 'available';
     }
+    for (const instance of instances) {
+      if (instance.state !== 'consuming') continue;
+      instance.consumeElapsed += elapsedDelta;
+      const progress = Math.min(1, instance.consumeElapsed / settings.consumeDuration);
+      const eased = progress * progress * (3 - 2 * progress);
+      instance.object.scale.copy(instance.consumeStartScale).multiplyScalar(Math.max(0, 1 - eased));
+      instance.object.rotation.y = instance.consumeStartYaw + eased * 0.12;
+      const effect = instance.consumeEffect;
+      if (effect) {
+        const expansion = 1 + eased * 0.45;
+        for (let index = 0; index < effect.phases.length; index += 1) {
+          const angle = effect.phases[index] + progress * Math.PI * 1.8;
+          const radius = effect.radii[index] * expansion;
+          effect.positions[index * 3] = Math.cos(angle) * radius;
+          effect.positions[index * 3 + 1] = effect.heights[index] + Math.sin(angle * 1.7) * 0.025;
+          effect.positions[index * 3 + 2] = Math.sin(angle) * radius;
+        }
+        effect.geometry.attributes.position.needsUpdate = true;
+        effect.material.opacity = 0.9 * (1 - eased);
+        effect.points.rotation.y = progress * 0.7;
+      }
+      if (progress === 1) {
+        removeConsumeEffect(instance);
+        instance.state = 'released';
+        instance.object.visible = false;
+        instance.object.removeFromParent();
+      }
+    }
     updateTargets();
     let feedbackState = null;
     for (const instance of heldByController.values()) {
@@ -368,6 +444,7 @@ export function createVrCrystalCollection({ scene, assetManager, controllers, po
     heldByController.clear();
     for (const instance of instances) {
       setHighlighted(instance, false);
+      removeConsumeEffect(instance);
       instance.heldBy = null;
       instance.state = 'available';
       instance.object.visible = false;
@@ -401,9 +478,11 @@ export function createVrCrystalCollection({ scene, assetManager, controllers, po
       if (!progressionController?.commitPage(page)) return false;
       onCommit?.(page);
       delete instance.previewPage;
-      instance.state = 'released';
-      instance.object.visible = false;
-      instance.object.removeFromParent();
+      instance.state = 'consuming';
+      instance.consumeElapsed = 0;
+      instance.consumeStartScale = instance.object.scale.clone();
+      instance.consumeStartYaw = instance.object.rotation.y;
+      createConsumeEffect(instance);
     }
     insertedInstance = null;
     return true;
