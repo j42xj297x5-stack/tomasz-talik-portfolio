@@ -10,7 +10,7 @@ const CONTRACTS = {
   wood: { base: 'VR_PROGRESS_SECTOR_WOOD_BASE', prefix: 'VR_PROGRESS_CARD_WOOD_', panelCount: 3 }
 };
 
-function createSectorModel(sourceType, { missingObject = null, radialStep = 1.25 } = {}) {
+function createSectorModel(sourceType, { missingObject = null, radialStep = 1.25, radii = null } = {}) {
   const contract = CONTRACTS[sourceType];
   const source = new THREE.Group();
   source.name = `${sourceType}FloorSource`;
@@ -27,7 +27,7 @@ function createSectorModel(sourceType, { missingObject = null, radialStep = 1.25
       new THREE.MeshStandardMaterial({ color: 0x222222, emissive: order === 1 ? 0x000000 : 0x551100 })
     );
     panel.name = name;
-    panel.position.set(order * radialStep, 0.05, 0);
+    panel.position.set(radii?.[order - 1] ?? order * radialStep, 0.05, 0);
     source.add(panel);
   }
   const ornament = new THREE.Mesh(new THREE.BoxGeometry(), new THREE.MeshStandardMaterial());
@@ -220,6 +220,36 @@ assert.throws(() => createVrProgressFloor({
   digSectorModel: createSectorModel('metal', { radialStep: 0 }),
   aiGuideSectorModel: createSectorModel('wood', { radialStep: 0 })
 }), /Cannot derive a valid radius for tier 1 from panel centers/);
+
+const createFloorWithRadii = (radii, rings = {}) => createVrProgressFloor({
+  parent: new THREE.Group(),
+  creativeSectorModel: createSectorModel('creative', { radii }),
+  ethicsSectorModel: createSectorModel('ethics', { radii }),
+  haikuSectorModel: createSectorModel('water', { radii }),
+  digSectorModel: createSectorModel('metal', { radii }),
+  aiGuideSectorModel: createSectorModel('wood', { radii }),
+  rings
+});
+const readRingRadii = (targetFloor) => targetFloor.object.children
+  .filter(({ name }) => name.startsWith('VrProgressTierRing:'))
+  .map(({ userData }) => userData.radius);
+const originalWarn = console.warn;
+const normalizationWarnings = [];
+console.warn = (...args) => normalizationWarnings.push(args);
+const nonMonotonicFloor = createFloorWithRadii([1.3, 2.6, 3.9, 3.7, 5.2]);
+const nonMonotonicRadii = readRingRadii(nonMonotonicFloor);
+assert.equal(nonMonotonicRadii.length, 5);
+assert.ok(nonMonotonicRadii.every((radius, index) => radius > 0 && (index === 0 || radius > nonMonotonicRadii[index - 1])));
+assert.deepEqual(nonMonotonicRadii, [1.3, 2.6, 3.7, 3.9, 5.2]);
+nonMonotonicFloor.dispose();
+
+const closeRadiiFloor = createFloorWithRadii([1.3, 2.6, 3.9, 3.91, 5.2], { ringThickness: 0.1 });
+const closeRadii = readRingRadii(closeRadiiFloor);
+assert.ok(closeRadii[3] - closeRadii[2] >= 0.2 - 1e-12, 'close candidates respect twice the ring thickness');
+assert.ok(closeRadii.every((radius, index) => index === 0 || radius > closeRadii[index - 1]));
+closeRadiiFloor.dispose();
+console.warn = originalWarn;
+assert.equal(normalizationWarnings.length, 2, 'normalization emits one developer warning per constructed floor');
 
 const ownedWaterMaterial = panelMaterial(sectors[1], 1);
 const ownedMetalMaterial = panelMaterial(sectors[0], 1);

@@ -57,6 +57,7 @@ export const VR_PROGRESS_FLOOR_EMISSION = Object.freeze({
 
 export const VR_PROGRESS_FLOOR_RINGS = Object.freeze({
   ringThickness: 0.035,
+  minimumRingGap: 0.07,
   ringSegments: 80,
   ringYOffset: 0.018,
   ringStableOpacity: 0.24,
@@ -197,7 +198,7 @@ export function createVrProgressFloor({
     });
 
     object.updateMatrixWorld(true);
-    const radii = [];
+    const candidateRadii = [];
     for (let tier = 1; tier <= 5; tier += 1) {
       const samples = [];
       sectorsByGlyphId.forEach(({ panelsByOrder }) => {
@@ -212,31 +213,71 @@ export function createVrProgressFloor({
       if (samples.length === 0) throw new Error(`[VrProgressFloor] Cannot derive a valid radius for tier ${tier} from panel centers.`);
       const middle = Math.floor(samples.length / 2);
       const radius = samples.length % 2 ? samples[middle] : (samples[middle - 1] + samples[middle]) / 2;
-      if (!Number.isFinite(radius) || radius <= 0 || (radii.length && radius <= radii.at(-1))) {
-        throw new Error(`[VrProgressFloor] Derived ring radii must increase with tier (invalid tier ${tier} radius: ${radius}).`);
+      if (!Number.isFinite(radius) || radius <= 0) {
+        throw new Error(`[VrProgressFloor] Cannot derive a valid radius for tier ${tier} from panel centers.`);
       }
-      radii.push(radius);
-      const geometry = new THREE.RingGeometry(
-        Math.max(0.001, radius - ringConfig.ringThickness / 2),
-        radius + ringConfig.ringThickness / 2,
-        ringConfig.ringSegments
-      );
-      const material = new THREE.MeshBasicMaterial({
-        color: ringConfig.ringColor,
-        transparent: true,
-        opacity: 0,
-        depthWrite: false,
-        side: THREE.DoubleSide
+      candidateRadii.push(radius);
+    }
+
+    const minimumRingGap = Math.max(
+      ringConfig.ringThickness * 2,
+      Number.isFinite(ringConfig.minimumRingGap) ? ringConfig.minimumRingGap : 0
+    );
+    const radii = candidateRadii.slice().sort((a, b) => a - b);
+    for (let index = 1; index < radii.length; index += 1) {
+      radii[index] = Math.max(radii[index], radii[index - 1] + minimumRingGap);
+    }
+    const radiiWereNormalized = radii.some((radius, index) => Math.abs(radius - candidateRadii[index]) > Number.EPSILON);
+    if (radiiWereNormalized) {
+      console.warn('[VrProgressFloor] Normalized tier ring radii.', {
+        candidateRadii: candidateRadii.slice(),
+        finalRadii: radii.slice()
       });
-      const ring = new THREE.Mesh(geometry, material);
-      ring.name = `VrProgressTierRing:${tier}`;
-      ring.rotation.x = -Math.PI / 2;
-      ring.position.y = ringConfig.ringYOffset;
-      ring.userData = { ...ring.userData, tier, radius };
-      ownedGeometries.add(geometry);
-      ownedMaterials.add(material);
-      tierRings.set(tier, { object: ring, material, pulseRemaining: 0 });
-      object.add(ring);
+    }
+
+    const ringMaterials = new Set();
+    const ringGeometries = new Set();
+    try {
+      radii.forEach((radius, index) => {
+        const tier = index + 1;
+        const geometry = new THREE.RingGeometry(
+          Math.max(0.001, radius - ringConfig.ringThickness / 2),
+          radius + ringConfig.ringThickness / 2,
+          ringConfig.ringSegments
+        );
+        const material = new THREE.MeshBasicMaterial({
+          color: ringConfig.ringColor,
+          transparent: true,
+          opacity: 0,
+          depthWrite: false,
+          side: THREE.DoubleSide
+        });
+        const ring = new THREE.Mesh(geometry, material);
+        ring.name = `VrProgressTierRing:${tier}`;
+        ring.rotation.x = -Math.PI / 2;
+        ring.position.y = ringConfig.ringYOffset;
+        ring.userData = { ...ring.userData, tier, radius };
+        ownedGeometries.add(geometry);
+        ringGeometries.add(geometry);
+        ownedMaterials.add(material);
+        ringMaterials.add(material);
+        tierRings.set(tier, { object: ring, material, pulseRemaining: 0 });
+        object.add(ring);
+      });
+    } catch (error) {
+      tierRings.forEach(({ object: ring }) => {
+        ring.removeFromParent();
+      });
+      ringMaterials.forEach((material) => {
+        material.dispose();
+        ownedMaterials.delete(material);
+      });
+      ringGeometries.forEach((geometry) => {
+        geometry.dispose();
+        ownedGeometries.delete(geometry);
+      });
+      tierRings.clear();
+      console.warn('[VrProgressFloor] Tier rings are unavailable; continuing without the optional visual layer.', error);
     }
   } catch (error) {
     ownedMaterials.forEach((material) => material.dispose());
