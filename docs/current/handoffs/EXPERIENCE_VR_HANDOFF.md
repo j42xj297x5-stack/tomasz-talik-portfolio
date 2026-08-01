@@ -1,6 +1,6 @@
 # Experience VR Handoff
 
-Status: self-contained implementation state at **2026-07-31**. Read the [runtime model](../technical/VR_RUNTIME_MODEL.md) and [progress-floor model](../technical/VR_PROGRESS_FLOOR_MODEL.md) for the canonical technical contracts.
+Status: self-contained implementation state at **2026-08-01**. Read the [runtime model](../technical/VR_RUNTIME_MODEL.md) and [progress-floor model](../technical/VR_PROGRESS_FLOOR_MODEL.md) for the canonical technical contracts.
 
 ## Runtime and locomotion
 
