@@ -151,7 +151,10 @@ const crystalCollection = createVrCrystalCollection({
   settings: settings.crystals, insertFeedbackSettings: settings.reliquary.insertFeedback,
   pages: experienceVrPages, progressionController,
   onPreview: (page) => portalCanvas.show(resolveExperienceVrPage(page, language)),
-  onCommit: (page) => progressFloor.activatePage(page)
+  onCommit: (page) => {
+    progressFloor.activatePage(page);
+    if (progressionController.isTierComplete(page.order)) progressFloor.completeTier(page.order);
+  }
 });
 const activateButtonGltf = assetManager.getGltf('vr-crystal-reliquary-button-activate-model');
 const activateButtonModel = assetManager.cloneGltfScene('vr-crystal-reliquary-button-activate-model');

@@ -10,7 +10,7 @@ const CONTRACTS = {
   wood: { base: 'VR_PROGRESS_SECTOR_WOOD_BASE', prefix: 'VR_PROGRESS_CARD_WOOD_', panelCount: 3 }
 };
 
-function createSectorModel(sourceType, { missingObject = null } = {}) {
+function createSectorModel(sourceType, { missingObject = null, radialStep = 1.25 } = {}) {
   const contract = CONTRACTS[sourceType];
   const source = new THREE.Group();
   source.name = `${sourceType}FloorSource`;
@@ -27,6 +27,7 @@ function createSectorModel(sourceType, { missingObject = null } = {}) {
       new THREE.MeshStandardMaterial({ color: 0x222222, emissive: order === 1 ? 0x000000 : 0x551100 })
     );
     panel.name = name;
+    panel.position.set(order * radialStep, 0.05, 0);
     source.add(panel);
   }
   const ornament = new THREE.Mesh(new THREE.BoxGeometry(), new THREE.MeshStandardMaterial());
@@ -53,7 +54,8 @@ const floor = createVrProgressFloor({
   aiGuideSectorModel: woodSource,
   emission: { stableIntensity: 1.5, pulseIntensity: 3, pulseDuration: 0.1, responseSpeed: 100 }
 });
-const sectors = floor.object.children;
+const sectors = floor.object.children.filter(({ name }) => name.startsWith('VrProgressFloorSector:'));
+const tierRings = floor.object.children.filter(({ name }) => name.startsWith('VrProgressTierRing:'));
 const expected = [
   ['spotify-digger', 'metal', false, 'metal'],
   ['haiku-cosmos', 'water', false, 'water'],
@@ -69,6 +71,12 @@ assert.deepEqual(floor.object.position.toArray(), [0, -1.05, 0]);
 assert.deepEqual(floor.object.rotation.toArray().slice(0, 3), [0, 0, 0]);
 assert.deepEqual(floor.object.scale.toArray(), [1, 1, 1]);
 assert.equal(sectors.length, 5);
+assert.equal(tierRings.length, 5);
+assert.deepEqual(tierRings.map(({ userData }) => userData.tier), [1, 2, 3, 4, 5]);
+assert.deepEqual(tierRings.map(({ userData }) => userData.radius), [1.25, 2.5, 3.75, 5, 6.25]);
+assert.ok(tierRings.every((ring, index) => index === 0 || ring.userData.radius > tierRings[index - 1].userData.radius));
+assert.ok(tierRings.every(({ material }) => material.opacity === 0 && material.transparent && material.depthWrite === false));
+assert.ok(tierRings.every(({ geometry }) => geometry.type === 'RingGeometry'), 'tiers 4 and 5 also use full RingGeometry');
 assert.deepEqual(sectors.map(({ name }) => name), expected.map(([glyphId]) => `VrProgressFloorSector:${glyphId}`));
 
 sectors.forEach((sector, index) => {
@@ -162,6 +170,25 @@ assert.notEqual(floor.getActivatedEntries()[0].glyphId, 'changed');
 assert.ok(floor.getActivatedEntries().length > 0);
 assert.ok(floor.getActivatedEntries().some(({ glyphId, order }) => glyphId === 'spotify-digger' && order === 4));
 
+assert.equal(floor.completeTier(0), false);
+assert.equal(floor.completeTier(6), false);
+assert.equal(floor.completeTier(1), true);
+assert.equal(floor.completeTier(1), false);
+floor.update(0.02);
+assert.ok(tierRings[0].material.opacity > 0, 'completion begins the light impulse');
+assert.equal(tierRings[1].material.opacity, 0, 'uncompleted rings stay unlit');
+const pulseOpacity = tierRings[0].material.opacity;
+floor.update(1);
+floor.update(1);
+assert.ok(tierRings[0].material.opacity > 0 && tierRings[0].material.opacity < pulseOpacity, 'impulse settles to a subtle stable glow');
+for (let tier = 2; tier <= 5; tier += 1) assert.equal(floor.completeTier(tier), true);
+floor.update(1);
+assert.ok(tierRings.every(({ material }) => material.opacity > 0), 'completed tier rings accumulate');
+assert.deepEqual(floor.getCompletedTiers(), [1, 2, 3, 4, 5]);
+const completedCopy = floor.getCompletedTiers();
+completedCopy.length = 0;
+assert.deepEqual(floor.getCompletedTiers(), [1, 2, 3, 4, 5]);
+
 for (const missingObject of ['VR_PROGRESS_CARD_WATER_04', 'VR_PROGRESS_CARD_WATER_05']) {
   assert.throws(() => createVrProgressFloor({
     parent: new THREE.Group(), creativeSectorModel: createSectorModel('creative'), ethicsSectorModel: createSectorModel('ethics'),
@@ -186,14 +213,27 @@ assert.throws(() => createVrProgressFloor({
   parent: new THREE.Group(), creativeSectorModel: creativeSource, ethicsSectorModel: ethicsSource,
   haikuSectorModel: waterSource, digSectorModel: metalSource
 }), /valid AI Guide sector model/);
+assert.throws(() => createVrProgressFloor({
+  parent: new THREE.Group(), creativeSectorModel: createSectorModel('creative', { radialStep: 0 }),
+  ethicsSectorModel: createSectorModel('ethics', { radialStep: 0 }),
+  haikuSectorModel: createSectorModel('water', { radialStep: 0 }),
+  digSectorModel: createSectorModel('metal', { radialStep: 0 }),
+  aiGuideSectorModel: createSectorModel('wood', { radialStep: 0 })
+}), /Cannot derive a valid radius for tier 1 from panel centers/);
 
 const ownedWaterMaterial = panelMaterial(sectors[1], 1);
 const ownedMetalMaterial = panelMaterial(sectors[0], 1);
 const ownedWoodMaterial = panelMaterial(sectors[2], 1);
+let ringGeometryDisposed = false;
+let ringMaterialDisposed = false;
+tierRings[0].geometry.addEventListener('dispose', () => { ringGeometryDisposed = true; });
+tierRings[0].material.addEventListener('dispose', () => { ringMaterialDisposed = true; });
 floor.dispose();
 assert.equal(floor.object.parent, null);
 assert.equal(ownedWaterMaterial.version > 0, true, 'owned cloned materials are disposed');
 assert.equal(ownedMetalMaterial.version > 0, true, 'owned cloned Metal materials are disposed');
 assert.equal(ownedWoodMaterial.version > 0, true, 'owned cloned Wood materials are disposed');
+assert.equal(ringGeometryDisposed, true, 'owned ring geometries are disposed');
+assert.equal(ringMaterialDisposed, true, 'owned ring materials are disposed');
 floor.dispose();
 console.log('VR progress floor assertions passed');

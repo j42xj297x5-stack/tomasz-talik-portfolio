@@ -55,6 +55,17 @@ export const VR_PROGRESS_FLOOR_EMISSION = Object.freeze({
   fallbackColors: Object.freeze({ creative: 0xff4b2b, ethics: 0xc8752a, water: 0x35a9ff, metal: 0x8cd1ff, wood: 0x29e86f })
 });
 
+export const VR_PROGRESS_FLOOR_RINGS = Object.freeze({
+  ringThickness: 0.035,
+  ringSegments: 80,
+  ringYOffset: 0.018,
+  ringStableOpacity: 0.24,
+  ringPulseOpacity: 0.9,
+  ringPulseDuration: 0.24,
+  ringResponseSpeed: 16,
+  ringColor: 0xeaf4ff
+});
+
 export const FLOOR_WORLD_Y_OFFSET = -1.05;
 
 function cloneMaterials(root, ownedMaterials) {
@@ -119,6 +130,7 @@ export function createVrProgressFloor({
   digSectorModel,
   aiGuideSectorModel,
   emission = {},
+  rings = {},
   worldYOffset = FLOOR_WORLD_Y_OFFSET
 }) {
   if (!parent?.add) throw new Error('[VrProgressFloor] A valid parent is required.');
@@ -135,10 +147,12 @@ export function createVrProgressFloor({
     ...emission,
     fallbackColors: { ...VR_PROGRESS_FLOOR_EMISSION.fallbackColors, ...emission.fallbackColors }
   };
+  const ringConfig = { ...VR_PROGRESS_FLOOR_RINGS, ...rings };
   const object = new THREE.Group();
   object.name = 'VrTiltableFloorRoot';
   object.position.y = worldYOffset;
   const ownedMaterials = new Set();
+  const ownedGeometries = new Set();
   const sourceModels = {
     creative: creativeSectorModel,
     ethics: ethicsSectorModel,
@@ -149,6 +163,8 @@ export function createVrProgressFloor({
   const sectorsByGlyphId = new Map();
   const activatedEntries = new Map();
   const pulseRemaining = new Map();
+  const completedTiers = new Set();
+  const tierRings = new Map();
   let disposed = false;
 
   try {
@@ -179,8 +195,52 @@ export function createVrProgressFloor({
       sectorsByGlyphId.set(sectorConfig.glyphId, { object: sector, panelsByOrder });
       object.add(sector);
     });
+
+    object.updateMatrixWorld(true);
+    const radii = [];
+    for (let tier = 1; tier <= 5; tier += 1) {
+      const samples = [];
+      sectorsByGlyphId.forEach(({ panelsByOrder }) => {
+        const panel = panelsByOrder.get(tier)?.object;
+        if (!panel) return;
+        const center = new THREE.Box3().setFromObject(panel).getCenter(new THREE.Vector3());
+        object.worldToLocal(center);
+        const radius = Math.hypot(center.x, center.z);
+        if (Number.isFinite(radius) && radius > 0) samples.push(radius);
+      });
+      samples.sort((a, b) => a - b);
+      if (samples.length === 0) throw new Error(`[VrProgressFloor] Cannot derive a valid radius for tier ${tier} from panel centers.`);
+      const middle = Math.floor(samples.length / 2);
+      const radius = samples.length % 2 ? samples[middle] : (samples[middle - 1] + samples[middle]) / 2;
+      if (!Number.isFinite(radius) || radius <= 0 || (radii.length && radius <= radii.at(-1))) {
+        throw new Error(`[VrProgressFloor] Derived ring radii must increase with tier (invalid tier ${tier} radius: ${radius}).`);
+      }
+      radii.push(radius);
+      const geometry = new THREE.RingGeometry(
+        Math.max(0.001, radius - ringConfig.ringThickness / 2),
+        radius + ringConfig.ringThickness / 2,
+        ringConfig.ringSegments
+      );
+      const material = new THREE.MeshBasicMaterial({
+        color: ringConfig.ringColor,
+        transparent: true,
+        opacity: 0,
+        depthWrite: false,
+        side: THREE.DoubleSide
+      });
+      const ring = new THREE.Mesh(geometry, material);
+      ring.name = `VrProgressTierRing:${tier}`;
+      ring.rotation.x = -Math.PI / 2;
+      ring.position.y = ringConfig.ringYOffset;
+      ring.userData = { ...ring.userData, tier, radius };
+      ownedGeometries.add(geometry);
+      ownedMaterials.add(material);
+      tierRings.set(tier, { object: ring, material, pulseRemaining: 0 });
+      object.add(ring);
+    }
   } catch (error) {
     ownedMaterials.forEach((material) => material.dispose());
+    ownedGeometries.forEach((geometry) => geometry.dispose());
     throw error;
   }
 
@@ -209,6 +269,20 @@ export function createVrProgressFloor({
         material.emissiveIntensity += (target - material.emissiveIntensity) * blend;
       });
     });
+    completedTiers.forEach((tier) => {
+      const ring = tierRings.get(tier);
+      ring.pulseRemaining = Math.max(0, ring.pulseRemaining - safeDelta);
+      const target = ring.pulseRemaining > 0 ? ringConfig.ringPulseOpacity : ringConfig.ringStableOpacity;
+      const ringBlend = 1 - Math.exp(-ringConfig.ringResponseSpeed * safeDelta);
+      ring.material.opacity += (target - ring.material.opacity) * ringBlend;
+    });
+  }
+
+  function completeTier(tier) {
+    if (disposed || !Number.isInteger(tier) || !tierRings.has(tier) || completedTiers.has(tier)) return false;
+    completedTiers.add(tier);
+    tierRings.get(tier).pulseRemaining = ringConfig.ringPulseDuration;
+    return true;
   }
 
   function dispose() {
@@ -217,13 +291,17 @@ export function createVrProgressFloor({
     object.removeFromParent();
     ownedMaterials.forEach((material) => material.dispose());
     ownedMaterials.clear();
+    ownedGeometries.forEach((geometry) => geometry.dispose());
+    ownedGeometries.clear();
   }
 
   return {
     object,
     activatePage,
+    completeTier,
     update,
     getActivatedEntries: () => [...activatedEntries.values()].map(({ glyphId, order }) => ({ glyphId, order })),
+    getCompletedTiers: () => [...completedTiers],
     dispose
   };
 }
