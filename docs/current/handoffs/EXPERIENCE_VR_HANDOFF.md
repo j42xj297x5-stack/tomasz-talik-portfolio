@@ -12,6 +12,8 @@ Session entry/end resets transient crystals, hands/socket ownership, hits, glyph
 
 Five branches contain 18 cards in counts `3 / 3 / 3 / 4 / 5` and reuse 15 GLBs. A physical crystal represents only a branch and tier, with a visual variant selecting the shared model; it does not retain a page or card ID. A branch can stock its successive unrepresented tiers regardless of the current global tier.
 
+On a completed glyph hold, the crystal captures the moving glyph's current world position and materializes `0.30 m` inward toward the central world object, at the resulting spatial height and independently of the viewer pose. Local minimum-spacing offsets prevent overlap, and the spawned crystal does not continue following the glyph.
+
 The in-memory `VrProgressionController` owns committed pages. Tiers 1–3 require all five branches, tier 4 Metal and Water, and tier 5 Water. Only a crystal matching the current tier can be inserted. Activate resolves and previews the branch/tier page without progress or floor activation. Release after Activate commits exactly once, lights the matching floor panel, and may advance the tier. Release without Activate returns the crystal to `available`. Transient reset preserves controller progress for the prepared runtime only.
 
 ## Complete five-sector visual floor

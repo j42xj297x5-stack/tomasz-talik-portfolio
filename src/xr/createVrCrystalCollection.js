@@ -18,6 +18,13 @@ export function hashVrPageId(id) {
 
 const unit = (hash, shift = 0) => ((hash >>> shift) & 0xff) / 255;
 
+export function calculateVrCrystalSpawnPosition({ glyphWorldPosition, centerWorldPosition, inwardOffset }) {
+  const position = glyphWorldPosition.clone();
+  const inward = centerWorldPosition.clone().sub(glyphWorldPosition);
+  if (inward.lengthSq() > 1e-8) position.addScaledVector(inward.normalize(), inwardOffset);
+  return position;
+}
+
 export function getDeterministicCrystalTransform(pageId, settings) {
   const hash = hashVrPageId(pageId);
   return {
@@ -217,7 +224,7 @@ export function createVrCrystalCollection({ scene, assetManager, controllers, po
     listeners.push({ controllerRecord, squeezeStart, squeezeEnd });
   });
 
-  function spawnOne(branchId, viewerFrame) {
+  function spawnOne(branchId, spawnFrame) {
     const requestedDefinition = typeof branchId === 'object' ? branchId : null;
     branchId = requestedDefinition?.glyphId ?? requestedDefinition?.branchId ?? branchId;
     const definition = pages.filter((page) => page.glyphId === branchId)
@@ -228,11 +235,14 @@ export function createVrCrystalCollection({ scene, assetManager, controllers, po
         && instance.tier === (requestedDefinition.order ?? requestedDefinition.tier ?? 1) && instance.state !== 'released')
         ? requestedDefinition : null);
     if (disposed || !settings.enabled || !definition) return null;
-    const origin = viewerFrame.position.clone();
-    const forward = viewerFrame.direction.clone(); forward.y = 0;
+    const center = calculateVrCrystalSpawnPosition({
+      glyphWorldPosition: spawnFrame.glyphWorldPosition,
+      centerWorldPosition: spawnFrame.centerWorldPosition,
+      inwardOffset: settings.spawnInwardOffset
+    });
+    const forward = spawnFrame.centerWorldPosition.clone().sub(spawnFrame.glyphWorldPosition); forward.y = 0;
     if (forward.lengthSq() < 1e-8) forward.set(0, 0, -1); forward.normalize();
     const right = new THREE.Vector3(-forward.z, 0, forward.x);
-    const center = origin.clone().addScaledVector(forward, settings.frontDistance); center.y = 0;
     let targetPosition = center.clone();
     for (let slot = 0; slot < 200; slot += 1) {
       const ring = Math.ceil(Math.sqrt(slot));
@@ -263,7 +273,6 @@ export function createVrCrystalCollection({ scene, assetManager, controllers, po
       model.updateMatrixWorld(true);
       bounds = new THREE.Box3().setFromObject(model);
       model.position.y -= bounds.min.y;
-      targetPosition.y = 0;
       object.position.copy(targetPosition);
       object.position.y -= settings.materializeRise;
       object.scale.setScalar(settings.materializeStartScale);
@@ -283,9 +292,8 @@ export function createVrCrystalCollection({ scene, assetManager, controllers, po
     if (disposed || !settings.enabled) return [];
     const anchorCenter = new THREE.Box3().setFromObject(anchorObject).getCenter(new THREE.Vector3());
     const position = new THREE.Vector3(spawnPosition.x, spawnPosition.y, spawnPosition.z);
-    const direction = anchorCenter.clone().sub(position).normalize();
     return branchIds.map((branchId, index) => {
-      const instance = spawnOne(branchId, { position, direction });
+      const instance = spawnOne(branchId, { glyphWorldPosition: position, centerWorldPosition: anchorCenter });
       if (instance) instance.materializeElapsed = -index * settings.materializeStagger;
       return instance;
     }).filter(Boolean);

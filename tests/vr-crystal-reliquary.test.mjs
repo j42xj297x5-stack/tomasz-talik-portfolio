@@ -138,7 +138,7 @@ function controllerRecord() {
   return { controller, holdSocket, currentCrystalHit: null, currentCrystalHitDistance: null };
 }
 const crystalSettings = { enabled: true, rayGrabMaxDistance: 2, pullDuration: 0.01, targetScale: 1.04,
-  scaleMin: 0.25, scaleMax: 0.25, spawnWidth: 1, spawnDepth: 1, minimumSpacing: 0.2, frontDistance: 1,
+  scaleMin: 0.25, scaleMax: 0.25, spawnWidth: 1, spawnDepth: 1, minimumSpacing: 0.2, spawnInwardOffset: 0.3,
   materializeDuration: 0.01, materializeStagger: 0, materializeStartScale: 0.2, materializeRise: 0.1,
   materializeYaw: 0.1, holdOffset: { x: 0, y: 0, z: 0 } };
 

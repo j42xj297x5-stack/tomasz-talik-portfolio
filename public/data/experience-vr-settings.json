@@ -110,7 +110,7 @@
     "spawnWidth": 1.45,
     "spawnDepth": 0.85,
     "minimumSpacing": 0.38,
-    "frontDistance": 1.55,
+    "spawnInwardOffset": 0.3,
     "materializeDuration": 0.55,
     "materializeStagger": 0.12,
     "materializeStartScale": 0.18,
