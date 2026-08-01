@@ -6,7 +6,7 @@ Status: canonical technical description of the implemented visual progress-floor
 
 `createVrProgressFloor` in `src/xr/floor/createVrProgressFloor.js` is the subsystem factory. `src/experienceVr.js` composes it under `worldRoot` after `AssetManager` has preloaded the five manifest models, passes clones of those models to the factory, calls `update(delta)` from the shared animation loop, and calls `dispose()` during page teardown.
 
-The factory creates one shared `THREE.Group` named `VrTiltableFloorRoot`. Its world-relative Y position is the exported `FLOOR_WORLD_Y_OFFSET` (`-1.05` by default). It owns all five instantiated sectors and its cloned materials. `dispose()` is idempotent: it detaches the root and disposes every owned material clone. The name reserves a future tilting contract; the current root remains stationary.
+The factory creates one shared `THREE.Group` named `VrTiltableFloorRoot`. Its world-relative Y position is the exported `FLOOR_WORLD_Y_OFFSET` (`-1.05` by default). It owns all five instantiated sectors, five procedural tier rings, cloned sector materials, and the rings' materials and geometries. `dispose()` is idempotent: it detaches the root and disposes every owned material and procedural geometry. The name reserves a future tilting contract; the current root remains stationary.
 
 ## Sector layout
 
@@ -50,16 +50,20 @@ New activation starts a short emissive impulse (`pulseIntensity = 2.8`, `pulseDu
 
 The floor object and its `activatedEntries` registry belong to the prepared page runtime. Session entry/end resets do not reconstruct or clear the floor, so highlights survive XR exit and re-entry in that same runtime. Reload, navigation, or page teardown creates a fresh registry. `dispose()` releases the cloned materials along with detaching the root.
 
-## Relationship to crystals
+## Global tier rings
 
-The floor reacts to the concrete `page` delivered by the current Activate callback: the portal displays that page and `progressFloor.activatePage(page)` lights its mapped panel. Crystals remain page-bound. Previously collected crystals can therefore be activated in physical insertion order rather than branch card order. The floor correctly lights the page actually activated, but does not repair sequential card resolution.
+The floor creates exactly five independent `THREE.RingGeometry` meshes as direct children of `VrTiltableFloorRoot`, one for each tier. Every ring covers 360 degrees, including tier 4 (Metal + Water) and tier 5 (Water only); branch requirement counts never determine angular coverage.
+
+Ring radii are not layout constants. After all sectors have been placed, the factory measures each existing panel's bounding-box center in floor-root local space, groups radial XZ distances by `order`, and uses their median as that tier's radius. Construction fails clearly when a valid positive radius cannot be derived or the resulting tier radii do not increase. Rings use 80 radial segments, a thin neutral cool-white transparent `MeshBasicMaterial`, no light or bloom dependency, and `depthWrite = false`. Their small local Y offset keeps them separated from authored surfaces without moving sectors or cards.
+
+Rings begin at zero opacity. `completeTier(tier)` accepts integers 1–5, returns `true` only for the first activation, and starts a short strong opacity impulse which `update(delta)` settles to a subtle persistent glow. Unsupported and repeated calls return `false`. `getCompletedTiers()` returns a defensive array. Completed rings accumulate for the prepared runtime and are unaffected by transient XR session reset.
+
+## Relationship to crystals and progression
+
+Crystals are branch-and-tier bound and do not carry a page identity. `VrProgressionController` owns committed progress and resolves the concrete sequential page during Activate for preview. Release performs the commit; only after that succeeds does the runtime call `progressFloor.activatePage(page)`. It then asks the controller whether `page.order` is complete and calls the idempotent `progressFloor.completeTier(page.order)` when appropriate. The floor is a visual projection of controller state and does not change tier requirements or page resolution.
 
 ## Explicitly not implemented
 
-- `VrProgressionController`;
-- branch-bound crystal contract;
-- Activate-time sequential page resolution;
-- global thresholds and rings;
 - progressively filled sector-background illumination;
 - soft gradient progress boundary;
 - central progression core;

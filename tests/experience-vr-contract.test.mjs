@@ -78,7 +78,7 @@ assert.doesNotMatch(crystalCollection, /currentHit\s*=/);
 assert.doesNotMatch(glyphInteraction, /SphereGeometry\(0\.31|VrEntryGlyphMarker|playerRig\.position|playerRig\.rotation/);
 assert.doesNotMatch(`${vr}\n${vrControllers}`, /XRControllerModelFactory/);
 assert.match(vr, /onPreview: \(page\) => portalCanvas\.show\(resolveExperienceVrPage\(page, language\)\)/);
-assert.match(vr, /onCommit: \(page\) => progressFloor\.activatePage\(page\)/);
+assert.match(vr, /progressFloor\.activatePage\(page\);[\s\S]*progressionController\.isTierComplete\(page\.order\)[\s\S]*progressFloor\.completeTier\(page\.order\)/);
 assert.doesNotMatch(crystalCollection, /CANNON|Ammo|Rapier|gravity|throwVelocity|linearVelocity|angularVelocity/i);
 assert.doesNotMatch(vrControllers, /controller\.(position|rotation|quaternion)\.(set|copy)/);
 
