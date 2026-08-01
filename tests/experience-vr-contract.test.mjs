@@ -88,7 +88,7 @@ const playerRig = new THREE.Group();
 const controllerSystem = createVrControllers({
   renderer: { xr: { getController: (index) => controllerObjects[index], getControllerGrip: (index) => controllerGrips[index] } },
   playerRig,
-  settings: { enabled: true, rayLength: 2, rayOpacity: 0.7, rayDiameter: 0.012, rayTipFraction: 0.08, rayRadialSegments: 6 }
+  settings: { enabled: true, rayLength: 2, rayOpacity: 0.7, rayDiameter: 0.01, rayTipFraction: 0.08, rayRadialSegments: 6 }
 });
 assert.equal(controllerSystem.controllers.length, 2);
 assert.equal(playerRig.children.length, 4);
@@ -104,6 +104,7 @@ assert.equal(right.handedness, '');
 assert.equal(left.ray.visible, true);
 assert.equal(left.currentRayLength, 2);
 assert.equal(left.ray.children.length, 2, 'ray uses a shaft and tapered mesh tip');
+assert.equal(left.ray.children[0].geometry.parameters.radiusTop * 2, 0.01, 'ray shaft uses configured diameter');
 left.controller.dispatchEvent({ type: 'selectstart' });
 assert.equal(left.isSelecting, true);
 assert.equal(left.ray.scale.z, 1);

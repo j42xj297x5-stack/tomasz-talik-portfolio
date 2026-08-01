@@ -18,14 +18,15 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
   },
   controllers: {
     enabled: true,
-    rayLength: 3,
+    rayLength: 2,
     rayOpacity: 0.8,
-    rayDiameter: 0.012,
+    rayDiameter: 0.010,
     rayTipFraction: 0.08,
     rayRadialSegments: 6
   },
-  targetHalo: { color: 0xbfe9ff, opacity: 0.28, scale: 1.055, pulseDuration: 1.45 },
-  glyphInteraction: { holdDurationSeconds: 0.5 },
+  targetHalo: { color: 0xbfe9ff, opacity: 0.28, thicknessPixels: 3, pulseDuration: 1.45 },
+  glyphInteraction: { holdDurationSeconds: 0.5, holdLostGraceSeconds: 0.15 },
+  glyphLights: { inwardOffset: 1 },
   glyphRing: {
     enabled: true,
     radiusMultiplier: 2,
@@ -174,12 +175,19 @@ export function normalizeExperienceVrSettings(candidate) {
     targetHalo: {
       color: Math.round(finiteNumber(candidate.targetHalo?.color, defaults.targetHalo.color, { min: 0, max: 0xffffff })),
       opacity: finiteNumber(candidate.targetHalo?.opacity, defaults.targetHalo.opacity, { min: 0.05, max: 0.6 }),
-      scale: finiteNumber(candidate.targetHalo?.scale, defaults.targetHalo.scale, { min: 1.01, max: 1.15 }),
+      thicknessPixels: finiteNumber(candidate.targetHalo?.thicknessPixels,
+        defaults.targetHalo.thicknessPixels, { min: 0.5, max: 8 }),
       pulseDuration: finiteNumber(candidate.targetHalo?.pulseDuration, defaults.targetHalo.pulseDuration, { min: 1.3, max: 1.6 })
     },
     glyphInteraction: {
       holdDurationSeconds: finiteNumber(candidate.glyphInteraction?.holdDurationSeconds,
-        defaults.glyphInteraction.holdDurationSeconds, { min: 0.1, max: 5 })
+        defaults.glyphInteraction.holdDurationSeconds, { min: 0.1, max: 5 }),
+      holdLostGraceSeconds: finiteNumber(candidate.glyphInteraction?.holdLostGraceSeconds,
+        defaults.glyphInteraction.holdLostGraceSeconds, { min: 0, max: 1 })
+    },
+    glyphLights: {
+      inwardOffset: finiteNumber(candidate.glyphLights?.inwardOffset,
+        defaults.glyphLights.inwardOffset, { min: 0, max: 5 })
     },
     glyphRing: {
       enabled: typeof candidate.glyphRing?.enabled === 'boolean' ? candidate.glyphRing.enabled : defaults.glyphRing.enabled,

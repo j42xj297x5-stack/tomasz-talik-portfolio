@@ -8,6 +8,11 @@ import {
 assert.deepEqual(normalizeExperienceVrSettings(null), DEFAULT_EXPERIENCE_VR_SETTINGS);
 assert.deepEqual(DEFAULT_EXPERIENCE_VR_SETTINGS.spawn.position, { x: 0, y: 0, z: 5.8 });
 assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.glyphInteraction.holdDurationSeconds, 0.5);
+assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.glyphInteraction.holdLostGraceSeconds, 0.15);
+assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.controllers.rayLength, 2);
+assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.controllers.rayDiameter, 0.01);
+assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.targetHalo.thicknessPixels, 3);
+assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.glyphLights.inwardOffset, 1);
 assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.crystals.spawnInwardOffset, 0.3);
 assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.crystals.consumeDuration, 0.55);
 assert.deepEqual(normalizeExperienceVrSettings({ schemaVersion: 2 }), DEFAULT_EXPERIENCE_VR_SETTINGS);
@@ -19,7 +24,9 @@ const normalized = normalizeExperienceVrSettings({
   spawn: { position: { x: 1, y: 'bad', z: 5 }, lookAt: { x: 0, y: 2, z: 0 } },
   renderer: { pixelRatioCap: 99, antialias: false },
   controllers: { enabled: false, rayLength: 0, rayOpacity: 4, rayDiameter: 2, rayTipFraction: 1, rayRadialSegments: 99 },
-  targetHalo: { color: -1, opacity: 4, scale: 2, pulseDuration: 9 },
+  targetHalo: { color: -1, opacity: 4, thicknessPixels: 20, pulseDuration: 9 },
+  glyphInteraction: { holdDurationSeconds: 20, holdLostGraceSeconds: 4 },
+  glyphLights: { inwardOffset: 20 },
   entryTransition: { enabled: false, durationSeconds: 99, target: { x: 2, z: 'bad' }, easing: 'linear' },
   portal: { enabled: false, maxWidth: 0, maxHeight: 20, distanceFromAnchor: 0, forwardBias: 9, floorOffset: -9, appearDuration: 0, appearStartScale: 9 },
   reliquary: { distanceFromPortal: 4, forwardOffset: -3, floorOffset: 9,
@@ -43,7 +50,9 @@ assert.deepEqual(normalized.controllers, {
   rayTipFraction: 0.1,
   rayRadialSegments: 10
 });
-assert.deepEqual(normalized.targetHalo, { color: 0, opacity: 0.6, scale: 1.15, pulseDuration: 1.6 });
+assert.deepEqual(normalized.targetHalo, { color: 0, opacity: 0.6, thicknessPixels: 8, pulseDuration: 1.6 });
+assert.deepEqual(normalized.glyphInteraction, { holdDurationSeconds: 5, holdLostGraceSeconds: 1 });
+assert.deepEqual(normalized.glyphLights, { inwardOffset: 5 });
 assert.deepEqual(normalized.entryTransition, {
   enabled: false,
   durationSeconds: 30,

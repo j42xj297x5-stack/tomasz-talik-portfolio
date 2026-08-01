@@ -119,7 +119,7 @@ const { group: glyphRing, nodes } = createOrbitNodes(resolvedPortfolioNodes, { a
 worldRoot.add(glyphRing);
 const entryDirection = new THREE.Vector3(settings.spawn.position.x, 0, settings.spawn.position.z).normalize();
 const glyphOrbit = createVrGlyphOrbit({ nodes, settings: settings.glyphRing, entryDirection });
-const glyphLights = createVrGlyphLights({ nodes });
+const glyphLights = createVrGlyphLights({ nodes, settings: settings.glyphLights });
 const monkeyAnchor = monkeyModel ?? centralPlaceholder;
 const portalDisplay = createVrPortalDisplay({
   scene, anchorObject: monkeyAnchor, spawnPosition: settings.spawn.position,
