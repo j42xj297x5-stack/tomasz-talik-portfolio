@@ -1,14 +1,22 @@
 import assert from 'node:assert/strict';
 import * as THREE from '../src/vendor/three.js';
 import { experienceVrPages } from '../src/content/experienceVrPages.js';
-import { createVrCrystalCollection } from '../src/xr/createVrCrystalCollection.js';
+import { calculateVrCrystalSpawnPosition, createVrCrystalCollection } from '../src/xr/createVrCrystalCollection.js';
 import { createVrProgressionController } from '../src/xr/progression/createVrProgressionController.js';
 
 const settings = { enabled: true, rayGrabMaxDistance: 2, pullDuration: 0.01, targetScale: 1.04,
-  scaleMin: 0.25, scaleMax: 0.25, spawnWidth: 1, spawnDepth: 1, minimumSpacing: 0.2, frontDistance: 1,
+  scaleMin: 0.25, scaleMax: 0.25, spawnWidth: 1, spawnDepth: 1, minimumSpacing: 0.2, spawnInwardOffset: 0.3,
   materializeDuration: 0.01, materializeStagger: 0, materializeStartScale: 0.2, materializeRise: 0.1,
   materializeYaw: 0.1, holdOffset: { x: 0, y: 0, z: 0 } };
-const viewerFrame = { position: new THREE.Vector3(0, 1.6, 5.8), direction: new THREE.Vector3(0, 0, -1) };
+const glyphFrame = {
+  glyphWorldPosition: new THREE.Vector3(4, 2.5, 3),
+  centerWorldPosition: new THREE.Vector3(1, 2.5, 3)
+};
+
+const calculatedSpawn = calculateVrCrystalSpawnPosition({ ...glyphFrame, inwardOffset: 0.3 });
+assert.ok(calculatedSpawn.distanceTo(new THREE.Vector3(3.7, 2.5, 3)) < 1e-8,
+  'spawn starts at the glyph world position and moves toward the world center');
+assert.equal(calculatedSpawn.y, 2.5, 'spawn height is not grounded');
 
 function harness() {
   const scene = new THREE.Scene();
@@ -29,12 +37,14 @@ function harness() {
 }
 
 const stocked = harness();
-const crystals = [1, 2, 3].map(() => stocked.collection.spawnOne('creative-ai', viewerFrame));
+const crystals = [1, 2, 3].map(() => stocked.collection.spawnOne('creative-ai', glyphFrame));
 assert.deepEqual(crystals.map(({ tier }) => tier), [1, 2, 3]);
+assert.ok(crystals[0].targetPosition.distanceTo(calculatedSpawn) < 1e-8);
+assert.equal(crystals[0].targetPosition.y, 2.5);
 for (const crystal of crystals) {
   assert.equal('page' in crystal, false); assert.equal('pageId' in crystal, false); assert.equal('cardId' in crystal, false);
 }
-assert.equal(stocked.collection.spawnOne('creative-ai', viewerFrame), null);
+assert.equal(stocked.collection.spawnOne('creative-ai', glyphFrame), null);
 stocked.insert(crystals[1]);
 assert.equal(crystals[1].state, 'available', 'future tier insertion is rejected');
 assert.equal(stocked.collection.getInsertedInstance(), null);
@@ -52,7 +62,7 @@ assert.equal(stocked.collection.instances.length, 0);
 assert.equal(stocked.progressionController.getActivatedPageIds().length, 1, 'transient reset preserves progress');
 
 const noActivate = harness();
-const crystal = noActivate.collection.spawnOne('ethics-life-protection', viewerFrame); noActivate.insert(crystal);
+const crystal = noActivate.collection.spawnOne('ethics-life-protection', glyphFrame); noActivate.insert(crystal);
 assert.equal(noActivate.collection.releaseInserted(), true);
 assert.equal(crystal.state, 'available');
 assert.equal(noActivate.progressionController.getActivatedPageIds().length, 0);

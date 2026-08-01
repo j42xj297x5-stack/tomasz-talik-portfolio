@@ -18,11 +18,13 @@ The left joystick applies continuous yaw to `playerRig`. The right joystick tran
 
 Each controller independently raycasts the moving glyphs. A completed glyph hold spawns the first tier of that branch which is not already represented by a committed card or a live, non-released crystal. Acquisition is independent of the current global tier, so several future crystals may be stored. Branch capacities are `3 / 3 / 3 / 4 / 5`.
 
+The crystal materialization point is captured from the activated glyph's current world position when the hold completes, then offset by `0.30 m` toward the central world object. It preserves the resulting world-space height and is independent of the viewer pose. Once created, the crystal remains at that captured location rather than following the orbiting glyph.
+
 ## Crystal instances and visual assets
 
 A physical instance carries only `crystalId`, `glyphId/branchId`, `tier`, `visualVariant`, `crystalAssetId` and transient interaction state. It has no persistent `page`, `pageId` or `cardId`. `visualVariant = ((tier - 1) % 3) + 1` selects one of three shared GLBs per branch, for exactly 15 preloaded crystal models.
 
-Spawn remains additive and floor-grounded in front of the viewer. A deterministic nearest-free search enforces spacing. Reset removes all live instances but does not reset committed progression.
+Spawn remains additive. A deterministic nearest-free search applies small local offsets around the glyph-derived materialization point to enforce spacing. Reset removes all live instances but does not reset committed progression.
 
 ## Insertion, preview, Release and progression
 

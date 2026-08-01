@@ -194,10 +194,11 @@ const glyphInteraction = createVrGlyphInteraction({
   isGlyphActive,
   onGlyphHoldComplete: ({ node }) => {
     if (getNextCrystalTier(node) === null) return;
-    const xrCamera = renderer.xr.getCamera(camera);
-    const position = xrCamera.getWorldPosition(new THREE.Vector3());
-    const direction = xrCamera.getWorldDirection(new THREE.Vector3());
-    crystalCollection.spawnOne(node.userData.id, { position, direction });
+    node.updateWorldMatrix(true, false);
+    monkeyAnchor.updateWorldMatrix(true, false);
+    const glyphWorldPosition = node.getWorldPosition(new THREE.Vector3());
+    const centerWorldPosition = monkeyAnchor.getWorldPosition(new THREE.Vector3());
+    crystalCollection.spawnOne(node.userData.id, { glyphWorldPosition, centerWorldPosition });
   }
 });
 
