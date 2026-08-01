@@ -18,7 +18,8 @@ const normalized = normalizeExperienceVrSettings({
   worldScale: 2,
   spawn: { position: { x: 1, y: 'bad', z: 5 }, lookAt: { x: 0, y: 2, z: 0 } },
   renderer: { pixelRatioCap: 99, antialias: false },
-  controllers: { enabled: false, rayLength: 0, rayOpacity: 4, idleScale: 'bad', activeScale: 99 },
+  controllers: { enabled: false, rayLength: 0, rayOpacity: 4, rayDiameter: 2, rayTipFraction: 1, rayRadialSegments: 99 },
+  targetHalo: { color: -1, opacity: 4, scale: 2, pulseDuration: 9 },
   entryTransition: { enabled: false, durationSeconds: 99, target: { x: 2, z: 'bad' }, easing: 'linear' },
   portal: { enabled: false, maxWidth: 0, maxHeight: 20, distanceFromAnchor: 0, forwardBias: 9, floorOffset: -9, appearDuration: 0, appearStartScale: 9 },
   reliquary: { distanceFromPortal: 4, forwardOffset: -3, floorOffset: 9,
@@ -27,7 +28,7 @@ const normalized = normalizeExperienceVrSettings({
     enabled: false, width: 0, height: 9, distanceFromAnchor: 0, forwardBias: 9, floorOffset: -9,
     canvasWidth: 3000.6, canvasHeight: 100, titleFontSize: 10, bodyFontSize: 200, maxBodyLines: 0
   },
-  crystals: { rayGrabMaxDistance: 99, pullDuration: 0, targetScale: 9 },
+  crystals: { pullDuration: 0, holdRotationDegrees: { x: -30, y: 5, z: 'bad' } },
   ignored: true
 });
 assert.equal(normalized.referenceSpaceType, 'local');
@@ -38,9 +39,11 @@ assert.deepEqual(normalized.controllers, {
   enabled: false,
   rayLength: 0.1,
   rayOpacity: 1,
-  idleScale: 1,
-  activeScale: 5
+  rayDiameter: 0.04,
+  rayTipFraction: 0.1,
+  rayRadialSegments: 10
 });
+assert.deepEqual(normalized.targetHalo, { color: 0, opacity: 0.6, scale: 1.15, pulseDuration: 1.6 });
 assert.deepEqual(normalized.entryTransition, {
   enabled: false,
   durationSeconds: 30,
@@ -77,9 +80,8 @@ assert.deepEqual(modernPlacement, {
 assert.deepEqual(normalized.locomotion, DEFAULT_EXPERIENCE_VR_SETTINGS.locomotion);
 assert.deepEqual(normalized.crystals, {
   ...DEFAULT_EXPERIENCE_VR_SETTINGS.crystals,
-  rayGrabMaxDistance: 3,
   pullDuration: 0.05,
-  targetScale: 1.15
+  holdRotationDegrees: { x: -30, y: 5, z: 0 }
 });
 assert.equal('ignored' in normalized, false);
 

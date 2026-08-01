@@ -1,8 +1,9 @@
 import * as THREE from '../vendor/three.js';
+import { createVrTargetHalo } from './createVrTargetHalo.js';
 
 const LOCAL_RAY_DIRECTION = new THREE.Vector3(0, 0, -1);
 
-export function createVrGlyphInteraction({ controllers, nodes, settings = {}, isGlyphActive = () => true, onGlyphHoldComplete = () => {} }) {
+export function createVrGlyphInteraction({ controllers, nodes, settings = {}, haloSettings = {}, isGlyphActive = () => true, onGlyphHoldComplete = () => {} }) {
   const raycaster = new THREE.Raycaster();
   const rayOrigin = new THREE.Vector3();
   const rayDirection = new THREE.Vector3();
@@ -23,7 +24,7 @@ export function createVrGlyphInteraction({ controllers, nodes, settings = {}, is
       fallbackCollider.name = 'VrGlyphFallbackCollider'; glyphRoot.add(fallbackCollider); raycastObjects.push(fallbackCollider);
     }
     raycastObjects.forEach((object) => objectToGlyph.set(object, glyphRoot));
-    return { glyphRoot, raycastObjects, fallbackCollider };
+    return { glyphRoot, raycastObjects, fallbackCollider, halo: createVrTargetHalo({ root: glyphRoot, settings: haloSettings }) };
   });
   const allRaycastObjects = targets.flatMap(({ raycastObjects }) => raycastObjects);
   const listeners = controllers.map((record) => {
@@ -62,8 +63,10 @@ export function createVrGlyphInteraction({ controllers, nodes, settings = {}, is
         }
       }
     }
+    const hovered = new Set(controllers.map(({ currentHit }) => currentHit).filter(Boolean));
+    targets.forEach(({ glyphRoot, halo }) => { halo.setVisible(hovered.has(glyphRoot)); halo.update(delta); });
   }
-  function reset() { holds.clear(); controllers.forEach((record) => { record.currentHit = null; }); }
+  function reset() { holds.clear(); controllers.forEach((record) => { record.currentHit = null; }); targets.forEach(({ halo }) => halo.setVisible(false)); }
   function dispose() {
     if (disposed) return; disposed = true; reset();
     controllers.forEach((record, index) => {
@@ -71,7 +74,7 @@ export function createVrGlyphInteraction({ controllers, nodes, settings = {}, is
       record.controller.removeEventListener('selectend', listeners[index].end);
       record.controller.removeEventListener('disconnected', listeners[index].end);
     });
-    targets.forEach(({ fallbackCollider }) => { if (fallbackCollider) { fallbackCollider.removeFromParent(); fallbackCollider.geometry.dispose(); fallbackCollider.material.dispose(); } });
+    targets.forEach(({ fallbackCollider, halo }) => { halo.dispose(); if (fallbackCollider) { fallbackCollider.removeFromParent(); fallbackCollider.geometry.dispose(); fallbackCollider.material.dispose(); } });
     objectToGlyph.clear(); targets.length = 0; allRaycastObjects.length = 0;
   }
   return { targets, holds, get hoveredGlyphs() { return new Set(controllers.map(({ currentHit }) => currentHit).filter(Boolean)); }, update, reset, dispose };

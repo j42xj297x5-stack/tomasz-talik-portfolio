@@ -14,16 +14,25 @@ export function createVrControllers({ renderer, playerRig, settings }) {
     const holdSocket = new THREE.Object3D();
     holdSocket.name = `VrCrystalHoldSocket${index}`;
     grip.add(holdSocket);
-    const geometry = new THREE.BufferGeometry().setFromPoints([
-      new THREE.Vector3(0, 0, 0),
-      new THREE.Vector3(0, 0, -settings.rayLength)
-    ]);
-    const material = new THREE.LineBasicMaterial({
+    const tipLength = settings.rayLength * settings.rayTipFraction;
+    const shaftLength = settings.rayLength - tipLength;
+    const shaftGeometry = new THREE.CylinderGeometry(settings.rayDiameter / 2, settings.rayDiameter / 2,
+      shaftLength, settings.rayRadialSegments, 1, true);
+    const tipGeometry = new THREE.ConeGeometry(settings.rayDiameter / 2, tipLength, settings.rayRadialSegments, 1, true);
+    const material = new THREE.MeshBasicMaterial({
       color: RAY_COLOR,
-      transparent: settings.rayOpacity < 1,
-      opacity: settings.rayOpacity
+      transparent: true,
+      opacity: settings.rayOpacity,
+      depthWrite: false
     });
-    const ray = new THREE.Line(geometry, material);
+    const ray = new THREE.Group();
+    const shaft = new THREE.Mesh(shaftGeometry, material);
+    shaft.position.z = -shaftLength / 2;
+    shaft.rotation.x = -Math.PI / 2;
+    const tip = new THREE.Mesh(tipGeometry, material);
+    tip.position.z = -(shaftLength + tipLength / 2);
+    tip.rotation.x = -Math.PI / 2;
+    ray.add(shaft, tip);
     ray.name = `VrControllerRay${index}`;
     ray.visible = false;
     ray.frustumCulled = false;
@@ -42,13 +51,12 @@ export function createVrControllers({ renderer, playerRig, settings }) {
       currentCrystalHit: null,
       currentCrystalHitDistance: null,
       get currentRayLength() {
-        return settings.rayLength * (this.isSelecting ? settings.activeScale : settings.idleScale);
+        return settings.rayLength;
       }
     };
 
     const setSelecting = (isSelecting) => {
       record.isSelecting = isSelecting;
-      ray.scale.z = isSelecting ? settings.activeScale : settings.idleScale;
     };
     const connected = (event) => {
       const inputSource = event.data ?? {};
@@ -82,7 +90,7 @@ export function createVrControllers({ renderer, playerRig, settings }) {
     playerRig.add(controller);
     playerRig.add(grip);
 
-    return { ...record, listeners, record };
+    return { ...record, listeners, record, shaftGeometry, tipGeometry, material };
   });
 
   const publicControllers = controllers.map(({ record }) => record);
@@ -90,11 +98,12 @@ export function createVrControllers({ renderer, playerRig, settings }) {
   function dispose() {
     if (disposed) return;
     disposed = true;
-    for (const { controller, grip, holdSocket, ray, listeners, record } of controllers) {
+    for (const { controller, grip, holdSocket, ray, listeners, record, shaftGeometry, tipGeometry, material } of controllers) {
       for (const [type, listener] of Object.entries(listeners)) controller.removeEventListener(type, listener);
       ray.visible = false;
-      ray.geometry.dispose();
-      ray.material.dispose();
+      shaftGeometry.dispose();
+      tipGeometry.dispose();
+      material.dispose();
       controller.remove(ray);
       playerRig.remove(controller);
       grip.remove(holdSocket);

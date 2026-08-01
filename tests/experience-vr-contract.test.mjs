@@ -88,7 +88,7 @@ const playerRig = new THREE.Group();
 const controllerSystem = createVrControllers({
   renderer: { xr: { getController: (index) => controllerObjects[index], getControllerGrip: (index) => controllerGrips[index] } },
   playerRig,
-  settings: { enabled: true, rayLength: 2, rayOpacity: 0.7, idleScale: 0.8, activeScale: 1.4 }
+  settings: { enabled: true, rayLength: 2, rayOpacity: 0.7, rayDiameter: 0.012, rayTipFraction: 0.08, rayRadialSegments: 6 }
 });
 assert.equal(controllerSystem.controllers.length, 2);
 assert.equal(playerRig.children.length, 4);
@@ -102,15 +102,16 @@ assert.equal(left.handedness, 'left');
 assert.deepEqual(left.controller.userData.xrInput.profiles, ['meta-quest-touch-plus']);
 assert.equal(right.handedness, '');
 assert.equal(left.ray.visible, true);
-assert.equal(left.currentRayLength, 1.6);
+assert.equal(left.currentRayLength, 2);
+assert.equal(left.ray.children.length, 2, 'ray uses a shaft and tapered mesh tip');
 left.controller.dispatchEvent({ type: 'selectstart' });
 assert.equal(left.isSelecting, true);
-assert.equal(left.ray.scale.z, 1.4);
-assert.equal(left.currentRayLength, 2.8);
+assert.equal(left.ray.scale.z, 1);
+assert.equal(left.currentRayLength, 2, 'select does not extend interaction range');
 assert.equal(right.isSelecting, false);
 left.controller.dispatchEvent({ type: 'selectend' });
 assert.equal(left.isSelecting, false);
-assert.equal(left.ray.scale.z, 0.8);
+assert.equal(left.ray.scale.z, 1);
 left.controller.dispatchEvent({ type: 'disconnected' });
 assert.equal(left.ray.visible, false);
 assert.equal(left.isConnected, false);

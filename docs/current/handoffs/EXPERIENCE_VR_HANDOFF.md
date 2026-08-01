@@ -8,11 +8,15 @@ Experience VR is an independent, dynamically imported WebXR runtime. It owns its
 
 Session entry/end resets transient crystals, hands/socket ownership, hits, glyph feedback, buttons, reliquary, portal, and rig pose while reusing the prepared runtime.
 
+Controller interaction has one `3.0 m` source of range for its visible pointer, glyph hits and crystal targeting/grab; trigger press does not extend it, while reliquary button limits are capped by it. The pointer is a transparent low-poly tube with a short tapered end rather than a screen-width line. Actionable glyph and crystal ray targets use a shared, subtle pulsating back-side silhouette shell; target loss, state changes, reset and disposal clear it without postprocessing.
+
 ## Cards, crystals, and progression
 
 Five branches contain 18 cards in counts `3 / 3 / 3 / 4 / 5` and reuse 15 GLBs. A physical crystal represents only a branch and tier, with a visual variant selecting the shared model; it does not retain a page or card ID. A branch can stock its successive unrepresented tiers regardless of the current global tier.
 
 On a completed glyph hold, the crystal captures the moving glyph's current world position and materializes `0.30 m` inward toward the central world object, at the resulting spatial height and independently of the viewer pose. Local minimum-spacing offsets prevent overlap, and the spawned crystal does not continue following the glyph.
+
+Squeeze pulls an in-range targeted crystal to the grip socket while interpolating to the configurable hold correction, currently `holdRotationDegrees = { x: 30, y: 0, z: 0 }`; GLB-local and randomized world rotations remain unchanged.
 
 The in-memory `VrProgressionController` owns committed pages. Tiers 1–3 require all five branches, tier 4 Metal and Water, and tier 5 Water. Only a crystal matching the current tier can be inserted. Activate resolves and previews the branch/tier page without progress or floor activation. Release after Activate commits exactly once, lights the matching floor panel, and may advance the tier. It also frees the socket immediately and starts a `0.55 s`, non-interactive `consuming` state: the crystal shrinks in place while 14 lightweight branch-colored points orbit, expand slightly, and fade; both are removed when the effect ends or transient state resets. Release without Activate returns the crystal to `available`. Transient reset preserves controller progress for the prepared runtime only.
 

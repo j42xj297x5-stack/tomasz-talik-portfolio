@@ -5,10 +5,10 @@ import { calculateVrCrystalSpawnPosition, createVrCrystalCollection,
   VR_CRYSTAL_CONSUME_COLORS } from '../src/xr/createVrCrystalCollection.js';
 import { createVrProgressionController } from '../src/xr/progression/createVrProgressionController.js';
 
-const settings = { enabled: true, rayGrabMaxDistance: 2, pullDuration: 0.01, targetScale: 1.04,
+const settings = { enabled: true, pullDuration: 0.01,
   scaleMin: 0.25, scaleMax: 0.25, spawnWidth: 1, spawnDepth: 1, minimumSpacing: 0.2, spawnInwardOffset: 0.3,
   materializeDuration: 0.01, materializeStagger: 0, materializeStartScale: 0.2, materializeRise: 0.1,
-  materializeYaw: 0.1, holdOffset: { x: 0, y: 0, z: 0 } };
+  materializeYaw: 0.1, holdOffset: { x: 0, y: 0, z: 0 }, holdRotationDegrees: { x: 30, y: 0, z: 0 } };
 settings.consumeDuration = 0.5;
 settings.consumeParticleCount = 12;
 settings.consumeParticleSize = 0.02;
@@ -25,7 +25,7 @@ assert.equal(calculatedSpawn.y, 2.5, 'spawn height is not grounded');
 function harness() {
   const scene = new THREE.Scene();
   const controller = new THREE.Group(); const holdSocket = new THREE.Group(); controller.add(holdSocket); scene.add(controller);
-  const record = { controller, holdSocket, currentCrystalHit: null, currentCrystalHitDistance: null };
+  const record = { controller, holdSocket, currentRayLength: 3, currentCrystalHit: null, currentCrystalHitDistance: null };
   const portalObject = new THREE.Group(); portalObject.visible = true; scene.add(portalObject);
   const portalDisplay = { object: portalObject, insertRadius: 10, getSocketWorldPosition: (out) => out.set(0, 0, 0) };
   const progressionController = createVrProgressionController({ pages: experienceVrPages });
@@ -54,6 +54,18 @@ assert.equal(crystals[0].targetPosition.y, 2.5);
 for (const crystal of crystals) {
   assert.equal('page' in crystal, false); assert.equal('pageId' in crystal, false); assert.equal('cardId' in crystal, false);
 }
+stocked.collection.update(1);
+stocked.record.currentCrystalHit = crystals[0]; stocked.record.currentCrystalHitDistance = 3.01;
+assert.equal(stocked.collection.grab(stocked.record), null, 'a crystal beyond the controller ray cannot be grabbed');
+stocked.record.currentCrystalHit = crystals[0]; stocked.record.currentCrystalHitDistance = 2.99;
+assert.equal(stocked.collection.grab(stocked.record), crystals[0], 'a targeted crystal within the shared ray range can be grabbed');
+stocked.collection.update(1);
+const expectedHoldQuaternion = new THREE.Quaternion().setFromEuler(new THREE.Euler(Math.PI / 6, 0, 0));
+assert.ok(stocked.collection.heldByController.get(stocked.record).object.quaternion.angleTo(expectedHoldQuaternion) < 1e-8,
+  'pulling interpolates to the configured hold orientation');
+stocked.record.controller.position.x = 30; stocked.scene.updateMatrixWorld(true);
+stocked.record.controller.dispatchEvent({ type: 'squeezeend' });
+stocked.record.controller.position.x = 0; stocked.scene.updateMatrixWorld(true);
 assert.equal(stocked.collection.spawnOne('creative-ai', glyphFrame), null);
 stocked.insert(crystals[1]);
 assert.ok(stocked.feedback.history.includes('INVALID'), 'future tier shows invalid feedback before release');
