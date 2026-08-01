@@ -30,15 +30,23 @@ Status: current binding decisions, organized by implementation status rather tha
 3. Reload/navigation starts fresh. No persistent save, read UI, victory presentation or next level is implemented.
 4. Smooth locomotion is implemented: right-stick tracked-head-relative horizontal movement and left-stick continuous yaw modify `playerRig` while preserving Y.
 
+### Visual progress-floor contract
+
+1. Five authored sector GLBs are the current visual-floor contract; one model corresponds to one branch and all earlier placeholders have been removed.
+2. A stable `glyphId` selects the semantic sector and `order` selects its panel. Panel counts derive from branch card counts: Creative AI 3, Ethics 3, AI Guide 3, DIG Engine 4, and Haiku Cosmos 5.
+3. Sector bases remain invisible (`opacity = 0`, `depthWrite = false`), while ornaments and panels remain visible.
+4. Every sector instance owns independent cloned materials; geometry may remain shared.
+5. Floor illumination survives XR session reset only in memory within the prepared runtime. Reload or navigation starts a new floor registry.
+
 ## Approved future gameplay direction — not implemented
 
 The [Experience VR Gameplay Roadmap](../concept/EXPERIENCE_VR_GAMEPLAY_ROADMAP.md) is the approved product and architecture direction. It does not override the current runtime model until separate implementation tasks change code and tests.
 
 1. The first approved implementation task is to replace page-bound activation semantics with branch-bound crystals: a physical crystal will carry branch identity and visual variant, while Activate will resolve the next unactivated page of that branch in logical order.
-2. Later approved direction includes a single progression owner for 18 cards and five global tiers, progress floor/sectors/rings, shells and orb assembly, semantic hand tools, small glyphs, a controlled tilting-floor prototype, sector alignment, runes, final radar and completion presentation.
+2. Later approved direction includes a single progression owner for 18 cards and five global tiers, global progress rings, shells and orb assembly, semantic hand tools, small glyphs, a controlled tilting-floor prototype, sector alignment, runes, final radar and completion presentation.
 3. Durable persistence and a controlled full-game reset are later roadmap work. They are not inferred from the current reset-surviving in-memory Set.
 4. Every roadmap stage requires its own implementation, automated validation where applicable and Meta Quest hardware gate. Documentation must not mark a planned capability as implemented before those gates are complete.
 
 ## Explicitly excluded from current claims
 
-The current architecture makes no claim that the future progression controller, floor, shells, orb, hand tools, gameplay tiers, runes, finale or persistence modules exist. Audio, physics, teleport, jump and snap turn are likewise outside the implemented Experience VR gameplay contract.
+The current architecture makes no claim that the future progression controller, global rings, shells, orb, hand tools, gameplay tiers, floor tilting, runes, finale or persistence modules exist. The bounded five-sector visual floor does exist, but is not any of those future systems. Audio, physics, teleport, jump and snap turn are likewise outside the implemented Experience VR gameplay contract.

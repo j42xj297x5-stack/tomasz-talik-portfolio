@@ -985,34 +985,39 @@ Testy mogą aktywować karty bez sceny 3D i poprawnie uzyskiwać progi oraz uko�
 
 # ETAP 3 — techniczny fundament podłogi
 
+## Stan implementacji na 2026-07-31
+
+Wizualny fundament powstał wcześniej niż `VrProgressionController`. Pięć autorskich GLB jest preloadowanych przez `AssetManager` i złożonych co 72° pod wspólnym, nieruchomym rootem runtime `VrTiltableFloorRoot`. Stabilne identyfikatory baz i pól pozwalają mapować 18 pól do 18 kart oraz sterować każdym polem niezależnie. Szczegóły bieżącego kontraktu opisuje [VR Progress Floor Model](../technical/VR_PROGRESS_FLOOR_MODEL.md). Nie oznacza to wdrożenia progów, pierścieni ani ruchomej podłogi.
+
 ## Cel
 
 Dodać stabilny root, powierzchnię, anchory i dane pięciu sektorów.
 
 ## TODO assetowe
 
-- [ ] Przygotować w Blenderze okrągłą podłogę.
-- [ ] Ustawić centralny pivot.
-- [ ] Dodać pięć anchorów co 72°.
+- [x] Przygotować pięć autorskich GLB sektorów, po jednym dla gałęzi.
+- [ ] Przygotować jedną fizyczną powierzchnię okrągłej podłogi. Obecnie niewidoczne bazy pięciu wycinków nie stanowią osobnego wspólnego collidera/podłoża.
+- [ ] Ustawić centralny pivot w assetcie. Obecny wspólny root jest tworzony wyłącznie runtime'owo.
+- [x] Rozmieścić pięć sektorów co 72° wokół wspólnego środka.
 - [ ] Dodać anchor hologramu kuli.
-- [ ] Wyeksportować GLB bez kamer, świateł i helperów roboczych.
+- [x] Utrzymać stabilne identyfikatory baz i pól w pięciu GLB.
 - [ ] Przygotować pięć SVG sektorów.
-- [ ] Zweryfikować stabilne identyfikatory elementów.
 
 ## TODO runtime
 
-- [ ] Wczytać podłogę przez AssetManager.
-- [ ] Utworzyć `VrTiltableFloorRoot`, początkowo nieruchomy.
-- [ ] Umieścić pięć sektorów.
-- [ ] Powiązać 18 pól z 18 kartami.
-- [ ] Dodać niezależną warstwę okręgów.
+- [x] Preloadować pięć modeli sektorów przez `AssetManager`.
+- [x] Utworzyć wspólny `VrTiltableFloorRoot`, obecnie nieruchomy.
+- [x] Umieścić pięć sektorów bez lokalnego przesunięcia.
+- [x] Powiązać 18 pól z 18 kartami przez `glyphId + order`.
+- [x] Sterować polami niezależnie.
+- [ ] Dodać niezależną warstwę globalnych okręgów.
 - [ ] Dodać tryb debugowego podświetlenia pól.
-- [ ] Sprawdzić brak z-fightingu.
-- [ ] Sprawdzić czytelność na Quest.
+- [ ] Zweryfikować brak z-fightingu na urządzeniu.
+- [ ] Zweryfikować czytelność na Meta Quest.
 
 ## Bramka
 
-Wszystkie pola i sektory mają poprawne pozycje, identyfikatory i mogą być sterowane niezależnie.
+Kontrakt identyfikatorów, pozycji i niezależnego sterowania jest pokryty testem automatycznym. Bramka sprzętowa dotycząca z-fightingu i czytelności na Quest pozostaje otwarta.
 
 ---
 
@@ -1020,32 +1025,24 @@ Wszystkie pola i sektory mają poprawne pozycje, identyfikatory i mogą być ste
 
 ## Cel
 
-Aktywacja karty zmienia odpowiadające pole, sektor i globalny okrąg.
+Aktywacja karty docelowo zmienia odpowiadające pole, sektor i globalny okrąg. Bieżący runtime realizuje wyłącznie część dotyczącą właściwego pola.
 
 ## TODO
 
-- [ ] Dodać impuls aktywacyjny pola.
-- [ ] Dodać powolny puls stanu aktywnego.
-- [ ] Dodać podświetlenie tła do najwyższego pola gałęzi.
+- [x] Dodać impuls aktywacyjny pola.
+- [ ] Dodać cykliczny, powolny puls stanu aktywnego. Obecnie po impulsie pozostaje stabilny blask.
+- [ ] Dodać narastające podświetlenie tła sektora do najwyższego pola gałęzi.
 - [ ] Dodać miękką granicę gradientową.
-- [ ] Dodać niezależne kolory pięciu gałęzi.
+- [x] Dodać niezależne kolory pięciu gałęzi.
+- [x] Podświetlać niezależnie właściwe pole przez `glyphId + order`.
 - [ ] Dodać prawie biały rdzeń i kolorowe halo.
-- [ ] Dodać podświetlenie pełnego okręgu po `tierCompleted`.
+- [ ] Dodać globalne pierścienie i podświetlenie pełnego okręgu po `tierCompleted`.
 - [ ] Zrobić wariant wydajnościowy bez pełnego postprocessingu.
-- [ ] Sprawdzić limity przezroczystości i overdraw na Quest.
+- [ ] Przetestować wydajność oraz limity przezroczystości i overdraw na Quest.
 
 ## Bramka
 
-Łańcuch działa:
-
-```text
-Activate
-→ kolejna karta
-→ pole
-→ część sektora
-→ globalny próg
-→ pełny okrąg
-```
+Obecnie potwierdzony jest tylko łańcuch `Activate → page → glyphId + order → właściwe pole`. Docelowy łańcuch z kolejną kartą, sektorem, globalnym progiem i pełnym okręgiem pozostaje niewdrożony.
 
 ---
 
@@ -1358,9 +1355,9 @@ Najbliższe kroki:
 ```text
 1. Osobne zadanie naprawiające sekwencyjne rozwiązywanie kart podczas Activate.
 2. Wprowadzenie modelu 18 kart i VrProgressionController.
-3. Przygotowanie assetów podłogi: GLB + pięć SVG.
-4. Integracja pól, sektorów i pierścieni.
-5. Podłączenie podłogi do aktywacji kart.
+3. Zachowanie istniejącego fundamentu pięciu GLB; przygotowanie nadal brakujących pięciu SVG.
+4. Integracja nadal brakujących warstw sektorów i globalnych pierścieni.
+5. Rozszerzenie istniejącego podłączenia pól do aktywacji kart o postęp kontrolera.
 6. Zdarzenie ukończenia progu 1.
 7. Testowa skorupa jako dowód zmiany świata.
 8. Dopiero potem narzędzie prawej ręki i budowa kuli.
@@ -1578,4 +1575,4 @@ Bez tej poprawki:
 - magazynowanie kryształów będzie niszczyło narrację progresji;
 - wszystkie dalsze mechaniki będą budowane na błędnym fundamencie.
 
-Po tej poprawce kolejnym krokiem jest `VrProgressionController`, a dopiero potem integracja wizualnej podłogi.
+Podłoga poprawnie podświetla pole strony faktycznie przekazanej przez Activate, więc nie należy implementować jej fundamentu ponownie. Nie naprawia to jednak semantyki page-bound crystals. Najpierw kryształ musi stać się branch-bound, a Activate ma wybierać kolejną nieaktywowaną stronę gałęzi. Dopiero potem kolejną warstwą jest `VrProgressionController`; globalne progi, pierścienie i przechylanie pozostają późniejszą integracją.
