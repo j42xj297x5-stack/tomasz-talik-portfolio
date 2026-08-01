@@ -61,7 +61,8 @@ export function getVrCrystalLayout(pageIds, settings) {
   return positions;
 }
 
-export function createVrCrystalCollection({ scene, assetManager, controllers, portalDisplay, insertionTarget, settings, pages = [], progressionController, onPreview, onCommit }) {
+export function createVrCrystalCollection({ scene, assetManager, controllers, portalDisplay, insertionTarget, settings,
+  insertFeedbackSettings = {}, pages = [], progressionController, onPreview, onCommit }) {
   const instances = [];
   const listeners = [];
   const heldByController = new Map();
@@ -72,6 +73,7 @@ export function createVrCrystalCollection({ scene, assetManager, controllers, po
   const rayQuaternion = new THREE.Quaternion();
   const scratch = new THREE.Vector3();
   const targetQuaternion = new THREE.Quaternion();
+  const crystalCenterScratch = new THREE.Vector3();
   let disposed = false;
   let insertedInstance = null;
   let fallbackAnchor = null;
@@ -143,6 +145,7 @@ export function createVrCrystalCollection({ scene, assetManager, controllers, po
     instance.object.updateWorldMatrix(true, false);
     heldByController.delete(controllerRecord);
     instance.heldBy = null;
+    insertionTarget?.setInsertFeedback?.(null);
     if (instance.state === 'pulling') {
       scene.attach(instance.object);
       instance.state = 'available';
@@ -165,7 +168,17 @@ export function createVrCrystalCollection({ scene, assetManager, controllers, po
       }
       if (progressionController && !progressionController.canInsertCrystal(instance.branchId, instance.tier)) {
         scene.attach(instance.object);
-        instance.state = 'available';
+        instance.state = 'rejecting';
+        instance.rejectElapsed = 0;
+        instance.rejectStartPosition = instance.object.position.clone();
+        const rejectSphere = insertionSphere ?? new THREE.Sphere(
+          portalDisplay.getSocketWorldPosition(new THREE.Vector3()), portalDisplay.insertRadius);
+        const direction = crystalCenter.clone().sub(rejectSphere.center);
+        if (direction.lengthSq() < 1e-8) direction.copy(insertionTarget?.portalForward ?? new THREE.Vector3(0, 0, 1));
+        direction.normalize();
+        const endCenter = rejectSphere.center.clone().addScaledVector(direction,
+          rejectSphere.radius + (insertFeedbackSettings.rejectDistance ?? 0.25));
+        instance.rejectEndPosition = instance.object.position.clone().add(endCenter.sub(crystalCenter));
         return instance;
       }
       let anchor = insertionSphere && insertionTarget?.crystalAnchor ? insertionTarget.crystalAnchor : null;
@@ -302,6 +315,7 @@ export function createVrCrystalCollection({ scene, assetManager, controllers, po
   function update(delta = 0) {
     if (disposed || !instances.length) {
       controllers.forEach(clearControllerHit);
+      insertionTarget?.setInsertFeedback?.(null);
       return;
     }
     const elapsedDelta = Math.max(0, delta);
@@ -315,19 +329,41 @@ export function createVrCrystalCollection({ scene, assetManager, controllers, po
       instance.object.rotation.y = instance.materializeYaw * (eased - 1);
       if (progress === 1) instance.state = 'available';
     }
-    updateTargets();
-    for (const instance of heldByController.values()) {
-      if (instance.state !== 'pulling') continue;
-      instance.pullElapsed += Math.max(0, delta);
-      const progress = Math.min(1, instance.pullElapsed / settings.pullDuration);
-      const eased = progress * progress * (3 - 2 * progress);
-      instance.object.position.lerpVectors(instance.pullStartPosition, settings.holdOffset, eased);
-      instance.object.quaternion.slerpQuaternions(instance.pullStartQuaternion, targetQuaternion, eased);
-      if (progress === 1) instance.state = 'held';
+    for (const instance of instances) {
+      if (instance.state !== 'rejecting') continue;
+      instance.rejectElapsed += elapsedDelta;
+      const progress = Math.min(1, instance.rejectElapsed / (insertFeedbackSettings.rejectDuration ?? 0.35));
+      const eased = 1 - ((1 - progress) ** 3);
+      instance.object.position.lerpVectors(instance.rejectStartPosition, instance.rejectEndPosition, eased);
+      if (progress === 1) instance.state = 'available';
     }
+    updateTargets();
+    let feedbackState = null;
+    for (const instance of heldByController.values()) {
+      if (!['pulling', 'held'].includes(instance.state)) continue;
+      if (instance.state === 'pulling') {
+        instance.pullElapsed += Math.max(0, delta);
+        const progress = Math.min(1, instance.pullElapsed / settings.pullDuration);
+        const eased = progress * progress * (3 - 2 * progress);
+        instance.object.position.lerpVectors(instance.pullStartPosition, settings.holdOffset, eased);
+        instance.object.quaternion.slerpQuaternions(instance.pullStartQuaternion, targetQuaternion, eased);
+        if (progress === 1) instance.state = 'held';
+      }
+      instance.model.updateWorldMatrix(true, true);
+      const sphere = insertionTarget?.hasValidInsertZone && insertionTarget.object.visible
+        ? insertionTarget.getInsertZoneWorldSphere?.() : null;
+      const center = new THREE.Box3().setFromObject(instance.model).getCenter(crystalCenterScratch);
+      if (sphere && center.distanceTo(sphere.center) <= sphere.radius
+        * (insertFeedbackSettings.proximityRadiusMultiplier ?? 1.25)) {
+        feedbackState = !insertedInstance && (!progressionController
+          || progressionController.canInsertCrystal(instance.branchId, instance.tier)) ? 'VALID' : 'INVALID';
+      }
+    }
+    insertionTarget?.setInsertFeedback?.(feedbackState);
   }
 
   function reset() {
+    insertionTarget?.setInsertFeedback?.(null);
     controllers.forEach(clearControllerHit);
     heldByController.clear();
     for (const instance of instances) {

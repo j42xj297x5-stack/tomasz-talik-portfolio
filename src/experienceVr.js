@@ -148,7 +148,8 @@ const locomotion = createVrLocomotion({ playerRig, renderer, camera, settings: s
 const progressionController = createVrProgressionController({ pages: experienceVrPages });
 const crystalCollection = createVrCrystalCollection({
   scene, assetManager, controllers: vrControllers.controllers, portalDisplay, insertionTarget: crystalReliquary,
-  settings: settings.crystals, pages: experienceVrPages, progressionController,
+  settings: settings.crystals, insertFeedbackSettings: settings.reliquary.insertFeedback,
+  pages: experienceVrPages, progressionController,
   onPreview: (page) => portalCanvas.show(resolveExperienceVrPage(page, language)),
   onCommit: (page) => progressFloor.activatePage(page)
 });

@@ -54,6 +54,12 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
     enabled: true,
     distanceFromPortal: 1.5,
     heightOffset: 0.5,
+    insertFeedback: {
+      proximityRadiusMultiplier: 1.25,
+      opacity: 0.2,
+      rejectDuration: 0.35,
+      rejectDistance: 0.25
+    },
     buttons: { scale: 0.3, forwardDistance: 1, lateralOffset: 0.5, verticalOffset: 0 },
     activateButton: {
       enabled: true,
@@ -206,6 +212,16 @@ export function normalizeExperienceVrSettings(candidate) {
       distanceFromPortal,
       heightOffset: finiteNumber(candidateReliquary.heightOffset ?? candidateReliquary.floorOffset,
         defaults.reliquary.heightOffset, { min: -1, max: 2 }),
+      insertFeedback: {
+        proximityRadiusMultiplier: finiteNumber(candidateReliquary.insertFeedback?.proximityRadiusMultiplier,
+          defaults.reliquary.insertFeedback.proximityRadiusMultiplier, { min: 1, max: 3 }),
+        opacity: finiteNumber(candidateReliquary.insertFeedback?.opacity,
+          defaults.reliquary.insertFeedback.opacity, { min: 0.02, max: 0.6 }),
+        rejectDuration: finiteNumber(candidateReliquary.insertFeedback?.rejectDuration,
+          defaults.reliquary.insertFeedback.rejectDuration, { min: 0.05, max: 2 }),
+        rejectDistance: finiteNumber(candidateReliquary.insertFeedback?.rejectDistance,
+          defaults.reliquary.insertFeedback.rejectDistance, { min: 0.05, max: 1 })
+      },
       buttons: {
         scale: finiteNumber(candidateReliquary.buttons?.scale, defaults.reliquary.buttons.scale, { min: 0.05, max: 1 }),
         forwardDistance: finiteNumber(candidateReliquary.buttons?.forwardDistance

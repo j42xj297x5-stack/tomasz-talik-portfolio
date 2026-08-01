@@ -61,6 +61,16 @@ export function createVrCrystalReliquary({ scene, reliquaryModel, portalDisplay,
     && roleIsValid(insertZone, 'crystal_insert_zone'));
   const hasValidAnchor = Boolean(authoredCrystalAnchor && roleIsValid(authoredCrystalAnchor, 'crystal_display_anchor'));
   if (insertZone) insertZone.visible = false;
+  const feedbackMaterial = new THREE.MeshStandardMaterial({
+    color: 0x49d17d, emissive: 0x49d17d, emissiveIntensity: 0.35,
+    transparent: true, opacity: settings.insertFeedback?.opacity ?? 0.2,
+    depthWrite: false, blending: THREE.NormalBlending
+  });
+  const insertFeedback = new THREE.Mesh(new THREE.SphereGeometry(1, 24, 16), feedbackMaterial);
+  insertFeedback.name = 'VrReliquaryInsertFeedback';
+  insertFeedback.visible = false;
+  insertFeedback.userData.feedbackState = null;
+  scene.add(insertFeedback);
   if (!model || !hasValidInsertZone || !hasValidAnchor) {
     console.warn('[Experience VR] Crystal reliquary model, insert zone, or anchor is missing or invalid. The portal crystal socket remains available when the insert zone cannot be used.');
   }
@@ -133,7 +143,12 @@ export function createVrCrystalReliquary({ scene, reliquaryModel, portalDisplay,
     return true;
   }
 
-  function reset() { if (!disposed) place(); }
+  function reset() {
+    if (!disposed) {
+      setInsertFeedback(null);
+      place();
+    }
+  }
 
   function attachCompanion({ id, model: companionModel, settings: placementSettings = settings.buttons, side = 'left' }) {
     if (!companionModel || !id || companions.has(id) || !['left', 'right'].includes(side)) return null;
@@ -177,11 +192,32 @@ export function createVrCrystalReliquary({ scene, reliquaryModel, portalDisplay,
     return runtimeCrystalAnchor.getWorldPosition(targetVector);
   }
 
+  function setInsertFeedback(state = null) {
+    if (disposed || !['VALID', 'INVALID'].includes(state) || !object.visible) {
+      insertFeedback.visible = false;
+      insertFeedback.userData.feedbackState = null;
+      return false;
+    }
+    const sphere = getInsertZoneWorldSphere();
+    if (!sphere) return false;
+    insertFeedback.position.copy(sphere.center);
+    insertFeedback.scale.setScalar(sphere.radius);
+    const color = state === 'VALID' ? 0x49d17d : 0xe05252;
+    feedbackMaterial.color.setHex(color);
+    feedbackMaterial.emissive.setHex(color);
+    insertFeedback.userData.feedbackState = state;
+    insertFeedback.visible = true;
+    return true;
+  }
+
   function dispose() {
     if (disposed) return;
     disposed = true;
     object.visible = false;
     object.removeFromParent();
+    insertFeedback.removeFromParent();
+    insertFeedback.geometry.dispose();
+    feedbackMaterial.dispose();
   }
 
   place();
@@ -189,5 +225,5 @@ export function createVrCrystalReliquary({ scene, reliquaryModel, portalDisplay,
     runtimeCrystalAnchor, hasValidInsertZone, portalForward, portalLeft, place, reset, dispose,
     attachCompanion,
     get buttonPlacementRoot() { return companions.get('activate')?.placementRoot ?? null; },
-    getInsertZoneWorldSphere, getCrystalAnchorWorldPosition };
+    insertFeedback, setInsertFeedback, getInsertZoneWorldSphere, getCrystalAnchorWorldPosition };
 }
