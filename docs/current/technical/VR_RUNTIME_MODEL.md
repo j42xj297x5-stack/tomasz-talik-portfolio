@@ -42,6 +42,8 @@ The progression controller exposes the current tier, insertion validation, branc
 
 The five-sector progress floor has 18 panels mapped by `glyphId + order` and receives pages only after Release commits them. Five independent full-circle threshold rings derive candidate radii from the local centers of panels at each order, then sort and gap-normalize those candidates into stable inward-to-outward tier radii. Non-monotonic authored centroids do not block runtime preparation; an isolated procedural-ring failure degrades to the functional sector and panel layer. A completed tier gives its ring a short neutral-white opacity impulse followed by a subtle persistent glow. Sector-background progression and other later visual layers remain absent.
 
+The current readiness gate has been smoke-tested on Meta Quest 3S: asset preload completes, the Experience VR scene reaches ready state, **Enter VR** becomes enabled, and a working immersive session can be entered. This is not a claim of complete performance, readability, z-fighting, or full-game QA.
+
 ## Explicitly absent from the current runtime
 
-Sector-background progression, shells, assembly orb, hand tools, small glyphs, floor tilting, runes, final radar, completion sequence, durable save and the full capabilities system are not implemented. The current five-sector floor, its five global tier rings, and the minimal card/tier controller are the bounded implementations described above.
+Sector-background progression and its soft boundary, a central progression core, the tier-1 world transition, shells, assembly orb, hand tools, small glyphs, floor tilting and local-plane locomotion, antenna, runes, final radar, completion sequence, durable save, full-game reset and the full capabilities system are not implemented. The current five-sector floor, its five global tier rings, and the minimal card/tier controller are the bounded implementations described above.
