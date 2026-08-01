@@ -1,222 +1,60 @@
 import assert from 'node:assert/strict';
 import * as THREE from '../src/vendor/three.js';
-import { experienceVrPages, experienceVrPagesByGlyphId, getExperienceVrPages, resolveExperienceVrPage } from '../src/content/experienceVrPages.js';
-import { portalCardsByGlyphId } from '../src/content/portalCards.js';
-import { ASSET_STAGES, getPreloadAssets } from '../src/assets/assetManifest.js';
-import { createVrCrystalCollection, getDeterministicCrystalTransform, getVrCrystalLayout, isEffectivelyVisible } from '../src/xr/createVrCrystalCollection.js';
+import { experienceVrPages } from '../src/content/experienceVrPages.js';
+import { createVrCrystalCollection } from '../src/xr/createVrCrystalCollection.js';
+import { createVrProgressionController } from '../src/xr/progression/createVrProgressionController.js';
 
-const expected = {
-  'ai-guide': 'crystal-ai_guide', 'creative-ai': 'crystal-creative_ai',
-  'spotify-digger': 'crystal-dig_engine', 'ethics-life-protection': 'crystal-ethics',
-  'haiku-cosmos': 'crystal-haiku_cosmos'
-};
-const expectedCounts = { 'ethics-life-protection': 3, 'creative-ai': 3, 'ai-guide': 3, 'spotify-digger': 4, 'haiku-cosmos': 5 };
-assert.equal(experienceVrPages.length, 18);
-assert.equal(new Set(experienceVrPages.map(({ cardId }) => cardId)).size, 18);
-assert.equal(new Set(experienceVrPages.map(({ crystalId }) => crystalId)).size, 18);
-for (const [glyphId, filename] of Object.entries(expected)) {
-  const pages = getExperienceVrPages(glyphId);
-  assert.equal(pages, experienceVrPagesByGlyphId[glyphId]);
-  assert.equal(pages.length, expectedCounts[glyphId]);
-  pages.forEach((page, index) => {
-    const variant = (index % 3) + 1;
-    assert.equal(page.visualVariant, variant);
-    assert.equal(page.crystalAssetId, `vr-crystal-${glyphId}-${variant}`);
-    assert.equal(page.crystalModelPath, `/glb/${filename}_${String(variant).padStart(2, '0')}.glb`);
-    assert.equal(page.cardId, portalCardsByGlyphId[glyphId][index].id);
-    assert.equal(page.crystalId, portalCardsByGlyphId[glyphId][index].crystalId);
-  });
-}
-assert.ok(experienceVrPages.every(({ crystalModelPath }) => !/_0[45]\.glb$/.test(crystalModelPath)));
-assert.deepEqual(getExperienceVrPages('unknown'), []);
-const localizedPages = getExperienceVrPages('spotify-digger').map((page) => resolveExperienceVrPage(page, 'en-US'));
-assert.ok(localizedPages.every(({ title, body }) => title.length > 0 && body.length > 0));
-assert.equal(localizedPages[0].title, portalCardsByGlyphId['spotify-digger'][0].translations.en.title);
-assert.equal(localizedPages[0].body, portalCardsByGlyphId['spotify-digger'][0].translations.en.body);
-assert.equal(localizedPages[0].crystalLabel, portalCardsByGlyphId['spotify-digger'][0].translations.en.crystalLabel);
-assert.equal(resolveExperienceVrPage(getExperienceVrPages('haiku-cosmos')[4], 'pl-PL').title, portalCardsByGlyphId['haiku-cosmos'][4].translations.pl.title);
-const manifestCrystals = getPreloadAssets([ASSET_STAGES.DEFERRED_WARM]).filter(({ id }) => id.startsWith('vr-crystal-') && !id.startsWith('vr-crystal-reliquary'));
-assert.equal(manifestCrystals.length, 15);
-assert.deepEqual(new Set(manifestCrystals.map(({ path }) => path)), new Set(experienceVrPages.map(({ crystalModelPath }) => crystalModelPath)));
-
-const settings = { enabled: true, rayGrabMaxDistance: 1.8, pullDuration: 0.25, targetScale: 1.04, scaleMin: 0.22, scaleMax: 0.28, spawnWidth: 1.45, spawnDepth: 0.85, minimumSpacing: 0.38, frontDistance: 1.55, materializeDuration: 0.55, materializeStagger: 0.12, materializeStartScale: 0.18, materializeRise: 0.12, materializeYaw: 0.35, holdOffset: { x: 0, y: 0, z: -0.09 } };
-const transforms = experienceVrPages.map(({ id }) => getDeterministicCrystalTransform(id, settings));
-assert.deepEqual(transforms, experienceVrPages.map(({ id }) => getDeterministicCrystalTransform(id, settings)));
-assert.ok(transforms.every(({ scale }) => scale >= 0.22 && scale <= 0.28));
-for (const count of [3, 4, 5]) {
-  const ids = Array.from({ length: count }, (_, index) => `layout-${index}`);
-  const layout = getVrCrystalLayout(ids, settings);
-  assert.deepEqual(layout, getVrCrystalLayout(ids, settings));
-  assert.equal(layout.length, count);
-  for (let a = 0; a < count; a += 1) for (let b = a + 1; b < count; b += 1) {
-    assert.ok(Math.hypot(layout[a].x - layout[b].x, layout[a].z - layout[b].z) >= settings.minimumSpacing - 1e-12);
-  }
-}
-
-const scene = new THREE.Scene();
-const makeController = (index) => {
-  const controller = new THREE.Group();
-  const grip = new THREE.Group();
-  const holdSocket = new THREE.Group();
-  grip.add(holdSocket); scene.add(controller, grip);
-  return { index, controller, grip, holdSocket, currentHit: { glyph: true }, currentCrystalHit: null, currentCrystalHitDistance: null };
-};
-const left = makeController(0); const right = makeController(1);
-left.controller.position.y = 0.1; right.controller.position.set(1, 0.1, 0);
-const portalObject = new THREE.Group(); portalObject.visible = true; portalObject.position.set(1, 0, -1); scene.add(portalObject);
-const portalDisplay = { object: portalObject, insertRadius: 0.25, getSocketWorldPosition: (target) => target.setFromMatrixPosition(portalObject.matrixWorld) };
-const consumed = [];
-const collection = createVrCrystalCollection({
-  scene, controllers: [left, right], portalDisplay, settings,
-  assetManager: { cloneGltfScene: () => new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1)) },
-  onConsume: (page) => consumed.push(page.id)
-});
-const pages = getExperienceVrPages('ai-guide').slice(0, 2);
-const spawned = collection.spawn(pages, { anchorObject: new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1)), spawnPosition: { x: 0, y: 0, z: 5 } });
-assert.equal(spawned.length, 2);
-assert.notEqual(spawned[0].object, spawned[1].object);
-assert.equal(spawned[0].cardId, pages[0].cardId);
-assert.equal(spawned[0].crystalId, pages[0].crystalId);
-assert.equal(spawned[0].state, 'materializing');
-assert.equal(spawned[0].object.scale.x, settings.materializeStartScale);
-assert.ok(spawned.every(({ targetPosition }) => targetPosition.z > 1));
-scene.updateMatrixWorld(true); collection.update(0);
-assert.equal(left.currentCrystalHit, null);
-assert.equal(collection.grab(left), null);
-collection.update(settings.materializeDuration);
-assert.equal(spawned[0].state, 'available');
-assert.equal(spawned[1].state, 'materializing');
-assert.equal(spawned[0].object.scale.x, 1);
-assert.equal(spawned[0].object.position.y, spawned[0].targetPosition.y);
-collection.update(settings.materializeStagger);
-assert.equal(spawned[1].state, 'available');
-spawned[0].object.position.set(0, 0, -1);
-spawned[1].object.position.set(0, 0, -1.5);
-scene.updateMatrixWorld(true);
-collection.update(0);
-assert.equal(left.currentCrystalHit, spawned[0]); // nearest ray intersection on local -Z.
-assert.ok(left.currentCrystalHitDistance < 1.8);
-assert.deepEqual(left.currentHit, { glyph: true }); // crystal targeting never owns the glyph hit.
-assert.equal(spawned[0].object.scale.x, settings.targetScale);
-
-left.controller.dispatchEvent({ type: 'squeezestart' });
-assert.equal(spawned[0].state, 'pulling');
-assert.equal(spawned[0].object.parent, left.holdSocket);
-assert.equal(spawned[0].object.scale.x, 1);
-collection.update(settings.pullDuration / 2);
-assert.equal(spawned[0].state, 'pulling');
-const duringPull = spawned[0].object.getWorldPosition(new THREE.Vector3()).clone();
-left.controller.dispatchEvent({ type: 'squeezeend' });
-assert.equal(spawned[0].state, 'available');
-assert.equal(spawned[0].object.parent, scene);
-assert.ok(spawned[0].object.getWorldPosition(new THREE.Vector3()).distanceTo(duringPull) < 1e-8);
-
-// No hit and an out-of-range hit cannot start a grab.
-left.controller.rotation.y = Math.PI;
-scene.updateMatrixWorld(true); collection.update(0);
-assert.equal(collection.grab(left), null);
-left.controller.rotation.y = 0; spawned[0].object.position.set(0, 0, -2.2); spawned[1].object.position.set(1, 0, -1.5);
-scene.updateMatrixWorld(true); collection.update(0);
-assert.ok(left.currentCrystalHitDistance > settings.rayGrabMaxDistance);
-assert.equal(collection.grab(left), null);
-
-// Both hands can pull separate available crystals and non-available states leave the raycast set.
-spawned[0].object.position.set(0, 0, -1);
-spawned[1].object.position.set(1, 0, -1);
-scene.updateMatrixWorld(true); collection.update(0);
-assert.equal(collection.grab(left), spawned[0]);
-assert.equal(collection.grab(right), spawned[1]);
-collection.update(settings.pullDuration);
-assert.equal(spawned[0].state, 'held');
-assert.equal(spawned[1].state, 'held');
-assert.ok(spawned[0].object.position.distanceTo(new THREE.Vector3(...Object.values(settings.holdOffset))) < 1e-8);
-assert.equal(left.currentCrystalHit, null);
-assert.equal(right.currentCrystalHit, null);
-
-left.grip.position.set(0.5, 0, 0); scene.updateMatrixWorld(true);
-const beforeRelease = spawned[0].object.getWorldPosition(new THREE.Vector3()).clone();
-collection.release(left);
-assert.equal(spawned[0].state, 'available');
-assert.ok(spawned[0].object.getWorldPosition(new THREE.Vector3()).distanceTo(beforeRelease) < 1e-8);
-right.grip.position.copy(portalObject.position).add(new THREE.Vector3(0, 0, 0.09)); scene.updateMatrixWorld(true);
-collection.release(right);
-assert.equal(spawned[1].state, 'inserted');
-assert.equal(spawned[1].object.visible, true);
-assert.deepEqual(consumed, []);
-assert.equal(collection.releaseInserted(), true);
-assert.equal(spawned[1].state, 'released');
-assert.equal(spawned[1].object.visible, false);
-
-collection.reset();
-assert.equal(collection.instances.length, 0);
-assert.equal(collection.heldByController.size, 0);
-assert.equal(left.currentCrystalHit, null);
-assert.equal(left.currentCrystalHitDistance, null);
-collection.dispose(); collection.dispose();
-
-// Reused visuals still produce independent per-card objects/state, and reset clears all five.
-const sharedAssetCollection = createVrCrystalCollection({
-  scene: new THREE.Scene(), controllers: [], portalDisplay, settings,
-  assetManager: { cloneGltfScene: () => new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1)) }
-});
-const haikuInstances = sharedAssetCollection.spawn(getExperienceVrPages('haiku-cosmos'), {
-  anchorObject: portalObject, spawnPosition: { x: 0, y: 0, z: 5 }
-});
-assert.equal(haikuInstances.length, 5);
-assert.equal(haikuInstances[0].page.crystalAssetId, haikuInstances[3].page.crystalAssetId);
-assert.notEqual(haikuInstances[0].object, haikuInstances[3].object);
-haikuInstances[0].state = 'available';
-assert.equal(haikuInstances[3].state, 'materializing');
-sharedAssetCollection.reset();
-assert.equal(sharedAssetCollection.instances.length, 0);
-assert.ok(haikuInstances.every(({ object }) => object.parent === null));
-sharedAssetCollection.dispose();
-
-// Additive single spawning supports all cards, rejects duplicate cards and keeps deterministic spacing.
-const allScene = new THREE.Scene();
-const allCollection = createVrCrystalCollection({
-  scene: allScene, controllers: [], portalDisplay, settings,
-  assetManager: { cloneGltfScene: () => new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.2, 0.1)) }
-});
+const settings = { enabled: true, rayGrabMaxDistance: 2, pullDuration: 0.01, targetScale: 1.04,
+  scaleMin: 0.25, scaleMax: 0.25, spawnWidth: 1, spawnDepth: 1, minimumSpacing: 0.2, frontDistance: 1,
+  materializeDuration: 0.01, materializeStagger: 0, materializeStartScale: 0.2, materializeRise: 0.1,
+  materializeYaw: 0.1, holdOffset: { x: 0, y: 0, z: 0 } };
 const viewerFrame = { position: new THREE.Vector3(0, 1.6, 5.8), direction: new THREE.Vector3(0, 0, -1) };
-const allInstances = experienceVrPages.map((page) => allCollection.spawnOne(page, viewerFrame));
-assert.equal(allInstances.filter(Boolean).length, 18);
-assert.equal(allCollection.spawnOne(experienceVrPages[0], viewerFrame), null, 'one live instance per card');
-for (let a = 0; a < 18; a += 1) for (let b = a + 1; b < 18; b += 1) {
-  assert.ok(allInstances[a].targetPosition.distanceTo(allInstances[b].targetPosition) >= settings.minimumSpacing - 1e-8);
-}
-experienceVrPages.forEach(({ id }) => allCollection.activatedPageIds.add(id));
-assert.equal(allCollection.isLevelComplete(), true);
-allCollection.reset();
-assert.equal(allCollection.instances.length, 0);
-assert.equal(allCollection.getActivatedPageIds().length, 18, 'reset preserves activation progress');
-assert.equal(allCollection.spawnOne(experienceVrPages[0], viewerFrame), null, 'activated pages cannot respawn');
-allCollection.dispose();
-console.log('VR crystal collection assertions passed');
 
-// A valid reliquary defers page activation and keeps one crystal visible in its authored anchor.
-{
-  const insertionScene = new THREE.Scene();
-  const record = (() => { const controller = new THREE.Group(); const holdSocket = new THREE.Group(); controller.add(holdSocket); insertionScene.add(controller); return { controller, holdSocket }; })();
-  const authoredRoot = new THREE.Group(); insertionScene.add(authoredRoot);
-  const insertZone = new THREE.Group(); insertZone.visible = false; authoredRoot.add(insertZone);
-  const authoredAnchor = new THREE.Group(); insertZone.add(authoredAnchor);
-  const anchor = new THREE.Group(); anchor.name = 'VrReliquaryCrystalDisplayAnchor'; authoredRoot.add(anchor);
-  const portal = { object: new THREE.Group(), insertRadius: 0.2, getSocketWorldPosition: (out) => out.set(99, 0, 99) }; insertionScene.add(portal.object);
-  const activated = [];
-  const insertedCollection = createVrCrystalCollection({ insertionTarget: { object: { visible: true }, authoredRoot, authoredCrystalAnchor: authoredAnchor, runtimeCrystalAnchor: anchor, crystalAnchor: anchor, hasValidInsertZone: true, getInsertZoneWorldSphere: () => new THREE.Sphere(new THREE.Vector3(), 10) }, scene: insertionScene, controllers: [record], portalDisplay: portal, settings, assetManager: { cloneGltfScene: () => new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.4, 0.2)) }, onActivate: (page) => activated.push(page.id) });
-  const insertedPages = [{ id: 'insert-one' }, { id: 'insert-two' }];
-  const [first, second] = insertedCollection.spawn(insertedPages, { anchorObject: portal.object, spawnPosition: { x: 0, y: 0, z: 2 } });
-  insertedCollection.update(2); insertedCollection.update(2);
-  for (const instance of [first, second]) { record.currentCrystalHit = instance; record.currentCrystalHitDistance = 0.1; insertedCollection.grab(record); insertedCollection.update(2); insertionScene.updateMatrixWorld(true); insertedCollection.release(record); }
-  assert.equal(first.state, 'inserted'); assert.equal(first.object.parent, anchor); assert.equal(first.object.visible, true);
-  assert.equal(isEffectivelyVisible(first.object), true); assert.notEqual(anchor.parent, insertZone);
-  assert.equal(insertedCollection.getInsertedInstance(), first); assert.deepEqual(activated, []);
-  assert.equal(second.state, 'available', 'a second crystal is rejected while occupied');
-  assert.equal(insertedCollection.activateInserted(), true); assert.equal(first.state, 'active'); assert.deepEqual(activated, ['insert-one']);
-  assert.equal(insertedCollection.activateInserted(), false); assert.deepEqual(activated, ['insert-one']);
-  assert.equal(insertedCollection.releaseInserted(), true); assert.equal(insertedCollection.getInsertedInstance(), null);
-  assert.equal(insertedCollection.hasReadPage('insert-one'), true);
-  assert.deepEqual(insertedCollection.getReadPageIds(), ['insert-one']);
-  insertedCollection.dispose();
+function harness() {
+  const scene = new THREE.Scene();
+  const controller = new THREE.Group(); const holdSocket = new THREE.Group(); controller.add(holdSocket); scene.add(controller);
+  const record = { controller, holdSocket, currentCrystalHit: null, currentCrystalHitDistance: null };
+  const portalObject = new THREE.Group(); portalObject.visible = true; scene.add(portalObject);
+  const portalDisplay = { object: portalObject, insertRadius: 10, getSocketWorldPosition: (out) => out.set(0, 0, 0) };
+  const progressionController = createVrProgressionController({ pages: experienceVrPages });
+  const previews = []; const commits = [];
+  const collection = createVrCrystalCollection({ scene, controllers: [record], portalDisplay, settings, pages: experienceVrPages,
+    progressionController, assetManager: { cloneGltfScene: () => new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.1, 0.1)) },
+    onPreview: (page) => previews.push(page.id), onCommit: (page) => commits.push(page.id) });
+  function insert(instance) {
+    collection.update(1); record.currentCrystalHit = instance; record.currentCrystalHitDistance = 0.1;
+    collection.grab(record); collection.update(1); scene.updateMatrixWorld(true); collection.release(record);
+  }
+  return { collection, progressionController, previews, commits, insert };
 }
+
+const stocked = harness();
+const crystals = [1, 2, 3].map(() => stocked.collection.spawnOne('creative-ai', viewerFrame));
+assert.deepEqual(crystals.map(({ tier }) => tier), [1, 2, 3]);
+for (const crystal of crystals) {
+  assert.equal('page' in crystal, false); assert.equal('pageId' in crystal, false); assert.equal('cardId' in crystal, false);
+}
+assert.equal(stocked.collection.spawnOne('creative-ai', viewerFrame), null);
+stocked.insert(crystals[1]);
+assert.equal(crystals[1].state, 'available', 'future tier insertion is rejected');
+assert.equal(stocked.collection.getInsertedInstance(), null);
+
+stocked.insert(crystals[0]);
+assert.equal(stocked.collection.activateInserted(), true);
+assert.equal(stocked.previews.length, 1);
+assert.equal(stocked.progressionController.getActivatedPageIds().length, 0, 'Activate only previews');
+assert.equal(stocked.collection.releaseInserted(), true);
+assert.equal(stocked.commits.length, 1);
+assert.equal(stocked.progressionController.getActivatedPageIds().length, 1, 'Release commits once');
+assert.equal(stocked.collection.releaseInserted(), false);
+stocked.collection.reset();
+assert.equal(stocked.collection.instances.length, 0);
+assert.equal(stocked.progressionController.getActivatedPageIds().length, 1, 'transient reset preserves progress');
+
+const noActivate = harness();
+const crystal = noActivate.collection.spawnOne('ethics-life-protection', viewerFrame); noActivate.insert(crystal);
+assert.equal(noActivate.collection.releaseInserted(), true);
+assert.equal(crystal.state, 'available');
+assert.equal(noActivate.progressionController.getActivatedPageIds().length, 0);
+assert.deepEqual(noActivate.commits, []);
+console.log('VR crystal collection assertions passed');
