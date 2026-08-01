@@ -35,6 +35,7 @@ experienceVr
 ├─ createVrPortalDisplay + createVrSpatialPlaque
 ├─ portalCards → experienceVrPages → 18 logical page records
 ├─ createVrCrystalCollection → page-bound instances + activation registry
+├─ createVrProgressFloor → VrTiltableFloorRoot + five authored sectors + activatedEntries
 ├─ createVrCrystalReliquary → insertion zone + visible display anchor
 ├─ createVrReliquaryActivateButton
 └─ createVrReliquaryReleaseButton
@@ -51,7 +52,8 @@ direct Enter VR gesture
 controller local -Z ray
 ├─ glyph currentHit → select hold → getNextPage(node) → spawnOne(page, viewer pose)
 ├─ crystal currentCrystalHit → squeeze → pulling → held → insertion/available
-├─ Activate hit → activateInserted() → insertedInstance.page → portal canvas
+├─ Activate hit → activateInserted() → page → portalCanvas.show(...)
+│                                      └→ progressFloor.activatePage(page) → glyphId + order → one sector panel
 └─ Release hit → delayed releaseInserted() → object removed + socket free
 ```
 
@@ -62,7 +64,19 @@ materializing → available → pulling → held → inserted → active → rel
                                   └──────── failed release ───────→ available
 ```
 
-Activate owns progress: it adds `insertedInstance.page.id` to the in-memory `activatedPageIds`. Reset removes all instances but does not clear that Set. Release removes the socket instance and does not alter activation. The read-named APIs are aliases to activation; there is no separate read registry or durable storage.
+Activate adds `insertedInstance.page.id` to the in-memory `activatedPageIds`, which owns content activation. The same callback sends the page to the floor; its independent `activatedEntries` registry owns visual panel illumination. Both survive session reset in the prepared runtime, but no common progression controller manages them. Release does not alter either registry, and neither has durable storage.
+
+## Progress-floor asset flow
+
+```text
+assetManifest
+→ AssetManager
+→ five sector models
+  (`floor_creative.glb`, `floor_ethic.glb`, `floor_haiku_cosmos.glb`,
+   `floor_dig_engine.glb`, `floor_ai_guide.glb`)
+→ createVrProgressFloor
+→ VrTiltableFloorRoot
+```
 
 ## Logical cards versus physical assets
 
@@ -79,4 +93,4 @@ Cards 4 and 5 reuse branch variants cyclically; each spawned object still has in
 
 ## Ownership and excluded dependencies
 
-Portal/reliquary placement and insertion depend on authored transforms and runtime scene hierarchy. Locomotion and crystal handling do not depend on physics. The active graph has no progression controller, progress floor, shells, orb, semantic hand-tool input, runes, finale system or persistence module; those names belong only to the approved concept roadmap.
+Portal/reliquary placement and insertion depend on authored transforms and runtime scene hierarchy. Locomotion and crystal handling do not depend on physics. The active graph includes the bounded visual progress floor, but has no progression controller, global progress rings, shells, orb, semantic hand-tool input, runes, finale system or persistence module; those names belong only to the approved concept roadmap.

@@ -1,27 +1,59 @@
 # Experience VR Handoff
 
-## Current state
+Status: self-contained implementation state at **2026-07-31**. Read the [runtime model](../technical/VR_RUNTIME_MODEL.md) and [progress-floor model](../technical/VR_PROGRESS_FLOOR_MODEL.md) for the canonical technical contracts.
 
-Experience VR is an independent, dynamically imported WebXR runtime. A session starts directly at `(0, 0, 5.8)` facing center; tracked-head X/Z compensation moves only `playerRig`. WebXR owns the tracked camera. Left-stick yaw and right-stick tracked-head-relative horizontal movement also modify only the rig. The repository's entry-transition module is not active.
+## Runtime and locomotion
 
-A `0.5 s` trigger hold on a targeted moving glyph spawns the first ordered page that is neither activated nor already represented by a live crystal. Branches contain `3 / 3 / 3 / 4 / 5` cards: **18 logical cards total**. Their visuals reuse **15 GLBs total**, exactly three variants per branch; cards 4 and 5 cycle back through those variants.
+Experience VR is an independent, dynamically imported WebXR runtime. It owns its renderer, scene, camera, `playerRig`, controllers, lifecycle, and animation loop. Sessions request `local-floor` with `local` fallback and start at `(0, 0, 5.8)` facing center. WebXR owns the tracked camera; entry alignment, left-stick continuous yaw, and right-stick tracked-head-relative horizontal movement transform only `playerRig` while preserving rig Y.
 
-## Current crystal contract and limitation
+Session entry/end resets transient crystals, hands/socket ownership, hits, glyph feedback, buttons, reliquary, portal, and rig pose while reusing the prepared runtime.
 
-Every spawned physical instance is currently created for a concrete page and contains `page`, `cardId` and `crystalId`. Instances materialize additively with deterministic spacing; both hands can hold different available crystals. One reliquary socket accepts one crystal through `available → pulling → held → inserted`. Activate changes it to `active`, records `insertedInstance.page.id` in `activatedPageIds` and displays that same `insertedInstance.page`. Release removes an inserted/active instance and frees the socket without undoing activation.
+## Cards, crystals, and known ordering limitation
 
-This page-bound contract has a confirmed ordering limitation: if a player collects several crystals before using them, inserting them in a different physical order can display branch content in that insertion order rather than sequential card order. Activate does not currently choose the next page of the branch.
+Five branches contain **18 logical cards** in counts `3 / 3 / 3 / 4 / 5`. They reuse **15 crystal GLBs**, three visual variants per branch; later cards cycle through those variants. A glyph hold spawns the first eligible ordered page, and each physical crystal is currently page-bound with its concrete `page`, `cardId`, and `crystalId`.
 
-## Reset and progress lifetime
+Activate records `insertedInstance.page.id` in `activatedPageIds` and passes that same page to the portal and floor callbacks. Thus crystals collected earlier can reveal pages in physical insertion order rather than branch order. The floor lights the page actually activated, but does not solve this limitation.
 
-Session entry/end removes all live crystals, clears hand/socket ownership, hits and holds, resets the portal/buttons/reliquary/glyph presentation, and restores the rig. The activation Set survives those resets while the prepared page runtime remains alive, so activated pages cannot respawn on XR re-entry. Reload or navigation creates a fresh registry. The read-named APIs alias activation, and there is no durable save, separate read state, progress UI, full-game reset, victory sequence or next level.
+## Complete five-sector visual floor
 
-The runtime now includes a visually complete progress floor made from five authored sectors: Creative AI / FIRE (`floor_creative.glb`, three panels), Ethics / EARTH (`floor_ethic.glb`, three panels), AI Guide / WOOD (`floor_ai_guide.glb`, three panels), DIG Engine / METAL (`floor_dig_engine.glb`, four panels), and Haiku Cosmos / WATER (`floor_haiku_cosmos.glb`, five panels). The unshifted sectors share the world origin and rotate every 72 degrees; DIG Engine occupies the `spotify-digger` rotation-zero slot. No placeholder remains. Sector bases are invisible, while ornaments and progression panels remain visible.
+`createVrProgressFloor` composes five authored, non-placeholder sectors under the stationary `VrTiltableFloorRoot`:
 
-Page activation maps the `page.glyphId + page.order` pair to one panel in that page's own sector. The full mappings cover FIRE 01–03, EARTH 01–03, WOOD 01–03, METAL 01–04 and WATER 01–05. Illumination accumulates independently and survives XR session exit/re-entry only within the prepared page runtime. There is still no central `VrProgressionController`, persistent highlight storage, or floor tilting.
+- Creative AI / Fire — `/glb/floor_creative.glb` — 3 panels;
+- Ethics / Earth — `/glb/floor_ethic.glb` — 3 panels;
+- AI Guide / Wood — `/glb/floor_ai_guide.glb` — 3 panels;
+- DIG Engine / Metal — `/glb/floor_dig_engine.glb` — 4 panels;
+- Haiku Cosmos / Water — `/glb/floor_haiku_cosmos.glb` — 5 panels.
 
-## Approved direction not yet implemented
+The five sectors share a center and are placed every 72°. Their **18 panels** map one-to-one to pages by `page.glyphId + page.order`. Activation produces a short emissive impulse followed by a stable glow; entries accumulate idempotently.
 
-The [gameplay roadmap](../concept/EXPERIENCE_VR_GAMEPLAY_ROADMAP.md) is approved direction only. Branch-bound crystals with Activate-time sequential resolution, `VrProgressionController`, final five-branch floor mapping and global rings, tiers, shells, orb, semantic hand tools, small glyphs, tilting floor, sector puzzles, runes, final radar, completion flow and persistent saves are absent from the runtime.
+The content registry `activatedPageIds` and floor registry `activatedEntries` both survive XR session exit/re-entry only while the already prepared page runtime exists. Reload or navigation loses both. They are separate in-memory owners and have no common progression controller.
 
-The nearest approved implementation is a **separate task** that fixes sequential card resolution during Activate by moving content choice from the physical crystal's page to the next unactivated page of its branch. No part of that fix is included in this documentation-only handoff.
+## Not implemented / outside the current runtime
+
+- `VrProgressionController`;
+- branch-bound crystal contract;
+- Activate-time sequential page resolution;
+- global thresholds and rings;
+- progressively filled sector-background illumination;
+- soft gradient progress boundary;
+- central progression core;
+- durable persistence;
+- full-game reset;
+- floor tilting;
+- locomotion coupled to the floor's local plane;
+- floor collisions and physics;
+- antenna puzzle;
+- final progression sequence.
+
+The visual floor foundation was implemented before the progression controller and does not replace it. Meta Quest readability, z-fighting, performance, and transparent-overdraw gates have not been completed.
+
+## Nearest approved architectural step
+
+The next task remains the crystal semantic correction:
+
+```text
+branch-bound crystal
+→ choose the next unactivated page during Activate
+```
+
+Only after that correction should a `VrProgressionController` become the shared progression layer. Do not reimplement the existing five-sector visual foundation.
