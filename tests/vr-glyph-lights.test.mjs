@@ -1,11 +1,13 @@
 import assert from 'node:assert/strict';
 import * as THREE from '../src/vendor/three.js';
 import { createVrGlyphLights } from '../src/xr/createVrGlyphLights.js';
-const glyph = new THREE.Group(); glyph.position.x = 4; const lights = createVrGlyphLights({ nodes: [glyph] });
+const glyph = new THREE.Group(); glyph.position.set(4, 2, 0); const lights = createVrGlyphLights({ nodes: [glyph], settings: { inwardOffset: 1 } });
 glyph.updateMatrixWorld(true); lights.update({ hovered: new Set([glyph]) });
 assert.equal(lights.records[0].state, 'hovered'); assert.equal(lights.records[0].light.intensity, 2.8);
 const first = lights.records[0].anchor.position.clone(); glyph.position.set(0, 0, 4); glyph.updateMatrixWorld(true); lights.update({ hovered: new Set([glyph]) });
 assert.notDeepEqual(lights.records[0].anchor.position, first); assert.equal(lights.records[0].state, 'hovered');
+assert.deepEqual(first.toArray(), [-1, 0, 0], 'light is one metre inward and keeps glyph height');
+assert.deepEqual(lights.records[0].anchor.position.toArray(), [0, 0, -1], 'radial offset follows X/Z direction to center');
 lights.update({ hovered: new Set([glyph]), exhausted: new Set([glyph]) }); assert.equal(lights.records[0].state, 'idle');
 lights.reset(); assert.equal(lights.records[0].light.visible, false);
 const anchor = lights.records[0].anchor; lights.dispose(); lights.dispose(); assert.equal(anchor.parent, null);

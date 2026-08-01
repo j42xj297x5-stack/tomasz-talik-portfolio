@@ -8,7 +8,9 @@ Experience VR is an independent, dynamically imported WebXR runtime. It owns its
 
 Session entry/end resets transient crystals, hands/socket ownership, hits, glyph feedback, buttons, reliquary, portal, and rig pose while reusing the prepared runtime.
 
-Controller interaction has one `3.0 m` source of range for its visible pointer, glyph hits and crystal targeting/grab; trigger press does not extend it, while reliquary button limits are capped by it. The pointer is a transparent low-poly tube with a short tapered end rather than a screen-width line. Actionable glyph and crystal ray targets use a shared, subtle pulsating back-side silhouette shell; target loss, state changes, reset and disposal clear it without postprocessing.
+Controller interaction has one `2.0 m` source of range for its visible pointer, glyph hits and crystal targeting/grab; trigger press does not extend it, while reliquary button limits are capped by it. The pointer is a transparent `0.010 m`-diameter low-poly tube with a short tapered end rather than a screen-width line. Actionable glyph and crystal ray targets use only effectively visible model meshes for a shared, subtle pulsating back-side silhouette shader. It expands in clip space by a configured pixel thickness and reads the current WebXR eye viewport in its render hook; hidden bases, technical helpers and fallback colliders are excluded. Target loss, state changes, reset and disposal clear it without postprocessing.
+
+A glyph hold starts only from a real model hit. A miss pauses progress for a `0.15 s` grace period so a moving glyph can be reacquired; a longer miss, another glyph hit, trigger release or disconnect cancels immediately. Glyph hover lights retain their existing color and intensity but sit `1.0 m` horizontally inward from each glyph toward ring center.
 
 ## Cards, crystals, and progression
 

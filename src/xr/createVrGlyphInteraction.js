@@ -11,6 +11,7 @@ export function createVrGlyphInteraction({ controllers, nodes, settings = {}, ha
   const objectToGlyph = new Map();
   const holds = new Map();
   const holdDuration = settings.holdDurationSeconds ?? 0.5;
+  const holdLostGrace = settings.holdLostGraceSeconds ?? 0.15;
   let disposed = false;
   const targets = nodes.map((glyphRoot) => {
     const raycastObjects = [];
@@ -30,7 +31,9 @@ export function createVrGlyphInteraction({ controllers, nodes, settings = {}, ha
   const listeners = controllers.map((record) => {
     const start = () => {
       const node = record.currentHit;
-      if (!disposed && node && isGlyphActive(node)) holds.set(record, { node, elapsed: 0, completed: false });
+      if (!disposed && node && isGlyphActive(node)) holds.set(record, {
+        node, elapsed: 0, lostElapsed: 0, completed: false
+      });
     };
     const end = () => holds.delete(record);
     record.controller.addEventListener('selectstart', start);
@@ -54,7 +57,14 @@ export function createVrGlyphInteraction({ controllers, nodes, settings = {}, ha
       }
       const hold = holds.get(record);
       if (!hold) continue;
-      if (!record.isConnected || record.currentHit !== hold.node || !isGlyphActive(hold.node)) { holds.delete(record); continue; }
+      if (!record.isConnected || !isGlyphActive(hold.node)) { holds.delete(record); continue; }
+      if (record.currentHit !== hold.node) {
+        if (record.currentHit) { holds.delete(record); continue; }
+        hold.lostElapsed += Math.max(0, delta);
+        if (hold.lostElapsed > holdLostGrace) holds.delete(record);
+        continue;
+      }
+      hold.lostElapsed = 0;
       if (!hold.completed) {
         hold.elapsed += Math.max(0, delta);
         if (hold.elapsed >= holdDuration) {

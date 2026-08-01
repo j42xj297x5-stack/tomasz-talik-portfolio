@@ -3,7 +3,7 @@ import * as THREE from '../vendor/three.js';
 const LIGHT_COLOR = '#fffaf2';
 const INTENSITIES = { idle: 0, hovered: 2.8, entryReady: 1.15, activated: 3 };
 
-export function createVrGlyphLights({ nodes, center = new THREE.Vector3() }) {
+export function createVrGlyphLights({ nodes, center = new THREE.Vector3(), settings = {} }) {
   const worldPosition = new THREE.Vector3();
   const lightWorldPosition = new THREE.Vector3();
   let disposed = false;
@@ -21,7 +21,9 @@ export function createVrGlyphLights({ nodes, center = new THREE.Vector3() }) {
       const { glyphRoot, anchor, light } = record;
       record.state = !exhausted.has(glyphRoot) && hovered.has(glyphRoot) ? 'hovered' : 'idle';
       glyphRoot.getWorldPosition(worldPosition);
-      lightWorldPosition.copy(center).lerp(worldPosition, 1.16);
+      lightWorldPosition.set(center.x - worldPosition.x, 0, center.z - worldPosition.z);
+      if (lightWorldPosition.lengthSq() > 0) lightWorldPosition.normalize().multiplyScalar(settings.inwardOffset ?? 1);
+      lightWorldPosition.add(worldPosition);
       glyphRoot.worldToLocal(lightWorldPosition);
       anchor.position.copy(lightWorldPosition);
       light.intensity = INTENSITIES[record.state];

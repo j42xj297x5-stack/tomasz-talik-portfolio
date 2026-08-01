@@ -20,20 +20,24 @@
   },
   "controllers": {
     "enabled": true,
-    "rayLength": 3,
+    "rayLength": 2,
     "rayOpacity": 0.8,
-    "rayDiameter": 0.012,
+    "rayDiameter": 0.01,
     "rayTipFraction": 0.08,
     "rayRadialSegments": 6
   },
   "targetHalo": {
     "color": 12577279,
     "opacity": 0.28,
-    "scale": 1.055,
+    "thicknessPixels": 3,
     "pulseDuration": 1.45
   },
   "glyphInteraction": {
-    "holdDurationSeconds": 0.5
+    "holdDurationSeconds": 0.5,
+    "holdLostGraceSeconds": 0.15
+  },
+  "glyphLights": {
+    "inwardOffset": 1.0
   },
   "glyphRing": {
     "enabled": true,
