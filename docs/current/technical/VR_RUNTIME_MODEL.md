@@ -40,7 +40,7 @@ Release accepts `inserted` or `active`. Releasing an `inserted` crystal without 
 
 The progression controller exposes the current tier, insertion validation, branch/tier page resolution, commit, activated-page queries, and tier-completion queries. Its registry lives in the prepared page runtime, so committed cards survive XR exit/re-entry while transient crystals are reset. Reload or navigation creates a fresh controller. There is no `localStorage` or durable save.
 
-The five-sector progress floor has 18 panels mapped by `glyphId + order` and receives pages only after Release commits them. Five independent full-circle threshold rings derive their radii from the local centers of panels at each order. A completed tier gives its ring a short neutral-white opacity impulse followed by a subtle persistent glow. Sector-background progression and other later visual layers remain absent.
+The five-sector progress floor has 18 panels mapped by `glyphId + order` and receives pages only after Release commits them. Five independent full-circle threshold rings derive candidate radii from the local centers of panels at each order, then sort and gap-normalize those candidates into stable inward-to-outward tier radii. Non-monotonic authored centroids do not block runtime preparation; an isolated procedural-ring failure degrades to the functional sector and panel layer. A completed tier gives its ring a short neutral-white opacity impulse followed by a subtle persistent glow. Sector-background progression and other later visual layers remain absent.
 
 ## Explicitly absent from the current runtime
 
