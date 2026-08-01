@@ -95,6 +95,9 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
     materializeStartScale: 0.18,
     materializeRise: 0.12,
     materializeYaw: 0.35,
+    consumeDuration: 0.55,
+    consumeParticleCount: 14,
+    consumeParticleSize: 0.025,
     holdOffset: { x: 0, y: 0, z: -0.09 }
   },
   locomotion: {
@@ -280,6 +283,11 @@ export function normalizeExperienceVrSettings(candidate) {
       materializeStartScale: finiteNumber(candidate.crystals?.materializeStartScale, defaults.crystals.materializeStartScale, { min: 0.05, max: 1 }),
       materializeRise: finiteNumber(candidate.crystals?.materializeRise, defaults.crystals.materializeRise, { min: 0, max: 0.5 }),
       materializeYaw: finiteNumber(candidate.crystals?.materializeYaw, defaults.crystals.materializeYaw, { min: 0, max: 1 }),
+      consumeDuration: finiteNumber(candidate.crystals?.consumeDuration, defaults.crystals.consumeDuration, { min: 0.1, max: 2 }),
+      consumeParticleCount: Math.round(finiteNumber(candidate.crystals?.consumeParticleCount,
+        defaults.crystals.consumeParticleCount, { min: 8, max: 20 })),
+      consumeParticleSize: finiteNumber(candidate.crystals?.consumeParticleSize,
+        defaults.crystals.consumeParticleSize, { min: 0.005, max: 0.08 }),
       holdOffset: normalizeVector(candidate.crystals?.holdOffset, defaults.crystals.holdOffset)
     },
     locomotion: {

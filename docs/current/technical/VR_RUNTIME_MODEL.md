@@ -34,7 +34,7 @@ While a held crystal is within the configurable proximity radius around the auth
 
 Activate accepts `inserted`, resolves the page by `branchId + tier`, verifies branch sequence, stores that page only as transient `previewPage`, changes the crystal to `active`, and calls the portal preview callback. It does not commit progress or illuminate the floor.
 
-Release accepts `inserted` or `active`. Releasing an `inserted` crystal without Activate returns it safely to `available` without progress. Releasing `active` commits its preview exactly once through the progression controller, calls `progressFloor.activatePage(page)`, advances the global tier when its requirements are complete, and removes the consumed crystal.
+Release accepts `inserted` or `active`. Releasing an `inserted` crystal without Activate returns it safely to `available` without progress. Releasing `active` commits its preview exactly once through the progression controller, calls `progressFloor.activatePage(page)`, and advances the global tier when its requirements are complete. The socket is then released immediately while the crystal enters a non-interactive `consuming` state for the configured `0.55 s`: its root eases down to zero scale in place and a single lightweight `THREE.Points` effect (14 branch-colored points) rotates, expands slightly, and fades around it. Completion removes both the crystal and effect. Transient reset or disposal also removes and disposes an in-flight effect without reverting committed progress.
 
 ## Progress, reset and persistence
 

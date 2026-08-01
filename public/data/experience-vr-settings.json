@@ -116,6 +116,9 @@
     "materializeStartScale": 0.18,
     "materializeRise": 0.12,
     "materializeYaw": 0.35,
+    "consumeDuration": 0.55,
+    "consumeParticleCount": 14,
+    "consumeParticleSize": 0.025,
     "holdOffset": {
       "x": 0,
       "y": 0,

@@ -1,13 +1,17 @@
 import assert from 'node:assert/strict';
 import * as THREE from '../src/vendor/three.js';
 import { experienceVrPages } from '../src/content/experienceVrPages.js';
-import { calculateVrCrystalSpawnPosition, createVrCrystalCollection } from '../src/xr/createVrCrystalCollection.js';
+import { calculateVrCrystalSpawnPosition, createVrCrystalCollection,
+  VR_CRYSTAL_CONSUME_COLORS } from '../src/xr/createVrCrystalCollection.js';
 import { createVrProgressionController } from '../src/xr/progression/createVrProgressionController.js';
 
 const settings = { enabled: true, rayGrabMaxDistance: 2, pullDuration: 0.01, targetScale: 1.04,
   scaleMin: 0.25, scaleMax: 0.25, spawnWidth: 1, spawnDepth: 1, minimumSpacing: 0.2, spawnInwardOffset: 0.3,
   materializeDuration: 0.01, materializeStagger: 0, materializeStartScale: 0.2, materializeRise: 0.1,
   materializeYaw: 0.1, holdOffset: { x: 0, y: 0, z: 0 } };
+settings.consumeDuration = 0.5;
+settings.consumeParticleCount = 12;
+settings.consumeParticleSize = 0.02;
 const glyphFrame = {
   glyphWorldPosition: new THREE.Vector3(4, 2.5, 3),
   centerWorldPosition: new THREE.Vector3(1, 2.5, 3)
@@ -69,7 +73,21 @@ assert.equal(stocked.progressionController.getActivatedPageIds().length, 0, 'Act
 assert.equal(stocked.collection.releaseInserted(), true);
 assert.equal(stocked.commits.length, 1);
 assert.equal(stocked.progressionController.getActivatedPageIds().length, 1, 'Release commits once');
+assert.equal(crystals[0].state, 'consuming', 'committed crystal enters consuming');
+assert.equal(stocked.collection.getInsertedInstance(), null, 'socket is free before consuming completes');
+assert.equal(crystals[0].consumeEffect.points.parent != null, true, 'particles exist during consuming');
+assert.equal(crystals[0].consumeEffect.material.color.getHex(), VR_CRYSTAL_CONSUME_COLORS['creative-ai']);
+stocked.record.currentCrystalHit = crystals[0]; stocked.record.currentCrystalHitDistance = 0.1;
+assert.equal(stocked.collection.grab(stocked.record), null, 'consuming crystal cannot be grabbed');
 assert.equal(stocked.collection.releaseInserted(), false);
+const consumeStartScale = crystals[0].object.scale.x;
+stocked.collection.update(0.25);
+assert.ok(crystals[0].object.scale.x < consumeStartScale, 'consuming update shrinks the crystal');
+assert.equal(stocked.record.currentCrystalHit, null, 'consuming crystal cannot be targeted');
+stocked.collection.update(0.25);
+assert.equal(crystals[0].state, 'released', 'crystal is released after consumeDuration');
+assert.equal(crystals[0].consumeEffect, null, 'particles are removed after consuming');
+assert.equal(crystals[0].object.parent, null, 'consumed crystal is removed from the scene');
 stocked.collection.reset();
 assert.equal(stocked.collection.instances.length, 0);
 assert.equal(stocked.progressionController.getActivatedPageIds().length, 1, 'transient reset preserves progress');
@@ -80,6 +98,20 @@ assert.equal(noActivate.collection.releaseInserted(), true);
 assert.equal(crystal.state, 'available');
 assert.equal(noActivate.progressionController.getActivatedPageIds().length, 0);
 assert.deepEqual(noActivate.commits, []);
+assert.equal(crystal.consumeEffect, undefined, 'Release without Activate has no consuming effect');
+
+const resetDuringConsume = harness();
+const resetCrystal = resetDuringConsume.collection.spawnOne('ethics-life-protection', glyphFrame);
+resetDuringConsume.insert(resetCrystal);
+resetDuringConsume.collection.activateInserted();
+resetDuringConsume.collection.releaseInserted();
+const resetEffect = resetCrystal.consumeEffect;
+assert.equal(resetCrystal.state, 'consuming');
+resetDuringConsume.collection.reset();
+assert.equal(resetEffect.points.parent, null, 'reset removes transient consuming particles');
+assert.equal(resetCrystal.consumeEffect, null);
+assert.equal(resetDuringConsume.progressionController.getActivatedPageIds().length, 1,
+  'reset during consuming preserves committed progression');
 
 const proximity = harness();
 const valid = proximity.collection.spawnOne('creative-ai', glyphFrame);
