@@ -20,9 +20,11 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
     enabled: true,
     rayLength: 3,
     rayOpacity: 0.8,
-    idleScale: 1,
-    activeScale: 1.2
+    rayDiameter: 0.012,
+    rayTipFraction: 0.08,
+    rayRadialSegments: 6
   },
+  targetHalo: { color: 0xbfe9ff, opacity: 0.28, scale: 1.055, pulseDuration: 1.45 },
   glyphInteraction: { holdDurationSeconds: 0.5 },
   glyphRing: {
     enabled: true,
@@ -81,9 +83,7 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
   },
   crystals: {
     enabled: true,
-    rayGrabMaxDistance: 1.8,
     pullDuration: 0.25,
-    targetScale: 1.04,
     scaleMin: 0.22,
     scaleMax: 0.28,
     spawnWidth: 1.45,
@@ -98,7 +98,8 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
     consumeDuration: 0.55,
     consumeParticleCount: 14,
     consumeParticleSize: 0.025,
-    holdOffset: { x: 0, y: 0, z: -0.09 }
+    holdOffset: { x: 0, y: 0, z: -0.09 },
+    holdRotationDegrees: { x: 30, y: 0, z: 0 }
   },
   locomotion: {
     enabled: true,
@@ -165,8 +166,16 @@ export function normalizeExperienceVrSettings(candidate) {
         : defaults.controllers.enabled,
       rayLength: finiteNumber(candidate.controllers?.rayLength, defaults.controllers.rayLength, { min: 0.1, max: 20 }),
       rayOpacity: finiteNumber(candidate.controllers?.rayOpacity, defaults.controllers.rayOpacity, { min: 0.05, max: 1 }),
-      idleScale: finiteNumber(candidate.controllers?.idleScale, defaults.controllers.idleScale, { min: 0.1, max: 5 }),
-      activeScale: finiteNumber(candidate.controllers?.activeScale, defaults.controllers.activeScale, { min: 0.1, max: 5 })
+      rayDiameter: finiteNumber(candidate.controllers?.rayDiameter, defaults.controllers.rayDiameter, { min: 0.004, max: 0.04 }),
+      rayTipFraction: finiteNumber(candidate.controllers?.rayTipFraction, defaults.controllers.rayTipFraction, { min: 0.05, max: 0.1 }),
+      rayRadialSegments: Math.round(finiteNumber(candidate.controllers?.rayRadialSegments,
+        defaults.controllers.rayRadialSegments, { min: 4, max: 10 }))
+    },
+    targetHalo: {
+      color: Math.round(finiteNumber(candidate.targetHalo?.color, defaults.targetHalo.color, { min: 0, max: 0xffffff })),
+      opacity: finiteNumber(candidate.targetHalo?.opacity, defaults.targetHalo.opacity, { min: 0.05, max: 0.6 }),
+      scale: finiteNumber(candidate.targetHalo?.scale, defaults.targetHalo.scale, { min: 1.01, max: 1.15 }),
+      pulseDuration: finiteNumber(candidate.targetHalo?.pulseDuration, defaults.targetHalo.pulseDuration, { min: 1.3, max: 1.6 })
     },
     glyphInteraction: {
       holdDurationSeconds: finiteNumber(candidate.glyphInteraction?.holdDurationSeconds,
@@ -268,9 +277,7 @@ export function normalizeExperienceVrSettings(candidate) {
     },
     crystals: {
       enabled: typeof candidate.crystals?.enabled === 'boolean' ? candidate.crystals.enabled : defaults.crystals.enabled,
-      rayGrabMaxDistance: finiteNumber(candidate.crystals?.rayGrabMaxDistance, defaults.crystals.rayGrabMaxDistance, { min: 0.3, max: 3 }),
       pullDuration: finiteNumber(candidate.crystals?.pullDuration, defaults.crystals.pullDuration, { min: 0.05, max: 1 }),
-      targetScale: finiteNumber(candidate.crystals?.targetScale, defaults.crystals.targetScale, { min: 1, max: 1.15 }),
       scaleMin: finiteNumber(candidate.crystals?.scaleMin, defaults.crystals.scaleMin, { min: 0.1, max: 0.3 }),
       scaleMax: finiteNumber(candidate.crystals?.scaleMax, defaults.crystals.scaleMax, { min: 0.2, max: 0.4 }),
       spawnWidth: finiteNumber(candidate.crystals?.spawnWidth, defaults.crystals.spawnWidth, { min: 0.5, max: 3 }),
@@ -288,7 +295,8 @@ export function normalizeExperienceVrSettings(candidate) {
         defaults.crystals.consumeParticleCount, { min: 8, max: 20 })),
       consumeParticleSize: finiteNumber(candidate.crystals?.consumeParticleSize,
         defaults.crystals.consumeParticleSize, { min: 0.005, max: 0.08 }),
-      holdOffset: normalizeVector(candidate.crystals?.holdOffset, defaults.crystals.holdOffset)
+      holdOffset: normalizeVector(candidate.crystals?.holdOffset, defaults.crystals.holdOffset),
+      holdRotationDegrees: normalizeVector(candidate.crystals?.holdRotationDegrees, defaults.crystals.holdRotationDegrees)
     },
     locomotion: {
       enabled: typeof candidate.locomotion?.enabled === 'boolean' ? candidate.locomotion.enabled : defaults.locomotion.enabled,

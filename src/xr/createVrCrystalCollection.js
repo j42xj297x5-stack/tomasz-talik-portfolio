@@ -1,4 +1,5 @@
 import * as THREE from '../vendor/three.js';
+import { createVrTargetHalo } from './createVrTargetHalo.js';
 
 export function isEffectivelyVisible(object) {
   for (let current = object; current; current = current.parent) {
@@ -71,7 +72,7 @@ export function getVrCrystalLayout(pageIds, settings) {
 }
 
 export function createVrCrystalCollection({ scene, assetManager, controllers, portalDisplay, insertionTarget, settings,
-  insertFeedbackSettings = {}, pages = [], progressionController, onPreview, onCommit }) {
+  haloSettings = {}, insertFeedbackSettings = {}, pages = [], progressionController, onPreview, onCommit }) {
   const instances = [];
   const listeners = [];
   const heldByController = new Map();
@@ -81,7 +82,12 @@ export function createVrCrystalCollection({ scene, assetManager, controllers, po
   const rayDirection = new THREE.Vector3();
   const rayQuaternion = new THREE.Quaternion();
   const scratch = new THREE.Vector3();
-  const targetQuaternion = new THREE.Quaternion();
+  const holdRotationDegrees = settings.holdRotationDegrees ?? { x: 0, y: 0, z: 0 };
+  const targetQuaternion = new THREE.Quaternion().setFromEuler(new THREE.Euler(
+    THREE.MathUtils.degToRad(holdRotationDegrees.x),
+    THREE.MathUtils.degToRad(holdRotationDegrees.y),
+    THREE.MathUtils.degToRad(holdRotationDegrees.z)
+  ));
   const crystalCenterScratch = new THREE.Vector3();
   let disposed = false;
   let insertedInstance = null;
@@ -135,7 +141,7 @@ export function createVrCrystalCollection({ scene, assetManager, controllers, po
   function setHighlighted(instance, highlighted) {
     if (!instance || instance.highlighted === highlighted) return;
     instance.highlighted = highlighted;
-    instance.object.scale.setScalar(highlighted ? settings.targetScale : 1);
+    instance.halo.setVisible(highlighted);
   }
 
   function updateTargets() {
@@ -149,6 +155,8 @@ export function createVrCrystalCollection({ scene, assetManager, controllers, po
       controllerRecord.controller.getWorldQuaternion(rayQuaternion);
       rayDirection.set(0, 0, -1).applyQuaternion(rayQuaternion).normalize();
       raycaster.set(rayOrigin, rayDirection);
+      raycaster.near = 0;
+      raycaster.far = controllerRecord.currentRayLength;
       const intersections = raycaster.intersectObjects(raycastObjects, true);
       for (const intersection of intersections) {
         let object = intersection.object;
@@ -173,7 +181,7 @@ export function createVrCrystalCollection({ scene, assetManager, controllers, po
     const instance = controllerRecord.currentCrystalHit;
     if (!instance || instance.state !== 'available'
       || controllerRecord.currentCrystalHitDistance == null
-      || controllerRecord.currentCrystalHitDistance > settings.rayGrabMaxDistance
+      || controllerRecord.currentCrystalHitDistance > controllerRecord.currentRayLength
       || instance.heldBy) return null;
     setHighlighted(instance, false);
     instance.state = 'pulling';
@@ -343,6 +351,7 @@ export function createVrCrystalCollection({ scene, assetManager, controllers, po
       const instance = { crystalId, glyphId: branchId, branchId, tier, visualVariant: definition.visualVariant,
         crystalAssetId: definition.crystalAssetId, object, model, state: 'materializing', heldBy: null, highlighted: false,
         materializeElapsed: 0, materializeYaw, targetPosition, initialTransform: object.matrix.clone() };
+      instance.halo = createVrTargetHalo({ root: model, settings: haloSettings });
       instances.push(instance);
       object.traverse((child) => objectToCrystal.set(child, instance));
       return instance;
@@ -414,6 +423,7 @@ export function createVrCrystalCollection({ scene, assetManager, controllers, po
       }
     }
     updateTargets();
+    instances.forEach(({ halo }) => halo.update(elapsedDelta));
     let feedbackState = null;
     for (const instance of heldByController.values()) {
       if (!['pulling', 'held'].includes(instance.state)) continue;
@@ -445,6 +455,7 @@ export function createVrCrystalCollection({ scene, assetManager, controllers, po
     for (const instance of instances) {
       setHighlighted(instance, false);
       removeConsumeEffect(instance);
+      instance.halo.dispose();
       instance.heldBy = null;
       instance.state = 'available';
       instance.object.visible = false;

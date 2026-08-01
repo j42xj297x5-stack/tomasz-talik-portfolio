@@ -148,7 +148,7 @@ const locomotion = createVrLocomotion({ playerRig, renderer, camera, settings: s
 const progressionController = createVrProgressionController({ pages: experienceVrPages });
 const crystalCollection = createVrCrystalCollection({
   scene, assetManager, controllers: vrControllers.controllers, portalDisplay, insertionTarget: crystalReliquary,
-  settings: settings.crystals, insertFeedbackSettings: settings.reliquary.insertFeedback,
+  settings: settings.crystals, haloSettings: settings.targetHalo, insertFeedbackSettings: settings.reliquary.insertFeedback,
   pages: experienceVrPages, progressionController,
   onPreview: (page) => portalCanvas.show(resolveExperienceVrPage(page, language)),
   onCommit: (page) => {
@@ -195,6 +195,7 @@ const glyphInteraction = createVrGlyphInteraction({
   controllers: vrControllers.controllers,
   nodes,
   settings: settings.glyphInteraction,
+  haloSettings: settings.targetHalo,
   isGlyphActive,
   onGlyphHoldComplete: ({ node }) => {
     if (getNextCrystalTier(node) === null) return;

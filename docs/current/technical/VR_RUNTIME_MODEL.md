@@ -8,6 +8,8 @@ Status: canonical description of the implemented runtime. Future gameplay is doc
 
 Each session starts at configured rig position `(0, 0, 5.8)`, facing the world center. After the XR session is installed, the runtime reads the tracked head's world X/Z and offsets `playerRig` so the physical head reaches the configured start. WebXR owns the tracked camera: application code does not write its position or orientation. There is no active entry-glyph transition and `createVrEntryTransition` is not imported by the runtime.
 
+Both controllers use one configured `3.0 m` interaction range for the visible pointer, active-glyph raycasts and available-crystal targeting/grab. Trigger state never changes that length; reliquary buttons may impose a shorter action-specific maximum but cannot exceed it. The pointer is a low-segment transparent mesh directed along local `-Z`: a nearly full-length constant-width tube ends in a short tapered tip, with depth writes disabled.
+
 Both session entry and session end reset transient scene state: all live crystals are removed, hand/socket ownership and controller hits are cleared, glyph holds/lights/orbit are reset, buttons and reliquary are reset, the portal waiting message is restored, and the rig returns to its configured position and orientation. The prepared runtime objects and listeners are reused.
 
 ## Locomotion
@@ -18,6 +20,8 @@ The left joystick applies continuous yaw to `playerRig`. The right joystick tran
 
 Each controller independently raycasts the moving glyphs. A completed glyph hold spawns the first tier of that branch which is not already represented by a committed card or a live, non-released crystal. Acquisition is independent of the current global tier, so several future crystals may be stored. Branch capacities are `3 / 3 / 3 / 4 / 5`.
 
+An actionable glyph or available crystal currently hit inside the shared controller range receives a lightweight pulsating silhouette halo. It consists of shared source geometry rendered as a slightly enlarged, transparent back-side shell without postprocessing or depth writes. Losing the hit, changing interaction state, reset and disposal remove the feedback, so visible halo always means the current action is available.
+
 The crystal materialization point is captured from the activated glyph's current world position when the hold completes, then offset by `0.30 m` toward the central world object. It preserves the resulting world-space height and is independent of the viewer pose. Once created, the crystal remains at that captured location rather than following the orbiting glyph.
 
 ## Crystal instances and visual assets
@@ -25,6 +29,8 @@ The crystal materialization point is captured from the activated glyph's current
 A physical instance carries only `crystalId`, `glyphId/branchId`, `tier`, `visualVariant`, `crystalAssetId` and transient interaction state. It has no persistent `page`, `pageId` or `cardId`. `visualVariant = ((tier - 1) % 3) + 1` selects one of three shared GLBs per branch, for exactly 15 preloaded crystal models.
 
 Spawn remains additive. A deterministic nearest-free search applies small local offsets around the glyph-derived materialization point to enforce spacing. Reset removes all live instances but does not reset committed progression.
+
+Squeeze pulls a targeted crystal into the grip socket and interpolates its root quaternion to the configured `holdRotationDegrees` correction (currently `x: 30, y: 0, z: 0`), without changing the GLB model's local rotation or its authored/randomized world transform.
 
 ## Insertion, preview, Release and progression
 

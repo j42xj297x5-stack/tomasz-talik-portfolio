@@ -144,12 +144,12 @@ function controllerRecord() {
   const controller = new THREE.Group();
   const holdSocket = new THREE.Group();
   controller.add(holdSocket); scene.add(controller);
-  return { controller, holdSocket, currentCrystalHit: null, currentCrystalHitDistance: null };
+  return { controller, holdSocket, currentRayLength: 3, currentCrystalHit: null, currentCrystalHitDistance: null };
 }
-const crystalSettings = { enabled: true, rayGrabMaxDistance: 2, pullDuration: 0.01, targetScale: 1.04,
+const crystalSettings = { enabled: true, pullDuration: 0.01,
   scaleMin: 0.25, scaleMax: 0.25, spawnWidth: 1, spawnDepth: 1, minimumSpacing: 0.2, spawnInwardOffset: 0.3,
   materializeDuration: 0.01, materializeStagger: 0, materializeStartScale: 0.2, materializeRise: 0.1,
-  materializeYaw: 0.1, holdOffset: { x: 0, y: 0, z: 0 } };
+  materializeYaw: 0.1, holdOffset: { x: 0, y: 0, z: 0 }, holdRotationDegrees: { x: 30, y: 0, z: 0 } };
 
 function testRelease({ target, releasePosition, expectedState }) {
   const controller = controllerRecord();

@@ -22,8 +22,15 @@
     "enabled": true,
     "rayLength": 3,
     "rayOpacity": 0.8,
-    "idleScale": 1,
-    "activeScale": 1.2
+    "rayDiameter": 0.012,
+    "rayTipFraction": 0.08,
+    "rayRadialSegments": 6
+  },
+  "targetHalo": {
+    "color": 12577279,
+    "opacity": 0.28,
+    "scale": 1.055,
+    "pulseDuration": 1.45
   },
   "glyphInteraction": {
     "holdDurationSeconds": 0.5
@@ -102,9 +109,7 @@
   },
   "crystals": {
     "enabled": true,
-    "rayGrabMaxDistance": 1.8,
     "pullDuration": 0.25,
-    "targetScale": 1.04,
     "scaleMin": 0.22,
     "scaleMax": 0.28,
     "spawnWidth": 1.45,
@@ -123,6 +128,11 @@
       "x": 0,
       "y": 0,
       "z": -0.09
+    },
+    "holdRotationDegrees": {
+      "x": 30,
+      "y": 0,
+      "z": 0
     }
   },
   "locomotion": {

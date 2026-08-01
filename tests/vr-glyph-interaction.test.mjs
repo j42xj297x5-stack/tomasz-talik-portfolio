@@ -9,6 +9,8 @@ const mesh = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.5, 0.5), new THREE.Mesh
 let completions = 0;
 const interaction = createVrGlyphInteraction({ controllers: records, nodes: [glyph], settings: { holdDurationSeconds: 0.5 }, onGlyphHoldComplete: ({ node }) => { assert.equal(node, glyph); completions += 1; } });
 glyph.updateMatrixWorld(true); interaction.update();
+assert.equal(interaction.targets[0].halo.visible, true, 'an actionable ray target shows its halo');
+assert.ok(interaction.targets[0].halo.shells.every(({ visible }) => visible));
 controllers[0].dispatchEvent({ type: 'selectstart' });
 interaction.update(0.49); assert.equal(completions, 0);
 interaction.update(0.01); assert.equal(completions, 1);
@@ -18,5 +20,10 @@ controllers[0].rotation.y = Math.PI; interaction.update(0.25); controllers[0].ro
 controllers[0].dispatchEvent({ type: 'selectstart' }); interaction.update(0.2); controllers[0].dispatchEvent({ type: 'selectend' }); interaction.update(1); assert.equal(completions, 1, 'selectend cancels');
 controllers[0].dispatchEvent({ type: 'selectstart' }); controllers[1].dispatchEvent({ type: 'selectstart' }); interaction.update(0.5); assert.equal(completions, 3, 'controllers hold independently');
 interaction.reset(); assert.equal(interaction.holds.size, 0); assert.ok(records.every(({ currentHit }) => currentHit === null));
+assert.equal(interaction.targets[0].halo.visible, false, 'reset clears target halo');
+const haloMaterial = interaction.targets[0].halo.material;
+let haloDisposed = false; haloMaterial.addEventListener('dispose', () => { haloDisposed = true; });
 interaction.dispose();
+assert.equal(haloDisposed, true, 'dispose releases the halo material');
+assert.equal(mesh.children.length, 0, 'dispose removes the shared-geometry halo shell');
 console.log('VR glyph interaction assertions passed');
