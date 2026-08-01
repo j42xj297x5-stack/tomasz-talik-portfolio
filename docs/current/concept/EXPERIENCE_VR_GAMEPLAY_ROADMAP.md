@@ -940,7 +940,8 @@ Kryształ nie niesie strony; Activate wybiera następną kartę gałęzi.
 - [x] Dodać test magazynowania i kolejności kryształów.
 - [x] Dodać test globalnej sekwencji tierów 1 → 2 → 3 → 4 → 5.
 - [x] Zachować state machine z `rejecting` i `consuming`.
-- [ ] Przetestować cykl na Quest.
+- [x] Potwierdzić sprzętowy gate gotowości na Quest 3S: preload, ready, aktywny przycisk wejścia i działająca sesja.
+- [ ] Przetestować pełny cykl gameplayowy oraz performance/readability na Quest.
 
 ## Bramka
 
@@ -1034,7 +1035,7 @@ Commit karty podczas Release zmienia odpowiadające pole i po ukończeniu tieru 
 
 ## Bramka
 
-Zaimplementowany łańcuch to `Activate preview → Release commit → glyphId + order → właściwe pole → test tieru → pełny ring`. Otwarte pozostają tło sektora, gradient i bramka sprzętowa Quest.
+Zaimplementowany łańcuch to `Activate preview → Release commit → glyphId + order → właściwe pole → test tieru → pełny ring`. Sprzętowy smoke gate gotowości i wejścia do sesji jest potwierdzony na Quest 3S; otwarte pozostają tło sektora, gradient oraz pełne QA wydajności i czytelności.
 
 ---
 
@@ -1467,7 +1468,9 @@ Minimalizacja:
 
 ---
 
-## 17. Przyjęty kierunek docelowy (nie oznacza implementacji)
+## 17. Status fundamentu i przyjęty kierunek docelowy
+
+`[x]` poniżej oznacza wyłącznie element obecnego runtime. Planowana wizja pozostaje oznaczona `[ ]`, nawet gdy decyzja produktowa jest zatwierdzona.
 
 - [x] Experience VR pozostaje osobnym runtime’em.
 - [x] Gra ma 18 kart w układzie `3 / 3 / 3 / 4 / 5`.
@@ -1475,22 +1478,23 @@ Minimalizacja:
 - [x] Kolejna karta jest wybierana dopiero podczas Activate.
 - [x] Gracz może magazynować kryształy.
 - [x] Podłoga ma pięć sektorów po 72°.
-- [x] Podłoga ma pięć pasów progresji wyznaczonych czterema wewnętrznymi okręgami.
+- [x] Podłoga ma 18 niezależnych pól i pięć proceduralnych pełnych ringów globalnych tierów.
 - [ ] Docelowo tło sektora podświetla się do aktualnego pola z gradientem; obecnie wykonane są impuls i stabilny blask pojedynczych pól.
-- [x] Globalne progi mają osobną warstwę kręgów.
-- [x] Próg 1 podnosi glify i uruchamia skorupy.
-- [x] Skorupy budują świetlistą kulę nad relikwiarzem.
-- [x] Gotowa kula materializuje się i staje się narzędziem lewej ręki.
-- [x] A przełącza prawą rękę i narzędzie przyciągania.
-- [x] X przełącza lewą rękę i kulę podłogi.
-- [x] Trigger lewej ręki steruje podłogą.
-- [x] Pierwszy prototyp przechyla podłogę razem z graczem.
-- [x] Gracz porusza się wyłącznie po wewnętrznym kole.
-- [x] Małe glify ulepszają przyciąganie odpowiadających dużych glifów.
-- [x] Ukończone sektory stają się anteną.
-- [x] Kamienie runiczne dostarczają esencji.
-- [x] Cztery sektory i esencja odblokowują finalny radar.
-- [x] Ostatni kryształ nadal używa zwykłego cyklu relikwiarza.
+- [x] `VrProgressionController` jest właścicielem zatwierdzonych kart, globalnych tierów i insertion gating.
+- [x] Activate wykonuje preview, Release wykonuje commit; invalid insertion ma `rejecting`, a commit kończy się `consuming`.
+- [ ] Próg 1 podnosi glify i uruchamia skorupy.
+- [ ] Skorupy budują świetlistą kulę nad relikwiarzem.
+- [ ] Gotowa kula materializuje się i staje się narzędziem lewej ręki.
+- [ ] A przełącza prawą rękę i narzędzie przyciągania.
+- [ ] X przełącza lewą rękę i kulę podłogi.
+- [ ] Trigger lewej ręki steruje podłogą.
+- [ ] Podłoga przechyla się razem z graczem.
+- [ ] Gracz porusza się po lokalnej płaszczyźnie przechylonej podłogi w granicy wewnętrznego koła.
+- [ ] Małe glify ulepszają przyciąganie odpowiadających dużych glifów.
+- [ ] Ukończone sektory stają się anteną.
+- [ ] Kamienie runiczne dostarczają esencji.
+- [ ] Cztery sektory i esencja odblokowują finalny radar.
+- [ ] Ostatni kryształ korzysta ze zwykłego cyklu relikwiarza w planowanej sekwencji finałowej.
 - [x] Dźwięk jest odroczony do czasu ustabilizowania mechaniki.
 
 ---

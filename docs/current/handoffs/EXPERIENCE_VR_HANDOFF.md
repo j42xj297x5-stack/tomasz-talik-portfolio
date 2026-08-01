@@ -30,7 +30,9 @@ The reliquary keeps its authored insertion-zone mesh hidden and mirrors its worl
 
 The five sectors share a center and are placed every 72°. Their **18 panels** map one-to-one to pages by `page.glyphId + page.order`. Activation produces a short emissive impulse followed by a stable glow; entries accumulate idempotently.
 
-Five independent procedural global rings cover the full 360° for tiers 1–5. Each radius is the median radial XZ distance of the existing panels for that order in floor-root local space, so tiers 4 and 5 remain complete circles despite their smaller branch requirements. After the final required page commit, the runtime checks `VrProgressionController.isTierComplete(page.order)` and idempotently completes that tier's ring. Its neutral cool-white material performs one short opacity impulse and retains a subtle glow. Ring state survives session exit/re-entry with the prepared floor; disposal explicitly releases ring geometries and materials.
+Five independent procedural global rings cover the full 360° for tiers 1–5, so tiers 4 and 5 remain complete circles despite their smaller branch requirements. The per-order median radial panel centroids are raw candidates and need not be tier-monotonic: runtime sorts them ascending and enforces `minimumRingGap >= ringThickness * 2` before assigning five concentric radii. After the final required page commit, the runtime checks `VrProgressionController.isTierComplete(page.order)` and idempotently completes that tier's ring. Its neutral cool-white material performs one short opacity impulse and retains a subtle glow. Ring state survives session exit/re-entry with the prepared floor; disposal explicitly releases ring geometries and materials.
+
+The authored sectors and 18 named panels are critical. Procedural ring meshes are optional decoration: an isolated creation failure removes and disposes partial ring resources while preserving the usable sector/panel floor and VR readiness. Missing required models, bases, or panels can still fail floor construction.
 
 The content registry `activatedPageIds` and floor registry `activatedEntries` both survive XR session exit/re-entry only while the already prepared page runtime exists. Reload or navigation loses both. The controller owns logical progress; the floor keeps its separate visual registry and is updated only after a successful commit.
 
@@ -47,4 +49,4 @@ The content registry `activatedPageIds` and floor registry `activatedEntries` bo
 - antenna puzzle;
 - final progression sequence.
 
-The visual floor projects committed controller state and does not replace the progression controller. Meta Quest readability, z-fighting, performance, and transparent-overdraw gates have not been completed.
+The visual floor projects committed controller state and does not replace the progression controller. A Meta Quest 3S smoke test confirms that preload finishes, the scene reaches ready state, **Enter VR** enables, and an immersive session can be entered. Full readability, z-fighting, performance, transparent-overdraw, and end-to-end gameplay QA remain open.

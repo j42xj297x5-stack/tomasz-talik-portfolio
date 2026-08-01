@@ -34,7 +34,10 @@ experienceVr
 ├─ createVrCrystalReliquary → proximity validation + insertion zone
 ├─ Activate / Release buttons → preview / commit boundary
 ├─ createVrPortalDisplay + createVrSpatialPlaque
-└─ createVrProgressFloor → five authored sectors + 18 panels + five tier rings
+└─ createVrProgressFloor
+   ├─ five required authored sectors
+   ├─ 18 required panels
+   └─ optional procedural tier-ring layer
 
 direct Enter VR gesture
 └─ immersive-vr → local-floor (fallback local) → renderer.setAnimationLoop
@@ -60,7 +63,7 @@ crystal
       └─ Release → controller commit
          → floor panel
          → tier-completion test
-         → idempotent full-circle global ring
+         → idempotent full-circle global ring (when the optional layer is available)
          → consuming → crystal/effect removal
 ```
 
@@ -77,6 +80,8 @@ materializing → available → pulling → held → inserted → active → con
 `VrProgressionController` is the sole owner of committed logical progress. Its global requirements are all five branches for tiers 1–3, Metal + Water for tier 4, and Water for tier 5. Acquisition is not tier-gated; insertion is.
 
 `createVrProgressFloor` is a visual projection with its own idempotent `activatedEntries` and completed-ring state. It receives a page only after the controller accepts Release commit. Both logical progress and floor visuals survive XR exit/re-entry in the already prepared page runtime; reload or navigation recreates them. There is no durable persistence or full-game reset.
+
+The five sector models and their 18 named panels are the critical floor contract. The procedural ring layer is additive: after deriving median per-order candidate radii, the floor sorts them ascending and enforces `minimumRingGap >= ringThickness * 2`. A failure isolated to ring mesh creation releases partial ring resources and leaves the sector/panel floor operational, so this optional decoration does not block Experience VR readiness.
 
 ## Progress-floor asset flow
 

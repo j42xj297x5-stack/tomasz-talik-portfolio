@@ -30,10 +30,11 @@ Status: current binding decisions, organized by implementation status rather tha
 ### Progress, reset and visual floor
 
 1. Five authored sector GLBs provide 18 independently addressable panels selected by `glyphId + order`. Activated panels accumulate with an initial impulse and stable glow.
-2. Five procedural global tier rings cover a full 360°, including tiers 4 and 5. Radii derive from actual panel positions; first completion pulses a ring and leaves a subtle glow. `completeTier()` is idempotent.
+2. Five procedural global tier rings cover a full 360°, including tiers 4 and 5. Each raw candidate is the median radial centroid of the real panels for that order; candidates need not increase with semantic tier number. Runtime sorts them ascending, then enforces `minimumRingGap >= ringThickness * 2` to obtain five concentric radii. First completion pulses a ring and leaves a subtle glow; `completeTier()` is idempotent.
 3. The controller owns logical progression; the floor owns only its visual projection registries. Successful Release is the boundary that updates both in that order.
 4. Logical progress and visual floor state survive XR exit/re-entry only in the already prepared page runtime. Reload/navigation resets them. Durable persistence and a controlled full-game reset do not exist.
 5. Smooth locomotion is right-stick tracked-head-relative horizontal movement plus left-stick continuous yaw on `playerRig`, preserving Y.
+6. The five authored sectors and 18 named panels are critical floor inputs. Procedural rings are an optional visual layer: a failure isolated to their creation disposes partial ring resources and preserves the usable sector/panel floor instead of blocking VR readiness.
 
 ## Approved future gameplay direction — not implemented
 
