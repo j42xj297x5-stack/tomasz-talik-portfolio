@@ -57,7 +57,8 @@ export function createVrShellSystem({ parent, assetManager, baseRadius, emission
     if (record.returning) { record.returnElapsed += currentDelta; const t = Math.min(1, record.returnElapsed / record.returnDuration);
       const eased = t * t * (3 - 2 * t); record.object.position.lerpVectors(record.returnStart, record.orbitPosition, eased);
       setEmission(record.object, record.returnEmissionStart * (1 - eased));
-      if (t >= 1) { record.returning = false; record.object.userData.shellState = 'orbiting'; setEmission(record.object, 0); }
+      if (t >= 1) { record.returning = false; record.object.userData.shellState = 'orbiting';
+        record.object.userData.attractorTarget = true; setEmission(record.object, 0); }
     } else if (['orbiting', 'targeted'].includes(state)) { record.object.position.copy(record.orbitPosition); setEmission(record.object, 0); }
     if (!['held', 'placed', 'capture_ready'].includes(state)) record.object.quaternion.copy(record.initialQuaternion).multiply(
       scratchQuaternion.setFromAxisAngle(record.selfRotationAxis, elapsed * record.selfRotationSpeed * record.direction));

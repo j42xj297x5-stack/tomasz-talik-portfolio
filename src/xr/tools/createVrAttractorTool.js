@@ -209,6 +209,9 @@ export function createVrAttractorTool({ model, config = VR_ATTRACTOR_VISUAL_CONF
   }
   // Astro never generates an independent ray: the target-ray controller and its local -Z are authoritative.
   function attachToTargetRay(controller) { if (controller && aimRoot.parent !== controller) controller.add(aimRoot); }
+  function getMasterRingWorldPosition(target = new THREE.Vector3()) {
+    return nodes.PIVOT_RING_MASTER.getWorldPosition(target);
+  }
 
   function setGlyphPanelState(panelState = 'idle') {
     const styles = {
@@ -283,7 +286,7 @@ export function createVrAttractorTool({ model, config = VR_ATTRACTOR_VISUAL_CONF
 
   return { object: aimRoot, modelScale, aimCorrection, energyCellAnchor,
     setEquipped, setUnlocked, setTrigger, setTarget, setPullStrength, setLevel, setState, setGlyphPanelState,
-    attachToTargetRay, update, reset, dispose, getState: () => state, getInnerRPM: () => innerRPM,
+    attachToTargetRay, getMasterRingWorldPosition, update, reset, dispose, getState: () => state, getInnerRPM: () => innerRPM,
     diagnostics: { missingRequiredNodes: missing, glyphPanelCount: glyphPanels.length,
       fuelPointCounts: Object.fromEntries(fuelPathData.map((data) => [data.element, data.controlPoints.length])),
       fuelPathSources: Object.fromEntries(fuelPathData.map((data) => [data.element, data.source])),
