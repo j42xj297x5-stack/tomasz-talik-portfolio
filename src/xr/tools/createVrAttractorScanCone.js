@@ -1,0 +1,26 @@
+import * as THREE from '../../vendor/three.js';
+
+export function createVrAttractorScanCone({ parent, length, settings }) {
+  const halfAngleRadians = THREE.MathUtils.degToRad(settings.halfAngleDegrees);
+  const radius = Math.tan(halfAngleRadians) * length;
+  const geometry = new THREE.ConeGeometry(radius, length, settings.radialSegments, 1, true);
+  // ConeGeometry's apex starts at local +Y; rotate it onto the controller origin and extend toward local -Z.
+  geometry.rotateX(Math.PI / 2); geometry.translate(0, 0, -length / 2);
+  const material = new THREE.ShaderMaterial({
+    uniforms: { color: { value: new THREE.Color(settings.color) }, opacityMin: { value: settings.opacityMin },
+      opacityMax: { value: settings.opacityMax }, pulse: { value: 0 } },
+    vertexShader: `varying float vDepth; uniform float pulse; void main() { vec3 p=position;
+      p.xy*=1.0+pulse*0.025; vDepth=clamp(-p.z/${length.toFixed(8)},0.0,1.0);
+      gl_Position=projectionMatrix*modelViewMatrix*vec4(p,1.0); }`,
+    fragmentShader: `uniform vec3 color; uniform float opacityMin; uniform float opacityMax; uniform float pulse;
+      varying float vDepth; void main(){ float fade=(1.0-vDepth*0.72)*(1.0-smoothstep(0.82,1.0,vDepth));
+      gl_FragColor=vec4(color,mix(opacityMin,opacityMax,pulse)*fade); }`,
+    transparent: true, depthWrite: false, depthTest: true, blending: THREE.AdditiveBlending, side: THREE.DoubleSide
+  });
+  const object = new THREE.Mesh(geometry, material); object.name='VrAttractorScanCone'; object.visible=false; parent.add(object);
+  let elapsed=0, disposed=false;
+  function update(delta=0, visible=false) { if(disposed)return; object.visible=Boolean(visible); elapsed+=Math.max(0,delta);
+    material.uniforms.pulse.value=0.5+0.5*Math.sin(elapsed*Math.PI*2/settings.pulseDuration); }
+  function dispose(){if(disposed)return;disposed=true;object.removeFromParent();geometry.dispose();material.dispose();}
+  return { object, geometry, material, length, halfAngleRadians, update, dispose };
+}
