@@ -25,7 +25,9 @@ function createContractModel() {
   const root = new THREE.Group();
   root.name = 'VR_ATTRACTOR_ROOT';
   model.add(root);
-  const plainNames = ['grab', 'base_grab', 'Fiskers', 'fuel_line_earth', 'fuel_line_fire', 'fuel_line_tree',
+  const plainNames = ['grab', 'PIVOT_BASE_GRAB', 'base_grab', 'PIVOT_FISKERS', 'Fiskers',
+    'DEBUG_FUEL_EARTH_PATH', 'DEBUG_FUEL_FIRE_PATH', 'DEBUG_FUEL_TREE_PATH', 'DEBUG_FUEL_METAL_PATH',
+    'DEBUG_FUEL_WATER_PATH', 'fuel_line_earth', 'fuel_line_fire', 'fuel_line_tree',
     'fuel_line_metal', 'fuel_line_water', 'PIVOT_BASE_MOLEKULAR', 'base_molekular', 'PIVOT_RING_CALIBRATION',
     'Ring_calibration', 'PIVOT_RING_MASTER', 'Ring_Master', 'PIVOT_RING_INNER', 'Ring_inner',
     'PIVOT_ENERGY_SHELL', 'energy_shell', 'VR_ENERGY_CELL_ANCHOR'];
@@ -49,30 +51,52 @@ function createContractModel() {
 }
 
 {
+  for (const requiredPivot of ['PIVOT_BASE_GRAB', 'PIVOT_FISKERS']) {
+    const invalidModel = createContractModel();
+    invalidModel.getObjectByName(requiredPivot).removeFromParent();
+    assert.throws(() => createVrAttractorTool({ model: invalidModel, logger: { warn() {} } }),
+      new RegExp(`missing required nodes:.*${requiredPivot}`), `${requiredPivot} is required by the GLB contract`);
+  }
+
   assert.deepEqual(blenderRpmToThree({ x: 17, y: -31, z: 43 }), { x: 17, y: 43, z: 31 });
   const source = createContractModel();
-  const pivots = ['PIVOT_BASE_MOLEKULAR', 'PIVOT_RING_CALIBRATION', 'PIVOT_RING_MASTER',
-    'PIVOT_RING_INNER', 'PIVOT_ENERGY_SHELL'].map((name) => source.getObjectByName(name));
+  const pivotNames = ['PIVOT_BASE_GRAB', 'PIVOT_FISKERS', 'PIVOT_BASE_MOLEKULAR', 'PIVOT_RING_CALIBRATION',
+    'PIVOT_RING_MASTER', 'PIVOT_RING_INNER', 'PIVOT_ENERGY_SHELL'];
+  const pivots = pivotNames.map((name) => source.getObjectByName(name));
   pivots.forEach((pivot, index) => pivot.rotation.set(0.03 * index, 0.05 * index, -0.02 * index));
-  const initialQuaternions = pivots.map((pivot) => pivot.quaternion.clone());
+  pivots.forEach((pivot, index) => {
+    pivot.position.set(index * 0.1, index * -0.04, index * 0.02);
+    pivot.scale.setScalar(1 + index * 0.1);
+  });
   const energyCell = source.getObjectByName('energy_cell');
   const sourceMaterial = energyCell.material;
   const tool = createVrAttractorTool({ model: source, logger: { warn() {} } });
+  const initialTransforms = pivots.map((pivot) => ({
+    position: pivot.position.clone(), quaternion: pivot.quaternion.clone(), scale: pivot.scale.clone()
+  }));
   assert.notEqual(energyCell.material, sourceMaterial, 'runtime clones the controlled material');
   assert.ok(Math.abs(tool.modelScale.scale.x - 1 / 3) < 1e-12, 'model wrapper applies central 1/3 scale');
   assert.ok(MODEL_AIM_AXIS.clone().applyQuaternion(tool.aimCorrection).distanceTo(XR_AIM_AXIS) < 1e-12,
     'aim correction maps model +Y onto target-ray -Z');
   const fuelPoints = tool.object.getObjectByName('VrAttractorFuelParticles_earth');
   assert.equal(fuelPoints.material.size, VR_ATTRACTOR_VISUAL_CONFIG.fuelPointSize);
+  assert.equal(VR_ATTRACTOR_VISUAL_CONFIG.fuelPointSize, 0.0035);
+  assert.equal(fuelPoints.material.depthWrite, false);
+  assert.equal(fuelPoints.material.depthTest, false);
+  assert.equal(fuelPoints.material.blending, THREE.AdditiveBlending);
+  assert.equal(fuelPoints.material.transparent, true);
+  assert.ok(fuelPoints.material.opacity > VR_ATTRACTOR_VISUAL_CONFIG.fuel.earth.brightness);
+  assert.equal(tool.diagnostics.missingRequiredNodes.some((name) => name.startsWith('DEBUG_FUEL_')), false,
+    'DEBUG_FUEL paths are optional and ignored by the runtime contract');
   tool.setUnlocked(true);
   tool.setEquipped(true);
   assert.equal(tool.getState(), VR_ATTRACTOR_STATES.IDLE);
   assert.equal(tool.object.visible, true);
   tool.setTrigger(1);
   tool.update(0.1);
-  const expectedBase = initialQuaternions[0].clone().multiply(new THREE.Quaternion()
+  const expectedBase = initialTransforms[2].quaternion.clone().multiply(new THREE.Quaternion()
     .setFromAxisAngle(new THREE.Vector3(0, 1, 0), -3 * Math.PI * 2 * 0.1 / 60));
-  assert.ok(pivots[0].quaternion.angleTo(expectedBase) < 1e-7, 'axial pivot update rotates around local Y');
+  assert.ok(pivots[2].quaternion.angleTo(expectedBase) < 1e-7, 'axial pivot update rotates around local Y');
   const acceleratingRPM = tool.getInnerRPM();
   assert.ok(acceleratingRPM > 0 && acceleratingRPM < 90, 'Ring_inner accelerates rather than jumping to max RPM');
   tool.setTrigger(0);
@@ -83,8 +107,16 @@ function createContractModel() {
   assert.equal(tool.getState(), VR_ATTRACTOR_STATES.UNEQUIPPED);
   assert.equal(tool.object.visible, false);
   assert.equal(tool.getInnerRPM(), 0);
-  pivots.forEach((pivot, index) => assert.ok(pivot.quaternion.angleTo(initialQuaternions[index]) < 1e-7,
-    `${pivot.name} reset restores its imported quaternion`));
+  pivots.forEach((pivot) => { pivot.position.set(9, 8, 7); pivot.quaternion.identity(); pivot.scale.set(3, 4, 5); });
+  tool.reset();
+  pivots.forEach((pivot, index) => {
+    assert.ok(pivot.position.distanceTo(initialTransforms[index].position) < 1e-7,
+      `${pivot.name} reset restores its configured local position`);
+    assert.ok(pivot.quaternion.angleTo(initialTransforms[index].quaternion) < 1e-7,
+      `${pivot.name} reset restores its imported quaternion`);
+    assert.ok(pivot.scale.distanceTo(initialTransforms[index].scale) < 1e-7,
+      `${pivot.name} reset restores its imported local scale`);
+  });
   tool.dispose();
 }
 
