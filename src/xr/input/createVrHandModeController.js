@@ -18,6 +18,9 @@ export function createVrHandModeController({ controllers, semanticInput, attract
         ? VR_RIGHT_HAND_MODES.ASTRO_ATTRACTOR
         : VR_RIGHT_HAND_MODES.NORMAL_HAND);
     }
+    // Hand mode owns equipment visibility; no downstream interaction may make
+    // Astro visible while the ordinary right hand is active.
+    if (mode === VR_RIGHT_HAND_MODES.NORMAL_HAND) attractorTool.setEquipped(false);
     attractorTool.setTrigger(mode === VR_RIGHT_HAND_MODES.ASTRO_ATTRACTOR ? input.primaryAction : 0);
     syncRightRay(rightRecord);
     attractorTool.update(deltaSeconds);
