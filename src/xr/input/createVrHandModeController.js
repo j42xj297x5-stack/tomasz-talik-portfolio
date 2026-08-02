@@ -19,18 +19,25 @@ export function createVrHandModeController({ controllers, semanticInput, attract
         : VR_RIGHT_HAND_MODES.NORMAL_HAND);
     }
     attractorTool.setTrigger(mode === VR_RIGHT_HAND_MODES.ASTRO_ATTRACTOR ? input.primaryAction : 0);
+    syncRightRay(rightRecord);
     attractorTool.update(deltaSeconds);
+  }
+
+  function syncRightRay(rightRecord = controllers.find((record) => record.handedness === 'right') ?? null) {
+    if (rightRecord?.ray) rightRecord.ray.visible = rightRecord.isConnected && mode === VR_RIGHT_HAND_MODES.NORMAL_HAND;
   }
 
   function setMode(nextMode) {
     mode = nextMode;
     attractorTool.setEquipped(mode === VR_RIGHT_HAND_MODES.ASTRO_ATTRACTOR);
+    syncRightRay();
   }
 
   function reset() {
     mode = VR_RIGHT_HAND_MODES.NORMAL_HAND;
     semanticInput.reset();
     attractorTool.reset();
+    syncRightRay();
   }
 
   function dispose() {

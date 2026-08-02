@@ -22,6 +22,9 @@ import { createVrReliquaryActivateButton } from './xr/createVrReliquaryActivateB
 import { createVrReliquaryReleaseButton } from './xr/createVrReliquaryReleaseButton.js';
 import { createVrProgressFloor, FLOOR_WORLD_Y_OFFSET } from './xr/floor/createVrProgressFloor.js';
 import { createVrProgressionController } from './xr/progression/createVrProgressionController.js';
+import { createVrProgressionShortcut } from './xr/progression/applyVrProgressionShortcut.js';
+import { createVrShellSystem } from './xr/shells/createVrShellSystem.js';
+import { createVrShellAttractorInteraction } from './xr/shells/createVrShellAttractorInteraction.js';
 import { createVrSemanticInput } from './xr/input/createVrSemanticInput.js';
 import { createVrHandModeController } from './xr/input/createVrHandModeController.js';
 import { createVrAttractorTool } from './xr/tools/createVrAttractorTool.js';
@@ -91,7 +94,7 @@ const centralPlaceholder = createCentralObject();
 worldRoot.add(centralPlaceholder);
 
 const vrAssets = getPreloadAssets([...INITIAL_PRELOAD_GROUPS, ...DEFERRED_PRELOAD_GROUPS])
-  .filter(({ id }) => id === 'gltf-loader-module' || id === 'monkey-model' || id === 'vr-portal-model' || id === 'vr-astro-attractor-model' || id.startsWith('vr-progress-floor-') || id === 'vr-crystal-reliquary-model' || id.startsWith('vr-crystal-reliquary-button-') || id.startsWith('glyph-') || id.startsWith('vr-crystal-'))
+  .filter(({ id }) => id === 'gltf-loader-module' || id === 'monkey-model' || id === 'vr-portal-model' || id === 'vr-astro-attractor-model' || id.startsWith('vr-progress-floor-') || id === 'vr-crystal-reliquary-model' || id.startsWith('vr-crystal-reliquary-button-') || id.startsWith('glyph-') || id.startsWith('vr-crystal-') || id.startsWith('shell-relic-'))
   .map((asset) => ({ ...asset, critical: asset.id === 'gltf-loader-module' }));
 const loadingDiagnostics = createLoadingDiagnostics(vrAssets);
 const assetManager = createAssetManager({ diagnostics: loadingDiagnostics });
@@ -122,6 +125,7 @@ const { group: glyphRing, nodes } = createOrbitNodes(resolvedPortfolioNodes, { a
 worldRoot.add(glyphRing);
 const entryDirection = new THREE.Vector3(settings.spawn.position.x, 0, settings.spawn.position.z).normalize();
 const glyphOrbit = createVrGlyphOrbit({ nodes, settings: settings.glyphRing, entryDirection });
+const shellSystem = createVrShellSystem({ parent: worldRoot, assetManager, baseRadius: glyphOrbit.effectiveRadius });
 const glyphLights = createVrGlyphLights({ nodes, settings: settings.glyphLights });
 const monkeyAnchor = monkeyModel ?? centralPlaceholder;
 const portalDisplay = createVrPortalDisplay({
@@ -149,6 +153,7 @@ const crystalReliquary = createVrCrystalReliquary({
 });
 const locomotion = createVrLocomotion({ playerRig, renderer, camera, settings: settings.locomotion });
 const progressionController = createVrProgressionController({ pages: experienceVrPages });
+function syncTierOneWorldState() { shellSystem.setActive(progressionController.isTierComplete(1)); }
 const attractorTool = createVrAttractorTool({ model: assetManager.cloneGltfScene('vr-astro-attractor-model') });
 const semanticInput = createVrSemanticInput({ renderer });
 const handModeController = createVrHandModeController({
@@ -165,8 +170,11 @@ const crystalCollection = createVrCrystalCollection({
   onCommit: (page) => {
     progressFloor.activatePage(page);
     if (progressionController.isTierComplete(page.order)) progressFloor.completeTier(page.order);
+    syncTierOneWorldState();
   }
 });
+createVrProgressionShortcut({ search: location.search, pages: experienceVrPages, progressionController,
+  progressFloor, syncTierOneWorldState })();
 const activateButtonGltf = assetManager.getGltf('vr-crystal-reliquary-button-activate-model');
 const activateButtonModel = assetManager.cloneGltfScene('vr-crystal-reliquary-button-activate-model');
 crystalReliquary.attachCompanion({ id: 'activate', model: activateButtonModel, settings: settings.reliquary.buttons,
@@ -217,6 +225,12 @@ const glyphInteraction = createVrGlyphInteraction({
     crystalCollection.spawnOne(node.userData.id, { glyphWorldPosition, centerWorldPosition });
   }
 });
+const shellAttractorInteraction = createVrShellAttractorInteraction({
+  controllers: vrControllers.controllers, shellSystem, handModeController, semanticInput, attractorTool,
+  settings: settings.shellAttractor, haloSettings: settings.targetHalo,
+  isHigherPriorityInteractionActive: (record) => Boolean(activateButton.hits.get(record)
+    || releaseButton.hits.get(record) || record.currentHit || record.currentCrystalHit)
+});
 
 function resize() {
   const width = canvas.clientWidth || innerWidth || 1;
@@ -237,6 +251,7 @@ function renderFrame() {
   const delta = clock.getDelta();
   vrControllers.beginRayHitFrame();
   glyphOrbit.update(delta);
+  shellSystem.update(delta);
   glyphRing.updateMatrixWorld(true);
   glyphInteraction.update(delta);
   crystalCollection.update(delta);
@@ -244,6 +259,7 @@ function renderFrame() {
   activateButton.update(delta);
   releaseButton.update(delta);
   handModeController.update(delta);
+  shellAttractorInteraction.update(delta);
   vrControllers.resolveVisualRayLength();
   glyphLights.update({
     hovered: glyphInteraction.hoveredGlyphs,
@@ -274,6 +290,9 @@ function handleSessionEnd() {
   playerRig.position.set(settings.spawn.position.x, settings.spawn.position.y, settings.spawn.position.z);
   orientPlayerRig(playerRig, settings.spawn.lookAt);
   glyphOrbit.reset();
+  shellAttractorInteraction.reset();
+  shellSystem.reset();
+  syncTierOneWorldState();
   glyphLights.reset();
   glyphInteraction.reset();
   vrControllers.reset();
@@ -292,6 +311,9 @@ async function enterVr() {
   playerRig.position.set(settings.spawn.position.x, settings.spawn.position.y, settings.spawn.position.z);
   orientPlayerRig(playerRig, settings.spawn.lookAt);
   glyphOrbit.reset();
+  shellAttractorInteraction.reset();
+  shellSystem.reset();
+  syncTierOneWorldState();
   glyphLights.reset();
   glyphInteraction.reset();
   vrControllers.reset();
@@ -333,6 +355,7 @@ async function enterVr() {
     restorePortalWaitingState();
     locomotion.reset();
     vrControllers.reset();
+    shellAttractorInteraction.reset();
     handModeController.reset();
     status.textContent = copy.error;
     enterButton.disabled = false;
@@ -343,6 +366,7 @@ async function enterVr() {
 enterButton.addEventListener('click', enterVr);
 exitButton.addEventListener('click', () => { void activeSession?.end(); });
 window.addEventListener('pagehide', () => {
+  shellAttractorInteraction.dispose();
   handModeController.dispose();
   activateButton.reset();
   releaseButton.reset();
@@ -351,5 +375,6 @@ window.addEventListener('pagehide', () => {
   crystalCollection.dispose();
   crystalReliquary.dispose();
   progressFloor.dispose();
+  shellSystem.dispose();
 }, { once: true });
 showReadyState();

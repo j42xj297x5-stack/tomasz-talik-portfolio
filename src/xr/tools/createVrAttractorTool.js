@@ -6,8 +6,14 @@ export const VR_ATTRACTOR_STATES = Object.freeze({
 
 export const VR_ATTRACTOR_VISUAL_CONFIG = Object.freeze({
   modelScale: 1 / 3,
-  fuelPointSize: 0.002,
+  fuelPointSize: 0.0035,
+  fuelBrightnessMultiplier: 1.2,
   aimOffset: [0, 0, 0],
+  ringLocalPositionOffsets: {
+    PIVOT_RING_CALIBRATION: [0, -0.03, 0],
+    PIVOT_RING_INNER: [0, -0.06, 0],
+    PIVOT_RING_MASTER: [0, -0.06, 0]
+  },
   baseMolecular: { idleRPM: 3, direction: -1 },
   calibration: { idleRPM: 4, targetingRPM: 8, direction: 1 },
   master: { idleRPM: 1, maxRPM: 10, direction: -1 },
@@ -32,7 +38,7 @@ export function blenderRpmToThree({ x, y, z }) {
 }
 
 const REQUIRED_NODES = Object.freeze([
-  'VR_ATTRACTOR_ROOT', 'grab', 'base_grab', 'Fiskers',
+  'VR_ATTRACTOR_ROOT', 'grab', 'PIVOT_BASE_GRAB', 'base_grab', 'PIVOT_FISKERS', 'Fiskers',
   'fuel_line_earth', 'fuel_line_fire', 'fuel_line_tree', 'fuel_line_metal', 'fuel_line_water',
   'PIVOT_BASE_MOLEKULAR', 'base_molekular', 'PIVOT_RING_CALIBRATION', 'Ring_calibration',
   'PIVOT_RING_MASTER', 'Ring_Master', 'PIVOT_RING_INNER', 'Ring_inner',
@@ -44,6 +50,45 @@ const rpmToRadians = (rpm, delta) => rpm * Math.PI * 2 * delta / 60;
 const clamp01 = (value) => Math.min(1, Math.max(0, Number.isFinite(value) ? value : 0));
 const pointIndex = (point) => Number.isFinite(point.userData?.vr_path_index)
   ? point.userData.vr_path_index : Number(point.name.match(/P(\d+)$/)?.[1] ?? Number.MAX_SAFE_INTEGER);
+
+const FUEL_PATH_EPSILON = 1e-5;
+
+export function isDegenerateFuelPath(points, tolerance = FUEL_PATH_EPSILON) {
+  if (points.length < 2) return true;
+  let length = 0;
+  for (let index = 1; index < points.length; index += 1) length += points[index].distanceTo(points[index - 1]);
+  return length <= tolerance || points.every((point) => point.distanceTo(points[0]) <= tolerance);
+}
+
+// Blender's debug curves arrive as tube meshes. Projecting their vertices on the
+// longest extent, then averaging slices, removes the tube radius while retaining
+// an ordered, open centre line suitable for the small fuel particles.
+function debugFuelControlPoints(debugMesh, root, targetCount = 12) {
+  const attribute = debugMesh?.geometry?.getAttribute?.('position');
+  if (!attribute || attribute.count < 2) return [];
+  root.updateWorldMatrix(true, false);
+  debugMesh.updateWorldMatrix(true, false);
+  const vertices = [];
+  const point = new THREE.Vector3();
+  for (let index = 0; index < attribute.count; index += 1) {
+    point.fromBufferAttribute(attribute, index).applyMatrix4(debugMesh.matrixWorld);
+    vertices.push(root.worldToLocal(point.clone()));
+  }
+  const bounds = new THREE.Box3().setFromPoints(vertices);
+  const extent = bounds.getSize(new THREE.Vector3());
+  const axis = extent.x >= extent.y && extent.x >= extent.z ? 'x' : extent.y >= extent.z ? 'y' : 'z';
+  vertices.sort((a, b) => a[axis] - b[axis]);
+  const count = Math.min(targetCount, vertices.length);
+  const controls = Array.from({ length: count }, (_, slice) => {
+    const start = Math.floor(slice * vertices.length / count);
+    const end = Math.max(start + 1, Math.floor((slice + 1) * vertices.length / count));
+    const center = new THREE.Vector3();
+    for (let index = start; index < end; index += 1) center.add(vertices[index]);
+    return center.multiplyScalar(1 / (end - start));
+  });
+  if (controls[0].y > controls.at(-1).y) controls.reverse();
+  return controls;
+}
 
 export function createVrAttractorTool({ model, config = VR_ATTRACTOR_VISUAL_CONFIG, logger = console }) {
   if (!model) throw new Error('[VrAttractor] Cached astro_grabber GLB instance is required.');
@@ -61,12 +106,44 @@ export function createVrAttractorTool({ model, config = VR_ATTRACTOR_VISUAL_CONF
   const modelScale = new THREE.Group();
   modelScale.name = 'VrAttractorModelScale';
   modelScale.scale.setScalar(config.modelScale);
+
+  // Resolve optional fuel visuals while the imported GLB hierarchy is intact.
+  // DEBUG_FUEL_* meshes are siblings of VR_ATTRACTOR_ROOT in the shipped asset,
+  // so their world transforms only share a coordinate space before root is moved.
+  model.updateWorldMatrix(true, true);
+  const fuelPathData = Object.entries(config.fuel).map(([element, settings]) => {
+    const path = nodes[settings.path];
+    const pathPoints = path.children.filter((child) => /P\d+$/.test(child.name)).sort((a, b) => pointIndex(a) - pointIndex(b));
+    if (pathPoints.length !== 12) throw new Error(`[VrAttractor] ${settings.path} requires 12 P00..P11 points; found ${pathPoints.length}.`);
+    let controlPoints = pathPoints.map((pathPoint) => nodes.VR_ATTRACTOR_ROOT.worldToLocal(
+      pathPoint.getWorldPosition(new THREE.Vector3())));
+    let source = 'vr_points';
+    const markersDegenerate = isDegenerateFuelPath(controlPoints);
+    const debugName = `DEBUG_FUEL_${element.toUpperCase()}_PATH`;
+    const debugMesh = model.getObjectByName(debugName);
+    if (debugMesh) debugMesh.visible = false;
+    if (markersDegenerate) {
+      controlPoints = debugFuelControlPoints(debugMesh, nodes.VR_ATTRACTOR_ROOT);
+      source = 'debug_geometry';
+      if (isDegenerateFuelPath(controlPoints)) {
+        logger.warn(`[VrAttractor] ${settings.path} is degenerate and ${debugName} has no usable BufferGeometry fallback; disabling ${element} fuel stream.`);
+        return { element, settings, source: 'disabled', markersDegenerate, controlPoints: [] };
+      }
+    }
+    return { element, settings, source, markersDegenerate, controlPoints };
+  });
+
   modelScale.add(nodes.VR_ATTRACTOR_ROOT);
   aimRoot.add(modelScale);
 
-  const animatedPivots = [nodes.PIVOT_BASE_MOLEKULAR, nodes.PIVOT_RING_CALIBRATION,
-    nodes.PIVOT_RING_MASTER, nodes.PIVOT_RING_INNER, nodes.PIVOT_ENERGY_SHELL];
-  const initialPivotQuaternions = new Map(animatedPivots.map((pivot) => [pivot, pivot.quaternion.clone()]));
+  const controlledPivots = [nodes.PIVOT_BASE_GRAB, nodes.PIVOT_FISKERS, nodes.PIVOT_BASE_MOLEKULAR,
+    nodes.PIVOT_RING_CALIBRATION, nodes.PIVOT_RING_MASTER, nodes.PIVOT_RING_INNER, nodes.PIVOT_ENERGY_SHELL];
+  const initialPivotTransforms = new Map(controlledPivots.map((pivot) => [pivot, {
+    position: pivot.position.clone(), quaternion: pivot.quaternion.clone(), scale: pivot.scale.clone()
+  }]));
+  Object.entries(config.ringLocalPositionOffsets).forEach(([name, offset]) => {
+    nodes[name].position.add(new THREE.Vector3().fromArray(offset));
+  });
   const shellRPM = blenderRpmToThree(config.shell.blenderRPM);
 
   const ownedMaterials = new Set();
@@ -87,19 +164,20 @@ export function createVrAttractorTool({ model, config = VR_ATTRACTOR_VISUAL_CONF
     const materials = Array.isArray(child.material) ? child.material : [child.material];
     materials.filter(Boolean).forEach((material) => energyMaterials.push(material));
   });
-  const fuelStreams = Object.entries(config.fuel).map(([element, settings]) => {
-    const path = nodes[settings.path];
-    const pathPoints = path.children.filter((child) => /P\d+$/.test(child.name)).sort((a, b) => pointIndex(a) - pointIndex(b));
-    if (pathPoints.length !== 12) throw new Error(`[VrAttractor] ${settings.path} requires 12 P00..P11 points; found ${pathPoints.length}.`);
-    const curve = new THREE.CatmullRomCurve3(pathPoints.map((point) => point.position.clone()), true);
+  const fuelStreams = fuelPathData.filter(({ source }) => source !== 'disabled').map(({
+    element, settings, source, markersDegenerate, controlPoints
+  }) => {
+    const curve = new THREE.CatmullRomCurve3(controlPoints, false);
     const geometry = new THREE.BufferGeometry();
     geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(settings.particleCount * 3), 3));
     const material = new THREE.PointsMaterial({ color: settings.color, size: config.fuelPointSize, transparent: true,
-      opacity: settings.brightness, blending: THREE.AdditiveBlending, depthWrite: false, sizeAttenuation: true });
+      opacity: settings.brightness * config.fuelBrightnessMultiplier, blending: THREE.AdditiveBlending,
+      depthWrite: false, depthTest: false, sizeAttenuation: true });
     const points = new THREE.Points(geometry, material);
     points.name = `VrAttractorFuelParticles_${element}`;
-    path.add(points);
-    return { settings, curve, geometry, material, points, elapsed: 0, sample: new THREE.Vector3() };
+    nodes.VR_ATTRACTOR_ROOT.add(points);
+    return { element, settings, curve, source, markersDegenerate, geometry, material, points, elapsed: 0,
+      sample: new THREE.Vector3() };
   });
 
   let state = VR_ATTRACTOR_STATES.UNEQUIPPED;
@@ -180,14 +258,19 @@ export function createVrAttractorTool({ model, config = VR_ATTRACTOR_VISUAL_CONF
         positions.setXYZ(index, stream.sample.x, stream.sample.y, stream.sample.z);
       }
       positions.needsUpdate = true;
-      stream.material.opacity = stream.settings.brightness * (0.88 + 0.12 * Math.sin(elapsed * 2 + stream.settings.phase * 7));
+      stream.material.opacity = stream.settings.brightness * config.fuelBrightnessMultiplier
+        * (0.88 + 0.12 * Math.sin(elapsed * 2 + stream.settings.phase * 7));
     });
   }
 
   function reset() {
     state = VR_ATTRACTOR_STATES.UNEQUIPPED; trigger = 0; target = null; targetProximity = 0; pullStrength = 0;
     elapsed = 0; innerRPM = 0; aimRoot.visible = false;
-    initialPivotQuaternions.forEach((quaternion, pivot) => pivot.quaternion.copy(quaternion));
+    initialPivotTransforms.forEach((transform, pivot) => {
+      pivot.position.copy(transform.position); pivot.quaternion.copy(transform.quaternion); pivot.scale.copy(transform.scale);
+      const offset = config.ringLocalPositionOffsets[pivot.name];
+      if (offset) pivot.position.add(new THREE.Vector3().fromArray(offset));
+    });
     fuelStreams.forEach((stream) => { stream.elapsed = 0; });
   }
   function dispose() {
@@ -202,5 +285,9 @@ export function createVrAttractorTool({ model, config = VR_ATTRACTOR_VISUAL_CONF
     setEquipped, setUnlocked, setTrigger, setTarget, setPullStrength, setLevel, setState, setGlyphPanelState,
     attachToTargetRay, update, reset, dispose, getState: () => state, getInnerRPM: () => innerRPM,
     diagnostics: { missingRequiredNodes: missing, glyphPanelCount: glyphPanels.length,
-      fuelPointCounts: Object.fromEntries(fuelStreams.map((stream, index) => [Object.keys(config.fuel)[index], stream.curve.points.length])) } };
+      fuelPointCounts: Object.fromEntries(fuelPathData.map((data) => [data.element, data.controlPoints.length])),
+      fuelPathSources: Object.fromEntries(fuelPathData.map((data) => [data.element, data.source])),
+      fuelMarkersDegenerate: Object.fromEntries(fuelPathData.map((data) => [data.element, data.markersDegenerate])),
+      fuelCurveClosed: Object.fromEntries(fuelPathData.map((data) => [data.element,
+        data.source === 'disabled' ? null : false])) } };
 }
