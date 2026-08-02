@@ -20,7 +20,7 @@ function makeButton(value = 0) { return { value, pressed: value > 0.5 }; }
   assert.equal(input.getState().primaryAction, 0);
 }
 
-function createContractModel({ degenerateFuelPoints = false } = {}) {
+function createContractModel({ degenerateFuelPoints = false, unusableDebugElement = null } = {}) {
   const model = new THREE.Group();
   const root = new THREE.Group();
   root.name = 'VR_ATTRACTOR_ROOT';
@@ -33,10 +33,11 @@ function createContractModel({ degenerateFuelPoints = false } = {}) {
   plainNames.forEach((name) => { const node = new THREE.Group(); node.name = name; root.add(node); });
   for (const element of ['EARTH', 'FIRE', 'TREE', 'METAL', 'WATER']) {
     const geometry = new THREE.BufferGeometry().setFromPoints(Array.from({ length: 36 }, (_, index) =>
-      new THREE.Vector3(Math.sin(index * 0.3) * 0.01, index * 0.01, Math.cos(index * 0.3) * 0.01)));
+      element === unusableDebugElement ? new THREE.Vector3() :
+        new THREE.Vector3(Math.sin(index * 0.3) * 0.01, index * 0.01, Math.cos(index * 0.3) * 0.01)));
     const debugPath = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial());
     debugPath.name = `DEBUG_FUEL_${element}_PATH`;
-    root.add(debugPath);
+    model.add(debugPath);
   }
   const energyCell = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshStandardMaterial());
   energyCell.name = 'energy_cell';
@@ -54,6 +55,24 @@ function createContractModel({ degenerateFuelPoints = false } = {}) {
     root.add(path);
   }
   return model;
+}
+
+{
+  const warnings = [];
+  const tool = createVrAttractorTool({
+    model: createContractModel({ degenerateFuelPoints: true, unusableDebugElement: 'EARTH' }),
+    logger: { warn(message) { warnings.push(message); } }
+  });
+  assert.equal(tool.diagnostics.fuelPathSources.earth, 'disabled');
+  assert.equal(tool.diagnostics.fuelPointCounts.earth, 0);
+  assert.equal(tool.object.getObjectByName('VrAttractorFuelParticles_earth'), undefined);
+  assert.ok(warnings.some((message) => message.includes('VR_FUEL_EARTH_PATH') && message.includes('disabling earth')),
+    'an unusable optional earth path emits an element-specific warning');
+  for (const element of ['fire', 'tree', 'metal', 'water']) {
+    assert.equal(tool.diagnostics.fuelPathSources[element], 'debug_geometry');
+    assert.ok(tool.object.getObjectByName(`VrAttractorFuelParticles_${element}`), `${element} stream remains active`);
+  }
+  tool.dispose();
 }
 
 {

@@ -106,6 +106,33 @@ export function createVrAttractorTool({ model, config = VR_ATTRACTOR_VISUAL_CONF
   const modelScale = new THREE.Group();
   modelScale.name = 'VrAttractorModelScale';
   modelScale.scale.setScalar(config.modelScale);
+
+  // Resolve optional fuel visuals while the imported GLB hierarchy is intact.
+  // DEBUG_FUEL_* meshes are siblings of VR_ATTRACTOR_ROOT in the shipped asset,
+  // so their world transforms only share a coordinate space before root is moved.
+  model.updateWorldMatrix(true, true);
+  const fuelPathData = Object.entries(config.fuel).map(([element, settings]) => {
+    const path = nodes[settings.path];
+    const pathPoints = path.children.filter((child) => /P\d+$/.test(child.name)).sort((a, b) => pointIndex(a) - pointIndex(b));
+    if (pathPoints.length !== 12) throw new Error(`[VrAttractor] ${settings.path} requires 12 P00..P11 points; found ${pathPoints.length}.`);
+    let controlPoints = pathPoints.map((pathPoint) => nodes.VR_ATTRACTOR_ROOT.worldToLocal(
+      pathPoint.getWorldPosition(new THREE.Vector3())));
+    let source = 'vr_points';
+    const markersDegenerate = isDegenerateFuelPath(controlPoints);
+    const debugName = `DEBUG_FUEL_${element.toUpperCase()}_PATH`;
+    const debugMesh = model.getObjectByName(debugName);
+    if (debugMesh) debugMesh.visible = false;
+    if (markersDegenerate) {
+      controlPoints = debugFuelControlPoints(debugMesh, nodes.VR_ATTRACTOR_ROOT);
+      source = 'debug_geometry';
+      if (isDegenerateFuelPath(controlPoints)) {
+        logger.warn(`[VrAttractor] ${settings.path} is degenerate and ${debugName} has no usable BufferGeometry fallback; disabling ${element} fuel stream.`);
+        return { element, settings, source: 'disabled', markersDegenerate, controlPoints: [] };
+      }
+    }
+    return { element, settings, source, markersDegenerate, controlPoints };
+  });
+
   modelScale.add(nodes.VR_ATTRACTOR_ROOT);
   aimRoot.add(modelScale);
 
@@ -137,27 +164,9 @@ export function createVrAttractorTool({ model, config = VR_ATTRACTOR_VISUAL_CONF
     const materials = Array.isArray(child.material) ? child.material : [child.material];
     materials.filter(Boolean).forEach((material) => energyMaterials.push(material));
   });
-  Object.keys(config.fuel).forEach((element) => {
-    const debugPath = nodes.VR_ATTRACTOR_ROOT.getObjectByName(`DEBUG_FUEL_${element.toUpperCase()}_PATH`);
-    if (debugPath) debugPath.visible = false;
-  });
-  const fuelStreams = Object.entries(config.fuel).map(([element, settings]) => {
-    const path = nodes[settings.path];
-    const pathPoints = path.children.filter((child) => /P\d+$/.test(child.name)).sort((a, b) => pointIndex(a) - pointIndex(b));
-    if (pathPoints.length !== 12) throw new Error(`[VrAttractor] ${settings.path} requires 12 P00..P11 points; found ${pathPoints.length}.`);
-    nodes.VR_ATTRACTOR_ROOT.updateWorldMatrix(true, true);
-    let controlPoints = pathPoints.map((pathPoint) => nodes.VR_ATTRACTOR_ROOT.worldToLocal(
-      pathPoint.getWorldPosition(new THREE.Vector3())));
-    let source = 'vr_points';
-    const markersDegenerate = isDegenerateFuelPath(controlPoints);
-    if (markersDegenerate) {
-      const debugName = `DEBUG_FUEL_${element.toUpperCase()}_PATH`;
-      const debugMesh = nodes.VR_ATTRACTOR_ROOT.getObjectByName(debugName);
-      controlPoints = debugFuelControlPoints(debugMesh, nodes.VR_ATTRACTOR_ROOT);
-      source = 'debug_geometry';
-      if (isDegenerateFuelPath(controlPoints)) throw new Error(
-        `[VrAttractor] ${settings.path} is degenerate and ${debugName} has no usable BufferGeometry fallback.`);
-    }
+  const fuelStreams = fuelPathData.filter(({ source }) => source !== 'disabled').map(({
+    element, settings, source, markersDegenerate, controlPoints
+  }) => {
     const curve = new THREE.CatmullRomCurve3(controlPoints, false);
     const geometry = new THREE.BufferGeometry();
     geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(settings.particleCount * 3), 3));
@@ -276,8 +285,9 @@ export function createVrAttractorTool({ model, config = VR_ATTRACTOR_VISUAL_CONF
     setEquipped, setUnlocked, setTrigger, setTarget, setPullStrength, setLevel, setState, setGlyphPanelState,
     attachToTargetRay, update, reset, dispose, getState: () => state, getInnerRPM: () => innerRPM,
     diagnostics: { missingRequiredNodes: missing, glyphPanelCount: glyphPanels.length,
-      fuelPointCounts: Object.fromEntries(fuelStreams.map((stream) => [stream.element, stream.curve.points.length])),
-      fuelPathSources: Object.fromEntries(fuelStreams.map((stream) => [stream.element, stream.source])),
-      fuelMarkersDegenerate: Object.fromEntries(fuelStreams.map((stream) => [stream.element, stream.markersDegenerate])),
-      fuelCurveClosed: Object.fromEntries(fuelStreams.map((stream) => [stream.element, stream.curve.closed])) } };
+      fuelPointCounts: Object.fromEntries(fuelPathData.map((data) => [data.element, data.controlPoints.length])),
+      fuelPathSources: Object.fromEntries(fuelPathData.map((data) => [data.element, data.source])),
+      fuelMarkersDegenerate: Object.fromEntries(fuelPathData.map((data) => [data.element, data.markersDegenerate])),
+      fuelCurveClosed: Object.fromEntries(fuelPathData.map((data) => [data.element,
+        data.source === 'disabled' ? null : false])) } };
 }
