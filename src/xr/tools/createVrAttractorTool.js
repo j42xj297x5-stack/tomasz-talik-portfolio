@@ -6,8 +6,14 @@ export const VR_ATTRACTOR_STATES = Object.freeze({
 
 export const VR_ATTRACTOR_VISUAL_CONFIG = Object.freeze({
   modelScale: 1 / 3,
-  fuelPointSize: 0.002,
+  fuelPointSize: 0.0035,
+  fuelBrightnessMultiplier: 1.2,
   aimOffset: [0, 0, 0],
+  ringLocalPositionOffsets: {
+    PIVOT_RING_CALIBRATION: [0, -0.03, 0],
+    PIVOT_RING_INNER: [0, -0.06, 0],
+    PIVOT_RING_MASTER: [0, -0.06, 0]
+  },
   baseMolecular: { idleRPM: 3, direction: -1 },
   calibration: { idleRPM: 4, targetingRPM: 8, direction: 1 },
   master: { idleRPM: 1, maxRPM: 10, direction: -1 },
@@ -32,7 +38,7 @@ export function blenderRpmToThree({ x, y, z }) {
 }
 
 const REQUIRED_NODES = Object.freeze([
-  'VR_ATTRACTOR_ROOT', 'grab', 'base_grab', 'Fiskers',
+  'VR_ATTRACTOR_ROOT', 'grab', 'PIVOT_BASE_GRAB', 'base_grab', 'PIVOT_FISKERS', 'Fiskers',
   'fuel_line_earth', 'fuel_line_fire', 'fuel_line_tree', 'fuel_line_metal', 'fuel_line_water',
   'PIVOT_BASE_MOLEKULAR', 'base_molekular', 'PIVOT_RING_CALIBRATION', 'Ring_calibration',
   'PIVOT_RING_MASTER', 'Ring_Master', 'PIVOT_RING_INNER', 'Ring_inner',
@@ -64,9 +70,14 @@ export function createVrAttractorTool({ model, config = VR_ATTRACTOR_VISUAL_CONF
   modelScale.add(nodes.VR_ATTRACTOR_ROOT);
   aimRoot.add(modelScale);
 
-  const animatedPivots = [nodes.PIVOT_BASE_MOLEKULAR, nodes.PIVOT_RING_CALIBRATION,
-    nodes.PIVOT_RING_MASTER, nodes.PIVOT_RING_INNER, nodes.PIVOT_ENERGY_SHELL];
-  const initialPivotQuaternions = new Map(animatedPivots.map((pivot) => [pivot, pivot.quaternion.clone()]));
+  const controlledPivots = [nodes.PIVOT_BASE_GRAB, nodes.PIVOT_FISKERS, nodes.PIVOT_BASE_MOLEKULAR,
+    nodes.PIVOT_RING_CALIBRATION, nodes.PIVOT_RING_MASTER, nodes.PIVOT_RING_INNER, nodes.PIVOT_ENERGY_SHELL];
+  const initialPivotTransforms = new Map(controlledPivots.map((pivot) => [pivot, {
+    position: pivot.position.clone(), quaternion: pivot.quaternion.clone(), scale: pivot.scale.clone()
+  }]));
+  Object.entries(config.ringLocalPositionOffsets).forEach(([name, offset]) => {
+    nodes[name].position.add(new THREE.Vector3().fromArray(offset));
+  });
   const shellRPM = blenderRpmToThree(config.shell.blenderRPM);
 
   const ownedMaterials = new Set();
@@ -95,7 +106,8 @@ export function createVrAttractorTool({ model, config = VR_ATTRACTOR_VISUAL_CONF
     const geometry = new THREE.BufferGeometry();
     geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(settings.particleCount * 3), 3));
     const material = new THREE.PointsMaterial({ color: settings.color, size: config.fuelPointSize, transparent: true,
-      opacity: settings.brightness, blending: THREE.AdditiveBlending, depthWrite: false, sizeAttenuation: true });
+      opacity: settings.brightness * config.fuelBrightnessMultiplier, blending: THREE.AdditiveBlending,
+      depthWrite: false, depthTest: false, sizeAttenuation: true });
     const points = new THREE.Points(geometry, material);
     points.name = `VrAttractorFuelParticles_${element}`;
     path.add(points);
@@ -180,14 +192,19 @@ export function createVrAttractorTool({ model, config = VR_ATTRACTOR_VISUAL_CONF
         positions.setXYZ(index, stream.sample.x, stream.sample.y, stream.sample.z);
       }
       positions.needsUpdate = true;
-      stream.material.opacity = stream.settings.brightness * (0.88 + 0.12 * Math.sin(elapsed * 2 + stream.settings.phase * 7));
+      stream.material.opacity = stream.settings.brightness * config.fuelBrightnessMultiplier
+        * (0.88 + 0.12 * Math.sin(elapsed * 2 + stream.settings.phase * 7));
     });
   }
 
   function reset() {
     state = VR_ATTRACTOR_STATES.UNEQUIPPED; trigger = 0; target = null; targetProximity = 0; pullStrength = 0;
     elapsed = 0; innerRPM = 0; aimRoot.visible = false;
-    initialPivotQuaternions.forEach((quaternion, pivot) => pivot.quaternion.copy(quaternion));
+    initialPivotTransforms.forEach((transform, pivot) => {
+      pivot.position.copy(transform.position); pivot.quaternion.copy(transform.quaternion); pivot.scale.copy(transform.scale);
+      const offset = config.ringLocalPositionOffsets[pivot.name];
+      if (offset) pivot.position.add(new THREE.Vector3().fromArray(offset));
+    });
     fuelStreams.forEach((stream) => { stream.elapsed = 0; });
   }
   function dispose() {
