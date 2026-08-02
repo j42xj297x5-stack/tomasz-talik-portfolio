@@ -170,7 +170,7 @@ const crystalCollection = createVrCrystalCollection({
   pages: experienceVrPages, progressionController,
   canGrabController: (record) => {
     if (record.handedness === 'right' && handModeController.getMode() === 'ASTRO_ATTRACTOR') return false;
-    if (record.handedness === 'left' && shellAttractorInteraction?.isCaptureReadyInHandRange()) return false;
+    if (record.handedness === 'left' && shellAttractorInteraction?.hasCurrentShellHit(record)) return false;
     return true;
   },
   onPreview: (page) => portalCanvas.show(resolveExperienceVrPage(page, language)),

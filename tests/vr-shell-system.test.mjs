@@ -26,6 +26,15 @@ assert.ok(first.system.instances[0].quaternion.angleTo(baselineQuaternion) > 0.0
 assert.ok(first.system.instances.every((shell) => Math.abs(shell.userData.selfRotationAxis.length() - 1) < 1e-12));
 assert.ok(first.system.instances.every((shell) => shell.userData.selfRotationSpeed >= 0.10
   && shell.userData.selfRotationSpeed <= 0.22));
+const returningShell = first.system.instances[0];
+returningShell.userData.shellState = 'capture_ready';
+assert.equal(first.system.returnToOrbit(returningShell, 0.1), true);
+assert.equal(returningShell.userData.attractorTarget, false);
+first.system.update(0.05); assert.equal(returningShell.userData.attractorTarget, false);
+first.system.update(0.05);
+assert.equal(returningShell.userData.shellState, 'orbiting');
+assert.equal(returningShell.userData.attractorTarget, true, 'completed return restores cone eligibility');
+
 const second = makeSystem();
 assert.deepEqual(second.system.instances.map((shell) => shell.userData.shellOrbit), first.system.instances.map((shell) => shell.userData.shellOrbit));
 assert.deepEqual(second.system.instances.map((shell) => shell.userData.selfRotationAxis.toArray()),

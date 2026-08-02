@@ -1564,3 +1564,8 @@ Bez tej poprawki:
 - wszystkie dalsze mechaniki będą budowane na błędnym fundamencie.
 
 Podłoga podświetla pole dopiero po zatwierdzeniu strony przez Release. Minimalny `VrProgressionController` obsługuje karty i progi 1–5, a pięć globalnych ringów wizualizuje ukończone tiery. Poza runtime pozostają progresywne tło sektorów, centralny core, world transition po tierze 1, przechylanie i pełny system capabilities.
+
+### Astro Attractor sphere assembly (design value only)
+
+- `sphereAssembly.requiredShells = 6`
+- Assembly, counters, holograms, and shell consumption are not implemented in the current runtime.

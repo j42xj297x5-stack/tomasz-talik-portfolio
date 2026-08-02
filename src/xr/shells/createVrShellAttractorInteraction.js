@@ -22,6 +22,11 @@ export function selectConeTarget({ candidates, origin, direction, maxDistance, h
   return hits[0] ?? null;
 }
 
+export function calculateShellCapturePosition({ masterRingWorldPosition, controllerRayDirection,
+  shellCaptureForwardDistance, target = new THREE.Vector3() }) {
+  return target.copy(masterRingWorldPosition).addScaledVector(controllerRayDirection, shellCaptureForwardDistance);
+}
+
 export function createVrShellAttractorInteraction({ controllers, shellSystem, handModeController, semanticInput,
   attractorTool, settings, haloSettings, settledParent = shellSystem.object.parent,
   crystalHeldByController = new Map(), isHigherPriorityInteractionActive = () => false }) {
@@ -29,8 +34,9 @@ export function createVrShellAttractorInteraction({ controllers, shellSystem, ha
   const halfAngleRadians = THREE.MathUtils.degToRad(settings.scanCone.halfAngleDegrees);
   const origin = new THREE.Vector3(), direction = new THREE.Vector3(), anchorWorldPosition = new THREE.Vector3();
   const shellWorldPosition = new THREE.Vector3(), movement = new THREE.Vector3(), localPosition = new THREE.Vector3();
-  const handWorldPosition = new THREE.Vector3(), worldQuaternion = new THREE.Quaternion(), scale = new THREE.Vector3();
-  const captureAnchor = new THREE.Object3D(); captureAnchor.name = 'VrAttractorCaptureAnchor'; captureAnchor.position.set(0, 0, -settings.captureDistance);
+  const worldQuaternion = new THREE.Quaternion(), scale = new THREE.Vector3();
+  const captureAnchor = new THREE.Object3D(); captureAnchor.name = 'VrAttractorCaptureAnchor';
+  const raycaster = new THREE.Raycaster();
   function getRightRecord() { return controllers.find((record) => record.handedness === 'right') ?? null; }
   function getLeftRecord() { return controllers.find((record) => record.handedness === 'left') ?? null; }
   const scanCone = createVrAttractorScanCone({ parent: null, length: maxTargetDistance, settings: settings.scanCone });
@@ -38,15 +44,17 @@ export function createVrShellAttractorInteraction({ controllers, shellSystem, ha
   const candidates = shellSystem.records.map((record) => ({ shell: record.object, radius: record.boundingRadius,
     getWorldCenter(result) { result.copy(record.boundingCenter); record.object.localToWorld(result); record.object.getWorldScale(scale);
       this.radius = record.boundingRadius * Math.max(scale.x, scale.y, scale.z); return result; } }));
-  let target = null, activePull = null, captureReady = null, heldShell = null, pullSpeed = 0, pullStartDistance = 1;
+  let target = null, activePull = null, captureReady = null, heldShell = null, leftRayTarget = null;
+  let pullSpeed = 0, pullStartDistance = 1;
   let disposed = false;
   const isEquipped = () => handModeController.getMode() === 'ASTRO_ATTRACTOR';
   const isValidCandidate = ({ shell }) => shell.visible !== false && shell.userData.attractorTarget === true
     && shell.userData.attractorType === 'shell' && ['orbiting', 'targeted'].includes(shell.userData.shellState);
-  function clearTarget() { if (target?.userData.shellState === 'targeted') target.userData.shellState = 'orbiting';
-    target = null; halos.forEach((halo) => halo.setVisible(false)); }
+  function syncHalo(shell) { halos.get(shell)?.setVisible(shell === target || shell === leftRayTarget); }
+  function clearTarget() { const previous = target; if (target?.userData.shellState === 'targeted') target.userData.shellState = 'orbiting';
+    target = null; if (previous) syncHalo(previous); }
   function setTarget(shell) { if (target === shell) return; clearTarget(); target = shell;
-    if (target) { target.userData.shellState = 'targeted'; halos.get(target)?.setVisible(true); } }
+    if (target) { target.userData.shellState = 'targeted'; syncHalo(target); } }
   function setWorldPosition(object, position) { localPosition.copy(position); object.parent.worldToLocal(localPosition); object.position.copy(localPosition); }
   function finishTool() { attractorTool.setTarget(null); attractorTool.setPullStrength(0); attractorTool.setState(VR_ATTRACTOR_STATES.IDLE); }
   function beginReturn(shell) { halos.get(shell)?.setVisible(false); shellSystem.returnToOrbit(shell, settings.returnDuration);
@@ -58,15 +66,31 @@ export function createVrShellAttractorInteraction({ controllers, shellSystem, ha
     direction.copy(LOCAL_DIRECTION).applyQuaternion(worldQuaternion).normalize();
     return selectConeTarget({ candidates: candidates.filter(isValidCandidate), origin, direction,
       maxDistance: maxTargetDistance, halfAngleRadians }); }
-  function isCaptureReadyInHandRange(leftRecord = getLeftRecord()) { if (!captureReady || !leftRecord?.holdSocket || !handIsFree(leftRecord)) return false;
-    leftRecord.holdSocket.getWorldPosition(handWorldPosition); captureReady.getWorldPosition(shellWorldPosition);
-    return handWorldPosition.distanceTo(shellWorldPosition) <= settings.handCaptureRadius; }
+  function clearLeftShellHit(leftRecord = getLeftRecord()) { if (leftRecord) {
+    leftRecord.currentShellHit = null; leftRecord.currentShellHitDistance = null; }
+    const previous = leftRayTarget; leftRayTarget = null; if (previous) syncHalo(previous); }
+  function updateCaptureAnchor(rightRecord) { rightRecord.controller.getWorldQuaternion(worldQuaternion);
+    direction.copy(LOCAL_DIRECTION).applyQuaternion(worldQuaternion).normalize();
+    attractorTool.getMasterRingWorldPosition(anchorWorldPosition);
+    calculateShellCapturePosition({ masterRingWorldPosition: anchorWorldPosition, controllerRayDirection: direction,
+      shellCaptureForwardDistance: settings.shellCaptureForwardDistance, target: anchorWorldPosition });
+    setWorldPosition(captureAnchor, anchorWorldPosition); }
+  function updateLeftRayHit(leftRecord = getLeftRecord()) { clearLeftShellHit(leftRecord);
+    if (!captureReady || !leftRecord?.controller || !leftRecord.isConnected || !Number.isFinite(leftRecord.currentRayLength)) return;
+    leftRecord.controller.getWorldPosition(origin); leftRecord.controller.getWorldQuaternion(worldQuaternion);
+    direction.copy(LOCAL_DIRECTION).applyQuaternion(worldQuaternion).normalize(); raycaster.set(origin, direction);
+    raycaster.near = 0; raycaster.far = leftRecord.currentRayLength;
+    const hit = raycaster.intersectObject(captureReady, true).find(({ object }) => object.visible !== false);
+    if (!hit) return; leftRecord.currentShellHit = captureReady; leftRecord.currentShellHitDistance = hit.distance;
+    leftRecord.reportRayHit?.(hit.distance); leftRayTarget = captureReady; syncHalo(captureReady); }
   function captureForHandoff(shell) { captureAnchor.attach(shell); shell.userData.shellState = 'capture_ready'; shell.userData.attractorTarget = false;
-    shellSystem.setEmission(shell, 1); captureReady = shell; activePull = shell; halos.get(shell)?.setVisible(false);
+    shellSystem.setEmission(shell, 1); captureReady = shell; activePull = shell; syncHalo(shell);
     attractorTool.setPullStrength(1); attractorTool.setState(VR_ATTRACTOR_STATES.CAPTURED); }
-  function takeWithLeftHand(leftRecord = getLeftRecord()) { if (!isCaptureReadyInHandRange(leftRecord)) return false; const shell = captureReady;
+  function hasCurrentShellHit(leftRecord = getLeftRecord()) { return Boolean(captureReady && leftRecord?.currentShellHit === captureReady
+    && leftRecord.currentShellHitDistance <= leftRecord.currentRayLength); }
+  function takeWithLeftHand(leftRecord = getLeftRecord()) { if (!handIsFree(leftRecord) || !hasCurrentShellHit(leftRecord)) return false; const shell = captureReady;
     leftRecord.holdSocket.attach(shell); shell.userData.shellState = 'held'; shell.userData.attractorTarget = false;
-    captureReady = null; activePull = null; target = null; heldShell = shell; finishTool(); return true; }
+    captureReady = null; activePull = null; target = null; heldShell = shell; clearLeftShellHit(leftRecord); finishTool(); return true; }
   function placeHeldShell(leftRecord = getLeftRecord()) { if (!leftRecord?.isConnected || !heldShell) return false; const shell = heldShell; settledParent.attach(shell);
     shell.userData.shellState = 'placed'; shell.userData.attractorTarget = false; heldShell = null; return true; }
   const squeezeListeners = controllers.map((record) => {
@@ -87,13 +111,15 @@ export function createVrShellAttractorInteraction({ controllers, shellSystem, ha
       return;
     }
     if (scanCone.object.parent !== rightRecord.controller) rightRecord.controller.add(scanCone.object);
-    if (captureAnchor.parent !== rightRecord.controller) rightRecord.controller.add(captureAnchor);
+    if (captureAnchor.parent !== settledParent) settledParent.add(captureAnchor);
+    updateCaptureAnchor(rightRecord); updateLeftRayHit(leftRecord);
     const { primaryAction = 0, grabAction = 0 } = currentInput();
     const scanning = shellSystem.active && rightRecord.isConnected && isEquipped() && grabAction > settings.scanThreshold;
     scanCone.update(delta, scanning);
     if (activePull) {
       if (!scanning || primaryAction <= settings.triggerThreshold) { beginReturn(activePull); return; }
-      if (activePull.userData.shellState === 'capture_ready') { attractorTool.setState(VR_ATTRACTOR_STATES.CAPTURED); return; }
+      if (activePull.userData.shellState === 'capture_ready') { setWorldPosition(activePull, anchorWorldPosition);
+        attractorTool.setState(VR_ATTRACTOR_STATES.CAPTURED); return; }
       captureAnchor.getWorldPosition(anchorWorldPosition); activePull.getWorldPosition(shellWorldPosition);
       const distance = shellWorldPosition.distanceTo(anchorWorldPosition);
       if (distance <= settings.captureRadius) { captureForHandoff(activePull); return; }
@@ -117,7 +143,7 @@ export function createVrShellAttractorInteraction({ controllers, shellSystem, ha
   }
   function reset() { scanCone.update(0, false); if (activePull) shellSystem.returnToOrbit(activePull, settings.returnDuration);
     if (heldShell) shellSystem.returnToOrbit(heldShell, settings.returnDuration); clearTarget(); activePull = null; captureReady = null;
-    heldShell = null; pullSpeed = 0; finishTool(); }
+    heldShell = null; pullSpeed = 0; clearLeftShellHit(); finishTool(); }
   function dispose() { if (disposed) return; reset(); disposed = true;
     squeezeListeners.forEach(({ record, onSqueezeStart, onSqueezeEnd }) => {
       record.controller.removeEventListener('squeezestart', onSqueezeStart);
@@ -125,7 +151,7 @@ export function createVrShellAttractorInteraction({ controllers, shellSystem, ha
     });
     captureAnchor.removeFromParent(); scanCone.dispose();
     halos.forEach((halo) => halo.dispose()); halos.clear(); }
-  return { captureAnchor, scanCone, maxTargetDistance, halfAngleRadians, update, reset, dispose, isCaptureReadyInHandRange,
+  return { captureAnchor, scanCone, maxTargetDistance, halfAngleRadians, update, reset, dispose, hasCurrentShellHit,
     get target() { return target; }, get activePull() { return activePull; }, get captureReady() { return captureReady; },
     get heldShell() { return heldShell; } };
 }

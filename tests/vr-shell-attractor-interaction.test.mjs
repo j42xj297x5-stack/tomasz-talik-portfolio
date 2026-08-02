@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import * as THREE from '../src/vendor/three.js';
 import { createVrShellSystem } from '../src/xr/shells/createVrShellSystem.js';
-import { createVrShellAttractorInteraction, selectConeTarget } from '../src/xr/shells/createVrShellAttractorInteraction.js';
+import { calculateShellCapturePosition, createVrShellAttractorInteraction, selectConeTarget } from '../src/xr/shells/createVrShellAttractorInteraction.js';
 import { VR_ATTRACTOR_STATES } from '../src/xr/tools/createVrAttractorTool.js';
 import { createVrHandModeController } from '../src/xr/input/createVrHandModeController.js';
 
@@ -19,25 +19,32 @@ import { createVrHandModeController } from '../src/xr/input/createVrHandModeCont
   handModes.dispose();
 }
 
+const capturePosition = calculateShellCapturePosition({ masterRingWorldPosition: new THREE.Vector3(1, 2, 3),
+  controllerRayDirection: new THREE.Vector3(0, 0, -1), shellCaptureForwardDistance: 1.3 });
+assert.deepEqual(capturePosition.toArray(), [1, 2, 1.7], 'capture point is offset from Master Ring, not controller origin');
+
 const parent = new THREE.Group();
 const geometry = new THREE.BoxGeometry(0.2, 0.2, 0.2);
 const authoredMaterial = new THREE.MeshStandardMaterial({ emissive: 0xffffff, emissiveIntensity: 0.4 });
 authoredMaterial.emissiveMap = new THREE.Texture();
 const assetManager = { cloneGltfScene() { const root = new THREE.Group(); root.add(new THREE.Mesh(geometry, authoredMaterial)); return root; } };
 const shellSettings = { targetDistanceRadiusMultiplier: 3, scanThreshold: 0.1, triggerThreshold: 0.1,
-  handCaptureRadius: 0.32, captureDistance: 0.8, pullAcceleration: 10, maxPullSpeed: 8.5,
+  shellCaptureForwardDistance: 1.3, pullAcceleration: 10, maxPullSpeed: 8.5,
   captureRadius: 0.28, returnDuration: 0.8, claimedEmissionMin: 1, claimedEmissionMax: 2,
   claimedEmissionPulseDuration: 1.4, scanCone: { color: 0x78ff9c, halfAngleDegrees: 2.5,
     opacityMin: 0.035, opacityMax: 0.065, pulseDuration: 1.6, radialSegments: 14 } };
 const shellSystem = createVrShellSystem({ parent, assetManager, baseRadius: 10, emissionSettings: shellSettings });
 shellSystem.setActive(true);
 const rightController = new THREE.Group(), leftController = new THREE.Group(); parent.add(rightController, leftController);
-const right = { handedness: 'right', controller: rightController, holdSocket: new THREE.Group(), isConnected: true };
-const left = { handedness: 'left', controller: leftController, holdSocket: new THREE.Group(), isConnected: true };
+const right = { handedness: 'right', controller: rightController, holdSocket: new THREE.Group(), isConnected: true, currentRayLength: 2.3 };
+const leftRayHits = [];
+const left = { handedness: 'left', controller: leftController, holdSocket: new THREE.Group(), isConnected: true, currentRayLength: 2.3, reportRayHit: (distance) => leftRayHits.push(distance) };
 rightController.add(right.holdSocket); leftController.add(left.holdSocket);
 let primaryAction = 0, grabAction = 0, mode = 'ASTRO_ATTRACTOR', higherPriority = false;
 const calls = { states: [], targets: [], strengths: [] };
-const tool = { setState(v) { calls.states.push(v); }, setTarget(v) { calls.targets.push(v); }, setPullStrength(v) { calls.strengths.push(v); } };
+const masterRingPosition = new THREE.Vector3(0.4, 0.2, -0.5);
+const tool = { setState(v) { calls.states.push(v); }, setTarget(v) { calls.targets.push(v); }, setPullStrength(v) { calls.strengths.push(v); },
+  getMasterRingWorldPosition(target) { return target.copy(masterRingPosition); } };
 const interaction = createVrShellAttractorInteraction({ controllers: [right, left], shellSystem,
   handModeController: { getMode: () => mode }, semanticInput: { getState: () => ({ primaryAction, grabAction }) }, attractorTool: tool,
   settings: shellSettings, haloSettings: {}, settledParent: parent, isHigherPriorityInteractionActive: () => higherPriority });
@@ -61,8 +68,13 @@ interaction.update(0.2); assert.ok(shellSystem.getRecord(shell).emissiveMaterial
 shell.position.copy(interaction.captureAnchor.getWorldPosition(new THREE.Vector3())); parent.worldToLocal(shell.position); parent.updateMatrixWorld(true);
 interaction.update(0.016); assert.equal(shell.userData.shellState, 'capture_ready'); assert.equal(interaction.heldShell, null);
 assert.equal(shellSystem.getRecord(shell).emissiveMaterials[0].emissiveIntensity, 1);
-leftController.position.copy(shell.getWorldPosition(new THREE.Vector3())); parent.worldToLocal(leftController.position); parent.updateMatrixWorld(true);
-assert.equal(interaction.isCaptureReadyInHandRange(), true);
+leftController.position.copy(shell.getWorldPosition(new THREE.Vector3())).add(new THREE.Vector3(0, 0, 3)); parent.worldToLocal(leftController.position); parent.updateMatrixWorld(true);
+interaction.update(0.016); assert.equal(left.currentShellHit, null, 'shell beyond the ordinary 2.3m ray is not hit');
+leftController.dispatchEvent({ type: 'squeezestart' }); assert.equal(shell.userData.shellState, 'capture_ready', 'squeeze without a ray hit does not claim');
+leftController.position.copy(shell.getWorldPosition(new THREE.Vector3())).add(new THREE.Vector3(0, 0, 2)); parent.worldToLocal(leftController.position); parent.updateMatrixWorld(true);
+interaction.update(0.016);
+assert.equal(left.currentShellHit, shell); assert.ok(leftRayHits.at(-1) <= 2.3);
+assert.ok(shell.getObjectByName('VrTargetHalo:mesh')?.visible, 'left ray reuses the shell halo');
 leftController.dispatchEvent({ type: 'squeezestart' }); assert.equal(shell.userData.shellState, 'held'); assert.equal(shell.parent, left.holdSocket);
 primaryAction = 0; interaction.update(0.016); assert.equal(shell.userData.shellState, 'held', 'right release cannot return a claimed shell');
 shellSystem.update(0.35); const pulseA = shellSystem.getRecord(shell).emissiveMaterials[0].emissiveIntensity;
@@ -86,10 +98,10 @@ function assertLateHandednessLifecycle({ leftIndex, rightIndex }) {
   lifecycleShellSystem.setActive(true);
   const records = [0, 1].map(() => {
     const controller = new THREE.Group(), holdSocket = new THREE.Group(); controller.add(holdSocket); lifecycleParent.add(controller);
-    return { handedness: '', controller, holdSocket, isConnected: false };
+    return { handedness: '', controller, holdSocket, isConnected: false, currentRayLength: 2.3, reportRayHit() {} };
   });
   let lifecyclePrimaryAction = 0, lifecycleGrabAction = 1;
-  const lifecycleTool = { setState() {}, setTarget() {}, setPullStrength() {} };
+  const lifecycleTool = { setState() {}, setTarget() {}, setPullStrength() {}, getMasterRingWorldPosition(target) { return target.set(0, 0, 0); } };
   let lifecycleInteraction;
   assert.doesNotThrow(() => { lifecycleInteraction = createVrShellAttractorInteraction({ controllers: records,
     shellSystem: lifecycleShellSystem, handModeController: { getMode: () => 'ASTRO_ATTRACTOR' },
@@ -116,12 +128,12 @@ function assertLateHandednessLifecycle({ leftIndex, rightIndex }) {
   lifecycleInteraction.update(0.016); lifecyclePrimaryAction = 1; lifecycleInteraction.update(0.016);
   lifecycleShell.position.copy(lifecycleInteraction.captureAnchor.getWorldPosition(new THREE.Vector3()));
   lifecycleParent.worldToLocal(lifecycleShell.position); lifecycleParent.updateMatrixWorld(true); lifecycleInteraction.update(0.016);
-  leftRecord.controller.position.copy(lifecycleShell.getWorldPosition(new THREE.Vector3()));
-  lifecycleParent.worldToLocal(leftRecord.controller.position); lifecycleParent.updateMatrixWorld(true);
+  leftRecord.controller.position.copy(lifecycleShell.getWorldPosition(new THREE.Vector3())).add(new THREE.Vector3(0, 0, 2));
+  lifecycleParent.worldToLocal(leftRecord.controller.position); lifecycleParent.updateMatrixWorld(true); lifecycleInteraction.update(0.016);
   rightRecord.controller.dispatchEvent({ type: 'squeezestart' });
   assert.equal(lifecycleInteraction.heldShell, null, 'a non-left controller cannot claim the shell');
   leftRecord.controller.dispatchEvent({ type: 'squeezestart' });
-  assert.equal(lifecycleInteraction.heldShell, lifecycleShell, 'the runtime left hand performs proximity handoff');
+  assert.equal(lifecycleInteraction.heldShell, lifecycleShell, 'the runtime left ray and squeeze claim the shell');
 
   lifecycleInteraction.dispose(); lifecycleShellSystem.dispose(); lifecycleGeometry.dispose(); lifecycleMaterial.dispose();
 }
