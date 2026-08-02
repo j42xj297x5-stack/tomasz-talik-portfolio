@@ -54,6 +54,14 @@ The five-sector progress floor has 18 panels mapped by `glyphId + order` and rec
 
 The current readiness gate has been smoke-tested on Meta Quest 3S: asset preload completes, the Experience VR scene reaches ready state, **Enter VR** becomes enabled, and a working immersive session can be entered. This is not a claim of complete performance, readability, z-fighting, or full-game QA.
 
+## Astro attractor hand tool
+
+The prepared VR asset set includes one cached `/glb/astro_grabber.glb`. The runtime clones that cached scene once, validates its authored node and five 12-point fuel-path contracts, and mounts a configurable `VrAttractorGripOffset` directly below the tracked right controller grip. Runtime-controlled energy-cell (and optional glyph-panel) materials are instance-only clones; the five lightweight `THREE.Points` streams own and dispose only their generated geometry and materials.
+
+Right-hand WebXR input is translated by a semantic input boundary: standard-gamepad button `4` produces an edge-triggered `toggleRightTool`, button `0` provides analog `primaryAction`, and button `1` provides `grabAction`. After global tier 1 is complete, `toggleRightTool` switches `NORMAL_HAND` and `ASTRO_ATTRACTOR`; before then it cannot equip the tool. The trigger currently drives only the attractor's visual controller, including smoothly accelerated `Ring_inner`, and does not target or move world objects.
+
+The attractor visual controller supports `UNEQUIPPED`, `IDLE`, `TARGETING`, `PULLING`, and `CAPTURED`, although normal composition currently uses only the first two. Its pivots, energy shell, energy-cell emission, and fuel streams are deterministic and delta-time based. Session reset returns the hand to `NORMAL_HAND` and resets the existing tool instance; page teardown detaches it and disposes only runtime-owned effects and cloned materials.
+
 ## Explicitly absent from the current runtime
 
-Sector-background progression and its soft boundary, a central progression core, the tier-1 world transition, shells, assembly orb, hand tools, small glyphs, floor tilting and local-plane locomotion, antenna, runes, final radar, completion sequence, durable save, full-game reset and the full capabilities system are not implemented. The current five-sector floor, its five global tier rings, and the minimal card/tier controller are the bounded implementations described above.
+Sector-background progression and its soft boundary, a central progression core, the tier-1 world transition, shells, assembly orb, small glyphs, floor tilting and local-plane locomotion, antenna, runes, final radar, completion sequence, durable save, full-game reset and the full capabilities system are not implemented. Astro object targeting, gravity pull, capture, and held-world-object state are also absent. The current five-sector floor, its five global tier rings, the minimal card/tier controller, and the visual-only Astro runtime are the bounded implementations described above.
