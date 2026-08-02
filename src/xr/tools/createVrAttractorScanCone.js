@@ -17,7 +17,8 @@ export function createVrAttractorScanCone({ parent, length, settings }) {
       gl_FragColor=vec4(color,mix(opacityMin,opacityMax,pulse)*fade); }`,
     transparent: true, depthWrite: false, depthTest: true, blending: THREE.AdditiveBlending, side: THREE.DoubleSide
   });
-  const object = new THREE.Mesh(geometry, material); object.name='VrAttractorScanCone'; object.visible=false; parent.add(object);
+  const object = new THREE.Mesh(geometry, material); object.name='VrAttractorScanCone'; object.visible=false;
+  if (parent?.add) parent.add(object);
   let elapsed=0, disposed=false;
   function update(delta=0, visible=false) { if(disposed)return; object.visible=Boolean(visible); elapsed+=Math.max(0,delta);
     material.uniforms.pulse.value=0.5+0.5*Math.sin(elapsed*Math.PI*2/settings.pulseDuration); }
