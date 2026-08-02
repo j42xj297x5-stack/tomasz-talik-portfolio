@@ -51,6 +51,45 @@ const clamp01 = (value) => Math.min(1, Math.max(0, Number.isFinite(value) ? valu
 const pointIndex = (point) => Number.isFinite(point.userData?.vr_path_index)
   ? point.userData.vr_path_index : Number(point.name.match(/P(\d+)$/)?.[1] ?? Number.MAX_SAFE_INTEGER);
 
+const FUEL_PATH_EPSILON = 1e-5;
+
+export function isDegenerateFuelPath(points, tolerance = FUEL_PATH_EPSILON) {
+  if (points.length < 2) return true;
+  let length = 0;
+  for (let index = 1; index < points.length; index += 1) length += points[index].distanceTo(points[index - 1]);
+  return length <= tolerance || points.every((point) => point.distanceTo(points[0]) <= tolerance);
+}
+
+// Blender's debug curves arrive as tube meshes. Projecting their vertices on the
+// longest extent, then averaging slices, removes the tube radius while retaining
+// an ordered, open centre line suitable for the small fuel particles.
+function debugFuelControlPoints(debugMesh, root, targetCount = 12) {
+  const attribute = debugMesh?.geometry?.getAttribute?.('position');
+  if (!attribute || attribute.count < 2) return [];
+  root.updateWorldMatrix(true, false);
+  debugMesh.updateWorldMatrix(true, false);
+  const vertices = [];
+  const point = new THREE.Vector3();
+  for (let index = 0; index < attribute.count; index += 1) {
+    point.fromBufferAttribute(attribute, index).applyMatrix4(debugMesh.matrixWorld);
+    vertices.push(root.worldToLocal(point.clone()));
+  }
+  const bounds = new THREE.Box3().setFromPoints(vertices);
+  const extent = bounds.getSize(new THREE.Vector3());
+  const axis = extent.x >= extent.y && extent.x >= extent.z ? 'x' : extent.y >= extent.z ? 'y' : 'z';
+  vertices.sort((a, b) => a[axis] - b[axis]);
+  const count = Math.min(targetCount, vertices.length);
+  const controls = Array.from({ length: count }, (_, slice) => {
+    const start = Math.floor(slice * vertices.length / count);
+    const end = Math.max(start + 1, Math.floor((slice + 1) * vertices.length / count));
+    const center = new THREE.Vector3();
+    for (let index = start; index < end; index += 1) center.add(vertices[index]);
+    return center.multiplyScalar(1 / (end - start));
+  });
+  if (controls[0].y > controls.at(-1).y) controls.reverse();
+  return controls;
+}
+
 export function createVrAttractorTool({ model, config = VR_ATTRACTOR_VISUAL_CONFIG, logger = console }) {
   if (!model) throw new Error('[VrAttractor] Cached astro_grabber GLB instance is required.');
   const missing = REQUIRED_NODES.filter((name) => !model.getObjectByName(name));
@@ -98,11 +137,28 @@ export function createVrAttractorTool({ model, config = VR_ATTRACTOR_VISUAL_CONF
     const materials = Array.isArray(child.material) ? child.material : [child.material];
     materials.filter(Boolean).forEach((material) => energyMaterials.push(material));
   });
+  Object.keys(config.fuel).forEach((element) => {
+    const debugPath = nodes.VR_ATTRACTOR_ROOT.getObjectByName(`DEBUG_FUEL_${element.toUpperCase()}_PATH`);
+    if (debugPath) debugPath.visible = false;
+  });
   const fuelStreams = Object.entries(config.fuel).map(([element, settings]) => {
     const path = nodes[settings.path];
     const pathPoints = path.children.filter((child) => /P\d+$/.test(child.name)).sort((a, b) => pointIndex(a) - pointIndex(b));
     if (pathPoints.length !== 12) throw new Error(`[VrAttractor] ${settings.path} requires 12 P00..P11 points; found ${pathPoints.length}.`);
-    const curve = new THREE.CatmullRomCurve3(pathPoints.map((point) => point.position.clone()), true);
+    nodes.VR_ATTRACTOR_ROOT.updateWorldMatrix(true, true);
+    let controlPoints = pathPoints.map((pathPoint) => nodes.VR_ATTRACTOR_ROOT.worldToLocal(
+      pathPoint.getWorldPosition(new THREE.Vector3())));
+    let source = 'vr_points';
+    const markersDegenerate = isDegenerateFuelPath(controlPoints);
+    if (markersDegenerate) {
+      const debugName = `DEBUG_FUEL_${element.toUpperCase()}_PATH`;
+      const debugMesh = nodes.VR_ATTRACTOR_ROOT.getObjectByName(debugName);
+      controlPoints = debugFuelControlPoints(debugMesh, nodes.VR_ATTRACTOR_ROOT);
+      source = 'debug_geometry';
+      if (isDegenerateFuelPath(controlPoints)) throw new Error(
+        `[VrAttractor] ${settings.path} is degenerate and ${debugName} has no usable BufferGeometry fallback.`);
+    }
+    const curve = new THREE.CatmullRomCurve3(controlPoints, false);
     const geometry = new THREE.BufferGeometry();
     geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(settings.particleCount * 3), 3));
     const material = new THREE.PointsMaterial({ color: settings.color, size: config.fuelPointSize, transparent: true,
@@ -110,8 +166,9 @@ export function createVrAttractorTool({ model, config = VR_ATTRACTOR_VISUAL_CONF
       depthWrite: false, depthTest: false, sizeAttenuation: true });
     const points = new THREE.Points(geometry, material);
     points.name = `VrAttractorFuelParticles_${element}`;
-    path.add(points);
-    return { settings, curve, geometry, material, points, elapsed: 0, sample: new THREE.Vector3() };
+    nodes.VR_ATTRACTOR_ROOT.add(points);
+    return { element, settings, curve, source, markersDegenerate, geometry, material, points, elapsed: 0,
+      sample: new THREE.Vector3() };
   });
 
   let state = VR_ATTRACTOR_STATES.UNEQUIPPED;
@@ -219,5 +276,8 @@ export function createVrAttractorTool({ model, config = VR_ATTRACTOR_VISUAL_CONF
     setEquipped, setUnlocked, setTrigger, setTarget, setPullStrength, setLevel, setState, setGlyphPanelState,
     attachToTargetRay, update, reset, dispose, getState: () => state, getInnerRPM: () => innerRPM,
     diagnostics: { missingRequiredNodes: missing, glyphPanelCount: glyphPanels.length,
-      fuelPointCounts: Object.fromEntries(fuelStreams.map((stream, index) => [Object.keys(config.fuel)[index], stream.curve.points.length])) } };
+      fuelPointCounts: Object.fromEntries(fuelStreams.map((stream) => [stream.element, stream.curve.points.length])),
+      fuelPathSources: Object.fromEntries(fuelStreams.map((stream) => [stream.element, stream.source])),
+      fuelMarkersDegenerate: Object.fromEntries(fuelStreams.map((stream) => [stream.element, stream.markersDegenerate])),
+      fuelCurveClosed: Object.fromEntries(fuelStreams.map((stream) => [stream.element, stream.curve.closed])) } };
 }

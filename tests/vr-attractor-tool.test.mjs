@@ -20,18 +20,24 @@ function makeButton(value = 0) { return { value, pressed: value > 0.5 }; }
   assert.equal(input.getState().primaryAction, 0);
 }
 
-function createContractModel() {
+function createContractModel({ degenerateFuelPoints = false } = {}) {
   const model = new THREE.Group();
   const root = new THREE.Group();
   root.name = 'VR_ATTRACTOR_ROOT';
   model.add(root);
   const plainNames = ['grab', 'PIVOT_BASE_GRAB', 'base_grab', 'PIVOT_FISKERS', 'Fiskers',
-    'DEBUG_FUEL_EARTH_PATH', 'DEBUG_FUEL_FIRE_PATH', 'DEBUG_FUEL_TREE_PATH', 'DEBUG_FUEL_METAL_PATH',
-    'DEBUG_FUEL_WATER_PATH', 'fuel_line_earth', 'fuel_line_fire', 'fuel_line_tree',
+    'fuel_line_earth', 'fuel_line_fire', 'fuel_line_tree',
     'fuel_line_metal', 'fuel_line_water', 'PIVOT_BASE_MOLEKULAR', 'base_molekular', 'PIVOT_RING_CALIBRATION',
     'Ring_calibration', 'PIVOT_RING_MASTER', 'Ring_Master', 'PIVOT_RING_INNER', 'Ring_inner',
     'PIVOT_ENERGY_SHELL', 'energy_shell', 'VR_ENERGY_CELL_ANCHOR'];
   plainNames.forEach((name) => { const node = new THREE.Group(); node.name = name; root.add(node); });
+  for (const element of ['EARTH', 'FIRE', 'TREE', 'METAL', 'WATER']) {
+    const geometry = new THREE.BufferGeometry().setFromPoints(Array.from({ length: 36 }, (_, index) =>
+      new THREE.Vector3(Math.sin(index * 0.3) * 0.01, index * 0.01, Math.cos(index * 0.3) * 0.01)));
+    const debugPath = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial());
+    debugPath.name = `DEBUG_FUEL_${element}_PATH`;
+    root.add(debugPath);
+  }
   const energyCell = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshStandardMaterial());
   energyCell.name = 'energy_cell';
   root.add(energyCell);
@@ -41,13 +47,31 @@ function createContractModel() {
     for (let index = 0; index < 12; index += 1) {
       const point = new THREE.Object3D();
       point.name = `VR_FUEL_${element}_P${String(index).padStart(2, '0')}`;
-      point.position.set(index * 0.01, index * 0.02, 0);
+      if (!degenerateFuelPoints) point.position.set(index * 0.01, index * 0.02, 0);
       point.userData.vr_path_index = index;
       path.add(point);
     }
     root.add(path);
   }
   return model;
+}
+
+{
+  const fallbackTool = createVrAttractorTool({ model: createContractModel({ degenerateFuelPoints: true }),
+    logger: { warn() {} } });
+  assert.deepEqual(fallbackTool.diagnostics.fuelPathSources,
+    { earth: 'debug_geometry', fire: 'debug_geometry', tree: 'debug_geometry', metal: 'debug_geometry', water: 'debug_geometry' },
+    'twelve coincident marker points select the DEBUG_FUEL geometry fallback');
+  assert.ok(Object.values(fallbackTool.diagnostics.fuelMarkersDegenerate).every(Boolean));
+  assert.ok(Object.values(fallbackTool.diagnostics.fuelPointCounts).every((count) => count === 12));
+  assert.ok(Object.values(fallbackTool.diagnostics.fuelCurveClosed).every((closed) => closed === false),
+    'fallback fuel curves remain open');
+  fallbackTool.setUnlocked(true); fallbackTool.setEquipped(true); fallbackTool.update(0.1);
+  const positions = fallbackTool.object.getObjectByName('VrAttractorFuelParticles_earth').geometry.attributes.position;
+  assert.ok(new THREE.Vector3().fromBufferAttribute(positions, 0)
+    .distanceTo(new THREE.Vector3().fromBufferAttribute(positions, 1)) > 1e-5,
+  'fallback curve has non-zero length');
+  fallbackTool.dispose();
 }
 
 {
@@ -88,6 +112,10 @@ function createContractModel() {
   assert.ok(fuelPoints.material.opacity > VR_ATTRACTOR_VISUAL_CONFIG.fuel.earth.brightness);
   assert.equal(tool.diagnostics.missingRequiredNodes.some((name) => name.startsWith('DEBUG_FUEL_')), false,
     'DEBUG_FUEL paths are optional and ignored by the runtime contract');
+  assert.ok(Object.values(tool.diagnostics.fuelPathSources).every((sourceName) => sourceName === 'vr_points'),
+    'valid P00..P11 markers do not use debug geometry');
+  assert.ok(Object.values(tool.diagnostics.fuelMarkersDegenerate).every((degenerate) => degenerate === false));
+  assert.ok(Object.values(tool.diagnostics.fuelCurveClosed).every((closed) => closed === false));
   tool.setUnlocked(true);
   tool.setEquipped(true);
   assert.equal(tool.getState(), VR_ATTRACTOR_STATES.IDLE);
