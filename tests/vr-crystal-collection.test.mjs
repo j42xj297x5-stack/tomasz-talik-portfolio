@@ -22,7 +22,7 @@ assert.ok(calculatedSpawn.distanceTo(new THREE.Vector3(3.7, 2.5, 3)) < 1e-8,
   'spawn starts at the glyph world position and moves toward the world center');
 assert.equal(calculatedSpawn.y, 2.5, 'spawn height is not grounded');
 
-function harness() {
+function harness(canGrabController = () => true) {
   const scene = new THREE.Scene();
   const controller = new THREE.Group(); const holdSocket = new THREE.Group(); controller.add(holdSocket); scene.add(controller);
   const record = { controller, holdSocket, currentRayLength: 3, currentCrystalHit: null, currentCrystalHitDistance: null };
@@ -38,7 +38,7 @@ function harness() {
   const collection = createVrCrystalCollection({ scene, controllers: [record], portalDisplay, insertionTarget, settings,
     insertFeedbackSettings: { proximityRadiusMultiplier: 1.25, rejectDuration: 0.35, rejectDistance: 0.25 }, pages: experienceVrPages,
     progressionController, assetManager: { cloneGltfScene: () => new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.1, 0.1)) },
-    onPreview: (page) => previews.push(page.id), onCommit: (page) => commits.push(page.id) });
+    onPreview: (page) => previews.push(page.id), onCommit: (page) => commits.push(page.id), canGrabController });
   function insert(instance) {
     collection.update(1); record.currentCrystalHit = instance; record.currentCrystalHitDistance = 0.1;
     collection.grab(record); collection.update(1); scene.updateMatrixWorld(true); collection.release(record);
@@ -59,6 +59,12 @@ stocked.record.currentCrystalHit = crystals[0]; stocked.record.currentCrystalHit
 assert.equal(stocked.collection.grab(stocked.record), null, 'a crystal beyond the controller ray cannot be grabbed');
 stocked.record.currentCrystalHit = crystals[0]; stocked.record.currentCrystalHitDistance = 2.99;
 assert.equal(stocked.collection.grab(stocked.record), crystals[0], 'a targeted crystal within the shared ray range can be grabbed');
+
+const gated = harness(() => false);
+const gatedCrystal = gated.collection.spawnOne('creative-ai', glyphFrame); gated.collection.update(1);
+gated.record.currentCrystalHit = gatedCrystal; gated.record.currentCrystalHitDistance = 0.1;
+assert.equal(gated.collection.grab(gated.record), null, 'optional controller gate reserves squeeze for higher-priority interactions');
+gated.collection.dispose();
 stocked.collection.update(1);
 const expectedHoldQuaternion = new THREE.Quaternion().setFromEuler(new THREE.Euler(Math.PI / 6, 0, 0));
 assert.ok(stocked.collection.heldByController.get(stocked.record).object.quaternion.angleTo(expectedHoldQuaternion) < 1e-8,

@@ -27,12 +27,19 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
   targetHalo: { color: 0xbfe9ff, opacity: 0.28, thicknessPixels: 3, pulseDuration: 1.45 },
   shellAttractor: {
     targetDistanceRadiusMultiplier: 3,
+    scanThreshold: 0.1,
     triggerThreshold: 0.1,
+    handCaptureRadius: 0.32,
     captureDistance: 0.8,
     pullAcceleration: 10,
     maxPullSpeed: 8.5,
     captureRadius: 0.28,
-    returnDuration: 0.8
+    returnDuration: 0.8,
+    claimedEmissionMin: 1,
+    claimedEmissionMax: 2,
+    claimedEmissionPulseDuration: 1.4,
+    scanCone: { color: 0x78ff9c, halfAngleDegrees: 2.5, opacityMin: 0.035, opacityMax: 0.065,
+      pulseDuration: 1.6, radialSegments: 14 }
   },
   glyphInteraction: { holdDurationSeconds: 0.5, holdLostGraceSeconds: 0.15 },
   glyphLights: { inwardOffset: 1 },
@@ -191,8 +198,12 @@ export function normalizeExperienceVrSettings(candidate) {
     shellAttractor: {
       targetDistanceRadiusMultiplier: finiteNumber(candidate.shellAttractor?.targetDistanceRadiusMultiplier,
         defaults.shellAttractor.targetDistanceRadiusMultiplier, { min: 1, max: 6 }),
+      scanThreshold: finiteNumber(candidate.shellAttractor?.scanThreshold,
+        defaults.shellAttractor.scanThreshold, { min: 0, max: 1 }),
       triggerThreshold: finiteNumber(candidate.shellAttractor?.triggerThreshold,
         defaults.shellAttractor.triggerThreshold, { min: 0, max: 1 }),
+      handCaptureRadius: finiteNumber(candidate.shellAttractor?.handCaptureRadius,
+        defaults.shellAttractor.handCaptureRadius, { min: 0.1, max: 1 }),
       captureDistance: finiteNumber(candidate.shellAttractor?.captureDistance,
         defaults.shellAttractor.captureDistance, { min: 0.2, max: 2 }),
       pullAcceleration: finiteNumber(candidate.shellAttractor?.pullAcceleration,
@@ -202,7 +213,27 @@ export function normalizeExperienceVrSettings(candidate) {
       captureRadius: finiteNumber(candidate.shellAttractor?.captureRadius,
         defaults.shellAttractor.captureRadius, { min: 0.05, max: 1 }),
       returnDuration: finiteNumber(candidate.shellAttractor?.returnDuration,
-        defaults.shellAttractor.returnDuration, { min: 0.1, max: 2 })
+        defaults.shellAttractor.returnDuration, { min: 0.1, max: 2 }),
+      claimedEmissionMin: finiteNumber(candidate.shellAttractor?.claimedEmissionMin,
+        defaults.shellAttractor.claimedEmissionMin, { min: 0, max: 10 }),
+      claimedEmissionMax: finiteNumber(candidate.shellAttractor?.claimedEmissionMax,
+        defaults.shellAttractor.claimedEmissionMax, { min: 0, max: 10 }),
+      claimedEmissionPulseDuration: finiteNumber(candidate.shellAttractor?.claimedEmissionPulseDuration,
+        defaults.shellAttractor.claimedEmissionPulseDuration, { min: 0.2, max: 10 }),
+      scanCone: {
+        color: Math.round(finiteNumber(candidate.shellAttractor?.scanCone?.color,
+          defaults.shellAttractor.scanCone.color, { min: 0, max: 0xffffff })),
+        halfAngleDegrees: finiteNumber(candidate.shellAttractor?.scanCone?.halfAngleDegrees,
+          defaults.shellAttractor.scanCone.halfAngleDegrees, { min: 0.1, max: 30 }),
+        opacityMin: finiteNumber(candidate.shellAttractor?.scanCone?.opacityMin,
+          defaults.shellAttractor.scanCone.opacityMin, { min: 0, max: 1 }),
+        opacityMax: finiteNumber(candidate.shellAttractor?.scanCone?.opacityMax,
+          defaults.shellAttractor.scanCone.opacityMax, { min: 0, max: 1 }),
+        pulseDuration: finiteNumber(candidate.shellAttractor?.scanCone?.pulseDuration,
+          defaults.shellAttractor.scanCone.pulseDuration, { min: 0.2, max: 10 }),
+        radialSegments: Math.round(finiteNumber(candidate.shellAttractor?.scanCone?.radialSegments,
+          defaults.shellAttractor.scanCone.radialSegments, { min: 3, max: 32 }))
+      }
     },
     glyphInteraction: {
       holdDurationSeconds: finiteNumber(candidate.glyphInteraction?.holdDurationSeconds,

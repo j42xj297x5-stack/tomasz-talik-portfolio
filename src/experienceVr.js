@@ -125,7 +125,8 @@ const { group: glyphRing, nodes } = createOrbitNodes(resolvedPortfolioNodes, { a
 worldRoot.add(glyphRing);
 const entryDirection = new THREE.Vector3(settings.spawn.position.x, 0, settings.spawn.position.z).normalize();
 const glyphOrbit = createVrGlyphOrbit({ nodes, settings: settings.glyphRing, entryDirection });
-const shellSystem = createVrShellSystem({ parent: worldRoot, assetManager, baseRadius: glyphOrbit.effectiveRadius });
+const shellSystem = createVrShellSystem({ parent: worldRoot, assetManager, baseRadius: glyphOrbit.effectiveRadius,
+  emissionSettings: settings.shellAttractor });
 const glyphLights = createVrGlyphLights({ nodes, settings: settings.glyphLights });
 const monkeyAnchor = monkeyModel ?? centralPlaceholder;
 const portalDisplay = createVrPortalDisplay({
@@ -162,10 +163,16 @@ const handModeController = createVrHandModeController({
   attractorTool,
   isUnlocked: () => progressionController.isTierComplete(1)
 });
+let shellAttractorInteraction = null;
 const crystalCollection = createVrCrystalCollection({
   scene, assetManager, controllers: vrControllers.controllers, portalDisplay, insertionTarget: crystalReliquary,
   settings: settings.crystals, haloSettings: settings.targetHalo, insertFeedbackSettings: settings.reliquary.insertFeedback,
   pages: experienceVrPages, progressionController,
+  canGrabController: (record) => {
+    if (record.handedness === 'right' && handModeController.getMode() === 'ASTRO_ATTRACTOR') return false;
+    if (record.handedness === 'left' && shellAttractorInteraction?.isCaptureReadyInHandRange()) return false;
+    return true;
+  },
   onPreview: (page) => portalCanvas.show(resolveExperienceVrPage(page, language)),
   onCommit: (page) => {
     progressFloor.activatePage(page);
@@ -225,11 +232,12 @@ const glyphInteraction = createVrGlyphInteraction({
     crystalCollection.spawnOne(node.userData.id, { glyphWorldPosition, centerWorldPosition });
   }
 });
-const shellAttractorInteraction = createVrShellAttractorInteraction({
+shellAttractorInteraction = createVrShellAttractorInteraction({
   controllers: vrControllers.controllers, shellSystem, handModeController, semanticInput, attractorTool,
-  settings: settings.shellAttractor, haloSettings: settings.targetHalo,
+  settings: settings.shellAttractor, haloSettings: settings.targetHalo, settledParent: worldRoot,
+  crystalHeldByController: crystalCollection.heldByController,
   isHigherPriorityInteractionActive: (record) => Boolean(activateButton.hits.get(record)
-    || releaseButton.hits.get(record) || record.currentHit || record.currentCrystalHit)
+    || releaseButton.hits.get(record) || record.currentHit)
 });
 
 function resize() {

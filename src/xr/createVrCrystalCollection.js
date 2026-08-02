@@ -72,7 +72,8 @@ export function getVrCrystalLayout(pageIds, settings) {
 }
 
 export function createVrCrystalCollection({ scene, assetManager, controllers, portalDisplay, insertionTarget, settings,
-  haloSettings = {}, insertFeedbackSettings = {}, pages = [], progressionController, onPreview, onCommit }) {
+  haloSettings = {}, insertFeedbackSettings = {}, pages = [], progressionController, onPreview, onCommit,
+  canGrabController = () => true }) {
   const instances = [];
   const listeners = [];
   const heldByController = new Map();
@@ -178,7 +179,7 @@ export function createVrCrystalCollection({ scene, assetManager, controllers, po
   }
 
   function grab(controllerRecord) {
-    if (disposed || heldByController.has(controllerRecord)) return null;
+    if (disposed || heldByController.has(controllerRecord) || !canGrabController(controllerRecord)) return null;
     const instance = controllerRecord.currentCrystalHit;
     if (!instance || instance.state !== 'available'
       || controllerRecord.currentCrystalHitDistance == null
