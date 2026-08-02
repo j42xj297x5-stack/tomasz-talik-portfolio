@@ -1,7 +1,9 @@
 import assert from 'node:assert/strict';
 import * as THREE from '../src/vendor/three.js';
 import { createVrSemanticInput, XR_STANDARD_BUTTONS } from '../src/xr/input/createVrSemanticInput.js';
-import { createVrAttractorTool, VR_ATTRACTOR_STATES } from '../src/xr/tools/createVrAttractorTool.js';
+import { createVrAttractorTool, VR_ATTRACTOR_STATES, VR_ATTRACTOR_VISUAL_CONFIG, MODEL_AIM_AXIS,
+  XR_AIM_AXIS, blenderRpmToThree } from '../src/xr/tools/createVrAttractorTool.js';
+import { createVrHandModeController } from '../src/xr/input/createVrHandModeController.js';
 
 function makeButton(value = 0) { return { value, pressed: value > 0.5 }; }
 
@@ -47,17 +49,30 @@ function createContractModel() {
 }
 
 {
+  assert.deepEqual(blenderRpmToThree({ x: 17, y: -31, z: 43 }), { x: 17, y: 43, z: 31 });
   const source = createContractModel();
+  const pivots = ['PIVOT_BASE_MOLEKULAR', 'PIVOT_RING_CALIBRATION', 'PIVOT_RING_MASTER',
+    'PIVOT_RING_INNER', 'PIVOT_ENERGY_SHELL'].map((name) => source.getObjectByName(name));
+  pivots.forEach((pivot, index) => pivot.rotation.set(0.03 * index, 0.05 * index, -0.02 * index));
+  const initialQuaternions = pivots.map((pivot) => pivot.quaternion.clone());
   const energyCell = source.getObjectByName('energy_cell');
   const sourceMaterial = energyCell.material;
   const tool = createVrAttractorTool({ model: source, logger: { warn() {} } });
   assert.notEqual(energyCell.material, sourceMaterial, 'runtime clones the controlled material');
+  assert.ok(Math.abs(tool.modelScale.scale.x - 1 / 3) < 1e-12, 'model wrapper applies central 1/3 scale');
+  assert.ok(MODEL_AIM_AXIS.clone().applyQuaternion(tool.aimCorrection).distanceTo(XR_AIM_AXIS) < 1e-12,
+    'aim correction maps model +Y onto target-ray -Z');
+  const fuelPoints = tool.object.getObjectByName('VrAttractorFuelParticles_earth');
+  assert.equal(fuelPoints.material.size, VR_ATTRACTOR_VISUAL_CONFIG.fuelPointSize);
   tool.setUnlocked(true);
   tool.setEquipped(true);
   assert.equal(tool.getState(), VR_ATTRACTOR_STATES.IDLE);
   assert.equal(tool.object.visible, true);
   tool.setTrigger(1);
   tool.update(0.1);
+  const expectedBase = initialQuaternions[0].clone().multiply(new THREE.Quaternion()
+    .setFromAxisAngle(new THREE.Vector3(0, 1, 0), -3 * Math.PI * 2 * 0.1 / 60));
+  assert.ok(pivots[0].quaternion.angleTo(expectedBase) < 1e-7, 'axial pivot update rotates around local Y');
   const acceleratingRPM = tool.getInnerRPM();
   assert.ok(acceleratingRPM > 0 && acceleratingRPM < 90, 'Ring_inner accelerates rather than jumping to max RPM');
   tool.setTrigger(0);
@@ -68,7 +83,28 @@ function createContractModel() {
   assert.equal(tool.getState(), VR_ATTRACTOR_STATES.UNEQUIPPED);
   assert.equal(tool.object.visible, false);
   assert.equal(tool.getInnerRPM(), 0);
+  pivots.forEach((pivot, index) => assert.ok(pivot.quaternion.angleTo(initialQuaternions[index]) < 1e-7,
+    `${pivot.name} reset restores its imported quaternion`));
   tool.dispose();
+}
+
+{
+  const controller = new THREE.Group();
+  const grip = new THREE.Group();
+  const calls = [];
+  const attractorTool = {
+    setUnlocked() {}, setTrigger() {}, update() {}, setEquipped() {}, reset() {}, dispose() {},
+    attachToTargetRay(parent) { calls.push(parent); }
+  };
+  const handModes = createVrHandModeController({
+    controllers: [{ handedness: 'right', controller, grip }],
+    semanticInput: { update: () => ({ toggleRightTool: false, primaryAction: 0 }), reset() {} },
+    attractorTool,
+    isUnlocked: () => true
+  });
+  handModes.update(0.016);
+  assert.equal(calls[0], controller, 'Astro mount uses right target-ray controller');
+  assert.notEqual(calls[0], grip, 'Astro mount does not use right grip');
 }
 
 console.log('vr-attractor-tool tests passed');

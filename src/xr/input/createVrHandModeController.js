@@ -10,8 +10,8 @@ export function createVrHandModeController({ controllers, semanticInput, attract
     const input = semanticInput.update();
     const unlocked = Boolean(isUnlocked());
     attractorTool.setUnlocked(unlocked);
-    const rightGrip = controllers.find((controller) => controller.handedness === 'right')?.grip ?? null;
-    attractorTool.attachToGrip(rightGrip);
+    const rightRecord = controllers.find((record) => record.handedness === 'right') ?? null;
+    attractorTool.attachToTargetRay(rightRecord?.controller ?? null);
     if (!unlocked && mode !== VR_RIGHT_HAND_MODES.NORMAL_HAND) setMode(VR_RIGHT_HAND_MODES.NORMAL_HAND);
     if (unlocked && input.toggleRightTool) {
       setMode(mode === VR_RIGHT_HAND_MODES.NORMAL_HAND
