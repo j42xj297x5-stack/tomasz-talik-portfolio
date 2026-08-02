@@ -22,6 +22,9 @@ import { createVrReliquaryActivateButton } from './xr/createVrReliquaryActivateB
 import { createVrReliquaryReleaseButton } from './xr/createVrReliquaryReleaseButton.js';
 import { createVrProgressFloor, FLOOR_WORLD_Y_OFFSET } from './xr/floor/createVrProgressFloor.js';
 import { createVrProgressionController } from './xr/progression/createVrProgressionController.js';
+import { createVrSemanticInput } from './xr/input/createVrSemanticInput.js';
+import { createVrHandModeController } from './xr/input/createVrHandModeController.js';
+import { createVrAttractorTool } from './xr/tools/createVrAttractorTool.js';
 import { experienceVrPages, getExperienceVrPages, resolveExperienceVrPage } from './content/experienceVrPages.js';
 
 const app = document.querySelector('#app');
@@ -88,7 +91,7 @@ const centralPlaceholder = createCentralObject();
 worldRoot.add(centralPlaceholder);
 
 const vrAssets = getPreloadAssets([...INITIAL_PRELOAD_GROUPS, ...DEFERRED_PRELOAD_GROUPS])
-  .filter(({ id }) => id === 'gltf-loader-module' || id === 'monkey-model' || id === 'vr-portal-model' || id.startsWith('vr-progress-floor-') || id === 'vr-crystal-reliquary-model' || id.startsWith('vr-crystal-reliquary-button-') || id.startsWith('glyph-') || id.startsWith('vr-crystal-'))
+  .filter(({ id }) => id === 'gltf-loader-module' || id === 'monkey-model' || id === 'vr-portal-model' || id === 'vr-astro-attractor-model' || id.startsWith('vr-progress-floor-') || id === 'vr-crystal-reliquary-model' || id.startsWith('vr-crystal-reliquary-button-') || id.startsWith('glyph-') || id.startsWith('vr-crystal-'))
   .map((asset) => ({ ...asset, critical: asset.id === 'gltf-loader-module' }));
 const loadingDiagnostics = createLoadingDiagnostics(vrAssets);
 const assetManager = createAssetManager({ diagnostics: loadingDiagnostics });
@@ -146,6 +149,14 @@ const crystalReliquary = createVrCrystalReliquary({
 });
 const locomotion = createVrLocomotion({ playerRig, renderer, camera, settings: settings.locomotion });
 const progressionController = createVrProgressionController({ pages: experienceVrPages });
+const attractorTool = createVrAttractorTool({ model: assetManager.cloneGltfScene('vr-astro-attractor-model') });
+const semanticInput = createVrSemanticInput({ renderer });
+const handModeController = createVrHandModeController({
+  controllers: vrControllers.controllers,
+  semanticInput,
+  attractorTool,
+  isUnlocked: () => progressionController.isTierComplete(1)
+});
 const crystalCollection = createVrCrystalCollection({
   scene, assetManager, controllers: vrControllers.controllers, portalDisplay, insertionTarget: crystalReliquary,
   settings: settings.crystals, haloSettings: settings.targetHalo, insertFeedbackSettings: settings.reliquary.insertFeedback,
@@ -232,6 +243,7 @@ function renderFrame() {
   progressFloor.update(delta);
   activateButton.update(delta);
   releaseButton.update(delta);
+  handModeController.update(delta);
   vrControllers.resolveVisualRayLength();
   glyphLights.update({
     hovered: glyphInteraction.hoveredGlyphs,
@@ -265,6 +277,7 @@ function handleSessionEnd() {
   glyphLights.reset();
   glyphInteraction.reset();
   vrControllers.reset();
+  handModeController.reset();
   showReadyState({ ended: hasEnteredSession });
 }
 
@@ -282,6 +295,7 @@ async function enterVr() {
   glyphLights.reset();
   glyphInteraction.reset();
   vrControllers.reset();
+  handModeController.reset();
   enterButton.disabled = true;
   status.textContent = copy.entering;
   let requestedSession = null;
@@ -319,6 +333,7 @@ async function enterVr() {
     restorePortalWaitingState();
     locomotion.reset();
     vrControllers.reset();
+    handModeController.reset();
     status.textContent = copy.error;
     enterButton.disabled = false;
     exitButton.hidden = true;
@@ -328,6 +343,7 @@ async function enterVr() {
 enterButton.addEventListener('click', enterVr);
 exitButton.addEventListener('click', () => { void activeSession?.end(); });
 window.addEventListener('pagehide', () => {
+  handModeController.dispose();
   activateButton.reset();
   releaseButton.reset();
   activateButton.dispose();
