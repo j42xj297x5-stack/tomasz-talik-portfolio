@@ -24,6 +24,7 @@ import { createVrProgressFloor, FLOOR_WORLD_Y_OFFSET } from './xr/floor/createVr
 import { createVrProgressionController } from './xr/progression/createVrProgressionController.js';
 import { createVrProgressionShortcut } from './xr/progression/applyVrProgressionShortcut.js';
 import { createVrShellSystem } from './xr/shells/createVrShellSystem.js';
+import { createVrShellAttractorInteraction } from './xr/shells/createVrShellAttractorInteraction.js';
 import { createVrSemanticInput } from './xr/input/createVrSemanticInput.js';
 import { createVrHandModeController } from './xr/input/createVrHandModeController.js';
 import { createVrAttractorTool } from './xr/tools/createVrAttractorTool.js';
@@ -224,6 +225,12 @@ const glyphInteraction = createVrGlyphInteraction({
     crystalCollection.spawnOne(node.userData.id, { glyphWorldPosition, centerWorldPosition });
   }
 });
+const shellAttractorInteraction = createVrShellAttractorInteraction({
+  controllers: vrControllers.controllers, shellSystem, handModeController, semanticInput, attractorTool,
+  settings: settings.shellAttractor, haloSettings: settings.targetHalo,
+  isHigherPriorityInteractionActive: (record) => Boolean(activateButton.hits.get(record)
+    || releaseButton.hits.get(record) || record.currentHit || record.currentCrystalHit)
+});
 
 function resize() {
   const width = canvas.clientWidth || innerWidth || 1;
@@ -252,6 +259,7 @@ function renderFrame() {
   activateButton.update(delta);
   releaseButton.update(delta);
   handModeController.update(delta);
+  shellAttractorInteraction.update(delta);
   vrControllers.resolveVisualRayLength();
   glyphLights.update({
     hovered: glyphInteraction.hoveredGlyphs,
@@ -282,6 +290,7 @@ function handleSessionEnd() {
   playerRig.position.set(settings.spawn.position.x, settings.spawn.position.y, settings.spawn.position.z);
   orientPlayerRig(playerRig, settings.spawn.lookAt);
   glyphOrbit.reset();
+  shellAttractorInteraction.reset();
   shellSystem.reset();
   syncTierOneWorldState();
   glyphLights.reset();
@@ -302,6 +311,7 @@ async function enterVr() {
   playerRig.position.set(settings.spawn.position.x, settings.spawn.position.y, settings.spawn.position.z);
   orientPlayerRig(playerRig, settings.spawn.lookAt);
   glyphOrbit.reset();
+  shellAttractorInteraction.reset();
   shellSystem.reset();
   syncTierOneWorldState();
   glyphLights.reset();
@@ -345,6 +355,7 @@ async function enterVr() {
     restorePortalWaitingState();
     locomotion.reset();
     vrControllers.reset();
+    shellAttractorInteraction.reset();
     handModeController.reset();
     status.textContent = copy.error;
     enterButton.disabled = false;
@@ -355,6 +366,7 @@ async function enterVr() {
 enterButton.addEventListener('click', enterVr);
 exitButton.addEventListener('click', () => { void activeSession?.end(); });
 window.addEventListener('pagehide', () => {
+  shellAttractorInteraction.dispose();
   handModeController.dispose();
   activateButton.reset();
   releaseButton.reset();
