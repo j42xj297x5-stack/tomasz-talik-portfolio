@@ -44,19 +44,21 @@ export function createVrShellAttractorInteraction({ controllers, shellSystem, ha
   const candidates = shellSystem.records.map((record) => ({ shell: record.object, radius: record.boundingRadius,
     getWorldCenter(result) { result.copy(record.boundingCenter); record.object.localToWorld(result); record.object.getWorldScale(scale);
       this.radius = record.boundingRadius * Math.max(scale.x, scale.y, scale.z); return result; } }));
-  let target = null, activePull = null, captureReady = null, heldShell = null, leftRayTarget = null;
+  let target = null, activePull = null, captureReady = null, heldShell = null, heldByRecord = null, leftRayTarget = null;
+  const placedRayTargets = new Set();
   let pullSpeed = 0, pullStartDistance = 1;
   let disposed = false;
   const isEquipped = () => handModeController.getMode() === 'ASTRO_ATTRACTOR';
   const isValidCandidate = ({ shell }) => shell.visible !== false && shell.userData.attractorTarget === true
     && shell.userData.attractorType === 'shell' && ['orbiting', 'targeted'].includes(shell.userData.shellState);
-  function syncHalo(shell) { halos.get(shell)?.setVisible(shell === target || shell === leftRayTarget); }
+  function syncHalo(shell) { halos.get(shell)?.setVisible(shell === target || shell === leftRayTarget || placedRayTargets.has(shell)); }
   function clearTarget() { const previous = target; if (target?.userData.shellState === 'targeted') target.userData.shellState = 'orbiting';
     target = null; if (previous) syncHalo(previous); }
   function setTarget(shell) { if (target === shell) return; clearTarget(); target = shell;
     if (target) { target.userData.shellState = 'targeted'; syncHalo(target); } }
   function setWorldPosition(object, position) { localPosition.copy(position); object.parent.worldToLocal(localPosition); object.position.copy(localPosition); }
-  function finishTool() { attractorTool.setTarget(null); attractorTool.setPullStrength(0); attractorTool.setState(VR_ATTRACTOR_STATES.IDLE); }
+  function finishTool() { attractorTool.setTarget(null); attractorTool.setPullStrength(0);
+    if (isEquipped()) attractorTool.setState(VR_ATTRACTOR_STATES.IDLE); }
   function beginReturn(shell) { halos.get(shell)?.setVisible(false); shellSystem.returnToOrbit(shell, settings.returnDuration);
     if (captureReady === shell) captureReady = null; activePull = null; pullSpeed = 0; target = null; finishTool(); }
   function currentInput() { return semanticInput.getState?.() ?? { primaryAction: 0, grabAction: 0 }; }
@@ -69,6 +71,41 @@ export function createVrShellAttractorInteraction({ controllers, shellSystem, ha
   function clearLeftShellHit(leftRecord = getLeftRecord()) { if (leftRecord) {
     leftRecord.currentShellHit = null; leftRecord.currentShellHitDistance = null; }
     const previous = leftRayTarget; leftRayTarget = null; if (previous) syncHalo(previous); }
+  function clearPlacedShellHit(record) {
+    const previous = record.currentPlacedShellHit;
+    record.currentPlacedShellHit = null; record.currentPlacedShellHitDistance = null;
+    if (previous) { placedRayTargets.delete(previous); syncHalo(previous); }
+  }
+  function isVisibleHit(object, shell) {
+    for (let current = object; current; current = current.parent) {
+      if (current.visible === false) return false;
+      if (current === shell) return true;
+    }
+    return false;
+  }
+  function updatePlacedShellHit(record) {
+    if (!record?.controller || !record.isConnected || !Number.isFinite(record.currentRayLength)
+      || crystalHeldByController.has(record) || heldByRecord === record
+      || (record.handedness === 'right' && isEquipped())) return;
+    record.controller.getWorldPosition(origin); record.controller.getWorldQuaternion(worldQuaternion);
+    direction.copy(LOCAL_DIRECTION).applyQuaternion(worldQuaternion).normalize(); raycaster.set(origin, direction);
+    raycaster.near = 0; raycaster.far = record.currentRayLength;
+    let nearest = null;
+    for (const shell of shellSystem.instances) {
+      if (shell.userData.shellState !== 'placed' || shell.visible === false) continue;
+      const hit = raycaster.intersectObject(shell, true).find(({ object }) => isVisibleHit(object, shell));
+      if (hit && (!nearest || hit.distance < nearest.distance)) nearest = { shell, distance: hit.distance };
+    }
+    if (!nearest) return;
+    record.currentPlacedShellHit = nearest.shell; record.currentPlacedShellHitDistance = nearest.distance;
+    record.reportRayHit?.(nearest.distance); placedRayTargets.add(nearest.shell);
+  }
+  function updatePlacedShellHits() {
+    const previous = new Set(placedRayTargets); placedRayTargets.clear();
+    controllers.forEach((record) => { record.currentPlacedShellHit = null; record.currentPlacedShellHitDistance = null; });
+    controllers.forEach(updatePlacedShellHit);
+    new Set([...previous, ...placedRayTargets]).forEach(syncHalo);
+  }
   function updateCaptureAnchor(rightRecord) { rightRecord.controller.getWorldQuaternion(worldQuaternion);
     direction.copy(LOCAL_DIRECTION).applyQuaternion(worldQuaternion).normalize();
     attractorTool.getMasterRingWorldPosition(anchorWorldPosition);
@@ -90,12 +127,25 @@ export function createVrShellAttractorInteraction({ controllers, shellSystem, ha
     && leftRecord.currentShellHitDistance <= leftRecord.currentRayLength); }
   function takeWithLeftHand(leftRecord = getLeftRecord()) { if (!handIsFree(leftRecord) || !hasCurrentShellHit(leftRecord)) return false; const shell = captureReady;
     leftRecord.holdSocket.attach(shell); shell.userData.shellState = 'held'; shell.userData.attractorTarget = false;
-    captureReady = null; activePull = null; target = null; heldShell = shell; clearLeftShellHit(leftRecord); finishTool(); return true; }
-  function placeHeldShell(leftRecord = getLeftRecord()) { if (!leftRecord?.isConnected || !heldShell) return false; const shell = heldShell; settledParent.attach(shell);
-    shell.userData.shellState = 'placed'; shell.userData.attractorTarget = false; heldShell = null; return true; }
+    captureReady = null; activePull = null; target = null; heldShell = shell; heldByRecord = leftRecord;
+    clearLeftShellHit(leftRecord); finishTool(); return true; }
+  function hasCurrentPlacedShellHit(record) { return Boolean(record?.currentPlacedShellHit
+    && record.currentPlacedShellHit.userData.shellState === 'placed'
+    && record.currentPlacedShellHitDistance <= record.currentRayLength); }
+  function takePlacedShell(record) {
+    if (!handIsFree(record) || !hasCurrentPlacedShellHit(record)
+      || (record.handedness === 'right' && isEquipped())) return false;
+    const shell = record.currentPlacedShellHit; record.holdSocket.attach(shell);
+    shell.userData.shellState = 'held'; shell.userData.attractorTarget = false;
+    heldShell = shell; heldByRecord = record; clearPlacedShellHit(record); return true;
+  }
+  function placeHeldShell(record) { if (!record?.isConnected || heldByRecord !== record || !heldShell) return false;
+    const shell = heldShell; settledParent.attach(shell); shell.userData.shellState = 'placed'; shell.userData.attractorTarget = false;
+    heldShell = null; heldByRecord = null; return true; }
   const squeezeListeners = controllers.map((record) => {
-    const onSqueezeStart = () => { if (record.handedness === 'left') takeWithLeftHand(record); };
-    const onSqueezeEnd = () => { if (record.handedness === 'left') placeHeldShell(record); };
+    const onSqueezeStart = () => { if (takePlacedShell(record)) return;
+      if (record.handedness === 'left') takeWithLeftHand(record); };
+    const onSqueezeEnd = () => { placeHeldShell(record); };
     record.controller.addEventListener('squeezestart', onSqueezeStart);
     record.controller.addEventListener('squeezeend', onSqueezeEnd);
     return { record, onSqueezeStart, onSqueezeEnd };
@@ -105,6 +155,7 @@ export function createVrShellAttractorInteraction({ controllers, shellSystem, ha
     if (disposed) return; const delta = Math.max(0, Number.isFinite(deltaSeconds) ? deltaSeconds : 0);
     const rightRecord = getRightRecord();
     const leftRecord = getLeftRecord();
+    updatePlacedShellHits();
     if (!rightRecord?.controller || !rightRecord.isConnected) {
       scanCone.update(delta, false); clearTarget();
       if (activePull) beginReturn(activePull); else finishTool();
@@ -143,7 +194,7 @@ export function createVrShellAttractorInteraction({ controllers, shellSystem, ha
   }
   function reset() { scanCone.update(0, false); if (activePull) shellSystem.returnToOrbit(activePull, settings.returnDuration);
     if (heldShell) shellSystem.returnToOrbit(heldShell, settings.returnDuration); clearTarget(); activePull = null; captureReady = null;
-    heldShell = null; pullSpeed = 0; clearLeftShellHit(); finishTool(); }
+    heldShell = null; heldByRecord = null; pullSpeed = 0; clearLeftShellHit(); controllers.forEach(clearPlacedShellHit); finishTool(); }
   function dispose() { if (disposed) return; reset(); disposed = true;
     squeezeListeners.forEach(({ record, onSqueezeStart, onSqueezeEnd }) => {
       record.controller.removeEventListener('squeezestart', onSqueezeStart);
@@ -151,7 +202,8 @@ export function createVrShellAttractorInteraction({ controllers, shellSystem, ha
     });
     captureAnchor.removeFromParent(); scanCone.dispose();
     halos.forEach((halo) => halo.dispose()); halos.clear(); }
-  return { captureAnchor, scanCone, maxTargetDistance, halfAngleRadians, update, reset, dispose, hasCurrentShellHit,
+  return { captureAnchor, scanCone, maxTargetDistance, halfAngleRadians, update, reset, dispose,
+    hasCurrentShellHit: (record) => hasCurrentPlacedShellHit(record) || hasCurrentShellHit(record),
     get target() { return target; }, get activePull() { return activePull; }, get captureReady() { return captureReady; },
     get heldShell() { return heldShell; } };
 }

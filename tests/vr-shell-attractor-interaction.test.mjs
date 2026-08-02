@@ -9,13 +9,17 @@ import { createVrHandModeController } from '../src/xr/input/createVrHandModeCont
   const ray = new THREE.Group();
   const handRecord = { handedness: 'right', controller: new THREE.Group(), ray, isConnected: true };
   let toggleRightTool = false;
+  const astroModel = { visible: false };
   const handModes = createVrHandModeController({ controllers: [handRecord],
     semanticInput: { update: () => ({ toggleRightTool, primaryAction: 0 }), reset() {} }, isUnlocked: () => true,
-    attractorTool: { setUnlocked() {}, attachToTargetRay() {}, setTrigger() {}, update() {}, setEquipped() {}, reset() {}, dispose() {} } });
-  handModes.update(0); assert.equal(ray.visible, true);
+    attractorTool: { setUnlocked() {}, attachToTargetRay() {}, setTrigger() {}, update() {},
+      setEquipped(equipped) { astroModel.visible = equipped; }, reset() { astroModel.visible = false; }, dispose() {} } });
+  handModes.update(0); assert.equal(ray.visible, true); assert.equal(astroModel.visible, false);
   toggleRightTool = true; handModes.update(0); assert.equal(ray.visible, false, 'Astro hides the right visible ray');
+  assert.equal(astroModel.visible, true, 'A equips and shows Astro');
   toggleRightTool = false; handModes.update(0); toggleRightTool = true; handModes.update(0);
   assert.equal(ray.visible, true, 'returning to normal hand restores the connected ray');
+  assert.equal(astroModel.visible, false, 'a second A unequips and hides Astro');
   handModes.dispose();
 }
 
@@ -36,7 +40,9 @@ const shellSettings = { targetDistanceRadiusMultiplier: 3, scanThreshold: 0.1, t
 const shellSystem = createVrShellSystem({ parent, assetManager, baseRadius: 10, emissionSettings: shellSettings });
 shellSystem.setActive(true);
 const rightController = new THREE.Group(), leftController = new THREE.Group(); parent.add(rightController, leftController);
-const right = { handedness: 'right', controller: rightController, holdSocket: new THREE.Group(), isConnected: true, currentRayLength: 2.3 };
+const rightRayHits = [];
+const right = { handedness: 'right', controller: rightController, holdSocket: new THREE.Group(), isConnected: true,
+  currentRayLength: 2.3, reportRayHit: (distance) => rightRayHits.push(distance) };
 const leftRayHits = [];
 const left = { handedness: 'left', controller: leftController, holdSocket: new THREE.Group(), isConnected: true, currentRayLength: 2.3, reportRayHit: (distance) => leftRayHits.push(distance) };
 rightController.add(right.holdSocket); leftController.add(left.holdSocket);
@@ -82,6 +88,33 @@ shellSystem.update(0.35); const pulseB = shellSystem.getRecord(shell).emissiveMa
 assert.ok(pulseA >= 1 && pulseA <= 2 && pulseB >= 1 && pulseB <= 2 && pulseA !== pulseB);
 leftController.dispatchEvent({ type: 'squeezeend' }); assert.equal(shell.userData.shellState, 'placed'); assert.equal(shell.parent, parent);
 assert.equal(shell.userData.attractorTarget, false);
+interaction.update(0.016);
+assert.equal(left.currentPlacedShellHit, shell, 'a placed shell is reacquired by the ordinary left ray');
+assert.ok(leftRayHits.at(-1) <= 2.3, 'placed-shell targeting reports a hit within the ordinary 2.3m ray');
+assert.ok(shell.getObjectByName('VrTargetHalo:mesh')?.visible, 'placed targeting reuses VrTargetHalo');
+assert.equal(interaction.hasCurrentShellHit(left), true, 'shell hit can take priority over crystal grab');
+leftController.dispatchEvent({ type: 'squeezestart' }); assert.equal(shell.userData.shellState, 'held');
+leftController.dispatchEvent({ type: 'squeezeend' }); assert.equal(shell.userData.shellState, 'placed');
+interaction.update(0.016); leftController.dispatchEvent({ type: 'squeezestart' });
+assert.equal(shell.userData.shellState, 'held', 'placed -> held can be repeated without a claim limit');
+leftController.dispatchEvent({ type: 'squeezeend' });
+
+mode = 'ASTRO_ATTRACTOR'; interaction.update(0.016);
+assert.equal(right.currentPlacedShellHit, null, 'the right ordinary shell ray is disabled while Astro is equipped');
+mode = 'NORMAL_HAND';
+rightController.position.copy(shell.getWorldPosition(new THREE.Vector3())).add(new THREE.Vector3(0, 0, 2));
+parent.worldToLocal(rightController.position); parent.updateMatrixWorld(true); interaction.update(0.016);
+assert.equal(right.currentPlacedShellHit, shell, 'the right normal hand targets a placed shell');
+assert.ok(rightRayHits.at(-1) <= 2.3); rightController.dispatchEvent({ type: 'squeezestart' });
+assert.equal(shell.parent, right.holdSocket, 'the right normal hand grabs its placed-shell ray hit');
+assert.equal(shell.userData.attractorTarget, false); rightController.dispatchEvent({ type: 'squeezeend' });
+assert.equal(shell.userData.shellState, 'placed');
+
+const stateCallsBeforeNormalFinish = calls.states.length; grabAction = 0; interaction.update(0.016);
+assert.equal(calls.states.length, stateCallsBeforeNormalFinish, 'finishTool cannot promote unequipped Astro to IDLE in NORMAL_HAND');
+leftController.position.set(10, 0, 0); rightController.position.set(-10, 0, 0); parent.updateMatrixWorld(true); interaction.update(0.016);
+assert.equal(interaction.hasCurrentShellHit(left), false, 'without a shell hit the crystal grab path remains unblocked');
+assert.equal(shell.getObjectByName('VrTargetHalo:mesh')?.visible, false, 'losing the placed hit disables its halo');
 const materialOne = shellSystem.getRecord(shellSystem.instances[0]).emissiveMaterials[0];
 const materialTwo = shellSystem.getRecord(shellSystem.instances[1]).emissiveMaterials[0];
 assert.notEqual(materialOne, materialTwo); assert.equal(materialOne.emissiveMap, authoredMaterial.emissiveMap);
