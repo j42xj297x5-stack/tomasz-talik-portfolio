@@ -75,6 +75,60 @@ const materialTwo = shellSystem.getRecord(shellSystem.instances[1]).emissiveMate
 assert.notEqual(materialOne, materialTwo); assert.equal(materialOne.emissiveMap, authoredMaterial.emissiveMap);
 materialOne.emissiveIntensity = 7; assert.notEqual(materialTwo.emissiveIntensity, 7);
 
+function assertLateHandednessLifecycle({ leftIndex, rightIndex }) {
+  const lifecycleParent = new THREE.Group();
+  const lifecycleGeometry = new THREE.BoxGeometry(0.2, 0.2, 0.2);
+  const lifecycleMaterial = new THREE.MeshStandardMaterial({ emissive: 0xffffff, emissiveIntensity: 0.4 });
+  const lifecycleAssets = { cloneGltfScene() { const root = new THREE.Group();
+    root.add(new THREE.Mesh(lifecycleGeometry, lifecycleMaterial)); return root; } };
+  const lifecycleShellSystem = createVrShellSystem({ parent: lifecycleParent, assetManager: lifecycleAssets,
+    baseRadius: 10, emissionSettings: shellSettings });
+  lifecycleShellSystem.setActive(true);
+  const records = [0, 1].map(() => {
+    const controller = new THREE.Group(), holdSocket = new THREE.Group(); controller.add(holdSocket); lifecycleParent.add(controller);
+    return { handedness: '', controller, holdSocket, isConnected: false };
+  });
+  let lifecyclePrimaryAction = 0, lifecycleGrabAction = 1;
+  const lifecycleTool = { setState() {}, setTarget() {}, setPullStrength() {} };
+  let lifecycleInteraction;
+  assert.doesNotThrow(() => { lifecycleInteraction = createVrShellAttractorInteraction({ controllers: records,
+    shellSystem: lifecycleShellSystem, handModeController: { getMode: () => 'ASTRO_ATTRACTOR' },
+    semanticInput: { getState: () => ({ primaryAction: lifecyclePrimaryAction, grabAction: lifecycleGrabAction }) },
+    attractorTool: lifecycleTool, settings: shellSettings, haloSettings: {}, settledParent: lifecycleParent }); });
+  assert.equal(lifecycleInteraction.scanCone.object.parent, null, 'cone has no hand parent before WebXR connected');
+  assert.equal(lifecycleInteraction.scanCone.object.visible, false);
+  assert.doesNotThrow(() => lifecycleInteraction.update(0.016));
+  assert.equal(lifecycleInteraction.target, null);
+
+  const leftRecord = records[leftIndex], rightRecord = records[rightIndex];
+  leftRecord.handedness = 'left'; leftRecord.isConnected = true;
+  rightRecord.handedness = 'right'; rightRecord.isConnected = true;
+  const lifecycleShell = lifecycleShellSystem.instances[0]; lifecycleShell.position.set(0, 0, -12);
+  lifecycleParent.updateMatrixWorld(true); lifecycleInteraction.update(0.016);
+  assert.equal(lifecycleInteraction.scanCone.object.parent, rightRecord.controller, 'cone attaches to the runtime right hand');
+  assert.equal(lifecycleInteraction.target, lifecycleShell, 'runtime right hand performs targeting');
+
+  rightRecord.handedness = ''; rightRecord.isConnected = false;
+  assert.doesNotThrow(() => lifecycleInteraction.update(0.016));
+  assert.equal(lifecycleInteraction.scanCone.object.visible, false, 'right disconnect hides the cone');
+  assert.equal(lifecycleInteraction.target, null, 'right disconnect clears targeting');
+  rightRecord.handedness = 'right'; rightRecord.isConnected = true;
+  lifecycleInteraction.update(0.016); lifecyclePrimaryAction = 1; lifecycleInteraction.update(0.016);
+  lifecycleShell.position.copy(lifecycleInteraction.captureAnchor.getWorldPosition(new THREE.Vector3()));
+  lifecycleParent.worldToLocal(lifecycleShell.position); lifecycleParent.updateMatrixWorld(true); lifecycleInteraction.update(0.016);
+  leftRecord.controller.position.copy(lifecycleShell.getWorldPosition(new THREE.Vector3()));
+  lifecycleParent.worldToLocal(leftRecord.controller.position); lifecycleParent.updateMatrixWorld(true);
+  rightRecord.controller.dispatchEvent({ type: 'squeezestart' });
+  assert.equal(lifecycleInteraction.heldShell, null, 'a non-left controller cannot claim the shell');
+  leftRecord.controller.dispatchEvent({ type: 'squeezestart' });
+  assert.equal(lifecycleInteraction.heldShell, lifecycleShell, 'the runtime left hand performs proximity handoff');
+
+  lifecycleInteraction.dispose(); lifecycleShellSystem.dispose(); lifecycleGeometry.dispose(); lifecycleMaterial.dispose();
+}
+
+assertLateHandednessLifecycle({ leftIndex: 0, rightIndex: 1 });
+assertLateHandednessLifecycle({ leftIndex: 1, rightIndex: 0 });
+
 const candidates = (entries) => entries.map(({ position, radius = 0, shell: candidateShell = {} }) => ({ shell: candidateShell, radius,
   getWorldCenter: (out) => out.copy(position) }));
 const cone = { origin: new THREE.Vector3(), direction: new THREE.Vector3(0, 0, -1), maxDistance: 10,
