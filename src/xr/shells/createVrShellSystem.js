@@ -27,14 +27,21 @@ export function createVrShellSystem({ parent, assetManager, baseRadius }) {
       inclination: -Math.PI / 3 + (index % 7) * Math.PI / 18,
       ascendingNode: (index * GOLDEN_ANGLE * 0.61) % TAU,
       angularSpeed: 0.035 + (index % 5) * 0.006, direction: index % 2 === 0 ? 1 : -1,
-      selfRotationSpeed: 0.025 + (index % 4) * 0.008,
-      initialRotation: shell.rotation.clone()
+      selfRotationAxis: new THREE.Vector3(
+        Math.sin((index + 1) * 1.71),
+        0.45 + ((index * 7) % 5) * 0.17,
+        Math.cos((index + 1) * 2.13)
+      ).normalize(),
+      selfRotationSpeed: 0.10 + (index % 7) * 0.02,
+      initialRotation: shell.rotation.clone(), initialQuaternion: shell.quaternion.clone(),
+      orbitPosition: new THREE.Vector3(), returnStart: new THREE.Vector3(), returnElapsed: 0, returning: false
     };
     shell.name = attractorId;
     Object.assign(shell.userData, {
       attractorTarget: true, attractorType: 'shell', attractorId, shellState: 'orbiting', shellAssetId: assetId,
       shellOrbit: Object.freeze({ radius: record.radius, phase: record.phase, inclination: record.inclination,
-        ascendingNode: record.ascendingNode, angularSpeed: record.angularSpeed, direction: record.direction })
+        ascendingNode: record.ascendingNode, angularSpeed: record.angularSpeed, direction: record.direction }),
+      selfRotationAxis: record.selfRotationAxis.clone(), selfRotationSpeed: record.selfRotationSpeed
     });
     object.add(shell);
     instances.push(shell);
@@ -50,18 +57,39 @@ export function createVrShellSystem({ parent, assetManager, baseRadius }) {
       const z = planeY * Math.cos(record.inclination);
       const cosNode = Math.cos(record.ascendingNode);
       const sinNode = Math.sin(record.ascendingNode);
-      record.object.position.set(x * cosNode - z * sinNode, y, x * sinNode + z * cosNode);
-      record.object.rotation.copy(record.initialRotation);
-      record.object.rotation.y += elapsed * record.selfRotationSpeed * record.direction;
+      record.orbitPosition.set(x * cosNode - z * sinNode, y, x * sinNode + z * cosNode);
+      const state = record.object.userData.shellState;
+      if (record.returning) {
+        record.returnElapsed += currentDelta;
+        const t = Math.min(1, record.returnElapsed / record.returnDuration);
+        const eased = t * t * (3 - 2 * t);
+        record.object.position.lerpVectors(record.returnStart, record.orbitPosition, eased);
+        if (t >= 1) { record.returning = false; record.object.userData.shellState = 'orbiting'; }
+      } else if (state !== 'pulling' && state !== 'held') record.object.position.copy(record.orbitPosition);
+      record.object.quaternion.copy(record.initialQuaternion).multiply(
+        scratchQuaternion.setFromAxisAngle(record.selfRotationAxis, elapsed * record.selfRotationSpeed * record.direction));
     });
   }
+  const scratchQuaternion = new THREE.Quaternion();
+  let currentDelta = 0;
   function setActive(value) { if (!disposed) { active = Boolean(value); object.visible = active; } }
   function update(deltaSeconds) {
     if (disposed || !active) return;
-    elapsed += Math.max(0, Number.isFinite(deltaSeconds) ? deltaSeconds : 0);
+    currentDelta = Math.max(0, Number.isFinite(deltaSeconds) ? deltaSeconds : 0);
+    elapsed += currentDelta;
     applyPositions();
   }
-  function reset() { if (!disposed) { elapsed = 0; applyPositions(); } }
+  function returnToOrbit(shell, duration = 0.8) {
+    const record = records.find((candidate) => candidate.object === shell);
+    if (!record || disposed) return false;
+    object.attach(shell); record.returnStart.copy(shell.position); record.returnElapsed = 0;
+    record.returnDuration = Math.max(0.001, duration); record.returning = true; shell.userData.shellState = 'orbiting';
+    return true;
+  }
+  function reset() { if (!disposed) { elapsed = 0; currentDelta = 0; records.forEach((record) => {
+    if (record.object.parent !== object) object.attach(record.object);
+    record.returning = false; record.returnElapsed = 0; record.object.userData.shellState = 'orbiting';
+  }); applyPositions(); } }
   function dispose() {
     if (disposed) return;
     disposed = true; active = false; object.visible = false;
@@ -69,5 +97,5 @@ export function createVrShellSystem({ parent, assetManager, baseRadius }) {
   }
   applyPositions();
   return { object, instances, innerRadius: baseRadius, outerRadius: baseRadius * 2,
-    get active() { return active; }, setActive, update, reset, dispose };
+    get active() { return active; }, setActive, update, returnToOrbit, reset, dispose };
 }

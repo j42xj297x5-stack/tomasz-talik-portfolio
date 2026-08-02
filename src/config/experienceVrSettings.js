@@ -25,6 +25,15 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
     rayRadialSegments: 6
   },
   targetHalo: { color: 0xbfe9ff, opacity: 0.28, thicknessPixels: 3, pulseDuration: 1.45 },
+  shellAttractor: {
+    targetDistanceRadiusMultiplier: 3,
+    triggerThreshold: 0.1,
+    captureDistance: 0.8,
+    pullAcceleration: 10,
+    maxPullSpeed: 8.5,
+    captureRadius: 0.28,
+    returnDuration: 0.8
+  },
   glyphInteraction: { holdDurationSeconds: 0.5, holdLostGraceSeconds: 0.15 },
   glyphLights: { inwardOffset: 1 },
   glyphRing: {
@@ -178,6 +187,22 @@ export function normalizeExperienceVrSettings(candidate) {
       thicknessPixels: finiteNumber(candidate.targetHalo?.thicknessPixels,
         defaults.targetHalo.thicknessPixels, { min: 0.5, max: 8 }),
       pulseDuration: finiteNumber(candidate.targetHalo?.pulseDuration, defaults.targetHalo.pulseDuration, { min: 1.3, max: 1.6 })
+    },
+    shellAttractor: {
+      targetDistanceRadiusMultiplier: finiteNumber(candidate.shellAttractor?.targetDistanceRadiusMultiplier,
+        defaults.shellAttractor.targetDistanceRadiusMultiplier, { min: 1, max: 6 }),
+      triggerThreshold: finiteNumber(candidate.shellAttractor?.triggerThreshold,
+        defaults.shellAttractor.triggerThreshold, { min: 0, max: 1 }),
+      captureDistance: finiteNumber(candidate.shellAttractor?.captureDistance,
+        defaults.shellAttractor.captureDistance, { min: 0.2, max: 2 }),
+      pullAcceleration: finiteNumber(candidate.shellAttractor?.pullAcceleration,
+        defaults.shellAttractor.pullAcceleration, { min: 1, max: 30 }),
+      maxPullSpeed: finiteNumber(candidate.shellAttractor?.maxPullSpeed,
+        defaults.shellAttractor.maxPullSpeed, { min: 1, max: 20 }),
+      captureRadius: finiteNumber(candidate.shellAttractor?.captureRadius,
+        defaults.shellAttractor.captureRadius, { min: 0.05, max: 1 }),
+      returnDuration: finiteNumber(candidate.shellAttractor?.returnDuration,
+        defaults.shellAttractor.returnDuration, { min: 0.1, max: 2 })
     },
     glyphInteraction: {
       holdDurationSeconds: finiteNumber(candidate.glyphInteraction?.holdDurationSeconds,
