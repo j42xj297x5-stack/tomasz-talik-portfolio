@@ -15,7 +15,7 @@ export function resolveProcessTelemetry({ state = 'IDLE', progress = 0, angularS
   return { phase, label, progress: phase === 'IDLE' ? 0 : clamp01(progress),
     angularSpeed: Math.abs(angularSpeed || 0), processAngle: processAngle || 0,
     active: ACTIVE_PROCESS_STATES.includes(phase), showProgress: phase !== 'IDLE',
-    silhouetteOpacity: phase === 'COMPLETE' ? 0 : 1 - clamp01(progress),
+    silhouetteOpacity: phase === 'COMPLETE' ? 0 : 1,
     colorKey: phase === 'COMPLETE' ? 'complete' : phase === 'IDLE' ? 'idle' : 'process' };
 }
 

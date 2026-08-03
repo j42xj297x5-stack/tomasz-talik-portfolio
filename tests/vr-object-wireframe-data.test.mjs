@@ -1,0 +1,20 @@
+import assert from 'node:assert/strict';
+import * as THREE from '../src/vendor/three.js';
+import { createObjectWireframeData } from '../src/xr/visuals/createObjectWireframeData.js';
+
+const root = new THREE.Group(); root.position.set(40, -12, 8);
+const child = new THREE.Group(); child.position.set(7, 3, -2); child.rotation.y = .4; root.add(child);
+const box = new THREE.Mesh(new THREE.BoxGeometry(2, 4, 6)); box.position.set(5, 0, 0); child.add(box);
+const data = createObjectWireframeData(root, { maxSegments: 8 });
+assert.equal(data.segments.length, 8, 'deterministic cap is enforced');
+const allX = data.segments.flatMap((segment) => [segment.ax, segment.bx]);
+const allY = data.segments.flatMap((segment) => [segment.ay, segment.by]);
+const allZ = data.segments.flatMap((segment) => [segment.az, segment.bz]);
+assert.ok(Math.abs((Math.min(...allX) + Math.max(...allX)) / 2) < 1e-12);
+assert.ok(Math.abs((Math.min(...allY) + Math.max(...allY)) / 2) < 1e-12);
+assert.ok(Math.abs((Math.min(...allZ) + Math.max(...allZ)) / 2) < 1e-12, 'child transforms are root-local and centered');
+assert.ok(Math.max(data.bounds.max[0] - data.bounds.min[0], data.bounds.max[1] - data.bounds.min[1], data.bounds.max[2] - data.bounds.min[2]) <= 2 + 1e-12);
+assert.deepEqual(createObjectWireframeData(root, { maxSegments: 8 }), data, 'generation and reduction are deterministic');
+const other = new THREE.Group(); other.add(new THREE.Mesh(new THREE.OctahedronGeometry(1)));
+assert.notDeepEqual(createObjectWireframeData(other, { maxSegments: 8 }).segments, data.segments);
+console.log('VR object wireframe data assertions passed.');

@@ -7,6 +7,7 @@ export const ASTRO_FURNACE_PANEL_STATES = Object.freeze({
 });
 export const ASTRO_FURNACE_PANEL_SCREENS = Object.freeze({ HOME: 'HOME', ASTERION_SPHERE: 'ASTERION_SPHERE' });
 const smoothstep = (value) => value * value * (3 - 2 * value);
+export const wireframeDissolveVisible = (segment, progress) => progress < 1 && segment.dissolveOrder >= Math.max(0, progress);
 
 export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], progressionController, processSource, contentSource, settings = {} }) {
   const config = { width: 1.55, height: 1.05, gapFromFurnace: 0.18, verticalOffset: 0.15,
@@ -81,12 +82,7 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
     const telemetry = readTelemetry(), x = 90, y = 645, width = 1315, height = 325;
     panelRect(x, y, width, height, { variant: 'monitor', active: telemetry.active, completed: telemetry.phase === 'COMPLETE', accentColor: accents[telemetry.colorKey] });
     text('PRZEBIEG ABSORPCJI', x + 28, y + 42, 22, accents[telemetry.colorKey]);
-    const pulse = .72 + .28 * Math.sin(telemetryElapsed * 4), shellX = x + 300, shellY = y + 145;
-    context.save(); context.globalAlpha = telemetry.silhouetteOpacity * pulse; context.strokeStyle = accents[telemetry.colorKey];
-    context.lineWidth = 4; context.beginPath();
-    for (let ring = 0; ring < 4; ring++) context.ellipse(shellX, shellY, 112 - ring * 18, 70 + ring * 8,
-      telemetry.processAngle * .08 + ring * .55, 0, Math.PI * 2);
-    context.stroke(); context.restore();
+    drawInsertedShellWireframe(telemetry, x + 300, y + 145, 118);
     telemetry.label.split('\n').forEach((line, index) => text(`${index ? '' : 'STATUS // '}${line}`, x + 28, y + 215 + index * 28, 21, accents[telemetry.colorKey]));
     if (telemetry.showProgress) {
       const barX = x + 28, barY = y + 254, barWidth = 555; context.fillStyle = '#18303c'; context.fillRect(barX, barY, barWidth, 16);
@@ -97,6 +93,31 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
     const contentState = contentSource?.getState?.() ?? 'EMPTY'; const assetId = contentSource?.getInsertedShellAssetId?.();
     const contentLabels = { INSERTED: 'GOTOWY', CONSUMING: 'ABSORPCJA', CONSUMED: 'ZABEZPIECZONO' };
     if (contentLabels[contentState]) { context.textAlign = 'right'; text(`MATERIAŁ // ${contentLabels[contentState]}${assetId ? `  ${assetId.replace('shell-relic-', 'SKORUPA ')}` : ''}`, x + width - 28, y + 267, 19, '#88b8cf'); context.textAlign = 'left'; }
+  }
+  function drawInsertedShellWireframe(telemetry, cx, cy, scale) {
+    const data = contentSource?.getInsertedShellWireframe?.();
+    if (!data?.segments?.length || telemetry.phase === 'COMPLETE') return;
+    const contentState = contentSource?.getState?.() ?? 'EMPTY';
+    if (!['INSERTED', 'CONSUMING', 'CONSUMED'].includes(contentState)) return;
+    const processing = telemetry.active || contentState !== 'INSERTED';
+    const dissolve = processing ? telemetry.progress : 0;
+    const rotation = telemetryElapsed * (processing ? .38 : .16);
+    const cosY = Math.cos(rotation), sinY = Math.sin(rotation);
+    const tilt = -.28, cosX = Math.cos(tilt), sinX = Math.sin(tilt);
+    const pulse = .78 + .22 * Math.sin(telemetryElapsed * (processing ? 5 : 3));
+    context.save(); context.globalAlpha = pulse; context.strokeStyle = accents[telemetry.colorKey];
+    context.lineWidth = processing ? 4.5 : 3.5; context.shadowColor = accents[telemetry.colorKey]; context.shadowBlur = processing ? 15 : 8;
+    context.beginPath();
+    data.segments.forEach((segment) => {
+      if (!wireframeDissolveVisible(segment, dissolve)) return;
+      const arx = segment.ax * cosY + segment.az * sinY, arz = -segment.ax * sinY + segment.az * cosY;
+      const ary = segment.ay * cosX - arz * sinX, ad = 1 / Math.max(.65, 1 + (segment.ay * sinX + arz * cosX) * .16);
+      const brx = segment.bx * cosY + segment.bz * sinY, brz = -segment.bx * sinY + segment.bz * cosY;
+      const bry = segment.by * cosX - brz * sinX, bd = 1 / Math.max(.65, 1 + (segment.by * sinX + brz * cosX) * .16);
+      context.moveTo(cx + arx * scale * ad, cy - ary * scale * ad);
+      context.lineTo(cx + brx * scale * bd, cy - bry * scale * bd);
+    });
+    context.stroke(); context.restore();
   }
   function progressSnapshot() { return progressionController.getAsterionSphereProgress(); }
   function drawAsterionPreview(progress, cx, cy, radius) {
