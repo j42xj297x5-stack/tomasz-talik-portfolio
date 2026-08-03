@@ -16,6 +16,13 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
     pixelRatioCap: 1.5,
     antialias: true
   },
+  furnace: {
+    enabled: true,
+    position: { x: -2.0, y: 0, z: 1.0 },
+    rotationDegrees: { x: 0, y: 0, z: 0 },
+    scale: 1,
+    debug: false
+  },
   controllers: {
     enabled: true,
     rayLength: 2.3,
@@ -175,6 +182,17 @@ export function normalizeExperienceVrSettings(candidate) {
       antialias: typeof candidate.renderer?.antialias === 'boolean'
         ? candidate.renderer.antialias
         : defaults.renderer.antialias
+    },
+    furnace: {
+      enabled: typeof candidate.furnace?.enabled === 'boolean'
+        ? candidate.furnace.enabled
+        : defaults.furnace.enabled,
+      position: normalizeVector(candidate.furnace?.position, defaults.furnace.position),
+      rotationDegrees: normalizeVector(candidate.furnace?.rotationDegrees, defaults.furnace.rotationDegrees),
+      scale: finiteNumber(candidate.furnace?.scale, defaults.furnace.scale, { min: 0.05, max: 10 }),
+      debug: typeof candidate.furnace?.debug === 'boolean'
+        ? candidate.furnace.debug
+        : defaults.furnace.debug
     },
     controllers: {
       enabled: typeof candidate.controllers?.enabled === 'boolean'

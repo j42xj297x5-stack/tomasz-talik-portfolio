@@ -28,6 +28,7 @@ import { createVrShellAttractorInteraction } from './xr/shells/createVrShellAttr
 import { createVrSemanticInput } from './xr/input/createVrSemanticInput.js';
 import { createVrHandModeController } from './xr/input/createVrHandModeController.js';
 import { createVrAttractorTool } from './xr/tools/createVrAttractorTool.js';
+import { createVrAstroFurnace } from './xr/furnace/createVrAstroFurnace.js';
 import { experienceVrPages, getExperienceVrPages, resolveExperienceVrPage } from './content/experienceVrPages.js';
 
 const app = document.querySelector('#app');
@@ -94,7 +95,7 @@ const centralPlaceholder = createCentralObject();
 worldRoot.add(centralPlaceholder);
 
 const vrAssets = getPreloadAssets([...INITIAL_PRELOAD_GROUPS, ...DEFERRED_PRELOAD_GROUPS])
-  .filter(({ id }) => id === 'gltf-loader-module' || id === 'monkey-model' || id === 'vr-portal-model' || id === 'vr-astro-attractor-model' || id.startsWith('vr-progress-floor-') || id === 'vr-crystal-reliquary-model' || id.startsWith('vr-crystal-reliquary-button-') || id.startsWith('glyph-') || id.startsWith('vr-crystal-') || id.startsWith('shell-relic-'))
+  .filter(({ id }) => id === 'gltf-loader-module' || id === 'monkey-model' || id === 'vr-portal-model' || id === 'vr-astro-attractor-model' || id === 'vr-astro-furnace-model' || id.startsWith('vr-progress-floor-') || id === 'vr-crystal-reliquary-model' || id.startsWith('vr-crystal-reliquary-button-') || id.startsWith('glyph-') || id.startsWith('vr-crystal-') || id.startsWith('shell-relic-'))
   .map((asset) => ({ ...asset, critical: asset.id === 'gltf-loader-module' }));
 const loadingDiagnostics = createLoadingDiagnostics(vrAssets);
 const assetManager = createAssetManager({ diagnostics: loadingDiagnostics });
@@ -110,6 +111,13 @@ await preloadAssets(vrAssets, {
   markComplete: true
 });
 unsubscribe();
+const astroFurnaceGltf = assetManager.getGltf('vr-astro-furnace-model');
+const astroFurnace = createVrAstroFurnace({
+  parent: worldRoot,
+  model: assetManager.cloneGltfScene('vr-astro-furnace-model'),
+  animations: astroFurnaceGltf?.animations ?? [],
+  settings: settings.furnace
+});
 const progressFloor = createVrProgressFloor({
   parent: worldRoot,
   creativeSectorModel: assetManager.cloneGltfScene('vr-progress-floor-creative-model'),
@@ -257,6 +265,7 @@ const clock = new THREE.Clock(false);
 
 function renderFrame() {
   const delta = clock.getDelta();
+  astroFurnace.update(delta);
   vrControllers.beginRayHitFrame();
   glyphOrbit.update(delta);
   shellSystem.update(delta);
@@ -289,6 +298,7 @@ function handleSessionEnd() {
   renderer.setAnimationLoop(null);
   clock.stop();
   activeSession = null;
+  astroFurnace.reset();
   crystalCollection.reset();
   activateButton.reset();
   releaseButton.reset();
@@ -310,6 +320,7 @@ function handleSessionEnd() {
 
 async function enterVr() {
   if (activeSession) return;
+  astroFurnace.reset();
   crystalCollection.reset();
   activateButton.reset();
   releaseButton.reset();
@@ -356,6 +367,7 @@ async function enterVr() {
     activeSession = null;
     renderer.setAnimationLoop(null);
     clock.stop();
+    astroFurnace.reset();
     crystalCollection.reset();
     activateButton.reset();
     releaseButton.reset();
@@ -374,6 +386,7 @@ async function enterVr() {
 enterButton.addEventListener('click', enterVr);
 exitButton.addEventListener('click', () => { void activeSession?.end(); });
 window.addEventListener('pagehide', () => {
+  astroFurnace.dispose();
   shellAttractorInteraction.dispose();
   handModeController.dispose();
   activateButton.reset();
