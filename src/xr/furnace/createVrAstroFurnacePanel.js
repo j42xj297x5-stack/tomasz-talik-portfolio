@@ -8,13 +8,15 @@ export const ASTRO_FURNACE_PANEL_STATES = Object.freeze({
   HIDDEN: 'HIDDEN', APPEARING: 'APPEARING', VISIBLE: 'VISIBLE', DISAPPEARING: 'DISAPPEARING'
 });
 export const ASTRO_FURNACE_PANEL_SCREENS = Object.freeze({ HOME: 'HOME', ASTERION_SPHERE: 'ASTERION_SPHERE' });
+export const asterionPreviewAnimationActive = ({ panelState, screen }) =>
+  panelState === ASTRO_FURNACE_PANEL_STATES.VISIBLE && screen === ASTRO_FURNACE_PANEL_SCREENS.ASTERION_SPHERE;
 const smoothstep = (value) => value * value * (3 - 2 * value);
 export const wireframeDissolveVisible = (segment, progress) => progress < 1 && segment.dissolveOrder >= Math.max(0, progress);
 
 export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], progressionController, processSource, contentSource, settings = {} }) {
   const config = { width: 1.55, height: 1.05, gapFromFurnace: 0.10, verticalOffset: 0.15, yawDegrees: -12,
     canvasWidth: 1536, canvasHeight: 1024, appearDuration: 0.32, disappearDuration: 0.20,
-    telemetryRefreshHz: 12, frameCornerSizePx: 28, accents: {}, ...settings };
+    telemetryRefreshHz: 12, frameCornerSizePx: 28, spherePatchVisualScaleMultiplier: 1.10, accents: {}, ...settings };
   config.telemetryRefreshHz = Math.min(30, Math.max(4, config.telemetryRefreshHz));
   config.frameCornerSizePx = Math.min(64, Math.max(12, config.frameCornerSizePx));
   const accents = { asterion: '#72cfe8', attractor: '#c8ac70', emanation: '#a98bd4', idle: '#668493', process: '#9eeaff', complete: '#d9f8ff', ...config.accents };
@@ -41,7 +43,9 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
   let hoveredRegion = null, interactiveRegions = [], disposed = false, redrawCount = 0;
   const moduleListeners = new Set();
   // The expensive UV subdivision and cube-face mapping happen exactly once per panel.
-  const patchGeometryByAssetId = createAsterionPatchGeometry(ASTERION_SHELL_PATCHES);
+  const patchGeometryByAssetId = createAsterionPatchGeometry(ASTERION_SHELL_PATCHES, {
+    scaleMultiplier: config.spherePatchVisualScaleMultiplier
+  });
   const patchDataByAssetId = Object.fromEntries(ASTERION_SHELL_PATCHES.map((patch) => [patch.assetId, patch]));
 
   function panelRect(x, y, width, height, options = {}) {
@@ -216,7 +220,8 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
     else if (state === ASTRO_FURNACE_PANEL_STATES.DISAPPEARING) { const t = smoothstep(Math.min(1, elapsed / config.disappearDuration)); root.scale.set(1 - .999 * t, 1 - .08 * t, 1); renderPlanes.forEach((plane) => { plane.material.opacity = 1 - t; }); if (t === 1) { state = ASTRO_FURNACE_PANEL_STATES.HIDDEN; root.visible = false; } }
     updateHits();
     if (screen === ASTRO_FURNACE_PANEL_SCREENS.ASTERION_SPHERE) { const telemetry = readTelemetry();
-      if (shouldRefreshTelemetry({ active: telemetry.active || completedUntil > telemetryElapsed, elapsed: telemetryElapsed, lastRedraw: lastTelemetryRedraw, refreshHz: config.telemetryRefreshHz })) { lastTelemetryRedraw = telemetryElapsed; draw(); } }
+      const previewAnimating = asterionPreviewAnimationActive({ panelState: state, screen });
+      if (shouldRefreshTelemetry({ active: previewAnimating, elapsed: telemetryElapsed, lastRedraw: lastTelemetryRedraw, refreshHz: config.telemetryRefreshHz })) { lastTelemetryRedraw = telemetryElapsed; draw(); } }
   }
   function reset() { state = ASTRO_FURNACE_PANEL_STATES.HIDDEN; screen = ASTRO_FURNACE_PANEL_SCREENS.HOME; elapsed = 0; telemetryElapsed = 0; lastTelemetryRedraw = 0; completedUntil = 0; previousProcessState = 'IDLE'; hoveredRegion = null; renderPlanes.forEach((plane) => { plane.material.opacity = 0; }); hits.forEach((_, record) => hits.set(record, null)); place(); root.visible = false; draw(); }
   const unsubscribe = progressionController.subscribe(() => draw());

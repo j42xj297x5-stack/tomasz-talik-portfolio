@@ -20,6 +20,14 @@ assert.deepEqual(mapped[0], cubeFaceToSphere('+Z', -.8, 0)); assert.deepEqual(ma
 
 const cache = createAsterionPatchGeometry(ASTERION_SHELL_PATCHES);
 assert.equal(Object.keys(cache).length, 6); assert.ok(Object.isFrozen(cache['shell-relic-1'].fragments));
+const canonicalScale = ASTERION_SHELL_PATCHES[0].scale;
+const enlarged = createAsterionPatchGeometry(ASTERION_SHELL_PATCHES, { scaleMultiplier: 1.10 });
+assert.equal(ASTERION_SHELL_PATCHES[0].scale, canonicalScale);
+const baseFirstPoint = cache['shell-relic-1'].fragments[0].a;
+const enlargedFirstPoint = enlarged['shell-relic-1'].fragments[0].a;
+assert.notDeepEqual(enlargedFirstPoint, baseFirstPoint);
+enlarged['shell-relic-1'].fragments.flatMap(({ a, b }) => [a, b])
+  .forEach((point) => assert.ok(Math.abs(Math.hypot(...point) - 1) < 1e-12));
 assert.deepEqual(Array.from({ length: 80 }, (_, index) => assemblyOrderForIndex(index, 80)), Array.from({ length: 80 }, (_, index) => assemblyOrderForIndex(index, 80)));
 const sourceSegments = Array.from({ length: 80 }, (_, index) => ({ assemblyOrder: assemblyOrderForIndex(index, 80) }));
 assert.equal(sourceSegments.filter((segment) => assemblySegmentVisible(segment, 0)).length, 0);

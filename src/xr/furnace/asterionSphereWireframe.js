@@ -4,10 +4,10 @@ const FACE_BASIS = Object.freeze({
   '+Z': [[0, 0, 1], [1, 0, 0], [0, 1, 0]], '-Z': [[0, 0, -1], [-1, 0, 0], [0, 1, 0]]
 });
 
-export function transformPatchUv(u, v, patch) {
+export function transformPatchUv(u, v, patch, scaleMultiplier = 1) {
   const flippedU = patch.flipU ? -u : u, flippedV = patch.flipV ? -v : v;
   const angle = patch.rotationDegrees * Math.PI / 180, cosine = Math.cos(angle), sine = Math.sin(angle);
-  return [(flippedU * cosine - flippedV * sine) * patch.scale, (flippedU * sine + flippedV * cosine) * patch.scale];
+  return [(flippedU * cosine - flippedV * sine) * patch.scale * scaleMultiplier, (flippedU * sine + flippedV * cosine) * patch.scale * scaleMultiplier];
 }
 
 export function cubeFaceToSphere(face, u, v) {
@@ -30,12 +30,12 @@ export function subdivideSegment(segment, { maxUvStep = .18, maxFragments = 8 } 
 export const assemblyOrderForIndex = (index, count) => count <= 1 ? 0 : ((index * 37) % count) / (count - 1);
 export const assemblySegmentVisible = (segment, progress) => progress > 0 && segment.assemblyOrder <= Math.min(1, progress);
 
-export function createAsterionPatchGeometry(patches, options) {
+export function createAsterionPatchGeometry(patches, { scaleMultiplier = 1, ...subdivisionOptions } = {}) {
   return Object.fromEntries(patches.map((patch) => {
     const fragments = [];
     patch.segments2d.forEach((segment, sourceIndex) => {
-      const points = subdivideSegment(segment, options).map(([u, v]) => {
-        const transformed = transformPatchUv(u, v, patch);
+      const points = subdivideSegment(segment, subdivisionOptions).map(([u, v]) => {
+        const transformed = transformPatchUv(u, v, patch, scaleMultiplier);
         return cubeFaceToSphere(patch.face, transformed[0], transformed[1]);
       });
       const assemblyOrder = assemblyOrderForIndex(sourceIndex, patch.segments2d.length);

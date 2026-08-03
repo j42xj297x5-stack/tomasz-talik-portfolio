@@ -33,6 +33,7 @@ import { createVrAstroFurnaceOpenInteraction } from './xr/furnace/createVrAstroF
 import { createVrAstroFurnaceActivateInteraction } from './xr/furnace/createVrAstroFurnaceActivateInteraction.js';
 import { ASTRO_FURNACE_ACTIVE_MODE, createVrAstroFurnaceOptionInteraction } from './xr/furnace/createVrAstroFurnaceOptionInteraction.js';
 import { createVrAstroFurnacePanel } from './xr/furnace/createVrAstroFurnacePanel.js';
+import { createVrAstroFurnaceProcessSource } from './xr/furnace/createVrAstroFurnaceProcessSource.js';
 import { createVrAstroFurnaceProgressionController } from './xr/furnace/createVrAstroFurnaceProgressionController.js';
 import { createVrAstroFurnaceContentInteraction } from './xr/furnace/createVrAstroFurnaceContentInteraction.js';
 import { experienceVrPages, getExperienceVrPages, resolveExperienceVrPage } from './content/experienceVrPages.js';
@@ -188,12 +189,7 @@ const furnaceProgressionController = createVrAstroFurnaceProgressionController()
 const furnacePanel = createVrAstroFurnacePanel({
   parent: worldRoot, furnace: astroFurnace, controllers: vrControllers.controllers,
   progressionController: furnaceProgressionController, settings: settings.furnace.panel,
-  processSource: {
-    getState: () => astroFurnaceActivateInteraction?.getState?.() ?? 'IDLE',
-    getProgress: () => astroFurnaceActivateInteraction?.getProgress?.() ?? 0,
-    getAngularSpeed: () => astroFurnaceActivateInteraction?.getAngularSpeed?.() ?? 0,
-    getProcessAngle: () => astroFurnaceActivateInteraction?.getProcessAngle?.() ?? 0
-  },
+  processSource: createVrAstroFurnaceProcessSource(() => astroFurnaceActivateInteraction),
   contentSource: {
     getState: () => astroFurnaceContentInteraction?.getState?.() ?? 'EMPTY',
     getInsertedShellAssetId: () => astroFurnaceContentInteraction?.getInsertedShellAssetId?.() ?? null,
