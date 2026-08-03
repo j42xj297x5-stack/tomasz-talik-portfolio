@@ -1,6 +1,6 @@
 import * as THREE from '../../vendor/three.js';
 import { drawFurnaceFrame } from './drawVrFurnaceFrame.js';
-import { buildProgressBar, resolveAsciiFrame, resolveProcessTelemetry, shouldRefreshTelemetry } from './vrFurnaceTelemetry.js';
+import { resolveProcessTelemetry, shouldRefreshTelemetry } from './vrFurnaceTelemetry.js';
 
 export const ASTRO_FURNACE_PANEL_STATES = Object.freeze({
   HIDDEN: 'HIDDEN', APPEARING: 'APPEARING', VISIBLE: 'VISIBLE', DISAPPEARING: 'DISAPPEARING'
@@ -79,15 +79,37 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
   function drawProcessMonitor() {
     const telemetry = readTelemetry(), x = 90, y = 645, width = 1315, height = 325;
     panelRect(x, y, width, height, { variant: 'monitor', active: telemetry.active, completed: telemetry.phase === 'COMPLETE', accentColor: accents[telemetry.colorKey] });
-    text('PROCESS MONITOR', x + 28, y + 42, 22, accents[telemetry.colorKey]);
-    const lines = resolveAsciiFrame(telemetry, telemetryElapsed); context.textAlign = 'center';
-    context.font = '26px ui-monospace, SFMono-Regular, Consolas, monospace'; context.fillStyle = accents[telemetry.colorKey];
-    lines.forEach((line, index) => context.fillText(line, x + width / 2, y + 92 + index * 34)); context.textAlign = 'left';
+    text('PRZEBIEG ABSORPCJI', x + 28, y + 42, 22, accents[telemetry.colorKey]);
+    const pulse = .72 + .28 * Math.sin(telemetryElapsed * 4), shellX = x + 300, shellY = y + 145;
+    context.save(); context.globalAlpha = telemetry.silhouetteOpacity * pulse; context.strokeStyle = accents[telemetry.colorKey];
+    context.lineWidth = 4; context.beginPath();
+    for (let ring = 0; ring < 4; ring++) context.ellipse(shellX, shellY, 112 - ring * 18, 70 + ring * 8,
+      telemetry.processAngle * .08 + ring * .55, 0, Math.PI * 2);
+    context.stroke(); context.restore();
     text(`STATUS // ${telemetry.label}`, x + 28, y + 225, 21, accents[telemetry.colorKey]);
-    context.font = '22px ui-monospace, SFMono-Regular, Consolas, monospace'; context.fillStyle = '#b9dce8'; context.fillText(buildProgressBar(telemetry.progress), x + 28, y + 267);
+    if (telemetry.showProgress) {
+      const barX = x + 28, barY = y + 254, barWidth = 555; context.fillStyle = '#18303c'; context.fillRect(barX, barY, barWidth, 16);
+      context.fillStyle = accents[telemetry.colorKey]; context.fillRect(barX, barY, barWidth * telemetry.progress, 16);
+      text(`${Math.round(telemetry.progress * 100)}%`, barX + barWidth + 18, barY + 17, 20, '#b9dce8');
+    }
+    drawAsterionPreview(progressSnapshot(), x + 855, y + 150, 118);
     const contentState = contentSource?.getState?.() ?? 'EMPTY'; const assetId = contentSource?.getInsertedShellAssetId?.();
     const contentLabels = { INSERTED: 'GOTOWY', CONSUMING: 'ABSORPCJA', CONSUMED: 'ZABEZPIECZONO' };
     if (contentLabels[contentState]) { context.textAlign = 'right'; text(`MATERIAŁ // ${contentLabels[contentState]}${assetId ? `  ${assetId.replace('shell-relic-', 'SKORUPA ')}` : ''}`, x + width - 28, y + 267, 19, '#88b8cf'); context.textAlign = 'left'; }
+  }
+  function progressSnapshot() { return progressionController.getAsterionSphereProgress(); }
+  function drawAsterionPreview(progress, cx, cy, radius) {
+    const rotation = telemetryElapsed * .22; text(`KULA ASTERIONOWA  ${progress.absorbed}/6`, cx - 190, cy - 112, 20, accents.asterion);
+    context.save(); context.lineWidth = 3;
+    for (let segment = 0; segment < 6; segment++) {
+      const start = rotation + segment * Math.PI / 3, end = start + Math.PI / 3 - .08;
+      context.strokeStyle = segment < progress.absorbed ? '#c8f6ff' : '#355766';
+      context.shadowColor = segment < progress.absorbed ? accents.asterion : 'transparent'; context.shadowBlur = segment < progress.absorbed ? 14 : 0;
+      context.beginPath(); context.arc(cx, cy, radius, start, end); context.stroke();
+    }
+    context.shadowBlur = 0; context.strokeStyle = '#588797'; context.lineWidth = 2;
+    context.beginPath(); context.ellipse(cx, cy, radius, radius * .34, rotation, 0, Math.PI * 2); context.stroke();
+    context.beginPath(); context.ellipse(cx, cy, radius * .34, radius, -rotation * .7, 0, Math.PI * 2); context.stroke(); context.restore();
   }
   function draw() {
     if (!context) return; redrawCount += 1; context.clearRect(0, 0, canvas.width, canvas.height);
