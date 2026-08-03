@@ -31,6 +31,27 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
       emissionHover: 1,
       emissionPressed: 4
     },
+    activateButton: {
+      enabled: true,
+      rayMaxDistance: 3,
+      emissionInactive: 0,
+      emissionHover: 1,
+      emissionPressed: 5
+    },
+    process: {
+      durationSeconds: 18,
+      steadyRpm: 42,
+      extractionSpeedMultiplier: 2,
+      direction: -1,
+      spinupEnd: 0.20,
+      steadyEnd: 0.70,
+      extractionEnd: 0.88,
+      fireCellIdleEmission: 0.15,
+      fireCellSteadyEmission: 2.5,
+      fireCellExtractionEmission: 5,
+      fireCellPulseHzMin: 0.7,
+      fireCellPulseHzMax: 4
+    },
     chamber: { glassFadeStart: 0.2, glassFadeEnd: 1 }
   },
   controllers: {
@@ -176,6 +197,13 @@ export function normalizeExperienceVrSettings(candidate) {
     || Number.isFinite(legacyButtons.placementAngleDegrees);
   const legacyRadius = finiteNumber(legacyButtons.placementRadius, defaults.reliquary.buttons.forwardDistance, { min: 0, max: 3 });
   const legacyAngle = THREE_MATH_DEG_TO_RAD * finiteNumber(legacyButtons.placementAngleDegrees, 0, { min: 0, max: 89 });
+  const processCandidate = candidate.furnace?.process ?? {};
+  let spinupEnd = finiteNumber(processCandidate.spinupEnd, defaults.furnace.process.spinupEnd, { min: 0, max: 1 });
+  let steadyEnd = finiteNumber(processCandidate.steadyEnd, defaults.furnace.process.steadyEnd, { min: 0, max: 1 });
+  let extractionEnd = finiteNumber(processCandidate.extractionEnd, defaults.furnace.process.extractionEnd, { min: 0, max: 1 });
+  if (!(spinupEnd < steadyEnd && steadyEnd < extractionEnd)) {
+    ({ spinupEnd, steadyEnd, extractionEnd } = defaults.furnace.process);
+  }
 
   return {
     schemaVersion: EXPERIENCE_VR_SETTINGS_SCHEMA_VERSION,
@@ -218,6 +246,37 @@ export function normalizeExperienceVrSettings(candidate) {
           defaults.furnace.openButton.emissionHover, { min: 0, max: 10 }),
         emissionPressed: finiteNumber(candidate.furnace?.openButton?.emissionPressed,
           defaults.furnace.openButton.emissionPressed, { min: 0, max: 10 })
+      },
+      activateButton: {
+        enabled: typeof candidate.furnace?.activateButton?.enabled === 'boolean'
+          ? candidate.furnace.activateButton.enabled : defaults.furnace.activateButton.enabled,
+        rayMaxDistance: finiteNumber(candidate.furnace?.activateButton?.rayMaxDistance,
+          defaults.furnace.activateButton.rayMaxDistance, { min: 0.3, max: 5 }),
+        emissionInactive: finiteNumber(candidate.furnace?.activateButton?.emissionInactive,
+          defaults.furnace.activateButton.emissionInactive, { min: 0 }),
+        emissionHover: finiteNumber(candidate.furnace?.activateButton?.emissionHover,
+          defaults.furnace.activateButton.emissionHover, { min: 0 }),
+        emissionPressed: finiteNumber(candidate.furnace?.activateButton?.emissionPressed,
+          defaults.furnace.activateButton.emissionPressed, { min: 0 })
+      },
+      process: {
+        durationSeconds: finiteNumber(processCandidate.durationSeconds, defaults.furnace.process.durationSeconds, { min: 5, max: 60 }),
+        steadyRpm: finiteNumber(processCandidate.steadyRpm, defaults.furnace.process.steadyRpm, { min: 1, max: 180 }),
+        extractionSpeedMultiplier: finiteNumber(processCandidate.extractionSpeedMultiplier,
+          defaults.furnace.process.extractionSpeedMultiplier, { min: 1, max: 4 }),
+        direction: processCandidate.direction === 1 || processCandidate.direction === -1
+          ? processCandidate.direction : defaults.furnace.process.direction,
+        spinupEnd, steadyEnd, extractionEnd,
+        fireCellIdleEmission: finiteNumber(processCandidate.fireCellIdleEmission,
+          defaults.furnace.process.fireCellIdleEmission, { min: 0 }),
+        fireCellSteadyEmission: finiteNumber(processCandidate.fireCellSteadyEmission,
+          defaults.furnace.process.fireCellSteadyEmission, { min: 0 }),
+        fireCellExtractionEmission: finiteNumber(processCandidate.fireCellExtractionEmission,
+          defaults.furnace.process.fireCellExtractionEmission, { min: 0 }),
+        fireCellPulseHzMin: finiteNumber(processCandidate.fireCellPulseHzMin,
+          defaults.furnace.process.fireCellPulseHzMin, { min: 0 }),
+        fireCellPulseHzMax: finiteNumber(processCandidate.fireCellPulseHzMax,
+          defaults.furnace.process.fireCellPulseHzMax, { min: 0 })
       },
       chamber: {
         glassFadeStart: finiteNumber(candidate.furnace?.chamber?.glassFadeStart,

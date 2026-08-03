@@ -30,6 +30,7 @@ import { createVrHandModeController } from './xr/input/createVrHandModeControlle
 import { createVrAttractorTool } from './xr/tools/createVrAttractorTool.js';
 import { createVrAstroFurnace } from './xr/furnace/createVrAstroFurnace.js';
 import { createVrAstroFurnaceOpenInteraction } from './xr/furnace/createVrAstroFurnaceOpenInteraction.js';
+import { createVrAstroFurnaceActivateInteraction } from './xr/furnace/createVrAstroFurnaceActivateInteraction.js';
 import { experienceVrPages, getExperienceVrPages, resolveExperienceVrPage } from './content/experienceVrPages.js';
 
 const app = document.querySelector('#app');
@@ -71,6 +72,7 @@ const enterButton = app.querySelector('[data-vr-enter]');
 const exitButton = app.querySelector('[data-vr-exit]');
 const loadedSettings = await loadExperienceVrSettings({ debug: new URLSearchParams(location.search).has('debug') });
 const settings = loadedSettings.settings;
+const furnaceProcessQa = new URLSearchParams(location.search).has('furnaceProcess');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: settings.renderer.antialias });
 renderer.setPixelRatio(Math.min(devicePixelRatio || 1, settings.renderer.pixelRatioCap));
 renderer.xr.enabled = true;
@@ -175,12 +177,28 @@ const handModeController = createVrHandModeController({
   attractorTool,
   isUnlocked: () => progressionController.isTierComplete(1)
 });
+let astroFurnaceActivateInteraction = null;
+const ordinaryFurnaceRayAvailable = (record) => !(record.handedness === 'right'
+  && handModeController.getMode() === 'ASTRO_ATTRACTOR');
 const astroFurnaceOpenInteraction = createVrAstroFurnaceOpenInteraction({
   furnace: astroFurnace,
   controllers: vrControllers.controllers,
   settings: { ...settings.furnace.openButton, chamber: settings.furnace.chamber },
-  isOrdinaryRayAvailable: (record) => !(record.handedness === 'right'
-    && handModeController.getMode() === 'ASTRO_ATTRACTOR')
+  haloSettings: settings.targetHalo,
+  isOrdinaryRayAvailable: ordinaryFurnaceRayAvailable,
+  canToggle: () => !astroFurnaceActivateInteraction?.isProcessing(),
+  onOpeningStart: () => astroFurnaceActivateInteraction?.releaseForOpening()
+});
+astroFurnaceActivateInteraction = createVrAstroFurnaceActivateInteraction({
+  furnace: astroFurnace,
+  controllers: vrControllers.controllers,
+  settings: settings.furnace.activateButton,
+  processSettings: settings.furnace.process,
+  haloSettings: settings.targetHalo,
+  openInteraction: astroFurnaceOpenInteraction,
+  canActivateInput: () => false,
+  qaAllowWithoutInput: furnaceProcessQa,
+  isOrdinaryRayAvailable: ordinaryFurnaceRayAvailable
 });
 let shellAttractorInteraction = null;
 const crystalCollection = createVrCrystalCollection({
@@ -190,6 +208,7 @@ const crystalCollection = createVrCrystalCollection({
   canGrabController: (record) => {
     if (record.handedness === 'right' && handModeController.getMode() === 'ASTRO_ATTRACTOR') return false;
     if (astroFurnaceOpenInteraction.hasCurrentHit(record)) return false;
+    if (astroFurnaceActivateInteraction.hasCurrentHit(record)) return false;
     if (shellAttractorInteraction?.hasCurrentShellHit(record)) return false;
     return true;
   },
@@ -257,7 +276,8 @@ shellAttractorInteraction = createVrShellAttractorInteraction({
   settings: settings.shellAttractor, haloSettings: settings.targetHalo, settledParent: worldRoot,
   crystalHeldByController: crystalCollection.heldByController,
   isHigherPriorityInteractionActive: (record) => Boolean(activateButton.hits.get(record)
-    || releaseButton.hits.get(record) || astroFurnaceOpenInteraction.hasCurrentHit(record) || record.currentHit)
+    || releaseButton.hits.get(record) || astroFurnaceOpenInteraction.hasCurrentHit(record)
+    || astroFurnaceActivateInteraction.hasCurrentHit(record) || record.currentHit)
 });
 
 function resize() {
@@ -280,6 +300,7 @@ function renderFrame() {
   vrControllers.beginRayHitFrame();
   astroFurnace.update(delta);
   astroFurnaceOpenInteraction.update(delta);
+  astroFurnaceActivateInteraction.update(delta);
   glyphOrbit.update(delta);
   shellSystem.update(delta);
   glyphRing.updateMatrixWorld(true);
@@ -313,6 +334,7 @@ function handleSessionEnd() {
   activeSession = null;
   astroFurnace.reset();
   astroFurnaceOpenInteraction.reset();
+  astroFurnaceActivateInteraction.reset();
   crystalCollection.reset();
   activateButton.reset();
   releaseButton.reset();
@@ -336,6 +358,7 @@ async function enterVr() {
   if (activeSession) return;
   astroFurnace.reset();
   astroFurnaceOpenInteraction.reset();
+  astroFurnaceActivateInteraction.reset();
   crystalCollection.reset();
   activateButton.reset();
   releaseButton.reset();
@@ -384,6 +407,7 @@ async function enterVr() {
     clock.stop();
     astroFurnace.reset();
     astroFurnaceOpenInteraction.reset();
+    astroFurnaceActivateInteraction.reset();
     crystalCollection.reset();
     activateButton.reset();
     releaseButton.reset();
@@ -403,6 +427,7 @@ enterButton.addEventListener('click', enterVr);
 exitButton.addEventListener('click', () => { void activeSession?.end(); });
 window.addEventListener('pagehide', () => {
   astroFurnaceOpenInteraction.dispose();
+  astroFurnaceActivateInteraction.dispose();
   astroFurnace.dispose();
   shellAttractorInteraction.dispose();
   handModeController.dispose();

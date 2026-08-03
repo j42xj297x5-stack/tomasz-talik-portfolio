@@ -1,4 +1,5 @@
 import * as THREE from '../../vendor/three.js';
+import { createVrTargetHalo } from '../createVrTargetHalo.js';
 
 export const ASTRO_FURNACE_STATES = Object.freeze({
   CLOSED: 'CLOSED', OPENING: 'OPENING', OPEN: 'OPEN', CLOSING: 'CLOSING'
@@ -35,7 +36,8 @@ function cloneBranchMaterials(root, ownedMaterials) {
 }
 
 export function createVrAstroFurnaceOpenInteraction({
-  furnace, controllers = [], settings = {}, isOrdinaryRayAvailable = () => true
+  furnace, controllers = [], settings = {}, haloSettings = {}, isOrdinaryRayAvailable = () => true,
+  canToggle = () => true, onOpeningStart = () => {}
 }) {
   const stateNames = ASTRO_FURNACE_STATES;
   const buttonNode = furnace?.nodes?.button_open;
@@ -43,6 +45,7 @@ export function createVrAstroFurnaceOpenInteraction({
   buttonNode?.traverse((node) => { if (node.isMesh && node.geometry) buttonMeshes.push(node); });
   const ownedMaterials = new Set();
   const buttonMaterials = cloneBranchMaterials(buttonNode, ownedMaterials);
+  const halo = buttonNode ? createVrTargetHalo({ root: buttonNode, settings: haloSettings }) : null;
   const chamberNode = furnace?.nodes?.komora;
   const chamberBaseVisible = chamberNode?.visible ?? true;
   const chamberMaterials = cloneBranchMaterials(chamberNode, ownedMaterials).map((material) => ({
@@ -122,7 +125,9 @@ export function createVrAstroFurnaceOpenInteraction({
   }
   function beginTransition(nextState) {
     if (!capabilityReady || (nextState === stateNames.OPENING && state !== stateNames.CLOSED)
-      || (nextState === stateNames.CLOSING && state !== stateNames.OPEN)) return false;
+      || (nextState === stateNames.CLOSING && state !== stateNames.OPEN) || !canToggle()) return false;
+    if (nextState === stateNames.OPENING) onOpeningStart();
+    halo?.setVisible(false);
     state = nextState; transitionElapsed = 0; pendingMechanical.clear(); playButton();
     if (nextState === stateNames.CLOSING) { if (chamberNode) chamberNode.visible = chamberBaseVisible; setGlassFactor(0); }
     MECHANICAL_KEYS.forEach((key) => {
@@ -152,7 +157,8 @@ export function createVrAstroFurnaceOpenInteraction({
     let anyHit = false;
     controllers.forEach((record) => {
       let hit = false;
-      if (capabilityReady && furnace?.object?.visible !== false && isOrdinaryRayAvailable(record)) {
+      if (capabilityReady && canToggle() && (state === stateNames.CLOSED || state === stateNames.OPEN)
+        && furnace?.object?.visible !== false && isOrdinaryRayAvailable(record)) {
         record.controller.updateWorldMatrix(true, false);
         record.controller.getWorldPosition(origin); record.controller.getWorldQuaternion(quaternion);
         direction.set(0, 0, -1).applyQuaternion(quaternion).normalize();
@@ -168,6 +174,7 @@ export function createVrAstroFurnaceOpenInteraction({
     if (state === stateNames.CLOSED || state === stateNames.OPEN) {
       setEmission(anyHit ? settings.emissionHover ?? 1 : settings.emissionInactive ?? 0);
     }
+    halo?.setVisible(anyHit && canToggle() && (state === stateNames.CLOSED || state === stateNames.OPEN));
   }
   function press(record) {
     if (disposed || !hits.get(record) || !isOrdinaryRayAvailable(record)) return false;
@@ -185,11 +192,13 @@ export function createVrAstroFurnaceOpenInteraction({
     const step = Math.max(0, delta);
     if (state === stateNames.OPENING || state === stateNames.CLOSING) transitionElapsed += step;
     mixer?.update(step); updateGlass();
+    halo?.update(step);
   }
   function reset() {
     Object.values(actions).forEach((action) => action?.stop()); pendingMechanical.clear(); mixer?.stopAllAction(); mixer?.setTime(0);
     restoreTransforms(); restoreGlass(); state = stateNames.CLOSED; transitionElapsed = 0;
     hits.forEach((_, record) => hits.set(record, false)); setEmission(settings.emissionInactive ?? 0);
+    halo?.setVisible(false);
   }
   function dispose() {
     if (disposed) return;
@@ -198,10 +207,11 @@ export function createVrAstroFurnaceOpenInteraction({
     mixer?.removeEventListener('finished', onFinished); mixer?.stopAllAction();
     Object.values(CLIPS).forEach((name) => { if (furnace?.clips?.[name]) mixer?.uncacheClip(furnace.clips[name]); });
     ownedMaterials.forEach((material) => material.dispose?.()); ownedMaterials.clear(); hits.clear();
+    halo?.dispose();
   }
   reset();
   return {
-    mixer, actions, hits, capabilityReady, update, press, reset, dispose,
+    mixer, actions, hits, halo, capabilityReady, update, press, reset, dispose,
     getState: () => state,
     isOpen: () => state === stateNames.OPEN,
     isTransitioning: () => state === stateNames.OPENING || state === stateNames.CLOSING,
