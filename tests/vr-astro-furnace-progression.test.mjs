@@ -1,0 +1,22 @@
+import assert from 'node:assert/strict';
+import { createVrAstroFurnaceProgressionController, REQUIRED_ASTERION_SHELLS } from '../src/xr/furnace/createVrAstroFurnaceProgressionController.js';
+
+const controller = createVrAstroFurnaceProgressionController();
+assert.deepEqual(REQUIRED_ASTERION_SHELLS, Array.from({ length: 6 }, (_, index) => `shell-relic-${index + 1}`));
+assert.equal(controller.getAsterionSphereProgress().absorbed, 0);
+assert.equal(controller.getAsterionSphereProgress().required, 6);
+assert.equal(controller.canAbsorbShell('not-a-shell'), false);
+assert.equal(controller.canAbsorbShell('shell-relic-1'), true);
+let notifications = 0;
+const unsubscribe = controller.subscribe((snapshot) => { notifications += 1; assert.equal(snapshot.asterionSphere.absorbed, notifications); });
+assert.equal(controller.commitAbsorbedShell('shell-relic-1'), true);
+assert.equal(controller.commitAbsorbedShell('shell-relic-1'), false);
+assert.equal(controller.hasAbsorbedShell('shell-relic-1'), true);
+assert.equal(controller.getSnapshot().asterionSphere.missing.length, 5);
+for (let index = 2; index <= 6; index += 1) controller.commitAbsorbedShell(`shell-relic-${index}`);
+assert.equal(controller.getAsterionSphereProgress().complete, true);
+assert.deepEqual(controller.getAsterionSphereProgress().missing, []);
+assert.equal(notifications, 6);
+unsubscribe(); controller.dispose();
+assert.equal(controller.commitAbsorbedShell('shell-relic-1'), false);
+console.log('VR Astro furnace progression assertions passed');

@@ -31,6 +31,9 @@ import { createVrAttractorTool } from './xr/tools/createVrAttractorTool.js';
 import { createVrAstroFurnace } from './xr/furnace/createVrAstroFurnace.js';
 import { createVrAstroFurnaceOpenInteraction } from './xr/furnace/createVrAstroFurnaceOpenInteraction.js';
 import { createVrAstroFurnaceActivateInteraction } from './xr/furnace/createVrAstroFurnaceActivateInteraction.js';
+import { createVrAstroFurnaceOptionInteraction } from './xr/furnace/createVrAstroFurnaceOptionInteraction.js';
+import { createVrAstroFurnacePanel } from './xr/furnace/createVrAstroFurnacePanel.js';
+import { createVrAstroFurnaceProgressionController } from './xr/furnace/createVrAstroFurnaceProgressionController.js';
 import { experienceVrPages, getExperienceVrPages, resolveExperienceVrPage } from './content/experienceVrPages.js';
 
 const app = document.querySelector('#app');
@@ -178,6 +181,12 @@ const handModeController = createVrHandModeController({
   isUnlocked: () => progressionController.isTierComplete(1)
 });
 let astroFurnaceActivateInteraction = null;
+let astroFurnaceOptionInteraction = null;
+const furnaceProgressionController = createVrAstroFurnaceProgressionController();
+const furnacePanel = createVrAstroFurnacePanel({
+  parent: worldRoot, furnace: astroFurnace, controllers: vrControllers.controllers,
+  progressionController: furnaceProgressionController, settings: settings.furnace.panel
+});
 const ordinaryFurnaceRayAvailable = (record) => !(record.handedness === 'right'
   && handModeController.getMode() === 'ASTRO_ATTRACTOR');
 const astroFurnaceOpenInteraction = createVrAstroFurnaceOpenInteraction({
@@ -200,6 +209,12 @@ astroFurnaceActivateInteraction = createVrAstroFurnaceActivateInteraction({
   qaAllowWithoutInput: furnaceProcessQa,
   isOrdinaryRayAvailable: ordinaryFurnaceRayAvailable
 });
+astroFurnaceOptionInteraction = createVrAstroFurnaceOptionInteraction({
+  furnace: astroFurnace, panel: furnacePanel, controllers: vrControllers.controllers,
+  settings: settings.furnace.optionButton, haloSettings: settings.targetHalo,
+  isOrdinaryRayAvailable: ordinaryFurnaceRayAvailable,
+  isHigherPriorityInteractionActive: (record) => furnacePanel.hasCurrentHit(record)
+});
 let shellAttractorInteraction = null;
 const crystalCollection = createVrCrystalCollection({
   scene, assetManager, controllers: vrControllers.controllers, portalDisplay, insertionTarget: crystalReliquary,
@@ -209,6 +224,7 @@ const crystalCollection = createVrCrystalCollection({
     if (record.handedness === 'right' && handModeController.getMode() === 'ASTRO_ATTRACTOR') return false;
     if (astroFurnaceOpenInteraction.hasCurrentHit(record)) return false;
     if (astroFurnaceActivateInteraction.hasCurrentHit(record)) return false;
+    if (astroFurnaceOptionInteraction.hasCurrentHit(record) || furnacePanel.hasCurrentHit(record)) return false;
     if (shellAttractorInteraction?.hasCurrentShellHit(record)) return false;
     return true;
   },
@@ -277,7 +293,8 @@ shellAttractorInteraction = createVrShellAttractorInteraction({
   crystalHeldByController: crystalCollection.heldByController,
   isHigherPriorityInteractionActive: (record) => Boolean(activateButton.hits.get(record)
     || releaseButton.hits.get(record) || astroFurnaceOpenInteraction.hasCurrentHit(record)
-    || astroFurnaceActivateInteraction.hasCurrentHit(record) || record.currentHit)
+    || astroFurnaceActivateInteraction.hasCurrentHit(record) || astroFurnaceOptionInteraction.hasCurrentHit(record)
+    || furnacePanel.hasCurrentHit(record) || record.currentHit)
 });
 
 function resize() {
@@ -299,6 +316,8 @@ function renderFrame() {
   const delta = clock.getDelta();
   vrControllers.beginRayHitFrame();
   astroFurnace.update(delta);
+  furnacePanel.update(delta);
+  astroFurnaceOptionInteraction.update(delta);
   astroFurnaceOpenInteraction.update(delta);
   astroFurnaceActivateInteraction.update(delta);
   glyphOrbit.update(delta);
@@ -333,6 +352,8 @@ function handleSessionEnd() {
   clock.stop();
   activeSession = null;
   astroFurnace.reset();
+  furnacePanel.reset();
+  astroFurnaceOptionInteraction.reset();
   astroFurnaceOpenInteraction.reset();
   astroFurnaceActivateInteraction.reset();
   crystalCollection.reset();
@@ -357,6 +378,8 @@ function handleSessionEnd() {
 async function enterVr() {
   if (activeSession) return;
   astroFurnace.reset();
+  furnacePanel.reset();
+  astroFurnaceOptionInteraction.reset();
   astroFurnaceOpenInteraction.reset();
   astroFurnaceActivateInteraction.reset();
   crystalCollection.reset();
@@ -406,6 +429,8 @@ async function enterVr() {
     renderer.setAnimationLoop(null);
     clock.stop();
     astroFurnace.reset();
+    furnacePanel.reset();
+    astroFurnaceOptionInteraction.reset();
     astroFurnaceOpenInteraction.reset();
     astroFurnaceActivateInteraction.reset();
     crystalCollection.reset();
@@ -428,6 +453,9 @@ exitButton.addEventListener('click', () => { void activeSession?.end(); });
 window.addEventListener('pagehide', () => {
   astroFurnaceOpenInteraction.dispose();
   astroFurnaceActivateInteraction.dispose();
+  astroFurnaceOptionInteraction.dispose();
+  furnacePanel.dispose();
+  furnaceProgressionController.dispose();
   astroFurnace.dispose();
   shellAttractorInteraction.dispose();
   handModeController.dispose();
