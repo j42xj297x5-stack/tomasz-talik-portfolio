@@ -18,9 +18,11 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
   },
   furnace: {
     enabled: true,
+    placementMode: 'mirror-portal',
+    floorOffset: 0,
     position: { x: -2.0, y: 0, z: 1.0 },
     rotationDegrees: { x: 0, y: 0, z: 0 },
-    scale: 1,
+    scale: 3,
     debug: false
   },
   controllers: {
@@ -187,6 +189,10 @@ export function normalizeExperienceVrSettings(candidate) {
       enabled: typeof candidate.furnace?.enabled === 'boolean'
         ? candidate.furnace.enabled
         : defaults.furnace.enabled,
+      placementMode: ['mirror-portal', 'configured'].includes(candidate.furnace?.placementMode)
+        ? candidate.furnace.placementMode
+        : defaults.furnace.placementMode,
+      floorOffset: finiteNumber(candidate.furnace?.floorOffset, defaults.furnace.floorOffset, { min: -2, max: 2 }),
       position: normalizeVector(candidate.furnace?.position, defaults.furnace.position),
       rotationDegrees: normalizeVector(candidate.furnace?.rotationDegrees, defaults.furnace.rotationDegrees),
       scale: finiteNumber(candidate.furnace?.scale, defaults.furnace.scale, { min: 0.05, max: 10 }),
