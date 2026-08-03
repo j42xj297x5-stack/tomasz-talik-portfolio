@@ -2,7 +2,7 @@
 
 ## Documentation flow
 
-`PROJECT_ENTRY.md` → `maps/PROJECT_INDEX.md` → smallest task-specific current model. VR implementation work reads `technical/VR_RUNTIME_MODEL.md`, then `handoffs/EXPERIENCE_VR_HANDOFF.md`. Future gameplay work additionally reads `concept/EXPERIENCE_VR_GAMEPLAY_ROADMAP.md`, which distinguishes implemented foundations from planned direction.
+`PROJECT_ENTRY.md` → `maps/PROJECT_INDEX.md` → smallest task-specific current model. Current VR work reads `technical/VR_RUNTIME_MODEL.md`, then `handoffs/EXPERIENCE_VR_HANDOFF.md`; future gameplay additionally reads the roadmap and decision log.
 
 ## Runtime boundaries
 
@@ -19,91 +19,86 @@ Experience 3D and VR have separate owners. No shared-world-factory migration is 
 ## Active Experience VR composition
 
 ```text
-main → vrCapability → secure context + immersive-vr support
-main → dynamic import → experienceVr
-
 experienceVr
-├─ experienceVrSettings → publicPath → /data/experience-vr-settings.json
-├─ AssetManager → manifest-selected preloaded GLBs
-├─ centralObject + monkeyModel + lights + orbitNodes
-├─ playerRigOrientation + createVrLocomotion
-├─ createVrControllers + createVrGlyphOrbit/Interaction/Lights
-├─ experienceVrPages → 18 page records in five branches
-├─ VrProgressionController → committed pages + current global tier
-├─ createVrCrystalCollection → branch+tier instances + transient state machine
-├─ createVrCrystalReliquary → proximity validation + insertion zone
-├─ Activate / Release buttons → preview / commit boundary
-├─ createVrPortalDisplay + createVrSpatialPlaque
-└─ createVrProgressFloor
-   ├─ five required authored sectors
-   ├─ 18 required panels
-   └─ optional procedural tier-ring layer
-
-direct Enter VR gesture
-└─ immersive-vr → local-floor (fallback local) → renderer.setAnimationLoop
+├─ settings + AssetManager → preloaded runtime GLBs
+├─ world root → central object, monkey, lights, glyph orbit, portal
+├─ playerRig → controllers + locomotion
+├─ glyph interaction → crystal collection
+├─ reliquary → Activate / Release
+├─ VrProgressionController → progress floor
+└─ Tier-1 Astro/shell slice
+   ├─ semantic input
+   → hand mode controller
+   → Astro visual tool
+   → scan cone
+   → shell attractor interaction
+   → shell system
 ```
 
-`createVrEntryTransition` remains in the repository but is not part of the active composition.
+Handedness is populated after each WebXR controller `connected` event; construction does not require an initial left/right value.
 
-## Active interaction and data flow
+## Progression and crystal flow
 
 ```text
 glyph hold
-→ capture glyph world position and center direction
-→ spawn next unrepresented branch+tier crystal 0.30 m inward from glyph
-
-crystal
-→ grab
-→ held proximity feedback
-→ insertion validation against current global tier
-├─ INVALID → red halo → rejecting → available (no progress)
-└─ VALID → green halo → inserted
-   ├─ Release without Activate → available (no progress)
-   └─ Activate → resolve branch+tier page → portal preview (no progress)
-      └─ Release → controller commit
-         → floor panel
-         → tier-completion test
-         → idempotent full-circle global ring (when the optional layer is available)
-         → consuming → crystal/effect removal
+→ branch+tier crystal 0.30 m inward from captured glyph position
+→ ordinary-ray grab
+→ held insertion feedback
+├─ INVALID → rejecting → available
+└─ VALID → inserted
+   ├─ Release without Activate → available
+   └─ Activate → page preview
+      → Release → controller commit → floor panel → tier test/ring → consuming
 ```
 
-Glyph and crystal hits are separate controller fields. Only `available` crystals are grabbable. The principal transient states are:
+`VrProgressionController` exclusively owns committed logical state. The floor is its visual projection. Both survive XR re-entry in the prepared runtime, but not reload/navigation; there is no durable persistence.
+
+## Active Tier-1 Astro/shell flow
 
 ```text
-materializing → available → pulling → held → inserted → active → consuming → removed
-                                  ├─ invalid insertion → rejecting → available
-                                  └─ release without preview → available
+Tier 1 complete
+→ shell field active (6 assets × 3 instances)
++ Astro unlocked
+
+A / toggleRightTool
+→ NORMAL_HAND ↔ ASTRO_ATTRACTOR
+
+ASTRO_ATTRACTOR
+→ right squeeze > 0.1
+→ one 3R analytic cone scan
+→ cone target (cached bounding sphere)
+→ right trigger > 0.1
+→ pull (10 m/s², max 8.5 m/s)
+→ capture_ready at Master Ring + controller-local -Z × 1.3 m
+→ left standard 2.3 m ray + squeeze
+→ held
+→ release
+→ placed under VrWorldRoot
+
+cancel before takeover
+→ returning for 0.8 s, attractorTarget=false
+→ orbiting, attractorTarget=true
+
+placed shell, attractorTarget=false
+→ ordinary 2.3 m ray of either free hand
+   (right only in NORMAL_HAND)
+→ re-grab
+→ release
+→ placed
 ```
 
-## Progress and floor ownership
+Shell-over-crystal priority is conditional on an actual shell ray hit. Astro acquisition cannot target placed shells.
 
-`VrProgressionController` is the sole owner of committed logical progress. Its global requirements are all five branches for tiers 1–3, Metal + Water for tier 4, and Water for tier 5. Acquisition is not tier-gated; insertion is.
-
-`createVrProgressFloor` is a visual projection with its own idempotent `activatedEntries` and completed-ring state. It receives a page only after the controller accepts Release commit. Both logical progress and floor visuals survive XR exit/re-entry in the already prepared page runtime; reload or navigation recreates them. There is no durable persistence or full-game reset.
-
-The five sector models and their 18 named panels are the critical floor contract. The procedural ring layer is additive: after deriving median per-order candidate radii, the floor sorts them ascending and enforces `minimumRingGap >= ringThickness * 2`. A failure isolated to ring mesh creation releases partial ring resources and leaves the sector/panel floor operational, so this optional decoration does not block Experience VR readiness.
-
-## Progress-floor asset flow
+## Floor asset flow
 
 ```text
-assetManifest → AssetManager
-→ five sector models
-  (`floor_creative.glb`, `floor_ethic.glb`, `floor_haiku_cosmos.glb`,
-   `floor_dig_engine.glb`, `floor_ai_guide.glb`)
-→ createVrProgressFloor → stationary VrTiltableFloorRoot
+asset manifest → AssetManager
+→ five sector models → createVrProgressFloor → VrTiltableFloorRoot
+→ 18 authored panels + optional five procedural tier rings
 ```
 
-| Stable glyph ID | Logical cards | Shared crystal GLB variants |
-| --- | ---: | ---: |
-| `ethics-life-protection` | 3 | 3 |
-| `creative-ai` | 3 | 3 |
-| `ai-guide` | 3 | 3 |
-| `spotify-digger` | 4 | 3 |
-| `haiku-cosmos` | 5 | 3 |
-| **Total** | **18** | **15** |
+The optional procedural ring layer can fail without blocking the critical sector/panel floor.
 
-Tiers 4 and 5 reuse branch visual variants cyclically. Physical crystals do not carry page/card identity; `AssetManager` supplies every model and crystal spawn performs no fetch.
+## Not active dependencies
 
-## Excluded dependencies
-
-Portal/reliquary placement and insertion depend on authored transforms and the runtime scene hierarchy. Locomotion and crystal handling do not depend on physics. Sector-background progression, central progression core, floor tilting/local-plane locomotion, shells, orb assembly, semantic hand tools, small glyphs, antenna, runes, final radar, finale, durable persistence and full-game reset are not active dependencies.
+Progressive sector backgrounds, central progression core, Astro B/bands, sphere assembly, floor-control sphere, floor tilting/local-plane locomotion, small glyphs, antenna, runes, final radar/finale, audio, durable persistence and full-game reset are not active runtime dependencies.
