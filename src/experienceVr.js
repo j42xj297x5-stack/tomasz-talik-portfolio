@@ -31,7 +31,7 @@ import { createVrAttractorTool } from './xr/tools/createVrAttractorTool.js';
 import { createVrAstroFurnace } from './xr/furnace/createVrAstroFurnace.js';
 import { createVrAstroFurnaceOpenInteraction } from './xr/furnace/createVrAstroFurnaceOpenInteraction.js';
 import { createVrAstroFurnaceActivateInteraction } from './xr/furnace/createVrAstroFurnaceActivateInteraction.js';
-import { createVrAstroFurnaceOptionInteraction } from './xr/furnace/createVrAstroFurnaceOptionInteraction.js';
+import { ASTRO_FURNACE_ACTIVE_MODE, createVrAstroFurnaceOptionInteraction } from './xr/furnace/createVrAstroFurnaceOptionInteraction.js';
 import { createVrAstroFurnacePanel } from './xr/furnace/createVrAstroFurnacePanel.js';
 import { createVrAstroFurnaceProgressionController } from './xr/furnace/createVrAstroFurnaceProgressionController.js';
 import { createVrAstroFurnaceContentInteraction } from './xr/furnace/createVrAstroFurnaceContentInteraction.js';
@@ -210,6 +210,7 @@ const astroFurnaceOpenInteraction = createVrAstroFurnaceOpenInteraction({
   haloSettings: settings.targetHalo,
   isOrdinaryRayAvailable: ordinaryFurnaceRayAvailable,
   canToggle: () => !astroFurnaceActivateInteraction?.isProcessing(),
+  isModeActive: () => astroFurnaceOptionInteraction?.getActiveMode?.() === ASTRO_FURNACE_ACTIVE_MODE,
   onOpeningStart: () => astroFurnaceActivateInteraction?.releaseForOpening()
 });
 astroFurnaceActivateInteraction = createVrAstroFurnaceActivateInteraction({
@@ -220,6 +221,7 @@ astroFurnaceActivateInteraction = createVrAstroFurnaceActivateInteraction({
   haloSettings: settings.targetHalo,
   openInteraction: astroFurnaceOpenInteraction,
   canActivateInput: () => astroFurnaceContentInteraction?.hasValidInsertedContent() === true,
+  isModeActive: () => astroFurnaceOptionInteraction?.getActiveMode?.() === ASTRO_FURNACE_ACTIVE_MODE,
   qaAllowWithoutInput: furnaceProcessQa,
   isOrdinaryRayAvailable: ordinaryFurnaceRayAvailable
 });
@@ -227,6 +229,7 @@ let shellAttractorInteraction = null;
 astroFurnaceContentInteraction = createVrAstroFurnaceContentInteraction({
   furnace: astroFurnace, shellSystem, openInteraction: astroFurnaceOpenInteraction,
   activateInteraction: astroFurnaceActivateInteraction, progressionController: furnaceProgressionController,
+  isModeActive: () => astroFurnaceOptionInteraction?.getActiveMode?.() === ASTRO_FURNACE_ACTIVE_MODE,
   controllers: vrControllers.controllers, settings: settings.furnace.content,
   takeHeldShell: (shell) => shellAttractorInteraction?.transferHeldShell(shell) === true
 });

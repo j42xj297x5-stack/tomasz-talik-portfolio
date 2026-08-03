@@ -262,10 +262,29 @@ processOpen.dispose(); processFurnace.dispose();
 
 const qaFurnace = buildInteractiveFurnace();
 const qaOpen = createVrAstroFurnaceOpenInteraction({ furnace: qaFurnace, controllers: [], settings: { enabled: true } });
+let qaModeActive = false;
 const qaInteraction = createVrAstroFurnaceActivateInteraction({ furnace: qaFurnace, controllers: [],
-  openInteraction: qaOpen, settings: { enabled: true }, qaAllowWithoutInput: true });
-assert.equal(qaInteraction.canActivate(), true, 'QA mode permits activation without an implemented input');
+  openInteraction: qaOpen, settings: { enabled: true }, qaAllowWithoutInput: true, isModeActive: () => qaModeActive });
+assert.equal(qaInteraction.canActivate(), false, 'QA content bypass cannot bypass the active-mode gate');
+qaModeActive = true;
+assert.equal(qaInteraction.canActivate(), true, 'QA mode permits missing input only after module selection');
 qaInteraction.dispose(); qaOpen.dispose(); qaFurnace.dispose();
+
+{
+  const gatedFurnace = buildInteractiveFurnace(); let modeActive = false;
+  const gatedRecord = { controller: new THREE.Group(), currentRayLength: 3 };
+  const gatedOpen = createVrAstroFurnaceOpenInteraction({ furnace: gatedFurnace, controllers: [gatedRecord],
+    settings: { enabled: true }, isModeActive: () => modeActive });
+  gatedOpen.hits.set(gatedRecord, true);
+  assert.equal(gatedOpen.press(gatedRecord), false, 'Open is blocked before selecting the Asterion module');
+  assert.equal(gatedOpen.halo.visible, false, 'blocked Open has no interaction halo');
+  modeActive = true; gatedOpen.hits.set(gatedRecord, true);
+  assert.equal(gatedOpen.press(gatedRecord), true, 'Open works after selecting the Asterion module');
+  gatedOpen.update(.3); assert.equal(gatedOpen.getState(), ASTRO_FURNACE_STATES.OPEN);
+  modeActive = false; gatedOpen.hits.set(gatedRecord, true);
+  assert.equal(gatedOpen.press(gatedRecord), true, 'an already open chamber can always be closed');
+  gatedOpen.dispose(); gatedFurnace.dispose();
+}
 
 const warnings = [];
 const originalWarn = console.warn;
@@ -285,13 +304,20 @@ incomplete.dispose(); incompleteFurnace.dispose();
   const panel = { isVisible: () => false, toggle() {}, subscribeModuleActivation(listener) { moduleListener = listener; return () => { moduleListener = null; }; } };
   const option = createVrAstroFurnaceOptionInteraction({ furnace: optionFurnace, panel, controllers: [],
     settings: { enabled: true, selectionDuration: .5, moduleAnglesDegrees: { floor_gyroscope_sphere: 90 } } });
+  assert.equal(option.getActiveMode(), null, 'the furnace starts unconfigured');
+  panel.toggle(); panel.toggle();
+  assert.equal(option.getActiveMode(), null, 'opening or closing the panel does not select a module');
   assert.equal(moduleListener('floor_gyroscope_sphere'), true); option.update(.25);
   assert.ok(optionFurnace.nodes.PIVOT_BUTTON_OPTION.rotation.y > 0 && optionFurnace.nodes.PIVOT_BUTTON_OPTION.rotation.y < Math.PI / 2);
   assert.ok(Math.abs(optionFurnace.nodes.PIVOT_BUTTON_OPTION.rotation.z) < 1e-12, 'option tween uses local Three.js Y only');
   option.update(.25); assert.ok(Math.abs(optionFurnace.nodes.PIVOT_BUTTON_OPTION.rotation.y - Math.PI / 2) < 1e-7);
   assert.equal(option.getActiveMode(), 'floor_gyroscope_sphere');
+  panel.toggle();
+  assert.equal(option.getActiveMode(), 'floor_gyroscope_sphere', 'closing the panel preserves the selected module');
   assert.equal(moduleListener('floor_gyroscope_sphere'), true); option.update(.5);
   assert.ok(Math.abs(optionFurnace.nodes.PIVOT_BUTTON_OPTION.rotation.y - Math.PI / 2) < 1e-7, 'reselection is idempotent');
+  option.reset();
+  assert.equal(option.getActiveMode(), null, 'reset clears only the transient active mode');
   option.dispose(); optionFurnace.dispose();
 }
 console.log('VR Astro furnace assertions passed');

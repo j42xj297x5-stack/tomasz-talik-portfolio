@@ -1,6 +1,8 @@
 import * as THREE from '../../vendor/three.js';
 import { createVrTargetHalo } from '../createVrTargetHalo.js';
 
+export const ASTRO_FURNACE_ACTIVE_MODE = 'floor_gyroscope_sphere';
+
 export function createVrAstroFurnaceOptionInteraction({ furnace, panel, controllers = [], settings = {}, haloSettings = {},
   isOrdinaryRayAvailable = () => true, isHigherPriorityInteractionActive = () => false }) {
   const button = furnace?.nodes?.button_option;
@@ -16,7 +18,7 @@ export function createVrAstroFurnaceOptionInteraction({ furnace, panel, controll
   const baseQuaternion = pivot?.quaternion.clone();
   const localOptionAxis = new THREE.Vector3(0, 1, 0);
   const optionRotation = new THREE.Quaternion();
-  const moduleAngles = { floor_gyroscope_sphere: 90, ...(settings.moduleAnglesDegrees ?? {}) };
+  const moduleAngles = { [ASTRO_FURNACE_ACTIVE_MODE]: 90, ...(settings.moduleAnglesDegrees ?? {}) };
   let activeMode = null, tweenElapsed = 0, tweenStart = 0, tweenTarget = 0, currentAngle = 0;
   const capabilityReady = settings.enabled !== false && meshes.length > 0 && Boolean(furnace?.nodes?.PIVOT_BUTTON_OPTION);
   const setEmission = (value) => emissive.forEach((material) => { material.emissiveIntensity = value; });
@@ -28,11 +30,13 @@ export function createVrAstroFurnaceOptionInteraction({ furnace, panel, controll
       const intersection = raycaster.intersectObjects(meshes, false)[0]; hit = Boolean(intersection);
       if (intersection) record.reportRayHit?.(intersection.distance);
     } hits.set(record, hit); any ||= hit; });
-    setEmission(any ? settings.emissionHover ?? 1 : panel.isVisible() ? settings.emissionActive ?? 3 : settings.emissionInactive ?? 0);
+    setEmission(any ? settings.emissionHover ?? 1 : panel.isVisible() ? settings.emissionActive ?? 3
+      : activeMode === null ? settings.emissionUnconfigured ?? .45 : settings.emissionInactive ?? 0);
     halo?.setVisible(any);
   }
   function press(record) { if (disposed || !hits.get(record) || !isOrdinaryRayAvailable(record)) return false; panel.toggle(); return true; }
   function selectMode(mode) {
+    if (mode !== ASTRO_FURNACE_ACTIVE_MODE) return false;
     const angle = moduleAngles[mode];
     if (!pivot || !Number.isFinite(angle)) return false;
     activeMode = mode; tweenStart = currentAngle; tweenTarget = THREE.MathUtils.degToRad(angle); tweenElapsed = 0;

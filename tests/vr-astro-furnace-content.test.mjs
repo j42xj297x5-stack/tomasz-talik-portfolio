@@ -10,16 +10,17 @@ assert.ok(processRotationPulse(Math.PI * 2) < 1e-12, 'shell pulse follows the sa
 function fixture({ emptyVolume = false } = {}) {
   const object = new THREE.Group(), volume = emptyVolume ? new THREE.Group() : new THREE.Mesh(new THREE.SphereGeometry(.5)), anchor = new THREE.Group();
   const chamberGeometry = new THREE.CylinderGeometry(.4, .4, 1.2);
-  const chamber = new THREE.Mesh(chamberGeometry, new THREE.MeshBasicMaterial()); object.add(volume, anchor, chamber); const records = []; let open = 'OPEN', process = 'IDLE', progress = 0, commits = 0, removed;
+  const chamber = new THREE.Mesh(chamberGeometry, new THREE.MeshBasicMaterial()); object.add(volume, anchor, chamber); const records = []; let open = 'OPEN', process = 'IDLE', modeActive = true, progress = 0, commits = 0, removed;
   const progression = createVrAstroFurnaceProgressionController(), commit = progression.commitAbsorbedShell;
   progression.commitAbsorbedShell = (id) => { commits++; return commit(id); };
   const interaction = createVrAstroFurnaceContentInteraction({ furnace: { object, nodes: { VR_FURNACE_INSERT_VOLUME: volume,
     VR_FURNACE_CONTENT_ANCHOR: anchor, komora: chamber } }, shellSystem: { records, getRecord(shell) { return records.find((record) => record.object === shell); }, removeInstance(shell) { removed = shell; shell.removeFromParent(); return true; } },
   openInteraction: { getState: () => open }, activateInteraction: { getState: () => process, getProgress: () => progress }, progressionController: progression,
+  isModeActive: () => modeActive,
   settings: emptyVolume ? { volumeRadius: .5, rejectDuration: .1 } : { rejectDuration: .1 } });
   const makeShell = (id = 'shell-relic-1', radius = .1) => { const shell = new THREE.Mesh(new THREE.SphereGeometry(radius), new THREE.MeshStandardMaterial());
     shell.userData.shellAssetId = id; object.add(shell); records.push({ object: shell, boundingCenter: new THREE.Vector3(), boundingRadius: radius }); return shell; };
-  return { interaction, progression, anchor, makeShell, setOpen: (v) => { open = v; }, setProcess: (v) => { process = v; },
+  return { interaction, progression, anchor, makeShell, setOpen: (v) => { open = v; }, setProcess: (v) => { process = v; }, setModeActive: (v) => { modeActive = v; },
     setProgress: (v) => { progress = v; }, get commits() { return commits; }, get removed() { return removed; } };
 }
 {
@@ -62,6 +63,17 @@ function fixture({ emptyVolume = false } = {}) {
 }
 function insert(test, shell) { test.interaction.reportHeldShell(shell); test.interaction.update(.01);
   assert.equal(test.interaction.getState(), S.INSERTED); }
+
+{
+  const t = fixture(), shell = t.makeShell(); t.setModeActive(false);
+  assert.equal(t.interaction.canAcceptShell(shell), false, 'insertion is disabled before module selection');
+  t.interaction.reportHeldShell(shell); t.interaction.update(.01);
+  assert.equal(t.interaction.getInsertedShell(), null, 'the furnace cannot take over a shell while unconfigured');
+  assert.equal(t.interaction.feedback.visible, false, 'the insertion guide stays hidden while unconfigured');
+  t.setModeActive(true); t.interaction.reportHeldShell(shell); t.interaction.update(.01);
+  assert.equal(t.interaction.getInsertedShell(), shell, 'insertion resumes after module selection');
+  t.interaction.dispose();
+}
 
 {
   const t = fixture(), shell = t.makeShell(); assert.equal(t.interaction.canAcceptShell(shell), true);
