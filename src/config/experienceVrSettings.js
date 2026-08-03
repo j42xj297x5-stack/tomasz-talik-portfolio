@@ -27,7 +27,7 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
     content: {
       enabled: true, snapDuration: 0.42,
       chamberClearance: 0.012, contentClearance: 0.012, rejectDuration: 0.28, rejectDistanceMultiplier: 1.35,
-      feedbackOpacity: 0.20, validColor: 0x49d17d, invalidColor: 0xe05252,
+      feedbackOpacity: 0.32, releaseGrace: 0.035, surfaceClearance: 0.006, validColor: 0x49d17d, invalidColor: 0xe05252,
       consumeStartProgress: 0.18, consumeEndProgress: 0.78
     },
     openButton: {

@@ -1,20 +1,20 @@
 import assert from 'node:assert/strict';
 import * as THREE from '../src/vendor/three.js';
-import { ASTRO_FURNACE_CONTENT_STATES as S, createVrAstroFurnaceContentInteraction } from '../src/xr/furnace/createVrAstroFurnaceContentInteraction.js';
+import { ASTRO_FURNACE_CONTENT_STATES as S, constrainHeldShellToDeviceSurfaces, createVrAstroFurnaceContentInteraction, setObjectWorldScale } from '../src/xr/furnace/createVrAstroFurnaceContentInteraction.js';
 import { createVrAstroFurnaceProgressionController } from '../src/xr/furnace/createVrAstroFurnaceProgressionController.js';
 
 function fixture({ emptyVolume = false } = {}) {
   const object = new THREE.Group(), volume = emptyVolume ? new THREE.Group() : new THREE.Mesh(new THREE.SphereGeometry(.5)), anchor = new THREE.Group();
   const chamberGeometry = new THREE.CylinderGeometry(.4, .4, 1.2);
-  const chamber = new THREE.Mesh(chamberGeometry, new THREE.MeshBasicMaterial()); object.add(volume, anchor, chamber); let open = 'OPEN', process = 'IDLE', progress = 0, commits = 0, removed;
+  const chamber = new THREE.Mesh(chamberGeometry, new THREE.MeshBasicMaterial()); object.add(volume, anchor, chamber); const records = []; let open = 'OPEN', process = 'IDLE', progress = 0, commits = 0, removed;
   const progression = createVrAstroFurnaceProgressionController(), commit = progression.commitAbsorbedShell;
   progression.commitAbsorbedShell = (id) => { commits++; return commit(id); };
   const interaction = createVrAstroFurnaceContentInteraction({ furnace: { object, nodes: { VR_FURNACE_INSERT_VOLUME: volume,
-    VR_FURNACE_CONTENT_ANCHOR: anchor, komora: chamber } }, shellSystem: { removeInstance(shell) { removed = shell; shell.removeFromParent(); return true; } },
+    VR_FURNACE_CONTENT_ANCHOR: anchor, komora: chamber } }, shellSystem: { records, getRecord(shell) { return records.find((record) => record.object === shell); }, removeInstance(shell) { removed = shell; shell.removeFromParent(); return true; } },
   openInteraction: { getState: () => open }, activateInteraction: { getState: () => process, getProgress: () => progress }, progressionController: progression,
   settings: emptyVolume ? { volumeRadius: .5, rejectDuration: .1 } : { rejectDuration: .1 } });
   const makeShell = (id = 'shell-relic-1', radius = .1) => { const shell = new THREE.Mesh(new THREE.SphereGeometry(radius), new THREE.MeshStandardMaterial());
-    shell.userData.shellAssetId = id; object.add(shell); return shell; };
+    shell.userData.shellAssetId = id; object.add(shell); records.push({ object: shell, boundingCenter: new THREE.Vector3(), boundingRadius: radius }); return shell; };
   return { interaction, progression, anchor, makeShell, setOpen: (v) => { open = v; }, setProcess: (v) => { process = v; },
     setProgress: (v) => { progress = v; }, get commits() { return commits; }, get removed() { return removed; } };
 }
@@ -103,4 +103,52 @@ function insert(test, shell) { test.interaction.reportHeldShell(shell); test.int
   const t = fixture(), shell = t.makeShell('shell-relic-4'); insert(t, shell); t.interaction.reset();
   assert.equal(t.interaction.getState(), S.EMPTY); assert.equal(t.progression.getSnapshot().asterionSphere.absorbed, 0); t.interaction.dispose();
 }
+
+// Candidate volume uses the cached geometry center and release has a small boundary grace.
+{
+  const object = new THREE.Group(), chamber = new THREE.Mesh(new THREE.CylinderGeometry(.4, .4, 1.2)), volume = new THREE.Group(), anchor = new THREE.Group();
+  object.add(chamber, volume, anchor); const shell = new THREE.Mesh(new THREE.SphereGeometry(.05)); shell.position.x = -.5; object.add(shell);
+  shell.userData.shellAssetId = 'shell-relic-1'; const record = { object: shell, boundingCenter: new THREE.Vector3(.5, 0, 0), boundingRadius: .05 };
+  let held = shell; const interaction = createVrAstroFurnaceContentInteraction({ furnace: { object, nodes: { komora: chamber, VR_FURNACE_INSERT_VOLUME: volume, VR_FURNACE_CONTENT_ANCHOR: anchor } },
+    shellSystem: { records: [record], getRecord: () => record }, openInteraction: { getState: () => 'OPEN' }, activateInteraction: { getState: () => 'IDLE' },
+    progressionController: { canAbsorbShell: () => true }, settings: { releaseGrace: .04 } });
+  interaction.reportHeldShell(held); interaction.update(.01); assert.equal(interaction.getState(), S.CANDIDATE_VALID, 'cached geometry center is used instead of shell origin');
+  shell.position.x = -.91; // center is 0.41: release moved just outside since the last green frame.
+  interaction.reportHeldShell(null); interaction.update(.01);
+  assert.equal(interaction.getInsertedShell(), shell, 'previous green candidate released just outside the boundary is accepted by grace'); interaction.dispose();
+}
+
+// Hardware-QA regressions: stable feedback root and state visibility.
+{
+  const t = fixture();
+  t.interaction.update(.01);
+  assert.equal(t.interaction.feedback.visible, true, 'OPEN + EMPTY keeps the green guide visible before a shell approaches');
+  assert.equal(t.interaction.feedback.material.color.getHex(), 0x49d17d);
+  const chamber = t.interaction.feedback.parent.children.find((child) => child.geometry?.type === 'CylinderGeometry' && child !== t.interaction.feedback);
+  chamber.visible = false; t.interaction.update(.01);
+  assert.equal(t.interaction.feedback.visible, true, 'feedback remains renderable when the authored chamber is hidden');
+  assert.notEqual(t.interaction.feedback.parent, chamber);
+  t.setOpen('CLOSED'); t.interaction.update(.01); assert.equal(t.interaction.feedback.visible, false);
+  t.interaction.dispose();
+}
+
+{
+  const root = new THREE.Group(), hold = new THREE.Group(), shell = new THREE.Mesh(new THREE.SphereGeometry(.1));
+  const wall = new THREE.Mesh(new THREE.BoxGeometry(1, 1, .02)); wall.position.z = -.5; root.add(wall, hold); hold.add(shell); shell.position.z = -1; root.updateMatrixWorld(true);
+  const center = shell.getWorldPosition(new THREE.Vector3());
+  assert.equal(constrainHeldShellToDeviceSurfaces({ shell, shellCenter: center, origin: new THREE.Vector3(), radius: .1, deviceRoots: [wall], clearance: .01 }), true);
+  assert.ok(Math.abs(shell.position.x) < 1e-12 && Math.abs(shell.position.y) < 1e-12, 'surface clamp only moves along the lance axis');
+  assert.ok(shell.position.z > -.5, 'shell is clamped before the test surface');
+  shell.position.z = -1; root.updateMatrixWorld(true);
+  assert.equal(constrainHeldShellToDeviceSurfaces({ shell, shellCenter: shell.getWorldPosition(new THREE.Vector3()), origin: new THREE.Vector3(), radius: .1, deviceRoots: [wall], excludedRoots: [wall] }), false, 'an excluded open chamber does not block insertion');
+}
+{
+  const root = new THREE.Group(), parentA = new THREE.Group(), parentB = new THREE.Group(), shell = new THREE.Group();
+  parentA.scale.set(2, 3, 4); parentB.scale.set(.5, .25, 2); root.add(parentA, parentB); parentA.add(shell); shell.scale.set(.3, .4, .5); root.updateMatrixWorld(true);
+  const original = shell.getWorldScale(new THREE.Vector3());
+  for (let index = 0; index < 4; index++) { parentB.attach(shell); setObjectWorldScale(shell, original); root.updateMatrixWorld(true);
+    assert.ok(shell.getWorldScale(new THREE.Vector3()).distanceTo(original) < 1e-12); parentA.attach(shell); setObjectWorldScale(shell, original); root.updateMatrixWorld(true);
+    assert.ok(shell.getWorldScale(new THREE.Vector3()).distanceTo(original) < 1e-12, 'four reparent cycles preserve exact world scale'); }
+}
+
 console.log('VR Astro furnace content assertions passed');
