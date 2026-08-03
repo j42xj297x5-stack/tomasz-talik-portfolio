@@ -26,13 +26,21 @@ experienceVr
 ├─ glyph interaction → crystal collection
 ├─ reliquary → Activate / Release
 ├─ VrProgressionController → progress floor
-└─ Tier-1 Astro/shell slice
+├─ Tier-1 Astro/shell slice
    ├─ semantic input
    → hand mode controller
    → Astro visual tool
    → scan cone
    → shell attractor interaction
    → shell system
+└─ Astro Furnace
+   ├─ furnace asset / mirrored placement
+   ├─ open interaction
+   ├─ activate interaction
+   ├─ option interaction
+   ├─ content interaction
+   ├─ furnace panel
+   └─ VrAstroFurnaceProgressionController
 ```
 
 Handedness is populated after each WebXR controller `connected` event; construction does not require an initial left/right value.
@@ -51,7 +59,7 @@ glyph hold
       → Release → controller commit → floor panel → tier test/ring → consuming
 ```
 
-`VrProgressionController` exclusively owns committed logical state. The floor is its visual projection. Both survive XR re-entry in the prepared runtime, but not reload/navigation; there is no durable persistence.
+`VrProgressionController` exclusively owns committed portfolio cards, branch/tier completion and the floor projection source. `VrAstroFurnaceProgressionController` independently owns committed furnace materials. Both domains survive XR re-entry in the prepared runtime, but not reload/navigation; there is no global progression store or durable persistence.
 
 ## Active Tier-1 Astro/shell flow
 
@@ -89,6 +97,31 @@ placed shell, attractorTarget=false
 
 Shell-over-crystal priority is conditional on an actual shell ray hit. Astro acquisition cannot target placed shells.
 
+## Active shell-to-furnace flow
+
+```text
+shell system
+→ content interaction
+→ VrAstroFurnaceProgressionController
+→ furnace panel (read-only projection)
+
+Tier 1 complete → shell field
+→ Astro scan/pull → capture_ready
+→ ordinary-ray takeover → held / placed
+→ open furnace → held shell reaches INSERT_VOLUME
+├─ unknown/duplicate → INVALID → remains physical
+└─ required missing type → VALID → release
+   → same instance snaps to CONTENT_ANCHOR → INSERTED
+   → close furnace
+   → activate interaction → PRESSING → SPINUP
+   → content CONSUMING → CONSUMED (no commit yet)
+   → activate interaction COMPLETE
+   → commit shellAssetId → controlled physical removal
+   → panel x/6 update
+```
+
+Insertion depends on `OPEN + IDLE + empty content`. Reopening before activation exposes the inserted instance to ordinary-ray retrieval and does not commit. The commit dependency is strictly `CONSUMED + COMPLETE`; session reset before it clears transient content without progress.
+
 ## Floor asset flow
 
 ```text
@@ -101,4 +134,4 @@ The optional procedural ring layer can fail without blocking the critical sector
 
 ## Not active dependencies
 
-Progressive sector backgrounds, central progression core, Astro B/bands, sphere assembly, floor-control sphere, floor tilting/local-plane locomotion, small glyphs, antenna, runes, final radar/finale, audio, durable persistence and full-game reset are not active runtime dependencies.
+Progressive sector backgrounds, central progression core, Astro B/bands, physical Asterion Sphere construction, floor-control sphere, floor tilting/local-plane locomotion, small glyphs, antenna, rune/Emanation Matrix processing, final radar/finale, audio, durable persistence and full-game reset are not active runtime dependencies.

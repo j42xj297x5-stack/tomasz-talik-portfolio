@@ -1,6 +1,6 @@
 # Experience VR Handoff
 
-Status: self-contained current snapshot for a new work thread, **2026-08-02**. Code is implementation evidence; the runtime model is the detailed canonical contract.
+Status: self-contained current snapshot for a new work thread, **2026-08-03**. Code is implementation evidence; the runtime model is the detailed canonical contract.
 
 ## IMPLEMENTED
 
@@ -19,7 +19,7 @@ Status: self-contained current snapshot for a new work thread, **2026-08-02**. C
 - Real glyph meshes use a `0.5 s` hold with `0.15 s` loss grace. Spawn captures glyph world position and offsets `0.30 m` inward. Acquisition is additive; insertion is current-tier gated.
 - Available crystals are targeted and squeeze-grabbed by ordinary rays. Reliquary proximity only classifies held-crystal insertion. Invalid insertion returns through `rejecting` without progress.
 - Activate previews a branch+tier page. Release commits it, activates the floor panel, tests the tier, then consumes the crystal. Release without Activate does not progress.
-- `VrProgressionController` owns committed state. The floor projects it with five authored sectors, 18 panels and five idempotent procedural tier rings.
+- `VrProgressionController` exclusively owns committed portfolio cards, branch/tier completion and the state projected by the floor. Furnace materials belong to a separate domain controller; no global progression store exists. The floor has five authored sectors, 18 panels and five idempotent procedural tier rings.
 
 ### Tier 1 Astro/shell gameplay slice
 
@@ -33,9 +33,20 @@ Status: self-contained current snapshot for a new work thread, **2026-08-02**. C
 - Placed shells remain ineligible for Astro (`attractorTarget=false`) but can be repeatedly haloed, grabbed and placed with either free ordinary ray; the right ray works only in `NORMAL_HAND`. Shell priority over a crystal exists only for a real shell hit.
 - Shell materials are cloned without losing authored maps. Pull emission progresses `0→1`, `capture_ready` is `1`, held/placed pulse `1→2→1` over `1.4 s`, and deterministic tumble is `0.10–0.22 rad/s`.
 
+### Astro Furnace and Asterion shell progression
+
+- The staged asset pipeline preloads `public/glb/astral_stove.glb`. The independent subsystem is scale `3`, grounded by visible geometry, faces the player start and mirrors the portal's XZ placement around the central monkey anchor.
+- Three physical ordinary-ray controls provide real-hit shortening and halos: `button_open` drives authored latch/lid/chamber open and reverse-close clips with runtime glass fade; `button_activate` locks down and runs `PRESSING → SPINUP → STEADY → EXTRACTION → COOLDOWN → COMPLETE`; `button_option` toggles the panel. Opening is blocked during processing, and Activate unlocks only when the next opening begins.
+- Runtime process rotation belongs only to `PIVOT_FURNACE_PROCESS_SPIN`, not the authored open/close chamber pivot or lid. The 18-second default profile uses `42 RPM`, direction `-1`, `2×` extraction speed and angle-coupled `fire_cell` feedback.
+- The sibling `CanvasTexture`/`PlaneGeometry` panel does not inherit furnace scale. HOME links to active Asterion Sphere (Sfera Asterionowa) and displays future Astro Attractor (Astro Przyciągacz) and Emanation Matrix (Matryca Emanacji). The Asterion screen projects gathered/missing types and read-only process/content telemetry, redrawing active telemetry at default `12 Hz`.
+- `VrAstroFurnaceProgressionController` independently owns one binary slot for each `shell-relic-1` through `shell-relic-6`. Exactly one of each type is required; duplicates and unknown IDs are invalid.
+- Insertion requires chamber `OPEN`, process `IDLE` and empty content. A valid held shell released in `VR_FURNACE_INSERT_VOLUME` remains the same physical instance and snaps to `VR_FURNACE_CONTENT_ANCHOR`. Before activation, reopening permits ordinary-ray+squeeze retrieval without progress.
+- Processing changes inserted content through `CONSUMING` to `CONSUMED`. Commit occurs only at `CONSUMED + COMPLETE`; then the shell system removes the physical instance and its owned material clones and the panel updates `x/6`. The furnace stores progression rather than emitting a physical essence output.
+- Furnace committed progress survives XR exit/re-entry in the prepared page runtime. Reload/navigation resets it. Session interruption before COMPLETE clears transient content with no commit; durable save does not exist.
+
 ## NOT IMPLEMENTED / FUTURE
 
 - B is not implemented. Approved future behavior makes it a selector only among unlocked Astro bands: RED, YELLOW, GREEN, BLUE and ULTRAVIOLET.
-- Sphere assembly is not implemented. The approved future value is `sphereAssembly.requiredShells = 6`; six acquired shells are intended to construct the left-hand floor-control sphere.
-- The sphere as a spatial gyroscope, floor tilt/local-plane movement, progressive sector backgrounds, central core, small glyphs, antenna, runes, final radar/finale, audio, durable persistence and full-game reset remain future work.
+- Collecting all six unique materials does not physically construct the Asterion Sphere. Its construction/materialization, left-hand spatial-gyroscope tool and floor control remain future.
+- Floor tilt/local-plane movement, progressive sector backgrounds, central core, small glyphs, Astro bands/B selector, antenna, rune processing, final radar/finale, audio, durable persistence and full-game reset remain future work.
 - After Tier 1, ordinary `2.3 m` reach is intended to become insufficient for further glyphs. Target separation is approximately `3 m`; moving the platform versus moving the glyph ring is deliberately unresolved.
