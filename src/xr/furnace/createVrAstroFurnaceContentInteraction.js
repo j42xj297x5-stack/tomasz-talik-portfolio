@@ -10,6 +10,30 @@ const VALID_ASSET_IDS = new Set(Array.from({ length: 6 }, (_, index) => `shell-r
 const clamp01 = (value) => THREE.MathUtils.clamp(value, 0, 1);
 const smoothstep = (value) => { const t = clamp01(value); return t * t * (3 - 2 * t); };
 
+export function setObjectWorldScale(object, desired, target = new THREE.Vector3()) {
+  object.scale.set(1, 1, 1); object.updateWorldMatrix(true, false); object.getWorldScale(target);
+  object.scale.set(desired.x / Math.max(Math.abs(target.x), 1e-8),
+    desired.y / Math.max(Math.abs(target.y), 1e-8), desired.z / Math.max(Math.abs(target.z), 1e-8));
+  object.updateWorldMatrix(false, false); return object.scale;
+}
+
+export function constrainHeldShellToDeviceSurfaces({ shell, shellCenter, origin, radius, deviceRoots = [],
+  excludedRoots = [], clearance = 0.006, raycaster = new THREE.Raycaster() }) {
+  const axis = new THREE.Vector3().subVectors(shellCenter, origin), targetDistance = axis.length();
+  if (!shell?.parent || targetDistance <= 1e-8) return false;
+  axis.multiplyScalar(1 / targetDistance); raycaster.set(origin, axis); raycaster.near = 0; raycaster.far = targetDistance;
+  const isExcluded = (object) => excludedRoots.some((root) => root && (object === root || root.getObjectById?.(object.id)));
+  const hit = deviceRoots.flatMap((root) => raycaster.intersectObject(root, true)).filter(({ object }) => {
+    if (!object.isMesh || object.visible === false || isExcluded(object)) return false;
+    return !/(helper|feedback|ray|halo|panel|button|insert_volume|content_anchor)/.test(object.name.toLowerCase());
+  }).sort((a, b) => a.distance - b.distance)[0];
+  if (!hit || hit.distance >= targetDistance) return false;
+  const distance = Math.max(0, hit.distance - Math.max(0, radius) - Math.max(0, clearance));
+  const shellOrigin = shell.getWorldPosition(new THREE.Vector3());
+  const constrainedOrigin = origin.clone().addScaledVector(axis, distance).sub(shellCenter.clone().sub(shellOrigin));
+  shell.parent.worldToLocal(constrainedOrigin); shell.position.copy(constrainedOrigin); return true;
+}
+
 export function createVrAstroFurnaceContentInteraction({
   furnace, shellSystem, openInteraction, activateInteraction, progressionController, settings = {}
 }) {
@@ -17,7 +41,7 @@ export function createVrAstroFurnaceContentInteraction({
   const config = {
     enabled: true, snapDuration: 0.42,
     chamberClearance: 0.012, contentClearance: 0.012, rejectDuration: 0.28, rejectDistanceMultiplier: 1.35,
-    feedbackOpacity: 0.20, validColor: 0x49d17d, invalidColor: 0xe05252,
+    feedbackOpacity: 0.32, releaseGrace: 0.035, surfaceClearance: 0.006, validColor: 0x49d17d, invalidColor: 0xe05252,
     consumeStartProgress: 0.18, consumeEndProgress: 0.78, ...settings
   };
   const volume = furnace?.nodes?.VR_FURNACE_INSERT_VOLUME;
@@ -29,16 +53,17 @@ export function createVrAstroFurnaceContentInteraction({
   if (config.enabled !== false && !insertionReady) {
     console.warn('[Experience VR] Astro furnace shell insertion is disabled: chamber geometry, insert marker, or content anchor is missing.');
   }
-  const worldCenter = new THREE.Vector3(), shellPosition = new THREE.Vector3();
+  const feedbackRoot = furnace?.object;
+  const worldCenter = new THREE.Vector3(), shellPosition = new THREE.Vector3(), worldScale = new THREE.Vector3();
   const chamberInverse = new THREE.Matrix4(), lanceDirection = new THREE.Vector3(), blockedLocal = new THREE.Vector3();
   const shellBaselines = new WeakMap();
   const feedbackGeometry = insertionReady ? new THREE.CylinderGeometry(chamberCylinder.radius, chamberCylinder.radius,
     chamberCylinder.height, 24, 1, true) : null;
   const feedbackMaterial = insertionReady ? new THREE.MeshBasicMaterial({ transparent: true, opacity: 0,
-    depthWrite: false, side: THREE.DoubleSide, color: config.validColor }) : null;
+    depthTest: false, depthWrite: false, side: THREE.DoubleSide, color: config.validColor }) : null;
   const feedback = insertionReady ? new THREE.Mesh(feedbackGeometry, feedbackMaterial) : null;
-  if (feedback) { feedback.name = 'VrAstroFurnaceInsertFeedback'; feedback.position.copy(chamberCylinder.center);
-    feedback.visible = false; chamber.add(feedback); }
+  if (feedback) { feedback.name = 'VrAstroFurnaceInsertFeedback'; feedback.renderOrder = 1000;
+    feedback.visible = false; feedbackRoot.add(feedback); }
 
   let state = states.EMPTY, insertedShell = null, pendingShellAssetId = null, reportedHeldShell = null;
   let previousHeldShell = null, candidateWasValid = false, snapElapsed = 0, elapsed = 0, disposed = false;
@@ -55,13 +80,28 @@ export function createVrAstroFurnaceContentInteraction({
   }
   function baselineScale(shell) {
     let baseline = shellBaselines.get(shell);
-    if (!baseline) { baseline = shell.scale.clone(); shellBaselines.set(shell, baseline); }
+    if (!baseline) { baseline = shell.getWorldScale(new THREE.Vector3()); shellBaselines.set(shell, baseline); }
     return baseline;
+  }
+  function shellRecord(shell) { return shellSystem?.getRecord?.(shell)
+    ?? shellSystem?.records?.find((record) => record.object === shell) ?? null; }
+  function shellWorldCenter(shell, target = shellPosition) {
+    shell.updateWorldMatrix(true, true); const center = shellRecord(shell)?.boundingCenter;
+    return center ? target.copy(center).applyMatrix4(shell.matrixWorld) : shell.getWorldPosition(target);
+  }
+  function shellWorldRadius(shell) { const record = shellRecord(shell); shell.getWorldScale(worldScale);
+    return (record?.boundingRadius ?? 0) * Math.max(...worldScale.toArray().map(Math.abs)); }
+  function syncFeedbackTransform() {
+    if (!feedback) return; chamber.updateWorldMatrix(true, false); feedbackRoot.updateWorldMatrix(true, false);
+    const matrix = new THREE.Matrix4().multiplyMatrices(feedbackRoot.matrixWorld.clone().invert(), chamber.matrixWorld);
+    matrix.decompose(feedback.position, feedback.quaternion, feedback.scale);
+    const offset = chamberCylinder.center.clone().multiply(feedback.scale).applyQuaternion(feedback.quaternion);
+    feedback.position.add(offset);
   }
   function blockClosedChamber(shell) {
     if (!shell || !chamberCylinder || openInteraction?.getState?.() === 'OPEN') return;
     chamber.updateWorldMatrix(true, false); chamberInverse.copy(chamber.matrixWorld).invert();
-    shell.getWorldPosition(shellPosition); blockedLocal.copy(shellPosition).applyMatrix4(chamberInverse);
+    shellWorldCenter(shell, shellPosition); blockedLocal.copy(shellPosition).applyMatrix4(chamberInverse);
     const center = chamberCylinder.center, radius = chamberCylinder.radius;
     const dx = blockedLocal.x - center.x, dz = blockedLocal.z - center.z;
     if (dx * dx + dz * dz >= radius * radius || Math.abs(blockedLocal.y - center.y) >= chamberCylinder.halfHeight) return;
@@ -86,7 +126,7 @@ export function createVrAstroFurnaceContentInteraction({
     && activateInteraction?.getState?.() === 'IDLE'; }
   function isNear(shell) {
     if (!shell || !insertionReady) return false;
-    shell.getWorldPosition(shellPosition);
+    shellWorldCenter(shell, shellPosition);
     return isWorldPointInsideChamberCylinder(shellPosition, chamber, chamberCylinder, blockedLocal);
   }
   function showFeedback(valid) {
@@ -123,7 +163,7 @@ export function createVrAstroFurnaceContentInteraction({
   }
   function resolveSnapTarget(shell) {
     const savedPosition = shell.position.clone(), savedQuaternion = shell.quaternion.clone(), savedScale = shell.scale.clone();
-    shell.position.set(0, 0, 0); shell.quaternion.identity(); shell.scale.copy(baseScale).multiplyScalar(shell.userData.furnaceInsertedScale); shell.updateWorldMatrix(true, true);
+    shell.position.set(0, 0, 0); shell.quaternion.identity(); setObjectWorldScale(shell, shell.userData.furnaceDesiredWorldScale, worldScale); shell.updateWorldMatrix(true, true);
     const shellBox = boxInAnchor(shell), energy = furnace?.nodes?.energy_cell ?? furnace?.nodes?.fire_cell;
     const energyBox = energy ? boxInAnchor(energy) : new THREE.Box3().makeEmpty();
     const target = new THREE.Vector3();
@@ -140,6 +180,8 @@ export function createVrAstroFurnaceContentInteraction({
     const available = new THREE.Vector3(chamberCylinder.radius * 2, chamberCylinder.height, chamberCylinder.radius * 2);
     const fitScale = Math.min(1, ...['x', 'y', 'z'].map((axis) => shellSize[axis] > 1e-6 ? available[axis] / shellSize[axis] : 1));
     shell.userData.furnaceInsertedScale = fitScale;
+    shell.userData.furnaceDesiredWorldScale = baseScale.clone().multiplyScalar(fitScale);
+    setObjectWorldScale(shell, shell.userData.furnaceDesiredWorldScale, worldScale);
     shell.userData.furnaceSnapTarget = resolveSnapTarget(shell);
     shell.userData.shellState = 'inserted'; shell.userData.attractorTarget = false;
     snapElapsed = 0; setState(states.INSERTED); hideFeedback(); return true;
@@ -149,6 +191,12 @@ export function createVrAstroFurnaceContentInteraction({
     const direction = start.clone().sub(center); if (direction.lengthSq() < 1e-8) direction.set(1, 0, 0);
     const end = center.clone().add(direction.normalize().multiplyScalar(chamberCylinder.radius * config.rejectDistanceMultiplier));
     shell.userData.shellState = 'rejecting'; rejects.push({ shell, elapsed: 0, start, end });
+  }
+  function isWithinReleaseGrace(shell) {
+    shellWorldCenter(shell, shellPosition); chamber.updateWorldMatrix(true, false);
+    blockedLocal.copy(shellPosition).applyMatrix4(chamberInverse.copy(chamber.matrixWorld).invert()).sub(chamberCylinder.center);
+    return Math.hypot(blockedLocal.x, blockedLocal.z) <= chamberCylinder.radius + config.releaseGrace
+      && Math.abs(blockedLocal.y) <= chamberCylinder.halfHeight + config.releaseGrace;
   }
   function updateCandidate() {
     const held = reportedHeldShell;
@@ -160,7 +208,7 @@ export function createVrAstroFurnaceContentInteraction({
     } else if ([states.CANDIDATE_VALID, states.CANDIDATE_INVALID].includes(state)) {
       setState(insertedShell ? states.INSERTED : states.EMPTY); candidateWasValid = false; hideFeedback();
     }
-    if (releasedShell && releasedWasValid && isNear(releasedShell)) accept(releasedShell);
+    if (releasedShell && releasedWasValid && (isNear(releasedShell) || isWithinReleaseGrace(releasedShell))) accept(releasedShell);
     else if (releasedShell && !releasedWasValid && isNear(releasedShell) && canEvaluateCandidate()) reject(releasedShell);
     previousHeldShell = held;
   }
@@ -170,7 +218,9 @@ export function createVrAstroFurnaceContentInteraction({
     const t = smoothstep(snapElapsed / Math.max(config.snapDuration, 1e-6));
     insertedShell.position.lerpVectors(snapStartPosition, insertedShell.userData.furnaceSnapTarget, t);
     insertedShell.quaternion.slerpQuaternions(snapStartQuaternion, new THREE.Quaternion(), t);
-    insertedShell.scale.lerpVectors(snapStartScale, baseScale.clone().multiplyScalar(insertedShell.userData.furnaceInsertedScale), t);
+    const targetScale = insertedShell.userData.furnaceDesiredWorldScale.clone(), parentScale = insertedShell.parent.getWorldScale(worldScale);
+    targetScale.set(targetScale.x / Math.abs(parentScale.x), targetScale.y / Math.abs(parentScale.y), targetScale.z / Math.abs(parentScale.z));
+    insertedShell.scale.lerpVectors(snapStartScale, targetScale, t);
   }
   function updateRejects(delta) { for (let index = rejects.length - 1; index >= 0; index--) {
     const item = rejects[index]; item.elapsed += delta; const raw = Math.min(1, item.elapsed / Math.max(config.rejectDuration, 1e-6));
@@ -204,15 +254,25 @@ export function createVrAstroFurnaceContentInteraction({
   function update(delta = 0) {
     if (disposed) return; const step = Math.max(0, Number.isFinite(delta) ? delta : 0); elapsed += step;
     if (insertedShell && reportedHeldShell === insertedShell && state === states.INSERTED) {
-      insertedShell.scale.copy(baseScale);
+      setObjectWorldScale(insertedShell, baseScale, worldScale);
       insertedShell = null; pendingShellAssetId = null; materialBases.length = 0; ownedMaterials.clear(); setState(states.EMPTY); hideFeedback();
     } else if ([states.EMPTY, states.CANDIDATE_VALID, states.CANDIDATE_INVALID, states.INSERTED].includes(state)) updateCandidate();
-    if (reportedHeldShell) blockClosedChamber(reportedHeldShell);
+    if (reportedHeldShell) {
+      shellWorldCenter(reportedHeldShell, shellPosition);
+      const holdOrigin = reportedHeldShell.parent?.getWorldPosition(new THREE.Vector3());
+      if (holdOrigin) constrainHeldShellToDeviceSurfaces({ shell: reportedHeldShell, shellCenter: shellPosition.clone(), origin: holdOrigin,
+        radius: shellWorldRadius(reportedHeldShell), deviceRoots: [furnace.object],
+        excludedRoots: openInteraction?.getState?.() === 'OPEN' ? [chamber] : [], clearance: config.surfaceClearance });
+      blockClosedChamber(reportedHeldShell);
+    }
     if (state === states.INSERTED) {
       if (insertedShell) { insertedShell.userData.shellState = openInteraction?.getState?.() === 'OPEN' ? 'placed' : 'inserted';
         insertedShell.userData.attractorTarget = false; updateSnap(step);
         if (['SPINUP', 'STEADY', 'EXTRACTION', 'COOLDOWN'].includes(activateInteraction?.getState?.())) consumeInsertedContent(); }
     }
+    syncFeedbackTransform();
+    if (state === states.EMPTY && canEvaluateCandidate()) showFeedback(true);
+    else if (![states.CANDIDATE_VALID, states.CANDIDATE_INVALID].includes(state)) hideFeedback();
     updateConsumption(); commitConsumedContent(); updateRejects(step); reportedHeldShell = null;
   }
   function reportHeldShell(shell) { reportedHeldShell = shell ?? null; }

@@ -184,6 +184,8 @@ activateInteraction.update(0.06);
 assert.equal(activateInteraction.getState(), ASTRO_FURNACE_PROCESS_STATES.STEADY);
 assert.ok(activateInteraction.processLight.visible && activateInteraction.processLight.intensity > 0);
 assert.equal(activateInteraction.processLight.castShadow, false);
+assert.equal(activateInteraction.processLight.parent, processFurnace.object, 'process light uses the stable furnace root');
+assert.notEqual(activateInteraction.processLight.parent, processFurnace.nodes.komora);
 assert.ok(Math.abs(activateInteraction.processLight.userData.lightAngle + activateInteraction.getProcessAngle()) < 1e-12,
   'process light angle is exactly the negative process angle');
 const steadySpeed = Math.abs(activateInteraction.getAngularSpeed());

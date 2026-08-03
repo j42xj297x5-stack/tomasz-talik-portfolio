@@ -40,10 +40,20 @@ export function createVrAstroFurnaceActivateInteraction({
   const fireCell = furnace?.nodes?.fire_cell;
   const chamber = furnace?.nodes?.komora;
   const chamberCylinder = resolveChamberCylinder(chamber, processSettings.processLightChamberClearance ?? 0.012);
+  const lightRoot = furnace?.object;
+  const lightOrbitCenter = new THREE.Vector3();
+  const lightOrbitScale = new THREE.Vector3(1, 1, 1);
+  if (chamberCylinder && lightRoot) {
+    chamber.updateWorldMatrix(true, false); lightRoot.updateWorldMatrix(true, false);
+    lightOrbitCenter.copy(chamberCylinder.center).applyMatrix4(chamber.matrixWorld);
+    lightRoot.worldToLocal(lightOrbitCenter);
+    chamber.getWorldScale(lightOrbitScale); const rootScale = lightRoot.getWorldScale(new THREE.Vector3());
+    lightOrbitScale.divide(rootScale);
+  }
   const processLight = chamberCylinder ? new THREE.PointLight(processSettings.processLightColor ?? 0xb8f3ff, 0,
     processSettings.processLightDistance ?? 2.4, processSettings.processLightDecay ?? 2) : null;
   if (processLight) { processLight.name = 'VrAstroFurnaceProcessLight'; processLight.castShadow = false;
-    processLight.visible = false; chamber.add(processLight); }
+    processLight.visible = false; lightRoot.add(processLight); }
   const clip = furnace?.clips?.[CLIP_NAME];
   const mixer = furnace?.model ? new THREE.AnimationMixer(furnace.model) : null;
   const action = mixer && clip ? mixer.clipAction(clip) : null;
@@ -108,8 +118,8 @@ export function createVrAstroFurnaceActivateInteraction({
     const lightAngle = -angle;
     const radius = chamberCylinder.radius * THREE.MathUtils.clamp(
       processSettings.processLightOrbitRadiusMultiplier ?? 0.82, 0, 0.99);
-    processLight.position.set(chamberCylinder.center.x + Math.cos(lightAngle) * radius,
-      chamberCylinder.center.y, chamberCylinder.center.z + Math.sin(lightAngle) * radius);
+    processLight.position.set(lightOrbitCenter.x + Math.cos(lightAngle) * radius * Math.abs(lightOrbitScale.x),
+      lightOrbitCenter.y, lightOrbitCenter.z + Math.sin(lightAngle) * radius * Math.abs(lightOrbitScale.z));
     processLight.intensity = Math.max(0, intensity); processLight.visible = processLight.intensity > 0;
     processLight.userData.lightAngle = lightAngle;
   }
