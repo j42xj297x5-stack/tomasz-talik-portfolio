@@ -23,7 +23,15 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
     position: { x: -2.0, y: 0, z: 1.0 },
     rotationDegrees: { x: 0, y: 0, z: 0 },
     scale: 3,
-    debug: false
+    debug: false,
+    openButton: {
+      enabled: true,
+      rayMaxDistance: 3,
+      emissionInactive: 0,
+      emissionHover: 1,
+      emissionPressed: 4
+    },
+    chamber: { glassFadeStart: 0.2, glassFadeEnd: 1 }
   },
   controllers: {
     enabled: true,
@@ -198,7 +206,25 @@ export function normalizeExperienceVrSettings(candidate) {
       scale: finiteNumber(candidate.furnace?.scale, defaults.furnace.scale, { min: 0.05, max: 10 }),
       debug: typeof candidate.furnace?.debug === 'boolean'
         ? candidate.furnace.debug
-        : defaults.furnace.debug
+        : defaults.furnace.debug,
+      openButton: {
+        enabled: typeof candidate.furnace?.openButton?.enabled === 'boolean'
+          ? candidate.furnace.openButton.enabled : defaults.furnace.openButton.enabled,
+        rayMaxDistance: finiteNumber(candidate.furnace?.openButton?.rayMaxDistance,
+          defaults.furnace.openButton.rayMaxDistance, { min: 0.3, max: 5 }),
+        emissionInactive: finiteNumber(candidate.furnace?.openButton?.emissionInactive,
+          defaults.furnace.openButton.emissionInactive, { min: 0, max: 10 }),
+        emissionHover: finiteNumber(candidate.furnace?.openButton?.emissionHover,
+          defaults.furnace.openButton.emissionHover, { min: 0, max: 10 }),
+        emissionPressed: finiteNumber(candidate.furnace?.openButton?.emissionPressed,
+          defaults.furnace.openButton.emissionPressed, { min: 0, max: 10 })
+      },
+      chamber: {
+        glassFadeStart: finiteNumber(candidate.furnace?.chamber?.glassFadeStart,
+          defaults.furnace.chamber.glassFadeStart, { min: 0, max: 1 }),
+        glassFadeEnd: finiteNumber(candidate.furnace?.chamber?.glassFadeEnd,
+          defaults.furnace.chamber.glassFadeEnd, { min: 0, max: 1 })
+      }
     },
     controllers: {
       enabled: typeof candidate.controllers?.enabled === 'boolean'
