@@ -111,13 +111,6 @@ await preloadAssets(vrAssets, {
   markComplete: true
 });
 unsubscribe();
-const astroFurnaceGltf = assetManager.getGltf('vr-astro-furnace-model');
-const astroFurnace = createVrAstroFurnace({
-  parent: worldRoot,
-  model: assetManager.cloneGltfScene('vr-astro-furnace-model'),
-  animations: astroFurnaceGltf?.animations ?? [],
-  settings: settings.furnace
-});
 const progressFloor = createVrProgressFloor({
   parent: worldRoot,
   creativeSectorModel: assetManager.cloneGltfScene('vr-progress-floor-creative-model'),
@@ -140,6 +133,16 @@ const monkeyAnchor = monkeyModel ?? centralPlaceholder;
 const portalDisplay = createVrPortalDisplay({
   scene, anchorObject: monkeyAnchor, spawnPosition: settings.spawn.position,
   portalModel: assetManager.cloneGltfScene('vr-portal-model'), settings: settings.portal
+});
+const astroFurnaceGltf = assetManager.getGltf('vr-astro-furnace-model');
+const astroFurnace = createVrAstroFurnace({
+  parent: worldRoot,
+  model: assetManager.cloneGltfScene('vr-astro-furnace-model'),
+  animations: astroFurnaceGltf?.animations ?? [],
+  settings: settings.furnace,
+  anchorObject: monkeyAnchor,
+  mirrorObject: portalDisplay.object,
+  spawnPosition: settings.spawn.position
 });
 const portalCanvas = createVrSpatialPlaque({
   scene,
