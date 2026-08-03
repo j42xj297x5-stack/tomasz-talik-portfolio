@@ -3,18 +3,26 @@ import * as THREE from '../src/vendor/three.js';
 import { ASTRO_FURNACE_CONTENT_STATES as S, createVrAstroFurnaceContentInteraction } from '../src/xr/furnace/createVrAstroFurnaceContentInteraction.js';
 import { createVrAstroFurnaceProgressionController } from '../src/xr/furnace/createVrAstroFurnaceProgressionController.js';
 
-function fixture() {
-  const object = new THREE.Group(), volume = new THREE.Mesh(new THREE.SphereGeometry(.5)), anchor = new THREE.Group();
+function fixture({ emptyVolume = false } = {}) {
+  const object = new THREE.Group(), volume = emptyVolume ? new THREE.Group() : new THREE.Mesh(new THREE.SphereGeometry(.5)), anchor = new THREE.Group();
   object.add(volume, anchor); let open = 'OPEN', process = 'IDLE', progress = 0, commits = 0, removed;
   const progression = createVrAstroFurnaceProgressionController(), commit = progression.commitAbsorbedShell;
   progression.commitAbsorbedShell = (id) => { commits++; return commit(id); };
   const interaction = createVrAstroFurnaceContentInteraction({ furnace: { object, nodes: { VR_FURNACE_INSERT_VOLUME: volume,
     VR_FURNACE_CONTENT_ANCHOR: anchor } }, shellSystem: { removeInstance(shell) { removed = shell; shell.removeFromParent(); return true; } },
-  openInteraction: { getState: () => open }, activateInteraction: { getState: () => process, getProgress: () => progress }, progressionController: progression });
+  openInteraction: { getState: () => open }, activateInteraction: { getState: () => process, getProgress: () => progress }, progressionController: progression,
+  settings: emptyVolume ? { volumeRadius: .5, rejectDuration: .1 } : { rejectDuration: .1 } });
   const makeShell = (id = 'shell-relic-1') => { const shell = new THREE.Mesh(new THREE.SphereGeometry(.1), new THREE.MeshStandardMaterial());
     shell.userData.shellAssetId = id; object.add(shell); return shell; };
   return { interaction, progression, anchor, makeShell, setOpen: (v) => { open = v; }, setProcess: (v) => { process = v; },
     setProgress: (v) => { progress = v; }, get commits() { return commits; }, get removed() { return removed; } };
+}
+{
+  const empty = fixture({ emptyVolume: true }), geometry = fixture();
+  assert.equal(empty.interaction.isInsertionReady(), true); assert.equal(geometry.interaction.isInsertionReady(), true);
+  const shell = empty.makeShell(); empty.interaction.reportHeldShell(shell); empty.interaction.update(.01);
+  assert.equal(empty.interaction.getState(), S.CANDIDATE_VALID); assert.equal(empty.interaction.feedback.visible, true);
+  empty.interaction.dispose(); geometry.interaction.dispose();
 }
 function insert(test, shell) { test.interaction.reportHeldShell(shell); test.interaction.update(.01);
   assert.equal(test.interaction.getState(), S.CANDIDATE_VALID); test.interaction.reportHeldShell(null); test.interaction.update(.01); }
@@ -26,6 +34,14 @@ function insert(test, shell) { test.interaction.reportHeldShell(shell); test.int
   const unknown = t.makeShell('unknown'); t.interaction.reportHeldShell(unknown); t.interaction.update(.01); assert.equal(t.interaction.getState(), S.CANDIDATE_INVALID);
   t.interaction.reset(); t.progression.commitAbsorbedShell('shell-relic-2'); const duplicate = t.makeShell('shell-relic-2');
   t.interaction.reportHeldShell(duplicate); t.interaction.update(.01); assert.equal(t.interaction.getState(), S.CANDIDATE_INVALID); t.interaction.dispose();
+}
+{
+  const t = fixture(), first = t.makeShell('shell-relic-1'), second = t.makeShell('shell-relic-2'); insert(t, first);
+  t.interaction.reportHeldShell(second); t.interaction.update(.01); assert.equal(t.interaction.getState(), S.CANDIDATE_INVALID);
+  assert.equal(t.interaction.feedback.material.color.getHex(), 0xe05252); t.interaction.reportHeldShell(null); t.interaction.update(.01);
+  assert.equal(t.interaction.getInsertedShell(), first); assert.equal(second.userData.shellState, 'rejecting');
+  t.interaction.update(.2); assert.equal(second.userData.shellState, 'placed'); assert.equal(t.interaction.getInsertedShell(), first);
+  assert.equal(t.progression.getSnapshot().asterionSphere.absorbed, 0); t.interaction.dispose();
 }
 {
   const t = fixture(), shell = t.makeShell(); insert(t, shell); assert.equal(t.interaction.getInsertedShell(), shell);

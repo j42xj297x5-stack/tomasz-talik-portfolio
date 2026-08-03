@@ -30,6 +30,7 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
   let state = ASTRO_FURNACE_PANEL_STATES.HIDDEN, screen = ASTRO_FURNACE_PANEL_SCREENS.HOME;
   let elapsed = 0, telemetryElapsed = 0, lastTelemetryRedraw = 0, completedUntil = 0, previousProcessState = 'IDLE';
   let hoveredRegion = null, interactiveRegions = [], disposed = false, redrawCount = 0;
+  const moduleListeners = new Set();
 
   function panelRect(x, y, width, height, options = {}) {
     drawFurnaceFrame(context, { x, y, width, height, cornerSize: options.cornerSize ?? config.frameCornerSizePx, ...options });
@@ -111,7 +112,10 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
   function show() { screen = ASTRO_FURNACE_PANEL_SCREENS.HOME; hoveredRegion = null; state = ASTRO_FURNACE_PANEL_STATES.APPEARING; elapsed = 0; root.visible = true; draw(); }
   function hide() { if (state === ASTRO_FURNACE_PANEL_STATES.HIDDEN) return; state = ASTRO_FURNACE_PANEL_STATES.DISAPPEARING; elapsed = 0; }
   function toggle() { if (state === ASTRO_FURNACE_PANEL_STATES.HIDDEN || state === ASTRO_FURNACE_PANEL_STATES.DISAPPEARING) show(); else hide(); }
-  function activateRegion(id) { if (id === 'module-asterion-sphere') screen = ASTRO_FURNACE_PANEL_SCREENS.ASTERION_SPHERE; else if (id === 'back-modules') screen = ASTRO_FURNACE_PANEL_SCREENS.HOME; else return false; hoveredRegion = null; draw(); return true; }
+  function activateRegion(id) { if (id === 'module-asterion-sphere') {
+    screen = ASTRO_FURNACE_PANEL_SCREENS.ASTERION_SPHERE;
+    moduleListeners.forEach((listener) => listener('floor_gyroscope_sphere'));
+  } else if (id === 'back-modules') screen = ASTRO_FURNACE_PANEL_SCREENS.HOME; else return false; hoveredRegion = null; draw(); return true; }
   function updateHits() {
     let nextHover = null;
     controllers.forEach((record) => {
@@ -141,9 +145,10 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
   function reset() { state = ASTRO_FURNACE_PANEL_STATES.HIDDEN; screen = ASTRO_FURNACE_PANEL_SCREENS.HOME; elapsed = 0; telemetryElapsed = 0; lastTelemetryRedraw = 0; completedUntil = 0; previousProcessState = 'IDLE'; hoveredRegion = null; material.opacity = 0; hits.forEach((_, record) => hits.set(record, null)); place(); root.visible = false; draw(); }
   const unsubscribe = progressionController.subscribe(() => draw());
   const unsubscribePlacement = furnace.subscribePlacement?.(() => place()) ?? (() => {});
-  function dispose() { if (disposed) return; disposed = true; unsubscribe(); unsubscribePlacement(); listeners.forEach(({ record, listener }) => record.controller.removeEventListener('selectstart', listener)); root.removeFromParent(); geometry.dispose(); material.dispose(); texture.dispose(); canvas.width = 0; canvas.height = 0; hits.clear(); }
+  function dispose() { if (disposed) return; disposed = true; unsubscribe(); unsubscribePlacement(); moduleListeners.clear(); listeners.forEach(({ record, listener }) => record.controller.removeEventListener('selectstart', listener)); root.removeFromParent(); geometry.dispose(); material.dispose(); texture.dispose(); canvas.width = 0; canvas.height = 0; hits.clear(); }
   reset();
-  return { object: root, mesh, canvas, texture, hits, show, hide, toggle, place, update, press, reset, dispose, activateRegion,
+  return { object: root, mesh, canvas, texture, hits, show, hide, toggle, place, update, press, reset, dispose, activateRegion, redraw: draw,
+    subscribeModuleActivation(listener) { moduleListeners.add(listener); return () => moduleListeners.delete(listener); },
     isVisible: () => state !== ASTRO_FURNACE_PANEL_STATES.HIDDEN && state !== ASTRO_FURNACE_PANEL_STATES.DISAPPEARING,
     hasCurrentHit: (record) => Boolean(hits.get(record)?.intersection), getState: () => state, getScreen: () => screen,
     getInteractiveRegions: () => interactiveRegions.map((region) => ({ ...region })), getRedrawCount: () => redrawCount };

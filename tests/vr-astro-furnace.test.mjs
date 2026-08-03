@@ -3,6 +3,7 @@ import * as THREE from '../src/vendor/three.js';
 import { calculateMirroredHorizontalPosition, createVrAstroFurnace } from '../src/xr/furnace/createVrAstroFurnace.js';
 import { ASTRO_FURNACE_STATES, createVrAstroFurnaceOpenInteraction } from '../src/xr/furnace/createVrAstroFurnaceOpenInteraction.js';
 import { ASTRO_FURNACE_PROCESS_STATES, createVrAstroFurnaceActivateInteraction } from '../src/xr/furnace/createVrAstroFurnaceActivateInteraction.js';
+import { createVrAstroFurnaceOptionInteraction } from '../src/xr/furnace/createVrAstroFurnaceOptionInteraction.js';
 import { normalizeExperienceVrSettings } from '../src/config/experienceVrSettings.js';
 
 const colorDistanceToWhite = (color) => Math.hypot(1 - color.r, 1 - color.g, 1 - color.b);
@@ -253,4 +254,19 @@ assert.equal(incomplete.getState(), ASTRO_FURNACE_STATES.CLOSED);
 assert.ok(incompleteFurnace.object.visible, 'missing clip disables only open/close capability');
 assert.equal(warnings.filter(([message]) => String(message).includes('open/close interaction is disabled')).length, 1);
 incomplete.dispose(); incompleteFurnace.dispose();
+
+{
+  const optionFurnace = buildInteractiveFurnace(); let moduleListener = null;
+  optionFurnace.nodes.PIVOT_BUTTON_OPTION = new THREE.Group(); optionFurnace.object.add(optionFurnace.nodes.PIVOT_BUTTON_OPTION);
+  const panel = { isVisible: () => false, toggle() {}, subscribeModuleActivation(listener) { moduleListener = listener; return () => { moduleListener = null; }; } };
+  const option = createVrAstroFurnaceOptionInteraction({ furnace: optionFurnace, panel, controllers: [],
+    settings: { enabled: true, selectionDuration: .5, moduleAnglesDegrees: { floor_gyroscope_sphere: 90 } } });
+  assert.equal(moduleListener('floor_gyroscope_sphere'), true); option.update(.25);
+  assert.ok(optionFurnace.nodes.PIVOT_BUTTON_OPTION.rotation.z > 0 && optionFurnace.nodes.PIVOT_BUTTON_OPTION.rotation.z < Math.PI / 2);
+  option.update(.25); assert.ok(Math.abs(optionFurnace.nodes.PIVOT_BUTTON_OPTION.rotation.z - Math.PI / 2) < 1e-7);
+  assert.equal(option.getActiveMode(), 'floor_gyroscope_sphere');
+  assert.equal(moduleListener('floor_gyroscope_sphere'), true); option.update(.5);
+  assert.ok(Math.abs(optionFurnace.nodes.PIVOT_BUTTON_OPTION.rotation.z - Math.PI / 2) < 1e-7, 'reselection is idempotent');
+  option.dispose(); optionFurnace.dispose();
+}
 console.log('VR Astro furnace assertions passed');
