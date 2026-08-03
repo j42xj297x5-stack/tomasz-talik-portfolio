@@ -5,6 +5,8 @@ import { ASTRO_FURNACE_STATES, createVrAstroFurnaceOpenInteraction } from '../sr
 import { ASTRO_FURNACE_PROCESS_STATES, createVrAstroFurnaceActivateInteraction } from '../src/xr/furnace/createVrAstroFurnaceActivateInteraction.js';
 import { normalizeExperienceVrSettings } from '../src/config/experienceVrSettings.js';
 
+const colorDistanceToWhite = (color) => Math.hypot(1 - color.r, 1 - color.g, 1 - color.b);
+
 const center = new THREE.Vector3(1, 4, -2);
 assert.deepEqual(calculateMirroredHorizontalPosition(center, new THREE.Vector3(-2, 20, 3)).toArray(), [4, 4, -7]);
 const normalized = normalizeExperienceVrSettings({ schemaVersion: 1, furnace: {
@@ -19,6 +21,13 @@ assert.equal(normalized.openButton.emissionPressed, 3);
 assert.equal(normalized.chamber.glassFadeStart, 0);
 assert.equal(normalized.activateButton.emissionPressed, 5);
 assert.equal(normalized.process.durationSeconds, 18);
+assert.equal(normalized.process.spinupEnd, 0.14);
+assert.equal(normalized.process.steadyEnd, 0.60);
+assert.equal(normalized.process.extractionEnd, 0.84);
+assert.equal(normalized.process.fireCellSteadyEmission, 4);
+assert.equal(normalized.process.fireCellExtractionEmission, 10);
+assert.ok(Math.abs((1 - normalized.process.extractionEnd) * normalized.process.durationSeconds - 2.88) < 1e-10,
+  'cooldown occupies 16% of the 18 second process');
 const normalizedProcess = normalizeExperienceVrSettings({ schemaVersion: 1, furnace: { process: {
   durationSeconds: 100, steadyRpm: 0, extractionSpeedMultiplier: 9, direction: 0,
   spinupEnd: 0.8, steadyEnd: 0.2, extractionEnd: -1,
@@ -70,7 +79,9 @@ function buildInteractiveFurnace({ omitClip = null } = {}) {
   const spinPivot = new THREE.Group(); spinPivot.name = 'PIVOT_FURNACE_PROCESS_SPIN'; model.add(spinPivot);
   const lid = new THREE.Group(); lid.name = 'pokrywa'; lid.rotation.x = 0.37; model.add(lid);
   const fireCell = new THREE.Group(); fireCell.name = 'fire_cell';
-  fireCell.add(new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.1, 0.1), new THREE.MeshStandardMaterial({ emissiveIntensity: 0.25 })));
+  fireCell.add(new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.1, 0.1), new THREE.MeshStandardMaterial({
+    color: new THREE.Color(0.4, 0.2, 0.1), emissive: new THREE.Color(0.3, 0.05, 0.01), emissiveIntensity: 0.25
+  })));
   model.add(fireCell);
   const chamber = new THREE.Group(); chamber.name = 'komora';
   chamber.add(new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.5, 0.5), new THREE.MeshStandardMaterial({
@@ -138,10 +149,14 @@ activateInteraction = createVrAstroFurnaceActivateInteraction({
   furnace: processFurnace, controllers: [processRecord], openInteraction: processOpen,
   settings: { enabled: true, rayMaxDistance: 3, emissionInactive: 0, emissionHover: 1, emissionPressed: 5 },
   processSettings: { durationSeconds: 1, steadyRpm: 60, extractionSpeedMultiplier: 2, direction: -1,
-    spinupEnd: 0.2, steadyEnd: 0.7, extractionEnd: 0.88, fireCellIdleEmission: 0.15,
-    fireCellSteadyEmission: 2.5, fireCellExtractionEmission: 5, fireCellPulseHzMin: 0.7, fireCellPulseHzMax: 4 },
+    spinupEnd: 0.14, steadyEnd: 0.60, extractionEnd: 0.84, fireCellIdleEmission: 0.15,
+    fireCellSteadyEmission: 4, fireCellExtractionEmission: 10, fireCellPulseHzMin: 0.7, fireCellPulseHzMax: 4 },
   canActivateInput: () => allowInput
 });
+const fireMaterial = processFurnace.nodes.fire_cell.children[0].material;
+const baseFireColor = fireMaterial.color.clone();
+const baseFireEmissive = fireMaterial.emissive.clone();
+const baseFireIntensity = fireMaterial.emissiveIntensity;
 assert.equal(activateInteraction.canActivate(), false, 'production activation requires an input');
 processOpen.update(0);
 assert.equal(processOpen.halo.visible, true, 'open button has a halo in stable CLOSED state');
@@ -160,27 +175,52 @@ activateInteraction.update(0.11);
 assert.equal(activateInteraction.getState(), ASTRO_FURNACE_PROCESS_STATES.SPINUP,
   'process starts from the exact lock action finished event');
 const lidQuaternion = processFurnace.nodes.pokrywa.quaternion.clone();
-activateInteraction.update(0.19);
-assert.equal(activateInteraction.getState(), ASTRO_FURNACE_PROCESS_STATES.SPINUP);
+activateInteraction.update(0.10);
+assert.equal(activateInteraction.getState(), ASTRO_FURNACE_PROCESS_STATES.SPINUP, 'spinup remains smooth but ends at 14%');
 assert.notEqual(processFurnace.nodes.fire_cell.children[0].material.emissiveIntensity, 0.25,
   'fire cell emission responds to process speed');
-activateInteraction.update(0.25);
+activateInteraction.update(0.06);
 assert.equal(activateInteraction.getState(), ASTRO_FURNACE_PROCESS_STATES.STEADY);
 const steadySpeed = Math.abs(activateInteraction.getAngularSpeed());
-activateInteraction.update(0.27);
+const steadyAngle = activateInteraction.getProcessAngle();
+const expectedSteadyPulse = 4 * (0.65 + 0.35 * (0.5 + 0.5 * Math.sin(Math.abs(steadyAngle) * 2)));
+assert.ok(Math.abs(fireMaterial.emissiveIntensity - expectedSteadyPulse) < 1e-10,
+  'fire-cell pulse is derived from the accumulated process angle');
+assert.ok(colorDistanceToWhite(fireMaterial.emissive) < colorDistanceToWhite(baseFireEmissive),
+  'steady emission color moves toward white');
+const steadyAngleBeforeStep = activateInteraction.getProcessAngle();
+activateInteraction.update(0.4);
+const steadyAngleStep = Math.abs(activateInteraction.getProcessAngle() - steadyAngleBeforeStep);
+activateInteraction.update(0.05);
 assert.equal(activateInteraction.getState(), ASTRO_FURNACE_PROCESS_STATES.EXTRACTION);
-activateInteraction.update(0.14);
+activateInteraction.update(0.08);
 assert.ok(Math.abs(activateInteraction.getAngularSpeed()) > steadySpeed * 1.8,
   'extraction approaches twice the steady RPM');
+const extractionAngleBeforeStep = activateInteraction.getProcessAngle();
+activateInteraction.update(0.04);
+const extractionAngleStep = Math.abs(activateInteraction.getProcessAngle() - extractionAngleBeforeStep);
+assert.ok(extractionAngleStep / 0.04 > steadyAngleStep / 0.4,
+  'angle-driven pulse frequency rises with extraction RPM');
+assert.ok(fireMaterial.emissiveIntensity > 4 * 0.65, 'extraction emission exceeds minimum steady emission');
+assert.ok(colorDistanceToWhite(fireMaterial.emissive) < 0.1,
+  'extraction emissive color becomes nearly white');
 assert.ok(processFurnace.nodes.pokrywa.quaternion.equals(lidQuaternion), 'the lid never rotates during processing');
-activateInteraction.update(0.13);
+const beforeCooldownQuaternion = processFurnace.nodes.PIVOT_FURNACE_PROCESS_SPIN.quaternion.clone();
+activateInteraction.update(0.11);
 assert.equal(activateInteraction.getState(), ASTRO_FURNACE_PROCESS_STATES.COOLDOWN);
-activateInteraction.update(0.2);
+assert.ok(beforeCooldownQuaternion.angleTo(processFurnace.nodes.PIVOT_FURNACE_PROCESS_SPIN.quaternion) < Math.PI,
+  'entering cooldown does not introduce a quaternion snap');
+assert.ok(Math.abs(activateInteraction.getAngularSpeed()) > steadySpeed,
+  'cooldown begins with substantial extraction inertia');
+activateInteraction.update(0.16);
 assert.equal(activateInteraction.getState(), ASTRO_FURNACE_PROCESS_STATES.COMPLETE);
 assert.ok(processFurnace.nodes.PIVOT_FURNACE_PROCESS_SPIN.quaternion.equals(new THREE.Quaternion()),
   'spin pivot returns exactly to its base quaternion');
 assert.equal(activateInteraction.action.time, activateInteraction.action.getClip().duration,
   'activate remains pressed in COMPLETE');
+assert.ok(fireMaterial.color.equals(baseFireColor), 'COMPLETE restores the exact base material color');
+assert.ok(fireMaterial.emissive.equals(baseFireEmissive), 'COMPLETE restores the exact base emissive color');
+assert.equal(fireMaterial.emissiveIntensity, baseFireIntensity, 'COMPLETE restores the exact base emissive intensity');
 processOpen.hits.set(processRecord, true);
 assert.equal(processOpen.press(processRecord), true, 'open is enabled again in COMPLETE');
 assert.equal(processOpen.getState(), ASTRO_FURNACE_STATES.OPENING);
@@ -188,6 +228,8 @@ assert.equal(activateInteraction.action.timeScale, -1, 'opening immediately star
 activateInteraction.update(0.11);
 assert.equal(activateInteraction.getState(), ASTRO_FURNACE_PROCESS_STATES.IDLE);
 activateInteraction.reset(); activateInteraction.reset();
+assert.ok(fireMaterial.color.equals(baseFireColor) && fireMaterial.emissive.equals(baseFireEmissive)
+  && fireMaterial.emissiveIntensity === baseFireIntensity, 'reset restores every fire-cell material base value');
 assert.equal(processController._listeners.selectstart.length, 2, 'resets do not duplicate open and activate listeners');
 activateInteraction.dispose();
 assert.equal(processController._listeners.selectstart.length, 1, 'activate disposal removes only its own listener');
