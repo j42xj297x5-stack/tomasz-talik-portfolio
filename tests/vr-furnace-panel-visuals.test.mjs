@@ -30,7 +30,10 @@ assert.equal(shouldRefreshTelemetry({ active: true, elapsed: .084, lastRedraw: 0
 assert.equal(shouldRefreshTelemetry({ active: true, elapsed: .02, lastRedraw: 0, refreshHz: 12 }), false);
 const panelSource = readFileSync(new URL('../src/xr/furnace/createVrAstroFurnacePanel.js', import.meta.url), 'utf8');
 assert.doesNotMatch(panelSource, /resolveAsciiFrame|PROCESS_ASCII|buildProgressBar/);
-assert.match(panelSource, /drawAsterionPreview/); assert.match(panelSource, /context\.ellipse/);
+assert.match(panelSource, /drawAsterionPreview/); assert.doesNotMatch(panelSource, /context\.ellipse/);
+assert.equal(panelSource.match(/context\.arc/g)?.length, 1);
+assert.match(panelSource, /patchGeometryByAssetId/); assert.match(panelSource, /patch\.segments2d\.forEach/);
+assert.match(panelSource, /states\[id\]\?\.committed/); assert.doesNotMatch(panelSource, /segment < progress\.absorbed/);
 assert.match(panelSource, /getInsertedShellWireframe/); assert.doesNotMatch(panelSource, /for \(let ring = 0; ring < 4/);
 const ordered = Array.from({ length: 101 }, (_, index) => ({ dissolveOrder: index / 100 }));
 assert.equal(ordered.filter((segment) => wireframeDissolveVisible(segment, 0)).length, 101);
