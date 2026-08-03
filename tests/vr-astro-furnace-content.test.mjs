@@ -15,7 +15,7 @@ function fixture({ emptyVolume = false } = {}) {
   progression.commitAbsorbedShell = (id) => { commits++; return commit(id); };
   const interaction = createVrAstroFurnaceContentInteraction({ furnace: { object, nodes: { VR_FURNACE_INSERT_VOLUME: volume,
     VR_FURNACE_CONTENT_ANCHOR: anchor, komora: chamber } }, shellSystem: { records, getRecord(shell) { return records.find((record) => record.object === shell); }, removeInstance(shell) { removed = shell; shell.removeFromParent(); return true; } },
-  openInteraction: { getState: () => open }, activateInteraction: { getState: () => process, getProgress: () => progress }, progressionController: progression,
+  openInteraction: { getState: () => open }, activateInteraction: { getState: () => process, getExtractionProgress: () => progress }, progressionController: progression,
   isModeActive: () => modeActive,
   settings: emptyVolume ? { volumeRadius: .5, rejectDuration: .1 } : { rejectDuration: .1 } });
   const makeShell = (id = 'shell-relic-1', radius = .1) => { const shell = new THREE.Mesh(new THREE.SphereGeometry(radius), new THREE.MeshStandardMaterial());
@@ -112,10 +112,13 @@ function insert(test, shell) { test.interaction.reportHeldShell(shell); test.int
 {
   const t = fixture(), shell = t.makeShell('shell-relic-3'); insert(t, shell); t.interaction.update(1); const scale = shell.scale.x;
   const settledPosition = shell.position.clone(), settledQuaternion = shell.quaternion.clone();
-  t.setOpen('CLOSED'); t.setProcess('SPINUP'); t.setProgress(.5); t.interaction.update(.01); assert.equal(t.interaction.getState(), S.CONSUMING);
+  t.setOpen('CLOSED'); t.setProcess('SPINUP'); t.setProgress(0); t.interaction.update(.01); assert.equal(t.interaction.getState(), S.CONSUMING);
   assert.equal(shell.scale.x, scale); assert.ok(shell.position.equals(settledPosition)); assert.ok(shell.quaternion.equals(settledQuaternion));
-  assert.ok(shell.material.emissiveIntensity > 0); assert.ok(shell.material.opacity < 1); assert.equal(t.commits, 0);
-  t.setProgress(.78); t.interaction.update(.01); assert.equal(t.interaction.getState(), S.CONSUMED); assert.equal(t.commits, 0);
+  assert.ok(shell.material.emissiveIntensity > 0); assert.equal(shell.material.opacity, 1, 'SPINUP does not reduce shell opacity');
+  t.setProcess('STEADY'); t.interaction.update(.01); assert.equal(shell.material.opacity, 1, 'STEADY does not reduce shell opacity');
+  t.setProcess('EXTRACTION'); t.setProgress(.5); t.interaction.update(.01);
+  assert.equal(shell.material.opacity, .5, 'physical shell uses the canonical halfway extraction progress'); assert.equal(shell.visible, true); assert.equal(t.commits, 0);
+  t.setProgress(1); t.interaction.update(.01); assert.equal(t.interaction.getState(), S.CONSUMED); assert.equal(t.commits, 0);
   t.setProcess('COMPLETE'); t.interaction.update(.01); assert.equal(t.commits, 1); assert.equal(t.removed, shell);
   assert.equal(t.progression.getSnapshot().asterionSphere.absorbed, 1); t.interaction.update(1); assert.equal(t.commits, 1); t.interaction.dispose();
 }

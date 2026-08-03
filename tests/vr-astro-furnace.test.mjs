@@ -28,13 +28,13 @@ assert.equal(normalized.openButton.emissionPressed, 3);
 assert.equal(normalized.chamber.glassFadeStart, 0);
 assert.equal(normalized.activateButton.emissionPressed, 5);
 assert.equal(normalized.process.durationSeconds, 18);
-assert.equal(normalized.process.spinupEnd, 0.14);
-assert.equal(normalized.process.steadyEnd, 0.60);
-assert.equal(normalized.process.extractionEnd, 0.84);
+assert.equal(normalized.process.spinupEnd, 1 / 6);
+assert.equal(normalized.process.steadyEnd, 1 / 3);
+assert.equal(normalized.process.extractionEnd, 5 / 6);
 assert.equal(normalized.process.fireCellSteadyEmission, 4);
 assert.equal(normalized.process.fireCellExtractionEmission, 10);
-assert.ok(Math.abs((1 - normalized.process.extractionEnd) * normalized.process.durationSeconds - 2.88) < 1e-10,
-  'cooldown occupies 16% of the 18 second process');
+assert.ok(Math.abs((1 - normalized.process.extractionEnd) * normalized.process.durationSeconds - 3) < 1e-12,
+  'cooldown occupies the final three seconds of the 18 second process');
 const normalizedProcess = normalizeExperienceVrSettings({ schemaVersion: 1, furnace: { process: {
   durationSeconds: 100, steadyRpm: 0, extractionSpeedMultiplier: 9, direction: 0,
   spinupEnd: 0.8, steadyEnd: 0.2, extractionEnd: -1,
@@ -156,7 +156,7 @@ activateInteraction = createVrAstroFurnaceActivateInteraction({
   furnace: processFurnace, controllers: [processRecord], openInteraction: processOpen,
   settings: { enabled: true, rayMaxDistance: 3, emissionInactive: 0, emissionHover: 1, emissionPressed: 5 },
   processSettings: { durationSeconds: 1, steadyRpm: 60, extractionSpeedMultiplier: 2, direction: -1,
-    spinupEnd: 0.14, steadyEnd: 0.60, extractionEnd: 0.84, fireCellIdleEmission: 0.15,
+    spinupEnd: 1 / 6, steadyEnd: 1 / 3, extractionEnd: 5 / 6, fireCellIdleEmission: 0.15,
     fireCellSteadyEmission: 4, fireCellExtractionEmission: 10, fireCellPulseHzMin: 0.7, fireCellPulseHzMax: 4 },
   canActivateInput: () => allowInput
 });
@@ -183,11 +183,12 @@ assert.equal(activateInteraction.getState(), ASTRO_FURNACE_PROCESS_STATES.SPINUP
   'process starts from the exact lock action finished event');
 const lidQuaternion = processFurnace.nodes.pokrywa.quaternion.clone();
 activateInteraction.update(0.10);
-assert.equal(activateInteraction.getState(), ASTRO_FURNACE_PROCESS_STATES.SPINUP, 'spinup remains smooth but ends at 14%');
+assert.equal(activateInteraction.getState(), ASTRO_FURNACE_PROCESS_STATES.SPINUP, 'spinup remains active before the three-second boundary');
 assert.notEqual(processFurnace.nodes.fire_cell.children[0].material.emissiveIntensity, 0.25,
   'fire cell emission responds to process speed');
-activateInteraction.update(0.06);
+activateInteraction.update(1 / 15);
 assert.equal(activateInteraction.getState(), ASTRO_FURNACE_PROCESS_STATES.STEADY);
+assert.equal(activateInteraction.getExtractionProgress(), 0);
 assert.ok(activateInteraction.processLight.visible && activateInteraction.processLight.intensity > 0);
 assert.equal(activateInteraction.processLight.castShadow, false);
 assert.equal(activateInteraction.processLight.parent, processFurnace.object, 'process light uses the stable furnace root');
@@ -212,11 +213,12 @@ assert.ok(Math.abs(Math.abs(chamberOrbitDelta) - Math.abs(lightOrbitDelta)) < 1e
 assert.ok(colorDistanceToWhite(fireMaterial.emissive) < colorDistanceToWhite(baseFireEmissive),
   'steady emission color moves toward white');
 const steadyAngleBeforeStep = activateInteraction.getProcessAngle();
-activateInteraction.update(0.4);
+activateInteraction.update(0.12);
 const steadyAngleStep = Math.abs(activateInteraction.getProcessAngle() - steadyAngleBeforeStep);
-activateInteraction.update(0.05);
+activateInteraction.update(2 / 75);
 assert.equal(activateInteraction.getState(), ASTRO_FURNACE_PROCESS_STATES.EXTRACTION);
-activateInteraction.update(0.08);
+assert.ok(activateInteraction.getExtractionProgress() < 1e-12, 'six seconds starts EXTRACTION at local progress zero');
+activateInteraction.update(0.12);
 assert.ok(Math.abs(activateInteraction.getAngularSpeed()) > steadySpeed * 1.8,
   'extraction approaches twice the steady RPM');
 const extractionAngleBeforeStep = activateInteraction.getProcessAngle();
@@ -229,14 +231,19 @@ assert.ok(colorDistanceToWhite(fireMaterial.emissive) < 0.1,
   'extraction emissive color becomes nearly white');
 assert.ok(processFurnace.nodes.pokrywa.quaternion.equals(lidQuaternion), 'the lid never rotates during processing');
 const beforeCooldownQuaternion = processFurnace.nodes.PIVOT_FURNACE_PROCESS_SPIN.quaternion.clone();
-activateInteraction.update(0.11);
+activateInteraction.update(.09);
+assert.ok(Math.abs(activateInteraction.getExtractionProgress() - .5) < 1e-12, '10.5 seconds maps to half of EXTRACTION');
+activateInteraction.update(.250001);
 assert.equal(activateInteraction.getState(), ASTRO_FURNACE_PROCESS_STATES.COOLDOWN);
+assert.equal(activateInteraction.getExtractionProgress(), 1);
 assert.ok(beforeCooldownQuaternion.angleTo(processFurnace.nodes.PIVOT_FURNACE_PROCESS_SPIN.quaternion) < Math.PI,
   'entering cooldown does not introduce a quaternion snap');
 assert.ok(Math.abs(activateInteraction.getAngularSpeed()) > steadySpeed,
   'cooldown begins with substantial extraction inertia');
-activateInteraction.update(0.16);
+activateInteraction.update(0.17);
 assert.equal(activateInteraction.getState(), ASTRO_FURNACE_PROCESS_STATES.COMPLETE);
+assert.equal(activateInteraction.getProgress(), 1);
+assert.equal(activateInteraction.getExtractionProgress(), 1);
 assert.equal(activateInteraction.processLight.visible, false); assert.equal(activateInteraction.processLight.intensity, 0);
 assert.ok(processFurnace.nodes.PIVOT_FURNACE_PROCESS_SPIN.quaternion.equals(new THREE.Quaternion()),
   'spin pivot returns exactly to its base quaternion');

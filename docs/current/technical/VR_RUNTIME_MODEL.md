@@ -89,13 +89,13 @@ VR_FURNACE_INSERT_VOLUME    VR_FURNACE_CONTENT_ANCHOR
 
 `button_activate` also uses ordinary-ray real hits and a halo. Activation is available only with the chamber closed and valid inserted content. Its state machine is `IDLE → PRESSING → SPINUP → STEADY → EXTRACTION → COOLDOWN → COMPLETE`. Processing starts only from the `AnimationMixer.finished` event for `AstroFurnace_ButtonActivate_Lock`. The physical button stays locked down after completion; beginning the next opening reverse-plays the lock clip and eventually returns activation to `IDLE`.
 
-The default 18-second process has steady speed `42 RPM`, direction `-1` and extraction multiplier `2`. Its normalized phases and approximate durations are:
+The default 18-second process has steady speed `42 RPM`, direction `-1` and extraction multiplier `2`. Its normalized phases and exact durations are:
 
 ```text
-SPINUP       0.00–0.14    2.52 s
-STEADY       0.14–0.60    8.28 s
-EXTRACTION   0.60–0.84    4.32 s
-COOLDOWN     0.84–1.00    2.88 s
+SPINUP       0–1/6        3 s
+STEADY       1/6–1/3      3 s
+EXTRACTION   1/3–5/6      9 s
+COOLDOWN     5/6–1        3 s
 ```
 
 During the first 30% of EXTRACTION, speed rises smoothly from steady speed to `2×`, then stays at maximum. COOLDOWN captures the real entry speed and angle, uses Hermite interpolation to preserve inertia, selects a target on a complete revolution, and finishes by restoring the exact base quaternion.
@@ -110,7 +110,7 @@ The panel is a `CanvasTexture` on `PlaneGeometry`. It is parented as a sibling o
 
 The implemented screens are `HOME` and `ASTERION_SPHERE`. HOME exposes active **Asterion Sphere (Sfera Asterionowa)** and UI-visible future **Astro Attractor (Astro Przyciągacz)** and **Emanation Matrix (Matryca Emanacji)** modules. Parametric astrolabe-style frames behave as scalable 9-slice-like borders, with restrained cyan, amber and violet accents. The sphere screen distinguishes gathered and missing shell types and displays process telemetry.
 
-The panel is a read-only consumer of process state/progress, angular speed, accumulated process angle, content state and chamber state. Its Canvas 2D monitor draws the actual inserted shell asset from CPU-only line data generated once per `shell-relic-*` type: mesh edges are transformed into shell-root space, centered, normalized and deterministically capped. The panel slowly rotates and projects those cached 3D segments without another renderer or render pass; during processing their deterministic dissolve order progressively removes the material structure, and COMPLETE removes it entirely. A separate gently rotating six-segment wireframe preview continues to show committed Asterion Sphere progress. OPEN + INSERTED instructs the user to close the lid; CLOSED + INSERTED reports extraction readiness. Both remain IDLE displays without a progress bar, and only the physical Activate button starts processing. COMPLETE confirms that the essence was stored in furnace memory. While a process (or its short completion display) is active, canvas redraw defaults to `12 Hz`, normalized to `4–30 Hz`; otherwise updates remain event-driven.
+The panel is a read-only consumer of process state, overall progress, the process-owned local EXTRACTION progress, angular speed, accumulated process angle, content state and chamber state. Its Canvas 2D monitor draws the actual inserted shell asset from CPU-only line data generated once per `shell-relic-*` type: mesh edges are transformed into shell-root space, centered, normalized and deterministically capped. The panel slowly rotates and projects those cached 3D segments without another renderer or render pass; only during EXTRACTION does the shared local progress drive their deterministic dissolve order, while COOLDOWN and COMPLETE omit the absorbed shell entirely. The absorption progress bar is likewise visible only during EXTRACTION. A separate gently rotating six-segment wireframe preview continues to show committed Asterion Sphere progress. OPEN + INSERTED instructs the user to close the lid; CLOSED + INSERTED reports extraction readiness. Both remain IDLE displays without a progress bar, and only the physical Activate button starts processing. COMPLETE confirms that the essence was stored in furnace memory. While a process (or its short completion display) is active, canvas redraw defaults to `12 Hz`, normalized to `4–30 Hz`; otherwise updates remain event-driven.
 
 ### Six-type progression, insertion and commit safety
 
@@ -127,7 +127,7 @@ open furnace → held shell enters VR_FURNACE_INSERT_VOLUME
    → same physical instance snaps to VR_FURNACE_CONTENT_ANCHOR → INSERTED
 close furnace → activation available
 activate → PRESSING → SPINUP → CONSUMING → visual absorption
-consumeEnd → CONSUMED → still no commit
+extractionProgress 1 → CONSUMED → still no commit
 process COMPLETE + CONSUMED → commit shellAssetId
 → remove physical shell → update furnace progress x/6
 ```

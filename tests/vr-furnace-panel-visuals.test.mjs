@@ -11,19 +11,19 @@ const tiny = resolveFurnaceFrameLayout({ width: 12, height: 8, cornerSize: 28 })
 assert.ok(tiny.horizontalLength >= 0 && tiny.verticalLength >= 0);
 
 for (const phase of ['IDLE', 'PRESSING', 'SPINUP', 'STEADY', 'EXTRACTION', 'COOLDOWN']) {
-  const telemetry = resolveProcessTelemetry({ state: phase, progress: .5, angularSpeed: 2 });
+  const telemetry = resolveProcessTelemetry({ state: phase, overallProgress: .5, extractionProgress: .5, angularSpeed: 2 });
   assert.equal(telemetry.phase, phase);
 }
 assert.equal(resolveProcessTelemetry({ state: 'IDLE', completed: true }).phase, 'COMPLETE');
-const idle = resolveProcessTelemetry({ state: 'IDLE', progress: 1 });
-assert.equal(idle.showProgress, false); assert.equal(idle.progress, 0); assert.match(idle.label, /OCZEKIWANIE/);
+const idle = resolveProcessTelemetry({ state: 'IDLE', overallProgress: 1, extractionProgress: 1 });
+assert.equal(idle.showProgress, false); assert.equal(idle.overallProgress, 0); assert.match(idle.label, /OCZEKIWANIE/);
 const openInserted = resolveProcessTelemetry({ state: 'IDLE', contentState: 'INSERTED', chamberState: 'OPEN' });
 assert.equal(openInserted.showProgress, false); assert.match(openInserted.label, /ZAMKNIJ POKRYWĘ\nI ROZPOCZNIJ EKSTRAKCJĘ/);
 const closedInserted = resolveProcessTelemetry({ state: 'IDLE', contentState: 'INSERTED', chamberState: 'CLOSED' });
 assert.equal(closedInserted.showProgress, false); assert.equal(closedInserted.label, 'GOTOWY DO EKSTRAKCJI');
-const active = resolveProcessTelemetry({ state: 'EXTRACTION', progress: .6 });
-assert.equal(active.showProgress, true); assert.equal(active.silhouetteOpacity, 1);
-const complete = resolveProcessTelemetry({ state: 'COMPLETE', progress: 1 });
+const active = resolveProcessTelemetry({ state: 'EXTRACTION', overallProgress: .6, extractionProgress: .5 });
+assert.equal(active.showProgress, true); assert.equal(active.extractionProgress, .5); assert.equal(active.silhouetteOpacity, 1);
+const complete = resolveProcessTelemetry({ state: 'COMPLETE', overallProgress: 1, extractionProgress: 1 });
 assert.equal(complete.silhouetteOpacity, 0); assert.match(complete.label, /PAMIĘCI PIECA/);
 assert.equal(shouldRefreshTelemetry({ active: false, elapsed: 10, lastRedraw: 0 }), false);
 assert.equal(shouldRefreshTelemetry({ active: true, elapsed: .084, lastRedraw: 0, refreshHz: 12 }), true);
@@ -36,7 +36,9 @@ const ordered = Array.from({ length: 101 }, (_, index) => ({ dissolveOrder: inde
 assert.equal(ordered.filter((segment) => wireframeDissolveVisible(segment, 0)).length, 101);
 assert.equal(ordered.filter((segment) => wireframeDissolveVisible(segment, .5)).length, 51);
 assert.equal(ordered.filter((segment) => wireframeDissolveVisible(segment, 1)).length, 0);
-assert.match(panelSource, /telemetry\.phase === 'COMPLETE'\) return/);
+assert.match(panelSource, /\['COOLDOWN', 'COMPLETE'\]\.includes\(telemetry\.phase\)/);
+assert.match(panelSource, /telemetry\.phase === 'EXTRACTION' \? telemetry\.extractionProgress : 0/);
+for (const phase of ['SPINUP', 'STEADY', 'COOLDOWN']) assert.equal(resolveProcessTelemetry({ state: phase, extractionProgress: phase === 'COOLDOWN' ? 1 : 0 }).showProgress, false);
 assert.match(panelSource, /VrAstroFurnacePanelFrontPlane/);
 assert.match(panelSource, /VrAstroFurnacePanelBackPlane/);
 assert.equal(panelSource.match(/new THREE\.PlaneGeometry/g)?.length, 2);

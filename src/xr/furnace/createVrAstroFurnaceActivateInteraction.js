@@ -197,9 +197,9 @@ export function createVrAstroFurnaceActivateInteraction({
     const duration = processSettings.durationSeconds ?? 18;
     const previousProgress = progress;
     elapsed = Math.min(duration, elapsed + delta); progress = clamp01(elapsed / duration);
-    const spinupEnd = processSettings.spinupEnd ?? 0.14;
-    const steadyEnd = processSettings.steadyEnd ?? 0.6;
-    const extractionEnd = processSettings.extractionEnd ?? 0.84;
+    const spinupEnd = processSettings.spinupEnd ?? 1 / 6;
+    const steadyEnd = processSettings.steadyEnd ?? 1 / 3;
+    const extractionEnd = processSettings.extractionEnd ?? 5 / 6;
     const baseSpeed = (processSettings.direction ?? -1) * (processSettings.steadyRpm ?? 42) * TAU / 60;
     const idleEmission = processSettings.fireCellIdleEmission ?? 0.15;
     const steadyEmission = processSettings.fireCellSteadyEmission ?? 4;
@@ -290,10 +290,15 @@ export function createVrAstroFurnaceActivateInteraction({
     halo?.dispose(); processLight?.removeFromParent(); processLight?.dispose(); ownedMaterials.forEach((material) => material.dispose?.()); ownedMaterials.clear(); hits.clear();
   }
   reset();
+  const getExtractionProgress = () => {
+    const steadyEnd = processSettings.steadyEnd ?? 1 / 3;
+    const extractionEnd = processSettings.extractionEnd ?? 5 / 6;
+    return clamp01((progress - steadyEnd) / Math.max(extractionEnd - steadyEnd, Number.EPSILON));
+  };
   return {
     mixer, action, hits, halo, processLight, chamberCylinder, capabilityReady, update, press, releaseForOpening, reset, dispose,
     hasCurrentHit: (record) => hits.get(record) === true,
-    canActivate, getState: () => state, getProgress: () => progress, getPhase: () => state,
+    canActivate, getState: () => state, getProgress: () => progress, getExtractionProgress, getPhase: () => state,
     isProcessing: () => [states.PRESSING, states.SPINUP, states.STEADY, states.EXTRACTION, states.COOLDOWN].includes(state),
     isComplete: () => state === states.COMPLETE,
     getAngularSpeed: () => angularSpeed,
