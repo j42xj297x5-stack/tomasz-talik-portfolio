@@ -182,6 +182,10 @@ assert.notEqual(processFurnace.nodes.fire_cell.children[0].material.emissiveInte
   'fire cell emission responds to process speed');
 activateInteraction.update(0.06);
 assert.equal(activateInteraction.getState(), ASTRO_FURNACE_PROCESS_STATES.STEADY);
+assert.ok(activateInteraction.processLight.visible && activateInteraction.processLight.intensity > 0);
+assert.equal(activateInteraction.processLight.castShadow, false);
+assert.ok(Math.abs(activateInteraction.processLight.userData.lightAngle + activateInteraction.getProcessAngle()) < 1e-12,
+  'process light angle is exactly the negative process angle');
 const steadySpeed = Math.abs(activateInteraction.getAngularSpeed());
 const steadyAngle = activateInteraction.getProcessAngle();
 const expectedSteadyPulse = 4 * (0.65 + 0.35 * (0.5 + 0.5 * Math.sin(Math.abs(steadyAngle) * 2)));
@@ -215,6 +219,7 @@ assert.ok(Math.abs(activateInteraction.getAngularSpeed()) > steadySpeed,
   'cooldown begins with substantial extraction inertia');
 activateInteraction.update(0.16);
 assert.equal(activateInteraction.getState(), ASTRO_FURNACE_PROCESS_STATES.COMPLETE);
+assert.equal(activateInteraction.processLight.visible, false); assert.equal(activateInteraction.processLight.intensity, 0);
 assert.ok(processFurnace.nodes.PIVOT_FURNACE_PROCESS_SPIN.quaternion.equals(new THREE.Quaternion()),
   'spin pivot returns exactly to its base quaternion');
 assert.equal(activateInteraction.action.time, activateInteraction.action.getClip().duration,
@@ -229,6 +234,7 @@ assert.equal(activateInteraction.action.timeScale, -1, 'opening immediately star
 activateInteraction.update(0.11);
 assert.equal(activateInteraction.getState(), ASTRO_FURNACE_PROCESS_STATES.IDLE);
 activateInteraction.reset(); activateInteraction.reset();
+assert.equal(activateInteraction.processLight.visible, false, 'process light is inactive in IDLE');
 assert.ok(fireMaterial.color.equals(baseFireColor) && fireMaterial.emissive.equals(baseFireEmissive)
   && fireMaterial.emissiveIntensity === baseFireIntensity, 'reset restores every fire-cell material base value');
 assert.equal(processController._listeners.selectstart.length, 2, 'resets do not duplicate open and activate listeners');
