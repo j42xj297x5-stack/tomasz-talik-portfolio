@@ -1,4 +1,6 @@
 import * as THREE from '../../vendor/three.js';
+import { drawFurnaceFrame } from './drawVrFurnaceFrame.js';
+import { buildProgressBar, resolveAsciiFrame, resolveProcessTelemetry, shouldRefreshTelemetry } from './vrFurnaceTelemetry.js';
 
 export const ASTRO_FURNACE_PANEL_STATES = Object.freeze({
   HIDDEN: 'HIDDEN', APPEARING: 'APPEARING', VISIBLE: 'VISIBLE', DISAPPEARING: 'DISAPPEARING'
@@ -6,9 +8,13 @@ export const ASTRO_FURNACE_PANEL_STATES = Object.freeze({
 export const ASTRO_FURNACE_PANEL_SCREENS = Object.freeze({ HOME: 'HOME', ASTERION_SPHERE: 'ASTERION_SPHERE' });
 const smoothstep = (value) => value * value * (3 - 2 * value);
 
-export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], progressionController, settings = {} }) {
+export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], progressionController, processSource, contentSource, settings = {} }) {
   const config = { width: 1.55, height: 1.05, gapFromFurnace: 0.18, verticalOffset: 0.15,
-    canvasWidth: 1536, canvasHeight: 1024, appearDuration: 0.32, disappearDuration: 0.20, ...settings };
+    canvasWidth: 1536, canvasHeight: 1024, appearDuration: 0.32, disappearDuration: 0.20,
+    telemetryRefreshHz: 12, frameCornerSizePx: 28, accents: {}, ...settings };
+  config.telemetryRefreshHz = Math.min(30, Math.max(4, config.telemetryRefreshHz));
+  config.frameCornerSizePx = Math.min(64, Math.max(12, config.frameCornerSizePx));
+  const accents = { asterion: '#72cfe8', attractor: '#c8ac70', emanation: '#a98bd4', idle: '#668493', process: '#9eeaff', complete: '#d9f8ff', ...config.accents };
   const root = new THREE.Group(); root.name = 'VrAstroFurnacePanelRoot';
   const canvas = document.createElement('canvas'); canvas.width = config.canvasWidth; canvas.height = config.canvasHeight;
   const context = canvas.getContext('2d');
@@ -22,11 +28,11 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
   const quaternion = new THREE.Quaternion(), furnaceQuaternion = new THREE.Quaternion(), right = new THREE.Vector3();
   const hits = new Map(controllers.map((record) => [record, null]));
   let state = ASTRO_FURNACE_PANEL_STATES.HIDDEN, screen = ASTRO_FURNACE_PANEL_SCREENS.HOME;
-  let elapsed = 0, hoveredRegion = null, interactiveRegions = [], disposed = false, redrawCount = 0;
+  let elapsed = 0, telemetryElapsed = 0, lastTelemetryRedraw = 0, completedUntil = 0, previousProcessState = 'IDLE';
+  let hoveredRegion = null, interactiveRegions = [], disposed = false, redrawCount = 0;
 
-  function panelRect(x, y, width, height, active = false) {
-    context.fillStyle = active ? '#102a3c' : '#09131f'; context.fillRect(x, y, width, height);
-    context.strokeStyle = active ? '#a8e8ff' : '#41677d'; context.lineWidth = active ? 4 : 2; context.strokeRect(x, y, width, height);
+  function panelRect(x, y, width, height, options = {}) {
+    drawFurnaceFrame(context, { x, y, width, height, cornerSize: options.cornerSize ?? config.frameCornerSizePx, ...options });
   }
   function text(value, x, y, size = 34, color = '#e8f7ff') {
     context.fillStyle = color; context.font = `${size}px sans-serif`; context.fillText(value, x, y);
@@ -40,7 +46,8 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
     ];
     interactiveRegions = cards.map((card, index) => {
       const rect = { id: card[0], x: 90, y: 205 + index * 245, width: 1356, height: 205, enabled: card[5] };
-      panelRect(rect.x, rect.y, rect.width, rect.height, hoveredRegion === rect.id);
+      const accentColor = [accents.asterion, accents.attractor, accents.emanation][index];
+      panelRect(rect.x, rect.y, rect.width, rect.height, { hovered: hoveredRegion === rect.id, active: card[5], locked: !card[5], accentColor });
       text(card[1], rect.x + 42, rect.y + 60, 37, card[5] ? '#f1fbff' : '#78909d');
       text(card[2], rect.x + 42, rect.y + 112, 25, '#91afbe'); text(card[3], rect.x + 42, rect.y + 166, 21, '#6f9db5');
       context.textAlign = 'right'; text(card[4], rect.x + rect.width - 42, rect.y + 166, 22, card[5] ? '#bdefff' : '#647985'); context.textAlign = 'left';
@@ -49,21 +56,42 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
   }
   function drawSphere(progress) {
     interactiveRegions = [{ id: 'back-modules', x: 90, y: 55, width: 260, height: 70, enabled: true }];
-    panelRect(90, 55, 260, 70, hoveredRegion === 'back-modules'); text('← MODUŁY', 120, 102, 27);
+    panelRect(90, 55, 260, 70, { hovered: hoveredRegion === 'back-modules', accentColor: accents.asterion }); text('← MODUŁY', 120, 102, 27);
     text('SFERA ASTERIONOWA', 90, 190, 48); text('Rdzeń żyroskopowy sterowania kręgiem', 90, 238, 24, '#88b8cf');
     progress.shells.forEach((shell, index) => {
-      const col = index % 3, row = Math.floor(index / 3), x = 90 + col * 455, y = 300 + row * 245;
-      panelRect(x, y, 405, 195, shell.absorbed); text(`SKORUPA ${String(index + 1).padStart(2, '0')}`, x + 30, y + 62, 26);
-      text(shell.absorbed ? '●  ZGROMADZONA' : '○  BRAK', x + 30, y + 138, 25, shell.absorbed ? '#c7f5ff' : '#6e8997');
+      const col = index % 3, row = Math.floor(index / 3), x = 90 + col * 455, y = 270 + row * 175;
+      panelRect(x, y, 405, 145, { active: shell.absorbed, completed: shell.absorbed, accentColor: shell.absorbed ? accents.asterion : accents.idle });
+      text(`SKORUPA ${String(index + 1).padStart(2, '0')}`, x + 30, y + 45, 24);
+      context.textAlign = 'center'; text(shell.absorbed ? '◆' : '◇', x + 202, y + 87, 28, shell.absorbed ? '#d9f8ff' : '#6e8997'); context.textAlign = 'left';
+      text(shell.absorbed ? 'ZGROMADZONA' : 'BRAK', x + 30, y + 122, 21, shell.absorbed ? '#c7f5ff' : '#6e8997');
     });
-    text(progress.complete ? 'KOMPLET ZGROMADZONY' : `ZGROMADZONO ${progress.absorbed} / ${progress.required}`, 90, 850, 34);
-    text('Piec zachowuje pochłonięte elementy.', 90, 920, 22, '#8fb0c0');
-    text('Zgromadź po jednej skorupie każdego typu.', 90, 958, 22, '#8fb0c0');
+    drawProcessMonitor();
+  }
+  function readTelemetry() {
+    const rawState = processSource?.getState?.() ?? 'IDLE';
+    if (rawState === 'COMPLETE' && previousProcessState !== 'COMPLETE') completedUntil = telemetryElapsed + 1.6;
+    previousProcessState = rawState;
+    const completed = completedUntil > telemetryElapsed;
+    return resolveProcessTelemetry({ state: rawState === 'COMPLETE' && !completed ? 'IDLE' : rawState, progress: processSource?.getProgress?.() ?? 0,
+      angularSpeed: processSource?.getAngularSpeed?.() ?? 0, processAngle: processSource?.getProcessAngle?.() ?? 0, completed });
+  }
+  function drawProcessMonitor() {
+    const telemetry = readTelemetry(), x = 90, y = 645, width = 1315, height = 325;
+    panelRect(x, y, width, height, { variant: 'monitor', active: telemetry.active, completed: telemetry.phase === 'COMPLETE', accentColor: accents[telemetry.colorKey] });
+    text('PROCESS MONITOR', x + 28, y + 42, 22, accents[telemetry.colorKey]);
+    const lines = resolveAsciiFrame(telemetry, telemetryElapsed); context.textAlign = 'center';
+    context.font = '26px ui-monospace, SFMono-Regular, Consolas, monospace'; context.fillStyle = accents[telemetry.colorKey];
+    lines.forEach((line, index) => context.fillText(line, x + width / 2, y + 92 + index * 34)); context.textAlign = 'left';
+    text(`STATUS // ${telemetry.label}`, x + 28, y + 225, 21, accents[telemetry.colorKey]);
+    context.font = '22px ui-monospace, SFMono-Regular, Consolas, monospace'; context.fillStyle = '#b9dce8'; context.fillText(buildProgressBar(telemetry.progress), x + 28, y + 267);
+    const contentState = contentSource?.getState?.() ?? 'EMPTY'; const assetId = contentSource?.getInsertedShellAssetId?.();
+    const contentLabels = { INSERTED: 'GOTOWY', CONSUMING: 'ABSORPCJA', CONSUMED: 'ZABEZPIECZONO' };
+    if (contentLabels[contentState]) { context.textAlign = 'right'; text(`MATERIAŁ // ${contentLabels[contentState]}${assetId ? `  ${assetId.replace('shell-relic-', 'SKORUPA ')}` : ''}`, x + width - 28, y + 267, 19, '#88b8cf'); context.textAlign = 'left'; }
   }
   function draw() {
     if (!context) return; redrawCount += 1; context.clearRect(0, 0, canvas.width, canvas.height);
     context.fillStyle = 'rgba(3,9,17,.96)'; context.fillRect(0, 0, canvas.width, canvas.height);
-    context.strokeStyle = '#4d89a5'; context.lineWidth = 3; context.strokeRect(18, 18, canvas.width - 36, canvas.height - 36);
+    drawFurnaceFrame(context, { x: 18, y: 18, width: canvas.width - 36, height: canvas.height - 36, variant: 'panel', cornerSize: config.frameCornerSizePx * 1.5, accentColor: '#4d89a5', opacity: .8 });
     const progress = progressionController.getAsterionSphereProgress();
     if (screen === ASTRO_FURNACE_PANEL_SCREENS.HOME) drawHome(progress); else drawSphere(progress);
     texture.needsUpdate = true;
@@ -103,12 +131,14 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
   function press(record) { const hit = hits.get(record); return state === ASTRO_FURNACE_PANEL_STATES.VISIBLE && hit?.region ? activateRegion(hit.region.id) : false; }
   const listeners = controllers.map((record) => { const listener = () => press(record); record.controller.addEventListener('selectstart', listener); return { record, listener }; });
   function update(delta = 0) {
-    if (disposed) return; elapsed += Math.max(0, delta);
+    if (disposed) return; const step = Math.max(0, delta); elapsed += step; telemetryElapsed += step;
     if (state === ASTRO_FURNACE_PANEL_STATES.APPEARING) { const t = smoothstep(Math.min(1, elapsed / config.appearDuration)); root.scale.set(0.001 + .999 * t, .92 + .08 * t, 1); material.opacity = t; if (t === 1) state = ASTRO_FURNACE_PANEL_STATES.VISIBLE; }
     else if (state === ASTRO_FURNACE_PANEL_STATES.DISAPPEARING) { const t = smoothstep(Math.min(1, elapsed / config.disappearDuration)); root.scale.set(1 - .999 * t, 1 - .08 * t, 1); material.opacity = 1 - t; if (t === 1) { state = ASTRO_FURNACE_PANEL_STATES.HIDDEN; root.visible = false; } }
     updateHits();
+    if (screen === ASTRO_FURNACE_PANEL_SCREENS.ASTERION_SPHERE) { const telemetry = readTelemetry();
+      if (shouldRefreshTelemetry({ active: telemetry.active || completedUntil > telemetryElapsed, elapsed: telemetryElapsed, lastRedraw: lastTelemetryRedraw, refreshHz: config.telemetryRefreshHz })) { lastTelemetryRedraw = telemetryElapsed; draw(); } }
   }
-  function reset() { state = ASTRO_FURNACE_PANEL_STATES.HIDDEN; screen = ASTRO_FURNACE_PANEL_SCREENS.HOME; elapsed = 0; hoveredRegion = null; material.opacity = 0; hits.forEach((_, record) => hits.set(record, null)); place(); root.visible = false; draw(); }
+  function reset() { state = ASTRO_FURNACE_PANEL_STATES.HIDDEN; screen = ASTRO_FURNACE_PANEL_SCREENS.HOME; elapsed = 0; telemetryElapsed = 0; lastTelemetryRedraw = 0; completedUntil = 0; previousProcessState = 'IDLE'; hoveredRegion = null; material.opacity = 0; hits.forEach((_, record) => hits.set(record, null)); place(); root.visible = false; draw(); }
   const unsubscribe = progressionController.subscribe(() => draw());
   const unsubscribePlacement = furnace.subscribePlacement?.(() => place()) ?? (() => {});
   function dispose() { if (disposed) return; disposed = true; unsubscribe(); unsubscribePlacement(); listeners.forEach(({ record, listener }) => record.controller.removeEventListener('selectstart', listener)); root.removeFromParent(); geometry.dispose(); material.dispose(); texture.dispose(); canvas.width = 0; canvas.height = 0; hits.clear(); }
