@@ -196,7 +196,8 @@ const furnacePanel = createVrAstroFurnacePanel({
   },
   contentSource: {
     getState: () => astroFurnaceContentInteraction?.getState?.() ?? 'EMPTY',
-    getInsertedShellAssetId: () => astroFurnaceContentInteraction?.getInsertedShellAssetId?.() ?? null
+    getInsertedShellAssetId: () => astroFurnaceContentInteraction?.getInsertedShellAssetId?.() ?? null,
+    getChamberState: () => astroFurnaceOpenInteraction?.getState?.() ?? 'CLOSED'
   }
 });
 const ordinaryFurnaceRayAvailable = (record) => !(record.handedness === 'right'
@@ -226,6 +227,7 @@ astroFurnaceContentInteraction = createVrAstroFurnaceContentInteraction({
   activateInteraction: astroFurnaceActivateInteraction, progressionController: furnaceProgressionController,
   controllers: vrControllers.controllers, settings: settings.furnace.content
 });
+astroFurnaceContentInteraction.subscribe(() => furnacePanel.redraw());
 astroFurnaceOptionInteraction = createVrAstroFurnaceOptionInteraction({
   furnace: astroFurnace, panel: furnacePanel, controllers: vrControllers.controllers,
   settings: settings.furnace.optionButton, haloSettings: settings.targetHalo,

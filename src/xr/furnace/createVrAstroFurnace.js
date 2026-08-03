@@ -79,7 +79,9 @@ export function createVrAstroFurnace({
       'PIVOT_FURNACE_LID_Z', 'PIVOT_FURNACE_CHAMBER_Z'
     ]) && hasAll(clips, REQUIRED_CLIP_NAMES.slice(2)),
     processSpinReady: Boolean(nodes.PIVOT_FURNACE_PROCESS_SPIN),
-    insertionReady: hasAll(nodes, ['VR_FURNACE_INSERT_VOLUME', 'VR_FURNACE_CONTENT_ANCHOR']),
+    insertionReady: settings.content?.enabled !== false
+      && hasAll(nodes, ['VR_FURNACE_INSERT_VOLUME', 'VR_FURNACE_CONTENT_ANCHOR'])
+      && (Boolean(nodes.VR_FURNACE_INSERT_VOLUME.geometry) || Number(settings.content?.volumeRadius) > 0),
     essenceOutputReady: Boolean(nodes.VR_FURNACE_ESSENCE_ANCHOR)
   });
   const diagnostics = {

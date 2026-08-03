@@ -25,7 +25,8 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
     scale: 3,
     debug: false,
     content: {
-      enabled: true, proximityRadiusMultiplier: 1.15, snapDuration: 0.32, insertedScale: 0.72,
+      enabled: true, snapDuration: 0.42,
+      chamberClearance: 0.012, contentClearance: 0.012, rejectDuration: 0.28, rejectDistanceMultiplier: 1.35,
       feedbackOpacity: 0.20, validColor: 0x49d17d, invalidColor: 0xe05252,
       consumeStartProgress: 0.18, consumeEndProgress: 0.78
     },
@@ -44,7 +45,8 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
       emissionPressed: 5
     },
     optionButton: {
-      enabled: true, rayMaxDistance: 3, emissionInactive: 0, emissionHover: 1, emissionActive: 3
+      enabled: true, rayMaxDistance: 3, emissionInactive: 0, emissionHover: 1, emissionActive: 3,
+      selectionDuration: 0.48, moduleAnglesDegrees: { floor_gyroscope_sphere: 90 }
     },
     panel: {
       enabled: true, width: 1.55, height: 1.05, gapFromFurnace: 0.18, verticalOffset: 0.15,
@@ -64,7 +66,14 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
       fireCellSteadyEmission: 4,
       fireCellExtractionEmission: 10,
       fireCellPulseHzMin: 0.7,
-      fireCellPulseHzMax: 4
+      fireCellPulseHzMax: 4,
+      processLightColor: 0xb8f3ff,
+      processLightSteadyIntensity: 18,
+      processLightExtractionIntensity: 28,
+      processLightDistance: 2.4,
+      processLightDecay: 2,
+      processLightOrbitRadiusMultiplier: 0.82,
+      processLightChamberClearance: 0.012
     },
     chamber: { glassFadeStart: 0.2, glassFadeEnd: 1 }
   },
@@ -312,7 +321,21 @@ export function normalizeExperienceVrSettings(candidate) {
         fireCellPulseHzMin: finiteNumber(processCandidate.fireCellPulseHzMin,
           defaults.furnace.process.fireCellPulseHzMin, { min: 0 }),
         fireCellPulseHzMax: finiteNumber(processCandidate.fireCellPulseHzMax,
-          defaults.furnace.process.fireCellPulseHzMax, { min: 0 })
+          defaults.furnace.process.fireCellPulseHzMax, { min: 0 }),
+        processLightColor: Number.isFinite(processCandidate.processLightColor)
+          ? processCandidate.processLightColor : defaults.furnace.process.processLightColor,
+        processLightSteadyIntensity: finiteNumber(processCandidate.processLightSteadyIntensity,
+          defaults.furnace.process.processLightSteadyIntensity, { min: 0 }),
+        processLightExtractionIntensity: finiteNumber(processCandidate.processLightExtractionIntensity,
+          defaults.furnace.process.processLightExtractionIntensity, { min: 0 }),
+        processLightDistance: finiteNumber(processCandidate.processLightDistance,
+          defaults.furnace.process.processLightDistance, { min: 0 }),
+        processLightDecay: finiteNumber(processCandidate.processLightDecay,
+          defaults.furnace.process.processLightDecay, { min: 0 }),
+        processLightOrbitRadiusMultiplier: finiteNumber(processCandidate.processLightOrbitRadiusMultiplier,
+          defaults.furnace.process.processLightOrbitRadiusMultiplier, { min: 0, max: .99 }),
+        processLightChamberClearance: finiteNumber(processCandidate.processLightChamberClearance,
+          defaults.furnace.process.processLightChamberClearance, { min: 0 })
       },
       chamber: {
         glassFadeStart: finiteNumber(candidate.furnace?.chamber?.glassFadeStart,

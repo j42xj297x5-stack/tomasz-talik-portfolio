@@ -60,7 +60,7 @@ export function createVrShellSystem({ parent, assetManager, baseRadius, emission
       if (t >= 1) { record.returning = false; record.object.userData.shellState = 'orbiting';
         record.object.userData.attractorTarget = true; setEmission(record.object, 0); }
     } else if (['orbiting', 'targeted'].includes(state)) { record.object.position.copy(record.orbitPosition); setEmission(record.object, 0); }
-    if (!['held', 'placed', 'capture_ready'].includes(state)) record.object.quaternion.copy(record.initialQuaternion).multiply(
+    if (!['held', 'placed', 'capture_ready', 'inserted', 'consuming', 'consumed'].includes(state)) record.object.quaternion.copy(record.initialQuaternion).multiply(
       scratchQuaternion.setFromAxisAngle(record.selfRotationAxis, elapsed * record.selfRotationSpeed * record.direction));
     if (state === 'capture_ready') setEmission(record.object, 1);
     if (state === 'held' || state === 'placed') setEmission(record.object, claimedMin + (claimedMax - claimedMin)

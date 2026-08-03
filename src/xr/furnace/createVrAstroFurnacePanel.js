@@ -1,6 +1,6 @@
 import * as THREE from '../../vendor/three.js';
 import { drawFurnaceFrame } from './drawVrFurnaceFrame.js';
-import { buildProgressBar, resolveAsciiFrame, resolveProcessTelemetry, shouldRefreshTelemetry } from './vrFurnaceTelemetry.js';
+import { resolveProcessTelemetry, shouldRefreshTelemetry } from './vrFurnaceTelemetry.js';
 
 export const ASTRO_FURNACE_PANEL_STATES = Object.freeze({
   HIDDEN: 'HIDDEN', APPEARING: 'APPEARING', VISIBLE: 'VISIBLE', DISAPPEARING: 'DISAPPEARING'
@@ -30,6 +30,7 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
   let state = ASTRO_FURNACE_PANEL_STATES.HIDDEN, screen = ASTRO_FURNACE_PANEL_SCREENS.HOME;
   let elapsed = 0, telemetryElapsed = 0, lastTelemetryRedraw = 0, completedUntil = 0, previousProcessState = 'IDLE';
   let hoveredRegion = null, interactiveRegions = [], disposed = false, redrawCount = 0;
+  const moduleListeners = new Set();
 
   function panelRect(x, y, width, height, options = {}) {
     drawFurnaceFrame(context, { x, y, width, height, cornerSize: options.cornerSize ?? config.frameCornerSizePx, ...options });
@@ -73,20 +74,43 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
     previousProcessState = rawState;
     const completed = completedUntil > telemetryElapsed;
     return resolveProcessTelemetry({ state: rawState === 'COMPLETE' && !completed ? 'IDLE' : rawState, progress: processSource?.getProgress?.() ?? 0,
-      angularSpeed: processSource?.getAngularSpeed?.() ?? 0, processAngle: processSource?.getProcessAngle?.() ?? 0, completed });
+      angularSpeed: processSource?.getAngularSpeed?.() ?? 0, processAngle: processSource?.getProcessAngle?.() ?? 0, completed,
+      contentState: contentSource?.getState?.() ?? 'EMPTY', chamberState: contentSource?.getChamberState?.() ?? 'CLOSED' });
   }
   function drawProcessMonitor() {
     const telemetry = readTelemetry(), x = 90, y = 645, width = 1315, height = 325;
     panelRect(x, y, width, height, { variant: 'monitor', active: telemetry.active, completed: telemetry.phase === 'COMPLETE', accentColor: accents[telemetry.colorKey] });
-    text('PROCESS MONITOR', x + 28, y + 42, 22, accents[telemetry.colorKey]);
-    const lines = resolveAsciiFrame(telemetry, telemetryElapsed); context.textAlign = 'center';
-    context.font = '26px ui-monospace, SFMono-Regular, Consolas, monospace'; context.fillStyle = accents[telemetry.colorKey];
-    lines.forEach((line, index) => context.fillText(line, x + width / 2, y + 92 + index * 34)); context.textAlign = 'left';
-    text(`STATUS // ${telemetry.label}`, x + 28, y + 225, 21, accents[telemetry.colorKey]);
-    context.font = '22px ui-monospace, SFMono-Regular, Consolas, monospace'; context.fillStyle = '#b9dce8'; context.fillText(buildProgressBar(telemetry.progress), x + 28, y + 267);
+    text('PRZEBIEG ABSORPCJI', x + 28, y + 42, 22, accents[telemetry.colorKey]);
+    const pulse = .72 + .28 * Math.sin(telemetryElapsed * 4), shellX = x + 300, shellY = y + 145;
+    context.save(); context.globalAlpha = telemetry.silhouetteOpacity * pulse; context.strokeStyle = accents[telemetry.colorKey];
+    context.lineWidth = 4; context.beginPath();
+    for (let ring = 0; ring < 4; ring++) context.ellipse(shellX, shellY, 112 - ring * 18, 70 + ring * 8,
+      telemetry.processAngle * .08 + ring * .55, 0, Math.PI * 2);
+    context.stroke(); context.restore();
+    telemetry.label.split('\n').forEach((line, index) => text(`${index ? '' : 'STATUS // '}${line}`, x + 28, y + 215 + index * 28, 21, accents[telemetry.colorKey]));
+    if (telemetry.showProgress) {
+      const barX = x + 28, barY = y + 254, barWidth = 555; context.fillStyle = '#18303c'; context.fillRect(barX, barY, barWidth, 16);
+      context.fillStyle = accents[telemetry.colorKey]; context.fillRect(barX, barY, barWidth * telemetry.progress, 16);
+      text(`${Math.round(telemetry.progress * 100)}%`, barX + barWidth + 18, barY + 17, 20, '#b9dce8');
+    }
+    drawAsterionPreview(progressSnapshot(), x + 855, y + 150, 118);
     const contentState = contentSource?.getState?.() ?? 'EMPTY'; const assetId = contentSource?.getInsertedShellAssetId?.();
     const contentLabels = { INSERTED: 'GOTOWY', CONSUMING: 'ABSORPCJA', CONSUMED: 'ZABEZPIECZONO' };
     if (contentLabels[contentState]) { context.textAlign = 'right'; text(`MATERIAŁ // ${contentLabels[contentState]}${assetId ? `  ${assetId.replace('shell-relic-', 'SKORUPA ')}` : ''}`, x + width - 28, y + 267, 19, '#88b8cf'); context.textAlign = 'left'; }
+  }
+  function progressSnapshot() { return progressionController.getAsterionSphereProgress(); }
+  function drawAsterionPreview(progress, cx, cy, radius) {
+    const rotation = telemetryElapsed * .22; text(`KULA ASTERIONOWA  ${progress.absorbed}/6`, cx - 190, cy - 112, 20, accents.asterion);
+    context.save(); context.lineWidth = 3;
+    for (let segment = 0; segment < 6; segment++) {
+      const start = rotation + segment * Math.PI / 3, end = start + Math.PI / 3 - .08;
+      context.strokeStyle = segment < progress.absorbed ? '#c8f6ff' : '#355766';
+      context.shadowColor = segment < progress.absorbed ? accents.asterion : 'transparent'; context.shadowBlur = segment < progress.absorbed ? 14 : 0;
+      context.beginPath(); context.arc(cx, cy, radius, start, end); context.stroke();
+    }
+    context.shadowBlur = 0; context.strokeStyle = '#588797'; context.lineWidth = 2;
+    context.beginPath(); context.ellipse(cx, cy, radius, radius * .34, rotation, 0, Math.PI * 2); context.stroke();
+    context.beginPath(); context.ellipse(cx, cy, radius * .34, radius, -rotation * .7, 0, Math.PI * 2); context.stroke(); context.restore();
   }
   function draw() {
     if (!context) return; redrawCount += 1; context.clearRect(0, 0, canvas.width, canvas.height);
@@ -111,7 +135,10 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
   function show() { screen = ASTRO_FURNACE_PANEL_SCREENS.HOME; hoveredRegion = null; state = ASTRO_FURNACE_PANEL_STATES.APPEARING; elapsed = 0; root.visible = true; draw(); }
   function hide() { if (state === ASTRO_FURNACE_PANEL_STATES.HIDDEN) return; state = ASTRO_FURNACE_PANEL_STATES.DISAPPEARING; elapsed = 0; }
   function toggle() { if (state === ASTRO_FURNACE_PANEL_STATES.HIDDEN || state === ASTRO_FURNACE_PANEL_STATES.DISAPPEARING) show(); else hide(); }
-  function activateRegion(id) { if (id === 'module-asterion-sphere') screen = ASTRO_FURNACE_PANEL_SCREENS.ASTERION_SPHERE; else if (id === 'back-modules') screen = ASTRO_FURNACE_PANEL_SCREENS.HOME; else return false; hoveredRegion = null; draw(); return true; }
+  function activateRegion(id) { if (id === 'module-asterion-sphere') {
+    screen = ASTRO_FURNACE_PANEL_SCREENS.ASTERION_SPHERE;
+    moduleListeners.forEach((listener) => listener('floor_gyroscope_sphere'));
+  } else if (id === 'back-modules') screen = ASTRO_FURNACE_PANEL_SCREENS.HOME; else return false; hoveredRegion = null; draw(); return true; }
   function updateHits() {
     let nextHover = null;
     controllers.forEach((record) => {
@@ -141,9 +168,10 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
   function reset() { state = ASTRO_FURNACE_PANEL_STATES.HIDDEN; screen = ASTRO_FURNACE_PANEL_SCREENS.HOME; elapsed = 0; telemetryElapsed = 0; lastTelemetryRedraw = 0; completedUntil = 0; previousProcessState = 'IDLE'; hoveredRegion = null; material.opacity = 0; hits.forEach((_, record) => hits.set(record, null)); place(); root.visible = false; draw(); }
   const unsubscribe = progressionController.subscribe(() => draw());
   const unsubscribePlacement = furnace.subscribePlacement?.(() => place()) ?? (() => {});
-  function dispose() { if (disposed) return; disposed = true; unsubscribe(); unsubscribePlacement(); listeners.forEach(({ record, listener }) => record.controller.removeEventListener('selectstart', listener)); root.removeFromParent(); geometry.dispose(); material.dispose(); texture.dispose(); canvas.width = 0; canvas.height = 0; hits.clear(); }
+  function dispose() { if (disposed) return; disposed = true; unsubscribe(); unsubscribePlacement(); moduleListeners.clear(); listeners.forEach(({ record, listener }) => record.controller.removeEventListener('selectstart', listener)); root.removeFromParent(); geometry.dispose(); material.dispose(); texture.dispose(); canvas.width = 0; canvas.height = 0; hits.clear(); }
   reset();
-  return { object: root, mesh, canvas, texture, hits, show, hide, toggle, place, update, press, reset, dispose, activateRegion,
+  return { object: root, mesh, canvas, texture, hits, show, hide, toggle, place, update, press, reset, dispose, activateRegion, redraw: draw,
+    subscribeModuleActivation(listener) { moduleListeners.add(listener); return () => moduleListeners.delete(listener); },
     isVisible: () => state !== ASTRO_FURNACE_PANEL_STATES.HIDDEN && state !== ASTRO_FURNACE_PANEL_STATES.DISAPPEARING,
     hasCurrentHit: (record) => Boolean(hits.get(record)?.intersection), getState: () => state, getScreen: () => screen,
     getInteractiveRegions: () => interactiveRegions.map((region) => ({ ...region })), getRedrawCount: () => redrawCount };
