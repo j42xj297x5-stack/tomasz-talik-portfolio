@@ -5,17 +5,36 @@ import { createVrAstroFurnaceProgressionController } from '../src/xr/furnace/cre
 
 function fixture({ emptyVolume = false } = {}) {
   const object = new THREE.Group(), volume = emptyVolume ? new THREE.Group() : new THREE.Mesh(new THREE.SphereGeometry(.5)), anchor = new THREE.Group();
-  object.add(volume, anchor); let open = 'OPEN', process = 'IDLE', progress = 0, commits = 0, removed;
+  const chamberGeometry = new THREE.CylinderGeometry(.4, .4, .8); chamberGeometry.rotateX(Math.PI / 2);
+  const chamber = new THREE.Mesh(chamberGeometry, new THREE.MeshBasicMaterial()); object.add(volume, anchor, chamber); let open = 'OPEN', process = 'IDLE', progress = 0, commits = 0, removed;
   const progression = createVrAstroFurnaceProgressionController(), commit = progression.commitAbsorbedShell;
   progression.commitAbsorbedShell = (id) => { commits++; return commit(id); };
   const interaction = createVrAstroFurnaceContentInteraction({ furnace: { object, nodes: { VR_FURNACE_INSERT_VOLUME: volume,
-    VR_FURNACE_CONTENT_ANCHOR: anchor } }, shellSystem: { removeInstance(shell) { removed = shell; shell.removeFromParent(); return true; } },
+    VR_FURNACE_CONTENT_ANCHOR: anchor, komora: chamber } }, shellSystem: { removeInstance(shell) { removed = shell; shell.removeFromParent(); return true; } },
   openInteraction: { getState: () => open }, activateInteraction: { getState: () => process, getProgress: () => progress }, progressionController: progression,
   settings: emptyVolume ? { volumeRadius: .5, rejectDuration: .1 } : { rejectDuration: .1 } });
-  const makeShell = (id = 'shell-relic-1') => { const shell = new THREE.Mesh(new THREE.SphereGeometry(.1), new THREE.MeshStandardMaterial());
+  const makeShell = (id = 'shell-relic-1', radius = .1) => { const shell = new THREE.Mesh(new THREE.SphereGeometry(radius), new THREE.MeshStandardMaterial());
     shell.userData.shellAssetId = id; object.add(shell); return shell; };
   return { interaction, progression, anchor, makeShell, setOpen: (v) => { open = v; }, setProcess: (v) => { process = v; },
     setProgress: (v) => { progress = v; }, get commits() { return commits; }, get removed() { return removed; } };
+}
+{
+  const t = fixture(), hand = new THREE.Group(), shell = t.makeShell(); shell.removeFromParent(); hand.add(shell); t.anchor.parent.add(hand);
+  t.setOpen('CLOSED'); shell.position.set(0, 0, 0); t.interaction.reportHeldShell(shell); t.interaction.update(.01);
+  assert.ok(shell.position.z > .39, 'closed authored chamber cylinder backs the held shell out along the lance axis'); t.interaction.dispose();
+}
+{
+  const t = fixture(), small = t.makeShell('shell-relic-1', .1); small.scale.setScalar(.63); insert(t, small); t.interaction.update(1);
+  assert.ok(Math.abs(small.scale.x - .63) < 1e-6, 'a shell that already fits is not upscaled');
+  t.interaction.reportHeldShell(small); t.interaction.update(.01); assert.ok(Math.abs(small.scale.x - .63) < 1e-6);
+  insert(t, small); t.interaction.update(1); assert.ok(Math.abs(small.scale.x - .63) < 1e-6, 'insert/retrieve does not accumulate scale');
+  t.interaction.dispose();
+}
+{
+  const t = fixture(), large = t.makeShell('shell-relic-1', .8); large.scale.setScalar(1.25); insert(t, large); t.interaction.update(1);
+  assert.ok(large.scale.x < 1.25, 'an oversized shell is downscaled');
+  t.interaction.reportHeldShell(large); t.interaction.update(.01);
+  assert.ok(Math.abs(large.scale.x - 1.25) < 1e-6, 'retrieval restores the per-shell baseline'); t.interaction.dispose();
 }
 {
   const empty = fixture({ emptyVolume: true }), geometry = fixture();
@@ -51,8 +70,10 @@ function insert(test, shell) { test.interaction.reportHeldShell(shell); test.int
 }
 {
   const t = fixture(), shell = t.makeShell('shell-relic-3'); insert(t, shell); t.interaction.update(1); const scale = shell.scale.x;
+  const settledPosition = shell.position.clone(), settledQuaternion = shell.quaternion.clone();
   t.setOpen('CLOSED'); t.setProcess('SPINUP'); t.setProgress(.5); t.interaction.update(.01); assert.equal(t.interaction.getState(), S.CONSUMING);
-  assert.ok(shell.scale.x < scale); assert.ok(shell.material.emissiveIntensity > 0); assert.ok(shell.material.opacity < 1); assert.equal(t.commits, 0);
+  assert.equal(shell.scale.x, scale); assert.ok(shell.position.equals(settledPosition)); assert.ok(shell.quaternion.equals(settledQuaternion));
+  assert.ok(shell.material.emissiveIntensity > 0); assert.ok(shell.material.opacity < 1); assert.equal(t.commits, 0);
   t.setProgress(.78); t.interaction.update(.01); assert.equal(t.interaction.getState(), S.CONSUMED); assert.equal(t.commits, 0);
   t.setProcess('COMPLETE'); t.interaction.update(.01); assert.equal(t.commits, 1); assert.equal(t.removed, shell);
   assert.equal(t.progression.getSnapshot().asterionSphere.absorbed, 1); t.interaction.update(1); assert.equal(t.commits, 1); t.interaction.dispose();
