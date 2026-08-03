@@ -300,10 +300,37 @@ incomplete.dispose(); incompleteFurnace.dispose();
 
 {
   const optionFurnace = buildInteractiveFurnace(); let moduleListener = null;
+  const optionButton = new THREE.Group();
+  optionButton.add(new THREE.Mesh(new THREE.BoxGeometry(.2, .2, .05), new THREE.MeshStandardMaterial({ emissiveIntensity: 0 })));
+  optionFurnace.object.add(optionButton); optionFurnace.nodes.button_option = optionButton;
   optionFurnace.nodes.PIVOT_BUTTON_OPTION = new THREE.Group(); optionFurnace.object.add(optionFurnace.nodes.PIVOT_BUTTON_OPTION);
-  const panel = { isVisible: () => false, toggle() {}, subscribeModuleActivation(listener) { moduleListener = listener; return () => { moduleListener = null; }; } };
-  const option = createVrAstroFurnaceOptionInteraction({ furnace: optionFurnace, panel, controllers: [],
-    settings: { enabled: true, selectionDuration: .5, moduleAnglesDegrees: { floor_gyroscope_sphere: 90 } } });
+  const optionController = new THREE.Group(); optionController.position.z = 1;
+  const optionRecord = { controller: optionController, currentRayLength: 3, reportRayHit() {} };
+  let panelVisible = false;
+  const panel = { isVisible: () => panelVisible, toggle() {}, subscribeModuleActivation(listener) { moduleListener = listener; return () => { moduleListener = null; }; } };
+  const targetHalo = { color: 0xbfe9ff, opacity: .28, thicknessPixels: 3, pulseDuration: 1.45 };
+  const optionHalo = { opacity: .52, thicknessPixels: 5, pulseDuration: 1.1 };
+  const option = createVrAstroFurnaceOptionInteraction({ furnace: optionFurnace, panel, controllers: [optionRecord],
+    settings: { enabled: true, emissionInactive: 0, emissionHover: 5, emissionActive: 3, selectionDuration: .5,
+      moduleAnglesDegrees: { floor_gyroscope_sphere: 90 } }, haloSettings: { ...targetHalo, ...optionHalo } });
+  const optionMaterial = optionButton.children[0].material;
+  optionController.position.copy(optionButton.getWorldPosition(new THREE.Vector3())); optionController.position.z += 1;
+  optionButton.updateWorldMatrix(true, true);
+  option.update(0);
+  assert.equal(optionMaterial.emissiveIntensity, 5, 'ray hover is the strongest Option emission state');
+  assert.equal(option.halo.visible, true, 'Option halo appears on an actual ray hit');
+  option.update(optionHalo.pulseDuration / 4);
+  assert.equal(option.halo.material.uniforms.haloOpacity.value, optionHalo.opacity,
+    'Option halo uses its local opacity and pulse duration');
+  assert.equal(option.halo.material.uniforms.thicknessPixels.value, optionHalo.thicknessPixels);
+  assert.deepEqual(targetHalo, { color: 0xbfe9ff, opacity: .28, thicknessPixels: 3, pulseDuration: 1.45 },
+    'the Option override does not mutate global target halo settings');
+  optionController.rotation.y = Math.PI; panelVisible = true; option.update(0);
+  assert.equal(optionMaterial.emissiveIntensity, 3, 'ray exit restores stable active emission');
+  assert.equal(option.halo.visible, false, 'Option halo disappears immediately after ray exit');
+  panelVisible = false; option.update(0);
+  assert.equal(optionMaterial.emissiveIntensity, .45, 'unconfigured Option retains subtle guidance emission');
+  assert.ok(5 > 3 && 3 > optionMaterial.emissiveIntensity, 'hover > active > unconfigured guidance');
   assert.equal(option.getActiveMode(), null, 'the furnace starts unconfigured');
   panel.toggle(); panel.toggle();
   assert.equal(option.getActiveMode(), null, 'opening or closing the panel does not select a module');
