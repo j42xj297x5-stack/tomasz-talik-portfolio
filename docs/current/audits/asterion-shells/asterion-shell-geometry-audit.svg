@@ -1,0 +1,1282 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1420" viewBox="0 0 1600 1420"><rect width="100%" height="100%" fill="#071019"/><style>text{font-family:monospace;fill:#d9f8ff}.muted{fill:#7fa7b8}.wire{fill:none;stroke:#72cfe8;stroke-width:1.3}.sphere{fill:none;stroke:#9eeaff;stroke-width:1;opacity:.82}</style>
+<text x="50" y="52" font-size="26">ASTERION // DETERMINISTIC SHELL GEOMETRY AUDIT</text><text x="50" y="82" class="muted" font-size="14">PCA flattened patches · thickness edges removed · max 100 segments</text>
+<g transform="translate(270 255) scale(105 -105)">
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.644878 0.323169L-0.993644 -0.274399"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.65501 0.303652L-0.982921 -0.276516"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.608719 0.301414L-0.95309 -0.239692"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.49793 -0.389807L0.127538 -0.400444"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.597727 0.280615L-0.940055 -0.241623"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.490996 -0.38925L0.131273 -0.418847"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.493927 -0.426892L0.128343 -0.456489"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.47499 -0.31613L0.127538 -0.400444"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.483162 -0.3916L0.121409 -0.457046"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.121409 -0.457046L0.640827 -0.592232"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.128343 -0.456489L0.64776 -0.591674"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.131273 -0.418847L0.631878 -0.552565"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.127538 -0.400444L0.609022 -0.551423"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.698419 -0.59654L0.888433 -0.137523"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.703041 -0.596169L0.890167 -0.137384"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.68685 -0.575788L0.891322 -0.137291"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.68685 -0.575788L0.890167 -0.137384"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.679917 -0.576345L0.84792 -0.134821"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.483162 -0.3916L-0.948227 -0.317092"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.669502 -0.5555L0.853698 -0.134357"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.493927 -0.426892L-0.93956 -0.316396"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.699774 -0.085488L0.956288 0.292144"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.648111 -0.535537L0.813494 -0.112926"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.84792 -0.134821L0.956288 0.292144"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.891322 -0.137291L0.980878 0.291142"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.490996 -0.38925L-0.899006 -0.281688"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.49793 -0.389807L-0.904783 -0.282153"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.853698 -0.134357L0.941789 0.275255"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.813494 -0.112926L0.899542 0.277818"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.592569 0.416011L0.200442 0.484464"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.588834 0.434414L0.196707 0.502866"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.595499 0.453653L0.203372 0.522105"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.532473 0.211405L0.904247 0.353009"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.70093 -0.085395L0.841372 0.28208"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.699774 -0.085488L0.839639 0.281941"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.568825 0.398378L0.194932 0.465318"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.47499 -0.31613L-0.805707 -0.19557"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.595499 0.453653L0.928837 0.352006"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.534206 0.211544L0.864848 0.318394"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.456171 0.610774L-0.116973 0.584411"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.460835 0.572993L-0.121636 0.546629"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.592569 0.416011L0.90856 0.334652"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.588834 0.434414L0.904247 0.353009"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.115549 0.565822L0.203372 0.522105"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.118479 0.52818L0.200442 0.484464"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.121636 0.546629L0.196707 0.502866"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.124876 0.49026L-0.444684 0.515202"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.124876 0.49026L0.194932 0.465318"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.435357 0.590764L-0.115549 0.565822"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.438287 0.553122L-0.118479 0.52818"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.532473 0.211405L0.839639 0.281941"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.534206 0.211544L0.841372 0.28208"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.568825 0.398378L0.864848 0.318394"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.511762 0.59654L-0.644878 0.323169"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.493259 0.576345L-0.644878 0.323169"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.518736 0.558573L-0.65501 0.303652"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.477377 0.537236L-0.608719 0.301414"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.482309 0.518137L-0.597727 0.280615"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.805707 -0.19557L-0.940055 -0.241623"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.839639 0.281941L0.956288 0.292144"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.839639 0.281941L0.904247 0.353009"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.929146 0.370734L1 0.308402"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.928837 0.352006L0.980878 0.291142"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.904247 0.353009L0.956288 0.292144"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.93956 -0.316396L-0.993644 -0.274399"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.899006 -0.281688L-0.95309 -0.239692"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.90856 0.334652L0.941789 0.275255"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.435357 0.590764L-0.493259 0.576345"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.640517 -0.61096L0.698419 -0.59654"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.645139 -0.610588L0.703041 -0.596169"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.45386 0.61096L-0.511762 0.59654"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.460835 0.572993L-0.518736 0.558573"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.904783 -0.282153L-0.940055 -0.241623"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.948227 -0.317092L-0.982921 -0.276516"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.438287 0.553122L-0.477377 0.537236"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.64776 -0.591674L0.68685 -0.575788"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.640827 -0.592232L0.679917 -0.576345"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.609022 -0.551423L0.648111 -0.535537"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.444684 0.515202L-0.482309 0.518137"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.631878 -0.552565L0.669502 -0.5555"/>
+</g>
+<text x="50" y="390" font-size="18">shell-relic-1 → +X</text><text x="50" y="413" class="muted" font-size="13">PCA 0.41465 × 0.253334 × 0.077258 · aspect 1.63677 · t/r 0.186321</text>
+<g transform="translate(780 255) scale(105 -105)">
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.450192 -0.283538L0.295558 -0.577381"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.275346 -0.509197L0.297882 -0.60864"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.274492 -0.494829L0.299015 -0.579544"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.263511 -0.49276L0.295558 -0.577381"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.261802 -0.464026L0.296979 -0.548466"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.259209 -0.465648L0.299571 -0.550088"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.450192 -0.283538L0.091866 -0.396258"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.496049 0.454501L-0.971173 0.242192"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.465713 0.423594L-0.940847 0.226194"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.506753 0.46716L-0.967438 0.254757"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.477569 0.436974L-0.938264 0.239479"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.454434 0.410574L0.033816 0.429882"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.025079 0.515821L-0.446715 0.495156"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.024523 0.486365L-0.432257 0.465245"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.409381 0.394301L0.03468 0.429341"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.420978 0.452226L0.021652 0.473259"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.673867 0.547916L0.84446 0.220604"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.703021 0.562455L0.858889 0.235418"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.658862 0.533463L0.815008 0.221154"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.378927 -0.063276L0.715662 -0.142874"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.68457 0.535257L0.827141 0.222501"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.655992 0.520357L0.797699 0.208142"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.297882 -0.60864L0.566849 -0.407393"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.887169 -0.144186L-0.999136 0.167299"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.299015 -0.579544L0.567703 -0.393026"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.860319 -0.128205L-0.98729 0.168827"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.871589 -0.130094L-0.983834 0.166664"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.295558 -0.577381L0.550384 -0.391129"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.299571 -0.550088L0.553255 -0.378023"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.296979 -0.548466L0.536503 -0.361578"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.841858 -0.115915L-0.954381 0.166114"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.815008 0.221154L0.956685 -0.046337"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.827141 0.222501L0.968531 -0.044809"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.84446 0.220604L0.98585 -0.046706"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.797699 0.208142L0.92465 -0.059073"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.831165 -0.113666L-0.943966 0.153635"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.829436 -0.114748L-0.942238 0.152554"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.263511 -0.49276L-0.450192 -0.283538"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.743763 0.397916L-0.98274 0.255392"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.550384 -0.391129L0.802667 -0.277795"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.567703 -0.393026L0.819986 -0.279692"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.743485 0.412644L-0.967438 0.254757"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.454434 0.410574L-0.516906 0.145668"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.477578 0.451882L-0.743763 0.397916"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.729027 0.382733L-0.967438 0.254757"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.743763 0.397916L-0.967438 0.254757"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.536503 -0.361578L0.77406 -0.24797"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.553255 -0.378023L0.790812 -0.264415"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.743763 0.397916L-0.95299 0.239754"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.261802 -0.464026L-0.449327 -0.284079"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.477569 0.436974L-0.729027 0.382733"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.025079 0.515821L0.275972 0.555514"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.021652 0.473259L0.272544 0.512953"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.021344 0.503256L0.272237 0.542949"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.024523 0.486365L0.275415 0.526058"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.271134 0.46913L0.03468 0.429341"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.270269 0.46967L0.033816 0.429882"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.652365 -0.222583L-0.871589 -0.130094"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.667945 -0.236675L-0.887169 -0.144186"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.275972 0.555514L0.512147 0.580575"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.303378 -0.479732L-0.462306 -0.314702"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.318958 -0.493825L-0.477886 -0.328795"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.454116 0.365669L-0.516042 0.145127"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.307123 -0.477388L-0.465187 -0.312899"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.637361 -0.208129L-0.841858 -0.115915"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.275415 0.526058L0.496864 0.551393"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.272544 0.512953L0.493993 0.538288"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.498295 0.366493L-0.516906 0.145668"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.450192 -0.283538L-0.640827 -0.191058"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.465187 -0.312899L-0.655534 -0.2206"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.447301 -0.300249L-0.637361 -0.208129"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.449327 -0.284079L-0.639387 -0.191959"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.462306 -0.314702L-0.652365 -0.222583"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.477886 -0.328795L-0.667945 -0.236675"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.302822 -0.450276L-0.447301 -0.300249"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.305136 -0.433926L-0.449327 -0.284079"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.640827 -0.191058L-0.831165 -0.113666"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.272237 0.542949L0.477539 0.539644"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.639387 -0.191959L-0.829436 -0.114748"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.271134 0.46913L0.461729 0.436282"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.819986 -0.279692L0.983366 -0.209074"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.790812 -0.264415L0.954191 -0.193797"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.77406 -0.24797L0.93716 -0.19208"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.802667 -0.277795L0.95131 -0.191994"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.465713 0.423594L-0.513528 0.262771"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.477539 0.539644L0.64066 0.565717"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.493993 0.538288L0.655992 0.520357"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.983366 -0.209074L0.98585 -0.046706"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.996651 -0.208448L0.999136 -0.046079"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.95131 -0.191994L0.968531 -0.044809"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.954191 -0.193797L0.956685 -0.046337"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.92465 -0.059073L0.93716 -0.19208"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.493993 0.538288L0.626808 0.550543"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.496864 0.551393L0.629679 0.563649"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.512147 0.580575L0.644961 0.59283"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.513528 0.262771L-0.516042 0.145127"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.967438 0.254757L-0.983834 0.166664"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.496049 0.454501L-0.498295 0.366493"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.938264 0.239479L-0.954381 0.166114"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.971173 0.242192L-0.98729 0.168827"/>
+</g>
+<text x="560" y="390" font-size="18">shell-relic-2 → -X</text><text x="560" y="413" class="muted" font-size="13">PCA 0.531359 × 0.323406 × 0.086191 · aspect 1.643008 · t/r 0.162209</text>
+<g transform="translate(1290 255) scale(105 -105)">
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.958817 -0.1204L1 0.389924"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.6539 -0.312304L-0.926602 0.107837"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.956885 -0.12094L0.973641 0.374536"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.940467 -0.115244L0.976861 0.375435"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.270691 -0.632863L-0.682109 -0.364826"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.276769 -0.652868L-0.688187 -0.384831"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.240831 -0.598189L-0.657682 -0.349977"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.238337 -0.560876L-0.6539 -0.312304"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.230971 -0.540511L-0.598969 -0.262603"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.895396 -0.107267L0.941849 0.339323"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.901192 -0.105649L0.947645 0.340941"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.512411 -0.407854L0.923359 -0.258458"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.500783 -0.382513L0.907586 -0.252582"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.514343 -0.407315L0.112329 -0.5176"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.832338 -0.112342L0.869212 0.294959"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.553125 0.519903L0.942376 0.404674"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.556626 0.53919L0.950666 0.443606"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.490724 -0.338425L0.8731 -0.223342"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.490724 -0.338425L0.108348 -0.453507"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.500783 -0.382513L0.118406 -0.497595"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.499132 -0.364665L0.86666 -0.22514"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.499132 -0.364665L0.121545 -0.460102"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.543546 0.480612L0.913159 0.370181"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.53775 0.478995L0.911508 0.388029"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.238337 -0.560876L-0.020099 -0.260663"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.451086 -0.310623L0.808391 -0.210569"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.166627 0.652411L0.196428 0.605353"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.168196 0.633664L0.194859 0.586606"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.177775 0.594374L0.18528 0.547316"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.230971 -0.540511L0.112774 -0.415655"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.53775 0.478995L0.17884 0.545518"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.500243 0.40557L0.854364 0.319401"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.554694 0.53865L0.196428 0.605353"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.553125 0.519903L0.194859 0.586606"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.543546 0.480612L0.18528 0.547316"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.524413 0.635736L-0.166627 0.652411"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.522363 0.571103L-0.164578 0.587779"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.451086 -0.310623L0.112774 -0.415655"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.688187 -0.384831L-0.939646 -0.136065"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.521193 0.636634L-0.168196 0.633664"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.182447 0.509556L0.160971 0.467296"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.164578 0.587779L0.17884 0.545518"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.500243 0.40557L0.160971 0.467296"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.187352 -0.632406L0.118406 -0.497595"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.193429 -0.652411L0.112329 -0.5176"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.18357 -0.594732L0.121545 -0.460102"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.511134 0.592546L-0.177775 0.594374"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.682109 -0.364826L-0.918721 -0.140502"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.177129 -0.592935L0.108348 -0.453507"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.496168 0.502932L-0.182447 0.509556"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.657682 -0.349977L-0.874657 -0.130451"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.16727 -0.535257L0.112774 -0.415655"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.6539 -0.312304L-0.876307 -0.112603"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.918721 -0.140502L-0.979074 0.124026"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.939646 -0.136065L-1 0.128464"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.598969 -0.262603L-0.805884 -0.087164"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.898463 0.374259L-1 0.128464"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.877538 0.369822L-0.979074 0.124026"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.900395 0.37372L-0.982295 0.123127"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.874657 -0.130451L-0.939799 0.114432"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.729887 0.561037L-0.900395 0.37372"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.843052 0.340582L-0.939799 0.114432"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.726667 0.561936L-0.877538 0.369822"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.849492 0.338784L-0.926602 0.107837"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.876307 -0.112603L-0.926602 0.107837"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.69697 0.513051L-0.843052 0.340582"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.521193 0.636634L-0.726667 0.561936"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.524413 0.635736L-0.729887 0.561037"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.805884 -0.087164L-0.860968 0.11363"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.7082 0.491607L-0.849492 0.338784"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.522363 0.571103L-0.7082 0.491607"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.511134 0.592546L-0.69697 0.513051"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.798226 0.285642L-0.860968 0.11363"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.496168 0.502932L-0.656934 0.438464"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.923359 -0.258458L0.956885 -0.12094"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.907586 -0.252582L0.940467 -0.115244"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.8731 -0.223342L0.901192 -0.105649"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.808391 -0.210569L0.832338 -0.112342"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.276769 -0.652868L-0.193429 -0.652411"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.270691 -0.632863L-0.187352 -0.632406"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.273912 -0.633762L-0.195362 -0.65295"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.950666 0.443606L1 0.389924"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.238337 -0.560876L-0.18357 -0.594732"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.240831 -0.598189L-0.177129 -0.592935"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.230971 -0.540511L-0.16727 -0.535257"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.911508 0.388029L0.941849 0.339323"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.913159 0.370181L0.947645 0.340941"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.942376 0.404674L0.976861 0.375435"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.854364 0.319401L0.869212 0.294959"/>
+</g>
+<text x="1070" y="390" font-size="18">shell-relic-3 → +Z</text><text x="1070" y="413" class="muted" font-size="13">PCA 0.387065 × 0.252734 × 0.06978 · aspect 1.531511 · t/r 0.18028</text>
+<g transform="translate(270 570) scale(105 -105)">
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.00446 -0.564078L0.959112 -0.728993"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.015033 -0.539896L0.94854 -0.704811"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.028949 -0.539678L-0.950515 -0.326799"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.007704 -0.483259L0.925531 -0.650831"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.00323 -0.469779L0.845842 -0.608276"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.820869 -0.303634L0.007704 -0.483259"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.015033 -0.539896L-0.836027 -0.341392"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.595947 0.668683L0.79947 -0.026019"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.583522 0.664407L0.749624 -0.016319"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.580789 0.630925L0.75447 -0.030922"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.749624 -0.016319L0.975884 -0.654383"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.033434 -0.492124L-0.687349 -0.318505"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.795742 -0.014785L0.975884 -0.654383"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.79947 -0.026019L0.989428 -0.653477"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.535428 0.59307L0.723894 -0.029895"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.186455 0.047063L-0.79295 -0.035341"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.75447 -0.030922L0.940316 -0.61195"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.723894 -0.029895L0.845842 -0.608276"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.44035 0.272142L0.096746 0.51761"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.723894 -0.029895L0.879524 -0.576944"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.726876 -0.038881L0.882506 -0.585931"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.413863 0.249397L0.085439 0.509964"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.410135 0.238164L0.100485 0.472302"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.381784 0.209803L0.109193 0.453737"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.44296 0.280005L-0.848522 -0.016062"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.372088 -0.360726L-0.856303 -0.253929"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.44035 0.272142L-0.828134 -0.028105"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.413863 0.249397L-0.79295 -0.035341"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.410135 0.238164L-0.79034 -0.043204"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.00323 -0.469779L0.466412 -0.452792"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.507934 0.694605L0.085439 0.509964"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.520359 0.698881L0.096746 0.51761"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.505201 0.661123L0.100485 0.472302"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.381784 0.209803L-0.735141 -0.061359"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.186455 0.047063L0.255109 0.004042"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.505213 0.627048L0.109193 0.453737"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.507822 0.619185L0.110685 0.449244"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.466412 -0.452792L0.845842 -0.608276"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.372088 -0.360726L0.00323 -0.469779"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.79295 -0.035341L-1 -0.284148"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.847777 -0.018309L-0.999254 -0.286394"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.848522 -0.016062L-1 -0.284148"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.847777 -0.018309L-0.961088 -0.302617"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.828134 -0.028105L-0.961088 -0.302617"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.79034 -0.043204L-0.927033 -0.272409"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.687349 -0.318505L-0.950515 -0.326799"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.753292 -0.056057L-0.874454 -0.248627"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.735141 -0.061359L-0.856303 -0.253929"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.884382 -0.336185L-0.961088 -0.302617"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.52421 0.728993L0.599798 0.698795"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.505201 0.661123L0.580789 0.630925"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.520359 0.698881L0.595947 0.668683"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.507934 0.694605L0.583522 0.664407"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.959112 -0.728993L1 -0.677659"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.94854 -0.704811L0.989428 -0.653477"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.950515 -0.326799L-1 -0.284148"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.874454 -0.248627L-0.927033 -0.272409"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.942202 -0.685714L0.975884 -0.654383"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.845842 -0.608276L0.879524 -0.576944"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.927033 -0.272409L-0.961088 -0.302617"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.505213 0.627048L0.535428 0.59307"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.867721 -0.624812L0.882506 -0.585931"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.925531 -0.650831L0.940316 -0.61195"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.961088 -0.302617L-0.999254 -0.286394"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.869224 -0.298427L-0.884382 -0.336185"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.820869 -0.303634L-0.836027 -0.341392"/>
+</g>
+<text x="50" y="705" font-size="18">shell-relic-4 → -Z</text><text x="50" y="728" class="muted" font-size="13">PCA 0.384402 × 0.280227 × 0.07972 · aspect 1.371755 · t/r 0.207386</text>
+<g transform="translate(780 570) scale(105 -105)">
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.301031 0.899173L0.963156 0.35379"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.265755 0.898659L0.960915 0.348867"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.564333 -0.899173L0.962484 0.352313"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.564333 -0.899173L0.960915 0.348867"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.565902 -0.895727L0.962484 0.352313"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.276501 0.845199L0.909178 0.329272"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.265755 0.898659L-0.963603 -0.173667"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.564333 -0.899173L0.908506 0.327795"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.257238 0.825559L0.890925 0.305224"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.663208 -0.686429L0.569376 -0.934"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.301031 0.899173L-0.982418 -0.153042"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.543726 -0.882487L0.870765 0.322895"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.646075 -0.664842L0.565902 -0.895727"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.647643 -0.668288L0.564333 -0.899173"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.541372 -0.841753L0.908506 0.327795"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.66971 -0.809896L0.999552 0.355737"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.649551 -0.792225L1 0.356722"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.520317 -0.826052L0.870765 0.322895"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.276501 0.845199L-0.924518 -0.165813"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.593781 -0.820681L0.908506 0.327795"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.647759 -0.796163L0.960915 0.348867"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.629392 -0.774555L0.963156 0.35379"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.593781 -0.820681L0.870765 0.322895"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.612705 -0.623638L0.541372 -0.841753"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.257238 0.825559L-0.888346 -0.164358"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.614821 -0.795854L0.543726 -0.882487"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.593442 -0.643278L0.519196 -0.828513"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.588177 -0.741183L0.909178 0.329272"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.576309 -0.621692L0.519869 -0.827036"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.57271 -0.827257L0.511924 -0.920245"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.566001 -0.727943L0.890925 0.305224"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.612929 -0.624131L0.458942 -0.775009"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.608558 -0.660434L0.463312 -0.811312"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.555352 -0.805178L0.491765 -0.902575"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.646075 -0.664842L-0.789331 -0.378286"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.576309 -0.621692L-0.736249 -0.355737"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.647643 -0.668288L-0.770292 -0.398418"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.612705 -0.623638L-0.752038 -0.37437"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.752038 -0.37437L-0.858774 -0.253159"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.770292 -0.398418L-0.877252 -0.277699"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.789331 -0.378286L-0.912751 -0.277677"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.807136 -0.401349L-0.930557 -0.300741"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.930557 -0.300741L-1 -0.175614"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.912751 -0.277677L-0.982418 -0.153042"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.736249 -0.355737L-0.822602 -0.251704"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.877252 -0.277699L-0.963603 -0.173667"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.467235 -0.848601L0.582811 -0.874633"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.858774 -0.253159L-0.924518 -0.165813"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.821929 -0.250228L-0.887674 -0.162881"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.822602 -0.251704L-0.888346 -0.164358"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.585373 -0.717362L-0.651118 -0.630016"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.602074 -0.894272L0.647759 -0.796163"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.562428 -0.857455L0.629392 -0.774555"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.602746 -0.892796L0.66971 -0.809896"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.467235 -0.848601L0.562428 -0.857455"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.584029 -0.714408L-0.592869 -0.809587"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.491765 -0.902575L0.582811 -0.874633"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.585373 -0.717362L-0.614821 -0.795854"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.564333 -0.899173L0.593781 -0.820681"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.563197 -0.730602L-0.608558 -0.660434"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.537898 -0.803481L0.588177 -0.741183"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.458046 -0.776978L0.519869 -0.827036"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.543726 -0.882487L0.593781 -0.820681"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.463312 -0.811312L0.537898 -0.803481"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.458046 -0.776978L0.532631 -0.769146"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.458942 -0.775009L0.533528 -0.767177"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.555352 -0.805178L-0.563197 -0.730602"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.519196 -0.828513L0.543726 -0.882487"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.908506 0.327795L0.962484 0.352313"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.593781 -0.820681L0.647759 -0.796163"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.593442 -0.643278L-0.651118 -0.630016"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.532631 -0.769146L0.566001 -0.727943"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.555352 -0.805178L-0.592869 -0.809587"/>
+</g>
+<text x="560" y="705" font-size="18">shell-relic-5 → +Y</text><text x="560" y="728" class="muted" font-size="13">PCA 0.295208 × 0.27616 × 0.04264 · aspect 1.068974 · t/r 0.14444</text>
+<g transform="translate(1290 570) scale(105 -105)">
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.288039 -0.497863L0.782189 0.212655"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.332701 -0.714945L0.920197 0.161467"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.317922 -0.674503L0.895645 0.173544"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.323335 -0.648765L0.891288 0.170917"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.304742 -0.610623L0.83456 0.190472"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.233234 -0.550626L0.782189 0.212655"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.076448 0.19596L0.833768 0.356122"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.497323 -0.175463L-0.945996 0.549891"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.535458 -0.194051L-0.945996 0.549891"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.573049 -0.21231L-0.945996 0.549891"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.490241 -0.171195L-0.919777 0.516345"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.222237 0.71396L-0.953728 0.617056"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.228195 0.687894L-0.949915 0.619354"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.204733 0.67516L-0.89809 0.596843"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.881642 0.534933L-0.198057 0.584885"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.340163 -0.641659L0.332701 -0.714945"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.782189 0.212655L0.193888 -0.120914"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.850588 0.549251L-0.185596 0.637345"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.415061 -0.134676L-0.760453 0.428657"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.288039 -0.497863L0.193888 -0.120914"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.273259 -0.538305L0.304742 -0.610623"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.076448 0.19596L0.483909 0.256658"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.288039 -0.497863L0.233234 -0.550626"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.722318 0.447244L-0.200096 0.489355"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.21245 0.595329L0.705359 0.552345"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.243942 0.681738L0.736851 0.638754"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.340163 -0.641659L-0.573049 -0.21231"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.242308 0.680753L0.725446 0.609404"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.327571 -0.197183L0.483909 0.256658"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.317922 -0.674503L0.327571 -0.197183"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.222237 0.71396L0.242308 0.680753"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.204858 0.568278L0.669403 0.535071"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.20976 0.571233L0.664534 0.509662"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.321165 -0.585257L-0.535458 -0.194051"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.204733 0.67516L0.231448 0.651731"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.273259 -0.538305L-0.497323 -0.175463"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.305402 -0.55328L-0.490241 -0.171195"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.198057 0.584885L0.20976 0.571233"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.185596 0.637345L0.21245 0.595329"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.20078 0.583243L0.197265 0.541227"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.288039 -0.497863L-0.415061 -0.134676"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.483909 0.256658L0.833768 0.356122"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.736851 0.638754L0.953992 0.532166"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.920197 0.161467L0.998366 0.388388"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.725446 0.609404L0.914223 0.512594"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.891288 0.170917L0.959686 0.369472"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.605767 0.433688L0.793859 0.430765"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.705359 0.552345L0.875543 0.493678"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.83456 0.190472L0.893187 0.360662"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.914223 0.512594L0.998366 0.388388"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.664534 0.509662L0.806354 0.460773"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.875543 0.493678L0.893187 0.360662"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.782189 0.212655L0.821274 0.326115"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.806354 0.460773L0.833768 0.356122"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.793859 0.430765L0.821274 0.326115"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.898494 0.502299L-0.945996 0.549891"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.893187 0.360662L0.959686 0.369472"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.850588 0.549251L-0.898494 0.502299"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.89809 0.596843L-0.945996 0.549891"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.949915 0.619354L-0.997821 0.572402"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.21245 0.595329L0.231448 0.651731"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M0.959686 0.369472L0.998366 0.388388"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.881642 0.534933L-0.919777 0.516345"/>
+<path class="wire" vector-effect="non-scaling-stroke" d="M-0.722318 0.447244L-0.760453 0.428657"/>
+</g>
+<text x="1070" y="705" font-size="18">shell-relic-6 → -Y</text><text x="1070" y="728" class="muted" font-size="13">PCA 0.260884 × 0.186518 × 0.071846 · aspect 1.398709 · t/r 0.275394</text>
+<text x="50" y="785" font-size="23">FIXED SPHERICAL-CUBE LAYOUT</text>
+<rect x="235" y="835" width="135" height="115" rx="8" fill="#0c2230" stroke="#568ca2"/><text x="247" y="865" font-size="18">+Y</text><text x="247" y="892" class="muted" font-size="13">shell-relic-5</text><text x="247" y="915" class="muted" font-size="12">rot 0° · s 0.82</text>
+<rect x="75" y="975" width="135" height="115" rx="8" fill="#0c2230" stroke="#568ca2"/><text x="87" y="1005" font-size="18">-X</text><text x="87" y="1032" class="muted" font-size="13">shell-relic-2</text><text x="87" y="1055" class="muted" font-size="12">rot 180° · s 0.84</text>
+<rect x="235" y="975" width="135" height="115" rx="8" fill="#0c2230" stroke="#568ca2"/><text x="247" y="1005" font-size="18">+Z</text><text x="247" y="1032" class="muted" font-size="13">shell-relic-3</text><text x="247" y="1055" class="muted" font-size="12">rot 90° · s 0.84</text>
+<rect x="395" y="975" width="135" height="115" rx="8" fill="#0c2230" stroke="#568ca2"/><text x="407" y="1005" font-size="18">+X</text><text x="407" y="1032" class="muted" font-size="13">shell-relic-1</text><text x="407" y="1055" class="muted" font-size="12">rot 0° · s 0.84</text>
+<rect x="555" y="975" width="135" height="115" rx="8" fill="#0c2230" stroke="#568ca2"/><text x="567" y="1005" font-size="18">-Z</text><text x="567" y="1032" class="muted" font-size="13">shell-relic-4</text><text x="567" y="1055" class="muted" font-size="12">rot -90° · s 0.84</text>
+<rect x="235" y="1115" width="135" height="115" rx="8" fill="#0c2230" stroke="#568ca2"/><text x="247" y="1145" font-size="18">-Y</text><text x="247" y="1172" class="muted" font-size="13">shell-relic-6</text><text x="247" y="1195" class="muted" font-size="12">rot 180° · s 0.82</text>
+<text x="780" y="785" font-size="23">COMPOSITE SPHERE VIEWS</text>
+<circle cx="900" cy="980" r="103" fill="#091925" stroke="#426b7c"/>
+<path class="sphere" d="M998.1342720934313 956.2502870821046L996.4722948505898 989.6692508060887"/>
+<path class="sphere" d="M998.4302556625912 957.4130157579368L996.5638884515125 990.0225274451445"/>
+<path class="sphere" d="M998.5022448565892 958.1212756583831L997.257854870228 988.4003685338057"/>
+<path class="sphere" d="M998.8193703237549 959.6632442277363L997.3732883852974 988.7919198728695"/>
+<path class="sphere" d="M996.4113351357339 1009.9708501174537L996.4369838574717 993.229241149841"/>
+<path class="sphere" d="M995.7236604843915 1011.9437779442862L996.5281858766501 993.3824744797513"/>
+<path class="sphere" d="M996.512641043118 1009.5977602261701L997.3304963476824 992.1684068860102"/>
+<path class="sphere" d="M996.544798136561 1009.4399418048579L997.2725004687136 992.067755053762"/>
+<path class="sphere" d="M997.818734324579 1005.1431961473436L999.0281036888758 988.7345808359083"/>
+<path class="sphere" d="M999.0281036888758 988.7345808359083L997.3732883852974 988.7919198728695"/>
+<path class="sphere" d="M996.5281858766501 993.3824744797513L996.4722948505898 989.6692508060887"/>
+<path class="sphere" d="M997.3304963476824 992.1684068860102L997.257854870228 988.4003685338057"/>
+<path class="sphere" d="M997.2725004687136 992.067755053762L997.3732883852974 988.7919198728695"/>
+<path class="sphere" d="M996.4369838574717 993.229241149841L996.5638884515125 990.0225274451445"/>
+<path class="sphere" d="M832.1369328875029 979.8491796002362L810.5619082874254 1015.5523889610486"/>
+<path class="sphere" d="M827.3494061588991 999.8496734653177L811.408539719693 1017.4336719509339"/>
+<path class="sphere" d="M827.0101832249502 998.9002249905069L810.5607146832866 1015.7305911988627"/>
+<path class="sphere" d="M826.4757681072055 999.0162324937824L810.5619082874254 1015.5523889610486"/>
+<path class="sphere" d="M825.8072088324325 997.0837382626021L809.7337517792478 1013.8156111061751"/>
+<path class="sphere" d="M825.7232950051111 997.2563700200502L809.7321482010119 1013.9526296974661"/>
+<path class="sphere" d="M832.1369328875029 979.8491796002362L810.7319006327791 1000.0691303440137"/>
+<path class="sphere" d="M836.7603798484844 926.8772308016113L857.8207062621324 938.2560902525468"/>
+<path class="sphere" d="M834.7963917249589 928.8786321465145L856.369602477809 939.2168701082044"/>
+<path class="sphere" d="M837.4776657817532 926.095532820156L857.7064961855298 937.5323824133563"/>
+<path class="sphere" d="M835.5850053740126 928.007698797355L856.3080045176222 938.4383336227671"/>
+<path class="sphere" d="M834.041075614997 929.7414403538049L813.3181135285603 935.7517853370139"/>
+<path class="sphere" d="M815.7179830447317 930.254828394346L835.0380158477587 924.861527592229"/>
+<path class="sphere" d="M814.9876497053558 932.0106416058726L833.8321736581395 926.6645731903529"/>
+<path class="sphere" d="M831.5622878149172 931.1039912231201L813.2771631137018 935.8057605070859"/>
+<path class="sphere" d="M833.0672720525899 927.5083879921913L814.7576518545626 932.7519878838802"/>
+<path class="sphere" d="M800.142298817498 980.6666977098596L799.9482535188835 992.5787530809475"/>
+<path class="sphere" d="M811.408539719693 1017.4336719509339L803.5026287036683 1008.3238205967735"/>
+<path class="sphere" d="M853.5465844356696 962.9809705435603L858.8179464409598 942.6073804583214"/>
+<path class="sphere" d="M810.5607146832866 1015.7305911988627L803.2074733495683 1007.4118391588866"/>
+<path class="sphere" d="M852.2019020736507 962.2250176814339L858.2880978064977 942.5398812682403"/>
+<path class="sphere" d="M852.754619269679 962.2248119304501L858.1252549508779 942.6755679207351"/>
+<path class="sphere" d="M810.5619082874254 1015.5523889610486L803.226141647204 1007.0901524699907"/>
+<path class="sphere" d="M809.7321482010119 1013.9526296974661L802.9547694680707 1006.2710656938465"/>
+<path class="sphere" d="M809.7337517792478 1013.8156111061751L802.6972403617306 1004.9844174833798"/>
+<path class="sphere" d="M851.2644067332155 961.6110547490171L856.7762574916453 942.774917195217"/>
+<path class="sphere" d="M850.7308424366723 961.5797651781282L856.2569712306162 943.5575451598509"/>
+<path class="sphere" d="M850.6481488100694 961.6720179317145L856.1735069165449 943.6282511959475"/>
+<path class="sphere" d="M826.4757681072055 999.0162324937824L832.1369328875029 979.8491796002362"/>
+<path class="sphere" d="M848.1890965451504 929.3911904383845L858.3974933031907 937.492825961714"/>
+<path class="sphere" d="M803.226141647204 1007.0901524699907L801.8543001216625 1002.5114265540335"/>
+<path class="sphere" d="M803.2074733495683 1007.4118391588866L801.9998733657042 1002.799964690775"/>
+<path class="sphere" d="M848.3204263919689 928.5613609792443L857.7064961855298 937.5323824133563"/>
+<path class="sphere" d="M834.041075614997 929.7414403538049L834.4874697210266 946.7662938938607"/>
+<path class="sphere" d="M835.8166159230706 927.1365149707924L848.1890965451504 929.3911904383845"/>
+<path class="sphere" d="M847.328613383055 930.2732473557139L857.7064961855298 937.5323824133563"/>
+<path class="sphere" d="M848.1890965451504 929.3911904383845L857.7064961855298 937.5323824133563"/>
+<path class="sphere" d="M802.6972403617306 1004.9844174833798L801.3009181278819 1000.3085610785575"/>
+<path class="sphere" d="M802.9547694680707 1006.2710656938465L801.6071486289976 1001.542846041888"/>
+<path class="sphere" d="M848.1890965451504 929.3911904383845L856.9843893660525 938.4095055139162"/>
+<path class="sphere" d="M825.8072088324325 997.0837382626021L832.0983847808769 979.9070278911222"/>
+<path class="sphere" d="M835.5850053740126 928.007698797355L847.328613383055 930.2732473557139"/>
+<path class="sphere" d="M815.7179830447317 930.254828394346L810.3147258205951 934.0820333828669"/>
+<path class="sphere" d="M814.7576518545626 932.7519878838802L809.2262283027613 936.4972188980518"/>
+<path class="sphere" d="M815.5182483405705 930.9222666288229L810.0404574162468 934.710797945347"/>
+<path class="sphere" d="M814.9876497053558 932.0106416058726L809.5217905915381 935.7918076027867"/>
+<path class="sphere" d="M808.1188368775837 939.1476218546629L813.2771631137018 935.8057605070859"/>
+<path class="sphere" d="M808.1489269404153 939.0904747540279L813.3181135285603 935.7517853370139"/>
+<path class="sphere" d="M842.1292926045 971.6316301762703L852.754619269679 962.2248119304501"/>
+<path class="sphere" d="M843.0324458505434 972.3699992450278L853.5465844356696 962.9809705435603"/>
+<path class="sphere" d="M810.3147258205951 934.0820333828669L807.914716054996 939.3610538959924"/>
+<path class="sphere" d="M828.0139179769592 997.1963212488704L833.1265451787372 981.8891157259797"/>
+<path class="sphere" d="M829.0091366736392 997.7905297013305L834.0971277276171 982.5869408507195"/>
+<path class="sphere" d="M833.3741619595578 932.5163811515301L834.4382273403533 946.81382950829"/>
+<path class="sphere" d="M828.1395487937781 996.9483082794943L833.2524844533898 981.6972243800697"/>
+<path class="sphere" d="M841.2517684154217 970.8488880124272L851.2644067332155 961.6110547490171"/>
+<path class="sphere" d="M809.5217905915381 935.7918076027867L807.2666636365407 940.5781448525155"/>
+<path class="sphere" d="M809.2262283027613 936.4972188980518L806.9508682200523 941.2555512843209"/>
+<path class="sphere" d="M835.6155371186198 932.1384421222084L834.4874697210266 946.7662938938607"/>
+<path class="sphere" d="M832.1369328875029 979.8491796002362L841.3257303367965 969.5684818973949"/>
+<path class="sphere" d="M833.2524844533898 981.6972243800697L842.2802823823874 971.4380105184589"/>
+<path class="sphere" d="M832.1821935594938 981.1429286281874L841.2517684154217 970.8488880124272"/>
+<path class="sphere" d="M832.0983847808769 979.9070278911222L841.2557885298231 969.6563382082342"/>
+<path class="sphere" d="M833.1265451787372 981.8891157259797L842.1292926045 971.6316301762703"/>
+<path class="sphere" d="M834.0971277276171 982.5869408507195L843.0324458505434 972.3699992450278"/>
+<path class="sphere" d="M827.4144597933181 995.1740838516981L832.1821935594938 981.1429286281874"/>
+<path class="sphere" d="M827.2141702504954 993.9740958842506L832.0983847808769 979.9070278911222"/>
+<path class="sphere" d="M841.3257303367965 969.5684818973949L850.7308424366723 961.5797651781282"/>
+<path class="sphere" d="M810.0404574162468 934.710797945347L807.1220258552114 940.698724095394"/>
+<path class="sphere" d="M841.2557885298231 969.6563382082342L850.6481488100694 961.6720179317145"/>
+<path class="sphere" d="M808.1188368775837 939.1476218546629L804.7306770587436 946.5452545547379"/>
+<path class="sphere" d="M834.7963917249589 928.8786321465145L835.2107309569078 938.717361437118"/>
+<path class="sphere" d="M835.2107309569078 938.717361437118L834.4382273403533 946.81382950829"/>
+<path class="sphere" d="M857.7064961855298 937.5323824133563L858.1252549508779 942.6755679207351"/>
+<path class="sphere" d="M836.7603798484844 926.8772308016113L835.6155371186198 932.1384421222084"/>
+<path class="sphere" d="M856.3080045176222 938.4383336227671L856.7762574916453 942.774917195217"/>
+<path class="sphere" d="M857.8207062621324 938.2560902525468L858.2880978064977 942.5398812682403"/>
+<path class="sphere" d="M941.2499445625841 899.815930978058L910.5045692602159 896.6841382667435"/>
+<path class="sphere" d="M957.9055340819164 1005.2232999878926L928.0952437396394 1017.0340246356423"/>
+<path class="sphere" d="M941.3133589136996 899.8812149098544L911.5215747218369 897.363249716033"/>
+<path class="sphere" d="M941.2618436987076 900.3134237791121L911.4540357219009 897.274328166287"/>
+<path class="sphere" d="M979.8863261365515 981.7013082390988L960.2080680954324 1007.1581898131354"/>
+<path class="sphere" d="M980.5927122244613 982.2990547913747L961.1368240393958 1007.5949954055192"/>
+<path class="sphere" d="M978.8103228747553 979.2674704150162L959.9044201431609 1005.6394188529472"/>
+<path class="sphere" d="M977.2460938661899 978.7162771808601L957.9055340819164 1005.2232999878926"/>
+<path class="sphere" d="M976.416237746028 977.9724239892511L956.0865307692784 1001.503325288748"/>
+<path class="sphere" d="M941.5505819600214 901.6602393769305L913.7834822341658 898.172868268435"/>
+<path class="sphere" d="M941.358810710479 901.4488057929509L913.6549126273986 898.003796103099"/>
+<path class="sphere" d="M965.7907486638302 923.9605638977735L949.5909991725148 902.979395050503"/>
+<path class="sphere" d="M964.6540069836932 924.0601515000012L949.5808203590697 903.4007394146422"/>
+<path class="sphere" d="M965.7271863402142 923.841697883783L976.2655731873215 952.2835035626983"/>
+<path class="sphere" d="M942.9097142187244 903.9164157101584L916.9461606483007 900.3764902023679"/>
+<path class="sphere" d="M903.5531865548859 914.7580136249561L909.8619136166164 898.4268601686264"/>
+<path class="sphere" d="M902.2968890074775 914.7381629471865L907.5346373481613 898.3972809470309"/>
+<path class="sphere" d="M962.3995301138268 923.704162927727L948.6304607936755 904.0917911964436"/>
+<path class="sphere" d="M962.3995301138268 923.704162927727L973.1649797926541 951.4030704921634"/>
+<path class="sphere" d="M964.6540069836932 924.0601515000012L975.2896679932608 951.4748839471619"/>
+<path class="sphere" d="M963.7126221540078 923.7736954119943L948.854032929221 904.346968341575"/>
+<path class="sphere" d="M963.7126221540078 923.7736954119943L973.4309037610165 950.5555563966842"/>
+<path class="sphere" d="M906.161512315722 914.9560708888239L912.0575785101875 899.170038422387"/>
+<path class="sphere" d="M906.2796379205313 915.2418841880963L910.9830487494045 899.3007312664627"/>
+<path class="sphere" d="M977.2460938661899 978.7162771808601L962.3586060672365 958.1170128426999"/>
+<path class="sphere" d="M961.4681757580853 925.4468396403623L949.1289970596972 906.2460014786415"/>
+<path class="sphere" d="M894.8569656834682 962.1689539922535L897.9595033255462 936.4360480500886"/>
+<path class="sphere" d="M896.0787373250611 962.3459515300441L899.217563429825 936.4532921871228"/>
+<path class="sphere" d="M898.6919170471378 963.1956838195167L901.9071199245343 936.9420523372189"/>
+<path class="sphere" d="M976.416237746028 977.9724239892511L971.1707988447711 950.3941916007404"/>
+<path class="sphere" d="M906.2796379205313 915.2418841880963L902.0331931236183 937.3767839182909"/>
+<path class="sphere" d="M911.3888392976431 916.8092531618959L915.5037651753486 900.9332171168431"/>
+<path class="sphere" d="M902.3330401303783 914.8302457926392L897.9595033255462 936.4360480500886"/>
+<path class="sphere" d="M903.5531865548859 914.7580136249561L899.217563429825 936.4532921871228"/>
+<path class="sphere" d="M906.161512315722 914.9560708888239L901.9071199245343 936.9420523372189"/>
+<path class="sphere" d="M896.1891715681237 987.1490939170217L894.8569656834682 962.1689539922535"/>
+<path class="sphere" d="M900.253794405607 987.7414395745805L899.135748467079 962.2501631416861"/>
+<path class="sphere" d="M961.4681757580853 925.4468396403623L971.1707988447711 950.3941916007404"/>
+<path class="sphere" d="M961.1368240393958 1007.5949954055192L942.4725499995425 1019.689834730289"/>
+<path class="sphere" d="M896.1307132628533 986.9301358617919L896.0787373250611 962.3459515300441"/>
+<path class="sphere" d="M904.5558022288501 963.9365959841339L907.6036844313657 938.4218546168248"/>
+<path class="sphere" d="M899.135748467079 962.2501631416861L902.0331931236183 937.3767839182909"/>
+<path class="sphere" d="M911.3888392976431 916.8092531618959L907.6036844313657 938.4218546168248"/>
+<path class="sphere" d="M980.6871068657146 975.8062015257918L975.2896679932608 951.4748839471619"/>
+<path class="sphere" d="M981.4105230230834 976.4545841404429L976.2655731873215 952.2835035626983"/>
+<path class="sphere" d="M979.1945471875165 975.1154759077505L973.4309037610165 950.5555563966842"/>
+<path class="sphere" d="M898.884096580897 986.7600098622045L898.6919170471378 963.1956838195167"/>
+<path class="sphere" d="M960.2080680954324 1007.1581898131354L943.0889012866645 1018.7174326689919"/>
+<path class="sphere" d="M979.1707287215592 974.6288393041248L973.1649797926541 951.4030704921634"/>
+<path class="sphere" d="M904.7389128292784 986.7541641994701L904.5558022288501 963.9365959841339"/>
+<path class="sphere" d="M959.9044201431609 1005.6394188529472L943.266018381076 1016.4754772242372"/>
+<path class="sphere" d="M976.7345230912208 973.2317665433419L971.1707988447711 950.3941916007404"/>
+<path class="sphere" d="M957.9055340819164 1005.2232999878926L942.1853829995297 1016.4385899029071"/>
+<path class="sphere" d="M943.0889012866645 1018.7174326689919L926.5268745711761 1019.3599314975618"/>
+<path class="sphere" d="M942.4725499995425 1019.689834730289L926.0353263451484 1020.2718106076326"/>
+<path class="sphere" d="M956.0865307692784 1001.503325288748L941.8171501587003 1012.5607399487425"/>
+<path class="sphere" d="M911.8763834396557 1012.4103052042555L926.0353263451484 1020.2718106076326"/>
+<path class="sphere" d="M912.2440206538973 1011.4046233095766L926.5268745711761 1019.3599314975618"/>
+<path class="sphere" d="M911.900533095421 1012.5149699257413L926.5459348297021 1019.5181271806825"/>
+<path class="sphere" d="M943.266018381076 1016.4754772242372L927.5420122001294 1017.6054397791708"/>
+<path class="sphere" d="M900.8477819650108 1000.6969662597343L911.900533095421 1012.5149699257413"/>
+<path class="sphere" d="M914.2358629619955 1009.9923610752703L927.5420122001294 1017.6054397791708"/>
+<path class="sphere" d="M900.7940985916965 1000.4994199217017L912.2440206538973 1011.4046233095766"/>
+<path class="sphere" d="M914.3141862049085 1010.3573628489071L928.0952437396394 1017.0340246356423"/>
+<path class="sphere" d="M942.1853829995297 1016.4385899029071L928.0952437396394 1017.0340246356423"/>
+<path class="sphere" d="M903.8319666204548 999.4276354443145L914.2358629619955 1009.9923610752703"/>
+<path class="sphere" d="M896.1307132628533 986.9301358617919L900.7940985916965 1000.4994199217017"/>
+<path class="sphere" d="M896.1891715681237 987.1490939170217L900.8477819650108 1000.6969662597343"/>
+<path class="sphere" d="M941.8171501587003 1012.5607399487425L928.4786627728336 1013.6619804294648"/>
+<path class="sphere" d="M905.1638961271987 1000.3801392073202L914.3141862049085 1010.3573628489071"/>
+<path class="sphere" d="M900.253794405607 987.7414395745805L905.1638961271987 1000.3801392073202"/>
+<path class="sphere" d="M898.884096580897 986.7600098622045L903.8319666204548 999.4276354443145"/>
+<path class="sphere" d="M918.0100068635765 1008.269695364653L928.4786627728336 1013.6619804294648"/>
+<path class="sphere" d="M904.7389128292784 986.7541641994701L908.6957844889513 997.9883379871732"/>
+<path class="sphere" d="M949.5909991725148 902.979395050503L941.3133589136996 899.8812149098544"/>
+<path class="sphere" d="M949.5808203590697 903.4007394146422L941.2618436987076 900.3134237791121"/>
+<path class="sphere" d="M948.6304607936755 904.0917911964436L941.358810710479 901.4488057929509"/>
+<path class="sphere" d="M949.1289970596972 906.2460014786415L942.9097142187244 903.9164157101584"/>
+<path class="sphere" d="M980.5927122244613 982.2990547913747L981.4105230230834 976.4545841404429"/>
+<path class="sphere" d="M979.8863261365515 981.7013082390988L980.6871068657146 975.8062015257918"/>
+<path class="sphere" d="M979.8847015396973 981.9343227160307L981.414774733859 976.5970221109824"/>
+<path class="sphere" d="M907.5346373481613 898.3972809470309L910.5045692602159 896.6841382667435"/>
+<path class="sphere" d="M977.2460938661899 978.7162771808601L979.1945471875165 975.1154759077505"/>
+<path class="sphere" d="M978.8103228747553 979.2674704150162L979.1707287215592 974.6288393041248"/>
+<path class="sphere" d="M976.416237746028 977.9724239892511L976.7345230912208 973.2317665433419"/>
+<path class="sphere" d="M910.9830487494045 899.3007312664627L913.7834822341658 898.172868268435"/>
+<path class="sphere" d="M912.0575785101875 899.170038422387L913.6549126273986 898.003796103099"/>
+<path class="sphere" d="M909.8619136166164 898.4268601686264L911.4540357219009 897.274328166287"/>
+<path class="sphere" d="M915.5037651753486 900.9332171168431L916.9461606483007 900.3764902023679"/>
+<path class="sphere" d="M880.5248618200973 886.5440360798194L956.6555145873552 897.3615039695777"/>
+<path class="sphere" d="M880.7099835487328 886.0460277595946L956.2164709904825 896.807326234642"/>
+<path class="sphere" d="M880.742872921641 886.1046792445474L956.1743914280939 896.8076768163985"/>
+<path class="sphere" d="M881.1230077509686 885.1091674722917L954.6490259649581 895.5276498047898"/>
+<path class="sphere" d="M886.7451278636122 886.9770409477803L955.1188422186135 896.071532086019"/>
+<path class="sphere" d="M882.8718066902555 884.9588365873439L953.4946269714975 894.7858888069989"/>
+<path class="sphere" d="M883.0995808786466 884.4846357861362L953.5113956126607 894.7864218067307"/>
+<path class="sphere" d="M890.0426661216256 886.8069194735674L953.9858876317696 895.744932873032"/>
+<path class="sphere" d="M881.1275934678478 885.1171436617736L949.9882825434199 892.5764572964542"/>
+<path class="sphere" d="M882.6137705934837 885.36836379896L950.6282432794551 893.1270789936375"/>
+<path class="sphere" d="M890.3193322860939 886.2760891697761L952.9033129062778 895.0144962057963"/>
+<path class="sphere" d="M880.7099835487328 886.0460277595946L863.2492767750626 888.012551327492"/>
+<path class="sphere" d="M883.0995808786466 884.4846357861362L865.0403811457988 886.8368576595625"/>
+<path class="sphere" d="M880.742872921641 886.1046792445474L864.8822259669877 887.5278832903068"/>
+<path class="sphere" d="M881.1230077509686 885.1091674722917L864.9204951459673 887.1517509626038"/>
+<path class="sphere" d="M864.9204951459673 887.1517509626038L855.7269071605332 890.3544255436582"/>
+<path class="sphere" d="M864.8822259669877 887.5278832903068L855.7624922783743 890.6361628736275"/>
+<path class="sphere" d="M863.2492767750626 888.012551327492L854.2668629044691 891.530900725236"/>
+<path class="sphere" d="M863.2222924630572 888.3842054392608L854.3131497781432 891.8261102700953"/>
+<path class="sphere" d="M854.3131497781432 891.8261102700953L847.5496282227484 894.6906655194749"/>
+<path class="sphere" d="M854.2668629044691 891.530900725236L847.4897474367898 894.4960497665749"/>
+<path class="sphere" d="M865.0403811457988 886.8368576595625L857.2807568255862 889.4649892889792"/>
+<path class="sphere" d="M855.7624922783743 890.6361628736275L848.8435031168306 893.7771804175665"/>
+<path class="sphere" d="M951.2204103366167 893.6981042413961L956.7900621307549 897.0087204544825"/>
+<path class="sphere" d="M855.7269071605332 890.3544255436582L850.1097046291351 892.8637692753243"/>
+<path class="sphere" d="M857.2605888538216 889.459862881285L851.5046886435639 891.9582157295606"/>
+<path class="sphere" d="M857.2807568255862 889.4649892889792L851.5248288432017 891.9583639080979"/>
+<path class="sphere" d="M885.8134331461937 885.5956172445418L879.2406033099973 885.837595104494"/>
+<path class="sphere" d="M957.776075864728 897.7446155796587L958.9022129520304 898.0290283390668"/>
+<path class="sphere" d="M955.7438112864276 896.2690191012289L957.9166569143475 897.3043272472192"/>
+<path class="sphere" d="M957.7937276081198 897.7459646318097L959.9348839336608 898.7869387473097"/>
+<path class="sphere" d="M951.2204103366167 893.6981042413961L955.7438112864276 896.2690191012289"/>
+<path class="sphere" d="M885.790916377987 885.5419287496408L888.3794240815488 886.8405890546401"/>
+<path class="sphere" d="M952.9033129062778 895.0144962057963L956.7900621307549 897.0087204544825"/>
+<path class="sphere" d="M885.8134331461937 885.5956172445418L886.7451278636122 886.9770409477803"/>
+<path class="sphere" d="M956.1743914280939 896.8076768163985L956.8050164275331 896.7261493309443"/>
+<path class="sphere" d="M887.4936577835949 885.4240993303748L882.6137705934837 885.36836379896"/>
+<path class="sphere" d="M954.1132047706006 895.0041274649648L955.7505270721115 895.8081001346264"/>
+<path class="sphere" d="M949.9673104322857 892.5763590418959L953.5113956126607 894.7864218067307"/>
+<path class="sphere" d="M955.1188422186135 896.071532086019L956.8050164275331 896.7261493309443"/>
+<path class="sphere" d="M950.6282432794551 893.1270789936375L954.1132047706006 895.0041274649648"/>
+<path class="sphere" d="M949.9673104322857 892.5763590418959L953.4989153764278 894.4939506893437"/>
+<path class="sphere" d="M949.9882825434199 892.5764572964542L953.5191489336208 894.4985143012461"/>
+<path class="sphere" d="M890.3193322860939 886.2760891697761L887.4936577835949 885.4240993303748"/>
+<path class="sphere" d="M953.4946269714975 894.7858888069989L955.1188422186135 896.071532086019"/>
+<path class="sphere" d="M956.8050164275331 896.7261493309443L958.9022129520304 898.0290283390668"/>
+<path class="sphere" d="M882.8718066902555 884.9588365873439L879.2406033099973 885.837595104494"/>
+<path class="sphere" d="M953.4989153764278 894.4939506893437L954.5855772349097 895.0451592298057"/>
+<path class="sphere" d="M890.3193322860939 886.2760891697761L888.3794240815488 886.8405890546401"/>
+<path class="sphere" d="M896.7932074364628 1054.5722216624247L942.1996386579358 1071.195328022332"/>
+<path class="sphere" d="M942.4623358125708 1050.768451635848L949.8579620714179 1067.1969185717621"/>
+<path class="sphere" d="M940.957485151842 1052.5252240195543L948.477259627328 1067.95939210726"/>
+<path class="sphere" d="M940.8175236763996 1053.6113731083785L948.3835847448863 1068.0409803281416"/>
+<path class="sphere" d="M939.0278041111841 1055.289090829425L945.3243569445509 1069.6825898991794"/>
+<path class="sphere" d="M933.4267661636203 1057.9680566205814L942.1996386579358 1071.195328022332"/>
+<path class="sphere" d="M887.42533322888 1078.538761976555L939.6038100305032 1070.8559250712428"/>
+<path class="sphere" d="M871.7603688412347 1060.154032809592L832.7463702664082 1053.3420888531382"/>
+<path class="sphere" d="M870.153155218041 1058.3851552134513L832.7463702664082 1053.3420888531382"/>
+<path class="sphere" d="M868.6312888252932 1056.6267014156024L832.7463702664082 1053.3420888531382"/>
+<path class="sphere" d="M872.036813136445 1060.5030034115466L834.0526348788957 1054.1789937630438"/>
+<path class="sphere" d="M863.9450356405823 1073.6543117190574L831.6902959143434 1053.1257907923539"/>
+<path class="sphere" d="M864.0682644414867 1073.8904715884944L831.7835272504072 1053.250822527998"/>
+<path class="sphere" d="M865.7316519568689 1074.5122431276488L833.7192690948458 1054.9752105678826"/>
+<path class="sphere" d="M835.0804815950376 1055.5131719229325L868.0255261476692 1075.701028013744"/>
+<path class="sphere" d="M898.0645648846136 1047.6406494692174L942.4623358125708 1050.768451635848"/>
+<path class="sphere" d="M942.1996386579358 1071.195328022332L918.4931631461599 1074.2481647730237"/>
+<path class="sphere" d="M835.9728540899084 1056.5832460352412L867.6777963869333 1075.3486927943047"/>
+<path class="sphere" d="M875.4242543886868 1063.8934020858237L841.3294492610721 1059.5582989603524"/>
+<path class="sphere" d="M896.7932074364628 1054.5722216624247L918.4931631461599 1074.2481647730237"/>
+<path class="sphere" d="M899.1159121921264 1053.2346015278818L939.0278041111841 1055.289090829425"/>
+<path class="sphere" d="M887.42533322888 1078.538761976555L924.4852012765967 1077.876979778876"/>
+<path class="sphere" d="M896.7932074364628 1054.5722216624247L933.4267661636203 1057.9680566205814"/>
+<path class="sphere" d="M842.5812398178539 1060.9493370198945L870.1350444744339 1076.468339184046"/>
+<path class="sphere" d="M898.0645648846136 1047.6406494692174L868.6312888252932 1056.6267014156024"/>
+<path class="sphere" d="M930.0878335650629 1071.2510134588292L924.4852012765967 1077.876979778876"/>
+<path class="sphere" d="M940.957485151842 1052.5252240195543L930.0878335650629 1071.2510134588292"/>
+<path class="sphere" d="M897.4845580406119 1050.3242296114574L870.153155218041 1058.3851552134513"/>
+<path class="sphere" d="M899.1159121921264 1053.2346015278818L871.7603688412347 1060.154032809592"/>
+<path class="sphere" d="M897.4748357624845 1051.9563179478841L872.036813136445 1060.5030034115466"/>
+<path class="sphere" d="M896.7932074364628 1054.5722216624247L875.4242543886868 1063.8934020858237"/>
+<path class="sphere" d="M834.9694269191411 1054.8835455814594L832.7463702664082 1053.3420888531382"/>
+<path class="sphere" d="M835.9728540899084 1056.5832460352412L834.9694269191411 1054.8835455814594"/>
+<path class="sphere" d="M833.7192690948458 1054.9752105678826L832.7463702664082 1053.3420888531382"/>
+<path class="sphere" d="M831.7835272504072 1053.250822527998L830.8699076270065 1051.6387232924817"/>
+<path class="sphere" d="M835.0804815950376 1055.5131719229325L834.0526348788957 1054.1789937630438"/>
+<path class="sphere" d="M842.5812398178539 1060.9493370198945L841.3294492610721 1059.5582989603524"/>
+<text x="845" y="1115" class="muted" font-size="14">VIEW 1 · yaw 26°</text>
+<circle cx="1130" cy="980" r="103" fill="#091925" stroke="#426b7c"/>
+<path class="sphere" d="M1037.4613597925493 1020.223555700648L1029.5533927385377 987.7895801919473"/>
+<path class="sphere" d="M1037.4117108768792 1020.0821926120216L1029.5566343204366 987.7510508441732"/>
+<path class="sphere" d="M1037.0615770554705 1019.3856180763452L1029.5588380792167 987.725385338421"/>
+<path class="sphere" d="M1037.0615770554705 1019.3856180763452L1029.5566343204366 987.7510508441732"/>
+<path class="sphere" d="M1037.1387362672176 1019.5975422419574L1029.464477505699 988.3093817523712"/>
+<path class="sphere" d="M1036.7360213830968 1018.7019475094523L1029.4689751162716 988.178392775289"/>
+<path class="sphere" d="M1029.3755001911156 987.5467441004294L1031.1585904036235 959.5237957302263"/>
+<path class="sphere" d="M1036.4721717676234 1018.1184889876749L1029.3114520134582 987.4450665777358"/>
+<path class="sphere" d="M1029.464477505699 988.3093817523712L1031.1585904036235 959.5237957302263"/>
+<path class="sphere" d="M1029.5588380792167 987.725385338421L1031.2244467638177 959.4577834372475"/>
+<path class="sphere" d="M1029.4689751162716 988.178392775289L1030.9204878726905 960.631070475756"/>
+<path class="sphere" d="M1029.3114520134582 987.4450665777358L1030.8592838599202 960.7246904196104"/>
+<path class="sphere" d="M1029.3705720666528 987.5196877292663L1030.8670515792976 960.8288452984139"/>
+<path class="sphere" d="M1029.3755001911156 987.5467441004294L1030.8655108703967 960.8492168875903"/>
+<path class="sphere" d="M1030.8655108703967 960.8492168875903L1031.1585904036235 959.5237957302263"/>
+<path class="sphere" d="M1030.8655108703967 960.8492168875903L1031.868595494389 956.1006595707871"/>
+<path class="sphere" d="M1032.160578488102 954.9438224538391L1031.4975572655594 958.3400462011983"/>
+<path class="sphere" d="M1031.8850896292097 956.0565937822305L1031.2244467638177 959.4577834372475"/>
+<path class="sphere" d="M1031.868595494389 956.1006595707871L1031.1585904036235 959.5237957302263"/>
+<path class="sphere" d="M1031.610214040129 957.1886746136915L1030.9204878726905 960.631070475756"/>
+<path class="sphere" d="M1038.404454146906 1022.5299874669882L1037.4613597925493 1020.223555700648"/>
+<path class="sphere" d="M1038.3431718854313 1022.3880097388416L1037.4117108768792 1020.0821926120216"/>
+<path class="sphere" d="M1037.8387207403666 1021.2867462661231L1037.0615770554705 1019.3856180763452"/>
+<path class="sphere" d="M1037.9284683442258 1021.4994821818375L1037.1387362672176 1019.5975422419574"/>
+<path class="sphere" d="M1037.284628656075 1020.0430289564918L1036.4721717676234 1018.1184889876749"/>
+<path class="sphere" d="M1037.050300110312 1019.5138027350297L1036.7360213830968 1018.7019475094523"/>
+<path class="sphere" d="M1225.9860872838021 995.7175368692866L1191.337804128988 1004.9187996154373"/>
+<path class="sphere" d="M1217.110607834378 1009.4249620188576L1190.6104964168615 1006.8601063934162"/>
+<path class="sphere" d="M1217.446726673794 1008.4706742139817L1191.1184399597762 1004.9910756327433"/>
+<path class="sphere" d="M1217.1771905632152 1008.2088966778516L1191.337804128988 1004.9187996154373"/>
+<path class="sphere" d="M1217.8278378326809 1006.260192442404L1191.814354305072 1003.0092350986041"/>
+<path class="sphere" d="M1217.7118097390917 1006.3394423284283L1191.6489529852272 1003.0660976808633"/>
+<path class="sphere" d="M1225.9860872838021 995.7175368692866L1205.2191894740174 996.1224152510454"/>
+<path class="sphere" d="M1223.4193230741437 942.8657779089427L1229.3396165053746 967.046347297505"/>
+<path class="sphere" d="M1223.5898569821584 944.072341758942L1229.598537125129 967.4778812248941"/>
+<path class="sphere" d="M1223.3030052765807 942.3470679924006L1229.2247946600628 966.2031195681357"/>
+<path class="sphere" d="M1223.5024373317667 943.5102899125735L1229.4755421401703 966.5993267869128"/>
+<path class="sphere" d="M1223.6682109534424 944.6370736379747L1207.3195270029762 933.1188271502647"/>
+<path class="sphere" d="M1205.8219365837479 927.9155758653443L1221.5809138759257 939.1215401059293"/>
+<path class="sphere" d="M1206.5203926035615 929.702576374995L1222.0136694176274 940.6061062058086"/>
+<path class="sphere" d="M1223.134084727395 944.6112938101847L1207.2908707590132 933.1405580788328"/>
+<path class="sphere" d="M1222.0899502506365 941.1461274360555L1206.942232739212 930.5557287299137"/>
+<path class="sphere" d="M1171.9701012764037 922.8713933255412L1165.388702027947 942.2713291939724"/>
+<path class="sphere" d="M1170.33634037569 922.2393180801686L1164.5903197145572 941.3633021664988"/>
+<path class="sphere" d="M1172.8969815652576 923.5776347251842L1166.926912356481 942.2247780422549"/>
+<path class="sphere" d="M1192.7218649596246 965.4053767209233L1172.606260822464 967.5020289367702"/>
+<path class="sphere" d="M1171.5530839761623 923.572159414901L1166.2843501144005 942.1439469528563"/>
+<path class="sphere" d="M1173.1857343229567 924.2660371105126L1167.8939989436647 943.0514971523472"/>
+<path class="sphere" d="M1190.6104964168615 1006.8601063934162L1179.1837262323443 988.3481252099442"/>
+<path class="sphere" d="M1230.4071691260222 990.6735063438987L1229.8494158839114 972.1708722128939"/>
+<path class="sphere" d="M1191.1184399597762 1004.9910756327433L1179.285316628258 987.3368249744473"/>
+<path class="sphere" d="M1230.5586518626233 989.360218056281L1229.894178177861 971.8796957838639"/>
+<path class="sphere" d="M1230.527661100081 989.6000647436867L1229.9247711090534 971.9571424795715"/>
+<path class="sphere" d="M1191.337804128988 1004.9187996154373L1180.2716448895217 987.5043737808547"/>
+<path class="sphere" d="M1191.6489529852272 1003.0660976808633L1180.2462795119861 986.5358230267808"/>
+<path class="sphere" d="M1191.814354305072 1003.0092350986041L1181.3572522980019 985.6584358474021"/>
+<path class="sphere" d="M1230.6535300777532 988.3511728126765L1230.051234460639 971.4970103006274"/>
+<path class="sphere" d="M1166.926912356481 942.2247780422549L1160.0519037236934 959.1237150423016"/>
+<path class="sphere" d="M1166.2843501144005 942.1439469528563L1159.4724864073123 958.9669057690559"/>
+<path class="sphere" d="M1165.388702027947 942.2713291939724L1158.631249033308 959.0048156170875"/>
+<path class="sphere" d="M1167.8939989436647 943.0514971523472L1161.6346177912574 960.1218088449875"/>
+<path class="sphere" d="M1230.675761719192 988.0839212643964L1230.1755274664129 972.1120425187145"/>
+<path class="sphere" d="M1230.671184360783 988.1370371668667L1230.1889478846977 972.1518028034149"/>
+<path class="sphere" d="M1217.1771905632152 1008.2088966778516L1225.9860872838021 995.7175368692866"/>
+<path class="sphere" d="M1180.2716448895217 987.5043737808547L1167.3305326716434 975.8610752370417"/>
+<path class="sphere" d="M1179.285316628258 987.3368249744473L1166.416060118141 975.7711164507942"/>
+<path class="sphere" d="M1223.6682109534424 944.6370736379747L1228.7128708517764 964.591565235997"/>
+<path class="sphere" d="M1223.167034744423 942.5687192692997L1227.117792309957 952.5136964992158"/>
+<path class="sphere" d="M1227.3189729928772 953.1097935700292L1229.2247946600628 966.2031195681357"/>
+<path class="sphere" d="M1181.3572522980019 985.6584358474021L1168.9904436591426 974.1878241278555"/>
+<path class="sphere" d="M1180.2462795119861 986.5358230267808L1168.0202496275272 975.1038494831245"/>
+<path class="sphere" d="M1227.117792309957 952.5136964992158L1229.4270775537625 966.85867091276"/>
+<path class="sphere" d="M1217.8278378326809 1006.260192442404L1225.9620147089406 995.7465603331929"/>
+<path class="sphere" d="M1223.5024373317667 943.5102899125735L1227.3189729928772 953.1097935700292"/>
+<path class="sphere" d="M1205.8219365837479 927.9155758653443L1192.7687429786265 922.8804175103311"/>
+<path class="sphere" d="M1206.942232739212 930.5557287299137L1193.7558939296218 925.3127361321147"/>
+<path class="sphere" d="M1206.2785652178195 928.7248612242934L1193.204038287779 923.6055584536075"/>
+<path class="sphere" d="M1206.5203926035615 929.702576374995L1193.360157123662 924.539154093415"/>
+<path class="sphere" d="M1194.6276630296127 927.9181302915479L1207.2908707590132 933.1405580788328"/>
+<path class="sphere" d="M1194.664182459437 927.8920339357757L1207.3195270029762 933.1188271502647"/>
+<path class="sphere" d="M1229.2630584782862 993.6106530122422L1230.527661100081 989.6000647436867"/>
+<path class="sphere" d="M1229.194746003394 994.7430776054786L1230.4071691260222 990.6735063438987"/>
+<path class="sphere" d="M1192.7687429786265 922.8804175103311L1179.9671811193389 920.8286855018009"/>
+<path class="sphere" d="M1218.6306157179138 1007.7885478409471L1225.677430126346 998.0917322594828"/>
+<path class="sphere" d="M1218.7009455429595 1008.885487652903L1225.6909337164973 999.2544284184232"/>
+<path class="sphere" d="M1224.5868158112296 947.5952709688439L1228.7059881371756 964.6136456409873"/>
+<path class="sphere" d="M1218.789463332596 1007.6731779187353L1225.7581796014385 997.9950067647947"/>
+<path class="sphere" d="M1229.322198665911 992.4405508797466L1230.6535300777532 988.3511728126765"/>
+<path class="sphere" d="M1193.360157123662 924.539154093415L1181.1921202596006 922.366295630866"/>
+<path class="sphere" d="M1193.7558939296218 925.3127361321147L1181.5320727183873 923.0746883246022"/>
+<path class="sphere" d="M1225.313460675538 948.6046954170248L1228.7128708517764 964.591565235997"/>
+<path class="sphere" d="M1225.9860872838021 995.7175368692866L1229.528666375362 991.2776757637238"/>
+<path class="sphere" d="M1225.7581796014385 997.9950067647947L1229.3071582006946 993.5057171177699"/>
+<path class="sphere" d="M1225.6599768704782 996.8901600595392L1229.322198665911 992.4405508797466"/>
+<path class="sphere" d="M1225.9620147089406 995.7465603331929L1229.509259839952 991.3249282020155"/>
+<path class="sphere" d="M1225.677430126346 998.0917322594828L1229.2630584782862 993.6106530122422"/>
+<path class="sphere" d="M1225.6909337164973 999.2544284184232L1229.194746003394 994.7430776054786"/>
+<path class="sphere" d="M1219.3217561488427 1005.8006618782185L1225.6599768704782 996.8901600595392"/>
+<path class="sphere" d="M1219.7642157513674 1004.7087575765861L1225.9620147089406 995.7465603331929"/>
+<path class="sphere" d="M1229.528666375362 991.2776757637238L1230.675761719192 988.0839212643964"/>
+<path class="sphere" d="M1193.204038287779 923.6055584536075L1182.3909578380656 923.0114994843141"/>
+<path class="sphere" d="M1229.509259839952 991.3249282020155L1230.671184360783 988.1370371668667"/>
+<path class="sphere" d="M1194.6276630296127 927.9181302915479L1184.6901846365522 928.9675600035594"/>
+<path class="sphere" d="M1166.416060118141 975.7711164507942L1158.5041910461953 969.3942172011429"/>
+<path class="sphere" d="M1168.0202496275272 975.1038494831245L1159.9479338495696 968.6759825819302"/>
+<path class="sphere" d="M1168.9904436591426 974.1878241278555L1160.7863752131038 968.7177359756892"/>
+<path class="sphere" d="M1167.3305326716434 975.8610752370417L1160.092821386908 968.5851758702794"/>
+<path class="sphere" d="M1223.5898569821584 944.072341758942L1227.3102146592978 956.0723471247095"/>
+<path class="sphere" d="M1182.3909578380656 923.0114994843141L1173.4785706691823 921.8366659688016"/>
+<path class="sphere" d="M1181.5320727183873 923.0746883246022L1173.1857343229567 924.2660371105126"/>
+<path class="sphere" d="M1158.5041910461953 969.3942172011429L1158.631249033308 959.0048156170875"/>
+<path class="sphere" d="M1157.874860134448 969.2356414188264L1157.993714255969 958.9026973688008"/>
+<path class="sphere" d="M1160.092821386908 968.5851758702794L1159.4724864073123 958.9669057690559"/>
+<path class="sphere" d="M1159.9479338495696 968.6759825819302L1160.0519037236934 959.1237150423016"/>
+<path class="sphere" d="M1161.6346177912574 960.1218088449875L1160.7863752131038 968.7177359756892"/>
+<path class="sphere" d="M1181.5320727183873 923.0746883246022L1174.3687171850565 922.5830022629377"/>
+<path class="sphere" d="M1181.1921202596006 922.366295630866L1174.068011290181 921.9095153364983"/>
+<path class="sphere" d="M1179.9671811193389 920.8286855018009L1172.945502768226 920.475046482038"/>
+<path class="sphere" d="M1227.3102146592978 956.0723471247095L1228.7059881371756 964.6136456409873"/>
+<path class="sphere" d="M1223.4193230741437 942.8657779089427L1225.313460675538 948.6046954170248"/>
+<path class="sphere" d="M1043.2017563235488 967.5547519601363L1054.3245071500678 916.0021472246433"/>
+<path class="sphere" d="M1044.0824168232339 967.992369594591L1054.7991916454764 915.7973663356244"/>
+<path class="sphere" d="M1044.105863604204 969.0329863805533L1069.3778456813086 1026.7762993855374"/>
+<path class="sphere" d="M1046.2787233066626 965.4368050712592L1055.950582911419 915.3409028249988"/>
+<path class="sphere" d="M1046.8328070850225 965.5749111338938L1055.3787067466067 917.4270054734183"/>
+<path class="sphere" d="M1067.390945297067 1020.5186408007288L1046.2787233066626 965.4368050712592"/>
+<path class="sphere" d="M1044.0824168232339 967.992369594591L1065.9699864490171 1021.4121054546172"/>
+<path class="sphere" d="M1122.619500190268 918.0257258420472L1081.7264677755256 908.4881650847569"/>
+<path class="sphere" d="M1122.3436894146885 918.5996781808622L1081.367008519923 910.4704392925388"/>
+<path class="sphere" d="M1120.3481657016448 918.4396113237943L1080.5963170085301 910.4181042507081"/>
+<path class="sphere" d="M1081.367008519923 910.4704392925388L1057.11304037947 913.5950598501549"/>
+<path class="sphere" d="M1045.9469999921562 968.6993917012366L1063.556372080103 1013.3155071337709"/>
+<path class="sphere" d="M1082.3088150850303 908.5220078535252L1057.11304037947 913.5950598501549"/>
+<path class="sphere" d="M1081.7264677755256 908.4881650847569L1057.4872908996965 913.0985061586982"/>
+<path class="sphere" d="M1117.9096618612446 920.4684312328625L1080.085698160748 911.748711384836"/>
+<path class="sphere" d="M1077.6665836475245 974.1112917677947L1081.064741892746 1017.3203441862604"/>
+<path class="sphere" d="M1080.5963170085301 910.4181042507081L1057.6461783494524 913.86581811676"/>
+<path class="sphere" d="M1080.085698160748 911.748711384836L1055.3787067466067 917.4270054734183"/>
+<path class="sphere" d="M1095.921066510547 991.2532309152133L1111.8236532679311 948.217380004106"/>
+<path class="sphere" d="M1080.085698160748 911.748711384836L1057.3429912265167 915.3379207009102"/>
+<path class="sphere" d="M1079.6092276738295 911.7160298310752L1057.0952170812757 915.4336513148737"/>
+<path class="sphere" d="M1094.0827572634562 989.5994274828073L1111.2763606668618 949.0585828726412"/>
+<path class="sphere" d="M1093.254514283364 989.4618430175458L1108.6256342490926 948.0020743358612"/>
+<path class="sphere" d="M1090.9791512171262 987.6879538811509L1107.3082391757805 947.387952064976"/>
+<path class="sphere" d="M1096.4948752960927 991.3432278786727L1083.2142283898734 1020.0601199528653"/>
+<path class="sphere" d="M1055.063550741255 992.8986998412194L1070.640706620311 1022.0920304819838"/>
+<path class="sphere" d="M1095.921066510547 991.2532309152133L1082.1454560223287 1019.1193960559626"/>
+<path class="sphere" d="M1094.0827572634562 989.5994274828073L1081.064741892746 1017.3203441862604"/>
+<path class="sphere" d="M1093.254514283364 989.4618430175458L1080.561572348308 1017.2504055783643"/>
+<path class="sphere" d="M1046.8328070850225 965.5749111338938L1052.5777129410194 932.7972977548379"/>
+<path class="sphere" d="M1123.993972056368 922.761813499602L1111.2763606668618 949.0585828726412"/>
+<path class="sphere" d="M1124.26287007403 922.144119442429L1111.8236532679311 948.217380004106"/>
+<path class="sphere" d="M1121.9931884815092 922.6175042496085L1108.6256342490926 948.0020743358612"/>
+<path class="sphere" d="M1090.9791512171262 987.6879538811509L1078.4481807725751 1014.3475718430068"/>
+<path class="sphere" d="M1077.6665836475245 974.1112917677947L1075.2029408648102 939.1680947924675"/>
+<path class="sphere" d="M1119.9209671451924 922.3407687068218L1107.3082391757805 947.387952064976"/>
+<path class="sphere" d="M1119.4440117230617 922.1390519264969L1106.9874035482333 947.2854043108846"/>
+<path class="sphere" d="M1052.5777129410194 932.7972977548379L1055.3787067466067 917.4270054734183"/>
+<path class="sphere" d="M1055.063550741255 992.8986998412194L1046.8328070850225 965.5749111338938"/>
+<path class="sphere" d="M1081.064741892746 1017.3203441862604L1072.501353181632 1028.7997611337332"/>
+<path class="sphere" d="M1083.0723533534704 1020.042786039128L1072.3797949688305 1028.7754242023004"/>
+<path class="sphere" d="M1083.2142283898734 1020.0601199528653L1072.501353181632 1028.7997611337332"/>
+<path class="sphere" d="M1083.0723533534704 1020.042786039128L1070.739917727462 1027.1756281858768"/>
+<path class="sphere" d="M1082.1454560223287 1019.1193960559626L1070.739917727462 1027.1756281858768"/>
+<path class="sphere" d="M1080.561572348308 1017.2504055783643L1071.3710560640034 1025.5399614202304"/>
+<path class="sphere" d="M1063.556372080103 1013.3155071337709L1069.3778456813086 1026.7762993855374"/>
+<path class="sphere" d="M1079.1068394449212 1015.3262207213465L1071.3189846333323 1022.9579869242476"/>
+<path class="sphere" d="M1078.4481807725751 1014.3475718430068L1070.640706620311 1022.0920304819838"/>
+<path class="sphere" d="M1067.3696454646552 1023.7566475654979L1070.739917727462 1027.1756281858768"/>
+<path class="sphere" d="M1126.016836911097 922.224972129351L1124.371734295941 918.1259900223642"/>
+<path class="sphere" d="M1121.9931884815092 922.6175042496085L1120.3481657016448 918.4396113237943"/>
+<path class="sphere" d="M1124.26287007403 922.144119442429L1122.619500190268 918.0257258420472"/>
+<path class="sphere" d="M1123.993972056368 922.761813499602L1122.3436894146885 918.5996781808622"/>
+<path class="sphere" d="M1054.3245071500678 916.0021472246433L1056.9659196444998 913.3090054201494"/>
+<path class="sphere" d="M1054.7991916454764 915.7973663356244L1057.4872908996965 913.0985061586982"/>
+<path class="sphere" d="M1069.3778456813086 1026.7762993855374L1072.501353181632 1028.7997611337332"/>
+<path class="sphere" d="M1071.3189846333323 1022.9579869242476L1071.3710560640034 1025.5399614202304"/>
+<path class="sphere" d="M1055.2398948774453 915.5656875530505L1057.11304037947 913.5950598501549"/>
+<path class="sphere" d="M1055.3787067466067 917.4270054734183L1057.3429912265167 915.3379207009102"/>
+<path class="sphere" d="M1071.3710560640034 1025.5399614202304L1070.739917727462 1027.1756281858768"/>
+<path class="sphere" d="M1119.9209671451924 922.3407687068218L1117.9096618612446 920.4684312328625"/>
+<path class="sphere" d="M1055.3605890932809 916.9442536290674L1057.0952170812757 915.4336513148737"/>
+<path class="sphere" d="M1055.950582911419 915.3409028249988L1057.6461783494524 913.86581811676"/>
+<path class="sphere" d="M1070.739917727462 1027.1756281858768L1072.3797949688305 1028.7754242023004"/>
+<path class="sphere" d="M1068.7785197645755 1022.9066598671897L1067.3696454646552 1023.7566475654979"/>
+<path class="sphere" d="M1067.390945297067 1020.5186408007288L1065.9699864490171 1021.4121054546172"/>
+<path class="sphere" d="M1113.5511655287812 887.956700666548L1066.831989721597 908.9363736421257"/>
+<path class="sphere" d="M1111.574538626584 887.8771724298226L1067.0274566499193 908.8719593309862"/>
+<path class="sphere" d="M1113.8163718473643 886.7620343701838L1069.1089937325812 907.0721401691428"/>
+<path class="sphere" d="M1111.574538626584 887.8771724298226L1187.9089754736162 897.4086801792431"/>
+<path class="sphere" d="M1113.3208261886143 886.3194393297996L1070.3672953743023 906.495474767977"/>
+<path class="sphere" d="M1113.5511655287812 887.956700666548L1187.8226672634853 897.4700097269586"/>
+<path class="sphere" d="M1113.8163718473643 886.7620343701838L1186.419842534802 896.3346289662336"/>
+<path class="sphere" d="M1113.3208261886143 886.3194393297996L1185.1710167511317 895.4556939819118"/>
+<path class="sphere" d="M1186.8147055934726 897.5767783746892L1187.014021412256 896.6764931140667"/>
+<path class="sphere" d="M1188.2774129767872 898.39739496634L1189.52175560432 898.4288700965324"/>
+<path class="sphere" d="M1189.5273528973173 899.3767234575095L1190.7428562455918 899.350325339193"/>
+<path class="sphere" d="M1190.7428562455918 899.350325339193L1189.0653462810506 898.3063353055808"/>
+<path class="sphere" d="M1189.52175560432 898.4288700965324L1187.8226672634853 897.4700097269586"/>
+<path class="sphere" d="M1188.379187559784 897.6502087065683L1187.9089754736162 897.4086801792431"/>
+<path class="sphere" d="M1187.014021412256 896.6764931140667L1186.419842534802 896.3346289662336"/>
+<path class="sphere" d="M1185.639176937257 895.8013268431216L1185.0991395234794 895.410883869819"/>
+<path class="sphere" d="M1185.7096074073675 895.850487082685L1185.1710167511317 895.4556939819118"/>
+<path class="sphere" d="M1168.7069965619291 1073.1910518586171L1077.038343982253 1065.9309511590063"/>
+<path class="sphere" d="M1126.2597724899608 1072.2909702985353L1070.8016052506578 1061.319802773226"/>
+<path class="sphere" d="M1168.8184791210354 1067.3443583002402L1159.5004105139512 1037.8314072057124"/>
+<path class="sphere" d="M1171.472916633633 1066.1137143946594L1159.5004105139512 1037.8314072057124"/>
+<path class="sphere" d="M1173.9864841789952 1064.863769053381L1159.5004105139512 1037.8314072057124"/>
+<path class="sphere" d="M1168.2826732412466 1067.562409718988L1159.785663707112 1039.4238872043047"/>
+<path class="sphere" d="M1114.9121429697307 1050.9095586099943L1157.1209445562529 1035.9537535199536"/>
+<path class="sphere" d="M1116.1727998605672 1051.8261225953656L1156.8728504526357 1036.0015857969374"/>
+<path class="sphere" d="M1115.1902927887281 1052.7417440843299L1155.600104448462 1038.0185218804045"/>
+<path class="sphere" d="M1157.413920373931 1040.085104696098L1118.0462443972763 1056.4118315299804"/>
+<path class="sphere" d="M1077.038343982253 1065.9309511590063L1122.3883242133948 1080.38522664667"/>
+<path class="sphere" d="M1155.4706312356286 1040.6266501051082L1115.3511192658395 1054.5681161282648"/>
+<path class="sphere" d="M1162.722021692251 1069.8303109338412L1156.4099805248327 1046.5802656428077"/>
+<path class="sphere" d="M1168.7069965619291 1073.1910518586171L1122.3883242133948 1080.38522664667"/>
+<path class="sphere" d="M1126.2597724899608 1072.2909702985353L1088.8405893737981 1070.3308904635878"/>
+<path class="sphere" d="M1168.7069965619291 1073.1910518586171L1138.4384068515133 1078.6667811869943"/>
+<path class="sphere" d="M1153.7941138115812 1047.2825041362116L1121.883480293933 1060.0520047065336"/>
+<path class="sphere" d="M1092.6211595163945 1060.0486360452874L1070.3618504718002 1057.7910326134504"/>
+<path class="sphere" d="M1088.5053140507548 1056.5729570888539L1067.396717350774 1054.5207327950873"/>
+<path class="sphere" d="M1175.5548921749937 1070.1167606089823L1173.9864841789952 1064.863769053381"/>
+<path class="sphere" d="M1088.6190374261898 1056.6120062773723L1068.3905128163738 1055.640325492986"/>
+<path class="sphere" d="M1117.202693779449 1080.1502012569902L1088.8405893737981 1070.3308904635878"/>
+<path class="sphere" d="M1114.9121429697307 1050.9095586099943L1088.6190374261898 1056.6120062773723"/>
+<path class="sphere" d="M1093.860452045121 1061.128378410752L1072.1283446669488 1058.8805080399368"/>
+<path class="sphere" d="M1093.4893616739841 1061.0155255333798L1072.9364866045066 1059.7840763910426"/>
+<path class="sphere" d="M1173.0777621988805 1071.3520479105455L1171.472916633633 1066.1137143946594"/>
+<path class="sphere" d="M1115.1902927887281 1052.7417440843299L1089.975742450344 1057.7826449466554"/>
+<path class="sphere" d="M1169.1175466687089 1073.1092337292907L1168.8184791210354 1067.3443583002402"/>
+<path class="sphere" d="M1171.3295400910279 1072.142871929075L1168.2826732412466 1067.562409718988"/>
+<path class="sphere" d="M1118.0462443972763 1056.4118315299804L1093.4893616739841 1061.0155255333798"/>
+<path class="sphere" d="M1115.3511192658395 1054.5681161282648L1092.6211595163945 1060.0486360452874"/>
+<path class="sphere" d="M1118.2782979078336 1056.4260043869303L1095.1351537690043 1062.1999791148405"/>
+<path class="sphere" d="M1168.7069965619291 1073.1910518586171L1162.722021692251 1069.8303109338412"/>
+<path class="sphere" d="M1088.8405893737981 1070.3308904635878L1070.8016052506578 1061.319802773226"/>
+<path class="sphere" d="M1067.396717350774 1054.5207327950873L1062.841849616207 1054.2707384770404"/>
+<path class="sphere" d="M1073.8631382224728 1063.8511873943612L1064.9590005091393 1057.1305175074096"/>
+<path class="sphere" d="M1068.3905128163738 1055.640325492986L1064.3814874362224 1055.5269842991293"/>
+<path class="sphere" d="M1074.5125241140365 1064.3456680120098L1066.5186197981154 1058.391760685808"/>
+<path class="sphere" d="M1077.3696092778596 1063.1224130356036L1070.1559485326998 1060.0429131761996"/>
+<path class="sphere" d="M1070.3618504718002 1057.7910326134504L1065.9581793833122 1056.7571616689231"/>
+<path class="sphere" d="M1075.8413455019547 1065.2512084582597L1068.7436765743007 1059.9896644003925"/>
+<path class="sphere" d="M1064.3814874362224 1055.5269842991293L1064.9590005091393 1057.1305175074096"/>
+<path class="sphere" d="M1072.9364866045066 1059.7840763910426L1068.9682209622065 1058.9502416455352"/>
+<path class="sphere" d="M1065.9581793833122 1056.7571616689231L1068.7436765743007 1059.9896644003925"/>
+<path class="sphere" d="M1077.038343982253 1065.9309511590063L1072.0847911075145 1062.3518497387895"/>
+<path class="sphere" d="M1068.9682209622065 1058.9502416455352L1070.8016052506578 1061.319802773226"/>
+<path class="sphere" d="M1070.1559485326998 1060.0429131761996L1072.0847911075145 1062.3518497387895"/>
+<path class="sphere" d="M1159.4717273890694 1040.4074891031903L1159.5004105139512 1037.8314072057124"/>
+<path class="sphere" d="M1068.7436765743007 1059.9896644003925L1066.5186197981154 1058.391760685808"/>
+<path class="sphere" d="M1155.4706312356286 1040.6266501051082L1159.4717273890694 1040.4074891031903"/>
+<path class="sphere" d="M1155.600104448462 1038.0185218804045L1159.5004105139512 1037.8314072057124"/>
+<path class="sphere" d="M1156.8728504526357 1036.0015857969374L1160.666846514519 1035.8108785289883"/>
+<path class="sphere" d="M1092.6211595163945 1060.0486360452874L1089.975742450344 1057.7826449466554"/>
+<path class="sphere" d="M1066.5186197981154 1058.391760685808L1064.9590005091393 1057.1305175074096"/>
+<path class="sphere" d="M1157.413920373931 1040.085104696098L1159.785663707112 1039.4238872043047"/>
+<path class="sphere" d="M1153.7941138115812 1047.2825041362116L1156.4099805248327 1046.5802656428077"/>
+<text x="1075" y="1115" class="muted" font-size="14">VIEW 2 · yaw 146°</text>
+<circle cx="1360" cy="980" r="103" fill="#091925" stroke="#426b7c"/>
+<path class="sphere" d="M1299.857675730599 976.4980108835479L1284.7646287707694 1013.1444936421615"/>
+<path class="sphere" d="M1299.1468813272666 977.8412511841717L1285.140408487765 1013.4388669280796"/>
+<path class="sphere" d="M1301.551335553312 978.1033633055358L1285.8703557106821 1011.7168584269544"/>
+<path class="sphere" d="M1308.7621052390705 1028.583641766378L1354.6709866273773 1034.7009023738874"/>
+<path class="sphere" d="M1301.9574632611336 979.6181828872707L1286.3440524856921 1012.033391267422"/>
+<path class="sphere" d="M1309.1727296737693 1028.661711847421L1354.9910079676902 1035.8589093072878"/>
+<path class="sphere" d="M1309.4230169627226 1030.920462967894L1354.8124475235263 1038.1741002380272"/>
+<path class="sphere" d="M1309.4128348866045 1024.2175284012296L1354.6709866273773 1034.7009023738874"/>
+<path class="sphere" d="M1309.6724800053635 1028.9346092847466L1354.2709826688088 1038.21645869659"/>
+<path class="sphere" d="M1354.2709826688088 1038.21645869659L1390.1028512188307 1040.9076471499116"/>
+<path class="sphere" d="M1354.8124475235263 1038.1741002380272L1390.5131358878514 1040.7743444886412"/>
+<path class="sphere" d="M1354.9910079676902 1035.8589093072878L1389.8907727806209 1039.027780233803"/>
+<path class="sphere" d="M1354.6709866273773 1034.7009023738874L1388.5266821040939 1039.3030875630682"/>
+<path class="sphere" d="M1393.3678286895017 1040.2245858790266L1406.327719620129 1011.1056001477809"/>
+<path class="sphere" d="M1393.629354833456 1040.1326548951429L1406.4118231313973 1011.0799162233101"/>
+<path class="sphere" d="M1392.895849707617 1039.3751794296206L1406.4677581005021 1011.0627862564278"/>
+<path class="sphere" d="M1392.895849707617 1039.3751794296206L1406.4118231313973 1011.0799162233101"/>
+<path class="sphere" d="M1392.4968286349822 1039.511459378365L1404.334697192929 1011.322922369447"/>
+<path class="sphere" d="M1309.6724800053635 1028.9346092847466L1286.70305655037 1016.3787139973743"/>
+<path class="sphere" d="M1392.0729556655156 1038.612503551651L1404.626633845673 1011.2375948822571"/>
+<path class="sphere" d="M1309.4230169627226 1030.920462967894L1287.004540794509 1016.4844660447158"/>
+<path class="sphere" d="M1396.3611725124263 1009.3077750475081L1408.803712739984 982.9781469912155"/>
+<path class="sphere" d="M1390.9850917070692 1037.898145196961L1402.6209505043398 1010.2106768698516"/>
+<path class="sphere" d="M1404.334697192929 1011.322922369447L1408.803712739984 982.9781469912155"/>
+<path class="sphere" d="M1406.4677581005021 1011.0627862564278L1409.896872469789 983.0753282646829"/>
+<path class="sphere" d="M1309.1727296737693 1028.661711847421L1288.172880578651 1015.1019101222764"/>
+<path class="sphere" d="M1308.7621052390705 1028.583641766378L1287.9603620554406 1015.0354105532562"/>
+<path class="sphere" d="M1404.626633845673 1011.2375948822571L1408.245912400531 984.0346357400273"/>
+<path class="sphere" d="M1402.6209505043398 1010.2106768698516L1406.2648020027323 983.8232665448561"/>
+<path class="sphere" d="M1388.4367265695205 973.5687997873935L1360.4140949490502 966.7437347382679"/>
+<path class="sphere" d="M1388.0883735290229 972.2877520404236L1360.1272849163395 965.4194642051183"/>
+<path class="sphere" d="M1388.3828059183159 971.0169666880706L1360.6313506335298 964.1035824809702"/>
+<path class="sphere" d="M1385.4569474346647 988.1890779279051L1406.0185815536438 978.9997865707167"/>
+<path class="sphere" d="M1396.4291976347558 1009.2923077559491L1403.38617649662 983.4688998042745"/>
+<path class="sphere" d="M1396.3611725124263 1009.3077750475081L1403.2992327781533 983.4757045911523"/>
+<path class="sphere" d="M1387.0317858250376 974.680618297187L1359.991857345157 968.0951263580193"/>
+<path class="sphere" d="M1309.4128348866045 1024.2175284012296L1291.2450986961687 1011.1837719828168"/>
+<path class="sphere" d="M1388.3828059183159 971.0169666880706L1407.1727031622054 979.1364400226677"/>
+<path class="sphere" d="M1385.573720150152 988.1796133574662L1404.3442262517574 981.1237774528757"/>
+<path class="sphere" d="M1314.085277210213 957.1813334221916L1336.6411258182657 958.7378103999027"/>
+<path class="sphere" d="M1313.2812223698465 959.5756733533213L1336.0086746890934 961.2797393572896"/>
+<path class="sphere" d="M1388.4367265695205 973.5687997873935L1406.3456515597243 980.1808042403236"/>
+<path class="sphere" d="M1388.0883735290229 972.2877520404236L1406.0185815536438 978.9997865707167"/>
+<path class="sphere" d="M1336.6039907006111 959.9855537270258L1360.6313506335298 964.1035824809702"/>
+<path class="sphere" d="M1336.1053188774906 962.5576975924314L1360.4140949490502 966.7437347382679"/>
+<path class="sphere" d="M1336.0086746890934 961.2797393572896L1360.1272849163395 965.4194642051183"/>
+<path class="sphere" d="M1335.3492061888787 965.2144103001101L1313.5019741493095 963.3307489229873"/>
+<path class="sphere" d="M1335.3492061888787 965.2144103001101L1359.991857345157 968.0951263580193"/>
+<path class="sphere" d="M1315.0713595254397 958.3945027983631L1336.6039907006111 959.9855537270258"/>
+<path class="sphere" d="M1314.3878178105276 960.820446180117L1336.1053188774906 962.5576975924314"/>
+<path class="sphere" d="M1385.4569474346647 988.1890779279051L1403.2992327781533 983.4757045911523"/>
+<path class="sphere" d="M1385.573720150152 988.1796133574662L1403.38617649662 983.4688998042745"/>
+<path class="sphere" d="M1387.0317858250376 974.680618297187L1404.3442262517574 981.1237774528757"/>
+<path class="sphere" d="M1310.6161919551296 958.2066170245283L1299.857675730599 976.4980108835479"/>
+<path class="sphere" d="M1311.4014581649624 959.4295712228594L1299.857675730599 976.4980108835479"/>
+<path class="sphere" d="M1309.673431420571 960.6159654583513L1299.1468813272666 977.8412511841717"/>
+<path class="sphere" d="M1311.8044011120737 961.916653470482L1301.551335553312 978.1033633055358"/>
+<path class="sphere" d="M1311.2561201124267 963.1791646275836L1301.9574632611336 979.6181828872707"/>
+<path class="sphere" d="M1291.2450986961687 1011.1837719828168L1286.3440524856921 1012.033391267422"/>
+<path class="sphere" d="M1403.2992327781533 983.4757045911523L1408.803712739984 982.9781469912155"/>
+<path class="sphere" d="M1403.2992327781533 983.4757045911523L1406.0185815536438 978.9997865707167"/>
+<path class="sphere" d="M1407.0546755575008 977.9611561424348L1410.6180868405936 982.0287751312989"/>
+<path class="sphere" d="M1407.1727031622054 979.1364400226677L1409.896872469789 983.0753282646829"/>
+<path class="sphere" d="M1406.0185815536438 978.9997865707167L1408.803712739984 982.9781469912155"/>
+<path class="sphere" d="M1287.004540794509 1016.4844660447158L1284.7646287707694 1013.1444936421615"/>
+<path class="sphere" d="M1288.172880578651 1015.1019101222764L1285.8703557106821 1011.7168584269544"/>
+<path class="sphere" d="M1406.3456515597243 980.1808042403236L1408.245912400531 984.0346357400273"/>
+<path class="sphere" d="M1315.0713595254397 958.3945027983631L1311.4014581649624 959.4295712228594"/>
+<path class="sphere" d="M1389.9302477575177 1041.835119973298L1393.3678286895017 1040.2245858790266"/>
+<path class="sphere" d="M1390.2031500620649 1041.7462295539187L1393.629354833456 1040.1326548951429"/>
+<path class="sphere" d="M1314.226730360364 957.1643416131005L1310.6161919551296 958.2066170245283"/>
+<path class="sphere" d="M1313.2812223698465 959.5756733533213L1309.673431420571 960.6159654583513"/>
+<path class="sphere" d="M1287.9603620554406 1015.0354105532562L1286.3440524856921 1012.033391267422"/>
+<path class="sphere" d="M1286.70305655037 1016.3787139973743L1285.140408487765 1013.4388669280796"/>
+<path class="sphere" d="M1314.3878178105276 960.820446180117L1311.8044011120737 961.916653470482"/>
+<path class="sphere" d="M1390.5131358878514 1040.7743444886412L1392.895849707617 1039.3751794296206"/>
+<path class="sphere" d="M1390.1028512188307 1040.9076471499116L1392.4968286349822 1039.511459378365"/>
+<path class="sphere" d="M1388.5266821040939 1039.3030875630682L1390.9850917070692 1037.898145196961"/>
+<path class="sphere" d="M1313.5019741493095 963.3307489229873L1311.2561201124267 963.1791646275836"/>
+<path class="sphere" d="M1389.8907727806209 1039.027780233803L1392.0729556655156 1038.612503551651"/>
+<path class="sphere" d="M1281.3324409093 917.605531619964L1289.9461292953374 909.9488019923557"/>
+<path class="sphere" d="M1281.2668770536116 917.6901847723508L1288.9012437435977 910.9320499182129"/>
+<path class="sphere" d="M1280.7773374744002 918.2180354951993L1289.0089797276348 910.8149271002134"/>
+<path class="sphere" d="M1266.198641637643 1007.1144016457201L1272.2266380468172 1029.9662779993123"/>
+<path class="sphere" d="M1266.6751524868362 1007.693767671081L1272.5013768882552 1030.4416676273436"/>
+<path class="sphere" d="M1265.145430502454 1004.7499275774868L1271.4401097947386 1028.5494442889674"/>
+<path class="sphere" d="M1264.429782889933 1004.1850566242114L1271.2022441345514 1027.989699831205"/>
+<path class="sphere" d="M1263.9810626684243 1003.4408238602027L1269.4860836921293 1024.3802123856567"/>
+<path class="sphere" d="M1279.3775231969857 919.8799395331325L1287.2785024216764 912.2731701327775"/>
+<path class="sphere" d="M1279.5765284034549 919.6095912311534L1287.475898318372 912.0518969136089"/>
+<path class="sphere" d="M1267.769518564282 946.9567801634189L1279.6150375078707 921.9102340027744"/>
+<path class="sphere" d="M1267.271716522553 947.0492494191623L1279.124152801824 922.431119429366"/>
+<path class="sphere" d="M1267.8145451514142 946.8217230246066L1262.4481484411954 977.6680795892952"/>
+<path class="sphere" d="M1277.2981468931746 922.6931945663245L1284.2709668387365 915.3773462363223"/>
+<path class="sphere" d="M1266.726565606033 946.5861742766675L1278.0890157073509 923.2439967313375"/>
+<path class="sphere" d="M1266.726565606033 946.5861742766675L1261.4011553783666 976.692030775894"/>
+<path class="sphere" d="M1267.271716522553 947.0492494191623L1262.1525006521517 976.8152885808286"/>
+<path class="sphere" d="M1267.1036271437504 946.7046581096234L1277.8776249930454 923.5640135645119"/>
+<path class="sphere" d="M1267.1036271437504 946.7046581096234L1261.589242973734 975.8206807769781"/>
+<path class="sphere" d="M1264.429782889933 1004.1850566242114L1259.1564256767813 982.9414334844619"/>
+<path class="sphere" d="M1265.5810001574926 948.488621234843L1276.047342604383 925.8675766598236"/>
+<path class="sphere" d="M1263.9810626684243 1003.4408238602027L1260.9123499657787 975.5798368497742"/>
+<path class="sphere" d="M1265.5810001574926 948.488621234843L1260.9123499657787 975.5798368497742"/>
+<path class="sphere" d="M1265.2280022481648 1001.3958669240943L1262.1525006521517 976.8152885808286"/>
+<path class="sphere" d="M1265.698486882495 1002.0293118988991L1262.4481484411954 977.6680795892952"/>
+<path class="sphere" d="M1264.4433251323746 1000.7093471312489L1261.589242973734 975.8206807769781"/>
+<path class="sphere" d="M1264.3469628222342 1000.2321568717381L1261.4011553783666 976.692030775894"/>
+<path class="sphere" d="M1263.1900748027563 998.8142705453336L1260.9123499657787 975.5798368497742"/>
+<path class="sphere" d="M1279.6150375078707 921.9102340027744L1281.2668770536116 917.6901847723508"/>
+<path class="sphere" d="M1279.124152801824 922.431119429366L1280.7773374744002 918.2180354951993"/>
+<path class="sphere" d="M1278.0890157073509 923.2439967313375L1279.5765284034549 919.6095912311534"/>
+<path class="sphere" d="M1276.047342604383 925.8675766598236L1277.2981468931746 922.6931945663245"/>
+<path class="sphere" d="M1266.6751524868362 1007.693767671081L1265.698486882495 1002.0293118988991"/>
+<path class="sphere" d="M1266.198641637643 1007.1144016457201L1265.2280022481648 1001.3958669240943"/>
+<path class="sphere" d="M1266.2596403622285 1007.3388369315221L1265.7285386963051 1002.1683797885213"/>
+<path class="sphere" d="M1264.429782889933 1004.1850566242114L1264.4433251323746 1000.7093471312489"/>
+<path class="sphere" d="M1265.145430502454 1004.7499275774868L1264.3469628222342 1000.2321568717381"/>
+<path class="sphere" d="M1263.9810626684243 1003.4408238602027L1263.1900748027563 998.8142705453336"/>
+<path class="sphere" d="M1443.079208336667 994.5408478621766L1423.0296919639684 938.0363334873917"/>
+<path class="sphere" d="M1444.0226945011577 994.9884457464848L1423.876365229248 937.8906453414018"/>
+<path class="sphere" d="M1444.0161581688142 996.0242995273412L1432.7319781093738 1047.960437503875"/>
+<path class="sphere" d="M1446.2086564678918 992.431237931967L1425.7755269683068 937.5529698480268"/>
+<path class="sphere" d="M1446.719354217488 992.562451852536L1428.7259288465593 940.1986083968109"/>
+<path class="sphere" d="M1436.9486757883042 1042.6882592773281L1446.2086564678918 992.431237931967"/>
+<path class="sphere" d="M1444.0226945011577 994.9884457464848L1435.6788021130078 1043.605724756005"/>
+<path class="sphere" d="M1446.9746182791669 933.0146265785543L1442.434476501251 929.2519499004413"/>
+<path class="sphere" d="M1447.329119377187 933.6887079013372L1444.1479156168446 931.563516981276"/>
+<path class="sphere" d="M1447.8957109915502 933.9356490910592L1443.8096877055373 931.5798814875475"/>
+<path class="sphere" d="M1444.1479156168446 931.563516981276L1424.5501426332494 935.4278032658768"/>
+<path class="sphere" d="M1445.844021034819 995.6885962660319L1440.403526137567 1036.6430961420544"/>
+<path class="sphere" d="M1442.6912222937478 929.2340688314684L1424.5501426332494 935.4278032658768"/>
+<path class="sphere" d="M1442.434476501251 929.2519499004413L1424.2675378391086 934.8269039988465"/>
+<path class="sphere" d="M1449.5137512056554 936.6088763984517L1444.7927556568654 933.147770113308"/>
+<path class="sphere" d="M1459.0330421595302 998.1568005586951L1442.525368838015 1038.2036871140401"/>
+<path class="sphere" d="M1443.8096877055373 931.5798814875475L1426.4275052068933 935.912100019423"/>
+<path class="sphere" d="M1444.7927556568654 933.147770113308L1428.7259288465593 940.1986083968109"/>
+<path class="sphere" d="M1444.7927556568654 933.147770113308L1428.7617457847625 937.8031744919856"/>
+<path class="sphere" d="M1444.5798733934325 933.156961197695L1428.4566902144834 937.8898055932642"/>
+<path class="sphere" d="M1454.7393242345197 1011.7156608116169L1440.980106897952 1040.356528979304"/>
+<path class="sphere" d="M1446.8507676509832 1018.5996112895084L1436.9411515816494 1043.7442087765664"/>
+<path class="sphere" d="M1454.827073613227 1011.7307565008537L1441.4896149129797 1039.6665247939327"/>
+<path class="sphere" d="M1455.5234715823133 1010.4796071653202L1442.525368838015 1038.2036871140401"/>
+<path class="sphere" d="M1455.6286445372807 1010.4903016602238L1442.5064874366392 1038.2106807070807"/>
+<path class="sphere" d="M1446.719354217488 992.562451852536L1442.028351718606 958.1270291506282"/>
+<path class="sphere" d="M1456.3036918706257 1009.1851036717711L1444.0081120267664 1035.882114903007"/>
+<path class="sphere" d="M1459.0330421595302 998.1568005586951L1457.5123267036222 963.3633934876094"/>
+<path class="sphere" d="M1442.028351718606 958.1270291506282L1428.7259288465593 940.1986083968109"/>
+<path class="sphere" d="M1446.8507676509832 1018.5996112895084L1446.719354217488 992.562451852536"/>
+<path class="sphere" d="M1442.525368838015 1038.2036871140401L1432.1394743642936 1049.3935876206378"/>
+<path class="sphere" d="M1440.9774883685525 1040.361316832808L1432.1193008903424 1049.3853562891725"/>
+<path class="sphere" d="M1440.980106897952 1040.356528979304L1432.1394743642936 1049.3935876206378"/>
+<path class="sphere" d="M1440.9774883685525 1040.361316832808L1432.9105087563114 1048.1717533494357"/>
+<path class="sphere" d="M1441.4896149129797 1039.6665247939327L1432.9105087563114 1048.1717533494357"/>
+<path class="sphere" d="M1442.5064874366392 1038.2106807070807L1434.487910783448 1046.686406490289"/>
+<path class="sphere" d="M1440.403526137567 1036.6430961420544L1432.7319781093738 1047.960437503875"/>
+<path class="sphere" d="M1443.5099324496155 1036.6769927889395L1436.5044098229985 1044.4330373532164"/>
+<path class="sphere" d="M1444.0081120267664 1035.882114903007L1436.9411515816494 1043.7442087765664"/>
+<path class="sphere" d="M1434.4197154389367 1045.5279084825836L1432.9105087563114 1048.1717533494357"/>
+<path class="sphere" d="M1423.0296919639684 938.0363334873917L1423.4373794632513 934.9883504945968"/>
+<path class="sphere" d="M1423.876365229248 937.8906453414018L1424.2675378391086 934.8269039988465"/>
+<path class="sphere" d="M1432.7319781093738 1047.960437503875L1432.1394743642936 1049.3935876206378"/>
+<path class="sphere" d="M1436.5044098229985 1044.4330373532164L1434.487910783448 1046.686406490289"/>
+<path class="sphere" d="M1424.5055468757773 937.6889075339868L1424.5501426332494 935.4278032658768"/>
+<path class="sphere" d="M1428.7259288465593 940.1986083968109L1428.7617457847625 937.8031744919856"/>
+<path class="sphere" d="M1434.487910783448 1046.686406490289L1432.9105087563114 1048.1717533494357"/>
+<path class="sphere" d="M1427.7759712136374 939.5678279426784L1428.4566902144834 937.8898055932642"/>
+<path class="sphere" d="M1425.7755269683068 937.5529698480268L1426.4275052068933 935.912100019423"/>
+<path class="sphere" d="M1432.9105087563114 1048.1717533494357L1432.1193008903424 1049.3853562891725"/>
+<path class="sphere" d="M1435.6565717837243 1044.650594656063L1434.4197154389367 1045.5279084825836"/>
+<path class="sphere" d="M1436.9486757883042 1042.6882592773281L1435.6788021130078 1043.605724756005"/>
+<path class="sphere" d="M1421.1979524387214 900.2913784781456L1372.257250669905 920.9181481582061"/>
+<path class="sphere" d="M1421.0601059102698 900.5039520060785L1371.9906896728182 920.7803378209505"/>
+<path class="sphere" d="M1298.8706241230489 912.5487572080465L1372.1773692989573 920.876802666728"/>
+<path class="sphere" d="M1298.8706241230489 912.5487572080465L1371.9906896728182 920.7803378209505"/>
+<path class="sphere" d="M1299.0157259429914 912.5243346361543L1372.1773692989573 920.876802666728"/>
+<path class="sphere" d="M1418.8063057482118 898.6746544616345L1371.5479629078711 918.5795235566588"/>
+<path class="sphere" d="M1298.8706241230489 912.5487572080465L1371.465613215694 918.537226064836"/>
+<path class="sphere" d="M1417.8507379323232 898.1589820239708L1370.3022390073272 917.6050780344474"/>
+<path class="sphere" d="M1322.8137871686336 890.5859350694269L1297.498855626065 913.4186664894223"/>
+<path class="sphere" d="M1299.4960061756917 911.5848753070732L1371.719397719396 917.0039997691118"/>
+<path class="sphere" d="M1323.6290774712247 889.9409128224459L1299.0157259429914 912.5243346361543"/>
+<path class="sphere" d="M1323.4730837371203 890.0334434713088L1298.8706241230489 912.5487572080465"/>
+<path class="sphere" d="M1301.215511640871 910.6591560681686L1371.465613215694 918.537226064836"/>
+<path class="sphere" d="M1303.0638954250255 914.0942175471987L1371.8376294907775 922.3073166048318"/>
+<path class="sphere" d="M1303.7635433927387 913.117507260907L1371.8902055584174 922.3342392023324"/>
+<path class="sphere" d="M1301.855626198009 909.6811660861196L1371.719397719396 917.0039997691118"/>
+<path class="sphere" d="M1302.2872654590851 911.8663105943356L1371.465613215694 918.537226064836"/>
+<path class="sphere" d="M1303.5791689538314 913.1315551185893L1371.9906896728182 920.7803378209505"/>
+<path class="sphere" d="M1304.4878684433281 912.1311705163097L1372.257250669905 920.9181481582061"/>
+<path class="sphere" d="M1302.2872654590851 911.8663105943356L1371.719397719396 917.0039997691118"/>
+<path class="sphere" d="M1325.2427570275795 888.7180458023337L1301.215511640871 910.6591560681686"/>
+<path class="sphere" d="M1316.1685668775776 892.8752187126122L1299.4960061756917 911.5848753070732"/>
+<path class="sphere" d="M1323.7418150608903 889.0150271615062L1301.7450052479267 909.6989607551028"/>
+<path class="sphere" d="M1305.9170727647218 910.139729953158L1371.5479629078711 918.5795235566588"/>
+<path class="sphere" d="M1324.6150017531684 888.3869220685802L1301.811361980454 909.6882680199872"/>
+<path class="sphere" d="M1313.7623200346914 893.468560138349L1297.8859263721176 911.4595457300637"/>
+<path class="sphere" d="M1306.4984325697671 909.1471017236715L1370.3022390073272 917.6050780344474"/>
+<path class="sphere" d="M1325.2193183869708 888.7310678926739L1304.1053877762538 906.6819111724909"/>
+<path class="sphere" d="M1323.0975547087794 889.530696696651L1302.4381177025234 907.6200303446279"/>
+<path class="sphere" d="M1314.4654716834877 892.8202382716192L1298.5595631158437 910.4896837627666"/>
+<path class="sphere" d="M1300.7936803362065 908.5700606004476L1299.9396962871053 912.6033961197528"/>
+<path class="sphere" d="M1299.1999168125853 913.5826612884794L1303.5791689538314 913.1315551185893"/>
+<path class="sphere" d="M1300.5983326525936 911.6303596902653L1304.4878684433281 912.1311705163097"/>
+<path class="sphere" d="M1299.2625992332341 913.5735845209024L1303.0638954250255 914.0942175471987"/>
+<path class="sphere" d="M1300.7936803362065 908.5700606004476L1300.5983326525936 911.6303596902653"/>
+<path class="sphere" d="M1298.5595631158437 910.4896837627666L1299.9396962871053 912.6033961197528"/>
+<path class="sphere" d="M1298.8706241230489 912.5487572080465L1302.2872654590851 911.8663105943356"/>
+<path class="sphere" d="M1302.8989246812637 909.7549740894367L1305.9170727647218 910.139729953158"/>
+<path class="sphere" d="M1304.0127950172873 906.6977089918133L1301.811361980454 909.6882680199872"/>
+<path class="sphere" d="M1299.4960061756917 911.5848753070732L1302.2872654590851 911.8663105943356"/>
+<path class="sphere" d="M1302.4381177025234 907.6200303446279L1302.8989246812637 909.7549740894367"/>
+<path class="sphere" d="M1304.0127950172873 906.6977089918133L1304.4651869701916 908.8796736937113"/>
+<path class="sphere" d="M1304.1053877762538 906.6819111724909L1304.5590613114564 908.8680902027006"/>
+<path class="sphere" d="M1301.7450052479267 909.6989607551028L1299.4960061756917 911.5848753070732"/>
+<path class="sphere" d="M1371.465613215694 918.537226064836L1372.1773692989573 920.876802666728"/>
+<path class="sphere" d="M1302.2872654590851 911.8663105943356L1303.5791689538314 913.1315551185893"/>
+<path class="sphere" d="M1304.4651869701916 908.8796736937113L1306.4984325697671 909.1471017236715"/>
+<path class="sphere" d="M1326.685809712738 1061.7500358069933L1365.752124838532 1075.2580025256384"/>
+<path class="sphere" d="M1307.1909617646452 1065.8371045062538L1360.694840075187 1072.8792587381383"/>
+<path class="sphere" d="M1309.3360685155067 1067.0677956390773L1361.7544992184814 1073.3218505323098"/>
+<path class="sphere" d="M1310.6984921161013 1067.8942851048087L1361.6323529534498 1073.419510129971"/>
+<path class="sphere" d="M1312.888074109593 1069.0100863651533L1363.595264740506 1074.4257798026067"/>
+<path class="sphere" d="M1316.7893617918787 1070.4620072943387L1365.752124838532 1075.2580025256384"/>
+<path class="sphere" d="M1376.791586444525 1075.5525773797267L1374.3986492294036 1073.011153587481"/>
+<path class="sphere" d="M1365.752124838532 1075.2580025256384L1347.7349273551674 1079.6460054469271"/>
+<path class="sphere" d="M1376.791586444525 1075.5525773797267L1373.2244546285692 1078.9701076516085"/>
+<path class="sphere" d="M1400.6728606378463 1072.44763701228L1388.7697549320733 1071.835181262908"/>
+<path class="sphere" d="M1405.101672506381 1070.3293303235462L1393.067158146777 1069.7185807714748"/>
+<path class="sphere" d="M1405.075208737544 1070.3461099072717L1391.6610099887555 1070.456927412177"/>
+<path class="sphere" d="M1340.4369049637744 1079.075413380971L1373.2244546285692 1078.9701076516085"/>
+<path class="sphere" d="M1309.3360685155067 1067.0677956390773L1340.4369049637744 1079.075413380971"/>
+<path class="sphere" d="M1399.1614396908194 1073.090411335335L1388.4468985396556 1072.5927502788563"/>
+<path class="sphere" d="M1399.2618491657504 1073.052459157926L1387.002672430448 1073.1385158762923"/>
+<path class="sphere" d="M1373.2244546285692 1078.9701076516085L1374.3986492294036 1073.011153587481"/>
+<path class="sphere" d="M1393.067158146777 1069.7185807714748L1382.8823652296144 1068.5742376207934"/>
+<path class="sphere" d="M1360.694840075187 1072.8792587381383L1373.8051036168915 1069.6557141992205"/>
+<path class="sphere" d="M1391.6610099887555 1070.456927412177L1382.4885194832816 1069.5233374836737"/>
+<path class="sphere" d="M1361.6323529534498 1073.419510129971L1373.261350742042 1070.5828235519816"/>
+<path class="sphere" d="M1383.325940842166 1075.1885514410894L1379.749972135304 1072.6869217171522"/>
+<path class="sphere" d="M1388.7697549320733 1071.835181262908L1382.0891000050558 1070.4395971922079"/>
+<path class="sphere" d="M1363.595264740506 1074.4257798026067L1373.7463494077238 1071.9043081509699"/>
+<path class="sphere" d="M1382.4885194832816 1069.5233374836737L1373.8051036168915 1069.6557141992205"/>
+<path class="sphere" d="M1387.002672430448 1073.1385158762923L1381.3705998452067 1072.040374990137"/>
+<path class="sphere" d="M1382.0891000050558 1070.4395971922079L1373.7463494077238 1071.9043081509699"/>
+<path class="sphere" d="M1365.752124838532 1075.2580025256384L1372.6782125430207 1073.5660563232195"/>
+<path class="sphere" d="M1381.3705998452067 1072.040374990137L1374.3986492294036 1073.011153587481"/>
+<path class="sphere" d="M1379.749972135304 1072.6869217171522L1372.6782125430207 1073.5660563232195"/>
+<path class="sphere" d="M1373.7463494077238 1071.9043081509699L1373.261350742042 1070.5828235519816"/>
+<path class="sphere" d="M1400.6728606378463 1072.44763701228L1403.6380711161462 1071.0729291957327"/>
+<path class="sphere" d="M1373.261350742042 1070.5828235519816L1373.8051036168915 1069.6557141992205"/>
+<text x="1305" y="1115" class="muted" font-size="14">VIEW 3 · yaw 261°</text>
+<text x="50" y="1370" class="muted" font-size="14">Gap policy: equator scale .84, poles .82. Lines are surface-only; no GLB thickness is mapped to the sphere.</text></svg>
