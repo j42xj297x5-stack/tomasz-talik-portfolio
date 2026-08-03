@@ -24,6 +24,11 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
     rotationDegrees: { x: 0, y: 0, z: 0 },
     scale: 3,
     debug: false,
+    content: {
+      enabled: true, proximityRadiusMultiplier: 1.15, snapDuration: 0.32, insertedScale: 0.72,
+      feedbackOpacity: 0.20, validColor: 0x49d17d, invalidColor: 0xe05252,
+      consumeStartProgress: 0.18, consumeEndProgress: 0.78
+    },
     openButton: {
       enabled: true,
       rayMaxDistance: 3,
@@ -242,6 +247,7 @@ export function normalizeExperienceVrSettings(candidate) {
       debug: typeof candidate.furnace?.debug === 'boolean'
         ? candidate.furnace.debug
         : defaults.furnace.debug,
+      content: { ...defaults.furnace.content, ...(candidate.furnace?.content ?? {}) },
       openButton: {
         enabled: typeof candidate.furnace?.openButton?.enabled === 'boolean'
           ? candidate.furnace.openButton.enabled : defaults.furnace.openButton.enabled,

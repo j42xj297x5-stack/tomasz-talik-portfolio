@@ -34,6 +34,7 @@ import { createVrAstroFurnaceActivateInteraction } from './xr/furnace/createVrAs
 import { createVrAstroFurnaceOptionInteraction } from './xr/furnace/createVrAstroFurnaceOptionInteraction.js';
 import { createVrAstroFurnacePanel } from './xr/furnace/createVrAstroFurnacePanel.js';
 import { createVrAstroFurnaceProgressionController } from './xr/furnace/createVrAstroFurnaceProgressionController.js';
+import { createVrAstroFurnaceContentInteraction } from './xr/furnace/createVrAstroFurnaceContentInteraction.js';
 import { experienceVrPages, getExperienceVrPages, resolveExperienceVrPage } from './content/experienceVrPages.js';
 
 const app = document.querySelector('#app');
@@ -181,6 +182,7 @@ const handModeController = createVrHandModeController({
   isUnlocked: () => progressionController.isTierComplete(1)
 });
 let astroFurnaceActivateInteraction = null;
+let astroFurnaceContentInteraction = null;
 let astroFurnaceOptionInteraction = null;
 const furnaceProgressionController = createVrAstroFurnaceProgressionController();
 const furnacePanel = createVrAstroFurnacePanel({
@@ -205,9 +207,14 @@ astroFurnaceActivateInteraction = createVrAstroFurnaceActivateInteraction({
   processSettings: settings.furnace.process,
   haloSettings: settings.targetHalo,
   openInteraction: astroFurnaceOpenInteraction,
-  canActivateInput: () => false,
+  canActivateInput: () => astroFurnaceContentInteraction?.hasValidInsertedContent() === true,
   qaAllowWithoutInput: furnaceProcessQa,
   isOrdinaryRayAvailable: ordinaryFurnaceRayAvailable
+});
+astroFurnaceContentInteraction = createVrAstroFurnaceContentInteraction({
+  furnace: astroFurnace, shellSystem, openInteraction: astroFurnaceOpenInteraction,
+  activateInteraction: astroFurnaceActivateInteraction, progressionController: furnaceProgressionController,
+  controllers: vrControllers.controllers, settings: settings.furnace.content
 });
 astroFurnaceOptionInteraction = createVrAstroFurnaceOptionInteraction({
   furnace: astroFurnace, panel: furnacePanel, controllers: vrControllers.controllers,
@@ -320,6 +327,8 @@ function renderFrame() {
   astroFurnaceOptionInteraction.update(delta);
   astroFurnaceOpenInteraction.update(delta);
   astroFurnaceActivateInteraction.update(delta);
+  astroFurnaceContentInteraction.reportHeldShell(shellAttractorInteraction?.heldShell);
+  astroFurnaceContentInteraction.update(delta);
   glyphOrbit.update(delta);
   shellSystem.update(delta);
   glyphRing.updateMatrixWorld(true);
@@ -356,6 +365,7 @@ function handleSessionEnd() {
   astroFurnaceOptionInteraction.reset();
   astroFurnaceOpenInteraction.reset();
   astroFurnaceActivateInteraction.reset();
+  astroFurnaceContentInteraction.reset();
   crystalCollection.reset();
   activateButton.reset();
   releaseButton.reset();
@@ -382,6 +392,7 @@ async function enterVr() {
   astroFurnaceOptionInteraction.reset();
   astroFurnaceOpenInteraction.reset();
   astroFurnaceActivateInteraction.reset();
+  astroFurnaceContentInteraction.reset();
   crystalCollection.reset();
   activateButton.reset();
   releaseButton.reset();
@@ -433,6 +444,7 @@ async function enterVr() {
     astroFurnaceOptionInteraction.reset();
     astroFurnaceOpenInteraction.reset();
     astroFurnaceActivateInteraction.reset();
+    astroFurnaceContentInteraction.reset();
     crystalCollection.reset();
     activateButton.reset();
     releaseButton.reset();
@@ -453,6 +465,7 @@ exitButton.addEventListener('click', () => { void activeSession?.end(); });
 window.addEventListener('pagehide', () => {
   astroFurnaceOpenInteraction.dispose();
   astroFurnaceActivateInteraction.dispose();
+  astroFurnaceContentInteraction.dispose();
   astroFurnaceOptionInteraction.dispose();
   furnacePanel.dispose();
   furnaceProgressionController.dispose();
