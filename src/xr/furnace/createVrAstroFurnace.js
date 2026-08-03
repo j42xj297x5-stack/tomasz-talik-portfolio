@@ -91,6 +91,7 @@ export function createVrAstroFurnace({
     anchorCenter: null, mirrorPosition: null, resolvedPosition: null, visibleBounds: null
   };
   let disposed = false;
+  const placementListeners = new Set();
   const anchorBounds = new THREE.Box3();
   const visibleBounds = new THREE.Box3();
   const geometryBounds = new THREE.Box3();
@@ -147,6 +148,7 @@ export function createVrAstroFurnace({
     diagnostics.visibleBounds = visibleBounds.isEmpty() ? null : {
       min: visibleBounds.min.toArray(), max: visibleBounds.max.toArray()
     };
+    placementListeners.forEach((listener) => listener());
     return object.visible;
   }
 
@@ -155,6 +157,7 @@ export function createVrAstroFurnace({
   function dispose() {
     if (disposed) return;
     disposed = true;
+    placementListeners.clear();
     object.visible = false;
     object.removeFromParent();
   }
@@ -179,5 +182,6 @@ export function createVrAstroFurnace({
     console.groupEnd();
   }
 
-  return { object, model, nodes, clips, capabilities, place, update, reset, dispose, diagnostics };
+  return { object, model, nodes, clips, capabilities, place, update, reset, dispose, diagnostics,
+    subscribePlacement(listener) { placementListeners.add(listener); return () => placementListeners.delete(listener); } };
 }

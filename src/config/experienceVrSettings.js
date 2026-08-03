@@ -38,6 +38,13 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
       emissionHover: 1,
       emissionPressed: 5
     },
+    optionButton: {
+      enabled: true, rayMaxDistance: 3, emissionInactive: 0, emissionHover: 1, emissionActive: 3
+    },
+    panel: {
+      enabled: true, width: 1.55, height: 1.05, gapFromFurnace: 0.18, verticalOffset: 0.15,
+      canvasWidth: 1536, canvasHeight: 1024, appearDuration: 0.32, disappearDuration: 0.20
+    },
     process: {
       durationSeconds: 18,
       steadyRpm: 42,
@@ -258,6 +265,24 @@ export function normalizeExperienceVrSettings(candidate) {
           defaults.furnace.activateButton.emissionHover, { min: 0 }),
         emissionPressed: finiteNumber(candidate.furnace?.activateButton?.emissionPressed,
           defaults.furnace.activateButton.emissionPressed, { min: 0 })
+      },
+      optionButton: {
+        enabled: typeof candidate.furnace?.optionButton?.enabled === 'boolean' ? candidate.furnace.optionButton.enabled : defaults.furnace.optionButton.enabled,
+        rayMaxDistance: finiteNumber(candidate.furnace?.optionButton?.rayMaxDistance, defaults.furnace.optionButton.rayMaxDistance, { min: 0.3, max: 5 }),
+        emissionInactive: finiteNumber(candidate.furnace?.optionButton?.emissionInactive, defaults.furnace.optionButton.emissionInactive, { min: 0 }),
+        emissionHover: finiteNumber(candidate.furnace?.optionButton?.emissionHover, defaults.furnace.optionButton.emissionHover, { min: 0 }),
+        emissionActive: finiteNumber(candidate.furnace?.optionButton?.emissionActive, defaults.furnace.optionButton.emissionActive, { min: 0 })
+      },
+      panel: {
+        enabled: typeof candidate.furnace?.panel?.enabled === 'boolean' ? candidate.furnace.panel.enabled : defaults.furnace.panel.enabled,
+        width: finiteNumber(candidate.furnace?.panel?.width, defaults.furnace.panel.width, { min: .5, max: 4 }),
+        height: finiteNumber(candidate.furnace?.panel?.height, defaults.furnace.panel.height, { min: .3, max: 3 }),
+        gapFromFurnace: finiteNumber(candidate.furnace?.panel?.gapFromFurnace, defaults.furnace.panel.gapFromFurnace, { min: 0, max: 2 }),
+        verticalOffset: finiteNumber(candidate.furnace?.panel?.verticalOffset, defaults.furnace.panel.verticalOffset, { min: -2, max: 2 }),
+        canvasWidth: finiteNumber(candidate.furnace?.panel?.canvasWidth, defaults.furnace.panel.canvasWidth, { min: 256, max: 4096 }),
+        canvasHeight: finiteNumber(candidate.furnace?.panel?.canvasHeight, defaults.furnace.panel.canvasHeight, { min: 256, max: 4096 }),
+        appearDuration: finiteNumber(candidate.furnace?.panel?.appearDuration, defaults.furnace.panel.appearDuration, { min: .01, max: 2 }),
+        disappearDuration: finiteNumber(candidate.furnace?.panel?.disappearDuration, defaults.furnace.panel.disappearDuration, { min: .01, max: 2 })
       },
       process: {
         durationSeconds: finiteNumber(processCandidate.durationSeconds, defaults.furnace.process.durationSeconds, { min: 5, max: 60 }),
