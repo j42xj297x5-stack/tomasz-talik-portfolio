@@ -48,7 +48,9 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
     },
     panel: {
       enabled: true, width: 1.55, height: 1.05, gapFromFurnace: 0.18, verticalOffset: 0.15,
-      canvasWidth: 1536, canvasHeight: 1024, appearDuration: 0.32, disappearDuration: 0.20
+      canvasWidth: 1536, canvasHeight: 1024, appearDuration: 0.32, disappearDuration: 0.20,
+      telemetryRefreshHz: 12, frameCornerSizePx: 28,
+      accents: { asterion: '#72cfe8', attractor: '#c8ac70', emanation: '#a98bd4', idle: '#668493', process: '#9eeaff', complete: '#d9f8ff' }
     },
     process: {
       durationSeconds: 18,
@@ -288,7 +290,10 @@ export function normalizeExperienceVrSettings(candidate) {
         canvasWidth: finiteNumber(candidate.furnace?.panel?.canvasWidth, defaults.furnace.panel.canvasWidth, { min: 256, max: 4096 }),
         canvasHeight: finiteNumber(candidate.furnace?.panel?.canvasHeight, defaults.furnace.panel.canvasHeight, { min: 256, max: 4096 }),
         appearDuration: finiteNumber(candidate.furnace?.panel?.appearDuration, defaults.furnace.panel.appearDuration, { min: .01, max: 2 }),
-        disappearDuration: finiteNumber(candidate.furnace?.panel?.disappearDuration, defaults.furnace.panel.disappearDuration, { min: .01, max: 2 })
+        disappearDuration: finiteNumber(candidate.furnace?.panel?.disappearDuration, defaults.furnace.panel.disappearDuration, { min: .01, max: 2 }),
+        telemetryRefreshHz: finiteNumber(candidate.furnace?.panel?.telemetryRefreshHz, defaults.furnace.panel.telemetryRefreshHz, { min: 4, max: 30 }),
+        frameCornerSizePx: finiteNumber(candidate.furnace?.panel?.frameCornerSizePx, defaults.furnace.panel.frameCornerSizePx, { min: 12, max: 64 }),
+        accents: { ...defaults.furnace.panel.accents, ...(candidate.furnace?.panel?.accents ?? {}) }
       },
       process: {
         durationSeconds: finiteNumber(processCandidate.durationSeconds, defaults.furnace.process.durationSeconds, { min: 5, max: 60 }),

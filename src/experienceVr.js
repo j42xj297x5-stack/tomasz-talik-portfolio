@@ -187,7 +187,17 @@ let astroFurnaceOptionInteraction = null;
 const furnaceProgressionController = createVrAstroFurnaceProgressionController();
 const furnacePanel = createVrAstroFurnacePanel({
   parent: worldRoot, furnace: astroFurnace, controllers: vrControllers.controllers,
-  progressionController: furnaceProgressionController, settings: settings.furnace.panel
+  progressionController: furnaceProgressionController, settings: settings.furnace.panel,
+  processSource: {
+    getState: () => astroFurnaceActivateInteraction?.getState?.() ?? 'IDLE',
+    getProgress: () => astroFurnaceActivateInteraction?.getProgress?.() ?? 0,
+    getAngularSpeed: () => astroFurnaceActivateInteraction?.getAngularSpeed?.() ?? 0,
+    getProcessAngle: () => astroFurnaceActivateInteraction?.getProcessAngle?.() ?? 0
+  },
+  contentSource: {
+    getState: () => astroFurnaceContentInteraction?.getState?.() ?? 'EMPTY',
+    getInsertedShellAssetId: () => astroFurnaceContentInteraction?.getInsertedShellAssetId?.() ?? null
+  }
 });
 const ordinaryFurnaceRayAvailable = (record) => !(record.handedness === 'right'
   && handModeController.getMode() === 'ASTRO_ATTRACTOR');
