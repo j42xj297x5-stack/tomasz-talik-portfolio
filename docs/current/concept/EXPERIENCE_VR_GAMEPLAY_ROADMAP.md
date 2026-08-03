@@ -1,12 +1,12 @@
 # Experience VR — gameplay and progression roadmap
 
-Status: approved product direction and implementation checklist synchronized on 2026-08-02. The [runtime model](../technical/VR_RUNTIME_MODEL.md) remains the authority for current behavior.
+Status: approved product direction and implementation checklist synchronized on 2026-08-03. The [runtime model](../technical/VR_RUNTIME_MODEL.md) remains the authority for current behavior.
 
 `[x]` means present in the current runtime. `[ ]` means future, including decisions that are approved but not implemented.
 
 ## Product direction
 
-Experience VR is a spatial progression game built around five portfolio branches and 18 cards. The stable loop is glyph acquisition → crystal handling → reliquary preview/commit → floor progress. Completed global tiers progressively unlock world mechanics. Future systems must extend this loop without moving page identity onto physical crystals or weakening the single progression owner.
+Experience VR is a spatial progression game built around five portfolio branches and 18 cards. The stable portfolio loop is glyph acquisition → crystal handling → reliquary preview/commit → floor progress. Completed global tiers progressively unlock world mechanics. `VrProgressionController` owns this portfolio domain; `VrAstroFurnaceProgressionController` separately owns committed furnace materials. Future systems must preserve both boundaries without inventing a global progression store.
 
 ## Current implemented foundation
 
@@ -41,6 +41,21 @@ Experience VR is a spatial progression game built around five portfolio branches
 - [x] Shell visuals preserve authored maps, show pull/captured/held emission and deterministic tumble.
 - [x] `?p1` provides the QA post-Tier-1 state.
 
+### Astro Furnace and Asterion material collection
+
+- [x] Astro Furnace GLB preload, mirrored placement, scale and visible-geometry grounding.
+- [x] Physical Open interaction with mechanical chamber open/close and glass fade.
+- [x] Physical Activate interaction and complete spinup/steady/extraction/cooldown process.
+- [x] Runtime process-spin pivot and angle-coupled fire-cell feedback.
+- [x] Physical Option interaction and toggleable CanvasTexture panel.
+- [x] Asterion progression counter and exactly six unique required shell asset types.
+- [x] Physical shell insertion with valid/invalid feedback.
+- [x] Same-instance snap to the content anchor and pre-activation retrieval.
+- [x] Visual shell absorption through `CONSUMING → CONSUMED`.
+- [x] Material commit only after process COMPLETE and controlled shell removal.
+- [x] Panel projection of gathered/missing Asterion materials.
+- [x] Phase-aware ASCII/Unicode process telemetry.
+
 ## Approved Astro band progression — future
 
 A remains the high-level right-hand choice `NORMAL_HAND ↔ ASTRO_ATTRACTOR`. It is implemented and is not replaced by band selection.
@@ -57,19 +72,21 @@ RED is a filtered local capability, not a global scene raycast. It must not incl
 
 The current shell slice does not yet implement YELLOW as a selectable band; shells are directly available to the unlocked Astro mode. The list above describes the future selector/capability model.
 
-## Sphere assembly and floor-control direction — future
+## Asterion material collection — implemented
 
-```text
-sphereAssembly.requiredShells = 6
-```
+- [x] Store one of each six unique shell types as binary `0/1` furnace progression.
+- [x] Absorb inserted physical shells during the furnace process.
+- [x] Project gathered/missing types and `x/6` progress on the panel.
+- [x] Report `complete=true` when all six unique types are committed.
 
-- [ ] Count six acquired shells toward assembly.
-- [ ] Consume/transfer those six shells into a visible construction sequence.
-- [ ] Build the luminous floor-control sphere.
-- [ ] Materialize the completed sphere as a left-hand tool.
+The furnace is a progression transformer/store, not a physical essence-output machine. `complete=true` at `6/6` means the material set is complete; it does **not** mean a physical Asterion Sphere exists.
+
+## Asterion physical construction and floor control — future
+
+- [ ] Transfer the completed material set into a visible physical construction sequence.
+- [ ] Materialize the luminous Asterion Sphere.
+- [ ] Equip the completed sphere as a left-hand tool.
 - [ ] Use the sphere as a spatial gyroscope for floor control.
-
-The value `requiredShells = 6` is an approved design value only. The current runtime has no assembly counter, hologram, shell consumption, completed sphere or sphere-tool state.
 
 After the sphere is built, further progression is intended to pass to **small glyphs**. The sphere remains a left-hand tool; the right hand retains A-controlled `NORMAL_HAND ↔ ASTRO_ATTRACTOR`.
 
@@ -99,10 +116,15 @@ This roadmap does not select either solution.
 - [ ] Completed sectors become controllable antenna elements.
 - [ ] Alignment/lensing provides clear visual feedback and remains solvable without audio.
 
-### Rune stones and essence
+### UI-visible future furnace modules
+
+- [ ] Astro Attractor (Astro Przyciągacz) glyph-based tuning/upgrades; the panel card is visible, but no recipe or module runtime exists.
+- [ ] Emanation Matrix (Matryca Emanacji) rune-stone processing; the panel card is visible, but no recipe or module runtime exists.
+
+### Rune stones and stored emanation
 
 - [ ] BLUE capability targets rune stones.
-- [ ] Rune extraction supplies progression essence.
+- [ ] Rune stone → furnace/Emanation Matrix processing → stored progression or emanation state. No removable physical essence output is planned for the current furnace model.
 
 ### Final radar and Haiku Cosmos
 
@@ -121,7 +143,7 @@ This roadmap does not select either solution.
 
 ## Constraints that remain binding
 
-- `VrProgressionController` remains the single logical owner of committed cards and tier completion.
+- `VrProgressionController` remains the sole owner of committed cards and tier completion; `VrAstroFurnaceProgressionController` separately owns committed furnace material state.
 - Physical crystals remain branch+tier objects; page resolution stays at Activate.
 - Existing Astro handoff remains explicit left-ray targeting and squeeze, not proximity takeover.
 - Placed shells remain ordinary-ray re-grabbable and excluded from Astro targeting.
