@@ -78,10 +78,16 @@ export function createVrShellSystem({ parent, assetManager, baseRadius, emission
     if (record.object.parent !== object) object.attach(record.object); record.returning = false; record.returnElapsed = 0;
     record.object.userData.shellState = 'orbiting'; record.object.userData.attractorTarget = true; setEmission(record.object, 0);
   }); applyPositions(); }
+  function removeInstance(shell) { const record = getRecord(shell); if (!record || disposed) return false;
+    const recordIndex = records.indexOf(record); if (recordIndex >= 0) records.splice(recordIndex, 1);
+    const instanceIndex = instances.indexOf(shell); if (instanceIndex >= 0) instances.splice(instanceIndex, 1);
+    shell.traverse((child) => { const materials = Array.isArray(child.material) ? child.material : [child.material];
+      materials.filter(Boolean).forEach((material) => { if (ownedMaterials.delete(material)) material.dispose?.(); }); });
+    shell.removeFromParent(); return true; }
   function dispose() { if (disposed) return; disposed = true; active = false; object.visible = false;
     object.remove(...instances); parent.remove(object); ownedMaterials.forEach((material) => material.dispose()); ownedMaterials.clear();
     instances.length = 0; records.length = 0; }
   applyPositions();
   return { object, instances, records, innerRadius: baseRadius, outerRadius: baseRadius * 2,
-    get active() { return active; }, getRecord, setEmission, setActive, update, returnToOrbit, reset, dispose };
+    get active() { return active; }, getRecord, setEmission, setActive, update, returnToOrbit, removeInstance, reset, dispose };
 }
