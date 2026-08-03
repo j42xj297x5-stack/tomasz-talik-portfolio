@@ -5,7 +5,7 @@ import { createVrAstroFurnaceProgressionController } from '../src/xr/furnace/cre
 
 function fixture({ emptyVolume = false } = {}) {
   const object = new THREE.Group(), volume = emptyVolume ? new THREE.Group() : new THREE.Mesh(new THREE.SphereGeometry(.5)), anchor = new THREE.Group();
-  const chamberGeometry = new THREE.CylinderGeometry(.4, .4, .8); chamberGeometry.rotateX(Math.PI / 2);
+  const chamberGeometry = new THREE.CylinderGeometry(.4, .4, 1.2);
   const chamber = new THREE.Mesh(chamberGeometry, new THREE.MeshBasicMaterial()); object.add(volume, anchor, chamber); let open = 'OPEN', process = 'IDLE', progress = 0, commits = 0, removed;
   const progression = createVrAstroFurnaceProgressionController(), commit = progression.commitAbsorbedShell;
   progression.commitAbsorbedShell = (id) => { commits++; return commit(id); };
@@ -17,6 +17,17 @@ function fixture({ emptyVolume = false } = {}) {
     shell.userData.shellAssetId = id; object.add(shell); return shell; };
   return { interaction, progression, anchor, makeShell, setOpen: (v) => { open = v; }, setProcess: (v) => { process = v; },
     setProgress: (v) => { progress = v; }, get commits() { return commits; }, get removed() { return removed; } };
+}
+{
+  const t = fixture(), shell = t.makeShell();
+  assert.equal(t.interaction.feedback.geometry.type, 'CylinderGeometry');
+  shell.position.set(.35, .55, 0); t.interaction.reportHeldShell(shell); t.interaction.update(.01);
+  assert.equal(t.interaction.getState(), S.CANDIDATE_VALID, 'representative center inside radial and height limits is valid');
+  shell.position.set(.41, 0, 0); t.interaction.reportHeldShell(shell); t.interaction.update(.01);
+  assert.equal(t.interaction.getState(), S.EMPTY, 'center outside the cylinder radius is not a candidate');
+  shell.position.set(0, .61, 0); t.interaction.reportHeldShell(shell); t.interaction.update(.01);
+  assert.equal(t.interaction.getState(), S.EMPTY, 'center outside the cylinder height is not a candidate');
+  t.interaction.dispose();
 }
 {
   const t = fixture(), hand = new THREE.Group(), shell = t.makeShell(); shell.removeFromParent(); hand.add(shell); t.anchor.parent.add(hand);
@@ -41,6 +52,8 @@ function fixture({ emptyVolume = false } = {}) {
   assert.equal(empty.interaction.isInsertionReady(), true); assert.equal(geometry.interaction.isInsertionReady(), true);
   const shell = empty.makeShell(); empty.interaction.reportHeldShell(shell); empty.interaction.update(.01);
   assert.equal(empty.interaction.getState(), S.CANDIDATE_VALID); assert.equal(empty.interaction.feedback.visible, true);
+  empty.interaction.reportHeldShell(null); empty.interaction.update(.01); empty.interaction.update(1);
+  assert.ok(empty.interaction.getInsertedShell().scale.x > 0, 'an empty Object3D insertion marker cannot produce scale zero');
   empty.interaction.dispose(); geometry.interaction.dispose();
 }
 function insert(test, shell) { test.interaction.reportHeldShell(shell); test.interaction.update(.01);
@@ -53,6 +66,14 @@ function insert(test, shell) { test.interaction.reportHeldShell(shell); test.int
   const unknown = t.makeShell('unknown'); t.interaction.reportHeldShell(unknown); t.interaction.update(.01); assert.equal(t.interaction.getState(), S.CANDIDATE_INVALID);
   t.interaction.reset(); t.progression.commitAbsorbedShell('shell-relic-2'); const duplicate = t.makeShell('shell-relic-2');
   t.interaction.reportHeldShell(duplicate); t.interaction.update(.01); assert.equal(t.interaction.getState(), S.CANDIDATE_INVALID); t.interaction.dispose();
+}
+{
+  const t = fixture(), shell = t.makeShell(); insert(t, shell); t.interaction.update(1);
+  const settledScale = shell.scale.clone();
+  assert.equal(shell.visible, true); assert.equal(t.interaction.getState(), S.INSERTED);
+  t.setOpen('CLOSED'); t.interaction.update(.2);
+  assert.ok(shell.scale.equals(settledScale) && shell.visible, 'inserted shell remains visible and stable before Activate');
+  t.interaction.dispose();
 }
 {
   const t = fixture(), first = t.makeShell('shell-relic-1'), second = t.makeShell('shell-relic-2'); insert(t, first);

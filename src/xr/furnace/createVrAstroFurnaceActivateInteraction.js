@@ -1,5 +1,6 @@
 import * as THREE from '../../vendor/three.js';
 import { createVrTargetHalo } from '../createVrTargetHalo.js';
+import { resolveChamberCylinder } from './vrAstroFurnaceChamberCylinder.js';
 
 export const ASTRO_FURNACE_PROCESS_STATES = Object.freeze({
   IDLE: 'IDLE', PRESSING: 'PRESSING', SPINUP: 'SPINUP', STEADY: 'STEADY',
@@ -37,6 +38,12 @@ export function createVrAstroFurnaceActivateInteraction({
   const spinPivot = furnace?.nodes?.PIVOT_FURNACE_PROCESS_SPIN;
   const buttonPivot = furnace?.nodes?.PIVOT_BUTTON_ACTIVATE;
   const fireCell = furnace?.nodes?.fire_cell;
+  const chamber = furnace?.nodes?.komora;
+  const chamberCylinder = resolveChamberCylinder(chamber, processSettings.processLightChamberClearance ?? 0.012);
+  const processLight = chamberCylinder ? new THREE.PointLight(processSettings.processLightColor ?? 0xb8f3ff, 0,
+    processSettings.processLightDistance ?? 2.4, processSettings.processLightDecay ?? 2) : null;
+  if (processLight) { processLight.name = 'VrAstroFurnaceProcessLight'; processLight.castShadow = false;
+    processLight.visible = false; chamber.add(processLight); }
   const clip = furnace?.clips?.[CLIP_NAME];
   const mixer = furnace?.model ? new THREE.AnimationMixer(furnace.model) : null;
   const action = mixer && clip ? mixer.clipAction(clip) : null;
@@ -95,6 +102,16 @@ export function createVrAstroFurnaceActivateInteraction({
     if (!spinPivot || !baseSpinQuaternion) return;
     localSpin.setFromAxisAngle(LOCAL_AXIS, angle);
     spinPivot.quaternion.copy(baseSpinQuaternion).multiply(localSpin);
+  }
+  function setProcessLight(intensity = 0) {
+    if (!processLight || !chamberCylinder) return;
+    const lightAngle = -angle;
+    const radius = chamberCylinder.radius * THREE.MathUtils.clamp(
+      processSettings.processLightOrbitRadiusMultiplier ?? 0.82, 0, 0.99);
+    processLight.position.set(chamberCylinder.center.x + Math.cos(lightAngle) * radius,
+      chamberCylinder.center.y, chamberCylinder.center.z + Math.sin(lightAngle) * radius);
+    processLight.intensity = Math.max(0, intensity); processLight.visible = processLight.intensity > 0;
+    processLight.userData.lightAngle = lightAngle;
   }
   function canActivate() {
     return capabilityReady && !disposed && state === states.IDLE && openInteraction?.getState?.() === 'CLOSED'
@@ -157,16 +174,21 @@ export function createVrAstroFurnaceActivateInteraction({
     const idleEmission = processSettings.fireCellIdleEmission ?? 0.15;
     const steadyEmission = processSettings.fireCellSteadyEmission ?? 4;
     const extractionEmission = processSettings.fireCellExtractionEmission ?? 10;
+    const steadyLight = processSettings.processLightSteadyIntensity ?? 18;
+    const extractionLight = processSettings.processLightExtractionIntensity ?? 28;
     let emission = idleEmission;
+    let lightIntensity = 0;
     let whiteMix = 0;
     if (progress < spinupEnd) {
       state = states.SPINUP; const t = smooth(progress / spinupEnd); angularSpeed = baseSpeed * t;
       emission = THREE.MathUtils.lerp(idleEmission, steadyEmission, t);
+      lightIntensity = THREE.MathUtils.lerp(0, steadyLight, t);
       whiteMix = 0.45 * t;
       angle += angularSpeed * delta;
     } else if (progress < steadyEnd) {
       state = states.STEADY; angularSpeed = baseSpeed; angle += angularSpeed * delta;
       emission = steadyEmission; whiteMix = 0.45;
+      lightIntensity = steadyLight;
     } else if (progress < extractionEnd) {
       state = states.EXTRACTION;
       const phaseProgress = (progress - steadyEnd) / (extractionEnd - steadyEnd);
@@ -174,6 +196,7 @@ export function createVrAstroFurnaceActivateInteraction({
       angularSpeed = baseSpeed * THREE.MathUtils.lerp(1, processSettings.extractionSpeedMultiplier ?? 2, t);
       angle += angularSpeed * delta;
       emission = THREE.MathUtils.lerp(steadyEmission, extractionEmission, t);
+      lightIntensity = THREE.MathUtils.lerp(steadyLight, extractionLight, t);
       whiteMix = THREE.MathUtils.lerp(0.45, 0.95, t);
     } else {
       if (previousProgress < extractionEnd || state !== states.COOLDOWN) {
@@ -195,15 +218,17 @@ export function createVrAstroFurnaceActivateInteraction({
         + (-6 * t2 + 6 * rawT) * cooldownTargetAngle) / cooldownDuration;
       const t = smooth(rawT);
       emission = THREE.MathUtils.lerp(extractionEmission, idleEmission, t);
+      lightIntensity = THREE.MathUtils.lerp(extractionLight, 0, t);
       whiteMix = THREE.MathUtils.lerp(0.95, 0, t);
     }
     const rotationPulse = 0.5 + 0.5 * Math.sin(Math.abs(angle) * 2);
     const pulseMultiplier = 0.65 + 0.35 * rotationPulse;
-    setFireEnergy(emission * pulseMultiplier, whiteMix); applyAngle();
+    setFireEnergy(emission * pulseMultiplier, whiteMix); applyAngle(); setProcessLight(lightIntensity);
     if (progress >= 1) {
       state = states.COMPLETE; angularSpeed = 0; angle = 0;
       if (spinPivot && baseSpinQuaternion) spinPivot.quaternion.copy(baseSpinQuaternion);
       restoreFireMaterials();
+      setProcessLight(0);
     }
   }
   controllers.forEach((record) => {
@@ -224,17 +249,18 @@ export function createVrAstroFurnaceActivateInteraction({
     state = states.IDLE; progress = 0; elapsed = 0; angle = 0; angularSpeed = 0;
     if (spinPivot && baseSpinQuaternion) spinPivot.quaternion.copy(baseSpinQuaternion);
     restoreFireMaterials();
+    setProcessLight(0);
     clearHits(); setButtonEmission(settings.emissionInactive ?? 0);
   }
   function dispose() {
     if (disposed) return; reset(); disposed = true;
     listeners.forEach(({ record, selectStart }) => record.controller.removeEventListener('selectstart', selectStart));
     mixer?.removeEventListener('finished', onFinished); mixer?.stopAllAction(); if (clip) mixer?.uncacheClip(clip);
-    halo?.dispose(); ownedMaterials.forEach((material) => material.dispose?.()); ownedMaterials.clear(); hits.clear();
+    halo?.dispose(); processLight?.removeFromParent(); processLight?.dispose(); ownedMaterials.forEach((material) => material.dispose?.()); ownedMaterials.clear(); hits.clear();
   }
   reset();
   return {
-    mixer, action, hits, halo, capabilityReady, update, press, releaseForOpening, reset, dispose,
+    mixer, action, hits, halo, processLight, chamberCylinder, capabilityReady, update, press, releaseForOpening, reset, dispose,
     hasCurrentHit: (record) => hits.get(record) === true,
     canActivate, getState: () => state, getProgress: () => progress, getPhase: () => state,
     isProcessing: () => [states.PRESSING, states.SPINUP, states.STEADY, states.EXTRACTION, states.COOLDOWN].includes(state),

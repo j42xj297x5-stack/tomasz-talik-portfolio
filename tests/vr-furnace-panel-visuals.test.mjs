@@ -16,6 +16,10 @@ for (const phase of ['IDLE', 'PRESSING', 'SPINUP', 'STEADY', 'EXTRACTION', 'COOL
 assert.equal(resolveProcessTelemetry({ state: 'IDLE', completed: true }).phase, 'COMPLETE');
 const idle = resolveProcessTelemetry({ state: 'IDLE', progress: 1 });
 assert.equal(idle.showProgress, false); assert.equal(idle.progress, 0); assert.match(idle.label, /OCZEKIWANIE/);
+const openInserted = resolveProcessTelemetry({ state: 'IDLE', contentState: 'INSERTED', chamberState: 'OPEN' });
+assert.equal(openInserted.showProgress, false); assert.match(openInserted.label, /ZAMKNIJ POKRYWĘ\nI ROZPOCZNIJ EKSTRAKCJĘ/);
+const closedInserted = resolveProcessTelemetry({ state: 'IDLE', contentState: 'INSERTED', chamberState: 'CLOSED' });
+assert.equal(closedInserted.showProgress, false); assert.equal(closedInserted.label, 'GOTOWY DO EKSTRAKCJI');
 const active = resolveProcessTelemetry({ state: 'EXTRACTION', progress: .6 });
 assert.equal(active.showProgress, true); assert.ok(active.silhouetteOpacity < 1);
 const complete = resolveProcessTelemetry({ state: 'COMPLETE', progress: 1 });

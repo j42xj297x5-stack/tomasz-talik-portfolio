@@ -1,4 +1,5 @@
 import * as THREE from '../../vendor/three.js';
+import { isWorldPointInsideChamberCylinder, resolveChamberCylinder } from './vrAstroFurnaceChamberCylinder.js';
 
 export const ASTRO_FURNACE_CONTENT_STATES = Object.freeze({
   EMPTY: 'EMPTY', CANDIDATE_VALID: 'CANDIDATE_VALID', CANDIDATE_INVALID: 'CANDIDATE_INVALID',
@@ -14,38 +15,30 @@ export function createVrAstroFurnaceContentInteraction({
 }) {
   const states = ASTRO_FURNACE_CONTENT_STATES;
   const config = {
-    enabled: true, volumeRadius: 0.122, proximityRadiusMultiplier: 1.15, snapDuration: 0.42, insertedScale: 0.72,
-    contentClearance: 0.012, rejectDuration: 0.28, rejectDistanceMultiplier: 1.35,
+    enabled: true, snapDuration: 0.42,
+    chamberClearance: 0.012, contentClearance: 0.012, rejectDuration: 0.28, rejectDistanceMultiplier: 1.35,
     feedbackOpacity: 0.20, validColor: 0x49d17d, invalidColor: 0xe05252,
     consumeStartProgress: 0.18, consumeEndProgress: 0.78, ...settings
   };
   const volume = furnace?.nodes?.VR_FURNACE_INSERT_VOLUME;
   const anchor = furnace?.nodes?.VR_FURNACE_CONTENT_ANCHOR;
   const chamber = furnace?.nodes?.komora;
-  const hasGeometryVolume = Boolean(volume?.geometry);
-  let insertionReady = config.enabled !== false && Boolean(volume && anchor)
-    && (hasGeometryVolume || Number(config.volumeRadius) > 0);
+  const chamberCylinder = resolveChamberCylinder(chamber, config.chamberClearance);
+  let insertionReady = config.enabled !== false && Boolean(volume && anchor && chamberCylinder);
   if (volume) volume.visible = false;
   if (config.enabled !== false && !insertionReady) {
-    console.warn('[Experience VR] Astro furnace shell insertion is disabled: insert volume, content anchor, or fallback radius is missing.');
+    console.warn('[Experience VR] Astro furnace shell insertion is disabled: chamber geometry, insert marker, or content anchor is missing.');
   }
-  if (volume?.geometry && !volume.geometry.boundingSphere) volume.geometry.computeBoundingSphere();
-  const localSphere = volume?.geometry?.boundingSphere?.clone() ?? new THREE.Sphere(new THREE.Vector3(), config.volumeRadius);
-  const worldCenter = new THREE.Vector3(), worldScale = new THREE.Vector3(), shellPosition = new THREE.Vector3();
-  const chamberBox = new THREE.Box3().makeEmpty();
+  const worldCenter = new THREE.Vector3(), shellPosition = new THREE.Vector3();
   const chamberInverse = new THREE.Matrix4(), lanceDirection = new THREE.Vector3(), blockedLocal = new THREE.Vector3();
   const shellBaselines = new WeakMap();
-  if (chamber) {
-    chamber.updateWorldMatrix(true, true); chamberInverse.copy(chamber.matrixWorld).invert();
-    chamber.traverse((node) => { if (!node.geometry) return; if (!node.geometry.boundingBox) node.geometry.computeBoundingBox();
-      if (node.geometry.boundingBox) chamberBox.union(node.geometry.boundingBox.clone().applyMatrix4(
-        new THREE.Matrix4().multiplyMatrices(chamberInverse, node.matrixWorld))); });
-  }
-  const feedbackGeometry = insertionReady ? new THREE.SphereGeometry(1, 20, 12) : null;
+  const feedbackGeometry = insertionReady ? new THREE.CylinderGeometry(chamberCylinder.radius, chamberCylinder.radius,
+    chamberCylinder.height, 24, 1, true) : null;
   const feedbackMaterial = insertionReady ? new THREE.MeshBasicMaterial({ transparent: true, opacity: 0,
     depthWrite: false, side: THREE.DoubleSide, color: config.validColor }) : null;
   const feedback = insertionReady ? new THREE.Mesh(feedbackGeometry, feedbackMaterial) : null;
-  if (feedback) { feedback.name = 'VrAstroFurnaceInsertFeedback'; feedback.visible = false; furnace.object.add(feedback); }
+  if (feedback) { feedback.name = 'VrAstroFurnaceInsertFeedback'; feedback.position.copy(chamberCylinder.center);
+    feedback.visible = false; chamber.add(feedback); }
 
   let state = states.EMPTY, insertedShell = null, pendingShellAssetId = null, reportedHeldShell = null;
   let previousHeldShell = null, candidateWasValid = false, snapElapsed = 0, elapsed = 0, disposed = false;
@@ -54,12 +47,7 @@ export function createVrAstroFurnaceContentInteraction({
   const listeners = new Set(), rejects = [];
   function setState(next) { if (state === next) return; state = next; listeners.forEach((listener) => listener(next)); }
 
-  function sphereWorld() {
-    volume.updateWorldMatrix(true, false);
-    worldCenter.copy(localSphere.center).applyMatrix4(volume.matrixWorld);
-    volume.getWorldScale(worldScale);
-    return { center: worldCenter, radius: localSphere.radius * Math.max(Math.abs(worldScale.x), Math.abs(worldScale.y), Math.abs(worldScale.z)) };
-  }
+  function cylinderWorldCenter() { chamber.updateWorldMatrix(true, false); return worldCenter.copy(chamberCylinder.center).applyMatrix4(chamber.matrixWorld); }
   function validAssetId(shell) { return shell?.userData?.shellAssetId; }
   function validate(shell) {
     const assetId = validAssetId(shell);
@@ -71,21 +59,20 @@ export function createVrAstroFurnaceContentInteraction({
     return baseline;
   }
   function blockClosedChamber(shell) {
-    if (!shell || chamberBox.isEmpty() || openInteraction?.getState?.() === 'OPEN') return;
+    if (!shell || !chamberCylinder || openInteraction?.getState?.() === 'OPEN') return;
     chamber.updateWorldMatrix(true, false); chamberInverse.copy(chamber.matrixWorld).invert();
     shell.getWorldPosition(shellPosition); blockedLocal.copy(shellPosition).applyMatrix4(chamberInverse);
-    const center = chamberBox.getCenter(new THREE.Vector3()), size = chamberBox.getSize(new THREE.Vector3());
-    const halfDepth = size.z / 2, radius = Math.max(size.x, size.y) / 2;
-    const dx = blockedLocal.x - center.x, dy = blockedLocal.y - center.y;
-    if (dx * dx + dy * dy >= radius * radius || Math.abs(blockedLocal.z - center.z) >= halfDepth) return;
+    const center = chamberCylinder.center, radius = chamberCylinder.radius;
+    const dx = blockedLocal.x - center.x, dz = blockedLocal.z - center.z;
+    if (dx * dx + dz * dz >= radius * radius || Math.abs(blockedLocal.y - center.y) >= chamberCylinder.halfHeight) return;
     // The held shell is parented below the controller. Moving along its parent's local +Z
     // reverses the controller lance without discarding the authored chamber orientation.
     lanceDirection.set(0, 0, 1).applyQuaternion(shell.parent?.getWorldQuaternion?.(new THREE.Quaternion()) ?? new THREE.Quaternion()).normalize();
     for (let distance = 0; distance <= radius * 4; distance += Math.max(radius / 16, .002)) {
       const candidate = shellPosition.clone().addScaledVector(lanceDirection, distance);
       blockedLocal.copy(candidate).applyMatrix4(chamberInverse);
-      const cx = blockedLocal.x - center.x, cy = blockedLocal.y - center.y;
-      if (cx * cx + cy * cy >= radius * radius || Math.abs(blockedLocal.z - center.z) >= halfDepth) {
+      const cx = blockedLocal.x - center.x, cz = blockedLocal.z - center.z;
+      if (cx * cx + cz * cz >= radius * radius || Math.abs(blockedLocal.y - center.y) >= chamberCylinder.halfHeight) {
         shell.parent.worldToLocal(candidate); shell.position.copy(candidate); return;
       }
     }
@@ -99,14 +86,11 @@ export function createVrAstroFurnaceContentInteraction({
     && activateInteraction?.getState?.() === 'IDLE'; }
   function isNear(shell) {
     if (!shell || !insertionReady) return false;
-    const sphere = sphereWorld(); shell.getWorldPosition(shellPosition);
-    return shellPosition.distanceTo(sphere.center) <= sphere.radius * config.proximityRadiusMultiplier;
+    shell.getWorldPosition(shellPosition);
+    return isWorldPointInsideChamberCylinder(shellPosition, chamber, chamberCylinder, blockedLocal);
   }
   function showFeedback(valid) {
     if (!feedback) return;
-    const sphere = sphereWorld(); furnace.object.worldToLocal(feedback.position.copy(sphere.center));
-    furnace.object.getWorldScale(worldScale);
-    feedback.scale.setScalar(sphere.radius * config.proximityRadiusMultiplier / Math.max(Math.abs(worldScale.x), Math.abs(worldScale.y), Math.abs(worldScale.z), 1e-6));
     feedback.material.color.setHex(valid ? config.validColor : config.invalidColor);
     feedback.material.opacity = config.feedbackOpacity * (0.82 + 0.18 * Math.sin(elapsed * Math.PI * 3));
     feedback.visible = true;
@@ -129,6 +113,14 @@ export function createVrAstroFurnaceContentInteraction({
       for (const z of [worldBox.min.z, worldBox.max.z]) result.expandByPoint(new THREE.Vector3(x, y, z).applyMatrix4(inverse));
     return result;
   }
+  function boxInChamber(object) {
+    const worldBox = new THREE.Box3().setFromObject(object), result = new THREE.Box3().makeEmpty();
+    if (worldBox.isEmpty()) return result;
+    chamber.updateWorldMatrix(true, false); const inverse = chamber.matrixWorld.clone().invert();
+    for (const x of [worldBox.min.x, worldBox.max.x]) for (const y of [worldBox.min.y, worldBox.max.y])
+      for (const z of [worldBox.min.z, worldBox.max.z]) result.expandByPoint(new THREE.Vector3(x, y, z).applyMatrix4(inverse));
+    return result;
+  }
   function resolveSnapTarget(shell) {
     const savedPosition = shell.position.clone(), savedQuaternion = shell.quaternion.clone(), savedScale = shell.scale.clone();
     shell.position.set(0, 0, 0); shell.quaternion.identity(); shell.scale.copy(baseScale).multiplyScalar(shell.userData.furnaceInsertedScale); shell.updateWorldMatrix(true, true);
@@ -143,8 +135,9 @@ export function createVrAstroFurnaceContentInteraction({
     if (!shell || !canAcceptShell(shell) || !validate(shell)) return false;
     insertedShell = shell; pendingShellAssetId = null; baseScale = baselineScale(shell).clone(); ownMaterials(shell);
     anchor.attach(shell); snapStartPosition = shell.position.clone(); snapStartQuaternion = shell.quaternion.clone(); snapStartScale = shell.scale.clone();
-    const baselineBox = boxInAnchor(shell), volumeBox = boxInAnchor(volume);
-    const shellSize = baselineBox.getSize(new THREE.Vector3()), available = volumeBox.getSize(new THREE.Vector3());
+    const baselineBox = boxInChamber(shell);
+    const shellSize = baselineBox.getSize(new THREE.Vector3());
+    const available = new THREE.Vector3(chamberCylinder.radius * 2, chamberCylinder.height, chamberCylinder.radius * 2);
     const fitScale = Math.min(1, ...['x', 'y', 'z'].map((axis) => shellSize[axis] > 1e-6 ? available[axis] / shellSize[axis] : 1));
     shell.userData.furnaceInsertedScale = fitScale;
     shell.userData.furnaceSnapTarget = resolveSnapTarget(shell);
@@ -152,9 +145,9 @@ export function createVrAstroFurnaceContentInteraction({
     snapElapsed = 0; setState(states.INSERTED); hideFeedback(); return true;
   }
   function reject(shell) {
-    const sphere = sphereWorld(), start = new THREE.Vector3(); shell.getWorldPosition(start);
-    const direction = start.clone().sub(sphere.center); if (direction.lengthSq() < 1e-8) direction.set(1, 0, 0);
-    const end = sphere.center.clone().add(direction.normalize().multiplyScalar(sphere.radius * config.proximityRadiusMultiplier * config.rejectDistanceMultiplier));
+    const center = cylinderWorldCenter().clone(), start = new THREE.Vector3(); shell.getWorldPosition(start);
+    const direction = start.clone().sub(center); if (direction.lengthSq() < 1e-8) direction.set(1, 0, 0);
+    const end = center.clone().add(direction.normalize().multiplyScalar(chamberCylinder.radius * config.rejectDistanceMultiplier));
     shell.userData.shellState = 'rejecting'; rejects.push({ shell, elapsed: 0, start, end });
   }
   function updateCandidate() {
@@ -236,5 +229,5 @@ export function createVrAstroFurnaceContentInteraction({
     hasValidInsertedContent: () => state === states.INSERTED && validate(insertedShell), canAcceptShell, reportHeldShell,
     consumeInsertedContent, commitConsumedContent, getState: () => state, isInsertionReady: () => insertionReady,
     subscribe(listener) { listeners.add(listener); return () => listeners.delete(listener); },
-    get pendingShellAssetId() { return pendingShellAssetId; }, feedback };
+    get pendingShellAssetId() { return pendingShellAssetId; }, chamberCylinder, feedback };
 }

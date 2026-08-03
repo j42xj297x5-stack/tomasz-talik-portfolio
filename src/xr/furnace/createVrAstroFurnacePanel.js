@@ -74,7 +74,8 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
     previousProcessState = rawState;
     const completed = completedUntil > telemetryElapsed;
     return resolveProcessTelemetry({ state: rawState === 'COMPLETE' && !completed ? 'IDLE' : rawState, progress: processSource?.getProgress?.() ?? 0,
-      angularSpeed: processSource?.getAngularSpeed?.() ?? 0, processAngle: processSource?.getProcessAngle?.() ?? 0, completed });
+      angularSpeed: processSource?.getAngularSpeed?.() ?? 0, processAngle: processSource?.getProcessAngle?.() ?? 0, completed,
+      contentState: contentSource?.getState?.() ?? 'EMPTY', chamberState: contentSource?.getChamberState?.() ?? 'CLOSED' });
   }
   function drawProcessMonitor() {
     const telemetry = readTelemetry(), x = 90, y = 645, width = 1315, height = 325;
@@ -86,7 +87,7 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
     for (let ring = 0; ring < 4; ring++) context.ellipse(shellX, shellY, 112 - ring * 18, 70 + ring * 8,
       telemetry.processAngle * .08 + ring * .55, 0, Math.PI * 2);
     context.stroke(); context.restore();
-    text(`STATUS // ${telemetry.label}`, x + 28, y + 225, 21, accents[telemetry.colorKey]);
+    telemetry.label.split('\n').forEach((line, index) => text(`${index ? '' : 'STATUS // '}${line}`, x + 28, y + 215 + index * 28, 21, accents[telemetry.colorKey]));
     if (telemetry.showProgress) {
       const barX = x + 28, barY = y + 254, barWidth = 555; context.fillStyle = '#18303c'; context.fillRect(barX, barY, barWidth, 16);
       context.fillStyle = accents[telemetry.colorKey]; context.fillRect(barX, barY, barWidth * telemetry.progress, 16);

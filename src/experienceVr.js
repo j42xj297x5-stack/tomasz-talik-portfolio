@@ -196,7 +196,8 @@ const furnacePanel = createVrAstroFurnacePanel({
   },
   contentSource: {
     getState: () => astroFurnaceContentInteraction?.getState?.() ?? 'EMPTY',
-    getInsertedShellAssetId: () => astroFurnaceContentInteraction?.getInsertedShellAssetId?.() ?? null
+    getInsertedShellAssetId: () => astroFurnaceContentInteraction?.getInsertedShellAssetId?.() ?? null,
+    getChamberState: () => astroFurnaceOpenInteraction?.getState?.() ?? 'CLOSED'
   }
 });
 const ordinaryFurnaceRayAvailable = (record) => !(record.handedness === 'right'
