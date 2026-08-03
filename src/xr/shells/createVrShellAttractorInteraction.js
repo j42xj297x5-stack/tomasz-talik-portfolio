@@ -142,6 +142,10 @@ export function createVrShellAttractorInteraction({ controllers, shellSystem, ha
   function placeHeldShell(record) { if (!record?.isConnected || heldByRecord !== record || !heldShell) return false;
     const shell = heldShell; settledParent.attach(shell); shell.userData.shellState = 'placed'; shell.userData.attractorTarget = false;
     heldShell = null; heldByRecord = null; return true; }
+  function transferHeldShell(shell) {
+    if (!shell || heldShell !== shell) return false;
+    heldShell = null; heldByRecord = null; clearLeftShellHit(); controllers.forEach(clearPlacedShellHit); return true;
+  }
   const squeezeListeners = controllers.map((record) => {
     const onSqueezeStart = () => { if (takePlacedShell(record)) return;
       if (record.handedness === 'left') takeWithLeftHand(record); };
@@ -202,7 +206,7 @@ export function createVrShellAttractorInteraction({ controllers, shellSystem, ha
     });
     captureAnchor.removeFromParent(); scanCone.dispose();
     halos.forEach((halo) => halo.dispose()); halos.clear(); }
-  return { captureAnchor, scanCone, maxTargetDistance, halfAngleRadians, update, reset, dispose,
+  return { captureAnchor, scanCone, maxTargetDistance, halfAngleRadians, update, reset, dispose, transferHeldShell,
     hasCurrentShellHit: (record) => hasCurrentPlacedShellHit(record) || hasCurrentShellHit(record),
     get target() { return target; }, get activePull() { return activePull; }, get captureReady() { return captureReady; },
     get heldShell() { return heldShell; } };

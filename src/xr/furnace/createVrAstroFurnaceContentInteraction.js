@@ -1,5 +1,6 @@
 import * as THREE from '../../vendor/three.js';
 import { isWorldPointInsideChamberCylinder, resolveChamberCylinder } from './vrAstroFurnaceChamberCylinder.js';
+import { processRotationPulse01 } from './createVrAstroFurnaceActivateInteraction.js';
 
 export const ASTRO_FURNACE_CONTENT_STATES = Object.freeze({
   EMPTY: 'EMPTY', CANDIDATE_VALID: 'CANDIDATE_VALID', CANDIDATE_INVALID: 'CANDIDATE_INVALID',
@@ -9,6 +10,10 @@ export const ASTRO_FURNACE_CONTENT_STATES = Object.freeze({
 const VALID_ASSET_IDS = new Set(Array.from({ length: 6 }, (_, index) => `shell-relic-${index + 1}`));
 const clamp01 = (value) => THREE.MathUtils.clamp(value, 0, 1);
 const smoothstep = (value) => { const t = clamp01(value); return t * t * (3 - 2 * t); };
+
+export function processRotationPulse(angle) {
+  return 3 * processRotationPulse01(angle);
+}
 
 export function setObjectWorldScale(object, desired, target = new THREE.Vector3()) {
   object.scale.set(1, 1, 1); object.updateWorldMatrix(true, false); object.getWorldScale(target);
@@ -35,13 +40,14 @@ export function constrainHeldShellToDeviceSurfaces({ shell, shellCenter, origin,
 }
 
 export function createVrAstroFurnaceContentInteraction({
-  furnace, shellSystem, openInteraction, activateInteraction, progressionController, settings = {}
+  furnace, shellSystem, openInteraction, activateInteraction, progressionController, settings = {}, takeHeldShell = () => true
 }) {
   const states = ASTRO_FURNACE_CONTENT_STATES;
   const config = {
     enabled: true, snapDuration: 0.42,
     chamberClearance: 0.012, contentClearance: 0.012, rejectDuration: 0.28, rejectDistanceMultiplier: 1.35,
-    feedbackOpacity: 0.32, releaseGrace: 0.035, surfaceClearance: 0.006, validColor: 0x49d17d, invalidColor: 0xe05252,
+    guideOpacity: 0.07, validFeedbackOpacity: 0.58, invalidFeedbackOpacity: 0.62,
+    releaseGrace: 0.035, surfaceClearance: 0.006, validColor: 0x49d17d, invalidColor: 0xe05252,
     consumeStartProgress: 0.18, consumeEndProgress: 0.78, ...settings
   };
   const volume = furnace?.nodes?.VR_FURNACE_INSERT_VOLUME;
@@ -98,8 +104,8 @@ export function createVrAstroFurnaceContentInteraction({
     const offset = chamberCylinder.center.clone().multiply(feedback.scale).applyQuaternion(feedback.quaternion);
     feedback.position.add(offset);
   }
-  function blockClosedChamber(shell) {
-    if (!shell || !chamberCylinder || openInteraction?.getState?.() === 'OPEN') return;
+  function ejectHeldFromCylinder(shell) {
+    if (!shell || !chamberCylinder || !isNear(shell)) return false;
     chamber.updateWorldMatrix(true, false); chamberInverse.copy(chamber.matrixWorld).invert();
     shellWorldCenter(shell, shellPosition); blockedLocal.copy(shellPosition).applyMatrix4(chamberInverse);
     const center = chamberCylinder.center, radius = chamberCylinder.radius;
@@ -113,9 +119,15 @@ export function createVrAstroFurnaceContentInteraction({
       blockedLocal.copy(candidate).applyMatrix4(chamberInverse);
       const cx = blockedLocal.x - center.x, cz = blockedLocal.z - center.z;
       if (cx * cx + cz * cz >= radius * radius || Math.abs(blockedLocal.y - center.y) >= chamberCylinder.halfHeight) {
-        shell.parent.worldToLocal(candidate); shell.position.copy(candidate); return;
+        const offset = candidate.sub(shellPosition); const shellOrigin = shell.getWorldPosition(new THREE.Vector3()).add(offset);
+        shell.parent.worldToLocal(shellOrigin); shell.position.copy(shellOrigin); shell.updateWorldMatrix(true, true); return true;
       }
     }
+    return false;
+  }
+  function blockClosedChamber(shell) {
+    if (!shell || !chamberCylinder || openInteraction?.getState?.() === 'OPEN') return;
+    ejectHeldFromCylinder(shell);
   }
   function canAcceptShell(shell = null) {
     return insertionReady && !disposed && state !== states.INSERTED && state !== states.CONSUMING && state !== states.CONSUMED
@@ -129,10 +141,13 @@ export function createVrAstroFurnaceContentInteraction({
     shellWorldCenter(shell, shellPosition);
     return isWorldPointInsideChamberCylinder(shellPosition, chamber, chamberCylinder, blockedLocal);
   }
-  function showFeedback(valid) {
+  function showFeedback(kind) {
     if (!feedback) return;
+    const valid = kind !== 'invalid';
     feedback.material.color.setHex(valid ? config.validColor : config.invalidColor);
-    feedback.material.opacity = config.feedbackOpacity * (0.82 + 0.18 * Math.sin(elapsed * Math.PI * 3));
+    const pulse = 0.82 + 0.18 * Math.sin(elapsed * Math.PI * 4);
+    feedback.material.opacity = kind === 'guide' ? config.guideOpacity : (valid
+      ? config.validFeedbackOpacity : config.invalidFeedbackOpacity) * pulse;
     feedback.visible = true;
   }
   function hideFeedback() { if (feedback) feedback.visible = false; }
@@ -168,11 +183,17 @@ export function createVrAstroFurnaceContentInteraction({
     const energyBox = energy ? boxInAnchor(energy) : new THREE.Box3().makeEmpty();
     const target = new THREE.Vector3();
     if (!shellBox.isEmpty() && !energyBox.isEmpty()) target.y = energyBox.min.y - config.contentClearance - shellBox.max.y;
+    const geometryCenter = shellRecord(shell)?.boundingCenter;
+    if (geometryCenter) {
+      const centerInAnchor = geometryCenter.clone().applyMatrix4(shell.matrixWorld); anchor.worldToLocal(centerInAnchor);
+      target.x -= centerInAnchor.x; target.z -= centerInAnchor.z;
+    }
     shell.position.copy(savedPosition); shell.quaternion.copy(savedQuaternion); shell.scale.copy(savedScale); shell.updateWorldMatrix(true, true);
     return target;
   }
   function accept(shell) {
     if (!shell || !canAcceptShell(shell) || !validate(shell)) return false;
+    if (!takeHeldShell(shell)) return false;
     insertedShell = shell; pendingShellAssetId = null; baseScale = baselineScale(shell).clone(); ownMaterials(shell);
     anchor.attach(shell); snapStartPosition = shell.position.clone(); snapStartQuaternion = shell.quaternion.clone(); snapStartScale = shell.scale.clone();
     const baselineBox = boxInChamber(shell);
@@ -204,12 +225,15 @@ export function createVrAstroFurnaceContentInteraction({
     const releasedWasValid = candidateWasValid;
     if (held && canEvaluateCandidate() && isNear(held)) {
       candidateWasValid = canAcceptShell(held) && validate(held); setState(candidateWasValid ? states.CANDIDATE_VALID : states.CANDIDATE_INVALID);
-      showFeedback(candidateWasValid);
+      showFeedback(candidateWasValid ? 'valid' : 'invalid');
+      if (candidateWasValid) { accept(held); reportedHeldShell = null; }
+      else ejectHeldFromCylinder(held);
     } else if ([states.CANDIDATE_VALID, states.CANDIDATE_INVALID].includes(state)) {
       setState(insertedShell ? states.INSERTED : states.EMPTY); candidateWasValid = false; hideFeedback();
     }
-    if (releasedShell && releasedWasValid && (isNear(releasedShell) || isWithinReleaseGrace(releasedShell))) accept(releasedShell);
-    else if (releasedShell && !releasedWasValid && isNear(releasedShell) && canEvaluateCandidate()) reject(releasedShell);
+    if (releasedShell && !releasedWasValid && (isNear(releasedShell) || isWithinReleaseGrace(releasedShell)) && canEvaluateCandidate()) {
+      ejectHeldFromCylinder(releasedShell); reject(releasedShell);
+    }
     previousHeldShell = held;
   }
   function updateSnap(delta) {
@@ -236,11 +260,12 @@ export function createVrAstroFurnaceContentInteraction({
     if (state !== states.CONSUMING || !insertedShell) return;
     const progress = activateInteraction?.getProgress?.() ?? 0;
     const t = smoothstep((progress - config.consumeStartProgress) / Math.max(config.consumeEndProgress - config.consumeStartProgress, 1e-6));
+    const pulse = processRotationPulse(activateInteraction?.getProcessAngle?.() ?? 0);
     // Absorption is communicated by light and opacity; the physical shell stays settled.
     materialBases.forEach(({ material, color, emissive, emissiveIntensity, opacity }) => {
       if (material.color && color) material.color.copy(color).lerp(new THREE.Color(1, 1, 1), t * 0.35);
       if (material.emissive) material.emissive.copy(emissive ?? new THREE.Color()).lerp(new THREE.Color(1, 1, 1), t);
-      if ('emissiveIntensity' in material) material.emissiveIntensity = THREE.MathUtils.lerp(emissiveIntensity, 7, t);
+      if ('emissiveIntensity' in material) material.emissiveIntensity = THREE.MathUtils.lerp(emissiveIntensity + pulse, 7, t);
       material.transparent = true; material.opacity = THREE.MathUtils.lerp(opacity, 0, t);
     });
     if (progress >= config.consumeEndProgress) { insertedShell.visible = false; insertedShell.userData.shellState = 'consumed'; setState(states.CONSUMED); }
@@ -271,7 +296,7 @@ export function createVrAstroFurnaceContentInteraction({
         if (['SPINUP', 'STEADY', 'EXTRACTION', 'COOLDOWN'].includes(activateInteraction?.getState?.())) consumeInsertedContent(); }
     }
     syncFeedbackTransform();
-    if (state === states.EMPTY && canEvaluateCandidate()) showFeedback(true);
+    if (state === states.EMPTY && canEvaluateCandidate()) showFeedback('guide');
     else if (![states.CANDIDATE_VALID, states.CANDIDATE_INVALID].includes(state)) hideFeedback();
     updateConsumption(); commitConsumedContent(); updateRejects(step); reportedHeldShell = null;
   }

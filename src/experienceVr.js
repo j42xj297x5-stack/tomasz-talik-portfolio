@@ -223,10 +223,12 @@ astroFurnaceActivateInteraction = createVrAstroFurnaceActivateInteraction({
   qaAllowWithoutInput: furnaceProcessQa,
   isOrdinaryRayAvailable: ordinaryFurnaceRayAvailable
 });
+let shellAttractorInteraction = null;
 astroFurnaceContentInteraction = createVrAstroFurnaceContentInteraction({
   furnace: astroFurnace, shellSystem, openInteraction: astroFurnaceOpenInteraction,
   activateInteraction: astroFurnaceActivateInteraction, progressionController: furnaceProgressionController,
-  controllers: vrControllers.controllers, settings: settings.furnace.content
+  controllers: vrControllers.controllers, settings: settings.furnace.content,
+  takeHeldShell: (shell) => shellAttractorInteraction?.transferHeldShell(shell) === true
 });
 astroFurnaceContentInteraction.subscribe(() => furnacePanel.redraw());
 astroFurnaceOptionInteraction = createVrAstroFurnaceOptionInteraction({
@@ -235,7 +237,6 @@ astroFurnaceOptionInteraction = createVrAstroFurnaceOptionInteraction({
   isOrdinaryRayAvailable: ordinaryFurnaceRayAvailable,
   isHigherPriorityInteractionActive: (record) => furnacePanel.hasCurrentHit(record)
 });
-let shellAttractorInteraction = null;
 const crystalCollection = createVrCrystalCollection({
   scene, assetManager, controllers: vrControllers.controllers, portalDisplay, insertionTarget: crystalReliquary,
   settings: settings.crystals, haloSettings: settings.targetHalo, insertFeedbackSettings: settings.reliquary.insertFeedback,

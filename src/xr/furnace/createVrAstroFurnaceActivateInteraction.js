@@ -13,6 +13,10 @@ const TAU = Math.PI * 2;
 const clamp01 = (value) => THREE.MathUtils.clamp(value, 0, 1);
 const smooth = (value) => { const t = clamp01(value); return t * t * (3 - 2 * t); };
 
+export function processRotationPulse01(angle) {
+  return 0.5 * (1 - Math.cos(Number.isFinite(angle) ? angle : 0));
+}
+
 function cloneMaterials(root, owned) {
   const result = [];
   root?.traverse((node) => {
@@ -43,12 +47,23 @@ export function createVrAstroFurnaceActivateInteraction({
   const lightRoot = furnace?.object;
   const lightOrbitCenter = new THREE.Vector3();
   const lightOrbitScale = new THREE.Vector3(1, 1, 1);
+  const stableSpinAxis = new THREE.Vector3(0, 1, 0);
+  const stableOrbitReference = new THREE.Vector3(1, 0, 0);
+  const orbitRotation = new THREE.Quaternion();
   if (chamberCylinder && lightRoot) {
     chamber.updateWorldMatrix(true, false); lightRoot.updateWorldMatrix(true, false);
     lightOrbitCenter.copy(chamberCylinder.center).applyMatrix4(chamber.matrixWorld);
     lightRoot.worldToLocal(lightOrbitCenter);
     chamber.getWorldScale(lightOrbitScale); const rootScale = lightRoot.getWorldScale(new THREE.Vector3());
     lightOrbitScale.divide(rootScale);
+    if (spinPivot) {
+      const rootWorldQuaternion = lightRoot.getWorldQuaternion(new THREE.Quaternion());
+      const spinWorldQuaternion = spinPivot.getWorldQuaternion(new THREE.Quaternion());
+      stableSpinAxis.set(0, 1, 0).applyQuaternion(rootWorldQuaternion.invert().multiply(spinWorldQuaternion)).normalize();
+      stableOrbitReference.set(1, 0, 0).addScaledVector(stableSpinAxis, -stableSpinAxis.x);
+      if (stableOrbitReference.lengthSq() < 1e-8) stableOrbitReference.set(0, 0, 1);
+      stableOrbitReference.normalize();
+    }
   }
   const processLight = chamberCylinder ? new THREE.PointLight(processSettings.processLightColor ?? 0xb8f3ff, 0,
     processSettings.processLightDistance ?? 2.4, processSettings.processLightDecay ?? 2) : null;
@@ -115,13 +130,18 @@ export function createVrAstroFurnaceActivateInteraction({
   }
   function setProcessLight(intensity = 0) {
     if (!processLight || !chamberCylinder) return;
-    const lightAngle = -angle;
     const radius = chamberCylinder.radius * THREE.MathUtils.clamp(
       processSettings.processLightOrbitRadiusMultiplier ?? 0.82, 0, 0.99);
-    processLight.position.set(lightOrbitCenter.x + Math.cos(lightAngle) * radius * Math.abs(lightOrbitScale.x),
-      lightOrbitCenter.y, lightOrbitCenter.z + Math.sin(lightAngle) * radius * Math.abs(lightOrbitScale.z));
+    const orbitRadius = radius * Math.max(Math.abs(lightOrbitScale.x), Math.abs(lightOrbitScale.z));
+    orbitRotation.setFromAxisAngle(stableSpinAxis, -angle);
+    processLight.position.copy(stableOrbitReference).multiplyScalar(orbitRadius).applyQuaternion(orbitRotation).add(lightOrbitCenter);
     processLight.intensity = Math.max(0, intensity); processLight.visible = processLight.intensity > 0;
-    processLight.userData.lightAngle = lightAngle;
+    processLight.userData.lightAngle = -angle;
+    orbitRotation.setFromAxisAngle(stableSpinAxis, angle);
+    processLight.userData.chamberOrbitPosition = stableOrbitReference.clone().multiplyScalar(orbitRadius)
+      .applyQuaternion(orbitRotation).add(lightOrbitCenter);
+    processLight.userData.orbitCenter = lightOrbitCenter.clone();
+    processLight.userData.orbitAxis = stableSpinAxis.clone();
   }
   function canActivate() {
     return capabilityReady && !disposed && state === states.IDLE && openInteraction?.getState?.() === 'CLOSED'
@@ -231,9 +251,10 @@ export function createVrAstroFurnaceActivateInteraction({
       lightIntensity = THREE.MathUtils.lerp(extractionLight, 0, t);
       whiteMix = THREE.MathUtils.lerp(0.95, 0, t);
     }
-    const rotationPulse = 0.5 + 0.5 * Math.sin(Math.abs(angle) * 2);
-    const pulseMultiplier = 0.65 + 0.35 * rotationPulse;
-    setFireEnergy(emission * pulseMultiplier, whiteMix); applyAngle(); setProcessLight(lightIntensity);
+    const pulse = processRotationPulse01(angle);
+    const pulseMinimum = processSettings.fireCellPulseMinEmission ?? 0.05;
+    const pulseMaximum = processSettings.fireCellPulseMaxEmission ?? emission;
+    setFireEnergy(THREE.MathUtils.lerp(pulseMinimum, pulseMaximum, pulse), whiteMix); applyAngle(); setProcessLight(lightIntensity);
     if (progress >= 1) {
       state = states.COMPLETE; angularSpeed = 0; angle = 0;
       if (spinPivot && baseSpinQuaternion) spinPivot.quaternion.copy(baseSpinQuaternion);

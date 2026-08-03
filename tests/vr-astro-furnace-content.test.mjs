@@ -1,7 +1,11 @@
 import assert from 'node:assert/strict';
 import * as THREE from '../src/vendor/three.js';
-import { ASTRO_FURNACE_CONTENT_STATES as S, constrainHeldShellToDeviceSurfaces, createVrAstroFurnaceContentInteraction, setObjectWorldScale } from '../src/xr/furnace/createVrAstroFurnaceContentInteraction.js';
+import { ASTRO_FURNACE_CONTENT_STATES as S, constrainHeldShellToDeviceSurfaces, createVrAstroFurnaceContentInteraction, processRotationPulse, setObjectWorldScale } from '../src/xr/furnace/createVrAstroFurnaceContentInteraction.js';
 import { createVrAstroFurnaceProgressionController } from '../src/xr/furnace/createVrAstroFurnaceProgressionController.js';
+
+assert.equal(processRotationPulse(0), 0);
+assert.equal(processRotationPulse(Math.PI), 3);
+assert.ok(processRotationPulse(Math.PI * 2) < 1e-12, 'shell pulse follows the same 0 -> 3 -> 0 process-angle phase');
 
 function fixture({ emptyVolume = false } = {}) {
   const object = new THREE.Group(), volume = emptyVolume ? new THREE.Group() : new THREE.Mesh(new THREE.SphereGeometry(.5)), anchor = new THREE.Group();
@@ -22,7 +26,7 @@ function fixture({ emptyVolume = false } = {}) {
   const t = fixture(), shell = t.makeShell();
   assert.equal(t.interaction.feedback.geometry.type, 'CylinderGeometry');
   shell.position.set(.35, .55, 0); t.interaction.reportHeldShell(shell); t.interaction.update(.01);
-  assert.equal(t.interaction.getState(), S.CANDIDATE_VALID, 'representative center inside radial and height limits is valid');
+  assert.equal(t.interaction.getState(), S.INSERTED, 'a valid center is automatically inserted without release');
   shell.position.set(.41, 0, 0); t.interaction.reportHeldShell(shell); t.interaction.update(.01);
   assert.equal(t.interaction.getState(), S.EMPTY, 'center outside the cylinder radius is not a candidate');
   shell.position.set(0, .61, 0); t.interaction.reportHeldShell(shell); t.interaction.update(.01);
@@ -51,19 +55,23 @@ function fixture({ emptyVolume = false } = {}) {
   const empty = fixture({ emptyVolume: true }), geometry = fixture();
   assert.equal(empty.interaction.isInsertionReady(), true); assert.equal(geometry.interaction.isInsertionReady(), true);
   const shell = empty.makeShell(); empty.interaction.reportHeldShell(shell); empty.interaction.update(.01);
-  assert.equal(empty.interaction.getState(), S.CANDIDATE_VALID); assert.equal(empty.interaction.feedback.visible, true);
-  empty.interaction.reportHeldShell(null); empty.interaction.update(.01); empty.interaction.update(1);
+  assert.equal(empty.interaction.getState(), S.INSERTED); assert.equal(empty.interaction.feedback.visible, false);
+  empty.interaction.update(1);
   assert.ok(empty.interaction.getInsertedShell().scale.x > 0, 'an empty Object3D insertion marker cannot produce scale zero');
   empty.interaction.dispose(); geometry.interaction.dispose();
 }
 function insert(test, shell) { test.interaction.reportHeldShell(shell); test.interaction.update(.01);
-  assert.equal(test.interaction.getState(), S.CANDIDATE_VALID); test.interaction.reportHeldShell(null); test.interaction.update(.01); }
+  assert.equal(test.interaction.getState(), S.INSERTED); }
 
 {
   const t = fixture(), shell = t.makeShell(); assert.equal(t.interaction.canAcceptShell(shell), true);
   t.setOpen('CLOSED'); assert.equal(t.interaction.canAcceptShell(shell), false); t.setOpen('OPEN'); t.setProcess('SPINUP');
   assert.equal(t.interaction.canAcceptShell(shell), false); t.setProcess('IDLE');
   const unknown = t.makeShell('unknown'); t.interaction.reportHeldShell(unknown); t.interaction.update(.01); assert.equal(t.interaction.getState(), S.CANDIDATE_INVALID);
+  assert.equal(t.interaction.feedback.material.color.getHex(), 0xe05252);
+  assert.equal(t.interaction.getInsertedShell(), null, 'invalid candidate is never taken over');
+  t.interaction.reportHeldShell(null); t.interaction.update(.01);
+  assert.notEqual(unknown.userData.shellState, 'inserted', 'release during red feedback cannot leave invalid content inserted');
   t.interaction.reset(); t.progression.commitAbsorbedShell('shell-relic-2'); const duplicate = t.makeShell('shell-relic-2');
   t.interaction.reportHeldShell(duplicate); t.interaction.update(.01); assert.equal(t.interaction.getState(), S.CANDIDATE_INVALID); t.interaction.dispose();
 }
@@ -112,10 +120,12 @@ function insert(test, shell) { test.interaction.reportHeldShell(shell); test.int
   let held = shell; const interaction = createVrAstroFurnaceContentInteraction({ furnace: { object, nodes: { komora: chamber, VR_FURNACE_INSERT_VOLUME: volume, VR_FURNACE_CONTENT_ANCHOR: anchor } },
     shellSystem: { records: [record], getRecord: () => record }, openInteraction: { getState: () => 'OPEN' }, activateInteraction: { getState: () => 'IDLE' },
     progressionController: { canAbsorbShell: () => true }, settings: { releaseGrace: .04 } });
-  interaction.reportHeldShell(held); interaction.update(.01); assert.equal(interaction.getState(), S.CANDIDATE_VALID, 'cached geometry center is used instead of shell origin');
-  shell.position.x = -.91; // center is 0.41: release moved just outside since the last green frame.
-  interaction.reportHeldShell(null); interaction.update(.01);
-  assert.equal(interaction.getInsertedShell(), shell, 'previous green candidate released just outside the boundary is accepted by grace'); interaction.dispose();
+  interaction.reportHeldShell(held); interaction.update(.01); assert.equal(interaction.getState(), S.INSERTED, 'cached geometry center triggers automatic insertion instead of the shell origin');
+  assert.equal(interaction.getInsertedShell(), shell); interaction.update(1); object.updateMatrixWorld(true);
+  const snappedCenter = record.boundingCenter.clone().applyMatrix4(shell.matrixWorld);
+  const anchorCenter = anchor.getWorldPosition(new THREE.Vector3());
+  assert.ok(Math.abs(snappedCenter.x - anchorCenter.x) < 1e-10 && Math.abs(snappedCenter.z - anchorCenter.z) < 1e-10,
+    'cached geometry boundingCenter, not the authored origin, lands exactly on the content axis'); interaction.dispose();
 }
 
 // Hardware-QA regressions: stable feedback root and state visibility.
@@ -124,6 +134,7 @@ function insert(test, shell) { test.interaction.reportHeldShell(shell); test.int
   t.interaction.update(.01);
   assert.equal(t.interaction.feedback.visible, true, 'OPEN + EMPTY keeps the green guide visible before a shell approaches');
   assert.equal(t.interaction.feedback.material.color.getHex(), 0x49d17d);
+  assert.ok(t.interaction.feedback.material.opacity <= .08, 'empty guide is deliberately subtle');
   const chamber = t.interaction.feedback.parent.children.find((child) => child.geometry?.type === 'CylinderGeometry' && child !== t.interaction.feedback);
   chamber.visible = false; t.interaction.update(.01);
   assert.equal(t.interaction.feedback.visible, true, 'feedback remains renderable when the authored chamber is hidden');

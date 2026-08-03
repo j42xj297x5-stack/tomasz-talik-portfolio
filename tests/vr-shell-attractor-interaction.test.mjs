@@ -167,6 +167,10 @@ function assertLateHandednessLifecycle({ leftIndex, rightIndex }) {
   assert.equal(lifecycleInteraction.heldShell, null, 'a non-left controller cannot claim the shell');
   leftRecord.controller.dispatchEvent({ type: 'squeezestart' });
   assert.equal(lifecycleInteraction.heldShell, lifecycleShell, 'the runtime left ray and squeeze claim the shell');
+  assert.equal(lifecycleInteraction.transferHeldShell(lifecycleShell), true, 'furnace takeover explicitly clears the hand owner');
+  assert.equal(lifecycleInteraction.heldShell, null, 'the hand no longer reports a furnace-owned shell as held');
+  leftRecord.controller.dispatchEvent({ type: 'squeezeend' });
+  assert.notEqual(lifecycleShell.userData.shellState, 'placed', 'release after takeover cannot place the shell again');
 
   lifecycleInteraction.dispose(); lifecycleShellSystem.dispose(); lifecycleGeometry.dispose(); lifecycleMaterial.dispose();
 }

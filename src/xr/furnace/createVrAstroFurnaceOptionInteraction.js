@@ -13,9 +13,11 @@ export function createVrAstroFurnaceOptionInteraction({ furnace, panel, controll
   const raycaster = new THREE.Raycaster(), origin = new THREE.Vector3(), direction = new THREE.Vector3(), quaternion = new THREE.Quaternion();
   const hits = new Map(controllers.map((record) => [record, false])); const listeners = []; let disposed = false;
   const pivot = furnace?.nodes?.PIVOT_BUTTON_OPTION;
-  const baseRotationZ = pivot?.rotation.z ?? 0;
+  const baseQuaternion = pivot?.quaternion.clone();
+  const localOptionAxis = new THREE.Vector3(0, 1, 0);
+  const optionRotation = new THREE.Quaternion();
   const moduleAngles = { floor_gyroscope_sphere: 90, ...(settings.moduleAnglesDegrees ?? {}) };
-  let activeMode = null, tweenElapsed = 0, tweenStart = baseRotationZ, tweenTarget = baseRotationZ;
+  let activeMode = null, tweenElapsed = 0, tweenStart = 0, tweenTarget = 0, currentAngle = 0;
   const capabilityReady = settings.enabled !== false && meshes.length > 0 && Boolean(furnace?.nodes?.PIVOT_BUTTON_OPTION);
   const setEmission = (value) => emissive.forEach((material) => { material.emissiveIntensity = value; });
   function updateHits() { let any = false; controllers.forEach((record) => { let hit = false;
@@ -33,16 +35,17 @@ export function createVrAstroFurnaceOptionInteraction({ furnace, panel, controll
   function selectMode(mode) {
     const angle = moduleAngles[mode];
     if (!pivot || !Number.isFinite(angle)) return false;
-    activeMode = mode; tweenStart = pivot.rotation.z; tweenTarget = baseRotationZ + THREE.MathUtils.degToRad(angle); tweenElapsed = 0;
+    activeMode = mode; tweenStart = currentAngle; tweenTarget = THREE.MathUtils.degToRad(angle); tweenElapsed = 0;
     return true;
   }
   const unsubscribeModule = panel.subscribeModuleActivation?.(selectMode) ?? (() => {});
   controllers.forEach((record) => { const listener = () => press(record); record.controller.addEventListener('selectstart', listener); listeners.push({ record, listener }); });
   function update(delta = 0) { if (!disposed) { updateHits(); halo?.update(Math.max(0, delta));
-    if (pivot && Math.abs(pivot.rotation.z - tweenTarget) > 1e-7) { tweenElapsed += Math.max(0, delta); const raw = Math.min(1, tweenElapsed / Math.max(settings.selectionDuration ?? .48, 1e-6));
-      const t = raw < .5 ? 4 * raw ** 3 : 1 - ((-2 * raw + 2) ** 3) / 2; pivot.rotation.z = THREE.MathUtils.lerp(tweenStart, tweenTarget, t); }
+    if (pivot && Math.abs(currentAngle - tweenTarget) > 1e-7) { tweenElapsed += Math.max(0, delta); const raw = Math.min(1, tweenElapsed / Math.max(settings.selectionDuration ?? .48, 1e-6));
+      const t = raw < .5 ? 4 * raw ** 3 : 1 - ((-2 * raw + 2) ** 3) / 2; currentAngle = THREE.MathUtils.lerp(tweenStart, tweenTarget, t);
+      optionRotation.setFromAxisAngle(localOptionAxis, currentAngle); pivot.quaternion.copy(baseQuaternion).multiply(optionRotation); }
   } }
-  function reset() { hits.forEach((_, record) => hits.set(record, false)); halo?.setVisible(false); setEmission(settings.emissionInactive ?? 0); activeMode = null; tweenElapsed = 0; tweenStart = baseRotationZ; tweenTarget = baseRotationZ; if (pivot) pivot.rotation.z = baseRotationZ; }
+  function reset() { hits.forEach((_, record) => hits.set(record, false)); halo?.setVisible(false); setEmission(settings.emissionInactive ?? 0); activeMode = null; tweenElapsed = 0; tweenStart = 0; tweenTarget = 0; currentAngle = 0; if (pivot && baseQuaternion) pivot.quaternion.copy(baseQuaternion); }
   function dispose() { if (disposed) return; reset(); disposed = true; unsubscribeModule(); listeners.forEach(({ record, listener }) => record.controller.removeEventListener('selectstart', listener)); ownedMaterials.forEach((material) => material.dispose()); ownedMaterials.clear(); hits.clear(); halo?.dispose(); }
   reset(); return { hits, halo, capabilityReady, update, press, selectMode, reset, dispose,
     getActiveMode: () => activeMode, getTargetAngle: () => tweenTarget, hasCurrentHit: (record) => hits.get(record) === true };

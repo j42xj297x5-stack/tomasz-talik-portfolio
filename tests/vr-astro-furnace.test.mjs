@@ -2,11 +2,17 @@ import assert from 'node:assert/strict';
 import * as THREE from '../src/vendor/three.js';
 import { calculateMirroredHorizontalPosition, createVrAstroFurnace } from '../src/xr/furnace/createVrAstroFurnace.js';
 import { ASTRO_FURNACE_STATES, createVrAstroFurnaceOpenInteraction } from '../src/xr/furnace/createVrAstroFurnaceOpenInteraction.js';
-import { ASTRO_FURNACE_PROCESS_STATES, createVrAstroFurnaceActivateInteraction } from '../src/xr/furnace/createVrAstroFurnaceActivateInteraction.js';
+import { ASTRO_FURNACE_PROCESS_STATES, createVrAstroFurnaceActivateInteraction, processRotationPulse01 } from '../src/xr/furnace/createVrAstroFurnaceActivateInteraction.js';
 import { createVrAstroFurnaceOptionInteraction } from '../src/xr/furnace/createVrAstroFurnaceOptionInteraction.js';
 import { normalizeExperienceVrSettings } from '../src/config/experienceVrSettings.js';
 
 const colorDistanceToWhite = (color) => Math.hypot(1 - color.r, 1 - color.g, 1 - color.b);
+const signedOrbitAngle = (point, center) => Math.atan2(point.z - center.z, point.x - center.x);
+const signedAngleDelta = (from, to) => Math.atan2(Math.sin(to - from), Math.cos(to - from));
+
+assert.equal(processRotationPulse01(0), 0);
+assert.equal(processRotationPulse01(Math.PI), 1);
+assert.ok(processRotationPulse01(Math.PI * 2) < 1e-12);
 
 const center = new THREE.Vector3(1, 4, -2);
 assert.deepEqual(calculateMirroredHorizontalPosition(center, new THREE.Vector3(-2, 20, 3)).toArray(), [4, 4, -7]);
@@ -190,9 +196,19 @@ assert.ok(Math.abs(activateInteraction.processLight.userData.lightAngle + activa
   'process light angle is exactly the negative process angle');
 const steadySpeed = Math.abs(activateInteraction.getAngularSpeed());
 const steadyAngle = activateInteraction.getProcessAngle();
-const expectedSteadyPulse = 4 * (0.65 + 0.35 * (0.5 + 0.5 * Math.sin(Math.abs(steadyAngle) * 2)));
+const expectedSteadyPulse = THREE.MathUtils.lerp(0.05, 4, processRotationPulse01(steadyAngle));
 assert.ok(Math.abs(fireMaterial.emissiveIntensity - expectedSteadyPulse) < 1e-10,
   'fire-cell pulse is derived from the accumulated process angle');
+const orbitCenter = activateInteraction.processLight.userData.orbitCenter;
+const chamberOrbitBefore = signedOrbitAngle(activateInteraction.processLight.userData.chamberOrbitPosition, orbitCenter);
+const lightOrbitBefore = signedOrbitAngle(activateInteraction.processLight.position, orbitCenter);
+activateInteraction.update(0.02);
+const chamberOrbitDelta = signedAngleDelta(chamberOrbitBefore,
+  signedOrbitAngle(activateInteraction.processLight.userData.chamberOrbitPosition, orbitCenter));
+const lightOrbitDelta = signedAngleDelta(lightOrbitBefore, signedOrbitAngle(activateInteraction.processLight.position, orbitCenter));
+assert.ok(chamberOrbitDelta * lightOrbitDelta < 0, 'chamber and PointLight have opposite signed motion in the stable furnace root');
+assert.ok(Math.abs(Math.abs(chamberOrbitDelta) - Math.abs(lightOrbitDelta)) < 1e-10,
+  'both stable-space orbits have the same absolute angular speed');
 assert.ok(colorDistanceToWhite(fireMaterial.emissive) < colorDistanceToWhite(baseFireEmissive),
   'steady emission color moves toward white');
 const steadyAngleBeforeStep = activateInteraction.getProcessAngle();
@@ -208,7 +224,7 @@ activateInteraction.update(0.04);
 const extractionAngleStep = Math.abs(activateInteraction.getProcessAngle() - extractionAngleBeforeStep);
 assert.ok(extractionAngleStep / 0.04 > steadyAngleStep / 0.4,
   'angle-driven pulse frequency rises with extraction RPM');
-assert.ok(fireMaterial.emissiveIntensity > 4 * 0.65, 'extraction emission exceeds minimum steady emission');
+assert.ok(fireMaterial.emissiveIntensity >= 0.05, 'extraction emission stays within the configured angle pulse');
 assert.ok(colorDistanceToWhite(fireMaterial.emissive) < 0.1,
   'extraction emissive color becomes nearly white');
 assert.ok(processFurnace.nodes.pokrywa.quaternion.equals(lidQuaternion), 'the lid never rotates during processing');
@@ -270,11 +286,12 @@ incomplete.dispose(); incompleteFurnace.dispose();
   const option = createVrAstroFurnaceOptionInteraction({ furnace: optionFurnace, panel, controllers: [],
     settings: { enabled: true, selectionDuration: .5, moduleAnglesDegrees: { floor_gyroscope_sphere: 90 } } });
   assert.equal(moduleListener('floor_gyroscope_sphere'), true); option.update(.25);
-  assert.ok(optionFurnace.nodes.PIVOT_BUTTON_OPTION.rotation.z > 0 && optionFurnace.nodes.PIVOT_BUTTON_OPTION.rotation.z < Math.PI / 2);
-  option.update(.25); assert.ok(Math.abs(optionFurnace.nodes.PIVOT_BUTTON_OPTION.rotation.z - Math.PI / 2) < 1e-7);
+  assert.ok(optionFurnace.nodes.PIVOT_BUTTON_OPTION.rotation.y > 0 && optionFurnace.nodes.PIVOT_BUTTON_OPTION.rotation.y < Math.PI / 2);
+  assert.ok(Math.abs(optionFurnace.nodes.PIVOT_BUTTON_OPTION.rotation.z) < 1e-12, 'option tween uses local Three.js Y only');
+  option.update(.25); assert.ok(Math.abs(optionFurnace.nodes.PIVOT_BUTTON_OPTION.rotation.y - Math.PI / 2) < 1e-7);
   assert.equal(option.getActiveMode(), 'floor_gyroscope_sphere');
   assert.equal(moduleListener('floor_gyroscope_sphere'), true); option.update(.5);
-  assert.ok(Math.abs(optionFurnace.nodes.PIVOT_BUTTON_OPTION.rotation.z - Math.PI / 2) < 1e-7, 'reselection is idempotent');
+  assert.ok(Math.abs(optionFurnace.nodes.PIVOT_BUTTON_OPTION.rotation.y - Math.PI / 2) < 1e-7, 'reselection is idempotent');
   option.dispose(); optionFurnace.dispose();
 }
 console.log('VR Astro furnace assertions passed');
