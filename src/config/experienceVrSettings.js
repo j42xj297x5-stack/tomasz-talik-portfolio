@@ -45,8 +45,9 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
       emissionPressed: 5
     },
     optionButton: {
-      enabled: true, rayMaxDistance: 3, emissionInactive: 0, emissionHover: 1, emissionActive: 3,
-      selectionDuration: 0.48, moduleAnglesDegrees: { floor_gyroscope_sphere: 90 }
+      enabled: true, rayMaxDistance: 3, emissionInactive: 0, emissionHover: 5, emissionActive: 3,
+      selectionDuration: 0.48, moduleAnglesDegrees: { floor_gyroscope_sphere: 90 },
+      halo: { opacity: 0.52, thicknessPixels: 5, pulseDuration: 1.1 }
     },
     panel: {
       enabled: true, width: 1.55, height: 1.05, gapFromFurnace: 0.10, verticalOffset: 0.15, yawDegrees: -12,
@@ -290,7 +291,15 @@ export function normalizeExperienceVrSettings(candidate) {
         rayMaxDistance: finiteNumber(candidate.furnace?.optionButton?.rayMaxDistance, defaults.furnace.optionButton.rayMaxDistance, { min: 0.3, max: 5 }),
         emissionInactive: finiteNumber(candidate.furnace?.optionButton?.emissionInactive, defaults.furnace.optionButton.emissionInactive, { min: 0 }),
         emissionHover: finiteNumber(candidate.furnace?.optionButton?.emissionHover, defaults.furnace.optionButton.emissionHover, { min: 0 }),
-        emissionActive: finiteNumber(candidate.furnace?.optionButton?.emissionActive, defaults.furnace.optionButton.emissionActive, { min: 0 })
+        emissionActive: finiteNumber(candidate.furnace?.optionButton?.emissionActive, defaults.furnace.optionButton.emissionActive, { min: 0 }),
+        halo: {
+          opacity: finiteNumber(candidate.furnace?.optionButton?.halo?.opacity,
+            defaults.furnace.optionButton.halo.opacity, { min: 0.05, max: 0.6 }),
+          thicknessPixels: finiteNumber(candidate.furnace?.optionButton?.halo?.thicknessPixels,
+            defaults.furnace.optionButton.halo.thicknessPixels, { min: 0.5, max: 8 }),
+          pulseDuration: finiteNumber(candidate.furnace?.optionButton?.halo?.pulseDuration,
+            defaults.furnace.optionButton.halo.pulseDuration, { min: 0.5, max: 2 })
+        }
       },
       panel: {
         enabled: typeof candidate.furnace?.panel?.enabled === 'boolean' ? candidate.furnace.panel.enabled : defaults.furnace.panel.enabled,

@@ -236,7 +236,8 @@ astroFurnaceContentInteraction = createVrAstroFurnaceContentInteraction({
 astroFurnaceContentInteraction.subscribe(() => furnacePanel.redraw());
 astroFurnaceOptionInteraction = createVrAstroFurnaceOptionInteraction({
   furnace: astroFurnace, panel: furnacePanel, controllers: vrControllers.controllers,
-  settings: settings.furnace.optionButton, haloSettings: settings.targetHalo,
+  settings: settings.furnace.optionButton,
+  haloSettings: { ...settings.targetHalo, ...settings.furnace.optionButton.halo },
   isOrdinaryRayAvailable: ordinaryFurnaceRayAvailable,
   isHigherPriorityInteractionActive: (record) => furnacePanel.hasCurrentHit(record)
 });

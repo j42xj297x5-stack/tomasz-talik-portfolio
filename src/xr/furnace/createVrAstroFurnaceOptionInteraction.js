@@ -30,7 +30,7 @@ export function createVrAstroFurnaceOptionInteraction({ furnace, panel, controll
       const intersection = raycaster.intersectObjects(meshes, false)[0]; hit = Boolean(intersection);
       if (intersection) record.reportRayHit?.(intersection.distance);
     } hits.set(record, hit); any ||= hit; });
-    setEmission(any ? settings.emissionHover ?? 1 : panel.isVisible() ? settings.emissionActive ?? 3
+    setEmission(any ? settings.emissionHover ?? 5 : panel.isVisible() ? settings.emissionActive ?? 3
       : activeMode === null ? settings.emissionUnconfigured ?? .45 : settings.emissionInactive ?? 0);
     halo?.setVisible(any);
   }
