@@ -32,7 +32,7 @@ function cloneMaterials(root, owned) {
 
 export function createVrAstroFurnaceActivateInteraction({
   furnace, controllers = [], settings = {}, processSettings = {}, haloSettings = {},
-  openInteraction, canActivateInput = () => false, qaAllowWithoutInput = false,
+  openInteraction, canActivateInput = () => false, isModeActive = () => true, qaAllowWithoutInput = false,
   isOrdinaryRayAvailable = () => true
 }) {
   const states = ASTRO_FURNACE_PROCESS_STATES;
@@ -144,7 +144,7 @@ export function createVrAstroFurnaceActivateInteraction({
     processLight.userData.orbitAxis = stableSpinAxis.clone();
   }
   function canActivate() {
-    return capabilityReady && !disposed && state === states.IDLE && openInteraction?.getState?.() === 'CLOSED'
+    return capabilityReady && !disposed && isModeActive() && state === states.IDLE && openInteraction?.getState?.() === 'CLOSED'
       && !openInteraction?.isTransitioning?.() && (qaAllowWithoutInput || canActivateInput());
   }
   function clearHits() { hits.forEach((_, record) => hits.set(record, false)); halo?.setVisible(false); }

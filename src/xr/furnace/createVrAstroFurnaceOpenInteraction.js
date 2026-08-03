@@ -37,7 +37,7 @@ function cloneBranchMaterials(root, ownedMaterials) {
 
 export function createVrAstroFurnaceOpenInteraction({
   furnace, controllers = [], settings = {}, haloSettings = {}, isOrdinaryRayAvailable = () => true,
-  canToggle = () => true, onOpeningStart = () => {}
+  canToggle = () => true, isModeActive = () => true, onOpeningStart = () => {}
 }) {
   const stateNames = ASTRO_FURNACE_STATES;
   const buttonNode = furnace?.nodes?.button_open;
@@ -90,6 +90,7 @@ export function createVrAstroFurnaceOpenInteraction({
   let disposed = false;
 
   const setEmission = (value) => emissiveMaterials.forEach((material) => { material.emissiveIntensity = value; });
+  const canToggleCurrentState = () => canToggle() && (state === stateNames.OPEN || isModeActive());
   function restoreTransforms() {
     baseTransforms.forEach((base, node) => {
       node.position.copy(base.position); node.quaternion.copy(base.quaternion); node.scale.copy(base.scale);
@@ -125,7 +126,7 @@ export function createVrAstroFurnaceOpenInteraction({
   }
   function beginTransition(nextState) {
     if (!capabilityReady || (nextState === stateNames.OPENING && state !== stateNames.CLOSED)
-      || (nextState === stateNames.CLOSING && state !== stateNames.OPEN) || !canToggle()) return false;
+      || (nextState === stateNames.CLOSING && state !== stateNames.OPEN) || !canToggleCurrentState()) return false;
     if (nextState === stateNames.OPENING) onOpeningStart();
     halo?.setVisible(false);
     state = nextState; transitionElapsed = 0; pendingMechanical.clear(); playButton();
@@ -157,7 +158,7 @@ export function createVrAstroFurnaceOpenInteraction({
     let anyHit = false;
     controllers.forEach((record) => {
       let hit = false;
-      if (capabilityReady && canToggle() && (state === stateNames.CLOSED || state === stateNames.OPEN)
+      if (capabilityReady && canToggleCurrentState() && (state === stateNames.CLOSED || state === stateNames.OPEN)
         && furnace?.object?.visible !== false && isOrdinaryRayAvailable(record)) {
         record.controller.updateWorldMatrix(true, false);
         record.controller.getWorldPosition(origin); record.controller.getWorldQuaternion(quaternion);
@@ -174,7 +175,7 @@ export function createVrAstroFurnaceOpenInteraction({
     if (state === stateNames.CLOSED || state === stateNames.OPEN) {
       setEmission(anyHit ? settings.emissionHover ?? 1 : settings.emissionInactive ?? 0);
     }
-    halo?.setVisible(anyHit && canToggle() && (state === stateNames.CLOSED || state === stateNames.OPEN));
+    halo?.setVisible(anyHit && canToggleCurrentState() && (state === stateNames.CLOSED || state === stateNames.OPEN));
   }
   function press(record) {
     if (disposed || !hits.get(record) || !isOrdinaryRayAvailable(record)) return false;

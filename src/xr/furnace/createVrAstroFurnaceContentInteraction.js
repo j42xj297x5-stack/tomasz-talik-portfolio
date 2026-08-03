@@ -40,7 +40,8 @@ export function constrainHeldShellToDeviceSurfaces({ shell, shellCenter, origin,
 }
 
 export function createVrAstroFurnaceContentInteraction({
-  furnace, shellSystem, openInteraction, activateInteraction, progressionController, settings = {}, takeHeldShell = () => true
+  furnace, shellSystem, openInteraction, activateInteraction, progressionController, settings = {}, takeHeldShell = () => true,
+  isModeActive = () => true
 }) {
   const states = ASTRO_FURNACE_CONTENT_STATES;
   const config = {
@@ -130,11 +131,11 @@ export function createVrAstroFurnaceContentInteraction({
     ejectHeldFromCylinder(shell);
   }
   function canAcceptShell(shell = null) {
-    return insertionReady && !disposed && state !== states.INSERTED && state !== states.CONSUMING && state !== states.CONSUMED
+    return insertionReady && !disposed && isModeActive() && state !== states.INSERTED && state !== states.CONSUMING && state !== states.CONSUMED
       && openInteraction?.getState?.() === 'OPEN' && activateInteraction?.getState?.() === 'IDLE'
       && (!shell || shell !== insertedShell);
   }
-  function canEvaluateCandidate() { return insertionReady && !disposed && openInteraction?.getState?.() === 'OPEN'
+  function canEvaluateCandidate() { return insertionReady && !disposed && isModeActive() && openInteraction?.getState?.() === 'OPEN'
     && activateInteraction?.getState?.() === 'IDLE'; }
   function isNear(shell) {
     if (!shell || !insertionReady) return false;
