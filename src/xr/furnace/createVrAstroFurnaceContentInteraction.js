@@ -48,8 +48,7 @@ export function createVrAstroFurnaceContentInteraction({
     enabled: true, snapDuration: 0.42,
     chamberClearance: 0.012, contentClearance: 0.012, rejectDuration: 0.28, rejectDistanceMultiplier: 1.35,
     guideOpacity: 0.07, validFeedbackOpacity: 0.58, invalidFeedbackOpacity: 0.62,
-    releaseGrace: 0.035, surfaceClearance: 0.006, validColor: 0x49d17d, invalidColor: 0xe05252,
-    consumeStartProgress: 0.18, consumeEndProgress: 0.78, ...settings
+    releaseGrace: 0.035, surfaceClearance: 0.006, validColor: 0x49d17d, invalidColor: 0xe05252, ...settings
   };
   const volume = furnace?.nodes?.VR_FURNACE_INSERT_VOLUME;
   const anchor = furnace?.nodes?.VR_FURNACE_CONTENT_ANCHOR;
@@ -259,8 +258,8 @@ export function createVrAstroFurnaceContentInteraction({
   }
   function updateConsumption() {
     if (state !== states.CONSUMING || !insertedShell) return;
-    const progress = activateInteraction?.getProgress?.() ?? 0;
-    const t = smoothstep((progress - config.consumeStartProgress) / Math.max(config.consumeEndProgress - config.consumeStartProgress, 1e-6));
+    const extractionProgress = activateInteraction?.getExtractionProgress?.() ?? 0;
+    const t = smoothstep(extractionProgress);
     const pulse = processRotationPulse(activateInteraction?.getProcessAngle?.() ?? 0);
     // Absorption is communicated by light and opacity; the physical shell stays settled.
     materialBases.forEach(({ material, color, emissive, emissiveIntensity, opacity }) => {
@@ -269,7 +268,7 @@ export function createVrAstroFurnaceContentInteraction({
       if ('emissiveIntensity' in material) material.emissiveIntensity = THREE.MathUtils.lerp(emissiveIntensity + pulse, 7, t);
       material.transparent = true; material.opacity = THREE.MathUtils.lerp(opacity, 0, t);
     });
-    if (progress >= config.consumeEndProgress) { insertedShell.visible = false; insertedShell.userData.shellState = 'consumed'; setState(states.CONSUMED); }
+    if (extractionProgress >= 1) { insertedShell.visible = false; insertedShell.userData.shellState = 'consumed'; setState(states.CONSUMED); }
   }
   function commitConsumedContent() {
     if (state !== states.CONSUMED || activateInteraction?.getState?.() !== 'COMPLETE' || !pendingShellAssetId) return false;

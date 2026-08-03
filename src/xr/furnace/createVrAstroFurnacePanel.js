@@ -80,7 +80,8 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
     if (rawState === 'COMPLETE' && previousProcessState !== 'COMPLETE') completedUntil = telemetryElapsed + 1.6;
     previousProcessState = rawState;
     const completed = completedUntil > telemetryElapsed;
-    return resolveProcessTelemetry({ state: rawState === 'COMPLETE' && !completed ? 'IDLE' : rawState, progress: processSource?.getProgress?.() ?? 0,
+    return resolveProcessTelemetry({ state: rawState === 'COMPLETE' && !completed ? 'IDLE' : rawState,
+      overallProgress: processSource?.getProgress?.() ?? 0, extractionProgress: processSource?.getExtractionProgress?.() ?? 0,
       angularSpeed: processSource?.getAngularSpeed?.() ?? 0, processAngle: processSource?.getProcessAngle?.() ?? 0, completed,
       contentState: contentSource?.getState?.() ?? 'EMPTY', chamberState: contentSource?.getChamberState?.() ?? 'CLOSED' });
   }
@@ -92,8 +93,8 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
     telemetry.label.split('\n').forEach((line, index) => text(`${index ? '' : 'STATUS // '}${line}`, x + 28, y + 215 + index * 28, 21, accents[telemetry.colorKey]));
     if (telemetry.showProgress) {
       const barX = x + 28, barY = y + 254, barWidth = 555; context.fillStyle = '#18303c'; context.fillRect(barX, barY, barWidth, 16);
-      context.fillStyle = accents[telemetry.colorKey]; context.fillRect(barX, barY, barWidth * telemetry.progress, 16);
-      text(`${Math.round(telemetry.progress * 100)}%`, barX + barWidth + 18, barY + 17, 20, '#b9dce8');
+      context.fillStyle = accents[telemetry.colorKey]; context.fillRect(barX, barY, barWidth * telemetry.extractionProgress, 16);
+      text(`${Math.round(telemetry.extractionProgress * 100)}%`, barX + barWidth + 18, barY + 17, 20, '#b9dce8');
     }
     drawAsterionPreview(progressSnapshot(), x + 855, y + 150, 118);
     const contentState = contentSource?.getState?.() ?? 'EMPTY'; const assetId = contentSource?.getInsertedShellAssetId?.();
@@ -102,11 +103,11 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
   }
   function drawInsertedShellWireframe(telemetry, cx, cy, scale) {
     const data = contentSource?.getInsertedShellWireframe?.();
-    if (!data?.segments?.length || telemetry.phase === 'COMPLETE') return;
+    if (!data?.segments?.length || ['COOLDOWN', 'COMPLETE'].includes(telemetry.phase)) return;
     const contentState = contentSource?.getState?.() ?? 'EMPTY';
     if (!['INSERTED', 'CONSUMING', 'CONSUMED'].includes(contentState)) return;
     const processing = telemetry.active || contentState !== 'INSERTED';
-    const dissolve = processing ? telemetry.progress : 0;
+    const dissolve = telemetry.phase === 'EXTRACTION' ? telemetry.extractionProgress : 0;
     const rotation = telemetryElapsed * (processing ? .38 : .16);
     const cosY = Math.cos(rotation), sinY = Math.sin(rotation);
     const tilt = -.28, cosX = Math.cos(tilt), sinX = Math.sin(tilt);
