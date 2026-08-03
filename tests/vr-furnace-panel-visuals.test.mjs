@@ -37,4 +37,13 @@ assert.equal(ordered.filter((segment) => wireframeDissolveVisible(segment, 0)).l
 assert.equal(ordered.filter((segment) => wireframeDissolveVisible(segment, .5)).length, 51);
 assert.equal(ordered.filter((segment) => wireframeDissolveVisible(segment, 1)).length, 0);
 assert.match(panelSource, /telemetry\.phase === 'COMPLETE'\) return/);
+assert.match(panelSource, /VrAstroFurnacePanelFrontPlane/);
+assert.match(panelSource, /VrAstroFurnacePanelBackPlane/);
+assert.equal(panelSource.match(/new THREE\.PlaneGeometry/g)?.length, 2);
+assert.equal(panelSource.match(/new THREE\.CanvasTexture/g)?.length, 1);
+assert.match(panelSource, /const renderPlanes = \[frontPlane, backPlane\]/);
+assert.match(panelSource, /backPlane\.rotation\.y = Math\.PI/);
+assert.match(panelSource, /map: texture, side: THREE\.FrontSide/);
+assert.doesNotMatch(panelSource, /THREE\.DoubleSide/);
+assert.match(panelSource, /raycaster\.intersectObjects\(renderPlanes, false\)/);
 console.log('VR furnace panel visual helper tests passed.');

@@ -10,7 +10,7 @@ const smoothstep = (value) => value * value * (3 - 2 * value);
 export const wireframeDissolveVisible = (segment, progress) => progress < 1 && segment.dissolveOrder >= Math.max(0, progress);
 
 export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], progressionController, processSource, contentSource, settings = {} }) {
-  const config = { width: 1.55, height: 1.05, gapFromFurnace: 0.18, verticalOffset: 0.15,
+  const config = { width: 1.55, height: 1.05, gapFromFurnace: 0.10, verticalOffset: 0.15, yawDegrees: -12,
     canvasWidth: 1536, canvasHeight: 1024, appearDuration: 0.32, disappearDuration: 0.20,
     telemetryRefreshHz: 12, frameCornerSizePx: 28, accents: {}, ...settings };
   config.telemetryRefreshHz = Math.min(30, Math.max(4, config.telemetryRefreshHz));
@@ -21,10 +21,16 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
   const context = canvas.getContext('2d');
   const texture = new THREE.CanvasTexture(canvas); texture.colorSpace = THREE.SRGBColorSpace;
   texture.minFilter = THREE.LinearFilter; texture.magFilter = THREE.LinearFilter;
-  const material = new THREE.MeshBasicMaterial({ map: texture, transparent: true, depthWrite: false, opacity: 0 });
-  const geometry = new THREE.PlaneGeometry(config.width, config.height);
-  const mesh = new THREE.Mesh(geometry, material); mesh.name = 'VrAstroFurnacePanelMesh'; mesh.position.x = config.width / 2;
-  root.add(mesh); (parent ?? furnace?.object?.parent)?.add(root);
+  const createMaterial = () => new THREE.MeshBasicMaterial({ map: texture, side: THREE.FrontSide, transparent: true, depthWrite: false, opacity: 0 });
+  const frontMaterial = createMaterial(), backMaterial = createMaterial();
+  const frontGeometry = new THREE.PlaneGeometry(config.width, config.height);
+  const backGeometry = new THREE.PlaneGeometry(config.width, config.height);
+  const frontPlane = new THREE.Mesh(frontGeometry, frontMaterial); frontPlane.name = 'VrAstroFurnacePanelFrontPlane';
+  const backPlane = new THREE.Mesh(backGeometry, backMaterial); backPlane.name = 'VrAstroFurnacePanelBackPlane';
+  frontPlane.position.set(config.width / 2, 0, 0.0005);
+  backPlane.position.set(config.width / 2, 0, -0.0005); backPlane.rotation.y = Math.PI;
+  const renderPlanes = [frontPlane, backPlane];
+  root.add(...renderPlanes); (parent ?? furnace?.object?.parent)?.add(root);
   const raycaster = new THREE.Raycaster(), origin = new THREE.Vector3(), direction = new THREE.Vector3();
   const quaternion = new THREE.Quaternion(), furnaceQuaternion = new THREE.Quaternion(), right = new THREE.Vector3();
   const hits = new Map(controllers.map((record) => [record, null]));
@@ -150,7 +156,8 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
     const size = bounds.getSize(new THREE.Vector3());
     const projectedHalfWidth = (Math.abs(right.x) * size.x + Math.abs(right.y) * size.y + Math.abs(right.z) * size.z) / 2;
     root.position.copy(center).addScaledVector(right, projectedHalfWidth + config.gapFromFurnace);
-    root.position.y = center.y + config.verticalOffset; root.quaternion.copy(furnaceQuaternion); root.scale.set(0.001, 0.92, 1);
+    root.position.y = center.y + config.verticalOffset; root.quaternion.copy(furnaceQuaternion);
+    root.rotateY(THREE.MathUtils.degToRad(config.yawDegrees)); root.scale.set(0.001, 0.92, 1);
     root.visible = state !== ASTRO_FURNACE_PANEL_STATES.HIDDEN;
   }
   function show() { screen = ASTRO_FURNACE_PANEL_SCREENS.HOME; hoveredRegion = null; state = ASTRO_FURNACE_PANEL_STATES.APPEARING; elapsed = 0; root.visible = true; draw(); }
@@ -167,7 +174,7 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
       if (state === ASTRO_FURNACE_PANEL_STATES.VISIBLE) {
         record.controller.updateWorldMatrix(true, false); record.controller.getWorldPosition(origin); record.controller.getWorldQuaternion(quaternion);
         direction.set(0, 0, -1).applyQuaternion(quaternion).normalize(); raycaster.set(origin, direction);
-        raycaster.far = record.currentRayLength ?? 3; const intersection = raycaster.intersectObject(mesh, false)[0];
+        raycaster.far = record.currentRayLength ?? 3; const intersection = raycaster.intersectObjects(renderPlanes, false)[0];
         if (intersection) { record.reportRayHit?.(intersection.distance); const x = intersection.uv.x * canvas.width, y = (1 - intersection.uv.y) * canvas.height;
           const region = interactiveRegions.find((item) => item.enabled && x >= item.x && x <= item.x + item.width && y >= item.y && y <= item.y + item.height);
           result = { intersection, region: region ?? null }; if (region) nextHover = region.id; }
@@ -180,18 +187,18 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
   const listeners = controllers.map((record) => { const listener = () => press(record); record.controller.addEventListener('selectstart', listener); return { record, listener }; });
   function update(delta = 0) {
     if (disposed) return; const step = Math.max(0, delta); elapsed += step; telemetryElapsed += step;
-    if (state === ASTRO_FURNACE_PANEL_STATES.APPEARING) { const t = smoothstep(Math.min(1, elapsed / config.appearDuration)); root.scale.set(0.001 + .999 * t, .92 + .08 * t, 1); material.opacity = t; if (t === 1) state = ASTRO_FURNACE_PANEL_STATES.VISIBLE; }
-    else if (state === ASTRO_FURNACE_PANEL_STATES.DISAPPEARING) { const t = smoothstep(Math.min(1, elapsed / config.disappearDuration)); root.scale.set(1 - .999 * t, 1 - .08 * t, 1); material.opacity = 1 - t; if (t === 1) { state = ASTRO_FURNACE_PANEL_STATES.HIDDEN; root.visible = false; } }
+    if (state === ASTRO_FURNACE_PANEL_STATES.APPEARING) { const t = smoothstep(Math.min(1, elapsed / config.appearDuration)); root.scale.set(0.001 + .999 * t, .92 + .08 * t, 1); renderPlanes.forEach((plane) => { plane.material.opacity = t; }); if (t === 1) state = ASTRO_FURNACE_PANEL_STATES.VISIBLE; }
+    else if (state === ASTRO_FURNACE_PANEL_STATES.DISAPPEARING) { const t = smoothstep(Math.min(1, elapsed / config.disappearDuration)); root.scale.set(1 - .999 * t, 1 - .08 * t, 1); renderPlanes.forEach((plane) => { plane.material.opacity = 1 - t; }); if (t === 1) { state = ASTRO_FURNACE_PANEL_STATES.HIDDEN; root.visible = false; } }
     updateHits();
     if (screen === ASTRO_FURNACE_PANEL_SCREENS.ASTERION_SPHERE) { const telemetry = readTelemetry();
       if (shouldRefreshTelemetry({ active: telemetry.active || completedUntil > telemetryElapsed, elapsed: telemetryElapsed, lastRedraw: lastTelemetryRedraw, refreshHz: config.telemetryRefreshHz })) { lastTelemetryRedraw = telemetryElapsed; draw(); } }
   }
-  function reset() { state = ASTRO_FURNACE_PANEL_STATES.HIDDEN; screen = ASTRO_FURNACE_PANEL_SCREENS.HOME; elapsed = 0; telemetryElapsed = 0; lastTelemetryRedraw = 0; completedUntil = 0; previousProcessState = 'IDLE'; hoveredRegion = null; material.opacity = 0; hits.forEach((_, record) => hits.set(record, null)); place(); root.visible = false; draw(); }
+  function reset() { state = ASTRO_FURNACE_PANEL_STATES.HIDDEN; screen = ASTRO_FURNACE_PANEL_SCREENS.HOME; elapsed = 0; telemetryElapsed = 0; lastTelemetryRedraw = 0; completedUntil = 0; previousProcessState = 'IDLE'; hoveredRegion = null; renderPlanes.forEach((plane) => { plane.material.opacity = 0; }); hits.forEach((_, record) => hits.set(record, null)); place(); root.visible = false; draw(); }
   const unsubscribe = progressionController.subscribe(() => draw());
   const unsubscribePlacement = furnace.subscribePlacement?.(() => place()) ?? (() => {});
-  function dispose() { if (disposed) return; disposed = true; unsubscribe(); unsubscribePlacement(); moduleListeners.clear(); listeners.forEach(({ record, listener }) => record.controller.removeEventListener('selectstart', listener)); root.removeFromParent(); geometry.dispose(); material.dispose(); texture.dispose(); canvas.width = 0; canvas.height = 0; hits.clear(); }
+  function dispose() { if (disposed) return; disposed = true; unsubscribe(); unsubscribePlacement(); moduleListeners.clear(); listeners.forEach(({ record, listener }) => record.controller.removeEventListener('selectstart', listener)); root.removeFromParent(); renderPlanes.forEach((plane) => { plane.geometry.dispose(); plane.material.dispose(); }); texture.dispose(); canvas.width = 0; canvas.height = 0; hits.clear(); }
   reset();
-  return { object: root, mesh, canvas, texture, hits, show, hide, toggle, place, update, press, reset, dispose, activateRegion, redraw: draw,
+  return { object: root, mesh: frontPlane, renderPlanes, canvas, texture, hits, show, hide, toggle, place, update, press, reset, dispose, activateRegion, redraw: draw,
     subscribeModuleActivation(listener) { moduleListeners.add(listener); return () => moduleListeners.delete(listener); },
     isVisible: () => state !== ASTRO_FURNACE_PANEL_STATES.HIDDEN && state !== ASTRO_FURNACE_PANEL_STATES.DISAPPEARING,
     hasCurrentHit: (record) => Boolean(hits.get(record)?.intersection), getState: () => state, getScreen: () => screen,
