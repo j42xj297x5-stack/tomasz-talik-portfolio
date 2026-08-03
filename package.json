@@ -7,6 +7,8 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
+    "audit:asterion-shells": "node scripts/audit-asterion-shells.mjs",
+    "test:asterion-shells": "node tests/asterion-shell-geometry.test.mjs",
     "test:settings": "node tests/experience3d-settings.test.mjs && node tests/fog-reveal-controller.test.mjs",
     "test:routing": "node tests/options-event-router.test.mjs",
     "test:render-contract": "node tests/experience3d-render-contract.test.mjs",
