@@ -49,7 +49,12 @@ export function createVrAstroFurnaceActivateInteraction({
   const ownedMaterials = new Set();
   const buttonMaterials = cloneMaterials(button, ownedMaterials).filter((material) => 'emissiveIntensity' in material);
   const fireMaterials = cloneMaterials(fireCell, ownedMaterials).filter((material) => 'emissiveIntensity' in material);
-  const fireBases = fireMaterials.map((material) => ({ material, intensity: material.emissiveIntensity }));
+  const fireBases = fireMaterials.map((material) => ({
+    material,
+    baseEmissiveIntensity: material.emissiveIntensity,
+    baseEmissive: material.emissive?.clone?.(),
+    baseColor: material.color?.clone?.()
+  }));
   const halo = button ? createVrTargetHalo({ root: button, settings: haloSettings }) : null;
   const baseSpinQuaternion = spinPivot?.quaternion.clone();
   const raycaster = new THREE.Raycaster();
@@ -66,11 +71,26 @@ export function createVrAstroFurnaceActivateInteraction({
   let angularSpeed = 0;
   let cooldownStartAngle = 0;
   let cooldownTargetAngle = 0;
+  let cooldownStartSpeed = 0;
   let releasing = false;
   let disposed = false;
 
   const setButtonEmission = (value) => buttonMaterials.forEach((material) => { material.emissiveIntensity = value; });
-  const setFireEmission = (value) => fireMaterials.forEach((material) => { material.emissiveIntensity = value; });
+  function setFireEnergy(emission, whiteMix = 0) {
+    const mix = clamp01(whiteMix);
+    fireBases.forEach(({ material, baseEmissive, baseColor }) => {
+      material.emissiveIntensity = emission;
+      if (baseEmissive && material.emissive) material.emissive.copy(baseEmissive).lerp(new THREE.Color(1, 1, 1), mix);
+      if (baseColor && material.color) material.color.copy(baseColor).lerp(new THREE.Color(1, 1, 1), mix * 0.18);
+    });
+  }
+  function restoreFireMaterials() {
+    fireBases.forEach(({ material, baseEmissiveIntensity, baseEmissive, baseColor }) => {
+      material.emissiveIntensity = baseEmissiveIntensity;
+      if (baseEmissive && material.emissive) material.emissive.copy(baseEmissive);
+      if (baseColor && material.color) material.color.copy(baseColor);
+    });
+  }
   function applyAngle() {
     if (!spinPivot || !baseSpinQuaternion) return;
     localSpin.setFromAxisAngle(LOCAL_AXIS, angle);
@@ -130,46 +150,60 @@ export function createVrAstroFurnaceActivateInteraction({
     const duration = processSettings.durationSeconds ?? 18;
     const previousProgress = progress;
     elapsed = Math.min(duration, elapsed + delta); progress = clamp01(elapsed / duration);
-    const spinupEnd = processSettings.spinupEnd ?? 0.2;
-    const steadyEnd = processSettings.steadyEnd ?? 0.7;
-    const extractionEnd = processSettings.extractionEnd ?? 0.88;
+    const spinupEnd = processSettings.spinupEnd ?? 0.14;
+    const steadyEnd = processSettings.steadyEnd ?? 0.6;
+    const extractionEnd = processSettings.extractionEnd ?? 0.84;
     const baseSpeed = (processSettings.direction ?? -1) * (processSettings.steadyRpm ?? 42) * TAU / 60;
-    let emission = processSettings.fireCellIdleEmission ?? 0.15;
+    const idleEmission = processSettings.fireCellIdleEmission ?? 0.15;
+    const steadyEmission = processSettings.fireCellSteadyEmission ?? 4;
+    const extractionEmission = processSettings.fireCellExtractionEmission ?? 10;
+    let emission = idleEmission;
+    let whiteMix = 0;
     if (progress < spinupEnd) {
       state = states.SPINUP; const t = smooth(progress / spinupEnd); angularSpeed = baseSpeed * t;
-      emission = THREE.MathUtils.lerp(processSettings.fireCellIdleEmission ?? 0.15,
-        processSettings.fireCellSteadyEmission ?? 2.5, t);
+      emission = THREE.MathUtils.lerp(idleEmission, steadyEmission, t);
+      whiteMix = 0.45 * t;
       angle += angularSpeed * delta;
     } else if (progress < steadyEnd) {
       state = states.STEADY; angularSpeed = baseSpeed; angle += angularSpeed * delta;
-      emission = processSettings.fireCellSteadyEmission ?? 2.5;
+      emission = steadyEmission; whiteMix = 0.45;
     } else if (progress < extractionEnd) {
-      state = states.EXTRACTION; const t = smooth((progress - steadyEnd) / (extractionEnd - steadyEnd));
+      state = states.EXTRACTION;
+      const phaseProgress = (progress - steadyEnd) / (extractionEnd - steadyEnd);
+      const t = smooth(phaseProgress / 0.3);
       angularSpeed = baseSpeed * THREE.MathUtils.lerp(1, processSettings.extractionSpeedMultiplier ?? 2, t);
       angle += angularSpeed * delta;
-      emission = THREE.MathUtils.lerp(processSettings.fireCellSteadyEmission ?? 2.5,
-        processSettings.fireCellExtractionEmission ?? 5, t);
+      emission = THREE.MathUtils.lerp(steadyEmission, extractionEmission, t);
+      whiteMix = THREE.MathUtils.lerp(0.45, 0.95, t);
     } else {
       if (previousProgress < extractionEnd || state !== states.COOLDOWN) {
-        state = states.COOLDOWN; cooldownStartAngle = angle;
+        state = states.COOLDOWN; cooldownStartAngle = angle; cooldownStartSpeed = angularSpeed;
+        const cooldownDuration = duration * (1 - extractionEnd);
+        const naturalTarget = angle + cooldownStartSpeed * cooldownDuration * 0.5;
         cooldownTargetAngle = (processSettings.direction ?? -1) < 0
-          ? Math.floor(angle / TAU) * TAU : Math.ceil(angle / TAU) * TAU;
+          ? Math.floor(naturalTarget / TAU) * TAU : Math.ceil(naturalTarget / TAU) * TAU;
       }
-      const t = smooth((progress - extractionEnd) / (1 - extractionEnd));
-      angle = THREE.MathUtils.lerp(cooldownStartAngle, cooldownTargetAngle, t);
-      angularSpeed = baseSpeed * (processSettings.extractionSpeedMultiplier ?? 2) * (1 - t);
-      emission = THREE.MathUtils.lerp(processSettings.fireCellExtractionEmission ?? 5,
-        processSettings.fireCellIdleEmission ?? 0.15, t);
+      const rawT = clamp01((progress - extractionEnd) / (1 - extractionEnd));
+      const cooldownDuration = duration * (1 - extractionEnd);
+      const t2 = rawT * rawT; const t3 = t2 * rawT;
+      const startTangent = cooldownStartSpeed * cooldownDuration;
+      angle = (2 * t3 - 3 * t2 + 1) * cooldownStartAngle
+        + (t3 - 2 * t2 + rawT) * startTangent
+        + (-2 * t3 + 3 * t2) * cooldownTargetAngle;
+      angularSpeed = ((6 * t2 - 6 * rawT) * cooldownStartAngle
+        + (3 * t2 - 4 * rawT + 1) * startTangent
+        + (-6 * t2 + 6 * rawT) * cooldownTargetAngle) / cooldownDuration;
+      const t = smooth(rawT);
+      emission = THREE.MathUtils.lerp(extractionEmission, idleEmission, t);
+      whiteMix = THREE.MathUtils.lerp(0.95, 0, t);
     }
-    const speedRatio = clamp01(Math.abs(angularSpeed) / Math.max(Math.abs(baseSpeed) * (processSettings.extractionSpeedMultiplier ?? 2), 1e-6));
-    const hz = THREE.MathUtils.lerp(processSettings.fireCellPulseHzMin ?? 0.7,
-      processSettings.fireCellPulseHzMax ?? 4, speedRatio);
-    const pulse = 0.9 + 0.1 * Math.sin(TAU * hz * elapsed);
-    setFireEmission(emission * pulse); applyAngle();
+    const rotationPulse = 0.5 + 0.5 * Math.sin(Math.abs(angle) * 2);
+    const pulseMultiplier = 0.65 + 0.35 * rotationPulse;
+    setFireEnergy(emission * pulseMultiplier, whiteMix); applyAngle();
     if (progress >= 1) {
       state = states.COMPLETE; angularSpeed = 0; angle = 0;
       if (spinPivot && baseSpinQuaternion) spinPivot.quaternion.copy(baseSpinQuaternion);
-      setFireEmission(processSettings.fireCellIdleEmission ?? 0.15);
+      restoreFireMaterials();
     }
   }
   controllers.forEach((record) => {
@@ -189,7 +223,7 @@ export function createVrAstroFurnaceActivateInteraction({
     action?.stop(); mixer?.stopAllAction(); mixer?.setTime(0); releasing = false;
     state = states.IDLE; progress = 0; elapsed = 0; angle = 0; angularSpeed = 0;
     if (spinPivot && baseSpinQuaternion) spinPivot.quaternion.copy(baseSpinQuaternion);
-    fireBases.forEach(({ material, intensity }) => { material.emissiveIntensity = intensity; });
+    restoreFireMaterials();
     clearHits(); setButtonEmission(settings.emissionInactive ?? 0);
   }
   function dispose() {
@@ -205,6 +239,7 @@ export function createVrAstroFurnaceActivateInteraction({
     canActivate, getState: () => state, getProgress: () => progress, getPhase: () => state,
     isProcessing: () => [states.PRESSING, states.SPINUP, states.STEADY, states.EXTRACTION, states.COOLDOWN].includes(state),
     isComplete: () => state === states.COMPLETE,
-    getAngularSpeed: () => angularSpeed
+    getAngularSpeed: () => angularSpeed,
+    getProcessAngle: () => angle
   };
 }
