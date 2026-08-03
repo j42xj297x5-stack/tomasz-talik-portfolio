@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { resolveFurnaceFrameLayout } from '../src/xr/furnace/drawVrFurnaceFrame.js';
 import { resolveProcessTelemetry, shouldRefreshTelemetry } from '../src/xr/furnace/vrFurnaceTelemetry.js';
+import { wireframeDissolveVisible } from '../src/xr/furnace/createVrAstroFurnacePanel.js';
 
 const wide = resolveFurnaceFrameLayout({ width: 400, height: 100, cornerSize: 28 });
 const tall = resolveFurnaceFrameLayout({ width: 100, height: 400, cornerSize: 28 });
@@ -21,7 +22,7 @@ assert.equal(openInserted.showProgress, false); assert.match(openInserted.label,
 const closedInserted = resolveProcessTelemetry({ state: 'IDLE', contentState: 'INSERTED', chamberState: 'CLOSED' });
 assert.equal(closedInserted.showProgress, false); assert.equal(closedInserted.label, 'GOTOWY DO EKSTRAKCJI');
 const active = resolveProcessTelemetry({ state: 'EXTRACTION', progress: .6 });
-assert.equal(active.showProgress, true); assert.ok(active.silhouetteOpacity < 1);
+assert.equal(active.showProgress, true); assert.equal(active.silhouetteOpacity, 1);
 const complete = resolveProcessTelemetry({ state: 'COMPLETE', progress: 1 });
 assert.equal(complete.silhouetteOpacity, 0); assert.match(complete.label, /PAMIĘCI PIECA/);
 assert.equal(shouldRefreshTelemetry({ active: false, elapsed: 10, lastRedraw: 0 }), false);
@@ -30,4 +31,10 @@ assert.equal(shouldRefreshTelemetry({ active: true, elapsed: .02, lastRedraw: 0,
 const panelSource = readFileSync(new URL('../src/xr/furnace/createVrAstroFurnacePanel.js', import.meta.url), 'utf8');
 assert.doesNotMatch(panelSource, /resolveAsciiFrame|PROCESS_ASCII|buildProgressBar/);
 assert.match(panelSource, /drawAsterionPreview/); assert.match(panelSource, /context\.ellipse/);
+assert.match(panelSource, /getInsertedShellWireframe/); assert.doesNotMatch(panelSource, /for \(let ring = 0; ring < 4/);
+const ordered = Array.from({ length: 101 }, (_, index) => ({ dissolveOrder: index / 100 }));
+assert.equal(ordered.filter((segment) => wireframeDissolveVisible(segment, 0)).length, 101);
+assert.equal(ordered.filter((segment) => wireframeDissolveVisible(segment, .5)).length, 51);
+assert.equal(ordered.filter((segment) => wireframeDissolveVisible(segment, 1)).length, 0);
+assert.match(panelSource, /telemetry\.phase === 'COMPLETE'\) return/);
 console.log('VR furnace panel visual helper tests passed.');

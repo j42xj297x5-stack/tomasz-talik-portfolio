@@ -4,12 +4,19 @@ import { createVrShellSystem } from '../src/xr/shells/createVrShellSystem.js';
 
 function makeSystem(radius = 10) {
   const cloned = [];
-  const assetManager = { cloneGltfScene(assetId) { cloned.push(assetId); return new THREE.Group(); } };
+  const assetManager = { cloneGltfScene(assetId) { cloned.push(assetId); const root = new THREE.Group();
+    root.add(new THREE.Mesh(new THREE.BoxGeometry(Number(assetId.at(-1)), 1, 1))); return root; } };
   const parent = new THREE.Group();
   return { system: createVrShellSystem({ parent, assetManager, baseRadius: radius }), cloned, parent };
 }
 const first = makeSystem();
 assert.equal(first.system.instances.length, 18);
+assert.equal(first.system.panelWireframes.size, 6);
+for (let index = 0; index < 6; index += 1) {
+  const copies = first.system.records.slice(index * 3, index * 3 + 3);
+  assert.ok(copies.every((record) => record.panelWireframe === copies[0].panelWireframe));
+}
+assert.notDeepEqual(first.system.getPanelWireframe('shell-relic-1'), first.system.getPanelWireframe('shell-relic-2'));
 for (let index = 1; index <= 6; index += 1) assert.equal(first.cloned.filter((id) => id === `shell-relic-${index}`).length, 3);
 const radii = first.system.instances.map((shell) => shell.userData.shellOrbit.radius);
 assert.ok(radii.every((radius) => radius >= 10 && radius <= 20));

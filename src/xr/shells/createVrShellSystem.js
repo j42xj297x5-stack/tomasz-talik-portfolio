@@ -1,4 +1,5 @@
 import * as THREE from '../../vendor/three.js';
+import { createObjectWireframeData } from '../visuals/createObjectWireframeData.js';
 
 const TAU = Math.PI * 2;
 const ASSET_IDS = Object.freeze(Array.from({ length: 6 }, (_, index) => `shell-relic-${index + 1}`));
@@ -13,12 +14,14 @@ export function createVrShellSystem({ parent, assetManager, baseRadius, emission
   const claimedDuration = emissionSettings.claimedEmissionPulseDuration ?? 1.4;
   const object = new THREE.Group(); object.name = 'VrShellSystem'; object.visible = false; parent.add(object);
   let active = false, elapsed = 0, disposed = false, currentDelta = 0;
-  const instances = [], records = [], ownedMaterials = new Set();
+  const instances = [], records = [], ownedMaterials = new Set(), panelWireframes = new Map();
   const scratchQuaternion = new THREE.Quaternion();
 
   ASSET_IDS.forEach((assetId, assetIndex) => SUFFIXES.forEach((suffix, copyIndex) => {
     const index = assetIndex * SUFFIXES.length + copyIndex;
     const shell = assetManager.cloneGltfScene(assetId);
+    if (!panelWireframes.has(assetId)) panelWireframes.set(assetId, createObjectWireframeData(shell));
+    const panelWireframe = panelWireframes.get(assetId);
     const emissiveMaterials = [];
     shell.traverse((child) => { if (!child.isMesh || !child.material) return;
       const cloneMaterial = (material) => { const clone = material.clone(); ownedMaterials.add(clone);
@@ -28,7 +31,7 @@ export function createVrShellSystem({ parent, assetManager, baseRadius, emission
     shell.updateMatrixWorld(true);
     const bounds = new THREE.Box3().setFromObject(shell).getBoundingSphere(new THREE.Sphere());
     const attractorId = `shell-${String(assetIndex + 1).padStart(2, '0')}-${suffix}`;
-    const record = { object: shell, emissiveMaterials, boundingCenter: shell.worldToLocal(bounds.center.clone()), boundingRadius: bounds.radius,
+    const record = { object: shell, emissiveMaterials, panelWireframe, boundingCenter: shell.worldToLocal(bounds.center.clone()), boundingRadius: bounds.radius,
       radius: baseRadius * (1 + index / 17), phase: index * GOLDEN_ANGLE, inclination: -Math.PI / 3 + (index % 7) * Math.PI / 18,
       ascendingNode: (index * GOLDEN_ANGLE * 0.61) % TAU, angularSpeed: 0.035 + (index % 5) * 0.006,
       direction: index % 2 === 0 ? 1 : -1,
@@ -38,7 +41,7 @@ export function createVrShellSystem({ parent, assetManager, baseRadius, emission
       returnElapsed: 0, returnDuration: 0.8, returnEmissionStart: 0, returning: false };
     shell.name = attractorId;
     Object.assign(shell.userData, { attractorTarget: true, attractorType: 'shell', attractorId, shellState: 'orbiting',
-      shellAssetId: assetId, shellOrbit: Object.freeze({ radius: record.radius, phase: record.phase, inclination: record.inclination,
+      shellAssetId: assetId, panelWireframe, shellOrbit: Object.freeze({ radius: record.radius, phase: record.phase, inclination: record.inclination,
         ascendingNode: record.ascendingNode, angularSpeed: record.angularSpeed, direction: record.direction }),
       selfRotationAxis: record.selfRotationAxis.clone(), selfRotationSpeed: record.selfRotationSpeed });
     object.add(shell); instances.push(shell); records.push(record);
@@ -89,5 +92,6 @@ export function createVrShellSystem({ parent, assetManager, baseRadius, emission
     instances.length = 0; records.length = 0; }
   applyPositions();
   return { object, instances, records, innerRadius: baseRadius, outerRadius: baseRadius * 2,
+    panelWireframes, getPanelWireframe: (assetId) => panelWireframes.get(assetId) ?? null,
     get active() { return active; }, getRecord, setEmission, setActive, update, returnToOrbit, removeInstance, reset, dispose };
 }

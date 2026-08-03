@@ -285,6 +285,7 @@ export function createVrAstroFurnaceContentInteraction({
   function dispose() { if (disposed) return; reset(); disposed = true; listeners.clear(); feedback?.removeFromParent(); feedbackGeometry?.dispose(); feedbackMaterial?.dispose(); }
   return { update, reset, dispose, getInsertedShell: () => insertedShell,
     getInsertedShellAssetId: () => insertedShell ? validAssetId(insertedShell) : null,
+    getInsertedShellWireframe: () => insertedShell?.userData?.panelWireframe ?? null,
     hasInsertedContent: () => [states.INSERTED, states.CONSUMING, states.CONSUMED].includes(state),
     hasValidInsertedContent: () => state === states.INSERTED && validate(insertedShell), canAcceptShell, reportHeldShell,
     consumeInsertedContent, commitConsumedContent, getState: () => state, isInsertionReady: () => insertionReady,
