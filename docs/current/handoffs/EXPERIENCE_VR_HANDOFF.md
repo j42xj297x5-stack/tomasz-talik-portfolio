@@ -1,60 +1,41 @@
 # Experience VR Handoff
 
-Status: self-contained implementation state at **2026-08-01**. Read the [runtime model](../technical/VR_RUNTIME_MODEL.md) and [progress-floor model](../technical/VR_PROGRESS_FLOOR_MODEL.md) for the canonical technical contracts.
+Status: self-contained current snapshot for a new work thread, **2026-08-02**. Code is implementation evidence; the runtime model is the detailed canonical contract.
 
-## Runtime and locomotion
+## IMPLEMENTED
 
-Experience VR is an independent, dynamically imported WebXR runtime. It owns its renderer, scene, camera, `playerRig`, controllers, lifecycle, and animation loop. Sessions request `local-floor` with `local` fallback and start at `(0, 0, 5.8)` facing center. WebXR owns the tracked camera; entry alignment, left-stick continuous yaw, and right-stick tracked-head-relative horizontal movement transform only `playerRig` while preserving rig Y.
+### Runtime, lifecycle and locomotion
 
-Disconnect, session reset/end, re-entry and disposal clear targeting, transient hit distances and halo state, and restore each pointer to full length. Session entry/end also resets transient crystals, hands/socket ownership, glyph feedback, buttons, reliquary, portal, and rig pose while reusing the prepared runtime.
+- Experience VR is an independent, dynamically imported WebXR runtime owned by `src/experienceVr.js`; it does not boot Experience 3D.
+- Preparation happens before the direct immersive-session gesture. Reference space is `local-floor`, with `local` fallback. The tracked head is aligned to the configured start `(0, 0, 5.8)` through `playerRig`; application code does not steer the XR camera.
+- Controller records are valid while handedness is initially empty; left/right identity arrives after WebXR `connected`.
+- Left stick yaws the rig. Right stick moves horizontally relative to tracked viewer heading. Teleport, jump and snap turn are absent.
+- Ordinary white rays reach `2.3 m` and shorten only to reported real interaction hits.
+- XR exit/re-entry resets transient interaction state but preserves committed progress within the prepared page runtime. Reload/navigation resets it; no durable save exists.
 
-Controller interaction has one `2.3 m` source of maximum range for its visible pointer, glyph hits and crystal targeting/grab; trigger press does not extend it, while reliquary button limits are capped by it. Existing target raycasts report valid glyph, crystal, Activate and Release hit distances each frame, and the pointer shortens to the nearest one before returning to full range on target loss. Its transparent `0.010 m`-diameter low-poly tube keeps a constant diameter and a short tapered end rather than scaling uniformly or using a screen-width line. Actionable glyph and crystal ray targets use only effectively visible model meshes for a shared, subtle pulsating back-side silhouette shader. It expands in clip space by a configured pixel thickness and reads the current WebXR eye viewport in its render hook; hidden bases, technical helpers and fallback colliders are excluded. Target loss, state changes, reset and disposal clear it without postprocessing.
+### Crystals, reliquary, progression and floor
 
-An active glyph or available crystal under the pointer gets a subtle pulsating halo that means the action is currently available; a haloed crystal is therefore squeeze-grabbable. The halo reuses visible model geometry with `ShaderMaterial`, computes thickness in screen/viewport space instead of scaling the model, and updates its viewport per eye during WebXR stereo rendering. Hidden meshes/materials, technical hit areas, helpers and fallback colliders are excluded. It uses no postprocessing, bloom or `OutlinePass`; target loss and reset clear it, while disposal also removes shells, materials and render hooks.
+- Five branches contain 18 cards in counts `3 / 3 / 3 / 4 / 5`. Physical crystals are branch+tier instances and do not own page/card identity.
+- Real glyph meshes use a `0.5 s` hold with `0.15 s` loss grace. Spawn captures glyph world position and offsets `0.30 m` inward. Acquisition is additive; insertion is current-tier gated.
+- Available crystals are targeted and squeeze-grabbed by ordinary rays. Reliquary proximity only classifies held-crystal insertion. Invalid insertion returns through `rejecting` without progress.
+- Activate previews a branch+tier page. Release commits it, activates the floor panel, tests the tier, then consumes the crystal. Release without Activate does not progress.
+- `VrProgressionController` owns committed state. The floor projects it with five authored sectors, 18 panels and five idempotent procedural tier rings.
 
-A glyph raycast uses the real visible model meshes, not a large sphere. Its hold lasts `0.5 s` by default. A miss pauses progress for `holdLostGraceSeconds = 0.15`; reacquiring the same glyph continues the accumulated hold, while a longer miss, another glyph hit, `selectend` or disconnect cancels it. The active light sits about `1.0 m` radially inward in the X/Z plane while preserving the glyph's Y.
+### Tier 1 Astro/shell gameplay slice
 
-## Cards, crystals, and progression
+- Tier 1 unlocks Astro and activates 18 shells: six assets with three instances each. `?p1` remains a QA shortcut to the post-Tier-1 state.
+- Semantic right input is: **A / `toggleRightTool`** toggles `NORMAL_HAND ↔ ASTRO_ATTRACTOR`; **squeeze / `grabAction` > 0.1** scans; **trigger / `primaryAction` > 0.1** starts and sustains pull while scanning.
+- `createVrHandModeController` owns Astro equipment/visibility. `NORMAL_HAND` shows the right ordinary ray and hides Astro; `ASTRO_ATTRACTOR` does the reverse.
+- The single scan cone follows local `-Z`, reaches `3R`, has a `2.5°` half-angle, color `0x78ff9c`, opacity `0.035–0.065` and a `1.6 s` pulse. Targeting analytically tests cached shell bounding spheres, with no ray fan.
+- Pull uses `10 m/s²`, maximum `8.5 m/s`, and `0.28 m` capture radius. Its capture point is `worldPosition(PIVOT_RING_MASTER) + worldDirection(controller local -Z) * 1.3 m`.
+- States are `orbiting → targeted → pulling → capture_ready → held → placed`, plus technical `returning`. Cancellation before takeover returns in `0.8 s`, with `attractorTarget=false` until orbit is restored.
+- Handoff is explicit: the left ordinary ray hits the `capture_ready` shell within `2.3 m`, halo/reporting confirms the hit, then left squeeze holds it. It is not a proximity capture. Left release places it under `VrWorldRoot`.
+- Placed shells remain ineligible for Astro (`attractorTarget=false`) but can be repeatedly haloed, grabbed and placed with either free ordinary ray; the right ray works only in `NORMAL_HAND`. Shell priority over a crystal exists only for a real shell hit.
+- Shell materials are cloned without losing authored maps. Pull emission progresses `0→1`, `capture_ready` is `1`, held/placed pulse `1→2→1` over `1.4 s`, and deterministic tumble is `0.10–0.22 rad/s`.
 
-Five branches contain 18 cards in counts `3 / 3 / 3 / 4 / 5` and reuse 15 GLBs. A physical crystal represents only a branch and tier, with a visual variant selecting the shared model; it does not retain a page or card ID. A branch can stock its successive unrepresented tiers regardless of the current global tier.
+## NOT IMPLEMENTED / FUTURE
 
-On a completed glyph hold, the crystal captures the moving glyph's current world position and materializes `0.30 m` inward toward the central world object, at the resulting spatial height and independently of the viewer pose. Local minimum-spacing offsets prevent overlap, and the spawned crystal does not continue following the glyph.
-
-Available-crystal targeting uses the shared `2.3 m` maximum. Squeeze pulls the targeted crystal to the grip socket while applying the configurable correction to the grip root, currently `holdRotationDegrees = { x: 30, y: 0, z: 0 }`; the GLB's local rotations are not rewritten.
-
-The in-memory `VrProgressionController` owns committed pages. Tiers 1–3 require all five branches, tier 4 Metal and Water, and tier 5 Water. Only a crystal matching the current tier can be inserted. Activate resolves and previews the branch/tier page without progress or floor activation. Release after Activate commits exactly once, lights the matching floor panel, and may advance the tier. It also frees the socket immediately and starts a `0.55 s`, non-interactive `consuming` state: the crystal shrinks in place while 14 lightweight branch-colored points orbit, expand slightly, and fade; both are removed when the effect ends or transient state resets. Release without Activate returns the crystal to `available`. Transient reset preserves controller progress for the prepared runtime only.
-
-The reliquary keeps its authored insertion-zone mesh hidden and mirrors its world sphere with a separate, translucent runtime halo while a held crystal is nearby. Green means Release can insert under the progression controller's current validation; red means it cannot. An invalid Release inside the zone moves the crystal through a temporary, non-targetable `rejecting` state and eases it deterministically beyond the capture sphere, then restores `available` without socket or progression changes. The halo and any rejection state are transient session state and are cleared by runtime reset and disposal.
-
-## Complete five-sector visual floor
-
-`createVrProgressFloor` composes five authored, non-placeholder sectors under the stationary `VrTiltableFloorRoot`:
-
-- Creative AI / Fire — `/glb/floor_creative.glb` — 3 panels;
-- Ethics / Earth — `/glb/floor_ethic.glb` — 3 panels;
-- AI Guide / Wood — `/glb/floor_ai_guide.glb` — 3 panels;
-- DIG Engine / Metal — `/glb/floor_dig_engine.glb` — 4 panels;
-- Haiku Cosmos / Water — `/glb/floor_haiku_cosmos.glb` — 5 panels.
-
-The five sectors share a center and are placed every 72°. Their **18 panels** map one-to-one to pages by `page.glyphId + page.order`. Activation produces a short emissive impulse followed by a stable glow; entries accumulate idempotently.
-
-Five independent procedural global rings cover the full 360° for tiers 1–5, so tiers 4 and 5 remain complete circles despite their smaller branch requirements. The per-order median radial panel centroids are raw candidates and need not be tier-monotonic: runtime sorts them ascending and enforces `minimumRingGap >= ringThickness * 2` before assigning five concentric radii. After the final required page commit, the runtime checks `VrProgressionController.isTierComplete(page.order)` and idempotently completes that tier's ring. Its neutral cool-white material performs one short opacity impulse and retains a subtle glow. Ring state survives session exit/re-entry with the prepared floor; disposal explicitly releases ring geometries and materials.
-
-The authored sectors and 18 named panels are critical. Procedural ring meshes are optional decoration: an isolated creation failure removes and disposes partial ring resources while preserving the usable sector/panel floor and VR readiness. Missing required models, bases, or panels can still fail floor construction.
-
-The content registry `activatedPageIds` and floor registry `activatedEntries` both survive XR session exit/re-entry only while the already prepared page runtime exists. Reload or navigation loses both. The controller owns logical progress; the floor keeps its separate visual registry and is updated only after a successful commit.
-
-## Not implemented / outside the current runtime
-
-- progressively filled sector-background illumination;
-- soft gradient progress boundary;
-- central progression core;
-- durable persistence;
-- full-game reset;
-- floor tilting;
-- locomotion coupled to the floor's local plane;
-- floor collisions and physics;
-- antenna puzzle;
-- final progression sequence.
-
-The visual floor projects committed controller state and does not replace the progression controller. A Meta Quest 3S smoke test confirms that preload finishes, the scene reaches ready state, **Enter VR** enables, and an immersive session can be entered. Full readability, z-fighting, performance, transparent-overdraw, and end-to-end gameplay QA remain open.
+- B is not implemented. Approved future behavior makes it a selector only among unlocked Astro bands: RED, YELLOW, GREEN, BLUE and ULTRAVIOLET.
+- Sphere assembly is not implemented. The approved future value is `sphereAssembly.requiredShells = 6`; six acquired shells are intended to construct the left-hand floor-control sphere.
+- The sphere as a spatial gyroscope, floor tilt/local-plane movement, progressive sector backgrounds, central core, small glyphs, antenna, runes, final radar/finale, audio, durable persistence and full-game reset remain future work.
+- After Tier 1, ordinary `2.3 m` reach is intended to become insufficient for further glyphs. Target separation is approximately `3 m`; moving the platform versus moving the glyph ring is deliberately unresolved.
