@@ -1,6 +1,8 @@
 import * as THREE from '../../vendor/three.js';
 import { drawFurnaceFrame } from './drawVrFurnaceFrame.js';
 import { resolveProcessTelemetry, shouldRefreshTelemetry } from './vrFurnaceTelemetry.js';
+import { ASTERION_SHELL_PATCHES } from './asterionShellPatchData.js';
+import { assemblySegmentVisible, createAsterionPatchGeometry, resolvePatchVisualStates } from './asterionSphereWireframe.js';
 
 export const ASTRO_FURNACE_PANEL_STATES = Object.freeze({
   HIDDEN: 'HIDDEN', APPEARING: 'APPEARING', VISIBLE: 'VISIBLE', DISAPPEARING: 'DISAPPEARING'
@@ -38,6 +40,9 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
   let elapsed = 0, telemetryElapsed = 0, lastTelemetryRedraw = 0, completedUntil = 0, previousProcessState = 'IDLE';
   let hoveredRegion = null, interactiveRegions = [], disposed = false, redrawCount = 0;
   const moduleListeners = new Set();
+  // The expensive UV subdivision and cube-face mapping happen exactly once per panel.
+  const patchGeometryByAssetId = createAsterionPatchGeometry(ASTERION_SHELL_PATCHES);
+  const patchDataByAssetId = Object.fromEntries(ASTERION_SHELL_PATCHES.map((patch) => [patch.assetId, patch]));
 
   function panelRect(x, y, width, height, options = {}) {
     drawFurnaceFrame(context, { x, y, width, height, cornerSize: options.cornerSize ?? config.frameCornerSizePx, ...options });
@@ -66,14 +71,24 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
     interactiveRegions = [{ id: 'back-modules', x: 90, y: 55, width: 260, height: 70, enabled: true }];
     panelRect(90, 55, 260, 70, { hovered: hoveredRegion === 'back-modules', accentColor: accents.asterion }); text('← MODUŁY', 120, 102, 27);
     text('SFERA ASTERIONOWA', 90, 190, 48); text('Rdzeń żyroskopowy sterowania kręgiem', 90, 238, 24, '#88b8cf');
+    const currentAssetId = contentSource?.getInsertedShellAssetId?.();
+    const currentState = contentSource?.getState?.() ?? 'EMPTY';
     progress.shells.forEach((shell, index) => {
       const col = index % 3, row = Math.floor(index / 3), x = 90 + col * 455, y = 270 + row * 175;
-      panelRect(x, y, 405, 145, { active: shell.absorbed, completed: shell.absorbed, accentColor: shell.absorbed ? accents.asterion : accents.idle });
+      const processing = shell.assetId === currentAssetId && !shell.absorbed && ['CONSUMING', 'CONSUMED'].includes(currentState);
+      panelRect(x, y, 405, 145, { active: shell.absorbed || processing, completed: shell.absorbed, accentColor: shell.absorbed ? accents.asterion : processing ? accents.process : accents.idle });
       text(`SKORUPA ${String(index + 1).padStart(2, '0')}`, x + 30, y + 45, 24);
-      context.textAlign = 'center'; text(shell.absorbed ? '◆' : '◇', x + 202, y + 87, 28, shell.absorbed ? '#d9f8ff' : '#6e8997'); context.textAlign = 'left';
-      text(shell.absorbed ? 'ZGROMADZONA' : 'BRAK', x + 30, y + 122, 21, shell.absorbed ? '#c7f5ff' : '#6e8997');
+      drawShellMiniature(patchDataByAssetId[shell.assetId], x + 202, y + 82, 65, shell.absorbed ? accents.complete : processing ? accents.process : accents.idle, shell.absorbed || processing);
+      text(shell.absorbed ? 'ZGROMADZONA' : processing ? 'W PROCESIE' : 'BRAK', x + 30, y + 122, 21, shell.absorbed ? '#c7f5ff' : processing ? accents.process : '#6e8997');
     });
     drawProcessMonitor();
+  }
+  function drawShellMiniature(patch, cx, cy, scale, color, bright) {
+    if (!patch) return;
+    context.save(); context.strokeStyle = color; context.globalAlpha = bright ? .92 : .25; context.lineWidth = bright ? 1.8 : 1.2;
+    context.shadowColor = bright ? color : 'transparent'; context.shadowBlur = bright ? 7 : 0; context.beginPath();
+    patch.segments2d.forEach(([ax, ay, bx, by]) => { context.moveTo(cx + ax * scale, cy - ay * scale); context.lineTo(cx + bx * scale, cy - by * scale); });
+    context.stroke(); context.restore();
   }
   function readTelemetry() {
     const rawState = processSource?.getState?.() ?? 'IDLE';
@@ -96,7 +111,7 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
       context.fillStyle = accents[telemetry.colorKey]; context.fillRect(barX, barY, barWidth * telemetry.extractionProgress, 16);
       text(`${Math.round(telemetry.extractionProgress * 100)}%`, barX + barWidth + 18, barY + 17, 20, '#b9dce8');
     }
-    drawAsterionPreview(progressSnapshot(), x + 855, y + 150, 118);
+    drawAsterionPreview(progressSnapshot(), telemetry, x + 855, y + 150, 118);
     const contentState = contentSource?.getState?.() ?? 'EMPTY'; const assetId = contentSource?.getInsertedShellAssetId?.();
     const contentLabels = { INSERTED: 'GOTOWY', CONSUMING: 'ABSORPCJA', CONSUMED: 'ZABEZPIECZONO' };
     if (contentLabels[contentState]) { context.textAlign = 'right'; text(`MATERIAŁ // ${contentLabels[contentState]}${assetId ? `  ${assetId.replace('shell-relic-', 'SKORUPA ')}` : ''}`, x + width - 28, y + 267, 19, '#88b8cf'); context.textAlign = 'left'; }
@@ -127,18 +142,27 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
     context.stroke(); context.restore();
   }
   function progressSnapshot() { return progressionController.getAsterionSphereProgress(); }
-  function drawAsterionPreview(progress, cx, cy, radius) {
-    const rotation = telemetryElapsed * .22; text(`KULA ASTERIONOWA  ${progress.absorbed}/6`, cx - 190, cy - 112, 20, accents.asterion);
-    context.save(); context.lineWidth = 3;
-    for (let segment = 0; segment < 6; segment++) {
-      const start = rotation + segment * Math.PI / 3, end = start + Math.PI / 3 - .08;
-      context.strokeStyle = segment < progress.absorbed ? '#c8f6ff' : '#355766';
-      context.shadowColor = segment < progress.absorbed ? accents.asterion : 'transparent'; context.shadowBlur = segment < progress.absorbed ? 14 : 0;
-      context.beginPath(); context.arc(cx, cy, radius, start, end); context.stroke();
-    }
-    context.shadowBlur = 0; context.strokeStyle = '#588797'; context.lineWidth = 2;
-    context.beginPath(); context.ellipse(cx, cy, radius, radius * .34, rotation, 0, Math.PI * 2); context.stroke();
-    context.beginPath(); context.ellipse(cx, cy, radius * .34, radius, -rotation * .7, 0, Math.PI * 2); context.stroke(); context.restore();
+  function drawAsterionPreview(progress, telemetry, cx, cy, radius) {
+    const yaw = telemetryElapsed * .16, pitch = -.24 + Math.sin(telemetryElapsed * .07) * .08;
+    const cosineY = Math.cos(yaw), sineY = Math.sin(yaw), cosineX = Math.cos(pitch), sineX = Math.sin(pitch);
+    const assetId = contentSource?.getInsertedShellAssetId?.(), contentState = contentSource?.getState?.() ?? 'EMPTY';
+    const states = resolvePatchVisualStates(progress, { assetId, contentState, phase: telemetry.phase, extractionProgress: telemetry.extractionProgress });
+    const rotate = ([x, y, z]) => { const rx = x * cosineY + z * sineY, rz = -x * sineY + z * cosineY; return [rx, y * cosineX - rz * sineX, y * sineX + rz * cosineX]; };
+    const drawPatches = (predicate, color, alpha, glow = 0) => {
+      context.save(); context.strokeStyle = color; context.globalAlpha = alpha; context.lineWidth = 1.6; context.shadowColor = color; context.shadowBlur = glow; context.beginPath();
+      ASTERION_SHELL_PATCHES.forEach((patch) => patchGeometryByAssetId[patch.assetId].fragments.forEach((fragment) => {
+        if (!predicate(patch.assetId, fragment)) return;
+        const a = rotate(fragment.a), b = rotate(fragment.b), depth = (a[2] + b[2]) * .5;
+        if (depth <= -.02) return;
+        context.moveTo(cx + a[0] * radius, cy - a[1] * radius); context.lineTo(cx + b[0] * radius, cy - b[1] * radius);
+      }));
+      context.stroke(); context.restore();
+    };
+    text(`KULA ASTERIONOWA  ${progress.absorbed}/6`, cx - 190, cy - 112, 20, accents.asterion);
+    drawPatches(() => true, '#6aa6b8', .1);
+    drawPatches((id) => states[id]?.committed, accents.complete, progress.complete ? .94 + Math.sin(telemetryElapsed * 2) * .04 : .9, 9);
+    drawPatches((id, fragment) => states[id]?.pending && assemblySegmentVisible(fragment, states[id].assemblyProgress), accents.process, .9, 10);
+    context.save(); context.strokeStyle = '#588797'; context.globalAlpha = .22; context.lineWidth = 1.2; context.beginPath(); context.arc(cx, cy, radius, 0, Math.PI * 2); context.stroke(); context.restore();
   }
   function draw() {
     if (!context) return; redrawCount += 1; context.clearRect(0, 0, canvas.width, canvas.height);
