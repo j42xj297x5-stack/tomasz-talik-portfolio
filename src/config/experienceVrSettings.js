@@ -25,7 +25,8 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
     scale: 3,
     debug: false,
     content: {
-      enabled: true, proximityRadiusMultiplier: 1.15, snapDuration: 0.32, insertedScale: 0.72,
+      enabled: true, volumeRadius: 0.122, proximityRadiusMultiplier: 1.15, snapDuration: 0.42, insertedScale: 0.72,
+      contentClearance: 0.012, rejectDuration: 0.28, rejectDistanceMultiplier: 1.35,
       feedbackOpacity: 0.20, validColor: 0x49d17d, invalidColor: 0xe05252,
       consumeStartProgress: 0.18, consumeEndProgress: 0.78
     },
@@ -44,7 +45,8 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
       emissionPressed: 5
     },
     optionButton: {
-      enabled: true, rayMaxDistance: 3, emissionInactive: 0, emissionHover: 1, emissionActive: 3
+      enabled: true, rayMaxDistance: 3, emissionInactive: 0, emissionHover: 1, emissionActive: 3,
+      selectionDuration: 0.48, moduleAnglesDegrees: { floor_gyroscope_sphere: 90 }
     },
     panel: {
       enabled: true, width: 1.55, height: 1.05, gapFromFurnace: 0.18, verticalOffset: 0.15,

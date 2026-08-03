@@ -226,6 +226,7 @@ astroFurnaceContentInteraction = createVrAstroFurnaceContentInteraction({
   activateInteraction: astroFurnaceActivateInteraction, progressionController: furnaceProgressionController,
   controllers: vrControllers.controllers, settings: settings.furnace.content
 });
+astroFurnaceContentInteraction.subscribe(() => furnacePanel.redraw());
 astroFurnaceOptionInteraction = createVrAstroFurnaceOptionInteraction({
   furnace: astroFurnace, panel: furnacePanel, controllers: vrControllers.controllers,
   settings: settings.furnace.optionButton, haloSettings: settings.targetHalo,
