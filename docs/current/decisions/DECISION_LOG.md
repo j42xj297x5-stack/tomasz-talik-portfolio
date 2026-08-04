@@ -37,7 +37,10 @@ Status: current binding decisions organized by implementation status, not patch 
 9. The lid does not spin during processing.
 10. `AstroFurnace_ButtonActivate_Lock` remains physically pressed through COMPLETE and releases only when the next opening begins.
 11. The CanvasTexture panel is a read-only projection of furnace progression, process and transient content state; it is not a state owner.
-12. `complete=true` at `6/6` means the required material set is committed. It does not construct or materialize the physical Asterion Sphere.
+12. The panel Asterion is a deterministic reconstruction of the six real, audited shell patches: every `shellAssetId` has one fixed `±X / ±Y / ±Z` assignment. Runtime consumes exported patch data and does not perform PCA or GLB analysis.
+13. Material progression remains the exclusive property of `VrAstroFurnaceProgressionController`; panel miniatures, pending assembly and the full-sphere ghost never own or infer progression from a counter.
+14. `complete=true` at `6/6` means the exact six-shell material set and its panel hologram are complete. It does not construct or materialize the physical Asterion Sphere.
+15. Physical construction/materialization of the Asterion Sphere is the next separate system, including its future `UTWÓRZ` action and left-hand equipment.
 
 ## Approved future gameplay direction — not implemented
 

@@ -6,7 +6,7 @@ Sześć finalnych GLB przeanalizowano offline. PCA daje użyteczny, stabilny rzu
 
 ## ZADANIE
 
-Audyt geometrii i prototyp danych przyszłej Sfery Asterionowej; bez zmian runtime, gameplayu i istniejącego cached wireframe.
+Audyt geometrii i źródło deterministycznie eksportowanych danych produkcyjnych panelowej Sfery Asterionowej. Sam etap audytu nie zmieniał runtime ani gameplayu.
 
 ## METODA AUDYTU
 
@@ -44,11 +44,11 @@ Bardziej złożone łaty 1–4 zajmują równik, a 5–6 bieguny. Stałe skale .
 
 ## WNIOSKI
 
-Spherical-cube zachowuje rozpoznawalne linie i dobrze komunikuje sześć energetycznych płyt. Nie są potrzebne geometryczne overrides. Rekomendowana jest jedynie ocena artystyczna skali szczeliny po wdrożeniu; dane pozwalają przejść bez ponownej analizy GLB do implementacji runtime.
+Spherical-cube zachowuje rozpoznawalne linie i dobrze komunikuje sześć energetycznych płyt. Nie są potrzebne geometryczne overrides. Runtime panelu zużywa deterministycznie eksportowane dane bez ponownej analizy GLB i bez PCA. Nadal możliwa jest artystyczna ocena skali szczeliny.
 
 ## NIE WYKONANO / POZA ZAKRESEM
 
-Nie zmieniono GLB, panelu, wireframe pojedynczej skorupy, progresji, insertion/process ani gameplayu. Nie użyto WebGLRenderer/GPU.
+Sam audyt nie zmienił GLB, panelu, wireframe pojedynczej skorupy, progresji, insertion/process ani gameplayu. Nie użyto WebGLRenderer/GPU; integracja panelu nastąpiła w osobnym etapie.
 
 ## ZMIENIONE/DODANE PLIKI
 
@@ -64,4 +64,4 @@ EdgesGeometry odzwierciedla próg cech 30°, a limit 100 celowo redukuje detal. 
 
 ## STAN PUBLIKACJI
 
-Gotowe dane audytowe; integracja runtime pozostaje osobnym etapem.
+Gotowe dane audytowe są źródłem wdrożonych danych patchy panelu. Fizyczna Kula Asterionowa pozostaje osobnym przyszłym etapem.
