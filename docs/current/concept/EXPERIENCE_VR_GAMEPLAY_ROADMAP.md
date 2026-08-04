@@ -48,12 +48,18 @@ Experience VR is a spatial progression game built around five portfolio branches
 - [x] Physical Activate interaction and complete spinup/steady/extraction/cooldown process.
 - [x] Runtime process-spin pivot and angle-coupled fire-cell feedback.
 - [x] Physical Option interaction and toggleable CanvasTexture panel.
+- [x] Mandatory furnace-module selection: initial mode is unset, and Open/insertion/Activate unlock only after Asterion Sphere selection.
 - [x] Asterion progression counter and exactly six unique required shell asset types.
 - [x] Physical shell insertion with valid/invalid feedback.
 - [x] Same-instance snap to the content anchor and pre-activation retrieval.
-- [x] Visual shell absorption through `CONSUMING → CONSUMED`.
+- [x] Synchronized `3 / 3 / 9 / 3 s` SPINUP/STEADY/EXTRACTION/COOLDOWN process.
+- [x] EXTRACTION-driven physical-shell dissolve through `CONSUMING → CONSUMED`.
 - [x] Material commit only after process COMPLETE and controlled shell removal.
 - [x] Panel projection of gathered/missing Asterion materials.
+- [x] Deterministic miniatures of the six real shell types.
+- [x] Deterministic full-sphere ghost.
+- [x] Per-shell patch assembly from audited geometry and fixed shell identity.
+- [x] Continuously rotating Asterion panel preview, including IDLE.
 - [x] Phase-aware ASCII/Unicode process telemetry.
 
 ## Approved Astro band progression — future
@@ -77,6 +83,7 @@ The current shell slice does not yet implement YELLOW as a selectable band; shel
 - [x] Store one of each six unique shell types as binary `0/1` furnace progression.
 - [x] Absorb inserted physical shells during the furnace process.
 - [x] Project gathered/missing types and `x/6` progress on the panel.
+- [x] Dissolve the current shell wireframe and assemble its matching pending sphere patch from the same EXTRACTION progress.
 - [x] Report `complete=true` when all six unique types are committed.
 
 The furnace is a progression transformer/store, not a physical essence-output machine. `complete=true` at `6/6` means the material set is complete; it does **not** mean a physical Asterion Sphere exists.
@@ -84,6 +91,7 @@ The furnace is a progression transformer/store, not a physical essence-output ma
 ## Asterion physical construction and floor control — future
 
 - [ ] Transfer the completed material set into a visible physical construction sequence.
+- [ ] Add the physical **UTWÓRZ** action.
 - [ ] Materialize the luminous Asterion Sphere.
 - [ ] Equip the completed sphere as a left-hand tool.
 - [ ] Use the sphere as a spatial gyroscope for floor control.

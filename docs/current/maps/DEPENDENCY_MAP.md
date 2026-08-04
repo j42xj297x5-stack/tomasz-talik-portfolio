@@ -39,7 +39,8 @@ experienceVr
    ├─ activate interaction
    ├─ option interaction
    ├─ content interaction
-   ├─ furnace panel
+   ├─ audit-derived patch data → Asterion sphere wireframe helper → furnace panel
+   ├─ activate interaction `extractionProgress` → panel dissolve / progress / patch assembly
    └─ VrAstroFurnaceProgressionController
 ```
 
@@ -120,7 +121,9 @@ Tier 1 complete → shell field
    → panel x/6 update
 ```
 
-Insertion depends on `OPEN + IDLE + empty content`. Reopening before activation exposes the inserted instance to ordinary-ray retrieval and does not commit. The commit dependency is strictly `CONSUMED + COMPLETE`; session reset before it clears transient content without progress.
+Option selection of `floor_gyroscope_sphere` is a prerequisite for Open, insertion and Activate; the initial mode is unset. Insertion then depends on `OPEN + IDLE + empty content`. Reopening before activation exposes the inserted instance to ordinary-ray retrieval and does not commit. The commit dependency is strictly `CONSUMED + COMPLETE`; session reset before it clears transient content without progress.
+
+The audit-to-panel path carries deterministic exported patch data only: PCA and GLB analysis remain offline. The activation interaction's single EXTRACTION-local progress drives physical dissolve and the matching pending panel patch; identity commit still belongs to `VrAstroFurnaceProgressionController`.
 
 ## Floor asset flow
 

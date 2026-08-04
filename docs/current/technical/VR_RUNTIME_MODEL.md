@@ -63,80 +63,50 @@ Every shell owns cloned materials; authored `map` and `emissiveMap` data are pre
 
 ## Astro Furnace and Asterion progression
 
-### Asset, placement and authored contract
+### Configuration gate and controls
 
-The Astro Furnace is a separate Experience VR subsystem backed by `public/glb/astral_stove.glb`. The staged asset pipeline preloads it through the shared `AssetManager`. Runtime places the furnace on the opposite side of the central monkey from the portal: its XZ position is the portal position mirrored around the central anchor. It uses scale `3`, grounds itself from visible geometry bounds and faces the configured player start. Fixed test world coordinates are not part of this contract.
+The Astro Furnace is a separate subsystem backed by `public/glb/astral_stove.glb`, preloaded through `AssetManager`, placed opposite the portal, grounded from visible bounds, scaled to `3` and faced toward the configured start. Authored open/close animation owns `PIVOT_FURNACE_CHAMBER_Z`; runtime spin owns only `PIVOT_FURNACE_PROCESS_SPIN`, and the lid never spins.
 
-The important authored nodes are:
+The furnace is deliberately unconfigured at session start: Option owns `activeMode = null`. Open, insertion and Activate are unavailable until the player opens the panel with Option and selects **Asterion Sphere**, which activates `floor_gyroscope_sphere`. Option is therefore the first suggested step. Selection rotates `PIVOT_BUTTON_OPTION` by `+90°` around its local Y axis relative to its authored base quaternion. Its local ray-hover is stronger than its active and idle emissions, and its halo is locally stronger than the shared default.
 
-```text
-button_open                 PIVOT_BUTTON_OPEN
-button_activate             PIVOT_BUTTON_ACTIVATE
-button_option               PIVOT_BUTTON_OPTION
-PIVOT_FURNACE_LATCH_LEFT    PIVOT_FURNACE_LATCH_RIGHT
-PIVOT_FURNACE_LATCH_TOP     PIVOT_FURNACE_LID_Z
-PIVOT_FURNACE_CHAMBER_Z     PIVOT_FURNACE_PROCESS_SPIN
-komora                      pokrywa
-fire_cell
-VR_FURNACE_INSERT_VOLUME    VR_FURNACE_CONTENT_ANCHOR
-```
+After configuration, Open uses `CLOSED → OPENING → OPEN → CLOSING → CLOSED`; authored button, latch, lid and chamber clips reverse on close, and glass fades. Activate requires `CLOSED + valid INSERTED`, locks down, and runs `IDLE → PRESSING → SPINUP → STEADY → EXTRACTION → COOLDOWN → COMPLETE`. Processing begins only after the lock clip finishes. The button remains down at COMPLETE and unlocks when the next opening begins.
 
-`PIVOT_FURNACE_CHAMBER_Z` belongs to authored chamber open/close animation. Continuous process rotation is applied only to `PIVOT_FURNACE_PROCESS_SPIN`; the lid does not rotate during processing. `VR_FURNACE_ESSENCE_ANCHOR` may remain detectable in the asset contract, but no current gameplay output uses it.
+### Insertion, takeover and commit
 
-### Three physical controls and process mechanics
+The inset authored bounds of `komora` define a Y-axis insertion cylinder and its guide. When the **geometric center** of a currently held, missing required shell enters that cylinder, content interaction automatically takes the same physical instance over; release is not required. Unknown and duplicate shell types are invalid and are pushed out immediately along the controller lance without takeover or destruction. The guide remains visible for an empty, open, configured furnace and switches to pulsing valid/invalid feedback for a candidate.
 
-`button_open` uses an ordinary controller ray, nearest-real-hit ray shortening and a halo. Its state machine is `CLOSED → OPENING → OPEN → CLOSING → CLOSED`. The button, three latches, lid and chamber use authored clips; runtime fades the chamber glass, and closing plays the mechanical clips in reverse. Further presses are ignored in transition. `canInsert()` is true only in `OPEN`, and opening is blocked while the process is active.
+Candidate tests and snap alignment use the shell record's `boundingCenter`, rather than its object origin. The shell attaches to `VR_FURNACE_CONTENT_ANCHOR`; snap preserves its baseline world scale, downscaling only if required to fit the chamber, and retrieval restores that baseline without cumulative scaling. Reopening before activation permits ordinary-ray+squeeze retrieval. Outside this safe-open state the chamber cylinder acts as a soft blocker.
 
-`button_activate` also uses ordinary-ray real hits and a halo. Activation is available only with the chamber closed and valid inserted content. Its state machine is `IDLE → PRESSING → SPINUP → STEADY → EXTRACTION → COOLDOWN → COMPLETE`. Processing starts only from the `AnimationMixer.finished` event for `AstroFurnace_ButtonActivate_Lock`. The physical button stays locked down after completion; beginning the next opening reverse-plays the lock clip and eventually returns activation to `IDLE`.
+Exactly one each of `shell-relic-1` through `shell-relic-6` is required. `VrAstroFurnaceProgressionController` owns these six identity-based binary material slots independently from portfolio progression. During processing the inserted shell stays settled and dissolves through emission and opacity. Commit remains strictly gated by the conjunction `CONSUMED + COMPLETE`; interruption before it clears transient content without progress. A successful commit removes only that physical shell instance and advances its `shellAssetId` slot. The furnace emits no removable physical essence.
 
-The default 18-second process has steady speed `42 RPM`, direction `-1` and extraction multiplier `2`. Its normalized phases and exact durations are:
+### Synchronized 18-second process
+
+The default profile is one continuous 18-second process at `42 RPM`, direction `-1`, with a `2×` extraction multiplier:
 
 ```text
-SPINUP       0–1/6        3 s
-STEADY       1/6–1/3      3 s
-EXTRACTION   1/3–5/6      9 s
-COOLDOWN     5/6–1        3 s
+SPINUP       0–3 s
+STEADY       3–6 s
+EXTRACTION   6–15 s
+COOLDOWN     15–18 s
 ```
 
-During the first 30% of EXTRACTION, speed rises smoothly from steady speed to `2×`, then stays at maximum. COOLDOWN captures the real entry speed and angle, uses Hermite interpolation to preserve inertia, selects a target on a complete revolution, and finishes by restoring the exact base quaternion.
+There is one local `extractionProgress`, which is `0→1` only during EXTRACTION. The physical shell dissolve and panel dissolve/progress/patch assembly consume this same value; SPINUP and STEADY do not advance absorption, and COOLDOWN begins with extraction already complete. The first 30% of EXTRACTION accelerates smoothly to `2×`; COOLDOWN preserves entry inertia with Hermite interpolation, lands on a full revolution and restores the exact authored quaternion.
 
-The runtime clones `fire_cell` materials. Phase energy rises to default emission `4` in STEADY and `10` in EXTRACTION while emissive color approaches white. Its pulse derives from the accumulated mechanical angle—approximately two pulses per revolution—so it accelerates and decelerates with the chamber mechanism. A single shadowless internal `PointLight` follows the same phase envelope and orbits in chamber-local XZ with `lightAngle = -processAngle`; IDLE and COMPLETE keep it disabled. COMPLETE and reset restore the authored base material values.
+The cloned `fire_cell` materials and inserted-shell emission use a common process phase derived from accumulated mechanical angle. A single shadowless `PointLight` follows the phase energy envelope but orbits against the chamber angle (`lightAngle = -processAngle`) around a stable axis/reference, so its counter-rotation is stable rather than inherited from the spinning pivot. IDLE/COMPLETE disable the light and restore authored material values.
 
-`button_option` is the third ordinary-ray, real-hit and halo interaction. It toggles the furnace panel. `AstroFurnace_ButtonOption_PreviewRange` and physical option detents are not active runtime behavior.
+### Two-sided panel and deterministic Asterion Sphere
 
-### Panel and telemetry
+The panel is a furnace sibling and therefore does not inherit furnace scale `3`. It has separate `VrAstroFurnacePanelFrontPlane` and `VrAstroFurnacePanelBackPlane`, each with `FrontSide`, sharing one `CanvasTexture`. The back plane is geometrically turned around, so the same canvas reads normally—neither crushed nor mirrored—from both sides; `DoubleSide` is not used. Its world size is about `1.55 × 1.05`, its configured gap is about `0.10 m`, and yaw is about `-12°`.
 
-The panel is a `CanvasTexture` on `PlaneGeometry`. It is parented as a sibling of the scaled furnace, so it does not inherit scale `3`; its world size is approximately `1.55 × 1.05`, it sits to the furnace's right and unfolds from its left-edge pivot. Its own ordinary-ray intersection maps `intersection.uv` into explicit canvas regions.
+HOME contains the active Asterion module and two UI-only future modules. The Asterion screen shows real deterministic mini-wireframes for all six shells and the states **BRAK / W PROCESIE / ZGROMADZONA**. While this screen is visible, throttled redraw (default `12 Hz`, clamped `4–30 Hz`) continues even in IDLE, so the full sphere preview never stops rotating.
 
-The implemented screens are `HOME` and `ASTERION_SPHERE`. HOME exposes active **Asterion Sphere (Sfera Asterionowa)** and UI-visible future **Astro Attractor (Astro Przyciągacz)** and **Emanation Matrix (Matryca Emanacji)** modules. Parametric astrolabe-style frames behave as scalable 9-slice-like borders, with restrained cyan, amber and violet accents. The sphere screen distinguishes gathered and missing shell types and displays process telemetry.
+The preview is not an arc/ellipse placeholder. It consists of a deterministic ghost of the complete sphere plus six audited shell patches with fixed identity mapping to `+X / -X / +Y / -Y / +Z / -Z`. Audit-derived 2D segments are mapped onto curved spherical-cube faces with subdivision; the Canvas projection rotates the entire sphere continuously and applies front/back culling. During EXTRACTION the inserted shell wireframe fades in deterministic order while its matching patch materializes in parallel from the same `extractionProgress`. The patch remains pending through COOLDOWN and is not rendered as committed until `COMPLETE` causes the progression controller to commit that `shellAssetId`.
 
-The panel is a read-only consumer of process state, overall progress, the process-owned local EXTRACTION progress, angular speed, accumulated process angle, content state and chamber state. Its Canvas 2D monitor draws the actual inserted shell asset from CPU-only line data generated once per `shell-relic-*` type: mesh edges are transformed into shell-root space, centered, normalized and deterministically capped. The panel slowly rotates and projects those cached 3D segments without another renderer or render pass; only during EXTRACTION does the shared local progress drive their deterministic dissolve order, while COOLDOWN and COMPLETE omit the absorbed shell entirely. The absorption progress bar is likewise visible only during EXTRACTION. A separate gently rotating six-segment wireframe preview continues to show committed Asterion Sphere progress. OPEN + INSERTED instructs the user to close the lid; CLOSED + INSERTED reports extraction readiness. Both remain IDLE displays without a progress bar, and only the physical Activate button starts processing. COMPLETE confirms that the essence was stored in furnace memory. While a process (or its short completion display) is active, canvas redraw defaults to `12 Hz`, normalized to `4–30 Hz`; otherwise updates remain event-driven.
+At `6/6` the panel therefore shows a complete material/holographic reconstruction. It is **not** a physical Asterion Sphere and does not construct or materialize one.
 
-### Six-type progression, insertion and commit safety
+### Audit-derived data boundary
 
-`VrAstroFurnaceProgressionController` owns committed furnace material progression independently of portfolio progression. Asterion Sphere requires exactly one of every known type: `shell-relic-1`, `shell-relic-2`, `shell-relic-3`, `shell-relic-4`, `shell-relic-5` and `shell-relic-6`. Each is binary `0/1`; an unknown ID or duplicate is invalid. Its snapshot exposes `absorbed`, `required`, `complete`, per-shell states and `missing` IDs. Committed furnace progress survives XR session exit/re-entry in the prepared page runtime, but reload/navigation recreates it; no durable save exists.
-
-The complete material flow is:
-
-```text
-Tier 1 complete → shell field
-Astro scan/pull → capture_ready → ordinary-ray takeover → held / placed
-open furnace → held shell enters VR_FURNACE_INSERT_VOLUME
-├─ unknown or duplicate → INVALID → no takeover
-└─ required missing type → VALID → release
-   → same physical instance snaps to VR_FURNACE_CONTENT_ANCHOR → INSERTED
-close furnace → activation available
-activate → PRESSING → SPINUP → CONSUMING → visual absorption
-extractionProgress 1 → CONSUMED → still no commit
-process COMPLETE + CONSUMED → commit shellAssetId
-→ remove physical shell → update furnace progress x/6
-```
-
-Insertion requires an `OPEN` chamber, process `IDLE` and empty furnace content. The authored local bounds of `komora`, inset by configurable clearance, define one Y-axis cylinder: its X/Z radius and Y height drive the closed blocker, cylindrical feedback, representative-center candidate test and safe downscale dimensions. `VR_FURNACE_INSERT_VOLUME` remains an anchor marker and its empty `Object3D` bounds are never used for sizing. Validity additionally requires a known `shellAssetId` for which `canAbsorbShell(assetId)` is true. Invalid shells remain physical and are not taken over or destroyed.
-
-The inserted shell remains the same physical instance. Its authored baseline scale is retained per instance: snap only downscales an oversized shell to fit and retrieval restores that baseline without cumulative insert/retrieve scaling. While the chamber is open it presents as `placed`, so `insert → close → reopen before activate` permits ordinary-ray plus squeeze retrieval from the content anchor, with no commit. Outside that safe-open state, the authored `komora` bounds form an oriented cylindrical soft blocker which backs a held shell out along the controller lance. During processing the shell stays settled; absorption uses emission and opacity rather than orbit/tumble or spatial motion. Insert, close, activation press, SPINUP, CONSUMING and even CONSUMED never commit by themselves. Commit occurs only when content is `CONSUMED` **and** the process is `COMPLETE`. Session interruption/reset before that conjunction removes transient furnace content and never commits it.
-
-On successful commit, `createVrShellSystem.removeInstance` removes the shell record, instance and instance-owned cloned materials. It does not dispose shared cached geometry, textures or `AssetManager` resources. The furnace is therefore a material transformer plus progression store, not a generator of removable physical essence.
+[`docs/current/audits/asterion-shells/`](../audits/asterion-shells/) is the deterministic offline audit of the six final GLBs and the source of production patch data. Runtime performs no PCA and no GLB geometry analysis for Asterion patches; it consumes deterministically exported audit data through the Asterion sphere wireframe helper. Detailed metrics remain in the [geometry audit](../audits/asterion-shells/asterion-shell-geometry-audit.md), not in this runtime model.
 
 ## Implemented boundary
 
