@@ -21,30 +21,52 @@ Experience 3D and VR have separate owners. No shared-world-factory migration is 
 ```text
 experienceVr
 ├─ settings + AssetManager → preloaded runtime GLBs
-├─ world root → central object, monkey, lights, glyph orbit, portal
-├─ playerRig → controllers + locomotion
+├─ worldRoot
+│  ├─ world-stable glyph ring / shell field / cosmos
+│  └─ VrTiltableFloorRoot
+│     ├─ progress floor sectors / rings
+│     ├─ monkeyAnchor
+│     ├─ VrPlatformFixturesRoot → portal / reliquary / furnace / furnace panel
+│     └─ VrFloorPassengerRoot → playerRig → camera / controllers / grips
+├─ local-plane locomotion → VrFloorPassengerRoot/playerRig
 ├─ glyph interaction → crystal collection
 ├─ reliquary → Activate / Release
-├─ VrProgressionController → progress floor
+├─ VrProgressionController → progress floor projection
+├─ independent hand modes
+│  ├─ LEFT X: NORMAL_HAND ↔ ASTERION_SPHERE
+│  └─ RIGHT A: NORMAL_HAND ↔ ASTRO_ATTRACTOR
 ├─ Tier-1 Astro/shell slice
-   ├─ semantic input
-   → hand mode controller
-   → Astro visual tool
-   → scan cone
-   → shell attractor interaction
-   → shell system
-└─ Astro Furnace
-   ├─ furnace asset / mirrored placement
-   ├─ open interaction
-   ├─ activate interaction
-   ├─ option interaction
-   ├─ content interaction
-   ├─ audit-derived patch data → Asterion sphere wireframe helper → furnace panel
-   ├─ activate interaction `extractionProgress` → panel dissolve / progress / patch assembly
-   └─ VrAstroFurnaceProgressionController
+│  ├─ semantic input
+│  ├─ hand mode controller
+│  ├─ Astro visual tool
+│  ├─ scan cone
+│  ├─ shell attractor interaction
+│  └─ shell system
+├─ Astro Furnace
+│  ├─ furnace asset / platform-fixture placement
+│  ├─ open / activate / option / content interactions
+│  ├─ audit-derived patch data → Asterion sphere wireframe helper → furnace panel
+│  └─ VrAstroFurnaceProgressionController
+└─ QA Asterion Sphere behind ?asterionSphere
+   ├─ createVrAsterionSphere → left-hand equipment and ring nodes
+   └─ createVrAsterionGyroInteraction → PREVIEW / COMMAND / CURRENT + heavy angular drive
 ```
 
 Handedness is populated after each WebXR controller `connected` event; construction does not require an initial left/right value.
+
+## Platform and locomotion flow
+
+```text
+Asterion Sphere PREVIEW
+→ trigger-held COMMAND
+→ heavy angular drive with angularVelocity
+→ CURRENT quaternion on VrTiltableFloorRoot
+→ platform fixtures + passenger player inherit tilt/orientation
+→ locomotion resolves on platform-local tangent plane
+→ radial boundary uses snapshot glyphOrbit.effectiveRadius
+```
+
+The glyph ring and shell field stay world-stable, so the accepted QA/prototype direction is a rotating platform under a stable target frame.
 
 ## Progression and crystal flow
 
@@ -69,7 +91,7 @@ Tier 1 complete
 → shell field active (6 assets × 3 instances)
 + Astro unlocked
 
-A / toggleRightTool
+RIGHT A / toggleRightTool
 → NORMAL_HAND ↔ ASTRO_ATTRACTOR
 
 ASTRO_ATTRACTOR
@@ -79,24 +101,13 @@ ASTRO_ATTRACTOR
 → right trigger > 0.1
 → pull (10 m/s², max 8.5 m/s)
 → capture_ready at Master Ring + controller-local -Z × 1.3 m
-→ left standard 2.3 m ray + squeeze
+→ left NORMAL_HAND standard 2.3 m ray + squeeze
 → held
 → release
 → placed under VrWorldRoot
-
-cancel before takeover
-→ returning for 0.8 s, attractorTarget=false
-→ orbiting, attractorTarget=true
-
-placed shell, attractorTarget=false
-→ ordinary 2.3 m ray of either free hand
-   (right only in NORMAL_HAND)
-→ re-grab
-→ release
-→ placed
 ```
 
-Shell-over-crystal priority is conditional on an actual shell ray hit. Astro acquisition cannot target placed shells.
+Placed shells remain excluded from Astro targeting and are re-grabbable by ordinary rays of free hands only.
 
 ## Active shell-to-furnace flow
 
@@ -106,13 +117,9 @@ shell system
 → VrAstroFurnaceProgressionController
 → furnace panel (read-only projection)
 
-Tier 1 complete → shell field
-→ Astro scan/pull → capture_ready
-→ ordinary-ray takeover → held / placed
-→ open furnace → held shell reaches INSERT_VOLUME
+open furnace → held shell reaches INSERT_VOLUME
 ├─ unknown/duplicate → INVALID → remains physical
-└─ required missing type → VALID → release
-   → same instance snaps to CONTENT_ANCHOR → INSERTED
+└─ required missing type → VALID → same instance snaps to CONTENT_ANCHOR
    → close furnace
    → activate interaction → PRESSING → SPINUP
    → content CONSUMING → CONSUMED (no commit yet)
@@ -121,20 +128,8 @@ Tier 1 complete → shell field
    → panel x/6 update
 ```
 
-Option selection of `floor_gyroscope_sphere` is a prerequisite for Open, insertion and Activate; the initial mode is unset. Insertion then depends on `OPEN + IDLE + empty content`. Reopening before activation exposes the inserted instance to ordinary-ray retrieval and does not commit. The commit dependency is strictly `CONSUMED + COMPLETE`; session reset before it clears transient content without progress.
-
-The audit-to-panel path carries deterministic exported patch data only: PCA and GLB analysis remain offline. The activation interaction's single EXTRACTION-local progress drives physical dissolve and the matching pending panel patch; identity commit still belongs to `VrAstroFurnaceProgressionController`.
-
-## Floor asset flow
-
-```text
-asset manifest → AssetManager
-→ five sector models → createVrProgressFloor → VrTiltableFloorRoot
-→ 18 authored panels + optional five procedural tier rings
-```
-
-The optional procedural ring layer can fail without blocking the critical sector/panel floor.
+Option selection of `floor_gyroscope_sphere` is a prerequisite for Open, insertion and Activate; the initial mode is unset. The audit-to-panel path carries deterministic exported patch data only: PCA and GLB analysis remain offline.
 
 ## Not active dependencies
 
-Progressive sector backgrounds, central progression core, Astro B/bands, physical Asterion Sphere construction, floor-control sphere, floor tilting/local-plane locomotion, small glyphs, antenna, rune/Emanation Matrix processing, final radar/finale, audio, durable persistence and full-game reset are not active runtime dependencies.
+Progressive sector backgrounds, central progression core, Astro B/bands, production physical Asterion Sphere construction/materialization, `UTWÓRZ`, production progression gate, radar sectors, small glyph progression, antenna, rune/Emanation Matrix processing, final radar/finale, audio, durable persistence and full-game reset are not active runtime dependencies.
