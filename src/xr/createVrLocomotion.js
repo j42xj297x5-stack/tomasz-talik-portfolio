@@ -96,6 +96,7 @@ export function createVrLocomotion({ playerRig, renderer, camera, settings, surf
   const constrainedDelta = new THREE.Vector3();
   const initialLocalY = playerRig.position.y;
   let disposed = false;
+  let leftYawLocked = false;
 
   function axesFor(handedness) {
     const sources = renderer.xr.getSession()?.inputSources ?? [];
@@ -108,7 +109,7 @@ export function createVrLocomotion({ playerRig, renderer, camera, settings, surf
     if (disposed || !settings.enabled || !Number.isFinite(delta) || delta <= 0) return;
     const y = playerRig.position.y;
     const left = axesFor('left');
-    playerRig.rotateY(-left.x * settings.turnSpeed * delta);
+    if (!leftYawLocked) playerRig.rotateY(-left.x * settings.turnSpeed * delta);
 
     const rightStick = axesFor('right');
     const xrCamera = renderer.xr.getCamera(camera);
@@ -132,7 +133,8 @@ export function createVrLocomotion({ playerRig, renderer, camera, settings, surf
     playerRig.position.y = y;
   }
 
-  function reset() { playerRig.position.y = initialLocalY; }
+  function setLeftYawLocked(locked) { leftYawLocked = Boolean(locked); }
+  function reset() { playerRig.position.y = initialLocalY; leftYawLocked = false; }
   function dispose() { disposed = true; }
-  return { update, reset, dispose };
+  return { update, reset, dispose, setLeftYawLocked };
 }

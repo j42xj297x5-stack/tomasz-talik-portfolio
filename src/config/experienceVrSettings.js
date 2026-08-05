@@ -94,6 +94,18 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
     lockThresholdDegrees: 0.5,
     lockDelaySeconds: 0.18
   },
+  playerGuidePanel: {
+    enabled: true,
+    width: 0.34,
+    height: 0.22,
+    canvasWidth: 768,
+    canvasHeight: 512,
+    position: { x: 0.02, y: 0.11, z: -0.18 },
+    rotationDegrees: { x: -28, y: 0, z: 0 },
+    navigationThreshold: 0.55,
+    triggerThreshold: 0.45,
+    colors: { background: '#101722', border: '#75d7ff', text: '#eff9ff', muted: '#9ab0bd', selected: '#1f5d78' }
+  },
   controllers: {
     enabled: true,
     rayLength: 2.3,
@@ -388,6 +400,18 @@ export function normalizeExperienceVrSettings(candidate) {
       settleAngularSpeedDegrees: finiteNumber(candidate.asterionSphere?.settleAngularSpeedDegrees, defaults.asterionSphere.settleAngularSpeedDegrees, { min: 0 }),
       lockThresholdDegrees: finiteNumber(candidate.asterionSphere?.lockThresholdDegrees, defaults.asterionSphere.lockThresholdDegrees, { min: 0, max: 10 }),
       lockDelaySeconds: finiteNumber(candidate.asterionSphere?.lockDelaySeconds, defaults.asterionSphere.lockDelaySeconds, { min: 0, max: 2 })
+    },
+    playerGuidePanel: {
+      enabled: typeof candidate.playerGuidePanel?.enabled === 'boolean' ? candidate.playerGuidePanel.enabled : defaults.playerGuidePanel.enabled,
+      width: finiteNumber(candidate.playerGuidePanel?.width, defaults.playerGuidePanel.width, { min: 0.1, max: 1 }),
+      height: finiteNumber(candidate.playerGuidePanel?.height, defaults.playerGuidePanel.height, { min: 0.1, max: 1 }),
+      canvasWidth: Math.round(finiteNumber(candidate.playerGuidePanel?.canvasWidth, defaults.playerGuidePanel.canvasWidth, { min: 256, max: 2048 })),
+      canvasHeight: Math.round(finiteNumber(candidate.playerGuidePanel?.canvasHeight, defaults.playerGuidePanel.canvasHeight, { min: 256, max: 2048 })),
+      position: normalizeVector(candidate.playerGuidePanel?.position, defaults.playerGuidePanel.position),
+      rotationDegrees: normalizeVector(candidate.playerGuidePanel?.rotationDegrees, defaults.playerGuidePanel.rotationDegrees),
+      navigationThreshold: finiteNumber(candidate.playerGuidePanel?.navigationThreshold, defaults.playerGuidePanel.navigationThreshold, { min: 0.1, max: 1 }),
+      triggerThreshold: finiteNumber(candidate.playerGuidePanel?.triggerThreshold, defaults.playerGuidePanel.triggerThreshold, { min: 0.1, max: 1 }),
+      colors: { ...defaults.playerGuidePanel.colors, ...(candidate.playerGuidePanel?.colors ?? {}) }
     },
     controllers: {
       enabled: typeof candidate.controllers?.enabled === 'boolean'

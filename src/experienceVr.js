@@ -38,6 +38,7 @@ import { createVrAstroFurnaceProgressionController } from './xr/furnace/createVr
 import { createVrAstroFurnaceContentInteraction } from './xr/furnace/createVrAstroFurnaceContentInteraction.js';
 import { createVrAsterionSphere } from './xr/asterion/createVrAsterionSphere.js';
 import { createVrAsterionGyroInteraction } from './xr/asterion/createVrAsterionGyroInteraction.js';
+import { createVrPlayerGuidePanel } from './xr/guidance/createVrPlayerGuidePanel.js';
 import { experienceVrPages, getExperienceVrPages, resolveExperienceVrPage } from './content/experienceVrPages.js';
 
 const app = document.querySelector('#app');
@@ -230,6 +231,13 @@ const handModeController = createVrHandModeController({
   isUnlocked: () => progressionController.isTierComplete(1),
   isAsterionAvailable: () => asterionSphereQa
 });
+const playerGuidePanel = createVrPlayerGuidePanel({
+  leftGrip: vrControllers.controllers[0]?.grip,
+  semanticInput,
+  locale: language,
+  settings: settings.playerGuidePanel
+});
+const isPlayerGuidePanelOpen = () => playerGuidePanel.isOpen();
 let astroFurnaceActivateInteraction = null;
 let astroFurnaceContentInteraction = null;
 let astroFurnaceOptionInteraction = null;
@@ -246,7 +254,8 @@ const furnacePanel = createVrAstroFurnacePanel({
   }
 });
 platformFixturesRoot.attach(furnacePanel.object);
-const ordinaryFurnaceRayAvailable = (record) => !(record.handedness === 'right'
+const ordinaryFurnaceRayAvailable = (record) => !(isPlayerGuidePanelOpen() && record.handedness === 'left')
+  && !(record.handedness === 'right'
   && handModeController.getRightMode() === 'ASTRO_ATTRACTOR')
   && !(asterionSphereQa && asterionSphere.isEquipped() && record.handedness === 'left');
 const astroFurnaceOpenInteraction = createVrAstroFurnaceOpenInteraction({
@@ -292,6 +301,7 @@ const crystalCollection = createVrCrystalCollection({
   settings: settings.crystals, haloSettings: settings.targetHalo, insertFeedbackSettings: settings.reliquary.insertFeedback,
   pages: experienceVrPages, progressionController,
   canGrabController: (record) => {
+    if (isPlayerGuidePanelOpen() && record.handedness === 'left') return false;
     if (record.handedness === 'right' && handModeController.getRightMode() === 'ASTRO_ATTRACTOR') return false;
     if (asterionSphereQa && asterionSphere.isEquipped() && record.handedness === 'left') return false;
     if (astroFurnaceOpenInteraction.hasCurrentHit(record)) return false;
@@ -349,7 +359,7 @@ const glyphInteraction = createVrGlyphInteraction({
   nodes,
   settings: settings.glyphInteraction,
   haloSettings: settings.targetHalo,
-  isGlyphActive,
+  isGlyphActive: (node) => !isPlayerGuidePanelOpen() && isGlyphActive(node),
   onGlyphHoldComplete: ({ node }) => {
     if (getNextCrystalTier(node) === null) return;
     node.updateWorldMatrix(true, false);
@@ -363,7 +373,8 @@ shellAttractorInteraction = createVrShellAttractorInteraction({
   controllers: vrControllers.controllers, shellSystem, handModeController, semanticInput, attractorTool,
   settings: settings.shellAttractor, haloSettings: settings.targetHalo, settledParent: worldRoot,
   crystalHeldByController: crystalCollection.heldByController,
-  isHigherPriorityInteractionActive: (record) => Boolean(activateButton.hits.get(record)
+  isHigherPriorityInteractionActive: (record) => Boolean((isPlayerGuidePanelOpen() && record.handedness === 'left')
+    || activateButton.hits.get(record)
     || releaseButton.hits.get(record) || astroFurnaceOpenInteraction.hasCurrentHit(record)
     || astroFurnaceActivateInteraction.hasCurrentHit(record) || astroFurnaceOptionInteraction.hasCurrentHit(record)
     || furnacePanel.hasCurrentHit(record) || record.currentHit)
@@ -388,6 +399,8 @@ function renderFrame() {
   const delta = clock.getDelta();
   vrControllers.beginRayHitFrame();
   handModeController.update(delta);
+  playerGuidePanel.update(delta);
+  locomotion.setLeftYawLocked(playerGuidePanel.isOpen());
   astroFurnace.update(delta);
   furnacePanel.update(delta);
   astroFurnaceOptionInteraction.update(delta);
@@ -429,6 +442,7 @@ function handleSessionEnd() {
   activeSession = null;
   astroFurnace.reset();
   furnacePanel.reset();
+  playerGuidePanel.reset();
   astroFurnaceOptionInteraction.reset();
   astroFurnaceOpenInteraction.reset();
   astroFurnaceActivateInteraction.reset();
@@ -450,6 +464,7 @@ function handleSessionEnd() {
   asterionGyroInteraction.reset();
   asterionSphere.reset();
   handModeController.reset();
+  playerGuidePanel.reset();
   showReadyState({ ended: hasEnteredSession });
 }
 
@@ -457,6 +472,7 @@ async function enterVr() {
   if (activeSession) return;
   astroFurnace.reset();
   furnacePanel.reset();
+  playerGuidePanel.reset();
   astroFurnaceOptionInteraction.reset();
   astroFurnaceOpenInteraction.reset();
   astroFurnaceActivateInteraction.reset();
@@ -478,6 +494,7 @@ async function enterVr() {
   asterionGyroInteraction.reset();
   asterionSphere.reset();
   handModeController.reset();
+  playerGuidePanel.reset();
   enterButton.disabled = true;
   status.textContent = copy.entering;
   let requestedSession = null;
@@ -510,6 +527,7 @@ async function enterVr() {
     clock.stop();
     astroFurnace.reset();
     furnacePanel.reset();
+    playerGuidePanel.reset();
     astroFurnaceOptionInteraction.reset();
     astroFurnaceOpenInteraction.reset();
     astroFurnaceActivateInteraction.reset();
@@ -525,6 +543,7 @@ async function enterVr() {
     asterionGyroInteraction.reset();
     asterionSphere.reset();
     handModeController.reset();
+    playerGuidePanel.reset();
     status.textContent = copy.error;
     enterButton.disabled = false;
     exitButton.hidden = true;
@@ -540,6 +559,7 @@ window.addEventListener('pagehide', () => {
   astroFurnaceActivateInteraction.dispose();
   astroFurnaceContentInteraction.dispose();
   astroFurnaceOptionInteraction.dispose();
+  playerGuidePanel.dispose();
   furnacePanel.dispose();
   furnaceProgressionController.dispose();
   astroFurnace.dispose();
