@@ -79,6 +79,16 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
     },
     chamber: { glassFadeStart: 0.2, glassFadeEnd: 1 }
   },
+  asterionSphere: {
+    enabled: true,
+    qaQueryParam: 'asterionSphere',
+    targetDiameter: 0.18,
+    holdOffset: { x: 0, y: 0.07, z: -0.11 },
+    holdRotationDegrees: { x: 0, y: 0, z: 0 },
+    response: 7,
+    lockThresholdDegrees: 0.5,
+    lockDelaySeconds: 0.18
+  },
   controllers: {
     enabled: true,
     rayLength: 2.3,
@@ -358,6 +368,17 @@ export function normalizeExperienceVrSettings(candidate) {
         glassFadeEnd: finiteNumber(candidate.furnace?.chamber?.glassFadeEnd,
           defaults.furnace.chamber.glassFadeEnd, { min: 0, max: 1 })
       }
+    },
+    asterionSphere: {
+      enabled: typeof candidate.asterionSphere?.enabled === 'boolean' ? candidate.asterionSphere.enabled : defaults.asterionSphere.enabled,
+      qaQueryParam: typeof candidate.asterionSphere?.qaQueryParam === 'string' && candidate.asterionSphere.qaQueryParam.trim()
+        ? candidate.asterionSphere.qaQueryParam.trim() : defaults.asterionSphere.qaQueryParam,
+      targetDiameter: finiteNumber(candidate.asterionSphere?.targetDiameter, defaults.asterionSphere.targetDiameter, { min: 0.03, max: 0.5 }),
+      holdOffset: normalizeVector(candidate.asterionSphere?.holdOffset, defaults.asterionSphere.holdOffset),
+      holdRotationDegrees: normalizeVector(candidate.asterionSphere?.holdRotationDegrees, defaults.asterionSphere.holdRotationDegrees),
+      response: finiteNumber(candidate.asterionSphere?.response, defaults.asterionSphere.response, { min: 0, max: 40 }),
+      lockThresholdDegrees: finiteNumber(candidate.asterionSphere?.lockThresholdDegrees, defaults.asterionSphere.lockThresholdDegrees, { min: 0, max: 10 }),
+      lockDelaySeconds: finiteNumber(candidate.asterionSphere?.lockDelaySeconds, defaults.asterionSphere.lockDelaySeconds, { min: 0, max: 2 })
     },
     controllers: {
       enabled: typeof candidate.controllers?.enabled === 'boolean'

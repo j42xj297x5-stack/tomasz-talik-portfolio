@@ -108,8 +108,16 @@ At `6/6` the panel therefore shows a complete material/holographic reconstructio
 
 [`docs/current/audits/asterion-shells/`](../audits/asterion-shells/) is the deterministic offline audit of the six final GLBs and the source of production patch data. Runtime performs no PCA and no GLB geometry analysis for Asterion patches; it consumes deterministically exported audit data through the Asterion sphere wireframe helper. Detailed metrics remain in the [geometry audit](../audits/asterion-shells/asterion-shell-geometry-audit.md), not in this runtime model.
 
+## QA physical Asterion Sphere prototype
+
+`?asterionSphere` is a QA-only equipment override. It does not commit shells, does not alter `VrAstroFurnaceProgressionController`, does not fake `6/6`, and does not reinterpret the furnace panel preview as a physical object. When enabled, the runtime loads `public/glb/asterion_sphere.glb` through `AssetManager`, equips the cloned model on the resolved left `grip`, hides only the left ordinary ray while equipped, and leaves the right-hand Astro Attractor path unchanged.
+
+The prototype starts every `ASTERION_IDLE__*` clip on an `AnimationMixer` while validating that `ASTERION_ROOT`, `GIMBAL_CURRENT` and `GIMBAL_TARGET` remain runtime-driven. The left trigger is a quaternion clutch: target orientation captures from current target on trigger-down, follows physical left-grip world rotation while held, freezes on release, and supports repeated clutch accumulation without snap. `currentQuaternion` follows `targetQuaternion` with framerate-independent exponential slerp.
+
+Only `progressFloor.object` (`VrTiltableFloorRoot`) receives the resulting `currentQuaternion`; `playerRig`, camera and locomotion reference frame remain stable. `GIMBAL_CURRENT` and `GIMBAL_TARGET` are written in their actual parent space so their world orientations match the current/target radar orientation even while the sphere shell moves with the user’s hand.
+
 ## Implemented boundary
 
 Implemented: runtime/session lifecycle, locomotion, glyph/crystal/reliquary progression, floor panels/rings, Tier-1 shell activation, semantic Astro input, A mode toggle, Astro visual, analytic scan targeting, pull/cancel/return, explicit left-ray handoff, placement and ordinary-ray re-grab; Astro Furnace asset/placement; open, activate and option interactions; Asterion panel; six-type furnace progression; physical shell insertion, retrieval and absorption; COMPLETE-gated commit; and process telemetry.
 
-Not implemented: physical Asterion Sphere construction, floor-control sphere, floor tilting, small glyph progression, B band selection/Astro bands, antenna, rune processing, final radar/finale, durable persistence, full-game reset and audio.
+Not implemented: production physical Asterion Sphere construction, production equipment gating, `UTWÓRZ`, production 6/6 materialization, floor tilting, small glyph progression, B band selection/Astro bands, antenna, rune processing, final radar/finale, durable persistence, full-game reset and audio.
