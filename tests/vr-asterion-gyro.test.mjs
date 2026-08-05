@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import * as THREE from '../src/vendor/three.js';
 import { createVrAsterionSphere } from '../src/xr/asterion/createVrAsterionSphere.js';
 import { createVrAsterionGyroInteraction } from '../src/xr/asterion/createVrAsterionGyroInteraction.js';
-import { cappedExponentialSlerp, computeClutchedTargetQuaternion, exponentialSlerpAlpha, neutralizeControllerQuaternionAgainstFloor } from '../src/xr/asterion/asterionGyroMath.js';
+import { ASTERION_GYRO_STATES, cappedExponentialSlerp, computeClutchedTargetQuaternion, exponentialSlerpAlpha, neutralizeControllerQuaternionAgainstFloor } from '../src/xr/asterion/asterionGyroMath.js';
 
 const settings = { targetDiameter: 0.18, holdOffset: { x: 0, y: 0.07, z: -0.11 }, holdRotationDegrees: { x: 0, y: 0, z: 0 }, response: 2.5, maxAngularSpeedDegrees: 55, targetRingBlendResponse: 12, lockThresholdDegrees: 0.5, lockDelaySeconds: 0.18 };
 
@@ -266,6 +266,62 @@ const expected = computeClutchedTargetQuaternion({
   parentWorldQuaternion: new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI / 3)
 });
 assert.ok(expected.isQuaternion, 'clutch helper returns a quaternion for testable pure math');
+
+
+function spinUntilLocked(gyroInstance, maxFrames = 600) {
+  for (let i = 0; i < maxFrames && gyroInstance.getState() !== ASTERION_GYRO_STATES.LOCKED; i += 1) gyroInstance.update(1 / 60);
+  assert.equal(gyroInstance.getState(), ASTERION_GYRO_STATES.LOCKED, 'gyro reaches LOCKED within bounded simulation frames');
+}
+
+// Control-base regression: preview is relative to the last locked CURRENT, not absolute world zero.
+gyro.reset();
+leftTrigger = 0;
+leftGrip.quaternion.identity(); worldRoot.updateMatrixWorld(true); gyro.update(0.016);
+assertQuaternionClose(gyro.getPreviewQuaternion(), gyro.getCurrentQuaternion(), 'control base A: first capture keeps PREVIEW equal to CURRENT with no jump');
+const firstGesture = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), THREE.MathUtils.degToRad(40));
+leftGrip.quaternion.copy(firstGesture); worldRoot.updateMatrixWorld(true); gyro.update(0.016);
+const previewBeforeDrive = gyro.getPreviewQuaternion();
+assert.ok(previewBeforeDrive.angleTo(gyro.getCurrentQuaternion()) > 0.1, 'control base B: hand movement without trigger changes PREVIEW');
+assertQuaternionClose(gyro.getCommandQuaternion(), new THREE.Quaternion(), 'control base B: hand movement without trigger leaves COMMAND frozen');
+leftTrigger = 1; gyro.update(0.016);
+assertQuaternionClose(gyro.getCommandQuaternion(), previewBeforeDrive, 'control base C: trigger copies PREVIEW into COMMAND');
+leftTrigger = 0; gyro.update(0.016);
+const commandAfterRelease = gyro.getCommandQuaternion();
+const baseBeforeLock = gyro.getControlBaseQuaternion();
+leftGrip.quaternion.setFromAxisAngle(new THREE.Vector3(0, 1, 0), THREE.MathUtils.degToRad(55)); worldRoot.updateMatrixWorld(true); gyro.update(0.016);
+assertQuaternionClose(gyro.getCommandQuaternion(), commandAfterRelease, 'control base D: release freezes COMMAND');
+assert.ok(gyro.getPreviewQuaternion().angleTo(commandAfterRelease) > 0.05, 'control base D: PREVIEW remains live after release');
+assertQuaternionClose(gyro.getControlBaseQuaternion(), baseBeforeLock, 'control base E: no automatic rebase before LOCK');
+leftGrip.quaternion.setFromAxisAngle(new THREE.Vector3(0, 1, 0), THREE.MathUtils.degToRad(20)); worldRoot.updateMatrixWorld(true);
+leftTrigger = 1; gyro.update(0.016);
+const retargetedCommand = gyro.getCommandQuaternion();
+assert.ok(retargetedCommand.angleTo(commandAfterRelease) > 0.05, 'control base F: another trigger during TARGETING can change COMMAND before LOCK');
+leftTrigger = 0; gyro.update(0.016);
+spinUntilLocked(gyro);
+assertQuaternionClose(gyro.getCurrentQuaternion(), gyro.getCommandQuaternion(), 'control base G/M: LOCK hard-settles CURRENT to COMMAND');
+assertQuaternionClose(gyro.getControlBaseQuaternion(), gyro.getCurrentQuaternion(), 'control base G: LOCK rebases CONTROL BASE to CURRENT');
+assertQuaternionClose(gyro.getHandReferenceQuaternion(), neutralizeControllerQuaternionAgainstFloor({ gripWorldQuaternion: worldQuaternionOf(leftGrip), floorWorldQuaternion: worldQuaternionOf(progressFloor.object), floorParentWorldQuaternion: worldQuaternionOf(worldRoot) }), 'control base H: LOCK captures current hand as new hand reference');
+const lockedCurrent = gyro.getCurrentQuaternion();
+gyro.update(1 / 60);
+assertQuaternionClose(gyro.getPreviewQuaternion(), lockedCurrent, 'control base I/L: stationary hand after rebase leaves PREVIEW at new CURRENT');
+const lockedCurrentAgain = gyro.getCurrentQuaternion();
+gyro.update(1 / 60);
+assertQuaternionClose(gyro.getCurrentQuaternion(), lockedCurrentAgain, 'control base N: subsequent LOCKED frames do not move CURRENT');
+leftGrip.quaternion.setFromAxisAngle(new THREE.Vector3(0, 1, 0), THREE.MathUtils.degToRad(30)); worldRoot.updateMatrixWorld(true); gyro.update(0.016);
+const expectedIncremental = lockedCurrent.clone().multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), THREE.MathUtils.degToRad(10)));
+assert.ok(gyro.getPreviewQuaternion().angleTo(expectedIncremental) < 1e-7, 'control base J: post-LOCK hand delta increments from new control base');
+leftTrigger = 1; gyro.update(0.016);
+assertQuaternionClose(gyro.getCommandQuaternion(), gyro.getPreviewQuaternion(), 'control base O: trigger after LOCK starts next maneuver from rebased PREVIEW');
+leftTrigger = 0; gyro.update(0.016); spinUntilLocked(gyro);
+let expectedAccumulated = gyro.getCurrentQuaternion();
+for (const degrees of [45, 60]) {
+  leftGrip.quaternion.setFromAxisAngle(new THREE.Vector3(0, 1, 0), THREE.MathUtils.degToRad(degrees)); worldRoot.updateMatrixWorld(true); gyro.update(0.016);
+  leftTrigger = 1; gyro.update(0.016);
+  leftTrigger = 0; gyro.update(0.016); spinUntilLocked(gyro);
+  expectedAccumulated = gyro.getCurrentQuaternion();
+}
+assert.ok(expectedAccumulated.angleTo(new THREE.Quaternion()) > THREE.MathUtils.degToRad(35), 'control base K: repeated gesture/trigger/release/LOCK sequence accumulates orientation over stages');
+
 
 gyro.dispose(); sphere.dispose();
 console.log('VR Asterion gyro assertions passed');
