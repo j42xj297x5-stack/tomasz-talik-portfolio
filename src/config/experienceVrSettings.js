@@ -85,7 +85,9 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
     targetDiameter: 0.18,
     holdOffset: { x: 0, y: 0.07, z: -0.11 },
     holdRotationDegrees: { x: 0, y: 0, z: 0 },
-    response: 7,
+    response: 2.5,
+    maxAngularSpeedDegrees: 55,
+    targetRingBlendResponse: 12,
     lockThresholdDegrees: 0.5,
     lockDelaySeconds: 0.18
   },

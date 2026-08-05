@@ -32,9 +32,11 @@
       "y": 0,
       "z": 0
     },
-    "response": 7,
+    "response": 2.5,
     "lockThresholdDegrees": 0.5,
-    "lockDelaySeconds": 0.18
+    "lockDelaySeconds": 0.18,
+    "maxAngularSpeedDegrees": 55,
+    "targetRingBlendResponse": 12
   },
   "controllers": {
     "enabled": true,
