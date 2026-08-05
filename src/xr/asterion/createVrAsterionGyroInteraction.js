@@ -15,16 +15,17 @@ function getLeftPrimaryAction(renderer) {
 }
 
 export function createVrAsterionGyroInteraction({ sphere, controllers, progressFloor, worldRoot, renderer, settings, enabled = false }) {
-  const targetQuaternion = new THREE.Quaternion();
+  const previewQuaternion = new THREE.Quaternion();
+  const commandQuaternion = new THREE.Quaternion();
   const currentQuaternion = new THREE.Quaternion();
-  const grabStartControllerQuaternion = new THREE.Quaternion();
-  const grabStartTargetQuaternion = new THREE.Quaternion();
+  const previewReferenceControllerQuaternion = new THREE.Quaternion();
+  const previewReferenceQuaternion = new THREE.Quaternion();
   const controllerQuaternionNow = new THREE.Quaternion();
   const parentWorldQuaternion = new THREE.Quaternion();
   const floorWorldQuaternion = new THREE.Quaternion();
   const gripWorldQuaternion = new THREE.Quaternion();
-  let triggerWasDown = false;
-  let clutchActive = false;
+  let previewReferenceValid = false;
+  let driveActive = false;
   let lockTimer = 0;
   let state = ASTERION_GYRO_STATES.IDLE;
   let angularError = 0;
@@ -40,18 +41,19 @@ export function createVrAsterionGyroInteraction({ sphere, controllers, progressF
   }
 
   function reset() {
-    targetQuaternion.identity();
+    previewQuaternion.identity();
+    commandQuaternion.identity();
     currentQuaternion.identity();
-    grabStartControllerQuaternion.identity();
-    grabStartTargetQuaternion.identity();
-    triggerWasDown = false;
-    clutchActive = false;
+    previewReferenceControllerQuaternion.identity();
+    previewReferenceQuaternion.identity();
+    previewReferenceValid = false;
+    driveActive = false;
     lockTimer = 0;
     state = ASTERION_GYRO_STATES.IDLE;
     angularError = 0;
     if (progressFloor?.object?.quaternion) progressFloor.object.quaternion.identity();
     sphere?.setTargetRingsStabilized?.(false);
-    sphere?.syncGimbals?.({ currentQuaternion, targetQuaternion, worldRoot });
+    sphere?.syncGimbals?.({ currentQuaternion, targetQuaternion: previewQuaternion, worldRoot });
   }
 
   function update(delta = 0) {
@@ -67,42 +69,45 @@ export function createVrAsterionGyroInteraction({ sphere, controllers, progressF
     progressFloor?.object?.updateWorldMatrix?.(true, false);
     progressFloor?.object?.getWorldQuaternion?.(floorWorldQuaternion) ?? floorWorldQuaternion.identity();
 
-    if (triggerDown && !triggerWasDown && leftRecord?.grip) {
-      leftRecord.grip.updateWorldMatrix(true, false);
-      leftRecord.grip.getWorldQuaternion(gripWorldQuaternion);
-      neutralizeControllerQuaternionAgainstFloor({
-        gripWorldQuaternion, floorWorldQuaternion, floorParentWorldQuaternion: parentWorldQuaternion
-      }, grabStartControllerQuaternion);
-      grabStartTargetQuaternion.copy(targetQuaternion);
-      clutchActive = true;
-    } else if (!triggerDown && triggerWasDown) {
-      clutchActive = false;
-    }
-
-    if (triggerDown && clutchActive && leftRecord?.grip) {
+    if (leftRecord?.grip && sphere?.isEquipped?.()) {
       leftRecord.grip.updateWorldMatrix(true, false);
       leftRecord.grip.getWorldQuaternion(gripWorldQuaternion);
       neutralizeControllerQuaternionAgainstFloor({
         gripWorldQuaternion, floorWorldQuaternion, floorParentWorldQuaternion: parentWorldQuaternion
       }, controllerQuaternionNow);
-      computeClutchedTargetQuaternion({ controllerQuaternionNow, grabStartControllerQuaternion, grabStartTargetQuaternion, parentWorldQuaternion }, targetQuaternion);
+      if (!previewReferenceValid) {
+        previewReferenceControllerQuaternion.copy(controllerQuaternionNow);
+        previewReferenceQuaternion.copy(previewQuaternion);
+        previewReferenceValid = true;
+      } else {
+        computeClutchedTargetQuaternion({
+          controllerQuaternionNow,
+          grabStartControllerQuaternion: previewReferenceControllerQuaternion,
+          grabStartTargetQuaternion: previewReferenceQuaternion,
+          parentWorldQuaternion
+        }, previewQuaternion);
+      }
     }
 
-    triggerWasDown = triggerDown;
-    cappedExponentialSlerp(currentQuaternion, targetQuaternion, { response, deltaSeconds: safeDelta, maxAngularSpeedDegrees });
+    driveActive = triggerDown;
+    if (driveActive) commandQuaternion.copy(previewQuaternion);
+
+    cappedExponentialSlerp(currentQuaternion, commandQuaternion, { response, deltaSeconds: safeDelta, maxAngularSpeedDegrees });
     if (progressFloor?.object?.quaternion) progressFloor.object.quaternion.copy(currentQuaternion);
-    angularError = currentQuaternion.angleTo(targetQuaternion);
-    if (!triggerDown && angularError < lockThreshold) lockTimer += safeDelta;
+    angularError = currentQuaternion.angleTo(commandQuaternion);
+    if (!driveActive && angularError < lockThreshold) lockTimer += safeDelta;
     else lockTimer = 0;
-    state = resolveGyroState({ clutchActive: triggerDown, angularError: angularError < lockThreshold ? 0 : angularError, lockTimer, lockDelaySeconds });
-    sphere?.setTargetRingsStabilized?.(triggerDown || state === ASTERION_GYRO_STATES.TARGETING);
-    if (progressFloor?.object?.userData) progressFloor.object.userData.asterionGyro = { state, angularError };
-    sphere?.syncGimbals?.({ currentQuaternion, targetQuaternion, worldRoot });
+    state = resolveGyroState({ clutchActive: driveActive, angularError: angularError < lockThreshold ? 0 : angularError, lockTimer, lockDelaySeconds });
+    sphere?.setTargetRingsStabilized?.(driveActive);
+    if (progressFloor?.object?.userData) progressFloor.object.userData.asterionGyro = {
+      state, driveActive, angularError, previewCommandAngularError: previewQuaternion.angleTo(commandQuaternion)
+    };
+    sphere?.syncGimbals?.({ currentQuaternion, targetQuaternion: previewQuaternion, worldRoot });
     hideLeftRayIfEquipped(leftRecord);
   }
 
   function dispose() { if (disposed) return; disposed = true; reset(); }
 
   return { update, reset, dispose, getState: () => state, getAngularError: () => angularError,
-    getTargetQuaternion: () => targetQuaternion.clone(), getCurrentQuaternion: () => currentQuaternion.clone(), isClutchActive: () => clutchActive };
+    getTargetQuaternion: () => commandQuaternion.clone(), getPreviewQuaternion: () => previewQuaternion.clone(), getCommandQuaternion: () => commandQuaternion.clone(), getCurrentQuaternion: () => currentQuaternion.clone(), isDriveActive: () => driveActive, isClutchActive: () => driveActive };
 }

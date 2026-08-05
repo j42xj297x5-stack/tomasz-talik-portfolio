@@ -91,24 +91,51 @@ assert.equal(sphere.isEquipped(), true, 'QA sphere equips to the resolved left g
 assert.equal(sphere.socket.parent, leftGrip, 'QA sphere is mounted on left grip, not controller index');
 assert.equal(leftRay.visible, false, 'left ordinary ray is hidden while QA sphere is equipped');
 assert.equal(rightRay.visible, true, 'right ordinary ray is not touched by Asterion QA');
-const initialTarget = gyro.getTargetQuaternion();
+const initialPreview = gyro.getPreviewQuaternion();
+const initialCommand = gyro.getCommandQuaternion();
+const initialCurrent = gyro.getCurrentQuaternion();
 leftGrip.quaternion.setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI / 2); worldRoot.updateMatrixWorld(true);
 gyro.update(0.016);
-assert.ok(gyro.getTargetQuaternion().angleTo(initialTarget) < 1e-12, 'moving the hand without trigger does not change target');
+const freePreview = gyro.getPreviewQuaternion();
+assert.ok(initialPreview.angleTo(new THREE.Quaternion()) < 1e-12, 'first preview reference capture does not jump preview');
+assert.ok(freePreview.angleTo(initialPreview) > 0.1, 'moving the hand without trigger changes preview');
+assert.ok(gyro.getCommandQuaternion().angleTo(initialCommand) < 1e-12, 'moving preview without trigger does not change command');
+assert.ok(gyro.getTargetQuaternion().angleTo(initialCommand) < 1e-12, 'compatible target getter returns command');
+assert.ok(gyro.getCurrentQuaternion().angleTo(initialCurrent) < 1e-12, 'platform does not move toward preview without trigger');
+assert.equal(gyro.isDriveActive(), false, 'drive is inactive without trigger');
 
 leftTrigger = 1; gyro.update(0.016);
-const capturedTarget = gyro.getTargetQuaternion();
-assert.ok(capturedTarget.angleTo(initialTarget) < 1e-12, 'trigger down captures without snapping target');
+const capturedCommand = gyro.getCommandQuaternion();
+assert.ok(capturedCommand.angleTo(freePreview) < 1e-12, 'trigger down copies current preview into command');
+assert.equal(gyro.isDriveActive(), true, 'drive is active while trigger is held');
 leftGrip.quaternion.setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI); worldRoot.updateMatrixWorld(true); gyro.update(0.016);
-const heldTarget = gyro.getTargetQuaternion();
-assert.ok(heldTarget.angleTo(capturedTarget) > 0.1, 'controller rotation during trigger hold changes target');
+const heldPreview = gyro.getPreviewQuaternion();
+const heldCommand = gyro.getCommandQuaternion();
+assert.ok(heldPreview.angleTo(freePreview) > 0.1, 'controller rotation during trigger hold changes preview');
+assert.ok(heldCommand.angleTo(heldPreview) < 1e-12, 'trigger hold continuously copies preview into command');
 leftTrigger = 0; gyro.update(0.016);
-const releasedTarget = gyro.getTargetQuaternion();
+const releasedCommand = gyro.getCommandQuaternion();
+const currentAfterRelease = gyro.getCurrentQuaternion();
 leftGrip.quaternion.identity(); worldRoot.updateMatrixWorld(true); gyro.update(0.016);
-assert.ok(gyro.getTargetQuaternion().angleTo(releasedTarget) < 1e-12, 'trigger up freezes target while the hand returns');
-leftTrigger = 1; gyro.update(0.016);
-leftGrip.quaternion.setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI / 2); worldRoot.updateMatrixWorld(true); gyro.update(0.016);
-assert.ok(gyro.getTargetQuaternion().angleTo(releasedTarget) > 0.1, 'second clutch starts from existing target and accumulates');
+assert.equal(gyro.isDriveActive(), false, 'drive is inactive after trigger release');
+assert.ok(gyro.getCommandQuaternion().angleTo(releasedCommand) < 1e-12, 'trigger up freezes command while the hand returns');
+assert.ok(gyro.getPreviewQuaternion().angleTo(releasedCommand) > 0.1, 'after trigger up, hand motion continues to change preview');
+assert.ok(gyro.getCurrentQuaternion().angleTo(currentAfterRelease) > 0, 'after release, current continues moving toward frozen command');
+assert.ok(Math.abs(gyro.getAngularError() - gyro.getCurrentQuaternion().angleTo(gyro.getCommandQuaternion())) < 1e-12, 'angularError is measured between current and command');
+assert.notEqual(progressFloor.object.userData.asterionGyro.angularError, gyro.getCurrentQuaternion().angleTo(gyro.getPreviewQuaternion()), 'angularError is not measured against preview');
+
+const gyroDrivenInner2Action = sphere.getIdleActionByClipName('ASTERION_IDLE__inner_ring2');
+for (let i = 0; i < 40; i += 1) {
+  leftTrigger = 1; gyro.update(1 / 60); sphere.update(1 / 60);
+}
+assert.ok(gyroDrivenInner2Action.getEffectiveWeight() < 0.01, 'trigger on fades inner2/3 idle weight toward zero through gyro runtime');
+leftTrigger = 0; gyro.update(1 / 60);
+const currentStillTravelingOnRelease = gyro.getCurrentQuaternion();
+leftGrip.quaternion.setFromAxisAngle(new THREE.Vector3(1, 0, 0), Math.PI / 3); worldRoot.updateMatrixWorld(true); gyro.update(1 / 60);
+sphere.update(1 / 60);
+assert.ok(gyro.getCurrentQuaternion().angleTo(currentStillTravelingOnRelease) > 0, 'current still travels after release while ring idle returns');
+assert.ok(gyroDrivenInner2Action.getEffectiveWeight() > 0 && gyroDrivenInner2Action.getEffectiveWeight() < 1, 'release restores inner2/3 idle target even before current reaches command');
+sphere.reset();
 
 const nodes = sphere.getRequiredNodes();
 const targetAxisLocalRestQuaternion = nodes.PIV_TARGET_AXIS.quaternion.clone();
