@@ -1,4 +1,5 @@
 import * as THREE from '../vendor/three.js';
+import { applyWorldTransform } from './applyWorldTransform.js';
 
 export function calculatePortalScale(size, maxWidth, maxHeight) {
   if (size.x <= 0 || size.y <= 0) return 1;
@@ -59,6 +60,9 @@ export function createVrPortalDisplay({ scene, anchorObject, portalModel, spawnP
   const rightFromSpawnView = new THREE.Vector3();
   const direction = new THREE.Vector3();
   const target = new THREE.Vector3();
+  const desiredWorldPosition = new THREE.Vector3();
+  const desiredWorldQuaternion = new THREE.Quaternion();
+  const placementProbe = new THREE.Object3D();
   const configuredSpawn = new THREE.Vector3(spawnPosition?.x ?? 0, spawnPosition?.y ?? 0, spawnPosition?.z ?? 1);
   const localBounds = model ? new THREE.Box3().setFromObject(model) : null;
   let disposed = false;
@@ -71,10 +75,13 @@ export function createVrPortalDisplay({ scene, anchorObject, portalModel, spawnP
     towardSpawn.normalize();
     rightFromSpawnView.set(-towardSpawn.z, 0, towardSpawn.x);
     direction.copy(rightFromSpawnView).addScaledVector(towardSpawn, settings.forwardBias).normalize();
-    object.position.copy(anchorCenter).addScaledVector(direction, settings.distanceFromAnchor);
-    object.position.y = settings.floorOffset - localBounds.min.y;
-    target.set(configuredSpawn.x, object.position.y, configuredSpawn.z);
-    object.lookAt(target);
+    desiredWorldPosition.copy(anchorCenter).addScaledVector(direction, settings.distanceFromAnchor);
+    desiredWorldPosition.y = settings.floorOffset - localBounds.min.y;
+    target.set(configuredSpawn.x, desiredWorldPosition.y, configuredSpawn.z);
+    placementProbe.position.copy(desiredWorldPosition);
+    placementProbe.lookAt(target);
+    desiredWorldQuaternion.copy(placementProbe.quaternion);
+    applyWorldTransform(object, desiredWorldPosition, desiredWorldQuaternion);
     object.visible = true;
     return true;
   }

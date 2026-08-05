@@ -1,4 +1,5 @@
 import * as THREE from '../../vendor/three.js';
+import { applyWorldTransform } from '../applyWorldTransform.js';
 import { drawFurnaceFrame } from './drawVrFurnaceFrame.js';
 import { resolveProcessTelemetry, shouldRefreshTelemetry } from './vrFurnaceTelemetry.js';
 import { ASTERION_SHELL_PATCHES } from './asterionShellPatchData.js';
@@ -37,6 +38,8 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
   root.add(...renderPlanes); (parent ?? furnace?.object?.parent)?.add(root);
   const raycaster = new THREE.Raycaster(), origin = new THREE.Vector3(), direction = new THREE.Vector3();
   const quaternion = new THREE.Quaternion(), furnaceQuaternion = new THREE.Quaternion(), right = new THREE.Vector3();
+  const desiredWorldPosition = new THREE.Vector3(), desiredWorldQuaternion = new THREE.Quaternion(), desiredWorldScale = new THREE.Vector3();
+  const yawQuaternion = new THREE.Quaternion(), yawAxis = new THREE.Vector3(0, 1, 0);
   const hits = new Map(controllers.map((record) => [record, null]));
   let state = ASTRO_FURNACE_PANEL_STATES.HIDDEN, screen = ASTRO_FURNACE_PANEL_SCREENS.HOME;
   let elapsed = 0, telemetryElapsed = 0, lastTelemetryRedraw = 0, completedUntil = 0, previousProcessState = 'IDLE';
@@ -184,9 +187,12 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
     const center = bounds.getCenter(new THREE.Vector3());
     const size = bounds.getSize(new THREE.Vector3());
     const projectedHalfWidth = (Math.abs(right.x) * size.x + Math.abs(right.y) * size.y + Math.abs(right.z) * size.z) / 2;
-    root.position.copy(center).addScaledVector(right, projectedHalfWidth + config.gapFromFurnace);
-    root.position.y = center.y + config.verticalOffset; root.quaternion.copy(furnaceQuaternion);
-    root.rotateY(THREE.MathUtils.degToRad(config.yawDegrees)); root.scale.set(0.001, 0.92, 1);
+    desiredWorldPosition.copy(center).addScaledVector(right, projectedHalfWidth + config.gapFromFurnace);
+    desiredWorldPosition.y = center.y + config.verticalOffset;
+    yawQuaternion.setFromAxisAngle(yawAxis, THREE.MathUtils.degToRad(config.yawDegrees));
+    desiredWorldQuaternion.copy(furnaceQuaternion).multiply(yawQuaternion);
+    desiredWorldScale.set(0.001, 0.92, 1);
+    applyWorldTransform(root, desiredWorldPosition, desiredWorldQuaternion, desiredWorldScale);
     root.visible = state !== ASTRO_FURNACE_PANEL_STATES.HIDDEN;
   }
   function show() { screen = ASTRO_FURNACE_PANEL_SCREENS.HOME; hoveredRegion = null; state = ASTRO_FURNACE_PANEL_STATES.APPEARING; elapsed = 0; root.visible = true; draw(); }
