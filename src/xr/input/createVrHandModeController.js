@@ -14,7 +14,8 @@ export function createVrHandModeController({
   attractorTool,
   asterionSphere = null,
   isUnlocked,
-  isAsterionAvailable = () => false
+  isAsterionAvailable = () => false,
+  isLeftToolToggleBlocked = () => false
 }) {
   let rightMode = VR_RIGHT_HAND_MODES.NORMAL_HAND;
   let leftMode = VR_LEFT_HAND_MODES.NORMAL_HAND;
@@ -37,7 +38,7 @@ export function createVrHandModeController({
         ? VR_RIGHT_HAND_MODES.ASTRO_ATTRACTOR
         : VR_RIGHT_HAND_MODES.NORMAL_HAND);
     }
-    if (input.toggleLeftTool) {
+    if (input.toggleLeftTool && !isLeftToolToggleBlocked()) {
       if (leftMode === VR_LEFT_HAND_MODES.ASTERION_SPHERE) setLeftMode(VR_LEFT_HAND_MODES.NORMAL_HAND);
       else if (asterionAvailable) setLeftMode(VR_LEFT_HAND_MODES.ASTERION_SPHERE);
     }

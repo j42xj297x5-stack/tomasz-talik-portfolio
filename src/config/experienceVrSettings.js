@@ -97,13 +97,12 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
   playerGuidePanel: {
     enabled: true,
     width: 0.34,
-    height: 0.22,
+    height: 0.286,
     canvasWidth: 768,
-    canvasHeight: 512,
-    position: { x: 0.02, y: 0.11, z: -0.18 },
-    rotationDegrees: { x: -28, y: 0, z: 0 },
+    canvasHeight: 666,
+    position: { x: 0.19, y: 0.143, z: -0.18 },
+    rotationDegrees: { x: -5, y: 0, z: 0 },
     navigationThreshold: 0.55,
-    triggerThreshold: 0.45,
     colors: { background: '#101722', border: '#75d7ff', text: '#eff9ff', muted: '#9ab0bd', selected: '#1f5d78' }
   },
   controllers: {
@@ -410,7 +409,6 @@ export function normalizeExperienceVrSettings(candidate) {
       position: normalizeVector(candidate.playerGuidePanel?.position, defaults.playerGuidePanel.position),
       rotationDegrees: normalizeVector(candidate.playerGuidePanel?.rotationDegrees, defaults.playerGuidePanel.rotationDegrees),
       navigationThreshold: finiteNumber(candidate.playerGuidePanel?.navigationThreshold, defaults.playerGuidePanel.navigationThreshold, { min: 0.1, max: 1 }),
-      triggerThreshold: finiteNumber(candidate.playerGuidePanel?.triggerThreshold, defaults.playerGuidePanel.triggerThreshold, { min: 0.1, max: 1 }),
       colors: { ...defaults.playerGuidePanel.colors, ...(candidate.playerGuidePanel?.colors ?? {}) }
     },
     controllers: {

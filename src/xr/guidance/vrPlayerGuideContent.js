@@ -3,19 +3,33 @@ const VR_PLAYER_GUIDE_CONTENT = Object.freeze({
     title: 'Panel gracza',
     items: Object.freeze([
       Object.freeze({ id: 'current-task', label: 'AKTUALNE ZADANIE', body: 'Kontynuuj eksplorację i aktywuj kolejne elementy świata.' }),
-      Object.freeze({ id: 'controls', label: 'STEROWANIE', body: 'Prawy joystick: ruch. Lewy joystick: obrót poza panelem. Y: panel.' })
+      Object.freeze({ id: 'controls', label: 'STEROWANIE', body: 'Mapa podstawowych wejść kontrolerów.' })
     ]),
-    confirm: 'Lewy trigger: wybierz',
-    close: 'Y: zamknij'
+    controls: Object.freeze([
+      'Prawy drążek — ruch',
+      'Lewy drążek — obrót',
+      'Spust — wybór / użycie',
+      'Chwyt — złap przedmiot',
+      'Y — panel gracza'
+    ]),
+    panelHint: 'Lewy drążek — wybór · X — zatwierdź · Y — zamknij',
+    controllersFallback: 'Schemat kontrolerów niedostępny.'
   }),
   en: Object.freeze({
     title: 'Player panel',
     items: Object.freeze([
       Object.freeze({ id: 'current-task', label: 'CURRENT TASK', body: 'Continue exploring and activate the next world elements.' }),
-      Object.freeze({ id: 'controls', label: 'CONTROLS', body: 'Right joystick: move. Left joystick: turn outside the panel. Y: panel.' })
+      Object.freeze({ id: 'controls', label: 'CONTROLS', body: 'Basic controller input map.' })
     ]),
-    confirm: 'Left trigger: select',
-    close: 'Y: close'
+    controls: Object.freeze([
+      'Right stick — move',
+      'Left stick — turn',
+      'Trigger — select / use',
+      'Grip — grab an object',
+      'Y — player panel'
+    ]),
+    panelHint: 'Left stick — select · X — confirm · Y — close',
+    controllersFallback: 'Controller diagram unavailable.'
   })
 });
 

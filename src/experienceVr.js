@@ -229,7 +229,8 @@ const handModeController = createVrHandModeController({
   attractorTool,
   asterionSphere,
   isUnlocked: () => progressionController.isTierComplete(1),
-  isAsterionAvailable: () => asterionSphereQa
+  isAsterionAvailable: () => asterionSphereQa,
+  isLeftToolToggleBlocked: () => playerGuidePanel.isOpen()
 });
 const playerGuidePanel = createVrPlayerGuidePanel({
   leftGrip: vrControllers.controllers[0]?.grip,
@@ -237,7 +238,6 @@ const playerGuidePanel = createVrPlayerGuidePanel({
   locale: language,
   settings: settings.playerGuidePanel
 });
-const isPlayerGuidePanelOpen = () => playerGuidePanel.isOpen();
 let astroFurnaceActivateInteraction = null;
 let astroFurnaceContentInteraction = null;
 let astroFurnaceOptionInteraction = null;
@@ -254,8 +254,7 @@ const furnacePanel = createVrAstroFurnacePanel({
   }
 });
 platformFixturesRoot.attach(furnacePanel.object);
-const ordinaryFurnaceRayAvailable = (record) => !(isPlayerGuidePanelOpen() && record.handedness === 'left')
-  && !(record.handedness === 'right'
+const ordinaryFurnaceRayAvailable = (record) => !(record.handedness === 'right'
   && handModeController.getRightMode() === 'ASTRO_ATTRACTOR')
   && !(asterionSphereQa && asterionSphere.isEquipped() && record.handedness === 'left');
 const astroFurnaceOpenInteraction = createVrAstroFurnaceOpenInteraction({
@@ -301,7 +300,6 @@ const crystalCollection = createVrCrystalCollection({
   settings: settings.crystals, haloSettings: settings.targetHalo, insertFeedbackSettings: settings.reliquary.insertFeedback,
   pages: experienceVrPages, progressionController,
   canGrabController: (record) => {
-    if (isPlayerGuidePanelOpen() && record.handedness === 'left') return false;
     if (record.handedness === 'right' && handModeController.getRightMode() === 'ASTRO_ATTRACTOR') return false;
     if (asterionSphereQa && asterionSphere.isEquipped() && record.handedness === 'left') return false;
     if (astroFurnaceOpenInteraction.hasCurrentHit(record)) return false;
@@ -359,7 +357,7 @@ const glyphInteraction = createVrGlyphInteraction({
   nodes,
   settings: settings.glyphInteraction,
   haloSettings: settings.targetHalo,
-  isGlyphActive: (node) => !isPlayerGuidePanelOpen() && isGlyphActive(node),
+  isGlyphActive: (node) => isGlyphActive(node),
   onGlyphHoldComplete: ({ node }) => {
     if (getNextCrystalTier(node) === null) return;
     node.updateWorldMatrix(true, false);
@@ -373,8 +371,7 @@ shellAttractorInteraction = createVrShellAttractorInteraction({
   controllers: vrControllers.controllers, shellSystem, handModeController, semanticInput, attractorTool,
   settings: settings.shellAttractor, haloSettings: settings.targetHalo, settledParent: worldRoot,
   crystalHeldByController: crystalCollection.heldByController,
-  isHigherPriorityInteractionActive: (record) => Boolean((isPlayerGuidePanelOpen() && record.handedness === 'left')
-    || activateButton.hits.get(record)
+  isHigherPriorityInteractionActive: (record) => Boolean(activateButton.hits.get(record)
     || releaseButton.hits.get(record) || astroFurnaceOpenInteraction.hasCurrentHit(record)
     || astroFurnaceActivateInteraction.hasCurrentHit(record) || astroFurnaceOptionInteraction.hasCurrentHit(record)
     || furnacePanel.hasCurrentHit(record) || record.currentHit)
