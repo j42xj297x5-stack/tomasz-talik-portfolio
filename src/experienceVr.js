@@ -133,6 +133,8 @@ const progressFloor = createVrProgressFloor({
   worldYOffset: FLOOR_WORLD_Y_OFFSET
 });
 const monkeyModel = await loadMonkeyModel({ scene: worldRoot, fallbackObject: centralPlaceholder, assetManager });
+const monkeyAnchor = monkeyModel ?? centralPlaceholder;
+progressFloor.object.attach(monkeyAnchor);
 const resolvedPortfolioNodes = resolvePortfolioNodes(language);
 const { group: glyphRing, nodes } = createOrbitNodes(resolvedPortfolioNodes, { assetManager });
 worldRoot.add(glyphRing);
@@ -153,7 +155,6 @@ const asterionGyroInteraction = createVrAsterionGyroInteraction({
   settings: settings.asterionSphere, enabled: asterionSphereQa
 });
 const glyphLights = createVrGlyphLights({ nodes, settings: settings.glyphLights });
-const monkeyAnchor = monkeyModel ?? centralPlaceholder;
 const portalDisplay = createVrPortalDisplay({
   scene, anchorObject: monkeyAnchor, spawnPosition: settings.spawn.position,
   portalModel: assetManager.cloneGltfScene('vr-portal-model'), settings: settings.portal

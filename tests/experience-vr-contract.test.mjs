@@ -79,6 +79,44 @@ assert.doesNotMatch(glyphInteraction, /SphereGeometry\(0\.31|VrEntryGlyphMarker|
 assert.doesNotMatch(`${vr}\n${vrControllers}`, /XRControllerModelFactory/);
 assert.match(vr, /onPreview: \(page\) => portalCanvas\.show\(resolveExperienceVrPage\(page, language\)\)/);
 assert.match(vr, /progressFloor\.activatePage\(page\);[\s\S]*progressionController\.isTierComplete\(page\.order\)[\s\S]*progressFloor\.completeTier\(page\.order\)/);
+assert.match(vr, /const monkeyModel = await loadMonkeyModel\(\{ scene: worldRoot, fallbackObject: centralPlaceholder, assetManager \}\);\nconst monkeyAnchor = monkeyModel \?\? centralPlaceholder;\nprogressFloor\.object\.attach\(monkeyAnchor\);/);
+assert.equal((vr.match(/const monkeyAnchor = monkeyModel \?\? centralPlaceholder/g) ?? []).length, 1);
+assert.doesNotMatch(vr, /progressFloor\.object\.add\(monkeyAnchor\)/);
+assert.match(vr, /createVrPortalDisplay\([\s\S]*anchorObject: monkeyAnchor/);
+assert.match(vr, /createVrAstroFurnace\([\s\S]*anchorObject: monkeyAnchor/);
+
+const assertMonkeyFloorAttachContract = (monkeyAnchor) => {
+  const sceneRoot = new THREE.Group();
+  const floorRoot = new THREE.Group();
+  floorRoot.name = 'VrTiltableFloorRoot';
+  floorRoot.position.set(0, -1.05, 0);
+  floorRoot.rotation.set(0.1, 0.2, -0.05);
+  sceneRoot.add(floorRoot);
+  sceneRoot.add(monkeyAnchor);
+  monkeyAnchor.position.set(1.25, 0.4, -2.5);
+  monkeyAnchor.quaternion.setFromEuler(new THREE.Euler(0.3, -0.4, 0.2));
+  monkeyAnchor.scale.setScalar(1.2);
+  sceneRoot.updateMatrixWorld(true);
+  const worldPositionBefore = monkeyAnchor.getWorldPosition(new THREE.Vector3());
+  const worldQuaternionBefore = monkeyAnchor.getWorldQuaternion(new THREE.Quaternion());
+  const worldScaleBefore = monkeyAnchor.getWorldScale(new THREE.Vector3());
+
+  floorRoot.attach(monkeyAnchor);
+  sceneRoot.updateMatrixWorld(true);
+
+  assert.equal(monkeyAnchor.parent, floorRoot);
+  assert.ok(monkeyAnchor.getWorldPosition(new THREE.Vector3()).distanceTo(worldPositionBefore) < 1e-12);
+  assert.ok(monkeyAnchor.getWorldQuaternion(new THREE.Quaternion()).angleTo(worldQuaternionBefore) < 1e-7);
+  assert.ok(monkeyAnchor.getWorldScale(new THREE.Vector3()).distanceTo(worldScaleBefore) < 1e-12);
+
+  floorRoot.quaternion.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI / 5));
+  sceneRoot.updateMatrixWorld(true);
+
+  assert.ok(monkeyAnchor.getWorldPosition(new THREE.Vector3()).distanceTo(worldPositionBefore) > 1e-3);
+  assert.ok(monkeyAnchor.getWorldQuaternion(new THREE.Quaternion()).angleTo(worldQuaternionBefore) > 1e-3);
+};
+assertMonkeyFloorAttachContract(new THREE.Group());
+assertMonkeyFloorAttachContract(new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshBasicMaterial()));
 assert.doesNotMatch(crystalCollection, /CANNON|Ammo|Rapier|gravity|throwVelocity|linearVelocity|angularVelocity/i);
 assert.doesNotMatch(vrControllers, /controller\.(position|rotation|quaternion)\.(set|copy)/);
 
