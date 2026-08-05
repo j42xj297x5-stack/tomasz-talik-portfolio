@@ -2,8 +2,11 @@ import assert from 'node:assert/strict';
 import * as THREE from '../src/vendor/three.js';
 import {
   applyDeadzone,
+  clampPositionToWalkRadius,
+  constrainRadialStep,
   createVrLocomotion,
-  getHorizontalViewerBasis
+  getHorizontalViewerBasis,
+  getPlatformViewerBasis
 } from '../src/xr/createVrLocomotion.js';
 
 const EPSILON = 1e-9;
@@ -18,7 +21,7 @@ function assertHorizontalPosition(rig, x, z, message) {
   assertClose(rig.position.z, z, `${message} (z)`);
 }
 
-function createFixture({ headYaw = 0, headPitch = 0, rigYaw = 0, position = [0, 2.5, 0] } = {}) {
+function createFixture({ headYaw = 0, headPitch = 0, rigYaw = 0, position = [0, 2.5, 0], surfaceRoot = null, walkRadius = Infinity } = {}) {
   const rig = new THREE.Group();
   rig.position.fromArray(position);
   rig.rotation.y = rigYaw;
@@ -44,7 +47,7 @@ function createFixture({ headYaw = 0, headPitch = 0, rigYaw = 0, position = [0, 
   rig.updateMatrixWorld(true);
   eyeCamera.updateMatrix();
   updateCamera();
-  const locomotion = createVrLocomotion({ playerRig: rig, renderer, camera: baseCamera, settings: SETTINGS });
+  const locomotion = createVrLocomotion({ playerRig: rig, renderer, camera: baseCamera, settings: SETTINGS, surfaceRoot: surfaceRoot ?? rig.parent, walkRadius });
   return { rig, baseCamera, eyeCamera, xrCamera, sources, locomotion };
 }
 
@@ -137,6 +140,38 @@ const basisFixture = createFixture({ headYaw: Math.PI / 2 });
 const basis = getHorizontalViewerBasis(basisFixture.xrCamera, new THREE.Vector3(), new THREE.Vector3());
 assertClose(basis.forward.x, -1, 'ArrayCamera eye supplies forward basis');
 assertClose(basis.right.z, -1, 'ArrayCamera eye supplies right basis');
+
+
+
+const tiltedSurface = new THREE.Group();
+tiltedSurface.rotation.z = Math.PI / 4;
+tiltedSurface.updateMatrixWorld(true);
+const tilted = createFixture({ surfaceRoot: tiltedSurface });
+setStick(tilted, 'right', 0, -1);
+tilted.locomotion.update(1);
+const platformNormal = new THREE.Vector3(0, 1, 0).transformDirection(tiltedSurface.matrixWorld);
+assert.ok(Math.abs(tilted.rig.position.clone().sub(new THREE.Vector3(0, 2.5, 0)).dot(platformNormal)) < 1e-9, 'tilted locomotion remains on the platform surface instead of world XZ');
+assert.equal(tilted.rig.position.y, 2.5, 'tilted locomotion preserves local rig Y');
+
+const blockedOutward = constrainRadialStep(new THREE.Vector3(2, 0, 0), new THREE.Vector3(1, 0, 0), 2);
+assertClose(blockedOutward.x, 0, 'radial boundary blocks outward movement');
+const tangentAllowed = constrainRadialStep(new THREE.Vector3(2, 0, 0), new THREE.Vector3(0, 0, 1), 2);
+assertClose(tangentAllowed.z, 1, 'radial boundary preserves tangential movement');
+const hugeStep = new THREE.Vector3(100, 0, 0);
+const constrainedHuge = constrainRadialStep(new THREE.Vector3(0, 0, 0), hugeStep, 2);
+assertClose(constrainedHuge.x, 2, 'large delta is constrained to walkRadius');
+const clamped = clampPositionToWalkRadius(new THREE.Vector3(3, 4, 0), 2);
+assertClose(Math.hypot(clamped.x, clamped.z), 2, 'final clamp keeps player inside walkRadius');
+
+const tiltedBasis = createFixture({ headYaw: 0, surfaceRoot: tiltedSurface });
+const basisOnPlatform = getPlatformViewerBasis({
+  xrCamera: tiltedBasis.xrCamera,
+  surfaceRoot: tiltedSurface,
+  normal: new THREE.Vector3(),
+  forward: new THREE.Vector3(),
+  right: new THREE.Vector3()
+});
+assert.ok(Math.abs(basisOnPlatform.forward.dot(platformNormal)) < 1e-9, 'viewer forward projects onto platform plane');
 
 const disposed = createFixture();
 setStick(disposed, 'left', 1, 0);

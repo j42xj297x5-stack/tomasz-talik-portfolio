@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import * as THREE from '../src/vendor/three.js';
 import { createVrAsterionSphere } from '../src/xr/asterion/createVrAsterionSphere.js';
 import { createVrAsterionGyroInteraction } from '../src/xr/asterion/createVrAsterionGyroInteraction.js';
-import { cappedExponentialSlerp, computeClutchedTargetQuaternion, exponentialSlerpAlpha } from '../src/xr/asterion/asterionGyroMath.js';
+import { cappedExponentialSlerp, computeClutchedTargetQuaternion, exponentialSlerpAlpha, neutralizeControllerQuaternionAgainstFloor } from '../src/xr/asterion/asterionGyroMath.js';
 
 const settings = { targetDiameter: 0.18, holdOffset: { x: 0, y: 0.07, z: -0.11 }, holdRotationDegrees: { x: 0, y: 0, z: 0 }, response: 2.5, maxAngularSpeedDegrees: 55, targetRingBlendResponse: 12, lockThresholdDegrees: 0.5, lockDelaySeconds: 0.18 };
 
@@ -205,6 +205,32 @@ sphere.reset();
 assert.equal(sphere.getIdleActionByClipName('ASTERION_IDLE__inner_ring1').getEffectiveWeight(), 0, 'sphere reset keeps inner1 action weight zero');
 assert.equal(sphere.getIdleActionByClipName('ASTERION_IDLE__inner_ring2').getEffectiveWeight(), 1, 'sphere reset restores inner2 action weight one');
 assert.equal(sphere.getIdleActionByClipName('ASTERION_IDLE__inner_ring3').getEffectiveWeight(), 1, 'sphere reset restores inner3 action weight one');
+
+
+const floorParentQuaternion = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), Math.PI / 8);
+const physicalGripQuaternion = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), Math.PI / 5);
+const currentFloorA = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI / 6);
+const currentFloorB = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), -Math.PI / 4);
+const inheritedGripA = currentFloorA.clone().multiply(physicalGripQuaternion);
+const inheritedGripB = currentFloorB.clone().multiply(physicalGripQuaternion);
+const neutralizedA = neutralizeControllerQuaternionAgainstFloor({
+  gripWorldQuaternion: inheritedGripA,
+  floorWorldQuaternion: currentFloorA,
+  floorParentWorldQuaternion: floorParentQuaternion
+});
+const neutralizedB = neutralizeControllerQuaternionAgainstFloor({
+  gripWorldQuaternion: inheritedGripB,
+  floorWorldQuaternion: currentFloorB,
+  floorParentWorldQuaternion: floorParentQuaternion
+});
+assertQuaternionClose(neutralizedA, neutralizedB, 'neutralized controller quaternion ignores CURRENT floor rotation feedback');
+const changedPhysicalGrip = currentFloorB.clone().multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), Math.PI / 3));
+const neutralizedChanged = neutralizeControllerQuaternionAgainstFloor({
+  gripWorldQuaternion: changedPhysicalGrip,
+  floorWorldQuaternion: currentFloorB,
+  floorParentWorldQuaternion: floorParentQuaternion
+});
+assert.ok(neutralizedChanged.angleTo(neutralizedB) > 0.1, 'real grip orientation changes still reach clutch target math');
 
 const expected = computeClutchedTargetQuaternion({
   controllerQuaternionNow: new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), Math.PI / 4),

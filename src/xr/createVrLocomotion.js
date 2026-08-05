@@ -1,5 +1,8 @@
 import * as THREE from '../vendor/three.js';
 
+const EPSILON = 1e-9;
+const PLATFORM_UP_LOCAL = new THREE.Vector3(0, 1, 0);
+
 export function applyDeadzone(value, deadzone) {
   if (!Number.isFinite(value) || Math.abs(value) <= deadzone) return 0;
   return Math.sign(value) * (Math.abs(value) - deadzone) / (1 - deadzone);
@@ -17,10 +20,81 @@ export function getHorizontalViewerBasis(xrCamera, forward, right) {
   return { forward, right };
 }
 
-export function createVrLocomotion({ playerRig, renderer, camera, settings }) {
+export function projectVectorOntoPlane(vector, normal, target = new THREE.Vector3()) {
+  return target.copy(vector).addScaledVector(normal, -vector.dot(normal));
+}
+
+export function getPlatformViewerBasis({ xrCamera, surfaceRoot, normal, forward, right }) {
+  const viewerCamera = xrCamera.isArrayCamera && xrCamera.cameras.length > 0
+    ? xrCamera.cameras[0]
+    : xrCamera;
+  surfaceRoot?.updateWorldMatrix?.(true, false);
+  normal.copy(PLATFORM_UP_LOCAL).transformDirection(surfaceRoot?.matrixWorld ?? new THREE.Matrix4()).normalize();
+  forward.setFromMatrixColumn(viewerCamera.matrixWorld, 2).negate();
+  projectVectorOntoPlane(forward, normal, forward);
+  if (forward.lengthSq() < EPSILON) {
+    forward.setFromMatrixColumn(viewerCamera.matrixWorld, 0);
+    projectVectorOntoPlane(forward, normal, forward);
+  }
+  if (forward.lengthSq() < EPSILON) forward.set(0, 0, -1).projectOnPlane(normal);
+  forward.normalize();
+  right.crossVectors(forward, normal).normalize();
+  return { normal, forward, right };
+}
+
+export function constrainRadialStep(startPosition, desiredDelta, walkRadius, target = new THREE.Vector3()) {
+  target.copy(desiredDelta);
+  if (walkRadius === Infinity) return target;
+  if (!Number.isFinite(walkRadius) || walkRadius <= 0) return target.set(0, 0, 0);
+  const radiusSq = walkRadius * walkRadius;
+  const startRadiusSq = startPosition.x * startPosition.x + startPosition.z * startPosition.z;
+  const desiredX = startPosition.x + target.x;
+  const desiredZ = startPosition.z + target.z;
+  if (desiredX * desiredX + desiredZ * desiredZ <= radiusSq + EPSILON) return target;
+
+  if (startRadiusSq >= radiusSq - EPSILON) {
+    const startRadius = Math.sqrt(Math.max(startRadiusSq, EPSILON));
+    const outward = (startPosition.x * target.x + startPosition.z * target.z) / startRadius;
+    if (outward > 0) {
+      target.x -= (startPosition.x / startRadius) * outward;
+      target.z -= (startPosition.z / startRadius) * outward;
+    }
+    return target;
+  }
+
+  const a = target.x * target.x + target.z * target.z;
+  const b = 2 * (startPosition.x * target.x + startPosition.z * target.z);
+  const c = startRadiusSq - radiusSq;
+  const discriminant = Math.max(0, b * b - 4 * a * c);
+  const t = a > EPSILON ? Math.max(0, Math.min(1, (-b + Math.sqrt(discriminant)) / (2 * a))) : 0;
+  return target.multiplyScalar(t);
+}
+
+export function clampPositionToWalkRadius(position, walkRadius) {
+  if (walkRadius === Infinity) return position;
+  if (!Number.isFinite(walkRadius) || walkRadius <= 0) {
+    position.x = 0;
+    position.z = 0;
+    return position;
+  }
+  const radius = Math.hypot(position.x, position.z);
+  if (radius > walkRadius && radius > EPSILON) {
+    const scale = walkRadius / radius;
+    position.x *= scale;
+    position.z *= scale;
+  }
+  return position;
+}
+
+export function createVrLocomotion({ playerRig, renderer, camera, settings, surfaceRoot = playerRig.parent, walkRadius = Infinity }) {
   const forward = new THREE.Vector3();
   const right = new THREE.Vector3();
-  const movement = new THREE.Vector3();
+  const normal = new THREE.Vector3();
+  const movementWorld = new THREE.Vector3();
+  const movementLocal = new THREE.Vector3();
+  const parentWorldQuaternion = new THREE.Quaternion();
+  const constrainedDelta = new THREE.Vector3();
+  const initialLocalY = playerRig.position.y;
   let disposed = false;
 
   function axesFor(handedness) {
@@ -34,21 +108,31 @@ export function createVrLocomotion({ playerRig, renderer, camera, settings }) {
     if (disposed || !settings.enabled || !Number.isFinite(delta) || delta <= 0) return;
     const y = playerRig.position.y;
     const left = axesFor('left');
-    playerRig.rotation.y -= left.x * settings.turnSpeed * delta;
+    playerRig.rotateY(-left.x * settings.turnSpeed * delta);
 
     const rightStick = axesFor('right');
     const xrCamera = renderer.xr.getCamera(camera);
     playerRig.updateMatrixWorld(true);
     if (typeof renderer.xr.updateCamera === 'function') renderer.xr.updateCamera(camera);
     else xrCamera.updateMatrixWorld(true);
-    getHorizontalViewerBasis(xrCamera, forward, right);
-    movement.copy(forward).multiplyScalar(-rightStick.y).addScaledVector(right, rightStick.x);
-    if (movement.lengthSq() > 1) movement.normalize();
-    playerRig.position.addScaledVector(movement, settings.moveSpeed * delta);
+    getPlatformViewerBasis({ xrCamera, surfaceRoot, normal, forward, right });
+    movementWorld.copy(forward).multiplyScalar(-rightStick.y).addScaledVector(right, rightStick.x);
+    if (movementWorld.lengthSq() > 1) movementWorld.normalize();
+    movementWorld.multiplyScalar(settings.moveSpeed * delta);
+
+    const parent = playerRig.parent;
+    parent?.updateWorldMatrix?.(true, false);
+    parent?.getWorldQuaternion?.(parentWorldQuaternion) ?? parentWorldQuaternion.identity();
+    movementLocal.copy(movementWorld).applyQuaternion(parentWorldQuaternion.invert());
+    movementLocal.y = 0;
+    constrainRadialStep(playerRig.position, movementLocal, walkRadius, constrainedDelta);
+    playerRig.position.addScaledVector(constrainedDelta, 1);
+    playerRig.position.y = y;
+    clampPositionToWalkRadius(playerRig.position, walkRadius);
     playerRig.position.y = y;
   }
 
-  function reset() {}
+  function reset() { playerRig.position.y = initialLocalY; }
   function dispose() { disposed = true; }
   return { update, reset, dispose };
 }

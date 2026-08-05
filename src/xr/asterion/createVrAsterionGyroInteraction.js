@@ -1,5 +1,5 @@
 import * as THREE from '../../vendor/three.js';
-import { ASTERION_GYRO_STATES, cappedExponentialSlerp, computeClutchedTargetQuaternion, resolveGyroState } from './asterionGyroMath.js';
+import { ASTERION_GYRO_STATES, cappedExponentialSlerp, computeClutchedTargetQuaternion, neutralizeControllerQuaternionAgainstFloor, resolveGyroState } from './asterionGyroMath.js';
 
 const TRIGGER_THRESHOLD = 0.1;
 
@@ -21,6 +21,8 @@ export function createVrAsterionGyroInteraction({ sphere, controllers, progressF
   const grabStartTargetQuaternion = new THREE.Quaternion();
   const controllerQuaternionNow = new THREE.Quaternion();
   const parentWorldQuaternion = new THREE.Quaternion();
+  const floorWorldQuaternion = new THREE.Quaternion();
+  const gripWorldQuaternion = new THREE.Quaternion();
   let triggerWasDown = false;
   let clutchActive = false;
   let lockTimer = 0;
@@ -62,10 +64,15 @@ export function createVrAsterionGyroInteraction({ sphere, controllers, progressF
     const floorParent = progressFloor?.object?.parent ?? worldRoot ?? null;
     floorParent?.updateWorldMatrix?.(true, false);
     floorParent?.getWorldQuaternion?.(parentWorldQuaternion) ?? parentWorldQuaternion.identity();
+    progressFloor?.object?.updateWorldMatrix?.(true, false);
+    progressFloor?.object?.getWorldQuaternion?.(floorWorldQuaternion) ?? floorWorldQuaternion.identity();
 
     if (triggerDown && !triggerWasDown && leftRecord?.grip) {
       leftRecord.grip.updateWorldMatrix(true, false);
-      leftRecord.grip.getWorldQuaternion(grabStartControllerQuaternion);
+      leftRecord.grip.getWorldQuaternion(gripWorldQuaternion);
+      neutralizeControllerQuaternionAgainstFloor({
+        gripWorldQuaternion, floorWorldQuaternion, floorParentWorldQuaternion: parentWorldQuaternion
+      }, grabStartControllerQuaternion);
       grabStartTargetQuaternion.copy(targetQuaternion);
       clutchActive = true;
     } else if (!triggerDown && triggerWasDown) {
@@ -74,7 +81,10 @@ export function createVrAsterionGyroInteraction({ sphere, controllers, progressF
 
     if (triggerDown && clutchActive && leftRecord?.grip) {
       leftRecord.grip.updateWorldMatrix(true, false);
-      leftRecord.grip.getWorldQuaternion(controllerQuaternionNow);
+      leftRecord.grip.getWorldQuaternion(gripWorldQuaternion);
+      neutralizeControllerQuaternionAgainstFloor({
+        gripWorldQuaternion, floorWorldQuaternion, floorParentWorldQuaternion: parentWorldQuaternion
+      }, controllerQuaternionNow);
       computeClutchedTargetQuaternion({ controllerQuaternionNow, grabStartControllerQuaternion, grabStartTargetQuaternion, parentWorldQuaternion }, targetQuaternion);
     }
 

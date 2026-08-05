@@ -30,6 +30,13 @@ export function convertWorldDeltaToParentLocal(controllerDeltaWorld, parentWorld
   return target.copy(parentInverse).multiply(controllerDeltaWorld).multiply(parentWorldQuaternion).normalize();
 }
 
+
+export function neutralizeControllerQuaternionAgainstFloor({ gripWorldQuaternion, floorWorldQuaternion, floorParentWorldQuaternion }, target = new THREE.Quaternion()) {
+  const floorInverse = floorWorldQuaternion.clone().invert();
+  const gripRelativeToFloor = floorInverse.multiply(gripWorldQuaternion);
+  return target.copy(floorParentWorldQuaternion).multiply(gripRelativeToFloor).normalize();
+}
+
 export function computeClutchedTargetQuaternion({ controllerQuaternionNow, grabStartControllerQuaternion, grabStartTargetQuaternion, parentWorldQuaternion }, target = new THREE.Quaternion()) {
   const controllerDeltaWorld = computeControllerDeltaWorld(controllerQuaternionNow, grabStartControllerQuaternion);
   const deltaLocal = convertWorldDeltaToParentLocal(controllerDeltaWorld, parentWorldQuaternion);

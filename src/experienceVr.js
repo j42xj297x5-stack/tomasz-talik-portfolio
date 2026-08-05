@@ -138,6 +138,12 @@ platformFixturesRoot.position.set(0, 0, 0);
 platformFixturesRoot.quaternion.identity();
 platformFixturesRoot.scale.set(1, 1, 1);
 progressFloor.object.add(platformFixturesRoot);
+const floorPassengerRoot = new THREE.Group();
+floorPassengerRoot.name = 'VrFloorPassengerRoot';
+floorPassengerRoot.position.set(0, 0, 0);
+floorPassengerRoot.quaternion.identity();
+floorPassengerRoot.scale.set(1, 1, 1);
+progressFloor.object.add(floorPassengerRoot);
 const monkeyModel = await loadMonkeyModel({ scene: worldRoot, fallbackObject: centralPlaceholder, assetManager });
 const monkeyAnchor = monkeyModel ?? centralPlaceholder;
 progressFloor.object.attach(monkeyAnchor);
@@ -146,6 +152,11 @@ const { group: glyphRing, nodes } = createOrbitNodes(resolvedPortfolioNodes, { a
 worldRoot.add(glyphRing);
 const entryDirection = new THREE.Vector3(settings.spawn.position.x, 0, settings.spawn.position.z).normalize();
 const glyphOrbit = createVrGlyphOrbit({ nodes, settings: settings.glyphRing, entryDirection });
+const floorWalkRadius = glyphOrbit.effectiveRadius;
+floorPassengerRoot.attach(playerRig);
+const playerRigSpawnLocalPosition = playerRig.position.clone();
+const playerRigSpawnLocalQuaternion = playerRig.quaternion.clone();
+const playerRigSpawnLocalScale = playerRig.scale.clone();
 const shellSystem = createVrShellSystem({ parent: worldRoot, assetManager, baseRadius: glyphOrbit.effectiveRadius,
   emissionSettings: settings.shellAttractor });
 const asterionSphereGltf = assetManager.getGltf('vr-asterion-sphere-model');
@@ -198,9 +209,17 @@ const crystalReliquary = createVrCrystalReliquary({
 });
 platformFixturesRoot.attach(crystalReliquary.object);
 platformFixturesRoot.attach(crystalReliquary.insertFeedback);
-const locomotion = createVrLocomotion({ playerRig, renderer, camera, settings: settings.locomotion });
+const locomotion = createVrLocomotion({
+  playerRig, renderer, camera, settings: settings.locomotion, surfaceRoot: progressFloor.object, walkRadius: floorWalkRadius
+});
 const progressionController = createVrProgressionController({ pages: experienceVrPages });
 function syncTierOneWorldState() { shellSystem.setActive(progressionController.isTierComplete(1)); }
+function resetPlayerRigToSpawn() {
+  if (playerRig.parent !== floorPassengerRoot) floorPassengerRoot.attach(playerRig);
+  playerRig.position.copy(playerRigSpawnLocalPosition);
+  playerRig.quaternion.copy(playerRigSpawnLocalQuaternion);
+  playerRig.scale.copy(playerRigSpawnLocalScale);
+}
 const attractorTool = createVrAttractorTool({ model: assetManager.cloneGltfScene('vr-astro-attractor-model') });
 const semanticInput = createVrSemanticInput({ renderer });
 const handModeController = createVrHandModeController({
@@ -418,8 +437,7 @@ function handleSessionEnd() {
   crystalReliquary.reset();
   restorePortalWaitingState();
   locomotion.reset();
-  playerRig.position.set(settings.spawn.position.x, settings.spawn.position.y, settings.spawn.position.z);
-  orientPlayerRig(playerRig, settings.spawn.lookAt);
+  resetPlayerRigToSpawn();
   glyphOrbit.reset();
   shellAttractorInteraction.reset();
   shellSystem.reset();
@@ -447,8 +465,7 @@ async function enterVr() {
   crystalReliquary.reset();
   restorePortalWaitingState();
   locomotion.reset();
-  playerRig.position.set(settings.spawn.position.x, settings.spawn.position.y, settings.spawn.position.z);
-  orientPlayerRig(playerRig, settings.spawn.lookAt);
+  resetPlayerRigToSpawn();
   glyphOrbit.reset();
   shellAttractorInteraction.reset();
   shellSystem.reset();
