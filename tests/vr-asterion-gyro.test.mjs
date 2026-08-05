@@ -2,9 +2,9 @@ import assert from 'node:assert/strict';
 import * as THREE from '../src/vendor/three.js';
 import { createVrAsterionSphere } from '../src/xr/asterion/createVrAsterionSphere.js';
 import { createVrAsterionGyroInteraction } from '../src/xr/asterion/createVrAsterionGyroInteraction.js';
-import { ASTERION_GYRO_STATES, cappedExponentialSlerp, computeClutchedTargetQuaternion, exponentialSlerpAlpha, neutralizeControllerQuaternionAgainstFloor } from '../src/xr/asterion/asterionGyroMath.js';
+import { ASTERION_GYRO_STATES, cappedExponentialSlerp, computeClutchedTargetQuaternion, computeQuaternionError, exponentialSlerpAlpha, neutralizeControllerQuaternionAgainstFloor } from '../src/xr/asterion/asterionGyroMath.js';
 
-const settings = { targetDiameter: 0.18, holdOffset: { x: 0, y: 0.07, z: -0.11 }, holdRotationDegrees: { x: 0, y: 0, z: 0 }, response: 2.5, maxAngularSpeedDegrees: 55, targetRingBlendResponse: 12, lockThresholdDegrees: 0.5, lockDelaySeconds: 0.18 };
+const settings = { targetDiameter: 0.18, holdOffset: { x: 0, y: 0.07, z: -0.11 }, holdRotationDegrees: { x: 0, y: 0, z: 0 }, response: 2.5, maxAngularSpeedDegrees: 32, angularAccelerationDegrees: 32, angularDecelerationDegrees: 45, settleAngularSpeedDegrees: 0.15, targetRingBlendResponse: 12, lockThresholdDegrees: 0.5, lockDelaySeconds: 0.18 };
 
 function makeModel() {
   const root = new THREE.Group(); root.name = 'ASTERION_ROOT';
@@ -55,6 +55,32 @@ function worldQuaternionOf(node) {
 
 function assertQuaternionClose(actual, expected, message) {
   assert.ok(actual.angleTo(expected) < 1e-7, message);
+}
+
+function simulateHeavyDriveFor(totalFrames, dt) {
+  const localWorldRoot = new THREE.Group();
+  const localProgressFloor = { object: new THREE.Group() };
+  localWorldRoot.add(localProgressFloor.object);
+  const localLeftGrip = new THREE.Group(); localWorldRoot.add(localLeftGrip);
+  let localTrigger = 0;
+  const localRenderer = { xr: { getSession: () => ({ inputSources: [{ handedness: 'left', gamepad: { buttons: [{ value: localTrigger }] } }] }) } };
+  const localSphere = createVrAsterionSphere({ model: makeModel(), animations: makeIdleClips(), settings, enabled: true });
+  const localGyro = createVrAsterionGyroInteraction({
+    sphere: localSphere,
+    controllers: [{ handedness: 'left', isConnected: true, grip: localLeftGrip, ray: new THREE.Group(), isSelecting: false }],
+    progressFloor: localProgressFloor,
+    worldRoot: localWorldRoot,
+    renderer: localRenderer,
+    settings,
+    enabled: true
+  });
+  localGyro.update(dt);
+  localLeftGrip.quaternion.setFromAxisAngle(new THREE.Vector3(0, 1, 0), THREE.MathUtils.degToRad(90)); localWorldRoot.updateMatrixWorld(true); localGyro.update(dt);
+  localTrigger = 1;
+  for (let i = 0; i < totalFrames; i += 1) localGyro.update(dt);
+  const result = { current: localGyro.getCurrentQuaternion(), speed: localGyro.getAngularSpeed(), error: localGyro.getAngularError() };
+  localGyro.dispose(); localSphere.dispose();
+  return result;
 }
 
 {
@@ -142,6 +168,7 @@ assert.ok(Math.abs(gyro.getAngularError() - gyro.getCurrentQuaternion().angleTo(
 assert.notEqual(progressFloor.object.userData.asterionGyro.angularError, gyro.getCurrentQuaternion().angleTo(gyro.getPreviewQuaternion()), 'angularError is not measured against preview');
 
 const gyroDrivenInner2Action = sphere.getIdleActionByClipName('ASTERION_IDLE__inner_ring2');
+leftGrip.quaternion.setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI / 2); worldRoot.updateMatrixWorld(true);
 for (let i = 0; i < 40; i += 1) {
   leftTrigger = 1; gyro.update(1 / 60); sphere.update(1 / 60);
 }
@@ -285,7 +312,7 @@ const expected = computeClutchedTargetQuaternion({
 assert.ok(expected.isQuaternion, 'clutch helper returns a quaternion for testable pure math');
 
 
-function spinUntilLocked(gyroInstance, maxFrames = 600) {
+function spinUntilLocked(gyroInstance, maxFrames = 1800) {
   for (let i = 0; i < maxFrames && gyroInstance.getState() !== ASTERION_GYRO_STATES.LOCKED; i += 1) gyroInstance.update(1 / 60);
   assert.equal(gyroInstance.getState(), ASTERION_GYRO_STATES.LOCKED, 'gyro reaches LOCKED within bounded simulation frames');
 }
@@ -316,7 +343,7 @@ assert.ok(retargetedCommand.angleTo(commandAfterRelease) > 0.05, 'control base F
 leftTrigger = 0; gyro.update(0.016);
 let displayBeforeLock = gyro.getDisplayPreviewQuaternion();
 let sawSubThresholdWithoutLock = false;
-for (let i = 0; i < 600 && gyro.getState() !== ASTERION_GYRO_STATES.LOCKED; i += 1) {
+for (let i = 0; i < 1800 && gyro.getState() !== ASTERION_GYRO_STATES.LOCKED; i += 1) {
   displayBeforeLock = gyro.getDisplayPreviewQuaternion();
   gyro.update(1 / 60);
   if (gyro.getAngularError() <= THREE.MathUtils.degToRad(0.3) && gyro.getAngularError() > THREE.MathUtils.degToRad(0.05)) {
@@ -359,6 +386,80 @@ for (const degrees of [45, 60]) {
   expectedAccumulated = gyro.getCurrentQuaternion();
 }
 assert.ok(expectedAccumulated.angleTo(new THREE.Quaternion()) > THREE.MathUtils.degToRad(35), 'control base K: repeated gesture/trigger/release/LOCK sequence accumulates orientation over stages');
+
+// Heavy-drive regression coverage: COMMAND retargeting accelerates/brakes CURRENT without teleporting.
+gyro.reset();
+leftTrigger = 0;
+leftGrip.quaternion.identity(); worldRoot.updateMatrixWorld(true); gyro.update(1 / 60);
+leftGrip.quaternion.setFromAxisAngle(new THREE.Vector3(0, 1, 0), THREE.MathUtils.degToRad(120)); worldRoot.updateMatrixWorld(true); gyro.update(1 / 60);
+const previewBeforeHeavyDrive = gyro.getPreviewQuaternion();
+leftTrigger = 1; gyro.update(1 / 60);
+const currentAtCommandCapture = gyro.getCurrentQuaternion();
+assert.ok(currentAtCommandCapture.angleTo(previewBeforeHeavyDrive) > THREE.MathUtils.degToRad(100), 'heavy drive A/O: new COMMAND does not teleport CURRENT while PREVIEW responds immediately');
+const speed1 = gyro.getAngularSpeed();
+gyro.update(1 / 60);
+const speed2 = gyro.getAngularSpeed();
+assert.ok(speed2 > speed1 && speed2 < THREE.MathUtils.degToRad(2), 'heavy drive B/F: angular speed rises gradually from rest');
+let maxObservedSpeed = 0;
+let speedAtOneSecond = 0;
+for (let i = 0; i < 60; i += 1) {
+  gyro.update(1 / 60);
+  maxObservedSpeed = Math.max(maxObservedSpeed, gyro.getAngularSpeed());
+  if (i === 58) speedAtOneSecond = gyro.getAngularSpeed();
+}
+assert.ok(Math.abs(speedAtOneSecond - THREE.MathUtils.degToRad(32)) < THREE.MathUtils.degToRad(1.2), 'heavy drive C: continuous acceleration reaches about 32 degrees/s after about one second');
+for (let i = 0; i < 30; i += 1) {
+  gyro.update(1 / 60);
+  maxObservedSpeed = Math.max(maxObservedSpeed, gyro.getAngularSpeed());
+}
+assert.ok(maxObservedSpeed <= THREE.MathUtils.degToRad(32.01), 'heavy drive D: angular speed never exceeds maxAngularSpeed');
+const sixtyHzDrive = simulateHeavyDriveFor(60, 1 / 60);
+const oneTwentyHzDrive = simulateHeavyDriveFor(120, 1 / 120);
+assert.ok(sixtyHzDrive.current.angleTo(oneTwentyHzDrive.current) < THREE.MathUtils.degToRad(0.35) && Math.abs(sixtyHzDrive.speed - oneTwentyHzDrive.speed) < THREE.MathUtils.degToRad(0.35), 'heavy drive E: 60 Hz and 120 Hz integration stay close');
+leftTrigger = 0; gyro.update(1 / 60);
+const speedAfterRelease = gyro.getAngularSpeed();
+gyro.update(1 / 60);
+assert.ok(gyro.getAngularSpeed() > 0 && Math.abs(gyro.getAngularSpeed() - speedAfterRelease) < THREE.MathUtils.degToRad(1), 'heavy drive L: trigger release does not zero angular velocity');
+let sawBraking = false;
+let previousSpeed = gyro.getAngularSpeed();
+let previousError = gyro.getAngularError();
+let minError = previousError;
+for (let i = 0; i < 1800 && gyro.getState() !== ASTERION_GYRO_STATES.LOCKED; i += 1) {
+  gyro.update(1 / 60);
+  const speed = gyro.getAngularSpeed();
+  const error = gyro.getAngularError();
+  sawBraking = sawBraking || (error < THREE.MathUtils.degToRad(20) && speed < previousSpeed);
+  assert.ok(error <= previousError + THREE.MathUtils.degToRad(0.2), 'heavy drive I: CURRENT does not overshoot COMMAND during normal arrival');
+  previousSpeed = speed;
+  previousError = error;
+  minError = Math.min(minError, error);
+}
+assert.equal(gyro.getState(), ASTERION_GYRO_STATES.LOCKED, 'heavy drive J: low-error and low-speed platform reaches LOCK');
+assert.equal(sawBraking, true, 'heavy drive G/H: braking-distance controller reduces speed before target');
+assert.ok(minError <= THREE.MathUtils.degToRad(0.05), 'heavy drive J: lock waits until error is within 0.05 degrees');
+assert.equal(gyro.getAngularSpeed(), 0, 'heavy drive J/K: LOCK zeros angularVelocity');
+assertQuaternionClose(gyro.getCurrentQuaternion(), gyro.getCommandQuaternion(), 'heavy drive J: LOCK hard-settles exact CURRENT to COMMAND');
+const currentAfterHeavyLock = gyro.getCurrentQuaternion();
+gyro.update(1 / 60);
+assertQuaternionClose(gyro.getCurrentQuaternion(), currentAfterHeavyLock, 'heavy drive K: frames after LOCK do not move CURRENT');
+
+gyro.reset();
+leftGrip.quaternion.identity(); worldRoot.updateMatrixWorld(true); leftTrigger = 0; gyro.update(1 / 60);
+leftGrip.quaternion.setFromAxisAngle(new THREE.Vector3(0, 1, 0), THREE.MathUtils.degToRad(100)); worldRoot.updateMatrixWorld(true); leftTrigger = 1; gyro.update(1 / 60);
+for (let i = 0; i < 45; i += 1) gyro.update(1 / 60);
+const currentBeforeRetarget = gyro.getCurrentQuaternion();
+const velocityBeforeRetarget = gyro.getAngularVelocity();
+leftGrip.quaternion.setFromAxisAngle(new THREE.Vector3(0, 1, 0), THREE.MathUtils.degToRad(-70)); worldRoot.updateMatrixWorld(true); gyro.update(1 / 60);
+assert.ok(gyro.getCurrentQuaternion().angleTo(currentBeforeRetarget) < THREE.MathUtils.degToRad(1), 'heavy drive M: COMMAND change during motion does not teleport CURRENT');
+assert.ok(gyro.getAngularSpeed() > 0 && gyro.getAngularVelocity().length() > velocityBeforeRetarget.length() * 0.5, 'heavy drive M: retarget does not zero angularVelocity');
+const errorAfterRetarget = gyro.getAngularError();
+for (let i = 0; i < 90; i += 1) gyro.update(1 / 60);
+assert.ok(gyro.getAngularError() < errorAfterRetarget, 'heavy drive N: platform smoothly bends toward the new COMMAND');
+
+const errorAxis = new THREE.Vector3();
+const errorQuaternion = new THREE.Quaternion();
+const error = computeQuaternionError(new THREE.Quaternion(), new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), THREE.MathUtils.degToRad(30)), errorAxis, errorQuaternion);
+assert.ok(Math.abs(error.angle - THREE.MathUtils.degToRad(30)) < 1e-12 && Math.abs(error.axis.y - 1) < 1e-12, 'heavy drive math: quaternion error exposes shortest local axis/angle');
 
 
 gyro.dispose(); sphere.dispose();

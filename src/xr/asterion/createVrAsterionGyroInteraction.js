@@ -1,5 +1,5 @@
 import * as THREE from '../../vendor/three.js';
-import { ASTERION_GYRO_STATES, cappedExponentialSlerp, computeClutchedTargetQuaternion, neutralizeControllerQuaternionAgainstFloor, resolveGyroState } from './asterionGyroMath.js';
+import { ASTERION_GYRO_STATES, computeClutchedTargetQuaternion, computeQuaternionError, neutralizeControllerQuaternionAgainstFloor, resolveGyroState, steerAngularVelocity } from './asterionGyroMath.js';
 
 const TRIGGER_THRESHOLD = 0.1;
 const HARD_SETTLE_THRESHOLD_DEGREES = 0.05;
@@ -30,6 +30,12 @@ export function createVrAsterionGyroInteraction({ sphere, controllers, progressF
   const parentWorldQuaternion = new THREE.Quaternion();
   const floorWorldQuaternion = new THREE.Quaternion();
   const gripWorldQuaternion = new THREE.Quaternion();
+  const angularVelocity = new THREE.Vector3();
+  const errorAxis = new THREE.Vector3();
+  const desiredAngularVelocity = new THREE.Vector3();
+  const errorQuaternion = new THREE.Quaternion();
+  const stepQuaternion = new THREE.Quaternion();
+  const stepAxis = new THREE.Vector3();
   let handReferenceValid = false;
   let driveActive = false;
   let maneuverPendingLock = false;
@@ -40,8 +46,14 @@ export function createVrAsterionGyroInteraction({ sphere, controllers, progressF
   let visualRebaseActive = false;
   let disposed = false;
 
-  const response = Math.max(0, Number.isFinite(settings?.response) ? settings.response : 2.5);
-  const maxAngularSpeedDegrees = Math.max(0, Number.isFinite(settings?.maxAngularSpeedDegrees) ? settings.maxAngularSpeedDegrees : 55);
+  const maxAngularSpeedDegrees = Math.max(0, Number.isFinite(settings?.maxAngularSpeedDegrees) ? settings.maxAngularSpeedDegrees : 32);
+  const angularAccelerationDegrees = Math.max(0, Number.isFinite(settings?.angularAccelerationDegrees) ? settings.angularAccelerationDegrees : 32);
+  const angularDecelerationDegrees = Math.max(0, Number.isFinite(settings?.angularDecelerationDegrees) ? settings.angularDecelerationDegrees : 45);
+  const settleAngularSpeedDegrees = Math.max(0, Number.isFinite(settings?.settleAngularSpeedDegrees) ? settings.settleAngularSpeedDegrees : 0.15);
+  const maxAngularSpeed = THREE.MathUtils.degToRad(maxAngularSpeedDegrees);
+  const angularAcceleration = THREE.MathUtils.degToRad(angularAccelerationDegrees);
+  const angularDeceleration = THREE.MathUtils.degToRad(angularDecelerationDegrees);
+  const settleAngularSpeed = THREE.MathUtils.degToRad(settleAngularSpeedDegrees);
   const lockThreshold = THREE.MathUtils.degToRad(Math.max(0, Number.isFinite(settings?.lockThresholdDegrees) ? settings.lockThresholdDegrees : 0.5));
   const hardSettleThreshold = THREE.MathUtils.degToRad(HARD_SETTLE_THRESHOLD_DEGREES);
   const lockDelaySeconds = Math.max(0, Number.isFinite(settings?.lockDelaySeconds) ? settings.lockDelaySeconds : 0.18);
@@ -67,6 +79,7 @@ export function createVrAsterionGyroInteraction({ sphere, controllers, progressF
     lockTimer = 0;
     state = ASTERION_GYRO_STATES.IDLE;
     angularError = 0;
+    angularVelocity.set(0, 0, 0);
     if (progressFloor?.object?.quaternion) progressFloor.object.quaternion.identity();
     sphere?.setTargetRingsStabilized?.(false);
     sphere?.syncGimbals?.({ currentQuaternion, targetQuaternion: displayPreviewQuaternion, worldRoot });
@@ -114,18 +127,49 @@ export function createVrAsterionGyroInteraction({ sphere, controllers, progressF
 
     let visualRebaseStartedThisFrame = false;
     const previousState = state;
-    cappedExponentialSlerp(currentQuaternion, commandQuaternion, { response, deltaSeconds: safeDelta, maxAngularSpeedDegrees });
+    computeQuaternionError(currentQuaternion, commandQuaternion, errorAxis, errorQuaternion);
+    angularError = currentQuaternion.angleTo(commandQuaternion);
+    if (safeDelta > 0 && angularError > 1e-9 && maxAngularSpeed > 0) {
+      const brakingSpeed = angularDeceleration > 0 ? Math.sqrt(Math.max(0, 2 * angularDeceleration * angularError)) : 0;
+      const desiredSpeed = angularError <= hardSettleThreshold ? 0 : Math.min(maxAngularSpeed, brakingSpeed);
+      desiredAngularVelocity.copy(errorAxis).multiplyScalar(desiredSpeed);
+      steerAngularVelocity(angularVelocity, desiredAngularVelocity, {
+        acceleration: angularAcceleration,
+        deceleration: angularDeceleration,
+        deltaSeconds: safeDelta
+      });
+      const angularSpeedBeforeClamp = angularVelocity.length();
+      const maxStep = Math.max(0, angularError - hardSettleThreshold * 0.25);
+      const stepAngle = Math.min(angularSpeedBeforeClamp * safeDelta, maxStep);
+      if (stepAngle > 1e-9 && angularSpeedBeforeClamp > 1e-9) {
+        stepAxis.copy(angularVelocity).multiplyScalar(1 / angularSpeedBeforeClamp);
+        stepQuaternion.setFromAxisAngle(stepAxis, stepAngle);
+        currentQuaternion.multiply(stepQuaternion).normalize();
+        if (stepAngle < angularSpeedBeforeClamp * safeDelta) {
+          angularVelocity.copy(errorAxis).multiplyScalar(Math.min(angularVelocity.length(), Math.max(0, stepAngle / safeDelta)));
+        }
+      }
+    } else if (angularError <= 1e-9 || maxAngularSpeed <= 0) {
+      desiredAngularVelocity.set(0, 0, 0);
+      steerAngularVelocity(angularVelocity, desiredAngularVelocity, {
+        acceleration: angularAcceleration,
+        deceleration: angularDeceleration,
+        deltaSeconds: safeDelta
+      });
+    }
     if (progressFloor?.object?.quaternion) progressFloor.object.quaternion.copy(currentQuaternion);
     angularError = currentQuaternion.angleTo(commandQuaternion);
-    if (!driveActive && angularError < lockThreshold) lockTimer += safeDelta;
+    const angularSpeed = angularVelocity.length();
+    if (!driveActive && angularError < lockThreshold && angularSpeed <= settleAngularSpeed) lockTimer += safeDelta;
     else lockTimer = 0;
-    const canHardSettle = !driveActive && lockTimer >= lockDelaySeconds && angularError <= hardSettleThreshold;
+    const canHardSettle = !driveActive && lockTimer >= lockDelaySeconds && angularError <= hardSettleThreshold && angularSpeed <= settleAngularSpeed;
     state = canHardSettle
       ? ASTERION_GYRO_STATES.LOCKED
       : resolveGyroState({ clutchActive: driveActive, angularError, lockTimer: 0, lockDelaySeconds });
     if (!driveActive && maneuverPendingLock && previousState !== ASTERION_GYRO_STATES.LOCKED && state === ASTERION_GYRO_STATES.LOCKED) {
       const displayPreviewBeforeRebase = displayPreviewQuaternion.clone();
       currentQuaternion.copy(commandQuaternion).normalize();
+      angularVelocity.set(0, 0, 0);
       if (progressFloor?.object?.quaternion) progressFloor.object.quaternion.copy(currentQuaternion);
       progressFloor?.object?.updateWorldMatrix?.(true, false);
       progressFloor?.object?.getWorldQuaternion?.(floorWorldQuaternion) ?? floorWorldQuaternion.identity();
@@ -164,7 +208,7 @@ export function createVrAsterionGyroInteraction({ sphere, controllers, progressF
     }
     sphere?.setTargetRingsStabilized?.(driveActive);
     if (progressFloor?.object?.userData) progressFloor.object.userData.asterionGyro = {
-      state, driveActive, angularError, previewCommandAngularError: previewQuaternion.angleTo(commandQuaternion)
+      state, driveActive, angularError, angularSpeed: angularVelocity.length(), previewCommandAngularError: previewQuaternion.angleTo(commandQuaternion)
     };
     sphere?.syncGimbals?.({ currentQuaternion, targetQuaternion: displayPreviewQuaternion, worldRoot });
     hideLeftRayIfEquipped(leftRecord);
@@ -172,6 +216,6 @@ export function createVrAsterionGyroInteraction({ sphere, controllers, progressF
 
   function dispose() { if (disposed) return; disposed = true; reset(); }
 
-  return { update, reset, dispose, getState: () => state, getAngularError: () => angularError,
+  return { update, reset, dispose, getState: () => state, getAngularError: () => angularError, getAngularVelocity: () => angularVelocity.clone(), getAngularSpeed: () => angularVelocity.length(),
     getTargetQuaternion: () => commandQuaternion.clone(), getPreviewQuaternion: () => previewQuaternion.clone(), getDisplayPreviewQuaternion: () => displayPreviewQuaternion.clone(), isVisualRebaseActive: () => visualRebaseActive, getCommandQuaternion: () => commandQuaternion.clone(), getCurrentQuaternion: () => currentQuaternion.clone(), getControlBaseQuaternion: () => controlBaseQuaternion.clone(), getHandReferenceQuaternion: () => handReferenceQuaternion.clone(), isDriveActive: () => driveActive, isClutchActive: () => driveActive };
 }
