@@ -8,8 +8,8 @@ const DEFAULT_SETTINGS = Object.freeze({
   height: 0.286,
   canvasWidth: 768,
   canvasHeight: 666,
-  position: { x: 0.19, y: 0.143, z: -0.18 },
-  rotationDegrees: { x: -5, y: 0, z: 0 },
+  position: { x: 0.49, y: 0.143, z: -0.18 },
+  rotationDegrees: { x: -52, y: 0, z: 0 },
   navigationThreshold: 0.55,
   colors: { background: '#101722', border: '#75d7ff', text: '#eff9ff', muted: '#9ab0bd', selected: '#1f5d78' }
 });
@@ -70,7 +70,9 @@ export function createVrPlayerGuidePanel({ leftGrip, semanticInput, locale = 'en
 
   let open = false;
   let selectedIndex = 0;
-  let activeSectionId = content.items[0]?.id ?? 'current-task';
+  const VIEW_STATE = Object.freeze({ MENU: 'MENU', DETAIL: 'DETAIL' });
+  let viewState = VIEW_STATE.MENU;
+  let activeSectionId = null;
   let previousNavDirection = 0;
   let previousConfirmPressed = false;
   let disposed = false;
@@ -93,24 +95,31 @@ export function createVrPlayerGuidePanel({ leftGrip, semanticInput, locale = 'en
     context.fillText(content.title, 28, 60);
     context.fillStyle = config.colors.muted;
     context.font = '23px sans-serif';
-    context.fillText(content.panelHint, 28, canvas.height - 30);
+    context.fillText(viewState === VIEW_STATE.MENU ? content.menuHint : content.detailHint, 28, canvas.height - 30);
   }
 
-  function drawSectionTabs() {
-    const tabY = 88;
-    const tabWidth = (canvas.width - 64) / content.items.length;
+  function drawMainMenu() {
+    const boxWidth = canvas.width - 72;
+    const boxHeight = 132;
+    const gap = 34;
+    const startY = 154;
     content.items.forEach((item, index) => {
-      const x = 28 + index * tabWidth;
+      const x = 36;
+      const y = startY + index * (boxHeight + gap);
       if (index === selectedIndex) {
         context.fillStyle = config.colors.selected;
-        context.fillRect(x, tabY, tabWidth - 10, 46);
+        context.fillRect(x, y, boxWidth, boxHeight);
       }
-      context.strokeStyle = item.id === activeSectionId ? config.colors.border : 'rgba(117, 215, 255, 0.35)';
-      context.lineWidth = 3;
-      context.strokeRect(x, tabY, tabWidth - 10, 46);
+      context.strokeStyle = index === selectedIndex ? config.colors.border : 'rgba(117, 215, 255, 0.35)';
+      context.lineWidth = 4;
+      context.strokeRect(x, y, boxWidth, boxHeight);
       context.fillStyle = config.colors.text;
-      context.font = '700 24px sans-serif';
-      context.fillText(item.label, x + 14, tabY + 31);
+      context.font = '700 38px sans-serif';
+      context.textAlign = 'center';
+      context.textBaseline = 'middle';
+      context.fillText(item.label, x + boxWidth / 2, y + boxHeight / 2);
+      context.textAlign = 'start';
+      context.textBaseline = 'alphabetic';
     });
   }
 
@@ -124,44 +133,43 @@ export function createVrPlayerGuidePanel({ leftGrip, semanticInput, locale = 'en
   }
 
   function drawControlsCard(item) {
-    const innerLeft = 28;
-    const innerRight = canvas.width - 28;
-    const top = 154;
-    const bottom = canvas.height - 70;
+    const padding = 34;
+    const top = 112;
+    const bottom = canvas.height - 72;
     context.fillStyle = config.colors.text;
     context.font = '700 30px sans-serif';
-    context.fillText(item.label, innerLeft + 8, top + 30);
+    context.fillText(item.label, padding, top);
 
-    const imageBox = { x: innerLeft + 8, y: top + 48, width: 320, height: bottom - top - 58 };
+    const imageBox = { x: padding, y: top + 20, width: canvas.width - padding * 2, height: bottom - top - 20 };
     if (controllersImageLoaded) {
       const ratio = Math.min(imageBox.width / controllersImage.naturalWidth, imageBox.height / controllersImage.naturalHeight);
       const drawWidth = controllersImage.naturalWidth * ratio;
       const drawHeight = controllersImage.naturalHeight * ratio;
-      context.drawImage(controllersImage, imageBox.x + (imageBox.width - drawWidth) / 2, imageBox.y + (imageBox.height - drawHeight) / 2, drawWidth, drawHeight);
+      context.drawImage(
+        controllersImage,
+        imageBox.x + (imageBox.width - drawWidth) / 2,
+        imageBox.y + (imageBox.height - drawHeight) / 2,
+        drawWidth,
+        drawHeight
+      );
     } else if (controllersImageFailed) {
       context.fillStyle = config.colors.muted;
       context.font = '22px sans-serif';
       context.fillText(content.controllersFallback, imageBox.x, imageBox.y + 36);
     }
-
-    const textX = imageBox.x + imageBox.width + 28;
-    const textWidth = innerRight - textX - 8;
-    context.fillStyle = config.colors.text;
-    context.font = '26px sans-serif';
-    let y = top + 76;
-    content.controls.forEach((line) => {
-      y = drawWrappedText(context, line, textX, y, textWidth, 33, 2) + 4;
-    });
   }
 
   function draw() {
     const { width, height } = canvas;
     drawFrame(width, height);
     drawHeader();
-    drawSectionTabs();
-    const activeItem = content.items.find((item) => item.id === activeSectionId) ?? content.items[0];
-    if (activeItem?.id === 'controls') drawControlsCard(activeItem);
-    else drawCurrentTaskCard(activeItem);
+    if (viewState === VIEW_STATE.MENU) {
+      drawMainMenu();
+    } else {
+      const activeItem = content.items.find((item) => item.id === activeSectionId) ?? content.items[0];
+      if (activeItem?.id === 'controls') drawControlsCard(activeItem);
+      else drawCurrentTaskCard(activeItem);
+    }
     texture.needsUpdate = true;
   }
 
@@ -170,23 +178,34 @@ export function createVrPlayerGuidePanel({ leftGrip, semanticInput, locale = 'en
   function update() {
     if (disposed) return;
     const input = semanticInput.getState?.() ?? {};
-    if (input.togglePlayerGuidePanel) setOpen(!open);
+    if (input.togglePlayerGuidePanel) {
+      if (open && viewState === VIEW_STATE.DETAIL) {
+        viewState = VIEW_STATE.MENU;
+        activeSectionId = null;
+        draw();
+      } else {
+        setOpen(!open);
+      }
+    }
     if (!open) { previousNavDirection = 0; previousConfirmPressed = false; return; }
     const axis = input.leftStickY ?? 0;
     const direction = Math.abs(axis) >= config.navigationThreshold ? Math.sign(axis) : 0;
-    if (direction && direction !== previousNavDirection) {
+    if (viewState === VIEW_STATE.MENU && direction && direction !== previousNavDirection) {
       selectedIndex = (selectedIndex + (direction > 0 ? 1 : -1) + content.items.length) % content.items.length;
       draw();
     }
     previousNavDirection = direction;
     const confirmPressed = Boolean(input.toggleLeftTool);
     if (confirmPressed && !previousConfirmPressed) {
-      activeSectionId = content.items[selectedIndex]?.id ?? activeSectionId;
-      draw();
+      if (viewState === VIEW_STATE.MENU) {
+        activeSectionId = content.items[selectedIndex]?.id ?? activeSectionId;
+        viewState = VIEW_STATE.DETAIL;
+        draw();
+      }
     }
     previousConfirmPressed = confirmPressed;
   }
-  function reset() { selectedIndex = 0; activeSectionId = content.items[0]?.id ?? 'current-task'; previousNavDirection = 0; previousConfirmPressed = false; setOpen(false); }
+  function reset() { selectedIndex = 0; viewState = VIEW_STATE.MENU; activeSectionId = null; previousNavDirection = 0; previousConfirmPressed = false; setOpen(false); }
   function dispose() {
     if (disposed) return;
     disposed = true;
@@ -197,7 +216,7 @@ export function createVrPlayerGuidePanel({ leftGrip, semanticInput, locale = 'en
 
   controllersImage.onload = () => { if (disposed) return; controllersImageLoaded = true; draw(); };
   controllersImage.onerror = () => { if (disposed) return; controllersImageFailed = true; draw(); };
-  controllersImage.src = publicPath('svg/controllers.svg');
+  controllersImage.src = publicPath(locale === 'pl' ? 'svg/controllers_pl.svg' : 'svg/controllers_en.svg');
   draw();
-  return { object, isOpen, update, reset, dispose };
+  return { object, isOpen, update, reset, dispose, getViewState: () => viewState, getSelectedIndex: () => selectedIndex, getActiveSectionId: () => activeSectionId };
 }

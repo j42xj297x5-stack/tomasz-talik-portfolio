@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 540" role="img" aria-label="META QUEST CONTROLS">
+  <rect width="960" height="540" rx="32" fill="#101722"/>
+  <text x="480" y="70" text-anchor="middle" fill="#eff9ff" font-size="42" font-family="Arial, sans-serif" font-weight="700">META QUEST CONTROLS</text>
+  <g fill="none" stroke="#75d7ff" stroke-width="8">
+    <path d="M220 190c-70 0-120 65-120 145 0 56 27 92 66 92 34 0 50-24 63-54 11-27 26-44 58-44h47V190z"/>
+    <path d="M740 190c70 0 120 65 120 145 0 56-27 92-66 92-34 0-50-24-63-54-11-27-26-44-58-44h-47V190z"/>
+  </g>
+  <g fill="#eff9ff" font-family="Arial, sans-serif" font-size="28">
+    <text x="160" y="155">Y / X</text><text x="710" y="155">A / B</text>
+    <text x="120" y="470">Grip</text><text x="770" y="470">Trigger</text>
+    <text x="390" y="455">Left stick / Right stick</text>
+  </g>
+</svg>
