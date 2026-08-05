@@ -1,5 +1,5 @@
 import * as THREE from '../../vendor/three.js';
-import { ASTERION_GYRO_STATES, computeClutchedTargetQuaternion, exponentialSlerpAlpha, resolveGyroState } from './asterionGyroMath.js';
+import { ASTERION_GYRO_STATES, cappedExponentialSlerp, computeClutchedTargetQuaternion, resolveGyroState } from './asterionGyroMath.js';
 
 const TRIGGER_THRESHOLD = 0.1;
 
@@ -28,7 +28,8 @@ export function createVrAsterionGyroInteraction({ sphere, controllers, progressF
   let angularError = 0;
   let disposed = false;
 
-  const response = Math.max(0, Number.isFinite(settings?.response) ? settings.response : 7);
+  const response = Math.max(0, Number.isFinite(settings?.response) ? settings.response : 2.5);
+  const maxAngularSpeedDegrees = Math.max(0, Number.isFinite(settings?.maxAngularSpeedDegrees) ? settings.maxAngularSpeedDegrees : 55);
   const lockThreshold = THREE.MathUtils.degToRad(Math.max(0, Number.isFinite(settings?.lockThresholdDegrees) ? settings.lockThresholdDegrees : 0.5));
   const lockDelaySeconds = Math.max(0, Number.isFinite(settings?.lockDelaySeconds) ? settings.lockDelaySeconds : 0.18);
 
@@ -47,6 +48,7 @@ export function createVrAsterionGyroInteraction({ sphere, controllers, progressF
     state = ASTERION_GYRO_STATES.IDLE;
     angularError = 0;
     if (progressFloor?.object?.quaternion) progressFloor.object.quaternion.identity();
+    sphere?.setTargetRingsStabilized?.(false);
     sphere?.syncGimbals?.({ currentQuaternion, targetQuaternion, worldRoot });
   }
 
@@ -77,12 +79,13 @@ export function createVrAsterionGyroInteraction({ sphere, controllers, progressF
     }
 
     triggerWasDown = triggerDown;
-    currentQuaternion.slerp(targetQuaternion, exponentialSlerpAlpha(response, safeDelta)).normalize();
+    cappedExponentialSlerp(currentQuaternion, targetQuaternion, { response, deltaSeconds: safeDelta, maxAngularSpeedDegrees });
     if (progressFloor?.object?.quaternion) progressFloor.object.quaternion.copy(currentQuaternion);
     angularError = currentQuaternion.angleTo(targetQuaternion);
     if (!triggerDown && angularError < lockThreshold) lockTimer += safeDelta;
     else lockTimer = 0;
     state = resolveGyroState({ clutchActive: triggerDown, angularError: angularError < lockThreshold ? 0 : angularError, lockTimer, lockDelaySeconds });
+    sphere?.setTargetRingsStabilized?.(triggerDown || state === ASTERION_GYRO_STATES.TARGETING);
     if (progressFloor?.object?.userData) progressFloor.object.userData.asterionGyro = { state, angularError };
     sphere?.syncGimbals?.({ currentQuaternion, targetQuaternion, worldRoot });
     hideLeftRayIfEquipped(leftRecord);
