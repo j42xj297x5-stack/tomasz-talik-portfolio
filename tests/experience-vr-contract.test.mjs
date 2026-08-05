@@ -3,8 +3,9 @@ import { readFile } from 'node:fs/promises';
 import { calculatePlayerRigYaw } from '../src/xr/playerRigOrientation.js';
 import * as THREE from '../src/vendor/three.js';
 import { createVrControllers } from '../src/xr/createVrControllers.js';
+import { applyWorldTransform } from '../src/xr/applyWorldTransform.js';
 
-const [main, vr, experience3d, vrControllers, glyphInteraction, entryTransition, spatialPlaque, crystalCollection, locomotion] = await Promise.all([
+const [main, vr, experience3d, vrControllers, glyphInteraction, entryTransition, spatialPlaque, crystalCollection, locomotion, portalDisplay, crystalReliquary, astroFurnace, furnacePanel] = await Promise.all([
   readFile(new URL('../src/main.js', import.meta.url), 'utf8'),
   readFile(new URL('../src/experienceVr.js', import.meta.url), 'utf8'),
   readFile(new URL('../src/experience3d.js', import.meta.url), 'utf8'),
@@ -13,7 +14,11 @@ const [main, vr, experience3d, vrControllers, glyphInteraction, entryTransition,
   readFile(new URL('../src/xr/createVrEntryTransition.js', import.meta.url), 'utf8'),
   readFile(new URL('../src/xr/createVrSpatialPlaque.js', import.meta.url), 'utf8'),
   readFile(new URL('../src/xr/createVrCrystalCollection.js', import.meta.url), 'utf8'),
-  readFile(new URL('../src/xr/createVrLocomotion.js', import.meta.url), 'utf8')
+  readFile(new URL('../src/xr/createVrLocomotion.js', import.meta.url), 'utf8'),
+  readFile(new URL('../src/xr/createVrPortalDisplay.js', import.meta.url), 'utf8'),
+  readFile(new URL('../src/xr/createVrCrystalReliquary.js', import.meta.url), 'utf8'),
+  readFile(new URL('../src/xr/furnace/createVrAstroFurnace.js', import.meta.url), 'utf8'),
+  readFile(new URL('../src/xr/furnace/createVrAstroFurnacePanel.js', import.meta.url), 'utf8')
 ]);
 
 assert.match(main, /await import\('\.\/experienceVr\.js'\)/);
@@ -84,6 +89,74 @@ assert.equal((vr.match(/const monkeyAnchor = monkeyModel \?\? centralPlaceholder
 assert.doesNotMatch(vr, /progressFloor\.object\.add\(monkeyAnchor\)/);
 assert.match(vr, /createVrPortalDisplay\([\s\S]*anchorObject: monkeyAnchor/);
 assert.match(vr, /createVrAstroFurnace\([\s\S]*anchorObject: monkeyAnchor/);
+
+assert.match(vr, /const platformFixturesRoot = new THREE\.Group\(\);\s*platformFixturesRoot\.name = 'VrPlatformFixturesRoot';[\s\S]*progressFloor\.object\.add\(platformFixturesRoot\);/);
+assert.match(vr, /restorePortalWaitingState\(\);\s*platformFixturesRoot\.attach\(portalDisplay\.object\);\s*platformFixturesRoot\.attach\(astroFurnace\.object\);/);
+assert.match(vr, /platformFixturesRoot\.attach\(crystalReliquary\.object\);\s*platformFixturesRoot\.attach\(crystalReliquary\.insertFeedback\);/);
+assert.match(vr, /platformFixturesRoot\.attach\(furnacePanel\.object\);/);
+assert.match(vr, /parent: portalDisplay\.object,[\s\S]*surface: portalDisplay\.canvasSurface/);
+assert.match(vr, /crystalReliquary\.attachCompanion\(\{ id: 'activate'/);
+assert.match(vr, /crystalReliquary\.attachCompanion\(\{ id: 'release'/);
+assert.doesNotMatch(vr, /platformFixturesRoot\.attach\(monkeyAnchor\)|platformFixturesRoot\.add\(monkeyAnchor\)/);
+assert.doesNotMatch(vr, /platformFixturesRoot\.(?:attach|add)\(playerRig\)/);
+assert.doesNotMatch(vr, /platformFixturesRoot\.(?:attach|add)\(glyphRing\)|platformFixturesRoot\.(?:attach|add)\(shellSystem/);
+assert.match(portalDisplay, /applyWorldTransform\(object, desiredWorldPosition, desiredWorldQuaternion\)/);
+assert.match(crystalReliquary, /portalDisplay\.object\.getWorldPosition\(portalPosition\);[\s\S]*portalDisplay\.object\.getWorldQuaternion\(portalQuaternion\);[\s\S]*applyWorldTransform\(object, desiredWorldPosition, portalQuaternion\)/);
+assert.match(crystalReliquary, /applyWorldTransform\(insertFeedback, sphere\.center, insertFeedback\.quaternion, insertFeedbackWorldScale\)/);
+assert.match(astroFurnace, /calculateMirroredHorizontalPosition\(anchorCenter, mirrorPosition, desiredWorldPosition\);[\s\S]*applyWorldTransform\(object, desiredWorldPosition, desiredWorldQuaternion, desiredWorldScale\)/);
+assert.doesNotMatch(astroFurnace, /object\.position\.y = 0;[\s\S]*worldToLocal\(object\.position\)/);
+assert.match(furnacePanel, /return \{ object: root/);
+assert.match(furnacePanel, /applyWorldTransform\(root, desiredWorldPosition, desiredWorldQuaternion, desiredWorldScale\)/);
+
+const assertFixturesAttachContract = () => {
+  const sceneRoot = new THREE.Group();
+  const floorRoot = new THREE.Group();
+  floorRoot.name = 'VrTiltableFloorRoot';
+  const fixturesRoot = new THREE.Group();
+  fixturesRoot.name = 'VrPlatformFixturesRoot';
+  floorRoot.add(fixturesRoot);
+  sceneRoot.add(floorRoot);
+  const fixtures = ['portal', 'reliquary', 'furnace', 'panel'].map((name, index) => {
+    const fixture = new THREE.Group();
+    fixture.name = name;
+    fixture.position.set(index + 1, 0.25 * index, -index - 0.5);
+    fixture.quaternion.setFromEuler(new THREE.Euler(0.1 * index, -0.2 * index, 0.05 * index));
+    fixture.scale.setScalar(1 + index * 0.1);
+    sceneRoot.add(fixture);
+    return fixture;
+  });
+  sceneRoot.updateMatrixWorld(true);
+  const before = fixtures.map((fixture) => ({
+    position: fixture.getWorldPosition(new THREE.Vector3()),
+    quaternion: fixture.getWorldQuaternion(new THREE.Quaternion()),
+    scale: fixture.getWorldScale(new THREE.Vector3())
+  }));
+  fixtures.forEach((fixture) => fixturesRoot.attach(fixture));
+  sceneRoot.updateMatrixWorld(true);
+  fixtures.forEach((fixture, index) => {
+    assert.equal(fixture.parent, fixturesRoot);
+    assert.ok(fixture.getWorldPosition(new THREE.Vector3()).distanceTo(before[index].position) < 1e-12);
+    assert.ok(fixture.getWorldQuaternion(new THREE.Quaternion()).angleTo(before[index].quaternion) < 1e-7);
+    assert.ok(fixture.getWorldScale(new THREE.Vector3()).distanceTo(before[index].scale) < 1e-12);
+  });
+  floorRoot.quaternion.setFromEuler(new THREE.Euler(0.25, 0.4, -0.12));
+  sceneRoot.updateMatrixWorld(true);
+  fixtures.forEach((fixture, index) => {
+    assert.ok(fixture.getWorldPosition(new THREE.Vector3()).distanceTo(before[index].position) > 1e-3);
+    assert.ok(fixture.getWorldQuaternion(new THREE.Quaternion()).angleTo(before[index].quaternion) > 1e-3);
+  });
+  const desiredWorldPosition = new THREE.Vector3(0.8, 0.6, -1.1);
+  const desiredWorldQuaternion = new THREE.Quaternion().setFromEuler(new THREE.Euler(0.3, -0.5, 0.1));
+  const desiredWorldScale = new THREE.Vector3(1.2, 0.9, 1.1);
+  applyWorldTransform(fixtures[0], desiredWorldPosition, desiredWorldQuaternion, desiredWorldScale);
+  sceneRoot.updateMatrixWorld(true);
+  assert.equal(fixtures[0].parent, fixturesRoot);
+  assert.ok(fixtures[0].getWorldPosition(new THREE.Vector3()).distanceTo(desiredWorldPosition) < 1e-12);
+  assert.ok(fixtures[0].getWorldQuaternion(new THREE.Quaternion()).angleTo(desiredWorldQuaternion) < 1e-7);
+  assert.ok(fixtures[0].getWorldScale(new THREE.Vector3()).distanceTo(desiredWorldScale) < 1e-12);
+};
+assertFixturesAttachContract();
+
 
 const assertMonkeyFloorAttachContract = (monkeyAnchor) => {
   const sceneRoot = new THREE.Group();

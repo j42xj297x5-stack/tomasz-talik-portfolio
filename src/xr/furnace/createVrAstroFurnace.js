@@ -1,4 +1,5 @@
 import * as THREE from '../../vendor/three.js';
+import { applyWorldTransform } from '../applyWorldTransform.js';
 
 const REQUIRED_NODE_NAMES = Object.freeze([
   'ASTRO_FURNACE_ROOT', 'button_open', 'button_activate', 'button_option',
@@ -100,7 +101,11 @@ export function createVrAstroFurnace({
   const anchorCenter = new THREE.Vector3();
   const mirrorPosition = new THREE.Vector3();
   const resolvedWorldPosition = new THREE.Vector3();
+  const desiredWorldPosition = new THREE.Vector3();
+  const desiredWorldQuaternion = new THREE.Quaternion();
+  const desiredWorldScale = new THREE.Vector3();
   const target = new THREE.Vector3();
+  const placementProbe = new THREE.Object3D();
 
   function calculateVisibleBounds() {
     visibleBounds.makeEmpty();
@@ -117,28 +122,33 @@ export function createVrAstroFurnace({
 
   function place() {
     if (disposed) return false;
-    object.scale.setScalar(settings.scale);
+    desiredWorldScale.setScalar(settings.scale);
     if (settings.placementMode === 'mirror-portal' && anchorObject && mirrorObject) {
       anchorObject.updateWorldMatrix(true, true);
       mirrorObject.updateWorldMatrix(true, false);
       anchorBounds.setFromObject(anchorObject).getCenter(anchorCenter);
       mirrorObject.getWorldPosition(mirrorPosition);
-      calculateMirroredHorizontalPosition(anchorCenter, mirrorPosition, resolvedWorldPosition);
-      object.position.copy(resolvedWorldPosition);
-      parent?.worldToLocal(object.position);
+      calculateMirroredHorizontalPosition(anchorCenter, mirrorPosition, desiredWorldPosition);
     } else {
-      object.position.set(settings.position.x, settings.position.y, settings.position.z);
+      desiredWorldPosition.set(settings.position.x, settings.position.y, settings.position.z);
       anchorCenter.set(0, 0, 0);
       mirrorPosition.set(0, 0, 0);
     }
-    object.position.y = 0;
-    target.set(spawnPosition?.x ?? 0, object.position.y, spawnPosition?.z ?? 0);
-    object.lookAt(target);
-    object.rotateX(THREE.MathUtils.degToRad(settings.rotationDegrees.x));
-    object.rotateY(THREE.MathUtils.degToRad(settings.rotationDegrees.y));
-    object.rotateZ(THREE.MathUtils.degToRad(settings.rotationDegrees.z));
+    desiredWorldPosition.y = 0;
+    target.set(spawnPosition?.x ?? 0, desiredWorldPosition.y, spawnPosition?.z ?? 0);
+    placementProbe.position.copy(desiredWorldPosition);
+    placementProbe.quaternion.identity();
+    placementProbe.lookAt(target);
+    placementProbe.rotateX(THREE.MathUtils.degToRad(settings.rotationDegrees.x));
+    placementProbe.rotateY(THREE.MathUtils.degToRad(settings.rotationDegrees.y));
+    placementProbe.rotateZ(THREE.MathUtils.degToRad(settings.rotationDegrees.z));
+    desiredWorldQuaternion.copy(placementProbe.quaternion);
+    applyWorldTransform(object, desiredWorldPosition, desiredWorldQuaternion, desiredWorldScale);
     const bounds = calculateVisibleBounds();
-    if (!bounds.isEmpty()) object.position.y += settings.floorOffset - bounds.min.y;
+    if (!bounds.isEmpty()) {
+      desiredWorldPosition.y += settings.floorOffset - bounds.min.y;
+      applyWorldTransform(object, desiredWorldPosition, desiredWorldQuaternion, desiredWorldScale);
+    }
     object.visible = settings.enabled && Boolean(model);
     calculateVisibleBounds();
     object.getWorldPosition(resolvedWorldPosition);

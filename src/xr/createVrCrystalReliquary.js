@@ -1,4 +1,5 @@
 import * as THREE from '../vendor/three.js';
+import { applyWorldTransform } from './applyWorldTransform.js';
 
 const INSERT_ZONE_NAME = 'RELIQUARY_CRYSTAL_INSERT_ZONE';
 const ANCHOR_NAME = 'RELIQUARY_CRYSTAL_ANCHOR';
@@ -102,6 +103,8 @@ export function createVrCrystalReliquary({ scene, reliquaryModel, portalDisplay,
   const buttonWorldOffset = new THREE.Vector3();
   const worldUp = new THREE.Vector3(0, 1, 0);
   const worldScale = new THREE.Vector3();
+  const desiredWorldPosition = new THREE.Vector3();
+  const insertFeedbackWorldScale = new THREE.Vector3();
   const companions = new Map();
   let disposed = false;
 
@@ -132,10 +135,10 @@ export function createVrCrystalReliquary({ scene, reliquaryModel, portalDisplay,
     portalForward.normalize();
     if (towardSpawn.lengthSq() > 1e-8 && portalForward.dot(towardSpawn) < 0) portalForward.negate();
     portalLeft.crossVectors(portalForward, worldUp).normalize();
-    object.position.copy(portalPosition).addScaledVector(portalForward, settings.distanceFromPortal);
-    object.position.y = 0;
+    desiredWorldPosition.copy(portalPosition).addScaledVector(portalForward, settings.distanceFromPortal);
+    desiredWorldPosition.y = 0;
     modelRoot.position.y = settings.heightOffset ?? 0.5;
-    object.quaternion.copy(portalQuaternion);
+    applyWorldTransform(object, desiredWorldPosition, portalQuaternion);
     object.visible = true;
     object.updateWorldMatrix(true, true);
     updateButtonPlacement();
@@ -200,8 +203,8 @@ export function createVrCrystalReliquary({ scene, reliquaryModel, portalDisplay,
     }
     const sphere = getInsertZoneWorldSphere();
     if (!sphere) return false;
-    insertFeedback.position.copy(sphere.center);
-    insertFeedback.scale.setScalar(sphere.radius);
+    insertFeedbackWorldScale.setScalar(sphere.radius);
+    applyWorldTransform(insertFeedback, sphere.center, insertFeedback.quaternion, insertFeedbackWorldScale);
     const color = state === 'VALID' ? 0x49d17d : 0xe05252;
     feedbackMaterial.color.setHex(color);
     feedbackMaterial.emissive.setHex(color);

@@ -132,6 +132,12 @@ const progressFloor = createVrProgressFloor({
   aiGuideSectorModel: assetManager.cloneGltfScene('vr-progress-floor-ai-guide-model'),
   worldYOffset: FLOOR_WORLD_Y_OFFSET
 });
+const platformFixturesRoot = new THREE.Group();
+platformFixturesRoot.name = 'VrPlatformFixturesRoot';
+platformFixturesRoot.position.set(0, 0, 0);
+platformFixturesRoot.quaternion.identity();
+platformFixturesRoot.scale.set(1, 1, 1);
+progressFloor.object.add(platformFixturesRoot);
 const monkeyModel = await loadMonkeyModel({ scene: worldRoot, fallbackObject: centralPlaceholder, assetManager });
 const monkeyAnchor = monkeyModel ?? centralPlaceholder;
 progressFloor.object.attach(monkeyAnchor);
@@ -181,6 +187,8 @@ function restorePortalWaitingState() {
   portalCanvas.show({ title: copy.crystalInstructionTitle, body: copy.crystalInstructionBody });
 }
 restorePortalWaitingState();
+platformFixturesRoot.attach(portalDisplay.object);
+platformFixturesRoot.attach(astroFurnace.object);
 const crystalReliquary = createVrCrystalReliquary({
   scene,
   reliquaryModel: assetManager.cloneGltfScene('vr-crystal-reliquary-model'),
@@ -188,6 +196,8 @@ const crystalReliquary = createVrCrystalReliquary({
   spawnPosition: settings.spawn.position,
   settings: settings.reliquary
 });
+platformFixturesRoot.attach(crystalReliquary.object);
+platformFixturesRoot.attach(crystalReliquary.insertFeedback);
 const locomotion = createVrLocomotion({ playerRig, renderer, camera, settings: settings.locomotion });
 const progressionController = createVrProgressionController({ pages: experienceVrPages });
 function syncTierOneWorldState() { shellSystem.setActive(progressionController.isTierComplete(1)); }
@@ -214,6 +224,7 @@ const furnacePanel = createVrAstroFurnacePanel({
     getChamberState: () => astroFurnaceOpenInteraction?.getState?.() ?? 'CLOSED'
   }
 });
+platformFixturesRoot.attach(furnacePanel.object);
 const ordinaryFurnaceRayAvailable = (record) => !(record.handedness === 'right'
   && handModeController.getMode() === 'ASTRO_ATTRACTOR')
   && !(asterionSphereQa && asterionSphere.isEquipped() && record.handedness === 'left');
