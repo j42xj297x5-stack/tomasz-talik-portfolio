@@ -4,8 +4,9 @@ import { calculatePlayerRigYaw } from '../src/xr/playerRigOrientation.js';
 import * as THREE from '../src/vendor/three.js';
 import { createVrControllers } from '../src/xr/createVrControllers.js';
 import { applyWorldTransform } from '../src/xr/applyWorldTransform.js';
+import { createVrSemanticInput, XR_STANDARD_BUTTONS } from '../src/xr/input/createVrSemanticInput.js';
 
-const [main, vr, experience3d, vrControllers, glyphInteraction, entryTransition, spatialPlaque, crystalCollection, locomotion, portalDisplay, crystalReliquary, astroFurnace, furnacePanel] = await Promise.all([
+const [main, vr, experience3d, vrControllers, glyphInteraction, entryTransition, spatialPlaque, crystalCollection, locomotion, portalDisplay, crystalReliquary, astroFurnace, furnacePanel, semanticInputSource, playerGuidePanelSource, playerGuideContentSource] = await Promise.all([
   readFile(new URL('../src/main.js', import.meta.url), 'utf8'),
   readFile(new URL('../src/experienceVr.js', import.meta.url), 'utf8'),
   readFile(new URL('../src/experience3d.js', import.meta.url), 'utf8'),
@@ -18,7 +19,10 @@ const [main, vr, experience3d, vrControllers, glyphInteraction, entryTransition,
   readFile(new URL('../src/xr/createVrPortalDisplay.js', import.meta.url), 'utf8'),
   readFile(new URL('../src/xr/createVrCrystalReliquary.js', import.meta.url), 'utf8'),
   readFile(new URL('../src/xr/furnace/createVrAstroFurnace.js', import.meta.url), 'utf8'),
-  readFile(new URL('../src/xr/furnace/createVrAstroFurnacePanel.js', import.meta.url), 'utf8')
+  readFile(new URL('../src/xr/furnace/createVrAstroFurnacePanel.js', import.meta.url), 'utf8'),
+  readFile(new URL('../src/xr/input/createVrSemanticInput.js', import.meta.url), 'utf8'),
+  readFile(new URL('../src/xr/guidance/createVrPlayerGuidePanel.js', import.meta.url), 'utf8'),
+  readFile(new URL('../src/xr/guidance/vrPlayerGuideContent.js', import.meta.url), 'utf8')
 ]);
 
 assert.match(main, /await import\('\.\/experienceVr\.js'\)/);
@@ -65,6 +69,7 @@ assert.match(vr, /crystalCollection\.update\(delta\)/);
 assert.match(vr, /glyphOrbit\.update\(delta\)/);
 assert.doesNotMatch(vr.match(/onComplete:[\s\S]*?\n  }\n}/)?.[0] ?? '', /portalDisplay\.place|portalCanvas\.hide/);
 assert.match(vr, /function restorePortalWaitingState\(\)[\s\S]*portalCanvas\.show/);
+assert.match(vr, /locomotion\.setLeftYawLocked\(playerGuidePanel\.isOpen\(\)\)/);
 assert.match(vr, /locomotion\.update\(delta\)/);
 assert.match(locomotion, /renderer\.xr\.getCamera\(camera\)/);
 assert.match(locomotion, /renderer\.xr\.updateCamera\(camera\)/);
@@ -72,6 +77,8 @@ assert.match(locomotion, /xrCamera\.isArrayCamera/);
 assert.match(locomotion, /playerRig\.position\.addScaledVector/);
 assert.match(locomotion, /getPlatformViewerBasis/);
 assert.match(locomotion, /constrainRadialStep/);
+assert.match(locomotion, /setLeftYawLocked/);
+assert.match(locomotion, /if \(!leftYawLocked\) playerRig\.rotateY/);
 assert.doesNotMatch(locomotion, /(?:camera|xrCamera|viewerCamera)\.(?:position|rotation|quaternion)\.(?:set|copy|add)/);
 assert.doesNotMatch(vr, /createVrGlyphPlaque|createVrPlaqueComposition/);
 assert.match(vrControllers, /renderer\.xr\.getController\(0\)/);
@@ -90,6 +97,49 @@ assert.match(vr, /const monkeyModel = await loadMonkeyModel\(\{ scene: worldRoot
 assert.equal((vr.match(/const monkeyAnchor = monkeyModel \?\? centralPlaceholder/g) ?? []).length, 1);
 assert.doesNotMatch(vr, /progressFloor\.object\.add\(monkeyAnchor\)/);
 assert.match(vr, /createVrPortalDisplay\([\s\S]*anchorObject: monkeyAnchor/);
+
+assert.equal(XR_STANDARD_BUTTONS.togglePlayerGuidePanel, 5, 'LEFT Y uses the standard Y button slot');
+assert.equal(XR_STANDARD_BUTTONS.toggleLeftTool, 4, 'LEFT X mapping is preserved');
+assert.equal(XR_STANDARD_BUTTONS.toggleRightTool, 4, 'RIGHT A mapping is preserved');
+const leftButtons = Array.from({ length: 6 }, () => ({ pressed: false, value: 0 }));
+const rightButtons = Array.from({ length: 5 }, () => ({ pressed: false, value: 0 }));
+const semanticInputRuntime = createVrSemanticInput({ renderer: { xr: { getSession: () => ({ inputSources: [
+  { handedness: 'left', gamepad: { buttons: leftButtons, axes: [0, 0, 0, -0.8] } },
+  { handedness: 'right', gamepad: { buttons: rightButtons, axes: [0, 0, 0, 0] } }
+] }) } } });
+leftButtons[5].pressed = true;
+leftButtons[0].value = 0.72;
+rightButtons[4].pressed = true;
+rightButtons[0].value = 0.33;
+rightButtons[1].value = 0.44;
+let semanticState = semanticInputRuntime.update();
+assert.equal(semanticState.togglePlayerGuidePanel, true, 'LEFT Y is edge-triggered');
+assert.equal(semanticState.toggleRightTool, true, 'RIGHT A edge remains available');
+assert.equal(semanticState.toggleLeftTool, false, 'LEFT X does not share the Y edge');
+assert.equal(semanticState.leftPrimaryAction, 0.72, 'left trigger is exposed separately');
+assert.equal(semanticState.primaryAction, 0.33, 'right trigger is preserved');
+assert.equal(semanticState.grabAction, 0.44, 'right grab is preserved');
+assert.equal(semanticState.leftStickY, -0.8, 'left joystick vertical axis is exposed');
+semanticState = semanticInputRuntime.update();
+assert.equal(semanticState.togglePlayerGuidePanel, false, 'held LEFT Y does not retrigger');
+leftButtons[5].pressed = false;
+semanticInputRuntime.update();
+leftButtons[4].pressed = true;
+semanticState = semanticInputRuntime.update();
+assert.equal(semanticState.toggleLeftTool, true, 'LEFT X edge still works after Y release');
+semanticInputRuntime.reset();
+assert.equal(semanticInputRuntime.getState().leftPrimaryAction, 0);
+assert.match(playerGuidePanelSource, /new THREE\.CanvasTexture\(canvas\)/);
+assert.match(playerGuidePanelSource, /leftGrip\?\.add\?\.\(object\)/);
+assert.match(playerGuidePanelSource, /togglePlayerGuidePanel/);
+assert.match(playerGuidePanelSource, /leftPrimaryAction/);
+assert.match(playerGuidePanelSource, /leftStickY/);
+assert.match(playerGuideContentSource, /pl:[\s\S]*AKTUALNE ZADANIE/);
+assert.match(playerGuideContentSource, /en:[\s\S]*CURRENT TASK/);
+assert.match(vr, /isPlayerGuidePanelOpen\(\) && record\.handedness === 'left'/);
+assert.match(vr, /playerGuidePanel\.reset\(\)/);
+assert.match(vr, /playerGuidePanel\.dispose\(\)/);
+
 assert.match(vr, /createVrAstroFurnace\([\s\S]*anchorObject: monkeyAnchor/);
 
 assert.match(vr, /const platformFixturesRoot = new THREE\.Group\(\);\s*platformFixturesRoot\.name = 'VrPlatformFixturesRoot';[\s\S]*progressFloor\.object\.add\(platformFixturesRoot\);/);
