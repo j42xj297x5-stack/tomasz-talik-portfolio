@@ -1,12 +1,31 @@
 # Experience VR Progress Floor Model
 
-Status: canonical technical description of the implemented visual progress-floor subsystem. Gameplay direction beyond this bounded subsystem remains in the [Experience VR Gameplay Roadmap](../concept/EXPERIENCE_VR_GAMEPLAY_ROADMAP.md).
+Status: canonical technical description of the implemented progress-floor and platform-root subsystem synchronized on 2026-08-05. Gameplay direction beyond this bounded subsystem remains in the [Experience VR Gameplay Roadmap](../concept/EXPERIENCE_VR_GAMEPLAY_ROADMAP.md).
 
 ## Runtime ownership and lifecycle
 
 `createVrProgressFloor` in `src/xr/floor/createVrProgressFloor.js` is the subsystem factory. `src/experienceVr.js` composes it under `worldRoot` after `AssetManager` has preloaded the five manifest models, passes clones of those models to the factory, calls `update(delta)` from the shared animation loop, and calls `dispose()` during page teardown.
 
-The factory creates one shared `THREE.Group` named `VrTiltableFloorRoot`. Its world-relative Y position is the exported `FLOOR_WORLD_Y_OFFSET` (`-1.05` by default). It owns all five instantiated sectors, cloned sector materials and, when creation succeeds, five procedural tier rings with their materials and geometries. `dispose()` is idempotent: it marks the subsystem inactive, detaches the root, and disposes every owned material and procedural geometry; later activation, completion and update calls are inert. The name reserves a future tilting contract; the current root remains stationary.
+The factory creates one shared `THREE.Group` named `VrTiltableFloorRoot`. Its world-relative Y position is the exported `FLOOR_WORLD_Y_OFFSET` (`-1.05` by default). It owns all five instantiated sectors, cloned sector materials and, when creation succeeds, five procedural tier rings with their materials and geometries. `dispose()` is idempotent: it marks the subsystem inactive, detaches the root, and disposes every owned material and procedural geometry; later activation, completion and update calls are inert.
+
+`VrTiltableFloorRoot` now has two active roles: it is the visual progress floor root and the platform transform root driven by the QA Asterion gyro. Progress ownership and transform ownership remain separate. `createVrProgressFloor` only projects committed portfolio progress; the Asterion gyro writes the root quaternion and does not take over card, tier or furnace progression logic.
+
+The platform hierarchy under this root is:
+
+```text
+VrTiltableFloorRoot
+├── floor sectors / rings
+├── monkeyAnchor
+├── VrPlatformFixturesRoot
+│   ├── portal
+│   ├── reliquary
+│   ├── furnace
+│   └── furnace panel
+└── VrFloorPassengerRoot
+    └── playerRig
+```
+
+Locomotion depends on this hierarchy. `VrFloorPassengerRoot` carries `playerRig`, so smooth movement resolves along the platform-local tangent plane, preserves rig local Y and uses the snapshot `glyphOrbit.effectiveRadius` as a radial walking boundary. The world-stable glyph ring and shell field remain outside this root.
 
 ## Sector layout
 
@@ -73,8 +92,8 @@ Crystals are branch-and-tier bound and do not carry a page identity. `VrProgress
 - central progression core;
 - durable persistence;
 - full-game reset;
-- floor tilting (despite the future-facing `VrTiltableFloorRoot` name);
-- locomotion coupled to the floor's local plane;
 - floor collisions or physics;
 - antenna puzzle;
 - final progression sequence.
+
+Implemented in the current QA/platform stage, but not owned by `createVrProgressFloor`: platform quaternion control by the QA Asterion Sphere, passenger/fixtures inheritance and local-plane locomotion with the safe radial boundary.

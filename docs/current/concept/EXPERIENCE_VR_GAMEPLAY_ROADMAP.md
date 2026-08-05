@@ -1,123 +1,68 @@
-# Experience VR — gameplay and progression roadmap
+# Experience VR Gameplay Roadmap
 
-Status: approved product direction and implementation checklist synchronized on 2026-08-03. The [runtime model](../technical/VR_RUNTIME_MODEL.md) remains the authority for current behavior.
+Status: concept roadmap synchronized on 2026-08-05. This document marks implemented QA/prototype mechanics separately from future production gameplay. The runtime authority remains [`VR_RUNTIME_MODEL.md`](../technical/VR_RUNTIME_MODEL.md).
 
-`[x]` means present in the current runtime. `[ ]` means future, including decisions that are approved but not implemented.
+## Current accepted direction
 
-## Product direction
+The accepted QA/prototype direction after the Asterion/platform stage is a rotating `VrTiltableFloorRoot` platform under a world-stable glyph ring / shell field / cosmos. `VrPlatformFixturesRoot`, the monkey anchor and `VrFloorPassengerRoot/playerRig` inherit the platform. Player locomotion follows the platform-local tangent plane with a safe radial boundary.
 
-Experience VR is a spatial progression game built around five portfolio branches and 18 cards. The stable portfolio loop is glyph acquisition → crystal handling → reliquary preview/commit → floor progress. Completed global tiers progressively unlock world mechanics. `VrProgressionController` owns this portfolio domain; `VrAstroFurnaceProgressionController` separately owns committed furnace materials. Future systems must preserve both boundaries without inventing a global progression store.
+This resolves the previous open question of platform motion versus glyph-ring displacement for the tested prototype: the current direction is platform orientation control with the glyph ring kept world-stable. Future production puzzles may still tune how radar/sectors use that relationship, but the implemented stage is no longer undecided.
 
-## Current implemented foundation
+## Implemented QA/prototype stage — Asterion platform control
 
-### Runtime, cards and floor
+- [x] QA-only physical Asterion Sphere / Kula Asterionowa behind `?asterionSphere`.
+- [x] Spatial gyroscope floor control using PREVIEW / COMMAND / CURRENT.
+- [x] CONTROL BASE + HAND REFERENCE multi-step target capture and smooth rebase.
+- [x] Bounded platform tilt/orientation through `VrTiltableFloorRoot`.
+- [x] Player passenger hierarchy through `VrFloorPassengerRoot/playerRig`.
+- [x] Platform fixtures hierarchy through `VrPlatformFixturesRoot`.
+- [x] Local-plane locomotion on the tilted platform.
+- [x] Safe radial walking boundary using the snapshot `glyphOrbit.effectiveRadius`; outward movement is blocked while tangent movement remains allowed.
+- [x] Heavy inertial angular drive with angular velocity, acceleration/deceleration, braking-distance control, smooth retarget and exact final settle.
+- [x] Independent left Asterion tool mode: X toggles `NORMAL_HAND ↔ ASTERION_SPHERE`.
+- [x] Independent right Astro Attractor mode: A toggles `NORMAL_HAND ↔ ASTRO_ATTRACTOR` after unlock.
 
-- [x] Independent Experience VR runtime with WebXR lifecycle and `playerRig` locomotion.
-- [x] Five branches and 18 cards in counts `3 / 3 / 3 / 4 / 5`.
-- [x] Physical crystals carry branch+tier, not page/card identity.
-- [x] Glyph hold spawns the next unrepresented branch tier; acquisition can stock future tiers.
-- [x] Current global tier gates insertion, not acquisition.
-- [x] Activate previews; Release commits through `VrProgressionController` and consumes the crystal.
-- [x] Five authored floor sectors, 18 independently activated panels and five procedural global tier rings.
-- [x] Ordinary interaction rays have a maximum range of `2.3 m`.
-- [ ] Progressive sector-background illumination with a soft gradient boundary.
-- [ ] Central progression core.
+This is a QA/prototype control system. It is not production physical construction, not 6/6 materialization and not the `UTWÓRZ` action.
 
-### Completed Tier-1 Astro/shell slice
+## Implemented foundation
 
-- [x] Tier 1 unlock event activates the shell field and unlocks Astro.
-- [x] Semantic input works even though handedness is assigned only after WebXR `connected`.
-- [x] A / `toggleRightTool` toggles `NORMAL_HAND ↔ ASTRO_ATTRACTOR` after unlock.
-- [x] `createVrHandModeController` owns Astro visibility/equipment and right ordinary-ray visibility.
-- [x] Astro visual model is mounted to the right controller.
-- [x] Shell field contains 18 instances: six assets × three clones.
-- [x] Right squeeze above `0.1` activates one `3R`, `2.5°` scan cone.
-- [x] Cached bounding-sphere cone-volume targeting selects shells analytically.
-- [x] Right trigger above `0.1` starts/sustains accelerated pull while scan remains active.
-- [x] Cancellation returns a shell to its advancing orbit in `0.8 s`.
-- [x] Capture point is `PIVOT_RING_MASTER` world position plus controller world `-Z × 1.3 m`; readiness radius is `0.28 m`.
-- [x] `capture_ready` is acquired by left ordinary ray + reported hit + squeeze, not proximity.
-- [x] Left release creates `placed`; either free ordinary hand can repeatedly re-grab it, with the right hand limited to `NORMAL_HAND`.
-- [x] Shell visuals preserve authored maps, show pull/captured/held emission and deterministic tumble.
-- [x] `?p1` provides the QA post-Tier-1 state.
+- [x] Separate Classic 2D, Experience 3D and Experience VR presentations.
+- [x] WebXR runtime with local-floor/local reference handling.
+- [x] Ordinary `2.3 m` rays with real-hit shortening.
+- [x] Glyph hold → physical crystal spawn.
+- [x] Reliquary Activate/Release preview and commit contract.
+- [x] `VrProgressionController` as sole owner of committed portfolio-card progress.
+- [x] Five progress-floor sectors, 18 panels and optional tier rings.
+- [x] Tier-1 Astro unlock and 18-shell field.
+- [x] Astro Attractor scan/pull/capture-ready and explicit ordinary-ray handoff.
+- [x] Placed shell ordinary-ray re-grab.
+- [x] Astro Furnace option/open/insert/activate/content interactions.
+- [x] Six unique shell material progression in `VrAstroFurnaceProgressionController`.
+- [x] Furnace panel deterministic Asterion hologram and shell-patch assembly.
 
-### Astro Furnace and Asterion material collection
+## Production Asterion construction — future
 
-- [x] Astro Furnace GLB preload, mirrored placement, scale and visible-geometry grounding.
-- [x] Physical Open interaction with mechanical chamber open/close and glass fade.
-- [x] Physical Activate interaction and complete spinup/steady/extraction/cooldown process.
-- [x] Runtime process-spin pivot and angle-coupled fire-cell feedback.
-- [x] Physical Option interaction and toggleable CanvasTexture panel.
-- [x] Mandatory furnace-module selection: initial mode is unset, and Open/insertion/Activate unlock only after Asterion Sphere selection.
-- [x] Asterion progression counter and exactly six unique required shell asset types.
-- [x] Physical shell insertion with valid/invalid feedback.
-- [x] Same-instance snap to the content anchor and pre-activation retrieval.
-- [x] Synchronized `3 / 3 / 9 / 3 s` SPINUP/STEADY/EXTRACTION/COOLDOWN process.
-- [x] EXTRACTION-driven physical-shell dissolve through `CONSUMING → CONSUMED`.
-- [x] Material commit only after process COMPLETE and controlled shell removal.
-- [x] Panel projection of gathered/missing Asterion materials.
-- [x] Deterministic miniatures of the six real shell types.
-- [x] Deterministic full-sphere ghost.
-- [x] Per-shell patch assembly from audited geometry and fixed shell identity.
-- [x] Continuously rotating Asterion panel preview, including IDLE.
-- [x] Phase-aware ASCII/Unicode process telemetry.
-
-## Approved Astro band progression — future
-
-A remains the high-level right-hand choice `NORMAL_HAND ↔ ASTRO_ATTRACTOR`. It is implemented and is not replaced by band selection.
-
-- [ ] B selects only bands unlocked by progression. **B is not implemented.**
-- [ ] **RED** targets local utility elements, primarily crystals and later floor controls.
-- [ ] **YELLOW** targets shells.
-- [ ] **GREEN** targets small glyphs.
-- [ ] **BLUE** targets rune stones.
-- [ ] **ULTRAVIOLET** targets final/distant glyphs.
-- [ ] Immediately after Tier 1, the planned available set is RED + YELLOW; later progression unlocks the remaining bands.
-
-RED is a filtered local capability, not a global scene raycast. It must not include the monkey, portal, reliquary, buttons, Astro Furnace or decoration.
-
-The current shell slice does not yet implement YELLOW as a selectable band; shells are directly available to the unlocked Astro mode. The list above describes the future selector/capability model.
-
-## Asterion material collection — implemented
-
-- [x] Store one of each six unique shell types as binary `0/1` furnace progression.
-- [x] Absorb inserted physical shells during the furnace process.
-- [x] Project gathered/missing types and `x/6` progress on the panel.
-- [x] Dissolve the current shell wireframe and assemble its matching pending sphere patch from the same EXTRACTION progress.
-- [x] Report `complete=true` when all six unique types are committed.
-
-The furnace is a progression transformer/store, not a physical essence-output machine. `complete=true` at `6/6` means the material set is complete; it does **not** mean a physical Asterion Sphere exists.
-
-## Asterion physical construction and floor control — future
-
-- [x] QA-only physical Asterion Sphere runtime and spatial-gyro prototype behind `?asterionSphere`: GLB idle animation, left-hand QA equipment and visual floor/radar quaternion control are implemented for testing only. Production construction, `UTWÓRZ` and 6/6 materialization gating remain future.
-- [ ] Transfer the completed material set into a visible physical construction sequence.
+- [ ] Transfer the completed six-shell material set into a visible physical construction sequence.
 - [ ] Add the physical **UTWÓRZ** action.
-- [ ] Materialize the luminous Asterion Sphere.
-- [ ] Equip the completed sphere as a left-hand tool.
-- [ ] Use the sphere as a spatial gyroscope for floor control.
+- [ ] Materialize the production luminous Asterion Sphere after the correct production gate.
+- [ ] Equip the completed production sphere as a progression-earned tool.
+- [ ] Connect production construction to progression without faking `6/6` from QA flags.
 
-After the sphere is built, further progression is intended to pass to **small glyphs**. The sphere remains a left-hand tool; the right hand retains A-controlled `NORMAL_HAND ↔ ASTRO_ATTRACTOR`.
+The furnace material store can reach `complete=true` at `6/6`, and the panel can show a complete hologram. That does not mean a physical production Asterion Sphere exists.
 
-## Spatial progression requirement after Tier 1
+## Radar and sector targeting — next major stage
 
-The ordinary `2.3 m` interaction range must stop being sufficient for subsequent glyph progression. The intended separation is approximately `3 m`, establishing a reason to use new mechanics rather than the ordinary ray.
-
-How that separation is created is unresolved. The accepted alternatives remain:
-
-- movement of the player platform; or
-- displacement of the glyph ring.
-
-This roadmap does not select either solution.
+- [ ] Define radar/sektorowe namierzanie around the world-stable target frame and rotating platform.
+- [ ] Reuse Asterion platform control as the player-facing aiming/orientation mechanic.
+- [ ] Decide sector feedback, target readability and comfort limits for Quest-class hardware.
+- [ ] Keep progression ownership outside the gyro controller.
 
 ## Later progression — future
 
 ### Small glyphs and floor control
 
-- [ ] Small glyphs take over progression after sphere construction.
+- [ ] Small glyphs take over progression after production sphere construction.
 - [ ] GREEN capability targets small glyphs.
-- [ ] Left-hand sphere controls bounded floor pitch/roll as a spatial gyroscope.
-- [ ] Locomotion follows the controlled local floor plane inside the safe central boundary.
 - [ ] Input priorities prevent tool, crystal, button and shell actions from firing together.
 
 ### Moving sectors and antenna
@@ -141,28 +86,19 @@ This roadmap does not select either solution.
 - [ ] Completed sectors and essence unlock the final radar.
 - [ ] The final crystal returns to the established reliquary preview/commit contract.
 
-## Cross-cutting future work
-
-- [ ] Progressive floor backgrounds and central core.
-- [ ] Explicit capability state for unlocked Astro bands.
-- [ ] Comfort limits and device validation for any floor motion.
-- [ ] Performance validation for transparency, emission, halos and long sessions.
-- [ ] Durable save and controlled full-game reset.
-- [ ] Audio and final polish; sound must not be required to understand mechanics.
-
 ## Constraints that remain binding
 
 - `VrProgressionController` remains the sole owner of committed cards and tier completion; `VrAstroFurnaceProgressionController` separately owns committed furnace material state.
 - Physical crystals remain branch+tier objects; page resolution stays at Activate.
-- Existing Astro handoff remains explicit left-ray targeting and squeeze, not proximity takeover.
+- Existing Astro handoff remains explicit ordinary-ray targeting and squeeze, not proximity takeover.
 - Placed shells remain ordinary-ray re-grabbable and excluded from Astro targeting.
 - No future band implies an unrestricted global scene raycast.
-- New movement/tilt mechanics require comfort testing on target hardware.
+- QA physical Asterion/floor control implemented now is distinct from future production construction/materialization.
 - Planned systems remain unchecked until runtime implementation and validation exist.
 
 ## Risks
 
-1. **Floor motion and comfort:** prototype bounded motion before expanding dependent puzzles; keep a stable reference and test seated/standing use.
+1. **Comfort and platform motion:** keep bounded angular speeds, stable distant reference cues and Meta Quest hardware validation before expanding dependent puzzles.
 2. **State ownership:** keep explicit state machines and idempotent progression events; avoid distributing committed state across visual modules.
 3. **Transparency/emission cost:** control overdraw and simultaneous lights on Quest-class hardware.
 4. **Input conflicts:** preserve semantic actions, hand-mode ownership and real-hit priorities.

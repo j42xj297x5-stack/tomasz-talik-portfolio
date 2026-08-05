@@ -1,37 +1,65 @@
 # Experience VR Handoff
 
-Status: self-contained current snapshot for the next implementation stage, **2026-08-03**. The [runtime model](../technical/VR_RUNTIME_MODEL.md) is the detailed authority; code is implementation evidence.
+Status: current implementation snapshot synchronized on 2026-08-05 after Meta Quest 3S hardware validation.
 
-## IMPLEMENTED
+## What works now
 
-- Experience VR is an independent WebXR runtime with `playerRig` locomotion, tracked-controller handedness resolved after connection, ordinary `2.3 m` rays and transient-session reset. Committed page and furnace progress survives XR re-entry in the prepared page only; there is no durable save.
-- The portfolio loop is glyph hold → branch+tier crystal → reliquary Activate preview → Release commit → floor panel/tier ring. `VrProgressionController` exclusively owns this card/tier domain.
-- Tier 1 unlocks Astro and 18 orbiting shells (six assets × three instances). Right A switches `NORMAL_HAND ↔ ASTRO_ATTRACTOR`; squeeze scans analytically, trigger pulls, and a `capture_ready` shell requires explicit left ordinary-ray+squeeze takeover. Placed shells remain ordinary-ray re-grabbable.
-- Astro Furnace starts unconfigured (`activeMode = null`). Option is the first step: its stronger local hover opens the panel, selection of Asterion Sphere activates `floor_gyroscope_sphere`, and the knob rotates `+90°` on local Y. Open, insertion and Activate remain gated until that selection.
-- A configured open chamber continuously shows its cylindrical insertion guide. Entry of a held shell's `boundingCenter` triggers automatic takeover for a missing required type; duplicate/unknown shells receive invalid feedback and are pushed out immediately. Snap also uses `boundingCenter`, preserves world scale and only downscales to fit. Reopening before processing permits retrieval.
-- Activate runs one synchronized 18-second profile: **SPINUP 0–3 s, STEADY 3–6 s, EXTRACTION 6–15 s, COOLDOWN 15–18 s**. One `extractionProgress 0→1`, active only in EXTRACTION, drives both physical-shell dissolve and panel dissolve/patch assembly. Commit remains strictly `CONSUMED + COMPLETE`.
-- Chamber spin is isolated to the process pivot. `fire_cell` and shell pulses share process phase; the shadowless internal `PointLight` counter-rotates against the chamber around a stable axis/reference.
-- The panel uses front and back `FrontSide` planes with one shared `CanvasTexture`, providing normal, unmirrored reading from either side. It is placed at about `0.10 m` gap and `-12°` yaw. The visible Asterion screen redraws at a throttled rate even in IDLE, so its sphere rotates continuously.
-- The panel has real mini-wireframes and **BRAK / W PROCESIE / ZGROMADZONA** states. Its rotating Asterion visualization combines a deterministic full-sphere ghost with six audit-derived, identity-fixed `±X / ±Y / ±Z` shell patches, curved spherical mapping with subdivision, and front/back culling. During EXTRACTION the current wireframe dissolves while the corresponding pending patch appears; it commits only at COMPLETE.
-- `VrAstroFurnaceProgressionController` exclusively owns one binary slot for each exact `shell-relic-1` through `shell-relic-6`. The panel is a read-only projection. `6/6` means a complete material/holographic panel model, not a physical object. Runtime consumes exported data from the [deterministic six-GLB audit](../audits/asterion-shells/asterion-shell-geometry-audit.md); it performs no PCA or GLB analysis.
+- Experience VR boots as a separate WebXR runtime with its own scene, renderer, `playerRig`, controllers and animation loop.
+- Glyph/crystal/reliquary progression, progress-floor panels/rings, Tier-1 Astro unlock, shell scan/pull/handoff/place and Astro Furnace material progression remain active.
+- Platform fixtures and the monkey move with `VrTiltableFloorRoot`; the glyph ring, shell field and cosmos remain world-stable.
+- `playerRig` is a passenger under `VrFloorPassengerRoot`, so camera/controllers/grips inherit the platform. There is no horizon-lock compensation.
+- Smooth locomotion follows the platform-local tangent plane, preserves local Y and enforces the snapshot `glyphOrbit.effectiveRadius` radial boundary by blocking outward movement while allowing tangent motion.
+- `?asterionSphere` enables the QA physical Asterion Sphere / Kula Asterionowa. Left X toggles `NORMAL_HAND ↔ ASTERION_SPHERE`; right A keeps the independent `NORMAL_HAND ↔ ASTRO_ATTRACTOR` toggle. Both tools can be equipped together.
+- Asterion PREVIEW / COMMAND / CURRENT is usable for multi-step targeting. CONTROL BASE + HAND REFERENCE drive PREVIEW, trigger-held accepts PREVIEW into COMMAND, release freezes COMMAND, and CURRENT is the actual platform orientation.
+- The QA sphere visual contract is active: `inner_ring2`, `inner_ring3` and `PIV_TARGET_AXIS` show PREVIEW; `master_ring1`, `master_ring2` and `inner_ring1` show CURRENT; authored idle fan motion remains on `inner_ring2/inner_ring3`.
+- TARGET rebase is smooth through `displayPreviewQuaternion` and an approximately `0.5 s` visual rebase, so the target frame does not visually teleport after LOCK.
+- Heavy angular drive is active and hardware-verified; trigger release and unequip do not stop platform travel.
 
-## QA PROTOTYPE — ASTERION PHYSICAL RUNTIME
+## Important architecture
 
-- QA physical Asterion Sphere runtime and spatial-gyro prototype exists behind `?asterionSphere`; production construction/equipment gating remains future. Hand modes are independent: left X toggles `NORMAL_HAND ↔ ASTERION_SPHERE`, while the existing right-hand toggle keeps `NORMAL_HAND ↔ ASTRO_ATTRACTOR`, so both tools may be equipped at the same time without cross-hiding each other's ordinary ray.
-- With the QA flag, `public/glb/asterion_sphere.glb` is loaded through `AssetManager`, can be equipped on the runtime-resolved left grip with the left X button (`NORMAL_HAND ↔ ASTERION_SPHERE`), starts all `ASTERION_IDLE__*` GLB clips, and uses `GIMBAL_CURRENT` / `GIMBAL_TARGET` as runtime-driven spatial gyroscope nodes. Runtime reparents `PIV_inner_ring1_precession` under `GIMBAL_CURRENT`, preserves its world transform, and keeps `ASTERION_IDLE__inner_ring1` at zero weight so inner ring 1 reads as the current floor horizon instead of a drifting target ring.
-- Unequipping the Asterion Sphere returns the left ordinary ray immediately and behaves like releasing gyro control: `COMMAND` stays frozen, `angularVelocity` is preserved, and heavy `CURRENT → COMMAND` platform motion, braking and lock continue while the sphere is hidden.
-- The gyro control semantics are now split into `CONTROL BASE + HAND REFERENCE → PREVIEW → COMMAND → CURRENT`. After the first no-jump capture, `PREVIEW` is computed from the neutralized left-grip delta against `HAND REFERENCE`, applied on top of the accumulated `CONTROL BASE`; `COMMAND` is copied from `PREVIEW` only while the left trigger is held, and `CURRENT` is the actual `VrTiltableFloorRoot` orientation moving toward `COMMAND`. The compatible target API still represents `COMMAND`.
-- Rebase happens only once on entry to `LOCKED`, after the platform has genuinely reached `COMMAND`: `CURRENT` is hard-settled to `COMMAND`, `CONTROL BASE` becomes the settled `CURRENT`, the current neutralized grip orientation becomes the new `HAND REFERENCE`, and `PREVIEW` is recentered on `CURRENT`. Trigger release alone does not rebase, so a second trigger can retarget the still-moving platform before the previous command locks.
-- `GIMBAL_CURRENT` continues to display `CURRENT`. `GIMBAL_TARGET` displays a dedicated display `PREVIEW`, consciously separated from the logical `PREVIEW` used by CONTROL BASE + HAND REFERENCE → PREVIEW → COMMAND. Outside rebase they are identical; on final lock the TARGET display rebase blends for about `0.5 s`, so inner rings 2/3 plus `PIV_TARGET_AXIS` / `srodek` visually settle into the new base without teleporting while the logical preview remains live to hand motion. `srodek` remains a pure inherited preview-axis child with no procedural runtime rotation. Rings 2/3 now use the authored GLB inner2/inner3 idle fan at full weight whenever the trigger is off and smoothly blend to zero animation weight only while drive/trigger is active, without restarting clip time.
-- `CURRENT` floor motion now uses an acceleration-limited heavy platform drive instead of capped exponential interpolation. The runtime keeps `angularVelocity` as a parent-local `Vector3` in radians/second, computes the shortest quaternion error from `CURRENT → COMMAND`, derives braking distance with `sqrt(2 * angularDeceleration * angle)`, and steers velocity toward that limited target without teleporting `CURRENT`. Default tuning is `maxAngularSpeedDegrees = 32`, `angularAccelerationDegrees = 32`, `angularDecelerationDegrees = 45`, and `settleAngularSpeedDegrees = 0.15`, while legacy `response = 2.5` remains in settings for data compatibility but no longer drives platform motion.
-- Final `LOCKED` still rebases only after the platform has genuinely reached `COMMAND`, but the lock gate now requires trigger/drive off, about `0.05°` remaining error, angular speed below the settle threshold, and the existing delay before hard-settling `CURRENT = COMMAND` and zeroing `angularVelocity`. Retargeting while moving updates `COMMAND` against the existing velocity, so the platform bends smoothly toward the new target without resetting motion. `playerRig`, camera, locomotion reference frame, furnace progression and the panel `x/6` material preview are unchanged.
-- Still not implemented in this stage: jerk-limited acceleration, procedural/audio feedback for the drive, radar sectors, and idle spin for `PIV_TARGET_AXIS` / `srodek`.
+```text
+WORLD
+├── world-stable glyphRing / shell field / cosmos
+└── VrTiltableFloorRoot
+    ├── floor sectors / rings
+    ├── monkeyAnchor
+    ├── VrPlatformFixturesRoot
+    │   ├── portal
+    │   ├── reliquary
+    │   ├── furnace
+    │   └── furnace panel
+    └── VrFloorPassengerRoot
+        └── playerRig
+            └── camera / controllers / grips
+```
 
-## FUTURE — NEXT STAGE
+`VrProgressionController` remains the only owner of committed portfolio-card progress. `VrAstroFurnaceProgressionController` remains the only owner of committed six-shell furnace material progress. Asterion gyro writes the quaternion of `VrTiltableFloorRoot`; it does not own progression and does not convert the furnace panel hologram into a production physical sphere.
 
-- [ ] Construct and materialize the **physical Asterion Sphere** from the completed six-material set; `UTWÓRZ` belongs to this new system, not to the existing panel.
-- [ ] Equip the physical sphere in the left hand.
-- [ ] Add later bounded floor control/spatial-gyroscope behavior.
-- [ ] Continue progression through small glyphs.
+## Current tuning values
 
-The next stage must preserve furnace-controller ownership of material progression and must not reinterpret the panel preview or `6/6` as an already materialized sphere.
+- Ordinary ray range: `2.3 m`.
+- Glyph hold: `0.5 s`; miss grace: `0.15 s`.
+- Crystal spawn offset: `0.30 m` inward.
+- Astro scan: `3R` length, `2.5°` half-angle.
+- Astro pull: `10 m/s²`, max `8.5 m/s`, capture readiness at `0.28 m`.
+- Shell return after cancel: `0.8 s`.
+- Furnace process: `18 s`, `42 RPM`, extraction from `6–15 s`, cooldown from `15–18 s`.
+- Asterion heavy drive: `maxAngularSpeedDegrees = 32`, `angularAccelerationDegrees = 32`, `angularDecelerationDegrees = 45`, `settleAngularSpeedDegrees = 0.15`.
+
+## Hardware validation
+
+Validated on Meta Quest 3S for this snapshot:
+
+- platform fixtures and monkey inherit platform movement correctly;
+- `playerRig` is a platform passenger;
+- locomotion works on the tilted local surface with radial limit;
+- PREVIEW / COMMAND / CURRENT, CONTROL BASE / HAND REFERENCE and ring visualization are comfortable;
+- authored idle fan on `inner_ring2/inner_ring3` remains active;
+- TARGET rebase is smooth;
+- heavy angular inertia behaves correctly;
+- X toggles left `NORMAL_HAND ↔ ASTERION_SPHERE`;
+- right hand remains independent for `NORMAL_HAND ↔ ASTRO_ATTRACTOR`.
+
+## Next major stage
+
+The next larger Experience VR stage is radar/sector targeting and further use of Asterion platform control. Production Asterion construction/materialization, `UTWÓRZ`, production unlock/gating, small glyph progression, radar sectors and final radar remain future work.
