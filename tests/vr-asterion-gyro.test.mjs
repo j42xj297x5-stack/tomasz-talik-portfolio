@@ -25,9 +25,23 @@ function makeModel() {
 }
 
 function makeIdleClips() {
-  const named = ['inner_ring1', 'inner_ring2', 'inner_ring3'].map((name) => new THREE.AnimationClip(`ASTERION_IDLE__${name}`, 1, [
-    new THREE.VectorKeyframeTrack('AuthoredVisibleMesh.scale', [0, 1], [1, 1, 1, 1, 1, 1])
-  ]));
+  const fanAxis = new THREE.Vector3(0, 1, 0);
+  const fanKeys = [0, 0.5, 1];
+  const inner2Fan = [
+    new THREE.Quaternion().setFromAxisAngle(fanAxis, THREE.MathUtils.degToRad(-15)),
+    new THREE.Quaternion().setFromAxisAngle(fanAxis, THREE.MathUtils.degToRad(15)),
+    new THREE.Quaternion().setFromAxisAngle(fanAxis, THREE.MathUtils.degToRad(-15))
+  ].flatMap((q) => q.toArray());
+  const inner3Fan = [
+    new THREE.Quaternion().setFromAxisAngle(fanAxis, THREE.MathUtils.degToRad(15)),
+    new THREE.Quaternion().setFromAxisAngle(fanAxis, THREE.MathUtils.degToRad(-15)),
+    new THREE.Quaternion().setFromAxisAngle(fanAxis, THREE.MathUtils.degToRad(15))
+  ].flatMap((q) => q.toArray());
+  const named = [
+    new THREE.AnimationClip('ASTERION_IDLE__inner_ring1', 1, [new THREE.VectorKeyframeTrack('AuthoredVisibleMesh.scale', [0, 1], [1, 1, 1, 1, 1, 1])]),
+    new THREE.AnimationClip('ASTERION_IDLE__inner_ring2', 1, [new THREE.QuaternionKeyframeTrack('PIV_inner_ring2_precession.quaternion', fanKeys, inner2Fan)]),
+    new THREE.AnimationClip('ASTERION_IDLE__inner_ring3', 1, [new THREE.QuaternionKeyframeTrack('PIV_inner_ring3_precession.quaternion', fanKeys, inner3Fan)])
+  ];
   const generic = Array.from({ length: 9 }, (_, i) => new THREE.AnimationClip(`ASTERION_IDLE__test_${i + 1}`, 1, [
     new THREE.VectorKeyframeTrack('AuthoredVisibleMesh.scale', [0, 1], [1, 1, 1, 1, 1, 1])
   ]));
@@ -60,6 +74,8 @@ function assertQuaternionClose(actual, expected, message) {
   assert.equal(sphere.getIdleActionByClipName('ASTERION_IDLE__inner_ring1').getEffectiveWeight(), 0, 'inner_ring1 idle action has zero effective weight');
   assert.equal(sphere.getIdleActionByClipName('ASTERION_IDLE__inner_ring2').getEffectiveWeight(), 1, 'inner_ring2 idles with full effective weight');
   assert.equal(sphere.getIdleActionByClipName('ASTERION_IDLE__inner_ring3').getEffectiveWeight(), 1, 'inner_ring3 idles with full effective weight');
+  assert.equal(sphere.getDiagnostics().conflictingClipNames.includes('ASTERION_IDLE__inner_ring2'), false, 'inner2 authored pivot idle is not a runtime conflict');
+  assert.equal(sphere.getDiagnostics().conflictingClipNames.includes('ASTERION_IDLE__inner_ring3'), false, 'inner3 authored pivot idle is not a runtime conflict');
   sphere.dispose();
 }
 
@@ -121,6 +137,7 @@ assert.equal(gyro.isDriveActive(), false, 'drive is inactive after trigger relea
 assert.ok(gyro.getCommandQuaternion().angleTo(releasedCommand) < 1e-12, 'trigger up freezes command while the hand returns');
 assert.ok(gyro.getPreviewQuaternion().angleTo(releasedCommand) > 0.1, 'after trigger up, hand motion continues to change preview');
 assert.ok(gyro.getCurrentQuaternion().angleTo(currentAfterRelease) > 0, 'after release, current continues moving toward frozen command');
+assertQuaternionClose(gyro.getDisplayPreviewQuaternion(), gyro.getPreviewQuaternion(), 'outside visual rebase display PREVIEW equals logical PREVIEW');
 assert.ok(Math.abs(gyro.getAngularError() - gyro.getCurrentQuaternion().angleTo(gyro.getCommandQuaternion())) < 1e-12, 'angularError is measured between current and command');
 assert.notEqual(progressFloor.object.userData.asterionGyro.angularError, gyro.getCurrentQuaternion().angleTo(gyro.getPreviewQuaternion()), 'angularError is not measured against preview');
 
@@ -297,11 +314,32 @@ leftTrigger = 1; gyro.update(0.016);
 const retargetedCommand = gyro.getCommandQuaternion();
 assert.ok(retargetedCommand.angleTo(commandAfterRelease) > 0.05, 'control base F: another trigger during TARGETING can change COMMAND before LOCK');
 leftTrigger = 0; gyro.update(0.016);
-spinUntilLocked(gyro);
-assertQuaternionClose(gyro.getCurrentQuaternion(), gyro.getCommandQuaternion(), 'control base G/M: LOCK hard-settles CURRENT to COMMAND');
+let displayBeforeLock = gyro.getDisplayPreviewQuaternion();
+let sawSubThresholdWithoutLock = false;
+for (let i = 0; i < 600 && gyro.getState() !== ASTERION_GYRO_STATES.LOCKED; i += 1) {
+  displayBeforeLock = gyro.getDisplayPreviewQuaternion();
+  gyro.update(1 / 60);
+  if (gyro.getAngularError() <= THREE.MathUtils.degToRad(0.3) && gyro.getAngularError() > THREE.MathUtils.degToRad(0.05)) {
+    sawSubThresholdWithoutLock = sawSubThresholdWithoutLock || gyro.getState() !== ASTERION_GYRO_STATES.LOCKED;
+  }
+}
+assert.equal(gyro.getState(), ASTERION_GYRO_STATES.LOCKED, 'gyro reaches LOCKED within bounded simulation frames');
+assert.equal(sawSubThresholdWithoutLock, true, 'CURRENT is not hard-snapped while remaining error is around 0.3 degrees');
+assertQuaternionClose(gyro.getCurrentQuaternion(), gyro.getCommandQuaternion(), 'control base G/M/J: LOCK hard-settles CURRENT to COMMAND only at the precise settle threshold');
+assertQuaternionClose(gyro.getDisplayPreviewQuaternion(), displayBeforeLock, 'visual rebase first LOCK frame preserves display PREVIEW continuity');
+assert.equal(gyro.isVisualRebaseActive(), true, 'LOCK starts TARGET visual rebase transition');
 assertQuaternionClose(gyro.getControlBaseQuaternion(), gyro.getCurrentQuaternion(), 'control base G: LOCK rebases CONTROL BASE to CURRENT');
 assertQuaternionClose(gyro.getHandReferenceQuaternion(), neutralizeControllerQuaternionAgainstFloor({ gripWorldQuaternion: worldQuaternionOf(leftGrip), floorWorldQuaternion: worldQuaternionOf(progressFloor.object), floorParentWorldQuaternion: worldQuaternionOf(worldRoot) }), 'control base H: LOCK captures current hand as new hand reference');
 const lockedCurrent = gyro.getCurrentQuaternion();
+const displayAtLock = gyro.getDisplayPreviewQuaternion();
+gyro.update(0.25);
+assert.ok(gyro.getDisplayPreviewQuaternion().angleTo(gyro.getPreviewQuaternion()) < displayAtLock.angleTo(gyro.getPreviewQuaternion()), 'visual rebase converges display PREVIEW toward logical PREVIEW over time');
+const displayBeforeHandDuringRebase = gyro.getDisplayPreviewQuaternion();
+leftGrip.quaternion.setFromAxisAngle(new THREE.Vector3(0, 1, 0), THREE.MathUtils.degToRad(25)); worldRoot.updateMatrixWorld(true); gyro.update(0.016);
+assert.ok(gyro.getDisplayPreviewQuaternion().angleTo(displayBeforeHandDuringRebase) > 0.001, 'hand motion during visual rebase still affects displayed TARGET');
+leftGrip.quaternion.setFromAxisAngle(new THREE.Vector3(0, 1, 0), THREE.MathUtils.degToRad(20)); worldRoot.updateMatrixWorld(true); gyro.update(0.3);
+assert.equal(gyro.isVisualRebaseActive(), false, 'visual rebase finishes after roughly 0.5 seconds');
+assertQuaternionClose(gyro.getDisplayPreviewQuaternion(), gyro.getPreviewQuaternion(), 'after visual rebase display PREVIEW equals logical PREVIEW');
 gyro.update(1 / 60);
 assertQuaternionClose(gyro.getPreviewQuaternion(), lockedCurrent, 'control base I/L: stationary hand after rebase leaves PREVIEW at new CURRENT');
 const lockedCurrentAgain = gyro.getCurrentQuaternion();
