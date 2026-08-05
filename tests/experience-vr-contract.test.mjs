@@ -59,7 +59,7 @@ const glyphSpawnContract = vr.match(/onGlyphHoldComplete:[\s\S]*?\n  }\n}/)?.[0]
 assert.match(glyphSpawnContract, /node\.getWorldPosition/);
 assert.match(glyphSpawnContract, /monkeyAnchor\.getWorldPosition/);
 assert.doesNotMatch(glyphSpawnContract, /renderer\.xr|getCamera|getWorldDirection/);
-assert.match(vr, /crystalCollection\.reset\(\);\s*activateButton\.reset\(\);\s*releaseButton\.reset\(\);\s*crystalReliquary\.reset\(\);\s*restorePortalWaitingState\(\);\s*locomotion\.reset\(\);\s*playerRig\.position\.set\(settings\.spawn\.position\.x/);
+assert.match(vr, /crystalCollection\.reset\(\);\s*activateButton\.reset\(\);\s*releaseButton\.reset\(\);\s*crystalReliquary\.reset\(\);\s*restorePortalWaitingState\(\);\s*locomotion\.reset\(\);\s*resetPlayerRigToSpawn\(\);/);
 assert.match(vr, /function handleSessionEnd\(\)[\s\S]*restorePortalWaitingState\(\)/);
 assert.match(vr, /crystalCollection\.update\(delta\)/);
 assert.match(vr, /glyphOrbit\.update\(delta\)/);
@@ -70,6 +70,8 @@ assert.match(locomotion, /renderer\.xr\.getCamera\(camera\)/);
 assert.match(locomotion, /renderer\.xr\.updateCamera\(camera\)/);
 assert.match(locomotion, /xrCamera\.isArrayCamera/);
 assert.match(locomotion, /playerRig\.position\.addScaledVector/);
+assert.match(locomotion, /getPlatformViewerBasis/);
+assert.match(locomotion, /constrainRadialStep/);
 assert.doesNotMatch(locomotion, /(?:camera|xrCamera|viewerCamera)\.(?:position|rotation|quaternion)\.(?:set|copy|add)/);
 assert.doesNotMatch(vr, /createVrGlyphPlaque|createVrPlaqueComposition/);
 assert.match(vrControllers, /renderer\.xr\.getController\(0\)/);
@@ -91,6 +93,9 @@ assert.match(vr, /createVrPortalDisplay\([\s\S]*anchorObject: monkeyAnchor/);
 assert.match(vr, /createVrAstroFurnace\([\s\S]*anchorObject: monkeyAnchor/);
 
 assert.match(vr, /const platformFixturesRoot = new THREE\.Group\(\);\s*platformFixturesRoot\.name = 'VrPlatformFixturesRoot';[\s\S]*progressFloor\.object\.add\(platformFixturesRoot\);/);
+assert.match(vr, /const floorPassengerRoot = new THREE\.Group\(\);\s*floorPassengerRoot\.name = 'VrFloorPassengerRoot';[\s\S]*progressFloor\.object\.add\(floorPassengerRoot\);/);
+assert.match(vr, /const floorWalkRadius = glyphOrbit\.effectiveRadius;\s*floorPassengerRoot\.attach\(playerRig\);/);
+assert.match(vr, /walkRadius: floorWalkRadius/);
 assert.match(vr, /restorePortalWaitingState\(\);\s*platformFixturesRoot\.attach\(portalDisplay\.object\);\s*platformFixturesRoot\.attach\(astroFurnace\.object\);/);
 assert.match(vr, /platformFixturesRoot\.attach\(crystalReliquary\.object\);\s*platformFixturesRoot\.attach\(crystalReliquary\.insertFeedback\);/);
 assert.match(vr, /platformFixturesRoot\.attach\(furnacePanel\.object\);/);
@@ -99,6 +104,7 @@ assert.match(vr, /crystalReliquary\.attachCompanion\(\{ id: 'activate'/);
 assert.match(vr, /crystalReliquary\.attachCompanion\(\{ id: 'release'/);
 assert.doesNotMatch(vr, /platformFixturesRoot\.attach\(monkeyAnchor\)|platformFixturesRoot\.add\(monkeyAnchor\)/);
 assert.doesNotMatch(vr, /platformFixturesRoot\.(?:attach|add)\(playerRig\)/);
+assert.doesNotMatch(vr, /progressFloor\.object\.(?:attach|add)\(playerRig\)/);
 assert.doesNotMatch(vr, /platformFixturesRoot\.(?:attach|add)\(glyphRing\)|platformFixturesRoot\.(?:attach|add)\(shellSystem/);
 assert.match(portalDisplay, /applyWorldTransform\(object, desiredWorldPosition, desiredWorldQuaternion\)/);
 assert.match(crystalReliquary, /portalDisplay\.object\.getWorldPosition\(portalPosition\);[\s\S]*portalDisplay\.object\.getWorldQuaternion\(portalQuaternion\);[\s\S]*applyWorldTransform\(object, desiredWorldPosition, portalQuaternion\)/);
@@ -157,6 +163,49 @@ const assertFixturesAttachContract = () => {
 };
 assertFixturesAttachContract();
 
+
+const assertPassengerAttachContract = () => {
+  const sceneRoot = new THREE.Group();
+  const floorRoot = new THREE.Group();
+  floorRoot.name = 'VrTiltableFloorRoot';
+  const passengerRoot = new THREE.Group();
+  passengerRoot.name = 'VrFloorPassengerRoot';
+  passengerRoot.position.set(0, 0, 0);
+  passengerRoot.quaternion.identity();
+  passengerRoot.scale.set(1, 1, 1);
+  floorRoot.add(passengerRoot);
+  sceneRoot.add(floorRoot);
+  const rig = new THREE.Group(); rig.name = 'VrPlayerRig';
+  const camera = new THREE.PerspectiveCamera();
+  const controller = new THREE.Group();
+  const grip = new THREE.Group();
+  rig.add(camera, controller, grip);
+  sceneRoot.add(rig);
+  rig.position.set(0.5, 1.6, 2.5);
+  rig.quaternion.setFromEuler(new THREE.Euler(0, 0.4, 0));
+  rig.scale.setScalar(1.1);
+  sceneRoot.updateMatrixWorld(true);
+  const beforePosition = rig.getWorldPosition(new THREE.Vector3());
+  const beforeQuaternion = rig.getWorldQuaternion(new THREE.Quaternion());
+  const beforeScale = rig.getWorldScale(new THREE.Vector3());
+  passengerRoot.attach(rig);
+  sceneRoot.updateMatrixWorld(true);
+  assert.equal(passengerRoot.parent, floorRoot, 'VrFloorPassengerRoot is a child of VrTiltableFloorRoot');
+  assert.deepEqual(passengerRoot.position.toArray(), [0, 0, 0], 'VrFloorPassengerRoot has identity position');
+  assert.ok(passengerRoot.quaternion.angleTo(new THREE.Quaternion()) < 1e-12, 'VrFloorPassengerRoot has identity rotation');
+  assert.deepEqual(passengerRoot.scale.toArray(), [1, 1, 1], 'VrFloorPassengerRoot has identity scale');
+  assert.equal(rig.parent, passengerRoot, 'playerRig is parented under passenger root');
+  assert.equal(camera.parent, rig, 'camera remains child of playerRig');
+  assert.equal(controller.parent, rig, 'controller remains child of playerRig');
+  assert.equal(grip.parent, rig, 'grip remains child of playerRig');
+  assert.ok(rig.getWorldPosition(new THREE.Vector3()).distanceTo(beforePosition) < 1e-12, 'attach preserves rig world position');
+  assert.ok(rig.getWorldQuaternion(new THREE.Quaternion()).angleTo(beforeQuaternion) < 1e-7, 'attach preserves rig world quaternion');
+  assert.ok(rig.getWorldScale(new THREE.Vector3()).distanceTo(beforeScale) < 1e-12, 'attach preserves rig world scale');
+  floorRoot.quaternion.setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI / 4);
+  sceneRoot.updateMatrixWorld(true);
+  assert.ok(rig.getWorldQuaternion(new THREE.Quaternion()).angleTo(beforeQuaternion) > 1e-3, 'platform rotation carries playerRig as passenger');
+};
+assertPassengerAttachContract();
 
 const assertMonkeyFloorAttachContract = (monkeyAnchor) => {
   const sceneRoot = new THREE.Group();
