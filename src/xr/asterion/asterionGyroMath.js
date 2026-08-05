@@ -25,7 +25,7 @@ export function computeClutchedTargetQuaternion({ controllerQuaternionNow, grabS
   return target.copy(deltaLocal).multiply(grabStartTargetQuaternion).normalize();
 }
 
-export function computeGimbalLocalQuaternion({ desiredWorldQuaternion, nodeParentWorldQuaternion }, target = new THREE.Quaternion()) {
+export function computeNodeLocalQuaternionForWorldOrientation({ desiredWorldQuaternion, nodeParentWorldQuaternion }, target = new THREE.Quaternion()) {
   return target.copy(nodeParentWorldQuaternion).invert().multiply(desiredWorldQuaternion).normalize();
 }
 
@@ -40,3 +40,5 @@ export function resolveGyroState({ clutchActive, angularError, lockTimer, lockDe
     ? ASTERION_GYRO_STATES.LOCKED
     : ASTERION_GYRO_STATES.IDLE;
 }
+
+export const computeGimbalLocalQuaternion = computeNodeLocalQuaternionForWorldOrientation;
