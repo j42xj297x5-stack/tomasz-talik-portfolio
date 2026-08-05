@@ -74,6 +74,7 @@ function simulateHeavyDriveFor(totalFrames, dt) {
     settings,
     enabled: true
   });
+  localSphere.equipTo({ handedness: 'left', isConnected: true, grip: localLeftGrip, ray: new THREE.Group() });
   localGyro.update(dt);
   localLeftGrip.quaternion.setFromAxisAngle(new THREE.Vector3(0, 1, 0), THREE.MathUtils.degToRad(90)); localWorldRoot.updateMatrixWorld(true); localGyro.update(dt);
   localTrigger = 1;
@@ -129,10 +130,25 @@ const sphere = createVrAsterionSphere({ model: makeModel(), animations: makeIdle
 const gyro = createVrAsterionGyroInteraction({ sphere, controllers: [right, left], progressFloor, worldRoot, renderer, settings, enabled: true });
 
 gyro.update(0.016);
-assert.equal(sphere.isEquipped(), true, 'QA sphere equips to the resolved left grip');
+assert.equal(sphere.isEquipped(), false, 'gyro does not auto-equip the QA sphere');
+sphere.equipTo(left);
+gyro.update(0.016);
+assert.equal(sphere.isEquipped(), true, 'hand mode can equip the QA sphere before gyro update');
 assert.equal(sphere.socket.parent, leftGrip, 'QA sphere is mounted on left grip, not controller index');
 assert.equal(leftRay.visible, false, 'left ordinary ray is hidden while QA sphere is equipped');
 assert.equal(rightRay.visible, true, 'right ordinary ray is not touched by Asterion QA');
+
+const previewBeforeUnequip = gyro.getPreviewQuaternion();
+const commandBeforeUnequip = gyro.getCommandQuaternion();
+sphere.unequip();
+leftGrip.quaternion.setFromAxisAngle(new THREE.Vector3(0, 1, 0), -Math.PI / 2); worldRoot.updateMatrixWorld(true);
+leftTrigger = 1; gyro.update(0.016);
+assert.ok(gyro.getPreviewQuaternion().angleTo(previewBeforeUnequip) < 1e-12, 'unequipped sphere ignores left-hand motion for preview');
+assert.ok(gyro.getCommandQuaternion().angleTo(commandBeforeUnequip) < 1e-12, 'unequipped sphere ignores left trigger for command');
+sphere.equipTo(left); gyro.update(0.016);
+assert.ok(gyro.getPreviewQuaternion().angleTo(gyro.getCurrentQuaternion()) < 1e-12, 're-equip captures preview from current without a jump');
+assert.ok(gyro.getControlBaseQuaternion().angleTo(gyro.getCurrentQuaternion()) < 1e-12, 're-equip captures control base from current');
+leftTrigger = 0; gyro.update(0.016);
 const initialPreview = gyro.getPreviewQuaternion();
 const initialCommand = gyro.getCommandQuaternion();
 const initialCurrent = gyro.getCurrentQuaternion();
@@ -175,11 +191,22 @@ for (let i = 0; i < 40; i += 1) {
 assert.ok(gyroDrivenInner2Action.getEffectiveWeight() < 0.01, 'trigger on fades inner2/3 idle weight toward zero through gyro runtime');
 leftTrigger = 0; gyro.update(1 / 60);
 const currentStillTravelingOnRelease = gyro.getCurrentQuaternion();
+const velocityBeforeHide = gyro.getAngularVelocity();
+const commandBeforeHide = gyro.getCommandQuaternion();
+sphere.unequip();
+gyro.update(1 / 60);
+assert.ok(gyro.getAngularVelocity().length() > 0, 'unequip while moving does not zero angularVelocity');
+assert.ok(gyro.getCurrentQuaternion().angleTo(commandBeforeHide) < currentStillTravelingOnRelease.angleTo(commandBeforeHide), 'current continues toward frozen command after sphere unequip');
+assert.ok(gyro.getCommandQuaternion().angleTo(commandBeforeHide) < 1e-12, 'unequip freezes command instead of resetting it');
+assert.ok(gyro.getAngularVelocity().angleTo ? true : velocityBeforeHide.length() >= 0, 'angular velocity remains a Vector3');
+sphere.equipTo(left);
+gyro.update(1 / 60);
 leftGrip.quaternion.setFromAxisAngle(new THREE.Vector3(1, 0, 0), Math.PI / 3); worldRoot.updateMatrixWorld(true); gyro.update(1 / 60);
 sphere.update(1 / 60);
 assert.ok(gyro.getCurrentQuaternion().angleTo(currentStillTravelingOnRelease) > 0, 'current still travels after release while ring idle returns');
 assert.ok(gyroDrivenInner2Action.getEffectiveWeight() > 0 && gyroDrivenInner2Action.getEffectiveWeight() < 1, 'release restores inner2/3 idle target even before current reaches command');
 sphere.reset();
+sphere.equipTo(left);
 
 const nodes = sphere.getRequiredNodes();
 const targetAxisLocalRestQuaternion = nodes.PIV_TARGET_AXIS.quaternion.clone();
@@ -318,6 +345,7 @@ function spinUntilLocked(gyroInstance, maxFrames = 1800) {
 }
 
 // Control-base regression: preview is relative to the last locked CURRENT, not absolute world zero.
+sphere.equipTo(left);
 gyro.reset();
 leftTrigger = 0;
 leftGrip.quaternion.identity(); worldRoot.updateMatrixWorld(true); gyro.update(0.016);

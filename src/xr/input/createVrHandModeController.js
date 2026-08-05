@@ -3,43 +3,92 @@ export const VR_RIGHT_HAND_MODES = Object.freeze({
   ASTRO_ATTRACTOR: 'ASTRO_ATTRACTOR'
 });
 
-export function createVrHandModeController({ controllers, semanticInput, attractorTool, isUnlocked }) {
-  let mode = VR_RIGHT_HAND_MODES.NORMAL_HAND;
+export const VR_LEFT_HAND_MODES = Object.freeze({
+  NORMAL_HAND: 'NORMAL_HAND',
+  ASTERION_SPHERE: 'ASTERION_SPHERE'
+});
+
+export function createVrHandModeController({
+  controllers,
+  semanticInput,
+  attractorTool,
+  asterionSphere = null,
+  isUnlocked,
+  isAsterionAvailable = () => false
+}) {
+  let rightMode = VR_RIGHT_HAND_MODES.NORMAL_HAND;
+  let leftMode = VR_LEFT_HAND_MODES.NORMAL_HAND;
 
   function update(deltaSeconds) {
     const input = semanticInput.update();
     const unlocked = Boolean(isUnlocked());
+    const asterionAvailable = Boolean(isAsterionAvailable());
+    const rightRecord = findRecord('right');
+    const leftRecord = findRecord('left');
+
     attractorTool.setUnlocked(unlocked);
-    const rightRecord = controllers.find((record) => record.handedness === 'right') ?? null;
     attractorTool.attachToTargetRay(rightRecord?.controller ?? null);
-    if (!unlocked && mode !== VR_RIGHT_HAND_MODES.NORMAL_HAND) setMode(VR_RIGHT_HAND_MODES.NORMAL_HAND);
+
+    if (!unlocked && rightMode !== VR_RIGHT_HAND_MODES.NORMAL_HAND) setRightMode(VR_RIGHT_HAND_MODES.NORMAL_HAND);
+    if (!asterionAvailable && leftMode !== VR_LEFT_HAND_MODES.NORMAL_HAND) setLeftMode(VR_LEFT_HAND_MODES.NORMAL_HAND);
+
     if (unlocked && input.toggleRightTool) {
-      setMode(mode === VR_RIGHT_HAND_MODES.NORMAL_HAND
+      setRightMode(rightMode === VR_RIGHT_HAND_MODES.NORMAL_HAND
         ? VR_RIGHT_HAND_MODES.ASTRO_ATTRACTOR
         : VR_RIGHT_HAND_MODES.NORMAL_HAND);
     }
-    // Hand mode owns equipment visibility; no downstream interaction may make
-    // Astro visible while the ordinary right hand is active.
-    if (mode === VR_RIGHT_HAND_MODES.NORMAL_HAND) attractorTool.setEquipped(false);
-    attractorTool.setTrigger(mode === VR_RIGHT_HAND_MODES.ASTRO_ATTRACTOR ? input.primaryAction : 0);
+    if (input.toggleLeftTool) {
+      if (leftMode === VR_LEFT_HAND_MODES.ASTERION_SPHERE) setLeftMode(VR_LEFT_HAND_MODES.NORMAL_HAND);
+      else if (asterionAvailable) setLeftMode(VR_LEFT_HAND_MODES.ASTERION_SPHERE);
+    }
+
+    if (rightMode === VR_RIGHT_HAND_MODES.NORMAL_HAND) attractorTool.setEquipped(false);
+    attractorTool.setTrigger(rightMode === VR_RIGHT_HAND_MODES.ASTRO_ATTRACTOR ? input.primaryAction : 0);
     syncRightRay(rightRecord);
+    syncLeftEquipment(leftRecord);
+    syncLeftRay(leftRecord);
     attractorTool.update(deltaSeconds);
   }
 
-  function syncRightRay(rightRecord = controllers.find((record) => record.handedness === 'right') ?? null) {
-    if (rightRecord?.ray) rightRecord.ray.visible = rightRecord.isConnected && mode === VR_RIGHT_HAND_MODES.NORMAL_HAND;
+  function findRecord(handedness) {
+    return controllers.find((record) => record.handedness === handedness) ?? null;
   }
 
-  function setMode(nextMode) {
-    mode = nextMode;
-    attractorTool.setEquipped(mode === VR_RIGHT_HAND_MODES.ASTRO_ATTRACTOR);
+  function syncRightRay(rightRecord = findRecord('right')) {
+    if (rightRecord?.ray) rightRecord.ray.visible = rightRecord.isConnected && rightMode === VR_RIGHT_HAND_MODES.NORMAL_HAND;
+  }
+
+  function syncLeftRay(leftRecord = findRecord('left')) {
+    if (leftRecord?.ray) leftRecord.ray.visible = leftRecord.isConnected && leftMode === VR_LEFT_HAND_MODES.NORMAL_HAND;
+  }
+
+  function syncLeftEquipment(leftRecord = findRecord('left')) {
+    if (leftMode === VR_LEFT_HAND_MODES.ASTERION_SPHERE) {
+      if (leftRecord?.isConnected) asterionSphere?.equipTo?.(leftRecord);
+    } else {
+      asterionSphere?.unequip?.();
+    }
+  }
+
+  function setRightMode(nextMode) {
+    rightMode = nextMode;
+    attractorTool.setEquipped(rightMode === VR_RIGHT_HAND_MODES.ASTRO_ATTRACTOR);
     syncRightRay();
   }
 
+  function setLeftMode(nextMode) {
+    leftMode = nextMode;
+    syncLeftEquipment();
+    syncLeftRay();
+  }
+
   function reset() {
-    mode = VR_RIGHT_HAND_MODES.NORMAL_HAND;
+    leftMode = VR_LEFT_HAND_MODES.NORMAL_HAND;
+    rightMode = VR_RIGHT_HAND_MODES.NORMAL_HAND;
     semanticInput.reset();
     attractorTool.reset();
+    asterionSphere?.unequip?.();
+    syncLeftRay();
     syncRightRay();
   }
 
@@ -48,5 +97,12 @@ export function createVrHandModeController({ controllers, semanticInput, attract
     attractorTool.dispose();
   }
 
-  return { update, reset, dispose, getMode: () => mode };
+  return {
+    update,
+    reset,
+    dispose,
+    getMode: () => rightMode,
+    getRightMode: () => rightMode,
+    getLeftMode: () => leftMode
+  };
 }
