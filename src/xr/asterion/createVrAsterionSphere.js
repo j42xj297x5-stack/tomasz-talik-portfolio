@@ -37,6 +37,11 @@ export function createVrAsterionSphere({ model, animations = [], settings, enabl
   const socket = new THREE.Object3D();
   socket.name = 'VrAsterionSphereSocket';
   const requiredNodes = Object.fromEntries(REQUIRED_NODES.map((name) => [name, object.getObjectByName(name) ?? null]));
+  const innerRing1Pivot = object.getObjectByName('PIV_inner_ring1_precession') ?? null;
+  if (innerRing1Pivot && requiredNodes.GIMBAL_CURRENT && innerRing1Pivot.parent !== requiredNodes.GIMBAL_CURRENT) {
+    object.updateMatrixWorld(true);
+    requiredNodes.GIMBAL_CURRENT.attach(innerRing1Pivot);
+  }
   const missingNodes = REQUIRED_NODES.filter((name) => !requiredNodes[name]);
   if (missingNodes.length > 0) console.warn('[AsterionSphere] Missing required runtime node(s).', missingNodes);
   const idleClips = animations.filter((clip) => clip?.name?.startsWith?.(IDLE_PREFIX));
@@ -52,6 +57,16 @@ export function createVrAsterionSphere({ model, animations = [], settings, enabl
     action.play();
     return action;
   });
+  const actionByClipName = new Map(actions.map((action) => [action.getClip().name, action]));
+  const innerRing1Action = actionByClipName.get('ASTERION_IDLE__inner_ring1') ?? null;
+  const targetRingActions = ['ASTERION_IDLE__inner_ring2', 'ASTERION_IDLE__inner_ring3']
+    .map((clipName) => actionByClipName.get(clipName))
+    .filter(Boolean);
+  const targetRingBlendResponse = Math.max(0, Number.isFinite(settings?.targetRingBlendResponse) ? settings.targetRingBlendResponse : 12);
+  let targetRingWeight = 1;
+  let targetRingTargetWeight = 1;
+  if (innerRing1Action) innerRing1Action.setEffectiveWeight(0);
+  targetRingActions.forEach((action) => action.setEffectiveWeight(targetRingWeight));
 
   const bounds = getVisibleBounds(object);
   const size = bounds.getSize(new THREE.Vector3());
@@ -102,10 +117,19 @@ export function createVrAsterionSphere({ model, animations = [], settings, enabl
     setRuntimeNodeWorldOrientation(requiredNodes.CORE, rootWorldQuaternion);
     setRuntimeNodeWorldOrientation(requiredNodes.VERTICAL_SYSTEM, rootWorldQuaternion);
   }
-  function update(delta) { if (!disposed) mixer.update(Math.max(0, Number.isFinite(delta) ? delta : 0)); }
-  function reset() { actions.forEach((a) => { a.reset(); a.play(); }); mixer.setTime(0); if (enabled && equippedRecord?.handedness === 'left') equipTo(equippedRecord); else unequip(); }
+  function update(delta) {
+    if (disposed) return;
+    const safeDelta = Math.max(0, Number.isFinite(delta) ? delta : 0);
+    const blendAlpha = 1 - Math.exp(-targetRingBlendResponse * safeDelta);
+    targetRingWeight += (targetRingTargetWeight - targetRingWeight) * blendAlpha;
+    if (innerRing1Action) innerRing1Action.setEffectiveWeight(0);
+    targetRingActions.forEach((action) => action.setEffectiveWeight(targetRingWeight));
+    mixer.update(safeDelta);
+  }
+  function setTargetRingsStabilized(stabilized) { targetRingTargetWeight = stabilized ? 0 : 1; }
+  function reset() { actions.forEach((a) => { a.reset(); a.play(); }); mixer.setTime(0); targetRingWeight = 1; targetRingTargetWeight = 1; if (innerRing1Action) innerRing1Action.setEffectiveWeight(0); targetRingActions.forEach((a) => a.setEffectiveWeight(1)); if (enabled && equippedRecord?.handedness === 'left') equipTo(equippedRecord); else unequip(); }
   function dispose() { if (disposed) return; disposed = true; actions.forEach((a) => a.stop()); mixer.stopAllAction(); unequip(); }
   function isEquipped() { return Boolean(equippedRecord && object.visible && socket.parent); }
-  return { object, socket, equipTo, unequip, update, reset, dispose, syncGimbals, isEquipped, getEquippedRecord: () => equippedRecord,
-    getIdleClipCount: () => idleClips.length, getStartedIdleClipCount: () => playableIdleClips.length, getRequiredNodes: () => ({ ...requiredNodes }), getDiagnostics: () => ({ computedScale, targetDiameter, sourceDiameter, missingNodes: [...missingNodes], conflictingClipNames: conflictingClips.map((clip) => clip.name) }) };
+  return { object, socket, equipTo, unequip, update, reset, dispose, syncGimbals, setTargetRingsStabilized, isEquipped, getEquippedRecord: () => equippedRecord,
+    getIdleActionByClipName: (clipName) => actionByClipName.get(clipName) ?? null, getTargetRingWeight: () => targetRingWeight, getIdleClipCount: () => idleClips.length, getStartedIdleClipCount: () => playableIdleClips.length, getRequiredNodes: () => ({ ...requiredNodes }), getDiagnostics: () => ({ computedScale, targetDiameter, sourceDiameter, missingNodes: [...missingNodes], conflictingClipNames: conflictingClips.map((clip) => clip.name) }) };
 }

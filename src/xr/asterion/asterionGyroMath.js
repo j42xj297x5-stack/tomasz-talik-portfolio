@@ -10,6 +10,17 @@ export function exponentialSlerpAlpha(response, deltaSeconds) {
   return 1 - Math.exp(-safeResponse * safeDelta);
 }
 
+export function cappedExponentialSlerp(current, target, { response, deltaSeconds, maxAngularSpeedDegrees, epsilon = EPSILON } = {}) {
+  const safeDelta = Math.max(0, Number.isFinite(deltaSeconds) ? deltaSeconds : 0);
+  const safeMaxDegrees = Math.max(0, Number.isFinite(maxAngularSpeedDegrees) ? maxAngularSpeedDegrees : Infinity);
+  const angle = current.angleTo(target);
+  const responseStep = angle * exponentialSlerpAlpha(response, safeDelta);
+  const maxStep = THREE.MathUtils.degToRad(safeMaxDegrees) * safeDelta;
+  const actualStep = Math.min(responseStep, maxStep);
+  const alpha = angle > epsilon ? actualStep / angle : 1;
+  return current.slerp(target, alpha).normalize();
+}
+
 export function computeControllerDeltaWorld(controllerQuaternionNow, grabStartControllerQuaternion, target = new THREE.Quaternion()) {
   return target.copy(controllerQuaternionNow).multiply(grabStartControllerQuaternion.clone().invert()).normalize();
 }
