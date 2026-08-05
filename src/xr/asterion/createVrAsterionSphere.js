@@ -1,7 +1,7 @@
 import * as THREE from '../../vendor/three.js';
 import { computeNodeLocalQuaternionForWorldOrientation } from './asterionGyroMath.js';
 
-const REQUIRED_NODES = Object.freeze(['ASTERION_ROOT', 'GIMBAL_CURRENT', 'GIMBAL_TARGET', 'CORE', 'VERTICAL_SYSTEM']);
+const REQUIRED_NODES = Object.freeze(['ASTERION_ROOT', 'GIMBAL_CURRENT', 'GIMBAL_TARGET', 'CORE', 'VERTICAL_SYSTEM', 'PIV_TARGET_AXIS', 'srodek']);
 const IDLE_PREFIX = 'ASTERION_IDLE__';
 const DEG_TO_RAD = Math.PI / 180;
 
@@ -38,6 +38,8 @@ export function createVrAsterionSphere({ model, animations = [], settings, enabl
   socket.name = 'VrAsterionSphereSocket';
   const requiredNodes = Object.fromEntries(REQUIRED_NODES.map((name) => [name, object.getObjectByName(name) ?? null]));
   const innerRing1Pivot = object.getObjectByName('PIV_inner_ring1_precession') ?? null;
+  const innerRing2Pivot = object.getObjectByName('PIV_inner_ring2_precession') ?? null;
+  const innerRing3Pivot = object.getObjectByName('PIV_inner_ring3_precession') ?? null;
   if (innerRing1Pivot && requiredNodes.GIMBAL_CURRENT && innerRing1Pivot.parent !== requiredNodes.GIMBAL_CURRENT) {
     object.updateMatrixWorld(true);
     requiredNodes.GIMBAL_CURRENT.attach(innerRing1Pivot);
@@ -45,7 +47,7 @@ export function createVrAsterionSphere({ model, animations = [], settings, enabl
   const missingNodes = REQUIRED_NODES.filter((name) => !requiredNodes[name]);
   if (missingNodes.length > 0) console.warn('[AsterionSphere] Missing required runtime node(s).', missingNodes);
   const idleClips = animations.filter((clip) => clip?.name?.startsWith?.(IDLE_PREFIX));
-  const mixerProtectedNodeNames = ['GIMBAL_CURRENT', 'GIMBAL_TARGET', 'CORE', 'VERTICAL_SYSTEM'];
+  const mixerProtectedNodeNames = ['GIMBAL_CURRENT', 'GIMBAL_TARGET', 'CORE', 'VERTICAL_SYSTEM', 'PIV_TARGET_AXIS'];
   const conflictingClips = animations.filter((clip) => animationTargetsRuntimeNode(clip, mixerProtectedNodeNames));
   if (conflictingClips.length > 0) console.warn('[AsterionSphere] Runtime node animation conflict; these clips were not started.', conflictingClips.map((clip) => clip.name));
   const playableIdleClips = idleClips.filter((clip) => !animationTargetsRuntimeNode(clip, mixerProtectedNodeNames));
@@ -96,6 +98,12 @@ export function createVrAsterionSphere({ model, animations = [], settings, enabl
       diagnosticsLogged = true;
       console.info('[AsterionSphere]', { clipNames: animations.map((clip) => clip.name), idleClipCount: idleClips.length,
         runtimeNodes: Object.fromEntries(REQUIRED_NODES.map((name) => [name, Boolean(requiredNodes[name])])),
+        targetFrame: {
+          innerRing2: innerRing2Pivot ? { status: 'found', parent: innerRing2Pivot.parent?.name ?? null } : { status: 'missing', parent: null },
+          innerRing3: innerRing3Pivot ? { status: 'found', parent: innerRing3Pivot.parent?.name ?? null } : { status: 'missing', parent: null },
+          targetAxis: requiredNodes.PIV_TARGET_AXIS ? { status: 'found', parent: requiredNodes.PIV_TARGET_AXIS.parent?.name ?? null } : { status: 'missing', parent: null },
+          targetAxisMesh: requiredNodes.srodek ? { status: 'found', parent: requiredNodes.srodek.parent?.name ?? null } : { status: 'missing', parent: null }
+        },
         animationTrackConflicts: conflictingClips.map((clip) => clip.name),
         visibleBounds: { min: bounds.min.toArray(), max: bounds.max.toArray(), size: size.toArray() }, computedScale, targetDiameter,
         equippedHandedness: record.handedness });
