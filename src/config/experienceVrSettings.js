@@ -86,7 +86,10 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
     holdOffset: { x: 0, y: 0.07, z: -0.11 },
     holdRotationDegrees: { x: 0, y: 0, z: 0 },
     response: 2.5,
-    maxAngularSpeedDegrees: 55,
+    maxAngularSpeedDegrees: 32,
+    angularAccelerationDegrees: 32,
+    angularDecelerationDegrees: 45,
+    settleAngularSpeedDegrees: 0.15,
     targetRingBlendResponse: 12,
     lockThresholdDegrees: 0.5,
     lockDelaySeconds: 0.18
@@ -379,6 +382,10 @@ export function normalizeExperienceVrSettings(candidate) {
       holdOffset: normalizeVector(candidate.asterionSphere?.holdOffset, defaults.asterionSphere.holdOffset),
       holdRotationDegrees: normalizeVector(candidate.asterionSphere?.holdRotationDegrees, defaults.asterionSphere.holdRotationDegrees),
       response: finiteNumber(candidate.asterionSphere?.response, defaults.asterionSphere.response, { min: 0, max: 40 }),
+      maxAngularSpeedDegrees: finiteNumber(candidate.asterionSphere?.maxAngularSpeedDegrees, defaults.asterionSphere.maxAngularSpeedDegrees, { min: 0 }),
+      angularAccelerationDegrees: finiteNumber(candidate.asterionSphere?.angularAccelerationDegrees, defaults.asterionSphere.angularAccelerationDegrees, { min: 0 }),
+      angularDecelerationDegrees: finiteNumber(candidate.asterionSphere?.angularDecelerationDegrees, defaults.asterionSphere.angularDecelerationDegrees, { min: 0 }),
+      settleAngularSpeedDegrees: finiteNumber(candidate.asterionSphere?.settleAngularSpeedDegrees, defaults.asterionSphere.settleAngularSpeedDegrees, { min: 0 }),
       lockThresholdDegrees: finiteNumber(candidate.asterionSphere?.lockThresholdDegrees, defaults.asterionSphere.lockThresholdDegrees, { min: 0, max: 10 }),
       lockDelaySeconds: finiteNumber(candidate.asterionSphere?.lockDelaySeconds, defaults.asterionSphere.lockDelaySeconds, { min: 0, max: 2 })
     },

@@ -21,6 +21,45 @@ export function cappedExponentialSlerp(current, target, { response, deltaSeconds
   return current.slerp(target, alpha).normalize();
 }
 
+export function computeQuaternionError(current, target, axisTarget = new THREE.Vector3(), quaternionTarget = new THREE.Quaternion()) {
+  quaternionTarget.copy(current).invert().multiply(target).normalize();
+  if (quaternionTarget.w < 0) {
+    quaternionTarget.x *= -1;
+    quaternionTarget.y *= -1;
+    quaternionTarget.z *= -1;
+    quaternionTarget.w *= -1;
+  }
+  const clampedW = THREE.MathUtils.clamp(quaternionTarget.w, -1, 1);
+  const angle = 2 * Math.acos(clampedW);
+  const sinHalfAngle = Math.sqrt(Math.max(0, 1 - clampedW * clampedW));
+  if (sinHalfAngle > EPSILON && angle > EPSILON) {
+    axisTarget.set(quaternionTarget.x / sinHalfAngle, quaternionTarget.y / sinHalfAngle, quaternionTarget.z / sinHalfAngle).normalize();
+  } else {
+    axisTarget.set(0, 0, 0);
+  }
+  return { angle, axis: axisTarget, quaternion: quaternionTarget };
+}
+
+export function steerAngularVelocity(currentVelocity, desiredVelocity, { acceleration, deceleration, deltaSeconds } = {}) {
+  const safeDelta = Math.max(0, Number.isFinite(deltaSeconds) ? deltaSeconds : 0);
+  const safeAcceleration = Math.max(0, Number.isFinite(acceleration) ? acceleration : 0);
+  const safeDeceleration = Math.max(0, Number.isFinite(deceleration) ? deceleration : safeAcceleration);
+  const currentSpeed = currentVelocity.length();
+  const desiredSpeed = desiredVelocity.length();
+  const limit = desiredSpeed < currentSpeed || currentVelocity.dot(desiredVelocity) < 0
+    ? safeDeceleration * safeDelta
+    : safeAcceleration * safeDelta;
+  const deltaX = desiredVelocity.x - currentVelocity.x;
+  const deltaY = desiredVelocity.y - currentVelocity.y;
+  const deltaZ = desiredVelocity.z - currentVelocity.z;
+  const deltaLength = Math.sqrt(deltaX * deltaX + deltaY * deltaY + deltaZ * deltaZ);
+  if (deltaLength <= limit || deltaLength <= EPSILON) return currentVelocity.copy(desiredVelocity);
+  currentVelocity.x += deltaX * (limit / deltaLength);
+  currentVelocity.y += deltaY * (limit / deltaLength);
+  currentVelocity.z += deltaZ * (limit / deltaLength);
+  return currentVelocity;
+}
+
 export function computeControllerDeltaWorld(controllerQuaternionNow, grabStartControllerQuaternion, target = new THREE.Quaternion()) {
   return target.copy(controllerQuaternionNow).multiply(grabStartControllerQuaternion.clone().invert()).normalize();
 }

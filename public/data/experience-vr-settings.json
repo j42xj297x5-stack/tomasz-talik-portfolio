@@ -35,8 +35,11 @@
     "response": 2.5,
     "lockThresholdDegrees": 0.5,
     "lockDelaySeconds": 0.18,
-    "maxAngularSpeedDegrees": 55,
-    "targetRingBlendResponse": 12
+    "maxAngularSpeedDegrees": 32,
+    "targetRingBlendResponse": 12,
+    "angularAccelerationDegrees": 32,
+    "angularDecelerationDegrees": 45,
+    "settleAngularSpeedDegrees": 0.15
   },
   "controllers": {
     "enabled": true,
