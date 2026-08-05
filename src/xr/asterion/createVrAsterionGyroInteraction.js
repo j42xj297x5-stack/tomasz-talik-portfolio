@@ -18,14 +18,15 @@ export function createVrAsterionGyroInteraction({ sphere, controllers, progressF
   const previewQuaternion = new THREE.Quaternion();
   const commandQuaternion = new THREE.Quaternion();
   const currentQuaternion = new THREE.Quaternion();
-  const previewReferenceControllerQuaternion = new THREE.Quaternion();
-  const previewReferenceQuaternion = new THREE.Quaternion();
+  const controlBaseQuaternion = new THREE.Quaternion();
+  const handReferenceQuaternion = new THREE.Quaternion();
   const controllerQuaternionNow = new THREE.Quaternion();
   const parentWorldQuaternion = new THREE.Quaternion();
   const floorWorldQuaternion = new THREE.Quaternion();
   const gripWorldQuaternion = new THREE.Quaternion();
-  let previewReferenceValid = false;
+  let handReferenceValid = false;
   let driveActive = false;
+  let maneuverPendingLock = false;
   let lockTimer = 0;
   let state = ASTERION_GYRO_STATES.IDLE;
   let angularError = 0;
@@ -44,10 +45,11 @@ export function createVrAsterionGyroInteraction({ sphere, controllers, progressF
     previewQuaternion.identity();
     commandQuaternion.identity();
     currentQuaternion.identity();
-    previewReferenceControllerQuaternion.identity();
-    previewReferenceQuaternion.identity();
-    previewReferenceValid = false;
+    controlBaseQuaternion.identity();
+    handReferenceQuaternion.identity();
+    handReferenceValid = false;
     driveActive = false;
+    maneuverPendingLock = false;
     lockTimer = 0;
     state = ASTERION_GYRO_STATES.IDLE;
     angularError = 0;
@@ -75,29 +77,52 @@ export function createVrAsterionGyroInteraction({ sphere, controllers, progressF
       neutralizeControllerQuaternionAgainstFloor({
         gripWorldQuaternion, floorWorldQuaternion, floorParentWorldQuaternion: parentWorldQuaternion
       }, controllerQuaternionNow);
-      if (!previewReferenceValid) {
-        previewReferenceControllerQuaternion.copy(controllerQuaternionNow);
-        previewReferenceQuaternion.copy(previewQuaternion);
-        previewReferenceValid = true;
+      if (!handReferenceValid) {
+        handReferenceQuaternion.copy(controllerQuaternionNow);
+        controlBaseQuaternion.copy(currentQuaternion);
+        previewQuaternion.copy(controlBaseQuaternion);
+        handReferenceValid = true;
       } else {
         computeClutchedTargetQuaternion({
           controllerQuaternionNow,
-          grabStartControllerQuaternion: previewReferenceControllerQuaternion,
-          grabStartTargetQuaternion: previewReferenceQuaternion,
+          grabStartControllerQuaternion: handReferenceQuaternion,
+          grabStartTargetQuaternion: controlBaseQuaternion,
           parentWorldQuaternion
         }, previewQuaternion);
       }
     }
 
     driveActive = triggerDown;
-    if (driveActive) commandQuaternion.copy(previewQuaternion);
+    if (driveActive) {
+      commandQuaternion.copy(previewQuaternion);
+      maneuverPendingLock = true;
+    }
 
+    const previousState = state;
     cappedExponentialSlerp(currentQuaternion, commandQuaternion, { response, deltaSeconds: safeDelta, maxAngularSpeedDegrees });
     if (progressFloor?.object?.quaternion) progressFloor.object.quaternion.copy(currentQuaternion);
     angularError = currentQuaternion.angleTo(commandQuaternion);
     if (!driveActive && angularError < lockThreshold) lockTimer += safeDelta;
     else lockTimer = 0;
     state = resolveGyroState({ clutchActive: driveActive, angularError: angularError < lockThreshold ? 0 : angularError, lockTimer, lockDelaySeconds });
+    if (!driveActive && maneuverPendingLock && previousState !== ASTERION_GYRO_STATES.LOCKED && state === ASTERION_GYRO_STATES.LOCKED) {
+      currentQuaternion.copy(commandQuaternion);
+      if (progressFloor?.object?.quaternion) progressFloor.object.quaternion.copy(currentQuaternion);
+      progressFloor?.object?.updateWorldMatrix?.(true, false);
+      progressFloor?.object?.getWorldQuaternion?.(floorWorldQuaternion) ?? floorWorldQuaternion.identity();
+      if (leftRecord?.grip && handReferenceValid) {
+        leftRecord.grip.updateWorldMatrix(true, false);
+        leftRecord.grip.getWorldQuaternion(gripWorldQuaternion);
+        neutralizeControllerQuaternionAgainstFloor({
+          gripWorldQuaternion, floorWorldQuaternion, floorParentWorldQuaternion: parentWorldQuaternion
+        }, controllerQuaternionNow);
+      }
+      angularError = 0;
+      controlBaseQuaternion.copy(currentQuaternion);
+      if (handReferenceValid) handReferenceQuaternion.copy(controllerQuaternionNow);
+      previewQuaternion.copy(currentQuaternion);
+      maneuverPendingLock = false;
+    }
     sphere?.setTargetRingsStabilized?.(driveActive);
     if (progressFloor?.object?.userData) progressFloor.object.userData.asterionGyro = {
       state, driveActive, angularError, previewCommandAngularError: previewQuaternion.angleTo(commandQuaternion)
@@ -109,5 +134,5 @@ export function createVrAsterionGyroInteraction({ sphere, controllers, progressF
   function dispose() { if (disposed) return; disposed = true; reset(); }
 
   return { update, reset, dispose, getState: () => state, getAngularError: () => angularError,
-    getTargetQuaternion: () => commandQuaternion.clone(), getPreviewQuaternion: () => previewQuaternion.clone(), getCommandQuaternion: () => commandQuaternion.clone(), getCurrentQuaternion: () => currentQuaternion.clone(), isDriveActive: () => driveActive, isClutchActive: () => driveActive };
+    getTargetQuaternion: () => commandQuaternion.clone(), getPreviewQuaternion: () => previewQuaternion.clone(), getCommandQuaternion: () => commandQuaternion.clone(), getCurrentQuaternion: () => currentQuaternion.clone(), getControlBaseQuaternion: () => controlBaseQuaternion.clone(), getHandReferenceQuaternion: () => handReferenceQuaternion.clone(), isDriveActive: () => driveActive, isClutchActive: () => driveActive };
 }
