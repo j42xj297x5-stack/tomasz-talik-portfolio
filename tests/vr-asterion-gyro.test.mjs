@@ -14,6 +14,11 @@ function makeModel() {
   const vertical = new THREE.Group(); vertical.name = 'VERTICAL_SYSTEM';
   const masterPivot = new THREE.Group(); masterPivot.name = 'PIV_master_ring1'; current.add(masterPivot);
   const targetPivot = new THREE.Group(); targetPivot.name = 'PIV_inner_ring1_precession'; target.add(targetPivot);
+  const inner2Pivot = new THREE.Group(); inner2Pivot.name = 'PIV_inner_ring2_precession'; target.add(inner2Pivot);
+  const inner3Pivot = new THREE.Group(); inner3Pivot.name = 'PIV_inner_ring3_precession'; target.add(inner3Pivot);
+  const targetAxis = new THREE.Group(); targetAxis.name = 'PIV_TARGET_AXIS';
+  targetAxis.quaternion.setFromAxisAngle(new THREE.Vector3(0, 0, 1), Math.PI / 11);
+  const targetAxisMesh = new THREE.Group(); targetAxisMesh.name = 'srodek'; targetAxis.add(targetAxisMesh); target.add(targetAxis);
   const mesh = new THREE.Mesh(new THREE.BoxGeometry(2, 1, 1), new THREE.MeshStandardMaterial({ emissive: 0x224466, emissiveIntensity: 2 }));
   mesh.name = 'AuthoredVisibleMesh'; target.add(mesh); current.add(target); root.add(current, core, vertical);
   const scene = new THREE.Group(); scene.add(root); return scene;
@@ -47,10 +52,25 @@ function assertQuaternionClose(actual, expected, message) {
   assert.ok(sphere.getRequiredNodes().GIMBAL_TARGET, 'GIMBAL_TARGET is found');
   assert.ok(sphere.getRequiredNodes().CORE, 'CORE is found');
   assert.ok(sphere.getRequiredNodes().VERTICAL_SYSTEM, 'VERTICAL_SYSTEM is found');
+  assert.ok(sphere.getRequiredNodes().PIV_TARGET_AXIS, 'PIV_TARGET_AXIS is found');
+  assert.ok(sphere.getRequiredNodes().srodek, 'srodek target axis mesh is found');
+  assert.equal(sphere.getRequiredNodes().srodek.parent, sphere.getRequiredNodes().PIV_TARGET_AXIS, 'srodek remains a child of PIV_TARGET_AXIS');
+  assert.notEqual(sphere.getRequiredNodes().srodek.parent, sphere.getRequiredNodes().CORE, 'runtime does not reparent srodek to CORE');
   assert.equal(sphere.getRequiredNodes().GIMBAL_CURRENT.getObjectByName('PIV_inner_ring1_precession')?.name, 'PIV_inner_ring1_precession', 'inner_ring1 precession pivot is reparented under GIMBAL_CURRENT');
   assert.equal(sphere.getIdleActionByClipName('ASTERION_IDLE__inner_ring1').getEffectiveWeight(), 0, 'inner_ring1 idle action has zero effective weight');
   assert.equal(sphere.getIdleActionByClipName('ASTERION_IDLE__inner_ring2').getEffectiveWeight(), 1, 'inner_ring2 idles with full effective weight');
   assert.equal(sphere.getIdleActionByClipName('ASTERION_IDLE__inner_ring3').getEffectiveWeight(), 1, 'inner_ring3 idles with full effective weight');
+  sphere.dispose();
+}
+
+
+{
+  const protectedClip = new THREE.AnimationClip('ASTERION_IDLE__target_axis_conflict', 1, [
+    new THREE.QuaternionKeyframeTrack('PIV_TARGET_AXIS.quaternion', [0, 1], [0, 0, 0, 1, 0, 0, 0, 1])
+  ]);
+  const sphere = createVrAsterionSphere({ model: makeModel(), animations: [...makeIdleClips(), protectedClip], settings, enabled: false });
+  assert.equal(sphere.getDiagnostics().conflictingClipNames.includes('ASTERION_IDLE__target_axis_conflict'), true, 'PIV_TARGET_AXIS animation tracks are rejected as runtime conflicts');
+  assert.equal(sphere.getIdleActionByClipName('ASTERION_IDLE__target_axis_conflict'), null, 'conflicting PIV_TARGET_AXIS idle action is not started');
   sphere.dispose();
 }
 
@@ -91,6 +111,7 @@ leftGrip.quaternion.setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI / 2); w
 assert.ok(gyro.getTargetQuaternion().angleTo(releasedTarget) > 0.1, 'second clutch starts from existing target and accumulates');
 
 const nodes = sphere.getRequiredNodes();
+const targetAxisLocalRestQuaternion = nodes.PIV_TARGET_AXIS.quaternion.clone();
 const neutralWorld = worldQuaternionOf(worldRoot);
 leftGrip.position.set(1, 2, 3);
 leftGrip.quaternion.setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI / 3);
@@ -104,11 +125,26 @@ const targetFloorQuaternion = new THREE.Quaternion().setFromAxisAngle(new THREE.
 sphere.syncGimbals({ currentQuaternion: currentFloorQuaternion, targetQuaternion: targetFloorQuaternion, worldRoot });
 assertQuaternionClose(worldQuaternionOf(nodes.GIMBAL_CURRENT), neutralWorld.clone().multiply(currentFloorQuaternion), 'GIMBAL_CURRENT world quaternion matches current floor quaternion');
 assertQuaternionClose(worldQuaternionOf(nodes.GIMBAL_TARGET), neutralWorld.clone().multiply(targetFloorQuaternion), 'GIMBAL_TARGET world quaternion matches target floor quaternion');
+assertQuaternionClose(worldQuaternionOf(nodes.PIV_TARGET_AXIS), neutralWorld.clone().multiply(targetFloorQuaternion).multiply(targetAxisLocalRestQuaternion), 'PIV_TARGET_AXIS inherits GIMBAL_TARGET world quaternion with authored local rest');
+assertQuaternionClose(worldQuaternionOf(nodes.srodek), worldQuaternionOf(nodes.PIV_TARGET_AXIS), 'srodek world quaternion follows PIV_TARGET_AXIS');
 const masterPivotQuaternion = nodes.GIMBAL_CURRENT.getObjectByName('PIV_master_ring1').quaternion.clone();
 const targetPivotQuaternion = nodes.GIMBAL_CURRENT.getObjectByName('PIV_inner_ring1_precession').quaternion.clone();
-sphere.syncGimbals({ currentQuaternion: new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI / 4), targetQuaternion: new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), -Math.PI / 4), worldRoot });
+const inner2PivotQuaternion = nodes.GIMBAL_TARGET.getObjectByName('PIV_inner_ring2_precession').quaternion.clone();
+const inner3PivotQuaternion = nodes.GIMBAL_TARGET.getObjectByName('PIV_inner_ring3_precession').quaternion.clone();
+const targetAxisQuaternionBefore = nodes.PIV_TARGET_AXIS.quaternion.clone();
+const targetAxisWorldBeforeCurrentOnly = worldQuaternionOf(nodes.PIV_TARGET_AXIS);
+sphere.syncGimbals({ currentQuaternion: new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI / 4), targetQuaternion: targetFloorQuaternion, worldRoot });
 assertQuaternionClose(nodes.GIMBAL_CURRENT.getObjectByName('PIV_master_ring1').quaternion, masterPivotQuaternion, 'runtime does not write master child pivot transform');
 assertQuaternionClose(nodes.GIMBAL_CURRENT.getObjectByName('PIV_inner_ring1_precession').quaternion, targetPivotQuaternion, 'runtime does not write inner_ring1 child pivot transform');
+assertQuaternionClose(nodes.GIMBAL_TARGET.getObjectByName('PIV_inner_ring2_precession').quaternion, inner2PivotQuaternion, 'runtime does not write inner_ring2 child pivot transform');
+assertQuaternionClose(nodes.GIMBAL_TARGET.getObjectByName('PIV_inner_ring3_precession').quaternion, inner3PivotQuaternion, 'runtime does not write inner_ring3 child pivot transform');
+assertQuaternionClose(nodes.PIV_TARGET_AXIS.quaternion, targetAxisQuaternionBefore, 'runtime does not write PIV_TARGET_AXIS local quaternion');
+assertQuaternionClose(worldQuaternionOf(nodes.PIV_TARGET_AXIS), targetAxisWorldBeforeCurrentOnly, 'changing currentQuaternion alone does not change TARGET axis');
+assertQuaternionClose(worldQuaternionOf(nodes.srodek), targetAxisWorldBeforeCurrentOnly, 'changing currentQuaternion alone does not change srodek target axis');
+const changedTargetQuaternion = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), Math.PI / 6);
+sphere.syncGimbals({ currentQuaternion: new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI / 4), targetQuaternion: changedTargetQuaternion, worldRoot });
+assert.ok(worldQuaternionOf(nodes.srodek).angleTo(targetAxisWorldBeforeCurrentOnly) > 0.1, 'changing targetQuaternion changes srodek world orientation with target frame');
+assertQuaternionClose(worldQuaternionOf(nodes.PIV_TARGET_AXIS), worldQuaternionOf(nodes.srodek), 'target axis and srodek continue to rotate together after target changes');
 leftGrip.position.set(0, 0, 0);
 leftGrip.quaternion.identity();
 worldRoot.updateMatrixWorld(true);
@@ -163,6 +199,8 @@ assertQuaternionClose(worldQuaternionOf(nodes.GIMBAL_TARGET), worldQuaternionOf(
 assertQuaternionClose(worldQuaternionOf(nodes.CORE), worldQuaternionOf(worldRoot), 'reset returns CORE to neutral world orientation');
 assertQuaternionClose(worldQuaternionOf(nodes.VERTICAL_SYSTEM), worldQuaternionOf(worldRoot), 'reset returns VERTICAL_SYSTEM to neutral world orientation');
 assert.equal(nodes.GIMBAL_CURRENT.getObjectByName('PIV_inner_ring1_precession')?.name, 'PIV_inner_ring1_precession', 'reset keeps inner_ring1 under GIMBAL_CURRENT');
+assert.equal(nodes.srodek.parent, nodes.PIV_TARGET_AXIS, 'reset keeps srodek under PIV_TARGET_AXIS');
+assertQuaternionClose(nodes.PIV_TARGET_AXIS.quaternion, targetAxisLocalRestQuaternion, 'reset preserves PIV_TARGET_AXIS authored local rest quaternion');
 sphere.reset();
 assert.equal(sphere.getIdleActionByClipName('ASTERION_IDLE__inner_ring1').getEffectiveWeight(), 0, 'sphere reset keeps inner1 action weight zero');
 assert.equal(sphere.getIdleActionByClipName('ASTERION_IDLE__inner_ring2').getEffectiveWeight(), 1, 'sphere reset restores inner2 action weight one');
