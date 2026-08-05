@@ -226,7 +226,9 @@ const handModeController = createVrHandModeController({
   controllers: vrControllers.controllers,
   semanticInput,
   attractorTool,
-  isUnlocked: () => progressionController.isTierComplete(1)
+  asterionSphere,
+  isUnlocked: () => progressionController.isTierComplete(1),
+  isAsterionAvailable: () => asterionSphereQa
 });
 let astroFurnaceActivateInteraction = null;
 let astroFurnaceContentInteraction = null;
@@ -245,7 +247,7 @@ const furnacePanel = createVrAstroFurnacePanel({
 });
 platformFixturesRoot.attach(furnacePanel.object);
 const ordinaryFurnaceRayAvailable = (record) => !(record.handedness === 'right'
-  && handModeController.getMode() === 'ASTRO_ATTRACTOR')
+  && handModeController.getRightMode() === 'ASTRO_ATTRACTOR')
   && !(asterionSphereQa && asterionSphere.isEquipped() && record.handedness === 'left');
 const astroFurnaceOpenInteraction = createVrAstroFurnaceOpenInteraction({
   furnace: astroFurnace,
@@ -290,7 +292,7 @@ const crystalCollection = createVrCrystalCollection({
   settings: settings.crystals, haloSettings: settings.targetHalo, insertFeedbackSettings: settings.reliquary.insertFeedback,
   pages: experienceVrPages, progressionController,
   canGrabController: (record) => {
-    if (record.handedness === 'right' && handModeController.getMode() === 'ASTRO_ATTRACTOR') return false;
+    if (record.handedness === 'right' && handModeController.getRightMode() === 'ASTRO_ATTRACTOR') return false;
     if (asterionSphereQa && asterionSphere.isEquipped() && record.handedness === 'left') return false;
     if (astroFurnaceOpenInteraction.hasCurrentHit(record)) return false;
     if (astroFurnaceActivateInteraction.hasCurrentHit(record)) return false;
@@ -385,6 +387,7 @@ const clock = new THREE.Clock(false);
 function renderFrame() {
   const delta = clock.getDelta();
   vrControllers.beginRayHitFrame();
+  handModeController.update(delta);
   astroFurnace.update(delta);
   furnacePanel.update(delta);
   astroFurnaceOptionInteraction.update(delta);
@@ -400,7 +403,6 @@ function renderFrame() {
   progressFloor.update(delta);
   activateButton.update(delta);
   releaseButton.update(delta);
-  handModeController.update(delta);
   shellAttractorInteraction.update(delta);
   asterionSphere.update(delta);
   asterionGyroInteraction.update(delta);

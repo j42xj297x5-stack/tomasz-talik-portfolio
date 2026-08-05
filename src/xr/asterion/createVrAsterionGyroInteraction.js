@@ -44,6 +44,7 @@ export function createVrAsterionGyroInteraction({ sphere, controllers, progressF
   let angularError = 0;
   let visualRebaseElapsed = 0;
   let visualRebaseActive = false;
+  let wasEquipped = false;
   let disposed = false;
 
   const maxAngularSpeedDegrees = Math.max(0, Number.isFinite(settings?.maxAngularSpeedDegrees) ? settings.maxAngularSpeedDegrees : 32);
@@ -80,6 +81,7 @@ export function createVrAsterionGyroInteraction({ sphere, controllers, progressF
     state = ASTERION_GYRO_STATES.IDLE;
     angularError = 0;
     angularVelocity.set(0, 0, 0);
+    wasEquipped = false;
     if (progressFloor?.object?.quaternion) progressFloor.object.quaternion.identity();
     sphere?.setTargetRingsStabilized?.(false);
     sphere?.syncGimbals?.({ currentQuaternion, targetQuaternion: displayPreviewQuaternion, worldRoot });
@@ -89,16 +91,43 @@ export function createVrAsterionGyroInteraction({ sphere, controllers, progressF
     if (disposed || !enabled) return;
     const safeDelta = Math.max(0, Number.isFinite(delta) ? delta : 0);
     const leftRecord = findLeftRecord(controllers);
-    if (leftRecord && !sphere?.isEquipped?.()) sphere?.equipTo?.(leftRecord);
     hideLeftRayIfEquipped(leftRecord);
-    const triggerDown = getLeftPrimaryAction(renderer) > TRIGGER_THRESHOLD || Boolean(leftRecord?.isSelecting);
+    const equipped = Boolean(sphere?.isEquipped?.());
+    if (equipped && !wasEquipped) {
+      const floorParent = progressFloor?.object?.parent ?? worldRoot ?? null;
+      floorParent?.updateWorldMatrix?.(true, false);
+      floorParent?.getWorldQuaternion?.(parentWorldQuaternion) ?? parentWorldQuaternion.identity();
+      progressFloor?.object?.updateWorldMatrix?.(true, false);
+      progressFloor?.object?.getWorldQuaternion?.(floorWorldQuaternion) ?? floorWorldQuaternion.identity();
+      if (leftRecord?.grip) {
+        leftRecord.grip.updateWorldMatrix(true, false);
+        leftRecord.grip.getWorldQuaternion(gripWorldQuaternion);
+        neutralizeControllerQuaternionAgainstFloor({
+          gripWorldQuaternion, floorWorldQuaternion, floorParentWorldQuaternion: parentWorldQuaternion
+        }, controllerQuaternionNow);
+        handReferenceQuaternion.copy(controllerQuaternionNow);
+        handReferenceValid = true;
+      } else {
+        handReferenceValid = false;
+      }
+      controlBaseQuaternion.copy(currentQuaternion);
+      previewQuaternion.copy(currentQuaternion);
+      displayPreviewQuaternion.copy(currentQuaternion);
+    }
+    if (!equipped && wasEquipped) {
+      driveActive = false;
+      sphere?.setTargetRingsStabilized?.(false);
+      handReferenceValid = false;
+    }
+    wasEquipped = equipped;
+    const triggerDown = equipped && (getLeftPrimaryAction(renderer) > TRIGGER_THRESHOLD || Boolean(leftRecord?.isSelecting));
     const floorParent = progressFloor?.object?.parent ?? worldRoot ?? null;
     floorParent?.updateWorldMatrix?.(true, false);
     floorParent?.getWorldQuaternion?.(parentWorldQuaternion) ?? parentWorldQuaternion.identity();
     progressFloor?.object?.updateWorldMatrix?.(true, false);
     progressFloor?.object?.getWorldQuaternion?.(floorWorldQuaternion) ?? floorWorldQuaternion.identity();
 
-    if (leftRecord?.grip && sphere?.isEquipped?.()) {
+    if (leftRecord?.grip && equipped) {
       leftRecord.grip.updateWorldMatrix(true, false);
       leftRecord.grip.getWorldQuaternion(gripWorldQuaternion);
       neutralizeControllerQuaternionAgainstFloor({

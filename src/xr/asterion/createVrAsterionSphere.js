@@ -135,7 +135,7 @@ export function createVrAsterionSphere({ model, animations = [], settings, enabl
     mixer.update(safeDelta);
   }
   function setTargetRingsStabilized(stabilized) { targetRingTargetWeight = stabilized ? 0 : 1; }
-  function reset() { actions.forEach((a) => { a.reset(); a.play(); }); mixer.setTime(0); targetRingWeight = 1; targetRingTargetWeight = 1; if (innerRing1Action) innerRing1Action.setEffectiveWeight(0); targetRingActions.forEach((a) => a.setEffectiveWeight(1)); if (enabled && equippedRecord?.handedness === 'left') equipTo(equippedRecord); else unequip(); }
+  function reset() { actions.forEach((a) => { a.reset(); a.play(); }); mixer.setTime(0); targetRingWeight = 1; targetRingTargetWeight = 1; if (innerRing1Action) innerRing1Action.setEffectiveWeight(0); targetRingActions.forEach((a) => a.setEffectiveWeight(1)); unequip(); }
   function dispose() { if (disposed) return; disposed = true; actions.forEach((a) => a.stop()); mixer.stopAllAction(); unequip(); }
   function isEquipped() { return Boolean(equippedRecord && object.visible && socket.parent); }
   return { object, socket, equipTo, unequip, update, reset, dispose, syncGimbals, setTargetRingsStabilized, isEquipped, getEquippedRecord: () => equippedRecord,
