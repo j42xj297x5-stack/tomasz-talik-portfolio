@@ -5,6 +5,7 @@ import * as THREE from '../src/vendor/three.js';
 import { createVrControllers } from '../src/xr/createVrControllers.js';
 import { applyWorldTransform } from '../src/xr/applyWorldTransform.js';
 import { createVrSemanticInput, XR_STANDARD_BUTTONS } from '../src/xr/input/createVrSemanticInput.js';
+import { createVrHandModeController, VR_LEFT_HAND_MODES } from '../src/xr/input/createVrHandModeController.js';
 
 const [main, vr, experience3d, vrControllers, glyphInteraction, entryTransition, spatialPlaque, crystalCollection, locomotion, portalDisplay, crystalReliquary, astroFurnace, furnacePanel, semanticInputSource, playerGuidePanelSource, playerGuideContentSource] = await Promise.all([
   readFile(new URL('../src/main.js', import.meta.url), 'utf8'),
@@ -132,13 +133,59 @@ assert.equal(semanticInputRuntime.getState().leftPrimaryAction, 0);
 assert.match(playerGuidePanelSource, /new THREE\.CanvasTexture\(canvas\)/);
 assert.match(playerGuidePanelSource, /leftGrip\?\.add\?\.\(object\)/);
 assert.match(playerGuidePanelSource, /togglePlayerGuidePanel/);
-assert.match(playerGuidePanelSource, /leftPrimaryAction/);
+assert.doesNotMatch(playerGuidePanelSource, /leftPrimaryAction/, 'panel confirm must not use the left trigger/primary action');
 assert.match(playerGuidePanelSource, /leftStickY/);
 assert.match(playerGuideContentSource, /pl:[\s\S]*AKTUALNE ZADANIE/);
 assert.match(playerGuideContentSource, /en:[\s\S]*CURRENT TASK/);
-assert.match(vr, /isPlayerGuidePanelOpen\(\) && record\.handedness === 'left'/);
+assert.doesNotMatch(vr, /isPlayerGuidePanelOpen\(\) && record\.handedness === 'left'/, 'open panel alone must not block ordinary left interactions');
 assert.match(vr, /playerGuidePanel\.reset\(\)/);
 assert.match(vr, /playerGuidePanel\.dispose\(\)/);
+
+assert.match(playerGuidePanelSource, /publicPath\('svg\/controllers\.svg'\)/, 'controllers.svg is loaded through base-safe publicPath');
+assert.match(playerGuideContentSource, /Prawy drążek — ruch/);
+assert.match(playerGuideContentSource, /Right stick — move/);
+assert.match(playerGuideContentSource, /Lewy drążek — wybór · X — zatwierdź · Y — zamknij/);
+assert.match(playerGuideContentSource, /Left stick — select · X — confirm · Y — close/);
+assert.match(playerGuidePanelSource, /controllersImage\.onload = null;\s*controllersImage\.onerror = null;/, 'panel dispose clears SVG image callbacks');
+assert.match(playerGuidePanelSource, /function reset\(\)[\s\S]*setOpen\(false\)/, 'panel reset closes without recreating resources');
+assert.match(vr, /isLeftToolToggleBlocked: \(\) => playerGuidePanel\.isOpen\(\)/, 'LEFT X is context-arbitrated by panel openness');
+assert.doesNotMatch(vr, /isPlayerGuidePanelOpen\(\)[\s\S]{0,160}activateButton|isPlayerGuidePanelOpen\(\)[\s\S]{0,160}crystalCollection|isPlayerGuidePanelOpen\(\)[\s\S]{0,160}glyphInteraction/, 'panel openness is not used as a trigger/grip interaction blocker');
+
+const leftToggleCalls = [];
+const mockSemantic = {
+  input: { toggleLeftTool: false, toggleRightTool: false, primaryAction: 0 },
+  update() { return this.input; },
+  reset() { this.input.toggleLeftTool = false; }
+};
+const handController = createVrHandModeController({
+  controllers: [{ handedness: 'left', isConnected: true, ray: { visible: true } }, { handedness: 'right', isConnected: true, ray: { visible: true } }],
+  semanticInput: mockSemantic,
+  attractorTool: {
+    setUnlocked() {}, attachToTargetRay() {}, setEquipped() {}, setTrigger() {}, update() {}, reset() {}, dispose() {}
+  },
+  asterionSphere: { equipTo: () => leftToggleCalls.push('equip'), unequip: () => leftToggleCalls.push('unequip') },
+  isUnlocked: () => true,
+  isAsterionAvailable: () => true,
+  isLeftToolToggleBlocked: () => true
+});
+mockSemantic.input.toggleLeftTool = true;
+handController.update(0.016);
+assert.equal(handController.getLeftMode(), VR_LEFT_HAND_MODES.NORMAL_HAND, 'open panel X does not toggle Asterion');
+assert.deepEqual(leftToggleCalls, ['unequip'], 'blocked X only keeps current left equipment synced');
+const handControllerClosed = createVrHandModeController({
+  controllers: [{ handedness: 'left', isConnected: true, ray: { visible: true } }, { handedness: 'right', isConnected: true, ray: { visible: true } }],
+  semanticInput: mockSemantic,
+  attractorTool: {
+    setUnlocked() {}, attachToTargetRay() {}, setEquipped() {}, setTrigger() {}, update() {}, reset() {}, dispose() {}
+  },
+  asterionSphere: { equipTo: () => {}, unequip: () => {} },
+  isUnlocked: () => true,
+  isAsterionAvailable: () => true,
+  isLeftToolToggleBlocked: () => false
+});
+handControllerClosed.update(0.016);
+assert.equal(handControllerClosed.getLeftMode(), VR_LEFT_HAND_MODES.ASTERION_SPHERE, 'closed panel X toggles Asterion again');
+
 
 assert.match(vr, /createVrAstroFurnace\([\s\S]*anchorObject: monkeyAnchor/);
 
