@@ -2,6 +2,8 @@ import * as THREE from '../../vendor/three.js';
 import { ASTERION_GYRO_STATES, cappedExponentialSlerp, computeClutchedTargetQuaternion, neutralizeControllerQuaternionAgainstFloor, resolveGyroState } from './asterionGyroMath.js';
 
 const TRIGGER_THRESHOLD = 0.1;
+const HARD_SETTLE_THRESHOLD_DEGREES = 0.05;
+const TARGET_VISUAL_REBASE_SECONDS = 0.5;
 
 function findLeftRecord(controllers) {
   return controllers.find((record) => record.handedness === 'left' && record.isConnected && record.grip) ?? null;
@@ -18,6 +20,10 @@ export function createVrAsterionGyroInteraction({ sphere, controllers, progressF
   const previewQuaternion = new THREE.Quaternion();
   const commandQuaternion = new THREE.Quaternion();
   const currentQuaternion = new THREE.Quaternion();
+  const displayPreviewQuaternion = new THREE.Quaternion();
+  const visualOffsetQuaternion = new THREE.Quaternion();
+  const visualOffsetStartQuaternion = new THREE.Quaternion();
+  const visualOffsetIdentityQuaternion = new THREE.Quaternion();
   const controlBaseQuaternion = new THREE.Quaternion();
   const handReferenceQuaternion = new THREE.Quaternion();
   const controllerQuaternionNow = new THREE.Quaternion();
@@ -30,11 +36,14 @@ export function createVrAsterionGyroInteraction({ sphere, controllers, progressF
   let lockTimer = 0;
   let state = ASTERION_GYRO_STATES.IDLE;
   let angularError = 0;
+  let visualRebaseElapsed = 0;
+  let visualRebaseActive = false;
   let disposed = false;
 
   const response = Math.max(0, Number.isFinite(settings?.response) ? settings.response : 2.5);
   const maxAngularSpeedDegrees = Math.max(0, Number.isFinite(settings?.maxAngularSpeedDegrees) ? settings.maxAngularSpeedDegrees : 55);
   const lockThreshold = THREE.MathUtils.degToRad(Math.max(0, Number.isFinite(settings?.lockThresholdDegrees) ? settings.lockThresholdDegrees : 0.5));
+  const hardSettleThreshold = THREE.MathUtils.degToRad(HARD_SETTLE_THRESHOLD_DEGREES);
   const lockDelaySeconds = Math.max(0, Number.isFinite(settings?.lockDelaySeconds) ? settings.lockDelaySeconds : 0.18);
 
   function hideLeftRayIfEquipped(leftRecord) {
@@ -45,6 +54,11 @@ export function createVrAsterionGyroInteraction({ sphere, controllers, progressF
     previewQuaternion.identity();
     commandQuaternion.identity();
     currentQuaternion.identity();
+    displayPreviewQuaternion.identity();
+    visualOffsetQuaternion.identity();
+    visualOffsetStartQuaternion.identity();
+    visualRebaseElapsed = 0;
+    visualRebaseActive = false;
     controlBaseQuaternion.identity();
     handReferenceQuaternion.identity();
     handReferenceValid = false;
@@ -55,7 +69,7 @@ export function createVrAsterionGyroInteraction({ sphere, controllers, progressF
     angularError = 0;
     if (progressFloor?.object?.quaternion) progressFloor.object.quaternion.identity();
     sphere?.setTargetRingsStabilized?.(false);
-    sphere?.syncGimbals?.({ currentQuaternion, targetQuaternion: previewQuaternion, worldRoot });
+    sphere?.syncGimbals?.({ currentQuaternion, targetQuaternion: displayPreviewQuaternion, worldRoot });
   }
 
   function update(delta = 0) {
@@ -98,15 +112,20 @@ export function createVrAsterionGyroInteraction({ sphere, controllers, progressF
       maneuverPendingLock = true;
     }
 
+    let visualRebaseStartedThisFrame = false;
     const previousState = state;
     cappedExponentialSlerp(currentQuaternion, commandQuaternion, { response, deltaSeconds: safeDelta, maxAngularSpeedDegrees });
     if (progressFloor?.object?.quaternion) progressFloor.object.quaternion.copy(currentQuaternion);
     angularError = currentQuaternion.angleTo(commandQuaternion);
     if (!driveActive && angularError < lockThreshold) lockTimer += safeDelta;
     else lockTimer = 0;
-    state = resolveGyroState({ clutchActive: driveActive, angularError: angularError < lockThreshold ? 0 : angularError, lockTimer, lockDelaySeconds });
+    const canHardSettle = !driveActive && lockTimer >= lockDelaySeconds && angularError <= hardSettleThreshold;
+    state = canHardSettle
+      ? ASTERION_GYRO_STATES.LOCKED
+      : resolveGyroState({ clutchActive: driveActive, angularError, lockTimer: 0, lockDelaySeconds });
     if (!driveActive && maneuverPendingLock && previousState !== ASTERION_GYRO_STATES.LOCKED && state === ASTERION_GYRO_STATES.LOCKED) {
-      currentQuaternion.copy(commandQuaternion);
+      const displayPreviewBeforeRebase = displayPreviewQuaternion.clone();
+      currentQuaternion.copy(commandQuaternion).normalize();
       if (progressFloor?.object?.quaternion) progressFloor.object.quaternion.copy(currentQuaternion);
       progressFloor?.object?.updateWorldMatrix?.(true, false);
       progressFloor?.object?.getWorldQuaternion?.(floorWorldQuaternion) ?? floorWorldQuaternion.identity();
@@ -120,19 +139,39 @@ export function createVrAsterionGyroInteraction({ sphere, controllers, progressF
       angularError = 0;
       controlBaseQuaternion.copy(currentQuaternion);
       if (handReferenceValid) handReferenceQuaternion.copy(controllerQuaternionNow);
-      previewQuaternion.copy(currentQuaternion);
+      previewQuaternion.copy(currentQuaternion).normalize();
+      visualOffsetStartQuaternion.copy(displayPreviewBeforeRebase).multiply(previewQuaternion.clone().invert()).normalize();
+      visualOffsetQuaternion.copy(visualOffsetStartQuaternion);
+      visualRebaseElapsed = 0;
+      visualRebaseActive = true;
+      visualRebaseStartedThisFrame = true;
       maneuverPendingLock = false;
+    }
+    if (visualRebaseActive) {
+      visualRebaseElapsed += visualRebaseStartedThisFrame ? 0 : safeDelta;
+      const linearT = TARGET_VISUAL_REBASE_SECONDS > 0 ? Math.min(1, visualRebaseElapsed / TARGET_VISUAL_REBASE_SECONDS) : 1;
+      const smoothT = linearT * linearT * (3 - 2 * linearT);
+      visualOffsetQuaternion.copy(visualOffsetStartQuaternion).slerp(visualOffsetIdentityQuaternion, smoothT).normalize();
+      displayPreviewQuaternion.copy(visualOffsetQuaternion).multiply(previewQuaternion).normalize();
+      if (linearT >= 1) {
+        visualRebaseActive = false;
+        visualOffsetQuaternion.identity();
+        visualOffsetStartQuaternion.identity();
+        displayPreviewQuaternion.copy(previewQuaternion).normalize();
+      }
+    } else {
+      displayPreviewQuaternion.copy(previewQuaternion).normalize();
     }
     sphere?.setTargetRingsStabilized?.(driveActive);
     if (progressFloor?.object?.userData) progressFloor.object.userData.asterionGyro = {
       state, driveActive, angularError, previewCommandAngularError: previewQuaternion.angleTo(commandQuaternion)
     };
-    sphere?.syncGimbals?.({ currentQuaternion, targetQuaternion: previewQuaternion, worldRoot });
+    sphere?.syncGimbals?.({ currentQuaternion, targetQuaternion: displayPreviewQuaternion, worldRoot });
     hideLeftRayIfEquipped(leftRecord);
   }
 
   function dispose() { if (disposed) return; disposed = true; reset(); }
 
   return { update, reset, dispose, getState: () => state, getAngularError: () => angularError,
-    getTargetQuaternion: () => commandQuaternion.clone(), getPreviewQuaternion: () => previewQuaternion.clone(), getCommandQuaternion: () => commandQuaternion.clone(), getCurrentQuaternion: () => currentQuaternion.clone(), getControlBaseQuaternion: () => controlBaseQuaternion.clone(), getHandReferenceQuaternion: () => handReferenceQuaternion.clone(), isDriveActive: () => driveActive, isClutchActive: () => driveActive };
+    getTargetQuaternion: () => commandQuaternion.clone(), getPreviewQuaternion: () => previewQuaternion.clone(), getDisplayPreviewQuaternion: () => displayPreviewQuaternion.clone(), isVisualRebaseActive: () => visualRebaseActive, getCommandQuaternion: () => commandQuaternion.clone(), getCurrentQuaternion: () => currentQuaternion.clone(), getControlBaseQuaternion: () => controlBaseQuaternion.clone(), getHandReferenceQuaternion: () => handReferenceQuaternion.clone(), isDriveActive: () => driveActive, isClutchActive: () => driveActive };
 }
