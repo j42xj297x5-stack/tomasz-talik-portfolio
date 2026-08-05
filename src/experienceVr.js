@@ -36,6 +36,8 @@ import { createVrAstroFurnacePanel } from './xr/furnace/createVrAstroFurnacePane
 import { createVrAstroFurnaceProcessSource } from './xr/furnace/createVrAstroFurnaceProcessSource.js';
 import { createVrAstroFurnaceProgressionController } from './xr/furnace/createVrAstroFurnaceProgressionController.js';
 import { createVrAstroFurnaceContentInteraction } from './xr/furnace/createVrAstroFurnaceContentInteraction.js';
+import { createVrAsterionSphere } from './xr/asterion/createVrAsterionSphere.js';
+import { createVrAsterionGyroInteraction } from './xr/asterion/createVrAsterionGyroInteraction.js';
 import { experienceVrPages, getExperienceVrPages, resolveExperienceVrPage } from './content/experienceVrPages.js';
 
 const app = document.querySelector('#app');
@@ -77,7 +79,8 @@ const enterButton = app.querySelector('[data-vr-enter]');
 const exitButton = app.querySelector('[data-vr-exit]');
 const loadedSettings = await loadExperienceVrSettings({ debug: new URLSearchParams(location.search).has('debug') });
 const settings = loadedSettings.settings;
-const furnaceProcessQa = new URLSearchParams(location.search).has('furnaceProcess');
+const searchParams = new URLSearchParams(location.search);
+const furnaceProcessQa = searchParams.has('furnaceProcess');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: settings.renderer.antialias });
 renderer.setPixelRatio(Math.min(devicePixelRatio || 1, settings.renderer.pixelRatioCap));
 renderer.xr.enabled = true;
@@ -102,8 +105,9 @@ addLights(scene);
 const centralPlaceholder = createCentralObject();
 worldRoot.add(centralPlaceholder);
 
+const asterionSphereQa = settings.asterionSphere.enabled && searchParams.has(settings.asterionSphere.qaQueryParam);
 const vrAssets = getPreloadAssets([...INITIAL_PRELOAD_GROUPS, ...DEFERRED_PRELOAD_GROUPS])
-  .filter(({ id }) => id === 'gltf-loader-module' || id === 'monkey-model' || id === 'vr-portal-model' || id === 'vr-astro-attractor-model' || id === 'vr-astro-furnace-model' || id.startsWith('vr-progress-floor-') || id === 'vr-crystal-reliquary-model' || id.startsWith('vr-crystal-reliquary-button-') || id.startsWith('glyph-') || id.startsWith('vr-crystal-') || id.startsWith('shell-relic-'))
+  .filter(({ id }) => id === 'vr-asterion-sphere-model' || id === 'gltf-loader-module' || id === 'monkey-model' || id === 'vr-portal-model' || id === 'vr-astro-attractor-model' || id === 'vr-astro-furnace-model' || id.startsWith('vr-progress-floor-') || id === 'vr-crystal-reliquary-model' || id.startsWith('vr-crystal-reliquary-button-') || id.startsWith('glyph-') || id.startsWith('vr-crystal-') || id.startsWith('shell-relic-'))
   .map((asset) => ({ ...asset, critical: asset.id === 'gltf-loader-module' }));
 const loadingDiagnostics = createLoadingDiagnostics(vrAssets);
 const assetManager = createAssetManager({ diagnostics: loadingDiagnostics });
@@ -136,6 +140,18 @@ const entryDirection = new THREE.Vector3(settings.spawn.position.x, 0, settings.
 const glyphOrbit = createVrGlyphOrbit({ nodes, settings: settings.glyphRing, entryDirection });
 const shellSystem = createVrShellSystem({ parent: worldRoot, assetManager, baseRadius: glyphOrbit.effectiveRadius,
   emissionSettings: settings.shellAttractor });
+const asterionSphereGltf = assetManager.getGltf('vr-asterion-sphere-model');
+const asterionSphere = createVrAsterionSphere({
+  model: assetManager.cloneGltfScene('vr-asterion-sphere-model'),
+  animations: asterionSphereGltf?.animations ?? [],
+  settings: settings.asterionSphere,
+  enabled: asterionSphereQa,
+  debug: searchParams.has('debug') || asterionSphereQa
+});
+const asterionGyroInteraction = createVrAsterionGyroInteraction({
+  sphere: asterionSphere, controllers: vrControllers.controllers, progressFloor, worldRoot, renderer,
+  settings: settings.asterionSphere, enabled: asterionSphereQa
+});
 const glyphLights = createVrGlyphLights({ nodes, settings: settings.glyphLights });
 const monkeyAnchor = monkeyModel ?? centralPlaceholder;
 const portalDisplay = createVrPortalDisplay({
@@ -198,7 +214,8 @@ const furnacePanel = createVrAstroFurnacePanel({
   }
 });
 const ordinaryFurnaceRayAvailable = (record) => !(record.handedness === 'right'
-  && handModeController.getMode() === 'ASTRO_ATTRACTOR');
+  && handModeController.getMode() === 'ASTRO_ATTRACTOR')
+  && !(asterionSphereQa && asterionSphere.isEquipped() && record.handedness === 'left');
 const astroFurnaceOpenInteraction = createVrAstroFurnaceOpenInteraction({
   furnace: astroFurnace,
   controllers: vrControllers.controllers,
@@ -243,6 +260,7 @@ const crystalCollection = createVrCrystalCollection({
   pages: experienceVrPages, progressionController,
   canGrabController: (record) => {
     if (record.handedness === 'right' && handModeController.getMode() === 'ASTRO_ATTRACTOR') return false;
+    if (asterionSphereQa && asterionSphere.isEquipped() && record.handedness === 'left') return false;
     if (astroFurnaceOpenInteraction.hasCurrentHit(record)) return false;
     if (astroFurnaceActivateInteraction.hasCurrentHit(record)) return false;
     if (astroFurnaceOptionInteraction.hasCurrentHit(record) || furnacePanel.hasCurrentHit(record)) return false;
@@ -353,6 +371,8 @@ function renderFrame() {
   releaseButton.update(delta);
   handModeController.update(delta);
   shellAttractorInteraction.update(delta);
+  asterionSphere.update(delta);
+  asterionGyroInteraction.update(delta);
   vrControllers.resolveVisualRayLength();
   glyphLights.update({
     hovered: glyphInteraction.hoveredGlyphs,
@@ -395,6 +415,8 @@ function handleSessionEnd() {
   glyphLights.reset();
   glyphInteraction.reset();
   vrControllers.reset();
+  asterionGyroInteraction.reset();
+  asterionSphere.reset();
   handModeController.reset();
   showReadyState({ ended: hasEnteredSession });
 }
@@ -422,6 +444,8 @@ async function enterVr() {
   glyphLights.reset();
   glyphInteraction.reset();
   vrControllers.reset();
+  asterionGyroInteraction.reset();
+  asterionSphere.reset();
   handModeController.reset();
   enterButton.disabled = true;
   status.textContent = copy.entering;
@@ -467,6 +491,8 @@ async function enterVr() {
     locomotion.reset();
     vrControllers.reset();
     shellAttractorInteraction.reset();
+    asterionGyroInteraction.reset();
+    asterionSphere.reset();
     handModeController.reset();
     status.textContent = copy.error;
     enterButton.disabled = false;
@@ -477,6 +503,8 @@ async function enterVr() {
 enterButton.addEventListener('click', enterVr);
 exitButton.addEventListener('click', () => { void activeSession?.end(); });
 window.addEventListener('pagehide', () => {
+  asterionGyroInteraction.dispose();
+  asterionSphere.dispose();
   astroFurnaceOpenInteraction.dispose();
   astroFurnaceActivateInteraction.dispose();
   astroFurnaceContentInteraction.dispose();

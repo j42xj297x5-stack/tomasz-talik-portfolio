@@ -90,6 +90,7 @@ The furnace is a progression transformer/store, not a physical essence-output ma
 
 ## Asterion physical construction and floor control — future
 
+- [x] QA-only physical Asterion Sphere runtime and spatial-gyro prototype behind `?asterionSphere`: GLB idle animation, left-hand QA equipment and visual floor/radar quaternion control are implemented for testing only. Production construction, `UTWÓRZ` and 6/6 materialization gating remain future.
 - [ ] Transfer the completed material set into a visible physical construction sequence.
 - [ ] Add the physical **UTWÓRZ** action.
 - [ ] Materialize the luminous Asterion Sphere.

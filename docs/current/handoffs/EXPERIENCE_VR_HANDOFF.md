@@ -15,6 +15,12 @@ Status: self-contained current snapshot for the next implementation stage, **202
 - The panel has real mini-wireframes and **BRAK / W PROCESIE / ZGROMADZONA** states. Its rotating Asterion visualization combines a deterministic full-sphere ghost with six audit-derived, identity-fixed `±X / ±Y / ±Z` shell patches, curved spherical mapping with subdivision, and front/back culling. During EXTRACTION the current wireframe dissolves while the corresponding pending patch appears; it commits only at COMPLETE.
 - `VrAstroFurnaceProgressionController` exclusively owns one binary slot for each exact `shell-relic-1` through `shell-relic-6`. The panel is a read-only projection. `6/6` means a complete material/holographic panel model, not a physical object. Runtime consumes exported data from the [deterministic six-GLB audit](../audits/asterion-shells/asterion-shell-geometry-audit.md); it performs no PCA or GLB analysis.
 
+## QA PROTOTYPE — ASTERION PHYSICAL RUNTIME
+
+- QA physical Asterion Sphere runtime and spatial-gyro prototype exists behind `?asterionSphere`; production construction/equipment gating remains future.
+- With the QA flag, `public/glb/asterion_sphere.glb` is loaded through `AssetManager`, equipped on the runtime-resolved left grip, starts all `ASTERION_IDLE__*` GLB clips, and uses `GIMBAL_CURRENT` / `GIMBAL_TARGET` as runtime-driven spatial gyroscope nodes.
+- The left trigger acts as a quaternion clutch for the visual `VrTiltableFloorRoot` radar only; `playerRig`, camera, locomotion reference frame, furnace progression and the panel `x/6` material preview are unchanged.
+
 ## FUTURE — NEXT STAGE
 
 - [ ] Construct and materialize the **physical Asterion Sphere** from the completed six-material set; `UTWÓRZ` belongs to this new system, not to the existing panel.

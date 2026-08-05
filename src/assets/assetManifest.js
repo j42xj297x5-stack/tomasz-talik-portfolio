@@ -69,6 +69,7 @@ const criticalInitialAssets = Object.freeze([
 const deferredWarmAssets = Object.freeze([
   withStage({ id: 'vr-astro-attractor-model', label: 'VR Astro attractor tool', path: '/glb/astro_grabber.glb', type: 'model' }, ASSET_STAGES.DEFERRED_WARM),
   withStage({ id: 'vr-astro-furnace-model', label: 'VR Astro furnace', path: '/glb/astral_stove.glb', type: 'model' }, ASSET_STAGES.DEFERRED_WARM),
+  withStage({ id: 'vr-asterion-sphere-model', label: 'VR Asterion Sphere physical prototype', path: '/glb/asterion_sphere.glb', type: 'model' }, ASSET_STAGES.DEFERRED_WARM),
   withStage({ id: 'vr-progress-floor-creative-model', label: 'VR Creative progress floor sector model', path: '/glb/floor_creative.glb', type: 'model' }, ASSET_STAGES.DEFERRED_WARM),
   withStage({ id: 'vr-progress-floor-ethics-model', label: 'VR Ethics progress floor sector model', path: '/glb/floor_ethic.glb', type: 'model' }, ASSET_STAGES.DEFERRED_WARM),
   withStage({ id: 'vr-progress-floor-haiku-model', label: 'VR Haiku Cosmos progress floor sector model', path: '/glb/floor_haiku_cosmos.glb', type: 'model' }, ASSET_STAGES.DEFERRED_WARM),
