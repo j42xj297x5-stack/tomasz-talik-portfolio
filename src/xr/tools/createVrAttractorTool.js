@@ -1,5 +1,6 @@
 import * as THREE from '../../vendor/three.js';
-import { createVrAttractorPanelSystem, VR_ATTRACTOR_PANEL_NAMES } from './createVrAttractorPanelSystem.js';
+import { createVrAttractorPanelSystem, resolveAttractorGlyphFamilyColors,
+  VR_ATTRACTOR_PANEL_NAMES } from './createVrAttractorPanelSystem.js';
 import { resolveAttractorShellGlyph } from './vrAttractorShellGlyphs.js';
 
 export const VR_ATTRACTOR_STATES = Object.freeze({
@@ -159,7 +160,8 @@ export function createVrAttractorTool({ model, config = VR_ATTRACTOR_VISUAL_CONF
   });
   cloneMaterials(nodes.energy_cell);
 
-  const panelSystem = createVrAttractorPanelSystem({ panels: glyphPanels, canvasFactory, imageFactory });
+  const panelSystem = createVrAttractorPanelSystem({ panels: glyphPanels, canvasFactory, imageFactory,
+    familyColors: resolveAttractorGlyphFamilyColors(config) });
 
   const energyMaterials = [];
   nodes.energy_cell.traverse((child) => {
@@ -205,7 +207,8 @@ export function createVrAttractorTool({ model, config = VR_ATTRACTOR_VISUAL_CONF
   function setTarget(value) {
     target = value ?? null; targetProximity = clamp01(value?.proximity);
     const glyph = resolveAttractorShellGlyph(value?.target ?? value);
-    panelSystem.setPrimaryGlyph(glyph?.url ?? null).catch((error) => logger.warn(error.message));
+    panelSystem.setPrimaryGlyph(glyph).catch((error) => logger.warn(error.message));
+    panelSystem.setPrimaryPresentation({ isPulling: state === VR_ATTRACTOR_STATES.PULLING, targetProximity });
   }
   function setPullStrength(value) { pullStrength = clamp01(value); }
   function setLevel(value) { level = Math.max(0, Number.isFinite(value) ? value : 0); }
@@ -214,6 +217,7 @@ export function createVrAttractorTool({ model, config = VR_ATTRACTOR_VISUAL_CONF
     state = value;
     aimRoot.visible = value !== VR_ATTRACTOR_STATES.UNEQUIPPED;
     if (value === VR_ATTRACTOR_STATES.UNEQUIPPED) setTarget(null);
+    else panelSystem.setPrimaryPresentation({ isPulling: value === VR_ATTRACTOR_STATES.PULLING, targetProximity });
   }
   // Astro never generates an independent ray: the target-ray controller and its local -Z are authoritative.
   function attachToTargetRay(controller) { if (controller && aimRoot.parent !== controller) controller.add(aimRoot); }
@@ -228,6 +232,7 @@ export function createVrAttractorTool({ model, config = VR_ATTRACTOR_VISUAL_CONF
   function update(deltaSeconds) {
     if (disposed || state === VR_ATTRACTOR_STATES.UNEQUIPPED || !Number.isFinite(deltaSeconds) || deltaSeconds <= 0) return;
     elapsed += deltaSeconds;
+    panelSystem.setPrimaryPresentation({ isPulling: state === VR_ATTRACTOR_STATES.PULLING, targetProximity });
     const activity = 1 + trigger * 0.35 + pullStrength * 0.45 + (state === VR_ATTRACTOR_STATES.PULLING ? 0.35 : 0);
     nodes.PIVOT_BASE_MOLEKULAR.rotateY(rpmToRadians(config.baseMolecular.idleRPM * config.baseMolecular.direction, deltaSeconds));
     const calibrationRPM = state === VR_ATTRACTOR_STATES.TARGETING ? config.calibration.targetingRPM : config.calibration.idleRPM;
