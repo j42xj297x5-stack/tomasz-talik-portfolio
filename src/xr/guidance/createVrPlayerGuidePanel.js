@@ -8,7 +8,7 @@ const DEFAULT_SETTINGS = Object.freeze({
   height: 0.286,
   canvasWidth: 768,
   canvasHeight: 666,
-  position: { x: 0.49, y: 0.143, z: -0.18 },
+  position: { x: 0.29, y: 0.143, z: -0.18 },
   rotationDegrees: { x: -52, y: 0, z: 0 },
   navigationThreshold: 0.55,
   colors: { background: '#101722', border: '#75d7ff', text: '#eff9ff', muted: '#9ab0bd', selected: '#1f5d78' }

@@ -63,7 +63,7 @@ assert.equal(createdImages.at(-1).src, '/svg/controllers_en.svg');
 assert.equal(english.panel.getViewState(), 'MENU');
 assert.equal(english.panel.getSelectedIndex(), 0);
 assert.equal(english.panel.getActiveSectionId(), null, 'first tab is not opened automatically');
-assert.equal(english.panel.object.position.x, 0.49);
+assert.equal(english.panel.object.position.x, 0.29);
 assert.ok(Math.abs(english.panel.object.rotation.x - (-52 * Math.PI / 180)) < 1e-12);
 pulse(english, 'togglePlayerGuidePanel');
 assert.equal(english.panel.isOpen(), true);

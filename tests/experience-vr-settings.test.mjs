@@ -11,8 +11,16 @@ assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.glyphInteraction.holdDurationSeconds
 assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.glyphInteraction.holdLostGraceSeconds, 0.15);
 assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.controllers.rayLength, 2.3);
 assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.controllers.rayDiameter, 0.01);
-assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.playerGuidePanel.position.x, 0.49);
+assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.playerGuidePanel.position.x, 0.29);
 assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.playerGuidePanel.rotationDegrees.x, -52);
+assert.deepEqual(DEFAULT_EXPERIENCE_VR_SETTINGS.monkeyGuide.attention.radii, [0.08, 0.125, 0.17]);
+assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.monkeyGuide.attention.thickness, 0.009);
+assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.monkeyGuide.attention.verticalGap, 0.055);
+assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.monkeyGuide.message.position.y, 1.96);
+assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.monkeyGuide.dialogue.position.z, 0.60);
+assert.deepEqual(DEFAULT_EXPERIENCE_VR_SETTINGS.monkeyGuide.dialogue.rotationDegrees, { x: -7.5, y: 0, z: 0 });
+assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.monkeyGuide.colors.messagePanel, '#ffbd83');
+assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.monkeyGuide.colors.dialoguePanel, '#ffaa63');
 assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.targetHalo.thicknessPixels, 3);
 assert.deepEqual(DEFAULT_EXPERIENCE_VR_SETTINGS.furnace.optionButton.halo,
   { opacity: 0.52, thicknessPixels: 5, pulseDuration: 1.1 });
@@ -98,6 +106,14 @@ assert.deepEqual(normalized.crystals, {
   holdRotationDegrees: { x: -30, y: 5, z: 0 }
 });
 assert.equal('ignored' in normalized, false);
+
+const normalizedGuide = normalizeExperienceVrSettings({ schemaVersion: 1, monkeyGuide: {
+  dialogue: { rotationDegrees: { x: 4, y: 'bad', z: -2 } },
+  colors: { panel: '#123456' }
+} }).monkeyGuide;
+assert.deepEqual(normalizedGuide.dialogue.rotationDegrees, { x: 4, y: 0, z: -2 });
+assert.equal(normalizedGuide.colors.messagePanel, '#123456', 'legacy panel color remains a safe message fallback');
+assert.equal(normalizedGuide.colors.dialoguePanel, '#123456', 'legacy panel color remains a safe dialogue fallback');
 
 const server = await loadExperienceVrSettings({
   fetchImpl: async () => ({ ok: true, json: async () => ({ ...DEFAULT_EXPERIENCE_VR_SETTINGS, worldScale: 1.25 }) })
