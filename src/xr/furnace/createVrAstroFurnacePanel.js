@@ -4,6 +4,8 @@ import { drawFurnaceFrame } from './drawVrFurnaceFrame.js';
 import { resolveProcessTelemetry, shouldRefreshTelemetry } from './vrFurnaceTelemetry.js';
 import { ASTERION_SHELL_PATCHES } from './asterionShellPatchData.js';
 import { assemblySegmentVisible, createAsterionPatchGeometry, resolvePatchVisualStates } from './asterionSphereWireframe.js';
+import { drawMaterialCardVisual } from './drawVrMaterialCard.js';
+import { resolveAttractorShellGlyph } from '../tools/vrAttractorShellGlyphs.js';
 
 export const ASTRO_FURNACE_PANEL_STATES = Object.freeze({
   HIDDEN: 'HIDDEN', APPEARING: 'APPEARING', VISIBLE: 'VISIBLE', DISAPPEARING: 'DISAPPEARING'
@@ -50,6 +52,13 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
     scaleMultiplier: config.spherePatchVisualScaleMultiplier
   });
   const patchDataByAssetId = Object.fromEntries(ASTERION_SHELL_PATCHES.map((patch) => [patch.assetId, patch]));
+  const shellGlyphImages = Object.fromEntries(ASTERION_SHELL_PATCHES.map(({ assetId }) => {
+    const glyph = resolveAttractorShellGlyph(assetId);
+    const image = new Image();
+    image.onload = () => { if (!disposed) draw(); };
+    if (glyph) image.src = glyph.url;
+    return [assetId, image];
+  }));
 
   function panelRect(x, y, width, height, options = {}) {
     drawFurnaceFrame(context, { x, y, width, height, cornerSize: options.cornerSize ?? config.frameCornerSizePx, ...options });
@@ -84,9 +93,9 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
       const col = index % 3, row = Math.floor(index / 3), x = 90 + col * 455, y = 270 + row * 175;
       const processing = shell.assetId === currentAssetId && !shell.absorbed && ['CONSUMING', 'CONSUMED'].includes(currentState);
       panelRect(x, y, 405, 145, { active: shell.absorbed || processing, completed: shell.absorbed, accentColor: shell.absorbed ? accents.asterion : processing ? accents.process : accents.idle });
-      text(`SKORUPA ${String(index + 1).padStart(2, '0')}`, x + 30, y + 45, 24);
-      drawShellMiniature(patchDataByAssetId[shell.assetId], x + 202, y + 82, 65, shell.absorbed ? accents.complete : processing ? accents.process : accents.idle, shell.absorbed || processing);
-      text(shell.absorbed ? 'ZGROMADZONA' : processing ? 'W PROCESIE' : 'BRAK', x + 30, y + 122, 21, shell.absorbed ? '#c7f5ff' : processing ? accents.process : '#6e8997');
+      const color = shell.absorbed ? accents.complete : processing ? accents.process : accents.idle;
+      drawMaterialCardVisual(context, { x, y, width: 405, height: 145, glyphImage: shellGlyphImages[shell.assetId], color,
+        drawPreview: ({ cx, cy, scale }) => drawShellMiniature(patchDataByAssetId[shell.assetId], cx, cy, scale, color, shell.absorbed || processing) });
     });
     drawProcessMonitor();
   }
@@ -119,9 +128,9 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
       text(`${Math.round(telemetry.extractionProgress * 100)}%`, barX + barWidth + 18, barY + 17, 20, '#b9dce8');
     }
     drawAsterionPreview(progressSnapshot(), telemetry, x + 855, y + 150, 118);
-    const contentState = contentSource?.getState?.() ?? 'EMPTY'; const assetId = contentSource?.getInsertedShellAssetId?.();
+    const contentState = contentSource?.getState?.() ?? 'EMPTY';
     const contentLabels = { INSERTED: 'GOTOWY', CONSUMING: 'ABSORPCJA', CONSUMED: 'ZABEZPIECZONO' };
-    if (contentLabels[contentState]) { context.textAlign = 'right'; text(`MATERIAŁ // ${contentLabels[contentState]}${assetId ? `  ${assetId.replace('shell-relic-', 'SKORUPA ')}` : ''}`, x + width - 28, y + 267, 19, '#88b8cf'); context.textAlign = 'left'; }
+    if (contentLabels[contentState]) { context.textAlign = 'right'; text(`MATERIAŁ // ${contentLabels[contentState]}`, x + width - 28, y + 267, 19, '#88b8cf'); context.textAlign = 'left'; }
   }
   function drawInsertedShellWireframe(telemetry, cx, cy, scale) {
     const data = contentSource?.getInsertedShellWireframe?.();
