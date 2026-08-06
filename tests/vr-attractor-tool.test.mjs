@@ -4,17 +4,30 @@ import { createVrSemanticInput, XR_STANDARD_BUTTONS } from '../src/xr/input/crea
 import { createVrAttractorTool, VR_ATTRACTOR_STATES, VR_ATTRACTOR_VISUAL_CONFIG, MODEL_AIM_AXIS,
   XR_AIM_AXIS, blenderRpmToThree } from '../src/xr/tools/createVrAttractorTool.js';
 import { createVrHandModeController } from '../src/xr/input/createVrHandModeController.js';
+import { resolveAttractorShellGlyph, VR_ATTRACTOR_SHELL_GLYPHS } from '../src/xr/tools/vrAttractorShellGlyphs.js';
 
 function createTestCanvas() {
   const calls = [];
   const context = {
-    calls, clearRect() {}, fillRect() {}, fillText(...args) { calls.push(args); },
+    calls, clearRect() {}, fillRect() {}, fillText(...args) { calls.push(['text', ...args]); },
+    drawImage(...args) { calls.push(['image', ...args]); },
     fillStyle: '', globalAlpha: 1, textAlign: '', textBaseline: '', font: ''
   };
   return { width: 0, height: 0, context, getContext: (type) => type === '2d' ? context : null };
 }
 
 globalThis.document = { createElement: (tag) => tag === 'canvas' ? createTestCanvas() : null };
+
+{
+  const expected = [['shell_01', 'RO'], ['shell_02', 'KO'], ['shell_03', 'LO'], ['shell_04', 'SO'],
+    ['shell_05', 'TO'], ['shell_06', 'VO']];
+  assert.deepEqual(Object.entries(VR_ATTRACTOR_SHELL_GLYPHS).map(([shell, glyph]) => [shell, glyph.syllable]), expected);
+  expected.forEach(([identity, syllable], index) => {
+    const glyph = resolveAttractorShellGlyph({ userData: { shellAssetId: `shell-relic-${index + 1}` } });
+    assert.equal(glyph.identity, identity); assert.equal(glyph.syllable, syllable);
+    assert.match(glyph.url, new RegExp(`/svg/${syllable}\\.svg$`));
+  });
+}
 
 function makeButton(value = 0) { return { value, pressed: value > 0.5 }; }
 
@@ -139,13 +152,17 @@ function createContractModel({ degenerateFuelPoints = false, unusableDebugElemen
     const panel = source.getObjectByName(`glyph_panel_0${index + 1}`);
     return { panel, geometry: panel.geometry, position: panel.position.clone(), quaternion: panel.quaternion.clone(), scale: panel.scale.clone() };
   });
-  const tool = createVrAttractorTool({ model: source, logger: { warn() {} } });
+  let imageLoadCount = 0;
+  const tool = createVrAttractorTool({ model: source, logger: { warn() {} }, imageFactory: () => {
+    imageLoadCount += 1;
+    return { naturalWidth: 120, naturalHeight: 240, set src(value) { this.currentSrc = value; this.onload(); } };
+  } });
   const panelRecords = tool.panelSystem.panels;
   assert.equal(panelRecords.length, 4);
   assert.equal(new Set(panelRecords.map(({ canvas }) => canvas)).size, 4, 'each panel owns a canvas');
   assert.equal(new Set(panelRecords.map(({ texture }) => texture)).size, 4, 'each panel owns a CanvasTexture');
   assert.equal(new Set(panelRecords.map(({ material }) => material)).size, 4, 'each panel owns a screen material');
-  assert.deepEqual(panelRecords.map(({ content }) => content), ['01', '02', '03', '04']);
+  assert.deepEqual(panelRecords.map(({ content }) => content), ['', '02', '03', '04']);
   assert.deepEqual([panelRecords[0].canvas.width, panelRecords[0].canvas.height], [512, 256],
     'Blender panel aspect extras determine canvas proportions');
   panelTransforms.forEach(({ panel, geometry, position, quaternion, scale }) => {
@@ -164,6 +181,28 @@ function createContractModel({ degenerateFuelPoints = false, unusableDebugElemen
   assert.equal(panelRecords[0].content, 'A');
   assert.deepEqual(panelRecords.slice(1).map(({ context }) => context.calls.length), untouchedDrawCounts,
     'updating panel 1 does not redraw panels 2-4');
+  const secondaryDrawCounts = panelRecords.slice(1).map(({ context }) => context.calls.length);
+  tool.setTarget({ target: { userData: { shellAssetId: 'shell-relic-1' } }, proximity: 0.4 });
+  await Promise.resolve();
+  assert.equal(imageLoadCount, 1); assert.match(panelRecords[0].glyph.currentSrc, /\/svg\/RO\.svg$/);
+  const imageCall = panelRecords[0].context.calls.at(-1);
+  assert.equal(imageCall[0], 'image');
+  assert.ok(Math.abs(imageCall[2] - 202.24) < 1e-9 && Math.abs(imageCall[3] - 20.48) < 1e-9
+    && Math.abs(imageCall[4] - 107.52) < 1e-9 && Math.abs(imageCall[5] - 215.04) < 1e-9,
+  'the RO SVG is aspect-fitted, centered, and rendered with a safe margin');
+  tool.setState(VR_ATTRACTOR_STATES.TARGETING); tool.setGlyphPanelState('target-valid');
+  tool.setState(VR_ATTRACTOR_STATES.PULLING); tool.setGlyphPanelState('pulling');
+  assert.ok(panelRecords[0].glyph, 'visual state changes preserve the current target glyph');
+  tool.setTarget({ target: { userData: { shellAssetId: 'shell-relic-1' } }, proximity: 0.8 });
+  await Promise.resolve(); assert.equal(imageLoadCount, 1, 'repeated target updates reuse the cached SVG');
+  tool.setTarget({ target: { userData: { shellAssetId: 'shell-relic-2' } } });
+  await Promise.resolve(); assert.equal(imageLoadCount, 2); assert.match(panelRecords[0].glyph.currentSrc, /\/svg\/KO\.svg$/);
+  assert.deepEqual(panelRecords.slice(1).map(({ context }) => context.calls.length), secondaryDrawCounts.map((count) => count + 2),
+    'only visual-state broadcasts, not target changes, redraw panels 2-4');
+  tool.setTarget(null); assert.equal(panelRecords[0].glyph, null); assert.equal(panelRecords[0].content, '');
+  tool.setTarget({ target: { userData: { shellAssetId: 'shell-relic-1' } } }); await Promise.resolve();
+  tool.setEquipped(false); assert.equal(panelRecords[0].glyph, null, 'unequip clears the previous target glyph');
+  tool.setEquipped(true);
   const canvasMaterials = panelRecords.map(({ material }) => material);
   tool.setGlyphPanelState('pulling');
   assert.deepEqual(panelRecords.map(({ panel }) => panel.material), canvasMaterials,
@@ -208,8 +247,8 @@ function createContractModel({ degenerateFuelPoints = false, unusableDebugElemen
   assert.equal(tool.getState(), VR_ATTRACTOR_STATES.UNEQUIPPED);
   assert.equal(tool.object.visible, false);
   assert.equal(tool.getInnerRPM(), 0);
-  assert.deepEqual(panelRecords.map(({ content }) => content), ['01', '02', '03', '04'],
-    'reset deterministically restores the technical labels');
+  assert.deepEqual(panelRecords.map(({ content }) => content), ['', '02', '03', '04'],
+    'reset clears panel 1 while restoring the remaining technical labels');
   pivots.forEach((pivot) => { pivot.position.set(9, 8, 7); pivot.quaternion.identity(); pivot.scale.set(3, 4, 5); });
   tool.reset();
   pivots.forEach((pivot, index) => {
@@ -230,6 +269,7 @@ function createContractModel({ degenerateFuelPoints = false, unusableDebugElemen
   assert.equal(disposedTextures.length, 4);
   assert.equal(disposedPanelMaterials.length, 4);
   assert.ok(panelRecords.every(({ canvas }) => canvas.width === 0 && canvas.height === 0));
+  assert.equal(tool.panelSystem.glyphImages.size, 0, 'dispose releases the glyph image cache');
 }
 
 {
