@@ -5,6 +5,17 @@ import { createVrAttractorTool, VR_ATTRACTOR_STATES, VR_ATTRACTOR_VISUAL_CONFIG,
   XR_AIM_AXIS, blenderRpmToThree } from '../src/xr/tools/createVrAttractorTool.js';
 import { createVrHandModeController } from '../src/xr/input/createVrHandModeController.js';
 
+function createTestCanvas() {
+  const calls = [];
+  const context = {
+    calls, clearRect() {}, fillRect() {}, fillText(...args) { calls.push(args); },
+    fillStyle: '', globalAlpha: 1, textAlign: '', textBaseline: '', font: ''
+  };
+  return { width: 0, height: 0, context, getContext: (type) => type === '2d' ? context : null };
+}
+
+globalThis.document = { createElement: (tag) => tag === 'canvas' ? createTestCanvas() : null };
+
 function makeButton(value = 0) { return { value, pressed: value > 0.5 }; }
 
 {
@@ -42,6 +53,13 @@ function createContractModel({ degenerateFuelPoints = false, unusableDebugElemen
   const energyCell = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshStandardMaterial());
   energyCell.name = 'energy_cell';
   root.add(energyCell);
+  for (let index = 1; index <= 4; index += 1) {
+    const panel = new THREE.Mesh(new THREE.PlaneGeometry(0.12 * index, 0.06), new THREE.MeshStandardMaterial());
+    panel.name = `glyph_panel_0${index}`;
+    if (index === 1) panel.userData = { vr_panel_width_m: 0.2, vr_panel_height_m: 0.1, vr_panel_aspect: 2 };
+    panel.position.set(index * 0.01, index * 0.02, index * -0.01);
+    root.add(panel);
+  }
   for (const element of ['EARTH', 'FIRE', 'TREE', 'METAL', 'WATER']) {
     const path = new THREE.Group();
     path.name = `VR_FUEL_${element}_PATH`;
@@ -100,6 +118,10 @@ function createContractModel({ degenerateFuelPoints = false, unusableDebugElemen
     assert.throws(() => createVrAttractorTool({ model: invalidModel, logger: { warn() {} } }),
       new RegExp(`missing required nodes:.*${requiredPivot}`), `${requiredPivot} is required by the GLB contract`);
   }
+  const missingPanelModel = createContractModel();
+  missingPanelModel.getObjectByName('glyph_panel_03').removeFromParent();
+  assert.throws(() => createVrAttractorTool({ model: missingPanelModel, logger: { warn() {} } }),
+    /missing required nodes:.*glyph_panel_03/, 'all four glyph panels are required by the new GLB contract');
 
   assert.deepEqual(blenderRpmToThree({ x: 17, y: -31, z: 43 }), { x: 17, y: 43, z: 31 });
   const source = createContractModel();
@@ -113,7 +135,39 @@ function createContractModel({ degenerateFuelPoints = false, unusableDebugElemen
   });
   const energyCell = source.getObjectByName('energy_cell');
   const sourceMaterial = energyCell.material;
+  const panelTransforms = Array.from({ length: 4 }, (_, index) => {
+    const panel = source.getObjectByName(`glyph_panel_0${index + 1}`);
+    return { panel, geometry: panel.geometry, position: panel.position.clone(), quaternion: panel.quaternion.clone(), scale: panel.scale.clone() };
+  });
   const tool = createVrAttractorTool({ model: source, logger: { warn() {} } });
+  const panelRecords = tool.panelSystem.panels;
+  assert.equal(panelRecords.length, 4);
+  assert.equal(new Set(panelRecords.map(({ canvas }) => canvas)).size, 4, 'each panel owns a canvas');
+  assert.equal(new Set(panelRecords.map(({ texture }) => texture)).size, 4, 'each panel owns a CanvasTexture');
+  assert.equal(new Set(panelRecords.map(({ material }) => material)).size, 4, 'each panel owns a screen material');
+  assert.deepEqual(panelRecords.map(({ content }) => content), ['01', '02', '03', '04']);
+  assert.deepEqual([panelRecords[0].canvas.width, panelRecords[0].canvas.height], [512, 256],
+    'Blender panel aspect extras determine canvas proportions');
+  panelTransforms.forEach(({ panel, geometry, position, quaternion, scale }) => {
+    assert.equal(panel.geometry, geometry, 'the authored panel geometry is reused');
+    assert.ok(panel.position.equals(position) && panel.quaternion.equals(quaternion) && panel.scale.equals(scale),
+      'the authored panel transform is unchanged');
+  });
+  panelRecords.forEach(({ panel, material, texture }) => {
+    assert.equal(panel.material, material);
+    assert.equal(material.map, texture);
+    assert.equal(material.depthTest, true); assert.equal(material.depthWrite, false);
+    assert.equal(texture.colorSpace, THREE.SRGBColorSpace);
+  });
+  const untouchedDrawCounts = panelRecords.slice(1).map(({ context }) => context.calls.length);
+  tool.panelSystem.setPanelContent(0, 'A');
+  assert.equal(panelRecords[0].content, 'A');
+  assert.deepEqual(panelRecords.slice(1).map(({ context }) => context.calls.length), untouchedDrawCounts,
+    'updating panel 1 does not redraw panels 2-4');
+  const canvasMaterials = panelRecords.map(({ material }) => material);
+  tool.setGlyphPanelState('pulling');
+  assert.deepEqual(panelRecords.map(({ panel }) => panel.material), canvasMaterials,
+    'state feedback preserves all CanvasTexture materials');
   const initialTransforms = pivots.map((pivot) => ({
     position: pivot.position.clone(), quaternion: pivot.quaternion.clone(), scale: pivot.scale.clone()
   }));
@@ -154,6 +208,8 @@ function createContractModel({ degenerateFuelPoints = false, unusableDebugElemen
   assert.equal(tool.getState(), VR_ATTRACTOR_STATES.UNEQUIPPED);
   assert.equal(tool.object.visible, false);
   assert.equal(tool.getInnerRPM(), 0);
+  assert.deepEqual(panelRecords.map(({ content }) => content), ['01', '02', '03', '04'],
+    'reset deterministically restores the technical labels');
   pivots.forEach((pivot) => { pivot.position.set(9, 8, 7); pivot.quaternion.identity(); pivot.scale.set(3, 4, 5); });
   tool.reset();
   pivots.forEach((pivot, index) => {
@@ -164,7 +220,16 @@ function createContractModel({ degenerateFuelPoints = false, unusableDebugElemen
     assert.ok(pivot.scale.distanceTo(initialTransforms[index].scale) < 1e-7,
       `${pivot.name} reset restores its imported local scale`);
   });
+  const disposedTextures = [];
+  const disposedPanelMaterials = [];
+  panelRecords.forEach(({ texture, material }) => {
+    texture.dispose = () => disposedTextures.push(texture);
+    material.dispose = () => disposedPanelMaterials.push(material);
+  });
   tool.dispose();
+  assert.equal(disposedTextures.length, 4);
+  assert.equal(disposedPanelMaterials.length, 4);
+  assert.ok(panelRecords.every(({ canvas }) => canvas.width === 0 && canvas.height === 0));
 }
 
 {

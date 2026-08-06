@@ -1,4 +1,5 @@
 import * as THREE from '../../vendor/three.js';
+import { createVrAttractorPanelSystem, VR_ATTRACTOR_PANEL_NAMES } from './createVrAttractorPanelSystem.js';
 
 export const VR_ATTRACTOR_STATES = Object.freeze({
   UNEQUIPPED: 'UNEQUIPPED', IDLE: 'IDLE', TARGETING: 'TARGETING', PULLING: 'PULLING', CAPTURED: 'CAPTURED'
@@ -43,6 +44,7 @@ const REQUIRED_NODES = Object.freeze([
   'PIVOT_BASE_MOLEKULAR', 'base_molekular', 'PIVOT_RING_CALIBRATION', 'Ring_calibration',
   'PIVOT_RING_MASTER', 'Ring_Master', 'PIVOT_RING_INNER', 'Ring_inner',
   'PIVOT_ENERGY_SHELL', 'energy_shell', 'energy_cell',
+  ...VR_ATTRACTOR_PANEL_NAMES,
   ...Object.values(VR_ATTRACTOR_VISUAL_CONFIG.fuel).map(({ path }) => path)
 ]);
 
@@ -90,14 +92,14 @@ function debugFuelControlPoints(debugMesh, root, targetCount = 12) {
   return controls;
 }
 
-export function createVrAttractorTool({ model, config = VR_ATTRACTOR_VISUAL_CONFIG, logger = console }) {
+export function createVrAttractorTool({ model, config = VR_ATTRACTOR_VISUAL_CONFIG, logger = console, canvasFactory }) {
   if (!model) throw new Error('[VrAttractor] Cached astro_grabber GLB instance is required.');
   const missing = REQUIRED_NODES.filter((name) => !model.getObjectByName(name));
   if (missing.length) throw new Error(`[VrAttractor] Invalid astro_grabber.glb; missing required nodes: ${missing.join(', ')}`);
 
   const nodes = Object.fromEntries(REQUIRED_NODES.map((name) => [name, model.getObjectByName(name)]));
   const energyCellAnchor = model.getObjectByName('VR_ENERGY_CELL_ANCHOR') ?? null;
-  const glyphPanels = [1, 2, 3, 4].map((index) => model.getObjectByName(`glyph_panel_0${index}`)).filter(Boolean);
+  const glyphPanels = VR_ATTRACTOR_PANEL_NAMES.map((name) => nodes[name]);
   const aimRoot = new THREE.Group();
   aimRoot.name = 'VrAttractorAimRoot';
   aimRoot.position.fromArray(config.aimOffset);
@@ -156,8 +158,7 @@ export function createVrAttractorTool({ model, config = VR_ATTRACTOR_VISUAL_CONF
   });
   cloneMaterials(nodes.energy_cell);
 
-  if (glyphPanels.length !== 4) logger.warn('[VrAttractor] Optional glyph_panel_01..04 are absent; glyph visuals are disabled.');
-  else glyphPanels.forEach(cloneMaterials);
+  const panelSystem = createVrAttractorPanelSystem({ panels: glyphPanels, canvasFactory });
 
   const energyMaterials = [];
   nodes.energy_cell.traverse((child) => {
@@ -214,18 +215,7 @@ export function createVrAttractorTool({ model, config = VR_ATTRACTOR_VISUAL_CONF
   }
 
   function setGlyphPanelState(panelState = 'idle') {
-    const styles = {
-      idle: [0x6cbcff, 0.5], 'target-valid': [0x76ffac, 1.2], 'target-invalid': [0xff6b6b, 1],
-      pulling: [0xffd36b, 1.5], captured: [0xffffff, 1.8], upgrade: [0xc881ff, 1.6], 'low-energy': [0x805050, 0.25]
-    };
-    const [color, intensity] = styles[panelState] ?? styles.idle;
-    glyphPanels.forEach((panel) => panel.traverse((child) => {
-      const materials = Array.isArray(child.material) ? child.material : [child.material];
-      materials.filter(Boolean).forEach((material) => {
-        material.transparent = true; material.opacity = panelState === 'low-energy' ? 0.45 : 1;
-        material.emissive?.setHex(color); if ('emissiveIntensity' in material) material.emissiveIntensity = intensity;
-      });
-    }));
+    panelSystem.setVisualState(panelState);
   }
 
   function update(deltaSeconds) {
@@ -275,16 +265,18 @@ export function createVrAttractorTool({ model, config = VR_ATTRACTOR_VISUAL_CONF
       if (offset) pivot.position.add(new THREE.Vector3().fromArray(offset));
     });
     fuelStreams.forEach((stream) => { stream.elapsed = 0; });
+    panelSystem.reset();
   }
   function dispose() {
     if (disposed) return;
     reset(); disposed = true;
     modelScale.remove(nodes.VR_ATTRACTOR_ROOT); aimRoot.parent?.remove(aimRoot);
     fuelStreams.forEach(({ points, geometry, material }) => { points.parent?.remove(points); geometry.dispose(); material.dispose(); });
+    panelSystem.dispose();
     ownedMaterials.forEach((material) => material.dispose());
   }
 
-  return { object: aimRoot, modelScale, aimCorrection, energyCellAnchor,
+  return { object: aimRoot, modelScale, aimCorrection, energyCellAnchor, panelSystem,
     setEquipped, setUnlocked, setTrigger, setTarget, setPullStrength, setLevel, setState, setGlyphPanelState,
     attachToTargetRay, getMasterRingWorldPosition, update, reset, dispose, getState: () => state, getInnerRPM: () => innerRPM,
     diagnostics: { missingRequiredNodes: missing, glyphPanelCount: glyphPanels.length,
