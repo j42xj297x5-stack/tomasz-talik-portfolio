@@ -4,6 +4,17 @@ import { resolveFurnaceFrameLayout } from '../src/xr/furnace/drawVrFurnaceFrame.
 import { resolveProcessTelemetry, shouldRefreshTelemetry } from '../src/xr/furnace/vrFurnaceTelemetry.js';
 import { ASTRO_FURNACE_PANEL_SCREENS, ASTRO_FURNACE_PANEL_STATES, asterionPreviewAnimationActive, wireframeDissolveVisible } from '../src/xr/furnace/createVrAstroFurnacePanel.js';
 import { createVrAstroFurnaceProcessSource } from '../src/xr/furnace/createVrAstroFurnaceProcessSource.js';
+import { resolveMaterialCardLayout } from '../src/xr/furnace/drawVrMaterialCard.js';
+import { VR_ATTRACTOR_SHELL_GLYPHS } from '../src/xr/tools/vrAttractorShellGlyphs.js';
+
+assert.deepEqual(Object.entries(VR_ATTRACTOR_SHELL_GLYPHS).map(([id, glyph]) => [id, glyph.syllable, glyph.path]), [
+  ['shell_01', 'RO', 'svg/RO.svg'], ['shell_02', 'KO', 'svg/KO.svg'], ['shell_03', 'LO', 'svg/LO.svg'],
+  ['shell_04', 'SO', 'svg/SO.svg'], ['shell_05', 'TO', 'svg/TO.svg'], ['shell_06', 'VO', 'svg/VO.svg']
+]);
+const materialLayout = resolveMaterialCardLayout({ x: 10, y: 20, width: 405, height: 145 });
+assert.equal(materialLayout.glyph.width / (materialLayout.glyph.width + materialLayout.preview.width), .58);
+assert.equal(materialLayout.glyph.y, materialLayout.preview.y);
+assert.equal(materialLayout.glyph.height, materialLayout.preview.height);
 
 const wide = resolveFurnaceFrameLayout({ width: 400, height: 100, cornerSize: 28 });
 const tall = resolveFurnaceFrameLayout({ width: 100, height: 400, cornerSize: 28 });
@@ -47,6 +58,9 @@ assert.doesNotMatch(panelSource, /resolveAsciiFrame|PROCESS_ASCII|buildProgressB
 assert.match(panelSource, /drawAsterionPreview/); assert.doesNotMatch(panelSource, /context\.ellipse/);
 assert.equal(panelSource.match(/context\.arc/g)?.length, 1);
 assert.match(panelSource, /patchGeometryByAssetId/); assert.match(panelSource, /patch\.segments2d\.forEach/);
+assert.match(panelSource, /drawMaterialCardVisual/);
+assert.doesNotMatch(panelSource, /SKORUPA \$\{String\(index/);
+assert.doesNotMatch(panelSource, /assetId\.replace\('shell-relic-'/);
 assert.match(panelSource, /spherePatchVisualScaleMultiplier: 1\.10/);
 assert.match(panelSource, /states\[id\]\?\.committed/); assert.doesNotMatch(panelSource, /segment < progress\.absorbed/);
 assert.match(panelSource, /getInsertedShellWireframe/); assert.doesNotMatch(panelSource, /for \(let ring = 0; ring < 4/);
