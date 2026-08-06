@@ -4,7 +4,7 @@ export const VR_ATTRACTOR_PANEL_NAMES = Object.freeze(
   Array.from({ length: 4 }, (_, index) => `glyph_panel_0${index + 1}`)
 );
 
-const DEFAULT_CONTENTS = Object.freeze(['01', '02', '03', '04']);
+const DEFAULT_CONTENTS = Object.freeze(['', '02', '03', '04']);
 const MAX_CANVAS_EDGE = 512;
 const STATE_STYLES = Object.freeze({
   idle: { accent: '#8fd8ff', brightness: 1 },
@@ -38,7 +38,7 @@ function canvasSize(aspect) {
     : { width: Math.max(1, Math.round(MAX_CANVAS_EDGE * aspect)), height: MAX_CANVAS_EDGE };
 }
 
-export function createVrAttractorPanelSystem({ panels, canvasFactory } = {}) {
+export function createVrAttractorPanelSystem({ panels, canvasFactory, imageFactory } = {}) {
   if (!Array.isArray(panels) || panels.length !== VR_ATTRACTOR_PANEL_NAMES.length) {
     throw new Error('[VrAttractorPanels] Exactly four authored glyph panels are required.');
   }
@@ -63,14 +63,39 @@ export function createVrAttractorPanelSystem({ panels, canvasFactory } = {}) {
       depthTest: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 });
     const originalMaterial = panel.material;
     panel.material = material;
-    return { panel, canvas, context, texture, material, originalMaterial, content: DEFAULT_CONTENTS[index] };
+    return { panel, canvas, context, texture, material, originalMaterial, content: DEFAULT_CONTENTS[index], glyph: null };
   });
+
+  const glyphImages = new Map();
+
+  function loadGlyph(url) {
+    if (glyphImages.has(url)) return glyphImages.get(url);
+    const image = imageFactory ? imageFactory() : new Image();
+    const pending = new Promise((resolve, reject) => {
+      image.onload = () => resolve(image);
+      image.onerror = () => reject(new Error(`[VrAttractorPanels] Could not load glyph: ${url}`));
+      image.src = url;
+    });
+    glyphImages.set(url, pending);
+    return pending;
+  }
 
   function draw(record) {
     const { canvas, context, texture } = record;
     const style = STATE_STYLES[state] ?? STATE_STYLES.idle;
     context.clearRect(0, 0, canvas.width, canvas.height);
     context.fillStyle = '#071019'; context.fillRect(0, 0, canvas.width, canvas.height);
+    if (record.glyph) {
+      const margin = Math.min(canvas.width, canvas.height) * 0.08;
+      const availableWidth = canvas.width - margin * 2, availableHeight = canvas.height - margin * 2;
+      const width = positiveNumber(record.glyph.naturalWidth) ?? positiveNumber(record.glyph.width) ?? 1;
+      const height = positiveNumber(record.glyph.naturalHeight) ?? positiveNumber(record.glyph.height) ?? 1;
+      const scale = Math.min(availableWidth / width, availableHeight / height);
+      context.globalAlpha = style.brightness;
+      context.drawImage(record.glyph, (canvas.width - width * scale) / 2, (canvas.height - height * scale) / 2,
+        width * scale, height * scale);
+      context.globalAlpha = 1; texture.needsUpdate = true; return;
+    }
     context.globalAlpha = style.brightness; context.fillStyle = style.accent;
     context.textAlign = 'center'; context.textBaseline = 'middle';
     context.font = `600 ${Math.round(Math.min(canvas.width, canvas.height) * 0.46)}px system-ui, sans-serif`;
@@ -78,11 +103,24 @@ export function createVrAttractorPanelSystem({ panels, canvasFactory } = {}) {
     context.globalAlpha = 1; texture.needsUpdate = true;
   }
 
+  async function setPrimaryGlyph(url) {
+    if (disposed) return false;
+    const record = records[0];
+    if (url && record.requestedGlyphUrl === url && record.glyph) return true;
+    record.requestedGlyphUrl = url ?? null;
+    record.content = ''; record.glyph = null; draw(record);
+    if (!url) return true;
+    const requestedUrl = url;
+    const image = await loadGlyph(url);
+    if (disposed || record.requestedGlyphUrl !== requestedUrl) return false;
+    record.glyph = image; draw(record); return true;
+  }
+
   function setPanelContent(index, content) {
     if (disposed) return false;
     const record = records[index];
     if (!record) throw new RangeError(`[VrAttractorPanels] Panel index ${index} is outside 0..3.`);
-    record.content = String(content ?? ''); draw(record); return true;
+    record.content = String(content ?? ''); record.glyph = null; draw(record); return true;
   }
   function setPanelContents(contents) {
     if (!Array.isArray(contents)) throw new TypeError('[VrAttractorPanels] Panel contents must be an array.');
@@ -94,7 +132,8 @@ export function createVrAttractorPanelSystem({ panels, canvasFactory } = {}) {
   }
   function reset() {
     if (disposed) return;
-    state = 'idle'; records.forEach((record, index) => { record.content = DEFAULT_CONTENTS[index]; draw(record); });
+    state = 'idle'; records.forEach((record, index) => { record.content = DEFAULT_CONTENTS[index]; record.glyph = null;
+      record.requestedGlyphUrl = null; draw(record); });
   }
   function dispose() {
     if (disposed) return;
@@ -104,9 +143,11 @@ export function createVrAttractorPanelSystem({ panels, canvasFactory } = {}) {
       record.context.clearRect(0, 0, record.canvas.width, record.canvas.height);
       record.canvas.width = 0; record.canvas.height = 0;
     });
+    glyphImages.clear();
     disposed = true;
   }
 
   reset();
-  return { panels: records, setPanelContent, setPanelContents, setVisualState, reset, dispose };
+  return { panels: records, setPanelContent, setPanelContents, setPrimaryGlyph, setVisualState, reset, dispose,
+    glyphImages };
 }

@@ -1,5 +1,6 @@
 import * as THREE from '../../vendor/three.js';
 import { createVrAttractorPanelSystem, VR_ATTRACTOR_PANEL_NAMES } from './createVrAttractorPanelSystem.js';
+import { resolveAttractorShellGlyph } from './vrAttractorShellGlyphs.js';
 
 export const VR_ATTRACTOR_STATES = Object.freeze({
   UNEQUIPPED: 'UNEQUIPPED', IDLE: 'IDLE', TARGETING: 'TARGETING', PULLING: 'PULLING', CAPTURED: 'CAPTURED'
@@ -92,7 +93,7 @@ function debugFuelControlPoints(debugMesh, root, targetCount = 12) {
   return controls;
 }
 
-export function createVrAttractorTool({ model, config = VR_ATTRACTOR_VISUAL_CONFIG, logger = console, canvasFactory }) {
+export function createVrAttractorTool({ model, config = VR_ATTRACTOR_VISUAL_CONFIG, logger = console, canvasFactory, imageFactory }) {
   if (!model) throw new Error('[VrAttractor] Cached astro_grabber GLB instance is required.');
   const missing = REQUIRED_NODES.filter((name) => !model.getObjectByName(name));
   if (missing.length) throw new Error(`[VrAttractor] Invalid astro_grabber.glb; missing required nodes: ${missing.join(', ')}`);
@@ -158,7 +159,7 @@ export function createVrAttractorTool({ model, config = VR_ATTRACTOR_VISUAL_CONF
   });
   cloneMaterials(nodes.energy_cell);
 
-  const panelSystem = createVrAttractorPanelSystem({ panels: glyphPanels, canvasFactory });
+  const panelSystem = createVrAttractorPanelSystem({ panels: glyphPanels, canvasFactory, imageFactory });
 
   const energyMaterials = [];
   nodes.energy_cell.traverse((child) => {
@@ -197,16 +198,22 @@ export function createVrAttractorTool({ model, config = VR_ATTRACTOR_VISUAL_CONF
     const shouldEquip = Boolean(equipped) && unlocked;
     state = shouldEquip ? VR_ATTRACTOR_STATES.IDLE : VR_ATTRACTOR_STATES.UNEQUIPPED;
     aimRoot.visible = shouldEquip;
+    if (!shouldEquip) setTarget(null);
   }
   function setUnlocked(value) { unlocked = Boolean(value); if (!unlocked) setEquipped(false); }
   function setTrigger(value) { trigger = clamp01(value); }
-  function setTarget(value) { target = value ?? null; targetProximity = clamp01(value?.proximity); }
+  function setTarget(value) {
+    target = value ?? null; targetProximity = clamp01(value?.proximity);
+    const glyph = resolveAttractorShellGlyph(value?.target ?? value);
+    panelSystem.setPrimaryGlyph(glyph?.url ?? null).catch((error) => logger.warn(error.message));
+  }
   function setPullStrength(value) { pullStrength = clamp01(value); }
   function setLevel(value) { level = Math.max(0, Number.isFinite(value) ? value : 0); }
   function setState(value) {
     if (!Object.values(VR_ATTRACTOR_STATES).includes(value)) throw new Error(`[VrAttractor] Unknown state: ${value}`);
     state = value;
     aimRoot.visible = value !== VR_ATTRACTOR_STATES.UNEQUIPPED;
+    if (value === VR_ATTRACTOR_STATES.UNEQUIPPED) setTarget(null);
   }
   // Astro never generates an independent ray: the target-ray controller and its local -Z are authoritative.
   function attachToTargetRay(controller) { if (controller && aimRoot.parent !== controller) controller.add(aimRoot); }
