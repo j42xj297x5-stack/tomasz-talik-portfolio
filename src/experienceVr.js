@@ -39,6 +39,7 @@ import { createVrAstroFurnaceContentInteraction } from './xr/furnace/createVrAst
 import { createVrAsterionSphere } from './xr/asterion/createVrAsterionSphere.js';
 import { createVrAsterionGyroInteraction } from './xr/asterion/createVrAsterionGyroInteraction.js';
 import { createVrPlayerGuidePanel } from './xr/guidance/createVrPlayerGuidePanel.js';
+import { createVrMonkeyGuide } from './xr/guidance/createVrMonkeyGuide.js';
 import { experienceVrPages, getExperienceVrPages, resolveExperienceVrPage } from './content/experienceVrPages.js';
 
 const app = document.querySelector('#app');
@@ -238,6 +239,16 @@ const playerGuidePanel = createVrPlayerGuidePanel({
   locale: language,
   settings: settings.playerGuidePanel
 });
+const monkeyGuide = createVrMonkeyGuide({
+  monkeyAnchor,
+  controllers: vrControllers.controllers,
+  progressionController,
+  locale: language,
+  settings: settings.monkeyGuide,
+  isOrdinaryRayAvailable: (record) => !(record.handedness === 'right'
+    && handModeController.getRightMode() === 'ASTRO_ATTRACTOR')
+    && !(asterionSphereQa && asterionSphere.isEquipped() && record.handedness === 'left')
+});
 let astroFurnaceActivateInteraction = null;
 let astroFurnaceContentInteraction = null;
 let astroFurnaceOptionInteraction = null;
@@ -305,6 +316,7 @@ const crystalCollection = createVrCrystalCollection({
     if (astroFurnaceOpenInteraction.hasCurrentHit(record)) return false;
     if (astroFurnaceActivateInteraction.hasCurrentHit(record)) return false;
     if (astroFurnaceOptionInteraction.hasCurrentHit(record) || furnacePanel.hasCurrentHit(record)) return false;
+    if (monkeyGuide.hasCurrentHit(record)) return false;
     if (shellAttractorInteraction?.hasCurrentShellHit(record)) return false;
     return true;
   },
@@ -313,6 +325,7 @@ const crystalCollection = createVrCrystalCollection({
     progressFloor.activatePage(page);
     if (progressionController.isTierComplete(page.order)) progressFloor.completeTier(page.order);
     syncTierOneWorldState();
+    monkeyGuide.notifyAttention();
   }
 });
 createVrProgressionShortcut({ search: location.search, pages: experienceVrPages, progressionController,
@@ -374,7 +387,7 @@ shellAttractorInteraction = createVrShellAttractorInteraction({
   isHigherPriorityInteractionActive: (record) => Boolean(activateButton.hits.get(record)
     || releaseButton.hits.get(record) || astroFurnaceOpenInteraction.hasCurrentHit(record)
     || astroFurnaceActivateInteraction.hasCurrentHit(record) || astroFurnaceOptionInteraction.hasCurrentHit(record)
-    || furnacePanel.hasCurrentHit(record) || record.currentHit)
+    || furnacePanel.hasCurrentHit(record) || monkeyGuide.hasCurrentHit(record) || record.currentHit)
 });
 
 function resize() {
@@ -397,6 +410,7 @@ function renderFrame() {
   vrControllers.beginRayHitFrame();
   handModeController.update(delta);
   playerGuidePanel.update(delta);
+  monkeyGuide.update(delta);
   locomotion.setLeftYawLocked(playerGuidePanel.isOpen());
   astroFurnace.update(delta);
   furnacePanel.update(delta);
@@ -462,6 +476,7 @@ function handleSessionEnd() {
   asterionSphere.reset();
   handModeController.reset();
   playerGuidePanel.reset();
+  monkeyGuide.reset();
   showReadyState({ ended: hasEnteredSession });
 }
 
@@ -492,6 +507,7 @@ async function enterVr() {
   asterionSphere.reset();
   handModeController.reset();
   playerGuidePanel.reset();
+  monkeyGuide.reset();
   enterButton.disabled = true;
   status.textContent = copy.entering;
   let requestedSession = null;
@@ -525,6 +541,7 @@ async function enterVr() {
     astroFurnace.reset();
     furnacePanel.reset();
     playerGuidePanel.reset();
+    monkeyGuide.reset();
     astroFurnaceOptionInteraction.reset();
     astroFurnaceOpenInteraction.reset();
     astroFurnaceActivateInteraction.reset();
@@ -557,6 +574,7 @@ window.addEventListener('pagehide', () => {
   astroFurnaceContentInteraction.dispose();
   astroFurnaceOptionInteraction.dispose();
   playerGuidePanel.dispose();
+  monkeyGuide.dispose();
   furnacePanel.dispose();
   furnaceProgressionController.dispose();
   astroFurnace.dispose();

@@ -105,6 +105,26 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
     navigationThreshold: 0.55,
     colors: { background: '#101722', border: '#75d7ff', text: '#eff9ff', muted: '#9ab0bd', selected: '#1f5d78' }
   },
+  monkeyGuide: {
+    enabled: true,
+    rayMaxDistance: 2.3,
+    colors: { accent: '#ffaa63', panel: '#ffbd83', hover: '#ffd3ac', text: '#342116', panelOpacity: 0.92 },
+    halo: { color: 0xffaa63, opacity: 0.42, thicknessPixels: 4, pulseDuration: 1.4 },
+    attention: {
+      position: { x: 0, y: 1.4, z: 0.08 }, radii: [0.16, 0.25, 0.34], thickness: 0.018,
+      verticalGap: 0.11, cycleDuration: 1.35, opacityMin: 0.12, opacityMax: 0.95, scalePulse: 0.025
+    },
+    message: {
+      position: { x: 0, y: 2.35, z: 0.08 }, width: 1.7, height: 0.72,
+      canvasWidth: 1280, canvasHeight: 540, padding: 62, cornerRadius: 64,
+      fontSize: 64, fontWeight: 600, lineHeight: 78, maxLines: 4
+    },
+    dialogue: {
+      position: { x: 0, y: -0.72, z: 0.42 }, width: 1.65, height: 0.76,
+      canvasWidth: 1280, canvasHeight: 590, padding: 42, gap: 24, cornerRadius: 58,
+      optionCornerRadius: 36, fontSize: 58, fontWeight: 700
+    }
+  },
   controllers: {
     enabled: true,
     rayLength: 2.3,
@@ -410,6 +430,32 @@ export function normalizeExperienceVrSettings(candidate) {
       rotationDegrees: normalizeVector(candidate.playerGuidePanel?.rotationDegrees, defaults.playerGuidePanel.rotationDegrees),
       navigationThreshold: finiteNumber(candidate.playerGuidePanel?.navigationThreshold, defaults.playerGuidePanel.navigationThreshold, { min: 0.1, max: 1 }),
       colors: { ...defaults.playerGuidePanel.colors, ...(candidate.playerGuidePanel?.colors ?? {}) }
+    },
+    monkeyGuide: {
+      enabled: typeof candidate.monkeyGuide?.enabled === 'boolean' ? candidate.monkeyGuide.enabled : defaults.monkeyGuide.enabled,
+      rayMaxDistance: finiteNumber(candidate.monkeyGuide?.rayMaxDistance, defaults.monkeyGuide.rayMaxDistance, { min: 0.3, max: defaults.controllers.rayLength }),
+      colors: { ...defaults.monkeyGuide.colors, ...(candidate.monkeyGuide?.colors ?? {}) },
+      halo: {
+        color: Math.round(finiteNumber(candidate.monkeyGuide?.halo?.color, defaults.monkeyGuide.halo.color, { min: 0, max: 0xffffff })),
+        opacity: finiteNumber(candidate.monkeyGuide?.halo?.opacity, defaults.monkeyGuide.halo.opacity, { min: 0.05, max: 0.8 }),
+        thicknessPixels: finiteNumber(candidate.monkeyGuide?.halo?.thicknessPixels, defaults.monkeyGuide.halo.thicknessPixels, { min: 0.5, max: 8 }),
+        pulseDuration: finiteNumber(candidate.monkeyGuide?.halo?.pulseDuration, defaults.monkeyGuide.halo.pulseDuration, { min: 0.5, max: 3 })
+      },
+      attention: {
+        ...defaults.monkeyGuide.attention, ...(candidate.monkeyGuide?.attention ?? {}),
+        position: normalizeVector(candidate.monkeyGuide?.attention?.position, defaults.monkeyGuide.attention.position),
+        radii: Array.isArray(candidate.monkeyGuide?.attention?.radii) && candidate.monkeyGuide.attention.radii.length === 3
+          ? candidate.monkeyGuide.attention.radii.map((radius, index) => finiteNumber(radius, defaults.monkeyGuide.attention.radii[index], { min: 0.03, max: 1 }))
+          : [...defaults.monkeyGuide.attention.radii]
+      },
+      message: {
+        ...defaults.monkeyGuide.message, ...(candidate.monkeyGuide?.message ?? {}),
+        position: normalizeVector(candidate.monkeyGuide?.message?.position, defaults.monkeyGuide.message.position)
+      },
+      dialogue: {
+        ...defaults.monkeyGuide.dialogue, ...(candidate.monkeyGuide?.dialogue ?? {}),
+        position: normalizeVector(candidate.monkeyGuide?.dialogue?.position, defaults.monkeyGuide.dialogue.position)
+      }
     },
     controllers: {
       enabled: typeof candidate.controllers?.enabled === 'boolean'
