@@ -6,6 +6,8 @@ import { experienceVrPages, resolveExperienceVrPage } from '../src/content/exper
 import { resolveVrPageProtoAstro } from '../src/xr/protoAstro/resolveVrPageProtoAstro.js';
 
 const drawnText = [];
+const roundedRectStarts = [];
+const fillStyles = [];
 globalThis.Image = class {
   complete = false; naturalWidth = 0;
   set src(value) { this.url = value; }
@@ -18,10 +20,11 @@ globalThis.document = {
       getContext(type) {
         assert.equal(type, '2d');
         return {
-          clearRect() {}, beginPath() {}, moveTo() {}, arcTo() {}, closePath() {}, fill() {}, drawImage() {},
+          clearRect() {}, beginPath() {}, moveTo(x, y) { roundedRectStarts.push({ x, y }); },
+          arcTo() {}, closePath() {}, fill() {}, drawImage() {},
           measureText(text) { return { width: String(text).length * 24 }; },
           fillText(text) { drawnText.push(String(text)); },
-          set fillStyle(value) {}, set font(value) {}, set textAlign(value) {},
+          set fillStyle(value) { fillStyles.push(value); }, set font(value) {}, set textAlign(value) {},
           set textBaseline(value) {}, set globalAlpha(value) {}
         };
       }
@@ -72,7 +75,26 @@ assert.equal(guide.dialoguePanel.planes.length, 2);
 assert.ok(guide.messagePanel.planes.every(({ material }) => material.side === THREE.FrontSide));
 assert.equal(guide.messagePanel.planes[1].rotation.y, Math.PI, 'back uses its own rotated FrontSide plane');
 assert.equal(guide.arcs.length, 3);
+assert.deepEqual(guide.arcs.map(({ geometry }) => geometry.parameters.radius), [0.08, 0.125, 0.17]);
+assert.ok(guide.arcs.every(({ geometry }) => geometry.parameters.tube === 0.009));
+assert.deepEqual(guide.arcs.map(({ position }) => position.y), [0, 0.055, 0.11]);
+assert.ok(guide.arcs.every(({ rotation }) => rotation.z === Math.PI), 'attention arcs open upward');
+assert.equal(guide.messagePanel.group.position.y, 1.96);
+assert.equal(guide.dialoguePanel.group.position.z, 0.60);
+assert.ok(Math.abs(guide.dialoguePanel.group.rotation.x - (-7.5 * Math.PI / 180)) < 1e-12);
+assert.ok(fillStyles.includes('#ffaa63'), 'dialogue uses its saturated panel color');
 assert.equal(guide.attentionRoot.visible, false);
+
+roundedRectStarts.length = 0;
+guide.showMessage('Short message');
+const oneLineBoxY = roundedRectStarts.at(-1).y;
+assert.equal(oneLineBoxY, 540 - (78 + 62 * 2), 'one-line message box is anchored to canvas bottom');
+roundedRectStarts.length = 0;
+guide.showMessage('This message contains enough words to wrap onto a second line in the panel');
+const multiLineBoxY = roundedRectStarts.at(-1).y;
+assert.ok(multiLineBoxY < oneLineBoxY, 'additional lines grow the message box upward');
+assert.ok(fillStyles.includes('#ffbd83'), 'message uses its original panel color');
+guide.showMessage('');
 
 guide.update(0.016);
 assert.ok(fixture.getRayDistance() > 0 && fixture.getRayDistance() <= 2.3, 'monkey hit reports ordinary ray distance');
