@@ -6,6 +6,7 @@ export const VR_ATTRACTOR_PANEL_NAMES = Object.freeze(
 
 const DEFAULT_CONTENTS = Object.freeze(['', '02', '03', '04']);
 const MAX_CANVAS_EDGE = 512;
+const PROXIMITY_BUCKETS = 28;
 const STATE_STYLES = Object.freeze({
   idle: { accent: '#8fd8ff', brightness: 1 },
   'target-valid': { accent: '#76ffac', brightness: 1.12 },
@@ -15,6 +16,18 @@ const STATE_STYLES = Object.freeze({
   upgrade: { accent: '#d5a0ff', brightness: 1.14 },
   'low-energy': { accent: '#9d7777', brightness: 0.55 }
 });
+
+const clamp01 = (value) => Math.min(1, Math.max(0, Number.isFinite(value) ? value : 0));
+const hexCss = (value) => `#${Number(value).toString(16).padStart(6, '0')}`;
+
+// This is deliberately semantic: VO belongs to Astro, not to the five fuel elements.
+export function resolveAttractorGlyphFamilyColors(config) {
+  return Object.freeze({
+    RO: hexCss(config.fuel.fire.color), KO: hexCss(config.fuel.earth.color),
+    LO: hexCss(config.fuel.tree.color), SO: hexCss(config.fuel.water.color),
+    TO: hexCss(config.fuel.metal.color), VO: hexCss(config.energyCell.color)
+  });
+}
 
 function positiveNumber(value) {
   const number = Number(value);
@@ -38,7 +51,7 @@ function canvasSize(aspect) {
     : { width: Math.max(1, Math.round(MAX_CANVAS_EDGE * aspect)), height: MAX_CANVAS_EDGE };
 }
 
-export function createVrAttractorPanelSystem({ panels, canvasFactory, imageFactory } = {}) {
+export function createVrAttractorPanelSystem({ panels, canvasFactory, imageFactory, familyColors = {} } = {}) {
   if (!Array.isArray(panels) || panels.length !== VR_ATTRACTOR_PANEL_NAMES.length) {
     throw new Error('[VrAttractorPanels] Exactly four authored glyph panels are required.');
   }
@@ -49,25 +62,31 @@ export function createVrAttractorPanelSystem({ panels, canvasFactory, imageFacto
   });
 
   let state = 'idle';
+  let pulling = false;
+  let proximityBucket = 0;
   let disposed = false;
   const records = panels.map((panel, index) => {
-    const canvas = canvasFactory ? canvasFactory(panel, index) : document.createElement('canvas');
+    const canvas = canvasFactory ? canvasFactory(panel, index, 'display') : document.createElement('canvas');
+    const maskCanvas = canvasFactory ? canvasFactory(panel, index, 'mask') : document.createElement('canvas');
     const size = canvasSize(resolveAttractorPanelAspect(panel));
-    canvas.width = size.width; canvas.height = size.height;
+    canvas.width = maskCanvas.width = size.width; canvas.height = maskCanvas.height = size.height;
     const context = canvas.getContext('2d');
-    if (!context) throw new Error(`[VrAttractorPanels] Could not create a 2D context for ${panel.name}.`);
+    const maskContext = maskCanvas.getContext('2d');
+    if (!context || !maskContext) throw new Error(`[VrAttractorPanels] Could not create a 2D context for ${panel.name}.`);
     const texture = new THREE.CanvasTexture(canvas);
+    // GLTFLoader uploads authored glTF textures without the legacy WebGL vertical flip.
+    texture.flipY = false;
     texture.colorSpace = THREE.SRGBColorSpace;
     texture.minFilter = THREE.LinearFilter; texture.magFilter = THREE.LinearFilter;
     const material = new THREE.MeshBasicMaterial({ map: texture, transparent: true, side: THREE.FrontSide,
       depthTest: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 });
     const originalMaterial = panel.material;
     panel.material = material;
-    return { panel, canvas, context, texture, material, originalMaterial, content: DEFAULT_CONTENTS[index], glyph: null };
+    return { panel, canvas, context, maskCanvas, maskContext, texture, material, originalMaterial,
+      content: DEFAULT_CONTENTS[index], glyph: null, syllable: null, drawCount: 0 };
   });
 
   const glyphImages = new Map();
-
   function loadGlyph(url) {
     if (glyphImages.has(url)) return glyphImages.get(url);
     const image = imageFactory ? imageFactory() : new Image();
@@ -81,41 +100,76 @@ export function createVrAttractorPanelSystem({ panels, canvasFactory, imageFacto
   }
 
   function draw(record) {
-    const { canvas, context, texture } = record;
+    const { canvas, context, maskCanvas, maskContext, texture } = record;
     const style = STATE_STYLES[state] ?? STATE_STYLES.idle;
     context.clearRect(0, 0, canvas.width, canvas.height);
-    context.fillStyle = '#071019'; context.fillRect(0, 0, canvas.width, canvas.height);
     if (record.glyph) {
+      context.fillStyle = '#071019'; context.fillRect(0, 0, canvas.width, canvas.height);
       const margin = Math.min(canvas.width, canvas.height) * 0.08;
       const availableWidth = canvas.width - margin * 2, availableHeight = canvas.height - margin * 2;
       const width = positiveNumber(record.glyph.naturalWidth) ?? positiveNumber(record.glyph.width) ?? 1;
       const height = positiveNumber(record.glyph.naturalHeight) ?? positiveNumber(record.glyph.height) ?? 1;
       const scale = Math.min(availableWidth / width, availableHeight / height);
-      context.globalAlpha = style.brightness;
-      context.drawImage(record.glyph, (canvas.width - width * scale) / 2, (canvas.height - height * scale) / 2,
-        width * scale, height * scale);
-      context.globalAlpha = 1; texture.needsUpdate = true; return;
+      const x = (canvas.width - width * scale) / 2, y = (canvas.height - height * scale) / 2;
+      const familyColor = familyColors[record.syllable] ?? '#8feaff';
+      const p = proximityBucket / PROXIMITY_BUCKETS;
+      const whiteMix = pulling ? 0.10 + 0.35 * p : 0;
+      const color = new THREE.Color(familyColor).lerp(new THREE.Color('#ffffff'), whiteMix).getStyle();
+      const glowStrength = pulling ? 0.15 + 0.65 * p : 0.075;
+
+      // The source SVG is only an alpha mask; its black fill never reaches the display canvas.
+      maskContext.clearRect(0, 0, maskCanvas.width, maskCanvas.height);
+      maskContext.globalCompositeOperation = 'source-over';
+      maskContext.drawImage(record.glyph, x, y, width * scale, height * scale);
+      maskContext.globalCompositeOperation = 'source-in';
+      maskContext.fillStyle = color; maskContext.fillRect(0, 0, maskCanvas.width, maskCanvas.height);
+      maskContext.globalCompositeOperation = 'source-over';
+
+      context.save?.();
+      context.globalAlpha = glowStrength;
+      context.shadowColor = familyColor;
+      context.shadowBlur = (6 + 22 * p) * glowStrength;
+      context.drawImage(maskCanvas, 0, 0);
+      context.restore?.();
+      context.globalAlpha = 1;
+      context.drawImage(maskCanvas, 0, 0);
+    } else {
+      context.fillStyle = '#071019'; context.fillRect(0, 0, canvas.width, canvas.height);
+      context.globalAlpha = style.brightness; context.fillStyle = style.accent;
+      context.textAlign = 'center'; context.textBaseline = 'middle';
+      context.font = `600 ${Math.round(Math.min(canvas.width, canvas.height) * 0.46)}px system-ui, sans-serif`;
+      context.fillText(record.content, canvas.width / 2, canvas.height / 2);
+      context.globalAlpha = 1;
     }
-    context.globalAlpha = style.brightness; context.fillStyle = style.accent;
-    context.textAlign = 'center'; context.textBaseline = 'middle';
-    context.font = `600 ${Math.round(Math.min(canvas.width, canvas.height) * 0.46)}px system-ui, sans-serif`;
-    context.fillText(record.content, canvas.width / 2, canvas.height / 2);
-    context.globalAlpha = 1; texture.needsUpdate = true;
+    record.drawCount += 1; texture.needsUpdate = true;
   }
 
-  async function setPrimaryGlyph(url) {
+  async function setPrimaryGlyph(glyph) {
     if (disposed) return false;
+    const descriptor = typeof glyph === 'string' ? { url: glyph } : glyph;
+    const url = descriptor?.url ?? null;
     const record = records[0];
-    if (url && record.requestedGlyphUrl === url && record.glyph) return true;
-    record.requestedGlyphUrl = url ?? null;
+    if (url && record.requestedGlyphUrl === url && record.glyph) {
+      if (descriptor.syllable && descriptor.syllable !== record.syllable) { record.syllable = descriptor.syllable; draw(record); }
+      return true;
+    }
+    record.requestedGlyphUrl = url; record.syllable = descriptor?.syllable ?? null;
     record.content = ''; record.glyph = null; draw(record);
     if (!url) return true;
-    const requestedUrl = url;
     const image = await loadGlyph(url);
-    if (disposed || record.requestedGlyphUrl !== requestedUrl) return false;
+    if (disposed || record.requestedGlyphUrl !== url) return false;
     record.glyph = image; draw(record); return true;
   }
 
+  function setPrimaryPresentation({ isPulling = false, targetProximity = 0 } = {}) {
+    if (disposed) return false;
+    const nextPulling = Boolean(isPulling);
+    const nextBucket = nextPulling ? Math.round(clamp01(targetProximity) * PROXIMITY_BUCKETS) : 0;
+    if (nextPulling === pulling && nextBucket === proximityBucket) return false;
+    pulling = nextPulling; proximityBucket = nextBucket;
+    if (records[0].glyph) draw(records[0]);
+    return true;
+  }
   function setPanelContent(index, content) {
     if (disposed) return false;
     const record = records[index];
@@ -132,8 +186,9 @@ export function createVrAttractorPanelSystem({ panels, canvasFactory, imageFacto
   }
   function reset() {
     if (disposed) return;
-    state = 'idle'; records.forEach((record, index) => { record.content = DEFAULT_CONTENTS[index]; record.glyph = null;
-      record.requestedGlyphUrl = null; draw(record); });
+    state = 'idle'; pulling = false; proximityBucket = 0;
+    records.forEach((record, index) => { record.content = DEFAULT_CONTENTS[index]; record.glyph = null;
+      record.syllable = null; record.requestedGlyphUrl = null; draw(record); });
   }
   function dispose() {
     if (disposed) return;
@@ -141,13 +196,13 @@ export function createVrAttractorPanelSystem({ panels, canvasFactory, imageFacto
       record.panel.material = record.originalMaterial;
       record.texture.dispose(); record.material.dispose();
       record.context.clearRect(0, 0, record.canvas.width, record.canvas.height);
-      record.canvas.width = 0; record.canvas.height = 0;
+      record.maskContext.clearRect(0, 0, record.maskCanvas.width, record.maskCanvas.height);
+      record.canvas.width = record.canvas.height = record.maskCanvas.width = record.maskCanvas.height = 0;
     });
-    glyphImages.clear();
-    disposed = true;
+    glyphImages.clear(); disposed = true;
   }
 
   reset();
-  return { panels: records, setPanelContent, setPanelContents, setPrimaryGlyph, setVisualState, reset, dispose,
-    glyphImages };
+  return { panels: records, setPanelContent, setPanelContents, setPrimaryGlyph, setPrimaryPresentation,
+    setVisualState, reset, dispose, glyphImages };
 }

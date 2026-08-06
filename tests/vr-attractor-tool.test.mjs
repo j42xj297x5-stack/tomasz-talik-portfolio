@@ -5,15 +5,25 @@ import { createVrAttractorTool, VR_ATTRACTOR_STATES, VR_ATTRACTOR_VISUAL_CONFIG,
   XR_AIM_AXIS, blenderRpmToThree } from '../src/xr/tools/createVrAttractorTool.js';
 import { createVrHandModeController } from '../src/xr/input/createVrHandModeController.js';
 import { resolveAttractorShellGlyph, VR_ATTRACTOR_SHELL_GLYPHS } from '../src/xr/tools/vrAttractorShellGlyphs.js';
+import { resolveAttractorGlyphFamilyColors } from '../src/xr/tools/createVrAttractorPanelSystem.js';
 
 function createTestCanvas() {
   const calls = [];
   const context = {
-    calls, clearRect() {}, fillRect() {}, fillText(...args) { calls.push(['text', ...args]); },
+    calls, clearRect(...args) { calls.push(['clear', ...args]); },
+    fillRect(...args) { calls.push(['fill', this.fillStyle, this.globalCompositeOperation, ...args]); },
     drawImage(...args) { calls.push(['image', ...args]); },
-    fillStyle: '', globalAlpha: 1, textAlign: '', textBaseline: '', font: ''
+    fillText(...args) { calls.push(['text', ...args]); }, save() {}, restore() {},
+    fillStyle: '', globalAlpha: 1, globalCompositeOperation: 'source-over', shadowColor: '', shadowBlur: 0,
+    textAlign: '', textBaseline: '', font: ''
   };
   return { width: 0, height: 0, context, getContext: (type) => type === '2d' ? context : null };
+}
+
+{
+  assert.deepEqual(resolveAttractorGlyphFamilyColors(VR_ATTRACTOR_VISUAL_CONFIG), {
+    RO: '#ff9b3d', KO: '#d59a36', LO: '#69c979', SO: '#79d8ff', TO: '#dcecff', VO: '#8feaff'
+  }, 'glyph colors resolve from the existing fuel and Astro energy-cell palette');
 }
 
 globalThis.document = { createElement: (tag) => tag === 'canvas' ? createTestCanvas() : null };
@@ -175,6 +185,7 @@ function createContractModel({ degenerateFuelPoints = false, unusableDebugElemen
     assert.equal(material.map, texture);
     assert.equal(material.depthTest, true); assert.equal(material.depthWrite, false);
     assert.equal(texture.colorSpace, THREE.SRGBColorSpace);
+    assert.equal(texture.flipY, false, 'CanvasTexture follows the authored glTF UV convention');
   });
   const untouchedDrawCounts = panelRecords.slice(1).map(({ context }) => context.calls.length);
   tool.panelSystem.setPanelContent(0, 'A');
@@ -185,19 +196,34 @@ function createContractModel({ degenerateFuelPoints = false, unusableDebugElemen
   tool.setTarget({ target: { userData: { shellAssetId: 'shell-relic-1' } }, proximity: 0.4 });
   await Promise.resolve();
   assert.equal(imageLoadCount, 1); assert.match(panelRecords[0].glyph.currentSrc, /\/svg\/RO\.svg$/);
-  const imageCall = panelRecords[0].context.calls.at(-1);
+  const imageCall = panelRecords[0].maskContext.calls.findLast((call) => call[0] === 'image');
   assert.equal(imageCall[0], 'image');
   assert.ok(Math.abs(imageCall[2] - 202.24) < 1e-9 && Math.abs(imageCall[3] - 20.48) < 1e-9
     && Math.abs(imageCall[4] - 107.52) < 1e-9 && Math.abs(imageCall[5] - 215.04) < 1e-9,
   'the RO SVG is aspect-fitted, centered, and rendered with a safe margin');
+  assert.ok(panelRecords[0].maskContext.calls.some((call) => call[0] === 'fill'
+    && call[1] === 'rgb(255,155,61)' && call[2] === 'source-in'),
+  'the black SVG is used as an alpha mask and recolored with the fire family color');
+  const targetingDrawCount = panelRecords[0].drawCount;
   tool.setState(VR_ATTRACTOR_STATES.TARGETING); tool.setGlyphPanelState('target-valid');
   tool.setState(VR_ATTRACTOR_STATES.PULLING); tool.setGlyphPanelState('pulling');
   assert.ok(panelRecords[0].glyph, 'visual state changes preserve the current target glyph');
+  const pullingDrawCount = panelRecords[0].drawCount;
   tool.setTarget({ target: { userData: { shellAssetId: 'shell-relic-1' } }, proximity: 0.8 });
   await Promise.resolve(); assert.equal(imageLoadCount, 1, 'repeated target updates reuse the cached SVG');
+  assert.ok(panelRecords[0].drawCount > pullingDrawCount && pullingDrawCount > targetingDrawCount,
+    'entering PULLING and increasing targetProximity both increase the presentation');
+  const sameBucketDrawCount = panelRecords[0].drawCount;
+  tool.setTarget({ target: { userData: { shellAssetId: 'shell-relic-1' } }, proximity: 0.801 });
+  await Promise.resolve();
+  assert.equal(panelRecords[0].drawCount, sameBucketDrawCount,
+    'proximity changes inside the same quantized bucket do not redraw the canvas');
+  assert.ok(panelRecords[0].maskContext.calls.filter((call) => call[0] === 'fill').every((call) =>
+    !call[1] || call[1].startsWith('rgb') || call[1] === '#ff9b3d'),
+  'distance intensity never changes the selected glyph family');
   tool.setTarget({ target: { userData: { shellAssetId: 'shell-relic-2' } } });
   await Promise.resolve(); assert.equal(imageLoadCount, 2); assert.match(panelRecords[0].glyph.currentSrc, /\/svg\/KO\.svg$/);
-  assert.deepEqual(panelRecords.slice(1).map(({ context }) => context.calls.length), secondaryDrawCounts.map((count) => count + 2),
+  assert.deepEqual(panelRecords.slice(1).map(({ context }) => context.calls.length), secondaryDrawCounts.map((count) => count + 6),
     'only visual-state broadcasts, not target changes, redraw panels 2-4');
   tool.setTarget(null); assert.equal(panelRecords[0].glyph, null); assert.equal(panelRecords[0].content, '');
   tool.setTarget({ target: { userData: { shellAssetId: 'shell-relic-1' } } }); await Promise.resolve();
