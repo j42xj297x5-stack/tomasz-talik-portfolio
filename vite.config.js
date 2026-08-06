@@ -1,4 +1,5 @@
 import { defineConfig } from 'vite';
+import basicSsl from '@vitejs/plugin-basic-ssl';
 import { fileURLToPath, URL } from 'node:url';
 import { copyFile, mkdir, readdir, stat } from 'node:fs/promises';
 import { createReadStream } from 'node:fs';
@@ -82,7 +83,12 @@ function vendoredThreeRuntimePlugin() {
 
 export default defineConfig({
   base,
-  plugins: [vendoredThreeRuntimePlugin()],
+  plugins: [basicSsl(), vendoredThreeRuntimePlugin()],
+  server: {
+    host: true,
+    port: 5173,
+    strictPort: true,
+  },
   resolve: {
     alias: {
       three: fileURLToPath(new URL('./vendor/three/three.module.js', import.meta.url)),
