@@ -1,13 +1,19 @@
-import { publicPath } from '../../utils/publicPath.js';
+import { resolveProtoAstroAssetUrl, resolveProtoAstroSyllable } from '../protoAstro/protoAstroRegistry.js';
 
-export const VR_ATTRACTOR_SHELL_GLYPHS = Object.freeze({
-  shell_01: Object.freeze({ syllable: 'RO', path: 'svg/RO.svg' }),
-  shell_02: Object.freeze({ syllable: 'KO', path: 'svg/KO.svg' }),
-  shell_03: Object.freeze({ syllable: 'LO', path: 'svg/LO.svg' }),
-  shell_04: Object.freeze({ syllable: 'SO', path: 'svg/SO.svg' }),
-  shell_05: Object.freeze({ syllable: 'TO', path: 'svg/TO.svg' }),
-  shell_06: Object.freeze({ syllable: 'VO', path: 'svg/VO.svg' })
+const SHELL_SYLLABLES = Object.freeze({
+  shell_01: 'RO',
+  shell_02: 'KO',
+  shell_03: 'LO',
+  shell_04: 'SO',
+  shell_05: 'TO',
+  shell_06: 'VO'
 });
+
+// Compatibility adapter: shell runtime identity stays local, while all language
+// semantics and asset paths come from the central Proto-Astro registry.
+export const VR_ATTRACTOR_SHELL_GLYPHS = Object.freeze(Object.fromEntries(
+  Object.entries(SHELL_SYLLABLES).map(([identity, syllable]) => [identity, resolveProtoAstroSyllable(syllable)])
+));
 
 export function resolveAttractorShellIdentity(target) {
   const value = target?.userData?.shellAssetId ?? target?.userData?.attractorId ?? target?.name ?? target;
@@ -18,5 +24,5 @@ export function resolveAttractorShellIdentity(target) {
 export function resolveAttractorShellGlyph(target) {
   const identity = resolveAttractorShellIdentity(target);
   const glyph = identity ? VR_ATTRACTOR_SHELL_GLYPHS[identity] : null;
-  return glyph ? { ...glyph, identity, url: publicPath(glyph.path) } : null;
+  return glyph ? { ...glyph, identity, url: resolveProtoAstroAssetUrl(glyph) } : null;
 }
