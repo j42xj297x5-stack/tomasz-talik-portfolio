@@ -100,7 +100,7 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
     height: 0.286,
     canvasWidth: 768,
     canvasHeight: 666,
-    position: { x: 0.49, y: 0.143, z: -0.18 },
+    position: { x: 0.29, y: 0.143, z: -0.18 },
     rotationDegrees: { x: -52, y: 0, z: 0 },
     navigationThreshold: 0.55,
     colors: { background: '#101722', border: '#75d7ff', text: '#eff9ff', muted: '#9ab0bd', selected: '#1f5d78' }
@@ -108,19 +108,23 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
   monkeyGuide: {
     enabled: true,
     rayMaxDistance: 2.3,
-    colors: { accent: '#ffaa63', panel: '#ffbd83', hover: '#ffd3ac', text: '#342116', panelOpacity: 0.92 },
+    colors: {
+      accent: '#ffaa63', messagePanel: '#ffbd83', dialoguePanel: '#ffaa63',
+      hover: '#ffd3ac', text: '#342116', panelOpacity: 0.92
+    },
     halo: { color: 0xffaa63, opacity: 0.42, thicknessPixels: 4, pulseDuration: 1.4 },
     attention: {
-      position: { x: 0, y: 1.4, z: 0.08 }, radii: [0.16, 0.25, 0.34], thickness: 0.018,
-      verticalGap: 0.11, cycleDuration: 1.35, opacityMin: 0.12, opacityMax: 0.95, scalePulse: 0.025
+      position: { x: 0, y: 1.4, z: 0.08 }, radii: [0.08, 0.125, 0.17], thickness: 0.009,
+      verticalGap: 0.055, cycleDuration: 1.35, opacityMin: 0.12, opacityMax: 0.95, scalePulse: 0.025
     },
     message: {
-      position: { x: 0, y: 2.35, z: 0.08 }, width: 1.7, height: 0.72,
+      position: { x: 0, y: 1.96, z: 0.08 }, width: 1.7, height: 0.72,
       canvasWidth: 1280, canvasHeight: 540, padding: 62, cornerRadius: 64,
       fontSize: 64, fontWeight: 600, lineHeight: 78, maxLines: 4
     },
     dialogue: {
-      position: { x: 0, y: -0.72, z: 0.42 }, width: 1.65, height: 0.76,
+      position: { x: 0, y: -0.72, z: 0.60 }, rotationDegrees: { x: -7.5, y: 0, z: 0 },
+      width: 1.65, height: 0.76,
       canvasWidth: 1280, canvasHeight: 590, padding: 42, gap: 24, cornerRadius: 58,
       optionCornerRadius: 36, fontSize: 58, fontWeight: 700,
       historyPageSize: 6, historyColumns: 3, historyGlyphSize: 104, historyMarkerFontSize: 30,
@@ -439,7 +443,14 @@ export function normalizeExperienceVrSettings(candidate) {
     monkeyGuide: {
       enabled: typeof candidate.monkeyGuide?.enabled === 'boolean' ? candidate.monkeyGuide.enabled : defaults.monkeyGuide.enabled,
       rayMaxDistance: finiteNumber(candidate.monkeyGuide?.rayMaxDistance, defaults.monkeyGuide.rayMaxDistance, { min: 0.3, max: defaults.controllers.rayLength }),
-      colors: { ...defaults.monkeyGuide.colors, ...(candidate.monkeyGuide?.colors ?? {}) },
+      colors: {
+        ...defaults.monkeyGuide.colors,
+        ...(candidate.monkeyGuide?.colors ?? {}),
+        messagePanel: candidate.monkeyGuide?.colors?.messagePanel
+          ?? candidate.monkeyGuide?.colors?.panel ?? defaults.monkeyGuide.colors.messagePanel,
+        dialoguePanel: candidate.monkeyGuide?.colors?.dialoguePanel
+          ?? candidate.monkeyGuide?.colors?.panel ?? defaults.monkeyGuide.colors.dialoguePanel
+      },
       halo: {
         color: Math.round(finiteNumber(candidate.monkeyGuide?.halo?.color, defaults.monkeyGuide.halo.color, { min: 0, max: 0xffffff })),
         opacity: finiteNumber(candidate.monkeyGuide?.halo?.opacity, defaults.monkeyGuide.halo.opacity, { min: 0.05, max: 0.8 }),
@@ -459,7 +470,9 @@ export function normalizeExperienceVrSettings(candidate) {
       },
       dialogue: {
         ...defaults.monkeyGuide.dialogue, ...(candidate.monkeyGuide?.dialogue ?? {}),
-        position: normalizeVector(candidate.monkeyGuide?.dialogue?.position, defaults.monkeyGuide.dialogue.position)
+        position: normalizeVector(candidate.monkeyGuide?.dialogue?.position, defaults.monkeyGuide.dialogue.position),
+        rotationDegrees: normalizeVector(candidate.monkeyGuide?.dialogue?.rotationDegrees,
+          defaults.monkeyGuide.dialogue.rotationDegrees)
       },
       card: { ...defaults.monkeyGuide.card, ...(candidate.monkeyGuide?.card ?? {}) }
     },

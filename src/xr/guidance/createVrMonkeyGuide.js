@@ -9,6 +9,7 @@ const COPY = Object.freeze({
 });
 
 export const VR_MONKEY_GUIDE_SCREEN = Object.freeze({ MENU: 'MENU', HISTORY: 'HISTORY', CARD: 'CARD' });
+const degToRad = (degrees) => degrees * Math.PI / 180;
 
 function roundedRect(context, x, y, width, height, radius) {
   const r = Math.min(radius, width / 2, height / 2);
@@ -122,6 +123,7 @@ export function createVrMonkeyGuide({
     const arc = new THREE.Mesh(geometry, material);
     arc.name = `VrMonkeyAttentionArc${index + 1}`;
     arc.position.y = index * settings.attention.verticalGap;
+    arc.rotation.z = Math.PI;
     attentionRoot.add(arc);
     arcMaterials.push(material);
     return arc;
@@ -141,6 +143,11 @@ export function createVrMonkeyGuide({
     canvasWidth: settings.dialogue.canvasWidth, canvasHeight: settings.dialogue.canvasHeight
   });
   dialoguePanel.group.position.set(settings.dialogue.position.x, settings.dialogue.position.y, settings.dialogue.position.z);
+  dialoguePanel.group.rotation.set(
+    degToRad(settings.dialogue.rotationDegrees.x),
+    degToRad(settings.dialogue.rotationDegrees.y),
+    degToRad(settings.dialogue.rotationDegrees.z)
+  );
   dialoguePanel.group.visible = false;
   root.add(dialoguePanel.group);
 
@@ -173,7 +180,7 @@ export function createVrMonkeyGuide({
     if (screen === VR_MONKEY_GUIDE_SCREEN.CARD && selectedPage) {
       const resolved = resolveExperienceVrPage(selectedPage, locale);
       context.globalAlpha = settings.colors.panelOpacity;
-      context.fillStyle = settings.colors.panel;
+      context.fillStyle = settings.colors.messagePanel ?? settings.colors.panel;
       roundedRect(context, 0, 0, canvas.width, canvas.height, settings.message.cornerRadius);
       context.fill();
       context.globalAlpha = 1;
@@ -198,9 +205,9 @@ export function createVrMonkeyGuide({
     const boxWidth = Math.min(canvas.width, measuredWidth + settings.message.padding * 2);
     const boxHeight = Math.min(canvas.height, lines.length * settings.message.lineHeight + settings.message.padding * 2);
     const x = (canvas.width - boxWidth) / 2;
-    const y = (canvas.height - boxHeight) / 2;
+    const y = canvas.height - boxHeight;
     context.globalAlpha = settings.colors.panelOpacity;
-    context.fillStyle = settings.colors.panel;
+    context.fillStyle = settings.colors.messagePanel ?? settings.colors.panel;
     roundedRect(context, x, y, boxWidth, boxHeight, settings.message.cornerRadius);
     context.fill();
     context.globalAlpha = 1;
@@ -216,7 +223,7 @@ export function createVrMonkeyGuide({
     const { canvas, context, texture } = dialoguePanel;
     context.clearRect(0, 0, canvas.width, canvas.height);
     context.globalAlpha = settings.colors.panelOpacity;
-    context.fillStyle = settings.colors.panel;
+    context.fillStyle = settings.colors.dialoguePanel ?? settings.colors.panel;
     roundedRect(context, 0, 0, canvas.width, canvas.height, settings.dialogue.cornerRadius);
     context.fill();
     context.globalAlpha = 1;
