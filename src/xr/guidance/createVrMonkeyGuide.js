@@ -1,10 +1,14 @@
 import * as THREE from '../../vendor/three.js';
+import { experienceVrPages, resolveExperienceVrPage } from '../../content/experienceVrPages.js';
 import { createVrTargetHalo } from '../createVrTargetHalo.js';
+import { resolveVrPageProtoAstro } from '../protoAstro/resolveVrPageProtoAstro.js';
 
 const COPY = Object.freeze({
-  pl: Object.freeze({ progress: 'JAK MI IDZIE?', close: 'ZAMKNIJ', message: (count) => `Odkryte karty: ${count}.` }),
-  en: Object.freeze({ progress: 'HOW AM I DOING?', close: 'CLOSE', message: (count) => `Discovered cards: ${count}.` })
+  pl: Object.freeze({ progress: 'JAK MI IDZIE?', close: 'ZAMKNIJ', history: (count) => `Odkryte karty: ${count}. Wybierz znak.` }),
+  en: Object.freeze({ progress: 'HOW AM I DOING?', close: 'CLOSE', history: (count) => `Discovered cards: ${count}. Select a sign.` })
 });
+
+export const VR_MONKEY_GUIDE_SCREEN = Object.freeze({ MENU: 'MENU', HISTORY: 'HISTORY', CARD: 'CARD' });
 
 function roundedRect(context, x, y, width, height, radius) {
   const r = Math.min(radius, width / 2, height / 2);
@@ -37,6 +41,24 @@ function wrapText(context, text, maxWidth, maxLines) {
     lines[lines.length - 1] += '…';
   }
   return lines;
+}
+
+function paginateText(context, text, maxWidth, maxLines) {
+  const words = String(text ?? '').split(/\s+/).filter(Boolean);
+  const pages = [];
+  let lines = [];
+  let line = '';
+  words.forEach((word) => {
+    const candidate = line ? `${line} ${word}` : word;
+    if (line && context.measureText(candidate).width > maxWidth) {
+      lines.push(line);
+      line = word;
+      if (lines.length === maxLines) { pages.push(lines); lines = []; }
+    } else line = candidate;
+  });
+  if (line) lines.push(line);
+  if (lines.length) pages.push(lines);
+  return pages.length ? pages : [[]];
 }
 
 function createTwoSidedCanvasPlane({ name, width, height, canvasWidth, canvasHeight }) {
@@ -134,6 +156,12 @@ export function createVrMonkeyGuide({
   let message = '';
   let disposed = false;
   let interactiveRegions = [];
+  let screen = VR_MONKEY_GUIDE_SCREEN.MENU;
+  let historyPage = 0;
+  let selectedPageId = null;
+  let cardPage = 0;
+  const pagesById = new Map(experienceVrPages.map((page) => [page.id, page]));
+  const glyphImages = new Map();
 
   function progressCount() { return progressionController.getActivatedPageIds().length; }
 
@@ -141,6 +169,28 @@ export function createVrMonkeyGuide({
     const { canvas, context, texture } = messagePanel;
     context.clearRect(0, 0, canvas.width, canvas.height);
     if (!message) { texture.needsUpdate = true; return; }
+    const selectedPage = pagesById.get(selectedPageId);
+    if (screen === VR_MONKEY_GUIDE_SCREEN.CARD && selectedPage) {
+      const resolved = resolveExperienceVrPage(selectedPage, locale);
+      context.globalAlpha = settings.colors.panelOpacity;
+      context.fillStyle = settings.colors.panel;
+      roundedRect(context, 0, 0, canvas.width, canvas.height, settings.message.cornerRadius);
+      context.fill();
+      context.globalAlpha = 1;
+      context.fillStyle = settings.colors.text;
+      context.textAlign = 'center';
+      context.textBaseline = 'middle';
+      context.font = `${settings.message.fontWeight} ${settings.card.titleFontSize}px sans-serif`;
+      context.fillText(resolved.title, canvas.width / 2, settings.message.padding);
+      context.font = `${settings.card.bodyFontSize}px sans-serif`;
+      const pages = paginateText(context, resolved.body, canvas.width - settings.message.padding * 2,
+        settings.card.maxLinesPerPage);
+      cardPage = Math.min(cardPage, pages.length - 1);
+      pages[cardPage].forEach((line, index) => context.fillText(line, canvas.width / 2,
+        settings.message.padding * 2 + settings.card.lineHeight * (index + 0.5)));
+      texture.needsUpdate = true;
+      return;
+    }
     context.font = `${settings.message.fontWeight} ${settings.message.fontSize}px sans-serif`;
     const maxTextWidth = canvas.width - settings.message.padding * 2;
     const lines = wrapText(context, message, maxTextWidth, settings.message.maxLines);
@@ -170,6 +220,8 @@ export function createVrMonkeyGuide({
     roundedRect(context, 0, 0, canvas.width, canvas.height, settings.dialogue.cornerRadius);
     context.fill();
     context.globalAlpha = 1;
+    if (screen === VR_MONKEY_GUIDE_SCREEN.HISTORY) { drawHistory(context, canvas); texture.needsUpdate = true; return; }
+    if (screen === VR_MONKEY_GUIDE_SCREEN.CARD) { drawCardNavigation(context, canvas); texture.needsUpdate = true; return; }
     const options = progressCount() > 0
       ? [{ id: 'progress', label: copy.progress }, { id: 'close', label: copy.close }]
       : [{ id: 'close', label: copy.close }];
@@ -194,6 +246,79 @@ export function createVrMonkeyGuide({
     texture.needsUpdate = true;
   }
 
+  function addRegion(region) { interactiveRegions.push(region); return region; }
+  function drawButton(context, region, label) {
+    if (hoveredOption === region.id) { context.fillStyle = settings.colors.hover; roundedRect(context, region.x, region.y,
+      region.width, region.height, settings.dialogue.optionCornerRadius); context.fill(); }
+    context.fillStyle = settings.colors.text;
+    context.font = `${settings.dialogue.fontWeight} ${settings.dialogue.fontSize}px sans-serif`;
+    context.textAlign = 'center'; context.textBaseline = 'middle';
+    context.fillText(label, region.x + region.width / 2, region.y + region.height / 2);
+  }
+  function historyEntries() {
+    return progressionController.getActivatedPageIds().map((pageId) => {
+      const page = pagesById.get(pageId);
+      const protoAstro = resolveVrPageProtoAstro(page);
+      return page && protoAstro ? { pageId, page, ...protoAstro } : null;
+    }).filter(Boolean);
+  }
+  function requestGlyphImage(entry) {
+    if (glyphImages.has(entry.assetUrl) || typeof Image === 'undefined') return glyphImages.get(entry.assetUrl);
+    const image = new Image();
+    glyphImages.set(entry.assetUrl, image);
+    image.onload = () => { if (!disposed && screen === VR_MONKEY_GUIDE_SCREEN.HISTORY) drawDialogue(); };
+    image.src = entry.assetUrl;
+    return image;
+  }
+  function drawHistory(context, canvas) {
+    interactiveRegions = [];
+    const entries = historyEntries();
+    const size = settings.dialogue.historyPageSize;
+    const totalPages = Math.max(1, Math.ceil(entries.length / size));
+    historyPage = Math.min(historyPage, totalPages - 1);
+    const visible = entries.slice(historyPage * size, (historyPage + 1) * size);
+    const navHeight = 100; const padding = settings.dialogue.padding; const columns = settings.dialogue.historyColumns;
+    const cellWidth = (canvas.width - padding * 2) / columns;
+    const rows = Math.max(1, Math.ceil(size / columns)); const cellHeight = (canvas.height - padding * 2 - navHeight) / rows;
+    visible.forEach((entry, index) => {
+      const column = index % columns; const row = Math.floor(index / columns);
+      const region = addRegion({ id: `page:${entry.pageId}`, pageId: entry.pageId,
+        x: padding + column * cellWidth + 8, y: padding + row * cellHeight + 8,
+        width: cellWidth - 16, height: cellHeight - 16 });
+      if (hoveredOption === region.id) { context.fillStyle = settings.colors.hover; roundedRect(context, region.x, region.y,
+        region.width, region.height, settings.dialogue.optionCornerRadius); context.fill(); }
+      const image = requestGlyphImage(entry); const glyphSize = settings.dialogue.historyGlyphSize;
+      if (image?.complete && image.naturalWidth && context.drawImage) context.drawImage(image,
+        region.x + (region.width - glyphSize) / 2, region.y + (region.height - glyphSize) / 2, glyphSize, glyphSize);
+      else { context.fillStyle = settings.colors.text; context.font = `${settings.dialogue.fontWeight} ${glyphSize * 0.55}px sans-serif`;
+        context.textAlign = 'center'; context.textBaseline = 'middle'; context.fillText(entry.descriptor.syllable,
+          region.x + region.width / 2, region.y + region.height / 2); }
+      context.font = `${settings.dialogue.historyMarkerFontSize}px sans-serif`; context.textAlign = 'right';
+      context.fillText(String(entry.page.order), region.x + region.width - 14, region.y + region.height - 18);
+    });
+    const back = addRegion({ id: 'back-menu', x: padding, y: canvas.height - padding - navHeight,
+      width: settings.dialogue.navigationWidth, height: navHeight }); drawButton(context, back, '←');
+    if (totalPages > 1 && historyPage > 0) { const previous = addRegion({ id: 'history-previous', x: canvas.width / 2 - 170,
+      y: canvas.height - padding - navHeight, width: 140, height: navHeight }); drawButton(context, previous, '‹'); }
+    if (totalPages > 1 && historyPage < totalPages - 1) { const next = addRegion({ id: 'history-next', x: canvas.width / 2 + 30,
+      y: canvas.height - padding - navHeight, width: 140, height: navHeight }); drawButton(context, next, '›'); }
+  }
+  function cardPages() {
+    const page = pagesById.get(selectedPageId); if (!page) return [[]];
+    dialoguePanel.context.font = `${settings.card.bodyFontSize}px sans-serif`;
+    return paginateText(dialoguePanel.context, resolveExperienceVrPage(page, locale).body,
+      messagePanel.canvas.width - settings.message.padding * 2, settings.card.maxLinesPerPage);
+  }
+  function drawCardNavigation(context, canvas) {
+    interactiveRegions = []; const padding = settings.dialogue.padding; const height = canvas.height - padding * 2;
+    const back = addRegion({ id: 'back-history', x: padding, y: padding, width: settings.dialogue.navigationWidth, height });
+    drawButton(context, back, '←'); const pages = cardPages();
+    if (pages.length > 1 && cardPage > 0) { const previous = addRegion({ id: 'card-previous', x: canvas.width / 2 - 190,
+      y: padding, width: 150, height }); drawButton(context, previous, '‹'); }
+    if (pages.length > 1 && cardPage < pages.length - 1) { const next = addRegion({ id: 'card-next', x: canvas.width / 2 + 40,
+      y: padding, width: 150, height }); drawButton(context, next, '›'); }
+  }
+
   function showMessage(text) {
     message = String(text ?? '').trim();
     messagePanel.group.visible = Boolean(message);
@@ -216,12 +341,22 @@ export function createVrMonkeyGuide({
     hoveredOption = null;
     hits.forEach((_, record) => hits.set(record, null));
     if (open) clearAttention();
+    else { screen = VR_MONKEY_GUIDE_SCREEN.MENU; selectedPageId = null; cardPage = 0; historyPage = 0; showMessage(''); }
     drawDialogue();
   }
   function close() { setOpen(false); }
   function openDialogue() { setOpen(true); }
   function activateOption(id) {
-    if (id === 'progress' && progressCount() > 0) { showMessage(copy.message(progressCount())); return true; }
+    if (id === 'progress' && progressCount() > 0) { screen = VR_MONKEY_GUIDE_SCREEN.HISTORY; historyPage = 0;
+      showMessage(copy.history(progressCount())); drawDialogue(); return true; }
+    if (id?.startsWith('page:')) { selectedPageId = id.slice(5); screen = VR_MONKEY_GUIDE_SCREEN.CARD; cardPage = 0;
+      showMessage('card'); drawDialogue(); return true; }
+    if (id === 'back-history') { screen = VR_MONKEY_GUIDE_SCREEN.HISTORY; showMessage(copy.history(progressCount())); drawDialogue(); return true; }
+    if (id === 'back-menu') { screen = VR_MONKEY_GUIDE_SCREEN.MENU; showMessage(''); drawDialogue(); return true; }
+    if (id === 'history-previous') { historyPage -= 1; drawDialogue(); return true; }
+    if (id === 'history-next') { historyPage += 1; drawDialogue(); return true; }
+    if (id === 'card-previous') { cardPage -= 1; drawMessage(); drawDialogue(); return true; }
+    if (id === 'card-next') { cardPage += 1; drawMessage(); drawDialogue(); return true; }
     if (id === 'close') { close(); return true; }
     return false;
   }
@@ -319,6 +454,8 @@ export function createVrMonkeyGuide({
     object: root, messagePanel, dialoguePanel, attentionRoot, arcs, halo, hits,
     update, notifyAttention, showMessage, open: openDialogue, close, isOpen: () => open,
     hasCurrentHit: (record) => Boolean(hits.get(record)), reset, dispose, press,
-    isAttentionPending: () => attentionPending
+    isAttentionPending: () => attentionPending,
+    getScreen: () => screen, getHistoryEntries: historyEntries, getSelectedPageId: () => selectedPageId,
+    getHistoryPage: () => historyPage, getCardPage: () => cardPage, getCardPageCount: () => cardPages().length
   };
 }

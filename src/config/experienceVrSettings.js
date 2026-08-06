@@ -122,7 +122,12 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
     dialogue: {
       position: { x: 0, y: -0.72, z: 0.42 }, width: 1.65, height: 0.76,
       canvasWidth: 1280, canvasHeight: 590, padding: 42, gap: 24, cornerRadius: 58,
-      optionCornerRadius: 36, fontSize: 58, fontWeight: 700
+      optionCornerRadius: 36, fontSize: 58, fontWeight: 700,
+      historyPageSize: 6, historyColumns: 3, historyGlyphSize: 104, historyMarkerFontSize: 30,
+      navigationWidth: 150
+    },
+    card: {
+      titleFontSize: 58, bodyFontSize: 43, lineHeight: 56, maxLinesPerPage: 6
     }
   },
   controllers: {
@@ -455,7 +460,8 @@ export function normalizeExperienceVrSettings(candidate) {
       dialogue: {
         ...defaults.monkeyGuide.dialogue, ...(candidate.monkeyGuide?.dialogue ?? {}),
         position: normalizeVector(candidate.monkeyGuide?.dialogue?.position, defaults.monkeyGuide.dialogue.position)
-      }
+      },
+      card: { ...defaults.monkeyGuide.card, ...(candidate.monkeyGuide?.card ?? {}) }
     },
     controllers: {
       enabled: typeof candidate.controllers?.enabled === 'boolean'
