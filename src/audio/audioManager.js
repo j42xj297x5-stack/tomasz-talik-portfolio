@@ -3,9 +3,7 @@ import { publicPath } from '../utils/publicPath.js';
 const DEFAULTS = Object.freeze({ master: 0.7, ambient: 0.4, effects: 0.85 });
 const CROSSFADE_SECONDS = 5;
 const INTRO_DELAY_SECONDS = 5;
-const HOVER_FADE_IN_SECONDS = 0.5;
-const HOVER_FADE_OUT_SECONDS = 1;
-const HOVER_SILENT_HOLD_SECONDS = 0.5;
+const HOVER_FADE_OUT_SECONDS = 0.2;
 const EFFECTS_TRIM_DB = -3;
 const INTRO_TRIM_DB = 5;
 const AMBIENT_PATHS = Object.freeze([
@@ -17,13 +15,34 @@ const AMBIENT_PATHS = Object.freeze([
 ]);
 const STORAGE_KEY = 'portfolioAudioSettings';
 const EFFECT_PATHS = Object.freeze({
-  click: ['/audio/click_01.wav'],
-  caseToggle: ['/audio/click_02.wav'],
-  glyphClick: ['/audio/click_long_01.wav', '/audio/click_long_02.wav'],
-  glyphHover: ['/audio/glyph_on_hover.mp3'],
-  glyphOpen: ['/audio/glyph_open_01.wav', '/audio/glyph_open_02.wav'],
-  glyphClose: ['/audio/glyph_close_01.wav', '/audio/glyph_close_02.wav']
+  click: ['/audio/click_panel_01.mp3'],
+  caseOpen: ['/audio/bell_01.mp3'],
+  caseClose: ['/audio/bell_02.mp3'],
+  glyphHover: ['/audio/glif_hover_loop.mp3'],
+  glyphEarthOpen: ['/audio/glif_earth_4s_01.mp3'],
+  glyphEarthClose: ['/audio/glif_earth_4s_02.mp3'],
+  glyphFireOpen: ['/audio/glif_fire_4s_01.mp3'],
+  glyphFireClose: ['/audio/glif_fire_4s_02.mp3'],
+  glyphWoodOpen: ['/audio/glif_wood_4s_01.mp3'],
+  glyphWoodClose: ['/audio/glif_wood_4s_02.mp3'],
+  glyphWaterOpen: ['/audio/glif_water_4s_01.mp3'],
+  glyphWaterClose: ['/audio/glif_water_4s_02.mp3'],
+  glyphMetalOpen: ['/audio/glif_metal_4s_01.mp3'],
+  glyphMetalClose: ['/audio/glif_metal_4s_02.mp3']
 });
+const GLYPH_EFFECTS = Object.freeze({
+  'ethics-life-protection': Object.freeze({ open: 'glyphEarthOpen', close: 'glyphEarthClose' }),
+  'creative-ai': Object.freeze({ open: 'glyphFireOpen', close: 'glyphFireClose' }),
+  'ai-guide': Object.freeze({ open: 'glyphWoodOpen', close: 'glyphWoodClose' }),
+  'spotify-digger': Object.freeze({ open: 'glyphWaterOpen', close: 'glyphWaterClose' }),
+  'haiku-cosmos': Object.freeze({ open: 'glyphMetalOpen', close: 'glyphMetalClose' })
+});
+const AMBIENT_BY_PROGRESS_LEVEL = Object.freeze([1, 2, 3, 3, 0, 4]);
+
+const resolveAmbientIndex = (level) => {
+  const normalizedLevel = Math.min(5, Math.max(0, Math.round(Number(level) || 0)));
+  return AMBIENT_BY_PROGRESS_LEVEL[normalizedLevel];
+};
 
 const clamp01 = (value) => Math.min(1, Math.max(0, Number(value) || 0));
 const perceptualGain = (value) => Math.pow(clamp01(value), 2);
@@ -51,7 +70,6 @@ class AudioManager {
     this.activeGlyphHover = null;
     this.fadingGlyphHover = null;
     this.pendingGlyphHoverStart = false;
-    this.preparedGlyphHoverBuffer = null;
     this.glyphHoverRequestVersion = 0;
     this.masterVolume = DEFAULTS.master;
     this.lastNonZeroVolume = DEFAULTS.master;
@@ -144,8 +162,8 @@ class AudioManager {
     }
   }
 
-  preloadEntryEffects() { return this.preloadPools(['click', 'caseToggle']); }
-  preloadExperienceEffects() { return this.preloadPools(['glyphClick', 'glyphHover', 'glyphOpen', 'glyphClose']); }
+  preloadEntryEffects() { return this.preloadPools(['click', 'caseOpen', 'caseClose']); }
+  preloadExperienceEffects() { return this.preloadPools(['glyphHover', ...new Set(Object.values(GLYPH_EFFECTS).flatMap(Object.values))]); }
 
   prepareExperienceAudio() {
     this.ensureContext();
@@ -196,32 +214,14 @@ class AudioManager {
 
   cacheDecodedBuffer(path, buffer) {
     this.buffers.set(path, buffer);
-    if (path === EFFECT_PATHS.glyphHover[0]) {
-      this.preparedGlyphHoverBuffer = this.createSafeGlyphHoverBuffer(buffer);
-    }
   }
 
-  createSafeGlyphHoverBuffer(original) {
-    if (!this.context) return original;
-    const silentFrames = Math.ceil(HOVER_SILENT_HOLD_SECONDS * original.sampleRate);
-    const safeBuffer = this.context.createBuffer(
-      original.numberOfChannels,
-      original.length + silentFrames,
-      original.sampleRate
-    );
-    const fadeFrames = Math.min(original.length, Math.ceil(original.sampleRate));
-    const fadeStart = original.length - fadeFrames;
-    for (let channel = 0; channel < original.numberOfChannels; channel += 1) {
-      const input = original.getChannelData(channel);
-      const output = safeBuffer.getChannelData(channel);
-      output.set(input);
-      for (let frame = fadeStart; frame < original.length; frame += 1) {
-        const remaining = original.length - 1 - frame;
-        const multiplier = fadeFrames <= 1 ? 0 : remaining / (fadeFrames - 1);
-        output[frame] *= multiplier;
-      }
-    }
-    return safeBuffer;
+  playCaseToggle(isOpen) { return this.playEffect(isOpen ? 'caseOpen' : 'caseClose'); }
+
+  playGlyphPanel(glyphId, action) {
+    const poolName = GLYPH_EFFECTS[glyphId]?.[action];
+    if (poolName) return this.playEffect(poolName);
+    return undefined;
   }
 
   async playEffect(poolName) {
@@ -260,7 +260,6 @@ class AudioManager {
     const now = this.context.currentTime;
     const fadeDuration = HOVER_FADE_OUT_SECONDS;
     const fadeEndsAt = now + fadeDuration;
-    const stopAt = fadeEndsAt + HOVER_SILENT_HOLD_SECONDS;
     const parameter = handle.gain.gain;
     if (typeof parameter.cancelAndHoldAtTime === 'function') parameter.cancelAndHoldAtTime(now);
     else {
@@ -272,7 +271,7 @@ class AudioManager {
     parameter.setValueCurveAtTime(this.createFadeCurve(currentGain, 1, false), now, fadeDuration);
     parameter.setValueAtTime(0, fadeEndsAt);
     this.fadingGlyphHover = handle;
-    try { handle.source.stop(stopAt); } catch (_) { this.cleanupGlyphHover(handle); }
+    try { handle.source.stop(fadeEndsAt); } catch (_) { this.cleanupGlyphHover(handle); }
   }
 
   async startGlyphHover() {
@@ -282,18 +281,16 @@ class AudioManager {
     try {
       if (!await this.unlock() || requestVersion !== this.glyphHoverRequestVersion) return;
       const path = EFFECT_PATHS.glyphHover[0];
-      const decodedBuffer = this.buffers.get(path) || await this.loadBuffer(path);
-      const buffer = this.preparedGlyphHoverBuffer;
-      if (requestVersion !== this.glyphHoverRequestVersion || !decodedBuffer || !buffer || !this.context || !this.effectsBusNode) return;
+      const buffer = this.buffers.get(path) || await this.loadBuffer(path);
+      if (requestVersion !== this.glyphHoverRequestVersion || !buffer || !this.context || !this.effectsBusNode) return;
 
       const source = this.context.createBufferSource();
       const gain = this.context.createGain();
       const handle = { source, gain, stopping: false, cleaned: false };
       source.buffer = buffer;
-      source.loop = false;
+      source.loop = true;
       const now = this.context.currentTime;
-      gain.gain.setValueAtTime(0, now);
-      gain.gain.setValueCurveAtTime(this.createFadeCurve(0, 1, true), now, HOVER_FADE_IN_SECONDS);
+      gain.gain.setValueAtTime(1, now);
       source.connect(gain).connect(this.effectsBusNode);
       source.onended = () => this.cleanupGlyphHover(handle);
       this.activeGlyphHover = handle;
@@ -335,7 +332,8 @@ class AudioManager {
 
   async startInitialAmbient() {
     if (this.startedAmbient || !this.context || !this.ambientChannels.length) return;
-    const channel = this.ambientChannels[0];
+    const target = this.requestedAmbient ?? resolveAmbientIndex(0);
+    const channel = this.ambientChannels[target];
     channel.element.currentTime = 0;
     try {
       await channel.element.play();
@@ -344,8 +342,8 @@ class AudioManager {
       return;
     }
     this.startedAmbient = true;
-    this.activeAmbient = 0;
-    this.requestedAmbient = 0;
+    this.activeAmbient = target;
+    this.requestedAmbient = target;
     const now = this.context.currentTime;
     channel.gain.gain.cancelScheduledValues(now);
     channel.gain.gain.setValueAtTime(0, now);
@@ -353,8 +351,7 @@ class AudioManager {
   }
 
   setProgressLevel(level) {
-    const normalizedLevel = Math.min(5, Math.max(0, Math.round(Number(level) || 0)));
-    const target = normalizedLevel <= 1 ? 0 : normalizedLevel - 1;
+    const target = resolveAmbientIndex(level);
     if (target === this.requestedAmbient) return;
     this.requestedAmbient = target;
     const requestVersion = ++this.ambientRequestVersion;
