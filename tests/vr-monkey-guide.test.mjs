@@ -8,6 +8,8 @@ import { resolveVrPageProtoAstro } from '../src/xr/protoAstro/resolveVrPageProto
 const drawnText = [];
 const roundedRectStarts = [];
 const fillStyles = [];
+const strokeStyles = [];
+const textAlignments = [];
 globalThis.Image = class {
   complete = false; naturalWidth = 0;
   set src(value) { this.url = value; }
@@ -21,10 +23,12 @@ globalThis.document = {
         assert.equal(type, '2d');
         return {
           clearRect() {}, beginPath() {}, moveTo(x, y) { roundedRectStarts.push({ x, y }); },
-          arcTo() {}, closePath() {}, fill() {}, drawImage() {},
+          arcTo() {}, closePath() {}, fill() {}, stroke() {}, fillRect() {}, drawImage() {},
           measureText(text) { return { width: String(text).length * 24 }; },
           fillText(text) { drawnText.push(String(text)); },
-          set fillStyle(value) { fillStyles.push(value); }, set font(value) {}, set textAlign(value) {},
+          set fillStyle(value) { fillStyles.push(value); }, set strokeStyle(value) { strokeStyles.push(value); },
+          set lineWidth(value) {}, set globalCompositeOperation(value) {}, set font(value) {},
+          set textAlign(value) { textAlignments.push(value); },
           set textBaseline(value) {}, set globalAlpha(value) {}
         };
       }
@@ -77,12 +81,14 @@ assert.equal(guide.messagePanel.planes[1].rotation.y, Math.PI, 'back uses its ow
 assert.equal(guide.arcs.length, 3);
 assert.deepEqual(guide.arcs.map(({ geometry }) => geometry.parameters.radius), [0.08, 0.125, 0.17]);
 assert.ok(guide.arcs.every(({ geometry }) => geometry.parameters.tube === 0.009));
-assert.deepEqual(guide.arcs.map(({ position }) => position.y), [0, 0.055, 0.11]);
+assert.deepEqual(guide.arcs.map(({ position }) => position.y), [0, 0, 0], 'attention arcs share one local center');
 assert.ok(guide.arcs.every(({ rotation }) => rotation.z === Math.PI), 'attention arcs open upward');
 assert.equal(guide.messagePanel.group.position.y, 1.96);
-assert.equal(guide.dialoguePanel.group.position.z, 0.60);
+assert.deepEqual(guide.dialoguePanel.group.position.toArray(), [1.20, 0.30, 0.50]);
 assert.ok(Math.abs(guide.dialoguePanel.group.rotation.x - (-7.5 * Math.PI / 180)) < 1e-12);
-assert.ok(fillStyles.includes('#ffaa63'), 'dialogue uses its saturated panel color');
+assert.ok(fillStyles.includes('#090909'), 'dialogue controls use an almost-black background');
+assert.ok(strokeStyles.includes('#ffaa63'), 'dialogue controls use an orange border');
+assert.ok(textAlignments.includes('left'), 'MENU labels are left aligned');
 assert.equal(guide.attentionRoot.visible, false);
 
 roundedRectStarts.length = 0;
@@ -93,7 +99,7 @@ roundedRectStarts.length = 0;
 guide.showMessage('This message contains enough words to wrap onto a second line in the panel');
 const multiLineBoxY = roundedRectStarts.at(-1).y;
 assert.ok(multiLineBoxY < oneLineBoxY, 'additional lines grow the message box upward');
-assert.ok(fillStyles.includes('#ffbd83'), 'message uses its original panel color');
+assert.ok(fillStyles.includes('#e99a55'), 'message uses its darker saturated panel color');
 guide.showMessage('');
 
 guide.update(0.016);
@@ -160,4 +166,7 @@ polish.guide.dispose(); polish.monkeyGeometry.dispose(); polish.monkeyMaterial.d
 
 const source = await readFile(new URL('../src/xr/guidance/createVrMonkeyGuide.js', import.meta.url), 'utf8');
 assert.doesNotMatch(source, /['"`]svg\/(?:KA|TA|SA|LA|RA)\.svg/, 'guide owns no Proto-Astro asset paths');
+assert.doesNotMatch(source, /fillStyle = settings\.colors\.dialoguePanel/, 'dialogue canvas has no full-panel background');
+assert.match(source, /globalCompositeOperation = 'source-in'/, 'history glyphs are recolored through one mask canvas');
+assert.match(source, /const glyphX = region\.x \+ 24/, 'history glyphs are laid out from the left edge');
 console.log('VR monkey guide assertions passed');
