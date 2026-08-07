@@ -212,7 +212,8 @@ assert.doesNotMatch(vr, /platformFixturesRoot\.(?:attach|add)\(glyphRing\)|platf
 assert.match(portalDisplay, /applyWorldTransform\(object, desiredWorldPosition, desiredWorldQuaternion\)/);
 assert.match(crystalReliquary, /portalDisplay\.object\.getWorldPosition\(portalPosition\);[\s\S]*portalDisplay\.object\.getWorldQuaternion\(portalQuaternion\);[\s\S]*applyWorldTransform\(object, desiredWorldPosition, portalQuaternion\)/);
 assert.match(crystalReliquary, /applyWorldTransform\(insertFeedback, sphere\.center, insertFeedback\.quaternion, insertFeedbackWorldScale\)/);
-assert.match(astroFurnace, /calculateMirroredHorizontalPosition\(anchorCenter, mirrorPosition, desiredWorldPosition\);[\s\S]*applyWorldTransform\(object, desiredWorldPosition, desiredWorldQuaternion, desiredWorldScale\)/);
+assert.match(astroFurnace, /resolveVrPlatformFixturePositions\(\{ anchorCenter, spawnPosition, portalSettings \}\);[\s\S]*applyWorldTransform\(object, desiredWorldPosition, desiredWorldQuaternion, desiredWorldScale\)/);
+assert.doesNotMatch(astroFurnace, /mirrorObject/, 'furnace does not depend on the placed portal object');
 assert.doesNotMatch(astroFurnace, /object\.position\.y = 0;[\s\S]*worldToLocal\(object\.position\)/);
 assert.match(furnacePanel, /return \{ object: root/);
 assert.match(furnacePanel, /applyWorldTransform\(root, desiredWorldPosition, desiredWorldQuaternion, desiredWorldScale\)/);

@@ -16,7 +16,11 @@ assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.playerGuidePanel.rotationDegrees.x, 
 assert.deepEqual(DEFAULT_EXPERIENCE_VR_SETTINGS.monkeyGuide.attention.radii, [0.08, 0.125, 0.17]);
 assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.monkeyGuide.attention.thickness, 0.009);
 assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.monkeyGuide.attention.verticalGap, 0);
-assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.monkeyGuide.message.position.y, 1.96);
+assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.monkeyGuide.attention.position.z, -0.05);
+assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.monkeyGuide.message.gapFromAttention, 0.03);
+assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.monkeyGuide.message.paddingX, 44);
+assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.monkeyGuide.message.paddingY, 31);
+assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.monkeyGuide.dialogue.historyGlyphSize, 136);
 assert.deepEqual(DEFAULT_EXPERIENCE_VR_SETTINGS.monkeyGuide.dialogue.position, { x: 1.20, y: 0.30, z: 0.50 });
 assert.deepEqual(DEFAULT_EXPERIENCE_VR_SETTINGS.monkeyGuide.dialogue.rotationDegrees, { x: -7.5, y: 0, z: 0 });
 assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.monkeyGuide.colors.messagePanel, '#e99a55');

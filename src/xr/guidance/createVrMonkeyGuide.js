@@ -9,6 +9,7 @@ const COPY = Object.freeze({
 });
 
 export const VR_MONKEY_GUIDE_SCREEN = Object.freeze({ MENU: 'MENU', HISTORY: 'HISTORY', CARD: 'CARD' });
+export const unreadPulseAlpha = (seconds) => 0.5 - 0.5 * Math.cos(Math.PI * Math.max(0, seconds));
 const degToRad = (degrees) => degrees * Math.PI / 180;
 
 function roundedRect(context, x, y, width, height, radius) {
@@ -134,7 +135,12 @@ export function createVrMonkeyGuide({
     name: 'VrMonkeyMessagePanel', width: settings.message.width, height: settings.message.height,
     canvasWidth: settings.message.canvasWidth, canvasHeight: settings.message.canvasHeight
   });
-  messagePanel.group.position.set(settings.message.position.x, settings.message.position.y, settings.message.position.z);
+  const attentionTop = settings.attention.position.y + Math.max(...settings.attention.radii);
+  messagePanel.group.position.set(
+    0,
+    attentionTop + settings.message.gapFromAttention + settings.message.height / 2,
+    settings.attention.position.z
+  );
   messagePanel.group.visible = false;
   root.add(messagePanel.group);
 
@@ -167,6 +173,9 @@ export function createVrMonkeyGuide({
   let historyPage = 0;
   let selectedPageId = null;
   let cardPage = 0;
+  let historyPulseRedrawElapsed = 0;
+  const knownActivatedPageIds = new Set(progressionController.getActivatedPageIds());
+  const unreadPageIds = new Set();
   const pagesById = new Map(experienceVrPages.map((page) => [page.id, page]));
   const glyphImages = new Map();
   const glyphMaskCanvas = document.createElement('canvas');
@@ -181,44 +190,53 @@ export function createVrMonkeyGuide({
     const selectedPage = pagesById.get(selectedPageId);
     if (screen === VR_MONKEY_GUIDE_SCREEN.CARD && selectedPage) {
       const resolved = resolveExperienceVrPage(selectedPage, locale);
-      context.globalAlpha = settings.colors.panelOpacity;
-      context.fillStyle = settings.colors.messagePanel ?? settings.colors.panel;
-      roundedRect(context, 0, 0, canvas.width, canvas.height, settings.message.cornerRadius);
-      context.fill();
-      context.globalAlpha = 1;
-      context.fillStyle = settings.colors.text;
-      context.textAlign = 'center';
-      context.textBaseline = 'middle';
       context.font = `${settings.message.fontWeight} ${settings.card.titleFontSize}px sans-serif`;
-      context.fillText(resolved.title, canvas.width / 2, settings.message.padding);
+      const titleWidth = context.measureText(resolved.title).width;
       context.font = `${settings.card.bodyFontSize}px sans-serif`;
-      const pages = paginateText(context, resolved.body, canvas.width - settings.message.padding * 2,
+      const pages = paginateText(context, resolved.body, settings.message.maxBubbleWidthPx - settings.message.paddingX * 2,
         settings.card.maxLinesPerPage);
       cardPage = Math.min(cardPage, pages.length - 1);
-      pages[cardPage].forEach((line, index) => context.fillText(line, canvas.width / 2,
-        settings.message.padding * 2 + settings.card.lineHeight * (index + 0.5)));
+      const lines = pages[cardPage];
+      const bodyWidth = Math.max(...lines.map((line) => context.measureText(line).width), 0);
+      const titleLineHeight = settings.card.titleFontSize * 1.15;
+      const titleGap = settings.message.paddingY;
+      const boxWidth = Math.min(settings.message.maxBubbleWidthPx,
+        Math.max(titleWidth, bodyWidth) + settings.message.paddingX * 2);
+      const boxHeight = Math.min(canvas.height, settings.message.paddingY * 2 + titleLineHeight + titleGap
+        + lines.length * settings.card.lineHeight);
+      const x = (canvas.width - boxWidth) / 2; const y = canvas.height - boxHeight;
+      drawBubble(context, x, y, boxWidth, boxHeight);
+      context.fillStyle = settings.colors.text; context.textAlign = 'center'; context.textBaseline = 'middle';
+      context.font = `${settings.message.fontWeight} ${settings.card.titleFontSize}px sans-serif`;
+      context.fillText(resolved.title, canvas.width / 2, y + settings.message.paddingY + titleLineHeight / 2);
+      context.font = `${settings.card.bodyFontSize}px sans-serif`;
+      lines.forEach((line, index) => context.fillText(line, canvas.width / 2,
+        y + settings.message.paddingY + titleLineHeight + titleGap + settings.card.lineHeight * (index + 0.5)));
       texture.needsUpdate = true;
       return;
     }
     context.font = `${settings.message.fontWeight} ${settings.message.fontSize}px sans-serif`;
-    const maxTextWidth = canvas.width - settings.message.padding * 2;
+    const maxTextWidth = settings.message.maxBubbleWidthPx - settings.message.paddingX * 2;
     const lines = wrapText(context, message, maxTextWidth, settings.message.maxLines);
     const measuredWidth = Math.max(...lines.map((line) => context.measureText(line).width), 1);
-    const boxWidth = Math.min(canvas.width, measuredWidth + settings.message.padding * 2);
-    const boxHeight = Math.min(canvas.height, lines.length * settings.message.lineHeight + settings.message.padding * 2);
+    const boxWidth = Math.min(settings.message.maxBubbleWidthPx, measuredWidth + settings.message.paddingX * 2);
+    const boxHeight = Math.min(canvas.height, lines.length * settings.message.lineHeight + settings.message.paddingY * 2);
     const x = (canvas.width - boxWidth) / 2;
     const y = canvas.height - boxHeight;
-    context.globalAlpha = settings.colors.panelOpacity;
-    context.fillStyle = settings.colors.messagePanel ?? settings.colors.panel;
-    roundedRect(context, x, y, boxWidth, boxHeight, settings.message.cornerRadius);
-    context.fill();
-    context.globalAlpha = 1;
+    drawBubble(context, x, y, boxWidth, boxHeight);
     context.fillStyle = settings.colors.text;
     context.textAlign = 'center';
     context.textBaseline = 'middle';
     lines.forEach((line, index) => context.fillText(line, canvas.width / 2,
-      y + settings.message.padding + settings.message.lineHeight * (index + 0.5)));
+      y + settings.message.paddingY + settings.message.lineHeight * (index + 0.5)));
     texture.needsUpdate = true;
+  }
+
+  function drawBubble(context, x, y, width, height) {
+    context.globalAlpha = settings.colors.panelOpacity;
+    context.fillStyle = settings.colors.messagePanel ?? settings.colors.panel;
+    roundedRect(context, x, y, width, height, settings.message.cornerRadius); context.fill();
+    context.globalAlpha = 1;
   }
 
   function drawDialogue() {
@@ -231,16 +249,16 @@ export function createVrMonkeyGuide({
       : [{ id: 'close', label: copy.close }];
     const gap = settings.dialogue.gap;
     const padding = settings.dialogue.padding;
-    const height = (canvas.height - padding * 2 - gap * (options.length - 1)) / options.length;
-    interactiveRegions = options.map((option, index) => ({
-      ...option, x: padding, y: padding + index * (height + gap), width: canvas.width - padding * 2, height
-    }));
     context.font = `${settings.dialogue.fontWeight} ${settings.dialogue.fontSize}px sans-serif`;
+    const height = settings.dialogue.fontSize + settings.dialogue.menuPaddingY * 2;
+    interactiveRegions = options.map((option, index) => ({ ...option, x: padding,
+      y: padding + index * (height + gap),
+      width: context.measureText(option.label).width + settings.dialogue.menuPaddingX * 2, height }));
     context.textAlign = 'left';
     context.textBaseline = 'middle';
     interactiveRegions.forEach((region) => {
       context.fillStyle = drawInteractiveRegion(context, region, hoveredOption === region.id);
-      context.fillText(region.label, region.x + 48, region.y + region.height / 2);
+      context.fillText(region.label, region.x + settings.dialogue.menuPaddingX, region.y + region.height / 2);
     });
     texture.needsUpdate = true;
   }
@@ -295,24 +313,33 @@ export function createVrMonkeyGuide({
     historyPage = Math.min(historyPage, totalPages - 1);
     const visible = entries.slice(historyPage * size, (historyPage + 1) * size);
     const navHeight = 100; const padding = settings.dialogue.padding; const columns = settings.dialogue.historyColumns;
-    const cellWidth = (canvas.width - padding * 2) / columns;
-    const rows = Math.max(1, Math.ceil(size / columns)); const cellHeight = (canvas.height - padding * 2 - navHeight) / rows;
+    const glyphSize = settings.dialogue.historyGlyphSize;
+    const itemWidth = glyphSize + settings.dialogue.historyItemPadding * 2;
+    const itemHeight = glyphSize + settings.dialogue.historyGlyphStarGap + settings.dialogue.historyStarFontSize
+      + settings.dialogue.historyItemPadding * 2;
+    const columnGap = Math.max(0, (canvas.width - padding * 2 - columns * itemWidth) / columns);
     visible.forEach((entry, index) => {
       const column = index % columns; const row = Math.floor(index / columns);
       const region = addRegion({ id: `page:${entry.pageId}`, pageId: entry.pageId,
-        x: padding + column * cellWidth + 8, y: padding + row * cellHeight + 8,
-        width: cellWidth - 16, height: cellHeight - 16 });
+        x: padding + column * (itemWidth + columnGap), y: padding + row * (itemHeight + settings.dialogue.gap),
+        width: itemWidth, height: itemHeight });
       const contentColor = drawInteractiveRegion(context, region, hoveredOption === region.id);
-      const image = requestGlyphImage(entry); const glyphSize = settings.dialogue.historyGlyphSize;
-      const glyphX = region.x + 24; const glyphY = region.y + (region.height - glyphSize) / 2;
+      const image = requestGlyphImage(entry);
+      const glyphX = region.x + settings.dialogue.historyItemPadding;
+      const glyphY = region.y + settings.dialogue.historyItemPadding;
+      const contentAlpha = unreadPageIds.has(entry.pageId) ? unreadPulseAlpha(elapsed) : 1;
+      context.globalAlpha = contentAlpha;
       if (image?.complete && image.naturalWidth && context.drawImage) drawTintedGlyph(context, image,
         glyphX, glyphY, glyphSize, contentColor);
       else { context.fillStyle = contentColor; context.font = `${settings.dialogue.fontWeight} ${glyphSize * 0.55}px sans-serif`;
         context.textAlign = 'left'; context.textBaseline = 'middle'; context.fillText(entry.descriptor.syllable,
           glyphX, region.y + region.height / 2); }
       context.fillStyle = contentColor;
-      context.font = `${settings.dialogue.historyMarkerFontSize}px sans-serif`; context.textAlign = 'right';
-      context.fillText(String(entry.page.order), region.x + region.width - 14, region.y + region.height - 18);
+      context.font = `${settings.dialogue.historyStarFontSize}px sans-serif`; context.textAlign = 'center';
+      context.textBaseline = 'middle';
+      context.fillText('★'.repeat(entry.page.order), glyphX + glyphSize / 2,
+        glyphY + glyphSize + settings.dialogue.historyGlyphStarGap + settings.dialogue.historyStarFontSize / 2);
+      context.globalAlpha = 1;
     });
     const back = addRegion({ id: 'back-menu', x: padding, y: canvas.height - padding - navHeight,
       width: settings.dialogue.navigationWidth, height: navHeight }); drawButton(context, back, '←');
@@ -325,7 +352,7 @@ export function createVrMonkeyGuide({
     const page = pagesById.get(selectedPageId); if (!page) return [[]];
     dialoguePanel.context.font = `${settings.card.bodyFontSize}px sans-serif`;
     return paginateText(dialoguePanel.context, resolveExperienceVrPage(page, locale).body,
-      messagePanel.canvas.width - settings.message.padding * 2, settings.card.maxLinesPerPage);
+      settings.message.maxBubbleWidthPx - settings.message.paddingX * 2, settings.card.maxLinesPerPage);
   }
   function drawCardNavigation(context, canvas) {
     interactiveRegions = []; const padding = settings.dialogue.padding; const height = canvas.height - padding * 2;
@@ -367,7 +394,8 @@ export function createVrMonkeyGuide({
   function activateOption(id) {
     if (id === 'progress' && progressCount() > 0) { screen = VR_MONKEY_GUIDE_SCREEN.HISTORY; historyPage = 0;
       showMessage(copy.history(progressCount())); drawDialogue(); return true; }
-    if (id?.startsWith('page:')) { selectedPageId = id.slice(5); screen = VR_MONKEY_GUIDE_SCREEN.CARD; cardPage = 0;
+    if (id?.startsWith('page:')) { selectedPageId = id.slice(5); unreadPageIds.delete(selectedPageId);
+      screen = VR_MONKEY_GUIDE_SCREEN.CARD; cardPage = 0;
       showMessage('card'); drawDialogue(); return true; }
     if (id === 'back-history') { screen = VR_MONKEY_GUIDE_SCREEN.HISTORY; showMessage(copy.history(progressCount())); drawDialogue(); return true; }
     if (id === 'back-menu') { screen = VR_MONKEY_GUIDE_SCREEN.MENU; showMessage(''); drawDialogue(); return true; }
@@ -431,6 +459,15 @@ export function createVrMonkeyGuide({
   function update(delta = 0) {
     if (disposed) return;
     elapsed += Math.max(0, delta);
+    for (const pageId of progressionController.getActivatedPageIds()) {
+      if (!knownActivatedPageIds.has(pageId)) { knownActivatedPageIds.add(pageId); unreadPageIds.add(pageId); }
+    }
+    historyPulseRedrawElapsed += Math.max(0, delta);
+    if (screen === VR_MONKEY_GUIDE_SCREEN.HISTORY && historyPulseRedrawElapsed >= 1 / 30
+      && historyEntries().slice(historyPage * settings.dialogue.historyPageSize,
+        (historyPage + 1) * settings.dialogue.historyPageSize).some(({ pageId }) => unreadPageIds.has(pageId))) {
+      historyPulseRedrawElapsed = 0; drawDialogue();
+    }
     if (attentionPending) {
       const phase = (elapsed % settings.attention.cycleDuration) / settings.attention.cycleDuration * arcs.length;
       arcs.forEach((arc, index) => {
@@ -451,6 +488,9 @@ export function createVrMonkeyGuide({
     clearAttention();
     showMessage('');
     elapsed = 0;
+    knownActivatedPageIds.clear();
+    progressionController.getActivatedPageIds().forEach((pageId) => knownActivatedPageIds.add(pageId));
+    unreadPageIds.clear(); historyPulseRedrawElapsed = 0;
     halo.setVisible(false);
   }
   function dispose() {
@@ -474,6 +514,7 @@ export function createVrMonkeyGuide({
     hasCurrentHit: (record) => Boolean(hits.get(record)), reset, dispose, press,
     isAttentionPending: () => attentionPending,
     getScreen: () => screen, getHistoryEntries: historyEntries, getSelectedPageId: () => selectedPageId,
-    getHistoryPage: () => historyPage, getCardPage: () => cardPage, getCardPageCount: () => cardPages().length
+    getHistoryPage: () => historyPage, getCardPage: () => cardPage, getCardPageCount: () => cardPages().length,
+    getUnreadPageIds: () => [...unreadPageIds]
   };
 }

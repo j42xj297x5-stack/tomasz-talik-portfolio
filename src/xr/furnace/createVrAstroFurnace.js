@@ -1,5 +1,6 @@
 import * as THREE from '../../vendor/three.js';
 import { applyWorldTransform } from '../applyWorldTransform.js';
+import { resolveVrPlatformFixturePositions } from '../placement/vrPlatformFixturePlacement.js';
 
 const REQUIRED_NODE_NAMES = Object.freeze([
   'ASTRO_FURNACE_ROOT', 'button_open', 'button_activate', 'button_option',
@@ -23,10 +24,6 @@ const GLTF_CHANNEL_TYPE = Object.freeze({
   position: 'translation', quaternion: 'rotation', scale: 'scale', morphTargetInfluences: 'weights'
 });
 
-export function calculateMirroredHorizontalPosition(anchorCenter, mirrorPosition, target = new THREE.Vector3()) {
-  return target.set(2 * anchorCenter.x - mirrorPosition.x, anchorCenter.y, 2 * anchorCenter.z - mirrorPosition.z);
-}
-
 function isVisibleGeometry(node, root) {
   if (!node.geometry || !node.isMesh) return false;
   for (let current = node; current; current = current.parent) {
@@ -37,7 +34,7 @@ function isVisibleGeometry(node, root) {
 }
 
 export function createVrAstroFurnace({
-  parent, model, animations = [], settings, anchorObject, mirrorObject, spawnPosition
+  parent, model, animations = [], settings, anchorObject, portalSettings, spawnPosition
 }) {
   const object = new THREE.Group();
   object.name = 'VrAstroFurnace';
@@ -123,12 +120,12 @@ export function createVrAstroFurnace({
   function place() {
     if (disposed) return false;
     desiredWorldScale.setScalar(settings.scale);
-    if (settings.placementMode === 'mirror-portal' && anchorObject && mirrorObject) {
+    if (settings.placementMode === 'mirror-portal' && anchorObject && portalSettings) {
       anchorObject.updateWorldMatrix(true, true);
-      mirrorObject.updateWorldMatrix(true, false);
       anchorBounds.setFromObject(anchorObject).getCenter(anchorCenter);
-      mirrorObject.getWorldPosition(mirrorPosition);
-      calculateMirroredHorizontalPosition(anchorCenter, mirrorPosition, desiredWorldPosition);
+      const placement = resolveVrPlatformFixturePositions({ anchorCenter, spawnPosition, portalSettings });
+      desiredWorldPosition.copy(placement.furnacePosition);
+      mirrorPosition.copy(placement.portalPosition);
     } else {
       desiredWorldPosition.set(settings.position.x, settings.position.y, settings.position.z);
       anchorCenter.set(0, 0, 0);
@@ -155,7 +152,7 @@ export function createVrAstroFurnace({
     diagnostics.placementMode = settings.placementMode;
     diagnostics.appliedScale = object.scale.x;
     diagnostics.anchorCenter = anchorObject ? anchorCenter.toArray() : null;
-    diagnostics.mirrorPosition = mirrorObject ? mirrorPosition.toArray() : null;
+    diagnostics.mirrorPosition = portalSettings ? mirrorPosition.toArray() : null;
     diagnostics.resolvedPosition = resolvedWorldPosition.toArray();
     diagnostics.visibleBounds = visibleBounds.isEmpty() ? null : {
       min: visibleBounds.min.toArray(), max: visibleBounds.max.toArray()
