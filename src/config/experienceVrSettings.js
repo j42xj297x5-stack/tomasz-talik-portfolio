@@ -109,13 +109,15 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
     enabled: true,
     rayMaxDistance: 2.3,
     colors: {
-      accent: '#ffaa63', messagePanel: '#ffbd83', dialoguePanel: '#ffaa63',
+      accent: '#ffaa63', messagePanel: '#e99a55', dialoguePanel: '#ffaa63',
+      dialogueButtonBackground: '#090909', dialogueButtonBorder: '#ffaa63', dialogueButtonText: '#ffaa63',
+      dialogueButtonHoverBackground: '#ffaa63', dialogueButtonHoverText: '#090909',
       hover: '#ffd3ac', text: '#342116', panelOpacity: 0.92
     },
     halo: { color: 0xffaa63, opacity: 0.42, thicknessPixels: 4, pulseDuration: 1.4 },
     attention: {
       position: { x: 0, y: 1.4, z: 0.08 }, radii: [0.08, 0.125, 0.17], thickness: 0.009,
-      verticalGap: 0.055, cycleDuration: 1.35, opacityMin: 0.12, opacityMax: 0.95, scalePulse: 0.025
+      verticalGap: 0, cycleDuration: 1.35, opacityMin: 0.12, opacityMax: 0.95, scalePulse: 0.025
     },
     message: {
       position: { x: 0, y: 1.96, z: 0.08 }, width: 1.7, height: 0.72,
@@ -123,7 +125,7 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
       fontSize: 64, fontWeight: 600, lineHeight: 78, maxLines: 4
     },
     dialogue: {
-      position: { x: 0, y: -0.72, z: 0.60 }, rotationDegrees: { x: -7.5, y: 0, z: 0 },
+      position: { x: 1.20, y: 0.30, z: 0.50 }, rotationDegrees: { x: -7.5, y: 0, z: 0 },
       width: 1.65, height: 0.76,
       canvasWidth: 1280, canvasHeight: 590, padding: 42, gap: 24, cornerRadius: 58,
       optionCornerRadius: 36, fontSize: 58, fontWeight: 700,
