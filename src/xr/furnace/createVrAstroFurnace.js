@@ -162,6 +162,13 @@ export function createVrAstroFurnace({
   }
 
   function update() {}
+  function refreshVisibleBounds() {
+    const bounds = calculateVisibleBounds();
+    diagnostics.visibleBounds = bounds.isEmpty() ? null : {
+      min: bounds.min.toArray(), max: bounds.max.toArray()
+    };
+    return diagnostics.visibleBounds;
+  }
   function reset() { return place(); }
   function dispose() {
     if (disposed) return;
@@ -191,6 +198,6 @@ export function createVrAstroFurnace({
     console.groupEnd();
   }
 
-  return { object, model, nodes, clips, capabilities, place, update, reset, dispose, diagnostics,
+  return { object, model, nodes, clips, capabilities, place, update, reset, dispose, diagnostics, refreshVisibleBounds,
     subscribePlacement(listener) { placementListeners.add(listener); return () => placementListeners.delete(listener); } };
 }

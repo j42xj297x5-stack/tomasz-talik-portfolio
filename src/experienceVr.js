@@ -40,6 +40,7 @@ import { createVrAsterionSphere } from './xr/asterion/createVrAsterionSphere.js'
 import { createVrAsterionGyroInteraction } from './xr/asterion/createVrAsterionGyroInteraction.js';
 import { createVrPlayerGuidePanel } from './xr/guidance/createVrPlayerGuidePanel.js';
 import { createVrMonkeyGuide } from './xr/guidance/createVrMonkeyGuide.js';
+import { createVrSceneLayoutPrototype } from './xr/layout/createVrSceneLayoutPrototype.js';
 import { experienceVrPages, getExperienceVrPages, resolveExperienceVrPage } from './content/experienceVrPages.js';
 
 const app = document.querySelector('#app');
@@ -82,6 +83,8 @@ const exitButton = app.querySelector('[data-vr-exit]');
 const loadedSettings = await loadExperienceVrSettings({ debug: new URLSearchParams(location.search).has('debug') });
 const settings = loadedSettings.settings;
 const searchParams = new URLSearchParams(location.search);
+const sceneLayoutQa = searchParams.has('sceneLayout');
+const sceneLayoutDebug = sceneLayoutQa && searchParams.has('layoutDebug');
 const furnaceProcessQa = searchParams.has('furnaceProcess');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: settings.renderer.antialias });
 renderer.setPixelRatio(Math.min(devicePixelRatio || 1, settings.renderer.pixelRatioCap));
@@ -124,6 +127,16 @@ await preloadAssets(vrAssets, {
   stage: ASSET_STAGES.CRITICAL_INITIAL,
   markComplete: true
 });
+let sceneLayoutAsset = null;
+if (sceneLayoutQa) {
+  try {
+    sceneLayoutAsset = await assetManager.loadAsset({
+      id: 'vr-scene-layout-prototype', path: '/glb/uklad_sceny.glb', type: 'model'
+    });
+  } catch (error) {
+    console.warn('[Experience VR] Prototype scene layout failed to load; using legacy placement.', error);
+  }
+}
 unsubscribe();
 const progressFloor = createVrProgressFloor({
   parent: worldRoot,
@@ -134,6 +147,18 @@ const progressFloor = createVrProgressFloor({
   aiGuideSectorModel: assetManager.cloneGltfScene('vr-progress-floor-ai-guide-model'),
   worldYOffset: FLOOR_WORLD_Y_OFFSET
 });
+let sceneLayout = null;
+if (sceneLayoutAsset?.gltf?.scene) {
+  try {
+    sceneLayout = createVrSceneLayoutPrototype(sceneLayoutAsset.gltf.scene);
+    if (!sceneLayout.getNode('VR_ROOM_LAYOUT_ROOT') || !sceneLayout.getNode('ANCHOR_FLOOR_ROOT')) {
+      throw new Error('VR_ROOM_LAYOUT_ROOT or ANCHOR_FLOOR_ROOT is missing.');
+    }
+  } catch (error) {
+    sceneLayout = null;
+    console.warn('[Experience VR] Prototype scene layout is invalid; using legacy placement.', error);
+  }
+}
 const platformFixturesRoot = new THREE.Group();
 platformFixturesRoot.name = 'VrPlatformFixturesRoot';
 platformFixturesRoot.position.set(0, 0, 0);
@@ -156,9 +181,17 @@ const entryDirection = new THREE.Vector3(settings.spawn.position.x, 0, settings.
 const glyphOrbit = createVrGlyphOrbit({ nodes, settings: settings.glyphRing, entryDirection });
 const floorWalkRadius = glyphOrbit.effectiveRadius;
 floorPassengerRoot.attach(playerRig);
+if (sceneLayout) {
+  const spawnApplied = sceneLayout.applyTransform({ layoutNode: 'ANCHOR_PLAYER_SPAWN',
+    layoutReference: 'ANCHOR_FLOOR_ROOT', runtimeObject: playerRig,
+    runtimeReference: progressFloor.object, applyRotation: false });
+  if (!spawnApplied) console.warn('[Experience VR] Layout anchor ANCHOR_PLAYER_SPAWN is missing; using legacy player spawn.');
+}
 const playerRigSpawnLocalPosition = playerRig.position.clone();
 const playerRigSpawnLocalQuaternion = playerRig.quaternion.clone();
 const playerRigSpawnLocalScale = playerRig.scale.clone();
+playerRig.updateWorldMatrix(true, false);
+const playerRigSpawnWorldPosition = playerRig.getWorldPosition(new THREE.Vector3());
 const shellSystem = createVrShellSystem({ parent: worldRoot, assetManager, baseRadius: glyphOrbit.effectiveRadius,
   emissionSettings: settings.shellAttractor });
 const asterionSphereGltf = assetManager.getGltf('vr-asterion-sphere-model');
@@ -332,7 +365,7 @@ createVrProgressionShortcut({ search: location.search, pages: experienceVrPages,
   progressFloor, syncTierOneWorldState })();
 const activateButtonGltf = assetManager.getGltf('vr-crystal-reliquary-button-activate-model');
 const activateButtonModel = assetManager.cloneGltfScene('vr-crystal-reliquary-button-activate-model');
-crystalReliquary.attachCompanion({ id: 'activate', model: activateButtonModel, settings: settings.reliquary.buttons,
+const activateCompanion = crystalReliquary.attachCompanion({ id: 'activate', model: activateButtonModel, settings: settings.reliquary.buttons,
   side: settings.reliquary.activateButton.side });
 const activateButton = createVrReliquaryActivateButton({
   buttonModel: activateButtonModel,
@@ -345,7 +378,7 @@ const activateButton = createVrReliquaryActivateButton({
 });
 const releaseButtonGltf = assetManager.getGltf('vr-crystal-reliquary-button-release-model');
 const releaseButtonModel = assetManager.cloneGltfScene('vr-crystal-reliquary-button-release-model');
-crystalReliquary.attachCompanion({ id: 'release', model: releaseButtonModel, settings: settings.reliquary.buttons,
+const releaseCompanion = crystalReliquary.attachCompanion({ id: 'release', model: releaseButtonModel, settings: settings.reliquary.buttons,
   side: settings.reliquary.releaseButton.side });
 const releaseButton = createVrReliquaryReleaseButton({
   buttonModel: releaseButtonModel,
@@ -389,6 +422,80 @@ shellAttractorInteraction = createVrShellAttractorInteraction({
     || astroFurnaceActivateInteraction.hasCurrentHit(record) || astroFurnaceOptionInteraction.hasCurrentHit(record)
     || furnacePanel.hasCurrentHit(record) || monkeyGuide.hasCurrentHit(record) || record.currentHit)
 });
+
+const warnedLayoutAnchors = new Set();
+let sceneLayoutDebugLogged = false;
+function applySceneLayoutPrototype() {
+  if (!sceneLayout) return false;
+  const rows = [];
+  const apply = ({ anchor, target, runtimeObject, layoutReference = 'ANCHOR_FLOOR_ROOT',
+    runtimeReference = progressFloor.object, fallback = false, offsetPosition = null, applyRotation = true }) => {
+    try {
+      const resolved = sceneLayout.applyTransform({ layoutNode: anchor, layoutReference, runtimeObject,
+        runtimeReference, offsetPosition, applyRotation });
+      if (!resolved) {
+        if (!warnedLayoutAnchors.has(anchor)) {
+          warnedLayoutAnchors.add(anchor);
+          console.warn(`[Experience VR] Layout anchor ${anchor} is missing; retaining legacy transform for ${target}.`);
+        }
+        return false;
+      }
+      rows.push({
+        anchor, target,
+        localPosition: resolved.localPosition.toArray().map((value) => Number(value.toFixed(4))).join(', '),
+        worldPosition: resolved.worldPosition.toArray().map((value) => Number(value.toFixed(4))).join(', '),
+        quaternion: resolved.quaternion.toArray().map((value) => Number(value.toFixed(4))).join(', '),
+        fallback
+      });
+      return true;
+    } catch (error) {
+      console.warn(`[Experience VR] Could not apply layout anchor ${anchor}; retaining legacy transform for ${target}.`, error);
+      return false;
+    }
+  };
+
+  apply({ anchor: 'ANCHOR_MONKEY', target: 'monkeyAnchor', runtimeObject: monkeyAnchor });
+  apply({ anchor: 'ANCHOR_MONKEY_ATTENTION', target: 'monkeyGuide.attentionRoot',
+    runtimeObject: monkeyGuide.attentionRoot, layoutReference: 'ANCHOR_MONKEY', runtimeReference: monkeyAnchor });
+  const speechProxy = sceneLayout.getNode('PROXY_MONKEY_SPEECH_MAX_ENVELOPE');
+  apply({
+    anchor: speechProxy ? 'PROXY_MONKEY_SPEECH_MAX_ENVELOPE' : 'ANCHOR_MONKEY_SPEECH_BASE',
+    target: 'monkeyGuide.messagePanel.group', runtimeObject: monkeyGuide.messagePanel.group,
+    layoutReference: 'ANCHOR_MONKEY', runtimeReference: monkeyAnchor, fallback: !speechProxy,
+    offsetPosition: speechProxy ? null : { x: 0, y: settings.monkeyGuide.message.height / 2, z: 0 }
+  });
+  apply({ anchor: 'ANCHOR_MONKEY_DIALOGUE', target: 'monkeyGuide.dialoguePanel.group',
+    runtimeObject: monkeyGuide.dialoguePanel.group, layoutReference: 'ANCHOR_MONKEY', runtimeReference: monkeyAnchor });
+  apply({ anchor: 'ANCHOR_PORTAL', target: 'portalDisplay.object', runtimeObject: portalDisplay.object });
+  const furnaceApplied = apply({ anchor: 'ANCHOR_FURNACE', target: 'astroFurnace.object', runtimeObject: astroFurnace.object });
+  if (furnaceApplied) {
+    astroFurnace.object.updateWorldMatrix(true, true);
+    astroFurnace.refreshVisibleBounds();
+    furnacePanel.place();
+  }
+  apply({ anchor: 'ANCHOR_RELIQUARY', target: 'crystalReliquary.object', runtimeObject: crystalReliquary.object });
+  apply({ anchor: 'ANCHOR_RELIQUARY_BUTTON_ACTIVATE', target: 'activateCompanion.placementRoot',
+    runtimeObject: activateCompanion?.placementRoot });
+  apply({ anchor: 'ANCHOR_RELIQUARY_BUTTON_RELEASE', target: 'releaseCompanion.placementRoot',
+    runtimeObject: releaseCompanion?.placementRoot });
+  const floorPivots = { metal: 'PIVOT_FLOOR_METAL', water: 'PIVOT_FLOOR_WATER', wood: 'PIVOT_FLOOR_WOOD',
+    fire: 'PIVOT_FLOOR_FIRE', earth: 'PIVOT_FLOOR_EARTH' };
+  progressFloor.object.children.filter((object) => object.userData?.branchId).forEach((sector) => {
+    apply({ anchor: floorPivots[sector.userData.branchId], target: `floor sector ${sector.userData.branchId}`,
+      runtimeObject: sector });
+  });
+  apply({ anchor: 'ANCHOR_PLAYER_SPAWN', target: 'playerRig', runtimeObject: playerRig, applyRotation: false });
+
+  if (sceneLayoutDebug && !sceneLayoutDebugLogged) {
+    sceneLayoutDebugLogged = true;
+    console.groupCollapsed('[Experience VR] Blender scene layout prototype');
+    console.table(rows);
+    console.groupEnd();
+  }
+  return true;
+}
+
+applySceneLayoutPrototype();
 
 function resize() {
   const width = canvas.clientWidth || innerWidth || 1;
@@ -477,6 +584,7 @@ function handleSessionEnd() {
   handModeController.reset();
   playerGuidePanel.reset();
   monkeyGuide.reset();
+  applySceneLayoutPrototype();
   showReadyState({ ended: hasEnteredSession });
 }
 
@@ -508,6 +616,7 @@ async function enterVr() {
   handModeController.reset();
   playerGuidePanel.reset();
   monkeyGuide.reset();
+  applySceneLayoutPrototype();
   enterButton.disabled = true;
   status.textContent = copy.entering;
   let requestedSession = null;
@@ -522,8 +631,17 @@ async function enterVr() {
     requestedSession.addEventListener('end', handleSessionEnd, { once: true });
     await renderer.xr.setSession(requestedSession);
     const trackedHead = renderer.xr.getCamera(camera).getWorldPosition(new THREE.Vector3());
-    playerRig.position.x += settings.spawn.position.x - trackedHead.x;
-    playerRig.position.z += settings.spawn.position.z - trackedHead.z;
+    if (sceneLayout) {
+      playerRig.updateWorldMatrix(true, false);
+      const alignedRigWorldPosition = playerRig.getWorldPosition(new THREE.Vector3());
+      alignedRigWorldPosition.x += playerRigSpawnWorldPosition.x - trackedHead.x;
+      alignedRigWorldPosition.z += playerRigSpawnWorldPosition.z - trackedHead.z;
+      playerRig.parent.worldToLocal(alignedRigWorldPosition);
+      playerRig.position.copy(alignedRigWorldPosition);
+    } else {
+      playerRig.position.x += settings.spawn.position.x - trackedHead.x;
+      playerRig.position.z += settings.spawn.position.z - trackedHead.z;
+    }
     activeSession = requestedSession;
     hasEnteredSession = true;
     status.textContent = copy.ready;
