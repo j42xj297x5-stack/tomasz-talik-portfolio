@@ -32,8 +32,8 @@ const GLYPH_EFFECTS = Object.freeze({
   'ethics-life-protection': Object.freeze({ open: 'glyphEarthOpen', close: 'glyphEarthClose' }),
   'creative-ai': Object.freeze({ open: 'glyphFireOpen', close: 'glyphFireClose' }),
   'ai-guide': Object.freeze({ open: 'glyphWoodOpen', close: 'glyphWoodClose' }),
-  'spotify-digger': Object.freeze({ open: 'glyphWaterOpen', close: 'glyphWaterClose' }),
-  'haiku-cosmos': Object.freeze({ open: 'glyphMetalOpen', close: 'glyphMetalClose' })
+  'spotify-digger': Object.freeze({ open: 'glyphMetalOpen', close: 'glyphMetalClose' }),
+  'haiku-cosmos': Object.freeze({ open: 'glyphWaterOpen', close: 'glyphWaterClose' })
 });
 const AMBIENT_BY_PROGRESS_LEVEL = Object.freeze([1, 2, 3, 3, 0, 4]);
 
@@ -252,21 +252,28 @@ class AudioManager {
     if (!handle || handle.cleaned || !this.context || handle.stopping) return;
     handle.stopping = true;
     if (this.activeGlyphHover === handle) this.activeGlyphHover = null;
-    const now = this.context.currentTime;
-    const fadeDuration = HOVER_FADE_OUT_SECONDS;
-    const fadeEndsAt = now + fadeDuration;
-    const parameter = handle.gain.gain;
-    if (typeof parameter.cancelAndHoldAtTime === 'function') parameter.cancelAndHoldAtTime(now);
-    else {
+    try {
+      const now = this.context.currentTime;
+      const fadeDuration = HOVER_FADE_OUT_SECONDS;
+      const fadeEndsAt = now + fadeDuration;
+      const parameter = handle.gain.gain;
+      if (typeof parameter.cancelAndHoldAtTime === 'function') parameter.cancelAndHoldAtTime(now);
+      else {
+        const currentGain = clamp01(parameter.value);
+        parameter.cancelScheduledValues(now);
+        parameter.setValueAtTime(currentGain, now);
+      }
       const currentGain = clamp01(parameter.value);
-      parameter.cancelScheduledValues(now);
-      parameter.setValueAtTime(currentGain, now);
+      const fadeCurve = this.createFadeCurve(currentGain, 1, false);
+      fadeCurve[fadeCurve.length - 1] = 0;
+      parameter.setValueCurveAtTime(fadeCurve, now, fadeDuration);
+      this.fadingGlyphHover = handle;
+      handle.source.stop(fadeEndsAt);
+    } catch (error) {
+      console.warn('[audio] Glyph hover fade could not be scheduled.', error);
+      try { handle.source?.stop(); } catch (_) { /* The optional source may already be stopped. */ }
+      this.cleanupGlyphHover(handle);
     }
-    const currentGain = clamp01(parameter.value);
-    parameter.setValueCurveAtTime(this.createFadeCurve(currentGain, 1, false), now, fadeDuration);
-    parameter.setValueAtTime(0, fadeEndsAt);
-    this.fadingGlyphHover = handle;
-    try { handle.source.stop(fadeEndsAt); } catch (_) { this.cleanupGlyphHover(handle); }
   }
 
   async startGlyphHover() {
