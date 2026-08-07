@@ -326,19 +326,19 @@ function restoreInteractionSafely() {
 }
 
 async function focusNodePanel(node) {
-  interactionState = 'focusing';
-  clearInteractiveHover();
-  releaseActivePointer();
-  orbit.pauseOrbit();
-  cameraRig.pauseMouseControl();
-  cameraRig.setInteractionLocked(true);
-  atmosphereProgression.prepareGateProgression(node.userData?.id);
-  activePanelNode = node;
-  // Start independently of camera focus, so every orbit side receives the
-  // complete neutral-light ramp before the plaque sequence needs it.
-  startNodeTransitionLight(node);
-
   try {
+    interactionState = 'focusing';
+    clearInteractiveHover();
+    releaseActivePointer();
+    orbit.pauseOrbit();
+    cameraRig.pauseMouseControl();
+    cameraRig.setInteractionLocked(true);
+    atmosphereProgression.prepareGateProgression(node.userData?.id);
+    activePanelNode = node;
+    // Start independently of camera focus, so every orbit side receives the
+    // complete neutral-light ramp before the plaque sequence needs it.
+    startNodeTransitionLight(node);
+
     await cameraRig.focusOnNode(camera, node);
     if (interactionState !== 'focusing') return;
     if (node.userData?.plaqueModelPath && plaqueTransition.hasInstance(node)) {

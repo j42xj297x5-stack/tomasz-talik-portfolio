@@ -36,10 +36,10 @@ Canvas selection does not add a general or long click. At the existing plaque re
 | `ethics-life-protection` | `/audio/glif_earth_4s_01.mp3` | `/audio/glif_earth_4s_02.mp3` |
 | `creative-ai` | `/audio/glif_fire_4s_01.mp3` | `/audio/glif_fire_4s_02.mp3` |
 | `ai-guide` | `/audio/glif_wood_4s_01.mp3` | `/audio/glif_wood_4s_02.mp3` |
-| `spotify-digger` | `/audio/glif_water_4s_01.mp3` | `/audio/glif_water_4s_02.mp3` |
-| `haiku-cosmos` | `/audio/glif_metal_4s_01.mp3` | `/audio/glif_metal_4s_02.mp3` |
+| `spotify-digger` | `/audio/glif_metal_4s_01.mp3` | `/audio/glif_metal_4s_02.mp3` |
+| `haiku-cosmos` | `/audio/glif_water_4s_01.mp3` | `/audio/glif_water_4s_02.mp3` |
 
-Fine-pointer entry onto a new Experience 3D glyph starts decoded `/audio/glif_hover_loop.mp3` as a looping `AudioBufferSourceNode` at local gain 1, without a fade-in. Movement over the same logical glyph ID does not restart it. A glyph-to-null raycast has a 100 ms grace window, while another glyph, canvas/window leave, drag, click/opening, and interaction locking end hover immediately. Exit invalidates pending starts, holds the current local gain, perceptually fades it to exactly zero over 0.2 seconds, then stops and disconnects the source.
+Fine-pointer entry onto a new Experience 3D glyph starts decoded `/audio/glif_hover_loop.mp3` as a looping `AudioBufferSourceNode` at local gain 1, without a fade-in. Movement over the same logical glyph ID does not restart it. A glyph-to-null raycast has a 100 ms grace window, while another glyph, canvas/window leave, drag, click/opening, and interaction locking end hover immediately. Exit invalidates pending starts, holds the current local gain, and uses one perceptual curve ending at exactly zero over 0.2 seconds; the source stops at that boundary and its ended handler disconnects the source and local gain. Fade scheduling failures instead stop and clean up the optional source immediately without propagating into Experience 3D interaction.
 
 A pending start, active source, or fading source owns one non-interruptible lifecycle; further start attempts are ignored rather than queued until cleanup finishes. Changing glyph still updates visual hover normally, but only a later real entry after cleanup may start audio. Cleanup is idempotent, and the request token prevents a canceled unlock/load from starting late. The hover channel connects to the effects bus and therefore remains subordinate to master, mute, and Effects controls. Touch/coarse-pointer interactions never request it, and an unavailable asset remains non-blocking.
 
