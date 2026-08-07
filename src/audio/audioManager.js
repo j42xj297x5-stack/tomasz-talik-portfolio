@@ -1,11 +1,9 @@
 import { publicPath } from '../utils/publicPath.js';
 
-const DEFAULTS = Object.freeze({ master: 0.7, ambient: 0.4, effects: 0.85 });
+const DEFAULTS = Object.freeze({ master: 0.7, ambient: 1.0, effects: 1.0 });
 const CROSSFADE_SECONDS = 5;
 const INTRO_DELAY_SECONDS = 5;
 const HOVER_FADE_OUT_SECONDS = 0.2;
-const EFFECTS_TRIM_DB = -3;
-const INTRO_TRIM_DB = 5;
 const AMBIENT_PATHS = Object.freeze([
   '/audio/ambient_01.mp3',
   '/audio/ambient_02.mp3',
@@ -15,7 +13,7 @@ const AMBIENT_PATHS = Object.freeze([
 ]);
 const STORAGE_KEY = 'portfolioAudioSettings';
 const EFFECT_PATHS = Object.freeze({
-  click: ['/audio/click_panel_01.mp3'],
+  click: ['/audio/turn_page_02.mp3'],
   caseOpen: ['/audio/bell_01.mp3'],
   caseClose: ['/audio/bell_02.mp3'],
   glyphHover: ['/audio/glif_hover_loop.mp3'],
@@ -46,7 +44,6 @@ const resolveAmbientIndex = (level) => {
 
 const clamp01 = (value) => Math.min(1, Math.max(0, Number(value) || 0));
 const perceptualGain = (value) => Math.pow(clamp01(value), 2);
-const dbToGain = (db) => 10 ** (db / 20);
 
 class AudioManager {
   constructor() {
@@ -126,10 +123,8 @@ class AudioManager {
     const introElement = new Audio(publicPath('/audio/start.mp3'));
     introElement.loop = false;
     introElement.preload = 'auto';
-    const introGain = this.context.createGain();
-    introGain.gain.value = dbToGain(INTRO_TRIM_DB);
-    this.context.createMediaElementSource(introElement).connect(introGain).connect(this.ambientBusNode);
-    this.introChannel = { element: introElement, gain: introGain };
+    this.context.createMediaElementSource(introElement).connect(this.ambientBusNode);
+    this.introChannel = { element: introElement };
 
     AMBIENT_PATHS.forEach((path) => {
       const element = new Audio(publicPath(path));
@@ -147,7 +142,7 @@ class AudioManager {
     const now = this.context.currentTime;
     this.masterNode.gain.setTargetAtTime(this.muted ? 0 : perceptualGain(this.masterVolume), now, 0.025);
     this.ambientBusNode.gain.setTargetAtTime(perceptualGain(this.ambientVolume), now, 0.025);
-    this.effectsBusNode.gain.setTargetAtTime(perceptualGain(this.effectsVolume) * dbToGain(EFFECTS_TRIM_DB), now, 0.025);
+    this.effectsBusNode.gain.setTargetAtTime(perceptualGain(this.effectsVolume), now, 0.025);
   }
 
   async unlock() {
