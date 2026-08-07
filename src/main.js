@@ -66,7 +66,12 @@ document.addEventListener('click', (event) => {
   const clickTarget = event.target.closest?.('button, .overlay__project-link');
   if (!clickTarget || clickTarget.closest('[data-audio-control]')) return;
   if (clickTarget.matches('button') && (clickTarget.disabled || clickTarget.getAttribute('aria-disabled') === 'true')) return;
-  void audioManager.playEffect(clickTarget.matches('.overlay__case-toggle') ? 'caseToggle' : 'click');
+  const caseToggle = clickTarget.closest('.overlay__case-toggle, [data-classic-case-toggle]');
+  if (caseToggle) {
+    void audioManager.playCaseToggle(caseToggle.getAttribute('aria-expanded') === 'true');
+    return;
+  }
+  void audioManager.playEffect('click');
 });
 
 function loadStoredSelection() {

@@ -167,7 +167,9 @@ runtimeDiagnostics.census('sceneAttach');
 const overlay = createOverlay({
   language: document.documentElement.lang,
   onClose: () => {
-    if (activePanelNode?.userData?.plaqueTransitionReady) void audioManager.playEffect('glyphClose');
+    if (activePanelNode?.userData?.plaqueTransitionReady) {
+      void audioManager.playGlyphPanel(activePanelNode.userData?.id, 'close');
+    }
     void returnFromNodePanel();
   }
 });
@@ -288,7 +290,6 @@ function debugInteraction(message, details = {}) {
 
 function openNodePanel(node) {
   if (!node || interactionState !== 'idle') return;
-  void audioManager.playEffect('glyphClick');
   debugInteraction('raycast hit', {
     objectName: node.name || null,
     objectId: node.id,
@@ -342,7 +343,7 @@ async function focusNodePanel(node) {
     if (interactionState !== 'focusing') return;
     if (node.userData?.plaqueModelPath && plaqueTransition.hasInstance(node)) {
       interactionState = 'revealingPlaque';
-      void audioManager.playEffect('glyphOpen');
+      void audioManager.playGlyphPanel(node.userData?.id, 'open');
       const plaque = await plaqueTransition.reveal(node, camera);
       if (plaque) {
         node.userData.plaqueTransitionReady = true;
