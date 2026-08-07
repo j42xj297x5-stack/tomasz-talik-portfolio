@@ -8,11 +8,11 @@ The persistent control is mounted once by `src/main.js` outside `#app`. It expos
 
 ## Loading, intro, and ambient contract
 
-The Classic 2D and Experience 3D general click effect is `/audio/click_panel_01.mp3`. Both Case Study toggles (`.overlay__case-toggle` and `[data-classic-case-toggle]`) are handled separately: opening plays `/audio/bell_01.mp3`, closing plays `/audio/bell_02.mp3`, and neither action additionally plays the general click. These entry effects begin fetching at entry.
+The Classic 2D and Experience 3D general click effect is `/audio/turn_page_02.mp3`. Both Case Study toggles (`.overlay__case-toggle` and `[data-classic-case-toggle]`) are handled separately: opening plays `/audio/bell_01.mp3`, closing plays `/audio/bell_02.mp3`, and neither action additionally plays the general click. These entry effects begin fetching at entry.
 
 Selecting Experience 3D is the required user gesture that unlocks/resumes the context, creates and prepares the streaming media elements, begins their non-blocking preload, and prepares the remaining short effects. It does not start music. Classic 2D never starts the intro or ambient. Optional failures settle without blocking the page; Experience 3D awaits only the short-effect preparation attempt before releasing its loader and interaction gate.
 
-Immediately after `loaderOverlay.complete()` and immediately before the text intro starts, Experience 3D makes its single playback attempt for the non-looping `/audio/start.mp3`. Its `MediaElementAudioSourceNode` passes through a dedicated gain with a fixed +5 dB trim before reaching the ambient bus, so master volume, mute, and the Ambient session control still apply to it without raising `ambient_01`–`ambient_05`. A successful playback starts the five-second delay; a rejected attempt instead measures five seconds from the attempt itself. The text intro is never delayed by audio success, failure, or loading.
+Immediately after `loaderOverlay.complete()` and immediately before the text intro starts, Experience 3D makes its single playback attempt for the non-looping `/audio/start.mp3`. Its `MediaElementAudioSourceNode` reaches the ambient bus at the prepared source level, without an intro trim; master volume, mute, and the Ambient session control still apply to it. A successful playback starts the five-second delay; a rejected attempt instead measures five seconds from the attempt itself. The text intro is never delayed by audio success, failure, or loading.
 
 Five seconds after that boundary, the looping ambient selected for the current progress level starts from zero with a five-second perceptual equal-power fade-in while the intro sound continues naturally. One explicit resolver supplies both this initial selection and every later progression request:
 
@@ -43,8 +43,8 @@ Fine-pointer entry onto a new Experience 3D glyph starts decoded `/audio/glif_ho
 
 A pending start, active source, or fading source owns one non-interruptible lifecycle; further start attempts are ignored rather than queued until cleanup finishes. Changing glyph still updates visual hover normally, but only a later real entry after cleanup may start audio. Cleanup is idempotent, and the request token prevents a canceled unlock/load from starting late. The hover channel connects to the effects bus and therefore remains subordinate to master, mute, and Effects controls. Touch/coarse-pointer interactions never request it, and an unavailable asset remains non-blocking.
 
-## Effects bus and debug controls
+## Bus gain and debug controls
 
-The shared effects bus applies a fixed −3 dB trim after the perceptual Effects control. It covers general clicks, Case Study bells, elemental glyph panel effects, and glyph hover without changing the slider value, defaults, or settings storage.
+Ambient and Effects both default to unity gain (`1.0`) before the unchanged master control and output. The effects bus has no additional technical trim, and the intro has no source-specific trim, so the prepared relative levels of `start.mp3`, ambient tracks, and effects remain intact. The shared effects bus covers general clicks, Case Study bells, elemental glyph panel effects, and glyph hover.
 
-With `?debug`, Scene tuning receives live Ambient and Effects bus sliders with numeric values. They are audio-session controls only: they are not members of scene settings schema version 1 and never enter scene import/export.
+With `?debug`, Scene tuning receives live Ambient and Effects bus sliders with numeric values. They start at unity and remain audio-session controls only: they are not members of scene settings schema version 1 and never enter scene import/export. Their perceptual adjustment and the persistent master/mute behavior are unchanged.
