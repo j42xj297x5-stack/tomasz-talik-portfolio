@@ -36,7 +36,10 @@ globalThis.document = {
   }
 };
 
-const { createVrMonkeyGuide, VR_MONKEY_GUIDE_SCREEN } = await import('../src/xr/guidance/createVrMonkeyGuide.js');
+const { createVrMonkeyGuide, VR_MONKEY_GUIDE_SCREEN, unreadPulseAlpha } = await import('../src/xr/guidance/createVrMonkeyGuide.js');
+assert.equal(unreadPulseAlpha(0), 0);
+assert.equal(unreadPulseAlpha(1), 1);
+assert.ok(unreadPulseAlpha(2) < 1e-12);
 
 const expectedFamilies = {
   'ethics-life-protection': 'KA', 'spotify-digger': 'TA', 'haiku-cosmos': 'SA',
@@ -83,7 +86,10 @@ assert.deepEqual(guide.arcs.map(({ geometry }) => geometry.parameters.radius), [
 assert.ok(guide.arcs.every(({ geometry }) => geometry.parameters.tube === 0.009));
 assert.deepEqual(guide.arcs.map(({ position }) => position.y), [0, 0, 0], 'attention arcs share one local center');
 assert.ok(guide.arcs.every(({ rotation }) => rotation.z === Math.PI), 'attention arcs open upward');
-assert.equal(guide.messagePanel.group.position.y, 1.96);
+assert.equal(guide.attentionRoot.position.z, -0.05);
+assert.equal(guide.messagePanel.group.position.z, guide.attentionRoot.position.z);
+assert.equal(guide.messagePanel.group.position.y, 1.4 + 0.17 + 0.03 + 0.72 / 2,
+  'technical envelope bottom is derived from the largest attention arc');
 assert.deepEqual(guide.dialoguePanel.group.position.toArray(), [1.20, 0.30, 0.50]);
 assert.ok(Math.abs(guide.dialoguePanel.group.rotation.x - (-7.5 * Math.PI / 180)) < 1e-12);
 assert.ok(fillStyles.includes('#090909'), 'dialogue controls use an almost-black background');
@@ -94,7 +100,7 @@ assert.equal(guide.attentionRoot.visible, false);
 roundedRectStarts.length = 0;
 guide.showMessage('Short message');
 const oneLineBoxY = roundedRectStarts.at(-1).y;
-assert.equal(oneLineBoxY, 540 - (78 + 62 * 2), 'one-line message box is anchored to canvas bottom');
+assert.equal(oneLineBoxY, 540 - (78 + 31 * 2), 'one-line message box is anchored to canvas bottom');
 roundedRectStarts.length = 0;
 guide.showMessage('This message contains enough words to wrap onto a second line in the panel');
 const multiLineBoxY = roundedRectStarts.at(-1).y;
@@ -115,11 +121,15 @@ const creative1 = experienceVrPages.find((page) => page.glyphId === 'creative-ai
 const creative2 = experienceVrPages.find((page) => page.glyphId === 'creative-ai' && page.order === 2);
 const haiku1 = experienceVrPages.find((page) => page.glyphId === 'haiku-cosmos' && page.order === 1);
 pageIds.push(creative2.id, creative1.id, haiku1.id);
+guide.update(0);
+assert.deepEqual(guide.getUnreadPageIds(), pageIds, 'newly activated cards become unread');
 guide.open();
 assert.ok(drawnText.includes('HOW AM I DOING?'));
 guide.hits.set(record, { kind: 'panel', region: { id: 'progress' } });
 assert.equal(guide.press(record), true);
 assert.equal(guide.getScreen(), VR_MONKEY_GUIDE_SCREEN.HISTORY, 'MENU -> HISTORY');
+assert.deepEqual(guide.getUnreadPageIds(), pageIds, 'opening history does not mark cards read');
+assert.ok(drawnText.includes('★') && drawnText.includes('★★'), 'history uses order stars instead of numeric markers');
 assert.ok(drawnText.includes('Discovered cards: 3. Select a sign.'));
 assert.deepEqual(guide.getHistoryEntries().map(({ pageId }) => pageId), pageIds, 'only activated pages retain activation order');
 assert.deepEqual(guide.getHistoryEntries().map(({ descriptor }) => descriptor.syllable), ['RA', 'RA', 'SA']);
@@ -132,6 +142,7 @@ guide.hits.set(record, { kind: 'panel', region: { id: `page:${creative1.id}` } }
 guide.press(record);
 assert.equal(guide.getScreen(), VR_MONKEY_GUIDE_SCREEN.CARD, 'HISTORY -> CARD');
 assert.equal(guide.getSelectedPageId(), creative1.id, 'duplicate rune opens its concrete pageId');
+assert.deepEqual(guide.getUnreadPageIds().sort(), [creative2.id, haiku1.id].sort(), 'CARD marks only its page read');
 const content = resolveExperienceVrPage(creative1, 'en');
 assert.ok(drawnText.includes(content.title));
 const cardPageCount = guide.getCardPageCount();
@@ -168,5 +179,5 @@ const source = await readFile(new URL('../src/xr/guidance/createVrMonkeyGuide.js
 assert.doesNotMatch(source, /['"`]svg\/(?:KA|TA|SA|LA|RA)\.svg/, 'guide owns no Proto-Astro asset paths');
 assert.doesNotMatch(source, /fillStyle = settings\.colors\.dialoguePanel/, 'dialogue canvas has no full-panel background');
 assert.match(source, /globalCompositeOperation = 'source-in'/, 'history glyphs are recolored through one mask canvas');
-assert.match(source, /const glyphX = region\.x \+ 24/, 'history glyphs are laid out from the left edge');
+assert.match(source, /'★'\.repeat\(entry\.page\.order\)/, 'history marker is generated from order stars');
 console.log('VR monkey guide assertions passed');

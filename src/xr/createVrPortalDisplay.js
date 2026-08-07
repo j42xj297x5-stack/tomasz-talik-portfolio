@@ -1,5 +1,6 @@
 import * as THREE from '../vendor/three.js';
 import { applyWorldTransform } from './applyWorldTransform.js';
+import { resolveVrPlatformFixturePositions } from './placement/vrPlatformFixturePlacement.js';
 
 export function calculatePortalScale(size, maxWidth, maxHeight) {
   if (size.x <= 0 || size.y <= 0) return 1;
@@ -56,9 +57,6 @@ export function createVrPortalDisplay({ scene, anchorObject, portalModel, spawnP
   }
 
   const anchorCenter = new THREE.Vector3();
-  const towardSpawn = new THREE.Vector3();
-  const rightFromSpawnView = new THREE.Vector3();
-  const direction = new THREE.Vector3();
   const target = new THREE.Vector3();
   const desiredWorldPosition = new THREE.Vector3();
   const desiredWorldQuaternion = new THREE.Quaternion();
@@ -70,12 +68,9 @@ export function createVrPortalDisplay({ scene, anchorObject, portalModel, spawnP
   function place() {
     if (disposed || !settings.enabled || !model) return false;
     new THREE.Box3().setFromObject(anchorObject).getCenter(anchorCenter);
-    towardSpawn.subVectors(configuredSpawn, anchorCenter).setY(0);
-    if (towardSpawn.lengthSq() < 1e-8) towardSpawn.set(0, 0, 1);
-    towardSpawn.normalize();
-    rightFromSpawnView.set(-towardSpawn.z, 0, towardSpawn.x);
-    direction.copy(rightFromSpawnView).addScaledVector(towardSpawn, settings.forwardBias).normalize();
-    desiredWorldPosition.copy(anchorCenter).addScaledVector(direction, settings.distanceFromAnchor);
+    desiredWorldPosition.copy(resolveVrPlatformFixturePositions({
+      anchorCenter, spawnPosition: configuredSpawn, portalSettings: settings
+    }).portalPosition);
     desiredWorldPosition.y = settings.floorOffset - localBounds.min.y;
     target.set(configuredSpawn.x, desiredWorldPosition.y, configuredSpawn.z);
     placementProbe.position.copy(desiredWorldPosition);

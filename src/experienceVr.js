@@ -185,7 +185,7 @@ const astroFurnace = createVrAstroFurnace({
   animations: astroFurnaceGltf?.animations ?? [],
   settings: settings.furnace,
   anchorObject: monkeyAnchor,
-  mirrorObject: portalDisplay.object,
+  portalSettings: settings.portal,
   spawnPosition: settings.spawn.position
 });
 const portalCanvas = createVrSpatialPlaque({

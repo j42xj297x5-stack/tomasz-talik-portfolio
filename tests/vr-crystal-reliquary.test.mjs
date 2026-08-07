@@ -139,6 +139,13 @@ assert.equal(scene.children.length, childCount, 'reset does not duplicate the wr
 assert.equal(reliquary.companionsRoot.children.filter(({ name }) => name === 'VrReliquaryActivateButtonPlacementRoot').length, 1);
 assert.ok(reliquary.object.position.distanceTo(placedOnce) < 1e-10, 'reset does not accumulate the reliquary offset');
 assert.ok(companion.getWorldPosition(new THREE.Vector3()).distanceTo(companionWorldOnce) < 1e-10, 'reset does not accumulate the button offset');
+portalObject.position.add(new THREE.Vector3(-3, 0, 1.25));
+const portalTranslation = portalObject.position.clone().sub(portalPosition);
+reliquary.place();
+assert.ok(reliquary.object.position.distanceTo(placedOnce.clone().add(portalTranslation)) < 1e-10,
+  'the complete reliquary follows portal translation');
+assert.ok(companion.getWorldPosition(new THREE.Vector3()).distanceTo(companionWorldOnce.clone().add(portalTranslation)) < 1e-10,
+  'button companions follow the translated reliquary');
 
 function controllerRecord() {
   const controller = new THREE.Group();

@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import * as THREE from '../src/vendor/three.js';
-import { calculateMirroredHorizontalPosition, createVrAstroFurnace } from '../src/xr/furnace/createVrAstroFurnace.js';
+import { createVrAstroFurnace } from '../src/xr/furnace/createVrAstroFurnace.js';
+import { resolveVrPlatformFixturePositions } from '../src/xr/placement/vrPlatformFixturePlacement.js';
 import { ASTRO_FURNACE_STATES, createVrAstroFurnaceOpenInteraction } from '../src/xr/furnace/createVrAstroFurnaceOpenInteraction.js';
 import { ASTRO_FURNACE_PROCESS_STATES, createVrAstroFurnaceActivateInteraction, processRotationPulse01 } from '../src/xr/furnace/createVrAstroFurnaceActivateInteraction.js';
 import { createVrAstroFurnaceOptionInteraction } from '../src/xr/furnace/createVrAstroFurnaceOptionInteraction.js';
@@ -15,7 +16,13 @@ assert.equal(processRotationPulse01(Math.PI), 1);
 assert.ok(processRotationPulse01(Math.PI * 2) < 1e-12);
 
 const center = new THREE.Vector3(1, 4, -2);
-assert.deepEqual(calculateMirroredHorizontalPosition(center, new THREE.Vector3(-2, 20, 3)).toArray(), [4, 4, -7]);
+const fixturePlacement = resolveVrPlatformFixturePositions({ anchorCenter: center,
+  spawnPosition: { x: 0, z: 5 }, portalSettings: { distanceFromAnchor: 2, forwardBias: 0.25 } });
+const toward = fixturePlacement.towardPlayer; const lateral = fixturePlacement.lateral;
+const furnaceOffset = fixturePlacement.furnacePosition.clone().sub(center).setY(0);
+const portalOffset = fixturePlacement.portalPosition.clone().sub(center).setY(0);
+assert.ok(Math.abs(furnaceOffset.dot(toward) - portalOffset.dot(toward)) < 1e-12);
+assert.ok(Math.abs(furnaceOffset.dot(lateral) + portalOffset.dot(lateral)) < 1e-12);
 const normalized = normalizeExperienceVrSettings({ schemaVersion: 1, furnace: {
   placementMode: 'unknown', floorOffset: 20, scale: 99,
   openButton: { rayMaxDistance: 30, emissionPressed: 3 }, chamber: { glassFadeStart: -1 }
@@ -57,13 +64,16 @@ parent.add(anchor, portal);
 const placementSettings = { enabled: true, placementMode: 'mirror-portal', floorOffset: 0,
   position: { x: 0, y: 0, z: 0 }, rotationDegrees: { x: 0, y: 0, z: 0 }, scale: 3, debug: false };
 const placedFurnace = createVrAstroFurnace({ parent, model: placementModel, settings: placementSettings,
-  anchorObject: anchor, mirrorObject: portal, spawnPosition: { x: 0, y: 0, z: 5 } });
-assert.deepEqual(placedFurnace.object.position.toArray(), [4, 3, -7]);
+  anchorObject: anchor, portalSettings: { distanceFromAnchor: 2, forwardBias: 0.25 }, spawnPosition: { x: 0, y: 0, z: 5 } });
+const expectedFurnace = resolveVrPlatformFixturePositions({ anchorCenter: new THREE.Vector3(1, 1, -2),
+  spawnPosition: { x: 0, y: 0, z: 5 }, portalSettings: { distanceFromAnchor: 2, forwardBias: 0.25 } }).furnacePosition;
+assert.ok(Math.abs(placedFurnace.object.position.x - expectedFurnace.x) < 1e-12);
+assert.ok(Math.abs(placedFurnace.object.position.z - expectedFurnace.z) < 1e-12);
 assert.equal(placedFurnace.object.scale.x, 3);
 assert.ok(Math.abs(new THREE.Box3().setFromObject(placedFurnace.object).min.y) < 1e-10);
-portal.position.x = -3;
 placedFurnace.reset();
-assert.equal(placedFurnace.object.position.x, 5);
+assert.ok(Math.abs(placedFurnace.object.position.x - expectedFurnace.x) < 1e-12,
+  'furnace placement is independent from the portal object');
 assert.equal(parent.children.filter((child) => child.name === 'VrAstroFurnace').length, 1);
 placedFurnace.dispose();
 
