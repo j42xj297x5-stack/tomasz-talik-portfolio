@@ -169,6 +169,8 @@ export function createVrMonkeyGuide({
   let cardPage = 0;
   const pagesById = new Map(experienceVrPages.map((page) => [page.id, page]));
   const glyphImages = new Map();
+  const glyphMaskCanvas = document.createElement('canvas');
+  const glyphMaskContext = glyphMaskCanvas.getContext('2d');
 
   function progressCount() { return progressionController.getActivatedPageIds().length; }
 
@@ -222,11 +224,6 @@ export function createVrMonkeyGuide({
   function drawDialogue() {
     const { canvas, context, texture } = dialoguePanel;
     context.clearRect(0, 0, canvas.width, canvas.height);
-    context.globalAlpha = settings.colors.panelOpacity;
-    context.fillStyle = settings.colors.dialoguePanel ?? settings.colors.panel;
-    roundedRect(context, 0, 0, canvas.width, canvas.height, settings.dialogue.cornerRadius);
-    context.fill();
-    context.globalAlpha = 1;
     if (screen === VR_MONKEY_GUIDE_SCREEN.HISTORY) { drawHistory(context, canvas); texture.needsUpdate = true; return; }
     if (screen === VR_MONKEY_GUIDE_SCREEN.CARD) { drawCardNavigation(context, canvas); texture.needsUpdate = true; return; }
     const options = progressCount() > 0
@@ -239,25 +236,26 @@ export function createVrMonkeyGuide({
       ...option, x: padding, y: padding + index * (height + gap), width: canvas.width - padding * 2, height
     }));
     context.font = `${settings.dialogue.fontWeight} ${settings.dialogue.fontSize}px sans-serif`;
-    context.textAlign = 'center';
+    context.textAlign = 'left';
     context.textBaseline = 'middle';
     interactiveRegions.forEach((region) => {
-      if (hoveredOption === region.id) {
-        context.fillStyle = settings.colors.hover;
-        roundedRect(context, region.x, region.y, region.width, region.height, settings.dialogue.optionCornerRadius);
-        context.fill();
-      }
-      context.fillStyle = settings.colors.text;
-      context.fillText(region.label, region.x + region.width / 2, region.y + region.height / 2);
+      context.fillStyle = drawInteractiveRegion(context, region, hoveredOption === region.id);
+      context.fillText(region.label, region.x + 48, region.y + region.height / 2);
     });
     texture.needsUpdate = true;
   }
 
   function addRegion(region) { interactiveRegions.push(region); return region; }
+  function drawInteractiveRegion(context, region, hovered) {
+    context.fillStyle = hovered ? settings.colors.dialogueButtonHoverBackground : settings.colors.dialogueButtonBackground;
+    context.strokeStyle = settings.colors.dialogueButtonBorder;
+    context.lineWidth = 4;
+    roundedRect(context, region.x, region.y, region.width, region.height, settings.dialogue.optionCornerRadius);
+    context.fill(); context.stroke();
+    return hovered ? settings.colors.dialogueButtonHoverText : settings.colors.dialogueButtonText;
+  }
   function drawButton(context, region, label) {
-    if (hoveredOption === region.id) { context.fillStyle = settings.colors.hover; roundedRect(context, region.x, region.y,
-      region.width, region.height, settings.dialogue.optionCornerRadius); context.fill(); }
-    context.fillStyle = settings.colors.text;
+    context.fillStyle = drawInteractiveRegion(context, region, hoveredOption === region.id);
     context.font = `${settings.dialogue.fontWeight} ${settings.dialogue.fontSize}px sans-serif`;
     context.textAlign = 'center'; context.textBaseline = 'middle';
     context.fillText(label, region.x + region.width / 2, region.y + region.height / 2);
@@ -277,6 +275,18 @@ export function createVrMonkeyGuide({
     image.src = entry.assetUrl;
     return image;
   }
+  function drawTintedGlyph(context, image, x, y, size, color) {
+    if (glyphMaskCanvas.width !== size || glyphMaskCanvas.height !== size) {
+      glyphMaskCanvas.width = size; glyphMaskCanvas.height = size;
+    }
+    glyphMaskContext.clearRect(0, 0, size, size);
+    glyphMaskContext.drawImage(image, 0, 0, size, size);
+    glyphMaskContext.globalCompositeOperation = 'source-in';
+    glyphMaskContext.fillStyle = color;
+    glyphMaskContext.fillRect(0, 0, size, size);
+    glyphMaskContext.globalCompositeOperation = 'source-over';
+    context.drawImage(glyphMaskCanvas, x, y, size, size);
+  }
   function drawHistory(context, canvas) {
     interactiveRegions = [];
     const entries = historyEntries();
@@ -292,14 +302,15 @@ export function createVrMonkeyGuide({
       const region = addRegion({ id: `page:${entry.pageId}`, pageId: entry.pageId,
         x: padding + column * cellWidth + 8, y: padding + row * cellHeight + 8,
         width: cellWidth - 16, height: cellHeight - 16 });
-      if (hoveredOption === region.id) { context.fillStyle = settings.colors.hover; roundedRect(context, region.x, region.y,
-        region.width, region.height, settings.dialogue.optionCornerRadius); context.fill(); }
+      const contentColor = drawInteractiveRegion(context, region, hoveredOption === region.id);
       const image = requestGlyphImage(entry); const glyphSize = settings.dialogue.historyGlyphSize;
-      if (image?.complete && image.naturalWidth && context.drawImage) context.drawImage(image,
-        region.x + (region.width - glyphSize) / 2, region.y + (region.height - glyphSize) / 2, glyphSize, glyphSize);
-      else { context.fillStyle = settings.colors.text; context.font = `${settings.dialogue.fontWeight} ${glyphSize * 0.55}px sans-serif`;
-        context.textAlign = 'center'; context.textBaseline = 'middle'; context.fillText(entry.descriptor.syllable,
-          region.x + region.width / 2, region.y + region.height / 2); }
+      const glyphX = region.x + 24; const glyphY = region.y + (region.height - glyphSize) / 2;
+      if (image?.complete && image.naturalWidth && context.drawImage) drawTintedGlyph(context, image,
+        glyphX, glyphY, glyphSize, contentColor);
+      else { context.fillStyle = contentColor; context.font = `${settings.dialogue.fontWeight} ${glyphSize * 0.55}px sans-serif`;
+        context.textAlign = 'left'; context.textBaseline = 'middle'; context.fillText(entry.descriptor.syllable,
+          glyphX, region.y + region.height / 2); }
+      context.fillStyle = contentColor;
       context.font = `${settings.dialogue.historyMarkerFontSize}px sans-serif`; context.textAlign = 'right';
       context.fillText(String(entry.page.order), region.x + region.width - 14, region.y + region.height - 18);
     });
