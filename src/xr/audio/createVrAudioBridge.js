@@ -23,6 +23,8 @@ export function createVrAudioBridge({ manager = audioManager, warn = console.war
   });
   let attractorState = 'idle', attractorId = null, attractorClass = null, attractorHandle = null;
   let attractorToken = 0, attractorTimer = null;
+  const FURNACE_PROCESS_PATH = '/audio/astro_piec_work_01.mp3';
+  let furnaceHandle = null, furnaceToken = 0, furnacePending = false;
 
   function reportFailure(operation, error) {
     try {
@@ -49,8 +51,32 @@ export function createVrAudioBridge({ manager = audioManager, warn = console.war
     if (disposed) return;
     stopGlyphLifecycle();
     stopAttractorLifecycle();
+    stopFurnaceProcess();
     runOptional('stop VR audio', (audio) => audio.stopVrAudio());
     disposed = true;
+  }
+
+  function stopFurnaceProcess() {
+    furnaceToken += 1;
+    furnacePending = false;
+    const handle = furnaceHandle; furnaceHandle = null;
+    try { handle?.stop?.(); } catch (error) { reportFailure('stop Astro Furnace process', error); }
+  }
+
+  function startFurnaceProcess() {
+    if (disposed || furnaceHandle || furnacePending) return false;
+    const token = ++furnaceToken;
+    furnacePending = true;
+    runOptional('start Astro Furnace process', (audio) => Promise.resolve(
+      audio.startVrProcessSource(FURNACE_PROCESS_PATH, 'DEVICE', { loop: false })
+    ).then((handle) => {
+      furnacePending = false;
+      if (!handle) return;
+      if (disposed || token !== furnaceToken) { handle.stop?.(); return; }
+      furnaceHandle = handle;
+      handle.onEnded?.(() => { if (furnaceHandle === handle) furnaceHandle = null; });
+    }).catch((error) => { if (token === furnaceToken) furnacePending = false; throw error; }));
+    return true;
   }
 
   function prepareOneShots(paths) {
@@ -240,7 +266,8 @@ export function createVrAudioBridge({ manager = audioManager, warn = console.war
     if (completionPath) playOneShot(completionPath, 'WORLD');
   }
 
-  return { runOptional, prepareOneShots, prepareAttractorLoops, playOneShot, startGlyphAcquisition, missGlyphAcquisition,
+  return { runOptional, prepareOneShots, prepareAttractorLoops, playOneShot, startFurnaceProcess, stopFurnaceProcess,
+    startGlyphAcquisition, missGlyphAcquisition,
     cancelGlyphAcquisition, completeGlyphAcquisition, dispose,
     startAttractor, missAttractor, cancelAttractor, handoffAttractor,
     get glyphAcquisitionState() { return glyphState; }, get attractorState() { return attractorState; } };

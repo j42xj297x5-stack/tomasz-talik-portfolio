@@ -33,18 +33,20 @@ function cloneMaterials(root, owned) {
 export function createVrAstroFurnaceActivateInteraction({
   furnace, controllers = [], settings = {}, processSettings = {}, haloSettings = {},
   openInteraction, canActivateInput = () => false, isModeActive = () => true, qaAllowWithoutInput = false,
-  isOrdinaryRayAvailable = () => true
+  isOrdinaryRayAvailable = () => true, onProcessStart = () => {}, onProcessStop = () => {}
 }) {
   const states = ASTRO_FURNACE_PROCESS_STATES;
   const button = furnace?.nodes?.button_activate;
   const buttonMeshes = [];
   button?.traverse((node) => { if (node.isMesh && node.geometry) buttonMeshes.push(node); });
   const spinPivot = furnace?.nodes?.PIVOT_FURNACE_PROCESS_SPIN;
+  const lid = furnace?.nodes?.pokrywa;
   const buttonPivot = furnace?.nodes?.PIVOT_BUTTON_ACTIVATE;
   const fireCell = furnace?.nodes?.fire_cell;
   const chamber = furnace?.nodes?.komora;
   const chamberCylinder = resolveChamberCylinder(chamber, processSettings.processLightChamberClearance ?? 0.012);
   const lightRoot = furnace?.object;
+  const energyAnchor = furnace?.nodes?.VR_FURNACE_LIGHT_ORBIT;
   const lightOrbitCenter = new THREE.Vector3();
   const lightOrbitScale = new THREE.Vector3(1, 1, 1);
   const stableSpinAxis = new THREE.Vector3(0, 1, 0);
@@ -89,6 +91,21 @@ export function createVrAstroFurnaceActivateInteraction({
   }));
   const halo = button ? createVrTargetHalo({ root: button, settings: haloSettings }) : null;
   const baseSpinQuaternion = spinPivot?.quaternion.clone();
+  const baseLidQuaternion = lid?.quaternion.clone();
+  const lidSpin = new THREE.Quaternion();
+  const energyRoot = new THREE.Group();
+  energyRoot.name = 'VrAstroFurnaceEnergyPoints';
+  const energyGeometry = new THREE.SphereGeometry(0.018, 8, 6);
+  const energyMaterials = [];
+  for (let index = 0; index < 4; index += 1) {
+    const material = new THREE.MeshBasicMaterial({ color: 0xc8f8ff, transparent: true, opacity: 0 });
+    const point = new THREE.Mesh(energyGeometry, material);
+    point.name = `VrAstroFurnaceEnergyPoint${index + 1}`;
+    point.userData.phase = index * TAU / 4;
+    energyMaterials.push(material); energyRoot.add(point);
+  }
+  energyRoot.visible = false;
+  energyAnchor?.add(energyRoot);
   const raycaster = new THREE.Raycaster();
   const origin = new THREE.Vector3();
   const direction = new THREE.Vector3();
@@ -105,6 +122,7 @@ export function createVrAstroFurnaceActivateInteraction({
   let cooldownTargetAngle = 0;
   let cooldownStartSpeed = 0;
   let releasing = false;
+  let processStarted = false;
   let disposed = false;
 
   const setButtonEmission = (value) => buttonMaterials.forEach((material) => { material.emissiveIntensity = value; });
@@ -127,6 +145,21 @@ export function createVrAstroFurnaceActivateInteraction({
     if (!spinPivot || !baseSpinQuaternion) return;
     localSpin.setFromAxisAngle(LOCAL_AXIS, angle);
     spinPivot.quaternion.copy(baseSpinQuaternion).multiply(localSpin);
+    if (lid && baseLidQuaternion) {
+      lidSpin.setFromAxisAngle(LOCAL_AXIS, angle * 0.5);
+      lid.quaternion.copy(baseLidQuaternion).multiply(lidSpin);
+    }
+  }
+  function updateEnergyPoints(intensity, speedMultiplier = 1) {
+    const energy = clamp01(intensity);
+    energyRoot.visible = energy > 0.001;
+    energyRoot.children.forEach((point) => {
+      const orbitAngle = point.userData.phase - angle * speedMultiplier;
+      point.position.set(Math.cos(orbitAngle) * 0.11, Math.sin(orbitAngle * 2) * 0.025,
+        Math.sin(orbitAngle) * 0.11);
+      point.scale.setScalar(0.65 + energy * 0.9);
+    });
+    energyMaterials.forEach((material) => { material.opacity = energy * 0.9; });
   }
   function setProcessLight(intensity = 0) {
     if (!processLight || !chamberCylinder) return;
@@ -152,6 +185,7 @@ export function createVrAstroFurnaceActivateInteraction({
     if (!canActivate()) return false;
     state = states.PRESSING; clearHits(); setButtonEmission(settings.emissionPressed ?? 5);
     action.stop(); action.reset(); action.timeScale = 1; action.clampWhenFinished = true; action.play();
+    processStarted = true; onProcessStart();
     return true;
   }
   function press(record) {
@@ -209,16 +243,20 @@ export function createVrAstroFurnaceActivateInteraction({
     let emission = idleEmission;
     let lightIntensity = 0;
     let whiteMix = 0;
+    let energyIntensity = 0;
+    let energySpeed = 1;
     if (progress < spinupEnd) {
       state = states.SPINUP; const t = smooth(progress / spinupEnd); angularSpeed = baseSpeed * t;
       emission = THREE.MathUtils.lerp(idleEmission, steadyEmission, t);
       lightIntensity = THREE.MathUtils.lerp(0, steadyLight, t);
       whiteMix = 0.45 * t;
+      energyIntensity = t * 0.45;
       angle += angularSpeed * delta;
     } else if (progress < steadyEnd) {
       state = states.STEADY; angularSpeed = baseSpeed; angle += angularSpeed * delta;
       emission = steadyEmission; whiteMix = 0.45;
       lightIntensity = steadyLight;
+      energyIntensity = 0.55;
     } else if (progress < extractionEnd) {
       state = states.EXTRACTION;
       const phaseProgress = (progress - steadyEnd) / (extractionEnd - steadyEnd);
@@ -228,6 +266,7 @@ export function createVrAstroFurnaceActivateInteraction({
       emission = THREE.MathUtils.lerp(steadyEmission, extractionEmission, t);
       lightIntensity = THREE.MathUtils.lerp(steadyLight, extractionLight, t);
       whiteMix = THREE.MathUtils.lerp(0.45, 0.95, t);
+      energyIntensity = THREE.MathUtils.lerp(0.55, 1, t); energySpeed = 2;
     } else {
       if (previousProgress < extractionEnd || state !== states.COOLDOWN) {
         state = states.COOLDOWN; cooldownStartAngle = angle; cooldownStartSpeed = angularSpeed;
@@ -250,16 +289,21 @@ export function createVrAstroFurnaceActivateInteraction({
       emission = THREE.MathUtils.lerp(extractionEmission, idleEmission, t);
       lightIntensity = THREE.MathUtils.lerp(extractionLight, 0, t);
       whiteMix = THREE.MathUtils.lerp(0.95, 0, t);
+      energyIntensity = 1 - t; energySpeed = THREE.MathUtils.lerp(2, 0.25, t);
     }
     const pulse = processRotationPulse01(angle);
     const pulseMinimum = processSettings.fireCellPulseMinEmission ?? 0.05;
     const pulseMaximum = processSettings.fireCellPulseMaxEmission ?? emission;
-    setFireEnergy(THREE.MathUtils.lerp(pulseMinimum, pulseMaximum, pulse), whiteMix); applyAngle(); setProcessLight(lightIntensity);
+    setFireEnergy(THREE.MathUtils.lerp(pulseMinimum, pulseMaximum, pulse), whiteMix); applyAngle();
+    setProcessLight(lightIntensity); updateEnergyPoints(energyIntensity, energySpeed);
     if (progress >= 1) {
       state = states.COMPLETE; angularSpeed = 0; angle = 0;
       if (spinPivot && baseSpinQuaternion) spinPivot.quaternion.copy(baseSpinQuaternion);
+      if (lid && baseLidQuaternion) lid.quaternion.copy(baseLidQuaternion);
       restoreFireMaterials();
       setProcessLight(0);
+      updateEnergyPoints(0);
+      processStarted = false; onProcessStop({ completed: true });
     }
   }
   controllers.forEach((record) => {
@@ -276,18 +320,24 @@ export function createVrAstroFurnaceActivateInteraction({
     halo?.update(step);
   }
   function reset() {
+    if (processStarted) onProcessStop({ completed: false });
     action?.stop(); mixer?.stopAllAction(); mixer?.setTime(0); releasing = false;
     state = states.IDLE; progress = 0; elapsed = 0; angle = 0; angularSpeed = 0;
     if (spinPivot && baseSpinQuaternion) spinPivot.quaternion.copy(baseSpinQuaternion);
+    if (lid && baseLidQuaternion) lid.quaternion.copy(baseLidQuaternion);
+    processStarted = false;
     restoreFireMaterials();
     setProcessLight(0);
+    updateEnergyPoints(0);
     clearHits(); setButtonEmission(settings.emissionInactive ?? 0);
   }
   function dispose() {
     if (disposed) return; reset(); disposed = true;
     listeners.forEach(({ record, selectStart }) => record.controller.removeEventListener('selectstart', selectStart));
     mixer?.removeEventListener('finished', onFinished); mixer?.stopAllAction(); if (clip) mixer?.uncacheClip(clip);
-    halo?.dispose(); processLight?.removeFromParent(); processLight?.dispose(); ownedMaterials.forEach((material) => material.dispose?.()); ownedMaterials.clear(); hits.clear();
+    halo?.dispose(); processLight?.removeFromParent(); processLight?.dispose(); energyRoot.removeFromParent();
+    energyGeometry.dispose(); energyMaterials.forEach((material) => material.dispose());
+    ownedMaterials.forEach((material) => material.dispose?.()); ownedMaterials.clear(); hits.clear();
   }
   reset();
   const getExtractionProgress = () => {
@@ -296,7 +346,7 @@ export function createVrAstroFurnaceActivateInteraction({
     return clamp01((progress - steadyEnd) / Math.max(extractionEnd - steadyEnd, Number.EPSILON));
   };
   return {
-    mixer, action, hits, halo, processLight, chamberCylinder, capabilityReady, update, press, releaseForOpening, reset, dispose,
+    mixer, action, hits, halo, processLight, energyRoot, chamberCylinder, capabilityReady, update, press, releaseForOpening, reset, dispose,
     hasCurrentHit: (record) => hits.get(record) === true,
     canActivate, getState: () => state, getProgress: () => progress, getExtractionProgress, getPhase: () => state,
     isProcessing: () => [states.PRESSING, states.SPINUP, states.STEADY, states.EXTRACTION, states.COOLDOWN].includes(state),

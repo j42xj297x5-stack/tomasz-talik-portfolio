@@ -72,6 +72,7 @@ const VR_AUDIO = Object.freeze({
   reliquaryInsert: '/audio/turn_page_01.mp3', reliquaryConsume: '/audio/reliquiary_consume.mp3',
   tierComplete: '/audio/floor_panel_activate.mp3', monkeyThinking: '/audio/monkey_thinking_01.mp3',
   chamberOpen: '/audio/astro_piec_open.mp3', chamberClose: '/audio/astro_piec_close.mp3',
+  furnaceProcess: '/audio/astro_piec_work_01.mp3',
   glyphProcess: '/audio/glif_hover_loop.mp3'
 });
 const GLYPH_COMPLETION_AUDIO = Object.freeze({
@@ -355,7 +356,9 @@ astroFurnaceActivateInteraction = createVrAstroFurnaceActivateInteraction({
   canActivateInput: () => astroFurnaceContentInteraction?.hasValidInsertedContent() === true,
   isModeActive: () => astroFurnaceOptionInteraction?.getActiveMode?.() === ASTRO_FURNACE_ACTIVE_MODE,
   qaAllowWithoutInput: furnaceProcessQa,
-  isOrdinaryRayAvailable: ordinaryFurnaceRayAvailable
+  isOrdinaryRayAvailable: ordinaryFurnaceRayAvailable,
+  onProcessStart: () => vrAudio.startFurnaceProcess(),
+  onProcessStop: () => vrAudio.stopFurnaceProcess()
 });
 let shellAttractorInteraction = null;
 astroFurnaceContentInteraction = createVrAstroFurnaceContentInteraction({
