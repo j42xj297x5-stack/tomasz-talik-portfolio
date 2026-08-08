@@ -223,3 +223,23 @@ test('glyph audio synchronous and rejected starts fail soft', async () => {
   assert.equal(warnings.length, 2);
   synchronous.dispose(); rejected.dispose();
 });
+
+test('production Asterion create source starts exactly once on DEVICE and cleanup stops it', async () => {
+  const { bridge, handles } = createProcessHarness();
+  assert.equal(bridge.startAsterionCreate(), true);
+  assert.equal(bridge.startAsterionCreate(), false);
+  await flush();
+  assert.equal(handles.length, 1);
+  assert.equal(handles[0].path, '/audio/astro_piec_work_create_01.mp3');
+  assert.equal(handles[0].bus, 'DEVICE');
+  bridge.stopAsterionCreate(); bridge.stopAsterionCreate();
+  assert.equal(handles[0].stopped, 1);
+  bridge.dispose();
+});
+
+test('production Asterion create audio failure is fail-soft', async () => {
+  const warnings = [];
+  const bridge = createVrAudioBridge({ manager: { startVrProcessSource() { throw new Error('decode'); } }, warn: (...args) => warnings.push(args) });
+  assert.doesNotThrow(() => bridge.startAsterionCreate());
+  await flush(); assert.equal(warnings.length, 1); bridge.dispose();
+});

@@ -104,3 +104,11 @@ function makeControllerHarness({ asterionAvailable = true, rightUnlocked = true 
   assert.equal(h.sphere.equipped, false, 'unavailable Asterion does not call equip');
   assert.equal(h.left.ray.visible, true, 'left ray remains visible when Asterion is unavailable');
 }
+
+{
+  const h = makeControllerHarness();
+  assert.equal(h.controller.equipLeftAsterion(), true, 'earned claim can request first equip through controller');
+  assert.equal(h.controller.getLeftMode(), VR_LEFT_HAND_MODES.ASTERION_SPHERE);
+  const unavailable = makeControllerHarness({ asterionAvailable: false });
+  assert.equal(unavailable.controller.equipLeftAsterion(), false, 'public equip respects gameplay availability');
+}

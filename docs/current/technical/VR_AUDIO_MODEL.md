@@ -116,7 +116,7 @@ Each shorthand above denotes `glif_<element>_4s_<NN>.mp3`. `glif_earth_4s_04.mp3
 - Shell process → `astro_piec_work_01.mp3` (**IMPLEMENTED**, accepted-cycle one-shot on DEVICE).
 - Small-glyph process → `astro_piec_work_02.mp3` (**TODO gameplay**).
 - Stone process → `astro_piec_work_03.mp3` (**TODO gameplay**).
-- Create Astro Attractor or Asterion Sphere → `astro_piec_work_create_01.mp3`.
+- Production Asterion Sphere `UTWÓRZ` → `astro_piec_work_create_01.mp3` (**IMPLEMENTED**); future Astro Attractor creation may reuse the authored family but has no runtime action yet.
 
 ### Monkey and panels
 
@@ -157,9 +157,9 @@ The inventory below contains every existing `public/audio/*.mp3` as of 2026-08-0
 | `astro_piec_close.mp3` | one-shot | DEVICE | zamknięcie komory Astro Pieca | **IMPLEMENTED** | Playback one-shot jest wdrożony zgodnie z semantyką eventu powyżej. |
 | `astro_piec_open.mp3` | one-shot | DEVICE | otwarcie komory Astro Pieca | **IMPLEMENTED** | Playback one-shot jest wdrożony zgodnie z semantyką eventu powyżej. |
 | `astro_piec_work_01.mp3` | one-shot | DEVICE | proces skorup w Astro Piecu | **IMPLEMENTED** | Raz po zaakceptowanym starcie; bez loop/restartu; reset/dispose zatrzymuje aktywne źródło. |
+| `astro_piec_work_create_01.mp3` | one-shot | DEVICE | Production Asterion `UTWÓRZ`; exactly once per accepted build, stopped on interrupted build | **IMPLEMENTED** | Fail-soft source; no loop and no duplicate generic click. |
 | `astro_piec_work_02.mp3` | one-shot | DEVICE | proces małych glifów w Astro Piecu (TODO gameplay) | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
 | `astro_piec_work_03.mp3` | one-shot | DEVICE | proces kamieni w Astro Piecu (TODO gameplay) | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
-| `astro_piec_work_create_01.mp3` | one-shot | DEVICE | tworzenie Astro Przyciągacza lub Kuli | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
 | `bell_01.mp3` | one-shot | UI | otwarcie panelu gracza Y | **IMPLEMENTED** | Playback one-shot na busie UI jest wdrożony. |
 | `bell_02.mp3` | one-shot | UI | zamknięcie panelu gracza Y | **IMPLEMENTED** | Playback one-shot na busie UI jest wdrożony. |
 | `bell_03.mp3` | one-shot | UI | — | **UNASSIGNED** | Brak ustalonego użycia VR. |
