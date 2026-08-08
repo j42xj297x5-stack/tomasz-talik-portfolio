@@ -1,16 +1,16 @@
 # Experience VR Audio Model
 
-Status: canonical, living technical model for Experience VR audio. Synchronized with the second runtime one-shot pass on 2026-08-08.
+Status: canonical, living technical model for Experience VR audio. Synchronized with the crystal-acquisition lifecycle pass on 2026-08-08.
 
 ## SUMMARY DLA ARCHITEKTA
 
-The second bounded Experience VR one-shot pass is **IMPLEMENTED**: in addition to the fail-soft `VrAudioBridge`, five unity-gain buses and the first UI package, runtime now covers accepted reliquary insert, semantic consume commit, idempotent tier completion, a newly started monkey communication signal, and accepted Astro Furnace chamber open/close transitions. Ambient sequencing, loops, spatial audio, and all other mapped events remain **PLANNED**; known but unmapped family capacity is **RESERVED**, and sounds without a decided VR use are **UNASSIGNED**.
+The bounded Experience VR crystal-acquisition audio lifecycle is **IMPLEMENTED**: the existing fail-soft `VrAudioBridge` now follows real glyph hold/miss/resume/success transitions, renews the non-looping process source after its natural end, and plays the mapped elemental completion one-shot after a physical crystal is created. The earlier UI and world/device one-shot packages remain active. Ambient sequencing, Astro Attractor audio, spatial audio, and all other mapped events remain **PLANNED**; known but unmapped family capacity is **RESERVED**, and sounds without a decided VR use are **UNASSIGNED**.
 
 ## Status vocabulary and authority
 
 | Status | Meaning in this document |
 | --- | --- |
-| **IMPLEMENTED** | Behavior exists in the current runtime. This currently covers the bridge, five-bus mixer, the first UI package, and the six world/device one-shots listed as implemented below. |
+| **IMPLEMENTED** | Behavior exists in the current runtime. This currently covers the bridge, five-bus mixer, UI and world/device one-shots listed below, and the crystal-acquisition process lifecycle. |
 | **PLANNED** | An existing asset has an explicitly assigned future VR event or sequence role. It does **not** mean playback exists. |
 | **RESERVED** | The family/layer function is known, but no event or concrete mapping has been assigned yet. |
 | **UNASSIGNED** | No VR use has been decided. |
@@ -174,25 +174,25 @@ The inventory below contains every existing `public/audio/*.mp3` as of 2026-08-0
 | `creating_08.mp3` | one-shot | WORLD | — | **UNASSIGNED** | Dostępny; przyszłe użycie pozostaje otwarte. |
 | `creating_short_01.mp3` | one-shot | WORLD | — | **UNASSIGNED** | Dostępny; przyszłe użycie pozostaje otwarte. |
 | `floor_panel_activate.mp3` | one-shot | WORLD | dodatkowo po Release kończącym pełny próg | **IMPLEMENTED** | Playback one-shot jest wdrożony zgodnie z semantyką eventu powyżej. |
-| `glif_earth_4s_01.mp3` | one-shot | WORLD | Ethics / Earth: kryształ 1 | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
-| `glif_earth_4s_02.mp3` | one-shot | WORLD | Ethics / Earth: kryształ 2 | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
-| `glif_earth_4s_03.mp3` | one-shot | WORLD | Ethics / Earth: kryształ 3 | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
+| `glif_earth_4s_01.mp3` | one-shot | WORLD | Ethics / Earth: kryształ 1 | **IMPLEMENTED** | Playback VR jest wdrożony zgodnie z mappingiem acquisition. |
+| `glif_earth_4s_02.mp3` | one-shot | WORLD | Ethics / Earth: kryształ 2 | **IMPLEMENTED** | Playback VR jest wdrożony zgodnie z mappingiem acquisition. |
+| `glif_earth_4s_03.mp3` | one-shot | WORLD | Ethics / Earth: kryształ 3 | **IMPLEMENTED** | Playback VR jest wdrożony zgodnie z mappingiem acquisition. |
 | `glif_earth_4s_04.mp3` | one-shot | WORLD | — | **UNASSIGNED** | Jawnie bez użycia VR. |
-| `glif_fire_4s_01.mp3` | one-shot | WORLD | Creative AI / Fire: kryształ 1 | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
-| `glif_fire_4s_02.mp3` | one-shot | WORLD | Creative AI / Fire: kryształ 2 | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
-| `glif_fire_4s_03.mp3` | one-shot | WORLD | Creative AI / Fire: kryształ 3 | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
+| `glif_fire_4s_01.mp3` | one-shot | WORLD | Creative AI / Fire: kryształ 1 | **IMPLEMENTED** | Playback VR jest wdrożony zgodnie z mappingiem acquisition. |
+| `glif_fire_4s_02.mp3` | one-shot | WORLD | Creative AI / Fire: kryształ 2 | **IMPLEMENTED** | Playback VR jest wdrożony zgodnie z mappingiem acquisition. |
+| `glif_fire_4s_03.mp3` | one-shot | WORLD | Creative AI / Fire: kryształ 3 | **IMPLEMENTED** | Playback VR jest wdrożony zgodnie z mappingiem acquisition. |
 | `glif_fire_4s_04.mp3` | one-shot | WORLD | — | **UNASSIGNED** | Jawnie bez użycia VR. |
-| `glif_hover_loop.mp3` | specjalna: odnawiany one-shot (12 s) | WORLD | bed pozyskiwania kryształu; restart ręczny po naturalnym końcu, nigdy `source.loop=true` | **PLANNED** | Nazwa nie oznacza nieskończonego loopa w VR. |
-| `glif_metal_4s_01.mp3` | one-shot | WORLD | DIG Engine / Metal: kryształ 1 | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
-| `glif_metal_4s_02.mp3` | one-shot | WORLD | DIG Engine / Metal: kryształ 2 | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
-| `glif_metal_4s_03.mp3` | one-shot | WORLD | DIG Engine / Metal: kryształ 3 | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
-| `glif_metal_4s_04.mp3` | one-shot | WORLD | DIG Engine / Metal: kryształ 4 | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
-| `glif_water_4s_01.mp3` | one-shot | WORLD | Haiku Cosmos / Water: kryształ 1; Haiku Cosmos / Water: kryształ 5 | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
-| `glif_water_4s_02.mp3` | one-shot | WORLD | Haiku Cosmos / Water: kryształ 2 | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
-| `glif_water_4s_03.mp3` | one-shot | WORLD | Haiku Cosmos / Water: kryształ 3 | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
-| `glif_water_4s_04.mp3` | one-shot | WORLD | Haiku Cosmos / Water: kryształ 4 | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
-| `glif_wood_4s_01.mp3` | one-shot | WORLD | AI Guide / Wood: kryształ 1; AI Guide / Wood: kryształ 3 | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
-| `glif_wood_4s_02.mp3` | one-shot | WORLD | AI Guide / Wood: kryształ 2 | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
+| `glif_hover_loop.mp3` | specjalna: odnawiany one-shot (12 s) | WORLD | bed pozyskiwania kryształu; restart ręczny po naturalnym końcu, nigdy `source.loop=true` | **IMPLEMENTED** | Nazwa nie oznacza nieskończonego loopa w VR. |
+| `glif_metal_4s_01.mp3` | one-shot | WORLD | DIG Engine / Metal: kryształ 1 | **IMPLEMENTED** | Playback VR jest wdrożony zgodnie z mappingiem acquisition. |
+| `glif_metal_4s_02.mp3` | one-shot | WORLD | DIG Engine / Metal: kryształ 2 | **IMPLEMENTED** | Playback VR jest wdrożony zgodnie z mappingiem acquisition. |
+| `glif_metal_4s_03.mp3` | one-shot | WORLD | DIG Engine / Metal: kryształ 3 | **IMPLEMENTED** | Playback VR jest wdrożony zgodnie z mappingiem acquisition. |
+| `glif_metal_4s_04.mp3` | one-shot | WORLD | DIG Engine / Metal: kryształ 4 | **IMPLEMENTED** | Playback VR jest wdrożony zgodnie z mappingiem acquisition. |
+| `glif_water_4s_01.mp3` | one-shot | WORLD | Haiku Cosmos / Water: kryształ 1; Haiku Cosmos / Water: kryształ 5 | **IMPLEMENTED** | Playback VR jest wdrożony zgodnie z mappingiem acquisition. |
+| `glif_water_4s_02.mp3` | one-shot | WORLD | Haiku Cosmos / Water: kryształ 2 | **IMPLEMENTED** | Playback VR jest wdrożony zgodnie z mappingiem acquisition. |
+| `glif_water_4s_03.mp3` | one-shot | WORLD | Haiku Cosmos / Water: kryształ 3 | **IMPLEMENTED** | Playback VR jest wdrożony zgodnie z mappingiem acquisition. |
+| `glif_water_4s_04.mp3` | one-shot | WORLD | Haiku Cosmos / Water: kryształ 4 | **IMPLEMENTED** | Playback VR jest wdrożony zgodnie z mappingiem acquisition. |
+| `glif_wood_4s_01.mp3` | one-shot | WORLD | AI Guide / Wood: kryształ 1; AI Guide / Wood: kryształ 3 | **IMPLEMENTED** | Playback VR jest wdrożony zgodnie z mappingiem acquisition. |
+| `glif_wood_4s_02.mp3` | one-shot | WORLD | AI Guide / Wood: kryształ 2 | **IMPLEMENTED** | Playback VR jest wdrożony zgodnie z mappingiem acquisition. |
 | `monkey_thinking_01.mp3` | one-shot | WORLD | komunikacja małpy / łuki nad głową | **IMPLEMENTED** | Playback one-shot jest wdrożony zgodnie z semantyką eventu powyżej. |
 | `noise_laud_loop_01.mp3` | seamless loop | DEVICE | Astro Przyciągacz: małe glify | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
 | `noise_laud_loop_02.mp3` | seamless loop | DEVICE | Astro Przyciągacz: skorupy | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
@@ -256,4 +256,4 @@ The prefix map supplies only a default classification. Every new MP3 must still 
 
 ## Implementation boundary
 
-This document records the implemented UI pass plus the bounded second world/device one-shot pass and the future contract for all remaining systems. The current implementation is limited to the shared Master Volume, five unity-gain VR buses, unity-gain one-shot sources, the events explicitly marked `IMPLEMENTED`, and the fail-soft bridge boundary. It does not authorize additional playback, sequencing, loops, asset creation, renaming, mastering, or spatialization changes.
+This document records the implemented UI and world/device one-shot passes plus the bounded glyph-acquisition lifecycle and the future contract for all remaining systems. The current implementation is limited to the shared Master Volume, five unity-gain VR buses, unity-gain one-shot sources, the events explicitly marked `IMPLEMENTED`, the glyph process fades/recovery/renewal, and the fail-soft bridge boundary. It does not authorize additional playback, sequencing, loops, asset creation, renaming, mastering, or spatialization changes.
