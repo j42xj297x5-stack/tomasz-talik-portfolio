@@ -47,9 +47,11 @@ experienceVr
 │  ├─ open / activate / option / content interactions
 │  ├─ audit-derived patch data → Asterion sphere wireframe helper → furnace panel
 │  └─ VrAstroFurnaceProgressionController
-└─ QA Asterion Sphere behind ?asterionSphere
+├─ QA Asterion Sphere behind ?asterionSphere
    ├─ createVrAsterionSphere → left-hand equipment and ring nodes
    └─ createVrAsterionGyroInteraction → PREVIEW / COMMAND / CURRENT + heavy angular drive
+└─ fail-soft VR audio boundary
+   └─ VrAudioBridge → shared audioManager (no VR gameplay audio content yet)
 ```
 
 Handedness is populated after each WebXR controller `connected` event; construction does not require an initial left/right value.
@@ -132,4 +134,4 @@ Option selection of `floor_gyroscope_sphere` is a prerequisite for Open, inserti
 
 ## Not active dependencies
 
-Progressive sector backgrounds, central progression core, Astro B/bands, production physical Asterion Sphere construction/materialization, `UTWÓRZ`, production progression gate, radar sectors, small glyph progression, antenna, rune/Emanation Matrix processing, final radar/finale, audio, durable persistence and full-game reset are not active runtime dependencies.
+Progressive sector backgrounds, central progression core, Astro B/bands, production physical Asterion Sphere construction/materialization, `UTWÓRZ`, production progression gate, radar sectors, small glyph progression, antenna, rune/Emanation Matrix processing, final radar/finale, VR gameplay audio content, durable persistence and full-game reset are not active runtime dependencies. The lifecycle-owned `VrAudioBridge` is active only as a fail-soft boundary for future optional audio side effects.
