@@ -1,0 +1,259 @@
+# Experience VR Audio Model
+
+Status: canonical, living technical model for planned Experience VR audio. Synchronized with the repository asset inventory on 2026-08-08.
+
+## SUMMARY DLA ARCHITEKTA
+
+Gameplay audio for Experience VR is not implemented. The only **IMPLEMENTED** component is the fail-soft `VrAudioBridge`, which remains the mandatory gameplay → audio boundary. This document fixes the future five-bus mixer, complete 80-file MP3 inventory, threshold/subthreshold sequencing, and interaction-to-asset assignments without implementing playback, mixing, or runtime events. Assets with an assigned event are **PLANNED**, known but unmapped family capacity is **RESERVED**, and sounds without a decided VR use are **UNASSIGNED**.
+
+## Status vocabulary and authority
+
+| Status | Meaning in this document |
+| --- | --- |
+| **IMPLEMENTED** | Behavior exists in the current runtime. At present this applies only to the fail-soft `VrAudioBridge`, not to VR gameplay playback. |
+| **PLANNED** | An existing asset has an explicitly assigned future VR event or sequence role. It does **not** mean playback exists. |
+| **RESERVED** | The family/layer function is known, but no event or concrete mapping has been assigned yet. |
+| **UNASSIGNED** | No VR use has been decided. |
+
+This is the main source for **Experience VR audio** tasks. The general [`AUDIO_RUNTIME_MODEL.md`](AUDIO_RUNTIME_MODEL.md) remains authority for the implemented shared audio owner and existing non-VR behavior; [`VR_RUNTIME_MODEL.md`](VR_RUNTIME_MODEL.md) remains authority for implemented VR gameplay. If code, inventory, and this model diverge, report the conflict rather than inventing a mapping.
+
+## Runtime boundary and mixer contract
+
+`VrAudioBridge` is **IMPLEMENTED** and remains the mandatory fail-soft boundary from gameplay to optional audio. Future audio requests must cross `runOptional(operation, request)`: an audio failure may warn, but must never block or fail gameplay. The bridge stores no gameplay state. No VR gameplay playback calls, mixer buses, or audio events are currently implemented.
+
+The future VR mixer has five independently tunable gain buses:
+
+| Bus | Responsibility | Asset families |
+| --- | --- | --- |
+| `SPACE` | lowest cosmic background | `noise_quiete_loop_*`, `noise_loop_*` |
+| `AMBIENT` | ambients and main musical threads | `ambient_01–05`, `ambient_loop_01–04` |
+| `DEVICE` | loud device operation | `astro_piec_*`, `noise_laud_loop_01–08` |
+| `WORLD` | short world sounds | `creating_*`, `floor_panel_activate`, `glif_*`, `reliquiary_consume`, `monkey_thinking_01` |
+| `UI` | panels | `bell_*`, `click_panel_01`, `panel_sound_*`, `panel_sound_long_*`, `turn_page_*` |
+
+Each bus has its own future gain node and all five ultimately feed the existing shared **Master Volume**. All samples are already mixed and mastered. Defaults are `source gain = 1.0` and every `VR bus gain = 1.0`. Do not add normalization, limiters, per-sample trims, or ducking. Event-specific fades below are lifecycle behavior, not mastering trims.
+
+## Background sequencer
+
+### Full thresholds
+
+| Active threshold | Entry condition | Main asset |
+| --- | --- | --- |
+| 1 | entry into the circle | `ambient_01.mp3` |
+| 2 | completion of the first panel circle for every branch | `ambient_02.mp3` |
+| 3 | second circle | `ambient_03.mp3` |
+| 4 | third circle | `ambient_04.mp3` |
+| 5 | fourth circle | `ambient_05.mp3` |
+
+For the active threshold, the sequence is:
+
+1. Play `ambient_N` once to its natural end.
+2. Hold 30 seconds of silence.
+3. Select the next `noise_quiete_loop` from the global queue.
+4. Fade in for 10 seconds.
+5. Play 6 complete repetitions of the seamless loop.
+6. Fade out for 10 seconds.
+7. Hold 30 seconds of silence.
+8. If the player remains in the same threshold, play `ambient_N` again and continue with the next quiet loop.
+
+The quiet-loop cursor is global and **does not reset** when the threshold changes. The actual repository queue is:
+
+```text
+01 → 02 → 03 → 04 → 05 → 07 → wrap
+```
+
+`noise_quiete_loop_06.mp3` does not exist. When it is added, both the inventory and queue in this document must be explicitly updated.
+
+### Subthreshold override
+
+A subthreshold interrupts the normal full-threshold sequencer. The first defined subthreshold begins after all shells are complete and the Asterion Sphere has been built, before transition to the next full threshold. Its main layer is `ambient_loop_01.mp3`; `ambient_loop_02.mp3` through `ambient_loop_04.mp3` are **RESERVED**.
+
+The subthreshold sequence is:
+
+1. Play `ambient_loop_N` for 13 seamless repetitions.
+2. Fade out for 10 seconds.
+3. Hold 30 seconds of silence.
+4. Select the next quiet loop from the same global cursor.
+5. Fade it in for 10 seconds, play 6 complete repetitions, fade it out for 10 seconds, then hold 30 seconds of silence.
+6. If the subthreshold remains active, repeat the cycle.
+7. When it ends, begin the sequence for the new higher full threshold.
+
+## Interaction contracts
+
+### Crystal acquisition
+
+| Branch / element | Crystal order and completion samples |
+| --- | --- |
+| Ethics / Earth (3) | `earth_01`, `earth_02`, `earth_03` |
+| Creative AI / Fire (3) | `fire_01`, `fire_02`, `fire_03` |
+| AI Guide / Wood (3) | `wood_01`, `wood_02`, `wood_01` |
+| DIG Engine / Metal (4) | `metal_01`, `metal_02`, `metal_03`, `metal_04` |
+| Haiku Cosmos / Water (5) | `water_01`, `water_02`, `water_03`, `water_04`, `water_01` |
+
+Each shorthand above denotes `glif_<element>_4s_<NN>.mp3`. `glif_earth_4s_04.mp3` and `glif_fire_4s_04.mp3` have no current VR use.
+
+`glif_hover_loop.mp3` has special VR semantics despite its name; it is **not** an infinite source loop:
+
+- The first ray hit beginning acquisition starts it immediately with no fade-in.
+- A temporary glyph loss leaves the source playing while gain eases toward zero over 1 second.
+- Return to the same acquisition process within that second keeps the same source and playhead, fading in over 0.1 seconds from its current gain.
+- Without return, reaching zero stops and cleans up the source.
+- Successful acquisition fades it out over 0.2 seconds, then plays the appropriate elemental completion sample.
+- If the 12-second file ends naturally while acquisition remains active, start it again from the beginning. Never set `source.loop = true` for this bed.
+
+### Reliquary
+
+- Insert crystal → `turn_page_01.mp3`.
+- Release/consume → `reliquiary_consume.mp3`.
+- A Release that completes a full threshold additionally plays `floor_panel_activate.mp3`.
+
+### Astro Furnace
+
+- Open Option panel → `panel_sound_01.mp3`.
+- Enter deeper → `panel_sound_02.mp3`.
+- Return to main menu → `click_panel_01.mp3`.
+- Chamber open / close → `astro_piec_open.mp3` / `astro_piec_close.mp3`.
+- Shell process → `astro_piec_work_01.mp3`.
+- Small-glyph process → `astro_piec_work_02.mp3` (**TODO gameplay**).
+- Stone process → `astro_piec_work_03.mp3` (**TODO gameplay**).
+- Create Astro Attractor or Asterion Sphere → `astro_piec_work_create_01.mp3`.
+
+### Monkey and panels
+
+- Monkey communication / arcs above its head → `monkey_thinking_01.mp3`.
+- Monkey panel: open → `panel_sound_long_01.mp3`; close → `panel_sound_long_02.mp3`; internal click → `click_panel_01.mp3`.
+- Player Y panel: open → `bell_01.mp3`; close → `bell_02.mp3`; internal click → `click_panel_01.mp3`.
+
+### Astro Attractor
+
+The target beds are seamless loops: small glyphs → `noise_laud_loop_01.mp3`, shells → `02`, large glyphs → `03`, and stones 1–5 → `04–08` respectively.
+
+Start the selected source immediately without fade-in. Successful takeover of the object by the Spike fades it out over 0.5 seconds. On temporary target loss, keep the source and playhead alive while fading toward zero over 1 second. Reacquisition within that window restores gain and continues the same seamless loop without restart. A full second without recovery stops and cleans up the source.
+
+### Asterion Sphere / floor
+
+**DEVICE SOUND TBD** — behavior is decided, but no asset is assigned. Do not infer or assign any `noise_*` file.
+
+- First trigger starts immediately.
+- Release begins a smooth 2-second fade-out.
+- A new trigger during that window continues the current source and restores gain.
+- Reaching the end of the fade stops and cleans up the source.
+
+## Complete repository MP3 inventory
+
+The inventory below contains every existing `public/audio/*.mp3` as of 2026-08-08, exactly one row per file. A layer classifies the family; it does not itself assign an event. `UNASSIGNED` in the Layer column means no VR layer is safely inferable.
+
+| Asset | Forma | Warstwa | Planowane użycie VR | Status | Uwagi |
+| --- | --- | --- | --- | --- | --- |
+| `ambient_01.mp3` | one-shot | AMBIENT | wejście do kręgu / pełny próg 1 | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
+| `ambient_02.mp3` | one-shot | AMBIENT | ukończenie pierwszego kręgu paneli wszystkich gałęzi / pełny próg 2 | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
+| `ambient_03.mp3` | one-shot | AMBIENT | pełny próg 3 (drugi krąg) | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
+| `ambient_04.mp3` | one-shot | AMBIENT | pełny próg 4 (trzeci krąg) | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
+| `ambient_05.mp3` | one-shot | AMBIENT | pełny próg 5 (czwarty krąg) | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
+| `ambient_loop_01.mp3` | seamless loop | AMBIENT | podpróg: ukończone skorupy + zbudowana Kula Asterionowa | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
+| `ambient_loop_02.mp3` | seamless loop | AMBIENT | — | **RESERVED** | Rodzina podprogów znana; event/mapping nieustalony. |
+| `ambient_loop_03.mp3` | seamless loop | AMBIENT | — | **RESERVED** | Rodzina podprogów znana; event/mapping nieustalony. |
+| `ambient_loop_04.mp3` | seamless loop | AMBIENT | — | **RESERVED** | Rodzina podprogów znana; event/mapping nieustalony. |
+| `astro_piec_close.mp3` | one-shot | DEVICE | zamknięcie komory Astro Pieca | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
+| `astro_piec_open.mp3` | one-shot | DEVICE | otwarcie komory Astro Pieca | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
+| `astro_piec_work_01.mp3` | one-shot | DEVICE | proces skorup w Astro Piecu | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
+| `astro_piec_work_02.mp3` | one-shot | DEVICE | proces małych glifów w Astro Piecu (TODO gameplay) | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
+| `astro_piec_work_03.mp3` | one-shot | DEVICE | proces kamieni w Astro Piecu (TODO gameplay) | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
+| `astro_piec_work_create_01.mp3` | one-shot | DEVICE | tworzenie Astro Przyciągacza lub Kuli | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
+| `bell_01.mp3` | one-shot | UI | otwarcie panelu gracza Y | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
+| `bell_02.mp3` | one-shot | UI | zamknięcie panelu gracza Y | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
+| `bell_03.mp3` | one-shot | UI | — | **UNASSIGNED** | Brak ustalonego użycia VR. |
+| `click_panel_01.mp3` | one-shot | UI | klik wewnątrz panelu małpy lub gracza Y; powrót panelu Astro Pieca do menu głównego | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
+| `creating_01.mp3` | one-shot | WORLD | — | **UNASSIGNED** | Dostępny; przyszłe użycie pozostaje otwarte. |
+| `creating_02.mp3` | one-shot | WORLD | — | **UNASSIGNED** | Dostępny; przyszłe użycie pozostaje otwarte. |
+| `creating_03.mp3` | one-shot | WORLD | — | **UNASSIGNED** | Dostępny; przyszłe użycie pozostaje otwarte. |
+| `creating_04.mp3` | one-shot | WORLD | — | **UNASSIGNED** | Dostępny; przyszłe użycie pozostaje otwarte. |
+| `creating_05.mp3` | one-shot | WORLD | — | **UNASSIGNED** | Dostępny; przyszłe użycie pozostaje otwarte. |
+| `creating_06.mp3` | one-shot | WORLD | — | **UNASSIGNED** | Dostępny; przyszłe użycie pozostaje otwarte. |
+| `creating_07.mp3` | one-shot | WORLD | — | **UNASSIGNED** | Dostępny; przyszłe użycie pozostaje otwarte. |
+| `creating_08.mp3` | one-shot | WORLD | — | **UNASSIGNED** | Dostępny; przyszłe użycie pozostaje otwarte. |
+| `creating_short_01.mp3` | one-shot | WORLD | — | **UNASSIGNED** | Dostępny; przyszłe użycie pozostaje otwarte. |
+| `floor_panel_activate.mp3` | one-shot | WORLD | dodatkowo po Release kończącym pełny próg | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
+| `glif_earth_4s_01.mp3` | one-shot | WORLD | Ethics / Earth: kryształ 1 | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
+| `glif_earth_4s_02.mp3` | one-shot | WORLD | Ethics / Earth: kryształ 2 | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
+| `glif_earth_4s_03.mp3` | one-shot | WORLD | Ethics / Earth: kryształ 3 | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
+| `glif_earth_4s_04.mp3` | one-shot | WORLD | — | **UNASSIGNED** | Jawnie bez użycia VR. |
+| `glif_fire_4s_01.mp3` | one-shot | WORLD | Creative AI / Fire: kryształ 1 | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
+| `glif_fire_4s_02.mp3` | one-shot | WORLD | Creative AI / Fire: kryształ 2 | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
+| `glif_fire_4s_03.mp3` | one-shot | WORLD | Creative AI / Fire: kryształ 3 | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
+| `glif_fire_4s_04.mp3` | one-shot | WORLD | — | **UNASSIGNED** | Jawnie bez użycia VR. |
+| `glif_hover_loop.mp3` | specjalna: odnawiany one-shot (12 s) | WORLD | bed pozyskiwania kryształu; restart ręczny po naturalnym końcu, nigdy `source.loop=true` | **PLANNED** | Nazwa nie oznacza nieskończonego loopa w VR. |
+| `glif_metal_4s_01.mp3` | one-shot | WORLD | DIG Engine / Metal: kryształ 1 | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
+| `glif_metal_4s_02.mp3` | one-shot | WORLD | DIG Engine / Metal: kryształ 2 | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
+| `glif_metal_4s_03.mp3` | one-shot | WORLD | DIG Engine / Metal: kryształ 3 | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
+| `glif_metal_4s_04.mp3` | one-shot | WORLD | DIG Engine / Metal: kryształ 4 | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
+| `glif_water_4s_01.mp3` | one-shot | WORLD | Haiku Cosmos / Water: kryształ 1; Haiku Cosmos / Water: kryształ 5 | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
+| `glif_water_4s_02.mp3` | one-shot | WORLD | Haiku Cosmos / Water: kryształ 2 | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
+| `glif_water_4s_03.mp3` | one-shot | WORLD | Haiku Cosmos / Water: kryształ 3 | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
+| `glif_water_4s_04.mp3` | one-shot | WORLD | Haiku Cosmos / Water: kryształ 4 | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
+| `glif_wood_4s_01.mp3` | one-shot | WORLD | AI Guide / Wood: kryształ 1; AI Guide / Wood: kryształ 3 | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
+| `glif_wood_4s_02.mp3` | one-shot | WORLD | AI Guide / Wood: kryształ 2 | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
+| `monkey_thinking_01.mp3` | one-shot | WORLD | komunikacja małpy / łuki nad głową | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
+| `noise_laud_loop_01.mp3` | seamless loop | DEVICE | Astro Przyciągacz: małe glify | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
+| `noise_laud_loop_02.mp3` | seamless loop | DEVICE | Astro Przyciągacz: skorupy | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
+| `noise_laud_loop_03.mp3` | seamless loop | DEVICE | Astro Przyciągacz: duże glify | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
+| `noise_laud_loop_04.mp3` | seamless loop | DEVICE | Astro Przyciągacz: kamień 1 | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
+| `noise_laud_loop_05.mp3` | seamless loop | DEVICE | Astro Przyciągacz: kamień 2 | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
+| `noise_laud_loop_06.mp3` | seamless loop | DEVICE | Astro Przyciągacz: kamień 3 | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
+| `noise_laud_loop_07.mp3` | seamless loop | DEVICE | Astro Przyciągacz: kamień 4 | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
+| `noise_laud_loop_08.mp3` | seamless loop | DEVICE | Astro Przyciągacz: kamień 5 | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
+| `noise_loop_01.mp3` | seamless loop | SPACE | — | **UNASSIGNED** | Dostępny; przyszłe użycie pozostaje otwarte. |
+| `noise_loop_02.mp3` | seamless loop | SPACE | — | **UNASSIGNED** | Dostępny; przyszłe użycie pozostaje otwarte. |
+| `noise_loop_03.mp3` | seamless loop | SPACE | — | **UNASSIGNED** | Dostępny; przyszłe użycie pozostaje otwarte. |
+| `noise_loop_04.mp3` | seamless loop | SPACE | — | **UNASSIGNED** | Dostępny; przyszłe użycie pozostaje otwarte. |
+| `noise_loop_05.mp3` | seamless loop | SPACE | — | **UNASSIGNED** | Dostępny; przyszłe użycie pozostaje otwarte. |
+| `noise_loop_06.mp3` | seamless loop | SPACE | — | **UNASSIGNED** | Dostępny; przyszłe użycie pozostaje otwarte. |
+| `noise_quiete_loop_01.mp3` | seamless loop | SPACE | globalna kolejka cichego tła między blokami progu/podprogu | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
+| `noise_quiete_loop_02.mp3` | seamless loop | SPACE | globalna kolejka cichego tła między blokami progu/podprogu | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
+| `noise_quiete_loop_03.mp3` | seamless loop | SPACE | globalna kolejka cichego tła między blokami progu/podprogu | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
+| `noise_quiete_loop_04.mp3` | seamless loop | SPACE | globalna kolejka cichego tła między blokami progu/podprogu | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
+| `noise_quiete_loop_05.mp3` | seamless loop | SPACE | globalna kolejka cichego tła między blokami progu/podprogu | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
+| `noise_quiete_loop_07.mp3` | seamless loop | SPACE | globalna kolejka cichego tła między blokami progu/podprogu | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
+| `panel_sound_01.mp3` | one-shot | UI | otwarcie panelu Option Astro Pieca | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
+| `panel_sound_02.mp3` | one-shot | UI | wejście głębiej w panel Astro Pieca | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
+| `panel_sound_03.mp3` | one-shot | UI | — | **UNASSIGNED** | Brak ustalonego użycia VR. |
+| `panel_sound_04.mp3` | one-shot | UI | — | **UNASSIGNED** | Brak ustalonego użycia VR. |
+| `panel_sound_long_01.mp3` | one-shot | UI | otwarcie panelu małpy | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
+| `panel_sound_long_02.mp3` | one-shot | UI | zamknięcie panelu małpy | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
+| `panel_sound_long_03.mp3` | one-shot | UI | — | **UNASSIGNED** | Brak ustalonego użycia VR. |
+| `reliquiary_consume.mp3` | one-shot | WORLD | Release/consume w relikwiarzu | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
+| `start.mp3` | one-shot | UNASSIGNED | — | **UNASSIGNED** | Brak przypisanej funkcji i warstwy VR. |
+| `turn_page_01.mp3` | one-shot | UI | włożenie kryształu do relikwiarza | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
+| `turn_page_02.mp3` | one-shot | UI | — | **UNASSIGNED** | Brak ustalonego użycia VR. |
+
+## Braki / oczekiwane assety
+
+| Oczekiwany asset / funkcja | Warstwa | Status | Uwagi |
+| --- | --- | --- | --- |
+| `noise_quiete_loop_06.mp3` | SPACE | **RESERVED** | Brakuje w repo; planowana rodzina ma zakres `01–07`. Nie wolno symulować ani pomijać aktualnej faktycznej kolejki `01, 02, 03, 04, 05, 07`. |
+| DEVICE SOUND TBD dla pracy Kuli Asterionowej / podłogi | DEVICE | **RESERVED** | Kontrakt lifecycle jest ustalony, ale nazwa/asset nie. Nie przypisywać samodzielnie żadnego `noise_*`. |
+
+## Prefix map for future assets
+
+| Prefix | Default VR layer |
+| --- | --- |
+| `noise_quiete_loop_`, `noise_loop_` | `SPACE` |
+| `ambient_`, `ambient_loop_` | `AMBIENT` |
+| `astro_piec_`, `noise_laud_loop_` | `DEVICE` |
+| `creating_`, `floor_panel_`, `glif_`, `reliquiary_`, `monkey_` | `WORLD` |
+| `bell_`, `click_panel_`, `panel_sound_`, `panel_sound_long_`, `turn_page_` | `UI` |
+
+The prefix map supplies only a default classification. Every new MP3 must still be added explicitly as one inventory row and receive a status and deliberate planned use (or an explicit lack of one). Unknown prefixes remain `UNASSIGNED` until decided.
+
+## Open decisions — do not guess
+
+- The concrete device asset for Asterion Sphere / floor operation.
+- Future uses of `noise_loop_*`.
+- Future uses of `creating_*` and `creating_short_*`.
+- Subthreshold mapping of `ambient_loop_02–04`.
+- Whether individual effects should be spatial / `PositionalAudio`, and which ones.
+- Exact audio transition behavior on an ordinary full-threshold change while a block from the previous threshold is still active.
+
+## Implementation boundary
+
+This document defines a future contract only. It does not authorize runtime playback, mixer, event, asset creation, renaming, mastering, or spatialization changes. Implementation must preserve the shared Master Volume, the five unity-gain VR buses, source unity gain, event lifecycle semantics, and the fail-soft bridge boundary.

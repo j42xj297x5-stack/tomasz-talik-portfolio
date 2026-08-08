@@ -10,6 +10,7 @@ The entry shell exposes three modes: Classic 2D, Experience 3D, and capability-g
 
 | Task | Read first | Runtime evidence when needed |
 | --- | --- | --- |
+| Experience VR audio | [`technical/VR_AUDIO_MODEL.md`](../technical/VR_AUDIO_MODEL.md), then [`technical/VR_RUNTIME_MODEL.md`](../technical/VR_RUNTIME_MODEL.md) | `src/xr/audio/createVrAudioBridge.js`; consult `src/audio/audioManager.js` only for the shared owner/Master Volume boundary |
 | Experience VR current implementation | [`technical/VR_RUNTIME_MODEL.md`](../technical/VR_RUNTIME_MODEL.md), then [`handoffs/EXPERIENCE_VR_HANDOFF.md`](../handoffs/EXPERIENCE_VR_HANDOFF.md) | `src/experienceVr.js`, `src/config/experienceVrSettings.js`, relevant `src/xr/*` modules |
 | Experience VR Astro Furnace | [`technical/VR_RUNTIME_MODEL.md`](../technical/VR_RUNTIME_MODEL.md), then [`handoffs/EXPERIENCE_VR_HANDOFF.md`](../handoffs/EXPERIENCE_VR_HANDOFF.md) | `src/xr/furnace/*`, `src/experienceVr.js`, `src/config/experienceVrSettings.js`, `src/xr/shells/createVrShellSystem.js` |
 | Experience VR progress floor | [`technical/VR_PROGRESS_FLOOR_MODEL.md`](../technical/VR_PROGRESS_FLOOR_MODEL.md), then [`technical/VR_RUNTIME_MODEL.md`](../technical/VR_RUNTIME_MODEL.md) | `src/xr/floor/createVrProgressFloor.js`, `src/experienceVr.js`, `src/assets/assetManifest.js`, `tests/vr-progress-floor.test.mjs` |
