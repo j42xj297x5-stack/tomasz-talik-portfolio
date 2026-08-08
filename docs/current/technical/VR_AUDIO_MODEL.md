@@ -4,7 +4,7 @@ Status: canonical, living technical model for Experience VR audio. Synchronized 
 
 ## SUMMARY DLA ARCHITEKTA
 
-The bounded Experience VR Astro Attractor lifecycle is **IMPLEMENTED** for the currently playable shell target class. Its seamless DEVICE loop follows the existing pull, cancellation, and successful ordinary-ray handoff signals through the fail-soft `VrAudioBridge`. All eight assets are prepared, while small/large glyph and rune-stone mappings remain **PLANNED** because those gameplay target classes do not yet exist. Crystal acquisition and the earlier UI/world/device packages remain active; the ambient sequencer, Asterion Sphere audio, and spatial audio remain unimplemented.
+The bounded Experience VR Astro Attractor lifecycle and the Astro Furnace single-shell process audio are **IMPLEMENTED**. The furnace plays `astro_piec_work_01.mp3` exactly once on DEVICE only after an accepted cycle; it does not loop or restart and is stopped by reset/dispose through the fail-soft `VrAudioBridge`. Small/large glyph and rune-stone mappings remain **PLANNED**. The ambient sequencer, production Asterion Sphere audio, and spatial audio remain unimplemented.
 
 ## Status vocabulary and authority
 
@@ -113,7 +113,7 @@ Each shorthand above denotes `glif_<element>_4s_<NN>.mp3`. `glif_earth_4s_04.mp3
 - Enter deeper → `panel_sound_02.mp3`.
 - Return to main menu → `click_panel_01.mp3`.
 - Accepted transition start `CLOSED → OPENING` / `OPEN → CLOSING` → `astro_piec_open.mp3` / `astro_piec_close.mp3` on `DEVICE`, once per transition; blocked presses, stable requested states, animation frames, and reset are silent.
-- Shell process → `astro_piec_work_01.mp3`.
+- Shell process → `astro_piec_work_01.mp3` (**IMPLEMENTED**, accepted-cycle one-shot on DEVICE).
 - Small-glyph process → `astro_piec_work_02.mp3` (**TODO gameplay**).
 - Stone process → `astro_piec_work_03.mp3` (**TODO gameplay**).
 - Create Astro Attractor or Asterion Sphere → `astro_piec_work_create_01.mp3`.
@@ -156,7 +156,7 @@ The inventory below contains every existing `public/audio/*.mp3` as of 2026-08-0
 | `ambient_loop_04.mp3` | seamless loop | AMBIENT | — | **RESERVED** | Rodzina podprogów znana; event/mapping nieustalony. |
 | `astro_piec_close.mp3` | one-shot | DEVICE | zamknięcie komory Astro Pieca | **IMPLEMENTED** | Playback one-shot jest wdrożony zgodnie z semantyką eventu powyżej. |
 | `astro_piec_open.mp3` | one-shot | DEVICE | otwarcie komory Astro Pieca | **IMPLEMENTED** | Playback one-shot jest wdrożony zgodnie z semantyką eventu powyżej. |
-| `astro_piec_work_01.mp3` | one-shot | DEVICE | proces skorup w Astro Piecu | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
+| `astro_piec_work_01.mp3` | one-shot | DEVICE | proces skorup w Astro Piecu | **IMPLEMENTED** | Raz po zaakceptowanym starcie; bez loop/restartu; reset/dispose zatrzymuje aktywne źródło. |
 | `astro_piec_work_02.mp3` | one-shot | DEVICE | proces małych glifów w Astro Piecu (TODO gameplay) | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
 | `astro_piec_work_03.mp3` | one-shot | DEVICE | proces kamieni w Astro Piecu (TODO gameplay) | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
 | `astro_piec_work_create_01.mp3` | one-shot | DEVICE | tworzenie Astro Przyciągacza lub Kuli | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |

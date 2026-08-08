@@ -161,6 +161,7 @@ processFurnace.nodes.button_activate.getWorldPosition(processController.position
 processController.position.z += 1;
 let allowInput = false;
 let activateInteraction = null;
+let processStarts = 0; let processStops = 0;
 const processOpen = createVrAstroFurnaceOpenInteraction({
   furnace: processFurnace, controllers: [processRecord], settings: { enabled: true, rayMaxDistance: 3 },
   canToggle: () => !activateInteraction?.isProcessing(),
@@ -172,7 +173,9 @@ activateInteraction = createVrAstroFurnaceActivateInteraction({
   processSettings: { durationSeconds: 1, steadyRpm: 60, extractionSpeedMultiplier: 2, direction: -1,
     spinupEnd: 1 / 6, steadyEnd: 1 / 3, extractionEnd: 5 / 6, fireCellIdleEmission: 0.15,
     fireCellSteadyEmission: 4, fireCellExtractionEmission: 10, fireCellPulseHzMin: 0.7, fireCellPulseHzMax: 4 },
-  canActivateInput: () => allowInput
+  canActivateInput: () => allowInput,
+  onProcessStart: () => { processStarts += 1; },
+  onProcessStop: () => { processStops += 1; }
 });
 const fireMaterial = processFurnace.nodes.fire_cell.children[0].material;
 const baseFireColor = fireMaterial.color.clone();
@@ -189,6 +192,8 @@ assert.equal(activateInteraction.hasCurrentHit(processRecord), true);
 assert.equal(activateInteraction.halo.visible, true, 'allowed ordinary-ray hit has a halo');
 assert.ok(processRecord.hitReports.length > 0);
 assert.equal(activateInteraction.press(processRecord), true);
+assert.equal(activateInteraction.press(processRecord), false, 'a second Activate cannot create another timeline');
+assert.equal(processStarts, 1, 'accepted Activate emits one semantic process start');
 assert.equal(activateInteraction.getState(), ASTRO_FURNACE_PROCESS_STATES.PRESSING);
 assert.equal(activateInteraction.halo.visible, false);
 assert.equal(processOpen.press(processRecord), false, 'open is blocked while the process is pressing');
@@ -243,7 +248,9 @@ assert.ok(extractionAngleStep / 0.04 > steadyAngleStep / 0.4,
 assert.ok(fireMaterial.emissiveIntensity >= 0.05, 'extraction emission stays within the configured angle pulse');
 assert.ok(colorDistanceToWhite(fireMaterial.emissive) < 0.1,
   'extraction emissive color becomes nearly white');
-assert.ok(processFurnace.nodes.pokrywa.quaternion.equals(lidQuaternion), 'the lid never rotates during processing');
+assert.ok(!processFurnace.nodes.pokrywa.quaternion.equals(lidQuaternion), 'the lid visibly rotates during processing');
+assert.equal(activateInteraction.energyRoot.children.length, 4, 'four lightweight emissive energy meshes are reused');
+assert.ok(activateInteraction.energyRoot.children.every((point) => point.isMesh && !point.isLight));
 const beforeCooldownQuaternion = processFurnace.nodes.PIVOT_FURNACE_PROCESS_SPIN.quaternion.clone();
 activateInteraction.update(.09);
 assert.ok(Math.abs(activateInteraction.getExtractionProgress() - .5) < 1e-12, '10.5 seconds maps to half of EXTRACTION');
@@ -258,6 +265,7 @@ activateInteraction.update(0.17);
 assert.equal(activateInteraction.getState(), ASTRO_FURNACE_PROCESS_STATES.COMPLETE);
 assert.equal(activateInteraction.getProgress(), 1);
 assert.equal(activateInteraction.getExtractionProgress(), 1);
+assert.equal(processStops, 1, 'normal completion emits one semantic process stop');
 assert.equal(activateInteraction.processLight.visible, false); assert.equal(activateInteraction.processLight.intensity, 0);
 assert.ok(processFurnace.nodes.PIVOT_FURNACE_PROCESS_SPIN.quaternion.equals(new THREE.Quaternion()),
   'spin pivot returns exactly to its base quaternion');

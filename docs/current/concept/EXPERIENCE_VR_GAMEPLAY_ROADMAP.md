@@ -39,6 +39,7 @@ This is a QA/prototype control system. It is not production physical constructio
 - [x] Astro Furnace option/open/insert/activate/content interactions.
 - [x] Six unique shell material progression in `VrAstroFurnaceProgressionController`.
 - [x] Furnace panel deterministic Asterion hologram and shell-patch assembly.
+- [x] Repeatable single-shell 18-second furnace cycle, completion-only material commit and `astro_piec_work_01.mp3` DEVICE one-shot.
 
 ## Production Asterion construction — future
 

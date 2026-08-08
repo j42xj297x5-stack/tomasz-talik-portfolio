@@ -122,6 +122,36 @@ test('Astro Attractor contains sync/async start failures and dispose stops an ac
   assert.equal(handles[0].stopped, 1); assert.equal(warnings.length, 2); sync.dispose(); asyncBridge.dispose();
 });
 
+test('Astro Furnace work source starts once on DEVICE, never loops, and cleanup is idempotent', async () => {
+  const { bridge, handles } = createProcessHarness();
+  assert.equal(bridge.startFurnaceProcess(), true);
+  assert.equal(bridge.startFurnaceProcess(), false, 'pending source also blocks duplicate starts');
+  await flush();
+  assert.equal(bridge.startFurnaceProcess(), false, 'repeated process signal does not restart audio');
+  assert.equal(handles.length, 1);
+  assert.equal(handles[0].path, '/audio/astro_piec_work_01.mp3');
+  assert.equal(handles[0].bus, 'DEVICE');
+  bridge.stopFurnaceProcess(); bridge.stopFurnaceProcess();
+  assert.equal(handles[0].stopped, 1);
+  bridge.dispose();
+});
+
+test('Astro Furnace audio failure stays fail-soft and a late source is stopped after reset', async () => {
+  const warnings = [];
+  const failed = createVrAudioBridge({ manager: { startVrProcessSource() { throw new Error('decode'); } },
+    warn: (...args) => warnings.push(args) });
+  assert.equal(failed.startFurnaceProcess(), true);
+  let resolveSource;
+  const handle = { stopped: 0, stop() { this.stopped += 1; } };
+  const delayed = createVrAudioBridge({ manager: { startVrProcessSource() {
+    return new Promise((resolve) => { resolveSource = resolve; });
+  } }, warn: () => {} });
+  delayed.startFurnaceProcess(); delayed.stopFurnaceProcess(); resolveSource(handle); await flush();
+  assert.equal(handle.stopped, 1, 'session cleanup retires an asynchronously arriving source');
+  assert.equal(warnings.length, 1);
+  failed.dispose(); delayed.dispose();
+});
+
 test('glyph acquisition lifecycle starts immediately and resumes the same source after a miss', async () => {
   const { bridge, handles } = createProcessHarness();
   bridge.startGlyphAcquisition('earth');

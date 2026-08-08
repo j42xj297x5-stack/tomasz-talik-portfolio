@@ -14,6 +14,7 @@ Status: current implementation snapshot synchronized on 2026-08-05 after Meta Qu
 - The QA sphere visual contract is active: `inner_ring2`, `inner_ring3` and `PIV_TARGET_AXIS` show PREVIEW; `master_ring1`, `master_ring2` and `inner_ring1` show CURRENT; authored idle fan motion remains on `inner_ring2/inner_ring3`.
 - TARGET rebase is smooth through `displayPreviewQuaternion` and an approximately `0.5 s` visual rebase, so the target frame does not visually teleport after LOCK.
 - Heavy angular drive is active and hardware-verified; trigger release and unequip do not stop platform travel.
+- The single-shell Astro Furnace cycle is implemented: accepted content is locked in the chamber, Activate runs one 18-second mechanical/emissive process with DEVICE audio, and only successful completion commits once to `VrAstroFurnaceProgressionController`. Reset cancels without progress, and reopening enables the next missing shell type.
 
 ## Important architecture
 
@@ -59,6 +60,10 @@ Validated on Meta Quest 3S for this snapshot:
 - heavy angular inertia behaves correctly;
 - X toggles left `NORMAL_HAND ↔ ASTERION_SPHERE`;
 - right hand remains independent for `NORMAL_HAND ↔ ASTRO_ATTRACTOR`.
+
+## Remaining production boundary
+
+`UTWÓRZ`, production sphere materialization, earned-sphere gating and `astro_piec_work_create_01.mp3` remain future work. A complete `6/6` hologram is not a physical production sphere.
 
 ## Next major stage
 
