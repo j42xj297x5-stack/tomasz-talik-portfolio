@@ -6,5 +6,6 @@ export function createVrAstroFurnaceProcessSource(getInteraction) {
     getExtractionProgress: () => interaction()?.getExtractionProgress?.() ?? 0,
     getAngularSpeed: () => interaction()?.getAngularSpeed?.() ?? 0,
     getProcessAngle: () => interaction()?.getProcessAngle?.() ?? 0
+    , getProcessKind: () => interaction()?.getProcessKind?.() ?? null
   };
 }

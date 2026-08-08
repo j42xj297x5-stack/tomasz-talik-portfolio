@@ -29,6 +29,34 @@ export function subdivideSegment(segment, { maxUvStep = .18, maxFragments = 8 } 
 
 export const assemblyOrderForIndex = (index, count) => count <= 1 ? 0 : ((index * 37) % count) / (count - 1);
 export const assemblySegmentVisible = (segment, progress) => progress > 0 && segment.assemblyOrder <= Math.min(1, progress);
+export const resolveConstructionPatchOpacity = (formationProgress) => 1 - .86 * Math.max(0, Math.min(1, formationProgress));
+
+const modelWireframeCache = new WeakMap();
+export function createAsterionModelWireframeMap(model, { maxSegments = 900, minLength = .012, thresholdAngle = 28 } = {}) {
+  if (!model) return Object.freeze({ segments: Object.freeze([]), cacheHit: false });
+  if (modelWireframeCache.has(model)) return modelWireframeCache.get(model);
+  model.updateWorldMatrix(true, true);
+  const inverseRoot = model.matrixWorld.clone().invert(), raw = [], a = new THREE.Vector3(), b = new THREE.Vector3();
+  model.traverse((node) => {
+    if (!node.isMesh || node.visible === false || !node.geometry) return;
+    const edges = new THREE.EdgesGeometry(node.geometry, thresholdAngle), positions = edges.getAttribute('position');
+    const matrix = inverseRoot.clone().multiply(node.matrixWorld);
+    for (let index = 0; index + 1 < positions.count; index += 2) {
+      a.fromBufferAttribute(positions, index).applyMatrix4(matrix); b.fromBufferAttribute(positions, index + 1).applyMatrix4(matrix);
+      if (a.distanceTo(b) >= minLength) raw.push({ a: a.clone(), b: b.clone() });
+    } edges.dispose();
+  });
+  const bounds = new THREE.Box3(); raw.forEach((segment) => { bounds.expandByPoint(segment.a); bounds.expandByPoint(segment.b); });
+  const center = bounds.getCenter(new THREE.Vector3()), size = bounds.getSize(new THREE.Vector3());
+  const radius = Math.max(size.x, size.y, size.z) * .5 || 1, stride = Math.max(1, Math.ceil(raw.length / maxSegments));
+  const sampled = raw.filter((_, index) => index % stride === 0).slice(0, maxSegments).map((segment, index, list) => Object.freeze({
+    a: Object.freeze(segment.a.sub(center).multiplyScalar(1 / radius).toArray()),
+    b: Object.freeze(segment.b.sub(center).multiplyScalar(1 / radius).toArray()),
+    assemblyOrder: assemblyOrderForIndex(index, list.length)
+  }));
+  const map = Object.freeze({ segments: Object.freeze(sampled), sourceSegmentCount: raw.length, cacheHit: false });
+  modelWireframeCache.set(model, map); return map;
+}
 
 export function createAsterionPatchGeometry(patches, { scaleMultiplier = 1, ...subdivisionOptions } = {}) {
   return Object.fromEntries(patches.map((patch) => {
@@ -53,3 +81,4 @@ export function resolvePatchVisualStates(progress, { assetId, contentState, phas
     return [shell.assetId, { committed: absorbed.has(shell.assetId), pending, assemblyProgress }];
   }));
 }
+import * as THREE from '../../vendor/three.js';

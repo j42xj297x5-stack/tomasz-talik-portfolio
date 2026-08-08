@@ -116,7 +116,7 @@ Each shorthand above denotes `glif_<element>_4s_<NN>.mp3`. `glif_earth_4s_04.mp3
 - Shell process → `astro_piec_work_01.mp3` (**IMPLEMENTED**, accepted-cycle one-shot on DEVICE).
 - Small-glyph process → `astro_piec_work_02.mp3` (**TODO gameplay**).
 - Stone process → `astro_piec_work_03.mp3` (**TODO gameplay**).
-- Production Asterion Sphere `UTWÓRZ` → `astro_piec_work_create_01.mp3` (**IMPLEMENTED**); future Astro Attractor creation may reuse the authored family but has no runtime action yet.
+- Accepted Production Asterion Sphere `UTWÓRZ` construction cycle → `astro_piec_work_create_01.mp3` (**IMPLEMENTED**, once on DEVICE). The furnace process kind suppresses `astro_piec_work_01.mp3` for this cycle. Audio never determines duration: construction always follows the canonical 18-second furnace clock; interruption stops the create source. Future Astro Attractor creation may reuse the authored family but has no runtime action yet.
 
 ### Monkey and panels
 

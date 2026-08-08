@@ -3,7 +3,7 @@ import { applyWorldTransform } from '../applyWorldTransform.js';
 import { drawFurnaceFrame } from './drawVrFurnaceFrame.js';
 import { resolveProcessTelemetry, shouldRefreshTelemetry } from './vrFurnaceTelemetry.js';
 import { ASTERION_SHELL_PATCHES } from './asterionShellPatchData.js';
-import { assemblySegmentVisible, createAsterionPatchGeometry, resolvePatchVisualStates } from './asterionSphereWireframe.js';
+import { assemblySegmentVisible, createAsterionModelWireframeMap, createAsterionPatchGeometry, resolveConstructionPatchOpacity, resolvePatchVisualStates } from './asterionSphereWireframe.js';
 import { drawMaterialCardVisual } from './drawVrMaterialCard.js';
 import { resolveAttractorShellGlyph } from '../tools/vrAttractorShellGlyphs.js';
 
@@ -17,7 +17,7 @@ const smoothstep = (value) => value * value * (3 - 2 * value);
 export const wireframeDissolveVisible = (segment, progress) => progress < 1 && segment.dissolveOrder >= Math.max(0, progress);
 
 export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], progressionController, processSource, contentSource,
-  productionController = null, settings = {}, onEnterModule = () => {}, onReturnHome = () => {}, onCreate = () => {} }) {
+  productionController = null, asterionModel = null, settings = {}, onEnterModule = () => {}, onReturnHome = () => {}, onCreate = () => {} }) {
   const config = { width: 1.55, height: 1.05, gapFromFurnace: 0.10, verticalOffset: 0.15, yawDegrees: -12,
     canvasWidth: 1536, canvasHeight: 1024, appearDuration: 0.32, disappearDuration: 0.20,
     telemetryRefreshHz: 12, frameCornerSizePx: 28, spherePatchVisualScaleMultiplier: 1.10, accents: {}, ...settings };
@@ -53,6 +53,7 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
     scaleMultiplier: config.spherePatchVisualScaleMultiplier
   });
   const patchDataByAssetId = Object.fromEntries(ASTERION_SHELL_PATCHES.map((patch) => [patch.assetId, patch]));
+  const asterionWireframeMap = createAsterionModelWireframeMap(asterionModel);
   const shellGlyphImages = Object.fromEntries(ASTERION_SHELL_PATCHES.map(({ assetId }) => {
     const glyph = resolveAttractorShellGlyph(assetId);
     const image = new Image();
@@ -105,7 +106,7 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
       interactiveRegions.push(create); panelRect(create.x, create.y, create.width, create.height, { hovered: hoveredRegion === create.id, active: true, accentColor: accents.complete });
       text('UTWÓRZ', create.x + 118, create.y + 53, 32, accents.complete);
     } else if (productionState === 'BUILDING') text('MATERIALIZACJA', 1030, 918, 27, accents.process);
-    else if (productionState === 'AVAILABLE') { text('KULA GOTOWA', 1050, 892, 28, accents.complete); text('LEWY PROMIEŃ + SQUEEZE', 990, 928, 19, '#88b8cf'); }
+    else if (productionState === 'AVAILABLE') { text('KULA GOTOWA', 1050, 892, 28, accents.complete); text('OTWÓRZ KOMORĘ', 1030, 928, 19, '#88b8cf'); }
     else if (productionState === 'EARNED') { text('AKTYWNA', 1110, 892, 28, accents.complete); text('X // KULA ASTERIONOWA', 1015, 928, 19, '#88b8cf'); }
   }
   function drawShellMiniature(patch, cx, cy, scale, color, bright) {
@@ -127,14 +128,19 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
   }
   function drawProcessMonitor() {
     const telemetry = readTelemetry(), x = 90, y = 645, width = 1315, height = 325;
+    const production = productionController?.getSnapshot?.() ?? { state: 'LOCKED', constructionProgress: 0, formationProgress: 0 };
+    const constructing = production.state === 'BUILDING';
     panelRect(x, y, width, height, { variant: 'monitor', active: telemetry.active, completed: telemetry.phase === 'COMPLETE', accentColor: accents[telemetry.colorKey] });
-    text('PRZEBIEG ABSORPCJI', x + 28, y + 42, 22, accents[telemetry.colorKey]);
+    text(constructing ? 'MATERIALIZACJA KULI' : 'PRZEBIEG ABSORPCJI', x + 28, y + 42, 22, accents[telemetry.colorKey]);
     drawInsertedShellWireframe(telemetry, x + 300, y + 145, 118);
-    telemetry.label.split('\n').forEach((line, index) => text(`${index ? '' : 'STATUS // '}${line}`, x + 28, y + 215 + index * 28, 21, accents[telemetry.colorKey]));
-    if (telemetry.showProgress) {
+    const constructionLabel = production.constructionProgress < 1 / 6 ? 'INICJACJA' : production.constructionProgress < 1 / 3
+      ? 'STABILIZACJA POLA' : production.constructionProgress < 5 / 6 ? 'FORMOWANIE' : 'KONDENSACJA';
+    (constructing ? [constructionLabel] : telemetry.label.split('\n')).forEach((line, index) => text(`${index ? '' : 'STATUS // '}${line}`, x + 28, y + 215 + index * 28, 21, accents[telemetry.colorKey]));
+    if (telemetry.showProgress || constructing) {
       const barX = x + 28, barY = y + 254, barWidth = 555; context.fillStyle = '#18303c'; context.fillRect(barX, barY, barWidth, 16);
-      context.fillStyle = accents[telemetry.colorKey]; context.fillRect(barX, barY, barWidth * telemetry.extractionProgress, 16);
-      text(`${Math.round(telemetry.extractionProgress * 100)}%`, barX + barWidth + 18, barY + 17, 20, '#b9dce8');
+      const shownProgress = constructing ? production.constructionProgress : telemetry.extractionProgress;
+      context.fillStyle = accents[telemetry.colorKey]; context.fillRect(barX, barY, barWidth * shownProgress, 16);
+      text(`${Math.round(shownProgress * 100)}%`, barX + barWidth + 18, barY + 17, 20, '#b9dce8');
     }
     drawAsterionPreview(progressSnapshot(), telemetry, x + 855, y + 150, 118);
     const contentState = contentSource?.getState?.() ?? 'EMPTY';
@@ -184,10 +190,25 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
       context.stroke(); context.restore();
     };
     text(`KULA ASTERIONOWA  ${progress.absorbed}/6`, cx - 190, cy - 112, 20, accents.asterion);
-    drawPatches(() => true, '#6aa6b8', .1);
-    drawPatches((id) => states[id]?.committed, accents.complete, progress.complete ? .94 + Math.sin(telemetryElapsed * 2) * .04 : .9, 9);
+    const production = productionController?.getSnapshot?.() ?? { state: 'LOCKED', constructionProgress: 0, formationProgress: 0 };
+    const constructing = production.state === 'BUILDING' || production.state === 'AVAILABLE';
+    const patchOpacity = production.state === 'AVAILABLE' ? .08 : constructing ? resolveConstructionPatchOpacity(production.formationProgress) : 1;
+    drawPatches(() => true, '#6aa6b8', .1 * patchOpacity);
+    drawPatches((id) => states[id]?.committed, accents.complete, (progress.complete ? .94 + Math.sin(telemetryElapsed * 2) * .04 : .9) * patchOpacity, 9);
     drawPatches((id, fragment) => states[id]?.pending && assemblySegmentVisible(fragment, states[id].assemblyProgress), accents.process, .9, 10);
     context.save(); context.strokeStyle = '#588797'; context.globalAlpha = .22; context.lineWidth = 1.2; context.beginPath(); context.arc(cx, cy, radius, 0, Math.PI * 2); context.stroke(); context.restore();
+    if (constructing) drawAsterionModelContour(cx, cy, radius, production.state === 'AVAILABLE' ? 1 : production.formationProgress);
+  }
+  function drawAsterionModelContour(cx, cy, radius, reveal) {
+    if (!asterionWireframeMap.segments.length || reveal <= 0) return;
+    const yaw = telemetryElapsed * .18, pitch = -.24, cyaw = Math.cos(yaw), syaw = Math.sin(yaw), cp = Math.cos(pitch), sp = Math.sin(pitch);
+    const project = ([x, y, z]) => { const rx = x * cyaw + z * syaw, rz = -x * syaw + z * cyaw;
+      const ry = y * cp - rz * sp, depth = 1 / Math.max(.7, 1 + (y * sp + rz * cp) * .14); return [cx + rx * radius * depth, cy - ry * radius * depth]; };
+    context.save(); context.strokeStyle = accents.process; context.globalAlpha = .2 + .8 * reveal; context.lineWidth = 1.35;
+    context.shadowColor = accents.process; context.shadowBlur = 7; context.beginPath();
+    asterionWireframeMap.segments.forEach((segment) => { if (!assemblySegmentVisible(segment, reveal)) return;
+      const a = project(segment.a), b = project(segment.b); context.moveTo(a[0], a[1]); context.lineTo(b[0], b[1]); });
+    context.stroke(); context.restore();
   }
   function draw() {
     if (!context) return; redrawCount += 1; context.clearRect(0, 0, canvas.width, canvas.height);
@@ -260,5 +281,6 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
     subscribeModuleActivation(listener) { moduleListeners.add(listener); return () => moduleListeners.delete(listener); },
     isVisible: () => state !== ASTRO_FURNACE_PANEL_STATES.HIDDEN && state !== ASTRO_FURNACE_PANEL_STATES.DISAPPEARING,
     hasCurrentHit: (record) => Boolean(hits.get(record)?.intersection), getState: () => state, getScreen: () => screen,
-    getInteractiveRegions: () => interactiveRegions.map((region) => ({ ...region })), getRedrawCount: () => redrawCount };
+    getInteractiveRegions: () => interactiveRegions.map((region) => ({ ...region })), getRedrawCount: () => redrawCount,
+    getAsterionWireframeMap: () => asterionWireframeMap };
 }

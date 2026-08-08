@@ -6,6 +6,9 @@ export const ASTRO_FURNACE_PROCESS_STATES = Object.freeze({
   IDLE: 'IDLE', PRESSING: 'PRESSING', SPINUP: 'SPINUP', STEADY: 'STEADY',
   EXTRACTION: 'EXTRACTION', COOLDOWN: 'COOLDOWN', COMPLETE: 'COMPLETE'
 });
+export const ASTRO_FURNACE_PROCESS_KINDS = Object.freeze({
+  SHELL_EXTRACTION: 'SHELL_EXTRACTION', ASTERION_CONSTRUCTION: 'ASTERION_CONSTRUCTION'
+});
 
 const CLIP_NAME = 'AstroFurnace_ButtonActivate_Lock';
 const LOCAL_AXIS = new THREE.Vector3(0, 1, 0);
@@ -123,6 +126,7 @@ export function createVrAstroFurnaceActivateInteraction({
   let cooldownStartSpeed = 0;
   let releasing = false;
   let processStarted = false;
+  let processKind = null;
   let disposed = false;
 
   const setButtonEmission = (value) => buttonMaterials.forEach((material) => { material.emissiveIntensity = value; });
@@ -185,8 +189,16 @@ export function createVrAstroFurnaceActivateInteraction({
     if (!canActivate()) return false;
     state = states.PRESSING; clearHits(); setButtonEmission(settings.emissionPressed ?? 5);
     action.stop(); action.reset(); action.timeScale = 1; action.clampWhenFinished = true; action.play();
-    processStarted = true; onProcessStart();
+    processKind = ASTRO_FURNACE_PROCESS_KINDS.SHELL_EXTRACTION;
+    processStarted = true; onProcessStart({ processKind });
     return true;
+  }
+  function startConstruction() {
+    if (!capabilityReady || disposed || state !== states.IDLE || openInteraction?.getState?.() !== 'CLOSED'
+      || openInteraction?.isTransitioning?.()) return false;
+    processKind = ASTRO_FURNACE_PROCESS_KINDS.ASTERION_CONSTRUCTION;
+    state = states.SPINUP; elapsed = 0; progress = 0; angle = 0; angularSpeed = 0;
+    processStarted = true; clearHits(); onProcessStart({ processKind }); return true;
   }
   function press(record) {
     if (!hits.get(record) || !isOrdinaryRayAvailable(record)) return false;
@@ -203,7 +215,11 @@ export function createVrAstroFurnaceActivateInteraction({
   }
   mixer?.addEventListener('finished', onFinished);
   function releaseForOpening() {
-    if (state !== states.COMPLETE || !action) return false;
+    if (state !== states.COMPLETE) return false;
+    if (processKind === ASTRO_FURNACE_PROCESS_KINDS.ASTERION_CONSTRUCTION) {
+      state = states.IDLE; processKind = null; setButtonEmission(settings.emissionInactive ?? 0); return true;
+    }
+    if (!action) return false;
     releasing = true; clearHits(); action.stop(); action.enabled = true; action.paused = false;
     action.time = action.getClip().duration; action.timeScale = -1; action.clampWhenFinished = false; action.play();
     return true;
@@ -303,7 +319,7 @@ export function createVrAstroFurnaceActivateInteraction({
       restoreFireMaterials();
       setProcessLight(0);
       updateEnergyPoints(0);
-      processStarted = false; onProcessStop({ completed: true });
+      processStarted = false; onProcessStop({ completed: true, processKind });
     }
   }
   controllers.forEach((record) => {
@@ -320,12 +336,12 @@ export function createVrAstroFurnaceActivateInteraction({
     halo?.update(step);
   }
   function reset() {
-    if (processStarted) onProcessStop({ completed: false });
+    if (processStarted) onProcessStop({ completed: false, processKind });
     action?.stop(); mixer?.stopAllAction(); mixer?.setTime(0); releasing = false;
     state = states.IDLE; progress = 0; elapsed = 0; angle = 0; angularSpeed = 0;
     if (spinPivot && baseSpinQuaternion) spinPivot.quaternion.copy(baseSpinQuaternion);
     if (lid && baseLidQuaternion) lid.quaternion.copy(baseLidQuaternion);
-    processStarted = false;
+    processStarted = false; processKind = null;
     restoreFireMaterials();
     setProcessLight(0);
     updateEnergyPoints(0);
@@ -346,12 +362,13 @@ export function createVrAstroFurnaceActivateInteraction({
     return clamp01((progress - steadyEnd) / Math.max(extractionEnd - steadyEnd, Number.EPSILON));
   };
   return {
-    mixer, action, hits, halo, processLight, energyRoot, chamberCylinder, capabilityReady, update, press, releaseForOpening, reset, dispose,
+    mixer, action, hits, halo, processLight, energyRoot, chamberCylinder, capabilityReady, update, press, startConstruction, releaseForOpening, reset, dispose,
     hasCurrentHit: (record) => hits.get(record) === true,
     canActivate, getState: () => state, getProgress: () => progress, getExtractionProgress, getPhase: () => state,
     isProcessing: () => [states.PRESSING, states.SPINUP, states.STEADY, states.EXTRACTION, states.COOLDOWN].includes(state),
     isComplete: () => state === states.COMPLETE,
     getAngularSpeed: () => angularSpeed,
     getProcessAngle: () => angle
+    , getProcessKind: () => processKind
   };
 }

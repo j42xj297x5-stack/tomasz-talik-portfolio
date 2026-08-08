@@ -87,11 +87,40 @@ export function createVrAsterionSphere({ model, animations = [], settings, enabl
   let disposed = false;
   let diagnosticsLogged = false;
   let presentationAnchor = null;
+  const presentationMaterials = [];
+  object.traverse((node) => {
+    if (!node.isMesh || !node.material) return;
+    const source = Array.isArray(node.material) ? node.material : [node.material];
+    const runtime = source.map((material) => material?.clone?.() ?? material);
+    node.material = Array.isArray(node.material) ? runtime : runtime[0];
+    runtime.forEach((material) => presentationMaterials.push({ material, color: material.color?.clone?.(),
+      emissive: material.emissive?.clone?.(), emissiveIntensity: material.emissiveIntensity ?? 0,
+      opacity: material.opacity ?? 1, transparent: material.transparent, depthWrite: material.depthWrite }));
+  });
+  const white = new THREE.Color(1, 1, 1);
+  function restorePresentationMaterials() {
+    presentationMaterials.forEach((base) => { const { material } = base;
+      if (base.color && material.color) material.color.copy(base.color);
+      if (base.emissive && material.emissive) material.emissive.copy(base.emissive);
+      material.emissiveIntensity = base.emissiveIntensity; material.opacity = base.opacity;
+      material.transparent = base.transparent; material.depthWrite = base.depthWrite; material.needsUpdate = true;
+    });
+  }
+  function setMaterializationProgress(formationProgress) {
+    const progress = THREE.MathUtils.clamp(formationProgress, 0, 1);
+    presentationMaterials.forEach((base) => { const { material } = base;
+      if (base.color && material.color) material.color.copy(white).lerp(base.color, progress);
+      if (base.emissive && material.emissive) material.emissive.copy(white).lerp(base.emissive, progress);
+      material.emissiveIntensity = THREE.MathUtils.lerp(10, base.emissiveIntensity, progress);
+      material.opacity = base.opacity * progress; material.transparent = progress < 1 || base.transparent;
+      material.depthWrite = progress >= 1 ? base.depthWrite : false; material.needsUpdate = true;
+    });
+  }
 
   function equipTo(record) {
     if (!enabled || disposed || !record?.grip || record.handedness !== 'left') return false;
     if (equippedRecord === record && socket.parent === record.grip) return true;
-    socket.removeFromParent();
+    restorePresentationMaterials(); socket.removeFromParent();
     record.grip.add(socket);
     socket.position.set(holdOffset.x ?? 0, holdOffset.y ?? 0, holdOffset.z ?? 0);
     socket.rotation.set((holdRotation.x ?? 0) * DEG_TO_RAD, (holdRotation.y ?? 0) * DEG_TO_RAD, (holdRotation.z ?? 0) * DEG_TO_RAD);
@@ -129,7 +158,7 @@ export function createVrAsterionSphere({ model, animations = [], settings, enabl
   }
   function clearPresentation() {
     if (!presentationAnchor) return;
-    object.visible = false; socket.removeFromParent(); socket.scale.setScalar(1); presentationAnchor = null;
+    restorePresentationMaterials(); object.visible = false; socket.removeFromParent(); socket.scale.setScalar(1); presentationAnchor = null;
   }
 
   function unequip() { object.visible = false; socket.removeFromParent(); socket.scale.setScalar(1); equippedRecord = null; presentationAnchor = null; }
@@ -159,6 +188,6 @@ export function createVrAsterionSphere({ model, animations = [], settings, enabl
   function reset() { actions.forEach((a) => { a.reset(); a.play(); }); mixer.setTime(0); targetRingWeight = 1; targetRingTargetWeight = 1; if (innerRing1Action) innerRing1Action.setEffectiveWeight(0); targetRingActions.forEach((a) => a.setEffectiveWeight(1)); unequip(); }
   function dispose() { if (disposed) return; disposed = true; actions.forEach((a) => a.stop()); mixer.stopAllAction(); unequip(); }
   function isEquipped() { return Boolean(equippedRecord && object.visible && socket.parent); }
-  return { object, socket, equipTo, unequip, presentAt, setPresentationScale, clearPresentation, update, reset, dispose, syncGimbals, setTargetRingsStabilized, isEquipped, isPresented: () => Boolean(presentationAnchor && object.visible), getEquippedRecord: () => equippedRecord,
+  return { object, socket, equipTo, unequip, presentAt, setPresentationScale, setMaterializationProgress, restorePresentationMaterials, clearPresentation, update, reset, dispose, syncGimbals, setTargetRingsStabilized, isEquipped, isPresented: () => Boolean(presentationAnchor && object.visible), getEquippedRecord: () => equippedRecord,
     getIdleActionByClipName: (clipName) => actionByClipName.get(clipName) ?? null, getTargetRingWeight: () => targetRingWeight, getIdleClipCount: () => idleClips.length, getStartedIdleClipCount: () => playableIdleClips.length, getRequiredNodes: () => ({ ...requiredNodes }), getDiagnostics: () => ({ computedScale, targetDiameter, sourceDiameter, missingNodes: [...missingNodes], conflictingClipNames: conflictingClips.map((clip) => clip.name) }) };
 }
