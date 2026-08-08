@@ -41,6 +41,7 @@ import { createVrAsterionGyroInteraction } from './xr/asterion/createVrAsterionG
 import { createVrPlayerGuidePanel } from './xr/guidance/createVrPlayerGuidePanel.js';
 import { createVrMonkeyGuide } from './xr/guidance/createVrMonkeyGuide.js';
 import { createVrSceneLayoutPrototype } from './xr/layout/createVrSceneLayoutPrototype.js';
+import { createVrAudioBridge } from './xr/audio/createVrAudioBridge.js';
 import { experienceVrPages, getExperienceVrPages, resolveExperienceVrPage } from './content/experienceVrPages.js';
 
 const app = document.querySelector('#app');
@@ -63,6 +64,7 @@ const COPY = {
 
 const language = document.documentElement.lang === 'pl' ? 'pl' : 'en';
 const copy = COPY[language];
+const vrAudio = createVrAudioBridge();
 app.innerHTML = `
   <main class="vr-runtime" aria-labelledby="vr-runtime-title">
     <canvas id="vr-scene-canvas" class="vr-runtime__canvas"></canvas>
@@ -685,6 +687,7 @@ async function enterVr() {
 enterButton.addEventListener('click', enterVr);
 exitButton.addEventListener('click', () => { void activeSession?.end(); });
 window.addEventListener('pagehide', () => {
+  vrAudio.dispose();
   asterionGyroInteraction.dispose();
   asterionSphere.dispose();
   astroFurnaceOpenInteraction.dispose();
