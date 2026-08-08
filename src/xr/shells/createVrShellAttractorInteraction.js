@@ -29,7 +29,8 @@ export function calculateShellCapturePosition({ masterRingWorldPosition, control
 
 export function createVrShellAttractorInteraction({ controllers, shellSystem, handModeController, semanticInput,
   attractorTool, settings, haloSettings, settledParent = shellSystem.object.parent,
-  crystalHeldByController = new Map(), isHigherPriorityInteractionActive = () => false }) {
+  crystalHeldByController = new Map(), isHigherPriorityInteractionActive = () => false,
+  onPullStart = () => {}, onPullCancel = () => {}, onHandoff = () => {} }) {
   const maxTargetDistance = shellSystem.innerRadius * settings.targetDistanceRadiusMultiplier;
   const halfAngleRadians = THREE.MathUtils.degToRad(settings.scanCone.halfAngleDegrees);
   const origin = new THREE.Vector3(), direction = new THREE.Vector3(), anchorWorldPosition = new THREE.Vector3();
@@ -59,7 +60,7 @@ export function createVrShellAttractorInteraction({ controllers, shellSystem, ha
   function setWorldPosition(object, position) { localPosition.copy(position); object.parent.worldToLocal(localPosition); object.position.copy(localPosition); }
   function finishTool() { attractorTool.setTarget(null); attractorTool.setPullStrength(0);
     if (isEquipped()) attractorTool.setState(VR_ATTRACTOR_STATES.IDLE); }
-  function beginReturn(shell) { halos.get(shell)?.setVisible(false); shellSystem.returnToOrbit(shell, settings.returnDuration);
+  function beginReturn(shell) { onPullCancel({ target: shell }); halos.get(shell)?.setVisible(false); shellSystem.returnToOrbit(shell, settings.returnDuration);
     if (captureReady === shell) captureReady = null; activePull = null; pullSpeed = 0; target = null; finishTool(); }
   function currentInput() { return semanticInput.getState?.() ?? { primaryAction: 0, grabAction: 0 }; }
   function handIsFree(leftRecord = getLeftRecord()) { return Boolean(leftRecord?.isConnected && !heldShell && !crystalHeldByController.has(leftRecord)); }
@@ -128,7 +129,7 @@ export function createVrShellAttractorInteraction({ controllers, shellSystem, ha
   function takeWithLeftHand(leftRecord = getLeftRecord()) { if (!handIsFree(leftRecord) || !hasCurrentShellHit(leftRecord)) return false; const shell = captureReady;
     leftRecord.holdSocket.attach(shell); shell.userData.shellState = 'held'; shell.userData.attractorTarget = false;
     captureReady = null; activePull = null; target = null; heldShell = shell; heldByRecord = leftRecord;
-    clearLeftShellHit(leftRecord); finishTool(); return true; }
+    clearLeftShellHit(leftRecord); finishTool(); onHandoff({ target: shell }); return true; }
   function hasCurrentPlacedShellHit(record) { return Boolean(record?.currentPlacedShellHit
     && record.currentPlacedShellHit.userData.shellState === 'placed'
     && record.currentPlacedShellHitDistance <= record.currentRayLength); }
@@ -192,11 +193,12 @@ export function createVrShellAttractorInteraction({ controllers, shellSystem, ha
       proximity: clamp01(1 - hit.distance / maxTargetDistance) }); attractorTool.setPullStrength(0);
     attractorTool.setState(VR_ATTRACTOR_STATES.TARGETING);
     if (primaryAction > settings.triggerThreshold && handIsFree(leftRecord)) { activePull = target; activePull.userData.shellState = 'pulling';
+      onPullStart({ target: activePull, targetClass: activePull.userData.attractorType });
       activePull.getWorldPosition(shellWorldPosition); captureAnchor.getWorldPosition(anchorWorldPosition);
       pullStartDistance = Math.max(shellWorldPosition.distanceTo(anchorWorldPosition), 1e-6); shellSystem.setEmission(activePull, 0);
       pullSpeed = 0; attractorTool.setPullStrength(0); attractorTool.setState(VR_ATTRACTOR_STATES.PULLING); }
   }
-  function reset() { scanCone.update(0, false); if (activePull) shellSystem.returnToOrbit(activePull, settings.returnDuration);
+  function reset() { scanCone.update(0, false); if (activePull) { onPullCancel({ target: activePull }); shellSystem.returnToOrbit(activePull, settings.returnDuration); }
     if (heldShell) shellSystem.returnToOrbit(heldShell, settings.returnDuration); clearTarget(); activePull = null; captureReady = null;
     heldShell = null; heldByRecord = null; pullSpeed = 0; clearLeftShellHit(); controllers.forEach(clearPlacedShellHit); finishTool(); }
   function dispose() { if (disposed) return; reset(); disposed = true;

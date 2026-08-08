@@ -1,10 +1,10 @@
 # Experience VR Audio Model
 
-Status: canonical, living technical model for Experience VR audio. Synchronized with the crystal-acquisition lifecycle pass on 2026-08-08.
+Status: canonical, living technical model for Experience VR audio. Synchronized with the Astro Attractor DEVICE-loop pass on 2026-08-08.
 
 ## SUMMARY DLA ARCHITEKTA
 
-The bounded Experience VR crystal-acquisition audio lifecycle is **IMPLEMENTED**: the existing fail-soft `VrAudioBridge` now follows real glyph hold/miss/resume/success transitions, renews the non-looping process source after its natural end, and plays the mapped elemental completion one-shot after a physical crystal is created. The earlier UI and world/device one-shot packages remain active. Ambient sequencing, Astro Attractor audio, spatial audio, and all other mapped events remain **PLANNED**; known but unmapped family capacity is **RESERVED**, and sounds without a decided VR use are **UNASSIGNED**.
+The bounded Experience VR Astro Attractor lifecycle is **IMPLEMENTED** for the currently playable shell target class. Its seamless DEVICE loop follows the existing pull, cancellation, and successful ordinary-ray handoff signals through the fail-soft `VrAudioBridge`. All eight assets are prepared, while small/large glyph and rune-stone mappings remain **PLANNED** because those gameplay target classes do not yet exist. Crystal acquisition and the earlier UI/world/device packages remain active; the ambient sequencer, Asterion Sphere audio, and spatial audio remain unimplemented.
 
 ## Status vocabulary and authority
 
@@ -126,9 +126,9 @@ Each shorthand above denotes `glif_<element>_4s_<NN>.mp3`. `glif_earth_4s_04.mp3
 
 ### Astro Attractor
 
-The target beds are seamless loops: small glyphs → `noise_laud_loop_01.mp3`, shells → `02`, large glyphs → `03`, and stones 1–5 → `04–08` respectively.
+The target beds are seamless DEVICE loops at source gain `1.0`: small glyphs → `noise_laud_loop_01.mp3`, shells → `02`, large glyphs → `03`, and stones 1–5 → `04–08` respectively. Only shells are a current gameplay target class and therefore only `02` is **IMPLEMENTED**; every other mapping remains **PLANNED** without synthetic target logic. All eight existing assets are prepared non-blockingly.
 
-Start the selected source immediately without fade-in. Successful takeover of the object by the Spike fades it out over 0.5 seconds. On temporary target loss, keep the source and playhead alive while fading toward zero over 1 second. Reacquisition within that window restores gain and continues the same seamless loop without restart. A full second without recovery stops and cleans up the source.
+Actual active pull starts the selected source immediately without fade-in and uses true source looping, never per-frame restarts. Successful takeover by the ordinary Spike ray fades it out over `0.5 s`. Temporary target loss keeps the same source and playhead while fading from its current gain toward zero over `1.0 s`; reacquiring the same logical target within that window cancels the prior automation and returns from the current gain to `1.0` in about `0.1 s`. A full second without recovery stops and idempotently cleans up the source. Deliberate release/cancel uses a shorter safe fade instead of recovery. A different logical target always ends the previous lifecycle and starts a new source from the beginning, even when both targets share an asset class. Audio observes gameplay success and identity; it does not decide either.
 
 ### Asterion Sphere / floor
 
@@ -195,7 +195,7 @@ The inventory below contains every existing `public/audio/*.mp3` as of 2026-08-0
 | `glif_wood_4s_02.mp3` | one-shot | WORLD | AI Guide / Wood: kryształ 2 | **IMPLEMENTED** | Playback VR jest wdrożony zgodnie z mappingiem acquisition. |
 | `monkey_thinking_01.mp3` | one-shot | WORLD | komunikacja małpy / łuki nad głową | **IMPLEMENTED** | Playback one-shot jest wdrożony zgodnie z semantyką eventu powyżej. |
 | `noise_laud_loop_01.mp3` | seamless loop | DEVICE | Astro Przyciągacz: małe glify | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
-| `noise_laud_loop_02.mp3` | seamless loop | DEVICE | Astro Przyciągacz: skorupy | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
+| `noise_laud_loop_02.mp3` | seamless loop | DEVICE | Astro Przyciągacz: skorupy | **IMPLEMENTED** | Aktywny lifecycle skorup: immediate loop, recovery i handoff fade. |
 | `noise_laud_loop_03.mp3` | seamless loop | DEVICE | Astro Przyciągacz: duże glify | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
 | `noise_laud_loop_04.mp3` | seamless loop | DEVICE | Astro Przyciągacz: kamień 1 | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
 | `noise_laud_loop_05.mp3` | seamless loop | DEVICE | Astro Przyciągacz: kamień 2 | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
