@@ -3,7 +3,9 @@ import { createVrTargetHalo } from './createVrTargetHalo.js';
 
 const LOCAL_RAY_DIRECTION = new THREE.Vector3(0, 0, -1);
 
-export function createVrGlyphInteraction({ controllers, nodes, settings = {}, haloSettings = {}, isGlyphActive = () => true, onGlyphHoldComplete = () => {} }) {
+export function createVrGlyphInteraction({ controllers, nodes, settings = {}, haloSettings = {}, isGlyphActive = () => true,
+  onGlyphHoldStart = () => {}, onGlyphHitLost = () => {}, onGlyphHitResumed = () => {},
+  onGlyphHoldCancelled = () => {}, onGlyphHoldComplete = () => {} }) {
   const raycaster = new THREE.Raycaster();
   const rayOrigin = new THREE.Vector3();
   const rayDirection = new THREE.Vector3();
@@ -31,11 +33,16 @@ export function createVrGlyphInteraction({ controllers, nodes, settings = {}, ha
   const listeners = controllers.map((record) => {
     const start = () => {
       const node = record.currentHit;
-      if (!disposed && node && isGlyphActive(node)) holds.set(record, {
-        node, elapsed: 0, lostElapsed: 0, completed: false
-      });
+      if (!disposed && node && isGlyphActive(node)) {
+        holds.set(record, { node, elapsed: 0, lostElapsed: 0, completed: false, hitLost: false });
+        onGlyphHoldStart({ node, controllerIndex: record.index, handedness: record.handedness });
+      }
     };
-    const end = () => holds.delete(record);
+    const end = () => {
+      const hold = holds.get(record);
+      holds.delete(record);
+      if (hold && !hold.completed) onGlyphHoldCancelled({ node: hold.node, controllerIndex: record.index, handedness: record.handedness });
+    };
     record.controller.addEventListener('selectstart', start);
     record.controller.addEventListener('selectend', end);
     record.controller.addEventListener('disconnected', end);
@@ -58,13 +65,15 @@ export function createVrGlyphInteraction({ controllers, nodes, settings = {}, ha
       }
       const hold = holds.get(record);
       if (!hold) continue;
-      if (!record.isConnected || !isGlyphActive(hold.node)) { holds.delete(record); continue; }
+      if (!record.isConnected || !isGlyphActive(hold.node)) { holds.delete(record); onGlyphHoldCancelled({ node: hold.node }); continue; }
       if (record.currentHit !== hold.node) {
-        if (record.currentHit) { holds.delete(record); continue; }
+        if (record.currentHit) { holds.delete(record); onGlyphHoldCancelled({ node: hold.node }); continue; }
+        if (!hold.hitLost) { hold.hitLost = true; onGlyphHitLost({ node: hold.node }); }
         hold.lostElapsed += Math.max(0, delta);
         if (hold.lostElapsed > holdLostGrace) holds.delete(record);
         continue;
       }
+      if (hold.hitLost) { hold.hitLost = false; onGlyphHitResumed({ node: hold.node }); }
       hold.lostElapsed = 0;
       if (!hold.completed) {
         hold.elapsed += Math.max(0, delta);

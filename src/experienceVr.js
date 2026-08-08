@@ -71,9 +71,17 @@ const VR_AUDIO = Object.freeze({
   furnaceOpen: '/audio/panel_sound_01.mp3', furnaceDeeper: '/audio/panel_sound_02.mp3',
   reliquaryInsert: '/audio/turn_page_01.mp3', reliquaryConsume: '/audio/reliquiary_consume.mp3',
   tierComplete: '/audio/floor_panel_activate.mp3', monkeyThinking: '/audio/monkey_thinking_01.mp3',
-  chamberOpen: '/audio/astro_piec_open.mp3', chamberClose: '/audio/astro_piec_close.mp3'
+  chamberOpen: '/audio/astro_piec_open.mp3', chamberClose: '/audio/astro_piec_close.mp3',
+  glyphProcess: '/audio/glif_hover_loop.mp3'
 });
-vrAudio.prepareOneShots(Object.values(VR_AUDIO));
+const GLYPH_COMPLETION_AUDIO = Object.freeze({
+  'ethics-life-protection': ['/audio/glif_earth_4s_01.mp3', '/audio/glif_earth_4s_02.mp3', '/audio/glif_earth_4s_03.mp3'],
+  'creative-ai': ['/audio/glif_fire_4s_01.mp3', '/audio/glif_fire_4s_02.mp3', '/audio/glif_fire_4s_03.mp3'],
+  'ai-guide': ['/audio/glif_wood_4s_01.mp3', '/audio/glif_wood_4s_02.mp3', '/audio/glif_wood_4s_01.mp3'],
+  'spotify-digger': ['/audio/glif_metal_4s_01.mp3', '/audio/glif_metal_4s_02.mp3', '/audio/glif_metal_4s_03.mp3', '/audio/glif_metal_4s_04.mp3'],
+  'haiku-cosmos': ['/audio/glif_water_4s_01.mp3', '/audio/glif_water_4s_02.mp3', '/audio/glif_water_4s_03.mp3', '/audio/glif_water_4s_04.mp3', '/audio/glif_water_4s_01.mp3']
+});
+vrAudio.prepareOneShots([...Object.values(VR_AUDIO), ...Object.values(GLYPH_COMPLETION_AUDIO).flat()]);
 const playVrUi = (path) => vrAudio.playOneShot(path, 'UI');
 const playVrWorld = (path) => vrAudio.playOneShot(path, 'WORLD');
 const playVrDevice = (path) => vrAudio.playOneShot(path, 'DEVICE');
@@ -433,13 +441,19 @@ const glyphInteraction = createVrGlyphInteraction({
   settings: settings.glyphInteraction,
   haloSettings: settings.targetHalo,
   isGlyphActive: (node) => isGlyphActive(node),
+  onGlyphHoldStart: ({ node }) => vrAudio.startGlyphAcquisition(node.userData.id),
+  onGlyphHitLost: ({ node }) => vrAudio.missGlyphAcquisition(node.userData.id),
+  onGlyphHitResumed: ({ node }) => vrAudio.startGlyphAcquisition(node.userData.id),
+  onGlyphHoldCancelled: ({ node }) => vrAudio.cancelGlyphAcquisition(node.userData.id),
   onGlyphHoldComplete: ({ node }) => {
-    if (getNextCrystalTier(node) === null) return;
+    const tier = getNextCrystalTier(node);
+    if (tier === null) return;
     node.updateWorldMatrix(true, false);
     monkeyAnchor.updateWorldMatrix(true, false);
     const glyphWorldPosition = node.getWorldPosition(new THREE.Vector3());
     const centerWorldPosition = monkeyAnchor.getWorldPosition(new THREE.Vector3());
-    crystalCollection.spawnOne(node.userData.id, { glyphWorldPosition, centerWorldPosition });
+    const crystal = crystalCollection.spawnOne(node.userData.id, { glyphWorldPosition, centerWorldPosition });
+    if (crystal) vrAudio.completeGlyphAcquisition(node.userData.id, GLYPH_COMPLETION_AUDIO[node.userData.id]?.[tier - 1]);
   }
 });
 shellAttractorInteraction = createVrShellAttractorInteraction({

@@ -208,6 +208,58 @@ class AudioManager {
     source.start();
   }
 
+  async startVrProcessSource(path, bus = 'WORLD') {
+    if (!VR_AUDIO_BUSES.includes(bus)) return null;
+    if (!await this.unlock()) return null;
+    const buffer = this.buffers.get(path) || await this.loadBuffer(path);
+    const busNode = this.vrBusNodes.get(bus);
+    if (!buffer || !this.context || !busNode) return null;
+    const source = this.context.createBufferSource();
+    const sourceGain = this.context.createGain();
+    source.buffer = buffer;
+    source.loop = false;
+    sourceGain.gain.value = 1;
+    source.connect(sourceGain).connect(busNode);
+    let endedCallback = null;
+    let cleaned = false;
+    let ramp = null;
+    const handle = {
+      rampTo: (target, duration) => {
+        if (cleaned) return;
+        const now = this.context.currentTime;
+        const parameter = sourceGain.gain;
+        let current = parameter.value;
+        if (ramp && now < ramp.endsAt) {
+          const progress = Math.max(0, Math.min(1, (now - ramp.startsAt) / (ramp.endsAt - ramp.startsAt)));
+          current = ramp.from + (ramp.to - ramp.from) * progress;
+        }
+        if (typeof parameter.cancelAndHoldAtTime === 'function') parameter.cancelAndHoldAtTime(now);
+        else {
+          parameter.cancelScheduledValues(now);
+          parameter.setValueAtTime(current, now);
+        }
+        const seconds = Math.max(0, duration);
+        const value = clamp01(target);
+        if (seconds === 0) parameter.setValueAtTime(value, now);
+        else parameter.linearRampToValueAtTime(value, now + seconds);
+        ramp = { from: current, to: value, startsAt: now, endsAt: now + seconds };
+      },
+      stop: () => { try { source.stop(); } catch (_) { /* Already stopped or naturally ended. */ } },
+      onEnded: (callback) => { endedCallback = callback; }
+    };
+    this.activeVrSources.add(handle);
+    source.onended = () => {
+      if (cleaned) return;
+      cleaned = true;
+      this.activeVrSources.delete(handle);
+      try { source.disconnect(); } catch (_) { /* Already disconnected. */ }
+      try { sourceGain.disconnect(); } catch (_) { /* Already disconnected. */ }
+      endedCallback?.();
+    };
+    source.start();
+    return handle;
+  }
+
   setVrBusGain(bus, value) {
     if (!VR_AUDIO_BUSES.includes(bus)) return false;
     const node = this.vrBusNodes.get(bus);
@@ -220,7 +272,9 @@ class AudioManager {
   }
 
   stopVrAudio() {
-    this.activeVrSources.forEach(({ source }) => { try { source.stop(); } catch (_) { /* Source may already have ended. */ } });
+    this.activeVrSources.forEach((handle) => {
+      try { (handle.source ? handle.source.stop() : handle.stop?.()); } catch (_) { /* Source may already have ended. */ }
+    });
     this.activeVrSources.clear();
   }
 
