@@ -30,7 +30,8 @@ import { createVrHandModeController } from './xr/input/createVrHandModeControlle
 import { createVrAttractorTool } from './xr/tools/createVrAttractorTool.js';
 import { createVrAstroFurnace } from './xr/furnace/createVrAstroFurnace.js';
 import { createVrAstroFurnaceOpenInteraction } from './xr/furnace/createVrAstroFurnaceOpenInteraction.js';
-import { createVrAstroFurnaceActivateInteraction } from './xr/furnace/createVrAstroFurnaceActivateInteraction.js';
+import { ASTRO_FURNACE_PROCESS_KINDS, createVrAstroFurnaceActivateInteraction } from './xr/furnace/createVrAstroFurnaceActivateInteraction.js';
+import { resolveChamberCylinder } from './xr/furnace/vrAstroFurnaceChamberCylinder.js';
 import { ASTRO_FURNACE_ACTIVE_MODE, createVrAstroFurnaceOptionInteraction } from './xr/furnace/createVrAstroFurnaceOptionInteraction.js';
 import { createVrAstroFurnacePanel } from './xr/furnace/createVrAstroFurnacePanel.js';
 import { createVrAstroFurnaceProcessSource } from './xr/furnace/createVrAstroFurnaceProcessSource.js';
@@ -250,11 +251,19 @@ const astroFurnace = createVrAstroFurnace({
 const furnaceProgressionController = createVrAstroFurnaceProgressionController();
 const asterionProductionController = createVrAsterionProductionController({
   progressionController: furnaceProgressionController, sphere: asterionSphere,
-  essenceAnchor: astroFurnace.nodes.VR_FURNACE_ESSENCE_ANCHOR,
+  contentAnchor: astroFurnace.nodes.VR_FURNACE_CONTENT_ANCHOR,
+  chamber: astroFurnace.nodes.komora,
+  chamberCylinder: resolveChamberCylinder(astroFurnace.nodes.komora, settings.furnace.content.chamberClearance),
   controllers: vrControllers.controllers, settings: settings.asterionSphere.production,
   haloSettings: settings.targetHalo,
-  onBuildStart: () => vrAudio.startAsterionCreate(),
-  onBuildStop: (cancelled) => { if (cancelled) vrAudio.stopAsterionCreate(); }
+  processDriver: {
+    startConstruction: () => astroFurnaceActivateInteraction?.startConstruction?.() === true,
+    getState: () => astroFurnaceActivateInteraction?.getState?.() ?? 'IDLE',
+    getProgress: () => astroFurnaceActivateInteraction?.getProgress?.() ?? 0,
+    getProcessKind: () => astroFurnaceActivateInteraction?.getProcessKind?.() ?? null
+  },
+  getChamberState: () => astroFurnaceOpenInteraction?.getState?.() ?? 'CLOSED',
+  getContentState: () => astroFurnaceContentInteraction?.getState?.() ?? 'EMPTY'
 });
 const portalCanvas = createVrSpatialPlaque({
   scene,
@@ -328,7 +337,8 @@ let astroFurnaceContentInteraction = null;
 let astroFurnaceOptionInteraction = null;
 const furnacePanel = createVrAstroFurnacePanel({
   parent: worldRoot, furnace: astroFurnace, controllers: vrControllers.controllers,
-  progressionController: furnaceProgressionController, productionController: asterionProductionController, settings: settings.furnace.panel,
+  progressionController: furnaceProgressionController, productionController: asterionProductionController,
+  asterionModel: asterionSphere.object, settings: settings.furnace.panel,
   processSource: createVrAstroFurnaceProcessSource(() => astroFurnaceActivateInteraction),
   contentSource: {
     getState: () => astroFurnaceContentInteraction?.getState?.() ?? 'EMPTY',
@@ -368,8 +378,10 @@ astroFurnaceActivateInteraction = createVrAstroFurnaceActivateInteraction({
   isModeActive: () => astroFurnaceOptionInteraction?.getActiveMode?.() === ASTRO_FURNACE_ACTIVE_MODE,
   qaAllowWithoutInput: furnaceProcessQa,
   isOrdinaryRayAvailable: ordinaryFurnaceRayAvailable,
-  onProcessStart: () => vrAudio.startFurnaceProcess(),
-  onProcessStop: () => vrAudio.stopFurnaceProcess()
+  onProcessStart: ({ processKind }) => processKind === ASTRO_FURNACE_PROCESS_KINDS.ASTERION_CONSTRUCTION
+    ? vrAudio.startAsterionCreate() : vrAudio.startFurnaceProcess(),
+  onProcessStop: ({ processKind }) => processKind === ASTRO_FURNACE_PROCESS_KINDS.ASTERION_CONSTRUCTION
+    ? vrAudio.stopAsterionCreate() : vrAudio.stopFurnaceProcess()
 });
 let shellAttractorInteraction = null;
 astroFurnaceContentInteraction = createVrAstroFurnaceContentInteraction({
@@ -581,7 +593,6 @@ function renderFrame() {
   monkeyGuide.update(delta);
   locomotion.setLeftYawLocked(playerGuidePanel.isOpen());
   astroFurnace.update(delta);
-  furnacePanel.update(delta);
   astroFurnaceOptionInteraction.update(delta);
   astroFurnaceOpenInteraction.update(delta);
   astroFurnaceActivateInteraction.update(delta);
@@ -597,6 +608,7 @@ function renderFrame() {
   releaseButton.update(delta);
   shellAttractorInteraction.update(delta);
   asterionProductionController.update(delta);
+  furnacePanel.update(delta);
   asterionSphere.update(delta);
   asterionGyroInteraction.update(delta);
   vrControllers.resolveVisualRayLength();

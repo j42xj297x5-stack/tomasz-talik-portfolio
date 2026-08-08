@@ -1,43 +1,65 @@
 import assert from 'node:assert/strict';
 import * as THREE from '../src/vendor/three.js';
 import { createVrAstroFurnaceProgressionController, REQUIRED_ASTERION_SHELLS } from '../src/xr/furnace/createVrAstroFurnaceProgressionController.js';
-import { createVrAsterionProductionController, VR_ASTERION_PRODUCTION_STATES as STATES } from '../src/xr/asterion/createVrAsterionProductionController.js';
+import { createVrAsterionProductionController, resolveAsterionFormationProgress, VR_ASTERION_PRODUCTION_STATES as STATES } from '../src/xr/asterion/createVrAsterionProductionController.js';
+import { assemblySegmentVisible, createAsterionModelWireframeMap, resolveConstructionPatchOpacity } from '../src/xr/furnace/asterionSphereWireframe.js';
 
 function harness({ complete = false } = {}) {
   const progression = createVrAstroFurnaceProgressionController();
   REQUIRED_ASTERION_SHELLS.slice(0, complete ? 6 : 5).forEach((id) => progression.commitAbsorbedShell(id));
-  const anchor = new THREE.Group(), socket = new THREE.Group();
-  const object = new THREE.Mesh(new THREE.SphereGeometry(0.1), new THREE.MeshBasicMaterial()); object.visible = false; socket.add(object);
-  let presented = false, mode = 'NORMAL_HAND', equips = 0, starts = 0, stops = 0;
+  const contentAnchor = new THREE.Group(), socket = new THREE.Group();
+  const object = new THREE.Mesh(new THREE.SphereGeometry(.1), new THREE.MeshStandardMaterial({ color: 0x123456, emissive: 0x010203, opacity: .8 }));
+  object.visible = false; socket.add(object);
+  let presented = false, mode = 'NORMAL_HAND', equips = 0, starts = 0, stops = 0, chamberState = 'CLOSED', contentState = 'EMPTY';
+  let processState = 'IDLE', processKind = null, processProgress = 0;
   const sphere = { object, socket, presentAt(parent, scale) { parent.add(socket); socket.scale.setScalar(scale); object.visible = true; presented = true; return true; },
-    setPresentationScale(scale) { socket.scale.setScalar(scale); return true; }, clearPresentation() { socket.removeFromParent(); object.visible = false; presented = false; }, isPresented: () => presented };
+    setPresentationScale(scale) { socket.scale.setScalar(scale); return true; },
+    setMaterializationProgress(progress) { object.material.opacity = .8 * progress; object.material.emissiveIntensity = THREE.MathUtils.lerp(10, 0, progress); },
+    restorePresentationMaterials() { object.material.opacity = .8; object.material.emissiveIntensity = 0; },
+    clearPresentation() { socket.removeFromParent(); object.visible = false; presented = false; }, isPresented: () => presented };
   const leftController = new THREE.Group(); leftController.position.z = 1;
   const rightController = new THREE.Group(); rightController.position.z = 1;
   const left = { handedness: 'left', controller: leftController, ray: { visible: true }, currentRayLength: 2.3, reportRayHit() {} };
   const right = { handedness: 'right', controller: rightController, ray: { visible: true }, currentRayLength: 2.3, reportRayHit() {} };
   const handModes = { getLeftMode: () => mode, equipLeftAsterion() { mode = 'ASTERION_SPHERE'; equips += 1; return true; } };
-  const production = createVrAsterionProductionController({ progressionController: progression, sphere, essenceAnchor: anchor,
-    controllers: [left, right], handModeController: handModes, settings: { buildDurationSeconds: 5, rayMaxDistance: 2.3 },
+  const processDriver = { startConstruction() { if (processState !== 'IDLE') return false; processState = 'SPINUP'; processKind = 'ASTERION_CONSTRUCTION'; return true; },
+    getState: () => processState, getProcessKind: () => processKind, getProgress: () => processProgress };
+  const production = createVrAsterionProductionController({ progressionController: progression, sphere, contentAnchor,
+    controllers: [left, right], handModeController: handModes, processDriver, getChamberState: () => chamberState,
+    getContentState: () => contentState, settings: { buildDurationSeconds: 18, rayMaxDistance: 2.3 },
     onBuildStart() { starts += 1; }, onBuildStop() { stops += 1; } });
-  return { progression, production, sphere, left, right, handModes, counts: () => ({ equips, starts, stops }) };
+  return { progression, production, sphere, left, right, handModes, contentAnchor,
+    setChamber: (value) => { chamberState = value; }, setContent: (value) => { contentState = value; },
+    setProcess: (progress) => { processProgress = progress; if (progress >= 1) processState = 'COMPLETE'; },
+    counts: () => ({ equips, starts, stops }) };
 }
 
 {
-  const h = harness(); assert.equal(h.production.getState(), STATES.LOCKED, '5/6 remains LOCKED'); assert.equal(h.production.requestCreate(), false);
-  h.progression.commitAbsorbedShell(REQUIRED_ASTERION_SHELLS[5]); assert.equal(h.production.getState(), STATES.READY, '6/6 opens READY');
-  assert.equal(h.production.requestCreate(), true); assert.equal(h.production.requestCreate(), false, 'duplicate create cannot restart'); assert.equal(h.counts().starts, 1);
+  const h = harness(); assert.equal(h.production.getState(), STATES.LOCKED); assert.equal(h.production.requestCreate(), false);
+  h.progression.commitAbsorbedShell(REQUIRED_ASTERION_SHELLS[5]); assert.equal(h.production.getState(), STATES.READY);
+  h.setChamber('OPEN'); assert.equal(h.production.requestCreate(), false, 'create requires CLOSED'); h.setChamber('CLOSED');
+  h.setContent('INSERTED'); assert.equal(h.production.requestCreate(), false, 'create requires EMPTY'); h.setContent('EMPTY');
+  assert.equal(h.production.requestCreate(), true); assert.equal(h.sphere.socket.parent, h.contentAnchor); assert.equal(h.production.requestCreate(), false);
+  assert.equal(h.counts().starts, 1); assert.equal(h.production.getDiagnostics().duration, 18);
   h.production.resetSession(); assert.equal(h.production.getState(), STATES.READY); assert.equal(h.sphere.isPresented(), false); h.production.dispose();
 }
 {
-  const h = harness({ complete: true }); h.production.requestCreate(); h.production.update(5);
-  assert.equal(h.production.getState(), STATES.AVAILABLE); assert.equal(h.production.getDiagnostics().committedBuilds, 1); h.production.update(1);
-  assert.equal(h.production.getDiagnostics().committedBuilds, 1); assert.equal(h.handModes.getLeftMode(), 'NORMAL_HAND', 'AVAILABLE does not equip');
-  assert.equal(h.production.claim(h.right), false, 'right hand cannot claim'); assert.equal(h.production.claim(h.left), true, 'left hit claims');
-  assert.equal(h.production.getState(), STATES.EARNED); assert.equal(h.counts().equips, 1); assert.equal(h.production.claim(h.left), false); assert.equal(h.production.getDiagnostics().earnedCommits, 1);
-  h.production.resetSession(); assert.equal(h.production.getState(), STATES.EARNED); h.production.dispose();
+  const h = harness({ complete: true }); h.production.requestCreate();
+  for (const [progress, formation] of [[0, 0], [.5833333333, .5], [1, 1]]) { h.setProcess(progress); h.production.update(0);
+    assert.ok(Math.abs(h.production.getSnapshot().formationProgress - formation) < 1e-6); }
+  assert.equal(h.production.getState(), STATES.AVAILABLE); assert.equal(h.sphere.object.material.opacity, .8, 'authored material restored');
+  assert.equal(h.production.getDiagnostics().committedBuilds, 1); assert.equal(h.production.claim(h.left), false, 'claim blocked while CLOSED');
+  h.setChamber('OPEN'); h.production.update(0); assert.equal(h.production.claim(h.right), false); assert.equal(h.production.claim(h.left), true);
+  assert.equal(h.production.getState(), STATES.EARNED); assert.equal(h.counts().equips, 1); h.production.dispose();
 }
+assert.equal(resolveAsterionFormationProgress(0), 0); assert.ok(Math.abs(resolveAsterionFormationProgress(7 / 12) - .5) < 1e-9); assert.equal(resolveAsterionFormationProgress(1), 1);
 {
-  const h = harness({ complete: true }); h.production.requestCreate(); h.production.update(5); h.production.resetSession();
-  assert.equal(h.production.getState(), STATES.AVAILABLE); assert.equal(h.sphere.isPresented(), true); h.production.dispose(); h.production.dispose(); assert.equal(h.sphere.isPresented(), false);
+  const model = new THREE.Group(); model.add(new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshBasicMaterial()));
+  const first = createAsterionModelWireframeMap(model), second = createAsterionModelWireframeMap(model);
+  assert.equal(first, second, 'real-model contour map is cached by model identity'); assert.ok(first.segments.length > 0);
+  assert.equal(first.segments.filter((segment) => assemblySegmentVisible(segment, 0)).length, 0);
+  assert.ok(first.segments.filter((segment) => assemblySegmentVisible(segment, .5)).length > 0);
+  assert.equal(first.segments.filter((segment) => assemblySegmentVisible(segment, 1)).length, first.segments.length);
+  assert.deepEqual([0, .5, 1].map(resolveConstructionPatchOpacity), [1, .5700000000000001, .14]);
 }
 console.log('VR production Asterion tests passed.');
