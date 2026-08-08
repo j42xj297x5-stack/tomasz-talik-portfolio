@@ -65,6 +65,63 @@ function createProcessHarness() {
   return { bridge: createVrAudioBridge({ manager, warn: () => {} }), handles, oneShots };
 }
 
+function createAttractorHarness() {
+  const handles = [], starts = [];
+  const manager = {
+    startVrProcessSource(path, bus, options) {
+      starts.push([path, bus, options]);
+      const handle = { ramps: [], stopped: 0, rampTo(value, duration) { this.ramps.push([value, duration]); }, stop() { this.stopped += 1; } };
+      handles.push(handle); return handle;
+    }, prepareVrOneShots() {}, stopVrAudio() {}
+  };
+  return { bridge: createVrAudioBridge({ manager, warn: () => {} }), handles, starts };
+}
+
+test('Astro Attractor loop starts once on DEVICE and same-target recovery preserves its source', async () => {
+  const { bridge, handles, starts } = createAttractorHarness();
+  bridge.startAttractor('shell-01', 'shell'); await flush();
+  assert.deepEqual(starts, [['/audio/noise_laud_loop_02.mp3', 'DEVICE', { loop: true }]]);
+  bridge.startAttractor('shell-01', 'shell'); await flush();
+  assert.equal(handles.length, 1, 'continuous callbacks do not restart playback');
+  bridge.missAttractor('shell-01'); assert.deepEqual(handles[0].ramps.at(-1), [0, 1]);
+  bridge.startAttractor('shell-01', 'shell');
+  assert.equal(handles.length, 1); assert.deepEqual(handles[0].ramps.at(-1), [1, 0.1]);
+  bridge.dispose();
+});
+
+test('Astro Attractor recovery timeout stops and a different logical target starts fresh', async () => {
+  const { bridge, handles } = createAttractorHarness();
+  bridge.startAttractor('shell-01', 'shell'); await flush(); bridge.missAttractor('shell-01');
+  await new Promise((resolve) => setTimeout(resolve, 1010));
+  assert.equal(handles[0].stopped, 1); assert.equal(bridge.attractorState, 'idle');
+  bridge.startAttractor('shell-02', 'shell'); await flush();
+  bridge.startAttractor('shell-03', 'shell'); await flush();
+  assert.deepEqual(handles[1].ramps.at(-1), [0, 0.2]);
+  await new Promise((resolve) => setTimeout(resolve, 210));
+  assert.equal(handles[1].stopped, 1, 'replacement is not inherited even for the same class');
+  assert.equal(handles.length, 3); bridge.dispose();
+});
+
+test('Astro Attractor handoff and deliberate cancel use their bounded fades', async () => {
+  const { bridge, handles } = createAttractorHarness();
+  bridge.startAttractor('shell-01', 'shell'); await flush(); bridge.handoffAttractor('shell-01');
+  assert.deepEqual(handles[0].ramps.at(-1), [0, 0.5]);
+  await new Promise((resolve) => setTimeout(resolve, 510)); assert.equal(handles[0].stopped, 1);
+  bridge.startAttractor('shell-02', 'shell'); await flush(); bridge.cancelAttractor('shell-02');
+  assert.deepEqual(handles[1].ramps.at(-1), [0, 0.2]);
+  await new Promise((resolve) => setTimeout(resolve, 210)); assert.equal(handles[1].stopped, 1); bridge.dispose();
+});
+
+test('Astro Attractor contains sync/async start failures and dispose stops an active loop', async () => {
+  const warnings = [];
+  const sync = createVrAudioBridge({ manager: { startVrProcessSource() { throw new Error('sync'); } }, warn: (...args) => warnings.push(args) });
+  assert.doesNotThrow(() => sync.startAttractor('one', 'shell')); assert.equal(sync.attractorState, 'idle');
+  const asyncBridge = createVrAudioBridge({ manager: { startVrProcessSource() { return Promise.reject(new Error('async')); } }, warn: (...args) => warnings.push(args) });
+  asyncBridge.startAttractor('two', 'shell'); await flush(); assert.equal(asyncBridge.attractorState, 'idle');
+  const { bridge, handles } = createAttractorHarness(); bridge.startAttractor('three', 'shell'); await flush(); bridge.dispose(); bridge.dispose();
+  assert.equal(handles[0].stopped, 1); assert.equal(warnings.length, 2); sync.dispose(); asyncBridge.dispose();
+});
+
 test('glyph acquisition lifecycle starts immediately and resumes the same source after a miss', async () => {
   const { bridge, handles } = createProcessHarness();
   bridge.startGlyphAcquisition('earth');

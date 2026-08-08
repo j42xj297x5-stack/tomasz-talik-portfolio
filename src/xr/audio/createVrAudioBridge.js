@@ -11,6 +11,18 @@ export function createVrAudioBridge({ manager = audioManager, warn = console.war
   let glyphStartPending = false;
   let finishTimer = null;
   const GLYPH_PROCESS_PATH = '/audio/glif_hover_loop.mp3';
+  const ATTRACTOR_PATHS = Object.freeze({
+    smallGlyph: '/audio/noise_laud_loop_01.mp3',
+    shell: '/audio/noise_laud_loop_02.mp3',
+    largeGlyph: '/audio/noise_laud_loop_03.mp3',
+    runeStone1: '/audio/noise_laud_loop_04.mp3',
+    runeStone2: '/audio/noise_laud_loop_05.mp3',
+    runeStone3: '/audio/noise_laud_loop_06.mp3',
+    runeStone4: '/audio/noise_laud_loop_07.mp3',
+    runeStone5: '/audio/noise_laud_loop_08.mp3'
+  });
+  let attractorState = 'idle', attractorId = null, attractorClass = null, attractorHandle = null;
+  let attractorToken = 0, attractorTimer = null;
 
   function reportFailure(operation, error) {
     try {
@@ -36,6 +48,7 @@ export function createVrAudioBridge({ manager = audioManager, warn = console.war
   function dispose() {
     if (disposed) return;
     stopGlyphLifecycle();
+    stopAttractorLifecycle();
     runOptional('stop VR audio', (audio) => audio.stopVrAudio());
     disposed = true;
   }
@@ -43,6 +56,71 @@ export function createVrAudioBridge({ manager = audioManager, warn = console.war
   function prepareOneShots(paths) {
     runOptional('prepare VR one-shots', (audio) => audio.prepareVrOneShots(paths));
   }
+
+  function prepareAttractorLoops() { prepareOneShots(Object.values(ATTRACTOR_PATHS)); }
+
+  function clearAttractorTimer() { if (attractorTimer !== null) clearTimeout(attractorTimer); attractorTimer = null; }
+  function stopAttractorHandle(handle = attractorHandle) {
+    if (!handle) return;
+    if (attractorHandle === handle) attractorHandle = null;
+    try { handle.stop?.(); } catch (error) { reportFailure('stop Astro Attractor', error); }
+  }
+  function stopAttractorLifecycle() {
+    attractorToken += 1; clearAttractorTimer(); stopAttractorHandle();
+    attractorId = null; attractorClass = null; attractorState = 'idle';
+  }
+  function replaceAttractorLifecycle() {
+    attractorToken += 1; clearAttractorTimer();
+    const handle = attractorHandle; attractorHandle = null;
+    try { handle?.rampTo?.(0, 0.2); } catch (error) { reportFailure('replace Astro Attractor', error); }
+    if (handle) setTimeout(() => stopAttractorHandle(handle), 200);
+    attractorId = null; attractorClass = null; attractorState = 'idle';
+  }
+  function finishAttractor(duration, state, operation) {
+    clearAttractorTimer(); attractorToken += 1; attractorState = state;
+    const handle = attractorHandle;
+    try { handle?.rampTo?.(0, duration); } catch (error) { reportFailure(operation, error); }
+    attractorTimer = setTimeout(() => {
+      attractorTimer = null; stopAttractorHandle(handle);
+      if (!attractorHandle) { attractorId = null; attractorClass = null; attractorState = 'idle'; }
+    }, duration * 1000);
+  }
+  function startAttractor(nextId, soundClass) {
+    if (disposed || !nextId || !ATTRACTOR_PATHS[soundClass]) return;
+    if (attractorId === nextId && attractorState === 'active') return;
+    if (attractorId === nextId && attractorState === 'recovering') {
+      clearAttractorTimer(); attractorState = 'active';
+      try { attractorHandle?.rampTo?.(1, 0.1); } catch (error) { reportFailure('resume Astro Attractor', error); }
+      return;
+    }
+    if (attractorId) replaceAttractorLifecycle();
+    attractorId = nextId; attractorClass = soundClass; attractorState = 'active';
+    const token = attractorToken;
+    runOptional('start Astro Attractor', (audio) => {
+      let request;
+      try { request = audio.startVrProcessSource(ATTRACTOR_PATHS[soundClass], 'DEVICE', { loop: true }); }
+      catch (error) { if (token === attractorToken) stopAttractorLifecycle(); throw error; }
+      return Promise.resolve(request).then((handle) => {
+      if (!handle) return;
+      if (disposed || token !== attractorToken || !['active', 'recovering'].includes(attractorState)) { stopAttractorHandle(handle); return; }
+      attractorHandle = handle;
+      if (attractorState === 'recovering') handle.rampTo?.(0, 1);
+      }).catch((error) => { if (token === attractorToken) stopAttractorLifecycle(); throw error; });
+    });
+  }
+  function missAttractor(targetId) {
+    if (disposed || attractorState !== 'active' || attractorId !== targetId) return;
+    attractorState = 'recovering';
+    try { attractorHandle?.rampTo?.(0, 1); } catch (error) { reportFailure('recover Astro Attractor', error); }
+    clearAttractorTimer(); const token = attractorToken, handle = attractorHandle;
+    attractorTimer = setTimeout(() => {
+      attractorTimer = null;
+      if (token !== attractorToken || attractorState !== 'recovering' || attractorId !== targetId) return;
+      stopAttractorHandle(handle); attractorId = null; attractorClass = null; attractorState = 'idle'; attractorToken += 1;
+    }, 1000);
+  }
+  function cancelAttractor(targetId) { if (attractorId === targetId) finishAttractor(0.2, 'cancelFade', 'cancel Astro Attractor'); }
+  function handoffAttractor(targetId) { if (attractorId === targetId) finishAttractor(0.5, 'handoffFade', 'handoff Astro Attractor'); }
 
   function playOneShot(path, bus = 'UI') {
     runOptional(`play ${path} on ${bus}`, (audio) => audio.playVrOneShot(path, bus));
@@ -162,7 +240,8 @@ export function createVrAudioBridge({ manager = audioManager, warn = console.war
     if (completionPath) playOneShot(completionPath, 'WORLD');
   }
 
-  return { runOptional, prepareOneShots, playOneShot, startGlyphAcquisition, missGlyphAcquisition,
+  return { runOptional, prepareOneShots, prepareAttractorLoops, playOneShot, startGlyphAcquisition, missGlyphAcquisition,
     cancelGlyphAcquisition, completeGlyphAcquisition, dispose,
-    get glyphAcquisitionState() { return glyphState; } };
+    startAttractor, missAttractor, cancelAttractor, handoffAttractor,
+    get glyphAcquisitionState() { return glyphState; }, get attractorState() { return attractorState; } };
 }

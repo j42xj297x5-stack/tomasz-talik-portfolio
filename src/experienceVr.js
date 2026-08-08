@@ -82,6 +82,7 @@ const GLYPH_COMPLETION_AUDIO = Object.freeze({
   'haiku-cosmos': ['/audio/glif_water_4s_01.mp3', '/audio/glif_water_4s_02.mp3', '/audio/glif_water_4s_03.mp3', '/audio/glif_water_4s_04.mp3', '/audio/glif_water_4s_01.mp3']
 });
 vrAudio.prepareOneShots([...Object.values(VR_AUDIO), ...Object.values(GLYPH_COMPLETION_AUDIO).flat()]);
+vrAudio.prepareAttractorLoops();
 const playVrUi = (path) => vrAudio.playOneShot(path, 'UI');
 const playVrWorld = (path) => vrAudio.playOneShot(path, 'WORLD');
 const playVrDevice = (path) => vrAudio.playOneShot(path, 'DEVICE');
@@ -460,6 +461,9 @@ shellAttractorInteraction = createVrShellAttractorInteraction({
   controllers: vrControllers.controllers, shellSystem, handModeController, semanticInput, attractorTool,
   settings: settings.shellAttractor, haloSettings: settings.targetHalo, settledParent: worldRoot,
   crystalHeldByController: crystalCollection.heldByController,
+  onPullStart: ({ target }) => vrAudio.startAttractor(target.userData.attractorId, 'shell'),
+  onPullCancel: ({ target }) => vrAudio.cancelAttractor(target.userData.attractorId),
+  onHandoff: ({ target }) => vrAudio.handoffAttractor(target.userData.attractorId),
   isHigherPriorityInteractionActive: (record) => Boolean(activateButton.hits.get(record)
     || releaseButton.hits.get(record) || astroFurnaceOpenInteraction.hasCurrentHit(record)
     || astroFurnaceActivateInteraction.hasCurrentHit(record) || astroFurnaceOptionInteraction.hasCurrentHit(record)

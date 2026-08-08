@@ -208,7 +208,7 @@ class AudioManager {
     source.start();
   }
 
-  async startVrProcessSource(path, bus = 'WORLD') {
+  async startVrProcessSource(path, bus = 'WORLD', { loop = false } = {}) {
     if (!VR_AUDIO_BUSES.includes(bus)) return null;
     if (!await this.unlock()) return null;
     const buffer = this.buffers.get(path) || await this.loadBuffer(path);
@@ -217,7 +217,7 @@ class AudioManager {
     const source = this.context.createBufferSource();
     const sourceGain = this.context.createGain();
     source.buffer = buffer;
-    source.loop = false;
+    source.loop = loop;
     sourceGain.gain.value = 1;
     source.connect(sourceGain).connect(busNode);
     let endedCallback = null;
