@@ -28,8 +28,17 @@ export function createVrAudioBridge({ manager = audioManager, warn = console.war
 
   function dispose() {
     if (disposed) return;
+    runOptional('stop VR audio', (audio) => audio.stopVrAudio());
     disposed = true;
   }
 
-  return { runOptional, dispose };
+  function prepareOneShots(paths) {
+    runOptional('prepare VR one-shots', (audio) => audio.prepareVrOneShots(paths));
+  }
+
+  function playOneShot(path, bus = 'UI') {
+    runOptional(`play ${path} on ${bus}`, (audio) => audio.playVrOneShot(path, bus));
+  }
+
+  return { runOptional, prepareOneShots, playOneShot, dispose };
 }

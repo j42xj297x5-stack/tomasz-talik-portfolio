@@ -36,6 +36,7 @@ const GLYPH_EFFECTS = Object.freeze({
   'haiku-cosmos': Object.freeze({ open: 'glyphWaterOpen', close: 'glyphWaterClose' })
 });
 const AMBIENT_BY_PROGRESS_LEVEL = Object.freeze([1, 2, 3, 3, 0, 4]);
+export const VR_AUDIO_BUSES = Object.freeze(['SPACE', 'AMBIENT', 'DEVICE', 'WORLD', 'UI']);
 
 const resolveAmbientIndex = (level) => {
   const normalizedLevel = Math.min(5, Math.max(0, Math.round(Number(level) || 0)));
@@ -51,6 +52,8 @@ class AudioManager {
     this.masterNode = null;
     this.ambientBusNode = null;
     this.effectsBusNode = null;
+    this.vrBusNodes = new Map();
+    this.activeVrSources = new Set();
     this.ambientChannels = [];
     this.introChannel = null;
     this.buffers = new Map();
@@ -106,6 +109,12 @@ class AudioManager {
       this.masterNode = this.context.createGain();
       this.ambientBusNode = this.context.createGain();
       this.effectsBusNode = this.context.createGain();
+      VR_AUDIO_BUSES.forEach((bus) => {
+        const node = this.context.createGain();
+        node.gain.value = 1;
+        node.connect(this.masterNode);
+        this.vrBusNodes.set(bus, node);
+      });
       this.ambientBusNode.connect(this.masterNode);
       this.effectsBusNode.connect(this.masterNode);
       this.masterNode.connect(this.context.destination);
@@ -169,6 +178,50 @@ class AudioManager {
 
   preloadPools(names) {
     return Promise.allSettled(names.flatMap((name) => EFFECT_PATHS[name].map((path) => this.loadBuffer(path))));
+  }
+
+  prepareVrOneShots(paths = []) {
+    return Promise.allSettled([...new Set(paths)].map((path) => this.loadBuffer(path)));
+  }
+
+  async playVrOneShot(path, bus = 'UI') {
+    if (!VR_AUDIO_BUSES.includes(bus)) {
+      console.warn(`[audio] Unknown VR audio bus: ${bus}`);
+      return;
+    }
+    if (!await this.unlock()) return;
+    const buffer = this.buffers.get(path) || await this.loadBuffer(path);
+    const busNode = this.vrBusNodes.get(bus);
+    if (!buffer || !this.context || !busNode) return;
+    const source = this.context.createBufferSource();
+    const sourceGain = this.context.createGain();
+    source.buffer = buffer;
+    sourceGain.gain.value = 1;
+    source.connect(sourceGain).connect(busNode);
+    const handle = { source, sourceGain };
+    this.activeVrSources.add(handle);
+    source.onended = () => {
+      this.activeVrSources.delete(handle);
+      try { source.disconnect(); } catch (_) { /* The optional source may already be disconnected. */ }
+      try { sourceGain.disconnect(); } catch (_) { /* The optional node may already be disconnected. */ }
+    };
+    source.start();
+  }
+
+  setVrBusGain(bus, value) {
+    if (!VR_AUDIO_BUSES.includes(bus)) return false;
+    const node = this.vrBusNodes.get(bus);
+    if (node && this.context) node.gain.setTargetAtTime(clamp01(value), this.context.currentTime, 0.025);
+    return Boolean(node);
+  }
+
+  getVrBusGains() {
+    return Object.fromEntries(VR_AUDIO_BUSES.map((bus) => [bus, this.vrBusNodes.get(bus)?.gain.value ?? 1]));
+  }
+
+  stopVrAudio() {
+    this.activeVrSources.forEach(({ source }) => { try { source.stop(); } catch (_) { /* Source may already have ended. */ } });
+    this.activeVrSources.clear();
   }
 
   async loadBuffer(path) {

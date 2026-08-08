@@ -1,16 +1,16 @@
 # Experience VR Audio Model
 
-Status: canonical, living technical model for planned Experience VR audio. Synchronized with the repository asset inventory on 2026-08-08.
+Status: canonical, living technical model for Experience VR audio. Synchronized with the first runtime audio pass on 2026-08-08.
 
 ## SUMMARY DLA ARCHITEKTA
 
-Gameplay audio for Experience VR is not implemented. The only **IMPLEMENTED** component is the fail-soft `VrAudioBridge`, which remains the mandatory gameplay → audio boundary. This document fixes the future five-bus mixer, complete 80-file MP3 inventory, threshold/subthreshold sequencing, and interaction-to-asset assignments without implementing playback, mixing, or runtime events. Assets with an assigned event are **PLANNED**, known but unmapped family capacity is **RESERVED**, and sounds without a decided VR use are **UNASSIGNED**.
+The first bounded Experience VR audio pass is **IMPLEMENTED**: the fail-soft `VrAudioBridge`, five unity-gain VR buses connected to shared Master Volume/mute, and UI one-shots for the player panel, monkey panel, and Astro Furnace panel navigation. Ambient sequencing, WORLD/DEVICE content, loops, spatial audio, and all other mapped events remain **PLANNED**; known but unmapped family capacity is **RESERVED**, and sounds without a decided VR use are **UNASSIGNED**.
 
 ## Status vocabulary and authority
 
 | Status | Meaning in this document |
 | --- | --- |
-| **IMPLEMENTED** | Behavior exists in the current runtime. At present this applies only to the fail-soft `VrAudioBridge`, not to VR gameplay playback. |
+| **IMPLEMENTED** | Behavior exists in the current runtime. This currently covers the bridge, five-bus mixer, and the first UI one-shot package. |
 | **PLANNED** | An existing asset has an explicitly assigned future VR event or sequence role. It does **not** mean playback exists. |
 | **RESERVED** | The family/layer function is known, but no event or concrete mapping has been assigned yet. |
 | **UNASSIGNED** | No VR use has been decided. |
@@ -19,9 +19,9 @@ This is the main source for **Experience VR audio** tasks. The general [`AUDIO_R
 
 ## Runtime boundary and mixer contract
 
-`VrAudioBridge` is **IMPLEMENTED** and remains the mandatory fail-soft boundary from gameplay to optional audio. Future audio requests must cross `runOptional(operation, request)`: an audio failure may warn, but must never block or fail gameplay. The bridge stores no gameplay state. No VR gameplay playback calls, mixer buses, or audio events are currently implemented.
+`VrAudioBridge` is **IMPLEMENTED** and remains the mandatory fail-soft boundary from gameplay to optional audio. Requests use its small prepare/play helpers, which retain the `runOptional(operation, request)` failure boundary: an audio failure may warn, but must never block or fail gameplay. The bridge stores no gameplay state and stops active VR one-shots on disposal.
 
-The future VR mixer has five independently tunable gain buses:
+The VR mixer has five **IMPLEMENTED**, independently tunable gain buses:
 
 | Bus | Responsibility | Asset families |
 | --- | --- | --- |
@@ -31,7 +31,7 @@ The future VR mixer has five independently tunable gain buses:
 | `WORLD` | short world sounds | `creating_*`, `floor_panel_activate`, `glif_*`, `reliquiary_consume`, `monkey_thinking_01` |
 | `UI` | panels | `bell_*`, `click_panel_01`, `panel_sound_*`, `panel_sound_long_*`, `turn_page_*` |
 
-Each bus has its own future gain node and all five ultimately feed the existing shared **Master Volume**. All samples are already mixed and mastered. Defaults are `source gain = 1.0` and every `VR bus gain = 1.0`. Do not add normalization, limiters, per-sample trims, or ducking. Event-specific fades below are lifecycle behavior, not mastering trims.
+Each bus has its own `GainNode` and all five feed the existing shared **Master Volume**. All samples are already mixed and mastered. Defaults are `source gain = 1.0` and every `VR bus gain = 1.0`. Do not add normalization, limiters, per-sample trims, or ducking. Event-specific fades below are lifecycle behavior, not mastering trims.
 
 ## Background sequencer
 
@@ -160,10 +160,10 @@ The inventory below contains every existing `public/audio/*.mp3` as of 2026-08-0
 | `astro_piec_work_02.mp3` | one-shot | DEVICE | proces małych glifów w Astro Piecu (TODO gameplay) | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
 | `astro_piec_work_03.mp3` | one-shot | DEVICE | proces kamieni w Astro Piecu (TODO gameplay) | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
 | `astro_piec_work_create_01.mp3` | one-shot | DEVICE | tworzenie Astro Przyciągacza lub Kuli | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
-| `bell_01.mp3` | one-shot | UI | otwarcie panelu gracza Y | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
-| `bell_02.mp3` | one-shot | UI | zamknięcie panelu gracza Y | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
+| `bell_01.mp3` | one-shot | UI | otwarcie panelu gracza Y | **IMPLEMENTED** | Playback one-shot na busie UI jest wdrożony. |
+| `bell_02.mp3` | one-shot | UI | zamknięcie panelu gracza Y | **IMPLEMENTED** | Playback one-shot na busie UI jest wdrożony. |
 | `bell_03.mp3` | one-shot | UI | — | **UNASSIGNED** | Brak ustalonego użycia VR. |
-| `click_panel_01.mp3` | one-shot | UI | klik wewnątrz panelu małpy lub gracza Y; powrót panelu Astro Pieca do menu głównego | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
+| `click_panel_01.mp3` | one-shot | UI | klik wewnątrz panelu małpy lub gracza Y; powrót panelu Astro Pieca do menu głównego | **IMPLEMENTED** | Playback one-shot na busie UI jest wdrożony. |
 | `creating_01.mp3` | one-shot | WORLD | — | **UNASSIGNED** | Dostępny; przyszłe użycie pozostaje otwarte. |
 | `creating_02.mp3` | one-shot | WORLD | — | **UNASSIGNED** | Dostępny; przyszłe użycie pozostaje otwarte. |
 | `creating_03.mp3` | one-shot | WORLD | — | **UNASSIGNED** | Dostępny; przyszłe użycie pozostaje otwarte. |
@@ -214,12 +214,12 @@ The inventory below contains every existing `public/audio/*.mp3` as of 2026-08-0
 | `noise_quiete_loop_04.mp3` | seamless loop | SPACE | globalna kolejka cichego tła między blokami progu/podprogu | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
 | `noise_quiete_loop_05.mp3` | seamless loop | SPACE | globalna kolejka cichego tła między blokami progu/podprogu | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
 | `noise_quiete_loop_07.mp3` | seamless loop | SPACE | globalna kolejka cichego tła między blokami progu/podprogu | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
-| `panel_sound_01.mp3` | one-shot | UI | otwarcie panelu Option Astro Pieca | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
-| `panel_sound_02.mp3` | one-shot | UI | wejście głębiej w panel Astro Pieca | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
+| `panel_sound_01.mp3` | one-shot | UI | otwarcie panelu Option Astro Pieca | **IMPLEMENTED** | Playback one-shot na busie UI jest wdrożony. |
+| `panel_sound_02.mp3` | one-shot | UI | wejście głębiej w panel Astro Pieca | **IMPLEMENTED** | Playback one-shot na busie UI jest wdrożony. |
 | `panel_sound_03.mp3` | one-shot | UI | — | **UNASSIGNED** | Brak ustalonego użycia VR. |
 | `panel_sound_04.mp3` | one-shot | UI | — | **UNASSIGNED** | Brak ustalonego użycia VR. |
-| `panel_sound_long_01.mp3` | one-shot | UI | otwarcie panelu małpy | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
-| `panel_sound_long_02.mp3` | one-shot | UI | zamknięcie panelu małpy | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
+| `panel_sound_long_01.mp3` | one-shot | UI | otwarcie panelu małpy | **IMPLEMENTED** | Playback one-shot na busie UI jest wdrożony. |
+| `panel_sound_long_02.mp3` | one-shot | UI | zamknięcie panelu małpy | **IMPLEMENTED** | Playback one-shot na busie UI jest wdrożony. |
 | `panel_sound_long_03.mp3` | one-shot | UI | — | **UNASSIGNED** | Brak ustalonego użycia VR. |
 | `reliquiary_consume.mp3` | one-shot | WORLD | Release/consume w relikwiarzu | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
 | `start.mp3` | one-shot | UNASSIGNED | — | **UNASSIGNED** | Brak przypisanej funkcji i warstwy VR. |
@@ -256,4 +256,4 @@ The prefix map supplies only a default classification. Every new MP3 must still 
 
 ## Implementation boundary
 
-This document defines a future contract only. It does not authorize runtime playback, mixer, event, asset creation, renaming, mastering, or spatialization changes. Implementation must preserve the shared Master Volume, the five unity-gain VR buses, source unity gain, event lifecycle semantics, and the fail-soft bridge boundary.
+This document records the implemented first UI pass and the future contract for all remaining systems. The current implementation is limited to the shared Master Volume, five unity-gain VR buses, unity-gain one-shot sources, the listed UI events, and the fail-soft bridge boundary. It does not authorize additional playback, sequencing, loops, asset creation, renaming, mastering, or spatialization changes.

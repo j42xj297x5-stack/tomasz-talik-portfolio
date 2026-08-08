@@ -65,6 +65,13 @@ const COPY = {
 const language = document.documentElement.lang === 'pl' ? 'pl' : 'en';
 const copy = COPY[language];
 const vrAudio = createVrAudioBridge();
+const VR_UI_AUDIO = Object.freeze({
+  playerOpen: '/audio/bell_01.mp3', playerClose: '/audio/bell_02.mp3', click: '/audio/click_panel_01.mp3',
+  monkeyOpen: '/audio/panel_sound_long_01.mp3', monkeyClose: '/audio/panel_sound_long_02.mp3',
+  furnaceOpen: '/audio/panel_sound_01.mp3', furnaceDeeper: '/audio/panel_sound_02.mp3'
+});
+vrAudio.prepareOneShots(Object.values(VR_UI_AUDIO));
+const playVrUi = (path) => vrAudio.playOneShot(path, 'UI');
 app.innerHTML = `
   <main class="vr-runtime" aria-labelledby="vr-runtime-title">
     <canvas id="vr-scene-canvas" class="vr-runtime__canvas"></canvas>
@@ -272,7 +279,9 @@ const playerGuidePanel = createVrPlayerGuidePanel({
   leftGrip: vrControllers.controllers[0]?.grip,
   semanticInput,
   locale: language,
-  settings: settings.playerGuidePanel
+  settings: settings.playerGuidePanel,
+  onOpenChange: (open) => playVrUi(open ? VR_UI_AUDIO.playerOpen : VR_UI_AUDIO.playerClose),
+  onPanelClick: () => playVrUi(VR_UI_AUDIO.click)
 });
 const monkeyGuide = createVrMonkeyGuide({
   monkeyAnchor,
@@ -280,6 +289,8 @@ const monkeyGuide = createVrMonkeyGuide({
   progressionController,
   locale: language,
   settings: settings.monkeyGuide,
+  onOpenChange: (open) => playVrUi(open ? VR_UI_AUDIO.monkeyOpen : VR_UI_AUDIO.monkeyClose),
+  onPanelClick: () => playVrUi(VR_UI_AUDIO.click),
   isOrdinaryRayAvailable: (record) => !(record.handedness === 'right'
     && handModeController.getRightMode() === 'ASTRO_ATTRACTOR')
     && !(asterionSphereQa && asterionSphere.isEquipped() && record.handedness === 'left')
@@ -297,7 +308,9 @@ const furnacePanel = createVrAstroFurnacePanel({
     getInsertedShellAssetId: () => astroFurnaceContentInteraction?.getInsertedShellAssetId?.() ?? null,
     getInsertedShellWireframe: () => astroFurnaceContentInteraction?.getInsertedShellWireframe?.() ?? null,
     getChamberState: () => astroFurnaceOpenInteraction?.getState?.() ?? 'CLOSED'
-  }
+  },
+  onEnterModule: () => playVrUi(VR_UI_AUDIO.furnaceDeeper),
+  onReturnHome: () => playVrUi(VR_UI_AUDIO.click)
 });
 platformFixturesRoot.attach(furnacePanel.object);
 const ordinaryFurnaceRayAvailable = (record) => !(record.handedness === 'right'
@@ -339,7 +352,8 @@ astroFurnaceOptionInteraction = createVrAstroFurnaceOptionInteraction({
   settings: settings.furnace.optionButton,
   haloSettings: { ...settings.targetHalo, ...settings.furnace.optionButton.halo },
   isOrdinaryRayAvailable: ordinaryFurnaceRayAvailable,
-  isHigherPriorityInteractionActive: (record) => furnacePanel.hasCurrentHit(record)
+  isHigherPriorityInteractionActive: (record) => furnacePanel.hasCurrentHit(record),
+  onPanelOpen: () => playVrUi(VR_UI_AUDIO.furnaceOpen)
 });
 const crystalCollection = createVrCrystalCollection({
   scene, assetManager, controllers: vrControllers.controllers, portalDisplay, insertionTarget: crystalReliquary,

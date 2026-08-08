@@ -16,7 +16,8 @@ export const asterionPreviewAnimationActive = ({ panelState, screen }) =>
 const smoothstep = (value) => value * value * (3 - 2 * value);
 export const wireframeDissolveVisible = (segment, progress) => progress < 1 && segment.dissolveOrder >= Math.max(0, progress);
 
-export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], progressionController, processSource, contentSource, settings = {} }) {
+export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], progressionController, processSource, contentSource,
+  settings = {}, onEnterModule = () => {}, onReturnHome = () => {} }) {
   const config = { width: 1.55, height: 1.05, gapFromFurnace: 0.10, verticalOffset: 0.15, yawDegrees: -12,
     canvasWidth: 1536, canvasHeight: 1024, appearDuration: 0.32, disappearDuration: 0.20,
     telemetryRefreshHz: 12, frameCornerSizePx: 28, spherePatchVisualScaleMultiplier: 1.10, accents: {}, ...settings };
@@ -210,7 +211,8 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
   function activateRegion(id) { if (id === 'module-asterion-sphere') {
     screen = ASTRO_FURNACE_PANEL_SCREENS.ASTERION_SPHERE;
     moduleListeners.forEach((listener) => listener('floor_gyroscope_sphere'));
-  } else if (id === 'back-modules') screen = ASTRO_FURNACE_PANEL_SCREENS.HOME; else return false; hoveredRegion = null; draw(); return true; }
+    onEnterModule();
+  } else if (id === 'back-modules') { screen = ASTRO_FURNACE_PANEL_SCREENS.HOME; onReturnHome(); } else return false; hoveredRegion = null; draw(); return true; }
   function updateHits() {
     let nextHover = null;
     controllers.forEach((record) => {
