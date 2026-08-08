@@ -41,13 +41,13 @@ This is a QA/prototype control system. It is not production physical constructio
 - [x] Furnace panel deterministic Asterion hologram and shell-patch assembly.
 - [x] Repeatable single-shell 18-second furnace cycle, completion-only material commit and `astro_piec_work_01.mp3` DEVICE one-shot.
 
-## Production Asterion construction — future
+## Production Asterion construction — implemented
 
-- [ ] Transfer the completed six-shell material set into a visible physical construction sequence.
-- [ ] Add the physical **UTWÓRZ** action.
-- [ ] Materialize the production luminous Asterion Sphere after the correct production gate.
-- [ ] Equip the completed production sphere as a progression-earned tool.
-- [ ] Connect production construction to progression without faking `6/6` from QA flags.
+- [x] Transfer the completed six-shell material set into a visible physical construction sequence.
+- [x] Add the physical **UTWÓRZ** action.
+- [x] Materialize the production luminous Asterion Sphere after the correct production gate.
+- [x] Equip the completed production sphere as a progression-earned tool.
+- [x] Connect production construction to progression without faking `6/6` from QA flags.
 
 The furnace material store can reach `complete=true` at `6/6`, and the panel can show a complete hologram. That does not mean a physical production Asterion Sphere exists.
 

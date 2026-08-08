@@ -92,7 +92,8 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
     settleAngularSpeedDegrees: 0.15,
     targetRingBlendResponse: 12,
     lockThresholdDegrees: 0.5,
-    lockDelaySeconds: 0.18
+    lockDelaySeconds: 0.18,
+    production: { buildDurationSeconds: 5, initialScale: 0.07, rayMaxDistance: 2.3 }
   },
   playerGuidePanel: {
     enabled: true,
@@ -431,7 +432,12 @@ export function normalizeExperienceVrSettings(candidate) {
       angularDecelerationDegrees: finiteNumber(candidate.asterionSphere?.angularDecelerationDegrees, defaults.asterionSphere.angularDecelerationDegrees, { min: 0 }),
       settleAngularSpeedDegrees: finiteNumber(candidate.asterionSphere?.settleAngularSpeedDegrees, defaults.asterionSphere.settleAngularSpeedDegrees, { min: 0 }),
       lockThresholdDegrees: finiteNumber(candidate.asterionSphere?.lockThresholdDegrees, defaults.asterionSphere.lockThresholdDegrees, { min: 0, max: 10 }),
-      lockDelaySeconds: finiteNumber(candidate.asterionSphere?.lockDelaySeconds, defaults.asterionSphere.lockDelaySeconds, { min: 0, max: 2 })
+      lockDelaySeconds: finiteNumber(candidate.asterionSphere?.lockDelaySeconds, defaults.asterionSphere.lockDelaySeconds, { min: 0, max: 2 }),
+      production: {
+        buildDurationSeconds: finiteNumber(candidate.asterionSphere?.production?.buildDurationSeconds, defaults.asterionSphere.production.buildDurationSeconds, { min: 0.1, max: 15 }),
+        initialScale: finiteNumber(candidate.asterionSphere?.production?.initialScale, defaults.asterionSphere.production.initialScale, { min: 0.01, max: 0.25 }),
+        rayMaxDistance: finiteNumber(candidate.asterionSphere?.production?.rayMaxDistance, defaults.asterionSphere.production.rayMaxDistance, { min: 0.1, max: 2.3 })
+      }
     },
     playerGuidePanel: {
       enabled: typeof candidate.playerGuidePanel?.enabled === 'boolean' ? candidate.playerGuidePanel.enabled : defaults.playerGuidePanel.enabled,

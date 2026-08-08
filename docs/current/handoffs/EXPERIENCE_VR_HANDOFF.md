@@ -9,7 +9,7 @@ Status: current implementation snapshot synchronized on 2026-08-05 after Meta Qu
 - Platform fixtures and the monkey move with `VrTiltableFloorRoot`; the glyph ring, shell field and cosmos remain world-stable.
 - `playerRig` is a passenger under `VrFloorPassengerRoot`, so camera/controllers/grips inherit the platform. There is no horizon-lock compensation.
 - Smooth locomotion follows the platform-local tangent plane, preserves local Y and enforces the snapshot `glyphOrbit.effectiveRadius` radial boundary by blocking outward movement while allowing tangent motion.
-- `?asterionSphere` enables the QA physical Asterion Sphere / Kula Asterionowa. Left X toggles `NORMAL_HAND ↔ ASTERION_SPHERE`; right A keeps the independent `NORMAL_HAND ↔ ASTRO_ATTRACTOR` toggle. Both tools can be equipped together.
+- Production Asterion is implemented: 6/6 opens `UTWÓRZ`, builds for about 5 s at `VR_FURNACE_ESSENCE_ANCHOR`, remains `AVAILABLE`, and left ordinary-ray + halo + squeeze commits `EARNED` and auto-equips it. `?asterionSphere` remains only a QA override. Left X toggles `NORMAL_HAND ↔ ASTERION_SPHERE`; right A keeps the independent `NORMAL_HAND ↔ ASTRO_ATTRACTOR` toggle. Both tools can be equipped together.
 - Asterion PREVIEW / COMMAND / CURRENT is usable for multi-step targeting. CONTROL BASE + HAND REFERENCE drive PREVIEW, trigger-held accepts PREVIEW into COMMAND, release freezes COMMAND, and CURRENT is the actual platform orientation.
 - The QA sphere visual contract is active: `inner_ring2`, `inner_ring3` and `PIV_TARGET_AXIS` show PREVIEW; `master_ring1`, `master_ring2` and `inner_ring1` show CURRENT; authored idle fan motion remains on `inner_ring2/inner_ring3`.
 - TARGET rebase is smooth through `displayPreviewQuaternion` and an approximately `0.5 s` visual rebase, so the target frame does not visually teleport after LOCK.
@@ -61,10 +61,10 @@ Validated on Meta Quest 3S for this snapshot:
 - X toggles left `NORMAL_HAND ↔ ASTERION_SPHERE`;
 - right hand remains independent for `NORMAL_HAND ↔ ASTRO_ATTRACTOR`.
 
-## Remaining production boundary
+## Production validation boundary
 
-`UTWÓRZ`, production sphere materialization, earned-sphere gating and `astro_piec_work_create_01.mp3` remain future work. A complete `6/6` hologram is not a physical production sphere.
+The implementation and automated contracts are complete. Meta Quest hardware validation remains required for the five-second materialization readability, create audio, left-ray halo/claim, first auto-equip, session interruption/re-entry and unchanged PREVIEW / COMMAND / CURRENT comfort.
 
 ## Next major stage
 
-The next larger Experience VR stage is radar/sector targeting and further use of Asterion platform control. Production Asterion construction/materialization, `UTWÓRZ`, production unlock/gating, small glyph progression, radar sectors and final radar remain future work.
+The next larger Experience VR stage is radar/sector targeting and further use of Asterion platform control. Small glyph progression, radar sectors and final radar remain future work; production Asterion construction/materialization and earned gating are implemented.

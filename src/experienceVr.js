@@ -38,6 +38,7 @@ import { createVrAstroFurnaceProgressionController } from './xr/furnace/createVr
 import { createVrAstroFurnaceContentInteraction } from './xr/furnace/createVrAstroFurnaceContentInteraction.js';
 import { createVrAsterionSphere } from './xr/asterion/createVrAsterionSphere.js';
 import { createVrAsterionGyroInteraction } from './xr/asterion/createVrAsterionGyroInteraction.js';
+import { createVrAsterionProductionController } from './xr/asterion/createVrAsterionProductionController.js';
 import { createVrPlayerGuidePanel } from './xr/guidance/createVrPlayerGuidePanel.js';
 import { createVrMonkeyGuide } from './xr/guidance/createVrMonkeyGuide.js';
 import { createVrSceneLayoutPrototype } from './xr/layout/createVrSceneLayoutPrototype.js';
@@ -73,6 +74,7 @@ const VR_AUDIO = Object.freeze({
   tierComplete: '/audio/floor_panel_activate.mp3', monkeyThinking: '/audio/monkey_thinking_01.mp3',
   chamberOpen: '/audio/astro_piec_open.mp3', chamberClose: '/audio/astro_piec_close.mp3',
   furnaceProcess: '/audio/astro_piec_work_01.mp3',
+  asterionCreate: '/audio/astro_piec_work_create_01.mp3',
   glyphProcess: '/audio/glif_hover_loop.mp3'
 });
 const GLYPH_COMPLETION_AUDIO = Object.freeze({
@@ -223,12 +225,12 @@ const asterionSphere = createVrAsterionSphere({
   model: assetManager.cloneGltfScene('vr-asterion-sphere-model'),
   animations: asterionSphereGltf?.animations ?? [],
   settings: settings.asterionSphere,
-  enabled: asterionSphereQa,
+  enabled: settings.asterionSphere.enabled,
   debug: searchParams.has('debug') || asterionSphereQa
 });
 const asterionGyroInteraction = createVrAsterionGyroInteraction({
   sphere: asterionSphere, controllers: vrControllers.controllers, progressFloor, worldRoot, renderer,
-  settings: settings.asterionSphere, enabled: asterionSphereQa
+  settings: settings.asterionSphere, enabled: settings.asterionSphere.enabled
 });
 const glyphLights = createVrGlyphLights({ nodes, settings: settings.glyphLights });
 const portalDisplay = createVrPortalDisplay({
@@ -244,6 +246,15 @@ const astroFurnace = createVrAstroFurnace({
   anchorObject: monkeyAnchor,
   portalSettings: settings.portal,
   spawnPosition: settings.spawn.position
+});
+const furnaceProgressionController = createVrAstroFurnaceProgressionController();
+const asterionProductionController = createVrAsterionProductionController({
+  progressionController: furnaceProgressionController, sphere: asterionSphere,
+  essenceAnchor: astroFurnace.nodes.VR_FURNACE_ESSENCE_ANCHOR,
+  controllers: vrControllers.controllers, settings: settings.asterionSphere.production,
+  haloSettings: settings.targetHalo,
+  onBuildStart: () => vrAudio.startAsterionCreate(),
+  onBuildStop: (cancelled) => { if (cancelled) vrAudio.stopAsterionCreate(); }
 });
 const portalCanvas = createVrSpatialPlaque({
   scene,
@@ -287,9 +298,10 @@ const handModeController = createVrHandModeController({
   attractorTool,
   asterionSphere,
   isUnlocked: () => progressionController.isTierComplete(1),
-  isAsterionAvailable: () => asterionSphereQa,
+  isAsterionAvailable: () => asterionProductionController.isEarned() || asterionSphereQa,
   isLeftToolToggleBlocked: () => playerGuidePanel.isOpen()
 });
+asterionProductionController.setHandModeController(handModeController);
 const playerGuidePanel = createVrPlayerGuidePanel({
   leftGrip: vrControllers.controllers[0]?.grip,
   semanticInput,
@@ -309,15 +321,14 @@ const monkeyGuide = createVrMonkeyGuide({
   onAttentionStart: () => playVrWorld(VR_AUDIO.monkeyThinking),
   isOrdinaryRayAvailable: (record) => !(record.handedness === 'right'
     && handModeController.getRightMode() === 'ASTRO_ATTRACTOR')
-    && !(asterionSphereQa && asterionSphere.isEquipped() && record.handedness === 'left')
+    && !(asterionSphere.isEquipped() && record.handedness === 'left')
 });
 let astroFurnaceActivateInteraction = null;
 let astroFurnaceContentInteraction = null;
 let astroFurnaceOptionInteraction = null;
-const furnaceProgressionController = createVrAstroFurnaceProgressionController();
 const furnacePanel = createVrAstroFurnacePanel({
   parent: worldRoot, furnace: astroFurnace, controllers: vrControllers.controllers,
-  progressionController: furnaceProgressionController, settings: settings.furnace.panel,
+  progressionController: furnaceProgressionController, productionController: asterionProductionController, settings: settings.furnace.panel,
   processSource: createVrAstroFurnaceProcessSource(() => astroFurnaceActivateInteraction),
   contentSource: {
     getState: () => astroFurnaceContentInteraction?.getState?.() ?? 'EMPTY',
@@ -331,7 +342,7 @@ const furnacePanel = createVrAstroFurnacePanel({
 platformFixturesRoot.attach(furnacePanel.object);
 const ordinaryFurnaceRayAvailable = (record) => !(record.handedness === 'right'
   && handModeController.getRightMode() === 'ASTRO_ATTRACTOR')
-  && !(asterionSphereQa && asterionSphere.isEquipped() && record.handedness === 'left');
+  && !(asterionSphere.isEquipped() && record.handedness === 'left');
 const astroFurnaceOpenInteraction = createVrAstroFurnaceOpenInteraction({
   furnace: astroFurnace,
   controllers: vrControllers.controllers,
@@ -384,7 +395,7 @@ const crystalCollection = createVrCrystalCollection({
   onInsertAccepted: () => playVrWorld(VR_AUDIO.reliquaryInsert),
   canGrabController: (record) => {
     if (record.handedness === 'right' && handModeController.getRightMode() === 'ASTRO_ATTRACTOR') return false;
-    if (asterionSphereQa && asterionSphere.isEquipped() && record.handedness === 'left') return false;
+    if (asterionSphere.isEquipped() && record.handedness === 'left') return false;
     if (astroFurnaceOpenInteraction.hasCurrentHit(record)) return false;
     if (astroFurnaceActivateInteraction.hasCurrentHit(record)) return false;
     if (astroFurnaceOptionInteraction.hasCurrentHit(record) || furnacePanel.hasCurrentHit(record)) return false;
@@ -585,6 +596,7 @@ function renderFrame() {
   activateButton.update(delta);
   releaseButton.update(delta);
   shellAttractorInteraction.update(delta);
+  asterionProductionController.update(delta);
   asterionSphere.update(delta);
   asterionGyroInteraction.update(delta);
   vrControllers.resolveVisualRayLength();
@@ -631,6 +643,7 @@ function handleSessionEnd() {
   vrControllers.reset();
   asterionGyroInteraction.reset();
   asterionSphere.reset();
+  asterionProductionController.resetSession();
   handModeController.reset();
   playerGuidePanel.reset();
   monkeyGuide.reset();
@@ -663,6 +676,7 @@ async function enterVr() {
   vrControllers.reset();
   asterionGyroInteraction.reset();
   asterionSphere.reset();
+  asterionProductionController.resetSession();
   handModeController.reset();
   playerGuidePanel.reset();
   monkeyGuide.reset();
@@ -724,6 +738,7 @@ async function enterVr() {
     shellAttractorInteraction.reset();
     asterionGyroInteraction.reset();
     asterionSphere.reset();
+    asterionProductionController.resetSession();
     handModeController.reset();
     playerGuidePanel.reset();
     status.textContent = copy.error;
@@ -737,6 +752,7 @@ exitButton.addEventListener('click', () => { void activeSession?.end(); });
 window.addEventListener('pagehide', () => {
   vrAudio.dispose();
   asterionGyroInteraction.dispose();
+  asterionProductionController.dispose();
   asterionSphere.dispose();
   astroFurnaceOpenInteraction.dispose();
   astroFurnaceActivateInteraction.dispose();

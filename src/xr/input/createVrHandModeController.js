@@ -83,6 +83,12 @@ export function createVrHandModeController({
     syncLeftRay();
   }
 
+  function equipLeftAsterion() {
+    if (!isAsterionAvailable() || isLeftToolToggleBlocked()) return false;
+    setLeftMode(VR_LEFT_HAND_MODES.ASTERION_SPHERE);
+    return leftMode === VR_LEFT_HAND_MODES.ASTERION_SPHERE;
+  }
+
   function reset() {
     leftMode = VR_LEFT_HAND_MODES.NORMAL_HAND;
     rightMode = VR_RIGHT_HAND_MODES.NORMAL_HAND;
@@ -104,6 +110,7 @@ export function createVrHandModeController({
     dispose,
     getMode: () => rightMode,
     getRightMode: () => rightMode,
-    getLeftMode: () => leftMode
+    getLeftMode: () => leftMode,
+    equipLeftAsterion
   };
 }

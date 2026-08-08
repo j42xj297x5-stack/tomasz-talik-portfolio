@@ -25,6 +25,8 @@ export function createVrAudioBridge({ manager = audioManager, warn = console.war
   let attractorToken = 0, attractorTimer = null;
   const FURNACE_PROCESS_PATH = '/audio/astro_piec_work_01.mp3';
   let furnaceHandle = null, furnaceToken = 0, furnacePending = false;
+  const ASTERION_CREATE_PATH = '/audio/astro_piec_work_create_01.mp3';
+  let asterionCreateHandle = null, asterionCreateToken = 0, asterionCreatePending = false;
 
   function reportFailure(operation, error) {
     try {
@@ -52,6 +54,7 @@ export function createVrAudioBridge({ manager = audioManager, warn = console.war
     stopGlyphLifecycle();
     stopAttractorLifecycle();
     stopFurnaceProcess();
+    stopAsterionCreate();
     runOptional('stop VR audio', (audio) => audio.stopVrAudio());
     disposed = true;
   }
@@ -76,6 +79,26 @@ export function createVrAudioBridge({ manager = audioManager, warn = console.war
       furnaceHandle = handle;
       handle.onEnded?.(() => { if (furnaceHandle === handle) furnaceHandle = null; });
     }).catch((error) => { if (token === furnaceToken) furnacePending = false; throw error; }));
+    return true;
+  }
+
+  function stopAsterionCreate() {
+    asterionCreateToken += 1; asterionCreatePending = false;
+    const handle = asterionCreateHandle; asterionCreateHandle = null;
+    try { handle?.stop?.(); } catch (error) { reportFailure('stop Asterion creation', error); }
+  }
+  function startAsterionCreate() {
+    if (disposed || asterionCreateHandle || asterionCreatePending) return false;
+    const token = ++asterionCreateToken; asterionCreatePending = true;
+    runOptional('start Asterion creation', (audio) => Promise.resolve(
+      audio.startVrProcessSource(ASTERION_CREATE_PATH, 'DEVICE', { loop: false })
+    ).then((handle) => {
+      asterionCreatePending = false;
+      if (!handle) return;
+      if (disposed || token !== asterionCreateToken) { handle.stop?.(); return; }
+      asterionCreateHandle = handle;
+      handle.onEnded?.(() => { if (asterionCreateHandle === handle) asterionCreateHandle = null; });
+    }).catch((error) => { if (token === asterionCreateToken) asterionCreatePending = false; throw error; }));
     return true;
   }
 
@@ -266,7 +289,7 @@ export function createVrAudioBridge({ manager = audioManager, warn = console.war
     if (completionPath) playOneShot(completionPath, 'WORLD');
   }
 
-  return { runOptional, prepareOneShots, prepareAttractorLoops, playOneShot, startFurnaceProcess, stopFurnaceProcess,
+  return { runOptional, prepareOneShots, prepareAttractorLoops, playOneShot, startFurnaceProcess, stopFurnaceProcess, startAsterionCreate, stopAsterionCreate,
     startGlyphAcquisition, missGlyphAcquisition,
     cancelGlyphAcquisition, completeGlyphAcquisition, dispose,
     startAttractor, missAttractor, cancelAttractor, handoffAttractor,
