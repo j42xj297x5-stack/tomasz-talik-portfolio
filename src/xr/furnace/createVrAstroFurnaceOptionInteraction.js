@@ -4,7 +4,7 @@ import { createVrTargetHalo } from '../createVrTargetHalo.js';
 export const ASTRO_FURNACE_ACTIVE_MODE = 'floor_gyroscope_sphere';
 
 export function createVrAstroFurnaceOptionInteraction({ furnace, panel, controllers = [], settings = {}, haloSettings = {},
-  isOrdinaryRayAvailable = () => true, isHigherPriorityInteractionActive = () => false }) {
+  isOrdinaryRayAvailable = () => true, isHigherPriorityInteractionActive = () => false, onPanelOpen = () => {} }) {
   const button = furnace?.nodes?.button_option;
   const meshes = []; button?.traverse((node) => { if (node.isMesh && node.geometry) meshes.push(node); });
   const ownedMaterials = new Set(), materials = [];
@@ -34,7 +34,8 @@ export function createVrAstroFurnaceOptionInteraction({ furnace, panel, controll
       : activeMode === null ? settings.emissionUnconfigured ?? .45 : settings.emissionInactive ?? 0);
     halo?.setVisible(any);
   }
-  function press(record) { if (disposed || !hits.get(record) || !isOrdinaryRayAvailable(record)) return false; panel.toggle(); return true; }
+  function press(record) { if (disposed || !hits.get(record) || !isOrdinaryRayAvailable(record)) return false;
+    const opening = !panel.isVisible(); panel.toggle(); if (opening) onPanelOpen(); return true; }
   function selectMode(mode) {
     if (mode !== ASTRO_FURNACE_ACTIVE_MODE) return false;
     const angle = moduleAngles[mode];

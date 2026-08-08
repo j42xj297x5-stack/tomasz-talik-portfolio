@@ -50,7 +50,8 @@ function drawWrappedText(context, text, x, y, maxWidth, lineHeight, maxLines = I
   return y;
 }
 
-export function createVrPlayerGuidePanel({ leftGrip, semanticInput, locale = 'en', settings = {} }) {
+export function createVrPlayerGuidePanel({ leftGrip, semanticInput, locale = 'en', settings = {},
+  onOpenChange = () => {}, onPanelClick = () => {} }) {
   const config = normalizeSettings(settings);
   const content = resolveVrPlayerGuideContent(locale);
   const canvas = document.createElement('canvas');
@@ -75,6 +76,7 @@ export function createVrPlayerGuidePanel({ leftGrip, semanticInput, locale = 'en
   let activeSectionId = null;
   let previousNavDirection = 0;
   let previousConfirmPressed = false;
+  let suppressOpenNotification = false;
   let disposed = false;
   let controllersImageLoaded = false;
   let controllersImageFailed = false;
@@ -173,7 +175,11 @@ export function createVrPlayerGuidePanel({ leftGrip, semanticInput, locale = 'en
     texture.needsUpdate = true;
   }
 
-  function setOpen(nextOpen) { open = Boolean(config.enabled && nextOpen); object.visible = open; draw(); }
+  function setOpen(nextOpen, { notify = true } = {}) {
+    const previous = open;
+    open = Boolean(config.enabled && nextOpen); object.visible = open; draw();
+    if (notify && !suppressOpenNotification && open !== previous) onOpenChange(open);
+  }
   function isOpen() { return open; }
   function update() {
     if (disposed) return;
@@ -183,6 +189,7 @@ export function createVrPlayerGuidePanel({ leftGrip, semanticInput, locale = 'en
         viewState = VIEW_STATE.MENU;
         activeSectionId = null;
         draw();
+        onPanelClick();
       } else {
         setOpen(!open);
       }
@@ -193,6 +200,7 @@ export function createVrPlayerGuidePanel({ leftGrip, semanticInput, locale = 'en
     if (viewState === VIEW_STATE.MENU && direction && direction !== previousNavDirection) {
       selectedIndex = (selectedIndex + (direction > 0 ? 1 : -1) + content.items.length) % content.items.length;
       draw();
+      onPanelClick();
     }
     previousNavDirection = direction;
     const confirmPressed = Boolean(input.toggleLeftTool);
@@ -201,11 +209,13 @@ export function createVrPlayerGuidePanel({ leftGrip, semanticInput, locale = 'en
         activeSectionId = content.items[selectedIndex]?.id ?? activeSectionId;
         viewState = VIEW_STATE.DETAIL;
         draw();
+        onPanelClick();
       }
     }
     previousConfirmPressed = confirmPressed;
   }
-  function reset() { selectedIndex = 0; viewState = VIEW_STATE.MENU; activeSectionId = null; previousNavDirection = 0; previousConfirmPressed = false; setOpen(false); }
+  function reset() { selectedIndex = 0; viewState = VIEW_STATE.MENU; activeSectionId = null; previousNavDirection = 0; previousConfirmPressed = false;
+    suppressOpenNotification = true; setOpen(false); suppressOpenNotification = false; }
   function dispose() {
     if (disposed) return;
     disposed = true;

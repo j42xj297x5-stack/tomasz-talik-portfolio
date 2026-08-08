@@ -97,7 +97,7 @@ function createTwoSidedCanvasPlane({ name, width, height, canvasWidth, canvasHei
 
 export function createVrMonkeyGuide({
   monkeyAnchor, controllers = [], progressionController, locale = 'en', settings = {},
-  isOrdinaryRayAvailable = () => true
+  isOrdinaryRayAvailable = () => true, onOpenChange = () => {}, onPanelClick = () => {}
 }) {
   const copy = COPY[locale === 'pl' ? 'pl' : 'en'];
   const root = new THREE.Group();
@@ -380,7 +380,8 @@ export function createVrMonkeyGuide({
     elapsed = 0;
     attentionRoot.visible = true;
   }
-  function setOpen(nextOpen) {
+  function setOpen(nextOpen, { notify = true } = {}) {
+    const previous = open;
     open = Boolean(settings.enabled && nextOpen);
     dialoguePanel.group.visible = open;
     hoveredOption = null;
@@ -388,6 +389,7 @@ export function createVrMonkeyGuide({
     if (open) clearAttention();
     else { screen = VR_MONKEY_GUIDE_SCREEN.MENU; selectedPageId = null; cardPage = 0; historyPage = 0; showMessage(''); }
     drawDialogue();
+    if (notify && open !== previous) onOpenChange(open);
   }
   function close() { setOpen(false); }
   function openDialogue() { setOpen(true); }
@@ -448,7 +450,11 @@ export function createVrMonkeyGuide({
     const hit = hits.get(record);
     if (!hit) return false;
     if (hit.kind === 'monkey') { setOpen(!open); return true; }
-    return hit.region ? activateOption(hit.region.id) : false;
+    if (!hit.region) return false;
+    const closesPanel = hit.region.id === 'close';
+    const activated = activateOption(hit.region.id);
+    if (activated && !closesPanel) onPanelClick();
+    return activated;
   }
   const listeners = controllers.map((record) => {
     const listener = () => press(record);
@@ -484,7 +490,7 @@ export function createVrMonkeyGuide({
     halo.update(delta);
   }
   function reset() {
-    close();
+    setOpen(false, { notify: false });
     clearAttention();
     showMessage('');
     elapsed = 0;
