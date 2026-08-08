@@ -122,10 +122,11 @@ function buildInteractiveFurnace({ omitClip = null } = {}) {
 const controller = new THREE.Group();
 const record = { controller, handedness: 'left', currentRayLength: 3, reportRayHit() {} };
 const furnace = buildInteractiveFurnace();
+let openingStarts = 0; let closingStarts = 0;
 const interaction = createVrAstroFurnaceOpenInteraction({ furnace, controllers: [record], settings: {
   enabled: true, rayMaxDistance: 3, emissionInactive: 0, emissionHover: 1, emissionPressed: 4,
   chamber: { glassFadeStart: 0.2, glassFadeEnd: 1 }
-} });
+}, onOpeningStart: () => { openingStarts += 1; }, onClosingStart: () => { closingStarts += 1; } });
 assert.equal(interaction.getState(), ASTRO_FURNACE_STATES.CLOSED);
 assert.equal(interaction.isOpen(), false);
 assert.equal(interaction.canInsert(), false);
@@ -133,6 +134,7 @@ interaction.hits.set(record, true);
 assert.equal(interaction.press(record), true);
 assert.equal(interaction.getState(), ASTRO_FURNACE_STATES.OPENING);
 assert.equal(interaction.press(record), false, 'a second press is ignored during opening');
+assert.deepEqual([openingStarts, closingStarts], [1, 0], 'accepted opening emits one transition-start event');
 interaction.update(0.1);
 assert.ok(furnace.nodes.komora.children[0].material.opacity < 0.6);
 interaction.update(0.2);
@@ -141,11 +143,13 @@ assert.equal(interaction.canInsert(), true);
 interaction.hits.set(record, true);
 assert.equal(interaction.press(record), true);
 assert.equal(interaction.getState(), ASTRO_FURNACE_STATES.CLOSING);
+assert.deepEqual([openingStarts, closingStarts], [1, 1], 'accepted closing emits one transition-start event');
 interaction.update(0.3);
 assert.equal(interaction.getState(), ASTRO_FURNACE_STATES.CLOSED);
 assert.equal(furnace.nodes.komora.children[0].material.opacity, 0.6);
 assert.deepEqual(furnace.nodes.PIVOT_FURNACE_LATCH_LEFT.position.toArray(), [0, 0, 0]);
 interaction.reset(); interaction.reset();
+assert.deepEqual([openingStarts, closingStarts], [1, 1], 'reset emits no mechanical transition events');
 assert.equal(controller._listeners.selectstart.length, 1, 'reset does not duplicate controller listeners');
 interaction.dispose(); furnace.dispose();
 

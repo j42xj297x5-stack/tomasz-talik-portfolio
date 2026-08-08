@@ -1,16 +1,16 @@
 # Experience VR Audio Model
 
-Status: canonical, living technical model for Experience VR audio. Synchronized with the first runtime audio pass on 2026-08-08.
+Status: canonical, living technical model for Experience VR audio. Synchronized with the second runtime one-shot pass on 2026-08-08.
 
 ## SUMMARY DLA ARCHITEKTA
 
-The first bounded Experience VR audio pass is **IMPLEMENTED**: the fail-soft `VrAudioBridge`, five unity-gain VR buses connected to shared Master Volume/mute, and UI one-shots for the player panel, monkey panel, and Astro Furnace panel navigation. Ambient sequencing, WORLD/DEVICE content, loops, spatial audio, and all other mapped events remain **PLANNED**; known but unmapped family capacity is **RESERVED**, and sounds without a decided VR use are **UNASSIGNED**.
+The second bounded Experience VR one-shot pass is **IMPLEMENTED**: in addition to the fail-soft `VrAudioBridge`, five unity-gain buses and the first UI package, runtime now covers accepted reliquary insert, semantic consume commit, idempotent tier completion, a newly started monkey communication signal, and accepted Astro Furnace chamber open/close transitions. Ambient sequencing, loops, spatial audio, and all other mapped events remain **PLANNED**; known but unmapped family capacity is **RESERVED**, and sounds without a decided VR use are **UNASSIGNED**.
 
 ## Status vocabulary and authority
 
 | Status | Meaning in this document |
 | --- | --- |
-| **IMPLEMENTED** | Behavior exists in the current runtime. This currently covers the bridge, five-bus mixer, and the first UI one-shot package. |
+| **IMPLEMENTED** | Behavior exists in the current runtime. This currently covers the bridge, five-bus mixer, the first UI package, and the six world/device one-shots listed as implemented below. |
 | **PLANNED** | An existing asset has an explicitly assigned future VR event or sequence role. It does **not** mean playback exists. |
 | **RESERVED** | The family/layer function is known, but no event or concrete mapping has been assigned yet. |
 | **UNASSIGNED** | No VR use has been decided. |
@@ -103,16 +103,16 @@ Each shorthand above denotes `glif_<element>_4s_<NN>.mp3`. `glif_earth_4s_04.mp3
 
 ### Reliquary
 
-- Insert crystal → `turn_page_01.mp3`.
-- Release/consume → `reliquiary_consume.mp3`.
-- A Release that completes a full threshold additionally plays `floor_panel_activate.mp3`.
+- A physical crystal actually accepted by the reliquary → `turn_page_01.mp3` on `WORLD`, exactly once; hover, volume entry without acceptance, rejection, and reset are silent.
+- Release after Activate whose idempotent progression commit succeeds → `reliquiary_consume.mp3` on `WORLD`; Release without Activate returns the crystal silently.
+- The same commit, when the progression controller reports real tier completion, additionally plays `floor_panel_activate.mp3` on `WORLD`, after `reliquiary_consume`; audio does not calculate or own progression state.
 
 ### Astro Furnace
 
 - Open Option panel → `panel_sound_01.mp3`.
 - Enter deeper → `panel_sound_02.mp3`.
 - Return to main menu → `click_panel_01.mp3`.
-- Chamber open / close → `astro_piec_open.mp3` / `astro_piec_close.mp3`.
+- Accepted transition start `CLOSED → OPENING` / `OPEN → CLOSING` → `astro_piec_open.mp3` / `astro_piec_close.mp3` on `DEVICE`, once per transition; blocked presses, stable requested states, animation frames, and reset are silent.
 - Shell process → `astro_piec_work_01.mp3`.
 - Small-glyph process → `astro_piec_work_02.mp3` (**TODO gameplay**).
 - Stone process → `astro_piec_work_03.mp3` (**TODO gameplay**).
@@ -120,7 +120,7 @@ Each shorthand above denotes `glif_<element>_4s_<NN>.mp3`. `glif_earth_4s_04.mp3
 
 ### Monkey and panels
 
-- Monkey communication / arcs above its head → `monkey_thinking_01.mp3`.
+- A new monkey communication signal that starts the three attention arcs → `monkey_thinking_01.mp3` on `WORLD`, once at signal start; pulses/redraws and repeated notification while the same signal remains pending are silent.
 - Monkey panel: open → `panel_sound_long_01.mp3`; close → `panel_sound_long_02.mp3`; internal click → `click_panel_01.mp3`.
 - Player Y panel: open → `bell_01.mp3`; close → `bell_02.mp3`; internal click → `click_panel_01.mp3`.
 
@@ -154,8 +154,8 @@ The inventory below contains every existing `public/audio/*.mp3` as of 2026-08-0
 | `ambient_loop_02.mp3` | seamless loop | AMBIENT | — | **RESERVED** | Rodzina podprogów znana; event/mapping nieustalony. |
 | `ambient_loop_03.mp3` | seamless loop | AMBIENT | — | **RESERVED** | Rodzina podprogów znana; event/mapping nieustalony. |
 | `ambient_loop_04.mp3` | seamless loop | AMBIENT | — | **RESERVED** | Rodzina podprogów znana; event/mapping nieustalony. |
-| `astro_piec_close.mp3` | one-shot | DEVICE | zamknięcie komory Astro Pieca | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
-| `astro_piec_open.mp3` | one-shot | DEVICE | otwarcie komory Astro Pieca | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
+| `astro_piec_close.mp3` | one-shot | DEVICE | zamknięcie komory Astro Pieca | **IMPLEMENTED** | Playback one-shot jest wdrożony zgodnie z semantyką eventu powyżej. |
+| `astro_piec_open.mp3` | one-shot | DEVICE | otwarcie komory Astro Pieca | **IMPLEMENTED** | Playback one-shot jest wdrożony zgodnie z semantyką eventu powyżej. |
 | `astro_piec_work_01.mp3` | one-shot | DEVICE | proces skorup w Astro Piecu | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
 | `astro_piec_work_02.mp3` | one-shot | DEVICE | proces małych glifów w Astro Piecu (TODO gameplay) | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
 | `astro_piec_work_03.mp3` | one-shot | DEVICE | proces kamieni w Astro Piecu (TODO gameplay) | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
@@ -173,7 +173,7 @@ The inventory below contains every existing `public/audio/*.mp3` as of 2026-08-0
 | `creating_07.mp3` | one-shot | WORLD | — | **UNASSIGNED** | Dostępny; przyszłe użycie pozostaje otwarte. |
 | `creating_08.mp3` | one-shot | WORLD | — | **UNASSIGNED** | Dostępny; przyszłe użycie pozostaje otwarte. |
 | `creating_short_01.mp3` | one-shot | WORLD | — | **UNASSIGNED** | Dostępny; przyszłe użycie pozostaje otwarte. |
-| `floor_panel_activate.mp3` | one-shot | WORLD | dodatkowo po Release kończącym pełny próg | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
+| `floor_panel_activate.mp3` | one-shot | WORLD | dodatkowo po Release kończącym pełny próg | **IMPLEMENTED** | Playback one-shot jest wdrożony zgodnie z semantyką eventu powyżej. |
 | `glif_earth_4s_01.mp3` | one-shot | WORLD | Ethics / Earth: kryształ 1 | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
 | `glif_earth_4s_02.mp3` | one-shot | WORLD | Ethics / Earth: kryształ 2 | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
 | `glif_earth_4s_03.mp3` | one-shot | WORLD | Ethics / Earth: kryształ 3 | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
@@ -193,7 +193,7 @@ The inventory below contains every existing `public/audio/*.mp3` as of 2026-08-0
 | `glif_water_4s_04.mp3` | one-shot | WORLD | Haiku Cosmos / Water: kryształ 4 | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
 | `glif_wood_4s_01.mp3` | one-shot | WORLD | AI Guide / Wood: kryształ 1; AI Guide / Wood: kryształ 3 | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
 | `glif_wood_4s_02.mp3` | one-shot | WORLD | AI Guide / Wood: kryształ 2 | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
-| `monkey_thinking_01.mp3` | one-shot | WORLD | komunikacja małpy / łuki nad głową | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
+| `monkey_thinking_01.mp3` | one-shot | WORLD | komunikacja małpy / łuki nad głową | **IMPLEMENTED** | Playback one-shot jest wdrożony zgodnie z semantyką eventu powyżej. |
 | `noise_laud_loop_01.mp3` | seamless loop | DEVICE | Astro Przyciągacz: małe glify | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
 | `noise_laud_loop_02.mp3` | seamless loop | DEVICE | Astro Przyciągacz: skorupy | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
 | `noise_laud_loop_03.mp3` | seamless loop | DEVICE | Astro Przyciągacz: duże glify | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
@@ -221,9 +221,9 @@ The inventory below contains every existing `public/audio/*.mp3` as of 2026-08-0
 | `panel_sound_long_01.mp3` | one-shot | UI | otwarcie panelu małpy | **IMPLEMENTED** | Playback one-shot na busie UI jest wdrożony. |
 | `panel_sound_long_02.mp3` | one-shot | UI | zamknięcie panelu małpy | **IMPLEMENTED** | Playback one-shot na busie UI jest wdrożony. |
 | `panel_sound_long_03.mp3` | one-shot | UI | — | **UNASSIGNED** | Brak ustalonego użycia VR. |
-| `reliquiary_consume.mp3` | one-shot | WORLD | Release/consume w relikwiarzu | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
+| `reliquiary_consume.mp3` | one-shot | WORLD | Release/consume w relikwiarzu | **IMPLEMENTED** | Playback one-shot jest wdrożony zgodnie z semantyką eventu powyżej. |
 | `start.mp3` | one-shot | UNASSIGNED | — | **UNASSIGNED** | Brak przypisanej funkcji i warstwy VR. |
-| `turn_page_01.mp3` | one-shot | UI | włożenie kryształu do relikwiarza | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
+| `turn_page_01.mp3` | one-shot | WORLD | włożenie kryształu do relikwiarza | **IMPLEMENTED** | Playback one-shot jest wdrożony dla faktycznie zaakceptowanego insertu. |
 | `turn_page_02.mp3` | one-shot | UI | — | **UNASSIGNED** | Brak ustalonego użycia VR. |
 
 ## Braki / oczekiwane assety
@@ -241,7 +241,7 @@ The inventory below contains every existing `public/audio/*.mp3` as of 2026-08-0
 | `ambient_`, `ambient_loop_` | `AMBIENT` |
 | `astro_piec_`, `noise_laud_loop_` | `DEVICE` |
 | `creating_`, `floor_panel_`, `glif_`, `reliquiary_`, `monkey_` | `WORLD` |
-| `bell_`, `click_panel_`, `panel_sound_`, `panel_sound_long_`, `turn_page_` | `UI` |
+| `bell_`, `click_panel_`, `panel_sound_`, `panel_sound_long_` | `UI` |
 
 The prefix map supplies only a default classification. Every new MP3 must still be added explicitly as one inventory row and receive a status and deliberate planned use (or an explicit lack of one). Unknown prefixes remain `UNASSIGNED` until decided.
 
@@ -256,4 +256,4 @@ The prefix map supplies only a default classification. Every new MP3 must still 
 
 ## Implementation boundary
 
-This document records the implemented first UI pass and the future contract for all remaining systems. The current implementation is limited to the shared Master Volume, five unity-gain VR buses, unity-gain one-shot sources, the listed UI events, and the fail-soft bridge boundary. It does not authorize additional playback, sequencing, loops, asset creation, renaming, mastering, or spatialization changes.
+This document records the implemented UI pass plus the bounded second world/device one-shot pass and the future contract for all remaining systems. The current implementation is limited to the shared Master Volume, five unity-gain VR buses, unity-gain one-shot sources, the events explicitly marked `IMPLEMENTED`, and the fail-soft bridge boundary. It does not authorize additional playback, sequencing, loops, asset creation, renaming, mastering, or spatialization changes.

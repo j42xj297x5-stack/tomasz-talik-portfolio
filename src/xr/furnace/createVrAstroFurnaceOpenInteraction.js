@@ -37,7 +37,7 @@ function cloneBranchMaterials(root, ownedMaterials) {
 
 export function createVrAstroFurnaceOpenInteraction({
   furnace, controllers = [], settings = {}, haloSettings = {}, isOrdinaryRayAvailable = () => true,
-  canToggle = () => true, isModeActive = () => true, onOpeningStart = () => {}
+  canToggle = () => true, isModeActive = () => true, onOpeningStart = () => {}, onClosingStart = () => {}
 }) {
   const stateNames = ASTRO_FURNACE_STATES;
   const buttonNode = furnace?.nodes?.button_open;
@@ -127,9 +127,10 @@ export function createVrAstroFurnaceOpenInteraction({
   function beginTransition(nextState) {
     if (!capabilityReady || (nextState === stateNames.OPENING && state !== stateNames.CLOSED)
       || (nextState === stateNames.CLOSING && state !== stateNames.OPEN) || !canToggleCurrentState()) return false;
-    if (nextState === stateNames.OPENING) onOpeningStart();
     halo?.setVisible(false);
     state = nextState; transitionElapsed = 0; pendingMechanical.clear(); playButton();
+    if (nextState === stateNames.OPENING) onOpeningStart();
+    else onClosingStart();
     if (nextState === stateNames.CLOSING) { if (chamberNode) chamberNode.visible = chamberBaseVisible; setGlassFactor(0); }
     MECHANICAL_KEYS.forEach((key) => {
       const action = actions[key];
