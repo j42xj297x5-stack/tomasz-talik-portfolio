@@ -34,16 +34,18 @@ function harness(canGrabController = () => true) {
     portalForward: new THREE.Vector3(0, 0, 1),
     getInsertZoneWorldSphere: () => new THREE.Sphere(new THREE.Vector3(), 10),
     setInsertFeedback: (state) => { feedback.state = state; feedback.history.push(state); } };
-  const previews = []; const commits = [];
+  const previews = []; const commits = []; const inserts = [];
   const collection = createVrCrystalCollection({ scene, controllers: [record], portalDisplay, insertionTarget, settings,
     insertFeedbackSettings: { proximityRadiusMultiplier: 1.25, rejectDuration: 0.35, rejectDistance: 0.25 }, pages: experienceVrPages,
     progressionController, assetManager: { cloneGltfScene: () => new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.1, 0.1)) },
-    onPreview: (page) => previews.push(page.id), onCommit: (page) => commits.push(page.id), canGrabController });
+    onPreview: (page) => previews.push(page.id),
+    onCommit: (page, event) => commits.push({ pageId: page.id, ...event }),
+    onInsertAccepted: (instance) => inserts.push(instance.crystalId), canGrabController });
   function insert(instance) {
     collection.update(1); record.currentCrystalHit = instance; record.currentCrystalHitDistance = 0.1;
     collection.grab(record); collection.update(1); scene.updateMatrixWorld(true); collection.release(record);
   }
-  return { collection, progressionController, previews, commits, insert, record, scene, feedback };
+  return { collection, progressionController, previews, commits, inserts, insert, record, scene, feedback };
 }
 
 const stocked = harness();
@@ -74,6 +76,7 @@ stocked.record.controller.dispatchEvent({ type: 'squeezeend' });
 stocked.record.controller.position.x = 0; stocked.scene.updateMatrixWorld(true);
 assert.equal(stocked.collection.spawnOne('creative-ai', glyphFrame), null);
 stocked.insert(crystals[1]);
+assert.equal(stocked.inserts.length, 0, 'rejected insertion does not emit an accepted-insert event');
 assert.ok(stocked.feedback.history.includes('INVALID'), 'future tier shows invalid feedback before release');
 assert.equal(crystals[1].state, 'rejecting', 'future tier insertion starts controlled rejection');
 assert.equal(stocked.collection.getInsertedInstance(), null);
@@ -85,11 +88,13 @@ assert.equal(crystals[1].state, 'available', 'rejected crystal becomes available
 assert.ok(crystals[1].object.position.length() > 10, 'rejection finishes beyond the insert sphere');
 
 stocked.insert(crystals[0]);
+assert.equal(stocked.inserts.length, 1, 'accepted insertion emits exactly one semantic event');
 assert.equal(stocked.collection.activateInserted(), true);
 assert.equal(stocked.previews.length, 1);
 assert.equal(stocked.progressionController.getActivatedPageIds().length, 0, 'Activate only previews');
 assert.equal(stocked.collection.releaseInserted(), true);
 assert.equal(stocked.commits.length, 1);
+assert.equal(stocked.commits[0].tierCompleted, false, 'ordinary commit reports no tier completion');
 assert.equal(stocked.progressionController.getActivatedPageIds().length, 1, 'Release commits once');
 assert.equal(crystals[0].state, 'consuming', 'committed crystal enters consuming');
 assert.equal(stocked.collection.getInsertedInstance(), null, 'socket is free before consuming completes');

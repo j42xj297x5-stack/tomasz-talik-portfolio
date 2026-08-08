@@ -97,7 +97,8 @@ function createTwoSidedCanvasPlane({ name, width, height, canvasWidth, canvasHei
 
 export function createVrMonkeyGuide({
   monkeyAnchor, controllers = [], progressionController, locale = 'en', settings = {},
-  isOrdinaryRayAvailable = () => true, onOpenChange = () => {}, onPanelClick = () => {}
+  isOrdinaryRayAvailable = () => true, onOpenChange = () => {}, onPanelClick = () => {},
+  onAttentionStart = () => {}
 }) {
   const copy = COPY[locale === 'pl' ? 'pl' : 'en'];
   const root = new THREE.Group();
@@ -375,10 +376,11 @@ export function createVrMonkeyGuide({
     arcMaterials.forEach((material) => { material.opacity = 0; });
   }
   function notifyAttention() {
-    if (disposed) return;
+    if (disposed || attentionPending) return;
     attentionPending = true;
     elapsed = 0;
     attentionRoot.visible = true;
+    onAttentionStart();
   }
   function setOpen(nextOpen, { notify = true } = {}) {
     const previous = open;

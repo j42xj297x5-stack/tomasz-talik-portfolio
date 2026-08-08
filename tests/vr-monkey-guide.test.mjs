@@ -62,13 +62,14 @@ function createFixture(locale = 'en', configure = () => {}) {
   let rayDistance = null;
   const record = { controller, currentRayLength: 2.3, reportRayHit(distance) { rayDistance = distance; } };
   const pageIds = [];
+  let attentionStarts = 0;
   const settings = structuredClone(DEFAULT_EXPERIENCE_VR_SETTINGS.monkeyGuide);
   configure(settings);
   const guide = createVrMonkeyGuide({ monkeyAnchor, controllers: [record],
     progressionController: { getActivatedPageIds: () => [...pageIds] }, locale,
-    settings });
+    settings, onAttentionStart: () => { attentionStarts += 1; } });
   return { monkeyAnchor, monkeyGeometry, monkeyMaterial, controller, record, pageIds, guide,
-    getRayDistance: () => rayDistance };
+    getRayDistance: () => rayDistance, getAttentionStarts: () => attentionStarts };
 }
 
 const fixture = createFixture('en', (settings) => {
@@ -158,10 +159,13 @@ assert.equal(guide.getScreen(), VR_MONKEY_GUIDE_SCREEN.HISTORY, 'CARD -> HISTORY
 guide.hits.set(record, { kind: 'panel', region: { id: 'back-menu' } }); guide.press(record);
 assert.equal(guide.getScreen(), VR_MONKEY_GUIDE_SCREEN.MENU, 'HISTORY -> MENU');
 
-guide.notifyAttention(); assert.equal(guide.isAttentionPending(), true); guide.update(0.2);
+guide.notifyAttention(); guide.notifyAttention();
+assert.equal(fixture.getAttentionStarts(), 1, 'one active communication signal starts audio only once');
+assert.equal(guide.isAttentionPending(), true); guide.update(0.2);
 assert.equal(guide.attentionRoot.visible, true);
 assert.ok(new Set(guide.arcs.map(({ material }) => material.opacity)).size > 1);
 guide.open(); assert.equal(guide.isAttentionPending(), false);
+guide.notifyAttention(); assert.equal(fixture.getAttentionStarts(), 2, 'a new signal after clearing starts once');
 guide.reset(); assert.equal(guide.isOpen(), false); assert.equal(guide.getScreen(), VR_MONKEY_GUIDE_SCREEN.MENU);
 assert.equal(guide.messagePanel.group.visible, false);
 guide.dispose(); assert.equal(guide.object.parent, null);

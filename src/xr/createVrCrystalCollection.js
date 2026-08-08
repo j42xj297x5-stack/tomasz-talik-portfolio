@@ -73,7 +73,7 @@ export function getVrCrystalLayout(pageIds, settings) {
 
 export function createVrCrystalCollection({ scene, assetManager, controllers, portalDisplay, insertionTarget, settings,
   haloSettings = {}, insertFeedbackSettings = {}, pages = [], progressionController, onPreview, onCommit,
-  canGrabController = () => true }) {
+  onInsertAccepted = () => {}, canGrabController = () => true }) {
   const instances = [];
   const listeners = [];
   const heldByController = new Map();
@@ -265,6 +265,7 @@ export function createVrCrystalCollection({ scene, assetManager, controllers, po
       instance.state = 'inserted';
       instance.object.visible = true;
       insertedInstance = instance;
+      onInsertAccepted(instance);
       if (!isEffectivelyVisible(instance.object)) {
         if (!warnedFallbackAnchor) {
           console.warn('[Experience VR] Inserted crystal inherited an invisible parent; using a visible runtime fallback anchor.');
@@ -489,7 +490,7 @@ export function createVrCrystalCollection({ scene, assetManager, controllers, po
     } else {
       const page = instance.previewPage;
       if (!progressionController?.commitPage(page)) return false;
-      onCommit?.(page);
+      onCommit?.(page, { tierCompleted: progressionController.isTierComplete(page.order) });
       delete instance.previewPage;
       instance.state = 'consuming';
       instance.consumeElapsed = 0;

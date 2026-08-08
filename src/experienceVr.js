@@ -65,13 +65,18 @@ const COPY = {
 const language = document.documentElement.lang === 'pl' ? 'pl' : 'en';
 const copy = COPY[language];
 const vrAudio = createVrAudioBridge();
-const VR_UI_AUDIO = Object.freeze({
+const VR_AUDIO = Object.freeze({
   playerOpen: '/audio/bell_01.mp3', playerClose: '/audio/bell_02.mp3', click: '/audio/click_panel_01.mp3',
   monkeyOpen: '/audio/panel_sound_long_01.mp3', monkeyClose: '/audio/panel_sound_long_02.mp3',
-  furnaceOpen: '/audio/panel_sound_01.mp3', furnaceDeeper: '/audio/panel_sound_02.mp3'
+  furnaceOpen: '/audio/panel_sound_01.mp3', furnaceDeeper: '/audio/panel_sound_02.mp3',
+  reliquaryInsert: '/audio/turn_page_01.mp3', reliquaryConsume: '/audio/reliquiary_consume.mp3',
+  tierComplete: '/audio/floor_panel_activate.mp3', monkeyThinking: '/audio/monkey_thinking_01.mp3',
+  chamberOpen: '/audio/astro_piec_open.mp3', chamberClose: '/audio/astro_piec_close.mp3'
 });
-vrAudio.prepareOneShots(Object.values(VR_UI_AUDIO));
+vrAudio.prepareOneShots(Object.values(VR_AUDIO));
 const playVrUi = (path) => vrAudio.playOneShot(path, 'UI');
+const playVrWorld = (path) => vrAudio.playOneShot(path, 'WORLD');
+const playVrDevice = (path) => vrAudio.playOneShot(path, 'DEVICE');
 app.innerHTML = `
   <main class="vr-runtime" aria-labelledby="vr-runtime-title">
     <canvas id="vr-scene-canvas" class="vr-runtime__canvas"></canvas>
@@ -280,8 +285,8 @@ const playerGuidePanel = createVrPlayerGuidePanel({
   semanticInput,
   locale: language,
   settings: settings.playerGuidePanel,
-  onOpenChange: (open) => playVrUi(open ? VR_UI_AUDIO.playerOpen : VR_UI_AUDIO.playerClose),
-  onPanelClick: () => playVrUi(VR_UI_AUDIO.click)
+  onOpenChange: (open) => playVrUi(open ? VR_AUDIO.playerOpen : VR_AUDIO.playerClose),
+  onPanelClick: () => playVrUi(VR_AUDIO.click)
 });
 const monkeyGuide = createVrMonkeyGuide({
   monkeyAnchor,
@@ -289,8 +294,9 @@ const monkeyGuide = createVrMonkeyGuide({
   progressionController,
   locale: language,
   settings: settings.monkeyGuide,
-  onOpenChange: (open) => playVrUi(open ? VR_UI_AUDIO.monkeyOpen : VR_UI_AUDIO.monkeyClose),
-  onPanelClick: () => playVrUi(VR_UI_AUDIO.click),
+  onOpenChange: (open) => playVrUi(open ? VR_AUDIO.monkeyOpen : VR_AUDIO.monkeyClose),
+  onPanelClick: () => playVrUi(VR_AUDIO.click),
+  onAttentionStart: () => playVrWorld(VR_AUDIO.monkeyThinking),
   isOrdinaryRayAvailable: (record) => !(record.handedness === 'right'
     && handModeController.getRightMode() === 'ASTRO_ATTRACTOR')
     && !(asterionSphereQa && asterionSphere.isEquipped() && record.handedness === 'left')
@@ -309,8 +315,8 @@ const furnacePanel = createVrAstroFurnacePanel({
     getInsertedShellWireframe: () => astroFurnaceContentInteraction?.getInsertedShellWireframe?.() ?? null,
     getChamberState: () => astroFurnaceOpenInteraction?.getState?.() ?? 'CLOSED'
   },
-  onEnterModule: () => playVrUi(VR_UI_AUDIO.furnaceDeeper),
-  onReturnHome: () => playVrUi(VR_UI_AUDIO.click)
+  onEnterModule: () => playVrUi(VR_AUDIO.furnaceDeeper),
+  onReturnHome: () => playVrUi(VR_AUDIO.click)
 });
 platformFixturesRoot.attach(furnacePanel.object);
 const ordinaryFurnaceRayAvailable = (record) => !(record.handedness === 'right'
@@ -324,7 +330,11 @@ const astroFurnaceOpenInteraction = createVrAstroFurnaceOpenInteraction({
   isOrdinaryRayAvailable: ordinaryFurnaceRayAvailable,
   canToggle: () => !astroFurnaceActivateInteraction?.isProcessing(),
   isModeActive: () => astroFurnaceOptionInteraction?.getActiveMode?.() === ASTRO_FURNACE_ACTIVE_MODE,
-  onOpeningStart: () => astroFurnaceActivateInteraction?.releaseForOpening()
+  onOpeningStart: () => {
+    astroFurnaceActivateInteraction?.releaseForOpening();
+    playVrDevice(VR_AUDIO.chamberOpen);
+  },
+  onClosingStart: () => playVrDevice(VR_AUDIO.chamberClose)
 });
 astroFurnaceActivateInteraction = createVrAstroFurnaceActivateInteraction({
   furnace: astroFurnace,
@@ -353,12 +363,13 @@ astroFurnaceOptionInteraction = createVrAstroFurnaceOptionInteraction({
   haloSettings: { ...settings.targetHalo, ...settings.furnace.optionButton.halo },
   isOrdinaryRayAvailable: ordinaryFurnaceRayAvailable,
   isHigherPriorityInteractionActive: (record) => furnacePanel.hasCurrentHit(record),
-  onPanelOpen: () => playVrUi(VR_UI_AUDIO.furnaceOpen)
+  onPanelOpen: () => playVrUi(VR_AUDIO.furnaceOpen)
 });
 const crystalCollection = createVrCrystalCollection({
   scene, assetManager, controllers: vrControllers.controllers, portalDisplay, insertionTarget: crystalReliquary,
   settings: settings.crystals, haloSettings: settings.targetHalo, insertFeedbackSettings: settings.reliquary.insertFeedback,
   pages: experienceVrPages, progressionController,
+  onInsertAccepted: () => playVrWorld(VR_AUDIO.reliquaryInsert),
   canGrabController: (record) => {
     if (record.handedness === 'right' && handModeController.getRightMode() === 'ASTRO_ATTRACTOR') return false;
     if (asterionSphereQa && asterionSphere.isEquipped() && record.handedness === 'left') return false;
@@ -370,10 +381,12 @@ const crystalCollection = createVrCrystalCollection({
     return true;
   },
   onPreview: (page) => portalCanvas.show(resolveExperienceVrPage(page, language)),
-  onCommit: (page) => {
+  onCommit: (page, { tierCompleted }) => {
     progressFloor.activatePage(page);
-    if (progressionController.isTierComplete(page.order)) progressFloor.completeTier(page.order);
+    if (tierCompleted) progressFloor.completeTier(page.order);
     syncTierOneWorldState();
+    playVrWorld(VR_AUDIO.reliquaryConsume);
+    if (tierCompleted) playVrWorld(VR_AUDIO.tierComplete);
     monkeyGuide.notifyAttention();
   }
 });

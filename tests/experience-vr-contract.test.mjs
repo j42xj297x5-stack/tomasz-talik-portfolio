@@ -93,7 +93,7 @@ assert.doesNotMatch(crystalCollection, /currentHit\s*=/);
 assert.doesNotMatch(glyphInteraction, /SphereGeometry\(0\.31|VrEntryGlyphMarker|playerRig\.position|playerRig\.rotation/);
 assert.doesNotMatch(`${vr}\n${vrControllers}`, /XRControllerModelFactory/);
 assert.match(vr, /onPreview: \(page\) => portalCanvas\.show\(resolveExperienceVrPage\(page, language\)\)/);
-assert.match(vr, /progressFloor\.activatePage\(page\);[\s\S]*progressionController\.isTierComplete\(page\.order\)[\s\S]*progressFloor\.completeTier\(page\.order\)/);
+assert.match(vr, /onCommit: \(page, \{ tierCompleted \}\)[\s\S]*progressFloor\.activatePage\(page\);[\s\S]*if \(tierCompleted\) progressFloor\.completeTier\(page\.order\)/);
 assert.match(vr, /const monkeyModel = await loadMonkeyModel\(\{ scene: worldRoot, fallbackObject: centralPlaceholder, assetManager \}\);\nconst monkeyAnchor = monkeyModel \?\? centralPlaceholder;\nprogressFloor\.object\.attach\(monkeyAnchor\);/);
 assert.equal((vr.match(/const monkeyAnchor = monkeyModel \?\? centralPlaceholder/g) ?? []).length, 1);
 assert.doesNotMatch(vr, /progressFloor\.object\.add\(monkeyAnchor\)/);
