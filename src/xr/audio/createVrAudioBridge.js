@@ -2,7 +2,7 @@ import { audioManager } from '../../audio/audioManager.js';
 
 const WARNING_PREFIX = '[vr-audio] Optional audio operation failed:';
 
-export function createVrAudioBridge({ manager = audioManager, warn = console.warn } = {}) {
+export function createVrAudioBridge({ manager = audioManager, warn = console.warn, setTimer = setTimeout, clearTimer = clearTimeout } = {}) {
   let disposed = false;
   let glyphState = 'idle';
   let glyphId = null;
@@ -27,6 +27,11 @@ export function createVrAudioBridge({ manager = audioManager, warn = console.war
   let furnaceHandle = null, furnaceToken = 0, furnacePending = false;
   const ASTERION_CREATE_PATH = '/audio/astro_piec_work_create_01.mp3';
   let asterionCreateHandle = null, asterionCreateToken = 0, asterionCreatePending = false;
+  const ASTERION_BACKGROUND_PATH = '/audio/asterion_sphere_background.mp3';
+  const ASTERION_WORK_PATH = '/audio/asterion_sphere_work.mp3';
+  let asterionEquipped = false, asterionDriveActive = false;
+  let asterionBackgroundHandle = null, asterionBackgroundToken = 0, asterionBackgroundPending = false;
+  let asterionWorkHandle = null, asterionWorkToken = 0, asterionWorkPending = false, asterionWorkTimer = null;
 
   function reportFailure(operation, error) {
     try {
@@ -55,8 +60,78 @@ export function createVrAudioBridge({ manager = audioManager, warn = console.war
     stopAttractorLifecycle();
     stopFurnaceProcess();
     stopAsterionCreate();
+    resetAsterionSphereAudio();
     runOptional('stop VR audio', (audio) => audio.stopVrAudio());
     disposed = true;
+  }
+
+  function stopAsterionBackground() {
+    asterionBackgroundToken += 1; asterionBackgroundPending = false;
+    const handle = asterionBackgroundHandle; asterionBackgroundHandle = null;
+    try { handle?.stop?.(); } catch (error) { reportFailure('stop Asterion Sphere background', error); }
+  }
+  function startAsterionBackground() {
+    if (disposed || !asterionEquipped || asterionBackgroundHandle || asterionBackgroundPending) return;
+    const token = ++asterionBackgroundToken; asterionBackgroundPending = true;
+    runOptional('start Asterion Sphere background', (audio) => Promise.resolve(
+      audio.startVrProcessSource(ASTERION_BACKGROUND_PATH, 'DEVICE', { loop: true })
+    ).then((handle) => {
+      if (token === asterionBackgroundToken) asterionBackgroundPending = false;
+      if (!handle) return;
+      if (disposed || token !== asterionBackgroundToken || !asterionEquipped) { handle.stop?.(); return; }
+      asterionBackgroundHandle = handle;
+    }).catch((error) => { if (token === asterionBackgroundToken) asterionBackgroundPending = false; throw error; }));
+  }
+  function clearAsterionWorkTimer() {
+    if (asterionWorkTimer !== null) clearTimer(asterionWorkTimer);
+    asterionWorkTimer = null;
+  }
+  function stopAsterionWork() {
+    asterionWorkToken += 1; asterionWorkPending = false; clearAsterionWorkTimer();
+    const handle = asterionWorkHandle; asterionWorkHandle = null;
+    try { handle?.stop?.(); } catch (error) { reportFailure('stop Asterion Sphere work', error); }
+  }
+  function startAsterionWork() {
+    const wasFading = asterionWorkTimer !== null;
+    clearAsterionWorkTimer();
+    if (asterionWorkHandle) {
+      if (wasFading) {
+        try { asterionWorkHandle.rampTo?.(1, 0.1); } catch (error) { reportFailure('resume Asterion Sphere work', error); }
+      }
+      return;
+    }
+    if (disposed || !asterionEquipped || !asterionDriveActive || asterionWorkPending) return;
+    const token = ++asterionWorkToken; asterionWorkPending = true;
+    runOptional('start Asterion Sphere work', (audio) => Promise.resolve(
+      audio.startVrProcessSource(ASTERION_WORK_PATH, 'DEVICE', { loop: true })
+    ).then((handle) => {
+      if (token === asterionWorkToken) asterionWorkPending = false;
+      if (!handle) return;
+      if (disposed || token !== asterionWorkToken || !asterionEquipped || !asterionDriveActive) { handle.stop?.(); return; }
+      asterionWorkHandle = handle;
+    }).catch((error) => { if (token === asterionWorkToken) asterionWorkPending = false; throw error; }));
+  }
+  function fadeAsterionWork() {
+    if (!asterionWorkHandle || asterionWorkTimer !== null) return;
+    const handle = asterionWorkHandle;
+    try { handle.rampTo?.(0, 2); } catch (error) { reportFailure('fade Asterion Sphere work', error); }
+    asterionWorkTimer = setTimer(() => {
+      asterionWorkTimer = null;
+      if (asterionDriveActive || !asterionEquipped || asterionWorkHandle !== handle) return;
+      stopAsterionWork();
+    }, 2000);
+  }
+  function setAsterionSphereState({ equipped = false, driveActive = false } = {}) {
+    if (disposed) return;
+    const nextEquipped = Boolean(equipped), nextDriveActive = nextEquipped && Boolean(driveActive);
+    asterionEquipped = nextEquipped; asterionDriveActive = nextDriveActive;
+    if (!nextEquipped) { stopAsterionBackground(); stopAsterionWork(); return; }
+    startAsterionBackground();
+    if (nextDriveActive) startAsterionWork(); else fadeAsterionWork();
+  }
+  function resetAsterionSphereAudio() {
+    asterionEquipped = false; asterionDriveActive = false;
+    stopAsterionBackground(); stopAsterionWork();
   }
 
   function stopFurnaceProcess() {
@@ -301,7 +376,7 @@ export function createVrAudioBridge({ manager = audioManager, warn = console.war
   }
 
   return { runOptional, prepareOneShots, prepareAttractorLoops, playOneShot, startFiniteSource, startFurnaceProcess, stopFurnaceProcess, startAsterionCreate, stopAsterionCreate,
-    startGlyphAcquisition, missGlyphAcquisition,
+    startGlyphAcquisition, missGlyphAcquisition, setAsterionSphereState, resetAsterionSphereAudio,
     cancelGlyphAcquisition, completeGlyphAcquisition, dispose,
     startAttractor, missAttractor, cancelAttractor, handoffAttractor,
     get glyphAcquisitionState() { return glyphState; }, get attractorState() { return attractorState; } };

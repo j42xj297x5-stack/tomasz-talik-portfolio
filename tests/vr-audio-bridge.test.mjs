@@ -243,3 +243,65 @@ test('production Asterion create audio failure is fail-soft', async () => {
   assert.doesNotThrow(() => bridge.startAsterionCreate());
   await flush(); assert.equal(warnings.length, 1); bridge.dispose();
 });
+
+function createAsterionAudioHarness({ fail = false } = {}) {
+  const handles = [], starts = [], timers = [];
+  const manager = {
+    startVrProcessSource(path, bus, options) {
+      starts.push([path, bus, options]);
+      if (fail) return Promise.reject(new Error('decode'));
+      const handle = { path, ramps: [], stopped: 0,
+        rampTo(value, duration) { this.ramps.push([value, duration]); },
+        stop() { this.stopped += 1; } };
+      handles.push(handle); return handle;
+    }, stopVrAudio() {}
+  };
+  const bridge = createVrAudioBridge({ manager, warn: () => {},
+    setTimer(callback, delay) { const timer = { callback, delay, cleared: false }; timers.push(timer); return timer; },
+    clearTimer(timer) { timer.cleared = true; }
+  });
+  return { bridge, handles, starts, timers };
+}
+
+test('Asterion Sphere equip starts exactly one independent background loop and unequip stops it', async () => {
+  const h = createAsterionAudioHarness();
+  h.bridge.setAsterionSphereState({ equipped: true }); await flush();
+  h.bridge.setAsterionSphereState({ equipped: true }); await flush();
+  assert.deepEqual(h.starts, [['/audio/asterion_sphere_background.mp3', 'DEVICE', { loop: true }]]);
+  h.bridge.setAsterionSphereState({ equipped: false });
+  assert.equal(h.handles[0].stopped, 1);
+  h.bridge.setAsterionSphereState({ equipped: true }); await flush();
+  assert.equal(h.handles.length, 2, 'a fresh equip after cleanup creates a fresh source');
+  h.bridge.dispose();
+});
+
+test('Asterion Sphere work loop fades for two seconds and retrigger preserves its source', async () => {
+  const h = createAsterionAudioHarness();
+  h.bridge.setAsterionSphereState({ equipped: true, driveActive: true }); await flush();
+  const work = h.handles.find((handle) => handle.path === '/audio/asterion_sphere_work.mp3');
+  assert.ok(work); assert.deepEqual(h.starts.at(-1), ['/audio/asterion_sphere_work.mp3', 'DEVICE', { loop: true }]);
+  h.bridge.setAsterionSphereState({ equipped: true, driveActive: true });
+  assert.deepEqual(work.ramps, [], 'continuous active frames neither restart nor reschedule gain');
+  h.bridge.setAsterionSphereState({ equipped: true, driveActive: false });
+  assert.deepEqual(work.ramps.at(-1), [0, 2]); assert.equal(h.timers.at(-1).delay, 2000);
+  h.bridge.setAsterionSphereState({ equipped: true, driveActive: true });
+  assert.equal(h.handles.filter((handle) => handle.path === work.path).length, 1);
+  assert.equal(h.timers.at(-1).cleared, true); assert.deepEqual(work.ramps.at(-1), [1, 0.1]);
+  h.bridge.setAsterionSphereState({ equipped: true, driveActive: false });
+  const finalFade = h.timers.at(-1); finalFade.callback();
+  assert.equal(work.stopped, 1, 'source stops after the complete fade window');
+  assert.equal(h.handles[0].stopped, 0, 'trigger release does not stop the background');
+  h.bridge.dispose();
+});
+
+test('Asterion Sphere reset/dispose stop both loops and asynchronous failures remain fail-soft', async () => {
+  const h = createAsterionAudioHarness();
+  h.bridge.setAsterionSphereState({ equipped: true, driveActive: true }); await flush();
+  h.bridge.resetAsterionSphereAudio();
+  assert.ok(h.handles.every((handle) => handle.stopped === 1));
+  assert.doesNotThrow(() => { h.bridge.resetAsterionSphereAudio(); h.bridge.dispose(); h.bridge.dispose(); });
+  const failed = createAsterionAudioHarness({ fail: true });
+  assert.doesNotThrow(() => failed.bridge.setAsterionSphereState({ equipped: true, driveActive: true }));
+  await flush();
+  assert.equal(failed.handles.length, 0); failed.bridge.dispose();
+});
