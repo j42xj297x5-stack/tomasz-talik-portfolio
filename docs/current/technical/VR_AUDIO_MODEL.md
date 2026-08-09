@@ -1,10 +1,10 @@
 # Experience VR Audio Model
 
-Status: canonical, living technical model for Experience VR audio. Synchronized with the Astro Attractor DEVICE-loop pass on 2026-08-08.
+Status: canonical, living technical model for Experience VR audio synchronized on 2026-08-09.
 
 ## SUMMARY DLA ARCHITEKTA
 
-The bounded Experience VR Astro Attractor lifecycle and the Astro Furnace single-shell process audio are **IMPLEMENTED**. The furnace plays `astro_piec_work_01.mp3` exactly once on DEVICE only after an accepted cycle; it does not loop or restart and is stopped by reset/dispose through the fail-soft `VrAudioBridge`. Small/large glyph and rune-stone mappings remain **PLANNED**. The ambient sequencer, production Asterion Sphere audio, and spatial audio remain unimplemented.
+The bounded Experience VR Astro Attractor lifecycle and both Astro Furnace process sounds are **IMPLEMENTED**. Shell extraction plays `astro_piec_work_01.mp3`; production construction plays `astro_piec_work_create_01.mp3` instead, exactly once on DEVICE after an accepted cycle. Neither loops or determines gameplay timing, and reset/dispose stops it through the fail-soft `VrAudioBridge`. Small/large glyph and rune-stone mappings remain **PLANNED**. The ambient sequencer, Asterion Sphere active-control sound (`DEVICE SOUND TBD`), and spatial audio remain unimplemented.
 
 ## Status vocabulary and authority
 

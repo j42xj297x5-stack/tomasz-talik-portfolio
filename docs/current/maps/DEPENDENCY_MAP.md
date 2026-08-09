@@ -46,12 +46,13 @@ experienceVr
 │  ├─ furnace asset / platform-fixture placement
 │  ├─ open / activate / option / content interactions
 │  ├─ audit-derived patch data → Asterion sphere wireframe helper → furnace panel
-│  └─ VrAstroFurnaceProgressionController
-├─ QA Asterion Sphere behind ?asterionSphere
-   ├─ createVrAsterionSphere → left-hand equipment and ring nodes
-   └─ createVrAsterionGyroInteraction → PREVIEW / COMMAND / CURRENT + heavy angular drive
+│  ├─ VrAstroFurnaceProgressionController → 6/6
+│  └─ VrAsterionProductionController → UTWÓRZ / READY / BUILDING / AVAILABLE / EARNED
+├─ createVrAsterionSphere → production presentation + left-hand equipment on one socket/model
+├─ createVrHandModeController → earned production or ?asterionSphere QA availability
+├─ createVrAsterionGyroInteraction → PREVIEW / COMMAND / CURRENT + heavy angular drive
 └─ fail-soft VR audio boundary
-   └─ VrAudioBridge → shared audioManager (no VR gameplay audio content yet)
+   └─ VrAudioBridge → shared audioManager + optional gameplay side effects
 ```
 
 Handedness is populated after each WebXR controller `connected` event; construction does not require an initial left/right value.
@@ -132,6 +133,26 @@ open furnace → held shell reaches INSERT_VOLUME
 
 Option selection of `floor_gyroscope_sphere` is a prerequisite for Open, insertion and Activate; the initial mode is unset. The audit-to-panel path carries deterministic exported patch data only: PCA and GLB analysis remain offline.
 
+## Production Asterion flow
+
+```text
+VrAstroFurnaceProgressionController
+        ↓ 6/6
+VrAsterionProductionController
+        ↓
+VrAstroFurnaceActivateInteraction
+        ↓ ASTERION_CONSTRUCTION (shared 18 s process)
+createVrAsterionSphere presentation
+        ↓ AVAILABLE / explicit claim
+createVrHandModeController
+        ↓ EARNED
+createVrAsterionGyroInteraction
+        ↓
+VrTiltableFloorRoot
+```
+
+`VrAudioBridge` is an optional fail-soft side effect of both furnace process kinds. Production presentation and equipment reuse one Sphere socket/model but have separate lifecycle ownership. `?asterionSphere` only overrides equipment availability and never supplies progression.
+
 ## Not active dependencies
 
-Progressive sector backgrounds, central progression core, Astro B/bands, production physical Asterion Sphere construction/materialization, `UTWÓRZ`, production progression gate, radar sectors, small glyph progression, antenna, rune/Emanation Matrix processing, final radar/finale, VR gameplay audio content, durable persistence and full-game reset are not active runtime dependencies. The lifecycle-owned `VrAudioBridge` is active only as a fail-soft boundary for future optional audio side effects.
+Progressive sector backgrounds, a central progression core, Astro B/bands, radar sectors, small glyph progression, antenna, rune/Emanation Matrix processing, final radar/finale, ambient sequencing, Asterion active-control sound, spatial audio, durable persistence and full-game reset are not active runtime dependencies. Production Asterion and bounded VR gameplay audio are active; the two current hardware QA issues are physical chamber placement and contour-line continuity.

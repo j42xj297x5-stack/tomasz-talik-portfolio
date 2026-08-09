@@ -21,6 +21,7 @@
 - [`technical/AUDIO_RUNTIME_MODEL.md`](technical/AUDIO_RUNTIME_MODEL.md)
 - [`technical/GLYPH_HOVER_EFFECTS_MODEL.md`](technical/GLYPH_HOVER_EFFECTS_MODEL.md)
 - [`technical/VR_RUNTIME_MODEL.md`](technical/VR_RUNTIME_MODEL.md)
+- [`technical/VR_AUDIO_MODEL.md`](technical/VR_AUDIO_MODEL.md)
 - [`technical/VR_PROGRESS_FLOOR_MODEL.md`](technical/VR_PROGRESS_FLOOR_MODEL.md)
 - [`handoffs/EXPERIENCE_VR_HANDOFF.md`](handoffs/EXPERIENCE_VR_HANDOFF.md)
 - [`concept/EXPERIENCE_VR_GAMEPLAY_ROADMAP.md`](concept/EXPERIENCE_VR_GAMEPLAY_ROADMAP.md) — future direction with explicit implemented/planned status.

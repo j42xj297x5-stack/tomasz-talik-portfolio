@@ -1,6 +1,6 @@
 # Decision Log
 
-Status: current binding decisions organized by implementation status, not patch chronology. Synchronized on 2026-08-05.
+Status: current binding decisions organized by implementation status, not patch chronology. Synchronized on 2026-08-09.
 
 ## Implemented and binding
 
@@ -24,7 +24,7 @@ Status: current binding decisions organized by implementation status, not patch 
 2. Controller construction is valid before handedness is known; left/right resolves after WebXR `connected`.
 3. `createVrHandModeController` owns right `NORMAL_HAND ↔ ASTRO_ATTRACTOR` and left `NORMAL_HAND ↔ ASTERION_SPHERE` state.
 4. RIGHT: A toggles Astro after unlock. `NORMAL_HAND` means Astro hidden/right ordinary ray visible; `ASTRO_ATTRACTOR` means Astro visible/right ordinary ray hidden.
-5. LEFT: X toggles Asterion Sphere when `?asterionSphere` makes QA equipment available. `NORMAL_HAND` means sphere unequipped/left ordinary ray visible; `ASTERION_SPHERE` means sphere equipped/left ordinary ray hidden.
+5. LEFT: X toggles Asterion Sphere only after production `EARNED` or under the independent `?asterionSphere` QA availability override. `AVAILABLE` requires physical claim and does not unlock X. `NORMAL_HAND` means sphere unequipped/left ordinary ray visible; `ASTERION_SPHERE` means sphere equipped/left ordinary ray hidden.
 6. Left and right modes are independent; Asterion Sphere and Astro Attractor can be equipped simultaneously.
 
 ### Tier-1 Astro and shells
@@ -45,11 +45,22 @@ Status: current binding decisions organized by implementation status, not patch 
 5. A valid inserted shell remains the same physical instance at `VR_FURNACE_CONTENT_ANCHOR` and is ordinary-ray retrievable after reopening until the process begins. Insertion and closing do not commit.
 6. Progress commits only after physical visual absorption reaches `CONSUMED` and the activation process reaches `COMPLETE`. Neither condition alone is sufficient.
 7. The CanvasTexture panel is a read-only projection of furnace progression, process and transient content state; it is not a state owner.
-8. `complete=true` at `6/6` means the exact six-shell material set and its panel hologram are complete. It does not construct or materialize the production physical Asterion Sphere.
+8. `complete=true` at `6/6` opens production `READY`; it does not itself construct, claim or earn the Sphere.
 
-### QA Asterion Sphere and heavy platform drive
+### Production Asterion Sphere
 
-1. `?asterionSphere` enables QA physical Asterion/floor control only. It does not fake furnace `6/6`, does not commit shell materials and does not implement production construction.
+1. Production Asterion is made in the Astro Furnace from the six unique committed shells: `6/6 → READY → UTWÓRZ → BUILDING → AVAILABLE → explicit claim → EARNED`.
+2. `SHELL_EXTRACTION` and `ASTERION_CONSTRUCTION` share the furnace-owned authoritative 18-second, 42-RPM process driver. Construction needs no shell in the content slot and uses its dedicated create audio rather than shell-process audio.
+3. After a completed last-shell cycle, accepted `UTWÓRZ` may enter `PREPARING_CONSTRUCTION` and the authored reverse button-lock animation before `ASTERION_CONSTRUCTION / SPINUP`; preparation time is outside the 18 seconds.
+4. One `/glb/asterion_sphere.glb` socket/model serves production presentation and earned hand equipment. No second model is created on claim.
+5. Presentation and equipment lifecycles are separate: hand unequip does not clear presentation; production owns presentation cleanup and transfers the same socket on claim.
+6. Claim is explicit and requires `AVAILABLE`, an open chamber, left `NORMAL_HAND`, a real ordinary-ray hit within `2.3 m`, halo and squeeze. It commits `EARNED` and auto-equips through the hand-mode controller.
+7. `?asterionSphere` remains a QA availability override, never a `6/6`, `AVAILABLE` or `EARNED` progression source.
+8. Asterion active-control audio remains `DEVICE SOUND TBD`; no existing asset may be assigned by inference.
+
+### Asterion Sphere and heavy platform drive
+
+1. Production `EARNED` unlocks the same already-tested physical Asterion/floor control; `?asterionSphere` only bypasses availability for QA and does not fake furnace or production progress.
 2. PREVIEW is live left-hand orientation expressed through CONTROL BASE + HAND REFERENCE and visualized by `inner_ring2`, `inner_ring3` and `PIV_TARGET_AXIS` with authored idle fan preserved.
 3. COMMAND is the accepted target. Trigger-held copies PREVIEW into COMMAND; release freezes COMMAND and does not stop platform motion.
 4. CURRENT is the actual `VrTiltableFloorRoot` quaternion and is visualized by `master_ring1`, `master_ring2` and `inner_ring1`.
@@ -62,11 +73,10 @@ Status: current binding decisions organized by implementation status, not patch 
 
 1. **B will select only Astro bands already unlocked by progression. B is currently not implemented.**
 2. Planned bands remain RED/YELLOW/GREEN/BLUE/ULTRAVIOLET, but no future band implies an unrestricted global scene raycast.
-3. Production physical Asterion construction/materialization remains future, including the `UTWÓRZ` action and production equipment gating.
-4. Small glyph progression remains future after production sphere construction.
-5. Radar sectors, antenna, runes, Emanation Matrix processing, final radar/finale, audio, durable persistence and full-game reset remain future systems.
-6. The current QA/prototype movement direction is platform rotation under a world-stable glyph ring; production radar/sectors still need design and validation.
+3. Small glyph progression remains future after production sphere construction.
+4. Radar sectors, antenna, runes, Emanation Matrix processing, final radar/finale, ambient sequencing, spatial audio, Asterion active-control sound, durable persistence and full-game reset remain future systems.
+5. Platform rotation under a world-stable glyph ring is implemented; production radar/sectors still need design and validation.
 
 ## Explicit current exclusions
 
-Production physical Asterion construction, production unlock/gating, `UTWÓRZ`, small glyph progression, final radar, teleport, jump, snap turn and rigid-body physics are outside the current Experience VR contract.
+Small glyph progression, Astro B/bands, radar/sector gameplay, final radar, teleport, jump, snap turn and rigid-body physics are outside the current Experience VR contract. Current Meta Quest 3S defects in physical Sphere placement and contour continuity are implementation QA issues, not exclusions or future features.
