@@ -6,8 +6,9 @@ const REQUIRED_NODE_NAMES = Object.freeze([
   'ASTRO_FURNACE_ROOT', 'button_open', 'button_activate', 'button_option',
   'PIVOT_BUTTON_OPEN', 'PIVOT_BUTTON_ACTIVATE', 'PIVOT_BUTTON_OPTION',
   'PIVOT_FURNACE_LATCH_LEFT', 'PIVOT_FURNACE_LATCH_RIGHT', 'PIVOT_FURNACE_LATCH_TOP',
-  'PIVOT_FURNACE_LID_Z', 'PIVOT_FURNACE_CHAMBER_Z', 'PIVOT_FURNACE_PROCESS_SPIN',
-  'komora', 'pokrywa', 'zatrzask_lewy', 'zatrzask_prawy', 'zatrzask_gora', 'fire_cell',
+  'PIVOT_FURNACE_LID_Z', 'PIVOT_FURNACE_LID_PROCESS_SPIN', 'PIVOT_FURNACE_CHAMBER_Z',
+  'PIVOT_FURNACE_PROCESS_SPIN', 'komora', 'pokrywa', 'pokrywa_gora',
+  'zatrzask_lewy', 'zatrzask_prawy', 'zatrzask_gora', 'fire_cell',
   'VR_FURNACE_INSERT_VOLUME', 'VR_FURNACE_CONTENT_ANCHOR', 'VR_FURNACE_LIGHT_ORBIT',
   'VR_FURNACE_ESSENCE_ANCHOR'
 ]);
@@ -74,9 +75,9 @@ export function createVrAstroFurnace({
     optionButtonReady: hasAll(nodes, ['button_option', 'PIVOT_BUTTON_OPTION']),
     chamberAnimationReady: hasAll(nodes, [
       'PIVOT_FURNACE_LATCH_LEFT', 'PIVOT_FURNACE_LATCH_RIGHT', 'PIVOT_FURNACE_LATCH_TOP',
-      'PIVOT_FURNACE_LID_Z', 'PIVOT_FURNACE_CHAMBER_Z'
+      'PIVOT_FURNACE_LID_Z', 'PIVOT_FURNACE_CHAMBER_Z', 'pokrywa', 'pokrywa_gora'
     ]) && hasAll(clips, REQUIRED_CLIP_NAMES.slice(2)),
-    processSpinReady: Boolean(nodes.PIVOT_FURNACE_PROCESS_SPIN),
+    processSpinReady: hasAll(nodes, ['PIVOT_FURNACE_PROCESS_SPIN', 'PIVOT_FURNACE_LID_PROCESS_SPIN']),
     insertionReady: settings.content?.enabled !== false
       && hasAll(nodes, ['VR_FURNACE_INSERT_VOLUME', 'VR_FURNACE_CONTENT_ANCHOR'])
       && (Boolean(nodes.VR_FURNACE_INSERT_VOLUME.geometry) || Number(settings.content?.volumeRadius) > 0),
@@ -91,6 +92,8 @@ export function createVrAstroFurnace({
     anchorCenter: null, mirrorPosition: null, resolvedPosition: null, visibleBounds: null
   };
   let disposed = false;
+  const runtimeMaterialBranches = new WeakMap();
+  const runtimeMaterials = new Set();
   const placementListeners = new Set();
   const anchorBounds = new THREE.Box3();
   const visibleBounds = new THREE.Box3();
@@ -162,6 +165,22 @@ export function createVrAstroFurnace({
   }
 
   function update() {}
+  function ensureRuntimeMaterials(root) {
+    if (!root) return [];
+    const existing = runtimeMaterialBranches.get(root);
+    if (existing) return existing;
+    const materials = [];
+    root.traverse((node) => {
+      if (!node.isMesh || !node.material) return;
+      const source = Array.isArray(node.material) ? node.material : [node.material];
+      const clones = source.map((material) => material?.clone?.() ?? material);
+      clones.forEach((material, index) => { if (material !== source[index]) runtimeMaterials.add(material); });
+      node.material = Array.isArray(node.material) ? clones : clones[0];
+      materials.push(...clones.filter(Boolean));
+    });
+    runtimeMaterialBranches.set(root, materials);
+    return materials;
+  }
   function refreshVisibleBounds() {
     const bounds = calculateVisibleBounds();
     diagnostics.visibleBounds = bounds.isEmpty() ? null : {
@@ -174,6 +193,8 @@ export function createVrAstroFurnace({
     if (disposed) return;
     disposed = true;
     placementListeners.clear();
+    runtimeMaterials.forEach((material) => material.dispose?.());
+    runtimeMaterials.clear();
     object.visible = false;
     object.removeFromParent();
   }
@@ -199,5 +220,6 @@ export function createVrAstroFurnace({
   }
 
   return { object, model, nodes, clips, capabilities, place, update, reset, dispose, diagnostics, refreshVisibleBounds,
+    ensureRuntimeMaterials,
     subscribePlacement(listener) { placementListeners.add(listener); return () => placementListeners.delete(listener); } };
 }
