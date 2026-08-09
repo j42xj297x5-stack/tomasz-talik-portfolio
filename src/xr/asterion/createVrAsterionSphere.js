@@ -158,7 +158,8 @@ export function createVrAsterionSphere({ model, animations = [], settings, enabl
   }
   function clearPresentation() {
     if (!presentationAnchor) return;
-    restorePresentationMaterials(); object.visible = false; socket.removeFromParent(); socket.scale.setScalar(1); presentationAnchor = null;
+    restorePresentationMaterials(); object.visible = false; socket.removeFromParent(); socket.position.set(0, 0, 0);
+    socket.quaternion.identity(); socket.scale.setScalar(1); presentationAnchor = null;
   }
 
   function unequipFromHand() {

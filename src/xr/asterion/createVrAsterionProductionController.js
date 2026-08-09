@@ -7,6 +7,9 @@ export const VR_ASTERION_PRODUCTION_STATES = Object.freeze({
 });
 const CONSTRUCTION_KIND = 'ASTERION_CONSTRUCTION';
 const clamp01 = (value) => THREE.MathUtils.clamp(value, 0, 1);
+const PRESENTATION_LEVITATION_AMPLITUDE = 0.02;
+const PRESENTATION_LEVITATION_PERIOD = 2.1;
+const PRESENTATION_LEVITATION_AXIS = new THREE.Vector3(0, 1, 0);
 export const resolveAsterionFormationProgress = (constructionProgress) => clamp01((constructionProgress - 1 / 3) / (1 / 2));
 
 export function createVrAsterionProductionController({
@@ -22,7 +25,7 @@ export function createVrAsterionProductionController({
   const subscribers = new Set();
   let state = progressionController?.getAsterionSphereProgress?.().complete ? 'READY' : 'LOCKED';
   let disposed = false, committedBuilds = 0, earnedCommits = 0, modeController = handModeController;
-  let constructionProgress = 0;
+  let constructionProgress = 0, presentationElapsed = 0, presentationTarget = null;
   const sphereWasVisible = sphere?.object?.visible;
   if (sphere?.object) sphere.object.visible = true;
   const halo = sphere?.object ? createVrTargetHalo({ root: sphere.object, settings: haloSettings }) : null;
@@ -44,17 +47,27 @@ export function createVrAsterionProductionController({
   function canCreate() { return !disposed && state === 'READY' && !sphere?.isPresented?.() && contentAnchor
     && progressionController?.getAsterionSphereProgress?.().complete === true && getChamberState() === 'CLOSED'
     && getContentState() === 'EMPTY' && processDriver?.canStartConstruction?.() === true; }
+  // Every furnace-produced object is first parented to VR_FURNACE_CONTENT_ANCHOR and then
+  // positioned by the same geometry/energy-cell contract used for inserted content.
+  function presentAtFurnaceSnapTarget() {
+    if (!sphere?.presentAt?.(contentAnchor, 1, new THREE.Vector3())) return false;
+    presentationTarget = resolveFurnaceContentSnapTarget({ object: sphere.socket, visibleRoot: sphere.object,
+      anchor: contentAnchor, energyCell, contentClearance: settings.contentClearance ?? .012, centerVisibleBounds: true });
+    sphere.socket.position.copy(presentationTarget); presentationElapsed = 0;
+    return true;
+  }
+  function clearPresentation() {
+    presentationTarget = null; presentationElapsed = 0; sphere?.clearPresentation?.();
+  }
   function requestCreate() {
     syncGate(); if (!canCreate() || processDriver?.startConstruction?.() !== true) return false;
     state = 'BUILDING'; constructionProgress = 0;
-    const presentationTarget = resolveFurnaceContentSnapTarget({ object: sphere.socket, visibleRoot: sphere.object,
-      anchor: contentAnchor, energyCell, contentClearance: settings.contentClearance ?? .012, centerVisibleBounds: true });
-    sphere.presentAt(contentAnchor, .92, presentationTarget); sphere.setMaterializationProgress?.(0);
+    presentAtFurnaceSnapTarget(); sphere.setMaterializationProgress?.(0);
     onBuildStart(); emit(); return true;
   }
   function finishBuild() {
     if (disposed || state !== 'BUILDING' || constructionProgress < 1) return false;
-    sphere.setPresentationScale(1); sphere.restorePresentationMaterials?.(); state = 'AVAILABLE'; committedBuilds += 1;
+    sphere.restorePresentationMaterials?.(); state = 'AVAILABLE'; committedBuilds += 1;
     onBuildStop(false); emit(); return true;
   }
   function clearHits() { hits.forEach((_, record) => hits.set(record, false)); halo?.setVisible(false); }
@@ -76,26 +89,28 @@ export function createVrAsterionProductionController({
     if (state === 'BUILDING') {
       if (processDriver?.getProcessKind?.() === CONSTRUCTION_KIND) constructionProgress = clamp01(processDriver.getProgress?.() ?? 0);
       const formation = resolveAsterionFormationProgress(constructionProgress);
-      sphere.setMaterializationProgress?.(formation); sphere.setPresentationScale(.92 + .08 * formation);
+      sphere.setMaterializationProgress?.(formation);
       sphere.socket.rotation.y += step * (0.4 - 0.18 * constructionProgress);
       if (constructionProgress >= 1) finishBuild();
-    } else if (state === 'AVAILABLE') sphere.socket.rotation.y += step * .22;
+    } else if (state === 'AVAILABLE') {
+      presentationElapsed += step; sphere.socket.rotation.y += step * .22;
+      if (presentationTarget) sphere.socket.position.copy(presentationTarget).addScaledVector(
+        PRESENTATION_LEVITATION_AXIS, PRESENTATION_LEVITATION_AMPLITUDE * Math.sin(presentationElapsed * Math.PI * 2 / PRESENTATION_LEVITATION_PERIOD));
+    }
     updateRayHits(); halo?.update(step);
   }
   function claim(record) { if (disposed || state !== 'AVAILABLE' || getChamberState() !== 'OPEN' || record?.handedness !== 'left'
     || modeController?.getLeftMode?.() !== 'NORMAL_HAND' || !hits.get(record)) return false;
-    state = 'EARNED'; earnedCommits += 1; clearHits(); sphere.restorePresentationMaterials?.(); sphere.clearPresentation(); emit();
+    state = 'EARNED'; earnedCommits += 1; clearHits(); sphere.restorePresentationMaterials?.(); clearPresentation(); emit();
     modeController?.equipLeftAsterion?.(); return true; }
   const listeners = controllers.map((record) => { const listener = () => claim(record); record.controller.addEventListener?.('squeezestart', listener); return { record, listener }; });
-  function resetSession() { clearHits(); if (state === 'BUILDING') { sphere.restorePresentationMaterials?.(); sphere.clearPresentation(); constructionProgress = 0;
+  function resetSession() { clearHits(); if (state === 'BUILDING') { sphere.restorePresentationMaterials?.(); clearPresentation(); constructionProgress = 0;
       state = 'READY'; onBuildStop(true); emit(); }
     else if (state === 'AVAILABLE') {
-      const presentationTarget = resolveFurnaceContentSnapTarget({ object: sphere.socket, visibleRoot: sphere.object,
-        anchor: contentAnchor, energyCell, contentClearance: settings.contentClearance ?? .012, centerVisibleBounds: true });
-      sphere.presentAt(contentAnchor, 1, presentationTarget); sphere.restorePresentationMaterials?.();
-    } else sphere.clearPresentation(); }
+      presentAtFurnaceSnapTarget(); sphere.restorePresentationMaterials?.();
+    } else clearPresentation(); }
   function dispose() { if (disposed) return; disposed = true; if (state === 'BUILDING') onBuildStop(true); unsubscribeProgress();
-    listeners.forEach(({ record, listener }) => record.controller.removeEventListener?.('squeezestart', listener)); clearHits(); halo?.dispose(); sphere.restorePresentationMaterials?.(); sphere.clearPresentation(); subscribers.clear(); }
+    listeners.forEach(({ record, listener }) => record.controller.removeEventListener?.('squeezestart', listener)); clearHits(); halo?.dispose(); sphere.restorePresentationMaterials?.(); clearPresentation(); subscribers.clear(); }
   return { canCreate, requestCreate, finishBuild, claim, update, resetSession, dispose, getState: () => state, getSnapshot,
     isEarned: () => state === 'EARNED', isAvailable: () => state === 'AVAILABLE', hasCurrentHit: (record) => Boolean(hits.get(record)),
     setHandModeController: (next) => { modeController = next; }, subscribe(listener) { if (disposed || typeof listener !== 'function') return () => {};

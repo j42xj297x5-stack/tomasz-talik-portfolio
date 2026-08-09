@@ -93,7 +93,7 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
     targetRingBlendResponse: 12,
     lockThresholdDegrees: 0.5,
     lockDelaySeconds: 0.18,
-    production: { buildDurationSeconds: 18, initialScale: 0.92, rayMaxDistance: 2.3 }
+    production: { buildDurationSeconds: 18, rayMaxDistance: 2.3 }
   },
   playerGuidePanel: {
     enabled: true,
@@ -435,7 +435,6 @@ export function normalizeExperienceVrSettings(candidate) {
       lockDelaySeconds: finiteNumber(candidate.asterionSphere?.lockDelaySeconds, defaults.asterionSphere.lockDelaySeconds, { min: 0, max: 2 }),
       production: {
         buildDurationSeconds: finiteNumber(candidate.asterionSphere?.production?.buildDurationSeconds, defaults.asterionSphere.production.buildDurationSeconds, { min: 18, max: 18 }),
-        initialScale: finiteNumber(candidate.asterionSphere?.production?.initialScale, defaults.asterionSphere.production.initialScale, { min: 0.01, max: 0.25 }),
         rayMaxDistance: finiteNumber(candidate.asterionSphere?.production?.rayMaxDistance, defaults.asterionSphere.production.rayMaxDistance, { min: 0.1, max: 2.3 })
       }
     },
