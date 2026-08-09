@@ -61,10 +61,8 @@ For the active threshold, the sequence is:
 The quiet-loop cursor is global and **does not reset** when the threshold changes. The actual repository queue is:
 
 ```text
-01 → 02 → 03 → 04 → 05 → 06 → 07 → 08 → 09 → 10 → 11 → 12 → 13 → 14 → wrap
+01 → 02 → 03 → 04 → 05 → 06 → 07 → 08 → 09 → 10 → 11 → 12 → 13 → wrap
 ```
-
-The runtime queue deliberately covers all 14 positions. `noise_quiete_loop_14.mp3` is currently missing from the working-tree inventory, so its turn fails soft and the sequencer continues after the established bounded silence.
 
 ### Subthreshold override
 
@@ -106,8 +104,11 @@ Each shorthand above denotes `glif_<element>_4s_<NN>.mp3`. `glif_earth_4s_04.mp3
 ### Reliquary
 
 - A physical crystal actually accepted by the reliquary → `turn_page_01.mp3` on `WORLD`, exactly once; hover, volume entry without acceptance, rejection, and reset are silent.
+- An accepted Activate action for the currently inserted crystal → `creating_short_01.mp3` on `WORLD`, exactly once; rejected/repeated activation, hover, insertion, and reset are silent.
 - Release after Activate whose idempotent progression commit succeeds → `reliquiary_consume.mp3` on `WORLD`; Release without Activate returns the crystal silently.
 - The same commit, when the progression controller reports real tier completion, additionally plays `floor_panel_activate.mp3` on `WORLD`, after `reliquiary_consume`; audio does not calculate or own progression state.
+
+In short: insert → `turn_page_01`, activate → `creating_short_01`, consume → `reliquiary_consume`, complete → additional `floor_panel_activate`. These remain four distinct gameplay events.
 
 ### Astro Furnace
 
@@ -179,7 +180,7 @@ The inventory below contains every existing `public/audio/*.mp3` as of 2026-08-0
 | `creating_06.mp3` | one-shot | WORLD | — | **UNASSIGNED** | Dostępny; przyszłe użycie pozostaje otwarte. |
 | `creating_07.mp3` | one-shot | WORLD | — | **UNASSIGNED** | Dostępny; przyszłe użycie pozostaje otwarte. |
 | `creating_08.mp3` | one-shot | WORLD | — | **UNASSIGNED** | Dostępny; przyszłe użycie pozostaje otwarte. |
-| `creating_short_01.mp3` | one-shot | WORLD | — | **UNASSIGNED** | Dostępny; przyszłe użycie pozostaje otwarte. |
+| `creating_short_01.mp3` | one-shot | WORLD | zaakceptowana aktywacja kryształu w relikwiarzu / AKTYWUJ | **IMPLEMENTED** | Raz na faktycznie zaakceptowaną aktywację; audio nie rozstrzyga poprawności gameplayu. |
 | `floor_panel_activate.mp3` | one-shot | WORLD | dodatkowo po Release kończącym pełny próg | **IMPLEMENTED** | Playback one-shot jest wdrożony zgodnie z semantyką eventu powyżej. |
 | `glif_earth_4s_01.mp3` | one-shot | WORLD | Ethics / Earth: kryształ 1 | **IMPLEMENTED** | Playback VR jest wdrożony zgodnie z mappingiem acquisition. |
 | `glif_earth_4s_02.mp3` | one-shot | WORLD | Ethics / Earth: kryształ 2 | **IMPLEMENTED** | Playback VR jest wdrożony zgodnie z mappingiem acquisition. |
@@ -239,12 +240,6 @@ The inventory below contains every existing `public/audio/*.mp3` as of 2026-08-0
 | `start.mp3` | one-shot | UNASSIGNED | — | **UNASSIGNED** | Brak przypisanej funkcji i warstwy VR. |
 | `turn_page_01.mp3` | one-shot | WORLD | włożenie kryształu do relikwiarza | **IMPLEMENTED** | Playback one-shot jest wdrożony dla faktycznie zaakceptowanego insertu. |
 | `turn_page_02.mp3` | one-shot | UI | — | **UNASSIGNED** | Brak ustalonego użycia VR. |
-
-## Braki / oczekiwane assety
-
-| Oczekiwany asset / funkcja | Warstwa | Status | Uwagi |
-| --- | --- | --- | --- |
-| `noise_quiete_loop_14.mp3` | SPACE | **MISSING** | Runtime wymaga pozycji 14; assetu nie ma w bieżącym working tree i playback pozostaje fail-soft. |
 
 ## Prefix map for future assets
 

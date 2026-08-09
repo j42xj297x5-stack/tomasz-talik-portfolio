@@ -72,7 +72,8 @@ const VR_AUDIO = Object.freeze({
   playerOpen: '/audio/bell_01.mp3', playerClose: '/audio/bell_02.mp3', click: '/audio/click_panel_01.mp3',
   monkeyOpen: '/audio/panel_sound_long_01.mp3', monkeyClose: '/audio/panel_sound_long_02.mp3',
   furnaceOpen: '/audio/panel_sound_01.mp3', furnaceDeeper: '/audio/panel_sound_02.mp3',
-  reliquaryInsert: '/audio/turn_page_01.mp3', reliquaryConsume: '/audio/reliquiary_consume.mp3',
+  reliquaryInsert: '/audio/turn_page_01.mp3', reliquaryActivate: '/audio/creating_short_01.mp3',
+  reliquaryConsume: '/audio/reliquiary_consume.mp3',
   tierComplete: '/audio/floor_panel_activate.mp3', monkeyThinking: '/audio/monkey_thinking_01.mp3',
   chamberOpen: '/audio/astro_piec_open.mp3', chamberClose: '/audio/astro_piec_close.mp3',
   furnaceProcess: '/audio/astro_piec_work_01.mp3',
@@ -452,7 +453,11 @@ const activateButton = createVrReliquaryActivateButton({
   controllers: vrControllers.controllers,
   settings: settings.reliquary.activateButton,
   canActivate: () => crystalCollection.getInsertedInstance()?.state === 'inserted',
-  onActivate: () => crystalCollection.activateInserted()
+  onActivate: () => {
+    const accepted = crystalCollection.activateInserted();
+    if (accepted) playVrWorld(VR_AUDIO.reliquaryActivate);
+    return accepted;
+  }
 });
 const releaseButtonGltf = assetManager.getGltf('vr-crystal-reliquary-button-release-model');
 const releaseButtonModel = assetManager.cloneGltfScene('vr-crystal-reliquary-button-release-model');
