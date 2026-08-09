@@ -625,6 +625,10 @@ function renderFrame() {
   furnacePanel.update(delta);
   asterionSphere.update(delta);
   asterionGyroInteraction.update(delta);
+  vrAudio.setAsterionSphereState({
+    equipped: asterionSphere.isEquipped(),
+    driveActive: asterionGyroInteraction.isDriveActive()
+  });
   vrControllers.resolveVisualRayLength();
   glyphLights.update({
     hovered: glyphInteraction.hoveredGlyphs,
@@ -644,6 +648,7 @@ function showReadyState({ ended = false } = {}) {
 
 function handleSessionEnd() {
   ambientSequencer.reset();
+  vrAudio.resetAsterionSphereAudio();
   renderer.setAnimationLoop(null);
   clock.stop();
   activeSession = null;
@@ -680,6 +685,7 @@ function handleSessionEnd() {
 
 async function enterVr() {
   ambientSequencer.reset();
+  vrAudio.resetAsterionSphereAudio();
   if (activeSession) return;
   astroFurnace.reset();
   furnacePanel.reset();
@@ -747,6 +753,7 @@ async function enterVr() {
       try { await requestedSession.end(); } catch { /* Session may already be ending. */ }
     }
     activeSession = null;
+    vrAudio.resetAsterionSphereAudio();
     renderer.setAnimationLoop(null);
     clock.stop();
     astroFurnace.reset();

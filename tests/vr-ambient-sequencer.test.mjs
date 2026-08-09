@@ -30,11 +30,12 @@ test('full threshold follows ambient, silence, six quiet repetitions, silence an
   await h.finish(); await h.tick(); assert.equal(h.starts[2].path, '/audio/ambient_03.mp3'); h.sequencer.dispose();
 });
 
-test('quiet queue is 01,02,03,04,05,07, wraps and survives threshold changes', async () => {
+test('quiet queue is 01 through 14, wraps and survives threshold changes', async () => {
   const h = harness();
-  for (let index = 0; index < 7; index += 1) {
+  assert.deepEqual(VR_QUIET_QUEUE, Array.from({ length: 14 }, (_, index) => `/audio/noise_quiete_loop_${String(index + 1).padStart(2, '0')}.mp3`));
+  for (let index = 0; index < 15; index += 1) {
     h.sequencer.setState({ fullThreshold: index % 2 ? 2 : 1 }); await flush(); await h.finish(); await h.tick();
-    assert.equal(h.starts.at(-1).path, VR_QUIET_QUEUE[index % 6]); await h.finish(); await h.tick();
+    assert.equal(h.starts.at(-1).path, VR_QUIET_QUEUE[index % 14]); await h.finish(); await h.tick();
   }
   h.sequencer.dispose();
 });
