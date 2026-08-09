@@ -46,6 +46,7 @@ import { createVrSceneLayoutPrototype } from './xr/layout/createVrSceneLayoutPro
 import { createVrAudioBridge } from './xr/audio/createVrAudioBridge.js';
 import { createVrAmbientSequencer } from './xr/audio/createVrAmbientSequencer.js';
 import { experienceVrPages, getExperienceVrPages, resolveExperienceVrPage } from './content/experienceVrPages.js';
+import { publicPath } from './utils/publicPath.js';
 
 const app = document.querySelector('#app');
 if (!app) throw new Error('Missing #app mount element.');
@@ -55,12 +56,14 @@ const COPY = {
     title: 'Doświadczenie VR', loading: 'Przygotowywanie minimalnej sceny VR…', ready: 'Scena jest gotowa.',
     enter: 'Wejdź do VR', entering: 'Uruchamianie sesji…', exit: 'Zakończ VR', retry: 'Wejdź ponownie do VR',
     error: 'Nie udało się uruchomić sesji VR. Możesz spróbować ponownie.',
+    controllersAlt: 'Instrukcja sterowania kontrolerami VR',
     crystalInstructionTitle: 'Portal czeka', crystalInstructionBody: 'Umieść kryształ w relikwiarzu i uruchom go przyciskiem.'
   },
   en: {
     title: 'Experience VR', loading: 'Preparing the minimal VR scene…', ready: 'The scene is ready.',
     enter: 'Enter VR', entering: 'Starting session…', exit: 'Exit VR', retry: 'Enter VR again',
     error: 'The VR session could not be started. You can try again.',
+    controllersAlt: 'VR controller instructions',
     crystalInstructionTitle: 'The portal is waiting', crystalInstructionBody: 'Place a crystal in the reliquary and activate it with the button.'
   }
 };
@@ -93,12 +96,14 @@ const playVrUi = (path) => vrAudio.playOneShot(path, 'UI');
 const playVrWorld = (path) => vrAudio.playOneShot(path, 'WORLD');
 const playVrDevice = (path) => vrAudio.playOneShot(path, 'DEVICE');
 app.innerHTML = `
-  <main class="vr-runtime" aria-labelledby="vr-runtime-title">
+  <main class="vr-runtime" aria-label="${copy.title}">
     <canvas id="vr-scene-canvas" class="vr-runtime__canvas"></canvas>
     <section class="vr-runtime__controls">
-      <p class="entry-shell__eyebrow">WebXR · Meta Quest 3S</p>
-      <h1 id="vr-runtime-title" class="vr-runtime__title">${copy.title}</h1>
+      <div class="vr-runtime__controllers-visual">
+        <img src="${publicPath(`/svg/controllers_${language}.svg`)}" alt="${copy.controllersAlt}">
+      </div>
       <p class="vr-runtime__status" data-vr-status aria-live="polite">${copy.loading}</p>
+      <div class="vr-runtime__audio-slot" data-vr-audio-slot></div>
       <button class="entry-choice entry-choice--primary" type="button" data-vr-enter disabled>${copy.enter}</button>
       <button class="entry-shell__back" type="button" data-vr-exit hidden>${copy.exit}</button>
     </section>
@@ -109,6 +114,9 @@ const canvas = app.querySelector('#vr-scene-canvas');
 const status = app.querySelector('[data-vr-status]');
 const enterButton = app.querySelector('[data-vr-enter]');
 const exitButton = app.querySelector('[data-vr-exit]');
+const controls = app.querySelector('.vr-runtime__controls');
+const audioControl = document.querySelector('[data-audio-control]');
+if (audioControl) app.querySelector('[data-vr-audio-slot]').append(audioControl);
 const loadedSettings = await loadExperienceVrSettings({ debug: new URLSearchParams(location.search).has('debug') });
 const settings = loadedSettings.settings;
 const searchParams = new URLSearchParams(location.search);
@@ -645,6 +653,7 @@ function renderFrame() {
 }
 
 function showReadyState({ ended = false } = {}) {
+  controls.hidden = false;
   status.textContent = copy.ready;
   enterButton.textContent = ended ? copy.retry : copy.enter;
   enterButton.disabled = false;
@@ -750,6 +759,7 @@ async function enterVr() {
     hasEnteredSession = true;
     status.textContent = copy.ready;
     exitButton.hidden = false;
+    controls.hidden = true;
     clock.start();
     renderer.setAnimationLoop(renderFrame);
   } catch (error) {
@@ -782,6 +792,7 @@ async function enterVr() {
     asterionProductionController.resetSession();
     handModeController.reset();
     playerGuidePanel.reset();
+    controls.hidden = false;
     status.textContent = copy.error;
     enterButton.disabled = false;
     exitButton.hidden = true;
