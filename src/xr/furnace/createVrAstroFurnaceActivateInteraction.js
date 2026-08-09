@@ -154,7 +154,7 @@ export function createVrAstroFurnaceActivateInteraction({
     });
   }
   function setChamberEmission(value) {
-    const intensity = THREE.MathUtils.clamp(value, 0, 3);
+    const intensity = THREE.MathUtils.clamp(value, 0, 30);
     chamberBases.forEach(({ material }) => { material.emissiveIntensity = intensity; });
   }
   function restoreChamberMaterials() {
@@ -302,13 +302,13 @@ export function createVrAstroFurnaceActivateInteraction({
       whiteMix = 0.45 * t;
       energyIntensity = t * 0.45;
       angle += angularSpeed * delta;
-      chamberEmission = 3 * smooth(progress / chamberEmissionPeak);
+      chamberEmission = 30 * smooth(progress / chamberEmissionPeak);
     } else if (progress < steadyEnd) {
       state = states.STEADY; angularSpeed = baseSpeed; angle += angularSpeed * delta;
       emission = steadyEmission; whiteMix = 0.45;
       lightIntensity = steadyLight;
       energyIntensity = 0.55;
-      chamberEmission = 3 * smooth(progress / chamberEmissionPeak);
+      chamberEmission = 30 * smooth(progress / chamberEmissionPeak);
     } else if (progress < extractionEnd) {
       state = states.EXTRACTION;
       const phaseProgress = (progress - steadyEnd) / (extractionEnd - steadyEnd);
@@ -319,7 +319,7 @@ export function createVrAstroFurnaceActivateInteraction({
       lightIntensity = THREE.MathUtils.lerp(steadyLight, extractionLight, t);
       whiteMix = THREE.MathUtils.lerp(0.45, 0.95, t);
       energyIntensity = THREE.MathUtils.lerp(0.55, 1, t); energySpeed = 2;
-      chamberEmission = 3 * smooth(progress / chamberEmissionPeak);
+      chamberEmission = 30 * smooth(progress / chamberEmissionPeak);
     } else {
       if (previousProgress < extractionEnd || state !== states.COOLDOWN) {
         state = states.COOLDOWN; cooldownStartAngle = angle; cooldownStartSpeed = angularSpeed;
@@ -343,7 +343,7 @@ export function createVrAstroFurnaceActivateInteraction({
       lightIntensity = THREE.MathUtils.lerp(extractionLight, 0, t);
       whiteMix = THREE.MathUtils.lerp(0.95, 0, t);
       energyIntensity = 1 - t; energySpeed = THREE.MathUtils.lerp(2, 0.25, t);
-      chamberEmission = THREE.MathUtils.lerp(3, 0, t);
+      chamberEmission = THREE.MathUtils.lerp(30, 0, t);
     }
     const pulse = processRotationPulse01(angle);
     const pulseMinimum = processSettings.fireCellPulseMinEmission ?? 0.05;

@@ -219,8 +219,8 @@ activateInteraction.update(0.10);
 assert.equal(activateInteraction.getState(), ASTRO_FURNACE_PROCESS_STATES.SPINUP, 'spinup remains active before the three-second boundary');
 assert.notEqual(processFurnace.nodes.fire_cell.children[0].material.emissiveIntensity, 0.25,
   'fire cell emission responds to process speed');
-assert.ok(chamberMaterial.emissiveIntensity > 0 && chamberMaterial.emissiveIntensity <= 3,
-  'SPINUP raises chamber emissive intensity within the 0..3 contract');
+assert.ok(chamberMaterial.emissiveIntensity > 0 && chamberMaterial.emissiveIntensity <= 30,
+  'SPINUP raises chamber emissive intensity within the 0..30 contract');
 activateInteraction.update(1 / 15);
 assert.equal(activateInteraction.getState(), ASTRO_FURNACE_PROCESS_STATES.STEADY);
 assert.equal(activateInteraction.getExtractionProgress(), 0);
@@ -276,12 +276,12 @@ const beforeCooldownQuaternion = processFurnace.nodes.PIVOT_FURNACE_PROCESS_SPIN
 activateInteraction.update(.09);
 assert.ok(Math.abs(activateInteraction.getExtractionProgress() - .5) < 1e-12, '10.5 seconds maps to half of EXTRACTION');
 activateInteraction.update(1 / 6);
-assert.equal(chamberMaterial.emissiveIntensity, 3, 'chamber emission reaches its clamped maximum in late EXTRACTION');
+assert.equal(chamberMaterial.emissiveIntensity, 30, 'chamber emission reaches its clamped maximum in late EXTRACTION');
 assert.equal(activateInteraction.getState(), ASTRO_FURNACE_PROCESS_STATES.EXTRACTION);
 activateInteraction.update(1 / 12 + .000001);
 assert.equal(activateInteraction.getState(), ASTRO_FURNACE_PROCESS_STATES.COOLDOWN);
 assert.equal(activateInteraction.getExtractionProgress(), 1);
-assert.ok(chamberMaterial.emissiveIntensity >= 0 && chamberMaterial.emissiveIntensity < 3,
+assert.ok(chamberMaterial.emissiveIntensity >= 0 && chamberMaterial.emissiveIntensity < 30,
   'COOLDOWN fades chamber emission down from its clamped maximum');
 assert.equal(chamberMaterial.emissiveMap, chamberEmissiveMap, 'process updates never replace the emissive map');
 assert.ok(beforeCooldownQuaternion.angleTo(processFurnace.nodes.PIVOT_FURNACE_PROCESS_SPIN.quaternion) < Math.PI,
