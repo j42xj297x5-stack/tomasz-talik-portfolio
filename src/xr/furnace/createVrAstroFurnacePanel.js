@@ -101,7 +101,7 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
     });
     drawProcessMonitor();
     const productionState = productionController?.getState?.() ?? 'LOCKED';
-    if (productionState === 'READY') {
+    if (productionState === 'READY' && productionController?.canCreate?.() === true) {
       const create = { id: 'create-asterion', x: 930, y: 850, width: 410, height: 82, enabled: true };
       interactiveRegions.push(create); panelRect(create.x, create.y, create.width, create.height, { hovered: hoveredRegion === create.id, active: true, accentColor: accents.complete });
       text('UTWÓRZ', create.x + 118, create.y + 53, 32, accents.complete);

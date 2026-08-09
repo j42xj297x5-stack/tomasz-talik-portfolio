@@ -258,6 +258,7 @@ const asterionProductionController = createVrAsterionProductionController({
   haloSettings: settings.targetHalo,
   processDriver: {
     startConstruction: () => astroFurnaceActivateInteraction?.startConstruction?.() === true,
+    canStartConstruction: () => astroFurnaceActivateInteraction?.canStartConstruction?.() === true,
     getState: () => astroFurnaceActivateInteraction?.getState?.() ?? 'IDLE',
     getProgress: () => astroFurnaceActivateInteraction?.getProgress?.() ?? 0,
     getProcessKind: () => astroFurnaceActivateInteraction?.getProcessKind?.() ?? null

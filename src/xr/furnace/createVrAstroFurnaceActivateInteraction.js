@@ -4,7 +4,8 @@ import { resolveChamberCylinder } from './vrAstroFurnaceChamberCylinder.js';
 
 export const ASTRO_FURNACE_PROCESS_STATES = Object.freeze({
   IDLE: 'IDLE', PRESSING: 'PRESSING', SPINUP: 'SPINUP', STEADY: 'STEADY',
-  EXTRACTION: 'EXTRACTION', COOLDOWN: 'COOLDOWN', COMPLETE: 'COMPLETE'
+  EXTRACTION: 'EXTRACTION', COOLDOWN: 'COOLDOWN', COMPLETE: 'COMPLETE',
+  PREPARING_CONSTRUCTION: 'PREPARING_CONSTRUCTION'
 });
 export const ASTRO_FURNACE_PROCESS_KINDS = Object.freeze({
   SHELL_EXTRACTION: 'SHELL_EXTRACTION', ASTERION_CONSTRUCTION: 'ASTERION_CONSTRUCTION'
@@ -127,6 +128,7 @@ export function createVrAstroFurnaceActivateInteraction({
   let releasing = false;
   let processStarted = false;
   let processKind = null;
+  let preparingConstruction = false;
   let disposed = false;
 
   const setButtonEmission = (value) => buttonMaterials.forEach((material) => { material.emissiveIntensity = value; });
@@ -193,12 +195,25 @@ export function createVrAstroFurnaceActivateInteraction({
     processStarted = true; onProcessStart({ processKind });
     return true;
   }
-  function startConstruction() {
-    if (!capabilityReady || disposed || state !== states.IDLE || openInteraction?.getState?.() !== 'CLOSED'
-      || openInteraction?.isTransitioning?.()) return false;
+  function canStartConstruction() {
+    if (!capabilityReady || disposed || openInteraction?.getState?.() !== 'CLOSED' || openInteraction?.isTransitioning?.()) return false;
+    return (state === states.IDLE && processKind == null)
+      || (state === states.COMPLETE && processKind === ASTRO_FURNACE_PROCESS_KINDS.SHELL_EXTRACTION);
+  }
+  function beginConstructionProcess() {
     processKind = ASTRO_FURNACE_PROCESS_KINDS.ASTERION_CONSTRUCTION;
     state = states.SPINUP; elapsed = 0; progress = 0; angle = 0; angularSpeed = 0;
-    processStarted = true; clearHits(); onProcessStart({ processKind }); return true;
+    processStarted = true; preparingConstruction = false; clearHits(); onProcessStart({ processKind });
+  }
+  function startConstruction() {
+    if (!canStartConstruction()) return false;
+    if (state === states.COMPLETE) {
+      preparingConstruction = true; state = states.PREPARING_CONSTRUCTION; progress = 0; clearHits();
+      releasing = true; action.stop(); action.enabled = true; action.paused = false;
+      action.time = action.getClip().duration; action.timeScale = -1; action.clampWhenFinished = false; action.play();
+      return true;
+    }
+    beginConstructionProcess(); return true;
   }
   function press(record) {
     if (!hits.get(record) || !isOrdinaryRayAvailable(record)) return false;
@@ -209,8 +224,10 @@ export function createVrAstroFurnaceActivateInteraction({
     if (state === states.PRESSING && !releasing) {
       state = states.SPINUP; elapsed = 0; progress = 0; angle = 0; angularSpeed = 0;
     } else if (releasing) {
-      releasing = false; action.stop(); action.time = 0; state = states.IDLE;
+      releasing = false; action.stop(); action.time = 0;
       setButtonEmission(settings.emissionInactive ?? 0);
+      if (preparingConstruction) beginConstructionProcess();
+      else { state = states.IDLE; processKind = null; }
     }
   }
   mixer?.addEventListener('finished', onFinished);
@@ -332,12 +349,14 @@ export function createVrAstroFurnaceActivateInteraction({
     updateHits();
     const stateBeforeMixer = state;
     mixer?.update(step);
-    updateProcess(stateBeforeMixer === states.PRESSING && state === states.SPINUP ? 0 : step);
+    const processStartedAfterMixer = [states.PRESSING, states.PREPARING_CONSTRUCTION].includes(stateBeforeMixer)
+      && state === states.SPINUP;
+    updateProcess(processStartedAfterMixer ? 0 : step);
     halo?.update(step);
   }
   function reset() {
     if (processStarted) onProcessStop({ completed: false, processKind });
-    action?.stop(); mixer?.stopAllAction(); mixer?.setTime(0); releasing = false;
+    action?.stop(); mixer?.stopAllAction(); mixer?.setTime(0); releasing = false; preparingConstruction = false;
     state = states.IDLE; progress = 0; elapsed = 0; angle = 0; angularSpeed = 0;
     if (spinPivot && baseSpinQuaternion) spinPivot.quaternion.copy(baseSpinQuaternion);
     if (lid && baseLidQuaternion) lid.quaternion.copy(baseLidQuaternion);
@@ -362,10 +381,10 @@ export function createVrAstroFurnaceActivateInteraction({
     return clamp01((progress - steadyEnd) / Math.max(extractionEnd - steadyEnd, Number.EPSILON));
   };
   return {
-    mixer, action, hits, halo, processLight, energyRoot, chamberCylinder, capabilityReady, update, press, startConstruction, releaseForOpening, reset, dispose,
+    mixer, action, hits, halo, processLight, energyRoot, chamberCylinder, capabilityReady, update, press, startConstruction, canStartConstruction, releaseForOpening, reset, dispose,
     hasCurrentHit: (record) => hits.get(record) === true,
     canActivate, getState: () => state, getProgress: () => progress, getExtractionProgress, getPhase: () => state,
-    isProcessing: () => [states.PRESSING, states.SPINUP, states.STEADY, states.EXTRACTION, states.COOLDOWN].includes(state),
+    isProcessing: () => [states.PREPARING_CONSTRUCTION, states.PRESSING, states.SPINUP, states.STEADY, states.EXTRACTION, states.COOLDOWN].includes(state),
     isComplete: () => state === states.COMPLETE,
     getAngularSpeed: () => angularSpeed,
     getProcessAngle: () => angle

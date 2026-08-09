@@ -53,6 +53,8 @@ assert.equal(runtimeProcessSource.getExtractionProgress(), .5);
 assert.equal(resolveProcessTelemetry({ state: runtimeProcessSource.getState(), overallProgress: runtimeProcessSource.getProgress(), extractionProgress: runtimeProcessSource.getExtractionProgress() }).extractionProgress, .5);
 const panelSource = readFileSync(new URL('../src/xr/furnace/createVrAstroFurnacePanel.js', import.meta.url), 'utf8');
 const experienceSource = readFileSync(new URL('../src/experienceVr.js', import.meta.url), 'utf8');
+assert.match(panelSource, /productionController\?\.canCreate\?\.\(\) === true/,
+  'UTWÓRZ visual eligibility uses the production runtime contract');
 assert.match(experienceSource, /processSource: createVrAstroFurnaceProcessSource\(\(\) => astroFurnaceActivateInteraction\)/);
 assert.doesNotMatch(panelSource, /resolveAsciiFrame|PROCESS_ASCII|buildProgressBar/);
 assert.match(panelSource, /drawAsterionPreview/); assert.doesNotMatch(panelSource, /context\.ellipse/);
