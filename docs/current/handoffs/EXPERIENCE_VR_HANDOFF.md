@@ -14,6 +14,8 @@ Status: current implementation handoff synchronized on 2026-08-09. `VR_RUNTIME_M
 
 `VrProgressionController` exclusively owns portfolio-card/tier progress. Glyph hold creates branch+tier crystals; reliquary Activate previews and Release commits. Tier 1 unlocks the right-hand Astro Przyciągacz and the 18-shell field (six unique assets, three instances each). The Attractor uses analytic cone targeting, pull/cancel/return and explicit left ordinary-ray+squeeze handoff; placed shells are ordinary-ray re-grabbable but excluded from Attractor targeting.
 
+The guidance baseline is also **IMPLEMENTED**. Y opens the left-grip player reference panel. The Monkey has three attention arcs, a system-set message panel and a separate ray-interactive dialogue panel. Its current choice can ask about progress, then browse `VrProgressionController` history and read existing localized cards. Newly committed cards pulse as transient unread entries until opened. This is a technical communication surface only: authored narrative, dialogue sequence, quests, personality and stuck-player assistance remain **NOT DESIGNED / FUTURE**.
+
 ## Astro Furnace and production Asterion
 
 `VrAstroFurnaceProgressionController` separately owns the six unique Asterion shell slots. The furnace offers two implemented process kinds through one authoritative driver:
@@ -54,18 +56,18 @@ After `EARNED`, the left Sphere and right Astro Przyciągacz remain independent 
 
 ## Audio snapshot
 
-**IMPLEMENTED:** fail-soft `VrAudioBridge`; five unity-gain buses `SPACE`, `AMBIENT`, `DEVICE`, `WORLD`, `UI` feeding existing Master Volume/mute; wired UI/WORLD/DEVICE one-shots for panels, monkey, reliquary, progression and furnace; glyph `glif_hover_loop` acquisition lifecycle (1.0 s recovery, same-source reacquire, 0.1 s regain, success fade and elemental completion mapping); shell Attractor `noise_laud_loop_02.mp3` on DEVICE (true loop, 1 s recovery, 0.1 s regain, 0.5 s successful-handoff fade); furnace open/close and the two process sounds above.
+**IMPLEMENTED:** fail-soft `VrAudioBridge`; five unity-gain buses `SPACE`, `AMBIENT`, `DEVICE`, `WORLD`, `UI` feeding existing Master Volume/mute; wired UI/WORLD/DEVICE one-shots for panels, monkey, reliquary, progression and furnace; glyph `glif_hover_loop` acquisition lifecycle (1.0 s recovery, same-source reacquire, 0.1 s regain, success fade and elemental completion mapping); shell Attractor `noise_laud_loop_02.mp3` on DEVICE (true loop, 1 s recovery, 0.1 s regain, 0.5 s successful-handoff fade); furnace open/close and both process sounds; equipped/drive Asterion Sphere loops; and the composed transient ambient sequencer for tier thresholds and the completed-shell/built-Sphere subthreshold.
 
-**NOT IMPLEMENTED / PLANNED:** ambient sequencer, spatial audio, non-shell Attractor target mappings, future small-glyph/rune furnace processes. Asterion active control remains **DEVICE SOUND TBD**; no asset is assigned.
+**NOT IMPLEMENTED / PLANNED:** spatial audio, non-shell Attractor target mappings and future small-glyph/rune furnace processes.
 
 ## Meta Quest 3S hardware QA
 
 **HARDWARE VALIDATED:** `UTWÓRZ` is clickable after `6/6`; the sixth-shell transition works without manual open→close; the full 18-second construction and furnace mechanics run; the panel process works; patch sphere changes into a rotating contour blueprint; and the physical Sphere is rendered/materialized.
 
-**KNOWN QA ISSUE — PHYSICAL PLACEMENT:** the physical Sphere currently materializes **behind the Astro Furnace panel**, not at the expected location inside the chamber. Code targets `VR_FURNACE_CONTENT_ANCHOR` with the shared placement helper, but correct final chamber placement is not hardware validated.
+**HARDWARE VALIDATION PENDING — PHYSICAL PLACEMENT:** HEAD parents every produced object to `VR_FURNACE_CONTENT_ANCHOR` and derives the Sphere target with the shared content-placement helper. The earlier behind-panel result predates this correction and must not be treated as the current runtime state. The corrected chamber position still requires Wizjoner confirmation on Quest.
 
 **KNOWN QA ISSUE — CONTOUR CONTINUITY:** the rotating blueprint is semantically readable, but its contour lines are locally fragmented/gapped and need later cosmetic refinement.
 
 ## Future boundary
 
-Radar/sector targeting is the next major stage. Astro bands/B selection, small-glyph progression, antenna, rune/Emanation Matrix processing, final radar/finale, ambient sequencing, spatial audio, durable persistence and full-game reset remain **FUTURE**. The two QA issues above are bugs in implemented functionality, not reasons to move production Asterion back to FUTURE.
+Narrative design and radar/sector targeting are next-stage spaces. Authored Monkey guidance, Astro bands/B selection, small-glyph progression, antenna, rune/Emanation Matrix processing, final radar/finale, spatial audio, durable persistence and full-game reset remain **FUTURE**. Pending placement validation and the contour issue do not move production Asterion back to FUTURE.
