@@ -264,4 +264,4 @@ The prefix map supplies only a default classification. Every new MP3 must still 
 
 ## Implementation boundary
 
-This document records the implemented UI and world/device one-shot passes plus the bounded glyph-acquisition lifecycle and the future contract for all remaining systems. The current implementation is limited to the shared Master Volume, five unity-gain VR buses, unity-gain one-shot sources, the events explicitly marked `IMPLEMENTED`, the glyph process fades/recovery/renewal, and the fail-soft bridge boundary. It does not authorize additional playback, sequencing, loops, asset creation, renaming, mastering, or spatialization changes.
+This document records the current audio contract. The implementation includes the shared Master Volume, five unity-gain VR buses, events explicitly marked `IMPLEMENTED`, glyph and shell lifecycle fades/recovery, Asterion Sphere equipment/drive loops, and the transient full-threshold/subthreshold ambient sequencer composed by `experienceVr.js`. Anything marked `PLANNED`, `RESERVED` or `UNASSIGNED` remains outside runtime. This model does not authorize new playback mappings, assets, renaming, mastering or spatialization.

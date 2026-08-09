@@ -11,6 +11,8 @@ Status: concept roadmap synchronized on 2026-08-09. The runtime authority remain
 - [x] Repeatable `SHELL_EXTRACTION`: shared 18 s / 42 RPM driver, completion-only commit and `astro_piec_work_01.mp3`.
 - [x] Independent left/right hand modes and QA `?asterionSphere` availability override.
 - [x] Existing Asterion PREVIEW / COMMAND / CURRENT, CONTROL BASE + HAND REFERENCE, smooth rebase and heavy angular platform drive.
+- [x] Player Y guide plus Monkey attention arcs, message/dialogue panels, interactive progress choice, discovered-card history, card reader and transient unread attention.
+- [x] Composed ambient sequencer for full thresholds and the completed-shell/built-Sphere subthreshold, plus equipped/working Asterion Sphere audio.
 
 ## Production Asterion — IMPLEMENTED
 
@@ -24,9 +26,9 @@ Status: concept roadmap synchronized on 2026-08-09. The runtime authority remain
 - [x] Claim-time reuse of the same model/socket, `EARNED`, automatic left equip and subsequent X toggle.
 - [x] Separate production-presentation and hand-equipment lifecycles.
 
-Meta Quest 3S confirms the create action, automatic post-sixth-shell transition, construction mechanics and timing, panel transformation/rotation, and physical rendering. Two items remain **KNOWN QA ISSUE**, not future functionality:
+Meta Quest 3S confirms the create action, automatic post-sixth-shell transition, construction mechanics and timing, panel transformation/rotation, and physical rendering. Current qualification is:
 
-1. **Physical placement:** the Sphere renders behind the furnace panel rather than correctly inside the chamber; the intended anchor contract is not yet hardware validated.
+1. **Physical placement:** the shared `VR_FURNACE_CONTENT_ANCHOR` correction is **IMPLEMENTED**. The earlier behind-panel observation predates that correction; correct chamber placement is **HARDWARE VALIDATION PENDING**, not a confirmed current bug.
 2. **Contour continuity:** the blueprint works and is readable, but some lines are fragmented/gapped.
 
 ## Radar and sector targeting — NEXT / FUTURE
@@ -44,7 +46,7 @@ Meta Quest 3S confirms the create action, automatic post-sixth-shell transition,
 - [ ] Astro Przyciągacz glyph upgrade recipes and Emanation Matrix rune processing.
 - [ ] BLUE rune targeting and stored emanation progression.
 - [ ] ULTRAVIOLET distant glyphs, final radar and final reliquary crystal.
-- [ ] Ambient sequencer, spatial audio, Asterion active-control sound assignment, durable persistence and full-game reset.
+- [ ] Spatial audio, audio for future target/process classes, durable persistence and full-game reset.
 
 ## Binding constraints and risks
 
