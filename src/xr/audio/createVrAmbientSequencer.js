@@ -1,6 +1,6 @@
 const AMBIENTS = Object.freeze([null, '/audio/ambient_01.mp3', '/audio/ambient_02.mp3',
   '/audio/ambient_03.mp3', '/audio/ambient_04.mp3', '/audio/ambient_05.mp3']);
-export const VR_QUIET_QUEUE = Object.freeze(Array.from({ length: 14 }, (_, index) => String(index + 1).padStart(2, '0'))
+export const VR_QUIET_QUEUE = Object.freeze(Array.from({ length: 13 }, (_, index) => String(index + 1).padStart(2, '0'))
   .map((id) => `/audio/noise_quiete_loop_${id}.mp3`));
 const SUBTHRESHOLD_AMBIENT = '/audio/ambient_loop_01.mp3';
 

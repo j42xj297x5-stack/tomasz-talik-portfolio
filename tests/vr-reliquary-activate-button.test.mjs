@@ -9,6 +9,10 @@ assert.deepEqual({ label: asset.label, path: asset.path, type: asset.type }, { l
 const runtime = await readFile(new URL('../src/experienceVr.js', import.meta.url), 'utf8');
 assert.match(runtime, /getGltf\('vr-crystal-reliquary-button-activate-model'\)/);
 assert.match(runtime, /attachCompanion\(\{ id: 'activate', model: activateButtonModel, settings: settings\.reliquary\.buttons/);
+assert.match(runtime, /reliquaryActivate: '\/audio\/creating_short_01\.mp3'/);
+assert.match(runtime, /const accepted = crystalCollection\.activateInserted\(\);\s+if \(accepted\) playVrWorld\(VR_AUDIO\.reliquaryActivate\);\s+return accepted;/);
+assert.match(runtime, /onInsertAccepted: \(\) => playVrWorld\(VR_AUDIO\.reliquaryInsert\)/);
+assert.match(runtime, /playVrWorld\(VR_AUDIO\.reliquaryConsume\);\s+if \(tierCompleted\) playVrWorld\(VR_AUDIO\.tierComplete\);/);
 
 const scene = new THREE.Scene();
 const model = new THREE.Group();
@@ -40,4 +44,10 @@ assert.equal(button.action.loop, THREE.LoopOnce); assert.equal(button.action.cla
 button.update(2); assert.ok(root.position.y < -0.09); controller.dispatchEvent({ type: 'selectstart' }); assert.equal(activations, 1);
 button.reset(); assert.equal(button.state, 'idle'); assert.equal(button.hovered, false); assert.equal(visual.material.emissiveIntensity, 0); assert.ok(Math.abs(root.position.y) < 1e-8);
 button.reset(); button.dispose(); button.dispose();
+
+let accepted = false; const activationAudio = [];
+const observeAcceptedActivation = () => { if (!accepted) return false; activationAudio.push('/audio/creating_short_01.mp3'); return true; };
+assert.equal(observeAcceptedActivation(), false); assert.deepEqual(activationAudio, [], 'rejected activation is silent');
+accepted = true; assert.equal(observeAcceptedActivation(), true);
+assert.deepEqual(activationAudio, ['/audio/creating_short_01.mp3'], 'accepted activation emits one one-shot');
 console.log('VR reliquary activate button assertions passed');

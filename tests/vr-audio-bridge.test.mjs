@@ -43,6 +43,23 @@ test('VR audio bridge dispose is idempotent and prevents later requests', () => 
   assert.equal(calls, 0);
 });
 
+test('reliquary activation one-shot prepares and plays on WORLD fail-soft', async () => {
+  const prepared = []; const played = []; const warnings = [];
+  const path = '/audio/creating_short_01.mp3';
+  const bridge = createVrAudioBridge({ manager: {
+    prepareVrOneShots(paths) { prepared.push(...paths); },
+    playVrOneShot(soundPath, bus) { played.push([soundPath, bus]); throw new Error('optional playback'); },
+    stopVrAudio() {}
+  }, warn: (...args) => warnings.push(args) });
+
+  assert.doesNotThrow(() => bridge.prepareOneShots([path]));
+  assert.doesNotThrow(() => bridge.playOneShot(path, 'WORLD'));
+  assert.deepEqual(prepared, [path]);
+  assert.deepEqual(played, [[path, 'WORLD']]);
+  assert.equal(warnings.length, 1);
+  bridge.dispose();
+});
+
 const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
 
 function createProcessHarness() {
