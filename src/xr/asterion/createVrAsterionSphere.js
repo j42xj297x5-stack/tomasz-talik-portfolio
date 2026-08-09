@@ -144,11 +144,11 @@ export function createVrAsterionSphere({ model, animations = [], settings, enabl
     return true;
   }
 
-  function presentAt(anchor, scale = 1) {
+  function presentAt(anchor, scale = 1, localPosition = null) {
     if (!enabled || disposed || !anchor) return false;
     socket.removeFromParent();
     anchor.add(socket);
-    socket.position.set(0, 0, 0); socket.quaternion.identity(); socket.scale.setScalar(Math.max(0, scale));
+    socket.position.copy(localPosition ?? new THREE.Vector3()); socket.quaternion.identity(); socket.scale.setScalar(Math.max(0, scale));
     presentationAnchor = anchor; equippedRecord = null; object.visible = true;
     return true;
   }
@@ -161,7 +161,12 @@ export function createVrAsterionSphere({ model, animations = [], settings, enabl
     restorePresentationMaterials(); object.visible = false; socket.removeFromParent(); socket.scale.setScalar(1); presentationAnchor = null;
   }
 
-  function unequip() { object.visible = false; socket.removeFromParent(); socket.scale.setScalar(1); equippedRecord = null; presentationAnchor = null; }
+  function unequipFromHand() {
+    if (!equippedRecord) return false;
+    object.visible = false; socket.removeFromParent(); socket.scale.setScalar(1); equippedRecord = null;
+    return true;
+  }
+  const unequip = unequipFromHand;
   function syncGimbals({ currentQuaternion, targetQuaternion, worldRoot }) {
     if (!isEquipped()) return;
     socket.updateWorldMatrix(true, true);
@@ -185,9 +190,16 @@ export function createVrAsterionSphere({ model, animations = [], settings, enabl
     mixer.update(safeDelta);
   }
   function setTargetRingsStabilized(stabilized) { targetRingTargetWeight = stabilized ? 0 : 1; }
-  function reset() { actions.forEach((a) => { a.reset(); a.play(); }); mixer.setTime(0); targetRingWeight = 1; targetRingTargetWeight = 1; if (innerRing1Action) innerRing1Action.setEffectiveWeight(0); targetRingActions.forEach((a) => a.setEffectiveWeight(1)); unequip(); }
-  function dispose() { if (disposed) return; disposed = true; actions.forEach((a) => a.stop()); mixer.stopAllAction(); unequip(); }
+  function reset() { actions.forEach((a) => { a.reset(); a.play(); }); mixer.setTime(0); targetRingWeight = 1; targetRingTargetWeight = 1; if (innerRing1Action) innerRing1Action.setEffectiveWeight(0); targetRingActions.forEach((a) => a.setEffectiveWeight(1)); unequipFromHand(); }
+  function dispose() { if (disposed) return; actions.forEach((a) => a.stop()); mixer.stopAllAction(); unequipFromHand(); clearPresentation(); disposed = true; }
   function isEquipped() { return Boolean(equippedRecord && object.visible && socket.parent); }
-  return { object, socket, equipTo, unequip, presentAt, setPresentationScale, setMaterializationProgress, restorePresentationMaterials, clearPresentation, update, reset, dispose, syncGimbals, setTargetRingsStabilized, isEquipped, isPresented: () => Boolean(presentationAnchor && object.visible), getEquippedRecord: () => equippedRecord,
-    getIdleActionByClipName: (clipName) => actionByClipName.get(clipName) ?? null, getTargetRingWeight: () => targetRingWeight, getIdleClipCount: () => idleClips.length, getStartedIdleClipCount: () => playableIdleClips.length, getRequiredNodes: () => ({ ...requiredNodes }), getDiagnostics: () => ({ computedScale, targetDiameter, sourceDiameter, missingNodes: [...missingNodes], conflictingClipNames: conflictingClips.map((clip) => clip.name) }) };
+  return { object, socket, equipTo, unequip, unequipFromHand, presentAt, setPresentationScale, setMaterializationProgress, restorePresentationMaterials, clearPresentation, update, reset, dispose, syncGimbals, setTargetRingsStabilized, isEquipped, isPresented: () => Boolean(presentationAnchor && object.visible), getEquippedRecord: () => equippedRecord,
+    getIdleActionByClipName: (clipName) => actionByClipName.get(clipName) ?? null, getTargetRingWeight: () => targetRingWeight, getIdleClipCount: () => idleClips.length, getStartedIdleClipCount: () => playableIdleClips.length, getRequiredNodes: () => ({ ...requiredNodes }), getDiagnostics: () => {
+      object.updateWorldMatrix(true, true); const worldBounds = new THREE.Box3().setFromObject(object);
+      const worldSize = worldBounds.getSize(new THREE.Vector3()), worldCenter = worldBounds.getCenter(new THREE.Vector3());
+      return { computedScale, targetDiameter, sourceDiameter, missingNodes: [...missingNodes], conflictingClipNames: conflictingClips.map((clip) => clip.name),
+        isPresented: Boolean(presentationAnchor && object.visible), objectVisible: object.visible, socketParentName: socket.parent?.name ?? null,
+        presentationAnchorName: presentationAnchor?.name ?? null, socketLocalPosition: socket.position.toArray(), socketLocalScale: socket.scale.toArray(),
+        sphereWorldCenter: worldCenter.toArray(), sphereWorldSize: worldSize.toArray(), sphereWorldDiameter: Math.max(...worldSize.toArray()) };
+    } };
 }

@@ -254,7 +254,9 @@ const asterionProductionController = createVrAsterionProductionController({
   contentAnchor: astroFurnace.nodes.VR_FURNACE_CONTENT_ANCHOR,
   chamber: astroFurnace.nodes.komora,
   chamberCylinder: resolveChamberCylinder(astroFurnace.nodes.komora, settings.furnace.content.chamberClearance),
-  controllers: vrControllers.controllers, settings: settings.asterionSphere.production,
+  energyCell: astroFurnace.nodes.energy_cell ?? astroFurnace.nodes.fire_cell,
+  controllers: vrControllers.controllers, settings: { ...settings.asterionSphere.production,
+    contentClearance: settings.furnace.content.contentClearance },
   haloSettings: settings.targetHalo,
   processDriver: {
     startConstruction: () => astroFurnaceActivateInteraction?.startConstruction?.() === true,

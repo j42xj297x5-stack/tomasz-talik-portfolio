@@ -1,5 +1,5 @@
 import * as THREE from '../../vendor/three.js';
-import { isWorldPointInsideChamberCylinder, resolveChamberCylinder } from './vrAstroFurnaceChamberCylinder.js';
+import { isWorldPointInsideChamberCylinder, resolveChamberCylinder, resolveFurnaceContentSnapTarget } from './vrAstroFurnaceChamberCylinder.js';
 import { processRotationPulse01 } from './createVrAstroFurnaceActivateInteraction.js';
 
 export const ASTRO_FURNACE_CONTENT_STATES = Object.freeze({
@@ -160,14 +160,6 @@ export function createVrAstroFurnaceContentInteraction({
         emissiveIntensity: material.emissiveIntensity ?? 0, opacity: material.opacity ?? 1, transparent: material.transparent ?? false }));
     });
   }
-  function boxInAnchor(object) {
-    const worldBox = new THREE.Box3().setFromObject(object), result = new THREE.Box3().makeEmpty();
-    if (worldBox.isEmpty()) return result;
-    anchor.updateWorldMatrix(true, false); const inverse = anchor.matrixWorld.clone().invert();
-    for (const x of [worldBox.min.x, worldBox.max.x]) for (const y of [worldBox.min.y, worldBox.max.y])
-      for (const z of [worldBox.min.z, worldBox.max.z]) result.expandByPoint(new THREE.Vector3(x, y, z).applyMatrix4(inverse));
-    return result;
-  }
   function boxInChamber(object) {
     const worldBox = new THREE.Box3().setFromObject(object), result = new THREE.Box3().makeEmpty();
     if (worldBox.isEmpty()) return result;
@@ -177,19 +169,10 @@ export function createVrAstroFurnaceContentInteraction({
     return result;
   }
   function resolveSnapTarget(shell) {
-    const savedPosition = shell.position.clone(), savedQuaternion = shell.quaternion.clone(), savedScale = shell.scale.clone();
-    shell.position.set(0, 0, 0); shell.quaternion.identity(); setObjectWorldScale(shell, shell.userData.furnaceDesiredWorldScale, worldScale); shell.updateWorldMatrix(true, true);
-    const shellBox = boxInAnchor(shell), energy = furnace?.nodes?.energy_cell ?? furnace?.nodes?.fire_cell;
-    const energyBox = energy ? boxInAnchor(energy) : new THREE.Box3().makeEmpty();
-    const target = new THREE.Vector3();
-    if (!shellBox.isEmpty() && !energyBox.isEmpty()) target.y = energyBox.min.y - config.contentClearance - shellBox.max.y;
-    const geometryCenter = shellRecord(shell)?.boundingCenter;
-    if (geometryCenter) {
-      const centerInAnchor = geometryCenter.clone().applyMatrix4(shell.matrixWorld); anchor.worldToLocal(centerInAnchor);
-      target.x -= centerInAnchor.x; target.z -= centerInAnchor.z;
-    }
-    shell.position.copy(savedPosition); shell.quaternion.copy(savedQuaternion); shell.scale.copy(savedScale); shell.updateWorldMatrix(true, true);
-    return target;
+    return resolveFurnaceContentSnapTarget({ object: shell, anchor,
+      energyCell: furnace?.nodes?.energy_cell ?? furnace?.nodes?.fire_cell,
+      contentClearance: config.contentClearance, desiredWorldScale: shell.userData.furnaceDesiredWorldScale,
+      localGeometryCenter: shellRecord(shell)?.boundingCenter ?? null });
   }
   function accept(shell) {
     if (!shell || !canAcceptShell(shell) || !validate(shell)) return false;
