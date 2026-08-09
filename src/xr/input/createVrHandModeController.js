@@ -67,7 +67,7 @@ export function createVrHandModeController({
     if (leftMode === VR_LEFT_HAND_MODES.ASTERION_SPHERE) {
       if (leftRecord?.isConnected) asterionSphere?.equipTo?.(leftRecord);
     } else {
-      asterionSphere?.unequip?.();
+      (asterionSphere?.unequipFromHand ?? asterionSphere?.unequip)?.call(asterionSphere);
     }
   }
 
@@ -94,7 +94,7 @@ export function createVrHandModeController({
     rightMode = VR_RIGHT_HAND_MODES.NORMAL_HAND;
     semanticInput.reset();
     attractorTool.reset();
-    asterionSphere?.unequip?.();
+    (asterionSphere?.unequipFromHand ?? asterionSphere?.unequip)?.call(asterionSphere);
     syncLeftRay();
     syncRightRay();
   }

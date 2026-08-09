@@ -1,6 +1,6 @@
 import * as THREE from '../../vendor/three.js';
 import { createVrTargetHalo } from '../createVrTargetHalo.js';
-import { isWorldPointInsideChamberCylinder } from '../furnace/vrAstroFurnaceChamberCylinder.js';
+import { isWorldPointInsideChamberCylinder, resolveFurnaceContentSnapTarget } from '../furnace/vrAstroFurnaceChamberCylinder.js';
 
 export const VR_ASTERION_PRODUCTION_STATES = Object.freeze({
   LOCKED: 'LOCKED', READY: 'READY', BUILDING: 'BUILDING', AVAILABLE: 'AVAILABLE', EARNED: 'EARNED'
@@ -10,14 +10,14 @@ const clamp01 = (value) => THREE.MathUtils.clamp(value, 0, 1);
 export const resolveAsterionFormationProgress = (constructionProgress) => clamp01((constructionProgress - 1 / 3) / (1 / 2));
 
 export function createVrAsterionProductionController({
-  progressionController, sphere, contentAnchor, chamber = null, chamberCylinder = null, controllers = [], handModeController = null,
+  progressionController, sphere, contentAnchor, chamber = null, chamberCylinder = null, energyCell = null, controllers = [], handModeController = null,
   processDriver = null, getChamberState = () => 'CLOSED', getContentState = () => 'EMPTY', settings = {}, haloSettings = {},
   onBuildStart = () => {}, onBuildStop = () => {}, onStateChange = () => {}
 }) {
   const duration = Math.max(18, settings.buildDurationSeconds ?? 18);
   const rayMaxDistance = Math.max(0.1, settings.rayMaxDistance ?? 2.3);
   const raycaster = new THREE.Raycaster(), origin = new THREE.Vector3(), direction = new THREE.Vector3(), quaternion = new THREE.Quaternion();
-  const center = new THREE.Vector3(), chamberInverse = new THREE.Matrix4();
+  const center = new THREE.Vector3(), chamberLocalCenter = new THREE.Vector3();
   const hits = new Map(controllers.map((record) => [record, false]));
   const subscribers = new Set();
   let state = progressionController?.getAsterionSphereProgress?.().complete ? 'READY' : 'LOCKED';
@@ -38,15 +38,18 @@ export function createVrAsterionProductionController({
   function isCenterInsideChamber() {
     if (!sphere?.object || !chamber || !chamberCylinder) return null;
     sphere.object.updateWorldMatrix(true, true); chamber.updateWorldMatrix(true, false);
-    new THREE.Box3().setFromObject(sphere.object).getCenter(center); chamberInverse.copy(chamber.matrixWorld).invert();
-    return isWorldPointInsideChamberCylinder(center, chamber, chamberCylinder, chamberInverse);
+    new THREE.Box3().setFromObject(sphere.object).getCenter(center);
+    return isWorldPointInsideChamberCylinder(center, chamber, chamberCylinder, chamberLocalCenter);
   }
   function canCreate() { return !disposed && state === 'READY' && !sphere?.isPresented?.() && contentAnchor
     && progressionController?.getAsterionSphereProgress?.().complete === true && getChamberState() === 'CLOSED'
     && getContentState() === 'EMPTY' && processDriver?.canStartConstruction?.() === true; }
   function requestCreate() {
     syncGate(); if (!canCreate() || processDriver?.startConstruction?.() !== true) return false;
-    state = 'BUILDING'; constructionProgress = 0; sphere.presentAt(contentAnchor, .92); sphere.setMaterializationProgress?.(0);
+    state = 'BUILDING'; constructionProgress = 0;
+    const presentationTarget = resolveFurnaceContentSnapTarget({ object: sphere.socket, visibleRoot: sphere.object,
+      anchor: contentAnchor, energyCell, contentClearance: settings.contentClearance ?? .012, centerVisibleBounds: true });
+    sphere.presentAt(contentAnchor, .92, presentationTarget); sphere.setMaterializationProgress?.(0);
     onBuildStart(); emit(); return true;
   }
   function finishBuild() {
@@ -86,13 +89,17 @@ export function createVrAsterionProductionController({
   const listeners = controllers.map((record) => { const listener = () => claim(record); record.controller.addEventListener?.('squeezestart', listener); return { record, listener }; });
   function resetSession() { clearHits(); if (state === 'BUILDING') { sphere.restorePresentationMaterials?.(); sphere.clearPresentation(); constructionProgress = 0;
       state = 'READY'; onBuildStop(true); emit(); }
-    else if (state === 'AVAILABLE') { sphere.presentAt(contentAnchor, 1); sphere.restorePresentationMaterials?.(); } else sphere.clearPresentation(); }
+    else if (state === 'AVAILABLE') {
+      const presentationTarget = resolveFurnaceContentSnapTarget({ object: sphere.socket, visibleRoot: sphere.object,
+        anchor: contentAnchor, energyCell, contentClearance: settings.contentClearance ?? .012, centerVisibleBounds: true });
+      sphere.presentAt(contentAnchor, 1, presentationTarget); sphere.restorePresentationMaterials?.();
+    } else sphere.clearPresentation(); }
   function dispose() { if (disposed) return; disposed = true; if (state === 'BUILDING') onBuildStop(true); unsubscribeProgress();
     listeners.forEach(({ record, listener }) => record.controller.removeEventListener?.('squeezestart', listener)); clearHits(); halo?.dispose(); sphere.restorePresentationMaterials?.(); sphere.clearPresentation(); subscribers.clear(); }
   return { canCreate, requestCreate, finishBuild, claim, update, resetSession, dispose, getState: () => state, getSnapshot,
     isEarned: () => state === 'EARNED', isAvailable: () => state === 'AVAILABLE', hasCurrentHit: (record) => Boolean(hits.get(record)),
     setHandModeController: (next) => { modeController = next; }, subscribe(listener) { if (disposed || typeof listener !== 'function') return () => {};
       subscribers.add(listener); return () => subscribers.delete(listener); },
-    getDiagnostics: () => ({ committedBuilds, earnedCommits, duration, constructionProgress, formationProgress: resolveAsterionFormationProgress(constructionProgress),
-      parentIsContentAnchor: sphere?.socket?.parent === contentAnchor, centerInsideChamber: isCenterInsideChamber() }) };
+    getDiagnostics: () => ({ state, committedBuilds, earnedCommits, duration, constructionProgress, formationProgress: resolveAsterionFormationProgress(constructionProgress),
+      parentIsContentAnchor: sphere?.socket?.parent === contentAnchor, centerInsideChamber: isCenterInsideChamber(), ...sphere?.getDiagnostics?.() }) };
 }
