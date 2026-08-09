@@ -44,7 +44,7 @@ export function createVrAstroFurnaceActivateInteraction({
   const buttonMeshes = [];
   button?.traverse((node) => { if (node.isMesh && node.geometry) buttonMeshes.push(node); });
   const spinPivot = furnace?.nodes?.PIVOT_FURNACE_PROCESS_SPIN;
-  const lid = furnace?.nodes?.pokrywa;
+  const lidSpinPivot = furnace?.nodes?.PIVOT_FURNACE_LID_PROCESS_SPIN;
   const buttonPivot = furnace?.nodes?.PIVOT_BUTTON_ACTIVATE;
   const fireCell = furnace?.nodes?.fire_cell;
   const chamber = furnace?.nodes?.komora;
@@ -80,13 +80,19 @@ export function createVrAstroFurnaceActivateInteraction({
   const action = mixer && clip ? mixer.clipAction(clip) : null;
   action?.setLoop(THREE.LoopOnce, 1);
   if (action) { action.clampWhenFinished = true; action.enabled = true; }
-  const capabilityReady = settings.enabled !== false && Boolean(buttonMeshes.length && buttonPivot && spinPivot && clip && action);
+  const capabilityReady = settings.enabled !== false
+    && Boolean(buttonMeshes.length && buttonPivot && spinPivot && lidSpinPivot && clip && action);
   if (settings.enabled !== false && !capabilityReady) {
     console.warn('[Experience VR] Astro furnace activate interaction is disabled: button geometry, pivots, or exact lock clip are missing.');
   }
   const ownedMaterials = new Set();
   const buttonMaterials = cloneMaterials(button, ownedMaterials).filter((material) => 'emissiveIntensity' in material);
   const fireMaterials = cloneMaterials(fireCell, ownedMaterials).filter((material) => 'emissiveIntensity' in material);
+  const chamberMaterials = (furnace?.ensureRuntimeMaterials?.(chamber)
+    ?? cloneMaterials(chamber, ownedMaterials)).filter((material) => 'emissiveIntensity' in material);
+  const chamberBases = chamberMaterials.map((material) => ({
+    material, baseEmissiveIntensity: 0
+  }));
   const fireBases = fireMaterials.map((material) => ({
     material,
     baseEmissiveIntensity: material.emissiveIntensity,
@@ -95,7 +101,7 @@ export function createVrAstroFurnaceActivateInteraction({
   }));
   const halo = button ? createVrTargetHalo({ root: button, settings: haloSettings }) : null;
   const baseSpinQuaternion = spinPivot?.quaternion.clone();
-  const baseLidQuaternion = lid?.quaternion.clone();
+  const baseLidQuaternion = lidSpinPivot?.quaternion.clone();
   const lidSpin = new THREE.Quaternion();
   const energyRoot = new THREE.Group();
   energyRoot.name = 'VrAstroFurnaceEnergyPoints';
@@ -147,13 +153,22 @@ export function createVrAstroFurnaceActivateInteraction({
       if (baseColor && material.color) material.color.copy(baseColor);
     });
   }
+  function setChamberEmission(value) {
+    const intensity = THREE.MathUtils.clamp(value, 0, 3);
+    chamberBases.forEach(({ material }) => { material.emissiveIntensity = intensity; });
+  }
+  function restoreChamberMaterials() {
+    chamberBases.forEach(({ material, baseEmissiveIntensity }) => {
+      material.emissiveIntensity = baseEmissiveIntensity;
+    });
+  }
   function applyAngle() {
     if (!spinPivot || !baseSpinQuaternion) return;
     localSpin.setFromAxisAngle(LOCAL_AXIS, angle);
     spinPivot.quaternion.copy(baseSpinQuaternion).multiply(localSpin);
-    if (lid && baseLidQuaternion) {
+    if (lidSpinPivot && baseLidQuaternion) {
       lidSpin.setFromAxisAngle(LOCAL_AXIS, angle * 0.5);
-      lid.quaternion.copy(baseLidQuaternion).multiply(lidSpin);
+      lidSpinPivot.quaternion.copy(baseLidQuaternion).multiply(lidSpin);
     }
   }
   function updateEnergyPoints(intensity, speedMultiplier = 1) {
@@ -267,6 +282,7 @@ export function createVrAstroFurnaceActivateInteraction({
     const spinupEnd = processSettings.spinupEnd ?? 1 / 6;
     const steadyEnd = processSettings.steadyEnd ?? 1 / 3;
     const extractionEnd = processSettings.extractionEnd ?? 5 / 6;
+    const chamberEmissionPeak = extractionEnd - (extractionEnd - steadyEnd) * 0.25;
     const baseSpeed = (processSettings.direction ?? -1) * (processSettings.steadyRpm ?? 42) * TAU / 60;
     const idleEmission = processSettings.fireCellIdleEmission ?? 0.15;
     const steadyEmission = processSettings.fireCellSteadyEmission ?? 4;
@@ -278,6 +294,7 @@ export function createVrAstroFurnaceActivateInteraction({
     let whiteMix = 0;
     let energyIntensity = 0;
     let energySpeed = 1;
+    let chamberEmission = 0;
     if (progress < spinupEnd) {
       state = states.SPINUP; const t = smooth(progress / spinupEnd); angularSpeed = baseSpeed * t;
       emission = THREE.MathUtils.lerp(idleEmission, steadyEmission, t);
@@ -285,11 +302,13 @@ export function createVrAstroFurnaceActivateInteraction({
       whiteMix = 0.45 * t;
       energyIntensity = t * 0.45;
       angle += angularSpeed * delta;
+      chamberEmission = 3 * smooth(progress / chamberEmissionPeak);
     } else if (progress < steadyEnd) {
       state = states.STEADY; angularSpeed = baseSpeed; angle += angularSpeed * delta;
       emission = steadyEmission; whiteMix = 0.45;
       lightIntensity = steadyLight;
       energyIntensity = 0.55;
+      chamberEmission = 3 * smooth(progress / chamberEmissionPeak);
     } else if (progress < extractionEnd) {
       state = states.EXTRACTION;
       const phaseProgress = (progress - steadyEnd) / (extractionEnd - steadyEnd);
@@ -300,6 +319,7 @@ export function createVrAstroFurnaceActivateInteraction({
       lightIntensity = THREE.MathUtils.lerp(steadyLight, extractionLight, t);
       whiteMix = THREE.MathUtils.lerp(0.45, 0.95, t);
       energyIntensity = THREE.MathUtils.lerp(0.55, 1, t); energySpeed = 2;
+      chamberEmission = 3 * smooth(progress / chamberEmissionPeak);
     } else {
       if (previousProgress < extractionEnd || state !== states.COOLDOWN) {
         state = states.COOLDOWN; cooldownStartAngle = angle; cooldownStartSpeed = angularSpeed;
@@ -323,17 +343,20 @@ export function createVrAstroFurnaceActivateInteraction({
       lightIntensity = THREE.MathUtils.lerp(extractionLight, 0, t);
       whiteMix = THREE.MathUtils.lerp(0.95, 0, t);
       energyIntensity = 1 - t; energySpeed = THREE.MathUtils.lerp(2, 0.25, t);
+      chamberEmission = THREE.MathUtils.lerp(3, 0, t);
     }
     const pulse = processRotationPulse01(angle);
     const pulseMinimum = processSettings.fireCellPulseMinEmission ?? 0.05;
     const pulseMaximum = processSettings.fireCellPulseMaxEmission ?? emission;
-    setFireEnergy(THREE.MathUtils.lerp(pulseMinimum, pulseMaximum, pulse), whiteMix); applyAngle();
+    setFireEnergy(THREE.MathUtils.lerp(pulseMinimum, pulseMaximum, pulse), whiteMix);
+    setChamberEmission(chamberEmission); applyAngle();
     setProcessLight(lightIntensity); updateEnergyPoints(energyIntensity, energySpeed);
     if (progress >= 1) {
       state = states.COMPLETE; angularSpeed = 0; angle = 0;
       if (spinPivot && baseSpinQuaternion) spinPivot.quaternion.copy(baseSpinQuaternion);
-      if (lid && baseLidQuaternion) lid.quaternion.copy(baseLidQuaternion);
+      if (lidSpinPivot && baseLidQuaternion) lidSpinPivot.quaternion.copy(baseLidQuaternion);
       restoreFireMaterials();
+      restoreChamberMaterials();
       setProcessLight(0);
       updateEnergyPoints(0);
       processStarted = false; onProcessStop({ completed: true, processKind });
@@ -359,9 +382,10 @@ export function createVrAstroFurnaceActivateInteraction({
     action?.stop(); mixer?.stopAllAction(); mixer?.setTime(0); releasing = false; preparingConstruction = false;
     state = states.IDLE; progress = 0; elapsed = 0; angle = 0; angularSpeed = 0;
     if (spinPivot && baseSpinQuaternion) spinPivot.quaternion.copy(baseSpinQuaternion);
-    if (lid && baseLidQuaternion) lid.quaternion.copy(baseLidQuaternion);
+    if (lidSpinPivot && baseLidQuaternion) lidSpinPivot.quaternion.copy(baseLidQuaternion);
     processStarted = false; processKind = null;
     restoreFireMaterials();
+    restoreChamberMaterials();
     setProcessLight(0);
     updateEnergyPoints(0);
     clearHits(); setButtonEmission(settings.emissionInactive ?? 0);

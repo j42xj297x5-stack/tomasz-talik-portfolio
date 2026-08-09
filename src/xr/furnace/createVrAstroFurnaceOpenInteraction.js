@@ -48,7 +48,8 @@ export function createVrAstroFurnaceOpenInteraction({
   const halo = buttonNode ? createVrTargetHalo({ root: buttonNode, settings: haloSettings }) : null;
   const chamberNode = furnace?.nodes?.komora;
   const chamberBaseVisible = chamberNode?.visible ?? true;
-  const chamberMaterials = cloneBranchMaterials(chamberNode, ownedMaterials).map((material) => ({
+  const chamberMaterials = (furnace?.ensureRuntimeMaterials?.(chamberNode)
+    ?? cloneBranchMaterials(chamberNode, ownedMaterials)).map((material) => ({
     material,
     baseOpacity: material.opacity,
     baseTransparent: material.transparent,

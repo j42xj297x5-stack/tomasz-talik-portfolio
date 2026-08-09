@@ -94,15 +94,21 @@ function buildInteractiveFurnace({ omitClip = null } = {}) {
   activateButton.add(new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.2, 0.05), new THREE.MeshStandardMaterial())); model.add(activateButton);
   const activatePivot = new THREE.Group(); activatePivot.name = 'PIVOT_BUTTON_ACTIVATE'; model.add(activatePivot);
   const spinPivot = new THREE.Group(); spinPivot.name = 'PIVOT_FURNACE_PROCESS_SPIN'; model.add(spinPivot);
-  const lid = new THREE.Group(); lid.name = 'pokrywa'; lid.rotation.x = 0.37; model.add(lid);
+  const lidOpenPivot = model.getObjectByName('PIVOT_FURNACE_LID_Z');
+  const lidProcessPivot = new THREE.Group(); lidProcessPivot.name = 'PIVOT_FURNACE_LID_PROCESS_SPIN';
+  lidProcessPivot.rotation.x = 0.17; lidOpenPivot.add(lidProcessPivot);
+  const lid = new THREE.Group(); lid.name = 'pokrywa'; lid.rotation.x = 0.37; lidProcessPivot.add(lid);
+  const upperLid = new THREE.Group(); upperLid.name = 'pokrywa_gora'; upperLid.rotation.z = 0.23; lidOpenPivot.add(upperLid);
   const fireCell = new THREE.Group(); fireCell.name = 'fire_cell';
   fireCell.add(new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.1, 0.1), new THREE.MeshStandardMaterial({
     color: new THREE.Color(0.4, 0.2, 0.1), emissive: new THREE.Color(0.3, 0.05, 0.01), emissiveIntensity: 0.25
   })));
   model.add(fireCell);
   const chamber = new THREE.Group(); chamber.name = 'komora';
+  const emissiveMap = new THREE.Texture();
   chamber.add(new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.5, 0.5), new THREE.MeshStandardMaterial({
-    transparent: true, opacity: 0.6, depthWrite: false
+    transparent: true, opacity: 0.6, depthWrite: false, emissive: 0xffffff,
+    emissiveMap, emissiveIntensity: 1
   }))); model.add(chamber);
   const animations = Object.entries(clipNames).filter(([, clipName]) => clipName !== omitClip).map(([node, clipName]) => {
     const values = node === 'PIVOT_BUTTON_OPEN'
@@ -157,6 +163,7 @@ const processController = new THREE.Group(); processController.position.z = 1;
 const processRecord = { controller: processController, handedness: 'left', currentRayLength: 3,
   hitReports: [], reportRayHit(distance) { this.hitReports.push(distance); } };
 const processFurnace = buildInteractiveFurnace();
+const sourceChamberMaterial = processFurnace.nodes.komora.children[0].material;
 processFurnace.nodes.button_activate.getWorldPosition(processController.position);
 processController.position.z += 1;
 let allowInput = false;
@@ -201,10 +208,19 @@ activateInteraction.update(0.11);
 assert.equal(activateInteraction.getState(), ASTRO_FURNACE_PROCESS_STATES.SPINUP,
   'process starts from the exact lock action finished event');
 const lidQuaternion = processFurnace.nodes.pokrywa.quaternion.clone();
+const lidProcessQuaternion = processFurnace.nodes.PIVOT_FURNACE_LID_PROCESS_SPIN.quaternion.clone();
+const upperLidQuaternion = processFurnace.nodes.pokrywa_gora.quaternion.clone();
+const chamberMaterial = processFurnace.nodes.komora.children[0].material;
+const chamberEmissiveMap = chamberMaterial.emissiveMap;
+assert.notEqual(chamberMaterial, sourceChamberMaterial, 'process emission uses a runtime-owned chamber material clone');
+assert.equal(chamberMaterial.emissiveIntensity, 0, 'the chamber emission is off before processing');
+assert.equal(chamberMaterial.emissiveMap, chamberEmissiveMap, 'runtime cloning preserves the authored emissive map');
 activateInteraction.update(0.10);
 assert.equal(activateInteraction.getState(), ASTRO_FURNACE_PROCESS_STATES.SPINUP, 'spinup remains active before the three-second boundary');
 assert.notEqual(processFurnace.nodes.fire_cell.children[0].material.emissiveIntensity, 0.25,
   'fire cell emission responds to process speed');
+assert.ok(chamberMaterial.emissiveIntensity > 0 && chamberMaterial.emissiveIntensity <= 3,
+  'SPINUP raises chamber emissive intensity within the 0..3 contract');
 activateInteraction.update(1 / 15);
 assert.equal(activateInteraction.getState(), ASTRO_FURNACE_PROCESS_STATES.STEADY);
 assert.equal(activateInteraction.getExtractionProgress(), 0);
@@ -248,15 +264,26 @@ assert.ok(extractionAngleStep / 0.04 > steadyAngleStep / 0.4,
 assert.ok(fireMaterial.emissiveIntensity >= 0.05, 'extraction emission stays within the configured angle pulse');
 assert.ok(colorDistanceToWhite(fireMaterial.emissive) < 0.1,
   'extraction emissive color becomes nearly white');
-assert.ok(!processFurnace.nodes.pokrywa.quaternion.equals(lidQuaternion), 'the lid visibly rotates during processing');
+assert.ok(!processFurnace.nodes.PIVOT_FURNACE_LID_PROCESS_SPIN.quaternion.equals(lidProcessQuaternion),
+  'the lower-lid process pivot visibly rotates during processing');
+assert.ok(processFurnace.nodes.pokrywa.quaternion.equals(lidQuaternion),
+  'processing does not directly write the lower lid mesh quaternion');
+assert.ok(processFurnace.nodes.pokrywa_gora.quaternion.equals(upperLidQuaternion),
+  'the upper lid receives no runtime process rotation');
 assert.equal(activateInteraction.energyRoot.children.length, 4, 'four lightweight emissive energy meshes are reused');
 assert.ok(activateInteraction.energyRoot.children.every((point) => point.isMesh && !point.isLight));
 const beforeCooldownQuaternion = processFurnace.nodes.PIVOT_FURNACE_PROCESS_SPIN.quaternion.clone();
 activateInteraction.update(.09);
 assert.ok(Math.abs(activateInteraction.getExtractionProgress() - .5) < 1e-12, '10.5 seconds maps to half of EXTRACTION');
-activateInteraction.update(.250001);
+activateInteraction.update(1 / 6);
+assert.equal(chamberMaterial.emissiveIntensity, 3, 'chamber emission reaches its clamped maximum in late EXTRACTION');
+assert.equal(activateInteraction.getState(), ASTRO_FURNACE_PROCESS_STATES.EXTRACTION);
+activateInteraction.update(1 / 12 + .000001);
 assert.equal(activateInteraction.getState(), ASTRO_FURNACE_PROCESS_STATES.COOLDOWN);
 assert.equal(activateInteraction.getExtractionProgress(), 1);
+assert.ok(chamberMaterial.emissiveIntensity >= 0 && chamberMaterial.emissiveIntensity < 3,
+  'COOLDOWN fades chamber emission down from its clamped maximum');
+assert.equal(chamberMaterial.emissiveMap, chamberEmissiveMap, 'process updates never replace the emissive map');
 assert.ok(beforeCooldownQuaternion.angleTo(processFurnace.nodes.PIVOT_FURNACE_PROCESS_SPIN.quaternion) < Math.PI,
   'entering cooldown does not introduce a quaternion snap');
 assert.ok(Math.abs(activateInteraction.getAngularSpeed()) > steadySpeed,
@@ -269,6 +296,9 @@ assert.equal(processStops, 1, 'normal completion emits one semantic process stop
 assert.equal(activateInteraction.processLight.visible, false); assert.equal(activateInteraction.processLight.intensity, 0);
 assert.ok(processFurnace.nodes.PIVOT_FURNACE_PROCESS_SPIN.quaternion.equals(new THREE.Quaternion()),
   'spin pivot returns exactly to its base quaternion');
+assert.ok(processFurnace.nodes.PIVOT_FURNACE_LID_PROCESS_SPIN.quaternion.equals(lidProcessQuaternion),
+  'lower-lid process pivot returns exactly to its authored base quaternion');
+assert.equal(chamberMaterial.emissiveIntensity, 0, 'COMPLETE restores idle chamber emission');
 assert.equal(activateInteraction.action.time, activateInteraction.action.getClip().duration,
   'activate remains pressed in COMPLETE');
 assert.ok(fireMaterial.color.equals(baseFireColor), 'COMPLETE restores the exact base material color');
@@ -301,6 +331,8 @@ activateInteraction.reset(); activateInteraction.reset();
 assert.equal(activateInteraction.processLight.visible, false, 'process light is inactive in IDLE');
 assert.ok(fireMaterial.color.equals(baseFireColor) && fireMaterial.emissive.equals(baseFireEmissive)
   && fireMaterial.emissiveIntensity === baseFireIntensity, 'reset restores every fire-cell material base value');
+assert.equal(chamberMaterial.emissiveIntensity, 0, 'reset restores idle chamber emission without residual light');
+assert.equal(chamberMaterial.emissiveMap, chamberEmissiveMap, 'reset preserves the authored chamber emissive map');
 assert.equal(processController._listeners.selectstart.length, 2, 'resets do not duplicate open and activate listeners');
 activateInteraction.dispose();
 assert.equal(processController._listeners.selectstart.length, 1, 'activate disposal removes only its own listener');
