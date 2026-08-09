@@ -4,14 +4,15 @@ import { createVrAstroFurnaceProgressionController, REQUIRED_ASTERION_SHELLS } f
 import { createVrAsterionProductionController, resolveAsterionFormationProgress, VR_ASTERION_PRODUCTION_STATES as STATES } from '../src/xr/asterion/createVrAsterionProductionController.js';
 import { assemblySegmentVisible, createAsterionModelWireframeMap, resolveConstructionPatchOpacity } from '../src/xr/furnace/asterionSphereWireframe.js';
 
-function harness({ complete = false } = {}) {
+function harness({ complete = false, completedShellCycle = false } = {}) {
   const progression = createVrAstroFurnaceProgressionController();
   REQUIRED_ASTERION_SHELLS.slice(0, complete ? 6 : 5).forEach((id) => progression.commitAbsorbedShell(id));
   const contentAnchor = new THREE.Group(), socket = new THREE.Group();
   const object = new THREE.Mesh(new THREE.SphereGeometry(.1), new THREE.MeshStandardMaterial({ color: 0x123456, emissive: 0x010203, opacity: .8 }));
   object.visible = false; socket.add(object);
   let presented = false, mode = 'NORMAL_HAND', equips = 0, starts = 0, stops = 0, chamberState = 'CLOSED', contentState = 'EMPTY';
-  let processState = 'IDLE', processKind = null, processProgress = 0;
+  let processState = completedShellCycle ? 'COMPLETE' : 'IDLE';
+  let processKind = completedShellCycle ? 'SHELL_EXTRACTION' : null, processProgress = completedShellCycle ? 1 : 0;
   const sphere = { object, socket, presentAt(parent, scale) { parent.add(socket); socket.scale.setScalar(scale); object.visible = true; presented = true; return true; },
     setPresentationScale(scale) { socket.scale.setScalar(scale); return true; },
     setMaterializationProgress(progress) { object.material.opacity = .8 * progress; object.material.emissiveIntensity = THREE.MathUtils.lerp(10, 0, progress); },
@@ -22,7 +23,9 @@ function harness({ complete = false } = {}) {
   const left = { handedness: 'left', controller: leftController, ray: { visible: true }, currentRayLength: 2.3, reportRayHit() {} };
   const right = { handedness: 'right', controller: rightController, ray: { visible: true }, currentRayLength: 2.3, reportRayHit() {} };
   const handModes = { getLeftMode: () => mode, equipLeftAsterion() { mode = 'ASTERION_SPHERE'; equips += 1; return true; } };
-  const processDriver = { startConstruction() { if (processState !== 'IDLE') return false; processState = 'SPINUP'; processKind = 'ASTERION_CONSTRUCTION'; return true; },
+  const processDriver = { canStartConstruction: () => (processState === 'IDLE' && processKind == null)
+      || (processState === 'COMPLETE' && processKind === 'SHELL_EXTRACTION'),
+    startConstruction() { if (!this.canStartConstruction()) return false; processState = completedShellCycle ? 'PREPARING_CONSTRUCTION' : 'SPINUP'; processKind = 'ASTERION_CONSTRUCTION'; return true; },
     getState: () => processState, getProcessKind: () => processKind, getProgress: () => processProgress };
   const production = createVrAsterionProductionController({ progressionController: progression, sphere, contentAnchor,
     controllers: [left, right], handModeController: handModes, processDriver, getChamberState: () => chamberState,
@@ -32,6 +35,15 @@ function harness({ complete = false } = {}) {
     setChamber: (value) => { chamberState = value; }, setContent: (value) => { contentState = value; },
     setProcess: (progress) => { processProgress = progress; if (progress >= 1) processState = 'COMPLETE'; },
     counts: () => ({ equips, starts, stops }) };
+}
+{
+  const h = harness({ complete: true, completedShellCycle: true });
+  assert.equal(h.production.canCreate(), true, '6/6 + EMPTY + CLOSED + completed shell extraction enables UTWÓRZ');
+  assert.equal(h.production.requestCreate(), true, 'the hardware regression path accepts UTWÓRZ without opening the chamber');
+  assert.equal(h.production.getState(), STATES.BUILDING, 'accepted create transitions READY to BUILDING immediately');
+  assert.equal(h.production.getSnapshot().constructionProgress, 0);
+  assert.equal(h.production.requestCreate(), false, 'duplicate UTWÓRZ is rejected while the lock is preparing');
+  assert.equal(h.counts().starts, 1); h.production.dispose();
 }
 
 {

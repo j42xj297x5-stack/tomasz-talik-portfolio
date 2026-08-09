@@ -43,7 +43,7 @@ export function createVrAsterionProductionController({
   }
   function canCreate() { return !disposed && state === 'READY' && !sphere?.isPresented?.() && contentAnchor
     && progressionController?.getAsterionSphereProgress?.().complete === true && getChamberState() === 'CLOSED'
-    && getContentState() === 'EMPTY' && processDriver?.getState?.() === 'IDLE' && processDriver?.getProcessKind?.() == null; }
+    && getContentState() === 'EMPTY' && processDriver?.canStartConstruction?.() === true; }
   function requestCreate() {
     syncGate(); if (!canCreate() || processDriver?.startConstruction?.() !== true) return false;
     state = 'BUILDING'; constructionProgress = 0; sphere.presentAt(contentAnchor, .92); sphere.setMaterializationProgress?.(0);
@@ -89,7 +89,7 @@ export function createVrAsterionProductionController({
     else if (state === 'AVAILABLE') { sphere.presentAt(contentAnchor, 1); sphere.restorePresentationMaterials?.(); } else sphere.clearPresentation(); }
   function dispose() { if (disposed) return; disposed = true; if (state === 'BUILDING') onBuildStop(true); unsubscribeProgress();
     listeners.forEach(({ record, listener }) => record.controller.removeEventListener?.('squeezestart', listener)); clearHits(); halo?.dispose(); sphere.restorePresentationMaterials?.(); sphere.clearPresentation(); subscribers.clear(); }
-  return { requestCreate, finishBuild, claim, update, resetSession, dispose, getState: () => state, getSnapshot,
+  return { canCreate, requestCreate, finishBuild, claim, update, resetSession, dispose, getState: () => state, getSnapshot,
     isEarned: () => state === 'EARNED', isAvailable: () => state === 'AVAILABLE', hasCurrentHit: (record) => Boolean(hits.get(record)),
     setHandModeController: (next) => { modeController = next; }, subscribe(listener) { if (disposed || typeof listener !== 'function') return () => {};
       subscribers.add(listener); return () => subscribers.delete(listener); },
