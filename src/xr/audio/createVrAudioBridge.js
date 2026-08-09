@@ -175,6 +175,17 @@ export function createVrAudioBridge({ manager = audioManager, warn = console.war
     runOptional(`play ${path} on ${bus}`, (audio) => audio.playVrOneShot(path, bus));
   }
 
+  function startFiniteSource(path, bus, options) {
+    if (disposed) return Promise.resolve(null);
+    try {
+      return Promise.resolve(manager.startVrFiniteSource(path, bus, options))
+        .catch((error) => { reportFailure(`start finite ${path}`, error); return null; });
+    } catch (error) {
+      reportFailure(`start finite ${path}`, error);
+      return Promise.resolve(null);
+    }
+  }
+
   function clearFinishTimer() {
     if (finishTimer !== null) clearTimeout(finishTimer);
     finishTimer = null;
@@ -289,7 +300,7 @@ export function createVrAudioBridge({ manager = audioManager, warn = console.war
     if (completionPath) playOneShot(completionPath, 'WORLD');
   }
 
-  return { runOptional, prepareOneShots, prepareAttractorLoops, playOneShot, startFurnaceProcess, stopFurnaceProcess, startAsterionCreate, stopAsterionCreate,
+  return { runOptional, prepareOneShots, prepareAttractorLoops, playOneShot, startFiniteSource, startFurnaceProcess, stopFurnaceProcess, startAsterionCreate, stopAsterionCreate,
     startGlyphAcquisition, missGlyphAcquisition,
     cancelGlyphAcquisition, completeGlyphAcquisition, dispose,
     startAttractor, missAttractor, cancelAttractor, handoffAttractor,

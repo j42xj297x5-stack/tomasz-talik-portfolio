@@ -44,6 +44,7 @@ import { createVrPlayerGuidePanel } from './xr/guidance/createVrPlayerGuidePanel
 import { createVrMonkeyGuide } from './xr/guidance/createVrMonkeyGuide.js';
 import { createVrSceneLayoutPrototype } from './xr/layout/createVrSceneLayoutPrototype.js';
 import { createVrAudioBridge } from './xr/audio/createVrAudioBridge.js';
+import { createVrAmbientSequencer } from './xr/audio/createVrAmbientSequencer.js';
 import { experienceVrPages, getExperienceVrPages, resolveExperienceVrPage } from './content/experienceVrPages.js';
 
 const app = document.querySelector('#app');
@@ -295,6 +296,15 @@ const locomotion = createVrLocomotion({
   playerRig, renderer, camera, settings: settings.locomotion, surfaceRoot: progressFloor.object, walkRadius: floorWalkRadius
 });
 const progressionController = createVrProgressionController({ pages: experienceVrPages });
+const ambientSequencer = createVrAmbientSequencer({ bridge: vrAudio });
+function syncAmbientSequence() {
+  const fullThreshold = progressionController.getCurrentTier();
+  const shellsComplete = furnaceProgressionController.getAsterionSphereProgress().complete;
+  const sphereBuilt = asterionProductionController.getSnapshot().built;
+  ambientSequencer.setState({ fullThreshold, asterionSubthreshold: fullThreshold === 2 && shellsComplete && sphereBuilt });
+}
+const unsubscribeAmbientFurnace = furnaceProgressionController.subscribe(syncAmbientSequence);
+const unsubscribeAmbientAsterion = asterionProductionController.subscribe(syncAmbientSequence);
 function syncTierOneWorldState() { shellSystem.setActive(progressionController.isTierComplete(1)); }
 function resetPlayerRigToSpawn() {
   if (playerRig.parent !== floorPassengerRoot) floorPassengerRoot.attach(playerRig);
@@ -423,6 +433,7 @@ const crystalCollection = createVrCrystalCollection({
     progressFloor.activatePage(page);
     if (tierCompleted) progressFloor.completeTier(page.order);
     syncTierOneWorldState();
+    syncAmbientSequence();
     playVrWorld(VR_AUDIO.reliquaryConsume);
     if (tierCompleted) playVrWorld(VR_AUDIO.tierComplete);
     monkeyGuide.notifyAttention();
@@ -632,6 +643,7 @@ function showReadyState({ ended = false } = {}) {
 }
 
 function handleSessionEnd() {
+  ambientSequencer.reset();
   renderer.setAnimationLoop(null);
   clock.stop();
   activeSession = null;
@@ -667,6 +679,7 @@ function handleSessionEnd() {
 }
 
 async function enterVr() {
+  ambientSequencer.reset();
   if (activeSession) return;
   astroFurnace.reset();
   furnacePanel.reset();
@@ -722,6 +735,7 @@ async function enterVr() {
       playerRig.position.z += settings.spawn.position.z - trackedHead.z;
     }
     activeSession = requestedSession;
+    syncAmbientSequence();
     hasEnteredSession = true;
     status.textContent = copy.ready;
     exitButton.hidden = false;
@@ -765,6 +779,9 @@ async function enterVr() {
 enterButton.addEventListener('click', enterVr);
 exitButton.addEventListener('click', () => { void activeSession?.end(); });
 window.addEventListener('pagehide', () => {
+  unsubscribeAmbientFurnace();
+  unsubscribeAmbientAsterion();
+  ambientSequencer.dispose();
   vrAudio.dispose();
   asterionGyroInteraction.dispose();
   asterionProductionController.dispose();
