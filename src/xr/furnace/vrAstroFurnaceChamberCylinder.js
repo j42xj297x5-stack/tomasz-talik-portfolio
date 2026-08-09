@@ -44,7 +44,7 @@ function boundsInAnchor(root, anchor) {
   return result;
 }
 
-// Canonical process-zone placement shared by inserted shells and the production Sphere.
+// Canonical process-zone placement shared by inserted content and every furnace-produced object.
 export function resolveFurnaceContentSnapTarget({
   object, visibleRoot = object, anchor, energyCell = null, contentClearance = 0.012,
   desiredWorldScale = null, localGeometryCenter = null, centerVisibleBounds = false

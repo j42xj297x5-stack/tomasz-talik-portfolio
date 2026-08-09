@@ -4,7 +4,7 @@ import { createVrAstroFurnaceProgressionController, REQUIRED_ASTERION_SHELLS } f
 import { createVrAsterionProductionController, resolveAsterionFormationProgress, VR_ASTERION_PRODUCTION_STATES as STATES } from '../src/xr/asterion/createVrAsterionProductionController.js';
 import { createVrAsterionSphere } from '../src/xr/asterion/createVrAsterionSphere.js';
 import { createVrHandModeController } from '../src/xr/input/createVrHandModeController.js';
-import { resolveChamberCylinder } from '../src/xr/furnace/vrAstroFurnaceChamberCylinder.js';
+import { resolveChamberCylinder, resolveFurnaceContentSnapTarget } from '../src/xr/furnace/vrAstroFurnaceChamberCylinder.js';
 import { assemblySegmentVisible, createAsterionModelWireframeMap, resolveConstructionPatchOpacity } from '../src/xr/furnace/asterionSphereWireframe.js';
 
 function harness({ complete = false, completedShellCycle = false } = {}) {
@@ -92,6 +92,14 @@ assert.equal(resolveAsterionFormationProgress(0), 0); assert.ok(Math.abs(resolve
       getProcessKind: () => 'ASTERION_CONSTRUCTION', getProgress: () => progress } });
   assert.equal(production.requestCreate(), true); assert.equal(production.getState(), STATES.BUILDING);
   assert.equal(sphere.isPresented(), true); assert.equal(sphere.object.visible, true); assert.equal(sphere.socket.parent, contentAnchor);
+  assert.equal(sphere.socket.parent.name, 'VR_FURNACE_CONTENT_ANCHOR', 'produced content uses the canonical furnace anchor');
+  const snapTarget = resolveFurnaceContentSnapTarget({ object: sphere.socket, visibleRoot: sphere.object,
+    anchor: contentAnchor, energyCell, contentClearance: .012, centerVisibleBounds: true });
+  assert.ok(sphere.socket.position.distanceTo(snapTarget) < 1e-9, 'production uses the shared furnace content snap target');
+  assert.deepEqual(sphere.socket.scale.toArray(), [1, 1, 1], 'presentation starts at scale 1');
+  progress = .5833333333; production.update(.25);
+  assert.deepEqual(sphere.socket.scale.toArray(), [1, 1, 1], 'materialization progress does not animate presentation scale');
+  assert.ok(sphere.socket.position.distanceTo(snapTarget) < 1e-9, 'BUILDING remains exactly on the snap target');
   for (let frame = 0; frame < 5; frame++) handModes.update(.016);
   assert.equal(sphere.isPresented(), true, 'one or many NORMAL_HAND updates preserve presentation');
   assert.equal(sphere.object.visible, true); assert.equal(sphere.socket.parent, contentAnchor);
@@ -99,14 +107,21 @@ assert.equal(resolveAsterionFormationProgress(0), 0); assert.ok(Math.abs(resolve
   progress = 1; production.update(.016); root.updateMatrixWorld(true);
   assert.equal(production.getState(), STATES.AVAILABLE); assert.equal(sphere.socket.parent, contentAnchor);
   assert.deepEqual(sphere.socket.scale.toArray(), [1, 1, 1]);
+  production.update(.525);
+  assert.ok(Math.abs(sphere.socket.position.y - snapTarget.y) <= .0200001, 'levitation stays within 0.02 m of the base target');
+  assert.ok(Math.abs(sphere.socket.position.x - snapTarget.x) < 1e-9 && Math.abs(sphere.socket.position.z - snapTarget.z) < 1e-9,
+    'levitation has no horizontal anchor drift');
+  production.update(2.1 * 20);
+  assert.ok(Math.abs(sphere.socket.position.y - snapTarget.y) <= .0200001, 'elapsed loops do not accumulate levitation offset');
   const diagnostics = production.getDiagnostics();
   assert.equal(diagnostics.centerInsideChamber, true, 'visible Sphere center is inside the authored chamber cylinder');
   assert.ok(diagnostics.socketLocalPosition[1] > -0.6, 'shared placement keeps the Sphere above the chamber floor');
-  const presentedDiameter = diagnostics.sphereWorldDiameter;
   for (let frame = 0; frame < 5; frame++) handModes.update(.016);
   assert.equal(sphere.isPresented(), true, 'AVAILABLE presentation survives subsequent hand-mode frames');
   production.resetSession(); handModes.reset();
   assert.equal(sphere.isPresented(), true, 'AVAILABLE re-entry remains presented regardless of following hand-mode reset');
+  assert.ok(sphere.socket.position.distanceTo(snapTarget) < 1e-9, 'reset restores the unmodified snap target with no levitation offset');
+  root.updateMatrixWorld(true); const presentedDiameter = sphere.getDiagnostics().sphereWorldDiameter;
   sphere.clearPresentation(); available = true; assert.equal(handModes.equipLeftAsterion(), true); root.updateMatrixWorld(true);
   const equippedDiameter = sphere.getDiagnostics().sphereWorldDiameter;
   assert.ok(Math.abs(presentedDiameter - equippedDiameter) < 1e-3, 'production and equipment compare real visible-model bounds at the same diameter');
