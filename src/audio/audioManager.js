@@ -4,6 +4,8 @@ const DEFAULTS = Object.freeze({ master: 0.7, ambient: 1.0, effects: 1.0 });
 const CROSSFADE_SECONDS = 5;
 const INTRO_DELAY_SECONDS = 5;
 const HOVER_FADE_OUT_SECONDS = 0.2;
+// Technical guard for compressed loop padding. Set to 0 when assets become authored seamless WAVs.
+export const VR_MP3_SEAM_GUARD_SECONDS = 0.04;
 const AMBIENT_PATHS = Object.freeze([
   '/audio/ambient_01.mp3',
   '/audio/ambient_02.mp3',
@@ -257,6 +259,78 @@ class AudioManager {
       endedCallback?.();
     };
     source.start();
+    return handle;
+  }
+
+  async loadTransientBuffer(path, { signal } = {}) {
+    if (!await this.unlock()) return null;
+    try {
+      const response = await fetch(publicPath(path), { signal });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      return await this.context.decodeAudioData(await response.arrayBuffer());
+    } catch (error) {
+      console.warn(`[audio] Optional transient sound unavailable: ${path}`, error);
+      return null;
+    }
+  }
+
+  async startVrFiniteSource(path, bus = 'AMBIENT', { repetitions = 1, fadeIn = 0, fadeOut = 0,
+    seamGuard = path.endsWith('.mp3') ? VR_MP3_SEAM_GUARD_SECONDS : 0, signal } = {}) {
+    if (!VR_AUDIO_BUSES.includes(bus)) return null;
+    const buffer = await this.loadTransientBuffer(path, { signal });
+    const context = this.context, busNode = this.vrBusNodes.get(bus);
+    if (!buffer || !context || !busNode) return null;
+    const count = Math.max(1, Math.floor(repetitions));
+    const guard = Math.min(Math.max(0, seamGuard), buffer.duration / 4);
+    const stride = buffer.duration - guard;
+    const startAt = context.currentTime + 0.02;
+    const endAt = startAt + buffer.duration + stride * (count - 1);
+    const output = context.createGain();
+    output.gain.setValueAtTime(fadeIn > 0 ? 0 : 1, startAt);
+    if (fadeIn > 0) output.gain.linearRampToValueAtTime(1, Math.min(endAt, startAt + fadeIn));
+    if (fadeOut > 0) {
+      output.gain.setValueAtTime(1, Math.max(startAt, endAt - fadeOut));
+      output.gain.linearRampToValueAtTime(0, endAt);
+    }
+    output.connect(busNode);
+    const sources = [];
+    let resolveFinished;
+    const finished = new Promise((resolve) => { resolveFinished = resolve; });
+    let stopped = false, remaining = count;
+    const owner = this;
+    const handle = { finished, stop() {
+      if (stopped) return;
+      stopped = true;
+      output.gain.cancelScheduledValues(context.currentTime);
+      sources.forEach((source) => { try { source.stop(); } catch (_) { /* already stopped */ } source.buffer = null; });
+      try { output.disconnect(); } catch (_) { /* already disconnected */ }
+      owner.activeVrSources.delete(handle);
+      this.buffer = null;
+      resolveFinished();
+    }, buffer };
+    this.activeVrSources.add(handle);
+    for (let index = 0; index < count; index += 1) {
+      const source = context.createBufferSource(), gain = context.createGain();
+      source.buffer = buffer;
+      const at = startAt + index * stride;
+      gain.gain.setValueAtTime(index === 0 || guard === 0 ? 1 : 0, at);
+      if (index > 0 && guard > 0) gain.gain.linearRampToValueAtTime(1, at + guard);
+      if (index < count - 1 && guard > 0) {
+        gain.gain.setValueAtTime(1, at + stride);
+        gain.gain.linearRampToValueAtTime(0, at + buffer.duration);
+      }
+      source.connect(gain).connect(output);
+      source.onended = () => {
+        try { source.disconnect(); gain.disconnect(); } catch (_) { /* optional cleanup */ }
+        remaining -= 1;
+        if (!stopped && remaining === 0) {
+          stopped = true; this.activeVrSources.delete(handle); handle.buffer = null;
+          try { output.disconnect(); } catch (_) { /* optional cleanup */ }
+          resolveFinished();
+        }
+      };
+      sources.push(source); source.start(at);
+    }
     return handle;
   }
 

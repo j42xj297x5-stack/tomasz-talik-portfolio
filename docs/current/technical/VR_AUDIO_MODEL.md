@@ -4,7 +4,7 @@ Status: canonical, living technical model for Experience VR audio synchronized o
 
 ## SUMMARY DLA ARCHITEKTA
 
-The bounded Experience VR Astro Attractor lifecycle and both Astro Furnace process sounds are **IMPLEMENTED**. Shell extraction plays `astro_piec_work_01.mp3`; production construction plays `astro_piec_work_create_01.mp3` instead, exactly once on DEVICE after an accepted cycle. Neither loops or determines gameplay timing, and reset/dispose stops it through the fail-soft `VrAudioBridge`. Small/large glyph and rune-stone mappings remain **PLANNED**. The ambient sequencer, Asterion Sphere active-control sound (`DEVICE SOUND TBD`), and spatial audio remain unimplemented.
+The bounded Experience VR Astro Attractor lifecycle and both Astro Furnace process sounds are **IMPLEMENTED**. Shell extraction plays `astro_piec_work_01.mp3`; production construction plays `astro_piec_work_create_01.mp3` instead, exactly once on DEVICE after an accepted cycle. Neither loops or determines gameplay timing, and reset/dispose stops it through the fail-soft `VrAudioBridge`. Small/large glyph and rune-stone mappings remain **PLANNED**. The canonical background sequencer and its Asterion subthreshold override are **IMPLEMENTED**. Asterion Sphere active-control sound (`DEVICE SOUND TBD`) and spatial audio remain unimplemented.
 
 ## Status vocabulary and authority
 
@@ -20,6 +20,8 @@ This is the main source for **Experience VR audio** tasks. The general [`AUDIO_R
 ## Runtime boundary and mixer contract
 
 `VrAudioBridge` is **IMPLEMENTED** and remains the mandatory fail-soft boundary from gameplay to optional audio. Requests use its small prepare/play helpers, which retain the `runOptional(operation, request)` failure boundary: an audio failure may warn, but must never block or fail gameplay. The bridge stores no gameplay state and stops active VR one-shots on disposal.
+
+Long-form sequencer assets use transient decoded buffers rather than the permanent one-shot cache. Only the current decode/source (and a pending replacement) is retained, and generation invalidation prevents a late decode from playing after state changes. Finite repetition is scheduled ahead on the `AudioContext` clock from one decoded buffer; MP3 assets use one configurable 40 ms overlap/crossfade seam guard. A future seamless WAV can use a zero guard without changing the sequencer.
 
 The VR mixer has five **IMPLEMENTED**, independently tunable gain buses:
 
@@ -145,12 +147,12 @@ The inventory below contains every existing `public/audio/*.mp3` as of 2026-08-0
 
 | Asset | Forma | Warstwa | Planowane użycie VR | Status | Uwagi |
 | --- | --- | --- | --- | --- | --- |
-| `ambient_01.mp3` | one-shot | AMBIENT | wejście do kręgu / pełny próg 1 | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
-| `ambient_02.mp3` | one-shot | AMBIENT | ukończenie pierwszego kręgu paneli wszystkich gałęzi / pełny próg 2 | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
-| `ambient_03.mp3` | one-shot | AMBIENT | pełny próg 3 (drugi krąg) | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
-| `ambient_04.mp3` | one-shot | AMBIENT | pełny próg 4 (trzeci krąg) | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
-| `ambient_05.mp3` | one-shot | AMBIENT | pełny próg 5 (czwarty krąg) | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
-| `ambient_loop_01.mp3` | seamless loop | AMBIENT | podpróg: ukończone skorupy + zbudowana Kula Asterionowa | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
+| `ambient_01.mp3` | one-shot | AMBIENT | wejście do kręgu / pełny próg 1 | **IMPLEMENTED** | Playback jest obsługiwany przez kanoniczny transient background sequencer. |
+| `ambient_02.mp3` | one-shot | AMBIENT | ukończenie pierwszego kręgu paneli wszystkich gałęzi / pełny próg 2 | **IMPLEMENTED** | Playback jest obsługiwany przez kanoniczny transient background sequencer. |
+| `ambient_03.mp3` | one-shot | AMBIENT | pełny próg 3 (drugi krąg) | **IMPLEMENTED** | Playback jest obsługiwany przez kanoniczny transient background sequencer. |
+| `ambient_04.mp3` | one-shot | AMBIENT | pełny próg 4 (trzeci krąg) | **IMPLEMENTED** | Playback jest obsługiwany przez kanoniczny transient background sequencer. |
+| `ambient_05.mp3` | one-shot | AMBIENT | pełny próg 5 (czwarty krąg) | **IMPLEMENTED** | Playback jest obsługiwany przez kanoniczny transient background sequencer. |
+| `ambient_loop_01.mp3` | seamless loop | AMBIENT | podpróg: ukończone skorupy + zbudowana Kula Asterionowa | **IMPLEMENTED** | Playback jest obsługiwany przez kanoniczny transient background sequencer. |
 | `ambient_loop_02.mp3` | seamless loop | AMBIENT | — | **RESERVED** | Rodzina podprogów znana; event/mapping nieustalony. |
 | `ambient_loop_03.mp3` | seamless loop | AMBIENT | — | **RESERVED** | Rodzina podprogów znana; event/mapping nieustalony. |
 | `ambient_loop_04.mp3` | seamless loop | AMBIENT | — | **RESERVED** | Rodzina podprogów znana; event/mapping nieustalony. |
@@ -208,12 +210,12 @@ The inventory below contains every existing `public/audio/*.mp3` as of 2026-08-0
 | `noise_loop_04.mp3` | seamless loop | SPACE | — | **UNASSIGNED** | Dostępny; przyszłe użycie pozostaje otwarte. |
 | `noise_loop_05.mp3` | seamless loop | SPACE | — | **UNASSIGNED** | Dostępny; przyszłe użycie pozostaje otwarte. |
 | `noise_loop_06.mp3` | seamless loop | SPACE | — | **UNASSIGNED** | Dostępny; przyszłe użycie pozostaje otwarte. |
-| `noise_quiete_loop_01.mp3` | seamless loop | SPACE | globalna kolejka cichego tła między blokami progu/podprogu | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
-| `noise_quiete_loop_02.mp3` | seamless loop | SPACE | globalna kolejka cichego tła między blokami progu/podprogu | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
-| `noise_quiete_loop_03.mp3` | seamless loop | SPACE | globalna kolejka cichego tła między blokami progu/podprogu | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
-| `noise_quiete_loop_04.mp3` | seamless loop | SPACE | globalna kolejka cichego tła między blokami progu/podprogu | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
-| `noise_quiete_loop_05.mp3` | seamless loop | SPACE | globalna kolejka cichego tła między blokami progu/podprogu | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
-| `noise_quiete_loop_07.mp3` | seamless loop | SPACE | globalna kolejka cichego tła między blokami progu/podprogu | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
+| `noise_quiete_loop_01.mp3` | seamless loop | SPACE | globalna kolejka cichego tła między blokami progu/podprogu | **IMPLEMENTED** | Playback jest obsługiwany przez kanoniczny transient background sequencer. |
+| `noise_quiete_loop_02.mp3` | seamless loop | SPACE | globalna kolejka cichego tła między blokami progu/podprogu | **IMPLEMENTED** | Playback jest obsługiwany przez kanoniczny transient background sequencer. |
+| `noise_quiete_loop_03.mp3` | seamless loop | SPACE | globalna kolejka cichego tła między blokami progu/podprogu | **IMPLEMENTED** | Playback jest obsługiwany przez kanoniczny transient background sequencer. |
+| `noise_quiete_loop_04.mp3` | seamless loop | SPACE | globalna kolejka cichego tła między blokami progu/podprogu | **IMPLEMENTED** | Playback jest obsługiwany przez kanoniczny transient background sequencer. |
+| `noise_quiete_loop_05.mp3` | seamless loop | SPACE | globalna kolejka cichego tła między blokami progu/podprogu | **IMPLEMENTED** | Playback jest obsługiwany przez kanoniczny transient background sequencer. |
+| `noise_quiete_loop_07.mp3` | seamless loop | SPACE | globalna kolejka cichego tła między blokami progu/podprogu | **IMPLEMENTED** | Playback jest obsługiwany przez kanoniczny transient background sequencer. |
 | `panel_sound_01.mp3` | one-shot | UI | otwarcie panelu Option Astro Pieca | **IMPLEMENTED** | Playback one-shot na busie UI jest wdrożony. |
 | `panel_sound_02.mp3` | one-shot | UI | wejście głębiej w panel Astro Pieca | **IMPLEMENTED** | Playback one-shot na busie UI jest wdrożony. |
 | `panel_sound_03.mp3` | one-shot | UI | — | **UNASSIGNED** | Brak ustalonego użycia VR. |
