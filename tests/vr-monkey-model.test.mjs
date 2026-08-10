@@ -17,24 +17,29 @@ const worldMatrix = (object) => { object.updateWorldMatrix(true, false); return 
 const matricesNear = (a, b) => a.elements.every((value, index) => Math.abs(value - b.elements[index]) < 1e-10);
 
 const alignment = makeAssets(); const assembled = assembleMonkeyAssets({ characterAsset: alignment.character, stoneAsset: alignment.stone });
-assert.equal(assembled.assemblyRoot.name, 'VrMonkeyAssemblyRoot');
-assert.ok(matricesNear(worldMatrix(alignment.anchor), worldMatrix(alignment.seat)), 'full nonzero anchor TRS coincides');
-const uniform = assembled.assemblyRoot.scale.x; assert.ok(uniform > 0); assert.deepEqual(assembled.assemblyRoot.scale.toArray(), [uniform, uniform, uniform]);
-assert.ok(matricesNear(worldMatrix(alignment.anchor), worldMatrix(alignment.seat)), 'coincidence survives uniform assembly scale');
-assert.equal(alignment.stone.parent, assembled.assemblyRoot); assert.equal(alignment.character.parent, assembled.assemblyRoot);
+assert.ok(assembled.scale > 0);
+assert.equal(alignment.character.parent, null); assert.equal(alignment.stone.parent, null);
 
 const scene = new THREE.Scene(); const placeholder = createPlaceholder(scene); const assets = makeAssets();
 const actor = await loadMonkeyModel({ scene, fallbackObject: placeholder, assetManager: { cloneGltfScene: (id) => id === 'monkey-model' ? assets.character : assets.stone } });
 assert.equal(actor.motionRoot.name, 'VrMonkeyMotionRoot'); assert.equal(actor.visualRoot.name, 'VrMonkeyVisualRoot');
-assert.equal(actor.assemblyRoot.parent, actor.visualRoot); assert.equal(actor.visualRoot.parent, actor.motionRoot);
+assert.equal(actor.stoneRoot.name, 'VrMonkeyStoneRoot'); assert.equal(actor.visualRoot.parent, actor.motionRoot);
+assert.equal(actor.characterRoot.parent, actor.visualRoot); assert.equal(actor.stoneRoot.parent, scene);
+assert.notEqual(actor.stoneRoot.parent, actor.motionRoot); assert.notEqual(actor.stoneRoot.parent, actor.visualRoot);
 assert.equal(actor.interactionRoot, actor.characterRoot); assert.notEqual(actor.interactionRoot, actor.stoneRoot);
 assert.deepEqual(actor.motionRoot.scale.toArray(), [1, 1, 1]); assert.deepEqual(actor.motionRoot.position.toArray(), [2, .5, -3]);
+assert.equal(actor.dockStoneToCanonicalMonkey(), true);
+assert.ok(matricesNear(worldMatrix(actor.characterAnchor), worldMatrix(actor.seatAnchor)), 'full authored anchor matrices dock at canonical pose');
 const runtimeMonkeyMaterial = actor.characterRoot.getObjectByName('monkey').material;
 assert.notEqual(runtimeMonkeyMaterial, assets.material); actor.setEmergeAlpha(0); assert.equal(runtimeMonkeyMaterial.opacity, 0);
 actor.setEmergeAlpha(1); assert.equal(runtimeMonkeyMaterial.opacity, .7);
-const before = actor.assemblyRoot.getWorldPosition(new THREE.Vector3()); actor.motionRoot.position.x += 10; scene.updateMatrixWorld(true);
-assert.ok(Math.abs(actor.assemblyRoot.getWorldPosition(new THREE.Vector3()).x - before.x - 10) < 1e-9);
+const stoneBefore = worldMatrix(actor.stoneRoot); const monkeyBefore = actor.characterRoot.getWorldPosition(new THREE.Vector3()); actor.motionRoot.position.x += 10; scene.updateMatrixWorld(true);
+assert.ok(Math.abs(actor.characterRoot.getWorldPosition(new THREE.Vector3()).x - monkeyBefore.x - 10) < 1e-9);
+assert.ok(matricesNear(worldMatrix(actor.stoneRoot), stoneBefore), 'moving Monkey does not move stone');
+actor.motionRoot.position.x -= 10; scene.updateMatrixWorld(true);
+assert.ok(matricesNear(worldMatrix(actor.stoneRoot), stoneBefore), 'returning Monkey leaves stone transform unchanged');
+assert.ok(matricesNear(worldMatrix(actor.characterAnchor), worldMatrix(actor.seatAnchor)), 'canonical return restores authored docking without a snap');
 
 const fallbackScene = new THREE.Scene(); const fallback = createPlaceholder(fallbackScene); const fallbackActor = await loadMonkeyModel({ scene: fallbackScene, fallbackObject: fallback });
 assert.equal(fallbackActor.model, fallback); assert.equal(fallback.parent, fallbackActor.visualRoot);
-console.log('VR authored Monkey assembly assertions passed.');
+console.log('VR authored Monkey and stationary stone assertions passed.');
