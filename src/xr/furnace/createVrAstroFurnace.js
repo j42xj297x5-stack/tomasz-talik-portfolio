@@ -120,7 +120,7 @@ export function createVrAstroFurnace({
     );
     object.scale.setScalar(settings.scale);
     const bounds = calculateVisibleBounds();
-    if (!bounds.isEmpty()) modelRoot.position.y = (settings.floorOffset - bounds.min.y) / settings.scale;
+    if (!bounds.isEmpty()) modelRoot.position.y += (settings.floorOffset - bounds.min.y) / settings.scale;
     object.visible = settings.enabled && Boolean(model);
     calculateVisibleBounds();
     object.getWorldPosition(resolvedWorldPosition);

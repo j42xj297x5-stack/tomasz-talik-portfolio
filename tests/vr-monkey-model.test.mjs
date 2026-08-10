@@ -28,7 +28,8 @@ assert.equal(actor.characterRoot.parent, actor.visualRoot); assert.equal(actor.s
 assert.notEqual(actor.stoneRoot.parent, actor.motionRoot); assert.notEqual(actor.stoneRoot.parent, actor.visualRoot);
 assert.equal(actor.interactionRoot, actor.characterRoot); assert.notEqual(actor.interactionRoot, actor.stoneRoot);
 assert.deepEqual(actor.motionRoot.scale.toArray(), [1, 1, 1]); assert.deepEqual(actor.motionRoot.position.toArray(), [0, 0, 0]);
-assert.equal(actor.dockStoneToCanonicalMonkey(), true);
+assert.ok(matricesNear(worldMatrix(actor.authoredStoneRoot), worldMatrix(scene)), 'authored stone root is based at the platform center');
+assert.equal(actor.dockCharacterToStone(), true);
 assert.ok(matricesNear(worldMatrix(actor.characterAnchor), worldMatrix(actor.seatAnchor)), 'full authored anchor matrices dock at canonical pose');
 const runtimeMonkeyMaterial = actor.characterRoot.getObjectByName('monkey').material;
 assert.notEqual(runtimeMonkeyMaterial, assets.material); actor.setEmergeAlpha(0); assert.equal(runtimeMonkeyMaterial.opacity, 0);
@@ -37,6 +38,7 @@ const stoneBefore = worldMatrix(actor.stoneRoot); const monkeyBefore = actor.cha
 assert.ok(Math.abs(actor.characterRoot.getWorldPosition(new THREE.Vector3()).x - monkeyBefore.x - 10) < 1e-9);
 assert.ok(matricesNear(worldMatrix(actor.stoneRoot), stoneBefore), 'moving Monkey does not move stone');
 actor.motionRoot.position.x -= 10; scene.updateMatrixWorld(true);
+assert.deepEqual(actor.motionRoot.position.toArray(), [0, 0, 0], 'motion root returns to its canonical transform');
 assert.ok(matricesNear(worldMatrix(actor.stoneRoot), stoneBefore), 'returning Monkey leaves stone transform unchanged');
 assert.ok(matricesNear(worldMatrix(actor.characterAnchor), worldMatrix(actor.seatAnchor)), 'canonical return restores authored docking without a snap');
 

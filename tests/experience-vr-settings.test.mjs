@@ -47,6 +47,8 @@ assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.furnace.optionButton.emissionHover, 
 assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.glyphLights.inwardOffset, 1);
 assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.crystals.spawnInwardOffset, 0.3);
 assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.crystals.consumeDuration, 0.55);
+assert.deepEqual(DEFAULT_EXPERIENCE_VR_SETTINGS.portal.position, { x: 2, y: 0, z: 0.5 });
+assert.deepEqual(DEFAULT_EXPERIENCE_VR_SETTINGS.furnace.position, { x: -2, y: 0, z: 0.5 });
 assert.deepEqual(normalizeExperienceVrSettings({ schemaVersion: 2 }), DEFAULT_EXPERIENCE_VR_SETTINGS);
 
 const normalized = normalizeExperienceVrSettings({
