@@ -176,6 +176,11 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
   intro: {
     enabled: true,
     emergeDuration: 12.0,
+    introRevealDuration: 13.0,
+    postRevealSilenceDuration: 2.0,
+    initialHeadToMonkeyDistance: 1.5,
+    insideSafeMargin: 0.75,
+    glyphFreeExploreDuration: 60.0,
     playerStartRadius: 20.0,
     monkeyStartRadius: 18.0,
     thresholdStopOutsideDistance: 1.0,
@@ -579,6 +584,11 @@ export function normalizeExperienceVrSettings(candidate) {
     intro: {
       enabled: typeof candidate.intro?.enabled === 'boolean' ? candidate.intro.enabled : defaults.intro.enabled,
       emergeDuration: finiteNumber(candidate.intro?.emergeDuration, defaults.intro.emergeDuration, { min: 0.1, max: 30 }),
+      introRevealDuration: finiteNumber(candidate.intro?.introRevealDuration, defaults.intro.introRevealDuration, { min: 0.1, max: 30 }),
+      postRevealSilenceDuration: finiteNumber(candidate.intro?.postRevealSilenceDuration, defaults.intro.postRevealSilenceDuration, { min: 0, max: 10 }),
+      initialHeadToMonkeyDistance: finiteNumber(candidate.intro?.initialHeadToMonkeyDistance, defaults.intro.initialHeadToMonkeyDistance, { min: 0.5, max: 5 }),
+      insideSafeMargin: finiteNumber(candidate.intro?.insideSafeMargin, defaults.intro.insideSafeMargin, { min: 0.1, max: 2 }),
+      glyphFreeExploreDuration: finiteNumber(candidate.intro?.glyphFreeExploreDuration, defaults.intro.glyphFreeExploreDuration, { min: 1, max: 300 }),
       playerStartRadius: finiteNumber(candidate.intro?.playerStartRadius, defaults.intro.playerStartRadius, { min: 1, max: 100 }),
       monkeyStartRadius: finiteNumber(candidate.intro?.monkeyStartRadius, defaults.intro.monkeyStartRadius, { min: 1, max: 100 }),
       thresholdStopOutsideDistance: finiteNumber(candidate.intro?.thresholdStopOutsideDistance,

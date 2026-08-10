@@ -3,7 +3,7 @@ const VR_PLAYER_GUIDE_CONTENT = Object.freeze({
     title: 'Panel gracza',
     items: Object.freeze([
       Object.freeze({ id: 'controls', label: 'STEROWANIE', body: 'Mapa podstawowych wejść kontrolerów.' }),
-      Object.freeze({ id: 'current-task', label: 'AKTUALNE ZADANIE', body: 'Kontynuuj eksplorację i aktywuj kolejne elementy świata.' })
+      Object.freeze({ id: 'current-task', label: 'AKTUALNE ZADANIE', body: 'Dokonaj wyboru.' })
     ]),
     menuHint: 'Lewy drążek — wybór · X — otwórz · Y — zamknij',
     detailHint: 'Lewy drążek — wybór · X — otwórz · Y — wróć',
@@ -13,7 +13,7 @@ const VR_PLAYER_GUIDE_CONTENT = Object.freeze({
     title: 'Player panel',
     items: Object.freeze([
       Object.freeze({ id: 'controls', label: 'CONTROLS', body: 'Basic controller input map.' }),
-      Object.freeze({ id: 'current-task', label: 'CURRENT TASK', body: 'Continue exploring and activate the next world elements.' })
+      Object.freeze({ id: 'current-task', label: 'CURRENT TASK', body: 'Make a choice.' })
     ]),
     menuHint: 'Left stick — select · X — open · Y — close',
     detailHint: 'Left stick — select · X — open · Y — back',
