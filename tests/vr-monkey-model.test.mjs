@@ -5,7 +5,7 @@ import { assembleMonkeyAssets, loadMonkeyModel } from '../src/scene/monkeyModel.
 function createPlaceholder(scene) { const object = new THREE.Mesh(new THREE.BoxGeometry(1, 2, 1), new THREE.MeshBasicMaterial()); object.position.set(2, .5, -3); scene.add(object); return object; }
 function makeAssets() {
   const character = new THREE.Group(); const anchor = new THREE.Group(); anchor.name = 'MONKEY_ANCHOR';
-  anchor.position.set(.3, .7, -.2); anchor.rotation.set(.2, -.3, .1); anchor.scale.set(1.2, .8, 1.1);
+  anchor.position.set(.3, .7, -.2); anchor.rotation.set(.2, -.3, .1); anchor.scale.set(.5, .5, .5);
   const material = new THREE.MeshBasicMaterial({ opacity: .7 }); const monkey = new THREE.Mesh(new THREE.BoxGeometry(2, 4, 1), material); monkey.name = 'monkey'; anchor.add(monkey); character.add(anchor);
   const stone = new THREE.Group(); const root = new THREE.Group(); root.name = 'MONKEY_STONE_ROOT';
   root.position.set(-.4, .2, .5); root.rotation.set(-.1, .4, .2); root.scale.set(.9, 1.3, .7);
@@ -15,6 +15,8 @@ function makeAssets() {
 }
 const worldMatrix = (object) => { object.updateWorldMatrix(true, false); return object.matrixWorld.clone(); };
 const matricesNear = (a, b) => a.elements.every((value, index) => Math.abs(value - b.elements[index]) < 1e-10);
+const vectorsNear = (a, b) => a.distanceTo(b) < 1e-10;
+const quaternionsNear = (a, b) => 1 - Math.abs(a.dot(b)) < 1e-10;
 
 const alignment = makeAssets(); const assembled = assembleMonkeyAssets({ characterAsset: alignment.character, stoneAsset: alignment.stone });
 assert.ok(assembled.scale > 0);
@@ -29,8 +31,13 @@ assert.notEqual(actor.stoneRoot.parent, actor.motionRoot); assert.notEqual(actor
 assert.equal(actor.interactionRoot, actor.characterRoot); assert.notEqual(actor.interactionRoot, actor.stoneRoot);
 assert.deepEqual(actor.motionRoot.scale.toArray(), [1, 1, 1]); assert.deepEqual(actor.motionRoot.position.toArray(), [0, 0, 0]);
 assert.ok(matricesNear(worldMatrix(actor.authoredStoneRoot), worldMatrix(scene)), 'authored stone root is based at the platform center');
+const stoneScaleBeforeDock = actor.stoneRoot.scale.clone();
 assert.equal(actor.dockCharacterToStone(), true);
-assert.ok(matricesNear(worldMatrix(actor.characterAnchor), worldMatrix(actor.seatAnchor)), 'full authored anchor matrices dock at canonical pose');
+assert.ok(vectorsNear(actor.characterAnchor.getWorldPosition(new THREE.Vector3()), actor.seatAnchor.getWorldPosition(new THREE.Vector3())), 'character and seat anchor world positions dock');
+assert.ok(quaternionsNear(actor.characterAnchor.getWorldQuaternion(new THREE.Quaternion()), actor.seatAnchor.getWorldQuaternion(new THREE.Quaternion())), 'character and seat anchor world rotations dock');
+assert.ok(vectorsNear(actor.characterAnchor.getWorldScale(new THREE.Vector3()), new THREE.Vector3(.5, .5, .5)), 'authored character anchor scale remains effective');
+assert.ok(!vectorsNear(actor.characterAnchor.getWorldScale(new THREE.Vector3()), actor.seatAnchor.getWorldScale(new THREE.Vector3())), 'character scale is not normalized to seat scale');
+assert.ok(vectorsNear(actor.stoneRoot.scale, stoneScaleBeforeDock), 'docking leaves stone scale unchanged');
 const runtimeMonkeyMaterial = actor.characterRoot.getObjectByName('monkey').material;
 assert.notEqual(runtimeMonkeyMaterial, assets.material); actor.setEmergeAlpha(0); assert.equal(runtimeMonkeyMaterial.opacity, 0);
 actor.setEmergeAlpha(1); assert.equal(runtimeMonkeyMaterial.opacity, .7);
@@ -39,8 +46,10 @@ assert.ok(Math.abs(actor.characterRoot.getWorldPosition(new THREE.Vector3()).x -
 assert.ok(matricesNear(worldMatrix(actor.stoneRoot), stoneBefore), 'moving Monkey does not move stone');
 actor.motionRoot.position.x -= 10; scene.updateMatrixWorld(true);
 assert.deepEqual(actor.motionRoot.position.toArray(), [0, 0, 0], 'motion root returns to its canonical transform');
+assert.deepEqual(actor.motionRoot.scale.toArray(), [1, 1, 1], 'motion root retains canonical scale');
 assert.ok(matricesNear(worldMatrix(actor.stoneRoot), stoneBefore), 'returning Monkey leaves stone transform unchanged');
-assert.ok(matricesNear(worldMatrix(actor.characterAnchor), worldMatrix(actor.seatAnchor)), 'canonical return restores authored docking without a snap');
+assert.ok(vectorsNear(actor.characterAnchor.getWorldPosition(new THREE.Vector3()), actor.seatAnchor.getWorldPosition(new THREE.Vector3())), 'canonical return restores seating position without a snap');
+assert.ok(quaternionsNear(actor.characterAnchor.getWorldQuaternion(new THREE.Quaternion()), actor.seatAnchor.getWorldQuaternion(new THREE.Quaternion())), 'canonical return restores seating rotation without a snap');
 
 const fallbackScene = new THREE.Scene(); const fallback = createPlaceholder(fallbackScene); const fallbackActor = await loadMonkeyModel({ actorParent: fallbackScene, fixtureParent: fallbackScene, fallbackObject: fallback });
 assert.equal(fallbackActor.model, fallback); assert.equal(fallback.parent, fallbackActor.visualRoot);
