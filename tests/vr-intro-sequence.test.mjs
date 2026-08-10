@@ -9,6 +9,10 @@ assert.match(VR_INTRO_COPY.en.threshold[0], /threshold/);
 
 function fixture({ bypass = false } = {}) {
   const monkeyAnchor = new THREE.Group();
+  monkeyAnchor.position.set(0.25, 0, -0.5);
+  monkeyAnchor.rotation.y = 0.35;
+  const canonicalMonkeyPosition = monkeyAnchor.position.clone();
+  const canonicalMonkeyQuaternion = monkeyAnchor.quaternion.clone();
   const playerRig = new THREE.Group();
   const glyphRing = new THREE.Group();
   const platformFixturesRoot = new THREE.Group();
@@ -17,19 +21,24 @@ function fixture({ bypass = false } = {}) {
   let override = null; let message = ''; let ended = 0; let radius = 4;
   const monkeyGuide = { showMessage(value) { message = value; }, setDialogueOverride(value) { override = value; } };
   const locomotion = { reset() { radius = 4; }, setWalkRadius(value) { radius = value; } };
-  const settings = { enabled: true, locale: 'en', startOutsideMargin: 2.6, thresholdStopMargin: 0.35,
-    guideSpeed: 1, pauseDistance: 3.2, resumeDistance: 2.4, revealProgress: 0.72, lineDuration: 0.01 };
+  const settings = { enabled: true, locale: 'en', startOutsideMargin: 2.6, playerStartBackOffset: 2,
+    thresholdStopMargin: 0.35, guideSpeed: 1, guideTurnDuration: 1, pauseDistance: 3.2,
+    resumeDistance: 2.4, revealProgress: 0.72, lineDuration: 0.01 };
   const sequence = createVrIntroSequence({ monkeyGuide, monkeyAnchor, playerRig, glyphRing, progressFloor,
     platformFixturesRoot, locomotion, ringRadius: 4, entryDirection: new THREE.Vector3(0, 0, 1), settings,
     bypass, onEndSession: () => { ended += 1; } });
   return { sequence, monkeyAnchor, playerRig, glyphRing, platformFixturesRoot, sector,
+    canonicalMonkeyPosition, canonicalMonkeyQuaternion,
     getOverride: () => override, getMessage: () => message, getRadius: () => radius, getEnded: () => ended };
 }
 
 const intro = fixture();
 assert.equal(intro.sequence.getState(), VR_INTRO_STATE.VOID);
 assert.equal(intro.sector.visible, false); assert.equal(intro.platformFixturesRoot.visible, false);
-assert.equal(intro.glyphRing.visible, false); assert.ok(Math.hypot(intro.playerRig.position.x, intro.playerRig.position.z) > 4);
+assert.equal(intro.glyphRing.visible, false);
+assert.equal(Math.hypot(intro.playerRig.position.x, intro.playerRig.position.z), 8.6, 'hardware offset is added to the base radius');
+intro.sequence.reset();
+assert.equal(Math.hypot(intro.playerRig.position.x, intro.playerRig.position.z), 8.6, 'hardware offset does not accumulate');
 for (let i = 0; i < 6; i += 1) intro.sequence.update(0.02);
 assert.equal(intro.sequence.getState(), VR_INTRO_STATE.WAIT_HOVER);
 intro.getOverride().onMonkeyHover(); assert.equal(intro.sequence.getState(), VR_INTRO_STATE.WAIT_TRIGGER);
@@ -40,6 +49,12 @@ intro.sequence.chooseInvitation('where'); for (let i = 0; i < 3; i += 1) intro.s
 assert.equal(intro.sequence.getState(), VR_INTRO_STATE.INVITATION, 'where returns to invitation');
 intro.sequence.chooseInvitation('go'); assert.equal(intro.sequence.getState(), VR_INTRO_STATE.FOLLOWING);
 assert.equal(intro.getRadius(), Infinity);
+const followingStart = intro.monkeyAnchor.position.clone();
+const originalQuaternion = intro.canonicalMonkeyQuaternion.clone();
+intro.playerRig.position.copy(intro.monkeyAnchor.position); intro.sequence.update(0.5);
+assert.ok(intro.monkeyAnchor.position.distanceTo(followingStart) > 0, 'translation starts during the turn');
+assert.ok(intro.monkeyAnchor.quaternion.angleTo(originalQuaternion) > 0, 'turn starts without an orientation jump');
+assert.ok(Math.abs(intro.monkeyAnchor.quaternion.angleTo(originalQuaternion) - Math.PI / 2) < 1e-6, 'half turn takes half the duration');
 intro.playerRig.position.z = 10; intro.sequence.update(1);
 assert.equal(intro.sequence.isGuidePaused(), true); const pausedZ = intro.monkeyAnchor.position.z;
 intro.sequence.update(1); assert.equal(intro.monkeyAnchor.position.z, pausedZ, 'guide never retreats while paused');
@@ -52,7 +67,9 @@ intro.playerRig.position.z = 4.1; intro.sequence.update(0.1); assert.equal(intro
 intro.playerRig.position.z = 3.9; intro.sequence.update(0.1);
 assert.equal(intro.sequence.getState(), VR_INTRO_STATE.INSIDE_RING_READY, 'only physical crossing completes intro');
 assert.equal(intro.getRadius(), 4);
+assert.ok(intro.monkeyAnchor.quaternion.angleTo(intro.canonicalMonkeyQuaternion) < 1e-6, 'completion restores canonical orientation');
 intro.sequence.reset(); assert.equal(intro.sequence.getState(), VR_INTRO_STATE.VOID, 'session reset is deterministic');
+assert.ok(intro.monkeyAnchor.quaternion.angleTo(intro.canonicalMonkeyQuaternion) < 1e-6, 'reset restores canonical orientation');
 
 const refusal = fixture(); refusal.sequence.chooseInvitation('no');
 for (let i = 0; i < 3; i += 1) refusal.sequence.update(0.02);
