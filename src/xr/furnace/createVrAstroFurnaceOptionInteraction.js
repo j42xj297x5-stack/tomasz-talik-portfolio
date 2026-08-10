@@ -46,7 +46,7 @@ export function createVrAstroFurnaceOptionInteraction({ furnace, panel, controll
   const unsubscribeModule = panel.subscribeModuleActivation?.(selectMode) ?? (() => {});
   controllers.forEach((record) => { const listener = () => press(record); record.controller.addEventListener('selectstart', listener); listeners.push({ record, listener }); });
   function update(delta = 0) { if (!disposed) { updateHits(); halo?.update(Math.max(0, delta));
-    if (pivot && Math.abs(currentAngle - tweenTarget) > 1e-7) { tweenElapsed += Math.max(0, delta); const raw = Math.min(1, tweenElapsed / Math.max(settings.selectionDuration ?? .48, 1e-6));
+    if (pivot && Math.abs(currentAngle - tweenTarget) > 1e-7) { tweenElapsed += Math.max(0, delta); const raw = Math.min(1, tweenElapsed / Math.max(settings.selectionDuration, 1e-6));
       const t = raw < .5 ? 4 * raw ** 3 : 1 - ((-2 * raw + 2) ** 3) / 2; currentAngle = THREE.MathUtils.lerp(tweenStart, tweenTarget, t);
       optionRotation.setFromAxisAngle(localOptionAxis, currentAngle); pivot.quaternion.copy(baseQuaternion).multiply(optionRotation); }
   } }
