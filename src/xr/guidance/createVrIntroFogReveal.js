@@ -5,15 +5,13 @@ const smoothstep = (value) => {
   return t * t * (3 - 2 * t);
 };
 
-/** Lightweight, platform-anchored replacement for fading the monkey's materials. */
-export function createVrIntroFogReveal({ anchor, roots = [], color = '#05070b', duration = 13, revealRadius = 24 }) {
+/** Radial black fog that expands from the calibrated player position to the Monkey. */
+export function createVrIntroFogReveal({ getOriginPosition, getTargetPosition, roots = [], color = '#05070b', duration = 10 }) {
   const uniforms = { center: { value: new THREE.Vector3() }, radius: { value: 0 }, color: { value: new THREE.Color(color) } };
   const patched = new Map();
-  let elapsed = 0; let progress = 0; let active = false;
+  let elapsed = 0; let progress = 0; let active = false; let revealRadius = 0;
 
   function install() {
-    anchor.updateWorldMatrix(true, false);
-    anchor.getWorldPosition(uniforms.center.value);
     for (const root of roots.filter(Boolean)) root.traverse?.((object) => {
       const materials = Array.isArray(object.material) ? object.material : [object.material];
       for (const material of materials.filter(Boolean)) {
@@ -39,7 +37,12 @@ export function createVrIntroFogReveal({ anchor, roots = [], color = '#05070b', 
     patched.clear();
   }
   function restart() { uninstall(); elapsed = 0; progress = 0; active = false; uniforms.radius.value = 0; install(); }
-  function start() { active = true; }
+  function start() {
+    uniforms.center.value.copy(getOriginPosition());
+    const target = getTargetPosition();
+    revealRadius = Math.hypot(target.x - uniforms.center.value.x, target.z - uniforms.center.value.z);
+    active = true;
+  }
   function update(delta) {
     if (!active) return;
     elapsed = Math.min(duration, elapsed + Math.max(0, delta));
@@ -50,5 +53,6 @@ export function createVrIntroFogReveal({ anchor, roots = [], color = '#05070b', 
   function skipToEnd() { elapsed = duration; progress = 1; uniforms.radius.value = revealRadius; active = false; uninstall(); }
   function dispose() { uninstall(); }
   restart();
-  return { restart, start, update, skipToEnd, dispose, getSnapshot: () => ({ progress, elapsed, duration, active }) };
+  return { restart, start, update, skipToEnd, dispose,
+    getSnapshot: () => ({ progress, elapsed, duration, active, revealRadius, center: uniforms.center.value.clone() }) };
 }

@@ -49,30 +49,6 @@ function createMonkeyActor({ actorParent, fixtureParent, fallbackObject, model, 
     setMatrix(stoneAsset, authoredRootInAsset.invert());
   }
 
-  const emergenceMaterials = [];
-  visualRoot.traverse((object) => {
-    if (!object.isMesh || !object.material) return;
-    const sourceMaterials = Array.isArray(object.material) ? object.material : [object.material];
-    const runtimeMaterials = sourceMaterials.map((source) => {
-      const material = source.clone();
-      emergenceMaterials.push({ material, baseOpacity: material.opacity,
-        baseTransparent: material.transparent, baseDepthWrite: material.depthWrite });
-      return material;
-    });
-    object.material = Array.isArray(object.material) ? runtimeMaterials : runtimeMaterials[0];
-  });
-
-  let emergeAlpha = 1;
-  function setEmergeAlpha(value) {
-    emergeAlpha = THREE.MathUtils.clamp(Number.isFinite(value) ? value : 1, 0, 1);
-    emergenceMaterials.forEach(({ material, baseOpacity, baseTransparent, baseDepthWrite }) => {
-      material.opacity = baseOpacity * emergeAlpha;
-      material.transparent = emergeAlpha < 1 || baseTransparent;
-      material.depthWrite = emergeAlpha < 1 ? false : baseDepthWrite;
-      material.needsUpdate = true;
-    });
-  }
-
   function dockCharacterToStone() {
     if (!stoneAsset || !characterAnchor || !seatAnchor || !stoneRoot.parent) return false;
     motionRoot.updateWorldMatrix(true, true);
@@ -98,8 +74,7 @@ function createMonkeyActor({ actorParent, fixtureParent, fallbackObject, model, 
   }
 
   return { motionRoot, visualRoot, characterRoot, interactionRoot: characterRoot, stoneRoot, model,
-    characterAnchor, authoredStoneRoot, seatAnchor, dockCharacterToStone, setEmergeAlpha, getEmergeAlpha: () => emergeAlpha,
-    disposeEmergenceMaterials() { emergenceMaterials.forEach(({ material }) => material.dispose()); } };
+    characterAnchor, authoredStoneRoot, seatAnchor, dockCharacterToStone };
 }
 
 export async function loadMonkeyModel({ actorParent, fixtureParent = actorParent, fallbackObject, assetManager = null }) {
