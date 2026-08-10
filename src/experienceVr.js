@@ -197,7 +197,7 @@ const monkeyActor = await loadMonkeyModel({ actorParent: progressFloor.object, f
 const { motionRoot: monkeyMotionRoot, visualRoot: monkeyVisualRoot, interactionRoot: monkeyInteractionRoot,
   stoneRoot: monkeyStoneRoot, model: monkeyModel } = monkeyActor;
 monkeyMotionRoot.position.set(settings.spatial.monkeyFinal.x, settings.spatial.monkeyFinal.y, settings.spatial.monkeyFinal.z);
-monkeyActor.dockStoneToCanonicalMonkey();
+monkeyActor.dockCharacterToStone();
 const resolvedPortfolioNodes = resolvePortfolioNodes(language);
 const { group: glyphRing, nodes } = createOrbitNodes(resolvedPortfolioNodes, { assetManager });
 worldStableRoot.add(glyphRing);

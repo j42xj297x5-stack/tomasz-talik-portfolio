@@ -60,10 +60,12 @@ assert.ok(Math.abs(placedFurnace.object.position.z - expectedFurnace.z) < 1e-12)
 assert.equal(placedFurnace.object.scale.x, 3);
 assert.ok(Math.abs(new THREE.Box3().setFromObject(placedFurnace.object).min.y) < 1e-10);
 placedFurnace.reset();
+assert.ok(Math.abs(new THREE.Box3().setFromObject(placedFurnace.object).min.y) < 1e-10, 'reset preserves visible floor grounding');
 assert.ok(Math.abs(placedFurnace.object.position.x - expectedFurnace.x) < 1e-12,
   'furnace placement is independent from the portal object');
 anchor.position.set(11, 1, 2);
 placedFurnace.place();
+assert.ok(Math.abs(new THREE.Box3().setFromObject(placedFurnace.object).min.y) < 1e-10, 'repeated place preserves visible floor grounding');
 assert.ok(Math.abs(placedFurnace.object.position.x - expectedFurnace.x) < 1e-12
   && Math.abs(placedFurnace.object.position.z - expectedFurnace.z) < 1e-12,
   'furnace place never reads the monkey transform');

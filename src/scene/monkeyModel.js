@@ -25,11 +25,11 @@ export function assembleMonkeyAssets({ characterAsset, stoneAsset }) {
   if (!characterAnchor.getObjectById(monkeyMesh.id)) throw new Error('[monkeyModel] MONKEY_ANCHOR must be an ancestor of monkey.');
   if (!authoredStoneRoot.getObjectById(seatAnchor.id)) throw new Error('[monkeyModel] MONKEY_SEAT_ANCHOR must belong to MONKEY_STONE_ROOT.');
 
-  return { characterRoot: characterAsset, stoneAsset, characterAnchor, seatAnchor, scale: 1 };
+  return { characterRoot: characterAsset, stoneAsset, characterAnchor, authoredStoneRoot, seatAnchor, scale: 1 };
 }
 
 function createMonkeyActor({ actorParent, fixtureParent, fallbackObject, model, characterRoot = model, stoneAsset = null,
-  characterAnchor = null, seatAnchor = null, scale = 1 }) {
+  characterAnchor = null, authoredStoneRoot = null, seatAnchor = null, scale = 1 }) {
   const motionRoot = new THREE.Group();
   motionRoot.name = 'VrMonkeyMotionRoot';
   const visualRoot = new THREE.Group();
@@ -43,6 +43,11 @@ function createMonkeyActor({ actorParent, fixtureParent, fallbackObject, model, 
   visualRoot.add(characterRoot);
   visualRoot.scale.setScalar(scale);
   if (stoneAsset) { fixtureParent.add(stoneRoot); stoneRoot.add(stoneAsset); stoneRoot.scale.setScalar(scale); }
+
+  if (stoneAsset && authoredStoneRoot) {
+    const authoredRootInAsset = matrixRelativeTo(authoredStoneRoot, stoneAsset);
+    setMatrix(stoneAsset, authoredRootInAsset.invert());
+  }
 
   const emergenceMaterials = [];
   visualRoot.traverse((object) => {
@@ -68,21 +73,20 @@ function createMonkeyActor({ actorParent, fixtureParent, fallbackObject, model, 
     });
   }
 
-  function dockStoneToCanonicalMonkey() {
+  function dockCharacterToStone() {
     if (!stoneAsset || !characterAnchor || !seatAnchor || !stoneRoot.parent) return false;
     motionRoot.updateWorldMatrix(true, true);
     stoneRoot.updateWorldMatrix(true, true);
-    const anchorWorld = characterAnchor.matrixWorld.clone();
-    const seatInStone = matrixRelativeTo(seatAnchor, stoneRoot);
-    stoneRoot.parent.updateWorldMatrix(true, false);
-    const stoneLocal = stoneRoot.parent.matrixWorld.clone().invert().multiply(anchorWorld).multiply(seatInStone.invert());
-    setMatrix(stoneRoot, stoneLocal);
-    stoneRoot.updateWorldMatrix(true, true);
+    const seatWorld = seatAnchor.matrixWorld.clone();
+    const anchorInVisual = matrixRelativeTo(characterAnchor, visualRoot);
+    const visualLocal = motionRoot.matrixWorld.clone().invert().multiply(seatWorld).multiply(anchorInVisual.invert());
+    setMatrix(visualRoot, visualLocal);
+    visualRoot.updateWorldMatrix(true, true);
     return true;
   }
 
   return { motionRoot, visualRoot, characterRoot, interactionRoot: characterRoot, stoneRoot, model,
-    characterAnchor, seatAnchor, dockStoneToCanonicalMonkey, setEmergeAlpha, getEmergeAlpha: () => emergeAlpha,
+    characterAnchor, authoredStoneRoot, seatAnchor, dockCharacterToStone, setEmergeAlpha, getEmergeAlpha: () => emergeAlpha,
     disposeEmergenceMaterials() { emergenceMaterials.forEach(({ material }) => material.dispose()); } };
 }
 

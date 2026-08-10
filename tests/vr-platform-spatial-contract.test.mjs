@@ -12,11 +12,11 @@ const fixtures = new THREE.Group(); fixtures.name = 'VrPlatformFixturesRoot'; fl
 
 const portalModel = new THREE.Group(); portalModel.add(new THREE.Mesh(new THREE.BoxGeometry(1, 2, 0.2)));
 const portal = createVrPortalDisplay({ parent: fixtures, portalModel,
-  settings: { enabled: true, position: { x: -2, y: 0, z: 0 }, maxWidth: 2, maxHeight: 2, floorOffset: 0 } });
+  settings: { enabled: true, position: { x: 2, y: 0, z: 0.5 }, maxWidth: 2, maxHeight: 2, floorOffset: 0 } });
 portal.place();
 const furnaceModel = new THREE.Group(); furnaceModel.add(new THREE.Mesh(new THREE.BoxGeometry(1, 2, 1)));
 const furnace = createVrAstroFurnace({ parent: fixtures, model: furnaceModel, settings: {
-  enabled: true, position: { x: 2, y: 0, z: 0 }, floorOffset: 0, scale: 1,
+  enabled: true, position: { x: -2, y: 0, z: 0.5 }, floorOffset: 0, scale: 1,
   rotationDegrees: { x: 0, y: 0, z: 0 }, content: { enabled: false }, debug: false
 } });
 const reliquaryModel = new THREE.Group(); reliquaryModel.add(new THREE.Mesh(new THREE.BoxGeometry(0.5, 1, 0.5)));

@@ -23,7 +23,7 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
   furnace: {
     enabled: true,
     floorOffset: 0,
-    position: { x: -2.0, y: 0, z: 1.0 },
+    position: { x: -2, y: 0, z: 0.5 },
     rotationDegrees: { x: 0, y: 5.71, z: 0 },
     scale: 3,
     debug: false,
@@ -194,7 +194,7 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
   },
   portal: {
     enabled: true,
-    position: { x: -1.940285, y: 0, z: -0.485071 },
+    position: { x: 2, y: 0, z: 0.5 },
     rotationDegrees: { x: 0, y: 5.41, z: 0 },
     maxWidth: 2.8,
     maxHeight: 3.2,
