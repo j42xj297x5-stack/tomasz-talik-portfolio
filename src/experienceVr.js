@@ -42,6 +42,7 @@ import { createVrAsterionGyroInteraction } from './xr/asterion/createVrAsterionG
 import { createVrAsterionProductionController } from './xr/asterion/createVrAsterionProductionController.js';
 import { createVrPlayerGuidePanel } from './xr/guidance/createVrPlayerGuidePanel.js';
 import { createVrMonkeyGuide } from './xr/guidance/createVrMonkeyGuide.js';
+import { createVrIntroSequence, VR_INTRO_STATE } from './xr/guidance/createVrIntroSequence.js';
 import { createVrSceneLayoutPrototype } from './xr/layout/createVrSceneLayoutPrototype.js';
 import { createVrAudioBridge } from './xr/audio/createVrAudioBridge.js';
 import { createVrAmbientSequencer } from './xr/audio/createVrAmbientSequencer.js';
@@ -123,6 +124,8 @@ const searchParams = new URLSearchParams(location.search);
 const sceneLayoutQa = searchParams.has('sceneLayout');
 const sceneLayoutDebug = sceneLayoutQa && searchParams.has('layoutDebug');
 const furnaceProcessQa = searchParams.has('furnaceProcess');
+const introQaBypass = ['p1', 'asterionSphere', 'furnaceProcess', 'sceneLayout', 'layoutDebug', 'furnace', 'layout']
+  .some((key) => searchParams.has(key));
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: settings.renderer.antialias });
 renderer.setPixelRatio(Math.min(devicePixelRatio || 1, settings.renderer.pixelRatioCap));
 renderer.xr.enabled = true;
@@ -227,8 +230,6 @@ if (sceneLayout) {
 const playerRigSpawnLocalPosition = playerRig.position.clone();
 const playerRigSpawnLocalQuaternion = playerRig.quaternion.clone();
 const playerRigSpawnLocalScale = playerRig.scale.clone();
-playerRig.updateWorldMatrix(true, false);
-const playerRigSpawnWorldPosition = playerRig.getWorldPosition(new THREE.Vector3());
 const shellSystem = createVrShellSystem({ parent: worldRoot, assetManager, baseRadius: glyphOrbit.effectiveRadius,
   emissionSettings: settings.shellAttractor });
 const asterionSphereGltf = assetManager.getGltf('vr-asterion-sphere-model');
@@ -354,6 +355,7 @@ const monkeyGuide = createVrMonkeyGuide({
     && handModeController.getRightMode() === 'ASTRO_ATTRACTOR')
     && !(asterionSphere.isEquipped() && record.handedness === 'left')
 });
+let introSequence = null;
 let astroFurnaceActivateInteraction = null;
 let astroFurnaceContentInteraction = null;
 let astroFurnaceOptionInteraction = null;
@@ -488,7 +490,11 @@ function getNextCrystalTier(node) {
       && !crystalCollection.instances.some((instance) => instance.branchId === branchId
         && instance.tier === page.order && instance.state !== 'released'))?.order ?? null;
 }
-function isGlyphActive(node) { return getNextCrystalTier(node) !== null; }
+function isGlyphActive(node) {
+  const introState = introSequence?.getState();
+  const introAllowsGameplay = introState === VR_INTRO_STATE.INSIDE_RING_READY || introState === VR_INTRO_STATE.BYPASSED;
+  return introAllowsGameplay && getNextCrystalTier(node) !== null;
+}
 const glyphInteraction = createVrGlyphInteraction({
   controllers: vrControllers.controllers,
   nodes,
@@ -597,6 +603,21 @@ function applySceneLayoutPrototype() {
 
 applySceneLayoutPrototype();
 
+const introEntryDirection = new THREE.Vector3(settings.spawn.position.x, 0, settings.spawn.position.z);
+if (introEntryDirection.lengthSq() < 1e-6) introEntryDirection.set(0, 0, 1);
+introEntryDirection.normalize();
+introSequence = createVrIntroSequence({
+  monkeyGuide, monkeyAnchor, playerRig, glyphRing, progressFloor, platformFixturesRoot, locomotion,
+  ringRadius: glyphOrbit.effectiveRadius, entryDirection: introEntryDirection,
+  settings: { ...settings.intro, locale: language }, bypass: introQaBypass,
+  getHeadPosition: () => {
+    const position = renderer.xr.getCamera(camera).getWorldPosition(new THREE.Vector3());
+    progressFloor.object.worldToLocal(position);
+    return position;
+  },
+  onEndSession: () => { void activeSession?.end(); }
+});
+
 function resize() {
   const width = canvas.clientWidth || innerWidth || 1;
   const height = canvas.clientHeight || innerHeight || 1;
@@ -618,6 +639,7 @@ function renderFrame() {
   handModeController.update(delta);
   playerGuidePanel.update(delta);
   monkeyGuide.update(delta);
+  introSequence.update(delta);
   locomotion.setLeftYawLocked(playerGuidePanel.isOpen());
   astroFurnace.update(delta);
   astroFurnaceOptionInteraction.update(delta);
@@ -692,8 +714,9 @@ function handleSessionEnd() {
   asterionProductionController.resetSession();
   handModeController.reset();
   playerGuidePanel.reset();
-  monkeyGuide.reset();
   applySceneLayoutPrototype();
+  monkeyGuide.reset();
+  introSequence.reset();
   showReadyState({ ended: hasEnteredSession });
 }
 
@@ -727,8 +750,9 @@ async function enterVr() {
   asterionProductionController.resetSession();
   handModeController.reset();
   playerGuidePanel.reset();
-  monkeyGuide.reset();
   applySceneLayoutPrototype();
+  monkeyGuide.reset();
+  introSequence.reset();
   enterButton.disabled = true;
   status.textContent = copy.entering;
   let requestedSession = null;
@@ -746,13 +770,14 @@ async function enterVr() {
     if (sceneLayout) {
       playerRig.updateWorldMatrix(true, false);
       const alignedRigWorldPosition = playerRig.getWorldPosition(new THREE.Vector3());
-      alignedRigWorldPosition.x += playerRigSpawnWorldPosition.x - trackedHead.x;
-      alignedRigWorldPosition.z += playerRigSpawnWorldPosition.z - trackedHead.z;
+      alignedRigWorldPosition.x += alignedRigWorldPosition.x - trackedHead.x;
+      alignedRigWorldPosition.z += alignedRigWorldPosition.z - trackedHead.z;
       playerRig.parent.worldToLocal(alignedRigWorldPosition);
       playerRig.position.copy(alignedRigWorldPosition);
     } else {
-      playerRig.position.x += settings.spawn.position.x - trackedHead.x;
-      playerRig.position.z += settings.spawn.position.z - trackedHead.z;
+      const desiredX = playerRig.position.x; const desiredZ = playerRig.position.z;
+      playerRig.position.x += desiredX - trackedHead.x;
+      playerRig.position.z += desiredZ - trackedHead.z;
     }
     activeSession = requestedSession;
     syncAmbientSequence();
@@ -775,6 +800,7 @@ async function enterVr() {
     furnacePanel.reset();
     playerGuidePanel.reset();
     monkeyGuide.reset();
+    introSequence.reset();
     astroFurnaceOptionInteraction.reset();
     astroFurnaceOpenInteraction.reset();
     astroFurnaceActivateInteraction.reset();

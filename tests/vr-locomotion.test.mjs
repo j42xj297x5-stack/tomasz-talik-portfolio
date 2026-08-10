@@ -163,6 +163,15 @@ assertClose(constrainedHuge.x, 2, 'large delta is constrained to walkRadius');
 const clamped = clampPositionToWalkRadius(new THREE.Vector3(3, 4, 0), 2);
 assertClose(Math.hypot(clamped.x, clamped.z), 2, 'final clamp keeps player inside walkRadius');
 
+const dynamicRadius = createFixture({ position: [1.5, 2.5, 0], walkRadius: 2 });
+dynamicRadius.locomotion.setWalkRadius(Infinity);
+setStick(dynamicRadius, 'right', 1, 0); dynamicRadius.locomotion.update(1);
+assert.ok(dynamicRadius.rig.position.x > 2, 'temporary radius allows the intro walk outside the ring');
+dynamicRadius.locomotion.setWalkRadius(2, { clamp: true });
+assertClose(Math.hypot(dynamicRadius.rig.position.x, dynamicRadius.rig.position.z), 2, 'restoring radius clamps inside');
+dynamicRadius.locomotion.setWalkRadius(Infinity); dynamicRadius.locomotion.reset();
+assert.equal(dynamicRadius.locomotion.getWalkRadius(), 2, 'reset restores the original walk radius');
+
 const tiltedBasis = createFixture({ headYaw: 0, surfaceRoot: tiltedSurface });
 const basisOnPlatform = getPlatformViewerBasis({
   xrCamera: tiltedBasis.xrCamera,

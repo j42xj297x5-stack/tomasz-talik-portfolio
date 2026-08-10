@@ -175,6 +175,8 @@ export function createVrMonkeyGuide({
   let selectedPageId = null;
   let cardPage = 0;
   let historyPulseRedrawElapsed = 0;
+  let dialogueOverride = null;
+  let monkeyWasHovered = false;
   const knownActivatedPageIds = new Set(progressionController.getActivatedPageIds());
   const unreadPageIds = new Set();
   const pagesById = new Map(experienceVrPages.map((page) => [page.id, page]));
@@ -243,6 +245,20 @@ export function createVrMonkeyGuide({
   function drawDialogue() {
     const { canvas, context, texture } = dialoguePanel;
     context.clearRect(0, 0, canvas.width, canvas.height);
+    if (dialogueOverride) {
+      const options = dialogueOverride.options ?? [];
+      const gap = settings.dialogue.gap; const padding = settings.dialogue.padding;
+      context.font = `${settings.dialogue.fontWeight} ${settings.dialogue.fontSize}px sans-serif`;
+      const height = settings.dialogue.fontSize + settings.dialogue.menuPaddingY * 2;
+      interactiveRegions = options.map((option, index) => ({ ...option, x: padding,
+        y: padding + index * (height + gap), width: Math.min(canvas.width - padding * 2,
+          context.measureText(option.label).width + settings.dialogue.menuPaddingX * 2), height }));
+      context.textAlign = 'left'; context.textBaseline = 'middle';
+      interactiveRegions.forEach((region) => { context.fillStyle = drawInteractiveRegion(context, region,
+        hoveredOption === region.id); context.fillText(region.label, region.x + settings.dialogue.menuPaddingX,
+        region.y + region.height / 2); });
+      texture.needsUpdate = true; return;
+    }
     if (screen === VR_MONKEY_GUIDE_SCREEN.HISTORY) { drawHistory(context, canvas); texture.needsUpdate = true; return; }
     if (screen === VR_MONKEY_GUIDE_SCREEN.CARD) { drawCardNavigation(context, canvas); texture.needsUpdate = true; return; }
     const options = progressCount() > 0
@@ -445,16 +461,23 @@ export function createVrMonkeyGuide({
       hits.set(record, hit);
     });
     halo.setVisible(monkeyHovered);
+    if (monkeyHovered && !monkeyWasHovered) dialogueOverride?.onMonkeyHover?.();
+    monkeyWasHovered = monkeyHovered;
     if (hoveredOption !== nextHoveredOption) { hoveredOption = nextHoveredOption; drawDialogue(); }
   }
 
   function press(record) {
     const hit = hits.get(record);
     if (!hit) return false;
-    if (hit.kind === 'monkey') { setOpen(!open); return true; }
+    if (hit.kind === 'monkey') {
+      if (dialogueOverride?.onMonkeyPress) return dialogueOverride.onMonkeyPress(record) !== false;
+      setOpen(!open); return true;
+    }
     if (!hit.region) return false;
     const closesPanel = hit.region.id === 'close';
-    const activated = activateOption(hit.region.id);
+    const activated = dialogueOverride
+      ? dialogueOverride.onSelect?.(hit.region.id, record) !== false
+      : activateOption(hit.region.id);
     if (activated && !closesPanel) onPanelClick();
     return activated;
   }
@@ -492,6 +515,7 @@ export function createVrMonkeyGuide({
     halo.update(delta);
   }
   function reset() {
+    dialogueOverride = null; monkeyWasHovered = false;
     setOpen(false, { notify: false });
     clearAttention();
     showMessage('');
@@ -523,6 +547,15 @@ export function createVrMonkeyGuide({
     isAttentionPending: () => attentionPending,
     getScreen: () => screen, getHistoryEntries: historyEntries, getSelectedPageId: () => selectedPageId,
     getHistoryPage: () => historyPage, getCardPage: () => cardPage, getCardPageCount: () => cardPages().length,
-    getUnreadPageIds: () => [...unreadPageIds]
+    getUnreadPageIds: () => [...unreadPageIds],
+    setDialogueOverride(override) {
+      dialogueOverride = override || null;
+      open = Boolean(dialogueOverride?.options?.length);
+      dialoguePanel.group.visible = open;
+      hoveredOption = null; monkeyWasHovered = false;
+      hits.forEach((_, record) => hits.set(record, null));
+      drawDialogue();
+    },
+    hasDialogueOverride: () => Boolean(dialogueOverride)
   };
 }

@@ -112,6 +112,19 @@ guide.showMessage('');
 guide.update(0.016);
 assert.ok(fixture.getRayDistance() > 0 && fixture.getRayDistance() <= 2.3, 'monkey hit reports ordinary ray distance');
 assert.equal(guide.halo.visible, true);
+let overridePresses = 0; let overrideChoice = null; let overrideHovers = 0;
+guide.setDialogueOverride({ options: [{ id: 'intro-go', label: 'GO' }],
+  onMonkeyHover: () => { overrideHovers += 1; }, onMonkeyPress: () => { overridePresses += 1; },
+  onSelect: (id) => { overrideChoice = id; } });
+guide.update(0.016);
+record.controller.dispatchEvent({ type: 'selectstart' });
+assert.equal(overridePresses, 1, 'narrative override captures the real monkey trigger');
+assert.equal(guide.getScreen(), VR_MONKEY_GUIDE_SCREEN.MENU, 'override does not enter history');
+guide.hits.set(record, { kind: 'panel', region: { id: 'intro-go' } }); guide.press(record);
+assert.equal(overrideChoice, 'intro-go', 'custom dialogue choice is delegated');
+assert.ok(overrideHovers <= 1, 'hover callback is edge-triggered');
+guide.setDialogueOverride(null);
+guide.update(0.016);
 record.controller.dispatchEvent({ type: 'selectstart' });
 assert.equal(guide.isOpen(), true);
 assert.ok(drawnText.includes('CLOSE'));
