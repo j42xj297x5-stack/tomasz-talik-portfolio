@@ -81,8 +81,7 @@ const normalized = normalizeExperienceVrSettings({
   glyphLights: { inwardOffset: 20 },
   portal: { enabled: false, maxWidth: 0, maxHeight: 20, floorOffset: -9, appearDuration: 0, appearStartScale: 9 },
   reliquary: { distanceFromPortal: 9, heightOffset: 9,
-    buttons: { forwardDistance: 8, lateralOffset: 0 },
-    activateButton: { verticalOffset: 7 } },
+    buttons: { forwardDistance: 8, lateralOffset: 0, verticalOffset: 7 } },
   portalCanvas: {
     enabled: false, width: 0, height: 9,
     canvasWidth: 3000.6, canvasHeight: 100, titleFontSize: 10, bodyFontSize: 200, maxBodyLines: 0
