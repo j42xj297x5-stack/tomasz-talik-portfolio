@@ -196,6 +196,7 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
   },
   portal: {
     enabled: true,
+    position: { x: -1.940285, y: 0, z: -0.485071 },
     maxWidth: 2.8,
     maxHeight: 3.2,
     distanceFromAnchor: 2,
@@ -607,6 +608,7 @@ export function normalizeExperienceVrSettings(candidate) {
     },
     portal: {
       enabled: typeof candidate.portal?.enabled === 'boolean' ? candidate.portal.enabled : defaults.portal.enabled,
+      position: normalizeVector(candidate.portal?.position, defaults.portal.position),
       maxWidth: finiteNumber(candidate.portal?.maxWidth, defaults.portal.maxWidth, { min: 0.5, max: 8 }),
       maxHeight: finiteNumber(candidate.portal?.maxHeight, defaults.portal.maxHeight, { min: 0.5, max: 8 }),
       distanceFromAnchor: finiteNumber(candidate.portal?.distanceFromAnchor, defaults.portal.distanceFromAnchor, { min: 0.5, max: 5 }),

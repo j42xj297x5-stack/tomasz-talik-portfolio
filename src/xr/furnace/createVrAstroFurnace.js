@@ -1,6 +1,6 @@
 import * as THREE from '../../vendor/three.js';
 import { applyWorldTransform } from '../applyWorldTransform.js';
-import { resolveVrPlatformFixturePositions } from '../placement/vrPlatformFixturePlacement.js';
+import { resolveVrPlatformFixtureWorldPosition } from '../placement/vrPlatformFixturePlacement.js';
 
 const REQUIRED_NODE_NAMES = Object.freeze([
   'ASTRO_FURNACE_ROOT', 'button_open', 'button_activate', 'button_option',
@@ -35,7 +35,7 @@ function isVisibleGeometry(node, root) {
 }
 
 export function createVrAstroFurnace({
-  parent, model, animations = [], settings, anchorObject, portalSettings, spawnPosition
+  parent, model, animations = [], settings, platformOrigin, spawnPosition
 }) {
   const object = new THREE.Group();
   object.name = 'VrAstroFurnace';
@@ -89,17 +89,14 @@ export function createVrAstroFurnace({
     missingNodes: Object.freeze(missingNodes),
     missingClips: Object.freeze(missingClips),
     capabilities, animationDetails, placementMode: settings.placementMode, appliedScale: settings.scale,
-    anchorCenter: null, mirrorPosition: null, resolvedPosition: null, visibleBounds: null
+    fixturePosition: null, resolvedPosition: null, visibleBounds: null
   };
   let disposed = false;
   const runtimeMaterialBranches = new WeakMap();
   const runtimeMaterials = new Set();
   const placementListeners = new Set();
-  const anchorBounds = new THREE.Box3();
   const visibleBounds = new THREE.Box3();
   const geometryBounds = new THREE.Box3();
-  const anchorCenter = new THREE.Vector3();
-  const mirrorPosition = new THREE.Vector3();
   const resolvedWorldPosition = new THREE.Vector3();
   const desiredWorldPosition = new THREE.Vector3();
   const desiredWorldQuaternion = new THREE.Quaternion();
@@ -123,18 +120,9 @@ export function createVrAstroFurnace({
   function place() {
     if (disposed) return false;
     desiredWorldScale.setScalar(settings.scale);
-    if (settings.placementMode === 'mirror-portal' && anchorObject && portalSettings) {
-      anchorObject.updateWorldMatrix(true, true);
-      anchorBounds.setFromObject(anchorObject).getCenter(anchorCenter);
-      const placement = resolveVrPlatformFixturePositions({ anchorCenter, spawnPosition, portalSettings });
-      desiredWorldPosition.copy(placement.furnacePosition);
-      mirrorPosition.copy(placement.portalPosition);
-    } else {
-      desiredWorldPosition.set(settings.position.x, settings.position.y, settings.position.z);
-      anchorCenter.set(0, 0, 0);
-      mirrorPosition.set(0, 0, 0);
-    }
-    desiredWorldPosition.y = 0;
+    resolveVrPlatformFixtureWorldPosition({
+      platformOrigin, fixturePosition: settings.position, target: desiredWorldPosition
+    });
     target.set(spawnPosition?.x ?? 0, desiredWorldPosition.y, spawnPosition?.z ?? 0);
     placementProbe.position.copy(desiredWorldPosition);
     placementProbe.quaternion.identity();
@@ -154,8 +142,7 @@ export function createVrAstroFurnace({
     object.getWorldPosition(resolvedWorldPosition);
     diagnostics.placementMode = settings.placementMode;
     diagnostics.appliedScale = object.scale.x;
-    diagnostics.anchorCenter = anchorObject ? anchorCenter.toArray() : null;
-    diagnostics.mirrorPosition = portalSettings ? mirrorPosition.toArray() : null;
+    diagnostics.fixturePosition = [settings.position.x, settings.position.y, settings.position.z];
     diagnostics.resolvedPosition = resolvedWorldPosition.toArray();
     diagnostics.visibleBounds = visibleBounds.isEmpty() ? null : {
       min: visibleBounds.min.toArray(), max: visibleBounds.max.toArray()
@@ -212,8 +199,8 @@ export function createVrAstroFurnace({
       missingClips: diagnostics.missingClips.join(', '),
       capabilities: JSON.stringify(capabilities),
       animationDetails: JSON.stringify(diagnostics.animationDetails), placementMode: diagnostics.placementMode,
-      appliedScale: diagnostics.appliedScale, anchorCenter: JSON.stringify(diagnostics.anchorCenter),
-      mirrorPosition: JSON.stringify(diagnostics.mirrorPosition), resolvedPosition: JSON.stringify(diagnostics.resolvedPosition),
+      appliedScale: diagnostics.appliedScale, fixturePosition: JSON.stringify(diagnostics.fixturePosition),
+      resolvedPosition: JSON.stringify(diagnostics.resolvedPosition),
       visibleBounds: JSON.stringify(diagnostics.visibleBounds)
     });
     console.groupEnd();

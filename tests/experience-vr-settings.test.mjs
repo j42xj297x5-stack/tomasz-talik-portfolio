@@ -90,7 +90,8 @@ assert.deepEqual(normalized.entryTransition, {
   easing: 'smoothstep'
 });
 assert.deepEqual(normalized.portal, {
-  enabled: false, maxWidth: 0.5, maxHeight: 8, distanceFromAnchor: 0.5, forwardBias: 1, floorOffset: -1,
+  enabled: false, position: DEFAULT_EXPERIENCE_VR_SETTINGS.portal.position,
+  maxWidth: 0.5, maxHeight: 8, distanceFromAnchor: 0.5, forwardBias: 1, floorOffset: -1,
   appearDuration: 0.05, appearStartScale: 1,
   socket: DEFAULT_EXPERIENCE_VR_SETTINGS.portal.socket
 });
