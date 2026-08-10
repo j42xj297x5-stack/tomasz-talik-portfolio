@@ -356,6 +356,7 @@ export function normalizeExperienceVrSettings(candidate) {
         emissionInactive: finiteNumber(candidate.furnace?.optionButton?.emissionInactive, defaults.furnace.optionButton.emissionInactive, { min: 0 }),
         emissionHover: finiteNumber(candidate.furnace?.optionButton?.emissionHover, defaults.furnace.optionButton.emissionHover, { min: 0 }),
         emissionActive: finiteNumber(candidate.furnace?.optionButton?.emissionActive, defaults.furnace.optionButton.emissionActive, { min: 0 }),
+        selectionDuration: finiteNumber(candidate.furnace?.optionButton?.selectionDuration, defaults.furnace.optionButton.selectionDuration, { min: .01, max: 2 }),
         halo: {
           opacity: finiteNumber(candidate.furnace?.optionButton?.halo?.opacity,
             defaults.furnace.optionButton.halo.opacity, { min: 0.05, max: 0.6 }),
