@@ -1,3 +1,5 @@
+import * as THREE from '../../vendor/three.js';
+
 export const VR_INTRO_STATE = Object.freeze({
   VOID: 'VOID', WAIT_HOVER: 'WAIT_HOVER', WAIT_TRIGGER: 'WAIT_TRIGGER', INVITATION: 'INVITATION',
   FOLLOWING: 'FOLLOWING', THRESHOLD: 'THRESHOLD', CROSSING: 'CROSSING', INSIDE_RING_READY: 'INSIDE_RING_READY',
@@ -38,9 +40,13 @@ export function createVrIntroSequence({ monkeyGuide, monkeyAnchor, playerRig, ge
   onEndSession = () => {}, bypass = false }) {
   const copy = VR_INTRO_COPY[settings.locale === 'pl' ? 'pl' : 'en'];
   const canonicalMonkey = monkeyAnchor.position.clone();
+  const canonicalMonkeyQuaternion = monkeyAnchor.quaternion.clone();
+  const followingMonkeyQuaternion = canonicalMonkeyQuaternion.clone().multiply(
+    new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI)
+  );
   const direction = entryDirection.clone(); direction.y = 0;
   if (direction.lengthSq() < 1e-6) direction.set(0, 0, 1); else direction.normalize();
-  let state; let queue = []; let elapsed = 0; let walkingPaused = false; let startRadius = 0;
+  let state; let queue = []; let elapsed = 0; let walkingPaused = false; let startRadius = 0; let turnElapsed = 0;
   const sectors = progressFloor.object.children.filter((child) => child.userData?.branchId);
   const captureMonkey = () => monkeyGuide.setDialogueOverride({ onMonkeyPress: () => true });
   const show = (lines, done) => { queue = [...lines]; elapsed = 0; monkeyGuide.showMessage(queue.shift() ?? ''); pendingDone = done; };
@@ -53,7 +59,7 @@ export function createVrIntroSequence({ monkeyGuide, monkeyAnchor, playerRig, ge
     else if (id === 'go') beginFollowing();
     return true;
   }
-  function beginFollowing() { state = VR_INTRO_STATE.FOLLOWING; captureMonkey(); monkeyGuide.showMessage('');
+  function beginFollowing() { state = VR_INTRO_STATE.FOLLOWING; captureMonkey(); monkeyGuide.showMessage(''); turnElapsed = 0;
     locomotion.setWalkRadius(Infinity); walkingPaused = false; startRadius = Math.hypot(monkeyAnchor.position.x, monkeyAnchor.position.z); }
   function thresholdChoice() { state = VR_INTRO_STATE.THRESHOLD; show(copy.threshold, () => options(copy.thresholdOptions, chooseThreshold)); }
   function chooseThreshold(id) {
@@ -64,12 +70,13 @@ export function createVrIntroSequence({ monkeyGuide, monkeyAnchor, playerRig, ge
   }
   function reset() {
     queue = []; pendingDone = null; elapsed = 0; walkingPaused = false; monkeyGuide.setDialogueOverride(null);
-    monkeyAnchor.position.copy(canonicalMonkey); locomotion.reset();
+    monkeyAnchor.position.copy(canonicalMonkey); monkeyAnchor.quaternion.copy(canonicalMonkeyQuaternion); locomotion.reset();
     if (bypass || !settings.enabled) { state = VR_INTRO_STATE.BYPASSED; sectors.forEach((item) => { item.visible = true; });
       platformFixturesRoot.visible = true; glyphRing.visible = true; return; }
     state = VR_INTRO_STATE.VOID; sectors.forEach((item) => { item.visible = false; }); platformFixturesRoot.visible = false; glyphRing.visible = false;
     const playerRadius = ringRadius + settings.startOutsideMargin;
-    playerRig.position.x = direction.x * playerRadius; playerRig.position.z = direction.z * playerRadius;
+    const adjustedPlayerRadius = playerRadius + Math.max(0, settings.playerStartBackOffset ?? 0);
+    playerRig.position.x = direction.x * adjustedPlayerRadius; playerRig.position.z = direction.z * adjustedPlayerRadius;
     monkeyAnchor.position.x = direction.x * (playerRadius - 1.5); monkeyAnchor.position.z = direction.z * (playerRadius - 1.5);
     show(copy.opening, () => { state = VR_INTRO_STATE.WAIT_HOVER; monkeyGuide.setDialogueOverride({ onMonkeyHover() {
       if (state === VR_INTRO_STATE.WAIT_HOVER) { state = VR_INTRO_STATE.WAIT_TRIGGER; monkeyGuide.showMessage(copy.trigger); }
@@ -80,6 +87,9 @@ export function createVrIntroSequence({ monkeyGuide, monkeyAnchor, playerRig, ge
     if (queue.length || pendingDone) { elapsed += Math.max(0, delta); if (elapsed >= settings.lineDuration) { elapsed = 0;
       if (queue.length) monkeyGuide.showMessage(queue.shift()); else { const done = pendingDone; pendingDone = null; done?.(); } } }
     if (state === VR_INTRO_STATE.FOLLOWING) {
+      turnElapsed += Math.max(0, delta);
+      const turnProgress = Math.min(1, turnElapsed / Math.max(0.001, settings.guideTurnDuration ?? 1));
+      monkeyAnchor.quaternion.slerpQuaternions(canonicalMonkeyQuaternion, followingMonkeyQuaternion, turnProgress);
       const p = playerRig.position; const distance = Math.hypot(p.x - monkeyAnchor.position.x, p.z - monkeyAnchor.position.z);
       if (!walkingPaused && distance > settings.pauseDistance) walkingPaused = true;
       else if (walkingPaused && distance < settings.resumeDistance) walkingPaused = false;
@@ -92,7 +102,8 @@ export function createVrIntroSequence({ monkeyGuide, monkeyAnchor, playerRig, ge
     } else if (state === VR_INTRO_STATE.CROSSING) {
       const head = getHeadPosition(); if (Math.hypot(head.x, head.z) <= ringRadius) {
         state = VR_INTRO_STATE.INSIDE_RING_READY; locomotion.setWalkRadius(ringRadius, { clamp: true });
-        monkeyGuide.setDialogueOverride(null); monkeyAnchor.position.copy(canonicalMonkey); show(copy.inside, null);
+        monkeyGuide.setDialogueOverride(null); monkeyAnchor.position.copy(canonicalMonkey);
+        monkeyAnchor.quaternion.copy(canonicalMonkeyQuaternion); show(copy.inside, null);
       }
     }
   }

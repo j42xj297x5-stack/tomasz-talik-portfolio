@@ -13,6 +13,8 @@ assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.controllers.rayLength, 2.3);
 assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.controllers.rayDiameter, 0.01);
 assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.playerGuidePanel.position.x, 0.29);
 assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.playerGuidePanel.rotationDegrees.x, -52);
+assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.intro.playerStartBackOffset, 2);
+assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.intro.guideTurnDuration, 1);
 assert.deepEqual(DEFAULT_EXPERIENCE_VR_SETTINGS.monkeyGuide.attention.radii, [0.08, 0.125, 0.17]);
 assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.monkeyGuide.attention.thickness, 0.009);
 assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.monkeyGuide.attention.verticalGap, 0);

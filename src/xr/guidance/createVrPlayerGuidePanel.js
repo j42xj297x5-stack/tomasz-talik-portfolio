@@ -1,6 +1,7 @@
 import * as THREE from '../../vendor/three.js';
 import { publicPath } from '../../utils/publicPath.js';
 import { resolveVrPlayerGuideContent } from './vrPlayerGuideContent.js';
+import { filterControllerSvg, INITIAL_VISIBLE_CONTROL_IDS, normalizeVisibleControlIds } from './filterControllerSvg.js';
 
 const DEFAULT_SETTINGS = Object.freeze({
   enabled: true,
@@ -81,6 +82,39 @@ export function createVrPlayerGuidePanel({ leftGrip, semanticInput, locale = 'en
   let controllersImageLoaded = false;
   let controllersImageFailed = false;
   const controllersImage = new Image();
+  const controllersSvgUrl = publicPath(locale === 'pl' ? 'svg/controllers_pl.svg' : 'svg/controllers_en.svg');
+  let visibleControlIds = normalizeVisibleControlIds(INITIAL_VISIBLE_CONTROL_IDS);
+  let controllerObjectUrl = null;
+  let loadVersion = 0;
+
+  function releaseControllerObjectUrl() {
+    if (controllerObjectUrl) URL.revokeObjectURL(controllerObjectUrl);
+    controllerObjectUrl = null;
+  }
+
+  async function loadControllersImage() {
+    const version = ++loadVersion;
+    controllersImageLoaded = false; controllersImageFailed = false;
+    try {
+      const response = await fetch(controllersSvgUrl);
+      if (!response.ok) throw new Error(`Controller SVG request failed: ${response.status}`);
+      const filtered = filterControllerSvg(await response.text(), visibleControlIds);
+      if (disposed || version !== loadVersion) return;
+      releaseControllerObjectUrl();
+      controllerObjectUrl = URL.createObjectURL(new Blob([filtered], { type: 'image/svg+xml' }));
+      controllersImage.src = controllerObjectUrl;
+    } catch {
+      if (disposed || version !== loadVersion) return;
+      releaseControllerObjectUrl(); controllersImageFailed = true; draw();
+    }
+  }
+
+  function setVisibleControlIds(ids) {
+    const next = normalizeVisibleControlIds(ids);
+    if (next.length === visibleControlIds.length && next.every((id, index) => id === visibleControlIds[index])) return;
+    visibleControlIds = next;
+    void loadControllersImage();
+  }
 
   function drawFrame(width, height) {
     context.clearRect(0, 0, width, height);
@@ -221,12 +255,15 @@ export function createVrPlayerGuidePanel({ leftGrip, semanticInput, locale = 'en
     disposed = true;
     controllersImage.onload = null;
     controllersImage.onerror = null;
+    loadVersion += 1; releaseControllerObjectUrl();
     object.removeFromParent(); geometry.dispose(); material.dispose(); texture.dispose(); canvas.width = 0; canvas.height = 0;
   }
 
   controllersImage.onload = () => { if (disposed) return; controllersImageLoaded = true; draw(); };
   controllersImage.onerror = () => { if (disposed) return; controllersImageFailed = true; draw(); };
-  controllersImage.src = publicPath(locale === 'pl' ? 'svg/controllers_pl.svg' : 'svg/controllers_en.svg');
+  void loadControllersImage();
   draw();
-  return { object, isOpen, update, reset, dispose, getViewState: () => viewState, getSelectedIndex: () => selectedIndex, getActiveSectionId: () => activeSectionId };
+  return { object, isOpen, update, reset, dispose, setVisibleControlIds,
+    getVisibleControlIds: () => [...visibleControlIds], getViewState: () => viewState,
+    getSelectedIndex: () => selectedIndex, getActiveSectionId: () => activeSectionId };
 }

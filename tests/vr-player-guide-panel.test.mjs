@@ -1,9 +1,35 @@
 import assert from 'node:assert/strict';
 import * as THREE from '../src/vendor/three.js';
+import { readFile } from 'node:fs/promises';
+import { CONTROLLER_SEMANTIC_IDS, filterControllerSvg, INITIAL_VISIBLE_CONTROL_IDS } from '../src/xr/guidance/filterControllerSvg.js';
 
 const textLog = [];
 const imageLog = [];
 const createdImages = [];
+const revokedUrls = [];
+const blobs = new Map();
+let blobIndex = 0;
+
+globalThis.fetch = async (url) => ({ ok: true, text: () => readFile(new URL(`../public${url}`, import.meta.url), 'utf8') });
+globalThis.URL.createObjectURL = (blob) => { const url = `blob:test-${++blobIndex}`; blobs.set(url, blob); return url; };
+globalThis.URL.revokeObjectURL = (url) => { revokedUrls.push(url); blobs.delete(url); };
+
+class MockSvgDocument {
+  constructor(source) { this.source = source; this.documentElement = { localName: source.includes('<svg') ? 'svg' : 'parsererror' }; }
+  querySelector(selector) { return selector === 'parsererror' && this.documentElement.localName !== 'svg' ? {} : null; }
+  getElementById(id) {
+    const pattern = new RegExp(`(<[^>]+\\bid=["']${id}["'][^>]*)(>)`);
+    if (!pattern.test(this.source)) return null;
+    return { setAttribute: (name, value) => {
+      this.source = this.source.replace(pattern, (match, start, end) => {
+        const clean = start.replace(new RegExp(`\\s${name}=["'][^"']*["']`), '');
+        return `${clean} ${name}="${value}"${end}`;
+      });
+    } };
+  }
+}
+globalThis.DOMParser = class { parseFromString(source) { return new MockSvgDocument(source); } };
+globalThis.XMLSerializer = class { serializeToString(document) { return document.source; } };
 
 globalThis.document = {
   createElement(tag) {
@@ -44,6 +70,20 @@ function createFixture(locale = 'en') {
   return { panel, input, grip };
 }
 
+async function settleLoads() {
+  await new Promise((resolve) => setTimeout(resolve, 10));
+  for (let attempt = 0; attempt < 20 && !createdImages.at(-1)?.src; attempt += 1) {
+    await new Promise((resolve) => setTimeout(resolve, 5));
+  }
+}
+
+assert.deepEqual(CONTROLLER_SEMANTIC_IDS, ['trigger', 'grab', 'rotate', 'move', 'X', 'Y']);
+assert.deepEqual(INITIAL_VISIBLE_CONTROL_IDS, ['trigger', 'grab', 'rotate', 'move', 'Y']);
+const sourceSvg = await readFile(new URL('../public/svg/controllers_en.svg', import.meta.url), 'utf8');
+const filteredSvg = filterControllerSvg(sourceSvg, INITIAL_VISIBLE_CONTROL_IDS);
+for (const id of INITIAL_VISIBLE_CONTROL_IDS) assert.match(filteredSvg, new RegExp(`id="${id}"[^>]*display="inline"`));
+assert.match(filteredSvg, /id="X"[^>]*display="none"/, 'X starts hidden in the diagram');
+
 function pulse(fixture, key) {
   fixture.input[key] = true;
   fixture.panel.update(0.016);
@@ -59,7 +99,8 @@ function stick(fixture, y) {
 }
 
 const english = createFixture('en');
-assert.equal(createdImages.at(-1).src, '/svg/controllers_en.svg');
+await settleLoads();
+assert.match(createdImages.at(-1).src, /^blob:test-/);
 assert.equal(english.panel.getViewState(), 'MENU');
 assert.equal(english.panel.getSelectedIndex(), 0);
 assert.equal(english.panel.getActiveSectionId(), null, 'first tab is not opened automatically');
@@ -88,17 +129,32 @@ assert.equal(english.panel.getSelectedIndex(), 0, 'reset returns to controls sel
 assert.equal(english.panel.getActiveSectionId(), null);
 
 const polish = createFixture('pl');
-assert.equal(createdImages.at(-1).src, '/svg/controllers_pl.svg');
+await settleLoads();
+assert.match(createdImages.at(-1).src, /^blob:test-/);
 pulse(polish, 'togglePlayerGuidePanel');
 pulse(polish, 'toggleLeftTool');
 createdImages.at(-1).onload();
 assert.equal(imageLog.length > 0, true, 'loaded SVG is drawn');
 assert.equal(textLog.some(({ text }) => text === 'Prawy drążek — ruch' || text === 'Right stick — move'), false, 'extra controls list is not drawn');
 
+const previousUrl = createdImages.at(-1).src;
+const previousBlobIndex = blobIndex;
+polish.panel.setVisibleControlIds([...INITIAL_VISIBLE_CONTROL_IDS]);
+await settleLoads();
+assert.equal(blobIndex, previousBlobIndex, 'equivalent visible IDs do not reload the SVG');
+polish.panel.setVisibleControlIds(CONTROLLER_SEMANTIC_IDS);
+await settleLoads();
+assert.ok(revokedUrls.includes(previousUrl), 'replaced filtered SVG URL is revoked');
+assert.deepEqual(polish.panel.getVisibleControlIds(), CONTROLLER_SEMANTIC_IDS);
+
 const fallback = createFixture('en');
+await settleLoads();
 pulse(fallback, 'togglePlayerGuidePanel');
 pulse(fallback, 'toggleLeftTool');
 createdImages.at(-1).onerror();
 assert.equal(textLog.some(({ text }) => text === 'Controller diagram unavailable.'), true, 'fallback text is drawn when SVG loading fails');
+const fallbackUrl = createdImages.at(-1).src;
+fallback.panel.dispose();
+assert.ok(revokedUrls.includes(fallbackUrl), 'dispose revokes the filtered SVG URL');
 
 console.log('VR player guide panel assertions passed');

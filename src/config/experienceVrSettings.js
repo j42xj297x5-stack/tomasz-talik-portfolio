@@ -176,8 +176,10 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
   intro: {
     enabled: true,
     startOutsideMargin: 2.6,
+    playerStartBackOffset: 2.0,
     thresholdStopMargin: 0.35,
     guideSpeed: 0.7,
+    guideTurnDuration: 1.0,
     pauseDistance: 3.2,
     resumeDistance: 2.4,
     revealProgress: 0.72,
