@@ -37,7 +37,7 @@ assert.match(vr, /await renderer\.xr\.setSession\(requestedSession\);\s*xrStartC
   'session entry defers start calibration to an XR animation frame');
 assert.match(vr, /if \(xrStartCalibrationPending\)[\s\S]*renderer\.xr\.updateCamera\(camera\)[\s\S]*calibrateXrHeadToPlatform/,
   'the pending frame refreshes the tracked camera before calibration');
-assert.match(vr, /xrStartCalibrationPending = false;\s*introSequence\.beginAfterXrCalibration\(\);\s*renderer\.render\(scene, camera\);\s*return;/,
+assert.match(vr, /xrStartCalibrationPending = false;\s*introSequence\.beginAfterXrCalibration\(\);\s*if \(introQaBypass\) vrControllers\.setRaysEnabled\(true\);\s*renderer\.render\(scene, camera\);\s*return;/,
   'calibration is one-shot and skips ordinary locomotion/update work in that frame');
 assert.match(vr, /function handleSessionEnd\(\)[\s\S]*xrStartCalibrationPending = false;[\s\S]*introSequence\.reset\(\)/,
   'session end clears pending calibration and resets the intro for re-entry');
@@ -378,7 +378,9 @@ right.controller.dispatchEvent({ type: 'connected', data: { targetRayMode: 'trac
 assert.equal(left.handedness, 'left');
 assert.deepEqual(left.controller.userData.xrInput.profiles, ['meta-quest-touch-plus']);
 assert.equal(right.handedness, '');
-assert.equal(left.ray.visible, true);
+assert.equal(left.ray.visible, false, 'connected ray remains hidden behind the global gate');
+controllerSystem.setRaysEnabled(true);
+assert.equal(left.ray.visible, true); assert.equal(right.ray.visible, true);
 assert.equal(left.currentRayLength, 2.3);
 assert.equal(left.ray.children.length, 2, 'ray uses a shaft and tapered mesh tip');
 assert.equal(left.ray.children[0].geometry.parameters.radiusTop * 2, 0.01, 'ray shaft uses configured diameter');
@@ -407,6 +409,7 @@ assert.equal(left.isSelecting, false);
 assert.equal(left.ray.scale.z, 1);
 left.controller.dispatchEvent({ type: 'disconnected' });
 assert.equal(left.ray.visible, false);
+controllerSystem.setRaysEnabled(true); assert.equal(left.ray.visible, false, 'disconnected ray ignores the enabled gate');
 assert.equal(left.isConnected, false);
 assert.equal(left.nearestRayHitDistance, null);
 assert.equal(left.visualRayLength, 2.3, 'disconnect clears shortened visual state');

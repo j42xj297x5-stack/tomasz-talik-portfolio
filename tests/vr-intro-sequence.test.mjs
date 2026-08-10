@@ -7,9 +7,9 @@ assert.equal(VR_INTRO_COPY.en.invitation[0].label, "I'LL GO");
 assert.match(VR_INTRO_COPY.pl.threshold[0], /próg/);
 assert.match(VR_INTRO_COPY.en.threshold[0], /threshold/);
 
-function fixture({ bypass = false } = {}) {
+function fixture({ bypass = false, lineCounts = {} } = {}) {
   const monkeyMotionRoot = new THREE.Group();
-  monkeyMotionRoot.position.set(0.25, 0, -0.5);
+  monkeyMotionRoot.position.set(0.25, 1.25, -0.5);
   monkeyMotionRoot.rotation.y = 0.35;
   const visualRoot = new THREE.Group();
   visualRoot.position.set(-0.4, 0.7, 0.2);
@@ -27,20 +27,21 @@ function fixture({ bypass = false } = {}) {
   const progressFloor = { object: new THREE.Group() }; progressFloor.object.add(sector);
   const platformOrigin = new THREE.Group(); platformOrigin.name = 'VrPlatformOrigin'; progressFloor.object.add(platformOrigin);
   let override = null; let message = ''; let ended = 0; let radius = 4; const messages = [];
-  let interactionEnabled = true; let emergeAlpha = 1;
-  const monkeyGuide = { showMessage(value) { message = value; messages.push(value); }, setDialogueOverride(value) { override = value; },
+  let interactionEnabled = true; let emergeAlpha = 1; let raysReady = 0;
+  const monkeyGuide = { showMessage(value) { message = value; messages.push(value); return { lineCount: value ? (lineCounts[value] ?? 1) : 0 }; }, setDialogueOverride(value) { override = value; },
     setInteractionEnabled(value) { interactionEnabled = value; } };
   const radiusCalls = [];
   const locomotion = { reset() { radius = 4; radiusCalls.push(['reset', radius]); }, setWalkRadius(value, options) {
     radius = value; radiusCalls.push(['set', value, options]);
   } };
   const settings = { enabled: true, locale: 'en', playerStartRadius: 20, monkeyStartRadius: 18,
-    thresholdStopOutsideDistance: 1, guideSpeed: 1, guideTurnDuration: 1, pauseDistance: 3.2,
+    thresholdStopOutsideDistance: 1, guideSpeed: 1, guideTurnDuration: 1, followGraceDistance: 3, pauseDistance: 3.2,
     resumeDistance: 2.4, revealProgress: 0.72, messageDisplayDuration: 2,
     messageGapDuration: 0.5, questionGapDuration: 2, emergeDuration: 12 };
   const sequence = createVrIntroSequence({ monkeyGuide, monkeyMotionRoot, playerRig, glyphRing, progressFloor,
     platformOrigin, platformFixturesRoot, locomotion, ringRadius: 4, entryDirection: new THREE.Vector3(0, 0, 1), settings,
     getHeadPosition: () => trackedHead.getWorldPosition(new THREE.Vector3()),
+    onOpeningRaysReady: () => { raysReady += 1; },
     setMonkeyEmergeAlpha(value) { emergeAlpha = value; },
     bypass, onEndSession: () => { ended += 1; } });
   return { sequence, monkeyMotionRoot, visualRoot, playerRig, trackedHead, glyphRing, platformFixturesRoot, sector,
@@ -48,7 +49,7 @@ function fixture({ bypass = false } = {}) {
     canonicalVisualPosition, canonicalVisualScale,
     getOverride: () => override, getMessage: () => message, getMessages: () => messages, getRadius: () => radius,
     getRadiusCalls: () => radiusCalls, getEnded: () => ended, getInteractionEnabled: () => interactionEnabled,
-    getEmergeAlpha: () => emergeAlpha };
+    getEmergeAlpha: () => emergeAlpha, getRaysReady: () => raysReady };
 }
 
 const intro = fixture();
@@ -56,6 +57,7 @@ assert.equal(intro.sequence.getState(), VR_INTRO_STATE.XR_CALIBRATING);
 assert.equal(intro.sector.visible, false); assert.equal(intro.platformFixturesRoot.visible, false);
 assert.equal(intro.glyphRing.visible, false);
 assert.equal(intro.sequence.getDebugSnapshot().monkeyRadius, 18, 'canonical offset does not affect the 18 m start radius');
+assert.equal(intro.monkeyMotionRoot.position.y, 1.25, '18 m start preserves canonical platform-local height');
 assert.equal(intro.sequence.getDebugSnapshot().xrCalibrated, false);
 assert.equal(intro.getMessage(), '', 'opening is absent during emergence');
 assert.equal(intro.getInteractionEnabled(), false);
@@ -79,9 +81,12 @@ assert.equal(intro.sequence.getState(), VR_INTRO_STATE.XR_CALIBRATING); assert.e
 intro.sequence.beginAfterXrCalibration();
 intro.sequence.update(12);
 intro.sequence.update(1.99); assert.equal(intro.getMessage(), VR_INTRO_COPY.en.opening[0], 'message remains visible for 2 s');
+assert.equal(intro.getRaysReady(), 0, 'rays remain gated throughout Good display');
 intro.sequence.update(0.01); assert.equal(intro.getMessage(), '', 'message panel is empty during the gap');
 intro.sequence.update(0.49); assert.equal(intro.getMessage(), '', 'ordinary gap lasts 0.5 s');
+assert.equal(intro.getRaysReady(), 0, 'rays remain gated throughout the first gap');
 intro.sequence.update(0.01); assert.equal(intro.getMessage(), VR_INTRO_COPY.en.opening[1]);
+assert.equal(intro.getRaysReady(), 1, 'rays open immediately before You have hands');
 intro.sequence.reset();
 assert.equal(intro.getMessage(), '', 'reset during DISPLAY returns to a message-free emergence');
 intro.sequence.beginAfterXrCalibration();
@@ -108,22 +113,30 @@ intro.sequence.chooseInvitation('go'); assert.equal(intro.sequence.getState(), V
 assert.equal(intro.getRadius(), Infinity);
 const followingStart = intro.monkeyMotionRoot.position.clone();
 const originalQuaternion = intro.canonicalMonkeyQuaternion.clone();
-intro.playerRig.position.copy(intro.monkeyMotionRoot.position); intro.sequence.update(0.5);
+intro.trackedHead.position.copy(intro.monkeyMotionRoot.position); intro.sequence.update(0.5);
 assert.ok(intro.monkeyMotionRoot.position.distanceTo(followingStart) > 0, 'translation starts during the turn');
 assert.ok(intro.monkeyMotionRoot.quaternion.angleTo(originalQuaternion) > 0, 'turn starts without an orientation jump');
 assert.ok(Math.abs(intro.monkeyMotionRoot.quaternion.angleTo(originalQuaternion) - Math.PI / 2) < 1e-6, 'half turn takes half the duration');
-intro.playerRig.position.z = 10; intro.sequence.update(1);
+intro.trackedHead.position.z = 30; intro.playerRig.position.copy(intro.monkeyMotionRoot.position);
+intro.sequence.update(2.49);
+assert.equal(intro.sequence.isGuidePaused(), false, 'first 3 m ignore follow distance');
+assert.notEqual(intro.getMessage(), VR_INTRO_COPY.en.going, 'grace walk has no reminder');
+intro.sequence.update(0.01); intro.sequence.update(0.01);
 assert.equal(intro.sequence.isGuidePaused(), true); const pausedZ = intro.monkeyMotionRoot.position.z;
-intro.sequence.update(1); assert.equal(intro.monkeyMotionRoot.position.z, pausedZ, 'guide never retreats while paused');
-intro.playerRig.position.z = intro.monkeyMotionRoot.position.z + 2; intro.sequence.update(1);
+assert.equal(intro.getMessage(), VR_INTRO_COPY.en.going, 'pause shows a non-decision reminder');
+intro.playerRig.position.z = intro.monkeyMotionRoot.position.z;
+intro.sequence.update(1); assert.equal(intro.monkeyMotionRoot.position.z, pausedZ, 'rig alone cannot resume tracked-head following');
+intro.playerRig.position.set(0, 0, 0); intro.trackedHead.position.copy(intro.monkeyMotionRoot.position); intro.sequence.update(1);
 assert.equal(intro.sequence.isGuidePaused(), false, 'resume threshold provides hysteresis');
+assert.equal(intro.getMessage(), '', 'tracked-head approach clears reminder automatically');
 for (let i = 0; i < 20 && intro.sequence.getState() === VR_INTRO_STATE.FOLLOWING; i += 1) {
-  intro.playerRig.position.copy(intro.monkeyMotionRoot.position);
+  intro.trackedHead.position.copy(intro.monkeyMotionRoot.position);
   intro.sequence.update(1);
 }
 assert.equal(intro.sequence.getState(), VR_INTRO_STATE.THRESHOLD); assert.equal(intro.glyphRing.visible, true);
-assert.ok(intro.monkeyMotionRoot.position.distanceTo(new THREE.Vector3(0, 0, 5)) < 1e-6,
+assert.ok(intro.monkeyMotionRoot.position.distanceTo(new THREE.Vector3(0, 1.25, 5)) < 1e-6,
   'threshold is based on PlatformOrigin, independently of canonical root offset');
+assert.equal(intro.monkeyMotionRoot.position.y, 1.25, 'threshold preserves canonical height');
 intro.sequence.update(2); intro.sequence.update(0.5); intro.sequence.update(2); intro.sequence.update(0.5);
 intro.sequence.update(2); intro.sequence.update(1.99);
 assert.equal(intro.getMessage(), '', 'threshold sequence uses the long pre-question gap');
@@ -131,9 +144,10 @@ intro.sequence.update(0.01); assert.equal(intro.getMessage(), VR_INTRO_COPY.en.t
 const thresholdQuaternion = intro.monkeyMotionRoot.quaternion.clone();
 intro.sequence.chooseThreshold('cross'); assert.equal(intro.sequence.getState(), VR_INTRO_STATE.CROSSING);
 const crossingStart = intro.monkeyMotionRoot.position.clone();
-intro.playerRig.position.z = 3.9; intro.sequence.update(0.1);
+intro.playerRig.position.set(0, 0, 0); intro.trackedHead.position.set(0, 1.7, 3.9); intro.sequence.update(0.1);
 assert.equal(intro.sequence.getState(), VR_INTRO_STATE.CROSSING, 'player cannot commit before the monkey enters');
 assert.ok(intro.monkeyMotionRoot.position.distanceTo(crossingStart) > 0, 'monkey resumes walking after threshold acceptance');
+assert.equal(intro.monkeyMotionRoot.position.y, 1.25, 'crossing preserves canonical height');
 assert.ok(intro.monkeyMotionRoot.quaternion.angleTo(thresholdQuaternion) < 1e-6, 'monkey does not turn at the threshold');
 for (let i = 0; i < 20 && intro.sequence.getState() === VR_INTRO_STATE.CROSSING; i += 1) intro.sequence.update(0.1);
 assert.equal(intro.sequence.getState(), VR_INTRO_STATE.INSIDE_RING_READY, 'only physical crossing completes intro');
@@ -144,6 +158,16 @@ assert.ok(intro.monkeyMotionRoot.position.distanceTo(intro.canonicalMonkeyPositi
 assert.ok(intro.monkeyMotionRoot.quaternion.angleTo(intro.canonicalMonkeyQuaternion) < 1e-6, 'arrival restores canonical orientation');
 intro.sequence.reset(); assert.equal(intro.sequence.getState(), VR_INTRO_STATE.XR_CALIBRATING, 'session reset is deterministic');
 assert.ok(intro.monkeyMotionRoot.quaternion.angleTo(intro.canonicalMonkeyQuaternion) < 1e-6, 'reset restores canonical orientation');
+
+for (const lineCount of [1, 2, 3]) {
+  const timed = fixture({ lineCounts: { [VR_INTRO_COPY.en.opening[0]]: lineCount } });
+  timed.sequence.beginAfterXrCalibration(); timed.sequence.update(12);
+  timed.sequence.update(lineCount * 2 - 0.01);
+  assert.equal(timed.getMessage(), VR_INTRO_COPY.en.opening[0], `${lineCount} rendered lines remain for ${lineCount * 2} s`);
+  timed.sequence.update(0.01); assert.equal(timed.getMessage(), '');
+  timed.sequence.update(0.49); assert.equal(timed.getMessage(), '', 'line timing does not alter the 0.5 s gap');
+  timed.sequence.update(0.01); assert.equal(timed.getMessage(), VR_INTRO_COPY.en.opening[1]);
+}
 
 const refusal = fixture(); refusal.sequence.chooseInvitation('no');
 for (let i = 0; i < 2; i += 1) { refusal.sequence.update(2); refusal.sequence.update(0.5); }

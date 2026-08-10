@@ -115,15 +115,17 @@ assert.ok(textAlignments.includes('left'), 'MENU labels are left aligned');
 assert.equal(guide.attentionRoot.visible, false);
 
 roundedRectStarts.length = 0;
-guide.showMessage('Short message');
+const oneLineMetrics = guide.showMessage('Short message');
+assert.equal(oneLineMetrics.lineCount, 1, 'showMessage reports the lines produced by the renderer wrap');
 const oneLineBoxY = roundedRectStarts.at(-1).y;
 assert.equal(oneLineBoxY, 540 - (78 + 31 * 2), 'one-line message box is anchored to canvas bottom');
 roundedRectStarts.length = 0;
-guide.showMessage('This message contains enough words to wrap onto a second line in the panel');
+const wrappedMetrics = guide.showMessage('This message contains enough words to wrap onto a second line in the panel');
+assert.ok(wrappedMetrics.lineCount > 1, 'metrics use actual measured wrapping');
 const multiLineBoxY = roundedRectStarts.at(-1).y;
 assert.ok(multiLineBoxY < oneLineBoxY, 'additional lines grow the message box upward');
 assert.ok(fillStyles.includes('#e99a55'), 'message uses its darker saturated panel color');
-guide.showMessage('');
+assert.equal(guide.showMessage('').lineCount, 0, 'an empty bubble has no rendered lines');
 
 guide.update(0.016);
 assert.ok(fixture.getRayDistance() > 0 && fixture.getRayDistance() <= 2.3, 'monkey hit reports ordinary ray distance');

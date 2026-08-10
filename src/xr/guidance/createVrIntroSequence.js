@@ -38,7 +38,7 @@ export const VR_INTRO_COPY = Object.freeze({
 export function createVrIntroSequence({ monkeyGuide, monkeyMotionRoot, monkeyVisualRoot, platformOrigin, playerRig,
   setMonkeyEmergeAlpha = () => {}, getHeadPosition = () => playerRig.getWorldPosition(new THREE.Vector3()),
   glyphRing, progressFloor, platformFixturesRoot, locomotion, ringRadius, entryDirection, settings,
-  onEndSession = () => {}, bypass = false }) {
+  onOpeningRaysReady = () => {}, onEndSession = () => {}, bypass = false }) {
   const copy = VR_INTRO_COPY[settings.locale === 'pl' ? 'pl' : 'en'];
   const canonicalMonkey = monkeyMotionRoot.position.clone();
   const canonicalMonkeyQuaternion = monkeyMotionRoot.quaternion.clone();
@@ -48,14 +48,18 @@ export function createVrIntroSequence({ monkeyGuide, monkeyMotionRoot, monkeyVis
   const direction = entryDirection.clone(); direction.y = 0;
   if (direction.lengthSq() < 1e-6) direction.set(0, 0, 1); else direction.normalize();
   let state; let queue = []; let elapsed = 0; let emergeElapsed = 0; let emergeProgress = 1;
-  let timerPhase = null; let walkingPaused = false;
+  let timerPhase = null; let messageDisplayDuration = 0; let walkingPaused = false;
   let monkeyNarrativeRadius = 0; let startRadius = 0; let turnElapsed = 0; let pendingDone = null;
   const sectors = progressFloor.object.children.filter((child) => child.userData?.branchId);
   const captureMonkey = () => monkeyGuide.setDialogueOverride({ onMonkeyPress: () => true });
   const center = platformOrigin ?? progressFloor.object;
+  center.updateWorldMatrix(true, false); monkeyMotionRoot.updateWorldMatrix(true, false);
+  const canonicalMonkeyPlatformY = center.worldToLocal(
+    monkeyMotionRoot.getWorldPosition(new THREE.Vector3())
+  ).y;
   const pointInParent = (object, radius) => {
     center.updateWorldMatrix(true, false);
-    const point = new THREE.Vector3(direction.x * radius, 0, direction.z * radius);
+    const point = new THREE.Vector3(direction.x * radius, canonicalMonkeyPlatformY, direction.z * radius);
     center.localToWorld(point);
     object.parent?.updateWorldMatrix(true, false);
     return object.parent ? object.parent.worldToLocal(point) : point;
@@ -74,19 +78,23 @@ export function createVrIntroSequence({ monkeyGuide, monkeyMotionRoot, monkeyVis
     show(copy.opening, () => { state = VR_INTRO_STATE.WAIT_HOVER; monkeyGuide.setDialogueOverride({ onMonkeyHover() {
       if (state === VR_INTRO_STATE.WAIT_HOVER) { state = VR_INTRO_STATE.WAIT_TRIGGER; monkeyGuide.showMessage(copy.trigger); }
     }, onMonkeyPress() { if (state !== VR_INTRO_STATE.WAIT_TRIGGER) return true; state = VR_INTRO_STATE.VOID;
-      monkeyGuide.setDialogueOverride(null); show(copy.seen, invitation, copy.going); return true; } }); });
+      monkeyGuide.setDialogueOverride(null); show(copy.seen, invitation, copy.going); return true; } }); }, null, 1, onOpeningRaysReady);
   };
   const displayNext = () => {
     const item = queue.shift();
     if (!item) return;
-    monkeyGuide.showMessage(item.text);
+    item.beforeDisplay?.();
+    const metrics = monkeyGuide.showMessage(item.text) ?? {};
     if (item.kind === 'question') {
       timerPhase = null;
       const done = pendingDone; pendingDone = null; done?.();
-    } else timerPhase = 'DISPLAY';
+    } else {
+      messageDisplayDuration = settings.messageDisplayDuration * Math.max(0, metrics.lineCount ?? 1);
+      timerPhase = messageDisplayDuration > 0 ? 'DISPLAY' : 'GAP';
+    }
   };
-  const show = (lines, done, finalQuestion = null) => {
-    queue = lines.map((text) => ({ text, kind: 'statement' }));
+  const show = (lines, done, finalQuestion = null, hookIndex = -1, beforeDisplay = null) => {
+    queue = lines.map((text, index) => ({ text, kind: 'statement', beforeDisplay: index === hookIndex ? beforeDisplay : null }));
     if (finalQuestion) queue.push({ text: finalQuestion, kind: 'question' });
     elapsed = 0; timerPhase = null; pendingDone = done; displayNext();
   };
@@ -109,7 +117,8 @@ export function createVrIntroSequence({ monkeyGuide, monkeyMotionRoot, monkeyVis
     return true;
   }
   function reset() {
-    queue = []; pendingDone = null; elapsed = 0; timerPhase = null; walkingPaused = false; monkeyGuide.setDialogueOverride(null);
+    queue = []; pendingDone = null; elapsed = 0; timerPhase = null; messageDisplayDuration = 0;
+    walkingPaused = false; monkeyGuide.setDialogueOverride(null); monkeyGuide.showMessage('');
     emergeElapsed = 0; xrCalibrated = false;
     monkeyMotionRoot.position.copy(canonicalMonkey); monkeyMotionRoot.quaternion.copy(canonicalMonkeyQuaternion); locomotion.reset();
     if (bypass || !settings.enabled) { state = VR_INTRO_STATE.BYPASSED; emergeProgress = 1; setMonkeyEmergeAlpha(1);
@@ -135,7 +144,7 @@ export function createVrIntroSequence({ monkeyGuide, monkeyMotionRoot, monkeyVis
     }
     if (timerPhase) {
       elapsed += Math.max(0, delta);
-      const duration = timerPhase === 'DISPLAY' ? settings.messageDisplayDuration
+      const duration = timerPhase === 'DISPLAY' ? messageDisplayDuration
         : (queue[0]?.kind === 'question' ? settings.questionGapDuration : settings.messageGapDuration);
       if (elapsed >= duration) {
         elapsed = 0;
@@ -148,10 +157,21 @@ export function createVrIntroSequence({ monkeyGuide, monkeyMotionRoot, monkeyVis
       turnElapsed += Math.max(0, delta);
       const turnProgress = Math.min(1, turnElapsed / Math.max(0.001, settings.guideTurnDuration ?? 1));
       monkeyMotionRoot.quaternion.slerpQuaternions(canonicalMonkeyQuaternion, followingMonkeyQuaternion, turnProgress);
-      const p = playerRig.position; const distance = Math.hypot(p.x - monkeyMotionRoot.position.x, p.z - monkeyMotionRoot.position.z);
-      if (!walkingPaused && distance > settings.pauseDistance) walkingPaused = true;
-      else if (walkingPaused && distance < settings.resumeDistance) walkingPaused = false;
       const stopRadius = ringRadius + settings.thresholdStopOutsideDistance;
+      const walkedDistance = startRadius - monkeyNarrativeRadius;
+      const headWorld = getHeadPosition();
+      const monkeyWorld = monkeyMotionRoot.getWorldPosition(new THREE.Vector3());
+      center.updateWorldMatrix(true, false);
+      const headLocal = center.worldToLocal(headWorld.clone());
+      const monkeyLocal = center.worldToLocal(monkeyWorld.clone());
+      const distance = Math.hypot(headLocal.x - monkeyLocal.x, headLocal.z - monkeyLocal.z);
+      if (walkedDistance >= settings.followGraceDistance) {
+        if (!walkingPaused && distance > settings.pauseDistance) {
+          walkingPaused = true; monkeyGuide.showMessage(copy.going);
+        } else if (walkingPaused && distance < settings.resumeDistance) {
+          walkingPaused = false; monkeyGuide.showMessage('');
+        }
+      }
       if (!walkingPaused && monkeyNarrativeRadius > stopRadius) {
         const step = Math.min(monkeyNarrativeRadius - stopRadius, settings.guideSpeed * Math.max(0, delta));
         monkeyNarrativeRadius -= step; placeMonkey();

@@ -386,6 +386,10 @@ export function createVrMonkeyGuide({
     message = String(text ?? '').trim();
     messagePanel.group.visible = Boolean(message);
     drawMessage();
+    if (!message) return { lineCount: 0 };
+    messagePanel.context.font = `${settings.message.fontWeight} ${settings.message.fontSize}px sans-serif`;
+    const maxTextWidth = settings.message.maxBubbleWidthPx - settings.message.paddingX * 2;
+    return { lineCount: wrapText(messagePanel.context, message, maxTextWidth, settings.message.maxLines).length };
   }
   function clearAttention() {
     attentionPending = false;
