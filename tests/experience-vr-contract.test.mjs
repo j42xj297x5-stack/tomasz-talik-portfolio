@@ -62,7 +62,8 @@ assert.doesNotMatch(vr, /createVrEntryTransition|activatedEntryGlyph|entryReady/
 assert.match(vr, /onGlyphHoldComplete:[\s\S]*crystalCollection\.spawnOne/);
 const glyphSpawnContract = vr.match(/onGlyphHoldComplete:[\s\S]*?\n  }\n}/)?.[0] ?? '';
 assert.match(glyphSpawnContract, /node\.getWorldPosition/);
-assert.match(glyphSpawnContract, /monkeyMotionRoot\.getWorldPosition/);
+assert.match(glyphSpawnContract, /platformOrigin\.getWorldPosition/);
+assert.doesNotMatch(glyphSpawnContract, /monkeyMotionRoot\.getWorldPosition/);
 assert.doesNotMatch(glyphSpawnContract, /renderer\.xr|getCamera|getWorldDirection/);
 assert.match(vr, /crystalCollection\.reset\(\);\s*activateButton\.reset\(\);\s*releaseButton\.reset\(\);\s*crystalReliquary\.reset\(\);\s*restorePortalWaitingState\(\);\s*locomotion\.reset\(\);\s*resetPlayerRigToSpawn\(\);/);
 assert.match(vr, /function handleSessionEnd\(\)[\s\S]*restorePortalWaitingState\(\)/);
@@ -96,7 +97,8 @@ assert.match(vr, /onPreview: \(page\) => portalCanvas\.show\(resolveExperienceVr
 assert.match(vr, /onCommit: \(page, \{ tierCompleted \}\)[\s\S]*progressFloor\.activatePage\(page\);[\s\S]*if \(tierCompleted\) progressFloor\.completeTier\(page\.order\)/);
 assert.match(vr, /const monkeyActor = await loadMonkeyModel\(\{ scene: worldRoot, fallbackObject: centralPlaceholder, assetManager \}\);[\s\S]*motionRoot: monkeyMotionRoot[\s\S]*visualRoot: monkeyVisualRoot[\s\S]*model: monkeyModel[\s\S]*progressFloor\.object\.attach\(monkeyMotionRoot\);/);
 assert.doesNotMatch(vr, /progressFloor\.object\.add\(monkeyMotionRoot\)/);
-assert.match(vr, /createVrPortalDisplay\([\s\S]*anchorObject: monkeyMotionRoot/);
+assert.match(vr, /createVrPortalDisplay\([\s\S]*platformOrigin/);
+assert.doesNotMatch(vr, /createVrPortalDisplay\([\s\S]*anchorObject: monkeyMotionRoot/);
 
 assert.equal(XR_STANDARD_BUTTONS.togglePlayerGuidePanel, 5, 'LEFT Y uses the standard Y button slot');
 assert.equal(XR_STANDARD_BUTTONS.toggleLeftTool, 4, 'LEFT X mapping is preserved');
@@ -192,9 +194,11 @@ handControllerClosed.update(0.016);
 assert.equal(handControllerClosed.getLeftMode(), VR_LEFT_HAND_MODES.ASTERION_SPHERE, 'closed panel X toggles Asterion again');
 
 
-assert.match(vr, /createVrAstroFurnace\([\s\S]*anchorObject: monkeyMotionRoot/);
+assert.match(vr, /createVrAstroFurnace\([\s\S]*platformOrigin/);
+assert.doesNotMatch(vr, /createVrAstroFurnace\([\s\S]*anchorObject: monkeyMotionRoot/);
 
 assert.match(vr, /const platformFixturesRoot = new THREE\.Group\(\);\s*platformFixturesRoot\.name = 'VrPlatformFixturesRoot';[\s\S]*progressFloor\.object\.add\(platformFixturesRoot\);/);
+assert.match(vr, /const platformOrigin = new THREE\.Group\(\);\s*platformOrigin\.name = 'VrPlatformOrigin';\s*platformOrigin\.position\.set\(0, 0, 0\);\s*platformOrigin\.quaternion\.identity\(\);\s*platformOrigin\.scale\.set\(1, 1, 1\);\s*progressFloor\.object\.add\(platformOrigin\);/);
 assert.match(vr, /const floorPassengerRoot = new THREE\.Group\(\);\s*floorPassengerRoot\.name = 'VrFloorPassengerRoot';[\s\S]*progressFloor\.object\.add\(floorPassengerRoot\);/);
 assert.match(vr, /const floorWalkRadius = glyphOrbit\.effectiveRadius;\s*floorPassengerRoot\.attach\(playerRig\);/);
 assert.match(vr, /walkRadius: floorWalkRadius/);
@@ -211,7 +215,7 @@ assert.doesNotMatch(vr, /platformFixturesRoot\.(?:attach|add)\(glyphRing\)|platf
 assert.match(portalDisplay, /applyWorldTransform\(object, desiredWorldPosition, desiredWorldQuaternion\)/);
 assert.match(crystalReliquary, /portalDisplay\.object\.getWorldPosition\(portalPosition\);[\s\S]*portalDisplay\.object\.getWorldQuaternion\(portalQuaternion\);[\s\S]*applyWorldTransform\(object, desiredWorldPosition, portalQuaternion\)/);
 assert.match(crystalReliquary, /applyWorldTransform\(insertFeedback, sphere\.center, insertFeedback\.quaternion, insertFeedbackWorldScale\)/);
-assert.match(astroFurnace, /resolveVrPlatformFixturePositions\(\{ anchorCenter, spawnPosition, portalSettings \}\);[\s\S]*applyWorldTransform\(object, desiredWorldPosition, desiredWorldQuaternion, desiredWorldScale\)/);
+assert.match(astroFurnace, /resolveVrPlatformFixtureWorldPosition\([\s\S]*fixturePosition: settings\.position[\s\S]*applyWorldTransform\(object, desiredWorldPosition, desiredWorldQuaternion, desiredWorldScale\)/);
 assert.doesNotMatch(astroFurnace, /mirrorObject/, 'furnace does not depend on the placed portal object');
 assert.doesNotMatch(astroFurnace, /object\.position\.y = 0;[\s\S]*worldToLocal\(object\.position\)/);
 assert.match(furnacePanel, /return \{ object: root/);

@@ -205,6 +205,12 @@ platformFixturesRoot.position.set(0, 0, 0);
 platformFixturesRoot.quaternion.identity();
 platformFixturesRoot.scale.set(1, 1, 1);
 progressFloor.object.add(platformFixturesRoot);
+const platformOrigin = new THREE.Group();
+platformOrigin.name = 'VrPlatformOrigin';
+platformOrigin.position.set(0, 0, 0);
+platformOrigin.quaternion.identity();
+platformOrigin.scale.set(1, 1, 1);
+progressFloor.object.add(platformOrigin);
 const floorPassengerRoot = new THREE.Group();
 floorPassengerRoot.name = 'VrFloorPassengerRoot';
 floorPassengerRoot.position.set(0, 0, 0);
@@ -246,7 +252,7 @@ const asterionGyroInteraction = createVrAsterionGyroInteraction({
 });
 const glyphLights = createVrGlyphLights({ nodes, settings: settings.glyphLights });
 const portalDisplay = createVrPortalDisplay({
-  scene, anchorObject: monkeyMotionRoot, spawnPosition: settings.spawn.position,
+  scene, platformOrigin, spawnPosition: settings.spawn.position,
   portalModel: assetManager.cloneGltfScene('vr-portal-model'), settings: settings.portal
 });
 const astroFurnaceGltf = assetManager.getGltf('vr-astro-furnace-model');
@@ -255,8 +261,7 @@ const astroFurnace = createVrAstroFurnace({
   model: assetManager.cloneGltfScene('vr-astro-furnace-model'),
   animations: astroFurnaceGltf?.animations ?? [],
   settings: settings.furnace,
-  anchorObject: monkeyMotionRoot,
-  portalSettings: settings.portal,
+  platformOrigin,
   spawnPosition: settings.spawn.position
 });
 const furnaceProgressionController = createVrAstroFurnaceProgressionController();
@@ -510,9 +515,9 @@ const glyphInteraction = createVrGlyphInteraction({
     const tier = getNextCrystalTier(node);
     if (tier === null) return;
     node.updateWorldMatrix(true, false);
-    monkeyMotionRoot.updateWorldMatrix(true, false);
+    platformOrigin.updateWorldMatrix(true, false);
     const glyphWorldPosition = node.getWorldPosition(new THREE.Vector3());
-    const centerWorldPosition = monkeyMotionRoot.getWorldPosition(new THREE.Vector3());
+    const centerWorldPosition = platformOrigin.getWorldPosition(new THREE.Vector3());
     const crystal = crystalCollection.spawnOne(node.userData.id, { glyphWorldPosition, centerWorldPosition });
     if (crystal) vrAudio.completeGlyphAcquisition(node.userData.id, GLYPH_COMPLETION_AUDIO[node.userData.id]?.[tier - 1]);
   }
