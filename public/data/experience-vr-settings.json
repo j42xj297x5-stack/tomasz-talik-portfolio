@@ -87,9 +87,9 @@
       "insertRadius": 0.28
     },
     "position": {
-      "x": 2,
+      "x": -2.910428,
       "y": 0,
-      "z": 0.5
+      "z": -0.727607
     },
     "rotationDegrees": {
       "x": 0,
@@ -99,6 +99,7 @@
   },
   "reliquary": {
     "enabled": true,
+    "distanceFromPortal": 1.5,
     "heightOffset": 0.5,
     "buttons": {
       "scale": 0.3,
@@ -117,11 +118,6 @@
       "side": "right",
       "releaseDelaySeconds": 1,
       "hitAreaScale": 2
-    },
-    "position": {
-      "x": -1.497785,
-      "y": 0,
-      "z": 0.949929
     },
     "rotationDegrees": {
       "x": 0,

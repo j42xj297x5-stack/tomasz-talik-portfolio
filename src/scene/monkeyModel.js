@@ -77,9 +77,21 @@ function createMonkeyActor({ actorParent, fixtureParent, fallbackObject, model, 
     if (!stoneAsset || !characterAnchor || !seatAnchor || !stoneRoot.parent) return false;
     motionRoot.updateWorldMatrix(true, true);
     stoneRoot.updateWorldMatrix(true, true);
-    const seatWorld = seatAnchor.matrixWorld.clone();
     const anchorInVisual = matrixRelativeTo(characterAnchor, visualRoot);
-    const visualLocal = motionRoot.matrixWorld.clone().invert().multiply(seatWorld).multiply(anchorInVisual.invert());
+    const anchorPosition = new THREE.Vector3();
+    const anchorQuaternion = new THREE.Quaternion();
+    const ignoredAnchorScale = new THREE.Vector3();
+    anchorInVisual.decompose(anchorPosition, anchorQuaternion, ignoredAnchorScale);
+
+    const seatPosition = seatAnchor.getWorldPosition(new THREE.Vector3());
+    const seatQuaternion = seatAnchor.getWorldQuaternion(new THREE.Quaternion());
+    const visualScale = visualRoot.getWorldScale(new THREE.Vector3());
+    const visualQuaternion = seatQuaternion.multiply(anchorQuaternion.invert());
+    const visualPosition = anchorPosition.clone().multiply(visualScale).applyQuaternion(visualQuaternion);
+    visualPosition.multiplyScalar(-1).add(seatPosition);
+
+    const visualWorld = new THREE.Matrix4().compose(visualPosition, visualQuaternion, visualScale);
+    const visualLocal = motionRoot.matrixWorld.clone().invert().multiply(visualWorld);
     setMatrix(visualRoot, visualLocal);
     visualRoot.updateWorldMatrix(true, true);
     return true;

@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
 import {
   DEFAULT_EXPERIENCE_VR_SETTINGS,
   loadExperienceVrSettings,
@@ -49,6 +50,12 @@ assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.crystals.spawnInwardOffset, 0.3);
 assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.crystals.consumeDuration, 0.55);
 assert.deepEqual(DEFAULT_EXPERIENCE_VR_SETTINGS.portal.position, { x: -2.910428, y: 0, z: -0.727607 });
 assert.deepEqual(DEFAULT_EXPERIENCE_VR_SETTINGS.furnace.position, { x: 2.910428, y: 0, z: -0.727607 });
+const publicOverrides = JSON.parse(await readFile(new URL('../public/data/experience-vr-settings.json', import.meta.url), 'utf8'));
+const activeSettings = normalizeExperienceVrSettings(publicOverrides);
+assert.deepEqual(activeSettings.portal.position, { x: -2.910428, y: 0, z: -0.727607 });
+assert.deepEqual(activeSettings.furnace.position, { x: 2.910428, y: 0, z: -0.727607 });
+assert.equal('position' in publicOverrides.reliquary, false, 'public reliquary override does not restore legacy absolute placement');
+assert.equal(activeSettings.reliquary.distanceFromPortal, 1.5);
 assert.deepEqual(normalizeExperienceVrSettings({ schemaVersion: 2 }), DEFAULT_EXPERIENCE_VR_SETTINGS);
 
 const normalized = normalizeExperienceVrSettings({

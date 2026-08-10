@@ -80,7 +80,7 @@ Status: current binding decisions organized by implementation status, not patch 
 1. `public/glb/monkey.glb` (character node `monkey`) and `public/glb/monkey_stone.glb` (separate seat/stone) are distinct **PRESENT** physical assets.
 2. The approved internal authoring contract is `MONKEY_ANCHOR → monkey` for the character and `MONKEY_STONE_ROOT → <stone mesh> + MONKEY_SEAT_ANCHOR` for the stone. `MONKEY_ANCHOR` is the character-local seated reference, `MONKEY_STONE_ROOT` the stone-local lower/root reference and `MONKEY_SEAT_ANCHOR` the stone-local seating point.
 3. Runtime preloads both assets. `VrMonkeyMotionRoot` owns the actor, while `VrMonkeyStoneRoot` is a stationary platform fixture.
-4. Normal composition bases authored `MONKEY_STONE_ROOT` at platform center `(0,0,0)`, then aligns `VrMonkeyVisualRoot` so the complete world matrices of `MONKEY_ANCHOR` and `MONKEY_SEAT_ANCHOR` coincide.
+4. Normal composition bases authored `MONKEY_STONE_ROOT` at platform center `(0,0,0)`, then aligns the world position and rotation of `MONKEY_ANCHOR` with `MONKEY_SEAT_ANCHOR`. Their scales intentionally remain independent so the character retains its authored GLB scale.
 5. `(0,0,0)` is the canonical transform of `VrMonkeyMotionRoot`, not the required physical world position of `MONKEY_ANCHOR`. The internal references never define P0 start or gameplay placement and require no magic offset.
 
 ## Approved future gameplay direction — not implemented
