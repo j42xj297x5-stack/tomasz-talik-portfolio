@@ -47,6 +47,14 @@ assert.deepEqual(DEFAULT_EXPERIENCE_VR_SETTINGS.furnace.optionButton.halo,
 assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.furnace.optionButton.emissionHover, 5);
 assert.equal(normalizeExperienceVrSettings({ schemaVersion: 1 }).furnace.optionButton.selectionDuration, 0.48);
 assert.equal(normalizeExperienceVrSettings({ schemaVersion: 1, furnace: { optionButton: { selectionDuration: 0.75 } } }).furnace.optionButton.selectionDuration, 0.75);
+const canonicalModuleAngles = DEFAULT_EXPERIENCE_VR_SETTINGS.furnace.optionButton.moduleAnglesDegrees;
+assert.deepEqual(normalizeExperienceVrSettings({ schemaVersion: 1 }).furnace.optionButton.moduleAnglesDegrees,
+  canonicalModuleAngles);
+const sparseModuleAngles = normalizeExperienceVrSettings({ schemaVersion: 1, furnace: {
+  optionButton: { moduleAnglesDegrees: { custom_module: 135 } }
+} }).furnace.optionButton.moduleAnglesDegrees;
+assert.equal(sparseModuleAngles.custom_module, 135);
+assert.equal(sparseModuleAngles.floor_gyroscope_sphere, canonicalModuleAngles.floor_gyroscope_sphere);
 assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.glyphLights.inwardOffset, 1);
 assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.crystals.spawnInwardOffset, 0.3);
 assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.crystals.consumeDuration, 0.55);
