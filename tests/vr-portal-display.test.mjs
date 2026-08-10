@@ -10,6 +10,7 @@ assert.deepEqual(
 );
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(); camera.position.set(0, 1.6, 5); scene.add(camera);
+const platformOrigin = new THREE.Group(); scene.add(platformOrigin);
 const monkey = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1)); scene.add(monkey);
 const portalSource = new THREE.Group(); portalSource.add(new THREE.Mesh(new THREE.BoxGeometry(4, 3, 0.3)));
 const blenderSurface = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 0.9));
@@ -24,7 +25,7 @@ const noUvs = new THREE.Mesh(new THREE.BufferGeometry()); noUvs.name = 'PORTAL_C
 noUvs.geometry.setAttribute('position', new THREE.Float32BufferAttribute([0, 0, 0], 3));
 assert.equal(findPortalCanvasSurface(noUvs), null);
 scene.updateMatrixWorld(true);
-const portal = createVrPortalDisplay({ scene, anchorObject: monkey, portalModel: portalSource, spawnPosition: { x: 0, y: 0, z: 5 }, settings: { enabled: true, maxWidth: 2.8, maxHeight: 3.2, distanceFromAnchor: 2, forwardBias: 0.25, floorOffset: 0 } });
+const portal = createVrPortalDisplay({ scene, platformOrigin, portalModel: portalSource, spawnPosition: { x: 0, y: 0, z: 5 }, settings: { enabled: true, position: { x: -2, y: 0, z: -0.5 }, maxWidth: 2.8, maxHeight: 3.2, floorOffset: 0 } });
 assert.equal(portal.canvasSurface.name, 'PORTAL_CANVAS_SURFACE');
 assert.equal(portal.canvasSurface.parent, portal.model);
 assert.deepEqual(portal.canvasSurface.position.toArray(), blenderSurface.position.toArray());
@@ -34,9 +35,11 @@ assert.equal(portal.object.visible, true);
 assert.equal(canvas.parent, portal.object);
 assert.ok(Math.abs(canvas.getWorldQuaternion(new THREE.Quaternion()).dot(portal.model.getWorldQuaternion(new THREE.Quaternion()))) > 0.999999);
 const firstPosition = portal.object.position.clone();
-const anchorCenter = new THREE.Box3().setFromObject(monkey).getCenter(new THREE.Vector3());
-assert.ok(Math.abs(Math.hypot(firstPosition.x - anchorCenter.x, firstPosition.z - anchorCenter.z) - 2) < 1e-8);
-assert.ok(firstPosition.x < anchorCenter.x); // right side for a player looking from +Z toward the monkey.
+assert.equal(firstPosition.x, -2);
+assert.equal(firstPosition.z, -0.5);
+monkey.position.set(10, 0, 4);
+portal.place(); assert.ok(portal.object.position.distanceTo(firstPosition) < 1e-8,
+  'portal place never reads the monkey transform');
 camera.position.set(99, 12, -40); camera.rotation.set(1, 2, 3);
 portal.place(); assert.ok(portal.object.position.distanceTo(firstPosition) < 1e-8);
 const floorBound = new THREE.Box3().setFromObject(portal.object);

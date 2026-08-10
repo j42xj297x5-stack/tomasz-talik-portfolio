@@ -205,15 +205,21 @@ platformFixturesRoot.position.set(0, 0, 0);
 platformFixturesRoot.quaternion.identity();
 platformFixturesRoot.scale.set(1, 1, 1);
 progressFloor.object.add(platformFixturesRoot);
+const platformOrigin = new THREE.Group();
+platformOrigin.name = 'VrPlatformOrigin';
+platformOrigin.position.set(0, 0, 0);
+platformOrigin.quaternion.identity();
+platformOrigin.scale.set(1, 1, 1);
+progressFloor.object.add(platformOrigin);
 const floorPassengerRoot = new THREE.Group();
 floorPassengerRoot.name = 'VrFloorPassengerRoot';
 floorPassengerRoot.position.set(0, 0, 0);
 floorPassengerRoot.quaternion.identity();
 floorPassengerRoot.scale.set(1, 1, 1);
 progressFloor.object.add(floorPassengerRoot);
-const monkeyModel = await loadMonkeyModel({ scene: worldRoot, fallbackObject: centralPlaceholder, assetManager });
-const monkeyAnchor = monkeyModel ?? centralPlaceholder;
-progressFloor.object.attach(monkeyAnchor);
+const monkeyActor = await loadMonkeyModel({ scene: worldRoot, fallbackObject: centralPlaceholder, assetManager });
+const { motionRoot: monkeyMotionRoot, visualRoot: monkeyVisualRoot, model: monkeyModel } = monkeyActor;
+progressFloor.object.attach(monkeyMotionRoot);
 const resolvedPortfolioNodes = resolvePortfolioNodes(language);
 const { group: glyphRing, nodes } = createOrbitNodes(resolvedPortfolioNodes, { assetManager });
 worldRoot.add(glyphRing);
@@ -246,7 +252,7 @@ const asterionGyroInteraction = createVrAsterionGyroInteraction({
 });
 const glyphLights = createVrGlyphLights({ nodes, settings: settings.glyphLights });
 const portalDisplay = createVrPortalDisplay({
-  scene, anchorObject: monkeyAnchor, spawnPosition: settings.spawn.position,
+  scene, platformOrigin, spawnPosition: settings.spawn.position,
   portalModel: assetManager.cloneGltfScene('vr-portal-model'), settings: settings.portal
 });
 const astroFurnaceGltf = assetManager.getGltf('vr-astro-furnace-model');
@@ -255,8 +261,7 @@ const astroFurnace = createVrAstroFurnace({
   model: assetManager.cloneGltfScene('vr-astro-furnace-model'),
   animations: astroFurnaceGltf?.animations ?? [],
   settings: settings.furnace,
-  anchorObject: monkeyAnchor,
-  portalSettings: settings.portal,
+  platformOrigin,
   spawnPosition: settings.spawn.position
 });
 const furnaceProgressionController = createVrAstroFurnaceProgressionController();
@@ -343,7 +348,8 @@ const playerGuidePanel = createVrPlayerGuidePanel({
   onPanelClick: () => playVrUi(VR_AUDIO.click)
 });
 const monkeyGuide = createVrMonkeyGuide({
-  monkeyAnchor,
+  actorRoot: monkeyMotionRoot,
+  visualRoot: monkeyVisualRoot,
   controllers: vrControllers.controllers,
   progressionController,
   locale: language,
@@ -509,9 +515,9 @@ const glyphInteraction = createVrGlyphInteraction({
     const tier = getNextCrystalTier(node);
     if (tier === null) return;
     node.updateWorldMatrix(true, false);
-    monkeyAnchor.updateWorldMatrix(true, false);
+    platformOrigin.updateWorldMatrix(true, false);
     const glyphWorldPosition = node.getWorldPosition(new THREE.Vector3());
-    const centerWorldPosition = monkeyAnchor.getWorldPosition(new THREE.Vector3());
+    const centerWorldPosition = platformOrigin.getWorldPosition(new THREE.Vector3());
     const crystal = crystalCollection.spawnOne(node.userData.id, { glyphWorldPosition, centerWorldPosition });
     if (crystal) vrAudio.completeGlyphAcquisition(node.userData.id, GLYPH_COMPLETION_AUDIO[node.userData.id]?.[tier - 1]);
   }
@@ -560,18 +566,18 @@ function applySceneLayoutPrototype() {
     }
   };
 
-  apply({ anchor: 'ANCHOR_MONKEY', target: 'monkeyAnchor', runtimeObject: monkeyAnchor });
+  apply({ anchor: 'ANCHOR_MONKEY', target: 'monkeyMotionRoot', runtimeObject: monkeyMotionRoot });
   apply({ anchor: 'ANCHOR_MONKEY_ATTENTION', target: 'monkeyGuide.attentionRoot',
-    runtimeObject: monkeyGuide.attentionRoot, layoutReference: 'ANCHOR_MONKEY', runtimeReference: monkeyAnchor });
+    runtimeObject: monkeyGuide.attentionRoot, layoutReference: 'ANCHOR_MONKEY', runtimeReference: monkeyMotionRoot });
   const speechProxy = sceneLayout.getNode('PROXY_MONKEY_SPEECH_MAX_ENVELOPE');
   apply({
     anchor: speechProxy ? 'PROXY_MONKEY_SPEECH_MAX_ENVELOPE' : 'ANCHOR_MONKEY_SPEECH_BASE',
     target: 'monkeyGuide.messagePanel.group', runtimeObject: monkeyGuide.messagePanel.group,
-    layoutReference: 'ANCHOR_MONKEY', runtimeReference: monkeyAnchor, fallback: !speechProxy,
+    layoutReference: 'ANCHOR_MONKEY', runtimeReference: monkeyMotionRoot, fallback: !speechProxy,
     offsetPosition: speechProxy ? null : { x: 0, y: settings.monkeyGuide.message.height / 2, z: 0 }
   });
   apply({ anchor: 'ANCHOR_MONKEY_DIALOGUE', target: 'monkeyGuide.dialoguePanel.group',
-    runtimeObject: monkeyGuide.dialoguePanel.group, layoutReference: 'ANCHOR_MONKEY', runtimeReference: monkeyAnchor });
+    runtimeObject: monkeyGuide.dialoguePanel.group, layoutReference: 'ANCHOR_MONKEY', runtimeReference: monkeyMotionRoot });
   apply({ anchor: 'ANCHOR_PORTAL', target: 'portalDisplay.object', runtimeObject: portalDisplay.object });
   const furnaceApplied = apply({ anchor: 'ANCHOR_FURNACE', target: 'astroFurnace.object', runtimeObject: astroFurnace.object });
   if (furnaceApplied) {
@@ -607,7 +613,7 @@ const introEntryDirection = new THREE.Vector3(settings.spawn.position.x, 0, sett
 if (introEntryDirection.lengthSq() < 1e-6) introEntryDirection.set(0, 0, 1);
 introEntryDirection.normalize();
 introSequence = createVrIntroSequence({
-  monkeyGuide, monkeyAnchor, playerRig, glyphRing, progressFloor, platformFixturesRoot, locomotion,
+  monkeyGuide, monkeyMotionRoot, playerRig, glyphRing, progressFloor, platformFixturesRoot, locomotion,
   ringRadius: glyphOrbit.effectiveRadius, entryDirection: introEntryDirection,
   settings: { ...settings.intro, locale: language }, bypass: introQaBypass,
   getHeadPosition: () => {

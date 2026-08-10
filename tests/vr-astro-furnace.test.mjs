@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import * as THREE from '../src/vendor/three.js';
 import { createVrAstroFurnace } from '../src/xr/furnace/createVrAstroFurnace.js';
-import { resolveVrPlatformFixturePositions } from '../src/xr/placement/vrPlatformFixturePlacement.js';
+import { resolveVrPlatformFixtureWorldPosition } from '../src/xr/placement/vrPlatformFixturePlacement.js';
 import { ASTRO_FURNACE_STATES, createVrAstroFurnaceOpenInteraction } from '../src/xr/furnace/createVrAstroFurnaceOpenInteraction.js';
 import { ASTRO_FURNACE_PROCESS_KINDS, ASTRO_FURNACE_PROCESS_STATES, createVrAstroFurnaceActivateInteraction, processRotationPulse01 } from '../src/xr/furnace/createVrAstroFurnaceActivateInteraction.js';
 import { createVrAstroFurnaceOptionInteraction } from '../src/xr/furnace/createVrAstroFurnaceOptionInteraction.js';
@@ -15,14 +15,10 @@ assert.equal(processRotationPulse01(0), 0);
 assert.equal(processRotationPulse01(Math.PI), 1);
 assert.ok(processRotationPulse01(Math.PI * 2) < 1e-12);
 
-const center = new THREE.Vector3(1, 4, -2);
-const fixturePlacement = resolveVrPlatformFixturePositions({ anchorCenter: center,
-  spawnPosition: { x: 0, z: 5 }, portalSettings: { distanceFromAnchor: 2, forwardBias: 0.25 } });
-const toward = fixturePlacement.towardPlayer; const lateral = fixturePlacement.lateral;
-const furnaceOffset = fixturePlacement.furnacePosition.clone().sub(center).setY(0);
-const portalOffset = fixturePlacement.portalPosition.clone().sub(center).setY(0);
-assert.ok(Math.abs(furnaceOffset.dot(toward) - portalOffset.dot(toward)) < 1e-12);
-assert.ok(Math.abs(furnaceOffset.dot(lateral) + portalOffset.dot(lateral)) < 1e-12);
+const fixturePlatform = new THREE.Group(); fixturePlatform.position.set(1, 4, -2);
+const fixturePlacement = resolveVrPlatformFixtureWorldPosition({ platformOrigin: fixturePlatform,
+  fixturePosition: { x: 2, y: 0, z: 1 } });
+assert.deepEqual(fixturePlacement.toArray(), [3, 4, -1]);
 const normalized = normalizeExperienceVrSettings({ schemaVersion: 1, furnace: {
   placementMode: 'unknown', floorOffset: 20, scale: 99,
   openButton: { rayMaxDistance: 30, emissionPressed: 3 }, chamber: { glassFadeStart: -1 }
@@ -58,15 +54,15 @@ assert.equal(normalizedProcess.fireCellPulseHzMax, 4);
 
 const parent = new THREE.Group();
 const anchor = new THREE.Mesh(new THREE.BoxGeometry(2, 2, 2)); anchor.position.set(1, 1, -2);
+const platformOrigin = new THREE.Group(); parent.add(platformOrigin);
 const portal = new THREE.Group(); portal.position.set(-2, 9, 3);
 const placementModel = new THREE.Group(); placementModel.add(new THREE.Mesh(new THREE.BoxGeometry(1, 2, 1)));
 parent.add(anchor, portal);
 const placementSettings = { enabled: true, placementMode: 'mirror-portal', floorOffset: 0,
   position: { x: 0, y: 0, z: 0 }, rotationDegrees: { x: 0, y: 0, z: 0 }, scale: 3, debug: false };
 const placedFurnace = createVrAstroFurnace({ parent, model: placementModel, settings: placementSettings,
-  anchorObject: anchor, portalSettings: { distanceFromAnchor: 2, forwardBias: 0.25 }, spawnPosition: { x: 0, y: 0, z: 5 } });
-const expectedFurnace = resolveVrPlatformFixturePositions({ anchorCenter: new THREE.Vector3(1, 1, -2),
-  spawnPosition: { x: 0, y: 0, z: 5 }, portalSettings: { distanceFromAnchor: 2, forwardBias: 0.25 } }).furnacePosition;
+  platformOrigin, spawnPosition: { x: 0, y: 0, z: 5 } });
+const expectedFurnace = new THREE.Vector3(0, 0, 0);
 assert.ok(Math.abs(placedFurnace.object.position.x - expectedFurnace.x) < 1e-12);
 assert.ok(Math.abs(placedFurnace.object.position.z - expectedFurnace.z) < 1e-12);
 assert.equal(placedFurnace.object.scale.x, 3);
@@ -74,6 +70,11 @@ assert.ok(Math.abs(new THREE.Box3().setFromObject(placedFurnace.object).min.y) <
 placedFurnace.reset();
 assert.ok(Math.abs(placedFurnace.object.position.x - expectedFurnace.x) < 1e-12,
   'furnace placement is independent from the portal object');
+anchor.position.set(11, 1, 2);
+placedFurnace.place();
+assert.ok(Math.abs(placedFurnace.object.position.x - expectedFurnace.x) < 1e-12
+  && Math.abs(placedFurnace.object.position.z - expectedFurnace.z) < 1e-12,
+  'furnace place never reads the monkey transform');
 assert.equal(parent.children.filter((child) => child.name === 'VrAstroFurnace').length, 1);
 placedFurnace.dispose();
 

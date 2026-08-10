@@ -35,12 +35,12 @@ export const VR_INTRO_COPY = Object.freeze({
   }
 });
 
-export function createVrIntroSequence({ monkeyGuide, monkeyAnchor, playerRig, getHeadPosition = () => playerRig.position,
+export function createVrIntroSequence({ monkeyGuide, monkeyMotionRoot, playerRig, getHeadPosition = () => playerRig.position,
   glyphRing, progressFloor, platformFixturesRoot, locomotion, ringRadius, entryDirection, settings,
   onEndSession = () => {}, bypass = false }) {
   const copy = VR_INTRO_COPY[settings.locale === 'pl' ? 'pl' : 'en'];
-  const canonicalMonkey = monkeyAnchor.position.clone();
-  const canonicalMonkeyQuaternion = monkeyAnchor.quaternion.clone();
+  const canonicalMonkey = monkeyMotionRoot.position.clone();
+  const canonicalMonkeyQuaternion = monkeyMotionRoot.quaternion.clone();
   const followingMonkeyQuaternion = canonicalMonkeyQuaternion.clone().multiply(
     new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI)
   );
@@ -50,7 +50,7 @@ export function createVrIntroSequence({ monkeyGuide, monkeyAnchor, playerRig, ge
   let monkeyNarrativeRadius = 0; let startRadius = 0; let turnElapsed = 0; let pendingDone = null;
   const sectors = progressFloor.object.children.filter((child) => child.userData?.branchId);
   const captureMonkey = () => monkeyGuide.setDialogueOverride({ onMonkeyPress: () => true });
-  const placeMonkey = () => monkeyAnchor.position.copy(canonicalMonkey).addScaledVector(direction, monkeyNarrativeRadius);
+  const placeMonkey = () => monkeyMotionRoot.position.copy(canonicalMonkey).addScaledVector(direction, monkeyNarrativeRadius);
   const displayNext = () => {
     const item = queue.shift();
     if (!item) return;
@@ -85,7 +85,7 @@ export function createVrIntroSequence({ monkeyGuide, monkeyAnchor, playerRig, ge
   }
   function reset() {
     queue = []; pendingDone = null; elapsed = 0; timerPhase = null; walkingPaused = false; monkeyGuide.setDialogueOverride(null);
-    monkeyAnchor.position.copy(canonicalMonkey); monkeyAnchor.quaternion.copy(canonicalMonkeyQuaternion); locomotion.reset();
+    monkeyMotionRoot.position.copy(canonicalMonkey); monkeyMotionRoot.quaternion.copy(canonicalMonkeyQuaternion); locomotion.reset();
     if (bypass || !settings.enabled) { state = VR_INTRO_STATE.BYPASSED; sectors.forEach((item) => { item.visible = true; });
       platformFixturesRoot.visible = true; glyphRing.visible = true; return; }
     locomotion.setWalkRadius(Infinity);
@@ -112,8 +112,8 @@ export function createVrIntroSequence({ monkeyGuide, monkeyAnchor, playerRig, ge
     if (state === VR_INTRO_STATE.FOLLOWING) {
       turnElapsed += Math.max(0, delta);
       const turnProgress = Math.min(1, turnElapsed / Math.max(0.001, settings.guideTurnDuration ?? 1));
-      monkeyAnchor.quaternion.slerpQuaternions(canonicalMonkeyQuaternion, followingMonkeyQuaternion, turnProgress);
-      const p = playerRig.position; const distance = Math.hypot(p.x - monkeyAnchor.position.x, p.z - monkeyAnchor.position.z);
+      monkeyMotionRoot.quaternion.slerpQuaternions(canonicalMonkeyQuaternion, followingMonkeyQuaternion, turnProgress);
+      const p = playerRig.position; const distance = Math.hypot(p.x - monkeyMotionRoot.position.x, p.z - monkeyMotionRoot.position.z);
       if (!walkingPaused && distance > settings.pauseDistance) walkingPaused = true;
       else if (walkingPaused && distance < settings.resumeDistance) walkingPaused = false;
       const stopRadius = ringRadius + settings.thresholdStopOutsideDistance;
@@ -129,7 +129,7 @@ export function createVrIntroSequence({ monkeyGuide, monkeyAnchor, playerRig, ge
         monkeyNarrativeRadius = Math.max(0, monkeyNarrativeRadius - settings.guideSpeed * Math.max(0, delta));
         if (monkeyNarrativeRadius < 1e-4) monkeyNarrativeRadius = 0;
         placeMonkey();
-        if (monkeyNarrativeRadius === 0) monkeyAnchor.quaternion.copy(canonicalMonkeyQuaternion);
+        if (monkeyNarrativeRadius === 0) monkeyMotionRoot.quaternion.copy(canonicalMonkeyQuaternion);
       }
       const monkeyHasEntered = monkeyNarrativeRadius <= ringRadius;
       const head = getHeadPosition();
