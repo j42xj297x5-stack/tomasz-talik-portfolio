@@ -44,6 +44,7 @@ import { createVrAsterionProductionController } from './xr/asterion/createVrAste
 import { createVrPlayerGuidePanel } from './xr/guidance/createVrPlayerGuidePanel.js';
 import { createVrMonkeyGuide } from './xr/guidance/createVrMonkeyGuide.js';
 import { createVrIntroSequence, VR_INTRO_STATE } from './xr/guidance/createVrIntroSequence.js';
+import { createVrIntroFogReveal } from './xr/guidance/createVrIntroFogReveal.js';
 import { createVrSceneLayoutPrototype } from './xr/layout/createVrSceneLayoutPrototype.js';
 import { createVrAudioBridge } from './xr/audio/createVrAudioBridge.js';
 import { createVrAmbientSequencer } from './xr/audio/createVrAmbientSequencer.js';
@@ -499,7 +500,7 @@ function getNextCrystalTier(node) {
 }
 function isGlyphActive(node) {
   const introState = introSequence?.getState();
-  const introAllowsGameplay = introState === VR_INTRO_STATE.INSIDE_RING_READY || introState === VR_INTRO_STATE.BYPASSED;
+  const introAllowsGameplay = introState === VR_INTRO_STATE.GLYPH_FREE_EXPLORE || introState === VR_INTRO_STATE.BYPASSED;
   return introAllowsGameplay && getNextCrystalTier(node) !== null;
 }
 const glyphInteraction = createVrGlyphInteraction({
@@ -520,7 +521,10 @@ const glyphInteraction = createVrGlyphInteraction({
     const glyphWorldPosition = node.getWorldPosition(new THREE.Vector3());
     const centerWorldPosition = platformOrigin.getWorldPosition(new THREE.Vector3());
     const crystal = crystalCollection.spawnOne(node.userData.id, { glyphWorldPosition, centerWorldPosition });
-    if (crystal) vrAudio.completeGlyphAcquisition(node.userData.id, GLYPH_COMPLETION_AUDIO[node.userData.id]?.[tier - 1]);
+    if (crystal) {
+      introSequence?.notifyGlyphExploreSuccess();
+      vrAudio.completeGlyphAcquisition(node.userData.id, GLYPH_COMPLETION_AUDIO[node.userData.id]?.[tier - 1]);
+    }
   }
 });
 shellAttractorInteraction = createVrShellAttractorInteraction({
@@ -610,12 +614,20 @@ function applySceneLayoutPrototype() {
 
 applySceneLayoutPrototype();
 
+const introFogReveal = createVrIntroFogReveal({
+  anchor: platformOrigin,
+  roots: [worldRoot],
+  color: '#05070b',
+  duration: settings.intro.introRevealDuration,
+  revealRadius: settings.intro.playerStartRadius + 4
+});
+
 const introEntryDirection = new THREE.Vector3(settings.spawn.position.x, 0, settings.spawn.position.z);
 if (introEntryDirection.lengthSq() < 1e-6) introEntryDirection.set(0, 0, 1);
 introEntryDirection.normalize();
 introSequence = createVrIntroSequence({
   monkeyGuide, monkeyMotionRoot, monkeyVisualRoot, platformOrigin, playerRig, glyphRing, progressFloor,
-  platformFixturesRoot, locomotion, setMonkeyEmergeAlpha: monkeyActor.setEmergeAlpha,
+  platformFixturesRoot, locomotion, playerGuidePanel, fogReveal: introFogReveal,
   ringRadius: glyphOrbit.effectiveRadius, entryDirection: introEntryDirection,
   settings: { ...settings.intro, locale: language }, bypass: introQaBypass,
   onOpeningRaysReady: () => vrControllers.setRaysEnabled(true),
@@ -842,6 +854,7 @@ async function enterVr() {
 enterButton.addEventListener('click', enterVr);
 exitButton.addEventListener('click', () => { void activeSession?.end(); });
 window.addEventListener('pagehide', () => {
+  introFogReveal.dispose();
   unsubscribeAmbientFurnace();
   unsubscribeAmbientAsterion();
   ambientSequencer.dispose();
