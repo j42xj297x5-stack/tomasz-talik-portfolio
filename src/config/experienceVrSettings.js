@@ -183,7 +183,9 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
     pauseDistance: 3.2,
     resumeDistance: 2.4,
     revealProgress: 0.72,
-    lineDuration: 1.7
+    messageDisplayDuration: 2.0,
+    messageGapDuration: 0.5,
+    questionGapDuration: 2.0
   },
   entryTransition: {
     enabled: true,
@@ -582,7 +584,12 @@ export function normalizeExperienceVrSettings(candidate) {
       pauseDistance: finiteNumber(candidate.intro?.pauseDistance, defaults.intro.pauseDistance, { min: 1, max: 10 }),
       resumeDistance: finiteNumber(candidate.intro?.resumeDistance, defaults.intro.resumeDistance, { min: 0.5, max: 9 }),
       revealProgress: finiteNumber(candidate.intro?.revealProgress, defaults.intro.revealProgress, { min: 0.4, max: 1 }),
-      lineDuration: finiteNumber(candidate.intro?.lineDuration, defaults.intro.lineDuration, { min: 0.5, max: 5 })
+      messageDisplayDuration: finiteNumber(candidate.intro?.messageDisplayDuration,
+        defaults.intro.messageDisplayDuration, { min: 0.5, max: 5 }),
+      messageGapDuration: finiteNumber(candidate.intro?.messageGapDuration,
+        defaults.intro.messageGapDuration, { min: 0, max: 5 }),
+      questionGapDuration: finiteNumber(candidate.intro?.questionGapDuration,
+        defaults.intro.questionGapDuration, { min: 0, max: 5 })
     },
     entryTransition: {
       enabled: typeof candidate.entryTransition?.enabled === 'boolean'
