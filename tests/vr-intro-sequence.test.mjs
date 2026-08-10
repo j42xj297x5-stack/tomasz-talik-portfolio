@@ -16,7 +16,9 @@ function fixture({ bypass = false } = {}) {
   const sequence = createVrIntroSequence({ monkeyGuide, monkeyMotionRoot, monkeyVisualRoot: new THREE.Group(), platformOrigin, playerRig, playerGuidePanel: panel, fogReveal: fog, glyphRing, progressFloor, platformFixturesRoot, locomotion, ringRadius: 4, entryDirection: new THREE.Vector3(0, 0, 1), settings, getHeadPosition: () => head.clone(), onOpeningRaysReady: () => { rays += 1; }, bypass });
   return { sequence, monkeyMotionRoot, head, panel, fog, locomotion, getMessage: () => message, getOverride: () => override, getRadius: () => radius, getAttention: () => attention, getRays: () => rays };
 }
-assert.equal(VR_INTRO_COPY.pl.opening.at(-1), 'Otwórz panel Y.');
+assert.deepEqual(VR_INTRO_COPY.pl.opening, ['Dobrze.', 'Masz ręce.', 'Sprawdźmy tylko, gdzie co masz.']);
+assert.equal(VR_INTRO_COPY.pl.panelPrompt, 'Naciśnij Y, żeby wejść do menu.');
+assert.equal(VR_INTRO_COPY.en.panelPrompt, 'Press Y to open the menu.');
 const f = fixture(); assert.equal(f.sequence.getState(), VR_INTRO_STATE.XR_CALIBRATING);
 f.sequence.beginAfterXrCalibration();
 assert.ok(Math.abs(f.sequence.getDebugSnapshot().headToMonkeyDistance - 1.5) < 1e-6);
@@ -24,7 +26,9 @@ f.sequence.update(6.5); assert.equal(f.sequence.getState(), VR_INTRO_STATE.FOG_R
 f.sequence.update(6.5); assert.equal(f.sequence.getState(), VR_INTRO_STATE.POST_REVEAL_SILENCE); assert.equal(f.getMessage(), '');
 f.sequence.update(1.99); assert.equal(f.getMessage(), ''); f.sequence.update(.01); assert.equal(f.getMessage(), VR_INTRO_COPY.en.opening[0]);
 for (let i = 0; i < 10; i += 1) f.sequence.update(.01);
-assert.equal(f.sequence.getState(), VR_INTRO_STATE.WAIT_PLAYER_PANEL_OPEN); f.panel.open = true; f.sequence.update(0); assert.equal(f.sequence.getState(), VR_INTRO_STATE.WAIT_CONTROLS_VIEW);
+assert.equal(f.sequence.getState(), VR_INTRO_STATE.WAIT_PLAYER_PANEL_OPEN); assert.equal(f.getMessage(), VR_INTRO_COPY.en.panelPrompt);
+f.sequence.update(1000); assert.equal(f.getMessage(), VR_INTRO_COPY.en.panelPrompt, 'Y prompt has no timeout');
+f.panel.open = true; f.sequence.update(0); assert.equal(f.sequence.getState(), VR_INTRO_STATE.WAIT_CONTROLS_VIEW); assert.equal(f.getMessage(), '');
 f.panel.section = 'controls'; f.panel.view = 'DETAIL'; f.sequence.update(0); assert.equal(f.sequence.getState(), VR_INTRO_STATE.WAIT_PANEL_CLOSE);
 f.sequence.update(1); assert.equal(f.sequence.getState(), VR_INTRO_STATE.WAIT_PANEL_CLOSE); f.panel.open = false; f.sequence.update(0); for (let i = 0; i < 10; i += 1) f.sequence.update(.01);
 assert.equal(f.sequence.getState(), VR_INTRO_STATE.WAIT_HOVER); assert.equal(f.getRays(), 1);

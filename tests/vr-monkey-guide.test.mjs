@@ -74,6 +74,21 @@ function createFixture(locale = 'en', configure = () => {}) {
     getRayDistance: () => rayDistance, getAttentionStarts: () => attentionStarts };
 }
 
+{
+  const actorRoot = new THREE.Group(); const visualRoot = new THREE.Group(); const interactionRoot = new THREE.Group();
+  actorRoot.add(visualRoot); visualRoot.add(interactionRoot);
+  interactionRoot.position.x = 5;
+  const character = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshBasicMaterial()); interactionRoot.add(character);
+  const stone = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshBasicMaterial()); visualRoot.add(stone);
+  const controller = new THREE.Group(); controller.position.z = 2; actorRoot.add(controller);
+  const record = { controller, currentRayLength: 2.3, reportRayHit() {} };
+  const stoneExclusionGuide = createVrMonkeyGuide({ actorRoot, visualRoot, interactionRoot, controllers: [record],
+    progressionController: { getActivatedPageIds: () => [] }, settings: structuredClone(DEFAULT_EXPERIENCE_VR_SETTINGS.monkeyGuide) });
+  actorRoot.updateMatrixWorld(true); stoneExclusionGuide.update(0);
+  assert.equal(stoneExclusionGuide.hasCurrentHit(record), false, 'stone mesh is excluded from Monkey ray targets');
+  stoneExclusionGuide.dispose(); character.geometry.dispose(); character.material.dispose(); stone.geometry.dispose(); stone.material.dispose();
+}
+
 const fixture = createFixture('en', (settings) => {
   settings.dialogue.historyPageSize = 2;
   settings.card.maxLinesPerPage = 1;
