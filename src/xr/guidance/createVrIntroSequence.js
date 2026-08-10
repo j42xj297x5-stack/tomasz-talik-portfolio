@@ -60,7 +60,7 @@ export function createVrIntroSequence({ monkeyGuide, monkeyAnchor, playerRig, ge
     return true;
   }
   function beginFollowing() { state = VR_INTRO_STATE.FOLLOWING; captureMonkey(); monkeyGuide.showMessage(''); turnElapsed = 0;
-    locomotion.setWalkRadius(Infinity); walkingPaused = false; startRadius = Math.hypot(monkeyAnchor.position.x, monkeyAnchor.position.z); }
+    walkingPaused = false; startRadius = Math.hypot(monkeyAnchor.position.x, monkeyAnchor.position.z); }
   function thresholdChoice() { state = VR_INTRO_STATE.THRESHOLD; show(copy.threshold, () => options(copy.thresholdOptions, chooseThreshold)); }
   function chooseThreshold(id) {
     if (id === 'beyond') { monkeyGuide.setDialogueOverride(null); show(copy.beyond, () => options(copy.thresholdOptions, chooseThreshold)); }
@@ -73,11 +73,10 @@ export function createVrIntroSequence({ monkeyGuide, monkeyAnchor, playerRig, ge
     monkeyAnchor.position.copy(canonicalMonkey); monkeyAnchor.quaternion.copy(canonicalMonkeyQuaternion); locomotion.reset();
     if (bypass || !settings.enabled) { state = VR_INTRO_STATE.BYPASSED; sectors.forEach((item) => { item.visible = true; });
       platformFixturesRoot.visible = true; glyphRing.visible = true; return; }
+    locomotion.setWalkRadius(Infinity);
     state = VR_INTRO_STATE.VOID; sectors.forEach((item) => { item.visible = false; }); platformFixturesRoot.visible = false; glyphRing.visible = false;
-    const playerRadius = ringRadius + settings.startOutsideMargin;
-    const adjustedPlayerRadius = playerRadius + Math.max(0, settings.playerStartBackOffset ?? 0);
-    playerRig.position.x = direction.x * adjustedPlayerRadius; playerRig.position.z = direction.z * adjustedPlayerRadius;
-    monkeyAnchor.position.x = direction.x * (playerRadius - 1.5); monkeyAnchor.position.z = direction.z * (playerRadius - 1.5);
+    playerRig.position.x = direction.x * settings.playerStartRadius; playerRig.position.z = direction.z * settings.playerStartRadius;
+    monkeyAnchor.position.x = direction.x * settings.monkeyStartRadius; monkeyAnchor.position.z = direction.z * settings.monkeyStartRadius;
     show(copy.opening, () => { state = VR_INTRO_STATE.WAIT_HOVER; monkeyGuide.setDialogueOverride({ onMonkeyHover() {
       if (state === VR_INTRO_STATE.WAIT_HOVER) { state = VR_INTRO_STATE.WAIT_TRIGGER; monkeyGuide.showMessage(copy.trigger); }
     }, onMonkeyPress() { if (state !== VR_INTRO_STATE.WAIT_TRIGGER) return true; state = VR_INTRO_STATE.VOID;
@@ -93,17 +92,25 @@ export function createVrIntroSequence({ monkeyGuide, monkeyAnchor, playerRig, ge
       const p = playerRig.position; const distance = Math.hypot(p.x - monkeyAnchor.position.x, p.z - monkeyAnchor.position.z);
       if (!walkingPaused && distance > settings.pauseDistance) walkingPaused = true;
       else if (walkingPaused && distance < settings.resumeDistance) walkingPaused = false;
-      const radius = Math.hypot(monkeyAnchor.position.x, monkeyAnchor.position.z); const stopRadius = ringRadius + settings.thresholdStopMargin;
+      const radius = Math.hypot(monkeyAnchor.position.x, monkeyAnchor.position.z);
+      const stopRadius = ringRadius + settings.thresholdStopOutsideDistance;
       if (!walkingPaused && radius > stopRadius) { const step = Math.min(radius - stopRadius, settings.guideSpeed * Math.max(0, delta));
         monkeyAnchor.position.x -= direction.x * step; monkeyAnchor.position.z -= direction.z * step; }
       const progress = (startRadius - radius) / Math.max(0.001, startRadius - stopRadius);
       if (progress >= settings.revealProgress) glyphRing.visible = true;
       if (radius <= stopRadius + 1e-4) thresholdChoice();
-    } else if (state === VR_INTRO_STATE.CROSSING) {
-      const head = getHeadPosition(); if (Math.hypot(head.x, head.z) <= ringRadius) {
+    } else if (state === VR_INTRO_STATE.CROSSING || state === VR_INTRO_STATE.INSIDE_RING_READY) {
+      const distanceToCanonical = monkeyAnchor.position.distanceTo(canonicalMonkey);
+      if (distanceToCanonical > 1e-4) {
+        const step = Math.min(distanceToCanonical, settings.guideSpeed * Math.max(0, delta));
+        monkeyAnchor.position.lerp(canonicalMonkey, step / distanceToCanonical);
+        if (step === distanceToCanonical) monkeyAnchor.quaternion.copy(canonicalMonkeyQuaternion);
+      }
+      const monkeyHasEntered = Math.hypot(monkeyAnchor.position.x, monkeyAnchor.position.z) <= ringRadius;
+      const head = getHeadPosition();
+      if (state === VR_INTRO_STATE.CROSSING && monkeyHasEntered && Math.hypot(head.x, head.z) <= ringRadius) {
         state = VR_INTRO_STATE.INSIDE_RING_READY; locomotion.setWalkRadius(ringRadius, { clamp: true });
-        monkeyGuide.setDialogueOverride(null); monkeyAnchor.position.copy(canonicalMonkey);
-        monkeyAnchor.quaternion.copy(canonicalMonkeyQuaternion); show(copy.inside, null);
+        monkeyGuide.setDialogueOverride(null); show(copy.inside, null);
       }
     }
   }
