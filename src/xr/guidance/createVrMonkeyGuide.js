@@ -96,21 +96,21 @@ function createTwoSidedCanvasPlane({ name, width, height, canvasWidth, canvasHei
 }
 
 export function createVrMonkeyGuide({
-  monkeyAnchor, controllers = [], progressionController, locale = 'en', settings = {},
+  actorRoot, visualRoot, controllers = [], progressionController, locale = 'en', settings = {},
   isOrdinaryRayAvailable = () => true, onOpenChange = () => {}, onPanelClick = () => {},
   onAttentionStart = () => {}
 }) {
   const copy = COPY[locale === 'pl' ? 'pl' : 'en'];
   const root = new THREE.Group();
   root.name = 'VrMonkeyGuide';
-  monkeyAnchor.add(root);
+  actorRoot.add(root);
 
   // Capture the static model before guide meshes are attached, so its ray target never grows to include UI.
   const monkeyTargets = [];
-  monkeyAnchor.traverse((object) => {
+  visualRoot.traverse((object) => {
     if (object.isMesh && object.geometry && object.visible !== false) monkeyTargets.push(object);
   });
-  const halo = createVrTargetHalo({ root: monkeyAnchor, settings: settings.halo });
+  const halo = createVrTargetHalo({ root: visualRoot, settings: settings.halo });
 
   const attentionRoot = new THREE.Group();
   attentionRoot.name = 'VrMonkeyAttentionArcs';

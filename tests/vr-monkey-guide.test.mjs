@@ -54,10 +54,12 @@ for (const [glyphId, syllable] of Object.entries(expectedFamilies)) {
 assert.equal(resolveVrPageProtoAstro({ glyphId: 'unknown' }), null);
 
 function createFixture(locale = 'en', configure = () => {}) {
-  const monkeyAnchor = new THREE.Group();
+  const actorRoot = new THREE.Group();
+  const visualRoot = new THREE.Group();
+  actorRoot.add(visualRoot);
   const monkeyGeometry = new THREE.BoxGeometry(1, 1, 1);
   const monkeyMaterial = new THREE.MeshBasicMaterial();
-  monkeyAnchor.add(new THREE.Mesh(monkeyGeometry, monkeyMaterial));
+  visualRoot.add(new THREE.Mesh(monkeyGeometry, monkeyMaterial));
   const controller = new THREE.Group(); controller.position.set(0, 0, 2);
   let rayDistance = null;
   const record = { controller, currentRayLength: 2.3, reportRayHit(distance) { rayDistance = distance; } };
@@ -65,10 +67,10 @@ function createFixture(locale = 'en', configure = () => {}) {
   let attentionStarts = 0;
   const settings = structuredClone(DEFAULT_EXPERIENCE_VR_SETTINGS.monkeyGuide);
   configure(settings);
-  const guide = createVrMonkeyGuide({ monkeyAnchor, controllers: [record],
+  const guide = createVrMonkeyGuide({ actorRoot, visualRoot, controllers: [record],
     progressionController: { getActivatedPageIds: () => [...pageIds] }, locale,
     settings, onAttentionStart: () => { attentionStarts += 1; } });
-  return { monkeyAnchor, monkeyGeometry, monkeyMaterial, controller, record, pageIds, guide,
+  return { actorRoot, visualRoot, monkeyGeometry, monkeyMaterial, controller, record, pageIds, guide,
     getRayDistance: () => rayDistance, getAttentionStarts: () => attentionStarts };
 }
 
@@ -76,8 +78,22 @@ const fixture = createFixture('en', (settings) => {
   settings.dialogue.historyPageSize = 2;
   settings.card.maxLinesPerPage = 1;
 });
-const { monkeyAnchor, monkeyGeometry, monkeyMaterial, controller, record, pageIds, guide } = fixture;
-assert.equal(guide.object.parent, monkeyAnchor, 'guide inherits the monkey anchor transform');
+const { actorRoot, monkeyGeometry, monkeyMaterial, controller, record, pageIds, guide } = fixture;
+assert.equal(guide.object.parent, actorRoot, 'guide inherits the monkey anchor transform');
+actorRoot.position.x += 10;
+actorRoot.updateMatrixWorld(true);
+const guideWorldX = guide.object.getWorldPosition(new THREE.Vector3()).x;
+fixture.visualRoot.scale.setScalar(3);
+fixture.visualRoot.position.x = 4;
+actorRoot.updateMatrixWorld(true);
+assert.equal(guide.object.getWorldPosition(new THREE.Vector3()).x, guideWorldX,
+  'visual correction does not scale or offset the guide');
+assert.deepEqual(guide.object.getWorldScale(new THREE.Vector3()).toArray(), [1, 1, 1],
+  'guide inherits only the logical actor scale');
+fixture.visualRoot.position.set(0, 0, 0);
+fixture.visualRoot.scale.set(1, 1, 1);
+actorRoot.position.set(0, 0, 0);
+actorRoot.updateMatrixWorld(true);
 assert.equal(guide.messagePanel.planes.length, 2);
 assert.equal(guide.dialoguePanel.planes.length, 2);
 assert.ok(guide.messagePanel.planes.every(({ material }) => material.side === THREE.FrontSide));
