@@ -620,8 +620,8 @@ export function normalizeExperienceVrSettings(candidate) {
           defaults.reliquary.buttons.forwardDistance, { min: 0, max: 3 }),
         lateralOffset: finiteNumber(candidateReliquary.buttons?.lateralOffset,
           defaults.reliquary.buttons.lateralOffset, { min: 0, max: 2 }),
-        verticalOffset: finiteNumber(candidateReliquary.buttons?.verticalOffset
-          ?? candidateReliquary.activateButton?.verticalOffset, defaults.reliquary.buttons.verticalOffset, { min: -1, max: 1 })
+        verticalOffset: finiteNumber(candidateReliquary.buttons?.verticalOffset,
+          defaults.reliquary.buttons.verticalOffset, { min: -1, max: 1 })
       },
       activateButton: {
         enabled: typeof candidate.reliquary?.activateButton?.enabled === 'boolean'
