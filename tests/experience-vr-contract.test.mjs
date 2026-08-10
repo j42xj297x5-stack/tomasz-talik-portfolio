@@ -216,7 +216,7 @@ assert.match(vr, /parent: portalDisplay\.object,[\s\S]*surface: portalDisplay\.c
 assert.match(vr, /crystalReliquary\.attachCompanion\(\{ id: 'activate'/);
 assert.match(vr, /crystalReliquary\.attachCompanion\(\{ id: 'release'/);
 assert.match(portalDisplay, /object\.position\.set\(settings\.position\.x, settings\.position\.y, settings\.position\.z\)/);
-assert.match(crystalReliquary, /object\.position\.set\(position\.x, position\.y, position\.z\)/);
+assert.match(crystalReliquary, /reliquaryWorldPosition\.copy\(portalWorldPosition\)[\s\S]*\.addScaledVector\(portalForward, settings\.distanceFromPortal \?\? 1\.5\);[\s\S]*object\.position\.copy\(parent\.worldToLocal\(reliquaryWorldPosition\)\)/);
 assert.match(astroFurnace, /object\.position\.set\(settings\.position\.x, settings\.position\.y, settings\.position\.z\)/);
 assert.match(crystalReliquary, /applyWorldTransform\(insertFeedback, sphere\.center/);
 assert.match(furnacePanel, /applyWorldTransform\(root, desiredWorldPosition/);
