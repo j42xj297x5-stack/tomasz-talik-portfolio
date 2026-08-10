@@ -173,6 +173,16 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
     entryAngleThreshold: 0.24,
     entryAngleHysteresis: 0.04
   },
+  intro: {
+    enabled: true,
+    startOutsideMargin: 2.6,
+    thresholdStopMargin: 0.35,
+    guideSpeed: 0.7,
+    pauseDistance: 3.2,
+    resumeDistance: 2.4,
+    revealProgress: 0.72,
+    lineDuration: 1.7
+  },
   entryTransition: {
     enabled: true,
     durationSeconds: 3,
@@ -558,6 +568,16 @@ export function normalizeExperienceVrSettings(candidate) {
       direction: candidate.glyphRing?.direction === -1 ? -1 : 1,
       entryAngleThreshold: finiteNumber(candidate.glyphRing?.entryAngleThreshold, defaults.glyphRing.entryAngleThreshold, { min: 0.01, max: Math.PI }),
       entryAngleHysteresis: finiteNumber(candidate.glyphRing?.entryAngleHysteresis, defaults.glyphRing.entryAngleHysteresis, { min: 0, max: 0.5 })
+    },
+    intro: {
+      enabled: typeof candidate.intro?.enabled === 'boolean' ? candidate.intro.enabled : defaults.intro.enabled,
+      startOutsideMargin: finiteNumber(candidate.intro?.startOutsideMargin, defaults.intro.startOutsideMargin, { min: 0.5, max: 10 }),
+      thresholdStopMargin: finiteNumber(candidate.intro?.thresholdStopMargin, defaults.intro.thresholdStopMargin, { min: 0.05, max: 2 }),
+      guideSpeed: finiteNumber(candidate.intro?.guideSpeed, defaults.intro.guideSpeed, { min: 0.1, max: 3 }),
+      pauseDistance: finiteNumber(candidate.intro?.pauseDistance, defaults.intro.pauseDistance, { min: 1, max: 10 }),
+      resumeDistance: finiteNumber(candidate.intro?.resumeDistance, defaults.intro.resumeDistance, { min: 0.5, max: 9 }),
+      revealProgress: finiteNumber(candidate.intro?.revealProgress, defaults.intro.revealProgress, { min: 0.4, max: 1 }),
+      lineDuration: finiteNumber(candidate.intro?.lineDuration, defaults.intro.lineDuration, { min: 0.5, max: 5 })
     },
     entryTransition: {
       enabled: typeof candidate.entryTransition?.enabled === 'boolean'

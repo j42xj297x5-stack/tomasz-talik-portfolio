@@ -95,6 +95,8 @@ export function createVrLocomotion({ playerRig, renderer, camera, settings, surf
   const parentWorldQuaternion = new THREE.Quaternion();
   const constrainedDelta = new THREE.Vector3();
   const initialLocalY = playerRig.position.y;
+  const initialWalkRadius = walkRadius;
+  let activeWalkRadius = walkRadius;
   let disposed = false;
   let leftYawLocked = false;
 
@@ -126,15 +128,20 @@ export function createVrLocomotion({ playerRig, renderer, camera, settings, surf
     parent?.getWorldQuaternion?.(parentWorldQuaternion) ?? parentWorldQuaternion.identity();
     movementLocal.copy(movementWorld).applyQuaternion(parentWorldQuaternion.invert());
     movementLocal.y = 0;
-    constrainRadialStep(playerRig.position, movementLocal, walkRadius, constrainedDelta);
+    constrainRadialStep(playerRig.position, movementLocal, activeWalkRadius, constrainedDelta);
     playerRig.position.addScaledVector(constrainedDelta, 1);
     playerRig.position.y = y;
-    clampPositionToWalkRadius(playerRig.position, walkRadius);
+    clampPositionToWalkRadius(playerRig.position, activeWalkRadius);
     playerRig.position.y = y;
   }
 
   function setLeftYawLocked(locked) { leftYawLocked = Boolean(locked); }
-  function reset() { playerRig.position.y = initialLocalY; leftYawLocked = false; }
+  function setWalkRadius(nextRadius, { clamp = false } = {}) {
+    activeWalkRadius = nextRadius === Infinity || (Number.isFinite(nextRadius) && nextRadius > 0)
+      ? nextRadius : initialWalkRadius;
+    if (clamp) clampPositionToWalkRadius(playerRig.position, activeWalkRadius);
+  }
+  function reset() { playerRig.position.y = initialLocalY; leftYawLocked = false; activeWalkRadius = initialWalkRadius; }
   function dispose() { disposed = true; }
-  return { update, reset, dispose, setLeftYawLocked };
+  return { update, reset, dispose, setLeftYawLocked, setWalkRadius, getWalkRadius: () => activeWalkRadius };
 }
