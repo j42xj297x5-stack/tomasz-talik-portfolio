@@ -18,7 +18,7 @@ export function createVrAstroFurnaceOptionInteraction({ furnace, panel, controll
   const baseQuaternion = pivot?.quaternion.clone();
   const localOptionAxis = new THREE.Vector3(0, 1, 0);
   const optionRotation = new THREE.Quaternion();
-  const moduleAngles = { [ASTRO_FURNACE_ACTIVE_MODE]: 90, ...(settings.moduleAnglesDegrees ?? {}) };
+  const moduleAngles = settings.moduleAnglesDegrees;
   let activeMode = null, tweenElapsed = 0, tweenStart = 0, tweenTarget = 0, currentAngle = 0;
   const capabilityReady = settings.enabled !== false && meshes.length > 0 && Boolean(furnace?.nodes?.PIVOT_BUTTON_OPTION);
   const setEmission = (value) => emissive.forEach((material) => { material.emissiveIntensity = value; });
