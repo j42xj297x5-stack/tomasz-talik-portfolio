@@ -47,8 +47,8 @@ assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.furnace.optionButton.emissionHover, 
 assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.glyphLights.inwardOffset, 1);
 assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.crystals.spawnInwardOffset, 0.3);
 assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.crystals.consumeDuration, 0.55);
-assert.deepEqual(DEFAULT_EXPERIENCE_VR_SETTINGS.portal.position, { x: 2, y: 0, z: 0.5 });
-assert.deepEqual(DEFAULT_EXPERIENCE_VR_SETTINGS.furnace.position, { x: -2, y: 0, z: 0.5 });
+assert.deepEqual(DEFAULT_EXPERIENCE_VR_SETTINGS.portal.position, { x: -2.910428, y: 0, z: -0.727607 });
+assert.deepEqual(DEFAULT_EXPERIENCE_VR_SETTINGS.furnace.position, { x: 2.910428, y: 0, z: -0.727607 });
 assert.deepEqual(normalizeExperienceVrSettings({ schemaVersion: 2 }), DEFAULT_EXPERIENCE_VR_SETTINGS);
 
 const normalized = normalizeExperienceVrSettings({
@@ -61,7 +61,7 @@ const normalized = normalizeExperienceVrSettings({
   glyphInteraction: { holdDurationSeconds: 20, holdLostGraceSeconds: 4 },
   glyphLights: { inwardOffset: 20 },
   portal: { enabled: false, maxWidth: 0, maxHeight: 20, floorOffset: -9, appearDuration: 0, appearStartScale: 9 },
-  reliquary: { position: { x: 2, y: 3, z: 4 }, floorOffset: 9,
+  reliquary: { distanceFromPortal: 9, floorOffset: 9,
     activateButton: { placementRadius: 8, placementAngleDegrees: -4, verticalOffset: 7 } },
   portalCanvas: {
     enabled: false, width: 0, height: 9, distanceFromAnchor: 0, forwardBias: 9, floorOffset: -9,
@@ -97,18 +97,18 @@ assert.deepEqual(normalized.portalCanvas, {
 });
 assert.deepEqual(normalized.reliquary, {
   ...DEFAULT_EXPERIENCE_VR_SETTINGS.reliquary,
-  position: { x: 2, y: 3, z: 4 },
+  distanceFromPortal: 3,
   heightOffset: 2,
   buttons: { ...DEFAULT_EXPERIENCE_VR_SETTINGS.reliquary.buttons, forwardDistance: 3, lateralOffset: 0, verticalOffset: 1 }
 });
 
 const modernPlacement = normalizeExperienceVrSettings({ schemaVersion: 1, reliquary: {
-  position: { x: 9, y: 8, z: 7 }, heightOffset: -9,
+  distanceFromPortal: -9, heightOffset: -9,
   buttons: { scale: 9, forwardDistance: 9, lateralOffset: 9, verticalOffset: -9 }
 } }).reliquary;
 assert.deepEqual(modernPlacement, {
   ...DEFAULT_EXPERIENCE_VR_SETTINGS.reliquary,
-  position: { x: 9, y: 8, z: 7 },
+  distanceFromPortal: 0,
   heightOffset: -1,
   buttons: { scale: 1, forwardDistance: 3, lateralOffset: 2, verticalOffset: -1 }
 });

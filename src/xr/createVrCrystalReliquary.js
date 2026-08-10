@@ -41,7 +41,7 @@ function getCompanionVisibleBounds(model, target = new THREE.Box3()) {
   return target;
 }
 
-export function createVrCrystalReliquary({ parent, reliquaryModel, settings }) {
+export function createVrCrystalReliquary({ parent, portalAnchor, reliquaryModel, settings }) {
   const object = new THREE.Group();
   object.name = 'VrCrystalReliquary';
   parent.add(object);
@@ -96,6 +96,8 @@ export function createVrCrystalReliquary({ parent, reliquaryModel, settings }) {
   const portalForward = new THREE.Vector3();
   const portalLeft = new THREE.Vector3();
   const portalQuaternion = new THREE.Quaternion();
+  const portalWorldPosition = new THREE.Vector3();
+  const reliquaryWorldPosition = new THREE.Vector3();
   const inversePlacementQuaternion = new THREE.Quaternion();
   const buttonWorldOffset = new THREE.Vector3();
   const worldUp = new THREE.Vector3(0, 1, 0);
@@ -117,13 +119,19 @@ export function createVrCrystalReliquary({ parent, reliquaryModel, settings }) {
   }
 
   function place() {
-    if (disposed || !settings.enabled || !model || visibleBounds.isEmpty()) {
+    if (disposed || !settings.enabled || !portalAnchor || !model || visibleBounds.isEmpty()) {
       object.visible = false;
       return false;
     }
-    const position = settings.position ?? { x: 0, y: 0, z: 0 };
     const rotation = settings.rotationDegrees ?? { x: 0, y: 0, z: 0 };
-    object.position.set(position.x, position.y, position.z);
+    portalAnchor.updateWorldMatrix(true, false);
+    portalAnchor.getWorldQuaternion(portalQuaternion);
+    portalForward.set(0, 0, 1).applyQuaternion(portalQuaternion).setY(0).normalize();
+    portalAnchor.getWorldPosition(portalWorldPosition);
+    reliquaryWorldPosition.copy(portalWorldPosition)
+      .addScaledVector(portalForward, settings.distanceFromPortal ?? 1.5);
+    parent.updateWorldMatrix(true, false);
+    object.position.copy(parent.worldToLocal(reliquaryWorldPosition));
     object.rotation.set(
       THREE.MathUtils.degToRad(rotation.x),
       THREE.MathUtils.degToRad(rotation.y),

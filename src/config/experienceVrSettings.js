@@ -23,7 +23,7 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
   furnace: {
     enabled: true,
     floorOffset: 0,
-    position: { x: -2, y: 0, z: 0.5 },
+    position: { x: 2.910428, y: 0, z: -0.727607 },
     rotationDegrees: { x: 0, y: 5.71, z: 0 },
     scale: 3,
     debug: false,
@@ -194,7 +194,7 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
   },
   portal: {
     enabled: true,
-    position: { x: 2, y: 0, z: 0.5 },
+    position: { x: -2.910428, y: 0, z: -0.727607 },
     rotationDegrees: { x: 0, y: 5.41, z: 0 },
     maxWidth: 2.8,
     maxHeight: 3.2,
@@ -205,7 +205,7 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
   },
   reliquary: {
     enabled: true,
-    position: { x: -1.497785, y: 0, z: 0.949929 },
+    distanceFromPortal: 1.5,
     rotationDegrees: { x: 0, y: 5.41, z: 0 },
     heightOffset: 0.5,
     insertFeedback: {
@@ -602,7 +602,8 @@ export function normalizeExperienceVrSettings(candidate) {
     },
     reliquary: {
       enabled: typeof candidateReliquary.enabled === 'boolean' ? candidateReliquary.enabled : defaults.reliquary.enabled,
-      position: normalizeVector(candidateReliquary.position, defaults.reliquary.position),
+      distanceFromPortal: finiteNumber(candidateReliquary.distanceFromPortal,
+        defaults.reliquary.distanceFromPortal, { min: 0, max: 3 }),
       rotationDegrees: normalizeVector(candidateReliquary.rotationDegrees, defaults.reliquary.rotationDegrees),
       heightOffset: finiteNumber(candidateReliquary.heightOffset ?? candidateReliquary.floorOffset,
         defaults.reliquary.heightOffset, { min: -1, max: 2 }),

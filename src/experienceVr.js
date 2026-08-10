@@ -268,6 +268,7 @@ function restorePortalWaitingState() {
 restorePortalWaitingState();
 const crystalReliquary = createVrCrystalReliquary({
   parent: platformFixturesRoot,
+  portalAnchor: portalDisplay.object,
   reliquaryModel: assetManager.cloneGltfScene('vr-crystal-reliquary-model'),
   settings: settings.reliquary
 });
