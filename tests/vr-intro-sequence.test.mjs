@@ -7,19 +7,21 @@ function fixture({ bypass = false } = {}) {
   const monkeyMotionRoot = new THREE.Group(); monkeyMotionRoot.position.set(0, 1.25, -0.5); progressFloor.object.add(monkeyMotionRoot);
   const playerRig = new THREE.Group(); const head = new THREE.Vector3(0, 1.7, 20);
   const glyphRing = new THREE.Group(); const platformFixturesRoot = new THREE.Group(); const sector = new THREE.Group(); sector.userData.branchId = 'x'; progressFloor.object.add(sector);
+  const monkeyStoneRoot = new THREE.Group(); progressFloor.object.add(monkeyStoneRoot);
   let message = ''; let override = null; let radius = 4; let attention = 0; let rays = 0;
   const panel = { open: false, view: 'MENU', section: null, isOpen() { return this.open; }, getViewState() { return this.view; }, getActiveSectionId() { return this.section; } };
   const fog = { progress: 0, restart() { this.progress = 0; }, start() {}, update(d) { this.progress = Math.min(1, this.progress + d / 13); }, skipToEnd() { this.progress = 1; }, getSnapshot() { return { progress: this.progress }; } };
   const monkeyGuide = { showMessage(v) { message = v; return { lineCount: v ? 1 : 0 }; }, setDialogueOverride(v) { override = v; }, setInteractionEnabled() {}, notifyAttention() { attention += 1; } };
   const locomotion = { reset() { radius = 4; }, setWalkRadius(v, options) { radius = v; this.lastOptions = options; } };
   const settings = { enabled: true, locale: 'en', introRevealDuration: 13, postRevealSilenceDuration: 2, initialHeadToMonkeyDistance: 1.5, insideSafeMargin: .75, glyphFreeExploreDuration: 60, thresholdStopOutsideDistance: 1, guideSpeed: 2, guideTurnDuration: 1, followGraceDistance: 3, pauseDistance: 3.2, resumeDistance: 2.4, revealProgress: .72, messageDisplayDuration: 0, messageGapDuration: 0, questionGapDuration: 0 };
-  const sequence = createVrIntroSequence({ monkeyGuide, monkeyMotionRoot, monkeyVisualRoot: new THREE.Group(), platformOrigin, playerRig, playerGuidePanel: panel, fogReveal: fog, glyphRing, progressFloor, platformFixturesRoot, locomotion, ringRadius: 4, entryDirection: new THREE.Vector3(0, 0, 1), settings, getHeadPosition: () => head.clone(), onOpeningRaysReady: () => { rays += 1; }, bypass });
-  return { sequence, monkeyMotionRoot, head, panel, fog, locomotion, getMessage: () => message, getOverride: () => override, getRadius: () => radius, getAttention: () => attention, getRays: () => rays };
+  const sequence = createVrIntroSequence({ monkeyGuide, monkeyMotionRoot, monkeyVisualRoot: new THREE.Group(), monkeyStoneRoot, platformOrigin, playerRig, playerGuidePanel: panel, fogReveal: fog, glyphRing, progressFloor, platformFixturesRoot, locomotion, ringRadius: 4, entryDirection: new THREE.Vector3(0, 0, 1), settings, getHeadPosition: () => head.clone(), onOpeningRaysReady: () => { rays += 1; }, bypass });
+  return { sequence, monkeyMotionRoot, monkeyStoneRoot, glyphRing, head, panel, fog, locomotion, getMessage: () => message, getOverride: () => override, getRadius: () => radius, getAttention: () => attention, getRays: () => rays };
 }
 assert.deepEqual(VR_INTRO_COPY.pl.opening, ['Dobrze.', 'Masz ręce.', 'Sprawdźmy tylko, gdzie co masz.']);
 assert.equal(VR_INTRO_COPY.pl.panelPrompt, 'Naciśnij Y, żeby wejść do menu.');
 assert.equal(VR_INTRO_COPY.en.panelPrompt, 'Press Y to open the menu.');
 const f = fixture(); assert.equal(f.sequence.getState(), VR_INTRO_STATE.XR_CALIBRATING);
+assert.equal(f.monkeyStoneRoot.visible, false);
 f.sequence.beginAfterXrCalibration();
 assert.ok(Math.abs(f.sequence.getDebugSnapshot().headToMonkeyDistance - 1.5) < 1e-6);
 f.sequence.update(6.5); assert.equal(f.sequence.getState(), VR_INTRO_STATE.FOG_REVEAL); assert.ok(f.fog.progress > 0 && f.fog.progress < 1);
@@ -36,11 +38,12 @@ f.getOverride().onMonkeyHover(); f.getOverride().onMonkeyPress(); for (let i = 0
 // First check pauses once, then resolving it permanently disables distance pauses.
 f.head.z = 40; f.sequence.update(1.5); f.sequence.update(.1); assert.equal(f.sequence.isGuidePaused(), true); f.head.copy(f.monkeyMotionRoot.getWorldPosition(new THREE.Vector3())); f.sequence.update(.1); assert.equal(f.sequence.getDebugSnapshot().followCheckResolved, true);
 f.head.z = 40; for (let i = 0; i < 20 && f.sequence.getState() === VR_INTRO_STATE.FOLLOWING; i += 1) f.sequence.update(.5); assert.equal(f.sequence.getState(), VR_INTRO_STATE.THRESHOLD); assert.equal(f.sequence.isGuidePaused(), false);
+assert.equal(f.glyphRing.visible, true); assert.equal(f.monkeyStoneRoot.visible, true, 'stone appears with ring reveal');
 f.sequence.chooseThreshold('cross'); f.head.set(0, 1.7, 3.99); const before = f.playerRig?.position?.clone?.(); f.sequence.update(.1); assert.equal(f.sequence.getDebugSnapshot().playerSafelyInside, false); assert.equal(f.getRadius(), Infinity);
 f.head.z = 3.2; for (let i = 0; i < 20 && f.sequence.getState() !== VR_INTRO_STATE.GLYPH_FREE_EXPLORE; i += 1) f.sequence.update(.25);
 assert.equal(f.sequence.getState(), VR_INTRO_STATE.GLYPH_FREE_EXPLORE); assert.deepEqual(f.locomotion.lastOptions, { clamp: false });
 f.sequence.update(20); f.sequence.notifyGlyphExploreSuccess(); f.sequence.update(100); assert.equal(f.getAttention(), 0);
 const hint = fixture(); hint.sequence.beginAfterXrCalibration(); hint.sequence.getDebugSnapshot(); // bypass choreography for timer is covered through public flow above
-const bypassed = fixture({ bypass: true }); assert.equal(bypassed.sequence.getState(), VR_INTRO_STATE.BYPASSED); assert.equal(bypassed.fog.progress, 1);
+const bypassed = fixture({ bypass: true }); assert.equal(bypassed.sequence.getState(), VR_INTRO_STATE.BYPASSED); assert.equal(bypassed.fog.progress, 1); assert.equal(bypassed.monkeyStoneRoot.visible, true);
 f.sequence.reset(); assert.equal(f.sequence.getState(), VR_INTRO_STATE.XR_CALIBRATING); assert.equal(f.sequence.getDebugSnapshot().glyphExploreResolved, false);
 console.log('VR intro sequence assertions passed');

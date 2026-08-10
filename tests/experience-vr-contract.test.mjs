@@ -105,7 +105,8 @@ assert.doesNotMatch(glyphInteraction, /SphereGeometry\(0\.31|VrEntryGlyphMarker|
 assert.doesNotMatch(`${vr}\n${vrControllers}`, /XRControllerModelFactory/);
 assert.match(vr, /onPreview: \(page\) => portalCanvas\.show\(resolveExperienceVrPage\(page, language\)\)/);
 assert.match(vr, /onCommit: \(page, \{ tierCompleted \}\)[\s\S]*progressFloor\.activatePage\(page\);[\s\S]*if \(tierCompleted\) progressFloor\.completeTier\(page\.order\)/);
-assert.match(vr, /const monkeyActor = await loadMonkeyModel\(\{ scene: worldRoot, fallbackObject: centralPlaceholder, assetManager \}\);[\s\S]*motionRoot: monkeyMotionRoot[\s\S]*visualRoot: monkeyVisualRoot[\s\S]*model: monkeyModel[\s\S]*progressFloor\.object\.attach\(monkeyMotionRoot\);/);
+assert.match(vr, /const monkeyActor = await loadMonkeyModel\(\{ scene: worldRoot, fallbackObject: centralPlaceholder, assetManager \}\);[\s\S]*motionRoot: monkeyMotionRoot[\s\S]*visualRoot: monkeyVisualRoot[\s\S]*stoneRoot: monkeyStoneRoot[\s\S]*model: monkeyModel[\s\S]*progressFloor\.object\.attach\(monkeyMotionRoot\);[\s\S]*progressFloor\.object\.attach\(monkeyStoneRoot\);/);
+assert.match(vr, /apply\(\{ anchor: 'ANCHOR_MONKEY'[\s\S]*monkeyActor\.dockStoneToCanonicalMonkey\(\);/);
 assert.doesNotMatch(vr, /progressFloor\.object\.add\(monkeyMotionRoot\)/);
 assert.match(vr, /createVrPortalDisplay\([\s\S]*platformOrigin/);
 assert.doesNotMatch(vr, /createVrPortalDisplay\([\s\S]*anchorObject: monkeyMotionRoot/);

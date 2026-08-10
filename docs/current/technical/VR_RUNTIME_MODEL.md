@@ -131,7 +131,9 @@ Two distinct physical files are **PRESENT**:
 
   `MONKEY_STONE_ROOT` is the stone's local root/lower reference point. `MONKEY_SEAT_ANCHOR` is the local seating point on its upper surface.
 
-The authored contract is **IMPLEMENTED**. Both assets are critical-initial preloads. `VrMonkeyVisualRoot` contains one uniformly scaled `VrMonkeyAssemblyRoot`; the stone asset is matrix-aligned so `MONKEY_STONE_ROOT` defines its origin, then the character asset is matrix-aligned so the full `MONKEY_ANCHOR` transform coincides with `MONKEY_SEAT_ANCHOR`. There is no independent bbox centering or per-asset scale. The assembly moves as one passenger of the unchanged `VrMonkeyMotionRoot`.
+The authored contract is **IMPLEMENTED**. Both assets are critical-initial preloads. `VrMonkeyMotionRoot` owns only `VrMonkeyVisualRoot`/the character and Monkey Guide. The independent `VrMonkeyStoneRoot` is its sibling under `VrTiltableFloorRoot`, so it inherits platform tilt but none of the actor's P0 translation or turns. Both assets use the same uniform character-derived scale; there is no bbox centering, per-asset scale, or hand-authored placement offset. Once the canonical `ANCHOR_MONKEY` placement is applied, the stone fixture is composed once with the complete authored anchor matrices so `worldMatrix(MONKEY_SEAT_ANCHOR) === worldMatrix(MONKEY_ANCHOR)` at the canonical Monkey pose. The stone remains fixed while the Monkey leaves and returns to that pose, without a final docking snap.
+
+The stone is hidden through the initial P0 emptiness and becomes visible at the existing glyph-ring reveal point; QA bypass exposes it immediately. Only `VrMonkeyMotionRoot` starts 1.5 m in front of the calibrated tracked head and moves through `FOLLOWING`, crossing, and settling. The stone remains at the ring center throughout.
 
 The three semantic levels must remain separate: (1) current layout/runtime `ANCHOR_MONKEY`, unchanged and authoritative for the actor; (2) character-internal `MONKEY_ANCHOR`; and (3) stone-internal `MONKEY_STONE_ROOT` / `MONKEY_SEAT_ANCHOR`. Neither internal seating anchor replaces `ANCHOR_MONKEY`.
 

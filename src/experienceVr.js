@@ -221,8 +221,9 @@ floorPassengerRoot.scale.set(1, 1, 1);
 progressFloor.object.add(floorPassengerRoot);
 const monkeyActor = await loadMonkeyModel({ scene: worldRoot, fallbackObject: centralPlaceholder, assetManager });
 const { motionRoot: monkeyMotionRoot, visualRoot: monkeyVisualRoot, interactionRoot: monkeyInteractionRoot,
-  model: monkeyModel } = monkeyActor;
+  stoneRoot: monkeyStoneRoot, model: monkeyModel } = monkeyActor;
 progressFloor.object.attach(monkeyMotionRoot);
+progressFloor.object.attach(monkeyStoneRoot);
 const resolvedPortfolioNodes = resolvePortfolioNodes(language);
 const { group: glyphRing, nodes } = createOrbitNodes(resolvedPortfolioNodes, { assetManager });
 worldRoot.add(glyphRing);
@@ -574,6 +575,7 @@ function applySceneLayoutPrototype() {
   };
 
   apply({ anchor: 'ANCHOR_MONKEY', target: 'monkeyMotionRoot', runtimeObject: monkeyMotionRoot });
+  monkeyActor.dockStoneToCanonicalMonkey();
   apply({ anchor: 'ANCHOR_MONKEY_ATTENTION', target: 'monkeyGuide.attentionRoot',
     runtimeObject: monkeyGuide.attentionRoot, layoutReference: 'ANCHOR_MONKEY', runtimeReference: monkeyMotionRoot });
   const speechProxy = sceneLayout.getNode('PROXY_MONKEY_SPEECH_MAX_ENVELOPE');
@@ -628,7 +630,7 @@ const introEntryDirection = new THREE.Vector3(settings.spawn.position.x, 0, sett
 if (introEntryDirection.lengthSq() < 1e-6) introEntryDirection.set(0, 0, 1);
 introEntryDirection.normalize();
 introSequence = createVrIntroSequence({
-  monkeyGuide, monkeyMotionRoot, monkeyVisualRoot, platformOrigin, playerRig, glyphRing, progressFloor,
+  monkeyGuide, monkeyMotionRoot, monkeyVisualRoot, monkeyStoneRoot, platformOrigin, playerRig, glyphRing, progressFloor,
   platformFixturesRoot, locomotion, playerGuidePanel, fogReveal: introFogReveal,
   ringRadius: glyphOrbit.effectiveRadius, entryDirection: introEntryDirection,
   settings: { ...settings.intro, locale: language }, bypass: introQaBypass,

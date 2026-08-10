@@ -14,44 +14,33 @@ function matrixRelativeTo(node, root) {
   return new THREE.Matrix4().copy(root.matrixWorld).invert().multiply(node.matrixWorld);
 }
 
-function applyMatrix(object, matrix) {
+function setMatrix(object, matrix) {
   object.matrix.copy(matrix);
   object.matrixAutoUpdate = false;
 }
 
 export function assembleMonkeyAssets({ characterAsset, stoneAsset }) {
-  const assemblyRoot = new THREE.Group();
-  assemblyRoot.name = 'VrMonkeyAssemblyRoot';
   const characterAnchor = findUniqueNode(characterAsset, 'MONKEY_ANCHOR');
   const monkeyMesh = findUniqueNode(characterAsset, 'monkey');
-  const stoneRoot = findUniqueNode(stoneAsset, 'MONKEY_STONE_ROOT');
+  const authoredStoneRoot = findUniqueNode(stoneAsset, 'MONKEY_STONE_ROOT');
   const seatAnchor = findUniqueNode(stoneAsset, 'MONKEY_SEAT_ANCHOR');
   if (!characterAnchor.getObjectById(monkeyMesh.id)) throw new Error('[monkeyModel] MONKEY_ANCHOR must be an ancestor of monkey.');
-  if (!stoneRoot.getObjectById(seatAnchor.id)) throw new Error('[monkeyModel] MONKEY_SEAT_ANCHOR must belong to MONKEY_STONE_ROOT.');
-
-  const stoneRootInAsset = matrixRelativeTo(stoneRoot, stoneAsset);
-  assemblyRoot.add(stoneAsset);
-  applyMatrix(stoneAsset, stoneRootInAsset.clone().invert());
-  stoneAsset.updateWorldMatrix(true, true);
-
-  const seatInAssembly = matrixRelativeTo(seatAnchor, assemblyRoot);
-  const characterAnchorInAsset = matrixRelativeTo(characterAnchor, characterAsset);
-  assemblyRoot.add(characterAsset);
-  applyMatrix(characterAsset, seatInAssembly.multiply(characterAnchorInAsset.invert()));
-  assemblyRoot.updateWorldMatrix(true, true);
+  if (!authoredStoneRoot.getObjectById(seatAnchor.id)) throw new Error('[monkeyModel] MONKEY_SEAT_ANCHOR must belong to MONKEY_STONE_ROOT.');
 
   const characterSize = new THREE.Box3().setFromObject(characterAsset).getSize(new THREE.Vector3());
   const maxDimension = Math.max(characterSize.x, characterSize.y, characterSize.z) || 1;
-  assemblyRoot.scale.setScalar(MONKEY_TARGET_DIMENSION / maxDimension);
-  assemblyRoot.updateWorldMatrix(true, true);
-  return { assemblyRoot, characterRoot: characterAsset, stoneRoot: stoneAsset, characterAnchor, seatAnchor };
+  const scale = MONKEY_TARGET_DIMENSION / maxDimension;
+  return { characterRoot: characterAsset, stoneAsset, characterAnchor, seatAnchor, scale };
 }
 
-function createMonkeyActor({ scene, fallbackObject, model, assemblyRoot = model, characterRoot = model, stoneRoot = null }) {
+function createMonkeyActor({ scene, fallbackObject, model, characterRoot = model, stoneAsset = null,
+  characterAnchor = null, seatAnchor = null, scale = 1 }) {
   const motionRoot = new THREE.Group();
   motionRoot.name = 'VrMonkeyMotionRoot';
   const visualRoot = new THREE.Group();
   visualRoot.name = 'VrMonkeyVisualRoot';
+  const stoneRoot = new THREE.Group();
+  stoneRoot.name = 'VrMonkeyStoneRoot';
 
   fallbackObject.updateWorldMatrix(true, false);
   const worldPosition = fallbackObject.getWorldPosition(new THREE.Vector3());
@@ -62,7 +51,9 @@ function createMonkeyActor({ scene, fallbackObject, model, assemblyRoot = model,
   motionRoot.quaternion.copy(worldQuaternion);
   motionRoot.add(visualRoot);
   if (model === fallbackObject) { model.position.set(0, 0, 0); model.quaternion.identity(); }
-  visualRoot.add(assemblyRoot);
+  visualRoot.add(characterRoot);
+  visualRoot.scale.setScalar(scale);
+  if (stoneAsset) { scene.add(stoneRoot); stoneRoot.add(stoneAsset); stoneRoot.scale.setScalar(scale); }
 
   const emergenceMaterials = [];
   visualRoot.traverse((object) => {
@@ -88,8 +79,21 @@ function createMonkeyActor({ scene, fallbackObject, model, assemblyRoot = model,
     });
   }
 
-  return { motionRoot, visualRoot, assemblyRoot, characterRoot, interactionRoot: characterRoot, stoneRoot, model,
-    setEmergeAlpha, getEmergeAlpha: () => emergeAlpha,
+  function dockStoneToCanonicalMonkey() {
+    if (!stoneAsset || !characterAnchor || !seatAnchor || !stoneRoot.parent) return false;
+    motionRoot.updateWorldMatrix(true, true);
+    stoneRoot.updateWorldMatrix(true, true);
+    const anchorWorld = characterAnchor.matrixWorld.clone();
+    const seatInStone = matrixRelativeTo(seatAnchor, stoneRoot);
+    stoneRoot.parent.updateWorldMatrix(true, false);
+    const stoneLocal = stoneRoot.parent.matrixWorld.clone().invert().multiply(anchorWorld).multiply(seatInStone.invert());
+    setMatrix(stoneRoot, stoneLocal);
+    stoneRoot.updateWorldMatrix(true, true);
+    return true;
+  }
+
+  return { motionRoot, visualRoot, characterRoot, interactionRoot: characterRoot, stoneRoot, model,
+    characterAnchor, seatAnchor, dockStoneToCanonicalMonkey, setEmergeAlpha, getEmergeAlpha: () => emergeAlpha,
     disposeEmergenceMaterials() { emergenceMaterials.forEach(({ material }) => material.dispose()); } };
 }
 
@@ -97,13 +101,13 @@ export async function loadMonkeyModel({ scene, fallbackObject, assetManager = nu
   const characterAsset = assetManager?.cloneGltfScene?.('monkey-model');
   const stoneAsset = assetManager?.cloneGltfScene?.('monkey-stone-model');
   if (!characterAsset || !stoneAsset) {
-    console.info('[monkeyModel] Placeholder fallback retained because the authored Monkey assembly was not in AssetManager cache.');
+    console.info('[monkeyModel] Placeholder fallback retained because the authored Monkey assets were not in AssetManager cache.');
     return createMonkeyActor({ scene, fallbackObject, model: fallbackObject });
   }
 
-  const assembly = assembleMonkeyAssets({ characterAsset, stoneAsset });
-  const actor = createMonkeyActor({ scene, fallbackObject, model: characterAsset, ...assembly });
+  const composition = assembleMonkeyAssets({ characterAsset, stoneAsset });
+  const actor = createMonkeyActor({ scene, fallbackObject, model: characterAsset, ...composition });
   fallbackObject.visible = false;
-  console.info('[monkeyModel] Authored Monkey and stone assembly attached from AssetManager cache. Placeholder hidden.');
+  console.info('[monkeyModel] Authored Monkey actor and stationary stone fixture attached from AssetManager cache. Placeholder hidden.');
   return actor;
 }
