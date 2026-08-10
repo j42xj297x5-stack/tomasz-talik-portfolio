@@ -18,7 +18,7 @@ assert.deepEqual(DEFAULT_EXPERIENCE_VR_SETTINGS.reliquary.activateButton, {
   enabled: true, rayMaxDistance: 3, side: 'left'
 });
 const normalized = normalizeExperienceVrSettings({ schemaVersion: 1, reliquary: { enabled: false,
-  distanceFromPortal: 2.25, floorOffset: 0.1,
+  distanceFromPortal: 2.25, heightOffset: 0.1,
   activateButton: { enabled: false, rayMaxDistance: 9 } } });
 assert.equal(normalized.reliquary.distanceFromPortal, 2.25);
 assert.equal(normalized.reliquary.heightOffset, 0.1, 'visual model height remains independent from fixture position');
