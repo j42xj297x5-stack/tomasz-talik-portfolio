@@ -32,7 +32,7 @@ To jest kolejność mechaniczna, nie fabularna. Runtime nie definiuje jeszcze na
 
 HEAD zawiera już ograniczoną, autorską sekwencję wejścia P0; nie wolno jej cofać do wcześniejszego modelu ani opisywać całego wejścia jako niezaprojektowanego. Po kalibracji XR następują radialne odsłonięcie mgły i cisza, onboarding panelu Y/sekcji sterowania, wskazanie Małpy i trigger, zaproszenie, `FOLLOWING`, wybór na progu, fizyczne wejście gracza do kręgu, `MONKEY_SETTLING`, a następnie `GLYPH_FREE_EXPLORE` z opóźnioną podpowiedzią attention przy braku sukcesu.
 
-Jest to obecna mechanika i copy P0, nie kompletna narracja całego doświadczenia. Ruch wykorzystuje istniejący `monkeyMotionRoot`, wraca do kanonicznego transformu nadanego przez obecny layout i nie redefiniuje `ANCHOR_MONKEY`.
+Jest to obecna mechanika i copy P0, nie kompletna narracja całego doświadczenia. Ruch wykorzystuje `monkeyMotionRoot`: startuje na kanonicznym promieniu `18`, przechodzi przez próg wynikający z jednego promienia kręgu i wraca do finalnego `(0,0,0)`. Tracked head nie definiuje żadnej pozycji Małpy.
 
 ## Małpa — dostępne kanały komunikacji
 
@@ -78,8 +78,8 @@ Poniższe obszary są **NIEZAPROJEKTOWANE / DO DECYZJI** i ten dokument ich nie 
 
 ## Twarde granice
 
-- `ANCHOR_MONKEY` pozostaje istniejącą kotwicą scene/layout, a `monkeyMotionRoot` właścicielem ruchu intro. Przygotowane punkty wewnątrz assetów — postaciowy `MONKEY_ANCHOR` oraz kamienne `MONKEY_STONE_ROOT` / `MONKEY_SEAT_ANCHOR` — należą do innego poziomu semantycznego i nie mogą zastępować kotwicy layoutu.
-- Osobne assety `monkey.glb` i `monkey_stone.glb` oraz ich zatwierdzony kontrakt kotwic przygotowują następny etap osadzenia Małpy na kamieniu bez magicznych offsetów. Runtime nie integruje jeszcze kamienia, nie preloaduje go, nie parentuje assetów i nie rozstrzyga algorytmu dopasowania. W HEAD kamień eksportuje oba punkty; eksport Małpy nadal nie pokazuje zadeklarowanego `MONKEY_ANCHOR`, więc ten konflikt artefaktu musi zostać wyjaśniony przed integracją, bez obchodzenia go zmianą `ANCHOR_MONKEY`.
+- `monkeyMotionRoot` jest właścicielem ruchu intro i wraca do canonical final `(0,0,0)`. Postaciowy `MONKEY_ANCHOR` oraz kamienne `MONKEY_STONE_ROOT` / `MONKEY_SEAT_ANCHOR` pozostają wyłącznie internal authored anchors.
+- Osobne assety `monkey.glb` i `monkey_stone.glb` są preloadowane i składane podczas normalnej kompozycji. Kamień jest nieruchomym fixture’em, a pełne authored matrices zrównują seat i character anchor bez magicznych offsetów.
 
 - `VrProgressionController` jest jedynym właścicielem odkrytych kart i ukończenia tierów; narracja może ten stan odczytać, ale nie może go zastępować ani commitować bokiem.
 - `VrAstroFurnaceProgressionController` jest właścicielem sześciu slotów materiałowych; produkcja Kuli ma odrębny stan `LOCKED → READY → BUILDING → AVAILABLE → EARNED`.

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import * as THREE from '../src/vendor/three.js';
-import { createVrProgressFloor, FLOOR_WORLD_Y_OFFSET } from '../src/xr/floor/createVrProgressFloor.js';
+import { createVrProgressFloor } from '../src/xr/floor/createVrProgressFloor.js';
 
 const CONTRACTS = {
   creative: { base: 'VR_PROGRESS_SECTOR_FIRE_BASE', prefix: 'VR_PROGRESS_CARD_FIRE_', panelCount: 3 },
@@ -54,8 +54,8 @@ const floor = createVrProgressFloor({
   aiGuideSectorModel: woodSource,
   emission: { stableIntensity: 1.5, pulseIntensity: 3, pulseDuration: 0.1, responseSpeed: 100 }
 });
-const sectors = floor.object.children.filter(({ name }) => name.startsWith('VrProgressFloorSector:'));
-const tierRings = floor.object.children.filter(({ name }) => name.startsWith('VrProgressTierRing:'));
+const sectors = floor.geometryRoot.children.filter(({ name }) => name.startsWith('VrProgressFloorSector:'));
+const tierRings = floor.geometryRoot.children.filter(({ name }) => name.startsWith('VrProgressTierRing:'));
 const expected = [
   ['spotify-digger', 'metal', false, 'metal'],
   ['haiku-cosmos', 'water', false, 'water'],
@@ -66,8 +66,7 @@ const expected = [
 
 assert.equal(parent.children[0], floor.object);
 assert.equal(floor.object.name, 'VrTiltableFloorRoot');
-assert.equal(FLOOR_WORLD_Y_OFFSET, -1.05);
-assert.deepEqual(floor.object.position.toArray(), [0, -1.05, 0]);
+assert.deepEqual(floor.object.position.toArray(), [0, 0, 0], 'canonical platform origin is absolute zero');
 assert.deepEqual(floor.object.rotation.toArray().slice(0, 3), [0, 0, 0]);
 assert.deepEqual(floor.object.scale.toArray(), [1, 1, 1]);
 assert.equal(sectors.length, 5);
@@ -230,7 +229,7 @@ const createFloorWithRadii = (radii, rings = {}) => createVrProgressFloor({
   aiGuideSectorModel: createSectorModel('wood', { radii }),
   rings
 });
-const readRingRadii = (targetFloor) => targetFloor.object.children
+const readRingRadii = (targetFloor) => targetFloor.geometryRoot.children
   .filter(({ name }) => name.startsWith('VrProgressTierRing:'))
   .map(({ userData }) => userData.radius);
 const originalWarn = console.warn;

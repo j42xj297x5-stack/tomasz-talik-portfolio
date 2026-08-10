@@ -21,7 +21,7 @@ import { createVrCrystalCollection } from './xr/createVrCrystalCollection.js';
 import { createVrCrystalReliquary } from './xr/createVrCrystalReliquary.js';
 import { createVrReliquaryActivateButton } from './xr/createVrReliquaryActivateButton.js';
 import { createVrReliquaryReleaseButton } from './xr/createVrReliquaryReleaseButton.js';
-import { createVrProgressFloor, FLOOR_WORLD_Y_OFFSET } from './xr/floor/createVrProgressFloor.js';
+import { createVrProgressFloor } from './xr/floor/createVrProgressFloor.js';
 import { createVrProgressionController } from './xr/progression/createVrProgressionController.js';
 import { createVrProgressionShortcut } from './xr/progression/applyVrProgressionShortcut.js';
 import { createVrShellSystem } from './xr/shells/createVrShellSystem.js';
@@ -45,7 +45,6 @@ import { createVrPlayerGuidePanel } from './xr/guidance/createVrPlayerGuidePanel
 import { createVrMonkeyGuide } from './xr/guidance/createVrMonkeyGuide.js';
 import { createVrIntroSequence, VR_INTRO_STATE } from './xr/guidance/createVrIntroSequence.js';
 import { createVrIntroFogReveal } from './xr/guidance/createVrIntroFogReveal.js';
-import { createVrSceneLayoutPrototype } from './xr/layout/createVrSceneLayoutPrototype.js';
 import { createVrAudioBridge } from './xr/audio/createVrAudioBridge.js';
 import { createVrAmbientSequencer } from './xr/audio/createVrAmbientSequencer.js';
 import { experienceVrPages, getExperienceVrPages, resolveExperienceVrPage } from './content/experienceVrPages.js';
@@ -123,10 +122,8 @@ if (audioControl) app.querySelector('[data-vr-audio-slot]').append(audioControl)
 const loadedSettings = await loadExperienceVrSettings({ debug: new URLSearchParams(location.search).has('debug') });
 const settings = loadedSettings.settings;
 const searchParams = new URLSearchParams(location.search);
-const sceneLayoutQa = searchParams.has('sceneLayout');
-const sceneLayoutDebug = sceneLayoutQa && searchParams.has('layoutDebug');
 const furnaceProcessQa = searchParams.has('furnaceProcess');
-const introQaBypass = ['p1', 'asterionSphere', 'furnaceProcess', 'sceneLayout', 'layoutDebug', 'furnace', 'layout']
+const introQaBypass = ['p1', 'asterionSphere', 'furnaceProcess', 'furnace']
   .some((key) => searchParams.has(key));
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: settings.renderer.antialias });
 renderer.setPixelRatio(Math.min(devicePixelRatio || 1, settings.renderer.pixelRatioCap));
@@ -134,23 +131,27 @@ renderer.xr.enabled = true;
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color('#05070b');
-const worldRoot = new THREE.Group();
-worldRoot.name = 'VrWorldRoot';
-worldRoot.scale.setScalar(settings.worldScale);
-scene.add(worldRoot);
+const experienceRoot = new THREE.Group();
+experienceRoot.name = 'ExperienceVrRoot';
+scene.add(experienceRoot);
+const worldStableRoot = new THREE.Group();
+worldStableRoot.name = 'WorldStableRoot';
+experienceRoot.add(worldStableRoot);
+const entryDirection = new THREE.Vector3(
+  settings.spatial.entryDirection.x, settings.spatial.entryDirection.y, settings.spatial.entryDirection.z
+).normalize();
 const camera = new THREE.PerspectiveCamera(55, 1, 0.1, 100);
 const playerRig = new THREE.Group();
 playerRig.name = 'VrPlayerRig';
-playerRig.position.set(settings.spawn.position.x, settings.spawn.position.y, settings.spawn.position.z);
+playerRig.position.copy(entryDirection).multiplyScalar(settings.spatial.playerStartRadius);
 camera.position.set(0, 1.6, 0);
 playerRig.add(camera);
-scene.add(playerRig);
-orientPlayerRig(playerRig, settings.spawn.lookAt);
+orientPlayerRig(playerRig, settings.spatial.monkeyFinal);
 const vrControllers = createVrControllers({ renderer, playerRig, settings: settings.controllers });
 
 addLights(scene);
 const centralPlaceholder = createCentralObject();
-worldRoot.add(centralPlaceholder);
+worldStableRoot.add(centralPlaceholder);
 
 const asterionSphereQa = settings.asterionSphere.enabled && searchParams.has(settings.asterionSphere.qaQueryParam);
 const vrAssets = getPreloadAssets([...INITIAL_PRELOAD_GROUPS, ...DEFERRED_PRELOAD_GROUPS])
@@ -169,78 +170,45 @@ await preloadAssets(vrAssets, {
   stage: ASSET_STAGES.CRITICAL_INITIAL,
   markComplete: true
 });
-let sceneLayoutAsset = null;
-if (sceneLayoutQa) {
-  try {
-    sceneLayoutAsset = await assetManager.loadAsset({
-      id: 'vr-scene-layout-prototype', path: '/glb/uklad_sceny.glb', type: 'model'
-    });
-  } catch (error) {
-    console.warn('[Experience VR] Prototype scene layout failed to load; using legacy placement.', error);
-  }
-}
 unsubscribe();
 const progressFloor = createVrProgressFloor({
-  parent: worldRoot,
+  parent: experienceRoot,
   creativeSectorModel: assetManager.cloneGltfScene('vr-progress-floor-creative-model'),
   ethicsSectorModel: assetManager.cloneGltfScene('vr-progress-floor-ethics-model'),
   haikuSectorModel: assetManager.cloneGltfScene('vr-progress-floor-haiku-model'),
   digSectorModel: assetManager.cloneGltfScene('vr-progress-floor-dig-model'),
-  aiGuideSectorModel: assetManager.cloneGltfScene('vr-progress-floor-ai-guide-model'),
-  worldYOffset: FLOOR_WORLD_Y_OFFSET
+  aiGuideSectorModel: assetManager.cloneGltfScene('vr-progress-floor-ai-guide-model')
 });
-let sceneLayout = null;
-if (sceneLayoutAsset?.gltf?.scene) {
-  try {
-    sceneLayout = createVrSceneLayoutPrototype(sceneLayoutAsset.gltf.scene);
-    if (!sceneLayout.getNode('VR_ROOM_LAYOUT_ROOT') || !sceneLayout.getNode('ANCHOR_FLOOR_ROOT')) {
-      throw new Error('VR_ROOM_LAYOUT_ROOT or ANCHOR_FLOOR_ROOT is missing.');
-    }
-  } catch (error) {
-    sceneLayout = null;
-    console.warn('[Experience VR] Prototype scene layout is invalid; using legacy placement.', error);
-  }
-}
 const platformFixturesRoot = new THREE.Group();
 platformFixturesRoot.name = 'VrPlatformFixturesRoot';
 platformFixturesRoot.position.set(0, 0, 0);
 platformFixturesRoot.quaternion.identity();
 platformFixturesRoot.scale.set(1, 1, 1);
 progressFloor.object.add(platformFixturesRoot);
-const platformOrigin = new THREE.Group();
-platformOrigin.name = 'VrPlatformOrigin';
-platformOrigin.position.set(0, 0, 0);
-platformOrigin.quaternion.identity();
-platformOrigin.scale.set(1, 1, 1);
-progressFloor.object.add(platformOrigin);
 const floorPassengerRoot = new THREE.Group();
 floorPassengerRoot.name = 'VrFloorPassengerRoot';
 floorPassengerRoot.position.set(0, 0, 0);
 floorPassengerRoot.quaternion.identity();
 floorPassengerRoot.scale.set(1, 1, 1);
 progressFloor.object.add(floorPassengerRoot);
-const monkeyActor = await loadMonkeyModel({ scene: worldRoot, fallbackObject: centralPlaceholder, assetManager });
+floorPassengerRoot.add(playerRig);
+const monkeyActor = await loadMonkeyModel({ actorParent: progressFloor.object, fixtureParent: platformFixturesRoot,
+  fallbackObject: centralPlaceholder, assetManager });
 const { motionRoot: monkeyMotionRoot, visualRoot: monkeyVisualRoot, interactionRoot: monkeyInteractionRoot,
   stoneRoot: monkeyStoneRoot, model: monkeyModel } = monkeyActor;
-progressFloor.object.attach(monkeyMotionRoot);
-progressFloor.object.attach(monkeyStoneRoot);
+monkeyMotionRoot.position.set(settings.spatial.monkeyFinal.x, settings.spatial.monkeyFinal.y, settings.spatial.monkeyFinal.z);
+monkeyActor.dockStoneToCanonicalMonkey();
 const resolvedPortfolioNodes = resolvePortfolioNodes(language);
 const { group: glyphRing, nodes } = createOrbitNodes(resolvedPortfolioNodes, { assetManager });
-worldRoot.add(glyphRing);
-const entryDirection = new THREE.Vector3(settings.spawn.position.x, 0, settings.spawn.position.z).normalize();
-const glyphOrbit = createVrGlyphOrbit({ nodes, settings: settings.glyphRing, entryDirection });
+worldStableRoot.add(glyphRing);
+const glyphOrbit = createVrGlyphOrbit({ nodes, center: new THREE.Vector3(0, settings.spatial.worldStableCenterY, 0),
+  settings: settings.glyphRing, entryDirection, radius: settings.spatial.ringRadius });
 const floorWalkRadius = glyphOrbit.effectiveRadius;
-floorPassengerRoot.attach(playerRig);
-if (sceneLayout) {
-  const spawnApplied = sceneLayout.applyTransform({ layoutNode: 'ANCHOR_PLAYER_SPAWN',
-    layoutReference: 'ANCHOR_FLOOR_ROOT', runtimeObject: playerRig,
-    runtimeReference: progressFloor.object, applyRotation: false });
-  if (!spawnApplied) console.warn('[Experience VR] Layout anchor ANCHOR_PLAYER_SPAWN is missing; using legacy player spawn.');
-}
 const playerRigSpawnLocalPosition = playerRig.position.clone();
 const playerRigSpawnLocalQuaternion = playerRig.quaternion.clone();
 const playerRigSpawnLocalScale = playerRig.scale.clone();
-const shellSystem = createVrShellSystem({ parent: worldRoot, assetManager, baseRadius: glyphOrbit.effectiveRadius,
+const shellSystem = createVrShellSystem({ parent: worldStableRoot, assetManager, baseRadius: glyphOrbit.effectiveRadius,
+  centerY: settings.spatial.worldStableCenterY,
   emissionSettings: settings.shellAttractor });
 const asterionSphereGltf = assetManager.getGltf('vr-asterion-sphere-model');
 const asterionSphere = createVrAsterionSphere({
@@ -251,22 +219,20 @@ const asterionSphere = createVrAsterionSphere({
   debug: searchParams.has('debug') || asterionSphereQa
 });
 const asterionGyroInteraction = createVrAsterionGyroInteraction({
-  sphere: asterionSphere, controllers: vrControllers.controllers, progressFloor, worldRoot, renderer,
+  sphere: asterionSphere, controllers: vrControllers.controllers, progressFloor, worldRoot: worldStableRoot, renderer,
   settings: settings.asterionSphere, enabled: settings.asterionSphere.enabled
 });
 const glyphLights = createVrGlyphLights({ nodes, settings: settings.glyphLights });
 const portalDisplay = createVrPortalDisplay({
-  scene, platformOrigin, spawnPosition: settings.spawn.position,
+  parent: platformFixturesRoot,
   portalModel: assetManager.cloneGltfScene('vr-portal-model'), settings: settings.portal
 });
 const astroFurnaceGltf = assetManager.getGltf('vr-astro-furnace-model');
 const astroFurnace = createVrAstroFurnace({
-  parent: worldRoot,
+  parent: platformFixturesRoot,
   model: assetManager.cloneGltfScene('vr-astro-furnace-model'),
   animations: astroFurnaceGltf?.animations ?? [],
-  settings: settings.furnace,
-  platformOrigin,
-  spawnPosition: settings.spawn.position
+  settings: settings.furnace
 });
 const furnaceProgressionController = createVrAstroFurnaceProgressionController();
 const asterionProductionController = createVrAsterionProductionController({
@@ -300,17 +266,11 @@ function restorePortalWaitingState() {
   portalCanvas.show({ title: copy.crystalInstructionTitle, body: copy.crystalInstructionBody });
 }
 restorePortalWaitingState();
-platformFixturesRoot.attach(portalDisplay.object);
-platformFixturesRoot.attach(astroFurnace.object);
 const crystalReliquary = createVrCrystalReliquary({
-  scene,
+  parent: platformFixturesRoot,
   reliquaryModel: assetManager.cloneGltfScene('vr-crystal-reliquary-model'),
-  portalDisplay,
-  spawnPosition: settings.spawn.position,
   settings: settings.reliquary
 });
-platformFixturesRoot.attach(crystalReliquary.object);
-platformFixturesRoot.attach(crystalReliquary.insertFeedback);
 const locomotion = createVrLocomotion({
   playerRig, renderer, camera, settings: settings.locomotion, surfaceRoot: progressFloor.object, walkRadius: floorWalkRadius
 });
@@ -326,7 +286,7 @@ const unsubscribeAmbientFurnace = furnaceProgressionController.subscribe(syncAmb
 const unsubscribeAmbientAsterion = asterionProductionController.subscribe(syncAmbientSequence);
 function syncTierOneWorldState() { shellSystem.setActive(progressionController.isTierComplete(1)); }
 function resetPlayerRigToSpawn() {
-  if (playerRig.parent !== floorPassengerRoot) floorPassengerRoot.attach(playerRig);
+  if (playerRig.parent !== floorPassengerRoot) floorPassengerRoot.add(playerRig);
   playerRig.position.copy(playerRigSpawnLocalPosition);
   playerRig.quaternion.copy(playerRigSpawnLocalQuaternion);
   playerRig.scale.copy(playerRigSpawnLocalScale);
@@ -371,7 +331,7 @@ let astroFurnaceActivateInteraction = null;
 let astroFurnaceContentInteraction = null;
 let astroFurnaceOptionInteraction = null;
 const furnacePanel = createVrAstroFurnacePanel({
-  parent: worldRoot, furnace: astroFurnace, controllers: vrControllers.controllers,
+  parent: platformFixturesRoot, furnace: astroFurnace, controllers: vrControllers.controllers,
   progressionController: furnaceProgressionController, productionController: asterionProductionController,
   asterionModel: asterionSphere.object, settings: settings.furnace.panel,
   processSource: createVrAstroFurnaceProcessSource(() => astroFurnaceActivateInteraction),
@@ -384,7 +344,6 @@ const furnacePanel = createVrAstroFurnacePanel({
   onEnterModule: () => playVrUi(VR_AUDIO.furnaceDeeper),
   onReturnHome: () => playVrUi(VR_AUDIO.click)
 });
-platformFixturesRoot.attach(furnacePanel.object);
 const ordinaryFurnaceRayAvailable = (record) => !(record.handedness === 'right'
   && handModeController.getRightMode() === 'ASTRO_ATTRACTOR')
   && !(asterionSphere.isEquipped() && record.handedness === 'left');
@@ -520,9 +479,9 @@ const glyphInteraction = createVrGlyphInteraction({
     const tier = getNextCrystalTier(node);
     if (tier === null) return;
     node.updateWorldMatrix(true, false);
-    platformOrigin.updateWorldMatrix(true, false);
+    progressFloor.object.updateWorldMatrix(true, false);
     const glyphWorldPosition = node.getWorldPosition(new THREE.Vector3());
-    const centerWorldPosition = platformOrigin.getWorldPosition(new THREE.Vector3());
+    const centerWorldPosition = progressFloor.object.getWorldPosition(new THREE.Vector3());
     const crystal = crystalCollection.spawnOne(node.userData.id, { glyphWorldPosition, centerWorldPosition });
     if (crystal) {
       introSequence?.notifyGlyphExploreSuccess();
@@ -532,7 +491,7 @@ const glyphInteraction = createVrGlyphInteraction({
 });
 shellAttractorInteraction = createVrShellAttractorInteraction({
   controllers: vrControllers.controllers, shellSystem, handModeController, semanticInput, attractorTool,
-  settings: settings.shellAttractor, haloSettings: settings.targetHalo, settledParent: worldRoot,
+  settings: settings.shellAttractor, haloSettings: settings.targetHalo, settledParent: worldStableRoot,
   crystalHeldByController: crystalCollection.heldByController,
   onPullStart: ({ target }) => vrAudio.startAttractor(target.userData.attractorId, 'shell'),
   onPullCancel: ({ target }) => vrAudio.cancelAttractor(target.userData.attractorId),
@@ -543,96 +502,18 @@ shellAttractorInteraction = createVrShellAttractorInteraction({
     || furnacePanel.hasCurrentHit(record) || monkeyGuide.hasCurrentHit(record) || record.currentHit)
 });
 
-const warnedLayoutAnchors = new Set();
-let sceneLayoutDebugLogged = false;
-function applySceneLayoutPrototype() {
-  if (!sceneLayout) return false;
-  const rows = [];
-  const apply = ({ anchor, target, runtimeObject, layoutReference = 'ANCHOR_FLOOR_ROOT',
-    runtimeReference = progressFloor.object, fallback = false, offsetPosition = null, applyRotation = true }) => {
-    try {
-      const resolved = sceneLayout.applyTransform({ layoutNode: anchor, layoutReference, runtimeObject,
-        runtimeReference, offsetPosition, applyRotation });
-      if (!resolved) {
-        if (!warnedLayoutAnchors.has(anchor)) {
-          warnedLayoutAnchors.add(anchor);
-          console.warn(`[Experience VR] Layout anchor ${anchor} is missing; retaining legacy transform for ${target}.`);
-        }
-        return false;
-      }
-      rows.push({
-        anchor, target,
-        localPosition: resolved.localPosition.toArray().map((value) => Number(value.toFixed(4))).join(', '),
-        worldPosition: resolved.worldPosition.toArray().map((value) => Number(value.toFixed(4))).join(', '),
-        quaternion: resolved.quaternion.toArray().map((value) => Number(value.toFixed(4))).join(', '),
-        fallback
-      });
-      return true;
-    } catch (error) {
-      console.warn(`[Experience VR] Could not apply layout anchor ${anchor}; retaining legacy transform for ${target}.`, error);
-      return false;
-    }
-  };
-
-  apply({ anchor: 'ANCHOR_MONKEY', target: 'monkeyMotionRoot', runtimeObject: monkeyMotionRoot });
-  monkeyActor.dockStoneToCanonicalMonkey();
-  apply({ anchor: 'ANCHOR_MONKEY_ATTENTION', target: 'monkeyGuide.attentionRoot',
-    runtimeObject: monkeyGuide.attentionRoot, layoutReference: 'ANCHOR_MONKEY', runtimeReference: monkeyMotionRoot });
-  const speechProxy = sceneLayout.getNode('PROXY_MONKEY_SPEECH_MAX_ENVELOPE');
-  apply({
-    anchor: speechProxy ? 'PROXY_MONKEY_SPEECH_MAX_ENVELOPE' : 'ANCHOR_MONKEY_SPEECH_BASE',
-    target: 'monkeyGuide.messagePanel.group', runtimeObject: monkeyGuide.messagePanel.group,
-    layoutReference: 'ANCHOR_MONKEY', runtimeReference: monkeyMotionRoot, fallback: !speechProxy,
-    offsetPosition: speechProxy ? null : { x: 0, y: settings.monkeyGuide.message.height / 2, z: 0 }
-  });
-  apply({ anchor: 'ANCHOR_MONKEY_DIALOGUE', target: 'monkeyGuide.dialoguePanel.group',
-    runtimeObject: monkeyGuide.dialoguePanel.group, layoutReference: 'ANCHOR_MONKEY', runtimeReference: monkeyMotionRoot });
-  apply({ anchor: 'ANCHOR_PORTAL', target: 'portalDisplay.object', runtimeObject: portalDisplay.object });
-  const furnaceApplied = apply({ anchor: 'ANCHOR_FURNACE', target: 'astroFurnace.object', runtimeObject: astroFurnace.object });
-  if (furnaceApplied) {
-    astroFurnace.object.updateWorldMatrix(true, true);
-    astroFurnace.refreshVisibleBounds();
-    furnacePanel.place();
-  }
-  apply({ anchor: 'ANCHOR_RELIQUARY', target: 'crystalReliquary.object', runtimeObject: crystalReliquary.object });
-  apply({ anchor: 'ANCHOR_RELIQUARY_BUTTON_ACTIVATE', target: 'activateCompanion.placementRoot',
-    runtimeObject: activateCompanion?.placementRoot });
-  apply({ anchor: 'ANCHOR_RELIQUARY_BUTTON_RELEASE', target: 'releaseCompanion.placementRoot',
-    runtimeObject: releaseCompanion?.placementRoot });
-  const floorPivots = { metal: 'PIVOT_FLOOR_METAL', water: 'PIVOT_FLOOR_WATER', wood: 'PIVOT_FLOOR_WOOD',
-    fire: 'PIVOT_FLOOR_FIRE', earth: 'PIVOT_FLOOR_EARTH' };
-  progressFloor.object.children.filter((object) => object.userData?.branchId).forEach((sector) => {
-    apply({ anchor: floorPivots[sector.userData.branchId], target: `floor sector ${sector.userData.branchId}`,
-      runtimeObject: sector });
-  });
-  apply({ anchor: 'ANCHOR_PLAYER_SPAWN', target: 'playerRig', runtimeObject: playerRig, applyRotation: false });
-
-  if (sceneLayoutDebug && !sceneLayoutDebugLogged) {
-    sceneLayoutDebugLogged = true;
-    console.groupCollapsed('[Experience VR] Blender scene layout prototype');
-    console.table(rows);
-    console.groupEnd();
-  }
-  return true;
-}
-
-applySceneLayoutPrototype();
-
 const introFogReveal = createVrIntroFogReveal({
-  anchor: platformOrigin,
-  roots: [worldRoot],
+  anchor: progressFloor.object,
+  roots: [worldStableRoot],
   color: '#05070b',
   duration: settings.intro.introRevealDuration,
-  revealRadius: settings.intro.playerStartRadius + 4
+  revealRadius: settings.spatial.playerStartRadius + 4
 });
 
-const introEntryDirection = new THREE.Vector3(settings.spawn.position.x, 0, settings.spawn.position.z);
-if (introEntryDirection.lengthSq() < 1e-6) introEntryDirection.set(0, 0, 1);
-introEntryDirection.normalize();
 introSequence = createVrIntroSequence({
-  monkeyGuide, monkeyMotionRoot, monkeyVisualRoot, monkeyStoneRoot, platformOrigin, playerRig, glyphRing, progressFloor,
+  monkeyGuide, monkeyMotionRoot, monkeyVisualRoot, monkeyStoneRoot, playerRig, glyphRing, progressFloor,
   platformFixturesRoot, locomotion, playerGuidePanel, fogReveal: introFogReveal,
-  ringRadius: glyphOrbit.effectiveRadius, entryDirection: introEntryDirection,
+  spatial: settings.spatial,
   settings: { ...settings.intro, locale: language }, bypass: introQaBypass,
   onOpeningRaysReady: () => vrControllers.setRaysEnabled(true),
   getHeadPosition: () => {
@@ -663,10 +544,8 @@ function renderFrame() {
     playerRig.updateWorldMatrix(true, true);
     if (typeof renderer.xr.updateCamera === 'function') renderer.xr.updateCamera(camera);
     const xrCamera = renderer.xr.getCamera(camera);
-    const targetLocalPosition = sceneLayout
-      ? platformOrigin.worldToLocal(playerRig.getWorldPosition(new THREE.Vector3()).clone()) : null;
-    calibrateXrHeadToPlatform({ playerRig, xrCamera, platformOrigin, entryDirection: introEntryDirection,
-      targetRadius: settings.intro.playerStartRadius, targetLocalPosition });
+    calibrateXrHeadToPlatform({ playerRig, xrCamera, platformRoot: progressFloor.object, entryDirection,
+      targetRadius: settings.spatial.playerStartRadius });
     if (typeof renderer.xr.updateCamera === 'function') renderer.xr.updateCamera(camera);
     else xrCamera.updateWorldMatrix(true, true);
     xrStartCalibrationPending = false;
@@ -755,7 +634,6 @@ function handleSessionEnd() {
   asterionProductionController.resetSession();
   handModeController.reset();
   playerGuidePanel.reset();
-  applySceneLayoutPrototype();
   monkeyGuide.reset();
   introSequence.reset();
   showReadyState({ ended: hasEnteredSession });
@@ -791,7 +669,6 @@ async function enterVr() {
   asterionProductionController.resetSession();
   handModeController.reset();
   playerGuidePanel.reset();
-  applySceneLayoutPrototype();
   monkeyGuide.reset();
   introSequence.reset();
   enterButton.disabled = true;

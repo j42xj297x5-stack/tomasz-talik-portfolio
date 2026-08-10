@@ -1,7 +1,5 @@
 import * as THREE from '../vendor/three.js';
 
-const MONKEY_TARGET_DIMENSION = 2.0;
-
 function findUniqueNode(root, name) {
   const matches = [];
   root.traverse((object) => { if (object.name === name) matches.push(object); });
@@ -27,13 +25,10 @@ export function assembleMonkeyAssets({ characterAsset, stoneAsset }) {
   if (!characterAnchor.getObjectById(monkeyMesh.id)) throw new Error('[monkeyModel] MONKEY_ANCHOR must be an ancestor of monkey.');
   if (!authoredStoneRoot.getObjectById(seatAnchor.id)) throw new Error('[monkeyModel] MONKEY_SEAT_ANCHOR must belong to MONKEY_STONE_ROOT.');
 
-  const characterSize = new THREE.Box3().setFromObject(characterAsset).getSize(new THREE.Vector3());
-  const maxDimension = Math.max(characterSize.x, characterSize.y, characterSize.z) || 1;
-  const scale = MONKEY_TARGET_DIMENSION / maxDimension;
-  return { characterRoot: characterAsset, stoneAsset, characterAnchor, seatAnchor, scale };
+  return { characterRoot: characterAsset, stoneAsset, characterAnchor, seatAnchor, scale: 1 };
 }
 
-function createMonkeyActor({ scene, fallbackObject, model, characterRoot = model, stoneAsset = null,
+function createMonkeyActor({ actorParent, fixtureParent, fallbackObject, model, characterRoot = model, stoneAsset = null,
   characterAnchor = null, seatAnchor = null, scale = 1 }) {
   const motionRoot = new THREE.Group();
   motionRoot.name = 'VrMonkeyMotionRoot';
@@ -42,18 +37,12 @@ function createMonkeyActor({ scene, fallbackObject, model, characterRoot = model
   const stoneRoot = new THREE.Group();
   stoneRoot.name = 'VrMonkeyStoneRoot';
 
-  fallbackObject.updateWorldMatrix(true, false);
-  const worldPosition = fallbackObject.getWorldPosition(new THREE.Vector3());
-  const worldQuaternion = fallbackObject.getWorldQuaternion(new THREE.Quaternion());
-  scene.add(motionRoot);
-  scene.worldToLocal(worldPosition);
-  motionRoot.position.copy(worldPosition);
-  motionRoot.quaternion.copy(worldQuaternion);
+  actorParent.add(motionRoot);
   motionRoot.add(visualRoot);
   if (model === fallbackObject) { model.position.set(0, 0, 0); model.quaternion.identity(); }
   visualRoot.add(characterRoot);
   visualRoot.scale.setScalar(scale);
-  if (stoneAsset) { scene.add(stoneRoot); stoneRoot.add(stoneAsset); stoneRoot.scale.setScalar(scale); }
+  if (stoneAsset) { fixtureParent.add(stoneRoot); stoneRoot.add(stoneAsset); stoneRoot.scale.setScalar(scale); }
 
   const emergenceMaterials = [];
   visualRoot.traverse((object) => {
@@ -97,16 +86,16 @@ function createMonkeyActor({ scene, fallbackObject, model, characterRoot = model
     disposeEmergenceMaterials() { emergenceMaterials.forEach(({ material }) => material.dispose()); } };
 }
 
-export async function loadMonkeyModel({ scene, fallbackObject, assetManager = null }) {
+export async function loadMonkeyModel({ actorParent, fixtureParent = actorParent, fallbackObject, assetManager = null }) {
   const characterAsset = assetManager?.cloneGltfScene?.('monkey-model');
   const stoneAsset = assetManager?.cloneGltfScene?.('monkey-stone-model');
   if (!characterAsset || !stoneAsset) {
     console.info('[monkeyModel] Placeholder fallback retained because the authored Monkey assets were not in AssetManager cache.');
-    return createMonkeyActor({ scene, fallbackObject, model: fallbackObject });
+    return createMonkeyActor({ actorParent, fixtureParent, fallbackObject, model: fallbackObject });
   }
 
   const composition = assembleMonkeyAssets({ characterAsset, stoneAsset });
-  const actor = createMonkeyActor({ scene, fallbackObject, model: characterAsset, ...composition });
+  const actor = createMonkeyActor({ actorParent, fixtureParent, fallbackObject, model: characterAsset, ...composition });
   fallbackObject.visible = false;
   console.info('[monkeyModel] Authored Monkey actor and stationary stone fixture attached from AssetManager cache. Placeholder hidden.');
   return actor;

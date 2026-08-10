@@ -21,13 +21,13 @@ assert.ok(assembled.scale > 0);
 assert.equal(alignment.character.parent, null); assert.equal(alignment.stone.parent, null);
 
 const scene = new THREE.Scene(); const placeholder = createPlaceholder(scene); const assets = makeAssets();
-const actor = await loadMonkeyModel({ scene, fallbackObject: placeholder, assetManager: { cloneGltfScene: (id) => id === 'monkey-model' ? assets.character : assets.stone } });
+const actor = await loadMonkeyModel({ actorParent: scene, fixtureParent: scene, fallbackObject: placeholder, assetManager: { cloneGltfScene: (id) => id === 'monkey-model' ? assets.character : assets.stone } });
 assert.equal(actor.motionRoot.name, 'VrMonkeyMotionRoot'); assert.equal(actor.visualRoot.name, 'VrMonkeyVisualRoot');
 assert.equal(actor.stoneRoot.name, 'VrMonkeyStoneRoot'); assert.equal(actor.visualRoot.parent, actor.motionRoot);
 assert.equal(actor.characterRoot.parent, actor.visualRoot); assert.equal(actor.stoneRoot.parent, scene);
 assert.notEqual(actor.stoneRoot.parent, actor.motionRoot); assert.notEqual(actor.stoneRoot.parent, actor.visualRoot);
 assert.equal(actor.interactionRoot, actor.characterRoot); assert.notEqual(actor.interactionRoot, actor.stoneRoot);
-assert.deepEqual(actor.motionRoot.scale.toArray(), [1, 1, 1]); assert.deepEqual(actor.motionRoot.position.toArray(), [2, .5, -3]);
+assert.deepEqual(actor.motionRoot.scale.toArray(), [1, 1, 1]); assert.deepEqual(actor.motionRoot.position.toArray(), [0, 0, 0]);
 assert.equal(actor.dockStoneToCanonicalMonkey(), true);
 assert.ok(matricesNear(worldMatrix(actor.characterAnchor), worldMatrix(actor.seatAnchor)), 'full authored anchor matrices dock at canonical pose');
 const runtimeMonkeyMaterial = actor.characterRoot.getObjectByName('monkey').material;
@@ -40,6 +40,6 @@ actor.motionRoot.position.x -= 10; scene.updateMatrixWorld(true);
 assert.ok(matricesNear(worldMatrix(actor.stoneRoot), stoneBefore), 'returning Monkey leaves stone transform unchanged');
 assert.ok(matricesNear(worldMatrix(actor.characterAnchor), worldMatrix(actor.seatAnchor)), 'canonical return restores authored docking without a snap');
 
-const fallbackScene = new THREE.Scene(); const fallback = createPlaceholder(fallbackScene); const fallbackActor = await loadMonkeyModel({ scene: fallbackScene, fallbackObject: fallback });
+const fallbackScene = new THREE.Scene(); const fallback = createPlaceholder(fallbackScene); const fallbackActor = await loadMonkeyModel({ actorParent: fallbackScene, fixtureParent: fallbackScene, fallbackObject: fallback });
 assert.equal(fallbackActor.model, fallback); assert.equal(fallback.parent, fallbackActor.visualRoot);
 console.log('VR authored Monkey and stationary stone assertions passed.');

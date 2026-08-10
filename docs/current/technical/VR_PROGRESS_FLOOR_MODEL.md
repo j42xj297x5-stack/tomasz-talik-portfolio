@@ -4,9 +4,9 @@ Status: canonical technical description of the implemented progress-floor and pl
 
 ## Runtime ownership and lifecycle
 
-`createVrProgressFloor` in `src/xr/floor/createVrProgressFloor.js` is the subsystem factory. `src/experienceVr.js` composes it under `worldRoot` after `AssetManager` has preloaded the five manifest models, passes clones of those models to the factory, calls `update(delta)` from the shared animation loop, and calls `dispose()` during page teardown.
+`createVrProgressFloor` in `src/xr/floor/createVrProgressFloor.js` is the subsystem factory. `src/experienceVr.js` composes it under `ExperienceVrRoot` after `AssetManager` has preloaded the five manifest models, passes clones of those models to the factory, calls `update(delta)` from the shared animation loop, and calls `dispose()` during page teardown.
 
-The factory creates one shared `THREE.Group` named `VrTiltableFloorRoot`. Its world-relative Y position is the exported `FLOOR_WORLD_Y_OFFSET` (`-1.05` by default). It owns all five instantiated sectors, cloned sector materials and, when creation succeeds, five procedural tier rings with their materials and geometries. `dispose()` is idempotent: it marks the subsystem inactive, detaches the root, and disposes every owned material and procedural geometry; later activation, completion and update calls are inert.
+The factory creates one shared `THREE.Group` named `VrTiltableFloorRoot`. Its identity transform defines the absolute platform center `(0,0,0)` and the platform reference plane `Y=0`. It owns all five instantiated sectors, cloned sector materials and, when creation succeeds, five procedural tier rings with their materials and geometries. `dispose()` is idempotent: it marks the subsystem inactive, detaches the root, and disposes every owned material and procedural geometry; later activation, completion and update calls are inert.
 
 `VrTiltableFloorRoot` now has two active roles: it is the visual progress floor root and the platform transform root driven by the QA Asterion gyro. Progress ownership and transform ownership remain separate. `createVrProgressFloor` only projects committed portfolio progress; the Asterion gyro writes the root quaternion and does not take over card, tier or furnace progression logic.
 

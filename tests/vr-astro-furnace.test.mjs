@@ -1,7 +1,6 @@
 import assert from 'node:assert/strict';
 import * as THREE from '../src/vendor/three.js';
 import { createVrAstroFurnace } from '../src/xr/furnace/createVrAstroFurnace.js';
-import { resolveVrPlatformFixtureWorldPosition } from '../src/xr/placement/vrPlatformFixturePlacement.js';
 import { ASTRO_FURNACE_STATES, createVrAstroFurnaceOpenInteraction } from '../src/xr/furnace/createVrAstroFurnaceOpenInteraction.js';
 import { ASTRO_FURNACE_PROCESS_KINDS, ASTRO_FURNACE_PROCESS_STATES, createVrAstroFurnaceActivateInteraction, processRotationPulse01 } from '../src/xr/furnace/createVrAstroFurnaceActivateInteraction.js';
 import { createVrAstroFurnaceOptionInteraction } from '../src/xr/furnace/createVrAstroFurnaceOptionInteraction.js';
@@ -15,15 +14,10 @@ assert.equal(processRotationPulse01(0), 0);
 assert.equal(processRotationPulse01(Math.PI), 1);
 assert.ok(processRotationPulse01(Math.PI * 2) < 1e-12);
 
-const fixturePlatform = new THREE.Group(); fixturePlatform.position.set(1, 4, -2);
-const fixturePlacement = resolveVrPlatformFixtureWorldPosition({ platformOrigin: fixturePlatform,
-  fixturePosition: { x: 2, y: 0, z: 1 } });
-assert.deepEqual(fixturePlacement.toArray(), [3, 4, -1]);
 const normalized = normalizeExperienceVrSettings({ schemaVersion: 1, furnace: {
-  placementMode: 'unknown', floorOffset: 20, scale: 99,
+floorOffset: 20, scale: 99,
   openButton: { rayMaxDistance: 30, emissionPressed: 3 }, chamber: { glassFadeStart: -1 }
 } }).furnace;
-assert.equal(normalized.placementMode, 'mirror-portal');
 assert.equal(normalized.floorOffset, 2);
 assert.equal(normalized.scale, 10);
 assert.equal(normalized.openButton.rayMaxDistance, 5);
@@ -54,14 +48,12 @@ assert.equal(normalizedProcess.fireCellPulseHzMax, 4);
 
 const parent = new THREE.Group();
 const anchor = new THREE.Mesh(new THREE.BoxGeometry(2, 2, 2)); anchor.position.set(1, 1, -2);
-const platformOrigin = new THREE.Group(); parent.add(platformOrigin);
 const portal = new THREE.Group(); portal.position.set(-2, 9, 3);
 const placementModel = new THREE.Group(); placementModel.add(new THREE.Mesh(new THREE.BoxGeometry(1, 2, 1)));
 parent.add(anchor, portal);
-const placementSettings = { enabled: true, placementMode: 'mirror-portal', floorOffset: 0,
+const placementSettings = { enabled: true, floorOffset: 0,
   position: { x: 0, y: 0, z: 0 }, rotationDegrees: { x: 0, y: 0, z: 0 }, scale: 3, debug: false };
-const placedFurnace = createVrAstroFurnace({ parent, model: placementModel, settings: placementSettings,
-  platformOrigin, spawnPosition: { x: 0, y: 0, z: 5 } });
+const placedFurnace = createVrAstroFurnace({ parent, model: placementModel, settings: placementSettings });
 const expectedFurnace = new THREE.Vector3(0, 0, 0);
 assert.ok(Math.abs(placedFurnace.object.position.x - expectedFurnace.x) < 1e-12);
 assert.ok(Math.abs(placedFurnace.object.position.z - expectedFurnace.z) < 1e-12);
@@ -122,9 +114,9 @@ function buildInteractiveFurnace({ omitClip = null } = {}) {
     'AstroFurnace_ButtonActivate_Lock', 0.1,
     [new THREE.VectorKeyframeTrack('PIVOT_BUTTON_ACTIVATE.position', [0, 0.1], [0, 0, 0, 0, 0, -0.02])]
   ));
-  const settings = { enabled: true, placementMode: 'configured', floorOffset: 0, position: { x: 0, y: 0, z: 0 },
+  const settings = { enabled: true, floorOffset: 0, position: { x: 0, y: 0, z: 0 },
     rotationDegrees: { x: 0, y: 0, z: 0 }, scale: 1, debug: false };
-  return createVrAstroFurnace({ parent: new THREE.Group(), model, animations, settings, spawnPosition: { x: 0, z: 1 } });
+  return createVrAstroFurnace({ parent: new THREE.Group(), model, animations, settings });
 }
 const controller = new THREE.Group();
 const record = { controller, handedness: 'left', currentRayLength: 3, reportRayHit() {} };

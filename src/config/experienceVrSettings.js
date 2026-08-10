@@ -7,10 +7,14 @@ export const EXPERIENCE_VR_SETTINGS_SCHEMA_VERSION = 1;
 export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
   schemaVersion: EXPERIENCE_VR_SETTINGS_SCHEMA_VERSION,
   referenceSpaceType: 'local-floor',
-  worldScale: 1,
-  spawn: {
-    position: { x: 0, y: 0, z: 5.8 },
-    lookAt: { x: 0, y: 1, z: 0 }
+  spatial: {
+    entryDirection: { x: 0, y: 0, z: 1 },
+    playerStartRadius: 20,
+    monkeyStartRadius: 18,
+    monkeyFinal: { x: 0, y: 0, z: 0 },
+    ringRadius: 7.6,
+    worldStableCenterY: 1.05,
+    thresholdOutsideDistance: 1
   },
   renderer: {
     pixelRatioCap: 1.5,
@@ -18,10 +22,9 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
   },
   furnace: {
     enabled: true,
-    placementMode: 'mirror-portal',
     floorOffset: 0,
     position: { x: -2.0, y: 0, z: 1.0 },
-    rotationDegrees: { x: 0, y: 0, z: 0 },
+    rotationDegrees: { x: 0, y: 5.71, z: 0 },
     scale: 3,
     debug: false,
     content: {
@@ -167,7 +170,6 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
   glyphLights: { inwardOffset: 1 },
   glyphRing: {
     enabled: true,
-    radiusMultiplier: 2,
     angularSpeed: 0.14,
     direction: 1,
     entryAngleThreshold: 0.24,
@@ -178,12 +180,8 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
     emergeDuration: 12.0,
     introRevealDuration: 13.0,
     postRevealSilenceDuration: 2.0,
-    initialHeadToMonkeyDistance: 1.5,
     insideSafeMargin: 0.75,
     glyphFreeExploreDuration: 60.0,
-    playerStartRadius: 20.0,
-    monkeyStartRadius: 18.0,
-    thresholdStopOutsideDistance: 1.0,
     guideSpeed: 0.7,
     guideTurnDuration: 1.0,
     followGraceDistance: 3.0,
@@ -194,20 +192,12 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
     messageGapDuration: 0.5,
     questionGapDuration: 2.0
   },
-  entryTransition: {
-    enabled: true,
-    durationSeconds: 3,
-    targetRadiusFactor: 0.76,
-    target: { x: 0, z: 1.8 },
-    easing: 'smoothstep'
-  },
   portal: {
     enabled: true,
     position: { x: -1.940285, y: 0, z: -0.485071 },
+    rotationDegrees: { x: 0, y: 5.41, z: 0 },
     maxWidth: 2.8,
     maxHeight: 3.2,
-    distanceFromAnchor: 2,
-    forwardBias: 0.25,
     floorOffset: 0,
     appearDuration: 0.42,
     appearStartScale: 0.92,
@@ -215,7 +205,8 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
   },
   reliquary: {
     enabled: true,
-    distanceFromPortal: 1.5,
+    position: { x: -1.497785, y: 0, z: 0.949929 },
+    rotationDegrees: { x: 0, y: 5.41, z: 0 },
     heightOffset: 0.5,
     insertFeedback: {
       proximityRadiusMultiplier: 1.25,
@@ -289,16 +280,6 @@ export function normalizeExperienceVrSettings(candidate) {
   }
 
   const candidateReliquary = candidate.reliquary ?? {};
-  const hasLegacyForwardOffset = Number.isFinite(candidateReliquary.forwardOffset);
-  const legacyForwardOffset = hasLegacyForwardOffset ? candidateReliquary.forwardOffset : 0;
-  const distanceBase = Number.isFinite(candidateReliquary.distanceFromPortal)
-    ? candidateReliquary.distanceFromPortal
-    : (hasLegacyForwardOffset ? 0.5 : defaults.reliquary.distanceFromPortal);
-  const distanceFromPortal = finiteNumber(
-    distanceBase + legacyForwardOffset,
-    defaults.reliquary.distanceFromPortal,
-    { min: 0, max: 5 }
-  );
   const legacyButtons = candidateReliquary.buttons ?? candidateReliquary.activateButton ?? {};
   const hasLegacyAngularPlacement = Number.isFinite(legacyButtons.placementRadius)
     || Number.isFinite(legacyButtons.placementAngleDegrees);
@@ -317,10 +298,15 @@ export function normalizeExperienceVrSettings(candidate) {
     referenceSpaceType: ['local-floor', 'local'].includes(candidate.referenceSpaceType)
       ? candidate.referenceSpaceType
       : defaults.referenceSpaceType,
-    worldScale: finiteNumber(candidate.worldScale, defaults.worldScale, { min: 0.01, max: 100 }),
-    spawn: {
-      position: normalizeVector(candidate.spawn?.position, defaults.spawn.position),
-      lookAt: normalizeVector(candidate.spawn?.lookAt, defaults.spawn.lookAt)
+    spatial: {
+      entryDirection: normalizeVector(candidate.spatial?.entryDirection, defaults.spatial.entryDirection),
+      playerStartRadius: finiteNumber(candidate.spatial?.playerStartRadius, defaults.spatial.playerStartRadius, { min: 1, max: 100 }),
+      monkeyStartRadius: finiteNumber(candidate.spatial?.monkeyStartRadius, defaults.spatial.monkeyStartRadius, { min: 1, max: 100 }),
+      monkeyFinal: normalizeVector(candidate.spatial?.monkeyFinal, defaults.spatial.monkeyFinal),
+      ringRadius: finiteNumber(candidate.spatial?.ringRadius, defaults.spatial.ringRadius, { min: 1, max: 50 }),
+      worldStableCenterY: finiteNumber(candidate.spatial?.worldStableCenterY, defaults.spatial.worldStableCenterY, { min: -10, max: 10 }),
+      thresholdOutsideDistance: finiteNumber(candidate.spatial?.thresholdOutsideDistance,
+        defaults.spatial.thresholdOutsideDistance, { min: 0.05, max: 10 })
     },
     renderer: {
       pixelRatioCap: finiteNumber(candidate.renderer?.pixelRatioCap, defaults.renderer.pixelRatioCap, { min: 0.5, max: 2 }),
@@ -332,9 +318,6 @@ export function normalizeExperienceVrSettings(candidate) {
       enabled: typeof candidate.furnace?.enabled === 'boolean'
         ? candidate.furnace.enabled
         : defaults.furnace.enabled,
-      placementMode: ['mirror-portal', 'configured'].includes(candidate.furnace?.placementMode)
-        ? candidate.furnace.placementMode
-        : defaults.furnace.placementMode,
       floorOffset: finiteNumber(candidate.furnace?.floorOffset, defaults.furnace.floorOffset, { min: -2, max: 2 }),
       position: normalizeVector(candidate.furnace?.position, defaults.furnace.position),
       rotationDegrees: normalizeVector(candidate.furnace?.rotationDegrees, defaults.furnace.rotationDegrees),
@@ -575,7 +558,6 @@ export function normalizeExperienceVrSettings(candidate) {
     },
     glyphRing: {
       enabled: typeof candidate.glyphRing?.enabled === 'boolean' ? candidate.glyphRing.enabled : defaults.glyphRing.enabled,
-      radiusMultiplier: finiteNumber(candidate.glyphRing?.radiusMultiplier, defaults.glyphRing.radiusMultiplier, { min: 0.25, max: 5 }),
       angularSpeed: finiteNumber(candidate.glyphRing?.angularSpeed, defaults.glyphRing.angularSpeed, { min: 0, max: 2 }),
       direction: candidate.glyphRing?.direction === -1 ? -1 : 1,
       entryAngleThreshold: finiteNumber(candidate.glyphRing?.entryAngleThreshold, defaults.glyphRing.entryAngleThreshold, { min: 0.01, max: Math.PI }),
@@ -586,13 +568,8 @@ export function normalizeExperienceVrSettings(candidate) {
       emergeDuration: finiteNumber(candidate.intro?.emergeDuration, defaults.intro.emergeDuration, { min: 0.1, max: 30 }),
       introRevealDuration: finiteNumber(candidate.intro?.introRevealDuration, defaults.intro.introRevealDuration, { min: 0.1, max: 30 }),
       postRevealSilenceDuration: finiteNumber(candidate.intro?.postRevealSilenceDuration, defaults.intro.postRevealSilenceDuration, { min: 0, max: 10 }),
-      initialHeadToMonkeyDistance: finiteNumber(candidate.intro?.initialHeadToMonkeyDistance, defaults.intro.initialHeadToMonkeyDistance, { min: 0.5, max: 5 }),
       insideSafeMargin: finiteNumber(candidate.intro?.insideSafeMargin, defaults.intro.insideSafeMargin, { min: 0.1, max: 2 }),
       glyphFreeExploreDuration: finiteNumber(candidate.intro?.glyphFreeExploreDuration, defaults.intro.glyphFreeExploreDuration, { min: 1, max: 300 }),
-      playerStartRadius: finiteNumber(candidate.intro?.playerStartRadius, defaults.intro.playerStartRadius, { min: 1, max: 100 }),
-      monkeyStartRadius: finiteNumber(candidate.intro?.monkeyStartRadius, defaults.intro.monkeyStartRadius, { min: 1, max: 100 }),
-      thresholdStopOutsideDistance: finiteNumber(candidate.intro?.thresholdStopOutsideDistance,
-        defaults.intro.thresholdStopOutsideDistance, { min: 0.05, max: 10 }),
       guideSpeed: finiteNumber(candidate.intro?.guideSpeed, defaults.intro.guideSpeed, { min: 0.1, max: 3 }),
       guideTurnDuration: finiteNumber(candidate.intro?.guideTurnDuration, defaults.intro.guideTurnDuration, { min: 0.1, max: 10 }),
       followGraceDistance: finiteNumber(candidate.intro?.followGraceDistance,
@@ -607,27 +584,12 @@ export function normalizeExperienceVrSettings(candidate) {
       questionGapDuration: finiteNumber(candidate.intro?.questionGapDuration,
         defaults.intro.questionGapDuration, { min: 0, max: 5 })
     },
-    entryTransition: {
-      enabled: typeof candidate.entryTransition?.enabled === 'boolean'
-        ? candidate.entryTransition.enabled
-        : defaults.entryTransition.enabled,
-      durationSeconds: finiteNumber(candidate.entryTransition?.durationSeconds, defaults.entryTransition.durationSeconds, { min: 0.1, max: 30 }),
-      targetRadiusFactor: finiteNumber(candidate.entryTransition?.targetRadiusFactor, defaults.entryTransition.targetRadiusFactor, { min: 0.2, max: 0.8 }),
-      target: {
-        x: finiteNumber(candidate.entryTransition?.target?.x, defaults.entryTransition.target.x),
-        z: finiteNumber(candidate.entryTransition?.target?.z, defaults.entryTransition.target.z)
-      },
-      easing: candidate.entryTransition?.easing === 'smoothstep'
-        ? candidate.entryTransition.easing
-        : defaults.entryTransition.easing
-    },
     portal: {
       enabled: typeof candidate.portal?.enabled === 'boolean' ? candidate.portal.enabled : defaults.portal.enabled,
       position: normalizeVector(candidate.portal?.position, defaults.portal.position),
+      rotationDegrees: normalizeVector(candidate.portal?.rotationDegrees, defaults.portal.rotationDegrees),
       maxWidth: finiteNumber(candidate.portal?.maxWidth, defaults.portal.maxWidth, { min: 0.5, max: 8 }),
       maxHeight: finiteNumber(candidate.portal?.maxHeight, defaults.portal.maxHeight, { min: 0.5, max: 8 }),
-      distanceFromAnchor: finiteNumber(candidate.portal?.distanceFromAnchor, defaults.portal.distanceFromAnchor, { min: 0.5, max: 5 }),
-      forwardBias: finiteNumber(candidate.portal?.forwardBias, defaults.portal.forwardBias, { min: -0.5, max: 1 }),
       floorOffset: finiteNumber(candidate.portal?.floorOffset, defaults.portal.floorOffset, { min: -1, max: 1 }),
       appearDuration: finiteNumber(candidate.portal?.appearDuration, defaults.portal.appearDuration, { min: 0.05, max: 3 }),
       appearStartScale: finiteNumber(candidate.portal?.appearStartScale, defaults.portal.appearStartScale, { min: 0.1, max: 1 }),
@@ -640,7 +602,8 @@ export function normalizeExperienceVrSettings(candidate) {
     },
     reliquary: {
       enabled: typeof candidateReliquary.enabled === 'boolean' ? candidateReliquary.enabled : defaults.reliquary.enabled,
-      distanceFromPortal,
+      position: normalizeVector(candidateReliquary.position, defaults.reliquary.position),
+      rotationDegrees: normalizeVector(candidateReliquary.rotationDegrees, defaults.reliquary.rotationDegrees),
       heightOffset: finiteNumber(candidateReliquary.heightOffset ?? candidateReliquary.floorOffset,
         defaults.reliquary.heightOffset, { min: -1, max: 2 }),
       insertFeedback: {

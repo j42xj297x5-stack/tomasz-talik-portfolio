@@ -41,10 +41,10 @@ function getCompanionVisibleBounds(model, target = new THREE.Box3()) {
   return target;
 }
 
-export function createVrCrystalReliquary({ scene, reliquaryModel, portalDisplay, spawnPosition, settings }) {
+export function createVrCrystalReliquary({ parent, reliquaryModel, settings }) {
   const object = new THREE.Group();
   object.name = 'VrCrystalReliquary';
-  scene.add(object);
+  parent.add(object);
   const modelRoot = new THREE.Group();
   modelRoot.name = 'VrCrystalReliquaryModelRoot';
   modelRoot.position.y = settings.heightOffset ?? 0.5;
@@ -71,7 +71,7 @@ export function createVrCrystalReliquary({ scene, reliquaryModel, portalDisplay,
   insertFeedback.name = 'VrReliquaryInsertFeedback';
   insertFeedback.visible = false;
   insertFeedback.userData.feedbackState = null;
-  scene.add(insertFeedback);
+  parent.add(insertFeedback);
   if (!model || !hasValidInsertZone || !hasValidAnchor) {
     console.warn('[Experience VR] Crystal reliquary model, insert zone, or anchor is missing or invalid. The portal crystal socket remains available when the insert zone cannot be used.');
   }
@@ -93,17 +93,13 @@ export function createVrCrystalReliquary({ scene, reliquaryModel, portalDisplay,
     localMatrix.decompose(runtimeCrystalAnchor.position, runtimeCrystalAnchor.quaternion, runtimeCrystalAnchor.scale);
   }
 
-  const portalPosition = new THREE.Vector3();
-  const configuredSpawn = new THREE.Vector3(spawnPosition?.x ?? 0, spawnPosition?.y ?? 0, spawnPosition?.z ?? 1);
   const portalForward = new THREE.Vector3();
   const portalLeft = new THREE.Vector3();
-  const towardSpawn = new THREE.Vector3();
   const portalQuaternion = new THREE.Quaternion();
   const inversePlacementQuaternion = new THREE.Quaternion();
   const buttonWorldOffset = new THREE.Vector3();
   const worldUp = new THREE.Vector3(0, 1, 0);
   const worldScale = new THREE.Vector3();
-  const desiredWorldPosition = new THREE.Vector3();
   const insertFeedbackWorldScale = new THREE.Vector3();
   const companions = new Map();
   let disposed = false;
@@ -125,20 +121,18 @@ export function createVrCrystalReliquary({ scene, reliquaryModel, portalDisplay,
       object.visible = false;
       return false;
     }
-    portalDisplay.object.updateWorldMatrix(true, false);
-    portalDisplay.object.getWorldPosition(portalPosition);
-    portalDisplay.object.getWorldQuaternion(portalQuaternion);
-    portalForward.set(0, 0, 1).applyQuaternion(portalQuaternion).setY(0);
-    towardSpawn.subVectors(configuredSpawn, portalPosition).setY(0);
-    if (portalForward.lengthSq() < 1e-8) portalForward.copy(towardSpawn);
-    if (portalForward.lengthSq() < 1e-8) portalForward.set(1, 0, 0).applyQuaternion(portalQuaternion).setY(0);
-    portalForward.normalize();
-    if (towardSpawn.lengthSq() > 1e-8 && portalForward.dot(towardSpawn) < 0) portalForward.negate();
+    const position = settings.position ?? { x: 0, y: 0, z: 0 };
+    const rotation = settings.rotationDegrees ?? { x: 0, y: 0, z: 0 };
+    object.position.set(position.x, position.y, position.z);
+    object.rotation.set(
+      THREE.MathUtils.degToRad(rotation.x),
+      THREE.MathUtils.degToRad(rotation.y),
+      THREE.MathUtils.degToRad(rotation.z)
+    );
+    object.getWorldQuaternion(portalQuaternion);
+    portalForward.set(0, 0, 1).applyQuaternion(portalQuaternion).setY(0).normalize();
     portalLeft.crossVectors(portalForward, worldUp).normalize();
-    desiredWorldPosition.copy(portalPosition).addScaledVector(portalForward, settings.distanceFromPortal);
-    desiredWorldPosition.y = 0;
     modelRoot.position.y = settings.heightOffset ?? 0.5;
-    applyWorldTransform(object, desiredWorldPosition, portalQuaternion);
     object.visible = true;
     object.updateWorldMatrix(true, true);
     updateButtonPlacement();

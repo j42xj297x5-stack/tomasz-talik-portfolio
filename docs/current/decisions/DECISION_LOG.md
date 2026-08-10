@@ -75,15 +75,15 @@ Status: current binding decisions organized by implementation status, not patch 
 7. Retargeting does not zero velocity. Unequip freezes COMMAND but CURRENT continues driving. LOCK requires small error and small angular speed, then performs exact final settle.
 8. The drive is intentionally a heavy angular controller, not a full rigid-body physics simulation.
 
-## Approved future gameplay direction — not implemented
-
-### Monkey seating asset contract
+## Monkey seating asset contract — implemented
 
 1. `public/glb/monkey.glb` (character node `monkey`) and `public/glb/monkey_stone.glb` (separate seat/stone) are distinct **PRESENT** physical assets.
 2. The approved internal authoring contract is `MONKEY_ANCHOR → monkey` for the character and `MONKEY_STONE_ROOT → <stone mesh> + MONKEY_SEAT_ANCHOR` for the stone. `MONKEY_ANCHOR` is the character-local seated reference, `MONKEY_STONE_ROOT` the stone-local lower/root reference and `MONKEY_SEAT_ANCHOR` the stone-local seating point.
-3. Future integration will use these internal references instead of magic offsets. The matching algorithm and technical runtime owner remain a separate architectural decision.
-4. This contract does not change the scene-layout `ANCHOR_MONKEY`, `monkeyMotionRoot`, runtime hierarchy, P0 path or existing canonical Monkey position; it does not imply automatic parenting in either direction or current preload/use of the stone.
-5. Export verification currently conflicts with the approved character contract: `monkey_stone.glb` exports its two anchors, while HEAD `monkey.glb` exposes `monkey` without `MONKEY_ANCHOR`. Resolve the artifact before integration; do not invent an offset or alter the scene anchor as a workaround.
+3. Runtime preloads both assets. `VrMonkeyMotionRoot` owns the actor, while `VrMonkeyStoneRoot` is a stationary platform fixture.
+4. Normal composition aligns the complete authored matrices so `MONKEY_ANCHOR` and `MONKEY_SEAT_ANCHOR` coincide at the canonical final Monkey pose `(0,0,0)`.
+5. These internal references never define the world center, P0 start or gameplay placement and require no magic offset.
+
+## Approved future gameplay direction — not implemented
 
 1. **B will select only Astro bands already unlocked by progression. B is currently not implemented.**
 2. Planned bands remain RED/YELLOW/GREEN/BLUE/ULTRAVIOLET, but no future band implies an unrestricted global scene raycast.

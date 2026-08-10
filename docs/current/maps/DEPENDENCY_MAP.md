@@ -21,12 +21,12 @@ Experience 3D and VR have separate owners. No shared-world-factory migration is 
 ```text
 experienceVr
 ├─ settings + AssetManager → preloaded runtime GLBs
-├─ worldRoot
-│  ├─ world-stable glyph ring / shell field / cosmos
-│  └─ VrTiltableFloorRoot
+├─ ExperienceVrRoot
+│  ├─ WorldStableRoot → glyph ring / shell field / cosmos
+│  └─ VrTiltableFloorRoot at canonical (0,0,0)
 │     ├─ progress floor sectors / rings
-│     ├─ monkeyAnchor
-│     ├─ VrPlatformFixturesRoot → portal / reliquary / furnace / furnace panel
+│     ├─ VrMonkeyMotionRoot → Monkey visual / Guide
+│     ├─ VrPlatformFixturesRoot → stationary stone / portal / reliquary / furnace / furnace panel
 │     └─ VrFloorPassengerRoot → playerRig → camera / controllers / grips
 ├─ local-plane locomotion → VrFloorPassengerRoot/playerRig
 ├─ glyph interaction → crystal collection

@@ -1,6 +1,4 @@
 import * as THREE from '../vendor/three.js';
-import { applyWorldTransform } from './applyWorldTransform.js';
-import { resolveVrPlatformFixtureWorldPosition } from './placement/vrPlatformFixturePlacement.js';
 
 export function calculatePortalScale(size, maxWidth, maxHeight) {
   if (size.x <= 0 || size.y <= 0) return 1;
@@ -20,12 +18,12 @@ export function findPortalCanvasSurface(model) {
   return candidate;
 }
 
-export function createVrPortalDisplay({ scene, platformOrigin, portalModel, spawnPosition, settings }) {
+export function createVrPortalDisplay({ parent, portalModel, settings }) {
   const socketSettings = settings.socket ?? { xFactor: 0, yFactor: -0.34, zFactor: 0.58, insertRadius: 0.28 };
   const object = new THREE.Group();
   object.name = 'VrPortalDisplay';
   object.visible = false;
-  scene.add(object);
+  parent.add(object);
   const model = portalModel?.clone(true) ?? null;
   const canvasSurface = findPortalCanvasSurface(model);
   if (model && !canvasSurface) {
@@ -43,7 +41,7 @@ export function createVrPortalDisplay({ scene, platformOrigin, portalModel, spaw
     model.updateMatrixWorld(true);
     const scaledBounds = new THREE.Box3().setFromObject(model);
     const center = scaledBounds.getCenter(new THREE.Vector3());
-    model.position.set(-center.x, -center.y, -center.z);
+    model.position.set(-center.x, settings.floorOffset - scaledBounds.min.y, -center.z);
     object.add(model);
     model.updateMatrixWorld(true);
     const localBounds = new THREE.Box3().setFromObject(model);
@@ -56,25 +54,17 @@ export function createVrPortalDisplay({ scene, platformOrigin, portalModel, spaw
     );
   }
 
-  const target = new THREE.Vector3();
-  const desiredWorldPosition = new THREE.Vector3();
-  const desiredWorldQuaternion = new THREE.Quaternion();
-  const placementProbe = new THREE.Object3D();
-  const configuredSpawn = new THREE.Vector3(spawnPosition?.x ?? 0, spawnPosition?.y ?? 0, spawnPosition?.z ?? 1);
-  const localBounds = model ? new THREE.Box3().setFromObject(model) : null;
   let disposed = false;
 
   function place() {
     if (disposed || !settings.enabled || !model) return false;
-    resolveVrPlatformFixtureWorldPosition({
-      platformOrigin, fixturePosition: settings.position, target: desiredWorldPosition
-    });
-    desiredWorldPosition.y = settings.floorOffset - localBounds.min.y;
-    target.set(configuredSpawn.x, desiredWorldPosition.y, configuredSpawn.z);
-    placementProbe.position.copy(desiredWorldPosition);
-    placementProbe.lookAt(target);
-    desiredWorldQuaternion.copy(placementProbe.quaternion);
-    applyWorldTransform(object, desiredWorldPosition, desiredWorldQuaternion);
+    object.position.set(settings.position.x, settings.position.y, settings.position.z);
+    const rotation = settings.rotationDegrees ?? { x: 0, y: 0, z: 0 };
+    object.rotation.set(
+      THREE.MathUtils.degToRad(rotation.x),
+      THREE.MathUtils.degToRad(rotation.y),
+      THREE.MathUtils.degToRad(rotation.z)
+    );
     object.visible = true;
     return true;
   }
