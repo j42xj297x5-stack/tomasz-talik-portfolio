@@ -613,13 +613,12 @@ const introEntryDirection = new THREE.Vector3(settings.spawn.position.x, 0, sett
 if (introEntryDirection.lengthSq() < 1e-6) introEntryDirection.set(0, 0, 1);
 introEntryDirection.normalize();
 introSequence = createVrIntroSequence({
-  monkeyGuide, monkeyMotionRoot, playerRig, glyphRing, progressFloor, platformFixturesRoot, locomotion,
+  monkeyGuide, monkeyMotionRoot, monkeyVisualRoot, platformOrigin, playerRig, glyphRing, progressFloor,
+  platformFixturesRoot, locomotion, setMonkeyEmergeAlpha: monkeyActor.setEmergeAlpha,
   ringRadius: glyphOrbit.effectiveRadius, entryDirection: introEntryDirection,
   settings: { ...settings.intro, locale: language }, bypass: introQaBypass,
   getHeadPosition: () => {
-    const position = renderer.xr.getCamera(camera).getWorldPosition(new THREE.Vector3());
-    progressFloor.object.worldToLocal(position);
-    return position;
+    return renderer.xr.getCamera(camera).getWorldPosition(new THREE.Vector3());
   },
   onEndSession: () => { void activeSession?.end(); }
 });
@@ -847,6 +846,7 @@ window.addEventListener('pagehide', () => {
   astroFurnaceOptionInteraction.dispose();
   playerGuidePanel.dispose();
   monkeyGuide.dispose();
+  monkeyActor.disposeEmergenceMaterials();
   furnacePanel.dispose();
   furnaceProgressionController.dispose();
   astroFurnace.dispose();

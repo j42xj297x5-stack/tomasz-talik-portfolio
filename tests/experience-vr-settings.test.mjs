@@ -14,6 +14,7 @@ assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.controllers.rayDiameter, 0.01);
 assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.playerGuidePanel.position.x, 0.29);
 assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.playerGuidePanel.rotationDegrees.x, -52);
 assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.intro.playerStartRadius, 20);
+assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.intro.emergeDuration, 12);
 assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.intro.monkeyStartRadius, 18);
 assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.intro.thresholdStopOutsideDistance, 1);
 assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.intro.guideTurnDuration, 1);

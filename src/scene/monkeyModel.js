@@ -43,7 +43,34 @@ function createMonkeyActor({ scene, fallbackObject, model }) {
   }
   visualRoot.add(model);
 
-  return { motionRoot, visualRoot, model };
+  // The runtime actor owns these clones. Fading must never mutate a material
+  // retained by AssetManager (or by another GLTF clone).
+  const emergenceMaterials = [];
+  visualRoot.traverse((object) => {
+    if (!object.isMesh || !object.material) return;
+    const sourceMaterials = Array.isArray(object.material) ? object.material : [object.material];
+    const runtimeMaterials = sourceMaterials.map((source) => {
+      const material = source.clone();
+      emergenceMaterials.push({ material, baseOpacity: material.opacity,
+        baseTransparent: material.transparent, baseDepthWrite: material.depthWrite });
+      return material;
+    });
+    object.material = Array.isArray(object.material) ? runtimeMaterials : runtimeMaterials[0];
+  });
+
+  let emergeAlpha = 1;
+  function setEmergeAlpha(value) {
+    emergeAlpha = THREE.MathUtils.clamp(Number.isFinite(value) ? value : 1, 0, 1);
+    emergenceMaterials.forEach(({ material, baseOpacity, baseTransparent, baseDepthWrite }) => {
+      material.opacity = baseOpacity * emergeAlpha;
+      material.transparent = emergeAlpha < 1 || baseTransparent;
+      material.depthWrite = emergeAlpha < 1 ? false : baseDepthWrite;
+      material.needsUpdate = true;
+    });
+  }
+
+  return { motionRoot, visualRoot, model, setEmergeAlpha, getEmergeAlpha: () => emergeAlpha,
+    disposeEmergenceMaterials() { emergenceMaterials.forEach(({ material }) => material.dispose()); } };
 }
 
 export async function loadMonkeyModel({ scene, fallbackObject, assetManager = null }) {

@@ -128,6 +128,11 @@ guide.showMessage('');
 guide.update(0.016);
 assert.ok(fixture.getRayDistance() > 0 && fixture.getRayDistance() <= 2.3, 'monkey hit reports ordinary ray distance');
 assert.equal(guide.halo.visible, true);
+guide.setInteractionEnabled(false); guide.update(0.016);
+assert.equal(guide.halo.visible, false); assert.equal(guide.hasCurrentHit(record), false);
+record.controller.dispatchEvent({ type: 'selectstart' }); assert.equal(guide.isOpen(), false);
+assert.equal(guide.isInteractionEnabled(), false);
+guide.setInteractionEnabled(true); guide.update(0.016); assert.equal(guide.isInteractionEnabled(), true);
 let overridePresses = 0; let overrideChoice = null; let overrideHovers = 0;
 guide.setDialogueOverride({ options: [{ id: 'intro-go', label: 'GO' }],
   onMonkeyHover: () => { overrideHovers += 1; }, onMonkeyPress: () => { overridePresses += 1; },
