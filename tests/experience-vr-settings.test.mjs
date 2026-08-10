@@ -54,7 +54,7 @@ const publicOverrides = JSON.parse(await readFile(new URL('../public/data/experi
 const activeSettings = normalizeExperienceVrSettings(publicOverrides);
 assert.deepEqual(activeSettings.portal.position, { x: -2.910428, y: 0, z: -0.727607 });
 assert.deepEqual(activeSettings.furnace.position, { x: 2.910428, y: 0, z: -0.727607 });
-assert.equal('position' in publicOverrides.reliquary, false, 'public reliquary override does not restore legacy absolute placement');
+assert.equal('position' in (publicOverrides.reliquary ?? {}), false, 'public reliquary override does not restore legacy absolute placement');
 assert.equal(activeSettings.reliquary.distanceFromPortal, 1.5);
 assert.deepEqual(normalizeExperienceVrSettings({ schemaVersion: 2 }), DEFAULT_EXPERIENCE_VR_SETTINGS);
 
