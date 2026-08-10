@@ -12,7 +12,9 @@ function createPlaceholder(scene) {
 const scene = new THREE.Scene();
 const placeholder = createPlaceholder(scene);
 const sourceModel = new THREE.Group();
-const mesh = new THREE.Mesh(new THREE.BoxGeometry(2, 4, 1), new THREE.MeshBasicMaterial());
+const sharedMaterial = new THREE.MeshBasicMaterial();
+const mesh = new THREE.Mesh(new THREE.BoxGeometry(2, 4, 1), sharedMaterial);
+mesh.material.opacity = 0.7; mesh.material.transparent = false; mesh.material.depthWrite = true;
 mesh.position.set(5, 2, -1);
 sourceModel.add(mesh);
 const actor = await loadMonkeyModel({ scene, fallbackObject: placeholder,
@@ -26,6 +28,12 @@ assert.equal(actor.model.parent, actor.visualRoot);
 assert.ok(actor.visualRoot.getObjectById(actor.model.id), 'model is a descendant of the visual root');
 assert.deepEqual(actor.motionRoot.scale.toArray(), [1, 1, 1]);
 assert.deepEqual(actor.motionRoot.position.toArray(), [2, 0.5, -3], 'bbox centering does not enter the motion root');
+assert.notEqual(mesh.material, sharedMaterial, 'runtime material is isolated from the supplied asset material');
+actor.setEmergeAlpha(0); assert.equal(mesh.material.opacity, 0); assert.equal(mesh.material.transparent, true);
+assert.equal(mesh.material.depthWrite, false);
+actor.setEmergeAlpha(0.5); assert.ok(Math.abs(mesh.material.opacity - 0.35) < 1e-12);
+actor.setEmergeAlpha(1); assert.equal(mesh.material.opacity, 0.7); assert.equal(mesh.material.transparent, false);
+assert.equal(mesh.material.depthWrite, true);
 
 scene.updateMatrixWorld(true);
 const beforeWorld = actor.model.getWorldPosition(new THREE.Vector3());

@@ -24,8 +24,11 @@ function fixture({ bypass = false } = {}) {
   const platformFixturesRoot = new THREE.Group();
   const sector = new THREE.Group(); sector.userData.branchId = 'creative';
   const progressFloor = { object: new THREE.Group() }; progressFloor.object.add(sector);
+  const platformOrigin = new THREE.Group(); platformOrigin.name = 'VrPlatformOrigin'; progressFloor.object.add(platformOrigin);
   let override = null; let message = ''; let ended = 0; let radius = 4; const messages = [];
-  const monkeyGuide = { showMessage(value) { message = value; messages.push(value); }, setDialogueOverride(value) { override = value; } };
+  let interactionEnabled = true; let emergeAlpha = 1;
+  const monkeyGuide = { showMessage(value) { message = value; messages.push(value); }, setDialogueOverride(value) { override = value; },
+    setInteractionEnabled(value) { interactionEnabled = value; } };
   const radiusCalls = [];
   const locomotion = { reset() { radius = 4; radiusCalls.push(['reset', radius]); }, setWalkRadius(value, options) {
     radius = value; radiusCalls.push(['set', value, options]);
@@ -33,26 +36,34 @@ function fixture({ bypass = false } = {}) {
   const settings = { enabled: true, locale: 'en', playerStartRadius: 20, monkeyStartRadius: 18,
     thresholdStopOutsideDistance: 1, guideSpeed: 1, guideTurnDuration: 1, pauseDistance: 3.2,
     resumeDistance: 2.4, revealProgress: 0.72, messageDisplayDuration: 2,
-    messageGapDuration: 0.5, questionGapDuration: 2 };
+    messageGapDuration: 0.5, questionGapDuration: 2, emergeDuration: 12 };
   const sequence = createVrIntroSequence({ monkeyGuide, monkeyMotionRoot, playerRig, glyphRing, progressFloor,
-    platformFixturesRoot, locomotion, ringRadius: 4, entryDirection: new THREE.Vector3(0, 0, 1), settings,
+    platformOrigin, platformFixturesRoot, locomotion, ringRadius: 4, entryDirection: new THREE.Vector3(0, 0, 1), settings,
+    setMonkeyEmergeAlpha(value) { emergeAlpha = value; },
     bypass, onEndSession: () => { ended += 1; } });
   return { sequence, monkeyMotionRoot, visualRoot, playerRig, glyphRing, platformFixturesRoot, sector,
     canonicalMonkeyPosition, canonicalMonkeyQuaternion,
     canonicalVisualPosition, canonicalVisualScale,
     getOverride: () => override, getMessage: () => message, getMessages: () => messages, getRadius: () => radius,
-    getRadiusCalls: () => radiusCalls, getEnded: () => ended };
+    getRadiusCalls: () => radiusCalls, getEnded: () => ended, getInteractionEnabled: () => interactionEnabled,
+    getEmergeAlpha: () => emergeAlpha };
 }
 
 const intro = fixture();
-assert.equal(intro.sequence.getState(), VR_INTRO_STATE.VOID);
+assert.equal(intro.sequence.getState(), VR_INTRO_STATE.EMERGING);
 assert.equal(intro.sector.visible, false); assert.equal(intro.platformFixturesRoot.visible, false);
 assert.equal(intro.glyphRing.visible, false);
 assert.equal(Math.hypot(intro.playerRig.position.x, intro.playerRig.position.z), 20, 'player uses an absolute intro radius');
-assert.ok(intro.monkeyMotionRoot.position.distanceTo(intro.canonicalMonkeyPosition.clone().add(new THREE.Vector3(0, 0, 18))) < 1e-9,
-  'canonical model/pivot offset is preserved beneath the logical 18 m radius');
-assert.equal(intro.playerRig.position.z - (intro.monkeyMotionRoot.position.z - intro.canonicalMonkeyPosition.z), 2,
-  'player and monkey narrative radii start 2 m apart');
+assert.equal(intro.sequence.getDebugSnapshot().monkeyRadius, 18, 'canonical offset does not affect the 18 m start radius');
+assert.equal(intro.playerRig.position.distanceTo(intro.monkeyMotionRoot.position), 2,
+  'player and monkey logical roots start 2 m apart');
+assert.equal(intro.getMessage(), '', 'opening is absent during emergence');
+assert.equal(intro.getInteractionEnabled(), false);
+assert.equal(intro.getEmergeAlpha(), 0);
+intro.sequence.update(6); assert.equal(intro.sequence.getState(), VR_INTRO_STATE.EMERGING);
+assert.ok(intro.getEmergeAlpha() > 0 && intro.getEmergeAlpha() < 1); assert.equal(intro.getMessage(), '');
+intro.sequence.update(6); assert.equal(intro.getEmergeAlpha(), 1); assert.equal(intro.getInteractionEnabled(), true);
+assert.equal(intro.getMessage(), VR_INTRO_COPY.en.opening[0]);
 assert.equal(intro.getRadius(), Infinity, 'normal P0 unlocks locomotion before its first frame');
 intro.sequence.reset();
 assert.deepEqual(intro.visualRoot.position.toArray(), intro.canonicalVisualPosition.toArray(),
@@ -61,14 +72,17 @@ assert.deepEqual(intro.visualRoot.scale.toArray(), intro.canonicalVisualScale.to
   'reset leaves the visual model scale untouched');
 assert.equal(Math.hypot(intro.playerRig.position.x, intro.playerRig.position.z), 20, 'intro spawn does not accumulate');
 assert.equal(intro.getRadius(), Infinity, 'reset restores the unlocked intro radius');
+assert.equal(intro.sequence.getState(), VR_INTRO_STATE.EMERGING); assert.equal(intro.getEmergeAlpha(), 0);
+intro.sequence.update(12);
 intro.sequence.update(1.99); assert.equal(intro.getMessage(), VR_INTRO_COPY.en.opening[0], 'message remains visible for 2 s');
 intro.sequence.update(0.01); assert.equal(intro.getMessage(), '', 'message panel is empty during the gap');
 intro.sequence.update(0.49); assert.equal(intro.getMessage(), '', 'ordinary gap lasts 0.5 s');
 intro.sequence.update(0.01); assert.equal(intro.getMessage(), VR_INTRO_COPY.en.opening[1]);
 intro.sequence.reset();
-assert.equal(intro.getMessage(), VR_INTRO_COPY.en.opening[0], 'reset during DISPLAY deterministically restores the first line');
+assert.equal(intro.getMessage(), '', 'reset during DISPLAY returns to a message-free emergence');
+intro.sequence.update(12); assert.equal(intro.getMessage(), VR_INTRO_COPY.en.opening[0]);
 intro.sequence.update(2); assert.equal(intro.getMessage(), ''); intro.sequence.reset();
-assert.equal(intro.getMessage(), VR_INTRO_COPY.en.opening[0], 'reset during GAP removes the transitional timer');
+assert.equal(intro.getMessage(), '', 'reset during GAP removes the transitional timer'); intro.sequence.update(12);
 for (let i = 0; i < 5; i += 1) { intro.sequence.update(2); intro.sequence.update(0.5); }
 assert.equal(intro.sequence.getState(), VR_INTRO_STATE.WAIT_HOVER);
 intro.getOverride().onMonkeyHover(); assert.equal(intro.sequence.getState(), VR_INTRO_STATE.WAIT_TRIGGER);
@@ -103,8 +117,8 @@ for (let i = 0; i < 20 && intro.sequence.getState() === VR_INTRO_STATE.FOLLOWING
   intro.sequence.update(1);
 }
 assert.equal(intro.sequence.getState(), VR_INTRO_STATE.THRESHOLD); assert.equal(intro.glyphRing.visible, true);
-assert.ok(intro.monkeyMotionRoot.position.distanceTo(intro.canonicalMonkeyPosition.clone().add(new THREE.Vector3(0, 0, 5))) < 1e-6,
-  'threshold is based on narrative radius, independently of root offset');
+assert.ok(intro.monkeyMotionRoot.position.distanceTo(new THREE.Vector3(0, 0, 5)) < 1e-6,
+  'threshold is based on PlatformOrigin, independently of canonical root offset');
 intro.sequence.update(2); intro.sequence.update(0.5); intro.sequence.update(2); intro.sequence.update(0.5);
 intro.sequence.update(2); intro.sequence.update(1.99);
 assert.equal(intro.getMessage(), '', 'threshold sequence uses the long pre-question gap');
@@ -123,13 +137,14 @@ assert.ok(intro.monkeyMotionRoot.position.distanceTo(intro.canonicalMonkeyPositi
 for (let i = 0; i < 100 && intro.monkeyMotionRoot.position.distanceTo(intro.canonicalMonkeyPosition) > 1e-4; i += 1) intro.sequence.update(0.1);
 assert.ok(intro.monkeyMotionRoot.position.distanceTo(intro.canonicalMonkeyPosition) < 1e-6, 'monkey walks to its canonical position');
 assert.ok(intro.monkeyMotionRoot.quaternion.angleTo(intro.canonicalMonkeyQuaternion) < 1e-6, 'arrival restores canonical orientation');
-intro.sequence.reset(); assert.equal(intro.sequence.getState(), VR_INTRO_STATE.VOID, 'session reset is deterministic');
+intro.sequence.reset(); assert.equal(intro.sequence.getState(), VR_INTRO_STATE.EMERGING, 'session reset is deterministic');
 assert.ok(intro.monkeyMotionRoot.quaternion.angleTo(intro.canonicalMonkeyQuaternion) < 1e-6, 'reset restores canonical orientation');
 
 const refusal = fixture(); refusal.sequence.chooseInvitation('no');
 for (let i = 0; i < 2; i += 1) { refusal.sequence.update(2); refusal.sequence.update(0.5); }
 assert.equal(refusal.getEnded(), 1);
 const bypassed = fixture({ bypass: true }); assert.equal(bypassed.sequence.getState(), VR_INTRO_STATE.BYPASSED);
+assert.equal(bypassed.getEmergeAlpha(), 1); assert.equal(bypassed.getInteractionEnabled(), true);
 assert.equal(bypassed.getRadius(), 4, 'QA bypass keeps the floor walk radius');
 assert.equal(bypassed.sector.visible, true); assert.equal(bypassed.platformFixturesRoot.visible, true);
 console.log('VR intro sequence assertions passed');

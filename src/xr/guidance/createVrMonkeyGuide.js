@@ -177,6 +177,7 @@ export function createVrMonkeyGuide({
   let historyPulseRedrawElapsed = 0;
   let dialogueOverride = null;
   let monkeyWasHovered = false;
+  let interactionEnabled = true;
   const knownActivatedPageIds = new Set(progressionController.getActivatedPageIds());
   const unreadPageIds = new Set();
   const pagesById = new Map(experienceVrPages.map((page) => [page.id, page]));
@@ -432,7 +433,7 @@ export function createVrMonkeyGuide({
     let monkeyHovered = false;
     controllers.forEach((record) => {
       let hit = null;
-      if (settings.enabled && isOrdinaryRayAvailable(record)) {
+      if (interactionEnabled && settings.enabled && isOrdinaryRayAvailable(record)) {
         record.controller.updateWorldMatrix(true, false);
         record.controller.getWorldPosition(origin);
         record.controller.getWorldQuaternion(quaternion);
@@ -467,6 +468,7 @@ export function createVrMonkeyGuide({
   }
 
   function press(record) {
+    if (!interactionEnabled) return false;
     const hit = hits.get(record);
     if (!hit) return false;
     if (hit.kind === 'monkey') {
@@ -548,6 +550,15 @@ export function createVrMonkeyGuide({
     getScreen: () => screen, getHistoryEntries: historyEntries, getSelectedPageId: () => selectedPageId,
     getHistoryPage: () => historyPage, getCardPage: () => cardPage, getCardPageCount: () => cardPages().length,
     getUnreadPageIds: () => [...unreadPageIds],
+    setInteractionEnabled(enabled) {
+      interactionEnabled = Boolean(enabled);
+      if (!interactionEnabled) {
+        setOpen(false, { notify: false }); clearAttention(); showMessage('');
+        monkeyWasHovered = false; hoveredOption = null;
+        hits.forEach((_, record) => hits.set(record, null)); halo.setVisible(false);
+      }
+    },
+    isInteractionEnabled: () => interactionEnabled,
     setDialogueOverride(override) {
       dialogueOverride = override || null;
       open = Boolean(dialogueOverride?.options?.length);
