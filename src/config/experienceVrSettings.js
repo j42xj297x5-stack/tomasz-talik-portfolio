@@ -1,7 +1,5 @@
 import { publicPath } from '../utils/publicPath.js';
 
-const THREE_MATH_DEG_TO_RAD = Math.PI / 180;
-
 export const EXPERIENCE_VR_SETTINGS_SCHEMA_VERSION = 1;
 
 export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
@@ -279,11 +277,6 @@ export function normalizeExperienceVrSettings(candidate) {
   }
 
   const candidateReliquary = candidate.reliquary ?? {};
-  const legacyButtons = candidateReliquary.buttons ?? candidateReliquary.activateButton ?? {};
-  const hasLegacyAngularPlacement = Number.isFinite(legacyButtons.placementRadius)
-    || Number.isFinite(legacyButtons.placementAngleDegrees);
-  const legacyRadius = finiteNumber(legacyButtons.placementRadius, defaults.reliquary.buttons.forwardDistance, { min: 0, max: 3 });
-  const legacyAngle = THREE_MATH_DEG_TO_RAD * finiteNumber(legacyButtons.placementAngleDegrees, 0, { min: 0, max: 89 });
   const processCandidate = candidate.furnace?.process ?? {};
   let spinupEnd = finiteNumber(processCandidate.spinupEnd, defaults.furnace.process.spinupEnd, { min: 0, max: 1 });
   let steadyEnd = finiteNumber(processCandidate.steadyEnd, defaults.furnace.process.steadyEnd, { min: 0, max: 1 });
@@ -623,12 +616,10 @@ export function normalizeExperienceVrSettings(candidate) {
       },
       buttons: {
         scale: finiteNumber(candidateReliquary.buttons?.scale, defaults.reliquary.buttons.scale, { min: 0.05, max: 1 }),
-        forwardDistance: finiteNumber(candidateReliquary.buttons?.forwardDistance
-          ?? (hasLegacyAngularPlacement ? Math.cos(legacyAngle) * legacyRadius : undefined),
-        defaults.reliquary.buttons.forwardDistance, { min: 0, max: 3 }),
-        lateralOffset: finiteNumber(candidateReliquary.buttons?.lateralOffset
-          ?? (hasLegacyAngularPlacement ? Math.sin(legacyAngle) * legacyRadius : undefined),
-        defaults.reliquary.buttons.lateralOffset, { min: 0, max: 2 }),
+        forwardDistance: finiteNumber(candidateReliquary.buttons?.forwardDistance,
+          defaults.reliquary.buttons.forwardDistance, { min: 0, max: 3 }),
+        lateralOffset: finiteNumber(candidateReliquary.buttons?.lateralOffset,
+          defaults.reliquary.buttons.lateralOffset, { min: 0, max: 2 }),
         verticalOffset: finiteNumber(candidateReliquary.buttons?.verticalOffset
           ?? candidateReliquary.activateButton?.verticalOffset, defaults.reliquary.buttons.verticalOffset, { min: -1, max: 1 })
       },
