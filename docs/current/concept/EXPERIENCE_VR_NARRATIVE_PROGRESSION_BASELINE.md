@@ -1,6 +1,6 @@
 # Experience VR — Narrative & Progression Baseline
 
-Status: canonical entrypoint for the next narrative and gameplay-progression design stage. Runtime detail remains in [`VR_RUNTIME_MODEL.md`](../technical/VR_RUNTIME_MODEL.md).
+Status: canonical entrypoint synchronized with HEAD on 2026-08-10 for the next narrative and gameplay-progression design stage. Runtime detail remains in [`VR_RUNTIME_MODEL.md`](../technical/VR_RUNTIME_MODEL.md).
 
 ## Cel dokumentu
 
@@ -27,6 +27,12 @@ wejście → duże glify → kryształy → relikwiarz / odkryte karty
 ```
 
 To jest kolejność mechaniczna, nie fabularna. Runtime nie definiuje jeszcze narracyjnych przejść pomiędzy tymi etapami.
+
+## Zaimplementowane intro P0
+
+HEAD zawiera już ograniczoną, autorską sekwencję wejścia P0; nie wolno jej cofać do wcześniejszego modelu ani opisywać całego wejścia jako niezaprojektowanego. Po kalibracji XR następują radialne odsłonięcie mgły i cisza, onboarding panelu Y/sekcji sterowania, wskazanie Małpy i trigger, zaproszenie, `FOLLOWING`, wybór na progu, fizyczne wejście gracza do kręgu, `MONKEY_SETTLING`, a następnie `GLYPH_FREE_EXPLORE` z opóźnioną podpowiedzią attention przy braku sukcesu.
+
+Jest to obecna mechanika i copy P0, nie kompletna narracja całego doświadczenia. Ruch wykorzystuje istniejący `monkeyMotionRoot`, wraca do kanonicznego transformu nadanego przez obecny layout i nie redefiniuje `ANCHOR_MONKEY`.
 
 ## Małpa — dostępne kanały komunikacji
 
@@ -59,7 +65,7 @@ Zakres `UTWÓRZ`, mechaniki konstrukcji, panelowej transformacji i fizycznej mat
 
 Poniższe obszary są **NIEZAPROJEKTOWANE / DO DECYZJI** i ten dokument ich nie rozstrzyga:
 
-- narracja wejścia;
+- narracja wejścia wykraczająca poza zaimplementowane intro P0;
 - komunikaty Małpy pomiędzy etapami;
 - pomoc przy utknięciu;
 - dramaturgia odkrywania urządzeń;
@@ -71,6 +77,9 @@ Poniższe obszary są **NIEZAPROJEKTOWANE / DO DECYZJI** i ten dokument ich nie 
 - dalsze zdolności Astro.
 
 ## Twarde granice
+
+- `ANCHOR_MONKEY` pozostaje istniejącą kotwicą scene/layout, a `monkeyMotionRoot` właścicielem ruchu intro. Przygotowane punkty wewnątrz assetów — postaciowy `MONKEY_ANCHOR` oraz kamienne `MONKEY_STONE_ROOT` / `MONKEY_SEAT_ANCHOR` — należą do innego poziomu semantycznego i nie mogą zastępować kotwicy layoutu.
+- Osobne assety `monkey.glb` i `monkey_stone.glb` oraz ich zatwierdzony kontrakt kotwic przygotowują następny etap osadzenia Małpy na kamieniu bez magicznych offsetów. Runtime nie integruje jeszcze kamienia, nie preloaduje go, nie parentuje assetów i nie rozstrzyga algorytmu dopasowania. W HEAD kamień eksportuje oba punkty; eksport Małpy nadal nie pokazuje zadeklarowanego `MONKEY_ANCHOR`, więc ten konflikt artefaktu musi zostać wyjaśniony przed integracją, bez obchodzenia go zmianą `ANCHOR_MONKEY`.
 
 - `VrProgressionController` jest jedynym właścicielem odkrytych kart i ukończenia tierów; narracja może ten stan odczytać, ale nie może go zastępować ani commitować bokiem.
 - `VrAstroFurnaceProgressionController` jest właścicielem sześciu slotów materiałowych; produkcja Kuli ma odrębny stan `LOCKED → READY → BUILDING → AVAILABLE → EARNED`.

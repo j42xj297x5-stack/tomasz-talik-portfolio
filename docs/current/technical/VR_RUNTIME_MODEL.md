@@ -1,6 +1,6 @@
 # Experience VR Runtime Model
 
-Status: canonical description of the implemented runtime synchronized on 2026-08-09. Approved future gameplay is documented in the [gameplay roadmap](../concept/EXPERIENCE_VR_GAMEPLAY_ROADMAP.md).
+Status: canonical description of the implemented runtime synchronized on 2026-08-10. Approved future gameplay is documented in the [gameplay roadmap](../concept/EXPERIENCE_VR_GAMEPLAY_ROADMAP.md).
 
 ## Runtime boundary and lifecycle
 
@@ -92,6 +92,12 @@ A placed shell retains `attractorTarget=false`, so Astro cannot acquire it again
 
 Two **IMPLEMENTED** interfaces are distinct. The left-grip player guide opens with Y, presents the current-task and controller-reference sections, uses the left stick for menu navigation and X for selection, and temporarily blocks left-tool toggling while open. It is a player reference panel, not a narrative state owner.
 
+### Intro P0
+
+The rebuilt P0 intro is **IMPLEMENTED**. After XR head calibration it runs a radial fog reveal and a short post-reveal silence, then onboards the player through opening the Y panel, visiting its controls detail, closing it, pointing at the Monkey and using trigger. The invitation can enter `FOLLOWING`: the Monkey turns and moves radially toward the existing ring, can pause until the player catches up, reveals the glyph ring during the walk and asks for a threshold choice. Accepting the threshold enters `CROSSING` / `ENTERING_RING`; the player must physically enter the safe inner radius before the locomotion boundary is restored. The Monkey returns to its already established canonical transform, completes `MONKEY_SETTLING`, and only then enters `GLYPH_FREE_EXPLORE`. A delayed attention hint can follow if free exploration produces no glyph success. Declining either choice ends the session; existing QA routes use `BYPASSED`.
+
+`createVrIntroSequence` moves only the existing `monkeyMotionRoot` and captures that node's canonical position and quaternion at composition time. The current scene-layout application remains authoritative: `ANCHOR_MONKEY` places `monkeyMotionRoot`, while the existing attention, speech and dialogue anchors remain relative to that same runtime/layout relationship. The intro does not redefine, move, reparent or replace `ANCHOR_MONKEY`, and it does not transfer transform ownership away from `monkeyMotionRoot`.
+
 The Monkey guide exposes technical channels for future authored guidance without defining story or dialogue content:
 
 - `notifyAttention()` starts three pulsing attention arcs and its one-shot cue; repeated notification while pending does not restart it;
@@ -101,7 +107,35 @@ The Monkey guide exposes technical channels for future authored guidance without
 - progress opens paginated history derived exclusively from `VrProgressionController`; choosing an existing entry opens the localized card and supports multipage reading/back navigation;
 - newly committed cards are tracked as unread, pulse in history, and become read when opened. A progression commit requests attention. These unread markers are transient page-runtime UI state, not durable progression.
 
-The runtime supplies channels and current progress/history behavior only. Narrative sequencing, authored Monkey messages, quests, personality and stuck-player logic are **NOT DESIGNED / FUTURE**.
+Outside the bounded intro P0 copy and sequence described above, the runtime supplies channels and current progress/history behavior only. Further narrative sequencing, Monkey messages between progression stages, quests, personality and stuck-player logic are **NOT DESIGNED / FUTURE**.
+
+### Monkey physical assets and the next integration boundary
+
+Two distinct physical files are **PRESENT**:
+
+- `public/glb/monkey.glb` is the character asset; its main character mesh/node is named `monkey`. The approved authored asset contract targets this hierarchy:
+
+  ```text
+  MONKEY_ANCHOR
+  └── monkey
+  ```
+
+  `MONKEY_ANCHOR` means a local reference point inside the character asset for future precise placement of the seated Monkey. It is not a scene-layout anchor.
+- `public/glb/monkey_stone.glb` is a separate stone/seat asset, not part of the Monkey mesh. Its authored hierarchy is:
+
+  ```text
+  MONKEY_STONE_ROOT
+  ├── <stone mesh>
+  └── MONKEY_SEAT_ANCHOR
+  ```
+
+  `MONKEY_STONE_ROOT` is the stone's local root/lower reference point. `MONKEY_SEAT_ANCHOR` is the local seating point on its upper surface.
+
+These internal nodes are an **ASSET CONTRACT PREPARED FOR THE NEXT IMPLEMENTATION STEP**, not a completed runtime integration. The approved direction is to align Monkey and stone through authored internal anchors rather than hand-authored magic offsets, but the transform algorithm and the runtime node that will perform the final match remain undecided. HEAD does not preload `monkey_stone.glb`, parent either asset to the other, apply runtime offsets or alter the intro trajectory, scene layout, `ANCHOR_MONKEY`, `monkeyMotionRoot` ownership or runtime hierarchy.
+
+The three semantic levels must remain separate: (1) current layout/runtime `ANCHOR_MONKEY`, unchanged and authoritative for the actor; (2) character-internal `MONKEY_ANCHOR`; and (3) stone-internal `MONKEY_STONE_ROOT` / `MONKEY_SEAT_ANCHOR`. Neither internal seating anchor replaces `ANCHOR_MONKEY`.
+
+**HEAD evidence discrepancy to resolve before integration:** the 2026-08-10 exported `monkey_stone.glb` contains `MONKEY_STONE_ROOT` and `MONKEY_SEAT_ANCHOR`, but inspection of the current exported `monkey.glb` exposes the `monkey` node without an exported `MONKEY_ANCHOR` parent. The intended `MONKEY_ANCHOR → monkey` contract is approved/authored source intent, but its presence in the shipped binary cannot be classified as verified until the export is corrected or the Designer confirms an alternative artifact. This documentation does not invent a runtime substitute.
 
 ## Astro Furnace and Asterion material progression
 

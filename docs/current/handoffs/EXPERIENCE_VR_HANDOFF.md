@@ -1,12 +1,14 @@
 # Experience VR Handoff
 
-Status: current implementation handoff synchronized on 2026-08-09. `VR_RUNTIME_MODEL.md` and `VR_AUDIO_MODEL.md` remain the detailed runtime authorities.
+Status: current implementation handoff synchronized on 2026-08-10. `VR_RUNTIME_MODEL.md` and `VR_AUDIO_MODEL.md` remain the detailed runtime authorities.
 
 ## Status vocabulary
 
 - **IMPLEMENTED** — present in runtime/code.
 - **HARDWARE VALIDATED** — confirmed by the Designer on Meta Quest 3S.
 - **KNOWN QA ISSUE** — implemented, but current hardware QA found a specific defect.
+- **PRESENT / AUTHORED** — a physical asset or internal asset reference has been prepared, without implying runtime integration.
+- **FUTURE / NEXT IMPLEMENTATION STEP** — approved direction that HEAD does not yet compose.
 
 ## Current architecture and interaction baseline
 
@@ -14,7 +16,17 @@ Status: current implementation handoff synchronized on 2026-08-09. `VR_RUNTIME_M
 
 `VrProgressionController` exclusively owns portfolio-card/tier progress. Glyph hold creates branch+tier crystals; reliquary Activate previews and Release commits. Tier 1 unlocks the right-hand Astro Przyciągacz and the 18-shell field (six unique assets, three instances each). The Attractor uses analytic cone targeting, pull/cancel/return and explicit left ordinary-ray+squeeze handoff; placed shells are ordinary-ray re-grabbable but excluded from Attractor targeting.
 
-The guidance baseline is also **IMPLEMENTED**. Y opens the left-grip player reference panel. The Monkey has three attention arcs, a system-set message panel and a separate ray-interactive dialogue panel. Its current choice can ask about progress, then browse `VrProgressionController` history and read existing localized cards. Newly committed cards pulse as transient unread entries until opened. This is a technical communication surface only: authored narrative, dialogue sequence, quests, personality and stuck-player assistance remain **NOT DESIGNED / FUTURE**.
+The guidance baseline is also **IMPLEMENTED**. Y opens the left-grip player reference panel. The Monkey has three attention arcs, a system-set message panel and a separate ray-interactive dialogue panel. Its current choice can ask about progress, then browse `VrProgressionController` history and read existing localized cards. Newly committed cards pulse as transient unread entries until opened. Outside the bounded intro P0, this remains a technical communication surface only: further authored narrative, dialogue between progression stages, quests, personality and stuck-player assistance remain **NOT DESIGNED / FUTURE**.
+
+The rebuilt intro P0 is **IMPLEMENTED**: XR calibration leads through radial fog reveal and silence, Y-panel/controls onboarding, pointer and trigger onboarding, invitation, `FOLLOWING`, threshold choice, physical entry into the ring, `MONKEY_SETTLING` and `GLYPH_FREE_EXPLORE`. The sequence temporarily moves the existing `monkeyMotionRoot` and finally restores the canonical transform captured after current layout application. Do not rebuild or reinterpret the scene anchors: `ANCHOR_MONKEY` remains the unchanged layout/runtime anchor and `monkeyMotionRoot` remains the transform owner defined by HEAD.
+
+## Monkey / stone asset handoff
+
+`public/glb/monkey.glb` and `public/glb/monkey_stone.glb` are separate **PRESENT** assets. The character's main node is `monkey`; the approved character-internal contract is `MONKEY_ANCHOR → monkey`. The stone is not part of the Monkey mesh and carries `MONKEY_STONE_ROOT` with its stone mesh and `MONKEY_SEAT_ANCHOR` children. `MONKEY_STONE_ROOT` is the local lower/root reference and `MONKEY_SEAT_ANCHOR` is the local point for seating the character on the upper surface.
+
+These names are internal asset references prepared for the **FUTURE / NEXT IMPLEMENTATION STEP**. They are not replacements for `ANCHOR_MONKEY` and do not authorize moving/reparenting that layout anchor, changing `monkeyMotionRoot`, introducing offsets, changing the P0 trajectory or automatically parenting Monkey and stone in either direction. The next Architect should use the authored anchors instead of magic offsets, but must separately design which runtime node performs alignment and how transforms are resolved.
+
+There is one explicit artifact conflict to clear first: current `monkey_stone.glb` exports both declared stone anchors, while current `monkey.glb` exposes `monkey` without an exported `MONKEY_ANCHOR` parent. Treat `MONKEY_ANCHOR` as the approved authored contract, not as verified in the shipped GLB and not as **IMPLEMENTED** runtime behavior. Do not compensate by changing `ANCHOR_MONKEY`.
 
 ## Astro Furnace and production Asterion
 
