@@ -357,6 +357,10 @@ export function normalizeExperienceVrSettings(candidate) {
         emissionHover: finiteNumber(candidate.furnace?.optionButton?.emissionHover, defaults.furnace.optionButton.emissionHover, { min: 0 }),
         emissionActive: finiteNumber(candidate.furnace?.optionButton?.emissionActive, defaults.furnace.optionButton.emissionActive, { min: 0 }),
         selectionDuration: finiteNumber(candidate.furnace?.optionButton?.selectionDuration, defaults.furnace.optionButton.selectionDuration, { min: .01, max: 2 }),
+        moduleAnglesDegrees: {
+          ...defaults.furnace.optionButton.moduleAnglesDegrees,
+          ...(candidate.furnace?.optionButton?.moduleAnglesDegrees ?? {})
+        },
         halo: {
           opacity: finiteNumber(candidate.furnace?.optionButton?.halo?.opacity,
             defaults.furnace.optionButton.halo.opacity, { min: 0.05, max: 0.6 }),
