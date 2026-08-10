@@ -1,6 +1,6 @@
 # Decision Log
 
-Status: current binding decisions organized by implementation status, not patch chronology. Synchronized on 2026-08-09.
+Status: current binding decisions organized by implementation status, not patch chronology. Synchronized on 2026-08-10.
 
 ## Implemented and binding
 
@@ -17,6 +17,12 @@ Status: current binding decisions organized by implementation status, not patch 
 9. Five branches contain 18 cards in counts `3 / 3 / 3 / 4 / 5`. Physical crystals are branch+tier instances without persistent page/card identity; acquisition is additive and insertion is current-tier gated.
 10. Activate previews. Release after Activate commits through the sole logical owner of the portfolio domain, `VrProgressionController`, projects to the floor and consumes the crystal. Invalid insertion returns without progress.
 11. The floor contains five authored sectors, 18 panels and five optional procedural tier rings. Committed progress survives XR re-entry only in the prepared runtime. Durable persistence does not exist.
+
+### Intro P0 and Monkey transform authority
+
+1. The implemented intro P0 proceeds through XR calibration, radial fog reveal, player-panel/controls onboarding, pointer/trigger onboarding, invitation, `FOLLOWING`, threshold choice, physical ring entry, `MONKEY_SETTLING` and `GLYPH_FREE_EXPLORE`.
+2. `monkeyMotionRoot` remains the runtime transform owner for intro motion. The sequence captures its canonical transform after layout composition, moves it for the walk and settles it back to that transform.
+3. Existing `ANCHOR_MONKEY` and the other current layout anchors remain exactly as defined by HEAD. No internal asset anchor replaces, moves or reparents `ANCHOR_MONKEY`.
 
 ### Independent hand modes
 
@@ -70,6 +76,14 @@ Status: current binding decisions organized by implementation status, not patch 
 8. The drive is intentionally a heavy angular controller, not a full rigid-body physics simulation.
 
 ## Approved future gameplay direction — not implemented
+
+### Monkey seating asset contract
+
+1. `public/glb/monkey.glb` (character node `monkey`) and `public/glb/monkey_stone.glb` (separate seat/stone) are distinct **PRESENT** physical assets.
+2. The approved internal authoring contract is `MONKEY_ANCHOR → monkey` for the character and `MONKEY_STONE_ROOT → <stone mesh> + MONKEY_SEAT_ANCHOR` for the stone. `MONKEY_ANCHOR` is the character-local seated reference, `MONKEY_STONE_ROOT` the stone-local lower/root reference and `MONKEY_SEAT_ANCHOR` the stone-local seating point.
+3. Future integration will use these internal references instead of magic offsets. The matching algorithm and technical runtime owner remain a separate architectural decision.
+4. This contract does not change the scene-layout `ANCHOR_MONKEY`, `monkeyMotionRoot`, runtime hierarchy, P0 path or existing canonical Monkey position; it does not imply automatic parenting in either direction or current preload/use of the stone.
+5. Export verification currently conflicts with the approved character contract: `monkey_stone.glb` exports its two anchors, while HEAD `monkey.glb` exposes `monkey` without `MONKEY_ANCHOR`. Resolve the artifact before integration; do not invent an offset or alter the scene anchor as a workaround.
 
 1. **B will select only Astro bands already unlocked by progression. B is currently not implemented.**
 2. Planned bands remain RED/YELLOW/GREEN/BLUE/ULTRAVIOLET, but no future band implies an unrestricted global scene raycast.
