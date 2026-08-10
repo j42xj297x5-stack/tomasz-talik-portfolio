@@ -6,22 +6,18 @@ import {
 } from '../src/config/experienceVrSettings.js';
 
 assert.deepEqual(normalizeExperienceVrSettings(null), DEFAULT_EXPERIENCE_VR_SETTINGS);
-assert.deepEqual(DEFAULT_EXPERIENCE_VR_SETTINGS.spawn.position, { x: 0, y: 0, z: 5.8 });
+assert.deepEqual(DEFAULT_EXPERIENCE_VR_SETTINGS.spatial, { entryDirection: { x: 0, y: 0, z: 1 }, playerStartRadius: 20, monkeyStartRadius: 18, monkeyFinal: { x: 0, y: 0, z: 0 }, ringRadius: 7.6, worldStableCenterY: 1.05, thresholdOutsideDistance: 1 });
 assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.glyphInteraction.holdDurationSeconds, 0.5);
 assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.glyphInteraction.holdLostGraceSeconds, 0.15);
 assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.controllers.rayLength, 2.3);
 assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.controllers.rayDiameter, 0.01);
 assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.playerGuidePanel.position.x, 0.29);
 assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.playerGuidePanel.rotationDegrees.x, -52);
-assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.intro.playerStartRadius, 20);
 assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.intro.emergeDuration, 12);
 assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.intro.introRevealDuration, 13);
 assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.intro.postRevealSilenceDuration, 2);
-assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.intro.initialHeadToMonkeyDistance, 1.5);
 assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.intro.insideSafeMargin, 0.75);
 assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.intro.glyphFreeExploreDuration, 60);
-assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.intro.monkeyStartRadius, 18);
-assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.intro.thresholdStopOutsideDistance, 1);
 assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.intro.guideTurnDuration, 1);
 assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.intro.followGraceDistance, 3);
 assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.intro.messageDisplayDuration, 2);
@@ -56,16 +52,14 @@ assert.deepEqual(normalizeExperienceVrSettings({ schemaVersion: 2 }), DEFAULT_EX
 const normalized = normalizeExperienceVrSettings({
   schemaVersion: 1,
   referenceSpaceType: 'local',
-  worldScale: 2,
-  spawn: { position: { x: 1, y: 'bad', z: 5 }, lookAt: { x: 0, y: 2, z: 0 } },
+  spatial: { entryDirection: { x: 0, y: 'bad', z: 2 }, playerStartRadius: 200, monkeyStartRadius: 0, monkeyFinal: { x: 1, y: 0, z: 2 }, ringRadius: 0, worldStableCenterY: 99, thresholdOutsideDistance: 20 },
   renderer: { pixelRatioCap: 99, antialias: false },
   controllers: { enabled: false, rayLength: 0, rayOpacity: 4, rayDiameter: 2, rayTipFraction: 1, rayRadialSegments: 99 },
   targetHalo: { color: -1, opacity: 4, thicknessPixels: 20, pulseDuration: 9 },
   glyphInteraction: { holdDurationSeconds: 20, holdLostGraceSeconds: 4 },
   glyphLights: { inwardOffset: 20 },
-  entryTransition: { enabled: false, durationSeconds: 99, target: { x: 2, z: 'bad' }, easing: 'linear' },
-  portal: { enabled: false, maxWidth: 0, maxHeight: 20, distanceFromAnchor: 0, forwardBias: 9, floorOffset: -9, appearDuration: 0, appearStartScale: 9 },
-  reliquary: { distanceFromPortal: 4, forwardOffset: -3, floorOffset: 9,
+  portal: { enabled: false, maxWidth: 0, maxHeight: 20, floorOffset: -9, appearDuration: 0, appearStartScale: 9 },
+  reliquary: { position: { x: 2, y: 3, z: 4 }, floorOffset: 9,
     activateButton: { placementRadius: 8, placementAngleDegrees: -4, verticalOffset: 7 } },
   portalCanvas: {
     enabled: false, width: 0, height: 9, distanceFromAnchor: 0, forwardBias: 9, floorOffset: -9,
@@ -75,7 +69,7 @@ const normalized = normalizeExperienceVrSettings({
   ignored: true
 });
 assert.equal(normalized.referenceSpaceType, 'local');
-assert.deepEqual(normalized.spawn.position, { x: 1, y: 0, z: 5 });
+assert.deepEqual(normalized.spatial, { entryDirection: { x: 0, y: 0, z: 2 }, playerStartRadius: 100, monkeyStartRadius: 1, monkeyFinal: { x: 1, y: 0, z: 2 }, ringRadius: 1, worldStableCenterY: 10, thresholdOutsideDistance: 10 });
 assert.equal(normalized.renderer.pixelRatioCap, 2);
 assert.equal(normalized.renderer.antialias, false);
 assert.deepEqual(normalized.controllers, {
@@ -89,16 +83,9 @@ assert.deepEqual(normalized.controllers, {
 assert.deepEqual(normalized.targetHalo, { color: 0, opacity: 0.6, thicknessPixels: 8, pulseDuration: 1.6 });
 assert.deepEqual(normalized.glyphInteraction, { holdDurationSeconds: 5, holdLostGraceSeconds: 1 });
 assert.deepEqual(normalized.glyphLights, { inwardOffset: 5 });
-assert.deepEqual(normalized.entryTransition, {
-  enabled: false,
-  durationSeconds: 30,
-  targetRadiusFactor: 0.76,
-  target: { x: 2, z: 1.8 },
-  easing: 'smoothstep'
-});
 assert.deepEqual(normalized.portal, {
-  enabled: false, position: DEFAULT_EXPERIENCE_VR_SETTINGS.portal.position,
-  maxWidth: 0.5, maxHeight: 8, distanceFromAnchor: 0.5, forwardBias: 1, floorOffset: -1,
+  enabled: false, position: DEFAULT_EXPERIENCE_VR_SETTINGS.portal.position, rotationDegrees: DEFAULT_EXPERIENCE_VR_SETTINGS.portal.rotationDegrees,
+  maxWidth: 0.5, maxHeight: 8, floorOffset: -1,
   appearDuration: 0.05, appearStartScale: 1,
   socket: DEFAULT_EXPERIENCE_VR_SETTINGS.portal.socket
 });
@@ -108,18 +95,18 @@ assert.deepEqual(normalized.portalCanvas, {
 });
 assert.deepEqual(normalized.reliquary, {
   ...DEFAULT_EXPERIENCE_VR_SETTINGS.reliquary,
-  distanceFromPortal: 1,
+  position: { x: 2, y: 3, z: 4 },
   heightOffset: 2,
   buttons: { ...DEFAULT_EXPERIENCE_VR_SETTINGS.reliquary.buttons, forwardDistance: 3, lateralOffset: 0, verticalOffset: 1 }
 });
 
 const modernPlacement = normalizeExperienceVrSettings({ schemaVersion: 1, reliquary: {
-  distanceFromPortal: 9, heightOffset: -9,
+  position: { x: 9, y: 8, z: 7 }, heightOffset: -9,
   buttons: { scale: 9, forwardDistance: 9, lateralOffset: 9, verticalOffset: -9 }
 } }).reliquary;
 assert.deepEqual(modernPlacement, {
   ...DEFAULT_EXPERIENCE_VR_SETTINGS.reliquary,
-  distanceFromPortal: 5,
+  position: { x: 9, y: 8, z: 7 },
   heightOffset: -1,
   buttons: { scale: 1, forwardDistance: 3, lateralOffset: 2, verticalOffset: -1 }
 });
@@ -140,10 +127,10 @@ assert.equal(normalizedGuide.colors.messagePanel, '#123456', 'legacy panel color
 assert.equal(normalizedGuide.colors.dialoguePanel, '#123456', 'legacy panel color remains a safe dialogue fallback');
 
 const server = await loadExperienceVrSettings({
-  fetchImpl: async () => ({ ok: true, json: async () => ({ ...DEFAULT_EXPERIENCE_VR_SETTINGS, worldScale: 1.25 }) })
+  fetchImpl: async () => ({ ok: true, json: async () => ({ ...DEFAULT_EXPERIENCE_VR_SETTINGS, spatial: { ...DEFAULT_EXPERIENCE_VR_SETTINGS.spatial, ringRadius: 8 } }) })
 });
 assert.equal(server.settingsSource, 'server');
-assert.equal(server.settings.worldScale, 1.25);
+assert.equal(server.settings.spatial.ringRadius, 8);
 assert.equal(server.settingsLoadError, null);
 
 const fallback = await loadExperienceVrSettings({ fetchImpl: async () => { throw new Error('offline'); } });

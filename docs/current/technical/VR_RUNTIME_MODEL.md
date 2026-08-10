@@ -8,7 +8,7 @@ Status: canonical description of the implemented runtime synchronized on 2026-08
 
 The composition root owns the small `VrAudioBridge` lifecycle. Optional VR audio requests cross its fail-soft boundary, which contains both synchronous exceptions and Promise rejections and reports them as `[vr-audio]` warnings. Calls are fire-and-forget side effects after gameplay transitions; they are never awaited by session, input, progression, state-machine or render-frame flows. The bridge delegates Web Audio ownership to the shared `audioManager`, stores no gameplay state and is disposed idempotently on `pagehide`. Five unity-gain VR buses (`SPACE`, `AMBIENT`, `DEVICE`, `WORLD`, `UI`) feed the existing Master Volume/mute. UI and world/device one-shots, glyph acquisition, the shell-pull loop and both Asterion Sphere loops are **IMPLEMENTED**. `experienceVr.js` also actively composes `createVrAmbientSequencer`: the current full tier and the completed-shell/built-Sphere subthreshold select finite ambient/quiet-loop sequences. Other Attractor target classes and spatial audio remain **FUTURE**. Detailed lifecycle and asset mapping belong to [`VR_AUDIO_MODEL.md`](VR_AUDIO_MODEL.md).
 
-Every session aligns the rig so the tracked head reaches the configured start `(0, 0, 5.8)`. WebXR owns the tracked camera; locomotion and alignment transform `playerRig`, and the rig is now a passenger of the platform root rather than a world-stable camera island. Session exit/re-entry clears transient crystals, shell interaction, controller hits, halos, glyph state, reliquary/buttons, Asterion QA state and portal preview, while committed progress and floor projection survive in the already prepared page runtime. Reload/navigation recreates them. There is no durable save or full-game reset.
+Experience VR uses one metre-based spatial contract: platform center and final Monkey pose are `(0,0,0)`, the platform plane is `Y=0`, entry is `+Z`, the player viewpoint starts at radius `20`, the Monkey starts at radius `18`, and the glyph ring has one explicit canonical radius. Every session moves only `playerRig` so the tracked head reaches the canonical player point while preserving physical head height. Tracking never positions the Monkey, ring, stone, or fixtures. Session exit/re-entry clears transient crystals, shell interaction, controller hits, halos, glyph state, reliquary/buttons, Asterion QA state and portal preview, while committed progress and floor projection survive in the already prepared page runtime. Reload/navigation recreates them. There is no durable save or full-game reset.
 
 Controller records may be constructed with `handedness === ''`. Hand identity is resolved only at runtime after WebXR's `connected` event; semantic input and hand-mode lookup therefore do not assume handedness during construction.
 
@@ -17,22 +17,16 @@ Controller records may be constructed with `handedness === ''`. Hand identity is
 The active hierarchy is platform-relative for floor gameplay and world-stable for the distant frame:
 
 ```text
-WORLD
-├── world-stable glyphRing / shell field / cosmos
-└── VrTiltableFloorRoot
+ExperienceVrRoot
+├── WorldStableRoot → glyphRing / shell field / cosmos
+└── VrTiltableFloorRoot (identity position and scale)
     ├── floor sectors / rings
-    ├── monkeyAnchor
-    ├── VrPlatformFixturesRoot
-    │   ├── portal
-    │   ├── reliquary
-    │   ├── furnace
-    │   └── furnace panel
-    └── VrFloorPassengerRoot
-        └── playerRig
-            └── camera / controllers / grips
+    ├── VrPlatformFixturesRoot → stone / portal / reliquary / furnace / panel
+    ├── VrMonkeyMotionRoot → visual root / Monkey Guide
+    └── VrFloorPassengerRoot → playerRig → camera / controllers / grips
 ```
 
-`VrTiltableFloorRoot` is both the visual progress floor root and the active platform transform root. Platform fixtures, the monkey anchor and `VrFloorPassengerRoot/playerRig` inherit the platform quaternion. The glyph ring, shell field and cosmic/distant frame stay under the world-stable root so platform rotation changes the player's local platform relationship without rotating the target field itself.
+`VrTiltableFloorRoot` remains at canonical `(0,0,0)` and owns only inherited Asterion tilt. Fixtures, the stationary stone, the Monkey actor and `VrFloorPassengerRoot/playerRig` are created directly below their final parents and inherit its quaternion. No initial-composition `attach()` or runtime scene-layout override exists.
 
 ## Ordinary rays, hand modes and locomotion
 
@@ -96,7 +90,7 @@ Two **IMPLEMENTED** interfaces are distinct. The left-grip player guide opens wi
 
 The rebuilt P0 intro is **IMPLEMENTED**. After XR head calibration it runs a radial fog reveal and a short post-reveal silence, then shows three timed orientation lines followed by a persistent localized Y-menu instruction. That instruction remains visible throughout `WAIT_PLAYER_PANEL_OPEN`, clears immediately only after `playerGuidePanel.isOpen()` becomes true, and then onboarding continues through visiting controls, closing the panel, pointing at the Monkey and using trigger. The invitation can enter `FOLLOWING`: the Monkey turns and moves radially toward the existing ring, can pause until the player catches up, reveals the glyph ring during the walk and asks for a threshold choice. Accepting the threshold enters `CROSSING` / `ENTERING_RING`; the player must physically enter the safe inner radius before the locomotion boundary is restored. The Monkey returns to its already established canonical transform, completes `MONKEY_SETTLING`, and only then enters `GLYPH_FREE_EXPLORE`. A delayed attention hint can follow if free exploration produces no glyph success. Declining either choice ends the session; existing QA routes use `BYPASSED`.
 
-`createVrIntroSequence` moves only the existing `monkeyMotionRoot` and captures that node's canonical position and quaternion at composition time. The current scene-layout application remains authoritative: `ANCHOR_MONKEY` places `monkeyMotionRoot`, while the existing attention, speech and dialogue anchors remain relative to that same runtime/layout relationship. The intro does not redefine, move, reparent or replace `ANCHOR_MONKEY`, and it does not transfer transform ownership away from `monkeyMotionRoot`.
+`createVrIntroSequence` moves only `monkeyMotionRoot`. Its start and final positions come from the shared `spatial` contract; tracked head is read only for pause/resume and safe ring entry. Monkey Guide attention, speech and dialogue use one actor-local visual contract.
 
 The Monkey guide exposes technical channels for future authored guidance without defining story or dialogue content:
 
@@ -131,17 +125,17 @@ Two distinct physical files are **PRESENT**:
 
   `MONKEY_STONE_ROOT` is the stone's local root/lower reference point. `MONKEY_SEAT_ANCHOR` is the local seating point on its upper surface.
 
-The authored contract is **IMPLEMENTED**. Both assets are critical-initial preloads. `VrMonkeyMotionRoot` owns only `VrMonkeyVisualRoot`/the character and Monkey Guide. The independent `VrMonkeyStoneRoot` is its sibling under `VrTiltableFloorRoot`, so it inherits platform tilt but none of the actor's P0 translation or turns. Both assets use the same uniform character-derived scale; there is no bbox centering, per-asset scale, or hand-authored placement offset. Once the canonical `ANCHOR_MONKEY` placement is applied, the stone fixture is composed once with the complete authored anchor matrices so `worldMatrix(MONKEY_SEAT_ANCHOR) === worldMatrix(MONKEY_ANCHOR)` at the canonical Monkey pose. The stone remains fixed while the Monkey leaves and returns to that pose, without a final docking snap.
+The authored contract is **IMPLEMENTED**. Both assets are critical-initial preloads. `VrMonkeyMotionRoot` owns only `VrMonkeyVisualRoot`/the character and Monkey Guide. The independent `VrMonkeyStoneRoot` is created under `VrPlatformFixturesRoot`, so it inherits platform tilt but none of the actor's P0 translation or turns. Normal composition docks it once with complete authored anchor matrices so `worldMatrix(MONKEY_SEAT_ANCHOR) === worldMatrix(MONKEY_ANCHOR)` at final `(0,0,0)`. The stone remains fixed while the Monkey leaves and returns, without a final snap.
 
-The stone is hidden through the initial P0 emptiness and becomes visible at the existing glyph-ring reveal point; QA bypass exposes it immediately. Only `VrMonkeyMotionRoot` starts 1.5 m in front of the calibrated tracked head and moves through `FOLLOWING`, crossing, and settling. The stone remains at the ring center throughout.
+The stone is hidden through the initial P0 emptiness and becomes visible at the existing glyph-ring reveal point; QA bypass exposes it immediately. Only `VrMonkeyMotionRoot` starts at canonical radius `18`, moves to `ringRadius + thresholdOutsideDistance`, crosses, and settles at `(0,0,0)`. The stone remains at the ring center throughout.
 
-The three semantic levels must remain separate: (1) current layout/runtime `ANCHOR_MONKEY`, unchanged and authoritative for the actor; (2) character-internal `MONKEY_ANCHOR`; and (3) stone-internal `MONKEY_STONE_ROOT` / `MONKEY_SEAT_ANCHOR`. Neither internal seating anchor replaces `ANCHOR_MONKEY`.
+The semantic levels remain separate: the runtime final Monkey transform is plain canonical data; `MONKEY_ANCHOR` is character-internal; `MONKEY_STONE_ROOT` and `MONKEY_SEAT_ANCHOR` are stone-internal.
 
 The shipped GLBs verify each required name exactly once, finite TRS with nonzero scales, `MONKEY_ANCHOR → monkey`, and both stone children under `MONKEY_STONE_ROOT`. Monkey Guide ray targets and halo use the character-only interaction root, so the stone is not Monkey interaction geometry.
 
 ## Astro Furnace and Asterion material progression
 
-The Astro Furnace is a separate subsystem backed by `public/glb/astral_stove.glb`, preloaded through `AssetManager`, placed opposite the portal under `VrPlatformFixturesRoot`, grounded from visible bounds, scaled to `3` and faced toward the configured start. Authored open/close animation remains unchanged: `pokrywa` and `pokrywa_gora` travel together through `PIVOT_FURNACE_LID_Z`. During a material cycle `PIVOT_FURNACE_PROCESS_SPIN` drives the chamber and a base-pose-relative runtime offset on `PIVOT_FURNACE_LID_PROCESS_SPIN` drives only the lower `pokrywa`; `pokrywa_gora` remains latched and receives no process offset.
+The Astro Furnace is a separate subsystem backed by `public/glb/astral_stove.glb`, preloaded through `AssetManager`, and created under `VrPlatformFixturesRoot` with an explicit canonical local position and rotation. Bounds affect only visual grounding and panel layout, never the fixture root position. Authored open/close animation remains unchanged: `pokrywa` and `pokrywa_gora` travel together through `PIVOT_FURNACE_LID_Z`. During a material cycle `PIVOT_FURNACE_PROCESS_SPIN` drives the chamber and a base-pose-relative runtime offset on `PIVOT_FURNACE_LID_PROCESS_SPIN` drives only the lower `pokrywa`; `pokrywa_gora` remains latched and receives no process offset.
 
 The furnace is deliberately unconfigured at session start: Option owns `activeMode = null`. Open, insertion and Activate are unavailable until the player opens the panel with Option and selects **Asterion Sphere**, which activates `floor_gyroscope_sphere`. Option is therefore the first suggested step. Selection rotates `PIVOT_BUTTON_OPTION` by `+90°` around its local Y axis relative to its authored base quaternion.
 

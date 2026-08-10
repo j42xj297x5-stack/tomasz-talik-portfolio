@@ -1,18 +1,22 @@
 {
   "schemaVersion": 1,
   "referenceSpaceType": "local-floor",
-  "worldScale": 1,
-  "spawn": {
-    "position": {
+  "spatial": {
+    "entryDirection": {
       "x": 0,
       "y": 0,
-      "z": 5.8
+      "z": 1
     },
-    "lookAt": {
+    "playerStartRadius": 20,
+    "monkeyStartRadius": 18,
+    "monkeyFinal": {
       "x": 0,
-      "y": 1,
+      "y": 0,
       "z": 0
-    }
+    },
+    "ringRadius": 7.6,
+    "worldStableCenterY": 1.05,
+    "thresholdOutsideDistance": 1
   },
   "renderer": {
     "pixelRatioCap": 1.5,
@@ -64,28 +68,15 @@
   },
   "glyphRing": {
     "enabled": true,
-    "radiusMultiplier": 2,
     "angularSpeed": 0.14,
     "direction": 1,
     "entryAngleThreshold": 0.24,
     "entryAngleHysteresis": 0.04
   },
-  "entryTransition": {
-    "enabled": true,
-    "durationSeconds": 3,
-    "targetRadiusFactor": 0.76,
-    "target": {
-      "x": 0,
-      "z": 1.8
-    },
-    "easing": "smoothstep"
-  },
   "portal": {
     "enabled": true,
     "maxWidth": 2.8,
     "maxHeight": 3.2,
-    "distanceFromAnchor": 2.0,
-    "forwardBias": 0.25,
     "floorOffset": 0,
     "appearDuration": 0.42,
     "appearStartScale": 0.92,
@@ -94,11 +85,20 @@
       "yFactor": -0.34,
       "zFactor": 0.58,
       "insertRadius": 0.28
+    },
+    "position": {
+      "x": -1.940285,
+      "y": 0,
+      "z": -0.485071
+    },
+    "rotationDegrees": {
+      "x": 0,
+      "y": 5.41,
+      "z": 0
     }
   },
   "reliquary": {
     "enabled": true,
-    "distanceFromPortal": 1.5,
     "heightOffset": 0.5,
     "buttons": {
       "scale": 0.3,
@@ -117,6 +117,16 @@
       "side": "right",
       "releaseDelaySeconds": 1,
       "hitAreaScale": 2
+    },
+    "position": {
+      "x": -1.497785,
+      "y": 0,
+      "z": 0.949929
+    },
+    "rotationDegrees": {
+      "x": 0,
+      "y": 5.41,
+      "z": 0
     }
   },
   "portalCanvas": {

@@ -67,8 +67,6 @@ export const VR_PROGRESS_FLOOR_RINGS = Object.freeze({
   ringColor: 0xeaf4ff
 });
 
-export const FLOOR_WORLD_Y_OFFSET = -1.05;
-
 function cloneMaterials(root, ownedMaterials) {
   root.traverse((object) => {
     if (!object.isMesh || !object.material) return;
@@ -131,8 +129,7 @@ export function createVrProgressFloor({
   digSectorModel,
   aiGuideSectorModel,
   emission = {},
-  rings = {},
-  worldYOffset = FLOOR_WORLD_Y_OFFSET
+  rings = {}
 }) {
   if (!parent?.add) throw new Error('[VrProgressFloor] A valid parent is required.');
   if (!creativeSectorModel?.clone) throw new Error('[VrProgressFloor] A valid Creative sector model is required.');
@@ -151,7 +148,10 @@ export function createVrProgressFloor({
   const ringConfig = { ...VR_PROGRESS_FLOOR_RINGS, ...rings };
   const object = new THREE.Group();
   object.name = 'VrTiltableFloorRoot';
-  object.position.y = worldYOffset;
+  object.position.set(0, 0, 0);
+  const geometryRoot = new THREE.Group();
+  geometryRoot.name = 'PlatformGeometryRoot';
+  object.add(geometryRoot);
   const ownedMaterials = new Set();
   const ownedGeometries = new Set();
   const sourceModels = {
@@ -194,7 +194,7 @@ export function createVrProgressFloor({
         });
       });
       sectorsByGlyphId.set(sectorConfig.glyphId, { object: sector, panelsByOrder });
-      object.add(sector);
+      geometryRoot.add(sector);
     });
 
     object.updateMatrixWorld(true);
@@ -262,7 +262,7 @@ export function createVrProgressFloor({
         ownedMaterials.add(material);
         ringMaterials.add(material);
         tierRings.set(tier, { object: ring, material, pulseRemaining: 0 });
-        object.add(ring);
+        geometryRoot.add(ring);
       });
     } catch (error) {
       tierRings.forEach(({ object: ring }) => {
@@ -338,6 +338,7 @@ export function createVrProgressFloor({
 
   return {
     object,
+    geometryRoot,
     activatePage,
     completeTier,
     update,

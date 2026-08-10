@@ -10,7 +10,6 @@ assert.deepEqual(
 );
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(); camera.position.set(0, 1.6, 5); scene.add(camera);
-const platformOrigin = new THREE.Group(); scene.add(platformOrigin);
 const monkey = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1)); scene.add(monkey);
 const portalSource = new THREE.Group(); portalSource.add(new THREE.Mesh(new THREE.BoxGeometry(4, 3, 0.3)));
 const blenderSurface = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 0.9));
@@ -25,7 +24,7 @@ const noUvs = new THREE.Mesh(new THREE.BufferGeometry()); noUvs.name = 'PORTAL_C
 noUvs.geometry.setAttribute('position', new THREE.Float32BufferAttribute([0, 0, 0], 3));
 assert.equal(findPortalCanvasSurface(noUvs), null);
 scene.updateMatrixWorld(true);
-const portal = createVrPortalDisplay({ scene, platformOrigin, portalModel: portalSource, spawnPosition: { x: 0, y: 0, z: 5 }, settings: { enabled: true, position: { x: -2, y: 0, z: -0.5 }, maxWidth: 2.8, maxHeight: 3.2, floorOffset: 0 } });
+const portal = createVrPortalDisplay({ parent: scene, portalModel: portalSource, settings: { enabled: true, position: { x: -2, y: 0, z: -0.5 }, maxWidth: 2.8, maxHeight: 3.2, floorOffset: 0 } });
 assert.equal(portal.canvasSurface.name, 'PORTAL_CANVAS_SURFACE');
 assert.equal(portal.canvasSurface.parent, portal.model);
 assert.deepEqual(portal.canvasSurface.position.toArray(), blenderSurface.position.toArray());
@@ -42,11 +41,10 @@ portal.place(); assert.ok(portal.object.position.distanceTo(firstPosition) < 1e-
   'portal place never reads the monkey transform');
 camera.position.set(99, 12, -40); camera.rotation.set(1, 2, 3);
 portal.place(); assert.ok(portal.object.position.distanceTo(firstPosition) < 1e-8);
-const floorBound = new THREE.Box3().setFromObject(portal.object);
+const floorBound = new THREE.Box3().setFromObject(portal.model);
 assert.ok(Math.abs(floorBound.min.y) < 1e-8);
 const portalForward = new THREE.Vector3(0, 0, 1).applyQuaternion(portal.object.quaternion);
-const towardSpawn = new THREE.Vector3(0, portal.object.position.y, 5).sub(portal.object.position).normalize();
-assert.ok(portalForward.dot(towardSpawn) > 0.999);
+assert.deepEqual(portalForward.toArray(), [0, 0, 1], 'fixture rotation is a direct canonical local transform');
 portal.reset(); assert.equal(portal.object.visible, true); assert.ok(portal.object.position.distanceTo(firstPosition) < 1e-8);
 portal.dispose(); assert.equal(portal.object.parent, null);
 console.log('VR portal display assertions passed');

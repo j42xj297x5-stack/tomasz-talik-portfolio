@@ -6,7 +6,7 @@ const ASSET_IDS = Object.freeze(Array.from({ length: 6 }, (_, index) => `shell-r
 const SUFFIXES = Object.freeze(['a', 'b', 'c']);
 const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5));
 
-export function createVrShellSystem({ parent, assetManager, baseRadius, emissionSettings = {} }) {
+export function createVrShellSystem({ parent, assetManager, baseRadius, centerY = 0, emissionSettings = {} }) {
   if (!parent?.add || !assetManager?.cloneGltfScene) throw new Error('VrShellSystem requires parent and assetManager.');
   if (!Number.isFinite(baseRadius) || baseRadius <= 0) throw new Error('VrShellSystem requires a positive baseRadius.');
   const claimedMin = emissionSettings.claimedEmissionMin ?? 1;
@@ -53,7 +53,7 @@ export function createVrShellSystem({ parent, assetManager, baseRadius, emission
   function applyPositions() { records.forEach((record) => {
     const angle = record.phase + elapsed * record.angularSpeed * record.direction;
     const x = Math.cos(angle) * record.radius, planeY = Math.sin(angle) * record.radius;
-    const y = planeY * Math.sin(record.inclination), z = planeY * Math.cos(record.inclination);
+    const y = centerY + planeY * Math.sin(record.inclination), z = planeY * Math.cos(record.inclination);
     const cosNode = Math.cos(record.ascendingNode), sinNode = Math.sin(record.ascendingNode);
     record.orbitPosition.set(x * cosNode - z * sinNode, y, x * sinNode + z * cosNode);
     const state = record.object.userData.shellState;

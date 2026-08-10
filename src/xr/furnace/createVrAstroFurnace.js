@@ -1,6 +1,4 @@
 import * as THREE from '../../vendor/three.js';
-import { applyWorldTransform } from '../applyWorldTransform.js';
-import { resolveVrPlatformFixtureWorldPosition } from '../placement/vrPlatformFixturePlacement.js';
 
 const REQUIRED_NODE_NAMES = Object.freeze([
   'ASTRO_FURNACE_ROOT', 'button_open', 'button_activate', 'button_option',
@@ -35,7 +33,7 @@ function isVisibleGeometry(node, root) {
 }
 
 export function createVrAstroFurnace({
-  parent, model, animations = [], settings, platformOrigin, spawnPosition
+  parent, model, animations = [], settings
 }) {
   const object = new THREE.Group();
   object.name = 'VrAstroFurnace';
@@ -88,7 +86,7 @@ export function createVrAstroFurnace({
     clipNames: Object.freeze(Object.keys(clips)),
     missingNodes: Object.freeze(missingNodes),
     missingClips: Object.freeze(missingClips),
-    capabilities, animationDetails, placementMode: settings.placementMode, appliedScale: settings.scale,
+    capabilities, animationDetails, appliedScale: settings.scale,
     fixturePosition: null, resolvedPosition: null, visibleBounds: null
   };
   let disposed = false;
@@ -98,11 +96,6 @@ export function createVrAstroFurnace({
   const visibleBounds = new THREE.Box3();
   const geometryBounds = new THREE.Box3();
   const resolvedWorldPosition = new THREE.Vector3();
-  const desiredWorldPosition = new THREE.Vector3();
-  const desiredWorldQuaternion = new THREE.Quaternion();
-  const desiredWorldScale = new THREE.Vector3();
-  const target = new THREE.Vector3();
-  const placementProbe = new THREE.Object3D();
 
   function calculateVisibleBounds() {
     visibleBounds.makeEmpty();
@@ -119,30 +112,20 @@ export function createVrAstroFurnace({
 
   function place() {
     if (disposed) return false;
-    desiredWorldScale.setScalar(settings.scale);
-    resolveVrPlatformFixtureWorldPosition({
-      platformOrigin, fixturePosition: settings.position, target: desiredWorldPosition
-    });
-    target.set(spawnPosition?.x ?? 0, desiredWorldPosition.y, spawnPosition?.z ?? 0);
-    placementProbe.position.copy(desiredWorldPosition);
-    placementProbe.quaternion.identity();
-    placementProbe.lookAt(target);
-    placementProbe.rotateX(THREE.MathUtils.degToRad(settings.rotationDegrees.x));
-    placementProbe.rotateY(THREE.MathUtils.degToRad(settings.rotationDegrees.y));
-    placementProbe.rotateZ(THREE.MathUtils.degToRad(settings.rotationDegrees.z));
-    desiredWorldQuaternion.copy(placementProbe.quaternion);
-    applyWorldTransform(object, desiredWorldPosition, desiredWorldQuaternion, desiredWorldScale);
+    object.position.set(settings.position.x, settings.position.y, settings.position.z);
+    object.rotation.set(
+      THREE.MathUtils.degToRad(settings.rotationDegrees.x),
+      THREE.MathUtils.degToRad(settings.rotationDegrees.y),
+      THREE.MathUtils.degToRad(settings.rotationDegrees.z)
+    );
+    object.scale.setScalar(settings.scale);
     const bounds = calculateVisibleBounds();
-    if (!bounds.isEmpty()) {
-      desiredWorldPosition.y += settings.floorOffset - bounds.min.y;
-      applyWorldTransform(object, desiredWorldPosition, desiredWorldQuaternion, desiredWorldScale);
-    }
+    if (!bounds.isEmpty()) modelRoot.position.y = (settings.floorOffset - bounds.min.y) / settings.scale;
     object.visible = settings.enabled && Boolean(model);
     calculateVisibleBounds();
     object.getWorldPosition(resolvedWorldPosition);
-    diagnostics.placementMode = settings.placementMode;
     diagnostics.appliedScale = object.scale.x;
-    diagnostics.fixturePosition = [settings.position.x, settings.position.y, settings.position.z];
+    diagnostics.fixturePosition = object.position.toArray();
     diagnostics.resolvedPosition = resolvedWorldPosition.toArray();
     diagnostics.visibleBounds = visibleBounds.isEmpty() ? null : {
       min: visibleBounds.min.toArray(), max: visibleBounds.max.toArray()
@@ -198,7 +181,7 @@ export function createVrAstroFurnace({
       missingNodes: diagnostics.missingNodes.join(', '),
       missingClips: diagnostics.missingClips.join(', '),
       capabilities: JSON.stringify(capabilities),
-      animationDetails: JSON.stringify(diagnostics.animationDetails), placementMode: diagnostics.placementMode,
+      animationDetails: JSON.stringify(diagnostics.animationDetails),
       appliedScale: diagnostics.appliedScale, fixturePosition: JSON.stringify(diagnostics.fixturePosition),
       resolvedPosition: JSON.stringify(diagnostics.resolvedPosition),
       visibleBounds: JSON.stringify(diagnostics.visibleBounds)

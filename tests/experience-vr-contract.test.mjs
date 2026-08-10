@@ -7,13 +7,12 @@ import { applyWorldTransform } from '../src/xr/applyWorldTransform.js';
 import { createVrSemanticInput, XR_STANDARD_BUTTONS } from '../src/xr/input/createVrSemanticInput.js';
 import { createVrHandModeController, VR_LEFT_HAND_MODES } from '../src/xr/input/createVrHandModeController.js';
 
-const [main, vr, experience3d, vrControllers, glyphInteraction, entryTransition, spatialPlaque, crystalCollection, locomotion, portalDisplay, crystalReliquary, astroFurnace, furnacePanel, semanticInputSource, playerGuidePanelSource, playerGuideContentSource] = await Promise.all([
+const [main, vr, experience3d, vrControllers, glyphInteraction, spatialPlaque, crystalCollection, locomotion, portalDisplay, crystalReliquary, astroFurnace, furnacePanel, semanticInputSource, playerGuidePanelSource, playerGuideContentSource] = await Promise.all([
   readFile(new URL('../src/main.js', import.meta.url), 'utf8'),
   readFile(new URL('../src/experienceVr.js', import.meta.url), 'utf8'),
   readFile(new URL('../src/experience3d.js', import.meta.url), 'utf8'),
   readFile(new URL('../src/xr/createVrControllers.js', import.meta.url), 'utf8'),
   readFile(new URL('../src/xr/createVrGlyphInteraction.js', import.meta.url), 'utf8'),
-  readFile(new URL('../src/xr/createVrEntryTransition.js', import.meta.url), 'utf8'),
   readFile(new URL('../src/xr/createVrSpatialPlaque.js', import.meta.url), 'utf8'),
   readFile(new URL('../src/xr/createVrCrystalCollection.js', import.meta.url), 'utf8'),
   readFile(new URL('../src/xr/createVrLocomotion.js', import.meta.url), 'utf8'),
@@ -43,7 +42,6 @@ assert.match(vr, /function handleSessionEnd\(\)[\s\S]*xrStartCalibrationPending 
   'session end clears pending calibration and resets the intro for re-entry');
 assert.doesNotMatch(vr, /const trackedHead = renderer\.xr\.getCamera\(camera\)/,
   'the stale immediate post-setSession correction is removed');
-assert.doesNotMatch(entryTransition, /requestAnimationFrame|performance\.now/);
 assert.match(spatialPlaque, /new THREE\.CanvasTexture\(canvas\)/);
 assert.match(spatialPlaque, /new THREE\.PlaneGeometry/);
 assert.match(vr, /surface: portalDisplay\.canvasSurface/);
@@ -65,14 +63,13 @@ const assertFacesTarget = (position, lookAt) => {
 assertFacesTarget({ x: 0, y: 0, z: 6 }, { x: 0, y: 1, z: 0 });
 assertFacesTarget({ x: -4, y: 2, z: 3 }, { x: 2, y: -5, z: -1 });
 assert.equal(calculatePlayerRigYaw({ x: 1, y: 0, z: 1 }, { x: 1, y: 9, z: 1 }), 0);
-assert.match(vr, /orientPlayerRig\(playerRig, settings\.spawn\.lookAt\)/);
+assert.match(vr, /orientPlayerRig\(playerRig, settings\.spatial\.monkeyFinal\)/);
 assert.doesNotMatch(vr, /camera\.rotation|camera\.quaternion|camera\.lookAt/);
-assert.doesNotMatch(entryTransition, /camera\.(position|rotation|quaternion)\.(set|copy)|playerRig\.rotation/);
 assert.doesNotMatch(vr, /createVrEntryTransition|activatedEntryGlyph|entryReady/);
 assert.match(vr, /onGlyphHoldComplete:[\s\S]*crystalCollection\.spawnOne/);
 const glyphSpawnContract = vr.match(/onGlyphHoldComplete:[\s\S]*?\n  }\n}/)?.[0] ?? '';
 assert.match(glyphSpawnContract, /node\.getWorldPosition/);
-assert.match(glyphSpawnContract, /platformOrigin\.getWorldPosition/);
+assert.match(glyphSpawnContract, /progressFloor\.object\.getWorldPosition/);
 assert.doesNotMatch(glyphSpawnContract, /monkeyMotionRoot\.getWorldPosition/);
 assert.doesNotMatch(glyphSpawnContract, /renderer\.xr|getCamera|getWorldDirection/);
 assert.match(vr, /crystalCollection\.reset\(\);\s*activateButton\.reset\(\);\s*releaseButton\.reset\(\);\s*crystalReliquary\.reset\(\);\s*restorePortalWaitingState\(\);\s*locomotion\.reset\(\);\s*resetPlayerRigToSpawn\(\);/);
@@ -105,10 +102,11 @@ assert.doesNotMatch(glyphInteraction, /SphereGeometry\(0\.31|VrEntryGlyphMarker|
 assert.doesNotMatch(`${vr}\n${vrControllers}`, /XRControllerModelFactory/);
 assert.match(vr, /onPreview: \(page\) => portalCanvas\.show\(resolveExperienceVrPage\(page, language\)\)/);
 assert.match(vr, /onCommit: \(page, \{ tierCompleted \}\)[\s\S]*progressFloor\.activatePage\(page\);[\s\S]*if \(tierCompleted\) progressFloor\.completeTier\(page\.order\)/);
-assert.match(vr, /const monkeyActor = await loadMonkeyModel\(\{ scene: worldRoot, fallbackObject: centralPlaceholder, assetManager \}\);[\s\S]*motionRoot: monkeyMotionRoot[\s\S]*visualRoot: monkeyVisualRoot[\s\S]*stoneRoot: monkeyStoneRoot[\s\S]*model: monkeyModel[\s\S]*progressFloor\.object\.attach\(monkeyMotionRoot\);[\s\S]*progressFloor\.object\.attach\(monkeyStoneRoot\);/);
-assert.match(vr, /apply\(\{ anchor: 'ANCHOR_MONKEY'[\s\S]*monkeyActor\.dockStoneToCanonicalMonkey\(\);/);
-assert.doesNotMatch(vr, /progressFloor\.object\.add\(monkeyMotionRoot\)/);
-assert.match(vr, /createVrPortalDisplay\([\s\S]*platformOrigin/);
+assert.match(vr, /loadMonkeyModel\(\{ actorParent: progressFloor\.object, fixtureParent: platformFixturesRoot/);
+assert.match(vr, /monkeyMotionRoot\.position\.set\(settings\.spatial\.monkeyFinal[\s\S]*monkeyActor\.dockStoneToCanonicalMonkey\(\)/);
+assert.doesNotMatch(vr, /sceneLayout|uklad_sceny|ANCHOR_PLAYER_SPAWN/);
+assert.doesNotMatch(vr, /progressFloor\.object\.attach|platformFixturesRoot\.attach|floorPassengerRoot\.attach/);
+assert.match(vr, /createVrPortalDisplay\(\{[\s\S]*parent: platformFixturesRoot/);
 assert.doesNotMatch(vr, /createVrPortalDisplay\([\s\S]*anchorObject: monkeyMotionRoot/);
 
 assert.equal(XR_STANDARD_BUTTONS.togglePlayerGuidePanel, 5, 'LEFT Y uses the standard Y button slot');
@@ -205,158 +203,39 @@ handControllerClosed.update(0.016);
 assert.equal(handControllerClosed.getLeftMode(), VR_LEFT_HAND_MODES.ASTERION_SPHERE, 'closed panel X toggles Asterion again');
 
 
-assert.match(vr, /createVrAstroFurnace\([\s\S]*platformOrigin/);
-assert.doesNotMatch(vr, /createVrAstroFurnace\([\s\S]*anchorObject: monkeyMotionRoot/);
-
-assert.match(vr, /const platformFixturesRoot = new THREE\.Group\(\);\s*platformFixturesRoot\.name = 'VrPlatformFixturesRoot';[\s\S]*progressFloor\.object\.add\(platformFixturesRoot\);/);
-assert.match(vr, /const platformOrigin = new THREE\.Group\(\);\s*platformOrigin\.name = 'VrPlatformOrigin';\s*platformOrigin\.position\.set\(0, 0, 0\);\s*platformOrigin\.quaternion\.identity\(\);\s*platformOrigin\.scale\.set\(1, 1, 1\);\s*progressFloor\.object\.add\(platformOrigin\);/);
-assert.match(vr, /const floorPassengerRoot = new THREE\.Group\(\);\s*floorPassengerRoot\.name = 'VrFloorPassengerRoot';[\s\S]*progressFloor\.object\.add\(floorPassengerRoot\);/);
-assert.match(vr, /const floorWalkRadius = glyphOrbit\.effectiveRadius;\s*floorPassengerRoot\.attach\(playerRig\);/);
+assert.match(vr, /const experienceRoot = new THREE\.Group\(\);[\s\S]*experienceRoot\.name = 'ExperienceVrRoot'/);
+assert.match(vr, /worldStableRoot\.name = 'WorldStableRoot';[\s\S]*experienceRoot\.add\(worldStableRoot\)/);
+assert.match(vr, /progressFloor = createVrProgressFloor\(\{[\s\S]*parent: experienceRoot/);
+assert.match(vr, /progressFloor\.object\.add\(platformFixturesRoot\)/);
+assert.match(vr, /progressFloor\.object\.add\(floorPassengerRoot\);\s*floorPassengerRoot\.add\(playerRig\)/);
+assert.match(vr, /parent: platformFixturesRoot,[\s\S]*portalModel/);
+assert.match(vr, /createVrAstroFurnace\(\{[\s\S]*parent: platformFixturesRoot/);
+assert.match(vr, /createVrCrystalReliquary\(\{[\s\S]*parent: platformFixturesRoot/);
+assert.match(vr, /createVrAstroFurnacePanel\(\{[\s\S]*parent: platformFixturesRoot/);
 assert.match(vr, /walkRadius: floorWalkRadius/);
-assert.match(vr, /restorePortalWaitingState\(\);\s*platformFixturesRoot\.attach\(portalDisplay\.object\);\s*platformFixturesRoot\.attach\(astroFurnace\.object\);/);
-assert.match(vr, /platformFixturesRoot\.attach\(crystalReliquary\.object\);\s*platformFixturesRoot\.attach\(crystalReliquary\.insertFeedback\);/);
-assert.match(vr, /platformFixturesRoot\.attach\(furnacePanel\.object\);/);
 assert.match(vr, /parent: portalDisplay\.object,[\s\S]*surface: portalDisplay\.canvasSurface/);
 assert.match(vr, /crystalReliquary\.attachCompanion\(\{ id: 'activate'/);
 assert.match(vr, /crystalReliquary\.attachCompanion\(\{ id: 'release'/);
-assert.doesNotMatch(vr, /platformFixturesRoot\.attach\(monkeyMotionRoot\)|platformFixturesRoot\.add\(monkeyMotionRoot\)/);
-assert.doesNotMatch(vr, /platformFixturesRoot\.(?:attach|add)\(playerRig\)/);
-assert.doesNotMatch(vr, /progressFloor\.object\.(?:attach|add)\(playerRig\)/);
-assert.doesNotMatch(vr, /platformFixturesRoot\.(?:attach|add)\(glyphRing\)|platformFixturesRoot\.(?:attach|add)\(shellSystem/);
-assert.match(portalDisplay, /applyWorldTransform\(object, desiredWorldPosition, desiredWorldQuaternion\)/);
-assert.match(crystalReliquary, /portalDisplay\.object\.getWorldPosition\(portalPosition\);[\s\S]*portalDisplay\.object\.getWorldQuaternion\(portalQuaternion\);[\s\S]*applyWorldTransform\(object, desiredWorldPosition, portalQuaternion\)/);
-assert.match(crystalReliquary, /applyWorldTransform\(insertFeedback, sphere\.center, insertFeedback\.quaternion, insertFeedbackWorldScale\)/);
-assert.match(astroFurnace, /resolveVrPlatformFixtureWorldPosition\([\s\S]*fixturePosition: settings\.position[\s\S]*applyWorldTransform\(object, desiredWorldPosition, desiredWorldQuaternion, desiredWorldScale\)/);
-assert.doesNotMatch(astroFurnace, /mirrorObject/, 'furnace does not depend on the placed portal object');
-assert.doesNotMatch(astroFurnace, /object\.position\.y = 0;[\s\S]*worldToLocal\(object\.position\)/);
-assert.match(furnacePanel, /return \{ object: root/);
-assert.match(furnacePanel, /applyWorldTransform\(root, desiredWorldPosition, desiredWorldQuaternion, desiredWorldScale\)/);
+assert.match(portalDisplay, /object\.position\.set\(settings\.position\.x, settings\.position\.y, settings\.position\.z\)/);
+assert.match(crystalReliquary, /object\.position\.set\(position\.x, position\.y, position\.z\)/);
+assert.match(astroFurnace, /object\.position\.set\(settings\.position\.x, settings\.position\.y, settings\.position\.z\)/);
+assert.match(crystalReliquary, /applyWorldTransform\(insertFeedback, sphere\.center/);
+assert.match(furnacePanel, /applyWorldTransform\(root, desiredWorldPosition/);
 
-const assertFixturesAttachContract = () => {
-  const sceneRoot = new THREE.Group();
-  const floorRoot = new THREE.Group();
-  floorRoot.name = 'VrTiltableFloorRoot';
-  const fixturesRoot = new THREE.Group();
-  fixturesRoot.name = 'VrPlatformFixturesRoot';
-  floorRoot.add(fixturesRoot);
-  sceneRoot.add(floorRoot);
-  const fixtures = ['portal', 'reliquary', 'furnace', 'panel'].map((name, index) => {
-    const fixture = new THREE.Group();
-    fixture.name = name;
-    fixture.position.set(index + 1, 0.25 * index, -index - 0.5);
-    fixture.quaternion.setFromEuler(new THREE.Euler(0.1 * index, -0.2 * index, 0.05 * index));
-    fixture.scale.setScalar(1 + index * 0.1);
-    sceneRoot.add(fixture);
-    return fixture;
-  });
-  sceneRoot.updateMatrixWorld(true);
-  const before = fixtures.map((fixture) => ({
-    position: fixture.getWorldPosition(new THREE.Vector3()),
-    quaternion: fixture.getWorldQuaternion(new THREE.Quaternion()),
-    scale: fixture.getWorldScale(new THREE.Vector3())
-  }));
-  fixtures.forEach((fixture) => fixturesRoot.attach(fixture));
-  sceneRoot.updateMatrixWorld(true);
-  fixtures.forEach((fixture, index) => {
-    assert.equal(fixture.parent, fixturesRoot);
-    assert.ok(fixture.getWorldPosition(new THREE.Vector3()).distanceTo(before[index].position) < 1e-12);
-    assert.ok(fixture.getWorldQuaternion(new THREE.Quaternion()).angleTo(before[index].quaternion) < 1e-7);
-    assert.ok(fixture.getWorldScale(new THREE.Vector3()).distanceTo(before[index].scale) < 1e-12);
-  });
-  floorRoot.quaternion.setFromEuler(new THREE.Euler(0.25, 0.4, -0.12));
-  sceneRoot.updateMatrixWorld(true);
-  fixtures.forEach((fixture, index) => {
-    assert.ok(fixture.getWorldPosition(new THREE.Vector3()).distanceTo(before[index].position) > 1e-3);
-    assert.ok(fixture.getWorldQuaternion(new THREE.Quaternion()).angleTo(before[index].quaternion) > 1e-3);
-  });
-  const desiredWorldPosition = new THREE.Vector3(0.8, 0.6, -1.1);
-  const desiredWorldQuaternion = new THREE.Quaternion().setFromEuler(new THREE.Euler(0.3, -0.5, 0.1));
-  const desiredWorldScale = new THREE.Vector3(1.2, 0.9, 1.1);
-  applyWorldTransform(fixtures[0], desiredWorldPosition, desiredWorldQuaternion, desiredWorldScale);
-  sceneRoot.updateMatrixWorld(true);
-  assert.equal(fixtures[0].parent, fixturesRoot);
-  assert.ok(fixtures[0].getWorldPosition(new THREE.Vector3()).distanceTo(desiredWorldPosition) < 1e-12);
-  assert.ok(fixtures[0].getWorldQuaternion(new THREE.Quaternion()).angleTo(desiredWorldQuaternion) < 1e-7);
-  assert.ok(fixtures[0].getWorldScale(new THREE.Vector3()).distanceTo(desiredWorldScale) < 1e-12);
-};
-assertFixturesAttachContract();
+const canonicalRoot = new THREE.Group();
+const worldStable = new THREE.Group();
+const floorRoot = new THREE.Group();
+const fixturesRoot = new THREE.Group();
+const passengerRoot = new THREE.Group();
+const rig = new THREE.Group();
+canonicalRoot.add(worldStable, floorRoot); floorRoot.add(fixturesRoot, passengerRoot); passengerRoot.add(rig);
+assert.deepEqual(floorRoot.position.toArray(), [0, 0, 0]);
+assert.equal(rig.parent, passengerRoot);
+const fixture = new THREE.Group(); fixture.position.set(2, 0, -1); fixturesRoot.add(fixture);
+const localFixturePosition = fixture.position.clone();
+floorRoot.quaternion.setFromEuler(new THREE.Euler(.2, .3, -.1)); canonicalRoot.updateMatrixWorld(true);
+assert.deepEqual(fixture.position.toArray(), localFixturePosition.toArray(), 'tilt changes inheritance, not canonical local placement');
 
-
-const assertPassengerAttachContract = () => {
-  const sceneRoot = new THREE.Group();
-  const floorRoot = new THREE.Group();
-  floorRoot.name = 'VrTiltableFloorRoot';
-  const passengerRoot = new THREE.Group();
-  passengerRoot.name = 'VrFloorPassengerRoot';
-  passengerRoot.position.set(0, 0, 0);
-  passengerRoot.quaternion.identity();
-  passengerRoot.scale.set(1, 1, 1);
-  floorRoot.add(passengerRoot);
-  sceneRoot.add(floorRoot);
-  const rig = new THREE.Group(); rig.name = 'VrPlayerRig';
-  const camera = new THREE.PerspectiveCamera();
-  const controller = new THREE.Group();
-  const grip = new THREE.Group();
-  rig.add(camera, controller, grip);
-  sceneRoot.add(rig);
-  rig.position.set(0.5, 1.6, 2.5);
-  rig.quaternion.setFromEuler(new THREE.Euler(0, 0.4, 0));
-  rig.scale.setScalar(1.1);
-  sceneRoot.updateMatrixWorld(true);
-  const beforePosition = rig.getWorldPosition(new THREE.Vector3());
-  const beforeQuaternion = rig.getWorldQuaternion(new THREE.Quaternion());
-  const beforeScale = rig.getWorldScale(new THREE.Vector3());
-  passengerRoot.attach(rig);
-  sceneRoot.updateMatrixWorld(true);
-  assert.equal(passengerRoot.parent, floorRoot, 'VrFloorPassengerRoot is a child of VrTiltableFloorRoot');
-  assert.deepEqual(passengerRoot.position.toArray(), [0, 0, 0], 'VrFloorPassengerRoot has identity position');
-  assert.ok(passengerRoot.quaternion.angleTo(new THREE.Quaternion()) < 1e-12, 'VrFloorPassengerRoot has identity rotation');
-  assert.deepEqual(passengerRoot.scale.toArray(), [1, 1, 1], 'VrFloorPassengerRoot has identity scale');
-  assert.equal(rig.parent, passengerRoot, 'playerRig is parented under passenger root');
-  assert.equal(camera.parent, rig, 'camera remains child of playerRig');
-  assert.equal(controller.parent, rig, 'controller remains child of playerRig');
-  assert.equal(grip.parent, rig, 'grip remains child of playerRig');
-  assert.ok(rig.getWorldPosition(new THREE.Vector3()).distanceTo(beforePosition) < 1e-12, 'attach preserves rig world position');
-  assert.ok(rig.getWorldQuaternion(new THREE.Quaternion()).angleTo(beforeQuaternion) < 1e-7, 'attach preserves rig world quaternion');
-  assert.ok(rig.getWorldScale(new THREE.Vector3()).distanceTo(beforeScale) < 1e-12, 'attach preserves rig world scale');
-  floorRoot.quaternion.setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI / 4);
-  sceneRoot.updateMatrixWorld(true);
-  assert.ok(rig.getWorldQuaternion(new THREE.Quaternion()).angleTo(beforeQuaternion) > 1e-3, 'platform rotation carries playerRig as passenger');
-};
-assertPassengerAttachContract();
-
-const assertMonkeyFloorAttachContract = (monkeyAnchor) => {
-  const sceneRoot = new THREE.Group();
-  const floorRoot = new THREE.Group();
-  floorRoot.name = 'VrTiltableFloorRoot';
-  floorRoot.position.set(0, -1.05, 0);
-  floorRoot.rotation.set(0.1, 0.2, -0.05);
-  sceneRoot.add(floorRoot);
-  sceneRoot.add(monkeyAnchor);
-  monkeyAnchor.position.set(1.25, 0.4, -2.5);
-  monkeyAnchor.quaternion.setFromEuler(new THREE.Euler(0.3, -0.4, 0.2));
-  monkeyAnchor.scale.setScalar(1.2);
-  sceneRoot.updateMatrixWorld(true);
-  const worldPositionBefore = monkeyAnchor.getWorldPosition(new THREE.Vector3());
-  const worldQuaternionBefore = monkeyAnchor.getWorldQuaternion(new THREE.Quaternion());
-  const worldScaleBefore = monkeyAnchor.getWorldScale(new THREE.Vector3());
-
-  floorRoot.attach(monkeyAnchor);
-  sceneRoot.updateMatrixWorld(true);
-
-  assert.equal(monkeyAnchor.parent, floorRoot);
-  assert.ok(monkeyAnchor.getWorldPosition(new THREE.Vector3()).distanceTo(worldPositionBefore) < 1e-12);
-  assert.ok(monkeyAnchor.getWorldQuaternion(new THREE.Quaternion()).angleTo(worldQuaternionBefore) < 1e-7);
-  assert.ok(monkeyAnchor.getWorldScale(new THREE.Vector3()).distanceTo(worldScaleBefore) < 1e-12);
-
-  floorRoot.quaternion.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI / 5));
-  sceneRoot.updateMatrixWorld(true);
-
-  assert.ok(monkeyAnchor.getWorldPosition(new THREE.Vector3()).distanceTo(worldPositionBefore) > 1e-3);
-  assert.ok(monkeyAnchor.getWorldQuaternion(new THREE.Quaternion()).angleTo(worldQuaternionBefore) > 1e-3);
-};
-assertMonkeyFloorAttachContract(new THREE.Group());
-assertMonkeyFloorAttachContract(new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshBasicMaterial()));
 assert.doesNotMatch(crystalCollection, /CANNON|Ammo|Rapier|gravity|throwVelocity|linearVelocity|angularVelocity/i);
 assert.doesNotMatch(vrControllers, /controller\.(position|rotation|quaternion)\.(set|copy)/);
 

@@ -4,9 +4,9 @@ import { createVrGlyphOrbit, angularDifference } from '../src/xr/createVrGlyphOr
 const nodes = Array.from({ length: 5 }, (_, index) => {
   const node = new THREE.Group(); node.position.y = index; node.userData.orbitAngle = Math.PI * 2 * index / 5; node.userData.orbitRadius = 3.8; return node;
 });
-const settings = { enabled: true, radiusMultiplier: 2, angularSpeed: 0.2, direction: 1, entryAngleThreshold: 0.3, entryAngleHysteresis: 0.05 };
-const orbit = createVrGlyphOrbit({ nodes, settings, entryDirection: new THREE.Vector3(0, 0, 1) });
-assert.equal(orbit.baseRadius, 3.8); assert.equal(orbit.effectiveRadius, 7.6);
+const settings = { enabled: true, angularSpeed: 0.2, direction: 1, entryAngleThreshold: 0.3, entryAngleHysteresis: 0.05 };
+const orbit = createVrGlyphOrbit({ nodes, settings, entryDirection: new THREE.Vector3(0, 0, 1), radius: 7.6 });
+assert.equal(orbit.effectiveRadius, 7.6);
 assert.ok(8.6 > orbit.effectiveRadius);
 const before = nodes[0].position.clone(); const ready = orbit.update(0.5);
 assert.notDeepEqual(nodes[0].position, before);

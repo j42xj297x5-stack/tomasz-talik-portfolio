@@ -12,19 +12,16 @@ assert.equal(reliquaryAsset.type, 'model');
 const runtime = await readFile(new URL('../src/experienceVr.js', import.meta.url), 'utf8');
 assert.match(runtime, /cloneGltfScene\('vr-crystal-reliquary-model'\)/);
 assert.match(runtime, /insertionTarget: crystalReliquary/);
-assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.reliquary.distanceFromPortal, 1.5);
+assert.deepEqual(DEFAULT_EXPERIENCE_VR_SETTINGS.reliquary.position, { x: -1.497785, y: 0, z: 0.949929 });
 assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.reliquary.heightOffset, 0.5);
 assert.deepEqual(DEFAULT_EXPERIENCE_VR_SETTINGS.reliquary.activateButton, {
   enabled: true, rayMaxDistance: 3, side: 'left'
 });
-const normalized = normalizeExperienceVrSettings({ schemaVersion: 1, reliquary: { enabled: false, distanceFromPortal: 0.75,
-  forwardOffset: 9, floorOffset: 0.1, activateButton: { enabled: false, rayMaxDistance: 9, placementRadius: -2,
-    placementAngleDegrees: 120, verticalOffset: -2 } } });
-assert.equal(normalized.reliquary.distanceFromPortal, 5, 'legacy offsets combine and clamp');
-assert.equal(normalized.reliquary.heightOffset, 0.1, 'legacy floorOffset maps to model height');
-assert.ok(Math.abs(normalized.reliquary.buttons.forwardDistance) < 1e-10);
-assert.equal(normalized.reliquary.buttons.lateralOffset, 0);
-assert.equal(normalized.reliquary.buttons.verticalOffset, -1);
+const normalized = normalizeExperienceVrSettings({ schemaVersion: 1, reliquary: { enabled: false,
+  position: { x: 3, y: 0, z: 4 }, floorOffset: 0.1,
+  activateButton: { enabled: false, rayMaxDistance: 9 } } });
+assert.deepEqual(normalized.reliquary.position, { x: 3, y: 0, z: 4 });
+assert.equal(normalized.reliquary.heightOffset, 0.1, 'visual model height remains independent from fixture position');
 assert.deepEqual(normalized.reliquary.activateButton, { enabled: false, rayMaxDistance: 5, side: 'left' });
 
 const scene = new THREE.Scene();
@@ -55,7 +52,7 @@ assert.ok(visibleBounds.max.x < 10, 'technical sphere is excluded from visible b
 const sourceScale = source.scale.clone();
 const stoneScale = stone.scale.clone();
 const reliquary = createVrCrystalReliquary({
-  scene, reliquaryModel: source, portalDisplay, spawnPosition: { x: 2, y: 0, z: 7 },
+  parent: scene, reliquaryModel: source,
   settings: DEFAULT_EXPERIENCE_VR_SETTINGS.reliquary
 });
 assert.equal(reliquary.object.name, 'VrCrystalReliquary');
@@ -88,12 +85,10 @@ assert.equal(insertZone.visible, false);
 assert.deepEqual(source.scale.toArray(), sourceScale.toArray());
 assert.deepEqual(stone.scale.toArray(), stoneScale.toArray());
 assert.deepEqual(reliquary.object.scale.toArray(), [1, 1, 1]);
-const portalPosition = portalObject.getWorldPosition(new THREE.Vector3());
-const reliquaryOffset = reliquary.object.position.clone().sub(portalPosition.clone().setY(0));
-assert.ok(Math.abs(reliquaryOffset.dot(reliquary.portalForward) - 1.5) < 1e-10);
-assert.ok(Math.abs(reliquaryOffset.dot(reliquary.portalLeft)) < 1e-10, 'reliquary remains on the portal axis');
+assert.deepEqual(reliquary.object.position.toArray(), Object.values(DEFAULT_EXPERIENCE_VR_SETTINGS.reliquary.position));
+const portalPosition = portalObject.position.clone();
 assert.equal(reliquary.object.position.y, 0);
-assert.ok(Math.abs(reliquary.object.quaternion.dot(portalObject.getWorldQuaternion(new THREE.Quaternion()))) > 0.999999);
+assert.ok(Math.abs(reliquary.object.rotation.y - THREE.MathUtils.degToRad(5.41)) < 1e-12);
 const grounded = getReliquaryVisibleBounds(reliquary.object, insertZone);
 assert.ok(Math.abs(grounded.min.y - 0.5) < 1e-8);
 
@@ -140,12 +135,11 @@ assert.equal(reliquary.companionsRoot.children.filter(({ name }) => name === 'Vr
 assert.ok(reliquary.object.position.distanceTo(placedOnce) < 1e-10, 'reset does not accumulate the reliquary offset');
 assert.ok(companion.getWorldPosition(new THREE.Vector3()).distanceTo(companionWorldOnce) < 1e-10, 'reset does not accumulate the button offset');
 portalObject.position.add(new THREE.Vector3(-3, 0, 1.25));
-const portalTranslation = portalObject.position.clone().sub(portalPosition);
 reliquary.place();
-assert.ok(reliquary.object.position.distanceTo(placedOnce.clone().add(portalTranslation)) < 1e-10,
-  'the complete reliquary follows portal translation');
-assert.ok(companion.getWorldPosition(new THREE.Vector3()).distanceTo(companionWorldOnce.clone().add(portalTranslation)) < 1e-10,
-  'button companions follow the translated reliquary');
+assert.ok(reliquary.object.position.distanceTo(placedOnce) < 1e-10,
+  'canonical reliquary placement never follows another fixture');
+assert.ok(companion.getWorldPosition(new THREE.Vector3()).distanceTo(companionWorldOnce) < 1e-10,
+  'button companions remain owned by the canonical reliquary transform');
 
 function controllerRecord() {
   const controller = new THREE.Group();
