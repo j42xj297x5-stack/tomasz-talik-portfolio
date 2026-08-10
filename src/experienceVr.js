@@ -618,6 +618,7 @@ introSequence = createVrIntroSequence({
   platformFixturesRoot, locomotion, setMonkeyEmergeAlpha: monkeyActor.setEmergeAlpha,
   ringRadius: glyphOrbit.effectiveRadius, entryDirection: introEntryDirection,
   settings: { ...settings.intro, locale: language }, bypass: introQaBypass,
+  onOpeningRaysReady: () => vrControllers.setRaysEnabled(true),
   getHeadPosition: () => {
     return renderer.xr.getCamera(camera).getWorldPosition(new THREE.Vector3());
   },
@@ -654,6 +655,7 @@ function renderFrame() {
     else xrCamera.updateWorldMatrix(true, true);
     xrStartCalibrationPending = false;
     introSequence.beginAfterXrCalibration();
+    if (introQaBypass) vrControllers.setRaysEnabled(true);
     renderer.render(scene, camera);
     return;
   }

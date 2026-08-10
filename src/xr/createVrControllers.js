@@ -4,10 +4,11 @@ const RAY_COLOR = 0xd8e2ec;
 
 export function createVrControllers({ renderer, playerRig, settings }) {
   if (!settings.enabled) {
-    return { controllers: [], beginRayHitFrame() {}, resolveVisualRayLength() {}, reset() {}, update() {}, dispose() {} };
+    return { controllers: [], beginRayHitFrame() {}, resolveVisualRayLength() {}, setRaysEnabled() {}, reset() {}, update() {}, dispose() {} };
   }
 
   let disposed = false;
+  let raysEnabled = false;
   const controllers = [renderer.xr.getController(0), renderer.xr.getController(1)].map((controller, index) => {
     const grip = renderer.xr.getControllerGrip(index);
     grip.name = `VrControllerGrip${index}`;
@@ -91,7 +92,7 @@ export function createVrControllers({ renderer, playerRig, settings }) {
         targetRayMode: inputSource.targetRayMode ?? '',
         profiles: Array.isArray(inputSource.profiles) ? [...inputSource.profiles] : []
       };
-      ray.visible = true;
+      ray.visible = raysEnabled;
       setSelecting(false);
     };
     const disconnected = () => {
@@ -146,7 +147,14 @@ export function createVrControllers({ renderer, playerRig, settings }) {
 
   function beginRayHitFrame() { publicControllers.forEach((record) => record.beginRayHitFrame()); }
   function resolveVisualRayLength() { publicControllers.forEach((record) => record.resolveVisualRayLength()); }
-  function reset() { publicControllers.forEach((record) => record.resetVisualRay()); }
+  function setRaysEnabled(enabled) {
+    raysEnabled = Boolean(enabled);
+    publicControllers.forEach((record) => { record.ray.visible = raysEnabled && record.isConnected; });
+  }
+  function reset() {
+    setRaysEnabled(false);
+    publicControllers.forEach((record) => record.resetVisualRay());
+  }
 
-  return { controllers: publicControllers, beginRayHitFrame, resolveVisualRayLength, reset, update() {}, dispose };
+  return { controllers: publicControllers, beginRayHitFrame, resolveVisualRayLength, setRaysEnabled, reset, update() {}, dispose };
 }
