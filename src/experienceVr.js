@@ -9,6 +9,7 @@ import { createLoadingDiagnostics, preloadAssets } from './assets/preloadAssets.
 import { ASSET_STAGES, getPreloadAssets, INITIAL_PRELOAD_GROUPS, DEFERRED_PRELOAD_GROUPS } from './assets/assetManifest.js';
 import { loadExperienceVrSettings } from './config/experienceVrSettings.js';
 import { orientPlayerRig } from './xr/playerRigOrientation.js';
+import { calibrateXrHeadToPlatform } from './xr/calibration/calibrateXrHeadToPlatform.js';
 import { createVrControllers } from './xr/createVrControllers.js';
 import { createVrGlyphInteraction } from './xr/createVrGlyphInteraction.js';
 import { createVrGlyphOrbit } from './xr/createVrGlyphOrbit.js';
@@ -636,10 +637,26 @@ renderer.render(scene, camera);
 
 let activeSession = null;
 let hasEnteredSession = false;
+let xrStartCalibrationPending = false;
 const clock = new THREE.Clock(false);
 
 function renderFrame() {
   const delta = clock.getDelta();
+  if (xrStartCalibrationPending) {
+    playerRig.updateWorldMatrix(true, true);
+    if (typeof renderer.xr.updateCamera === 'function') renderer.xr.updateCamera(camera);
+    const xrCamera = renderer.xr.getCamera(camera);
+    const targetLocalPosition = sceneLayout
+      ? platformOrigin.worldToLocal(playerRig.getWorldPosition(new THREE.Vector3()).clone()) : null;
+    calibrateXrHeadToPlatform({ playerRig, xrCamera, platformOrigin, entryDirection: introEntryDirection,
+      targetRadius: settings.intro.playerStartRadius, targetLocalPosition });
+    if (typeof renderer.xr.updateCamera === 'function') renderer.xr.updateCamera(camera);
+    else xrCamera.updateWorldMatrix(true, true);
+    xrStartCalibrationPending = false;
+    introSequence.beginAfterXrCalibration();
+    renderer.render(scene, camera);
+    return;
+  }
   vrControllers.beginRayHitFrame();
   handModeController.update(delta);
   playerGuidePanel.update(delta);
@@ -693,6 +710,7 @@ function handleSessionEnd() {
   renderer.setAnimationLoop(null);
   clock.stop();
   activeSession = null;
+  xrStartCalibrationPending = false;
   astroFurnace.reset();
   furnacePanel.reset();
   playerGuidePanel.reset();
@@ -771,19 +789,7 @@ async function enterVr() {
     renderer.xr.setReferenceSpaceType(referenceSpaceType);
     requestedSession.addEventListener('end', handleSessionEnd, { once: true });
     await renderer.xr.setSession(requestedSession);
-    const trackedHead = renderer.xr.getCamera(camera).getWorldPosition(new THREE.Vector3());
-    if (sceneLayout) {
-      playerRig.updateWorldMatrix(true, false);
-      const alignedRigWorldPosition = playerRig.getWorldPosition(new THREE.Vector3());
-      alignedRigWorldPosition.x += alignedRigWorldPosition.x - trackedHead.x;
-      alignedRigWorldPosition.z += alignedRigWorldPosition.z - trackedHead.z;
-      playerRig.parent.worldToLocal(alignedRigWorldPosition);
-      playerRig.position.copy(alignedRigWorldPosition);
-    } else {
-      const desiredX = playerRig.position.x; const desiredZ = playerRig.position.z;
-      playerRig.position.x += desiredX - trackedHead.x;
-      playerRig.position.z += desiredZ - trackedHead.z;
-    }
+    xrStartCalibrationPending = true;
     activeSession = requestedSession;
     syncAmbientSequence();
     hasEnteredSession = true;
@@ -798,6 +804,7 @@ async function enterVr() {
       try { await requestedSession.end(); } catch { /* Session may already be ending. */ }
     }
     activeSession = null;
+    xrStartCalibrationPending = false;
     vrAudio.resetAsterionSphereAudio();
     renderer.setAnimationLoop(null);
     clock.stop();

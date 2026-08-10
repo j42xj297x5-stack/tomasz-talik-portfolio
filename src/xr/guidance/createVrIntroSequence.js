@@ -1,7 +1,7 @@
 import * as THREE from '../../vendor/three.js';
 
 export const VR_INTRO_STATE = Object.freeze({
-  VOID: 'VOID', EMERGING: 'EMERGING', WAIT_HOVER: 'WAIT_HOVER', WAIT_TRIGGER: 'WAIT_TRIGGER', INVITATION: 'INVITATION',
+  VOID: 'VOID', XR_CALIBRATING: 'XR_CALIBRATING', EMERGING: 'EMERGING', WAIT_HOVER: 'WAIT_HOVER', WAIT_TRIGGER: 'WAIT_TRIGGER', INVITATION: 'INVITATION',
   FOLLOWING: 'FOLLOWING', THRESHOLD: 'THRESHOLD', CROSSING: 'CROSSING', INSIDE_RING_READY: 'INSIDE_RING_READY',
   ENDING: 'ENDING', BYPASSED: 'BYPASSED'
 });
@@ -61,17 +61,12 @@ export function createVrIntroSequence({ monkeyGuide, monkeyMotionRoot, monkeyVis
     return object.parent ? object.parent.worldToLocal(point) : point;
   };
   const placeMonkey = () => monkeyMotionRoot.position.copy(pointInParent(monkeyMotionRoot, monkeyNarrativeRadius));
-  const placePlayer = () => {
-    playerRig.updateWorldMatrix(true, false); center.updateWorldMatrix(true, false);
-    const current = playerRig.getWorldPosition(new THREE.Vector3()); center.worldToLocal(current);
-    const point = new THREE.Vector3(direction.x * settings.playerStartRadius, current.y,
-      direction.z * settings.playerStartRadius);
-    center.localToWorld(point); playerRig.parent?.updateWorldMatrix(true, false);
-    playerRig.position.copy(playerRig.parent ? playerRig.parent.worldToLocal(point) : point);
-  };
-  const radiusFromCenter = (object) => {
-    object.updateWorldMatrix(true, false); center.updateWorldMatrix(true, false);
-    const point = object.getWorldPosition(new THREE.Vector3()); center.worldToLocal(point);
+  let xrCalibrated = false;
+  const radiusFromCenter = (objectOrPosition) => {
+    center.updateWorldMatrix(true, false);
+    const point = objectOrPosition?.isObject3D
+      ? objectOrPosition.getWorldPosition(new THREE.Vector3()) : objectOrPosition.clone();
+    center.worldToLocal(point);
     return Math.hypot(point.x, point.z);
   };
   const beginOpening = () => {
@@ -115,16 +110,20 @@ export function createVrIntroSequence({ monkeyGuide, monkeyMotionRoot, monkeyVis
   }
   function reset() {
     queue = []; pendingDone = null; elapsed = 0; timerPhase = null; walkingPaused = false; monkeyGuide.setDialogueOverride(null);
-    emergeElapsed = 0;
+    emergeElapsed = 0; xrCalibrated = false;
     monkeyMotionRoot.position.copy(canonicalMonkey); monkeyMotionRoot.quaternion.copy(canonicalMonkeyQuaternion); locomotion.reset();
     if (bypass || !settings.enabled) { state = VR_INTRO_STATE.BYPASSED; emergeProgress = 1; setMonkeyEmergeAlpha(1);
       monkeyGuide.setInteractionEnabled?.(true); sectors.forEach((item) => { item.visible = true; });
       platformFixturesRoot.visible = true; glyphRing.visible = true; return; }
     locomotion.setWalkRadius(Infinity);
-    state = VR_INTRO_STATE.EMERGING; sectors.forEach((item) => { item.visible = false; }); platformFixturesRoot.visible = false; glyphRing.visible = false;
-    placePlayer();
+    state = VR_INTRO_STATE.XR_CALIBRATING; xrCalibrated = false;
+    sectors.forEach((item) => { item.visible = false; }); platformFixturesRoot.visible = false; glyphRing.visible = false;
     monkeyNarrativeRadius = settings.monkeyStartRadius; placeMonkey();
     emergeProgress = 0; setMonkeyEmergeAlpha(0); monkeyGuide.setInteractionEnabled?.(false); monkeyGuide.showMessage('');
+  }
+  function beginAfterXrCalibration() {
+    xrCalibrated = true;
+    if (state === VR_INTRO_STATE.XR_CALIBRATING) state = VR_INTRO_STATE.EMERGING;
   }
   function update(delta) {
     if (state === VR_INTRO_STATE.EMERGING) {
@@ -185,7 +184,12 @@ export function createVrIntroSequence({ monkeyGuide, monkeyMotionRoot, monkeyVis
     }
   }
   reset();
-  return { update, reset, getState: () => state, isGuidePaused: () => walkingPaused, chooseInvitation, chooseThreshold,
-    getDebugSnapshot: () => ({ playerRadius: radiusFromCenter(playerRig), monkeyRadius: radiusFromCenter(monkeyMotionRoot),
-      ringRadius, state, emergeProgress, visualRoot: monkeyVisualRoot?.name ?? null }) };
+  return { update, reset, beginAfterXrCalibration, getState: () => state, isGuidePaused: () => walkingPaused, chooseInvitation, chooseThreshold,
+    getDebugSnapshot: () => {
+      const head = getHeadPosition(); const rigRadius = radiusFromCenter(playerRig);
+      return { playerRadius: rigRadius, rigRadius, headRadius: radiusFromCenter(head),
+        monkeyRadius: radiusFromCenter(monkeyMotionRoot),
+        headToMonkeyDistance: head.distanceTo(monkeyMotionRoot.getWorldPosition(new THREE.Vector3())),
+        ringRadius, state, emergeProgress, xrCalibrated, visualRoot: monkeyVisualRoot?.name ?? null };
+    } };
 }

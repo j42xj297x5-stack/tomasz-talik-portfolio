@@ -33,6 +33,16 @@ assert.match(vr, /requestSession\('immersive-vr'/);
 assert.match(vr, /renderer\.setAnimationLoop\(renderFrame\)/);
 assert.match(vr, /renderer\.setAnimationLoop\(null\)/);
 assert.doesNotMatch(vr, /requestAnimationFrame/);
+assert.match(vr, /await renderer\.xr\.setSession\(requestedSession\);\s*xrStartCalibrationPending = true;/,
+  'session entry defers start calibration to an XR animation frame');
+assert.match(vr, /if \(xrStartCalibrationPending\)[\s\S]*renderer\.xr\.updateCamera\(camera\)[\s\S]*calibrateXrHeadToPlatform/,
+  'the pending frame refreshes the tracked camera before calibration');
+assert.match(vr, /xrStartCalibrationPending = false;\s*introSequence\.beginAfterXrCalibration\(\);\s*renderer\.render\(scene, camera\);\s*return;/,
+  'calibration is one-shot and skips ordinary locomotion/update work in that frame');
+assert.match(vr, /function handleSessionEnd\(\)[\s\S]*xrStartCalibrationPending = false;[\s\S]*introSequence\.reset\(\)/,
+  'session end clears pending calibration and resets the intro for re-entry');
+assert.doesNotMatch(vr, /const trackedHead = renderer\.xr\.getCamera\(camera\)/,
+  'the stale immediate post-setSession correction is removed');
 assert.doesNotMatch(entryTransition, /requestAnimationFrame|performance\.now/);
 assert.match(spatialPlaque, /new THREE\.CanvasTexture\(canvas\)/);
 assert.match(spatialPlaque, /new THREE\.PlaneGeometry/);
