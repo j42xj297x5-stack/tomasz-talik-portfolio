@@ -80,7 +80,7 @@ const normalized = normalizeExperienceVrSettings({
   glyphInteraction: { holdDurationSeconds: 20, holdLostGraceSeconds: 4 },
   glyphLights: { inwardOffset: 20 },
   portal: { enabled: false, maxWidth: 0, maxHeight: 20, floorOffset: -9, appearDuration: 0, appearStartScale: 9 },
-  reliquary: { distanceFromPortal: 9, floorOffset: 9,
+  reliquary: { distanceFromPortal: 9, heightOffset: 9,
     activateButton: { placementRadius: 8, placementAngleDegrees: -4, verticalOffset: 7 } },
   portalCanvas: {
     enabled: false, width: 0, height: 9,

@@ -611,7 +611,7 @@ export function normalizeExperienceVrSettings(candidate) {
       distanceFromPortal: finiteNumber(candidateReliquary.distanceFromPortal,
         defaults.reliquary.distanceFromPortal, { min: 0, max: 3 }),
       rotationDegrees: normalizeVector(candidateReliquary.rotationDegrees, defaults.reliquary.rotationDegrees),
-      heightOffset: finiteNumber(candidateReliquary.heightOffset ?? candidateReliquary.floorOffset,
+      heightOffset: finiteNumber(candidateReliquary.heightOffset,
         defaults.reliquary.heightOffset, { min: -1, max: 2 }),
       insertFeedback: {
         proximityRadiusMultiplier: finiteNumber(candidateReliquary.insertFeedback?.proximityRadiusMultiplier,
