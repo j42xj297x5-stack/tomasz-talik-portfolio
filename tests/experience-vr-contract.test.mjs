@@ -3,7 +3,6 @@ import { readFile } from 'node:fs/promises';
 import { calculatePlayerRigYaw } from '../src/xr/playerRigOrientation.js';
 import * as THREE from '../src/vendor/three.js';
 import { createVrControllers } from '../src/xr/createVrControllers.js';
-import { applyWorldTransform } from '../src/xr/applyWorldTransform.js';
 import { createVrSemanticInput, XR_STANDARD_BUTTONS } from '../src/xr/input/createVrSemanticInput.js';
 import { createVrHandModeController, VR_LEFT_HAND_MODES } from '../src/xr/input/createVrHandModeController.js';
 
@@ -103,7 +102,7 @@ assert.doesNotMatch(`${vr}\n${vrControllers}`, /XRControllerModelFactory/);
 assert.match(vr, /onPreview: \(page\) => portalCanvas\.show\(resolveExperienceVrPage\(page, language\)\)/);
 assert.match(vr, /onCommit: \(page, \{ tierCompleted \}\)[\s\S]*progressFloor\.activatePage\(page\);[\s\S]*if \(tierCompleted\) progressFloor\.completeTier\(page\.order\)/);
 assert.match(vr, /loadMonkeyModel\(\{ actorParent: progressFloor\.object, fixtureParent: platformFixturesRoot/);
-assert.match(vr, /monkeyMotionRoot\.position\.set\(settings\.spatial\.monkeyFinal[\s\S]*monkeyActor\.dockStoneToCanonicalMonkey\(\)/);
+assert.match(vr, /monkeyMotionRoot\.position\.set\(settings\.spatial\.monkeyFinal[\s\S]*monkeyActor\.dockCharacterToStone\(\)/);
 assert.doesNotMatch(vr, /sceneLayout|uklad_sceny|ANCHOR_PLAYER_SPAWN/);
 assert.doesNotMatch(vr, /progressFloor\.object\.attach|platformFixturesRoot\.attach|floorPassengerRoot\.attach/);
 assert.match(vr, /createVrPortalDisplay\(\{[\s\S]*parent: platformFixturesRoot/);
