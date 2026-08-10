@@ -10,7 +10,7 @@ export const VR_INTRO_STATE = Object.freeze({
 });
 
 export const VR_INTRO_COPY = Object.freeze({
-  pl: { opening: ['Dobrze.', 'Masz ręce.', 'Sprawdźmy tylko, gdzie co masz.', 'Otwórz panel Y.'],
+  pl: { opening: ['Dobrze.', 'Masz ręce.', 'Sprawdźmy tylko, gdzie co masz.'], panelPrompt: 'Naciśnij Y, żeby wejść do menu.',
     panelDone: ['Jak zapomnisz — przypomnę.', 'Najpierw sprawdźmy, czy świat cię słucha.', 'Wskaż mnie.'], trigger: 'Teraz spust.',
     seen: ['Widzisz?', 'Już nauczyłeś świat, gdzie patrzysz.'], going: 'Idziesz?',
     invitation: [{ id: 'go', label: 'IDĘ' }, { id: 'where', label: 'DOKĄD?' }, { id: 'no', label: 'NIE' }],
@@ -18,7 +18,7 @@ export const VR_INTRO_COPY = Object.freeze({
     threshold: ['Dalej jest próg.', 'Możesz go nie przekraczać.', 'Jeśli przekroczysz — wrócisz dopiero wtedy, kiedy droga się skończy.', 'Wchodzisz?'],
     thresholdOptions: [{ id: 'cross', label: 'PRZEKRACZAM PRÓG' }, { id: 'beyond', label: 'CO JEST PO DRUGIEJ STRONIE?' }, { id: 'return', label: 'WRACAM' }],
     beyond: ['Po tej stronie pytasz.', 'Po tamtej będziesz sprawdzał.'], returning: ['Mądra decyzja.', 'Albo tchórzliwa.', 'Czasem to ta sama decyzja. Dopiero później wiadomo.'] },
-  en: { opening: ['Good.', 'You have hands.', 'Let us make sure you know where everything is.', 'Open the panel with Y.'],
+  en: { opening: ['Good.', 'You have hands.', 'Let us make sure you know where everything is.'], panelPrompt: 'Press Y to open the menu.',
     panelDone: ["If you forget — I'll remind you.", 'First, let us see if the world listens to you.', 'Point at me.'], trigger: 'Now pull the trigger.',
     seen: ['See?', 'You have already taught the world where you are looking.'], going: 'Will you walk?',
     invitation: [{ id: 'go', label: "I'LL GO" }, { id: 'where', label: 'WHERE TO?' }, { id: 'no', label: 'NO' }],
@@ -50,7 +50,7 @@ export function createVrIntroSequence({ monkeyGuide, monkeyMotionRoot, monkeyVis
   const show = (lines, callback, question = null) => { queue = lines.map((text) => ({ text })); if (question) queue.push({ text: question, question: true }); elapsed = 0; phase = null; done = callback; displayNext(); };
   const options = (items, onSelect) => monkeyGuide.setDialogueOverride({ options: items, onSelect });
   const invitation = () => { state = VR_INTRO_STATE.INVITATION; options(copy.invitation, chooseInvitation); };
-  function beginPanelTutorial() { state = VR_INTRO_STATE.CONTROLLER_ONBOARDING; monkeyGuide.setInteractionEnabled?.(true); onOpeningRaysReady(); show(copy.opening, () => { state = VR_INTRO_STATE.WAIT_PLAYER_PANEL_OPEN; }); }
+  function beginPanelTutorial() { state = VR_INTRO_STATE.CONTROLLER_ONBOARDING; monkeyGuide.setInteractionEnabled?.(true); onOpeningRaysReady(); show(copy.opening, () => { state = VR_INTRO_STATE.WAIT_PLAYER_PANEL_OPEN; monkeyGuide.showMessage(copy.panelPrompt); }); }
   function beginPointerTutorial() { state = VR_INTRO_STATE.CONTROLLER_ONBOARDING; show(copy.panelDone, () => { state = VR_INTRO_STATE.WAIT_HOVER; monkeyGuide.setDialogueOverride({ onMonkeyHover() { if (state === VR_INTRO_STATE.WAIT_HOVER) { state = VR_INTRO_STATE.WAIT_TRIGGER; monkeyGuide.showMessage(copy.trigger); } }, onMonkeyPress() { if (state !== VR_INTRO_STATE.WAIT_TRIGGER) return true; monkeyGuide.setDialogueOverride(null); show(copy.seen, invitation, copy.going); return true; } }); }); }
   function chooseInvitation(id) { if (id === 'where') { monkeyGuide.setDialogueOverride(null); show(copy.where, invitation, copy.going); } else if (id === 'no') { state = VR_INTRO_STATE.ENDING; monkeyGuide.setDialogueOverride(null); show(copy.no, onEndSession); } else if (id === 'go') { state = VR_INTRO_STATE.FOLLOWING; capture(); monkeyGuide.showMessage(''); startRadius = monkeyRadius; turnElapsed = 0; } return true; }
   const thresholdChoice = () => { state = VR_INTRO_STATE.THRESHOLD; show(copy.threshold.slice(0, -1), () => options(copy.thresholdOptions, chooseThreshold), copy.threshold.at(-1)); };
@@ -70,7 +70,7 @@ export function createVrIntroSequence({ monkeyGuide, monkeyMotionRoot, monkeyVis
     if (state === VR_INTRO_STATE.FOG_REVEAL) { if ((fogReveal?.getSnapshot().progress ?? Math.min(1, (elapsed += delta) / (settings.introRevealDuration ?? 13))) >= 1) { state = VR_INTRO_STATE.POST_REVEAL_SILENCE; silenceElapsed = 0; } return; }
     if (state === VR_INTRO_STATE.POST_REVEAL_SILENCE) { silenceElapsed += delta; if (silenceElapsed >= (settings.postRevealSilenceDuration ?? 2)) beginPanelTutorial(); return; }
     updateMessages(delta);
-    if (state === VR_INTRO_STATE.WAIT_PLAYER_PANEL_OPEN && playerGuidePanel?.isOpen()) state = VR_INTRO_STATE.WAIT_CONTROLS_VIEW;
+    if (state === VR_INTRO_STATE.WAIT_PLAYER_PANEL_OPEN && playerGuidePanel?.isOpen()) { monkeyGuide.showMessage(''); state = VR_INTRO_STATE.WAIT_CONTROLS_VIEW; }
     if ([VR_INTRO_STATE.WAIT_CONTROLS_VIEW, VR_INTRO_STATE.WAIT_PANEL_CLOSE].includes(state)) { if (playerGuidePanel?.getActiveSectionId() === 'controls' && playerGuidePanel?.getViewState() === 'DETAIL') { controlsTutorialVisited = true; state = VR_INTRO_STATE.WAIT_PANEL_CLOSE; } if (controlsTutorialVisited && !playerGuidePanel?.isOpen()) beginPointerTutorial(); }
     if (state === VR_INTRO_STATE.FOLLOWING) {
       turnElapsed += delta; monkeyMotionRoot.quaternion.slerpQuaternions(canonicalQuaternion, walkingQuaternion, Math.min(1, turnElapsed / (settings.guideTurnDuration ?? 1)));

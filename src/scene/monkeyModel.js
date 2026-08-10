@@ -1,29 +1,53 @@
 import * as THREE from '../vendor/three.js';
 
-const MONKEY_GLB_PATH = 'glb/monkey.glb';
 const MONKEY_TARGET_DIMENSION = 2.0;
-const MONKEY_YAW_TO_CAMERA = 0;
 
-function prepareVisualModel(model) {
-  const box = new THREE.Box3().setFromObject(model);
-  const size = new THREE.Vector3();
-  box.getSize(size);
-
-  const maxDimension = Math.max(size.x, size.y, size.z) || 1;
-  const uniformScale = MONKEY_TARGET_DIMENSION / maxDimension;
-
-  model.scale.setScalar(uniformScale);
-  model.updateMatrixWorld(true);
-
-  const centeredBox = new THREE.Box3().setFromObject(model);
-  const center = new THREE.Vector3();
-  centeredBox.getCenter(center);
-
-  model.position.sub(center);
-  model.rotation.y = MONKEY_YAW_TO_CAMERA;
+function findUniqueNode(root, name) {
+  const matches = [];
+  root.traverse((object) => { if (object.name === name) matches.push(object); });
+  if (matches.length !== 1) throw new Error(`[monkeyModel] Expected exactly one ${name}; found ${matches.length}.`);
+  return matches[0];
 }
 
-function createMonkeyActor({ scene, fallbackObject, model }) {
+function matrixRelativeTo(node, root) {
+  root.updateWorldMatrix(true, true);
+  return new THREE.Matrix4().copy(root.matrixWorld).invert().multiply(node.matrixWorld);
+}
+
+function applyMatrix(object, matrix) {
+  object.matrix.copy(matrix);
+  object.matrixAutoUpdate = false;
+}
+
+export function assembleMonkeyAssets({ characterAsset, stoneAsset }) {
+  const assemblyRoot = new THREE.Group();
+  assemblyRoot.name = 'VrMonkeyAssemblyRoot';
+  const characterAnchor = findUniqueNode(characterAsset, 'MONKEY_ANCHOR');
+  const monkeyMesh = findUniqueNode(characterAsset, 'monkey');
+  const stoneRoot = findUniqueNode(stoneAsset, 'MONKEY_STONE_ROOT');
+  const seatAnchor = findUniqueNode(stoneAsset, 'MONKEY_SEAT_ANCHOR');
+  if (!characterAnchor.getObjectById(monkeyMesh.id)) throw new Error('[monkeyModel] MONKEY_ANCHOR must be an ancestor of monkey.');
+  if (!stoneRoot.getObjectById(seatAnchor.id)) throw new Error('[monkeyModel] MONKEY_SEAT_ANCHOR must belong to MONKEY_STONE_ROOT.');
+
+  const stoneRootInAsset = matrixRelativeTo(stoneRoot, stoneAsset);
+  assemblyRoot.add(stoneAsset);
+  applyMatrix(stoneAsset, stoneRootInAsset.clone().invert());
+  stoneAsset.updateWorldMatrix(true, true);
+
+  const seatInAssembly = matrixRelativeTo(seatAnchor, assemblyRoot);
+  const characterAnchorInAsset = matrixRelativeTo(characterAnchor, characterAsset);
+  assemblyRoot.add(characterAsset);
+  applyMatrix(characterAsset, seatInAssembly.multiply(characterAnchorInAsset.invert()));
+  assemblyRoot.updateWorldMatrix(true, true);
+
+  const characterSize = new THREE.Box3().setFromObject(characterAsset).getSize(new THREE.Vector3());
+  const maxDimension = Math.max(characterSize.x, characterSize.y, characterSize.z) || 1;
+  assemblyRoot.scale.setScalar(MONKEY_TARGET_DIMENSION / maxDimension);
+  assemblyRoot.updateWorldMatrix(true, true);
+  return { assemblyRoot, characterRoot: characterAsset, stoneRoot: stoneAsset, characterAnchor, seatAnchor };
+}
+
+function createMonkeyActor({ scene, fallbackObject, model, assemblyRoot = model, characterRoot = model, stoneRoot = null }) {
   const motionRoot = new THREE.Group();
   motionRoot.name = 'VrMonkeyMotionRoot';
   const visualRoot = new THREE.Group();
@@ -37,14 +61,9 @@ function createMonkeyActor({ scene, fallbackObject, model }) {
   motionRoot.position.copy(worldPosition);
   motionRoot.quaternion.copy(worldQuaternion);
   motionRoot.add(visualRoot);
-  if (model === fallbackObject) {
-    model.position.set(0, 0, 0);
-    model.quaternion.identity();
-  }
-  visualRoot.add(model);
+  if (model === fallbackObject) { model.position.set(0, 0, 0); model.quaternion.identity(); }
+  visualRoot.add(assemblyRoot);
 
-  // The runtime actor owns these clones. Fading must never mutate a material
-  // retained by AssetManager (or by another GLTF clone).
   const emergenceMaterials = [];
   visualRoot.traverse((object) => {
     if (!object.isMesh || !object.material) return;
@@ -69,21 +88,22 @@ function createMonkeyActor({ scene, fallbackObject, model }) {
     });
   }
 
-  return { motionRoot, visualRoot, model, setEmergeAlpha, getEmergeAlpha: () => emergeAlpha,
+  return { motionRoot, visualRoot, assemblyRoot, characterRoot, interactionRoot: characterRoot, stoneRoot, model,
+    setEmergeAlpha, getEmergeAlpha: () => emergeAlpha,
     disposeEmergenceMaterials() { emergenceMaterials.forEach(({ material }) => material.dispose()); } };
 }
 
 export async function loadMonkeyModel({ scene, fallbackObject, assetManager = null }) {
-  const loadedModel = assetManager?.cloneGltfScene?.('monkey-model');
-  if (!loadedModel) {
-    console.info('[monkeyModel] Placeholder fallback retained because the monkey model was not in AssetManager cache.');
-    const actor = createMonkeyActor({ scene, fallbackObject, model: fallbackObject });
-    return actor;
+  const characterAsset = assetManager?.cloneGltfScene?.('monkey-model');
+  const stoneAsset = assetManager?.cloneGltfScene?.('monkey-stone-model');
+  if (!characterAsset || !stoneAsset) {
+    console.info('[monkeyModel] Placeholder fallback retained because the authored Monkey assembly was not in AssetManager cache.');
+    return createMonkeyActor({ scene, fallbackObject, model: fallbackObject });
   }
 
-  prepareVisualModel(loadedModel);
-  const actor = createMonkeyActor({ scene, fallbackObject, model: loadedModel });
+  const assembly = assembleMonkeyAssets({ characterAsset, stoneAsset });
+  const actor = createMonkeyActor({ scene, fallbackObject, model: characterAsset, ...assembly });
   fallbackObject.visible = false;
-  console.info('[monkeyModel] Monkey model attached from AssetManager cache. Placeholder hidden.');
+  console.info('[monkeyModel] Authored Monkey and stone assembly attached from AssetManager cache. Placeholder hidden.');
   return actor;
 }
