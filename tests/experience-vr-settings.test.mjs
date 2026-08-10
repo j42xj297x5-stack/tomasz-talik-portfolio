@@ -45,6 +45,8 @@ assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.targetHalo.thicknessPixels, 3);
 assert.deepEqual(DEFAULT_EXPERIENCE_VR_SETTINGS.furnace.optionButton.halo,
   { opacity: 0.52, thicknessPixels: 5, pulseDuration: 1.1 });
 assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.furnace.optionButton.emissionHover, 5);
+assert.equal(normalizeExperienceVrSettings({ schemaVersion: 1 }).asterionSphere.targetRingBlendResponse, 12);
+assert.equal(normalizeExperienceVrSettings({ schemaVersion: 1, asterionSphere: { targetRingBlendResponse: 8 } }).asterionSphere.targetRingBlendResponse, 8);
 assert.equal(normalizeExperienceVrSettings({ schemaVersion: 1 }).furnace.optionButton.selectionDuration, 0.48);
 assert.equal(normalizeExperienceVrSettings({ schemaVersion: 1, furnace: { optionButton: { selectionDuration: 0.75 } } }).furnace.optionButton.selectionDuration, 0.75);
 const canonicalModuleAngles = DEFAULT_EXPERIENCE_VR_SETTINGS.furnace.optionButton.moduleAnglesDegrees;

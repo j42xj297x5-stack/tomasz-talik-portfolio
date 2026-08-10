@@ -441,6 +441,7 @@ export function normalizeExperienceVrSettings(candidate) {
       angularAccelerationDegrees: finiteNumber(candidate.asterionSphere?.angularAccelerationDegrees, defaults.asterionSphere.angularAccelerationDegrees, { min: 0 }),
       angularDecelerationDegrees: finiteNumber(candidate.asterionSphere?.angularDecelerationDegrees, defaults.asterionSphere.angularDecelerationDegrees, { min: 0 }),
       settleAngularSpeedDegrees: finiteNumber(candidate.asterionSphere?.settleAngularSpeedDegrees, defaults.asterionSphere.settleAngularSpeedDegrees, { min: 0 }),
+      targetRingBlendResponse: finiteNumber(candidate.asterionSphere?.targetRingBlendResponse, defaults.asterionSphere.targetRingBlendResponse, { min: 0 }),
       lockThresholdDegrees: finiteNumber(candidate.asterionSphere?.lockThresholdDegrees, defaults.asterionSphere.lockThresholdDegrees, { min: 0, max: 10 }),
       lockDelaySeconds: finiteNumber(candidate.asterionSphere?.lockDelaySeconds, defaults.asterionSphere.lockDelaySeconds, { min: 0, max: 2 }),
       production: {
