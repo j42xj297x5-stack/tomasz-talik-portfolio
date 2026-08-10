@@ -177,8 +177,7 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
   },
   intro: {
     enabled: true,
-    emergeDuration: 12.0,
-    introRevealDuration: 13.0,
+    introRevealDuration: 10.0,
     postRevealSilenceDuration: 2.0,
     insideSafeMargin: 0.75,
     glyphFreeExploreDuration: 60.0,
@@ -571,7 +570,6 @@ export function normalizeExperienceVrSettings(candidate) {
     },
     intro: {
       enabled: typeof candidate.intro?.enabled === 'boolean' ? candidate.intro.enabled : defaults.intro.enabled,
-      emergeDuration: finiteNumber(candidate.intro?.emergeDuration, defaults.intro.emergeDuration, { min: 0.1, max: 30 }),
       introRevealDuration: finiteNumber(candidate.intro?.introRevealDuration, defaults.intro.introRevealDuration, { min: 0.1, max: 30 }),
       postRevealSilenceDuration: finiteNumber(candidate.intro?.postRevealSilenceDuration, defaults.intro.postRevealSilenceDuration, { min: 0, max: 10 }),
       insideSafeMargin: finiteNumber(candidate.intro?.insideSafeMargin, defaults.intro.insideSafeMargin, { min: 0.1, max: 2 }),

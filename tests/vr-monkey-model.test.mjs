@@ -39,8 +39,9 @@ assert.ok(vectorsNear(actor.characterAnchor.getWorldScale(new THREE.Vector3()), 
 assert.ok(!vectorsNear(actor.characterAnchor.getWorldScale(new THREE.Vector3()), actor.seatAnchor.getWorldScale(new THREE.Vector3())), 'character scale is not normalized to seat scale');
 assert.ok(vectorsNear(actor.stoneRoot.scale, stoneScaleBeforeDock), 'docking leaves stone scale unchanged');
 const runtimeMonkeyMaterial = actor.characterRoot.getObjectByName('monkey').material;
-assert.notEqual(runtimeMonkeyMaterial, assets.material); actor.setEmergeAlpha(0); assert.equal(runtimeMonkeyMaterial.opacity, 0);
-actor.setEmergeAlpha(1); assert.equal(runtimeMonkeyMaterial.opacity, .7);
+assert.equal(runtimeMonkeyMaterial, assets.material, 'Monkey keeps its authored material without an alpha-emergence clone');
+assert.equal('setEmergeAlpha' in actor, false); assert.equal('getEmergeAlpha' in actor, false);
+assert.equal('disposeEmergenceMaterials' in actor, false);
 const stoneBefore = worldMatrix(actor.stoneRoot); const monkeyBefore = actor.characterRoot.getWorldPosition(new THREE.Vector3()); actor.motionRoot.position.x += 10; scene.updateMatrixWorld(true);
 assert.ok(Math.abs(actor.characterRoot.getWorldPosition(new THREE.Vector3()).x - monkeyBefore.x - 10) < 1e-9);
 assert.ok(matricesNear(worldMatrix(actor.stoneRoot), stoneBefore), 'moving Monkey does not move stone');

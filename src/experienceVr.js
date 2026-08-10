@@ -504,11 +504,11 @@ shellAttractorInteraction = createVrShellAttractorInteraction({
 });
 
 const introFogReveal = createVrIntroFogReveal({
-  anchor: progressFloor.object,
+  getOriginPosition: () => renderer.xr.getCamera(camera).getWorldPosition(new THREE.Vector3()),
+  getTargetPosition: () => monkeyVisualRoot.getWorldPosition(new THREE.Vector3()),
   roots: [worldStableRoot],
   color: '#05070b',
-  duration: settings.intro.introRevealDuration,
-  revealRadius: settings.spatial.playerStartRadius + 4
+  duration: settings.intro.introRevealDuration
 });
 
 introSequence = createVrIntroSequence({
@@ -750,7 +750,6 @@ window.addEventListener('pagehide', () => {
   astroFurnaceOptionInteraction.dispose();
   playerGuidePanel.dispose();
   monkeyGuide.dispose();
-  monkeyActor.disposeEmergenceMaterials();
   furnacePanel.dispose();
   furnaceProgressionController.dispose();
   astroFurnace.dispose();
