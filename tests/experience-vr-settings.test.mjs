@@ -71,7 +71,7 @@ const normalized = normalizeExperienceVrSettings({
   reliquary: { distanceFromPortal: 9, floorOffset: 9,
     activateButton: { placementRadius: 8, placementAngleDegrees: -4, verticalOffset: 7 } },
   portalCanvas: {
-    enabled: false, width: 0, height: 9, distanceFromAnchor: 0, forwardBias: 9, floorOffset: -9,
+    enabled: false, width: 0, height: 9,
     canvasWidth: 3000.6, canvasHeight: 100, titleFontSize: 10, bodyFontSize: 200, maxBodyLines: 0
   },
   crystals: { pullDuration: 0, holdRotationDegrees: { x: -30, y: 5, z: 'bad' } },
