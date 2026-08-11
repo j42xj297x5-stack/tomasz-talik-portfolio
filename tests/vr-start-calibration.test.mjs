@@ -59,12 +59,8 @@ assert.ok(Math.abs(centeredHead.z - 20) < 1e-9, 'detached ArrayCamera matrix ret
 const monkeyWorld = centered.monkey.getWorldPosition(new THREE.Vector3());
 assert.ok(Math.abs(Math.hypot(monkeyWorld.x - centeredHead.x, monkeyWorld.z - centeredHead.z) - 2) < 1e-9,
   'radius-18 Monkey starts two metres from the calibrated head');
-const fog = createVrIntroFogReveal({
-  getOriginPosition: () => getXrHeadWorldPosition({ renderer: centered.renderer, camera: centered.camera, playerRig: centered.playerRig }),
-  getTargetPosition: () => centered.monkey.getWorldPosition(new THREE.Vector3()), duration: 10
-});
-fog.start();
-assert.ok(Math.abs(fog.getSnapshot().revealRadius - 2) < 1e-9, 'fog radius uses the real two-metre head-to-Monkey distance');
+const fog = createVrIntroFogReveal({ center: centered.floor, roots: [centered.monkey], duration: 10 });
+assert.equal(fog.getSnapshot().radius, 20, 'fog starts at the canonical platform-local radius, independent of HMD distance');
 const offset = fixture(new THREE.Vector3(0.45, 1.72, -0.35));
 const offsetResult = calibrate(offset);
 assert.notDeepEqual(centeredResult.rigAfter.toArray(), offsetResult.rigAfter.toArray(), 'physical offset changes only rig calibration');

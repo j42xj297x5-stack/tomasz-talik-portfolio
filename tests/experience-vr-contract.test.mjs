@@ -103,7 +103,10 @@ assert.doesNotMatch(glyphInteraction, /SphereGeometry\(0\.31|VrEntryGlyphMarker|
 assert.doesNotMatch(`${vr}\n${vrControllers}`, /XRControllerModelFactory/);
 assert.match(vr, /onPreview: \(page\) => portalCanvas\.show\(resolveExperienceVrPage\(page, language\)\)/);
 assert.match(vr, /onCommit: \(page, \{ tierCompleted \}\)[\s\S]*progressFloor\.activatePage\(page\);[\s\S]*if \(tierCompleted\) progressFloor\.completeTier\(page\.order\)/);
-assert.match(vr, /loadMonkeyModel\(\{ actorParent: progressFloor\.object, fixtureParent: platformFixturesRoot/);
+assert.match(vr, /loadMonkeyModel\(\{ actorParent: progressFloor\.object, fixtureParent: progressFloor\.object/,
+  'Monkey stone is a stationary platform child, not a hidden fixtures child');
+assert.match(vr, /roots: \[monkeyVisualRoot, glyphRing, monkeyStoneRoot\]/);
+assert.doesNotMatch(vr, /roots: \[worldStableRoot\]/);
 assert.match(vr, /monkeyMotionRoot\.position\.set\(settings\.spatial\.monkeyFinal[\s\S]*monkeyActor\.dockCharacterToStone\(\)/);
 assert.doesNotMatch(vr, /sceneLayout|uklad_sceny|ANCHOR_PLAYER_SPAWN/);
 assert.doesNotMatch(vr, /progressFloor\.object\.attach|platformFixturesRoot\.attach|floorPassengerRoot\.attach/);

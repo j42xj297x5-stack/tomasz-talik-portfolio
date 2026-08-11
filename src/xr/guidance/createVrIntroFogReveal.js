@@ -1,17 +1,23 @@
 import * as THREE from '../../vendor/three.js';
 
-const smoothstep = (value) => {
-  const t = Math.min(1, Math.max(0, value));
-  return t * t * (3 - 2 * t);
-};
-
-/** Radial black fog that expands from the calibrated player position to the Monkey. */
-export function createVrIntroFogReveal({ getOriginPosition, getTargetPosition, roots = [], color = '#05070b', duration = 10 }) {
-  const uniforms = { center: { value: new THREE.Vector3() }, radius: { value: 0 }, color: { value: new THREE.Color(color) } };
+/** Renders a black, platform-local radial mask on an explicit set of roots. */
+export function createVrIntroFogReveal({ center, roots = [], color = '#05070b', duration = 10,
+  initialRadius = 20, revealedRadius = 17 }) {
+  if (!center?.isObject3D) throw new TypeError('VR intro fog requires a platform center Object3D');
+  const uniforms = {
+    worldToPlatform: { value: new THREE.Matrix4() },
+    radius: { value: initialRadius },
+    color: { value: new THREE.Color(color) }
+  };
   const patched = new Map();
-  let elapsed = 0; let progress = 0; let active = false; let revealRadius = 0;
+  let elapsed = 0; let progress = 0; let active = false; let installed = false;
 
+  function syncCenter() {
+    center.updateWorldMatrix(true, false);
+    uniforms.worldToPlatform.value.copy(center.matrixWorld).invert();
+  }
   function install() {
+    syncCenter();
     for (const root of roots.filter(Boolean)) root.traverse?.((object) => {
       const materials = Array.isArray(object.material) ? object.material : [object.material];
       for (const material of materials.filter(Boolean)) {
@@ -20,39 +26,39 @@ export function createVrIntroFogReveal({ getOriginPosition, getTargetPosition, r
         patched.set(material, previous);
         material.onBeforeCompile = (shader, renderer) => {
           previous?.(shader, renderer);
-          shader.uniforms.vrFogCenter = uniforms.center;
+          shader.uniforms.vrFogWorldToPlatform = uniforms.worldToPlatform;
           shader.uniforms.vrFogRadius = uniforms.radius;
           shader.uniforms.vrFogColor = uniforms.color;
-          shader.vertexShader = `varying vec3 vrFogWorldPosition;\n${shader.vertexShader}`
-            .replace('#include <worldpos_vertex>', '#include <worldpos_vertex>\nvrFogWorldPosition = worldPosition.xyz;');
-          shader.fragmentShader = `uniform vec3 vrFogCenter; uniform float vrFogRadius; uniform vec3 vrFogColor; varying vec3 vrFogWorldPosition;\n${shader.fragmentShader}`
-            .replace('#include <dithering_fragment>', `float vrFogEdge = smoothstep(vrFogRadius - 0.35, vrFogRadius + 0.35, distance(vrFogWorldPosition.xz, vrFogCenter.xz));\n gl_FragColor.rgb = mix(gl_FragColor.rgb, vrFogColor, vrFogEdge);\n#include <dithering_fragment>`);
+          shader.vertexShader = `uniform mat4 vrFogWorldToPlatform; varying vec3 vrFogPlatformPosition;\n${shader.vertexShader}`
+            .replace('#include <worldpos_vertex>', '#include <worldpos_vertex>\nvrFogPlatformPosition = (vrFogWorldToPlatform * worldPosition).xyz;');
+          shader.fragmentShader = `uniform float vrFogRadius; uniform vec3 vrFogColor; varying vec3 vrFogPlatformPosition;\n${shader.fragmentShader}`
+            .replace('#include <dithering_fragment>', `float vrFogEdge = smoothstep(vrFogRadius - 0.35, vrFogRadius + 0.35, length(vrFogPlatformPosition.xz));\n gl_FragColor.rgb = mix(vrFogColor, gl_FragColor.rgb, vrFogEdge);\n#include <dithering_fragment>`);
         };
         material.needsUpdate = true;
       }
     });
+    installed = true;
   }
   function uninstall() {
     for (const [material, previous] of patched) { material.onBeforeCompile = previous; material.needsUpdate = true; }
-    patched.clear();
+    patched.clear(); installed = false;
   }
-  function restart() { uninstall(); elapsed = 0; progress = 0; active = false; uniforms.radius.value = 0; install(); }
-  function start() {
-    uniforms.center.value.copy(getOriginPosition());
-    const target = getTargetPosition();
-    revealRadius = Math.hypot(target.x - uniforms.center.value.x, target.z - uniforms.center.value.z);
-    active = true;
-  }
+  function setRadius(radius) { uniforms.radius.value = Math.max(0, radius); syncCenter(); }
+  function restart() { uninstall(); elapsed = 0; progress = 0; active = false; uniforms.radius.value = initialRadius; install(); }
+  function start() { elapsed = 0; progress = 0; active = true; setRadius(initialRadius); }
   function update(delta) {
+    if (!installed) return;
+    syncCenter();
     if (!active) return;
     elapsed = Math.min(duration, elapsed + Math.max(0, delta));
-    const linear = duration <= 0 ? 1 : elapsed / duration;
-    progress = smoothstep(linear); uniforms.radius.value = revealRadius * progress;
-    if (linear >= 1) { active = false; uninstall(); }
+    progress = duration <= 0 ? 1 : elapsed / duration;
+    setRadius(THREE.MathUtils.lerp(initialRadius, revealedRadius, progress));
+    if (progress >= 1) active = false;
   }
-  function skipToEnd() { elapsed = duration; progress = 1; uniforms.radius.value = revealRadius; active = false; uninstall(); }
-  function dispose() { uninstall(); }
+  function skipToEnd() { elapsed = duration; progress = 1; active = false; setRadius(0); uninstall(); }
+  function dispose() { active = false; uninstall(); }
   restart();
-  return { restart, start, update, skipToEnd, dispose,
-    getSnapshot: () => ({ progress, elapsed, duration, active, revealRadius, center: uniforms.center.value.clone() }) };
+  return { restart, start, update, setRadius, skipToEnd, dispose,
+    getSnapshot: () => ({ progress, elapsed, duration, active, installed, radius: uniforms.radius.value,
+      initialRadius, revealedRadius, worldToPlatform: uniforms.worldToPlatform.value.clone() }) };
 }
