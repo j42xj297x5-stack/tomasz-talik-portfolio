@@ -30,7 +30,20 @@ export function createVrIntroFogReveal({ center, roots = [], color = '#05070b', 
           shader.uniforms.vrFogRadius = uniforms.radius;
           shader.uniforms.vrFogColor = uniforms.color;
           shader.vertexShader = `uniform mat4 vrFogWorldToPlatform; varying vec3 vrFogPlatformPosition;\n${shader.vertexShader}`
-            .replace('#include <worldpos_vertex>', '#include <worldpos_vertex>\nvrFogPlatformPosition = (vrFogWorldToPlatform * worldPosition).xyz;');
+            .replace('#include <worldpos_vertex>', `#include <worldpos_vertex>
+
+vec4 vrFogWorldPosition = vec4(transformed, 1.0);
+
+#ifdef USE_BATCHING
+  vrFogWorldPosition = batchingMatrix * vrFogWorldPosition;
+#endif
+
+#ifdef USE_INSTANCING
+  vrFogWorldPosition = instanceMatrix * vrFogWorldPosition;
+#endif
+
+vrFogWorldPosition = modelMatrix * vrFogWorldPosition;
+vrFogPlatformPosition = (vrFogWorldToPlatform * vrFogWorldPosition).xyz;`);
           shader.fragmentShader = `uniform float vrFogRadius; uniform vec3 vrFogColor; varying vec3 vrFogPlatformPosition;\n${shader.fragmentShader}`
             .replace('#include <dithering_fragment>', `float vrFogEdge = smoothstep(vrFogRadius - 0.35, vrFogRadius + 0.35, length(vrFogPlatformPosition.xz));\n gl_FragColor.rgb = mix(vrFogColor, gl_FragColor.rgb, vrFogEdge);\n#include <dithering_fragment>`);
         };

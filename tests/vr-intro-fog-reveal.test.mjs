@@ -11,6 +11,53 @@ const originalCompile = material.onBeforeCompile;
 const reveal = createVrIntroFogReveal({ center: platform, roots: [root], duration: 10 });
 
 assert.notEqual(material.onBeforeCompile, originalCompile, 'fog is installed before the first renderable frame');
+
+// MeshBasicMaterial does not require Three's conditionally declared worldPosition.
+// Compile the patch against a minimal shader representing that exact code path.
+const shader = {
+  uniforms: {},
+  vertexShader: `void main() {
+    vec3 transformed = position;
+
+    #include <worldpos_vertex>
+}`,
+  fragmentShader: `void main() {
+    gl_FragColor = vec4(1.0);
+
+    #include <dithering_fragment>
+}`
+};
+material.onBeforeCompile(shader, {});
+
+assert.match(shader.vertexShader, /vec4 vrFogWorldPosition = vec4\(transformed, 1\.0\);/,
+  'fog declares its own world-space position from the pipeline-transformed vertex');
+assert.match(shader.vertexShader, /#ifdef USE_BATCHING\s+vrFogWorldPosition = batchingMatrix \* vrFogWorldPosition;/,
+  'fog applies the Three batching transform');
+assert.match(shader.vertexShader, /#ifdef USE_INSTANCING\s+vrFogWorldPosition = instanceMatrix \* vrFogWorldPosition;/,
+  'fog applies the Three instancing transform');
+assert.match(shader.vertexShader, /vrFogWorldPosition = modelMatrix \* vrFogWorldPosition;/,
+  'fog transforms its private position into world space');
+assert.match(shader.vertexShader,
+  /vrFogPlatformPosition = \(vrFogWorldToPlatform \* vrFogWorldPosition\)\.xyz;/,
+  'platform-local position uses the fog-owned world-space value');
+assert.doesNotMatch(shader.vertexShader,
+  /vrFogPlatformPosition\s*=\s*\(vrFogWorldToPlatform\s*\*\s*worldPosition\)\.xyz/,
+  'fog injection never depends on Three conditionally declaring worldPosition');
+
+assert.match(shader.fragmentShader,
+  /smoothstep\(vrFogRadius - 0\.35, vrFogRadius \+ 0\.35, length\(vrFogPlatformPosition\.xz\)\)/,
+  'radial mask transitions from fog inside the radius to visible material outside it');
+
+const smoothstep = (edge0, edge1, value) => {
+  const t = Math.min(1, Math.max(0, (value - edge0) / (edge1 - edge0)));
+  return t * t * (3 - 2 * t);
+};
+const radialVisibility = (distance, radius = 17) => smoothstep(radius - 0.35, radius + 0.35, distance);
+assert.equal(radialVisibility(10), 0, 'distance 10 is fogged');
+assert.equal(radialVisibility(16), 0, 'distance 16 remains on the fog side of the feather');
+assert.equal(radialVisibility(18), 1, 'distance 18 shows the original material');
+assert.equal(radialVisibility(20), 1, 'distance 20 shows the original material');
+
 assert.deepEqual(reveal.getSnapshot().worldToPlatform.elements, platform.matrixWorld.clone().invert().elements,
   'fog radial coordinates use the complete platform transform');
 assert.equal(reveal.getSnapshot().radius, 20);
