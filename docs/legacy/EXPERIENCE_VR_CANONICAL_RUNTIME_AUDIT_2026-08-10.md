@@ -1,3 +1,5 @@
+> **DEPRECATED / HISTORICAL SNAPSHOT:** This audit records the repository state observed on 2026-08-10. It is not a current runtime authority; later changes superseded some findings. Use `docs/current/technical/VR_RUNTIME_MODEL.md`, `docs/current/handoffs/EXPERIENCE_VR_HANDOFF.md` and current code for the active contract.
+
 # Experience VR — audyt kanonicznego runtime po globalnym cięciu architektury
 
 **Data audytu:** 2026-08-10  
