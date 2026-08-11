@@ -8,7 +8,7 @@ Status: current binding decisions organized by implementation status, not patch 
 
 1. Classic 2D, Experience 3D and Experience VR are separate presentations. `src/experienceVr.js` owns the independent WebXR scene, rig, lifecycle and loop; WebXR owns the tracked camera.
 2. `VrTiltableFloorRoot` is the active platform transform root and the visual progress-floor root. The world-stable glyph ring, shell field and cosmos remain outside it.
-3. Platform-relative children include floor sectors/rings, `monkeyAnchor`, `VrPlatformFixturesRoot` and `VrFloorPassengerRoot/playerRig`.
+3. Platform-relative children include floor sectors/rings, `VrMonkeyMotionRoot`, `VrPlatformFixturesRoot` and `VrFloorPassengerRoot/playerRig`.
 4. `VrPlatformFixturesRoot` carries the portal, reliquary, Astro Furnace and furnace panel, so those fixtures move with the platform.
 5. `VrFloorPassengerRoot` carries `playerRig`; camera, controllers and grips inherit the platform. There is no world-stable/horizon-lock camera compensation.
 6. Smooth locomotion is tracked-head-relative right-stick translation on the platform-local tangent plane plus left-stick continuous rig yaw. Platform normal replaces world Y, local rig Y is preserved and diagonal input is capped.
@@ -21,8 +21,8 @@ Status: current binding decisions organized by implementation status, not patch 
 ### Intro P0 and Monkey transform authority
 
 1. The implemented intro P0 proceeds through XR calibration, radial fog reveal, player-panel/controls onboarding, pointer/trigger onboarding, invitation, `FOLLOWING`, threshold choice, physical ring entry, `MONKEY_SETTLING` and `GLYPH_FREE_EXPLORE`.
-2. `monkeyMotionRoot` remains the runtime transform owner for intro motion. The sequence captures its canonical transform after layout composition, moves it for the walk and settles it back to that transform.
-3. Existing `ANCHOR_MONKEY` and the other current layout anchors remain exactly as defined by HEAD. No internal asset anchor replaces, moves or reparents `ANCHOR_MONKEY`.
+2. `monkeyMotionRoot` is the runtime transform owner for intro motion. The sequence captures its canonical transform after scene composition, moves it for the walk and settles it back to that transform.
+3. `MONKEY_ANCHOR` is a character-local asset reference used only to align the character with the stone seat during `dockCharacterToStone()`; it does not own scene placement or intro motion.
 
 ### Independent hand modes
 
