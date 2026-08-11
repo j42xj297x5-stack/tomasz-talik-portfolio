@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import * as THREE from '../src/vendor/three.js';
 import { createVrIntroSequence, VR_INTRO_COPY, VR_INTRO_STATE } from '../src/xr/guidance/createVrIntroSequence.js';
 
-function fixture({ bypass = false } = {}) {
+function fixture({ bypass = false, onReliquaryReveal = () => {} } = {}) {
   const platformRoot = new THREE.Group(); const progressFloor = { object: new THREE.Group() }; progressFloor.object.add(platformRoot);
   const monkeyMotionRoot = new THREE.Group(); monkeyMotionRoot.position.set(0, 1.25, -0.5); progressFloor.object.add(monkeyMotionRoot);
   const playerRig = new THREE.Group(); const head = new THREE.Vector3(0, 1.7, 20);
@@ -13,10 +13,24 @@ function fixture({ bypass = false } = {}) {
   const fog = { progress: 0, radius: 20, installed: true, active: false, restart() { this.progress = 0; this.radius = 20; this.installed = true; this.active = false; }, start() { this.active = true; }, update(d) { if (!this.active) return; this.progress = Math.min(1, this.progress + d / 10); this.radius = 20 - 3 * this.progress; if (this.progress >= 1) this.active = false; }, setRadius(v) { this.radius = v; }, dispose() { this.installed = false; }, skipToEnd() { this.progress = 1; this.radius = 0; this.installed = false; }, getSnapshot() { return { progress: this.progress, radius: this.radius, installed: this.installed }; } };
   const monkeyGuide = { showMessage(v) { message = v; return { lineCount: v ? 1 : 0 }; }, setDialogueOverride(v) { override = v; }, setInteractionEnabled() {}, notifyAttention() { attention += 1; } };
   const locomotion = { reset() { radius = 4; }, setWalkRadius(v, options) { radius = v; this.lastOptions = options; } };
-  const settings = { enabled: true, locale: 'en', introRevealDuration: 10, postRevealSilenceDuration: 2, insideSafeMargin: .75, glyphFreeExploreDuration: 60, guideSpeed: 2, guideTurnDuration: 1, followGraceDistance: 3, pauseDistance: 3.2, resumeDistance: 2.4, revealProgress: .72, messageDisplayDuration: 0, messageGapDuration: 0, questionGapDuration: 0 };
+  const settings = { enabled: true, locale: 'en', introRevealDuration: 10, postRevealSilenceDuration: 2, insideSafeMargin: .75, glyphFreeExploreDuration: 120, guideSpeed: 2, guideTurnDuration: 1, followGraceDistance: 3, pauseDistance: 3.2, resumeDistance: 2.4, revealProgress: .72, messageDisplayDuration: 0, messageGapDuration: 0, questionGapDuration: 0 };
   const spatial = { entryDirection: { x: 0, y: 0, z: 1 }, playerStartRadius: 20, monkeyStartRadius: 18, monkeyFinal: { x: 0, y: 0, z: 0 }, ringRadius: 7.6, thresholdOutsideDistance: 1 };
-  const sequence = createVrIntroSequence({ monkeyGuide, monkeyMotionRoot, monkeyVisualRoot: new THREE.Group(), monkeyStoneRoot, platformRoot, playerRig, playerGuidePanel: panel, fogReveal: fog, glyphRing, progressFloor, platformFixturesRoot, locomotion, spatial, settings, getHeadPosition: () => head.clone(), onOpeningRaysReady: () => { rays += 1; }, bypass });
+  const sequence = createVrIntroSequence({ monkeyGuide, monkeyMotionRoot, monkeyVisualRoot: new THREE.Group(), monkeyStoneRoot, platformRoot, playerRig, playerGuidePanel: panel, fogReveal: fog, glyphRing, progressFloor, platformFixturesRoot, locomotion, spatial, settings, getHeadPosition: () => head.clone(), onOpeningRaysReady: () => { rays += 1; }, onReliquaryReveal, bypass });
   return { sequence, monkeyMotionRoot, monkeyStoneRoot, glyphRing, head, panel, fog, locomotion, getMessage: () => message, getOverride: () => override, getRadius: () => radius, getAttention: () => attention, getRays: () => rays };
+}
+function reachGlyphExplore(value) {
+  value.sequence.beginAfterXrCalibration(); value.sequence.update(10); value.sequence.update(2);
+  for (let i = 0; i < 10; i += 1) value.sequence.update(.01);
+  value.panel.open = true; value.sequence.update(0); value.panel.section = 'controls'; value.panel.view = 'DETAIL'; value.sequence.update(0);
+  value.panel.open = false; value.sequence.update(0); for (let i = 0; i < 10; i += 1) value.sequence.update(.01);
+  value.getOverride().onMonkeyHover(); value.getOverride().onMonkeyPress(); for (let i = 0; i < 8; i += 1) value.sequence.update(.01);
+  value.sequence.chooseInvitation('go');
+  for (let i = 0; i < 30 && value.sequence.getState() === VR_INTRO_STATE.FOLLOWING; i += 1) {
+    value.head.copy(value.monkeyMotionRoot.getWorldPosition(new THREE.Vector3())); value.sequence.update(.5);
+  }
+  value.sequence.chooseThreshold('cross'); value.head.set(0, 1.7, 6.8);
+  for (let i = 0; i < 30 && value.sequence.getState() !== VR_INTRO_STATE.GLYPH_FREE_EXPLORE; i += 1) value.sequence.update(.25);
+  assert.equal(value.sequence.getState(), VR_INTRO_STATE.GLYPH_FREE_EXPLORE);
 }
 assert.deepEqual(VR_INTRO_COPY.pl.opening, ['Dobrze.', 'Masz ręce.', 'Sprawdźmy tylko, gdzie co masz.']);
 assert.equal(VR_INTRO_COPY.pl.panelPrompt, 'Naciśnij Y, żeby wejść do menu.');
@@ -62,7 +76,22 @@ f.head.z = 6.8; for (let i = 0; i < 28 && f.sequence.getState() !== VR_INTRO_STA
 assert.equal(f.sequence.getState(), VR_INTRO_STATE.GLYPH_FREE_EXPLORE); assert.deepEqual(f.locomotion.lastOptions, { clamp: false });
 assert.deepEqual(f.monkeyMotionRoot.position.toArray(), [0, 0, 0], 'Monkey settles at canonical final origin');
 assert.equal(f.fog.radius, 0); assert.equal(f.fog.installed, false, 'fog is removed after P0 settling');
-f.sequence.update(20); f.sequence.notifyGlyphExploreSuccess(); f.sequence.update(100); assert.equal(f.getAttention(), 0);
+f.sequence.update(119.9); assert.equal(f.getAttention(), 0, 'no hint before 120 seconds');
+f.sequence.update(.1); assert.equal(f.getAttention(), 1, 'timeout arms Monkey hint at 120 seconds');
+assert.equal(f.sequence.getDebugSnapshot().glyphHintTriggered, true);
+f.getOverride().onMonkeyPress(); f.sequence.update(.01); f.sequence.update(.01); assert.equal(f.getMessage(), VR_INTRO_COPY.en.glyphHint[1]);
+assert.equal(f.sequence.notifyGlyphExploreSuccess(), true, 'a crystal still resolves discovery after the timeout hint');
+assert.equal(f.getAttention(), 2); assert.equal(f.sequence.notifyGlyphExploreSuccess(), false, 'discovery is one-shot');
+f.getOverride().onMonkeyPress();
+for (let i = 0; i < 4; i += 1) f.sequence.update(.01);
+assert.equal(f.sequence.getState(), VR_INTRO_STATE.RELIQUARY_REVEAL);
+let earlyReveal = 0;
+const early = fixture({ onReliquaryReveal: (duration) => { earlyReveal = duration; } }); reachGlyphExplore(early);
+early.sequence.update(30); assert.equal(early.sequence.notifyGlyphExploreSuccess(), true);
+assert.equal(early.getAttention(), 1, 'early first crystal cancels the timeout and attracts attention once');
+early.sequence.update(200); assert.equal(early.getAttention(), 1);
+early.getOverride().onMonkeyPress(); for (let i = 0; i < 3; i += 1) early.sequence.update(.01);
+assert.equal(earlyReveal, 3); assert.equal(early.sequence.getState(), VR_INTRO_STATE.RELIQUARY_REVEAL);
 const hint = fixture(); hint.sequence.beginAfterXrCalibration(); hint.sequence.getDebugSnapshot(); // bypass choreography for timer is covered through public flow above
 const bypassed = fixture({ bypass: true }); assert.equal(bypassed.sequence.getState(), VR_INTRO_STATE.BYPASSED); assert.equal(bypassed.fog.progress, 1); assert.equal(bypassed.monkeyStoneRoot.visible, true);
 f.sequence.reset(); assert.equal(f.sequence.getState(), VR_INTRO_STATE.XR_CALIBRATING); assert.equal(f.sequence.getDebugSnapshot().glyphExploreResolved, false);

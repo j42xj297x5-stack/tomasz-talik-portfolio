@@ -1,6 +1,7 @@
 import { publicPath } from '../utils/publicPath.js';
 
 export const EXPERIENCE_VR_SETTINGS_SCHEMA_VERSION = 1;
+export const VR_BACKGROUND_COLOR = '#05070b';
 
 export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
   schemaVersion: EXPERIENCE_VR_SETTINGS_SCHEMA_VERSION,
@@ -178,7 +179,7 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
     introRevealDuration: 10.0,
     postRevealSilenceDuration: 2.0,
     insideSafeMargin: 0.75,
-    glyphFreeExploreDuration: 60.0,
+    glyphFreeExploreDuration: 120.0,
     guideSpeed: 0.7,
     guideTurnDuration: 1.0,
     followGraceDistance: 3.0,

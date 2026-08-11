@@ -1,7 +1,8 @@
 import * as THREE from '../../vendor/three.js';
+import { VR_BACKGROUND_COLOR } from '../../config/experienceVrSettings.js';
 
 /** Renders a black, platform-local radial mask on an explicit set of roots. */
-export function createVrIntroFogReveal({ center, roots = [], color = '#05070b', duration = 10,
+export function createVrIntroFogReveal({ center, roots = [], color = VR_BACKGROUND_COLOR, duration = 10,
   initialRadius = 20, revealedRadius = 17 }) {
   if (!center?.isObject3D) throw new TypeError('VR intro fog requires a platform center Object3D');
   const uniforms = {
@@ -45,7 +46,7 @@ vec4 vrFogWorldPosition = vec4(transformed, 1.0);
 vrFogWorldPosition = modelMatrix * vrFogWorldPosition;
 vrFogPlatformPosition = (vrFogWorldToPlatform * vrFogWorldPosition).xyz;`);
           shader.fragmentShader = `uniform float vrFogRadius; uniform vec3 vrFogColor; varying vec3 vrFogPlatformPosition;\n${shader.fragmentShader}`
-            .replace('#include <dithering_fragment>', `float vrFogEdge = smoothstep(vrFogRadius - 0.35, vrFogRadius + 0.35, length(vrFogPlatformPosition.xz));\n gl_FragColor.rgb = mix(vrFogColor, gl_FragColor.rgb, vrFogEdge);\n#include <dithering_fragment>`);
+            .replace('#include <tonemapping_fragment>', `float vrFogEdge = smoothstep(vrFogRadius - 0.35, vrFogRadius + 0.35, length(vrFogPlatformPosition.xz));\n gl_FragColor.rgb = mix(vrFogColor, gl_FragColor.rgb, vrFogEdge);\n#include <tonemapping_fragment>`);
         };
         material.needsUpdate = true;
       }
