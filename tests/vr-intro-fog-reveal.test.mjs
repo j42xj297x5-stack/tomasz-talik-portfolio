@@ -1,6 +1,13 @@
 import assert from 'node:assert/strict';
 import * as THREE from '../src/vendor/three.js';
 import { createVrIntroFogReveal } from '../src/xr/guidance/createVrIntroFogReveal.js';
+import { VR_BACKGROUND_COLOR } from '../src/config/experienceVrSettings.js';
+import { readFile } from 'node:fs/promises';
+
+assert.equal(VR_BACKGROUND_COLOR, '#05070b');
+const runtimeSource = await readFile(new URL('../src/experienceVr.js', import.meta.url), 'utf8');
+assert.match(runtimeSource, /scene\.background = new THREE\.Color\(VR_BACKGROUND_COLOR\)/);
+assert.match(runtimeSource, /color: VR_BACKGROUND_COLOR/);
 
 const platform = new THREE.Group();
 platform.position.set(3, 2, -4); platform.rotation.set(.4, .7, -.2);
@@ -24,6 +31,8 @@ const shader = {
   fragmentShader: `void main() {
     gl_FragColor = vec4(1.0);
 
+    #include <tonemapping_fragment>
+    #include <colorspace_fragment>
     #include <dithering_fragment>
 }`
 };
@@ -47,6 +56,8 @@ assert.doesNotMatch(shader.vertexShader,
 assert.match(shader.fragmentShader,
   /smoothstep\(vrFogRadius - 0\.35, vrFogRadius \+ 0\.35, length\(vrFogPlatformPosition\.xz\)\)/,
   'radial mask transitions from fog inside the radius to visible material outside it');
+assert.ok(shader.fragmentShader.indexOf('mix(vrFogColor') < shader.fragmentShader.indexOf('#include <tonemapping_fragment>'));
+assert.ok(shader.fragmentShader.indexOf('mix(vrFogColor') < shader.fragmentShader.indexOf('#include <colorspace_fragment>'));
 
 const smoothstep = (edge0, edge1, value) => {
   const t = Math.min(1, Math.max(0, (value - edge0) / (edge1 - edge0)));

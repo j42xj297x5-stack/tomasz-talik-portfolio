@@ -104,6 +104,11 @@ export function createVrCrystalReliquary({ parent, portalAnchor, reliquaryModel,
   const worldScale = new THREE.Vector3();
   const insertFeedbackWorldScale = new THREE.Vector3();
   const companions = new Map();
+  const revealMaterials = new Map();
+  let revealElapsed = 0;
+  let revealDuration = 3;
+  let revealActive = false;
+  let interactionEnabled = false;
   let disposed = false;
 
   function updateButtonPlacement() {
@@ -152,7 +157,54 @@ export function createVrCrystalReliquary({ parent, portalAnchor, reliquaryModel,
     if (!disposed) {
       setInsertFeedback(null);
       place();
+      revealElapsed = 0;
+      revealActive = false;
+      interactionEnabled = false;
+      applyRevealProgress(0);
     }
+  }
+
+  function trackRevealMaterials(root) {
+    root?.traverse((child) => {
+      if (!child.isMesh || child === insertZone) return;
+      const materials = Array.isArray(child.material) ? child.material : [child.material];
+      materials.filter(Boolean).forEach((material) => {
+        if (!revealMaterials.has(material)) revealMaterials.set(material, {
+          opacity: material.userData?.vrReliquaryOriginalOpacity ?? material.opacity,
+          transparent: material.userData?.vrReliquaryOriginalTransparent ?? material.transparent
+        });
+        material.userData = material.userData ?? {};
+        material.userData.vrReliquaryOriginalOpacity = revealMaterials.get(material).opacity;
+        material.userData.vrReliquaryOriginalTransparent = revealMaterials.get(material).transparent;
+      });
+    });
+  }
+
+  function applyRevealProgress(progress) {
+    const amount = THREE.MathUtils.clamp(progress, 0, 1);
+    revealMaterials.forEach((source, material) => {
+      material.opacity = source.opacity * amount;
+      material.transparent = amount < 1 || source.transparent;
+      material.needsUpdate = true;
+    });
+  }
+
+  function reveal(duration = 3) {
+    if (disposed || revealActive || interactionEnabled) return false;
+    trackRevealMaterials(object);
+    revealDuration = Math.max(0, duration);
+    revealElapsed = 0;
+    revealActive = revealDuration > 0;
+    applyRevealProgress(revealActive ? 0 : 1);
+    interactionEnabled = !revealActive;
+    return true;
+  }
+
+  function update(delta) {
+    if (!revealActive) return;
+    revealElapsed = Math.min(revealDuration, revealElapsed + Math.max(0, delta));
+    applyRevealProgress(revealDuration <= 0 ? 1 : revealElapsed / revealDuration);
+    if (revealElapsed >= revealDuration) { revealActive = false; interactionEnabled = true; }
   }
 
   function attachCompanion({ id, model: companionModel, settings: placementSettings = settings.buttons, side = 'left' }) {
@@ -174,6 +226,8 @@ export function createVrCrystalReliquary({ parent, portalAnchor, reliquaryModel,
     scaleRoot.scale.setScalar(placementSettings?.scale ?? 0.3);
     const companion = { placementRoot, scaleRoot, model: companionModel, visibleBounds: companionBounds, settings: placementSettings, side };
     companions.set(id, companion);
+    trackRevealMaterials(companionModel);
+    applyRevealProgress(interactionEnabled ? 1 : (revealActive && revealDuration > 0 ? revealElapsed / revealDuration : 0));
     object.updateWorldMatrix(true, true);
     updateButtonPlacement();
     return companion;
@@ -225,10 +279,14 @@ export function createVrCrystalReliquary({ parent, portalAnchor, reliquaryModel,
     feedbackMaterial.dispose();
   }
 
+  trackRevealMaterials(model);
   place();
+  reset();
   return { object, modelRoot, authoredRoot, companionsRoot, model, insertZone, authoredCrystalAnchor, crystalAnchor: runtimeCrystalAnchor,
-    runtimeCrystalAnchor, hasValidInsertZone, portalForward, portalLeft, place, reset, dispose,
+    runtimeCrystalAnchor, hasValidInsertZone, portalForward, portalLeft, place, reset, reveal, update, dispose,
     attachCompanion,
+    isInteractionEnabled: () => interactionEnabled,
+    getRevealSnapshot: () => ({ active: revealActive, elapsed: revealElapsed, duration: revealDuration, interactionEnabled }),
     get buttonPlacementRoot() { return companions.get('activate')?.placementRoot ?? null; },
     insertFeedback, setInsertFeedback, getInsertZoneWorldSphere, getCrystalAnchorWorldPosition };
 }

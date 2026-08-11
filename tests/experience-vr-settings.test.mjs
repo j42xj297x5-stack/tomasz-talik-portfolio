@@ -18,7 +18,7 @@ assert.equal('emergeDuration' in DEFAULT_EXPERIENCE_VR_SETTINGS.intro, false);
 assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.intro.introRevealDuration, 10);
 assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.intro.postRevealSilenceDuration, 2);
 assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.intro.insideSafeMargin, 0.75);
-assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.intro.glyphFreeExploreDuration, 60);
+assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.intro.glyphFreeExploreDuration, 120);
 assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.intro.guideTurnDuration, 1);
 assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.intro.followGraceDistance, 3);
 assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.intro.messageDisplayDuration, 2);

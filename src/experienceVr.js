@@ -7,7 +7,7 @@ import { createOrbitNodes } from './scene/orbitNodes.js';
 import { createAssetManager } from './assets/assetManager.js';
 import { createLoadingDiagnostics, preloadAssets } from './assets/preloadAssets.js';
 import { ASSET_STAGES, getPreloadAssets, INITIAL_PRELOAD_GROUPS, DEFERRED_PRELOAD_GROUPS } from './assets/assetManifest.js';
-import { loadExperienceVrSettings } from './config/experienceVrSettings.js';
+import { loadExperienceVrSettings, VR_BACKGROUND_COLOR } from './config/experienceVrSettings.js';
 import { orientPlayerRig } from './xr/playerRigOrientation.js';
 import { calibrateXrHeadToPlatform } from './xr/calibration/calibrateXrHeadToPlatform.js';
 import { getXrHeadWorldPosition } from './xr/getXrHeadWorldPosition.js';
@@ -131,7 +131,7 @@ renderer.setPixelRatio(Math.min(devicePixelRatio || 1, settings.renderer.pixelRa
 renderer.xr.enabled = true;
 
 const scene = new THREE.Scene();
-scene.background = new THREE.Color('#05070b');
+scene.background = new THREE.Color(VR_BACKGROUND_COLOR);
 const experienceRoot = new THREE.Group();
 experienceRoot.name = 'ExperienceVrRoot';
 scene.add(experienceRoot);
@@ -434,7 +434,7 @@ const activateButton = createVrReliquaryActivateButton({
   reliquary: crystalReliquary,
   controllers: vrControllers.controllers,
   settings: settings.reliquary.activateButton,
-  canActivate: () => crystalCollection.getInsertedInstance()?.state === 'inserted',
+  canActivate: () => crystalReliquary.isInteractionEnabled() && crystalCollection.getInsertedInstance()?.state === 'inserted',
   onActivate: () => {
     const accepted = crystalCollection.activateInserted();
     if (accepted) playVrWorld(VR_AUDIO.reliquaryActivate);
@@ -451,7 +451,7 @@ const releaseButton = createVrReliquaryReleaseButton({
   reliquary: crystalReliquary,
   controllers: vrControllers.controllers,
   settings: settings.reliquary.releaseButton,
-  canRelease: () => ['inserted', 'active'].includes(crystalCollection.getInsertedInstance()?.state),
+  canRelease: () => crystalReliquary.isInteractionEnabled() && ['inserted', 'active'].includes(crystalCollection.getInsertedInstance()?.state),
   onRelease: () => crystalCollection.releaseInserted(),
   onReleaseComplete: () => activateButton.reset()
 });
@@ -507,7 +507,7 @@ shellAttractorInteraction = createVrShellAttractorInteraction({
 const introFogReveal = createVrIntroFogReveal({
   center: progressFloor.object,
   roots: [monkeyVisualRoot, glyphRing, monkeyStoneRoot],
-  color: '#05070b',
+  color: VR_BACKGROUND_COLOR,
   duration: settings.intro.introRevealDuration
 });
 
@@ -517,6 +517,9 @@ introSequence = createVrIntroSequence({
   spatial: settings.spatial,
   settings: { ...settings.intro, locale: language }, bypass: introQaBypass,
   onOpeningRaysReady: () => vrControllers.setRaysEnabled(true),
+  onProgressionFixturesHidden: () => { portalDisplay.hide(); astroFurnace.object.visible = false; crystalReliquary.reset(); },
+  onBypassFixturesVisible: () => { restorePortalWaitingState(); astroFurnace.reset(); crystalReliquary.reveal(0); },
+  onReliquaryReveal: (duration) => crystalReliquary.reveal(duration),
   getHeadPosition: () => {
     return getXrHeadWorldPosition({ renderer, camera, playerRig });
   },
@@ -557,6 +560,7 @@ function renderFrame() {
   playerGuidePanel.update(delta);
   monkeyGuide.update(delta);
   introSequence.update(delta);
+  crystalReliquary.update(delta);
   locomotion.setLeftYawLocked(playerGuidePanel.isOpen());
   astroFurnace.update(delta);
   astroFurnaceOptionInteraction.update(delta);
