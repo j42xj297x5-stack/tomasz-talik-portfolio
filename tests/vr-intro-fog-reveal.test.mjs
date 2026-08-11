@@ -2,33 +2,24 @@ import assert from 'node:assert/strict';
 import * as THREE from '../src/vendor/three.js';
 import { createVrIntroFogReveal } from '../src/xr/guidance/createVrIntroFogReveal.js';
 
+const platform = new THREE.Group();
+platform.position.set(3, 2, -4); platform.rotation.set(.4, .7, -.2);
 const material = new THREE.MeshBasicMaterial();
-const root = new THREE.Group();
-root.add(new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), material));
+const root = new THREE.Group(); root.add(new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), material));
+platform.add(root); platform.updateWorldMatrix(true, true);
 const originalCompile = material.onBeforeCompile;
-const origin = new THREE.Vector3(3, 1.7, 4);
-const target = new THREE.Vector3(-9, 0, 9);
-const reveal = createVrIntroFogReveal({
-  getOriginPosition: () => origin.clone(),
-  getTargetPosition: () => target.clone(),
-  roots: [root],
-  duration: 10
-});
+const reveal = createVrIntroFogReveal({ center: platform, roots: [root], duration: 10 });
 
-assert.notEqual(material.onBeforeCompile, originalCompile, 'fog shader patch covers the Monkey material root before reveal');
-origin.set(5, 1.8, 7); target.set(-7, 0, 12);
+assert.notEqual(material.onBeforeCompile, originalCompile, 'fog is installed before the first renderable frame');
+assert.deepEqual(reveal.getSnapshot().worldToPlatform.elements, platform.matrixWorld.clone().invert().elements,
+  'fog radial coordinates use the complete platform transform');
+assert.equal(reveal.getSnapshot().radius, 20);
 reveal.start();
-let snapshot = reveal.getSnapshot();
-assert.deepEqual(snapshot.center.toArray(), origin.toArray(), 'reveal starts at the calibrated runtime head position');
-assert.equal(snapshot.revealRadius, 13, 'radius is computed from runtime head and Monkey XZ positions');
-assert.equal(snapshot.duration, 10);
-reveal.update(9.999);
-snapshot = reveal.getSnapshot();
-assert.ok(snapshot.progress < 1); assert.equal(snapshot.active, true);
-assert.notEqual(material.onBeforeCompile, originalCompile, 'black fog remains installed until ten seconds elapse');
-reveal.update(0.001);
-snapshot = reveal.getSnapshot();
-assert.equal(snapshot.progress, 1); assert.equal(snapshot.elapsed, 10); assert.equal(snapshot.active, false);
-assert.equal(material.onBeforeCompile, originalCompile, 'shader patch is removed at reveal completion');
+reveal.update(5); assert.equal(reveal.getSnapshot().radius, 18.5);
+reveal.update(5); assert.equal(reveal.getSnapshot().radius, 17);
+reveal.update(100); assert.equal(reveal.getSnapshot().radius, 17, 'completed reveal holds its radius and shader patch');
+reveal.setRadius(6); assert.equal(reveal.getSnapshot().radius, 6);
+reveal.setRadius(0); assert.equal(reveal.getSnapshot().radius, 0);
+reveal.dispose(); assert.equal(material.onBeforeCompile, originalCompile, 'dispose restores the material lifecycle');
 
-console.log('VR intro fog runtime-distance and ten-second reveal assertions passed.');
+console.log('VR intro platform-radial fog assertions passed.');

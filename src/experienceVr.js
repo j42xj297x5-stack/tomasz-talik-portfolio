@@ -193,7 +193,7 @@ floorPassengerRoot.quaternion.identity();
 floorPassengerRoot.scale.set(1, 1, 1);
 progressFloor.object.add(floorPassengerRoot);
 floorPassengerRoot.add(playerRig);
-const monkeyActor = await loadMonkeyModel({ actorParent: progressFloor.object, fixtureParent: platformFixturesRoot,
+const monkeyActor = await loadMonkeyModel({ actorParent: progressFloor.object, fixtureParent: progressFloor.object,
   fallbackObject: centralPlaceholder, assetManager });
 const { motionRoot: monkeyMotionRoot, visualRoot: monkeyVisualRoot, interactionRoot: monkeyInteractionRoot,
   stoneRoot: monkeyStoneRoot, model: monkeyModel } = monkeyActor;
@@ -505,9 +505,8 @@ shellAttractorInteraction = createVrShellAttractorInteraction({
 });
 
 const introFogReveal = createVrIntroFogReveal({
-  getOriginPosition: () => getXrHeadWorldPosition({ renderer, camera, playerRig }),
-  getTargetPosition: () => monkeyVisualRoot.getWorldPosition(new THREE.Vector3()),
-  roots: [worldStableRoot],
+  center: progressFloor.object,
+  roots: [monkeyVisualRoot, glyphRing, monkeyStoneRoot],
   color: '#05070b',
   duration: settings.intro.introRevealDuration
 });
