@@ -10,6 +10,7 @@ import { ASSET_STAGES, getPreloadAssets, INITIAL_PRELOAD_GROUPS, DEFERRED_PRELOA
 import { loadExperienceVrSettings } from './config/experienceVrSettings.js';
 import { orientPlayerRig } from './xr/playerRigOrientation.js';
 import { calibrateXrHeadToPlatform } from './xr/calibration/calibrateXrHeadToPlatform.js';
+import { getXrHeadWorldPosition } from './xr/getXrHeadWorldPosition.js';
 import { createVrControllers } from './xr/createVrControllers.js';
 import { createVrGlyphInteraction } from './xr/createVrGlyphInteraction.js';
 import { createVrGlyphOrbit } from './xr/createVrGlyphOrbit.js';
@@ -504,7 +505,7 @@ shellAttractorInteraction = createVrShellAttractorInteraction({
 });
 
 const introFogReveal = createVrIntroFogReveal({
-  getOriginPosition: () => renderer.xr.getCamera(camera).getWorldPosition(new THREE.Vector3()),
+  getOriginPosition: () => getXrHeadWorldPosition({ renderer, camera, playerRig }),
   getTargetPosition: () => monkeyVisualRoot.getWorldPosition(new THREE.Vector3()),
   roots: [worldStableRoot],
   color: '#05070b',
@@ -518,7 +519,7 @@ introSequence = createVrIntroSequence({
   settings: { ...settings.intro, locale: language }, bypass: introQaBypass,
   onOpeningRaysReady: () => vrControllers.setRaysEnabled(true),
   getHeadPosition: () => {
-    return renderer.xr.getCamera(camera).getWorldPosition(new THREE.Vector3());
+    return getXrHeadWorldPosition({ renderer, camera, playerRig });
   },
   onEndSession: () => { void activeSession?.end(); }
 });
@@ -542,13 +543,10 @@ const clock = new THREE.Clock(false);
 function renderFrame() {
   const delta = clock.getDelta();
   if (xrStartCalibrationPending) {
-    playerRig.updateWorldMatrix(true, true);
-    if (typeof renderer.xr.updateCamera === 'function') renderer.xr.updateCamera(camera);
-    const xrCamera = renderer.xr.getCamera(camera);
-    calibrateXrHeadToPlatform({ playerRig, xrCamera, platformRoot: progressFloor.object, entryDirection,
+    const headWorldPosition = getXrHeadWorldPosition({ renderer, camera, playerRig });
+    calibrateXrHeadToPlatform({ playerRig, headWorldPosition, platformRoot: progressFloor.object, entryDirection,
       targetRadius: settings.spatial.playerStartRadius });
-    if (typeof renderer.xr.updateCamera === 'function') renderer.xr.updateCamera(camera);
-    else xrCamera.updateWorldMatrix(true, true);
+    getXrHeadWorldPosition({ renderer, camera, playerRig });
     xrStartCalibrationPending = false;
     introSequence.beginAfterXrCalibration();
     if (introQaBypass) vrControllers.setRaysEnabled(true);
