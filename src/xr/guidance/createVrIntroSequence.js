@@ -78,7 +78,11 @@ export function createVrIntroSequence({ monkeyGuide, monkeyMotionRoot, monkeyVis
     if (state === VR_INTRO_STATE.FOLLOWING) {
       turnElapsed += delta; monkeyMotionRoot.quaternion.slerpQuaternions(canonicalQuaternion, walkingQuaternion, Math.min(1, turnElapsed / (settings.guideTurnDuration ?? 1)));
       const stopRadius = ringRadius + spatial.thresholdOutsideDistance; const walked = startRadius - monkeyRadius; const head = getHeadPosition(); const monkey = monkeyMotionRoot.getWorldPosition(new THREE.Vector3()); const distance = Math.hypot(head.x - monkey.x, head.z - monkey.z);
-      if (!followCheckResolved && walked >= settings.followGraceDistance) { if (!walkingPaused && distance > settings.pauseDistance) { walkingPaused = true; monkeyGuide.showMessage(copy.going); } else if (walkingPaused && distance < settings.resumeDistance) { walkingPaused = false; followCheckResolved = true; monkeyGuide.showMessage(''); } else if (!walkingPaused) followCheckResolved = true; }
+      if (walked >= settings.followGraceDistance) {
+        followCheckResolved = true;
+        if (!walkingPaused && distance > settings.pauseDistance) { walkingPaused = true; monkeyGuide.showMessage(copy.going); }
+        else if (walkingPaused && distance < settings.resumeDistance) { walkingPaused = false; monkeyGuide.showMessage(''); }
+      }
       if (!walkingPaused && monkeyRadius > stopRadius) { monkeyRadius = Math.max(stopRadius, monkeyRadius - settings.guideSpeed * delta); placeAtRadius(); }
       if ((startRadius - monkeyRadius) / Math.max(.001, startRadius - stopRadius) >= settings.revealProgress) { glyphRing.visible = true; if (monkeyStoneRoot) monkeyStoneRoot.visible = true; }
       if (monkeyRadius <= stopRadius + 1e-4) thresholdChoice();

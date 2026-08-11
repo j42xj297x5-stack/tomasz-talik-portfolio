@@ -1,10 +1,10 @@
 import * as THREE from '../../vendor/three.js';
 
 /** Move the rig once so the tracked head reaches the requested platform-local XZ. */
-export function calibrateXrHeadToPlatform({ playerRig, xrCamera, platformRoot, entryDirection, targetRadius }) {
+export function calibrateXrHeadToPlatform({ playerRig, headWorldPosition, platformRoot, entryDirection, targetRadius }) {
   playerRig.updateWorldMatrix(true, true);
   platformRoot.updateWorldMatrix(true, false);
-  const actualHeadWorld = xrCamera.getWorldPosition(new THREE.Vector3());
+  const actualHeadWorld = headWorldPosition.clone();
   const actualHeadLocal = platformRoot.worldToLocal(actualHeadWorld.clone());
   const desiredHeadLocal = entryDirection.clone();
   desiredHeadLocal.y = 0;

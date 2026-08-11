@@ -41,9 +41,18 @@ assert.equal(f.sequence.getState(), VR_INTRO_STATE.WAIT_HOVER); assert.equal(f.g
 f.getOverride().onMonkeyHover(); f.getOverride().onMonkeyPress(); for (let i = 0; i < 8; i += 1) f.sequence.update(.01); f.sequence.chooseInvitation('go');
 assert.ok(f.sequence.getDebugSnapshot().monkeyRadius > 5, 'FOLLOWING has positive distance from radius 18 to threshold 5');
 const stationaryStonePosition = f.monkeyStoneRoot.position.clone();
-// First check pauses once, then resolving it permanently disables distance pauses.
-f.head.z = 40; f.sequence.update(1.5); f.sequence.update(.1); assert.equal(f.sequence.isGuidePaused(), true); f.head.copy(f.monkeyMotionRoot.getWorldPosition(new THREE.Vector3())); f.sequence.update(.1); assert.equal(f.sequence.getDebugSnapshot().followCheckResolved, true);
-f.head.z = 40; for (let i = 0; i < 20 && f.sequence.getState() === VR_INTRO_STATE.FOLLOWING; i += 1) f.sequence.update(.5); assert.equal(f.sequence.getState(), VR_INTRO_STATE.THRESHOLD); assert.equal(f.sequence.isGuidePaused(), false);
+// Passing the three-metre grace point while actually following must not pause.
+f.sequence.update(1.5);
+f.head.copy(f.monkeyMotionRoot.getWorldPosition(new THREE.Vector3())).add(new THREE.Vector3(0, 0, 2));
+f.sequence.update(.1); assert.equal(f.sequence.isGuidePaused(), false);
+// A lagging player pauses only beyond pauseDistance, then resumes below resumeDistance.
+f.head.z = 40; f.sequence.update(.1); assert.equal(f.sequence.isGuidePaused(), true);
+f.head.copy(f.monkeyMotionRoot.getWorldPosition(new THREE.Vector3())); f.sequence.update(.1); assert.equal(f.sequence.getDebugSnapshot().followCheckResolved, true);
+for (let i = 0; i < 20 && f.sequence.getState() === VR_INTRO_STATE.FOLLOWING; i += 1) {
+  f.head.copy(f.monkeyMotionRoot.getWorldPosition(new THREE.Vector3())).add(new THREE.Vector3(0, 0, 2));
+  f.sequence.update(.5);
+}
+assert.equal(f.sequence.getState(), VR_INTRO_STATE.THRESHOLD); assert.equal(f.sequence.isGuidePaused(), false);
 assert.deepEqual(f.monkeyStoneRoot.position.toArray(), stationaryStonePosition.toArray(), 'stone is stationary during FOLLOWING');
 assert.equal(f.glyphRing.visible, true); assert.equal(f.monkeyStoneRoot.visible, true, 'stone appears with ring reveal');
 f.sequence.chooseThreshold('cross'); f.head.set(0, 1.7, 3.99); const before = f.playerRig?.position?.clone?.(); f.sequence.update(.1); assert.equal(f.sequence.getDebugSnapshot().playerSafelyInside, false); assert.equal(f.getRadius(), Infinity);

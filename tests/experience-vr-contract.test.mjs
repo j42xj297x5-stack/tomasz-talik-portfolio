@@ -33,8 +33,10 @@ assert.match(vr, /renderer\.setAnimationLoop\(null\)/);
 assert.doesNotMatch(vr, /requestAnimationFrame/);
 assert.match(vr, /await renderer\.xr\.setSession\(requestedSession\);\s*xrStartCalibrationPending = true;/,
   'session entry defers start calibration to an XR animation frame');
-assert.match(vr, /if \(xrStartCalibrationPending\)[\s\S]*renderer\.xr\.updateCamera\(camera\)[\s\S]*calibrateXrHeadToPlatform/,
-  'the pending frame refreshes the tracked camera before calibration');
+assert.match(vr, /if \(xrStartCalibrationPending\)[\s\S]*getXrHeadWorldPosition\(\{ renderer, camera, playerRig \}\)[\s\S]*calibrateXrHeadToPlatform/,
+  'the pending frame uses the canonical WebXR matrix reader before calibration');
+assert.doesNotMatch(vr, /renderer\.xr\.getCamera\(camera\)\.getWorldPosition\(/,
+  'active P0 code must not rebuild the detached WebXR ArrayCamera matrix');
 assert.match(vr, /xrStartCalibrationPending = false;\s*introSequence\.beginAfterXrCalibration\(\);\s*if \(introQaBypass\) vrControllers\.setRaysEnabled\(true\);\s*renderer\.render\(scene, camera\);\s*return;/,
   'calibration is one-shot and skips ordinary locomotion/update work in that frame');
 assert.match(vr, /function handleSessionEnd\(\)[\s\S]*xrStartCalibrationPending = false;[\s\S]*introSequence\.reset\(\)/,
