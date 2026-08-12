@@ -59,6 +59,15 @@ assert.match(vr, /VR_SCENARIO_EFFECT\.BEGIN_CONTROLLER_ONBOARDING[\s\S]*introSeq
   'controller onboarding effect resumes the waiting Intro actor and rejects composition bugs explicitly');
 assert.equal((vr.match(/introSequence\.beginControllerOnboarding\(\)/g) ?? []).length, 1,
   'there is no second controller onboarding start path');
+assert.match(vr, /onPlayerOpenedGuide: \(\) => runtimeExperience\.dispatch\(VR_SCENARIO_EVENT\.PLAYER_OPENED_GUIDE\)/,
+  'Intro guide-open callback performs only semantic dispatch');
+assert.match(vr, /VR_SCENARIO_EFFECT\.CONTINUE_CONTROLLER_ONBOARDING[\s\S]*introSequence\.continueControllerOnboarding\(\)[\s\S]*throw new Error/,
+  'guide-open effect alone resumes controller onboarding and rejects composition bugs explicitly');
+assert.equal((vr.match(/introSequence\.continueControllerOnboarding\(\)/g) ?? []).length, 1,
+  'there is no second controller onboarding continuation fallback');
+const guideOpenWiring = vr.match(/introSequence = createVrIntroSequence\(\{[\s\S]*?\n\}\);/)?.[0] ?? '';
+assert.doesNotMatch(guideOpenWiring, /playerGuidePanel\.isOpen\(\)/,
+  'experienceVr does not interpret panel state for the guide-open decision');
 assert.match(vr, /function handleSessionEnd\(\) \{\s*runtimeExperience\.resetSession\(\)/);
 assert.match(vr, /async function enterVr\(\)[\s\S]*if \(activeSession\) return;\s*runtimeExperience\.resetSession\(\)/);
 assert.match(vr, /catch \(error\)[\s\S]*xrStartCalibrationPending = false;\s*runtimeExperience\.resetSession\(\)/);

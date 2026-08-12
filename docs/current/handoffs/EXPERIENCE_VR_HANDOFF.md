@@ -6,7 +6,23 @@ Status: current delivery handoff synchronized with HEAD on 2026-08-12. It intent
 
 Experience VR has an implemented P0 intro, portfolio crystal progression, Tier-1 Astro/shell loop, Astro Furnace material loop, production/claim of the Asterion Sphere and heavy platform-orientation control. The transient ambient sequencer is **IMPLEMENTED**, not FUTURE. Exact owners, state machines, timings, hierarchy and visibility gates live only in the [VR Runtime Model](../technical/VR_RUNTIME_MODEL.md); audio mappings and sequencer behavior live only in the [VR Audio Model](../technical/VR_AUDIO_MODEL.md).
 
-M0, M1.1 **Live Bootstrap Slice**, M1.2 **Intro Reveal Completion Handoff**, and M1.3 **Post-Reveal Silence Completion Handoff** are complete, while M1 overall remains **IN PROGRESS**. Scenario and `ExperienceDirector` are authoritative only for `XR_CALIBRATED → BEGIN_INTRO_REVEAL`, `INTRO_REVEAL_COMPLETE → BEGIN_POST_REVEAL_SILENCE`, and `POST_REVEAL_SILENCE_COMPLETE → BEGIN_CONTROLLER_ONBOARDING`; `RuntimeExperience` executes these symbolic effects through injected adapters. SG-032 and SG-039 are **MIGRATED**. The actor still measures the two-second silence, while the Y-panel UI facts and tutorial from `WAIT_PLAYER_PANEL_OPEN` remain with `createVrIntroSequence`; SG-040 and later groups are not migrated. Full central Scenario ownership does not yet exist, and RC-01…RC-14 are not consolidated. **CURRENT:** Scenario uses canonical numbered point IDs `1.1`–`1.4`, `ExperienceDirector` exposes `currentPointId`, and `RuntimeExperience` exposes `getCurrentPointId()`; legacy scene aliases delegate to the same state.
+M0, M1.1 **Live Bootstrap Slice**, M1.2 **Intro Reveal Completion Handoff**, M1.3 **Post-Reveal Silence Completion Handoff**, and M1.4 **Player Guide Open Handoff** are live, while M1 remains **IN PROGRESS**. Scenario and Director now also own `PLAYER_OPENED_GUIDE → CONTINUE_CONTROLLER_ONBOARDING`, moving `1.4 → 1.4.1`. SG-032 and SG-039 are **MIGRATED**. SG-040 remains **RETAINED**: migrated edge `PLAYER_OPENED_GUIDE`; remaining legacy edges `PLAYER_VIEWED_CONTROLS`, `PLAYER_CLOSED_GUIDE`, and pointer tutorial start. Runtime is the only caller of `continueControllerOnboarding()`.
+
+## M1.4 Meta Quest 3S smoke checklist
+
+**PENDING — HARDWARE QA NOT EXECUTED**
+
+- [ ] Opening onboarding is unchanged.
+- [ ] The Y prompt still has no timeout.
+- [ ] Opening Y continues exactly once.
+- [ ] The panel can be opened, viewed and closed as before.
+- [ ] Controls detail is still required.
+- [ ] Closing the panel still begins the same three messages.
+- [ ] `WAIT_HOVER` appears at the same moment.
+- [ ] Monkey hover/trigger is unchanged.
+- [ ] Reset/re-entry repeats the flow exactly once.
+- [ ] QA bypass has no regression.
+- [ ] Messages and listeners are not duplicated.
 
 ## M1.1 Meta Quest 3S smoke checklist
 

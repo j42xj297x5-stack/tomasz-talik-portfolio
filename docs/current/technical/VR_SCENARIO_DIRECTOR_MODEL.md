@@ -126,7 +126,7 @@ Skok nie jest błędem, powrót nie jest ukrytym zachowaniem, a pętla jest jawn
 
 `id: '1.3'` jest tożsamością punktu; opcjonalne `label: 'Cisza po revealu'` jest etykietą dla człowieka i może się zmienić bez zmiany adresu.
 
-**CURRENT:** działający slice M1.1–M1.3 używa kanonicznych, stabilnych point IDs `1.1`–`1.4`; opisowe nazwy pozostają wyłącznie etykietami dla człowieka.
+**CURRENT:** działający slice M1.1–M1.4 używa kanonicznych, stabilnych point IDs `1.1`–`1.4.1`; opisowe nazwy pozostają wyłącznie etykietami dla człowieka.
 
 ## 8. Event, effect, cue, milestone i capability
 
@@ -228,16 +228,17 @@ Kontroler odpowiada „co faktycznie osiągnięto w domenie”; Scenario — „
 
 QA shortcut nie jest alternatywną fabułą i nie ma własnego Scenario. Może przygotować stan domenowy, ale jawnie synchronizuje wymagane fakty, nie omija nowych gates tak, by ukryć błąd produkcyjny, wymaga parity testu, a jego status jest śledzony osobno od produkcyjnej migracji. **CURRENT:** `applyVrProgressionShortcut.js` pozostaje istniejącym adapterem QA bez zmian działania.
 
-## 19. CURRENT dla M1.1–M1.3
+## 19. CURRENT dla M1.1–M1.4
 
 | Kanoniczny adres | Etykieta | Event kończący punkt | Effect uruchamiający kolejny punkt | Status |
 | --- | --- | --- | --- | --- |
 | `1.1` | Bootstrap / oczekiwanie na kalibrację XR | `XR_CALIBRATED` | `BEGIN_INTRO_REVEAL` | CURRENT |
 | `1.2` | Intro reveal | `INTRO_REVEAL_COMPLETE` | `BEGIN_POST_REVEAL_SILENCE` | CURRENT |
 | `1.3` | Cisza po revealu | `POST_REVEAL_SILENCE_COMPLETE` | `BEGIN_CONTROLLER_ONBOARDING` | CURRENT |
-| `1.4` | Controller onboarding | — w obecnym zakresie | — w obecnym zakresie | CURRENT boundary; SG-040 RETAINED |
+| `1.4` | Controller onboarding / oczekiwanie na Player Guide | `PLAYER_OPENED_GUIDE` | `CONTINUE_CONTROLLER_ONBOARDING` | CURRENT; SG-040 RETAINED |
+| `1.4.1` | Player Guide otwarty / dalszy tutorial legacy | — | — | CURRENT terminal obecnego slice; SG-040 RETAINED |
 
-M1.1–M1.3 są zaimplementowane i live pod kanonicznymi adresami `1.1`–`1.4`. SG-032 i SG-039 pozostają `MIGRATED`; SG-040 i dalsze grupy pozostają `RETAINED`. Punkt `1.4` jest wyłącznie granicą obecnego slice i nie migruje `WAIT_PLAYER_PANEL_OPEN`.
+M1.1–M1.4 są zaimplementowane i live pod kanonicznymi adresami `1.1`–`1.4.1`. SG-032 i SG-039 pozostają `MIGRATED`; SG-040 pozostaje `RETAINED`. W SG-040 przeniesiono wyłącznie edge `PLAYER_OPENED_GUIDE`; legacy nadal posiada `PLAYER_VIEWED_CONTROLS`, `PLAYER_CLOSED_GUIDE` oraz start pointer tutorial.
 
 ## 20. Docelowy kształt danych Scenario
 
@@ -346,9 +347,10 @@ Obowiązkowy format przyszłych synchronizacji:
 | `1.1` | 1 | Bootstrap XR | `experienceVr.js` calibration handoff | SG-032 | `XR_CALIBRATED` | `1.2` | `BEGIN_INTRO_REVEAL` | `MIGRATED` | CURRENT live pod kanonicznym point ID | istniejące testy kontraktu | M1.1 PASS, Quest 3S, 2026-08-12 |
 | `1.2` | 1 | Intro reveal | `createVrIntroSequence` reveal completion seam | SG-039 edge: reveal completion | `INTRO_REVEAL_COMPLETE` | `1.3` | `BEGIN_POST_REVEAL_SILENCE` | `MIGRATED` | CURRENT live pod kanonicznym point ID | istniejące testy kontraktu | M1.2 PASS, Quest 3S, 2026-08-12 |
 | `1.3` | 1 | Cisza po revealu | `createVrIntroSequence` actor-owned timer/completion seam | SG-039 | `POST_REVEAL_SILENCE_COMPLETE` | `1.4` | `BEGIN_CONTROLLER_ONBOARDING` | `MIGRATED` | CURRENT live pod kanonicznym point ID | istniejące testy kontraktu | M1.3 PENDING — niewykonane |
-| `1.4` | 1 | Controller onboarding | `createVrIntroSequence` od `WAIT_PLAYER_PANEL_OPEN` | SG-040 | — | — | — | `RETAINED` | CURRENT legacy actor ownership | istniejące testy tylko bieżącego slice | nieuznane |
+| `1.4` | 1 | Controller onboarding | `createVrIntroSequence` wykrywa faktyczne otwarcie | SG-040 | `PLAYER_OPENED_GUIDE` | `1.4.1` | `CONTINUE_CONTROLLER_ONBOARDING` | `RETAINED` | CURRENT live; tylko pierwszy edge zmigrowany | testy Director/Runtime/aktora/kontraktu | M1.4 PENDING — Quest 3S |
+| `1.4.1` | 1 | Dalszy controller tutorial | `createVrIntroSequence` | SG-040 | — | — | — | `RETAINED` | `PLAYER_VIEWED_CONTROLS`, `PLAYER_CLOSED_GUIDE` i pointer tutorial start pozostają legacy | testy legacy parity | M1.4 PENDING — Quest 3S |
 
-Wpis powstaje przed migracją lub razem z nią; niewdrożone punkty nie są live; target address i current owner są widoczne razem. `MIGRATED` oznacza brak dual ownership. Hardware QA nie wynika z automatycznych testów. Usunięte adresy pozostają jako `REMOVED`. Rejestr nie zastępuje kodu ani testów. Powyższe wpisy obejmują wyłącznie live slice M1.1–M1.3 i jego granicę SG-040, nie przenoszą całego audytu.
+Wpis powstaje przed migracją lub razem z nią; niewdrożone punkty nie są live; target address i current owner są widoczne razem. `MIGRATED` oznacza brak dual ownership. Hardware QA nie wynika z automatycznych testów. Usunięte adresy pozostają jako `REMOVED`. Rejestr nie zastępuje kodu ani testów. Powyższe wpisy obejmują wyłącznie live slice M1.1–M1.4 i częściowe pokrycie SG-040, nie przenoszą całego audytu.
 
 ## 24. Debugowanie i wyszukiwanie
 
@@ -406,10 +408,10 @@ adres punktu jest wyliczany albo sortowany jako liczba
 
 ```text
 CURRENT:
-M0, M1.1, M1.2 i M1.3 są wdrożone.
-Scenario używa kanonicznych point IDs 1.1–1.4.
+M0, M1.1, M1.2, M1.3 i M1.4 PLAYER GUIDE OPEN HANDOFF są wdrożone.
+Scenario używa kanonicznych point IDs 1.1–1.4.1.
 Director używa currentPointId; legacy scene API jest wyłącznie aliasem.
-RuntimeExperience wykonuje trzy live effects.
+RuntimeExperience wykonuje cztery live effects, w tym CONTINUE_CONTROLLER_ONBOARDING.
 SG-032 i SG-039 są MIGRATED.
 SG-040 i dalsze grupy pozostają RETAINED.
 ```
@@ -425,6 +427,6 @@ experienceVr.js pozostaje composition rootem.
 
 ```text
 IMPLEMENTED BOUNDARY:
-Działające M1.1–M1.3 są odwzorowane na punkty 1.1–1.4,
-z kompatybilnością legacy i bez migracji SG-040.
+Działające M1.1–M1.4 są odwzorowane na punkty 1.1–1.4.1.
+SG-040 pozostaje RETAINED: zmigrowano tylko PLAYER_OPENED_GUIDE, a dalsze edge'e są legacy.
 ```
