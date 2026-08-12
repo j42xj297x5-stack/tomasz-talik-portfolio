@@ -5,6 +5,7 @@ function immutableIdentifiers(names) {
 export const VR_SCENARIO_EVENT = immutableIdentifiers([
   'XR_CALIBRATED',
   'INTRO_REVEAL_COMPLETE',
+  'POST_REVEAL_SILENCE_COMPLETE',
   'PLAYER_OPENED_GUIDE',
   'PLAYER_VIEWED_CONTROLS',
   'PLAYER_CLOSED_GUIDE',
@@ -77,6 +78,7 @@ export const VR_SCENARIO_CAPABILITY = immutableIdentifiers([
 export const VR_SCENARIO_MILESTONE = immutableIdentifiers([
   'XR_CALIBRATED',
   'INTRO_REVEAL_COMPLETE',
+  'POST_REVEAL_SILENCE_COMPLETE',
   'PLAYER_VIEWED_CONTROLS',
   'PLAYER_ENTERED_RING',
   'MONKEY_SETTLED',
@@ -93,6 +95,7 @@ export const VR_SCENARIO_MILESTONE = immutableIdentifiers([
 export const VR_SCENARIO_EFFECT = immutableIdentifiers([
   'BEGIN_INTRO_REVEAL',
   'BEGIN_POST_REVEAL_SILENCE',
+  'BEGIN_CONTROLLER_ONBOARDING',
   'SHOW_GUIDE_PROMPT',
   'START_MONKEY_FOLLOW',
   'SHOW_GLYPH_HINT',
@@ -106,7 +109,8 @@ export const VR_SCENARIO_EFFECT = immutableIdentifiers([
 export const VR_EXPERIENCE_SCENE = immutableIdentifiers([
   'RUNTIME_OWNERSHIP_BOOTSTRAP',
   'P0_LEGACY_SEQUENCE_ACTIVE',
-  'P0_LEGACY_POST_REVEAL_ACTIVE'
+  'P0_LEGACY_POST_REVEAL_ACTIVE',
+  'P0_LEGACY_CONTROLLER_ONBOARDING_ACTIVE'
 ]);
 
 export const vrExperienceScenario = Object.freeze({
@@ -146,15 +150,28 @@ export const vrExperienceScenario = Object.freeze({
     Object.freeze({
       id: VR_EXPERIENCE_SCENE.P0_LEGACY_POST_REVEAL_ACTIVE,
       capabilities: Object.freeze([]),
+      transitions: Object.freeze([
+        Object.freeze({
+          event: VR_SCENARIO_EVENT.POST_REVEAL_SILENCE_COMPLETE,
+          target: VR_EXPERIENCE_SCENE.P0_LEGACY_CONTROLLER_ONBOARDING_ACTIVE,
+          milestonesToAdd: Object.freeze([VR_SCENARIO_MILESTONE.POST_REVEAL_SILENCE_COMPLETE]),
+          effects: Object.freeze([VR_SCENARIO_EFFECT.BEGIN_CONTROLLER_ONBOARDING])
+        })
+      ])
+    }),
+    Object.freeze({
+      id: VR_EXPERIENCE_SCENE.P0_LEGACY_CONTROLLER_ONBOARDING_ACTIVE,
+      capabilities: Object.freeze([]),
       transitions: Object.freeze([])
     })
   ]),
   metadata: Object.freeze({
-    stage: 'M1_2_INTRO_REVEAL_COMPLETION_HANDOFF',
+    stage: 'M1_3_POST_REVEAL_SILENCE_COMPLETION_HANDOFF',
     authoritativeForLiveGameplay: true,
     authoritativeScope: Object.freeze([
       'XR_CALIBRATED → BEGIN_INTRO_REVEAL',
-      'INTRO_REVEAL_COMPLETE → BEGIN_POST_REVEAL_SILENCE'
+      'INTRO_REVEAL_COMPLETE → BEGIN_POST_REVEAL_SILENCE',
+      'POST_REVEAL_SILENCE_COMPLETE → BEGIN_CONTROLLER_ONBOARDING'
     ])
   })
 });

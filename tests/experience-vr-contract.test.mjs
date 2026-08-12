@@ -53,6 +53,12 @@ assert.match(vr, /VR_SCENARIO_EFFECT\.BEGIN_POST_REVEAL_SILENCE[\s\S]*introSeque
   'post-reveal effect resumes the waiting Intro actor and rejects composition bugs explicitly');
 assert.equal((vr.match(/introSequence\.beginPostRevealSilence\(\)/g) ?? []).length, 1,
   'there is no second post-reveal silence start path');
+assert.match(vr, /onPostRevealSilenceComplete: \(\) => runtimeExperience\.dispatch\(VR_SCENARIO_EVENT\.POST_REVEAL_SILENCE_COMPLETE\)/,
+  'silence completion callback performs only semantic dispatch');
+assert.match(vr, /VR_SCENARIO_EFFECT\.BEGIN_CONTROLLER_ONBOARDING[\s\S]*introSequence\.beginControllerOnboarding\(\)[\s\S]*throw new Error/,
+  'controller onboarding effect resumes the waiting Intro actor and rejects composition bugs explicitly');
+assert.equal((vr.match(/introSequence\.beginControllerOnboarding\(\)/g) ?? []).length, 1,
+  'there is no second controller onboarding start path');
 assert.match(vr, /function handleSessionEnd\(\) \{\s*runtimeExperience\.resetSession\(\)/);
 assert.match(vr, /async function enterVr\(\)[\s\S]*if \(activeSession\) return;\s*runtimeExperience\.resetSession\(\)/);
 assert.match(vr, /catch \(error\)[\s\S]*xrStartCalibrationPending = false;\s*runtimeExperience\.resetSession\(\)/);

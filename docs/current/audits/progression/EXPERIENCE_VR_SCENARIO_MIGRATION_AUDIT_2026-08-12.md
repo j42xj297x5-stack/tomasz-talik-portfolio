@@ -1,15 +1,15 @@
 # Experience VR — Scenario Migration Audit
 
 **Data audytu:** 2026-08-12
-**Status:** working evidence / mapa migracji, synchronized after M1.2
+**Status:** working evidence / mapa migracji, synchronized after M1.3
 **Zakres dowodowy:** aktualny kod gałęzi roboczej; dokumenty kanoniczne przeczytane w kolejności wskazanej w zadaniu.
 **Zasada interpretacji:** kod dowodzi implementacji, dokumentacja opisuje model. Poniższe rekomendacje identyfikują przyszłą granicę, nie ustanawiają API i nie zmieniają decyzji architektonicznych.
 
 ## 1. Executive summary
 
-### M1.2 synchronization
+### M1.3 synchronization
 
-M0, M1.1 **Live Bootstrap Slice**, and M1.2 **Intro Reveal Completion Handoff** are complete; M1 overall remains **IN PROGRESS**. Scenario and `ExperienceDirector` are authoritative only for `XR_CALIBRATED → BEGIN_INTRO_REVEAL` and `INTRO_REVEAL_COMPLETE → BEGIN_POST_REVEAL_SILENCE`, with `RuntimeExperience` as the injected symbolic-effect execution boundary. SG-032 alone is fully **MIGRATED**. M1.2 takes only the first edge within SG-039; SG-039 is not **MIGRATED**, and its two-second silence plus later Intro transitions remain actor-owned. QA bypass does not emit synthetic completion. SG-028…SG-031, SG-033…SG-045, full SG-001…SG-004, SG-052, and all RC-01…RC-14 otherwise retain their prior status. M1.1 hardware smoke is **PASS — confirmed on Meta Quest 3S by Projectant, 2026-08-12**. M1.2 manual test is **PENDING — HARDWARE QA NOT EXECUTED**.
+M0, M1.1 **Live Bootstrap Slice**, M1.2 **Intro Reveal Completion Handoff**, and M1.3 **Post-Reveal Silence Completion Handoff** are complete; M1 overall remains **IN PROGRESS**. Scenario and `ExperienceDirector` are authoritative only for `XR_CALIBRATED → BEGIN_INTRO_REVEAL`, `INTRO_REVEAL_COMPLETE → BEGIN_POST_REVEAL_SILENCE`, and `POST_REVEAL_SILENCE_COMPLETE → BEGIN_CONTROLLER_ONBOARDING`, with `RuntimeExperience` as the injected symbolic-effect execution boundary. SG-032 and SG-039 are **MIGRATED**. The actor retains the two-second timer, then waits for Runtime to start onboarding. The Y-panel UI facts and tutorial from `WAIT_PLAYER_PANEL_OPEN` remain actor-owned; SG-040 and later groups are not migrated. QA bypass does not emit synthetic completion. RC-01…RC-14 retain their prior status and are not consolidated. Full central Scenario ownership does not exist. M1.1 hardware smoke is **PASS — confirmed on Meta Quest 3S by Projectant, 2026-08-12**. M1.2 hardware smoke is **PASS — confirmed on Meta Quest 3S by Projectant, 2026-08-12**. M1.3 hardware smoke is **PENDING — HARDWARE QA NOT EXECUTED**.
 
 Scenariusz nie ma dziś jednego właściciela. Audyt znalazł **12 niezależnych lub częściowo niezależnych ownerów stanu/decyzji**: composition root, Intro, portfolio progression, crystal collection/reliquary, floor, Monkey/guide, hints, hand modes, shell field, furnace material progression, furnace process oraz Asterion production. Dodatkowym właścicielem projekcji czasowej jest ambient sequencer.
 
@@ -96,7 +96,7 @@ Najważniejsze ryzyka migracji:
 | SG-036 | `src/xr/guidance/createVrIntroSequence.js:L64-L75` | messages/hover/press/options | P0 onboarding→invitation→follow/ending/threshold | SCENARIO_GATE / NARRATIVE_TRIGGER | Scenario + Director | HIGH |
 | SG-037 | `src/xr/guidance/createVrIntroSequence.js:L54-L58` | head radius crosses ring | entry fact; walk radius becomes ring | WORLD_STATE_TRIGGER | subsystem event → Director command | HIGH |
 | SG-038 | `src/xr/guidance/createVrIntroSequence.js:L76-L83` | reset + bypass/enabled | visibility, fog, locomotion, interaction state | RESET_COUPLING | Director reset orchestration | HIGH |
-| SG-039 | `src/xr/guidance/createVrIntroSequence.js` | calibration; fog complete; silence complete | Intro transitions and onboarding | TIMER_TRIGGER | **PARTIAL M1.2 HANDOFF, not MIGRATED** — Scenario owns only fog-complete → begin-silence; actor retains the 2 s timer and onboarding | HIGH |
+| SG-039 | `src/xr/guidance/createVrIntroSequence.js` | calibration; fog complete; silence complete | Intro transitions and onboarding | TIMER_TRIGGER | **MIGRATED** — Scenario owns the three bounded decisions through RuntimeExperience; actor retains the 2 s timer and tutorial execution | HIGH |
 | SG-040 | `src/xr/guidance/createVrIntroSequence.js:L92-L93` | panel open, controls detail visited, panel closed | pointer tutorial | SCENARIO_GATE | UI facts → Director | HIGH |
 | SG-041 | `src/xr/guidance/createVrIntroSequence.js:L94-L105` | grace/distance/pause/resume/arrival | Monkey movement/messages/fog/threshold | SCENARIO_GATE | Director narrative policy; motion execution Monkey actor | HIGH |
 | SG-042 | `src/xr/guidance/createVrIntroSequence.js:L106-L115` | Monkey canonical + player ring entry + settle timer | free explore | SCENARIO_GATE | Director combines facts | HIGH |
@@ -140,9 +140,9 @@ RC-01 ambient, RC-02 furnace presentation, RC-03 furnace panel, RC-04 furnace op
 XR_CALIBRATING
 ↓ beginAfterXrCalibration()
 FOG_REVEAL
-↓ fog progress == 1
+↓ fog progress == 1 → WAIT_RUNTIME_AFTER_REVEAL → Scenario
 POST_REVEAL_SILENCE
-↓ 2 s
+↓ 2 s → WAIT_RUNTIME_AFTER_POST_REVEAL_SILENCE → Scenario
 CONTROLLER_ONBOARDING → WAIT_PLAYER_PANEL_OPEN
 ↓ panel.isOpen()
 WAIT_CONTROLS_VIEW
@@ -181,7 +181,8 @@ reset + QA/disabled → BYPASSED
 |---|---|---|---|
 | XR_CALIBRATING | reset; exits explicit calibration callback | fixtures hidden callback; sectors hidden; rays/Monkey interaction off; locomotion radius ∞; waits renderer XR head fact | C |
 | FOG_REVEAL | calibration | Monkey placed at start radius; fog starts; exit progress 1 / fallback 13 s | C |
-| POST_REVEAL_SILENCE | reveal complete | no input transition; 2 s then onboarding | A |
+| POST_REVEAL_SILENCE | reveal complete | actor measures 2 s, emits completion once, then waits for Runtime | C |
+| WAIT_RUNTIME_AFTER_POST_REVEAL_SILENCE | silence complete | no actor edge; Scenario effect explicitly begins legacy onboarding | C |
 | CONTROLLER_ONBOARDING | begin panel/pointer authored messages | opens message queue; first entry enables Monkey and rays; transient routing state | C |
 | WAIT_PLAYER_PANEL_OPEN | opening copy ended | panel prompt; polls Player Guide open | A |
 | WAIT_CONTROLS_VIEW | panel open | polls section `controls` + view `DETAIL` | A |
@@ -514,10 +515,11 @@ Ta granica zapobiega God Directorowi: Director odpowiada „czy/kiedy/co dalej�
 
 - [x] M0 foundation — immutable declarative Scenario, independent Director, validation, monotonic milestones, distinct session/hard reset contracts and symbolic effects are implemented and tested.
 - [x] M1.1 Live Bootstrap Slice — SG-032 migrated.
-- [x] M1.2 Intro Reveal Completion Handoff — first SG-039 edge transferred; SG-039 remains not MIGRATED.
+- [x] M1.2 Intro Reveal Completion Handoff — reveal-complete edge transferred.
+- [x] M1.3 Post-Reveal Silence Completion Handoff — SG-039 migrated; actor timer retained.
 - [ ] M1 full P0 migration — **IN PROGRESS**; all other ownership remains unchanged.
 
-Scenario + Director are authoritative only for `XR_CALIBRATED → BEGIN_INTRO_REVEAL` and `INTRO_REVEAL_COMPLETE → BEGIN_POST_REVEAL_SILENCE`. `RuntimeExperience` is connected to `experienceVr.js`; SG-032 alone is fully **MIGRATED**, while SG-039 has only its first edge transferred. This does not imply full P0 or M1 completion.
+Scenario + Director are authoritative only for `XR_CALIBRATED → BEGIN_INTRO_REVEAL`, `INTRO_REVEAL_COMPLETE → BEGIN_POST_REVEAL_SILENCE`, and `POST_REVEAL_SILENCE_COMPLETE → BEGIN_CONTROLLER_ONBOARDING`. `RuntimeExperience` remains the symbolic-effect execution boundary connected to `experienceVr.js`; SG-032 and SG-039 are **MIGRATED**. SG-040 and later groups remain unmigrated, the Y-panel facts and tutorial remain actor-owned, and RC-01…RC-14 are not consolidated. This does not imply full P0 or M1 completion or full central Scenario ownership.
 
 Dla każdego elementu ustawić dokładnie jeden status: **MIGRATED / RETAINED / REMOVED**.
 
