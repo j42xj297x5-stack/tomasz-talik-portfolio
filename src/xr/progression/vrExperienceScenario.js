@@ -106,65 +106,77 @@ export const VR_SCENARIO_EFFECT = immutableIdentifiers([
   'SHOW_ASTERION_EARNED_CUE'
 ]);
 
-export const VR_EXPERIENCE_SCENE = immutableIdentifiers([
-  'RUNTIME_OWNERSHIP_BOOTSTRAP',
-  'P0_LEGACY_SEQUENCE_ACTIVE',
-  'P0_LEGACY_POST_REVEAL_ACTIVE',
-  'P0_LEGACY_CONTROLLER_ONBOARDING_ACTIVE'
+export const VR_EXPERIENCE_POINT = immutableIdentifiers([
+  '1.1',
+  '1.2',
+  '1.3',
+  '1.4'
+]);
+
+// Compatibility export only; both names reference the same identifier set.
+export const VR_EXPERIENCE_SCENE = VR_EXPERIENCE_POINT;
+
+const points = Object.freeze([
+  Object.freeze({
+    id: VR_EXPERIENCE_POINT['1.1'],
+    label: 'Bootstrap / oczekiwanie na kalibrację XR',
+    capabilities: Object.freeze([]),
+    transitions: Object.freeze([
+      Object.freeze({
+        event: VR_SCENARIO_EVENT.XR_CALIBRATED,
+        target: VR_EXPERIENCE_POINT['1.2'],
+        milestonesToAdd: Object.freeze([VR_SCENARIO_MILESTONE.XR_CALIBRATED]),
+        effects: Object.freeze([VR_SCENARIO_EFFECT.BEGIN_INTRO_REVEAL])
+      })
+    ])
+  }),
+  Object.freeze({
+    id: VR_EXPERIENCE_POINT['1.2'],
+    label: 'Intro reveal',
+    capabilities: Object.freeze([]),
+    transitions: Object.freeze([
+      Object.freeze({
+        event: VR_SCENARIO_EVENT.INTRO_REVEAL_COMPLETE,
+        target: VR_EXPERIENCE_POINT['1.3'],
+        milestonesToAdd: Object.freeze([VR_SCENARIO_MILESTONE.INTRO_REVEAL_COMPLETE]),
+        effects: Object.freeze([VR_SCENARIO_EFFECT.BEGIN_POST_REVEAL_SILENCE])
+      })
+    ])
+  }),
+  Object.freeze({
+    id: VR_EXPERIENCE_POINT['1.3'],
+    label: 'Cisza po revealu',
+    capabilities: Object.freeze([]),
+    transitions: Object.freeze([
+      Object.freeze({
+        event: VR_SCENARIO_EVENT.POST_REVEAL_SILENCE_COMPLETE,
+        target: VR_EXPERIENCE_POINT['1.4'],
+        milestonesToAdd: Object.freeze([VR_SCENARIO_MILESTONE.POST_REVEAL_SILENCE_COMPLETE]),
+        effects: Object.freeze([VR_SCENARIO_EFFECT.BEGIN_CONTROLLER_ONBOARDING])
+      })
+    ])
+  }),
+  Object.freeze({
+    id: VR_EXPERIENCE_POINT['1.4'],
+    label: 'Controller onboarding',
+    capabilities: Object.freeze([]),
+    transitions: Object.freeze([])
+  })
 ]);
 
 export const vrExperienceScenario = Object.freeze({
   id: 'experience-vr',
-  initialSceneId: VR_EXPERIENCE_SCENE.RUNTIME_OWNERSHIP_BOOTSTRAP,
+  initialPointId: VR_EXPERIENCE_POINT['1.1'],
+  points,
+  // Compatibility aliases share the canonical point data; they are not a second model.
+  initialSceneId: VR_EXPERIENCE_POINT['1.1'],
+  scenes: points,
   vocabulary: Object.freeze({
     events: Object.freeze(Object.values(VR_SCENARIO_EVENT)),
     capabilities: Object.freeze(Object.values(VR_SCENARIO_CAPABILITY)),
     milestones: Object.freeze(Object.values(VR_SCENARIO_MILESTONE)),
     effects: Object.freeze(Object.values(VR_SCENARIO_EFFECT))
   }),
-  scenes: Object.freeze([
-    Object.freeze({
-      id: VR_EXPERIENCE_SCENE.RUNTIME_OWNERSHIP_BOOTSTRAP,
-      capabilities: Object.freeze([]),
-      transitions: Object.freeze([
-        Object.freeze({
-          event: VR_SCENARIO_EVENT.XR_CALIBRATED,
-          target: VR_EXPERIENCE_SCENE.P0_LEGACY_SEQUENCE_ACTIVE,
-          milestonesToAdd: Object.freeze([VR_SCENARIO_MILESTONE.XR_CALIBRATED]),
-          effects: Object.freeze([VR_SCENARIO_EFFECT.BEGIN_INTRO_REVEAL])
-        })
-      ])
-    }),
-    Object.freeze({
-      id: VR_EXPERIENCE_SCENE.P0_LEGACY_SEQUENCE_ACTIVE,
-      capabilities: Object.freeze([]),
-      transitions: Object.freeze([
-        Object.freeze({
-          event: VR_SCENARIO_EVENT.INTRO_REVEAL_COMPLETE,
-          target: VR_EXPERIENCE_SCENE.P0_LEGACY_POST_REVEAL_ACTIVE,
-          milestonesToAdd: Object.freeze([VR_SCENARIO_MILESTONE.INTRO_REVEAL_COMPLETE]),
-          effects: Object.freeze([VR_SCENARIO_EFFECT.BEGIN_POST_REVEAL_SILENCE])
-        })
-      ])
-    }),
-    Object.freeze({
-      id: VR_EXPERIENCE_SCENE.P0_LEGACY_POST_REVEAL_ACTIVE,
-      capabilities: Object.freeze([]),
-      transitions: Object.freeze([
-        Object.freeze({
-          event: VR_SCENARIO_EVENT.POST_REVEAL_SILENCE_COMPLETE,
-          target: VR_EXPERIENCE_SCENE.P0_LEGACY_CONTROLLER_ONBOARDING_ACTIVE,
-          milestonesToAdd: Object.freeze([VR_SCENARIO_MILESTONE.POST_REVEAL_SILENCE_COMPLETE]),
-          effects: Object.freeze([VR_SCENARIO_EFFECT.BEGIN_CONTROLLER_ONBOARDING])
-        })
-      ])
-    }),
-    Object.freeze({
-      id: VR_EXPERIENCE_SCENE.P0_LEGACY_CONTROLLER_ONBOARDING_ACTIVE,
-      capabilities: Object.freeze([]),
-      transitions: Object.freeze([])
-    })
-  ]),
   metadata: Object.freeze({
     stage: 'M1_3_POST_REVEAL_SILENCE_COMPLETION_HANDOFF',
     authoritativeForLiveGameplay: true,

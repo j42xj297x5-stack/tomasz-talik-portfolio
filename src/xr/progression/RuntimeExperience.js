@@ -18,7 +18,8 @@ export class RuntimeExperience {
   }
   can(capability) { return this.director.can(capability); }
   hasMilestone(milestone) { return this.director.hasMilestone(milestone); }
-  getCurrentSceneId() { return this.director.getCurrentSceneId(); }
+  getCurrentPointId() { return this.director.getCurrentPointId(); }
+  getCurrentSceneId() { return this.getCurrentPointId(); }
   getDebugSnapshot() { return this.director.getDebugSnapshot(); }
   resetSession(options) { return this.director.resetSession(options); }
   dispose() { if (this.disposed) return; this.disposed = true; this.effectHandlers.clear(); this.director.dispose(); }

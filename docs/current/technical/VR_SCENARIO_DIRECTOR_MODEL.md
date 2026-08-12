@@ -126,7 +126,7 @@ Skok nie jest błędem, powrót nie jest ukrytym zachowaniem, a pętla jest jawn
 
 `id: '1.3'` jest tożsamością punktu; opcjonalne `label: 'Cisza po revealu'` jest etykietą dla człowieka i może się zmienić bez zmiany adresu.
 
-**CURRENT:** `P0_LEGACY_POST_REVEAL_ACTIVE` i `P0_LEGACY_CONTROLLER_ONBOARDING_ACTIVE` należą do przejściowej reprezentacji wdrożonej w M1.1–M1.3. **TARGET:** opisowe IDs nie są główną osią Scenario; zostaną zastąpione lub odwzorowane na numery w osobnym kroku implementacyjnym. Ten dokument ich nie usuwa.
+**CURRENT:** działający slice M1.1–M1.3 używa kanonicznych, stabilnych point IDs `1.1`–`1.4`; opisowe nazwy pozostają wyłącznie etykietami dla człowieka.
 
 ## 8. Event, effect, cue, milestone i capability
 
@@ -179,7 +179,7 @@ Scenario nie importuje Three.js, DOM ani WebXR; nie odpytuje aktorów, nie mierz
 
 Nie wykonuje effects, nie wywołuje aktorów, nie importuje runtime ani Three.js, nie czyta DOM, nie odpytuje kontrolerów domenowych, nie ustala sam ukończenia Tieru, nie mierzy timerów i nie posiada drugiej maszyny stanów.
 
-Docelowe API mówi o punktach: `currentPointId`, `initialPointId`, `getCurrentPointId()`. **CURRENT:** istnieją `sceneId`, `initialSceneId`, `getCurrentSceneId()`. Ten krok ich nie zmienia. Przyszła migracja musi zachować przejściową kompatybilność albo być osobnym, przetestowanym breaking change.
+**CURRENT:** kanoniczne API mówi o punktach: `currentPointId`, `initialPointId`, `getCurrentPointId()`. `getCurrentSceneId()` oraz aliasy Scenario `scenes` / `initialSceneId` pozostają przejściową kompatybilnością delegującą do tych samych danych, bez drugiego stanu.
 
 ## 12. RuntimeExperience
 
@@ -228,16 +228,16 @@ Kontroler odpowiada „co faktycznie osiągnięto w domenie”; Scenario — „
 
 QA shortcut nie jest alternatywną fabułą i nie ma własnego Scenario. Może przygotować stan domenowy, ale jawnie synchronizuje wymagane fakty, nie omija nowych gates tak, by ukryć błąd produkcyjny, wymaga parity testu, a jego status jest śledzony osobno od produkcyjnej migracji. **CURRENT:** `applyVrProgressionShortcut.js` pozostaje istniejącym adapterem QA bez zmian działania.
 
-## 19. CURRENT → TARGET dla M1.1–M1.3
+## 19. CURRENT dla M1.1–M1.3
 
-| Docelowy adres | Opcjonalna etykieta | Obecny identyfikator sceny | Event kończący punkt | Effect uruchamiający kolejny punkt | Status |
-| --- | --- | --- | --- | --- | --- |
-| `1.1` | Bootstrap / oczekiwanie na kalibrację XR | `RUNTIME_OWNERSHIP_BOOTSTRAP` | `XR_CALIBRATED` | `BEGIN_INTRO_REVEAL` | CURRENT live pod opisowym ID; TARGET mapping |
-| `1.2` | Intro reveal | `P0_LEGACY_SEQUENCE_ACTIVE` | `INTRO_REVEAL_COMPLETE` | `BEGIN_POST_REVEAL_SILENCE` | CURRENT live pod opisowym ID; TARGET mapping |
-| `1.3` | Cisza po revealu | `P0_LEGACY_POST_REVEAL_ACTIVE` | `POST_REVEAL_SILENCE_COMPLETE` | `BEGIN_CONTROLLER_ONBOARDING` | CURRENT live pod opisowym ID; TARGET mapping |
-| `1.4` | Controller onboarding | `P0_LEGACY_CONTROLLER_ONBOARDING_ACTIVE` | — w obecnym zakresie | — w obecnym zakresie | CURRENT live terminal obecnego slice; TARGET mapping |
+| Kanoniczny adres | Etykieta | Event kończący punkt | Effect uruchamiający kolejny punkt | Status |
+| --- | --- | --- | --- | --- |
+| `1.1` | Bootstrap / oczekiwanie na kalibrację XR | `XR_CALIBRATED` | `BEGIN_INTRO_REVEAL` | CURRENT |
+| `1.2` | Intro reveal | `INTRO_REVEAL_COMPLETE` | `BEGIN_POST_REVEAL_SILENCE` | CURRENT |
+| `1.3` | Cisza po revealu | `POST_REVEAL_SILENCE_COMPLETE` | `BEGIN_CONTROLLER_ONBOARDING` | CURRENT |
+| `1.4` | Controller onboarding | — w obecnym zakresie | — w obecnym zakresie | CURRENT boundary; SG-040 RETAINED |
 
-M1.1–M1.3 są zaimplementowane i live, a opisowe IDs działają. Numery są wyłącznie **TARGET / FUTURE / NOT IMPLEMENTED**. Przepisanie czterech scen będzie osobnym małym zadaniem implementacyjnym. SG-032 i SG-039 pozostają `MIGRATED`; SG-040 i dalsze grupy pozostają `RETAINED`. Ten dokument nie zmienia statusów ani zakresu migracji.
+M1.1–M1.3 są zaimplementowane i live pod kanonicznymi adresami `1.1`–`1.4`. SG-032 i SG-039 pozostają `MIGRATED`; SG-040 i dalsze grupy pozostają `RETAINED`. Punkt `1.4` jest wyłącznie granicą obecnego slice i nie migruje `WAIT_PLAYER_PANEL_OPEN`.
 
 ## 20. Docelowy kształt danych Scenario
 
@@ -274,7 +274,7 @@ Poniższy przykład jest składniowo niewiążący, lecz semantycznie wiążący
 }
 ```
 
-**CURRENT:** kod używa `scenes`, stringowych effects i `initialSceneId`. Obiektowy effect z `type` i parametrami jest **FUTURE / NOT IMPLEMENTED**. Przyszły patch zdecyduje, czy rozszerzyć effects o payload, zachowując walidację i kompatybilność. Dokument nie upoważnia do zmiany kodu w tym zadaniu.
+**CURRENT:** kod używa `points`, `initialPointId` i stringowych effects; `scenes` / `initialSceneId` są aliasami kompatybilności wskazującymi te same dane. Obiektowy effect z `type` i parametrami jest **FUTURE / NOT IMPLEMENTED**. Przyszły patch zdecyduje, czy rozszerzyć effects o payload, zachowując walidację i kompatybilność. Dokument nie upoważnia do zmiany kodu w tym zadaniu.
 
 ## 21. Walidacja numerowanego Scenario
 
@@ -343,10 +343,10 @@ Obowiązkowy format przyszłych synchronizacji:
 
 | Scenario point | Akt | Label | Legacy owner | Legacy SG | Producer event | Target | Effects/cues | Group status | Runtime status | Automated QA | Hardware QA |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `1.1` (TARGET mapping) | 1 | Bootstrap XR | `experienceVr.js` calibration handoff | SG-032 | `XR_CALIBRATED` | `1.2` | `BEGIN_INTRO_REVEAL` | `MIGRATED` | CURRENT live pod opisowymi IDs | istniejące testy kontraktu | M1.1 PASS, Quest 3S, 2026-08-12 |
-| `1.2` (TARGET mapping) | 1 | Intro reveal | `createVrIntroSequence` reveal completion seam | SG-039 edge: reveal completion | `INTRO_REVEAL_COMPLETE` | `1.3` | `BEGIN_POST_REVEAL_SILENCE` | `MIGRATED` | CURRENT live pod opisowymi IDs | istniejące testy kontraktu | M1.2 PASS, Quest 3S, 2026-08-12 |
-| `1.3` (TARGET mapping) | 1 | Cisza po revealu | `createVrIntroSequence` actor-owned timer/completion seam | SG-039 | `POST_REVEAL_SILENCE_COMPLETE` | `1.4` | `BEGIN_CONTROLLER_ONBOARDING` | `MIGRATED` | CURRENT live pod opisowymi IDs | istniejące testy kontraktu | M1.3 PENDING — niewykonane |
-| `1.4` (TARGET mapping) | 1 | Controller onboarding | `createVrIntroSequence` od `WAIT_PLAYER_PANEL_OPEN` | SG-040 | — | — | — | `RETAINED` | CURRENT legacy actor ownership | istniejące testy tylko bieżącego slice | nieuznane |
+| `1.1` | 1 | Bootstrap XR | `experienceVr.js` calibration handoff | SG-032 | `XR_CALIBRATED` | `1.2` | `BEGIN_INTRO_REVEAL` | `MIGRATED` | CURRENT live pod kanonicznym point ID | istniejące testy kontraktu | M1.1 PASS, Quest 3S, 2026-08-12 |
+| `1.2` | 1 | Intro reveal | `createVrIntroSequence` reveal completion seam | SG-039 edge: reveal completion | `INTRO_REVEAL_COMPLETE` | `1.3` | `BEGIN_POST_REVEAL_SILENCE` | `MIGRATED` | CURRENT live pod kanonicznym point ID | istniejące testy kontraktu | M1.2 PASS, Quest 3S, 2026-08-12 |
+| `1.3` | 1 | Cisza po revealu | `createVrIntroSequence` actor-owned timer/completion seam | SG-039 | `POST_REVEAL_SILENCE_COMPLETE` | `1.4` | `BEGIN_CONTROLLER_ONBOARDING` | `MIGRATED` | CURRENT live pod kanonicznym point ID | istniejące testy kontraktu | M1.3 PENDING — niewykonane |
+| `1.4` | 1 | Controller onboarding | `createVrIntroSequence` od `WAIT_PLAYER_PANEL_OPEN` | SG-040 | — | — | — | `RETAINED` | CURRENT legacy actor ownership | istniejące testy tylko bieżącego slice | nieuznane |
 
 Wpis powstaje przed migracją lub razem z nią; niewdrożone punkty nie są live; target address i current owner są widoczne razem. `MIGRATED` oznacza brak dual ownership. Hardware QA nie wynika z automatycznych testów. Usunięte adresy pozostają jako `REMOVED`. Rejestr nie zastępuje kodu ani testów. Powyższe wpisy obejmują wyłącznie live slice M1.1–M1.3 i jego granicę SG-040, nie przenoszą całego audytu.
 
@@ -407,15 +407,15 @@ adres punktu jest wyliczany albo sortowany jako liczba
 ```text
 CURRENT:
 M0, M1.1, M1.2 i M1.3 są wdrożone.
-Scenario używa jeszcze opisowych scene IDs.
-Director używa jeszcze sceneId.
+Scenario używa kanonicznych point IDs 1.1–1.4.
+Director używa currentPointId; legacy scene API jest wyłącznie aliasem.
 RuntimeExperience wykonuje trzy live effects.
 SG-032 i SG-039 są MIGRATED.
 SG-040 i dalsze grupy pozostają RETAINED.
 ```
 
 ```text
-TARGET:
+CURRENT:
 Scenario używa stabilnych numerowanych point IDs.
 Director operuje na currentPointId.
 Nazwy eventów, efektów i cue pozostają semantycznym vocabulary.
@@ -424,9 +424,7 @@ experienceVr.js pozostaje composition rootem.
 ```
 
 ```text
-NEXT IMPLEMENTATION BOUNDARY:
-Osobny mały patch odwzoruje działające M1.1–M1.3 na punkty 1.1–1.4,
-z zachowaniem kompatybilności i bez migracji SG-040.
+IMPLEMENTED BOUNDARY:
+Działające M1.1–M1.3 są odwzorowane na punkty 1.1–1.4,
+z kompatybilnością legacy i bez migracji SG-040.
 ```
-
-Ten następny patch jest **FUTURE / NOT IMPLEMENTED** i nie jest realizowany przez niniejszy dokument.
