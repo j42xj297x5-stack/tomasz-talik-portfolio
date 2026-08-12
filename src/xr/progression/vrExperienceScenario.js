@@ -114,7 +114,8 @@ export const VR_EXPERIENCE_POINT = immutableIdentifiers([
   '1.4',
   '1.4.1',
   '1.4.2',
-  '1.4.3'
+  '1.4.3',
+  '1.4.4'
 ]);
 
 // Compatibility export only; both names reference the same identifier set.
@@ -201,7 +202,20 @@ const points = Object.freeze([
   }),
   Object.freeze({
     id: VR_EXPERIENCE_POINT['1.4.3'],
-    label: 'Pointer tutorial uruchomiony / dalsze interakcje Monkey pozostają legacy',
+    label: 'Pointer tutorial uruchomiony / oczekiwanie na wskazanie Monkey',
+    capabilities: Object.freeze([]),
+    transitions: Object.freeze([
+      Object.freeze({
+        event: VR_SCENARIO_EVENT.MONKEY_HOVERED,
+        target: VR_EXPERIENCE_POINT['1.4.4'],
+        milestonesToAdd: Object.freeze([]),
+        effects: Object.freeze([VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING])
+      })
+    ])
+  }),
+  Object.freeze({
+    id: VR_EXPERIENCE_POINT['1.4.4'],
+    label: 'Monkey wskazany / oczekiwanie na trigger',
     capabilities: Object.freeze([]),
     transitions: Object.freeze([])
   })
@@ -221,7 +235,7 @@ export const vrExperienceScenario = Object.freeze({
     effects: Object.freeze(Object.values(VR_SCENARIO_EFFECT))
   }),
   metadata: Object.freeze({
-    stage: 'M1_6_PLAYER_CLOSED_GUIDE_HANDOFF',
+    stage: 'M1_7_MONKEY_HOVER_HANDOFF',
     authoritativeForLiveGameplay: true,
     authoritativeScope: Object.freeze([
       'XR_CALIBRATED → BEGIN_INTRO_REVEAL',
@@ -229,7 +243,8 @@ export const vrExperienceScenario = Object.freeze({
       'POST_REVEAL_SILENCE_COMPLETE → BEGIN_CONTROLLER_ONBOARDING',
       'PLAYER_OPENED_GUIDE → CONTINUE_CONTROLLER_ONBOARDING',
       'PLAYER_VIEWED_CONTROLS → CONTINUE_CONTROLLER_ONBOARDING',
-      'PLAYER_CLOSED_GUIDE → CONTINUE_CONTROLLER_ONBOARDING'
+      'PLAYER_CLOSED_GUIDE → CONTINUE_CONTROLLER_ONBOARDING',
+      'MONKEY_HOVERED → CONTINUE_CONTROLLER_ONBOARDING'
     ])
   })
 });
