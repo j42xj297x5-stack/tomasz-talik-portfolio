@@ -33,6 +33,7 @@ The entry shell exposes three modes: Classic 2D, Experience 3D, and capability-g
 - [`decisions/DECISION_LOG.md`](../decisions/DECISION_LOG.md) — currently binding decisions.
 - [`concept/EXPERIENCE_VR_GAMEPLAY_ROADMAP.md`](../concept/EXPERIENCE_VR_GAMEPLAY_ROADMAP.md) — future gameplay direction with implemented-stage status; technical models remain runtime authority.
 - [`concept/EXPERIENCE_VR_NARRATIVE_PROGRESSION_BASELINE.md`](../concept/EXPERIENCE_VR_NARRATIVE_PROGRESSION_BASELINE.md) — recommended canonical start for Experience VR narrative, Monkey/player guidance and post-Sphere progression design.
+- [`audits/progression/EXPERIENCE_VR_SCENARIO_MIGRATION_AUDIT_2026-08-12.md`](../audits/progression/EXPERIENCE_VR_SCENARIO_MIGRATION_AUDIT_2026-08-12.md) — working evidence and migration inventory for the future Experience VR Scenario + Director refactor; not a runtime architecture change.
 
 ## Scope rules
 
