@@ -1,6 +1,6 @@
 # Experience VR Runtime Model
 
-Status: canonical description of the implemented runtime synchronized on 2026-08-10. Approved future gameplay is documented in the [gameplay roadmap](../concept/EXPERIENCE_VR_GAMEPLAY_ROADMAP.md).
+Status: canonical description of the implemented runtime synchronized on 2026-08-12. Approved future gameplay is documented in the [gameplay roadmap](../concept/EXPERIENCE_VR_GAMEPLAY_ROADMAP.md).
 
 ## Runtime boundary and lifecycle
 
@@ -21,12 +21,14 @@ ExperienceVrRoot
 ├── WorldStableRoot → glyphRing / shell field / cosmos
 └── VrTiltableFloorRoot (identity position and scale)
     ├── floor sectors / rings
-    ├── VrPlatformFixturesRoot → stone / portal / reliquary / furnace / panel
     ├── VrMonkeyMotionRoot → visual root / Monkey Guide
+    ├── VrPlatformFixturesRoot (structural container)
+    │   ├── VrMonkeyStoneRoot
+    │   └── portal / reliquary / furnace / panel
     └── VrFloorPassengerRoot → playerRig → camera / controllers / grips
 ```
 
-`VrTiltableFloorRoot` remains at canonical `(0,0,0)` and owns only inherited Asterion tilt. Fixtures, the stationary stone, the Monkey actor and `VrFloorPassengerRoot/playerRig` are created directly below their final parents and inherit its quaternion. No initial-composition `attach()` or runtime scene-layout override exists.
+`VrTiltableFloorRoot` remains at canonical `(0,0,0)` and owns only inherited Asterion tilt. `VrMonkeyStoneRoot` is a direct child of `VrPlatformFixturesRoot`; it is never parented to `VrMonkeyMotionRoot`. `VrPlatformFixturesRoot` is only a structural transform container: intro and reset logic keep the container present and control the visibility/reveal of the stone, portal, reliquary and furnace individually. Fixtures, the Monkey actor and `VrFloorPassengerRoot/playerRig` inherit the platform quaternion. No initial-composition `attach()` or runtime scene-layout override exists.
 
 ## Ordinary rays, hand modes and locomotion
 
@@ -49,7 +51,7 @@ Each controller raycasts the real visible glyph meshes. A `0.5 s` hold spawns th
 
 The five branches contain `3 / 3 / 3 / 4 / 5` cards. Fifteen preloaded GLBs provide three cyclic crystal variants per branch. A physical crystal carries branch/glyph identity, tier, visual variant and transient interaction state, but no persistent card/page identity. Available crystals use the ordinary `2.3 m` ray and squeeze-grab.
 
-`VrProgressionController` exclusively owns committed portfolio-card progression, branch/tier completion and the source projected by the floor. Tiers 1–3 require all five branches, tier 4 Metal + Water, and tier 5 Water. Held-crystal proximity to the authored insertion sphere gives green valid or red invalid feedback. Invalid release enters `rejecting` and returns the crystal to `available`. Activate resolves and previews the branch+tier page without progress. Release after Activate commits it, activates its floor panel, tests tier completion and consumes the crystal over `0.55 s`; Release without Activate returns it without progress. Furnace material progression is a separate domain owned by `VrAstroFurnaceProgressionController`; there is no central global progression store.
+`VrProgressionController` exclusively owns committed portfolio-card progression, branch/tier completion and the source projected by the floor. Tiers 1–3 require all five branches, tier 4 Metal + Water, and tier 5 Water. Held-crystal proximity to the authored insertion sphere gives green valid or red invalid feedback. Invalid release enters `rejecting` and returns the crystal to `available`. The player-facing Release button is disabled while the crystal is `inserted`. Activate is the only physical action that advances `inserted → active` and previews the branch+tier page without progress. Only then does the physical Release button become available; Release from `active` commits the page, activates its floor panel, tests tier completion and consumes the crystal over `0.55 s`. The internal `releaseInserted()` recovery branch for `inserted` is not a player action and must not be documented as one. Furnace material progression is a separate domain owned by `VrAstroFurnaceProgressionController`; there is no central global progression store.
 
 The progress floor has five authored sectors, 18 panels and five optional procedural full-circle tier rings. A completed tier pulses its idempotent ring and leaves a subtle glow. Failure limited to procedural ring creation does not block the sector/panel floor.
 
@@ -88,9 +90,13 @@ Two **IMPLEMENTED** interfaces are distinct. The left-grip player guide opens wi
 
 ### Intro P0
 
-The rebuilt P0 intro is **IMPLEMENTED**. After XR head calibration it runs a radial fog reveal and a short post-reveal silence, then shows three timed orientation lines followed by a persistent localized Y-menu instruction. That instruction remains visible throughout `WAIT_PLAYER_PANEL_OPEN`, clears immediately only after `playerGuidePanel.isOpen()` becomes true, and then onboarding continues through visiting controls, closing the panel, pointing at the Monkey and using trigger. The invitation can enter `FOLLOWING`: the Monkey turns and moves radially toward the existing ring, can pause until the player catches up, reveals the glyph ring during the walk and asks for a threshold choice. Accepting the threshold enters `CROSSING` / `ENTERING_RING`; the player must physically enter the safe inner radius before the locomotion boundary is restored. The Monkey returns to its already established canonical transform, completes `MONKEY_SETTLING`, and only then enters `GLYPH_FREE_EXPLORE`. A delayed attention hint can follow if free exploration produces no glyph success. Declining either choice ends the session; existing QA routes use `BYPASSED`.
+The rebuilt P0 intro is **IMPLEMENTED**. Its radial fog is platform-local and patches only the Monkey visual, glyph ring and `VrMonkeyStoneRoot`. It uses the VR background color and a radius sequence `20 → 17 → 6 → 0`: the timed opening reveal covers `20 → 17`, following covers `17 → 6`, the threshold holds `6`, and crossing/settling reaches `0` before the patch is removed. The shader derives its own transformed world position from `transformed`, batching/instancing matrices and `modelMatrix`; it does not depend on Three.js conditionally declaring `worldPosition`.
 
-`createVrIntroSequence` moves only `monkeyMotionRoot`. Its start and final positions come from the shared `spatial` contract; tracked head is read only for pause/resume and safe ring entry. Monkey Guide attention, speech and dialogue use one actor-local visual contract.
+After the reveal and short silence, three timed orientation lines precede a persistent localized Y-menu instruction. It clears only when the player guide actually opens; onboarding then requires visiting controls, closing the panel, pointing at the Monkey and using trigger. The invitation enters `FOLLOWING`, can pause for catch-up, and leads to the threshold choice. During crossing, `playerEnteredRing` becomes true at `headRadius <= ringRadius` and immediately restores the ring walk boundary without clamping. The narrower `playerSafelyInside` (`ringRadius - 0.75 m`) remains diagnostics only. `MONKEY_SETTLING → GLYPH_FREE_EXPLORE` requires exactly `monkeySettled && playerEnteredRing`; gameplay no longer requires penetrating `0.75 m` inside the ring.
+
+`GLYPH_FREE_EXPLORE` lasts `60 s`. A first crystal before timeout resolves discovery immediately, requests Monkey attention and arms the discovery conversation. If no crystal succeeds by timeout, Monkey attention instead arms the three-line hint beginning `Pięć znaków.`; a later first crystal still wins discovery. On discovery, the Monkey says `O, wydaje mi się, że można tego użyć.` and starts one `3 s` reveal of the portal, portal waiting canvas, reliquary, Activate and Release. The Polish waiting copy is `Osadź kryształ w naczyniu.`
+
+`createVrIntroSequence` moves only `monkeyMotionRoot`. Its start and final positions come from the shared `spatial` contract; tracked head is read only for follow/pause and ring-entry diagnostics. Declining either choice ends the session; QA routes may use `BYPASSED`.
 
 The Monkey guide exposes technical channels for future authored guidance without defining story or dialogue content:
 
@@ -100,6 +106,8 @@ The Monkey guide exposes technical channels for future authored guidance without
 - the implemented menu currently offers the progress question when at least one card is committed, plus close;
 - progress opens paginated history derived exclusively from `VrProgressionController`; choosing an existing entry opens the localized card and supports multipage reading/back navigation;
 - newly committed cards are tracked as unread, pulse in history, and become read when opened. A progression commit requests attention. These unread markers are transient page-runtime UI state, not durable progression.
+
+The actor-local attention anchor uses Y `1.5`; the dialogue base uses Y `0.80`. Runtime applies a floor-local clearance guard so the transformed dialogue panel cannot cross the floor. HISTORY renders eight items in a `4 × 2` grid and reserves a separate lower navigation band for back/previous/next controls.
 
 Outside the bounded intro P0 copy and sequence described above, the runtime supplies channels and current progress/history behavior only. Further narrative sequencing, Monkey messages between progression stages, quests, personality and stuck-player logic are **NOT DESIGNED / FUTURE**.
 
