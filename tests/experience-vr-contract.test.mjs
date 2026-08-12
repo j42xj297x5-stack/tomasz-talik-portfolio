@@ -73,7 +73,7 @@ assert.match(glyphSpawnContract, /node\.getWorldPosition/);
 assert.match(glyphSpawnContract, /progressFloor\.object\.getWorldPosition/);
 assert.doesNotMatch(glyphSpawnContract, /monkeyMotionRoot\.getWorldPosition/);
 assert.doesNotMatch(glyphSpawnContract, /renderer\.xr|getCamera|getWorldDirection/);
-assert.match(vr, /crystalCollection\.reset\(\);\s*activateButton\.reset\(\);\s*releaseButton\.reset\(\);\s*crystalReliquary\.reset\(\);\s*restorePortalWaitingState\(\);\s*locomotion\.reset\(\);\s*resetPlayerRigToSpawn\(\);/);
+assert.match(vr, /crystalCollection\.reset\(\);\s*reliquaryHints\.reset\(\);\s*activateButton\.reset\(\);\s*releaseButton\.reset\(\);\s*crystalReliquary\.reset\(\);\s*restorePortalWaitingState\(\);\s*locomotion\.reset\(\);\s*resetPlayerRigToSpawn\(\);/);
 assert.match(vr, /function handleSessionEnd\(\)[\s\S]*restorePortalWaitingState\(\)/);
 assert.match(vr, /crystalCollection\.update\(delta\)/);
 assert.match(vr, /glyphOrbit\.update\(delta\)/);
