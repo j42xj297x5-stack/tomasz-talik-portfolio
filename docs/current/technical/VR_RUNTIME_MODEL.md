@@ -2,11 +2,11 @@
 
 Status: canonical description of the implemented runtime synchronized on 2026-08-12. Approved future gameplay is documented in the [gameplay roadmap](../concept/EXPERIENCE_VR_GAMEPLAY_ROADMAP.md).
 
-## Scenario + Director M0 foundation
+## Scenario + Director live bootstrap slice
 
-`src/xr/progression/vrExperienceScenario.js` now defines the immutable semantic vocabulary and a deliberately minimal declarative bootstrap scene. `createVrExperienceDirector.js` coordinates scene transitions, monotonic narrative milestones, scenario-level capabilities and symbolic effects without importing Three.js or runtime actors. Session reset returns to the initial scene while preserving committed milestones; an explicit hard reset clears them.
+M0 is complete and M1.1 **Live Bootstrap Slice** is complete; M1 overall remains **IN PROGRESS**. `ExperienceDirector` is the canonical orchestration class, while `createVrExperienceDirector` remains a compatibility factory. The immutable Scenario and Director are authoritative for live gameplay only for `XR_CALIBRATED → BEGIN_INTRO_REVEAL`.
 
-**Scenario + Director foundation exists but is not yet authoritative for live gameplay.** The Director is not composed into `experienceVr.js`; all existing Intro, progression, interaction, furnace, shell, Asterion, audio and lifecycle predicates remain the sole live-runtime owners until a later migration stage.
+`RuntimeExperience` is the framework-free execution boundary for symbolic effects and invokes only handlers injected by `experienceVr.js`. The `BEGIN_INTRO_REVEAL` adapter starts the existing `createVrIntroSequence` actor and preserves the existing QA-bypass ray behavior. All remaining P0 states stay owned by `createVrIntroSequence`; full central Scenario ownership does not exist, and RC-01…RC-14 lifecycle orchestration has not been consolidated. Only SG-032 is **MIGRATED**. Hardware QA for this slice is **PENDING — HARDWARE QA NOT EXECUTED**.
 
 ## Runtime boundary and lifecycle
 

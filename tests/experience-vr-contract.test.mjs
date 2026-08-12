@@ -37,8 +37,20 @@ assert.match(vr, /if \(xrStartCalibrationPending\)[\s\S]*getXrHeadWorldPosition\
   'the pending frame uses the canonical WebXR matrix reader before calibration');
 assert.doesNotMatch(vr, /renderer\.xr\.getCamera\(camera\)\.getWorldPosition\(/,
   'active P0 code must not rebuild the detached WebXR ArrayCamera matrix');
-assert.match(vr, /xrStartCalibrationPending = false;\s*introSequence\.beginAfterXrCalibration\(\);\s*if \(introQaBypass\) vrControllers\.setRaysEnabled\(true\);\s*renderer\.render\(scene, camera\);\s*return;/,
+assert.match(vr, /new ExperienceDirector\(\{ scenario: vrExperienceScenario \}\)/);
+assert.match(vr, /new RuntimeExperience\(\{[\s\S]*VR_SCENARIO_EFFECT\.BEGIN_INTRO_REVEAL[\s\S]*introSequence\.beginAfterXrCalibration\(\);[\s\S]*if \(introQaBypass\) vrControllers\.setRaysEnabled\(true\);/,
+  'RuntimeExperience effect adapter owns Intro start and QA rays');
+assert.match(vr, /xrStartCalibrationPending = false;\s*runtimeExperience\.dispatch\(VR_SCENARIO_EVENT\.XR_CALIBRATED\);\s*renderer\.render\(scene, camera\);\s*return;/,
   'calibration is one-shot and skips ordinary locomotion/update work in that frame');
+const calibrationBlock = vr.match(/if \(xrStartCalibrationPending\)[\s\S]*?\n  }/)?.[0] ?? '';
+assert.doesNotMatch(calibrationBlock, /introSequence\.beginAfterXrCalibration|setRaysEnabled\(true\)/,
+  'calibration block contains only the semantic dispatch');
+assert.equal((vr.match(/introSequence\.beginAfterXrCalibration\(\)/g) ?? []).length, 1,
+  'there is no second calibration fallback');
+assert.match(vr, /function handleSessionEnd\(\) \{\s*runtimeExperience\.resetSession\(\)/);
+assert.match(vr, /async function enterVr\(\)[\s\S]*if \(activeSession\) return;\s*runtimeExperience\.resetSession\(\)/);
+assert.match(vr, /catch \(error\)[\s\S]*xrStartCalibrationPending = false;\s*runtimeExperience\.resetSession\(\)/);
+assert.match(vr, /window\.addEventListener\('pagehide', \(\) => \{\s*runtimeExperience\.dispose\(\)/);
 assert.match(vr, /function handleSessionEnd\(\)[\s\S]*xrStartCalibrationPending = false;[\s\S]*introSequence\.reset\(\)/,
   'session end clears pending calibration and resets the intro for re-entry');
 assert.doesNotMatch(vr, /const trackedHead = renderer\.xr\.getCamera\(camera\)/,

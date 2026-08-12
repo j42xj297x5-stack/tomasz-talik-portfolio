@@ -1,13 +1,32 @@
 import assert from 'node:assert/strict';
 import { createVrExperienceDirector } from '../src/xr/progression/createVrExperienceDirector.js';
-import { vrExperienceScenario } from '../src/xr/progression/vrExperienceScenario.js';
+import { ExperienceDirector } from '../src/xr/progression/ExperienceDirector.js';
+import { VR_EXPERIENCE_SCENE, VR_SCENARIO_EFFECT, VR_SCENARIO_EVENT, VR_SCENARIO_MILESTONE, vrExperienceScenario } from '../src/xr/progression/vrExperienceScenario.js';
 
 assert.equal(Object.isFrozen(vrExperienceScenario), true);
 assert.equal(Object.isFrozen(vrExperienceScenario.scenes[0]), true);
+assert.equal(Object.isFrozen(vrExperienceScenario.scenes[0].transitions[0]), true);
+assert.equal(Object.isFrozen(vrExperienceScenario.scenes[0].transitions[0].effects), true);
+assert.equal(Object.isFrozen(vrExperienceScenario.metadata.authoritativeScope), true);
 assert.equal(
   createVrExperienceDirector({ scenario: vrExperienceScenario }).getCurrentSceneId(),
   vrExperienceScenario.initialSceneId
 );
+const productionDirector = new ExperienceDirector({ scenario: vrExperienceScenario });
+const factoryDirector = createVrExperienceDirector({ scenario: vrExperienceScenario });
+assert.equal(factoryDirector instanceof ExperienceDirector, true);
+const productionChange = productionDirector.dispatch(VR_SCENARIO_EVENT.XR_CALIBRATED);
+const factoryChange = factoryDirector.dispatch(VR_SCENARIO_EVENT.XR_CALIBRATED);
+assert.deepEqual(factoryChange, productionChange, 'constructor and compatibility factory share semantics');
+assert.equal(productionChange.currentSceneId, VR_EXPERIENCE_SCENE.P0_LEGACY_SEQUENCE_ACTIVE);
+assert.deepEqual(productionChange.addedMilestones, [VR_SCENARIO_MILESTONE.XR_CALIBRATED]);
+assert.deepEqual(productionChange.effects, [VR_SCENARIO_EFFECT.BEGIN_INTRO_REVEAL]);
+assert.equal(productionDirector.dispatch(VR_SCENARIO_EVENT.XR_CALIBRATED), null);
+productionDirector.resetSession();
+assert.equal(productionDirector.hasMilestone(VR_SCENARIO_MILESTONE.XR_CALIBRATED), true);
+assert.notEqual(productionDirector.dispatch(VR_SCENARIO_EVENT.XR_CALIBRATED), null);
+productionDirector.resetSession({ hard: true });
+assert.equal(productionDirector.hasMilestone(VR_SCENARIO_MILESTONE.XR_CALIBRATED), false);
 
 const vocabulary = Object.freeze({
   events: Object.freeze(['GO', 'RETURN', 'IGNORED']),
