@@ -2,11 +2,11 @@
 
 Status: canonical description of the implemented runtime synchronized on 2026-08-12. Approved future gameplay is documented in the [gameplay roadmap](../concept/EXPERIENCE_VR_GAMEPLAY_ROADMAP.md).
 
-## Scenario + Director M1.5 slice
+## Scenario + Director M1.6 slice
 
-M0 through M1.5 **Player Viewed Controls Handoff** are live; M1 remains **IN PROGRESS**. Scenario and Director own both `PLAYER_OPENED_GUIDE → CONTINUE_CONTROLLER_ONBOARDING` (`1.4 → 1.4.1`) and `PLAYER_VIEWED_CONTROLS → CONTINUE_CONTROLLER_ONBOARDING` (`1.4.1 → 1.4.2`).
+M0 through M1.6 **Player Closed Guide Handoff** are live; M1 remains **IN PROGRESS**. Scenario and Director own all three SG-040 facts: `PLAYER_OPENED_GUIDE` (`1.4 → 1.4.1`), `PLAYER_VIEWED_CONTROLS` (`1.4.1 → 1.4.2`) and `PLAYER_CLOSED_GUIDE` (`1.4.2 → 1.4.3`). Every transition uses `CONTINUE_CONTROLLER_ONBOARDING` where continuation is required.
 
-`RuntimeExperience` remains the injected symbolic-effect boundary. The actor emits each panel fact exactly once and waits for Runtime after guide open and controls DETAIL. The single `continueControllerOnboarding()` seam handles both legal resumptions: into `WAIT_CONTROLS_VIEW`, then into `WAIT_PANEL_CLOSE`. QA bypass synthesizes neither event. SG-032 and SG-039 are **MIGRATED**. SG-040 remains **RETAINED**: migrated edges are `PLAYER_OPENED_GUIDE` and `PLAYER_VIEWED_CONTROLS`; `PLAYER_CLOSED_GUIDE` and pointer tutorial start remain legacy. M1.4 is **Hardware PASS on Quest 3S**; M1.5 hardware QA is **PENDING**. Point IDs span `1.1`–`1.4.2`.
+`RuntimeExperience` remains the only symbolic-effect execution boundary. The actor detects each UI fact exactly once and waits for Runtime after guide open, controls DETAIL and physical panel close. The single `continueControllerOnboarding()` seam has three legal resumptions: into `WAIT_CONTROLS_VIEW`, into `WAIT_PANEL_CLOSE`, then into the existing pointer tutorial. The final continuation preserves the three panel-done messages and reaches `WAIT_HOVER`; Monkey hover, trigger and subsequent SG-036 narration remain legacy. QA bypass synthesizes no `PLAYER_*` event. SG-032, SG-039 and SG-040 are **MIGRATED**. M1.5 is **HARDWARE PASS — Meta Quest 3S**; M1.6 is implemented with hardware QA **PENDING**. Point IDs span `1.1`–`1.4.3`.
 
 ## Runtime boundary and lifecycle
 

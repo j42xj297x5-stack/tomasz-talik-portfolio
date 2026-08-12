@@ -6,7 +6,7 @@ Status: current delivery handoff synchronized with HEAD on 2026-08-12. It intent
 
 Experience VR has an implemented P0 intro, portfolio crystal progression, Tier-1 Astro/shell loop, Astro Furnace material loop, production/claim of the Asterion Sphere and heavy platform-orientation control. The transient ambient sequencer is **IMPLEMENTED**, not FUTURE. Exact owners, state machines, timings, hierarchy and visibility gates live only in the [VR Runtime Model](../technical/VR_RUNTIME_MODEL.md); audio mappings and sequencer behavior live only in the [VR Audio Model](../technical/VR_AUDIO_MODEL.md).
 
-M0 through M1.5 **Player Viewed Controls Handoff** are live, while M1 remains **IN PROGRESS**. Scenario and Director own `PLAYER_OPENED_GUIDE` and `PLAYER_VIEWED_CONTROLS`, with the chain `1.4 → 1.4.1 → 1.4.2`; both use `CONTINUE_CONTROLLER_ONBOARDING`. SG-032 and SG-039 are **MIGRATED**. SG-040 remains **RETAINED**: `PLAYER_CLOSED_GUIDE` and pointer tutorial start remain legacy. Runtime is the only caller of `continueControllerOnboarding()`. M1.4 is **Hardware PASS on Quest 3S**; M1.5 is implemented with hardware QA pending.
+M0 through M1.6 **Player Closed Guide Handoff** are live, while M1 remains **IN PROGRESS**. Scenario and Director own all three SG-040 events, with the chain `1.4 → 1.4.1 → 1.4.2 → 1.4.3`; Runtime is the only continuation path through `CONTINUE_CONTROLLER_ONBOARDING`. SG-032, SG-039 and SG-040 are **MIGRATED**. Pointer tutorial begins only after Runtime resumes the waiting actor; Monkey hover, trigger and subsequent SG-036 flow remain legacy. M1.5 is **HARDWARE PASS — Meta Quest 3S**. M1.6 is implemented with hardware QA pending.
 
 ## M1.4 Meta Quest 3S smoke checklist
 
@@ -27,7 +27,7 @@ M0 through M1.5 **Player Viewed Controls Handoff** are live, while M1 remains **
 
 ## M1.5 Meta Quest 3S smoke checklist
 
-**PENDING — HARDWARE QA NOT EXECUTED**
+**HARDWARE PASS — Meta Quest 3S**
 
 - [ ] M1.4 behavior remains intact.
 - [ ] The Y prompt opens exactly once.
@@ -39,6 +39,23 @@ M0 through M1.5 **Player Viewed Controls Handoff** are live, while M1 remains **
 - [ ] `WAIT_HOVER` is unchanged.
 - [ ] Monkey hover/trigger behavior is unchanged.
 - [ ] Reset/re-entry emits each handoff exactly once.
+- [ ] Messages and listeners are not duplicated.
+
+
+## M1.6 Meta Quest 3S smoke checklist
+
+**PENDING — HARDWARE QA NOT EXECUTED**
+
+- [ ] M1.5 has no regression.
+- [ ] Closing the panel after controls advances exactly once.
+- [ ] Leaving the panel open does not start pointer tutorial.
+- [ ] The same three post-close messages appear.
+- [ ] Message timing is identical.
+- [ ] `WAIT_HOVER` begins at the same moment.
+- [ ] Monkey hover still shows “Teraz spust.” / “Now pull the trigger.”
+- [ ] Trigger still enters the existing subsequent flow.
+- [ ] Reset/re-entry repeats each handoff exactly once.
+- [ ] QA bypass has no regression and synthesizes no `PLAYER_*` event.
 - [ ] Messages and listeners are not duplicated.
 
 ## M1.1 Meta Quest 3S smoke checklist

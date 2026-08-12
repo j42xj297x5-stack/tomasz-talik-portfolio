@@ -126,7 +126,7 @@ Skok nie jest błędem, powrót nie jest ukrytym zachowaniem, a pętla jest jawn
 
 `id: '1.3'` jest tożsamością punktu; opcjonalne `label: 'Cisza po revealu'` jest etykietą dla człowieka i może się zmienić bez zmiany adresu.
 
-**CURRENT:** działający slice M1.1–M1.5 używa kanonicznych, stabilnych point IDs `1.1`–`1.4.2`; opisowe nazwy pozostają wyłącznie etykietami dla człowieka.
+**CURRENT:** działający slice M1.1–M1.6 używa kanonicznych, stabilnych point IDs `1.1`–`1.4.3`; opisowe nazwy pozostają wyłącznie etykietami dla człowieka.
 
 ## 8. Event, effect, cue, milestone i capability
 
@@ -228,18 +228,19 @@ Kontroler odpowiada „co faktycznie osiągnięto w domenie”; Scenario — „
 
 QA shortcut nie jest alternatywną fabułą i nie ma własnego Scenario. Może przygotować stan domenowy, ale jawnie synchronizuje wymagane fakty, nie omija nowych gates tak, by ukryć błąd produkcyjny, wymaga parity testu, a jego status jest śledzony osobno od produkcyjnej migracji. **CURRENT:** `applyVrProgressionShortcut.js` pozostaje istniejącym adapterem QA bez zmian działania.
 
-## 19. CURRENT dla M1.1–M1.5
+## 19. CURRENT dla M1.1–M1.6
 
 | Kanoniczny adres | Etykieta | Event kończący punkt | Effect uruchamiający kolejny punkt | Status |
 | --- | --- | --- | --- | --- |
 | `1.1` | Bootstrap / oczekiwanie na kalibrację XR | `XR_CALIBRATED` | `BEGIN_INTRO_REVEAL` | CURRENT |
 | `1.2` | Intro reveal | `INTRO_REVEAL_COMPLETE` | `BEGIN_POST_REVEAL_SILENCE` | CURRENT |
 | `1.3` | Cisza po revealu | `POST_REVEAL_SILENCE_COMPLETE` | `BEGIN_CONTROLLER_ONBOARDING` | CURRENT |
-| `1.4` | Controller onboarding / oczekiwanie na Player Guide | `PLAYER_OPENED_GUIDE` | `CONTINUE_CONTROLLER_ONBOARDING` | CURRENT; SG-040 RETAINED |
-| `1.4.1` | Player Guide otwarty / oczekiwanie na controls | `PLAYER_VIEWED_CONTROLS` | `CONTINUE_CONTROLLER_ONBOARDING` | CURRENT; SG-040 RETAINED |
-| `1.4.2` | Controls obejrzane / oczekiwanie na zamknięcie panelu | — | — | CURRENT terminal obecnego slice; SG-040 RETAINED |
+| `1.4` | Controller onboarding / oczekiwanie na Player Guide | `PLAYER_OPENED_GUIDE` | `CONTINUE_CONTROLLER_ONBOARDING` | CURRENT; SG-040 MIGRATED |
+| `1.4.1` | Player Guide otwarty / oczekiwanie na controls | `PLAYER_VIEWED_CONTROLS` | `CONTINUE_CONTROLLER_ONBOARDING` | CURRENT; SG-040 MIGRATED |
+| `1.4.2` | Controls obejrzane / oczekiwanie na zamknięcie panelu | `PLAYER_CLOSED_GUIDE` | `CONTINUE_CONTROLLER_ONBOARDING` | CURRENT; SG-040 MIGRATED |
+| `1.4.3` | Pointer tutorial uruchomiony | — | — | CURRENT terminal; granica przed RETAINED SG-036 |
 
-M1.1–M1.5 są zaimplementowane i live pod kanonicznymi adresami `1.1`–`1.4.2`. M1.4 ma Hardware PASS z Quest 3S; M1.5 oczekuje hardware QA. SG-032 i SG-039 pozostają `MIGRATED`; SG-040 pozostaje `RETAINED`. W SG-040 przeniesiono edge'e `PLAYER_OPENED_GUIDE` i `PLAYER_VIEWED_CONTROLS`; legacy nadal posiada `PLAYER_CLOSED_GUIDE` oraz start pointer tutorial.
+M1.1–M1.6 są zaimplementowane i live pod kanonicznymi adresami `1.1`–`1.4.3`. M1.5 ma **HARDWARE PASS — Meta Quest 3S**; M1.6 oczekuje hardware QA. SG-032, SG-039 i SG-040 są `MIGRATED`: Scenario posiada wszystkie trzy edge'e SG-040, a Runtime jest jedyną ścieżką continuation. Punkt `1.4.3` jest granicą przed nadal `RETAINED` SG-036 (Monkey hover/trigger i dalsza narracja).
 
 ## 20. Docelowy kształt danych Scenario
 
@@ -348,11 +349,12 @@ Obowiązkowy format przyszłych synchronizacji:
 | `1.1` | 1 | Bootstrap XR | `experienceVr.js` calibration handoff | SG-032 | `XR_CALIBRATED` | `1.2` | `BEGIN_INTRO_REVEAL` | `MIGRATED` | CURRENT live pod kanonicznym point ID | istniejące testy kontraktu | M1.1 PASS, Quest 3S, 2026-08-12 |
 | `1.2` | 1 | Intro reveal | `createVrIntroSequence` reveal completion seam | SG-039 edge: reveal completion | `INTRO_REVEAL_COMPLETE` | `1.3` | `BEGIN_POST_REVEAL_SILENCE` | `MIGRATED` | CURRENT live pod kanonicznym point ID | istniejące testy kontraktu | M1.2 PASS, Quest 3S, 2026-08-12 |
 | `1.3` | 1 | Cisza po revealu | `createVrIntroSequence` actor-owned timer/completion seam | SG-039 | `POST_REVEAL_SILENCE_COMPLETE` | `1.4` | `BEGIN_CONTROLLER_ONBOARDING` | `MIGRATED` | CURRENT live pod kanonicznym point ID | istniejące testy kontraktu | M1.3 PENDING — niewykonane |
-| `1.4` | 1 | Controller onboarding | `createVrIntroSequence` wykrywa faktyczne otwarcie | SG-040 | `PLAYER_OPENED_GUIDE` | `1.4.1` | `CONTINUE_CONTROLLER_ONBOARDING` | `RETAINED` | CURRENT live; pierwszy edge zmigrowany | testy Director/Runtime/aktora/kontraktu | M1.4 PASS, Quest 3S |
-| `1.4.1` | 1 | Oczekiwanie na controls | `createVrIntroSequence` wykrywa controls DETAIL | SG-040 | `PLAYER_VIEWED_CONTROLS` | `1.4.2` | `CONTINUE_CONTROLLER_ONBOARDING` | `RETAINED` | CURRENT live; drugi edge zmigrowany | testy Director/Runtime/aktora/kontraktu | M1.5 PENDING — Quest 3S |
-| `1.4.2` | 1 | Oczekiwanie na zamknięcie panelu | `createVrIntroSequence` | SG-040 | — | — | — | `RETAINED` | `PLAYER_CLOSED_GUIDE` i pointer tutorial start pozostają legacy | testy legacy parity | M1.5 PENDING — Quest 3S |
+| `1.4` | 1 | Controller onboarding | `createVrIntroSequence` wykrywa faktyczne otwarcie | SG-040 | `PLAYER_OPENED_GUIDE` | `1.4.1` | `CONTINUE_CONTROLLER_ONBOARDING` | `MIGRATED` | CURRENT live | testy Director/Runtime/aktora/kontraktu | M1.4 PASS, Quest 3S |
+| `1.4.1` | 1 | Oczekiwanie na controls | `createVrIntroSequence` wykrywa controls DETAIL | SG-040 | `PLAYER_VIEWED_CONTROLS` | `1.4.2` | `CONTINUE_CONTROLLER_ONBOARDING` | `MIGRATED` | CURRENT live | testy Director/Runtime/aktora/kontraktu | M1.5 PASS, Quest 3S |
+| `1.4.2` | 1 | Oczekiwanie na zamknięcie panelu | `createVrIntroSequence` wykrywa fizyczne zamknięcie | SG-040 | `PLAYER_CLOSED_GUIDE` | `1.4.3` | `CONTINUE_CONTROLLER_ONBOARDING` | `MIGRATED` | CURRENT live; Runtime uruchamia pointer tutorial | testy Director/Runtime/aktora/kontraktu | M1.6 PENDING — Quest 3S |
+| `1.4.3` | 1 | Pointer tutorial uruchomiony | Scenario / Runtime do tej granicy | SG-036 | — | — | — | `RETAINED` | CURRENT terminal; Monkey hover/trigger pozostają legacy | parity istniejącego aktora | M1.6 PENDING — Quest 3S |
 
-Wpis powstaje przed migracją lub razem z nią; niewdrożone punkty nie są live; target address i current owner są widoczne razem. `MIGRATED` oznacza brak dual ownership. Hardware QA nie wynika z automatycznych testów. Usunięte adresy pozostają jako `REMOVED`. Rejestr nie zastępuje kodu ani testów. Powyższe wpisy obejmują wyłącznie live slice M1.1–M1.5 i częściowe pokrycie SG-040, nie przenoszą całego audytu.
+Wpis powstaje przed migracją lub razem z nią; niewdrożone punkty nie są live; target address i current owner są widoczne razem. `MIGRATED` oznacza brak dual ownership. Hardware QA nie wynika z automatycznych testów. Usunięte adresy pozostają jako `REMOVED`. Rejestr nie zastępuje kodu ani testów. Powyższe wpisy obejmują wyłącznie live slice M1.1–M1.6 oraz zamknięte SG-040; SG-036 pozostaje poza tym wdrożeniem.
 
 ## 24. Debugowanie i wyszukiwanie
 
@@ -410,12 +412,12 @@ adres punktu jest wyliczany albo sortowany jako liczba
 
 ```text
 CURRENT:
-M0, M1.1, M1.2, M1.3, M1.4 PLAYER GUIDE OPEN HANDOFF i M1.5 PLAYER VIEWED CONTROLS HANDOFF są wdrożone.
-Scenario używa kanonicznych point IDs 1.1–1.4.2.
+M0–M1.6, włącznie z PLAYER CLOSED GUIDE HANDOFF, są wdrożone.
+Scenario używa kanonicznych point IDs 1.1–1.4.3.
 Director używa currentPointId; legacy scene API jest wyłącznie aliasem.
-RuntimeExperience wykonuje cztery live effects, w tym CONTINUE_CONTROLLER_ONBOARDING.
+RuntimeExperience wykonuje live effects, a CONTINUE_CONTROLLER_ONBOARDING jest jedyną ścieżką continuation SG-040.
 SG-032 i SG-039 są MIGRATED.
-SG-040 i dalsze grupy pozostają RETAINED.
+SG-040 jest MIGRATED; SG-036 i dalsze grupy pozostają RETAINED.
 ```
 
 ```text
@@ -429,6 +431,6 @@ experienceVr.js pozostaje composition rootem.
 
 ```text
 IMPLEMENTED BOUNDARY:
-Działające M1.1–M1.5 są odwzorowane na punkty 1.1–1.4.2.
-SG-040 pozostaje RETAINED: zmigrowano PLAYER_OPENED_GUIDE i PLAYER_VIEWED_CONTROLS; PLAYER_CLOSED_GUIDE oraz start pointer tutorial są legacy.
+Działające M1.1–M1.6 są odwzorowane na punkty 1.1–1.4.3.
+SG-040 jest MIGRATED: PLAYER_OPENED_GUIDE, PLAYER_VIEWED_CONTROLS i PLAYER_CLOSED_GUIDE należą do Scenario; punkt 1.4.3 wyznacza granicę przed RETAINED SG-036.
 ```
