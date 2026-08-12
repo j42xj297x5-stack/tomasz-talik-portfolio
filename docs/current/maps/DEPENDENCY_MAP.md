@@ -1,15 +1,15 @@
 # Dependency Map
 
-## Experience VR scenario migration seam (M0)
+## Experience VR scenario migration seam (M1.1)
 
 ```text
-vrExperienceScenario (declarative symbols and transitions)
-        ↓ data only
-createVrExperienceDirector (isolated coordinator)
-        ⇢ future adapters ⇢ actors / subsystems
+experienceVr bootstrap
+  → ExperienceDirector → vrExperienceScenario
+  → RuntimeExperience → injected BEGIN_INTRO_REVEAL handler
+  → existing createVrIntroSequence actor
 ```
 
-The future-adapter edge is intentionally inactive: **Scenario + Director foundation exists but is not yet authoritative for live gameplay.** `experienceVr.js` and every current controller/predicate retain runtime ownership; no actor or Three.js dependency points back into the Scenario or Director.
+M0 and M1.1 Live Bootstrap Slice are complete; M1 remains **IN PROGRESS**. Scenario/Director authority is limited to `XR_CALIBRATED → BEGIN_INTRO_REVEAL`, and `RuntimeExperience` is the symbolic-effect execution boundary. Only SG-032 is **MIGRATED**. Other P0 states remain in `createVrIntroSequence`; no full central Scenario ownership or RC-01…RC-14 consolidation exists.
 
 ## Documentation flow
 

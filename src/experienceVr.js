@@ -49,6 +49,9 @@ import { createVrIntroFogReveal } from './xr/guidance/createVrIntroFogReveal.js'
 import { createVrReliquaryHints } from './xr/guidance/createVrReliquaryHints.js';
 import { createVrAudioBridge } from './xr/audio/createVrAudioBridge.js';
 import { createVrAmbientSequencer } from './xr/audio/createVrAmbientSequencer.js';
+import { ExperienceDirector } from './xr/progression/ExperienceDirector.js';
+import { RuntimeExperience } from './xr/progression/RuntimeExperience.js';
+import { VR_SCENARIO_EFFECT, VR_SCENARIO_EVENT, vrExperienceScenario } from './xr/progression/vrExperienceScenario.js';
 import { experienceVrPages, getExperienceVrPages, resolveExperienceVrPage } from './content/experienceVrPages.js';
 import { publicPath } from './utils/publicPath.js';
 
@@ -538,6 +541,17 @@ introSequence = createVrIntroSequence({
   onEndSession: () => { void activeSession?.end(); }
 });
 
+const experienceDirector = new ExperienceDirector({ scenario: vrExperienceScenario });
+const runtimeExperience = new RuntimeExperience({
+  director: experienceDirector,
+  effectHandlers: {
+    [VR_SCENARIO_EFFECT.BEGIN_INTRO_REVEAL]: () => {
+      introSequence.beginAfterXrCalibration();
+      if (introQaBypass) vrControllers.setRaysEnabled(true);
+    }
+  }
+});
+
 function resize() {
   const width = canvas.clientWidth || innerWidth || 1;
   const height = canvas.clientHeight || innerHeight || 1;
@@ -562,8 +576,7 @@ function renderFrame() {
       targetRadius: settings.spatial.playerStartRadius });
     getXrHeadWorldPosition({ renderer, camera, playerRig });
     xrStartCalibrationPending = false;
-    introSequence.beginAfterXrCalibration();
-    if (introQaBypass) vrControllers.setRaysEnabled(true);
+    runtimeExperience.dispatch(VR_SCENARIO_EVENT.XR_CALIBRATED);
     renderer.render(scene, camera);
     return;
   }
@@ -618,6 +631,7 @@ function showReadyState({ ended = false } = {}) {
 }
 
 function handleSessionEnd() {
+  runtimeExperience.resetSession();
   ambientSequencer.reset();
   vrAudio.resetAsterionSphereAudio();
   renderer.setAnimationLoop(null);
@@ -660,6 +674,7 @@ async function enterVr() {
   ambientSequencer.reset();
   vrAudio.resetAsterionSphereAudio();
   if (activeSession) return;
+  runtimeExperience.resetSession();
   astroFurnace.reset();
   furnacePanel.reset();
   playerGuidePanel.reset();
@@ -718,6 +733,7 @@ async function enterVr() {
     }
     activeSession = null;
     xrStartCalibrationPending = false;
+    runtimeExperience.resetSession();
     vrAudio.resetAsterionSphereAudio();
     renderer.setAnimationLoop(null);
     clock.stop();
@@ -754,6 +770,7 @@ async function enterVr() {
 enterButton.addEventListener('click', enterVr);
 exitButton.addEventListener('click', () => { void activeSession?.end(); });
 window.addEventListener('pagehide', () => {
+  runtimeExperience.dispose();
   introFogReveal.dispose();
   unsubscribeAmbientFurnace();
   unsubscribeAmbientAsterion();

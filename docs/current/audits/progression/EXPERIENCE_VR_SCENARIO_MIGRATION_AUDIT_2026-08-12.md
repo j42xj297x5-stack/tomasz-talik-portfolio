@@ -1,11 +1,15 @@
 # Experience VR — Scenario Migration Audit
 
 **Data audytu:** 2026-08-12
-**Status:** working evidence / mapa migracji, read-only względem runtime'u
+**Status:** working evidence / mapa migracji, synchronized after M1.1
 **Zakres dowodowy:** aktualny kod gałęzi roboczej; dokumenty kanoniczne przeczytane w kolejności wskazanej w zadaniu.
 **Zasada interpretacji:** kod dowodzi implementacji, dokumentacja opisuje model. Poniższe rekomendacje identyfikują przyszłą granicę, nie ustanawiają API i nie zmieniają decyzji architektonicznych.
 
 ## 1. Executive summary
+
+### M1.1 synchronization
+
+M0 is complete and M1.1 **Live Bootstrap Slice** is complete; M1 overall remains **IN PROGRESS**. Scenario and `ExperienceDirector` are authoritative only for `XR_CALIBRATED → BEGIN_INTRO_REVEAL`, with `RuntimeExperience` as the injected symbolic-effect execution boundary. SG-032 alone is **MIGRATED**, including normal Intro start and QA-bypass rays. SG-028…SG-031, SG-033…SG-045, full SG-001…SG-004, SG-052, and all RC-01…RC-14 retain their prior status. Remaining P0 states still belong to `createVrIntroSequence`; full central Scenario ownership and lifecycle consolidation do not exist. Manual Meta Quest 3S verification is **PENDING — HARDWARE QA NOT EXECUTED**.
 
 Scenariusz nie ma dziś jednego właściciela. Audyt znalazł **12 niezależnych lub częściowo niezależnych ownerów stanu/decyzji**: composition root, Intro, portfolio progression, crystal collection/reliquary, floor, Monkey/guide, hints, hand modes, shell field, furnace material progression, furnace process oraz Asterion production. Dodatkowym właścicielem projekcji czasowej jest ambient sequencer.
 
@@ -85,7 +89,7 @@ Najważniejsze ryzyka migracji:
 | SG-029 | `src/experienceVr.js:L525` | normal Intro reset | portal/furnace hidden, reliquary reset | VISIBILITY_GATE | Director scene entry cue | HIGH |
 | SG-030 | `src/experienceVr.js:L526` | Intro bypass | portal/furnace/reliquary visible/reset | VISIBILITY_GATE | Director QA scene entry cue | HIGH |
 | SG-031 | `src/experienceVr.js:L527-L533` | discovery conversation complete | 3 s reveal portal/reliquary/canvas | VISIBILITY_GATE / NARRATIVE_TRIGGER | Director cue; reveal execution actors | HIGH |
-| SG-032 | `src/experienceVr.js:L565-L566` | calibration completed / bypass | Intro starts; bypass enables rays | SCENARIO_GATE | calibration event → Director | HIGH |
+| SG-032 | `src/experienceVr.js` calibration block and effect adapter | calibration completed / bypass | Intro starts; bypass enables rays | SCENARIO_GATE | **MIGRATED** — `XR_CALIBRATED → BEGIN_INTRO_REVEAL` through RuntimeExperience | HIGH |
 | SG-033 | `src/experienceVr.js:L577` | player guide open | locomotion yaw locked | CAPABILITY_GATE | modal interaction policy | MEDIUM |
 | SG-034 | `src/experienceVr.js:L598-L601` | Sphere equipped + gyro drive | device loops synchronized each frame | AUDIO_TRIGGER | semantic state-change events → audio adapter | MEDIUM |
 | SG-035 | `src/experienceVr.js:L603-L605` | glyph not currently active | exhausted lighting | VISIBILITY_GATE | capability projection | MEDIUM |
@@ -456,7 +460,7 @@ Najbardziej migracyjne są callbacki, w których producer zna **konkretny efekt 
 
 | Etap | Files touched later / moves | Stays | Risk / tests / prerequisite |
 |---|---|---|---|
-| **M0 foundation — COMPLETE** | Scenario/Director + event/capability/milestone/effect vocabulary; isolated and tested, without root composition | all current owners remain authoritative; no adapters are live | Foundation delivered; runtime ownership unchanged; M1 is next |
+| **M0 foundation — COMPLETE** | Scenario/Director + event/capability/milestone/effect vocabulary | foundation retained | Complete; followed by bounded M1.1 integration |
 | M1 P0 | Intro, Monkey/player/fog/locomotion/root callbacks | fog shader, motion interpolation, hit/UI rendering | **HIGH (highest)**; full state graph, all choices, no-action, re-entry, timer races; needs M0 |
 | M2 glyph/crystal/reliquary | root glyph gates/callbacks, hints, collection bridges/buttons | branch/tier correctness, physical grab/insertion/consume | HIGH; first-before/after-60s, invalid insertion, activate/release; M1 stable |
 | M3 portfolio tiers | progression event adapter, floor/ambient/card history | `VrProgressionController` commits and floor renderer | HIGH; all 18 order/branch/tier, re-entry hydration, p1 parity; M2 |
@@ -509,9 +513,10 @@ Ta granica zapobiega God Directorowi: Director odpowiada „czy/kiedy/co dalej�
 ## 20. Migration checklist
 
 - [x] M0 foundation — immutable declarative Scenario, independent Director, validation, monotonic milestones, distinct session/hard reset contracts and symbolic effects are implemented and tested.
-- [ ] M1 live integration — next; no current gameplay owner has been replaced.
+- [x] M1.1 Live Bootstrap Slice — SG-032 migrated.
+- [ ] M1 full P0 migration — **IN PROGRESS**; all other ownership remains unchanged.
 
-**Scenario + Director foundation exists but is not yet authoritative for live gameplay.** The Director is not connected to `experienceVr.js`, runtime ownership is unchanged, and none of `SG-001…SG-052` is marked **MIGRATED** by M0.
+Scenario + Director are authoritative only for `XR_CALIBRATED → BEGIN_INTRO_REVEAL`. `RuntimeExperience` is connected to `experienceVr.js`; SG-032 alone is **MIGRATED**. This does not imply full P0 or M1 completion.
 
 Dla każdego elementu ustawić dokładnie jeden status: **MIGRATED / RETAINED / REMOVED**.
 
