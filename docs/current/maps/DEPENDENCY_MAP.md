@@ -1,5 +1,16 @@
 # Dependency Map
 
+## Experience VR scenario migration seam (M0)
+
+```text
+vrExperienceScenario (declarative symbols and transitions)
+        ↓ data only
+createVrExperienceDirector (isolated coordinator)
+        ⇢ future adapters ⇢ actors / subsystems
+```
+
+The future-adapter edge is intentionally inactive: **Scenario + Director foundation exists but is not yet authoritative for live gameplay.** `experienceVr.js` and every current controller/predicate retain runtime ownership; no actor or Three.js dependency points back into the Scenario or Director.
+
 ## Documentation flow
 
 `PROJECT_ENTRY.md` → `maps/PROJECT_INDEX.md` → smallest task-specific current model. Current VR implementation work starts with `technical/VR_RUNTIME_MODEL.md`; audio and progress-floor detail route to their dedicated models. The handoff contains only current delivery/QA context. Future gameplay reads the roadmap after the runtime model; narrative work reads the narrative baseline.

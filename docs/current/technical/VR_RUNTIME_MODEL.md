@@ -2,6 +2,12 @@
 
 Status: canonical description of the implemented runtime synchronized on 2026-08-12. Approved future gameplay is documented in the [gameplay roadmap](../concept/EXPERIENCE_VR_GAMEPLAY_ROADMAP.md).
 
+## Scenario + Director M0 foundation
+
+`src/xr/progression/vrExperienceScenario.js` now defines the immutable semantic vocabulary and a deliberately minimal declarative bootstrap scene. `createVrExperienceDirector.js` coordinates scene transitions, monotonic narrative milestones, scenario-level capabilities and symbolic effects without importing Three.js or runtime actors. Session reset returns to the initial scene while preserving committed milestones; an explicit hard reset clears them.
+
+**Scenario + Director foundation exists but is not yet authoritative for live gameplay.** The Director is not composed into `experienceVr.js`; all existing Intro, progression, interaction, furnace, shell, Asterion, audio and lifecycle predicates remain the sole live-runtime owners until a later migration stage.
+
 ## Runtime boundary and lifecycle
 
 `src/experienceVr.js` is the composition root of an independent, dynamically imported WebXR runtime. It owns its renderer, scene, base camera, `playerRig`, two controllers and `renderer.setAnimationLoop`; it does not start Experience 3D. Runtime preparation precedes the direct **Enter VR** gesture. The requested reference space is `local-floor`, with `local` fallback.
