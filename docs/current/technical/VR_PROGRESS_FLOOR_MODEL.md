@@ -1,6 +1,6 @@
 # Experience VR Progress Floor Model
 
-Status: canonical technical description of the implemented progress-floor and platform-root subsystem synchronized on 2026-08-05. Gameplay direction beyond this bounded subsystem remains in the [Experience VR Gameplay Roadmap](../concept/EXPERIENCE_VR_GAMEPLAY_ROADMAP.md).
+Status: canonical technical description of the implemented progress-floor and platform-root subsystem synchronized on 2026-08-12. Gameplay direction beyond this bounded subsystem remains in the [Experience VR Gameplay Roadmap](../concept/EXPERIENCE_VR_GAMEPLAY_ROADMAP.md).
 
 ## Runtime ownership and lifecycle
 
@@ -10,23 +10,7 @@ The factory creates one shared `THREE.Group` named `VrTiltableFloorRoot`. Its id
 
 `VrTiltableFloorRoot` now has two active roles: it is the visual progress floor root and the platform transform root driven by the QA Asterion gyro. Progress ownership and transform ownership remain separate. `createVrProgressFloor` only projects committed portfolio progress; the Asterion gyro writes the root quaternion and does not take over card, tier or furnace progression logic.
 
-The platform hierarchy under this root is:
-
-```text
-VrTiltableFloorRoot
-├── floor sectors / rings
-├── monkeyAnchor
-├── VrPlatformFixturesRoot
-│   ├── portal
-│   ├── reliquary
-│   ├── furnace
-│   └── furnace panel
-└── VrFloorPassengerRoot
-    └── playerRig
-```
-
-Locomotion depends on this hierarchy. `VrFloorPassengerRoot` carries `playerRig`, so smooth movement resolves along the platform-local tangent plane, preserves rig local Y and uses the snapshot `glyphOrbit.effectiveRadius` as a radial walking boundary. The world-stable glyph ring and shell field remain outside this root.
-
+The floor model owns only sectors/rings and the `VrTiltableFloorRoot` contract. Runtime composition also parents actor, fixture and passenger roots below that platform transform, but their complete hierarchy and visibility rules belong to the [VR Runtime Model](VR_RUNTIME_MODEL.md), not this document. Locomotion depends on `VrFloorPassengerRoot → playerRig`: movement resolves along the platform-local tangent plane, preserves rig local Y and uses the snapshot `glyphOrbit.effectiveRadius` as its radial boundary. The world-stable glyph ring and shell field remain outside the platform root.
 ## Sector layout
 
 All authored sectors share the same local center, receive no local translation, and rotate around Y by `rotationIndex * 2π / 5`:

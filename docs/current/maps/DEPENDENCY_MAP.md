@@ -2,7 +2,7 @@
 
 ## Documentation flow
 
-`PROJECT_ENTRY.md` → `maps/PROJECT_INDEX.md` → smallest task-specific current model. Current VR work reads `technical/VR_RUNTIME_MODEL.md`, then `handoffs/EXPERIENCE_VR_HANDOFF.md`; future gameplay additionally reads the roadmap and decision log.
+`PROJECT_ENTRY.md` → `maps/PROJECT_INDEX.md` → smallest task-specific current model. Current VR implementation work starts with `technical/VR_RUNTIME_MODEL.md`; audio and progress-floor detail route to their dedicated models. The handoff contains only current delivery/QA context. Future gameplay reads the roadmap after the runtime model; narrative work reads the narrative baseline.
 
 ## Runtime boundaries
 
@@ -26,7 +26,8 @@ experienceVr
 │  └─ VrTiltableFloorRoot at canonical (0,0,0)
 │     ├─ progress floor sectors / rings
 │     ├─ VrMonkeyMotionRoot → Monkey visual / Guide
-│     ├─ VrPlatformFixturesRoot → stationary stone / portal / reliquary / furnace / furnace panel
+│     ├─ VrPlatformFixturesRoot (structural)
+│     │  └─ stationary VrMonkeyStoneRoot / portal / reliquary / furnace / furnace panel
 │     └─ VrFloorPassengerRoot → playerRig → camera / controllers / grips
 ├─ local-plane locomotion → VrFloorPassengerRoot/playerRig
 ├─ glyph interaction → crystal collection
@@ -80,9 +81,9 @@ glyph hold
 → held insertion feedback
 ├─ INVALID → rejecting → available
 └─ VALID → inserted
-   ├─ Release without Activate → available
-   └─ Activate → page preview
-      → Release → controller commit → floor panel → tier test/ring → consuming
+   → physical Release disabled
+   → Activate → active + page preview
+   → physical Release enabled → controller commit → floor panel → tier test/ring → consuming
 ```
 
 `VrProgressionController` exclusively owns committed portfolio cards, branch/tier completion and the floor projection source. `VrAstroFurnaceProgressionController` independently owns committed furnace materials. Both domains survive XR re-entry in the prepared runtime, but not reload/navigation; there is no global progression store or durable persistence.
@@ -155,4 +156,4 @@ VrTiltableFloorRoot
 
 ## Not active dependencies
 
-Progressive sector backgrounds, a central progression core, Astro B/bands, radar sectors, small glyph progression, antenna, rune/Emanation Matrix processing, final radar/finale, ambient sequencing, Asterion active-control sound, spatial audio, durable persistence and full-game reset are not active runtime dependencies. Production Asterion and bounded VR gameplay audio are active; the two current hardware QA issues are physical chamber placement and contour-line continuity.
+Progressive sector backgrounds, a central progression core, Astro B/bands, radar sectors, small glyph progression, antenna, rune/Emanation Matrix processing, final radar/finale, spatial audio, durable persistence and full-game reset are not active runtime dependencies. The transient ambient sequencer and Asterion active-control sound are active audio dependencies owned by the VR audio model. Production Asterion and bounded VR gameplay audio are active; the two current hardware QA issues are physical chamber placement and contour-line continuity.

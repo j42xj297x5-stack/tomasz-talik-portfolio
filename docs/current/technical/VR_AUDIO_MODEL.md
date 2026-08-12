@@ -105,7 +105,7 @@ Each shorthand above denotes `glif_<element>_4s_<NN>.mp3`. `glif_earth_4s_04.mp3
 
 - A physical crystal actually accepted by the reliquary → `turn_page_01.mp3` on `WORLD`, exactly once; hover, volume entry without acceptance, rejection, and reset are silent.
 - An accepted Activate action for the currently inserted crystal → `creating_short_01.mp3` on `WORLD`, exactly once; rejected/repeated activation, hover, insertion, and reset are silent.
-- Release after Activate whose idempotent progression commit succeeds → `reliquiary_consume.mp3` on `WORLD`; Release without Activate returns the crystal silently.
+- Player-facing Release after Activate, when the idempotent progression commit succeeds → `reliquiary_consume.mp3` on `WORLD`. Release is physically disabled in `inserted`; internal recovery from that state has no player-facing audio mapping.
 - The same commit, when the progression controller reports real tier completion, additionally plays `floor_panel_activate.mp3` on `WORLD`, after `reliquiary_consume`; audio does not calculate or own progression state.
 
 In short: insert → `turn_page_01`, activate → `creating_short_01`, consume → `reliquiary_consume`, complete → additional `floor_panel_activate`. These remain four distinct gameplay events.

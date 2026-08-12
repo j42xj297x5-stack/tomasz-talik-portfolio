@@ -1,6 +1,6 @@
 # Decision Log
 
-Status: current binding decisions organized by implementation status, not patch chronology. Synchronized on 2026-08-10.
+Status: current binding decisions organized by implementation status, not patch chronology. Synchronized on 2026-08-12.
 
 ## Implemented and binding
 
@@ -9,20 +9,21 @@ Status: current binding decisions organized by implementation status, not patch 
 1. Classic 2D, Experience 3D and Experience VR are separate presentations. `src/experienceVr.js` owns the independent WebXR scene, rig, lifecycle and loop; WebXR owns the tracked camera.
 2. `VrTiltableFloorRoot` is the active platform transform root and the visual progress-floor root. The world-stable glyph ring, shell field and cosmos remain outside it.
 3. Platform-relative children include floor sectors/rings, `VrMonkeyMotionRoot`, `VrPlatformFixturesRoot` and `VrFloorPassengerRoot/playerRig`.
-4. `VrPlatformFixturesRoot` carries the portal, reliquary, Astro Furnace and furnace panel, so those fixtures move with the platform.
+4. `VrPlatformFixturesRoot` is a structural platform-relative container. Its direct fixture children include `VrMonkeyStoneRoot`, portal, reliquary, Astro Furnace and furnace panel; their visibility is controlled individually rather than by treating the container as one device.
 5. `VrFloorPassengerRoot` carries `playerRig`; camera, controllers and grips inherit the platform. There is no world-stable/horizon-lock camera compensation.
 6. Smooth locomotion is tracked-head-relative right-stick translation on the platform-local tangent plane plus left-stick continuous rig yaw. Platform normal replaces world Y, local rig Y is preserved and diagonal input is capped.
 7. The walking boundary is the snapshot `glyphOrbit.effectiveRadius`; outward movement at the boundary is blocked while tangent movement remains allowed.
 8. Ordinary controller rays have a maximum range of `2.3 m` and shorten only to reported real interaction hits.
 9. Five branches contain 18 cards in counts `3 / 3 / 3 / 4 / 5`. Physical crystals are branch+tier instances without persistent page/card identity; acquisition is additive and insertion is current-tier gated.
-10. Activate previews. Release after Activate commits through the sole logical owner of the portfolio domain, `VrProgressionController`, projects to the floor and consumes the crystal. Invalid insertion returns without progress.
+10. Player-facing Release is disabled for `inserted`. Activate advances `inserted → active` and previews; only physical Release from `active` commits through `VrProgressionController`, projects to the floor and consumes. Internal recovery APIs do not define player actions. Invalid insertion returns without progress.
 11. The floor contains five authored sectors, 18 panels and five optional procedural tier rings. Committed progress survives XR re-entry only in the prepared runtime. Durable persistence does not exist.
 
 ### Intro P0 and Monkey transform authority
 
 1. The implemented intro P0 proceeds through XR calibration, radial fog reveal, player-panel/controls onboarding, pointer/trigger onboarding, invitation, `FOLLOWING`, threshold choice, physical ring entry, `MONKEY_SETTLING` and `GLYPH_FREE_EXPLORE`.
 2. `monkeyMotionRoot` is the runtime transform owner for intro motion. The sequence captures its canonical transform after scene composition, moves it for the walk and settles it back to that transform.
-3. `MONKEY_ANCHOR` is a character-local asset reference used only to align the character with the stone seat during `dockCharacterToStone()`; it does not own scene placement or intro motion.
+3. `MONKEY_ANCHOR` is a character-local asset reference used only to align the character with the stone seat during `dockCharacterToStone()`; it does not own scene placement or intro motion. `VrMonkeyStoneRoot` is a direct child of `VrPlatformFixturesRoot`, never `VrMonkeyMotionRoot`.
+4. Physical ring entry is `headRadius <= ringRadius`; the `0.75 m` safer-inner measurement is diagnostic only. Free exploration requires `monkeySettled && playerEnteredRing`, lasts `60 s`, and first-crystal discovery takes precedence over the delayed five-sign hint.
 
 ### Independent hand modes
 
@@ -62,7 +63,7 @@ Status: current binding decisions organized by implementation status, not patch 
 5. Presentation and equipment lifecycles are separate: hand unequip does not clear presentation; production owns presentation cleanup and transfers the same socket on claim.
 6. Claim is explicit and requires `AVAILABLE`, an open chamber, left `NORMAL_HAND`, a real ordinary-ray hit within `2.3 m`, halo and squeeze. It commits `EARNED` and auto-equips through the hand-mode controller.
 7. `?asterionSphere` remains a QA availability override, never a `6/6`, `AVAILABLE` or `EARNED` progression source.
-8. Asterion active-control audio remains `DEVICE SOUND TBD`; no existing asset may be assigned by inference.
+8. Asterion Sphere equipped and active-drive loops are implemented `DEVICE` audio behavior; exact lifecycle and asset mappings are owned only by `VR_AUDIO_MODEL.md`.
 
 ### Asterion Sphere and heavy platform drive
 
@@ -88,7 +89,7 @@ Status: current binding decisions organized by implementation status, not patch 
 1. **B will select only Astro bands already unlocked by progression. B is currently not implemented.**
 2. Planned bands remain RED/YELLOW/GREEN/BLUE/ULTRAVIOLET, but no future band implies an unrestricted global scene raycast.
 3. Small glyph progression remains future after production sphere construction.
-4. Radar sectors, antenna, runes, Emanation Matrix processing, final radar/finale, ambient sequencing, spatial audio, Asterion active-control sound, durable persistence and full-game reset remain future systems.
+4. Radar sectors, antenna, runes, Emanation Matrix processing, final radar/finale, spatial audio, durable persistence and full-game reset remain future systems. Ambient sequencing and Asterion active-control sound are implemented and binding audio behavior.
 5. Platform rotation under a world-stable glyph ring is implemented; production radar/sectors still need design and validation.
 
 ## Explicit current exclusions

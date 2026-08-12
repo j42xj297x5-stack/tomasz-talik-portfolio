@@ -1,6 +1,6 @@
 # Experience VR — Narrative & Progression Baseline
 
-Status: canonical entrypoint synchronized with HEAD on 2026-08-10 for the next narrative and gameplay-progression design stage. Runtime detail remains in [`VR_RUNTIME_MODEL.md`](../technical/VR_RUNTIME_MODEL.md).
+Status: canonical entrypoint synchronized with HEAD on 2026-08-12 for the next narrative and gameplay-progression design stage. Runtime detail remains in [`VR_RUNTIME_MODEL.md`](../technical/VR_RUNTIME_MODEL.md).
 
 ## Cel dokumentu
 
@@ -28,12 +28,19 @@ wejście → duże glify → kryształy → relikwiarz / odkryte karty
 
 To jest kolejność mechaniczna, nie fabularna. Runtime nie definiuje jeszcze narracyjnych przejść pomiędzy tymi etapami.
 
-## Zaimplementowane intro P0
+## Zaimplementowane intro P0 i obowiązujące copy
 
-HEAD zawiera już ograniczoną, autorską sekwencję wejścia P0; nie wolno jej cofać do wcześniejszego modelu ani opisywać całego wejścia jako niezaprojektowanego. Po kalibracji XR następują radialne odsłonięcie mgły i cisza, onboarding panelu Y/sekcji sterowania, wskazanie Małpy i trigger, zaproszenie, `FOLLOWING`, wybór na progu, fizyczne wejście gracza do kręgu, `MONKEY_SETTLING`, a następnie `GLYPH_FREE_EXPLORE` z opóźnioną podpowiedzią attention przy braku sukcesu.
+Obecne doświadczenie gracza zaczyna się od kalibracji XR, radialnego odsłonięcia Małpy, pięciu glifów i kamienia, ciszy oraz trzech komunikatów orientacyjnych. Gracz otwiera Y, odwiedza sterowanie, zamyka panel, wskazuje Małpę i naciska trigger. Po zaproszeniu podąża za Małpą, podejmuje decyzję na progu i fizycznie wchodzi do kręgu. Po osadzeniu Małpy rozpoczyna się `GLYPH_FREE_EXPLORE`.
 
-Jest to obecna mechanika i copy P0, nie kompletna narracja całego doświadczenia. Ruch wykorzystuje `monkeyMotionRoot`: startuje na kanonicznym promieniu `18`, przechodzi przez próg wynikający z jednego promienia kręgu i wraca do finalnego `(0,0,0)`. Tracked head nie definiuje żadnej pozycji Małpy.
+Gracz ma `60 s` swobodnej eksploracji. Pierwszy kryształ przed upływem czasu rozstrzyga discovery i zwraca uwagę Małpy. Bez sukcesu po `60 s` attention prowadzi do obowiązującej podpowiedzi:
 
+- `Pięć znaków.`
+- `Nie pytaj jeszcze, co znaczą.`
+- `Dotknij jednego Szpilą.`
+
+Pierwszy kryształ również po tej podpowiedzi rozstrzyga discovery. Małpa zwraca attention i mówi: `O, wydaje mi się, że można tego użyć.` Następnie trzysekundowe odsłonięcie udostępnia portal, canvas oczekiwania, relikwiarz oraz przyciski Activate i Release. Obowiązujące polskie copy portalu brzmi: `Osadź kryształ w naczyniu.`
+
+To jest zaimplementowany kanon P0. Szczegóły fog shadera, promieni, warunków przejść, transformów i visibility należą wyłącznie do [VR Runtime Model](../technical/VR_RUNTIME_MODEL.md).
 ## Małpa — dostępne kanały komunikacji
 
 ### Komunikat inicjowany przez system/Małpę
@@ -76,14 +83,9 @@ Poniższe obszary są **NIEZAPROJEKTOWANE / DO DECYZJI** i ten dokument ich nie 
 - runy / Emanation Matrix;
 - dalsze zdolności Astro.
 
-## Twarde granice
+## Twarde granice produktu
 
-- `monkeyMotionRoot` jest właścicielem ruchu intro i wraca do canonical final `(0,0,0)`. Postaciowy `MONKEY_ANCHOR` oraz kamienne `MONKEY_STONE_ROOT` / `MONKEY_SEAT_ANCHOR` pozostają wyłącznie internal authored anchors.
-- Osobne assety `monkey.glb` i `monkey_stone.glb` są preloadowane i składane podczas normalnej kompozycji. Kamień jest nieruchomym fixture’em, a pełne authored matrices zrównują seat i character anchor bez magicznych offsetów.
-
-- `VrProgressionController` jest jedynym właścicielem odkrytych kart i ukończenia tierów; narracja może ten stan odczytać, ale nie może go zastępować ani commitować bokiem.
-- `VrAstroFurnaceProgressionController` jest właścicielem sześciu slotów materiałowych; produkcja Kuli ma odrębny stan `LOCKED → READY → BUILDING → AVAILABLE → EARNED`.
-- `createVrHandModeController` jest właścicielem equip/unequip obu dłoni, a gyro jest właścicielem PREVIEW/COMMAND/CURRENT. Narracja nie może omijać ich bramek.
-- Fizyczne handoffy i claim wymagają rzeczywistego trafienia ograniczonym promieniem oraz właściwej dłoni/stanu; przyszłe komunikaty nie mogą przyznawać przedmiotów zamiast gameplayu.
-- `VR_FURNACE_CONTENT_ANCHOR` i wspólny helper placementu są kanoniczną bazą zawartości i produktów Pieca. Procesy skorupy i konstrukcji korzystają ze wspólnego 18-sekundowego drivera; narracja nie steruje jego zegarem ani commitem.
-- Kod rozstrzyga **IMPLEMENTED**. Tylko potwierdzenie Wizjonera na hardware może podnieść nowy lub poprawiony element do **HARDWARE VALIDATED**.
+- Narracja może odczytywać progresję, lecz nie może przyznawać kart, materiałów, produkcji ani wyposażenia z pominięciem właścicieli runtime.
+- Fizyczne handoffy i claim pozostają gameplayem wymagającym właściwego stanu, dłoni i realnego trafienia.
+- Ten dokument rozstrzyga aktualne doświadczenie, prowadzenie i copy; techniczne ownerstwo oraz state machines rozstrzyga wyłącznie [VR Runtime Model](../technical/VR_RUNTIME_MODEL.md).
+- Kod rozstrzyga **IMPLEMENTED**. Tylko jawne potwierdzenie Wizjonera na hardware może podnieść poprawiony element do **HARDWARE VALIDATED**.
