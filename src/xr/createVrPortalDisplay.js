@@ -55,6 +55,25 @@ export function createVrPortalDisplay({ parent, portalModel, settings }) {
   }
 
   let disposed = false;
+  const revealMaterials = new Map();
+  let revealElapsed = 0, revealDuration = 3, revealActive = false;
+  function trackRevealMaterials() {
+    object.traverse((child) => {
+      if (!child.isMesh) return;
+      const materials = Array.isArray(child.material) ? child.material : [child.material];
+      materials.filter((material) => material && !revealMaterials.has(material)).forEach((material) => revealMaterials.set(material,
+        { opacity: material.opacity, transparent: material.transparent }));
+    });
+  }
+  trackRevealMaterials();
+  function applyRevealProgress(progress) {
+    const amount = THREE.MathUtils.clamp(progress, 0, 1);
+    revealMaterials.forEach((source, material) => {
+      material.opacity = source.opacity * amount;
+      material.transparent = amount < 1 || source.transparent;
+      material.needsUpdate = true;
+    });
+  }
 
   function place() {
     if (disposed || !settings.enabled || !model) return false;
@@ -72,12 +91,25 @@ export function createVrPortalDisplay({ parent, portalModel, settings }) {
   function reset() {
     if (disposed) return;
     place();
+    revealElapsed = 0; revealActive = false; applyRevealProgress(1);
   }
-  function hide() { if (!disposed) object.visible = false; }
+  function hide() { if (!disposed) { trackRevealMaterials(); object.visible = false; revealActive = false; revealElapsed = 0; applyRevealProgress(0); } }
+  function reveal(duration = 3) {
+    if (disposed) return false;
+    trackRevealMaterials(); place(); revealDuration = Math.max(0, duration); revealElapsed = 0; revealActive = revealDuration > 0;
+    applyRevealProgress(revealActive ? 0 : 1); return true;
+  }
+  function update(delta) {
+    if (!revealActive) return;
+    revealElapsed = Math.min(revealDuration, revealElapsed + Math.max(0, delta));
+    applyRevealProgress(revealDuration <= 0 ? 1 : revealElapsed / revealDuration);
+    if (revealElapsed >= revealDuration) revealActive = false;
+  }
   function getSocketWorldPosition(targetVector = new THREE.Vector3()) {
     object.updateWorldMatrix(true, true);
     return socket.getWorldPosition(targetVector);
   }
   function dispose() { if (!disposed) { hide(); disposed = true; object.removeFromParent(); } }
-  return { object, model, canvasSurface, socket, insertRadius: socketSettings.insertRadius, getSocketWorldPosition, place, reset, hide, dispose };
+  return { object, model, canvasSurface, socket, insertRadius: socketSettings.insertRadius,
+    getSocketWorldPosition, place, reset, hide, reveal, update, dispose };
 }

@@ -46,6 +46,7 @@ import { createVrPlayerGuidePanel } from './xr/guidance/createVrPlayerGuidePanel
 import { createVrMonkeyGuide } from './xr/guidance/createVrMonkeyGuide.js';
 import { createVrIntroSequence, VR_INTRO_STATE } from './xr/guidance/createVrIntroSequence.js';
 import { createVrIntroFogReveal } from './xr/guidance/createVrIntroFogReveal.js';
+import { createVrReliquaryHints } from './xr/guidance/createVrReliquaryHints.js';
 import { createVrAudioBridge } from './xr/audio/createVrAudioBridge.js';
 import { createVrAmbientSequencer } from './xr/audio/createVrAmbientSequencer.js';
 import { experienceVrPages, getExperienceVrPages, resolveExperienceVrPage } from './content/experienceVrPages.js';
@@ -60,14 +61,14 @@ const COPY = {
     enter: 'Wejdź do VR', entering: 'Uruchamianie sesji…', exit: 'Zakończ VR', retry: 'Wejdź ponownie do VR',
     error: 'Nie udało się uruchomić sesji VR. Możesz spróbować ponownie.',
     controllersAlt: 'Instrukcja sterowania kontrolerami VR',
-    crystalInstructionTitle: 'Portal czeka', crystalInstructionBody: 'Umieść kryształ w relikwiarzu i uruchom go przyciskiem.'
+    crystalInstructionTitle: 'Portal czeka', crystalInstructionBody: 'Osadź kryształ w naczyniu.'
   },
   en: {
     title: 'Experience VR', loading: 'Preparing the minimal VR scene…', ready: 'The scene is ready.',
     enter: 'Enter VR', entering: 'Starting session…', exit: 'Exit VR', retry: 'Enter VR again',
     error: 'The VR session could not be started. You can try again.',
     controllersAlt: 'VR controller instructions',
-    crystalInstructionTitle: 'The portal is waiting', crystalInstructionBody: 'Place a crystal in the reliquary and activate it with the button.'
+    crystalInstructionTitle: 'The portal is waiting', crystalInstructionBody: 'Place the crystal in the vessel.'
   }
 };
 
@@ -455,6 +456,9 @@ const releaseButton = createVrReliquaryReleaseButton({
   onRelease: () => crystalCollection.releaseInserted(),
   onReleaseComplete: () => activateButton.reset()
 });
+const reliquaryHints = createVrReliquaryHints({
+  monkeyGuide, locale: language, getInsertedInstance: () => crystalCollection.getInsertedInstance()
+});
 function getNextCrystalTier(node) {
   const branchId = node?.userData?.id;
   return [...getExperienceVrPages(branchId)].sort((a, b) => a.order - b.order)
@@ -519,7 +523,7 @@ introSequence = createVrIntroSequence({
   onOpeningRaysReady: () => vrControllers.setRaysEnabled(true),
   onProgressionFixturesHidden: () => { portalDisplay.hide(); astroFurnace.object.visible = false; crystalReliquary.reset(); },
   onBypassFixturesVisible: () => { restorePortalWaitingState(); astroFurnace.reset(); crystalReliquary.reveal(0); },
-  onReliquaryReveal: (duration) => crystalReliquary.reveal(duration),
+  onReliquaryReveal: (duration) => { portalDisplay.reveal(duration); crystalReliquary.reveal(duration); },
   getHeadPosition: () => {
     return getXrHeadWorldPosition({ renderer, camera, playerRig });
   },
@@ -561,6 +565,7 @@ function renderFrame() {
   monkeyGuide.update(delta);
   introSequence.update(delta);
   crystalReliquary.update(delta);
+  portalDisplay.update(delta);
   locomotion.setLeftYawLocked(playerGuidePanel.isOpen());
   astroFurnace.update(delta);
   astroFurnaceOptionInteraction.update(delta);
@@ -573,6 +578,7 @@ function renderFrame() {
   glyphRing.updateMatrixWorld(true);
   glyphInteraction.update(delta);
   crystalCollection.update(delta);
+  reliquaryHints.update(delta);
   progressFloor.update(delta);
   activateButton.update(delta);
   releaseButton.update(delta);
@@ -618,6 +624,7 @@ function handleSessionEnd() {
   astroFurnaceActivateInteraction.reset();
   astroFurnaceContentInteraction.reset();
   crystalCollection.reset();
+  reliquaryHints.reset();
   activateButton.reset();
   releaseButton.reset();
   crystalReliquary.reset();
@@ -653,6 +660,7 @@ async function enterVr() {
   astroFurnaceActivateInteraction.reset();
   astroFurnaceContentInteraction.reset();
   crystalCollection.reset();
+  reliquaryHints.reset();
   activateButton.reset();
   releaseButton.reset();
   crystalReliquary.reset();
@@ -715,6 +723,7 @@ async function enterVr() {
     astroFurnaceActivateInteraction.reset();
     astroFurnaceContentInteraction.reset();
     crystalCollection.reset();
+    reliquaryHints.reset();
     activateButton.reset();
     releaseButton.reset();
     crystalReliquary.reset();
