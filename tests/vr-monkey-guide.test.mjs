@@ -22,7 +22,7 @@ globalThis.document = {
       getContext(type) {
         assert.equal(type, '2d');
         return {
-          clearRect() {}, beginPath() {}, moveTo(x, y) { roundedRectStarts.push({ x, y }); },
+          clearRect() {}, beginPath() {}, moveTo(x, y) { roundedRectStarts.push({ x, y }); }, lineTo() {},
           arcTo() {}, closePath() {}, fill() {}, stroke() {}, fillRect() {}, drawImage() {},
           measureText(text) { return { width: String(text).length * 24 }; },
           fillText(text) { drawnText.push(String(text)); },
@@ -54,7 +54,9 @@ for (const [glyphId, syllable] of Object.entries(expectedFamilies)) {
 assert.equal(resolveVrPageProtoAstro({ glyphId: 'unknown' }), null);
 
 function createFixture(locale = 'en', configure = () => {}) {
+  const floorRoot = new THREE.Group();
   const actorRoot = new THREE.Group();
+  floorRoot.add(actorRoot);
   const visualRoot = new THREE.Group();
   actorRoot.add(visualRoot);
   const monkeyGeometry = new THREE.BoxGeometry(1, 1, 1);
@@ -67,10 +69,10 @@ function createFixture(locale = 'en', configure = () => {}) {
   let attentionStarts = 0;
   const settings = structuredClone(DEFAULT_EXPERIENCE_VR_SETTINGS.monkeyGuide);
   configure(settings);
-  const guide = createVrMonkeyGuide({ actorRoot, visualRoot, controllers: [record],
+  const guide = createVrMonkeyGuide({ actorRoot, visualRoot, floorRoot, controllers: [record],
     progressionController: { getActivatedPageIds: () => [...pageIds] }, locale,
     settings, onAttentionStart: () => { attentionStarts += 1; } });
-  return { actorRoot, visualRoot, monkeyGeometry, monkeyMaterial, controller, record, pageIds, guide,
+  return { floorRoot, actorRoot, visualRoot, monkeyGeometry, monkeyMaterial, controller, record, pageIds, guide,
     getRayDistance: () => rayDistance, getAttentionStarts: () => attentionStarts };
 }
 
@@ -119,15 +121,38 @@ assert.ok(guide.arcs.every(({ geometry }) => geometry.parameters.tube === 0.009)
 assert.deepEqual(guide.arcs.map(({ position }) => position.y), [0, 0, 0], 'attention arcs share one local center');
 assert.ok(guide.arcs.every(({ rotation }) => rotation.z === Math.PI), 'attention arcs open upward');
 assert.equal(guide.attentionRoot.position.z, -0.05);
+assert.equal(guide.attentionRoot.position.y, 1.5);
 assert.equal(guide.messagePanel.group.position.z, guide.attentionRoot.position.z);
-assert.equal(guide.messagePanel.group.position.y, 1.4 + 0.17 + 0.03 + 0.72 / 2,
+assert.equal(guide.messagePanel.group.position.y, 1.5 + 0.17 + 0.03 + 0.72 / 2,
   'technical envelope bottom is derived from the largest attention arc');
-assert.deepEqual(guide.dialoguePanel.group.position.toArray(), [1.20, 0.30, 0.50]);
+assert.deepEqual(guide.dialoguePanel.group.position.toArray(), [1.20, 0.80, 0.50]);
 assert.ok(Math.abs(guide.dialoguePanel.group.rotation.x - (-7.5 * Math.PI / 180)) < 1e-12);
 assert.ok(fillStyles.includes('#090909'), 'dialogue controls use an almost-black background');
 assert.ok(strokeStyles.includes('#ffaa63'), 'dialogue controls use an orange border');
 assert.ok(textAlignments.includes('left'), 'MENU labels are left aligned');
 assert.equal(guide.attentionRoot.visible, false);
+
+{
+  const guarded = createFixture('en', (settings) => { settings.dialogue.position.y = -0.2; });
+  guarded.floorRoot.position.set(3, -2, 4);
+  guarded.floorRoot.rotation.set(0.3, -0.4, 0.2);
+  guarded.actorRoot.position.set(0.5, 0, -0.7);
+  guarded.floorRoot.updateWorldMatrix(true, true);
+  // Recreate after applying transforms so the construction-time guard sees the transformed local floor.
+  guarded.guide.dispose(); guarded.monkeyGeometry.dispose(); guarded.monkeyMaterial.dispose();
+  const settings = structuredClone(DEFAULT_EXPERIENCE_VR_SETTINGS.monkeyGuide);
+  settings.dialogue.position.y = -0.2;
+  const replacement = createVrMonkeyGuide({ actorRoot: guarded.actorRoot, visualRoot: guarded.visualRoot,
+    floorRoot: guarded.floorRoot, controllers: [], progressionController: { getActivatedPageIds: () => [] }, settings });
+  guarded.floorRoot.updateWorldMatrix(true, true);
+  const halfWidth = settings.dialogue.width / 2; const halfHeight = settings.dialogue.height / 2;
+  const floorYs = [[-halfWidth, -halfHeight], [halfWidth, -halfHeight], [-halfWidth, halfHeight], [halfWidth, halfHeight]]
+    .map(([x, y]) => guarded.floorRoot.worldToLocal(
+      replacement.dialoguePanel.group.localToWorld(new THREE.Vector3(x, y, 0))).y);
+  assert.ok(floorYs.every((y) => y >= settings.dialogue.floorClearance - 1e-10),
+    'all dialogue corners retain floor-local clearance under a transformed floor root');
+  replacement.dispose();
+}
 
 roundedRectStarts.length = 0;
 const oneLineMetrics = guide.showMessage('Short message');
@@ -222,6 +247,38 @@ assert.equal(guide.messagePanel.group.visible, false);
 guide.dispose(); assert.equal(guide.object.parent, null);
 assert.equal(controller._listeners?.selectstart?.length ?? 0, 0, 'dispose removes trigger listener');
 monkeyGeometry.dispose(); monkeyMaterial.dispose();
+
+{
+  const historyLayout = createFixture('en');
+  const validPageIds = experienceVrPages.filter((page) => resolveVrPageProtoAstro(page)).map((page) => page.id);
+  assert.ok(validPageIds.length >= 9, 'fixture has enough cards to exercise 8-item pagination');
+  historyLayout.pageIds.push(...validPageIds.slice(0, 9));
+  historyLayout.guide.open();
+  historyLayout.guide.hits.set(historyLayout.record, { kind: 'panel', region: { id: 'progress' } });
+  historyLayout.guide.press(historyLayout.record);
+  const regions = historyLayout.guide.getInteractiveRegions();
+  const contentRegions = regions.filter(({ id }) => id.startsWith('page:'));
+  const navigationRegions = regions.filter(({ id }) => !id.startsWith('page:'));
+  assert.equal(contentRegions.length, 8, 'HISTORY renders at most eight cards per page');
+  assert.equal(new Set(contentRegions.map(({ x }) => x)).size, 4, 'HISTORY uses four columns');
+  assert.equal(new Set(contentRegions.map(({ y }) => y)).size, 2, 'HISTORY uses at most two rows');
+  assert.equal(contentRegions[1].x - contentRegions[0].x - contentRegions[0].width, 112);
+  assert.equal(contentRegions[4].y - contentRegions[0].y - contentRegions[0].height, 12);
+  const navTop = 590 - 42 - 100;
+  assert.ok(contentRegions.every((region) => region.y + region.height <= navTop - 12),
+    'history content ends above the reserved navigation band');
+  assert.ok(contentRegions.every((content) => navigationRegions.every((nav) =>
+    content.y + content.height <= nav.y || nav.y + nav.height <= content.y)),
+  'content interactive regions do not intersect navigation controls');
+  const back = regions.find(({ id }) => id === 'back-menu');
+  const next = regions.find(({ id }) => id === 'history-next');
+  assert.ok(back.x < 1280 / 2 && next.x > 1280 / 2, 'Back is left-aligned and Next is right-aligned');
+  historyLayout.guide.hits.set(historyLayout.record, { kind: 'panel', region: next });
+  historyLayout.guide.press(historyLayout.record);
+  assert.equal(historyLayout.guide.getHistoryPage(), 1, 'the ninth history item remains reachable by pagination');
+  assert.equal(historyLayout.guide.getInteractiveRegions().filter(({ id }) => id.startsWith('page:')).length, 1);
+  historyLayout.guide.dispose(); historyLayout.monkeyGeometry.dispose(); historyLayout.monkeyMaterial.dispose();
+}
 
 const polish = createFixture('pl');
 polish.pageIds.push(creative1.id); polish.guide.open();

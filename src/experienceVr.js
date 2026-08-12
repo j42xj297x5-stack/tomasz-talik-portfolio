@@ -316,6 +316,7 @@ const playerGuidePanel = createVrPlayerGuidePanel({
 });
 const monkeyGuide = createVrMonkeyGuide({
   actorRoot: monkeyMotionRoot,
+  floorRoot: progressFloor.object,
   visualRoot: monkeyVisualRoot,
   interactionRoot: monkeyInteractionRoot,
   controllers: vrControllers.controllers,
