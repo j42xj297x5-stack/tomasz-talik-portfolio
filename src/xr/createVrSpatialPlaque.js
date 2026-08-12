@@ -113,6 +113,8 @@ export function createVrSpatialPlaque({ scene, parent = scene, surface, settings
 
   let state = 'hidden';
   let elapsed = 0;
+  let appearDuration = APPEAR_DURATION_SECONDS;
+  let animateScale = true;
   let disposed = false;
 
   function draw(content) {
@@ -150,7 +152,7 @@ export function createVrSpatialPlaque({ scene, parent = scene, surface, settings
     texture.needsUpdate = true;
   }
 
-  function show(content) {
+  function show(content, options = {}) {
     if (disposed || !settings.enabled) return false;
     draw(content);
     if (!usesGltfSurface) {
@@ -158,10 +160,16 @@ export function createVrSpatialPlaque({ scene, parent = scene, surface, settings
       object.rotation.set(0, 0, 0);
     }
     elapsed = 0;
+    appearDuration = Math.max(0, Number.isFinite(options.duration) ? options.duration : APPEAR_DURATION_SECONDS);
+    animateScale = options.animateScale !== false;
     state = 'appearing';
     object.visible = true;
-    object.scale.copy(baseScale).multiplyScalar(START_SCALE);
+    object.scale.copy(baseScale).multiplyScalar(animateScale ? START_SCALE : 1);
     material.opacity = 0;
+    if (appearDuration === 0) {
+      material.opacity = 1;
+      state = 'visible';
+    }
     return true;
   }
 
@@ -177,9 +185,9 @@ export function createVrSpatialPlaque({ scene, parent = scene, surface, settings
   function update(delta) {
     if (disposed || state !== 'appearing') return;
     elapsed += Number.isFinite(delta) && delta > 0 ? delta : 0;
-    const progress = Math.min(1, elapsed / APPEAR_DURATION_SECONDS);
+    const progress = Math.min(1, elapsed / appearDuration);
     const eased = progress * progress * (3 - 2 * progress);
-    object.scale.copy(baseScale).multiplyScalar(START_SCALE + (1 - START_SCALE) * eased);
+    object.scale.copy(baseScale).multiplyScalar(animateScale ? START_SCALE + (1 - START_SCALE) * eased : 1);
     material.opacity = eased;
     if (progress === 1) {
       object.scale.copy(baseScale);

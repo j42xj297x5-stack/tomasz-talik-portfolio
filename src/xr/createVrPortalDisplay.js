@@ -59,7 +59,8 @@ export function createVrPortalDisplay({ parent, portalModel, settings }) {
   let revealElapsed = 0, revealDuration = 3, revealActive = false;
   function trackRevealMaterials() {
     object.traverse((child) => {
-      if (!child.isMesh) return;
+      // The spatial plaque owns the canvas surface material and its opacity.
+      if (!child.isMesh || child === canvasSurface) return;
       const materials = Array.isArray(child.material) ? child.material : [child.material];
       materials.filter((material) => material && !revealMaterials.has(material)).forEach((material) => revealMaterials.set(material,
         { opacity: material.opacity, transparent: material.transparent }));

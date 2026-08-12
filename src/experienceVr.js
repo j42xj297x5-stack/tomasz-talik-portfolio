@@ -452,7 +452,7 @@ const releaseButton = createVrReliquaryReleaseButton({
   reliquary: crystalReliquary,
   controllers: vrControllers.controllers,
   settings: settings.reliquary.releaseButton,
-  canRelease: () => crystalReliquary.isInteractionEnabled() && ['inserted', 'active'].includes(crystalCollection.getInsertedInstance()?.state),
+  canRelease: () => crystalReliquary.isInteractionEnabled() && crystalCollection.getInsertedInstance()?.state === 'active',
   onRelease: () => crystalCollection.releaseInserted(),
   onReleaseComplete: () => activateButton.reset()
 });
@@ -523,7 +523,14 @@ introSequence = createVrIntroSequence({
   onOpeningRaysReady: () => vrControllers.setRaysEnabled(true),
   onProgressionFixturesHidden: () => { portalDisplay.hide(); astroFurnace.object.visible = false; crystalReliquary.reset(); },
   onBypassFixturesVisible: () => { restorePortalWaitingState(); astroFurnace.reset(); crystalReliquary.reveal(0); },
-  onReliquaryReveal: (duration) => { portalDisplay.reveal(duration); crystalReliquary.reveal(duration); },
+  onReliquaryReveal: (duration) => {
+    portalDisplay.reveal(duration);
+    crystalReliquary.reveal(duration);
+    portalCanvas.show(
+      { title: copy.crystalInstructionTitle, body: copy.crystalInstructionBody },
+      { duration, animateScale: false }
+    );
+  },
   getHeadPosition: () => {
     return getXrHeadWorldPosition({ renderer, camera, playerRig });
   },

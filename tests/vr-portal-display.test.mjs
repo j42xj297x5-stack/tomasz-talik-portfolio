@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import * as THREE from '../src/vendor/three.js';
 import { calculatePortalScale, createVrPortalDisplay, findPortalCanvasSurface } from '../src/xr/createVrPortalDisplay.js';
+import { createVrSpatialPlaque } from '../src/xr/createVrSpatialPlaque.js';
 import { ASSET_STAGES, getPreloadAssets } from '../src/assets/assetManifest.js';
 
 assert.equal(calculatePortalScale({ x: 4, y: 2 }, 2, 3), 0.5);
@@ -49,12 +50,35 @@ const portalForward = new THREE.Vector3(0, 0, 1).applyQuaternion(portal.object.q
 assert.deepEqual(portalForward.toArray(), [0, 0, 1], 'fixture rotation is a direct canonical local transform');
 portal.reset(); assert.equal(portal.object.visible, true); assert.ok(portal.object.position.distanceTo(firstPosition) < 1e-8);
 const runtimeFrameMaterial = portal.model.children[0].material;
+const fakeCanvas = () => {
+  const context = {
+    createLinearGradient: () => ({ addColorStop() {} }), fillRect() {}, strokeRect() {}, fillText() {}, clearRect() {},
+    measureText: (text) => ({ width: text.length * 10 })
+  };
+  return { width: 0, height: 0, getContext: () => context };
+};
+const plaque = createVrSpatialPlaque({
+  scene, parent: portal.object, surface: portal.canvasSurface, canvasFactory: fakeCanvas,
+  settings: { enabled: true, width: 1.6, height: 0.9, offset: { x: 0, y: 0, z: 0 }, canvasWidth: 1024,
+    canvasHeight: 640, titleFontSize: 72, bodyFontSize: 42, maxBodyLines: 6 }
+});
+const canvasMaterial = plaque.object.material;
+assert.notEqual(canvasMaterial, blenderSurface.material, 'plaque takes ownership of the cloned canvas surface material');
 portal.hide();
 assert.equal(runtimeFrameMaterial.opacity, 0, 'portal starts the shared reveal transparent');
-portal.reveal(3); portal.update(1.5);
+assert.equal(canvasMaterial.opacity, 0, 'portal hide does not override plaque-owned opacity');
+portal.reveal(3);
+plaque.show({ title: 'Brama', body: 'Place the crystal in the vessel.' }, { duration: 3, animateScale: false });
+portal.update(1.5); plaque.update(1.5);
 assert.ok(Math.abs(runtimeFrameMaterial.opacity - 0.325) < 1e-8, 'portal fades over the same three seconds');
-portal.update(1.5);
+assert.ok(Math.abs(canvasMaterial.opacity - 0.5) < 1e-8, 'canvas independently fades during the shared reveal');
+assert.deepEqual(plaque.object.scale.toArray(), blenderSurface.scale.toArray(), 'waiting reveal does not animate canvas scale');
+portal.update(1.5); plaque.update(1.5);
 assert.ok(Math.abs(runtimeFrameMaterial.opacity - 0.65) < 1e-8, 'portal restores authored material opacity');
+assert.equal(canvasMaterial.opacity, 1, 'canvas reaches full opacity');
+portal.update(1);
+assert.equal(canvasMaterial.opacity, 1, 'portal updates never overwrite plaque-owned opacity');
 assert.equal(portal.object.scale.x, 1, 'portal reveal does not animate scale');
+plaque.dispose();
 portal.dispose(); assert.equal(portal.object.parent, null);
 console.log('VR portal display assertions passed');
