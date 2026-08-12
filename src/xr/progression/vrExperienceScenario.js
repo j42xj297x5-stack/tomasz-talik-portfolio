@@ -92,6 +92,7 @@ export const VR_SCENARIO_MILESTONE = immutableIdentifiers([
 
 export const VR_SCENARIO_EFFECT = immutableIdentifiers([
   'BEGIN_INTRO_REVEAL',
+  'BEGIN_POST_REVEAL_SILENCE',
   'SHOW_GUIDE_PROMPT',
   'START_MONKEY_FOLLOW',
   'SHOW_GLYPH_HINT',
@@ -102,7 +103,11 @@ export const VR_SCENARIO_EFFECT = immutableIdentifiers([
   'SHOW_ASTERION_EARNED_CUE'
 ]);
 
-export const VR_EXPERIENCE_SCENE = immutableIdentifiers(['RUNTIME_OWNERSHIP_BOOTSTRAP', 'P0_LEGACY_SEQUENCE_ACTIVE']);
+export const VR_EXPERIENCE_SCENE = immutableIdentifiers([
+  'RUNTIME_OWNERSHIP_BOOTSTRAP',
+  'P0_LEGACY_SEQUENCE_ACTIVE',
+  'P0_LEGACY_POST_REVEAL_ACTIVE'
+]);
 
 export const vrExperienceScenario = Object.freeze({
   id: 'experience-vr',
@@ -129,12 +134,27 @@ export const vrExperienceScenario = Object.freeze({
     Object.freeze({
       id: VR_EXPERIENCE_SCENE.P0_LEGACY_SEQUENCE_ACTIVE,
       capabilities: Object.freeze([]),
+      transitions: Object.freeze([
+        Object.freeze({
+          event: VR_SCENARIO_EVENT.INTRO_REVEAL_COMPLETE,
+          target: VR_EXPERIENCE_SCENE.P0_LEGACY_POST_REVEAL_ACTIVE,
+          milestonesToAdd: Object.freeze([VR_SCENARIO_MILESTONE.INTRO_REVEAL_COMPLETE]),
+          effects: Object.freeze([VR_SCENARIO_EFFECT.BEGIN_POST_REVEAL_SILENCE])
+        })
+      ])
+    }),
+    Object.freeze({
+      id: VR_EXPERIENCE_SCENE.P0_LEGACY_POST_REVEAL_ACTIVE,
+      capabilities: Object.freeze([]),
       transitions: Object.freeze([])
     })
   ]),
   metadata: Object.freeze({
-    stage: 'M1_LIVE_BOOTSTRAP_SLICE',
+    stage: 'M1_2_INTRO_REVEAL_COMPLETION_HANDOFF',
     authoritativeForLiveGameplay: true,
-    authoritativeScope: Object.freeze(['XR_CALIBRATED → BEGIN_INTRO_REVEAL'])
+    authoritativeScope: Object.freeze([
+      'XR_CALIBRATED → BEGIN_INTRO_REVEAL',
+      'INTRO_REVEAL_COMPLETE → BEGIN_POST_REVEAL_SILENCE'
+    ])
   })
 });

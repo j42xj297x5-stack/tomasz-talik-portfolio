@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { ExperienceDirector } from '../src/xr/progression/ExperienceDirector.js';
 import { RuntimeExperience } from '../src/xr/progression/RuntimeExperience.js';
+import { VR_SCENARIO_EFFECT, VR_SCENARIO_EVENT, vrExperienceScenario } from '../src/xr/progression/vrExperienceScenario.js';
 
 const freeze = (value) => Object.freeze(value);
 const scenario = freeze({ initialSceneId: 'A', vocabulary: freeze({ events: freeze(['GO', 'IGNORED']),
@@ -33,4 +34,12 @@ const ownedDirector = { dispatch() { dispatchCalls += 1; return freeze({ effects
   getCurrentSceneId() {}, getDebugSnapshot() {}, resetSession() {}, dispose() { disposeCalls += 1; } };
 const disposable = new RuntimeExperience({ director: ownedDirector }); disposable.dispose(); disposable.dispose();
 assert.equal(disposeCalls, 1); assert.equal(disposable.dispatch('GO'), null); assert.equal(dispatchCalls, 0);
+const productionCalls = [];
+const productionRuntime = new RuntimeExperience({ director: new ExperienceDirector({ scenario: vrExperienceScenario }), effectHandlers: {
+  [VR_SCENARIO_EFFECT.BEGIN_INTRO_REVEAL]: () => productionCalls.push(VR_SCENARIO_EFFECT.BEGIN_INTRO_REVEAL),
+  [VR_SCENARIO_EFFECT.BEGIN_POST_REVEAL_SILENCE]: () => productionCalls.push(VR_SCENARIO_EFFECT.BEGIN_POST_REVEAL_SILENCE)
+} });
+productionRuntime.dispatch(VR_SCENARIO_EVENT.XR_CALIBRATED);
+productionRuntime.dispatch(VR_SCENARIO_EVENT.INTRO_REVEAL_COMPLETE);
+assert.deepEqual(productionCalls, [VR_SCENARIO_EFFECT.BEGIN_INTRO_REVEAL, VR_SCENARIO_EFFECT.BEGIN_POST_REVEAL_SILENCE]);
 console.log('RuntimeExperience assertions passed');

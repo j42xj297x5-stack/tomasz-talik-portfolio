@@ -8,18 +8,18 @@ function fixture({ bypass = false, onReliquaryReveal = () => {} } = {}) {
   const playerRig = new THREE.Group(); const head = new THREE.Vector3(0, 1.7, 20);
   const glyphRing = new THREE.Group(); const platformFixturesRoot = new THREE.Group(); const sector = new THREE.Group(); sector.userData.branchId = 'x'; progressFloor.object.add(sector);
   const monkeyStoneRoot = new THREE.Group(); progressFloor.object.add(monkeyStoneRoot);
-  let message = ''; let override = null; let radius = 4; let attention = 0; let rays = 0;
+  let message = ''; let override = null; let radius = 4; let attention = 0; let rays = 0; let revealComplete = 0;
   const panel = { open: false, view: 'MENU', section: null, isOpen() { return this.open; }, getViewState() { return this.view; }, getActiveSectionId() { return this.section; } };
   const fog = { progress: 0, radius: 20, installed: true, active: false, restart() { this.progress = 0; this.radius = 20; this.installed = true; this.active = false; }, start() { this.active = true; }, update(d) { if (!this.active) return; this.progress = Math.min(1, this.progress + d / 10); this.radius = 20 - 3 * this.progress; if (this.progress >= 1) this.active = false; }, setRadius(v) { this.radius = v; }, dispose() { this.installed = false; }, skipToEnd() { this.progress = 1; this.radius = 0; this.installed = false; }, getSnapshot() { return { progress: this.progress, radius: this.radius, installed: this.installed }; } };
   const monkeyGuide = { showMessage(v) { message = v; return { lineCount: v ? 1 : 0 }; }, setDialogueOverride(v) { override = v; }, setInteractionEnabled() {}, notifyAttention() { attention += 1; } };
   const locomotion = { reset() { radius = 4; }, setWalkRadius(v, options) { radius = v; this.lastOptions = options; } };
   const settings = { enabled: true, locale: 'en', introRevealDuration: 10, postRevealSilenceDuration: 2, insideSafeMargin: .75, glyphFreeExploreDuration: 60, guideSpeed: 2, guideTurnDuration: 1, followGraceDistance: 3, pauseDistance: 3.2, resumeDistance: 2.4, revealProgress: .72, messageDisplayDuration: 0, messageGapDuration: 0, questionGapDuration: 0 };
   const spatial = { entryDirection: { x: 0, y: 0, z: 1 }, playerStartRadius: 20, monkeyStartRadius: 18, monkeyFinal: { x: 0, y: 0, z: 0 }, ringRadius: 7.6, thresholdOutsideDistance: 1 };
-  const sequence = createVrIntroSequence({ monkeyGuide, monkeyMotionRoot, monkeyVisualRoot: new THREE.Group(), monkeyStoneRoot, platformRoot, playerRig, playerGuidePanel: panel, fogReveal: fog, glyphRing, progressFloor, platformFixturesRoot, locomotion, spatial, settings, getHeadPosition: () => head.clone(), onOpeningRaysReady: () => { rays += 1; }, onReliquaryReveal, bypass });
-  return { sequence, monkeyMotionRoot, monkeyStoneRoot, glyphRing, head, panel, fog, locomotion, getMessage: () => message, getOverride: () => override, getRadius: () => radius, getAttention: () => attention, getRays: () => rays };
+  const sequence = createVrIntroSequence({ monkeyGuide, monkeyMotionRoot, monkeyVisualRoot: new THREE.Group(), monkeyStoneRoot, platformRoot, playerRig, playerGuidePanel: panel, fogReveal: fog, glyphRing, progressFloor, platformFixturesRoot, locomotion, spatial, settings, getHeadPosition: () => head.clone(), onOpeningRaysReady: () => { rays += 1; }, onIntroRevealComplete: () => { revealComplete += 1; }, onReliquaryReveal, bypass });
+  return { sequence, monkeyMotionRoot, monkeyStoneRoot, glyphRing, head, panel, fog, locomotion, getMessage: () => message, getOverride: () => override, getRadius: () => radius, getAttention: () => attention, getRays: () => rays, getRevealComplete: () => revealComplete };
 }
 function reachThreshold(value) {
-  value.sequence.beginAfterXrCalibration(); value.sequence.update(10); value.sequence.update(2);
+  value.sequence.beginAfterXrCalibration(); value.sequence.update(10); assert.equal(value.sequence.beginPostRevealSilence(), true); value.sequence.update(2);
   for (let i = 0; i < 10; i += 1) value.sequence.update(.01);
   value.panel.open = true; value.sequence.update(0); value.panel.section = 'controls'; value.panel.view = 'DETAIL'; value.sequence.update(0);
   value.panel.open = false; value.sequence.update(0); for (let i = 0; i < 10; i += 1) value.sequence.update(.01);
@@ -47,7 +47,11 @@ f.head.x = 5; f.sequence.reset(); f.sequence.beginAfterXrCalibration();
 assert.ok(Math.abs(f.sequence.getDebugSnapshot().monkeyRadius - 18) < 1e-6, 'physical head offset never changes Monkey start');
 f.head.x = 0;
 f.sequence.update(5); assert.equal(f.sequence.getState(), VR_INTRO_STATE.FOG_REVEAL); assert.equal(f.fog.radius, 18.5);
-f.sequence.update(5); assert.equal(f.sequence.getState(), VR_INTRO_STATE.POST_REVEAL_SILENCE); assert.equal(f.fog.radius, 17); assert.equal(f.getMessage(), '');
+f.sequence.update(5); assert.equal(f.sequence.getState(), VR_INTRO_STATE.WAIT_RUNTIME_AFTER_REVEAL); assert.equal(f.fog.radius, 17); assert.equal(f.getMessage(), '');
+assert.equal(f.getRevealComplete(), 1, 'fog completion emits exactly once');
+f.sequence.update(100); assert.equal(f.sequence.getState(), VR_INTRO_STATE.WAIT_RUNTIME_AFTER_REVEAL, 'silence does not begin without Runtime');
+assert.equal(f.getRevealComplete(), 1, 'waiting updates do not emit completion again');
+assert.equal(f.sequence.beginPostRevealSilence(), true); assert.equal(f.sequence.beginPostRevealSilence(), false);
 f.sequence.update(1.99); assert.equal(f.getMessage(), ''); f.sequence.update(.01); assert.equal(f.getMessage(), VR_INTRO_COPY.en.opening[0]);
 for (let i = 0; i < 10; i += 1) f.sequence.update(.01);
 assert.equal(f.sequence.getState(), VR_INTRO_STATE.WAIT_PLAYER_PANEL_OPEN); assert.equal(f.getMessage(), VR_INTRO_COPY.en.panelPrompt);
@@ -113,4 +117,6 @@ lateEntry.sequence.update(.1); assert.equal(lateEntry.getAttention(), 1, 'late-e
 const hint = fixture(); hint.sequence.beginAfterXrCalibration(); hint.sequence.getDebugSnapshot(); // bypass choreography for timer is covered through public flow above
 const bypassed = fixture({ bypass: true }); assert.equal(bypassed.sequence.getState(), VR_INTRO_STATE.BYPASSED); assert.equal(bypassed.fog.progress, 1); assert.equal(bypassed.monkeyStoneRoot.visible, true);
 f.sequence.reset(); assert.equal(f.sequence.getState(), VR_INTRO_STATE.XR_CALIBRATING); assert.equal(f.sequence.getDebugSnapshot().glyphExploreResolved, false);
+f.sequence.beginAfterXrCalibration(); f.sequence.update(10); assert.equal(f.getRevealComplete(), 2, 'reset permits exactly one completion in the next run');
+assert.equal(f.sequence.beginPostRevealSilence(), true, 'reset flow can resume through Runtime again');
 console.log('VR intro sequence assertions passed');

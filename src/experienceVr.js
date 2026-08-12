@@ -524,6 +524,7 @@ introSequence = createVrIntroSequence({
   platformFixturesRoot, locomotion, playerGuidePanel, fogReveal: introFogReveal,
   spatial: settings.spatial,
   settings: { ...settings.intro, locale: language }, bypass: introQaBypass,
+  onIntroRevealComplete: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.INTRO_REVEAL_COMPLETE),
   onOpeningRaysReady: () => vrControllers.setRaysEnabled(true),
   onProgressionFixturesHidden: () => { portalDisplay.hide(); astroFurnace.object.visible = false; crystalReliquary.reset(); },
   onBypassFixturesVisible: () => { restorePortalWaitingState(); astroFurnace.reset(); crystalReliquary.reveal(0); },
@@ -548,6 +549,11 @@ const runtimeExperience = new RuntimeExperience({
     [VR_SCENARIO_EFFECT.BEGIN_INTRO_REVEAL]: () => {
       introSequence.beginAfterXrCalibration();
       if (introQaBypass) vrControllers.setRaysEnabled(true);
+    },
+    [VR_SCENARIO_EFFECT.BEGIN_POST_REVEAL_SILENCE]: () => {
+      if (!introSequence.beginPostRevealSilence()) {
+        throw new Error('BEGIN_POST_REVEAL_SILENCE rejected by Intro actor after accepted Scenario transition');
+      }
     }
   }
 });
