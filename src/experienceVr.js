@@ -529,6 +529,7 @@ introSequence = createVrIntroSequence({
   onPlayerOpenedGuide: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.PLAYER_OPENED_GUIDE),
   onPlayerViewedControls: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.PLAYER_VIEWED_CONTROLS),
   onPlayerClosedGuide: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.PLAYER_CLOSED_GUIDE),
+  onMonkeyHovered: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.MONKEY_HOVERED),
   onOpeningRaysReady: () => vrControllers.setRaysEnabled(true),
   onProgressionFixturesHidden: () => { portalDisplay.hide(); astroFurnace.object.visible = false; crystalReliquary.reset(); },
   onBypassFixturesVisible: () => { restorePortalWaitingState(); astroFurnace.reset(); crystalReliquary.reveal(0); },

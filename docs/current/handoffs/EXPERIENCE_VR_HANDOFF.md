@@ -6,7 +6,7 @@ Status: current delivery handoff synchronized with HEAD on 2026-08-12. It intent
 
 Experience VR has an implemented P0 intro, portfolio crystal progression, Tier-1 Astro/shell loop, Astro Furnace material loop, production/claim of the Asterion Sphere and heavy platform-orientation control. The transient ambient sequencer is **IMPLEMENTED**, not FUTURE. Exact owners, state machines, timings, hierarchy and visibility gates live only in the [VR Runtime Model](../technical/VR_RUNTIME_MODEL.md); audio mappings and sequencer behavior live only in the [VR Audio Model](../technical/VR_AUDIO_MODEL.md).
 
-M0 through M1.6 **Player Closed Guide Handoff** are live, while M1 remains **IN PROGRESS**. Scenario and Director own all three SG-040 events, with the chain `1.4 → 1.4.1 → 1.4.2 → 1.4.3`; Runtime is the only continuation path through `CONTINUE_CONTROLLER_ONBOARDING`. SG-032, SG-039 and SG-040 are **MIGRATED**. Pointer tutorial begins only after Runtime resumes the waiting actor; Monkey hover, trigger and subsequent SG-036 flow remain legacy. M1.5 is **HARDWARE PASS — Meta Quest 3S**. M1.6 is implemented with hardware QA pending.
+M0 through M1.7 **Monkey Hover Handoff** are live, while M1 remains **IN PROGRESS**. The current chain is `1.4 → 1.4.1 → 1.4.2 → 1.4.3 → 1.4.4`; point `1.4.4` (“Monkey wskazany / oczekiwanie na trigger”) is terminal for the current live slice. Runtime remains the only continuation path through `CONTINUE_CONTROLLER_ONBOARDING`. SG-032, SG-039 and SG-040 are **MIGRATED**. SG-036 remains **RETAINED**: its migrated edge is `MONKEY_HOVERED`; `MONKEY_TRIGGERED`, seen/invitation flow and later SG-036 decisions remain legacy. M1.6 is **HARDWARE PASS — Meta Quest 3S**. M1.7 is implemented with hardware QA pending.
 
 ## M1.4 Meta Quest 3S smoke checklist
 
@@ -44,7 +44,7 @@ M0 through M1.6 **Player Closed Guide Handoff** are live, while M1 remains **IN 
 
 ## M1.6 Meta Quest 3S smoke checklist
 
-**PENDING — HARDWARE QA NOT EXECUTED**
+**HARDWARE PASS — Meta Quest 3S**
 
 - [ ] M1.5 has no regression.
 - [ ] Closing the panel after controls advances exactly once.
@@ -56,6 +56,23 @@ M0 through M1.6 **Player Closed Guide Handoff** are live, while M1 remains **IN 
 - [ ] Trigger still enters the existing subsequent flow.
 - [ ] Reset/re-entry repeats each handoff exactly once.
 - [ ] QA bypass has no regression and synthesizes no `PLAYER_*` event.
+- [ ] Messages and listeners are not duplicated.
+
+## M1.7 Monkey Hover Handoff — Meta Quest 3S smoke checklist
+
+**IMPLEMENTED — HARDWARE QA PENDING**
+
+- [ ] M1.6 has no regression.
+- [ ] After the same three messages, `WAIT_HOVER` appears at the same moment.
+- [ ] Looking without a real hover/hit does not advance.
+- [ ] A real Monkey hover advances exactly once.
+- [ ] “Teraz spust.” / “Now pull the trigger.” appears exactly as before.
+- [ ] The trigger message does not appear before hover.
+- [ ] Trigger before a valid hover cannot skip the step.
+- [ ] Trigger after hover leads to the same `seen` messages.
+- [ ] “Idziesz?” / “Will you walk?” appears as before.
+- [ ] Reset/re-entry traverses the edge exactly once per run.
+- [ ] QA bypass has no regression and synthesizes no `MONKEY_HOVERED`.
 - [ ] Messages and listeners are not duplicated.
 
 ## M1.1 Meta Quest 3S smoke checklist
