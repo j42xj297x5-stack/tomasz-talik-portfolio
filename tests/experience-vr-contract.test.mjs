@@ -63,6 +63,8 @@ assert.match(vr, /onPlayerOpenedGuide: \(\) => runtimeExperience\.dispatch\(VR_S
   'Intro guide-open callback performs only semantic dispatch');
 assert.match(vr, /onPlayerViewedControls: \(\) => runtimeExperience\.dispatch\(VR_SCENARIO_EVENT\.PLAYER_VIEWED_CONTROLS\)/,
   'Intro controls-viewed callback performs only semantic dispatch');
+assert.match(vr, /onPlayerClosedGuide: \(\) => runtimeExperience\.dispatch\(VR_SCENARIO_EVENT\.PLAYER_CLOSED_GUIDE\)/,
+  'Intro guide-closed callback performs only semantic dispatch');
 assert.match(vr, /VR_SCENARIO_EFFECT\.CONTINUE_CONTROLLER_ONBOARDING[\s\S]*introSequence\.continueControllerOnboarding\(\)[\s\S]*throw new Error/,
   'guide-open effect alone resumes controller onboarding and rejects composition bugs explicitly');
 assert.equal((vr.match(/introSequence\.continueControllerOnboarding\(\)/g) ?? []).length, 1,
