@@ -96,7 +96,8 @@ function createTwoSidedCanvasPlane({ name, width, height, canvasWidth, canvasHei
 }
 
 export function createVrMonkeyGuide({
-  actorRoot, visualRoot, interactionRoot = visualRoot, controllers = [], progressionController, locale = 'en', settings = {},
+  actorRoot, visualRoot, floorRoot = actorRoot, interactionRoot = visualRoot, controllers = [], progressionController,
+  locale = 'en', settings = {},
   isOrdinaryRayAvailable = () => true, onOpenChange = () => {}, onPanelClick = () => {},
   onAttentionStart = () => {}
 }) {
@@ -157,6 +158,31 @@ export function createVrMonkeyGuide({
   );
   dialoguePanel.group.visible = false;
   root.add(dialoguePanel.group);
+
+  function enforceDialogueFloorClearance() {
+    const halfWidth = settings.dialogue.width / 2;
+    const halfHeight = settings.dialogue.height / 2;
+    floorRoot.updateWorldMatrix(true, false);
+    dialoguePanel.group.updateWorldMatrix(true, false);
+    const corners = [
+      new THREE.Vector3(-halfWidth, -halfHeight, 0), new THREE.Vector3(halfWidth, -halfHeight, 0),
+      new THREE.Vector3(-halfWidth, halfHeight, 0), new THREE.Vector3(halfWidth, halfHeight, 0)
+    ];
+    const minimumY = Math.min(...corners.map((corner) => floorRoot.worldToLocal(
+      dialoguePanel.group.localToWorld(corner)
+    ).y));
+    const lift = settings.dialogue.floorClearance - minimumY;
+    if (lift <= 0) return;
+
+    const floorOriginWorld = floorRoot.localToWorld(new THREE.Vector3());
+    const liftedFloorOriginWorld = floorRoot.localToWorld(new THREE.Vector3(0, lift, 0));
+    const parent = dialoguePanel.group.parent;
+    const localOrigin = parent.worldToLocal(floorOriginWorld);
+    const localLiftedOrigin = parent.worldToLocal(liftedFloorOriginWorld);
+    dialoguePanel.group.position.add(localLiftedOrigin.sub(localOrigin));
+    dialoguePanel.group.updateWorldMatrix(true, false);
+  }
+  enforceDialogueFloorClearance();
 
   const raycaster = new THREE.Raycaster();
   const origin = new THREE.Vector3();
@@ -330,16 +356,21 @@ export function createVrMonkeyGuide({
     const totalPages = Math.max(1, Math.ceil(entries.length / size));
     historyPage = Math.min(historyPage, totalPages - 1);
     const visible = entries.slice(historyPage * size, (historyPage + 1) * size);
-    const navHeight = 100; const padding = settings.dialogue.padding; const columns = settings.dialogue.historyColumns;
+    const padding = settings.dialogue.padding; const columns = settings.dialogue.historyColumns;
+    const navHeight = settings.dialogue.historyNavigationHeight;
+    const navTop = canvas.height - padding - navHeight;
     const glyphSize = settings.dialogue.historyGlyphSize;
     const itemWidth = glyphSize + settings.dialogue.historyItemPadding * 2;
     const itemHeight = glyphSize + settings.dialogue.historyGlyphStarGap + settings.dialogue.historyStarFontSize
       + settings.dialogue.historyItemPadding * 2;
-    const columnGap = Math.max(0, (canvas.width - padding * 2 - columns * itemWidth) / columns);
+    const columnGap = settings.dialogue.historyColumnGap;
+    const gridWidth = columns * itemWidth + (columns - 1) * columnGap;
+    const gridLeft = (canvas.width - gridWidth) / 2;
     visible.forEach((entry, index) => {
       const column = index % columns; const row = Math.floor(index / columns);
       const region = addRegion({ id: `page:${entry.pageId}`, pageId: entry.pageId,
-        x: padding + column * (itemWidth + columnGap), y: padding + row * (itemHeight + settings.dialogue.gap),
+        x: gridLeft + column * (itemWidth + columnGap),
+        y: padding + row * (itemHeight + settings.dialogue.historyRowGap),
         width: itemWidth, height: itemHeight });
       const contentColor = drawInteractiveRegion(context, region, hoveredOption === region.id);
       const image = requestGlyphImage(entry);
@@ -359,12 +390,17 @@ export function createVrMonkeyGuide({
         glyphY + glyphSize + settings.dialogue.historyGlyphStarGap + settings.dialogue.historyStarFontSize / 2);
       context.globalAlpha = 1;
     });
-    const back = addRegion({ id: 'back-menu', x: padding, y: canvas.height - padding - navHeight,
+    context.strokeStyle = settings.colors.dialogueButtonBorder;
+    context.lineWidth = 2; context.beginPath();
+    context.moveTo(padding, navTop - settings.dialogue.historyNavigationGap / 2);
+    context.lineTo(canvas.width - padding, navTop - settings.dialogue.historyNavigationGap / 2); context.stroke();
+    const back = addRegion({ id: 'back-menu', x: padding, y: navTop,
       width: settings.dialogue.navigationWidth, height: navHeight }); drawButton(context, back, '←');
-    if (totalPages > 1 && historyPage > 0) { const previous = addRegion({ id: 'history-previous', x: canvas.width / 2 - 170,
-      y: canvas.height - padding - navHeight, width: 140, height: navHeight }); drawButton(context, previous, '‹'); }
-    if (totalPages > 1 && historyPage < totalPages - 1) { const next = addRegion({ id: 'history-next', x: canvas.width / 2 + 30,
-      y: canvas.height - padding - navHeight, width: 140, height: navHeight }); drawButton(context, next, '›'); }
+    const nextX = canvas.width - padding - 140;
+    if (totalPages > 1 && historyPage > 0) { const previous = addRegion({ id: 'history-previous', x: nextX - 152,
+      y: navTop, width: 140, height: navHeight }); drawButton(context, previous, '‹'); }
+    if (totalPages > 1 && historyPage < totalPages - 1) { const next = addRegion({ id: 'history-next', x: nextX,
+      y: navTop, width: 140, height: navHeight }); drawButton(context, next, '›'); }
   }
   function cardPages() {
     const page = pagesById.get(selectedPageId); if (!page) return [[]];
@@ -373,13 +409,19 @@ export function createVrMonkeyGuide({
       settings.message.maxBubbleWidthPx - settings.message.paddingX * 2, settings.card.maxLinesPerPage);
   }
   function drawCardNavigation(context, canvas) {
-    interactiveRegions = []; const padding = settings.dialogue.padding; const height = canvas.height - padding * 2;
-    const back = addRegion({ id: 'back-history', x: padding, y: padding, width: settings.dialogue.navigationWidth, height });
+    interactiveRegions = []; const padding = settings.dialogue.padding;
+    const height = settings.dialogue.historyNavigationHeight;
+    const navTop = canvas.height - padding - height;
+    context.strokeStyle = settings.colors.dialogueButtonBorder;
+    context.lineWidth = 2; context.beginPath();
+    context.moveTo(padding, navTop - settings.dialogue.historyNavigationGap / 2);
+    context.lineTo(canvas.width - padding, navTop - settings.dialogue.historyNavigationGap / 2); context.stroke();
+    const back = addRegion({ id: 'back-history', x: padding, y: navTop, width: settings.dialogue.navigationWidth, height });
     drawButton(context, back, '←'); const pages = cardPages();
     if (pages.length > 1 && cardPage > 0) { const previous = addRegion({ id: 'card-previous', x: canvas.width / 2 - 190,
-      y: padding, width: 150, height }); drawButton(context, previous, '‹'); }
-    if (pages.length > 1 && cardPage < pages.length - 1) { const next = addRegion({ id: 'card-next', x: canvas.width / 2 + 40,
-      y: padding, width: 150, height }); drawButton(context, next, '›'); }
+      y: navTop, width: 150, height }); drawButton(context, previous, '‹'); }
+    if (pages.length > 1 && cardPage < pages.length - 1) { const next = addRegion({ id: 'card-next', x: canvas.width - padding - 150,
+      y: navTop, width: 150, height }); drawButton(context, next, '›'); }
   }
 
   function showMessage(text) {
@@ -554,6 +596,7 @@ export function createVrMonkeyGuide({
     getScreen: () => screen, getHistoryEntries: historyEntries, getSelectedPageId: () => selectedPageId,
     getHistoryPage: () => historyPage, getCardPage: () => cardPage, getCardPageCount: () => cardPages().length,
     getUnreadPageIds: () => [...unreadPageIds],
+    getInteractiveRegions: () => interactiveRegions.map((region) => ({ ...region })),
     setInteractionEnabled(enabled) {
       interactionEnabled = Boolean(enabled);
       if (!interactionEnabled) {

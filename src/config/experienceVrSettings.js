@@ -119,7 +119,7 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
     },
     halo: { color: 0xffaa63, opacity: 0.42, thicknessPixels: 4, pulseDuration: 1.4 },
     attention: {
-      position: { x: 0, y: 1.4, z: -0.05 }, radii: [0.08, 0.125, 0.17], thickness: 0.009,
+      position: { x: 0, y: 1.5, z: -0.05 }, radii: [0.08, 0.125, 0.17], thickness: 0.009,
       verticalGap: 0, cycleDuration: 1.35, opacityMin: 0.12, opacityMax: 0.95, scalePulse: 0.025
     },
     message: {
@@ -128,13 +128,15 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
       fontSize: 64, fontWeight: 600, lineHeight: 78, maxLines: 4
     },
     dialogue: {
-      position: { x: 1.20, y: 0.30, z: 0.50 }, rotationDegrees: { x: -7.5, y: 0, z: 0 },
+      position: { x: 1.20, y: 0.80, z: 0.50 }, rotationDegrees: { x: -7.5, y: 0, z: 0 },
+      floorClearance: 0.02,
       width: 1.65, height: 0.76,
       canvasWidth: 1280, canvasHeight: 590, padding: 42, gap: 24, cornerRadius: 58,
       optionCornerRadius: 36, fontSize: 58, fontWeight: 700,
       menuPaddingX: 24, menuPaddingY: 16,
-      historyPageSize: 6, historyColumns: 3, historyGlyphSize: 136, historyStarFontSize: 24,
-      historyItemPadding: 18, historyGlyphStarGap: 8,
+      historyPageSize: 8, historyColumns: 4, historyGlyphSize: 136, historyStarFontSize: 24,
+      historyItemPadding: 9, historyGlyphStarGap: 8, historyColumnGap: 112, historyRowGap: 12,
+      historyNavigationHeight: 100, historyNavigationGap: 12,
       navigationWidth: 150
     },
     card: {
