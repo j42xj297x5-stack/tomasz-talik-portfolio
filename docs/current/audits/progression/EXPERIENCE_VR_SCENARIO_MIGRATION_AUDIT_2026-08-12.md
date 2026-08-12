@@ -456,7 +456,7 @@ Najbardziej migracyjne są callbacki, w których producer zna **konkretny efekt 
 
 | Etap | Files touched later / moves | Stays | Risk / tests / prerequisite |
 |---|---|---|---|
-| M0 foundation | new Scenario/Director + event/capability vocabulary; root composition only | all current owners authoritative behind adapters | MEDIUM; characterization of every SG ID, lifecycle hydration; prerequisite none |
+| **M0 foundation — COMPLETE** | Scenario/Director + event/capability/milestone/effect vocabulary; isolated and tested, without root composition | all current owners remain authoritative; no adapters are live | Foundation delivered; runtime ownership unchanged; M1 is next |
 | M1 P0 | Intro, Monkey/player/fog/locomotion/root callbacks | fog shader, motion interpolation, hit/UI rendering | **HIGH (highest)**; full state graph, all choices, no-action, re-entry, timer races; needs M0 |
 | M2 glyph/crystal/reliquary | root glyph gates/callbacks, hints, collection bridges/buttons | branch/tier correctness, physical grab/insertion/consume | HIGH; first-before/after-60s, invalid insertion, activate/release; M1 stable |
 | M3 portfolio tiers | progression event adapter, floor/ambient/card history | `VrProgressionController` commits and floor renderer | HIGH; all 18 order/branch/tier, re-entry hydration, p1 parity; M2 |
@@ -507,6 +507,11 @@ Ta granica zapobiega God Directorowi: Director odpowiada „czy/kiedy/co dalej�
 | optional audio failure | LOW gameplay | fire-and-forget by contract; migration must preserve non-blocking behavior |
 
 ## 20. Migration checklist
+
+- [x] M0 foundation — immutable declarative Scenario, independent Director, validation, monotonic milestones, distinct session/hard reset contracts and symbolic effects are implemented and tested.
+- [ ] M1 live integration — next; no current gameplay owner has been replaced.
+
+**Scenario + Director foundation exists but is not yet authoritative for live gameplay.** The Director is not connected to `experienceVr.js`, runtime ownership is unchanged, and none of `SG-001…SG-052` is marked **MIGRATED** by M0.
 
 Dla każdego elementu ustawić dokładnie jeden status: **MIGRATED / RETAINED / REMOVED**.
 

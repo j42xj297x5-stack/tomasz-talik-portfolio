@@ -4,6 +4,13 @@ Status: current binding decisions organized by implementation status, not patch 
 
 ## Implemented and binding
 
+### Experience VR Scenario + Director migration foundation (M0)
+
+1. Experience VR adopts a two-module migration seam: an immutable declarative Scenario supplies semantic event/capability/milestone/effect identifiers and scene transitions; a framework-free Director coordinates only those values.
+2. Milestones are monotonic narrative history. A session reset preserves them and returns the Director to its initial scene; an explicit hard reset represents a new game and clears them.
+3. Director capabilities express only global scenario permission. Actor-local correctness, geometry, physics, state machines, UI hit testing, audio lifecycle and other invariants remain with their current subsystem owners.
+4. Effects are symbolic output for future adapters; the Director never invokes actors. **Scenario + Director foundation exists but is not yet authoritative for live gameplay.** M0 does not compose it into the live runtime and does not migrate any `SG-001…SG-052` gate.
+
 ### Runtime, progress and platform
 
 1. Classic 2D, Experience 3D and Experience VR are separate presentations. `src/experienceVr.js` owns the independent WebXR scene, rig, lifecycle and loop; WebXR owns the tracked camera.
