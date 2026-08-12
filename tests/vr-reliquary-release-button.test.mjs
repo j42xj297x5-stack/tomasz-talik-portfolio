@@ -38,21 +38,26 @@ const front = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshStand
 front.name = 'RELIQUARY_RELEASE_BUTTON_FRONT'; root.add(front, trigger); model.add(root);
 const clip = new THREE.AnimationClip('Relic_Reliquary_ReleaseButton_Press', 0.2, []);
 const controller = new THREE.Group(); const record = { controller, currentRayLength: 3 };
-let available = false; let releases = 0; let completed = 0;
+let crystalState = 'inserted'; let releases = 0; let completed = 0;
 const button = createVrReliquaryReleaseButton({ buttonModel: model, animations: [clip],
   reliquary: { object: { visible: true } }, controllers: [record], settings: { enabled: true, rayMaxDistance: 3, releaseDelaySeconds: 1 },
-  canRelease: () => available, onRelease: () => { releases += 1; return true; }, onReleaseComplete: () => { completed += 1; } });
+  canRelease: () => crystalState === 'active', onRelease: () => { releases += 1; crystalState = 'released'; return true; },
+  onReleaseComplete: () => { completed += 1; } });
 assert.equal(trigger.visible, true);
 assert.equal(trigger.material.opacity, 0); assert.equal(trigger.material.colorWrite, false);
 assert.equal(button.raycastTarget.name, 'VrReliquaryReleaseButtonHitArea');
 assert.equal(button.raycastTarget.visible, true); assert.equal(button.raycastTarget.frustumCulled, false);
 assert.equal(front.material.emissiveIntensity, 0);
-button.hits.set(record, true); assert.equal(button.press(record), false, 'empty reliquary cannot release');
-available = true;
+button.hits.set(record, true); assert.equal(button.press(record), false, 'inserted crystal cannot release before Activate');
 const targetPosition = button.raycastTarget.getWorldPosition(new THREE.Vector3());
 controller.position.copy(targetPosition).add(new THREE.Vector3(0, 0, 2));
 controller.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, -1), targetPosition.clone().sub(controller.position).normalize());
 model.updateWorldMatrix(true, true);
+button.update(0);
+assert.equal(button.hovered, false, 'inserted crystal has no Release hover');
+assert.equal(front.material.emissiveIntensity, 0, 'inserted crystal has no Release emission');
+assert.equal(crystalState, 'inserted', 'blocked press leaves the crystal inserted');
+crystalState = 'active';
 button.update(0);
 assert.equal(button.hovered, true, 'a real controller ray intersects the runtime proxy');
 assert.equal(front.material.emissiveIntensity, 1);
@@ -61,6 +66,7 @@ assert.equal(button.state, 'releasing'); assert.equal(front.material.emissiveInt
 assert.equal(button.press(record), false, 'repeat presses are locked');
 button.update(0.99); assert.equal(releases, 0);
 button.update(0.02); assert.equal(releases, 1); assert.equal(completed, 1);
+assert.equal(crystalState, 'released', 'active crystal follows the existing release flow');
 assert.equal(button.state, 'idle'); assert.equal(front.material.emissiveIntensity, 0);
 button.reset(); button.reset(); assert.equal(button.state, 'idle');
 button.dispose();
