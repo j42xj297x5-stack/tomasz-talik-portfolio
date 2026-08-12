@@ -47,6 +47,12 @@ assert.doesNotMatch(calibrationBlock, /introSequence\.beginAfterXrCalibration|se
   'calibration block contains only the semantic dispatch');
 assert.equal((vr.match(/introSequence\.beginAfterXrCalibration\(\)/g) ?? []).length, 1,
   'there is no second calibration fallback');
+assert.match(vr, /onIntroRevealComplete: \(\) => runtimeExperience\.dispatch\(VR_SCENARIO_EVENT\.INTRO_REVEAL_COMPLETE\)/,
+  'Intro completion callback performs only semantic dispatch');
+assert.match(vr, /VR_SCENARIO_EFFECT\.BEGIN_POST_REVEAL_SILENCE[\s\S]*introSequence\.beginPostRevealSilence\(\)[\s\S]*throw new Error/,
+  'post-reveal effect resumes the waiting Intro actor and rejects composition bugs explicitly');
+assert.equal((vr.match(/introSequence\.beginPostRevealSilence\(\)/g) ?? []).length, 1,
+  'there is no second post-reveal silence start path');
 assert.match(vr, /function handleSessionEnd\(\) \{\s*runtimeExperience\.resetSession\(\)/);
 assert.match(vr, /async function enterVr\(\)[\s\S]*if \(activeSession\) return;\s*runtimeExperience\.resetSession\(\)/);
 assert.match(vr, /catch \(error\)[\s\S]*xrStartCalibrationPending = false;\s*runtimeExperience\.resetSession\(\)/);

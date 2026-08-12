@@ -6,11 +6,11 @@ Status: current delivery handoff synchronized with HEAD on 2026-08-12. It intent
 
 Experience VR has an implemented P0 intro, portfolio crystal progression, Tier-1 Astro/shell loop, Astro Furnace material loop, production/claim of the Asterion Sphere and heavy platform-orientation control. The transient ambient sequencer is **IMPLEMENTED**, not FUTURE. Exact owners, state machines, timings, hierarchy and visibility gates live only in the [VR Runtime Model](../technical/VR_RUNTIME_MODEL.md); audio mappings and sequencer behavior live only in the [VR Audio Model](../technical/VR_AUDIO_MODEL.md).
 
-M0 of the Scenario migration is complete. M1.1 **Live Bootstrap Slice** is also complete, while M1 overall remains **IN PROGRESS**. Scenario and `ExperienceDirector` are authoritative only for `XR_CALIBRATED → BEGIN_INTRO_REVEAL`; `RuntimeExperience` executes that symbolic effect through an injected adapter into the existing Intro actor. Only SG-032 is **MIGRATED**. The remaining P0 states stay owned by `createVrIntroSequence`, full central Scenario ownership does not yet exist, and RC-01…RC-14 are not consolidated. Hardware verification of M1.1 is **PENDING — HARDWARE QA NOT EXECUTED**.
+M0, M1.1 **Live Bootstrap Slice**, and M1.2 **Intro Reveal Completion Handoff** are complete, while M1 overall remains **IN PROGRESS**. Scenario and `ExperienceDirector` are authoritative only for `XR_CALIBRATED → BEGIN_INTRO_REVEAL` and `INTRO_REVEAL_COMPLETE → BEGIN_POST_REVEAL_SILENCE`; `RuntimeExperience` executes both symbolic effects through injected adapters. Only SG-032 is fully **MIGRATED**. M1.2 takes the first SG-039 edge without migrating SG-039 as a whole; the two-second silence and all later P0 flow remain with `createVrIntroSequence`. Full central Scenario ownership does not yet exist, and RC-01…RC-14 are not consolidated.
 
 ## M1.1 Meta Quest 3S smoke checklist
 
-**PENDING — HARDWARE QA NOT EXECUTED**
+**PASS — confirmed on Meta Quest 3S by Projectant, 2026-08-12**
 
 - [ ] Normal VR entry starts fog/Intro exactly once.
 - [ ] The first message appears exactly once.
@@ -24,6 +24,10 @@ M0 of the Scenario migration is complete. M1.1 **Live Bootstrap Slice** is also 
 - [ ] Fog does not start twice.
 - [ ] Messages are not duplicated.
 - [ ] Re-entry does not accumulate duplicate listeners.
+
+## M1.2 manual test
+
+**PENDING — HARDWARE QA NOT EXECUTED**
 
 ## Hardware QA
 

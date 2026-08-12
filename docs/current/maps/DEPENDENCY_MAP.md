@@ -1,15 +1,15 @@
 # Dependency Map
 
-## Experience VR scenario migration seam (M1.1)
+## Experience VR scenario migration seam (M1.2)
 
 ```text
 experienceVr bootstrap
   → ExperienceDirector → vrExperienceScenario
-  → RuntimeExperience → injected BEGIN_INTRO_REVEAL handler
-  → existing createVrIntroSequence actor
+  → RuntimeExperience → injected BEGIN_INTRO_REVEAL / BEGIN_POST_REVEAL_SILENCE handlers
+  → existing createVrIntroSequence actor → INTRO_REVEAL_COMPLETE semantic callback
 ```
 
-M0 and M1.1 Live Bootstrap Slice are complete; M1 remains **IN PROGRESS**. Scenario/Director authority is limited to `XR_CALIBRATED → BEGIN_INTRO_REVEAL`, and `RuntimeExperience` is the symbolic-effect execution boundary. Only SG-032 is **MIGRATED**. Other P0 states remain in `createVrIntroSequence`; no full central Scenario ownership or RC-01…RC-14 consolidation exists.
+M0, M1.1, and M1.2 are complete; M1 remains **IN PROGRESS**. Scenario/Director authority is limited to `XR_CALIBRATED → BEGIN_INTRO_REVEAL` and `INTRO_REVEAL_COMPLETE → BEGIN_POST_REVEAL_SILENCE`; `RuntimeExperience` is the symbolic-effect execution boundary. Only SG-032 is fully **MIGRATED**. M1.2 owns only the first SG-039 edge, while the actor retains the two-second silence and later P0 flow. M1.1 hardware smoke is **PASS — confirmed on Meta Quest 3S by Projectant, 2026-08-12**; M1.2 manual QA is **PENDING — HARDWARE QA NOT EXECUTED**.
 
 ## Documentation flow
 

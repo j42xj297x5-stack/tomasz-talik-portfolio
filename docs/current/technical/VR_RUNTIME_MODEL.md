@@ -2,11 +2,11 @@
 
 Status: canonical description of the implemented runtime synchronized on 2026-08-12. Approved future gameplay is documented in the [gameplay roadmap](../concept/EXPERIENCE_VR_GAMEPLAY_ROADMAP.md).
 
-## Scenario + Director live bootstrap slice
+## Scenario + Director M1.2 slice
 
-M0 is complete and M1.1 **Live Bootstrap Slice** is complete; M1 overall remains **IN PROGRESS**. `ExperienceDirector` is the canonical orchestration class, while `createVrExperienceDirector` remains a compatibility factory. The immutable Scenario and Director are authoritative for live gameplay only for `XR_CALIBRATED → BEGIN_INTRO_REVEAL`.
+M0, M1.1 **Live Bootstrap Slice**, and M1.2 **Intro Reveal Completion Handoff** are complete; M1 overall remains **IN PROGRESS**. `ExperienceDirector` is the canonical orchestration class, while `createVrExperienceDirector` remains a compatibility factory. The immutable Scenario and Director are authoritative for `XR_CALIBRATED → BEGIN_INTRO_REVEAL` and `INTRO_REVEAL_COMPLETE → BEGIN_POST_REVEAL_SILENCE`.
 
-`RuntimeExperience` is the framework-free execution boundary for symbolic effects and invokes only handlers injected by `experienceVr.js`. The `BEGIN_INTRO_REVEAL` adapter starts the existing `createVrIntroSequence` actor and preserves the existing QA-bypass ray behavior. All remaining P0 states stay owned by `createVrIntroSequence`; full central Scenario ownership does not exist, and RC-01…RC-14 lifecycle orchestration has not been consolidated. Only SG-032 is **MIGRATED**. Hardware QA for this slice is **PENDING — HARDWARE QA NOT EXECUTED**.
+`RuntimeExperience` is the framework-free execution boundary for symbolic effects and invokes only handlers injected by `experienceVr.js`. After fog completion, the Intro actor waits, emits one semantic callback, and resumes its unchanged two-second silence only through the `BEGIN_POST_REVEAL_SILENCE` adapter. QA bypass behavior and rays are unchanged and do not synthesize reveal completion. Later P0 states stay owned by `createVrIntroSequence`; full central Scenario ownership does not exist, and RC-01…RC-14 lifecycle orchestration has not been consolidated. SG-032 remains the only full **MIGRATED** entry; M1.2 takes only the first edge belonging to SG-039, so SG-039 is not **MIGRATED**. M1.1 hardware smoke: **PASS — confirmed on Meta Quest 3S by Projectant, 2026-08-12**. M1.2 manual test: **PENDING — HARDWARE QA NOT EXECUTED**.
 
 ## Runtime boundary and lifecycle
 
