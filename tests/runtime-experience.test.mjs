@@ -37,9 +37,12 @@ assert.equal(disposeCalls, 1); assert.equal(disposable.dispatch('GO'), null); as
 const productionCalls = [];
 const productionRuntime = new RuntimeExperience({ director: new ExperienceDirector({ scenario: vrExperienceScenario }), effectHandlers: {
   [VR_SCENARIO_EFFECT.BEGIN_INTRO_REVEAL]: () => productionCalls.push(VR_SCENARIO_EFFECT.BEGIN_INTRO_REVEAL),
-  [VR_SCENARIO_EFFECT.BEGIN_POST_REVEAL_SILENCE]: () => productionCalls.push(VR_SCENARIO_EFFECT.BEGIN_POST_REVEAL_SILENCE)
+  [VR_SCENARIO_EFFECT.BEGIN_POST_REVEAL_SILENCE]: () => productionCalls.push(VR_SCENARIO_EFFECT.BEGIN_POST_REVEAL_SILENCE),
+  [VR_SCENARIO_EFFECT.BEGIN_CONTROLLER_ONBOARDING]: () => productionCalls.push(VR_SCENARIO_EFFECT.BEGIN_CONTROLLER_ONBOARDING)
 } });
 productionRuntime.dispatch(VR_SCENARIO_EVENT.XR_CALIBRATED);
 productionRuntime.dispatch(VR_SCENARIO_EVENT.INTRO_REVEAL_COMPLETE);
-assert.deepEqual(productionCalls, [VR_SCENARIO_EFFECT.BEGIN_INTRO_REVEAL, VR_SCENARIO_EFFECT.BEGIN_POST_REVEAL_SILENCE]);
+productionRuntime.dispatch(VR_SCENARIO_EVENT.POST_REVEAL_SILENCE_COMPLETE);
+assert.deepEqual(productionCalls, [VR_SCENARIO_EFFECT.BEGIN_INTRO_REVEAL, VR_SCENARIO_EFFECT.BEGIN_POST_REVEAL_SILENCE,
+  VR_SCENARIO_EFFECT.BEGIN_CONTROLLER_ONBOARDING]);
 console.log('RuntimeExperience assertions passed');

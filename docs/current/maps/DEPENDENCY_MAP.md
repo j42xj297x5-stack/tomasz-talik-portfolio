@@ -1,15 +1,15 @@
 # Dependency Map
 
-## Experience VR scenario migration seam (M1.2)
+## Experience VR scenario migration seam (M1.3)
 
 ```text
 experienceVr bootstrap
   → ExperienceDirector → vrExperienceScenario
-  → RuntimeExperience → injected BEGIN_INTRO_REVEAL / BEGIN_POST_REVEAL_SILENCE handlers
+  → RuntimeExperience → injected BEGIN_INTRO_REVEAL / BEGIN_POST_REVEAL_SILENCE / BEGIN_CONTROLLER_ONBOARDING handlers
   → existing createVrIntroSequence actor → INTRO_REVEAL_COMPLETE semantic callback
 ```
 
-M0, M1.1, and M1.2 are complete; M1 remains **IN PROGRESS**. Scenario/Director authority is limited to `XR_CALIBRATED → BEGIN_INTRO_REVEAL` and `INTRO_REVEAL_COMPLETE → BEGIN_POST_REVEAL_SILENCE`; `RuntimeExperience` is the symbolic-effect execution boundary. Only SG-032 is fully **MIGRATED**. M1.2 owns only the first SG-039 edge, while the actor retains the two-second silence and later P0 flow. M1.1 hardware smoke is **PASS — confirmed on Meta Quest 3S by Projectant, 2026-08-12**; M1.2 manual QA is **PENDING — HARDWARE QA NOT EXECUTED**.
+M0, M1.1, M1.2, and M1.3 are complete; M1 remains **IN PROGRESS**. Scenario/Director authority is limited to `XR_CALIBRATED → BEGIN_INTRO_REVEAL`, `INTRO_REVEAL_COMPLETE → BEGIN_POST_REVEAL_SILENCE`, and `POST_REVEAL_SILENCE_COMPLETE → BEGIN_CONTROLLER_ONBOARDING`; `RuntimeExperience` remains the symbolic-effect execution boundary. SG-032 and SG-039 are **MIGRATED**. The actor retains the two-second timer, then waits for Runtime; the Y-panel UI facts and tutorial from `WAIT_PLAYER_PANEL_OPEN` remain legacy-owned. SG-040 and later groups are not migrated, full central Scenario ownership does not exist, and RC-01…RC-14 remain unconsolidated. M1.1 and M1.2 hardware smoke are **PASS — confirmed on Meta Quest 3S by Projectant, 2026-08-12**; M1.3 hardware smoke is **PENDING — HARDWARE QA NOT EXECUTED**.
 
 ## Documentation flow
 
