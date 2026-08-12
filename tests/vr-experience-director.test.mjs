@@ -6,7 +6,7 @@ import { VR_EXPERIENCE_POINT, VR_SCENARIO_EFFECT, VR_SCENARIO_EVENT, VR_SCENARIO
 assert.equal(Object.isFrozen(vrExperienceScenario), true);
 assert.equal(vrExperienceScenario.points, vrExperienceScenario.scenes);
 assert.equal(vrExperienceScenario.initialPointId, vrExperienceScenario.initialSceneId);
-assert.deepEqual(vrExperienceScenario.points.map(({ id }) => id), ['1.1', '1.2', '1.3', '1.4']);
+assert.deepEqual(vrExperienceScenario.points.map(({ id }) => id), ['1.1', '1.2', '1.3', '1.4', '1.4.1']);
 assert.equal(Object.isFrozen(vrExperienceScenario.points[0]), true);
 assert.equal(Object.isFrozen(vrExperienceScenario.points[0].transitions[0]), true);
 assert.equal(Object.isFrozen(vrExperienceScenario.points[0].transitions[0].effects), true);
@@ -14,11 +14,12 @@ assert.equal(Object.isFrozen(vrExperienceScenario.metadata.authoritativeScope), 
 assert.equal(Object.isFrozen(vrExperienceScenario.points[2].transitions[0]), true);
 assert.equal(Object.isFrozen(vrExperienceScenario.points[2].transitions[0].milestonesToAdd), true);
 assert.equal(Object.isFrozen(vrExperienceScenario.points[3]), true);
-assert.equal(vrExperienceScenario.metadata.stage, 'M1_3_POST_REVEAL_SILENCE_COMPLETION_HANDOFF');
+assert.equal(vrExperienceScenario.metadata.stage, 'M1_4_PLAYER_GUIDE_OPEN_HANDOFF');
 assert.deepEqual(vrExperienceScenario.metadata.authoritativeScope, [
   'XR_CALIBRATED → BEGIN_INTRO_REVEAL',
   'INTRO_REVEAL_COMPLETE → BEGIN_POST_REVEAL_SILENCE',
-  'POST_REVEAL_SILENCE_COMPLETE → BEGIN_CONTROLLER_ONBOARDING'
+  'POST_REVEAL_SILENCE_COMPLETE → BEGIN_CONTROLLER_ONBOARDING',
+  'PLAYER_OPENED_GUIDE → CONTINUE_CONTROLLER_ONBOARDING'
 ]);
 assert.equal(
   createVrExperienceDirector({ scenario: vrExperienceScenario }).getCurrentPointId(),
@@ -38,6 +39,8 @@ assert.deepEqual(productionChange.effects, [VR_SCENARIO_EFFECT.BEGIN_INTRO_REVEA
 assert.equal(productionDirector.dispatch(VR_SCENARIO_EVENT.XR_CALIBRATED), null);
 assert.equal(new ExperienceDirector({ scenario: vrExperienceScenario }).dispatch(VR_SCENARIO_EVENT.POST_REVEAL_SILENCE_COMPLETE), null,
   'silence completion is rejected before its scene');
+assert.equal(new ExperienceDirector({ scenario: vrExperienceScenario }).dispatch(VR_SCENARIO_EVENT.PLAYER_OPENED_GUIDE), null,
+  'guide opening is rejected before point 1.4');
 const revealCompleteChange = productionDirector.dispatch(VR_SCENARIO_EVENT.INTRO_REVEAL_COMPLETE);
 assert.equal(revealCompleteChange.currentPointId, VR_EXPERIENCE_POINT['1.3']);
 assert.deepEqual(revealCompleteChange.addedMilestones, [VR_SCENARIO_MILESTONE.INTRO_REVEAL_COMPLETE]);
@@ -48,6 +51,12 @@ assert.equal(silenceCompleteChange.currentPointId, VR_EXPERIENCE_POINT['1.4']);
 assert.deepEqual(silenceCompleteChange.addedMilestones, [VR_SCENARIO_MILESTONE.POST_REVEAL_SILENCE_COMPLETE]);
 assert.deepEqual(silenceCompleteChange.effects, [VR_SCENARIO_EFFECT.BEGIN_CONTROLLER_ONBOARDING]);
 assert.equal(productionDirector.dispatch(VR_SCENARIO_EVENT.POST_REVEAL_SILENCE_COMPLETE), null, 'silence completion is accepted once');
+const guideOpenChange = productionDirector.dispatch(VR_SCENARIO_EVENT.PLAYER_OPENED_GUIDE);
+assert.equal(guideOpenChange.currentPointId, VR_EXPERIENCE_POINT['1.4.1']);
+assert.deepEqual(guideOpenChange.addedMilestones, []);
+assert.deepEqual(guideOpenChange.effects, [VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING]);
+assert.equal(productionDirector.dispatch(VR_SCENARIO_EVENT.PLAYER_OPENED_GUIDE), null, 'guide opening is accepted once');
+assert.equal(productionDirector.dispatch(VR_SCENARIO_EVENT.PLAYER_VIEWED_CONTROLS), null, 'point 1.4.1 remains terminal');
 productionDirector.resetSession();
 assert.equal(productionDirector.hasMilestone(VR_SCENARIO_MILESTONE.XR_CALIBRATED), true);
 assert.equal(productionDirector.hasMilestone(VR_SCENARIO_MILESTONE.POST_REVEAL_SILENCE_COMPLETE), true);
@@ -55,6 +64,8 @@ assert.notEqual(productionDirector.dispatch(VR_SCENARIO_EVENT.XR_CALIBRATED), nu
 assert.notEqual(productionDirector.dispatch(VR_SCENARIO_EVENT.INTRO_REVEAL_COMPLETE), null);
 assert.notEqual(productionDirector.dispatch(VR_SCENARIO_EVENT.POST_REVEAL_SILENCE_COMPLETE), null,
   'session reset permits the complete chain again');
+assert.notEqual(productionDirector.dispatch(VR_SCENARIO_EVENT.PLAYER_OPENED_GUIDE), null,
+  'session reset permits the guide-open handoff again');
 productionDirector.resetSession({ hard: true });
 assert.equal(productionDirector.hasMilestone(VR_SCENARIO_MILESTONE.XR_CALIBRATED), false);
 assert.equal(productionDirector.hasMilestone(VR_SCENARIO_MILESTONE.POST_REVEAL_SILENCE_COMPLETE), false);

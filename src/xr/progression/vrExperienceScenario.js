@@ -96,6 +96,7 @@ export const VR_SCENARIO_EFFECT = immutableIdentifiers([
   'BEGIN_INTRO_REVEAL',
   'BEGIN_POST_REVEAL_SILENCE',
   'BEGIN_CONTROLLER_ONBOARDING',
+  'CONTINUE_CONTROLLER_ONBOARDING',
   'SHOW_GUIDE_PROMPT',
   'START_MONKEY_FOLLOW',
   'SHOW_GLYPH_HINT',
@@ -110,7 +111,8 @@ export const VR_EXPERIENCE_POINT = immutableIdentifiers([
   '1.1',
   '1.2',
   '1.3',
-  '1.4'
+  '1.4',
+  '1.4.1'
 ]);
 
 // Compatibility export only; both names reference the same identifier set.
@@ -160,6 +162,19 @@ const points = Object.freeze([
     id: VR_EXPERIENCE_POINT['1.4'],
     label: 'Controller onboarding',
     capabilities: Object.freeze([]),
+    transitions: Object.freeze([
+      Object.freeze({
+        event: VR_SCENARIO_EVENT.PLAYER_OPENED_GUIDE,
+        target: VR_EXPERIENCE_POINT['1.4.1'],
+        milestonesToAdd: Object.freeze([]),
+        effects: Object.freeze([VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING])
+      })
+    ])
+  }),
+  Object.freeze({
+    id: VR_EXPERIENCE_POINT['1.4.1'],
+    label: 'Player Guide otwarty / dalszy controller tutorial legacy',
+    capabilities: Object.freeze([]),
     transitions: Object.freeze([])
   })
 ]);
@@ -178,12 +193,13 @@ export const vrExperienceScenario = Object.freeze({
     effects: Object.freeze(Object.values(VR_SCENARIO_EFFECT))
   }),
   metadata: Object.freeze({
-    stage: 'M1_3_POST_REVEAL_SILENCE_COMPLETION_HANDOFF',
+    stage: 'M1_4_PLAYER_GUIDE_OPEN_HANDOFF',
     authoritativeForLiveGameplay: true,
     authoritativeScope: Object.freeze([
       'XR_CALIBRATED → BEGIN_INTRO_REVEAL',
       'INTRO_REVEAL_COMPLETE → BEGIN_POST_REVEAL_SILENCE',
-      'POST_REVEAL_SILENCE_COMPLETE → BEGIN_CONTROLLER_ONBOARDING'
+      'POST_REVEAL_SILENCE_COMPLETE → BEGIN_CONTROLLER_ONBOARDING',
+      'PLAYER_OPENED_GUIDE → CONTINUE_CONTROLLER_ONBOARDING'
     ])
   })
 });
