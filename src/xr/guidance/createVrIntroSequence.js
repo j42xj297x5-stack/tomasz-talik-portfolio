@@ -5,7 +5,8 @@ export const VR_INTRO_STATE = Object.freeze({
   POST_REVEAL_SILENCE: 'POST_REVEAL_SILENCE', WAIT_RUNTIME_AFTER_POST_REVEAL_SILENCE: 'WAIT_RUNTIME_AFTER_POST_REVEAL_SILENCE',
   CONTROLLER_ONBOARDING: 'CONTROLLER_ONBOARDING', WAIT_PLAYER_PANEL_OPEN: 'WAIT_PLAYER_PANEL_OPEN',
   WAIT_RUNTIME_AFTER_PLAYER_GUIDE_OPEN: 'WAIT_RUNTIME_AFTER_PLAYER_GUIDE_OPEN',
-  WAIT_CONTROLS_VIEW: 'WAIT_CONTROLS_VIEW', WAIT_PANEL_CLOSE: 'WAIT_PANEL_CLOSE', WAIT_HOVER: 'WAIT_HOVER',
+  WAIT_CONTROLS_VIEW: 'WAIT_CONTROLS_VIEW', WAIT_RUNTIME_AFTER_CONTROLS_VIEWED: 'WAIT_RUNTIME_AFTER_CONTROLS_VIEWED',
+  WAIT_PANEL_CLOSE: 'WAIT_PANEL_CLOSE', WAIT_HOVER: 'WAIT_HOVER',
   WAIT_TRIGGER: 'WAIT_TRIGGER', INVITATION: 'INVITATION', FOLLOWING: 'FOLLOWING', THRESHOLD: 'THRESHOLD',
   CROSSING: 'CROSSING', ENTERING_RING: 'ENTERING_RING', MONKEY_SETTLING: 'MONKEY_SETTLING',
   GLYPH_FREE_EXPLORE: 'GLYPH_FREE_EXPLORE', RELIQUARY_REVEAL: 'RELIQUARY_REVEAL', ENDING: 'ENDING', BYPASSED: 'BYPASSED'
@@ -35,7 +36,7 @@ export const VR_INTRO_COPY = Object.freeze({
 export function createVrIntroSequence({ monkeyGuide, monkeyMotionRoot, monkeyVisualRoot, monkeyStoneRoot = null, playerRig,
   getHeadPosition = () => playerRig.getWorldPosition(new THREE.Vector3()), playerGuidePanel = null, fogReveal = null,
   glyphRing, progressFloor, platformFixturesRoot, locomotion, spatial, settings,
-  onOpeningRaysReady = () => {}, onIntroRevealComplete = () => {}, onPostRevealSilenceComplete = () => {}, onPlayerOpenedGuide = () => {}, onEndSession = () => {}, onReliquaryReveal = () => {},
+  onOpeningRaysReady = () => {}, onIntroRevealComplete = () => {}, onPostRevealSilenceComplete = () => {}, onPlayerOpenedGuide = () => {}, onPlayerViewedControls = () => {}, onEndSession = () => {}, onReliquaryReveal = () => {},
   onProgressionFixturesHidden = () => {}, onBypassFixturesVisible = () => {}, bypass = false }) {
   const copy = VR_INTRO_COPY[settings.locale === 'pl' ? 'pl' : 'en'];
   const canonicalPosition = new THREE.Vector3(spatial.monkeyFinal.x, spatial.monkeyFinal.y, spatial.monkeyFinal.z);
@@ -86,7 +87,11 @@ export function createVrIntroSequence({ monkeyGuide, monkeyMotionRoot, monkeyVis
   function beginAfterXrCalibration() { xrCalibrated = true; if (state !== VR_INTRO_STATE.XR_CALIBRATING) return; monkeyRadius = spatial.monkeyStartRadius; placeAtRadius(); state = VR_INTRO_STATE.FOG_REVEAL; fogReveal?.start(); }
   function beginPostRevealSilence() { if (state !== VR_INTRO_STATE.WAIT_RUNTIME_AFTER_REVEAL) return false; silenceElapsed = 0; state = VR_INTRO_STATE.POST_REVEAL_SILENCE; return true; }
   function beginControllerOnboarding() { if (state !== VR_INTRO_STATE.WAIT_RUNTIME_AFTER_POST_REVEAL_SILENCE) return false; beginPanelTutorial(); return true; }
-  function continueControllerOnboarding() { if (state !== VR_INTRO_STATE.WAIT_RUNTIME_AFTER_PLAYER_GUIDE_OPEN) return false; state = VR_INTRO_STATE.WAIT_CONTROLS_VIEW; return true; }
+  function continueControllerOnboarding() {
+    if (state === VR_INTRO_STATE.WAIT_RUNTIME_AFTER_PLAYER_GUIDE_OPEN) { state = VR_INTRO_STATE.WAIT_CONTROLS_VIEW; return true; }
+    if (state === VR_INTRO_STATE.WAIT_RUNTIME_AFTER_CONTROLS_VIEWED) { state = VR_INTRO_STATE.WAIT_PANEL_CLOSE; return true; }
+    return false;
+  }
   function updateMessages(delta) { if (!phase) return; elapsed += Math.max(0, delta); const duration = phase === 'DISPLAY' ? messageDuration : (queue[0]?.question ? settings.questionGapDuration : settings.messageGapDuration); if (elapsed >= duration) { elapsed = 0; if (phase === 'DISPLAY') { monkeyGuide.showMessage(''); phase = 'GAP'; } else if (queue.length) displayNext(); else { phase = null; const callback = done; done = null; callback?.(); } } }
   function moveTowardCanonical(delta) { const distance = monkeyMotionRoot.position.distanceTo(canonicalPosition); if (distance <= 1e-5) { monkeyMotionRoot.position.copy(canonicalPosition); return true; } monkeyMotionRoot.position.lerp(canonicalPosition, Math.min(1, settings.guideSpeed * Math.max(0, delta) / distance)); return false; }
   function update(delta) {
@@ -95,7 +100,8 @@ export function createVrIntroSequence({ monkeyGuide, monkeyMotionRoot, monkeyVis
     if (state === VR_INTRO_STATE.POST_REVEAL_SILENCE) { silenceElapsed += delta; if (silenceElapsed >= (settings.postRevealSilenceDuration ?? 2)) { state = VR_INTRO_STATE.WAIT_RUNTIME_AFTER_POST_REVEAL_SILENCE; onPostRevealSilenceComplete(); } return; }
     updateMessages(delta);
     if (state === VR_INTRO_STATE.WAIT_PLAYER_PANEL_OPEN && playerGuidePanel?.isOpen()) { monkeyGuide.showMessage(''); state = VR_INTRO_STATE.WAIT_RUNTIME_AFTER_PLAYER_GUIDE_OPEN; onPlayerOpenedGuide(); }
-    if ([VR_INTRO_STATE.WAIT_CONTROLS_VIEW, VR_INTRO_STATE.WAIT_PANEL_CLOSE].includes(state)) { if (playerGuidePanel?.getActiveSectionId() === 'controls' && playerGuidePanel?.getViewState() === 'DETAIL') { controlsTutorialVisited = true; state = VR_INTRO_STATE.WAIT_PANEL_CLOSE; } if (controlsTutorialVisited && !playerGuidePanel?.isOpen()) beginPointerTutorial(); }
+    if (state === VR_INTRO_STATE.WAIT_CONTROLS_VIEW && playerGuidePanel?.getActiveSectionId() === 'controls' && playerGuidePanel?.getViewState() === 'DETAIL') { controlsTutorialVisited = true; state = VR_INTRO_STATE.WAIT_RUNTIME_AFTER_CONTROLS_VIEWED; onPlayerViewedControls(); }
+    if (state === VR_INTRO_STATE.WAIT_PANEL_CLOSE && controlsTutorialVisited && !playerGuidePanel?.isOpen()) beginPointerTutorial();
     if (state === VR_INTRO_STATE.FOLLOWING) {
       turnElapsed += delta; monkeyMotionRoot.quaternion.slerpQuaternions(canonicalQuaternion, walkingQuaternion, Math.min(1, turnElapsed / (settings.guideTurnDuration ?? 1)));
       const stopRadius = ringRadius + spatial.thresholdOutsideDistance; const walked = startRadius - monkeyRadius; const head = getHeadPosition(); const monkey = monkeyMotionRoot.getWorldPosition(new THREE.Vector3()); const distance = Math.hypot(head.x - monkey.x, head.z - monkey.z);

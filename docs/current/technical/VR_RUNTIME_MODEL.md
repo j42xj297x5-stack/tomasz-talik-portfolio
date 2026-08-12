@@ -2,11 +2,11 @@
 
 Status: canonical description of the implemented runtime synchronized on 2026-08-12. Approved future gameplay is documented in the [gameplay roadmap](../concept/EXPERIENCE_VR_GAMEPLAY_ROADMAP.md).
 
-## Scenario + Director M1.4 slice
+## Scenario + Director M1.5 slice
 
-M0, M1.1 **Live Bootstrap Slice**, M1.2 **Intro Reveal Completion Handoff**, M1.3 **Post-Reveal Silence Completion Handoff**, and M1.4 **Player Guide Open Handoff** are live; M1 remains **IN PROGRESS**. Scenario and Director now also own `PLAYER_OPENED_GUIDE → CONTINUE_CONTROLLER_ONBOARDING` (`1.4 → 1.4.1`).
+M0 through M1.5 **Player Viewed Controls Handoff** are live; M1 remains **IN PROGRESS**. Scenario and Director own both `PLAYER_OPENED_GUIDE → CONTINUE_CONTROLLER_ONBOARDING` (`1.4 → 1.4.1`) and `PLAYER_VIEWED_CONTROLS → CONTINUE_CONTROLLER_ONBOARDING` (`1.4.1 → 1.4.2`).
 
-`RuntimeExperience` remains the injected symbolic-effect boundary. The actor observes `playerGuidePanel.isOpen()` in `WAIT_PLAYER_PANEL_OPEN`, removes the Y message, waits in `WAIT_RUNTIME_AFTER_PLAYER_GUIDE_OPEN`, and emits `PLAYER_OPENED_GUIDE` exactly once. Only the runtime effect calls `continueControllerOnboarding()`. QA bypass does not synthesize this event. SG-032 and SG-039 are **MIGRATED**. SG-040 remains **RETAINED**: migrated edge `PLAYER_OPENED_GUIDE`; legacy edges `PLAYER_VIEWED_CONTROLS`, `PLAYER_CLOSED_GUIDE`, and pointer tutorial start remain. M1.4 hardware QA is **PENDING — Quest 3S confirmation required**. Point IDs span `1.1`–`1.4.1`.
+`RuntimeExperience` remains the injected symbolic-effect boundary. The actor emits each panel fact exactly once and waits for Runtime after guide open and controls DETAIL. The single `continueControllerOnboarding()` seam handles both legal resumptions: into `WAIT_CONTROLS_VIEW`, then into `WAIT_PANEL_CLOSE`. QA bypass synthesizes neither event. SG-032 and SG-039 are **MIGRATED**. SG-040 remains **RETAINED**: migrated edges are `PLAYER_OPENED_GUIDE` and `PLAYER_VIEWED_CONTROLS`; `PLAYER_CLOSED_GUIDE` and pointer tutorial start remain legacy. M1.4 is **Hardware PASS on Quest 3S**; M1.5 hardware QA is **PENDING**. Point IDs span `1.1`–`1.4.2`.
 
 ## Runtime boundary and lifecycle
 

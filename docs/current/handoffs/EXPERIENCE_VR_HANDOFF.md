@@ -6,11 +6,11 @@ Status: current delivery handoff synchronized with HEAD on 2026-08-12. It intent
 
 Experience VR has an implemented P0 intro, portfolio crystal progression, Tier-1 Astro/shell loop, Astro Furnace material loop, production/claim of the Asterion Sphere and heavy platform-orientation control. The transient ambient sequencer is **IMPLEMENTED**, not FUTURE. Exact owners, state machines, timings, hierarchy and visibility gates live only in the [VR Runtime Model](../technical/VR_RUNTIME_MODEL.md); audio mappings and sequencer behavior live only in the [VR Audio Model](../technical/VR_AUDIO_MODEL.md).
 
-M0, M1.1 **Live Bootstrap Slice**, M1.2 **Intro Reveal Completion Handoff**, M1.3 **Post-Reveal Silence Completion Handoff**, and M1.4 **Player Guide Open Handoff** are live, while M1 remains **IN PROGRESS**. Scenario and Director now also own `PLAYER_OPENED_GUIDE → CONTINUE_CONTROLLER_ONBOARDING`, moving `1.4 → 1.4.1`. SG-032 and SG-039 are **MIGRATED**. SG-040 remains **RETAINED**: migrated edge `PLAYER_OPENED_GUIDE`; remaining legacy edges `PLAYER_VIEWED_CONTROLS`, `PLAYER_CLOSED_GUIDE`, and pointer tutorial start. Runtime is the only caller of `continueControllerOnboarding()`.
+M0 through M1.5 **Player Viewed Controls Handoff** are live, while M1 remains **IN PROGRESS**. Scenario and Director own `PLAYER_OPENED_GUIDE` and `PLAYER_VIEWED_CONTROLS`, with the chain `1.4 → 1.4.1 → 1.4.2`; both use `CONTINUE_CONTROLLER_ONBOARDING`. SG-032 and SG-039 are **MIGRATED**. SG-040 remains **RETAINED**: `PLAYER_CLOSED_GUIDE` and pointer tutorial start remain legacy. Runtime is the only caller of `continueControllerOnboarding()`. M1.4 is **Hardware PASS on Quest 3S**; M1.5 is implemented with hardware QA pending.
 
 ## M1.4 Meta Quest 3S smoke checklist
 
-**PENDING — HARDWARE QA NOT EXECUTED**
+**HARDWARE PASS — Meta Quest 3S**
 
 - [ ] Opening onboarding is unchanged.
 - [ ] The Y prompt still has no timeout.
@@ -22,6 +22,23 @@ M0, M1.1 **Live Bootstrap Slice**, M1.2 **Intro Reveal Completion Handoff**, M1.
 - [ ] Monkey hover/trigger is unchanged.
 - [ ] Reset/re-entry repeats the flow exactly once.
 - [ ] QA bypass has no regression.
+- [ ] Messages and listeners are not duplicated.
+
+
+## M1.5 Meta Quest 3S smoke checklist
+
+**PENDING — HARDWARE QA NOT EXECUTED**
+
+- [ ] M1.4 behavior remains intact.
+- [ ] The Y prompt opens exactly once.
+- [ ] Entering STEROWANIE / controls DETAIL advances exactly once.
+- [ ] Opening the panel without entering controls is insufficient.
+- [ ] Other panel sections do not complete this step.
+- [ ] The panel may remain open after controls are viewed.
+- [ ] Closing the panel still starts exactly the same three messages.
+- [ ] `WAIT_HOVER` is unchanged.
+- [ ] Monkey hover/trigger behavior is unchanged.
+- [ ] Reset/re-entry emits each handoff exactly once.
 - [ ] Messages and listeners are not duplicated.
 
 ## M1.1 Meta Quest 3S smoke checklist
