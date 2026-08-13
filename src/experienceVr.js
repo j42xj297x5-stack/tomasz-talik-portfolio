@@ -532,6 +532,7 @@ introSequence = createVrIntroSequence({
   onMonkeyHovered: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.MONKEY_HOVERED),
   onMonkeyTriggered: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.MONKEY_TRIGGERED),
   onInvitationSelected: (choice) => runtimeExperience.dispatch(VR_SCENARIO_EVENT.INTRO_INVITATION_SELECTED, { choice }),
+  onFollowPauseChanged: (paused) => runtimeExperience.dispatch(VR_SCENARIO_EVENT.FOLLOW_PAUSE_CHANGED, { paused }),
   onMonkeyReachedThreshold: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.MONKEY_REACHED_THRESHOLD),
   onThresholdSelected: (choice) => runtimeExperience.dispatch(VR_SCENARIO_EVENT.THRESHOLD_SELECTED, { choice }),
   onOpeningRaysReady: () => vrControllers.setRaysEnabled(true),
@@ -577,6 +578,11 @@ const runtimeExperience = new RuntimeExperience({
     [VR_SCENARIO_EFFECT.CONTINUE_INTRO_INVITATION]: (change, payload) => {
       if (!introSequence.continueInvitation(payload.choice)) {
         throw new Error('CONTINUE_INTRO_INVITATION rejected by Intro actor after accepted Scenario transition');
+      }
+    },
+    [VR_SCENARIO_EFFECT.APPLY_FOLLOW_PAUSE_STATE]: (change, payload) => {
+      if (!introSequence.continueFollowPauseChanged(payload.paused)) {
+        throw new Error('APPLY_FOLLOW_PAUSE_STATE rejected by Intro actor after accepted Scenario transition');
       }
     },
     [VR_SCENARIO_EFFECT.PRESENT_THRESHOLD_CHOICE]: () => {

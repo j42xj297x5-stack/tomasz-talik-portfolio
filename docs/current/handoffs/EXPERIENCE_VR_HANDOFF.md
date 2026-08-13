@@ -4,15 +4,15 @@ Status: current delivery handoff synchronized with HEAD on 2026-08-12. It intent
 
 ## Current stage
 
-M0 through M1.12 are implemented, while M1 remains **IN PROGRESS**. M1.12 **THRESHOLD CHOICE BRANCH** is **IMPLEMENTED — HARDWARE QA PENDING**. The current production Scenario uses the canonical flat-mainline `1.x` addresses; `100.10` is LIVE EXIT and `100.1` remains RESERVED / FUTURE.
+M0 through M1.13 are implemented, while M1 remains **IN PROGRESS**. M1.12 **THRESHOLD CHOICE BRANCH** is **HARDWARE PASS — Meta Quest 3S**; M1.13 is **IMPLEMENTED — HARDWARE QA PENDING**. The current production Scenario uses the canonical flat-mainline `1.x` addresses; `100.10` is LIVE EXIT and `100.1` remains RESERVED / FUTURE.
 
-SG-032, SG-036, SG-039 and SG-040 are **MIGRATED**. SG-041 remains **RETAINED** because follow pause/resume decision ownership and `FOLLOW_PAUSE_CHANGED` remain outside the migrated slice. The approved crystal/grip tutorial remains **NOT IMPLEMENTED**.
+SG-032, SG-036, SG-039, SG-040 and SG-041 are **MIGRATED**. M1.13 moved follow pause/resume decision ownership and `FOLLOW_PAUSE_CHANGED` into the migrated slice. The approved crystal/grip tutorial remains **NOT IMPLEMENTED**.
 
 ## Canonical Story Reindex Migration — IMPLEMENTED
 
 **CURRENT (2026-08-13):** LIVE Scenario używa flat slice `1.10`, `1.20`, `1.30`, `1.40`, `1.50`, `1.60`, `1.70`, `1.80`, `1.100`, `1.100.1`, `1.110`, `1.120`, `1.120.1`, `1.130`, `100.10`. `1.90` pozostaje **RESERVED / WATER CRYSTAL TUTORIAL / NOT IMPLEMENTED**. Stare produkcyjne IDs objęte canonical mappingiem są **SUPERSEDED / RETIRED** i nie mogą zostać ponownie użyte; `100.10` pozostaje bez zmiany.
 
-Migracja zmieniła wyłącznie adresy punktów i jawne targety. Eventy, numeric choices, effects, milestones, actor/runtime behavior i SG statuses są bez zmian. M1.12 nadal jest **IMPLEMENTED — HARDWARE QA PENDING**, SG-036 **MIGRATED**, SG-041 **RETAINED**. Scenario Spine pozostaje **TARGET / NOT IMPLEMENTED**; Director nadal używa wyłącznie explicit `transition.target`. Hardware QA osobnego, behavior-neutral reindexu: **N/A**.
+Migracja zmieniła wyłącznie adresy punktów i jawne targety. Eventy, numeric choices, effects, milestones, actor/runtime behavior i SG statuses są bez zmian. M1.12 ma **HARDWARE PASS — Meta Quest 3S**, SG-036 **MIGRATED**, a SG-041 jest **MIGRATED** po M1.13. Scenario Spine pozostaje **TARGET / NOT IMPLEMENTED**; Director nadal używa wyłącznie explicit `transition.target`. Canonical Story Reindex jest **IMPLEMENTED / behavior-neutral**; post-reindex regression: **PASS — Meta Quest 3S**.
 
 ## M1.9 Numeric Choice Routing Foundation
 
@@ -242,4 +242,17 @@ The approved future crystal/grip tutorial remains outside M1.12 and is not imple
 
 ## Canonical Story Reindex — IMPLEMENTED
 
-Jednorazowy corrective reindex został wykonany. Current LIVE slice i statusy są zapisane w sekcji na początku handoffu. Nie wdrożono przy tym `1.90`, nowego edge, Scenario Spine, buildera ani normalizera. Approved crystal tutorial pozostaje **NOT IMPLEMENTED**; M1.12 pozostaje **IMPLEMENTED — HARDWARE QA PENDING**, SG-036 **MIGRATED**, SG-041 **RETAINED**.
+Jednorazowy corrective reindex został wykonany. Current LIVE slice i statusy są zapisane w sekcji na początku handoffu. Nie wdrożono przy tym `1.90`, nowego edge, Scenario Spine, buildera ani normalizera. Approved crystal tutorial pozostaje **NOT IMPLEMENTED**; M1.12 ma **HARDWARE PASS — Meta Quest 3S**, SG-036 **MIGRATED**, SG-041 **RETAINED**.
+
+## M1.13 — FOLLOW PAUSE-RESUME HANDOFF
+
+**IMPLEMENTED — HARDWARE QA PENDING.** `1.110` is active FOLLOWING. LIVE `1.110.1` is the local “Monkey waiting for player” branch and is explicitly outside the future Scenario Spine. Pause routes `1.110 → FOLLOW_PAUSE_CHANGED { paused: true } → 1.110.1`; resume routes `1.110.1 → FOLLOW_PAUSE_CHANGED { paused: false } → 1.110`. Routing is point-owned, never payload-predicate-owned. One `APPLY_FOLLOW_PAUSE_STATE` effect resumes the actor through its guarded seam; no milestone or numeric choice was added.
+
+Physical grace/distance sensing, Monkey movement and fog interpolation remain in the actor. The shared safe wait prevents movement before accepted Runtime continuation. SG-041 is **MIGRATED** after point audit; SG-036 remains **MIGRATED**. Scenario Spine is **TARGET / NOT IMPLEMENTED** and `1.90` remains **RESERVED / NOT IMPLEMENTED**.
+
+### Meta Quest 3S hardware QA checklist — M1.13
+
+- GO and grace timing unchanged; no early pause.
+- Same pause distance and “Idziesz?”/“Will you walk?” copy; no movement while paused.
+- Same resume distance, message clearing and same-frame movement; repeat pause/resume without duplicates or deadlock.
+- Arrival, threshold dialogue, WHERE/BEYOND/RETURN, reset/re-entry and QA bypass without regression.

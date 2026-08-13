@@ -98,7 +98,7 @@ Najważniejsze ryzyka migracji:
 | SG-038 | `src/xr/guidance/createVrIntroSequence.js:L76-L83` | reset + bypass/enabled | visibility, fog, locomotion, interaction state | RESET_COUPLING | Director reset orchestration | HIGH |
 | SG-039 | `src/xr/guidance/createVrIntroSequence.js` | calibration; fog complete; silence complete | Intro transitions and onboarding | TIMER_TRIGGER | **MIGRATED** — Scenario owns the three bounded decisions through RuntimeExperience; actor retains the 2 s timer and tutorial execution | HIGH |
 | SG-040 | `src/xr/guidance/createVrIntroSequence.js:L92-L93` | panel open, controls detail visited, panel closed | pointer tutorial | SCENARIO_GATE | UI facts → Director | HIGH |
-| SG-041 | `src/xr/guidance/createVrIntroSequence.js:L94-L105` | grace/distance/pause/resume/arrival | Monkey movement/messages/fog/threshold | SCENARIO_GATE | Director narrative policy; motion execution Monkey actor | HIGH |
+| SG-041 | `src/xr/guidance/createVrIntroSequence.js` | grace/distance sensing; pause/resume and arrival handoffs | sensing/motion/fog remain actor mechanics; narrative edges Scenario-owned | MIGRATED | M1.11 arrival + M1.13 FOLLOW_PAUSE_CHANGED; no remaining narrative decision owner | — |
 | SG-042 | `src/xr/guidance/createVrIntroSequence.js:L106-L115` | Monkey canonical + player ring entry + settle timer | free explore | SCENARIO_GATE | Director combines facts | HIGH |
 | SG-043 | `src/xr/guidance/createVrIntroSequence.js:L116` | 60 s without discovery | attention + glyph hint armed | TIMER_TRIGGER / NARRATIVE_TRIGGER | Director | HIGH |
 | SG-044 | `src/xr/guidance/createVrIntroSequence.js:L117` | reveal elapsed 3 s | returns to free explore | TIMER_TRIGGER | Director | MEDIUM |

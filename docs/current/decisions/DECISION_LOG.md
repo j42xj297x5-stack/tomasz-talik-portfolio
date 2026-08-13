@@ -6,7 +6,7 @@ Status: current binding decisions organized by implementation status, not patch 
 
 **CURRENT (2026-08-13):** LIVE Scenario używa flat slice `1.10`, `1.20`, `1.30`, `1.40`, `1.50`, `1.60`, `1.70`, `1.80`, `1.100`, `1.100.1`, `1.110`, `1.120`, `1.120.1`, `1.130`, `100.10`. `1.90` pozostaje **RESERVED / WATER CRYSTAL TUTORIAL / NOT IMPLEMENTED**. Stare produkcyjne IDs objęte canonical mappingiem są **SUPERSEDED / RETIRED** i nie mogą zostać ponownie użyte; `100.10` pozostaje bez zmiany.
 
-Migracja zmieniła wyłącznie adresy punktów i jawne targety. Eventy, numeric choices, effects, milestones, actor/runtime behavior i SG statuses są bez zmian. M1.12 nadal jest **IMPLEMENTED — HARDWARE QA PENDING**, SG-036 **MIGRATED**, SG-041 **RETAINED**. Scenario Spine pozostaje **TARGET / NOT IMPLEMENTED**; Director nadal używa wyłącznie explicit `transition.target`. Hardware QA osobnego, behavior-neutral reindexu: **N/A**.
+Migracja zmieniła wyłącznie adresy punktów i jawne targety. Eventy, numeric choices, effects, milestones, actor/runtime behavior i SG statuses są bez zmian. M1.12 ma **HARDWARE PASS — Meta Quest 3S**, SG-036 **MIGRATED**, a SG-041 jest **MIGRATED** po M1.13. Scenario Spine pozostaje **TARGET / NOT IMPLEMENTED**; Director nadal używa wyłącznie explicit `transition.target`. Canonical Story Reindex jest **IMPLEMENTED / behavior-neutral**; post-reindex regression: **PASS — Meta Quest 3S**.
 
 ## Implemented and binding
 
@@ -154,3 +154,10 @@ Small glyph progression, Astro B/bands, radar/sector gameplay, final radar, tele
 - The single `CONTINUE_THRESHOLD_CHOICE` effect resumes an actor guarded by `WAIT_RUNTIME_AFTER_THRESHOLD_SELECTED`. UI strings are adapter-only and Runtime receives only `{ choice }`.
 - `100.10` is LIVE EXIT EXPERIENCE VR. `100.1` remains RESERVED / FUTURE.
 - Audit verification closes SG-036 as **MIGRATED**. SG-041 remains **RETAINED** because follow pause/resume decision ownership and `FOLLOW_PAUSE_CHANGED` remain outside this slice.
+
+## 2026-08-13 — M1.13 follow pause-resume handoff
+
+- M1.12 is **HARDWARE PASS — Meta Quest 3S**. Canonical Story Reindex is **IMPLEMENTED / behavior-neutral**; post-reindex hardware regression is **PASS — Meta Quest 3S**. M1.13 is **IMPLEMENTED — HARDWARE QA PENDING**.
+- LIVE local branch `1.110.1` means FOLLOWING / Monkey waiting for player. It belongs to `1.110` and is not part of the future Scenario Spine. Scenario Spine remains **TARGET / NOT IMPLEMENTED**; `1.90` remains **RESERVED / NOT IMPLEMENTED**.
+- Actor owns physical distance/grace sensing, motion and fog. Scenario routes `FOLLOW_PAUSE_CHANGED` by current point, without payload predicates or numeric choice. Runtime executes the single `APPLY_FOLLOW_PAUSE_STATE` command through the guarded actor continuation.
+- No milestone was added. SG-041 is **MIGRATED**; SG-036 remains **MIGRATED**.

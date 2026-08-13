@@ -9,7 +9,7 @@ import { VR_EXPERIENCE_POINT, vrExperienceScenario } from '../src/xr/progression
 
 const canonicalLivePointIds = [
   '1.10', '1.20', '1.30', '1.40', '1.50', '1.60', '1.70', '1.80',
-  '1.100', '1.100.1', '1.110', '1.120', '1.120.1', '1.130', '100.10'
+  '1.100', '1.100.1', '1.110', '1.110.1', '1.120', '1.120.1', '1.130', '100.10'
 ];
 const retiredPointIds = [
   '1.1', '1.2', '1.3', '1.4', '1.4.1', '1.4.2', '1.4.3', '1.4.4',
@@ -22,6 +22,7 @@ for (const retiredId of retiredPointIds) assert.equal(retiredId in VR_EXPERIENCE
 assert.equal(VR_EXPERIENCE_POINT['1.100.1'], '1.100.1', 'WHERE remains a local invitation branch');
 assert.equal(VR_EXPERIENCE_POINT['1.120.1'], '1.120.1', 'BEYOND remains a local threshold branch');
 assert.equal(VR_EXPERIENCE_POINT['1.110'], '1.110', 'FOLLOWING is a flat mainline point');
+assert.equal(VR_EXPERIENCE_POINT['1.110.1'], '1.110.1', 'paused FOLLOWING is a local branch');
 assert.equal(VR_EXPERIENCE_POINT['1.130'], '1.130', 'CROSSING is a flat mainline point');
 assert.equal(VR_EXPERIENCE_POINT['100.10'], '100.10', 'EXIT remains unchanged');
 
@@ -92,6 +93,9 @@ assert.match(vr, /onInvitationSelected: \(choice\) => runtimeExperience\.dispatc
   'invitation callback dispatches only the unchanged numeric choice fact');
 assert.match(vr, /onMonkeyReachedThreshold: \(\) => runtimeExperience\.dispatch\(VR_SCENARIO_EVENT\.MONKEY_REACHED_THRESHOLD\)/,
   'threshold arrival callback dispatches only the semantic producer fact');
+assert.match(vr, /onFollowPauseChanged: \(paused\) => runtimeExperience\.dispatch\(VR_SCENARIO_EVENT\.FOLLOW_PAUSE_CHANGED, \{ paused \}\)/);
+assert.match(vr, /VR_SCENARIO_EFFECT\.APPLY_FOLLOW_PAUSE_STATE[\s\S]*introSequence\.continueFollowPauseChanged\(payload\.paused\)[\s\S]*throw new Error/);
+assert.equal((vr.match(/introSequence\.continueFollowPauseChanged\(payload\.paused\)/g) ?? []).length, 1);
 assert.match(vr, /onThresholdSelected: \(choice\) => runtimeExperience\.dispatch\(VR_SCENARIO_EVENT\.THRESHOLD_SELECTED, \{ choice \}\)/,
   'threshold callback dispatches only the unchanged numeric choice fact');
 assert.match(vr, /VR_SCENARIO_EFFECT\.PRESENT_THRESHOLD_CHOICE[\s\S]*introSequence\.presentThresholdChoice\(\)[\s\S]*throw new Error/,
