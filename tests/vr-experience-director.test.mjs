@@ -1,12 +1,12 @@
 import assert from 'node:assert/strict';
 import { createVrExperienceDirector } from '../src/xr/progression/createVrExperienceDirector.js';
 import { ExperienceDirector } from '../src/xr/progression/ExperienceDirector.js';
-import { VR_EXPERIENCE_POINT, VR_SCENARIO_EFFECT, VR_SCENARIO_EVENT, VR_SCENARIO_MILESTONE, vrExperienceScenario } from '../src/xr/progression/vrExperienceScenario.js';
+import { VR_EXPERIENCE_POINT, VR_SCENARIO_CAPABILITY, VR_SCENARIO_EFFECT, VR_SCENARIO_EVENT, VR_SCENARIO_MILESTONE, vrExperienceScenario } from '../src/xr/progression/vrExperienceScenario.js';
 
 assert.equal(Object.isFrozen(vrExperienceScenario), true);
 assert.equal(vrExperienceScenario.points, vrExperienceScenario.scenes);
 assert.equal(vrExperienceScenario.initialPointId, vrExperienceScenario.initialSceneId);
-assert.deepEqual(vrExperienceScenario.points.map(({ id }) => id), ['1.10', '1.20', '1.30', '1.40', '1.50', '1.60', '1.70', '1.80', '1.100', '1.100.1', '1.110', '1.110.1', '1.120', '1.120.1', '1.130', '100.10']);
+assert.deepEqual(vrExperienceScenario.points.map(({ id }) => id), ['1.10', '1.20', '1.30', '1.40', '1.50', '1.60', '1.70', '1.80', '1.100', '1.100.1', '1.110', '1.110.1', '1.120', '1.120.1', '1.130', '1.130.1', '1.130.2', '1.140', '100.10']);
 assert.equal(Object.isFrozen(vrExperienceScenario.points[0]), true);
 assert.equal(Object.isFrozen(vrExperienceScenario.points[0].transitions[0]), true);
 assert.equal(Object.isFrozen(vrExperienceScenario.points[0].transitions[0].effects), true);
@@ -14,7 +14,7 @@ assert.equal(Object.isFrozen(vrExperienceScenario.metadata.authoritativeScope), 
 assert.equal(Object.isFrozen(vrExperienceScenario.points[2].transitions[0]), true);
 assert.equal(Object.isFrozen(vrExperienceScenario.points[2].transitions[0].milestonesToAdd), true);
 assert.equal(Object.isFrozen(vrExperienceScenario.points[3]), true);
-assert.equal(vrExperienceScenario.metadata.stage, 'M1_13_FOLLOW_PAUSE_RESUME_HANDOFF');
+assert.equal(vrExperienceScenario.metadata.stage, 'M1_14_RING_ENTRY_SETTLE_JOIN_HANDOFF');
 assert.deepEqual(vrExperienceScenario.metadata.authoritativeScope, [
   'XR_CALIBRATED → BEGIN_INTRO_REVEAL',
   'INTRO_REVEAL_COMPLETE → BEGIN_POST_REVEAL_SILENCE',
@@ -30,6 +30,7 @@ assert.deepEqual(vrExperienceScenario.metadata.authoritativeScope, [
   'THRESHOLD_SELECTED / choice 1 → 1.130',
   'THRESHOLD_SELECTED / choice 2 → 1.120.1',
   'THRESHOLD_SELECTED / choice 3 → 100.10',
+  'PLAYER_ENTERED_RING + MONKEY_SETTLED → BEGIN_GLYPH_FREE_EXPLORE → 1.140',
   'INTRO_INVITATION_SELECTED / choice 2 → 1.100.1',
   'INTRO_INVITATION_SELECTED / choice 3 → 100.10'
 ]);
@@ -126,6 +127,34 @@ assert.equal(crossChange.currentPointId, VR_EXPERIENCE_POINT['1.130']);
 assert.deepEqual(crossChange.effects, [VR_SCENARIO_EFFECT.CONTINUE_THRESHOLD_CHOICE]);
 assert.deepEqual(crossChange.addedMilestones, []);
 assert.equal(productionDirector.dispatch(VR_SCENARIO_EVENT.THRESHOLD_SELECTED, { choice: 1 }), null, 'CROSS terminal rejects duplicates');
+assert.equal(productionDirector.can(VR_SCENARIO_CAPABILITY.CAN_USE_GLYPHS), false);
+const enteredFirst = productionDirector.dispatch(VR_SCENARIO_EVENT.PLAYER_ENTERED_RING);
+assert.equal(enteredFirst.currentPointId, VR_EXPERIENCE_POINT['1.130.1']);
+assert.deepEqual(enteredFirst.effects, [], 'the first join fact does not begin free explore');
+assert.deepEqual(enteredFirst.addedMilestones, [VR_SCENARIO_MILESTONE.PLAYER_ENTERED_RING]);
+assert.equal(productionDirector.dispatch(VR_SCENARIO_EVENT.PLAYER_ENTERED_RING), null, 'a repeated join fact is inert');
+const settledSecond = productionDirector.dispatch(VR_SCENARIO_EVENT.MONKEY_SETTLED);
+assert.equal(settledSecond.currentPointId, VR_EXPERIENCE_POINT['1.140']);
+assert.deepEqual(settledSecond.effects, [VR_SCENARIO_EFFECT.BEGIN_GLYPH_FREE_EXPLORE]);
+assert.deepEqual(settledSecond.addedMilestones, [VR_SCENARIO_MILESTONE.MONKEY_SETTLED]);
+assert.equal(productionDirector.can(VR_SCENARIO_CAPABILITY.CAN_USE_GLYPHS), true);
+assert.equal(productionDirector.dispatch(VR_SCENARIO_EVENT.MONKEY_SETTLED), null, 'completed join rejects duplicate facts');
+
+const settledFirstDirector = new ExperienceDirector({ scenario: vrExperienceScenario });
+for (const event of [VR_SCENARIO_EVENT.XR_CALIBRATED, VR_SCENARIO_EVENT.INTRO_REVEAL_COMPLETE, VR_SCENARIO_EVENT.POST_REVEAL_SILENCE_COMPLETE, VR_SCENARIO_EVENT.PLAYER_OPENED_GUIDE, VR_SCENARIO_EVENT.PLAYER_VIEWED_CONTROLS, VR_SCENARIO_EVENT.PLAYER_CLOSED_GUIDE, VR_SCENARIO_EVENT.MONKEY_HOVERED, VR_SCENARIO_EVENT.MONKEY_TRIGGERED]) settledFirstDirector.dispatch(event);
+settledFirstDirector.dispatch(VR_SCENARIO_EVENT.INTRO_INVITATION_SELECTED, { choice: 1 });
+settledFirstDirector.dispatch(VR_SCENARIO_EVENT.MONKEY_REACHED_THRESHOLD);
+settledFirstDirector.dispatch(VR_SCENARIO_EVENT.THRESHOLD_SELECTED, { choice: 1 });
+const settledFirst = settledFirstDirector.dispatch(VR_SCENARIO_EVENT.MONKEY_SETTLED);
+assert.equal(settledFirst.currentPointId, VR_EXPERIENCE_POINT['1.130.2']);
+assert.deepEqual(settledFirst.effects, [], 'Monkey settling alone does not begin free explore');
+assert.equal(settledFirstDirector.can(VR_SCENARIO_CAPABILITY.CAN_USE_GLYPHS), false);
+assert.equal(settledFirstDirector.dispatch(VR_SCENARIO_EVENT.MONKEY_SETTLED), null);
+const enteredSecond = settledFirstDirector.dispatch(VR_SCENARIO_EVENT.PLAYER_ENTERED_RING);
+assert.equal(enteredSecond.currentPointId, VR_EXPERIENCE_POINT['1.140']);
+assert.deepEqual(enteredSecond.effects, [VR_SCENARIO_EFFECT.BEGIN_GLYPH_FREE_EXPLORE]);
+assert.equal(settledFirstDirector.can(VR_SCENARIO_CAPABILITY.CAN_USE_GLYPHS), true);
+
 const reachInvitation = (director) => {
   director.resetSession();
   for (const event of [VR_SCENARIO_EVENT.XR_CALIBRATED, VR_SCENARIO_EVENT.INTRO_REVEAL_COMPLETE, VR_SCENARIO_EVENT.POST_REVEAL_SILENCE_COMPLETE, VR_SCENARIO_EVENT.PLAYER_OPENED_GUIDE, VR_SCENARIO_EVENT.PLAYER_VIEWED_CONTROLS, VR_SCENARIO_EVENT.PLAYER_CLOSED_GUIDE, VR_SCENARIO_EVENT.MONKEY_HOVERED, VR_SCENARIO_EVENT.MONKEY_TRIGGERED]) assert.notEqual(director.dispatch(event), null);

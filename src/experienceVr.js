@@ -44,14 +44,14 @@ import { createVrAsterionGyroInteraction } from './xr/asterion/createVrAsterionG
 import { createVrAsterionProductionController } from './xr/asterion/createVrAsterionProductionController.js';
 import { createVrPlayerGuidePanel } from './xr/guidance/createVrPlayerGuidePanel.js';
 import { createVrMonkeyGuide } from './xr/guidance/createVrMonkeyGuide.js';
-import { createVrIntroSequence, VR_INTRO_STATE } from './xr/guidance/createVrIntroSequence.js';
+import { createVrIntroSequence } from './xr/guidance/createVrIntroSequence.js';
 import { createVrIntroFogReveal } from './xr/guidance/createVrIntroFogReveal.js';
 import { createVrReliquaryHints } from './xr/guidance/createVrReliquaryHints.js';
 import { createVrAudioBridge } from './xr/audio/createVrAudioBridge.js';
 import { createVrAmbientSequencer } from './xr/audio/createVrAmbientSequencer.js';
 import { ExperienceDirector } from './xr/progression/ExperienceDirector.js';
 import { RuntimeExperience } from './xr/progression/RuntimeExperience.js';
-import { VR_SCENARIO_EFFECT, VR_SCENARIO_EVENT, vrExperienceScenario } from './xr/progression/vrExperienceScenario.js';
+import { VR_SCENARIO_CAPABILITY, VR_SCENARIO_EFFECT, VR_SCENARIO_EVENT, vrExperienceScenario } from './xr/progression/vrExperienceScenario.js';
 import { experienceVrPages, getExperienceVrPages, resolveExperienceVrPage } from './content/experienceVrPages.js';
 import { publicPath } from './utils/publicPath.js';
 
@@ -471,8 +471,7 @@ function getNextCrystalTier(node) {
         && instance.tier === page.order && instance.state !== 'released'))?.order ?? null;
 }
 function isGlyphActive(node) {
-  const introState = introSequence?.getState();
-  const introAllowsGameplay = introState === VR_INTRO_STATE.GLYPH_FREE_EXPLORE || introState === VR_INTRO_STATE.BYPASSED;
+  const introAllowsGameplay = introQaBypass || runtimeExperience.can(VR_SCENARIO_CAPABILITY.CAN_USE_GLYPHS);
   return introAllowsGameplay && getNextCrystalTier(node) !== null;
 }
 const glyphInteraction = createVrGlyphInteraction({
@@ -535,6 +534,8 @@ introSequence = createVrIntroSequence({
   onFollowPauseChanged: (paused) => runtimeExperience.dispatch(VR_SCENARIO_EVENT.FOLLOW_PAUSE_CHANGED, { paused }),
   onMonkeyReachedThreshold: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.MONKEY_REACHED_THRESHOLD),
   onThresholdSelected: (choice) => runtimeExperience.dispatch(VR_SCENARIO_EVENT.THRESHOLD_SELECTED, { choice }),
+  onPlayerEnteredRing: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.PLAYER_ENTERED_RING),
+  onMonkeySettled: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.MONKEY_SETTLED),
   onOpeningRaysReady: () => vrControllers.setRaysEnabled(true),
   onProgressionFixturesHidden: () => { portalDisplay.hide(); astroFurnace.object.visible = false; crystalReliquary.reset(); },
   onBypassFixturesVisible: () => { restorePortalWaitingState(); astroFurnace.reset(); crystalReliquary.reveal(0); },
@@ -593,6 +594,11 @@ const runtimeExperience = new RuntimeExperience({
     [VR_SCENARIO_EFFECT.CONTINUE_THRESHOLD_CHOICE]: (change, payload) => {
       if (!introSequence.continueThresholdChoice(payload.choice)) {
         throw new Error('CONTINUE_THRESHOLD_CHOICE rejected by Intro actor after accepted Scenario transition');
+      }
+    },
+    [VR_SCENARIO_EFFECT.BEGIN_GLYPH_FREE_EXPLORE]: () => {
+      if (!introSequence.beginGlyphFreeExplore()) {
+        throw new Error('BEGIN_GLYPH_FREE_EXPLORE rejected by Intro actor after accepted Scenario transition');
       }
     }
   }
