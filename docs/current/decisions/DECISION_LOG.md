@@ -1,17 +1,23 @@
 # Decision Log
 
-Status: current binding decisions organized by implementation status, not patch chronology. Synchronized on 2026-08-12.
+Status: current binding decisions organized by implementation status, not patch chronology. Synchronized on 2026-08-13.
 
 ## Implemented and binding
 
-### Experience VR Scenario + Director migration foundation and M1.1 live slice
+### Experience VR Scenario + Director migration foundation, M1.8 live slice and addressing canon
 
 1. Experience VR adopts a two-module migration seam: an immutable declarative Scenario supplies semantic event/capability/milestone/effect identifiers and scene transitions; a framework-free Director coordinates only those values.
 2. Milestones are monotonic narrative history. A session reset preserves them and returns the Director to its initial scene; an explicit hard reset represents a new game and clears them.
 3. Director capabilities express only global scenario permission. Actor-local correctness, geometry, physics, state machines, UI hit testing, audio lifecycle and other invariants remain with their current subsystem owners.
 4. Effects are symbolic output; the Director never invokes actors. `RuntimeExperience` is the framework-free boundary that executes injected handlers.
-5. M0 and M1.1 Live Bootstrap Slice are complete; M1 remains **IN PROGRESS**. Scenario and `ExperienceDirector` are authoritative only for `XR_CALIBRATED → BEGIN_INTRO_REVEAL`. The compatibility factory constructs the canonical class.
-6. Only SG-032 is **MIGRATED**. Remaining P0 states belong to `createVrIntroSequence`; there is no full central Scenario ownership and RC-01…RC-14 remain unconsolidated. M1.1 hardware QA is pending.
+5. M0 and M1.1–M1.8 are implemented and live under canonical point IDs `1.1`–`1.4.5`; point `1.4.5` is the terminal of the current live slice. M1.7 has **HARDWARE PASS — Meta Quest 3S**; M1.8 is **IMPLEMENTED — HARDWARE QA PENDING**.
+6. SG-032, SG-039 and SG-040 are **MIGRATED**. SG-036 is **RETAINED**: its edges to `MONKEY_HOVERED` and `MONKEY_TRIGGERED` are migrated, while seen/invitation sequence, invitation choices and later decisions remain legacy. There is no claim of full central Scenario ownership.
+7. Point IDs are numeric-only strings of positive integer segments and are permanent structural addresses. ID, human-readable label and player-facing copy are separate layers; dialog or choice wording and narrative meaning are never encoded in an ID.
+8. Numeric child points may be nested to arbitrary depth. Their hierarchy creates address space, not implicit runtime order or behavior. Dialog choices are ordinary Scenario branches and do not require a special ID form.
+9. Published IDs are stable. A removed ID remains `REMOVED` or reserved, is never reused for another meaning, and gaps never trigger renumbering.
+10. Director moves only through explicit transition targets: it never increments, sorts or infers a child, sibling, parent, return or first branch. An actor reports what the player selected without knowing a target point ID; Scenario owns the mapping from an accepted selection to its explicit target. Event payloads, choice identifiers and predicates are deferred to a later implementation decision.
+11. Act `100` is reserved as the future ending/exit namespace. `100.1` is **FULL FINALE ENTRY / WHITE TRANSITION**, while `100.10` is **EXIT EXPERIENCE VR**, the actual departure from the VR mode. An early exit may explicitly jump straight to `100.10`; full completion explicitly follows `100.1 → finale → 100.10`.
+12. Act 100, `100.1`, `100.10` and their transitions are **RESERVED / CANONICAL FUTURE ADDRESS — NOT IMPLEMENTED**. They are not current `VR_EXPERIENCE_POINT` entries and this decision does not claim current Director support for them.
 
 ### Runtime, progress and platform
 
