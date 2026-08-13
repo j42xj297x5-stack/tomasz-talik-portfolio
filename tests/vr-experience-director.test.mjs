@@ -6,7 +6,7 @@ import { VR_EXPERIENCE_POINT, VR_SCENARIO_CAPABILITY, VR_SCENARIO_EFFECT, VR_SCE
 assert.equal(Object.isFrozen(vrExperienceScenario), true);
 assert.equal(vrExperienceScenario.points, vrExperienceScenario.scenes);
 assert.equal(vrExperienceScenario.initialPointId, vrExperienceScenario.initialSceneId);
-assert.deepEqual(vrExperienceScenario.points.map(({ id }) => id), ['1.10', '1.20', '1.30', '1.40', '1.50', '1.60', '1.70', '1.80', '1.100', '1.100.1', '1.110', '1.110.1', '1.120', '1.120.1', '1.130', '1.130.1', '1.130.2', '1.140', '1.150', '100.10']);
+assert.deepEqual(vrExperienceScenario.points.map(({ id }) => id), ['1.10', '1.20', '1.30', '1.40', '1.50', '1.60', '1.70', '1.80', '1.100', '1.100.1', '1.110', '1.110.1', '1.120', '1.120.1', '1.130', '1.130.1', '1.130.2', '1.140', '1.150', '1.160', '100.10']);
 assert.equal(Object.isFrozen(vrExperienceScenario.points[0]), true);
 assert.equal(Object.isFrozen(vrExperienceScenario.points[0].transitions[0]), true);
 assert.equal(Object.isFrozen(vrExperienceScenario.points[0].transitions[0].effects), true);
@@ -14,7 +14,7 @@ assert.equal(Object.isFrozen(vrExperienceScenario.metadata.authoritativeScope), 
 assert.equal(Object.isFrozen(vrExperienceScenario.points[2].transitions[0]), true);
 assert.equal(Object.isFrozen(vrExperienceScenario.points[2].transitions[0].milestonesToAdd), true);
 assert.equal(Object.isFrozen(vrExperienceScenario.points[3]), true);
-assert.equal(vrExperienceScenario.metadata.stage, 'M1_15_GLYPH_HINT_TIMEOUT_HANDOFF');
+assert.equal(vrExperienceScenario.metadata.stage, 'M1_16_FIRST_CRYSTAL_DISCOVERY_HANDOFF');
 assert.deepEqual(vrExperienceScenario.metadata.authoritativeScope, [
   'XR_CALIBRATED → BEGIN_INTRO_REVEAL',
   'INTRO_REVEAL_COMPLETE → BEGIN_POST_REVEAL_SILENCE',
@@ -32,6 +32,7 @@ assert.deepEqual(vrExperienceScenario.metadata.authoritativeScope, [
   'THRESHOLD_SELECTED / choice 3 → 100.10',
   'PLAYER_ENTERED_RING + MONKEY_SETTLED → BEGIN_GLYPH_FREE_EXPLORE → 1.140',
   'GLYPH_HINT_TIMEOUT → SHOW_GLYPH_HINT → 1.150',
+  'FIRST_CRYSTAL_DISCOVERED → REVEAL_RELIQUARY → 1.160',
   'INTRO_INVITATION_SELECTED / choice 2 → 1.100.1',
   'INTRO_INVITATION_SELECTED / choice 3 → 100.10'
 ]);
@@ -146,6 +147,14 @@ assert.equal(glyphHintChange.currentPointId, VR_EXPERIENCE_POINT['1.150']);
 assert.deepEqual(glyphHintChange.effects, [VR_SCENARIO_EFFECT.SHOW_GLYPH_HINT]);
 assert.equal(productionDirector.can(VR_SCENARIO_CAPABILITY.CAN_USE_GLYPHS), true, 'glyph use remains available after the hint');
 assert.equal(productionDirector.dispatch(VR_SCENARIO_EVENT.GLYPH_HINT_TIMEOUT), null, 'duplicate timeout is inert and emits no second effect');
+const discoveredAfterHint = productionDirector.dispatch(VR_SCENARIO_EVENT.FIRST_CRYSTAL_DISCOVERED);
+assert.equal(discoveredAfterHint.currentPointId, VR_EXPERIENCE_POINT['1.160']);
+assert.deepEqual(discoveredAfterHint.effects, [VR_SCENARIO_EFFECT.REVEAL_RELIQUARY]);
+assert.deepEqual(discoveredAfterHint.addedMilestones, [VR_SCENARIO_MILESTONE.FIRST_CRYSTAL_DISCOVERED]);
+assert.equal(productionDirector.hasMilestone(VR_SCENARIO_MILESTONE.FIRST_CRYSTAL_DISCOVERED), true);
+assert.equal(productionDirector.can(VR_SCENARIO_CAPABILITY.CAN_USE_GLYPHS), false);
+assert.equal(productionDirector.dispatch(VR_SCENARIO_EVENT.GLYPH_HINT_TIMEOUT), null, 'late hint is inert after discovery');
+assert.equal(productionDirector.dispatch(VR_SCENARIO_EVENT.FIRST_CRYSTAL_DISCOVERED), null, 'duplicate discovery is inert');
 
 const settledFirstDirector = new ExperienceDirector({ scenario: vrExperienceScenario });
 for (const event of [VR_SCENARIO_EVENT.XR_CALIBRATED, VR_SCENARIO_EVENT.INTRO_REVEAL_COMPLETE, VR_SCENARIO_EVENT.POST_REVEAL_SILENCE_COMPLETE, VR_SCENARIO_EVENT.PLAYER_OPENED_GUIDE, VR_SCENARIO_EVENT.PLAYER_VIEWED_CONTROLS, VR_SCENARIO_EVENT.PLAYER_CLOSED_GUIDE, VR_SCENARIO_EVENT.MONKEY_HOVERED, VR_SCENARIO_EVENT.MONKEY_TRIGGERED]) settledFirstDirector.dispatch(event);
@@ -161,6 +170,12 @@ const enteredSecond = settledFirstDirector.dispatch(VR_SCENARIO_EVENT.PLAYER_ENT
 assert.equal(enteredSecond.currentPointId, VR_EXPERIENCE_POINT['1.140']);
 assert.deepEqual(enteredSecond.effects, [VR_SCENARIO_EFFECT.BEGIN_GLYPH_FREE_EXPLORE]);
 assert.equal(settledFirstDirector.can(VR_SCENARIO_CAPABILITY.CAN_USE_GLYPHS), true);
+const discoveredBeforeHint = settledFirstDirector.dispatch(VR_SCENARIO_EVENT.FIRST_CRYSTAL_DISCOVERED);
+assert.equal(discoveredBeforeHint.previousPointId, VR_EXPERIENCE_POINT['1.140']);
+assert.equal(discoveredBeforeHint.currentPointId, VR_EXPERIENCE_POINT['1.160']);
+assert.deepEqual(discoveredBeforeHint.effects, discoveredAfterHint.effects, 'both discovery routes emit the same single effect');
+assert.deepEqual(discoveredBeforeHint.addedMilestones, [VR_SCENARIO_MILESTONE.FIRST_CRYSTAL_DISCOVERED]);
+assert.equal(settledFirstDirector.dispatch(VR_SCENARIO_EVENT.GLYPH_HINT_TIMEOUT), null);
 
 const reachInvitation = (director) => {
   director.resetSession();

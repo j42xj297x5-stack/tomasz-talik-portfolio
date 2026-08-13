@@ -132,6 +132,7 @@ export const VR_EXPERIENCE_POINT = immutableIdentifiers([
   '1.130.2',
   '1.140',
   '1.150',
+  '1.160',
   '100.10'
 ]);
 
@@ -345,13 +346,22 @@ const points = Object.freeze([
     label: 'GLYPH_FREE_EXPLORE rozpoczęte',
     capabilities: Object.freeze([VR_SCENARIO_CAPABILITY.CAN_USE_GLYPHS]),
     transitions: Object.freeze([
-      Object.freeze({ event: VR_SCENARIO_EVENT.GLYPH_HINT_TIMEOUT, target: VR_EXPERIENCE_POINT['1.150'], milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.SHOW_GLYPH_HINT]) })
+      Object.freeze({ event: VR_SCENARIO_EVENT.GLYPH_HINT_TIMEOUT, target: VR_EXPERIENCE_POINT['1.150'], milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.SHOW_GLYPH_HINT]) }),
+      Object.freeze({ event: VR_SCENARIO_EVENT.FIRST_CRYSTAL_DISCOVERED, target: VR_EXPERIENCE_POINT['1.160'], milestonesToAdd: Object.freeze([VR_SCENARIO_MILESTONE.FIRST_CRYSTAL_DISCOVERED]), effects: Object.freeze([VR_SCENARIO_EFFECT.REVEAL_RELIQUARY]) })
     ])
   }),
   Object.freeze({
     id: VR_EXPERIENCE_POINT['1.150'],
     label: 'GLYPH_FREE_EXPLORE po pokazaniu timeout hintu',
-    capabilities: Object.freeze([VR_SCENARIO_CAPABILITY.CAN_USE_GLYPHS]), transitions: Object.freeze([])
+    capabilities: Object.freeze([VR_SCENARIO_CAPABILITY.CAN_USE_GLYPHS]),
+    transitions: Object.freeze([
+      Object.freeze({ event: VR_SCENARIO_EVENT.FIRST_CRYSTAL_DISCOVERED, target: VR_EXPERIENCE_POINT['1.160'], milestonesToAdd: Object.freeze([VR_SCENARIO_MILESTONE.FIRST_CRYSTAL_DISCOVERED]), effects: Object.freeze([VR_SCENARIO_EFFECT.REVEAL_RELIQUARY]) })
+    ])
+  }),
+  Object.freeze({
+    id: VR_EXPERIENCE_POINT['1.160'],
+    label: 'Pierwszy kryształ odkryty / discovery i reliquary reveal rozpoczęte',
+    capabilities: Object.freeze([]), transitions: Object.freeze([])
   }),
   Object.freeze({
     id: VR_EXPERIENCE_POINT['100.10'],
@@ -374,7 +384,7 @@ export const vrExperienceScenario = Object.freeze({
     effects: Object.freeze(Object.values(VR_SCENARIO_EFFECT))
   }),
   metadata: Object.freeze({
-    stage: 'M1_15_GLYPH_HINT_TIMEOUT_HANDOFF',
+    stage: 'M1_16_FIRST_CRYSTAL_DISCOVERY_HANDOFF',
     authoritativeForLiveGameplay: true,
     authoritativeScope: Object.freeze([
       'XR_CALIBRATED → BEGIN_INTRO_REVEAL',
@@ -393,6 +403,7 @@ export const vrExperienceScenario = Object.freeze({
       'THRESHOLD_SELECTED / choice 3 → 100.10',
       'PLAYER_ENTERED_RING + MONKEY_SETTLED → BEGIN_GLYPH_FREE_EXPLORE → 1.140',
       'GLYPH_HINT_TIMEOUT → SHOW_GLYPH_HINT → 1.150',
+      'FIRST_CRYSTAL_DISCOVERED → REVEAL_RELIQUARY → 1.160',
       'INTRO_INVITATION_SELECTED / choice 2 → 1.100.1',
       'INTRO_INVITATION_SELECTED / choice 3 → 100.10'
     ])

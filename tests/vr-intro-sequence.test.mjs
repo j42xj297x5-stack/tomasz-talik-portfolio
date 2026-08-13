@@ -177,14 +177,14 @@ assert.equal(f.sequence.showGlyphHint(), true, 'Runtime continuation executes th
 assert.equal(f.sequence.showGlyphHint(), false, 'hint continuation is one-shot');
 assert.equal(f.getAttention(), 1);
 f.getOverride().onMonkeyPress(); f.sequence.update(.01); f.sequence.update(.01); assert.equal(f.getMessage(), VR_INTRO_COPY.en.glyphHint[1]);
-assert.equal(f.sequence.notifyGlyphExploreSuccess(), true, 'a crystal still resolves discovery after the timeout hint');
-assert.equal(f.getAttention(), 2); assert.equal(f.sequence.notifyGlyphExploreSuccess(), false, 'discovery is one-shot');
+assert.equal(f.sequence.beginFirstCrystalDiscovery(), true, 'a crystal still resolves discovery after the timeout hint');
+assert.equal(f.getAttention(), 2); assert.equal(f.sequence.beginFirstCrystalDiscovery(), false, 'discovery is one-shot');
 f.getOverride().onMonkeyPress();
 for (let i = 0; i < 4; i += 1) f.sequence.update(.01);
 assert.equal(f.sequence.getState(), VR_INTRO_STATE.RELIQUARY_REVEAL);
 let earlyReveal = 0;
 const early = fixture({ onReliquaryReveal: (duration) => { earlyReveal = duration; } }); reachGlyphExplore(early);
-early.sequence.update(30); assert.equal(early.sequence.notifyGlyphExploreSuccess(), true);
+early.sequence.update(30); assert.equal(early.sequence.beginFirstCrystalDiscovery(), true);
 assert.equal(early.getAttention(), 1, 'early first crystal cancels the timeout and attracts attention once');
 early.sequence.update(200); assert.equal(early.getAttention(), 1); assert.equal(early.getGlyphHintTimeout(), 0,
   'early discovery preserves its precedence over the delayed hint');
