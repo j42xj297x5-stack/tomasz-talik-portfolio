@@ -4,9 +4,9 @@ Status: current delivery handoff synchronized with HEAD on 2026-08-12. It intent
 
 ## Current stage
 
-Experience VR has an implemented P0 intro, portfolio crystal progression, Tier-1 Astro/shell loop, Astro Furnace material loop, production/claim of the Asterion Sphere and heavy platform-orientation control. The transient ambient sequencer is **IMPLEMENTED**, not FUTURE. Exact owners, state machines, timings, hierarchy and visibility gates live only in the [VR Runtime Model](../technical/VR_RUNTIME_MODEL.md); audio mappings and sequencer behavior live only in the [VR Audio Model](../technical/VR_AUDIO_MODEL.md).
+M0 through M1.8 **Monkey Trigger Handoff** are live, while M1 remains **IN PROGRESS**. The current chain ends `1.4.3 → MONKEY_HOVERED → 1.4.4 → MONKEY_TRIGGERED → 1.4.5`; point `1.4.5` means “Trigger zaakceptowany / seen + invitation legacy” and is terminal for the current live slice. Runtime remains the only continuation path through `CONTINUE_CONTROLLER_ONBOARDING`.
 
-M0 through M1.7 **Monkey Hover Handoff** are live, while M1 remains **IN PROGRESS**. The current chain is `1.4 → 1.4.1 → 1.4.2 → 1.4.3 → 1.4.4`; point `1.4.4` (“Monkey wskazany / oczekiwanie na trigger”) is terminal for the current live slice. Runtime remains the only continuation path through `CONTINUE_CONTROLLER_ONBOARDING`. SG-032, SG-039 and SG-040 are **MIGRATED**. SG-036 remains **RETAINED**: its migrated edge is `MONKEY_HOVERED`; `MONKEY_TRIGGERED`, seen/invitation flow and later SG-036 decisions remain legacy. M1.6 is **HARDWARE PASS — Meta Quest 3S**. M1.7 is implemented with hardware QA pending.
+SG-032, SG-039 and SG-040 are **MIGRATED**. SG-036 remains **RETAINED**: `MONKEY_HOVERED` and `MONKEY_TRIGGERED` are migrated, while the seen/invitation sequence, invitation choices and later P0 decisions remain legacy. M1.7 is **HARDWARE PASS — Meta Quest 3S**. M1.8 is **IMPLEMENTED — HARDWARE QA PENDING**.
 
 ## M1.4 Meta Quest 3S smoke checklist
 
@@ -60,7 +60,7 @@ M0 through M1.7 **Monkey Hover Handoff** are live, while M1 remains **IN PROGRES
 
 ## M1.7 Monkey Hover Handoff — Meta Quest 3S smoke checklist
 
-**IMPLEMENTED — HARDWARE QA PENDING**
+**HARDWARE PASS — Meta Quest 3S**
 
 - [ ] M1.6 has no regression.
 - [ ] After the same three messages, `WAIT_HOVER` appears at the same moment.
@@ -73,6 +73,25 @@ M0 through M1.7 **Monkey Hover Handoff** are live, while M1 remains **IN PROGRES
 - [ ] “Idziesz?” / “Will you walk?” appears as before.
 - [ ] Reset/re-entry traverses the edge exactly once per run.
 - [ ] QA bypass has no regression and synthesizes no `MONKEY_HOVERED`.
+- [ ] Messages and listeners are not duplicated.
+
+
+## M1.8 Monkey Trigger Handoff — Meta Quest 3S smoke checklist
+
+**IMPLEMENTED — HARDWARE QA PENDING**
+
+- [ ] M1.7 has no regression.
+- [ ] “Teraz spust.” / “Now pull the trigger.” appears as before.
+- [ ] Trigger before hover does not skip the step.
+- [ ] A real trigger after hover advances exactly once.
+- [ ] `Widzisz?` / `See?` appears exactly as before.
+- [ ] The second seen line is unchanged.
+- [ ] Timing of both seen messages is unchanged.
+- [ ] `Idziesz?` / `Will you walk?` appears at the same moment.
+- [ ] Invitation options are identical.
+- [ ] Before Runtime continuation, seen/invitation does not start.
+- [ ] Reset/re-entry traverses the trigger edge exactly once per run.
+- [ ] QA bypass has no regression and synthesizes no `MONKEY_TRIGGERED`.
 - [ ] Messages and listeners are not duplicated.
 
 ## M1.1 Meta Quest 3S smoke checklist
