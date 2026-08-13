@@ -9,7 +9,7 @@ import { VR_EXPERIENCE_POINT, vrExperienceScenario } from '../src/xr/progression
 
 const canonicalLivePointIds = [
   '1.10', '1.20', '1.30', '1.40', '1.50', '1.60', '1.70', '1.80',
-  '1.100', '1.100.1', '1.110', '1.110.1', '1.120', '1.120.1', '1.130', '100.10'
+  '1.100', '1.100.1', '1.110', '1.110.1', '1.120', '1.120.1', '1.130', '1.130.1', '1.130.2', '1.140', '100.10'
 ];
 const retiredPointIds = [
   '1.1', '1.2', '1.3', '1.4', '1.4.1', '1.4.2', '1.4.3', '1.4.4',
@@ -46,6 +46,14 @@ const [main, vr, experience3d, vrControllers, glyphInteraction, spatialPlaque, c
 
 assert.match(main, /await import\('\.\/experienceVr\.js'\)/);
 assert.doesNotMatch(main, /^import .*experienceVr/m);
+
+assert.match(vr, /onPlayerEnteredRing: \(\) => runtimeExperience\.dispatch\(VR_SCENARIO_EVENT\.PLAYER_ENTERED_RING\)/);
+assert.match(vr, /onMonkeySettled: \(\) => runtimeExperience\.dispatch\(VR_SCENARIO_EVENT\.MONKEY_SETTLED\)/);
+assert.match(vr, /VR_SCENARIO_EFFECT\.BEGIN_GLYPH_FREE_EXPLORE[\s\S]*introSequence\.beginGlyphFreeExplore\(\)/);
+assert.match(vr, /introQaBypass \|\| runtimeExperience\.can\(VR_SCENARIO_CAPABILITY\.CAN_USE_GLYPHS\)/,
+  'production glyph permission is Scenario capability-owned while preserving QA bypass');
+assert.doesNotMatch(vr, /introSequence\?\.getState\(\)|introSequence\.getState\(\)/,
+  'production glyph gate no longer reads the Intro actor state');
 assert.match(vr, /renderer\.xr\.enabled = true/);
 assert.match(vr, /requestSession\('immersive-vr'/);
 assert.match(vr, /renderer\.setAnimationLoop\(renderFrame\)/);

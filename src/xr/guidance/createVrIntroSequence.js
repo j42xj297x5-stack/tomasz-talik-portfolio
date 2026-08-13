@@ -41,7 +41,7 @@ export const VR_INTRO_COPY = Object.freeze({
 export function createVrIntroSequence({ monkeyGuide, monkeyMotionRoot, monkeyVisualRoot, monkeyStoneRoot = null, playerRig,
   getHeadPosition = () => playerRig.getWorldPosition(new THREE.Vector3()), playerGuidePanel = null, fogReveal = null,
   glyphRing, progressFloor, platformFixturesRoot, locomotion, spatial, settings,
-  onOpeningRaysReady = () => {}, onIntroRevealComplete = () => {}, onPostRevealSilenceComplete = () => {}, onPlayerOpenedGuide = () => {}, onPlayerViewedControls = () => {}, onPlayerClosedGuide = () => {}, onMonkeyHovered = () => {}, onMonkeyTriggered = () => {}, onInvitationSelected = () => {}, onFollowPauseChanged = () => {}, onMonkeyReachedThreshold = () => {}, onThresholdSelected = () => {}, onEndSession = () => {}, onReliquaryReveal = () => {},
+  onOpeningRaysReady = () => {}, onIntroRevealComplete = () => {}, onPostRevealSilenceComplete = () => {}, onPlayerOpenedGuide = () => {}, onPlayerViewedControls = () => {}, onPlayerClosedGuide = () => {}, onMonkeyHovered = () => {}, onMonkeyTriggered = () => {}, onInvitationSelected = () => {}, onFollowPauseChanged = () => {}, onMonkeyReachedThreshold = () => {}, onThresholdSelected = () => {}, onPlayerEnteredRing = () => {}, onMonkeySettled = () => {}, onEndSession = () => {}, onReliquaryReveal = () => {},
   onProgressionFixturesHidden = () => {}, onBypassFixturesVisible = () => {}, bypass = false }) {
   const copy = VR_INTRO_COPY[settings.locale === 'pl' ? 'pl' : 'en'];
   const canonicalPosition = new THREE.Vector3(spatial.monkeyFinal.x, spatial.monkeyFinal.y, spatial.monkeyFinal.z);
@@ -61,7 +61,7 @@ export function createVrIntroSequence({ monkeyGuide, monkeyMotionRoot, monkeyVis
   const radiusOf = (value) => { const p = value?.isObject3D ? value.getWorldPosition(new THREE.Vector3()) : value.clone(); center.updateWorldMatrix(true, false); center.worldToLocal(p); return Math.hypot(p.x, p.z); };
   const updatePlayerRingEntry = () => {
     const headRadius = radiusOf(getHeadPosition());
-    if (!playerEnteredRing && headRadius <= ringRadius) { playerEnteredRing = true; locomotion.setWalkRadius(ringRadius, { clamp: false }); }
+    if (!playerEnteredRing && headRadius <= ringRadius) { playerEnteredRing = true; locomotion.setWalkRadius(ringRadius, { clamp: false }); onPlayerEnteredRing(); }
     if (!playerSafelyInside && headRadius <= ringRadius - (settings.insideSafeMargin ?? .75)) playerSafelyInside = true;
   };
   const capture = () => monkeyGuide.setDialogueOverride({ onMonkeyPress: () => true });
@@ -107,6 +107,11 @@ export function createVrIntroSequence({ monkeyGuide, monkeyMotionRoot, monkeyVis
     if (choice === 1) { state = VR_INTRO_STATE.CROSSING; capture(); monkeyGuide.showMessage(''); }
     else if (choice === 2) { state = VR_INTRO_STATE.THRESHOLD; monkeyGuide.setDialogueOverride(null); show(copy.beyond, () => options(copy.thresholdOptions, selectThreshold)); }
     else { state = VR_INTRO_STATE.ENDING; monkeyGuide.setDialogueOverride(null); show(copy.returning, onEndSession); }
+    return true;
+  }
+  function beginGlyphFreeExplore() {
+    if (state !== VR_INTRO_STATE.MONKEY_SETTLING) return false;
+    monkeyMotionRoot.quaternion.copy(canonicalQuaternion); fogReveal?.dispose(); monkeyGuide.setDialogueOverride(null); monkeyGuide.showMessage(''); state = VR_INTRO_STATE.GLYPH_FREE_EXPLORE; glyphExploreElapsed = 0;
     return true;
   }
   function reset() {
@@ -162,13 +167,13 @@ export function createVrIntroSequence({ monkeyGuide, monkeyMotionRoot, monkeyVis
       if (state === VR_INTRO_STATE.CROSSING && radiusOf(monkeyMotionRoot) <= ringRadius) state = VR_INTRO_STATE.ENTERING_RING;
     } else if (state === VR_INTRO_STATE.MONKEY_SETTLING) {
       updatePlayerRingEntry();
-      finalTurnElapsed += delta; monkeyMotionRoot.quaternion.slerpQuaternions(walkingQuaternion, canonicalQuaternion, Math.min(1, finalTurnElapsed / (settings.guideTurnDuration ?? 1))); monkeySettled = finalTurnElapsed >= (settings.guideTurnDuration ?? 1);
-      if (monkeySettled && playerEnteredRing) { monkeyMotionRoot.quaternion.copy(canonicalQuaternion); fogReveal?.dispose(); monkeyGuide.setDialogueOverride(null); monkeyGuide.showMessage(''); state = VR_INTRO_STATE.GLYPH_FREE_EXPLORE; glyphExploreElapsed = 0; }
+      finalTurnElapsed += delta; monkeyMotionRoot.quaternion.slerpQuaternions(walkingQuaternion, canonicalQuaternion, Math.min(1, finalTurnElapsed / (settings.guideTurnDuration ?? 1)));
+      if (!monkeySettled && finalTurnElapsed >= (settings.guideTurnDuration ?? 1)) { monkeySettled = true; onMonkeySettled(); }
     } else if (state === VR_INTRO_STATE.GLYPH_FREE_EXPLORE && !glyphExploreResolved && !glyphHintTriggered) { glyphExploreElapsed += delta; if (glyphExploreElapsed >= (settings.glyphFreeExploreDuration ?? 60)) { glyphHintTriggered = true; monkeyGuide.notifyAttention(); armGlyphConversation(); } }
     else if (state === VR_INTRO_STATE.RELIQUARY_REVEAL && (elapsed += delta) >= 3) state = VR_INTRO_STATE.GLYPH_FREE_EXPLORE;
   }
   reset();
-  return { update, reset, beginAfterXrCalibration, beginPostRevealSilence, beginControllerOnboarding, continueControllerOnboarding, continueInvitation, continueFollowPauseChanged, presentThresholdChoice, continueThresholdChoice, getState: () => state, isGuidePaused: () => walkingPaused,
+  return { update, reset, beginAfterXrCalibration, beginPostRevealSilence, beginControllerOnboarding, continueControllerOnboarding, continueInvitation, continueFollowPauseChanged, presentThresholdChoice, continueThresholdChoice, beginGlyphFreeExplore, getState: () => state, isGuidePaused: () => walkingPaused,
     notifyGlyphExploreSuccess: () => { if (state !== VR_INTRO_STATE.GLYPH_FREE_EXPLORE || glyphExploreResolved) return false; glyphExploreResolved = true; monkeyGuide.notifyAttention(); armGlyphConversation(); return true; },
     getDebugSnapshot: () => { const head = getHeadPosition(); const fog = fogReveal?.getSnapshot() ?? {}; return { state, headRadius: radiusOf(head), monkeyRadius: radiusOf(monkeyMotionRoot), headToMonkeyDistance: Math.hypot(head.x - monkeyMotionRoot.getWorldPosition(new THREE.Vector3()).x, head.z - monkeyMotionRoot.getWorldPosition(new THREE.Vector3()).z), fogRadius: fog.radius, fogRevealProgress: fog.progress ?? (state === VR_INTRO_STATE.FOG_REVEAL ? 0 : 1), postRevealSilenceRemaining: state === VR_INTRO_STATE.POST_REVEAL_SILENCE ? Math.max(0, (settings.postRevealSilenceDuration ?? 2) - silenceElapsed) : 0, playerGuideOpen: playerGuidePanel?.isOpen() ?? false, playerGuideSection: playerGuidePanel?.getActiveSectionId() ?? null, followCheckResolved, walkingPaused, playerEnteredRing, playerSafelyInside, monkeySettled, glyphExploreElapsed, glyphExploreResolved, glyphHintTriggered, ringRadius, xrCalibrated, visualRoot: monkeyVisualRoot?.name ?? null }; }
   };

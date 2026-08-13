@@ -101,6 +101,7 @@ export const VR_SCENARIO_EFFECT = immutableIdentifiers([
   'APPLY_FOLLOW_PAUSE_STATE',
   'PRESENT_THRESHOLD_CHOICE',
   'CONTINUE_THRESHOLD_CHOICE',
+  'BEGIN_GLYPH_FREE_EXPLORE',
   'SHOW_GUIDE_PROMPT',
   'START_MONKEY_FOLLOW',
   'SHOW_GLYPH_HINT',
@@ -127,6 +128,9 @@ export const VR_EXPERIENCE_POINT = immutableIdentifiers([
   '1.120',
   '1.120.1',
   '1.130',
+  '1.130.1',
+  '1.130.2',
+  '1.140',
   '100.10'
 ]);
 
@@ -313,7 +317,32 @@ const points = Object.freeze([
   Object.freeze({
     id: VR_EXPERIENCE_POINT['1.130'],
     label: 'Gracz przekracza próg / CROSSING rozpoczyna się',
-    capabilities: Object.freeze([]), transitions: Object.freeze([])
+    capabilities: Object.freeze([]),
+    transitions: Object.freeze([
+      Object.freeze({ event: VR_SCENARIO_EVENT.PLAYER_ENTERED_RING, target: VR_EXPERIENCE_POINT['1.130.1'], milestonesToAdd: Object.freeze([VR_SCENARIO_MILESTONE.PLAYER_ENTERED_RING]), effects: Object.freeze([]) }),
+      Object.freeze({ event: VR_SCENARIO_EVENT.MONKEY_SETTLED, target: VR_EXPERIENCE_POINT['1.130.2'], milestonesToAdd: Object.freeze([VR_SCENARIO_MILESTONE.MONKEY_SETTLED]), effects: Object.freeze([]) })
+    ])
+  }),
+  Object.freeze({
+    id: VR_EXPERIENCE_POINT['1.130.1'],
+    label: 'Gracz w ringu / oczekiwanie na osadzenie Monkey',
+    capabilities: Object.freeze([]),
+    transitions: Object.freeze([
+      Object.freeze({ event: VR_SCENARIO_EVENT.MONKEY_SETTLED, target: VR_EXPERIENCE_POINT['1.140'], milestonesToAdd: Object.freeze([VR_SCENARIO_MILESTONE.MONKEY_SETTLED]), effects: Object.freeze([VR_SCENARIO_EFFECT.BEGIN_GLYPH_FREE_EXPLORE]) })
+    ])
+  }),
+  Object.freeze({
+    id: VR_EXPERIENCE_POINT['1.130.2'],
+    label: 'Monkey osadzona / oczekiwanie na wejście gracza do ringu',
+    capabilities: Object.freeze([]),
+    transitions: Object.freeze([
+      Object.freeze({ event: VR_SCENARIO_EVENT.PLAYER_ENTERED_RING, target: VR_EXPERIENCE_POINT['1.140'], milestonesToAdd: Object.freeze([VR_SCENARIO_MILESTONE.PLAYER_ENTERED_RING]), effects: Object.freeze([VR_SCENARIO_EFFECT.BEGIN_GLYPH_FREE_EXPLORE]) })
+    ])
+  }),
+  Object.freeze({
+    id: VR_EXPERIENCE_POINT['1.140'],
+    label: 'GLYPH_FREE_EXPLORE rozpoczęte',
+    capabilities: Object.freeze([VR_SCENARIO_CAPABILITY.CAN_USE_GLYPHS]), transitions: Object.freeze([])
   }),
   Object.freeze({
     id: VR_EXPERIENCE_POINT['100.10'],
@@ -336,7 +365,7 @@ export const vrExperienceScenario = Object.freeze({
     effects: Object.freeze(Object.values(VR_SCENARIO_EFFECT))
   }),
   metadata: Object.freeze({
-    stage: 'M1_13_FOLLOW_PAUSE_RESUME_HANDOFF',
+    stage: 'M1_14_RING_ENTRY_SETTLE_JOIN_HANDOFF',
     authoritativeForLiveGameplay: true,
     authoritativeScope: Object.freeze([
       'XR_CALIBRATED → BEGIN_INTRO_REVEAL',
@@ -353,6 +382,7 @@ export const vrExperienceScenario = Object.freeze({
       'THRESHOLD_SELECTED / choice 1 → 1.130',
       'THRESHOLD_SELECTED / choice 2 → 1.120.1',
       'THRESHOLD_SELECTED / choice 3 → 100.10',
+      'PLAYER_ENTERED_RING + MONKEY_SETTLED → BEGIN_GLYPH_FREE_EXPLORE → 1.140',
       'INTRO_INVITATION_SELECTED / choice 2 → 1.100.1',
       'INTRO_INVITATION_SELECTED / choice 3 → 100.10'
     ])
