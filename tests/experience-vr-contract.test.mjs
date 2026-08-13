@@ -9,7 +9,7 @@ import { VR_EXPERIENCE_POINT, vrExperienceScenario } from '../src/xr/progression
 
 const canonicalLivePointIds = [
   '1.10', '1.20', '1.30', '1.40', '1.50', '1.60', '1.70', '1.80',
-  '1.100', '1.100.1', '1.110', '1.110.1', '1.120', '1.120.1', '1.130', '1.130.1', '1.130.2', '1.140', '100.10'
+  '1.100', '1.100.1', '1.110', '1.110.1', '1.120', '1.120.1', '1.130', '1.130.1', '1.130.2', '1.140', '1.150', '100.10'
 ];
 const retiredPointIds = [
   '1.1', '1.2', '1.3', '1.4', '1.4.1', '1.4.2', '1.4.3', '1.4.4',
@@ -49,7 +49,13 @@ assert.doesNotMatch(main, /^import .*experienceVr/m);
 
 assert.match(vr, /onPlayerEnteredRing: \(\) => runtimeExperience\.dispatch\(VR_SCENARIO_EVENT\.PLAYER_ENTERED_RING\)/);
 assert.match(vr, /onMonkeySettled: \(\) => runtimeExperience\.dispatch\(VR_SCENARIO_EVENT\.MONKEY_SETTLED\)/);
+assert.match(vr, /onGlyphHintTimeout: \(\) => runtimeExperience\.dispatch\(VR_SCENARIO_EVENT\.GLYPH_HINT_TIMEOUT\)/,
+  'Intro timeout callback dispatches only the semantic fact');
 assert.match(vr, /VR_SCENARIO_EFFECT\.BEGIN_GLYPH_FREE_EXPLORE[\s\S]*introSequence\.beginGlyphFreeExplore\(\)/);
+assert.match(vr, /VR_SCENARIO_EFFECT\.SHOW_GLYPH_HINT[\s\S]*introSequence\.showGlyphHint\(\)[\s\S]*throw new Error/,
+  'Runtime owns the fail-fast glyph hint continuation');
+assert.equal((vr.match(/introSequence\.showGlyphHint\(\)/g) ?? []).length, 1,
+  'glyph hint has no direct or duplicate execution path');
 assert.match(vr, /introQaBypass \|\| runtimeExperience\.can\(VR_SCENARIO_CAPABILITY\.CAN_USE_GLYPHS\)/,
   'production glyph permission is Scenario capability-owned while preserving QA bypass');
 assert.doesNotMatch(vr, /introSequence\?\.getState\(\)|introSequence\.getState\(\)/,
