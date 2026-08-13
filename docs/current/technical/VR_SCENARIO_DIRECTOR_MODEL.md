@@ -10,7 +10,7 @@ Jest źródłem prawdy dla wszystkich następnych etapów migracji Scenario + Di
 
 ## 1.1. Canonical Story Reindex Migration — IMPLEMENTED
 
-**CURRENT (2026-08-13):** jednorazowy corrective reindex obecnego LIVE Scenario został wdrożony bez zmiany gameplay semantics. Flat live slice to `1.10`, `1.20`, `1.30`, `1.40`, `1.50`, `1.60`, `1.70`, `1.80`, `1.100`, `1.100.1`, `1.110`, `1.120`, `1.120.1`, `1.130`, `100.10`. WHERE (`1.100.1`) i BEYOND (`1.120.1`) są jedynymi current local branches; FOLLOWING (`1.110`), THRESHOLD (`1.120`) i CROSSING (`1.130`) są płaskimi mainline beats.
+**CURRENT (2026-08-13):** jednorazowy corrective reindex obecnego LIVE Scenario został wdrożony bez zmiany gameplay semantics. Flat live slice to `1.10`, `1.20`, `1.30`, `1.40`, `1.50`, `1.60`, `1.70`, `1.80`, `1.100`, `1.100.1`, `1.110`, `1.110.1`, `1.120`, `1.120.1`, `1.130`, `100.10`. WHERE (`1.100.1`), pause/wait (`1.110.1`) i BEYOND (`1.120.1`) są current local branches; FOLLOWING (`1.110`), THRESHOLD (`1.120`) i CROSSING (`1.130`) są płaskimi mainline beats.
 
 `1.90` jest **RESERVED / WATER (Haiku Cosmos) CRYSTAL GRAB TUTORIAL / NOT IMPLEMENTED** i nie należy do produkcyjnego identifier set. Scenario Spine pozostaje **TARGET / NOT IMPLEMENTED**: nie istnieje `spine`, `mainline`, `acts`, builder ani normalizer. Director nadal przechodzi wyłącznie przez jawne `transition.target` i nie wylicza kolejności z adresów.
 
@@ -484,10 +484,12 @@ adres punktu jest wyliczany albo sortowany jako liczba
 
 ```text
 CURRENT:
-M1.12 jest IMPLEMENTED — HARDWARE QA PENDING.
-SG-036 jest MIGRATED; SG-041 pozostaje RETAINED.
-Canonical Story Reindex jest IMPLEMENTED.
-1.90 jest RESERVED / NOT IMPLEMENTED; 100.10 jest LIVE EXIT.
+M1.12 THRESHOLD CHOICE BRANCH — HARDWARE PASS, Meta Quest 3S.
+M1.13 FOLLOW PAUSE-RESUME HANDOFF — HARDWARE PASS, Meta Quest 3S.
+SG-036 i SG-041 są MIGRATED; SG-042 jest RETAINED.
+Canonical Story Reindex jest IMPLEMENTED / behavior-neutral; regression PASS, Meta Quest 3S.
+LIVE authority kończy się na 1.130, gdzie rozpoczyna się CROSSING; 100.10 jest LIVE EXIT.
+1.90 jest RESERVED / WATER CRYSTAL TUTORIAL / NOT IMPLEMENTED.
 Director operuje na currentPointId i wyłącznie explicit targets.
 ```
 
@@ -501,7 +503,9 @@ Approved WATER crystal tutorial insert nie jest punktem LIVE.
 
 **IMPLEMENTED:** current production Scenario i testy używają flat-mainline addresses opisanych w sekcji 1.1. Była to wyłącznie corrective structural migration: żadnego nowego edge, eventu, effectu, milestone ani gameplayu. Retired addresses pozostają tylko w tabeli migracyjnej i zapisie historycznym.
 
-## M1.8 Monkey Trigger Handoff — CURRENT synchronization
+The M1.8–M1.12 sections below are chronological stage snapshots. Their terminal points, pending QA and retained-group statements describe those stages, not the binding CURRENT status in §27 and the M1.13 boundary section.
+
+## M1.8 Monkey Trigger Handoff — historical stage synchronization
 
 M1.7: **HARDWARE PASS — Meta Quest 3S**. M1.8 **MONKEY TRIGGER HANDOFF**: **HARDWARE PASS — Meta Quest 3S**. Current ending chain is `1.70 → MONKEY_HOVERED → 1.80 → MONKEY_TRIGGERED → 1.100`; `1.100` is “Trigger zaakceptowany / seen + invitation legacy” and terminal for this live slice. `CONTINUE_CONTROLLER_ONBOARDING` remains the sole continuation effect.
 
@@ -545,7 +549,7 @@ SG-032, SG-039 and SG-040 are **MIGRATED**. SG-036 and SG-041 remain **RETAINED*
 
 ## M1.12 — Threshold choice branch (current)
 
-**IMPLEMENTED — HARDWARE QA PENDING.** M1.11 has **HARDWARE PASS — Meta Quest 3S**.
+**HARDWARE PASS — Meta Quest 3S.** M1.11 has **HARDWARE PASS — Meta Quest 3S**.
 
 `THRESHOLD_SELECTED` carries only numeric `{ choice }`. Scenario owns both explicit threshold routing sets; every accepted edge adds no milestone and emits the single `CONTINUE_THRESHOLD_CHOICE` effect:
 
@@ -565,8 +569,17 @@ SG-032, SG-039 and SG-040 are **MIGRATED**. SG-036 and SG-041 remain **RETAINED*
 
 ## M1.13 — Follow pause-resume handoff (current)
 
-**IMPLEMENTED — HARDWARE QA PENDING.** LIVE point `1.110` oznacza aktywne FOLLOWING, a LIVE `1.110.1` oznacza „FOLLOWING / Monkey waiting for player”. `1.110.1` jest local branch punktu `1.110` i nie należy do przyszłego Scenario Spine. Scenario Spine pozostaje **TARGET / NOT IMPLEMENTED**, a `1.90` **RESERVED / NOT IMPLEMENTED**.
+**HARDWARE PASS — Meta Quest 3S.** LIVE point `1.110` oznacza aktywne FOLLOWING, a LIVE `1.110.1` oznacza „FOLLOWING / Monkey waiting for player”. `1.110.1` jest local branch punktu `1.110` i nie należy do przyszłego Scenario Spine. Scenario Spine pozostaje **TARGET / NOT IMPLEMENTED**, a `1.90` **RESERVED / NOT IMPLEMENTED**.
 
 Actor zachowuje physical sensing (head/Monkey position, grace/pause/resume distances), motion, stop radius i fog interpolation. Po grace emituje wyłącznie `FOLLOW_PAUSE_CHANGED { paused }` i bez synchronicznej kontynuacji czeka w `WAIT_RUNTIME_AFTER_FOLLOW_PAUSE_CHANGED`. Current point, nie payload, wybiera jawny target: `1.110 → 1.110.1` albo `1.110.1 → 1.110`. Jeden effect `APPLY_FOLLOW_PAUSE_STATE` deleguje mechaniczną zmianę `walkingPaused` i istniejącego komunikatu do `continueFollowPauseChanged(paused)`. Nie dodano milestone, predicate/guard DSL ani numeric choice.
 
 Punktowa weryfikacja audytu zamyka **SG-041 = MIGRATED**: po M1.11 arrival oraz M1.13 pause/resume nie pozostał w tej grupie narrative decision owner; sensory odległości, motion i fog są actor-local mechanics. SG-036 pozostaje **MIGRATED**.
+
+
+## CURRENT architectural boundary after M1.13
+
+Scenario/Director authority currently ends at LIVE `1.130`, where **CROSSING begins**. The next unmigrated legacy block is `CROSSING → ENTERING_RING → MONKEY_SETTLING → GLYPH_FREE_EXPLORE`. `PLAYER_ENTERED_RING`, `MONKEY_SETTLED` and `GLYPH_FREE_EXPLORE_STARTED` are **NOT Scenario-owned / NOT IMPLEMENTED as migrations**. This block is **SG-042 = RETAINED** and is the natural next analysis/migration boundary; no final API or point tree is established here. Act 2 (`2.x`, Próg I) and any `1.150 → 2.10` transition remain TARGET / NOT IMPLEMENTED.
+
+M1.13 hardware QA is **PASS — Meta Quest 3S**, manually confirmed by the Designer: GO walking and grace distance work without regression; Monkey pauses when the player remains behind; the existing “Idziesz?” message works and remains visible during pause; approaching clears it and resumes movement; repeated pause/resume does not deadlock; after resume Monkey reaches the threshold; and threshold flow works after migration.
+
+After M1.13 the actor/mechanics own head and Monkey positions, distance, `followGraceDistance`, `pauseDistance`, `resumeDistance`, `stopRadius`, `guideSpeed`, actual movement and fog interpolation. Scenario/Director own legality of semantic pause (`1.110 → 1.110.1`), resume (`1.110.1 → 1.110`) and `MONKEY_REACHED_THRESHOLD` (`1.110 → 1.120`). Route selection follows the current Scenario point; `payload.paused` remains execution data, not a route selector.

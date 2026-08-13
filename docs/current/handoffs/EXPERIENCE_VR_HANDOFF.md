@@ -1,20 +1,34 @@
 # Experience VR — Current Handoff
 
-Status: current delivery handoff synchronized with HEAD on 2026-08-12. It intentionally does not duplicate runtime, audio or narrative contracts.
+Status: current delivery handoff synchronized after M1.13 hardware QA on 2026-08-13. It intentionally does not duplicate runtime, audio or narrative contracts.
 
 ## Current stage
 
-M0 through M1.13 are implemented, while M1 remains **IN PROGRESS**. M1.12 **THRESHOLD CHOICE BRANCH** is **HARDWARE PASS — Meta Quest 3S**; M1.13 is **IMPLEMENTED — HARDWARE QA PENDING**. The current production Scenario uses the canonical flat-mainline `1.x` addresses; `100.10` is LIVE EXIT and `100.1` remains RESERVED / FUTURE.
+M0 through M1.13 are implemented, while M1 remains **IN PROGRESS**. M1.12 **THRESHOLD CHOICE BRANCH** and M1.13 **FOLLOW PAUSE-RESUME HANDOFF** are both **HARDWARE PASS — Meta Quest 3S**. The current production Scenario uses the canonical flat-mainline `1.x` addresses; `100.10` is LIVE EXIT and `100.1` remains RESERVED / FUTURE.
 
 SG-032, SG-036, SG-039, SG-040 and SG-041 are **MIGRATED**. M1.13 moved follow pause/resume decision ownership and `FOLLOW_PAUSE_CHANGED` into the migrated slice. The approved crystal/grip tutorial remains **NOT IMPLEMENTED**.
 
+## CURRENT STATE — read this first
+
+- Flat story indexing `ACT.MAINLINE_POINT[.LOCAL_BRANCH...]` is canonical: two segments are mainline beats; three or more are local branches.
+- Canonical Story Reindex is **IMPLEMENTED / behavior-neutral**; post-reindex regression is **PASS — Meta Quest 3S**. Pre-reindex IDs are **SUPERSEDED / RETIRED** and must not be reused.
+- M1.12 THRESHOLD CHOICE BRANCH and M1.13 FOLLOW PAUSE-RESUME HANDOFF are **HARDWARE PASS — Meta Quest 3S**.
+- SG-036 and SG-041 are **MIGRATED**. SG-042 is **RETAINED** and is the next legacy analysis/migration boundary.
+- Current LIVE Scenario backbone is `1.10 → 1.20 → 1.30 → 1.40 → 1.50 → 1.60 → 1.70 → 1.80 → 1.100 → 1.110 → 1.120 → 1.130`, with local `1.100.1`, `1.110.1`, `1.120.1`, and LIVE EXIT `100.10`.
+- LIVE Scenario authority ends at `1.130`, where CROSSING begins. `PLAYER_ENTERED_RING`, `MONKEY_SETTLED` and `GLYPH_FREE_EXPLORE_STARTED` are not Scenario-owned; the legacy block continues through `ENTERING_RING → MONKEY_SETTLING → GLYPH_FREE_EXPLORE`.
+- `1.90` is **RESERVED / WATER (Haiku Cosmos) CRYSTAL TUTORIAL / NOT IMPLEMENTED** after post-trigger onboarding and before Invitation.
+- Scenario Spine is **TARGET / NOT IMPLEMENTED**. Runtime correctly continues through explicit `transition.target`; it has no builder or normalizer.
+- Act 1 (`1.x`) remains Prolog/Intro and Act 2 (`2.x`) Próg I. Act 2 LIVE Scenario and further progression are **NOT IMPLEMENTED**.
+
 ## Canonical Story Reindex Migration — IMPLEMENTED
 
-**CURRENT (2026-08-13):** LIVE Scenario używa flat slice `1.10`, `1.20`, `1.30`, `1.40`, `1.50`, `1.60`, `1.70`, `1.80`, `1.100`, `1.100.1`, `1.110`, `1.120`, `1.120.1`, `1.130`, `100.10`. `1.90` pozostaje **RESERVED / WATER CRYSTAL TUTORIAL / NOT IMPLEMENTED**. Stare produkcyjne IDs objęte canonical mappingiem są **SUPERSEDED / RETIRED** i nie mogą zostać ponownie użyte; `100.10` pozostaje bez zmiany.
+**CURRENT (2026-08-13):** LIVE Scenario używa flat slice `1.10`, `1.20`, `1.30`, `1.40`, `1.50`, `1.60`, `1.70`, `1.80`, `1.100`, `1.100.1`, `1.110`, `1.110.1`, `1.120`, `1.120.1`, `1.130`, `100.10`. `1.90` pozostaje **RESERVED / WATER CRYSTAL TUTORIAL / NOT IMPLEMENTED**. Stare produkcyjne IDs objęte canonical mappingiem są **SUPERSEDED / RETIRED** i nie mogą zostać ponownie użyte; `100.10` pozostaje bez zmiany.
 
 Migracja zmieniła wyłącznie adresy punktów i jawne targety. Eventy, numeric choices, effects, milestones, actor/runtime behavior i SG statuses są bez zmian. M1.12 ma **HARDWARE PASS — Meta Quest 3S**, SG-036 **MIGRATED**, a SG-041 jest **MIGRATED** po M1.13. Scenario Spine pozostaje **TARGET / NOT IMPLEMENTED**; Director nadal używa wyłącznie explicit `transition.target`. Canonical Story Reindex jest **IMPLEMENTED / behavior-neutral**; post-reindex regression: **PASS — Meta Quest 3S**.
 
-## M1.9 Numeric Choice Routing Foundation
+The milestone sections below preserve chronological snapshots. Their then-current terminals, pending QA and RETAINED statuses are superseded by **CURRENT STATE** above.
+
+## M1.9 Numeric Choice Routing Foundation — historical snapshot
 
 **IMPLEMENTED.** Director supports an optional positive-integer `choice` and exact `(event, payload.choice)` matching while retaining event-only behavior. Choice-routed and event-only transitions cannot be mixed for one event in one point, and unmatched choices are inert. The selected transition's explicit `target` is authoritative: the Director never derives `.2` from `choice: 2`. Runtime forwards the same payload unchanged.
 
@@ -36,7 +50,6 @@ This infrastructure does **not** extend production Scenario. The current termina
 - [ ] QA bypass has no regression.
 - [ ] Messages and listeners are not duplicated.
 
-
 ## M1.5 Meta Quest 3S smoke checklist
 
 **HARDWARE PASS — Meta Quest 3S**
@@ -52,7 +65,6 @@ This infrastructure does **not** extend production Scenario. The current termina
 - [ ] Monkey hover/trigger behavior is unchanged.
 - [ ] Reset/re-entry emits each handoff exactly once.
 - [ ] Messages and listeners are not duplicated.
-
 
 ## M1.6 Meta Quest 3S smoke checklist
 
@@ -86,7 +98,6 @@ This infrastructure does **not** extend production Scenario. The current termina
 - [ ] Reset/re-entry traverses the edge exactly once per run.
 - [ ] QA bypass has no regression and synthesizes no `MONKEY_HOVERED`.
 - [ ] Messages and listeners are not duplicated.
-
 
 ## M1.8 Monkey Trigger Handoff — Meta Quest 3S smoke checklist
 
@@ -192,7 +203,6 @@ M1.8 is HARDWARE PASS — Meta Quest 3S. M1.9 Numeric Choice Routing Foundation 
 - [ ] Reset/re-entry works; there are no duplicate messages or listeners.
 - [ ] QA bypass has no regression.
 
-
 ## M1.11 — MONKEY REACHED THRESHOLD HANDOFF
 
 **Status:** IMPLEMENTED — HARDWARE QA PENDING.
@@ -207,7 +217,7 @@ A later technical audit may reuse the reliquary crystal removal/release material
 
 ## M1.12 — THRESHOLD CHOICE BRANCH
 
-**Status:** IMPLEMENTED — HARDWARE QA PENDING. M1.11 is **HARDWARE PASS — Meta Quest 3S**.
+**Status:** HARDWARE PASS — Meta Quest 3S. M1.11 is **HARDWARE PASS — Meta Quest 3S**.
 
 The current threshold tree is:
 
@@ -227,14 +237,14 @@ The current threshold tree is:
 
 ### Meta Quest 3S hardware QA checklist — M1.12
 
-- [ ] No M1.11 regression; Monkey stops at the same threshold.
-- [ ] Threshold dialogue and all three options are identical and in the same order.
-- [ ] CROSS begins crossing exactly as before.
-- [ ] BEYOND shows the identical answer and returns the options.
-- [ ] BEYOND can repeat, then transition to CROSS or RETURN.
-- [ ] RETURN shows identical closing copy and ends the session at the same time.
-- [ ] No branch starts before Runtime continuation; no duplicate callbacks, messages, or options.
-- [ ] Reset/re-entry does not deadlock; QA bypass has no regression.
+- [x] No M1.11 regression; Monkey stops at the same threshold.
+- [x] Threshold dialogue and all three options are identical and in the same order.
+- [x] CROSS begins crossing exactly as before.
+- [x] BEYOND shows the identical answer and returns the options.
+- [x] BEYOND can repeat, then transition to CROSS or RETURN.
+- [x] RETURN shows identical closing copy and ends the session at the same time.
+- [x] No branch starts before Runtime continuation; no duplicate callbacks, messages, or options.
+- [x] Reset/re-entry does not deadlock; QA bypass has no regression.
 
 ### APPROVED CRYSTAL TUTORIAL INSERT — NOT IMPLEMENTED
 
@@ -242,17 +252,26 @@ The approved future crystal/grip tutorial remains outside M1.12 and is not imple
 
 ## Canonical Story Reindex — IMPLEMENTED
 
-Jednorazowy corrective reindex został wykonany. Current LIVE slice i statusy są zapisane w sekcji na początku handoffu. Nie wdrożono przy tym `1.90`, nowego edge, Scenario Spine, buildera ani normalizera. Approved crystal tutorial pozostaje **NOT IMPLEMENTED**; M1.12 ma **HARDWARE PASS — Meta Quest 3S**, SG-036 **MIGRATED**, SG-041 **RETAINED**.
+Jednorazowy corrective reindex został wykonany. Current LIVE slice i statusy są zapisane w sekcji na początku handoffu. Nie wdrożono przy tym `1.90`, nowego edge, Scenario Spine, buildera ani normalizera. Approved crystal tutorial pozostaje **NOT IMPLEMENTED**; M1.12 ma **HARDWARE PASS — Meta Quest 3S**, a SG-036 i SG-041 są **MIGRATED** po M1.13.
 
 ## M1.13 — FOLLOW PAUSE-RESUME HANDOFF
 
-**IMPLEMENTED — HARDWARE QA PENDING.** `1.110` is active FOLLOWING. LIVE `1.110.1` is the local “Monkey waiting for player” branch and is explicitly outside the future Scenario Spine. Pause routes `1.110 → FOLLOW_PAUSE_CHANGED { paused: true } → 1.110.1`; resume routes `1.110.1 → FOLLOW_PAUSE_CHANGED { paused: false } → 1.110`. Routing is point-owned, never payload-predicate-owned. One `APPLY_FOLLOW_PAUSE_STATE` effect resumes the actor through its guarded seam; no milestone or numeric choice was added.
+**HARDWARE PASS — Meta Quest 3S.** `1.110` is active FOLLOWING. LIVE `1.110.1` is the local “Monkey waiting for player” branch and is explicitly outside the future Scenario Spine. Pause routes `1.110 → FOLLOW_PAUSE_CHANGED { paused: true } → 1.110.1`; resume routes `1.110.1 → FOLLOW_PAUSE_CHANGED { paused: false } → 1.110`. Routing is point-owned, never payload-predicate-owned. One `APPLY_FOLLOW_PAUSE_STATE` effect resumes the actor through its guarded seam; no milestone or numeric choice was added.
 
 Physical grace/distance sensing, Monkey movement and fog interpolation remain in the actor. The shared safe wait prevents movement before accepted Runtime continuation. SG-041 is **MIGRATED** after point audit; SG-036 remains **MIGRATED**. Scenario Spine is **TARGET / NOT IMPLEMENTED** and `1.90` remains **RESERVED / NOT IMPLEMENTED**.
 
 ### Meta Quest 3S hardware QA checklist — M1.13
 
-- GO and grace timing unchanged; no early pause.
-- Same pause distance and “Idziesz?”/“Will you walk?” copy; no movement while paused.
-- Same resume distance, message clearing and same-frame movement; repeat pause/resume without duplicates or deadlock.
-- Arrival, threshold dialogue, WHERE/BEYOND/RETURN, reset/re-entry and QA bypass without regression.
+**PASS — Meta Quest 3S**, manually confirmed by the Designer:
+
+- [x] Walking after GO works; grace distance has no regression.
+- [x] Monkey stops when the player remains behind and stays stopped during pause.
+- [x] The existing “Idziesz?” message works during pause.
+- [x] Approaching clears the message and resumes Monkey movement.
+- [x] Repeated pause/resume works without duplicates, deadlock or lock-up.
+- [x] After resume Monkey reaches the threshold.
+- [x] Threshold flow works after the migration.
+
+## Next boundary — not implemented
+
+Do not extend the current LIVE tree while preparing the next task. SG-042 remains **RETAINED** and covers Monkey canonical position, player ring entry, settling and transition to `GLYPH_FREE_EXPLORE`. Candidate mainline slots `1.140` (`PLAYER_ENTERED_RING`) and `1.150` (`MONKEY_SETTLED` / end of prologue) are only **PLANNED / NOT IMPLEMENTED**, not final LIVE points. The direction `1.150 → 2.10` is TARGET only.
