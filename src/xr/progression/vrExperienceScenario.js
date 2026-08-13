@@ -111,20 +111,20 @@ export const VR_SCENARIO_EFFECT = immutableIdentifiers([
 ]);
 
 export const VR_EXPERIENCE_POINT = immutableIdentifiers([
-  '1.1',
-  '1.2',
-  '1.3',
-  '1.4',
-  '1.4.1',
-  '1.4.2',
-  '1.4.3',
-  '1.4.4',
-  '1.4.5',
-  '1.4.5.1',
-  '1.4.5.1.1',
-  '1.4.5.1.1.1',
-  '1.4.5.1.1.2',
-  '1.4.5.2',
+  '1.10',
+  '1.20',
+  '1.30',
+  '1.40',
+  '1.50',
+  '1.60',
+  '1.70',
+  '1.80',
+  '1.100',
+  '1.100.1',
+  '1.110',
+  '1.120',
+  '1.120.1',
+  '1.130',
   '100.10'
 ]);
 
@@ -133,166 +133,166 @@ export const VR_EXPERIENCE_SCENE = VR_EXPERIENCE_POINT;
 
 const points = Object.freeze([
   Object.freeze({
-    id: VR_EXPERIENCE_POINT['1.1'],
+    id: VR_EXPERIENCE_POINT['1.10'],
     label: 'Bootstrap / oczekiwanie na kalibrację XR',
     capabilities: Object.freeze([]),
     transitions: Object.freeze([
       Object.freeze({
         event: VR_SCENARIO_EVENT.XR_CALIBRATED,
-        target: VR_EXPERIENCE_POINT['1.2'],
+        target: VR_EXPERIENCE_POINT['1.20'],
         milestonesToAdd: Object.freeze([VR_SCENARIO_MILESTONE.XR_CALIBRATED]),
         effects: Object.freeze([VR_SCENARIO_EFFECT.BEGIN_INTRO_REVEAL])
       })
     ])
   }),
   Object.freeze({
-    id: VR_EXPERIENCE_POINT['1.2'],
+    id: VR_EXPERIENCE_POINT['1.20'],
     label: 'Intro reveal',
     capabilities: Object.freeze([]),
     transitions: Object.freeze([
       Object.freeze({
         event: VR_SCENARIO_EVENT.INTRO_REVEAL_COMPLETE,
-        target: VR_EXPERIENCE_POINT['1.3'],
+        target: VR_EXPERIENCE_POINT['1.30'],
         milestonesToAdd: Object.freeze([VR_SCENARIO_MILESTONE.INTRO_REVEAL_COMPLETE]),
         effects: Object.freeze([VR_SCENARIO_EFFECT.BEGIN_POST_REVEAL_SILENCE])
       })
     ])
   }),
   Object.freeze({
-    id: VR_EXPERIENCE_POINT['1.3'],
+    id: VR_EXPERIENCE_POINT['1.30'],
     label: 'Cisza po revealu',
     capabilities: Object.freeze([]),
     transitions: Object.freeze([
       Object.freeze({
         event: VR_SCENARIO_EVENT.POST_REVEAL_SILENCE_COMPLETE,
-        target: VR_EXPERIENCE_POINT['1.4'],
+        target: VR_EXPERIENCE_POINT['1.40'],
         milestonesToAdd: Object.freeze([VR_SCENARIO_MILESTONE.POST_REVEAL_SILENCE_COMPLETE]),
         effects: Object.freeze([VR_SCENARIO_EFFECT.BEGIN_CONTROLLER_ONBOARDING])
       })
     ])
   }),
   Object.freeze({
-    id: VR_EXPERIENCE_POINT['1.4'],
+    id: VR_EXPERIENCE_POINT['1.40'],
     label: 'Controller onboarding',
     capabilities: Object.freeze([]),
     transitions: Object.freeze([
       Object.freeze({
         event: VR_SCENARIO_EVENT.PLAYER_OPENED_GUIDE,
-        target: VR_EXPERIENCE_POINT['1.4.1'],
+        target: VR_EXPERIENCE_POINT['1.50'],
         milestonesToAdd: Object.freeze([]),
         effects: Object.freeze([VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING])
       })
     ])
   }),
   Object.freeze({
-    id: VR_EXPERIENCE_POINT['1.4.1'],
+    id: VR_EXPERIENCE_POINT['1.50'],
     label: 'Player Guide otwarty / oczekiwanie na obejrzenie controls',
     capabilities: Object.freeze([]),
     transitions: Object.freeze([
       Object.freeze({
         event: VR_SCENARIO_EVENT.PLAYER_VIEWED_CONTROLS,
-        target: VR_EXPERIENCE_POINT['1.4.2'],
+        target: VR_EXPERIENCE_POINT['1.60'],
         milestonesToAdd: Object.freeze([VR_SCENARIO_MILESTONE.PLAYER_VIEWED_CONTROLS]),
         effects: Object.freeze([VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING])
       })
     ])
   }),
   Object.freeze({
-    id: VR_EXPERIENCE_POINT['1.4.2'],
+    id: VR_EXPERIENCE_POINT['1.60'],
     label: 'Controls obejrzane / oczekiwanie na zamknięcie panelu',
     capabilities: Object.freeze([]),
     transitions: Object.freeze([
       Object.freeze({
         event: VR_SCENARIO_EVENT.PLAYER_CLOSED_GUIDE,
-        target: VR_EXPERIENCE_POINT['1.4.3'],
+        target: VR_EXPERIENCE_POINT['1.70'],
         milestonesToAdd: Object.freeze([]),
         effects: Object.freeze([VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING])
       })
     ])
   }),
   Object.freeze({
-    id: VR_EXPERIENCE_POINT['1.4.3'],
+    id: VR_EXPERIENCE_POINT['1.70'],
     label: 'Pointer tutorial uruchomiony / oczekiwanie na wskazanie Monkey',
     capabilities: Object.freeze([]),
     transitions: Object.freeze([
       Object.freeze({
         event: VR_SCENARIO_EVENT.MONKEY_HOVERED,
-        target: VR_EXPERIENCE_POINT['1.4.4'],
+        target: VR_EXPERIENCE_POINT['1.80'],
         milestonesToAdd: Object.freeze([]),
         effects: Object.freeze([VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING])
       })
     ])
   }),
   Object.freeze({
-    id: VR_EXPERIENCE_POINT['1.4.4'],
+    id: VR_EXPERIENCE_POINT['1.80'],
     label: 'Monkey wskazany / oczekiwanie na trigger',
     capabilities: Object.freeze([]),
     transitions: Object.freeze([
       Object.freeze({
         event: VR_SCENARIO_EVENT.MONKEY_TRIGGERED,
-        target: VR_EXPERIENCE_POINT['1.4.5'],
+        target: VR_EXPERIENCE_POINT['1.100'],
         milestonesToAdd: Object.freeze([]),
         effects: Object.freeze([VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING])
       })
     ])
   }),
   Object.freeze({
-    id: VR_EXPERIENCE_POINT['1.4.5'],
+    id: VR_EXPERIENCE_POINT['1.100'],
     label: 'Sekwencja po triggerze / invitation / oczekiwanie na wybór',
     capabilities: Object.freeze([]),
     transitions: Object.freeze([
-      Object.freeze({ event: VR_SCENARIO_EVENT.INTRO_INVITATION_SELECTED, choice: 1, target: VR_EXPERIENCE_POINT['1.4.5.1'], milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.CONTINUE_INTRO_INVITATION]) }),
-      Object.freeze({ event: VR_SCENARIO_EVENT.INTRO_INVITATION_SELECTED, choice: 2, target: VR_EXPERIENCE_POINT['1.4.5.2'], milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.CONTINUE_INTRO_INVITATION]) }),
+      Object.freeze({ event: VR_SCENARIO_EVENT.INTRO_INVITATION_SELECTED, choice: 1, target: VR_EXPERIENCE_POINT['1.110'], milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.CONTINUE_INTRO_INVITATION]) }),
+      Object.freeze({ event: VR_SCENARIO_EVENT.INTRO_INVITATION_SELECTED, choice: 2, target: VR_EXPERIENCE_POINT['1.100.1'], milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.CONTINUE_INTRO_INVITATION]) }),
       Object.freeze({ event: VR_SCENARIO_EVENT.INTRO_INVITATION_SELECTED, choice: 3, target: VR_EXPERIENCE_POINT['100.10'], milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.CONTINUE_INTRO_INVITATION]) })
     ])
   }),
   Object.freeze({
-    id: VR_EXPERIENCE_POINT['1.4.5.1'],
+    id: VR_EXPERIENCE_POINT['1.100.1'],
+    label: 'Gracz pyta dokąd / odpowiedź Monkey i ponowne invitation',
+    capabilities: Object.freeze([]),
+    transitions: Object.freeze([
+      Object.freeze({ event: VR_SCENARIO_EVENT.INTRO_INVITATION_SELECTED, choice: 1, target: VR_EXPERIENCE_POINT['1.110'], milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.CONTINUE_INTRO_INVITATION]) }),
+      Object.freeze({ event: VR_SCENARIO_EVENT.INTRO_INVITATION_SELECTED, choice: 2, target: VR_EXPERIENCE_POINT['1.100.1'], milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.CONTINUE_INTRO_INVITATION]) }),
+      Object.freeze({ event: VR_SCENARIO_EVENT.INTRO_INVITATION_SELECTED, choice: 3, target: VR_EXPERIENCE_POINT['100.10'], milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.CONTINUE_INTRO_INVITATION]) })
+    ])
+  }),
+  Object.freeze({
+    id: VR_EXPERIENCE_POINT['1.110'],
     label: 'Gracz zgadza się iść za Monkey / FOLLOWING zaczyna się',
     capabilities: Object.freeze([]),
     transitions: Object.freeze([
       Object.freeze({
         event: VR_SCENARIO_EVENT.MONKEY_REACHED_THRESHOLD,
-        target: VR_EXPERIENCE_POINT['1.4.5.1.1'],
+        target: VR_EXPERIENCE_POINT['1.120'],
         milestonesToAdd: Object.freeze([]),
         effects: Object.freeze([VR_SCENARIO_EFFECT.PRESENT_THRESHOLD_CHOICE])
       })
     ])
   }),
   Object.freeze({
-    id: VR_EXPERIENCE_POINT['1.4.5.1.1'],
+    id: VR_EXPERIENCE_POINT['1.120'],
     label: 'Monkey dotarła do progu / threshold dialogue prezentowany',
     capabilities: Object.freeze([]),
     transitions: Object.freeze([
-      Object.freeze({ event: VR_SCENARIO_EVENT.THRESHOLD_SELECTED, choice: 1, target: VR_EXPERIENCE_POINT['1.4.5.1.1.1'], milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.CONTINUE_THRESHOLD_CHOICE]) }),
-      Object.freeze({ event: VR_SCENARIO_EVENT.THRESHOLD_SELECTED, choice: 2, target: VR_EXPERIENCE_POINT['1.4.5.1.1.2'], milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.CONTINUE_THRESHOLD_CHOICE]) }),
+      Object.freeze({ event: VR_SCENARIO_EVENT.THRESHOLD_SELECTED, choice: 1, target: VR_EXPERIENCE_POINT['1.130'], milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.CONTINUE_THRESHOLD_CHOICE]) }),
+      Object.freeze({ event: VR_SCENARIO_EVENT.THRESHOLD_SELECTED, choice: 2, target: VR_EXPERIENCE_POINT['1.120.1'], milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.CONTINUE_THRESHOLD_CHOICE]) }),
       Object.freeze({ event: VR_SCENARIO_EVENT.THRESHOLD_SELECTED, choice: 3, target: VR_EXPERIENCE_POINT['100.10'], milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.CONTINUE_THRESHOLD_CHOICE]) })
     ])
   }),
   Object.freeze({
-    id: VR_EXPERIENCE_POINT['1.4.5.1.1.1'],
-    label: 'Gracz przekracza próg / CROSSING rozpoczyna się',
-    capabilities: Object.freeze([]), transitions: Object.freeze([])
-  }),
-  Object.freeze({
-    id: VR_EXPERIENCE_POINT['1.4.5.1.1.2'],
+    id: VR_EXPERIENCE_POINT['1.120.1'],
     label: 'Gracz pyta co jest po drugiej stronie / odpowiedź i ponowny wybór',
     capabilities: Object.freeze([]),
     transitions: Object.freeze([
-      Object.freeze({ event: VR_SCENARIO_EVENT.THRESHOLD_SELECTED, choice: 1, target: VR_EXPERIENCE_POINT['1.4.5.1.1.1'], milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.CONTINUE_THRESHOLD_CHOICE]) }),
-      Object.freeze({ event: VR_SCENARIO_EVENT.THRESHOLD_SELECTED, choice: 2, target: VR_EXPERIENCE_POINT['1.4.5.1.1.2'], milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.CONTINUE_THRESHOLD_CHOICE]) }),
+      Object.freeze({ event: VR_SCENARIO_EVENT.THRESHOLD_SELECTED, choice: 1, target: VR_EXPERIENCE_POINT['1.130'], milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.CONTINUE_THRESHOLD_CHOICE]) }),
+      Object.freeze({ event: VR_SCENARIO_EVENT.THRESHOLD_SELECTED, choice: 2, target: VR_EXPERIENCE_POINT['1.120.1'], milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.CONTINUE_THRESHOLD_CHOICE]) }),
       Object.freeze({ event: VR_SCENARIO_EVENT.THRESHOLD_SELECTED, choice: 3, target: VR_EXPERIENCE_POINT['100.10'], milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.CONTINUE_THRESHOLD_CHOICE]) })
     ])
   }),
   Object.freeze({
-    id: VR_EXPERIENCE_POINT['1.4.5.2'],
-    label: 'Gracz pyta dokąd / odpowiedź Monkey i ponowne invitation',
-    capabilities: Object.freeze([]),
-    transitions: Object.freeze([
-      Object.freeze({ event: VR_SCENARIO_EVENT.INTRO_INVITATION_SELECTED, choice: 1, target: VR_EXPERIENCE_POINT['1.4.5.1'], milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.CONTINUE_INTRO_INVITATION]) }),
-      Object.freeze({ event: VR_SCENARIO_EVENT.INTRO_INVITATION_SELECTED, choice: 2, target: VR_EXPERIENCE_POINT['1.4.5.2'], milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.CONTINUE_INTRO_INVITATION]) }),
-      Object.freeze({ event: VR_SCENARIO_EVENT.INTRO_INVITATION_SELECTED, choice: 3, target: VR_EXPERIENCE_POINT['100.10'], milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.CONTINUE_INTRO_INVITATION]) })
-    ])
+    id: VR_EXPERIENCE_POINT['1.130'],
+    label: 'Gracz przekracza próg / CROSSING rozpoczyna się',
+    capabilities: Object.freeze([]), transitions: Object.freeze([])
   }),
   Object.freeze({
     id: VR_EXPERIENCE_POINT['100.10'],
@@ -303,10 +303,10 @@ const points = Object.freeze([
 
 export const vrExperienceScenario = Object.freeze({
   id: 'experience-vr',
-  initialPointId: VR_EXPERIENCE_POINT['1.1'],
+  initialPointId: VR_EXPERIENCE_POINT['1.10'],
   points,
   // Compatibility aliases share the canonical point data; they are not a second model.
-  initialSceneId: VR_EXPERIENCE_POINT['1.1'],
+  initialSceneId: VR_EXPERIENCE_POINT['1.10'],
   scenes: points,
   vocabulary: Object.freeze({
     events: Object.freeze(Object.values(VR_SCENARIO_EVENT)),
@@ -315,7 +315,7 @@ export const vrExperienceScenario = Object.freeze({
     effects: Object.freeze(Object.values(VR_SCENARIO_EFFECT))
   }),
   metadata: Object.freeze({
-    stage: 'M1_12_THRESHOLD_CHOICE_BRANCH',
+    stage: 'M1_12_CANONICAL_STORY_REINDEX',
     authoritativeForLiveGameplay: true,
     authoritativeScope: Object.freeze([
       'XR_CALIBRATED → BEGIN_INTRO_REVEAL',
@@ -326,12 +326,12 @@ export const vrExperienceScenario = Object.freeze({
       'PLAYER_CLOSED_GUIDE → CONTINUE_CONTROLLER_ONBOARDING',
       'MONKEY_HOVERED → CONTINUE_CONTROLLER_ONBOARDING',
       'MONKEY_TRIGGERED → CONTINUE_CONTROLLER_ONBOARDING',
-      'INTRO_INVITATION_SELECTED / choice 1 → 1.4.5.1',
-      'MONKEY_REACHED_THRESHOLD → PRESENT_THRESHOLD_CHOICE → 1.4.5.1.1',
-      'THRESHOLD_SELECTED / choice 1 → 1.4.5.1.1.1',
-      'THRESHOLD_SELECTED / choice 2 → 1.4.5.1.1.2',
+      'INTRO_INVITATION_SELECTED / choice 1 → 1.110',
+      'MONKEY_REACHED_THRESHOLD → PRESENT_THRESHOLD_CHOICE → 1.120',
+      'THRESHOLD_SELECTED / choice 1 → 1.130',
+      'THRESHOLD_SELECTED / choice 2 → 1.120.1',
       'THRESHOLD_SELECTED / choice 3 → 100.10',
-      'INTRO_INVITATION_SELECTED / choice 2 → 1.4.5.2',
+      'INTRO_INVITATION_SELECTED / choice 2 → 1.100.1',
       'INTRO_INVITATION_SELECTED / choice 3 → 100.10'
     ])
   })

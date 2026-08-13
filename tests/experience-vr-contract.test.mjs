@@ -5,6 +5,25 @@ import * as THREE from '../src/vendor/three.js';
 import { createVrControllers } from '../src/xr/createVrControllers.js';
 import { createVrSemanticInput, XR_STANDARD_BUTTONS } from '../src/xr/input/createVrSemanticInput.js';
 import { createVrHandModeController, VR_LEFT_HAND_MODES } from '../src/xr/input/createVrHandModeController.js';
+import { VR_EXPERIENCE_POINT, vrExperienceScenario } from '../src/xr/progression/vrExperienceScenario.js';
+
+const canonicalLivePointIds = [
+  '1.10', '1.20', '1.30', '1.40', '1.50', '1.60', '1.70', '1.80',
+  '1.100', '1.100.1', '1.110', '1.120', '1.120.1', '1.130', '100.10'
+];
+const retiredPointIds = [
+  '1.1', '1.2', '1.3', '1.4', '1.4.1', '1.4.2', '1.4.3', '1.4.4',
+  '1.4.5', '1.4.5.1', '1.4.5.2', '1.4.5.1.1', '1.4.5.1.1.1', '1.4.5.1.1.2'
+];
+assert.deepEqual(vrExperienceScenario.points.map(({ id }) => id), canonicalLivePointIds);
+assert.deepEqual(Object.values(VR_EXPERIENCE_POINT), canonicalLivePointIds);
+assert.equal('1.90' in VR_EXPERIENCE_POINT, false, 'reserved crystal tutorial is not LIVE');
+for (const retiredId of retiredPointIds) assert.equal(retiredId in VR_EXPERIENCE_POINT, false);
+assert.equal(VR_EXPERIENCE_POINT['1.100.1'], '1.100.1', 'WHERE remains a local invitation branch');
+assert.equal(VR_EXPERIENCE_POINT['1.120.1'], '1.120.1', 'BEYOND remains a local threshold branch');
+assert.equal(VR_EXPERIENCE_POINT['1.110'], '1.110', 'FOLLOWING is a flat mainline point');
+assert.equal(VR_EXPERIENCE_POINT['1.130'], '1.130', 'CROSSING is a flat mainline point');
+assert.equal(VR_EXPERIENCE_POINT['100.10'], '100.10', 'EXIT remains unchanged');
 
 const [main, vr, experience3d, vrControllers, glyphInteraction, spatialPlaque, crystalCollection, locomotion, portalDisplay, crystalReliquary, astroFurnace, furnacePanel, semanticInputSource, playerGuidePanelSource, playerGuideContentSource] = await Promise.all([
   readFile(new URL('../src/main.js', import.meta.url), 'utf8'),
