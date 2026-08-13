@@ -4,22 +4,35 @@ Status: current binding decisions organized by implementation status, not patch 
 
 ## Implemented and binding
 
-### Experience VR Scenario + Director migration foundation, M1.9 numeric choice routing foundation, M1.8 live slice and addressing canon
+### Canonical story indexing — flat mainline, local branches and Scenario Spine
+
+1. Point ID has authoring form `ACT.MAINLINE_POINT[.LOCAL_BRANCH...]`: two segments identify a flat mainline beat; three or more identify only a local branch owned by that beat. Mainline progression never inherits the previous beat's address.
+2. Authors space planned mainline beats by `10` by default. This is an authoring convention, not Runtime arithmetic; gaps are insertion reserve, may be used in any deliberate order and never require later points to be renumbered.
+3. A mainline insert such as `1.11` belongs between `1.10` and `1.20`. A branch such as `1.100.1` does not belong to the mainline spine and exits only through an explicit transition to its hub, another branch or a mainline point.
+4. Scenario owns the authored **Scenario Spine / Mainline Spine**, meaning the explicit order of two-segment mainline points. Director does not sort IDs, inspect gaps, add `1` or `10`, interpret spine or infer next; it follows only explicit `transition.target`.
+5. A future authoring builder/normalizer may expand spine order into explicit targets before the Director boundary. Scenario Spine is an approved TARGET concept, but its final production representation/API is deferred to a separate implementation task.
+6. An obligatory authored hint that changes progression flow may be a point. A contextual stuck-player cue may execute while `currentPointId` remains unchanged and need not consume an address.
+7. `1.x` is PROLOG / INTRO; `2.x` is PRÓG I through the first five-crystal loop; `3.x` is PRÓG II beginning after that full five and covering the next Astro, shell, Furnace and Asterion Sphere phase; `100.x` remains ENDING / EXIT. No Act 4+ detail is created here.
+8. A never-used slot remains **UNUSED** and may be assigned later. A published address that is removed or replaced is **RETIRED / REMOVED / SUPERSEDED** and can never receive another meaning.
+9. The existing deeply nested live slice predates this canon. A separate, one-time **CANONICAL STORY REINDEX MIGRATION** is approved as the next architectural task and must occur before any further migration of new Scenario edges. It is a corrective exception, not a precedent for discretionary renumbering. After it, all former live addresses are SUPERSEDED / RETIRED and cannot be reused.
+10. This decision changes documentation only: it neither reindexes production Scenario nor implements a spine builder/parser, automatic routing, ID sorting, next-point resolver or point arithmetic.
+
+### Experience VR Scenario + Director migration foundation and implemented routing baseline
 
 1. Experience VR adopts a two-module migration seam: an immutable declarative Scenario supplies semantic event/capability/milestone/effect identifiers and scene transitions; a framework-free Director coordinates only those values.
 2. Milestones are monotonic narrative history. A session reset preserves them and returns the Director to its initial scene; an explicit hard reset represents a new game and clears them.
 3. Director capabilities express only global scenario permission. Actor-local correctness, geometry, physics, state machines, UI hit testing, audio lifecycle and other invariants remain with their current subsystem owners.
 4. Effects are symbolic output; the Director never invokes actors. `RuntimeExperience` is the framework-free boundary that executes injected handlers.
-5. M0 and M1.1–M1.8 are implemented and live under canonical point IDs `1.1`–`1.4.5`; point `1.4.5` is the terminal of the current live slice. M1.7 has **HARDWARE PASS — Meta Quest 3S**; M1.8 has **HARDWARE PASS — Meta Quest 3S**.
-6. SG-032, SG-039 and SG-040 are **MIGRATED**. SG-036 is **RETAINED**: its edges to `MONKEY_HOVERED` and `MONKEY_TRIGGERED` are migrated, while seen/invitation sequence, invitation choices and later decisions remain legacy. There is no claim of full central Scenario ownership.
+5. M0 and M1.1–M1.12 are implemented under the current pre-reindex production addresses. M1.12 is **IMPLEMENTED — HARDWARE QA PENDING**; these live IDs remain unchanged until the approved corrective reindex.
+6. SG-032, SG-036, SG-039 and SG-040 are **MIGRATED**. SG-041 is **RETAINED** because follow pause/resume decision ownership and `FOLLOW_PAUSE_CHANGED` remain outside the migrated slice.
 7. Point IDs are numeric-only strings of positive integer segments and are permanent structural addresses. ID, human-readable label and player-facing copy are separate layers; dialog or choice wording and narrative meaning are never encoded in an ID.
-8. Numeric child points may be nested to arbitrary depth. Their hierarchy creates address space, not implicit runtime order or behavior. Dialog choices are ordinary Scenario branches and do not require a special ID form.
-9. Published IDs are stable. A removed ID remains `REMOVED` or reserved, is never reused for another meaning, and gaps never trigger renumbering.
+8. Numeric child points are reserved for local branches of a two-segment mainline beat. Their depth has authoring meaning but creates no implicit Runtime order, parent return or behavior.
+9. Published IDs are stable. An unused gap is available insertion reserve; a removed or superseded ID is retired, never reused for another meaning, and gaps never trigger renumbering.
 10. Director moves only through explicit transition targets: it never increments, sorts or infers a child, sibling, parent, return or first branch. An actor reports what the player selected without knowing a target point ID; Scenario owns the mapping from an accepted selection to its explicit target. `choice` routing is the sole implemented payload specialization: an optional positive integer on a transition is matched exactly against `payload.choice`; choice-routed and event-only transitions cannot be mixed for the same event in one point, and `(event, choice)` is unique. Unmatched choices are inert. This does not introduce predicates or a generic condition system.
 11. Act `100` is reserved as the future ending/exit namespace. `100.1` is **FULL FINALE ENTRY / WHITE TRANSITION**, while `100.10` is **EXIT EXPERIENCE VR**, the actual departure from the VR mode. An early exit may explicitly jump straight to `100.10`; full completion explicitly follows `100.1 → finale → 100.10`.
-12. Act 100, `100.1`, `100.10` and their transitions are **RESERVED / CANONICAL FUTURE ADDRESS — NOT IMPLEMENTED**. They are not current `VR_EXPERIENCE_POINT` entries and this decision does not claim current Director support for them.
+12. `100.10` is the LIVE EXIT EXPERIENCE VR point. `100.1` remains **RESERVED / FUTURE** as the full-finale entry.
 13. M1.9 **NUMERIC CHOICE ROUTING FOUNDATION — IMPLEMENTED**. Numeric `choice` selects only a transition whose explicit Scenario `target` remains authoritative; it never derives a child point (`choice: 2` does not imply `.2`). Runtime forwards the unchanged payload to Director and effect handlers.
-14. M1.9 does not extend live Scenario: production remains terminal at `1.4.5`, invitation remains legacy, and SG-036 remains **RETAINED** with only `MONKEY_HOVERED` and `MONKEY_TRIGGERED` migrated. Hardware QA is **N/A** for the foundation because no production transition uses `choice`; automated regression preserves the M1.8 **HARDWARE PASS — Meta Quest 3S**.
+14. M1.9 itself did not extend the then-live Scenario; its foundation had Hardware QA **N/A**. Later M1.10–M1.12 routing is recorded in the dated binding decisions below.
 
 ### Runtime, progress and platform
 

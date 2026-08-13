@@ -4,9 +4,9 @@ Status: current delivery handoff synchronized with HEAD on 2026-08-12. It intent
 
 ## Current stage
 
-M0 through M1.8 **Monkey Trigger Handoff** are live, while M1 remains **IN PROGRESS**. The current chain ends `1.4.3 → MONKEY_HOVERED → 1.4.4 → MONKEY_TRIGGERED → 1.4.5`; point `1.4.5` means “Trigger zaakceptowany / seen + invitation legacy” and is terminal for the current live slice. Runtime remains the only continuation path through `CONTINUE_CONTROLLER_ONBOARDING`.
+M0 through M1.12 are implemented, while M1 remains **IN PROGRESS**. M1.12 **THRESHOLD CHOICE BRANCH** is **IMPLEMENTED — HARDWARE QA PENDING**. The current production Scenario still uses the pre-reindex nested `1.x` addresses; `100.10` is LIVE EXIT and `100.1` remains RESERVED / FUTURE.
 
-SG-032, SG-039 and SG-040 are **MIGRATED**. SG-036 remains **RETAINED**: `MONKEY_HOVERED` and `MONKEY_TRIGGERED` are migrated, while the seen/invitation sequence, invitation choices and later P0 decisions remain legacy. M1.7 is **HARDWARE PASS — Meta Quest 3S**. M1.8 is **HARDWARE PASS — Meta Quest 3S**.
+SG-032, SG-036, SG-039 and SG-040 are **MIGRATED**. SG-041 remains **RETAINED** because follow pause/resume decision ownership and `FOLLOW_PAUSE_CHANGED` remain outside the migrated slice. The approved crystal/grip tutorial remains **NOT IMPLEMENTED**.
 
 ## M1.9 Numeric Choice Routing Foundation
 
@@ -233,3 +233,11 @@ The current threshold tree is:
 ### APPROVED CRYSTAL TUTORIAL INSERT — NOT IMPLEMENTED
 
 The approved future crystal/grip tutorial remains outside M1.12 and is not implemented.
+
+## Canonical Story Reindex — next architectural blocker
+
+**NEXT ARCHITECTURAL BLOCKER:** the separately approved, one-time **CANONICAL STORY REINDEX MIGRATION** must readdress the existing live `1.x` slice to the flat-mainline canon **before the next migration of new Scenario edges**. Current production IDs, tests, copy and gameplay are unchanged by this documentation patch; no Scenario Spine implementation exists yet. After that corrective migration, every former live address is **SUPERSEDED / RETIRED** and cannot be reused for another meaning.
+
+The binding TARGET authoring model is: two segments for mainline beats, default spacing by `10` with intentional insertion reserve, and three or more segments only for local branches. Scenario owns the future Mainline Spine; Director remains limited to explicit transition targets and performs no ID arithmetic or spine interpretation.
+
+Current delivery status remains unchanged: M1.12 is **IMPLEMENTED — HARDWARE QA PENDING**; SG-036 is **MIGRATED**; SG-041 is **RETAINED**; **APPROVED CRYSTAL TUTORIAL INSERT — NOT IMPLEMENTED**.

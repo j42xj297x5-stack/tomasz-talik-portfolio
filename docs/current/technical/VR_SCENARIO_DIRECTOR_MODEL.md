@@ -49,34 +49,60 @@ Punkt Scenario jest najmniejszym adresowalnym fragmentem przebiegu, w którym Di
 
 Punkt nie jest osobną funkcją, klasą, koniecznie osobnym timerem lub komunikatem, nazwą aktora, kopią lokalnego stanu aktora, indeksem tablicy ani numerem linii JavaScript. Numer punktu jest stabilnym adresem w dziele.
 
-## 5. Kanon numerowania
+## 5. Kanon numerowania: flat mainline + local branches
 
-### 5.1. Format
+### 5.1. Format i semantyka authoringowa
 
-**TARGET / MIGRATION RULE:** point ID jest wyłącznie numerycznym, trwałym adresem strukturalnym w dziele: stringiem dodatnich segmentów całkowitych rozdzielonych kropkami, np. `1.1`, `1.2`, `1.3`, `1.1.1`, `1.1.1.1`, `2.1`. Pierwszy segment oznacza Akt, dalsze — punkt i podpunkty. Nie wolno przechowywać adresu jako liczby zmiennoprzecinkowej.
+**TARGET / MIGRATION RULE:** point ID ma postać `ACT.MAINLINE_POINT[.LOCAL_BRANCH...]` i jest wyłącznie numerycznym stringiem dodatnich segmentów całkowitych rozdzielonych kropkami, np. `1.10`, `1.20`, `2.10`, `3.60`, `1.100.1` albo `3.60.1`. Nie wolno przechowywać adresu jako liczby zmiennoprzecinkowej.
 
 ```js
-id: '1.3' // poprawnie
-id: 1.3   // niepoprawnie
+id: '1.30' // poprawnie
+id: 1.30   // niepoprawnie
 ```
 
-ID nie koduje treści ani znaczenia fabularnego. Nie może zawierać słów, slugów, nazw dialogów lub wyborów ani literowych suffixów (`a`, `b`, `c`). Dlatego `1.4.5.go`, `1.4.5a`, `intro.leave` i `monkey_where` są niepoprawne, natomiast `1.4.5.1`, `1.4.5.2` i `1.4.5.3` są poprawnymi adresami.
+ID nie koduje treści ani znaczenia fabularnego i nie może zawierać słów, slugów, nazw dialogów lub wyborów ani literowych suffixów. Pierwszy segment oznacza duży etap progresji (**Act**), drugi — beat płaskiej osi fabularnej (**mainline**), a trzeci i każdy kolejny — wyłącznie lokalną odnogę należącą do tego mainline point. Zatem głębokość ma znaczenie authoringowe, ale nadal nie daje automatycznej semantyki Runtime.
 
-### 5.2. Dowolnie głębokie dzieci
+Wiążąca interpretacja pierwszego segmentu:
 
-Punkt może mieć dowolnie głębokie numeric child points, np. `2.6` → `2.6.1` → `2.6.1.1` → `2.6.1.1.1` → `2.6.1.1.1.1`. Każdy segment pozostaje dodatnią liczbą całkowitą. Kanon nie ustanawia sztucznego limitu głębokości.
+- `1.x` — **PROLOG / INTRO**;
+- `2.x` — **PRÓG I**, obejmujący pierwszą pętlę pięciu kryształów;
+- `3.x` — **PRÓG II**, rozpoczynający się po pierwszej pełnej piątce i obejmujący m.in. zmianę glifów, Astro / Astrolabium Więzi, skorupy, Piec i drogę do Kuli Asterionowej zgodnie z kanonicznym dokumentem progresji;
+- `100.x` — **ENDING / EXIT namespace**.
 
-Głębokość umożliwia strukturalne zagęszczanie Scenario; sama w sobie nie nadaje punktowi automatycznej semantyki runtime, kolejności wykonania, mechanizmu powrotu ani zachowania Directora.
+Ten patch nie ustanawia Act 4+.
 
-### 5.3. Stabilność i `REMOVED`
+### 5.2. Płaska oś i spacing
 
-Raz opublikowany adres pozostaje stabilny. Nie renumeruje się punktów dla estetyki. Jeżeli spośród `2.6.3.1`, `2.6.3.2`, `2.6.3.3` środkowa odnoga zostanie usunięta, `2.6.3.2` pozostaje `REMOVED`, a `.1` i `.3` zachowują adresy. Nie wolno przenumerować `.3` na `.2` ani później nadać `2.6.3.2` innego znaczenia.
+Gdy fabuła lub progresja przechodzi do następnego beatu, powstaje nowy **dwusegmentowy** point. `1.100 Invitation → 1.110 Following` oraz `1.120 Threshold → 1.130 Crossing` są poprawne. Nie tworzy się genealogii `1.100 → 1.100.1 → 1.100.1.1` tylko dlatego, że wydarzenia wynikają z siebie.
 
-Luki są prawidłowe. Usunięcie całej sekwencji nie powoduje renumeracji reszty dzieła. Usunięty adres pozostaje w rejestrze jako `REMOVED` albo zarezerwowany i nigdy nie wraca jako tożsamość innego punktu.
+Planowane mainline points otrzymują domyślnie krok `10`: `1.10`, `1.20`, `1.30`; `2.10`, `2.20`; `3.10`, `3.20`. To konwencja authoringowa, nie matematyczna reguła Runtime. Sloty między nimi są celową rezerwą: między `3.60` i `3.70` można później dodać `3.61` albo świadomie `3.64`, bez renumerowania `3.70` i dalszych punktów oraz bez obowiązku użycia najniższego wolnego numeru.
 
-### 5.4. Wstawianie
+**MAINLINE INSERT ≠ LOCAL BRANCH:** `1.10 → 1.11 → 1.20` dodaje obowiązkowy kolejny beat do osi. `1.100.1` jest natomiast lokalną odnogą `1.100`; gdy odnoga się kończy, jej jawny target prowadzi np. z powrotem do `1.100` albo dalej do `1.110`, a nie domyślnie do `1.100.1.1`.
 
-Punkt wstawiony pomiędzy `1.1` i `1.2` otrzymuje `1.1.1`; kolejne w tym miejscu mogą otrzymać `1.1.2`, `1.1.3`. Punkt pomiędzy `1.1.1` i `1.1.2` może otrzymać `1.1.1.1`. Nie następuje automatyczna renumeracja reszty Scenario.
+### 5.3. Local branches, dialogi i wybory
+
+Dwa segmenty zawsze oznaczają mainline; trzy lub więcej segmentów oznacza local branch konkretnego mainline point. Dialogowa odpowiedź jest typowym prawidłowym branchem:
+
+```text
+1.100  „Idziesz?”
+├── choice 1 → 1.110
+├── choice 2 → 1.100.1  „Dokąd?”
+└── choice 3 → 100.10
+
+1.100.1
+├── choice 1 → 1.110
+├── choice 2 → 1.100.1
+└── choice 3 → 100.10
+
+1.120  Threshold
+└── BEYOND → 1.120.1 → CROSS → 1.130
+```
+
+Branch nadal ma wyłącznie jawne transitions. Director nie wraca automatycznie do rodzica, nie wybiera dziecka i nie wylicza targetu. Zagnieżdżenie oznacza dla autora lokalną odnogę, nigdy automatycznie dalszą część głównej fabuły.
+
+### 5.4. Stabilność: unused a retired
+
+Raz opublikowany adres pozostaje stabilny i nie może później otrzymać innego znaczenia. **UNUSED SLOT**, np. nigdy nieużyty `3.61`, może zostać wykorzystany w przyszłości. **RETIRED / REMOVED / SUPERSEDED ID**, który kiedyś oznaczał konkretny beat, nie może zostać ponownie przypisany. Luki nie powodują renumeracji.
 
 ### 5.5. Przenoszenie
 
@@ -86,96 +112,62 @@ Położenie zmienia się przede wszystkim przez zmianę jawnych transitions. Je�
 
 Director nie dodaje `+1`, nie wylicza następnego dziecka, nie zakłada, że `.2` następuje po `.1`, nie opiera przebiegu na kolejności tablicy, nie sortuje punktów w celu ustalenia przebiegu, nie wraca automatycznie do rodzica i nie wybiera automatycznie pierwszego dziecka. Każde przejście wskazuje jawny `target`.
 
-Legalne mogą być więc przejścia `2.6.3 → 2.6.3.2`, `2.6.3.2.2 → 2.6.3`, `2.6.3.1 → 7.4` oraz `2.6.3.3 → 100.10`, o ile są zapisane jako transitions. **Numer opisuje adres; transitions opisują przebieg.**
+Legalne są skoki, pętle i powroty, o ile zapisują je transitions. **Numer opisuje adres; transitions opisują przebieg.**
 
-## 6. Jawne przejścia, skoki, pętle i powroty
+## 6. Scenario Spine i jawne targety
 
-Każdy punkt mówi: gdzie jesteśmy, na jaki fakt czekamy, jaki skutek zlecamy i dokąd idziemy.
-
-```js
-{
-  id: '1.3',
-  label: 'Cisza po revealu',
-  transitions: [{
-    event: POST_REVEAL_SILENCE_COMPLETE,
-    target: '1.4',
-    effects: [BEGIN_CONTROLLER_ONBOARDING]
-  }]
-}
-```
-
-Rozgałęzienie jest listą jawnych alternatyw:
-
-```js
-{
-  id: '1.8',
-  label: 'Zaproszenie',
-  transitions: [
-    { event: INVITATION_GO_SELECTED, target: '1.9', effects: [START_MONKEY_FOLLOW] },
-    { event: INVITATION_WHERE_SELECTED, target: '1.8.1', effects: [PRESENT_INVITATION_EXPLANATION] },
-    { event: INVITATION_NO_SELECTED, target: '1.15', effects: [END_XR_SESSION] }
-  ]
-}
-```
-
-Powrót również jest jawny:
-
-```js
-{
-  id: '1.8.1',
-  label: 'Odpowiedź: dokąd?',
-  transitions: [{
-    event: MESSAGE_SEQUENCE_COMPLETE,
-    target: '1.8',
-    effects: [PRESENT_INVITATION_OPTIONS]
-  }]
-}
-```
-
-Skok nie jest błędem, powrót nie jest ukrytym zachowaniem, a pętla jest jawną parą transitions. Director nie ma domyślnego „następnego punktu”. Nie wprowadza się ukrytego call stacku Scenario bez osobnej zatwierdzonej potrzeby. Punkt terminalny musi być oznaczony jawnie.
-
-## 7. ID, label i copy są oddzielnymi warstwami
-
-Wiążący podział jest następujący:
-
-- **POINT ID** — trwały adres strukturalny w dziele;
-- **LABEL** — czytelny opis punktu dla człowieka;
-- **COPY** — konkretna treść wyświetlana graczowi.
-
-Przykładowy punkt `{ id: '2.6.3.2', label: 'Gracz pyta Małpę o cel podróży' }` zachowuje ID `2.6.3.2`, gdy copy gracza zmieni się z `DOKĄD?` na `GDZIE MNIE PROWADZISZ?`. Zmiana labelu albo copy nie może wymuszać zmiany point ID. Label i copy nie uczestniczą w tożsamości punktu.
-
-**CURRENT:** działający slice M1.1–M1.8 używa kanonicznych, stabilnych point IDs `1.1`–`1.4.5`; opisowe nazwy pozostają wyłącznie etykietami dla człowieka.
-
-### 7.1. Dialogi i wybory są zwykłymi odnogami
-
-Rozgałęzienie dialogowe nie wymaga specjalnego rodzaju ID. Punkt wyboru `2.6.3` może mieć warianty `2.6.3.1`, `2.6.3.2`, `2.6.3.3`; wariant `2.6.3.2` może mieć dalsze dzieci `2.6.3.2.1`, `2.6.3.2.2`, a `2.6.3.2.1.1` jest równie legalnym adresem. Nazwy i teksty wariantów należą do label/copy, nie do ID.
-
-Aktor nie wydaje polecenia `goToPoint('2.6.3.2')` i nie zna target point ID. Aktor informuje, co wybrał gracz; Scenario jest właścicielem mapowania zaakceptowanego wyboru na jawny target; Director akceptuje wyłącznie legalne przejście. M1.9 implementuje wyłącznie wąski format `payload.choice` jako dodatnią liczbę całkowitą dopasowaną do opcjonalnego `transition.choice`. Nie istnieją `choiceId`, `variant`, predicates ani generic conditions.
-
-### 7.2. Niewiążący treściowo przykład kanoniczny
+**TARGET / BINDING AUTHORING CONCEPT:** **SCENARIO SPINE** (lub **MAINLINE SPINE**) jest Scenario-owned, jawną authored kolejnością dwusegmentowych mainline points. Przykład koncepcyjny dla Act 1:
 
 ```text
-2.6.3  „Pytanie”
-├── 2.6.3.1  „Pierwsza odpowiedź”
-├── 2.6.3.2  „Druga odpowiedź”
-│   ├── 2.6.3.2.1  „Dalsza rozmowa”
-│   └── 2.6.3.2.2  „Inna dalsza rozmowa”
-└── 2.6.3.3  „Wyjście”
-    → 100.10
+1.10 → 1.20 → 1.30 → 1.40 → 1.50 → 1.60 → 1.80
+→ 1.100 → 1.110 → 1.120 → 1.130
 ```
 
-Teksty w cudzysłowie są labelami albo przykładową treścią, a nie częścią identyfikatora.
+Brak `1.70` jest legalną rezerwą. Local branch `1.100.1` nie należy do spine i jest osiągalny wyłącznie przez jawne transition z lokalnego huba; nie wolno automatycznie wstawiać go pomiędzy `1.100` i `1.110`.
 
-### 7.3. Act 100 — reserved ending / exit namespace
+Scenario jest właścicielem authored kolejności. Director **nie** sortuje IDs, nie szuka najmniejszego większego numeru, nie robi `+10` ani `+1`, nie analizuje luk, nie interpretuje spine i nie wylicza „next point”. Director porusza się nadal wyłącznie przez **explicit `transition.target`**.
 
-**RESERVED / CANONICAL FUTURE ADDRESS — NOT IMPLEMENTED:** pierwszy segment `100` jest trwale zarezerwowany jako **ACT 100 — ENDING / EXIT NAMESPACE**. `100` jest namespace'em Aktu, a adresowalnymi punktami są jego dzieci, np. `100.1`, `100.2`, …, `100.10` oraz dowolnie głębokie dzieci, np. `100.2.1`, `100.2.2`, `100.3.1.1`. Akt 100 nie wynika z długości wcześniejszej gry; jest celowo odległym, stabilnym namespace'em zakończeń.
+W przyszłości mały builder lub normalizer może przed utworzeniem Directora rozwinąć authored kolejność `1.10 → 1.20` do jawnego targetu. Po wstawieniu `1.11` wynik przed granicą Directora ma być `1.10 → explicit target 1.11` i `1.11 → explicit target 1.20`. Scenario Spine jest zatwierdzonym TARGET authoring concept, lecz ten dokument nie kanonizuje API ani JS schema (`spine`, `mainline`, `acts` itp.). Dokładna reprezentacja w `vrExperienceScenario.js` zostanie wybrana w osobnym zadaniu implementacyjnym; na Director boundary wynik zawsze musi składać się ze zwykłych explicit targets.
 
-- `100.1` jest zarezerwowany jako **FULL FINALE ENTRY / WHITE TRANSITION**: kanoniczne wejście w pełny finał, np. wejście w biel i początek finałowej sekwencji. Experience VR nadal trwa. Między `100.1` a `100.10` mogą powstać `100.2`, `100.3`, … oraz ich dzieci bez zmiany adresu wyjścia.
-- `100.10` jest zarezerwowany jako **EXIT EXPERIENCE VR**: trwały adres faktycznego zakończenia i opuszczenia trybu Experience VR.
+## 7. Przykład flat-mainline indexing
 
-FULL FINALE i EXIT EXPERIENCE VR są różnymi rzeczami. Pełne ukończenie prowadzi jawnie `ostatni punkt głównej progresji → 100.1 → finał → 100.10 → exit`. Wczesna decyzja o opuszczeniu doświadczenia może legalnie wykonać jawny skok `dowolny legalny punkt → 100.10`, bez przechodzenia przez pełny finał. Nie wolno utożsamiać rozpoczęcia finału z technicznym zakończeniem sesji.
+Poniższy krótki szkielet pokazuje wyłącznie **TARGET indeksowania**, a nie zmianę obecnych production IDs ani pełną specyfikację gameplayu:
 
-Rozdział statusów jest bezwzględny: **CURRENT IMPLEMENTED** obejmuje obecne live Scenario M1.1–M1.8 opisane w sekcji 19; Act 100, `100.1`, `100.10` i prowadzące do nich transitions są wyłącznie **RESERVED / CANONICAL FUTURE ADDRESS**. Nie występują obecnie w `VR_EXPERIENCE_POINT`, nie są zaimplementowanymi punktami ani effects i Director nie posiada obecnie tych transitions.
+```text
+1.10   Start XR
+1.20   Reveal
+1.30   Cisza
+1.40   Pierwszy onboarding
+1.50   Player Guide
+1.60   Controls
+1.70   Pointer tutorial
+1.80   Trigger
+1.90   RESERVED / przyszły tutorial chwytu kryształu
+1.100  Invitation
+1.100.1  WHERE / local branch
+1.110  Following
+1.120  Threshold
+1.120.1  BEYOND / local branch
+1.130  Crossing
+1.140  Player entered ring
+1.150  Monkey settled / koniec prologu
+→ 2.10
+
+2.10   Start Progu I
+2.20   Pierwszy glif / pierwszy crystal flow
+…       2.x trwa przez pierwszą pełną piątkę kryształów
+→ 3.10  Start Progu II
+```
+
+ID, label i copy pozostają oddzielnymi warstwami: point ID jest trwałym adresem, label czytelnym opisem dla autora, a copy treścią gracza. Zmiana labelu lub copy nie zmienia ID.
+
+### 7.1. Point a Monkey hint
+
+Nie każda pomoc dla gracza jest Scenario pointem. Obowiązkowa instrukcja, która zmienia authored flow, może być mainline beatem, np. `3.60 Nauka Astro → 3.61 Monkey instruction → 3.70 Pierwsza skorupa w Piecu`. Contextual cue po np. 20 sekundach bezczynności może natomiast wystąpić przy niezmienionym `currentPoint = 3.60`; nie wymaga tworzenia `3.61`, `3.62` ani `3.63`. Point powstaje wtedy, gdy zmienia się authored progression flow, nie dla każdej warstwy pomocy UX.
+
+### 7.2. Act 100 — ending / exit namespace
+
+Pierwszy segment `100` jest trwale zarezerwowany jako **ACT 100 — ENDING / EXIT NAMESPACE**. `100.1` oznacza **FULL FINALE ENTRY / WHITE TRANSITION**, a `100.10` — **EXIT EXPERIENCE VR**. Wczesna decyzja może jawnie skoczyć do `100.10`; pełne ukończenie prowadzi jawnie przez `100.1` i finał do `100.10`. **CURRENT:** `100.10` jest LIVE EXIT; `100.1` pozostaje RESERVED / FUTURE.
 
 ## 8. Event, effect, cue, milestone i capability
 
@@ -218,7 +210,7 @@ Wiążąca zasada: **nowy punkt Scenario ≠ nowa funkcja**. Punkt nie tworzy au
 
 ## 10. Scenario
 
-**TARGET:** Scenario jest immutable zbiorem danych opisującym akty, numerowane punkty, punkt początkowy, jawne transitions, akceptowane eventy, target, symbolic effects, capabilities, prawdziwe milestones, terminalność i metadata zakresu autorytatywności.
+**TARGET:** Scenario jest właścicielem authored mainline / Scenario Spine oraz immutable zbiorem danych opisującym akty, numerowane punkty, punkt początkowy, jawne transitions, akceptowane eventy, target, symbolic effects, capabilities, prawdziwe milestones, terminalność i metadata zakresu autorytatywności.
 
 Scenario nie importuje Three.js, DOM ani WebXR; nie odpytuje aktorów, nie mierzy odległości, nie uruchamia timerów runtime, nie pokazuje UI, nie odtwarza audio, nie przesuwa Małpy, nie zapisuje progresji domenowej, nie wykonuje efektów i nie zawiera funkcji zależnych od runtime. Mówi, co powinno wydarzyć się teraz i co może nastąpić później, nie jak narysować, przesunąć, odtworzyć lub animować skutek.
 
@@ -226,7 +218,7 @@ Scenario nie importuje Three.js, DOM ani WebXR; nie odpytuje aktorów, nie mierz
 
 **TARGET:** Director jest framework-free interpreterem Scenario. Waliduje dane; przechowuje `currentPointId`; rozpoznaje Akt z adresu; przyjmuje event; sprawdza jego dopuszczalność; zwraca `null` albo przechodzi do jawnego targetu; aktualizuje prawdziwe milestones; udostępnia capabilities; zwraca i publikuje immutable change; daje czytelny debug snapshot.
 
-Nie wykonuje effects, nie wywołuje aktorów, nie importuje runtime ani Three.js, nie czyta DOM, nie odpytuje kontrolerów domenowych, nie ustala sam ukończenia Tieru, nie mierzy timerów i nie posiada drugiej maszyny stanów.
+Nie interpretuje Scenario Spine ani arytmetyki point IDs; otrzymuje wyłącznie explicit targets. Nie wykonuje effects, nie wywołuje aktorów, nie importuje runtime ani Three.js, nie czyta DOM, nie odpytuje kontrolerów domenowych, nie ustala sam ukończenia Tieru, nie mierzy timerów i nie posiada drugiej maszyny stanów.
 
 **CURRENT:** kanoniczne API mówi o punktach: `currentPointId`, `initialPointId`, `getCurrentPointId()`. `getCurrentSceneId()` oraz aliasy Scenario `scenes` / `initialSceneId` pozostają przejściową kompatybilnością delegującą do tych samych danych, bez drugiego stanu.
 
@@ -277,7 +269,7 @@ Kontroler odpowiada „co faktycznie osiągnięto w domenie”; Scenario — „
 
 QA shortcut nie jest alternatywną fabułą i nie ma własnego Scenario. Może przygotować stan domenowy, ale jawnie synchronizuje wymagane fakty, nie omija nowych gates tak, by ukryć błąd produkcyjny, wymaga parity testu, a jego status jest śledzony osobno od produkcyjnej migracji. **CURRENT:** `applyVrProgressionShortcut.js` pozostaje istniejącym adapterem QA bez zmian działania.
 
-## 19. CURRENT dla M1.1–M1.8
+## 19. Historyczny baseline migracji M1.1–M1.8
 
 | Kanoniczny adres | Etykieta | Event kończący punkt | Effect uruchamiający kolejny punkt | Status |
 | --- | --- | --- | --- | --- |
@@ -291,7 +283,7 @@ QA shortcut nie jest alternatywną fabułą i nie ma własnego Scenario. Może p
 | `1.4.4` | Monkey wskazany / oczekiwanie na trigger | `MONKEY_TRIGGERED` | `CONTINUE_CONTROLLER_ONBOARDING` | CURRENT; migrated edge SG-036 |
 | `1.4.5` | Trigger zaakceptowany / seen + invitation legacy | — | — | CURRENT terminal; SG-036 RETAINED |
 
-M1.1–M1.8 są zaimplementowane i live pod kanonicznymi adresami `1.1`–`1.4.5`. M1.7 ma **HARDWARE PASS — Meta Quest 3S**; M1.8 ma **HARDWARE PASS — Meta Quest 3S**. SG-032, SG-039 i SG-040 są `MIGRATED`. SG-036 pozostaje `RETAINED`: migrated edges to `MONKEY_HOVERED` i `MONKEY_TRIGGERED`; remaining legacy to seen/invitation sequence, invitation choices i dalsze decyzje objęte SG-036. Punkt `1.4.5` jest terminalem current live slice.
+Na etapie M1.8 punkty były zaimplementowane pod pre-reindex adresami `1.1`–`1.4.5`. M1.7 ma **HARDWARE PASS — Meta Quest 3S**; M1.8 ma **HARDWARE PASS — Meta Quest 3S**. SG-032, SG-039 i SG-040 są `MIGRATED`. SG-036 pozostaje `RETAINED`: migrated edges to `MONKEY_HOVERED` i `MONKEY_TRIGGERED`; remaining legacy to seen/invitation sequence, invitation choices i dalsze decyzje objęte SG-036. Punkt `1.4.5` jest terminalem current live slice.
 
 ## 20. Docelowy kształt danych Scenario
 
@@ -300,26 +292,26 @@ Poniższy przykład jest składniowo niewiążący, lecz semantycznie wiążący
 ```js
 {
   id: 'experience-vr',
-  initialPointId: '1.1',
+  initialPointId: '1.10',
   points: [
     {
-      id: '1.1',
+      id: '1.10',
       label: 'Bootstrap XR',
       capabilities: [],
       transitions: [{
         event: XR_CALIBRATED,
-        target: '1.2',
+        target: '1.20',
         milestonesToAdd: [],
         effects: [{ type: BEGIN_INTRO_REVEAL }]
       }]
     },
     {
-      id: '1.2',
+      id: '1.20',
       label: 'Intro reveal',
       capabilities: [],
       transitions: [{
         event: INTRO_REVEAL_COMPLETE,
-        target: '1.3',
+        target: '1.30',
         milestonesToAdd: [],
         effects: [{ type: BEGIN_POST_REVEAL_SILENCE }]
       }]
@@ -340,7 +332,9 @@ Poniższy przykład jest składniowo niewiążący, lecz semantycznie wiążący
 - event, effect, milestone i capability pochodzą z właściwego vocabulary;
 - jeden punkt nie ma niejednoznacznych transitions dla tego samego faktu bez jawnego warunku;
 - punkt terminalny jest jawnie oznaczony;
-- Director nie wylicza kolejnego adresu;
+- dwa segmenty oznaczają mainline, a 3+ segmenty local branch;
+- local branch nie należy do Scenario Spine;
+- Director nie wylicza kolejnego adresu ani nie interpretuje spine;
 - label nie uczestniczy w tożsamości;
 - całe Scenario pozostaje immutable;
 - debug snapshot pokazuje `currentPointId`.
@@ -465,29 +459,26 @@ adres punktu jest wyliczany albo sortowany jako liczba
 
 ```text
 CURRENT:
-M0–M1.8, włącznie z MONKEY TRIGGER HANDOFF, są wdrożone.
-Scenario używa kanonicznych point IDs 1.1–1.4.5.
-Director używa currentPointId; legacy scene API jest wyłącznie aliasem.
-RuntimeExperience wykonuje live effects, a CONTINUE_CONTROLLER_ONBOARDING jest jedyną ścieżką continuation obecnego slice.
-SG-032 i SG-039 są MIGRATED.
-SG-040 jest MIGRATED; SG-036 pozostaje RETAINED, z migrated edges MONKEY_HOVERED i MONKEY_TRIGGERED.
+M1.12 jest IMPLEMENTED — HARDWARE QA PENDING.
+SG-036 jest MIGRATED; SG-041 pozostaje RETAINED.
+100.10 jest LIVE EXIT; 100.1 pozostaje RESERVED / FUTURE.
+APPROVED CRYSTAL TUTORIAL INSERT pozostaje NOT IMPLEMENTED.
+Scenario używa obecnych pre-reindex production IDs.
+Director operuje na currentPointId i wyłącznie explicit targets.
 ```
 
 ```text
-CURRENT:
-Scenario używa stabilnych numerowanych point IDs.
-Director operuje na currentPointId.
-Nazwy eventów, efektów i cue pozostają semantycznym vocabulary.
-Nowy punkt nie wymusza nowej funkcji.
-experienceVr.js pozostaje composition rootem.
+TARGET / NOT IMPLEMENTED:
+Flat mainline, local-branch semantics i Scenario-owned Mainline Spine są wiążącym kanonem authoringowym.
+Osobny Canonical Story Reindex jest następnym blockerem przed migracją nowych Scenario edges.
+Nie istnieje jeszcze builder, normalizer, spine parser ani point-ID arithmetic.
 ```
 
-```text
-IMPLEMENTED BOUNDARY:
-Działające M1.1–M1.8 są odwzorowane na punkty 1.1–1.4.5.
-SG-040 jest MIGRATED. SG-036 pozostaje RETAINED: MONKEY_HOVERED i MONKEY_TRIGGERED są migrated edges, a seen/invitation flow i dalsze decyzje pozostają legacy; punkt 1.4.5 jest terminalem current slice.
-```
+## 28. One-time Canonical Story Reindex Migration
 
+**APPROVED NEXT ARCHITECTURAL TASK — NOT PERFORMED HERE:** production Scenario currently contains pre-canon addresses including `1.4`, `1.4.1`, `1.4.2`, `1.4.3`, `1.4.4`, `1.4.5`, `1.4.5.1`, `1.4.5.1.1`, `1.4.5.1.1.1`, `1.4.5.1.1.2` and `1.4.5.2`. Before another migration of new Scenario edges, a separate, one-time **CANONICAL STORY REINDEX MIGRATION** must move this live slice to the flat-mainline model.
+
+This is a deliberate correction of the former addressing model, not permission for later discretionary renumbering. After the reindex, every old address is **SUPERSEDED / RETIRED** and may never be assigned another meaning. Until that separate task, production IDs and tests remain unchanged; no `1.90`, `1.100`, `1.110` or Scenario Spine implementation is added by this documentation decision.
 
 ## M1.8 Monkey Trigger Handoff — CURRENT synchronization
 
