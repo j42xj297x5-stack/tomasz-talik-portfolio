@@ -58,6 +58,7 @@ const productionRuntime = new RuntimeExperience({ director: new ExperienceDirect
   [VR_SCENARIO_EFFECT.BEGIN_CONTROLLER_ONBOARDING]: () => productionCalls.push(VR_SCENARIO_EFFECT.BEGIN_CONTROLLER_ONBOARDING),
   [VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING]: () => productionCalls.push(VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING),
   [VR_SCENARIO_EFFECT.PRESENT_THRESHOLD_CHOICE]: () => productionCalls.push(VR_SCENARIO_EFFECT.PRESENT_THRESHOLD_CHOICE),
+  [VR_SCENARIO_EFFECT.CONTINUE_THRESHOLD_CHOICE]: (change, payload) => { productionCalls.push(VR_SCENARIO_EFFECT.CONTINUE_THRESHOLD_CHOICE); productionChoicePayloads.push(payload); },
   [VR_SCENARIO_EFFECT.CONTINUE_INTRO_INVITATION]: (change, payload) => { productionCalls.push(VR_SCENARIO_EFFECT.CONTINUE_INTRO_INVITATION); productionChoicePayloads.push(payload); }
 } });
 productionRuntime.dispatch(VR_SCENARIO_EVENT.XR_CALIBRATED);
@@ -80,4 +81,8 @@ productionRuntime.dispatch(VR_SCENARIO_EVENT.INTRO_INVITATION_SELECTED, { choice
 productionRuntime.dispatch(VR_SCENARIO_EVENT.MONKEY_REACHED_THRESHOLD);
 assert.equal(productionCalls.at(-1), VR_SCENARIO_EFFECT.PRESENT_THRESHOLD_CHOICE,
   'accepted threshold arrival executes the single production Runtime effect');
+const productionThresholdPayload = { choice: 2 };
+productionRuntime.dispatch(VR_SCENARIO_EVENT.THRESHOLD_SELECTED, productionThresholdPayload);
+assert.equal(productionCalls.at(-1), VR_SCENARIO_EFFECT.CONTINUE_THRESHOLD_CHOICE);
+assert.equal(productionChoicePayloads.at(-1), productionThresholdPayload, 'Runtime forwards threshold payload unchanged');
 console.log('RuntimeExperience assertions passed');

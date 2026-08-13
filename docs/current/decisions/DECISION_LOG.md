@@ -127,3 +127,11 @@ Small glyph progression, Astro B/bands, radar/sector gameplay, final radar, tele
 - Scenario owns `1.4.5.1 → MONKEY_REACHED_THRESHOLD → 1.4.5.1.1`; the transition adds no milestone and emits `PRESENT_THRESHOLD_CHOICE`. Point `1.4.5.1.1` is terminal for the current slice.
 - The Intro actor retains physical following and enters `WAIT_RUNTIME_AFTER_MONKEY_REACHED_THRESHOLD` as its exactly-once gate. Runtime alone invokes the guarded threshold-presentation seam. Threshold choices and selection remain legacy.
 - SG-032, SG-039 and SG-040 are **MIGRATED**. SG-036 and SG-041 remain **RETAINED**. Migrating the threshold-arrival edge does not migrate SG-041 as a whole: pause/resume distance decisions, `FOLLOW_PAUSE_CHANGED`, and movement/follow policy remain outstanding.
+
+## 2026-08-13 — M1.12 threshold choice branch
+
+- M1.11 is **HARDWARE PASS — Meta Quest 3S**. M1.12 **THRESHOLD CHOICE BRANCH** is **IMPLEMENTED — HARDWARE QA PENDING**.
+- `THRESHOLD_SELECTED` carries numeric choice 1, 2, or 3. Scenario explicitly routes both `1.4.5.1.1` and `1.4.5.1.1.2` to CROSS terminal `1.4.5.1.1.1`, BEYOND/self-loop `1.4.5.1.1.2`, or LIVE exit `100.10`; no threshold milestone is added.
+- The single `CONTINUE_THRESHOLD_CHOICE` effect resumes an actor guarded by `WAIT_RUNTIME_AFTER_THRESHOLD_SELECTED`. UI strings are adapter-only and Runtime receives only `{ choice }`.
+- `100.10` is LIVE EXIT EXPERIENCE VR. `100.1` remains RESERVED / FUTURE.
+- Audit verification closes SG-036 as **MIGRATED**. SG-041 remains **RETAINED** because follow pause/resume decision ownership and `FOLLOW_PAUSE_CHANGED` remain outside this slice.

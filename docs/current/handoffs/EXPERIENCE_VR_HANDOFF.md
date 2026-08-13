@@ -198,3 +198,38 @@ M1.10 is **HARDWARE PASS — Meta Quest 3S**. The current boundary is `1.4.5.1 �
 After the current P0 migration, insert a grip tutorial after “Widzisz?” / “Już nauczyłeś świat, gdzie patrzysz.” and before “Idziesz?”. The approved sequence is: materialize a small WATER / Haiku Cosmos crystal above Monkey and slightly left; instruct the player to grab it; detect the physical grab; instruct release; detect release; dematerialize it; Monkey says “W tym miejscu nie możesz go zatrzymać.”; wait about 2 seconds; only then present “Idziesz?” and invitation options.
 
 A later technical audit may reuse the reliquary crystal removal/release materialization mechanism when its contract permits safe reuse, together with WATER / Haiku Cosmos, the water acquisition sound on appearance, and release sound on disappearance. This approval does **not** implement an asset, spawn, grab, release, audio, tutorial events, or tutorial points.
+
+## M1.12 — THRESHOLD CHOICE BRANCH
+
+**Status:** IMPLEMENTED — HARDWARE QA PENDING. M1.11 is **HARDWARE PASS — Meta Quest 3S**.
+
+The current threshold tree is:
+
+```text
+1.4.5.1.1
+├── choice 1 → 1.4.5.1.1.1
+├── choice 2 → 1.4.5.1.1.2
+└── choice 3 → 100.10
+
+1.4.5.1.1.2
+├── choice 1 → 1.4.5.1.1.1
+├── choice 2 → 1.4.5.1.1.2
+└── choice 3 → 100.10
+```
+
+`100.10` is LIVE EXIT; `100.1` is RESERVED / FUTURE. SG-036 is **MIGRATED** after its threshold narrative decisions moved to Scenario. SG-041 stays **RETAINED** because follow pause/resume policy remains legacy.
+
+### Meta Quest 3S hardware QA checklist — M1.12
+
+- [ ] No M1.11 regression; Monkey stops at the same threshold.
+- [ ] Threshold dialogue and all three options are identical and in the same order.
+- [ ] CROSS begins crossing exactly as before.
+- [ ] BEYOND shows the identical answer and returns the options.
+- [ ] BEYOND can repeat, then transition to CROSS or RETURN.
+- [ ] RETURN shows identical closing copy and ends the session at the same time.
+- [ ] No branch starts before Runtime continuation; no duplicate callbacks, messages, or options.
+- [ ] Reset/re-entry does not deadlock; QA bypass has no regression.
+
+### APPROVED CRYSTAL TUTORIAL INSERT — NOT IMPLEMENTED
+
+The approved future crystal/grip tutorial remains outside M1.12 and is not implemented.
