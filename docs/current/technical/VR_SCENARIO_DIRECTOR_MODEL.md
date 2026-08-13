@@ -150,7 +150,7 @@ Przykładowy punkt `{ id: '2.6.3.2', label: 'Gracz pyta Małpę o cel podróży'
 
 Rozgałęzienie dialogowe nie wymaga specjalnego rodzaju ID. Punkt wyboru `2.6.3` może mieć warianty `2.6.3.1`, `2.6.3.2`, `2.6.3.3`; wariant `2.6.3.2` może mieć dalsze dzieci `2.6.3.2.1`, `2.6.3.2.2`, a `2.6.3.2.1.1` jest równie legalnym adresem. Nazwy i teksty wariantów należą do label/copy, nie do ID.
 
-Aktor nie wydaje polecenia `goToPoint('2.6.3.2')` i nie zna target point ID. Aktor informuje, co wybrał gracz; Scenario jest właścicielem mapowania zaakceptowanego wyboru na jawny target; Director akceptuje wyłącznie legalne przejście. Ten kanon ustala ownership, ale celowo **nie projektuje** formatu payloadu eventu, `choiceId`, `variant`, `condition` ani transition predicate. Będzie to osobna decyzja implementacyjna przy migracji pierwszego realnego rozgałęzienia.
+Aktor nie wydaje polecenia `goToPoint('2.6.3.2')` i nie zna target point ID. Aktor informuje, co wybrał gracz; Scenario jest właścicielem mapowania zaakceptowanego wyboru na jawny target; Director akceptuje wyłącznie legalne przejście. M1.9 implementuje wyłącznie wąski format `payload.choice` jako dodatnią liczbę całkowitą dopasowaną do opcjonalnego `transition.choice`. Nie istnieją `choiceId`, `variant`, predicates ani generic conditions.
 
 ### 7.2. Niewiążący treściowo przykład kanoniczny
 
@@ -291,7 +291,7 @@ QA shortcut nie jest alternatywną fabułą i nie ma własnego Scenario. Może p
 | `1.4.4` | Monkey wskazany / oczekiwanie na trigger | `MONKEY_TRIGGERED` | `CONTINUE_CONTROLLER_ONBOARDING` | CURRENT; migrated edge SG-036 |
 | `1.4.5` | Trigger zaakceptowany / seen + invitation legacy | — | — | CURRENT terminal; SG-036 RETAINED |
 
-M1.1–M1.8 są zaimplementowane i live pod kanonicznymi adresami `1.1`–`1.4.5`. M1.7 ma **HARDWARE PASS — Meta Quest 3S**; M1.8 jest **IMPLEMENTED — HARDWARE QA PENDING**. SG-032, SG-039 i SG-040 są `MIGRATED`. SG-036 pozostaje `RETAINED`: migrated edges to `MONKEY_HOVERED` i `MONKEY_TRIGGERED`; remaining legacy to seen/invitation sequence, invitation choices i dalsze decyzje objęte SG-036. Punkt `1.4.5` jest terminalem current live slice.
+M1.1–M1.8 są zaimplementowane i live pod kanonicznymi adresami `1.1`–`1.4.5`. M1.7 ma **HARDWARE PASS — Meta Quest 3S**; M1.8 ma **HARDWARE PASS — Meta Quest 3S**. SG-032, SG-039 i SG-040 są `MIGRATED`. SG-036 pozostaje `RETAINED`: migrated edges to `MONKEY_HOVERED` i `MONKEY_TRIGGERED`; remaining legacy to seen/invitation sequence, invitation choices i dalsze decyzje objęte SG-036. Punkt `1.4.5` jest terminalem current live slice.
 
 ## 20. Docelowy kształt danych Scenario
 
@@ -404,8 +404,8 @@ Obowiązkowy format przyszłych synchronizacji:
 | `1.4.1` | 1 | Oczekiwanie na controls | `createVrIntroSequence` wykrywa controls DETAIL | SG-040 | `PLAYER_VIEWED_CONTROLS` | `1.4.2` | `CONTINUE_CONTROLLER_ONBOARDING` | `MIGRATED` | CURRENT live | testy Director/Runtime/aktora/kontraktu | M1.5 PASS, Quest 3S |
 | `1.4.2` | 1 | Oczekiwanie na zamknięcie panelu | `createVrIntroSequence` wykrywa fizyczne zamknięcie | SG-040 | `PLAYER_CLOSED_GUIDE` | `1.4.3` | `CONTINUE_CONTROLLER_ONBOARDING` | `MIGRATED` | CURRENT live; Runtime uruchamia pointer tutorial | testy Director/Runtime/aktora/kontraktu | M1.6 PASS — Quest 3S |
 | `1.4.3` | 1 | Oczekiwanie na wskazanie Monkey | `createVrIntroSequence` wykrywa realny hover | SG-036 | `MONKEY_HOVERED` | `1.4.4` | `CONTINUE_CONTROLLER_ONBOARDING` | `RETAINED` | CURRENT live; migrated edge `MONKEY_HOVERED` | testy Director/Runtime/aktora/kontraktu | M1.7 PASS — Quest 3S |
-| `1.4.4` | 1 | Monkey wskazany / oczekiwanie na trigger | `createVrIntroSequence` wykrywa realny press | SG-036 | `MONKEY_TRIGGERED` | `1.4.5` | `CONTINUE_CONTROLLER_ONBOARDING` | `RETAINED` | CURRENT live; migrated edge `MONKEY_TRIGGERED` | testy Director/Runtime/aktora/kontraktu | M1.8 PENDING — Quest 3S |
-| `1.4.5` | 1 | Trigger zaakceptowany / seen + invitation legacy | legacy Intro actor | SG-036 | — | — | — | `RETAINED` | CURRENT terminal; seen/invitation i dalsze decyzje pozostają legacy | parity istniejącego aktora | M1.8 PENDING — Quest 3S |
+| `1.4.4` | 1 | Monkey wskazany / oczekiwanie na trigger | `createVrIntroSequence` wykrywa realny press | SG-036 | `MONKEY_TRIGGERED` | `1.4.5` | `CONTINUE_CONTROLLER_ONBOARDING` | `RETAINED` | CURRENT live; migrated edge `MONKEY_TRIGGERED` | testy Director/Runtime/aktora/kontraktu | M1.8 PASS — Quest 3S |
+| `1.4.5` | 1 | Trigger zaakceptowany / seen + invitation legacy | legacy Intro actor | SG-036 | — | — | — | `RETAINED` | CURRENT terminal; seen/invitation i dalsze decyzje pozostają legacy | parity istniejącego aktora | M1.8 PASS — Quest 3S |
 
 Wpis powstaje przed migracją lub razem z nią; niewdrożone punkty nie są live; target address i current owner są widoczne razem. `MIGRATED` oznacza brak dual ownership. Hardware QA nie wynika z automatycznych testów. Usunięte adresy pozostają jako `REMOVED`. Rejestr nie zastępuje kodu ani testów. Powyższe wpisy obejmują wyłącznie live slice M1.1–M1.8, zamknięte SG-040 i migrated edge `MONKEY_HOVERED`; SG-036 pozostaje `RETAINED`.
 
@@ -491,6 +491,15 @@ SG-040 jest MIGRATED. SG-036 pozostaje RETAINED: MONKEY_HOVERED i MONKEY_TRIGGER
 
 ## M1.8 Monkey Trigger Handoff — CURRENT synchronization
 
-M1.7: **HARDWARE PASS — Meta Quest 3S**. M1.8 **MONKEY TRIGGER HANDOFF**: **IMPLEMENTED — HARDWARE QA PENDING**. Current ending chain is `1.4.3 → MONKEY_HOVERED → 1.4.4 → MONKEY_TRIGGERED → 1.4.5`; `1.4.5` is “Trigger zaakceptowany / seen + invitation legacy” and terminal for this live slice. `CONTINUE_CONTROLLER_ONBOARDING` remains the sole continuation effect.
+M1.7: **HARDWARE PASS — Meta Quest 3S**. M1.8 **MONKEY TRIGGER HANDOFF**: **HARDWARE PASS — Meta Quest 3S**. Current ending chain is `1.4.3 → MONKEY_HOVERED → 1.4.4 → MONKEY_TRIGGERED → 1.4.5`; `1.4.5` is “Trigger zaakceptowany / seen + invitation legacy” and terminal for this live slice. `CONTINUE_CONTROLLER_ONBOARDING` remains the sole continuation effect.
 
 Status: SG-032, SG-039 and SG-040 are **MIGRATED**; SG-036 is **RETAINED**. Its migrated edges are `MONKEY_HOVERED` and `MONKEY_TRIGGERED`. Its remaining legacy is the seen/invitation sequence, invitation choices, and further P0 follow/ending/threshold decisions. No `INTRO_INVITATION_SELECTED` transition is live.
+
+
+## M1.9 Numeric Choice Routing Foundation — IMPLEMENTED
+
+Transition może opcjonalnie deklarować `choice` jako dodatnią liczbę całkowitą. W obrębie punktu dany event jest albo pojedynczym transition event-only, albo zbiorem choice-routed transitions, w którym każda para `(event, choice)` jest unikalna. Mieszanie obu modeli nie tworzy fallbacku i jest odrzucane podczas walidacji. Dla choice-routed eventu `dispatch(eventType, payload)` dopasowuje wyłącznie `payload.choice`; brak lub nieprawidłowy/nieistniejący wariant zwraca `null` bez zmiany stanu, efektów i notyfikacji. Event-only zachowuje dotychczasową semantykę także z dodatkowym payloadem.
+
+`choice` nie jest point ID ani targetem. `choice: 2` nigdy nie oznacza `currentPoint + '.2'`; Director korzysta wyłącznie z jawnego `target` zapisanego w Scenario, który legalnie może wskazywać np. `7.4.9` lub `100.10`. Podobieństwo numeric choice i numeric hierarchy służy wyłącznie czytelności autora i nie tworzy sprzężenia algorytmicznego.
+
+M1.9 nie rozszerza live Scenario: produkcyjny terminal pozostaje `1.4.5`, nie istnieje live transition `INTRO_INVITATION_SELECTED`, invitation pozostaje legacy, a SG-036 pozostaje **RETAINED** wyłącznie z migrated edges `MONKEY_HOVERED` i `MONKEY_TRIGGERED`. M1.8 zachowuje **HARDWARE PASS — Meta Quest 3S**. Hardware QA dla samego M1.9: **N/A**, ponieważ żaden production transition jeszcze nie używa `choice`; automatyczna regresja potwierdza niezmieniony live M1.8.

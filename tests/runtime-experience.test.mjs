@@ -28,6 +28,22 @@ assert.equal(runtime.hasMilestone('DONE'), true); assert.equal(runtime.getCurren
 assert.deepEqual(runtime.getDebugSnapshot(), director.getDebugSnapshot());
 runtime.resetSession(); assert.equal(runtime.hasMilestone('DONE'), true); assert.notEqual(runtime.dispatch('GO'), null);
 runtime.resetSession({ hard: true }); assert.equal(runtime.hasMilestone('DONE'), false);
+const choicePayload = { choice: 2, source: 'fixture' }; const choiceCalls = [];
+const choiceScenario = freeze({ initialPointId: '2.6.3', vocabulary: freeze({ events: freeze(['SELECTED']),
+  capabilities: freeze([]), milestones: freeze([]), effects: freeze(['CHOICE_EFFECT']) }), points: freeze([
+  freeze({ id: '2.6.3', capabilities: freeze([]), transitions: freeze([
+    freeze({ event: 'SELECTED', choice: 1, target: '2.6.3.1', effects: freeze([]) }),
+    freeze({ event: 'SELECTED', choice: 2, target: '7.4.9', effects: freeze(['CHOICE_EFFECT']) })
+  ]) }), freeze({ id: '2.6.3.1', capabilities: freeze([]), transitions: freeze([]) }),
+  freeze({ id: '7.4.9', capabilities: freeze([]), transitions: freeze([]) })
+]) });
+const choiceRuntime = new RuntimeExperience({ director: new ExperienceDirector({ scenario: choiceScenario }),
+  effectHandlers: { CHOICE_EFFECT: (acceptedChoice, receivedPayload) => choiceCalls.push([acceptedChoice, receivedPayload]) } });
+const choiceRuntimeChange = choiceRuntime.dispatch('SELECTED', choicePayload);
+assert.equal(choiceRuntimeChange.currentPointId, '7.4.9');
+assert.equal(choiceRuntimeChange.event.payload, choicePayload);
+assert.equal(choiceCalls.length, 1); assert.equal(choiceCalls[0][0], choiceRuntimeChange);
+assert.equal(choiceCalls[0][1], choicePayload, 'Runtime forwards the exact numeric-choice payload to effect handlers');
 const missing = new RuntimeExperience({ director: new ExperienceDirector({ scenario }), effectHandlers: { FIRST() {} } });
 assert.throws(() => missing.dispatch('GO'), /Missing effect handler: SECOND/);
 let disposeCalls = 0; let dispatchCalls = 0;

@@ -9,6 +9,10 @@ function assertStringArray(value, label) {
   return seen;
 }
 
+function hasChoice(transition) {
+  return Object.prototype.hasOwnProperty.call(transition, 'choice');
+}
+
 function validateScenario(scenario) {
   if (!scenario || typeof scenario !== 'object') throw new TypeError('scenario is required');
   if (!scenario.vocabulary || typeof scenario.vocabulary !== 'object') throw new TypeError('scenario vocabulary is required');
@@ -30,13 +34,29 @@ function validateScenario(scenario) {
     for (const transition of point.transitions) {
       if (!transition || typeof transition !== 'object') throw new TypeError(`point ${point.id} contains an invalid transition`);
       if (!events.has(transition.event)) throw new Error(`point ${point.id} uses unknown event: ${transition.event}`);
-      if (transitionsByEvent.has(transition.event)) throw new Error(`point ${point.id} has duplicate transition event: ${transition.event}`);
+      const transitionHasChoice = hasChoice(transition);
+      if (transitionHasChoice && (!Number.isInteger(transition.choice) || transition.choice <= 0)) {
+        throw new TypeError(`point ${point.id} transition ${transition.event} choice must be a positive integer`);
+      }
       if (!pointIds.has(transition.target)) throw new Error(`transition target does not exist: ${transition.target}`);
       const transitionMilestones = assertStringArray(transition.milestonesToAdd ?? [], `transition ${transition.event} milestones`);
       const transitionEffects = assertStringArray(transition.effects ?? [], `transition ${transition.event} effects`);
       for (const milestone of transitionMilestones) if (!milestones.has(milestone)) throw new Error(`transition ${transition.event} uses unknown milestone: ${milestone}`);
       for (const effect of transitionEffects) if (!effects.has(effect)) throw new Error(`transition ${transition.event} uses unknown effect: ${effect}`);
-      transitionsByEvent.set(transition.event, transition);
+      const existing = transitionsByEvent.get(transition.event);
+      if (!existing) {
+        transitionsByEvent.set(transition.event, transitionHasChoice
+          ? { choices: new Map([[transition.choice, transition]]) }
+          : { transition });
+      } else if (transitionHasChoice !== Boolean(existing.choices)) {
+        throw new Error(`point ${point.id} cannot mix choice-routed and event-only transitions for event: ${transition.event}`);
+      } else if (!transitionHasChoice) {
+        throw new Error(`point ${point.id} has duplicate transition event: ${transition.event}`);
+      } else if (existing.choices.has(transition.choice)) {
+        throw new Error(`point ${point.id} has duplicate transition event and choice: ${transition.event} + ${transition.choice}`);
+      } else {
+        existing.choices.set(transition.choice, transition);
+      }
     }
     pointsById.set(point.id, { point, transitionsByEvent });
   }
@@ -60,7 +80,11 @@ export class ExperienceDirector {
 
   dispatch(eventType, payload) {
     if (this.disposed) return null;
-    const transition = this.pointsById.get(this.currentPointId).transitionsByEvent.get(eventType);
+    const route = this.pointsById.get(this.currentPointId).transitionsByEvent.get(eventType);
+    if (!route) return null;
+    const transition = route.transition ?? (
+      Number.isInteger(payload?.choice) && payload.choice > 0 ? route.choices.get(payload.choice) : null
+    );
     if (!transition) return null;
     const previousPointId = this.currentPointId;
     this.currentPointId = transition.target;
