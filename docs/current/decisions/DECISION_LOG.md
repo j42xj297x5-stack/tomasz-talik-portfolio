@@ -112,3 +112,10 @@ Status: current binding decisions organized by implementation status, not patch 
 ## Explicit current exclusions
 
 Small glyph progression, Astro B/bands, radar/sector gameplay, final radar, teleport, jump, snap turn and rigid-body physics are outside the current Experience VR contract. Current Meta Quest 3S defects in physical Sphere placement and contour continuity are implementation QA issues, not exclusions or future features.
+
+## 2026-08-13 — M1.10 numeric Intro invitation routing
+
+- `INTRO_INVITATION_SELECTED` is the single semantic event; positive integer choices `1`, `2`, and `3` are stable IDs and labels remain copy.
+- Scenario explicitly routes `1.4.5` and `1.4.5.2` to `1.4.5.1`, `1.4.5.2`, or LIVE terminal `100.10`; choice 2 at `1.4.5.2` is an intentional self-loop.
+- One `CONTINUE_INTRO_INVITATION` effect resumes the safely waiting actor. `100.1` remains RESERVED / FUTURE. SG-036 and SG-041 remain RETAINED.
+- Status: IMPLEMENTED — HARDWARE QA PENDING.

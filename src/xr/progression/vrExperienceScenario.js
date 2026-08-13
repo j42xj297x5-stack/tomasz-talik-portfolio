@@ -97,6 +97,7 @@ export const VR_SCENARIO_EFFECT = immutableIdentifiers([
   'BEGIN_POST_REVEAL_SILENCE',
   'BEGIN_CONTROLLER_ONBOARDING',
   'CONTINUE_CONTROLLER_ONBOARDING',
+  'CONTINUE_INTRO_INVITATION',
   'SHOW_GUIDE_PROMPT',
   'START_MONKEY_FOLLOW',
   'SHOW_GLYPH_HINT',
@@ -116,7 +117,10 @@ export const VR_EXPERIENCE_POINT = immutableIdentifiers([
   '1.4.2',
   '1.4.3',
   '1.4.4',
-  '1.4.5'
+  '1.4.5',
+  '1.4.5.1',
+  '1.4.5.2',
+  '100.10'
 ]);
 
 // Compatibility export only; both names reference the same identifier set.
@@ -229,9 +233,33 @@ const points = Object.freeze([
   }),
   Object.freeze({
     id: VR_EXPERIENCE_POINT['1.4.5'],
-    label: 'Trigger zaakceptowany / seen + invitation flow nadal legacy',
+    label: 'Sekwencja po triggerze / invitation / oczekiwanie na wybór',
     capabilities: Object.freeze([]),
-    transitions: Object.freeze([])
+    transitions: Object.freeze([
+      Object.freeze({ event: VR_SCENARIO_EVENT.INTRO_INVITATION_SELECTED, choice: 1, target: VR_EXPERIENCE_POINT['1.4.5.1'], milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.CONTINUE_INTRO_INVITATION]) }),
+      Object.freeze({ event: VR_SCENARIO_EVENT.INTRO_INVITATION_SELECTED, choice: 2, target: VR_EXPERIENCE_POINT['1.4.5.2'], milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.CONTINUE_INTRO_INVITATION]) }),
+      Object.freeze({ event: VR_SCENARIO_EVENT.INTRO_INVITATION_SELECTED, choice: 3, target: VR_EXPERIENCE_POINT['100.10'], milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.CONTINUE_INTRO_INVITATION]) })
+    ])
+  }),
+  Object.freeze({
+    id: VR_EXPERIENCE_POINT['1.4.5.1'],
+    label: 'Gracz zgadza się iść za Monkey / FOLLOWING zaczyna się',
+    capabilities: Object.freeze([]), transitions: Object.freeze([])
+  }),
+  Object.freeze({
+    id: VR_EXPERIENCE_POINT['1.4.5.2'],
+    label: 'Gracz pyta dokąd / odpowiedź Monkey i ponowne invitation',
+    capabilities: Object.freeze([]),
+    transitions: Object.freeze([
+      Object.freeze({ event: VR_SCENARIO_EVENT.INTRO_INVITATION_SELECTED, choice: 1, target: VR_EXPERIENCE_POINT['1.4.5.1'], milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.CONTINUE_INTRO_INVITATION]) }),
+      Object.freeze({ event: VR_SCENARIO_EVENT.INTRO_INVITATION_SELECTED, choice: 2, target: VR_EXPERIENCE_POINT['1.4.5.2'], milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.CONTINUE_INTRO_INVITATION]) }),
+      Object.freeze({ event: VR_SCENARIO_EVENT.INTRO_INVITATION_SELECTED, choice: 3, target: VR_EXPERIENCE_POINT['100.10'], milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.CONTINUE_INTRO_INVITATION]) })
+    ])
+  }),
+  Object.freeze({
+    id: VR_EXPERIENCE_POINT['100.10'],
+    label: 'EXIT EXPERIENCE VR',
+    capabilities: Object.freeze([]), transitions: Object.freeze([])
   })
 ]);
 
@@ -249,7 +277,7 @@ export const vrExperienceScenario = Object.freeze({
     effects: Object.freeze(Object.values(VR_SCENARIO_EFFECT))
   }),
   metadata: Object.freeze({
-    stage: 'M1_8_MONKEY_TRIGGER_HANDOFF',
+    stage: 'M1_10_INTRO_INVITATION_CHOICE_BRANCH',
     authoritativeForLiveGameplay: true,
     authoritativeScope: Object.freeze([
       'XR_CALIBRATED → BEGIN_INTRO_REVEAL',
@@ -259,7 +287,10 @@ export const vrExperienceScenario = Object.freeze({
       'PLAYER_VIEWED_CONTROLS → CONTINUE_CONTROLLER_ONBOARDING',
       'PLAYER_CLOSED_GUIDE → CONTINUE_CONTROLLER_ONBOARDING',
       'MONKEY_HOVERED → CONTINUE_CONTROLLER_ONBOARDING',
-      'MONKEY_TRIGGERED → CONTINUE_CONTROLLER_ONBOARDING'
+      'MONKEY_TRIGGERED → CONTINUE_CONTROLLER_ONBOARDING',
+      'INTRO_INVITATION_SELECTED / choice 1 → 1.4.5.1',
+      'INTRO_INVITATION_SELECTED / choice 2 → 1.4.5.2',
+      'INTRO_INVITATION_SELECTED / choice 3 → 100.10'
     ])
   })
 });

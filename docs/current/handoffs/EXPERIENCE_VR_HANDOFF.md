@@ -160,3 +160,28 @@ The next design space is radar/sector targeting around the world-stable frame an
 - Progress-floor geometry and projection ownership: [VR Progress Floor Model](../technical/VR_PROGRESS_FLOOR_MODEL.md)
 - Current player experience, Monkey guidance and binding copy: [Narrative & Progression Baseline](../concept/EXPERIENCE_VR_NARRATIVE_PROGRESSION_BASELINE.md)
 - NEXT and FUTURE scope: [Gameplay Roadmap](../concept/EXPERIENCE_VR_GAMEPLAY_ROADMAP.md)
+
+## M1.10 — INTRO INVITATION CHOICE BRANCH
+
+**Status:** IMPLEMENTED — HARDWARE QA PENDING.
+
+Current LIVE routing is `1.4.5` choice 1 → `1.4.5.1`, choice 2 → `1.4.5.2`, choice 3 → `100.10`; point `1.4.5.2` exposes the same three edges, including its explicit choice-2 self-loop. `100.10` is LIVE terminal `EXIT EXPERIENCE VR`; `100.1` remains RESERVED / FUTURE. SG-036 and SG-041 remain RETAINED.
+
+M1.8 is HARDWARE PASS — Meta Quest 3S. M1.9 Numeric Choice Routing Foundation is IMPLEMENTED (Hardware QA N/A), with post-M1.9 hardware regression PASS — Meta Quest 3S.
+
+### Hardware QA checklist — M1.10
+
+- [ ] M1.8/M1.9 without regression.
+- [ ] `Widzisz?` and its second line are unchanged.
+- [ ] `Idziesz?` appears as before.
+- [ ] The three options retain their order.
+- [ ] IDĘ starts follow exactly as before.
+- [ ] DOKĄD? shows the same two responses.
+- [ ] After DOKĄD?, `Idziesz?` and the same options return.
+- [ ] DOKĄD? can be selected repeatedly without deadlock.
+- [ ] IDĘ can be selected after DOKĄD?.
+- [ ] NIE can be selected after DOKĄD?.
+- [ ] NIE shows the same closing messages and ends the session at the same time.
+- [ ] Branch selection is exactly once; no branch starts before Runtime continuation.
+- [ ] Reset/re-entry works; there are no duplicate messages or listeners.
+- [ ] QA bypass has no regression.

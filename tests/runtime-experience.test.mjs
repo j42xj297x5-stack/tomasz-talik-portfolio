@@ -51,12 +51,13 @@ const ownedDirector = { dispatch() { dispatchCalls += 1; return freeze({ effects
   getCurrentPointId() {}, getDebugSnapshot() {}, resetSession() {}, dispose() { disposeCalls += 1; } };
 const disposable = new RuntimeExperience({ director: ownedDirector }); disposable.dispose(); disposable.dispose();
 assert.equal(disposeCalls, 1); assert.equal(disposable.dispatch('GO'), null); assert.equal(dispatchCalls, 0);
-const productionCalls = [];
+const productionCalls = []; const productionChoicePayloads = [];
 const productionRuntime = new RuntimeExperience({ director: new ExperienceDirector({ scenario: vrExperienceScenario }), effectHandlers: {
   [VR_SCENARIO_EFFECT.BEGIN_INTRO_REVEAL]: () => productionCalls.push(VR_SCENARIO_EFFECT.BEGIN_INTRO_REVEAL),
   [VR_SCENARIO_EFFECT.BEGIN_POST_REVEAL_SILENCE]: () => productionCalls.push(VR_SCENARIO_EFFECT.BEGIN_POST_REVEAL_SILENCE),
   [VR_SCENARIO_EFFECT.BEGIN_CONTROLLER_ONBOARDING]: () => productionCalls.push(VR_SCENARIO_EFFECT.BEGIN_CONTROLLER_ONBOARDING),
-  [VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING]: () => productionCalls.push(VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING)
+  [VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING]: () => productionCalls.push(VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING),
+  [VR_SCENARIO_EFFECT.CONTINUE_INTRO_INVITATION]: (change, payload) => { productionCalls.push(VR_SCENARIO_EFFECT.CONTINUE_INTRO_INVITATION); productionChoicePayloads.push(payload); }
 } });
 productionRuntime.dispatch(VR_SCENARIO_EVENT.XR_CALIBRATED);
 productionRuntime.dispatch(VR_SCENARIO_EVENT.INTRO_REVEAL_COMPLETE);
@@ -66,8 +67,12 @@ productionRuntime.dispatch(VR_SCENARIO_EVENT.PLAYER_VIEWED_CONTROLS);
 productionRuntime.dispatch(VR_SCENARIO_EVENT.PLAYER_CLOSED_GUIDE);
 productionRuntime.dispatch(VR_SCENARIO_EVENT.MONKEY_HOVERED);
 productionRuntime.dispatch(VR_SCENARIO_EVENT.MONKEY_TRIGGERED);
+const productionInvitationPayload = { choice: 2 };
+productionRuntime.dispatch(VR_SCENARIO_EVENT.INTRO_INVITATION_SELECTED, productionInvitationPayload);
+assert.equal(productionChoicePayloads[0], productionInvitationPayload);
 assert.deepEqual(productionCalls, [VR_SCENARIO_EFFECT.BEGIN_INTRO_REVEAL, VR_SCENARIO_EFFECT.BEGIN_POST_REVEAL_SILENCE,
   VR_SCENARIO_EFFECT.BEGIN_CONTROLLER_ONBOARDING, VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING,
   VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING, VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING,
-  VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING, VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING]);
+  VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING, VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING,
+  VR_SCENARIO_EFFECT.CONTINUE_INTRO_INVITATION]);
 console.log('RuntimeExperience assertions passed');

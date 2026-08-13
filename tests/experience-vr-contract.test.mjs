@@ -69,6 +69,13 @@ assert.match(vr, /onMonkeyHovered: \(\) => runtimeExperience\.dispatch\(VR_SCENA
   'Monkey hover callback performs only semantic dispatch');
 assert.match(vr, /onMonkeyTriggered: \(\) => runtimeExperience\.dispatch\(VR_SCENARIO_EVENT\.MONKEY_TRIGGERED\)/,
   'Monkey trigger callback performs only semantic dispatch');
+assert.match(vr, /onInvitationSelected: \(choice\) => runtimeExperience\.dispatch\(VR_SCENARIO_EVENT\.INTRO_INVITATION_SELECTED, \{ choice \}\)/,
+  'invitation callback dispatches only the unchanged numeric choice fact');
+assert.match(vr, /VR_SCENARIO_EFFECT\.CONTINUE_INTRO_INVITATION[\s\S]*introSequence\.continueInvitation\(payload\.choice\)[\s\S]*throw new Error/,
+  'accepted invitation choice has one fail-fast actor execution seam');
+assert.equal((vr.match(/introSequence\.continueInvitation\(payload\.choice\)/g) ?? []).length, 1);
+assert.doesNotMatch(vr, /chooseInvitation|choice === ['"](?:go|where|no)['"]/,
+  'composition root cannot regain legacy invitation ownership');
 assert.match(vr, /VR_SCENARIO_EFFECT\.CONTINUE_CONTROLLER_ONBOARDING[\s\S]*introSequence\.continueControllerOnboarding\(\)[\s\S]*throw new Error/,
   'guide-open effect alone resumes controller onboarding and rejects composition bugs explicitly');
 assert.equal((vr.match(/introSequence\.continueControllerOnboarding\(\)/g) ?? []).length, 1,

@@ -531,6 +531,7 @@ introSequence = createVrIntroSequence({
   onPlayerClosedGuide: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.PLAYER_CLOSED_GUIDE),
   onMonkeyHovered: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.MONKEY_HOVERED),
   onMonkeyTriggered: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.MONKEY_TRIGGERED),
+  onInvitationSelected: (choice) => runtimeExperience.dispatch(VR_SCENARIO_EVENT.INTRO_INVITATION_SELECTED, { choice }),
   onOpeningRaysReady: () => vrControllers.setRaysEnabled(true),
   onProgressionFixturesHidden: () => { portalDisplay.hide(); astroFurnace.object.visible = false; crystalReliquary.reset(); },
   onBypassFixturesVisible: () => { restorePortalWaitingState(); astroFurnace.reset(); crystalReliquary.reveal(0); },
@@ -569,6 +570,11 @@ const runtimeExperience = new RuntimeExperience({
     [VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING]: () => {
       if (!introSequence.continueControllerOnboarding()) {
         throw new Error('CONTINUE_CONTROLLER_ONBOARDING rejected by Intro actor after accepted Scenario transition');
+      }
+    },
+    [VR_SCENARIO_EFFECT.CONTINUE_INTRO_INVITATION]: (change, payload) => {
+      if (!introSequence.continueInvitation(payload.choice)) {
+        throw new Error('CONTINUE_INTRO_INVITATION rejected by Intro actor after accepted Scenario transition');
       }
     }
   }
