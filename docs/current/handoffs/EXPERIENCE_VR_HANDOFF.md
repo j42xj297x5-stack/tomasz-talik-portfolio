@@ -4,15 +4,21 @@ Status: current delivery handoff synchronized with HEAD on 2026-08-12. It intent
 
 ## Current stage
 
-M0 through M1.12 are implemented, while M1 remains **IN PROGRESS**. M1.12 **THRESHOLD CHOICE BRANCH** is **IMPLEMENTED — HARDWARE QA PENDING**. The current production Scenario still uses the pre-reindex nested `1.x` addresses; `100.10` is LIVE EXIT and `100.1` remains RESERVED / FUTURE.
+M0 through M1.12 are implemented, while M1 remains **IN PROGRESS**. M1.12 **THRESHOLD CHOICE BRANCH** is **IMPLEMENTED — HARDWARE QA PENDING**. The current production Scenario uses the canonical flat-mainline `1.x` addresses; `100.10` is LIVE EXIT and `100.1` remains RESERVED / FUTURE.
 
 SG-032, SG-036, SG-039 and SG-040 are **MIGRATED**. SG-041 remains **RETAINED** because follow pause/resume decision ownership and `FOLLOW_PAUSE_CHANGED` remain outside the migrated slice. The approved crystal/grip tutorial remains **NOT IMPLEMENTED**.
+
+## Canonical Story Reindex Migration — IMPLEMENTED
+
+**CURRENT (2026-08-13):** LIVE Scenario używa flat slice `1.10`, `1.20`, `1.30`, `1.40`, `1.50`, `1.60`, `1.70`, `1.80`, `1.100`, `1.100.1`, `1.110`, `1.120`, `1.120.1`, `1.130`, `100.10`. `1.90` pozostaje **RESERVED / WATER CRYSTAL TUTORIAL / NOT IMPLEMENTED**. Stare produkcyjne IDs objęte canonical mappingiem są **SUPERSEDED / RETIRED** i nie mogą zostać ponownie użyte; `100.10` pozostaje bez zmiany.
+
+Migracja zmieniła wyłącznie adresy punktów i jawne targety. Eventy, numeric choices, effects, milestones, actor/runtime behavior i SG statuses są bez zmian. M1.12 nadal jest **IMPLEMENTED — HARDWARE QA PENDING**, SG-036 **MIGRATED**, SG-041 **RETAINED**. Scenario Spine pozostaje **TARGET / NOT IMPLEMENTED**; Director nadal używa wyłącznie explicit `transition.target`. Hardware QA osobnego, behavior-neutral reindexu: **N/A**.
 
 ## M1.9 Numeric Choice Routing Foundation
 
 **IMPLEMENTED.** Director supports an optional positive-integer `choice` and exact `(event, payload.choice)` matching while retaining event-only behavior. Choice-routed and event-only transitions cannot be mixed for one event in one point, and unmatched choices are inert. The selected transition's explicit `target` is authoritative: the Director never derives `.2` from `choice: 2`. Runtime forwards the same payload unchanged.
 
-This infrastructure does **not** extend production Scenario. The current terminal remains `1.4.5`; invitation remains legacy; SG-036 remains **RETAINED**, with only `MONKEY_HOVERED` and `MONKEY_TRIGGERED` migrated. No invitation transition, new live point, event, effect, or player-facing behavior was added. Hardware QA: **N/A** for M1.9 itself because no production transition uses `choice`; automated regression confirms the unchanged M1.8 flow, whose status remains **HARDWARE PASS — Meta Quest 3S**.
+This infrastructure does **not** extend production Scenario. The current terminal remains `1.100`; invitation remains legacy; SG-036 remains **RETAINED**, with only `MONKEY_HOVERED` and `MONKEY_TRIGGERED` migrated. No invitation transition, new live point, event, effect, or player-facing behavior was added. Hardware QA: **N/A** for M1.9 itself because no production transition uses `choice`; automated regression confirms the unchanged M1.8 flow, whose status remains **HARDWARE PASS — Meta Quest 3S**.
 
 ## M1.4 Meta Quest 3S smoke checklist
 
@@ -165,7 +171,7 @@ The next design space is radar/sector targeting around the world-stable frame an
 
 **Status:** HARDWARE PASS — Meta Quest 3S.
 
-Current LIVE routing is `1.4.5` choice 1 → `1.4.5.1`, choice 2 → `1.4.5.2`, choice 3 → `100.10`; point `1.4.5.2` exposes the same three edges, including its explicit choice-2 self-loop. `100.10` is LIVE terminal `EXIT EXPERIENCE VR`; `100.1` remains RESERVED / FUTURE. SG-036 and SG-041 remain RETAINED.
+Current LIVE routing is `1.100` choice 1 → `1.110`, choice 2 → `1.100.1`, choice 3 → `100.10`; point `1.100.1` exposes the same three edges, including its explicit choice-2 self-loop. `100.10` is LIVE terminal `EXIT EXPERIENCE VR`; `100.1` remains RESERVED / FUTURE. SG-036 and SG-041 remain RETAINED.
 
 M1.8 is HARDWARE PASS — Meta Quest 3S. M1.9 Numeric Choice Routing Foundation is IMPLEMENTED (Hardware QA N/A), with post-M1.9 hardware regression PASS — Meta Quest 3S.
 
@@ -191,7 +197,7 @@ M1.8 is HARDWARE PASS — Meta Quest 3S. M1.9 Numeric Choice Routing Foundation 
 
 **Status:** IMPLEMENTED — HARDWARE QA PENDING.
 
-M1.10 is **HARDWARE PASS — Meta Quest 3S**. The current boundary is `1.4.5.1 → MONKEY_REACHED_THRESHOLD → 1.4.5.1.1 → PRESENT_THRESHOLD_CHOICE → threshold choices legacy`. The actor safely waits after physical arrival; Runtime is the only accepted-transition route into the unchanged threshold dialogue. No milestone was added. SG-032, SG-039 and SG-040 are MIGRATED; SG-036 and SG-041 remain RETAINED. Remaining SG-041 includes pause/resume distance decisions, `FOLLOW_PAUSE_CHANGED`, and further movement/follow policy. Threshold selection remains legacy.
+M1.10 is **HARDWARE PASS — Meta Quest 3S**. The current boundary is `1.110 → MONKEY_REACHED_THRESHOLD → 1.120 → PRESENT_THRESHOLD_CHOICE → threshold choices legacy`. The actor safely waits after physical arrival; Runtime is the only accepted-transition route into the unchanged threshold dialogue. No milestone was added. SG-032, SG-039 and SG-040 are MIGRATED; SG-036 and SG-041 remain RETAINED. Remaining SG-041 includes pause/resume distance decisions, `FOLLOW_PAUSE_CHANGED`, and further movement/follow policy. Threshold selection remains legacy.
 
 ### APPROVED NEXT CONTENT INSERT — NOT IMPLEMENTED
 
@@ -206,14 +212,14 @@ A later technical audit may reuse the reliquary crystal removal/release material
 The current threshold tree is:
 
 ```text
-1.4.5.1.1
-├── choice 1 → 1.4.5.1.1.1
-├── choice 2 → 1.4.5.1.1.2
+1.120
+├── choice 1 → 1.130
+├── choice 2 → 1.120.1
 └── choice 3 → 100.10
 
-1.4.5.1.1.2
-├── choice 1 → 1.4.5.1.1.1
-├── choice 2 → 1.4.5.1.1.2
+1.120.1
+├── choice 1 → 1.130
+├── choice 2 → 1.120.1
 └── choice 3 → 100.10
 ```
 
@@ -234,10 +240,6 @@ The current threshold tree is:
 
 The approved future crystal/grip tutorial remains outside M1.12 and is not implemented.
 
-## Canonical Story Reindex — next architectural blocker
+## Canonical Story Reindex — IMPLEMENTED
 
-**NEXT ARCHITECTURAL BLOCKER:** the separately approved, one-time **CANONICAL STORY REINDEX MIGRATION** must readdress the existing live `1.x` slice to the flat-mainline canon **before the next migration of new Scenario edges**. Current production IDs, tests, copy and gameplay are unchanged by this documentation patch; no Scenario Spine implementation exists yet. After that corrective migration, every former live address is **SUPERSEDED / RETIRED** and cannot be reused for another meaning.
-
-The binding TARGET authoring model is: two segments for mainline beats, default spacing by `10` with intentional insertion reserve, and three or more segments only for local branches. Scenario owns the future Mainline Spine; Director remains limited to explicit transition targets and performs no ID arithmetic or spine interpretation.
-
-Current delivery status remains unchanged: M1.12 is **IMPLEMENTED — HARDWARE QA PENDING**; SG-036 is **MIGRATED**; SG-041 is **RETAINED**; **APPROVED CRYSTAL TUTORIAL INSERT — NOT IMPLEMENTED**.
+Jednorazowy corrective reindex został wykonany. Current LIVE slice i statusy są zapisane w sekcji na początku handoffu. Nie wdrożono przy tym `1.90`, nowego edge, Scenario Spine, buildera ani normalizera. Approved crystal tutorial pozostaje **NOT IMPLEMENTED**; M1.12 pozostaje **IMPLEMENTED — HARDWARE QA PENDING**, SG-036 **MIGRATED**, SG-041 **RETAINED**.

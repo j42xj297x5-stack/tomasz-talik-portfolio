@@ -2,6 +2,12 @@
 
 Status: current binding decisions organized by implementation status, not patch chronology. Synchronized on 2026-08-13.
 
+## Canonical Story Reindex Migration — IMPLEMENTED
+
+**CURRENT (2026-08-13):** LIVE Scenario używa flat slice `1.10`, `1.20`, `1.30`, `1.40`, `1.50`, `1.60`, `1.70`, `1.80`, `1.100`, `1.100.1`, `1.110`, `1.120`, `1.120.1`, `1.130`, `100.10`. `1.90` pozostaje **RESERVED / WATER CRYSTAL TUTORIAL / NOT IMPLEMENTED**. Stare produkcyjne IDs objęte canonical mappingiem są **SUPERSEDED / RETIRED** i nie mogą zostać ponownie użyte; `100.10` pozostaje bez zmiany.
+
+Migracja zmieniła wyłącznie adresy punktów i jawne targety. Eventy, numeric choices, effects, milestones, actor/runtime behavior i SG statuses są bez zmian. M1.12 nadal jest **IMPLEMENTED — HARDWARE QA PENDING**, SG-036 **MIGRATED**, SG-041 **RETAINED**. Scenario Spine pozostaje **TARGET / NOT IMPLEMENTED**; Director nadal używa wyłącznie explicit `transition.target`. Hardware QA osobnego, behavior-neutral reindexu: **N/A**.
+
 ## Implemented and binding
 
 ### Canonical story indexing — flat mainline, local branches and Scenario Spine
@@ -14,8 +20,8 @@ Status: current binding decisions organized by implementation status, not patch 
 6. An obligatory authored hint that changes progression flow may be a point. A contextual stuck-player cue may execute while `currentPointId` remains unchanged and need not consume an address.
 7. `1.x` is PROLOG / INTRO; `2.x` is PRÓG I through the first five-crystal loop; `3.x` is PRÓG II beginning after that full five and covering the next Astro, shell, Furnace and Asterion Sphere phase; `100.x` remains ENDING / EXIT. No Act 4+ detail is created here.
 8. A never-used slot remains **UNUSED** and may be assigned later. A published address that is removed or replaced is **RETIRED / REMOVED / SUPERSEDED** and can never receive another meaning.
-9. The existing deeply nested live slice predates this canon. A separate, one-time **CANONICAL STORY REINDEX MIGRATION** is approved as the next architectural task and must occur before any further migration of new Scenario edges. It is a corrective exception, not a precedent for discretionary renumbering. After it, all former live addresses are SUPERSEDED / RETIRED and cannot be reused.
-10. This decision changes documentation only: it neither reindexes production Scenario nor implements a spine builder/parser, automatic routing, ID sorting, next-point resolver or point arithmetic.
+9. The one-time **CANONICAL STORY REINDEX MIGRATION** is **IMPLEMENTED** as a corrective exception, not a precedent for discretionary renumbering. All former live addresses are SUPERSEDED / RETIRED and cannot be reused.
+10. The corrective migration reindexed production Scenario without implementing a spine builder/parser, automatic routing, ID sorting, next-point resolver or point arithmetic.
 
 ### Experience VR Scenario + Director migration foundation and implemented routing baseline
 
@@ -23,7 +29,7 @@ Status: current binding decisions organized by implementation status, not patch 
 2. Milestones are monotonic narrative history. A session reset preserves them and returns the Director to its initial scene; an explicit hard reset represents a new game and clears them.
 3. Director capabilities express only global scenario permission. Actor-local correctness, geometry, physics, state machines, UI hit testing, audio lifecycle and other invariants remain with their current subsystem owners.
 4. Effects are symbolic output; the Director never invokes actors. `RuntimeExperience` is the framework-free boundary that executes injected handlers.
-5. M0 and M1.1–M1.12 are implemented under the current pre-reindex production addresses. M1.12 is **IMPLEMENTED — HARDWARE QA PENDING**; these live IDs remain unchanged until the approved corrective reindex.
+5. M0 and M1.1–M1.12 remain implemented with unchanged gameplay semantics. M1.12 is **IMPLEMENTED — HARDWARE QA PENDING**; the approved canonical corrective reindex is **IMPLEMENTED**.
 6. SG-032, SG-036, SG-039 and SG-040 are **MIGRATED**. SG-041 is **RETAINED** because follow pause/resume decision ownership and `FOLLOW_PAUSE_CHANGED` remain outside the migrated slice.
 7. Point IDs are numeric-only strings of positive integer segments and are permanent structural addresses. ID, human-readable label and player-facing copy are separate layers; dialog or choice wording and narrative meaning are never encoded in an ID.
 8. Numeric child points are reserved for local branches of a two-segment mainline beat. Their depth has authoring meaning but creates no implicit Runtime order, parent return or behavior.
@@ -129,7 +135,7 @@ Small glyph progression, Astro B/bands, radar/sector gameplay, final radar, tele
 ## 2026-08-13 — M1.10 numeric Intro invitation routing
 
 - `INTRO_INVITATION_SELECTED` is the single semantic event; positive integer choices `1`, `2`, and `3` are stable IDs and labels remain copy.
-- Scenario explicitly routes `1.4.5` and `1.4.5.2` to `1.4.5.1`, `1.4.5.2`, or LIVE terminal `100.10`; choice 2 at `1.4.5.2` is an intentional self-loop.
+- Scenario explicitly routes `1.100` and `1.100.1` to `1.110`, `1.100.1`, or LIVE terminal `100.10`; choice 2 at `1.100.1` is an intentional self-loop.
 - One `CONTINUE_INTRO_INVITATION` effect resumes the safely waiting actor. `100.1` remains RESERVED / FUTURE. SG-036 and SG-041 remain RETAINED.
 - Status: IMPLEMENTED — HARDWARE QA PENDING.
 
@@ -137,14 +143,14 @@ Small glyph progression, Astro B/bands, radar/sector gameplay, final radar, tele
 ## 2026-08-13 — M1.11 Monkey reached threshold handoff
 
 - M1.10 is **HARDWARE PASS — Meta Quest 3S**. M1.11 is **IMPLEMENTED — HARDWARE QA PENDING**.
-- Scenario owns `1.4.5.1 → MONKEY_REACHED_THRESHOLD → 1.4.5.1.1`; the transition adds no milestone and emits `PRESENT_THRESHOLD_CHOICE`. Point `1.4.5.1.1` is terminal for the current slice.
+- Scenario owns `1.110 → MONKEY_REACHED_THRESHOLD → 1.120`; the transition adds no milestone and emits `PRESENT_THRESHOLD_CHOICE`. Point `1.120` is terminal for the current slice.
 - The Intro actor retains physical following and enters `WAIT_RUNTIME_AFTER_MONKEY_REACHED_THRESHOLD` as its exactly-once gate. Runtime alone invokes the guarded threshold-presentation seam. Threshold choices and selection remain legacy.
 - SG-032, SG-039 and SG-040 are **MIGRATED**. SG-036 and SG-041 remain **RETAINED**. Migrating the threshold-arrival edge does not migrate SG-041 as a whole: pause/resume distance decisions, `FOLLOW_PAUSE_CHANGED`, and movement/follow policy remain outstanding.
 
 ## 2026-08-13 — M1.12 threshold choice branch
 
 - M1.11 is **HARDWARE PASS — Meta Quest 3S**. M1.12 **THRESHOLD CHOICE BRANCH** is **IMPLEMENTED — HARDWARE QA PENDING**.
-- `THRESHOLD_SELECTED` carries numeric choice 1, 2, or 3. Scenario explicitly routes both `1.4.5.1.1` and `1.4.5.1.1.2` to CROSS terminal `1.4.5.1.1.1`, BEYOND/self-loop `1.4.5.1.1.2`, or LIVE exit `100.10`; no threshold milestone is added.
+- `THRESHOLD_SELECTED` carries numeric choice 1, 2, or 3. Scenario explicitly routes both `1.120` and `1.120.1` to CROSS terminal `1.130`, BEYOND/self-loop `1.120.1`, or LIVE exit `100.10`; no threshold milestone is added.
 - The single `CONTINUE_THRESHOLD_CHOICE` effect resumes an actor guarded by `WAIT_RUNTIME_AFTER_THRESHOLD_SELECTED`. UI strings are adapter-only and Runtime receives only `{ choice }`.
 - `100.10` is LIVE EXIT EXPERIENCE VR. `100.1` remains RESERVED / FUTURE.
 - Audit verification closes SG-036 as **MIGRATED**. SG-041 remains **RETAINED** because follow pause/resume decision ownership and `FOLLOW_PAUSE_CHANGED` remain outside this slice.

@@ -2,11 +2,17 @@
 
 Status: canonical description of the implemented runtime synchronized on 2026-08-12. Approved future gameplay is documented in the [gameplay roadmap](../concept/EXPERIENCE_VR_GAMEPLAY_ROADMAP.md).
 
+## Canonical Story Reindex Migration — IMPLEMENTED
+
+**CURRENT (2026-08-13):** LIVE Scenario używa flat slice `1.10`, `1.20`, `1.30`, `1.40`, `1.50`, `1.60`, `1.70`, `1.80`, `1.100`, `1.100.1`, `1.110`, `1.120`, `1.120.1`, `1.130`, `100.10`. `1.90` pozostaje **RESERVED / WATER CRYSTAL TUTORIAL / NOT IMPLEMENTED**. Stare produkcyjne IDs objęte canonical mappingiem są **SUPERSEDED / RETIRED** i nie mogą zostać ponownie użyte; `100.10` pozostaje bez zmiany.
+
+Migracja zmieniła wyłącznie adresy punktów i jawne targety. Eventy, numeric choices, effects, milestones, actor/runtime behavior i SG statuses są bez zmian. M1.12 nadal jest **IMPLEMENTED — HARDWARE QA PENDING**, SG-036 **MIGRATED**, SG-041 **RETAINED**. Scenario Spine pozostaje **TARGET / NOT IMPLEMENTED**; Director nadal używa wyłącznie explicit `transition.target`. Hardware QA osobnego, behavior-neutral reindexu: **N/A**.
+
 ## Scenario + Director M1.8 live slice and M1.9 foundation
 
-M0 through M1.11 are live; M1 remains **IN PROGRESS**. The current main chain reaches `1.4.5.1 → MONKEY_REACHED_THRESHOLD → 1.4.5.1.1`: the actor produces the physical arrival fact, Scenario/Director accepts it exactly once, and Runtime executes `PRESENT_THRESHOLD_CHOICE`. Point `1.4.5.1.1` is terminal for the current slice; threshold selection remains legacy.
+M0 through M1.11 are live; M1 remains **IN PROGRESS**. The current main chain reaches `1.110 → MONKEY_REACHED_THRESHOLD → 1.120`: the actor produces the physical arrival fact, Scenario/Director accepts it exactly once, and Runtime executes `PRESENT_THRESHOLD_CHOICE`. Point `1.120` is terminal for the current slice; threshold selection remains legacy.
 
-`RuntimeExperience` remains the only symbolic-effect execution boundary. M1.9 **NUMERIC CHOICE ROUTING FOUNDATION — IMPLEMENTED**: Runtime already forwards the unchanged payload to Director and effect handlers, including a numeric `payload.choice`; no Runtime transport was rebuilt. Choice routing always uses the explicit Scenario target and never derives a point ID from the number. M1.9 adds no live transition: production remains terminal at `1.4.5`, invitation remains legacy, and SG-036 remains **RETAINED** with only `MONKEY_HOVERED` and `MONKEY_TRIGGERED` migrated. Hardware QA is **N/A** for this foundation because production does not use `choice`; automated regression preserves the M1.8 **HARDWARE PASS — Meta Quest 3S**.
+`RuntimeExperience` remains the only symbolic-effect execution boundary. M1.9 **NUMERIC CHOICE ROUTING FOUNDATION — IMPLEMENTED**: Runtime already forwards the unchanged payload to Director and effect handlers, including a numeric `payload.choice`; no Runtime transport was rebuilt. Choice routing always uses the explicit Scenario target and never derives a point ID from the number. M1.9 adds no live transition: production remains terminal at `1.100`, invitation remains legacy, and SG-036 remains **RETAINED** with only `MONKEY_HOVERED` and `MONKEY_TRIGGERED` migrated. Hardware QA is **N/A** for this foundation because production does not use `choice`; automated regression preserves the M1.8 **HARDWARE PASS — Meta Quest 3S**.
 
 `RuntimeExperience` remains the only symbolic-effect execution boundary. A legal press in `WAIT_TRIGGER` moves the actor to `WAIT_RUNTIME_AFTER_MONKEY_TRIGGERED` and emits `MONKEY_TRIGGERED` exactly once. Before Runtime continuation it cannot clear the dialogue override into the subsequent flow, show `copy.seen` or `copy.going`, enter invitation, or install invitation options; repeated presses are consumed. The fifth legal `continueControllerOnboarding()` resumption starts the unchanged mechanical legacy execution `show(copy.seen, invitation, copy.going)`. There is no new effect or effect handler, and composition only wires the semantic dispatch. QA bypass synthesizes neither `MONKEY_HOVERED` nor `MONKEY_TRIGGERED`.
 
@@ -213,7 +219,7 @@ Baseline status: M1.8 HARDWARE PASS — Meta Quest 3S. M1.9 Numeric Choice Routi
 
 **Status:** IMPLEMENTED — HARDWARE QA PENDING. M1.10 is **HARDWARE PASS — Meta Quest 3S**.
 
-The current boundary is `1.4.5.1 → MONKEY_REACHED_THRESHOLD → 1.4.5.1.1 → PRESENT_THRESHOLD_CHOICE → legacy threshold choices`. `createVrIntroSequence` retains stop-radius calculation, following movement, pause/resume policy and fog interpolation. On physical arrival it enters `WAIT_RUNTIME_AFTER_MONKEY_REACHED_THRESHOLD` and emits one callback fact; only the Runtime effect may call `presentThresholdChoice()`. No listener or fallback arrival interpretation exists in `experienceVr.js`.
+The current boundary is `1.110 → MONKEY_REACHED_THRESHOLD → 1.120 → PRESENT_THRESHOLD_CHOICE → legacy threshold choices`. `createVrIntroSequence` retains stop-radius calculation, following movement, pause/resume policy and fog interpolation. On physical arrival it enters `WAIT_RUNTIME_AFTER_MONKEY_REACHED_THRESHOLD` and emits one callback fact; only the Runtime effect may call `presentThresholdChoice()`. No listener or fallback arrival interpretation exists in `experienceVr.js`.
 
 SG-032, SG-039 and SG-040 remain **MIGRATED**. SG-036 and SG-041 remain **RETAINED**. The migrated `MONKEY_REACHED_THRESHOLD` edge does not close SG-041: pause/resume distance decisions, `FOLLOW_PAUSE_CHANGED`, and broader movement/follow policy remain to migrate. Threshold selection is still legacy.
 
@@ -226,8 +232,8 @@ The Intro actor maps threshold UI IDs to numeric choices, enters `WAIT_RUNTIME_A
 Choice 1 retains the existing capture/message-clear/CROSSING mechanics. Choice 2 restores `THRESHOLD`, plays unchanged `copy.beyond`, and reinstalls the unchanged options, including repeat selection. Choice 3 retains ENDING, unchanged `copy.returning`, and existing end-session timing. The Scenario tree and exit status are:
 
 ```text
-1.4.5.1.1:   1 → 1.4.5.1.1.1; 2 → 1.4.5.1.1.2; 3 → 100.10
-1.4.5.1.1.2: 1 → 1.4.5.1.1.1; 2 → 1.4.5.1.1.2; 3 → 100.10
+1.120:   1 → 1.130; 2 → 1.120.1; 3 → 100.10
+1.120.1: 1 → 1.130; 2 → 1.120.1; 3 → 100.10
 100.10: LIVE EXIT
 100.1: RESERVED / FUTURE
 ```

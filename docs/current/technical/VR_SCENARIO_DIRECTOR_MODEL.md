@@ -8,6 +8,31 @@ Dokument definiuje Scenario Experience VR, Directora, `RuntimeExperience`, aktor
 
 Jest źródłem prawdy dla wszystkich następnych etapów migracji Scenario + Director. **CURRENT:** kod jest dowodem tego, co wdrożono. **TARGET:** każda dalsza migracja musi być projektowana według niniejszego modelu. Dokument nie zmienia kodu ani nie uznaje elementów docelowych za wdrożone.
 
+## 1.1. Canonical Story Reindex Migration — IMPLEMENTED
+
+**CURRENT (2026-08-13):** jednorazowy corrective reindex obecnego LIVE Scenario został wdrożony bez zmiany gameplay semantics. Flat live slice to `1.10`, `1.20`, `1.30`, `1.40`, `1.50`, `1.60`, `1.70`, `1.80`, `1.100`, `1.100.1`, `1.110`, `1.120`, `1.120.1`, `1.130`, `100.10`. WHERE (`1.100.1`) i BEYOND (`1.120.1`) są jedynymi current local branches; FOLLOWING (`1.110`), THRESHOLD (`1.120`) i CROSSING (`1.130`) są płaskimi mainline beats.
+
+`1.90` jest **RESERVED / WATER (Haiku Cosmos) CRYSTAL GRAB TUTORIAL / NOT IMPLEMENTED** i nie należy do produkcyjnego identifier set. Scenario Spine pozostaje **TARGET / NOT IMPLEMENTED**: nie istnieje `spine`, `mainline`, `acts`, builder ani normalizer. Director nadal przechodzi wyłącznie przez jawne `transition.target` i nie wylicza kolejności z adresów.
+
+| OLD (SUPERSEDED / RETIRED) | NEW |
+| --- | --- |
+| `1.1` | `1.10` |
+| `1.2` | `1.20` |
+| `1.3` | `1.30` |
+| `1.4` | `1.40` |
+| `1.4.1` | `1.50` |
+| `1.4.2` | `1.60` |
+| `1.4.3` | `1.70` |
+| `1.4.4` | `1.80` |
+| `1.4.5` | `1.100` |
+| `1.4.5.2` | `1.100.1` |
+| `1.4.5.1` | `1.110` |
+| `1.4.5.1.1` | `1.120` |
+| `1.4.5.1.1.2` | `1.120.1` |
+| `1.4.5.1.1.1` | `1.130` |
+
+Wszystkie OLD IDs w tabeli są trwale **SUPERSEDED / RETIRED** i nigdy nie mogą otrzymać innego znaczenia. `100.10` nie został zmieniony ani retired. M1.12 pozostaje **IMPLEMENTED — HARDWARE QA PENDING**, SG-036 **MIGRATED**, SG-041 **RETAINED**, a approved crystal tutorial **NOT IMPLEMENTED**. Hardware QA samego behavior-neutral reindexu: **N/A**.
+
 ## 2. Metafora teatralna i podział odpowiedzialności
 
 Wiążąca analogia:
@@ -273,17 +298,17 @@ QA shortcut nie jest alternatywną fabułą i nie ma własnego Scenario. Może p
 
 | Kanoniczny adres | Etykieta | Event kończący punkt | Effect uruchamiający kolejny punkt | Status |
 | --- | --- | --- | --- | --- |
-| `1.1` | Bootstrap / oczekiwanie na kalibrację XR | `XR_CALIBRATED` | `BEGIN_INTRO_REVEAL` | CURRENT |
-| `1.2` | Intro reveal | `INTRO_REVEAL_COMPLETE` | `BEGIN_POST_REVEAL_SILENCE` | CURRENT |
-| `1.3` | Cisza po revealu | `POST_REVEAL_SILENCE_COMPLETE` | `BEGIN_CONTROLLER_ONBOARDING` | CURRENT |
-| `1.4` | Controller onboarding / oczekiwanie na Player Guide | `PLAYER_OPENED_GUIDE` | `CONTINUE_CONTROLLER_ONBOARDING` | CURRENT; SG-040 MIGRATED |
-| `1.4.1` | Player Guide otwarty / oczekiwanie na controls | `PLAYER_VIEWED_CONTROLS` | `CONTINUE_CONTROLLER_ONBOARDING` | CURRENT; SG-040 MIGRATED |
-| `1.4.2` | Controls obejrzane / oczekiwanie na zamknięcie panelu | `PLAYER_CLOSED_GUIDE` | `CONTINUE_CONTROLLER_ONBOARDING` | CURRENT; SG-040 MIGRATED |
-| `1.4.3` | Pointer tutorial uruchomiony / oczekiwanie na wskazanie Monkey | `MONKEY_HOVERED` | `CONTINUE_CONTROLLER_ONBOARDING` | CURRENT; migrated edge SG-036 |
-| `1.4.4` | Monkey wskazany / oczekiwanie na trigger | `MONKEY_TRIGGERED` | `CONTINUE_CONTROLLER_ONBOARDING` | CURRENT; migrated edge SG-036 |
-| `1.4.5` | Trigger zaakceptowany / seen + invitation legacy | — | — | CURRENT terminal; SG-036 RETAINED |
+| `1.10` | Bootstrap / oczekiwanie na kalibrację XR | `XR_CALIBRATED` | `BEGIN_INTRO_REVEAL` | CURRENT |
+| `1.20` | Intro reveal | `INTRO_REVEAL_COMPLETE` | `BEGIN_POST_REVEAL_SILENCE` | CURRENT |
+| `1.30` | Cisza po revealu | `POST_REVEAL_SILENCE_COMPLETE` | `BEGIN_CONTROLLER_ONBOARDING` | CURRENT |
+| `1.40` | Controller onboarding / oczekiwanie na Player Guide | `PLAYER_OPENED_GUIDE` | `CONTINUE_CONTROLLER_ONBOARDING` | CURRENT; SG-040 MIGRATED |
+| `1.50` | Player Guide otwarty / oczekiwanie na controls | `PLAYER_VIEWED_CONTROLS` | `CONTINUE_CONTROLLER_ONBOARDING` | CURRENT; SG-040 MIGRATED |
+| `1.60` | Controls obejrzane / oczekiwanie na zamknięcie panelu | `PLAYER_CLOSED_GUIDE` | `CONTINUE_CONTROLLER_ONBOARDING` | CURRENT; SG-040 MIGRATED |
+| `1.70` | Pointer tutorial uruchomiony / oczekiwanie na wskazanie Monkey | `MONKEY_HOVERED` | `CONTINUE_CONTROLLER_ONBOARDING` | CURRENT; migrated edge SG-036 |
+| `1.80` | Monkey wskazany / oczekiwanie na trigger | `MONKEY_TRIGGERED` | `CONTINUE_CONTROLLER_ONBOARDING` | CURRENT; migrated edge SG-036 |
+| `1.100` | Trigger zaakceptowany / seen + invitation legacy | — | — | CURRENT terminal; SG-036 RETAINED |
 
-Na etapie M1.8 punkty były zaimplementowane pod pre-reindex adresami `1.1`–`1.4.5`. M1.7 ma **HARDWARE PASS — Meta Quest 3S**; M1.8 ma **HARDWARE PASS — Meta Quest 3S**. SG-032, SG-039 i SG-040 są `MIGRATED`. SG-036 pozostaje `RETAINED`: migrated edges to `MONKEY_HOVERED` i `MONKEY_TRIGGERED`; remaining legacy to seen/invitation sequence, invitation choices i dalsze decyzje objęte SG-036. Punkt `1.4.5` jest terminalem current live slice.
+Na etapie M1.8 punkty były zaimplementowane pod adresami sprzed reindexu; tabela pokazuje ich current canonical addresses `1.10`–`1.100`. M1.7 ma **HARDWARE PASS — Meta Quest 3S**; M1.8 ma **HARDWARE PASS — Meta Quest 3S**. SG-032, SG-039 i SG-040 są `MIGRATED`. SG-036 pozostaje `RETAINED`: migrated edges to `MONKEY_HOVERED` i `MONKEY_TRIGGERED`; remaining legacy to seen/invitation sequence, invitation choices i dalsze decyzje objęte SG-036. Punkt `1.100` jest terminalem current live slice.
 
 ## 20. Docelowy kształt danych Scenario
 
@@ -391,15 +416,15 @@ Obowiązkowy format przyszłych synchronizacji:
 
 | Scenario point | Akt | Label | Legacy owner | Legacy SG | Producer event | Target | Effects/cues | Group status | Runtime status | Automated QA | Hardware QA |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `1.1` | 1 | Bootstrap XR | `experienceVr.js` calibration handoff | SG-032 | `XR_CALIBRATED` | `1.2` | `BEGIN_INTRO_REVEAL` | `MIGRATED` | CURRENT live pod kanonicznym point ID | istniejące testy kontraktu | M1.1 PASS, Quest 3S, 2026-08-12 |
-| `1.2` | 1 | Intro reveal | `createVrIntroSequence` reveal completion seam | SG-039 edge: reveal completion | `INTRO_REVEAL_COMPLETE` | `1.3` | `BEGIN_POST_REVEAL_SILENCE` | `MIGRATED` | CURRENT live pod kanonicznym point ID | istniejące testy kontraktu | M1.2 PASS, Quest 3S, 2026-08-12 |
-| `1.3` | 1 | Cisza po revealu | `createVrIntroSequence` actor-owned timer/completion seam | SG-039 | `POST_REVEAL_SILENCE_COMPLETE` | `1.4` | `BEGIN_CONTROLLER_ONBOARDING` | `MIGRATED` | CURRENT live pod kanonicznym point ID | istniejące testy kontraktu | M1.3 PENDING — niewykonane |
-| `1.4` | 1 | Controller onboarding | `createVrIntroSequence` wykrywa faktyczne otwarcie | SG-040 | `PLAYER_OPENED_GUIDE` | `1.4.1` | `CONTINUE_CONTROLLER_ONBOARDING` | `MIGRATED` | CURRENT live | testy Director/Runtime/aktora/kontraktu | M1.4 PASS, Quest 3S |
-| `1.4.1` | 1 | Oczekiwanie na controls | `createVrIntroSequence` wykrywa controls DETAIL | SG-040 | `PLAYER_VIEWED_CONTROLS` | `1.4.2` | `CONTINUE_CONTROLLER_ONBOARDING` | `MIGRATED` | CURRENT live | testy Director/Runtime/aktora/kontraktu | M1.5 PASS, Quest 3S |
-| `1.4.2` | 1 | Oczekiwanie na zamknięcie panelu | `createVrIntroSequence` wykrywa fizyczne zamknięcie | SG-040 | `PLAYER_CLOSED_GUIDE` | `1.4.3` | `CONTINUE_CONTROLLER_ONBOARDING` | `MIGRATED` | CURRENT live; Runtime uruchamia pointer tutorial | testy Director/Runtime/aktora/kontraktu | M1.6 PASS — Quest 3S |
-| `1.4.3` | 1 | Oczekiwanie na wskazanie Monkey | `createVrIntroSequence` wykrywa realny hover | SG-036 | `MONKEY_HOVERED` | `1.4.4` | `CONTINUE_CONTROLLER_ONBOARDING` | `RETAINED` | CURRENT live; migrated edge `MONKEY_HOVERED` | testy Director/Runtime/aktora/kontraktu | M1.7 PASS — Quest 3S |
-| `1.4.4` | 1 | Monkey wskazany / oczekiwanie na trigger | `createVrIntroSequence` wykrywa realny press | SG-036 | `MONKEY_TRIGGERED` | `1.4.5` | `CONTINUE_CONTROLLER_ONBOARDING` | `RETAINED` | CURRENT live; migrated edge `MONKEY_TRIGGERED` | testy Director/Runtime/aktora/kontraktu | M1.8 PASS — Quest 3S |
-| `1.4.5` | 1 | Trigger zaakceptowany / seen + invitation legacy | legacy Intro actor | SG-036 | — | — | — | `RETAINED` | CURRENT terminal; seen/invitation i dalsze decyzje pozostają legacy | parity istniejącego aktora | M1.8 PASS — Quest 3S |
+| `1.10` | 1 | Bootstrap XR | `experienceVr.js` calibration handoff | SG-032 | `XR_CALIBRATED` | `1.20` | `BEGIN_INTRO_REVEAL` | `MIGRATED` | CURRENT live pod kanonicznym point ID | istniejące testy kontraktu | M1.1 PASS, Quest 3S, 2026-08-12 |
+| `1.20` | 1 | Intro reveal | `createVrIntroSequence` reveal completion seam | SG-039 edge: reveal completion | `INTRO_REVEAL_COMPLETE` | `1.30` | `BEGIN_POST_REVEAL_SILENCE` | `MIGRATED` | CURRENT live pod kanonicznym point ID | istniejące testy kontraktu | M1.2 PASS, Quest 3S, 2026-08-12 |
+| `1.30` | 1 | Cisza po revealu | `createVrIntroSequence` actor-owned timer/completion seam | SG-039 | `POST_REVEAL_SILENCE_COMPLETE` | `1.40` | `BEGIN_CONTROLLER_ONBOARDING` | `MIGRATED` | CURRENT live pod kanonicznym point ID | istniejące testy kontraktu | M1.3 PENDING — niewykonane |
+| `1.40` | 1 | Controller onboarding | `createVrIntroSequence` wykrywa faktyczne otwarcie | SG-040 | `PLAYER_OPENED_GUIDE` | `1.50` | `CONTINUE_CONTROLLER_ONBOARDING` | `MIGRATED` | CURRENT live | testy Director/Runtime/aktora/kontraktu | M1.4 PASS, Quest 3S |
+| `1.50` | 1 | Oczekiwanie na controls | `createVrIntroSequence` wykrywa controls DETAIL | SG-040 | `PLAYER_VIEWED_CONTROLS` | `1.60` | `CONTINUE_CONTROLLER_ONBOARDING` | `MIGRATED` | CURRENT live | testy Director/Runtime/aktora/kontraktu | M1.5 PASS, Quest 3S |
+| `1.60` | 1 | Oczekiwanie na zamknięcie panelu | `createVrIntroSequence` wykrywa fizyczne zamknięcie | SG-040 | `PLAYER_CLOSED_GUIDE` | `1.70` | `CONTINUE_CONTROLLER_ONBOARDING` | `MIGRATED` | CURRENT live; Runtime uruchamia pointer tutorial | testy Director/Runtime/aktora/kontraktu | M1.6 PASS — Quest 3S |
+| `1.70` | 1 | Oczekiwanie na wskazanie Monkey | `createVrIntroSequence` wykrywa realny hover | SG-036 | `MONKEY_HOVERED` | `1.80` | `CONTINUE_CONTROLLER_ONBOARDING` | `RETAINED` | CURRENT live; migrated edge `MONKEY_HOVERED` | testy Director/Runtime/aktora/kontraktu | M1.7 PASS — Quest 3S |
+| `1.80` | 1 | Monkey wskazany / oczekiwanie na trigger | `createVrIntroSequence` wykrywa realny press | SG-036 | `MONKEY_TRIGGERED` | `1.100` | `CONTINUE_CONTROLLER_ONBOARDING` | `RETAINED` | CURRENT live; migrated edge `MONKEY_TRIGGERED` | testy Director/Runtime/aktora/kontraktu | M1.8 PASS — Quest 3S |
+| `1.100` | 1 | Trigger zaakceptowany / seen + invitation legacy | legacy Intro actor | SG-036 | — | — | — | `RETAINED` | CURRENT terminal; seen/invitation i dalsze decyzje pozostają legacy | parity istniejącego aktora | M1.8 PASS — Quest 3S |
 
 Wpis powstaje przed migracją lub razem z nią; niewdrożone punkty nie są live; target address i current owner są widoczne razem. `MIGRATED` oznacza brak dual ownership. Hardware QA nie wynika z automatycznych testów. Usunięte adresy pozostają jako `REMOVED`. Rejestr nie zastępuje kodu ani testów. Powyższe wpisy obejmują wyłącznie live slice M1.1–M1.8, zamknięte SG-040 i migrated edge `MONKEY_HOVERED`; SG-036 pozostaje `RETAINED`.
 
@@ -409,24 +434,24 @@ Wpis powstaje przed migracją lub razem z nią; niewdrożone punkty nie są live
 
 ```text
 ACT 1
-POINT 1.3
+POINT 1.30
 EVENT POST_REVEAL_SILENCE_COMPLETE
-TARGET 1.4
+TARGET 1.40
 EFFECT BEGIN_CONTROLLER_ONBOARDING
 ```
 
 ```js
 {
-  currentPointId: '1.3',
+  currentPointId: '1.30',
   actId: '1',
   lastEvent: 'POST_REVEAL_SILENCE_COMPLETE',
-  lastTargetPointId: '1.4',
+  lastTargetPointId: '1.40',
   milestones: [],
   capabilities: []
 }
 ```
 
-To **FUTURE / NOT IMPLEMENTED**, nie obecny kontrakt snapshotu. Numer punktu ma być podstawowym adresem raportów, testów, logów, promptów Codexa, bugów, manualnego QA i dokumentacji narracyjnej, np.: „Akt 1, punkt 1.3: po `POST_REVEAL_SILENCE_COMPLETE` Director powinien przejść do `1.4`”.
+To **FUTURE / NOT IMPLEMENTED**, nie obecny kontrakt snapshotu. Numer punktu ma być podstawowym adresem raportów, testów, logów, promptów Codexa, bugów, manualnego QA i dokumentacji narracyjnej, np.: „Akt 1, punkt 1.30: po `POST_REVEAL_SILENCE_COMPLETE` Director powinien przejść do `1.40`”.
 
 ## 25. Zasady dla przyszłych promptów Codex
 
@@ -461,28 +486,24 @@ adres punktu jest wyliczany albo sortowany jako liczba
 CURRENT:
 M1.12 jest IMPLEMENTED — HARDWARE QA PENDING.
 SG-036 jest MIGRATED; SG-041 pozostaje RETAINED.
-100.10 jest LIVE EXIT; 100.1 pozostaje RESERVED / FUTURE.
-APPROVED CRYSTAL TUTORIAL INSERT pozostaje NOT IMPLEMENTED.
-Scenario używa obecnych pre-reindex production IDs.
+Canonical Story Reindex jest IMPLEMENTED.
+1.90 jest RESERVED / NOT IMPLEMENTED; 100.10 jest LIVE EXIT.
 Director operuje na currentPointId i wyłącznie explicit targets.
 ```
 
 ```text
 TARGET / NOT IMPLEMENTED:
-Flat mainline, local-branch semantics i Scenario-owned Mainline Spine są wiążącym kanonem authoringowym.
-Osobny Canonical Story Reindex jest następnym blockerem przed migracją nowych Scenario edges.
-Nie istnieje jeszcze builder, normalizer, spine parser ani point-ID arithmetic.
+Scenario-owned Mainline Spine, builder, normalizer i point-ID arithmetic nie istnieją.
+Approved WATER crystal tutorial insert nie jest punktem LIVE.
 ```
 
 ## 28. One-time Canonical Story Reindex Migration
 
-**APPROVED NEXT ARCHITECTURAL TASK — NOT PERFORMED HERE:** production Scenario currently contains pre-canon addresses including `1.4`, `1.4.1`, `1.4.2`, `1.4.3`, `1.4.4`, `1.4.5`, `1.4.5.1`, `1.4.5.1.1`, `1.4.5.1.1.1`, `1.4.5.1.1.2` and `1.4.5.2`. Before another migration of new Scenario edges, a separate, one-time **CANONICAL STORY REINDEX MIGRATION** must move this live slice to the flat-mainline model.
-
-This is a deliberate correction of the former addressing model, not permission for later discretionary renumbering. After the reindex, every old address is **SUPERSEDED / RETIRED** and may never be assigned another meaning. Until that separate task, production IDs and tests remain unchanged; no `1.90`, `1.100`, `1.110` or Scenario Spine implementation is added by this documentation decision.
+**IMPLEMENTED:** current production Scenario i testy używają flat-mainline addresses opisanych w sekcji 1.1. Była to wyłącznie corrective structural migration: żadnego nowego edge, eventu, effectu, milestone ani gameplayu. Retired addresses pozostają tylko w tabeli migracyjnej i zapisie historycznym.
 
 ## M1.8 Monkey Trigger Handoff — CURRENT synchronization
 
-M1.7: **HARDWARE PASS — Meta Quest 3S**. M1.8 **MONKEY TRIGGER HANDOFF**: **HARDWARE PASS — Meta Quest 3S**. Current ending chain is `1.4.3 → MONKEY_HOVERED → 1.4.4 → MONKEY_TRIGGERED → 1.4.5`; `1.4.5` is “Trigger zaakceptowany / seen + invitation legacy” and terminal for this live slice. `CONTINUE_CONTROLLER_ONBOARDING` remains the sole continuation effect.
+M1.7: **HARDWARE PASS — Meta Quest 3S**. M1.8 **MONKEY TRIGGER HANDOFF**: **HARDWARE PASS — Meta Quest 3S**. Current ending chain is `1.70 → MONKEY_HOVERED → 1.80 → MONKEY_TRIGGERED → 1.100`; `1.100` is “Trigger zaakceptowany / seen + invitation legacy” and terminal for this live slice. `CONTINUE_CONTROLLER_ONBOARDING` remains the sole continuation effect.
 
 Status: SG-032, SG-039 and SG-040 are **MIGRATED**; SG-036 is **RETAINED**. Its migrated edges are `MONKEY_HOVERED` and `MONKEY_TRIGGERED`. Its remaining legacy is the seen/invitation sequence, invitation choices, and further P0 follow/ending/threshold decisions. No `INTRO_INVITATION_SELECTED` transition is live.
 
@@ -493,32 +514,32 @@ Transition może opcjonalnie deklarować `choice` jako dodatnią liczbę całkow
 
 `choice` nie jest point ID ani targetem. `choice: 2` nigdy nie oznacza `currentPoint + '.2'`; Director korzysta wyłącznie z jawnego `target` zapisanego w Scenario, który legalnie może wskazywać np. `7.4.9` lub `100.10`. Podobieństwo numeric choice i numeric hierarchy służy wyłącznie czytelności autora i nie tworzy sprzężenia algorytmicznego.
 
-M1.9 nie rozszerza live Scenario: produkcyjny terminal pozostaje `1.4.5`, nie istnieje live transition `INTRO_INVITATION_SELECTED`, invitation pozostaje legacy, a SG-036 pozostaje **RETAINED** wyłącznie z migrated edges `MONKEY_HOVERED` i `MONKEY_TRIGGERED`. M1.8 zachowuje **HARDWARE PASS — Meta Quest 3S**. Hardware QA dla samego M1.9: **N/A**, ponieważ żaden production transition jeszcze nie używa `choice`; automatyczna regresja potwierdza niezmieniony live M1.8.
+M1.9 nie rozszerza live Scenario: produkcyjny terminal pozostaje `1.100`, nie istnieje live transition `INTRO_INVITATION_SELECTED`, invitation pozostaje legacy, a SG-036 pozostaje **RETAINED** wyłącznie z migrated edges `MONKEY_HOVERED` i `MONKEY_TRIGGERED`. M1.8 zachowuje **HARDWARE PASS — Meta Quest 3S**. Hardware QA dla samego M1.9: **N/A**, ponieważ żaden production transition jeszcze nie używa `choice`; automatyczna regresja potwierdza niezmieniony live M1.8.
 
 ## M1.10 — Intro invitation choice branch (current)
 
 M1.10 **INTRO INVITATION CHOICE BRANCH** is IMPLEMENTED — HARDWARE QA PENDING. Stable numeric choices are Scenario facts; current labels are presentation copy only.
 
 ```text
-1.4.5
-├── choice 1 → 1.4.5.1
-├── choice 2 → 1.4.5.2
+1.100
+├── choice 1 → 1.110
+├── choice 2 → 1.100.1
 └── choice 3 → 100.10
 
-1.4.5.2
-├── choice 1 → 1.4.5.1
-├── choice 2 → 1.4.5.2
+1.100.1
+├── choice 1 → 1.110
+├── choice 2 → 1.100.1
 └── choice 3 → 100.10
 ```
 
-Every accepted edge emits `CONTINUE_INTRO_INVITATION` and adds no milestone. `1.4.5.1` and `100.10` are terminal in the current slice. `100.10` is the current LIVE terminal `EXIT EXPERIENCE VR`; `100.1` remains RESERVED / FUTURE. SG-036 and SG-041 remain RETAINED.
+Every accepted edge emits `CONTINUE_INTRO_INVITATION` and adds no milestone. `1.110` and `100.10` are terminal in the current slice. `100.10` is the current LIVE terminal `EXIT EXPERIENCE VR`; `100.1` remains RESERVED / FUTURE. SG-036 and SG-041 remain RETAINED.
 
 
 ## M1.11 — Monkey reached threshold handoff (current)
 
 **IMPLEMENTED — HARDWARE QA PENDING.** M1.10 has **HARDWARE PASS — Meta Quest 3S**.
 
-Scenario now owns the edge `1.4.5.1 → MONKEY_REACHED_THRESHOLD → 1.4.5.1.1`. It adds no milestone and emits only `PRESENT_THRESHOLD_CHOICE`. Point `1.4.5.1.1` means “Monkey reached the threshold / threshold dialogue presented”; it is terminal for the current slice and has no `THRESHOLD_SELECTED` transition. The Runtime effect resumes the actor through its state-guarded presentation seam; threshold options and their selection remain legacy.
+Scenario now owns the edge `1.110 → MONKEY_REACHED_THRESHOLD → 1.120`. It adds no milestone and emits only `PRESENT_THRESHOLD_CHOICE`. Point `1.120` means “Monkey reached the threshold / threshold dialogue presented”; it is terminal for the current slice and has no `THRESHOLD_SELECTED` transition. The Runtime effect resumes the actor through its state-guarded presentation seam; threshold options and their selection remain legacy.
 
 SG-032, SG-039 and SG-040 are **MIGRATED**. SG-036 and SG-041 remain **RETAINED**. M1.11 migrates only the `MONKEY_REACHED_THRESHOLD` edge; remaining SG-041 still includes pause/resume distance decisions, `FOLLOW_PAUSE_CHANGED`, and movement/follow policy requiring later migration.
 
@@ -529,15 +550,15 @@ SG-032, SG-039 and SG-040 are **MIGRATED**. SG-036 and SG-041 remain **RETAINED*
 `THRESHOLD_SELECTED` carries only numeric `{ choice }`. Scenario owns both explicit threshold routing sets; every accepted edge adds no milestone and emits the single `CONTINUE_THRESHOLD_CHOICE` effect:
 
 ```text
-1.4.5.1.1
-├── choice 1 → 1.4.5.1.1.1
-├── choice 2 → 1.4.5.1.1.2
+1.120
+├── choice 1 → 1.130
+├── choice 2 → 1.120.1
 └── choice 3 → 100.10
 
-1.4.5.1.1.2
-├── choice 1 → 1.4.5.1.1.1
-├── choice 2 → 1.4.5.1.1.2
+1.120.1
+├── choice 1 → 1.130
+├── choice 2 → 1.120.1
 └── choice 3 → 100.10
 ```
 
-`1.4.5.1.1.1` is the terminal CROSS point of the current slice. Choice 2 is an explicit self-loop while the actor replays the unchanged answer and options. `100.10` is LIVE EXIT EXPERIENCE VR; `100.1` remains RESERVED / FUTURE. After verification against the historical audit, SG-036 is **MIGRATED**: all its narrative decisions through threshold selection are Scenario-owned. SG-041 remains **RETAINED** because pause/resume follow policy and `FOLLOW_PAUSE_CHANGED` remain actor-owned.
+`1.130` is the terminal CROSS point of the current slice. Choice 2 is an explicit self-loop while the actor replays the unchanged answer and options. `100.10` is LIVE EXIT EXPERIENCE VR; `100.1` remains RESERVED / FUTURE. After verification against the historical audit, SG-036 is **MIGRATED**: all its narrative decisions through threshold selection are Scenario-owned. SG-041 remains **RETAINED** because pause/resume follow policy and `FOLLOW_PAUSE_CHANGED` remain actor-owned.
