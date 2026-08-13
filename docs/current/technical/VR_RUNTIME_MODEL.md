@@ -2,11 +2,13 @@
 
 Status: canonical description of the implemented runtime synchronized on 2026-08-12. Approved future gameplay is documented in the [gameplay roadmap](../concept/EXPERIENCE_VR_GAMEPLAY_ROADMAP.md).
 
-## Scenario + Director M1.7 slice
+## Scenario + Director M1.8 slice
 
-M0 through M1.7 **Monkey Hover Handoff** are live; M1 remains **IN PROGRESS**. The current chain is `1.4 → 1.4.1 → 1.4.2 → 1.4.3 → 1.4.4`. Scenario and Director own the three SG-040 facts and the migrated SG-036 edge `MONKEY_HOVERED` (`1.4.3 → 1.4.4`). All four transitions use the existing `CONTINUE_CONTROLLER_ONBOARDING` effect.
+M0 through M1.8 **Monkey Trigger Handoff** are live; M1 remains **IN PROGRESS**. The current chain is `1.4 → 1.4.1 → 1.4.2 → 1.4.3 → 1.4.4 → 1.4.5`: real `MONKEY_HOVERED` advances to `1.4.4`, and real `MONKEY_TRIGGERED` advances to terminal point `1.4.5` (“Trigger zaakceptowany / seen + invitation legacy”). Both edges use the existing `CONTINUE_CONTROLLER_ONBOARDING` effect.
 
-`RuntimeExperience` remains the only symbolic-effect execution boundary. After real Monkey hover, the actor enters `WAIT_RUNTIME_AFTER_MONKEY_HOVERED`, emits `MONKEY_HOVERED` exactly once and does not show the trigger copy. The existing `continueControllerOnboarding()` seam has a fourth legal resumption: it enters `WAIT_TRIGGER` and shows the unchanged “Teraz spust.” / “Now pull the trigger.” message. Press is consumed during the Runtime wait; only after continuation does the retained legacy `MONKEY_TRIGGERED` and seen/invitation flow run. QA bypass synthesizes no `MONKEY_HOVERED` event. SG-032, SG-039 and SG-040 are **MIGRATED**. SG-036 remains **RETAINED**: its migrated edge is `MONKEY_HOVERED`; remaining legacy is `MONKEY_TRIGGERED`, the seen/invitation flow and later SG-036 decisions. M1.6 is **HARDWARE PASS — Meta Quest 3S**. M1.7 is implemented with hardware QA **PENDING**. Point `1.4.4` (“Monkey wskazany / oczekiwanie na trigger”) is terminal for the current live slice.
+`RuntimeExperience` remains the only symbolic-effect execution boundary. A legal press in `WAIT_TRIGGER` moves the actor to `WAIT_RUNTIME_AFTER_MONKEY_TRIGGERED` and emits `MONKEY_TRIGGERED` exactly once. Before Runtime continuation it cannot clear the dialogue override into the subsequent flow, show `copy.seen` or `copy.going`, enter invitation, or install invitation options; repeated presses are consumed. The fifth legal `continueControllerOnboarding()` resumption starts the unchanged mechanical legacy execution `show(copy.seen, invitation, copy.going)`. There is no new effect or effect handler, and composition only wires the semantic dispatch. QA bypass synthesizes neither `MONKEY_HOVERED` nor `MONKEY_TRIGGERED`.
+
+SG-032, SG-039 and SG-040 are **MIGRATED**. SG-036 remains **RETAINED**; its migrated edges are `MONKEY_HOVERED` and `MONKEY_TRIGGERED`. Remaining legacy comprises the seen/invitation sequence, invitation options and choices, and later follow/ending/threshold decisions belonging to SG-036. M1.7 is **HARDWARE PASS — Meta Quest 3S**. M1.8 is **IMPLEMENTED — HARDWARE QA PENDING**.
 
 ## Runtime boundary and lifecycle
 

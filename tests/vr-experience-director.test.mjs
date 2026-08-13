@@ -6,7 +6,7 @@ import { VR_EXPERIENCE_POINT, VR_SCENARIO_EFFECT, VR_SCENARIO_EVENT, VR_SCENARIO
 assert.equal(Object.isFrozen(vrExperienceScenario), true);
 assert.equal(vrExperienceScenario.points, vrExperienceScenario.scenes);
 assert.equal(vrExperienceScenario.initialPointId, vrExperienceScenario.initialSceneId);
-assert.deepEqual(vrExperienceScenario.points.map(({ id }) => id), ['1.1', '1.2', '1.3', '1.4', '1.4.1', '1.4.2', '1.4.3', '1.4.4']);
+assert.deepEqual(vrExperienceScenario.points.map(({ id }) => id), ['1.1', '1.2', '1.3', '1.4', '1.4.1', '1.4.2', '1.4.3', '1.4.4', '1.4.5']);
 assert.equal(Object.isFrozen(vrExperienceScenario.points[0]), true);
 assert.equal(Object.isFrozen(vrExperienceScenario.points[0].transitions[0]), true);
 assert.equal(Object.isFrozen(vrExperienceScenario.points[0].transitions[0].effects), true);
@@ -14,7 +14,7 @@ assert.equal(Object.isFrozen(vrExperienceScenario.metadata.authoritativeScope), 
 assert.equal(Object.isFrozen(vrExperienceScenario.points[2].transitions[0]), true);
 assert.equal(Object.isFrozen(vrExperienceScenario.points[2].transitions[0].milestonesToAdd), true);
 assert.equal(Object.isFrozen(vrExperienceScenario.points[3]), true);
-assert.equal(vrExperienceScenario.metadata.stage, 'M1_7_MONKEY_HOVER_HANDOFF');
+assert.equal(vrExperienceScenario.metadata.stage, 'M1_8_MONKEY_TRIGGER_HANDOFF');
 assert.deepEqual(vrExperienceScenario.metadata.authoritativeScope, [
   'XR_CALIBRATED → BEGIN_INTRO_REVEAL',
   'INTRO_REVEAL_COMPLETE → BEGIN_POST_REVEAL_SILENCE',
@@ -22,7 +22,8 @@ assert.deepEqual(vrExperienceScenario.metadata.authoritativeScope, [
   'PLAYER_OPENED_GUIDE → CONTINUE_CONTROLLER_ONBOARDING',
   'PLAYER_VIEWED_CONTROLS → CONTINUE_CONTROLLER_ONBOARDING',
   'PLAYER_CLOSED_GUIDE → CONTINUE_CONTROLLER_ONBOARDING',
-  'MONKEY_HOVERED → CONTINUE_CONTROLLER_ONBOARDING'
+  'MONKEY_HOVERED → CONTINUE_CONTROLLER_ONBOARDING',
+  'MONKEY_TRIGGERED → CONTINUE_CONTROLLER_ONBOARDING'
 ]);
 assert.equal(
   createVrExperienceDirector({ scenario: vrExperienceScenario }).getCurrentPointId(),
@@ -50,6 +51,8 @@ assert.equal(new ExperienceDirector({ scenario: vrExperienceScenario }).dispatch
   'guide closing is rejected before point 1.4.2');
 assert.equal(new ExperienceDirector({ scenario: vrExperienceScenario }).dispatch(VR_SCENARIO_EVENT.MONKEY_HOVERED), null,
   'Monkey hover is rejected before point 1.4.3');
+assert.equal(new ExperienceDirector({ scenario: vrExperienceScenario }).dispatch(VR_SCENARIO_EVENT.MONKEY_TRIGGERED), null,
+  'Monkey trigger is rejected before point 1.4.4');
 const revealCompleteChange = productionDirector.dispatch(VR_SCENARIO_EVENT.INTRO_REVEAL_COMPLETE);
 assert.equal(revealCompleteChange.currentPointId, VR_EXPERIENCE_POINT['1.3']);
 assert.deepEqual(revealCompleteChange.addedMilestones, [VR_SCENARIO_MILESTONE.INTRO_REVEAL_COMPLETE]);
@@ -79,8 +82,13 @@ const monkeyHoveredChange = productionDirector.dispatch(VR_SCENARIO_EVENT.MONKEY
 assert.equal(monkeyHoveredChange.currentPointId, VR_EXPERIENCE_POINT['1.4.4']);
 assert.deepEqual(monkeyHoveredChange.addedMilestones, []);
 assert.deepEqual(monkeyHoveredChange.effects, [VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING]);
-assert.equal(productionDirector.dispatch(VR_SCENARIO_EVENT.MONKEY_HOVERED), null, 'Monkey hover is accepted once and 1.4.4 is terminal');
-assert.equal(productionDirector.dispatch(VR_SCENARIO_EVENT.MONKEY_TRIGGERED), null, '1.4.4 is terminal in the current slice');
+assert.equal(productionDirector.dispatch(VR_SCENARIO_EVENT.MONKEY_HOVERED), null, 'Monkey hover is accepted once');
+const monkeyTriggeredChange = productionDirector.dispatch(VR_SCENARIO_EVENT.MONKEY_TRIGGERED);
+assert.equal(monkeyTriggeredChange.currentPointId, VR_EXPERIENCE_POINT['1.4.5']);
+assert.deepEqual(monkeyTriggeredChange.addedMilestones, []);
+assert.deepEqual(monkeyTriggeredChange.effects, [VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING]);
+assert.equal(productionDirector.dispatch(VR_SCENARIO_EVENT.MONKEY_TRIGGERED), null, 'Monkey trigger is accepted once and 1.4.5 is terminal');
+assert.equal(productionDirector.dispatch(VR_SCENARIO_EVENT.INTRO_INVITATION_SELECTED), null, '1.4.5 is terminal in the current slice');
 productionDirector.resetSession();
 assert.equal(productionDirector.hasMilestone(VR_SCENARIO_MILESTONE.XR_CALIBRATED), true);
 assert.equal(productionDirector.hasMilestone(VR_SCENARIO_MILESTONE.POST_REVEAL_SILENCE_COMPLETE), true);
@@ -96,6 +104,8 @@ assert.notEqual(productionDirector.dispatch(VR_SCENARIO_EVENT.PLAYER_CLOSED_GUID
   'session reset permits the complete guide-close handoff again');
 assert.notEqual(productionDirector.dispatch(VR_SCENARIO_EVENT.MONKEY_HOVERED), null,
   'session reset permits the Monkey-hover handoff again');
+assert.notEqual(productionDirector.dispatch(VR_SCENARIO_EVENT.MONKEY_TRIGGERED), null,
+  'session reset permits the Monkey-trigger handoff again');
 assert.equal(productionDirector.hasMilestone(VR_SCENARIO_MILESTONE.PLAYER_VIEWED_CONTROLS), true);
 productionDirector.resetSession({ hard: true });
 assert.equal(productionDirector.hasMilestone(VR_SCENARIO_MILESTONE.XR_CALIBRATED), false);

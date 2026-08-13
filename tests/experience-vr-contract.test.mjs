@@ -67,6 +67,8 @@ assert.match(vr, /onPlayerClosedGuide: \(\) => runtimeExperience\.dispatch\(VR_S
   'Intro guide-closed callback performs only semantic dispatch');
 assert.match(vr, /onMonkeyHovered: \(\) => runtimeExperience\.dispatch\(VR_SCENARIO_EVENT\.MONKEY_HOVERED\)/,
   'Monkey hover callback performs only semantic dispatch');
+assert.match(vr, /onMonkeyTriggered: \(\) => runtimeExperience\.dispatch\(VR_SCENARIO_EVENT\.MONKEY_TRIGGERED\)/,
+  'Monkey trigger callback performs only semantic dispatch');
 assert.match(vr, /VR_SCENARIO_EFFECT\.CONTINUE_CONTROLLER_ONBOARDING[\s\S]*introSequence\.continueControllerOnboarding\(\)[\s\S]*throw new Error/,
   'guide-open effect alone resumes controller onboarding and rejects composition bugs explicitly');
 assert.equal((vr.match(/introSequence\.continueControllerOnboarding\(\)/g) ?? []).length, 1,
@@ -78,7 +80,7 @@ assert.doesNotMatch(guideOpenWiring, /playerGuidePanel\.isOpen\(\)/,
   'experienceVr does not interpret panel state for the guide-open decision');
 assert.doesNotMatch(vr, /getActiveSectionId|getViewState/,
   'experienceVr does not interpret the controls section or panel view state');
-assert.doesNotMatch(vr, /WAIT_HOVER|WAIT_RUNTIME_AFTER_MONKEY_HOVERED|WAIT_TRIGGER/,
+assert.doesNotMatch(vr, /WAIT_HOVER|WAIT_RUNTIME_AFTER_MONKEY_HOVERED|WAIT_TRIGGER|WAIT_RUNTIME_AFTER_MONKEY_TRIGGERED/,
   'experienceVr does not interpret Monkey actor state');
 assert.match(vr, /function handleSessionEnd\(\) \{\s*runtimeExperience\.resetSession\(\)/);
 assert.match(vr, /async function enterVr\(\)[\s\S]*if \(activeSession\) return;\s*runtimeExperience\.resetSession\(\)/);

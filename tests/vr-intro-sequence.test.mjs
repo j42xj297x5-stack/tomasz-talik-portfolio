@@ -8,15 +8,15 @@ function fixture({ bypass = false, onReliquaryReveal = () => {} } = {}) {
   const playerRig = new THREE.Group(); const head = new THREE.Vector3(0, 1.7, 20);
   const glyphRing = new THREE.Group(); const platformFixturesRoot = new THREE.Group(); const sector = new THREE.Group(); sector.userData.branchId = 'x'; progressFloor.object.add(sector);
   const monkeyStoneRoot = new THREE.Group(); progressFloor.object.add(monkeyStoneRoot);
-  let message = ''; let override = null; let radius = 4; let attention = 0; let rays = 0; let revealComplete = 0; let silenceComplete = 0; let playerOpenedGuide = 0; let playerViewedControls = 0; let playerClosedGuide = 0; let monkeyHovered = 0; let interactionEnables = 0;
+  let message = ''; let override = null; let radius = 4; let attention = 0; let rays = 0; let revealComplete = 0; let silenceComplete = 0; let playerOpenedGuide = 0; let playerViewedControls = 0; let playerClosedGuide = 0; let monkeyHovered = 0; let monkeyTriggered = 0; let interactionEnables = 0;
   const panel = { open: false, view: 'MENU', section: null, isOpen() { return this.open; }, getViewState() { return this.view; }, getActiveSectionId() { return this.section; } };
   const fog = { progress: 0, radius: 20, installed: true, active: false, restart() { this.progress = 0; this.radius = 20; this.installed = true; this.active = false; }, start() { this.active = true; }, update(d) { if (!this.active) return; this.progress = Math.min(1, this.progress + d / 10); this.radius = 20 - 3 * this.progress; if (this.progress >= 1) this.active = false; }, setRadius(v) { this.radius = v; }, dispose() { this.installed = false; }, skipToEnd() { this.progress = 1; this.radius = 0; this.installed = false; }, getSnapshot() { return { progress: this.progress, radius: this.radius, installed: this.installed }; } };
   const monkeyGuide = { showMessage(v) { message = v; return { lineCount: v ? 1 : 0 }; }, setDialogueOverride(v) { override = v; }, setInteractionEnabled(value) { if (value) interactionEnables += 1; }, notifyAttention() { attention += 1; } };
   const locomotion = { reset() { radius = 4; }, setWalkRadius(v, options) { radius = v; this.lastOptions = options; } };
   const settings = { enabled: true, locale: 'en', introRevealDuration: 10, postRevealSilenceDuration: 2, insideSafeMargin: .75, glyphFreeExploreDuration: 60, guideSpeed: 2, guideTurnDuration: 1, followGraceDistance: 3, pauseDistance: 3.2, resumeDistance: 2.4, revealProgress: .72, messageDisplayDuration: 0, messageGapDuration: 0, questionGapDuration: 0 };
   const spatial = { entryDirection: { x: 0, y: 0, z: 1 }, playerStartRadius: 20, monkeyStartRadius: 18, monkeyFinal: { x: 0, y: 0, z: 0 }, ringRadius: 7.6, thresholdOutsideDistance: 1 };
-  const sequence = createVrIntroSequence({ monkeyGuide, monkeyMotionRoot, monkeyVisualRoot: new THREE.Group(), monkeyStoneRoot, platformRoot, playerRig, playerGuidePanel: panel, fogReveal: fog, glyphRing, progressFloor, platformFixturesRoot, locomotion, spatial, settings, getHeadPosition: () => head.clone(), onOpeningRaysReady: () => { rays += 1; }, onIntroRevealComplete: () => { revealComplete += 1; }, onPostRevealSilenceComplete: () => { silenceComplete += 1; }, onPlayerOpenedGuide: () => { playerOpenedGuide += 1; }, onPlayerViewedControls: () => { playerViewedControls += 1; }, onPlayerClosedGuide: () => { playerClosedGuide += 1; }, onMonkeyHovered: () => { monkeyHovered += 1; }, onReliquaryReveal, bypass });
-  return { sequence, monkeyMotionRoot, monkeyStoneRoot, glyphRing, head, panel, fog, locomotion, getMessage: () => message, getOverride: () => override, getRadius: () => radius, getAttention: () => attention, getRays: () => rays, getRevealComplete: () => revealComplete, getSilenceComplete: () => silenceComplete, getPlayerOpenedGuide: () => playerOpenedGuide, getPlayerViewedControls: () => playerViewedControls, getPlayerClosedGuide: () => playerClosedGuide, getMonkeyHovered: () => monkeyHovered, getInteractionEnables: () => interactionEnables };
+  const sequence = createVrIntroSequence({ monkeyGuide, monkeyMotionRoot, monkeyVisualRoot: new THREE.Group(), monkeyStoneRoot, platformRoot, playerRig, playerGuidePanel: panel, fogReveal: fog, glyphRing, progressFloor, platformFixturesRoot, locomotion, spatial, settings, getHeadPosition: () => head.clone(), onOpeningRaysReady: () => { rays += 1; }, onIntroRevealComplete: () => { revealComplete += 1; }, onPostRevealSilenceComplete: () => { silenceComplete += 1; }, onPlayerOpenedGuide: () => { playerOpenedGuide += 1; }, onPlayerViewedControls: () => { playerViewedControls += 1; }, onPlayerClosedGuide: () => { playerClosedGuide += 1; }, onMonkeyHovered: () => { monkeyHovered += 1; }, onMonkeyTriggered: () => { monkeyTriggered += 1; }, onReliquaryReveal, bypass });
+  return { sequence, monkeyMotionRoot, monkeyStoneRoot, glyphRing, head, panel, fog, locomotion, getMessage: () => message, getOverride: () => override, getRadius: () => radius, getAttention: () => attention, getRays: () => rays, getRevealComplete: () => revealComplete, getSilenceComplete: () => silenceComplete, getPlayerOpenedGuide: () => playerOpenedGuide, getPlayerViewedControls: () => playerViewedControls, getPlayerClosedGuide: () => playerClosedGuide, getMonkeyHovered: () => monkeyHovered, getMonkeyTriggered: () => monkeyTriggered, getInteractionEnables: () => interactionEnables };
 }
 function reachThreshold(value) {
   value.sequence.beginAfterXrCalibration(); value.sequence.update(10); assert.equal(value.sequence.beginPostRevealSilence(), true); value.sequence.update(2); assert.equal(value.sequence.beginControllerOnboarding(), true);
@@ -24,7 +24,7 @@ function reachThreshold(value) {
   value.panel.open = true; value.sequence.update(0); assert.equal(value.sequence.continueControllerOnboarding(), true); value.panel.section = 'controls'; value.panel.view = 'DETAIL'; value.sequence.update(0);
   assert.equal(value.sequence.continueControllerOnboarding(), true);
   value.panel.open = false; value.sequence.update(0); assert.equal(value.sequence.continueControllerOnboarding(), true); for (let i = 0; i < 10; i += 1) value.sequence.update(.01);
-  value.getOverride().onMonkeyHover(); assert.equal(value.sequence.continueControllerOnboarding(), true); value.getOverride().onMonkeyPress(); for (let i = 0; i < 8; i += 1) value.sequence.update(.01);
+  value.getOverride().onMonkeyHover(); assert.equal(value.sequence.continueControllerOnboarding(), true); value.getOverride().onMonkeyPress(); assert.equal(value.sequence.continueControllerOnboarding(), true); for (let i = 0; i < 8; i += 1) value.sequence.update(.01);
   value.sequence.chooseInvitation('go');
   for (let i = 0; i < 30 && value.sequence.getState() === VR_INTRO_STATE.FOLLOWING; i += 1) {
     value.head.copy(value.monkeyMotionRoot.getWorldPosition(new THREE.Vector3())); value.sequence.update(.5);
@@ -103,7 +103,16 @@ f.getOverride().onMonkeyPress(); assert.equal(f.sequence.getState(), VR_INTRO_ST
 assert.equal(f.getMessage(), messageBeforeHover); assert.notEqual(f.getMessage(), VR_INTRO_COPY.en.trigger);
 assert.equal(f.sequence.continueControllerOnboarding(), true); assert.equal(f.sequence.getState(), VR_INTRO_STATE.WAIT_TRIGGER);
 assert.equal(f.getMessage(), VR_INTRO_COPY.en.trigger); assert.equal(f.sequence.continueControllerOnboarding(), false);
-f.getOverride().onMonkeyPress(); for (let i = 0; i < 8; i += 1) f.sequence.update(.01);
+f.getOverride().onMonkeyPress();
+assert.equal(f.sequence.getState(), VR_INTRO_STATE.WAIT_RUNTIME_AFTER_MONKEY_TRIGGERED);
+assert.equal(f.getMonkeyTriggered(), 1); assert.equal(f.getMessage(), VR_INTRO_COPY.en.trigger);
+f.getOverride().onMonkeyPress(); f.sequence.update(100);
+assert.equal(f.getMonkeyTriggered(), 1, 'runtime wait emits Monkey trigger exactly once');
+assert.equal(f.sequence.getState(), VR_INTRO_STATE.WAIT_RUNTIME_AFTER_MONKEY_TRIGGERED);
+assert.equal(f.getMessage(), VR_INTRO_COPY.en.trigger, 'seen flow remains stopped before Runtime continuation');
+assert.equal(f.getOverride().options, undefined, 'invitation options are not installed before Runtime continuation');
+assert.equal(f.sequence.continueControllerOnboarding(), true); assert.equal(f.sequence.continueControllerOnboarding(), false);
+for (let i = 0; i < 8; i += 1) f.sequence.update(.01);
 assert.equal(f.getMessage(), VR_INTRO_COPY.en.going, 'legacy seen sequence and invitation question remain unchanged');
 f.sequence.chooseInvitation('go');
 assert.ok(f.sequence.getDebugSnapshot().monkeyRadius > 5, 'FOLLOWING has positive distance from radius 18 to threshold 5');
@@ -166,6 +175,7 @@ assert.equal(bypassed.getPlayerOpenedGuide(), 0, 'QA bypass does not synthesize 
 assert.equal(bypassed.getPlayerViewedControls(), 0, 'QA bypass does not synthesize controls viewed');
 assert.equal(bypassed.getPlayerClosedGuide(), 0, 'QA bypass does not synthesize guide closing');
 assert.equal(bypassed.getMonkeyHovered(), 0, 'QA bypass does not synthesize Monkey hover');
+assert.equal(bypassed.getMonkeyTriggered(), 0, 'QA bypass does not synthesize Monkey trigger');
 f.sequence.reset(); assert.equal(f.sequence.getState(), VR_INTRO_STATE.XR_CALIBRATING); assert.equal(f.sequence.getDebugSnapshot().glyphExploreResolved, false);
 f.sequence.beginAfterXrCalibration(); f.sequence.update(10); assert.equal(f.getRevealComplete(), 2, 'reset permits exactly one completion in the next run');
 assert.equal(f.sequence.beginPostRevealSilence(), true, 'reset flow can resume through Runtime again');
