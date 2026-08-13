@@ -493,7 +493,7 @@ const glyphInteraction = createVrGlyphInteraction({
     const centerWorldPosition = progressFloor.object.getWorldPosition(new THREE.Vector3());
     const crystal = crystalCollection.spawnOne(node.userData.id, { glyphWorldPosition, centerWorldPosition });
     if (crystal) {
-      introSequence?.notifyGlyphExploreSuccess();
+      runtimeExperience.dispatch(VR_SCENARIO_EVENT.FIRST_CRYSTAL_DISCOVERED);
       vrAudio.completeGlyphAcquisition(node.userData.id, GLYPH_COMPLETION_AUDIO[node.userData.id]?.[tier - 1]);
     }
   }
@@ -605,6 +605,11 @@ const runtimeExperience = new RuntimeExperience({
     [VR_SCENARIO_EFFECT.SHOW_GLYPH_HINT]: () => {
       if (!introSequence.showGlyphHint()) {
         throw new Error('SHOW_GLYPH_HINT rejected by Intro actor after accepted Scenario transition');
+      }
+    },
+    [VR_SCENARIO_EFFECT.REVEAL_RELIQUARY]: () => {
+      if (!introSequence.beginFirstCrystalDiscovery()) {
+        throw new Error('REVEAL_RELIQUARY rejected by Intro actor after accepted Scenario transition');
       }
     }
   }
