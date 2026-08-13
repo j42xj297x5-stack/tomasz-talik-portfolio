@@ -53,28 +53,40 @@ Punkt nie jest osobną funkcją, klasą, koniecznie osobnym timerem lub komunika
 
 ### 5.1. Format
 
-**TARGET / MIGRATION RULE:** adres jest stringiem dodatnich segmentów liczbowych rozdzielonych kropkami, np. `1.1`, `1.2`, `1.3`, `1.1.1`, `1.1.1.1`, `2.1`. Pierwszy segment oznacza Akt, dalsze — punkt i podpunkty. Nie wolno przechowywać adresu jako liczby zmiennoprzecinkowej.
+**TARGET / MIGRATION RULE:** point ID jest wyłącznie numerycznym, trwałym adresem strukturalnym w dziele: stringiem dodatnich segmentów całkowitych rozdzielonych kropkami, np. `1.1`, `1.2`, `1.3`, `1.1.1`, `1.1.1.1`, `2.1`. Pierwszy segment oznacza Akt, dalsze — punkt i podpunkty. Nie wolno przechowywać adresu jako liczby zmiennoprzecinkowej.
 
 ```js
 id: '1.3' // poprawnie
 id: 1.3   // niepoprawnie
 ```
 
-### 5.2. Stabilność
+ID nie koduje treści ani znaczenia fabularnego. Nie może zawierać słów, slugów, nazw dialogów lub wyborów ani literowych suffixów (`a`, `b`, `c`). Dlatego `1.4.5.go`, `1.4.5a`, `intro.leave` i `monkey_where` są niepoprawne, natomiast `1.4.5.1`, `1.4.5.2` i `1.4.5.3` są poprawnymi adresami.
 
-Raz opublikowany adres pozostaje stabilny. Nie renumeruje się punktów dla estetyki. Luki, np. `1.1`, `1.3`, `1.4`, są prawidłowe, a usunięcie `1.2` nie zmienia pozostałych adresów. Usuniętego adresu nie wolno użyć ponownie dla innego znaczenia; pozostaje w rejestrze jako `REMOVED` albo zarezerwowany.
+### 5.2. Dowolnie głębokie dzieci
 
-### 5.3. Wstawianie
+Punkt może mieć dowolnie głębokie numeric child points, np. `2.6` → `2.6.1` → `2.6.1.1` → `2.6.1.1.1` → `2.6.1.1.1.1`. Każdy segment pozostaje dodatnią liczbą całkowitą. Kanon nie ustanawia sztucznego limitu głębokości.
+
+Głębokość umożliwia strukturalne zagęszczanie Scenario; sama w sobie nie nadaje punktowi automatycznej semantyki runtime, kolejności wykonania, mechanizmu powrotu ani zachowania Directora.
+
+### 5.3. Stabilność i `REMOVED`
+
+Raz opublikowany adres pozostaje stabilny. Nie renumeruje się punktów dla estetyki. Jeżeli spośród `2.6.3.1`, `2.6.3.2`, `2.6.3.3` środkowa odnoga zostanie usunięta, `2.6.3.2` pozostaje `REMOVED`, a `.1` i `.3` zachowują adresy. Nie wolno przenumerować `.3` na `.2` ani później nadać `2.6.3.2` innego znaczenia.
+
+Luki są prawidłowe. Usunięcie całej sekwencji nie powoduje renumeracji reszty dzieła. Usunięty adres pozostaje w rejestrze jako `REMOVED` albo zarezerwowany i nigdy nie wraca jako tożsamość innego punktu.
+
+### 5.4. Wstawianie
 
 Punkt wstawiony pomiędzy `1.1` i `1.2` otrzymuje `1.1.1`; kolejne w tym miejscu mogą otrzymać `1.1.2`, `1.1.3`. Punkt pomiędzy `1.1.1` i `1.1.2` może otrzymać `1.1.1.1`. Nie następuje automatyczna renumeracja reszty Scenario.
 
-### 5.4. Przenoszenie
+### 5.5. Przenoszenie
 
 Położenie zmienia się przede wszystkim przez zmianę jawnych transitions. Jeżeli Projektant świadomie zmienia adres, stary adres zostaje oznaczony jako usunięty lub zastąpiony, wszystkie jawne odwołania są aktualizowane, rejestr zapisuje zmianę, a cicha renumeracja jest zakazana.
 
-### 5.5. Porządek
+### 5.6. Adres nie jest kolejnością wykonawczą
 
-Director nie wylicza następnego punktu matematycznie (`1.3 + 0.1 = 1.4` jest niedozwolonym założeniem), nie opiera przebiegu na kolejności tablicy i nie sortuje adresów leksykograficznie. Każde przejście wskazuje jawny `target`.
+Director nie dodaje `+1`, nie wylicza następnego dziecka, nie zakłada, że `.2` następuje po `.1`, nie opiera przebiegu na kolejności tablicy, nie sortuje punktów w celu ustalenia przebiegu, nie wraca automatycznie do rodzica i nie wybiera automatycznie pierwszego dziecka. Każde przejście wskazuje jawny `target`.
+
+Legalne mogą być więc przejścia `2.6.3 → 2.6.3.2`, `2.6.3.2.2 → 2.6.3`, `2.6.3.1 → 7.4` oraz `2.6.3.3 → 100.10`, o ile są zapisane jako transitions. **Numer opisuje adres; transitions opisują przebieg.**
 
 ## 6. Jawne przejścia, skoki, pętle i powroty
 
@@ -122,11 +134,48 @@ Powrót również jest jawny:
 
 Skok nie jest błędem, powrót nie jest ukrytym zachowaniem, a pętla jest jawną parą transitions. Director nie ma domyślnego „następnego punktu”. Nie wprowadza się ukrytego call stacku Scenario bez osobnej zatwierdzonej potrzeby. Punkt terminalny musi być oznaczony jawnie.
 
-## 7. Numer jest adresem, nazwa jest etykietą
+## 7. ID, label i copy są oddzielnymi warstwami
 
-`id: '1.3'` jest tożsamością punktu; opcjonalne `label: 'Cisza po revealu'` jest etykietą dla człowieka i może się zmienić bez zmiany adresu.
+Wiążący podział jest następujący:
+
+- **POINT ID** — trwały adres strukturalny w dziele;
+- **LABEL** — czytelny opis punktu dla człowieka;
+- **COPY** — konkretna treść wyświetlana graczowi.
+
+Przykładowy punkt `{ id: '2.6.3.2', label: 'Gracz pyta Małpę o cel podróży' }` zachowuje ID `2.6.3.2`, gdy copy gracza zmieni się z `DOKĄD?` na `GDZIE MNIE PROWADZISZ?`. Zmiana labelu albo copy nie może wymuszać zmiany point ID. Label i copy nie uczestniczą w tożsamości punktu.
 
 **CURRENT:** działający slice M1.1–M1.8 używa kanonicznych, stabilnych point IDs `1.1`–`1.4.5`; opisowe nazwy pozostają wyłącznie etykietami dla człowieka.
+
+### 7.1. Dialogi i wybory są zwykłymi odnogami
+
+Rozgałęzienie dialogowe nie wymaga specjalnego rodzaju ID. Punkt wyboru `2.6.3` może mieć warianty `2.6.3.1`, `2.6.3.2`, `2.6.3.3`; wariant `2.6.3.2` może mieć dalsze dzieci `2.6.3.2.1`, `2.6.3.2.2`, a `2.6.3.2.1.1` jest równie legalnym adresem. Nazwy i teksty wariantów należą do label/copy, nie do ID.
+
+Aktor nie wydaje polecenia `goToPoint('2.6.3.2')` i nie zna target point ID. Aktor informuje, co wybrał gracz; Scenario jest właścicielem mapowania zaakceptowanego wyboru na jawny target; Director akceptuje wyłącznie legalne przejście. Ten kanon ustala ownership, ale celowo **nie projektuje** formatu payloadu eventu, `choiceId`, `variant`, `condition` ani transition predicate. Będzie to osobna decyzja implementacyjna przy migracji pierwszego realnego rozgałęzienia.
+
+### 7.2. Niewiążący treściowo przykład kanoniczny
+
+```text
+2.6.3  „Pytanie”
+├── 2.6.3.1  „Pierwsza odpowiedź”
+├── 2.6.3.2  „Druga odpowiedź”
+│   ├── 2.6.3.2.1  „Dalsza rozmowa”
+│   └── 2.6.3.2.2  „Inna dalsza rozmowa”
+└── 2.6.3.3  „Wyjście”
+    → 100.10
+```
+
+Teksty w cudzysłowie są labelami albo przykładową treścią, a nie częścią identyfikatora.
+
+### 7.3. Act 100 — reserved ending / exit namespace
+
+**RESERVED / CANONICAL FUTURE ADDRESS — NOT IMPLEMENTED:** pierwszy segment `100` jest trwale zarezerwowany jako **ACT 100 — ENDING / EXIT NAMESPACE**. `100` jest namespace'em Aktu, a adresowalnymi punktami są jego dzieci, np. `100.1`, `100.2`, …, `100.10` oraz dowolnie głębokie dzieci, np. `100.2.1`, `100.2.2`, `100.3.1.1`. Akt 100 nie wynika z długości wcześniejszej gry; jest celowo odległym, stabilnym namespace'em zakończeń.
+
+- `100.1` jest zarezerwowany jako **FULL FINALE ENTRY / WHITE TRANSITION**: kanoniczne wejście w pełny finał, np. wejście w biel i początek finałowej sekwencji. Experience VR nadal trwa. Między `100.1` a `100.10` mogą powstać `100.2`, `100.3`, … oraz ich dzieci bez zmiany adresu wyjścia.
+- `100.10` jest zarezerwowany jako **EXIT EXPERIENCE VR**: trwały adres faktycznego zakończenia i opuszczenia trybu Experience VR.
+
+FULL FINALE i EXIT EXPERIENCE VR są różnymi rzeczami. Pełne ukończenie prowadzi jawnie `ostatni punkt głównej progresji → 100.1 → finał → 100.10 → exit`. Wczesna decyzja o opuszczeniu doświadczenia może legalnie wykonać jawny skok `dowolny legalny punkt → 100.10`, bez przechodzenia przez pełny finał. Nie wolno utożsamiać rozpoczęcia finału z technicznym zakończeniem sesji.
+
+Rozdział statusów jest bezwzględny: **CURRENT IMPLEMENTED** obejmuje obecne live Scenario M1.1–M1.8 opisane w sekcji 19; Act 100, `100.1`, `100.10` i prowadzące do nich transitions są wyłącznie **RESERVED / CANONICAL FUTURE ADDRESS**. Nie występują obecnie w `VR_EXPERIENCE_POINT`, nie są zaimplementowanymi punktami ani effects i Director nie posiada obecnie tych transitions.
 
 ## 8. Event, effect, cue, milestone i capability
 
