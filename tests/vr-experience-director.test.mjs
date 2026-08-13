@@ -6,7 +6,7 @@ import { VR_EXPERIENCE_POINT, VR_SCENARIO_EFFECT, VR_SCENARIO_EVENT, VR_SCENARIO
 assert.equal(Object.isFrozen(vrExperienceScenario), true);
 assert.equal(vrExperienceScenario.points, vrExperienceScenario.scenes);
 assert.equal(vrExperienceScenario.initialPointId, vrExperienceScenario.initialSceneId);
-assert.deepEqual(vrExperienceScenario.points.map(({ id }) => id), ['1.10', '1.20', '1.30', '1.40', '1.50', '1.60', '1.70', '1.80', '1.100', '1.100.1', '1.110', '1.120', '1.120.1', '1.130', '100.10']);
+assert.deepEqual(vrExperienceScenario.points.map(({ id }) => id), ['1.10', '1.20', '1.30', '1.40', '1.50', '1.60', '1.70', '1.80', '1.100', '1.100.1', '1.110', '1.110.1', '1.120', '1.120.1', '1.130', '100.10']);
 assert.equal(Object.isFrozen(vrExperienceScenario.points[0]), true);
 assert.equal(Object.isFrozen(vrExperienceScenario.points[0].transitions[0]), true);
 assert.equal(Object.isFrozen(vrExperienceScenario.points[0].transitions[0].effects), true);
@@ -14,7 +14,7 @@ assert.equal(Object.isFrozen(vrExperienceScenario.metadata.authoritativeScope), 
 assert.equal(Object.isFrozen(vrExperienceScenario.points[2].transitions[0]), true);
 assert.equal(Object.isFrozen(vrExperienceScenario.points[2].transitions[0].milestonesToAdd), true);
 assert.equal(Object.isFrozen(vrExperienceScenario.points[3]), true);
-assert.equal(vrExperienceScenario.metadata.stage, 'M1_12_CANONICAL_STORY_REINDEX');
+assert.equal(vrExperienceScenario.metadata.stage, 'M1_13_FOLLOW_PAUSE_RESUME_HANDOFF');
 assert.deepEqual(vrExperienceScenario.metadata.authoritativeScope, [
   'XR_CALIBRATED → BEGIN_INTRO_REVEAL',
   'INTRO_REVEAL_COMPLETE → BEGIN_POST_REVEAL_SILENCE',
@@ -25,6 +25,7 @@ assert.deepEqual(vrExperienceScenario.metadata.authoritativeScope, [
   'MONKEY_HOVERED → CONTINUE_CONTROLLER_ONBOARDING',
   'MONKEY_TRIGGERED → CONTINUE_CONTROLLER_ONBOARDING',
   'INTRO_INVITATION_SELECTED / choice 1 → 1.110',
+  'FOLLOW_PAUSE_CHANGED → APPLY_FOLLOW_PAUSE_STATE → 1.110 / 1.110.1',
   'MONKEY_REACHED_THRESHOLD → PRESENT_THRESHOLD_CHOICE → 1.120',
   'THRESHOLD_SELECTED / choice 1 → 1.130',
   'THRESHOLD_SELECTED / choice 2 → 1.120.1',
@@ -100,6 +101,19 @@ const goChange = productionDirector.dispatch(VR_SCENARIO_EVENT.INTRO_INVITATION_
 assert.equal(goChange.currentPointId, VR_EXPERIENCE_POINT['1.110']);
 assert.deepEqual(goChange.effects, [VR_SCENARIO_EFFECT.CONTINUE_INTRO_INVITATION]);
 assert.deepEqual(goChange.addedMilestones, []);
+for (let cycle = 0; cycle < 2; cycle += 1) {
+  const pausePayload = { paused: true };
+  const pauseChange = productionDirector.dispatch(VR_SCENARIO_EVENT.FOLLOW_PAUSE_CHANGED, pausePayload);
+  assert.equal(pauseChange.previousPointId, VR_EXPERIENCE_POINT['1.110']);
+  assert.equal(pauseChange.currentPointId, VR_EXPERIENCE_POINT['1.110.1']);
+  assert.deepEqual(pauseChange.addedMilestones, []);
+  assert.deepEqual(pauseChange.effects, [VR_SCENARIO_EFFECT.APPLY_FOLLOW_PAUSE_STATE]);
+  assert.equal(pauseChange.event.payload, pausePayload);
+  assert.equal(productionDirector.dispatch(VR_SCENARIO_EVENT.MONKEY_REACHED_THRESHOLD), null);
+  const resumeChange = productionDirector.dispatch(VR_SCENARIO_EVENT.FOLLOW_PAUSE_CHANGED, { paused: false });
+  assert.equal(resumeChange.currentPointId, VR_EXPERIENCE_POINT['1.110']);
+  assert.deepEqual(resumeChange.addedMilestones, []);
+}
 const thresholdChange = productionDirector.dispatch(VR_SCENARIO_EVENT.MONKEY_REACHED_THRESHOLD);
 assert.equal(thresholdChange.previousPointId, VR_EXPERIENCE_POINT['1.110']);
 assert.equal(thresholdChange.currentPointId, VR_EXPERIENCE_POINT['1.120']);

@@ -58,6 +58,7 @@ const productionRuntime = new RuntimeExperience({ director: new ExperienceDirect
   [VR_SCENARIO_EFFECT.BEGIN_CONTROLLER_ONBOARDING]: () => productionCalls.push(VR_SCENARIO_EFFECT.BEGIN_CONTROLLER_ONBOARDING),
   [VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING]: () => productionCalls.push(VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING),
   [VR_SCENARIO_EFFECT.PRESENT_THRESHOLD_CHOICE]: () => productionCalls.push(VR_SCENARIO_EFFECT.PRESENT_THRESHOLD_CHOICE),
+  [VR_SCENARIO_EFFECT.APPLY_FOLLOW_PAUSE_STATE]: (change, payload) => { productionCalls.push(VR_SCENARIO_EFFECT.APPLY_FOLLOW_PAUSE_STATE); productionChoicePayloads.push(payload); },
   [VR_SCENARIO_EFFECT.CONTINUE_THRESHOLD_CHOICE]: (change, payload) => { productionCalls.push(VR_SCENARIO_EFFECT.CONTINUE_THRESHOLD_CHOICE); productionChoicePayloads.push(payload); },
   [VR_SCENARIO_EFFECT.CONTINUE_INTRO_INVITATION]: (change, payload) => { productionCalls.push(VR_SCENARIO_EFFECT.CONTINUE_INTRO_INVITATION); productionChoicePayloads.push(payload); }
 } });
@@ -78,6 +79,10 @@ assert.deepEqual(productionCalls, [VR_SCENARIO_EFFECT.BEGIN_INTRO_REVEAL, VR_SCE
   VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING, VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING,
   VR_SCENARIO_EFFECT.CONTINUE_INTRO_INVITATION]);
 productionRuntime.dispatch(VR_SCENARIO_EVENT.INTRO_INVITATION_SELECTED, { choice: 1 });
+const followPayload = { paused: true };
+productionRuntime.dispatch(VR_SCENARIO_EVENT.FOLLOW_PAUSE_CHANGED, followPayload);
+assert.equal(productionChoicePayloads.at(-1), followPayload);
+productionRuntime.dispatch(VR_SCENARIO_EVENT.FOLLOW_PAUSE_CHANGED, { paused: false });
 productionRuntime.dispatch(VR_SCENARIO_EVENT.MONKEY_REACHED_THRESHOLD);
 assert.equal(productionCalls.at(-1), VR_SCENARIO_EFFECT.PRESENT_THRESHOLD_CHOICE,
   'accepted threshold arrival executes the single production Runtime effect');

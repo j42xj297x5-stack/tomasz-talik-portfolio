@@ -6,7 +6,7 @@ Status: canonical description of the implemented runtime synchronized on 2026-08
 
 **CURRENT (2026-08-13):** LIVE Scenario używa flat slice `1.10`, `1.20`, `1.30`, `1.40`, `1.50`, `1.60`, `1.70`, `1.80`, `1.100`, `1.100.1`, `1.110`, `1.120`, `1.120.1`, `1.130`, `100.10`. `1.90` pozostaje **RESERVED / WATER CRYSTAL TUTORIAL / NOT IMPLEMENTED**. Stare produkcyjne IDs objęte canonical mappingiem są **SUPERSEDED / RETIRED** i nie mogą zostać ponownie użyte; `100.10` pozostaje bez zmiany.
 
-Migracja zmieniła wyłącznie adresy punktów i jawne targety. Eventy, numeric choices, effects, milestones, actor/runtime behavior i SG statuses są bez zmian. M1.12 nadal jest **IMPLEMENTED — HARDWARE QA PENDING**, SG-036 **MIGRATED**, SG-041 **RETAINED**. Scenario Spine pozostaje **TARGET / NOT IMPLEMENTED**; Director nadal używa wyłącznie explicit `transition.target`. Hardware QA osobnego, behavior-neutral reindexu: **N/A**.
+Migracja zmieniła wyłącznie adresy punktów i jawne targety. Eventy, numeric choices, effects, milestones, actor/runtime behavior i SG statuses są bez zmian. M1.12 ma **HARDWARE PASS — Meta Quest 3S**, SG-036 **MIGRATED**, a SG-041 jest **MIGRATED** po M1.13. Scenario Spine pozostaje **TARGET / NOT IMPLEMENTED**; Director nadal używa wyłącznie explicit `transition.target`. Canonical Story Reindex jest **IMPLEMENTED / behavior-neutral**; post-reindex regression: **PASS — Meta Quest 3S**.
 
 ## Scenario + Director M1.8 live slice and M1.9 foundation
 
@@ -239,3 +239,7 @@ Choice 1 retains the existing capture/message-clear/CROSSING mechanics. Choice 2
 ```
 
 SG-036 is **MIGRATED**. SG-041 is **RETAINED**; follow grace, pause/resume distances, walking pause ownership, and movement continuation policy are unchanged.
+
+## M1.13 — Follow pause-resume runtime seam
+
+**IMPLEMENTED — HARDWARE QA PENDING.** Actor-local distance/grace sensing emits `FOLLOW_PAUSE_CHANGED { paused }`, production composition dispatches that semantic payload unchanged, and Scenario routes by current point between active FOLLOWING `1.110` and local waiting branch `1.110.1`. Runtime owns exactly one `APPLY_FOLLOW_PAUSE_STATE` handler and fail-fast delegates to `continueFollowPauseChanged(payload.paused)`. The transient actor safe wait prevents an unaccepted movement frame while synchronous production dispatch preserves same-frame pause/resume parity. Motion and fog interpolation remain actor mechanics. `1.110.1` is not part of the future Scenario Spine; Scenario Spine is **TARGET / NOT IMPLEMENTED**, and `1.90` is **RESERVED / NOT IMPLEMENTED**. SG-041 and SG-036 are **MIGRATED**.

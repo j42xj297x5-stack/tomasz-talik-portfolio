@@ -98,6 +98,7 @@ export const VR_SCENARIO_EFFECT = immutableIdentifiers([
   'BEGIN_CONTROLLER_ONBOARDING',
   'CONTINUE_CONTROLLER_ONBOARDING',
   'CONTINUE_INTRO_INVITATION',
+  'APPLY_FOLLOW_PAUSE_STATE',
   'PRESENT_THRESHOLD_CHOICE',
   'CONTINUE_THRESHOLD_CHOICE',
   'SHOW_GUIDE_PROMPT',
@@ -122,6 +123,7 @@ export const VR_EXPERIENCE_POINT = immutableIdentifiers([
   '1.100',
   '1.100.1',
   '1.110',
+  '1.110.1',
   '1.120',
   '1.120.1',
   '1.130',
@@ -262,10 +264,29 @@ const points = Object.freeze([
     capabilities: Object.freeze([]),
     transitions: Object.freeze([
       Object.freeze({
+        event: VR_SCENARIO_EVENT.FOLLOW_PAUSE_CHANGED,
+        target: VR_EXPERIENCE_POINT['1.110.1'],
+        milestonesToAdd: Object.freeze([]),
+        effects: Object.freeze([VR_SCENARIO_EFFECT.APPLY_FOLLOW_PAUSE_STATE])
+      }),
+      Object.freeze({
         event: VR_SCENARIO_EVENT.MONKEY_REACHED_THRESHOLD,
         target: VR_EXPERIENCE_POINT['1.120'],
         milestonesToAdd: Object.freeze([]),
         effects: Object.freeze([VR_SCENARIO_EFFECT.PRESENT_THRESHOLD_CHOICE])
+      })
+    ])
+  }),
+  Object.freeze({
+    id: VR_EXPERIENCE_POINT['1.110.1'],
+    label: 'FOLLOWING / Monkey zatrzymana i oczekuje na gracza',
+    capabilities: Object.freeze([]),
+    transitions: Object.freeze([
+      Object.freeze({
+        event: VR_SCENARIO_EVENT.FOLLOW_PAUSE_CHANGED,
+        target: VR_EXPERIENCE_POINT['1.110'],
+        milestonesToAdd: Object.freeze([]),
+        effects: Object.freeze([VR_SCENARIO_EFFECT.APPLY_FOLLOW_PAUSE_STATE])
       })
     ])
   }),
@@ -315,7 +336,7 @@ export const vrExperienceScenario = Object.freeze({
     effects: Object.freeze(Object.values(VR_SCENARIO_EFFECT))
   }),
   metadata: Object.freeze({
-    stage: 'M1_12_CANONICAL_STORY_REINDEX',
+    stage: 'M1_13_FOLLOW_PAUSE_RESUME_HANDOFF',
     authoritativeForLiveGameplay: true,
     authoritativeScope: Object.freeze([
       'XR_CALIBRATED → BEGIN_INTRO_REVEAL',
@@ -327,6 +348,7 @@ export const vrExperienceScenario = Object.freeze({
       'MONKEY_HOVERED → CONTINUE_CONTROLLER_ONBOARDING',
       'MONKEY_TRIGGERED → CONTINUE_CONTROLLER_ONBOARDING',
       'INTRO_INVITATION_SELECTED / choice 1 → 1.110',
+      'FOLLOW_PAUSE_CHANGED → APPLY_FOLLOW_PAUSE_STATE → 1.110 / 1.110.1',
       'MONKEY_REACHED_THRESHOLD → PRESENT_THRESHOLD_CHOICE → 1.120',
       'THRESHOLD_SELECTED / choice 1 → 1.130',
       'THRESHOLD_SELECTED / choice 2 → 1.120.1',

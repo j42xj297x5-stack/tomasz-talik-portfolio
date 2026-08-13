@@ -31,7 +31,7 @@ Jest źródłem prawdy dla wszystkich następnych etapów migracji Scenario + Di
 | `1.4.5.1.1.2` | `1.120.1` |
 | `1.4.5.1.1.1` | `1.130` |
 
-Wszystkie OLD IDs w tabeli są trwale **SUPERSEDED / RETIRED** i nigdy nie mogą otrzymać innego znaczenia. `100.10` nie został zmieniony ani retired. M1.12 pozostaje **IMPLEMENTED — HARDWARE QA PENDING**, SG-036 **MIGRATED**, SG-041 **RETAINED**, a approved crystal tutorial **NOT IMPLEMENTED**. Hardware QA samego behavior-neutral reindexu: **N/A**.
+Wszystkie OLD IDs w tabeli są trwale **SUPERSEDED / RETIRED** i nigdy nie mogą otrzymać innego znaczenia. `100.10` nie został zmieniony ani retired. M1.12 ma **HARDWARE PASS — Meta Quest 3S**, SG-036 **MIGRATED**, SG-041 **MIGRATED** po M1.13, a approved crystal tutorial **NOT IMPLEMENTED**. Canonical Story Reindex jest **IMPLEMENTED / behavior-neutral**; post-reindex regression: **PASS — Meta Quest 3S**.
 
 ## 2. Metafora teatralna i podział odpowiedzialności
 
@@ -562,3 +562,11 @@ SG-032, SG-039 and SG-040 are **MIGRATED**. SG-036 and SG-041 remain **RETAINED*
 ```
 
 `1.130` is the terminal CROSS point of the current slice. Choice 2 is an explicit self-loop while the actor replays the unchanged answer and options. `100.10` is LIVE EXIT EXPERIENCE VR; `100.1` remains RESERVED / FUTURE. After verification against the historical audit, SG-036 is **MIGRATED**: all its narrative decisions through threshold selection are Scenario-owned. SG-041 remains **RETAINED** because pause/resume follow policy and `FOLLOW_PAUSE_CHANGED` remain actor-owned.
+
+## M1.13 — Follow pause-resume handoff (current)
+
+**IMPLEMENTED — HARDWARE QA PENDING.** LIVE point `1.110` oznacza aktywne FOLLOWING, a LIVE `1.110.1` oznacza „FOLLOWING / Monkey waiting for player”. `1.110.1` jest local branch punktu `1.110` i nie należy do przyszłego Scenario Spine. Scenario Spine pozostaje **TARGET / NOT IMPLEMENTED**, a `1.90` **RESERVED / NOT IMPLEMENTED**.
+
+Actor zachowuje physical sensing (head/Monkey position, grace/pause/resume distances), motion, stop radius i fog interpolation. Po grace emituje wyłącznie `FOLLOW_PAUSE_CHANGED { paused }` i bez synchronicznej kontynuacji czeka w `WAIT_RUNTIME_AFTER_FOLLOW_PAUSE_CHANGED`. Current point, nie payload, wybiera jawny target: `1.110 → 1.110.1` albo `1.110.1 → 1.110`. Jeden effect `APPLY_FOLLOW_PAUSE_STATE` deleguje mechaniczną zmianę `walkingPaused` i istniejącego komunikatu do `continueFollowPauseChanged(paused)`. Nie dodano milestone, predicate/guard DSL ani numeric choice.
+
+Punktowa weryfikacja audytu zamyka **SG-041 = MIGRATED**: po M1.11 arrival oraz M1.13 pause/resume nie pozostał w tej grupie narrative decision owner; sensory odległości, motion i fog są actor-local mechanics. SG-036 pozostaje **MIGRATED**.
