@@ -71,6 +71,12 @@ assert.match(vr, /onMonkeyTriggered: \(\) => runtimeExperience\.dispatch\(VR_SCE
   'Monkey trigger callback performs only semantic dispatch');
 assert.match(vr, /onInvitationSelected: \(choice\) => runtimeExperience\.dispatch\(VR_SCENARIO_EVENT\.INTRO_INVITATION_SELECTED, \{ choice \}\)/,
   'invitation callback dispatches only the unchanged numeric choice fact');
+assert.match(vr, /onMonkeyReachedThreshold: \(\) => runtimeExperience\.dispatch\(VR_SCENARIO_EVENT\.MONKEY_REACHED_THRESHOLD\)/,
+  'threshold arrival callback dispatches only the semantic producer fact');
+assert.match(vr, /VR_SCENARIO_EFFECT\.PRESENT_THRESHOLD_CHOICE[\s\S]*introSequence\.presentThresholdChoice\(\)[\s\S]*throw new Error/,
+  'Runtime owns the single fail-fast threshold presentation seam');
+assert.equal((vr.match(/introSequence\.presentThresholdChoice\(\)/g) ?? []).length, 1,
+  'threshold presentation has no fallback or duplicate effect handler');
 assert.match(vr, /VR_SCENARIO_EFFECT\.CONTINUE_INTRO_INVITATION[\s\S]*introSequence\.continueInvitation\(payload\.choice\)[\s\S]*throw new Error/,
   'accepted invitation choice has one fail-fast actor execution seam');
 assert.equal((vr.match(/introSequence\.continueInvitation\(payload\.choice\)/g) ?? []).length, 1);

@@ -163,7 +163,7 @@ The next design space is radar/sector targeting around the world-stable frame an
 
 ## M1.10 — INTRO INVITATION CHOICE BRANCH
 
-**Status:** IMPLEMENTED — HARDWARE QA PENDING.
+**Status:** HARDWARE PASS — Meta Quest 3S.
 
 Current LIVE routing is `1.4.5` choice 1 → `1.4.5.1`, choice 2 → `1.4.5.2`, choice 3 → `100.10`; point `1.4.5.2` exposes the same three edges, including its explicit choice-2 self-loop. `100.10` is LIVE terminal `EXIT EXPERIENCE VR`; `100.1` remains RESERVED / FUTURE. SG-036 and SG-041 remain RETAINED.
 
@@ -185,3 +185,16 @@ M1.8 is HARDWARE PASS — Meta Quest 3S. M1.9 Numeric Choice Routing Foundation 
 - [ ] Branch selection is exactly once; no branch starts before Runtime continuation.
 - [ ] Reset/re-entry works; there are no duplicate messages or listeners.
 - [ ] QA bypass has no regression.
+
+
+## M1.11 — MONKEY REACHED THRESHOLD HANDOFF
+
+**Status:** IMPLEMENTED — HARDWARE QA PENDING.
+
+M1.10 is **HARDWARE PASS — Meta Quest 3S**. The current boundary is `1.4.5.1 → MONKEY_REACHED_THRESHOLD → 1.4.5.1.1 → PRESENT_THRESHOLD_CHOICE → threshold choices legacy`. The actor safely waits after physical arrival; Runtime is the only accepted-transition route into the unchanged threshold dialogue. No milestone was added. SG-032, SG-039 and SG-040 are MIGRATED; SG-036 and SG-041 remain RETAINED. Remaining SG-041 includes pause/resume distance decisions, `FOLLOW_PAUSE_CHANGED`, and further movement/follow policy. Threshold selection remains legacy.
+
+### APPROVED NEXT CONTENT INSERT — NOT IMPLEMENTED
+
+After the current P0 migration, insert a grip tutorial after “Widzisz?” / “Już nauczyłeś świat, gdzie patrzysz.” and before “Idziesz?”. The approved sequence is: materialize a small WATER / Haiku Cosmos crystal above Monkey and slightly left; instruct the player to grab it; detect the physical grab; instruct release; detect release; dematerialize it; Monkey says “W tym miejscu nie możesz go zatrzymać.”; wait about 2 seconds; only then present “Idziesz?” and invitation options.
+
+A later technical audit may reuse the reliquary crystal removal/release materialization mechanism when its contract permits safe reuse, together with WATER / Haiku Cosmos, the water acquisition sound on appearance, and release sound on disappearance. This approval does **not** implement an asset, spawn, grab, release, audio, tutorial events, or tutorial points.

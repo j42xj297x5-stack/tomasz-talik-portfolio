@@ -532,6 +532,7 @@ introSequence = createVrIntroSequence({
   onMonkeyHovered: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.MONKEY_HOVERED),
   onMonkeyTriggered: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.MONKEY_TRIGGERED),
   onInvitationSelected: (choice) => runtimeExperience.dispatch(VR_SCENARIO_EVENT.INTRO_INVITATION_SELECTED, { choice }),
+  onMonkeyReachedThreshold: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.MONKEY_REACHED_THRESHOLD),
   onOpeningRaysReady: () => vrControllers.setRaysEnabled(true),
   onProgressionFixturesHidden: () => { portalDisplay.hide(); astroFurnace.object.visible = false; crystalReliquary.reset(); },
   onBypassFixturesVisible: () => { restorePortalWaitingState(); astroFurnace.reset(); crystalReliquary.reveal(0); },
@@ -575,6 +576,11 @@ const runtimeExperience = new RuntimeExperience({
     [VR_SCENARIO_EFFECT.CONTINUE_INTRO_INVITATION]: (change, payload) => {
       if (!introSequence.continueInvitation(payload.choice)) {
         throw new Error('CONTINUE_INTRO_INVITATION rejected by Intro actor after accepted Scenario transition');
+      }
+    },
+    [VR_SCENARIO_EFFECT.PRESENT_THRESHOLD_CHOICE]: () => {
+      if (!introSequence.presentThresholdChoice()) {
+        throw new Error('PRESENT_THRESHOLD_CHOICE rejected by Intro actor after accepted Scenario transition');
       }
     }
   }

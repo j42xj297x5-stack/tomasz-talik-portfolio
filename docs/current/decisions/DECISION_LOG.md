@@ -119,3 +119,11 @@ Small glyph progression, Astro B/bands, radar/sector gameplay, final radar, tele
 - Scenario explicitly routes `1.4.5` and `1.4.5.2` to `1.4.5.1`, `1.4.5.2`, or LIVE terminal `100.10`; choice 2 at `1.4.5.2` is an intentional self-loop.
 - One `CONTINUE_INTRO_INVITATION` effect resumes the safely waiting actor. `100.1` remains RESERVED / FUTURE. SG-036 and SG-041 remain RETAINED.
 - Status: IMPLEMENTED — HARDWARE QA PENDING.
+
+
+## 2026-08-13 — M1.11 Monkey reached threshold handoff
+
+- M1.10 is **HARDWARE PASS — Meta Quest 3S**. M1.11 is **IMPLEMENTED — HARDWARE QA PENDING**.
+- Scenario owns `1.4.5.1 → MONKEY_REACHED_THRESHOLD → 1.4.5.1.1`; the transition adds no milestone and emits `PRESENT_THRESHOLD_CHOICE`. Point `1.4.5.1.1` is terminal for the current slice.
+- The Intro actor retains physical following and enters `WAIT_RUNTIME_AFTER_MONKEY_REACHED_THRESHOLD` as its exactly-once gate. Runtime alone invokes the guarded threshold-presentation seam. Threshold choices and selection remain legacy.
+- SG-032, SG-039 and SG-040 are **MIGRATED**. SG-036 and SG-041 remain **RETAINED**. Migrating the threshold-arrival edge does not migrate SG-041 as a whole: pause/resume distance decisions, `FOLLOW_PAUSE_CHANGED`, and movement/follow policy remain outstanding.

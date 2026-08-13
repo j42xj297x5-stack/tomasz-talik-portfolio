@@ -521,3 +521,12 @@ M1.10 **INTRO INVITATION CHOICE BRANCH** is IMPLEMENTED — HARDWARE QA PENDING.
 ```
 
 Every accepted edge emits `CONTINUE_INTRO_INVITATION` and adds no milestone. `1.4.5.1` and `100.10` are terminal in the current slice. `100.10` is the current LIVE terminal `EXIT EXPERIENCE VR`; `100.1` remains RESERVED / FUTURE. SG-036 and SG-041 remain RETAINED.
+
+
+## M1.11 — Monkey reached threshold handoff (current)
+
+**IMPLEMENTED — HARDWARE QA PENDING.** M1.10 has **HARDWARE PASS — Meta Quest 3S**.
+
+Scenario now owns the edge `1.4.5.1 → MONKEY_REACHED_THRESHOLD → 1.4.5.1.1`. It adds no milestone and emits only `PRESENT_THRESHOLD_CHOICE`. Point `1.4.5.1.1` means “Monkey reached the threshold / threshold dialogue presented”; it is terminal for the current slice and has no `THRESHOLD_SELECTED` transition. The Runtime effect resumes the actor through its state-guarded presentation seam; threshold options and their selection remain legacy.
+
+SG-032, SG-039 and SG-040 are **MIGRATED**. SG-036 and SG-041 remain **RETAINED**. M1.11 migrates only the `MONKEY_REACHED_THRESHOLD` edge; remaining SG-041 still includes pause/resume distance decisions, `FOLLOW_PAUSE_CHANGED`, and movement/follow policy requiring later migration.
