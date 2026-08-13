@@ -503,3 +503,21 @@ Transition może opcjonalnie deklarować `choice` jako dodatnią liczbę całkow
 `choice` nie jest point ID ani targetem. `choice: 2` nigdy nie oznacza `currentPoint + '.2'`; Director korzysta wyłącznie z jawnego `target` zapisanego w Scenario, który legalnie może wskazywać np. `7.4.9` lub `100.10`. Podobieństwo numeric choice i numeric hierarchy służy wyłącznie czytelności autora i nie tworzy sprzężenia algorytmicznego.
 
 M1.9 nie rozszerza live Scenario: produkcyjny terminal pozostaje `1.4.5`, nie istnieje live transition `INTRO_INVITATION_SELECTED`, invitation pozostaje legacy, a SG-036 pozostaje **RETAINED** wyłącznie z migrated edges `MONKEY_HOVERED` i `MONKEY_TRIGGERED`. M1.8 zachowuje **HARDWARE PASS — Meta Quest 3S**. Hardware QA dla samego M1.9: **N/A**, ponieważ żaden production transition jeszcze nie używa `choice`; automatyczna regresja potwierdza niezmieniony live M1.8.
+
+## M1.10 — Intro invitation choice branch (current)
+
+M1.10 **INTRO INVITATION CHOICE BRANCH** is IMPLEMENTED — HARDWARE QA PENDING. Stable numeric choices are Scenario facts; current labels are presentation copy only.
+
+```text
+1.4.5
+├── choice 1 → 1.4.5.1
+├── choice 2 → 1.4.5.2
+└── choice 3 → 100.10
+
+1.4.5.2
+├── choice 1 → 1.4.5.1
+├── choice 2 → 1.4.5.2
+└── choice 3 → 100.10
+```
+
+Every accepted edge emits `CONTINUE_INTRO_INVITATION` and adds no milestone. `1.4.5.1` and `100.10` are terminal in the current slice. `100.10` is the current LIVE terminal `EXIT EXPERIENCE VR`; `100.1` remains RESERVED / FUTURE. SG-036 and SG-041 remain RETAINED.
