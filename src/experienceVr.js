@@ -536,6 +536,7 @@ introSequence = createVrIntroSequence({
   onThresholdSelected: (choice) => runtimeExperience.dispatch(VR_SCENARIO_EVENT.THRESHOLD_SELECTED, { choice }),
   onPlayerEnteredRing: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.PLAYER_ENTERED_RING),
   onMonkeySettled: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.MONKEY_SETTLED),
+  onGlyphHintTimeout: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.GLYPH_HINT_TIMEOUT),
   onOpeningRaysReady: () => vrControllers.setRaysEnabled(true),
   onProgressionFixturesHidden: () => { portalDisplay.hide(); astroFurnace.object.visible = false; crystalReliquary.reset(); },
   onBypassFixturesVisible: () => { restorePortalWaitingState(); astroFurnace.reset(); crystalReliquary.reveal(0); },
@@ -599,6 +600,11 @@ const runtimeExperience = new RuntimeExperience({
     [VR_SCENARIO_EFFECT.BEGIN_GLYPH_FREE_EXPLORE]: () => {
       if (!introSequence.beginGlyphFreeExplore()) {
         throw new Error('BEGIN_GLYPH_FREE_EXPLORE rejected by Intro actor after accepted Scenario transition');
+      }
+    },
+    [VR_SCENARIO_EFFECT.SHOW_GLYPH_HINT]: () => {
+      if (!introSequence.showGlyphHint()) {
+        throw new Error('SHOW_GLYPH_HINT rejected by Intro actor after accepted Scenario transition');
       }
     }
   }
