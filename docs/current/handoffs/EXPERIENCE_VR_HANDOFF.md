@@ -6,7 +6,13 @@ Status: current delivery handoff synchronized with HEAD on 2026-08-12. It intent
 
 M0 through M1.8 **Monkey Trigger Handoff** are live, while M1 remains **IN PROGRESS**. The current chain ends `1.4.3 → MONKEY_HOVERED → 1.4.4 → MONKEY_TRIGGERED → 1.4.5`; point `1.4.5` means “Trigger zaakceptowany / seen + invitation legacy” and is terminal for the current live slice. Runtime remains the only continuation path through `CONTINUE_CONTROLLER_ONBOARDING`.
 
-SG-032, SG-039 and SG-040 are **MIGRATED**. SG-036 remains **RETAINED**: `MONKEY_HOVERED` and `MONKEY_TRIGGERED` are migrated, while the seen/invitation sequence, invitation choices and later P0 decisions remain legacy. M1.7 is **HARDWARE PASS — Meta Quest 3S**. M1.8 is **IMPLEMENTED — HARDWARE QA PENDING**.
+SG-032, SG-039 and SG-040 are **MIGRATED**. SG-036 remains **RETAINED**: `MONKEY_HOVERED` and `MONKEY_TRIGGERED` are migrated, while the seen/invitation sequence, invitation choices and later P0 decisions remain legacy. M1.7 is **HARDWARE PASS — Meta Quest 3S**. M1.8 is **HARDWARE PASS — Meta Quest 3S**.
+
+## M1.9 Numeric Choice Routing Foundation
+
+**IMPLEMENTED.** Director supports an optional positive-integer `choice` and exact `(event, payload.choice)` matching while retaining event-only behavior. Choice-routed and event-only transitions cannot be mixed for one event in one point, and unmatched choices are inert. The selected transition's explicit `target` is authoritative: the Director never derives `.2` from `choice: 2`. Runtime forwards the same payload unchanged.
+
+This infrastructure does **not** extend production Scenario. The current terminal remains `1.4.5`; invitation remains legacy; SG-036 remains **RETAINED**, with only `MONKEY_HOVERED` and `MONKEY_TRIGGERED` migrated. No invitation transition, new live point, event, effect, or player-facing behavior was added. Hardware QA: **N/A** for M1.9 itself because no production transition uses `choice`; automated regression confirms the unchanged M1.8 flow, whose status remains **HARDWARE PASS — Meta Quest 3S**.
 
 ## M1.4 Meta Quest 3S smoke checklist
 

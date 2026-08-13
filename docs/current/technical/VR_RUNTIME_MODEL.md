@@ -2,13 +2,15 @@
 
 Status: canonical description of the implemented runtime synchronized on 2026-08-12. Approved future gameplay is documented in the [gameplay roadmap](../concept/EXPERIENCE_VR_GAMEPLAY_ROADMAP.md).
 
-## Scenario + Director M1.8 slice
+## Scenario + Director M1.8 live slice and M1.9 foundation
 
 M0 through M1.8 **Monkey Trigger Handoff** are live; M1 remains **IN PROGRESS**. The current chain is `1.4 → 1.4.1 → 1.4.2 → 1.4.3 → 1.4.4 → 1.4.5`: real `MONKEY_HOVERED` advances to `1.4.4`, and real `MONKEY_TRIGGERED` advances to terminal point `1.4.5` (“Trigger zaakceptowany / seen + invitation legacy”). Both edges use the existing `CONTINUE_CONTROLLER_ONBOARDING` effect.
 
+`RuntimeExperience` remains the only symbolic-effect execution boundary. M1.9 **NUMERIC CHOICE ROUTING FOUNDATION — IMPLEMENTED**: Runtime already forwards the unchanged payload to Director and effect handlers, including a numeric `payload.choice`; no Runtime transport was rebuilt. Choice routing always uses the explicit Scenario target and never derives a point ID from the number. M1.9 adds no live transition: production remains terminal at `1.4.5`, invitation remains legacy, and SG-036 remains **RETAINED** with only `MONKEY_HOVERED` and `MONKEY_TRIGGERED` migrated. Hardware QA is **N/A** for this foundation because production does not use `choice`; automated regression preserves the M1.8 **HARDWARE PASS — Meta Quest 3S**.
+
 `RuntimeExperience` remains the only symbolic-effect execution boundary. A legal press in `WAIT_TRIGGER` moves the actor to `WAIT_RUNTIME_AFTER_MONKEY_TRIGGERED` and emits `MONKEY_TRIGGERED` exactly once. Before Runtime continuation it cannot clear the dialogue override into the subsequent flow, show `copy.seen` or `copy.going`, enter invitation, or install invitation options; repeated presses are consumed. The fifth legal `continueControllerOnboarding()` resumption starts the unchanged mechanical legacy execution `show(copy.seen, invitation, copy.going)`. There is no new effect or effect handler, and composition only wires the semantic dispatch. QA bypass synthesizes neither `MONKEY_HOVERED` nor `MONKEY_TRIGGERED`.
 
-SG-032, SG-039 and SG-040 are **MIGRATED**. SG-036 remains **RETAINED**; its migrated edges are `MONKEY_HOVERED` and `MONKEY_TRIGGERED`. Remaining legacy comprises the seen/invitation sequence, invitation options and choices, and later follow/ending/threshold decisions belonging to SG-036. M1.7 is **HARDWARE PASS — Meta Quest 3S**. M1.8 is **IMPLEMENTED — HARDWARE QA PENDING**.
+SG-032, SG-039 and SG-040 are **MIGRATED**. SG-036 remains **RETAINED**; its migrated edges are `MONKEY_HOVERED` and `MONKEY_TRIGGERED`. Remaining legacy comprises the seen/invitation sequence, invitation options and choices, and later follow/ending/threshold decisions belonging to SG-036. M1.7 is **HARDWARE PASS — Meta Quest 3S**. M1.8 is **HARDWARE PASS — Meta Quest 3S**.
 
 ## Runtime boundary and lifecycle
 

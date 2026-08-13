@@ -208,4 +208,57 @@ assert.throws(() => createVrExperienceDirector({ scenario: {
   ] }]
 } }), /duplicate transition/);
 
+const choiceScenario = {
+  initialPointId: '2.6.3',
+  vocabulary: { events: ['SELECTED'], capabilities: [], milestones: ['SECOND_SELECTED'], effects: ['SECOND_EFFECT'] },
+  points: [
+    { id: '2.6.3', capabilities: [], transitions: [
+      { event: 'SELECTED', choice: 1, target: '2.6.3.1', milestonesToAdd: [], effects: [] },
+      { event: 'SELECTED', choice: 2, target: '2.6.3.2', milestonesToAdd: ['SECOND_SELECTED'], effects: ['SECOND_EFFECT'] },
+      { event: 'SELECTED', choice: 3, target: '7.4.9', milestonesToAdd: [], effects: [] }
+    ] },
+    { id: '2.6.3.1', capabilities: [], transitions: [] },
+    { id: '2.6.3.2', capabilities: [], transitions: [] },
+    { id: '7.4.9', capabilities: [], transitions: [] }
+  ]
+};
+const choiceDirector = new ExperienceDirector({ scenario: choiceScenario });
+const choiceChanges = [];
+choiceDirector.subscribe((change) => choiceChanges.push(change));
+for (const payload of [undefined, null, {}, { choice: 0 }, { choice: -1 }, { choice: 1.5 }, { choice: '2' }, { choice: 4 }]) {
+  assert.equal(choiceDirector.dispatch('SELECTED', payload), null);
+  assert.equal(choiceDirector.getCurrentPointId(), '2.6.3');
+}
+assert.equal(choiceChanges.length, 0, 'unmatched choices do not notify subscribers');
+const choicePayload = { choice: 2 };
+const choiceChange = choiceDirector.dispatch('SELECTED', choicePayload);
+assert.equal(choiceChange.currentPointId, '2.6.3.2');
+assert.equal(choiceChange.event.type, 'SELECTED');
+assert.equal(choiceChange.event.payload, choicePayload);
+assert.equal(choiceChange.event.payload.choice, 2);
+assert.deepEqual(choiceChange.addedMilestones, ['SECOND_SELECTED']);
+assert.deepEqual(choiceChange.effects, ['SECOND_EFFECT']);
+assert.equal(choiceChanges.length, 1, 'only an accepted choice notifies subscribers');
+
+const explicitTargetDirector = new ExperienceDirector({ scenario: choiceScenario });
+assert.equal(explicitTargetDirector.dispatch('SELECTED', { choice: 3 }).currentPointId, '7.4.9',
+  'choice selects the Scenario transition but never derives its target');
+
+const choiceValidationScenario = (transitions) => ({
+  initialPointId: 'A',
+  vocabulary: { events: ['SELECTED'], capabilities: [], milestones: [], effects: [] },
+  points: [{ id: 'A', capabilities: [], transitions }]
+});
+assert.throws(() => new ExperienceDirector({ scenario: choiceValidationScenario([
+  { event: 'SELECTED', choice: 1, target: 'A' }, { event: 'SELECTED', choice: 1, target: 'A' }
+]) }), /duplicate transition event and choice/);
+assert.throws(() => new ExperienceDirector({ scenario: choiceValidationScenario([
+  { event: 'SELECTED', target: 'A' }, { event: 'SELECTED', choice: 1, target: 'A' }
+]) }), /cannot mix choice-routed and event-only transitions/);
+for (const invalidChoice of [0, -1, 1.5, '1']) {
+  assert.throws(() => new ExperienceDirector({ scenario: choiceValidationScenario([
+    { event: 'SELECTED', choice: invalidChoice, target: 'A' }
+  ]) }), /choice must be a positive integer/);
+}
+
 console.log('VR experience Director assertions passed');
