@@ -9,7 +9,7 @@ import { VR_EXPERIENCE_POINT, vrExperienceScenario } from '../src/xr/progression
 
 const canonicalLivePointIds = [
   '1.10', '1.20', '1.30', '1.40', '1.50', '1.60', '1.70', '1.80',
-  '1.100', '1.100.1', '1.110', '1.110.1', '1.120', '1.120.1', '1.130', '1.130.1', '1.130.2', '1.140', '1.150', '1.160', '100.10'
+  '1.100', '1.100.1', '1.110', '1.110.1', '1.120', '1.120.1', '1.130', '1.130.1', '1.130.2', '1.140', '1.150', '1.160', '1.170', '100.10'
 ];
 const retiredPointIds = [
   '1.1', '1.2', '1.3', '1.4', '1.4.1', '1.4.2', '1.4.3', '1.4.4',
@@ -51,12 +51,18 @@ assert.match(vr, /onPlayerEnteredRing: \(\) => runtimeExperience\.dispatch\(VR_S
 assert.match(vr, /onMonkeySettled: \(\) => runtimeExperience\.dispatch\(VR_SCENARIO_EVENT\.MONKEY_SETTLED\)/);
 assert.match(vr, /onGlyphHintTimeout: \(\) => runtimeExperience\.dispatch\(VR_SCENARIO_EVENT\.GLYPH_HINT_TIMEOUT\)/,
   'Intro timeout callback dispatches only the semantic fact');
+assert.match(vr, /onReliquaryRevealCompleted: \(\) => runtimeExperience\.dispatch\(VR_SCENARIO_EVENT\.RELIQUARY_REVEAL_COMPLETED\)/,
+  'reveal timer dispatches only the semantic completion fact');
 assert.match(vr, /if \(crystal\) \{\s*runtimeExperience\.dispatch\(VR_SCENARIO_EVENT\.FIRST_CRYSTAL_DISCOVERED\);/,
   'successful crystal creation dispatches the semantic discovery fact');
 assert.match(vr, /VR_SCENARIO_EFFECT\.REVEAL_RELIQUARY[\s\S]*introSequence\.beginFirstCrystalDiscovery\(\)[\s\S]*throw new Error/,
   'Runtime effect owns the first-crystal actor continuation');
 assert.equal((vr.match(/introSequence\.beginFirstCrystalDiscovery\(\)/g) ?? []).length, 1,
   'first-crystal continuation has only the Runtime handler production path');
+assert.match(vr, /VR_SCENARIO_EFFECT\.COMPLETE_RELIQUARY_REVEAL[\s\S]*introSequence\.completeReliquaryReveal\(\)[\s\S]*throw new Error/,
+  'Runtime effect owns reliquary completion');
+assert.equal((vr.match(/introSequence\.completeReliquaryReveal\(\)/g) ?? []).length, 1,
+  'reliquary completion has only the Runtime handler production path');
 assert.doesNotMatch(vr, /notifyGlyphExploreSuccess/, 'legacy direct discovery decision path is removed');
 assert.match(vr, /VR_SCENARIO_EFFECT\.BEGIN_GLYPH_FREE_EXPLORE[\s\S]*introSequence\.beginGlyphFreeExplore\(\)/);
 assert.match(vr, /VR_SCENARIO_EFFECT\.SHOW_GLYPH_HINT[\s\S]*introSequence\.showGlyphHint\(\)[\s\S]*throw new Error/,

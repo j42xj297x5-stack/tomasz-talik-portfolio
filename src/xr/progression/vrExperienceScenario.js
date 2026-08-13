@@ -106,6 +106,7 @@ export const VR_SCENARIO_EFFECT = immutableIdentifiers([
   'START_MONKEY_FOLLOW',
   'SHOW_GLYPH_HINT',
   'REVEAL_RELIQUARY',
+  'COMPLETE_RELIQUARY_REVEAL',
   'REVEAL_SHELL_FIELD',
   'REVEAL_FURNACE',
   'PRESENT_ASTERION',
@@ -133,6 +134,7 @@ export const VR_EXPERIENCE_POINT = immutableIdentifiers([
   '1.140',
   '1.150',
   '1.160',
+  '1.170',
   '100.10'
 ]);
 
@@ -361,7 +363,15 @@ const points = Object.freeze([
   Object.freeze({
     id: VR_EXPERIENCE_POINT['1.160'],
     label: 'Pierwszy kryształ odkryty / discovery i reliquary reveal rozpoczęte',
-    capabilities: Object.freeze([]), transitions: Object.freeze([])
+    capabilities: Object.freeze([]),
+    transitions: Object.freeze([
+      Object.freeze({ event: VR_SCENARIO_EVENT.RELIQUARY_REVEAL_COMPLETED, target: VR_EXPERIENCE_POINT['1.170'], milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.COMPLETE_RELIQUARY_REVEAL]) })
+    ])
+  }),
+  Object.freeze({
+    id: VR_EXPERIENCE_POINT['1.170'],
+    label: 'Reliquary reveal zakończony / powrót do GLYPH_FREE_EXPLORE',
+    capabilities: Object.freeze([VR_SCENARIO_CAPABILITY.CAN_USE_GLYPHS]), transitions: Object.freeze([])
   }),
   Object.freeze({
     id: VR_EXPERIENCE_POINT['100.10'],
@@ -384,7 +394,7 @@ export const vrExperienceScenario = Object.freeze({
     effects: Object.freeze(Object.values(VR_SCENARIO_EFFECT))
   }),
   metadata: Object.freeze({
-    stage: 'M1_16_FIRST_CRYSTAL_DISCOVERY_HANDOFF',
+    stage: 'M1_17_RELIQUARY_REVEAL_COMPLETION_HANDOFF',
     authoritativeForLiveGameplay: true,
     authoritativeScope: Object.freeze([
       'XR_CALIBRATED → BEGIN_INTRO_REVEAL',
@@ -404,6 +414,7 @@ export const vrExperienceScenario = Object.freeze({
       'PLAYER_ENTERED_RING + MONKEY_SETTLED → BEGIN_GLYPH_FREE_EXPLORE → 1.140',
       'GLYPH_HINT_TIMEOUT → SHOW_GLYPH_HINT → 1.150',
       'FIRST_CRYSTAL_DISCOVERED → REVEAL_RELIQUARY → 1.160',
+      'RELIQUARY_REVEAL_COMPLETED → COMPLETE_RELIQUARY_REVEAL → 1.170',
       'INTRO_INVITATION_SELECTED / choice 2 → 1.100.1',
       'INTRO_INVITATION_SELECTED / choice 3 → 100.10'
     ])

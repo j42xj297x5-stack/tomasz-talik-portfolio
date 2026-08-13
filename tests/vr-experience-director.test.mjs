@@ -6,7 +6,7 @@ import { VR_EXPERIENCE_POINT, VR_SCENARIO_CAPABILITY, VR_SCENARIO_EFFECT, VR_SCE
 assert.equal(Object.isFrozen(vrExperienceScenario), true);
 assert.equal(vrExperienceScenario.points, vrExperienceScenario.scenes);
 assert.equal(vrExperienceScenario.initialPointId, vrExperienceScenario.initialSceneId);
-assert.deepEqual(vrExperienceScenario.points.map(({ id }) => id), ['1.10', '1.20', '1.30', '1.40', '1.50', '1.60', '1.70', '1.80', '1.100', '1.100.1', '1.110', '1.110.1', '1.120', '1.120.1', '1.130', '1.130.1', '1.130.2', '1.140', '1.150', '1.160', '100.10']);
+assert.deepEqual(vrExperienceScenario.points.map(({ id }) => id), ['1.10', '1.20', '1.30', '1.40', '1.50', '1.60', '1.70', '1.80', '1.100', '1.100.1', '1.110', '1.110.1', '1.120', '1.120.1', '1.130', '1.130.1', '1.130.2', '1.140', '1.150', '1.160', '1.170', '100.10']);
 assert.equal(Object.isFrozen(vrExperienceScenario.points[0]), true);
 assert.equal(Object.isFrozen(vrExperienceScenario.points[0].transitions[0]), true);
 assert.equal(Object.isFrozen(vrExperienceScenario.points[0].transitions[0].effects), true);
@@ -14,7 +14,7 @@ assert.equal(Object.isFrozen(vrExperienceScenario.metadata.authoritativeScope), 
 assert.equal(Object.isFrozen(vrExperienceScenario.points[2].transitions[0]), true);
 assert.equal(Object.isFrozen(vrExperienceScenario.points[2].transitions[0].milestonesToAdd), true);
 assert.equal(Object.isFrozen(vrExperienceScenario.points[3]), true);
-assert.equal(vrExperienceScenario.metadata.stage, 'M1_16_FIRST_CRYSTAL_DISCOVERY_HANDOFF');
+assert.equal(vrExperienceScenario.metadata.stage, 'M1_17_RELIQUARY_REVEAL_COMPLETION_HANDOFF');
 assert.deepEqual(vrExperienceScenario.metadata.authoritativeScope, [
   'XR_CALIBRATED → BEGIN_INTRO_REVEAL',
   'INTRO_REVEAL_COMPLETE → BEGIN_POST_REVEAL_SILENCE',
@@ -33,6 +33,7 @@ assert.deepEqual(vrExperienceScenario.metadata.authoritativeScope, [
   'PLAYER_ENTERED_RING + MONKEY_SETTLED → BEGIN_GLYPH_FREE_EXPLORE → 1.140',
   'GLYPH_HINT_TIMEOUT → SHOW_GLYPH_HINT → 1.150',
   'FIRST_CRYSTAL_DISCOVERED → REVEAL_RELIQUARY → 1.160',
+  'RELIQUARY_REVEAL_COMPLETED → COMPLETE_RELIQUARY_REVEAL → 1.170',
   'INTRO_INVITATION_SELECTED / choice 2 → 1.100.1',
   'INTRO_INVITATION_SELECTED / choice 3 → 100.10'
 ]);
@@ -155,6 +156,13 @@ assert.equal(productionDirector.hasMilestone(VR_SCENARIO_MILESTONE.FIRST_CRYSTAL
 assert.equal(productionDirector.can(VR_SCENARIO_CAPABILITY.CAN_USE_GLYPHS), false);
 assert.equal(productionDirector.dispatch(VR_SCENARIO_EVENT.GLYPH_HINT_TIMEOUT), null, 'late hint is inert after discovery');
 assert.equal(productionDirector.dispatch(VR_SCENARIO_EVENT.FIRST_CRYSTAL_DISCOVERED), null, 'duplicate discovery is inert');
+const reliquaryComplete = productionDirector.dispatch(VR_SCENARIO_EVENT.RELIQUARY_REVEAL_COMPLETED);
+assert.equal(reliquaryComplete.previousPointId, VR_EXPERIENCE_POINT['1.160']);
+assert.equal(reliquaryComplete.currentPointId, VR_EXPERIENCE_POINT['1.170']);
+assert.deepEqual(reliquaryComplete.effects, [VR_SCENARIO_EFFECT.COMPLETE_RELIQUARY_REVEAL], 'completion emits exactly one effect');
+assert.deepEqual(reliquaryComplete.addedMilestones, []);
+assert.equal(productionDirector.can(VR_SCENARIO_CAPABILITY.CAN_USE_GLYPHS), true);
+assert.equal(productionDirector.dispatch(VR_SCENARIO_EVENT.RELIQUARY_REVEAL_COMPLETED), null, 'duplicate reveal completion is inert');
 
 const settledFirstDirector = new ExperienceDirector({ scenario: vrExperienceScenario });
 for (const event of [VR_SCENARIO_EVENT.XR_CALIBRATED, VR_SCENARIO_EVENT.INTRO_REVEAL_COMPLETE, VR_SCENARIO_EVENT.POST_REVEAL_SILENCE_COMPLETE, VR_SCENARIO_EVENT.PLAYER_OPENED_GUIDE, VR_SCENARIO_EVENT.PLAYER_VIEWED_CONTROLS, VR_SCENARIO_EVENT.PLAYER_CLOSED_GUIDE, VR_SCENARIO_EVENT.MONKEY_HOVERED, VR_SCENARIO_EVENT.MONKEY_TRIGGERED]) settledFirstDirector.dispatch(event);

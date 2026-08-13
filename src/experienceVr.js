@@ -537,6 +537,7 @@ introSequence = createVrIntroSequence({
   onPlayerEnteredRing: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.PLAYER_ENTERED_RING),
   onMonkeySettled: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.MONKEY_SETTLED),
   onGlyphHintTimeout: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.GLYPH_HINT_TIMEOUT),
+  onReliquaryRevealCompleted: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.RELIQUARY_REVEAL_COMPLETED),
   onOpeningRaysReady: () => vrControllers.setRaysEnabled(true),
   onProgressionFixturesHidden: () => { portalDisplay.hide(); astroFurnace.object.visible = false; crystalReliquary.reset(); },
   onBypassFixturesVisible: () => { restorePortalWaitingState(); astroFurnace.reset(); crystalReliquary.reveal(0); },
@@ -610,6 +611,11 @@ const runtimeExperience = new RuntimeExperience({
     [VR_SCENARIO_EFFECT.REVEAL_RELIQUARY]: () => {
       if (!introSequence.beginFirstCrystalDiscovery()) {
         throw new Error('REVEAL_RELIQUARY rejected by Intro actor after accepted Scenario transition');
+      }
+    },
+    [VR_SCENARIO_EFFECT.COMPLETE_RELIQUARY_REVEAL]: () => {
+      if (!introSequence.completeReliquaryReveal()) {
+        throw new Error('COMPLETE_RELIQUARY_REVEAL rejected by Intro actor after accepted Scenario transition');
       }
     }
   }
