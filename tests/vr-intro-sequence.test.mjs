@@ -8,15 +8,15 @@ function fixture({ bypass = false, onReliquaryReveal = () => {} } = {}) {
   const playerRig = new THREE.Group(); const head = new THREE.Vector3(0, 1.7, 20);
   const glyphRing = new THREE.Group(); const platformFixturesRoot = new THREE.Group(); const sector = new THREE.Group(); sector.userData.branchId = 'x'; progressFloor.object.add(sector);
   const monkeyStoneRoot = new THREE.Group(); progressFloor.object.add(monkeyStoneRoot);
-  let message = ''; let override = null; let radius = 4; let attention = 0; let rays = 0; let revealComplete = 0; let silenceComplete = 0; let playerOpenedGuide = 0; let playerViewedControls = 0; let playerClosedGuide = 0; let monkeyHovered = 0; let monkeyTriggered = 0; const invitationChoices = []; let interactionEnables = 0;
+  let message = ''; let override = null; let radius = 4; let attention = 0; let rays = 0; let revealComplete = 0; let silenceComplete = 0; let playerOpenedGuide = 0; let playerViewedControls = 0; let playerClosedGuide = 0; let monkeyHovered = 0; let monkeyTriggered = 0; let monkeyReachedThreshold = 0; const invitationChoices = []; let interactionEnables = 0;
   const panel = { open: false, view: 'MENU', section: null, isOpen() { return this.open; }, getViewState() { return this.view; }, getActiveSectionId() { return this.section; } };
-  const fog = { progress: 0, radius: 20, installed: true, active: false, restart() { this.progress = 0; this.radius = 20; this.installed = true; this.active = false; }, start() { this.active = true; }, update(d) { if (!this.active) return; this.progress = Math.min(1, this.progress + d / 10); this.radius = 20 - 3 * this.progress; if (this.progress >= 1) this.active = false; }, setRadius(v) { this.radius = v; }, dispose() { this.installed = false; }, skipToEnd() { this.progress = 1; this.radius = 0; this.installed = false; }, getSnapshot() { return { progress: this.progress, radius: this.radius, installed: this.installed }; } };
+  const fog = { progress: 0, radius: 20, setRadiusCalls: 0, installed: true, active: false, restart() { this.progress = 0; this.radius = 20; this.setRadiusCalls = 0; this.installed = true; this.active = false; }, start() { this.active = true; }, update(d) { if (!this.active) return; this.progress = Math.min(1, this.progress + d / 10); this.radius = 20 - 3 * this.progress; if (this.progress >= 1) this.active = false; }, setRadius(v) { this.radius = v; this.setRadiusCalls += 1; }, dispose() { this.installed = false; }, skipToEnd() { this.progress = 1; this.radius = 0; this.installed = false; }, getSnapshot() { return { progress: this.progress, radius: this.radius, installed: this.installed }; } };
   const monkeyGuide = { showMessage(v) { message = v; return { lineCount: v ? 1 : 0 }; }, setDialogueOverride(v) { override = v; }, setInteractionEnabled(value) { if (value) interactionEnables += 1; }, notifyAttention() { attention += 1; } };
   const locomotion = { reset() { radius = 4; }, setWalkRadius(v, options) { radius = v; this.lastOptions = options; } };
   const settings = { enabled: true, locale: 'en', introRevealDuration: 10, postRevealSilenceDuration: 2, insideSafeMargin: .75, glyphFreeExploreDuration: 60, guideSpeed: 2, guideTurnDuration: 1, followGraceDistance: 3, pauseDistance: 3.2, resumeDistance: 2.4, revealProgress: .72, messageDisplayDuration: 0, messageGapDuration: 0, questionGapDuration: 0 };
   const spatial = { entryDirection: { x: 0, y: 0, z: 1 }, playerStartRadius: 20, monkeyStartRadius: 18, monkeyFinal: { x: 0, y: 0, z: 0 }, ringRadius: 7.6, thresholdOutsideDistance: 1 };
-  const sequence = createVrIntroSequence({ monkeyGuide, monkeyMotionRoot, monkeyVisualRoot: new THREE.Group(), monkeyStoneRoot, platformRoot, playerRig, playerGuidePanel: panel, fogReveal: fog, glyphRing, progressFloor, platformFixturesRoot, locomotion, spatial, settings, getHeadPosition: () => head.clone(), onOpeningRaysReady: () => { rays += 1; }, onIntroRevealComplete: () => { revealComplete += 1; }, onPostRevealSilenceComplete: () => { silenceComplete += 1; }, onPlayerOpenedGuide: () => { playerOpenedGuide += 1; }, onPlayerViewedControls: () => { playerViewedControls += 1; }, onPlayerClosedGuide: () => { playerClosedGuide += 1; }, onMonkeyHovered: () => { monkeyHovered += 1; }, onMonkeyTriggered: () => { monkeyTriggered += 1; }, onInvitationSelected: (choice) => { invitationChoices.push(choice); }, onReliquaryReveal, bypass });
-  return { sequence, monkeyMotionRoot, monkeyStoneRoot, glyphRing, head, panel, fog, locomotion, getMessage: () => message, getOverride: () => override, getRadius: () => radius, getAttention: () => attention, getRays: () => rays, getRevealComplete: () => revealComplete, getSilenceComplete: () => silenceComplete, getPlayerOpenedGuide: () => playerOpenedGuide, getPlayerViewedControls: () => playerViewedControls, getPlayerClosedGuide: () => playerClosedGuide, getMonkeyHovered: () => monkeyHovered, getMonkeyTriggered: () => monkeyTriggered, getInvitationChoices: () => invitationChoices, getInteractionEnables: () => interactionEnables };
+  const sequence = createVrIntroSequence({ monkeyGuide, monkeyMotionRoot, monkeyVisualRoot: new THREE.Group(), monkeyStoneRoot, platformRoot, playerRig, playerGuidePanel: panel, fogReveal: fog, glyphRing, progressFloor, platformFixturesRoot, locomotion, spatial, settings, getHeadPosition: () => head.clone(), onOpeningRaysReady: () => { rays += 1; }, onIntroRevealComplete: () => { revealComplete += 1; }, onPostRevealSilenceComplete: () => { silenceComplete += 1; }, onPlayerOpenedGuide: () => { playerOpenedGuide += 1; }, onPlayerViewedControls: () => { playerViewedControls += 1; }, onPlayerClosedGuide: () => { playerClosedGuide += 1; }, onMonkeyHovered: () => { monkeyHovered += 1; }, onMonkeyTriggered: () => { monkeyTriggered += 1; }, onInvitationSelected: (choice) => { invitationChoices.push(choice); }, onMonkeyReachedThreshold: () => { monkeyReachedThreshold += 1; }, onReliquaryReveal, bypass });
+  return { sequence, monkeyMotionRoot, monkeyStoneRoot, glyphRing, head, panel, fog, locomotion, getMessage: () => message, getOverride: () => override, getRadius: () => radius, getAttention: () => attention, getRays: () => rays, getRevealComplete: () => revealComplete, getSilenceComplete: () => silenceComplete, getPlayerOpenedGuide: () => playerOpenedGuide, getPlayerViewedControls: () => playerViewedControls, getPlayerClosedGuide: () => playerClosedGuide, getMonkeyHovered: () => monkeyHovered, getMonkeyTriggered: () => monkeyTriggered, getMonkeyReachedThreshold: () => monkeyReachedThreshold, getInvitationChoices: () => invitationChoices, getInteractionEnables: () => interactionEnables };
 }
 function reachThreshold(value) {
   value.sequence.beginAfterXrCalibration(); value.sequence.update(10); assert.equal(value.sequence.beginPostRevealSilence(), true); value.sequence.update(2); assert.equal(value.sequence.beginControllerOnboarding(), true);
@@ -29,6 +29,8 @@ function reachThreshold(value) {
   for (let i = 0; i < 30 && value.sequence.getState() === VR_INTRO_STATE.FOLLOWING; i += 1) {
     value.head.copy(value.monkeyMotionRoot.getWorldPosition(new THREE.Vector3())); value.sequence.update(.5);
   }
+  assert.equal(value.sequence.getState(), VR_INTRO_STATE.WAIT_RUNTIME_AFTER_MONKEY_REACHED_THRESHOLD);
+  assert.equal(value.sequence.presentThresholdChoice(), true);
   assert.equal(value.sequence.getState(), VR_INTRO_STATE.THRESHOLD);
 }
 function reachGlyphExplore(value) {
@@ -133,8 +135,17 @@ for (let i = 0; i < 20 && f.sequence.getState() === VR_INTRO_STATE.FOLLOWING; i 
   f.head.copy(f.monkeyMotionRoot.getWorldPosition(new THREE.Vector3())).add(new THREE.Vector3(0, 0, 2));
   f.sequence.update(.5);
 }
-assert.equal(f.sequence.getState(), VR_INTRO_STATE.THRESHOLD); assert.equal(f.sequence.isGuidePaused(), false);
-assert.equal(f.fog.radius, 6); f.sequence.update(100); assert.equal(f.fog.radius, 6, 'threshold wait holds radius 6');
+assert.equal(f.sequence.getState(), VR_INTRO_STATE.WAIT_RUNTIME_AFTER_MONKEY_REACHED_THRESHOLD); assert.equal(f.sequence.isGuidePaused(), false);
+assert.equal(f.getMonkeyReachedThreshold(), 1); assert.notEqual(f.getMessage(), VR_INTRO_COPY.en.threshold[0]);
+const safeWaitPosition = f.monkeyMotionRoot.position.clone(); f.sequence.update(100);
+assert.equal(f.getMonkeyReachedThreshold(), 1, 'safe wait does not emit threshold arrival again');
+assert.deepEqual(f.monkeyMotionRoot.position.toArray(), safeWaitPosition.toArray(), 'safe wait stops Monkey movement');
+const followFogSetRadiusCalls = f.fog.setRadiusCalls; f.sequence.update(100);
+assert.equal(f.fog.setRadiusCalls, followFogSetRadiusCalls, 'safe wait does not apply the threshold presentation radius');
+assert.equal(f.sequence.presentThresholdChoice(), true); assert.equal(f.sequence.getState(), VR_INTRO_STATE.THRESHOLD);
+assert.equal(f.getMessage(), VR_INTRO_COPY.en.threshold[0]); assert.equal(f.fog.radius, 6); assert.equal(f.fog.setRadiusCalls, followFogSetRadiusCalls + 1);
+assert.equal(f.sequence.presentThresholdChoice(), false, 'threshold presentation seam is exactly once');
+f.sequence.update(100); assert.equal(f.fog.radius, 6, 'threshold wait holds radius 6');
 assert.deepEqual(f.monkeyStoneRoot.position.toArray(), stationaryStonePosition.toArray(), 'stone is stationary during FOLLOWING');
 assert.equal(f.glyphRing.visible, true); assert.equal(f.monkeyStoneRoot.visible, true, 'stone appears with ring reveal');
 f.sequence.chooseThreshold('cross'); f.head.set(0, 1.7, 7.59); f.sequence.update(.1); assert.ok(f.fog.radius < 6); assert.equal(f.sequence.getDebugSnapshot().playerSafelyInside, false); assert.equal(f.getRadius(), 7.6);

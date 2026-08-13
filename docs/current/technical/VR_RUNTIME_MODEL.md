@@ -4,7 +4,7 @@ Status: canonical description of the implemented runtime synchronized on 2026-08
 
 ## Scenario + Director M1.8 live slice and M1.9 foundation
 
-M0 through M1.8 **Monkey Trigger Handoff** are live; M1 remains **IN PROGRESS**. The current chain is `1.4 → 1.4.1 → 1.4.2 → 1.4.3 → 1.4.4 → 1.4.5`: real `MONKEY_HOVERED` advances to `1.4.4`, and real `MONKEY_TRIGGERED` advances to terminal point `1.4.5` (“Trigger zaakceptowany / seen + invitation legacy”). Both edges use the existing `CONTINUE_CONTROLLER_ONBOARDING` effect.
+M0 through M1.11 are live; M1 remains **IN PROGRESS**. The current main chain reaches `1.4.5.1 → MONKEY_REACHED_THRESHOLD → 1.4.5.1.1`: the actor produces the physical arrival fact, Scenario/Director accepts it exactly once, and Runtime executes `PRESENT_THRESHOLD_CHOICE`. Point `1.4.5.1.1` is terminal for the current slice; threshold selection remains legacy.
 
 `RuntimeExperience` remains the only symbolic-effect execution boundary. M1.9 **NUMERIC CHOICE ROUTING FOUNDATION — IMPLEMENTED**: Runtime already forwards the unchanged payload to Director and effect handlers, including a numeric `payload.choice`; no Runtime transport was rebuilt. Choice routing always uses the explicit Scenario target and never derives a point ID from the number. M1.9 adds no live transition: production remains terminal at `1.4.5`, invitation remains legacy, and SG-036 remains **RETAINED** with only `MONKEY_HOVERED` and `MONKEY_TRIGGERED` migrated. Hardware QA is **N/A** for this foundation because production does not use `choice`; automated regression preserves the M1.8 **HARDWARE PASS — Meta Quest 3S**.
 
@@ -206,4 +206,13 @@ Not implemented: authored narrative/quests/Monkey personality or stuck-player gu
 
 The Intro actor maps the three UI option IDs to stable numeric choices `1`, `2`, and `3`, enters `WAIT_RUNTIME_AFTER_INVITATION_SELECTED`, and emits `INTRO_INVITATION_SELECTED` with `{ choice }`. Scenario owns the explicit target. Only the accepted `CONTINUE_INTRO_INVITATION` effect calls `continueInvitation(payload.choice)`; rejection is a fail-fast composition error. There is no direct actor fallback.
 
-Baseline status: M1.8 HARDWARE PASS — Meta Quest 3S. M1.9 Numeric Choice Routing Foundation IMPLEMENTED; foundation Hardware QA N/A; post-M1.9 hardware regression PASS — Meta Quest 3S. M1.10 INTRO INVITATION CHOICE BRANCH IMPLEMENTED — HARDWARE QA PENDING. SG-036 and SG-041 remain RETAINED.
+Baseline status: M1.8 HARDWARE PASS — Meta Quest 3S. M1.9 Numeric Choice Routing Foundation IMPLEMENTED; foundation Hardware QA N/A; post-M1.9 hardware regression PASS — Meta Quest 3S. M1.10 INTRO INVITATION CHOICE BRANCH HARDWARE PASS — Meta Quest 3S. SG-036 and SG-041 remain RETAINED.
+
+
+## M1.11 — Monkey reached threshold runtime seam
+
+**Status:** IMPLEMENTED — HARDWARE QA PENDING. M1.10 is **HARDWARE PASS — Meta Quest 3S**.
+
+The current boundary is `1.4.5.1 → MONKEY_REACHED_THRESHOLD → 1.4.5.1.1 → PRESENT_THRESHOLD_CHOICE → legacy threshold choices`. `createVrIntroSequence` retains stop-radius calculation, following movement, pause/resume policy and fog interpolation. On physical arrival it enters `WAIT_RUNTIME_AFTER_MONKEY_REACHED_THRESHOLD` and emits one callback fact; only the Runtime effect may call `presentThresholdChoice()`. No listener or fallback arrival interpretation exists in `experienceVr.js`.
+
+SG-032, SG-039 and SG-040 remain **MIGRATED**. SG-036 and SG-041 remain **RETAINED**. The migrated `MONKEY_REACHED_THRESHOLD` edge does not close SG-041: pause/resume distance decisions, `FOLLOW_PAUSE_CHANGED`, and broader movement/follow policy remain to migrate. Threshold selection is still legacy.
