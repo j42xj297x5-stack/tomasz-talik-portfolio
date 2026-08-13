@@ -8,15 +8,15 @@ function fixture({ bypass = false, onReliquaryReveal = () => {} } = {}) {
   const playerRig = new THREE.Group(); const head = new THREE.Vector3(0, 1.7, 20);
   const glyphRing = new THREE.Group(); const platformFixturesRoot = new THREE.Group(); const sector = new THREE.Group(); sector.userData.branchId = 'x'; progressFloor.object.add(sector);
   const monkeyStoneRoot = new THREE.Group(); progressFloor.object.add(monkeyStoneRoot);
-  let message = ''; let override = null; let radius = 4; let attention = 0; let rays = 0; let revealComplete = 0; let silenceComplete = 0; let playerOpenedGuide = 0; let playerViewedControls = 0; let playerClosedGuide = 0; let monkeyHovered = 0; let monkeyTriggered = 0; let monkeyReachedThreshold = 0; const invitationChoices = []; let interactionEnables = 0;
+  let message = ''; let override = null; let radius = 4; let attention = 0; let rays = 0; let revealComplete = 0; let silenceComplete = 0; let playerOpenedGuide = 0; let playerViewedControls = 0; let playerClosedGuide = 0; let monkeyHovered = 0; let monkeyTriggered = 0; let monkeyReachedThreshold = 0; const invitationChoices = []; const thresholdChoices = []; let interactionEnables = 0; let endSessions = 0;
   const panel = { open: false, view: 'MENU', section: null, isOpen() { return this.open; }, getViewState() { return this.view; }, getActiveSectionId() { return this.section; } };
   const fog = { progress: 0, radius: 20, setRadiusCalls: 0, installed: true, active: false, restart() { this.progress = 0; this.radius = 20; this.setRadiusCalls = 0; this.installed = true; this.active = false; }, start() { this.active = true; }, update(d) { if (!this.active) return; this.progress = Math.min(1, this.progress + d / 10); this.radius = 20 - 3 * this.progress; if (this.progress >= 1) this.active = false; }, setRadius(v) { this.radius = v; this.setRadiusCalls += 1; }, dispose() { this.installed = false; }, skipToEnd() { this.progress = 1; this.radius = 0; this.installed = false; }, getSnapshot() { return { progress: this.progress, radius: this.radius, installed: this.installed }; } };
   const monkeyGuide = { showMessage(v) { message = v; return { lineCount: v ? 1 : 0 }; }, setDialogueOverride(v) { override = v; }, setInteractionEnabled(value) { if (value) interactionEnables += 1; }, notifyAttention() { attention += 1; } };
   const locomotion = { reset() { radius = 4; }, setWalkRadius(v, options) { radius = v; this.lastOptions = options; } };
   const settings = { enabled: true, locale: 'en', introRevealDuration: 10, postRevealSilenceDuration: 2, insideSafeMargin: .75, glyphFreeExploreDuration: 60, guideSpeed: 2, guideTurnDuration: 1, followGraceDistance: 3, pauseDistance: 3.2, resumeDistance: 2.4, revealProgress: .72, messageDisplayDuration: 0, messageGapDuration: 0, questionGapDuration: 0 };
   const spatial = { entryDirection: { x: 0, y: 0, z: 1 }, playerStartRadius: 20, monkeyStartRadius: 18, monkeyFinal: { x: 0, y: 0, z: 0 }, ringRadius: 7.6, thresholdOutsideDistance: 1 };
-  const sequence = createVrIntroSequence({ monkeyGuide, monkeyMotionRoot, monkeyVisualRoot: new THREE.Group(), monkeyStoneRoot, platformRoot, playerRig, playerGuidePanel: panel, fogReveal: fog, glyphRing, progressFloor, platformFixturesRoot, locomotion, spatial, settings, getHeadPosition: () => head.clone(), onOpeningRaysReady: () => { rays += 1; }, onIntroRevealComplete: () => { revealComplete += 1; }, onPostRevealSilenceComplete: () => { silenceComplete += 1; }, onPlayerOpenedGuide: () => { playerOpenedGuide += 1; }, onPlayerViewedControls: () => { playerViewedControls += 1; }, onPlayerClosedGuide: () => { playerClosedGuide += 1; }, onMonkeyHovered: () => { monkeyHovered += 1; }, onMonkeyTriggered: () => { monkeyTriggered += 1; }, onInvitationSelected: (choice) => { invitationChoices.push(choice); }, onMonkeyReachedThreshold: () => { monkeyReachedThreshold += 1; }, onReliquaryReveal, bypass });
-  return { sequence, monkeyMotionRoot, monkeyStoneRoot, glyphRing, head, panel, fog, locomotion, getMessage: () => message, getOverride: () => override, getRadius: () => radius, getAttention: () => attention, getRays: () => rays, getRevealComplete: () => revealComplete, getSilenceComplete: () => silenceComplete, getPlayerOpenedGuide: () => playerOpenedGuide, getPlayerViewedControls: () => playerViewedControls, getPlayerClosedGuide: () => playerClosedGuide, getMonkeyHovered: () => monkeyHovered, getMonkeyTriggered: () => monkeyTriggered, getMonkeyReachedThreshold: () => monkeyReachedThreshold, getInvitationChoices: () => invitationChoices, getInteractionEnables: () => interactionEnables };
+  const sequence = createVrIntroSequence({ monkeyGuide, monkeyMotionRoot, monkeyVisualRoot: new THREE.Group(), monkeyStoneRoot, platformRoot, playerRig, playerGuidePanel: panel, fogReveal: fog, glyphRing, progressFloor, platformFixturesRoot, locomotion, spatial, settings, getHeadPosition: () => head.clone(), onOpeningRaysReady: () => { rays += 1; }, onIntroRevealComplete: () => { revealComplete += 1; }, onPostRevealSilenceComplete: () => { silenceComplete += 1; }, onPlayerOpenedGuide: () => { playerOpenedGuide += 1; }, onPlayerViewedControls: () => { playerViewedControls += 1; }, onPlayerClosedGuide: () => { playerClosedGuide += 1; }, onMonkeyHovered: () => { monkeyHovered += 1; }, onMonkeyTriggered: () => { monkeyTriggered += 1; }, onInvitationSelected: (choice) => { invitationChoices.push(choice); }, onMonkeyReachedThreshold: () => { monkeyReachedThreshold += 1; }, onThresholdSelected: (choice) => { thresholdChoices.push(choice); }, onEndSession: () => { endSessions += 1; }, onReliquaryReveal, bypass });
+  return { sequence, monkeyMotionRoot, monkeyStoneRoot, glyphRing, head, panel, fog, locomotion, getMessage: () => message, getOverride: () => override, getRadius: () => radius, getAttention: () => attention, getRays: () => rays, getRevealComplete: () => revealComplete, getSilenceComplete: () => silenceComplete, getPlayerOpenedGuide: () => playerOpenedGuide, getPlayerViewedControls: () => playerViewedControls, getPlayerClosedGuide: () => playerClosedGuide, getMonkeyHovered: () => monkeyHovered, getMonkeyTriggered: () => monkeyTriggered, getMonkeyReachedThreshold: () => monkeyReachedThreshold, getInvitationChoices: () => invitationChoices, getThresholdChoices: () => thresholdChoices, getInteractionEnables: () => interactionEnables, getEndSessions: () => endSessions };
 }
 function reachThreshold(value) {
   value.sequence.beginAfterXrCalibration(); value.sequence.update(10); assert.equal(value.sequence.beginPostRevealSilence(), true); value.sequence.update(2); assert.equal(value.sequence.beginControllerOnboarding(), true);
@@ -32,10 +32,11 @@ function reachThreshold(value) {
   assert.equal(value.sequence.getState(), VR_INTRO_STATE.WAIT_RUNTIME_AFTER_MONKEY_REACHED_THRESHOLD);
   assert.equal(value.sequence.presentThresholdChoice(), true);
   assert.equal(value.sequence.getState(), VR_INTRO_STATE.THRESHOLD);
+  for (let i = 0; i < 12 && typeof value.getOverride()?.onSelect !== 'function'; i += 1) value.sequence.update(.01);
 }
 function reachGlyphExplore(value) {
   reachThreshold(value);
-  value.sequence.chooseThreshold('cross'); value.head.set(0, 1.7, 6.8);
+  value.getOverride().onSelect('cross'); assert.equal(value.sequence.continueThresholdChoice(1), true); value.head.set(0, 1.7, 6.8);
   for (let i = 0; i < 30 && value.sequence.getState() !== VR_INTRO_STATE.GLYPH_FREE_EXPLORE; i += 1) value.sequence.update(.25);
   assert.equal(value.sequence.getState(), VR_INTRO_STATE.GLYPH_FREE_EXPLORE);
 }
@@ -148,7 +149,8 @@ assert.equal(f.sequence.presentThresholdChoice(), false, 'threshold presentation
 f.sequence.update(100); assert.equal(f.fog.radius, 6, 'threshold wait holds radius 6');
 assert.deepEqual(f.monkeyStoneRoot.position.toArray(), stationaryStonePosition.toArray(), 'stone is stationary during FOLLOWING');
 assert.equal(f.glyphRing.visible, true); assert.equal(f.monkeyStoneRoot.visible, true, 'stone appears with ring reveal');
-f.sequence.chooseThreshold('cross'); f.head.set(0, 1.7, 7.59); f.sequence.update(.1); assert.ok(f.fog.radius < 6); assert.equal(f.sequence.getDebugSnapshot().playerSafelyInside, false); assert.equal(f.getRadius(), 7.6);
+for (let i = 0; i < 12 && typeof f.getOverride()?.onSelect !== 'function'; i += 1) f.sequence.update(.01);
+f.getOverride().onSelect('cross'); assert.equal(f.sequence.continueThresholdChoice(1), true); f.head.set(0, 1.7, 7.59); f.sequence.update(.1); assert.ok(f.fog.radius < 6); assert.equal(f.sequence.getDebugSnapshot().playerSafelyInside, false); assert.equal(f.getRadius(), 7.6);
 f.head.z = 6.8; for (let i = 0; i < 28 && f.sequence.getState() !== VR_INTRO_STATE.GLYPH_FREE_EXPLORE; i += 1) f.sequence.update(.25);
 assert.equal(f.sequence.getState(), VR_INTRO_STATE.GLYPH_FREE_EXPLORE); assert.deepEqual(f.locomotion.lastOptions, { clamp: false });
 assert.deepEqual(f.monkeyMotionRoot.position.toArray(), [0, 0, 0], 'Monkey settles at canonical final origin');
@@ -169,7 +171,31 @@ assert.equal(early.getAttention(), 1, 'early first crystal cancels the timeout a
 early.sequence.update(200); assert.equal(early.getAttention(), 1);
 early.getOverride().onMonkeyPress(); for (let i = 0; i < 3; i += 1) early.sequence.update(.01);
 assert.equal(earlyReveal, 3); assert.equal(early.sequence.getState(), VR_INTRO_STATE.RELIQUARY_REVEAL);
-const lateEntry = fixture(); reachThreshold(lateEntry); lateEntry.sequence.chooseThreshold('cross'); lateEntry.head.set(0, 1.7, 7.8);
+const thresholdBeyond = fixture(); reachThreshold(thresholdBeyond);
+thresholdBeyond.getOverride().onSelect('beyond');
+assert.equal(thresholdBeyond.sequence.getState(), VR_INTRO_STATE.WAIT_RUNTIME_AFTER_THRESHOLD_SELECTED);
+assert.deepEqual(thresholdBeyond.getThresholdChoices(), [2]);
+assert.notEqual(thresholdBeyond.getMessage(), VR_INTRO_COPY.en.beyond[0], 'BEYOND copy waits for Runtime');
+thresholdBeyond.getOverride().onSelect?.('beyond'); assert.deepEqual(thresholdBeyond.getThresholdChoices(), [2], 'safe wait emits once');
+assert.equal(thresholdBeyond.sequence.continueThresholdChoice(2), true);
+assert.equal(thresholdBeyond.sequence.getState(), VR_INTRO_STATE.THRESHOLD);
+assert.equal(thresholdBeyond.getMessage(), VR_INTRO_COPY.en.beyond[0]);
+assert.equal(thresholdBeyond.sequence.continueThresholdChoice(2), false);
+for (let i = 0; i < 8 && typeof thresholdBeyond.getOverride()?.onSelect !== 'function'; i += 1) thresholdBeyond.sequence.update(.01);
+thresholdBeyond.getOverride().onSelect('beyond'); assert.deepEqual(thresholdBeyond.getThresholdChoices(), [2, 2]);
+assert.equal(thresholdBeyond.sequence.continueThresholdChoice(2), true);
+for (let i = 0; i < 8 && typeof thresholdBeyond.getOverride()?.onSelect !== 'function'; i += 1) thresholdBeyond.sequence.update(.01);
+thresholdBeyond.getOverride().onSelect('return'); assert.deepEqual(thresholdBeyond.getThresholdChoices(), [2, 2, 3]);
+assert.equal(thresholdBeyond.getEndSessions(), 0); assert.equal(thresholdBeyond.sequence.continueThresholdChoice(3), true);
+assert.equal(thresholdBeyond.sequence.getState(), VR_INTRO_STATE.ENDING); assert.equal(thresholdBeyond.getMessage(), VR_INTRO_COPY.en.returning[0]);
+for (let i = 0; i < 8; i += 1) thresholdBeyond.sequence.update(.01);
+assert.equal(thresholdBeyond.getEndSessions(), 1);
+const thresholdCross = fixture(); reachThreshold(thresholdCross); const beforeCrossMessage = thresholdCross.getMessage();
+thresholdCross.getOverride().onSelect('cross'); assert.deepEqual(thresholdCross.getThresholdChoices(), [1]);
+assert.equal(thresholdCross.sequence.getState(), VR_INTRO_STATE.WAIT_RUNTIME_AFTER_THRESHOLD_SELECTED); assert.equal(thresholdCross.getMessage(), beforeCrossMessage);
+assert.equal(thresholdCross.sequence.continueThresholdChoice(1), true); assert.equal(thresholdCross.sequence.getState(), VR_INTRO_STATE.CROSSING); assert.equal(thresholdCross.getMessage(), '');
+assert.equal(thresholdCross.sequence.continueThresholdChoice(1), false);
+const lateEntry = fixture(); reachThreshold(lateEntry); lateEntry.getOverride().onSelect('cross'); assert.equal(lateEntry.sequence.continueThresholdChoice(1), true); lateEntry.head.set(0, 1.7, 7.8);
 for (let i = 0; i < 40 && !lateEntry.sequence.getDebugSnapshot().monkeySettled; i += 1) lateEntry.sequence.update(.25);
 assert.equal(lateEntry.sequence.getState(), VR_INTRO_STATE.MONKEY_SETTLING);
 assert.equal(lateEntry.sequence.getDebugSnapshot().monkeySettled, true);

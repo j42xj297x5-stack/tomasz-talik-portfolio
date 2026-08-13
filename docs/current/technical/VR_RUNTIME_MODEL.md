@@ -216,3 +216,20 @@ Baseline status: M1.8 HARDWARE PASS — Meta Quest 3S. M1.9 Numeric Choice Routi
 The current boundary is `1.4.5.1 → MONKEY_REACHED_THRESHOLD → 1.4.5.1.1 → PRESENT_THRESHOLD_CHOICE → legacy threshold choices`. `createVrIntroSequence` retains stop-radius calculation, following movement, pause/resume policy and fog interpolation. On physical arrival it enters `WAIT_RUNTIME_AFTER_MONKEY_REACHED_THRESHOLD` and emits one callback fact; only the Runtime effect may call `presentThresholdChoice()`. No listener or fallback arrival interpretation exists in `experienceVr.js`.
 
 SG-032, SG-039 and SG-040 remain **MIGRATED**. SG-036 and SG-041 remain **RETAINED**. The migrated `MONKEY_REACHED_THRESHOLD` edge does not close SG-041: pause/resume distance decisions, `FOLLOW_PAUSE_CHANGED`, and broader movement/follow policy remain to migrate. Threshold selection is still legacy.
+
+## M1.12 — Threshold choice runtime seam
+
+**Status:** THRESHOLD CHOICE BRANCH — **IMPLEMENTED — HARDWARE QA PENDING.** M1.11 is **HARDWARE PASS — Meta Quest 3S**.
+
+The Intro actor maps threshold UI IDs to numeric choices, enters `WAIT_RUNTIME_AFTER_THRESHOLD_SELECTED`, and emits one `onThresholdSelected(choice)` fact. Composition dispatches only `THRESHOLD_SELECTED` with `{ choice }`. Accepted Scenario transitions emit the single `CONTINUE_THRESHOLD_CHOICE`; Runtime forwards `payload.choice` to the guarded actor seam and fails fast if it rejects. Before continuation no CROSSING, beyond/return copy, options reinstall, or session ending occurs.
+
+Choice 1 retains the existing capture/message-clear/CROSSING mechanics. Choice 2 restores `THRESHOLD`, plays unchanged `copy.beyond`, and reinstalls the unchanged options, including repeat selection. Choice 3 retains ENDING, unchanged `copy.returning`, and existing end-session timing. The Scenario tree and exit status are:
+
+```text
+1.4.5.1.1:   1 → 1.4.5.1.1.1; 2 → 1.4.5.1.1.2; 3 → 100.10
+1.4.5.1.1.2: 1 → 1.4.5.1.1.1; 2 → 1.4.5.1.1.2; 3 → 100.10
+100.10: LIVE EXIT
+100.1: RESERVED / FUTURE
+```
+
+SG-036 is **MIGRATED**. SG-041 is **RETAINED**; follow grace, pause/resume distances, walking pause ownership, and movement continuation policy are unchanged.

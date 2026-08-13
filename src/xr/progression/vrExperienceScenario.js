@@ -99,6 +99,7 @@ export const VR_SCENARIO_EFFECT = immutableIdentifiers([
   'CONTINUE_CONTROLLER_ONBOARDING',
   'CONTINUE_INTRO_INVITATION',
   'PRESENT_THRESHOLD_CHOICE',
+  'CONTINUE_THRESHOLD_CHOICE',
   'SHOW_GUIDE_PROMPT',
   'START_MONKEY_FOLLOW',
   'SHOW_GLYPH_HINT',
@@ -121,6 +122,8 @@ export const VR_EXPERIENCE_POINT = immutableIdentifiers([
   '1.4.5',
   '1.4.5.1',
   '1.4.5.1.1',
+  '1.4.5.1.1.1',
+  '1.4.5.1.1.2',
   '1.4.5.2',
   '100.10'
 ]);
@@ -259,7 +262,27 @@ const points = Object.freeze([
   Object.freeze({
     id: VR_EXPERIENCE_POINT['1.4.5.1.1'],
     label: 'Monkey dotarła do progu / threshold dialogue prezentowany',
+    capabilities: Object.freeze([]),
+    transitions: Object.freeze([
+      Object.freeze({ event: VR_SCENARIO_EVENT.THRESHOLD_SELECTED, choice: 1, target: VR_EXPERIENCE_POINT['1.4.5.1.1.1'], milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.CONTINUE_THRESHOLD_CHOICE]) }),
+      Object.freeze({ event: VR_SCENARIO_EVENT.THRESHOLD_SELECTED, choice: 2, target: VR_EXPERIENCE_POINT['1.4.5.1.1.2'], milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.CONTINUE_THRESHOLD_CHOICE]) }),
+      Object.freeze({ event: VR_SCENARIO_EVENT.THRESHOLD_SELECTED, choice: 3, target: VR_EXPERIENCE_POINT['100.10'], milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.CONTINUE_THRESHOLD_CHOICE]) })
+    ])
+  }),
+  Object.freeze({
+    id: VR_EXPERIENCE_POINT['1.4.5.1.1.1'],
+    label: 'Gracz przekracza próg / CROSSING rozpoczyna się',
     capabilities: Object.freeze([]), transitions: Object.freeze([])
+  }),
+  Object.freeze({
+    id: VR_EXPERIENCE_POINT['1.4.5.1.1.2'],
+    label: 'Gracz pyta co jest po drugiej stronie / odpowiedź i ponowny wybór',
+    capabilities: Object.freeze([]),
+    transitions: Object.freeze([
+      Object.freeze({ event: VR_SCENARIO_EVENT.THRESHOLD_SELECTED, choice: 1, target: VR_EXPERIENCE_POINT['1.4.5.1.1.1'], milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.CONTINUE_THRESHOLD_CHOICE]) }),
+      Object.freeze({ event: VR_SCENARIO_EVENT.THRESHOLD_SELECTED, choice: 2, target: VR_EXPERIENCE_POINT['1.4.5.1.1.2'], milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.CONTINUE_THRESHOLD_CHOICE]) }),
+      Object.freeze({ event: VR_SCENARIO_EVENT.THRESHOLD_SELECTED, choice: 3, target: VR_EXPERIENCE_POINT['100.10'], milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.CONTINUE_THRESHOLD_CHOICE]) })
+    ])
   }),
   Object.freeze({
     id: VR_EXPERIENCE_POINT['1.4.5.2'],
@@ -292,7 +315,7 @@ export const vrExperienceScenario = Object.freeze({
     effects: Object.freeze(Object.values(VR_SCENARIO_EFFECT))
   }),
   metadata: Object.freeze({
-    stage: 'M1_11_MONKEY_REACHED_THRESHOLD_HANDOFF',
+    stage: 'M1_12_THRESHOLD_CHOICE_BRANCH',
     authoritativeForLiveGameplay: true,
     authoritativeScope: Object.freeze([
       'XR_CALIBRATED → BEGIN_INTRO_REVEAL',
@@ -305,6 +328,9 @@ export const vrExperienceScenario = Object.freeze({
       'MONKEY_TRIGGERED → CONTINUE_CONTROLLER_ONBOARDING',
       'INTRO_INVITATION_SELECTED / choice 1 → 1.4.5.1',
       'MONKEY_REACHED_THRESHOLD → PRESENT_THRESHOLD_CHOICE → 1.4.5.1.1',
+      'THRESHOLD_SELECTED / choice 1 → 1.4.5.1.1.1',
+      'THRESHOLD_SELECTED / choice 2 → 1.4.5.1.1.2',
+      'THRESHOLD_SELECTED / choice 3 → 100.10',
       'INTRO_INVITATION_SELECTED / choice 2 → 1.4.5.2',
       'INTRO_INVITATION_SELECTED / choice 3 → 100.10'
     ])

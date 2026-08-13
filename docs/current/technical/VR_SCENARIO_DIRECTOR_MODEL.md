@@ -530,3 +530,23 @@ Every accepted edge emits `CONTINUE_INTRO_INVITATION` and adds no milestone. `1.
 Scenario now owns the edge `1.4.5.1 → MONKEY_REACHED_THRESHOLD → 1.4.5.1.1`. It adds no milestone and emits only `PRESENT_THRESHOLD_CHOICE`. Point `1.4.5.1.1` means “Monkey reached the threshold / threshold dialogue presented”; it is terminal for the current slice and has no `THRESHOLD_SELECTED` transition. The Runtime effect resumes the actor through its state-guarded presentation seam; threshold options and their selection remain legacy.
 
 SG-032, SG-039 and SG-040 are **MIGRATED**. SG-036 and SG-041 remain **RETAINED**. M1.11 migrates only the `MONKEY_REACHED_THRESHOLD` edge; remaining SG-041 still includes pause/resume distance decisions, `FOLLOW_PAUSE_CHANGED`, and movement/follow policy requiring later migration.
+
+## M1.12 — Threshold choice branch (current)
+
+**IMPLEMENTED — HARDWARE QA PENDING.** M1.11 has **HARDWARE PASS — Meta Quest 3S**.
+
+`THRESHOLD_SELECTED` carries only numeric `{ choice }`. Scenario owns both explicit threshold routing sets; every accepted edge adds no milestone and emits the single `CONTINUE_THRESHOLD_CHOICE` effect:
+
+```text
+1.4.5.1.1
+├── choice 1 → 1.4.5.1.1.1
+├── choice 2 → 1.4.5.1.1.2
+└── choice 3 → 100.10
+
+1.4.5.1.1.2
+├── choice 1 → 1.4.5.1.1.1
+├── choice 2 → 1.4.5.1.1.2
+└── choice 3 → 100.10
+```
+
+`1.4.5.1.1.1` is the terminal CROSS point of the current slice. Choice 2 is an explicit self-loop while the actor replays the unchanged answer and options. `100.10` is LIVE EXIT EXPERIENCE VR; `100.1` remains RESERVED / FUTURE. After verification against the historical audit, SG-036 is **MIGRATED**: all its narrative decisions through threshold selection are Scenario-owned. SG-041 remains **RETAINED** because pause/resume follow policy and `FOLLOW_PAUSE_CHANGED` remain actor-owned.
