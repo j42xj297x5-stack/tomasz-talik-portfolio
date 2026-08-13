@@ -7,6 +7,10 @@
 
 ## 1. Executive summary
 
+### CURRENT synchronization after M1.13 (2026-08-13)
+
+This annotation updates statuses only; historical evidence and line references below remain the 2026-08-12 audit record. **SG-036 = MIGRATED** after Scenario-owned hover, trigger, invitation (`GO / WHERE / NO`), threshold arrival and threshold (`CROSS / BEYOND / RETURN`) routing. **SG-041 = MIGRATED** after M1.11 arrival and M1.13 semantic pause/resume handoff; physical sensing, movement and fog remain actor mechanics. **SG-042 = RETAINED** and is the next legacy boundary (`CROSSING → ENTERING_RING → MONKEY_SETTLING → GLYPH_FREE_EXPLORE`); `PLAYER_ENTERED_RING`, `MONKEY_SETTLED` and `GLYPH_FREE_EXPLORE_STARTED` are not Scenario-owned.
+
 ### M1.3 synchronization
 
 M0, M1.1 **Live Bootstrap Slice**, M1.2 **Intro Reveal Completion Handoff**, and M1.3 **Post-Reveal Silence Completion Handoff** are complete; M1 overall remains **IN PROGRESS**. Scenario and `ExperienceDirector` are authoritative only for `XR_CALIBRATED → BEGIN_INTRO_REVEAL`, `INTRO_REVEAL_COMPLETE → BEGIN_POST_REVEAL_SILENCE`, and `POST_REVEAL_SILENCE_COMPLETE → BEGIN_CONTROLLER_ONBOARDING`, with `RuntimeExperience` as the injected symbolic-effect execution boundary. SG-032 and SG-039 are **MIGRATED**. The actor retains the two-second timer, then waits for Runtime to start onboarding. The Y-panel UI facts and tutorial from `WAIT_PLAYER_PANEL_OPEN` remain actor-owned; SG-040 and later groups are not migrated. QA bypass does not emit synthetic completion. RC-01…RC-14 retain their prior status and are not consolidated. Full central Scenario ownership does not exist. M1.1 hardware smoke is **PASS — confirmed on Meta Quest 3S by Projectant, 2026-08-12**. M1.2 hardware smoke is **PASS — confirmed on Meta Quest 3S by Projectant, 2026-08-12**. M1.3 hardware smoke is **PENDING — HARDWARE QA NOT EXECUTED**.
@@ -93,13 +97,13 @@ Najważniejsze ryzyka migracji:
 | SG-033 | `src/experienceVr.js:L577` | player guide open | locomotion yaw locked | CAPABILITY_GATE | modal interaction policy | MEDIUM |
 | SG-034 | `src/experienceVr.js:L598-L601` | Sphere equipped + gyro drive | device loops synchronized each frame | AUDIO_TRIGGER | semantic state-change events → audio adapter | MEDIUM |
 | SG-035 | `src/experienceVr.js:L603-L605` | glyph not currently active | exhausted lighting | VISIBILITY_GATE | capability projection | MEDIUM |
-| SG-036 | `src/xr/guidance/createVrIntroSequence.js:L64-L75` | messages/hover/press/options | P0 onboarding→invitation→follow/ending/threshold | SCENARIO_GATE / NARRATIVE_TRIGGER | Scenario + Director | HIGH |
+| SG-036 | `src/xr/guidance/createVrIntroSequence.js:L64-L75` | messages/hover/press/options | P0 onboarding→invitation→follow/ending/threshold | MIGRATED | Scenario + Director; closed through M1.12 | — |
 | SG-037 | `src/xr/guidance/createVrIntroSequence.js:L54-L58` | head radius crosses ring | entry fact; walk radius becomes ring | WORLD_STATE_TRIGGER | subsystem event → Director command | HIGH |
 | SG-038 | `src/xr/guidance/createVrIntroSequence.js:L76-L83` | reset + bypass/enabled | visibility, fog, locomotion, interaction state | RESET_COUPLING | Director reset orchestration | HIGH |
 | SG-039 | `src/xr/guidance/createVrIntroSequence.js` | calibration; fog complete; silence complete | Intro transitions and onboarding | TIMER_TRIGGER | **MIGRATED** — Scenario owns the three bounded decisions through RuntimeExperience; actor retains the 2 s timer and tutorial execution | HIGH |
 | SG-040 | `src/xr/guidance/createVrIntroSequence.js:L92-L93` | panel open, controls detail visited, panel closed | pointer tutorial | SCENARIO_GATE | UI facts → Director | HIGH |
 | SG-041 | `src/xr/guidance/createVrIntroSequence.js` | grace/distance sensing; pause/resume and arrival handoffs | sensing/motion/fog remain actor mechanics; narrative edges Scenario-owned | MIGRATED | M1.11 arrival + M1.13 FOLLOW_PAUSE_CHANGED; no remaining narrative decision owner | — |
-| SG-042 | `src/xr/guidance/createVrIntroSequence.js:L106-L115` | Monkey canonical + player ring entry + settle timer | free explore | SCENARIO_GATE | Director combines facts | HIGH |
+| SG-042 | `src/xr/guidance/createVrIntroSequence.js:L106-L115` | Monkey canonical + player ring entry + settle timer | free explore | RETAINED | next legacy boundary; Director combination not implemented | HIGH |
 | SG-043 | `src/xr/guidance/createVrIntroSequence.js:L116` | 60 s without discovery | attention + glyph hint armed | TIMER_TRIGGER / NARRATIVE_TRIGGER | Director | HIGH |
 | SG-044 | `src/xr/guidance/createVrIntroSequence.js:L117` | reveal elapsed 3 s | returns to free explore | TIMER_TRIGGER | Director | MEDIUM |
 | SG-045 | `src/xr/guidance/createVrIntroSequence.js:L121` | first glyph success only in free explore | discovery flag + attention/conversation | NARRATIVE_TRIGGER | scenario event | HIGH |

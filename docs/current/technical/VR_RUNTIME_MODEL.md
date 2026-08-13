@@ -4,11 +4,13 @@ Status: canonical description of the implemented runtime synchronized on 2026-08
 
 ## Canonical Story Reindex Migration — IMPLEMENTED
 
-**CURRENT (2026-08-13):** LIVE Scenario używa flat slice `1.10`, `1.20`, `1.30`, `1.40`, `1.50`, `1.60`, `1.70`, `1.80`, `1.100`, `1.100.1`, `1.110`, `1.120`, `1.120.1`, `1.130`, `100.10`. `1.90` pozostaje **RESERVED / WATER CRYSTAL TUTORIAL / NOT IMPLEMENTED**. Stare produkcyjne IDs objęte canonical mappingiem są **SUPERSEDED / RETIRED** i nie mogą zostać ponownie użyte; `100.10` pozostaje bez zmiany.
+**CURRENT (2026-08-13):** LIVE Scenario używa flat slice `1.10`, `1.20`, `1.30`, `1.40`, `1.50`, `1.60`, `1.70`, `1.80`, `1.100`, `1.100.1`, `1.110`, `1.110.1`, `1.120`, `1.120.1`, `1.130`, `100.10`. `1.90` pozostaje **RESERVED / WATER CRYSTAL TUTORIAL / NOT IMPLEMENTED**. Stare produkcyjne IDs objęte canonical mappingiem są **SUPERSEDED / RETIRED** i nie mogą zostać ponownie użyte; `100.10` pozostaje bez zmiany.
 
 Migracja zmieniła wyłącznie adresy punktów i jawne targety. Eventy, numeric choices, effects, milestones, actor/runtime behavior i SG statuses są bez zmian. M1.12 ma **HARDWARE PASS — Meta Quest 3S**, SG-036 **MIGRATED**, a SG-041 jest **MIGRATED** po M1.13. Scenario Spine pozostaje **TARGET / NOT IMPLEMENTED**; Director nadal używa wyłącznie explicit `transition.target`. Canonical Story Reindex jest **IMPLEMENTED / behavior-neutral**; post-reindex regression: **PASS — Meta Quest 3S**.
 
-## Scenario + Director M1.8 live slice and M1.9 foundation
+## Scenario + Director M1.8 live slice and M1.9 foundation — historical snapshot
+
+The terminal-point and retained-group statements in this section record the M1.8/M1.9 stage and are superseded for CURRENT status by the M1.13 boundary below.
 
 M0 through M1.11 are live; M1 remains **IN PROGRESS**. The current main chain reaches `1.110 → MONKEY_REACHED_THRESHOLD → 1.120`: the actor produces the physical arrival fact, Scenario/Director accepts it exactly once, and Runtime executes `PRESENT_THRESHOLD_CHOICE`. Point `1.120` is terminal for the current slice; threshold selection remains legacy.
 
@@ -225,7 +227,7 @@ SG-032, SG-039 and SG-040 remain **MIGRATED**. SG-036 and SG-041 remain **RETAIN
 
 ## M1.12 — Threshold choice runtime seam
 
-**Status:** THRESHOLD CHOICE BRANCH — **IMPLEMENTED — HARDWARE QA PENDING.** M1.11 is **HARDWARE PASS — Meta Quest 3S**.
+**Status:** THRESHOLD CHOICE BRANCH — **HARDWARE PASS — Meta Quest 3S.** M1.11 is **HARDWARE PASS — Meta Quest 3S**.
 
 The Intro actor maps threshold UI IDs to numeric choices, enters `WAIT_RUNTIME_AFTER_THRESHOLD_SELECTED`, and emits one `onThresholdSelected(choice)` fact. Composition dispatches only `THRESHOLD_SELECTED` with `{ choice }`. Accepted Scenario transitions emit the single `CONTINUE_THRESHOLD_CHOICE`; Runtime forwards `payload.choice` to the guarded actor seam and fails fast if it rejects. Before continuation no CROSSING, beyond/return copy, options reinstall, or session ending occurs.
 
@@ -242,4 +244,13 @@ SG-036 is **MIGRATED**. SG-041 is **RETAINED**; follow grace, pause/resume dista
 
 ## M1.13 — Follow pause-resume runtime seam
 
-**IMPLEMENTED — HARDWARE QA PENDING.** Actor-local distance/grace sensing emits `FOLLOW_PAUSE_CHANGED { paused }`, production composition dispatches that semantic payload unchanged, and Scenario routes by current point between active FOLLOWING `1.110` and local waiting branch `1.110.1`. Runtime owns exactly one `APPLY_FOLLOW_PAUSE_STATE` handler and fail-fast delegates to `continueFollowPauseChanged(payload.paused)`. The transient actor safe wait prevents an unaccepted movement frame while synchronous production dispatch preserves same-frame pause/resume parity. Motion and fog interpolation remain actor mechanics. `1.110.1` is not part of the future Scenario Spine; Scenario Spine is **TARGET / NOT IMPLEMENTED**, and `1.90` is **RESERVED / NOT IMPLEMENTED**. SG-041 and SG-036 are **MIGRATED**.
+**HARDWARE PASS — Meta Quest 3S.** Actor-local distance/grace sensing emits `FOLLOW_PAUSE_CHANGED { paused }`, production composition dispatches that semantic payload unchanged, and Scenario routes by current point between active FOLLOWING `1.110` and local waiting branch `1.110.1`. Runtime owns exactly one `APPLY_FOLLOW_PAUSE_STATE` handler and fail-fast delegates to `continueFollowPauseChanged(payload.paused)`. The transient actor safe wait prevents an unaccepted movement frame while synchronous production dispatch preserves same-frame pause/resume parity. Motion and fog interpolation remain actor mechanics. `1.110.1` is not part of the future Scenario Spine; Scenario Spine is **TARGET / NOT IMPLEMENTED**, and `1.90` is **RESERVED / NOT IMPLEMENTED**. SG-041 and SG-036 are **MIGRATED**.
+
+
+## Current Scenario authority after M1.13
+
+The LIVE backbone is `1.10 → 1.20 → 1.30 → 1.40 → 1.50 → 1.60 → 1.70 → 1.80 → 1.100 → 1.110 → 1.120 → 1.130`, with local branches `1.100.1` (WHERE), `1.110.1` (Monkey paused/waiting) and `1.120.1` (BEYOND), plus LIVE EXIT `100.10`. Reserved `1.90` is not traversed and remains **WATER / Haiku Cosmos crystal grab tutorial — NOT IMPLEMENTED**.
+
+M1.12 and M1.13 are both **HARDWARE PASS — Meta Quest 3S**. `THRESHOLD_SELECTED` is owned by Scenario/Director numeric routing, transported by Runtime and executed by the actor. `FOLLOW_PAUSE_CHANGED { paused }` is sensed by actor mechanics and transported unchanged; the current Scenario point selects pause/resume routing, while `paused` is execution data. SG-036 and SG-041 are **MIGRATED**.
+
+LIVE Scenario authority ends at `1.130`, where CROSSING begins. Physical CROSSING through `ENTERING_RING`, `MONKEY_SETTLING` and transition to `GLYPH_FREE_EXPLORE` remains legacy. `PLAYER_ENTERED_RING`, `MONKEY_SETTLED` and `GLYPH_FREE_EXPLORE_STARTED` are not Scenario-owned. Their natural next boundary is **SG-042 = RETAINED**. Scenario Spine, Act 2 live Scenario and further progression remain **TARGET / NOT IMPLEMENTED**; current Runtime continues to use explicit `transition.target`.

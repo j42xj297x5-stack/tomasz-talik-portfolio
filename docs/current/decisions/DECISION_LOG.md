@@ -4,7 +4,7 @@ Status: current binding decisions organized by implementation status, not patch 
 
 ## Canonical Story Reindex Migration — IMPLEMENTED
 
-**CURRENT (2026-08-13):** LIVE Scenario używa flat slice `1.10`, `1.20`, `1.30`, `1.40`, `1.50`, `1.60`, `1.70`, `1.80`, `1.100`, `1.100.1`, `1.110`, `1.120`, `1.120.1`, `1.130`, `100.10`. `1.90` pozostaje **RESERVED / WATER CRYSTAL TUTORIAL / NOT IMPLEMENTED**. Stare produkcyjne IDs objęte canonical mappingiem są **SUPERSEDED / RETIRED** i nie mogą zostać ponownie użyte; `100.10` pozostaje bez zmiany.
+**CURRENT (2026-08-13):** LIVE Scenario używa flat slice `1.10`, `1.20`, `1.30`, `1.40`, `1.50`, `1.60`, `1.70`, `1.80`, `1.100`, `1.100.1`, `1.110`, `1.110.1`, `1.120`, `1.120.1`, `1.130`, `100.10`. `1.90` pozostaje **RESERVED / WATER CRYSTAL TUTORIAL / NOT IMPLEMENTED**. Stare produkcyjne IDs objęte canonical mappingiem są **SUPERSEDED / RETIRED** i nie mogą zostać ponownie użyte; `100.10` pozostaje bez zmiany.
 
 Migracja zmieniła wyłącznie adresy punktów i jawne targety. Eventy, numeric choices, effects, milestones, actor/runtime behavior i SG statuses są bez zmian. M1.12 ma **HARDWARE PASS — Meta Quest 3S**, SG-036 **MIGRATED**, a SG-041 jest **MIGRATED** po M1.13. Scenario Spine pozostaje **TARGET / NOT IMPLEMENTED**; Director nadal używa wyłącznie explicit `transition.target`. Canonical Story Reindex jest **IMPLEMENTED / behavior-neutral**; post-reindex regression: **PASS — Meta Quest 3S**.
 
@@ -29,8 +29,8 @@ Migracja zmieniła wyłącznie adresy punktów i jawne targety. Eventy, numeric 
 2. Milestones are monotonic narrative history. A session reset preserves them and returns the Director to its initial scene; an explicit hard reset represents a new game and clears them.
 3. Director capabilities express only global scenario permission. Actor-local correctness, geometry, physics, state machines, UI hit testing, audio lifecycle and other invariants remain with their current subsystem owners.
 4. Effects are symbolic output; the Director never invokes actors. `RuntimeExperience` is the framework-free boundary that executes injected handlers.
-5. M0 and M1.1–M1.12 remain implemented with unchanged gameplay semantics. M1.12 is **IMPLEMENTED — HARDWARE QA PENDING**; the approved canonical corrective reindex is **IMPLEMENTED**.
-6. SG-032, SG-036, SG-039 and SG-040 are **MIGRATED**. SG-041 is **RETAINED** because follow pause/resume decision ownership and `FOLLOW_PAUSE_CHANGED` remain outside the migrated slice.
+5. M0 and M1.1–M1.13 remain implemented with unchanged gameplay semantics. M1.12 and M1.13 are **HARDWARE PASS — Meta Quest 3S**; the approved canonical corrective reindex is **IMPLEMENTED**.
+6. SG-032, SG-036, SG-039, SG-040 and SG-041 are **MIGRATED**. SG-042 is **RETAINED** as the next legacy boundary.
 7. Point IDs are numeric-only strings of positive integer segments and are permanent structural addresses. ID, human-readable label and player-facing copy are separate layers; dialog or choice wording and narrative meaning are never encoded in an ID.
 8. Numeric child points are reserved for local branches of a two-segment mainline beat. Their depth has authoring meaning but creates no implicit Runtime order, parent return or behavior.
 9. Published IDs are stable. An unused gap is available insertion reserve; a removed or superseded ID is retired, never reused for another meaning, and gaps never trigger renumbering.
@@ -139,7 +139,6 @@ Small glyph progression, Astro B/bands, radar/sector gameplay, final radar, tele
 - One `CONTINUE_INTRO_INVITATION` effect resumes the safely waiting actor. `100.1` remains RESERVED / FUTURE. SG-036 and SG-041 remain RETAINED.
 - Status: IMPLEMENTED — HARDWARE QA PENDING.
 
-
 ## 2026-08-13 — M1.11 Monkey reached threshold handoff
 
 - M1.10 is **HARDWARE PASS — Meta Quest 3S**. M1.11 is **IMPLEMENTED — HARDWARE QA PENDING**.
@@ -149,7 +148,7 @@ Small glyph progression, Astro B/bands, radar/sector gameplay, final radar, tele
 
 ## 2026-08-13 — M1.12 threshold choice branch
 
-- M1.11 is **HARDWARE PASS — Meta Quest 3S**. M1.12 **THRESHOLD CHOICE BRANCH** is **IMPLEMENTED — HARDWARE QA PENDING**.
+- M1.11 is **HARDWARE PASS — Meta Quest 3S**. M1.12 **THRESHOLD CHOICE BRANCH** is **HARDWARE PASS — Meta Quest 3S**.
 - `THRESHOLD_SELECTED` carries numeric choice 1, 2, or 3. Scenario explicitly routes both `1.120` and `1.120.1` to CROSS terminal `1.130`, BEYOND/self-loop `1.120.1`, or LIVE exit `100.10`; no threshold milestone is added.
 - The single `CONTINUE_THRESHOLD_CHOICE` effect resumes an actor guarded by `WAIT_RUNTIME_AFTER_THRESHOLD_SELECTED`. UI strings are adapter-only and Runtime receives only `{ choice }`.
 - `100.10` is LIVE EXIT EXPERIENCE VR. `100.1` remains RESERVED / FUTURE.
@@ -157,7 +156,14 @@ Small glyph progression, Astro B/bands, radar/sector gameplay, final radar, tele
 
 ## 2026-08-13 — M1.13 follow pause-resume handoff
 
-- M1.12 is **HARDWARE PASS — Meta Quest 3S**. Canonical Story Reindex is **IMPLEMENTED / behavior-neutral**; post-reindex hardware regression is **PASS — Meta Quest 3S**. M1.13 is **IMPLEMENTED — HARDWARE QA PENDING**.
+- M1.12 is **HARDWARE PASS — Meta Quest 3S**. Canonical Story Reindex is **IMPLEMENTED / behavior-neutral**; post-reindex hardware regression is **PASS — Meta Quest 3S**. M1.13 **FOLLOW PAUSE-RESUME HANDOFF** is **HARDWARE PASS — Meta Quest 3S**.
 - LIVE local branch `1.110.1` means FOLLOWING / Monkey waiting for player. It belongs to `1.110` and is not part of the future Scenario Spine. Scenario Spine remains **TARGET / NOT IMPLEMENTED**; `1.90` remains **RESERVED / NOT IMPLEMENTED**.
 - Actor owns physical distance/grace sensing, motion and fog. Scenario routes `FOLLOW_PAUSE_CHANGED` by current point, without payload predicates or numeric choice. Runtime executes the single `APPLY_FOLLOW_PAUSE_STATE` command through the guarded actor continuation.
 - No milestone was added. SG-041 is **MIGRATED**; SG-036 remains **MIGRATED**.
+
+## 2026-08-13 — binding CURRENT boundary after M1.13 QA
+
+- M1.12 and M1.13 are **HARDWARE PASS — Meta Quest 3S**. For M1.13 the Designer manually confirmed GO walking, grace-distance parity, pause and existing “Idziesz?” message, message clearing and movement resume on approach, repeated pause/resume without deadlock, arrival at threshold after resume, and working threshold flow.
+- SG-036 and SG-041 are **MIGRATED**. For SG-041 actor/mechanics retain physical positions, distances, thresholds, speed, movement and fog interpolation; Scenario/Director own legality and routing of pause, resume and threshold arrival. Current point selects the route; `payload.paused` is execution data.
+- SG-042 is **RETAINED**. LIVE Scenario authority ends at `1.130` when CROSSING begins; `PLAYER_ENTERED_RING`, `MONKEY_SETTLED` and `GLYPH_FREE_EXPLORE_STARTED` remain legacy / NOT IMPLEMENTED migrations.
+- `1.90` remains **RESERVED / WATER CRYSTAL TUTORIAL / NOT IMPLEMENTED**. Scenario Spine and Act 2 LIVE Scenario remain **TARGET / NOT IMPLEMENTED**; explicit `transition.target` remains authoritative.
