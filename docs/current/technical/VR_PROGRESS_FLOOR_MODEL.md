@@ -41,7 +41,7 @@ The layout therefore contains **18 panels**: Creative AI 3, Ethics 3, AI Guide 3
 
 ## Materials and visibility
 
-Every sector instance receives cloned materials; geometries may remain shared through the deep object clone. The required base and all mesh descendants of that base are made transparent with `opacity = 0` and `depthWrite = false`. Ornaments and panels remain visible, and panels retain their own emissive materials.
+Every sector instance receives cloned materials; geometries may remain shared through the deep object clone. Each revealable body is an explicit two-mesh production contract: the required neutral `VR_PROGRESS_SECTOR_*_BASE` plus the authored colored overlay (`path4` for Creative, `path1` for the other four assets). Both body parts are made transparent with `opacity = 0` and `depthWrite = false`, then converge to their separate authored opacity after the branch's first committed page. Panels remain visible and retain their own emissive materials. This pairing is required because the colored overlay is a sibling scene root, not a child of `VR_PROGRESS_SECTOR_*_BASE`; traversing only BASE does not cover the production sector visual.
 
 At preparation time each panel's emissive intensity becomes zero. A missing emissive color or an emissive color equal to black receives the branch fallback: Creative `0xff4b2b`, Ethics `0xc8752a`, Water `0x35a9ff`, Metal `0x8cd1ff`, and Wood `0x29e86f`. A non-black authored emissive color is preserved.
 

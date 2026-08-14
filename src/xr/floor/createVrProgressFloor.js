@@ -1,16 +1,16 @@
 import * as THREE from '../../vendor/three.js';
 
-const SOURCE_CONTRACTS = Object.freeze({
+export const VR_PROGRESS_FLOOR_SOURCE_CONTRACTS = Object.freeze({
   creative: Object.freeze({
-    baseName: 'VR_PROGRESS_SECTOR_FIRE_BASE',
+    bodyNames: Object.freeze(['VR_PROGRESS_SECTOR_FIRE_BASE', 'path4']),
     panelNames: Object.freeze(['VR_PROGRESS_CARD_FIRE_01', 'VR_PROGRESS_CARD_FIRE_02', 'VR_PROGRESS_CARD_FIRE_03'])
   }),
   ethics: Object.freeze({
-    baseName: 'VR_PROGRESS_SECTOR_EARTH_BASE',
+    bodyNames: Object.freeze(['VR_PROGRESS_SECTOR_EARTH_BASE', 'path1']),
     panelNames: Object.freeze(['VR_PROGRESS_CARD_EARTH_01', 'VR_PROGRESS_CARD_EARTH_02', 'VR_PROGRESS_CARD_EARTH_03'])
   }),
   water: Object.freeze({
-    baseName: 'VR_PROGRESS_SECTOR_WATER_BASE',
+    bodyNames: Object.freeze(['VR_PROGRESS_SECTOR_WATER_BASE', 'path1']),
     panelNames: Object.freeze([
       'VR_PROGRESS_CARD_WATER_01',
       'VR_PROGRESS_CARD_WATER_02',
@@ -20,7 +20,7 @@ const SOURCE_CONTRACTS = Object.freeze({
     ])
   }),
   metal: Object.freeze({
-    baseName: 'VR_PROGRESS_SECTOR_METAL_BASE',
+    bodyNames: Object.freeze(['VR_PROGRESS_SECTOR_METAL_BASE', 'path1']),
     panelNames: Object.freeze([
       'VR_PROGRESS_CARD_METAL_01',
       'VR_PROGRESS_CARD_METAL_02',
@@ -29,7 +29,7 @@ const SOURCE_CONTRACTS = Object.freeze({
     ])
   }),
   wood: Object.freeze({
-    baseName: 'VR_PROGRESS_SECTOR_WOOD_BASE',
+    bodyNames: Object.freeze(['VR_PROGRESS_SECTOR_WOOD_BASE', 'path1']),
     panelNames: Object.freeze([
       'VR_PROGRESS_CARD_WOOD_01',
       'VR_PROGRESS_CARD_WOOD_02',
@@ -107,18 +107,20 @@ function requireSectorObject(sector, objectName, sectorConfig) {
   return object;
 }
 
-function makeSectorBaseTransparent(sector, baseName, sectorConfig) {
-  const base = requireSectorObject(sector, baseName, sectorConfig);
+function makeSectorBodyTransparent(sector, bodyNames, sectorConfig) {
   const materials = new Map();
-  base.traverse((object) => {
-    if (!object.isMesh || !object.material) return;
-    const meshMaterials = Array.isArray(object.material) ? object.material : [object.material];
-    meshMaterials.forEach((material) => {
-      if (!materials.has(material)) materials.set(material, material.opacity);
-      material.transparent = true;
-      material.opacity = 0;
-      material.depthWrite = false;
-      material.needsUpdate = true;
+  bodyNames.forEach((bodyName) => {
+    const bodyPart = requireSectorObject(sector, bodyName, sectorConfig);
+    bodyPart.traverse((object) => {
+      if (!object.isMesh || !object.material) return;
+      const meshMaterials = Array.isArray(object.material) ? object.material : [object.material];
+      meshMaterials.forEach((material) => {
+        if (!materials.has(material)) materials.set(material, material.opacity);
+        material.transparent = true;
+        material.opacity = 0;
+        material.depthWrite = false;
+        material.needsUpdate = true;
+      });
     });
   });
   return [...materials].map(([material, targetOpacity]) => ({ material, targetOpacity }));
@@ -175,7 +177,7 @@ export function createVrProgressFloor({
   try {
     SECTOR_LAYOUT.forEach((sectorConfig, index) => {
       const sourceModel = sourceModels[sectorConfig.sourceType];
-      const contract = SOURCE_CONTRACTS[sectorConfig.sourceType];
+      const contract = VR_PROGRESS_FLOOR_SOURCE_CONTRACTS[sectorConfig.sourceType];
       const sector = sourceModel.clone(true);
       sector.name = `VrProgressFloorSector:${sectorConfig.glyphId}`;
       sector.rotation.y = index * (Math.PI * 2 / SECTOR_COUNT);
@@ -188,7 +190,7 @@ export function createVrProgressFloor({
         sourceType: sectorConfig.sourceType
       };
       cloneMaterials(sector, ownedMaterials);
-      const baseMaterials = makeSectorBaseTransparent(sector, contract.baseName, sectorConfig);
+      const baseMaterials = makeSectorBodyTransparent(sector, contract.bodyNames, sectorConfig);
       const panelsByOrder = new Map();
       contract.panelNames.forEach((panelName, panelIndex) => {
         const panel = requireSectorObject(sector, panelName, sectorConfig);
