@@ -10,7 +10,7 @@ Jest źródłem prawdy dla wszystkich następnych etapów migracji Scenario + Di
 
 ## 1.1. Canonical Story Reindex Migration — IMPLEMENTED
 
-**CURRENT (2026-08-13):** jednorazowy corrective reindex obecnego LIVE Scenario został wdrożony bez zmiany gameplay semantics. Flat live slice to `1.10`, `1.20`, `1.30`, `1.40`, `1.50`, `1.60`, `1.70`, `1.80`, `1.100`, `1.100.1`, `1.110`, `1.110.1`, `1.120`, `1.120.1`, `1.130`, `100.10`. WHERE (`1.100.1`), pause/wait (`1.110.1`) i BEYOND (`1.120.1`) są current local branches; FOLLOWING (`1.110`), THRESHOLD (`1.120`) i CROSSING (`1.130`) są płaskimi mainline beats.
+**HISTORICAL IMPLEMENTED STAGE (2026-08-13):** jednorazowy corrective reindex ówczesnego LIVE Scenario został wdrożony bez zmiany gameplay semantics. Flat live slice to `1.10`, `1.20`, `1.30`, `1.40`, `1.50`, `1.60`, `1.70`, `1.80`, `1.100`, `1.100.1`, `1.110`, `1.110.1`, `1.120`, `1.120.1`, `1.130`, `100.10`. WHERE (`1.100.1`), pause/wait (`1.110.1`) i BEYOND (`1.120.1`) są current local branches; FOLLOWING (`1.110`), THRESHOLD (`1.120`) i CROSSING (`1.130`) są płaskimi mainline beats.
 
 `1.90` jest **RESERVED / WATER (Haiku Cosmos) CRYSTAL GRAB TUTORIAL / NOT IMPLEMENTED** i nie należy do produkcyjnego identifier set. Scenario Spine pozostaje **TARGET / NOT IMPLEMENTED**: nie istnieje `spine`, `mainline`, `acts`, builder ani normalizer. Director nadal przechodzi wyłącznie przez jawne `transition.target` i nie wylicza kolejności z adresów.
 
@@ -48,6 +48,14 @@ Wszystkie OLD IDs w tabeli są trwale **SUPERSEDED / RETIRED** i nigdy nie mogą
 | `1.180.1` | `2.40.1` |
 
 Wszystkie OLD IDs w tej tabeli są trwale **SUPERSEDED / RETIRED**, nie są aliasami Runtime i nigdy nie mogą otrzymać nowego znaczenia. Korekta zmienia wyłącznie adresy i jawne `transition.target`; milestones, effects, capabilities, payload, ownership oraz gameplay pozostają bez zmian.
+
+## 1.3. Stan LIVE po M1.20R / M1.20F / M1.20M — CURRENT
+
+Aktualny produkcyjny graf obejmuje cztery przestrzenie adresowe: `1.x` = Intro / Prolog, `2.x` = pierwsza pętla pięciu kryształów, `3.x` = etap po pełnym `5/5` (**PLANNED / NOT IMPLEMENTED**) oraz `100.x` = exit. LIVE punkty pierwszej pętli to dokładnie `2.10`, `2.10.1`, `2.20`, `2.30`, `2.30.1`, `2.40`, `2.40.1`. Stare `1.140`–`1.180.1` są trwale **RETIRED / SUPERSEDED** zgodnie z mapowaniem M1.20R i nie są aliasami.
+
+M1.20R (canonical Act address correction), M1.20F (floor sector reveal), M1.20M (Monkey attention correction) oraz późniejsza korekta wyłącznego ownershipu `sector.visible` przez `VrProgressFloor` są **IMPLEMENTED**. Nie kończy to całej migracji Scenario/Director: `3.x` i dalsze etapy nie są LIVE, a wcześniejsze audit blockers pozostają do obsłużenia.
+
+Scenario Spine jest wyłącznie **PLANNED / NOT IMPLEMENTED**. Nie istnieje jako warstwa runtime, schema ani API; LIVE Director nadal używa wyłącznie jawnych `transition.target`.
 
 ## 2. Metafora teatralna i podział odpowiedzialności
 
@@ -190,14 +198,14 @@ Poniższy krótki szkielet pokazuje wyłącznie **TARGET indeksowania**, a nie z
 1.120  Threshold
 1.120.1  BEYOND / local branch
 1.130  Crossing
-1.140  Player entered ring
-1.150  Monkey settled / koniec prologu
-→ 2.10
-
-2.10   Start Progu I
-2.20   Pierwszy glif / pierwszy crystal flow
-…       2.x trwa przez pierwszą pełną piątkę kryształów
-→ 3.10  Start Progu II
+2.10   Wejście do kręgu / start Progu I
+2.10.1 Local branch pierwszej pętli
+2.20   Pierwszy crystal-flow beat
+2.30   Dalszy beat pierwszej pętli
+2.30.1 Local branch punktu 2.30
+2.40   Końcowy beat obecnego LIVE slice
+2.40.1 Local branch punktu 2.40
+→ 3.x  Etap po pełnym 5/5 — PLANNED / NOT IMPLEMENTED
 ```
 
 ID, label i copy pozostają oddzielnymi warstwami: point ID jest trwałym adresem, label czytelnym opisem dla autora, a copy treścią gracza. Zmiana labelu lub copy nie zmienia ID.
@@ -290,6 +298,8 @@ Małpa nie sprawdza samodzielnie, czy Tier 1 jest ukończony, gracz ma Kulę, ze
 
 Monkey Guide nie ocenia fabularnej poprawności cue i nie kopiuje globalnej progresji. Prezentuje cue, lokalnie wykonuje komunikaty, opcje oraz interakcje i po zakończeniu może emitować event. Nazwy cue Małpy identyfikują treść, nie punkty Scenario.
 
+**CURRENT — attention contract po M1.20M:** `CARD_COMMITTED` nie uruchamia automatycznie Monkey attention, a `CUE_MONKEY_AFTER_CARD_COMMIT` został usunięty. Pierwszy bezpośredni press w Małpę kasuje pending attention również wtedy, gdy aktywny jest `dialogueOverride`. Contextual hint nadal może jawnie uruchomić attention; jest to cue pomocy kontekstowej, a nie automatyczny skutek commitu karty.
+
 ## 15. Audio
 
 Scenario może zlecić `scene point 4.3 / audioCue: AMBIENT_SMALL_GLYPHS` albo semantycznie `effect: PLAY_AUDIO_CUE / cue: AMBIENT_SMALL_GLYPHS`. Ambient sequencer lub audio actor nie sprawdza Tieru, nie interpretuje fabuły lub Aktu i nie zgaduje powodu aktywacji glifów; wykonuje cue zgodnie ze swoim lifecycle. **CURRENT:** audio pozostaje bez zmian w tym zadaniu.
@@ -308,7 +318,16 @@ Kontroler odpowiada „co faktycznie osiągnięto w domenie”; Scenario — „
 
 ## 18. QA shortcuts
 
-QA shortcut nie jest alternatywną fabułą i nie ma własnego Scenario. Może przygotować stan domenowy, ale jawnie synchronizuje wymagane fakty, nie omija nowych gates tak, by ukryć błąd produkcyjny, wymaga parity testu, a jego status jest śledzony osobno od produkcyjnej migracji. **CURRENT:** `applyVrProgressionShortcut.js` pozostaje istniejącym adapterem QA bez zmian działania.
+QA shortcut nie jest alternatywną fabułą i nie ma własnego Scenario. Może przygotować stan domenowy, ale jawnie synchronizuje wymagane fakty, nie omija nowych gates tak, by ukryć błąd produkcyjny, wymaga parity testu, a jego status jest śledzony osobno od produkcyjnej migracji.
+
+**TARGET QA CONTRACT — PLANNED / NOT IMPLEMENTED jako komplet:**
+
+- brak `?p` — normalne Intro;
+- `?p0` — canonical point `2.10`, czysty start gameplayu po wejściu do kręgu: Małpa, kamień i duże glify; zero zdobytej progresji; bez podłogi, portalu, Naczynia, Pieca i skorup;
+- `?p1` — stan po ukończeniu pierwszego `5/5`: pełna pierwsza podłoga, Piec dostępny, Astro czeka na fizyczny odbiór;
+- `?p2` — Astro zdobyte, sześć unikalnych skorup zaliczonych, Kula Asterionowa gotowa do utworzenia w Piecu.
+
+`?p0`, `?p1` i `?p2` są docelowym kontraktem QA, nie potwierdzeniem bieżącej implementacji. Dopóki kod nie zapewnia pełnej semantyki danego checkpointu, jego status pozostaje **PLANNED / NOT IMPLEMENTED**.
 
 ## 19. Historyczny baseline migracji M1.1–M1.8
 
@@ -504,15 +523,17 @@ M1.12 THRESHOLD CHOICE BRANCH — HARDWARE PASS, Meta Quest 3S.
 M1.13 FOLLOW PAUSE-RESUME HANDOFF — HARDWARE PASS, Meta Quest 3S.
 SG-036 i SG-041 są MIGRATED; SG-042 jest RETAINED.
 Canonical Story Reindex jest IMPLEMENTED / behavior-neutral; regression PASS, Meta Quest 3S.
-LIVE authority kończy się na 1.130, gdzie rozpoczyna się CROSSING; 100.10 jest LIVE EXIT.
-1.90 jest RESERVED / WATER CRYSTAL TUTORIAL / NOT IMPLEMENTED.
+LIVE graf obejmuje Intro `1.x`, pierwszą pętlę `2.x` (`2.10`, `2.10.1`, `2.20`, `2.30`, `2.30.1`, `2.40`, `2.40.1`) oraz EXIT `100.x`.
+M1.20R, M1.20F, M1.20M i późniejsza korekta ownershipu `sector.visible` są IMPLEMENTED.
+Stare `1.140`–`1.180.1` są RETIRED / SUPERSEDED.
 Director operuje na currentPointId i wyłącznie explicit targets.
 ```
 
 ```text
 TARGET / NOT IMPLEMENTED:
-Scenario-owned Mainline Spine, builder, normalizer i point-ID arithmetic nie istnieją.
-Approved WATER crystal tutorial insert nie jest punktem LIVE.
+Scenario Spine, builder, normalizer i point-ID arithmetic nie istnieją.
+Act `3.x`, dalsze etapy progresji i docelowe checkpointy `?p0`–`?p2` pozostają PLANNED / NOT IMPLEMENTED.
+Approved WATER crystal tutorial insert nie jest punktem LIVE. Cała migracja Scenario/Director pozostaje IN PROGRESS z wcześniejszymi audit blockers.
 ```
 
 ## 28. One-time Canonical Story Reindex Migration
@@ -592,7 +613,11 @@ Actor zachowuje physical sensing (head/Monkey position, grace/pause/resume dista
 Punktowa weryfikacja audytu zamyka **SG-041 = MIGRATED**: po M1.11 arrival oraz M1.13 pause/resume nie pozostał w tej grupie narrative decision owner; sensory odległości, motion i fog są actor-local mechanics. SG-036 pozostaje **MIGRATED**.
 
 
-## CURRENT architectural boundary after M1.13
+## CURRENT architectural boundary after M1.20 corrections
+
+Sekcja poniżej jest historycznym snapshotem granicy M1.13 i nie opisuje już bieżącego końca LIVE grafu. Po M1.20R pierwsza pętla jest LIVE pod adresami `2.10`, `2.10.1`, `2.20`, `2.30`, `2.30.1`, `2.40`, `2.40.1`; M1.20F i korekta ownershipu widoczności podłogi oraz M1.20M są wdrożone. Migracja nadal pozostaje **IN PROGRESS**: żaden `3.x` nie jest LIVE, Scenario Spine nie istnieje, a wcześniejsze audit blockers nie zostały zbiorczo zamknięte.
+
+## Historical boundary after M1.13 (superseded by current boundary above)
 
 Scenario/Director authority currently ends at LIVE `1.130`, where **CROSSING begins**. The next unmigrated legacy block is `CROSSING → ENTERING_RING → MONKEY_SETTLING → GLYPH_FREE_EXPLORE`. `PLAYER_ENTERED_RING`, `MONKEY_SETTLED` and `GLYPH_FREE_EXPLORE_STARTED` are **NOT Scenario-owned / NOT IMPLEMENTED as migrations**. This block is **SG-042 = RETAINED** and is the natural next analysis/migration boundary; no final API or point tree is established here. Act 2 (`2.x`, Próg I) and any `1.150 → 2.10` transition remain TARGET / NOT IMPLEMENTED.
 

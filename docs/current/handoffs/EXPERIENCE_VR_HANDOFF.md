@@ -1,28 +1,36 @@
 # Experience VR — Current Handoff
 
-Status: current delivery handoff synchronized after M1.13 hardware QA on 2026-08-13. It intentionally does not duplicate runtime, audio or narrative contracts.
+Status: current delivery handoff synchronized after M1.20R, M1.20F, M1.20M and the later floor-visibility ownership correction. It intentionally does not duplicate runtime, audio or narrative contracts.
 
 ## Current stage
 
-M0 through M1.13 are implemented, while M1 remains **IN PROGRESS**. M1.12 **THRESHOLD CHOICE BRANCH** and M1.13 **FOLLOW PAUSE-RESUME HANDOFF** are both **HARDWARE PASS — Meta Quest 3S**. The current production Scenario uses the canonical flat-mainline `1.x` addresses; `100.10` is LIVE EXIT and `100.1` remains RESERVED / FUTURE.
-
-SG-032, SG-036, SG-039, SG-040 and SG-041 are **MIGRATED**. M1.13 moved follow pause/resume decision ownership and `FOLLOW_PAUSE_CHANGED` into the migrated slice. The approved crystal/grip tutorial remains **NOT IMPLEMENTED**.
+M1 remains **IN PROGRESS**. M1.20R **Canonical Act Address Correction**, M1.20F **Floor Sector Reveal**, M1.20M **Monkey Attention Correction**, and the later correction making `VrProgressFloor` the sole owner of `sector.visible` are **IMPLEMENTED**. They do not complete the Scenario/Director migration: Act `3.x`, later stages and earlier audit blockers remain outstanding.
 
 ## CURRENT STATE — read this first
 
-- Flat story indexing `ACT.MAINLINE_POINT[.LOCAL_BRANCH...]` is canonical: two segments are mainline beats; three or more are local branches.
-- Canonical Story Reindex is **IMPLEMENTED / behavior-neutral**; post-reindex regression is **PASS — Meta Quest 3S**. Pre-reindex IDs are **SUPERSEDED / RETIRED** and must not be reused.
-- M1.12 THRESHOLD CHOICE BRANCH and M1.13 FOLLOW PAUSE-RESUME HANDOFF are **HARDWARE PASS — Meta Quest 3S**.
-- SG-036 and SG-041 are **MIGRATED**. SG-042 is **RETAINED** and is the next legacy analysis/migration boundary.
-- Current LIVE Scenario backbone is `1.10 → 1.20 → 1.30 → 1.40 → 1.50 → 1.60 → 1.70 → 1.80 → 1.100 → 1.110 → 1.120 → 1.130`, with local `1.100.1`, `1.110.1`, `1.120.1`, and LIVE EXIT `100.10`.
-- LIVE Scenario authority ends at `1.130`, where CROSSING begins. `PLAYER_ENTERED_RING`, `MONKEY_SETTLED` and `GLYPH_FREE_EXPLORE_STARTED` are not Scenario-owned; the legacy block continues through `ENTERING_RING → MONKEY_SETTLING → GLYPH_FREE_EXPLORE`.
-- `1.90` is **RESERVED / WATER (Haiku Cosmos) CRYSTAL TUTORIAL / NOT IMPLEMENTED** after post-trigger onboarding and before Invitation.
-- Scenario Spine is **TARGET / NOT IMPLEMENTED**. Runtime correctly continues through explicit `transition.target`; it has no builder or normalizer.
-- Act 1 (`1.x`) remains Prolog/Intro and Act 2 (`2.x`) Próg I. Act 2 LIVE Scenario and further progression are **NOT IMPLEMENTED**.
+- LIVE address spaces are `1.x` Intro / Prolog, `2.x` the first five-crystal loop, and `100.x` exit. Act `3.x` is the post-`5/5` stage and is **PLANNED / NOT IMPLEMENTED**.
+- LIVE first-loop points are `2.10`, `2.10.1`, `2.20`, `2.30`, `2.30.1`, `2.40`, `2.40.1`. Old `1.140`–`1.180.1` addresses are **RETIRED / SUPERSEDED**, never runtime aliases.
+- Scenario Spine is **PLANNED / NOT IMPLEMENTED**. No `spine`, `mainline`, `acts`, builder or normalizer exists; Director follows explicit `transition.target`.
+- `VrProgressFloor` alone owns sector visibility; Intro no longer writes `sector.visible`. The first commit in a branch reveals its sector, and discovered sectors survive XR re-entry in the same runtime. The production body contract is BASE + authored overlay.
+- **KNOWN HARDWARE ISSUE:** reveal currently includes a neutral gray BASE wedge. Canonical target presentation reveals the colored/authored body without the gray BASE.
+- `CARD_COMMITTED` does not automatically start Monkey attention; `CUE_MONKEY_AFTER_CARD_COMMIT` is removed. First direct Monkey press clears pending attention even with `dialogueOverride`; contextual hints may still start attention.
+
+## QA checkpoint target contract — PLANNED / NOT IMPLEMENTED
+
+- no `?p`: normal Intro;
+- `?p0`: canonical point `2.10`, clean gameplay start after ring entry — Monkey, stone and large glyphs; zero earned progress; no floor, portal, Vessel, Furnace or shells;
+- `?p1`: after first `5/5` — complete first floor, Furnace available, Astro awaiting physical pickup;
+- `?p2`: Astro earned, six unique shells credited, Asterion Sphere ready to create in the Furnace.
+
+These three checkpoints are the target QA contract, not a claim that the current shortcut adapter already implements them.
+
+## Target progression after Tier 1 — PLANNED / NOT IMPLEMENTED
+
+`5/5 first ring → complete first floor → new stage → Furnace → Furnace produces Astro → physical Astro pickup → only then shells activate → six unique shells enter Furnace → Furnace builds Asterion Sphere → physical Sphere pickup`. The superseded shortcut “Tier 1 → immediate automatic Astro unlock” is not canonical target behavior.
 
 ## Canonical Story Reindex Migration — IMPLEMENTED
 
-**CURRENT (2026-08-13):** LIVE Scenario używa flat slice `1.10`, `1.20`, `1.30`, `1.40`, `1.50`, `1.60`, `1.70`, `1.80`, `1.100`, `1.100.1`, `1.110`, `1.110.1`, `1.120`, `1.120.1`, `1.130`, `100.10`. `1.90` pozostaje **RESERVED / WATER CRYSTAL TUTORIAL / NOT IMPLEMENTED**. Stare produkcyjne IDs objęte canonical mappingiem są **SUPERSEDED / RETIRED** i nie mogą zostać ponownie użyte; `100.10` pozostaje bez zmiany.
+**HISTORICAL IMPLEMENTED STAGE (2026-08-13):** ówczesne LIVE Scenario używało flat slice `1.10`, `1.20`, `1.30`, `1.40`, `1.50`, `1.60`, `1.70`, `1.80`, `1.100`, `1.100.1`, `1.110`, `1.110.1`, `1.120`, `1.120.1`, `1.130`, `100.10`. `1.90` pozostaje **RESERVED / WATER CRYSTAL TUTORIAL / NOT IMPLEMENTED**. Stare produkcyjne IDs objęte canonical mappingiem są **SUPERSEDED / RETIRED** i nie mogą zostać ponownie użyte; `100.10` pozostaje bez zmiany.
 
 Migracja zmieniła wyłącznie adresy punktów i jawne targety. Eventy, numeric choices, effects, milestones, actor/runtime behavior i SG statuses są bez zmian. M1.12 ma **HARDWARE PASS — Meta Quest 3S**, SG-036 **MIGRATED**, a SG-041 jest **MIGRATED** po M1.13. Scenario Spine pozostaje **TARGET / NOT IMPLEMENTED**; Director nadal używa wyłącznie explicit `transition.target`. Canonical Story Reindex jest **IMPLEMENTED / behavior-neutral**; post-reindex regression: **PASS — Meta Quest 3S**.
 
@@ -272,6 +280,6 @@ Physical grace/distance sensing, Monkey movement and fog interpolation remain in
 - [x] After resume Monkey reaches the threshold.
 - [x] Threshold flow works after the migration.
 
-## Next boundary — not implemented
+## Remaining migration boundary — not implemented
 
-Do not extend the current LIVE tree while preparing the next task. SG-042 remains **RETAINED** and covers Monkey canonical position, player ring entry, settling and transition to `GLYPH_FREE_EXPLORE`. Candidate mainline slots `1.140` (`PLAYER_ENTERED_RING`) and `1.150` (`MONKEY_SETTLED` / end of prologue) are only **PLANNED / NOT IMPLEMENTED**, not final LIVE points. The direction `1.150 → 2.10` is TARGET only.
+Do not mark the Scenario/Director migration complete. The current LIVE graph reaches the first-loop `2.x` slice, but Act `3.x`, later stages and earlier audit blockers still require bounded follow-up. The retired `1.140`–`1.180.1` range must not be restored or reused.

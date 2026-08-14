@@ -1,16 +1,20 @@
 # Experience VR Gameplay Roadmap
 
-Status: concept roadmap synchronized on 2026-08-12. The [VR Runtime Model](../technical/VR_RUNTIME_MODEL.md) is the sole detailed runtime authority.
+Status: concept roadmap synchronized after the M1.20 progression and hardware-QA corrections. The [VR Runtime Model](../technical/VR_RUNTIME_MODEL.md) is the sole detailed runtime authority.
 
 ## Implemented baseline
 
 - [x] Independent WebXR runtime and bounded P0 intro through first-crystal discovery and reliquary reveal.
 - [x] Glyph/crystal/reliquary portfolio progression with the five-sector, 18-panel progress floor.
-- [x] Tier-1 Astro unlock, shell field, Attractor handoff and six-shell Astro Furnace loop.
+- [x] Existing Astro, shell-field, Attractor and six-shell Furnace mechanics (their old immediate Tier-1 unlock ordering is not the target canon).
 - [x] Production, physical claim and equipment of the Asterion Sphere; heavy platform-orientation control.
 - [x] Player/Monkey guidance surfaces and transient ambient sequencing.
 
 Implementation details, state transitions and timings are deliberately not repeated here; see the [runtime](../technical/VR_RUNTIME_MODEL.md), [audio](../technical/VR_AUDIO_MODEL.md), [progress-floor](../technical/VR_PROGRESS_FLOOR_MODEL.md) and [narrative](EXPERIENCE_VR_NARRATIVE_PROGRESSION_BASELINE.md) authorities. Current hardware qualification and known issues are in the [handoff](../handoffs/EXPERIENCE_VR_HANDOFF.md).
+
+## Binding target progression — PLANNED / NOT IMPLEMENTED
+
+`5/5 first ring → complete first floor → new stage → Furnace → Furnace produces Astro → physical Astro claim → shells activate → six unique shells enter Furnace → Furnace builds Asterion Sphere → physical Sphere claim`. The physical claims are mandatory gates. In particular, shells activate only after Astro is physically collected; immediate automatic Astro unlock at Tier 1 is superseded as target behavior. The post-`5/5` Scenario belongs to planned Act `3.x`, which is not LIVE.
 
 ## NEXT
 
