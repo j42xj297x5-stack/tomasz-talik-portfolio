@@ -10,7 +10,7 @@ const runtime = await readFile(new URL('../src/experienceVr.js', import.meta.url
 assert.match(runtime, /getGltf\('vr-crystal-reliquary-button-activate-model'\)/);
 assert.match(runtime, /attachCompanion\(\{ id: 'activate', model: activateButtonModel, settings: settings\.reliquary\.buttons/);
 assert.match(runtime, /reliquaryActivate: '\/audio\/creating_short_01\.mp3'/);
-assert.match(runtime, /const accepted = crystalCollection\.activateInserted\(\);\s+if \(accepted\) playVrWorld\(VR_AUDIO\.reliquaryActivate\);\s+return accepted;/);
+assert.match(runtime, /const accepted = crystalCollection\.activateInserted\(\);\s+if \(accepted\) \{\s+runtimeExperience\.dispatch\(VR_SCENARIO_EVENT\.CRYSTAL_ACTIVATED\);\s+playVrWorld\(VR_AUDIO\.reliquaryActivate\);\s+}\s+return accepted;/);
 assert.match(runtime, /onInsertAccepted: \(\) => playVrWorld\(VR_AUDIO\.reliquaryInsert\)/);
 assert.match(runtime, /playVrWorld\(VR_AUDIO\.reliquaryConsume\);\s+if \(tierCompleted\) playVrWorld\(VR_AUDIO\.tierComplete\);/);
 

@@ -28,6 +28,7 @@ export const VR_SCENARIO_EVENT = immutableIdentifiers([
   'RELIQUARY_REVEAL_COMPLETED',
   'CRYSTAL_INSERTED',
   'CRYSTAL_ACTIVATED',
+  'RELIQUARY_RELEASED',
   'CARD_COMMITTED',
   'TIER_COMPLETED',
   'ASTRO_UNLOCKED',
@@ -135,6 +136,7 @@ export const VR_EXPERIENCE_POINT = immutableIdentifiers([
   '1.150',
   '1.160',
   '1.170',
+  '1.180',
   '100.10'
 ]);
 
@@ -371,7 +373,26 @@ const points = Object.freeze([
   Object.freeze({
     id: VR_EXPERIENCE_POINT['1.170'],
     label: 'Reliquary reveal zakończony / powrót do GLYPH_FREE_EXPLORE',
-    capabilities: Object.freeze([VR_SCENARIO_CAPABILITY.CAN_USE_GLYPHS]), transitions: Object.freeze([])
+    capabilities: Object.freeze([
+      VR_SCENARIO_CAPABILITY.CAN_USE_GLYPHS,
+      VR_SCENARIO_CAPABILITY.CAN_USE_RELIQUARY,
+      VR_SCENARIO_CAPABILITY.CAN_ACTIVATE_RELIQUARY
+    ]),
+    transitions: Object.freeze([
+      Object.freeze({ event: VR_SCENARIO_EVENT.CRYSTAL_ACTIVATED, target: VR_EXPERIENCE_POINT['1.180'], milestonesToAdd: Object.freeze([]), effects: Object.freeze([]) })
+    ])
+  }),
+  Object.freeze({
+    id: VR_EXPERIENCE_POINT['1.180'],
+    label: 'Reliquary aktywowane / oczekiwanie na Release',
+    capabilities: Object.freeze([
+      VR_SCENARIO_CAPABILITY.CAN_USE_GLYPHS,
+      VR_SCENARIO_CAPABILITY.CAN_USE_RELIQUARY,
+      VR_SCENARIO_CAPABILITY.CAN_RELEASE_RELIQUARY
+    ]),
+    transitions: Object.freeze([
+      Object.freeze({ event: VR_SCENARIO_EVENT.RELIQUARY_RELEASED, target: VR_EXPERIENCE_POINT['1.170'], milestonesToAdd: Object.freeze([]), effects: Object.freeze([]) })
+    ])
   }),
   Object.freeze({
     id: VR_EXPERIENCE_POINT['100.10'],
@@ -394,7 +415,7 @@ export const vrExperienceScenario = Object.freeze({
     effects: Object.freeze(Object.values(VR_SCENARIO_EFFECT))
   }),
   metadata: Object.freeze({
-    stage: 'M1_17_RELIQUARY_REVEAL_COMPLETION_HANDOFF',
+    stage: 'M1_18_RELIQUARY_ACTION_CAPABILITY_HANDOFF',
     authoritativeForLiveGameplay: true,
     authoritativeScope: Object.freeze([
       'XR_CALIBRATED → BEGIN_INTRO_REVEAL',
@@ -415,6 +436,8 @@ export const vrExperienceScenario = Object.freeze({
       'GLYPH_HINT_TIMEOUT → SHOW_GLYPH_HINT → 1.150',
       'FIRST_CRYSTAL_DISCOVERED → REVEAL_RELIQUARY → 1.160',
       'RELIQUARY_REVEAL_COMPLETED → COMPLETE_RELIQUARY_REVEAL → 1.170',
+      'CRYSTAL_ACTIVATED → 1.180',
+      'RELIQUARY_RELEASED → 1.170',
       'INTRO_INVITATION_SELECTED / choice 2 → 1.100.1',
       'INTRO_INVITATION_SELECTED / choice 3 → 100.10'
     ])

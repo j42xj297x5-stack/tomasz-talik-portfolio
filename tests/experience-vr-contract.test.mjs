@@ -9,7 +9,7 @@ import { VR_EXPERIENCE_POINT, vrExperienceScenario } from '../src/xr/progression
 
 const canonicalLivePointIds = [
   '1.10', '1.20', '1.30', '1.40', '1.50', '1.60', '1.70', '1.80',
-  '1.100', '1.100.1', '1.110', '1.110.1', '1.120', '1.120.1', '1.130', '1.130.1', '1.130.2', '1.140', '1.150', '1.160', '1.170', '100.10'
+  '1.100', '1.100.1', '1.110', '1.110.1', '1.120', '1.120.1', '1.130', '1.130.1', '1.130.2', '1.140', '1.150', '1.160', '1.170', '1.180', '100.10'
 ];
 const retiredPointIds = [
   '1.1', '1.2', '1.3', '1.4', '1.4.1', '1.4.2', '1.4.3', '1.4.4',
@@ -71,6 +71,14 @@ assert.equal((vr.match(/introSequence\.showGlyphHint\(\)/g) ?? []).length, 1,
   'glyph hint has no direct or duplicate execution path');
 assert.match(vr, /introQaBypass \|\| runtimeExperience\.can\(VR_SCENARIO_CAPABILITY\.CAN_USE_GLYPHS\)/,
   'production glyph permission is Scenario capability-owned while preserving QA bypass');
+assert.match(vr, /canActivate: \(\) => \(introQaBypass[\s\S]*runtimeExperience\.can\(VR_SCENARIO_CAPABILITY\.CAN_ACTIVATE_RELIQUARY\)\)[\s\S]*crystalReliquary\.isInteractionEnabled\(\)[\s\S]*state === 'inserted'/,
+  'Activate combines explicit QA or Scenario permission with local technical validity');
+assert.match(vr, /onActivate: \(\) => \{[\s\S]*crystalCollection\.activateInserted\(\)[\s\S]*runtimeExperience\.dispatch\(VR_SCENARIO_EVENT\.CRYSTAL_ACTIVATED\)/,
+  'accepted local activation emits the semantic result fact');
+assert.match(vr, /canRelease: \(\) => \(introQaBypass[\s\S]*runtimeExperience\.can\(VR_SCENARIO_CAPABILITY\.CAN_RELEASE_RELIQUARY\)\)[\s\S]*crystalReliquary\.isInteractionEnabled\(\)[\s\S]*state === 'active'/,
+  'Release combines explicit QA or Scenario permission with local technical validity');
+assert.match(vr, /onRelease: \(\) => \{[\s\S]*crystalCollection\.releaseInserted\(\)[\s\S]*runtimeExperience\.dispatch\(VR_SCENARIO_EVENT\.RELIQUARY_RELEASED\)/,
+  'accepted local release emits a bounded semantic fact without migrating CARD_COMMITTED');
 assert.doesNotMatch(vr, /introSequence\?\.getState\(\)|introSequence\.getState\(\)/,
   'production glyph gate no longer reads the Intro actor state');
 assert.match(vr, /renderer\.xr\.enabled = true/);
