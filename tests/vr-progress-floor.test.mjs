@@ -21,6 +21,12 @@ function createSectorModel(sourceType, { missingObject = null, radialStep = 1.25
     base.name = contract.base;
     source.add(base);
   }
+  const authoredBodyOverlay = new THREE.Mesh(
+    new THREE.BoxGeometry(0.9, 0.02, 0.9),
+    new THREE.MeshStandardMaterial({ color: 0xff5500 })
+  );
+  authoredBodyOverlay.name = sourceType === 'creative' ? 'path4' : 'path1';
+  source.add(authoredBodyOverlay);
   for (let order = 1; order <= contract.panelCount; order += 1) {
     const name = `${contract.prefix}${String(order).padStart(2, '0')}`;
     if (name === missingObject) continue;
@@ -44,6 +50,7 @@ function panelMaterial(sector, order) {
 }
 const meshMaterials = (object) => Array.isArray(object.material) ? object.material : [object.material];
 const baseMaterials = (sector) => meshMaterials(sector.getObjectByName(CONTRACTS[sector.userData.sourceType].base));
+const overlayMaterial = (sector) => sector.getObjectByName(sector.userData.sourceType === 'creative' ? 'path4' : 'path1').material;
 
 const parent = new THREE.Group();
 const creativeSource = createSectorModel('creative');
@@ -101,6 +108,7 @@ sectors.forEach((sector, index) => {
     assert.equal(material.opacity, 0);
     assert.equal(material.depthWrite, false);
   });
+  assert.equal(overlayMaterial(sector).opacity, 0, 'authored colored body overlay starts hidden with its base');
   assert.equal(sector.getObjectByName(`${sourceType}Ornament`).material.opacity, 1);
 });
 assert.equal(new Set(sectors.map(({ userData }) => userData.sourceType)).size, 5);
@@ -137,8 +145,11 @@ floor.update(0.05);
 assertOnlyLit(sectors[3], 1);
 assert.deepEqual(floor.getRevealedSectorIds(), ['creative-ai']);
 assert.ok(baseMaterials(sectors[3]).every(({ opacity }) => opacity > 0), 'first committed page fades in its sector base');
+assert.ok(overlayMaterial(sectors[3]).opacity > 0, 'first committed page also fades in the authored colored sector body');
 assert.ok(sectors.filter((sector) => sector !== sectors[3]).every((sector) => baseMaterials(sector).every(({ opacity }) => opacity === 0)),
   'other sector bases remain hidden');
+assert.ok(sectors.filter((sector) => sector !== sectors[3]).every((sector) => overlayMaterial(sector).opacity === 0),
+  'other authored colored sector bodies remain hidden');
 const fireOpacityAfterFirstUpdate = baseMaterials(sectors[3])[0].opacity;
 assert.equal(floor.activatePage({ glyphId: 'creative-ai', order: 1 }), false);
 floor.update(0);
