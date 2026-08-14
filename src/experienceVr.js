@@ -474,7 +474,8 @@ const releaseButton = createVrReliquaryReleaseButton({
   onReleaseComplete: () => activateButton.reset()
 });
 const reliquaryHints = createVrReliquaryHints({
-  monkeyGuide, locale: language, getInsertedInstance: () => crystalCollection.getInsertedInstance()
+  monkeyGuide, locale: language, getInsertedInstance: () => crystalCollection.getInsertedInstance(),
+  onHintTimeout: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.RELIQUARY_HINT_TIMEOUT)
 });
 function getNextCrystalTier(node) {
   const branchId = node?.userData?.id;
@@ -629,6 +630,11 @@ const runtimeExperience = new RuntimeExperience({
     [VR_SCENARIO_EFFECT.COMPLETE_RELIQUARY_REVEAL]: () => {
       if (!introSequence.completeReliquaryReveal()) {
         throw new Error('COMPLETE_RELIQUARY_REVEAL rejected by Intro actor after accepted Scenario transition');
+      }
+    },
+    [VR_SCENARIO_EFFECT.SHOW_RELIQUARY_CONTEXT_HINT]: () => {
+      if (!reliquaryHints.showHint()) {
+        throw new Error('SHOW_RELIQUARY_CONTEXT_HINT rejected by Guidance actor after accepted Scenario transition');
       }
     }
   }
