@@ -198,8 +198,7 @@ const committed = productionDirector.dispatch(VR_SCENARIO_EVENT.CARD_COMMITTED, 
 assert.equal(committed.currentPointId, VR_EXPERIENCE_POINT['2.30']);
 assert.deepEqual(committed.effects, [
   VR_SCENARIO_EFFECT.UPDATE_COMMITTED_CARD_PRESENTATION,
-  VR_SCENARIO_EFFECT.PLAY_CARD_COMMIT_FEEDBACK,
-  VR_SCENARIO_EFFECT.CUE_MONKEY_AFTER_CARD_COMMIT
+  VR_SCENARIO_EFFECT.PLAY_CARD_COMMIT_FEEDBACK
 ]);
 assert.deepEqual(committed.addedMilestones, [VR_SCENARIO_MILESTONE.CARD_COMMITTED]);
 assert.equal(productionDirector.hasMilestone(VR_SCENARIO_MILESTONE.TIER_COMPLETED), false,

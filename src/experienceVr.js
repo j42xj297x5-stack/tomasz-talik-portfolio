@@ -640,9 +640,6 @@ const runtimeExperience = new RuntimeExperience({
     },
     [VR_SCENARIO_EFFECT.PLAY_CARD_COMMIT_FEEDBACK]: () => {
       playVrWorld(VR_AUDIO.reliquaryConsume);
-    },
-    [VR_SCENARIO_EFFECT.CUE_MONKEY_AFTER_CARD_COMMIT]: () => {
-      monkeyGuide.notifyAttention();
     }
   }
 });

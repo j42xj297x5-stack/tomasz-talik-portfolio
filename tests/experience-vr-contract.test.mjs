@@ -31,7 +31,7 @@ assert.equal(VR_EXPERIENCE_POINT['2.30.1'], '2.30.1', 'Activate hint is a local 
 assert.equal(VR_EXPERIENCE_POINT['2.40.1'], '2.40.1', 'Release hint is a local Act 2 branch');
 assert.equal(VR_EXPERIENCE_POINT['100.10'], '100.10', 'EXIT remains unchanged');
 
-const [main, vr, experience3d, vrControllers, glyphInteraction, spatialPlaque, crystalCollection, locomotion, portalDisplay, crystalReliquary, astroFurnace, furnacePanel, semanticInputSource, playerGuidePanelSource, playerGuideContentSource] = await Promise.all([
+const [main, vr, experience3d, vrControllers, glyphInteraction, spatialPlaque, crystalCollection, locomotion, portalDisplay, crystalReliquary, astroFurnace, furnacePanel, semanticInputSource, playerGuidePanelSource, playerGuideContentSource, scenario, reliquaryHints, monkeyGuide] = await Promise.all([
   readFile(new URL('../src/main.js', import.meta.url), 'utf8'),
   readFile(new URL('../src/experienceVr.js', import.meta.url), 'utf8'),
   readFile(new URL('../src/experience3d.js', import.meta.url), 'utf8'),
@@ -46,7 +46,10 @@ const [main, vr, experience3d, vrControllers, glyphInteraction, spatialPlaque, c
   readFile(new URL('../src/xr/furnace/createVrAstroFurnacePanel.js', import.meta.url), 'utf8'),
   readFile(new URL('../src/xr/input/createVrSemanticInput.js', import.meta.url), 'utf8'),
   readFile(new URL('../src/xr/guidance/createVrPlayerGuidePanel.js', import.meta.url), 'utf8'),
-  readFile(new URL('../src/xr/guidance/vrPlayerGuideContent.js', import.meta.url), 'utf8')
+  readFile(new URL('../src/xr/guidance/vrPlayerGuideContent.js', import.meta.url), 'utf8'),
+  readFile(new URL('../src/xr/progression/vrExperienceScenario.js', import.meta.url), 'utf8'),
+  readFile(new URL('../src/xr/guidance/createVrReliquaryHints.js', import.meta.url), 'utf8'),
+  readFile(new URL('../src/xr/guidance/createVrMonkeyGuide.js', import.meta.url), 'utf8')
 ]);
 
 assert.match(main, /await import\('\.\/experienceVr\.js'\)/);
@@ -246,7 +249,16 @@ assert.match(vr, /VR_SCENARIO_EFFECT\.UPDATE_COMMITTED_CARD_PRESENTATION[\s\S]*p
 assert.equal((vr.match(/progressFloor\.activatePage\(/g) ?? []).length, 1,
   'single-card floor projection has only the Runtime effect production path');
 assert.match(vr, /VR_SCENARIO_EFFECT\.PLAY_CARD_COMMIT_FEEDBACK[\s\S]*playVrWorld\(VR_AUDIO\.reliquaryConsume\)/);
-assert.match(vr, /VR_SCENARIO_EFFECT\.CUE_MONKEY_AFTER_CARD_COMMIT[\s\S]*monkeyGuide\.notifyAttention\(\)/);
+assert.doesNotMatch(scenario, /CUE_MONKEY_AFTER_CARD_COMMIT/,
+  'CARD_COMMITTED has no symbolic Monkey attention cue');
+assert.doesNotMatch(vr, /CUE_MONKEY_AFTER_CARD_COMMIT/,
+  'Runtime has no card-commit Monkey attention handler');
+assert.match(vr, /VR_SCENARIO_EFFECT\.SHOW_RELIQUARY_CONTEXT_HINT[\s\S]*reliquaryHints\.showHint\(\)/,
+  'the contextual reliquary hint retains its Runtime guidance path');
+assert.match(reliquaryHints, /showHint\(\)[\s\S]*monkeyGuide\.notifyAttention\(\)/,
+  'the contextual reliquary hint still requests Monkey attention');
+assert.match(monkeyGuide, /if \(hit\.kind === 'monkey'\) \{\s*clearAttention\(\);\s*if \(dialogueOverride\?\.onMonkeyPress\)/,
+  'a recognized Monkey press clears attention before dialogue override delegation');
 assert.match(vr, /if \(tierCompleted\) \{[\s\S]*progressFloor\.completeTier\(page\.order\)/,
   'tier-completion continuation remains explicitly outside M1.20');
 assert.match(vr, /loadMonkeyModel\(\{ actorParent: progressFloor\.object, fixtureParent: progressFloor\.object/,

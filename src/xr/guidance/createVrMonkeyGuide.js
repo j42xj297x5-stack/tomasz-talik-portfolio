@@ -518,6 +518,7 @@ export function createVrMonkeyGuide({
     const hit = hits.get(record);
     if (!hit) return false;
     if (hit.kind === 'monkey') {
+      clearAttention();
       if (dialogueOverride?.onMonkeyPress) return dialogueOverride.onMonkeyPress(record) !== false;
       setOpen(!open); return true;
     }

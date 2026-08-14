@@ -170,6 +170,14 @@ assert.equal(guide.showMessage('').lineCount, 0, 'an empty bubble has no rendere
 guide.update(0.016);
 assert.ok(fixture.getRayDistance() > 0 && fixture.getRayDistance() <= 2.3, 'monkey hit reports ordinary ray distance');
 assert.equal(guide.halo.visible, true);
+guide.notifyAttention();
+guide.update(0.2);
+assert.equal(guide.isAttentionPending(), true, 'hover does not acknowledge pending attention');
+assert.equal(guide.attentionRoot.visible, true, 'notifyAttention shows the attention arcs');
+assert.equal(guide.press(record), true);
+assert.equal(guide.isAttentionPending(), false, 'a normal Monkey press acknowledges attention');
+assert.equal(guide.attentionRoot.visible, false, 'a normal Monkey press hides the attention arcs');
+guide.close();
 guide.setInteractionEnabled(false); guide.update(0.016);
 assert.equal(guide.halo.visible, false); assert.equal(guide.hasCurrentHit(record), false);
 record.controller.dispatchEvent({ type: 'selectstart' }); assert.equal(guide.isOpen(), false);
@@ -180,11 +188,20 @@ guide.setDialogueOverride({ options: [{ id: 'intro-go', label: 'GO' }],
   onMonkeyHover: () => { overrideHovers += 1; }, onMonkeyPress: () => { overridePresses += 1; },
   onSelect: (id) => { overrideChoice = id; } });
 guide.update(0.016);
+guide.notifyAttention();
 record.controller.dispatchEvent({ type: 'selectstart' });
 assert.equal(overridePresses, 1, 'narrative override captures the real monkey trigger');
+assert.equal(guide.isAttentionPending(), false, 'the first override Monkey press acknowledges attention');
+assert.equal(guide.attentionRoot.visible, false, 'override delegation cannot leave attention arcs visible');
 assert.equal(guide.getScreen(), VR_MONKEY_GUIDE_SCREEN.MENU, 'override does not enter history');
+guide.notifyAttention();
 guide.hits.set(record, { kind: 'panel', region: { id: 'intro-go' } }); guide.press(record);
 assert.equal(overrideChoice, 'intro-go', 'custom dialogue choice is delegated');
+assert.equal(guide.isAttentionPending(), true, 'a panel option press does not acknowledge Monkey attention');
+guide.setDialogueOverride({ onMonkeyPress: () => false });
+guide.hits.set(record, { kind: 'monkey' });
+assert.equal(guide.press(record), false, 'override return semantics remain unchanged');
+assert.equal(guide.isAttentionPending(), false, 'even an override returning false cannot retain attention');
 assert.ok(overrideHovers <= 1, 'hover callback is edge-triggered');
 guide.setDialogueOverride(null);
 guide.update(0.016);
@@ -235,13 +252,14 @@ assert.equal(guide.getScreen(), VR_MONKEY_GUIDE_SCREEN.HISTORY, 'CARD -> HISTORY
 guide.hits.set(record, { kind: 'panel', region: { id: 'back-menu' } }); guide.press(record);
 assert.equal(guide.getScreen(), VR_MONKEY_GUIDE_SCREEN.MENU, 'HISTORY -> MENU');
 
+const attentionStartsBeforeSignal = fixture.getAttentionStarts();
 guide.notifyAttention(); guide.notifyAttention();
-assert.equal(fixture.getAttentionStarts(), 1, 'one active communication signal starts audio only once');
+assert.equal(fixture.getAttentionStarts(), attentionStartsBeforeSignal + 1, 'one active communication signal starts audio only once');
 assert.equal(guide.isAttentionPending(), true); guide.update(0.2);
 assert.equal(guide.attentionRoot.visible, true);
 assert.ok(new Set(guide.arcs.map(({ material }) => material.opacity)).size > 1);
 guide.open(); assert.equal(guide.isAttentionPending(), false);
-guide.notifyAttention(); assert.equal(fixture.getAttentionStarts(), 2, 'a new signal after clearing starts once');
+guide.notifyAttention(); assert.equal(fixture.getAttentionStarts(), attentionStartsBeforeSignal + 2, 'a new signal after clearing starts once');
 guide.reset(); assert.equal(guide.isOpen(), false); assert.equal(guide.getScreen(), VR_MONKEY_GUIDE_SCREEN.MENU);
 assert.equal(guide.messagePanel.group.visible, false);
 guide.dispose(); assert.equal(guide.object.parent, null);
