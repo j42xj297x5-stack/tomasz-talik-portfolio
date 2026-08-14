@@ -79,12 +79,14 @@ assert.match(vr, /introQaBypass \|\| runtimeExperience\.can\(VR_SCENARIO_CAPABIL
   'production glyph permission is Scenario capability-owned while preserving QA bypass');
 assert.match(vr, /canActivate: \(\) => \(introQaBypass[\s\S]*runtimeExperience\.can\(VR_SCENARIO_CAPABILITY\.CAN_ACTIVATE_RELIQUARY\)\)[\s\S]*crystalReliquary\.isInteractionEnabled\(\)[\s\S]*state === 'inserted'/,
   'Activate combines explicit QA or Scenario permission with local technical validity');
-assert.match(vr, /onActivate: \(\) => \{[\s\S]*crystalCollection\.activateInserted\(\)[\s\S]*runtimeExperience\.dispatch\(VR_SCENARIO_EVENT\.CRYSTAL_ACTIVATED\)/,
-  'accepted local activation emits the semantic result fact');
+assert.match(vr, /onPreview: \(page\) => runtimeExperience\.dispatch\(VR_SCENARIO_EVENT\.CRYSTAL_ACTIVATED, \{ page \}\)/,
+  'successful domain activation emits one semantic fact carrying the active page');
 assert.match(vr, /canRelease: \(\) => \(introQaBypass[\s\S]*runtimeExperience\.can\(VR_SCENARIO_CAPABILITY\.CAN_RELEASE_RELIQUARY\)\)[\s\S]*crystalReliquary\.isInteractionEnabled\(\)[\s\S]*state === 'active'/,
   'Release combines explicit QA or Scenario permission with local technical validity');
-assert.match(vr, /onRelease: \(\) => \{[\s\S]*crystalCollection\.releaseInserted\(\)[\s\S]*runtimeExperience\.dispatch\(VR_SCENARIO_EVENT\.RELIQUARY_RELEASED\)/,
-  'accepted local release emits a bounded semantic fact without migrating CARD_COMMITTED');
+assert.match(vr, /onCommit: \(page, \{ tierCompleted \}\) => \{\s*runtimeExperience\.dispatch\(VR_SCENARIO_EVENT\.CARD_COMMITTED, \{ page \}\)/,
+  'successful domain commit emits CARD_COMMITTED with minimal page identity');
+assert.doesNotMatch(vr, /runtimeExperience\.dispatch\(VR_SCENARIO_EVENT\.RELIQUARY_RELEASED/,
+  'temporary release story fact has no production dispatch');
 assert.doesNotMatch(vr, /introSequence\?\.getState\(\)|introSequence\.getState\(\)/,
   'production glyph gate no longer reads the Intro actor state');
 assert.match(vr, /renderer\.xr\.enabled = true/);
@@ -232,8 +234,16 @@ assert.match(crystalCollection, /currentCrystalHitDistance/);
 assert.doesNotMatch(crystalCollection, /currentHit\s*=/);
 assert.doesNotMatch(glyphInteraction, /SphereGeometry\(0\.31|VrEntryGlyphMarker|playerRig\.position|playerRig\.rotation/);
 assert.doesNotMatch(`${vr}\n${vrControllers}`, /XRControllerModelFactory/);
-assert.match(vr, /onPreview: \(page\) => portalCanvas\.show\(resolveExperienceVrPage\(page, language\)\)/);
-assert.match(vr, /onCommit: \(page, \{ tierCompleted \}\)[\s\S]*progressFloor\.activatePage\(page\);[\s\S]*if \(tierCompleted\) progressFloor\.completeTier\(page\.order\)/);
+assert.match(vr, /VR_SCENARIO_EFFECT\.PRESENT_ACTIVE_CARD_PREVIEW[\s\S]*portalCanvas\.show\(resolveExperienceVrPage\(payload\.page, language\)\)/);
+assert.equal((vr.match(/portalCanvas\.show\(resolveExperienceVrPage/g) ?? []).length, 1,
+  'active-card preview has only the Runtime effect production path');
+assert.match(vr, /VR_SCENARIO_EFFECT\.UPDATE_COMMITTED_CARD_PRESENTATION[\s\S]*progressFloor\.activatePage\(payload\.page\)/);
+assert.equal((vr.match(/progressFloor\.activatePage\(/g) ?? []).length, 1,
+  'single-card floor projection has only the Runtime effect production path');
+assert.match(vr, /VR_SCENARIO_EFFECT\.PLAY_CARD_COMMIT_FEEDBACK[\s\S]*playVrWorld\(VR_AUDIO\.reliquaryConsume\)/);
+assert.match(vr, /VR_SCENARIO_EFFECT\.CUE_MONKEY_AFTER_CARD_COMMIT[\s\S]*monkeyGuide\.notifyAttention\(\)/);
+assert.match(vr, /if \(tierCompleted\) \{[\s\S]*progressFloor\.completeTier\(page\.order\)/,
+  'tier-completion continuation remains explicitly outside M1.20');
 assert.match(vr, /loadMonkeyModel\(\{ actorParent: progressFloor\.object, fixtureParent: progressFloor\.object/,
   'Monkey stone is a stationary platform child, not a hidden fixtures child');
 assert.match(vr, /roots: \[monkeyVisualRoot, glyphRing, monkeyStoneRoot\]/);

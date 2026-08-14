@@ -29,7 +29,6 @@ export const VR_SCENARIO_EVENT = immutableIdentifiers([
   'CRYSTAL_INSERTED',
   'RELIQUARY_HINT_TIMEOUT',
   'CRYSTAL_ACTIVATED',
-  'RELIQUARY_RELEASED',
   'CARD_COMMITTED',
   'TIER_COMPLETED',
   'ASTRO_UNLOCKED',
@@ -110,6 +109,10 @@ export const VR_SCENARIO_EFFECT = immutableIdentifiers([
   'REVEAL_RELIQUARY',
   'COMPLETE_RELIQUARY_REVEAL',
   'SHOW_RELIQUARY_CONTEXT_HINT',
+  'PRESENT_ACTIVE_CARD_PREVIEW',
+  'UPDATE_COMMITTED_CARD_PRESENTATION',
+  'PLAY_CARD_COMMIT_FEEDBACK',
+  'CUE_MONKEY_AFTER_CARD_COMMIT',
   'REVEAL_SHELL_FIELD',
   'REVEAL_FURNACE',
   'PRESENT_ASTERION',
@@ -384,7 +387,7 @@ const points = Object.freeze([
     ]),
     transitions: Object.freeze([
       Object.freeze({ event: VR_SCENARIO_EVENT.RELIQUARY_HINT_TIMEOUT, target: VR_EXPERIENCE_POINT['1.170.1'], milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.SHOW_RELIQUARY_CONTEXT_HINT]) }),
-      Object.freeze({ event: VR_SCENARIO_EVENT.CRYSTAL_ACTIVATED, target: VR_EXPERIENCE_POINT['1.180'], milestonesToAdd: Object.freeze([]), effects: Object.freeze([]) })
+      Object.freeze({ event: VR_SCENARIO_EVENT.CRYSTAL_ACTIVATED, target: VR_EXPERIENCE_POINT['1.180'], milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.PRESENT_ACTIVE_CARD_PREVIEW]) })
     ])
   }),
   Object.freeze({
@@ -396,7 +399,7 @@ const points = Object.freeze([
       VR_SCENARIO_CAPABILITY.CAN_ACTIVATE_RELIQUARY
     ]),
     transitions: Object.freeze([
-      Object.freeze({ event: VR_SCENARIO_EVENT.CRYSTAL_ACTIVATED, target: VR_EXPERIENCE_POINT['1.180'], milestonesToAdd: Object.freeze([]), effects: Object.freeze([]) })
+      Object.freeze({ event: VR_SCENARIO_EVENT.CRYSTAL_ACTIVATED, target: VR_EXPERIENCE_POINT['1.180'], milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.PRESENT_ACTIVE_CARD_PREVIEW]) })
     ])
   }),
   Object.freeze({
@@ -409,7 +412,11 @@ const points = Object.freeze([
     ]),
     transitions: Object.freeze([
       Object.freeze({ event: VR_SCENARIO_EVENT.RELIQUARY_HINT_TIMEOUT, target: VR_EXPERIENCE_POINT['1.180.1'], milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.SHOW_RELIQUARY_CONTEXT_HINT]) }),
-      Object.freeze({ event: VR_SCENARIO_EVENT.RELIQUARY_RELEASED, target: VR_EXPERIENCE_POINT['1.170'], milestonesToAdd: Object.freeze([]), effects: Object.freeze([]) })
+      Object.freeze({ event: VR_SCENARIO_EVENT.CARD_COMMITTED, target: VR_EXPERIENCE_POINT['1.170'], milestonesToAdd: Object.freeze([VR_SCENARIO_MILESTONE.CARD_COMMITTED]), effects: Object.freeze([
+        VR_SCENARIO_EFFECT.UPDATE_COMMITTED_CARD_PRESENTATION,
+        VR_SCENARIO_EFFECT.PLAY_CARD_COMMIT_FEEDBACK,
+        VR_SCENARIO_EFFECT.CUE_MONKEY_AFTER_CARD_COMMIT
+      ]) })
     ])
   }),
   Object.freeze({
@@ -421,7 +428,11 @@ const points = Object.freeze([
       VR_SCENARIO_CAPABILITY.CAN_RELEASE_RELIQUARY
     ]),
     transitions: Object.freeze([
-      Object.freeze({ event: VR_SCENARIO_EVENT.RELIQUARY_RELEASED, target: VR_EXPERIENCE_POINT['1.170'], milestonesToAdd: Object.freeze([]), effects: Object.freeze([]) })
+      Object.freeze({ event: VR_SCENARIO_EVENT.CARD_COMMITTED, target: VR_EXPERIENCE_POINT['1.170'], milestonesToAdd: Object.freeze([VR_SCENARIO_MILESTONE.CARD_COMMITTED]), effects: Object.freeze([
+        VR_SCENARIO_EFFECT.UPDATE_COMMITTED_CARD_PRESENTATION,
+        VR_SCENARIO_EFFECT.PLAY_CARD_COMMIT_FEEDBACK,
+        VR_SCENARIO_EFFECT.CUE_MONKEY_AFTER_CARD_COMMIT
+      ]) })
     ])
   }),
   Object.freeze({
@@ -445,7 +456,7 @@ export const vrExperienceScenario = Object.freeze({
     effects: Object.freeze(Object.values(VR_SCENARIO_EFFECT))
   }),
   metadata: Object.freeze({
-    stage: 'M1_19_RELIQUARY_CONTEXTUAL_HINT_HANDOFF',
+    stage: 'M1_20_CARD_PREVIEW_CARD_COMMIT_HANDOFF',
     authoritativeForLiveGameplay: true,
     authoritativeScope: Object.freeze([
       'XR_CALIBRATED → BEGIN_INTRO_REVEAL',
@@ -466,8 +477,8 @@ export const vrExperienceScenario = Object.freeze({
       'GLYPH_HINT_TIMEOUT → SHOW_GLYPH_HINT → 1.150',
       'FIRST_CRYSTAL_DISCOVERED → REVEAL_RELIQUARY → 1.160',
       'RELIQUARY_REVEAL_COMPLETED → COMPLETE_RELIQUARY_REVEAL → 1.170',
-      'CRYSTAL_ACTIVATED → 1.180',
-      'RELIQUARY_RELEASED → 1.170',
+      'CRYSTAL_ACTIVATED → PRESENT_ACTIVE_CARD_PREVIEW → 1.180',
+      'CARD_COMMITTED → card presentation / feedback effects → 1.170',
       'RELIQUARY_HINT_TIMEOUT → SHOW_RELIQUARY_CONTEXT_HINT → local Activate / Release hint branch',
       'INTRO_INVITATION_SELECTED / choice 2 → 1.100.1',
       'INTRO_INVITATION_SELECTED / choice 3 → 100.10'

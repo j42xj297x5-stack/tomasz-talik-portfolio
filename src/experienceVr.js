@@ -416,15 +416,15 @@ const crystalCollection = createVrCrystalCollection({
     if (shellAttractorInteraction?.hasCurrentShellHit(record)) return false;
     return true;
   },
-  onPreview: (page) => portalCanvas.show(resolveExperienceVrPage(page, language)),
+  onPreview: (page) => runtimeExperience.dispatch(VR_SCENARIO_EVENT.CRYSTAL_ACTIVATED, { page }),
   onCommit: (page, { tierCompleted }) => {
-    progressFloor.activatePage(page);
-    if (tierCompleted) progressFloor.completeTier(page.order);
-    syncTierOneWorldState();
-    syncAmbientSequence();
-    playVrWorld(VR_AUDIO.reliquaryConsume);
-    if (tierCompleted) playVrWorld(VR_AUDIO.tierComplete);
-    monkeyGuide.notifyAttention();
+    runtimeExperience.dispatch(VR_SCENARIO_EVENT.CARD_COMMITTED, { page });
+    if (tierCompleted) {
+      progressFloor.completeTier(page.order);
+      syncTierOneWorldState();
+      syncAmbientSequence();
+      playVrWorld(VR_AUDIO.tierComplete);
+    }
   }
 });
 createVrProgressionShortcut({ search: location.search, pages: experienceVrPages, progressionController,
@@ -445,10 +445,7 @@ const activateButton = createVrReliquaryActivateButton({
     && crystalCollection.getInsertedInstance()?.state === 'inserted',
   onActivate: () => {
     const accepted = crystalCollection.activateInserted();
-    if (accepted) {
-      runtimeExperience.dispatch(VR_SCENARIO_EVENT.CRYSTAL_ACTIVATED);
-      playVrWorld(VR_AUDIO.reliquaryActivate);
-    }
+    if (accepted) playVrWorld(VR_AUDIO.reliquaryActivate);
     return accepted;
   }
 });
@@ -467,9 +464,7 @@ const releaseButton = createVrReliquaryReleaseButton({
     && crystalReliquary.isInteractionEnabled()
     && crystalCollection.getInsertedInstance()?.state === 'active',
   onRelease: () => {
-    const accepted = crystalCollection.releaseInserted();
-    if (accepted) runtimeExperience.dispatch(VR_SCENARIO_EVENT.RELIQUARY_RELEASED);
-    return accepted;
+    return crystalCollection.releaseInserted();
   },
   onReleaseComplete: () => activateButton.reset()
 });
@@ -636,6 +631,18 @@ const runtimeExperience = new RuntimeExperience({
       if (!reliquaryHints.showHint()) {
         throw new Error('SHOW_RELIQUARY_CONTEXT_HINT rejected by Guidance actor after accepted Scenario transition');
       }
+    },
+    [VR_SCENARIO_EFFECT.PRESENT_ACTIVE_CARD_PREVIEW]: (change, payload) => {
+      portalCanvas.show(resolveExperienceVrPage(payload.page, language));
+    },
+    [VR_SCENARIO_EFFECT.UPDATE_COMMITTED_CARD_PRESENTATION]: (change, payload) => {
+      progressFloor.activatePage(payload.page);
+    },
+    [VR_SCENARIO_EFFECT.PLAY_CARD_COMMIT_FEEDBACK]: () => {
+      playVrWorld(VR_AUDIO.reliquaryConsume);
+    },
+    [VR_SCENARIO_EFFECT.CUE_MONKEY_AFTER_CARD_COMMIT]: () => {
+      monkeyGuide.notifyAttention();
     }
   }
 });
