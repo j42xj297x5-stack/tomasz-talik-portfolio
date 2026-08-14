@@ -10,12 +10,14 @@ const CONTRACTS = {
   wood: { base: 'VR_PROGRESS_SECTOR_WOOD_BASE', prefix: 'VR_PROGRESS_CARD_WOOD_', panelCount: 3 }
 };
 
-function createSectorModel(sourceType, { missingObject = null, radialStep = 1.25, radii = null } = {}) {
+function createSectorModel(sourceType, { missingObject = null, radialStep = 1.25, radii = null, baseOpacity = 1 } = {}) {
   const contract = CONTRACTS[sourceType];
   const source = new THREE.Group();
   source.name = `${sourceType}FloorSource`;
   if (contract.base !== missingObject) {
-    const base = new THREE.Mesh(new THREE.BoxGeometry(1, 0.1, 1), [new THREE.MeshStandardMaterial(), new THREE.MeshStandardMaterial()]);
+    const base = new THREE.Mesh(new THREE.BoxGeometry(1, 0.1, 1), [
+      new THREE.MeshStandardMaterial({ opacity: baseOpacity }), new THREE.MeshStandardMaterial({ opacity: baseOpacity })
+    ]);
     base.name = contract.base;
     source.add(base);
   }
@@ -41,6 +43,7 @@ function panelMaterial(sector, order) {
   return sector.getObjectByName(`${contract.prefix}${String(order).padStart(2, '0')}`).material;
 }
 const meshMaterials = (object) => Array.isArray(object.material) ? object.material : [object.material];
+const baseMaterials = (sector) => meshMaterials(sector.getObjectByName(CONTRACTS[sector.userData.sourceType].base));
 
 const parent = new THREE.Group();
 const creativeSource = createSectorModel('creative');
@@ -107,6 +110,7 @@ assert.equal(sectors.filter(({ userData }) => userData.sourceType === 'water').l
 assert.equal(sectors.filter(({ userData }) => userData.sourceType === 'metal').length, 1);
 assert.equal(sectors.filter(({ userData }) => userData.sourceType === 'wood').length, 1);
 assert.equal(sectors.some(({ userData }) => userData.placeholder), false);
+assert.deepEqual(floor.getRevealedSectorIds(), []);
 
 for (let first = 0; first < sectors.length; first += 1) {
   for (let second = first + 1; second < sectors.length; second += 1) {
@@ -131,7 +135,21 @@ const assertOnlyLit = (targetSector, order) => sectors.forEach((sector) => {
 assert.equal(floor.activatePage({ glyphId: 'creative-ai', order: 1 }), true);
 floor.update(0.05);
 assertOnlyLit(sectors[3], 1);
+assert.deepEqual(floor.getRevealedSectorIds(), ['creative-ai']);
+assert.ok(baseMaterials(sectors[3]).every(({ opacity }) => opacity > 0), 'first committed page fades in its sector base');
+assert.ok(sectors.filter((sector) => sector !== sectors[3]).every((sector) => baseMaterials(sector).every(({ opacity }) => opacity === 0)),
+  'other sector bases remain hidden');
+const fireOpacityAfterFirstUpdate = baseMaterials(sectors[3])[0].opacity;
 assert.equal(floor.activatePage({ glyphId: 'creative-ai', order: 1 }), false);
+floor.update(0);
+assert.equal(baseMaterials(sectors[3])[0].opacity, fireOpacityAfterFirstUpdate, 'repeated page activation does not restart reveal');
+
+assert.equal(floor.activatePage({ glyphId: 'creative-ai', order: 2 }), true);
+floor.update(0.05);
+assert.ok(baseMaterials(sectors[3])[0].opacity > fireOpacityAfterFirstUpdate, 'a later page keeps the existing sector reveal progressing');
+assert.deepEqual(floor.getRevealedSectorIds(), ['creative-ai'], 'a second page does not create or restart sector state');
+assert.equal(panelMaterial(sectors[3], 2).emissiveIntensity > 0, true);
+assert.deepEqual(floor.getCompletedTiers(), [], 'sector reveal remains separate from tier completion');
 
 assert.equal(floor.activatePage({ glyphId: 'ethics-life-protection', order: 1 }), true);
 assert.equal(floor.activatePage({ glyphId: 'haiku-cosmos', order: 1 }), true);
@@ -149,7 +167,7 @@ assert.equal(floor.activatePage({ glyphId: 'ai-guide', order: 4 }), false);
 for (let order = 2; order <= 4; order += 1) assert.equal(floor.activatePage({ glyphId: 'spotify-digger', order }), true);
 for (let order = 2; order <= 5; order += 1) assert.equal(floor.activatePage({ glyphId: 'haiku-cosmos', order }), true);
 for (let order = 2; order <= 3; order += 1) {
-  assert.equal(floor.activatePage({ glyphId: 'creative-ai', order }), true);
+  if (order !== 2) assert.equal(floor.activatePage({ glyphId: 'creative-ai', order }), true);
   assert.equal(floor.activatePage({ glyphId: 'ethics-life-protection', order }), true);
 }
 assert.equal(floor.activatePage({ glyphId: 'creative-ai', order: 4 }), false);
@@ -187,6 +205,29 @@ assert.deepEqual(floor.getCompletedTiers(), [1, 2, 3, 4, 5]);
 const completedCopy = floor.getCompletedTiers();
 completedCopy.length = 0;
 assert.deepEqual(floor.getCompletedTiers(), [1, 2, 3, 4, 5]);
+
+const createRevealFloor = ({ creativeOpacity = 1 } = {}) => createVrProgressFloor({
+  parent: new THREE.Group(), creativeSectorModel: createSectorModel('creative', { baseOpacity: creativeOpacity }),
+  ethicsSectorModel: createSectorModel('ethics'), haikuSectorModel: createSectorModel('water'),
+  digSectorModel: createSectorModel('metal'), aiGuideSectorModel: createSectorModel('wood'),
+  emission: { responseSpeed: 100 }
+});
+const reversedFloor = createRevealFloor({ creativeOpacity: 0.42 });
+const reversedSectors = reversedFloor.geometryRoot.children.filter(({ name }) => name.startsWith('VrProgressFloorSector:'));
+const reversedFire = reversedSectors.find(({ userData }) => userData.glyphId === 'creative-ai');
+const reversedWater = reversedSectors.find(({ userData }) => userData.glyphId === 'haiku-cosmos');
+assert.equal(reversedFloor.activatePage({ glyphId: 'creative-ai', order: 2 }), true, 'a non-order-1 first page reveals its sector');
+reversedFloor.update(1);
+assert.ok(baseMaterials(reversedFire).every(({ opacity }) => opacity > 0.41 && opacity <= 0.42),
+  'reveal restores each authored target opacity instead of assuming one');
+assert.ok(baseMaterials(reversedWater).every(({ opacity }) => opacity === 0));
+assert.equal(reversedFloor.activatePage({ glyphId: 'haiku-cosmos', order: 1 }), true, 'sectors can reveal in reverse branch order');
+reversedFloor.update(0.05);
+assert.ok(baseMaterials(reversedWater).every(({ opacity }) => opacity > 0));
+assert.ok(baseMaterials(reversedFire).every(({ opacity }) => opacity > 0.41), 'revealing another sector leaves the first visible');
+assert.deepEqual(reversedFloor.getRevealedSectorIds(), ['creative-ai', 'haiku-cosmos']);
+reversedFloor.dispose();
+assert.deepEqual(reversedFloor.getRevealedSectorIds(), [], 'dispose clears local reveal state');
 
 for (const missingObject of ['VR_PROGRESS_CARD_WATER_04', 'VR_PROGRESS_CARD_WATER_05']) {
   assert.throws(() => createVrProgressFloor({
