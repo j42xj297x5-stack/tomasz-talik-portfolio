@@ -33,6 +33,22 @@ Jest źródłem prawdy dla wszystkich następnych etapów migracji Scenario + Di
 
 Wszystkie OLD IDs w tabeli są trwale **SUPERSEDED / RETIRED** i nigdy nie mogą otrzymać innego znaczenia. `100.10` nie został zmieniony ani retired. M1.12 ma **HARDWARE PASS — Meta Quest 3S**, SG-036 **MIGRATED**, SG-041 **MIGRATED** po M1.13, a approved crystal tutorial **NOT IMPLEMENTED**. Canonical Story Reindex jest **IMPLEMENTED / behavior-neutral**; post-reindex regression: **PASS — Meta Quest 3S**.
 
+## 1.2. M1.20R Canonical Act Address Correction — IMPLEMENTED
+
+**CURRENT:** M1.20R jest behavior-neutral corrective reindexem, który przywraca wiążącą semantykę Aktów: `1.x` = PROLOG / INTRO, `2.x` = PRÓG I / pierwsza pętla pięciu kryształów, `3.x` = PRÓG II / etap po ukończeniu pierwszej pełnej piątki. Ten patch nie implementuje żadnego LIVE `3.x` ani faktu `TIER_COMPLETED`.
+
+| OLD (SUPERSEDED / RETIRED) | NEW (CANONICAL) |
+| --- | --- |
+| `1.140` | `2.10` |
+| `1.150` | `2.10.1` |
+| `1.160` | `2.20` |
+| `1.170` | `2.30` |
+| `1.170.1` | `2.30.1` |
+| `1.180` | `2.40` |
+| `1.180.1` | `2.40.1` |
+
+Wszystkie OLD IDs w tej tabeli są trwale **SUPERSEDED / RETIRED**, nie są aliasami Runtime i nigdy nie mogą otrzymać nowego znaczenia. Korekta zmienia wyłącznie adresy i jawne `transition.target`; milestones, effects, capabilities, payload, ownership oraz gameplay pozostają bez zmian.
+
 ## 2. Metafora teatralna i podział odpowiedzialności
 
 Wiążąca analogia:
