@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import * as THREE from '../src/vendor/three.js';
 import { createVrProgressFloor } from '../src/xr/floor/createVrProgressFloor.js';
+import { createVrIntroSequence } from '../src/xr/guidance/createVrIntroSequence.js';
 
 const CONTRACTS = {
   creative: { base: 'VR_PROGRESS_SECTOR_FIRE_BASE', prefix: 'VR_PROGRESS_CARD_FIRE_', panelCount: 3 },
@@ -87,6 +88,8 @@ assert.ok(tierRings.every((ring, index) => index === 0 || ring.userData.radius >
 assert.ok(tierRings.every(({ material }) => material.opacity === 0 && material.transparent && material.depthWrite === false));
 assert.ok(tierRings.every(({ geometry }) => geometry.type === 'RingGeometry'), 'tiers 4 and 5 also use full RingGeometry');
 assert.deepEqual(sectors.map(({ name }) => name), expected.map(([glyphId]) => `VrProgressFloorSector:${glyphId}`));
+assert.ok(sectors.every(({ visible }) => visible === false), 'all sectors start hidden under floor ownership');
+assert.ok(tierRings.every(({ visible }) => visible === true), 'sector initial visibility does not hide tier rings');
 
 sectors.forEach((sector, index) => {
   const [glyphId, branchId, placeholder, sourceType] = expected[index];
@@ -141,6 +144,9 @@ const assertOnlyLit = (targetSector, order) => sectors.forEach((sector) => {
   }
 });
 assert.equal(floor.activatePage({ glyphId: 'creative-ai', order: 1 }), true);
+assert.equal(sectors[3].visible, true, 'first valid activation reveals its sector');
+assert.ok(sectors.filter((sector) => sector !== sectors[3]).every(({ visible }) => visible === false),
+  'first activation leaves every other sector hidden');
 floor.update(0.05);
 assertOnlyLit(sectors[3], 1);
 assert.deepEqual(floor.getRevealedSectorIds(), ['creative-ai']);
@@ -156,6 +162,7 @@ floor.update(0);
 assert.equal(baseMaterials(sectors[3])[0].opacity, fireOpacityAfterFirstUpdate, 'repeated page activation does not restart reveal');
 
 assert.equal(floor.activatePage({ glyphId: 'creative-ai', order: 2 }), true);
+assert.equal(sectors[3].visible, true, 'a later page keeps its sector visible');
 floor.update(0.05);
 assert.ok(baseMaterials(sectors[3])[0].opacity > fireOpacityAfterFirstUpdate, 'a later page keeps the existing sector reveal progressing');
 assert.deepEqual(floor.getRevealedSectorIds(), ['creative-ai'], 'a second page does not create or restart sector state');
@@ -163,6 +170,7 @@ assert.equal(panelMaterial(sectors[3], 2).emissiveIntensity > 0, true);
 assert.deepEqual(floor.getCompletedTiers(), [], 'sector reveal remains separate from tier completion');
 
 assert.equal(floor.activatePage({ glyphId: 'ethics-life-protection', order: 1 }), true);
+assert.equal(sectors[4].visible, true, 'another branch reveals independently');
 assert.equal(floor.activatePage({ glyphId: 'haiku-cosmos', order: 1 }), true);
 assert.equal(floor.activatePage({ glyphId: 'spotify-digger', order: 1 }), true);
 floor.update(0.05);
@@ -227,12 +235,36 @@ const reversedFloor = createRevealFloor({ creativeOpacity: 0.42 });
 const reversedSectors = reversedFloor.geometryRoot.children.filter(({ name }) => name.startsWith('VrProgressFloorSector:'));
 const reversedFire = reversedSectors.find(({ userData }) => userData.glyphId === 'creative-ai');
 const reversedWater = reversedSectors.find(({ userData }) => userData.glyphId === 'haiku-cosmos');
+const introMonkeyRoot = new THREE.Group();
+reversedFloor.object.add(introMonkeyRoot);
+const integrationIntro = createVrIntroSequence({
+  monkeyGuide: { setDialogueOverride() {}, showMessage() {}, setInteractionEnabled() {} },
+  monkeyMotionRoot: introMonkeyRoot,
+  monkeyVisualRoot: new THREE.Group(),
+  playerRig: new THREE.Group(),
+  glyphRing: new THREE.Group(),
+  progressFloor: reversedFloor,
+  platformFixturesRoot: new THREE.Group(),
+  locomotion: { reset() {}, setWalkRadius() {} },
+  spatial: { monkeyFinal: { x: 0, y: 0, z: 0 }, entryDirection: { x: 0, y: 0, z: 1 }, ringRadius: 7, monkeyStartRadius: 12 },
+  settings: { enabled: true, locale: 'en' }
+});
+integrationIntro.reset();
+assert.ok(reversedSectors.every(({ visible }) => visible === false),
+  'Intro reset does not take visibility ownership before the first card commit');
 assert.equal(reversedFloor.activatePage({ glyphId: 'creative-ai', order: 2 }), true, 'a non-order-1 first page reveals its sector');
+assert.equal(reversedFire.visible, true);
+assert.equal(reversedWater.visible, false);
+integrationIntro.reset();
+assert.equal(reversedFire.visible, true, 'Intro reset preserves a revealed sector across XR re-entry');
+assert.ok(reversedSectors.filter((sector) => sector !== reversedFire).every(({ visible }) => visible === false),
+  'Intro reset does not reveal unrelated sectors');
 reversedFloor.update(1);
 assert.ok(baseMaterials(reversedFire).every(({ opacity }) => opacity > 0.41 && opacity <= 0.42),
   'reveal restores each authored target opacity instead of assuming one');
 assert.ok(baseMaterials(reversedWater).every(({ opacity }) => opacity === 0));
 assert.equal(reversedFloor.activatePage({ glyphId: 'haiku-cosmos', order: 1 }), true, 'sectors can reveal in reverse branch order');
+assert.equal(reversedWater.visible, true);
 reversedFloor.update(0.05);
 assert.ok(baseMaterials(reversedWater).every(({ opacity }) => opacity > 0));
 assert.ok(baseMaterials(reversedFire).every(({ opacity }) => opacity > 0.41), 'revealing another sector leaves the first visible');
