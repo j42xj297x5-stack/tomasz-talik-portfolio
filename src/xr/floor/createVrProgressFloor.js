@@ -109,16 +109,19 @@ function requireSectorObject(sector, objectName, sectorConfig) {
 
 function makeSectorBaseTransparent(sector, baseName, sectorConfig) {
   const base = requireSectorObject(sector, baseName, sectorConfig);
+  const materials = new Map();
   base.traverse((object) => {
     if (!object.isMesh || !object.material) return;
-    const materials = Array.isArray(object.material) ? object.material : [object.material];
-    materials.forEach((material) => {
+    const meshMaterials = Array.isArray(object.material) ? object.material : [object.material];
+    meshMaterials.forEach((material) => {
+      if (!materials.has(material)) materials.set(material, material.opacity);
       material.transparent = true;
       material.opacity = 0;
       material.depthWrite = false;
       material.needsUpdate = true;
     });
   });
+  return [...materials].map(([material, targetOpacity]) => ({ material, targetOpacity }));
 }
 
 export function createVrProgressFloor({
@@ -162,6 +165,7 @@ export function createVrProgressFloor({
     wood: aiGuideSectorModel
   };
   const sectorsByGlyphId = new Map();
+  const revealedSectorIds = new Set();
   const activatedEntries = new Map();
   const pulseRemaining = new Map();
   const completedTiers = new Set();
@@ -184,7 +188,7 @@ export function createVrProgressFloor({
         sourceType: sectorConfig.sourceType
       };
       cloneMaterials(sector, ownedMaterials);
-      makeSectorBaseTransparent(sector, contract.baseName, sectorConfig);
+      const baseMaterials = makeSectorBaseTransparent(sector, contract.baseName, sectorConfig);
       const panelsByOrder = new Map();
       contract.panelNames.forEach((panelName, panelIndex) => {
         const panel = requireSectorObject(sector, panelName, sectorConfig);
@@ -193,7 +197,7 @@ export function createVrProgressFloor({
           materials: getPanelMaterials(panel, config.fallbackColors[sectorConfig.sourceType])
         });
       });
-      sectorsByGlyphId.set(sectorConfig.glyphId, { object: sector, panelsByOrder });
+      sectorsByGlyphId.set(sectorConfig.glyphId, { object: sector, panelsByOrder, baseMaterials });
       geometryRoot.add(sector);
     });
 
@@ -290,9 +294,11 @@ export function createVrProgressFloor({
   function activatePage(page) {
     const glyphId = page?.glyphId;
     const order = page?.order;
-    const panel = sectorsByGlyphId.get(glyphId)?.panelsByOrder.get(order);
+    const sector = sectorsByGlyphId.get(glyphId);
+    const panel = sector?.panelsByOrder.get(order);
     const key = `${glyphId}:${order}`;
     if (disposed || !panel || activatedEntries.has(key)) return false;
+    revealedSectorIds.add(glyphId);
     activatedEntries.set(key, { glyphId, order, panel });
     pulseRemaining.set(key, config.pulseDuration);
     return true;
@@ -302,6 +308,11 @@ export function createVrProgressFloor({
     if (disposed) return;
     const safeDelta = Math.max(0, Number.isFinite(delta) ? delta : 0);
     const blend = 1 - Math.exp(-config.responseSpeed * safeDelta);
+    revealedSectorIds.forEach((glyphId) => {
+      sectorsByGlyphId.get(glyphId)?.baseMaterials.forEach(({ material, targetOpacity }) => {
+        material.opacity += (targetOpacity - material.opacity) * blend;
+      });
+    });
     activatedEntries.forEach(({ panel }, key) => {
       const remaining = Math.max(0, (pulseRemaining.get(key) ?? 0) - safeDelta);
       pulseRemaining.set(key, remaining);
@@ -334,6 +345,7 @@ export function createVrProgressFloor({
     ownedMaterials.clear();
     ownedGeometries.forEach((geometry) => geometry.dispose());
     ownedGeometries.clear();
+    revealedSectorIds.clear();
   }
 
   return {
@@ -343,6 +355,7 @@ export function createVrProgressFloor({
     completeTier,
     update,
     getActivatedEntries: () => [...activatedEntries.values()].map(({ glyphId, order }) => ({ glyphId, order })),
+    getRevealedSectorIds: () => [...revealedSectorIds],
     getCompletedTiers: () => [...completedTiers],
     dispose
   };
