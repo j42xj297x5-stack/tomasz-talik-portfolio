@@ -64,8 +64,10 @@ function validateScenario(scenario) {
 }
 
 export class ExperienceDirector {
-  constructor({ scenario, initialMilestones = [] }) {
-    const { pointsById, milestones, initialPointId } = validateScenario(scenario);
+  constructor({ scenario, initialPointId: initialPointOverride, initialMilestones = [] }) {
+    const { pointsById, milestones, initialPointId: scenarioInitialPointId } = validateScenario(scenario);
+    const initialPointId = initialPointOverride ?? scenarioInitialPointId;
+    if (!pointsById.has(initialPointId)) throw new Error(`initial point does not exist: ${initialPointId}`);
     const hydrated = assertStringArray(initialMilestones, 'initial milestones');
     for (const milestone of hydrated) if (!milestones.has(milestone)) throw new Error(`unknown initial milestone: ${milestone}`);
     this.scenario = scenario;

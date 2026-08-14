@@ -94,13 +94,15 @@ assert.match(vr, /VR_SCENARIO_EFFECT\.SHOW_GLYPH_HINT[\s\S]*introSequence\.showG
   'Runtime owns the fail-fast glyph hint continuation');
 assert.equal((vr.match(/introSequence\.showGlyphHint\(\)/g) ?? []).length, 1,
   'glyph hint has no direct or duplicate execution path');
-assert.match(vr, /introQaBypass \|\| runtimeExperience\.can\(VR_SCENARIO_CAPABILITY\.CAN_USE_GLYPHS\)/,
-  'production glyph permission is Scenario capability-owned while preserving QA bypass');
-assert.match(vr, /canActivate: \(\) => \(introQaBypass[\s\S]*runtimeExperience\.can\(VR_SCENARIO_CAPABILITY\.CAN_ACTIVATE_RELIQUARY\)\)[\s\S]*crystalReliquary\.isInteractionEnabled\(\)[\s\S]*state === 'inserted'/,
+assert.match(vr, /legacyIntroQaBypass \|\| runtimeExperience\.can\(VR_SCENARIO_CAPABILITY\.CAN_USE_GLYPHS\)/,
+  'production glyph permission is Scenario capability-owned while preserving only legacy QA bypasses');
+assert.match(vr, /if \(qaCheckpoint === VR_QA_CHECKPOINT\.NORMAL\) createVrProgressionShortcut/,
+  'P0 cannot accidentally execute the legacy p1 domain shortcut');
+assert.match(vr, /canActivate: \(\) => \(legacyIntroQaBypass[\s\S]*runtimeExperience\.can\(VR_SCENARIO_CAPABILITY\.CAN_ACTIVATE_RELIQUARY\)\)[\s\S]*crystalReliquary\.isInteractionEnabled\(\)[\s\S]*state === 'inserted'/,
   'Activate combines explicit QA or Scenario permission with local technical validity');
 assert.match(vr, /onPreview: \(page\) => runtimeExperience\.dispatch\(VR_SCENARIO_EVENT\.CRYSTAL_ACTIVATED, \{ page \}\)/,
   'successful domain activation emits one semantic fact carrying the active page');
-assert.match(vr, /canRelease: \(\) => \(introQaBypass[\s\S]*runtimeExperience\.can\(VR_SCENARIO_CAPABILITY\.CAN_RELEASE_RELIQUARY\)\)[\s\S]*crystalReliquary\.isInteractionEnabled\(\)[\s\S]*state === 'active'/,
+assert.match(vr, /canRelease: \(\) => \(legacyIntroQaBypass[\s\S]*runtimeExperience\.can\(VR_SCENARIO_CAPABILITY\.CAN_RELEASE_RELIQUARY\)\)[\s\S]*crystalReliquary\.isInteractionEnabled\(\)[\s\S]*state === 'active'/,
   'Release combines explicit QA or Scenario permission with local technical validity');
 assert.match(vr, /onCommit: \(page, \{ tierCompleted \}\) => \{\s*runtimeExperience\.dispatch\(VR_SCENARIO_EVENT\.CARD_COMMITTED, \{ page \}\)/,
   'successful domain commit emits CARD_COMMITTED with minimal page identity');
@@ -119,7 +121,7 @@ assert.match(vr, /if \(xrStartCalibrationPending\)[\s\S]*getXrHeadWorldPosition\
   'the pending frame uses the canonical WebXR matrix reader before calibration');
 assert.doesNotMatch(vr, /renderer\.xr\.getCamera\(camera\)\.getWorldPosition\(/,
   'active P0 code must not rebuild the detached WebXR ArrayCamera matrix');
-assert.match(vr, /new ExperienceDirector\(\{ scenario: vrExperienceScenario \}\)/);
+assert.match(vr, /new ExperienceDirector\(\{[\s\S]*scenario: vrExperienceScenario,[\s\S]*initialPointId: qaCheckpointHydration\.initialPointId/);
 assert.match(vr, /new RuntimeExperience\(\{[\s\S]*VR_SCENARIO_EFFECT\.BEGIN_INTRO_REVEAL[\s\S]*introSequence\.beginAfterXrCalibration\(\);[\s\S]*if \(introQaBypass\) vrControllers\.setRaysEnabled\(true\);/,
   'RuntimeExperience effect adapter owns Intro start and QA rays');
 assert.match(vr, /xrStartCalibrationPending = false;\s*runtimeExperience\.dispatch\(VR_SCENARIO_EVENT\.XR_CALIBRATED\);\s*renderer\.render\(scene, camera\);\s*return;/,

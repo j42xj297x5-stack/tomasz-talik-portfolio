@@ -45,6 +45,13 @@ assert.equal(
   vrExperienceScenario.initialPointId
 );
 const productionDirector = new ExperienceDirector({ scenario: vrExperienceScenario });
+const hydratedDirector = new ExperienceDirector({ scenario: vrExperienceScenario, initialPointId: '2.10' });
+assert.equal(hydratedDirector.getCurrentPointId(), '2.10');
+assert.equal(hydratedDirector.can(VR_SCENARIO_CAPABILITY.CAN_USE_GLYPHS), true);
+assert.equal(hydratedDirector.getDebugSnapshot().lastEvent, null);
+hydratedDirector.resetSession();
+assert.equal(hydratedDirector.getCurrentPointId(), '2.10', 'session reset preserves the explicit construction point');
+assert.throws(() => new ExperienceDirector({ scenario: vrExperienceScenario, initialPointId: '9.90' }), /initial point does not exist/);
 const factoryDirector = createVrExperienceDirector({ scenario: vrExperienceScenario });
 assert.equal(factoryDirector instanceof ExperienceDirector, true);
 const productionChange = productionDirector.dispatch(VR_SCENARIO_EVENT.XR_CALIBRATED);

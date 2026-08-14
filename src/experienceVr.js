@@ -25,6 +25,8 @@ import { createVrReliquaryReleaseButton } from './xr/createVrReliquaryReleaseBut
 import { createVrProgressFloor } from './xr/floor/createVrProgressFloor.js';
 import { createVrProgressionController } from './xr/progression/createVrProgressionController.js';
 import { createVrProgressionShortcut } from './xr/progression/applyVrProgressionShortcut.js';
+import { getVrQaCheckpointHydration, getVrQaPlayerRadius, resolveVrQaCheckpoint,
+  VR_QA_CHECKPOINT } from './xr/progression/resolveVrQaCheckpoint.js';
 import { createVrShellSystem } from './xr/shells/createVrShellSystem.js';
 import { createVrShellAttractorInteraction } from './xr/shells/createVrShellAttractorInteraction.js';
 import { createVrSemanticInput } from './xr/input/createVrSemanticInput.js';
@@ -127,9 +129,12 @@ if (audioControl) app.querySelector('[data-vr-audio-slot]').append(audioControl)
 const loadedSettings = await loadExperienceVrSettings({ debug: new URLSearchParams(location.search).has('debug') });
 const settings = loadedSettings.settings;
 const searchParams = new URLSearchParams(location.search);
+const qaCheckpoint = resolveVrQaCheckpoint(location.search);
+const qaCheckpointHydration = getVrQaCheckpointHydration(qaCheckpoint);
 const furnaceProcessQa = searchParams.has('furnaceProcess');
-const introQaBypass = ['p1', 'asterionSphere', 'furnaceProcess', 'furnace']
-  .some((key) => searchParams.has(key));
+const legacyIntroQaBypass = qaCheckpoint === VR_QA_CHECKPOINT.NORMAL
+  && ['p1', 'asterionSphere', 'furnaceProcess', 'furnace'].some((key) => searchParams.has(key));
+const introQaBypass = legacyIntroQaBypass || qaCheckpointHydration.skipIntro;
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: settings.renderer.antialias });
 renderer.setPixelRatio(Math.min(devicePixelRatio || 1, settings.renderer.pixelRatioCap));
 renderer.xr.enabled = true;
@@ -149,6 +154,10 @@ const camera = new THREE.PerspectiveCamera(55, 1, 0.1, 100);
 const playerRig = new THREE.Group();
 playerRig.name = 'VrPlayerRig';
 playerRig.position.copy(entryDirection).multiplyScalar(settings.spatial.playerStartRadius);
+const qaPlayerRadius = getVrQaPlayerRadius(qaCheckpoint, {
+  ringRadius: settings.spatial.ringRadius, insideSafeMargin: settings.intro.insideSafeMargin
+});
+if (qaPlayerRadius !== null) playerRig.position.copy(entryDirection).multiplyScalar(qaPlayerRadius);
 camera.position.set(0, 1.6, 0);
 playerRig.add(camera);
 orientPlayerRig(playerRig, settings.spatial.monkeyFinal);
@@ -427,8 +436,9 @@ const crystalCollection = createVrCrystalCollection({
     }
   }
 });
-createVrProgressionShortcut({ search: location.search, pages: experienceVrPages, progressionController,
-  progressFloor, syncTierOneWorldState })();
+if (qaCheckpoint === VR_QA_CHECKPOINT.NORMAL) createVrProgressionShortcut({
+  search: location.search, pages: experienceVrPages, progressionController, progressFloor, syncTierOneWorldState
+})();
 const activateButtonGltf = assetManager.getGltf('vr-crystal-reliquary-button-activate-model');
 const activateButtonModel = assetManager.cloneGltfScene('vr-crystal-reliquary-button-activate-model');
 const activateCompanion = crystalReliquary.attachCompanion({ id: 'activate', model: activateButtonModel, settings: settings.reliquary.buttons,
@@ -439,7 +449,7 @@ const activateButton = createVrReliquaryActivateButton({
   reliquary: crystalReliquary,
   controllers: vrControllers.controllers,
   settings: settings.reliquary.activateButton,
-  canActivate: () => (introQaBypass
+  canActivate: () => (legacyIntroQaBypass
     || runtimeExperience.can(VR_SCENARIO_CAPABILITY.CAN_ACTIVATE_RELIQUARY))
     && crystalReliquary.isInteractionEnabled()
     && crystalCollection.getInsertedInstance()?.state === 'inserted',
@@ -459,7 +469,7 @@ const releaseButton = createVrReliquaryReleaseButton({
   reliquary: crystalReliquary,
   controllers: vrControllers.controllers,
   settings: settings.reliquary.releaseButton,
-  canRelease: () => (introQaBypass
+  canRelease: () => (legacyIntroQaBypass
     || runtimeExperience.can(VR_SCENARIO_CAPABILITY.CAN_RELEASE_RELIQUARY))
     && crystalReliquary.isInteractionEnabled()
     && crystalCollection.getInsertedInstance()?.state === 'active',
@@ -480,7 +490,7 @@ function getNextCrystalTier(node) {
         && instance.tier === page.order && instance.state !== 'released'))?.order ?? null;
 }
 function isGlyphActive(node) {
-  const introAllowsGameplay = introQaBypass || runtimeExperience.can(VR_SCENARIO_CAPABILITY.CAN_USE_GLYPHS);
+  const introAllowsGameplay = legacyIntroQaBypass || runtimeExperience.can(VR_SCENARIO_CAPABILITY.CAN_USE_GLYPHS);
   return introAllowsGameplay && getNextCrystalTier(node) !== null;
 }
 const glyphInteraction = createVrGlyphInteraction({
@@ -548,8 +558,12 @@ introSequence = createVrIntroSequence({
   onGlyphHintTimeout: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.GLYPH_HINT_TIMEOUT),
   onReliquaryRevealCompleted: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.RELIQUARY_REVEAL_COMPLETED),
   onOpeningRaysReady: () => vrControllers.setRaysEnabled(true),
+  onBypassReady: () => vrControllers.setRaysEnabled(true),
   onProgressionFixturesHidden: () => { portalDisplay.hide(); astroFurnace.object.visible = false; crystalReliquary.reset(); },
-  onBypassFixturesVisible: () => { restorePortalWaitingState(); astroFurnace.reset(); crystalReliquary.reveal(0); },
+  onBypassFixturesVisible: () => {
+    if (qaCheckpoint === VR_QA_CHECKPOINT.P0) return;
+    restorePortalWaitingState(); astroFurnace.reset(); crystalReliquary.reveal(0);
+  },
   onReliquaryReveal: (duration) => {
     portalDisplay.reveal(duration);
     crystalReliquary.reveal(duration);
@@ -564,7 +578,11 @@ introSequence = createVrIntroSequence({
   onEndSession: () => { void activeSession?.end(); }
 });
 
-const experienceDirector = new ExperienceDirector({ scenario: vrExperienceScenario });
+const experienceDirector = new ExperienceDirector({
+  scenario: vrExperienceScenario,
+  initialPointId: qaCheckpointHydration.initialPointId,
+  initialMilestones: qaCheckpointHydration.initialMilestones
+});
 const runtimeExperience = new RuntimeExperience({
   director: experienceDirector,
   effectHandlers: {
@@ -665,7 +683,7 @@ function renderFrame() {
   if (xrStartCalibrationPending) {
     const headWorldPosition = getXrHeadWorldPosition({ renderer, camera, playerRig });
     calibrateXrHeadToPlatform({ playerRig, headWorldPosition, platformRoot: progressFloor.object, entryDirection,
-      targetRadius: settings.spatial.playerStartRadius });
+      targetRadius: qaPlayerRadius ?? settings.spatial.playerStartRadius });
     getXrHeadWorldPosition({ renderer, camera, playerRig });
     xrStartCalibrationPending = false;
     runtimeExperience.dispatch(VR_SCENARIO_EVENT.XR_CALIBRATED);
