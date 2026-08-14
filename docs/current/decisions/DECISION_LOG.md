@@ -1,6 +1,15 @@
 # Decision Log
 
-Status: current binding decisions organized by implementation status, not patch chronology. Synchronized on 2026-08-13.
+Status: current binding decisions organized by implementation status, not patch chronology. Synchronized on 2026-08-14.
+
+## 2026-08-14 — P4 rune stones and sector vessels canonical target model
+
+1. P4 uses exactly five pair-specific units: five distinct animated rune stones and five corresponding sector vessels from one visual/construction family. The pair, not a global socket assumption, owns final stone pose and safe envelope.
+2. Every stone has one stable runtime root; every vessel exports a root, precise authored `SOCKET_POINT` and forgiving `SOCKET_ZONE`. Existing internal stone animation remains baked in GLB and continues after installation.
+3. The developed Astrolabium guides a large stone around the platform's exterior, never into the player or platform interior. Installation requires physical orbital transport, correct pair/sector capture and a completed controlled snap; zone entry alone is not a progression commit.
+4. Installed stones logically block later stones through a lightweight occupied-orbit model, not full rigid-body or animated mesh collision. Every stone retains a moving/installed spatial audio loop owned by Three.js/Web Audio, not Blender.
+5. Scenario owns authored P4 availability/order, the fifth-stone gate and completion meaning; Director owns transition legality; runtime actors execute targeting/orbit/capture/audio; Blender owns asset hierarchy/pivots/animation. The model is **TARGET / NOT IMPLEMENTED** and is normative in [`VR_RUNE_STONES_MODEL.md`](../technical/VR_RUNE_STONES_MODEL.md).
+6. Dimensions, radii, timings, easing, audio parameters, release behavior and occupied-arc algorithm remain tuning/open decisions. Implementation must validate one complete Blender 5.1.2 pair before expanding to the other four and requires Meta Quest 3S QA.
 
 ## Canonical Story Reindex Migration — IMPLEMENTED
 

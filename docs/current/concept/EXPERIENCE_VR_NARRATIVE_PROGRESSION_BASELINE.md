@@ -64,7 +64,7 @@ To jest zaimplementowany kanon P0. Szczegóły fog shadera, promieni, warunków 
 
 ## Stan gracza po obecnym końcu progresji
 
-Po zdobyciu Kuli gracz ma ukończony materiałowy stan Pieca `6/6`, stan produkcji `EARNED`, dostęp do obu niezależnych narzędzi dłoni oraz sterowania orientacją platformy. Zachowuje odkryte dotąd karty, aktywne panele/ringi podłogi, historię Małpy i dostęp do Pieca. Ambient ma wdrożone sekwencje progów oraz podpróg po ukończeniu skorup i zbudowaniu Kuli. Nie istnieje trwały save ani zaprojektowana progresja po Kuli.
+Po zdobyciu Kuli gracz ma ukończony materiałowy stan Pieca `6/6`, stan produkcji `EARNED`, dostęp do obu niezależnych narzędzi dłoni oraz sterowania orientacją platformy. Zachowuje odkryte dotąd karty, aktywne panele/ringi podłogi, historię Małpy i dostęp do Pieca. Ambient ma wdrożone sekwencje progów oraz podpróg po ukończeniu skorup i zbudowaniu Kuli. Nie istnieje trwały save ani zaimplementowana progresja po Kuli. Docelowy mechaniczno-assetowy kontrakt pięciu par P4 ustanawia [VR Rune Stones Model](../technical/VR_RUNE_STONES_MODEL.md); narracyjne przejścia i pełny przebieg post-Sphere pozostają niezaprojektowane.
 
 Zakres `UTWÓRZ`, mechaniki konstrukcji, panelowej transformacji i fizycznej materializacji jest **HARDWARE VALIDATED** na Meta Quest 3S. Poprawione pozycjonowanie produkowanej Kuli przez `VR_FURNACE_CONTENT_ANCHOR` jest **IMPLEMENTED**, lecz nadal **HARDWARE VALIDATION PENDING**; wcześniejszy wynik za panelem dotyczył stanu sprzed poprawki. Ciągłość konturu pozostaje **KNOWN QA ISSUE**.
 
@@ -76,7 +76,7 @@ Poniższe obszary są **NIEZAPROJEKTOWANE / DO DECYZJI** i ten dokument ich nie 
 - komunikaty Małpy pomiędzy etapami;
 - pomoc przy utknięciu;
 - dramaturgia odkrywania urządzeń;
-- progresja po Kuli Asteriona;
+- narracyjne przejścia i pełny authored przebieg progresji po Kuli Asteriona (mechaniczno-assetowy model kamieni P4 jest już zdefiniowany osobno);
 - radar / sector targeting;
 - małe glify;
 - kolejne poziomy Przyciągacza;
