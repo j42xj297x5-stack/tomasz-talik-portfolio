@@ -1,6 +1,6 @@
 # Experience VR Progress Floor Model
 
-Status: canonical technical description of the implemented progress-floor and platform-root subsystem synchronized on 2026-08-12. Gameplay direction beyond this bounded subsystem remains in the [Experience VR Gameplay Roadmap](../concept/EXPERIENCE_VR_GAMEPLAY_ROADMAP.md).
+Status: canonical technical description of the implemented progress-floor and platform-root subsystem synchronized after the M1.20F and hardware-QA ownership corrections. Gameplay direction beyond this bounded subsystem remains in the [Experience VR Gameplay Roadmap](../concept/EXPERIENCE_VR_GAMEPLAY_ROADMAP.md).
 
 ## Runtime ownership and lifecycle
 
@@ -41,7 +41,11 @@ The layout therefore contains **18 panels**: Creative AI 3, Ethics 3, AI Guide 3
 
 ## Materials and visibility
 
-Every sector instance starts with `visible = false`; `createVrProgressFloor` exclusively owns this visibility state, and Intro never reads or changes it. Geometries may remain shared through the deep object clone, while every sector instance receives cloned materials. Each revealable body is an explicit two-mesh production contract: the required neutral `VR_PROGRESS_SECTOR_*_BASE` plus the authored colored overlay (`path4` for Creative, `path1` for the other four assets). Both body parts are made transparent with `opacity = 0` and `depthWrite = false`. The first valid activation of any page in a branch makes that sector visible and starts both body parts converging to their separate authored opacity. Panels retain their own emissive materials. This pairing is required because the colored overlay is a sibling scene root, not a child of `VR_PROGRESS_SECTOR_*_BASE`; traversing only BASE does not cover the production sector visual.
+Every sector instance starts with `visible = false`; `createVrProgressFloor` is the **only** owner of this visibility state. Intro neither reads nor changes `sector.visible`. The first successful commit in a branch reveals that branch's sector, and the discovered-sector registry survives XR exit and re-entry within the same prepared page runtime. Geometries may remain shared through the deep object clone, while every sector instance receives cloned materials.
+
+The production body discovery/validation contract contains two sibling meshes: the required neutral `VR_PROGRESS_SECTOR_*_BASE` and the authored colored overlay (`path4` for Creative, `path1` for the other four assets). This BASE + authored-overlay pairing is required because traversing BASE alone cannot discover the production sector visual. It does **not** make the neutral gray BASE part of the canonical final presentation.
+
+**TARGET presentation:** reveal the authored colored/correct sector body; do not show the neutral gray BASE. **KNOWN HARDWARE ISSUE:** the sector currently reveals together with a neutral gray BASE wedge. The reveal and ownership correction are implemented, but removal/suppression of that gray wedge in the final presentation remains unresolved hardware-facing work.
 
 At preparation time each panel's emissive intensity becomes zero. A missing emissive color or an emissive color equal to black receives the branch fallback: Creative `0xff4b2b`, Ethics `0xc8752a`, Water `0x35a9ff`, Metal `0x8cd1ff`, and Wood `0x29e86f`. A non-black authored emissive color is preserved.
 

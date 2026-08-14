@@ -1,6 +1,6 @@
 # Experience VR — Narrative & Progression Baseline
 
-Status: canonical entrypoint synchronized with HEAD on 2026-08-12 for the next narrative and gameplay-progression design stage. Runtime detail remains in [`VR_RUNTIME_MODEL.md`](../technical/VR_RUNTIME_MODEL.md).
+Status: canonical entrypoint synchronized after the M1.20 progression and hardware-QA corrections for the next narrative and gameplay-progression design stage. Runtime detail remains in [`VR_RUNTIME_MODEL.md`](../technical/VR_RUNTIME_MODEL.md).
 
 ## Cel dokumentu
 
@@ -16,17 +16,22 @@ Ten dokument opisuje **stan wejściowy** potwierdzony przez HEAD: co jest **IMPL
 6. Kulą ustawiać docelową orientację platformy; ciężki driver prowadzi platformę do zaakceptowanego celu. Kula i Astro Przyciągacz mogą być wyposażone równocześnie.
 7. Otworzyć panelem Y skróconą pomoc gracza oraz korzystać z istniejącego interfejsu Małpy do podglądu postępu i odkrytych kart.
 
-## Aktualna progresja gameplayowa
+## Kanoniczny kierunek progresji po Tier 1
 
 ```text
-wejście → duże glify → kryształy → relikwiarz / odkryte karty
-→ komplet Tier 1 → Astro Przyciągacz + pole 18 skorup
-→ przejęcie sześciu typów skorup → Astro Piec / absorpcja 6/6
-→ UTWÓRZ / konstrukcja Kuli → AVAILABLE → odebranie → EARNED
-→ Kula Asteriona i sterowanie orientacją platformy
+5/5 pierwszego ringu
+→ pełna pierwsza podłoga
+→ nowy etap
+→ Piec
+→ Piec produkuje Astro
+→ gracz fizycznie odbiera Astro
+→ dopiero potem aktywują się skorupy
+→ sześć unikalnych skorup trafia do Pieca
+→ Piec buduje Kulę Asterionową
+→ gracz fizycznie odbiera Kulę
 ```
 
-To jest kolejność mechaniczna, nie fabularna. Runtime nie definiuje jeszcze narracyjnych przejść pomiędzy tymi etapami.
+To jest wiążący **TARGET**, ale pełny przebieg nie jest jeszcze zaimplementowany jako `3.x`. Stare zachowanie „Tier 1 → natychmiastowy automatyczny Astro unlock” nie jest kanonem docelowej progresji; istniejącej mechaniki nie należy opisywać jako zatwierdzonego przejścia narracyjnego. Fizyczne odbiory Astro i Kuli są obowiązkowymi gate’ami, a skorupy nie mogą aktywować się przed odbiorem Astro.
 
 ## Zaimplementowane intro P0 i obowiązujące copy
 
@@ -48,11 +53,12 @@ To jest zaimplementowany kanon P0. Szczegóły fog shadera, promieni, warunków 
 - trzy animowane łuki attention z jednorazowym sygnałem audio;
 - krótki panel wiadomości ustawianej przez runtime;
 - osobny panel dialogowy, który może zostać otwarty programowo;
-- po commicie karty runtime zgłasza attention. Kanał istnieje, ale nie ma zaprojektowanej sekwencji narracyjnej.
+- `CARD_COMMITTED` nie uruchamia automatycznie attention; usunięto `CUE_MONKEY_AFTER_CARD_COMMIT`;
+- contextual hint nadal może uruchamiać attention.
 
 ### Wybór użytkownika
 
-- gracz trafia Małpę rzeczywistym zwykłym promieniem, aby otworzyć/zamknąć panel;
+- gracz trafia Małpę rzeczywistym zwykłym promieniem, aby otworzyć/zamknąć panel; pierwszy bezpośredni press kasuje pending attention również przy `dialogueOverride`;
 - gracz trafia opcje panelu i zatwierdza je triggerem;
 - obecna implementacja oferuje pytanie o postęp (gdy istnieje przynajmniej jedna karta) oraz zamknięcie. Mechanizm obsługuje interaktywny wybór, ale nie dostarcza drzewa fabularnego.
 
