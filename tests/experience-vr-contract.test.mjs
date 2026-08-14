@@ -9,7 +9,7 @@ import { VR_EXPERIENCE_POINT, vrExperienceScenario } from '../src/xr/progression
 
 const canonicalLivePointIds = [
   '1.10', '1.20', '1.30', '1.40', '1.50', '1.60', '1.70', '1.80',
-  '1.100', '1.100.1', '1.110', '1.110.1', '1.120', '1.120.1', '1.130', '1.130.1', '1.130.2', '1.140', '1.150', '1.160', '1.170', '1.180', '100.10'
+  '1.100', '1.100.1', '1.110', '1.110.1', '1.120', '1.120.1', '1.130', '1.130.1', '1.130.2', '1.140', '1.150', '1.160', '1.170', '1.170.1', '1.180', '1.180.1', '100.10'
 ];
 const retiredPointIds = [
   '1.1', '1.2', '1.3', '1.4', '1.4.1', '1.4.2', '1.4.3', '1.4.4',
@@ -49,6 +49,12 @@ assert.doesNotMatch(main, /^import .*experienceVr/m);
 
 assert.match(vr, /onPlayerEnteredRing: \(\) => runtimeExperience\.dispatch\(VR_SCENARIO_EVENT\.PLAYER_ENTERED_RING\)/);
 assert.match(vr, /onMonkeySettled: \(\) => runtimeExperience\.dispatch\(VR_SCENARIO_EVENT\.MONKEY_SETTLED\)/);
+assert.match(vr, /onHintTimeout: \(\) => runtimeExperience\.dispatch\(VR_SCENARIO_EVENT\.RELIQUARY_HINT_TIMEOUT\)/,
+  'Reliquary timer callback dispatches only the semantic timeout fact');
+assert.match(vr, /VR_SCENARIO_EFFECT\.SHOW_RELIQUARY_CONTEXT_HINT[\s\S]*reliquaryHints\.showHint\(\)[\s\S]*throw new Error/,
+  'Runtime owns the fail-fast reliquary hint continuation');
+assert.equal((vr.match(/reliquaryHints\.showHint\(\)/g) ?? []).length, 1,
+  'reliquary hint continuation has only the Runtime handler production path');
 assert.match(vr, /onGlyphHintTimeout: \(\) => runtimeExperience\.dispatch\(VR_SCENARIO_EVENT\.GLYPH_HINT_TIMEOUT\)/,
   'Intro timeout callback dispatches only the semantic fact');
 assert.match(vr, /onReliquaryRevealCompleted: \(\) => runtimeExperience\.dispatch\(VR_SCENARIO_EVENT\.RELIQUARY_REVEAL_COMPLETED\)/,

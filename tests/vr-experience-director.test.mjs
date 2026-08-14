@@ -6,7 +6,7 @@ import { VR_EXPERIENCE_POINT, VR_SCENARIO_CAPABILITY, VR_SCENARIO_EFFECT, VR_SCE
 assert.equal(Object.isFrozen(vrExperienceScenario), true);
 assert.equal(vrExperienceScenario.points, vrExperienceScenario.scenes);
 assert.equal(vrExperienceScenario.initialPointId, vrExperienceScenario.initialSceneId);
-assert.deepEqual(vrExperienceScenario.points.map(({ id }) => id), ['1.10', '1.20', '1.30', '1.40', '1.50', '1.60', '1.70', '1.80', '1.100', '1.100.1', '1.110', '1.110.1', '1.120', '1.120.1', '1.130', '1.130.1', '1.130.2', '1.140', '1.150', '1.160', '1.170', '1.180', '100.10']);
+assert.deepEqual(vrExperienceScenario.points.map(({ id }) => id), ['1.10', '1.20', '1.30', '1.40', '1.50', '1.60', '1.70', '1.80', '1.100', '1.100.1', '1.110', '1.110.1', '1.120', '1.120.1', '1.130', '1.130.1', '1.130.2', '1.140', '1.150', '1.160', '1.170', '1.170.1', '1.180', '1.180.1', '100.10']);
 assert.equal(Object.isFrozen(vrExperienceScenario.points[0]), true);
 assert.equal(Object.isFrozen(vrExperienceScenario.points[0].transitions[0]), true);
 assert.equal(Object.isFrozen(vrExperienceScenario.points[0].transitions[0].effects), true);
@@ -14,7 +14,7 @@ assert.equal(Object.isFrozen(vrExperienceScenario.metadata.authoritativeScope), 
 assert.equal(Object.isFrozen(vrExperienceScenario.points[2].transitions[0]), true);
 assert.equal(Object.isFrozen(vrExperienceScenario.points[2].transitions[0].milestonesToAdd), true);
 assert.equal(Object.isFrozen(vrExperienceScenario.points[3]), true);
-assert.equal(vrExperienceScenario.metadata.stage, 'M1_18_RELIQUARY_ACTION_CAPABILITY_HANDOFF');
+assert.equal(vrExperienceScenario.metadata.stage, 'M1_19_RELIQUARY_CONTEXTUAL_HINT_HANDOFF');
 assert.deepEqual(vrExperienceScenario.metadata.authoritativeScope, [
   'XR_CALIBRATED → BEGIN_INTRO_REVEAL',
   'INTRO_REVEAL_COMPLETE → BEGIN_POST_REVEAL_SILENCE',
@@ -36,6 +36,7 @@ assert.deepEqual(vrExperienceScenario.metadata.authoritativeScope, [
   'RELIQUARY_REVEAL_COMPLETED → COMPLETE_RELIQUARY_REVEAL → 1.170',
   'CRYSTAL_ACTIVATED → 1.180',
   'RELIQUARY_RELEASED → 1.170',
+  'RELIQUARY_HINT_TIMEOUT → SHOW_RELIQUARY_CONTEXT_HINT → local Activate / Release hint branch',
   'INTRO_INVITATION_SELECTED / choice 2 → 1.100.1',
   'INTRO_INVITATION_SELECTED / choice 3 → 100.10'
 ]);
@@ -168,6 +169,14 @@ assert.equal(productionDirector.can(VR_SCENARIO_CAPABILITY.CAN_USE_RELIQUARY), t
 assert.equal(productionDirector.can(VR_SCENARIO_CAPABILITY.CAN_ACTIVATE_RELIQUARY), true);
 assert.equal(productionDirector.can(VR_SCENARIO_CAPABILITY.CAN_RELEASE_RELIQUARY), false);
 assert.equal(productionDirector.dispatch(VR_SCENARIO_EVENT.RELIQUARY_REVEAL_COMPLETED), null, 'duplicate reveal completion is inert');
+const activateHint = productionDirector.dispatch(VR_SCENARIO_EVENT.RELIQUARY_HINT_TIMEOUT);
+assert.equal(activateHint.currentPointId, VR_EXPERIENCE_POINT['1.170.1']);
+assert.deepEqual(activateHint.effects, [VR_SCENARIO_EFFECT.SHOW_RELIQUARY_CONTEXT_HINT]);
+assert.equal(productionDirector.dispatch(VR_SCENARIO_EVENT.RELIQUARY_HINT_TIMEOUT), null, 'duplicate Activate timeout is inert');
+assert.equal(productionDirector.can(VR_SCENARIO_CAPABILITY.CAN_USE_GLYPHS), true);
+assert.equal(productionDirector.can(VR_SCENARIO_CAPABILITY.CAN_USE_RELIQUARY), true);
+assert.equal(productionDirector.can(VR_SCENARIO_CAPABILITY.CAN_ACTIVATE_RELIQUARY), true);
+assert.equal(productionDirector.can(VR_SCENARIO_CAPABILITY.CAN_RELEASE_RELIQUARY), false);
 const activated = productionDirector.dispatch(VR_SCENARIO_EVENT.CRYSTAL_ACTIVATED);
 assert.equal(activated.currentPointId, VR_EXPERIENCE_POINT['1.180']);
 assert.deepEqual(activated.effects, [], 'capability handoff does not migrate preview effects');
@@ -175,7 +184,15 @@ assert.equal(productionDirector.can(VR_SCENARIO_CAPABILITY.CAN_USE_GLYPHS), true
 assert.equal(productionDirector.can(VR_SCENARIO_CAPABILITY.CAN_USE_RELIQUARY), true);
 assert.equal(productionDirector.can(VR_SCENARIO_CAPABILITY.CAN_ACTIVATE_RELIQUARY), false);
 assert.equal(productionDirector.can(VR_SCENARIO_CAPABILITY.CAN_RELEASE_RELIQUARY), true);
-assert.equal(productionDirector.dispatch(VR_SCENARIO_EVENT.CARD_COMMITTED), null, 'M1.18 does not migrate CARD_COMMITTED');
+assert.equal(productionDirector.dispatch(VR_SCENARIO_EVENT.CARD_COMMITTED), null, 'M1.19 does not migrate CARD_COMMITTED');
+const releaseHint = productionDirector.dispatch(VR_SCENARIO_EVENT.RELIQUARY_HINT_TIMEOUT);
+assert.equal(releaseHint.currentPointId, VR_EXPERIENCE_POINT['1.180.1']);
+assert.deepEqual(releaseHint.effects, [VR_SCENARIO_EFFECT.SHOW_RELIQUARY_CONTEXT_HINT]);
+assert.equal(productionDirector.dispatch(VR_SCENARIO_EVENT.RELIQUARY_HINT_TIMEOUT), null, 'duplicate Release timeout is inert');
+assert.equal(productionDirector.can(VR_SCENARIO_CAPABILITY.CAN_USE_GLYPHS), true);
+assert.equal(productionDirector.can(VR_SCENARIO_CAPABILITY.CAN_USE_RELIQUARY), true);
+assert.equal(productionDirector.can(VR_SCENARIO_CAPABILITY.CAN_ACTIVATE_RELIQUARY), false);
+assert.equal(productionDirector.can(VR_SCENARIO_CAPABILITY.CAN_RELEASE_RELIQUARY), true);
 const released = productionDirector.dispatch(VR_SCENARIO_EVENT.RELIQUARY_RELEASED);
 assert.equal(released.currentPointId, VR_EXPERIENCE_POINT['1.170']);
 assert.deepEqual(released.effects, [], 'release capability reset does not migrate commit fan-out');
