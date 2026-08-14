@@ -439,10 +439,16 @@ const activateButton = createVrReliquaryActivateButton({
   reliquary: crystalReliquary,
   controllers: vrControllers.controllers,
   settings: settings.reliquary.activateButton,
-  canActivate: () => crystalReliquary.isInteractionEnabled() && crystalCollection.getInsertedInstance()?.state === 'inserted',
+  canActivate: () => (introQaBypass
+    || runtimeExperience.can(VR_SCENARIO_CAPABILITY.CAN_ACTIVATE_RELIQUARY))
+    && crystalReliquary.isInteractionEnabled()
+    && crystalCollection.getInsertedInstance()?.state === 'inserted',
   onActivate: () => {
     const accepted = crystalCollection.activateInserted();
-    if (accepted) playVrWorld(VR_AUDIO.reliquaryActivate);
+    if (accepted) {
+      runtimeExperience.dispatch(VR_SCENARIO_EVENT.CRYSTAL_ACTIVATED);
+      playVrWorld(VR_AUDIO.reliquaryActivate);
+    }
     return accepted;
   }
 });
@@ -456,8 +462,15 @@ const releaseButton = createVrReliquaryReleaseButton({
   reliquary: crystalReliquary,
   controllers: vrControllers.controllers,
   settings: settings.reliquary.releaseButton,
-  canRelease: () => crystalReliquary.isInteractionEnabled() && crystalCollection.getInsertedInstance()?.state === 'active',
-  onRelease: () => crystalCollection.releaseInserted(),
+  canRelease: () => (introQaBypass
+    || runtimeExperience.can(VR_SCENARIO_CAPABILITY.CAN_RELEASE_RELIQUARY))
+    && crystalReliquary.isInteractionEnabled()
+    && crystalCollection.getInsertedInstance()?.state === 'active',
+  onRelease: () => {
+    const accepted = crystalCollection.releaseInserted();
+    if (accepted) runtimeExperience.dispatch(VR_SCENARIO_EVENT.RELIQUARY_RELEASED);
+    return accepted;
+  },
   onReleaseComplete: () => activateButton.reset()
 });
 const reliquaryHints = createVrReliquaryHints({
