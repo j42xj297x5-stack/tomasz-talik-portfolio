@@ -16,7 +16,7 @@ function fixture({ bypass = false, onReliquaryReveal = () => {} } = {}) {
   const settings = { enabled: true, locale: 'en', introRevealDuration: 10, postRevealSilenceDuration: 2, insideSafeMargin: .75, glyphFreeExploreDuration: 60, guideSpeed: 2, guideTurnDuration: 1, followGraceDistance: 3, pauseDistance: 3.2, resumeDistance: 2.4, revealProgress: .72, messageDisplayDuration: 0, messageGapDuration: 0, questionGapDuration: 0 };
   const spatial = { entryDirection: { x: 0, y: 0, z: 1 }, playerStartRadius: 20, monkeyStartRadius: 18, monkeyFinal: { x: 0, y: 0, z: 0 }, ringRadius: 7.6, thresholdOutsideDistance: 1 };
   const sequence = createVrIntroSequence({ monkeyGuide, monkeyMotionRoot, monkeyVisualRoot: new THREE.Group(), monkeyStoneRoot, platformRoot, playerRig, playerGuidePanel: panel, fogReveal: fog, glyphRing, progressFloor, platformFixturesRoot, locomotion, spatial, settings, getHeadPosition: () => head.clone(), onOpeningRaysReady: () => { rays += 1; }, onIntroRevealComplete: () => { revealComplete += 1; }, onPostRevealSilenceComplete: () => { silenceComplete += 1; }, onPlayerOpenedGuide: () => { playerOpenedGuide += 1; }, onPlayerViewedControls: () => { playerViewedControls += 1; }, onPlayerClosedGuide: () => { playerClosedGuide += 1; }, onMonkeyHovered: () => { monkeyHovered += 1; }, onMonkeyTriggered: () => { monkeyTriggered += 1; }, onInvitationSelected: (choice) => { invitationChoices.push(choice); }, onFollowPauseChanged: (paused) => { followPauseChanges.push(paused); }, onMonkeyReachedThreshold: () => { monkeyReachedThreshold += 1; }, onThresholdSelected: (choice) => { thresholdChoices.push(choice); }, onPlayerEnteredRing: () => { playerEnteredRing += 1; }, onMonkeySettled: () => { monkeySettled += 1; }, onGlyphHintTimeout: () => { glyphHintTimeout += 1; }, onReliquaryRevealCompleted: () => { reliquaryRevealCompleted += 1; }, onEndSession: () => { endSessions += 1; }, onReliquaryReveal, bypass });
-  return { sequence, monkeyMotionRoot, monkeyStoneRoot, glyphRing, head, panel, fog, locomotion, getMessage: () => message, getOverride: () => override, getRadius: () => radius, getAttention: () => attention, getRays: () => rays, getRevealComplete: () => revealComplete, getSilenceComplete: () => silenceComplete, getPlayerOpenedGuide: () => playerOpenedGuide, getPlayerViewedControls: () => playerViewedControls, getPlayerClosedGuide: () => playerClosedGuide, getMonkeyHovered: () => monkeyHovered, getMonkeyTriggered: () => monkeyTriggered, getMonkeyReachedThreshold: () => monkeyReachedThreshold, getPlayerEnteredRing: () => playerEnteredRing, getMonkeySettled: () => monkeySettled, getGlyphHintTimeout: () => glyphHintTimeout, getReliquaryRevealCompleted: () => reliquaryRevealCompleted, getInvitationChoices: () => invitationChoices, getFollowPauseChanges: () => followPauseChanges, getThresholdChoices: () => thresholdChoices, getInteractionEnables: () => interactionEnables, getEndSessions: () => endSessions };
+  return { sequence, sector, monkeyMotionRoot, monkeyStoneRoot, glyphRing, head, panel, fog, locomotion, getMessage: () => message, getOverride: () => override, getRadius: () => radius, getAttention: () => attention, getRays: () => rays, getRevealComplete: () => revealComplete, getSilenceComplete: () => silenceComplete, getPlayerOpenedGuide: () => playerOpenedGuide, getPlayerViewedControls: () => playerViewedControls, getPlayerClosedGuide: () => playerClosedGuide, getMonkeyHovered: () => monkeyHovered, getMonkeyTriggered: () => monkeyTriggered, getMonkeyReachedThreshold: () => monkeyReachedThreshold, getPlayerEnteredRing: () => playerEnteredRing, getMonkeySettled: () => monkeySettled, getGlyphHintTimeout: () => glyphHintTimeout, getReliquaryRevealCompleted: () => reliquaryRevealCompleted, getInvitationChoices: () => invitationChoices, getFollowPauseChanges: () => followPauseChanges, getThresholdChoices: () => thresholdChoices, getInteractionEnables: () => interactionEnables, getEndSessions: () => endSessions };
 }
 function reachThreshold(value) {
   value.sequence.beginAfterXrCalibration(); value.sequence.update(10); assert.equal(value.sequence.beginPostRevealSilence(), true); value.sequence.update(2); assert.equal(value.sequence.beginControllerOnboarding(), true);
@@ -46,6 +46,12 @@ assert.deepEqual(VR_INTRO_COPY.pl.opening, ['Dobrze.', 'Masz ręce.', 'Sprawdźm
 assert.equal(VR_INTRO_COPY.pl.panelPrompt, 'Naciśnij Y, żeby wejść do menu.');
 assert.equal(VR_INTRO_COPY.en.panelPrompt, 'Press Y to open the menu.');
 const f = fixture(); assert.equal(f.sequence.getState(), VR_INTRO_STATE.XR_CALIBRATING);
+assert.equal(f.sector.visible, true, 'normal Intro initialization does not hide floor sectors');
+f.sector.visible = false; f.sequence.reset();
+assert.equal(f.sector.visible, false, 'normal Intro reset preserves floor-owned hidden state');
+f.sector.visible = true; f.sequence.beginAfterXrCalibration(); f.sequence.update(1);
+assert.equal(f.sector.visible, true, 'normal Intro flow preserves a revealed sector');
+f.sequence.reset();
 assert.equal(f.sequence.continueControllerOnboarding(), false, 'runtime continuation rejects the wrong actor state');
 assert.equal(f.monkeyStoneRoot.visible, true); assert.equal(f.glyphRing.visible, true); assert.equal(f.fog.radius, 20);
 f.sequence.beginAfterXrCalibration();
@@ -246,13 +252,16 @@ assert.equal(lateEntry.getAttention(), 0, 'late-entry timeout still waits for Ru
 assert.equal(lateEntry.sequence.showGlyphHint(), true); assert.equal(lateEntry.getAttention(), 1);
 const hint = fixture(); hint.sequence.beginAfterXrCalibration(); hint.sequence.getDebugSnapshot(); // bypass choreography for timer is covered through public flow above
 const bypassed = fixture({ bypass: true }); assert.equal(bypassed.sequence.getState(), VR_INTRO_STATE.BYPASSED); assert.equal(bypassed.fog.progress, 1); assert.equal(bypassed.monkeyStoneRoot.visible, true);
+bypassed.sector.visible = false; bypassed.sequence.reset();
+assert.equal(bypassed.sector.visible, false, 'QA bypass does not reveal floor sectors through a separate visibility path');
 assert.equal(bypassed.getSilenceComplete(), 0); bypassed.sequence.update(100); assert.equal(bypassed.getSilenceComplete(), 0);
 assert.equal(bypassed.getPlayerOpenedGuide(), 0, 'QA bypass does not synthesize guide opening');
 assert.equal(bypassed.getPlayerViewedControls(), 0, 'QA bypass does not synthesize controls viewed');
 assert.equal(bypassed.getPlayerClosedGuide(), 0, 'QA bypass does not synthesize guide closing');
 assert.equal(bypassed.getMonkeyHovered(), 0, 'QA bypass does not synthesize Monkey hover');
 assert.equal(bypassed.getMonkeyTriggered(), 0, 'QA bypass does not synthesize Monkey trigger');
-f.sequence.reset(); assert.equal(f.sequence.getState(), VR_INTRO_STATE.XR_CALIBRATING); assert.equal(f.sequence.getDebugSnapshot().glyphExploreResolved, false);
+f.sector.visible = true; f.sequence.reset(); assert.equal(f.sequence.getState(), VR_INTRO_STATE.XR_CALIBRATING); assert.equal(f.sequence.getDebugSnapshot().glyphExploreResolved, false);
+assert.equal(f.sector.visible, true, 'XR re-entry reset leaves an already revealed sector visible');
 f.sequence.beginAfterXrCalibration(); f.sequence.update(10); assert.equal(f.getRevealComplete(), 2, 'reset permits exactly one completion in the next run');
 assert.equal(f.sequence.beginPostRevealSilence(), true, 'reset flow can resume through Runtime again');
 f.sequence.update(2); assert.equal(f.getSilenceComplete(), 2, 'reset permits exactly one silence completion in the next run');

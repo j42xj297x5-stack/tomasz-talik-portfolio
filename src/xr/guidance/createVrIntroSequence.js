@@ -56,7 +56,6 @@ export function createVrIntroSequence({ monkeyGuide, monkeyMotionRoot, monkeyVis
   let silenceElapsed = 0, monkeyRadius = 0, startRadius = 0, turnElapsed = 0, finalTurnElapsed = 0;
   let followCheckResolved = false, walkingPaused = false, playerEnteredRing = false, playerSafelyInside = false;
   let monkeySettled = false, glyphExploreElapsed = 0, glyphExploreResolved = false, glyphHintTriggered = false, glyphHintShown = false, xrCalibrated = false;
-  const sectors = (progressFloor.geometryRoot ?? progressFloor.object).children.filter((child) => child.userData?.branchId);
   const pointAtRadius = (radius) => { const p = new THREE.Vector3(direction.x * radius, canonicalY, direction.z * radius); center.updateWorldMatrix(true, false); center.localToWorld(p); return monkeyMotionRoot.parent?.worldToLocal(p) ?? p; };
   const placeAtRadius = () => monkeyMotionRoot.position.copy(pointAtRadius(monkeyRadius));
   const radiusOf = (value) => { const p = value?.isObject3D ? value.getWorldPosition(new THREE.Vector3()) : value.clone(); center.updateWorldMatrix(true, false); center.worldToLocal(p); return Math.hypot(p.x, p.z); };
@@ -135,8 +134,8 @@ export function createVrIntroSequence({ monkeyGuide, monkeyMotionRoot, monkeyVis
     followCheckResolved = walkingPaused = playerEnteredRing = playerSafelyInside = monkeySettled = glyphExploreResolved = glyphHintTriggered = glyphHintShown = xrCalibrated = false;
     monkeyGuide.setDialogueOverride(null); monkeyGuide.showMessage(''); monkeyMotionRoot.position.copy(canonicalPosition); monkeyMotionRoot.quaternion.copy(canonicalQuaternion); locomotion.reset(); fogReveal?.restart();
     platformFixturesRoot.visible = true; onProgressionFixturesHidden();
-    if (bypass || !settings.enabled) { state = VR_INTRO_STATE.BYPASSED; fogReveal?.skipToEnd(); monkeyGuide.setInteractionEnabled?.(true); sectors.forEach((x) => { x.visible = true; }); glyphRing.visible = true; if (monkeyStoneRoot) monkeyStoneRoot.visible = true; onBypassFixturesVisible(); return; }
-    locomotion.setWalkRadius(Infinity); state = VR_INTRO_STATE.XR_CALIBRATING; sectors.forEach((x) => { x.visible = false; }); glyphRing.visible = true; if (monkeyStoneRoot) monkeyStoneRoot.visible = true; monkeyVisualRoot.visible = true; fogReveal?.setRadius(20); monkeyGuide.setInteractionEnabled?.(false);
+    if (bypass || !settings.enabled) { state = VR_INTRO_STATE.BYPASSED; fogReveal?.skipToEnd(); monkeyGuide.setInteractionEnabled?.(true); glyphRing.visible = true; if (monkeyStoneRoot) monkeyStoneRoot.visible = true; onBypassFixturesVisible(); return; }
+    locomotion.setWalkRadius(Infinity); state = VR_INTRO_STATE.XR_CALIBRATING; glyphRing.visible = true; if (monkeyStoneRoot) monkeyStoneRoot.visible = true; monkeyVisualRoot.visible = true; fogReveal?.setRadius(20); monkeyGuide.setInteractionEnabled?.(false);
   }
   function beginAfterXrCalibration() { xrCalibrated = true; if (state !== VR_INTRO_STATE.XR_CALIBRATING) return; monkeyRadius = spatial.monkeyStartRadius; placeAtRadius(); state = VR_INTRO_STATE.FOG_REVEAL; fogReveal?.start(); }
   function beginPostRevealSilence() { if (state !== VR_INTRO_STATE.WAIT_RUNTIME_AFTER_REVEAL) return false; silenceElapsed = 0; state = VR_INTRO_STATE.POST_REVEAL_SILENCE; return true; }

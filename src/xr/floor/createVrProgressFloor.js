@@ -189,6 +189,7 @@ export function createVrProgressFloor({
         placeholder: sectorConfig.placeholder,
         sourceType: sectorConfig.sourceType
       };
+      sector.visible = false;
       cloneMaterials(sector, ownedMaterials);
       const baseMaterials = makeSectorBodyTransparent(sector, contract.bodyNames, sectorConfig);
       const panelsByOrder = new Map();
@@ -300,7 +301,11 @@ export function createVrProgressFloor({
     const panel = sector?.panelsByOrder.get(order);
     const key = `${glyphId}:${order}`;
     if (disposed || !panel || activatedEntries.has(key)) return false;
-    revealedSectorIds.add(glyphId);
+    const firstReveal = !revealedSectorIds.has(glyphId);
+    if (firstReveal) {
+      sector.object.visible = true;
+      revealedSectorIds.add(glyphId);
+    }
     activatedEntries.set(key, { glyphId, order, panel });
     pulseRemaining.set(key, config.pulseDuration);
     return true;

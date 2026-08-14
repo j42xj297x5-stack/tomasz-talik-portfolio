@@ -31,7 +31,7 @@ assert.equal(VR_EXPERIENCE_POINT['2.30.1'], '2.30.1', 'Activate hint is a local 
 assert.equal(VR_EXPERIENCE_POINT['2.40.1'], '2.40.1', 'Release hint is a local Act 2 branch');
 assert.equal(VR_EXPERIENCE_POINT['100.10'], '100.10', 'EXIT remains unchanged');
 
-const [main, vr, experience3d, vrControllers, glyphInteraction, spatialPlaque, crystalCollection, locomotion, portalDisplay, crystalReliquary, astroFurnace, furnacePanel, semanticInputSource, playerGuidePanelSource, playerGuideContentSource, scenario, reliquaryHints, monkeyGuide] = await Promise.all([
+const [main, vr, experience3d, vrControllers, glyphInteraction, spatialPlaque, crystalCollection, locomotion, portalDisplay, crystalReliquary, astroFurnace, furnacePanel, semanticInputSource, playerGuidePanelSource, playerGuideContentSource, scenario, reliquaryHints, monkeyGuide, introSequenceSource, progressFloorSource] = await Promise.all([
   readFile(new URL('../src/main.js', import.meta.url), 'utf8'),
   readFile(new URL('../src/experienceVr.js', import.meta.url), 'utf8'),
   readFile(new URL('../src/experience3d.js', import.meta.url), 'utf8'),
@@ -49,8 +49,19 @@ const [main, vr, experience3d, vrControllers, glyphInteraction, spatialPlaque, c
   readFile(new URL('../src/xr/guidance/vrPlayerGuideContent.js', import.meta.url), 'utf8'),
   readFile(new URL('../src/xr/progression/vrExperienceScenario.js', import.meta.url), 'utf8'),
   readFile(new URL('../src/xr/guidance/createVrReliquaryHints.js', import.meta.url), 'utf8'),
-  readFile(new URL('../src/xr/guidance/createVrMonkeyGuide.js', import.meta.url), 'utf8')
+  readFile(new URL('../src/xr/guidance/createVrMonkeyGuide.js', import.meta.url), 'utf8'),
+  readFile(new URL('../src/xr/guidance/createVrIntroSequence.js', import.meta.url), 'utf8'),
+  readFile(new URL('../src/xr/floor/createVrProgressFloor.js', import.meta.url), 'utf8')
 ]);
+
+assert.doesNotMatch(introSequenceSource, /progressFloor\.geometryRoot|userData\?\.branchId|userData\.branchId/,
+  'Intro cannot discover progress-floor sectors through their geometry or branch metadata');
+assert.doesNotMatch(introSequenceSource, /sectors[\s\S]*?\.visible\s*=/,
+  'Intro cannot own progress-floor sector visibility');
+assert.match(progressFloorSource, /sector\.visible = false;/,
+  'ProgressFloor owns the initial hidden sector state');
+assert.match(progressFloorSource, /sector\.object\.visible = true;/,
+  'ProgressFloor owns the first-reveal visibility transition');
 
 assert.match(main, /await import\('\.\/experienceVr\.js'\)/);
 assert.doesNotMatch(main, /^import .*experienceVr/m);
