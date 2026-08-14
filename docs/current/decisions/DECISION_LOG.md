@@ -2,6 +2,16 @@
 
 Status: current binding decisions organized by implementation status, not patch chronology. Synchronized on 2026-08-14.
 
+## 2026-08-14 — linear Scenario Spine and deterministic story reconstruction
+
+1. Experience VR has one authored linear main story: Scenario-owned **Scenario Spine**, the ordered sequence of mainline points. Local branches are temporary detours returning to that path, not alternate progression lines; only an explicit early `EXIT` in `100.x` may leave it before the finale.
+2. A Scenario point is also a stable story-state address. Starting at `X` treats all earlier Spine points as completed history; logical `stateAt(X)` composes their persistent settled consequences rather than selecting a checkpoint-specific snapshot or replaying transient dramaturgy.
+3. Optional local branches without a persistent consequence do not affect later reconstruction. Mutually contradictory persistent branch outcomes require a separate architectural decision.
+4. Scenario declares required canonical story facts but never owns copies of cards, floor, Furnace, shells, production, tools or equipment. `RuntimeExperience` and a future bootstrap resolver/hydrator materialize reconstructed facts through the existing domain owners; no second global progression store is introduced.
+5. Director remains the Scenario interpreter with `currentPointId`. It does not mutate or query world subsystems to reconstruct history, commit domain facts, sort IDs or derive Spine. Existing LIVE movement remains exclusively through explicit `transition.target`.
+6. `?p0`, `?p1`, `?p2` and future `?pN` are only aliases from query to canonical Scenario point. They cannot define world progression; adding an earlier mandatory mainline point must automatically affect the later reconstructed state.
+7. The Scenario Spine and reconstruction semantics are **TARGET / BINDING**. Runtime Spine representation, `stateAt` API, builder/normalizer, resolver, hydrator and reconstruction-backed checkpoints are **NOT IMPLEMENTED**. `applyVrProgressionShortcut.js` remains a legacy/transitionary QA adapter.
+
 ## 2026-08-14 — P4 rune stones and sector vessels canonical target model
 
 1. P4 uses exactly five pair-specific units: five distinct animated rune stones and five corresponding sector vessels from one visual/construction family. The pair, not a global socket assumption, owns final stone pose and safe envelope.

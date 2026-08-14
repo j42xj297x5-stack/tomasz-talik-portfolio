@@ -55,7 +55,7 @@ Aktualny produkcyjny graf obejmuje cztery przestrzenie adresowe: `1.x` = Intro /
 
 M1.20R (canonical Act address correction), M1.20F (floor sector reveal), M1.20M (Monkey attention correction) oraz późniejsza korekta wyłącznego ownershipu `sector.visible` przez `VrProgressFloor` są **IMPLEMENTED**. Nie kończy to całej migracji Scenario/Director: `3.x` i dalsze etapy nie są LIVE, a wcześniejsze audit blockers pozostają do obsłużenia.
 
-Scenario Spine jest wyłącznie **PLANNED / NOT IMPLEMENTED**. Nie istnieje jako warstwa runtime, schema ani API; LIVE Director nadal używa wyłącznie jawnych `transition.target`.
+Scenario Spine i reconstruction są **TARGET / BINDING**, a ich warstwa runtime, schema i API są **NOT IMPLEMENTED**. LIVE Director nadal używa wyłącznie jawnych `transition.target`.
 
 ## 2. Metafora teatralna i podział odpowiedzialności
 
@@ -161,22 +161,53 @@ Położenie zmienia się przede wszystkim przez zmianę jawnych transitions. Je�
 
 Director nie dodaje `+1`, nie wylicza następnego dziecka, nie zakłada, że `.2` następuje po `.1`, nie opiera przebiegu na kolejności tablicy, nie sortuje punktów w celu ustalenia przebiegu, nie wraca automatycznie do rodzica i nie wybiera automatycznie pierwszego dziecka. Każde przejście wskazuje jawny `target`.
 
-Legalne są skoki, pętle i powroty, o ile zapisują je transitions. **Numer opisuje adres; transitions opisują przebieg.**
+Technicznie transition może zapisać skok, lokalną pętlę lub powrót, ale authored topology musi respektować linearny kontrakt z §6: branch wraca do głównej drogi, a jedynym odejściem bez powrotu przed finałem jest jawny `EXIT` w `100.x`. **Numer opisuje adres; transitions opisują przebieg; Scenario Spine opisuje obowiązkową kolejność głównej historii.**
 
 ## 6. Scenario Spine i jawne targety
 
-**TARGET / BINDING AUTHORING CONCEPT:** **SCENARIO SPINE** (lub **MAINLINE SPINE**) jest Scenario-owned, jawną authored kolejnością dwusegmentowych mainline points. Przykład koncepcyjny dla Act 1:
+**TARGET / BINDING:** **SCENARIO SPINE** (lub **MAINLINE SPINE**) jest Scenario-owned, jawną authored kolejnością dwusegmentowych mainline points. Jest jedną główną, linearną fabułą Experience VR: po rozpoczęciu właściwego doświadczenia wszystkie obowiązkowe mainline points prowadzą jedną drogą do finału. Przykład koncepcyjny dla Act 1:
 
 ```text
 1.10 → 1.20 → 1.30 → 1.40 → 1.50 → 1.60 → 1.80
 → 1.100 → 1.110 → 1.120 → 1.130
 ```
 
-Brak `1.70` jest legalną rezerwą. Local branch `1.100.1` nie należy do spine i jest osiągalny wyłącznie przez jawne transition z lokalnego huba; nie wolno automatycznie wstawiać go pomiędzy `1.100` i `1.110`.
+Brak `1.70` jest legalną rezerwą. Local branch `1.100.1` nie należy do spine i jest osiągalny wyłącznie przez jawne transition z lokalnego huba; nie wolno automatycznie wstawiać go pomiędzy `1.100` i `1.110`. Local branches są chwilowymi odnogami, nie alternatywnymi liniami progresji: muszą wracać do huba albo dalszego mainline point. Jedyny zatwierdzony wyjątek od dojścia główną drogą do finału to jawny wcześniejszy `EXIT` w namespace `100.x`.
+
+Opcjonalny branch bez trwałej konsekwencji nie wpływa na stan późniejszych punktów. Model nie dopuszcza trwałych, wzajemnie sprzecznych wariantów świata wynikających z opcjonalnych branchy; taki wariant wymaga osobnej decyzji architektonicznej przed authoringiem.
 
 Scenario jest właścicielem authored kolejności. Director **nie** sortuje IDs, nie szuka najmniejszego większego numeru, nie robi `+10` ani `+1`, nie analizuje luk, nie interpretuje spine i nie wylicza „next point”. Director porusza się nadal wyłącznie przez **explicit `transition.target`**.
 
-W przyszłości mały builder lub normalizer może przed utworzeniem Directora rozwinąć authored kolejność `1.10 → 1.20` do jawnego targetu. Po wstawieniu `1.11` wynik przed granicą Directora ma być `1.10 → explicit target 1.11` i `1.11 → explicit target 1.20`. Scenario Spine jest zatwierdzonym TARGET authoring concept, lecz ten dokument nie kanonizuje API ani JS schema (`spine`, `mainline`, `acts` itp.). Dokładna reprezentacja w `vrExperienceScenario.js` zostanie wybrana w osobnym zadaniu implementacyjnym; na Director boundary wynik zawsze musi składać się ze zwykłych explicit targets.
+W przyszłości mały builder lub normalizer może przed utworzeniem Directora rozwinąć authored kolejność `1.10 → 1.20` do jawnego targetu. Po wstawieniu `1.11` wynik przed granicą Directora ma być `1.10 → explicit target 1.11` i `1.11 → explicit target 1.20`. Scenario Spine jest wiążącym TARGET, lecz jego runtime representation, builder/normalizer, bootstrap resolver i hydrator są **NOT IMPLEMENTED**. Dokument nie kanonizuje nazwy JS API ani schema (`spine`, `mainline`, `acts` itp.). Na istniejącej LIVE granicy Directora przebieg nadal składa się wyłącznie ze zwykłych explicit `transition.target`; ta zmiana dokumentacyjna nie zmienia ich znaczenia ani gameplayu.
+
+### 6.1. Punkt jako adres historii
+
+**TARGET / BINDING:** punkt Scenario jest również stabilnym adresem stanu historii. Uruchomienie Directora w punkcie `X` oznacza, że każdy mainline point położony przed `X` na Scenario Spine jest zakończoną przeszłością, a `X` jest granicą wejścia do bieżącej historii. Nie oznacza to odegrania wszystkich wcześniejszych dialogów, timerów i animacji.
+
+### 6.2. Trwałe konsekwencje i `stateAt(pointId)`
+
+**TARGET / BINDING:** logiczne `stateAt(pointId)` jest deterministycznym złożeniem trwałych konsekwencji wszystkich wcześniejszych mainline points Scenario Spine, do granicy wskazanego punktu. Jest to definicja semantyczna, nie zatwierdzona nazwa przyszłego JS API.
+
+Każdy mainline point może wnosić kanoniczne fakty historii, które po zakończeniu pozostają prawdziwe. Rekonstrukcja dla `X` składa te konsekwencje w kolejności authored Spine; nie wybiera snapshotu ręcznie napisanego dla `X` i nie odgaduje przeszłości z bieżących subsystemów. Dodanie nowego obowiązkowego mainline point przed istniejącym `X` musi przez samo położenie na Spine wpłynąć na przyszły reconstructed state `X`, bez przepisywania definicji checkpointu.
+
+### 6.3. Live effects a persistent / settled story state
+
+- **live / transient effects** wykonują dramaturgię podczas normalnego przechodzenia historii: reveal animation, dialogue, timer, produkcję, przejściowe cue i oczekiwanie na interakcję;
+- **persistent / settled story state** jest zakończonym, trwałym rezultatem tych wydarzeń, wymaganym przy bootstrapie późniejszego punktu, np. kanonicznym faktem, że reveal się zakończył albo wymagany przedmiot został zdobyty.
+
+Bootstrap późniejszego punktu materializuje settled consequences; nie odtwarza całej przeszłej dramaturgii, animacji, dialogów, timerów ani procesu produkcji. Ten rozdział nie zmienia LIVE effects ani istniejących transition handlers.
+
+### 6.4. Ownership i materializacja stanu
+
+Scenario deklaruje, **jakie kanoniczne fakty historii powinny być prawdziwe** przy wejściu w punkt. Nie staje się właścicielem domenowego stanu runtime i nie przechowuje własnych kopii kart, floor state, skorup, stanu Pieca, wyposażenia, produkcji ani innych faktów kontrolerów.
+
+Docelowo `RuntimeExperience` / bootstrap execution layer przekazuje wynik rekonstrukcji do właściwych istniejących właścicieli domenowych, a przyszły resolver/hydrator materializuje fakty przez ich kontrakty. Nadal obowiązuje przepływ `Scenario → Director → RuntimeExperience → domain owners`; nie powstaje drugi globalny progression store.
+
+Director pozostaje interpreterem Scenario: zna `currentPointId`, ale nie ustawia bezpośrednio obiektów świata, nie commituje kart, skorup ani wyposażenia, nie hydratuje domen i nie rekonstruuje historii przez odpytywanie subsystemów. Nie sortuje point IDs ani nie wylicza Spine z numerów.
+
+### 6.5. Status implementacyjny rekonstrukcji
+
+Scenario Spine i deterministyczna semantyka reconstruction są **TARGET / BINDING** dla authoringu i przyszłej architektury. Runtime implementation Spine, `stateAt`, builder/normalizer, bootstrap resolver, hydrator oraz checkpointy o tej semantyce są **NOT IMPLEMENTED**. Obecny Director i istniejące LIVE transitions nadal działają przez explicit `transition.target`.
 
 ## 7. Przykład flat-mainline indexing
 
@@ -261,13 +292,13 @@ Wiążąca zasada: **nowy punkt Scenario ≠ nowa funkcja**. Punkt nie tworzy au
 
 **TARGET:** Scenario jest właścicielem authored mainline / Scenario Spine oraz immutable zbiorem danych opisującym akty, numerowane punkty, punkt początkowy, jawne transitions, akceptowane eventy, target, symbolic effects, capabilities, prawdziwe milestones, terminalność i metadata zakresu autorytatywności.
 
-Scenario nie importuje Three.js, DOM ani WebXR; nie odpytuje aktorów, nie mierzy odległości, nie uruchamia timerów runtime, nie pokazuje UI, nie odtwarza audio, nie przesuwa Małpy, nie zapisuje progresji domenowej, nie wykonuje efektów i nie zawiera funkcji zależnych od runtime. Mówi, co powinno wydarzyć się teraz i co może nastąpić później, nie jak narysować, przesunąć, odtworzyć lub animować skutek.
+Scenario nie importuje Three.js, DOM ani WebXR; nie odpytuje aktorów, nie mierzy odległości, nie uruchamia timerów runtime, nie pokazuje UI, nie odtwarza audio, nie przesuwa Małpy, nie zapisuje progresji domenowej, nie wykonuje efektów i nie zawiera funkcji zależnych od runtime. Definiuje authored kolejność i kanoniczne fakty historii wymagane na danej granicy, ale nie kopiuje domenowego stanu. Mówi, co powinno wydarzyć się teraz, co może nastąpić później i jaki settled result pozostaje prawdziwy, nie jak go przechować, narysować, przesunąć, odtworzyć lub animować.
 
 ## 11. Director
 
 **TARGET:** Director jest framework-free interpreterem Scenario. Waliduje dane; przechowuje `currentPointId`; rozpoznaje Akt z adresu; przyjmuje event; sprawdza jego dopuszczalność; zwraca `null` albo przechodzi do jawnego targetu; aktualizuje prawdziwe milestones; udostępnia capabilities; zwraca i publikuje immutable change; daje czytelny debug snapshot.
 
-Nie interpretuje Scenario Spine ani arytmetyki point IDs; otrzymuje wyłącznie explicit targets. Nie wykonuje effects, nie wywołuje aktorów, nie importuje runtime ani Three.js, nie czyta DOM, nie odpytuje kontrolerów domenowych, nie ustala sam ukończenia Tieru, nie mierzy timerów i nie posiada drugiej maszyny stanów.
+Nie interpretuje Scenario Spine ani arytmetyki point IDs; otrzymuje wyłącznie explicit targets. Nie wykonuje effects, nie wywołuje aktorów, nie importuje runtime ani Three.js, nie czyta DOM, nie odpytuje kontrolerów domenowych, nie ustala sam ukończenia Tieru, nie mierzy timerów, nie commituje kart, skorup lub wyposażenia, nie hydratuje świata i nie posiada drugiej maszyny stanów.
 
 **CURRENT:** kanoniczne API mówi o punktach: `currentPointId`, `initialPointId`, `getCurrentPointId()`. `getCurrentSceneId()` oraz aliasy Scenario `scenes` / `initialSceneId` pozostają przejściową kompatybilnością delegującą do tych samych danych, bez drugiego stanu.
 
@@ -318,7 +349,9 @@ Kontroler odpowiada „co faktycznie osiągnięto w domenie”; Scenario — „
 
 ## 18. QA shortcuts
 
-QA shortcut nie jest alternatywną fabułą i nie ma własnego Scenario. Może przygotować stan domenowy, ale jawnie synchronizuje wymagane fakty, nie omija nowych gates tak, by ukryć błąd produkcyjny, wymaga parity testu, a jego status jest śledzony osobno od produkcyjnej migracji.
+**TARGET / BINDING:** `?p0`, `?p1`, `?p2` i przyszłe `?pN` są wyłącznie aliasami `query → canonical Scenario point`. Checkpoint wybiera adres wejścia; nie definiuje kart, floor state, Pieca, skorup, tools, wyposażenia ani innych flag. Jego stan zawsze wynika z Scenario Spine przez `stateAt(canonicalPoint)`. Ręcznie authored komplet efektów świata przy `?pN` jest poza kanonem, ponieważ duplikuje historię, rozjeżdża się po wstawieniu wcześniejszego mainline point i tworzy alternatywne źródło progresji.
+
+**CURRENT / LEGACY TRANSITION:** `src/xr/progression/applyVrProgressionShortcut.js` jest przejściowym adapterem QA, nie wzorcem docelowego systemu ani dowodem wdrożonej rekonstrukcji. Jego dzisiejsze zachowanie pozostaje bez zmian w tym zadaniu.
 
 **TARGET QA CONTRACT — PLANNED / NOT IMPLEMENTED jako komplet:**
 
@@ -327,7 +360,7 @@ QA shortcut nie jest alternatywną fabułą i nie ma własnego Scenario. Może p
 - `?p1` — stan po ukończeniu pierwszego `5/5`: pełna pierwsza podłoga, Piec dostępny, Astro czeka na fizyczny odbiór;
 - `?p2` — Astro zdobyte, sześć unikalnych skorup zaliczonych, Kula Asterionowa gotowa do utworzenia w Piecu.
 
-`?p0`, `?p1` i `?p2` są docelowym kontraktem QA, nie potwierdzeniem bieżącej implementacji. Dopóki kod nie zapewnia pełnej semantyki danego checkpointu, jego status pozostaje **PLANNED / NOT IMPLEMENTED**.
+Opisane rezultaty służą do identyfikacji docelowych kanonicznych punktów, a nie jako niezależne snapshot definitions. `?p0`, `?p1`, `?p2`, przyszłe aliasy i reconstruction-backed bootstrap są **PLANNED / NOT IMPLEMENTED**. Dopóki kod nie zapewnia tej semantyki, istniejącego shortcutu nie wolno interpretować jako realizacji kontraktu.
 
 ## 19. Historyczny baseline migracji M1.1–M1.8
 
@@ -530,8 +563,8 @@ Director operuje na currentPointId i wyłącznie explicit targets.
 ```
 
 ```text
-TARGET / NOT IMPLEMENTED:
-Scenario Spine, builder, normalizer i point-ID arithmetic nie istnieją.
+TARGET / BINDING, RUNTIME NOT IMPLEMENTED:
+Scenario Spine oraz deterministyczne `stateAt(pointId)` są wiążącym modelem; runtime Spine, builder, normalizer, resolver i hydrator nie istnieją.
 Act `3.x`, dalsze etapy progresji i docelowe checkpointy `?p0`–`?p2` pozostają PLANNED / NOT IMPLEMENTED.
 Approved WATER crystal tutorial insert nie jest punktem LIVE. Cała migracja Scenario/Director pozostaje IN PROGRESS z wcześniejszymi audit blockers.
 ```
