@@ -29,6 +29,8 @@ Naprawiony contract pozwala złożyć composition po preloadzie, przed READY: wc
 
 Automated guards `vr-first-ring-live-flow`, `vr-astro-first-claim-live-flow` i `vr-runtime-bootstrap` nie są hardware/perceptual PASS. Pełny `3.10–3.80`, reveal/materialization, skala/orientacja, hover, physical handoff i shell targeting wymagają osobnego QA Wizjonera.
 
+Director obsługuje także jawny start sesji w dowolnym `startPointId` należącym do canonical Spine, bez odgrywania transition effects i bez rekonstrukcji historii. `initialMilestones` są jawnym bootstrap baseline; hard reset odtwarza je wraz z session start point, a soft reset zachowuje bieżące milestones.
+
 ## NEXT
 
 - hardware/perceptual QA pełnego `3.10–3.80`;
@@ -38,7 +40,6 @@ Automated guards `vr-first-ring-live-flow`, `vr-astro-first-claim-live-flow` i `
 
 ## DEFERRED
 
-- arbitrary Director start;
 - hydration i owner restore;
 - reconstruction-backed checkpoints/QA aliases;
 - durable persistence/save i pełny reset;

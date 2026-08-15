@@ -50,8 +50,10 @@ Piec ma rozłączne modes: `astro_attractor` oraz istniejący Asterion mode, oso
 
 Po preloadzie wszystkich assetów composition musi dać się złożyć przed READY. `runtimeExperience` ma wcześniejszy bezpieczny nullable binding, ponieważ construction-time callbacks mogą wykonać się przed pełnym bindem Runtime. `canUseAstroProduction` zwraca przed bindem bezpieczne `false`, a po bindzie rzeczywisty Scenario/runtime gate.
 
+`ExperienceDirector` może rozpocząć sesję w opcjonalnym `startPointId`, o ile punkt należy do canonical authored Spine. Taki start nie odgrywa wcześniejszych transition effects ani nie rekonstruuje historii; wymagany baseline domenowy nadal dostarcza jawne `initialMilestones`. Soft reset wraca do punktu startowego sesji i zachowuje bieżące milestones, a hard reset odtwarza zarówno punkt startowy, jak i bootstrap `initialMilestones`. Bez tych opcji zachowanie pozostaje normalnym startem w `spine[0]`.
+
 Regression guards: `vr-first-ring-live-flow`, `vr-astro-first-claim-live-flow`, `vr-runtime-bootstrap`. Bootstrap regression był RED przed poprawką i GREEN po niej przez production path. Wizjoner potwierdził przejście poza `41/41` i brak zatrzymania przed READY: **HARDWARE VALIDATED — Meta Quest 3S** wyłącznie dla bootstrap fixu. Pełny flow `3.10–3.80` oraz Furnace/Astro visuals, hover, skala/orientacja, handoff i shell targeting pozostają hardware/perceptual QA pending.
 
 ## Reconstruction i deferred
 
-`stateAt(X) = fold(settledConsequences punktów ściśle przed X)`. Mechanizm nie odtwarza live/transient state. Nadal deferred: arbitrary Director start, hydration/owner restore, reconstruction-backed checkpoints i QA aliases, durable persistence/save oraz pełny reset zapisanej gry.
+`stateAt(X) = fold(settledConsequences punktów ściśle przed X)`. Mechanizm nie odtwarza live/transient state. Nadal deferred: hydration/owner restore, reconstruction-backed checkpoints i QA aliases, durable persistence/save oraz pełny reset zapisanej gry.

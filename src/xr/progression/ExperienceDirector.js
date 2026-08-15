@@ -106,16 +106,23 @@ function validateScenario(scenario) {
 }
 
 export class ExperienceDirector {
-  constructor({ scenario, initialMilestones = [] }) {
+  constructor({ scenario, initialMilestones = [], startPointId }) {
     const { pointsById, milestones, initialPointId } = validateScenario(scenario);
     const hydrated = assertStringArray(initialMilestones, 'initial milestones');
     for (const milestone of hydrated) if (!milestones.has(milestone)) throw new Error(`unknown initial milestone: ${milestone}`);
+    const sessionStartPointId = startPointId ?? initialPointId;
+    if (!pointsById.has(sessionStartPointId)) throw new Error(`unknown start point: ${String(sessionStartPointId)}`);
+    if (!scenario.spine.includes(sessionStartPointId)) {
+      throw new Error(`start point "${sessionStartPointId}" does not belong to the Scenario spine`);
+    }
     this.scenario = scenario;
     this.pointsById = pointsById;
     this.initialPointId = initialPointId;
+    this.sessionStartPointId = sessionStartPointId;
+    this.bootstrapInitialMilestones = new Set(hydrated);
     this.committedMilestones = new Set(hydrated);
     this.listeners = new Set();
-    this.currentPointId = initialPointId;
+    this.currentPointId = sessionStartPointId;
     this.lastEvent = null;
     this.disposed = false;
   }
@@ -170,8 +177,8 @@ export class ExperienceDirector {
     this.listeners.add(listener); return () => this.listeners.delete(listener);
   }
   resetSession({ hard = false } = {}) {
-    this.currentPointId = this.initialPointId; this.lastEvent = null;
-    if (hard) this.committedMilestones.clear();
+    this.currentPointId = this.sessionStartPointId; this.lastEvent = null;
+    if (hard) this.committedMilestones = new Set(this.bootstrapInitialMilestones);
   }
   dispose() { if (this.disposed) return; this.disposed = true; this.listeners.clear(); }
 }
