@@ -24,6 +24,7 @@ import { createVrReliquaryActivateButton } from './xr/createVrReliquaryActivateB
 import { createVrReliquaryReleaseButton } from './xr/createVrReliquaryReleaseButton.js';
 import { createVrProgressFloor } from './xr/floor/createVrProgressFloor.js';
 import { createVrProgressionController } from './xr/progression/createVrProgressionController.js';
+import { createVrFirstRingFlow } from './xr/progression/createVrFirstRingFlow.js';
 import { createVrProgressionShortcut } from './xr/progression/applyVrProgressionShortcut.js';
 import { createVrShellSystem } from './xr/shells/createVrShellSystem.js';
 import { createVrShellAttractorInteraction } from './xr/shells/createVrShellAttractorInteraction.js';
@@ -292,6 +293,12 @@ function syncAmbientSequence() {
   const sphereBuilt = asterionProductionController.getSnapshot().built;
   ambientSequencer.setState({ fullThreshold, asterionSubthreshold: fullThreshold === 2 && shellsComplete && sphereBuilt });
 }
+const firstRingFlow = createVrFirstRingFlow({
+  progressionController,
+  progressFloor,
+  dispatch: (event, payload) => runtimeExperience.dispatch(event, payload),
+  syncAmbientSequence
+});
 const unsubscribeAmbientFurnace = furnaceProgressionController.subscribe(syncAmbientSequence);
 const unsubscribeAmbientAsterion = asterionProductionController.subscribe(syncAmbientSequence);
 function syncQaPostP1WorldState() {
@@ -424,13 +431,7 @@ const crystalCollection = createVrCrystalCollection({
     return true;
   },
   onPreview: (page) => runtimeExperience.dispatch(VR_SCENARIO_EVENT.CRYSTAL_ACTIVATED, { page }),
-  onCommit: (page, { tierCompleted }) => {
-    runtimeExperience.dispatch(VR_SCENARIO_EVENT.CARD_COMMITTED, { page });
-    if (tierCompleted) {
-      if (page.order === 1) runtimeExperience.dispatch(VR_SCENARIO_EVENT.FIRST_RING_COMPLETED, { page });
-      syncAmbientSequence();
-    }
-  }
+  onCommit: firstRingFlow.commitPage
 });
 createVrProgressionShortcut({ search: location.search, pages: experienceVrPages, progressionController,
   progressFloor, syncQaPostP1WorldState })();
@@ -664,7 +665,7 @@ const runtimeExperience = new RuntimeExperience({
       playVrWorld(VR_AUDIO.reliquaryConsume);
     },
     [VR_SCENARIO_EFFECT.COMPLETE_FIRST_RING_PRESENTATION]: () => {
-      progressFloor.completeTier(1);
+      firstRingFlow.beginPresentation();
     },
     [VR_SCENARIO_EFFECT.PLAY_FIRST_RING_COMPLETE_FEEDBACK]: () => {
       playVrWorld(VR_AUDIO.tierComplete);
@@ -733,6 +734,7 @@ function renderFrame() {
   crystalCollection.update(delta);
   reliquaryHints.update(delta);
   progressFloor.update(delta);
+  firstRingFlow.update(delta);
   activateButton.update(delta);
   releaseButton.update(delta);
   shellAttractorInteraction.update(delta);
@@ -787,6 +789,7 @@ function handleSessionEnd() {
   resetPlayerRigToSpawn();
   glyphOrbit.reset();
   postRingPresentation.reset();
+  firstRingFlow.reset();
   observationWindow.reset();
   shellAttractorInteraction.reset();
   shellSystem.reset();
@@ -827,6 +830,7 @@ async function enterVr() {
   resetPlayerRigToSpawn();
   glyphOrbit.reset();
   postRingPresentation.reset();
+  firstRingFlow.reset();
   observationWindow.reset();
   shellAttractorInteraction.reset();
   shellSystem.reset();
