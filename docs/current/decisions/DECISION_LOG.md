@@ -2,7 +2,17 @@
 
 Status: current binding decisions organized by implementation status, not patch chronology. Synchronized on 2026-08-14.
 
-## 2026-08-14 — linear Scenario Spine and deterministic story reconstruction
+## 2026-08-15 — single-owner Spine → Scenario → Director model after S1
+
+1. **Jedna informacja ma jednego właściciela.** The authored Scenario Spine is the sole owner of mainline order; Scenario is the catalog of point definitions; Director owns `currentPointId`, validates/completes the current definition and, in the binding target, obtains the next mainline ID from Spine. Runtime, actors and domain owners execute effects and retain domain truth.
+2. Point IDs are stable addresses only. Neither numeric sorting, arithmetic, namespace size nor a larger numeric value establishes chronology; only authored Spine does.
+3. Scenario point definitions may own conditions, accepted events/capabilities, milestones, live effects, `settledConsequences`, dialogue, Monkey hints and local reactions, but must not duplicate mainline order with an independent target. Domain gates such as `5/5`, `6/6`, pickup or interaction completion hold the current point and are not story branches.
+4. Local guidance does not move Spine unless it is a real canonical beat. Mainline completion uses `Spine.next(currentPointId)`; an explicit EARLY EXIT may name a terminal Scenario outcome outside normal Spine succession without creating a general branching model.
+5. Exclusive reconstruction is `stateAt(X) = fold(settledConsequences of Spine points strictly before X)`: Spine owns order, Scenario owns consequences, and pure reconstruction combines them. `?pN` is only an alias to a canonical point and owns no snapshot or domain facts.
+6. **CURRENT after S1:** authored `VR_EXPERIENCE_SCENARIO_SPINE`, Scenario `settledConsequences` and pure exclusive `reconstructVrScenarioState` are implemented. LIVE Scenario still contains `transition.target`, and Director still interprets it.
+7. **TARGET / NOT IMPLEMENTED:** Spine-driven Director next, reduction of redundant mainline targets, arbitrary Director start, hydration, reconstruction-backed `?pN` and owner restore APIs. S1 is retained as the correct foundation and did not change gameplay.
+
+## 2026-08-14 — linear Scenario Spine and deterministic story reconstruction (superseded where clarified above)
 
 1. Experience VR has one authored linear main story: Scenario-owned **Scenario Spine**, the ordered sequence of mainline points. Local branches are temporary detours returning to that path, not alternate progression lines; only an explicit early `EXIT` in `100.x` may leave it before the finale.
 2. A Scenario point is also a stable story-state address. Starting at `X` treats all earlier Spine points as completed history; logical `stateAt(X)` composes their persistent settled consequences rather than selecting a checkpoint-specific snapshot or replaying transient dramaturgy.
@@ -10,7 +20,7 @@ Status: current binding decisions organized by implementation status, not patch 
 4. Scenario declares required canonical story facts but never owns copies of cards, floor, Furnace, shells, production, tools or equipment. `RuntimeExperience` and a future bootstrap resolver/hydrator materialize reconstructed facts through the existing domain owners; no second global progression store is introduced.
 5. Director remains the Scenario interpreter with `currentPointId`. It does not mutate or query world subsystems to reconstruct history, commit domain facts, sort IDs or derive Spine. Existing LIVE movement remains exclusively through explicit `transition.target`.
 6. `?p0`, `?p1`, `?p2` and future `?pN` are only aliases from query to canonical Scenario point. They cannot define world progression; adding an earlier mandatory mainline point must automatically affect the later reconstructed state.
-7. The Scenario Spine and reconstruction semantics are **TARGET / BINDING**. Runtime Spine representation, `stateAt` API, builder/normalizer, resolver, hydrator and reconstruction-backed checkpoints are **NOT IMPLEMENTED**. `applyVrProgressionShortcut.js` remains a legacy/transitionary QA adapter.
+7. Historical pre-S1 status: the Spine and reconstruction semantics were then **TARGET / BINDING**. S1 subsequently implemented authored Spine and pure exclusive reconstruction; resolver, hydrator and reconstruction-backed checkpoints remain **NOT IMPLEMENTED**. `applyVrProgressionShortcut.js` remains a legacy/transitionary QA adapter.
 
 ## 2026-08-14 — P4 rune stones and sector vessels canonical target model
 
@@ -25,7 +35,7 @@ Status: current binding decisions organized by implementation status, not patch 
 
 **CURRENT (2026-08-13):** LIVE Scenario używa flat slice `1.10`, `1.20`, `1.30`, `1.40`, `1.50`, `1.60`, `1.70`, `1.80`, `1.100`, `1.100.1`, `1.110`, `1.110.1`, `1.120`, `1.120.1`, `1.130`, `100.10`. `1.90` pozostaje **RESERVED / WATER CRYSTAL TUTORIAL / NOT IMPLEMENTED**. Stare produkcyjne IDs objęte canonical mappingiem są **SUPERSEDED / RETIRED** i nie mogą zostać ponownie użyte; `100.10` pozostaje bez zmiany.
 
-Migracja zmieniła wyłącznie adresy punktów i jawne targety. Eventy, numeric choices, effects, milestones, actor/runtime behavior i SG statuses są bez zmian. M1.12 ma **HARDWARE PASS — Meta Quest 3S**, SG-036 **MIGRATED**, a SG-041 jest **MIGRATED** po M1.13. Scenario Spine pozostaje **TARGET / NOT IMPLEMENTED**; Director nadal używa wyłącznie explicit `transition.target`. Canonical Story Reindex jest **IMPLEMENTED / behavior-neutral**; post-reindex regression: **PASS — Meta Quest 3S**.
+Migracja zmieniła wyłącznie adresy punktów i jawne targety. Eventy, numeric choices, effects, milestones, actor/runtime behavior i SG statuses są bez zmian. M1.12 ma **HARDWARE PASS — Meta Quest 3S**, SG-036 **MIGRATED**, a SG-041 jest **MIGRATED** po M1.13. W tym historycznym etapie Scenario Spine pozostawało **TARGET / NOT IMPLEMENTED**; S1 wdrożył je później, natomiast Director nadal używa explicit `transition.target`. Canonical Story Reindex jest **IMPLEMENTED / behavior-neutral**; post-reindex regression: **PASS — Meta Quest 3S**.
 
 ## Implemented and binding
 

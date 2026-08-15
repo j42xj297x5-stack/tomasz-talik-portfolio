@@ -12,7 +12,7 @@ Jest źródłem prawdy dla wszystkich następnych etapów migracji Scenario + Di
 
 **HISTORICAL IMPLEMENTED STAGE (2026-08-13):** jednorazowy corrective reindex ówczesnego LIVE Scenario został wdrożony bez zmiany gameplay semantics. Flat live slice to `1.10`, `1.20`, `1.30`, `1.40`, `1.50`, `1.60`, `1.70`, `1.80`, `1.100`, `1.100.1`, `1.110`, `1.110.1`, `1.120`, `1.120.1`, `1.130`, `100.10`. WHERE (`1.100.1`), pause/wait (`1.110.1`) i BEYOND (`1.120.1`) są current local branches; FOLLOWING (`1.110`), THRESHOLD (`1.120`) i CROSSING (`1.130`) są płaskimi mainline beats.
 
-`1.90` jest **RESERVED / WATER (Haiku Cosmos) CRYSTAL GRAB TUTORIAL / NOT IMPLEMENTED** i nie należy do produkcyjnego identifier set. Scenario Spine pozostaje **TARGET / NOT IMPLEMENTED**: nie istnieje `spine`, `mainline`, `acts`, builder ani normalizer. Director nadal przechodzi wyłącznie przez jawne `transition.target` i nie wylicza kolejności z adresów.
+`1.90` jest **RESERVED / WATER (Haiku Cosmos) CRYSTAL GRAB TUTORIAL / NOT IMPLEMENTED** i nie należy do produkcyjnego identifier set. W tamtym historycznym etapie Scenario Spine było **TARGET / NOT IMPLEMENTED**; S1 wdrożył je później. Director nadal przechodzi przez jawne `transition.target` i nie wylicza kolejności z adresów.
 
 | OLD (SUPERSEDED / RETIRED) | NEW |
 | --- | --- |
@@ -55,27 +55,108 @@ Aktualny produkcyjny graf obejmuje cztery przestrzenie adresowe: `1.x` = Intro /
 
 M1.20R (canonical Act address correction), M1.20F (floor sector reveal), M1.20M (Monkey attention correction) oraz późniejsza korekta wyłącznego ownershipu `sector.visible` przez `VrProgressFloor` są **IMPLEMENTED**. Nie kończy to całej migracji Scenario/Director: `3.x` i dalsze etapy nie są LIVE, a wcześniejsze audit blockers pozostają do obsłużenia.
 
-Scenario Spine i reconstruction są **TARGET / BINDING**, a ich warstwa runtime, schema i API są **NOT IMPLEMENTED**. LIVE Director nadal używa wyłącznie jawnych `transition.target`.
+Po S1 authored `VR_EXPERIENCE_SCENARIO_SPINE`, `settledConsequences` oraz pure `reconstructVrScenarioState` z exclusive boundary są **CURRENT / IMPLEMENTED**. LIVE Director nadal używa jawnych `transition.target`; przejście mainline przez `Spine.next()` pozostaje **TARGET / NOT IMPLEMENTED**.
+
+## 1.4. Wiążący model ownershipu po S1
+
+Niniejsza sekcja jest nadrzędna wobec historycznych opisów migracji niżej w tym dokumencie:
+
+```text
+SPINE → SCENARIO → DIRECTOR → RUNTIME / ACTORS / DOMAIN OWNERS
+```
+
+Obowiązuje zasada: **jedna informacja ma jednego właściciela**. Kolejność głównej fabuły należy wyłącznie do Spine; znaczenie punktu do Scenario; bieżąca pozycja i interpretacja do Directora; wykonanie do Runtime/aktorów; prawda domenowa i jej projekcja do właściwych ownerów.
+
+### CURRENT — stan wdrożony przez S1
+
+- `VR_EXPERIENCE_SCENARIO_SPINE` jest immutable, jawną authored sekwencją istniejących mainline point IDs;
+- definicje Scenario mają deklaratywne `settledConsequences`;
+- pure `reconstructVrScenarioState` waliduje Spine i składa stan według jego authored order;
+- reconstruction ma exclusive boundary: uwzględnia tylko punkty stojące ściśle przed targetem;
+- LIVE definicje Scenario nadal mają istniejące `transition.target`, a Director nadal je interpretuje;
+- S1 nie wdrożył przejścia mainline completion → `Spine.next()` i nie zmienił gameplayu.
+
+S1 poprawnie ustanowił Spine, `settledConsequences`, pure reconstruction i exclusive `stateAt`. Nie jest to element do cofnięcia; korekta dotyczy docelowego ownershipu kolejności i roli redundantnych mainline targets.
+
+### TARGET / BINDING
+
+#### Scenario Spine — jedyny właściciel mainline order
+
+Spine odpowiada wyłącznie za authored kolejność głównej fabuły, jej początek i właściwy koniec, relacje `previous/current/next` oraz wskazanie punktów stojących przed targetem dla `stateAt(pointId)`. Jest jawną sekwencją point IDs. Żaden drugi komponent nie może posiadać kopii tej kolejności.
+
+Point ID jest tylko stabilnym identyfikatorem/adresem. Nie wolno interpretować go matematycznie, sortować numerycznie, wyliczać kolejności z `1.10`, `2.20` lub `3.40` ani zakładać, że większy numer oznacza późniejsze wydarzenie. Konwencje segmentów pomagają autorom katalogować punkty, ale **jedynym źródłem mainline order jest authored Spine**.
+
+#### Scenario — katalog definicji
+
+Scenario odpowiada za znaczenie point ID. Definicja może zawierać warunki aktywności, dozwolone eventy/capabilities, condition ukończenia, milestones, transient/live effects, `settledConsequences`, dialogue/cues, Monkey hints i lokalne reakcje dramaturgiczne. Scenario nie jest właścicielem mainline order. Model docelowy nie zapisuje jednocześnie `Spine: A → B` i niezależnego `Scenario[A].mainlineTransition.target = B` jako dwóch źródeł tej samej informacji.
+
+#### Director — interpreter bieżącego punktu
+
+Director posiada `currentPointId`, odczytuje odpowiednią definicję Scenario, waliduje eventy i condition punktu, rozstrzyga jego ukończenie, emituje symbolic live effects, a po ukończeniu mainline pointu pobiera następny ID wyłącznie ze `Spine.next(currentPointId)` i zmienia logiczną pozycję.
+
+Director nie sortuje ani nie interpretuje IDs, nie ma kopii mainline, nie rekonstruuje persistent world state, nie hydratuje ownerów, nie mutuje Three.js i nie przejmuje kart, floor, Furnace, shells ani tools. Runtime i aktorzy wykonują zlecone efekty, zaś domain owners zachowują własne invariants i prawdę domenową.
+
+### Warunek ukończenia nie jest branchem
+
+Mainline Experience VR jest linearny. Punkt może jednak blokować przejście aż do jawnego domain condition, np. `5/5` kryształów danego tieru, `6/6` skorup, kolejnego `5/5`, physical pickup albo completion konkretnej interakcji. Reguła `pozostajemy w X aż condition === complete` opisuje czas i warunek ukończenia jednego punktu, nie alternatywną fabułę. Po spełnieniu condition Director używa `Spine.next(X)`.
+
+### Monkey guidance i lokalne cues
+
+Nie każda wypowiedź lub podpowiedź Monkey jest punktem progresji. Jeden Scenario point może mieć objective, condition, hint po czasie, dalszy hint po kolejnej bezczynności, reakcję na błędne działanie i dialogue cue. Są to lokalne cues/hints/reactions definicji punktu i nie przesuwają Spine, o ile nie stanowią rzeczywistego nowego canonical story beat.
+
+### Explicit terminal outcome / EARLY EXIT
+
+Wczesne zakończenia nie tworzą pełnego branching progression modelu. Są dwa jawnie odmienne wyniki:
+
+- **mainline completion** — Director używa `Spine.next(currentPointId)`;
+- **explicit terminal outcome / EARLY EXIT** — definicja Scenario wskazuje terminalny Scenario point poza normalnym następstwem Spine, a Director przechodzi bezpośrednio do niego.
+
+EARLY EXIT jest canonical Scenario outcome, lecz główna fabuła nadal ma jedną authored Spine prowadzącą do właściwego finału. Wyjątek jest wyrażony semantycznie, nie przez arytmetykę ani namespace ID.
+
+### Reconstruction bez duplikacji odpowiedzialności
+
+Obowiązuje exclusive semantyka:
+
+```text
+stateAt(X) = fold(settledConsequences punktów Spine stojących ściśle przed X)
+```
+
+Spine dostarcza historię kolejności, Scenario dostarcza `settledConsequences` przypisane do definicji punktów, a pure reconstruction składa obie informacje. W efekcie przed targetem jest zakończona historia, target jest teraźniejszością, a punkty po nim przyszłością.
+
+Debug checkpoint `?pN → canonical pointId` jest tylko aliasem adresu. Nie zawiera snapshotu ani domain facts; te zawsze wynikają z `stateAt(canonicalPointId)`. Dzięki temu wstawienie wcześniejszego mainline pointu wpływa na późniejszy reconstructed state bez aktualizacji snapshotów checkpointów.
+
+### NOT IMPLEMENTED
+
+- migracja Directora do Spine-driven next;
+- usunięcie lub redukcja redundantnych mainline `transition.target`;
+- arbitrary Director start;
+- hydration i owner restore APIs;
+- reconstruction-backed `?pN`.
+
+Bootstrap, QA, Director i `experienceVr.js` nie mogą tworzyć równoległej prawdy. Stan portfolio należy do progression ownera, wizualna projekcja floor do Floor ownera, Furnace do Furnace ownera, shells do shell/material ownera, a tools do właściwego equipment/achievement ownera. Preferowane są małe jawne API ownerów zamiast direct scene writes i łatek synchronizujących visibility lub inne projekcje.
 
 ## 2. Metafora teatralna i podział odpowiedzialności
 
 Wiążąca analogia:
 
 ```text
+SPINE
+→ jaka jest authored kolejność głównej historii
+
 SCENARIUSZ
-→ co ma się wydarzyć i jaka jest kolejność
+→ co oznacza definicja bieżącego punktu
 
 REŻYSER
 → w którym punkcie scenariusza jesteśmy
 → jakie zdarzenie wolno teraz zaakceptować
-→ dokąd prowadzi zaakceptowane zdarzenie
+→ czy bieżący punkt został ukończony i jaki jest następny punkt Spine
 → jakie skutki symboliczne należy zlecić
 
 RUNTIME / AKTORZY / ŚWIATŁO / MUZYKA
 → jak fizycznie wykonać zlecony skutek
 ```
 
-W kodzie: `vrExperienceScenario → ExperienceDirector → RuntimeExperience → aktorzy i systemy wykonawcze`.
+W kodzie docelowo: `VR_EXPERIENCE_SCENARIO_SPINE → vrExperienceScenario → ExperienceDirector → RuntimeExperience → aktorzy i systemy wykonawcze`.
 
 Minimalny podział brzmi: **SCENARIUSZ — co ma się wydarzyć. DIRECTOR — w którym miejscu scenariusza jesteśmy i czy wolno przejść dalej. RUNTIME/AKTORZY — jak to wykonać.** Nie wolno ponownie połączyć tych odpowiedzialności w jednej maszynie ani w `experienceVr.js`.
 
@@ -83,7 +164,7 @@ Minimalny podział brzmi: **SCENARIUSZ — co ma się wydarzyć. DIRECTOR — w 
 
 **CURRENT / TARGET boundary:**
 
-- `src/xr/progression/vrExperienceScenario.js` — kanoniczne dane Scenario: kolejność i rozgałęzienia, dozwolone eventy, symbolic effects, capabilities i prawdziwe milestones; docelowo numerowane punkty.
+- `src/xr/progression/vrExperienceScenario.js` — kanoniczny katalog definicji Scenario: dozwolone eventy, conditions, symbolic effects, capabilities, milestones, cues i `settledConsequences`; authored mainline order należy wyłącznie do eksportowanego Spine.
 - `src/xr/progression/ExperienceDirector.js` — kanoniczny silnik Directora: waliduje Scenario, przechowuje bieżący adres, akceptuje lub odrzuca event, wykonuje logiczne przejście, publikuje immutable change oraz udostępnia milestones i capabilities; nie wykonuje aktorów.
 - `src/xr/progression/createVrExperienceDirector.js` — cienka fabryka kompatybilności, nie druga implementacja Directora i nie miejsce osobnej logiki Scenario.
 - `src/xr/progression/RuntimeExperience.js` — granica wykonania symbolic effects: mapuje je na wstrzyknięte handlery, zachowuje kolejność i jawnie zgłasza brak handlera; nie podejmuje decyzji fabularnych.
@@ -176,9 +257,9 @@ Brak `1.70` jest legalną rezerwą. Local branch `1.100.1` nie należy do spine 
 
 Opcjonalny branch bez trwałej konsekwencji nie wpływa na stan późniejszych punktów. Model nie dopuszcza trwałych, wzajemnie sprzecznych wariantów świata wynikających z opcjonalnych branchy; taki wariant wymaga osobnej decyzji architektonicznej przed authoringiem.
 
-Scenario jest właścicielem authored kolejności. Director **nie** sortuje IDs, nie szuka najmniejszego większego numeru, nie robi `+10` ani `+1`, nie analizuje luk, nie interpretuje spine i nie wylicza „next point”. Director porusza się nadal wyłącznie przez **explicit `transition.target`**.
+Spine jest jedynym właścicielem authored kolejności. Director **nie** sortuje IDs, nie szuka najmniejszego większego numeru, nie robi `+10` ani `+1` i nie analizuje luk. **TARGET:** po ukończeniu mainline pointu pyta Spine o `next`; nie wymaga skopiowanego explicit targetu w definicji Scenario. **CURRENT:** istniejący Director nadal porusza się przez `transition.target`, ponieważ migracja do Spine-driven next nie została wdrożona.
 
-W przyszłości mały builder lub normalizer może przed utworzeniem Directora rozwinąć authored kolejność `1.10 → 1.20` do jawnego targetu. Po wstawieniu `1.11` wynik przed granicą Directora ma być `1.10 → explicit target 1.11` i `1.11 → explicit target 1.20`. Scenario Spine jest wiążącym TARGET, lecz jego runtime representation, builder/normalizer, bootstrap resolver i hydrator są **NOT IMPLEMENTED**. Dokument nie kanonizuje nazwy JS API ani schema (`spine`, `mainline`, `acts` itp.). Na istniejącej LIVE granicy Directora przebieg nadal składa się wyłącznie ze zwykłych explicit `transition.target`; ta zmiana dokumentacyjna nie zmienia ich znaczenia ani gameplayu.
+S1 wdrożył runtime representation Spine i pure reconstruction. Builder/normalizer nie jest wymagany do duplikowania order jako targets i pozostaje niewdrożony; bootstrap resolver i hydrator również są **NOT IMPLEMENTED**. Ta zmiana dokumentacyjna nie zmienia LIVE targets ani gameplayu.
 
 ### 6.1. Punkt jako adres historii
 
@@ -207,7 +288,7 @@ Director pozostaje interpreterem Scenario: zna `currentPointId`, ale nie ustawia
 
 ### 6.5. Status implementacyjny rekonstrukcji
 
-Scenario Spine i deterministyczna semantyka reconstruction są **TARGET / BINDING** dla authoringu i przyszłej architektury. Runtime implementation Spine, `stateAt`, builder/normalizer, bootstrap resolver, hydrator oraz checkpointy o tej semantyce są **NOT IMPLEMENTED**. Obecny Director i istniejące LIVE transitions nadal działają przez explicit `transition.target`.
+**CURRENT:** authored Spine, deklaratywne `settledConsequences` i pure reconstruction odpowiadające semantyce `stateAt` są wdrożone przez S1. **TARGET / NOT IMPLEMENTED:** Director używający `Spine.next()`, arbitrary start, bootstrap resolver, hydrator, owner restore APIs i reconstruction-backed checkpoints. Obecny Director i LIVE transitions nadal działają przez explicit `transition.target`.
 
 ## 7. Przykład flat-mainline indexing
 
@@ -290,15 +371,15 @@ Wiążąca zasada: **nowy punkt Scenario ≠ nowa funkcja**. Punkt nie tworzy au
 
 ## 10. Scenario
 
-**TARGET:** Scenario jest właścicielem authored mainline / Scenario Spine oraz immutable zbiorem danych opisującym akty, numerowane punkty, punkt początkowy, jawne transitions, akceptowane eventy, target, symbolic effects, capabilities, prawdziwe milestones, terminalność i metadata zakresu autorytatywności.
+**TARGET:** Scenario jest immutable katalogiem definicji punktów opisującym warunki, akceptowane eventy, symbolic effects, capabilities, milestones, terminalność, cues i `settledConsequences`. Spine — nie Scenario point definitions — jest jedynym właścicielem authored mainline order.
 
 Scenario nie importuje Three.js, DOM ani WebXR; nie odpytuje aktorów, nie mierzy odległości, nie uruchamia timerów runtime, nie pokazuje UI, nie odtwarza audio, nie przesuwa Małpy, nie zapisuje progresji domenowej, nie wykonuje efektów i nie zawiera funkcji zależnych od runtime. Definiuje authored kolejność i kanoniczne fakty historii wymagane na danej granicy, ale nie kopiuje domenowego stanu. Mówi, co powinno wydarzyć się teraz, co może nastąpić później i jaki settled result pozostaje prawdziwy, nie jak go przechować, narysować, przesunąć, odtworzyć lub animować.
 
 ## 11. Director
 
-**TARGET:** Director jest framework-free interpreterem Scenario. Waliduje dane; przechowuje `currentPointId`; rozpoznaje Akt z adresu; przyjmuje event; sprawdza jego dopuszczalność; zwraca `null` albo przechodzi do jawnego targetu; aktualizuje prawdziwe milestones; udostępnia capabilities; zwraca i publikuje immutable change; daje czytelny debug snapshot.
+**TARGET:** Director jest framework-free interpreterem Scenario. Waliduje dane; przechowuje `currentPointId`; przyjmuje event; sprawdza jego dopuszczalność i condition ukończenia; dla mainline pobiera następny punkt ze Spine; aktualizuje prawdziwe milestones; udostępnia capabilities; zwraca i publikuje immutable change; daje czytelny debug snapshot.
 
-Nie interpretuje Scenario Spine ani arytmetyki point IDs; otrzymuje wyłącznie explicit targets. Nie wykonuje effects, nie wywołuje aktorów, nie importuje runtime ani Three.js, nie czyta DOM, nie odpytuje kontrolerów domenowych, nie ustala sam ukończenia Tieru, nie mierzy timerów, nie commituje kart, skorup lub wyposażenia, nie hydratuje świata i nie posiada drugiej maszyny stanów.
+Nie interpretuje arytmetyki point IDs ani nie posiada kopii Spine; używa jej jawnego API kolejności. Explicit target zachowuje tylko dla semantycznych wyjątków, takich jak terminalny EARLY EXIT. Nie wykonuje effects, nie wywołuje aktorów, nie importuje runtime ani Three.js, nie czyta DOM, nie commituje kart, skorup lub wyposażenia, nie hydratuje świata i nie posiada drugiej maszyny stanów.
 
 **CURRENT:** kanoniczne API mówi o punktach: `currentPointId`, `initialPointId`, `getCurrentPointId()`. `getCurrentSceneId()` oraz aliasy Scenario `scenes` / `initialSceneId` pozostają przejściową kompatybilnością delegującą do tych samych danych, bez drugiego stanu.
 
@@ -564,7 +645,7 @@ Director operuje na currentPointId i wyłącznie explicit targets.
 
 ```text
 TARGET / BINDING, RUNTIME NOT IMPLEMENTED:
-Scenario Spine oraz deterministyczne `stateAt(pointId)` są wiążącym modelem; runtime Spine, builder, normalizer, resolver i hydrator nie istnieją.
+Authored Spine i pure exclusive reconstruction są CURRENT po S1. Wiążący model `stateAt(pointId)` jest wdrożony na poziomie pure fold; builder, normalizer, resolver, hydrator i Director `Spine.next()` nie istnieją.
 Act `3.x`, dalsze etapy progresji i docelowe checkpointy `?p0`–`?p2` pozostają PLANNED / NOT IMPLEMENTED.
 Approved WATER crystal tutorial insert nie jest punktem LIVE. Cała migracja Scenario/Director pozostaje IN PROGRESS z wcześniejszymi audit blockers.
 ```
@@ -648,7 +729,7 @@ Punktowa weryfikacja audytu zamyka **SG-041 = MIGRATED**: po M1.11 arrival oraz 
 
 ## CURRENT architectural boundary after M1.20 corrections
 
-Sekcja poniżej jest historycznym snapshotem granicy M1.13 i nie opisuje już bieżącego końca LIVE grafu. Po M1.20R pierwsza pętla jest LIVE pod adresami `2.10`, `2.10.1`, `2.20`, `2.30`, `2.30.1`, `2.40`, `2.40.1`; M1.20F i korekta ownershipu widoczności podłogi oraz M1.20M są wdrożone. Migracja nadal pozostaje **IN PROGRESS**: żaden `3.x` nie jest LIVE, Scenario Spine nie istnieje, a wcześniejsze audit blockers nie zostały zbiorczo zamknięte.
+Sekcja poniżej jest historycznym snapshotem granicy M1.13 i nie opisuje już bieżącego końca LIVE grafu. Po M1.20R pierwsza pętla jest LIVE pod adresami `2.10`, `2.10.1`, `2.20`, `2.30`, `2.30.1`, `2.40`, `2.40.1`; M1.20F i korekta ownershipu widoczności podłogi oraz M1.20M są wdrożone. Migracja nadal pozostaje **IN PROGRESS**: żaden `3.x` nie jest LIVE, S1 Spine/reconstruction istnieją, lecz Director nie używa jeszcze `Spine.next()`, a wcześniejsze audit blockers nie zostały zbiorczo zamknięte.
 
 ## Historical boundary after M1.13 (superseded by current boundary above)
 
