@@ -623,6 +623,11 @@ const runtimeExperience = new RuntimeExperience({
         throw new Error('REVEAL_RELIQUARY rejected by Intro actor after accepted Scenario transition');
       }
     },
+    [VR_SCENARIO_EFFECT.BEGIN_RELIQUARY_REVEAL]: () => {
+      if (!introSequence.beginReliquaryReveal()) {
+        throw new Error('BEGIN_RELIQUARY_REVEAL rejected by Intro actor after accepted Scenario transition');
+      }
+    },
     [VR_SCENARIO_EFFECT.COMPLETE_RELIQUARY_REVEAL]: () => {
       if (!introSequence.completeReliquaryReveal()) {
         throw new Error('COMPLETE_RELIQUARY_REVEAL rejected by Intro actor after accepted Scenario transition');

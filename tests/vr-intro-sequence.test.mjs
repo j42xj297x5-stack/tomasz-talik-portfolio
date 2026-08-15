@@ -189,7 +189,8 @@ assert.equal(f.sequence.beginFirstCrystalDiscovery(), true, 'a crystal still res
 assert.equal(f.getAttention(), 2); assert.equal(f.sequence.beginFirstCrystalDiscovery(), false, 'discovery is one-shot');
 f.getOverride().onMonkeyPress();
 for (let i = 0; i < 4; i += 1) f.sequence.update(.01);
-assert.equal(f.sequence.getState(), VR_INTRO_STATE.RELIQUARY_REVEAL);
+assert.equal(f.sequence.getState(), VR_INTRO_STATE.WAIT_RUNTIME_AFTER_DISCOVERY_MONKEY_TRIGGERED);
+assert.equal(f.sequence.beginReliquaryReveal(), true);
 let earlyReveal = 0;
 const early = fixture({ onReliquaryReveal: (duration) => { earlyReveal = duration; } }); reachGlyphExplore(early);
 early.sequence.update(30); assert.equal(early.sequence.beginFirstCrystalDiscovery(), true);
@@ -197,6 +198,10 @@ assert.equal(early.getAttention(), 1, 'early first crystal cancels the timeout a
 early.sequence.update(200); assert.equal(early.getAttention(), 1); assert.equal(early.getGlyphHintTimeout(), 0,
   'early discovery preserves its precedence over the delayed hint');
 early.getOverride().onMonkeyPress(); for (let i = 0; i < 3; i += 1) early.sequence.update(.01);
+assert.equal(earlyReveal, 0, 'Monkey press reports a fact and cannot directly begin the reveal');
+assert.equal(early.sequence.getState(), VR_INTRO_STATE.WAIT_RUNTIME_AFTER_DISCOVERY_MONKEY_TRIGGERED);
+assert.equal(early.sequence.beginReliquaryReveal(), true); assert.equal(early.sequence.beginReliquaryReveal(), false);
+for (let i = 0; i < 3; i += 1) early.sequence.update(.01);
 assert.equal(earlyReveal, 3); assert.equal(early.sequence.getState(), VR_INTRO_STATE.RELIQUARY_REVEAL);
 early.sequence.update(2.9); assert.equal(early.getReliquaryRevealCompleted(), 0, 'no completion fact before the existing 3 second threshold');
 early.sequence.update(.1); assert.equal(early.getReliquaryRevealCompleted(), 1, 'completion fact emits at the existing threshold');
@@ -207,6 +212,7 @@ assert.equal(early.sequence.getState(), VR_INTRO_STATE.GLYPH_FREE_EXPLORE);
 assert.equal(early.sequence.completeReliquaryReveal(), false, 'completion continuation is one-shot');
 early.sequence.reset(); reachGlyphExplore(early); early.sequence.update(1); assert.equal(early.sequence.beginFirstCrystalDiscovery(), true);
 early.getOverride().onMonkeyPress(); for (let i = 0; i < 3; i += 1) early.sequence.update(.01);
+assert.equal(early.sequence.beginReliquaryReveal(), true); for (let i = 0; i < 3; i += 1) early.sequence.update(.01);
 early.sequence.update(3); assert.equal(early.getReliquaryRevealCompleted(), 2, 'reset permits completion in the next reveal cycle');
 assert.equal(early.sequence.completeReliquaryReveal(), true);
 const thresholdBeyond = fixture(); reachThreshold(thresholdBeyond);
