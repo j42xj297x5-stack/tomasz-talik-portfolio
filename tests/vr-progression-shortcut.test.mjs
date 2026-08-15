@@ -8,7 +8,7 @@ function setup(search) {
   const activated = []; const completed = []; let synced = 0;
   const apply = createVrProgressionShortcut({ search, pages: experienceVrPages, progressionController,
     progressFloor: { activatePage: (page) => activated.push(page), completeTier: (tier) => completed.push(tier) },
-    syncTierOneWorldState: () => { synced += 1; }, log: () => {} });
+    syncQaPostP1WorldState: () => { synced += 1; }, log: () => {} });
   return { progressionController, activated, completed, get synced() { return synced; }, apply };
 }
 const clean = setup('?debug');

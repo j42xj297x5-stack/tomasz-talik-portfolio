@@ -287,10 +287,20 @@ assert.match(tierCompletionBlock, /if \(page\.order === 1\) runtimeExperience\.d
   'the domain-owner-reported first-tier completion emits the durable first-ring Scenario fact');
 assert.doesNotMatch(tierCompletionBlock, /progressFloor\.completeTier|playVrWorld\(VR_AUDIO\.tierComplete\)/,
   'the direct post-dispatch block no longer executes authored first-ring consequences');
-assert.match(tierCompletionBlock, /syncTierOneWorldState\(\);\s*syncAmbientSequence\(\);/,
-  'world-state and ambient synchronization remain in their existing production flow');
+assert.doesNotMatch(tierCompletionBlock, /syncTierOneWorldState|syncQaPostP1WorldState|shellSystem\.setActive/,
+  'live tier completion does not activate the post-P1 QA world state or shell field');
+assert.match(tierCompletionBlock, /syncAmbientSequence\(\);/,
+  'ambient domain-state projection remains in the live tier-completion flow');
 assert.doesNotMatch(scenario, /SYNC_TIER_ONE_WORLD_STATE|SYNC_AMBIENT_SEQUENCE/,
   'world-state and ambient synchronization were not migrated into Scenario effects');
+assert.doesNotMatch(vr, /isUnlocked: \(\) => progressionController\.isTierComplete\(1\)/,
+  'Tier 1 completion is not the production Astro permission');
+assert.match(vr, /isUnlocked: \(\) => introQaBypass \|\| runtimeExperience\.can\(VR_SCENARIO_CAPABILITY\.CAN_EQUIP_ASTRO\)/,
+  'Astro permission is Scenario-owned while preserving the explicit QA bypass');
+assert.match(vr, /function syncQaPostP1WorldState\(\) \{\s*if \(postP1Qa\) shellSystem\.setActive\(true\);\s*\}/,
+  'shell activation is isolated behind the explicit post-P1 QA route');
+assert.doesNotMatch(vr, /shellSystem\.setActive\(progressionController\.isTierComplete\(1\)\)/,
+  'session reset and re-entry cannot project Tier 1 completion into shell visibility');
 assert.match(vr, /loadMonkeyModel\(\{ actorParent: progressFloor\.object, fixtureParent: progressFloor\.object/,
   'Monkey stone is a stationary platform child, not a hidden fixtures child');
 assert.match(vr, /roots: \[monkeyVisualRoot, glyphRing, monkeyStoneRoot\]/);

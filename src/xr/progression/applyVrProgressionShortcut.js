@@ -1,5 +1,5 @@
 export function createVrProgressionShortcut({ search, pages, progressionController, progressFloor,
-  syncTierOneWorldState, log = console.info }) {
+  syncQaPostP1WorldState, log = console.info }) {
   let checked = false;
   return function applyVrProgressionShortcut() {
     if (checked) return false;
@@ -12,7 +12,7 @@ export function createVrProgressionShortcut({ search, pages, progressionControll
       committed += 1;
     });
     if (committed > 0 && progressionController.isTierComplete(1)) progressFloor.completeTier(1);
-    syncTierOneWorldState();
+    syncQaPostP1WorldState();
     log('[experience-vr] QA shortcut ?p1 applied.');
     return true;
   };
