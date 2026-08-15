@@ -129,6 +129,7 @@ const enterButton = app.querySelector('[data-vr-enter]');
 const exitButton = app.querySelector('[data-vr-exit]');
 const controls = app.querySelector('.vr-runtime__controls');
 const audioControl = document.querySelector('[data-audio-control]');
+let runtimeExperience = null;
 if (audioControl) app.querySelector('[data-vr-audio-slot]').append(audioControl);
 const loadedSettings = await loadExperienceVrSettings({ debug: new URLSearchParams(location.search).has('debug') });
 const settings = loadedSettings.settings;
@@ -378,7 +379,7 @@ const furnacePanel = createVrAstroFurnacePanel({
   parent: platformFixturesRoot, furnace: astroFurnace, controllers: vrControllers.controllers,
   progressionController: furnaceProgressionController, productionController: asterionProductionController,
   astroProductionController: astroAttractorProductionController,
-  canUseAstroProduction: () => runtimeExperience.getCurrentPointId() === '3.50',
+  canUseAstroProduction: () => runtimeExperience?.getCurrentPointId() === '3.50',
   asterionModel: asterionSphere.object, settings: settings.furnace.panel,
   processSource: createVrAstroFurnaceProcessSource(() => astroFurnaceActivateInteraction),
   contentSource: {
@@ -614,7 +615,7 @@ const furnaceIntro = createVrFurnaceIntro({
   revealFurnace: () => { astroFurnace.object.visible = true; return true; },
   onCompleted: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.FURNACE_INTRO_COMPLETED)
 });
-const runtimeExperience = new RuntimeExperience({
+runtimeExperience = new RuntimeExperience({
   director: experienceDirector,
   effectHandlers: {
     [VR_SCENARIO_EFFECT.BEGIN_INTRO_REVEAL]: () => {
