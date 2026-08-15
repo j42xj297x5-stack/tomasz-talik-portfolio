@@ -37,6 +37,7 @@ export const VR_SCENARIO_EVENT = immutableIdentifiers([
   'RELIQUARY_HINT_TIMEOUT',
   'CRYSTAL_ACTIVATED',
   'CARD_COMMITTED',
+  'FIRST_RING_COMPLETED',
   'TIER_COMPLETED',
   'ASTRO_UNLOCKED',
   'SHELL_PULL_STARTED',
@@ -346,33 +347,29 @@ const points = Object.freeze([
   Object.freeze({
     id: VR_EXPERIENCE_POINT['2.30'],
     settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
-    label: 'Reliquary reveal zakończony / powrót do GLYPH_FREE_EXPLORE',
+    label: 'Pierwszy ring / zdobywanie pierwszych 5 kart',
     capabilities: Object.freeze([
       VR_SCENARIO_CAPABILITY.CAN_USE_GLYPHS,
       VR_SCENARIO_CAPABILITY.CAN_USE_RELIQUARY,
-      VR_SCENARIO_CAPABILITY.CAN_ACTIVATE_RELIQUARY
+      VR_SCENARIO_CAPABILITY.CAN_ACTIVATE_RELIQUARY,
+      VR_SCENARIO_CAPABILITY.CAN_RELEASE_RELIQUARY
     ]),
     transitions: Object.freeze([
       Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.STAY, event: VR_SCENARIO_EVENT.RELIQUARY_HINT_TIMEOUT, milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.SHOW_RELIQUARY_CONTEXT_HINT]) }),
-      Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.COMPLETE, event: VR_SCENARIO_EVENT.CRYSTAL_ACTIVATED, milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.PRESENT_ACTIVE_CARD_PREVIEW]) })
+      Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.STAY, event: VR_SCENARIO_EVENT.CRYSTAL_ACTIVATED, milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.PRESENT_ACTIVE_CARD_PREVIEW]) }),
+      Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.STAY, event: VR_SCENARIO_EVENT.CARD_COMMITTED, milestonesToAdd: Object.freeze([VR_SCENARIO_MILESTONE.CARD_COMMITTED]), effects: Object.freeze([
+        VR_SCENARIO_EFFECT.UPDATE_COMMITTED_CARD_PRESENTATION,
+        VR_SCENARIO_EFFECT.PLAY_CARD_COMMIT_FEEDBACK
+      ]) }),
+      Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.COMPLETE, event: VR_SCENARIO_EVENT.FIRST_RING_COMPLETED, milestonesToAdd: Object.freeze([]), effects: Object.freeze([]) })
     ])
   }),
   Object.freeze({
     id: VR_EXPERIENCE_POINT['2.40'],
     settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
-    label: 'Reliquary aktywowane / oczekiwanie na Release',
-    capabilities: Object.freeze([
-      VR_SCENARIO_CAPABILITY.CAN_USE_GLYPHS,
-      VR_SCENARIO_CAPABILITY.CAN_USE_RELIQUARY,
-      VR_SCENARIO_CAPABILITY.CAN_RELEASE_RELIQUARY
-    ]),
-    transitions: Object.freeze([
-      Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.STAY, event: VR_SCENARIO_EVENT.RELIQUARY_HINT_TIMEOUT, milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.SHOW_RELIQUARY_CONTEXT_HINT]) }),
-      Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.EXPLICIT, event: VR_SCENARIO_EVENT.CARD_COMMITTED, target: VR_EXPERIENCE_POINT['2.30'], milestonesToAdd: Object.freeze([VR_SCENARIO_MILESTONE.CARD_COMMITTED]), effects: Object.freeze([
-        VR_SCENARIO_EFFECT.UPDATE_COMMITTED_CARD_PRESENTATION,
-        VR_SCENARIO_EFFECT.PLAY_CARD_COMMIT_FEEDBACK
-      ]) })
-    ])
+    label: 'Pierwszy ring / pierwszy globalny poziom ukończony 5/5',
+    capabilities: Object.freeze([]),
+    transitions: Object.freeze([])
   }),
   Object.freeze({
     id: VR_EXPERIENCE_POINT['100.10'],
@@ -397,7 +394,7 @@ export const vrExperienceScenario = Object.freeze({
     effects: Object.freeze(Object.values(VR_SCENARIO_EFFECT))
   }),
   metadata: Object.freeze({
-    stage: 'M2_2C2_CANONICAL_HINT_STAY',
+    stage: 'M2_2D_FIRST_RING_LOOP',
     authoritativeForLiveGameplay: true,
     // Routing topology lives only in points/transitions and the authored Spine.
   })

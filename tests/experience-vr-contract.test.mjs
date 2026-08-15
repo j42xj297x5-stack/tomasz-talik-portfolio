@@ -268,8 +268,8 @@ assert.match(reliquaryHints, /showHint\(\)[\s\S]*monkeyGuide\.notifyAttention\(\
   'the contextual reliquary hint still requests Monkey attention');
 assert.match(monkeyGuide, /if \(hit\.kind === 'monkey'\) \{\s*clearAttention\(\);\s*if \(dialogueOverride\?\.onMonkeyPress\)/,
   'a recognized Monkey press clears attention before dialogue override delegation');
-assert.match(vr, /if \(tierCompleted\) \{[\s\S]*progressFloor\.completeTier\(page\.order\)/,
-  'tier-completion continuation remains explicitly outside M1.20');
+assert.match(vr, /if \(tierCompleted\) \{\s*if \(page\.order === 1\) runtimeExperience\.dispatch\(VR_SCENARIO_EVENT\.FIRST_RING_COMPLETED, \{ page \}\);[\s\S]*progressFloor\.completeTier\(page\.order\)/,
+  'the owner-reported first-tier completion emits the durable first-ring Scenario fact');
 assert.match(vr, /loadMonkeyModel\(\{ actorParent: progressFloor\.object, fixtureParent: progressFloor\.object/,
   'Monkey stone is a stationary platform child, not a hidden fixtures child');
 assert.match(vr, /roots: \[monkeyVisualRoot, glyphRing, monkeyStoneRoot\]/);
