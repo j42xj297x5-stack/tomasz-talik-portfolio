@@ -127,6 +127,7 @@ if (audioControl) app.querySelector('[data-vr-audio-slot]').append(audioControl)
 const loadedSettings = await loadExperienceVrSettings({ debug: new URLSearchParams(location.search).has('debug') });
 const settings = loadedSettings.settings;
 const searchParams = new URLSearchParams(location.search);
+const postP1Qa = searchParams.has('p1');
 const furnaceProcessQa = searchParams.has('furnaceProcess');
 const introQaBypass = ['p1', 'asterionSphere', 'furnaceProcess', 'furnace']
   .some((key) => searchParams.has(key));
@@ -290,7 +291,9 @@ function syncAmbientSequence() {
 }
 const unsubscribeAmbientFurnace = furnaceProgressionController.subscribe(syncAmbientSequence);
 const unsubscribeAmbientAsterion = asterionProductionController.subscribe(syncAmbientSequence);
-function syncTierOneWorldState() { shellSystem.setActive(progressionController.isTierComplete(1)); }
+function syncQaPostP1WorldState() {
+  if (postP1Qa) shellSystem.setActive(true);
+}
 function resetPlayerRigToSpawn() {
   if (playerRig.parent !== floorPassengerRoot) floorPassengerRoot.add(playerRig);
   playerRig.position.copy(playerRigSpawnLocalPosition);
@@ -304,7 +307,7 @@ const handModeController = createVrHandModeController({
   semanticInput,
   attractorTool,
   asterionSphere,
-  isUnlocked: () => progressionController.isTierComplete(1),
+  isUnlocked: () => introQaBypass || runtimeExperience.can(VR_SCENARIO_CAPABILITY.CAN_EQUIP_ASTRO),
   isAsterionAvailable: () => asterionProductionController.isEarned() || asterionSphereQa,
   isLeftToolToggleBlocked: () => playerGuidePanel.isOpen()
 });
@@ -422,13 +425,12 @@ const crystalCollection = createVrCrystalCollection({
     runtimeExperience.dispatch(VR_SCENARIO_EVENT.CARD_COMMITTED, { page });
     if (tierCompleted) {
       if (page.order === 1) runtimeExperience.dispatch(VR_SCENARIO_EVENT.FIRST_RING_COMPLETED, { page });
-      syncTierOneWorldState();
       syncAmbientSequence();
     }
   }
 });
 createVrProgressionShortcut({ search: location.search, pages: experienceVrPages, progressionController,
-  progressFloor, syncTierOneWorldState })();
+  progressFloor, syncQaPostP1WorldState })();
 const activateButtonGltf = assetManager.getGltf('vr-crystal-reliquary-button-activate-model');
 const activateButtonModel = assetManager.cloneGltfScene('vr-crystal-reliquary-button-activate-model');
 const activateCompanion = crystalReliquary.attachCompanion({ id: 'activate', model: activateButtonModel, settings: settings.reliquary.buttons,
@@ -759,7 +761,7 @@ function handleSessionEnd() {
   glyphOrbit.reset();
   shellAttractorInteraction.reset();
   shellSystem.reset();
-  syncTierOneWorldState();
+  syncQaPostP1WorldState();
   glyphLights.reset();
   glyphInteraction.reset();
   vrControllers.reset();
@@ -796,7 +798,7 @@ async function enterVr() {
   glyphOrbit.reset();
   shellAttractorInteraction.reset();
   shellSystem.reset();
-  syncTierOneWorldState();
+  syncQaPostP1WorldState();
   glyphLights.reset();
   glyphInteraction.reset();
   vrControllers.reset();
