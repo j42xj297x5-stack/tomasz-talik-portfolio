@@ -422,10 +422,8 @@ const crystalCollection = createVrCrystalCollection({
     runtimeExperience.dispatch(VR_SCENARIO_EVENT.CARD_COMMITTED, { page });
     if (tierCompleted) {
       if (page.order === 1) runtimeExperience.dispatch(VR_SCENARIO_EVENT.FIRST_RING_COMPLETED, { page });
-      progressFloor.completeTier(page.order);
       syncTierOneWorldState();
       syncAmbientSequence();
-      playVrWorld(VR_AUDIO.tierComplete);
     }
   }
 });
@@ -647,6 +645,12 @@ const runtimeExperience = new RuntimeExperience({
     },
     [VR_SCENARIO_EFFECT.PLAY_CARD_COMMIT_FEEDBACK]: () => {
       playVrWorld(VR_AUDIO.reliquaryConsume);
+    },
+    [VR_SCENARIO_EFFECT.COMPLETE_FIRST_RING_PRESENTATION]: () => {
+      progressFloor.completeTier(1);
+    },
+    [VR_SCENARIO_EFFECT.PLAY_FIRST_RING_COMPLETE_FEEDBACK]: () => {
+      playVrWorld(VR_AUDIO.tierComplete);
     }
   }
 });

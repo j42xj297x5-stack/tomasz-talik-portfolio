@@ -274,8 +274,23 @@ assert.match(reliquaryHints, /showHint\(\)[\s\S]*monkeyGuide\.notifyAttention\(\
   'the contextual reliquary hint still requests Monkey attention');
 assert.match(monkeyGuide, /if \(hit\.kind === 'monkey'\) \{\s*clearAttention\(\);\s*if \(dialogueOverride\?\.onMonkeyPress\)/,
   'a recognized Monkey press clears attention before dialogue override delegation');
-assert.match(vr, /if \(tierCompleted\) \{\s*if \(page\.order === 1\) runtimeExperience\.dispatch\(VR_SCENARIO_EVENT\.FIRST_RING_COMPLETED, \{ page \}\);[\s\S]*progressFloor\.completeTier\(page\.order\)/,
-  'the owner-reported first-tier completion emits the durable first-ring Scenario fact');
+assert.match(vr, /VR_SCENARIO_EFFECT\.COMPLETE_FIRST_RING_PRESENTATION[\s\S]*progressFloor\.completeTier\(1\)/,
+  'Runtime owns the first-ring floor completion effect with explicit tier identity');
+assert.equal((vr.match(/progressFloor\.completeTier\(/g) ?? []).length, 1,
+  'first-ring floor completion has only the Runtime effect production path');
+assert.match(vr, /VR_SCENARIO_EFFECT\.PLAY_FIRST_RING_COMPLETE_FEEDBACK[\s\S]*playVrWorld\(VR_AUDIO\.tierComplete\)/,
+  'Runtime owns first-ring completion audio feedback');
+assert.equal((vr.match(/playVrWorld\(VR_AUDIO\.tierComplete\)/g) ?? []).length, 1,
+  'first-ring completion audio has only the Runtime effect production path');
+const tierCompletionBlock = vr.match(/if \(tierCompleted\) \{[\s\S]*?\n    \}/)?.[0] ?? '';
+assert.match(tierCompletionBlock, /if \(page\.order === 1\) runtimeExperience\.dispatch\(VR_SCENARIO_EVENT\.FIRST_RING_COMPLETED, \{ page \}\);/,
+  'the domain-owner-reported first-tier completion emits the durable first-ring Scenario fact');
+assert.doesNotMatch(tierCompletionBlock, /progressFloor\.completeTier|playVrWorld\(VR_AUDIO\.tierComplete\)/,
+  'the direct post-dispatch block no longer executes authored first-ring consequences');
+assert.match(tierCompletionBlock, /syncTierOneWorldState\(\);\s*syncAmbientSequence\(\);/,
+  'world-state and ambient synchronization remain in their existing production flow');
+assert.doesNotMatch(scenario, /SYNC_TIER_ONE_WORLD_STATE|SYNC_AMBIENT_SEQUENCE/,
+  'world-state and ambient synchronization were not migrated into Scenario effects');
 assert.match(vr, /loadMonkeyModel\(\{ actorParent: progressFloor\.object, fixtureParent: progressFloor\.object/,
   'Monkey stone is a stationary platform child, not a hidden fixtures child');
 assert.match(vr, /roots: \[monkeyVisualRoot, glyphRing, monkeyStoneRoot\]/);
