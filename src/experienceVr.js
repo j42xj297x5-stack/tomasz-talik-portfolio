@@ -44,6 +44,7 @@ import { createVrAsterionGyroInteraction } from './xr/asterion/createVrAsterionG
 import { createVrAsterionProductionController } from './xr/asterion/createVrAsterionProductionController.js';
 import { createVrPlayerGuidePanel } from './xr/guidance/createVrPlayerGuidePanel.js';
 import { createVrMonkeyGuide } from './xr/guidance/createVrMonkeyGuide.js';
+import { createVrPostRingMonkeyDialogue } from './xr/guidance/createVrPostRingMonkeyDialogue.js';
 import { createVrIntroSequence } from './xr/guidance/createVrIntroSequence.js';
 import { createVrIntroFogReveal } from './xr/guidance/createVrIntroFogReveal.js';
 import { createVrReliquaryHints } from './xr/guidance/createVrReliquaryHints.js';
@@ -577,6 +578,10 @@ const observationWindow = createVrObservationWindow({
   durationSeconds: settings.observationWindow.durationSeconds,
   onCompleted: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.OBSERVATION_WINDOW_COMPLETED)
 });
+const postRingMonkeyDialogue = createVrPostRingMonkeyDialogue({
+  monkeyGuide,
+  onCompleted: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.POST_RING_MONKEY_DIALOGUE_COMPLETED)
+});
 const runtimeExperience = new RuntimeExperience({
   director: experienceDirector,
   effectHandlers: {
@@ -671,8 +676,9 @@ const runtimeExperience = new RuntimeExperience({
       postRingPresentation.elevateMainGlyphs();
     },
     [VR_SCENARIO_EFFECT.BEGIN_OBSERVATION_WINDOW]: () => { observationWindow.begin(); },
-    // Authored 3.30 boundary: Monkey attention belongs to a later runtime slice.
-    [VR_SCENARIO_EFFECT.BEGIN_MONKEY_ATTENTION]: () => {}
+    [VR_SCENARIO_EFFECT.BEGIN_MONKEY_ATTENTION]: () => { postRingMonkeyDialogue.begin(); },
+    // Authored 3.40 boundary: the approved Furnace introduction is deliberately not presented by this slice.
+    [VR_SCENARIO_EFFECT.BEGIN_FURNACE_INTRO]: () => {}
   }
 });
 
@@ -793,6 +799,7 @@ function handleSessionEnd() {
   asterionProductionController.resetSession();
   handModeController.reset();
   playerGuidePanel.reset();
+  postRingMonkeyDialogue.reset();
   monkeyGuide.reset();
   introSequence.reset();
   showReadyState({ ended: hasEnteredSession });
@@ -832,6 +839,7 @@ async function enterVr() {
   asterionProductionController.resetSession();
   handModeController.reset();
   playerGuidePanel.reset();
+  postRingMonkeyDialogue.reset();
   monkeyGuide.reset();
   introSequence.reset();
   enterButton.disabled = true;
@@ -870,6 +878,7 @@ async function enterVr() {
     astroFurnace.reset();
     furnacePanel.reset();
     playerGuidePanel.reset();
+    postRingMonkeyDialogue.reset();
     monkeyGuide.reset();
     introSequence.reset();
     observationWindow.reset();

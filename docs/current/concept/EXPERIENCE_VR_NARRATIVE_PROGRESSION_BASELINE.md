@@ -46,6 +46,12 @@ Gracz ma `60 s` swobodnej eksploracji. Pierwszy kryształ przed upływem czasu r
 Pierwszy kryształ również po tej podpowiedzi rozstrzyga discovery. Małpa zwraca attention i mówi: `O, wydaje mi się, że można tego użyć.` Następnie trzysekundowe odsłonięcie udostępnia portal, canvas oczekiwania, relikwiarz oraz przyciski Activate i Release. Obowiązujące polskie copy portalu brzmi: `Osadź kryształ w naczyniu.`
 
 To jest zaimplementowany kanon P0. Szczegóły fog shadera, promieni, warunków przejść, transformów i visibility należą wyłącznie do [VR Runtime Model](../technical/VR_RUNTIME_MODEL.md).
+## Kanoniczne przejście po pierwszym kręgu
+
+MAŁPA = pamięć, nauczyciel, historia i pomoc. W `3.30` attention oznacza tylko dostępną rozmowę. Świadomie otwarty główny beat brzmi kolejno: `No i świat przestał być uprzejmy.`, `To, czego potrzebujesz, jest teraz poza zasięgiem.`, `Na szczęście nie na długo.` Istniejący model maksymalnie kilku kontekstowych odpowiedzi pozostaje dostępny. Opcje `CO ROBI ASTROLABIUM?` i `JAK ZDOBYĆ SKORUPĘ?` wolno pokazać dopiero po fizycznym odebraniu Astrolabium.
+
+Dla `3.40` zatwierdzone, ale jeszcze niewykonywane copy brzmi: `Spójrz na Piec.` oraz `Tam coś na ciebie czeka.` Reveal Pieca należy do następnego slice.
+
 ## Małpa — dostępne kanały komunikacji
 
 ### Komunikat inicjowany przez system/Małpę

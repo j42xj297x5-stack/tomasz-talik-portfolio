@@ -126,10 +126,10 @@ assert.match(vr, /onCompleted: \(\) => runtimeExperience\.dispatch\(VR_SCENARIO_
   'the observation actor dispatches the authored semantic completion fact');
 assert.match(vr, /postRingPresentation\.update\(delta\);\s*observationWindow\.update\(delta\);/,
   'the render loop advances the local observation timer');
-assert.match(vr, /VR_SCENARIO_EFFECT\.BEGIN_MONKEY_ATTENTION\]: \(\) => \{\}/,
-  '3.30 remains an explicit boundary sink');
-assert.doesNotMatch(vr, /BEGIN_MONKEY_ATTENTION[\s\S]{0,200}monkeyGuide\.notifyAttention/,
-  'the observation slice does not execute Monkey attention');
+assert.match(vr, /VR_SCENARIO_EFFECT\.BEGIN_MONKEY_ATTENTION\]: \(\) => \{ postRingMonkeyDialogue\.begin\(\); \}/,
+  '3.30 begins the interaction-gated Monkey dialogue actor');
+assert.match(vr, /VR_SCENARIO_EFFECT\.BEGIN_FURNACE_INTRO\]: \(\) => \{\}/,
+  '3.40 remains an explicit Furnace boundary sink');
 assert.match(vr, /renderer\.xr\.enabled = true/);
 assert.match(vr, /requestSession\('immersive-vr'/);
 assert.match(vr, /renderer\.setAnimationLoop\(renderFrame\)/);
