@@ -1,24 +1,12 @@
 # Experience VR Runtime Model
 
-Status: canonical description of the implemented runtime synchronized on 2026-08-12. Approved future gameplay is documented in the [gameplay roadmap](../concept/EXPERIENCE_VR_GAMEPLAY_ROADMAP.md).
+Status: canonical description of the implemented runtime synchronized after M2.2 on 2026-08-15. Approved future gameplay is documented in the [gameplay roadmap](../concept/EXPERIENCE_VR_GAMEPLAY_ROADMAP.md).
 
-## Canonical Story Reindex Migration — IMPLEMENTED
+## Scenario composition boundary
 
-**CURRENT (2026-08-13):** LIVE Scenario używa flat slice `1.10`, `1.20`, `1.30`, `1.40`, `1.50`, `1.60`, `1.70`, `1.80`, `1.100`, `1.100.1`, `1.110`, `1.110.1`, `1.120`, `1.120.1`, `1.130`, `100.10`. `1.90` pozostaje **RESERVED / WATER CRYSTAL TUTORIAL / NOT IMPLEMENTED**. Stare produkcyjne IDs objęte canonical mappingiem są **SUPERSEDED / RETIRED** i nie mogą zostać ponownie użyte; `100.10` pozostaje bez zmiany.
+The implemented composition follows `Spine → Scenario → Director → Runtime / actors / domain owners`. Spine owns authored mainline order, Scenario defines points and accepted events, and Director owns `currentPointId` and interprets `STAY`, `COMPLETE`, `EXPLICIT` and the crossing-only `COMPLETE_IF`. Runtime remains the symbolic-effect execution boundary. Actors and domain controllers retain physical, transient and committed domain state; Director does not use technical point IDs as memory for that state.
 
-Migracja zmieniła wyłącznie adresy punktów i jawne targety. Eventy, numeric choices, effects, milestones, actor/runtime behavior i SG statuses są bez zmian. M1.12 ma **HARDWARE PASS — Meta Quest 3S**, SG-036 **MIGRATED**, a SG-041 jest **MIGRATED** po M1.13. Scenario Spine pozostaje **TARGET / NOT IMPLEMENTED**; Director nadal używa wyłącznie explicit `transition.target`. Canonical Story Reindex jest **IMPLEMENTED / behavior-neutral**; post-reindex regression: **PASS — Meta Quest 3S**.
-
-## Scenario + Director M1.8 live slice and M1.9 foundation — historical snapshot
-
-The terminal-point and retained-group statements in this section record the M1.8/M1.9 stage and are superseded for CURRENT status by the M1.13 boundary below.
-
-M0 through M1.11 are live; M1 remains **IN PROGRESS**. The current main chain reaches `1.110 → MONKEY_REACHED_THRESHOLD → 1.120`: the actor produces the physical arrival fact, Scenario/Director accepts it exactly once, and Runtime executes `PRESENT_THRESHOLD_CHOICE`. Point `1.120` is terminal for the current slice; threshold selection remains legacy.
-
-`RuntimeExperience` remains the only symbolic-effect execution boundary. M1.9 **NUMERIC CHOICE ROUTING FOUNDATION — IMPLEMENTED**: Runtime already forwards the unchanged payload to Director and effect handlers, including a numeric `payload.choice`; no Runtime transport was rebuilt. Choice routing always uses the explicit Scenario target and never derives a point ID from the number. M1.9 adds no live transition: production remains terminal at `1.100`, invitation remains legacy, and SG-036 remains **RETAINED** with only `MONKEY_HOVERED` and `MONKEY_TRIGGERED` migrated. Hardware QA is **N/A** for this foundation because production does not use `choice`; automated regression preserves the M1.8 **HARDWARE PASS — Meta Quest 3S**.
-
-`RuntimeExperience` remains the only symbolic-effect execution boundary. A legal press in `WAIT_TRIGGER` moves the actor to `WAIT_RUNTIME_AFTER_MONKEY_TRIGGERED` and emits `MONKEY_TRIGGERED` exactly once. Before Runtime continuation it cannot clear the dialogue override into the subsequent flow, show `copy.seen` or `copy.going`, enter invitation, or install invitation options; repeated presses are consumed. The fifth legal `continueControllerOnboarding()` resumption starts the unchanged mechanical legacy execution `show(copy.seen, invitation, copy.going)`. There is no new effect or effect handler, and composition only wires the semantic dispatch. QA bypass synthesizes neither `MONKEY_HOVERED` nor `MONKEY_TRIGGERED`.
-
-SG-032, SG-039 and SG-040 are **MIGRATED**. SG-036 remains **RETAINED**; its migrated edges are `MONKEY_HOVERED` and `MONKEY_TRIGGERED`. Remaining legacy comprises the seen/invitation sequence, invitation options and choices, and later follow/ending/threshold decisions belonging to SG-036. M1.7 is **HARDWARE PASS — Meta Quest 3S**. M1.8 is **HARDWARE PASS — Meta Quest 3S**.
+WHERE, BEYOND, FOLLOW pause and hints are local `STAY` reactions. Crossing exists only at `1.130`: the Intro actor owns `playerEnteredRing` and `monkeySettled`, reports `crossingComplete`, and Director advances only after that combined fact resolves completion. `100.10` remains the terminal authored EARLY EXIT outside Spine.
 
 ## Runtime boundary and lifecycle
 
@@ -210,47 +198,12 @@ Implemented: runtime/session lifecycle, platform-relative hierarchy, player pass
 
 Not implemented: authored narrative/quests/Monkey personality or stuck-player guidance, small glyph progression, B band selection/Astro bands, antenna, rune processing, final radar/finale, durable persistence, full-game reset, spatial audio and gameplay audio for target/process classes that do not yet exist.
 
-## M1.10 invitation runtime seam
+## Scenario-driven runtime flow
 
-The Intro actor maps the three UI option IDs to stable numeric choices `1`, `2`, and `3`, enters `WAIT_RUNTIME_AFTER_INVITATION_SELECTED`, and emits `INTRO_INVITATION_SELECTED` with `{ choice }`. Scenario owns the explicit target. Only the accepted `CONTINUE_INTRO_INVITATION` effect calls `continueInvitation(payload.choice)`; rejection is a fail-fast composition error. There is no direct actor fallback.
+Intro choices and follow/crossing observations are transported through Runtime without turning local actor phases into story topology. WHERE, BEYOND and FOLLOW pause remain at their current story points through `STAY`. The whole physical crossing is represented by `1.130`; its join state belongs to `createVrIntroSequence`, not to Director. Once the actor reports `crossingComplete`, Director completes `1.130` through Spine and Runtime begins glyph free exploration.
 
-Baseline status: M1.8 HARDWARE PASS — Meta Quest 3S. M1.9 Numeric Choice Routing Foundation IMPLEMENTED; foundation Hardware QA N/A; post-M1.9 hardware regression PASS — Meta Quest 3S. M1.10 INTRO INVITATION CHOICE BRANCH HARDWARE PASS — Meta Quest 3S. SG-036 and SG-041 remain RETAINED.
+The first-ring runtime then proceeds through glyph free explore (`2.10`), Naczynie reveal (`2.20`) and the complete five-card loop (`2.30`). Within `2.30`, a hint, accepted Activate and `CARD_COMMITTED` all resolve to `STAY`; preview and per-card feedback execute without changing the story point, so progress from one through four committed cards remains at `2.30`.
 
+`createVrProgressionController` is the sole source of truth for committed cards and tier completion. Runtime emits `FIRST_RING_COMPLETED` only for the first durable `5/5` result. Director resolves that event as `COMPLETE`, asks `Spine.next('2.30')`, and enters `2.40`. Point `2.40` is the durable first-ring completion state and the boundary of the currently implemented Scenario; it has no transition back into the card loop.
 
-## M1.11 — Monkey reached threshold runtime seam
-
-**Status:** IMPLEMENTED — HARDWARE QA PENDING. M1.10 is **HARDWARE PASS — Meta Quest 3S**.
-
-The current boundary is `1.110 → MONKEY_REACHED_THRESHOLD → 1.120 → PRESENT_THRESHOLD_CHOICE → legacy threshold choices`. `createVrIntroSequence` retains stop-radius calculation, following movement, pause/resume policy and fog interpolation. On physical arrival it enters `WAIT_RUNTIME_AFTER_MONKEY_REACHED_THRESHOLD` and emits one callback fact; only the Runtime effect may call `presentThresholdChoice()`. No listener or fallback arrival interpretation exists in `experienceVr.js`.
-
-SG-032, SG-039 and SG-040 remain **MIGRATED**. SG-036 and SG-041 remain **RETAINED**. The migrated `MONKEY_REACHED_THRESHOLD` edge does not close SG-041: pause/resume distance decisions, `FOLLOW_PAUSE_CHANGED`, and broader movement/follow policy remain to migrate. Threshold selection is still legacy.
-
-## M1.12 — Threshold choice runtime seam
-
-**Status:** THRESHOLD CHOICE BRANCH — **HARDWARE PASS — Meta Quest 3S.** M1.11 is **HARDWARE PASS — Meta Quest 3S**.
-
-The Intro actor maps threshold UI IDs to numeric choices, enters `WAIT_RUNTIME_AFTER_THRESHOLD_SELECTED`, and emits one `onThresholdSelected(choice)` fact. Composition dispatches only `THRESHOLD_SELECTED` with `{ choice }`. Accepted Scenario transitions emit the single `CONTINUE_THRESHOLD_CHOICE`; Runtime forwards `payload.choice` to the guarded actor seam and fails fast if it rejects. Before continuation no CROSSING, beyond/return copy, options reinstall, or session ending occurs.
-
-Choice 1 retains the existing capture/message-clear/CROSSING mechanics. Choice 2 restores `THRESHOLD`, plays unchanged `copy.beyond`, and reinstalls the unchanged options, including repeat selection. Choice 3 retains ENDING, unchanged `copy.returning`, and existing end-session timing. The Scenario tree and exit status are:
-
-```text
-1.120:   1 → 1.130; 2 → 1.120.1; 3 → 100.10
-1.120.1: 1 → 1.130; 2 → 1.120.1; 3 → 100.10
-100.10: LIVE EXIT
-100.1: RESERVED / FUTURE
-```
-
-SG-036 is **MIGRATED**. SG-041 is **RETAINED**; follow grace, pause/resume distances, walking pause ownership, and movement continuation policy are unchanged.
-
-## M1.13 — Follow pause-resume runtime seam
-
-**HARDWARE PASS — Meta Quest 3S.** Actor-local distance/grace sensing emits `FOLLOW_PAUSE_CHANGED { paused }`, production composition dispatches that semantic payload unchanged, and Scenario routes by current point between active FOLLOWING `1.110` and local waiting branch `1.110.1`. Runtime owns exactly one `APPLY_FOLLOW_PAUSE_STATE` handler and fail-fast delegates to `continueFollowPauseChanged(payload.paused)`. The transient actor safe wait prevents an unaccepted movement frame while synchronous production dispatch preserves same-frame pause/resume parity. Motion and fog interpolation remain actor mechanics. `1.110.1` is not part of the future Scenario Spine; Scenario Spine is **TARGET / NOT IMPLEMENTED**, and `1.90` is **RESERVED / NOT IMPLEMENTED**. SG-041 and SG-036 are **MIGRATED**.
-
-
-## Current Scenario authority after M1.13
-
-The LIVE backbone is `1.10 → 1.20 → 1.30 → 1.40 → 1.50 → 1.60 → 1.70 → 1.80 → 1.100 → 1.110 → 1.120 → 1.130`, with local branches `1.100.1` (WHERE), `1.110.1` (Monkey paused/waiting) and `1.120.1` (BEYOND), plus LIVE EXIT `100.10`. Reserved `1.90` is not traversed and remains **WATER / Haiku Cosmos crystal grab tutorial — NOT IMPLEMENTED**.
-
-M1.12 and M1.13 are both **HARDWARE PASS — Meta Quest 3S**. `THRESHOLD_SELECTED` is owned by Scenario/Director numeric routing, transported by Runtime and executed by the actor. `FOLLOW_PAUSE_CHANGED { paused }` is sensed by actor mechanics and transported unchanged; the current Scenario point selects pause/resume routing, while `paused` is execution data. SG-036 and SG-041 are **MIGRATED**.
-
-LIVE Scenario authority ends at `1.130`, where CROSSING begins. Physical CROSSING through `ENTERING_RING`, `MONKEY_SETTLING` and transition to `GLYPH_FREE_EXPLORE` remains legacy. `PLAYER_ENTERED_RING`, `MONKEY_SETTLED` and `GLYPH_FREE_EXPLORE_STARTED` are not Scenario-owned. Their natural next boundary is **SG-042 = RETAINED**. Scenario Spine, Act 2 live Scenario and further progression remain **TARGET / NOT IMPLEMENTED**; current Runtime continues to use explicit `transition.target`.
+Scenario may expose both Activate and Release capabilities throughout `2.30`, but this is availability, not interaction truth. The Naczynie domain permits Activate only while the crystal is `inserted` and Release only while it is `active`. These phases remain owned by interaction/domain state and are not represented as story points.
