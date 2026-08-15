@@ -35,18 +35,18 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
       enabled: true,
       rayMaxDistance: 3,
       emissionInactive: 0,
-      emissionHover: 1,
+      emissionHover: 4.5,
       emissionPressed: 4
     },
     activateButton: {
       enabled: true,
       rayMaxDistance: 3,
       emissionInactive: 0,
-      emissionHover: 1,
+      emissionHover: 5,
       emissionPressed: 5
     },
     optionButton: {
-      enabled: true, rayMaxDistance: 3, emissionInactive: 0, emissionHover: 5, emissionActive: 3,
+      enabled: true, rayMaxDistance: 3, emissionInactive: 0, emissionHover: 7, emissionActive: 3,
       selectionDuration: 0.48, moduleAnglesDegrees: { floor_gyroscope_sphere: 90 },
       halo: { opacity: 0.52, thicknessPixels: 5, pulseDuration: 1.1 }
     },
