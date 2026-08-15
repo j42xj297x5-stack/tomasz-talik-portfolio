@@ -7,6 +7,7 @@ import {
   reconstructVrScenarioState,
   validateScenarioSpine
 } from '../src/xr/progression/reconstructVrScenarioState.js';
+import { getNextScenarioSpinePointId } from '../src/xr/progression/scenarioSpineNavigation.js';
 
 const localBranches = [
   '1.100.1', '1.110.1', '1.120.1', '1.130.1', '1.130.2',
@@ -17,7 +18,7 @@ assert.equal(Object.isFrozen(VR_EXPERIENCE_SCENARIO_SPINE), true);
 assert.equal(vrExperienceScenario.spine, VR_EXPERIENCE_SCENARIO_SPINE);
 assert.deepEqual(VR_EXPERIENCE_SCENARIO_SPINE, [
   '1.10', '1.20', '1.30', '1.40', '1.50', '1.60', '1.70', '1.80',
-  '1.100', '1.110', '1.120', '1.130', '2.10', '2.20', '2.30', '2.40', '100.10'
+  '1.100', '1.110', '1.120', '1.130', '2.10', '2.20', '2.30', '2.40'
 ]);
 assert.equal(validateScenarioSpine(vrExperienceScenario), true);
 const pointIds = new Set(vrExperienceScenario.points.map(({ id }) => id));
@@ -26,10 +27,18 @@ assert.equal(localBranches.some((id) => VR_EXPERIENCE_SCENARIO_SPINE.includes(id
 assert.equal(vrExperienceScenario.points
   .filter(({ id }) => VR_EXPERIENCE_SCENARIO_SPINE.includes(id))
   .every(({ settledConsequences }) => Object.isFrozen(settledConsequences)), true);
-assert.throws(
-  () => validateScenarioSpine({ ...vrExperienceScenario, spine: Object.freeze(['1.10', '1.100.1']) }),
-  /two-segment mainline ID/
-);
+assert.equal(VR_EXPERIENCE_SCENARIO_SPINE.includes('100.10'), false, 'EARLY EXIT is not reconstruction history');
+assert.equal(getNextScenarioSpinePointId(vrExperienceScenario, '1.100'), '1.110');
+assert.equal(getNextScenarioSpinePointId(vrExperienceScenario, '2.40'), null,
+  'the final LIVE point has no invented successor');
+assert.throws(() => getNextScenarioSpinePointId(vrExperienceScenario, '1.100.1'), /does not belong/);
+for (const [index, pointId] of VR_EXPERIENCE_SCENARIO_SPINE.entries()) {
+  const nextPointId = VR_EXPERIENCE_SCENARIO_SPINE[index + 1];
+  if (!nextPointId) continue;
+  const point = vrExperienceScenario.points.find(({ id }) => id === pointId);
+  assert.equal(point.transitions.some(({ target }) => target === nextPointId), false,
+    `${pointId} must not duplicate its authored mainline successor as an explicit target`);
+}
 assert.throws(
   () => validateScenarioSpine({ ...vrExperienceScenario, spine: Object.freeze(['1.10', '1.10']) }),
   /duplicate point/
@@ -54,6 +63,13 @@ const proofScenario = Object.freeze({
   ]),
   spine: Object.freeze(['1.10', '1.20', '1.30'])
 });
+
+const addressOrderProof = Object.freeze({
+  points: Object.freeze([point('100.500'), point('2.1'), point('alpha')]),
+  spine: Object.freeze(['100.500', '2.1', 'alpha'])
+});
+assert.equal(getNextScenarioSpinePointId(addressOrderProof, '100.500'), '2.1',
+  'navigation follows authored order rather than numeric-looking ID values');
 
 const atB = reconstructVrScenarioState(proofScenario, '1.20');
 assert.deepEqual(atB, { alpha: { settled: true } });

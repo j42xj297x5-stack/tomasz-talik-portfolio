@@ -1,3 +1,5 @@
+import { getNextScenarioSpinePointId, validateScenarioSpine } from './scenarioSpineNavigation.js';
+
 function assertStringArray(value, label) {
   if (!Array.isArray(value)) throw new TypeError(`${label} must be an array`);
   const seen = new Set();
@@ -13,6 +15,10 @@ function hasChoice(transition) {
   return Object.prototype.hasOwnProperty.call(transition, 'choice');
 }
 
+function hasExplicitTarget(transition) {
+  return Object.prototype.hasOwnProperty.call(transition, 'target');
+}
+
 function validateScenario(scenario) {
   if (!scenario || typeof scenario !== 'object') throw new TypeError('scenario is required');
   if (!scenario.vocabulary || typeof scenario.vocabulary !== 'object') throw new TypeError('scenario vocabulary is required');
@@ -24,6 +30,7 @@ function validateScenario(scenario) {
   const initialPointId = scenario.initialPointId ?? scenario.initialSceneId;
   if (!Array.isArray(points) || points.length === 0) throw new TypeError('scenario points are required');
   const pointIds = assertStringArray(points.map((point) => point?.id), 'scenario point ids');
+  validateScenarioSpine(scenario);
   if (!pointIds.has(initialPointId)) throw new Error(`scenario initial point does not exist: ${initialPointId}`);
   const pointsById = new Map();
   for (const point of points) {
@@ -38,7 +45,14 @@ function validateScenario(scenario) {
       if (transitionHasChoice && (!Number.isInteger(transition.choice) || transition.choice <= 0)) {
         throw new TypeError(`point ${point.id} transition ${transition.event} choice must be a positive integer`);
       }
-      if (!pointIds.has(transition.target)) throw new Error(`transition target does not exist: ${transition.target}`);
+      if (hasExplicitTarget(transition)) {
+        if (!pointIds.has(transition.target)) throw new Error(`transition target does not exist: ${transition.target}`);
+      } else {
+        const nextPointId = getNextScenarioSpinePointId(scenario, point.id);
+        if (nextPointId === null) {
+          throw new Error(`point ${point.id} cannot complete through Spine.next() because it is the last spine point`);
+        }
+      }
       const transitionMilestones = assertStringArray(transition.milestonesToAdd ?? [], `transition ${transition.event} milestones`);
       const transitionEffects = assertStringArray(transition.effects ?? [], `transition ${transition.event} effects`);
       for (const milestone of transitionMilestones) if (!milestones.has(milestone)) throw new Error(`transition ${transition.event} uses unknown milestone: ${milestone}`);
@@ -87,7 +101,9 @@ export class ExperienceDirector {
     );
     if (!transition) return null;
     const previousPointId = this.currentPointId;
-    this.currentPointId = transition.target;
+    this.currentPointId = hasExplicitTarget(transition)
+      ? transition.target
+      : getNextScenarioSpinePointId(this.scenario, previousPointId);
     const addedMilestones = [];
     for (const milestone of transition.milestonesToAdd ?? []) if (!this.committedMilestones.has(milestone)) {
       this.committedMilestones.add(milestone); addedMilestones.push(milestone);

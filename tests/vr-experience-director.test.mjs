@@ -14,7 +14,7 @@ assert.equal(Object.isFrozen(vrExperienceScenario.metadata.authoritativeScope), 
 assert.equal(Object.isFrozen(vrExperienceScenario.points[2].transitions[0]), true);
 assert.equal(Object.isFrozen(vrExperienceScenario.points[2].transitions[0].milestonesToAdd), true);
 assert.equal(Object.isFrozen(vrExperienceScenario.points[3]), true);
-assert.equal(vrExperienceScenario.metadata.stage, 'M1_20R_CANONICAL_ACT_ADDRESS_CORRECTION');
+assert.equal(vrExperienceScenario.metadata.stage, 'M2_1_SPINE_DRIVEN_NAVIGATION');
 assert.deepEqual(vrExperienceScenario.metadata.authoritativeScope, [
   'XR_CALIBRATED → BEGIN_INTRO_REVEAL',
   'INTRO_REVEAL_COMPLETE → BEGIN_POST_REVEAL_SILENCE',
@@ -52,6 +52,8 @@ const factoryChange = factoryDirector.dispatch(VR_SCENARIO_EVENT.XR_CALIBRATED);
 assert.deepEqual(factoryChange, productionChange, 'constructor and compatibility factory share semantics');
 assert.equal(productionChange.previousPointId, VR_EXPERIENCE_POINT['1.10']);
 assert.equal(productionChange.currentPointId, VR_EXPERIENCE_POINT['1.20']);
+assert.equal('target' in vrExperienceScenario.points[0].transitions[0], false,
+  'the Director does not need a redundant target for mainline completion');
 assert.equal(Object.isFrozen(productionChange), true);
 assert.deepEqual(productionChange.addedMilestones, [VR_SCENARIO_MILESTONE.XR_CALIBRATED]);
 assert.deepEqual(productionChange.effects, [VR_SCENARIO_EFFECT.BEGIN_INTRO_REVEAL]);
@@ -295,6 +297,7 @@ const vocabulary = Object.freeze({
 const scenario = Object.freeze({
   id: 'test-scenario',
   initialPointId: 'A',
+  spine: Object.freeze(['A', 'B']),
   vocabulary,
   points: Object.freeze([
     Object.freeze({
@@ -367,23 +370,39 @@ assert.equal(legacyDirector.getCurrentSceneId(), 'B');
 
 assert.throws(() => createVrExperienceDirector({ scenario: { ...scenario, initialPointId: 'MISSING' } }), /initial point/);
 assert.throws(() => createVrExperienceDirector({ scenario: {
-  ...scenario,
+  ...scenario, spine: ['A'],
   points: [{ id: 'A', capabilities: ['CAN_START'], transitions: [{ event: 'GO', target: 'MISSING' }] }]
 } }), /transition target/);
 assert.throws(() => createVrExperienceDirector({ scenario: {
-  ...scenario,
+  ...scenario, spine: ['A'],
   points: [{ id: 'A', capabilities: ['UNKNOWN'], transitions: [] }]
 } }), /unknown capability/);
 assert.throws(() => createVrExperienceDirector({ scenario: {
-  ...scenario,
+  ...scenario, spine: ['A'],
   points: [{ id: 'A', capabilities: [], transitions: [
     { event: 'GO', target: 'A' },
     { event: 'GO', target: 'A' }
   ] }]
 } }), /duplicate transition/);
 
+assert.throws(() => createVrExperienceDirector({ scenario: {
+  ...scenario,
+  spine: ['A'],
+  points: [{ id: 'A', capabilities: [], transitions: [{ event: 'GO' }] }]
+} }), /last spine point/);
+assert.throws(() => createVrExperienceDirector({ scenario: {
+  ...scenario,
+  spine: ['B'],
+  initialPointId: 'A',
+  points: [
+    { id: 'A', capabilities: [], transitions: [{ event: 'GO' }] },
+    { id: 'B', capabilities: [], transitions: [] }
+  ]
+} }), /does not belong/);
+
 const choiceScenario = {
   initialPointId: '2.6.3',
+  spine: ['2.6.3'],
   vocabulary: { events: ['SELECTED'], capabilities: [], milestones: ['SECOND_SELECTED'], effects: ['SECOND_EFFECT'] },
   points: [
     { id: '2.6.3', capabilities: [], transitions: [
@@ -420,6 +439,7 @@ assert.equal(explicitTargetDirector.dispatch('SELECTED', { choice: 3 }).currentP
 
 const choiceValidationScenario = (transitions) => ({
   initialPointId: 'A',
+  spine: ['A'],
   vocabulary: { events: ['SELECTED'], capabilities: [], milestones: [], effects: [] },
   points: [{ id: 'A', capabilities: [], transitions }]
 });

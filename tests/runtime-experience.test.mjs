@@ -4,7 +4,7 @@ import { RuntimeExperience } from '../src/xr/progression/RuntimeExperience.js';
 import { VR_SCENARIO_EFFECT, VR_SCENARIO_EVENT, vrExperienceScenario } from '../src/xr/progression/vrExperienceScenario.js';
 
 const freeze = (value) => Object.freeze(value);
-const scenario = freeze({ initialPointId: 'A', vocabulary: freeze({ events: freeze(['GO', 'IGNORED']),
+const scenario = freeze({ initialPointId: 'A', spine: freeze(['A', 'B']), vocabulary: freeze({ events: freeze(['GO', 'IGNORED']),
   capabilities: freeze(['CAN_GO', 'CAN_DONE']), milestones: freeze(['DONE']), effects: freeze(['FIRST', 'SECOND']) }),
 points: freeze([
   freeze({ id: 'A', capabilities: freeze(['CAN_GO']), transitions: freeze([
@@ -29,7 +29,7 @@ assert.deepEqual(runtime.getDebugSnapshot(), director.getDebugSnapshot());
 runtime.resetSession(); assert.equal(runtime.hasMilestone('DONE'), true); assert.notEqual(runtime.dispatch('GO'), null);
 runtime.resetSession({ hard: true }); assert.equal(runtime.hasMilestone('DONE'), false);
 const choicePayload = { choice: 2, source: 'fixture' }; const choiceCalls = [];
-const choiceScenario = freeze({ initialPointId: '2.6.3', vocabulary: freeze({ events: freeze(['SELECTED']),
+const choiceScenario = freeze({ initialPointId: '2.6.3', spine: freeze(['2.6.3']), vocabulary: freeze({ events: freeze(['SELECTED']),
   capabilities: freeze([]), milestones: freeze([]), effects: freeze(['CHOICE_EFFECT']) }), points: freeze([
   freeze({ id: '2.6.3', capabilities: freeze([]), transitions: freeze([
     freeze({ event: 'SELECTED', choice: 1, target: '2.6.3.1', effects: freeze([]) }),
