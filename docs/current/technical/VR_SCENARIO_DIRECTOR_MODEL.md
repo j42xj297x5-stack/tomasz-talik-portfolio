@@ -1,764 +1,91 @@
-# Experience VR — Scenario, Director i model migracji progresji
+# Experience VR — Scenario, Director i progresja
 
-Status: **kanoniczny model architektoniczny i protokół migracji**. Oznaczenia normatywne używane w dokumencie: **CURRENT**, **TARGET**, **MIGRATION RULE**, **FUTURE / NOT IMPLEMENTED**.
+Status: **CURRENT**. Dokument opisuje wdrożony model po migracji M2.2; kod pozostaje dowodem implementacji.
 
-## 1. Cel i status dokumentu
-
-Dokument definiuje Scenario Experience VR, Directora, `RuntimeExperience`, aktorów i kontrolery domenowe; sposób adresowania punktów przebiegu; krokowe przenoszenie istniejącej progresji do Scenario; rozdział adresów punktów od nazw eventów, efektów i cue; oraz docelowe ograniczanie odpowiedzialności `experienceVr.js`.
-
-Jest źródłem prawdy dla wszystkich następnych etapów migracji Scenario + Director. **CURRENT:** kod jest dowodem tego, co wdrożono. **TARGET:** każda dalsza migracja musi być projektowana według niniejszego modelu. Dokument nie zmienia kodu ani nie uznaje elementów docelowych za wdrożone.
-
-## 1.1. Canonical Story Reindex Migration — IMPLEMENTED
-
-**HISTORICAL IMPLEMENTED STAGE (2026-08-13):** jednorazowy corrective reindex ówczesnego LIVE Scenario został wdrożony bez zmiany gameplay semantics. Flat live slice zawierał `1.10`, `1.20`, `1.30`, `1.40`, `1.50`, `1.60`, `1.70`, `1.80`, `1.100`, trzy później usunięte lokalne punkty Intro, `1.110`, `1.120`, `1.130`, `100.10`. Ten akapit jest zapisem historycznym; stan CURRENT definiują sekcje 1.5 i 1.6.
-
-`1.90` jest **RESERVED / WATER (Haiku Cosmos) CRYSTAL GRAB TUTORIAL / NOT IMPLEMENTED** i nie należy do produkcyjnego identifier set. W tamtym historycznym etapie Scenario Spine było **TARGET / NOT IMPLEMENTED**; S1 wdrożył je później. Director nadal przechodzi przez jawne `transition.target` i nie wylicza kolejności z adresów.
-
-| OLD (SUPERSEDED / RETIRED) | NEW |
-| --- | --- |
-| `1.1` | `1.10` |
-| `1.2` | `1.20` |
-| `1.3` | `1.30` |
-| `1.4` | `1.40` |
-| `1.4.1` | `1.50` |
-| `1.4.2` | `1.60` |
-| `1.4.3` | `1.70` |
-| `1.4.4` | `1.80` |
-| `1.4.5` | `1.100` |
-| `1.4.5.2` | `1.100.1` |
-| `1.4.5.1` | `1.110` |
-| `1.4.5.1.1` | `1.120` |
-| `1.4.5.1.1.2` | `1.120.1` |
-| `1.4.5.1.1.1` | `1.130` |
-
-Wszystkie OLD IDs w tabeli są trwale **SUPERSEDED / RETIRED** i nigdy nie mogą otrzymać innego znaczenia. `100.10` nie został zmieniony ani retired. M1.12 ma **HARDWARE PASS — Meta Quest 3S**, SG-036 **MIGRATED**, SG-041 **MIGRATED** po M1.13, a approved crystal tutorial **NOT IMPLEMENTED**. Canonical Story Reindex jest **IMPLEMENTED / behavior-neutral**; post-reindex regression: **PASS — Meta Quest 3S**.
-
-## 1.2. M1.20R Canonical Act Address Correction — IMPLEMENTED
-
-**CURRENT:** M1.20R jest behavior-neutral corrective reindexem, który przywraca wiążącą semantykę Aktów: `1.x` = PROLOG / INTRO, `2.x` = PRÓG I / pierwsza pętla pięciu kryształów, `3.x` = PRÓG II / etap po ukończeniu pierwszej pełnej piątki. Ten patch nie implementuje żadnego LIVE `3.x` ani faktu `TIER_COMPLETED`.
-
-| OLD (SUPERSEDED / RETIRED) | NEW (CANONICAL) |
-| --- | --- |
-| `1.140` | `2.10` |
-| `1.150` | removed; hint is local `STAY` in `2.10` |
-| `1.160` | `2.20` |
-| `1.170` | `2.30` |
-| `1.170.1` | removed; hint is local `STAY` in `2.30` |
-| `1.180` | `2.40` |
-| `1.180.1` | removed; hint is local `STAY` in `2.40` |
-
-Wszystkie OLD IDs w tej tabeli są trwale **SUPERSEDED / RETIRED**, nie są aliasami Runtime i nigdy nie mogą otrzymać nowego znaczenia. Korekta zmienia wyłącznie adresy i jawne `transition.target`; milestones, effects, capabilities, payload, ownership oraz gameplay pozostają bez zmian.
-
-## 1.3. Stan LIVE po M1.20R / M1.20F / M1.20M — CURRENT
-
-Aktualny produkcyjny graf obejmuje cztery przestrzenie adresowe: `1.x` = Intro / Prolog, `2.x` = pierwsza pętla pięciu kryształów, `3.x` = etap po pełnym `5/5` (**PLANNED / NOT IMPLEMENTED**) oraz `100.x` = exit. LIVE punkty pierwszej pętli to dokładnie `2.10`, `2.20`, `2.30` i `2.40`. Stare `1.140`–`1.180.1` są trwale **RETIRED / SUPERSEDED** zgodnie z mapowaniem M1.20R i nie są aliasami.
-
-M1.20R (canonical Act address correction), M1.20F (floor sector reveal), M1.20M (Monkey attention correction) oraz późniejsza korekta wyłącznego ownershipu `sector.visible` przez `VrProgressFloor` są **IMPLEMENTED**. Nie kończy to całej migracji Scenario/Director: `3.x` i dalsze etapy nie są LIVE, a wcześniejsze audit blockers pozostają do obsłużenia.
-
-Po M2.1 authored `VR_EXPERIENCE_SCENARIO_SPINE`, `settledConsequences`, pure `reconstructVrScenarioState` z exclusive boundary oraz Spine-driven normal mainline routing Directora są **CURRENT / IMPLEMENTED**. `transition.target` pozostaje wyłącznie dla jawnych tras local/exit poza normalnym następstwem Spine.
-
-## 1.4. Wiążący model ownershipu po M2.1
-
-Niniejsza sekcja jest nadrzędna wobec historycznych opisów migracji niżej w tym dokumencie:
+## 1. Model ownershipu
 
 ```text
 SPINE → SCENARIO → DIRECTOR → RUNTIME / ACTORS / DOMAIN OWNERS
 ```
 
-Obowiązuje zasada: **jedna informacja ma jednego właściciela**. Kolejność głównej fabuły należy wyłącznie do Spine; znaczenie punktu do Scenario; bieżąca pozycja i interpretacja do Directora; wykonanie do Runtime/aktorów; prawda domenowa i jej projekcja do właściwych ownerów.
+- **Spine** (`VR_EXPERIENCE_SCENARIO_SPINE`) jest jedynym właścicielem authored mainline order. ID jest stabilnym adresem, nie liczbą do sortowania ani źródłem kolejności.
+- **Scenario** definiuje canonical story points oraz ich accepted events, effects, capabilities, milestones i `settledConsequences`. Nie powiela normalnego następstwa mainline przez targety.
+- **Director** posiada `currentPointId`, interpretuje definicję bieżącego punktu, akceptuje pasujący event, commituje milestone'y, publikuje efekty i rozstrzyga przejście.
+- **Runtime / actors / domain owners** wykonują efekty i posiadają rzeczywisty stan domenowy oraz transient. Director nie mutuje sceny Three.js i nie przejmuje invariants interakcji, kart, podłogi, Naczynia ani Intro.
 
-### CURRENT — stan wdrożony przez S1 + M2.1
+`RuntimeExperience` jest granicą wykonawczą: przekazuje eventy do Directora i deleguje symboliczne effects do wstrzykniętych handlerów. Capability Scenario jest pozwoleniem na udział w danym loopie, a nie kopią szczegółowego stanu domeny.
 
-- `VR_EXPERIENCE_SCENARIO_SPINE` jest immutable, jawną authored sekwencją istniejących mainline point IDs;
-- definicje Scenario mają deklaratywne `settledConsequences`;
-- pure `reconstructVrScenarioState` waliduje Spine i składa stan według jego authored order;
-- reconstruction ma exclusive boundary: uwzględnia tylko punkty stojące ściśle przed targetem;
-- normalne mainline transitions nie zapisują `target`; Director pobiera następny point przez pure Spine navigation;
-- explicit `transition.target` pozostaje dla EARLY EXIT, local hint/choice flows i powrotów/pętli poza normalnym następstwem;
-- Spine kończy się na ostatnim zaimplementowanym mainline point `2.40`; terminalny EARLY EXIT `100.10` nie należy do Spine ani reconstruction path.
+## 2. Canonical Spine i granica implementacji
 
-S1 ustanowił Spine, `settledConsequences`, pure reconstruction i exclusive `stateAt`; M2.1 przeniósł na ten Spine również ownership normalnego routingu LIVE bez zmiany gameplay topology.
-
-### TARGET / BINDING
-
-#### Scenario Spine — jedyny właściciel mainline order
-
-Spine odpowiada wyłącznie za authored kolejność głównej fabuły, jej początek i właściwy koniec, relacje `previous/current/next` oraz wskazanie punktów stojących przed targetem dla `stateAt(pointId)`. Jest jawną sekwencją point IDs. Żaden drugi komponent nie może posiadać kopii tej kolejności.
-
-Point ID jest tylko stabilnym identyfikatorem/adresem. Nie wolno interpretować go matematycznie, sortować numerycznie, wyliczać kolejności z `1.10`, `2.20` lub `3.40` ani zakładać, że większy numer oznacza późniejsze wydarzenie. Konwencje segmentów pomagają autorom katalogować punkty, ale **jedynym źródłem mainline order jest authored Spine**.
-
-#### Scenario — katalog definicji
-
-Scenario odpowiada za znaczenie point ID. Definicja może zawierać warunki aktywności, dozwolone eventy/capabilities, condition ukończenia, milestones, transient/live effects, `settledConsequences`, dialogue/cues, Monkey hints i lokalne reakcje dramaturgiczne. Scenario nie jest właścicielem mainline order. Model docelowy nie zapisuje jednocześnie `Spine: A → B` i niezależnego `Scenario[A].mainlineTransition.target = B` jako dwóch źródeł tej samej informacji.
-
-#### Director — interpreter bieżącego punktu
-
-Director posiada `currentPointId`, odczytuje odpowiednią definicję Scenario, waliduje eventy i condition punktu, rozstrzyga jego ukończenie, emituje symbolic live effects, a po ukończeniu mainline pointu pobiera następny ID wyłącznie ze `Spine.next(currentPointId)` i zmienia logiczną pozycję.
-
-Director nie sortuje ani nie interpretuje IDs, nie ma kopii mainline, nie rekonstruuje persistent world state, nie hydratuje ownerów, nie mutuje Three.js i nie przejmuje kart, floor, Furnace, shells ani tools. Runtime i aktorzy wykonują zlecone efekty, zaś domain owners zachowują własne invariants i prawdę domenową.
-
-### Warunek ukończenia nie jest branchem
-
-Mainline Experience VR jest linearny. Punkt może jednak blokować przejście aż do jawnego domain condition, np. `5/5` kryształów danego tieru, `6/6` skorup, kolejnego `5/5`, physical pickup albo completion konkretnej interakcji. Reguła `pozostajemy w X aż condition === complete` opisuje czas i warunek ukończenia jednego punktu, nie alternatywną fabułę. Po spełnieniu condition Director używa `Spine.next(X)`.
-
-### Monkey guidance i lokalne cues
-
-Nie każda wypowiedź lub podpowiedź Monkey jest punktem progresji. Jeden Scenario point może mieć objective, condition, hint po czasie, dalszy hint po kolejnej bezczynności, reakcję na błędne działanie i dialogue cue. Są to lokalne cues/hints/reactions definicji punktu i nie przesuwają Spine, o ile nie stanowią rzeczywistego nowego canonical story beat.
-
-### Explicit terminal outcome / EARLY EXIT
-
-Wczesne zakończenia nie tworzą pełnego branching progression modelu. Są dwa jawnie odmienne wyniki:
-
-- **mainline completion** — Director używa `Spine.next(currentPointId)`;
-- **explicit terminal outcome / EARLY EXIT** — definicja Scenario wskazuje terminalny Scenario point poza normalnym następstwem Spine, a Director przechodzi bezpośrednio do niego.
-
-EARLY EXIT jest canonical Scenario outcome, lecz główna fabuła nadal ma jedną authored Spine prowadzącą do właściwego finału. Wyjątek jest wyrażony semantycznie, nie przez arytmetykę ani namespace ID.
-
-### Reconstruction bez duplikacji odpowiedzialności
-
-Obowiązuje exclusive semantyka:
-
-```text
-stateAt(X) = fold(settledConsequences punktów Spine stojących ściśle przed X)
-```
-
-Spine dostarcza historię kolejności, Scenario dostarcza `settledConsequences` przypisane do definicji punktów, a pure reconstruction składa obie informacje. W efekcie przed targetem jest zakończona historia, target jest teraźniejszością, a punkty po nim przyszłością.
-
-Debug checkpoint `?pN → canonical pointId` jest tylko aliasem adresu. Nie zawiera snapshotu ani domain facts; te zawsze wynikają z `stateAt(canonicalPointId)`. Dzięki temu wstawienie wcześniejszego mainline pointu wpływa na późniejszy reconstructed state bez aktualizacji snapshotów checkpointów.
-
-### NOT IMPLEMENTED
-
-- arbitrary Director start;
-- hydration i owner restore APIs;
-- reconstruction-backed `?pN`.
-- pełne uporządkowanie Scenario definitions i guidance/cues.
-
-Bootstrap, QA, Director i `experienceVr.js` nie mogą tworzyć równoległej prawdy. Stan portfolio należy do progression ownera, wizualna projekcja floor do Floor ownera, Furnace do Furnace ownera, shells do shell/material ownera, a tools do właściwego equipment/achievement ownera. Preferowane są małe jawne API ownerów zamiast direct scene writes i łatek synchronizujących visibility lub inne projekcje.
-
-## 1.5. Jawna semantyka transitionów — CURRENT / IMPLEMENTED
-
-Każdy LIVE transition posiada immutable `kind` z kontraktu `VR_SCENARIO_TRANSITION_KIND`: `STAY | COMPLETE | EXPLICIT | COMPLETE_IF`. Director interpretuje wyłącznie ten rodzaj, nigdy obecność lub brak `target`:
-
-- `STAY` — zaakceptowana reakcja lokalna: commituje przewidziane milestones i zwraca effects, ale zachowuje canonical `currentPointId`; nie może posiadać `target`;
-- `COMPLETE` — bezwarunkowo kończy bieżący canonical mainline point i pobiera następcę przez `Spine.next(currentPointId)`; nie może posiadać `target`, wymaga pointu należącego do Spine oraz authored następcy;
-- `EXPLICIT` — świadoma trasa do wymaganego, istniejącego authored `transition.target`, przeznaczona dla local/exit/loop routing; nie używa `Spine.next()`;
-- `COMPLETE_IF` — conditional completion, dla którego owner odpowiedniego transient/domain state jawnie przekazuje warunek. `false` rozwiązuje się do `STAY`, natomiast `true` rozwiązuje się do `COMPLETE` i używa `Spine.next(currentPointId)`. Nie posiada `target`.
-
-Accepted immutable `change` publikuje rozstrzygnięty `transitionKind`, czyli dla `COMPLETE_IF` odpowiednio `STAY` albo `COMPLETE`. Normalny start Directora pochodzi z `scenario.spine[0]`; compatibility aliases `initialPointId` i `initialSceneId` są wyprowadzone z tego elementu oraz walidowane pod kątem zgodności. `metadata.authoritativeScope` nie istnieje, ponieważ duplikowałoby topology; metadata zachowuje tylko stage i flagę autorytatywności LIVE.
-
-Normalne ukończenia mainline (`1.10`–`1.80`, invitation choice 1 z `1.100`, threshold arrival z `1.110`, threshold choice 1 z `1.120`, discovery/reveal/activate na `2.10`, `2.20`, `2.30`) są `COMPLETE`. Trasy EARLY EXIT i pętla `2.40 → 2.30` pozostają `EXPLICIT`. Lokalne reakcje WHERE w `1.100`, FOLLOW pause/resume w `1.110` i BEYOND w `1.120` są `STAY` bez targetu.
-
-`COMPLETE_IF` **nie jest ogólnym rules engine**. CURRENT kontrakt obsługuje wyłącznie zawężony, jawny warunek `crossingComplete`; nie ustanawia DSL, expression systemu ani generic condition engine.
-
-## 1.6. Crossing w canonical point `1.130` — CURRENT / IMPLEMENTED
-
-`1.130` jest jedynym canonical story pointem crossing. Eventy `PLAYER_ENTERED_RING` i `MONKEY_SETTLED` mogą nadejść w dowolnej kolejności. Intro actor jest wyłącznym właścicielem transient state `playerEnteredRing` i `monkeySettled`; Director nie przechowuje kopii tych faktów. Przy każdym z obu eventów Intro jawnie przekazuje warunek `crossingComplete` do transitionu `COMPLETE_IF`.
-
-Pierwszy z faktów pozostawia przebieg w `1.130`, ponieważ warunek `false` rozwiązuje się do `STAY`. Kiedy oba fakty są spełnione, `crossingComplete: true` rozwiązuje się do `COMPLETE`: kończy `1.130`, emituje completion effect i przez `Spine.next("1.130")` prowadzi do `2.10`. Usunięte techniczne adresy `1.130.1` i `1.130.2` nie są LIVE Scenario points, nie mają aliasów i nie reprezentują trwałych milestones.
-
-## 1.7. CURRENT technical points
-
-Hint-only technical points zostały usunięte. `GLYPH_HINT_TIMEOUT` jest lokalną reakcją `STAY + SHOW_GLYPH_HINT` w `2.10`, a `RELIQUARY_HINT_TIMEOUT` reakcją `STAY + SHOW_RELIQUARY_CONTEXT_HINT` w `2.30` i `2.40`. Intro zachowuje transient state glyph hintu, a `createVrReliquaryHints` zachowuje `fired` / `shown` / `phase`; Scenario i Director nie przechowują tej pamięci.
-
-Condition point `5/5`, arbitrary Director start, hydration oraz reconstruction-backed QA aliases pozostają **FUTURE / NOT IMPLEMENTED**. Nie należy przedstawiać `5/5` jako CURRENT.
-
-## 2. Metafora teatralna i podział odpowiedzialności
-
-Wiążąca analogia:
-
-```text
-SPINE
-→ jaka jest authored kolejność głównej historii
-
-SCENARIUSZ
-→ co oznacza definicja bieżącego punktu
-
-REŻYSER
-→ w którym punkcie scenariusza jesteśmy
-→ jakie zdarzenie wolno teraz zaakceptować
-→ czy bieżący punkt został ukończony i jaki jest następny punkt Spine
-→ jakie skutki symboliczne należy zlecić
-
-RUNTIME / AKTORZY / ŚWIATŁO / MUZYKA
-→ jak fizycznie wykonać zlecony skutek
-```
-
-W kodzie docelowo: `VR_EXPERIENCE_SCENARIO_SPINE → vrExperienceScenario → ExperienceDirector → RuntimeExperience → aktorzy i systemy wykonawcze`.
-
-Minimalny podział brzmi: **SCENARIUSZ — co ma się wydarzyć. DIRECTOR — w którym miejscu scenariusza jesteśmy i czy wolno przejść dalej. RUNTIME/AKTORZY — jak to wykonać.** Nie wolno ponownie połączyć tych odpowiedzialności w jednej maszynie ani w `experienceVr.js`.
-
-## 3. Rola poszczególnych plików
-
-**CURRENT / TARGET boundary:**
-
-- `src/xr/progression/vrExperienceScenario.js` — kanoniczny katalog definicji Scenario: dozwolone eventy, conditions, symbolic effects, capabilities, milestones, cues i `settledConsequences`; authored mainline order należy wyłącznie do eksportowanego Spine.
-- `src/xr/progression/ExperienceDirector.js` — kanoniczny silnik Directora: waliduje Scenario, przechowuje bieżący adres, akceptuje lub odrzuca event, wykonuje logiczne przejście, publikuje immutable change oraz udostępnia milestones i capabilities; nie wykonuje aktorów.
-- `src/xr/progression/createVrExperienceDirector.js` — cienka fabryka kompatybilności, nie druga implementacja Directora i nie miejsce osobnej logiki Scenario.
-- `src/xr/progression/RuntimeExperience.js` — granica wykonania symbolic effects: mapuje je na wstrzyknięte handlery, zachowuje kolejność i jawnie zgłasza brak handlera; nie podejmuje decyzji fabularnych.
-- `src/xr/progression/createVrProgressionController.js` — właściciel faktów domenowych kart, gałęzi i tierów; odpowiada na pytania domenowe, nie ustala narracyjnej kolejności, a po osiągnięciu faktu może wyemitować event do Directora.
-- `src/xr/progression/applyVrProgressionShortcut.js` — adapter QA, nie alternatywne Scenario ani drugi właściciel progresji; docelowo zachowuje parity z faktami i przejściami produkcyjnymi.
-
-Minimalny zdrowy podział dotyczy odpowiedzialności Scenario/Director. Osobne `ExperienceDirector.js` i `RuntimeExperience.js` są prawidłowymi granicami infrastrukturalnymi; ten krok nie nakazuje ich łączenia ani usuwania.
-
-## 4. Czym jest punkt scenariusza
-
-Punkt Scenario jest najmniejszym adresowalnym fragmentem przebiegu, w którym Director zna aktualny adres, oczekiwane eventy, jawne targety, zlecane symbolic effects i dostępne capabilities oraz może — ale nie musi — dodać prawdziwy milestone.
-
-Punkt nie jest osobną funkcją, klasą, koniecznie osobnym timerem lub komunikatem, nazwą aktora, kopią lokalnego stanu aktora, indeksem tablicy ani numerem linii JavaScript. Numer punktu jest stabilnym adresem w dziele.
-
-## 5. Kanon numerowania: flat mainline + local branches
-
-### 5.1. Format i semantyka authoringowa
-
-**TARGET / MIGRATION RULE:** point ID ma postać `ACT.MAINLINE_POINT[.LOCAL_BRANCH...]` i jest wyłącznie numerycznym stringiem dodatnich segmentów całkowitych rozdzielonych kropkami, np. `1.10`, `1.20`, `2.10`, `3.60`, `1.100.1` albo `3.60.1`. Nie wolno przechowywać adresu jako liczby zmiennoprzecinkowej.
-
-```js
-id: '1.30' // poprawnie
-id: 1.30   // niepoprawnie
-```
-
-ID nie koduje treści ani znaczenia fabularnego i nie może zawierać słów, slugów, nazw dialogów lub wyborów ani literowych suffixów. Pierwszy segment oznacza duży etap progresji (**Act**), drugi — beat płaskiej osi fabularnej (**mainline**), a trzeci i każdy kolejny — wyłącznie lokalną odnogę należącą do tego mainline point. Zatem głębokość ma znaczenie authoringowe, ale nadal nie daje automatycznej semantyki Runtime.
-
-Wiążąca interpretacja pierwszego segmentu:
-
-- `1.x` — **PROLOG / INTRO**;
-- `2.x` — **PRÓG I**, obejmujący pierwszą pętlę pięciu kryształów;
-- `3.x` — **PRÓG II**, rozpoczynający się po pierwszej pełnej piątce i obejmujący m.in. zmianę glifów, Astro / Astrolabium Więzi, skorupy, Piec i drogę do Kuli Asterionowej zgodnie z kanonicznym dokumentem progresji;
-- `100.x` — **ENDING / EXIT namespace**.
-
-Ten patch nie ustanawia Act 4+.
-
-### 5.2. Płaska oś i spacing
-
-Gdy fabuła lub progresja przechodzi do następnego beatu, powstaje nowy **dwusegmentowy** point. `1.100 Invitation → 1.110 Following` oraz `1.120 Threshold → 1.130 Crossing` są poprawne. Nie tworzy się genealogii `1.100 → 1.100.1 → 1.100.1.1` tylko dlatego, że wydarzenia wynikają z siebie.
-
-Planowane mainline points otrzymują domyślnie krok `10`: `1.10`, `1.20`, `1.30`; `2.10`, `2.20`; `3.10`, `3.20`. To konwencja authoringowa, nie matematyczna reguła Runtime. Sloty między nimi są celową rezerwą: między `3.60` i `3.70` można później dodać `3.61` albo świadomie `3.64`, bez renumerowania `3.70` i dalszych punktów oraz bez obowiązku użycia najniższego wolnego numeru.
-
-**MAINLINE INSERT ≠ LOCAL BRANCH:** `1.10 → 1.11 → 1.20` dodaje obowiązkowy kolejny beat do osi. `1.100.1` jest natomiast lokalną odnogą `1.100`; gdy odnoga się kończy, jej jawny target prowadzi np. z powrotem do `1.100` albo dalej do `1.110`, a nie domyślnie do `1.100.1.1`.
-
-### 5.3. Local branches, dialogi i wybory
-
-Dwa segmenty zawsze oznaczają mainline; trzy lub więcej segmentów oznacza local branch konkretnego mainline point. Dialogowa odpowiedź jest typowym prawidłowym branchem:
-
-```text
-1.100  „Idziesz?”
-├── choice 1 → 1.110
-├── choice 2 → 1.100.1  „Dokąd?”
-└── choice 3 → 100.10
-
-1.100.1
-├── choice 1 → 1.110
-├── choice 2 → 1.100.1
-└── choice 3 → 100.10
-
-1.120  Threshold
-└── BEYOND → 1.120.1 → CROSS → 1.130
-```
-
-Branch nadal ma wyłącznie jawne transitions. Director nie wraca automatycznie do rodzica, nie wybiera dziecka i nie wylicza targetu. Zagnieżdżenie oznacza dla autora lokalną odnogę, nigdy automatycznie dalszą część głównej fabuły.
-
-### 5.4. Stabilność: unused a retired
-
-Raz opublikowany adres pozostaje stabilny i nie może później otrzymać innego znaczenia. **UNUSED SLOT**, np. nigdy nieużyty `3.61`, może zostać wykorzystany w przyszłości. **RETIRED / REMOVED / SUPERSEDED ID**, który kiedyś oznaczał konkretny beat, nie może zostać ponownie przypisany. Luki nie powodują renumeracji.
-
-### 5.5. Przenoszenie
-
-Położenie zmienia się przede wszystkim przez zmianę jawnych transitions. Jeżeli Projektant świadomie zmienia adres, stary adres zostaje oznaczony jako usunięty lub zastąpiony, wszystkie jawne odwołania są aktualizowane, rejestr zapisuje zmianę, a cicha renumeracja jest zakazana.
-
-### 5.6. Adres nie jest kolejnością wykonawczą
-
-Director nie dodaje `+1`, nie wylicza następnego dziecka, nie zakłada, że `.2` następuje po `.1`, nie opiera przebiegu na kolejności tablicy, nie sortuje punktów w celu ustalenia przebiegu, nie wraca automatycznie do rodzica i nie wybiera automatycznie pierwszego dziecka. Każde przejście wskazuje jawny `target`.
-
-Technicznie transition może zapisać skok, lokalną pętlę lub powrót, ale authored topology musi respektować linearny kontrakt z §6: branch wraca do głównej drogi, a jedynym odejściem bez powrotu przed finałem jest jawny `EXIT` w `100.x`. **Numer opisuje adres; transitions opisują przebieg; Scenario Spine opisuje obowiązkową kolejność głównej historii.**
-
-## 6. Scenario Spine i jawne targety
-
-**CURRENT / BINDING:** **SCENARIO SPINE** (lub **MAINLINE SPINE**) jest Scenario-owned, jawną authored kolejnością mainline points. Jest jedną główną, linearną fabułą Experience VR. Aktualny LIVE Spine:
+Wdrożony Spine ma kolejność:
 
 ```text
 1.10 → 1.20 → 1.30 → 1.40 → 1.50 → 1.60 → 1.70 → 1.80
 → 1.100 → 1.110 → 1.120 → 1.130 → 2.10 → 2.20 → 2.30 → 2.40
 ```
 
-Local branch `1.100.1` nie należy do Spine i jest osiągalny wyłącznie przez jawne transition z lokalnego huba; nie wolno automatycznie wstawiać go pomiędzy `1.100` i `1.110`. Local branches są chwilowymi odnogami, nie alternatywnymi liniami progresji: muszą wracać do huba albo dalszego mainline point. Jawny wcześniejszy `EXIT` `100.10` także pozostaje poza Spine. LIVE Spine kończy się na `2.40`, ponieważ późniejszy właściwy finał nie jest jeszcze zaimplementowany.
+`100.10` jest authored terminalnym EARLY EXIT poza Spine. `EXPLICIT` może prowadzić do niego z wyboru wyjścia. `2.40` jest ostatnim zaimplementowanym punktem mainline i nie ma transitionów.
 
-Opcjonalny branch bez trwałej konsekwencji nie wpływa na stan późniejszych punktów. Model nie dopuszcza trwałych, wzajemnie sprzecznych wariantów świata wynikających z opcjonalnych branchy; taki wariant wymaga osobnej decyzji architektonicznej przed authoringiem.
+WHERE w `1.100`, FOLLOW pause w `1.110`, BEYOND w `1.120` oraz hinty są lokalnymi reakcjami `STAY`. Nie są osobnymi story points. W szczególności nie istnieją LIVE technical points `1.100.1`, `1.110.1`, `1.120.1`, `1.130.1`, `1.130.2`, `2.10.1`, `2.30.1` ani `2.40.1`.
 
-Spine jest jedynym właścicielem authored kolejności. Director **nie** sortuje IDs, nie szuka najmniejszego większego numeru, nie robi `+10` ani `+1` i nie analizuje luk. **CURRENT:** po ukończeniu mainline pointu Director pyta pure navigation seam o `next` w authored Spine i nie wymaga skopiowanego explicit targetu w definicji Scenario. Brak następcy ostatniego LIVE pointu jest jawnym `null`, a transition próbujący użyć go niejawnie jest odrzucany podczas walidacji.
+## 3. Transition contract
 
-S1 wdrożył runtime representation Spine i pure reconstruction, a M2.1 wdrożył Spine-driven LIVE routing. Builder/normalizer, bootstrap resolver i hydrator pozostają **NOT IMPLEMENTED**.
+Każdy transition ma jawny immutable `kind`:
 
-### 6.1. Punkt jako adres historii
+- **`STAY`** — event jest zaakceptowany, przewidziane milestones/effects są zwracane, a `currentPointId` się nie zmienia; transition nie ma `target`.
+- **`COMPLETE`** — bezwarunkowo kończy bieżący punkt Spine; Director pobiera następny punkt przez `Spine.next(currentPointId)`; transition nie ma `target`.
+- **`EXPLICIT`** — prowadzi do wymaganego authored `target` poza normalnym następstwem Spine, obecnie dla EARLY EXIT; nie wywołuje `Spine.next()`.
+- **`COMPLETE_IF`** — conditional completion. Payload `false` rozstrzyga się do `STAY`, a `true` do `COMPLETE` i `Spine.next(currentPointId)`; transition nie ma `target`.
 
-**TARGET / BINDING:** punkt Scenario jest również stabilnym adresem stanu historii. Uruchomienie Directora w punkcie `X` oznacza, że każdy mainline point położony przed `X` na Scenario Spine jest zakończoną przeszłością, a `X` jest granicą wejścia do bieżącej historii. Nie oznacza to odegrania wszystkich wcześniejszych dialogów, timerów i animacji.
+Accepted `change` publikuje już rozstrzygnięty `transitionKind`. `COMPLETE_IF` pozostaje celowo zawężone do condition `crossingComplete`; nie jest DSL-em, ogólnym rules engine ani podstawą przyszłego systemu predicates.
 
-### 6.2. Trwałe konsekwencje i `stateAt(pointId)`
+## 4. Intro i crossing w `1.130`
 
-**TARGET / BINDING:** logiczne `stateAt(pointId)` jest deterministycznym złożeniem trwałych konsekwencji wszystkich wcześniejszych mainline points Scenario Spine, do granicy wskazanego punktu. Jest to definicja semantyczna, nie zatwierdzona nazwa przyszłego JS API.
+`1.130` jest jedynym canonical crossing point. `PLAYER_ENTERED_RING` i `MONKEY_SETTLED` mogą przyjść w dowolnej kolejności. Intro actor posiada transient facts `playerEnteredRing` i `monkeySettled` oraz przekazuje wynik `crossingComplete`; Director nie przechowuje ich kopii.
 
-Każdy mainline point może wnosić kanoniczne fakty historii, które po zakończeniu pozostają prawdziwe. Rekonstrukcja dla `X` składa te konsekwencje w kolejności authored Spine; nie wybiera snapshotu ręcznie napisanego dla `X` i nie odgaduje przeszłości z bieżących subsystemów. Dodanie nowego obowiązkowego mainline point przed istniejącym `X` musi przez samo położenie na Spine wpłynąć na przyszły reconstructed state `X`, bez przepisywania definicji checkpointu.
+Pierwszy fakt daje warunkowe `STAY`. Gdy oba są prawdziwe, `COMPLETE_IF` rozstrzyga się do `COMPLETE`, emituje `BEGIN_GLYPH_FREE_EXPLORE` i przez `Spine.next('1.130')` przechodzi do `2.10`. Transient crossing state nie podlega rekonstrukcji.
 
-### 6.3. Live effects a persistent / settled story state
+## 5. Pierwszy ring
 
-- **live / transient effects** wykonują dramaturgię podczas normalnego przechodzenia historii: reveal animation, dialogue, timer, produkcję, przejściowe cue i oczekiwanie na interakcję;
-- **persistent / settled story state** jest zakończonym, trwałym rezultatem tych wydarzeń, wymaganym przy bootstrapie późniejszego punktu, np. kanonicznym faktem, że reveal się zakończył albo wymagany przedmiot został zdobyty.
+### `2.10` i `2.20`
 
-Bootstrap późniejszego punktu materializuje settled consequences; nie odtwarza całej przeszłej dramaturgii, animacji, dialogów, timerów ani procesu produkcji. Ten rozdział nie zmienia LIVE effects ani istniejących transition handlers.
+`2.10` obejmuje glyph free explore. Hint pozostaje lokalnym `STAY`, a pierwsze odkrycie kryształu kończy punkt. `2.20` obejmuje reveal Naczynia i kończy się po `RELIQUARY_REVEAL_COMPLETED`.
 
-### 6.4. Ownership i materializacja stanu
+### `2.30` — cały loop pięciu kart
 
-Scenario deklaruje, **jakie kanoniczne fakty historii powinny być prawdziwe** przy wejściu w punkt. Nie staje się właścicielem domenowego stanu runtime i nie przechowuje własnych kopii kart, floor state, skorup, stanu Pieca, wyposażenia, produkcji ani innych faktów kontrolerów.
+`2.30` obejmuje cały pierwszy ring, aż do ukończenia `5/5`. W jego obrębie:
 
-Docelowo `RuntimeExperience` / bootstrap execution layer przekazuje wynik rekonstrukcji do właściwych istniejących właścicieli domenowych, a przyszły resolver/hydrator materializuje fakty przez ich kontrakty. Nadal obowiązuje przepływ `Scenario → Director → RuntimeExperience → domain owners`; nie powstaje drugi globalny progression store.
+- `RELIQUARY_HINT_TIMEOUT` → `STAY`;
+- `CRYSTAL_ACTIVATED` → `STAY` i lokalny preview;
+- `CARD_COMMITTED` → `STAY`, milestone `CARD_COMMITTED` i lokalny per-card feedback;
+- `FIRST_RING_COMPLETED` → `COMPLETE` → `Spine.next('2.30')` → `2.40`.
 
-Director pozostaje interpreterem Scenario: zna `currentPointId`, ale nie ustawia bezpośrednio obiektów świata, nie commituje kart, skorup ani wyposażenia, nie hydratuje domen i nie rekonstruuje historii przez odpytywanie subsystemów. Nie sortuje point IDs ani nie wylicza Spine z numerów.
+`createVrProgressionController` jest jedynym źródłem prawdy o ukończeniu tieru. Runtime wysyła `FIRST_RING_COMPLETED` dopiero przy trwałym wyniku pierwszego tieru `5/5`; Scenario nie liczy kart i Director nie utrzymuje równoległego licznika.
 
-### 6.5. Status implementacyjny rekonstrukcji
+Scenario udostępnia w `2.30` capabilities całego loopa Naczynia. Poprawność interakcji pozostaje domenowa: Activate jest możliwe tylko dla kryształu w stanie `inserted`, a Release tylko w stanie `active`. Te fazy nie są osobnymi story points.
 
-**CURRENT:** authored Spine, deklaratywne `settledConsequences`, pure reconstruction oraz Director używający Spine next dla normalnego mainline są wdrożone. Explicit targets opisują tylko non-mainline routing. **TARGET / NOT IMPLEMENTED:** arbitrary start, bootstrap resolver, hydrator, owner restore APIs i reconstruction-backed checkpoints.
+### `2.40` — canonical completion
 
-## 7. Przykład flat-mainline indexing
+`2.40` oznacza ukończony pierwszy ring `5/5`. Jest obecnym końcem zaimplementowanego zakresu Scenario. Nie istnieje powrót z `2.40` do loopa ani dokumentacyjna pętla; późniejsza progresja nie jest CURRENT.
 
-Poniższy krótki szkielet pokazuje wyłącznie **TARGET indeksowania**, a nie zmianę obecnych production IDs ani pełną specyfikację gameplayu:
+## 6. Reconstruction contract
 
-```text
-1.10   Start XR
-1.20   Reveal
-1.30   Cisza
-1.40   Pierwszy onboarding
-1.50   Player Guide
-1.60   Controls
-1.70   Pointer tutorial
-1.80   Trigger
-1.90   RESERVED / przyszły tutorial chwytu kryształu
-1.100  Invitation
-1.100.1  WHERE / local branch
-1.110  Following
-1.120  Threshold
-1.120.1  BEYOND / local branch
-1.130  Crossing
-2.10   Wejście do kręgu / start Progu I
-2.20   Pierwszy crystal-flow beat
-2.30   Dalszy beat pierwszej pętli
-2.40   Końcowy beat obecnego LIVE slice
-→ 3.x  Etap po pełnym 5/5 — PLANNED / NOT IMPLEMENTED
-```
-
-ID, label i copy pozostają oddzielnymi warstwami: point ID jest trwałym adresem, label czytelnym opisem dla autora, a copy treścią gracza. Zmiana labelu lub copy nie zmienia ID.
-
-### 7.1. Point a Monkey hint
-
-Nie każda pomoc dla gracza jest Scenario pointem. Obowiązkowa instrukcja, która zmienia authored flow, może być mainline beatem, np. `3.60 Nauka Astro → 3.61 Monkey instruction → 3.70 Pierwsza skorupa w Piecu`. Contextual cue po np. 20 sekundach bezczynności może natomiast wystąpić przy niezmienionym `currentPoint = 3.60`; nie wymaga tworzenia `3.61`, `3.62` ani `3.63`. Point powstaje wtedy, gdy zmienia się authored progression flow, nie dla każdej warstwy pomocy UX.
-
-### 7.2. Act 100 — ending / exit namespace
-
-Pierwszy segment `100` jest trwale zarezerwowany jako **ACT 100 — ENDING / EXIT NAMESPACE**. `100.1` oznacza **FULL FINALE ENTRY / WHITE TRANSITION**, a `100.10` — **EXIT EXPERIENCE VR**. Wczesna decyzja może jawnie skoczyć do `100.10`; pełne ukończenie prowadzi jawnie przez `100.1` i finał do `100.10`. **CURRENT:** `100.10` jest LIVE EXIT; `100.1` pozostaje RESERVED / FUTURE.
-
-## 8. Event, effect, cue, milestone i capability
-
-### Event
-
-Event jest semantycznym faktem od aktora lub systemu, np. `XR_CALIBRATED`, `PLAYER_OPENED_GUIDE`, `TIER_COMPLETED`, `SHELL_SET_COMPLETED`. Nie jest adresem. Ten sam typ może występować w różnych punktach, jeśli znaczenie faktu pozostaje takie samo.
-
-### Effect
-
-Effect jest symbolicznym poleceniem po zaakceptowanym przejściu, np. `BEGIN_INTRO_REVEAL`, `PRESENT_MONKEY_CUE`, `PLAY_AUDIO_CUE`, `REVEAL_FURNACE`. Nie jest implementacją: `RuntimeExperience` znajduje handler i deleguje wykonanie. Nowy numer punktu sam w sobie nie uzasadnia nowego typu effect.
-
-### Cue
-
-Cue identyfikuje treść lub wariant wykonania, np. `MONKEY: P1_FURNACE_AWAKENING` albo `AUDIO: AMBIENT_SMALL_GLYPHS`, i może parametryzować ogólny efekt:
-
-```js
-{ effect: PRESENT_MONKEY_CUE, cue: P1_FURNACE_AWAKENING }
-{ effect: PLAY_AUDIO_CUE, cue: AMBIENT_SMALL_GLYPHS }
-```
-
-Nazwany cue jest prawidłowy, bo identyfikuje treść lub wykonanie, nie kolejną scenę.
-
-### Milestone
-
-Milestone jest trwałym, świadomie zachowywanym osiągnięciem lub faktem progresji. Nie każdy punkt go tworzy. Koniec timera, pokazanie komunikatu, zakończenie revealu lub ciszy, przejście dalej i otwarcie tymczasowego panelu nie są automatycznie milestones. Ukończenie punktu wynika z adresu i historii zaakceptowanych transitions; milestone’u nie dodaje się mechanicznie.
-
-**CURRENT:** techniczne milestones M1.1–M1.3 działają. **MIGRATION RULE:** podczas migracji na numery wymagają przeglądu, ale w tym kroku pozostają bez zmian.
-
-### Capability
-
-Capability odpowiada: „co wolno graczowi lub systemowi w aktualnym punkcie?”. Nie jest komunikatem, efektem ani lokalnym stanem mesha.
-
-## 9. Funkcje i API aktorów
-
-Wiążąca zasada: **nowy punkt Scenario ≠ nowa funkcja**. Punkt nie tworzy automatycznie publicznej metody, callbacku, klasy, unikalnego handlera ani lokalnego stanu. Nowa metoda publiczna jest uzasadniona tylko rzeczywiście nową zdolnością wykonawczą, niewyrażalną istniejącą komendą lub parametrem.
-
-**TARGET:** mały zestaw ogólnych komend + cue/parametry. Nazwy `presentMonkeyCue(cueId)`, `playAudioCue(cueId)`, `setWorldVisibility(cueId)` i `startMotion(cueId)` są wyłącznie przykładami koncepcyjnymi, nie istniejącym API.
-
-**CURRENT:** `beginAfterXrCalibration()`, `beginPostRevealSilence()` i `beginControllerOnboarding()` są działającymi adapterami przejściowymi, nie wzorcem `beginX()` dla każdego kolejnego punktu.
-
-## 10. Scenario
-
-**TARGET:** Scenario jest immutable katalogiem definicji punktów opisującym warunki, akceptowane eventy, symbolic effects, capabilities, milestones, terminalność, cues i `settledConsequences`. Spine — nie Scenario point definitions — jest jedynym właścicielem authored mainline order.
-
-Scenario nie importuje Three.js, DOM ani WebXR; nie odpytuje aktorów, nie mierzy odległości, nie uruchamia timerów runtime, nie pokazuje UI, nie odtwarza audio, nie przesuwa Małpy, nie zapisuje progresji domenowej, nie wykonuje efektów i nie zawiera funkcji zależnych od runtime. Definiuje authored kolejność i kanoniczne fakty historii wymagane na danej granicy, ale nie kopiuje domenowego stanu. Mówi, co powinno wydarzyć się teraz, co może nastąpić później i jaki settled result pozostaje prawdziwy, nie jak go przechować, narysować, przesunąć, odtworzyć lub animować.
-
-## 11. Director
-
-**TARGET:** Director jest framework-free interpreterem Scenario. Waliduje dane; przechowuje `currentPointId`; przyjmuje event; sprawdza jego dopuszczalność i condition ukończenia; dla mainline pobiera następny punkt ze Spine; aktualizuje prawdziwe milestones; udostępnia capabilities; zwraca i publikuje immutable change; daje czytelny debug snapshot.
-
-Nie interpretuje arytmetyki point IDs ani nie posiada kopii Spine; używa jej jawnego API kolejności. Explicit target zachowuje tylko dla semantycznych wyjątków, takich jak terminalny EARLY EXIT. Nie wykonuje effects, nie wywołuje aktorów, nie importuje runtime ani Three.js, nie czyta DOM, nie commituje kart, skorup lub wyposażenia, nie hydratuje świata i nie posiada drugiej maszyny stanów.
-
-**CURRENT:** kanoniczne API mówi o punktach: `currentPointId`, `initialPointId`, `getCurrentPointId()`. `getCurrentSceneId()` oraz aliasy Scenario `scenes` / `initialSceneId` pozostają przejściową kompatybilnością delegującą do tych samych danych, bez drugiego stanu.
-
-## 12. RuntimeExperience
-
-`RuntimeExperience` jest granicą między decyzją a wykonaniem:
+Reconstruction jest pure i używa exclusive boundary:
 
 ```text
-aktor/system emituje event
-→ RuntimeExperience przekazuje event Directorowi
-→ Director akceptuje transition
-→ Director zwraca symbolic effects
-→ RuntimeExperience wykonuje wstrzyknięte handlery
-→ handler deleguje do aktora
+stateAt(X) = fold(settledConsequences punktów Spine stojących ściśle przed X)
 ```
 
-Nie podejmuje decyzji fabularnej, nie zmienia targetu, nie interpretuje świata ani przyczyny efektu. Zachowuje kolejność efektów i nie pomija brakującego handlera. Nie jest globalnym event busem ani centralnym store’em progresji.
+Spine dostarcza porządek, a Scenario konsekwencje. Target `X` jest teraźniejszością; jego efekty oraz punkty późniejsze nie wchodzą do wyniku. Reconstruction nie odtwarza live/transient state, nie replayuje dramaturgii i nie przejmuje prawdy domain owners.
 
-## 13. Aktorzy i kontrolery domenowe
+Pole `settledConsequences` jest wdrożonym mechanizmem docelowym, ale obecne definicje mają puste konsekwencje. Nie należy z tego wywodzić, że hydration świata lub przywracanie stanu ownerów już działa.
 
-Aktorzy odpowiadają za wykonanie i lokalny mechanizm: `createVrIntroSequence` wykonuje Intro; Monkey Guide prezentuje komunikaty i opcje; motion actor przesuwa Małpę; fog actor wykonuje reveal; Player Guide renderuje panel Y; ambient sequencer wykonuje audio cue; furnace controllers wykonują Piec; Asterion actor wykonuje budowę, prezentację i ruch; progression controllers przechowują fakty domen.
+## 7. NOT IMPLEMENTED
 
-Aktor może mierzyć lokalny timer, wykrywać koniec animacji lub realny hit, wykonywać ruch, renderować panel, odtwarzać cue i emitować semantyczny fakt. Nie powinien decydować, co fabularnie następuje dalej, poza technicznym legacy jeszcze nieprzeniesionym do Scenario. **CURRENT:** takie legacy może pozostać, lecz ownership musi być jawnie `RETAINED`.
+- arbitrary Director start;
+- hydration i owner restore APIs;
+- reconstruction-backed checkpointy lub QA aliases;
+- save/durable persistence i pełny reset zapisanej gry;
+- mainline po `2.40`, w tym późniejsze akty, ringi i finał.
 
-## 14. Małpa
-
-Małpa nie sprawdza samodzielnie, czy Tier 1 jest ukończony, gracz ma Kulę, zestaw skorup jest ukończony, zdobyto pierwszy kryształ ani jaki etap fabularny następuje. Kontrolery domenowe emitują fakty, a Director na podstawie bieżącego punktu zleca np. `MONKEY: P1_FURNACE_AWAKENING`.
-
-Monkey Guide nie ocenia fabularnej poprawności cue i nie kopiuje globalnej progresji. Prezentuje cue, lokalnie wykonuje komunikaty, opcje oraz interakcje i po zakończeniu może emitować event. Nazwy cue Małpy identyfikują treść, nie punkty Scenario.
-
-**CURRENT — attention contract po M1.20M:** `CARD_COMMITTED` nie uruchamia automatycznie Monkey attention, a `CUE_MONKEY_AFTER_CARD_COMMIT` został usunięty. Pierwszy bezpośredni press w Małpę kasuje pending attention również wtedy, gdy aktywny jest `dialogueOverride`. Contextual hint nadal może jawnie uruchomić attention; jest to cue pomocy kontekstowej, a nie automatyczny skutek commitu karty.
-
-## 15. Audio
-
-Scenario może zlecić `scene point 4.3 / audioCue: AMBIENT_SMALL_GLYPHS` albo semantycznie `effect: PLAY_AUDIO_CUE / cue: AMBIENT_SMALL_GLYPHS`. Ambient sequencer lub audio actor nie sprawdza Tieru, nie interpretuje fabuły lub Aktu i nie zgaduje powodu aktywacji glifów; wykonuje cue zgodnie ze swoim lifecycle. **CURRENT:** audio pozostaje bez zmian w tym zadaniu.
-
-## 16. Rola `experienceVr.js`
-
-**TARGET:** composition root tworzy świat, kontrolery domenowe, aktorów, Directora i `RuntimeExperience`; łączy eventy aktorów z runtime i effect handlers z aktorami; wykonuje update, reset i dispose.
-
-Nie powinien zawierać rosnących reguł typu „jeśli Intro X, Tier Y i Sphere Z, pokaż A, włącz B, wyłącz C, powiadom Małpę i zmień ambient”. **MIGRATION RULE:** legacy glue może istnieć przejściowo, ale przeniesienie fragmentu usuwa odpowiadającą alternatywną decyzję. Dual ownership (`Scenario decyduje + experienceVr.js decyduje niezależnie`) jest zakazany.
-
-## 17. Relacja z progression controllers
-
-Scenario nie zastępuje kontrolerów domenowych. `createVrProgressionController` nadal wie, które karty zatwierdzono, jaki Tier jest aktualny, czy go ukończono i czy można przyjąć kartę. Scenario wie, jaki punkt jest aktywny, czy `TIER_COMPLETED` jest teraz istotny, dokąd prowadzi i jakie skutki narracyjne lub światowe zlecić.
-
-Kontroler odpowiada „co faktycznie osiągnięto w domenie”; Scenario — „co to osiągnięcie znaczy dla dalszego przebiegu”. Nie tworzy się centralnego store’a kopiującego stany kontrolerów.
-
-## 18. QA shortcuts
-
-**TARGET / BINDING:** `?p0`, `?p1`, `?p2` i przyszłe `?pN` są wyłącznie aliasami `query → canonical Scenario point`. Checkpoint wybiera adres wejścia; nie definiuje kart, floor state, Pieca, skorup, tools, wyposażenia ani innych flag. Jego stan zawsze wynika z Scenario Spine przez `stateAt(canonicalPoint)`. Ręcznie authored komplet efektów świata przy `?pN` jest poza kanonem, ponieważ duplikuje historię, rozjeżdża się po wstawieniu wcześniejszego mainline point i tworzy alternatywne źródło progresji.
-
-**CURRENT / LEGACY TRANSITION:** `src/xr/progression/applyVrProgressionShortcut.js` jest przejściowym adapterem QA, nie wzorcem docelowego systemu ani dowodem wdrożonej rekonstrukcji. Jego dzisiejsze zachowanie pozostaje bez zmian w tym zadaniu.
-
-**TARGET QA CONTRACT — PLANNED / NOT IMPLEMENTED jako komplet:**
-
-- brak `?p` — normalne Intro;
-- `?p0` — canonical point `2.10`, czysty start gameplayu po wejściu do kręgu: Małpa, kamień i duże glify; zero zdobytej progresji; bez podłogi, portalu, Naczynia, Pieca i skorup;
-- `?p1` — stan po ukończeniu pierwszego `5/5`: pełna pierwsza podłoga, Piec dostępny, Astro czeka na fizyczny odbiór;
-- `?p2` — Astro zdobyte, sześć unikalnych skorup zaliczonych, Kula Asterionowa gotowa do utworzenia w Piecu.
-
-Opisane rezultaty służą do identyfikacji docelowych kanonicznych punktów, a nie jako niezależne snapshot definitions. `?p0`, `?p1`, `?p2`, przyszłe aliasy i reconstruction-backed bootstrap są **PLANNED / NOT IMPLEMENTED**. Dopóki kod nie zapewnia tej semantyki, istniejącego shortcutu nie wolno interpretować jako realizacji kontraktu.
-
-## 19. Historyczny baseline migracji M1.1–M1.8
-
-| Kanoniczny adres | Etykieta | Event kończący punkt | Effect uruchamiający kolejny punkt | Status |
-| --- | --- | --- | --- | --- |
-| `1.10` | Bootstrap / oczekiwanie na kalibrację XR | `XR_CALIBRATED` | `BEGIN_INTRO_REVEAL` | CURRENT |
-| `1.20` | Intro reveal | `INTRO_REVEAL_COMPLETE` | `BEGIN_POST_REVEAL_SILENCE` | CURRENT |
-| `1.30` | Cisza po revealu | `POST_REVEAL_SILENCE_COMPLETE` | `BEGIN_CONTROLLER_ONBOARDING` | CURRENT |
-| `1.40` | Controller onboarding / oczekiwanie na Player Guide | `PLAYER_OPENED_GUIDE` | `CONTINUE_CONTROLLER_ONBOARDING` | CURRENT; SG-040 MIGRATED |
-| `1.50` | Player Guide otwarty / oczekiwanie na controls | `PLAYER_VIEWED_CONTROLS` | `CONTINUE_CONTROLLER_ONBOARDING` | CURRENT; SG-040 MIGRATED |
-| `1.60` | Controls obejrzane / oczekiwanie na zamknięcie panelu | `PLAYER_CLOSED_GUIDE` | `CONTINUE_CONTROLLER_ONBOARDING` | CURRENT; SG-040 MIGRATED |
-| `1.70` | Pointer tutorial uruchomiony / oczekiwanie na wskazanie Monkey | `MONKEY_HOVERED` | `CONTINUE_CONTROLLER_ONBOARDING` | CURRENT; migrated edge SG-036 |
-| `1.80` | Monkey wskazany / oczekiwanie na trigger | `MONKEY_TRIGGERED` | `CONTINUE_CONTROLLER_ONBOARDING` | CURRENT; migrated edge SG-036 |
-| `1.100` | Trigger zaakceptowany / seen + invitation legacy | — | — | CURRENT terminal; SG-036 RETAINED |
-
-Na etapie M1.8 punkty były zaimplementowane pod adresami sprzed reindexu; tabela pokazuje ich current canonical addresses `1.10`–`1.100`. M1.7 ma **HARDWARE PASS — Meta Quest 3S**; M1.8 ma **HARDWARE PASS — Meta Quest 3S**. SG-032, SG-039 i SG-040 są `MIGRATED`. SG-036 pozostaje `RETAINED`: migrated edges to `MONKEY_HOVERED` i `MONKEY_TRIGGERED`; remaining legacy to seen/invitation sequence, invitation choices i dalsze decyzje objęte SG-036. Punkt `1.100` jest terminalem current live slice.
-
-## 20. Docelowy kształt danych Scenario
-
-Poniższy przykład jest składniowo niewiążący, lecz semantycznie wiążący dla **TARGET**:
-
-```js
-{
-  id: 'experience-vr',
-  initialPointId: '1.10',
-  points: [
-    {
-      id: '1.10',
-      label: 'Bootstrap XR',
-      capabilities: [],
-      transitions: [{
-        event: XR_CALIBRATED,
-        target: '1.20',
-        milestonesToAdd: [],
-        effects: [{ type: BEGIN_INTRO_REVEAL }]
-      }]
-    },
-    {
-      id: '1.20',
-      label: 'Intro reveal',
-      capabilities: [],
-      transitions: [{
-        event: INTRO_REVEAL_COMPLETE,
-        target: '1.30',
-        milestonesToAdd: [],
-        effects: [{ type: BEGIN_POST_REVEAL_SILENCE }]
-      }]
-    }
-  ]
-}
-```
-
-**CURRENT:** kod używa `points`, `initialPointId` i stringowych effects; `scenes` / `initialSceneId` są aliasami kompatybilności wskazującymi te same dane. Obiektowy effect z `type` i parametrami jest **FUTURE / NOT IMPLEMENTED**. Przyszły patch zdecyduje, czy rozszerzyć effects o payload, zachowując walidację i kompatybilność. Dokument nie upoważnia do zmiany kodu w tym zadaniu.
-
-## 21. Walidacja numerowanego Scenario
-
-**FUTURE / NOT IMPLEMENTED:** walidator musi zapewnić, że:
-
-- każdy adres jest poprawnym, niepustym stringiem i jest unikalny;
-- `initialPointId` i każdy `target` istnieją;
-- usunięty adres nie może być ponownie przypisany;
-- event, effect, milestone i capability pochodzą z właściwego vocabulary;
-- jeden punkt nie ma niejednoznacznych transitions dla tego samego faktu bez jawnego warunku;
-- punkt terminalny jest jawnie oznaczony;
-- dwa segmenty oznaczają mainline, a 3+ segmenty local branch;
-- local branch nie należy do Scenario Spine;
-- Director nie wylicza kolejnego adresu ani nie interpretuje spine;
-- label nie uczestniczy w tożsamości;
-- całe Scenario pozostaje immutable;
-- debug snapshot pokazuje `currentPointId`.
-
-Walidacja nie jest implementowana w tym zadaniu.
-
-## 22. Protokół migracji jednego punktu
-
-Poniższa kolejność jest obowiązkowa (**MIGRATION RULE**).
-
-### Krok 1 — zidentyfikuj decyzję legacy
-
-Zapisz ownera, warunek, skutek, timer lub fakt wejściowy, wszystkie fallbacki, QA bypass, reset/lifecycle i identyfikator SG z audytu.
-
-### Krok 2 — wyznacz adres
-
-Nadaj stabilny adres w odpowiednim Akcie. Nie zmieniaj innych adresów bez decyzji Projektanta.
-
-### Krok 3 — określ event
-
-Aktor lub kontroler emituje semantyczny fakt, nie polecenie fabularne.
-
-### Krok 4 — dodaj transition
-
-Scenario określa event, jawny target, effects, capabilities oraz prawdziwe milestones, jeśli istnieją.
-
-### Krok 5 — przygotuj actor seam
-
-Aktor po emisji faktu zatrzymuje się na bezpiecznej granicy i nie podejmuje następnej decyzji fabularnej. Nie dodawaj publicznej funkcji, jeżeli ogólny adapter potrafi wykonać cue.
-
-### Krok 6 — podłącz RuntimeExperience
-
-Runtime wykonuje effect przez wstrzyknięty handler; brak handlera jest błędem programistycznym.
-
-### Krok 7 — usuń dual ownership
-
-Usuń dokładnie odpowiadającą decyzję z aktora, `experienceVr.js`, innego kontrolera i fallbacku. Mechaniczne wykonanie pozostaje w aktorze.
-
-### Krok 8 — zachowaj parity
-
-Sprawdź zwykły przebieg, reset, re-entry, QA bypass, dokładnie jedno wywołanie, brak podwójnych listenerów, niezmienione timery i copy oraz hardware QA, gdy dotyczy.
-
-### Krok 9 — zaktualizuj rejestr
-
-Grupa SG jest `MIGRATED` dopiero po uzyskaniu jednego ownera dla całego zakresu. `PARTIAL` nie jest czwartym statusem: częściowe pokrycie zapisuje listę przeniesionych edge’ów, a grupa pozostaje `RETAINED`. Dozwolone statusy to `MIGRATED`, `RETAINED`, `REMOVED`.
-
-### Krok 10 — mały commit i Summary
-
-Paczka obejmuje jeden spójny punkt albo bardzo małą grupę nierozdzielnych transitions. Nie łączy migracji z pobocznym refaktorem.
-
-## 23. Rejestr migracji
-
-Obowiązkowy format przyszłych synchronizacji:
-
-| Scenario point | Akt | Label | Legacy owner | Legacy SG | Producer event | Target | Effects/cues | Group status | Runtime status | Automated QA | Hardware QA |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `1.10` | 1 | Bootstrap XR | `experienceVr.js` calibration handoff | SG-032 | `XR_CALIBRATED` | `1.20` | `BEGIN_INTRO_REVEAL` | `MIGRATED` | CURRENT live pod kanonicznym point ID | istniejące testy kontraktu | M1.1 PASS, Quest 3S, 2026-08-12 |
-| `1.20` | 1 | Intro reveal | `createVrIntroSequence` reveal completion seam | SG-039 edge: reveal completion | `INTRO_REVEAL_COMPLETE` | `1.30` | `BEGIN_POST_REVEAL_SILENCE` | `MIGRATED` | CURRENT live pod kanonicznym point ID | istniejące testy kontraktu | M1.2 PASS, Quest 3S, 2026-08-12 |
-| `1.30` | 1 | Cisza po revealu | `createVrIntroSequence` actor-owned timer/completion seam | SG-039 | `POST_REVEAL_SILENCE_COMPLETE` | `1.40` | `BEGIN_CONTROLLER_ONBOARDING` | `MIGRATED` | CURRENT live pod kanonicznym point ID | istniejące testy kontraktu | M1.3 PENDING — niewykonane |
-| `1.40` | 1 | Controller onboarding | `createVrIntroSequence` wykrywa faktyczne otwarcie | SG-040 | `PLAYER_OPENED_GUIDE` | `1.50` | `CONTINUE_CONTROLLER_ONBOARDING` | `MIGRATED` | CURRENT live | testy Director/Runtime/aktora/kontraktu | M1.4 PASS, Quest 3S |
-| `1.50` | 1 | Oczekiwanie na controls | `createVrIntroSequence` wykrywa controls DETAIL | SG-040 | `PLAYER_VIEWED_CONTROLS` | `1.60` | `CONTINUE_CONTROLLER_ONBOARDING` | `MIGRATED` | CURRENT live | testy Director/Runtime/aktora/kontraktu | M1.5 PASS, Quest 3S |
-| `1.60` | 1 | Oczekiwanie na zamknięcie panelu | `createVrIntroSequence` wykrywa fizyczne zamknięcie | SG-040 | `PLAYER_CLOSED_GUIDE` | `1.70` | `CONTINUE_CONTROLLER_ONBOARDING` | `MIGRATED` | CURRENT live; Runtime uruchamia pointer tutorial | testy Director/Runtime/aktora/kontraktu | M1.6 PASS — Quest 3S |
-| `1.70` | 1 | Oczekiwanie na wskazanie Monkey | `createVrIntroSequence` wykrywa realny hover | SG-036 | `MONKEY_HOVERED` | `1.80` | `CONTINUE_CONTROLLER_ONBOARDING` | `RETAINED` | CURRENT live; migrated edge `MONKEY_HOVERED` | testy Director/Runtime/aktora/kontraktu | M1.7 PASS — Quest 3S |
-| `1.80` | 1 | Monkey wskazany / oczekiwanie na trigger | `createVrIntroSequence` wykrywa realny press | SG-036 | `MONKEY_TRIGGERED` | `1.100` | `CONTINUE_CONTROLLER_ONBOARDING` | `RETAINED` | CURRENT live; migrated edge `MONKEY_TRIGGERED` | testy Director/Runtime/aktora/kontraktu | M1.8 PASS — Quest 3S |
-| `1.100` | 1 | Trigger zaakceptowany / seen + invitation legacy | legacy Intro actor | SG-036 | — | — | — | `RETAINED` | CURRENT terminal; seen/invitation i dalsze decyzje pozostają legacy | parity istniejącego aktora | M1.8 PASS — Quest 3S |
-
-Wpis powstaje przed migracją lub razem z nią; niewdrożone punkty nie są live; target address i current owner są widoczne razem. `MIGRATED` oznacza brak dual ownership. Hardware QA nie wynika z automatycznych testów. Usunięte adresy pozostają jako `REMOVED`. Rejestr nie zastępuje kodu ani testów. Powyższe wpisy obejmują wyłącznie live slice M1.1–M1.8, zamknięte SG-040 i migrated edge `MONKEY_HOVERED`; SG-036 pozostaje `RETAINED`.
-
-## 24. Debugowanie i wyszukiwanie
-
-**TARGET:**
-
-```text
-ACT 1
-POINT 1.30
-EVENT POST_REVEAL_SILENCE_COMPLETE
-TARGET 1.40
-EFFECT BEGIN_CONTROLLER_ONBOARDING
-```
-
-```js
-{
-  currentPointId: '1.30',
-  actId: '1',
-  lastEvent: 'POST_REVEAL_SILENCE_COMPLETE',
-  lastTargetPointId: '1.40',
-  milestones: [],
-  capabilities: []
-}
-```
-
-To **FUTURE / NOT IMPLEMENTED**, nie obecny kontrakt snapshotu. Numer punktu ma być podstawowym adresem raportów, testów, logów, promptów Codexa, bugów, manualnego QA i dokumentacji narracyjnej, np.: „Akt 1, punkt 1.30: po `POST_REVEAL_SILENCE_COMPLETE` Director powinien przejść do `1.40`”.
-
-## 25. Zasady dla przyszłych promptów Codex
-
-Prompt migracyjny musi podać: source point, target, legacy ownera, event producenta, symbolic effect, aktora wykonawczego, potrzebę nowej zdolności aktora, status SG, reset/re-entry, QA bypass, zakres testów, hardware QA i zakaz pobocznego refaktoru.
-
-Nie może automatycznie żądać nowej nazwanej sceny, publicznej funkcji, milestone’u ani callbacku tylko dlatego, że migrowany jest punkt. Każdy taki element wymaga osobnego uzasadnienia.
-
-## 26. Antywzorce
-
-Jawnie zakazane są:
-
-```text
-jeden punkt = jedna nowa nazwana scena
-jeden punkt = jedna nowa publiczna funkcja
-jeden punkt = jeden milestone
-jeden punkt = jeden unikalny handler
-
-aktor sam sprawdza globalną progresję
-Monkey Guide sam wybiera fabularny komunikat na podstawie Tieru
-ambient sequencer sam interpretuje etap fabularny
-experienceVr.js łączy kilka domen w nowe warunki fabularne
-Director wykonuje Three.js, UI, audio albo ruch
-Scenario przechowuje kopię stanu wszystkich kontrolerów
-QA shortcut staje się alternatywną progresją
-jawne przejście Scenario istnieje równolegle z legacy fallbackiem
-adres punktu jest wyliczany albo sortowany jako liczba
-```
-
-## 27. Granice obecnego etapu
-
-```text
-CURRENT:
-M1.12 THRESHOLD CHOICE BRANCH — HARDWARE PASS, Meta Quest 3S.
-M1.13 FOLLOW PAUSE-RESUME HANDOFF — HARDWARE PASS, Meta Quest 3S.
-SG-036 i SG-041 są MIGRATED; SG-042 jest RETAINED.
-Canonical Story Reindex jest IMPLEMENTED / behavior-neutral; regression PASS, Meta Quest 3S.
-LIVE graf obejmuje Intro `1.x`, pierwszą pętlę `2.x` (`2.10`, `2.20`, `2.30`, `2.40`) oraz EXIT `100.x`.
-M1.20R, M1.20F, M1.20M, S1 i M2.1 oraz późniejsza korekta ownershipu `sector.visible` są IMPLEMENTED.
-Stare `1.140`–`1.180.1` są RETIRED / SUPERSEDED.
-Director operuje na currentPointId; normalny mainline pobiera z authored Spine, a explicit targets obsługują tylko trasy non-mainline.
-```
-
-```text
-CURRENT + TARGET BOUNDARY:
-Authored Spine i pure exclusive reconstruction są CURRENT po S1, a normalne przejścia Directora przez Spine next są CURRENT po M2.1. Builder, normalizer, resolver, hydrator, arbitrary start i owner restore APIs nie istnieją.
-Act `3.x`, dalsze etapy progresji i docelowe checkpointy `?p0`–`?p2` pozostają PLANNED / NOT IMPLEMENTED.
-Approved WATER crystal tutorial insert nie jest punktem LIVE. Cała migracja Scenario/Director pozostaje IN PROGRESS z wcześniejszymi audit blockers.
-```
-
-## 28. One-time Canonical Story Reindex Migration
-
-**IMPLEMENTED:** current production Scenario i testy używają flat-mainline addresses opisanych w sekcji 1.1. Była to wyłącznie corrective structural migration: żadnego nowego edge, eventu, effectu, milestone ani gameplayu. Retired addresses pozostają tylko w tabeli migracyjnej i zapisie historycznym.
-
-The M1.8–M1.12 sections below are chronological stage snapshots. Their terminal points, pending QA and retained-group statements describe those stages, not the binding CURRENT status in §27 and the M1.13 boundary section.
-
-## M1.8 Monkey Trigger Handoff — historical stage synchronization
-
-M1.7: **HARDWARE PASS — Meta Quest 3S**. M1.8 **MONKEY TRIGGER HANDOFF**: **HARDWARE PASS — Meta Quest 3S**. Current ending chain is `1.70 → MONKEY_HOVERED → 1.80 → MONKEY_TRIGGERED → 1.100`; `1.100` is “Trigger zaakceptowany / seen + invitation legacy” and terminal for this live slice. `CONTINUE_CONTROLLER_ONBOARDING` remains the sole continuation effect.
-
-Status: SG-032, SG-039 and SG-040 are **MIGRATED**; SG-036 is **RETAINED**. Its migrated edges are `MONKEY_HOVERED` and `MONKEY_TRIGGERED`. Its remaining legacy is the seen/invitation sequence, invitation choices, and further P0 follow/ending/threshold decisions. No `INTRO_INVITATION_SELECTED` transition is live.
-
-
-## M1.9 Numeric Choice Routing Foundation — IMPLEMENTED
-
-Transition może opcjonalnie deklarować `choice` jako dodatnią liczbę całkowitą. W obrębie punktu dany event jest albo pojedynczym transition event-only, albo zbiorem choice-routed transitions, w którym każda para `(event, choice)` jest unikalna. Mieszanie obu modeli nie tworzy fallbacku i jest odrzucane podczas walidacji. Dla choice-routed eventu `dispatch(eventType, payload)` dopasowuje wyłącznie `payload.choice`; brak lub nieprawidłowy/nieistniejący wariant zwraca `null` bez zmiany stanu, efektów i notyfikacji. Event-only zachowuje dotychczasową semantykę także z dodatkowym payloadem.
-
-`choice` nie jest point ID ani targetem. `choice: 2` nigdy nie oznacza `currentPoint + '.2'`; Director korzysta wyłącznie z jawnego `target` zapisanego w Scenario, który legalnie może wskazywać np. `7.4.9` lub `100.10`. Podobieństwo numeric choice i numeric hierarchy służy wyłącznie czytelności autora i nie tworzy sprzężenia algorytmicznego.
-
-M1.9 nie rozszerza live Scenario: produkcyjny terminal pozostaje `1.100`, nie istnieje live transition `INTRO_INVITATION_SELECTED`, invitation pozostaje legacy, a SG-036 pozostaje **RETAINED** wyłącznie z migrated edges `MONKEY_HOVERED` i `MONKEY_TRIGGERED`. M1.8 zachowuje **HARDWARE PASS — Meta Quest 3S**. Hardware QA dla samego M1.9: **N/A**, ponieważ żaden production transition jeszcze nie używa `choice`; automatyczna regresja potwierdza niezmieniony live M1.8.
-
-## M1.10 — Intro invitation choice branch (current)
-
-M1.10 **INTRO INVITATION CHOICE BRANCH** is IMPLEMENTED — HARDWARE QA PENDING. Stable numeric choices are Scenario facts; current labels are presentation copy only.
-
-```text
-1.100
-├── choice 1 → 1.110
-├── choice 2 → 1.100.1
-└── choice 3 → 100.10
-
-1.100.1
-├── choice 1 → 1.110
-├── choice 2 → 1.100.1
-└── choice 3 → 100.10
-```
-
-Every accepted edge emits `CONTINUE_INTRO_INVITATION` and adds no milestone. `1.110` and `100.10` are terminal in the current slice. `100.10` is the current LIVE terminal `EXIT EXPERIENCE VR`; `100.1` remains RESERVED / FUTURE. SG-036 and SG-041 remain RETAINED.
-
-
-## M1.11 — Monkey reached threshold handoff (current)
-
-**IMPLEMENTED — HARDWARE QA PENDING.** M1.10 has **HARDWARE PASS — Meta Quest 3S**.
-
-Scenario now owns the edge `1.110 → MONKEY_REACHED_THRESHOLD → 1.120`. It adds no milestone and emits only `PRESENT_THRESHOLD_CHOICE`. Point `1.120` means “Monkey reached the threshold / threshold dialogue presented”; it is terminal for the current slice and has no `THRESHOLD_SELECTED` transition. The Runtime effect resumes the actor through its state-guarded presentation seam; threshold options and their selection remain legacy.
-
-SG-032, SG-039 and SG-040 are **MIGRATED**. SG-036 and SG-041 remain **RETAINED**. M1.11 migrates only the `MONKEY_REACHED_THRESHOLD` edge; remaining SG-041 still includes pause/resume distance decisions, `FOLLOW_PAUSE_CHANGED`, and movement/follow policy requiring later migration.
-
-## M1.12 — Threshold choice branch (current)
-
-**HARDWARE PASS — Meta Quest 3S.** M1.11 has **HARDWARE PASS — Meta Quest 3S**.
-
-`THRESHOLD_SELECTED` carries only numeric `{ choice }`. Scenario owns both explicit threshold routing sets; every accepted edge adds no milestone and emits the single `CONTINUE_THRESHOLD_CHOICE` effect:
-
-```text
-1.120
-├── choice 1 → 1.130
-├── choice 2 → 1.120.1
-└── choice 3 → 100.10
-
-1.120.1
-├── choice 1 → 1.130
-├── choice 2 → 1.120.1
-└── choice 3 → 100.10
-```
-
-`1.130` is the terminal CROSS point of the current slice. Choice 2 is an explicit self-loop while the actor replays the unchanged answer and options. `100.10` is LIVE EXIT EXPERIENCE VR; `100.1` remains RESERVED / FUTURE. After verification against the historical audit, SG-036 is **MIGRATED**: all its narrative decisions through threshold selection are Scenario-owned. SG-041 remains **RETAINED** because pause/resume follow policy and `FOLLOW_PAUSE_CHANGED` remain actor-owned.
-
-## M1.13 — Follow pause-resume handoff (current)
-
-**HARDWARE PASS — Meta Quest 3S.** LIVE point `1.110` oznacza aktywne FOLLOWING, a LIVE `1.110.1` oznacza „FOLLOWING / Monkey waiting for player”. `1.110.1` jest local branch punktu `1.110` i nie należy do przyszłego Scenario Spine. Scenario Spine pozostaje **TARGET / NOT IMPLEMENTED**, a `1.90` **RESERVED / NOT IMPLEMENTED**.
-
-Actor zachowuje physical sensing (head/Monkey position, grace/pause/resume distances), motion, stop radius i fog interpolation. Po grace emituje wyłącznie `FOLLOW_PAUSE_CHANGED { paused }` i bez synchronicznej kontynuacji czeka w `WAIT_RUNTIME_AFTER_FOLLOW_PAUSE_CHANGED`. Current point, nie payload, wybiera jawny target: `1.110 → 1.110.1` albo `1.110.1 → 1.110`. Jeden effect `APPLY_FOLLOW_PAUSE_STATE` deleguje mechaniczną zmianę `walkingPaused` i istniejącego komunikatu do `continueFollowPauseChanged(paused)`. Nie dodano milestone, predicate/guard DSL ani numeric choice.
-
-Punktowa weryfikacja audytu zamyka **SG-041 = MIGRATED**: po M1.11 arrival oraz M1.13 pause/resume nie pozostał w tej grupie narrative decision owner; sensory odległości, motion i fog są actor-local mechanics. SG-036 pozostaje **MIGRATED**.
-
-
-## CURRENT architectural boundary after M1.20 corrections
-
-Sekcja poniżej jest historycznym snapshotem granicy M1.13 i nie opisuje już bieżącego końca LIVE grafu. Po M2.2C2 pierwsza pętla jest LIVE pod adresami `2.10`, `2.20`, `2.30`, `2.40`; hint timeouty są lokalnymi reakcjami `STAY` w tych canonical points; M1.20F i korekta ownershipu widoczności podłogi oraz M1.20M są wdrożone. Migracja nadal pozostaje **IN PROGRESS**: żaden `3.x` nie jest LIVE, S1 Spine/reconstruction i M2.1 Director `Spine.next()` istnieją, a wcześniejsze audit blockers nie zostały zbiorczo zamknięte.
-
-## Historical boundary after M1.13 (superseded by current boundary above)
-
-Scenario/Director authority currently ends at LIVE `1.130`, where **CROSSING begins**. The next unmigrated legacy block is `CROSSING → ENTERING_RING → MONKEY_SETTLING → GLYPH_FREE_EXPLORE`. `PLAYER_ENTERED_RING`, `MONKEY_SETTLED` and `GLYPH_FREE_EXPLORE_STARTED` are **NOT Scenario-owned / NOT IMPLEMENTED as migrations**. This block is **SG-042 = RETAINED** and is the natural next analysis/migration boundary; no final API or point tree is established here. Act 2 (`2.x`, Próg I) and any `1.150 → 2.10` transition remain TARGET / NOT IMPLEMENTED.
-
-M1.13 hardware QA is **PASS — Meta Quest 3S**, manually confirmed by the Designer: GO walking and grace distance work without regression; Monkey pauses when the player remains behind; the existing “Idziesz?” message works and remains visible during pause; approaching clears it and resumes movement; repeated pause/resume does not deadlock; after resume Monkey reaches the threshold; and threshold flow works after migration.
-
-After M1.13 the actor/mechanics own head and Monkey positions, distance, `followGraceDistance`, `pauseDistance`, `resumeDistance`, `stopRadius`, `guideSpeed`, actual movement and fog interpolation. Scenario/Director own legality of semantic pause (`1.110 → 1.110.1`), resume (`1.110.1 → 1.110`) and `MONKEY_REACHED_THRESHOLD` (`1.110 → 1.120`). Route selection follows the current Scenario point; `payload.paused` remains execution data, not a route selector.
+Istniejące compatibility aliases nazw punktów nie są checkpointami ani alternatywnym modelem progresji.
