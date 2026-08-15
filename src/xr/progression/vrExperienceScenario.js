@@ -432,23 +432,24 @@ const points = Object.freeze([
   }),
   Object.freeze({
     id: VR_EXPERIENCE_POINT['2.40'],
-    settledConsequences: ACT_TWO_ENTRY_SETTLED_CONSEQUENCES,
+    settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
     label: 'Pierwszy ring / pierwszy globalny poziom ukończony 5/5',
     capabilities: Object.freeze([]),
     transitions: Object.freeze([
       Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.COMPLETE,
         event: VR_SCENARIO_EVENT.FIRST_RING_PRESENTATION_COMPLETED,
         milestonesToAdd: Object.freeze([]),
-        effects: Object.freeze([
-          VR_SCENARIO_EFFECT.REVEAL_SHELL_FIELD_PRESENTATION,
-          VR_SCENARIO_EFFECT.ELEVATE_MAIN_GLYPHS
-        ])
+        effects: Object.freeze([])
       })
     ])
   }),
   Object.freeze({
     id: VR_EXPERIENCE_POINT['3.10'],
-    settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
+    settledConsequences: ACT_TWO_ENTRY_SETTLED_CONSEQUENCES,
+    entryEffects: Object.freeze([
+      VR_SCENARIO_EFFECT.REVEAL_SHELL_FIELD_PRESENTATION,
+      VR_SCENARIO_EFFECT.ELEVATE_MAIN_GLYPHS
+    ]),
     label: 'Post-ring world transition / prezentacja pola Muszli i elevacja głównych glyphów',
     capabilities: Object.freeze([]),
     transitions: Object.freeze([

@@ -90,4 +90,17 @@ const productionThresholdPayload = { choice: 2 };
 productionRuntime.dispatch(VR_SCENARIO_EVENT.THRESHOLD_SELECTED, productionThresholdPayload);
 assert.equal(productionCalls.at(-1), VR_SCENARIO_EFFECT.CONTINUE_THRESHOLD_CHOICE);
 assert.equal(productionChoicePayloads.at(-1), productionThresholdPayload, 'Runtime forwards threshold payload unchanged');
+
+const entryCalls = [];
+const entryRuntime = new RuntimeExperience({
+  director: new ExperienceDirector({ scenario: vrExperienceScenario, startPointId: '3.10' }),
+  effectHandlers: {
+    [VR_SCENARIO_EFFECT.REVEAL_SHELL_FIELD_PRESENTATION]: () => entryCalls.push(VR_SCENARIO_EFFECT.REVEAL_SHELL_FIELD_PRESENTATION),
+    [VR_SCENARIO_EFFECT.ELEVATE_MAIN_GLYPHS]: () => entryCalls.push(VR_SCENARIO_EFFECT.ELEVATE_MAIN_GLYPHS)
+  }
+});
+const entryChange = entryRuntime.activateCurrentPoint();
+assert.deepEqual(entryCalls, entryChange.effects, 'Runtime executes arbitrary-start entry effects through its canonical adapter');
+assert.equal(entryRuntime.activateCurrentPoint(), null);
+assert.equal(entryCalls.length, 2, 'repeated activation executes no effects');
 console.log('RuntimeExperience assertions passed');

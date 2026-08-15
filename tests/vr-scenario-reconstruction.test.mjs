@@ -68,11 +68,13 @@ assert.equal(productionAtThreeTen.progression.activatedPageIds.length, 5);
 assert.equal(productionAtThreeTen.progressFloor.activatedPages.length, 5);
 assert.deepEqual(productionAtThreeTen.reliquary, { revealed: true, interactionEnabled: true });
 assert.deepEqual(productionAtThreeTen.crystals, { consumedTier: 1 });
-assert.deepEqual(productionAtThreeTen.postRing, { shellFieldVisible: true,
-  shellInteractionEnabled: false, mainGlyphsElevated: true });
+assert.equal(productionAtThreeTen.postRing, undefined,
+  'the active 3.10 presentation is not settled history at entry');
 assert.equal(Object.isFrozen(productionAtThreeTen.progression.activatedPageIds), true);
 assert.deepEqual(reconstructVrScenarioState(vrExperienceScenario, '3.10'), productionAtThreeTen);
-assert.deepEqual(vrExperienceScenario.points.find(({ id }) => id === '3.10').settledConsequences, {});
+assert.deepEqual(vrExperienceScenario.points.find(({ id }) => id === '2.40').settledConsequences, {});
+assert.deepEqual(reconstructVrScenarioState(vrExperienceScenario, '3.20').postRing,
+  { shellFieldVisible: true, shellInteractionEnabled: false, mainGlyphsElevated: true });
 
 const point = (id, settledConsequences = Object.freeze({})) => Object.freeze({
   id,

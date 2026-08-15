@@ -11,7 +11,10 @@ assert.throws(() => resolveVrDebugCheckpoint('P3'), /Unknown VR debug checkpoint
 
 const order = [];
 let currentDirector = null;
-const runtime = { replaceDirector(director) { order.push(`replace:${director.pointId}`); currentDirector?.dispose(); currentDirector = director; } };
+const runtime = {
+  replaceDirector(director) { order.push(`replace:${director.pointId}`); currentDirector?.dispose(); currentDirector = director; },
+  activateCurrentPoint() { order.push(`activate:${currentDirector.pointId}`); }
+};
 const enter = createVrDebugCheckpointController({ scenario: vrExperienceScenario, owners: {}, runtime,
   restoreBaseline() {}, spawnIntro() { order.push('spawn:INTRO'); }, spawnRing() { order.push('spawn:RING'); },
   startCanonicalIntro() { order.push('intro:start'); },
@@ -23,7 +26,9 @@ const enter = createVrDebugCheckpointController({ scenario: vrExperienceScenario
 for (const id of ['P0', 'P1', 'P2', 'P0', 'P2', 'P1']) {
   const start = order.length;
   const { checkpoint } = enter(id);
-  const spawn = id === 'P0' ? ['spawn:INTRO', 'intro:start'] : ['spawn:RING'];
+  const spawn = id === 'P0'
+    ? ['spawn:INTRO', `activate:${checkpoint.pointId}`, 'intro:start']
+    : ['spawn:RING', `activate:${checkpoint.pointId}`];
   assert.deepEqual(order.slice(start), ['baseline', `reconstruct:${checkpoint.pointId}`, 'hydrate',
     `director:${checkpoint.pointId}`, `replace:${checkpoint.pointId}`, ...spawn]);
   assert.equal(currentDirector.pointId, checkpoint.pointId);

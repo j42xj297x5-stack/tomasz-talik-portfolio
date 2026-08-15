@@ -9,12 +9,22 @@ export class RuntimeExperience {
     if (this.disposed) return null;
     const change = this.director.dispatch(eventType, payload);
     if (!change) return null;
+    this.#executeEffects(change, payload);
+    return change;
+  }
+  activateCurrentPoint() {
+    if (this.disposed) return null;
+    const change = this.director.activateCurrentPoint();
+    if (!change) return null;
+    this.#executeEffects(change);
+    return change;
+  }
+  #executeEffects(change, payload) {
     for (const effect of change.effects) {
       const handler = this.effectHandlers.get(effect);
       if (typeof handler !== 'function') throw new Error(`Missing effect handler: ${effect}`);
       handler(change, payload);
     }
-    return change;
   }
   can(capability) { return this.director.can(capability); }
   hasMilestone(milestone) { return this.director.hasMilestone(milestone); }
