@@ -176,6 +176,11 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
     entryAngleThreshold: 0.24,
     entryAngleHysteresis: 0.04
   },
+  postRingPresentation: {
+    glyphVerticalOffset: 2.4,
+    glyphElevationDuration: 2.5,
+    shellRevealDuration: 1.5
+  },
   intro: {
     enabled: true,
     introRevealDuration: 10.0,
@@ -563,6 +568,14 @@ export function normalizeExperienceVrSettings(candidate) {
       direction: candidate.glyphRing?.direction === -1 ? -1 : 1,
       entryAngleThreshold: finiteNumber(candidate.glyphRing?.entryAngleThreshold, defaults.glyphRing.entryAngleThreshold, { min: 0.01, max: Math.PI }),
       entryAngleHysteresis: finiteNumber(candidate.glyphRing?.entryAngleHysteresis, defaults.glyphRing.entryAngleHysteresis, { min: 0, max: 0.5 })
+    },
+    postRingPresentation: {
+      glyphVerticalOffset: finiteNumber(candidate.postRingPresentation?.glyphVerticalOffset,
+        defaults.postRingPresentation.glyphVerticalOffset, { min: 0, max: 20 }),
+      glyphElevationDuration: finiteNumber(candidate.postRingPresentation?.glyphElevationDuration,
+        defaults.postRingPresentation.glyphElevationDuration, { min: 0.1, max: 30 }),
+      shellRevealDuration: finiteNumber(candidate.postRingPresentation?.shellRevealDuration,
+        defaults.postRingPresentation.shellRevealDuration, { min: 0, max: 30 })
     },
     intro: {
       enabled: typeof candidate.intro?.enabled === 'boolean' ? candidate.intro.enabled : defaults.intro.enabled,

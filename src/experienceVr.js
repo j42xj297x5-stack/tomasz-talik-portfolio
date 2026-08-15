@@ -51,6 +51,7 @@ import { createVrAudioBridge } from './xr/audio/createVrAudioBridge.js';
 import { createVrAmbientSequencer } from './xr/audio/createVrAmbientSequencer.js';
 import { ExperienceDirector } from './xr/progression/ExperienceDirector.js';
 import { RuntimeExperience } from './xr/progression/RuntimeExperience.js';
+import { createVrPostRingPresentation } from './xr/progression/createVrPostRingPresentation.js';
 import { VR_SCENARIO_CAPABILITY, VR_SCENARIO_EFFECT, VR_SCENARIO_EVENT, vrExperienceScenario } from './xr/progression/vrExperienceScenario.js';
 import { experienceVrPages, getExperienceVrPages, resolveExperienceVrPage } from './content/experienceVrPages.js';
 import { publicPath } from './utils/publicPath.js';
@@ -567,6 +568,10 @@ introSequence = createVrIntroSequence({
 });
 
 const experienceDirector = new ExperienceDirector({ scenario: vrExperienceScenario });
+const postRingPresentation = createVrPostRingPresentation({ glyphRing, shellSystem,
+  settings: settings.postRingPresentation,
+  onCompleted: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.POST_RING_WORLD_PRESENTATION_COMPLETED)
+});
 const runtimeExperience = new RuntimeExperience({
   director: experienceDirector,
   effectHandlers: {
@@ -653,7 +658,15 @@ const runtimeExperience = new RuntimeExperience({
     },
     [VR_SCENARIO_EFFECT.PLAY_FIRST_RING_COMPLETE_FEEDBACK]: () => {
       playVrWorld(VR_AUDIO.tierComplete);
-    }
+    },
+    [VR_SCENARIO_EFFECT.REVEAL_SHELL_FIELD_PRESENTATION]: () => {
+      postRingPresentation.revealShellField();
+    },
+    [VR_SCENARIO_EFFECT.ELEVATE_MAIN_GLYPHS]: () => {
+      postRingPresentation.elevateMainGlyphs();
+    },
+    // Authored boundary only: the 3.20 observation runtime is intentionally not part of this slice.
+    [VR_SCENARIO_EFFECT.BEGIN_OBSERVATION_WINDOW]: () => {}
   }
 });
 
@@ -700,6 +713,7 @@ function renderFrame() {
   astroFurnaceContentInteraction.reportHeldShell(shellAttractorInteraction?.heldShell);
   astroFurnaceContentInteraction.update(delta);
   glyphOrbit.update(delta);
+  postRingPresentation.update(delta);
   shellSystem.update(delta);
   glyphRing.updateMatrixWorld(true);
   glyphInteraction.update(delta);
@@ -759,6 +773,7 @@ function handleSessionEnd() {
   locomotion.reset();
   resetPlayerRigToSpawn();
   glyphOrbit.reset();
+  postRingPresentation.reset();
   shellAttractorInteraction.reset();
   shellSystem.reset();
   syncQaPostP1WorldState();
@@ -796,6 +811,7 @@ async function enterVr() {
   locomotion.reset();
   resetPlayerRigToSpawn();
   glyphOrbit.reset();
+  postRingPresentation.reset();
   shellAttractorInteraction.reset();
   shellSystem.reset();
   syncQaPostP1WorldState();
@@ -902,6 +918,7 @@ window.addEventListener('pagehide', () => {
   crystalCollection.dispose();
   crystalReliquary.dispose();
   progressFloor.dispose();
+  postRingPresentation.dispose();
   shellSystem.dispose();
 }, { once: true });
 showReadyState();

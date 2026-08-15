@@ -114,6 +114,14 @@ assert.doesNotMatch(vr, /runtimeExperience\.dispatch\(VR_SCENARIO_EVENT\.RELIQUA
   'temporary release story fact has no production dispatch');
 assert.doesNotMatch(vr, /introSequence\?\.getState\(\)|introSequence\.getState\(\)/,
   'production glyph gate no longer reads the Intro actor state');
+assert.match(vr, /VR_SCENARIO_EFFECT\.REVEAL_SHELL_FIELD_PRESENTATION[\s\S]*postRingPresentation\.revealShellField\(\)/,
+  'Runtime maps the authored shell presentation effect to its actor');
+assert.match(vr, /VR_SCENARIO_EFFECT\.ELEVATE_MAIN_GLYPHS[\s\S]*postRingPresentation\.elevateMainGlyphs\(\)/,
+  'Runtime maps the authored glyph elevation effect to its actor');
+assert.match(vr, /onCompleted: \(\) => runtimeExperience\.dispatch\(VR_SCENARIO_EVENT\.POST_RING_WORLD_PRESENTATION_COMPLETED\)/,
+  'the presentation actor emits one semantic completion fact back to Runtime');
+assert.match(vr, /VR_SCENARIO_EFFECT\.BEGIN_OBSERVATION_WINDOW\]: \(\) => \{\}/,
+  '3.20 has only a boundary sink and starts no observation runtime');
 assert.match(vr, /renderer\.xr\.enabled = true/);
 assert.match(vr, /requestSession\('immersive-vr'/);
 assert.match(vr, /renderer\.setAnimationLoop\(renderFrame\)/);
