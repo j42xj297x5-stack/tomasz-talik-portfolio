@@ -210,12 +210,20 @@ assert.doesNotMatch(vr, /getActiveSectionId|getViewState/,
   'experienceVr does not interpret the controls section or panel view state');
 assert.doesNotMatch(vr, /WAIT_HOVER|WAIT_RUNTIME_AFTER_MONKEY_HOVERED|WAIT_TRIGGER|WAIT_RUNTIME_AFTER_MONKEY_TRIGGERED/,
   'experienceVr does not interpret Monkey actor state');
-assert.match(vr, /function handleSessionEnd\(\) \{\s*runtimeExperience\.resetSession\(\)/);
-assert.match(vr, /async function enterVr\(\)[\s\S]*if \(activeSession\) return;\s*runtimeExperience\.resetSession\(\)/);
-assert.match(vr, /catch \(error\)[\s\S]*xrStartCalibrationPending = false;\s*runtimeExperience\.resetSession\(\)/);
+assert.match(vr, /function restoreVrScenarioBaseline\(\) \{\s*runtimeExperience\.resetSession\(\)/,
+  'the canonical baseline owns runtime reset orchestration');
+assert.equal((vr.match(/restoreVrScenarioBaseline\(\);/g) ?? []).length, 3,
+  'normal entry, session end, and failed entry share the canonical baseline path');
+assert.match(vr, /function handleSessionEnd\(\)[\s\S]*restoreVrScenarioBaseline\(\)/);
+assert.match(vr, /async function enterVr\(\)[\s\S]*if \(activeSession\) return;\s*restoreVrScenarioBaseline\(\)/);
+assert.match(vr, /catch \(error\)[\s\S]*xrStartCalibrationPending = false;[\s\S]*restoreVrScenarioBaseline\(\)/);
+assert.equal((vr.match(/runtimeExperience\.resetSession\(\)/g) ?? []).length, 1,
+  'session state cannot be reset outside the canonical baseline');
 assert.match(vr, /window\.addEventListener\('pagehide', \(\) => \{\s*runtimeExperience\.dispose\(\)/);
-assert.match(vr, /function handleSessionEnd\(\)[\s\S]*xrStartCalibrationPending = false;[\s\S]*introSequence\.reset\(\)/,
-  'session end clears pending calibration and resets the intro for re-entry');
+assert.match(vr, /function handleSessionEnd\(\)[\s\S]*xrStartCalibrationPending = false;[\s\S]*restoreVrScenarioBaseline\(\)/,
+  'session end clears pending calibration and restores the canonical baseline for re-entry');
+assert.match(vr, /function restoreVrScenarioBaseline\(\)[\s\S]*introSequence\.reset\(\)/,
+  'the canonical baseline resets the intro actor');
 assert.doesNotMatch(vr, /const trackedHead = renderer\.xr\.getCamera\(camera\)/,
   'the stale immediate post-setSession correction is removed');
 assert.match(spatialPlaque, /new THREE\.CanvasTexture\(canvas\)/);
@@ -249,7 +257,7 @@ assert.match(glyphSpawnContract, /progressFloor\.object\.getWorldPosition/);
 assert.doesNotMatch(glyphSpawnContract, /monkeyMotionRoot\.getWorldPosition/);
 assert.doesNotMatch(glyphSpawnContract, /renderer\.xr|getCamera|getWorldDirection/);
 assert.match(vr, /crystalCollection\.reset\(\);\s*reliquaryHints\.reset\(\);\s*activateButton\.reset\(\);\s*releaseButton\.reset\(\);\s*crystalReliquary\.reset\(\);\s*restorePortalWaitingState\(\);\s*locomotion\.reset\(\);\s*resetPlayerRigToSpawn\(\);/);
-assert.match(vr, /function handleSessionEnd\(\)[\s\S]*restorePortalWaitingState\(\)/);
+assert.match(vr, /function restoreVrScenarioBaseline\(\)[\s\S]*restorePortalWaitingState\(\)/);
 assert.match(vr, /crystalCollection\.update\(delta\)/);
 assert.match(vr, /glyphOrbit\.update\(delta\)/);
 assert.doesNotMatch(vr.match(/onComplete:[\s\S]*?\n  }\n}/)?.[0] ?? '', /portalDisplay\.place|portalCanvas\.hide/);

@@ -44,3 +44,7 @@ Director obsługuje także jawny start sesji w dowolnym `startPointId` należąc
 - reconstruction-backed checkpoints/QA aliases;
 - durable persistence/save i pełny reset;
 - pozostałe późniejsze akty, radar i finał.
+
+## Runtime baseline
+
+Istniejący stan wejściowy Scenario ma jeden production seam: `restoreVrScenarioBaseline()`. Normalne wejście do VR, session end i obsługa nieudanego wejścia korzystają z tej samej orkiestracji owner-owned reset APIs. Funkcja przywraca już zbudowany runtime; nie tworzy composition ponownie i nie implementuje reconstruction, hydration ani checkpointów.
