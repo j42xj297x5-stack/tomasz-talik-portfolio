@@ -22,7 +22,7 @@ assert.ok(calculatedSpawn.distanceTo(new THREE.Vector3(3.7, 2.5, 3)) < 1e-8,
   'spawn starts at the glyph world position and moves toward the world center');
 assert.equal(calculatedSpawn.y, 2.5, 'spawn height is not grounded');
 
-function harness(canGrabController = () => true) {
+function harness(canGrabController = () => true, canUseReliquary = () => true) {
   const scene = new THREE.Scene();
   const controller = new THREE.Group(); const holdSocket = new THREE.Group(); controller.add(holdSocket); scene.add(controller);
   const record = { controller, holdSocket, currentRayLength: 3, currentCrystalHit: null, currentCrystalHitDistance: null };
@@ -40,7 +40,7 @@ function harness(canGrabController = () => true) {
     progressionController, assetManager: { cloneGltfScene: () => new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.1, 0.1)) },
     onPreview: (page) => previews.push(page.id),
     onCommit: (page, event) => commits.push({ pageId: page.id, ...event }),
-    onInsertAccepted: (instance) => inserts.push(instance.crystalId), canGrabController });
+    onInsertAccepted: (instance) => inserts.push(instance.crystalId), canGrabController, canUseReliquary });
   function insert(instance) {
     collection.update(1); record.currentCrystalHit = instance; record.currentCrystalHitDistance = 0.1;
     collection.grab(record); collection.update(1); scene.updateMatrixWorld(true); collection.release(record);
@@ -67,6 +67,23 @@ const gatedCrystal = gated.collection.spawnOne('creative-ai', glyphFrame); gated
 gated.record.currentCrystalHit = gatedCrystal; gated.record.currentCrystalHitDistance = 0.1;
 assert.equal(gated.collection.grab(gated.record), null, 'optional controller gate reserves squeeze for higher-priority interactions');
 gated.collection.dispose();
+
+let reliquaryAllowed = false;
+const authoredGate = harness(() => true, () => reliquaryAllowed);
+const authoredGateCrystal = authoredGate.collection.spawnOne('creative-ai', glyphFrame);
+authoredGate.insert(authoredGateCrystal);
+assert.equal(authoredGateCrystal.state, 'available', 'authored gate rejects an otherwise valid insertion');
+assert.equal(authoredGate.collection.getInsertedInstance(), null, 'authored rejection leaves the socket empty');
+assert.equal(authoredGate.progressionController.getActivatedPageIds().length, 0,
+  'authored rejection does not mutate progression');
+assert.deepEqual(authoredGate.inserts, [], 'authored rejection has no accepted-insert consequence');
+assert.equal(authoredGate.collection.activateInserted(), false, 'authored rejection cannot start preview');
+assert.deepEqual(authoredGate.previews, [], 'authored rejection emits no preview consequence');
+reliquaryAllowed = true;
+authoredGate.insert(authoredGateCrystal);
+assert.equal(authoredGateCrystal.state, 'inserted', 'the same valid insertion succeeds when Scenario permits use');
+assert.equal(authoredGate.inserts.length, 1, 'permitted insertion retains its accepted consequence');
+authoredGate.collection.dispose();
 stocked.collection.update(1);
 const expectedHoldQuaternion = new THREE.Quaternion().setFromEuler(new THREE.Euler(Math.PI / 6, 0, 0));
 assert.ok(stocked.collection.heldByController.get(stocked.record).object.quaternion.angleTo(expectedHoldQuaternion) < 1e-8,
