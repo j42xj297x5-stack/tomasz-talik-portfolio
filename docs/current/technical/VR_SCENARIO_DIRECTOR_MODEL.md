@@ -29,7 +29,7 @@ Pierwszy trwały wynik `5/5` emituje `FIRST_RING_COMPLETED`, kończy `2.30` i wp
 
 | Punkt | Canonical zachowanie i completion |
 | --- | --- |
-| `3.10` | Pole skorup staje się widoczne, lecz pozostaje nieinteraktywne; główne glify unoszą się. `POST_RING_WORLD_PRESENTATION_COMPLETED`. |
+| `3.10` | Point-entry effects pokazują nieinteraktywne pole skorup i unoszą główne glify; punkt czeka na rzeczywiste `POST_RING_WORLD_PRESENTATION_COMPLETED`. |
 | `3.20` | Około 10 sekund observation window. `OBSERVATION_WINDOW_COMPLETED`. |
 | `3.30` | Checheszki sygnalizują wyłącznie nową wiadomość. Gracz sam podchodzi/wskazuje/klika Małpę; dialog nie otwiera się automatycznie. Obowiązkowo: `No i świat przestał być uprzejmy.` / `To, czego potrzebujesz, jest teraz poza zasięgiem.` / `Na szczęście nie na długo.` Dopiero finalne acknowledgement emituje `POST_RING_MONKEY_DIALOGUE_COMPLETED`. |
 | `3.40` | Rzeczywisty reveal Pieca i dokładne copy: `Spójrz na Piec.` / `Tam coś na ciebie czeka.` Completion: `FURNACE_INTRO_COMPLETED`. |
@@ -58,9 +58,9 @@ Regression guards: `vr-first-ring-live-flow`, `vr-astro-first-claim-live-flow`, 
 
 `stateAt(X) = fold(settledConsequences punktów ściśle przed X)`. Production state nie jest już pustym szkieletem: konsekwencje `1.130` opisują stabilne fakty po zakończonym crossing join, pogrupowane według ownerów `monkey`, `intro` i `locomotion`. Nie zawierają timerów, dialogue playback, hovera, animacji ani capability.
 
-`2.10` i `3.10` są production reconstruction-backed entry points. `prepareVrScenarioSession` zachowuje kolejność baseline → reconstruction → owner-delegating hydration → Director w target point. Monkey materializuje finalną pozycję na kamieniu, Intro actor czysty `GLYPH_FREE_EXPLORE` z zakończoną mgłą i bez dialogu, a locomotion granicę glyph ring. `CAN_USE_GLYPHS` pochodzi wyłącznie z Directora `2.10`.
+`2.10` i `3.10` są production reconstruction-backed entry points. `prepareVrScenarioSession` zachowuje kolejność baseline → reconstruction → owner-delegating hydration → Director w target point. Po spawnie checkpoint wywołuje `RuntimeExperience.activateCurrentPoint()`; P0 dopiero następnie uruchamia canonical intro. Monkey materializuje finalną pozycję na kamieniu, Intro actor czysty `GLYPH_FREE_EXPLORE` z zakończoną mgłą i bez dialogu, a locomotion granicę glyph ring. `CAN_USE_GLYPHS` pochodzi wyłącznie z Directora `2.10`.
 
-Naturalny trwały stan przed `3.10` został rozdzielony zgodnie z authored historią: `2.20` pozostawia w pełni ujawnione i interaktywne Reliquary; `2.30` pozostawia pięć committed Tier 1 cards, progression `Tier 2`, pięć aktywowanych elementów podłogi, ukończony pierwszy ring i zużyte kryształy; `2.40` pozostawia stabilną post-ring prezentację (widoczne, nieinteraktywne shells i uniesione główne glify). Timery, pulse, audio, dialogi, reveal/completion animations i historyczne effects nie są rekonstruowane.
+Reconstruction jest settled historią ściśle przed targetem. Dlatego stan dla `3.10` nie zawiera jeszcze `postRing`, natomiast stan dla `3.20` zawiera widoczne, nieinteraktywne shells i uniesione główne glify. Timery, pulse, audio, dialogi, reveal/completion animations i historyczne effects nie są rekonstruowane. Scenario deklaruje opcjonalne `entryEffects`; Director aktywuje punkt jednokrotnie, a Runtime wykonuje effects tym samym adapterem co `dispatch`. Naturalna zmiana punktu dołącza entry effects celu po transition-local effects; bezpośredni start wymaga jawnego `activateCurrentPoint()`.
 
 Designer macro checkpoint jest aliasem QA, a nie technical Scenario point i nie zastępuje Spine ID. Aktywny registry zawiera wyłącznie `P0 → 1.10` (normal intro spawn/start), `P1 → 2.10` (ring/crystals) oraz `P2 → 3.10` (Tier 1 complete/Act 2). `?debug` ujawnia te trzy aliasy w Player Panel. Każde live przełączenie przechodzi pełną ścieżkę baseline → reconstruct → hydrate → nowy Director → spawn; poprzedni Director jest odłączany.
 

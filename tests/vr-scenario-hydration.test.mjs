@@ -47,6 +47,6 @@ const p2Owners = Object.fromEntries(['monkey', 'intro', 'locomotion', 'reliquary
   hydrateScenarioState(value) { p2Calls.push([name, structuredClone(value)]); }
 }]));
 hydrateVrScenarioState(reconstructVrScenarioState(vrExperienceScenario, '3.10'), p2Owners);
-assert.deepEqual(p2Calls.map(([name]) => name), Object.keys(p2Owners));
+assert.deepEqual(p2Calls.map(([name]) => name), Object.keys(p2Owners).filter((name) => name !== 'postRing'));
 
 console.log('VR Scenario hydration and session preparation assertions passed.');

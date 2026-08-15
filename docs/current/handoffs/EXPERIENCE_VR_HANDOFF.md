@@ -7,7 +7,7 @@ Status: **CURRENT**. Operacyjny obraz dla następnego architekta; canonical mode
 - Intro `1.10–1.130`, pierwszy crystal, świadomy Monkey trigger i Reliquary reveal (`2.10–2.20`).
 - Pełny loop pięciu kart Tier 1 w `2.30`.
 - First-ring bridge: trwałe `5/5` → `FIRST_RING_COMPLETED` → `2.40`; `createVrFirstRingFlow` posiada presentation/audio seam, a dopiero `FIRST_RING_PRESENTATION_COMPLETED` prowadzi do `3.10`.
-- `3.10`: reveal widocznego, jeszcze nieinteraktywnego pola skorup i elevacja głównych glifów.
+- `3.10`: jednokrotna aktywacja point-entry uruchamia reveal widocznego, jeszcze nieinteraktywnego pola skorup i elevację głównych glifów; punkt czeka na rzeczywiste zakończenie prezentacji.
 - `3.20`: około 10 sekund obserwacji.
 - `3.30`: attention bez auto-open; gracz świadomie otwiera trzykwestiowy dialogue, a finalne acknowledgement kończy beat.
 - `3.40`: real Furnace reveal, `Spójrz na Piec.` / `Tam coś na ciebie czeka.`
@@ -55,4 +55,4 @@ Future contract, bez implementacji i bez przycisków: P3 = shells complete/Astro
 
 Istniejący stan wejściowy Scenario ma jeden production seam: `restoreVrScenarioBaseline()`. Normalne wejście do VR, session end i obsługa nieudanego wejścia korzystają z tej samej orkiestracji owner-owned reset APIs. Funkcja przywraca już zbudowany runtime i nie tworzy composition ponownie.
 
-Production hydration obejmuje canonical `2.10` i `3.10`: `prepareVrScenarioSession` po baseline rekonstruuje konsekwencje punktów ściśle wcześniejszych, deleguje sekcje do domain ownerów i dopiero potem tworzy Directora w target point. Żaden historyczny event/effect ani transient timer/animacja nie jest replayowany; capability zawsze wynika z aktualnego Directora. Live debug switching używa dokładnie tego samego mechanizmu.
+Production hydration obejmuje canonical `2.10` i `3.10`: `prepareVrScenarioSession` po baseline rekonstruuje konsekwencje punktów ściśle wcześniejszych, deleguje sekcje do domain ownerów i dopiero potem tworzy Directora w target point. Po spawnie Runtime aktywuje bieżący punkt; dla P0 canonical intro start następuje po aktywacji. `stateAt('3.10')` nie zawiera jeszcze `postRing`, bo reveal i elevacja są entry effects bieżącego beatu; dopiero `stateAt('3.20')` zawiera ich settled wynik. Żaden historyczny event/effect ani transient timer/animacja nie jest replayowany. Naturalne wejście i DEBUG P2 korzystają z tych samych authored `3.10.entryEffects`.

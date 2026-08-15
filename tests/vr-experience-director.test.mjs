@@ -268,6 +268,17 @@ assert.deepEqual(postRing.effects, [
   VR_SCENARIO_EFFECT.REVEAL_SHELL_FIELD_PRESENTATION,
   VR_SCENARIO_EFFECT.ELEVATE_MAIN_GLYPHS
 ]);
+const directThreeTen = new ExperienceDirector({ scenario: vrExperienceScenario, startPointId: '3.10' });
+const directThreeTenActivation = directThreeTen.activateCurrentPoint();
+assert.deepEqual(directThreeTenActivation.effects, postRing.effects,
+  'natural transition and arbitrary start share the authored 3.10 entry effects');
+assert.equal(Object.isFrozen(directThreeTenActivation), true);
+assert.deepEqual(directThreeTenActivation.addedMilestones, []);
+assert.equal(directThreeTen.getCurrentPointId(), '3.10');
+assert.equal(directThreeTen.activateCurrentPoint(), null, 'a point can only be activated once');
+directThreeTen.resetSession();
+assert.deepEqual(directThreeTen.activateCurrentPoint().effects, postRing.effects,
+  'reset restores the session start point as unactivated');
 const observation = productionDirector.dispatch(VR_SCENARIO_EVENT.POST_RING_WORLD_PRESENTATION_COMPLETED);
 assert.equal(observation.currentPointId, VR_EXPERIENCE_POINT['3.20']);
 assert.deepEqual(observation.effects, [VR_SCENARIO_EFFECT.BEGIN_OBSERVATION_WINDOW]);

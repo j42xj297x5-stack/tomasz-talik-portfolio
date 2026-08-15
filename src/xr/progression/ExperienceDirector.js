@@ -41,6 +41,8 @@ function validateScenario(scenario) {
   for (const point of points) {
     const pointCapabilities = assertStringArray(point.capabilities, `point ${point.id} capabilities`);
     for (const capability of pointCapabilities) if (!capabilities.has(capability)) throw new Error(`point ${point.id} uses unknown capability: ${capability}`);
+    const pointEntryEffects = assertStringArray(point.entryEffects ?? [], `point ${point.id} entry effects`);
+    for (const effect of pointEntryEffects) if (!effects.has(effect)) throw new Error(`point ${point.id} uses unknown entry effect: ${effect}`);
     if (!Array.isArray(point.transitions)) throw new TypeError(`point ${point.id} transitions must be an array`);
     const transitionsByEvent = new Map();
     for (const transition of point.transitions) {
@@ -123,6 +125,7 @@ export class ExperienceDirector {
     this.committedMilestones = new Set(hydrated);
     this.listeners = new Set();
     this.currentPointId = sessionStartPointId;
+    this.currentPointActivated = false;
     this.lastEvent = null;
     this.disposed = false;
   }
@@ -150,6 +153,8 @@ export class ExperienceDirector {
         this.currentPointId = transition.target;
         break;
     }
+    const changedPoint = this.currentPointId !== previousPointId;
+    if (changedPoint) this.currentPointActivated = true;
     const addedMilestones = [];
     const completedConditionalTransition = transition.kind !== VR_SCENARIO_TRANSITION_KIND.COMPLETE_IF
       || transitionKind === VR_SCENARIO_TRANSITION_KIND.COMPLETE;
@@ -159,9 +164,21 @@ export class ExperienceDirector {
     this.lastEvent = Object.freeze({ type: eventType, payload: payload ?? null });
     const change = Object.freeze({ event: this.lastEvent, transitionKind,
       previousPointId, currentPointId: this.currentPointId,
-      addedMilestones: Object.freeze(addedMilestones), effects: Object.freeze(completedConditionalTransition ? [...(transition.effects ?? [])] : []) });
+      addedMilestones: Object.freeze(addedMilestones), effects: Object.freeze(completedConditionalTransition ? [
+        ...(transition.effects ?? []),
+        ...(changedPoint ? (this.pointsById.get(this.currentPointId).point.entryEffects ?? []) : [])
+      ] : []) });
     for (const listener of [...this.listeners]) listener(change);
     return change;
+  }
+
+  activateCurrentPoint() {
+    if (this.disposed || this.currentPointActivated) return null;
+    const point = this.pointsById.get(this.currentPointId)?.point;
+    if (!point) throw new Error(`current point does not exist: ${String(this.currentPointId)}`);
+    this.currentPointActivated = true;
+    return Object.freeze({ previousPointId: this.currentPointId, currentPointId: this.currentPointId,
+      addedMilestones: Object.freeze([]), effects: Object.freeze([...(point.entryEffects ?? [])]) });
   }
 
   can(capability) { return this.pointsById.get(this.currentPointId).point.capabilities.includes(capability); }
@@ -178,6 +195,7 @@ export class ExperienceDirector {
   }
   resetSession({ hard = false } = {}) {
     this.currentPointId = this.sessionStartPointId; this.lastEvent = null;
+    this.currentPointActivated = false;
     if (hard) this.committedMilestones = new Set(this.bootstrapInitialMilestones);
   }
   dispose() { if (this.disposed) return; this.disposed = true; this.listeners.clear(); }
