@@ -8,12 +8,12 @@ import { VR_EXPERIENCE_POINT, VR_SCENARIO_CAPABILITY, VR_SCENARIO_EFFECT, VR_SCE
 assert.equal(Object.isFrozen(vrExperienceScenario), true);
 assert.equal(vrExperienceScenario.points, vrExperienceScenario.scenes);
 assert.equal(vrExperienceScenario.initialPointId, vrExperienceScenario.initialSceneId);
-assert.deepEqual(vrExperienceScenario.points.map(({ id }) => id), ['1.10', '1.20', '1.30', '1.40', '1.50', '1.60', '1.70', '1.80', '1.100', '1.110', '1.120', '1.130', '2.10', '2.20', '2.30', '2.40', '100.10']);
+assert.deepEqual(vrExperienceScenario.points.map(({ id }) => id), ['1.10', '1.20', '1.30', '1.40', '1.50', '1.60', '1.70', '1.80', '1.100', '1.110', '1.120', '1.130', '2.10', '2.20', '2.30', '2.40', '3.10', '3.20', '3.30', '3.40', '100.10']);
 assert.equal(Object.isFrozen(vrExperienceScenario.points[0]), true);
 assert.equal(Object.isFrozen(vrExperienceScenario.points[0].transitions[0]), true);
 assert.equal(Object.isFrozen(vrExperienceScenario.points[0].transitions[0].effects), true);
 assert.equal('authoritativeScope' in vrExperienceScenario.metadata, false);
-assert.equal(vrExperienceScenario.metadata.stage, 'M2_2D_FIRST_RING_LOOP');
+assert.equal(vrExperienceScenario.metadata.stage, 'M3_POST_RING_TO_FURNACE_INTRO');
 for (const removedId of ['1.100.1', '1.110.1', '1.120.1', '1.130.1', '1.130.2', '2.10.1', '2.30.1', '2.40.1']) {
   assert.equal(VR_EXPERIENCE_POINT[removedId], undefined);
   assert.equal(vrExperienceScenario.points.some(({ id }) => id === removedId), false);
@@ -216,7 +216,23 @@ assert.equal(productionDirector.dispatch(VR_SCENARIO_EVENT.CARD_COMMITTED), null
   '2.40 has no transient Release-loop commit route');
 assert.equal(productionDirector.dispatch(VR_SCENARIO_EVENT.RELIQUARY_HINT_TIMEOUT), null,
   '2.40 has no transient Reliquary hint route');
-assert.equal(vrExperienceScenario.points.find(({ id }) => id === '2.40').transitions.length, 0);
+const postRing = productionDirector.dispatch(VR_SCENARIO_EVENT.FIRST_RING_PRESENTATION_COMPLETED);
+assert.equal(postRing.currentPointId, VR_EXPERIENCE_POINT['3.10']);
+assert.deepEqual(postRing.effects, [
+  VR_SCENARIO_EFFECT.REVEAL_SHELL_FIELD_PRESENTATION,
+  VR_SCENARIO_EFFECT.ELEVATE_MAIN_GLYPHS
+]);
+const observation = productionDirector.dispatch(VR_SCENARIO_EVENT.POST_RING_WORLD_PRESENTATION_COMPLETED);
+assert.equal(observation.currentPointId, VR_EXPERIENCE_POINT['3.20']);
+assert.deepEqual(observation.effects, [VR_SCENARIO_EFFECT.BEGIN_OBSERVATION_WINDOW]);
+const attention = productionDirector.dispatch(VR_SCENARIO_EVENT.OBSERVATION_WINDOW_COMPLETED);
+assert.equal(attention.currentPointId, VR_EXPERIENCE_POINT['3.30']);
+assert.deepEqual(attention.effects, [VR_SCENARIO_EFFECT.BEGIN_MONKEY_ATTENTION]);
+const furnaceIntro = productionDirector.dispatch(VR_SCENARIO_EVENT.MONKEY_ATTENTION_COMPLETED);
+assert.equal(furnaceIntro.currentPointId, VR_EXPERIENCE_POINT['3.40']);
+assert.deepEqual(furnaceIntro.effects, [VR_SCENARIO_EFFECT.BEGIN_FURNACE_INTRO]);
+assert.equal(productionDirector.dispatch(VR_SCENARIO_EVENT.SHELL_PULL_STARTED), null,
+  'shell interaction remains disabled at the Furnace-intro boundary');
 assert.equal(vrExperienceScenario.points.some(({ transitions }) => transitions.some((transition) =>
   transition.kind === VR_SCENARIO_TRANSITION_KIND.EXPLICIT
     && transition.target === VR_EXPERIENCE_POINT['2.30'])), false,

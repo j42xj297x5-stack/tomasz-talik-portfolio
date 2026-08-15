@@ -38,6 +38,10 @@ export const VR_SCENARIO_EVENT = immutableIdentifiers([
   'CRYSTAL_ACTIVATED',
   'CARD_COMMITTED',
   'FIRST_RING_COMPLETED',
+  'FIRST_RING_PRESENTATION_COMPLETED',
+  'POST_RING_WORLD_PRESENTATION_COMPLETED',
+  'OBSERVATION_WINDOW_COMPLETED',
+  'MONKEY_ATTENTION_COMPLETED',
   'TIER_COMPLETED',
   'ASTRO_UNLOCKED',
   'SHELL_PULL_STARTED',
@@ -121,6 +125,11 @@ export const VR_SCENARIO_EFFECT = immutableIdentifiers([
   'PLAY_CARD_COMMIT_FEEDBACK',
   'COMPLETE_FIRST_RING_PRESENTATION',
   'PLAY_FIRST_RING_COMPLETE_FEEDBACK',
+  'REVEAL_SHELL_FIELD_PRESENTATION',
+  'ELEVATE_MAIN_GLYPHS',
+  'BEGIN_OBSERVATION_WINDOW',
+  'BEGIN_MONKEY_ATTENTION',
+  'BEGIN_FURNACE_INTRO',
   'REVEAL_SHELL_FIELD',
   'REVEAL_FURNACE',
   'PRESENT_ASTERION',
@@ -144,6 +153,10 @@ export const VR_EXPERIENCE_POINT = immutableIdentifiers([
   '2.20',
   '2.30',
   '2.40',
+  '3.10',
+  '3.20',
+  '3.30',
+  '3.40',
   '100.10'
 ]);
 
@@ -168,7 +181,11 @@ export const VR_EXPERIENCE_SCENARIO_SPINE = Object.freeze([
   VR_EXPERIENCE_POINT['2.10'],
   VR_EXPERIENCE_POINT['2.20'],
   VR_EXPERIENCE_POINT['2.30'],
-  VR_EXPERIENCE_POINT['2.40']
+  VR_EXPERIENCE_POINT['2.40'],
+  VR_EXPERIENCE_POINT['3.10'],
+  VR_EXPERIENCE_POINT['3.20'],
+  VR_EXPERIENCE_POINT['3.30'],
+  VR_EXPERIENCE_POINT['3.40']
 ]);
 
 const EMPTY_SETTLED_CONSEQUENCES = Object.freeze({});
@@ -376,6 +393,61 @@ const points = Object.freeze([
     settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
     label: 'Pierwszy ring / pierwszy globalny poziom ukończony 5/5',
     capabilities: Object.freeze([]),
+    transitions: Object.freeze([
+      Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.COMPLETE,
+        event: VR_SCENARIO_EVENT.FIRST_RING_PRESENTATION_COMPLETED,
+        milestonesToAdd: Object.freeze([]),
+        effects: Object.freeze([
+          VR_SCENARIO_EFFECT.REVEAL_SHELL_FIELD_PRESENTATION,
+          VR_SCENARIO_EFFECT.ELEVATE_MAIN_GLYPHS
+        ])
+      })
+    ])
+  }),
+  Object.freeze({
+    id: VR_EXPERIENCE_POINT['3.10'],
+    settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
+    label: 'Post-ring world transition / prezentacja pola Muszli i elevacja głównych glyphów',
+    capabilities: Object.freeze([]),
+    transitions: Object.freeze([
+      Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.COMPLETE,
+        event: VR_SCENARIO_EVENT.POST_RING_WORLD_PRESENTATION_COMPLETED,
+        milestonesToAdd: Object.freeze([]),
+        effects: Object.freeze([VR_SCENARIO_EFFECT.BEGIN_OBSERVATION_WINDOW])
+      })
+    ])
+  }),
+  Object.freeze({
+    id: VR_EXPERIENCE_POINT['3.20'],
+    settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
+    label: 'Observation window / około 10 sekund',
+    capabilities: Object.freeze([]),
+    transitions: Object.freeze([
+      Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.COMPLETE,
+        event: VR_SCENARIO_EVENT.OBSERVATION_WINDOW_COMPLETED,
+        milestonesToAdd: Object.freeze([]),
+        effects: Object.freeze([VR_SCENARIO_EFFECT.BEGIN_MONKEY_ATTENTION])
+      })
+    ])
+  }),
+  Object.freeze({
+    id: VR_EXPERIENCE_POINT['3.30'],
+    settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
+    label: 'Monkey attention / attention i checheszki',
+    capabilities: Object.freeze([]),
+    transitions: Object.freeze([
+      Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.COMPLETE,
+        event: VR_SCENARIO_EVENT.MONKEY_ATTENTION_COMPLETED,
+        milestonesToAdd: Object.freeze([]),
+        effects: Object.freeze([VR_SCENARIO_EFFECT.BEGIN_FURNACE_INTRO])
+      })
+    ])
+  }),
+  Object.freeze({
+    id: VR_EXPERIENCE_POINT['3.40'],
+    settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
+    label: 'Monkey → Furnace intro',
+    capabilities: Object.freeze([]),
     transitions: Object.freeze([])
   }),
   Object.freeze({
@@ -401,7 +473,7 @@ export const vrExperienceScenario = Object.freeze({
     effects: Object.freeze(Object.values(VR_SCENARIO_EFFECT))
   }),
   metadata: Object.freeze({
-    stage: 'M2_2D_FIRST_RING_LOOP',
+    stage: 'M3_POST_RING_TO_FURNACE_INTRO',
     authoritativeForLiveGameplay: true,
     // Routing topology lives only in points/transitions and the authored Spine.
   })
