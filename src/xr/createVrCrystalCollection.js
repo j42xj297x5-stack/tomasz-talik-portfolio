@@ -474,6 +474,11 @@ export function createVrCrystalCollection({ scene, assetManager, controllers, po
     insertedInstance = null;
   }
 
+  function hydrateScenarioState(state) {
+    if (state?.consumedTier !== 1) throw new Error('Crystal collection only supports consumed Tier 1 hydration');
+    reset();
+  }
+
   function getInsertedInstance() { return insertedInstance; }
 
   function activateInserted() {
@@ -519,5 +524,5 @@ export function createVrCrystalCollection({ scene, assetManager, controllers, po
   }
 
   return { instances, heldByController, spawn, spawnOne, update, grab, release, getInsertedInstance, activateInserted,
-    releaseInserted, reset, dispose };
+    releaseInserted, reset, hydrateScenarioState, dispose };
 }

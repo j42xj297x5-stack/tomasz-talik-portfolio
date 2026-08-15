@@ -23,6 +23,7 @@ export function createVrSemanticInput({ renderer }) {
     primaryAction: 0,
     grabAction: 0,
     leftPrimaryAction: 0,
+    leftStickX: 0,
     leftStickY: 0
   };
 
@@ -42,6 +43,7 @@ export function createVrSemanticInput({ renderer }) {
     state.primaryAction = clamp01(rightButtons[XR_STANDARD_BUTTONS.primaryAction]?.value);
     state.grabAction = clamp01(rightButtons[XR_STANDARD_BUTTONS.grabAction]?.value);
     state.leftPrimaryAction = clamp01(leftButtons[XR_STANDARD_BUTTONS.primaryAction]?.value);
+    state.leftStickX = applyAxisDeadzone(leftAxes[2] ?? leftAxes[0] ?? 0);
     state.leftStickY = applyAxisDeadzone(leftAxes[3] ?? leftAxes[1] ?? 0);
     previousLeftTogglePressed = leftTogglePressed;
     previousRightTogglePressed = rightTogglePressed;
@@ -59,6 +61,7 @@ export function createVrSemanticInput({ renderer }) {
     state.primaryAction = 0;
     state.grabAction = 0;
     state.leftPrimaryAction = 0;
+    state.leftStickX = 0;
     state.leftStickY = 0;
   }
 

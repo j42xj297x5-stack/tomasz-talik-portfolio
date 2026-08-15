@@ -164,6 +164,13 @@ export function createVrCrystalReliquary({ parent, portalAnchor, reliquaryModel,
     }
   }
 
+  function hydrateScenarioState(state) {
+    if (state?.revealed !== true || state.interactionEnabled !== true) {
+      throw new Error('Reliquary only supports its settled revealed Scenario state');
+    }
+    reveal(0);
+  }
+
   function trackRevealMaterials(root) {
     root?.traverse((child) => {
       if (!child.isMesh || child === insertZone) return;
@@ -284,6 +291,7 @@ export function createVrCrystalReliquary({ parent, portalAnchor, reliquaryModel,
   reset();
   return { object, modelRoot, authoredRoot, companionsRoot, model, insertZone, authoredCrystalAnchor, crystalAnchor: runtimeCrystalAnchor,
     runtimeCrystalAnchor, hasValidInsertZone, portalForward, portalLeft, place, reset, reveal, update, dispose,
+    hydrateScenarioState,
     attachCompanion,
     isInteractionEnabled: () => interactionEnabled,
     getRevealSnapshot: () => ({ active: revealActive, elapsed: revealElapsed, duration: revealDuration, interactionEnabled }),

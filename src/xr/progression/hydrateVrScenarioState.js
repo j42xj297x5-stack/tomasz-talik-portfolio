@@ -1,4 +1,5 @@
-const OWNER_SECTIONS = Object.freeze(['monkey', 'intro', 'locomotion']);
+const OWNER_SECTIONS = Object.freeze(['monkey', 'intro', 'locomotion', 'reliquary', 'progression',
+  'progressFloor', 'crystals', 'postRing']);
 
 // Canonical baseline restoration is an explicit precondition. This seam only
 // delegates owner-scoped facts; it never creates owners or emits story events.

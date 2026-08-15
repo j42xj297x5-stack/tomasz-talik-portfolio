@@ -52,7 +52,8 @@ function drawWrappedText(context, text, x, y, maxWidth, lineHeight, maxLines = I
 }
 
 export function createVrPlayerGuidePanel({ leftGrip, semanticInput, locale = 'en', settings = {},
-  onOpenChange = () => {}, onPanelClick = () => {} }) {
+  onOpenChange = () => {}, onPanelClick = () => {}, debugCheckpoints = [],
+  onDebugCheckpoint = () => {} }) {
   const config = normalizeSettings(settings);
   const content = resolveVrPlayerGuideContent(locale);
   const canvas = document.createElement('canvas');
@@ -76,6 +77,8 @@ export function createVrPlayerGuidePanel({ leftGrip, semanticInput, locale = 'en
   let viewState = VIEW_STATE.MENU;
   let activeSectionId = null;
   let previousNavDirection = 0;
+  let previousHorizontalDirection = 0;
+  let selectedDebugIndex = 0;
   let previousConfirmPressed = false;
   let suppressOpenNotification = false;
   let disposed = false;
@@ -157,6 +160,24 @@ export function createVrPlayerGuidePanel({ leftGrip, semanticInput, locale = 'en
       context.textAlign = 'start';
       context.textBaseline = 'alphabetic';
     });
+    if (debugCheckpoints.length) {
+      const selected = selectedIndex === content.items.length;
+      const y = canvas.height - 132;
+      context.strokeStyle = selected ? config.colors.border : 'rgba(117, 215, 255, 0.35)';
+      context.lineWidth = 3;
+      context.beginPath?.(); context.moveTo?.(36, y - 18); context.lineTo?.(canvas.width - 36, y - 18); context.stroke?.();
+      context.fillStyle = config.colors.muted; context.font = '700 22px sans-serif';
+      context.fillText('DEBUG', 36, y + 12);
+      const width = 86; const gap = 10; const start = 36;
+      debugCheckpoints.forEach((checkpoint, index) => {
+        const x = start + index * (width + gap);
+        if (selected && index === selectedDebugIndex) { context.fillStyle = config.colors.selected; context.fillRect(x, y + 26, width, 48); }
+        context.strokeStyle = selected && index === selectedDebugIndex ? config.colors.border : 'rgba(117, 215, 255, 0.35)';
+        context.strokeRect(x, y + 26, width, 48);
+        context.fillStyle = config.colors.text; context.font = '700 24px sans-serif'; context.textAlign = 'center';
+        context.fillText(checkpoint.label, x + width / 2, y + 58); context.textAlign = 'start';
+      });
+    }
   }
 
   function drawCurrentTaskCard(item) {
@@ -232,23 +253,38 @@ export function createVrPlayerGuidePanel({ leftGrip, semanticInput, locale = 'en
     const axis = input.leftStickY ?? 0;
     const direction = Math.abs(axis) >= config.navigationThreshold ? Math.sign(axis) : 0;
     if (viewState === VIEW_STATE.MENU && direction && direction !== previousNavDirection) {
-      selectedIndex = (selectedIndex + (direction > 0 ? 1 : -1) + content.items.length) % content.items.length;
+      const rowCount = content.items.length + (debugCheckpoints.length ? 1 : 0);
+      selectedIndex = (selectedIndex + (direction > 0 ? 1 : -1) + rowCount) % rowCount;
       draw();
       onPanelClick();
     }
     previousNavDirection = direction;
+    const horizontalAxis = input.leftStickX ?? 0;
+    const horizontalDirection = Math.abs(horizontalAxis) >= config.navigationThreshold ? Math.sign(horizontalAxis) : 0;
+    if (viewState === VIEW_STATE.MENU && selectedIndex === content.items.length && horizontalDirection
+      && horizontalDirection !== previousHorizontalDirection) {
+      selectedDebugIndex = (selectedDebugIndex + (horizontalDirection > 0 ? 1 : -1)
+        + debugCheckpoints.length) % debugCheckpoints.length;
+      draw(); onPanelClick();
+    }
+    previousHorizontalDirection = horizontalDirection;
     const confirmPressed = Boolean(input.toggleLeftTool);
     if (confirmPressed && !previousConfirmPressed) {
       if (viewState === VIEW_STATE.MENU) {
-        activeSectionId = content.items[selectedIndex]?.id ?? activeSectionId;
-        viewState = VIEW_STATE.DETAIL;
-        draw();
-        onPanelClick();
+        if (selectedIndex === content.items.length && debugCheckpoints.length) {
+          onDebugCheckpoint(debugCheckpoints[selectedDebugIndex].id);
+          setOpen(false);
+          onPanelClick();
+        } else {
+          activeSectionId = content.items[selectedIndex]?.id ?? activeSectionId;
+          viewState = VIEW_STATE.DETAIL;
+          draw(); onPanelClick();
+        }
       }
     }
     previousConfirmPressed = confirmPressed;
   }
-  function reset() { selectedIndex = 0; viewState = VIEW_STATE.MENU; activeSectionId = null; previousNavDirection = 0; previousConfirmPressed = false;
+  function reset() { selectedIndex = 0; selectedDebugIndex = 0; viewState = VIEW_STATE.MENU; activeSectionId = null; previousNavDirection = 0; previousHorizontalDirection = 0; previousConfirmPressed = false;
     suppressOpenNotification = true; setOpen(false); suppressOpenNotification = false; }
   function dispose() {
     if (disposed) return;
@@ -265,5 +301,6 @@ export function createVrPlayerGuidePanel({ leftGrip, semanticInput, locale = 'en
   draw();
   return { object, isOpen, update, reset, dispose, setVisibleControlIds,
     getVisibleControlIds: () => [...visibleControlIds], getViewState: () => viewState,
-    getSelectedIndex: () => selectedIndex, getActiveSectionId: () => activeSectionId };
+    getSelectedIndex: () => selectedIndex, getSelectedDebugIndex: () => selectedDebugIndex,
+    getActiveSectionId: () => activeSectionId };
 }

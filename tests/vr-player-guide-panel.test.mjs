@@ -40,7 +40,7 @@ globalThis.document = {
       getContext(type) {
         assert.equal(type, '2d');
         return {
-          clearRect() {}, fillRect() {}, strokeRect() {}, drawImage(...args) { imageLog.push(args); },
+          clearRect() {}, fillRect() {}, strokeRect() {}, beginPath() {}, moveTo() {}, lineTo() {}, stroke() {}, drawImage(...args) { imageLog.push(args); },
           measureText(text) { return { width: String(text).length * 12 }; },
           fillText(text, x, y) { textLog.push({ text, x, y }); },
           set fillStyle(value) {}, set strokeStyle(value) {}, set lineWidth(value) {}, set font(value) {},
@@ -70,6 +70,16 @@ function createFixture(locale = 'en') {
   return { panel, input, grip };
 }
 
+function createDebugFixture() {
+  const grip = new THREE.Group();
+  const input = { togglePlayerGuidePanel: false, toggleLeftTool: false, leftStickX: 0, leftStickY: 0 };
+  const activated = [];
+  const panel = createVrPlayerGuidePanel({ leftGrip: grip, semanticInput: { getState: () => input },
+    debugCheckpoints: ['P0', 'P1', 'P2'].map((id) => ({ id, label: id })),
+    onDebugCheckpoint: (id) => activated.push(id) });
+  return { panel, input, grip, activated };
+}
+
 async function settleLoads() {
   await new Promise((resolve) => setTimeout(resolve, 10));
   for (let attempt = 0; attempt < 20 && !createdImages.at(-1)?.src; attempt += 1) {
@@ -96,6 +106,10 @@ function stick(fixture, y) {
   fixture.panel.update(0.016);
   fixture.input.leftStickY = 0;
   fixture.panel.update(0.016);
+}
+function horizontal(fixture, x) {
+  fixture.input.leftStickX = x; fixture.panel.update(0.016);
+  fixture.input.leftStickX = 0; fixture.panel.update(0.016);
 }
 
 const english = createFixture('en');
@@ -156,5 +170,20 @@ assert.equal(textLog.some(({ text }) => text === 'Controller diagram unavailable
 const fallbackUrl = createdImages.at(-1).src;
 fallback.panel.dispose();
 assert.ok(revokedUrls.includes(fallbackUrl), 'dispose revokes the filtered SVG URL');
+
+textLog.length = 0;
+const debug = createDebugFixture();
+await settleLoads();
+pulse(debug, 'togglePlayerGuidePanel');
+stick(debug, -0.8);
+assert.equal(debug.panel.getSelectedIndex(), 2, 'vertical navigation reaches DEBUG row');
+assert.equal(textLog.some(({ text }) => text === 'DEBUG'), true);
+for (const id of ['P0', 'P1', 'P2']) assert.equal(textLog.some(({ text }) => text === id), true);
+assert.equal(textLog.some(({ text }) => text === 'P3' || text === 'P4'), false);
+horizontal(debug, 0.8);
+assert.equal(debug.panel.getSelectedDebugIndex(), 1);
+pulse(debug, 'toggleLeftTool');
+assert.deepEqual(debug.activated, ['P1']);
+assert.equal(debug.panel.isOpen(), false);
 
 console.log('VR player guide panel assertions passed');
