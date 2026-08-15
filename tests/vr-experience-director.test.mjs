@@ -203,7 +203,10 @@ for (const [index, page] of tierOnePages.entries()) {
     assert.equal(completed.previousPointId, VR_EXPERIENCE_POINT['2.30']);
     assert.equal(completed.currentPointId, VR_EXPERIENCE_POINT['2.40']);
     assert.equal(completed.transitionKind, VR_SCENARIO_TRANSITION_KIND.COMPLETE);
-    assert.deepEqual(completed.effects, []);
+    assert.deepEqual(completed.effects, [
+      VR_SCENARIO_EFFECT.COMPLETE_FIRST_RING_PRESENTATION,
+      VR_SCENARIO_EFFECT.PLAY_FIRST_RING_COMPLETE_FEEDBACK
+    ], 'first-ring completion emits exactly its authored presentation and audio consequences');
   } else {
     assert.equal(productionDirector.getCurrentPointId(), VR_EXPERIENCE_POINT['2.30'],
       `commit ${index + 1}/5 must not advance the canonical story point`);
