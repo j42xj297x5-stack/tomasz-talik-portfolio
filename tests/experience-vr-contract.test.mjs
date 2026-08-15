@@ -31,7 +31,7 @@ for (const removedHintPointId of ['2.10.1', '2.30.1', '2.40.1']) {
 }
 assert.equal(VR_EXPERIENCE_POINT['100.10'], '100.10', 'EXIT remains unchanged');
 
-const [main, vr, experience3d, vrControllers, glyphInteraction, spatialPlaque, crystalCollection, locomotion, portalDisplay, crystalReliquary, astroFurnace, furnacePanel, semanticInputSource, playerGuidePanelSource, playerGuideContentSource, scenario, reliquaryHints, monkeyGuide, introSequenceSource, progressFloorSource] = await Promise.all([
+const [main, vr, experience3d, vrControllers, glyphInteraction, spatialPlaque, crystalCollection, locomotion, portalDisplay, crystalReliquary, astroFurnace, furnacePanel, semanticInputSource, playerGuidePanelSource, playerGuideContentSource, scenario, reliquaryHints, monkeyGuide, introSequenceSource, progressFloorSource, firstRingFlowSource] = await Promise.all([
   readFile(new URL('../src/main.js', import.meta.url), 'utf8'),
   readFile(new URL('../src/experienceVr.js', import.meta.url), 'utf8'),
   readFile(new URL('../src/experience3d.js', import.meta.url), 'utf8'),
@@ -51,7 +51,8 @@ const [main, vr, experience3d, vrControllers, glyphInteraction, spatialPlaque, c
   readFile(new URL('../src/xr/guidance/createVrReliquaryHints.js', import.meta.url), 'utf8'),
   readFile(new URL('../src/xr/guidance/createVrMonkeyGuide.js', import.meta.url), 'utf8'),
   readFile(new URL('../src/xr/guidance/createVrIntroSequence.js', import.meta.url), 'utf8'),
-  readFile(new URL('../src/xr/floor/createVrProgressFloor.js', import.meta.url), 'utf8')
+  readFile(new URL('../src/xr/floor/createVrProgressFloor.js', import.meta.url), 'utf8'),
+  readFile(new URL('../src/xr/progression/createVrFirstRingFlow.js', import.meta.url), 'utf8')
 ]);
 
 assert.doesNotMatch(introSequenceSource, /progressFloor\.geometryRoot|userData\?\.branchId|userData\.branchId/,
@@ -108,7 +109,7 @@ assert.match(vr, /onPreview: \(page\) => runtimeExperience\.dispatch\(VR_SCENARI
   'successful domain activation emits one semantic fact carrying the active page');
 assert.match(vr, /canRelease: \(\) => \(introQaBypass[\s\S]*runtimeExperience\.can\(VR_SCENARIO_CAPABILITY\.CAN_RELEASE_RELIQUARY\)\)[\s\S]*crystalReliquary\.isInteractionEnabled\(\)[\s\S]*state === 'active'/,
   'Release combines explicit QA or Scenario permission with local technical validity');
-assert.match(vr, /onCommit: \(page, \{ tierCompleted \}\) => \{\s*runtimeExperience\.dispatch\(VR_SCENARIO_EVENT\.CARD_COMMITTED, \{ page \}\)/,
+assert.match(vr, /onCommit: firstRingFlow\.commitPage/,
   'successful domain commit emits CARD_COMMITTED with minimal page identity');
 assert.doesNotMatch(vr, /runtimeExperience\.dispatch\(VR_SCENARIO_EVENT\.RELIQUARY_RELEASED/,
   'temporary release story fact has no production dispatch');
@@ -292,16 +293,22 @@ assert.match(reliquaryHints, /showHint\(\)[\s\S]*monkeyGuide\.notifyAttention\(\
   'the contextual reliquary hint still requests Monkey attention');
 assert.match(monkeyGuide, /if \(hit\.kind === 'monkey'\) \{\s*clearAttention\(\);\s*if \(dialogueOverride\?\.onMonkeyPress\)/,
   'a recognized Monkey press clears attention before dialogue override delegation');
-assert.match(vr, /VR_SCENARIO_EFFECT\.COMPLETE_FIRST_RING_PRESENTATION[\s\S]*progressFloor\.completeTier\(1\)/,
-  'Runtime owns the first-ring floor completion effect with explicit tier identity');
-assert.equal((vr.match(/progressFloor\.completeTier\(/g) ?? []).length, 1,
-  'first-ring floor completion has only the Runtime effect production path');
+assert.match(vr, /VR_SCENARIO_EFFECT\.COMPLETE_FIRST_RING_PRESENTATION[\s\S]*firstRingFlow\.beginPresentation\(\)/,
+  'Runtime starts the first-ring presentation owner');
+assert.equal((firstRingFlowSource.match(/progressFloor\.completeTier\(1\)/g) ?? []).length, 1,
+  'first-ring presentation has one visual floor-completion consequence');
+assert.equal((`${vr}\n${firstRingFlowSource}`.match(/dispatch\(VR_SCENARIO_EVENT\.FIRST_RING_PRESENTATION_COMPLETED\)/g) ?? []).length, 1,
+  'first-ring presentation owner has exactly one semantic completion producer');
+assert.match(firstRingFlowSource, /presentationCompleted = true;\s*dispatch\(VR_SCENARIO_EVENT\.FIRST_RING_PRESENTATION_COMPLETED\)/,
+  'the owner latches completion before dispatching it');
+assert.match(vr, /progressFloor\.update\(delta\);\s*firstRingFlow\.update\(delta\);/,
+  'the production render loop advances the first-ring presentation owner');
 assert.match(vr, /VR_SCENARIO_EFFECT\.PLAY_FIRST_RING_COMPLETE_FEEDBACK[\s\S]*playVrWorld\(VR_AUDIO\.tierComplete\)/,
   'Runtime owns first-ring completion audio feedback');
 assert.equal((vr.match(/playVrWorld\(VR_AUDIO\.tierComplete\)/g) ?? []).length, 1,
   'first-ring completion audio has only the Runtime effect production path');
-const tierCompletionBlock = vr.match(/if \(tierCompleted\) \{[\s\S]*?\n    \}/)?.[0] ?? '';
-assert.match(tierCompletionBlock, /if \(page\.order === 1\) runtimeExperience\.dispatch\(VR_SCENARIO_EVENT\.FIRST_RING_COMPLETED, \{ page \}\);/,
+const tierCompletionBlock = firstRingFlowSource.match(/if \(!tierCompleted\) return;[\s\S]*?syncAmbientSequence\(\);/)?.[0] ?? '';
+assert.match(tierCompletionBlock, /if \(page\.order === 1\) dispatch\(VR_SCENARIO_EVENT\.FIRST_RING_COMPLETED, \{ page \}\);/,
   'the domain-owner-reported first-tier completion emits the durable first-ring Scenario fact');
 assert.doesNotMatch(tierCompletionBlock, /progressFloor\.completeTier|playVrWorld\(VR_AUDIO\.tierComplete\)/,
   'the direct post-dispatch block no longer executes authored first-ring consequences');
