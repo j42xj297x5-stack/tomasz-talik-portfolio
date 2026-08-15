@@ -1,4 +1,5 @@
 import { getNextScenarioSpinePointId, validateScenarioSpine } from './scenarioSpineNavigation.js';
+import { VR_SCENARIO_TRANSITION_KIND } from './vrExperienceScenario.js';
 
 function assertStringArray(value, label) {
   if (!Array.isArray(value)) throw new TypeError(`${label} must be an array`);
@@ -15,7 +16,7 @@ function hasChoice(transition) {
   return Object.prototype.hasOwnProperty.call(transition, 'choice');
 }
 
-function hasExplicitTarget(transition) {
+function hasTarget(transition) {
   return Object.prototype.hasOwnProperty.call(transition, 'target');
 }
 
@@ -27,11 +28,15 @@ function validateScenario(scenario) {
   const milestones = assertStringArray(scenario.vocabulary.milestones, 'scenario vocabulary milestones');
   const effects = assertStringArray(scenario.vocabulary.effects, 'scenario vocabulary effects');
   const points = scenario.points ?? scenario.scenes;
-  const initialPointId = scenario.initialPointId ?? scenario.initialSceneId;
   if (!Array.isArray(points) || points.length === 0) throw new TypeError('scenario points are required');
   const pointIds = assertStringArray(points.map((point) => point?.id), 'scenario point ids');
   validateScenarioSpine(scenario);
-  if (!pointIds.has(initialPointId)) throw new Error(`scenario initial point does not exist: ${initialPointId}`);
+  const initialPointId = scenario.spine[0];
+  for (const [alias, value] of [['initialPointId', scenario.initialPointId], ['initialSceneId', scenario.initialSceneId]]) {
+    if (value !== undefined && value !== initialPointId) {
+      throw new Error(`scenario ${alias} compatibility alias must equal spine[0]: ${initialPointId}`);
+    }
+  }
   const pointsById = new Map();
   for (const point of points) {
     const pointCapabilities = assertStringArray(point.capabilities, `point ${point.id} capabilities`);
@@ -45,13 +50,25 @@ function validateScenario(scenario) {
       if (transitionHasChoice && (!Number.isInteger(transition.choice) || transition.choice <= 0)) {
         throw new TypeError(`point ${point.id} transition ${transition.event} choice must be a positive integer`);
       }
-      if (hasExplicitTarget(transition)) {
-        if (!pointIds.has(transition.target)) throw new Error(`transition target does not exist: ${transition.target}`);
-      } else {
-        const nextPointId = getNextScenarioSpinePointId(scenario, point.id);
-        if (nextPointId === null) {
-          throw new Error(`point ${point.id} cannot complete through Spine.next() because it is the last spine point`);
+      const hasTransitionTarget = hasTarget(transition);
+      switch (transition.kind) {
+        case VR_SCENARIO_TRANSITION_KIND.STAY:
+          if (hasTransitionTarget) throw new Error(`STAY transition at point ${point.id} must not define target`);
+          break;
+        case VR_SCENARIO_TRANSITION_KIND.COMPLETE: {
+          if (hasTransitionTarget) throw new Error(`COMPLETE transition at point ${point.id} must not define target`);
+          const nextPointId = getNextScenarioSpinePointId(scenario, point.id);
+          if (nextPointId === null) {
+            throw new Error(`point ${point.id} cannot complete through Spine.next() because it is the last spine point`);
+          }
+          break;
         }
+        case VR_SCENARIO_TRANSITION_KIND.EXPLICIT:
+          if (!hasTransitionTarget) throw new Error(`EXPLICIT transition at point ${point.id} must define target`);
+          if (!pointIds.has(transition.target)) throw new Error(`transition target does not exist: ${transition.target}`);
+          break;
+        default:
+          throw new Error(`point ${point.id} transition ${transition.event} has unknown or missing kind: ${String(transition.kind)}`);
       }
       const transitionMilestones = assertStringArray(transition.milestonesToAdd ?? [], `transition ${transition.event} milestones`);
       const transitionEffects = assertStringArray(transition.effects ?? [], `transition ${transition.event} effects`);
@@ -101,15 +118,24 @@ export class ExperienceDirector {
     );
     if (!transition) return null;
     const previousPointId = this.currentPointId;
-    this.currentPointId = hasExplicitTarget(transition)
-      ? transition.target
-      : getNextScenarioSpinePointId(this.scenario, previousPointId);
+    switch (transition.kind) {
+      case VR_SCENARIO_TRANSITION_KIND.STAY:
+        this.currentPointId = previousPointId;
+        break;
+      case VR_SCENARIO_TRANSITION_KIND.COMPLETE:
+        this.currentPointId = getNextScenarioSpinePointId(this.scenario, previousPointId);
+        break;
+      case VR_SCENARIO_TRANSITION_KIND.EXPLICIT:
+        this.currentPointId = transition.target;
+        break;
+    }
     const addedMilestones = [];
     for (const milestone of transition.milestonesToAdd ?? []) if (!this.committedMilestones.has(milestone)) {
       this.committedMilestones.add(milestone); addedMilestones.push(milestone);
     }
     this.lastEvent = Object.freeze({ type: eventType, payload: payload ?? null });
-    const change = Object.freeze({ event: this.lastEvent, previousPointId, currentPointId: this.currentPointId,
+    const change = Object.freeze({ event: this.lastEvent, transitionKind: transition.kind,
+      previousPointId, currentPointId: this.currentPointId,
       addedMilestones: Object.freeze(addedMilestones), effects: Object.freeze([...(transition.effects ?? [])]) });
     for (const listener of [...this.listeners]) listener(change);
     return change;
