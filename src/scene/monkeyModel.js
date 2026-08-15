@@ -48,6 +48,22 @@ function createMonkeyActor({ actorParent, fixtureParent, fallbackObject, model, 
     const authoredRootInAsset = matrixRelativeTo(authoredStoneRoot, stoneAsset);
     setMatrix(stoneAsset, authoredRootInAsset.invert());
   }
+  let scenarioFinalPlacement = null;
+
+  function captureScenarioFinalPlacement() {
+    scenarioFinalPlacement = { position: motionRoot.position.clone(), quaternion: motionRoot.quaternion.clone() };
+  }
+
+  function hydrateScenarioState(state) {
+    if (state?.placement !== 'FINAL_STONE' || !scenarioFinalPlacement) {
+      throw new Error('[monkeyModel] FINAL_STONE scenario placement has not been captured');
+    }
+    motionRoot.position.copy(scenarioFinalPlacement.position);
+    motionRoot.quaternion.copy(scenarioFinalPlacement.quaternion);
+    visualRoot.visible = state.visible === true;
+    stoneRoot.visible = state.stoneVisible === true;
+    dockCharacterToStone();
+  }
 
   function dockCharacterToStone() {
     if (!stoneAsset || !characterAnchor || !seatAnchor || !stoneRoot.parent) return false;
@@ -74,7 +90,8 @@ function createMonkeyActor({ actorParent, fixtureParent, fallbackObject, model, 
   }
 
   return { motionRoot, visualRoot, characterRoot, interactionRoot: characterRoot, stoneRoot, model,
-    characterAnchor, authoredStoneRoot, seatAnchor, dockCharacterToStone };
+    characterAnchor, authoredStoneRoot, seatAnchor, dockCharacterToStone,
+    captureScenarioFinalPlacement, hydrateScenarioState };
 }
 
 export async function loadMonkeyModel({ actorParent, fixtureParent = actorParent, fallbackObject, assetManager = null }) {

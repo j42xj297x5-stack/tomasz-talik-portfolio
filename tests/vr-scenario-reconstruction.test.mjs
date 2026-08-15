@@ -49,6 +49,19 @@ assert.throws(
   /unknown point/
 );
 assert.deepEqual(reconstructVrScenarioState(vrExperienceScenario, '1.10'), {});
+const productionAtTwoTen = reconstructVrScenarioState(vrExperienceScenario, '2.10');
+assert.deepEqual(productionAtTwoTen, {
+  monkey: { placement: 'FINAL_STONE', visible: true, stoneVisible: true },
+  intro: { phase: 'GLYPH_FREE_EXPLORE', fog: 'CLEARED', glyphRingVisible: true,
+    progressionFixturesVisible: true, guideInteractionEnabled: true },
+  locomotion: { boundary: 'GLYPH_RING' }
+});
+assert.equal(Object.isFrozen(productionAtTwoTen), true);
+assert.equal(Object.isFrozen(productionAtTwoTen.intro), true);
+assert.deepEqual(reconstructVrScenarioState(vrExperienceScenario, '2.10'), productionAtTwoTen,
+  'production reconstruction is deterministic');
+assert.equal(vrExperienceScenario.points.find(({ id }) => id === '2.10').settledConsequences.intro, undefined,
+  '2.10 does not contribute its own state at entry');
 
 const point = (id, settledConsequences = Object.freeze({})) => Object.freeze({
   id,

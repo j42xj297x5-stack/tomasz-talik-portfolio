@@ -54,9 +54,13 @@ Po preloadzie wszystkich assetów composition musi dać się złożyć przed REA
 
 Regression guards: `vr-first-ring-live-flow`, `vr-astro-first-claim-live-flow`, `vr-runtime-bootstrap`. Bootstrap regression był RED przed poprawką i GREEN po niej przez production path. Wizjoner potwierdził przejście poza `41/41` i brak zatrzymania przed READY: **HARDWARE VALIDATED — Meta Quest 3S** wyłącznie dla bootstrap fixu. Pełny flow `3.10–3.80` oraz Furnace/Astro visuals, hover, skala/orientacja, handoff i shell targeting pozostają hardware/perceptual QA pending.
 
-## Reconstruction i deferred
+## Reconstruction i pierwszy hydration vertical slice
 
-`stateAt(X) = fold(settledConsequences punktów ściśle przed X)`. Mechanizm nie odtwarza live/transient state. Nadal deferred: hydration/owner restore, reconstruction-backed checkpoints i QA aliases, durable persistence/save oraz pełny reset zapisanej gry.
+`stateAt(X) = fold(settledConsequences punktów ściśle przed X)`. Production state nie jest już pustym szkieletem: konsekwencje `1.130` opisują stabilne fakty po zakończonym crossing join, pogrupowane według ownerów `monkey`, `intro` i `locomotion`. Nie zawierają timerów, dialogue playback, hovera, animacji ani capability.
+
+`2.10` jest pierwszym i jedynym udowodnionym reconstruction-backed entry point. `prepareVrScenarioSession` zachowuje kolejność baseline → reconstruction → owner-delegating hydration → Director w target point. Monkey materializuje finalną pozycję na kamieniu, Intro actor czysty `GLYPH_FREE_EXPLORE` z zakończoną mgłą i bez dialogu, a locomotion granicę glyph ring. `CAN_USE_GLYPHS` pochodzi wyłącznie z Directora `2.10`; wcześniejsze milestones nie są bootstrapowane, ponieważ dalszy flow ich nie odczytuje.
+
+Późniejsze checkpointy, QA aliases/arbitrary checkpoint UI, persistence/save i pełny reset zapisanej gry nadal są deferred. Hydration zakłada uprzedni canonical baseline i nie jest patchem dowolnego live state.
 
 ## Canonical runtime baseline
 
