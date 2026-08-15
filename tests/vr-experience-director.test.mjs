@@ -6,13 +6,13 @@ import { VR_EXPERIENCE_POINT, VR_SCENARIO_CAPABILITY, VR_SCENARIO_EFFECT, VR_SCE
 assert.equal(Object.isFrozen(vrExperienceScenario), true);
 assert.equal(vrExperienceScenario.points, vrExperienceScenario.scenes);
 assert.equal(vrExperienceScenario.initialPointId, vrExperienceScenario.initialSceneId);
-assert.deepEqual(vrExperienceScenario.points.map(({ id }) => id), ['1.10', '1.20', '1.30', '1.40', '1.50', '1.60', '1.70', '1.80', '1.100', '1.110', '1.120', '1.130', '2.10', '2.10.1', '2.20', '2.30', '2.30.1', '2.40', '2.40.1', '100.10']);
+assert.deepEqual(vrExperienceScenario.points.map(({ id }) => id), ['1.10', '1.20', '1.30', '1.40', '1.50', '1.60', '1.70', '1.80', '1.100', '1.110', '1.120', '1.130', '2.10', '2.20', '2.30', '2.40', '100.10']);
 assert.equal(Object.isFrozen(vrExperienceScenario.points[0]), true);
 assert.equal(Object.isFrozen(vrExperienceScenario.points[0].transitions[0]), true);
 assert.equal(Object.isFrozen(vrExperienceScenario.points[0].transitions[0].effects), true);
 assert.equal('authoritativeScope' in vrExperienceScenario.metadata, false);
-assert.equal(vrExperienceScenario.metadata.stage, 'M2_2C_CANONICAL_CROSSING_JOIN');
-for (const removedId of ['1.100.1', '1.110.1', '1.120.1', '1.130.1', '1.130.2']) {
+assert.equal(vrExperienceScenario.metadata.stage, 'M2_2C2_CANONICAL_HINT_STAY');
+for (const removedId of ['1.100.1', '1.110.1', '1.120.1', '1.130.1', '1.130.2', '2.10.1', '2.30.1', '2.40.1']) {
   assert.equal(VR_EXPERIENCE_POINT[removedId], undefined);
   assert.equal(vrExperienceScenario.points.some(({ id }) => id === removedId), false);
 }
@@ -132,10 +132,10 @@ assert.equal(productionDirector.can(VR_SCENARIO_CAPABILITY.CAN_USE_GLYPHS), true
 assert.equal(productionDirector.dispatch(VR_SCENARIO_EVENT.MONKEY_SETTLED), null, 'completed join rejects duplicate facts');
 const glyphHintChange = productionDirector.dispatch(VR_SCENARIO_EVENT.GLYPH_HINT_TIMEOUT);
 assert.equal(glyphHintChange.previousPointId, VR_EXPERIENCE_POINT['2.10']);
-assert.equal(glyphHintChange.currentPointId, VR_EXPERIENCE_POINT['2.10.1']);
+assert.equal(glyphHintChange.currentPointId, VR_EXPERIENCE_POINT['2.10']);
+assert.equal(glyphHintChange.transitionKind, VR_SCENARIO_TRANSITION_KIND.STAY);
 assert.deepEqual(glyphHintChange.effects, [VR_SCENARIO_EFFECT.SHOW_GLYPH_HINT]);
 assert.equal(productionDirector.can(VR_SCENARIO_CAPABILITY.CAN_USE_GLYPHS), true, 'glyph use remains available after the hint');
-assert.equal(productionDirector.dispatch(VR_SCENARIO_EVENT.GLYPH_HINT_TIMEOUT), null, 'duplicate timeout is inert and emits no second effect');
 const discoveredAfterHint = productionDirector.dispatch(VR_SCENARIO_EVENT.FIRST_CRYSTAL_DISCOVERED);
 assert.equal(discoveredAfterHint.currentPointId, VR_EXPERIENCE_POINT['2.20']);
 assert.deepEqual(discoveredAfterHint.effects, [VR_SCENARIO_EFFECT.REVEAL_RELIQUARY]);
@@ -155,9 +155,9 @@ assert.equal(productionDirector.can(VR_SCENARIO_CAPABILITY.CAN_ACTIVATE_RELIQUAR
 assert.equal(productionDirector.can(VR_SCENARIO_CAPABILITY.CAN_RELEASE_RELIQUARY), false);
 assert.equal(productionDirector.dispatch(VR_SCENARIO_EVENT.RELIQUARY_REVEAL_COMPLETED), null, 'duplicate reveal completion is inert');
 const activateHint = productionDirector.dispatch(VR_SCENARIO_EVENT.RELIQUARY_HINT_TIMEOUT);
-assert.equal(activateHint.currentPointId, VR_EXPERIENCE_POINT['2.30.1']);
+assert.equal(activateHint.currentPointId, VR_EXPERIENCE_POINT['2.30']);
+assert.equal(activateHint.transitionKind, VR_SCENARIO_TRANSITION_KIND.STAY);
 assert.deepEqual(activateHint.effects, [VR_SCENARIO_EFFECT.SHOW_RELIQUARY_CONTEXT_HINT]);
-assert.equal(productionDirector.dispatch(VR_SCENARIO_EVENT.RELIQUARY_HINT_TIMEOUT), null, 'duplicate Activate timeout is inert');
 assert.equal(productionDirector.can(VR_SCENARIO_CAPABILITY.CAN_USE_GLYPHS), true);
 assert.equal(productionDirector.can(VR_SCENARIO_CAPABILITY.CAN_USE_RELIQUARY), true);
 assert.equal(productionDirector.can(VR_SCENARIO_CAPABILITY.CAN_ACTIVATE_RELIQUARY), true);
@@ -170,9 +170,9 @@ assert.equal(productionDirector.can(VR_SCENARIO_CAPABILITY.CAN_USE_RELIQUARY), t
 assert.equal(productionDirector.can(VR_SCENARIO_CAPABILITY.CAN_ACTIVATE_RELIQUARY), false);
 assert.equal(productionDirector.can(VR_SCENARIO_CAPABILITY.CAN_RELEASE_RELIQUARY), true);
 const releaseHint = productionDirector.dispatch(VR_SCENARIO_EVENT.RELIQUARY_HINT_TIMEOUT);
-assert.equal(releaseHint.currentPointId, VR_EXPERIENCE_POINT['2.40.1']);
+assert.equal(releaseHint.currentPointId, VR_EXPERIENCE_POINT['2.40']);
+assert.equal(releaseHint.transitionKind, VR_SCENARIO_TRANSITION_KIND.STAY);
 assert.deepEqual(releaseHint.effects, [VR_SCENARIO_EFFECT.SHOW_RELIQUARY_CONTEXT_HINT]);
-assert.equal(productionDirector.dispatch(VR_SCENARIO_EVENT.RELIQUARY_HINT_TIMEOUT), null, 'duplicate Release timeout is inert');
 assert.equal(productionDirector.can(VR_SCENARIO_CAPABILITY.CAN_USE_GLYPHS), true);
 assert.equal(productionDirector.can(VR_SCENARIO_CAPABILITY.CAN_USE_RELIQUARY), true);
 assert.equal(productionDirector.can(VR_SCENARIO_CAPABILITY.CAN_ACTIVATE_RELIQUARY), false);
