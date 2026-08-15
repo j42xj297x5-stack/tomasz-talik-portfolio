@@ -420,6 +420,7 @@ const crystalCollection = createVrCrystalCollection({
   onCommit: (page, { tierCompleted }) => {
     runtimeExperience.dispatch(VR_SCENARIO_EVENT.CARD_COMMITTED, { page });
     if (tierCompleted) {
+      if (page.order === 1) runtimeExperience.dispatch(VR_SCENARIO_EVENT.FIRST_RING_COMPLETED, { page });
       progressFloor.completeTier(page.order);
       syncTierOneWorldState();
       syncAmbientSequence();

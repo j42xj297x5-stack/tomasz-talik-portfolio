@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import { createVrExperienceDirector } from '../src/xr/progression/createVrExperienceDirector.js';
 import { ExperienceDirector } from '../src/xr/progression/ExperienceDirector.js';
+import { createVrProgressionController } from '../src/xr/progression/createVrProgressionController.js';
+import { experienceVrPages } from '../src/content/experienceVrPages.js';
 import { VR_EXPERIENCE_POINT, VR_SCENARIO_CAPABILITY, VR_SCENARIO_EFFECT, VR_SCENARIO_EVENT, VR_SCENARIO_MILESTONE, VR_SCENARIO_TRANSITION_KIND, vrExperienceScenario } from '../src/xr/progression/vrExperienceScenario.js';
 
 assert.equal(Object.isFrozen(vrExperienceScenario), true);
@@ -11,7 +13,7 @@ assert.equal(Object.isFrozen(vrExperienceScenario.points[0]), true);
 assert.equal(Object.isFrozen(vrExperienceScenario.points[0].transitions[0]), true);
 assert.equal(Object.isFrozen(vrExperienceScenario.points[0].transitions[0].effects), true);
 assert.equal('authoritativeScope' in vrExperienceScenario.metadata, false);
-assert.equal(vrExperienceScenario.metadata.stage, 'M2_2C2_CANONICAL_HINT_STAY');
+assert.equal(vrExperienceScenario.metadata.stage, 'M2_2D_FIRST_RING_LOOP');
 for (const removedId of ['1.100.1', '1.110.1', '1.120.1', '1.130.1', '1.130.2', '2.10.1', '2.30.1', '2.40.1']) {
   assert.equal(VR_EXPERIENCE_POINT[removedId], undefined);
   assert.equal(vrExperienceScenario.points.some(({ id }) => id === removedId), false);
@@ -152,52 +154,65 @@ assert.deepEqual(reliquaryComplete.addedMilestones, []);
 assert.equal(productionDirector.can(VR_SCENARIO_CAPABILITY.CAN_USE_GLYPHS), true);
 assert.equal(productionDirector.can(VR_SCENARIO_CAPABILITY.CAN_USE_RELIQUARY), true);
 assert.equal(productionDirector.can(VR_SCENARIO_CAPABILITY.CAN_ACTIVATE_RELIQUARY), true);
-assert.equal(productionDirector.can(VR_SCENARIO_CAPABILITY.CAN_RELEASE_RELIQUARY), false);
+assert.equal(productionDirector.can(VR_SCENARIO_CAPABILITY.CAN_RELEASE_RELIQUARY), true);
 assert.equal(productionDirector.dispatch(VR_SCENARIO_EVENT.RELIQUARY_REVEAL_COMPLETED), null, 'duplicate reveal completion is inert');
-const activateHint = productionDirector.dispatch(VR_SCENARIO_EVENT.RELIQUARY_HINT_TIMEOUT);
-assert.equal(activateHint.currentPointId, VR_EXPERIENCE_POINT['2.30']);
-assert.equal(activateHint.transitionKind, VR_SCENARIO_TRANSITION_KIND.STAY);
-assert.deepEqual(activateHint.effects, [VR_SCENARIO_EFFECT.SHOW_RELIQUARY_CONTEXT_HINT]);
-assert.equal(productionDirector.can(VR_SCENARIO_CAPABILITY.CAN_USE_GLYPHS), true);
-assert.equal(productionDirector.can(VR_SCENARIO_CAPABILITY.CAN_USE_RELIQUARY), true);
+const insertedHint = productionDirector.dispatch(VR_SCENARIO_EVENT.RELIQUARY_HINT_TIMEOUT);
+assert.equal(insertedHint.currentPointId, VR_EXPERIENCE_POINT['2.30']);
+assert.equal(insertedHint.transitionKind, VR_SCENARIO_TRANSITION_KIND.STAY);
+assert.deepEqual(insertedHint.effects, [VR_SCENARIO_EFFECT.SHOW_RELIQUARY_CONTEXT_HINT]);
 assert.equal(productionDirector.can(VR_SCENARIO_CAPABILITY.CAN_ACTIVATE_RELIQUARY), true);
-assert.equal(productionDirector.can(VR_SCENARIO_CAPABILITY.CAN_RELEASE_RELIQUARY), false);
-const activated = productionDirector.dispatch(VR_SCENARIO_EVENT.CRYSTAL_ACTIVATED);
-assert.equal(activated.currentPointId, VR_EXPERIENCE_POINT['2.40']);
-assert.deepEqual(activated.effects, [VR_SCENARIO_EFFECT.PRESENT_ACTIVE_CARD_PREVIEW]);
-assert.equal(productionDirector.can(VR_SCENARIO_CAPABILITY.CAN_USE_GLYPHS), true, 'glyph permission survives the action handoff');
-assert.equal(productionDirector.can(VR_SCENARIO_CAPABILITY.CAN_USE_RELIQUARY), true);
-assert.equal(productionDirector.can(VR_SCENARIO_CAPABILITY.CAN_ACTIVATE_RELIQUARY), false);
-assert.equal(productionDirector.can(VR_SCENARIO_CAPABILITY.CAN_RELEASE_RELIQUARY), true);
-const releaseHint = productionDirector.dispatch(VR_SCENARIO_EVENT.RELIQUARY_HINT_TIMEOUT);
-assert.equal(releaseHint.currentPointId, VR_EXPERIENCE_POINT['2.40']);
-assert.equal(releaseHint.transitionKind, VR_SCENARIO_TRANSITION_KIND.STAY);
-assert.deepEqual(releaseHint.effects, [VR_SCENARIO_EFFECT.SHOW_RELIQUARY_CONTEXT_HINT]);
-assert.equal(productionDirector.can(VR_SCENARIO_CAPABILITY.CAN_USE_GLYPHS), true);
-assert.equal(productionDirector.can(VR_SCENARIO_CAPABILITY.CAN_USE_RELIQUARY), true);
-assert.equal(productionDirector.can(VR_SCENARIO_CAPABILITY.CAN_ACTIVATE_RELIQUARY), false);
-assert.equal(productionDirector.can(VR_SCENARIO_CAPABILITY.CAN_RELEASE_RELIQUARY), true);
-assert.equal(VR_SCENARIO_EVENT.RELIQUARY_RELEASED, undefined,
-  'temporary release story fact is removed from the vocabulary');
-const committed = productionDirector.dispatch(VR_SCENARIO_EVENT.CARD_COMMITTED, { page: { glyphId: 'creative-ai', order: 1 } });
-assert.equal(committed.currentPointId, VR_EXPERIENCE_POINT['2.30']);
-assert.deepEqual(committed.effects, [
-  VR_SCENARIO_EFFECT.UPDATE_COMMITTED_CARD_PRESENTATION,
-  VR_SCENARIO_EFFECT.PLAY_CARD_COMMIT_FEEDBACK
-]);
-assert.deepEqual(committed.addedMilestones, [VR_SCENARIO_MILESTONE.CARD_COMMITTED]);
-assert.equal(productionDirector.hasMilestone(VR_SCENARIO_MILESTONE.TIER_COMPLETED), false,
-  'one card commit is not tier completion');
-assert.equal(productionDirector.can(VR_SCENARIO_CAPABILITY.CAN_ACTIVATE_RELIQUARY), true, 'the next physical cycle can activate');
-assert.equal(productionDirector.can(VR_SCENARIO_CAPABILITY.CAN_RELEASE_RELIQUARY), false);
-const normalActivated = productionDirector.dispatch(VR_SCENARIO_EVENT.CRYSTAL_ACTIVATED, { page: { glyphId: 'haiku-cosmos', order: 1 } });
-assert.equal(normalActivated.currentPointId, VR_EXPERIENCE_POINT['2.40']);
-assert.deepEqual(normalActivated.effects, [VR_SCENARIO_EFFECT.PRESENT_ACTIVE_CARD_PREVIEW],
-  'normal and hinted Activate routes share one branch-neutral preview effect');
-const normalCommitted = productionDirector.dispatch(VR_SCENARIO_EVENT.CARD_COMMITTED, { page: { glyphId: 'haiku-cosmos', order: 1 } });
-assert.equal(normalCommitted.currentPointId, VR_EXPERIENCE_POINT['2.30']);
-assert.deepEqual(normalCommitted.effects, committed.effects, 'different branches use the same Scenario route');
-assert.deepEqual(normalCommitted.addedMilestones, [], 'CARD_COMMITTED milestone is monotonic, not a branch counter');
+assert.equal(productionDirector.can(VR_SCENARIO_CAPABILITY.CAN_RELEASE_RELIQUARY), true,
+  'Scenario permits the whole local loop; Reliquary state remains the phase gate');
+
+const tierOneProgression = createVrProgressionController({ pages: experienceVrPages });
+const tierOnePages = experienceVrPages.filter(({ order }) => order === 1).sort((a, b) => a.glyphId.localeCompare(b.glyphId));
+assert.equal(tierOnePages.length, 5);
+for (const [index, page] of tierOnePages.entries()) {
+  const activated = productionDirector.dispatch(VR_SCENARIO_EVENT.CRYSTAL_ACTIVATED, { page });
+  assert.equal(activated.currentPointId, VR_EXPERIENCE_POINT['2.30'], 'Activate stays inside the first-ring point');
+  assert.equal(activated.transitionKind, VR_SCENARIO_TRANSITION_KIND.STAY);
+  assert.deepEqual(activated.effects, [VR_SCENARIO_EFFECT.PRESENT_ACTIVE_CARD_PREVIEW]);
+
+  const activeHint = productionDirector.dispatch(VR_SCENARIO_EVENT.RELIQUARY_HINT_TIMEOUT);
+  assert.equal(activeHint.currentPointId, VR_EXPERIENCE_POINT['2.30']);
+  assert.deepEqual(activeHint.effects, [VR_SCENARIO_EFFECT.SHOW_RELIQUARY_CONTEXT_HINT],
+    'the same Scenario hint route serves the active Reliquary phase');
+
+  assert.equal(tierOneProgression.commitPage(page), true, 'Release commits through the progression owner');
+  const committed = productionDirector.dispatch(VR_SCENARIO_EVENT.CARD_COMMITTED, { page });
+  assert.equal(committed.currentPointId, VR_EXPERIENCE_POINT['2.30']);
+  assert.equal(committed.transitionKind, VR_SCENARIO_TRANSITION_KIND.STAY);
+  assert.deepEqual(committed.effects, [
+    VR_SCENARIO_EFFECT.UPDATE_COMMITTED_CARD_PRESENTATION,
+    VR_SCENARIO_EFFECT.PLAY_CARD_COMMIT_FEEDBACK
+  ], 'every card retains presentation and commit feedback');
+  assert.deepEqual(committed.addedMilestones,
+    index === 0 ? [VR_SCENARIO_MILESTONE.CARD_COMMITTED] : [],
+    'CARD_COMMITTED remains a monotonic milestone rather than a counter');
+
+  const tierCompleted = tierOneProgression.isTierComplete(page.order);
+  assert.equal(tierCompleted, index === tierOnePages.length - 1,
+    'only the progression controller owns and reports the 5/5 fact');
+  if (tierCompleted) {
+    const completed = productionDirector.dispatch(VR_SCENARIO_EVENT.FIRST_RING_COMPLETED, { page });
+    assert.equal(completed.previousPointId, VR_EXPERIENCE_POINT['2.30']);
+    assert.equal(completed.currentPointId, VR_EXPERIENCE_POINT['2.40']);
+    assert.equal(completed.transitionKind, VR_SCENARIO_TRANSITION_KIND.COMPLETE);
+    assert.deepEqual(completed.effects, []);
+  } else {
+    assert.equal(productionDirector.getCurrentPointId(), VR_EXPERIENCE_POINT['2.30'],
+      `commit ${index + 1}/5 must not advance the canonical story point`);
+  }
+}
+assert.equal(productionDirector.dispatch(VR_SCENARIO_EVENT.CARD_COMMITTED), null,
+  '2.40 has no transient Release-loop commit route');
+assert.equal(productionDirector.dispatch(VR_SCENARIO_EVENT.RELIQUARY_HINT_TIMEOUT), null,
+  '2.40 has no transient Reliquary hint route');
+assert.equal(vrExperienceScenario.points.find(({ id }) => id === '2.40').transitions.length, 0);
+assert.equal(vrExperienceScenario.points.some(({ transitions }) => transitions.some((transition) =>
+  transition.kind === VR_SCENARIO_TRANSITION_KIND.EXPLICIT
+    && transition.target === VR_EXPERIENCE_POINT['2.30'])), false,
+'no explicit transition returns from 2.40 to 2.30');
 
 const settledFirstDirector = new ExperienceDirector({ scenario: vrExperienceScenario });
 for (const event of [VR_SCENARIO_EVENT.XR_CALIBRATED, VR_SCENARIO_EVENT.INTRO_REVEAL_COMPLETE, VR_SCENARIO_EVENT.POST_REVEAL_SILENCE_COMPLETE, VR_SCENARIO_EVENT.PLAYER_OPENED_GUIDE, VR_SCENARIO_EVENT.PLAYER_VIEWED_CONTROLS, VR_SCENARIO_EVENT.PLAYER_CLOSED_GUIDE, VR_SCENARIO_EVENT.MONKEY_HOVERED, VR_SCENARIO_EVENT.MONKEY_TRIGGERED]) settledFirstDirector.dispatch(event);
