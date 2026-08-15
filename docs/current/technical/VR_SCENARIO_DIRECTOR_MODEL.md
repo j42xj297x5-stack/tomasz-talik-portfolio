@@ -57,3 +57,7 @@ Regression guards: `vr-first-ring-live-flow`, `vr-astro-first-claim-live-flow`, 
 ## Reconstruction i deferred
 
 `stateAt(X) = fold(settledConsequences punktów ściśle przed X)`. Mechanizm nie odtwarza live/transient state. Nadal deferred: hydration/owner restore, reconstruction-backed checkpoints i QA aliases, durable persistence/save oraz pełny reset zapisanej gry.
+
+## Canonical runtime baseline
+
+`restoreVrScenarioBaseline()` jest jednym production seamem, który orkiestruje istniejące API resetu ownerów i actorów. Zwykłe wejście do VR korzysta z niego przed utworzeniem sesji XR; ten sam seam jest używany po zakończeniu sesji oraz po nieudanej próbie wejścia. Baseline dotyczy wyłącznie już utworzonych obiektów runtime: nie powtarza bootstrapu, nie wykonuje effects Scenario, reconstruction ani hydration. Teardown sesji XR i UI pozostaje osobnym lifecycle concernem.
