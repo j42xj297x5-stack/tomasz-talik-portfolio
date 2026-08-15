@@ -42,6 +42,10 @@ export const VR_SCENARIO_EVENT = immutableIdentifiers([
   'POST_RING_WORLD_PRESENTATION_COMPLETED',
   'OBSERVATION_WINDOW_COMPLETED',
   'POST_RING_MONKEY_DIALOGUE_COMPLETED',
+  'FURNACE_INTRO_COMPLETED',
+  'ASTRO_ATTRACTOR_PRODUCTION_REQUESTED',
+  'ASTRO_ATTRACTOR_PRODUCED',
+  'ASTRO_ATTRACTOR_CLAIMED',
   'TIER_COMPLETED',
   'ASTRO_UNLOCKED',
   'SHELL_PULL_STARTED',
@@ -157,6 +161,10 @@ export const VR_EXPERIENCE_POINT = immutableIdentifiers([
   '3.20',
   '3.30',
   '3.40',
+  '3.50',
+  '3.60',
+  '3.70',
+  '3.80',
   '100.10'
 ]);
 
@@ -185,7 +193,11 @@ export const VR_EXPERIENCE_SCENARIO_SPINE = Object.freeze([
   VR_EXPERIENCE_POINT['3.10'],
   VR_EXPERIENCE_POINT['3.20'],
   VR_EXPERIENCE_POINT['3.30'],
-  VR_EXPERIENCE_POINT['3.40']
+  VR_EXPERIENCE_POINT['3.40'],
+  VR_EXPERIENCE_POINT['3.50'],
+  VR_EXPERIENCE_POINT['3.60'],
+  VR_EXPERIENCE_POINT['3.70'],
+  VR_EXPERIENCE_POINT['3.80']
 ]);
 
 const EMPTY_SETTLED_CONSEQUENCES = Object.freeze({});
@@ -448,7 +460,39 @@ const points = Object.freeze([
     settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
     label: 'Monkey → Furnace intro',
     capabilities: Object.freeze([]),
-    transitions: Object.freeze([])
+    transitions: Object.freeze([
+      Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.COMPLETE,
+        event: VR_SCENARIO_EVENT.FURNACE_INTRO_COMPLETED, milestonesToAdd: Object.freeze([]), effects: Object.freeze([]) })
+    ])
+  }),
+  Object.freeze({
+    id: VR_EXPERIENCE_POINT['3.50'], settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
+    label: 'Furnace available / Astro production ready',
+    capabilities: Object.freeze([VR_SCENARIO_CAPABILITY.CAN_USE_FURNACE, VR_SCENARIO_CAPABILITY.CAN_OPEN_FURNACE,
+      VR_SCENARIO_CAPABILITY.CAN_START_FURNACE_PROCESS]),
+    transitions: Object.freeze([Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.COMPLETE,
+      event: VR_SCENARIO_EVENT.ASTRO_ATTRACTOR_PRODUCTION_REQUESTED, milestonesToAdd: Object.freeze([]), effects: Object.freeze([]) })])
+  }),
+  Object.freeze({
+    id: VR_EXPERIENCE_POINT['3.60'], settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
+    label: 'Astro Attractor construction', capabilities: Object.freeze([VR_SCENARIO_CAPABILITY.CAN_USE_FURNACE]),
+    transitions: Object.freeze([Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.COMPLETE,
+      event: VR_SCENARIO_EVENT.ASTRO_ATTRACTOR_PRODUCED, milestonesToAdd: Object.freeze([]), effects: Object.freeze([]) })])
+  }),
+  Object.freeze({
+    id: VR_EXPERIENCE_POINT['3.70'], settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
+    label: 'Physical Astro available / waiting for claim',
+    capabilities: Object.freeze([VR_SCENARIO_CAPABILITY.CAN_USE_FURNACE, VR_SCENARIO_CAPABILITY.CAN_OPEN_FURNACE]),
+    transitions: Object.freeze([Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.COMPLETE,
+      event: VR_SCENARIO_EVENT.ASTRO_ATTRACTOR_CLAIMED, milestonesToAdd: Object.freeze([]), effects: Object.freeze([]) })])
+  }),
+  Object.freeze({
+    id: VR_EXPERIENCE_POINT['3.80'], settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
+    label: 'Astro Attractor physically claimed / EARNED',
+    capabilities: Object.freeze([VR_SCENARIO_CAPABILITY.CAN_EQUIP_ASTRO, VR_SCENARIO_CAPABILITY.CAN_SCAN_SHELLS,
+      VR_SCENARIO_CAPABILITY.CAN_TARGET_SHELLS, VR_SCENARIO_CAPABILITY.CAN_USE_FURNACE,
+      VR_SCENARIO_CAPABILITY.CAN_OPEN_FURNACE, VR_SCENARIO_CAPABILITY.CAN_INSERT_FURNACE_MATERIAL,
+      VR_SCENARIO_CAPABILITY.CAN_START_FURNACE_PROCESS]), transitions: Object.freeze([])
   }),
   Object.freeze({
     id: VR_EXPERIENCE_POINT['100.10'],
@@ -473,7 +517,7 @@ export const vrExperienceScenario = Object.freeze({
     effects: Object.freeze(Object.values(VR_SCENARIO_EFFECT))
   }),
   metadata: Object.freeze({
-    stage: 'M3_POST_RING_TO_FURNACE_INTRO',
+    stage: 'M3_ASTRO_PHYSICAL_CLAIM',
     authoritativeForLiveGameplay: true,
     // Routing topology lives only in points/transitions and the authored Spine.
   })

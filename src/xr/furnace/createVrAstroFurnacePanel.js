@@ -20,7 +20,8 @@ const smoothstep = (value) => value * value * (3 - 2 * value);
 export const wireframeDissolveVisible = (segment, progress) => progress < 1 && segment.dissolveOrder >= Math.max(0, progress);
 
 export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], progressionController, processSource, contentSource,
-  productionController = null, asterionModel = null, settings = {}, onEnterModule = () => {}, onReturnHome = () => {}, onCreate = () => {} }) {
+  productionController = null, astroProductionController = null, canUseAstroProduction = () => false,
+  asterionModel = null, settings = {}, onEnterModule = () => {}, onReturnHome = () => {}, onCreate = () => {} }) {
   const config = { width: 1.55, height: 1.05, gapFromFurnace: 0.10, verticalOffset: 0.15, yawDegrees: -12,
     canvasWidth: 1536, canvasHeight: 1024, appearDuration: 0.32, disappearDuration: 0.20,
     telemetryRefreshHz: 12, frameCornerSizePx: 28, spherePatchVisualScaleMultiplier: 1.10, accents: {}, ...settings };
@@ -75,7 +76,9 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
     text('ASTRO PIEC', 90, 100, 52); text('MODUŁY TRANSFORMACJI', 90, 152, 25, '#83b8d1');
     const cards = [
       ['module-asterion-sphere', 'SFERA ASTERIONOWA', 'Rdzeń żyroskopowy sterowania kręgiem', 'SKORUPY', `${progress.absorbed} / 6   DOSTĘPNE`, true],
-      ['module-astro-attractor', 'ASTRO PRZYCIĄGACZ', 'Astrolabium Więzi // narzędzie przyciągania', 'TRYB', 'Utwórz astro przyciągacz', false],
+      ['module-astro-attractor', 'ASTRO PRZYCIĄGACZ', 'Astrolabium Więzi // narzędzie przyciągania', 'TRYB',
+        astroProductionController?.getState?.() === 'AVAILABLE' ? 'ASTROLABIUM WIĘZI // GOTOWE' : 'Utwórz astro przyciągacz',
+        canUseAstroProduction() && astroProductionController?.canCreate?.() === true],
       ['module-emanation-matrix', 'MATRYCA EMANACJI', 'Przetwarzanie kamieni runicznych', 'KAMIENIE', 'W PRZYGOTOWANIU', false]
     ];
     interactiveRegions = cards.map((card, index) => {
@@ -249,6 +252,10 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
     screen = ASTRO_FURNACE_PANEL_SCREENS.ASTERION_SPHERE;
     moduleListeners.forEach((listener) => listener('floor_gyroscope_sphere'));
     onEnterModule();
+  } else if (id === 'module-astro-attractor') {
+    moduleListeners.forEach((listener) => listener('astro_attractor'));
+    if (!canUseAstroProduction() || !astroProductionController?.requestCreate?.()) return false;
+    onCreate();
   } else if (id === 'back-modules') { screen = ASTRO_FURNACE_PANEL_SCREENS.HOME; onReturnHome(); }
   else if (id === 'create-asterion') { if (!productionController?.requestCreate?.()) return false; onCreate(); }
   else return false; hoveredRegion = null; draw(); return true; }
@@ -282,8 +289,9 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
   function reset() { state = ASTRO_FURNACE_PANEL_STATES.HIDDEN; screen = ASTRO_FURNACE_PANEL_SCREENS.HOME; elapsed = 0; telemetryElapsed = 0; lastTelemetryRedraw = 0; completedUntil = 0; previousProcessState = 'IDLE'; hoveredRegion = null; renderPlanes.forEach((plane) => { plane.material.opacity = 0; }); hits.forEach((_, record) => hits.set(record, null)); place(); root.visible = false; draw(); }
   const unsubscribe = progressionController.subscribe(() => draw());
   const unsubscribeProduction = productionController?.subscribe?.(() => draw()) ?? (() => {});
+  const unsubscribeAstroProduction = astroProductionController?.subscribe?.(() => draw()) ?? (() => {});
   const unsubscribePlacement = furnace.subscribePlacement?.(() => place()) ?? (() => {});
-  function dispose() { if (disposed) return; disposed = true; unsubscribe(); unsubscribeProduction(); unsubscribePlacement(); moduleListeners.clear(); listeners.forEach(({ record, listener }) => record.controller.removeEventListener('selectstart', listener)); root.removeFromParent(); renderPlanes.forEach((plane) => { plane.geometry.dispose(); plane.material.dispose(); }); texture.dispose(); canvas.width = 0; canvas.height = 0; hits.clear(); }
+  function dispose() { if (disposed) return; disposed = true; unsubscribe(); unsubscribeProduction(); unsubscribeAstroProduction(); unsubscribePlacement(); moduleListeners.clear(); listeners.forEach(({ record, listener }) => record.controller.removeEventListener('selectstart', listener)); root.removeFromParent(); renderPlanes.forEach((plane) => { plane.geometry.dispose(); plane.material.dispose(); }); texture.dispose(); canvas.width = 0; canvas.height = 0; hits.clear(); }
   reset();
   return { object: root, mesh: frontPlane, renderPlanes, canvas, texture, hits, show, hide, toggle, place, update, press, reset, dispose, activateRegion, redraw: draw,
     subscribeModuleActivation(listener) { moduleListeners.add(listener); return () => moduleListeners.delete(listener); },
