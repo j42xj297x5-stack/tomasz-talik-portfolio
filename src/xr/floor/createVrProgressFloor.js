@@ -351,6 +351,24 @@ export function createVrProgressFloor({
     return true;
   }
 
+  function hydrateScenarioState(state) {
+    if (!Array.isArray(state?.activatedPages) || state.completedTier !== 1) {
+      throw new Error('Progress floor only supports the settled Tier 1 completion state');
+    }
+    state.activatedPages.forEach((page) => activatePage(page));
+    completeTier(1);
+    update(10);
+  }
+  function reset() {
+    revealedSectorIds.clear(); activatedEntries.clear(); pulseRemaining.clear(); completedTiers.clear();
+    sectorsByGlyphId.forEach(({ object: sector, panelsByOrder, presentationMaterials }) => {
+      sector.visible = false;
+      presentationMaterials.forEach(({ material }) => { material.opacity = 0; });
+      panelsByOrder.forEach(({ materials }) => materials.forEach((material) => { material.emissiveIntensity = 0; }));
+    });
+    tierRings.forEach((ring) => { ring.pulseRemaining = 0; ring.material.opacity = 0; });
+  }
+
   function dispose() {
     if (disposed) return;
     disposed = true;
@@ -367,6 +385,8 @@ export function createVrProgressFloor({
     geometryRoot,
     activatePage,
     completeTier,
+    hydrateScenarioState,
+    reset,
     update,
     getActivatedEntries: () => [...activatedEntries.values()].map(({ glyphId, order }) => ({ glyphId, order })),
     getRevealedSectorIds: () => [...revealedSectorIds],

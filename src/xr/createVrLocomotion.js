@@ -149,7 +149,14 @@ export function createVrLocomotion({ playerRig, renderer, camera, settings, surf
     }
     setWalkRadius(scenarioGlyphRingRadius, { clamp: false });
   }
+  function teleportLocal(position, lookAt) {
+    if (!position?.isVector3 || !lookAt?.isVector3) throw new TypeError('teleportLocal requires local Vector3 positions');
+    playerRig.position.copy(position);
+    playerRig.position.y = initialLocalY;
+    playerRig.lookAt(lookAt.x, playerRig.position.y, lookAt.z);
+    clampPositionToWalkRadius(playerRig.position, activeWalkRadius);
+  }
   function dispose() { disposed = true; }
-  return { update, reset, dispose, setLeftYawLocked, setWalkRadius, hydrateScenarioState,
+  return { update, reset, dispose, setLeftYawLocked, setWalkRadius, hydrateScenarioState, teleportLocal,
     getWalkRadius: () => activeWalkRadius };
 }

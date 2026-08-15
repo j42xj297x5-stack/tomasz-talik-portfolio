@@ -55,6 +55,8 @@ import { createVrAudioBridge } from './xr/audio/createVrAudioBridge.js';
 import { createVrAmbientSequencer } from './xr/audio/createVrAmbientSequencer.js';
 import { ExperienceDirector } from './xr/progression/ExperienceDirector.js';
 import { RuntimeExperience } from './xr/progression/RuntimeExperience.js';
+import { createVrDebugCheckpointController } from './xr/progression/enterVrDebugCheckpoint.js';
+import { VR_DEBUG_CHECKPOINTS } from './xr/progression/vrDebugCheckpoints.js';
 import { createVrPostRingPresentation } from './xr/progression/createVrPostRingPresentation.js';
 import { createVrObservationWindow } from './xr/progression/createVrObservationWindow.js';
 import { VR_SCENARIO_CAPABILITY, VR_SCENARIO_EFFECT, VR_SCENARIO_EVENT, vrExperienceScenario } from './xr/progression/vrExperienceScenario.js';
@@ -134,6 +136,7 @@ if (audioControl) app.querySelector('[data-vr-audio-slot]').append(audioControl)
 const loadedSettings = await loadExperienceVrSettings({ debug: new URLSearchParams(location.search).has('debug') });
 const settings = loadedSettings.settings;
 const searchParams = new URLSearchParams(location.search);
+const debugCheckpointsEnabled = searchParams.has('debug');
 const postP1Qa = searchParams.has('p1');
 const furnaceProcessQa = searchParams.has('furnaceProcess');
 const introQaBypass = ['p1', 'asterionSphere', 'furnaceProcess', 'furnace']
@@ -315,6 +318,14 @@ function resetPlayerRigToSpawn() {
   playerRig.quaternion.copy(playerRigSpawnLocalQuaternion);
   playerRig.scale.copy(playerRigSpawnLocalScale);
 }
+function spawnPlayerInsideRingFacingMonkey() {
+  const monkeyLocal = monkeyMotionRoot.position.clone();
+  const ringCenterLocal = new THREE.Vector3(0, monkeyLocal.y, 0);
+  const towardCenter = ringCenterLocal.sub(monkeyLocal).setY(0);
+  if (towardCenter.lengthSq() < 1e-8) towardCenter.copy(entryDirection).negate().setY(0);
+  const spawnLocal = monkeyLocal.clone().addScaledVector(towardCenter.normalize(), 3);
+  locomotion.teleportLocal(spawnLocal, monkeyLocal);
+}
 const attractorTool = createVrAttractorTool({ model: assetManager.cloneGltfScene('vr-astro-attractor-model') });
 const semanticInput = createVrSemanticInput({ renderer });
 const handModeController = createVrHandModeController({
@@ -355,7 +366,9 @@ const playerGuidePanel = createVrPlayerGuidePanel({
   locale: language,
   settings: settings.playerGuidePanel,
   onOpenChange: (open) => playVrUi(open ? VR_AUDIO.playerOpen : VR_AUDIO.playerClose),
-  onPanelClick: () => playVrUi(VR_AUDIO.click)
+  onPanelClick: () => playVrUi(VR_AUDIO.click),
+  debugCheckpoints: debugCheckpointsEnabled ? VR_DEBUG_CHECKPOINTS : [],
+  onDebugCheckpoint: (checkpointId) => enterVrDebugCheckpoint?.(checkpointId)
 });
 const monkeyGuide = createVrMonkeyGuide({
   actorRoot: monkeyMotionRoot,
@@ -718,6 +731,21 @@ runtimeExperience = new RuntimeExperience({
   }
 });
 
+const scenarioOwners = Object.freeze({
+  monkey: monkeyActor, intro: introSequence, locomotion, reliquary: crystalReliquary,
+  progression: progressionController, progressFloor, crystals: crystalCollection,
+  postRing: postRingPresentation
+});
+const enterVrDebugCheckpoint = createVrDebugCheckpointController({
+  scenario: vrExperienceScenario,
+  owners: scenarioOwners,
+  restoreBaseline: restoreVrScenarioBaseline,
+  runtime: runtimeExperience,
+  spawnIntro: resetPlayerRigToSpawn,
+  spawnRing: spawnPlayerInsideRingFacingMonkey,
+  startCanonicalIntro: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.XR_CALIBRATED)
+});
+
 function resize() {
   const width = canvas.clientWidth || innerWidth || 1;
   const height = canvas.clientHeight || innerHeight || 1;
@@ -822,6 +850,8 @@ function restoreVrScenarioBaseline() {
   restorePortalWaitingState();
   locomotion.reset();
   resetPlayerRigToSpawn();
+  progressionController.reset();
+  progressFloor.reset();
   glyphOrbit.reset();
   postRingPresentation.reset();
   firstRingFlow.reset();

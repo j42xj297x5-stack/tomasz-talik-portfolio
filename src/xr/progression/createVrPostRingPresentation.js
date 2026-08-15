@@ -35,7 +35,16 @@ export function createVrPostRingPresentation({ glyphRing, shellSystem, settings,
     shellSystem.setInteractionEnabled(false);
     shellSystem.setPresentationVisible(false);
   }
+  function hydrateScenarioState(state) {
+    if (state?.shellFieldVisible !== true || state.shellInteractionEnabled !== false
+      || state.mainGlyphsElevated !== true) throw new Error('Unsupported post-ring Scenario state');
+    shellStarted = glyphStarted = completed = true;
+    elapsed = Math.max(settings.shellRevealDuration, settings.glyphElevationDuration);
+    shellSystem.setPresentationVisible(true);
+    shellSystem.setInteractionEnabled(false);
+    glyphRing.position.y = baseGlyphY + settings.glyphVerticalOffset;
+  }
   function dispose() { if (!disposed) { reset(); disposed = true; } }
-  return { revealShellField, elevateMainGlyphs, update, reset, dispose,
+  return { revealShellField, elevateMainGlyphs, update, reset, hydrateScenarioState, dispose,
     get completed() { return completed; }, get glyphOffset() { return glyphRing.position.y - baseGlyphY; } };
 }

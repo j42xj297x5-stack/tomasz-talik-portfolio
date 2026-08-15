@@ -50,6 +50,22 @@ export function createVrProgressionController({ pages }) {
 
   function hasActivatedPage(pageId) { return activatedPageIds.has(pageId); }
   function getActivatedPageIds() { return [...activatedPageIds]; }
+  function reset() { activatedPageIds.clear(); currentTier = 1; }
 
-  return { getCurrentTier, canInsertCrystal, getNextPage, commitPage, hasActivatedPage, getActivatedPageIds, isTierComplete };
+  function hydrateScenarioState(state) {
+    if (!Array.isArray(state?.activatedPageIds) || state.completedTier !== 1 || state.tier !== 2) {
+      throw new Error('Progression owner only supports the settled Tier 1 completion state');
+    }
+    activatedPageIds.clear();
+    for (const pageId of state.activatedPageIds) {
+      if (!orderedPages.some(({ id }) => id === pageId)) throw new Error(`Unknown hydrated page: ${pageId}`);
+      activatedPageIds.add(pageId);
+    }
+    currentTier = 1;
+    advanceTier();
+    if (currentTier !== 2 || !isTierComplete(1)) throw new Error('Hydrated Tier 1 pages are incomplete');
+  }
+
+  return { getCurrentTier, canInsertCrystal, getNextPage, commitPage, hasActivatedPage, getActivatedPageIds,
+    isTierComplete, hydrateScenarioState, reset };
 }

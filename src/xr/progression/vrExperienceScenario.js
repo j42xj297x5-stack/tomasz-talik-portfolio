@@ -207,6 +207,30 @@ const INTRO_COMPLETE_SETTLED_CONSEQUENCES = Object.freeze({
     progressionFixturesVisible: true, guideInteractionEnabled: true }),
   locomotion: Object.freeze({ boundary: 'GLYPH_RING' })
 });
+const RELIQUARY_REVEALED_SETTLED_CONSEQUENCES = Object.freeze({
+  reliquary: Object.freeze({ revealed: true, interactionEnabled: true })
+});
+const FIRST_RING_COMPLETE_SETTLED_CONSEQUENCES = Object.freeze({
+  progression: Object.freeze({ tier: 2, completedTier: 1,
+    activatedPageIds: Object.freeze([
+      'portal-card-ethics-life-protection-foundation',
+      'portal-card-creative-ai-digital-domain', 'portal-card-ai-guide-orientation',
+      'portal-card-spotify-digger-exploration-system', 'portal-card-haiku-cosmos-overview'
+    ]) }),
+  progressFloor: Object.freeze({ completedTier: 1,
+    activatedPages: Object.freeze([
+      Object.freeze({ glyphId: 'ethics-life-protection', order: 1 }),
+      Object.freeze({ glyphId: 'creative-ai', order: 1 }),
+      Object.freeze({ glyphId: 'ai-guide', order: 1 }),
+      Object.freeze({ glyphId: 'spotify-digger', order: 1 }),
+      Object.freeze({ glyphId: 'haiku-cosmos', order: 1 })
+    ]) }),
+  crystals: Object.freeze({ consumedTier: 1 })
+});
+const ACT_TWO_ENTRY_SETTLED_CONSEQUENCES = Object.freeze({
+  postRing: Object.freeze({ shellFieldVisible: true, shellInteractionEnabled: false,
+    mainGlyphsElevated: true })
+});
 
 const points = Object.freeze([
   Object.freeze({
@@ -375,7 +399,7 @@ const points = Object.freeze([
   }),
   Object.freeze({
     id: VR_EXPERIENCE_POINT['2.20'],
-    settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
+    settledConsequences: RELIQUARY_REVEALED_SETTLED_CONSEQUENCES,
     label: 'Pierwszy kryształ odkryty / oczekiwanie na aktywację Monkey i reliquary reveal',
     capabilities: Object.freeze([]),
     transitions: Object.freeze([
@@ -385,7 +409,7 @@ const points = Object.freeze([
   }),
   Object.freeze({
     id: VR_EXPERIENCE_POINT['2.30'],
-    settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
+    settledConsequences: FIRST_RING_COMPLETE_SETTLED_CONSEQUENCES,
     label: 'Pierwszy ring / zdobywanie pierwszych 5 kart',
     capabilities: Object.freeze([
       VR_SCENARIO_CAPABILITY.CAN_USE_GLYPHS,
@@ -408,7 +432,7 @@ const points = Object.freeze([
   }),
   Object.freeze({
     id: VR_EXPERIENCE_POINT['2.40'],
-    settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
+    settledConsequences: ACT_TWO_ENTRY_SETTLED_CONSEQUENCES,
     label: 'Pierwszy ring / pierwszy globalny poziom ukończony 5/5',
     capabilities: Object.freeze([]),
     transitions: Object.freeze([

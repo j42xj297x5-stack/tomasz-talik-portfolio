@@ -62,6 +62,17 @@ assert.deepEqual(reconstructVrScenarioState(vrExperienceScenario, '2.10'), produ
   'production reconstruction is deterministic');
 assert.equal(vrExperienceScenario.points.find(({ id }) => id === '2.10').settledConsequences.intro, undefined,
   '2.10 does not contribute its own state at entry');
+const productionAtThreeTen = reconstructVrScenarioState(vrExperienceScenario, '3.10');
+assert.equal(productionAtThreeTen.progression.tier, 2);
+assert.equal(productionAtThreeTen.progression.activatedPageIds.length, 5);
+assert.equal(productionAtThreeTen.progressFloor.activatedPages.length, 5);
+assert.deepEqual(productionAtThreeTen.reliquary, { revealed: true, interactionEnabled: true });
+assert.deepEqual(productionAtThreeTen.crystals, { consumedTier: 1 });
+assert.deepEqual(productionAtThreeTen.postRing, { shellFieldVisible: true,
+  shellInteractionEnabled: false, mainGlyphsElevated: true });
+assert.equal(Object.isFrozen(productionAtThreeTen.progression.activatedPageIds), true);
+assert.deepEqual(reconstructVrScenarioState(vrExperienceScenario, '3.10'), productionAtThreeTen);
+assert.deepEqual(vrExperienceScenario.points.find(({ id }) => id === '3.10').settledConsequences, {});
 
 const point = (id, settledConsequences = Object.freeze({})) => Object.freeze({
   id,

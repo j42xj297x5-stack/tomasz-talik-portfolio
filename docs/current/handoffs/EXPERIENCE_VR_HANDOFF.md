@@ -37,11 +37,17 @@ Director obsługuje także jawny start sesji w dowolnym `startPointId` należąc
 - authored progression po `3.80` (obecny STOP BOUNDARY);
 - dalsza praca nad skorupami, Piecem i pełnym Asterion loopem;
 - późniejsze małe glify, Rune Stones i dalsze akty zgodnie z istniejącym kanonem. Rune Stones pozostają osobnym przyszłym systemem, nie automatycznym następstwem `3.80`.
+- hardware QA debug checkpointów: `P0 → P1`, `P1 → P2`, `P2 → P0`, `P0 → P2`, `P2 → P1 → P2`. Należy ręcznie potwierdzić czyste intro, naturalny ring i zbieranie w P1, kompletny Akt 1 w P2 oraz brak przecieków przy przejściach wstecz.
+
+## Debug macro progression
+
+Designer aliases nie są technical Scenario IDs: `P0 = 1.10` (normal start/intro), `P1 = 2.10` (ring i Tier 1 collection), `P2 = 3.10` (Tier 1 complete, start Aktu 2). Tylko te aliasy są aktywne i tylko `?debug` pokazuje kompaktowy wiersz `DEBUG [P0] [P1] [P2]` w Player Panel. P1/P2 teleportują cały rig około 3 m od Monkey, w kierunku środka ringu; P0 ponownie używa canonical `XR_CALIBRATED` intro start. Legacy `?p1` pozostaje niezależnym QA bypass i jest deferred cleanup, nie został rozszerzony.
+
+Future contract, bez implementacji i bez przycisków: P3 = shells complete/Astro owned/Astro Sphere next; P4 = Tier 2 complete/Act 3/small glyphs/nowa warstwa/B range change.
 
 ## DEFERRED
 
-- hydration późniejszych punktów i owner restore poza pierwszym slice `2.10`;
-- arbitrary reconstruction-backed checkpoint UI/QA aliases;
+- hydration punktów późniejszych niż `3.10`;
 - durable persistence/save i pełny reset;
 - pozostałe późniejsze akty, radar i finał.
 
@@ -49,6 +55,4 @@ Director obsługuje także jawny start sesji w dowolnym `startPointId` należąc
 
 Istniejący stan wejściowy Scenario ma jeden production seam: `restoreVrScenarioBaseline()`. Normalne wejście do VR, session end i obsługa nieudanego wejścia korzystają z tej samej orkiestracji owner-owned reset APIs. Funkcja przywraca już zbudowany runtime i nie tworzy composition ponownie.
 
-Pierwszy ograniczony production vertical slice istnieje dla canonical `2.10`: `prepareVrScenarioSession` po baseline rekonstruuje konsekwencje punktów ściśle wcześniejszych, deleguje sekcje do istniejących Monkey/Intro/locomotion ownerów i dopiero potem tworzy Directora startującego w `2.10`. Odpowiada to naturalnemu końcowi intro: widoczne glyphy, Monkey w finalnej pozycji na kamieniu, zakończona mgła i onboarding/dialogue, aktywna interakcja przewodnika oraz radialna granica ruchu ring. Żaden event/effect intro ani transient timer/animacja nie jest replayowany; `CAN_USE_GLYPHS` wynika z punktu Directora, bez historycznych milestones.
-
-Późniejsze punkty nie mają jeszcze hydration, a debug UI i arbitrary checkpoint switching nadal nie istnieją.
+Production hydration obejmuje canonical `2.10` i `3.10`: `prepareVrScenarioSession` po baseline rekonstruuje konsekwencje punktów ściśle wcześniejszych, deleguje sekcje do domain ownerów i dopiero potem tworzy Directora w target point. Żaden historyczny event/effect ani transient timer/animacja nie jest replayowany; capability zawsze wynika z aktualnego Directora. Live debug switching używa dokładnie tego samego mechanizmu.

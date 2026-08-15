@@ -54,13 +54,19 @@ Po preloadzie wszystkich assetów composition musi dać się złożyć przed REA
 
 Regression guards: `vr-first-ring-live-flow`, `vr-astro-first-claim-live-flow`, `vr-runtime-bootstrap`. Bootstrap regression był RED przed poprawką i GREEN po niej przez production path. Wizjoner potwierdził przejście poza `41/41` i brak zatrzymania przed READY: **HARDWARE VALIDATED — Meta Quest 3S** wyłącznie dla bootstrap fixu. Pełny flow `3.10–3.80` oraz Furnace/Astro visuals, hover, skala/orientacja, handoff i shell targeting pozostają hardware/perceptual QA pending.
 
-## Reconstruction i pierwszy hydration vertical slice
+## Reconstruction i debug macro checkpoints
 
 `stateAt(X) = fold(settledConsequences punktów ściśle przed X)`. Production state nie jest już pustym szkieletem: konsekwencje `1.130` opisują stabilne fakty po zakończonym crossing join, pogrupowane według ownerów `monkey`, `intro` i `locomotion`. Nie zawierają timerów, dialogue playback, hovera, animacji ani capability.
 
-`2.10` jest pierwszym i jedynym udowodnionym reconstruction-backed entry point. `prepareVrScenarioSession` zachowuje kolejność baseline → reconstruction → owner-delegating hydration → Director w target point. Monkey materializuje finalną pozycję na kamieniu, Intro actor czysty `GLYPH_FREE_EXPLORE` z zakończoną mgłą i bez dialogu, a locomotion granicę glyph ring. `CAN_USE_GLYPHS` pochodzi wyłącznie z Directora `2.10`; wcześniejsze milestones nie są bootstrapowane, ponieważ dalszy flow ich nie odczytuje.
+`2.10` i `3.10` są production reconstruction-backed entry points. `prepareVrScenarioSession` zachowuje kolejność baseline → reconstruction → owner-delegating hydration → Director w target point. Monkey materializuje finalną pozycję na kamieniu, Intro actor czysty `GLYPH_FREE_EXPLORE` z zakończoną mgłą i bez dialogu, a locomotion granicę glyph ring. `CAN_USE_GLYPHS` pochodzi wyłącznie z Directora `2.10`.
 
-Późniejsze checkpointy, QA aliases/arbitrary checkpoint UI, persistence/save i pełny reset zapisanej gry nadal są deferred. Hydration zakłada uprzedni canonical baseline i nie jest patchem dowolnego live state.
+Naturalny trwały stan przed `3.10` został rozdzielony zgodnie z authored historią: `2.20` pozostawia w pełni ujawnione i interaktywne Reliquary; `2.30` pozostawia pięć committed Tier 1 cards, progression `Tier 2`, pięć aktywowanych elementów podłogi, ukończony pierwszy ring i zużyte kryształy; `2.40` pozostawia stabilną post-ring prezentację (widoczne, nieinteraktywne shells i uniesione główne glify). Timery, pulse, audio, dialogi, reveal/completion animations i historyczne effects nie są rekonstruowane.
+
+Designer macro checkpoint jest aliasem QA, a nie technical Scenario point i nie zastępuje Spine ID. Aktywny registry zawiera wyłącznie `P0 → 1.10` (normal intro spawn/start), `P1 → 2.10` (ring/crystals) oraz `P2 → 3.10` (Tier 1 complete/Act 2). `?debug` ujawnia te trzy aliasy w Player Panel. Każde live przełączenie przechodzi pełną ścieżkę baseline → reconstruct → hydrate → nowy Director → spawn; poprzedni Director jest odłączany.
+
+Ustalony future macro contract, obecnie **nieaktywny i nieimplementowany**: P3 = shells complete, Astro owned/in pocket, Furnace ready for Astro Sphere; P4 = Tier 2 glyphs complete, Act 3, small glyphs, nowa radialna warstwa i komunikat Monkey o zmianie zasięgu przyciskiem B. P3/P4 nie należą do registry ani UI.
+
+Hydration zakłada uprzedni canonical baseline i nie jest patchem dowolnego live state. Reconstruction skorup, Astro Sphere, Tier 2/small glyphs, save/persistence i pełny checkpoint save system pozostają deferred.
 
 ## Canonical runtime baseline
 

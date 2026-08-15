@@ -22,5 +22,13 @@ export class RuntimeExperience {
   getCurrentSceneId() { return this.getCurrentPointId(); }
   getDebugSnapshot() { return this.director.getDebugSnapshot(); }
   resetSession(options) { return this.director.resetSession(options); }
+  replaceDirector(director) {
+    if (this.disposed) throw new Error('cannot replace Director on a disposed RuntimeExperience');
+    if (!director) throw new TypeError('director is required');
+    const previous = this.director;
+    this.director = director;
+    if (previous !== director) previous.dispose();
+    return previous;
+  }
   dispose() { if (this.disposed) return; this.disposed = true; this.effectHandlers.clear(); this.director.dispose(); }
 }
