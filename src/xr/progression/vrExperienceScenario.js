@@ -201,6 +201,12 @@ export const VR_EXPERIENCE_SCENARIO_SPINE = Object.freeze([
 ]);
 
 const EMPTY_SETTLED_CONSEQUENCES = Object.freeze({});
+const INTRO_COMPLETE_SETTLED_CONSEQUENCES = Object.freeze({
+  monkey: Object.freeze({ placement: 'FINAL_STONE', visible: true, stoneVisible: true }),
+  intro: Object.freeze({ phase: 'GLYPH_FREE_EXPLORE', fog: 'CLEARED', glyphRingVisible: true,
+    progressionFixturesVisible: true, guideInteractionEnabled: true }),
+  locomotion: Object.freeze({ boundary: 'GLYPH_RING' })
+});
 
 const points = Object.freeze([
   Object.freeze({
@@ -349,7 +355,7 @@ const points = Object.freeze([
   }),
   Object.freeze({
     id: VR_EXPERIENCE_POINT['1.130'],
-    settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
+    settledConsequences: INTRO_COMPLETE_SETTLED_CONSEQUENCES,
     label: 'Gracz przekracza próg / CROSSING rozpoczyna się',
     capabilities: Object.freeze([]),
     transitions: Object.freeze([

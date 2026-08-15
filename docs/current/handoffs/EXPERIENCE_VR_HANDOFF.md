@@ -40,11 +40,15 @@ Director obsługuje także jawny start sesji w dowolnym `startPointId` należąc
 
 ## DEFERRED
 
-- hydration i owner restore;
-- reconstruction-backed checkpoints/QA aliases;
+- hydration późniejszych punktów i owner restore poza pierwszym slice `2.10`;
+- arbitrary reconstruction-backed checkpoint UI/QA aliases;
 - durable persistence/save i pełny reset;
 - pozostałe późniejsze akty, radar i finał.
 
 ## Runtime baseline
 
-Istniejący stan wejściowy Scenario ma jeden production seam: `restoreVrScenarioBaseline()`. Normalne wejście do VR, session end i obsługa nieudanego wejścia korzystają z tej samej orkiestracji owner-owned reset APIs. Funkcja przywraca już zbudowany runtime; nie tworzy composition ponownie i nie implementuje reconstruction, hydration ani checkpointów.
+Istniejący stan wejściowy Scenario ma jeden production seam: `restoreVrScenarioBaseline()`. Normalne wejście do VR, session end i obsługa nieudanego wejścia korzystają z tej samej orkiestracji owner-owned reset APIs. Funkcja przywraca już zbudowany runtime i nie tworzy composition ponownie.
+
+Pierwszy ograniczony production vertical slice istnieje dla canonical `2.10`: `prepareVrScenarioSession` po baseline rekonstruuje konsekwencje punktów ściśle wcześniejszych, deleguje sekcje do istniejących Monkey/Intro/locomotion ownerów i dopiero potem tworzy Directora startującego w `2.10`. Odpowiada to naturalnemu końcowi intro: widoczne glyphy, Monkey w finalnej pozycji na kamieniu, zakończona mgła i onboarding/dialogue, aktywna interakcja przewodnika oraz radialna granica ruchu ring. Żaden event/effect intro ani transient timer/animacja nie jest replayowany; `CAN_USE_GLYPHS` wynika z punktu Directora, bez historycznych milestones.
+
+Późniejsze punkty nie mają jeszcze hydration, a debug UI i arbitrary checkpoint switching nadal nie istnieją.

@@ -211,6 +211,7 @@ const { motionRoot: monkeyMotionRoot, visualRoot: monkeyVisualRoot, interactionR
   stoneRoot: monkeyStoneRoot, model: monkeyModel } = monkeyActor;
 monkeyMotionRoot.position.set(settings.spatial.monkeyFinal.x, settings.spatial.monkeyFinal.y, settings.spatial.monkeyFinal.z);
 monkeyActor.dockCharacterToStone();
+monkeyActor.captureScenarioFinalPlacement();
 const resolvedPortfolioNodes = resolvePortfolioNodes(language);
 const { group: glyphRing, nodes } = createOrbitNodes(resolvedPortfolioNodes, { assetManager });
 worldStableRoot.add(glyphRing);
@@ -286,7 +287,8 @@ const crystalReliquary = createVrCrystalReliquary({
   settings: settings.reliquary
 });
 const locomotion = createVrLocomotion({
-  playerRig, renderer, camera, settings: settings.locomotion, surfaceRoot: progressFloor.object, walkRadius: floorWalkRadius
+  playerRig, renderer, camera, settings: settings.locomotion, surfaceRoot: progressFloor.object,
+  walkRadius: floorWalkRadius, scenarioGlyphRingRadius: floorWalkRadius
 });
 const progressionController = createVrProgressionController({ pages: experienceVrPages });
 const ambientSequencer = createVrAmbientSequencer({ bridge: vrAudio });
