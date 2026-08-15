@@ -134,11 +134,8 @@ export const VR_EXPERIENCE_POINT = immutableIdentifiers([
   '1.70',
   '1.80',
   '1.100',
-  '1.100.1',
   '1.110',
-  '1.110.1',
   '1.120',
-  '1.120.1',
   '1.130',
   '1.130.1',
   '1.130.2',
@@ -290,17 +287,7 @@ const points = Object.freeze([
     capabilities: Object.freeze([]),
     transitions: Object.freeze([
       Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.COMPLETE, event: VR_SCENARIO_EVENT.INTRO_INVITATION_SELECTED, choice: 1, milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.CONTINUE_INTRO_INVITATION]) }),
-      Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.EXPLICIT, event: VR_SCENARIO_EVENT.INTRO_INVITATION_SELECTED, choice: 2, target: VR_EXPERIENCE_POINT['1.100.1'], milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.CONTINUE_INTRO_INVITATION]) }),
-      Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.EXPLICIT, event: VR_SCENARIO_EVENT.INTRO_INVITATION_SELECTED, choice: 3, target: VR_EXPERIENCE_POINT['100.10'], milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.CONTINUE_INTRO_INVITATION]) })
-    ])
-  }),
-  Object.freeze({
-    id: VR_EXPERIENCE_POINT['1.100.1'],
-    label: 'Gracz pyta dokąd / odpowiedź Monkey i ponowne invitation',
-    capabilities: Object.freeze([]),
-    transitions: Object.freeze([
-      Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.EXPLICIT, event: VR_SCENARIO_EVENT.INTRO_INVITATION_SELECTED, choice: 1, target: VR_EXPERIENCE_POINT['1.110'], milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.CONTINUE_INTRO_INVITATION]) }),
-      Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.STAY, event: VR_SCENARIO_EVENT.INTRO_INVITATION_SELECTED, choice: 2,  milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.CONTINUE_INTRO_INVITATION]) }),
+      Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.STAY, event: VR_SCENARIO_EVENT.INTRO_INVITATION_SELECTED, choice: 2, milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.CONTINUE_INTRO_INVITATION]) }),
       Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.EXPLICIT, event: VR_SCENARIO_EVENT.INTRO_INVITATION_SELECTED, choice: 3, target: VR_EXPERIENCE_POINT['100.10'], milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.CONTINUE_INTRO_INVITATION]) })
     ])
   }),
@@ -310,9 +297,8 @@ const points = Object.freeze([
     label: 'Gracz zgadza się iść za Monkey / FOLLOWING zaczyna się',
     capabilities: Object.freeze([]),
     transitions: Object.freeze([
-      Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.EXPLICIT,
+      Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.STAY,
         event: VR_SCENARIO_EVENT.FOLLOW_PAUSE_CHANGED,
-        target: VR_EXPERIENCE_POINT['1.110.1'],
         milestonesToAdd: Object.freeze([]),
         effects: Object.freeze([VR_SCENARIO_EFFECT.APPLY_FOLLOW_PAUSE_STATE])
       }),
@@ -324,36 +310,13 @@ const points = Object.freeze([
     ])
   }),
   Object.freeze({
-    id: VR_EXPERIENCE_POINT['1.110.1'],
-    label: 'FOLLOWING / Monkey zatrzymana i oczekuje na gracza',
-    capabilities: Object.freeze([]),
-    transitions: Object.freeze([
-      Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.EXPLICIT,
-        event: VR_SCENARIO_EVENT.FOLLOW_PAUSE_CHANGED,
-        target: VR_EXPERIENCE_POINT['1.110'],
-        milestonesToAdd: Object.freeze([]),
-        effects: Object.freeze([VR_SCENARIO_EFFECT.APPLY_FOLLOW_PAUSE_STATE])
-      })
-    ])
-  }),
-  Object.freeze({
     id: VR_EXPERIENCE_POINT['1.120'],
     settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
     label: 'Monkey dotarła do progu / threshold dialogue prezentowany',
     capabilities: Object.freeze([]),
     transitions: Object.freeze([
       Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.COMPLETE, event: VR_SCENARIO_EVENT.THRESHOLD_SELECTED, choice: 1, milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.CONTINUE_THRESHOLD_CHOICE]) }),
-      Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.EXPLICIT, event: VR_SCENARIO_EVENT.THRESHOLD_SELECTED, choice: 2, target: VR_EXPERIENCE_POINT['1.120.1'], milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.CONTINUE_THRESHOLD_CHOICE]) }),
-      Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.EXPLICIT, event: VR_SCENARIO_EVENT.THRESHOLD_SELECTED, choice: 3, target: VR_EXPERIENCE_POINT['100.10'], milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.CONTINUE_THRESHOLD_CHOICE]) })
-    ])
-  }),
-  Object.freeze({
-    id: VR_EXPERIENCE_POINT['1.120.1'],
-    label: 'Gracz pyta co jest po drugiej stronie / odpowiedź i ponowny wybór',
-    capabilities: Object.freeze([]),
-    transitions: Object.freeze([
-      Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.EXPLICIT, event: VR_SCENARIO_EVENT.THRESHOLD_SELECTED, choice: 1, target: VR_EXPERIENCE_POINT['1.130'], milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.CONTINUE_THRESHOLD_CHOICE]) }),
-      Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.STAY, event: VR_SCENARIO_EVENT.THRESHOLD_SELECTED, choice: 2,  milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.CONTINUE_THRESHOLD_CHOICE]) }),
+      Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.STAY, event: VR_SCENARIO_EVENT.THRESHOLD_SELECTED, choice: 2, milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.CONTINUE_THRESHOLD_CHOICE]) }),
       Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.EXPLICIT, event: VR_SCENARIO_EVENT.THRESHOLD_SELECTED, choice: 3, target: VR_EXPERIENCE_POINT['100.10'], milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.CONTINUE_THRESHOLD_CHOICE]) })
     ])
   }),
@@ -491,7 +454,7 @@ export const vrExperienceScenario = Object.freeze({
     effects: Object.freeze(Object.values(VR_SCENARIO_EFFECT))
   }),
   metadata: Object.freeze({
-    stage: 'M2_2A_EXPLICIT_TRANSITION_SEMANTICS',
+    stage: 'M2_2B_INTRO_LOCAL_REACTIONS',
     authoritativeForLiveGameplay: true,
     // Routing topology lives only in points/transitions and the authored Spine.
   })

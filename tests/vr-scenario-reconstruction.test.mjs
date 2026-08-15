@@ -10,7 +10,7 @@ import {
 import { getNextScenarioSpinePointId } from '../src/xr/progression/scenarioSpineNavigation.js';
 
 const localBranches = [
-  '1.100.1', '1.110.1', '1.120.1', '1.130.1', '1.130.2',
+  '1.130.1', '1.130.2',
   '2.10.1', '2.30.1', '2.40.1'
 ];
 
@@ -31,7 +31,7 @@ assert.equal(VR_EXPERIENCE_SCENARIO_SPINE.includes('100.10'), false, 'EARLY EXIT
 assert.equal(getNextScenarioSpinePointId(vrExperienceScenario, '1.100'), '1.110');
 assert.equal(getNextScenarioSpinePointId(vrExperienceScenario, '2.40'), null,
   'the final LIVE point has no invented successor');
-assert.throws(() => getNextScenarioSpinePointId(vrExperienceScenario, '1.100.1'), /does not belong/);
+assert.throws(() => getNextScenarioSpinePointId(vrExperienceScenario, '1.130.1'), /does not belong/);
 for (const [index, pointId] of VR_EXPERIENCE_SCENARIO_SPINE.entries()) {
   const nextPointId = VR_EXPERIENCE_SCENARIO_SPINE[index + 1];
   if (!nextPointId) continue;
@@ -100,7 +100,7 @@ assert.deepEqual(proofScenario.points[0].settledConsequences, { alpha: { settled
 assert.throws(() => { afterB.beta.push('mutation'); }, TypeError);
 assert.deepEqual(atB, { alpha: { settled: true } }, 'a later reconstruction does not mutate an earlier result');
 assert.throws(() => reconstructVrScenarioState(proofScenario, '9.90'), /not a canonical reconstruction target/);
-assert.throws(() => reconstructVrScenarioState(vrExperienceScenario, '1.100.1'), /not a canonical reconstruction target/);
+assert.throws(() => reconstructVrScenarioState(vrExperienceScenario, '1.130.1'), /not a canonical reconstruction target/);
 
 const replacementScenario = Object.freeze({
   points: Object.freeze([

@@ -10,7 +10,7 @@ Jest źródłem prawdy dla wszystkich następnych etapów migracji Scenario + Di
 
 ## 1.1. Canonical Story Reindex Migration — IMPLEMENTED
 
-**HISTORICAL IMPLEMENTED STAGE (2026-08-13):** jednorazowy corrective reindex ówczesnego LIVE Scenario został wdrożony bez zmiany gameplay semantics. Flat live slice to `1.10`, `1.20`, `1.30`, `1.40`, `1.50`, `1.60`, `1.70`, `1.80`, `1.100`, `1.100.1`, `1.110`, `1.110.1`, `1.120`, `1.120.1`, `1.130`, `100.10`. WHERE (`1.100.1`), pause/wait (`1.110.1`) i BEYOND (`1.120.1`) są current local branches; FOLLOWING (`1.110`), THRESHOLD (`1.120`) i CROSSING (`1.130`) są płaskimi mainline beats.
+**HISTORICAL IMPLEMENTED STAGE (2026-08-13):** jednorazowy corrective reindex ówczesnego LIVE Scenario został wdrożony bez zmiany gameplay semantics. Flat live slice zawierał `1.10`, `1.20`, `1.30`, `1.40`, `1.50`, `1.60`, `1.70`, `1.80`, `1.100`, trzy później usunięte lokalne punkty Intro, `1.110`, `1.120`, `1.130`, `100.10`. Ten akapit jest zapisem historycznym; stan CURRENT definiują sekcje 1.5 i 1.6.
 
 `1.90` jest **RESERVED / WATER (Haiku Cosmos) CRYSTAL GRAB TUTORIAL / NOT IMPLEMENTED** i nie należy do produkcyjnego identifier set. W tamtym historycznym etapie Scenario Spine było **TARGET / NOT IMPLEMENTED**; S1 wdrożył je później. Director nadal przechodzi przez jawne `transition.target` i nie wylicza kolejności z adresów.
 
@@ -148,6 +148,18 @@ Accepted immutable `change` publikuje `transitionKind`. Normalny start Directora
 Normalne ukończenia mainline (`1.10`–`1.80`, invitation choice 1 z `1.100`, threshold arrival z `1.110`, threshold choice 1 z `1.120`, discovery/reveal/activate na `2.10`, `2.20`, `2.30`) są `COMPLETE`. Trasy EARLY EXIT, wejścia/powroty local, crossing join, hint points i pętla `2.40 → 2.30` pozostają `EXPLICIT`. Dokładne self-loopy wyboru 2 w `1.100.1` i `1.120.1` są `STAY` bez targetu.
 
 **FUTURE / NOT IMPLEMENTED:** migracja hint technical points, migracja Intro technical points, crossing condition merge, condition point `5/5`, arbitrary start, hydration oraz reconstruction-backed QA aliases. Punkty technical pozostają LIVE; M2.2A nie zmienia gameplay topology ani ownershipu progression conditions.
+
+## 1.6. M2.2B — lokalne reakcje Intro w canonical points — CURRENT / IMPLEMENTED
+
+M2.2B usuwa z LIVE Scenario trzy techniczne punkty Intro. WHERE jest teraz `STAY` w `1.100`, FOLLOW pause/resume jest `STAY` w `1.110`, a BEYOND jest `STAY` w `1.120`. Te reakcje nie tworzą durable milestones ani zastępczego stanu w Directorze. Canonical story location nie zmienia się podczas lokalnego dialogu lub oczekiwania.
+
+- `1.100`: GO ma `COMPLETE` bez targetu, WHERE ma `STAY + CONTINUE_INTRO_INVITATION`, EXIT ma `EXPLICIT → 100.10`;
+- `1.110`: `FOLLOW_PAUSE_CHANGED` ma `STAY + APPLY_FOLLOW_PAUSE_STATE`, a `MONKEY_REACHED_THRESHOLD` ma `COMPLETE` bez targetu;
+- `1.120`: CROSS ma `COMPLETE` bez targetu, BEYOND ma `STAY + CONTINUE_THRESHOLD_CHOICE`, RETURN ma `EXPLICIT → 100.10`.
+
+Intro actor nadal posiada queue dialogu, UI choices, phase, timery, animację i `walkingPaused`. Runtime wykonuje te same trzy symbolic effects przez istniejące handlery, więc copy, timing, locomotion oraz EARLY EXIT pozostają niezmienione. Usunięte adresy nie mają aliasów ani compatibility fallbacków.
+
+**FUTURE / NOT IMPLEMENTED:** crossing merge, migracja hint points, condition `5/5`, arbitrary Director start, hydration oraz reconstruction-backed QA aliases.
 
 ## 2. Metafora teatralna i podział odpowiedzialności
 

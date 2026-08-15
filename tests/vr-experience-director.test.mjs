@@ -6,12 +6,16 @@ import { VR_EXPERIENCE_POINT, VR_SCENARIO_CAPABILITY, VR_SCENARIO_EFFECT, VR_SCE
 assert.equal(Object.isFrozen(vrExperienceScenario), true);
 assert.equal(vrExperienceScenario.points, vrExperienceScenario.scenes);
 assert.equal(vrExperienceScenario.initialPointId, vrExperienceScenario.initialSceneId);
-assert.deepEqual(vrExperienceScenario.points.map(({ id }) => id), ['1.10', '1.20', '1.30', '1.40', '1.50', '1.60', '1.70', '1.80', '1.100', '1.100.1', '1.110', '1.110.1', '1.120', '1.120.1', '1.130', '1.130.1', '1.130.2', '2.10', '2.10.1', '2.20', '2.30', '2.30.1', '2.40', '2.40.1', '100.10']);
+assert.deepEqual(vrExperienceScenario.points.map(({ id }) => id), ['1.10', '1.20', '1.30', '1.40', '1.50', '1.60', '1.70', '1.80', '1.100', '1.110', '1.120', '1.130', '1.130.1', '1.130.2', '2.10', '2.10.1', '2.20', '2.30', '2.30.1', '2.40', '2.40.1', '100.10']);
 assert.equal(Object.isFrozen(vrExperienceScenario.points[0]), true);
 assert.equal(Object.isFrozen(vrExperienceScenario.points[0].transitions[0]), true);
 assert.equal(Object.isFrozen(vrExperienceScenario.points[0].transitions[0].effects), true);
 assert.equal('authoritativeScope' in vrExperienceScenario.metadata, false);
-assert.equal(vrExperienceScenario.metadata.stage, 'M2_2A_EXPLICIT_TRANSITION_SEMANTICS');
+assert.equal(vrExperienceScenario.metadata.stage, 'M2_2B_INTRO_LOCAL_REACTIONS');
+for (const removedId of ['1.100.1', '1.110.1', '1.120.1']) {
+  assert.equal(VR_EXPERIENCE_POINT[removedId], undefined);
+  assert.equal(vrExperienceScenario.points.some(({ id }) => id === removedId), false);
+}
 assert.equal(vrExperienceScenario.initialPointId, vrExperienceScenario.spine[0]);
 assert.equal(vrExperienceScenario.initialSceneId, vrExperienceScenario.spine[0]);
 assert.equal(
@@ -90,11 +94,11 @@ for (let cycle = 0; cycle < 2; cycle += 1) {
   const pausePayload = { paused: true };
   const pauseChange = productionDirector.dispatch(VR_SCENARIO_EVENT.FOLLOW_PAUSE_CHANGED, pausePayload);
   assert.equal(pauseChange.previousPointId, VR_EXPERIENCE_POINT['1.110']);
-  assert.equal(pauseChange.currentPointId, VR_EXPERIENCE_POINT['1.110.1']);
+  assert.equal(pauseChange.currentPointId, VR_EXPERIENCE_POINT['1.110']);
+  assert.equal(pauseChange.transitionKind, VR_SCENARIO_TRANSITION_KIND.STAY);
   assert.deepEqual(pauseChange.addedMilestones, []);
   assert.deepEqual(pauseChange.effects, [VR_SCENARIO_EFFECT.APPLY_FOLLOW_PAUSE_STATE]);
   assert.equal(pauseChange.event.payload, pausePayload);
-  assert.equal(productionDirector.dispatch(VR_SCENARIO_EVENT.MONKEY_REACHED_THRESHOLD), null);
   const resumeChange = productionDirector.dispatch(VR_SCENARIO_EVENT.FOLLOW_PAUSE_CHANGED, { paused: false });
   assert.equal(resumeChange.currentPointId, VR_EXPERIENCE_POINT['1.110']);
   assert.deepEqual(resumeChange.addedMilestones, []);
@@ -219,10 +223,10 @@ const reachInvitation = (director) => {
 };
 reachInvitation(productionDirector);
 assert.equal(productionDirector.dispatch(VR_SCENARIO_EVENT.MONKEY_REACHED_THRESHOLD), null, 'threshold arrival is rejected before FOLLOWING');
-assert.equal(productionDirector.dispatch(VR_SCENARIO_EVENT.INTRO_INVITATION_SELECTED, { choice: 2 }).currentPointId, VR_EXPERIENCE_POINT['1.100.1']);
-assert.equal(productionDirector.dispatch(VR_SCENARIO_EVENT.MONKEY_REACHED_THRESHOLD), null, 'WHERE branch rejects threshold arrival');
+assert.equal(productionDirector.dispatch(VR_SCENARIO_EVENT.INTRO_INVITATION_SELECTED, { choice: 2 }).currentPointId, VR_EXPERIENCE_POINT['1.100']);
+assert.equal(productionDirector.dispatch(VR_SCENARIO_EVENT.MONKEY_REACHED_THRESHOLD), null, 'invitation point rejects threshold arrival');
 const invitationStay = productionDirector.dispatch(VR_SCENARIO_EVENT.INTRO_INVITATION_SELECTED, { choice: 2 });
-assert.equal(invitationStay.currentPointId, VR_EXPERIENCE_POINT['1.100.1'], 'choice 2 remains an accepted self-loop');
+assert.equal(invitationStay.currentPointId, VR_EXPERIENCE_POINT['1.100'], 'choice 2 remains an accepted canonical STAY');
 assert.equal(invitationStay.transitionKind, VR_SCENARIO_TRANSITION_KIND.STAY);
 assert.equal(productionDirector.dispatch(VR_SCENARIO_EVENT.INTRO_INVITATION_SELECTED, { choice: 1 }).currentPointId, VR_EXPERIENCE_POINT['1.110']);
 assert.notEqual(productionDirector.dispatch(VR_SCENARIO_EVENT.MONKEY_REACHED_THRESHOLD), null);
@@ -239,10 +243,34 @@ assert.equal(productionDirector.dispatch(VR_SCENARIO_EVENT.INTRO_INVITATION_SELE
 reachInvitation(productionDirector);
 productionDirector.dispatch(VR_SCENARIO_EVENT.INTRO_INVITATION_SELECTED, { choice: 1 });
 productionDirector.dispatch(VR_SCENARIO_EVENT.MONKEY_REACHED_THRESHOLD);
-assert.equal(productionDirector.dispatch(VR_SCENARIO_EVENT.THRESHOLD_SELECTED, { choice: 2 }).currentPointId, VR_EXPERIENCE_POINT['1.120.1']);
-assert.equal(productionDirector.dispatch(VR_SCENARIO_EVENT.THRESHOLD_SELECTED, { choice: 2 }).currentPointId, VR_EXPERIENCE_POINT['1.120.1']);
+assert.equal(productionDirector.dispatch(VR_SCENARIO_EVENT.THRESHOLD_SELECTED, { choice: 2 }).currentPointId, VR_EXPERIENCE_POINT['1.120']);
+assert.equal(productionDirector.dispatch(VR_SCENARIO_EVENT.THRESHOLD_SELECTED, { choice: 2 }).currentPointId, VR_EXPERIENCE_POINT['1.120']);
 assert.equal(productionDirector.dispatch(VR_SCENARIO_EVENT.THRESHOLD_SELECTED, { choice: 3 }).currentPointId, VR_EXPERIENCE_POINT['100.10']);
 assert.equal(productionDirector.dispatch(VR_SCENARIO_EVENT.THRESHOLD_SELECTED, { choice: 1 }), null);
+
+reachInvitation(productionDirector);
+for (let repeat = 0; repeat < 3; repeat += 1) {
+  const where = productionDirector.dispatch(VR_SCENARIO_EVENT.INTRO_INVITATION_SELECTED, { choice: 2 });
+  assert.equal(where.currentPointId, VR_EXPERIENCE_POINT['1.100']);
+  assert.equal(where.transitionKind, VR_SCENARIO_TRANSITION_KIND.STAY);
+  assert.deepEqual(where.effects, [VR_SCENARIO_EFFECT.CONTINUE_INTRO_INVITATION]);
+}
+assert.equal(productionDirector.dispatch(VR_SCENARIO_EVENT.INTRO_INVITATION_SELECTED, { choice: 1 }).currentPointId, VR_EXPERIENCE_POINT['1.110']);
+for (const paused of [true, false, true, false]) {
+  const followStay = productionDirector.dispatch(VR_SCENARIO_EVENT.FOLLOW_PAUSE_CHANGED, { paused });
+  assert.equal(followStay.currentPointId, VR_EXPERIENCE_POINT['1.110']);
+  assert.equal(followStay.transitionKind, VR_SCENARIO_TRANSITION_KIND.STAY);
+}
+assert.equal(productionDirector.dispatch(VR_SCENARIO_EVENT.MONKEY_REACHED_THRESHOLD).currentPointId, VR_EXPERIENCE_POINT['1.120']);
+for (let repeat = 0; repeat < 3; repeat += 1) {
+  const beyond = productionDirector.dispatch(VR_SCENARIO_EVENT.THRESHOLD_SELECTED, { choice: 2 });
+  assert.equal(beyond.currentPointId, VR_EXPERIENCE_POINT['1.120']);
+  assert.equal(beyond.transitionKind, VR_SCENARIO_TRANSITION_KIND.STAY);
+  assert.deepEqual(beyond.effects, [VR_SCENARIO_EFFECT.CONTINUE_THRESHOLD_CHOICE]);
+}
+const crossAfterBeyond = productionDirector.dispatch(VR_SCENARIO_EVENT.THRESHOLD_SELECTED, { choice: 1 });
+assert.equal(crossAfterBeyond.currentPointId, VR_EXPERIENCE_POINT['1.130']);
+assert.equal(crossAfterBeyond.transitionKind, VR_SCENARIO_TRANSITION_KIND.COMPLETE);
 productionDirector.resetSession();
 assert.equal(productionDirector.hasMilestone(VR_SCENARIO_MILESTONE.XR_CALIBRATED), true);
 assert.equal(productionDirector.hasMilestone(VR_SCENARIO_MILESTONE.POST_REVEAL_SILENCE_COMPLETE), true);
