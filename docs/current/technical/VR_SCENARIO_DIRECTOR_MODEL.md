@@ -74,7 +74,7 @@ Obowiązuje zasada: **jedna informacja ma jednego właściciela**. Kolejność g
 - pure `reconstructVrScenarioState` waliduje Spine i składa stan według jego authored order;
 - reconstruction ma exclusive boundary: uwzględnia tylko punkty stojące ściśle przed targetem;
 - normalne mainline transitions nie zapisują `target`; Director pobiera następny point przez pure Spine navigation;
-- explicit `transition.target` pozostaje dla EARLY EXIT, local hint/pause/choice flows, crossing joinów i powrotów/pętli poza normalnym następstwem;
+- explicit `transition.target` pozostaje dla EARLY EXIT, local hint/choice flows i powrotów/pętli poza normalnym następstwem;
 - Spine kończy się na ostatnim zaimplementowanym mainline point `2.40`; terminalny EARLY EXIT `100.10` nie należy do Spine ani reconstruction path.
 
 S1 ustanowił Spine, `settledConsequences`, pure reconstruction i exclusive `stateAt`; M2.1 przeniósł na ten Spine również ownership normalnego routingu LIVE bez zmiany gameplay topology.
@@ -135,31 +135,36 @@ Debug checkpoint `?pN → canonical pointId` jest tylko aliasem adresu. Nie zawi
 
 Bootstrap, QA, Director i `experienceVr.js` nie mogą tworzyć równoległej prawdy. Stan portfolio należy do progression ownera, wizualna projekcja floor do Floor ownera, Furnace do Furnace ownera, shells do shell/material ownera, a tools do właściwego equipment/achievement ownera. Preferowane są małe jawne API ownerów zamiast direct scene writes i łatek synchronizujących visibility lub inne projekcje.
 
-## 1.5. M2.2A — jawna semantyka transitionów — CURRENT / IMPLEMENTED
+## 1.5. Jawna semantyka transitionów — CURRENT / IMPLEMENTED
 
-Każdy LIVE transition posiada immutable `kind` z kontraktu `VR_SCENARIO_TRANSITION_KIND`: `STAY | COMPLETE | EXPLICIT`. Director interpretuje wyłącznie ten rodzaj, nigdy obecność lub brak `target`:
+Każdy LIVE transition posiada immutable `kind` z kontraktu `VR_SCENARIO_TRANSITION_KIND`: `STAY | COMPLETE | EXPLICIT | COMPLETE_IF`. Director interpretuje wyłącznie ten rodzaj, nigdy obecność lub brak `target`:
 
-- `STAY` akceptuje event, commituje milestones i zwraca effects, lecz zachowuje canonical `currentPointId`; nie może posiadać `target`;
-- `COMPLETE` kończy bieżący mainline point i pobiera następcę z `Spine.next(currentPointId)`; nie może posiadać `target`, wymaga pointu należącego do Spine oraz authored następcy;
-- `EXPLICIT` jest świadomą trasą local/exit/join/loop do wymaganego, istniejącego `transition.target` i nie używa `Spine.next()`.
+- `STAY` — zaakceptowana reakcja lokalna: commituje przewidziane milestones i zwraca effects, ale zachowuje canonical `currentPointId`; nie może posiadać `target`;
+- `COMPLETE` — bezwarunkowo kończy bieżący canonical mainline point i pobiera następcę przez `Spine.next(currentPointId)`; nie może posiadać `target`, wymaga pointu należącego do Spine oraz authored następcy;
+- `EXPLICIT` — świadoma trasa do wymaganego, istniejącego authored `transition.target`, przeznaczona dla local/exit/loop routing; nie używa `Spine.next()`;
+- `COMPLETE_IF` — conditional completion, dla którego owner odpowiedniego transient/domain state jawnie przekazuje warunek. `false` rozwiązuje się do `STAY`, natomiast `true` rozwiązuje się do `COMPLETE` i używa `Spine.next(currentPointId)`. Nie posiada `target`.
 
-Accepted immutable `change` publikuje `transitionKind`. Normalny start Directora pochodzi z `scenario.spine[0]`; compatibility aliases `initialPointId` i `initialSceneId` są wyprowadzone z tego elementu oraz walidowane pod kątem zgodności. `metadata.authoritativeScope` usunięto, ponieważ duplikowało topology; metadata zachowuje tylko stage i flagę autorytatywności LIVE.
+Accepted immutable `change` publikuje rozstrzygnięty `transitionKind`, czyli dla `COMPLETE_IF` odpowiednio `STAY` albo `COMPLETE`. Normalny start Directora pochodzi z `scenario.spine[0]`; compatibility aliases `initialPointId` i `initialSceneId` są wyprowadzone z tego elementu oraz walidowane pod kątem zgodności. `metadata.authoritativeScope` nie istnieje, ponieważ duplikowałoby topology; metadata zachowuje tylko stage i flagę autorytatywności LIVE.
 
-Normalne ukończenia mainline (`1.10`–`1.80`, invitation choice 1 z `1.100`, threshold arrival z `1.110`, threshold choice 1 z `1.120`, discovery/reveal/activate na `2.10`, `2.20`, `2.30`) są `COMPLETE`. Trasy EARLY EXIT, wejścia/powroty local, crossing join, hint points i pętla `2.40 → 2.30` pozostają `EXPLICIT`. Dokładne self-loopy wyboru 2 w `1.100.1` i `1.120.1` są `STAY` bez targetu.
+Normalne ukończenia mainline (`1.10`–`1.80`, invitation choice 1 z `1.100`, threshold arrival z `1.110`, threshold choice 1 z `1.120`, discovery/reveal/activate na `2.10`, `2.20`, `2.30`) są `COMPLETE`. Trasy EARLY EXIT i pętla `2.40 → 2.30` pozostają `EXPLICIT`. Lokalne reakcje WHERE w `1.100`, FOLLOW pause/resume w `1.110` i BEYOND w `1.120` są `STAY` bez targetu.
 
-**FUTURE / NOT IMPLEMENTED:** migracja hint technical points, migracja Intro technical points, crossing condition merge, condition point `5/5`, arbitrary start, hydration oraz reconstruction-backed QA aliases. Punkty technical pozostają LIVE; M2.2A nie zmienia gameplay topology ani ownershipu progression conditions.
+`COMPLETE_IF` **nie jest ogólnym rules engine**. CURRENT kontrakt obsługuje wyłącznie zawężony, jawny warunek `crossingComplete`; nie ustanawia DSL, expression systemu ani generic condition engine.
 
-## 1.6. M2.2B — lokalne reakcje Intro w canonical points — CURRENT / IMPLEMENTED
+## 1.6. Crossing w canonical point `1.130` — CURRENT / IMPLEMENTED
 
-M2.2B usuwa z LIVE Scenario trzy techniczne punkty Intro. WHERE jest teraz `STAY` w `1.100`, FOLLOW pause/resume jest `STAY` w `1.110`, a BEYOND jest `STAY` w `1.120`. Te reakcje nie tworzą durable milestones ani zastępczego stanu w Directorze. Canonical story location nie zmienia się podczas lokalnego dialogu lub oczekiwania.
+`1.130` jest jedynym canonical story pointem crossing. Eventy `PLAYER_ENTERED_RING` i `MONKEY_SETTLED` mogą nadejść w dowolnej kolejności. Intro actor jest wyłącznym właścicielem transient state `playerEnteredRing` i `monkeySettled`; Director nie przechowuje kopii tych faktów. Przy każdym z obu eventów Intro jawnie przekazuje warunek `crossingComplete` do transitionu `COMPLETE_IF`.
 
-- `1.100`: GO ma `COMPLETE` bez targetu, WHERE ma `STAY + CONTINUE_INTRO_INVITATION`, EXIT ma `EXPLICIT → 100.10`;
-- `1.110`: `FOLLOW_PAUSE_CHANGED` ma `STAY + APPLY_FOLLOW_PAUSE_STATE`, a `MONKEY_REACHED_THRESHOLD` ma `COMPLETE` bez targetu;
-- `1.120`: CROSS ma `COMPLETE` bez targetu, BEYOND ma `STAY + CONTINUE_THRESHOLD_CHOICE`, RETURN ma `EXPLICIT → 100.10`.
+Pierwszy z faktów pozostawia przebieg w `1.130`, ponieważ warunek `false` rozwiązuje się do `STAY`. Kiedy oba fakty są spełnione, `crossingComplete: true` rozwiązuje się do `COMPLETE`: kończy `1.130`, emituje completion effect i przez `Spine.next("1.130")` prowadzi do `2.10`. Usunięte techniczne adresy `1.130.1` i `1.130.2` nie są LIVE Scenario points, nie mają aliasów i nie reprezentują trwałych milestones.
 
-Intro actor nadal posiada queue dialogu, UI choices, phase, timery, animację i `walkingPaused`. Runtime wykonuje te same trzy symbolic effects przez istniejące handlery, więc copy, timing, locomotion oraz EARLY EXIT pozostają niezmienione. Usunięte adresy nie mają aliasów ani compatibility fallbacków.
+## 1.7. CURRENT technical points
 
-**FUTURE / NOT IMPLEMENTED:** crossing merge, migracja hint points, condition `5/5`, arbitrary Director start, hydration oraz reconstruction-backed QA aliases.
+Jedynymi celowo zachowanymi LIVE technical points są:
+
+- `2.10.1`;
+- `2.30.1`;
+- `2.40.1`.
+
+Migracja hintów, condition point `5/5`, arbitrary Director start, hydration oraz reconstruction-backed QA aliases pozostają **FUTURE / NOT IMPLEMENTED**. Nie należy przedstawiać `5/5` jako CURRENT.
 
 ## 2. Metafora teatralna i podział odpowiedzialności
 
