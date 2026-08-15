@@ -2,15 +2,18 @@ import * as THREE from '../../vendor/three.js';
 
 export const VR_PROGRESS_FLOOR_SOURCE_CONTRACTS = Object.freeze({
   creative: Object.freeze({
-    bodyNames: Object.freeze(['VR_PROGRESS_SECTOR_FIRE_BASE', 'path4']),
+    referenceBaseName: 'VR_PROGRESS_SECTOR_FIRE_BASE',
+    presentationBodyNames: Object.freeze(['path4']),
     panelNames: Object.freeze(['VR_PROGRESS_CARD_FIRE_01', 'VR_PROGRESS_CARD_FIRE_02', 'VR_PROGRESS_CARD_FIRE_03'])
   }),
   ethics: Object.freeze({
-    bodyNames: Object.freeze(['VR_PROGRESS_SECTOR_EARTH_BASE', 'path1']),
+    referenceBaseName: 'VR_PROGRESS_SECTOR_EARTH_BASE',
+    presentationBodyNames: Object.freeze(['path1']),
     panelNames: Object.freeze(['VR_PROGRESS_CARD_EARTH_01', 'VR_PROGRESS_CARD_EARTH_02', 'VR_PROGRESS_CARD_EARTH_03'])
   }),
   water: Object.freeze({
-    bodyNames: Object.freeze(['VR_PROGRESS_SECTOR_WATER_BASE', 'path1']),
+    referenceBaseName: 'VR_PROGRESS_SECTOR_WATER_BASE',
+    presentationBodyNames: Object.freeze(['path1']),
     panelNames: Object.freeze([
       'VR_PROGRESS_CARD_WATER_01',
       'VR_PROGRESS_CARD_WATER_02',
@@ -20,7 +23,8 @@ export const VR_PROGRESS_FLOOR_SOURCE_CONTRACTS = Object.freeze({
     ])
   }),
   metal: Object.freeze({
-    bodyNames: Object.freeze(['VR_PROGRESS_SECTOR_METAL_BASE', 'path1']),
+    referenceBaseName: 'VR_PROGRESS_SECTOR_METAL_BASE',
+    presentationBodyNames: Object.freeze(['path1']),
     panelNames: Object.freeze([
       'VR_PROGRESS_CARD_METAL_01',
       'VR_PROGRESS_CARD_METAL_02',
@@ -29,7 +33,8 @@ export const VR_PROGRESS_FLOOR_SOURCE_CONTRACTS = Object.freeze({
     ])
   }),
   wood: Object.freeze({
-    bodyNames: Object.freeze(['VR_PROGRESS_SECTOR_WOOD_BASE', 'path1']),
+    referenceBaseName: 'VR_PROGRESS_SECTOR_WOOD_BASE',
+    presentationBodyNames: Object.freeze(['path1']),
     panelNames: Object.freeze([
       'VR_PROGRESS_CARD_WOOD_01',
       'VR_PROGRESS_CARD_WOOD_02',
@@ -107,7 +112,7 @@ function requireSectorObject(sector, objectName, sectorConfig) {
   return object;
 }
 
-function makeSectorBodyTransparent(sector, bodyNames, sectorConfig) {
+function makePresentationBodyTransparent(sector, bodyNames, sectorConfig) {
   const materials = new Map();
   bodyNames.forEach((bodyName) => {
     const bodyPart = requireSectorObject(sector, bodyName, sectorConfig);
@@ -191,7 +196,9 @@ export function createVrProgressFloor({
       };
       sector.visible = false;
       cloneMaterials(sector, ownedMaterials);
-      const baseMaterials = makeSectorBodyTransparent(sector, contract.bodyNames, sectorConfig);
+      const referenceBase = requireSectorObject(sector, contract.referenceBaseName, sectorConfig);
+      referenceBase.visible = false;
+      const presentationMaterials = makePresentationBodyTransparent(sector, contract.presentationBodyNames, sectorConfig);
       const panelsByOrder = new Map();
       contract.panelNames.forEach((panelName, panelIndex) => {
         const panel = requireSectorObject(sector, panelName, sectorConfig);
@@ -200,7 +207,7 @@ export function createVrProgressFloor({
           materials: getPanelMaterials(panel, config.fallbackColors[sectorConfig.sourceType])
         });
       });
-      sectorsByGlyphId.set(sectorConfig.glyphId, { object: sector, panelsByOrder, baseMaterials });
+      sectorsByGlyphId.set(sectorConfig.glyphId, { object: sector, panelsByOrder, presentationMaterials });
       geometryRoot.add(sector);
     });
 
@@ -316,7 +323,7 @@ export function createVrProgressFloor({
     const safeDelta = Math.max(0, Number.isFinite(delta) ? delta : 0);
     const blend = 1 - Math.exp(-config.responseSpeed * safeDelta);
     revealedSectorIds.forEach((glyphId) => {
-      sectorsByGlyphId.get(glyphId)?.baseMaterials.forEach(({ material, targetOpacity }) => {
+      sectorsByGlyphId.get(glyphId)?.presentationMaterials.forEach(({ material, targetOpacity }) => {
         material.opacity += (targetOpacity - material.opacity) * blend;
       });
     });
