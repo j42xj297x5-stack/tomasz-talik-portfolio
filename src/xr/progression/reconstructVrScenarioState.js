@@ -1,6 +1,6 @@
-function isMainlinePointId(pointId) {
-  return typeof pointId === 'string' && /^[1-9]\d*\.[1-9]\d*$/.test(pointId);
-}
+import { validateScenarioSpine } from './scenarioSpineNavigation.js';
+
+export { validateScenarioSpine } from './scenarioSpineNavigation.js';
 
 function assertDeclarativeValue(value, path) {
   if (value === null || typeof value === 'string' || typeof value === 'boolean' || Number.isFinite(value)) return;
@@ -23,25 +23,6 @@ function cloneAndFreeze(value) {
     ));
   }
   return value;
-}
-
-export function validateScenarioSpine(scenario) {
-  if (!scenario || !Array.isArray(scenario.points) || !Array.isArray(scenario.spine)) {
-    throw new TypeError('Scenario must provide points and an authored spine');
-  }
-
-  const pointIds = new Set(scenario.points.map(({ id }) => id));
-  const spineIds = new Set();
-  for (const pointId of scenario.spine) {
-    if (!isMainlinePointId(pointId)) {
-      throw new Error(`Scenario spine point "${pointId}" must be a two-segment mainline ID`);
-    }
-    if (spineIds.has(pointId)) throw new Error(`Scenario spine contains duplicate point "${pointId}"`);
-    if (!pointIds.has(pointId)) throw new Error(`Scenario spine references unknown point "${pointId}"`);
-    spineIds.add(pointId);
-  }
-
-  return true;
 }
 
 export function reconstructVrScenarioState(scenario, pointId) {
