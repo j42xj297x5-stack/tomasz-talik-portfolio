@@ -181,6 +181,7 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
     glyphElevationDuration: 2.5,
     shellRevealDuration: 1.5
   },
+  observationWindow: { durationSeconds: 10.0 },
   intro: {
     enabled: true,
     introRevealDuration: 10.0,
@@ -576,6 +577,10 @@ export function normalizeExperienceVrSettings(candidate) {
         defaults.postRingPresentation.glyphElevationDuration, { min: 0.1, max: 30 }),
       shellRevealDuration: finiteNumber(candidate.postRingPresentation?.shellRevealDuration,
         defaults.postRingPresentation.shellRevealDuration, { min: 0, max: 30 })
+    },
+    observationWindow: {
+      durationSeconds: finiteNumber(candidate.observationWindow?.durationSeconds,
+        defaults.observationWindow.durationSeconds, { min: 0.1, max: 60 })
     },
     intro: {
       enabled: typeof candidate.intro?.enabled === 'boolean' ? candidate.intro.enabled : defaults.intro.enabled,
