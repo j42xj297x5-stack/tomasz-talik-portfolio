@@ -98,6 +98,8 @@ assert.equal((vr.match(/introSequence\.showGlyphHint\(\)/g) ?? []).length, 1,
   'glyph hint has no direct or duplicate execution path');
 assert.match(vr, /introQaBypass \|\| runtimeExperience\.can\(VR_SCENARIO_CAPABILITY\.CAN_USE_GLYPHS\)/,
   'production glyph permission is Scenario capability-owned while preserving QA bypass');
+assert.match(vr, /canUseReliquary: \(\) => runtimeExperience\.can\(VR_SCENARIO_CAPABILITY\.CAN_USE_RELIQUARY\)/,
+  'production insertion receives the Scenario-owned global Reliquary permission');
 assert.match(vr, /canActivate: \(\) => \(introQaBypass[\s\S]*runtimeExperience\.can\(VR_SCENARIO_CAPABILITY\.CAN_ACTIVATE_RELIQUARY\)\)[\s\S]*crystalReliquary\.isInteractionEnabled\(\)[\s\S]*state === 'inserted'/,
   'Activate combines explicit QA or Scenario permission with local technical validity');
 assert.match(vr, /onPreview: \(page\) => runtimeExperience\.dispatch\(VR_SCENARIO_EVENT\.CRYSTAL_ACTIVATED, \{ page \}\)/,

@@ -73,7 +73,7 @@ export function getVrCrystalLayout(pageIds, settings) {
 
 export function createVrCrystalCollection({ scene, assetManager, controllers, portalDisplay, insertionTarget, settings,
   haloSettings = {}, insertFeedbackSettings = {}, pages = [], progressionController, onPreview, onCommit,
-  onInsertAccepted = () => {}, canGrabController = () => true }) {
+  onInsertAccepted = () => {}, canGrabController = () => true, canUseReliquary = () => true }) {
   const instances = [];
   const listeners = [];
   const heldByController = new Map();
@@ -219,6 +219,11 @@ export function createVrCrystalCollection({ scene, assetManager, controllers, po
       : portalDisplay.object.visible
         && crystalCenter.distanceTo(portalDisplay.getSocketWorldPosition(scratch)) <= portalDisplay.insertRadius;
     if (inSocket) {
+      if (!canUseReliquary()) {
+        scene.attach(instance.object);
+        instance.state = 'available';
+        return instance;
+      }
       if (insertedInstance) {
         scene.attach(instance.object);
         instance.state = 'available';
@@ -444,7 +449,7 @@ export function createVrCrystalCollection({ scene, assetManager, controllers, po
       const center = new THREE.Box3().setFromObject(instance.model).getCenter(crystalCenterScratch);
       if (sphere && center.distanceTo(sphere.center) <= sphere.radius
         * (insertFeedbackSettings.proximityRadiusMultiplier ?? 1.25)) {
-        feedbackState = !insertedInstance && (!progressionController
+        feedbackState = canUseReliquary() && !insertedInstance && (!progressionController
           || progressionController.canInsertCrystal(instance.branchId, instance.tier)) ? 'VALID' : 'INVALID';
       }
     }

@@ -405,6 +405,7 @@ const crystalCollection = createVrCrystalCollection({
   scene, assetManager, controllers: vrControllers.controllers, portalDisplay, insertionTarget: crystalReliquary,
   settings: settings.crystals, haloSettings: settings.targetHalo, insertFeedbackSettings: settings.reliquary.insertFeedback,
   pages: experienceVrPages, progressionController,
+  canUseReliquary: () => runtimeExperience.can(VR_SCENARIO_CAPABILITY.CAN_USE_RELIQUARY),
   onInsertAccepted: () => playVrWorld(VR_AUDIO.reliquaryInsert),
   canGrabController: (record) => {
     if (record.handedness === 'right' && handModeController.getRightMode() === 'ASTRO_ATTRACTOR') return false;
