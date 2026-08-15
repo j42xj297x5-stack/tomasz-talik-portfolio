@@ -24,6 +24,7 @@ assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.intro.followGraceDistance, 3);
 assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.intro.messageDisplayDuration, 2);
 assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.intro.messageGapDuration, 0.5);
 assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.intro.questionGapDuration, 2);
+assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.observationWindow.durationSeconds, 10);
 assert.deepEqual(DEFAULT_EXPERIENCE_VR_SETTINGS.monkeyGuide.attention.radii, [0.08, 0.125, 0.17]);
 assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.monkeyGuide.attention.thickness, 0.009);
 assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.monkeyGuide.attention.verticalGap, 0);

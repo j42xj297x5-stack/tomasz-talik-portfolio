@@ -24,7 +24,7 @@ Canonical Spine prowadzi od `1.10` przez Intro do `1.130`, następnie przez `2.1
 - `2.30` jest całym loopem pięciu kart. Hint, aktywacja kryształu i commit pojedynczej karty pozostają lokalne.
 - `CAN_USE_RELIQUARY` jest aktywnym, globalnym Scenario-owned gate dla insertion w `2.30`. Branch/tier/socket validation i transient state pozostają domenowe. `CAN_ACTIVATE_RELIQUARY` oraz `CAN_RELEASE_RELIQUARY` są osobnymi capabilities; domena nadal wymusza Activate tylko w `inserted` i Release tylko w `active`.
 - `createVrProgressionController` wyłącznie rozstrzyga ukończenie tieru. Przy pierwszym trwałym `5/5` Runtime wysyła `FIRST_RING_COMPLETED`; Director kończy `2.30`, emituje `COMPLETE_FIRST_RING_PRESENTATION` i `PLAY_FIRST_RING_COMPLETE_FEEDBACK`, po czym przechodzi przez Spine do `2.40`. Runtime wykonuje odpowiednio `progressFloor.completeTier(1)` i istniejący feedback audio.
-- `2.40` jest canonical stanem ukończenia pierwszego ringu `5/5` i nie wraca do `2.30`. Authored następstwo prowadzi przez post-ring world presentation (`3.10`), około 10 s obserwacji (`3.20`) i Monkey attention (`3.30`) do Monkey → Furnace intro (`3.40`). `3.10` runtime presentation jest **IMPLEMENTED**: pole Muszli jest tylko widoczne, główny ring glyphów unosi się jednym offsetem, a aktor emituje jedno completion po obu prezentacjach. `3.20–3.40` są **AUTHORED, RUNTIME NOT YET IMPLEMENTED**.
+- `2.40` jest canonical stanem ukończenia pierwszego ringu `5/5` i nie wraca do `2.30`. Authored następstwo prowadzi przez post-ring world presentation (`3.10`), 10 s obserwacji (`3.20`) i Monkey attention (`3.30`) do Monkey → Furnace intro (`3.40`). `3.10` i `3.20` są **IMPLEMENTED**: po prezentacji lokalny observation actor liczy pełne 10 s z render-loop delta, emituje jedno semantic completion i nie zmienia świata. `3.30–3.40` są **AUTHORED, RUNTIME NOT YET IMPLEMENTED**; Monkey attention pozostaje jawnym pustym boundary.
 - `syncTierOneWorldState()` i `syncAmbientSequence()` pozostają w kompozycji Runtime; nie zostały przeniesione do Scenario.
 - `100.10` pozostaje terminalnym EARLY EXIT poza Spine.
 
@@ -36,7 +36,7 @@ Wdrożone są authored Spine, pure reconstruction i exclusive `stateAt(X)`: skł
 
 ## NOT IMPLEMENTED
 
-- wykonawcze aktory post-ring dla `3.20–3.40` oraz progresja Pieca po `3.40`;
+- wykonawcze aktory post-ring dla `3.30–3.40` oraz progresja Pieca po `3.40`;
 - arbitrary Director start;
 - hydration, resolver/bootstrap materializujący reconstruction oraz owner restore APIs;
 - reconstruction-backed checkpointy i QA aliases;

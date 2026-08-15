@@ -52,6 +52,7 @@ import { createVrAmbientSequencer } from './xr/audio/createVrAmbientSequencer.js
 import { ExperienceDirector } from './xr/progression/ExperienceDirector.js';
 import { RuntimeExperience } from './xr/progression/RuntimeExperience.js';
 import { createVrPostRingPresentation } from './xr/progression/createVrPostRingPresentation.js';
+import { createVrObservationWindow } from './xr/progression/createVrObservationWindow.js';
 import { VR_SCENARIO_CAPABILITY, VR_SCENARIO_EFFECT, VR_SCENARIO_EVENT, vrExperienceScenario } from './xr/progression/vrExperienceScenario.js';
 import { experienceVrPages, getExperienceVrPages, resolveExperienceVrPage } from './content/experienceVrPages.js';
 import { publicPath } from './utils/publicPath.js';
@@ -572,6 +573,10 @@ const postRingPresentation = createVrPostRingPresentation({ glyphRing, shellSyst
   settings: settings.postRingPresentation,
   onCompleted: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.POST_RING_WORLD_PRESENTATION_COMPLETED)
 });
+const observationWindow = createVrObservationWindow({
+  durationSeconds: settings.observationWindow.durationSeconds,
+  onCompleted: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.OBSERVATION_WINDOW_COMPLETED)
+});
 const runtimeExperience = new RuntimeExperience({
   director: experienceDirector,
   effectHandlers: {
@@ -665,8 +670,9 @@ const runtimeExperience = new RuntimeExperience({
     [VR_SCENARIO_EFFECT.ELEVATE_MAIN_GLYPHS]: () => {
       postRingPresentation.elevateMainGlyphs();
     },
-    // Authored boundary only: the 3.20 observation runtime is intentionally not part of this slice.
-    [VR_SCENARIO_EFFECT.BEGIN_OBSERVATION_WINDOW]: () => {}
+    [VR_SCENARIO_EFFECT.BEGIN_OBSERVATION_WINDOW]: () => { observationWindow.begin(); },
+    // Authored 3.30 boundary: Monkey attention belongs to a later runtime slice.
+    [VR_SCENARIO_EFFECT.BEGIN_MONKEY_ATTENTION]: () => {}
   }
 });
 
@@ -714,6 +720,7 @@ function renderFrame() {
   astroFurnaceContentInteraction.update(delta);
   glyphOrbit.update(delta);
   postRingPresentation.update(delta);
+  observationWindow.update(delta);
   shellSystem.update(delta);
   glyphRing.updateMatrixWorld(true);
   glyphInteraction.update(delta);
@@ -774,6 +781,7 @@ function handleSessionEnd() {
   resetPlayerRigToSpawn();
   glyphOrbit.reset();
   postRingPresentation.reset();
+  observationWindow.reset();
   shellAttractorInteraction.reset();
   shellSystem.reset();
   syncQaPostP1WorldState();
@@ -812,6 +820,7 @@ async function enterVr() {
   resetPlayerRigToSpawn();
   glyphOrbit.reset();
   postRingPresentation.reset();
+  observationWindow.reset();
   shellAttractorInteraction.reset();
   shellSystem.reset();
   syncQaPostP1WorldState();
@@ -863,6 +872,7 @@ async function enterVr() {
     playerGuidePanel.reset();
     monkeyGuide.reset();
     introSequence.reset();
+    observationWindow.reset();
     astroFurnaceOptionInteraction.reset();
     astroFurnaceOpenInteraction.reset();
     astroFurnaceActivateInteraction.reset();

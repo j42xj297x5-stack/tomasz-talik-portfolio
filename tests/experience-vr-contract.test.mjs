@@ -120,8 +120,16 @@ assert.match(vr, /VR_SCENARIO_EFFECT\.ELEVATE_MAIN_GLYPHS[\s\S]*postRingPresenta
   'Runtime maps the authored glyph elevation effect to its actor');
 assert.match(vr, /onCompleted: \(\) => runtimeExperience\.dispatch\(VR_SCENARIO_EVENT\.POST_RING_WORLD_PRESENTATION_COMPLETED\)/,
   'the presentation actor emits one semantic completion fact back to Runtime');
-assert.match(vr, /VR_SCENARIO_EFFECT\.BEGIN_OBSERVATION_WINDOW\]: \(\) => \{\}/,
-  '3.20 has only a boundary sink and starts no observation runtime');
+assert.match(vr, /VR_SCENARIO_EFFECT\.BEGIN_OBSERVATION_WINDOW\]: \(\) => \{ observationWindow\.begin\(\); \}/,
+  'Runtime maps the authored observation effect to its actor');
+assert.match(vr, /onCompleted: \(\) => runtimeExperience\.dispatch\(VR_SCENARIO_EVENT\.OBSERVATION_WINDOW_COMPLETED\)/,
+  'the observation actor dispatches the authored semantic completion fact');
+assert.match(vr, /postRingPresentation\.update\(delta\);\s*observationWindow\.update\(delta\);/,
+  'the render loop advances the local observation timer');
+assert.match(vr, /VR_SCENARIO_EFFECT\.BEGIN_MONKEY_ATTENTION\]: \(\) => \{\}/,
+  '3.30 remains an explicit boundary sink');
+assert.doesNotMatch(vr, /BEGIN_MONKEY_ATTENTION[\s\S]{0,200}monkeyGuide\.notifyAttention/,
+  'the observation slice does not execute Monkey attention');
 assert.match(vr, /renderer\.xr\.enabled = true/);
 assert.match(vr, /requestSession\('immersive-vr'/);
 assert.match(vr, /renderer\.setAnimationLoop\(renderFrame\)/);
