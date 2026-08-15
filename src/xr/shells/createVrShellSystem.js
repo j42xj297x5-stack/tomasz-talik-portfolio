@@ -13,7 +13,7 @@ export function createVrShellSystem({ parent, assetManager, baseRadius, centerY 
   const claimedMax = emissionSettings.claimedEmissionMax ?? 2;
   const claimedDuration = emissionSettings.claimedEmissionPulseDuration ?? 1.4;
   const object = new THREE.Group(); object.name = 'VrShellSystem'; object.visible = false; parent.add(object);
-  let active = false, elapsed = 0, disposed = false, currentDelta = 0;
+  let active = false, interactionEnabled = false, elapsed = 0, disposed = false, currentDelta = 0;
   const instances = [], records = [], ownedMaterials = new Set(), panelWireframes = new Map();
   const scratchQuaternion = new THREE.Quaternion();
 
@@ -40,7 +40,7 @@ export function createVrShellSystem({ parent, assetManager, baseRadius, centerY 
       initialQuaternion: shell.quaternion.clone(), orbitPosition: new THREE.Vector3(), returnStart: new THREE.Vector3(),
       returnElapsed: 0, returnDuration: 0.8, returnEmissionStart: 0, returning: false };
     shell.name = attractorId;
-    Object.assign(shell.userData, { attractorTarget: true, attractorType: 'shell', attractorId, shellState: 'orbiting',
+    Object.assign(shell.userData, { attractorTarget: false, attractorType: 'shell', attractorId, shellState: 'orbiting',
       shellAssetId: assetId, panelWireframe, shellOrbit: Object.freeze({ radius: record.radius, phase: record.phase, inclination: record.inclination,
         ascendingNode: record.ascendingNode, angularSpeed: record.angularSpeed, direction: record.direction }),
       selfRotationAxis: record.selfRotationAxis.clone(), selfRotationSpeed: record.selfRotationSpeed });
@@ -61,7 +61,7 @@ export function createVrShellSystem({ parent, assetManager, baseRadius, centerY 
       const eased = t * t * (3 - 2 * t); record.object.position.lerpVectors(record.returnStart, record.orbitPosition, eased);
       setEmission(record.object, record.returnEmissionStart * (1 - eased));
       if (t >= 1) { record.returning = false; record.object.userData.shellState = 'orbiting';
-        record.object.userData.attractorTarget = true; setEmission(record.object, 0); }
+        record.object.userData.attractorTarget = interactionEnabled; setEmission(record.object, 0); }
     } else if (['orbiting', 'targeted'].includes(state)) { record.object.position.copy(record.orbitPosition); setEmission(record.object, 0); }
     if (!['held', 'placed', 'capture_ready', 'inserted', 'consuming', 'consumed'].includes(state)) record.object.quaternion.copy(record.initialQuaternion).multiply(
       scratchQuaternion.setFromAxisAngle(record.selfRotationAxis, elapsed * record.selfRotationSpeed * record.direction));
@@ -69,17 +69,23 @@ export function createVrShellSystem({ parent, assetManager, baseRadius, centerY 
     if (state === 'held' || state === 'placed') setEmission(record.object, claimedMin + (claimedMax - claimedMin)
       * (0.5 + 0.5 * Math.sin(elapsed * TAU / claimedDuration)));
   }); }
-  function setActive(value) { if (!disposed) { active = Boolean(value); object.visible = active; } }
+  function syncTargetEligibility() { records.forEach((record) => {
+    if (['orbiting', 'targeted'].includes(record.object.userData.shellState)) record.object.userData.attractorTarget = interactionEnabled;
+  }); }
+  function setPresentationVisible(value) { if (!disposed) { active = Boolean(value); object.visible = active; } }
+  function setInteractionEnabled(value) { if (!disposed) { interactionEnabled = Boolean(value); syncTargetEligibility(); } }
+  // Compatibility seam used by the explicit post-P1 QA path.
+  function setActive(value) { setPresentationVisible(value); setInteractionEnabled(value); }
   function update(deltaSeconds) { if (disposed || !active) return; currentDelta = Math.max(0, Number.isFinite(deltaSeconds) ? deltaSeconds : 0);
     elapsed += currentDelta; applyPositions(); }
   function returnToOrbit(shell, duration = 0.8) { const record = getRecord(shell); if (!record || disposed || shell.userData.shellState === 'placed') return false;
     object.attach(shell); record.returnStart.copy(shell.position); record.returnElapsed = 0; record.returnDuration = Math.max(0.001, duration);
     record.returnEmissionStart = record.emissiveMaterials[0]?.emissiveIntensity ?? 0; record.returning = true;
     shell.userData.shellState = 'returning'; shell.userData.attractorTarget = false; return true; }
-  function reset() { if (disposed) return; elapsed = 0; currentDelta = 0; records.forEach((record) => {
+  function reset() { if (disposed) return; active = false; interactionEnabled = false; object.visible = false; elapsed = 0; currentDelta = 0; records.forEach((record) => {
     if (record.object.userData.shellState === 'placed') return;
     if (record.object.parent !== object) object.attach(record.object); record.returning = false; record.returnElapsed = 0;
-    record.object.userData.shellState = 'orbiting'; record.object.userData.attractorTarget = true; setEmission(record.object, 0);
+    record.object.userData.shellState = 'orbiting'; record.object.userData.attractorTarget = interactionEnabled; setEmission(record.object, 0);
   }); applyPositions(); }
   function removeInstance(shell) { const record = getRecord(shell); if (!record || disposed) return false;
     const recordIndex = records.indexOf(record); if (recordIndex >= 0) records.splice(recordIndex, 1);
@@ -93,5 +99,6 @@ export function createVrShellSystem({ parent, assetManager, baseRadius, centerY 
   applyPositions();
   return { object, instances, records, innerRadius: baseRadius, outerRadius: baseRadius * 2,
     panelWireframes, getPanelWireframe: (assetId) => panelWireframes.get(assetId) ?? null,
-    get active() { return active; }, getRecord, setEmission, setActive, update, returnToOrbit, removeInstance, reset, dispose };
+    get active() { return active; }, get interactionEnabled() { return interactionEnabled; }, getRecord, setEmission, setActive,
+    setPresentationVisible, setInteractionEnabled, update, returnToOrbit, removeInstance, reset, dispose };
 }

@@ -22,6 +22,13 @@ const radii = first.system.instances.map((shell) => shell.userData.shellOrbit.ra
 assert.ok(radii.every((radius) => radius >= 10 && radius <= 20));
 assert.ok(new Set(radii).size > 1);
 assert.equal(first.system.object.visible, false);
+assert.equal(first.system.interactionEnabled, false);
+assert.ok(first.system.instances.every((shell) => shell.userData.attractorTarget === false));
+first.system.setPresentationVisible(true);
+assert.equal(first.system.object.visible, true);
+assert.equal(first.system.interactionEnabled, false);
+assert.ok(first.system.instances.every((shell) => shell.userData.attractorTarget === false));
+first.system.setPresentationVisible(false);
 const inactivePosition = first.system.instances[0].position.clone();
 first.system.update(2);
 assert.deepEqual(first.system.instances[0].position, inactivePosition);
