@@ -1,12 +1,16 @@
 # Experience VR — Current Handoff
 
-Status: current delivery handoff synchronized after S1, M2.1, M1.20R, M1.20F, M1.20M and the later floor-visibility ownership correction. It intentionally does not duplicate runtime, audio or narrative contracts.
+Status: current delivery handoff synchronized after S1, M2.1, M2.2A, M1.20R, M1.20F, M1.20M and the later floor-visibility ownership correction. It intentionally does not duplicate runtime, audio or narrative contracts.
 
 ## Current stage
 
 M1 remains **IN PROGRESS**. M1.20R **Canonical Act Address Correction**, M1.20F **Floor Sector Reveal**, M1.20M **Monkey Attention Correction**, and the later correction making `VrProgressFloor` the sole owner of `sector.visible` are **IMPLEMENTED**. They do not complete the Scenario/Director migration: Act `3.x`, later stages and earlier audit blockers remain outstanding.
 
 ## CURRENT STATE — read this first
+
+- M2.2A is **IMPLEMENTED**: every LIVE transition authors `kind: STAY | COMPLETE | EXPLICIT`. `STAY` retains the point, `COMPLETE` obtains the authored successor from Spine, and `EXPLICIT` requires a concrete local/exit/join/loop target. Director publishes `transitionKind`; Runtime only forwards the accepted change and executes effects. Missing/unknown kinds and invalid kind/target combinations fail Scenario validation.
+- Spine owns the normal start. Compatibility `initialPointId` / `initialSceneId` values derive from `spine[0]`; `metadata.authoritativeScope` was removed rather than retaining a textual topology copy.
+- M2.2A deliberately retains `1.100.1`, `1.110.1`, `1.120.1`, `1.130.1`, `1.130.2`, `2.10.1`, `2.30.1`, and `2.40.1`. Hint/Intro technical-point migration, crossing-condition merge, `5/5` condition point, arbitrary start, hydration, and reconstruction-backed QA aliases are **NOT IMPLEMENTED**.
 
 - LIVE address spaces are `1.x` Intro / Prolog, `2.x` the first five-crystal loop, and `100.x` exit. Act `3.x` is the post-`5/5` stage and is **PLANNED / NOT IMPLEMENTED**.
 - LIVE first-loop points are `2.10`, `2.10.1`, `2.20`, `2.30`, `2.30.1`, `2.40`, `2.40.1`. Old `1.140`–`1.180.1` addresses are **RETIRED / SUPERSEDED**, never runtime aliases.

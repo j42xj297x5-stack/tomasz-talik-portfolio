@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { createVrExperienceDirector } from '../src/xr/progression/createVrExperienceDirector.js';
 import { ExperienceDirector } from '../src/xr/progression/ExperienceDirector.js';
-import { VR_EXPERIENCE_POINT, VR_SCENARIO_CAPABILITY, VR_SCENARIO_EFFECT, VR_SCENARIO_EVENT, VR_SCENARIO_MILESTONE, vrExperienceScenario } from '../src/xr/progression/vrExperienceScenario.js';
+import { VR_EXPERIENCE_POINT, VR_SCENARIO_CAPABILITY, VR_SCENARIO_EFFECT, VR_SCENARIO_EVENT, VR_SCENARIO_MILESTONE, VR_SCENARIO_TRANSITION_KIND, vrExperienceScenario } from '../src/xr/progression/vrExperienceScenario.js';
 
 assert.equal(Object.isFrozen(vrExperienceScenario), true);
 assert.equal(vrExperienceScenario.points, vrExperienceScenario.scenes);
@@ -10,36 +10,10 @@ assert.deepEqual(vrExperienceScenario.points.map(({ id }) => id), ['1.10', '1.20
 assert.equal(Object.isFrozen(vrExperienceScenario.points[0]), true);
 assert.equal(Object.isFrozen(vrExperienceScenario.points[0].transitions[0]), true);
 assert.equal(Object.isFrozen(vrExperienceScenario.points[0].transitions[0].effects), true);
-assert.equal(Object.isFrozen(vrExperienceScenario.metadata.authoritativeScope), true);
-assert.equal(Object.isFrozen(vrExperienceScenario.points[2].transitions[0]), true);
-assert.equal(Object.isFrozen(vrExperienceScenario.points[2].transitions[0].milestonesToAdd), true);
-assert.equal(Object.isFrozen(vrExperienceScenario.points[3]), true);
-assert.equal(vrExperienceScenario.metadata.stage, 'M2_1_SPINE_DRIVEN_NAVIGATION');
-assert.deepEqual(vrExperienceScenario.metadata.authoritativeScope, [
-  'XR_CALIBRATED → BEGIN_INTRO_REVEAL',
-  'INTRO_REVEAL_COMPLETE → BEGIN_POST_REVEAL_SILENCE',
-  'POST_REVEAL_SILENCE_COMPLETE → BEGIN_CONTROLLER_ONBOARDING',
-  'PLAYER_OPENED_GUIDE → CONTINUE_CONTROLLER_ONBOARDING',
-  'PLAYER_VIEWED_CONTROLS → CONTINUE_CONTROLLER_ONBOARDING',
-  'PLAYER_CLOSED_GUIDE → CONTINUE_CONTROLLER_ONBOARDING',
-  'MONKEY_HOVERED → CONTINUE_CONTROLLER_ONBOARDING',
-  'MONKEY_TRIGGERED → CONTINUE_CONTROLLER_ONBOARDING',
-  'INTRO_INVITATION_SELECTED / choice 1 → 1.110',
-  'FOLLOW_PAUSE_CHANGED → APPLY_FOLLOW_PAUSE_STATE → 1.110 / 1.110.1',
-  'MONKEY_REACHED_THRESHOLD → PRESENT_THRESHOLD_CHOICE → 1.120',
-  'THRESHOLD_SELECTED / choice 1 → 1.130',
-  'THRESHOLD_SELECTED / choice 2 → 1.120.1',
-  'THRESHOLD_SELECTED / choice 3 → 100.10',
-  'PLAYER_ENTERED_RING + MONKEY_SETTLED → BEGIN_GLYPH_FREE_EXPLORE → 2.10',
-  'GLYPH_HINT_TIMEOUT → SHOW_GLYPH_HINT → 2.10.1',
-  'FIRST_CRYSTAL_DISCOVERED → REVEAL_RELIQUARY → 2.20',
-  'RELIQUARY_REVEAL_COMPLETED → COMPLETE_RELIQUARY_REVEAL → 2.30',
-  'CRYSTAL_ACTIVATED → PRESENT_ACTIVE_CARD_PREVIEW → 2.40',
-  'CARD_COMMITTED → card presentation / feedback effects → 2.30',
-  'RELIQUARY_HINT_TIMEOUT → SHOW_RELIQUARY_CONTEXT_HINT → local Activate / Release hint branch',
-  'INTRO_INVITATION_SELECTED / choice 2 → 1.100.1',
-  'INTRO_INVITATION_SELECTED / choice 3 → 100.10'
-]);
+assert.equal('authoritativeScope' in vrExperienceScenario.metadata, false);
+assert.equal(vrExperienceScenario.metadata.stage, 'M2_2A_EXPLICIT_TRANSITION_SEMANTICS');
+assert.equal(vrExperienceScenario.initialPointId, vrExperienceScenario.spine[0]);
+assert.equal(vrExperienceScenario.initialSceneId, vrExperienceScenario.spine[0]);
 assert.equal(
   createVrExperienceDirector({ scenario: vrExperienceScenario }).getCurrentPointId(),
   vrExperienceScenario.initialPointId
@@ -52,6 +26,7 @@ const factoryChange = factoryDirector.dispatch(VR_SCENARIO_EVENT.XR_CALIBRATED);
 assert.deepEqual(factoryChange, productionChange, 'constructor and compatibility factory share semantics');
 assert.equal(productionChange.previousPointId, VR_EXPERIENCE_POINT['1.10']);
 assert.equal(productionChange.currentPointId, VR_EXPERIENCE_POINT['1.20']);
+assert.equal(productionChange.transitionKind, VR_SCENARIO_TRANSITION_KIND.COMPLETE);
 assert.equal('target' in vrExperienceScenario.points[0].transitions[0], false,
   'the Director does not need a redundant target for mainline completion');
 assert.equal(Object.isFrozen(productionChange), true);
@@ -108,6 +83,7 @@ assert.equal(productionDirector.dispatch(VR_SCENARIO_EVENT.MONKEY_TRIGGERED), nu
 for (const payload of [undefined, { choice: 4 }, { choice: '1' }]) assert.equal(productionDirector.dispatch(VR_SCENARIO_EVENT.INTRO_INVITATION_SELECTED, payload), null);
 const goChange = productionDirector.dispatch(VR_SCENARIO_EVENT.INTRO_INVITATION_SELECTED, { choice: 1 });
 assert.equal(goChange.currentPointId, VR_EXPERIENCE_POINT['1.110']);
+assert.equal(goChange.transitionKind, VR_SCENARIO_TRANSITION_KIND.COMPLETE);
 assert.deepEqual(goChange.effects, [VR_SCENARIO_EFFECT.CONTINUE_INTRO_INVITATION]);
 assert.deepEqual(goChange.addedMilestones, []);
 for (let cycle = 0; cycle < 2; cycle += 1) {
@@ -245,7 +221,9 @@ reachInvitation(productionDirector);
 assert.equal(productionDirector.dispatch(VR_SCENARIO_EVENT.MONKEY_REACHED_THRESHOLD), null, 'threshold arrival is rejected before FOLLOWING');
 assert.equal(productionDirector.dispatch(VR_SCENARIO_EVENT.INTRO_INVITATION_SELECTED, { choice: 2 }).currentPointId, VR_EXPERIENCE_POINT['1.100.1']);
 assert.equal(productionDirector.dispatch(VR_SCENARIO_EVENT.MONKEY_REACHED_THRESHOLD), null, 'WHERE branch rejects threshold arrival');
-assert.equal(productionDirector.dispatch(VR_SCENARIO_EVENT.INTRO_INVITATION_SELECTED, { choice: 2 }).currentPointId, VR_EXPERIENCE_POINT['1.100.1'], 'choice 2 is an explicit accepted self-loop');
+const invitationStay = productionDirector.dispatch(VR_SCENARIO_EVENT.INTRO_INVITATION_SELECTED, { choice: 2 });
+assert.equal(invitationStay.currentPointId, VR_EXPERIENCE_POINT['1.100.1'], 'choice 2 remains an accepted self-loop');
+assert.equal(invitationStay.transitionKind, VR_SCENARIO_TRANSITION_KIND.STAY);
 assert.equal(productionDirector.dispatch(VR_SCENARIO_EVENT.INTRO_INVITATION_SELECTED, { choice: 1 }).currentPointId, VR_EXPERIENCE_POINT['1.110']);
 assert.notEqual(productionDirector.dispatch(VR_SCENARIO_EVENT.MONKEY_REACHED_THRESHOLD), null);
 reachInvitation(productionDirector);
@@ -304,14 +282,14 @@ const scenario = Object.freeze({
       id: 'A',
       capabilities: Object.freeze(['CAN_START']),
       transitions: Object.freeze([
-        Object.freeze({ event: 'GO', target: 'B', milestonesToAdd: Object.freeze(['ARRIVED']), effects: Object.freeze(['REVEAL']) })
+        Object.freeze({ kind: 'EXPLICIT', event: 'GO', target: 'B', milestonesToAdd: Object.freeze(['ARRIVED']), effects: Object.freeze(['REVEAL']) })
       ])
     }),
     Object.freeze({
       id: 'B',
       capabilities: Object.freeze(['CAN_FINISH']),
       transitions: Object.freeze([
-        Object.freeze({ event: 'RETURN', target: 'A', milestonesToAdd: Object.freeze([]), effects: Object.freeze([]) })
+        Object.freeze({ kind: 'EXPLICIT', event: 'RETURN', target: 'A', milestonesToAdd: Object.freeze([]), effects: Object.freeze([]) })
       ])
     })
   ])
@@ -368,10 +346,10 @@ assert.equal(legacyDirector.getCurrentPointId(), 'A');
 legacyDirector.dispatch('GO');
 assert.equal(legacyDirector.getCurrentSceneId(), 'B');
 
-assert.throws(() => createVrExperienceDirector({ scenario: { ...scenario, initialPointId: 'MISSING' } }), /initial point/);
+assert.throws(() => createVrExperienceDirector({ scenario: { ...scenario, initialPointId: 'MISSING' } }), /compatibility alias/);
 assert.throws(() => createVrExperienceDirector({ scenario: {
   ...scenario, spine: ['A'],
-  points: [{ id: 'A', capabilities: ['CAN_START'], transitions: [{ event: 'GO', target: 'MISSING' }] }]
+  points: [{ id: 'A', capabilities: ['CAN_START'], transitions: [{ kind: 'EXPLICIT', event: 'GO', target: 'MISSING' }] }]
 } }), /transition target/);
 assert.throws(() => createVrExperienceDirector({ scenario: {
   ...scenario, spine: ['A'],
@@ -380,22 +358,22 @@ assert.throws(() => createVrExperienceDirector({ scenario: {
 assert.throws(() => createVrExperienceDirector({ scenario: {
   ...scenario, spine: ['A'],
   points: [{ id: 'A', capabilities: [], transitions: [
-    { event: 'GO', target: 'A' },
-    { event: 'GO', target: 'A' }
+    { kind: 'EXPLICIT', event: 'GO', target: 'A' },
+    { kind: 'EXPLICIT', event: 'GO', target: 'A' }
   ] }]
 } }), /duplicate transition/);
 
 assert.throws(() => createVrExperienceDirector({ scenario: {
   ...scenario,
   spine: ['A'],
-  points: [{ id: 'A', capabilities: [], transitions: [{ event: 'GO' }] }]
+  points: [{ id: 'A', capabilities: [], transitions: [{ kind: 'COMPLETE', event: 'GO' }] }]
 } }), /last spine point/);
 assert.throws(() => createVrExperienceDirector({ scenario: {
   ...scenario,
   spine: ['B'],
-  initialPointId: 'A',
+  initialPointId: 'B',
   points: [
-    { id: 'A', capabilities: [], transitions: [{ event: 'GO' }] },
+    { id: 'A', capabilities: [], transitions: [{ kind: 'COMPLETE', event: 'GO' }] },
     { id: 'B', capabilities: [], transitions: [] }
   ]
 } }), /does not belong/);
@@ -406,9 +384,9 @@ const choiceScenario = {
   vocabulary: { events: ['SELECTED'], capabilities: [], milestones: ['SECOND_SELECTED'], effects: ['SECOND_EFFECT'] },
   points: [
     { id: '2.6.3', capabilities: [], transitions: [
-      { event: 'SELECTED', choice: 1, target: '2.6.3.1', milestonesToAdd: [], effects: [] },
-      { event: 'SELECTED', choice: 2, target: '2.6.3.2', milestonesToAdd: ['SECOND_SELECTED'], effects: ['SECOND_EFFECT'] },
-      { event: 'SELECTED', choice: 3, target: '7.4.9', milestonesToAdd: [], effects: [] }
+      { kind: 'EXPLICIT', event: 'SELECTED', choice: 1, target: '2.6.3.1', milestonesToAdd: [], effects: [] },
+      { kind: 'EXPLICIT', event: 'SELECTED', choice: 2, target: '2.6.3.2', milestonesToAdd: ['SECOND_SELECTED'], effects: ['SECOND_EFFECT'] },
+      { kind: 'EXPLICIT', event: 'SELECTED', choice: 3, target: '7.4.9', milestonesToAdd: [], effects: [] }
     ] },
     { id: '2.6.3.1', capabilities: [], transitions: [] },
     { id: '2.6.3.2', capabilities: [], transitions: [] },
@@ -444,15 +422,61 @@ const choiceValidationScenario = (transitions) => ({
   points: [{ id: 'A', capabilities: [], transitions }]
 });
 assert.throws(() => new ExperienceDirector({ scenario: choiceValidationScenario([
-  { event: 'SELECTED', choice: 1, target: 'A' }, { event: 'SELECTED', choice: 1, target: 'A' }
+  { kind: 'EXPLICIT', event: 'SELECTED', choice: 1, target: 'A' }, { kind: 'EXPLICIT', event: 'SELECTED', choice: 1, target: 'A' }
 ]) }), /duplicate transition event and choice/);
 assert.throws(() => new ExperienceDirector({ scenario: choiceValidationScenario([
-  { event: 'SELECTED', target: 'A' }, { event: 'SELECTED', choice: 1, target: 'A' }
+  { kind: 'EXPLICIT', event: 'SELECTED', target: 'A' }, { kind: 'EXPLICIT', event: 'SELECTED', choice: 1, target: 'A' }
 ]) }), /cannot mix choice-routed and event-only transitions/);
 for (const invalidChoice of [0, -1, 1.5, '1']) {
   assert.throws(() => new ExperienceDirector({ scenario: choiceValidationScenario([
-    { event: 'SELECTED', choice: invalidChoice, target: 'A' }
+    { kind: 'EXPLICIT', event: 'SELECTED', choice: invalidChoice, target: 'A' }
   ]) }), /choice must be a positive integer/);
+}
+
+const contractScenario = (transition, { source = 'A', spine = ['A', 'B'], targetPoints = [] } = {}) => ({
+  spine,
+  vocabulary: { events: ['GO'], capabilities: [], milestones: ['DONE'], effects: ['EFFECT'] },
+  points: [
+    { id: 'A', capabilities: [], transitions: source === 'A' ? [transition] : [] },
+    { id: 'B', capabilities: [], transitions: source === 'B' ? [transition] : [] },
+    ...targetPoints.map((id) => ({ id, capabilities: [], transitions: source === id ? [transition] : [] }))
+  ]
+});
+
+const stayDirector = new ExperienceDirector({ scenario: contractScenario({
+  kind: VR_SCENARIO_TRANSITION_KIND.STAY,
+  event: 'GO', milestonesToAdd: ['DONE'], effects: ['EFFECT']
+}) });
+const stayChange = stayDirector.dispatch('GO');
+assert.equal(stayChange.previousPointId, 'A');
+assert.equal(stayChange.currentPointId, 'A');
+assert.equal(stayChange.transitionKind, VR_SCENARIO_TRANSITION_KIND.STAY);
+assert.deepEqual(stayChange.effects, ['EFFECT']);
+assert.deepEqual(stayChange.addedMilestones, ['DONE']);
+
+const completeTransition = { kind: VR_SCENARIO_TRANSITION_KIND.COMPLETE, event: 'GO' };
+assert.equal('target' in completeTransition, false);
+const completeChange = new ExperienceDirector({ scenario: contractScenario(completeTransition) }).dispatch('GO');
+assert.equal(completeChange.currentPointId, 'B');
+assert.equal(completeChange.transitionKind, VR_SCENARIO_TRANSITION_KIND.COMPLETE);
+
+const explicitChange = new ExperienceDirector({ scenario: contractScenario({
+  kind: VR_SCENARIO_TRANSITION_KIND.EXPLICIT, event: 'GO', target: 'X'
+}, { targetPoints: ['X'] }) }).dispatch('GO');
+assert.equal(explicitChange.currentPointId, 'X');
+assert.equal(explicitChange.transitionKind, VR_SCENARIO_TRANSITION_KIND.EXPLICIT);
+
+for (const [transition, options, expected] of [
+  [{ event: 'GO' }, {}, /unknown or missing kind/],
+  [{ kind: 'UNKNOWN', event: 'GO' }, {}, /unknown or missing kind/],
+  [{ kind: VR_SCENARIO_TRANSITION_KIND.STAY, event: 'GO', target: 'B' }, {}, /STAY.*must not define target/],
+  [{ kind: VR_SCENARIO_TRANSITION_KIND.COMPLETE, event: 'GO', target: 'B' }, {}, /COMPLETE.*must not define target/],
+  [{ kind: VR_SCENARIO_TRANSITION_KIND.EXPLICIT, event: 'GO' }, {}, /EXPLICIT.*must define target/],
+  [{ kind: VR_SCENARIO_TRANSITION_KIND.EXPLICIT, event: 'GO', target: 'X' }, {}, /target does not exist/],
+  [{ kind: VR_SCENARIO_TRANSITION_KIND.COMPLETE, event: 'GO' }, { source: 'X', targetPoints: ['X'] }, /does not belong/],
+  [{ kind: VR_SCENARIO_TRANSITION_KIND.COMPLETE, event: 'GO' }, { source: 'B' }, /last spine point/]
+]) {
+  assert.throws(() => new ExperienceDirector({ scenario: contractScenario(transition, options) }), expected);
 }
 
 console.log('VR experience Director assertions passed');

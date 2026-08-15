@@ -8,7 +8,7 @@ const scenario = freeze({ initialPointId: 'A', spine: freeze(['A', 'B']), vocabu
   capabilities: freeze(['CAN_GO', 'CAN_DONE']), milestones: freeze(['DONE']), effects: freeze(['FIRST', 'SECOND']) }),
 points: freeze([
   freeze({ id: 'A', capabilities: freeze(['CAN_GO']), transitions: freeze([
-    freeze({ event: 'GO', target: 'B', milestonesToAdd: freeze(['DONE']), effects: freeze(['FIRST', 'SECOND']) })
+    freeze({ kind: 'EXPLICIT', event: 'GO', target: 'B', milestonesToAdd: freeze(['DONE']), effects: freeze(['FIRST', 'SECOND']) })
   ]) }), freeze({ id: 'B', capabilities: freeze(['CAN_DONE']), transitions: freeze([]) })
 ]) });
 const calls = []; const payload = { nested: { retained: true } };
@@ -32,8 +32,8 @@ const choicePayload = { choice: 2, source: 'fixture' }; const choiceCalls = [];
 const choiceScenario = freeze({ initialPointId: '2.6.3', spine: freeze(['2.6.3']), vocabulary: freeze({ events: freeze(['SELECTED']),
   capabilities: freeze([]), milestones: freeze([]), effects: freeze(['CHOICE_EFFECT']) }), points: freeze([
   freeze({ id: '2.6.3', capabilities: freeze([]), transitions: freeze([
-    freeze({ event: 'SELECTED', choice: 1, target: '2.6.3.1', effects: freeze([]) }),
-    freeze({ event: 'SELECTED', choice: 2, target: '7.4.9', effects: freeze(['CHOICE_EFFECT']) })
+    freeze({ kind: 'EXPLICIT', event: 'SELECTED', choice: 1, target: '2.6.3.1', effects: freeze([]) }),
+    freeze({ kind: 'EXPLICIT', event: 'SELECTED', choice: 2, target: '7.4.9', effects: freeze(['CHOICE_EFFECT']) })
   ]) }), freeze({ id: '2.6.3.1', capabilities: freeze([]), transitions: freeze([]) }),
   freeze({ id: '7.4.9', capabilities: freeze([]), transitions: freeze([]) })
 ]) });
