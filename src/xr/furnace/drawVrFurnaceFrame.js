@@ -20,7 +20,9 @@ export function drawFurnaceFrame(context, options = {}) {
   });
   const accent = options.accentColor ?? '#72cfe8';
   const alpha = (options.opacity ?? .55) * (options.hovered ? 1 : options.active ? .86 : .68) * (options.locked ? .48 : 1);
-  context.save(); context.fillStyle = options.background ?? 'rgba(5,13,22,.82)'; context.fillRect(x, y, width, height);
+  context.save(); context.fillStyle = options.hovered ? 'rgba(31,69,88,.96)' : options.background ?? 'rgba(5,13,22,.82)'; context.fillRect(x, y, width, height);
+  if (options.hovered) { context.save(); context.globalAlpha = .34; context.shadowColor = accent; context.shadowBlur = 28;
+    context.strokeStyle = accent; context.lineWidth = 8; context.strokeRect(x + 5, y + 5, Math.max(0, width - 10), Math.max(0, height - 10)); context.restore(); }
   context.globalAlpha = alpha; context.strokeStyle = accent; context.lineWidth = options.variant === 'panel' ? 3 : 2;
   const c = cornerSize;
   corner(context, x, y, c, 0); corner(context, x + width, y, c, Math.PI / 2);

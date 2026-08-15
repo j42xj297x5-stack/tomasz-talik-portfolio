@@ -6,6 +6,7 @@ import { ASTERION_SHELL_PATCHES } from './asterionShellPatchData.js';
 import { assemblySegmentVisible, createAsterionModelWireframeMap, createAsterionPatchGeometry, resolveConstructionPatchOpacity, resolvePatchVisualStates } from './asterionSphereWireframe.js';
 import { drawMaterialCardVisual } from './drawVrMaterialCard.js';
 import { resolveAttractorShellGlyph } from '../tools/vrAttractorShellGlyphs.js';
+import { drawVrAstroAttractorPreview } from './drawVrAstroAttractorPreview.js';
 
 export const ASTRO_FURNACE_PANEL_STATES = Object.freeze({
   HIDDEN: 'HIDDEN', APPEARING: 'APPEARING', VISIBLE: 'VISIBLE', DISAPPEARING: 'DISAPPEARING'
@@ -13,6 +14,8 @@ export const ASTRO_FURNACE_PANEL_STATES = Object.freeze({
 export const ASTRO_FURNACE_PANEL_SCREENS = Object.freeze({ HOME: 'HOME', ASTERION_SPHERE: 'ASTERION_SPHERE' });
 export const asterionPreviewAnimationActive = ({ panelState, screen }) =>
   panelState === ASTRO_FURNACE_PANEL_STATES.VISIBLE && screen === ASTRO_FURNACE_PANEL_SCREENS.ASTERION_SPHERE;
+export const furnacePanelAnimationActive = ({ panelState, screen }) => panelState === ASTRO_FURNACE_PANEL_STATES.VISIBLE
+  && [ASTRO_FURNACE_PANEL_SCREENS.HOME, ASTRO_FURNACE_PANEL_SCREENS.ASTERION_SPHERE].includes(screen);
 const smoothstep = (value) => value * value * (3 - 2 * value);
 export const wireframeDissolveVisible = (segment, progress) => progress < 1 && segment.dissolveOrder >= Math.max(0, progress);
 
@@ -72,7 +75,7 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
     text('ASTRO PIEC', 90, 100, 52); text('MODUŁY TRANSFORMACJI', 90, 152, 25, '#83b8d1');
     const cards = [
       ['module-asterion-sphere', 'SFERA ASTERIONOWA', 'Rdzeń żyroskopowy sterowania kręgiem', 'SKORUPY', `${progress.absorbed} / 6   DOSTĘPNE`, true],
-      ['module-astro-attractor', 'ASTRO PRZYCIĄGACZ', 'Dostrajanie modułów żywiołów', 'GLIFY', 'W PRZYGOTOWANIU', false],
+      ['module-astro-attractor', 'ASTRO PRZYCIĄGACZ', 'Astrolabium Więzi // narzędzie przyciągania', 'TRYB', 'Utwórz astro przyciągacz', false],
       ['module-emanation-matrix', 'MATRYCA EMANACJI', 'Przetwarzanie kamieni runicznych', 'KAMIENIE', 'W PRZYGOTOWANIU', false]
     ];
     interactiveRegions = cards.map((card, index) => {
@@ -81,7 +84,12 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
       panelRect(rect.x, rect.y, rect.width, rect.height, { hovered: hoveredRegion === rect.id, active: card[5], locked: !card[5], accentColor });
       text(card[1], rect.x + 42, rect.y + 60, 37, card[5] ? '#f1fbff' : '#78909d');
       text(card[2], rect.x + 42, rect.y + 112, 25, '#91afbe'); text(card[3], rect.x + 42, rect.y + 166, 21, '#6f9db5');
-      context.textAlign = 'right'; text(card[4], rect.x + rect.width - 42, rect.y + 166, 22, card[5] ? '#bdefff' : '#647985'); context.textAlign = 'left';
+      const statusRight = card[0] === 'module-astro-attractor' ? rect.x + rect.width - 385 : rect.x + rect.width - 42;
+      context.textAlign = 'right'; text(card[4], statusRight, rect.y + 166, 22, card[5] ? '#bdefff' : '#91afbe'); context.textAlign = 'left';
+      if (card[0] === 'module-astro-attractor') drawVrAstroAttractorPreview(context, {
+        cx: rect.x + rect.width - 210, cy: rect.y + 103, scale: 84, elapsed: telemetryElapsed,
+        color: accents.attractor, bright: hoveredRegion === rect.id
+      });
       return rect;
     });
   }
@@ -267,9 +275,9 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
     if (state === ASTRO_FURNACE_PANEL_STATES.APPEARING) { const t = smoothstep(Math.min(1, elapsed / config.appearDuration)); root.scale.set(0.001 + .999 * t, .92 + .08 * t, 1); renderPlanes.forEach((plane) => { plane.material.opacity = t; }); if (t === 1) state = ASTRO_FURNACE_PANEL_STATES.VISIBLE; }
     else if (state === ASTRO_FURNACE_PANEL_STATES.DISAPPEARING) { const t = smoothstep(Math.min(1, elapsed / config.disappearDuration)); root.scale.set(1 - .999 * t, 1 - .08 * t, 1); renderPlanes.forEach((plane) => { plane.material.opacity = 1 - t; }); if (t === 1) { state = ASTRO_FURNACE_PANEL_STATES.HIDDEN; root.visible = false; } }
     updateHits();
-    if (screen === ASTRO_FURNACE_PANEL_SCREENS.ASTERION_SPHERE) { const telemetry = readTelemetry();
-      const previewAnimating = asterionPreviewAnimationActive({ panelState: state, screen });
-      if (shouldRefreshTelemetry({ active: previewAnimating, elapsed: telemetryElapsed, lastRedraw: lastTelemetryRedraw, refreshHz: config.telemetryRefreshHz })) { lastTelemetryRedraw = telemetryElapsed; draw(); } }
+    if (screen === ASTRO_FURNACE_PANEL_SCREENS.ASTERION_SPHERE) readTelemetry();
+    const previewAnimating = furnacePanelAnimationActive({ panelState: state, screen });
+    if (shouldRefreshTelemetry({ active: previewAnimating, elapsed: telemetryElapsed, lastRedraw: lastTelemetryRedraw, refreshHz: config.telemetryRefreshHz })) { lastTelemetryRedraw = telemetryElapsed; draw(); }
   }
   function reset() { state = ASTRO_FURNACE_PANEL_STATES.HIDDEN; screen = ASTRO_FURNACE_PANEL_SCREENS.HOME; elapsed = 0; telemetryElapsed = 0; lastTelemetryRedraw = 0; completedUntil = 0; previousProcessState = 'IDLE'; hoveredRegion = null; renderPlanes.forEach((plane) => { plane.material.opacity = 0; }); hits.forEach((_, record) => hits.set(record, null)); place(); root.visible = false; draw(); }
   const unsubscribe = progressionController.subscribe(() => draw());

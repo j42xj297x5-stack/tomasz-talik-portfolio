@@ -2,7 +2,8 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { resolveFurnaceFrameLayout } from '../src/xr/furnace/drawVrFurnaceFrame.js';
 import { resolveProcessTelemetry, shouldRefreshTelemetry } from '../src/xr/furnace/vrFurnaceTelemetry.js';
-import { ASTRO_FURNACE_PANEL_SCREENS, ASTRO_FURNACE_PANEL_STATES, asterionPreviewAnimationActive, wireframeDissolveVisible } from '../src/xr/furnace/createVrAstroFurnacePanel.js';
+import { ASTRO_FURNACE_PANEL_SCREENS, ASTRO_FURNACE_PANEL_STATES, asterionPreviewAnimationActive, furnacePanelAnimationActive, wireframeDissolveVisible } from '../src/xr/furnace/createVrAstroFurnacePanel.js';
+import { ASTRO_ATTRACTOR_PANEL_CURVES, ASTRO_ATTRACTOR_PANEL_RINGS } from '../src/xr/furnace/drawVrAstroAttractorPreview.js';
 import { createVrAstroFurnaceProcessSource } from '../src/xr/furnace/createVrAstroFurnaceProcessSource.js';
 import { resolveMaterialCardLayout } from '../src/xr/furnace/drawVrMaterialCard.js';
 import { VR_ATTRACTOR_SHELL_GLYPHS } from '../src/xr/tools/vrAttractorShellGlyphs.js';
@@ -43,6 +44,8 @@ assert.equal(shouldRefreshTelemetry({ active: true, elapsed: .02, lastRedraw: 0,
 assert.equal(asterionPreviewAnimationActive({ panelState: ASTRO_FURNACE_PANEL_STATES.VISIBLE, screen: ASTRO_FURNACE_PANEL_SCREENS.ASTERION_SPHERE }), true);
 assert.equal(shouldRefreshTelemetry({ active: asterionPreviewAnimationActive({ panelState: ASTRO_FURNACE_PANEL_STATES.VISIBLE, screen: ASTRO_FURNACE_PANEL_SCREENS.ASTERION_SPHERE }), elapsed: .084, lastRedraw: 0, refreshHz: 12 }), true);
 assert.equal(asterionPreviewAnimationActive({ panelState: ASTRO_FURNACE_PANEL_STATES.HIDDEN, screen: ASTRO_FURNACE_PANEL_SCREENS.ASTERION_SPHERE }), false);
+assert.equal(furnacePanelAnimationActive({ panelState: ASTRO_FURNACE_PANEL_STATES.VISIBLE, screen: ASTRO_FURNACE_PANEL_SCREENS.HOME }), true);
+assert.ok(ASTRO_ATTRACTOR_PANEL_CURVES.length >= 10); assert.equal(ASTRO_ATTRACTOR_PANEL_RINGS.length, 3);
 assert.equal(shouldRefreshTelemetry({ active: asterionPreviewAnimationActive({ panelState: ASTRO_FURNACE_PANEL_STATES.HIDDEN, screen: ASTRO_FURNACE_PANEL_SCREENS.ASTERION_SPHERE }), elapsed: 1, lastRedraw: 0, refreshHz: 12 }), false);
 let interaction;
 const runtimeProcessSource = createVrAstroFurnaceProcessSource(() => interaction);
@@ -74,6 +77,9 @@ assert.match(panelSource, /\['COOLDOWN', 'COMPLETE'\]\.includes\(telemetry\.phas
 assert.match(panelSource, /telemetry\.phase === 'EXTRACTION' \? telemetry\.extractionProgress : 0/);
 for (const phase of ['SPINUP', 'STEADY', 'COOLDOWN']) assert.equal(resolveProcessTelemetry({ state: phase, extractionProgress: phase === 'COOLDOWN' ? 1 : 0 }).showProgress, false);
 assert.match(panelSource, /VrAstroFurnacePanelFrontPlane/);
+assert.match(panelSource, /Utwórz astro przyciągacz/);
+assert.match(panelSource, /drawVrAstroAttractorPreview/);
+assert.doesNotMatch(panelSource, /astro_grabber\(5\)\.glb/);
 assert.match(panelSource, /VrAstroFurnacePanelBackPlane/);
 assert.equal(panelSource.match(/new THREE\.PlaneGeometry/g)?.length, 2);
 assert.equal(panelSource.match(/new THREE\.CanvasTexture/g)?.length, 1);
