@@ -82,6 +82,10 @@ assert.match(vr, /VR_SCENARIO_EFFECT\.REVEAL_RELIQUARY[\s\S]*introSequence\.begi
   'Runtime effect owns the first-crystal actor continuation');
 assert.equal((vr.match(/introSequence\.beginFirstCrystalDiscovery\(\)/g) ?? []).length, 1,
   'first-crystal continuation has only the Runtime handler production path');
+assert.match(vr, /VR_SCENARIO_EFFECT\.BEGIN_RELIQUARY_REVEAL[\s\S]*introSequence\.beginReliquaryReveal\(\)[\s\S]*throw new Error/,
+  'Runtime owns the fail-fast reliquary reveal continuation');
+assert.equal((vr.match(/introSequence\.beginReliquaryReveal\(\)/g) ?? []).length, 1,
+  'reliquary reveal continuation has only the Runtime handler production path');
 assert.match(vr, /VR_SCENARIO_EFFECT\.COMPLETE_RELIQUARY_REVEAL[\s\S]*introSequence\.completeReliquaryReveal\(\)[\s\S]*throw new Error/,
   'Runtime effect owns reliquary completion');
 assert.equal((vr.match(/introSequence\.completeReliquaryReveal\(\)/g) ?? []).length, 1,

@@ -146,6 +146,11 @@ assert.equal(productionDirector.hasMilestone(VR_SCENARIO_MILESTONE.FIRST_CRYSTAL
 assert.equal(productionDirector.can(VR_SCENARIO_CAPABILITY.CAN_USE_GLYPHS), false);
 assert.equal(productionDirector.dispatch(VR_SCENARIO_EVENT.GLYPH_HINT_TIMEOUT), null, 'late hint is inert after discovery');
 assert.equal(productionDirector.dispatch(VR_SCENARIO_EVENT.FIRST_CRYSTAL_DISCOVERED), null, 'duplicate discovery is inert');
+const discoveryMonkeyTriggered = productionDirector.dispatch(VR_SCENARIO_EVENT.MONKEY_TRIGGERED);
+assert.equal(discoveryMonkeyTriggered.previousPointId, VR_EXPERIENCE_POINT['2.20']);
+assert.equal(discoveryMonkeyTriggered.currentPointId, VR_EXPERIENCE_POINT['2.20']);
+assert.equal(discoveryMonkeyTriggered.transitionKind, VR_SCENARIO_TRANSITION_KIND.STAY);
+assert.deepEqual(discoveryMonkeyTriggered.effects, [VR_SCENARIO_EFFECT.BEGIN_RELIQUARY_REVEAL]);
 const reliquaryComplete = productionDirector.dispatch(VR_SCENARIO_EVENT.RELIQUARY_REVEAL_COMPLETED);
 assert.equal(reliquaryComplete.previousPointId, VR_EXPERIENCE_POINT['2.20']);
 assert.equal(reliquaryComplete.currentPointId, VR_EXPERIENCE_POINT['2.30']);
@@ -237,6 +242,8 @@ assert.equal(discoveredBeforeHint.currentPointId, VR_EXPERIENCE_POINT['2.20']);
 assert.deepEqual(discoveredBeforeHint.effects, discoveredAfterHint.effects, 'both discovery routes emit the same single effect');
 assert.deepEqual(discoveredBeforeHint.addedMilestones, [VR_SCENARIO_MILESTONE.FIRST_CRYSTAL_DISCOVERED]);
 assert.equal(settledFirstDirector.dispatch(VR_SCENARIO_EVENT.GLYPH_HINT_TIMEOUT), null);
+assert.deepEqual(settledFirstDirector.dispatch(VR_SCENARIO_EVENT.MONKEY_TRIGGERED).effects,
+  [VR_SCENARIO_EFFECT.BEGIN_RELIQUARY_REVEAL], 'the same Monkey fact starts reveal through Scenario at 2.20');
 
 const reachInvitation = (director) => {
   director.resetSession();

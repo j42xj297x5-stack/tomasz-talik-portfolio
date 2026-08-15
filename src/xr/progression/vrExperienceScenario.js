@@ -113,6 +113,7 @@ export const VR_SCENARIO_EFFECT = immutableIdentifiers([
   'START_MONKEY_FOLLOW',
   'SHOW_GLYPH_HINT',
   'REVEAL_RELIQUARY',
+  'BEGIN_RELIQUARY_REVEAL',
   'COMPLETE_RELIQUARY_REVEAL',
   'SHOW_RELIQUARY_CONTEXT_HINT',
   'PRESENT_ACTIVE_CARD_PREVIEW',
@@ -338,9 +339,10 @@ const points = Object.freeze([
   Object.freeze({
     id: VR_EXPERIENCE_POINT['2.20'],
     settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
-    label: 'Pierwszy kryształ odkryty / discovery i reliquary reveal rozpoczęte',
+    label: 'Pierwszy kryształ odkryty / oczekiwanie na aktywację Monkey i reliquary reveal',
     capabilities: Object.freeze([]),
     transitions: Object.freeze([
+      Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.STAY, event: VR_SCENARIO_EVENT.MONKEY_TRIGGERED, milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.BEGIN_RELIQUARY_REVEAL]) }),
       Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.COMPLETE, event: VR_SCENARIO_EVENT.RELIQUARY_REVEAL_COMPLETED, milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.COMPLETE_RELIQUARY_REVEAL]) })
     ])
   }),
