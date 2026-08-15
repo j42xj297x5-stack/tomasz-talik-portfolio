@@ -79,7 +79,8 @@ Po zaakceptowaniu `FIRST_RING_COMPLETED` Runtime wykonuje `COMPLETE_FIRST_RING_P
 - po zakończeniu prezentacji/czasu `POST_RING_WORLD_PRESENTATION_COMPLETED` rozpoczyna `3.20`;
 - `3.20` jest około dziesięciosekundowym observation window;
 - timeout `OBSERVATION_WINDOW_COMPLETED` rozpoczyna Monkey attention w `3.30`;
-- po attention/„checheszkach” `MONKEY_ATTENTION_COMPLETED` rozpoczyna `3.40`, czyli Monkey → Furnace intro.
+- attention/„checheszki” tylko oznaczają dostępność rozmowy; Director bezterminowo pozostaje w `3.30` podczas oczekiwania i dialogu;
+- dopiero one-shot `POST_RING_MONKEY_DIALOGUE_COMPLETED`, wysłany po domknięciu trzeciej obowiązkowej kwestii, rozpoczyna `3.40`.
 
 `3.40` celowo nie ma jeszcze następcy. Kolejne punkty procesu Pieca, `ASTRO PRODUCED`, fizyczne `ASTRO CLAIMED` oraz dopiero późniejsze `ENABLE_SHELL_INTERACTION` wymagają osobnego authoringu. Do tego czasu punkty `3.10–3.40` nie przyznają `CAN_SCAN_SHELLS`, `CAN_TARGET_SHELLS` ani furnace capabilities.
 
@@ -101,7 +102,7 @@ Pole `settledConsequences` jest wdrożonym mechanizmem docelowym, ale obecne def
 - hydration i owner restore APIs;
 - reconstruction-backed checkpointy lub QA aliases;
 - save/durable persistence i pełny reset zapisanej gry;
-- wykonawcze aktory/timery dla authored `3.10–3.40`;
+- runtime Furnace intro dla authored `3.40`;
 - punkty Pieca po `3.40`, produkcja i fizyczne podniesienie Astro oraz wynikające z nich odblokowanie interakcji z Muszlami;
 - późniejsze akty, ringi i finał.
 

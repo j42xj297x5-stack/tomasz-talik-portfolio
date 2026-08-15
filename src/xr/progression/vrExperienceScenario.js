@@ -41,7 +41,7 @@ export const VR_SCENARIO_EVENT = immutableIdentifiers([
   'FIRST_RING_PRESENTATION_COMPLETED',
   'POST_RING_WORLD_PRESENTATION_COMPLETED',
   'OBSERVATION_WINDOW_COMPLETED',
-  'MONKEY_ATTENTION_COMPLETED',
+  'POST_RING_MONKEY_DIALOGUE_COMPLETED',
   'TIER_COMPLETED',
   'ASTRO_UNLOCKED',
   'SHELL_PULL_STARTED',
@@ -433,11 +433,11 @@ const points = Object.freeze([
   Object.freeze({
     id: VR_EXPERIENCE_POINT['3.30'],
     settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
-    label: 'Monkey attention / attention i checheszki',
+    label: 'Monkey post-ring dialogue / attention, świadoma interakcja i obowiązkowa wiadomość',
     capabilities: Object.freeze([]),
     transitions: Object.freeze([
       Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.COMPLETE,
-        event: VR_SCENARIO_EVENT.MONKEY_ATTENTION_COMPLETED,
+        event: VR_SCENARIO_EVENT.POST_RING_MONKEY_DIALOGUE_COMPLETED,
         milestonesToAdd: Object.freeze([]),
         effects: Object.freeze([VR_SCENARIO_EFFECT.BEGIN_FURNACE_INTRO])
       })

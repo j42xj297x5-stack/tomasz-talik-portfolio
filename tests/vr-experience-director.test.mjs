@@ -228,9 +228,15 @@ assert.deepEqual(observation.effects, [VR_SCENARIO_EFFECT.BEGIN_OBSERVATION_WIND
 const attention = productionDirector.dispatch(VR_SCENARIO_EVENT.OBSERVATION_WINDOW_COMPLETED);
 assert.equal(attention.currentPointId, VR_EXPERIENCE_POINT['3.30']);
 assert.deepEqual(attention.effects, [VR_SCENARIO_EFFECT.BEGIN_MONKEY_ATTENTION]);
-const furnaceIntro = productionDirector.dispatch(VR_SCENARIO_EVENT.MONKEY_ATTENTION_COMPLETED);
+assert.equal(productionDirector.dispatch(VR_SCENARIO_EVENT.MONKEY_TRIGGERED), null,
+  'opening or using contextual Monkey help cannot complete 3.30');
+assert.equal(productionDirector.getCurrentPointId(), VR_EXPERIENCE_POINT['3.30'],
+  'Director waits at 3.30 without a dialogue completion fact');
+const furnaceIntro = productionDirector.dispatch(VR_SCENARIO_EVENT.POST_RING_MONKEY_DIALOGUE_COMPLETED);
 assert.equal(furnaceIntro.currentPointId, VR_EXPERIENCE_POINT['3.40']);
 assert.deepEqual(furnaceIntro.effects, [VR_SCENARIO_EFFECT.BEGIN_FURNACE_INTRO]);
+assert.equal(productionDirector.dispatch(VR_SCENARIO_EVENT.POST_RING_MONKEY_DIALOGUE_COMPLETED), null,
+  'post-ring dialogue completion is consumed once');
 assert.equal(productionDirector.dispatch(VR_SCENARIO_EVENT.SHELL_PULL_STARTED), null,
   'shell interaction remains disabled at the Furnace-intro boundary');
 assert.equal(vrExperienceScenario.points.some(({ transitions }) => transitions.some((transition) =>
