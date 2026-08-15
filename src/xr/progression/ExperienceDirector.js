@@ -63,6 +63,17 @@ function validateScenario(scenario) {
           }
           break;
         }
+        case VR_SCENARIO_TRANSITION_KIND.COMPLETE_IF: {
+          if (hasTransitionTarget) throw new Error(`COMPLETE_IF transition at point ${point.id} must not define target`);
+          if (transition.condition !== 'crossingComplete') {
+            throw new Error(`COMPLETE_IF transition at point ${point.id} must use the crossingComplete condition`);
+          }
+          const nextPointId = getNextScenarioSpinePointId(scenario, point.id);
+          if (nextPointId === null) {
+            throw new Error(`point ${point.id} cannot conditionally complete through Spine.next() because it is the last spine point`);
+          }
+          break;
+        }
         case VR_SCENARIO_TRANSITION_KIND.EXPLICIT:
           if (!hasTransitionTarget) throw new Error(`EXPLICIT transition at point ${point.id} must define target`);
           if (!pointIds.has(transition.target)) throw new Error(`transition target does not exist: ${transition.target}`);
@@ -118,7 +129,10 @@ export class ExperienceDirector {
     );
     if (!transition) return null;
     const previousPointId = this.currentPointId;
-    switch (transition.kind) {
+    const transitionKind = transition.kind === VR_SCENARIO_TRANSITION_KIND.COMPLETE_IF
+      ? (payload?.[transition.condition] === true ? VR_SCENARIO_TRANSITION_KIND.COMPLETE : VR_SCENARIO_TRANSITION_KIND.STAY)
+      : transition.kind;
+    switch (transitionKind) {
       case VR_SCENARIO_TRANSITION_KIND.STAY:
         this.currentPointId = previousPointId;
         break;
@@ -130,13 +144,15 @@ export class ExperienceDirector {
         break;
     }
     const addedMilestones = [];
-    for (const milestone of transition.milestonesToAdd ?? []) if (!this.committedMilestones.has(milestone)) {
+    const completedConditionalTransition = transition.kind !== VR_SCENARIO_TRANSITION_KIND.COMPLETE_IF
+      || transitionKind === VR_SCENARIO_TRANSITION_KIND.COMPLETE;
+    for (const milestone of completedConditionalTransition ? (transition.milestonesToAdd ?? []) : []) if (!this.committedMilestones.has(milestone)) {
       this.committedMilestones.add(milestone); addedMilestones.push(milestone);
     }
     this.lastEvent = Object.freeze({ type: eventType, payload: payload ?? null });
-    const change = Object.freeze({ event: this.lastEvent, transitionKind: transition.kind,
+    const change = Object.freeze({ event: this.lastEvent, transitionKind,
       previousPointId, currentPointId: this.currentPointId,
-      addedMilestones: Object.freeze(addedMilestones), effects: Object.freeze([...(transition.effects ?? [])]) });
+      addedMilestones: Object.freeze(addedMilestones), effects: Object.freeze(completedConditionalTransition ? [...(transition.effects ?? [])] : []) });
     for (const listener of [...this.listeners]) listener(change);
     return change;
   }

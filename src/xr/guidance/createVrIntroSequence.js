@@ -61,7 +61,7 @@ export function createVrIntroSequence({ monkeyGuide, monkeyMotionRoot, monkeyVis
   const radiusOf = (value) => { const p = value?.isObject3D ? value.getWorldPosition(new THREE.Vector3()) : value.clone(); center.updateWorldMatrix(true, false); center.worldToLocal(p); return Math.hypot(p.x, p.z); };
   const updatePlayerRingEntry = () => {
     const headRadius = radiusOf(getHeadPosition());
-    if (!playerEnteredRing && headRadius <= ringRadius) { playerEnteredRing = true; locomotion.setWalkRadius(ringRadius, { clamp: false }); onPlayerEnteredRing(); }
+    if (!playerEnteredRing && headRadius <= ringRadius) { playerEnteredRing = true; locomotion.setWalkRadius(ringRadius, { clamp: false }); onPlayerEnteredRing({ crossingComplete: monkeySettled }); }
     if (!playerSafelyInside && headRadius <= ringRadius - (settings.insideSafeMargin ?? .75)) playerSafelyInside = true;
   };
   const capture = () => monkeyGuide.setDialogueOverride({ onMonkeyPress: () => true });
@@ -183,7 +183,7 @@ export function createVrIntroSequence({ monkeyGuide, monkeyMotionRoot, monkeyVis
     } else if (state === VR_INTRO_STATE.MONKEY_SETTLING) {
       updatePlayerRingEntry();
       finalTurnElapsed += delta; monkeyMotionRoot.quaternion.slerpQuaternions(walkingQuaternion, canonicalQuaternion, Math.min(1, finalTurnElapsed / (settings.guideTurnDuration ?? 1)));
-      if (!monkeySettled && finalTurnElapsed >= (settings.guideTurnDuration ?? 1)) { monkeySettled = true; onMonkeySettled(); }
+      if (!monkeySettled && finalTurnElapsed >= (settings.guideTurnDuration ?? 1)) { monkeySettled = true; onMonkeySettled({ crossingComplete: playerEnteredRing }); }
     } else if (state === VR_INTRO_STATE.GLYPH_FREE_EXPLORE && !glyphExploreResolved && !glyphHintTriggered) { glyphExploreElapsed += delta; if (glyphExploreElapsed >= (settings.glyphFreeExploreDuration ?? 60)) { glyphHintTriggered = true; onGlyphHintTimeout(); } }
     else if (state === VR_INTRO_STATE.RELIQUARY_REVEAL && (elapsed += delta) >= 3) {
       state = VR_INTRO_STATE.WAIT_RUNTIME_AFTER_RELIQUARY_REVEAL; onReliquaryRevealCompleted();

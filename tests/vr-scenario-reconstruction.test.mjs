@@ -10,7 +10,6 @@ import {
 import { getNextScenarioSpinePointId } from '../src/xr/progression/scenarioSpineNavigation.js';
 
 const localBranches = [
-  '1.130.1', '1.130.2',
   '2.10.1', '2.30.1', '2.40.1'
 ];
 

@@ -5,6 +5,7 @@ function immutableIdentifiers(names) {
 export const VR_SCENARIO_TRANSITION_KIND = immutableIdentifiers([
   'STAY',
   'COMPLETE',
+  'COMPLETE_IF',
   'EXPLICIT'
 ]);
 
@@ -87,8 +88,6 @@ export const VR_SCENARIO_MILESTONE = immutableIdentifiers([
   'INTRO_REVEAL_COMPLETE',
   'POST_REVEAL_SILENCE_COMPLETE',
   'PLAYER_VIEWED_CONTROLS',
-  'PLAYER_ENTERED_RING',
-  'MONKEY_SETTLED',
   'FIRST_CRYSTAL_DISCOVERED',
   'CARD_COMMITTED',
   'TIER_COMPLETED',
@@ -137,8 +136,6 @@ export const VR_EXPERIENCE_POINT = immutableIdentifiers([
   '1.110',
   '1.120',
   '1.130',
-  '1.130.1',
-  '1.130.2',
   '2.10',
   '2.10.1',
   '2.20',
@@ -326,24 +323,8 @@ const points = Object.freeze([
     label: 'Gracz przekracza próg / CROSSING rozpoczyna się',
     capabilities: Object.freeze([]),
     transitions: Object.freeze([
-      Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.EXPLICIT, event: VR_SCENARIO_EVENT.PLAYER_ENTERED_RING, target: VR_EXPERIENCE_POINT['1.130.1'], milestonesToAdd: Object.freeze([VR_SCENARIO_MILESTONE.PLAYER_ENTERED_RING]), effects: Object.freeze([]) }),
-      Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.EXPLICIT, event: VR_SCENARIO_EVENT.MONKEY_SETTLED, target: VR_EXPERIENCE_POINT['1.130.2'], milestonesToAdd: Object.freeze([VR_SCENARIO_MILESTONE.MONKEY_SETTLED]), effects: Object.freeze([]) })
-    ])
-  }),
-  Object.freeze({
-    id: VR_EXPERIENCE_POINT['1.130.1'],
-    label: 'Gracz w ringu / oczekiwanie na osadzenie Monkey',
-    capabilities: Object.freeze([]),
-    transitions: Object.freeze([
-      Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.EXPLICIT, event: VR_SCENARIO_EVENT.MONKEY_SETTLED, target: VR_EXPERIENCE_POINT['2.10'], milestonesToAdd: Object.freeze([VR_SCENARIO_MILESTONE.MONKEY_SETTLED]), effects: Object.freeze([VR_SCENARIO_EFFECT.BEGIN_GLYPH_FREE_EXPLORE]) })
-    ])
-  }),
-  Object.freeze({
-    id: VR_EXPERIENCE_POINT['1.130.2'],
-    label: 'Monkey osadzona / oczekiwanie na wejście gracza do ringu',
-    capabilities: Object.freeze([]),
-    transitions: Object.freeze([
-      Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.EXPLICIT, event: VR_SCENARIO_EVENT.PLAYER_ENTERED_RING, target: VR_EXPERIENCE_POINT['2.10'], milestonesToAdd: Object.freeze([VR_SCENARIO_MILESTONE.PLAYER_ENTERED_RING]), effects: Object.freeze([VR_SCENARIO_EFFECT.BEGIN_GLYPH_FREE_EXPLORE]) })
+      Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.COMPLETE_IF, condition: 'crossingComplete', event: VR_SCENARIO_EVENT.PLAYER_ENTERED_RING, milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.BEGIN_GLYPH_FREE_EXPLORE]) }),
+      Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.COMPLETE_IF, condition: 'crossingComplete', event: VR_SCENARIO_EVENT.MONKEY_SETTLED, milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.BEGIN_GLYPH_FREE_EXPLORE]) })
     ])
   }),
   Object.freeze({
@@ -454,7 +435,7 @@ export const vrExperienceScenario = Object.freeze({
     effects: Object.freeze(Object.values(VR_SCENARIO_EFFECT))
   }),
   metadata: Object.freeze({
-    stage: 'M2_2B_INTRO_LOCAL_REACTIONS',
+    stage: 'M2_2C_CANONICAL_CROSSING_JOIN',
     authoritativeForLiveGameplay: true,
     // Routing topology lives only in points/transitions and the authored Spine.
   })
