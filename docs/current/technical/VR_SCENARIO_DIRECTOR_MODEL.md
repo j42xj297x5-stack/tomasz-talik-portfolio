@@ -135,6 +135,20 @@ Debug checkpoint `?pN → canonical pointId` jest tylko aliasem adresu. Nie zawi
 
 Bootstrap, QA, Director i `experienceVr.js` nie mogą tworzyć równoległej prawdy. Stan portfolio należy do progression ownera, wizualna projekcja floor do Floor ownera, Furnace do Furnace ownera, shells do shell/material ownera, a tools do właściwego equipment/achievement ownera. Preferowane są małe jawne API ownerów zamiast direct scene writes i łatek synchronizujących visibility lub inne projekcje.
 
+## 1.5. M2.2A — jawna semantyka transitionów — CURRENT / IMPLEMENTED
+
+Każdy LIVE transition posiada immutable `kind` z kontraktu `VR_SCENARIO_TRANSITION_KIND`: `STAY | COMPLETE | EXPLICIT`. Director interpretuje wyłącznie ten rodzaj, nigdy obecność lub brak `target`:
+
+- `STAY` akceptuje event, commituje milestones i zwraca effects, lecz zachowuje canonical `currentPointId`; nie może posiadać `target`;
+- `COMPLETE` kończy bieżący mainline point i pobiera następcę z `Spine.next(currentPointId)`; nie może posiadać `target`, wymaga pointu należącego do Spine oraz authored następcy;
+- `EXPLICIT` jest świadomą trasą local/exit/join/loop do wymaganego, istniejącego `transition.target` i nie używa `Spine.next()`.
+
+Accepted immutable `change` publikuje `transitionKind`. Normalny start Directora pochodzi z `scenario.spine[0]`; compatibility aliases `initialPointId` i `initialSceneId` są wyprowadzone z tego elementu oraz walidowane pod kątem zgodności. `metadata.authoritativeScope` usunięto, ponieważ duplikowało topology; metadata zachowuje tylko stage i flagę autorytatywności LIVE.
+
+Normalne ukończenia mainline (`1.10`–`1.80`, invitation choice 1 z `1.100`, threshold arrival z `1.110`, threshold choice 1 z `1.120`, discovery/reveal/activate na `2.10`, `2.20`, `2.30`) są `COMPLETE`. Trasy EARLY EXIT, wejścia/powroty local, crossing join, hint points i pętla `2.40 → 2.30` pozostają `EXPLICIT`. Dokładne self-loopy wyboru 2 w `1.100.1` i `1.120.1` są `STAY` bez targetu.
+
+**FUTURE / NOT IMPLEMENTED:** migracja hint technical points, migracja Intro technical points, crossing condition merge, condition point `5/5`, arbitrary start, hydration oraz reconstruction-backed QA aliases. Punkty technical pozostają LIVE; M2.2A nie zmienia gameplay topology ani ownershipu progression conditions.
+
 ## 2. Metafora teatralna i podział odpowiedzialności
 
 Wiążąca analogia:
