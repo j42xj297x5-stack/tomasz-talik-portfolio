@@ -1,114 +1,57 @@
 # Experience VR — Scenario, Director i progresja
 
-Status: **CURRENT**. Dokument opisuje wdrożony model; kod pozostaje dowodem implementacji.
+Status: **CURRENT**. Kod jest dowodem statusu IMPLEMENTED; ten dokument jest canonical modelem authored progresji.
 
-## 1. Model ownershipu
+## Ownership
 
-```text
-SPINE → SCENARIO → DIRECTOR → RUNTIME / ACTORS / DOMAIN OWNERS
-```
+`SPINE → SCENARIO → DIRECTOR → RUNTIME / ACTORS / DOMAIN OWNERS`
 
-- **Spine** (`VR_EXPERIENCE_SCENARIO_SPINE`) jest jedynym właścicielem authored mainline order. ID jest stabilnym adresem, nie liczbą do sortowania ani źródłem kolejności.
-- **Scenario** definiuje canonical story points oraz ich accepted events, effects, capabilities, milestones i `settledConsequences`. Nie powiela normalnego następstwa mainline przez targety.
-- **Director** posiada `currentPointId`, interpretuje definicję bieżącego punktu, akceptuje pasujący event, commituje milestone'y, publikuje efekty i rozstrzyga przejście.
-- **Runtime / actors / domain owners** wykonują efekty i posiadają rzeczywisty stan domenowy oraz transient. Director nie mutuje sceny Three.js i nie przejmuje invariants interakcji, kart, podłogi, Naczynia ani Intro.
+Spine posiada kolejność mainline, Scenario punkty/events/effects/capabilities, Director bieżący punkt i legalność przejść, a Runtime/aktorzy wykonanie oraz stan domenowy i transient. `RuntimeExperience` jest granicą wykonawczą symbolicznych effects. `STAY` nie zmienia punktu, `COMPLETE` używa `Spine.next()`, `EXPLICIT` obsługuje early exit, a crossing-only `COMPLETE_IF` nie jest ogólnym rules engine.
 
-`RuntimeExperience` jest granicą wykonawczą: przekazuje eventy do Directora i deleguje symboliczne effects do wstrzykniętych handlerów. Capability Scenario jest pozwoleniem na udział w danym loopie, a nie kopią szczegółowego stanu domeny.
-
-## 2. Canonical Spine i granica implementacji
-
-Wdrożony Spine ma kolejność:
+## Canonical Spine
 
 ```text
 1.10 → 1.20 → 1.30 → 1.40 → 1.50 → 1.60 → 1.70 → 1.80
-→ 1.100 → 1.110 → 1.120 → 1.130 → 2.10 → 2.20 → 2.30 → 2.40
-→ 3.10 → 3.20 → 3.30 → 3.40
+→ 1.100 → 1.110 → 1.120 → 1.130
+→ 2.10 → 2.20 → 2.30 → 2.40
+→ 3.10 → 3.20 → 3.30 → 3.40 → 3.50 → 3.60 → 3.70 → 3.80
 ```
 
-`100.10` jest authored terminalnym EARLY EXIT poza Spine. `EXPLICIT` może prowadzić do niego z wyboru wyjścia. `3.40` jest obecną granicą authoringu mainline; kolejne punkty Pieca pozostają do nazwania.
+`100.10` jest terminalnym EARLY EXIT poza mainline. WHERE, FOLLOW pause, BEYOND i hinty są lokalnymi `STAY`, nie dodatkowymi technical points. Aktualny authored mainline kończy się na `3.80`.
 
-WHERE w `1.100`, FOLLOW pause w `1.110`, BEYOND w `1.120` oraz hinty są lokalnymi reakcjami `STAY`. Nie są osobnymi story points. W szczególności nie istnieją LIVE technical points `1.100.1`, `1.110.1`, `1.120.1`, `1.130.1`, `1.130.2`, `2.10.1`, `2.30.1` ani `2.40.1`.
+## Intro i pierwszy ring
 
-## 3. Transition contract
+`1.130` kończy się dopiero, gdy Intro actor potwierdzi łącznie `playerEnteredRing` i `monkeySettled`. `2.10` prowadzi przez pierwszy kryształ, `2.20` przez świadome uruchomienie Małpy i fizyczny reveal Reliquary, a `2.30` obejmuje pełny loop pięciu pierwszych kart. `createVrProgressionController` jest jedynym źródłem trwałego `5/5`.
 
-Każdy transition ma jawny immutable `kind`:
+Pierwszy trwały wynik `5/5` emituje `FIRST_RING_COMPLETED`, kończy `2.30` i wprowadza `2.40`. Runtime wykonuje first-ring presentation i completion audio; lokalnym production ownerem presentation seam jest `createVrFirstRingFlow`. Dopiero rzeczywiste zakończenie prezentacji emituje `FIRST_RING_PRESENTATION_COMPLETED` i przechodzi do `3.10`. `2.40` nie jest martwym końcem.
 
-- **`STAY`** — event jest zaakceptowany, przewidziane milestones/effects są zwracane, a `currentPointId` się nie zmienia; transition nie ma `target`.
-- **`COMPLETE`** — bezwarunkowo kończy bieżący punkt Spine; Director pobiera następny punkt przez `Spine.next(currentPointId)`; transition nie ma `target`.
-- **`EXPLICIT`** — prowadzi do wymaganego authored `target` poza normalnym następstwem Spine, obecnie dla EARLY EXIT; nie wywołuje `Spine.next()`.
-- **`COMPLETE_IF`** — conditional completion. Payload `false` rozstrzyga się do `STAY`, a `true` do `COMPLETE` i `Spine.next(currentPointId)`; transition nie ma `target`.
+## Post-ring i Astro — IMPLEMENTED
 
-Accepted `change` publikuje już rozstrzygnięty `transitionKind`. `COMPLETE_IF` pozostaje celowo zawężone do condition `crossingComplete`; nie jest DSL-em, ogólnym rules engine ani podstawą przyszłego systemu predicates.
+| Punkt | Canonical zachowanie i completion |
+| --- | --- |
+| `3.10` | Pole skorup staje się widoczne, lecz pozostaje nieinteraktywne; główne glify unoszą się. `POST_RING_WORLD_PRESENTATION_COMPLETED`. |
+| `3.20` | Około 10 sekund observation window. `OBSERVATION_WINDOW_COMPLETED`. |
+| `3.30` | Checheszki sygnalizują wyłącznie nową wiadomość. Gracz sam podchodzi/wskazuje/klika Małpę; dialog nie otwiera się automatycznie. Obowiązkowo: `No i świat przestał być uprzejmy.` / `To, czego potrzebujesz, jest teraz poza zasięgiem.` / `Na szczęście nie na długo.` Dopiero finalne acknowledgement emituje `POST_RING_MONKEY_DIALOGUE_COMPLETED`. |
+| `3.40` | Rzeczywisty reveal Pieca i dokładne copy: `Spójrz na Piec.` / `Tam coś na ciebie czeka.` Completion: `FURNACE_INTRO_COMPLETED`. |
+| `3.50` | Astro production ready. Gracz świadomie wybiera `Utwórz astro przyciągacz` w panelu Pieca; produkcja nie jest automatyczna. |
+| `3.60` | Konstrukcja Astro używa osobnego `ASTRO_ATTRACTOR_CONSTRUCTION`, nigdy `ASTERION_CONSTRUCTION`. |
+| `3.70` | Fizyczne Astro jest `AVAILABLE` w otwartej komorze, ale nie `EARNED` ani equipable. Claim wymaga prawej `NORMAL_HAND`, ordinary ray, rzeczywistego target hit i trigger/`selectstart`. |
+| `3.80` | Zakończony physical handoff emituje `ASTRO_ATTRACTOR_CLAIMED`. Dopiero tu Astro jest `EARNED`, equipable i dostępne prawej ręce, a Scenario przyznaje `CAN_EQUIP_ASTRO`, `CAN_SCAN_SHELLS`, `CAN_TARGET_SHELLS`. |
 
-## 4. Intro i crossing w `1.130`
+Pole skorup w `3.80` nie jest revealowane ponownie: to pole pokazane już w `3.10`. Dalsza authored shell progression oraz pełny Asterion loop są **NEXT / NOT YET AUTHORED**, mimo że domenowe mechaniki mogą istnieć w runtime.
 
-`1.130` jest jedynym canonical crossing point. `PLAYER_ENTERED_RING` i `MONKEY_SETTLED` mogą przyjść w dowolnej kolejności. Intro actor posiada transient facts `playerEnteredRing` i `monkeySettled` oraz przekazuje wynik `crossingComplete`; Director nie przechowuje ich kopii.
+## Astro i Furnace ownership
 
-Pierwszy fakt daje warunkowe `STAY`. Gdy oba są prawdziwe, `COMPLETE_IF` rozstrzyga się do `COMPLETE`, emituje `BEGIN_GLYPH_FREE_EXPLORE` i przez `Spine.next('1.130')` przechodzi do `2.10`. Transient crossing state nie podlega rekonstrukcji.
+Production representation ≠ gameplay equipment object. `createVrAstroAttractorProductionController` lokalnie posiada `READY → BUILDING → AVAILABLE → CLAIMING → EARNED`; `CLAIMING` jest transient runtime state, nie story point. Gameplay tool nadal obsługuje `createVrAttractorTool`; fizyczny production clone nie jest drugim gameplayowym Astro.
 
-## 5. Pierwszy ring
+Piec ma rozłączne modes: `astro_attractor` oraz istniejący Asterion mode, osobne construction kinds i współdzielony Furnace process driver. Fizyczny output znajduje się pod `VR_FURNACE_CONTENT_ANCHOR` i pozostaje w komorze do claimu.
 
-### `2.10` i `2.20`
+## Bootstrap i walidacja
 
-`2.10` obejmuje glyph free explore. Hint pozostaje lokalnym `STAY`. `FIRST_CRYSTAL_DISCOVERED` kończy `2.10`, przechodzi przez Spine do `2.20` i emituje discovery/attention effect `REVEAL_RELIQUARY`; ten effect nie rozpoczyna fizycznego revealu.
+Po preloadzie wszystkich assetów composition musi dać się złożyć przed READY. `runtimeExperience` ma wcześniejszy bezpieczny nullable binding, ponieważ construction-time callbacks mogą wykonać się przed pełnym bindem Runtime. `canUseAstroProduction` zwraca przed bindem bezpieczne `false`, a po bindzie rzeczywisty Scenario/runtime gate.
 
-W `2.20` aktywacja Małpy emituje `MONKEY_TRIGGERED`. Scenario akceptuje ten event jako `STAY` i emituje `BEGIN_RELIQUARY_REVEAL`, po czym Runtime uruchamia fizyczny reveal Naczynia. Dopiero `RELIQUARY_REVEAL_COMPLETED` kończy `2.20`, emituje `COMPLETE_RELIQUARY_REVEAL` i przez Spine przechodzi do `2.30`.
+Regression guards: `vr-first-ring-live-flow`, `vr-astro-first-claim-live-flow`, `vr-runtime-bootstrap`. Bootstrap regression był RED przed poprawką i GREEN po niej przez production path. Wizjoner potwierdził przejście poza `41/41` i brak zatrzymania przed READY: **HARDWARE VALIDATED — Meta Quest 3S** wyłącznie dla bootstrap fixu. Pełny flow `3.10–3.80` oraz Furnace/Astro visuals, hover, skala/orientacja, handoff i shell targeting pozostają hardware/perceptual QA pending.
 
-### `2.30` — cały loop pięciu kart
+## Reconstruction i deferred
 
-`2.30` obejmuje cały pierwszy ring, aż do ukończenia `5/5`. W jego obrębie:
-
-- `RELIQUARY_HINT_TIMEOUT` → `STAY`;
-- `CRYSTAL_ACTIVATED` → `STAY` i lokalny preview;
-- `CARD_COMMITTED` → `STAY`, milestone `CARD_COMMITTED` i lokalny per-card feedback;
-- `FIRST_RING_COMPLETED` → `COMPLETE`, effects `COMPLETE_FIRST_RING_PRESENTATION` i `PLAY_FIRST_RING_COMPLETE_FEEDBACK` → `Spine.next('2.30')` → `2.40`.
-
-`createVrProgressionController` jest jedynym źródłem prawdy o ukończeniu tieru. Runtime wysyła `FIRST_RING_COMPLETED` dopiero przy trwałym wyniku pierwszego tieru `5/5`; Scenario nie liczy kart i Director nie utrzymuje równoległego licznika.
-
-`CAN_USE_RELIQUARY` jest aktywnym, globalnym Scenario-owned gate dla insertion w `2.30`; Runtime przekazuje go do kolekcji kryształów przed zaakceptowaniem osadzenia. Branch/tier/socket validation oraz transient state kryształu i Naczynia pozostają własnością domeny. `CAN_ACTIVATE_RELIQUARY` i `CAN_RELEASE_RELIQUARY` są osobnymi capabilities: domena nadal dopuszcza Activate tylko dla kryształu w stanie `inserted`, a Release tylko w stanie `active`. Te fazy nie są osobnymi story points.
-
-Po zaakceptowaniu `FIRST_RING_COMPLETED` Runtime wykonuje `COMPLETE_FIRST_RING_PRESENTATION` przez `progressFloor.completeTier(1)` oraz `PLAY_FIRST_RING_COMPLETE_FEEDBACK` przez istniejący feedback audio. `syncTierOneWorldState()` i `syncAmbientSequence()` nadal są wywoływane przez kompozycję Runtime i nie zostały przeniesione do Scenario.
-
-### `2.40` — canonical completion i wejście w post-ring
-
-`2.40` oznacza ukończony pierwszy ring `5/5`. Po zakończeniu prezentacji ringu event `FIRST_RING_PRESENTATION_COMPLETED` prowadzi do `3.10` i publikuje dwa rozłączne polecenia prezentacyjne: `REVEAL_SHELL_FIELD_PRESENTATION` oraz `ELEVATE_MAIN_GLYPHS`. Sam reveal pola nie nadaje jeszcze capability interakcji z Muszlami.
-
-### `3.10–3.40` — przejście do Pieca
-
-- `3.10` posiada post-ring world presentation: reveal pola Muszli oraz elevację głównych glyphów;
-- po zakończeniu prezentacji/czasu `POST_RING_WORLD_PRESENTATION_COMPLETED` rozpoczyna `3.20`;
-- `3.20` jest około dziesięciosekundowym observation window;
-- timeout `OBSERVATION_WINDOW_COMPLETED` rozpoczyna Monkey attention w `3.30`;
-- attention/„checheszki” tylko oznaczają dostępność rozmowy; Director bezterminowo pozostaje w `3.30` podczas oczekiwania i dialogu;
-- dopiero one-shot `POST_RING_MONKEY_DIALOGUE_COMPLETED`, wysłany po domknięciu trzeciej obowiązkowej kwestii, rozpoczyna `3.40`.
-
-`3.40` celowo nie ma jeszcze następcy. Kolejne punkty procesu Pieca, `ASTRO PRODUCED`, fizyczne `ASTRO CLAIMED` oraz dopiero późniejsze `ENABLE_SHELL_INTERACTION` wymagają osobnego authoringu. Do tego czasu punkty `3.10–3.40` nie przyznają `CAN_SCAN_SHELLS`, `CAN_TARGET_SHELLS` ani furnace capabilities.
-
-## 6. Reconstruction contract
-
-Reconstruction jest pure i używa exclusive boundary:
-
-```text
-stateAt(X) = fold(settledConsequences punktów Spine stojących ściśle przed X)
-```
-
-Spine dostarcza porządek, a Scenario konsekwencje. Target `X` jest teraźniejszością; jego efekty oraz punkty późniejsze nie wchodzą do wyniku. Reconstruction nie odtwarza live/transient state, nie replayuje dramaturgii i nie przejmuje prawdy domain owners.
-
-Pole `settledConsequences` jest wdrożonym mechanizmem docelowym, ale obecne definicje mają puste konsekwencje. Nie należy z tego wywodzić, że hydration świata lub przywracanie stanu ownerów już działa.
-
-## 7. NOT IMPLEMENTED
-
-- arbitrary Director start;
-- hydration i owner restore APIs;
-- reconstruction-backed checkpointy lub QA aliases;
-- save/durable persistence i pełny reset zapisanej gry;
-- dalsza authored shell progression / Asterion loop po `3.80`;
-- późniejsze akty, ringi i finał.
-
-Istniejące compatibility aliases nazw punktów nie są checkpointami ani alternatywnym modelem progresji.
-
-## 8. IMPLEMENTED — canonical Astro physical claim (`3.40–3.80`)
-
-Canonical Spine extends through `3.40 → 3.50 → 3.60 → 3.70 → 3.80`. The Furnace-intro actor reveals the Furnace before presenting exactly `Spójrz na Piec.` and `Tam coś na ciebie czeka.` Point `3.50` waits for the conscious production action, `3.60` owns construction, `3.70` waits with the physical tool available in the chamber, and `3.80` means physically claimed / EARNED. Only durable fact `ASTRO_ATTRACTOR_CLAIMED` grants `CAN_EQUIP_ASTRO`, `CAN_SCAN_SHELLS` and `CAN_TARGET_SHELLS` at `3.80`.
-
-Canonical rule: the Furnace does not give the item; it creates it and the player must claim it. Further shell progression / Asterion loop is the STOP BOUNDARY and remains the next authored stage.
+`stateAt(X) = fold(settledConsequences punktów ściśle przed X)`. Mechanizm nie odtwarza live/transient state. Nadal deferred: arbitrary Director start, hydration/owner restore, reconstruction-backed checkpoints i QA aliases, durable persistence/save oraz pełny reset zapisanej gry.

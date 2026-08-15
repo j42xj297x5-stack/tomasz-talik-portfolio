@@ -12,3 +12,4 @@ This folder contains project documentation for the Interactive AI Portfolio.
 - Active hub: [`current/README.md`](current/README.md)
 - Navigation index: [`current/maps/PROJECT_INDEX.md`](current/maps/PROJECT_INDEX.md)
 - Current Experience VR handoff: [`current/handoffs/EXPERIENCE_VR_HANDOFF.md`](current/handoffs/EXPERIENCE_VR_HANDOFF.md)
+- Canonical collaboration protocol: [`current/operations/COLLABORATION_PROTOCOL.md`](current/operations/COLLABORATION_PROTOCOL.md)
