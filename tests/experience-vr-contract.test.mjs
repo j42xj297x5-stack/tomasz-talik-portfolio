@@ -9,7 +9,7 @@ import { VR_EXPERIENCE_POINT, vrExperienceScenario } from '../src/xr/progression
 
 const canonicalLivePointIds = [
   '1.10', '1.20', '1.30', '1.40', '1.50', '1.60', '1.70', '1.80',
-  '1.100', '1.100.1', '1.110', '1.110.1', '1.120', '1.120.1', '1.130', '1.130.1', '1.130.2', '2.10', '2.10.1', '2.20', '2.30', '2.30.1', '2.40', '2.40.1', '100.10'
+  '1.100', '1.110', '1.120', '1.130', '1.130.1', '1.130.2', '2.10', '2.10.1', '2.20', '2.30', '2.30.1', '2.40', '2.40.1', '100.10'
 ];
 const retiredPointIds = [
   '1.1', '1.2', '1.3', '1.4', '1.4.1', '1.4.2', '1.4.3', '1.4.4',
@@ -21,10 +21,7 @@ assert.deepEqual(Object.values(VR_EXPERIENCE_POINT), canonicalLivePointIds);
 assert.equal('1.90' in VR_EXPERIENCE_POINT, false, 'reserved crystal tutorial is not LIVE');
 for (const retiredId of retiredPointIds) assert.equal(retiredId in VR_EXPERIENCE_POINT, false);
 assert.equal(canonicalLivePointIds.some((id) => id.startsWith('3.')), false, 'Act 3 is not LIVE');
-assert.equal(VR_EXPERIENCE_POINT['1.100.1'], '1.100.1', 'WHERE remains a local invitation branch');
-assert.equal(VR_EXPERIENCE_POINT['1.120.1'], '1.120.1', 'BEYOND remains a local threshold branch');
 assert.equal(VR_EXPERIENCE_POINT['1.110'], '1.110', 'FOLLOWING is a flat mainline point');
-assert.equal(VR_EXPERIENCE_POINT['1.110.1'], '1.110.1', 'paused FOLLOWING is a local branch');
 assert.equal(VR_EXPERIENCE_POINT['1.130'], '1.130', 'CROSSING is a flat mainline point');
 assert.equal(VR_EXPERIENCE_POINT['2.10.1'], '2.10.1', 'glyph timeout is a local Act 2 branch');
 assert.equal(VR_EXPERIENCE_POINT['2.30.1'], '2.30.1', 'Activate hint is a local Act 2 branch');
