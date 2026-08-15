@@ -1,6 +1,6 @@
 # Experience VR — Current Handoff
 
-Status: **CURRENT** po zakończeniu migracji M2.2. To podsumowanie bieżącej granicy implementacji, nie kronika migracji.
+Status: **CURRENT**. To podsumowanie bieżącej granicy implementacji, nie kronika migracji.
 
 ## Aktualny model
 
@@ -20,10 +20,12 @@ SPINE → SCENARIO → DIRECTOR → RUNTIME / ACTORS / DOMAIN OWNERS
 Canonical Spine prowadzi od `1.10` przez Intro do `1.130`, następnie przez `2.10`, `2.20`, `2.30` do `2.40`. WHERE, BEYOND, FOLLOW pause i hinty są lokalnymi `STAY`, nie technical points.
 
 - `1.130` jest całym crossingiem. Intro actor posiada `playerEnteredRing` i `monkeySettled`; ukończenie następuje dopiero przy `crossingComplete`.
+- `FIRST_CRYSTAL_DISCOVERED` kończy `2.10` i uruchamia discovery/attention w `2.20`; nie rozpoczyna fizycznego revealu. Aktywacja Małpy emituje `MONKEY_TRIGGERED`, którego `STAY` emituje `BEGIN_RELIQUARY_REVEAL`. Runtime wykonuje fizyczny reveal, a `RELIQUARY_REVEAL_COMPLETED` kończy `2.20 → 2.30`.
 - `2.30` jest całym loopem pięciu kart. Hint, aktywacja kryształu i commit pojedynczej karty pozostają lokalne.
-- `createVrProgressionController` wyłącznie rozstrzyga ukończenie tieru. Przy pierwszym trwałym `5/5` Runtime wysyła `FIRST_RING_COMPLETED`, a Director kończy `2.30` i przechodzi przez Spine do `2.40`.
+- `CAN_USE_RELIQUARY` jest aktywnym, globalnym Scenario-owned gate dla insertion w `2.30`. Branch/tier/socket validation i transient state pozostają domenowe. `CAN_ACTIVATE_RELIQUARY` oraz `CAN_RELEASE_RELIQUARY` są osobnymi capabilities; domena nadal wymusza Activate tylko w `inserted` i Release tylko w `active`.
+- `createVrProgressionController` wyłącznie rozstrzyga ukończenie tieru. Przy pierwszym trwałym `5/5` Runtime wysyła `FIRST_RING_COMPLETED`; Director kończy `2.30`, emituje `COMPLETE_FIRST_RING_PRESENTATION` i `PLAY_FIRST_RING_COMPLETE_FEEDBACK`, po czym przechodzi przez Spine do `2.40`. Runtime wykonuje odpowiednio `progressFloor.completeTier(1)` i istniejący feedback audio.
 - `2.40` jest canonical stanem ukończenia pierwszego ringu `5/5` i końcem wdrożonego Scenario. Nie wraca do `2.30`.
-- Capabilities Naczynia są dostępne dla loopa `2.30`, ale domain interaction state wymusza Activate tylko w `inserted` i Release tylko w `active`.
+- `syncTierOneWorldState()` i `syncAmbientSequence()` pozostają w kompozycji Runtime; nie zostały przeniesione do Scenario.
 - `100.10` pozostaje terminalnym EARLY EXIT poza Spine.
 
 Nie ma LIVE technical points `1.100.1`, `1.110.1`, `1.120.1`, `1.130.1`, `1.130.2`, `2.10.1`, `2.30.1` ani `2.40.1`.
