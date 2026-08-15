@@ -9,9 +9,7 @@ import {
 } from '../src/xr/progression/reconstructVrScenarioState.js';
 import { getNextScenarioSpinePointId } from '../src/xr/progression/scenarioSpineNavigation.js';
 
-const localBranches = [
-  '2.10.1', '2.30.1', '2.40.1'
-];
+const removedHintPointIds = ['2.10.1', '2.30.1', '2.40.1'];
 
 assert.equal(Object.isFrozen(VR_EXPERIENCE_SCENARIO_SPINE), true);
 assert.equal(vrExperienceScenario.spine, VR_EXPERIENCE_SCENARIO_SPINE);
@@ -22,7 +20,8 @@ assert.deepEqual(VR_EXPERIENCE_SCENARIO_SPINE, [
 assert.equal(validateScenarioSpine(vrExperienceScenario), true);
 const pointIds = new Set(vrExperienceScenario.points.map(({ id }) => id));
 assert.equal(VR_EXPERIENCE_SCENARIO_SPINE.every((id) => pointIds.has(id)), true);
-assert.equal(localBranches.some((id) => VR_EXPERIENCE_SCENARIO_SPINE.includes(id)), false);
+assert.equal(removedHintPointIds.some((id) => pointIds.has(id)), false,
+  'hint transient state is not represented by Scenario points');
 assert.equal(vrExperienceScenario.points
   .filter(({ id }) => VR_EXPERIENCE_SCENARIO_SPINE.includes(id))
   .every(({ settledConsequences }) => Object.isFrozen(settledConsequences)), true);

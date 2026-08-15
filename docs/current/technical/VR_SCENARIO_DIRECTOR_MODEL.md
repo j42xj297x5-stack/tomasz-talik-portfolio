@@ -40,18 +40,18 @@ Wszystkie OLD IDs w tabeli są trwale **SUPERSEDED / RETIRED** i nigdy nie mogą
 | OLD (SUPERSEDED / RETIRED) | NEW (CANONICAL) |
 | --- | --- |
 | `1.140` | `2.10` |
-| `1.150` | `2.10.1` |
+| `1.150` | removed; hint is local `STAY` in `2.10` |
 | `1.160` | `2.20` |
 | `1.170` | `2.30` |
-| `1.170.1` | `2.30.1` |
+| `1.170.1` | removed; hint is local `STAY` in `2.30` |
 | `1.180` | `2.40` |
-| `1.180.1` | `2.40.1` |
+| `1.180.1` | removed; hint is local `STAY` in `2.40` |
 
 Wszystkie OLD IDs w tej tabeli są trwale **SUPERSEDED / RETIRED**, nie są aliasami Runtime i nigdy nie mogą otrzymać nowego znaczenia. Korekta zmienia wyłącznie adresy i jawne `transition.target`; milestones, effects, capabilities, payload, ownership oraz gameplay pozostają bez zmian.
 
 ## 1.3. Stan LIVE po M1.20R / M1.20F / M1.20M — CURRENT
 
-Aktualny produkcyjny graf obejmuje cztery przestrzenie adresowe: `1.x` = Intro / Prolog, `2.x` = pierwsza pętla pięciu kryształów, `3.x` = etap po pełnym `5/5` (**PLANNED / NOT IMPLEMENTED**) oraz `100.x` = exit. LIVE punkty pierwszej pętli to dokładnie `2.10`, `2.10.1`, `2.20`, `2.30`, `2.30.1`, `2.40`, `2.40.1`. Stare `1.140`–`1.180.1` są trwale **RETIRED / SUPERSEDED** zgodnie z mapowaniem M1.20R i nie są aliasami.
+Aktualny produkcyjny graf obejmuje cztery przestrzenie adresowe: `1.x` = Intro / Prolog, `2.x` = pierwsza pętla pięciu kryształów, `3.x` = etap po pełnym `5/5` (**PLANNED / NOT IMPLEMENTED**) oraz `100.x` = exit. LIVE punkty pierwszej pętli to dokładnie `2.10`, `2.20`, `2.30` i `2.40`. Stare `1.140`–`1.180.1` są trwale **RETIRED / SUPERSEDED** zgodnie z mapowaniem M1.20R i nie są aliasami.
 
 M1.20R (canonical Act address correction), M1.20F (floor sector reveal), M1.20M (Monkey attention correction) oraz późniejsza korekta wyłącznego ownershipu `sector.visible` przez `VrProgressFloor` są **IMPLEMENTED**. Nie kończy to całej migracji Scenario/Director: `3.x` i dalsze etapy nie są LIVE, a wcześniejsze audit blockers pozostają do obsłużenia.
 
@@ -158,13 +158,9 @@ Pierwszy z faktów pozostawia przebieg w `1.130`, ponieważ warunek `false` rozw
 
 ## 1.7. CURRENT technical points
 
-Jedynymi celowo zachowanymi LIVE technical points są:
+Hint-only technical points zostały usunięte. `GLYPH_HINT_TIMEOUT` jest lokalną reakcją `STAY + SHOW_GLYPH_HINT` w `2.10`, a `RELIQUARY_HINT_TIMEOUT` reakcją `STAY + SHOW_RELIQUARY_CONTEXT_HINT` w `2.30` i `2.40`. Intro zachowuje transient state glyph hintu, a `createVrReliquaryHints` zachowuje `fired` / `shown` / `phase`; Scenario i Director nie przechowują tej pamięci.
 
-- `2.10.1`;
-- `2.30.1`;
-- `2.40.1`.
-
-Migracja hintów, condition point `5/5`, arbitrary Director start, hydration oraz reconstruction-backed QA aliases pozostają **FUTURE / NOT IMPLEMENTED**. Nie należy przedstawiać `5/5` jako CURRENT.
+Condition point `5/5`, arbitrary Director start, hydration oraz reconstruction-backed QA aliases pozostają **FUTURE / NOT IMPLEMENTED**. Nie należy przedstawiać `5/5` jako CURRENT.
 
 ## 2. Metafora teatralna i podział odpowiedzialności
 
@@ -342,12 +338,9 @@ Poniższy krótki szkielet pokazuje wyłącznie **TARGET indeksowania**, a nie z
 1.120.1  BEYOND / local branch
 1.130  Crossing
 2.10   Wejście do kręgu / start Progu I
-2.10.1 Local branch pierwszej pętli
 2.20   Pierwszy crystal-flow beat
 2.30   Dalszy beat pierwszej pętli
-2.30.1 Local branch punktu 2.30
 2.40   Końcowy beat obecnego LIVE slice
-2.40.1 Local branch punktu 2.40
 → 3.x  Etap po pełnym 5/5 — PLANNED / NOT IMPLEMENTED
 ```
 
@@ -668,7 +661,7 @@ M1.12 THRESHOLD CHOICE BRANCH — HARDWARE PASS, Meta Quest 3S.
 M1.13 FOLLOW PAUSE-RESUME HANDOFF — HARDWARE PASS, Meta Quest 3S.
 SG-036 i SG-041 są MIGRATED; SG-042 jest RETAINED.
 Canonical Story Reindex jest IMPLEMENTED / behavior-neutral; regression PASS, Meta Quest 3S.
-LIVE graf obejmuje Intro `1.x`, pierwszą pętlę `2.x` (`2.10`, `2.10.1`, `2.20`, `2.30`, `2.30.1`, `2.40`, `2.40.1`) oraz EXIT `100.x`.
+LIVE graf obejmuje Intro `1.x`, pierwszą pętlę `2.x` (`2.10`, `2.20`, `2.30`, `2.40`) oraz EXIT `100.x`.
 M1.20R, M1.20F, M1.20M, S1 i M2.1 oraz późniejsza korekta ownershipu `sector.visible` są IMPLEMENTED.
 Stare `1.140`–`1.180.1` są RETIRED / SUPERSEDED.
 Director operuje na currentPointId; normalny mainline pobiera z authored Spine, a explicit targets obsługują tylko trasy non-mainline.
@@ -760,7 +753,7 @@ Punktowa weryfikacja audytu zamyka **SG-041 = MIGRATED**: po M1.11 arrival oraz 
 
 ## CURRENT architectural boundary after M1.20 corrections
 
-Sekcja poniżej jest historycznym snapshotem granicy M1.13 i nie opisuje już bieżącego końca LIVE grafu. Po M1.20R pierwsza pętla jest LIVE pod adresami `2.10`, `2.10.1`, `2.20`, `2.30`, `2.30.1`, `2.40`, `2.40.1`; M1.20F i korekta ownershipu widoczności podłogi oraz M1.20M są wdrożone. Migracja nadal pozostaje **IN PROGRESS**: żaden `3.x` nie jest LIVE, S1 Spine/reconstruction i M2.1 Director `Spine.next()` istnieją, a wcześniejsze audit blockers nie zostały zbiorczo zamknięte.
+Sekcja poniżej jest historycznym snapshotem granicy M1.13 i nie opisuje już bieżącego końca LIVE grafu. Po M2.2C2 pierwsza pętla jest LIVE pod adresami `2.10`, `2.20`, `2.30`, `2.40`; hint timeouty są lokalnymi reakcjami `STAY` w tych canonical points; M1.20F i korekta ownershipu widoczności podłogi oraz M1.20M są wdrożone. Migracja nadal pozostaje **IN PROGRESS**: żaden `3.x` nie jest LIVE, S1 Spine/reconstruction i M2.1 Director `Spine.next()` istnieją, a wcześniejsze audit blockers nie zostały zbiorczo zamknięte.
 
 ## Historical boundary after M1.13 (superseded by current boundary above)
 

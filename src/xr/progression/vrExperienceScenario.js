@@ -137,12 +137,9 @@ export const VR_EXPERIENCE_POINT = immutableIdentifiers([
   '1.120',
   '1.130',
   '2.10',
-  '2.10.1',
   '2.20',
   '2.30',
-  '2.30.1',
   '2.40',
-  '2.40.1',
   '100.10'
 ]);
 
@@ -333,16 +330,8 @@ const points = Object.freeze([
     label: 'GLYPH_FREE_EXPLORE rozpoczęte',
     capabilities: Object.freeze([VR_SCENARIO_CAPABILITY.CAN_USE_GLYPHS]),
     transitions: Object.freeze([
-      Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.EXPLICIT, event: VR_SCENARIO_EVENT.GLYPH_HINT_TIMEOUT, target: VR_EXPERIENCE_POINT['2.10.1'], milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.SHOW_GLYPH_HINT]) }),
+      Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.STAY, event: VR_SCENARIO_EVENT.GLYPH_HINT_TIMEOUT, milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.SHOW_GLYPH_HINT]) }),
       Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.COMPLETE, event: VR_SCENARIO_EVENT.FIRST_CRYSTAL_DISCOVERED, milestonesToAdd: Object.freeze([VR_SCENARIO_MILESTONE.FIRST_CRYSTAL_DISCOVERED]), effects: Object.freeze([VR_SCENARIO_EFFECT.REVEAL_RELIQUARY]) })
-    ])
-  }),
-  Object.freeze({
-    id: VR_EXPERIENCE_POINT['2.10.1'],
-    label: 'GLYPH_FREE_EXPLORE po pokazaniu timeout hintu',
-    capabilities: Object.freeze([VR_SCENARIO_CAPABILITY.CAN_USE_GLYPHS]),
-    transitions: Object.freeze([
-      Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.EXPLICIT, event: VR_SCENARIO_EVENT.FIRST_CRYSTAL_DISCOVERED, target: VR_EXPERIENCE_POINT['2.20'], milestonesToAdd: Object.freeze([VR_SCENARIO_MILESTONE.FIRST_CRYSTAL_DISCOVERED]), effects: Object.freeze([VR_SCENARIO_EFFECT.REVEAL_RELIQUARY]) })
     ])
   }),
   Object.freeze({
@@ -364,20 +353,8 @@ const points = Object.freeze([
       VR_SCENARIO_CAPABILITY.CAN_ACTIVATE_RELIQUARY
     ]),
     transitions: Object.freeze([
-      Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.EXPLICIT, event: VR_SCENARIO_EVENT.RELIQUARY_HINT_TIMEOUT, target: VR_EXPERIENCE_POINT['2.30.1'], milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.SHOW_RELIQUARY_CONTEXT_HINT]) }),
+      Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.STAY, event: VR_SCENARIO_EVENT.RELIQUARY_HINT_TIMEOUT, milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.SHOW_RELIQUARY_CONTEXT_HINT]) }),
       Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.COMPLETE, event: VR_SCENARIO_EVENT.CRYSTAL_ACTIVATED, milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.PRESENT_ACTIVE_CARD_PREVIEW]) })
-    ])
-  }),
-  Object.freeze({
-    id: VR_EXPERIENCE_POINT['2.30.1'],
-    label: 'Oczekiwanie na Activate po contextual hincie',
-    capabilities: Object.freeze([
-      VR_SCENARIO_CAPABILITY.CAN_USE_GLYPHS,
-      VR_SCENARIO_CAPABILITY.CAN_USE_RELIQUARY,
-      VR_SCENARIO_CAPABILITY.CAN_ACTIVATE_RELIQUARY
-    ]),
-    transitions: Object.freeze([
-      Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.EXPLICIT, event: VR_SCENARIO_EVENT.CRYSTAL_ACTIVATED, target: VR_EXPERIENCE_POINT['2.40'], milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.PRESENT_ACTIVE_CARD_PREVIEW]) })
     ])
   }),
   Object.freeze({
@@ -390,22 +367,7 @@ const points = Object.freeze([
       VR_SCENARIO_CAPABILITY.CAN_RELEASE_RELIQUARY
     ]),
     transitions: Object.freeze([
-      Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.EXPLICIT, event: VR_SCENARIO_EVENT.RELIQUARY_HINT_TIMEOUT, target: VR_EXPERIENCE_POINT['2.40.1'], milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.SHOW_RELIQUARY_CONTEXT_HINT]) }),
-      Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.EXPLICIT, event: VR_SCENARIO_EVENT.CARD_COMMITTED, target: VR_EXPERIENCE_POINT['2.30'], milestonesToAdd: Object.freeze([VR_SCENARIO_MILESTONE.CARD_COMMITTED]), effects: Object.freeze([
-        VR_SCENARIO_EFFECT.UPDATE_COMMITTED_CARD_PRESENTATION,
-        VR_SCENARIO_EFFECT.PLAY_CARD_COMMIT_FEEDBACK
-      ]) })
-    ])
-  }),
-  Object.freeze({
-    id: VR_EXPERIENCE_POINT['2.40.1'],
-    label: 'Oczekiwanie na Release po contextual hincie',
-    capabilities: Object.freeze([
-      VR_SCENARIO_CAPABILITY.CAN_USE_GLYPHS,
-      VR_SCENARIO_CAPABILITY.CAN_USE_RELIQUARY,
-      VR_SCENARIO_CAPABILITY.CAN_RELEASE_RELIQUARY
-    ]),
-    transitions: Object.freeze([
+      Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.STAY, event: VR_SCENARIO_EVENT.RELIQUARY_HINT_TIMEOUT, milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.SHOW_RELIQUARY_CONTEXT_HINT]) }),
       Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.EXPLICIT, event: VR_SCENARIO_EVENT.CARD_COMMITTED, target: VR_EXPERIENCE_POINT['2.30'], milestonesToAdd: Object.freeze([VR_SCENARIO_MILESTONE.CARD_COMMITTED]), effects: Object.freeze([
         VR_SCENARIO_EFFECT.UPDATE_COMMITTED_CARD_PRESENTATION,
         VR_SCENARIO_EFFECT.PLAY_CARD_COMMIT_FEEDBACK
@@ -435,7 +397,7 @@ export const vrExperienceScenario = Object.freeze({
     effects: Object.freeze(Object.values(VR_SCENARIO_EFFECT))
   }),
   metadata: Object.freeze({
-    stage: 'M2_2C_CANONICAL_CROSSING_JOIN',
+    stage: 'M2_2C2_CANONICAL_HINT_STAY',
     authoritativeForLiveGameplay: true,
     // Routing topology lives only in points/transitions and the authored Spine.
   })

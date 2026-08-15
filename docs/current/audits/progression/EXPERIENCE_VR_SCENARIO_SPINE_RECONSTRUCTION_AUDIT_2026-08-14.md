@@ -20,7 +20,7 @@ query alias (opcjonalny)
   → normalny RuntimeExperience wykonujący wyłącznie przyszłe transition effects
 ```
 
-Authored Spine powinien powstać obok `points` w `src/xr/progression/vrExperienceScenario.js` jako jawna, immutable lista dwusegmentowych mainline point IDs. Nie wolno go wyliczać przez sortowanie IDs ani włączać do niego `1.100.1`, `1.110.1`, `1.120.1`, `1.130.1`, `1.130.2`, `2.10.1`, `2.30.1` lub `2.40.1`. Minimalny brak danych to **settled/persistent consequences przypisane do ukończenia mainline pointu**; dzisiejsze `effects`, `milestones` i `capabilities` nie kodują materializowalnych faktów domenowych.
+Authored Spine powinien powstać obok `points` w `src/xr/progression/vrExperienceScenario.js` jako jawna, immutable lista dwusegmentowych mainline point IDs. Nie wolno go wyliczać przez sortowanie IDs ani włączać do niego `1.100.1`, `1.110.1`, `1.120.1`, `1.130.1`, `1.130.2` ani historycznych hint-only technical points. Minimalny brak danych to **settled/persistent consequences przypisane do ukończenia mainline pointu**; dzisiejsze `effects`, `milestones` i `capabilities` nie kodują materializowalnych faktów domenowych.
 
 `stateAt(X)` obejmuje konsekwencje punktów stojących **ściśle przed X** na Spine. Tym samym skutek przejścia kończącego poprzedni point i prowadzącego do `X` jest już settled przy wejściu w `X`; konsekwencje ukończenia samego `X` jeszcze nie są. Rekonstruktor ma być czysty i deterministyczny, a hydrator ma wykonywać wynik bez gameplay events, dialogów, timerów, audio, animacji i stanów pośrednich.
 
