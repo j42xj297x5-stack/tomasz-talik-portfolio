@@ -1,6 +1,6 @@
 # Experience VR — Current Handoff
 
-Status: current delivery handoff synchronized after S1, M2.1, M2.2A, M2.2B, M1.20R, M1.20F, M1.20M and the later floor-visibility ownership correction. It intentionally does not duplicate runtime, audio or narrative contracts.
+Status: current delivery handoff synchronized after S1, M2.1, M2.2A, M2.2B, M2.2C, M1.20R, M1.20F, M1.20M and the later floor-visibility ownership correction. It intentionally does not duplicate runtime, audio or narrative contracts.
 
 ## Current stage
 
@@ -8,11 +8,12 @@ M1 remains **IN PROGRESS**. M1.20R **Canonical Act Address Correction**, M1.20F 
 
 ## CURRENT STATE — read this first
 
-- M2.2A is **IMPLEMENTED**: every LIVE transition authors `kind: STAY | COMPLETE | EXPLICIT`. `STAY` retains the point, `COMPLETE` obtains the authored successor from Spine, and `EXPLICIT` requires a concrete local/exit/join/loop target. Director publishes `transitionKind`; Runtime only forwards the accepted change and executes effects. Missing/unknown kinds and invalid kind/target combinations fail Scenario validation.
+- M2.2A is **IMPLEMENTED**: ordinary LIVE transitions author `kind: STAY | COMPLETE | EXPLICIT`. `STAY` retains the point, `COMPLETE` obtains the authored successor from Spine, and `EXPLICIT` requires a concrete local/exit/loop target. M2.2C adds the deliberately narrow `COMPLETE_IF` join described below. Director publishes the resolved `transitionKind`; Runtime only forwards the accepted change and executes effects. Missing/unknown kinds and invalid kind/target combinations fail Scenario validation.
 - Spine owns the normal start. Compatibility `initialPointId` / `initialSceneId` values derive from `spine[0]`; `metadata.authoritativeScope` was removed rather than retaining a textual topology copy.
 - M2.2B is **IMPLEMENTED**: WHERE, FOLLOW pause/resume and BEYOND are targetless `STAY` reactions in canonical points `1.100`, `1.110` and `1.120`. Their former three technical point IDs are removed from the LIVE identifier set and Scenario without aliases. GO/CROSS remain targetless `COMPLETE`; both EARLY EXIT choices remain `EXPLICIT → 100.10`.
 - Runtime still delegates `CONTINUE_INTRO_INVITATION`, `APPLY_FOLLOW_PAUSE_STATE` and `CONTINUE_THRESHOLD_CHOICE` to the Intro actor. The actor remains owner of dialogue queues, choice UI, phase/timers, Monkey movement and transient `walkingPaused`; no new milestone or Director state was introduced.
-- The deliberately retained technical points are `1.130.1`, `1.130.2`, `2.10.1`, `2.30.1`, and `2.40.1`. Hint-point migration, crossing-condition merge, `5/5` condition point, arbitrary start, hydration, and reconstruction-backed QA aliases are **NOT IMPLEMENTED**.
+- M2.2C is **IMPLEMENTED**: `1.130` is the sole crossing story point. Intro remains the sole owner of transient `playerEnteredRing` / `monkeySettled` state and reports an explicit `crossingComplete` condition with either crossing event. `COMPLETE_IF` resolves to local `STAY` for the first fact and Spine-driven `COMPLETE` for the second, when both facts are true; only completion emits `BEGIN_GLYPH_FREE_EXPLORE`. Technical points `1.130.1` and `1.130.2` and their persistent crossing milestones are removed.
+- The deliberately retained technical points are `2.10.1`, `2.30.1`, and `2.40.1`. Hint-point migration, the `5/5` condition point, arbitrary start, hydration, and reconstruction-backed QA aliases are **NOT IMPLEMENTED**.
 
 - LIVE address spaces are `1.x` Intro / Prolog, `2.x` the first five-crystal loop, and `100.x` exit. Act `3.x` is the post-`5/5` stage and is **PLANNED / NOT IMPLEMENTED**.
 - LIVE first-loop points are `2.10`, `2.10.1`, `2.20`, `2.30`, `2.30.1`, `2.40`, `2.40.1`. Old `1.140`–`1.180.1` addresses are **RETIRED / SUPERSEDED**, never runtime aliases.
