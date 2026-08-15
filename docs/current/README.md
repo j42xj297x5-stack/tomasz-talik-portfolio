@@ -26,4 +26,5 @@
 - [`handoffs/EXPERIENCE_VR_HANDOFF.md`](handoffs/EXPERIENCE_VR_HANDOFF.md)
 - [`concept/EXPERIENCE_VR_GAMEPLAY_ROADMAP.md`](concept/EXPERIENCE_VR_GAMEPLAY_ROADMAP.md) — future direction with explicit implemented/planned status.
 - [`operations/DOCUMENTATION_WORKFLOW.md`](operations/DOCUMENTATION_WORKFLOW.md)
+- [`operations/COLLABORATION_PROTOCOL.md`](operations/COLLABORATION_PROTOCOL.md) — normatywne zasady dowodów, regresji i hardware validation.
 - [`decisions/DECISION_LOG.md`](decisions/DECISION_LOG.md)

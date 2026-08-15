@@ -1,6 +1,6 @@
 # Project Documentation Index
 
-Status: canonical architect entrypoint. Read [`PROJECT_ENTRY.md`](../../../PROJECT_ENTRY.md) first.
+Status: canonical architect entrypoint. Repozytoryjny entrypoint dokumentacji to [`README.md`](../../../README.md), który prowadzi przez [`docs/README.md`](../../README.md) do tego indeksu.
 
 ## Current runtime baseline
 
@@ -12,7 +12,8 @@ The entry shell exposes three modes: Classic 2D, Experience 3D, and capability-g
 | --- | --- | --- |
 | Experience VR audio | [`technical/VR_AUDIO_MODEL.md`](../technical/VR_AUDIO_MODEL.md), then [`technical/VR_RUNTIME_MODEL.md`](../technical/VR_RUNTIME_MODEL.md) | `src/xr/audio/createVrAudioBridge.js`; consult `src/audio/audioManager.js` only for the shared owner/Master Volume boundary |
 | Experience VR current implementation | [`technical/VR_RUNTIME_MODEL.md`](../technical/VR_RUNTIME_MODEL.md), then [`handoffs/EXPERIENCE_VR_HANDOFF.md`](../handoffs/EXPERIENCE_VR_HANDOFF.md) | `src/experienceVr.js`, `src/config/experienceVrSettings.js`, relevant `src/xr/*` modules |
-| Experience VR Scenario, Director, Scenario Spine or reconstruction | [`technical/VR_SCENARIO_DIRECTOR_MODEL.md`](../technical/VR_SCENARIO_DIRECTOR_MODEL.md), then [`handoffs/EXPERIENCE_VR_HANDOFF.md`](../handoffs/EXPERIENCE_VR_HANDOFF.md) for the implementation boundary | Spine-driven mainline routing, the final transition contract and pure exclusive reconstruction are CURRENT; `2.40` is the implemented boundary, while hydration, arbitrary start and reconstruction-backed checkpoints remain NOT IMPLEMENTED |
+| Experience VR Scenario, Director, Scenario Spine or reconstruction | [`technical/VR_SCENARIO_DIRECTOR_MODEL.md`](../technical/VR_SCENARIO_DIRECTOR_MODEL.md), then [`handoffs/EXPERIENCE_VR_HANDOFF.md`](../handoffs/EXPERIENCE_VR_HANDOFF.md) | Authored implemented mainline ends at `3.80`; physical Astro claim is the capability boundary. Hydration, arbitrary start and reconstruction-backed checkpoints remain NOT IMPLEMENTED |
+| Collaboration, tests and validation claims | [`operations/COLLABORATION_PROTOCOL.md`](../operations/COLLABORATION_PROTOCOL.md) | Automated, production-path and hardware/perceptual evidence must remain distinct |
 | Experience VR Astro Furnace | [`technical/VR_RUNTIME_MODEL.md`](../technical/VR_RUNTIME_MODEL.md), then [`handoffs/EXPERIENCE_VR_HANDOFF.md`](../handoffs/EXPERIENCE_VR_HANDOFF.md) | `src/xr/furnace/*`, `src/experienceVr.js`, `src/config/experienceVrSettings.js`, `src/xr/shells/createVrShellSystem.js` |
 | Experience VR progress floor | [`technical/VR_PROGRESS_FLOOR_MODEL.md`](../technical/VR_PROGRESS_FLOOR_MODEL.md), then [`technical/VR_RUNTIME_MODEL.md`](../technical/VR_RUNTIME_MODEL.md) | `src/xr/floor/createVrProgressFloor.js`, `src/experienceVr.js`, `src/assets/assetManifest.js`, `tests/vr-progress-floor.test.mjs` |
 | Experience VR future gameplay | [`concept/EXPERIENCE_VR_GAMEPLAY_ROADMAP.md`](../concept/EXPERIENCE_VR_GAMEPLAY_ROADMAP.md), after the current VR model | Current runtime evidence only when planning a bounded implementation stage |

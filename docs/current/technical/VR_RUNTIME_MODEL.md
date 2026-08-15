@@ -63,9 +63,11 @@ The progress floor has five authored sectors, 18 panels and five optional proced
 
 ## Tier 1, Astro and shell field
 
+The authored bridge is `2.30 durable 5/5 → FIRST_RING_COMPLETED → 2.40`. `createVrFirstRingFlow` owns the local ring presentation/audio seam; only its real completion emits `FIRST_RING_PRESENTATION_COMPLETED` and enters `3.10`. The shell field is revealed as presentation in `3.10`, but remains non-interactive until physical Astro claim completes at `3.80`.
+
 The executable and authored mainline now extends through the physical-claim boundary `3.80`: Tier 1 completion does not unlock Astro or activate the shell field. `?p1` remains an explicit one-shot QA/showcase path that commits the five tier-1 pages, mirrors them to the floor, completes the first ring and restores access to the existing post-P1 runtime. In that QA world state the field contains **18 shells: six cached `shell-relic-*` assets cloned three times each**. Their deterministic orbits occupy radii `[R, 2R]`, where `R` is the effective glyph-ring radius.
 
-Semantic input maps standard-gamepad button `4` to edge-triggered `toggleRightTool` on the right hand and `toggleLeftTool` on the left hand, button `1` to analog `grabAction` (squeeze) and button `0` to analog `primaryAction` (trigger). Right A toggles `NORMAL_HAND ↔ ASTRO_ATTRACTOR` only with Scenario capability `CAN_EQUIP_ASTRO` or an explicit QA bypass; no current mainline point grants that capability. Left X toggles `NORMAL_HAND ↔ ASTERION_SPHERE` only after production `EARNED` or when the independent `?asterionSphere` QA availability override is present. `AVAILABLE` alone never enables X.
+Semantic input maps standard-gamepad button `4` to edge-triggered `toggleRightTool` on the right hand and `toggleLeftTool` on the left hand, button `1` to analog `grabAction` (squeeze) and button `0` to analog `primaryAction` (trigger). Right A toggles `NORMAL_HAND ↔ ASTRO_ATTRACTOR` only with Scenario capability `CAN_EQUIP_ASTRO` or an explicit QA bypass; mainline grants it only after completed physical claim at `3.80`. Left X toggles `NORMAL_HAND ↔ ASTERION_SPHERE` only after production `EARNED` or when the independent `?asterionSphere` QA availability override is present. `AVAILABLE` alone never enables X.
 
 ### Scan and targeting
 
@@ -147,6 +149,12 @@ The semantic levels remain separate: `(0,0,0)` is canonical motion-root/scene-ce
 
 The shipped GLBs verify each required name exactly once, finite TRS with nonzero scales, `MONKEY_ANCHOR → monkey`, and both stone children under `MONKEY_STONE_ROOT`. Monkey Guide ray targets and halo use the character-only interaction root, so the stone is not Monkey interaction geometry.
 
+## Astro production and Furnace
+
+The Furnace is physically revealed at `3.40`. At `3.50` Scenario activates the Astro card and the player deliberately chooses `Utwórz astro przyciągacz`; no automatic production occurs. Furnace mode `astro_attractor` is distinct from the existing Asterion mode. `ASTRO_ATTRACTOR_CONSTRUCTION` is distinct from `ASTERION_CONSTRUCTION`, although both use the shared Furnace process driver. The physical output is parented below `VR_FURNACE_CONTENT_ANCHOR` and remains in the chamber until claim.
+
+`createVrAstroAttractorProductionController` owns `READY → BUILDING → AVAILABLE → CLAIMING → EARNED`; `CLAIMING` is transient, not a Scenario point. Production representation is separate from the equipment lifecycle managed by `createVrAttractorTool`; the production clone is not a second gameplay Astro. `3.70` is only `AVAILABLE`. A valid claim requires an open chamber, right `NORMAL_HAND`, ordinary ray, real target hit and trigger/`selectstart`; only completion emits `ASTRO_ATTRACTOR_CLAIMED` and enters `3.80`/`EARNED`.
+
 ## Astro Furnace and Asterion material progression
 
 The Astro Furnace is a separate subsystem backed by `public/glb/astral_stove.glb`, preloaded through `AssetManager`, and created under `VrPlatformFixturesRoot` with an explicit canonical local position and rotation. Bounds affect only visual grounding and panel layout, never the fixture root position. Authored open/close animation remains unchanged: `pokrywa` and `pokrywa_gora` travel together through `PIVOT_FURNACE_LID_Z`. During a material cycle `PIVOT_FURNACE_PROCESS_SPIN` drives the chamber and a base-pose-relative runtime offset on `PIVOT_FURNACE_LID_PROCESS_SPIN` drives only the lower `pokrywa`; `pokrywa_gora` remains latched and receives no process offset.
@@ -194,9 +202,13 @@ settleAngularSpeedDegrees   = 0.15
 
 The controller uses braking distance to choose speed toward COMMAND, caps angular speed, supports smooth retargeting without zeroing velocity, and preserves motion after trigger release. LOCK requires both small angular error and small angular speed; only then does the final exact settle write CURRENT to COMMAND and zero velocity.
 
+## Production bootstrap contract
+
+After every asset preload, Runtime must compose before READY. `runtimeExperience` therefore has an early safe nullable binding: construction-time callbacks may execute before the final Runtime bind. `canUseAstroProduction` returns safe `false` before binding and the real Scenario/runtime gate afterwards. `vr-runtime-bootstrap` captured this production regression RED before the fix and GREEN afterwards. Wizjoner confirmed startup passes `41/41` and no longer stalls before READY: **HARDWARE VALIDATED — Meta Quest 3S** for this bootstrap fix only. Full `3.10–3.80` perceptual/hardware QA remains pending.
+
 ## Implemented boundary
 
-Implemented: runtime/session lifecycle, platform-relative hierarchy, player passenger root, platform fixtures under `VrTiltableFloorRoot`, platform-local locomotion with radial boundary, glyph/crystal/reliquary progression through the executable `2.40` boundary plus authored post-ring points through `3.40`, floor panels/rings, QA-only post-P1 shell activation, semantic Astro input, independent right Astro Attractor and left Asterion Sphere hand modes, analytic scan targeting, pull/cancel/return, explicit left-ray handoff when left is free, placement and ordinary-ray re-grab, player guide, Monkey attention/message/dialogue/choice/progress/history/card/unread channels, Astro Furnace asset/placement, open/activate/option/content interactions, Asterion panel, repeatable single-shell 18-second processing with process audio, six-type furnace progression, physical shell insertion/absorption, COMPLETE-gated commit, production Asterion `UTWÓRZ` / anchored materialization / AVAILABLE claim / EARNED gating, QA override, PREVIEW/COMMAND/CURRENT gyro contract and heavy angular platform drive, ambient sequencing and Asterion Sphere audio.
+Implemented: runtime/session lifecycle, Intro and glyph/crystal/Reliquary progression, first-ring bridge, authored post-ring and physical Astro-claim mainline through `3.80`, floor panels/rings, semantic input, independent hand modes, Astro production and existing shell/Furnace/Asterion domain mechanics, player/Monkey guidance, ambient sequencing and bounded VR audio. Existing shell/Furnace/Asterion mechanics beyond the Astro claim are not an authored continuation after `3.80`.
 
 Not implemented: authored narrative/quests/Monkey personality or stuck-player guidance, small glyph progression, B band selection/Astro bands, antenna, rune processing, final radar/finale, durable persistence, full-game reset, spatial audio and gameplay audio for target/process classes that do not yet exist.
 

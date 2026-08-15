@@ -8,6 +8,8 @@ This repository is being prepared for an interactive Three.js-based portfolio ce
 
 - Start here: [`docs/README.md`](docs/README.md)
 - Active source of truth: [`docs/current/README.md`](docs/current/README.md)
+- Architect index: [`docs/current/maps/PROJECT_INDEX.md`](docs/current/maps/PROJECT_INDEX.md)
+- Canonical collaboration protocol: [`docs/current/operations/COLLABORATION_PROTOCOL.md`](docs/current/operations/COLLABORATION_PROTOCOL.md)
 
 ## Runtime status
 

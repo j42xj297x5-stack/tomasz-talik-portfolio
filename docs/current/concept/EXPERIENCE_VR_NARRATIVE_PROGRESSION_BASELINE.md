@@ -1,107 +1,47 @@
 # Experience VR — Narrative & Progression Baseline
 
-Status: canonical entrypoint synchronized after the M1.20 progression and hardware-QA corrections for the next narrative and gameplay-progression design stage. Runtime detail remains in [`VR_RUNTIME_MODEL.md`](../technical/VR_RUNTIME_MODEL.md).
+Status: **CURRENT / canonical** dla doświadczenia, prowadzenia i copy. Techniczne ownerstwo: [`VR_SCENARIO_DIRECTOR_MODEL.md`](../technical/VR_SCENARIO_DIRECTOR_MODEL.md) i [`VR_RUNTIME_MODEL.md`](../technical/VR_RUNTIME_MODEL.md).
 
-## Cel dokumentu
+## Aktualna droga gracza
 
-Ten dokument opisuje **stan wejściowy** potwierdzony przez HEAD: co jest **IMPLEMENTED**, które istniejące elementy są **HARDWARE VALIDATED**, a co pozostaje **FUTURE / DO DECYZJI**. Nie jest gotową narracją i nie ustanawia dialogów, lore, questów ani osobowości Małpy.
-
-## Co gracz już potrafi
-
-1. Wejść do osobnego runtime’u WebXR, poruszać się po platformie, obracać widok i używać ograniczonych do `2.3 m` promieni dłoni.
-2. Utrzymywać promień na dużych glifach, tworzyć kryształy, przenosić je i aktywować/oddawać w relikwiarzu, aby odkrywać karty i domykać progi.
-3. Po ukończeniu Tier 1 wyposażyć prawą dłonią Astro Przyciągacz, skanować, przyciągać i przekazywać skorupy do wolnej dłoni, a odłożone skorupy ponownie chwytać zwykłym promieniem.
-4. Skonfigurować Astro Piec w tryb Kuli Asteriona, otwierać komorę, wkładać sześć unikalnych skorup i wykonywać osobne 18-sekundowe procesy.
-5. Po `6/6` uruchomić `UTWÓRZ`, odebrać gotową Kulę realnym trafieniem lewego promienia i squeeze, a następnie wyposażać ją przyciskiem X.
-6. Kulą ustawiać docelową orientację platformy; ciężki driver prowadzi platformę do zaakceptowanego celu. Kula i Astro Przyciągacz mogą być wyposażone równocześnie.
-7. Otworzyć panelem Y skróconą pomoc gracza oraz korzystać z istniejącego interfejsu Małpy do podglądu postępu i odkrytych kart.
-
-## Kanoniczny kierunek progresji po Tier 1
+Intro prowadzi przez kalibrację XR, reveal Małpy i świata, onboarding, zaproszenie, próg i fizyczne wejście do kręgu. Pierwszy crystal uruchamia uwagę Małpy; świadome kliknięcie rozpoczyna Reliquary reveal. `2.30` obejmuje pięć pierwszych kart. Pierwszy trwały `5/5` uruchamia prezentację ringu w `2.40`, a dopiero jej realne zakończenie prowadzi do post-ring.
 
 ```text
-5/5 pierwszego ringu
-→ pełna pierwsza podłoga
-→ nowy etap
-→ Piec
-→ Piec produkuje Astro
-→ gracz fizycznie odbiera Astro
-→ dopiero potem aktywują się skorupy
-→ sześć unikalnych skorup trafia do Pieca
-→ Piec buduje Kulę Asterionową
-→ gracz fizycznie odbiera Kulę
+3.10 visible but non-interactive shell field + elevated main glyphs
+→ 3.20 observation
+→ 3.30 player-opened Monkey dialogue
+→ 3.40 Furnace reveal
+→ 3.50 conscious Astro production request
+→ 3.60 construction
+→ 3.70 physical AVAILABLE, not EARNED
+→ 3.80 physical claim, EARNED and shell/tool capabilities
 ```
 
-To jest wiążący **TARGET**, ale pełny przebieg nie jest jeszcze zaimplementowany jako `3.x`. Stare zachowanie „Tier 1 → natychmiastowy automatyczny Astro unlock” nie jest kanonem docelowej progresji; istniejącej mechaniki nie należy opisywać jako zatwierdzonego przejścia narracyjnego. Fizyczne odbiory Astro i Kuli są obowiązkowymi gate’ami, a skorupy nie mogą aktywować się przed odbiorem Astro.
+Nie istnieje automatyczny Tier-1 unlock Astro. Skorupy stają się interaktywne dopiero po fizycznym claimie w `3.80`; ich pole jest to samo, które zostało pokazane w `3.10`.
 
-## Zaimplementowane intro P0 i obowiązujące copy
+## Obowiązujące post-ring copy i komunikacja
 
-Obecne doświadczenie gracza zaczyna się od kalibracji XR, radialnego odsłonięcia Małpy, pięciu glifów i kamienia, ciszy oraz trzech komunikatów orientacyjnych. Gracz otwiera Y, odwiedza sterowanie, zamyka panel, wskazuje Małpę i naciska trigger. Po zaproszeniu podąża za Małpą, podejmuje decyzję na progu i fizycznie wchodzi do kręgu. Po osadzeniu Małpy rozpoczyna się `GLYPH_FREE_EXPLORE`.
+Attention/checheszki w `3.30` oznaczają wyłącznie nową wiadomość. Dialog nie otwiera się automatycznie: gracz musi podejść, wskazać i kliknąć Małpę. Beat brzmi dokładnie:
 
-Gracz ma `60 s` swobodnej eksploracji. Pierwszy kryształ przed upływem czasu rozstrzyga discovery i zwraca uwagę Małpy. Bez sukcesu po `60 s` attention prowadzi do obowiązującej podpowiedzi:
+1. `No i świat przestał być uprzejmy.`
+2. `To, czego potrzebujesz, jest teraz poza zasięgiem.`
+3. `Na szczęście nie na długo.`
 
-- `Pięć znaków.`
-- `Nie pytaj jeszcze, co znaczą.`
-- `Dotknij jednego Szpilą.`
+Dopiero acknowledgement ostatniej kwestii kończy dialogue. W `3.40` Piec zostaje rzeczywiście ujawniony, a copy brzmi dokładnie:
 
-Pierwszy kryształ również po tej podpowiedzi rozstrzyga discovery. Małpa zwraca attention i mówi: `O, wydaje mi się, że można tego użyć.` Następnie trzysekundowe odsłonięcie udostępnia portal, canvas oczekiwania, relikwiarz oraz przyciski Activate i Release. Obowiązujące polskie copy portalu brzmi: `Osadź kryształ w naczyniu.`
+1. `Spójrz na Piec.`
+2. `Tam coś na ciebie czeka.`
 
-To jest zaimplementowany kanon P0. Szczegóły fog shadera, promieni, warunków przejść, transformów i visibility należą wyłącznie do [VR Runtime Model](../technical/VR_RUNTIME_MODEL.md).
-## Kanoniczne przejście po pierwszym kręgu
+W `3.50` gracz świadomie wybiera `Utwórz astro przyciągacz`; produkcja nie uruchamia się automatycznie.
 
-MAŁPA = pamięć, nauczyciel, historia i pomoc. W `3.30` attention oznacza tylko dostępną rozmowę. Świadomie otwarty główny beat brzmi kolejno: `No i świat przestał być uprzejmy.`, `To, czego potrzebujesz, jest teraz poza zasięgiem.`, `Na szczęście nie na długo.` Istniejący model maksymalnie kilku kontekstowych odpowiedzi pozostaje dostępny. Opcje `CO ROBI ASTROLABIUM?` i `JAK ZDOBYĆ SKORUPĘ?` wolno pokazać dopiero po fizycznym odebraniu Astrolabium.
+## Physical claim jako gate
 
-Dla `3.40` zatwierdzone, ale jeszcze niewykonywane copy brzmi: `Spójrz na Piec.` oraz `Tam coś na ciebie czeka.` Reveal Pieca należy do następnego slice.
+`3.70` oznacza Astro `AVAILABLE` w otwartej komorze, bez `EARNED` i equip capability. Claim wymaga prawej `NORMAL_HAND`, ordinary ray, real target hit i trigger/`selectstart`. Dopiero completed handoff / `ASTRO_ATTRACTOR_CLAIMED` w `3.80` nadaje `EARNED` oraz capability Astro i skorup.
 
-## Małpa — dostępne kanały komunikacji
+## Granica i późniejsze systemy
 
-### Komunikat inicjowany przez system/Małpę
+Aktualny authored mainline kończy się na `3.80`. Dalszy authored shell/Furnace/Asterion loop jest NEXT, nie ukończonym następstwem. Rune Stones zachowują osobny canonical target model w [`VR_RUNE_STONES_MODEL.md`](../technical/VR_RUNE_STONES_MODEL.md), ale pozostają późniejszym systemem.
 
-- trzy animowane łuki attention z jednorazowym sygnałem audio;
-- krótki panel wiadomości ustawianej przez runtime;
-- osobny panel dialogowy, który może zostać otwarty programowo;
-- `CARD_COMMITTED` nie uruchamia automatycznie attention; usunięto `CUE_MONKEY_AFTER_CARD_COMMIT`;
-- contextual hint nadal może uruchamiać attention.
+## Hardware status
 
-### Wybór użytkownika
-
-- gracz trafia Małpę rzeczywistym zwykłym promieniem, aby otworzyć/zamknąć panel; pierwszy bezpośredni press kasuje pending attention również przy `dialogueOverride`;
-- gracz trafia opcje panelu i zatwierdza je triggerem;
-- obecna implementacja oferuje pytanie o postęp (gdy istnieje przynajmniej jedna karta) oraz zamknięcie. Mechanizm obsługuje interaktywny wybór, ale nie dostarcza drzewa fabularnego.
-
-### Podgląd postępu/historii
-
-- pytanie o postęp otwiera stronicowaną historię kart pochodzącą wyłącznie z `VrProgressionController`;
-- można wybrać wyłącznie już odkrytą kartę, przeczytać jej istniejący zlokalizowany tekst, zmieniać strony i wrócić do historii/menu;
-- nowo odkryte karty pulsują jako transient `unread` do pierwszego otwarcia. To stan UI bieżącego runtime’u, bez trwałego zapisu.
-
-## Stan gracza po obecnym końcu progresji
-
-Po zdobyciu Kuli gracz ma ukończony materiałowy stan Pieca `6/6`, stan produkcji `EARNED`, dostęp do obu niezależnych narzędzi dłoni oraz sterowania orientacją platformy. Zachowuje odkryte dotąd karty, aktywne panele/ringi podłogi, historię Małpy i dostęp do Pieca. Ambient ma wdrożone sekwencje progów oraz podpróg po ukończeniu skorup i zbudowaniu Kuli. Nie istnieje trwały save ani zaimplementowana progresja po Kuli. Docelowy mechaniczno-assetowy kontrakt pięciu par P4 ustanawia [VR Rune Stones Model](../technical/VR_RUNE_STONES_MODEL.md); narracyjne przejścia i pełny przebieg post-Sphere pozostają niezaprojektowane.
-
-Zakres `UTWÓRZ`, mechaniki konstrukcji, panelowej transformacji i fizycznej materializacji jest **HARDWARE VALIDATED** na Meta Quest 3S. Poprawione pozycjonowanie produkowanej Kuli przez `VR_FURNACE_CONTENT_ANCHOR` jest **IMPLEMENTED**, lecz nadal **HARDWARE VALIDATION PENDING**; wcześniejszy wynik za panelem dotyczył stanu sprzed poprawki. Ciągłość konturu pozostaje **KNOWN QA ISSUE**.
-
-## Następna przestrzeń projektowa
-
-Poniższe obszary są **NIEZAPROJEKTOWANE / DO DECYZJI** i ten dokument ich nie rozstrzyga:
-
-- narracja wejścia wykraczająca poza zaimplementowane intro P0;
-- komunikaty Małpy pomiędzy etapami;
-- pomoc przy utknięciu;
-- dramaturgia odkrywania urządzeń;
-- narracyjne przejścia i pełny authored przebieg progresji po Kuli Asteriona (mechaniczno-assetowy model kamieni P4 jest już zdefiniowany osobno);
-- radar / sector targeting;
-- małe glify;
-- kolejne poziomy Przyciągacza;
-- runy / Emanation Matrix;
-- dalsze zdolności Astro.
-
-## Twarde granice produktu
-
-- Narracja może odczytywać progresję, lecz nie może przyznawać kart, materiałów, produkcji ani wyposażenia z pominięciem właścicieli runtime.
-- Fizyczne handoffy i claim pozostają gameplayem wymagającym właściwego stanu, dłoni i realnego trafienia.
-- Ten dokument rozstrzyga aktualne doświadczenie, prowadzenie i copy; techniczne ownerstwo oraz state machines rozstrzyga wyłącznie [VR Runtime Model](../technical/VR_RUNTIME_MODEL.md).
-- Kod rozstrzyga **IMPLEMENTED**. Tylko jawne potwierdzenie Wizjonera na hardware może podnieść poprawiony element do **HARDWARE VALIDATED**.
-
-## IMPLEMENTED boundary — first Astro physical claim
-
-The canonical implemented continuation is `3.40 → 3.50 → 3.60 → 3.70 → 3.80`: Furnace reveal with `Spójrz na Piec.` / `Tam coś na ciebie czeka.`, conscious production request, construction, physical availability, then player-triggered claim. Astro and shell targeting are unlocked only after the physical handoff completes at `3.80`. Further shell progression and the Asterion loop remain outside this authored slice.
+Wizjoner potwierdził na Meta Quest 3S wyłącznie bootstrap fix: Experience VR przechodzi poza preload `41/41` i nie zatrzymuje się przed READY — **HARDWARE VALIDATED — Meta Quest 3S**. Pełny flow `3.10–3.80`, Furnace reveal, Astro materialization, skala/orientacja, hover, physical handoff i shell targeting pozostają hardware/perceptual QA pending. Automated PASS nie zmienia tego statusu.

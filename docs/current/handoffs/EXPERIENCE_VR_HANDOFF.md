@@ -1,58 +1,45 @@
 # Experience VR — Current Handoff
 
-Status: **CURRENT**. To podsumowanie bieżącej granicy implementacji, nie kronika migracji.
+Status: **CURRENT**. Operacyjny obraz dla następnego architekta; canonical model szczegółowy: [`VR_SCENARIO_DIRECTOR_MODEL.md`](../technical/VR_SCENARIO_DIRECTOR_MODEL.md).
 
-## Aktualny model
+## IMPLEMENTED
 
-```text
-SPINE → SCENARIO → DIRECTOR → RUNTIME / ACTORS / DOMAIN OWNERS
-```
+- Intro `1.10–1.130`, pierwszy crystal, świadomy Monkey trigger i Reliquary reveal (`2.10–2.20`).
+- Pełny loop pięciu kart Tier 1 w `2.30`.
+- First-ring bridge: trwałe `5/5` → `FIRST_RING_COMPLETED` → `2.40`; `createVrFirstRingFlow` posiada presentation/audio seam, a dopiero `FIRST_RING_PRESENTATION_COMPLETED` prowadzi do `3.10`.
+- `3.10`: reveal widocznego, jeszcze nieinteraktywnego pola skorup i elevacja głównych glifów.
+- `3.20`: około 10 sekund obserwacji.
+- `3.30`: attention bez auto-open; gracz świadomie otwiera trzykwestiowy dialogue, a finalne acknowledgement kończy beat.
+- `3.40`: real Furnace reveal, `Spójrz na Piec.` / `Tam coś na ciebie czeka.`
+- `3.50–3.60`: świadomy wybór `Utwórz astro przyciągacz` i osobny `ASTRO_ATTRACTOR_CONSTRUCTION` na shared Furnace driver.
+- `3.70`: physical Astro `AVAILABLE` w komorze, jeszcze nie `EARNED`.
+- `3.80`: praworęczny, real-hit, ordinary-ray trigger claim; `ASTRO_ATTRACTOR_CLAIMED` daje `EARNED`, a dopiero wtedy `CAN_EQUIP_ASTRO`, `CAN_SCAN_SHELLS`, `CAN_TARGET_SHELLS`.
 
-- Spine jest jedynym właścicielem authored mainline order.
-- Scenario definiuje canonical points, accepted events, effects, capabilities, milestones i `settledConsequences`.
-- Director posiada `currentPointId`, interpretuje Scenario i realizuje `STAY`, `COMPLETE`, `EXPLICIT` oraz zawężone `COMPLETE_IF`.
-- Runtime i aktorzy wykonują effects; domain owners zachowują faktyczny stan domenowy i transient.
+Production controller `createVrAstroAttractorProductionController` posiada `READY → BUILDING → AVAILABLE → CLAIMING → EARNED`; `CLAIMING` jest transient. Production clone i gameplay object nie są dwoma narzędziami; equipment obsługuje `createVrAttractorTool`.
 
-`COMPLETE` używa `Spine.next()`, `STAY` nie zmienia punktu, a `EXPLICIT` jest używane dla authored EARLY EXIT. `COMPLETE_IF` obsługuje obecnie wyłącznie `crossingComplete`; nie jest ogólnym rules engine.
+## Furnace i panel
 
-## Canonical zakres
+Furnace jest revealowany od `3.40`; karta Astro jest gate’owana przez Scenario. Mode `astro_attractor` pozostaje odrębny od Asterion mode, podobnie `ASTRO_ATTRACTOR_CONSTRUCTION` od `ASTERION_CONSTRUCTION`. Output pod `VR_FURNACE_CONTENT_ANCHOR` pozostaje w komorze do claimu.
 
-Canonical Spine prowadzi od `1.10` przez Intro do `1.130`, następnie przez `2.10`, `2.20`, `2.30`, `2.40` oraz authored post-ring beats `3.10`, `3.20`, `3.30` do `3.40`. WHERE, BEYOND, FOLLOW pause i hinty są lokalnymi `STAY`, nie technical points.
+Panel pokazuje obracającą się proceduralną line-art miniaturę Astro: gładkie krzywe/obręcze i centralne warstwowe jądro, bez ciężkiego GLB wireframe w canvasie. Copy brzmi `Utwórz astro przyciągacz`; canvas ma mocniejszy hover, a fizyczne kontrolki zwiększony emissive hover. Jakość tych elementów nie ma automatycznie statusu hardware validated.
 
-- `1.130` jest całym crossingiem. Intro actor posiada `playerEnteredRing` i `monkeySettled`; ukończenie następuje dopiero przy `crossingComplete`.
-- `FIRST_CRYSTAL_DISCOVERED` kończy `2.10` i uruchamia discovery/attention w `2.20`; nie rozpoczyna fizycznego revealu. Aktywacja Małpy emituje `MONKEY_TRIGGERED`, którego `STAY` emituje `BEGIN_RELIQUARY_REVEAL`. Runtime wykonuje fizyczny reveal, a `RELIQUARY_REVEAL_COMPLETED` kończy `2.20 → 2.30`.
-- `2.30` jest całym loopem pięciu kart. Hint, aktywacja kryształu i commit pojedynczej karty pozostają lokalne.
-- `CAN_USE_RELIQUARY` jest aktywnym, globalnym Scenario-owned gate dla insertion w `2.30`. Branch/tier/socket validation i transient state pozostają domenowe. `CAN_ACTIVATE_RELIQUARY` oraz `CAN_RELEASE_RELIQUARY` są osobnymi capabilities; domena nadal wymusza Activate tylko w `inserted` i Release tylko w `active`.
-- `createVrProgressionController` wyłącznie rozstrzyga ukończenie tieru. Przy pierwszym trwałym `5/5` Runtime wysyła `FIRST_RING_COMPLETED`; Director kończy `2.30`, emituje `COMPLETE_FIRST_RING_PRESENTATION` i `PLAY_FIRST_RING_COMPLETE_FEEDBACK`, po czym przechodzi przez Spine do `2.40`. Runtime wykonuje odpowiednio `progressFloor.completeTier(1)` i istniejący feedback audio.
-- `2.40` jest canonical stanem ukończenia pierwszego ringu `5/5` i nie wraca do `2.30`. Authored następstwo prowadzi przez post-ring world presentation (`3.10`), 10 s obserwacji (`3.20`) i Monkey attention (`3.30`) do Monkey → Furnace intro (`3.40`). `3.10`, `3.20` i `3.30` są **IMPLEMENTED**. `3.30` uruchamia attention, czeka na świadomy trigger Małpy i domknięcie trzech kwestii; dopiero one-shot `POST_RING_MONKEY_DIALOGUE_COMPLETED` prowadzi do `3.40`. `3.40` jest **IMPLEMENTED**; reveal Pieca poprzedza canonical copy `Spójrz na Piec.` / `Tam coś na ciebie czeka.`, a dalszy physical-claim flow kończy się na `3.80`.
-- `syncTierOneWorldState()` i `syncAmbientSequence()` pozostają w kompozycji Runtime; nie zostały przeniesione do Scenario.
-- `100.10` pozostaje terminalnym EARLY EXIT poza Spine.
+## Bootstrap i dowody
 
-Nie ma LIVE technical points `1.100.1`, `1.110.1`, `1.120.1`, `1.130.1`, `1.130.2`, `2.10.1`, `2.30.1` ani `2.40.1`.
+Naprawiony contract pozwala złożyć composition po preloadzie, przed READY: wcześniejszy nullable `runtimeExperience` binding chroni construction callbacks, a `canUseAstroProduction` zwraca `false` przed bindem i rzeczywisty gate po nim. `vr-runtime-bootstrap` odtworzył production regression **RED → GREEN**. Wizjoner potwierdził na Meta Quest 3S przejście poza `41/41` i brak zatrzymania przed READY: **HARDWARE VALIDATED — Meta Quest 3S** tylko dla tego bootstrap fixu.
 
-## Reconstruction
+Automated guards `vr-first-ring-live-flow`, `vr-astro-first-claim-live-flow` i `vr-runtime-bootstrap` nie są hardware/perceptual PASS. Pełny `3.10–3.80`, reveal/materialization, skala/orientacja, hover, physical handoff i shell targeting wymagają osobnego QA Wizjonera.
 
-Wdrożone są authored Spine, pure reconstruction i exclusive `stateAt(X)`: składane są `settledConsequences` punktów stojących ściśle przed `X`. Transient/live state nie jest rekonstruowany. Wszystkie obecne `settledConsequences` są puste, więc mechanizm nie materializuje jeszcze trwałych konsekwencji świata.
+## NEXT
 
-## NOT IMPLEMENTED
+- hardware/perceptual QA pełnego `3.10–3.80`;
+- authored progression po `3.80` (obecny STOP BOUNDARY);
+- dalsza praca nad skorupami, Piecem i pełnym Asterion loopem;
+- późniejsze małe glify, Rune Stones i dalsze akty zgodnie z istniejącym kanonem. Rune Stones pozostają osobnym przyszłym systemem, nie automatycznym następstwem `3.80`.
 
-- dalsza authored shell progression / Asterion loop po `3.80`;
+## DEFERRED
+
 - arbitrary Director start;
-- hydration, resolver/bootstrap materializujący reconstruction oraz owner restore APIs;
-- reconstruction-backed checkpointy i QA aliases;
-- save, durable persistence i pełny reset zapisanej gry;
-- późniejsze ringi, akty i finał.
-
-## Canonical source
-
-Pełny kontrakt znajduje się w [`VR_SCENARIO_DIRECTOR_MODEL.md`](../technical/VR_SCENARIO_DIRECTOR_MODEL.md). Kod Scenario, Directora i kompozycji Runtime jest dowodem aktualnej implementacji.
-
-## IMPLEMENTED — `3.40–3.80`
-
-- `3.40`: real Furnace reveal and exact approved Monkey copy.
-- `3.50`: Astro production ready; the player must select `Utwórz astro przyciągacz`.
-- `3.60`: shared Furnace construction driver with distinct `ASTRO_ATTRACTOR_CONSTRUCTION` kind.
-- `3.70`: physical Astro remains available in the chamber and requires right ordinary-ray trigger claim.
-- `3.80`: handoff completed, `ASTRO_ATTRACTOR_CLAIMED` / EARNED, Astro equip and shell eligibility enabled.
-
-**STOP BOUNDARY:** further shell progression / Asterion loop is the next stage, despite existing mechanics becoming available after claim. Meta Quest 3S hardware/perceptual QA remains NOT PERFORMED.
+- hydration i owner restore;
+- reconstruction-backed checkpoints/QA aliases;
+- durable persistence/save i pełny reset;
+- pozostałe późniejsze akty, radar i finał.

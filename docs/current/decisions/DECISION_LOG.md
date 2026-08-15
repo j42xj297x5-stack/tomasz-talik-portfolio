@@ -9,9 +9,9 @@ Status: current binding decisions organized by implementation status, not patch 
 3. The transition vocabulary is `STAY`, `COMPLETE`, `EXPLICIT`, `COMPLETE_IF`. `COMPLETE_IF` is restricted to `crossingComplete`; it is not a generic predicate DSL or rules engine.
 4. WHERE, BEYOND, FOLLOW pause and hints are local `STAY`. Crossing is wholly represented by `1.130`; its transient join facts belong to the Intro actor and are not milestones or separate technical points.
 5. `2.30` represents the complete first-ring five-card loop. Per-card preview, commit feedback and hints are local `STAY`; `createVrProgressionController` alone owns the tier completion fact. Its first-tier `5/5` produces `FIRST_RING_COMPLETED`, which completes `2.30` through Spine to `2.40`.
-6. `2.40` is the canonical first-ring-completed `5/5` point and current end of implemented Scenario. It has no route back to the loop.
+6. `2.40` is the canonical first-ring-completed `5/5` presentation point. `createVrFirstRingFlow` owns the local presentation seam; only `FIRST_RING_PRESENTATION_COMPLETED` advances to `3.10`.
 7. Scenario capabilities may make the whole vessel loop available, but domain interaction state enforces Activate only for `inserted` and Release only for `active`. Interaction phases are not story points.
-8. Reconstruction remains `stateAt(X) = fold(settledConsequences of Spine points strictly before X)`. It never reconstructs transient/live state. The mechanism is implemented, but current consequences are empty; hydration, arbitrary Director start, owner restore, reconstruction-backed QA aliases, save and progression after `2.40` are not implemented.
+8. Reconstruction remains `stateAt(X) = fold(settledConsequences of Spine points strictly before X)`. It never reconstructs transient/live state. Hydration, arbitrary Director start, owner restore, reconstruction-backed QA aliases and save are not implemented; authored progression is implemented through `3.80`.
 
 ## 2026-08-14 — P4 rune stones and sector vessels canonical target model
 
@@ -56,7 +56,7 @@ Status: current binding decisions organized by implementation status, not patch 
 
 ### Tier-1 Astro and shells
 
-1. Tier 1 unlocks Astro and activates an 18-shell field made from six assets cloned three times. `?p1` remains a QA shortcut for this state.
+1. Tier 1 does not unlock Astro. `3.10` reveals the 18-shell field as non-interactive presentation; only physical `ASTRO_ATTRACTOR_CLAIMED` at `3.80` grants Astro equip/scan/target capabilities. `?p1` is an explicit QA/showcase shortcut, not canonical progression.
 2. With Astro equipped, squeeze above `0.1` activates one local-`-Z`, `3R`, `2.5°` scan cone. Selection is an analytic cone-volume test of cached shell bounding spheres, not a ray fan.
 3. Trigger above `0.1` while scanning pulls at `10 m/s²`, capped at `8.5 m/s`, toward `worldPosition(PIVOT_RING_MASTER) + worldDirection(controller local -Z) * 1.3 m`; readiness radius is `0.28 m`.
 4. Shell state is `orbiting → targeted → pulling → capture_ready → held → placed`, with technical `returning`. Pre-takeover cancellation returns over `0.8 s`; the shell is excluded from Astro targeting until orbit is restored.
