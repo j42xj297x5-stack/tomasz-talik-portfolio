@@ -88,6 +88,11 @@ export function createVrHandModeController({
     setLeftMode(VR_LEFT_HAND_MODES.ASTERION_SPHERE);
     return leftMode === VR_LEFT_HAND_MODES.ASTERION_SPHERE;
   }
+  function equipRightAstro() {
+    if (!isUnlocked()) return false;
+    setRightMode(VR_RIGHT_HAND_MODES.ASTRO_ATTRACTOR);
+    return rightMode === VR_RIGHT_HAND_MODES.ASTRO_ATTRACTOR;
+  }
 
   function reset() {
     leftMode = VR_LEFT_HAND_MODES.NORMAL_HAND;
@@ -111,6 +116,7 @@ export function createVrHandModeController({
     getMode: () => rightMode,
     getRightMode: () => rightMode,
     getLeftMode: () => leftMode,
-    equipLeftAsterion
+    equipLeftAsterion,
+    equipRightAstro
   };
 }

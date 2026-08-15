@@ -101,3 +101,7 @@ Poniższe obszary są **NIEZAPROJEKTOWANE / DO DECYZJI** i ten dokument ich nie 
 - Fizyczne handoffy i claim pozostają gameplayem wymagającym właściwego stanu, dłoni i realnego trafienia.
 - Ten dokument rozstrzyga aktualne doświadczenie, prowadzenie i copy; techniczne ownerstwo oraz state machines rozstrzyga wyłącznie [VR Runtime Model](../technical/VR_RUNTIME_MODEL.md).
 - Kod rozstrzyga **IMPLEMENTED**. Tylko jawne potwierdzenie Wizjonera na hardware może podnieść poprawiony element do **HARDWARE VALIDATED**.
+
+## IMPLEMENTED boundary — first Astro physical claim
+
+The canonical implemented continuation is `3.40 → 3.50 → 3.60 → 3.70 → 3.80`: Furnace reveal with `Spójrz na Piec.` / `Tam coś na ciebie czeka.`, conscious production request, construction, physical availability, then player-triggered claim. Astro and shell targeting are unlocked only after the physical handoff completes at `3.80`. Further shell progression and the Asterion loop remain outside this authored slice.

@@ -8,7 +8,8 @@ export const ASTRO_FURNACE_PROCESS_STATES = Object.freeze({
   PREPARING_CONSTRUCTION: 'PREPARING_CONSTRUCTION'
 });
 export const ASTRO_FURNACE_PROCESS_KINDS = Object.freeze({
-  SHELL_EXTRACTION: 'SHELL_EXTRACTION', ASTERION_CONSTRUCTION: 'ASTERION_CONSTRUCTION'
+  SHELL_EXTRACTION: 'SHELL_EXTRACTION', ASTERION_CONSTRUCTION: 'ASTERION_CONSTRUCTION',
+  ASTRO_ATTRACTOR_CONSTRUCTION: 'ASTRO_ATTRACTOR_CONSTRUCTION'
 });
 
 const CLIP_NAME = 'AstroFurnace_ButtonActivate_Lock';
@@ -210,18 +211,21 @@ export function createVrAstroFurnaceActivateInteraction({
     processStarted = true; onProcessStart({ processKind });
     return true;
   }
-  function canStartConstruction() {
+  function canStartConstruction(processKindToStart = ASTRO_FURNACE_PROCESS_KINDS.ASTERION_CONSTRUCTION) {
+    if (![ASTRO_FURNACE_PROCESS_KINDS.ASTERION_CONSTRUCTION, ASTRO_FURNACE_PROCESS_KINDS.ASTRO_ATTRACTOR_CONSTRUCTION].includes(processKindToStart)) return false;
     if (!capabilityReady || disposed || openInteraction?.getState?.() !== 'CLOSED' || openInteraction?.isTransitioning?.()) return false;
     return (state === states.IDLE && processKind == null)
       || (state === states.COMPLETE && processKind === ASTRO_FURNACE_PROCESS_KINDS.SHELL_EXTRACTION);
   }
+  let pendingConstructionKind = ASTRO_FURNACE_PROCESS_KINDS.ASTERION_CONSTRUCTION;
   function beginConstructionProcess() {
-    processKind = ASTRO_FURNACE_PROCESS_KINDS.ASTERION_CONSTRUCTION;
+    processKind = pendingConstructionKind;
     state = states.SPINUP; elapsed = 0; progress = 0; angle = 0; angularSpeed = 0;
     processStarted = true; preparingConstruction = false; clearHits(); onProcessStart({ processKind });
   }
-  function startConstruction() {
-    if (!canStartConstruction()) return false;
+  function startConstruction(processKindToStart = ASTRO_FURNACE_PROCESS_KINDS.ASTERION_CONSTRUCTION) {
+    if (!canStartConstruction(processKindToStart)) return false;
+    pendingConstructionKind = processKindToStart;
     if (state === states.COMPLETE) {
       preparingConstruction = true; state = states.PREPARING_CONSTRUCTION; progress = 0; clearHits();
       releasing = true; action.stop(); action.enabled = true; action.paused = false;
@@ -248,7 +252,7 @@ export function createVrAstroFurnaceActivateInteraction({
   mixer?.addEventListener('finished', onFinished);
   function releaseForOpening() {
     if (state !== states.COMPLETE) return false;
-    if (processKind === ASTRO_FURNACE_PROCESS_KINDS.ASTERION_CONSTRUCTION) {
+    if ([ASTRO_FURNACE_PROCESS_KINDS.ASTERION_CONSTRUCTION, ASTRO_FURNACE_PROCESS_KINDS.ASTRO_ATTRACTOR_CONSTRUCTION].includes(processKind)) {
       state = states.IDLE; processKind = null; setButtonEmission(settings.emissionInactive ?? 0); return true;
     }
     if (!action) return false;
@@ -383,7 +387,7 @@ export function createVrAstroFurnaceActivateInteraction({
     state = states.IDLE; progress = 0; elapsed = 0; angle = 0; angularSpeed = 0;
     if (spinPivot && baseSpinQuaternion) spinPivot.quaternion.copy(baseSpinQuaternion);
     if (lidSpinPivot && baseLidQuaternion) lidSpinPivot.quaternion.copy(baseLidQuaternion);
-    processStarted = false; processKind = null;
+    processStarted = false; processKind = null; pendingConstructionKind = ASTRO_FURNACE_PROCESS_KINDS.ASTERION_CONSTRUCTION;
     restoreFireMaterials();
     restoreChamberMaterials();
     setProcessLight(0);

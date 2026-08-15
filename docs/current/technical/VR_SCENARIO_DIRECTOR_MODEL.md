@@ -102,8 +102,13 @@ Pole `settledConsequences` jest wdrożonym mechanizmem docelowym, ale obecne def
 - hydration i owner restore APIs;
 - reconstruction-backed checkpointy lub QA aliases;
 - save/durable persistence i pełny reset zapisanej gry;
-- runtime Furnace intro dla authored `3.40`;
-- punkty Pieca po `3.40`, produkcja i fizyczne podniesienie Astro oraz wynikające z nich odblokowanie interakcji z Muszlami;
+- dalsza authored shell progression / Asterion loop po `3.80`;
 - późniejsze akty, ringi i finał.
 
 Istniejące compatibility aliases nazw punktów nie są checkpointami ani alternatywnym modelem progresji.
+
+## 8. IMPLEMENTED — canonical Astro physical claim (`3.40–3.80`)
+
+Canonical Spine extends through `3.40 → 3.50 → 3.60 → 3.70 → 3.80`. The Furnace-intro actor reveals the Furnace before presenting exactly `Spójrz na Piec.` and `Tam coś na ciebie czeka.` Point `3.50` waits for the conscious production action, `3.60` owns construction, `3.70` waits with the physical tool available in the chamber, and `3.80` means physically claimed / EARNED. Only durable fact `ASTRO_ATTRACTOR_CLAIMED` grants `CAN_EQUIP_ASTRO`, `CAN_SCAN_SHELLS` and `CAN_TARGET_SHELLS` at `3.80`.
+
+Canonical rule: the Furnace does not give the item; it creates it and the player must claim it. Further shell progression / Asterion loop is the STOP BOUNDARY and remains the next authored stage.

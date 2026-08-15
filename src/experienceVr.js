@@ -31,11 +31,12 @@ import { createVrShellAttractorInteraction } from './xr/shells/createVrShellAttr
 import { createVrSemanticInput } from './xr/input/createVrSemanticInput.js';
 import { createVrHandModeController } from './xr/input/createVrHandModeController.js';
 import { createVrAttractorTool } from './xr/tools/createVrAttractorTool.js';
+import { ASTRO_ATTRACTOR_CONSTRUCTION, createVrAstroAttractorProductionController } from './xr/tools/createVrAstroAttractorProductionController.js';
 import { createVrAstroFurnace } from './xr/furnace/createVrAstroFurnace.js';
 import { createVrAstroFurnaceOpenInteraction } from './xr/furnace/createVrAstroFurnaceOpenInteraction.js';
 import { ASTRO_FURNACE_PROCESS_KINDS, createVrAstroFurnaceActivateInteraction } from './xr/furnace/createVrAstroFurnaceActivateInteraction.js';
 import { resolveChamberCylinder } from './xr/furnace/vrAstroFurnaceChamberCylinder.js';
-import { ASTRO_FURNACE_ACTIVE_MODE, createVrAstroFurnaceOptionInteraction } from './xr/furnace/createVrAstroFurnaceOptionInteraction.js';
+import { ASTRO_FURNACE_ACTIVE_MODE, ASTRO_FURNACE_ASTRO_ATTRACTOR_MODE, createVrAstroFurnaceOptionInteraction } from './xr/furnace/createVrAstroFurnaceOptionInteraction.js';
 import { createVrAstroFurnacePanel } from './xr/furnace/createVrAstroFurnacePanel.js';
 import { createVrAstroFurnaceProcessSource } from './xr/furnace/createVrAstroFurnaceProcessSource.js';
 import { createVrAstroFurnaceProgressionController } from './xr/furnace/createVrAstroFurnaceProgressionController.js';
@@ -46,6 +47,7 @@ import { createVrAsterionProductionController } from './xr/asterion/createVrAste
 import { createVrPlayerGuidePanel } from './xr/guidance/createVrPlayerGuidePanel.js';
 import { createVrMonkeyGuide } from './xr/guidance/createVrMonkeyGuide.js';
 import { createVrPostRingMonkeyDialogue } from './xr/guidance/createVrPostRingMonkeyDialogue.js';
+import { createVrFurnaceIntro } from './xr/guidance/createVrFurnaceIntro.js';
 import { createVrIntroSequence } from './xr/guidance/createVrIntroSequence.js';
 import { createVrIntroFogReveal } from './xr/guidance/createVrIntroFogReveal.js';
 import { createVrReliquaryHints } from './xr/guidance/createVrReliquaryHints.js';
@@ -322,6 +324,28 @@ const handModeController = createVrHandModeController({
   isLeftToolToggleBlocked: () => playerGuidePanel.isOpen()
 });
 asterionProductionController.setHandModeController(handModeController);
+const astroAttractorProductionController = createVrAstroAttractorProductionController({
+  model: assetManager.cloneGltfScene('vr-astro-attractor-model'),
+  contentAnchor: astroFurnace.nodes.VR_FURNACE_CONTENT_ANCHOR,
+  energyCell: astroFurnace.nodes.energy_cell ?? astroFurnace.nodes.fire_cell,
+  controllers: vrControllers.controllers,
+  processDriver: {
+    startConstruction: (kind) => astroFurnaceActivateInteraction?.startConstruction?.(kind) === true,
+    canStartConstruction: (kind) => astroFurnaceActivateInteraction?.canStartConstruction?.(kind) === true,
+    getProgress: () => astroFurnaceActivateInteraction?.getProgress?.() ?? 0,
+    getProcessKind: () => astroFurnaceActivateInteraction?.getProcessKind?.() ?? null
+  },
+  getChamberState: () => astroFurnaceOpenInteraction?.getState?.() ?? 'CLOSED',
+  getRightMode: () => handModeController.getRightMode(),
+  canRequest: () => runtimeExperience.can(VR_SCENARIO_CAPABILITY.CAN_START_FURNACE_PROCESS),
+  settings: { ...settings.asterionSphere.production, contentClearance: settings.furnace.content.contentClearance },
+  haloSettings: settings.targetHalo,
+  onRequested: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.ASTRO_ATTRACTOR_PRODUCTION_REQUESTED),
+  onProduced: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.ASTRO_ATTRACTOR_PRODUCED),
+  onClaimed: () => { runtimeExperience.dispatch(VR_SCENARIO_EVENT.ASTRO_ATTRACTOR_CLAIMED);
+    shellSystem.setInteractionEnabled(runtimeExperience.can(VR_SCENARIO_CAPABILITY.CAN_TARGET_SHELLS));
+    handModeController.equipRightAstro(); }
+});
 const playerGuidePanel = createVrPlayerGuidePanel({
   leftGrip: vrControllers.controllers[0]?.grip,
   semanticInput,
@@ -353,6 +377,8 @@ let astroFurnaceOptionInteraction = null;
 const furnacePanel = createVrAstroFurnacePanel({
   parent: platformFixturesRoot, furnace: astroFurnace, controllers: vrControllers.controllers,
   progressionController: furnaceProgressionController, productionController: asterionProductionController,
+  astroProductionController: astroAttractorProductionController,
+  canUseAstroProduction: () => runtimeExperience.getCurrentPointId() === '3.50',
   asterionModel: asterionSphere.object, settings: settings.furnace.panel,
   processSource: createVrAstroFurnaceProcessSource(() => astroFurnaceActivateInteraction),
   contentSource: {
@@ -374,7 +400,7 @@ const astroFurnaceOpenInteraction = createVrAstroFurnaceOpenInteraction({
   haloSettings: settings.targetHalo,
   isOrdinaryRayAvailable: ordinaryFurnaceRayAvailable,
   canToggle: () => !astroFurnaceActivateInteraction?.isProcessing(),
-  isModeActive: () => astroFurnaceOptionInteraction?.getActiveMode?.() === ASTRO_FURNACE_ACTIVE_MODE,
+  isModeActive: () => [ASTRO_FURNACE_ACTIVE_MODE, ASTRO_FURNACE_ASTRO_ATTRACTOR_MODE].includes(astroFurnaceOptionInteraction?.getActiveMode?.()),
   onOpeningStart: () => {
     astroFurnaceActivateInteraction?.releaseForOpening();
     playVrDevice(VR_AUDIO.chamberOpen);
@@ -392,9 +418,9 @@ astroFurnaceActivateInteraction = createVrAstroFurnaceActivateInteraction({
   isModeActive: () => astroFurnaceOptionInteraction?.getActiveMode?.() === ASTRO_FURNACE_ACTIVE_MODE,
   qaAllowWithoutInput: furnaceProcessQa,
   isOrdinaryRayAvailable: ordinaryFurnaceRayAvailable,
-  onProcessStart: ({ processKind }) => processKind === ASTRO_FURNACE_PROCESS_KINDS.ASTERION_CONSTRUCTION
+  onProcessStart: ({ processKind }) => [ASTRO_FURNACE_PROCESS_KINDS.ASTERION_CONSTRUCTION, ASTRO_ATTRACTOR_CONSTRUCTION].includes(processKind)
     ? vrAudio.startAsterionCreate() : vrAudio.startFurnaceProcess(),
-  onProcessStop: ({ processKind }) => processKind === ASTRO_FURNACE_PROCESS_KINDS.ASTERION_CONSTRUCTION
+  onProcessStop: ({ processKind }) => [ASTRO_FURNACE_PROCESS_KINDS.ASTERION_CONSTRUCTION, ASTRO_ATTRACTOR_CONSTRUCTION].includes(processKind)
     ? vrAudio.stopAsterionCreate() : vrAudio.stopFurnaceProcess()
 });
 let shellAttractorInteraction = null;
@@ -583,6 +609,11 @@ const postRingMonkeyDialogue = createVrPostRingMonkeyDialogue({
   monkeyGuide,
   onCompleted: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.POST_RING_MONKEY_DIALOGUE_COMPLETED)
 });
+const furnaceIntro = createVrFurnaceIntro({
+  monkeyGuide,
+  revealFurnace: () => { astroFurnace.object.visible = true; return true; },
+  onCompleted: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.FURNACE_INTRO_COMPLETED)
+});
 const runtimeExperience = new RuntimeExperience({
   director: experienceDirector,
   effectHandlers: {
@@ -678,8 +709,9 @@ const runtimeExperience = new RuntimeExperience({
     },
     [VR_SCENARIO_EFFECT.BEGIN_OBSERVATION_WINDOW]: () => { observationWindow.begin(); },
     [VR_SCENARIO_EFFECT.BEGIN_MONKEY_ATTENTION]: () => { postRingMonkeyDialogue.begin(); },
-    // Authored 3.40 boundary: the approved Furnace introduction is deliberately not presented by this slice.
-    [VR_SCENARIO_EFFECT.BEGIN_FURNACE_INTRO]: () => {}
+    [VR_SCENARIO_EFFECT.BEGIN_FURNACE_INTRO]: () => {
+      if (!furnaceIntro.begin()) throw new Error('BEGIN_FURNACE_INTRO rejected by Furnace intro actor');
+    }
   }
 });
 
@@ -739,6 +771,7 @@ function renderFrame() {
   releaseButton.update(delta);
   shellAttractorInteraction.update(delta);
   asterionProductionController.update(delta);
+  astroAttractorProductionController.update(delta);
   furnacePanel.update(delta);
   asterionSphere.update(delta);
   asterionGyroInteraction.update(delta);
@@ -800,9 +833,11 @@ function handleSessionEnd() {
   asterionGyroInteraction.reset();
   asterionSphere.reset();
   asterionProductionController.resetSession();
+  astroAttractorProductionController.resetSession();
   handModeController.reset();
   playerGuidePanel.reset();
   postRingMonkeyDialogue.reset();
+  furnaceIntro.reset();
   monkeyGuide.reset();
   introSequence.reset();
   showReadyState({ ended: hasEnteredSession });
@@ -841,9 +876,11 @@ async function enterVr() {
   asterionGyroInteraction.reset();
   asterionSphere.reset();
   asterionProductionController.resetSession();
+  astroAttractorProductionController.resetSession();
   handModeController.reset();
   playerGuidePanel.reset();
   postRingMonkeyDialogue.reset();
+  furnaceIntro.reset();
   monkeyGuide.reset();
   introSequence.reset();
   enterButton.disabled = true;
@@ -883,6 +920,7 @@ async function enterVr() {
     furnacePanel.reset();
     playerGuidePanel.reset();
     postRingMonkeyDialogue.reset();
+    furnaceIntro.reset();
     monkeyGuide.reset();
     introSequence.reset();
     observationWindow.reset();
@@ -902,6 +940,7 @@ async function enterVr() {
     asterionGyroInteraction.reset();
     asterionSphere.reset();
     asterionProductionController.resetSession();
+    astroAttractorProductionController.resetSession();
     handModeController.reset();
     playerGuidePanel.reset();
     controls.hidden = false;
@@ -922,6 +961,7 @@ window.addEventListener('pagehide', () => {
   vrAudio.dispose();
   asterionGyroInteraction.dispose();
   asterionProductionController.dispose();
+  astroAttractorProductionController.dispose();
   asterionSphere.dispose();
   astroFurnaceOpenInteraction.dispose();
   astroFurnaceActivateInteraction.dispose();

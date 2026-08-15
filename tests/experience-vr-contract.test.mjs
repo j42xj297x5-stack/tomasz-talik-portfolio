@@ -10,7 +10,7 @@ import { VR_EXPERIENCE_POINT, vrExperienceScenario } from '../src/xr/progression
 const canonicalLivePointIds = [
   '1.10', '1.20', '1.30', '1.40', '1.50', '1.60', '1.70', '1.80',
   '1.100', '1.110', '1.120', '1.130', '2.10', '2.20', '2.30', '2.40',
-  '3.10', '3.20', '3.30', '3.40', '100.10'
+  '3.10', '3.20', '3.30', '3.40', '3.50', '3.60', '3.70', '3.80', '100.10'
 ];
 const retiredPointIds = [
   '1.1', '1.2', '1.3', '1.4', '1.4.1', '1.4.2', '1.4.3', '1.4.4',
@@ -21,8 +21,8 @@ assert.deepEqual(vrExperienceScenario.points.map(({ id }) => id), canonicalLiveP
 assert.deepEqual(Object.values(VR_EXPERIENCE_POINT), canonicalLivePointIds);
 assert.equal('1.90' in VR_EXPERIENCE_POINT, false, 'reserved crystal tutorial is not LIVE');
 for (const retiredId of retiredPointIds) assert.equal(retiredId in VR_EXPERIENCE_POINT, false);
-assert.deepEqual(canonicalLivePointIds.filter((id) => id.startsWith('3.')), ['3.10', '3.20', '3.30', '3.40'],
-  'post-ring authoring stops at the Furnace-intro boundary');
+assert.deepEqual(canonicalLivePointIds.filter((id) => id.startsWith('3.')), ['3.10', '3.20', '3.30', '3.40', '3.50', '3.60', '3.70', '3.80'],
+  'authoring stops at the physical Astro claim boundary');
 assert.equal(VR_EXPERIENCE_POINT['1.110'], '1.110', 'FOLLOWING is a flat mainline point');
 assert.equal(VR_EXPERIENCE_POINT['1.130'], '1.130', 'CROSSING is a flat mainline point');
 for (const removedHintPointId of ['2.10.1', '2.30.1', '2.40.1']) {
@@ -129,8 +129,8 @@ assert.match(vr, /postRingPresentation\.update\(delta\);\s*observationWindow\.up
   'the render loop advances the local observation timer');
 assert.match(vr, /VR_SCENARIO_EFFECT\.BEGIN_MONKEY_ATTENTION\]: \(\) => \{ postRingMonkeyDialogue\.begin\(\); \}/,
   '3.30 begins the interaction-gated Monkey dialogue actor');
-assert.match(vr, /VR_SCENARIO_EFFECT\.BEGIN_FURNACE_INTRO\]: \(\) => \{\}/,
-  '3.40 remains an explicit Furnace boundary sink');
+assert.match(vr, /VR_SCENARIO_EFFECT\.BEGIN_FURNACE_INTRO[\s\S]*furnaceIntro\.begin\(\)/,
+  '3.40 executes the real Furnace intro actor');
 assert.match(vr, /renderer\.xr\.enabled = true/);
 assert.match(vr, /requestSession\('immersive-vr'/);
 assert.match(vr, /renderer\.setAnimationLoop\(renderFrame\)/);
