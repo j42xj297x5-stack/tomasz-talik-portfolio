@@ -34,12 +34,12 @@ for (const asset of ASSETS) {
   const document = await readGlbJson(asset.file);
   const nodesByName = new Map(document.nodes.map((node) => [node.name, node]));
   const runtimeContract = VR_PROGRESS_FLOOR_SOURCE_CONTRACTS[asset.sourceType];
-  assert.equal(runtimeContract.bodyNames[0], asset.base, `${asset.file} runtime body starts with its required BASE`);
-  assert.equal(runtimeContract.bodyNames.length, 2, `${asset.file} explicitly contracts BASE and authored colored overlay`);
+  assert.equal(runtimeContract.referenceBaseName, asset.base, `${asset.file} contracts its required technical BASE`);
+  assert.equal(runtimeContract.presentationBodyNames.length, 1, `${asset.file} contracts one authored presentation body`);
 
-  for (const bodyName of runtimeContract.bodyNames) {
+  for (const bodyName of [runtimeContract.referenceBaseName, ...runtimeContract.presentationBodyNames]) {
     const node = nodesByName.get(bodyName);
-    assert.ok(node, `${asset.file} contains revealable body node ${bodyName}`);
+    assert.ok(node, `${asset.file} contains contracted body node ${bodyName}`);
     assert.notEqual(node.mesh, undefined, `${asset.file}:${bodyName} owns a mesh`);
     const primitives = document.meshes[node.mesh].primitives;
     assert.ok(primitives.length > 0, `${asset.file}:${bodyName} has geometry primitives`);
