@@ -38,6 +38,52 @@ assert.equal('target' in vrExperienceScenario.points[0].transitions[0], false,
 assert.equal(Object.isFrozen(productionChange), true);
 assert.deepEqual(productionChange.addedMilestones, [VR_SCENARIO_MILESTONE.XR_CALIBRATED]);
 assert.deepEqual(productionChange.effects, [VR_SCENARIO_EFFECT.BEGIN_INTRO_REVEAL]);
+
+const bootstrapMilestones = [VR_SCENARIO_MILESTONE.XR_CALIBRATED];
+const arbitraryStartDirector = new ExperienceDirector({
+  scenario: vrExperienceScenario,
+  startPointId: VR_EXPERIENCE_POINT['2.10'],
+  initialMilestones: bootstrapMilestones
+});
+const arbitraryFactoryDirector = createVrExperienceDirector({
+  scenario: vrExperienceScenario,
+  startPointId: VR_EXPERIENCE_POINT['2.10'],
+  initialMilestones: bootstrapMilestones
+});
+assert.equal(arbitraryStartDirector.getCurrentPointId(), VR_EXPERIENCE_POINT['2.10']);
+assert.equal(arbitraryStartDirector.can(VR_SCENARIO_CAPABILITY.CAN_USE_GLYPHS), true,
+  'an arbitrary start exposes the authored capability of its current point immediately');
+assert.deepEqual(arbitraryStartDirector.getDebugSnapshot(), {
+  currentPointId: VR_EXPERIENCE_POINT['2.10'],
+  milestones: bootstrapMilestones,
+  capabilities: [VR_SCENARIO_CAPABILITY.CAN_USE_GLYPHS],
+  lastEvent: null
+}, 'construction sets the bootstrap state directly without producing a transition change or effects');
+assert.deepEqual(arbitraryFactoryDirector.getDebugSnapshot(), arbitraryStartDirector.getDebugSnapshot(),
+  'factory and direct constructor share arbitrary-start semantics');
+assert.throws(() => new ExperienceDirector({
+  scenario: vrExperienceScenario,
+  startPointId: VR_EXPERIENCE_POINT['100.10']
+}), /does not belong to the Scenario spine/);
+assert.throws(() => new ExperienceDirector({
+  scenario: vrExperienceScenario,
+  startPointId: '999.999'
+}), /unknown start point/);
+const arbitraryTransition = arbitraryStartDirector.dispatch(VR_SCENARIO_EVENT.FIRST_CRYSTAL_DISCOVERED);
+assert.equal(arbitraryTransition.previousPointId, VR_EXPERIENCE_POINT['2.10']);
+assert.equal(arbitraryTransition.currentPointId, VR_EXPERIENCE_POINT['2.20']);
+assert.deepEqual(arbitraryTransition.effects, [VR_SCENARIO_EFFECT.REVEAL_RELIQUARY]);
+assert.deepEqual(arbitraryTransition.addedMilestones, [VR_SCENARIO_MILESTONE.FIRST_CRYSTAL_DISCOVERED]);
+arbitraryStartDirector.resetSession();
+assert.equal(arbitraryStartDirector.getCurrentPointId(), VR_EXPERIENCE_POINT['2.10']);
+assert.equal(arbitraryStartDirector.hasMilestone(VR_SCENARIO_MILESTONE.FIRST_CRYSTAL_DISCOVERED), true,
+  'soft reset returns to the session start while preserving committed milestones');
+arbitraryStartDirector.resetSession({ hard: true });
+assert.equal(arbitraryStartDirector.getCurrentPointId(), VR_EXPERIENCE_POINT['2.10']);
+assert.equal(arbitraryStartDirector.hasMilestone(VR_SCENARIO_MILESTONE.XR_CALIBRATED), true,
+  'hard reset restores bootstrap initial milestones');
+assert.equal(arbitraryStartDirector.hasMilestone(VR_SCENARIO_MILESTONE.FIRST_CRYSTAL_DISCOVERED), false,
+  'hard reset removes milestones committed after bootstrap');
 assert.equal(productionDirector.dispatch(VR_SCENARIO_EVENT.XR_CALIBRATED), null);
 assert.equal(new ExperienceDirector({ scenario: vrExperienceScenario }).dispatch(VR_SCENARIO_EVENT.POST_REVEAL_SILENCE_COMPLETE), null,
   'silence completion is rejected before its scene');
