@@ -22,9 +22,10 @@ Wdrożony Spine ma kolejność:
 ```text
 1.10 → 1.20 → 1.30 → 1.40 → 1.50 → 1.60 → 1.70 → 1.80
 → 1.100 → 1.110 → 1.120 → 1.130 → 2.10 → 2.20 → 2.30 → 2.40
+→ 3.10 → 3.20 → 3.30 → 3.40
 ```
 
-`100.10` jest authored terminalnym EARLY EXIT poza Spine. `EXPLICIT` może prowadzić do niego z wyboru wyjścia. `2.40` jest ostatnim zaimplementowanym punktem mainline i nie ma transitionów.
+`100.10` jest authored terminalnym EARLY EXIT poza Spine. `EXPLICIT` może prowadzić do niego z wyboru wyjścia. `3.40` jest obecną granicą authoringu mainline; kolejne punkty Pieca pozostają do nazwania.
 
 WHERE w `1.100`, FOLLOW pause w `1.110`, BEYOND w `1.120` oraz hinty są lokalnymi reakcjami `STAY`. Nie są osobnymi story points. W szczególności nie istnieją LIVE technical points `1.100.1`, `1.110.1`, `1.120.1`, `1.130.1`, `1.130.2`, `2.10.1`, `2.30.1` ani `2.40.1`.
 
@@ -68,9 +69,19 @@ W `2.20` aktywacja Małpy emituje `MONKEY_TRIGGERED`. Scenario akceptuje ten eve
 
 Po zaakceptowaniu `FIRST_RING_COMPLETED` Runtime wykonuje `COMPLETE_FIRST_RING_PRESENTATION` przez `progressFloor.completeTier(1)` oraz `PLAY_FIRST_RING_COMPLETE_FEEDBACK` przez istniejący feedback audio. `syncTierOneWorldState()` i `syncAmbientSequence()` nadal są wywoływane przez kompozycję Runtime i nie zostały przeniesione do Scenario.
 
-### `2.40` — canonical completion
+### `2.40` — canonical completion i wejście w post-ring
 
-`2.40` oznacza ukończony pierwszy ring `5/5`. Jest obecnym końcem zaimplementowanego zakresu Scenario. Nie istnieje powrót z `2.40` do loopa ani dokumentacyjna pętla; późniejsza progresja nie jest CURRENT.
+`2.40` oznacza ukończony pierwszy ring `5/5`. Po zakończeniu prezentacji ringu event `FIRST_RING_PRESENTATION_COMPLETED` prowadzi do `3.10` i publikuje dwa rozłączne polecenia prezentacyjne: `REVEAL_SHELL_FIELD_PRESENTATION` oraz `ELEVATE_MAIN_GLYPHS`. Sam reveal pola nie nadaje jeszcze capability interakcji z Muszlami.
+
+### `3.10–3.40` — przejście do Pieca
+
+- `3.10` posiada post-ring world presentation: reveal pola Muszli oraz elevację głównych glyphów;
+- po zakończeniu prezentacji/czasu `POST_RING_WORLD_PRESENTATION_COMPLETED` rozpoczyna `3.20`;
+- `3.20` jest około dziesięciosekundowym observation window;
+- timeout `OBSERVATION_WINDOW_COMPLETED` rozpoczyna Monkey attention w `3.30`;
+- po attention/„checheszkach” `MONKEY_ATTENTION_COMPLETED` rozpoczyna `3.40`, czyli Monkey → Furnace intro.
+
+`3.40` celowo nie ma jeszcze następcy. Kolejne punkty procesu Pieca, `ASTRO PRODUCED`, fizyczne `ASTRO CLAIMED` oraz dopiero późniejsze `ENABLE_SHELL_INTERACTION` wymagają osobnego authoringu. Do tego czasu punkty `3.10–3.40` nie przyznają `CAN_SCAN_SHELLS`, `CAN_TARGET_SHELLS` ani furnace capabilities.
 
 ## 6. Reconstruction contract
 
@@ -90,6 +101,8 @@ Pole `settledConsequences` jest wdrożonym mechanizmem docelowym, ale obecne def
 - hydration i owner restore APIs;
 - reconstruction-backed checkpointy lub QA aliases;
 - save/durable persistence i pełny reset zapisanej gry;
-- mainline po `2.40`, w tym późniejsze akty, ringi i finał.
+- wykonawcze aktory/timery dla authored `3.10–3.40`;
+- punkty Pieca po `3.40`, produkcja i fizyczne podniesienie Astro oraz wynikające z nich odblokowanie interakcji z Muszlami;
+- późniejsze akty, ringi i finał.
 
 Istniejące compatibility aliases nazw punktów nie są checkpointami ani alternatywnym modelem progresji.
