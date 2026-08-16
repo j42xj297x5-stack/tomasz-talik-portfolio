@@ -450,7 +450,7 @@ const points = Object.freeze([
       Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.COMPLETE,
         event: VR_SCENARIO_EVENT.POST_RING_WORLD_PRESENTATION_COMPLETED,
         milestonesToAdd: Object.freeze([]),
-        effects: Object.freeze([VR_SCENARIO_EFFECT.BEGIN_OBSERVATION_WINDOW])
+        effects: Object.freeze([])
       })
     ])
   }),
@@ -458,13 +458,14 @@ const points = Object.freeze([
     id: VR_EXPERIENCE_POINT['3.20'],
     canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['3.30'] }),
     settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
+    entryEffects: Object.freeze([VR_SCENARIO_EFFECT.BEGIN_OBSERVATION_WINDOW]),
     label: 'Observation window / około 10 sekund',
     capabilities: Object.freeze([]),
     transitions: Object.freeze([
       Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.COMPLETE,
         event: VR_SCENARIO_EVENT.OBSERVATION_WINDOW_COMPLETED,
         milestonesToAdd: Object.freeze([]),
-        effects: Object.freeze([VR_SCENARIO_EFFECT.BEGIN_MONKEY_ATTENTION])
+        effects: Object.freeze([])
       })
     ])
   }),
@@ -472,13 +473,14 @@ const points = Object.freeze([
     id: VR_EXPERIENCE_POINT['3.30'],
     canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['3.40'] }),
     settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
+    entryEffects: Object.freeze([VR_SCENARIO_EFFECT.BEGIN_MONKEY_ATTENTION]),
     label: 'Monkey post-ring dialogue / attention, świadoma interakcja i obowiązkowa wiadomość',
     capabilities: Object.freeze([]),
     transitions: Object.freeze([
       Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.COMPLETE,
         event: VR_SCENARIO_EVENT.POST_RING_MONKEY_DIALOGUE_COMPLETED,
         milestonesToAdd: Object.freeze([]),
-        effects: Object.freeze([VR_SCENARIO_EFFECT.BEGIN_FURNACE_INTRO])
+        effects: Object.freeze([])
       })
     ])
   }),
@@ -486,6 +488,7 @@ const points = Object.freeze([
     id: VR_EXPERIENCE_POINT['3.40'],
     canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['3.50'] }),
     settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
+    entryEffects: Object.freeze([VR_SCENARIO_EFFECT.BEGIN_FURNACE_INTRO]),
     label: 'Monkey → Furnace intro',
     capabilities: Object.freeze([]),
     transitions: Object.freeze([
