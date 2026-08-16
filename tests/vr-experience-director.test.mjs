@@ -117,6 +117,7 @@ const pointOneForty = vrExperienceScenario.points.find(({ id }) => id === VR_EXP
 const pointOneFifty = vrExperienceScenario.points.find(({ id }) => id === VR_EXPERIENCE_POINT['1.50']);
 const pointOneSixty = vrExperienceScenario.points.find(({ id }) => id === VR_EXPERIENCE_POINT['1.60']);
 const pointOneSeventy = vrExperienceScenario.points.find(({ id }) => id === VR_EXPERIENCE_POINT['1.70']);
+const pointOneEighty = vrExperienceScenario.points.find(({ id }) => id === VR_EXPERIENCE_POINT['1.80']);
 assert.deepEqual(pointOneForty.transitions[0].effects, undefined,
   '1.40 completion does not own the target beat as a transition-local effect');
 assert.deepEqual(pointOneFifty.entryEffects, [VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING],
@@ -159,7 +160,16 @@ assert.equal(productionDirector.dispatch(VR_SCENARIO_EVENT.PLAYER_CLOSED_GUIDE),
 const monkeyHoveredChange = productionDirector.dispatch(VR_SCENARIO_EVENT.MONKEY_HOVERED);
 assert.equal(monkeyHoveredChange.currentPointId, VR_EXPERIENCE_POINT['1.80']);
 assert.deepEqual(monkeyHoveredChange.addedMilestones, []);
-assert.deepEqual(monkeyHoveredChange.effects, [VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING]);
+assert.deepEqual(pointOneSeventy.transitions[0].effects, undefined,
+  '1.70 completion does not own the target beat as a transition-local effect');
+assert.deepEqual(pointOneEighty.entryEffects, [VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING],
+  '1.80 owns the existing onboarding continuation through its entry contract');
+assert.deepEqual(monkeyHoveredChange.effects, pointOneEighty.entryEffects,
+  'natural entry into 1.80 executes its target-owned entry exactly once');
+const directOneEighty = new ExperienceDirector({ scenario: vrExperienceScenario, startPointId: VR_EXPERIENCE_POINT['1.80'] });
+assert.deepEqual(directOneEighty.activateCurrentPoint().effects, pointOneEighty.entryEffects,
+  'direct activation of 1.80 uses the same target entry contract');
+assert.equal(directOneEighty.activateCurrentPoint(), null, 'direct activation executes 1.80 entry exactly once');
 assert.equal(productionDirector.dispatch(VR_SCENARIO_EVENT.MONKEY_HOVERED), null, 'Monkey hover is accepted once');
 const monkeyTriggeredChange = productionDirector.dispatch(VR_SCENARIO_EVENT.MONKEY_TRIGGERED);
 assert.equal(monkeyTriggeredChange.currentPointId, VR_EXPERIENCE_POINT['1.100']);
