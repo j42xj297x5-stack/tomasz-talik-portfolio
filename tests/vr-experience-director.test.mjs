@@ -119,6 +119,7 @@ const pointOneSixty = vrExperienceScenario.points.find(({ id }) => id === VR_EXP
 const pointOneSeventy = vrExperienceScenario.points.find(({ id }) => id === VR_EXPERIENCE_POINT['1.70']);
 const pointOneEighty = vrExperienceScenario.points.find(({ id }) => id === VR_EXPERIENCE_POINT['1.80']);
 const pointOneHundred = vrExperienceScenario.points.find(({ id }) => id === VR_EXPERIENCE_POINT['1.100']);
+const pointOneHundredTen = vrExperienceScenario.points.find(({ id }) => id === VR_EXPERIENCE_POINT['1.110']);
 assert.deepEqual(pointOneForty.transitions[0].effects, undefined,
   '1.40 completion does not own the target beat as a transition-local effect');
 assert.deepEqual(pointOneFifty.entryEffects, [VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING],
@@ -190,7 +191,17 @@ for (const payload of [undefined, { choice: 4 }, { choice: '1' }]) assert.equal(
 const goChange = productionDirector.dispatch(VR_SCENARIO_EVENT.INTRO_INVITATION_SELECTED, { choice: 1 });
 assert.equal(goChange.currentPointId, VR_EXPERIENCE_POINT['1.110']);
 assert.equal(goChange.transitionKind, VR_SCENARIO_TRANSITION_KIND.COMPLETE);
-assert.deepEqual(goChange.effects, [VR_SCENARIO_EFFECT.CONTINUE_INTRO_INVITATION]);
+assert.deepEqual(pointOneHundred.transitions[0].effects, undefined,
+  '1.100 mainline completion does not own the target follow beat as a transition-local effect');
+assert.deepEqual(pointOneHundredTen.entryEffects, [VR_SCENARIO_EFFECT.CONTINUE_INTRO_INVITATION],
+  '1.110 owns the unchanged follow-Monkey command through its entry contract');
+assert.deepEqual(goChange.effects, pointOneHundredTen.entryEffects,
+  'natural entry into 1.110 executes its target-owned entry exactly once');
+assert.equal(productionDirector.activateCurrentPoint(), null, 'natural entry executes 1.110 entry exactly once');
+const directOneHundredTen = new ExperienceDirector({ scenario: vrExperienceScenario, startPointId: VR_EXPERIENCE_POINT['1.110'] });
+assert.deepEqual(directOneHundredTen.activateCurrentPoint().effects, pointOneHundredTen.entryEffects,
+  'direct activation of 1.110 uses the same target entry contract');
+assert.equal(directOneHundredTen.activateCurrentPoint(), null, 'direct activation executes 1.110 entry exactly once');
 assert.deepEqual(goChange.addedMilestones, []);
 for (let cycle = 0; cycle < 2; cycle += 1) {
   const pausePayload = { paused: true };
@@ -392,13 +403,17 @@ assert.equal(productionDirector.dispatch(VR_SCENARIO_EVENT.MONKEY_REACHED_THRESH
 const invitationStay = productionDirector.dispatch(VR_SCENARIO_EVENT.INTRO_INVITATION_SELECTED, { choice: 2 });
 assert.equal(invitationStay.currentPointId, VR_EXPERIENCE_POINT['1.100'], 'choice 2 remains an accepted canonical STAY');
 assert.equal(invitationStay.transitionKind, VR_SCENARIO_TRANSITION_KIND.STAY);
+assert.deepEqual(invitationStay.effects, [VR_SCENARIO_EFFECT.CONTINUE_INTRO_INVITATION]);
 assert.equal(productionDirector.dispatch(VR_SCENARIO_EVENT.INTRO_INVITATION_SELECTED, { choice: 1 }).currentPointId, VR_EXPERIENCE_POINT['1.110']);
 assert.notEqual(productionDirector.dispatch(VR_SCENARIO_EVENT.MONKEY_REACHED_THRESHOLD), null);
 reachInvitation(productionDirector);
 assert.equal(productionDirector.dispatch(VR_SCENARIO_EVENT.INTRO_INVITATION_SELECTED, { choice: 1 }).currentPointId, VR_EXPERIENCE_POINT['1.110']);
 assert.notEqual(productionDirector.dispatch(VR_SCENARIO_EVENT.MONKEY_REACHED_THRESHOLD), null, 'reset/re-entry permits threshold arrival again');
 reachInvitation(productionDirector);
-assert.equal(productionDirector.dispatch(VR_SCENARIO_EVENT.INTRO_INVITATION_SELECTED, { choice: 3 }).currentPointId, VR_EXPERIENCE_POINT['100.10']);
+const invitationExit = productionDirector.dispatch(VR_SCENARIO_EVENT.INTRO_INVITATION_SELECTED, { choice: 3 });
+assert.equal(invitationExit.currentPointId, VR_EXPERIENCE_POINT['100.10']);
+assert.equal(invitationExit.transitionKind, VR_SCENARIO_TRANSITION_KIND.EXPLICIT);
+assert.deepEqual(invitationExit.effects, [VR_SCENARIO_EFFECT.CONTINUE_INTRO_INVITATION]);
 assert.equal(productionDirector.dispatch(VR_SCENARIO_EVENT.INTRO_INVITATION_SELECTED, { choice: 1 }), null, '100.10 is terminal');
 assert.equal(productionDirector.dispatch(VR_SCENARIO_EVENT.MONKEY_REACHED_THRESHOLD), null, '100.10 rejects threshold arrival');
 reachInvitation(productionDirector);

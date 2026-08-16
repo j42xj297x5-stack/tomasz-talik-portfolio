@@ -79,6 +79,8 @@ assert.deepEqual(productionCalls, [VR_SCENARIO_EFFECT.BEGIN_INTRO_REVEAL, VR_SCE
   VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING, VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING,
   VR_SCENARIO_EFFECT.CONTINUE_INTRO_INVITATION]);
 productionRuntime.dispatch(VR_SCENARIO_EVENT.INTRO_INVITATION_SELECTED, { choice: 1 });
+assert.equal(productionCalls.filter((effect) => effect === VR_SCENARIO_EFFECT.CONTINUE_INTRO_INVITATION).length, 2,
+  'natural 1.110 entry executes the follow-Monkey command exactly once after the earlier STAY command');
 const followPayload = { paused: true };
 productionRuntime.dispatch(VR_SCENARIO_EVENT.FOLLOW_PAUSE_CHANGED, followPayload);
 assert.equal(productionChoicePayloads.at(-1), followPayload);
@@ -173,4 +175,18 @@ assert.deepEqual(monkeyTriggerEntryChange.effects, [VR_SCENARIO_EFFECT.CONTINUE_
 assert.equal(monkeyTriggerEntryRuntime.activateCurrentPoint(), null);
 assert.deepEqual(monkeyTriggerEntryCalls, [VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING],
   'Runtime executes the 1.100 entry command exactly once');
+
+const followEntryCalls = [];
+const followEntryRuntime = new RuntimeExperience({
+  director: new ExperienceDirector({ scenario: vrExperienceScenario, startPointId: '1.110' }),
+  effectHandlers: {
+    [VR_SCENARIO_EFFECT.CONTINUE_INTRO_INVITATION]: () => followEntryCalls.push(VR_SCENARIO_EFFECT.CONTINUE_INTRO_INVITATION)
+  }
+});
+const followEntryChange = followEntryRuntime.activateCurrentPoint();
+assert.deepEqual(followEntryChange.effects, [VR_SCENARIO_EFFECT.CONTINUE_INTRO_INVITATION],
+  'Runtime direct activation executes the authored 1.110 entry contract');
+assert.equal(followEntryRuntime.activateCurrentPoint(), null);
+assert.deepEqual(followEntryCalls, [VR_SCENARIO_EFFECT.CONTINUE_INTRO_INVITATION],
+  'Runtime executes the 1.110 entry command exactly once');
 console.log('RuntimeExperience assertions passed');
