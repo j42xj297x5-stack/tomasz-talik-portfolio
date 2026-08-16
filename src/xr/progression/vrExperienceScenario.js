@@ -1,3 +1,5 @@
+import { deriveScenarioSpine } from './scenarioSpineNavigation.js';
+
 function immutableIdentifiers(names) {
   return Object.freeze(Object.fromEntries(names.map((name) => [name, name])));
 }
@@ -171,34 +173,7 @@ export const VR_EXPERIENCE_POINT = immutableIdentifiers([
 // Compatibility export only; both names reference the same identifier set.
 export const VR_EXPERIENCE_SCENE = VR_EXPERIENCE_POINT;
 
-// Authored story order. This is deliberately explicit and independent from
-// identifier sorting and transition topology; local branches never belong here.
-export const VR_EXPERIENCE_SCENARIO_SPINE = Object.freeze([
-  VR_EXPERIENCE_POINT['1.10'],
-  VR_EXPERIENCE_POINT['1.20'],
-  VR_EXPERIENCE_POINT['1.30'],
-  VR_EXPERIENCE_POINT['1.40'],
-  VR_EXPERIENCE_POINT['1.50'],
-  VR_EXPERIENCE_POINT['1.60'],
-  VR_EXPERIENCE_POINT['1.70'],
-  VR_EXPERIENCE_POINT['1.80'],
-  VR_EXPERIENCE_POINT['1.100'],
-  VR_EXPERIENCE_POINT['1.110'],
-  VR_EXPERIENCE_POINT['1.120'],
-  VR_EXPERIENCE_POINT['1.130'],
-  VR_EXPERIENCE_POINT['2.10'],
-  VR_EXPERIENCE_POINT['2.20'],
-  VR_EXPERIENCE_POINT['2.30'],
-  VR_EXPERIENCE_POINT['2.40'],
-  VR_EXPERIENCE_POINT['3.10'],
-  VR_EXPERIENCE_POINT['3.20'],
-  VR_EXPERIENCE_POINT['3.30'],
-  VR_EXPERIENCE_POINT['3.40'],
-  VR_EXPERIENCE_POINT['3.50'],
-  VR_EXPERIENCE_POINT['3.60'],
-  VR_EXPERIENCE_POINT['3.70'],
-  VR_EXPERIENCE_POINT['3.80']
-]);
+// Canonical order is authored on point graph edges and derived below.
 
 const EMPTY_SETTLED_CONSEQUENCES = Object.freeze({});
 const INTRO_COMPLETE_SETTLED_CONSEQUENCES = Object.freeze({
@@ -236,6 +211,7 @@ const ACT_TWO_ENTRY_SETTLED_CONSEQUENCES = Object.freeze({
 const points = Object.freeze([
   Object.freeze({
     id: VR_EXPERIENCE_POINT['1.10'],
+    canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['1.20'] }),
     settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
     label: 'Bootstrap / oczekiwanie na kalibrację XR',
     capabilities: Object.freeze([]),
@@ -248,6 +224,7 @@ const points = Object.freeze([
   }),
   Object.freeze({
     id: VR_EXPERIENCE_POINT['1.20'],
+    canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['1.30'] }),
     settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
     label: 'Intro reveal',
     capabilities: Object.freeze([]),
@@ -261,6 +238,7 @@ const points = Object.freeze([
   }),
   Object.freeze({
     id: VR_EXPERIENCE_POINT['1.30'],
+    canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['1.40'] }),
     settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
     label: 'Cisza po revealu',
     capabilities: Object.freeze([]),
@@ -274,6 +252,7 @@ const points = Object.freeze([
   }),
   Object.freeze({
     id: VR_EXPERIENCE_POINT['1.40'],
+    canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['1.50'] }),
     settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
     label: 'Controller onboarding',
     capabilities: Object.freeze([]),
@@ -288,6 +267,7 @@ const points = Object.freeze([
   }),
   Object.freeze({
     id: VR_EXPERIENCE_POINT['1.50'],
+    canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['1.60'] }),
     settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
     label: 'Player Guide otwarty / oczekiwanie na obejrzenie controls',
     capabilities: Object.freeze([]),
@@ -301,6 +281,7 @@ const points = Object.freeze([
   }),
   Object.freeze({
     id: VR_EXPERIENCE_POINT['1.60'],
+    canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['1.70'] }),
     settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
     label: 'Controls obejrzane / oczekiwanie na zamknięcie panelu',
     capabilities: Object.freeze([]),
@@ -314,6 +295,7 @@ const points = Object.freeze([
   }),
   Object.freeze({
     id: VR_EXPERIENCE_POINT['1.70'],
+    canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['1.80'] }),
     settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
     label: 'Pointer tutorial uruchomiony / oczekiwanie na wskazanie Monkey',
     capabilities: Object.freeze([]),
@@ -327,6 +309,7 @@ const points = Object.freeze([
   }),
   Object.freeze({
     id: VR_EXPERIENCE_POINT['1.80'],
+    canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['1.100'] }),
     settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
     label: 'Monkey wskazany / oczekiwanie na trigger',
     capabilities: Object.freeze([]),
@@ -340,6 +323,7 @@ const points = Object.freeze([
   }),
   Object.freeze({
     id: VR_EXPERIENCE_POINT['1.100'],
+    canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['1.110'] }),
     settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
     label: 'Sekwencja po triggerze / invitation / oczekiwanie na wybór',
     capabilities: Object.freeze([]),
@@ -351,6 +335,7 @@ const points = Object.freeze([
   }),
   Object.freeze({
     id: VR_EXPERIENCE_POINT['1.110'],
+    canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['1.120'] }),
     settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
     label: 'Gracz zgadza się iść za Monkey / FOLLOWING zaczyna się',
     capabilities: Object.freeze([]),
@@ -369,6 +354,7 @@ const points = Object.freeze([
   }),
   Object.freeze({
     id: VR_EXPERIENCE_POINT['1.120'],
+    canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['1.130'] }),
     settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
     label: 'Monkey dotarła do progu / threshold dialogue prezentowany',
     capabilities: Object.freeze([]),
@@ -380,6 +366,7 @@ const points = Object.freeze([
   }),
   Object.freeze({
     id: VR_EXPERIENCE_POINT['1.130'],
+    canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['2.10'] }),
     settledConsequences: INTRO_COMPLETE_SETTLED_CONSEQUENCES,
     label: 'Gracz przekracza próg / CROSSING rozpoczyna się',
     capabilities: Object.freeze([]),
@@ -390,6 +377,7 @@ const points = Object.freeze([
   }),
   Object.freeze({
     id: VR_EXPERIENCE_POINT['2.10'],
+    canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['2.20'] }),
     settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
     label: 'GLYPH_FREE_EXPLORE rozpoczęte',
     capabilities: Object.freeze([VR_SCENARIO_CAPABILITY.CAN_USE_GLYPHS]),
@@ -400,6 +388,7 @@ const points = Object.freeze([
   }),
   Object.freeze({
     id: VR_EXPERIENCE_POINT['2.20'],
+    canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['2.30'] }),
     settledConsequences: RELIQUARY_REVEALED_SETTLED_CONSEQUENCES,
     label: 'Pierwszy kryształ odkryty / oczekiwanie na aktywację Monkey i reliquary reveal',
     capabilities: Object.freeze([]),
@@ -410,6 +399,7 @@ const points = Object.freeze([
   }),
   Object.freeze({
     id: VR_EXPERIENCE_POINT['2.30'],
+    canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['2.40'] }),
     settledConsequences: FIRST_RING_COMPLETE_SETTLED_CONSEQUENCES,
     label: 'Pierwszy ring / zdobywanie pierwszych 5 kart',
     capabilities: Object.freeze([
@@ -433,6 +423,7 @@ const points = Object.freeze([
   }),
   Object.freeze({
     id: VR_EXPERIENCE_POINT['2.40'],
+    canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['3.10'] }),
     settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
     label: 'Pierwszy ring / pierwszy globalny poziom ukończony 5/5',
     capabilities: Object.freeze([]),
@@ -446,6 +437,7 @@ const points = Object.freeze([
   }),
   Object.freeze({
     id: VR_EXPERIENCE_POINT['3.10'],
+    canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['3.20'] }),
     settledConsequences: ACT_TWO_ENTRY_SETTLED_CONSEQUENCES,
     entryEffects: Object.freeze([
       VR_SCENARIO_EFFECT.REVEAL_SHELL_FIELD_PRESENTATION,
@@ -463,6 +455,7 @@ const points = Object.freeze([
   }),
   Object.freeze({
     id: VR_EXPERIENCE_POINT['3.20'],
+    canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['3.30'] }),
     settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
     label: 'Observation window / około 10 sekund',
     capabilities: Object.freeze([]),
@@ -476,6 +469,7 @@ const points = Object.freeze([
   }),
   Object.freeze({
     id: VR_EXPERIENCE_POINT['3.30'],
+    canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['3.40'] }),
     settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
     label: 'Monkey post-ring dialogue / attention, świadoma interakcja i obowiązkowa wiadomość',
     capabilities: Object.freeze([]),
@@ -489,6 +483,7 @@ const points = Object.freeze([
   }),
   Object.freeze({
     id: VR_EXPERIENCE_POINT['3.40'],
+    canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['3.50'] }),
     settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
     label: 'Monkey → Furnace intro',
     capabilities: Object.freeze([]),
@@ -498,7 +493,8 @@ const points = Object.freeze([
     ])
   }),
   Object.freeze({
-    id: VR_EXPERIENCE_POINT['3.50'], settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
+    id: VR_EXPERIENCE_POINT['3.50'],
+    canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['3.60'] }), settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
     label: 'Furnace available / Astro production ready',
     capabilities: Object.freeze([VR_SCENARIO_CAPABILITY.CAN_USE_FURNACE, VR_SCENARIO_CAPABILITY.CAN_OPEN_FURNACE,
       VR_SCENARIO_CAPABILITY.CAN_START_FURNACE_PROCESS]),
@@ -506,20 +502,23 @@ const points = Object.freeze([
       event: VR_SCENARIO_EVENT.ASTRO_ATTRACTOR_PRODUCTION_REQUESTED, milestonesToAdd: Object.freeze([]), effects: Object.freeze([]) })])
   }),
   Object.freeze({
-    id: VR_EXPERIENCE_POINT['3.60'], settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
+    id: VR_EXPERIENCE_POINT['3.60'],
+    canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['3.70'] }), settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
     label: 'Astro Attractor construction', capabilities: Object.freeze([VR_SCENARIO_CAPABILITY.CAN_USE_FURNACE]),
     transitions: Object.freeze([Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.COMPLETE,
       event: VR_SCENARIO_EVENT.ASTRO_ATTRACTOR_PRODUCED, milestonesToAdd: Object.freeze([]), effects: Object.freeze([]) })])
   }),
   Object.freeze({
-    id: VR_EXPERIENCE_POINT['3.70'], settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
+    id: VR_EXPERIENCE_POINT['3.70'],
+    canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['3.80'] }), settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
     label: 'Physical Astro available / waiting for claim',
     capabilities: Object.freeze([VR_SCENARIO_CAPABILITY.CAN_USE_FURNACE, VR_SCENARIO_CAPABILITY.CAN_OPEN_FURNACE]),
     transitions: Object.freeze([Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.COMPLETE,
       event: VR_SCENARIO_EVENT.ASTRO_ATTRACTOR_CLAIMED, milestonesToAdd: Object.freeze([]), effects: Object.freeze([]) })])
   }),
   Object.freeze({
-    id: VR_EXPERIENCE_POINT['3.80'], settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
+    id: VR_EXPERIENCE_POINT['3.80'],
+    canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['100.10'] }), settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
     label: 'Astro Attractor physically claimed / EARNED',
     capabilities: Object.freeze([VR_SCENARIO_CAPABILITY.CAN_EQUIP_ASTRO, VR_SCENARIO_CAPABILITY.CAN_SCAN_SHELLS,
       VR_SCENARIO_CAPABILITY.CAN_TARGET_SHELLS, VR_SCENARIO_CAPABILITY.CAN_USE_FURNACE,
@@ -534,13 +533,23 @@ const points = Object.freeze([
   })
 ]);
 
+const scenarioGraph = Object.freeze({
+  initialPointId: VR_EXPERIENCE_POINT['1.10'],
+  canonicalTerminalPointId: VR_EXPERIENCE_POINT['100.10'],
+  points
+});
+
+export const VR_EXPERIENCE_SCENARIO_SPINE = Object.freeze(deriveScenarioSpine(scenarioGraph));
+
 export const vrExperienceScenario = Object.freeze({
   id: 'experience-vr',
-  initialPointId: VR_EXPERIENCE_SCENARIO_SPINE[0],
+  initialPointId: scenarioGraph.initialPointId,
+  canonicalTerminalPointId: scenarioGraph.canonicalTerminalPointId,
+  canonicalTerminalIsExit: true,
   points,
   spine: VR_EXPERIENCE_SCENARIO_SPINE,
   // Compatibility aliases share the canonical point data; they are not a second model.
-  initialSceneId: VR_EXPERIENCE_SCENARIO_SPINE[0],
+  initialSceneId: scenarioGraph.initialPointId,
   scenes: points,
   vocabulary: Object.freeze({
     events: Object.freeze(Object.values(VR_SCENARIO_EVENT)),
@@ -551,6 +560,6 @@ export const vrExperienceScenario = Object.freeze({
   metadata: Object.freeze({
     stage: 'M3_ASTRO_PHYSICAL_CLAIM',
     authoritativeForLiveGameplay: true,
-    // Routing topology lives only in points/transitions and the authored Spine.
+    // Canonical routing topology lives on authored point graph edges.
   })
 });

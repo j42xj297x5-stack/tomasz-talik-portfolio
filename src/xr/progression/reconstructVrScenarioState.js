@@ -1,4 +1,4 @@
-import { validateScenarioSpine } from './scenarioSpineNavigation.js';
+import { deriveScenarioSpine, validateScenarioSpine } from './scenarioSpineNavigation.js';
 
 export { validateScenarioSpine } from './scenarioSpineNavigation.js';
 
@@ -26,15 +26,15 @@ function cloneAndFreeze(value) {
 }
 
 export function stateAtVrScenarioPoint(scenario, pointId) {
-  validateScenarioSpine(scenario);
-  const targetIndex = scenario.spine.indexOf(pointId);
-  if (targetIndex < 0) {
+  const spine = deriveScenarioSpine(scenario);
+  const targetIndex = spine.indexOf(pointId);
+  if (targetIndex < 0 || scenario.canonicalTerminalIsExit && pointId === scenario.canonicalTerminalPointId) {
     throw new Error(`Point "${pointId}" is not a canonical reconstruction target`);
   }
 
   const pointsById = new Map(scenario.points.map((point) => [point.id, point]));
   const state = {};
-  for (const precedingPointId of scenario.spine.slice(0, targetIndex)) {
+  for (const precedingPointId of spine.slice(0, targetIndex)) {
     const consequences = pointsById.get(precedingPointId).settledConsequences ?? {};
     assertDeclarativeValue(consequences, `settledConsequences for "${precedingPointId}"`);
     if (Object.getPrototypeOf(consequences) !== Object.prototype) {
