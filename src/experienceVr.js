@@ -56,6 +56,8 @@ import { createVrAudioBridge } from './xr/audio/createVrAudioBridge.js';
 import { createVrAmbientSequencer } from './xr/audio/createVrAmbientSequencer.js';
 import { ExperienceDirector } from './xr/progression/ExperienceDirector.js';
 import { RuntimeExperience } from './xr/progression/RuntimeExperience.js';
+import { stateAtVrScenarioPoint } from './xr/progression/reconstructVrScenarioState.js';
+import { hydrateVrScenarioState } from './xr/progression/hydrateVrScenarioState.js';
 import { createVrDebugCheckpointController } from './xr/progression/enterVrDebugCheckpoint.js';
 import { VR_DEBUG_CHECKPOINTS } from './xr/progression/vrDebugCheckpoints.js';
 import { createVrPostRingPresentation } from './xr/progression/createVrPostRingPresentation.js';
@@ -637,6 +639,13 @@ const furnaceIntro = createVrFurnaceIntro({
 });
 runtimeExperience = new RuntimeExperience({
   director: experienceDirector,
+  pointLifecycle: {
+    stateAt: (pointId) => stateAtVrScenarioPoint(vrExperienceScenario, pointId),
+    hydrate: (state) => hydrateVrScenarioState(state, scenarioOwners),
+    restoreBaseline: restoreVrScenarioBaseline,
+    synchronize: syncAmbientSequence,
+    createDirector: (pointId) => new ExperienceDirector({ scenario: vrExperienceScenario, startPointId: pointId })
+  },
   effectHandlers: {
     [VR_SCENARIO_EFFECT.BEGIN_INTRO_REVEAL]: () => {
       if (!introSequence.beginIntroReveal()) {

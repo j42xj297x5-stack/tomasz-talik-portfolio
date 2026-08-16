@@ -25,7 +25,7 @@ function cloneAndFreeze(value) {
   return value;
 }
 
-export function reconstructVrScenarioState(scenario, pointId) {
+export function stateAtVrScenarioPoint(scenario, pointId) {
   validateScenarioSpine(scenario);
   const targetIndex = scenario.spine.indexOf(pointId);
   if (targetIndex < 0) {
@@ -47,3 +47,7 @@ export function reconstructVrScenarioState(scenario, pointId) {
 
   return cloneAndFreeze(state);
 }
+
+// Compatibility name for callers introduced before M3B named the two lifecycle
+// operations explicitly. Both exports are the same exclusive, declarative query.
+export const reconstructVrScenarioState = stateAtVrScenarioPoint;

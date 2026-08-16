@@ -11,17 +11,17 @@ export function createVrDebugCheckpointController({ scenario, owners, restoreBas
   }
   return function enterVrDebugCheckpoint(checkpointId) {
     const checkpoint = resolveVrDebugCheckpoint(checkpointId);
-    const prepared = prepareSession({
-      pointId: checkpoint.pointId, scenario, owners, restoreBaseline, synchronizeDerivedState
-    });
-    runtime.replaceDirector(prepared.director);
+    const prepared = typeof runtime.activatePoint === 'function'
+      ? runtime.activatePoint(checkpoint.pointId)
+      : prepareSession({ pointId: checkpoint.pointId, scenario, owners, restoreBaseline, synchronizeDerivedState });
+    if (typeof runtime.activatePoint !== 'function') runtime.replaceDirector(prepared.director);
     if (checkpoint.spawn === VR_DEBUG_CHECKPOINT_SPAWN.INTRO) {
       spawnIntro();
-      runtime.activateCurrentPoint();
+      if (typeof runtime.activatePoint !== 'function') runtime.activateCurrentPoint();
       requestCanonicalXrStartCalibration();
     } else {
       spawnRing();
-      runtime.activateCurrentPoint();
+      if (typeof runtime.activatePoint !== 'function') runtime.activateCurrentPoint();
     }
     return Object.freeze({ ...prepared, checkpoint });
   };
