@@ -47,11 +47,11 @@ function boundsInAnchor(root, anchor) {
 // Canonical process-zone placement shared by inserted content and every furnace-produced object.
 export function resolveFurnaceContentSnapTarget({
   object, visibleRoot = object, anchor, energyCell = null, contentClearance = 0.012,
-  desiredWorldScale = null, localGeometryCenter = null, centerVisibleBounds = false
+  desiredWorldScale = null, localGeometryCenter = null, centerVisibleBounds = false, preserveOrientation = false
 }) {
   if (!object || !visibleRoot || !anchor) return new THREE.Vector3();
   const savedPosition = object.position.clone(), savedQuaternion = object.quaternion.clone(), savedScale = object.scale.clone();
-  object.position.set(0, 0, 0); object.quaternion.identity();
+  object.position.set(0, 0, 0); if (!preserveOrientation) object.quaternion.identity();
   if (desiredWorldScale) {
     object.scale.set(1, 1, 1); object.updateWorldMatrix(true, false);
     const actual = object.getWorldScale(new THREE.Vector3());

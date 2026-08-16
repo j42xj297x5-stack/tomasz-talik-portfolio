@@ -349,6 +349,8 @@ asterionProductionController.setHandModeController(handModeController);
 const astroAttractorProductionController = createVrAstroAttractorProductionController({
   model: assetManager.cloneGltfScene('vr-astro-attractor-model'),
   contentAnchor: astroFurnace.nodes.VR_FURNACE_CONTENT_ANCHOR,
+  chamber: astroFurnace.nodes.komora,
+  chamberCylinder: resolveChamberCylinder(astroFurnace.nodes.komora, settings.furnace.content.chamberClearance),
   energyCell: astroFurnace.nodes.energy_cell ?? astroFurnace.nodes.fire_cell,
   controllers: vrControllers.controllers,
   processDriver: {
