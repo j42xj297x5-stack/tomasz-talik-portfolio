@@ -15,7 +15,7 @@
 
 ### Documents read
 
-In the required order: `PROJECT_ENTRY.md`; `docs/current/maps/PROJECT_INDEX.md`; `docs/current/technical/VR_SCENARIO_DIRECTOR_MODEL.md`; `docs/current/technical/VR_RUNTIME_MODEL.md`; `docs/current/handoffs/EXPERIENCE_VR_HANDOFF.md`; the complete `docs/current/audits/progression/EXPERIENCE_VR_SCENARIO_MIGRATION_AUDIT_2026-08-12.md`; `docs/current/decisions/DECISION_LOG.md`; and `docs/current/maps/DEPENDENCY_MAP.md`. The Project Index also routed the audit to `docs/current/concept/EXPERIENCE_VR_NARRATIVE_PROGRESSION_BASELINE.md`, which was read to distinguish current mechanical progression from future narrative.
+In the required order: `docs/current/maps/PROJECT_INDEX.md`; `docs/current/technical/VR_SCENARIO_DIRECTOR_MODEL.md`; `docs/current/technical/VR_RUNTIME_MODEL.md`; `docs/current/handoffs/EXPERIENCE_VR_HANDOFF.md`; the complete `docs/current/audits/progression/EXPERIENCE_VR_SCENARIO_MIGRATION_AUDIT_2026-08-12.md`; `docs/current/decisions/DECISION_LOG.md`; and `docs/current/maps/DEPENDENCY_MAP.md`. The Project Index also routed the audit to `docs/current/concept/EXPERIENCE_VR_NARRATIVE_PROGRESSION_BASELINE.md`, which was read to distinguish current mechanical progression from future narrative.
 
 The canonical documents lag current code: the handoff says Scenario authority ends at `1.130`, whereas current Scenario metadata states M1.17 and has live points through `1.170` (`src/xr/progression/vrExperienceScenario.js:321-420`). That status conflict was not resolved by editing canonical documents; code was used as implementation evidence.
 
@@ -65,7 +65,7 @@ All 22 identifiers in `VR_EXPERIENCE_POINT` are LIVE Scenario identifiers; unlik
 | `1.150` | `CAN_USE_GLYPHS` | `FIRST_CRYSTAL_DISCOVERED→1.160` |
 | `1.160` | — | `RELIQUARY_REVEAL_COMPLETED→1.170` + `COMPLETE_RELIQUARY_REVEAL` |
 | `1.170` | `CAN_USE_GLYPHS` | terminal for the current authored slice |
-| `100.10` | — | LIVE terminal exit |
+| `100.10` | — | LIVE terminal exit; a later Visionary decision canonically classifies it as the authored mainline story terminal and convergence point for all exit routes |
 
 The exact declarative transitions are at `src/xr/progression/vrExperienceScenario.js:144-380`. Director selects only an explicit target and never derives order from IDs (`src/xr/progression/ExperienceDirector.js:81-100`): `SCENARIO_DECISION_OK`.
 

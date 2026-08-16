@@ -6,7 +6,7 @@ Status: **CURRENT**. Kod jest dowodem statusu IMPLEMENTED; ten dokument jest can
 
 `SPINE → SCENARIO → DIRECTOR → RUNTIME / ACTORS / DOMAIN OWNERS`
 
-Spine posiada kolejność mainline, Scenario punkty/events/effects/capabilities, Director bieżący punkt i legalność przejść, a Runtime/aktorzy wykonanie oraz stan domenowy i transient. `RuntimeExperience` jest granicą wykonawczą symbolicznych effects. `STAY` nie zmienia punktu, `COMPLETE` używa `Spine.next()`, `EXPLICIT` obsługuje early exit, a crossing-only `COMPLETE_IF` nie jest ogólnym rules engine.
+Spine posiada kolejność mainline, Scenario punkty/events/effects/capabilities, Director bieżący punkt i legalność przejść, a Runtime/aktorzy wykonanie oraz stan domenowy i transient. `RuntimeExperience` jest granicą wykonawczą symbolicznych effects. `STAY` nie zmienia punktu, `COMPLETE` używa `Spine.next()`, `EXPLICIT` obsługuje jawne drogi wyjścia do wspólnego terminala, a crossing-only `COMPLETE_IF` nie jest ogólnym rules engine.
 
 ## Canonical Spine
 
@@ -14,10 +14,10 @@ Spine posiada kolejność mainline, Scenario punkty/events/effects/capabilities,
 1.10 → 1.20 → 1.30 → 1.40 → 1.50 → 1.60 → 1.70 → 1.80
 → 1.100 → 1.110 → 1.120 → 1.130
 → 2.10 → 2.20 → 2.30 → 2.40
-→ 3.10 → 3.20 → 3.30 → 3.40 → 3.50 → 3.60 → 3.70 → 3.80
+→ 3.10 → 3.20 → 3.30 → 3.40 → 3.50 → 3.60 → 3.70 → 3.80 → 100.10
 ```
 
-`100.10` jest terminalnym EARLY EXIT poza mainline. WHERE, FOLLOW pause, BEYOND i hinty są lokalnymi `STAY`, nie dodatkowymi technical points. Aktualny authored mainline kończy się na `3.80`.
+`100.10` jest pełnoprawnym canonical terminalem authored mainline i częścią fabuły. Prowadzi do niego zarówno normalne zakończenie obecnie authored flow po `3.80`, jak i wcześniejsze jawne drogi wyjścia. Terminal pozostaje niedozwolonym celem reconstruction/checkpoint start. WHERE, FOLLOW pause, BEYOND i hinty są lokalnymi `STAY`, nie dodatkowymi technical points.
 
 ## Intro i pierwszy ring
 

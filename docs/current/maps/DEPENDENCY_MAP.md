@@ -31,6 +31,7 @@ experienceVr bootstrap
 → 3.70 physical AVAILABLE in chamber
 → 3.80 physical claim / EARNED
 → CAN_EQUIP_ASTRO + CAN_SCAN_SHELLS + CAN_TARGET_SHELLS
+→ 100.10 canonical story terminal
 ```
 
 ```text
@@ -44,4 +45,4 @@ Production representation i gameplay equipment mają rozdzielone lifecycle owner
 
 ## Existing domain mechanics versus authored boundary
 
-Shell targeting, Furnace material progression and Asterion production/control mogą istnieć jako domenowe runtime mechanics. Nie stanowią ukończonego authored mainline po `3.80`. Rune Stones, małe glify i dalsze akty pozostają future systems. Hydration, arbitrary start, reconstruction-backed checkpoints i durable save pozostają deferred.
+Shell targeting, Furnace material progression and Asterion production/control mogą istnieć jako domenowe runtime mechanics, ale nie są authored punktami między `3.80` a canonical terminalem `100.10`. P0/P1/P2 używają wdrożonego direct activation oraz canonical reconstruction/hydration lifecycle. Stable state po `3.40`, Astro `AVAILABLE`/`EARNED`, Shell/Furnace/Asterion hydration, P3/P4 i durable save pozostają partial/deferred; Rune Stones, małe glify i dalsze akty pozostają future systems.

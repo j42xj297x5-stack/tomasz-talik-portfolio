@@ -625,12 +625,11 @@ Sprawdzenie wykonano przez odczyt plików, wyszukiwanie semantyczne (`if/state/g
 
 ### Audytowane dokumenty kanoniczne
 
-1. `PROJECT_ENTRY.md`
-2. `docs/current/maps/PROJECT_INDEX.md`
-3. `docs/current/concept/EXPERIENCE_VR_NARRATIVE_PROGRESSION_BASELINE.md`
-4. `docs/current/technical/VR_RUNTIME_MODEL.md`
-5. `docs/current/handoffs/EXPERIENCE_VR_HANDOFF.md`
-6. `docs/current/maps/DEPENDENCY_MAP.md`
+1. `docs/current/maps/PROJECT_INDEX.md`
+2. `docs/current/concept/EXPERIENCE_VR_NARRATIVE_PROGRESSION_BASELINE.md`
+3. `docs/current/technical/VR_RUNTIME_MODEL.md`
+4. `docs/current/handoffs/EXPERIENCE_VR_HANDOFF.md`
+5. `docs/current/maps/DEPENDENCY_MAP.md`
 7. `docs/current/maps/DOCUMENTATION_MAP.md`
 8. `docs/current/decisions/DECISION_LOG.md`
 

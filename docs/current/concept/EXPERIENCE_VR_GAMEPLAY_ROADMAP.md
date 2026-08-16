@@ -8,12 +8,12 @@ Intro, first crystal/Reliquary reveal, five Tier-1 cards, first-ring presentatio
 
 Tier 1 nie daje automatycznie Astro. Dopiero `ASTRO_ATTRACTOR_CLAIMED` w `3.80` czyni je `EARNED` i przyznaje `CAN_EQUIP_ASTRO`, `CAN_SCAN_SHELLS`, `CAN_TARGET_SHELLS`. Widoczne od `3.10` pole skorup nie jest przed claimem interaktywne ani revealowane ponownie.
 
-## STOP BOUNDARY / NEXT
+## CURRENT AUTHORED BOUNDARY / NEXT
 
-Authored mainline kończy się na `3.80`. Dalszy authored shell progression i pełny Asterion loop są **NEXT / NOT YET AUTHORED**, mimo istniejących domenowych mechanik runtime. Najbliższe zadania to:
+Obecny authored gameplay dochodzi przez `3.80` do canonical terminala fabuły `100.10`. Shell progression i pełny Asterion loop nie mają obecnie authored punktów między tym gameplay boundary a terminalem i są **NEXT / NOT YET AUTHORED**, mimo istniejących domenowych mechanik runtime. Najbliższe zadania to:
 
 - hardware/perceptual QA `3.10–3.80`;
-- authored shell/Furnace/Asterion progression po `3.80`;
+- przyszły, osobno zatwierdzony authored zakres shell/Furnace/Asterion;
 - następnie małe glify i dalsze akty zgodnie z kanonem.
 
 ## Future systems
