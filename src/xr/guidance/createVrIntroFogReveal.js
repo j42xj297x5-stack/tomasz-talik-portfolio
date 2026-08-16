@@ -40,7 +40,8 @@ export function createVrIntroFogReveal({ center, roots = [], color = VR_BACKGROU
       for (const material of materials.filter(Boolean)) {
         if (patched.has(material)) continue;
         const previous = material.onBeforeCompile;
-        patched.set(material, previous);
+        const previousProgramCacheKey = material.customProgramCacheKey;
+        patched.set(material, { onBeforeCompile: previous, customProgramCacheKey: previousProgramCacheKey });
         material.onBeforeCompile = (shader, renderer) => {
           previous?.(shader, renderer);
           shader.uniforms.vrFogWorldToPlatform = uniforms.worldToPlatform;
@@ -64,13 +65,20 @@ vrFogPlatformPosition = (vrFogWorldToPlatform * vrFogWorldPosition).xyz;`);
           shader.fragmentShader = `uniform float vrFogRadius; uniform vec3 vrFogColor; varying vec3 vrFogPlatformPosition;\n${shader.fragmentShader}`
             .replace('#include <tonemapping_fragment>', `float vrFogEdge = smoothstep(vrFogRadius - ${feather}, vrFogRadius + ${feather}, length(vrFogPlatformPosition.xz));\n gl_FragColor.rgb = mix(vrFogColor, gl_FragColor.rgb, vrFogEdge);\n#include <tonemapping_fragment>`);
         };
+        material.customProgramCacheKey = function vrIntroFogProgramCacheKey() {
+          return `${previousProgramCacheKey.call(this)}|vr-intro-fog-reveal-v1`;
+        };
         material.needsUpdate = true;
       }
     });
     installed = true;
   }
   function uninstall() {
-    for (const [material, previous] of patched) { material.onBeforeCompile = previous; material.needsUpdate = true; }
+    for (const [material, previous] of patched) {
+      material.onBeforeCompile = previous.onBeforeCompile;
+      material.customProgramCacheKey = previous.customProgramCacheKey;
+      material.needsUpdate = true;
+    }
     patched.clear(); installed = false;
   }
   function setRadius(radius) { uniforms.radius.value = Math.max(0, radius); syncCenter(); }
