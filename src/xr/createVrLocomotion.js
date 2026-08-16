@@ -143,6 +143,7 @@ export function createVrLocomotion({ playerRig, renderer, camera, settings, surf
     if (clamp) clampPositionToWalkRadius(playerRig.position, activeWalkRadius);
   }
   function reset() { playerRig.position.y = initialLocalY; leftYawLocked = false; activeWalkRadius = initialWalkRadius; }
+  function resetScenarioBaseline() { playerRig.position.y = initialLocalY; leftYawLocked = false; activeWalkRadius = Infinity; }
   function hydrateScenarioState(state) {
     if (state?.boundary !== 'GLYPH_RING' || !Number.isFinite(scenarioGlyphRingRadius) || scenarioGlyphRingRadius <= 0) {
       throw new Error('GLYPH_RING scenario boundary requires scenarioGlyphRingRadius');
@@ -157,6 +158,6 @@ export function createVrLocomotion({ playerRig, renderer, camera, settings, surf
     clampPositionToWalkRadius(playerRig.position, activeWalkRadius);
   }
   function dispose() { disposed = true; }
-  return { update, reset, dispose, setLeftYawLocked, setWalkRadius, hydrateScenarioState, teleportLocal,
+  return { update, reset, resetScenarioBaseline, dispose, setLeftYawLocked, setWalkRadius, hydrateScenarioState, teleportLocal,
     getWalkRadius: () => activeWalkRadius };
 }

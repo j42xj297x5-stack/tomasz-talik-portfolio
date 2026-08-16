@@ -256,8 +256,18 @@ assert.match(glyphSpawnContract, /node\.getWorldPosition/);
 assert.match(glyphSpawnContract, /progressFloor\.object\.getWorldPosition/);
 assert.doesNotMatch(glyphSpawnContract, /monkeyMotionRoot\.getWorldPosition/);
 assert.doesNotMatch(glyphSpawnContract, /renderer\.xr|getCamera|getWorldDirection/);
-assert.match(vr, /crystalCollection\.reset\(\);\s*reliquaryHints\.reset\(\);\s*activateButton\.reset\(\);\s*releaseButton\.reset\(\);\s*crystalReliquary\.reset\(\);\s*restorePortalWaitingState\(\);\s*locomotion\.reset\(\);\s*resetPlayerRigToSpawn\(\);/);
-assert.match(vr, /function restoreVrScenarioBaseline\(\)[\s\S]*restorePortalWaitingState\(\)/);
+assert.match(vr, /crystalCollection\.reset\(\);\s*reliquaryHints\.reset\(\);\s*activateButton\.reset\(\);\s*releaseButton\.reset\(\);\s*crystalReliquary\.reset\(\);\s*resetPortalBaseline\(\);\s*locomotion\.resetScenarioBaseline\(\);\s*resetPlayerRigToSpawn\(\);/);
+assert.match(vr, /function restoreVrScenarioBaseline\(\)[\s\S]*resetPortalBaseline\(\)/);
+const baselineBody = vr.match(/function restoreVrScenarioBaseline\(\) \{([\s\S]*?)\n\}/)?.[1] ?? '';
+for (const ownerReset of ['astroFurnace.resetBaseline()', 'crystalReliquary.reset()', 'resetPortalBaseline()',
+  'locomotion.resetScenarioBaseline()', 'progressionController.reset()', 'progressFloor.reset()', 'introSequence.reset()']) {
+  assert.equal((baselineBody.match(new RegExp(ownerReset.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g')) ?? []).length, 1,
+    `${ownerReset} has exactly one explicit canonical baseline seam`);
+}
+assert.doesNotMatch(vr, /onProgressionFixturesHidden|onBypassFixturesVisible/,
+  'Intro wiring has no cross-domain reset or bypass callbacks');
+assert.doesNotMatch(baselineBody, /restorePortalWaitingState\(\)|astroFurnace\.object\.visible/,
+  'canonical baseline uses owner reset APIs instead of ordering-dependent Portal/Furnace patches');
 assert.match(vr, /crystalCollection\.update\(delta\)/);
 assert.match(vr, /glyphOrbit\.update\(delta\)/);
 assert.doesNotMatch(vr.match(/onComplete:[\s\S]*?\n  }\n}/)?.[0] ?? '', /portalDisplay\.place|portalCanvas\.hide/);
