@@ -14,6 +14,7 @@ Status: **CURRENT**. Operacyjny obraz dla następnego architekta; canonical mode
 - `3.50–3.60`: świadomy wybór `Utwórz astro przyciągacz` i osobny `ASTRO_ATTRACTOR_CONSTRUCTION` na shared Furnace driver.
 - `3.70`: physical Astro `AVAILABLE` w komorze, jeszcze nie `EARNED`.
 - `3.80`: praworęczny, real-hit, ordinary-ray trigger claim; `ASTRO_ATTRACTOR_CLAIMED` daje `EARNED`, a dopiero wtedy `CAN_EQUIP_ASTRO`, `CAN_SCAN_SHELLS`, `CAN_TARGET_SHELLS`.
+- `100.10`: canonical terminal fabuły; dociera do niego normalny authored flow po `3.80` oraz wszystkie wcześniejsze jawne drogi wyjścia. Nie jest dozwolonym reconstruction/checkpoint startem.
 
 Production controller `createVrAstroAttractorProductionController` posiada `READY → BUILDING → AVAILABLE → CLAIMING → EARNED`; `CLAIMING` jest transient. Production clone i gameplay object nie są dwoma narzędziami; equipment obsługuje `createVrAttractorTool`.
 
@@ -34,7 +35,6 @@ Director obsługuje także jawny start sesji w dowolnym `startPointId` należąc
 ## NEXT
 
 - hardware/perceptual QA pełnego `3.10–3.80`;
-- authored progression po `3.80` (obecny STOP BOUNDARY);
 - dalsza praca nad skorupami, Piecem i pełnym Asterion loopem;
 - późniejsze małe glify, Rune Stones i dalsze akty zgodnie z istniejącym kanonem. Rune Stones pozostają osobnym przyszłym systemem, nie automatycznym następstwem `3.80`.
 - hardware QA debug checkpointów: `P0 → P1`, `P1 → P2`, `P2 → P0`, `P0 → P2`, `P2 → P1 → P2`. Należy ręcznie potwierdzić czyste intro, naturalny ring i zbieranie w P1, kompletny Akt 1 w P2 oraz brak przecieków przy przejściach wstecz.

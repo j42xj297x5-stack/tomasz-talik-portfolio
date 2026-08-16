@@ -40,7 +40,7 @@ W `3.50` gracz świadomie wybiera `Utwórz astro przyciągacz`; produkcja nie ur
 
 ## Granica i późniejsze systemy
 
-Aktualny authored mainline kończy się na `3.80`. Dalszy authored shell/Furnace/Asterion loop jest NEXT, nie ukończonym następstwem. Rune Stones zachowują osobny canonical target model w [`VR_RUNE_STONES_MODEL.md`](../technical/VR_RUNE_STONES_MODEL.md), ale pozostają późniejszym systemem.
+Aktualny authored mainline prowadzi przez `3.80` do canonical terminala fabuły `100.10`. Shell/Furnace/Asterion loop nie ma obecnie authored punktów pomiędzy tym gameplay boundary a terminalem i pozostaje NEXT, nie ukończonym następstwem. Rune Stones zachowują osobny canonical target model w [`VR_RUNE_STONES_MODEL.md`](../technical/VR_RUNE_STONES_MODEL.md), ale pozostają późniejszym systemem.
 
 ## Hardware status
 

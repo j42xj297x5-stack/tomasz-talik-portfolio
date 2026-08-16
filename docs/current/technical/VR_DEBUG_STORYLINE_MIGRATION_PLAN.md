@@ -16,7 +16,7 @@ Status: **PLAN / AUDYT KODU, 2026-08-16**. Dokument nie zmienia kanonu ani runti
 
 ### ZADANIE
 
-Audyt obejmuje production composition w `src/experienceVr.js`, Scenario/Director/Runtime, Intro i aktorów rzeczywiście wykonywanych do `3.40`, reconstruction/hydration/checkpoint orchestration oraz owner APIs używane przez baseline. Nie czytano legacy ani starych audytów. Wskazany `PROJECT_ENTRY.md` nie istnieje ani w repozytorium, ani w `/workspace`; nawigację rozpoczęto od `docs/current/maps/PROJECT_INDEX.md` i wskazanych bieżących modeli.
+Audyt obejmuje production composition w `src/experienceVr.js`, Scenario/Director/Runtime, Intro i aktorów rzeczywiście wykonywanych do `3.40`, reconstruction/hydration/checkpoint orchestration oraz owner APIs używane przez baseline. Nie czytano legacy ani starych audytów. Nawigację rozpoczęto od `docs/current/maps/PROJECT_INDEX.md` i wskazanych bieżących modeli.
 
 ### Stan zastany
 
@@ -365,8 +365,7 @@ Codex Cloud nie ma udawać WebXR hardware. Automatyczny harness powinien kontrol
 
 ## OGRANICZENIA I ZAOBSERWOWANE RYZYKA
 
-1. Brak `PROJECT_ENTRY.md` uniemożliwił wykonanie pierwszego wskazanego odczytu; nie zastępowano go dokumentem legacy.
-2. Automatyczne testy nie dowodzą tracked WebXR pose ani percepcji Quest; plan rozdziela behavior harness od hardware QA.
-3. Current docs są wewnętrznie niespójne co do statusu reconstruction/checkpoints. Kod jest dowodem implementacji częściowej; M10 synchronizuje kanon dopiero po migracji i regression evidence.
-4. Bez snapshotów realnych kolekcji nie wolno uznać istniejących metod `reset()` za dowód odwracalności.
-5. Techniczny direct start w dowolnym Spine point jest celem architektonicznym, ale nie oznacza automatycznego promowania tego pointu do DEBUG registry.
+1. Automatyczne testy nie dowodzą tracked WebXR pose ani percepcji Quest; plan rozdziela behavior harness od hardware QA.
+2. W chwili audytu current docs były wewnętrznie niespójne co do statusu reconstruction/checkpoints; późniejsza synchronizacja kanonu rozstrzygnęła status wdrożonego zakresu P0/P1/P2.
+3. Bez snapshotów realnych kolekcji nie wolno uznać istniejących metod `reset()` za dowód odwracalności.
+4. Techniczny direct start w dowolnym Spine point jest celem architektonicznym, ale nie oznacza automatycznego promowania tego pointu do DEBUG registry.

@@ -5,11 +5,10 @@
 - **Data:** 2026-08-16.
 - **Audytowany HEAD:** `e5f9d8ef8910e99bb99fe128501e4a528ae54460` (stan przed dodaniem tego dokumentu).
 - **Tryb:** audit + docs; kod produkcyjny i testy pozostawiono bez zmian.
-- **Zakres:** pełny aktywny graph Experience VR (`1.10–3.80` i exit `100.10`), derived Spine, Director, RuntimeExperience, reconstruction/hydration, aktorzy, composition root, QA shortcuts, ambient oraz istniejące systemy Shell/Furnace/Astro/Asterion po granicy authored story.
+- **Zakres:** pełny aktywny graph Experience VR (`1.10–3.80 → 100.10`), derived Spine, Director, RuntimeExperience, reconstruction/hydration, aktorzy, composition root, QA shortcuts, ambient oraz istniejące systemy Shell/Furnace/Astro/Asterion po granicy authored story.
 - **Źródła normatywne:** `docs/current/maps/PROJECT_INDEX.md`, `docs/current/maps/DOCUMENTATION_MAP.md`, `docs/current/technical/VR_SCENARIO_DIRECTOR_MODEL.md`, `docs/current/handoffs/EXPERIENCE_VR_HANDOFF.md`.
 - **Źródła wykonawcze:** `src/experienceVr.js`, całe `src/xr/progression/`, powiązane aktywne moduły `src/xr/{guidance,floor,shells,furnace,tools,asterion}`, właściciele Monkey/Portal/Reliquary/crystals/locomotion oraz testy `tests/vr-*` i `tests/runtime-experience.test.mjs`.
-- **Brak obowiązkowego wejścia:** żądany `PROJECT_ENTRY.md` nie istnieje w audytowanym HEAD. Repozytoryjnym entrypointem według aktualnego indeksu jest `README.md`. To konflikt wejścia zadania z repo, nie podstawa do zmiany kanonu.
-- **Konflikt dokumentacji:** wiersz Scenario w `PROJECT_INDEX.md` nadal twierdzi, że hydration, arbitrary start i reconstruction-backed checkpoints są „NOT IMPLEMENTED”, podczas gdy aktualny canonical model, handoff, kod i testy pokazują implementację P1/P2 oraz `RuntimeExperience.activatePoint()`. Audyt raportuje konflikt i opiera status implementacji na kodzie; nie poprawia indeksu (dozwolony był jeden dokument).
+- **Stan zastany podczas audytu:** wiersz Scenario w `PROJECT_INDEX.md` twierdził, że hydration, arbitrary start i reconstruction-backed checkpoints są „NOT IMPLEMENTED”, podczas gdy canonical model, handoff, kod i testy pokazywały implementację P1/P2 oraz `RuntimeExperience.activatePoint()`. Późniejsza synchronizacja dokumentacji poprawiła indeks zgodnie z dowodami audytu.
 
 ## 2. Executive summary
 
@@ -98,7 +97,7 @@ Kod wyprowadza następującą kolejność z `canonicalMainline.target`:
 → 3.80 → 100.10
 ```
 
-**REPORT CONFLICT:** canonical dokument opisuje `100.10` jako terminalny early exit „poza mainline”, lecz implementacja prowadzi canonical edge `3.80 → 100.10`, a derived `scenario.spine` zawiera `100.10`. Jednocześnie `canonicalTerminalIsExit` blokuje reconstruction/start tego terminala. Nie da się bez decyzji ustalić, czy edge z `3.80` ma oznaczać techniczny sentinel, czy realną mainline dramaturgię.
+**LATER RESOLUTION:** w chwili audytu canonical opis i implementacja różniły się w klasyfikacji terminala. Późniejsza wiążąca decyzja Wizjonera rozstrzyga, że `100.10` jest pełnoprawnym canonical terminalem authored mainline i fabuły: normalny flow po `3.80` oraz wcześniejsze jawne drogi wyjścia zbiegają się w tym punkcie. Zakaz reconstruction/start terminala pozostaje dozwolonym ograniczeniem technicznym.
 
 | Zakres | Status | Uzasadnienie |
 | --- | --- | --- |
@@ -108,7 +107,7 @@ Kod wyprowadza następującą kolejność z `canonicalMainline.target`:
 | `2.40–3.40` | CANONICAL | Completion prowadzi do targetu, a rozpoczęcie kolejnego beatu jest w target entry (brak entry w `2.40` jest zamierzonym wait). |
 | `3.50–3.80` | PARTIAL | Canonical points/events istnieją, ale brak stable consequences/hydration, a gates i post-claim fan-out są lokalne. |
 | Po `3.80` | LEGACY | Działające Shell/Furnace/Asterion domain flows nie mają authored points. |
-| `100.10` | BLOCKED | Sprzeczna semantyka „outside mainline” kontra derived Spine. |
+| `100.10` | CANONICAL | Canonical terminal authored mainline i fabuły; zbiega normalny flow po `3.80` oraz wcześniejsze jawne drogi wyjścia. Niedozwolony reconstruction/checkpoint start. |
 
 ## 6. Scenario point matrix
 
@@ -140,7 +139,7 @@ Status używa wyłącznie `CANONICAL`, `PARTIAL`, `LEGACY`, `BLOCKED`.
 | 3.60 | construct Astro | production already started by request actor | `ASTRO_ATTRACTOR_PRODUCED` | → 3.70 | AstroProduction/Furnace process | PARTIAL | Target lacks entry; actor starts gameplay before Director moves. |
 | 3.70 | physical Astro available | local production state | `ASTRO_ATTRACTOR_CLAIMED` | → 3.80 | AstroProduction | PARTIAL | No stable AVAILABLE consequence/hydration. |
 | 3.80 | Astro earned, shell capability boundary | claim actor hides/removes/equips locally | none | authored edge exists, no transition | Astro tool/Shell system | PARTIAL | Director grants capabilities, but composition root manually enables shells/equips; no earned consequence. |
-| 100.10 | exit | none | none | terminal | XR session | BLOCKED | Reachable by choice, yet also derived canonical terminal after 3.80; exit execution is actor-local. |
+| 100.10 | canonical story terminal | none | none | terminal | XR session | CANONICAL | Normal flow after 3.80 and earlier explicit exit routes converge here; exit execution is actor-local and direct reconstruction/start remains forbidden. |
 
 ### Rzeczywiste główne flows
 
@@ -413,7 +412,7 @@ Test green status therefore proves many mechanisms, not completion of architectu
 
 | AREA | CANONICAL | PARTIAL | LEGACY | BLOCKED | EVIDENCE |
 | --- | --- | --- | --- | --- | --- |
-| Spine derivation | yes |  |  | terminal semantics | graph-derived; `100.10` conflict |
+| Spine derivation | yes |  |  |  | graph-derived through canonical terminal `100.10`; later Visionary decision resolved its semantics |
 | Scenario vocabulary/points | through 3.80 | entry ownership 1.40–2.40, state 3.40+ | post-3.80 mechanics | future authored design | code graph |
 | Director mechanism | yes | whole-runtime authority | local later controllers |  | source/tests |
 | RuntimeExperience | yes | incomplete lifecycle data |  |  | source/tests |
@@ -597,12 +596,10 @@ S1 (Intro entry ownership)
 
 ## 19. Explicitly unresolved decisions
 
-1. Czy `100.10` jest rzeczywistym ostatnim elementem canonical Spine, czy wyłącznie sentinel/early-exit point poza mainline? Kod i canonical opis są sprzeczne.
-2. Jaka dokładna authored kolejność points następuje po `3.80`: pierwsza shell acquisition, pełny set, Furnace, Astro Sphere/Asterion czy dodatkowy Monkey beat? Kod mechanik nie rozstrzyga dramaturgii.
-3. Czy claim Astro ma automatycznie equipować prawą rękę, czy jedynie przyznać EARNED i pozwolić graczowi wyposażyć narzędzie? Obecny kod auto-equips; tekst kanonu mówi „equipable”.
-4. Czy `stateAt(3.70)` ma materializować Astro AVAILABLE w otwartej czy zamkniętej komorze? Naturalny claim wymaga otwartej, ale chamber state nie jest authored stable fact.
-5. Czy reconstructed Director milestones mają odzwierciedlać historyczne settled facts, czy milestones są wyłącznie bieżącą-session telemetry? Aktualny lifecycle nie hydratyzuje milestones.
-6. Czy query subsystem QA flags mają pozostać jako jawne izolowane harnesses, czy wszystkie mają stać się Scenario checkpoints? Nie każdy visual/process harness powinien reprezentować canonical point.
+1. Czy claim Astro ma automatycznie equipować prawą rękę, czy jedynie przyznać EARNED i pozwolić graczowi wyposażyć narzędzie? Obecny kod auto-equips; tekst kanonu mówi „equipable”.
+2. Czy `stateAt(3.70)` ma materializować Astro AVAILABLE w otwartej czy zamkniętej komorze? Naturalny claim wymaga otwartej, ale chamber state nie jest authored stable fact.
+3. Czy reconstructed Director milestones mają odzwierciedlać historyczne settled facts, czy milestones są wyłącznie bieżącą-session telemetry? Aktualny lifecycle nie hydratyzuje milestones.
+4. Czy query subsystem QA flags mają pozostać jako jawne izolowane harnesses, czy wszystkie mają stać się Scenario checkpoints? Nie każdy visual/process harness powinien reprezentować canonical point.
 
 ## 20. Definition of Done
 
@@ -646,7 +643,7 @@ S1: przenieść rozpoczęcia kolejnych Intro beats z transition effects na targe
 
 **BLOCKERS / DECISIONS**
 
-Rozstrzygnąć semantykę `100.10`; przed pracą po `3.80` ustalić authored post-Astro sequence; przed hydration Astro rozstrzygnąć auto-equip oraz stable chamber state.
+Semantyka `100.10` została później rozstrzygnięta: canonical terminal authored mainline i fabuły. Przed pracą nad niezauthorowanymi systemami ustalić ich bounded Scenario scope; przed hydration Astro rozstrzygnąć auto-equip oraz stable chamber state.
 
 **FILES TO READ FIRST**
 

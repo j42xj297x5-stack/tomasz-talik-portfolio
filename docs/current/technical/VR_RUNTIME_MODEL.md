@@ -6,7 +6,7 @@ Status: canonical description of the implemented runtime synchronized after M2.2
 
 The implemented composition follows `Spine → Scenario → Director → Runtime / actors / domain owners`. Spine owns authored mainline order, Scenario defines points and accepted events, and Director owns `currentPointId` and interprets `STAY`, `COMPLETE`, `EXPLICIT` and the crossing-only `COMPLETE_IF`. Runtime remains the symbolic-effect execution boundary. Actors and domain controllers retain physical, transient and committed domain state; Director does not use technical point IDs as memory for that state.
 
-WHERE, BEYOND, FOLLOW pause and hints are local `STAY` reactions. Crossing exists only at `1.130`: the Intro actor owns `playerEnteredRing` and `monkeySettled`, reports `crossingComplete`, and Director advances only after that combined fact resolves completion. `100.10` remains the terminal authored EARLY EXIT outside Spine.
+WHERE, BEYOND, FOLLOW pause and hints are local `STAY` reactions. Crossing exists only at `1.130`: the Intro actor owns `playerEnteredRing` and `monkeySettled`, reports `crossingComplete`, and Director advances only after that combined fact resolves completion. `100.10` is the canonical authored story terminal in Spine: normal completion after `3.80` and all earlier explicit exit routes converge there. It remains unavailable as a reconstruction/checkpoint start.
 
 ## Runtime boundary and lifecycle
 
@@ -222,7 +222,7 @@ The first-ring runtime then proceeds through glyph free explore (`2.10`), the Sc
 
 `CAN_USE_RELIQUARY` is the active, global Scenario-owned insertion gate in `2.30`; Runtime supplies it to the crystal collection. Branch/tier/socket checks and crystal/reliquary transient state remain domain-owned. `CAN_ACTIVATE_RELIQUARY` and `CAN_RELEASE_RELIQUARY` are separate capabilities, while the Naczynie domain permits Activate only while the crystal is `inserted` and Release only while it is `active`. These phases remain owned by interaction/domain state and are not represented as story points.
 
-`syncAmbientSequence()` remains a Runtime/domain-state projection and has not moved into Scenario; it still reacts to current tier, Furnace progression and Asterion production. Shell-field restoration is isolated to the `?p1` QA world-state helper. The target Furnace → physical Astro claim flow is implemented through `3.80`; arbitrary Director start, hydration, reconstruction-backed checkpoints and durable save remain NOT IMPLEMENTED.
+`syncAmbientSequence()` remains a Runtime/domain-state projection and has not moved into Scenario; it still reacts to current tier, Furnace progression and Asterion production. Canonical direct activation through `RuntimeExperience.activatePoint()` and reconstruction/hydration-backed P0/P1/P2 are implemented in their supported scope. The target Furnace → physical Astro claim flow proceeds through `3.80` to the authored terminal `100.10`. Stable reconstruction after `3.40`, Astro `AVAILABLE`/`EARNED`, Shell/Furnace/Asterion hydration, P3/P4 and durable save remain partial or not yet authored.
 
 ## Act 3 runtime boundary
 
