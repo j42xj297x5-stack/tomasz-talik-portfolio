@@ -15,7 +15,7 @@ export const resolveAsterionFormationProgress = (constructionProgress) => clamp0
 export function createVrAsterionProductionController({
   progressionController, sphere, contentAnchor, chamber = null, chamberCylinder = null, energyCell = null, controllers = [], handModeController = null,
   processDriver = null, getChamberState = () => 'CLOSED', getContentState = () => 'EMPTY', settings = {}, haloSettings = {},
-  onBuildStart = () => {}, onBuildStop = () => {}, onStateChange = () => {}
+  onBuildStart = () => {}, onBuildStop = () => {}, onStateChange = () => {}, onClaimed = () => {}
 }) {
   const duration = Math.max(18, settings.buildDurationSeconds ?? 18);
   const rayMaxDistance = Math.max(0.1, settings.rayMaxDistance ?? 2.3);
@@ -102,16 +102,29 @@ export function createVrAsterionProductionController({
   function claim(record) { if (disposed || state !== 'AVAILABLE' || getChamberState() !== 'OPEN' || record?.handedness !== 'left'
     || modeController?.getLeftMode?.() !== 'NORMAL_HAND' || !hits.get(record)) return false;
     state = 'EARNED'; earnedCommits += 1; clearHits(); sphere.restorePresentationMaterials?.(); clearPresentation(); emit();
-    modeController?.equipLeftAsterion?.(); return true; }
+    modeController?.equipLeftAsterion?.(); onClaimed(); return true; }
   const listeners = controllers.map((record) => { const listener = () => claim(record); record.controller.addEventListener?.('squeezestart', listener); return { record, listener }; });
   function resetSession() { clearHits(); if (state === 'BUILDING') { sphere.restorePresentationMaterials?.(); clearPresentation(); constructionProgress = 0;
       state = 'READY'; onBuildStop(true); emit(); }
     else if (state === 'AVAILABLE') {
       presentAtFurnaceSnapTarget(); sphere.restorePresentationMaterials?.();
     } else clearPresentation(); }
+  function resetBaseline() {
+    clearHits();
+    if (state === 'BUILDING') onBuildStop(true);
+    sphere.restorePresentationMaterials?.();
+    clearPresentation();
+    constructionProgress = 0; presentationElapsed = 0; state = 'LOCKED';
+    emit();
+  }
+  function hydrateScenarioState(value) {
+    if (!value || value.state !== 'EARNED') throw new TypeError('asterionProduction state must be EARNED');
+    clearHits(); sphere.restorePresentationMaterials?.(); clearPresentation();
+    constructionProgress = 1; presentationElapsed = 0; state = 'EARNED'; emit();
+  }
   function dispose() { if (disposed) return; disposed = true; if (state === 'BUILDING') onBuildStop(true); unsubscribeProgress();
     listeners.forEach(({ record, listener }) => record.controller.removeEventListener?.('squeezestart', listener)); clearHits(); halo?.dispose(); sphere.restorePresentationMaterials?.(); clearPresentation(); subscribers.clear(); }
-  return { canCreate, requestCreate, finishBuild, claim, update, resetSession, dispose, getState: () => state, getSnapshot,
+  return { canCreate, requestCreate, finishBuild, claim, update, resetSession, resetBaseline, hydrateScenarioState, dispose, getState: () => state, getSnapshot,
     isEarned: () => state === 'EARNED', isAvailable: () => state === 'AVAILABLE', hasCurrentHit: (record) => Boolean(hits.get(record)),
     setHandModeController: (next) => { modeController = next; }, subscribe(listener) { if (disposed || typeof listener !== 'function') return () => {};
       subscribers.add(listener); return () => subscribers.delete(listener); },

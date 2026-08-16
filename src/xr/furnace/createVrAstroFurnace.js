@@ -160,6 +160,10 @@ export function createVrAstroFurnace({
   }
   function reset() { return place(); }
   function resetBaseline() { place(); object.visible = false; }
+  function hydrateScenarioState(state) {
+    if (!state || typeof state.revealed !== 'boolean') throw new TypeError('furnace.revealed must be a boolean');
+    object.visible = state.revealed;
+  }
   function dispose() {
     if (disposed) return;
     disposed = true;
@@ -190,7 +194,7 @@ export function createVrAstroFurnace({
     console.groupEnd();
   }
 
-  return { object, model, nodes, clips, capabilities, place, update, reset, resetBaseline, dispose, diagnostics, refreshVisibleBounds,
+  return { object, model, nodes, clips, capabilities, place, update, reset, resetBaseline, hydrateScenarioState, dispose, diagnostics, refreshVisibleBounds,
     ensureRuntimeMaterials,
     subscribePlacement(listener) { placementListeners.add(listener); return () => placementListeners.delete(listener); } };
 }

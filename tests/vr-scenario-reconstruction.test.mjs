@@ -10,7 +10,8 @@ assert.equal(VR_EXPERIENCE_SCENARIO_SPINE.at(-1), '100.10');
 assert.equal(validateScenarioSpine(vrExperienceScenario), true);
 assert.equal(getNextScenarioSpinePointId(vrExperienceScenario, '1.100'), '1.110');
 assert.equal(getNextScenarioSpinePointId(vrExperienceScenario, '2.40'), '3.10');
-assert.equal(getNextScenarioSpinePointId(vrExperienceScenario, '3.80'), '100.10');
+assert.equal(getNextScenarioSpinePointId(vrExperienceScenario, '3.80'), '4.10');
+assert.equal(getNextScenarioSpinePointId(vrExperienceScenario, '4.10'), '100.10');
 assert.equal(getNextScenarioSpinePointId(vrExperienceScenario, '100.10'), null);
 
 assert.deepEqual(reconstructVrScenarioState(vrExperienceScenario, '1.10'), {});
@@ -23,6 +24,14 @@ assert.deepEqual(atThreeTen.reliquary, { revealed: true, interactionEnabled: tru
 assert.equal(atThreeTen.postRing, undefined, 'target consequences remain exclusive');
 assert.equal(Object.isFrozen(atThreeTen), true);
 assert.equal(Object.isFrozen(atThreeTen.progression), true);
+const atFourTen = reconstructVrScenarioState(vrExperienceScenario, '4.10');
+assert.equal(atFourTen.progression.completedTier, 1);
+assert.equal(atFourTen.reliquary.revealed, true);
+assert.equal(atFourTen.postRing.shellFieldVisible, true);
+assert.equal(atFourTen.furnace.revealed, true);
+assert.deepEqual(atFourTen.astroProduction, { state: 'EARNED' });
+assert.deepEqual(atFourTen.asterionProduction, { state: 'EARNED' });
+assert.equal(atFourTen.furnaceProgression.absorbedShellIds.length, 6);
 assert.throws(() => reconstructVrScenarioState(vrExperienceScenario, '100.10'), /canonical reconstruction target/);
 assert.throws(() => reconstructVrScenarioState(vrExperienceScenario, 'not-authored'), /canonical reconstruction target/);
 console.log('VR Scenario derived Spine reconstruction tests passed.');

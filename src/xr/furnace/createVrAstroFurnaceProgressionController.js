@@ -36,7 +36,16 @@ export function createVrAstroFurnaceProgressionController() {
     subscribers.add(listener);
     return () => subscribers.delete(listener);
   }
+  function notify() { const snapshot = getSnapshot(); subscribers.forEach((listener) => listener(snapshot)); }
+  function resetBaseline() { absorbedShells.clear(); notify(); }
+  function hydrateScenarioState(value) {
+    if (!value || !Array.isArray(value.absorbedShellIds)
+      || value.absorbedShellIds.some((assetId) => !REQUIRED_ASTERION_SHELLS.includes(assetId))) {
+      throw new TypeError('furnaceProgression.absorbedShellIds must contain known shell ids');
+    }
+    absorbedShells.clear(); value.absorbedShellIds.forEach((assetId) => absorbedShells.add(assetId)); notify();
+  }
   function dispose() { disposed = true; subscribers.clear(); }
   return { getSnapshot, getAsterionSphereProgress, hasAbsorbedShell, canAbsorbShell,
-    commitAbsorbedShell, subscribe, dispose };
+    commitAbsorbedShell, subscribe, resetBaseline, hydrateScenarioState, dispose };
 }

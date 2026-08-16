@@ -8,7 +8,7 @@ import { VR_EXPERIENCE_POINT, VR_SCENARIO_CAPABILITY, VR_SCENARIO_EFFECT, VR_SCE
 assert.equal(Object.isFrozen(vrExperienceScenario), true);
 assert.equal(vrExperienceScenario.points, vrExperienceScenario.scenes);
 assert.equal(vrExperienceScenario.initialPointId, vrExperienceScenario.initialSceneId);
-assert.deepEqual(vrExperienceScenario.points.map(({ id }) => id), ['1.10', '1.20', '1.30', '1.40', '1.50', '1.60', '1.70', '1.80', '1.100', '1.110', '1.120', '1.130', '2.10', '2.20', '2.30', '2.40', '3.10', '3.20', '3.30', '3.40', '3.50', '3.60', '3.70', '3.80', '100.10']);
+assert.deepEqual(vrExperienceScenario.points.map(({ id }) => id), ['1.10', '1.20', '1.30', '1.40', '1.50', '1.60', '1.70', '1.80', '1.100', '1.110', '1.120', '1.130', '2.10', '2.20', '2.30', '2.40', '3.10', '3.20', '3.30', '3.40', '3.50', '3.60', '3.70', '3.80', '4.10', '100.10']);
 assert.equal(Object.isFrozen(vrExperienceScenario.points[0]), true);
 assert.equal(Object.isFrozen(vrExperienceScenario.points[0].transitions[0]), true);
 assert.equal(Object.isFrozen(vrExperienceScenario.points[0].transitions[0].effects), true);
@@ -85,6 +85,12 @@ assert.equal(arbitraryStartDirector.hasMilestone(VR_SCENARIO_MILESTONE.XR_CALIBR
   'hard reset restores bootstrap initial milestones');
 assert.equal(arbitraryStartDirector.hasMilestone(VR_SCENARIO_MILESTONE.FIRST_CRYSTAL_DISCOVERED), false,
   'hard reset removes milestones committed after bootstrap');
+const secondCycleDirector = new ExperienceDirector({ scenario: vrExperienceScenario, startPointId: '3.80' });
+assert.equal(secondCycleDirector.can(VR_SCENARIO_CAPABILITY.CAN_USE_GLYPHS), false);
+assert.equal(secondCycleDirector.dispatch(VR_SCENARIO_EVENT.ASTERION_CLAIMED).currentPointId, '4.10');
+assert.equal(secondCycleDirector.can(VR_SCENARIO_CAPABILITY.CAN_USE_GLYPHS), true);
+assert.deepEqual(secondCycleDirector.dispatch(VR_SCENARIO_EVENT.CARD_COMMITTED, { page: {} }).effects,
+  [VR_SCENARIO_EFFECT.UPDATE_COMMITTED_CARD_PRESENTATION, VR_SCENARIO_EFFECT.PLAY_CARD_COMMIT_FEEDBACK]);
 assert.equal(productionDirector.dispatch(VR_SCENARIO_EVENT.XR_CALIBRATED), null);
 assert.equal(new ExperienceDirector({ scenario: vrExperienceScenario }).dispatch(VR_SCENARIO_EVENT.POST_REVEAL_SILENCE_COMPLETE), null,
   'silence completion is rejected before its scene');

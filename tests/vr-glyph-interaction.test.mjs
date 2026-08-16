@@ -1,6 +1,11 @@
 import assert from 'node:assert/strict';
 import * as THREE from '../src/vendor/three.js';
 import { createVrGlyphInteraction } from '../src/xr/createVrGlyphInteraction.js';
+import { ExperienceDirector } from '../src/xr/progression/ExperienceDirector.js';
+import { createVrProgressionController } from '../src/xr/progression/createVrProgressionController.js';
+import { stateAtVrScenarioPoint } from '../src/xr/progression/reconstructVrScenarioState.js';
+import { experienceVrPages } from '../src/content/experienceVrPages.js';
+import { VR_SCENARIO_CAPABILITY, vrExperienceScenario } from '../src/xr/progression/vrExperienceScenario.js';
 
 const controllers = [new THREE.Group(), new THREE.Group()];
 const records = controllers.map((controller, index) => ({ index, controller, handedness: index ? 'right' : 'left', isConnected: true, currentHit: null, currentRayLength: 4 }));
@@ -36,4 +41,11 @@ let haloDisposed = false; haloMaterial.addEventListener('dispose', () => { haloD
 interaction.dispose();
 assert.equal(haloDisposed, true, 'dispose releases the halo material');
 assert.equal(mesh.children.length, 0, 'dispose removes the shared-geometry halo shell');
+
+const secondCycleProgression = createVrProgressionController({ pages: experienceVrPages });
+secondCycleProgression.hydrateScenarioState(stateAtVrScenarioPoint(vrExperienceScenario, '4.10').progression);
+const secondCycleDirector = new ExperienceDirector({ scenario: vrExperienceScenario, startPointId: '4.10' });
+assert.equal(secondCycleDirector.can(VR_SCENARIO_CAPABILITY.CAN_USE_GLYPHS), true);
+const tierTwoPage = secondCycleProgression.getNextPage('ethics-life-protection', 2);
+assert.equal(tierTwoPage?.order, 2, 'authored capability plus Tier 1 persistent state exposes the next tier');
 console.log('VR glyph interaction assertions passed');

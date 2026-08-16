@@ -13,7 +13,7 @@ function harness({ complete = false, completedShellCycle = false } = {}) {
   const contentAnchor = new THREE.Group(), socket = new THREE.Group();
   const object = new THREE.Mesh(new THREE.SphereGeometry(.1), new THREE.MeshStandardMaterial({ color: 0x123456, emissive: 0x010203, opacity: .8 }));
   object.visible = false; socket.add(object);
-  let presented = false, mode = 'NORMAL_HAND', equips = 0, starts = 0, stops = 0, chamberState = 'CLOSED', contentState = 'EMPTY';
+  let presented = false, mode = 'NORMAL_HAND', equips = 0, starts = 0, stops = 0, claims = 0, chamberState = 'CLOSED', contentState = 'EMPTY';
   let processState = completedShellCycle ? 'COMPLETE' : 'IDLE';
   let processKind = completedShellCycle ? 'SHELL_EXTRACTION' : null, processProgress = completedShellCycle ? 1 : 0;
   const sphere = { object, socket, presentAt(parent, scale) { parent.add(socket); socket.scale.setScalar(scale); object.visible = true; presented = true; return true; },
@@ -33,11 +33,11 @@ function harness({ complete = false, completedShellCycle = false } = {}) {
   const production = createVrAsterionProductionController({ progressionController: progression, sphere, contentAnchor,
     controllers: [left, right], handModeController: handModes, processDriver, getChamberState: () => chamberState,
     getContentState: () => contentState, settings: { buildDurationSeconds: 18, rayMaxDistance: 2.3 },
-    onBuildStart() { starts += 1; }, onBuildStop() { stops += 1; } });
+    onBuildStart() { starts += 1; }, onBuildStop() { stops += 1; }, onClaimed() { claims += 1; } });
   return { progression, production, sphere, left, right, handModes, contentAnchor,
     setChamber: (value) => { chamberState = value; }, setContent: (value) => { contentState = value; },
     setProcess: (progress) => { processProgress = progress; if (progress >= 1) processState = 'COMPLETE'; },
-    counts: () => ({ equips, starts, stops }) };
+    counts: () => ({ equips, starts, stops, claims }) };
 }
 {
   const h = harness({ complete: true, completedShellCycle: true });
@@ -65,7 +65,11 @@ function harness({ complete = false, completedShellCycle = false } = {}) {
   assert.equal(h.production.getState(), STATES.AVAILABLE); assert.equal(h.sphere.object.material.opacity, .8, 'authored material restored');
   assert.equal(h.production.getDiagnostics().committedBuilds, 1); assert.equal(h.production.claim(h.left), false, 'claim blocked while CLOSED');
   h.setChamber('OPEN'); h.production.update(0); assert.equal(h.production.claim(h.right), false); assert.equal(h.production.claim(h.left), true);
-  assert.equal(h.production.getState(), STATES.EARNED); assert.equal(h.counts().equips, 1); h.production.dispose();
+  assert.equal(h.production.getState(), STATES.EARNED); assert.deepEqual(h.counts(), { equips: 1, starts: 1, stops: 1, claims: 1 });
+  assert.equal(h.production.claim(h.left), false); assert.equal(h.counts().claims, 1, 'semantic claim is emitted exactly once');
+  h.production.resetBaseline(); assert.equal(h.production.getState(), STATES.LOCKED);
+  h.production.hydrateScenarioState({ state: 'EARNED' }); assert.equal(h.production.getState(), STATES.EARNED);
+  assert.equal(h.counts().claims, 1, 'baseline and hydration stay semantically silent'); h.production.dispose();
 }
 assert.equal(resolveAsterionFormationProgress(0), 0); assert.ok(Math.abs(resolveAsterionFormationProgress(7 / 12) - .5) < 1e-9); assert.equal(resolveAsterionFormationProgress(1), 1);
 

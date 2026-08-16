@@ -111,9 +111,16 @@ export function createVrAstroAttractorProductionController({ model, contentAncho
   const listeners = controllers.map((record) => { const listener = () => claim(record); record.controller.addEventListener?.('selectstart', listener); return { record, listener }; });
   function resetSession() { clearHits(); if (state === 'BUILDING') { state = 'READY'; progress = 0; object.visible = false; object.removeFromParent(); }
     else if (state === 'AVAILABLE') { place(); setFormation(1); } else if (state === 'CLAIMING') { state = 'AVAILABLE'; place(); setFormation(1); } emit(); }
+  function resetBaseline() { clearHits(); state = 'READY'; progress = 0; handoffElapsed = 0;
+    object.visible = false; object.removeFromParent(); emit(); }
+  function hydrateScenarioState(value) {
+    if (!value || value.state !== 'EARNED') throw new TypeError('astroProduction state must be EARNED');
+    clearHits(); state = 'EARNED'; progress = 1; handoffElapsed = 0;
+    object.visible = false; object.removeFromParent(); emit();
+  }
   function dispose() { if (disposed) return; disposed = true; listeners.forEach(({ record, listener }) => record.controller.removeEventListener?.('selectstart', listener));
     clearHits(); halo.dispose(); object.removeFromParent(); ownedMaterials.forEach((material) => material.dispose()); subscribers.clear(); }
-  return { object, requestCreate, canCreate, claim, update, resetSession, dispose, getState: () => state, getSnapshot: snapshot,
+  return { object, requestCreate, canCreate, claim, update, resetSession, resetBaseline, hydrateScenarioState, dispose, getState: () => state, getSnapshot: snapshot,
     isEarned: () => state === 'EARNED', hasCurrentHit: (record) => hits.get(record) === true,
     subscribe(listener) { subscribers.add(listener); return () => subscribers.delete(listener); },
     getDiagnostics: () => ({ state, producedCount, claimedCount, visualRootName: authoritativeVisualRoot.name,
