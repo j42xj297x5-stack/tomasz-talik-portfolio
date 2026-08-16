@@ -10,6 +10,7 @@ import { ASSET_STAGES, getPreloadAssets, INITIAL_PRELOAD_GROUPS, DEFERRED_PRELOA
 import { loadExperienceVrSettings, VR_BACKGROUND_COLOR } from './config/experienceVrSettings.js';
 import { orientPlayerRig } from './xr/playerRigOrientation.js';
 import { calibrateXrHeadToPlatform } from './xr/calibration/calibrateXrHeadToPlatform.js';
+import { createCanonicalXrStartCalibration } from './xr/calibration/createCanonicalXrStartCalibration.js';
 import { getXrHeadWorldPosition } from './xr/getXrHeadWorldPosition.js';
 import { createVrControllers } from './xr/createVrControllers.js';
 import { createVrGlyphInteraction } from './xr/createVrGlyphInteraction.js';
@@ -746,7 +747,7 @@ const enterVrDebugCheckpoint = createVrDebugCheckpointController({
   runtime: runtimeExperience,
   spawnIntro: resetPlayerRigToSpawn,
   spawnRing: spawnPlayerInsideRingFacingMonkey,
-  startCanonicalIntro: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.XR_CALIBRATED)
+  requestCanonicalXrStartCalibration: () => xrStartCalibration.request()
 });
 
 function resize() {
@@ -762,18 +763,21 @@ renderer.render(scene, camera);
 
 let activeSession = null;
 let hasEnteredSession = false;
-let xrStartCalibrationPending = false;
 const clock = new THREE.Clock(false);
+const readTrackedXrHead = () => getXrHeadWorldPosition({ renderer, camera, playerRig });
+const xrStartCalibration = createCanonicalXrStartCalibration({
+  readTrackedHead: readTrackedXrHead,
+  calibrate: (headWorldPosition) => calibrateXrHeadToPlatform({
+    playerRig, headWorldPosition, platformRoot: progressFloor.object, entryDirection,
+    targetRadius: settings.spatial.playerStartRadius
+  }),
+  confirmCalibration: readTrackedXrHead,
+  onCalibrated: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.XR_CALIBRATED)
+});
 
 function renderFrame() {
   const delta = clock.getDelta();
-  if (xrStartCalibrationPending) {
-    const headWorldPosition = getXrHeadWorldPosition({ renderer, camera, playerRig });
-    calibrateXrHeadToPlatform({ playerRig, headWorldPosition, platformRoot: progressFloor.object, entryDirection,
-      targetRadius: settings.spatial.playerStartRadius });
-    getXrHeadWorldPosition({ renderer, camera, playerRig });
-    xrStartCalibrationPending = false;
-    runtimeExperience.dispatch(VR_SCENARIO_EVENT.XR_CALIBRATED);
+  if (xrStartCalibration.processFrame()) {
     renderer.render(scene, camera);
     return;
   }
@@ -881,7 +885,7 @@ function handleSessionEnd() {
   renderer.setAnimationLoop(null);
   clock.stop();
   activeSession = null;
-  xrStartCalibrationPending = false;
+  xrStartCalibration.cancel();
   restoreVrScenarioBaseline();
   showReadyState({ ended: hasEnteredSession });
 }
@@ -902,7 +906,7 @@ async function enterVr() {
     renderer.xr.setReferenceSpaceType(referenceSpaceType);
     requestedSession.addEventListener('end', handleSessionEnd, { once: true });
     await renderer.xr.setSession(requestedSession);
-    xrStartCalibrationPending = true;
+    xrStartCalibration.request();
     activeSession = requestedSession;
     syncAmbientSequence();
     hasEnteredSession = true;
@@ -917,7 +921,7 @@ async function enterVr() {
       try { await requestedSession.end(); } catch { /* Session may already be ending. */ }
     }
     activeSession = null;
-    xrStartCalibrationPending = false;
+    xrStartCalibration.cancel();
     renderer.setAnimationLoop(null);
     clock.stop();
     restoreVrScenarioBaseline();
