@@ -43,7 +43,7 @@ export function createVrIntroSequence({ monkeyGuide, monkeyMotionRoot, monkeyVis
   getHeadPosition = () => playerRig.getWorldPosition(new THREE.Vector3()), playerGuidePanel = null, fogReveal = null,
   glyphRing, progressFloor, platformFixturesRoot, locomotion, spatial, settings,
   onOpeningRaysReady = () => {}, onIntroRevealComplete = () => {}, onPostRevealSilenceComplete = () => {}, onPlayerOpenedGuide = () => {}, onPlayerViewedControls = () => {}, onPlayerClosedGuide = () => {}, onMonkeyHovered = () => {}, onMonkeyTriggered = () => {}, onInvitationSelected = () => {}, onFollowPauseChanged = () => {}, onMonkeyReachedThreshold = () => {}, onThresholdSelected = () => {}, onPlayerEnteredRing = () => {}, onMonkeySettled = () => {}, onGlyphHintTimeout = () => {}, onEndSession = () => {}, onReliquaryReveal = () => {},
-  onReliquaryRevealCompleted = () => {}, onProgressionFixturesHidden = () => {}, onBypassFixturesVisible = () => {}, bypass = false }) {
+  onReliquaryRevealCompleted = () => {}, bypass = false }) {
   const copy = VR_INTRO_COPY[settings.locale === 'pl' ? 'pl' : 'en'];
   const canonicalPosition = new THREE.Vector3(spatial.monkeyFinal.x, spatial.monkeyFinal.y, spatial.monkeyFinal.z);
   const canonicalQuaternion = monkeyMotionRoot.quaternion.clone();
@@ -138,10 +138,9 @@ export function createVrIntroSequence({ monkeyGuide, monkeyMotionRoot, monkeyVis
   function reset() {
     queue = []; phase = null; done = null; elapsed = silenceElapsed = turnElapsed = finalTurnElapsed = glyphExploreElapsed = 0;
     followCheckResolved = walkingPaused = playerEnteredRing = playerSafelyInside = monkeySettled = glyphExploreResolved = glyphHintTriggered = glyphHintShown = xrCalibrated = false;
-    monkeyGuide.setDialogueOverride(null); monkeyGuide.showMessage(''); monkeyMotionRoot.position.copy(canonicalPosition); monkeyMotionRoot.quaternion.copy(canonicalQuaternion); locomotion.reset(); fogReveal?.restart();
-    platformFixturesRoot.visible = true; onProgressionFixturesHidden();
-    if (bypass || !settings.enabled) { state = VR_INTRO_STATE.BYPASSED; fogReveal?.skipToEnd(); monkeyGuide.setInteractionEnabled?.(true); glyphRing.visible = true; if (monkeyStoneRoot) monkeyStoneRoot.visible = true; onBypassFixturesVisible(); return; }
-    locomotion.setWalkRadius(Infinity); state = VR_INTRO_STATE.XR_CALIBRATING; glyphRing.visible = true; if (monkeyStoneRoot) monkeyStoneRoot.visible = true; monkeyVisualRoot.visible = true; fogReveal?.setRadius(20); monkeyGuide.setInteractionEnabled?.(false);
+    monkeyGuide.setDialogueOverride(null); monkeyGuide.showMessage(''); monkeyMotionRoot.position.copy(canonicalPosition); monkeyMotionRoot.quaternion.copy(canonicalQuaternion); fogReveal?.restart();
+    if (bypass || !settings.enabled) { state = VR_INTRO_STATE.BYPASSED; fogReveal?.skipToEnd(); monkeyGuide.setInteractionEnabled?.(true); return; }
+    state = VR_INTRO_STATE.XR_CALIBRATING; fogReveal?.setRadius(20); monkeyGuide.setInteractionEnabled?.(false);
   }
   function hydrateScenarioState(value) {
     if (value?.phase !== 'GLYPH_FREE_EXPLORE' || value.fog !== 'CLEARED') {

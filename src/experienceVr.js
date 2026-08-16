@@ -283,6 +283,11 @@ function restorePortalWaitingState() {
   portalCanvas.reset();
   portalCanvas.show({ title: copy.crystalInstructionTitle, body: copy.crystalInstructionBody });
 }
+function resetPortalBaseline() {
+  portalDisplay.resetBaseline();
+  portalCanvas.reset();
+  portalCanvas.show({ title: copy.crystalInstructionTitle, body: copy.crystalInstructionBody });
+}
 restorePortalWaitingState();
 const crystalReliquary = createVrCrystalReliquary({
   parent: platformFixturesRoot,
@@ -598,8 +603,6 @@ introSequence = createVrIntroSequence({
   onGlyphHintTimeout: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.GLYPH_HINT_TIMEOUT),
   onReliquaryRevealCompleted: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.RELIQUARY_REVEAL_COMPLETED),
   onOpeningRaysReady: () => vrControllers.setRaysEnabled(true),
-  onProgressionFixturesHidden: () => { portalDisplay.hide(); astroFurnace.object.visible = false; crystalReliquary.reset(); },
-  onBypassFixturesVisible: () => { restorePortalWaitingState(); astroFurnace.reset(); crystalReliquary.reveal(0); },
   onReliquaryReveal: (duration) => {
     portalDisplay.reveal(duration);
     crystalReliquary.reveal(duration);
@@ -842,7 +845,7 @@ function restoreVrScenarioBaseline() {
   runtimeExperience.resetSession();
   ambientSequencer.reset();
   vrAudio.resetAsterionSphereAudio();
-  astroFurnace.reset();
+  astroFurnace.resetBaseline();
   furnacePanel.reset();
   playerGuidePanel.reset();
   astroFurnaceOptionInteraction.reset();
@@ -854,8 +857,8 @@ function restoreVrScenarioBaseline() {
   activateButton.reset();
   releaseButton.reset();
   crystalReliquary.reset();
-  restorePortalWaitingState();
-  locomotion.reset();
+  resetPortalBaseline();
+  locomotion.resetScenarioBaseline();
   resetPlayerRigToSpawn();
   progressionController.reset();
   progressFloor.reset();
@@ -874,10 +877,13 @@ function restoreVrScenarioBaseline() {
   asterionProductionController.resetSession();
   astroAttractorProductionController.resetSession();
   handModeController.reset();
-  playerGuidePanel.reset();
   postRingMonkeyDialogue.reset();
   furnaceIntro.reset();
   monkeyGuide.reset();
+  platformFixturesRoot.visible = true;
+  glyphRing.visible = true;
+  monkeyStoneRoot.visible = true;
+  monkeyVisualRoot.visible = true;
   introSequence.reset();
 }
 
