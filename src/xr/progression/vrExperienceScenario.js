@@ -208,7 +208,8 @@ const INTRO_COMPLETE_SETTLED_CONSEQUENCES = Object.freeze({
   locomotion: Object.freeze({ boundary: 'GLYPH_RING' })
 });
 const RELIQUARY_REVEALED_SETTLED_CONSEQUENCES = Object.freeze({
-  reliquary: Object.freeze({ revealed: true, interactionEnabled: true })
+  reliquary: Object.freeze({ revealed: true, interactionEnabled: true }),
+  portal: Object.freeze({ visible: true })
 });
 const FIRST_RING_COMPLETE_SETTLED_CONSEQUENCES = Object.freeze({
   progression: Object.freeze({ tier: 2, completedTier: 1,

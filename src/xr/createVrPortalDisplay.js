@@ -94,6 +94,10 @@ export function createVrPortalDisplay({ parent, portalModel, settings }) {
     place();
     revealElapsed = 0; revealActive = false; applyRevealProgress(1);
   }
+  function hydrateScenarioState(value) {
+    if (value?.visible !== true) throw new Error('Portal display only supports the settled visible scenario state');
+    trackRevealMaterials(); place(); revealElapsed = 0; revealActive = false; applyRevealProgress(1);
+  }
   function hide() { if (!disposed) { trackRevealMaterials(); object.visible = false; revealActive = false; revealElapsed = 0; applyRevealProgress(0); } }
   function reveal(duration = 3) {
     if (disposed) return false;
@@ -112,5 +116,5 @@ export function createVrPortalDisplay({ parent, portalModel, settings }) {
   }
   function dispose() { if (!disposed) { hide(); disposed = true; object.removeFromParent(); } }
   return { object, model, canvasSurface, socket, insertRadius: socketSettings.insertRadius,
-    getSocketWorldPosition, place, reset, hide, reveal, update, dispose };
+    getSocketWorldPosition, place, reset, hide, reveal, hydrateScenarioState, update, dispose };
 }

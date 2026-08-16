@@ -80,4 +80,29 @@ reveal.setRadius(6); assert.equal(reveal.getSnapshot().radius, 6);
 reveal.setRadius(0); assert.equal(reveal.getSnapshot().radius, 0);
 reveal.dispose(); assert.equal(material.onBeforeCompile, originalCompile, 'dispose restores the material lifecycle');
 
+const monkey = new THREE.Group();
+const monkeyMaterial = new THREE.MeshBasicMaterial();
+monkey.add(new THREE.Mesh(new THREE.BoxGeometry(2, 2, 4), monkeyMaterial));
+monkey.position.set(0, 0, 18);
+platform.add(monkey); platform.updateWorldMatrix(true, true);
+const geometricReveal = createVrIntroFogReveal({ center: platform, roots: [monkey], revealTarget: monkey, duration: 2 });
+geometricReveal.start(); geometricReveal.update(2);
+const firstFinal = geometricReveal.getSnapshot().revealedRadius;
+const localBounds = new THREE.Box3().setFromObject(monkey).applyMatrix4(platform.matrixWorld.clone().invert());
+const localSphere = localBounds.getBoundingSphere(new THREE.Sphere());
+assert.equal(firstFinal, Math.max(0, Math.hypot(localSphere.center.x, localSphere.center.z) - localSphere.radius - 0.35));
+assert.ok(firstFinal < 17, 'a bound crossing the former radius derives a sufficiently deep reveal boundary');
+assert.ok(Math.hypot(localSphere.center.x, localSphere.center.z) - localSphere.radius >= firstFinal + 0.35,
+  'the complete conservative Monkey bound is beyond the visible side of the feather');
+geometricReveal.skipToEnd(); geometricReveal.dispose(); geometricReveal.restart();
+assert.equal(geometricReveal.getSnapshot().installed, true, 'restart reinstalls the shader patch after disposal');
+assert.equal(geometricReveal.getSnapshot().progress, 0);
+geometricReveal.start(); geometricReveal.update(1);
+assert.equal(geometricReveal.getSnapshot().progress, 0.5, 'the restarted reveal progresses from zero');
+assert.notEqual(geometricReveal.getSnapshot().radius, 20, 'the restarted reveal updates its radius');
+geometricReveal.update(1);
+assert.equal(geometricReveal.getSnapshot().revealedRadius, firstFinal,
+  'the same geometry produces the same final radius in the next lifecycle');
+geometricReveal.dispose();
+
 console.log('VR intro platform-radial fog assertions passed.');

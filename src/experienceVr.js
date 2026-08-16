@@ -571,6 +571,7 @@ shellAttractorInteraction = createVrShellAttractorInteraction({
 const introFogReveal = createVrIntroFogReveal({
   center: progressFloor.object,
   roots: [monkeyVisualRoot, glyphRing, monkeyStoneRoot],
+  revealTarget: monkeyVisualRoot,
   color: VR_BACKGROUND_COLOR,
   duration: settings.intro.introRevealDuration
 });
@@ -733,6 +734,7 @@ runtimeExperience = new RuntimeExperience({
 
 const scenarioOwners = Object.freeze({
   monkey: monkeyActor, intro: introSequence, locomotion, reliquary: crystalReliquary,
+  portal: portalDisplay,
   progression: progressionController, progressFloor, crystals: crystalCollection,
   postRing: postRingPresentation
 });

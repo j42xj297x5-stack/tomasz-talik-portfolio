@@ -49,7 +49,7 @@ assert.throws(() => prepareVrScenarioSession({
 }), /synchronizeDerivedState must be a function/);
 
 const p2Calls = [];
-const p2Owners = Object.fromEntries(['monkey', 'intro', 'locomotion', 'reliquary', 'progression',
+const p2Owners = Object.fromEntries(['monkey', 'intro', 'locomotion', 'reliquary', 'portal', 'progression',
   'progressFloor', 'crystals', 'postRing'].map((name) => [name, {
   hydrateScenarioState(value) { p2Calls.push([name, structuredClone(value)]); }
 }]));
