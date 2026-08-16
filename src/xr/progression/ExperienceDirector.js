@@ -1,4 +1,4 @@
-import { getNextScenarioSpinePointId, validateScenarioSpine } from './scenarioSpineNavigation.js';
+import { deriveScenarioSpine, getNextScenarioSpinePointId } from './scenarioSpineNavigation.js';
 import { VR_SCENARIO_TRANSITION_KIND } from './vrExperienceScenario.js';
 
 function assertStringArray(value, label) {
@@ -30,8 +30,8 @@ function validateScenario(scenario) {
   const points = scenario.points ?? scenario.scenes;
   if (!Array.isArray(points) || points.length === 0) throw new TypeError('scenario points are required');
   const pointIds = assertStringArray(points.map((point) => point?.id), 'scenario point ids');
-  validateScenarioSpine(scenario);
-  const initialPointId = scenario.spine[0];
+  const spine = deriveScenarioSpine(scenario);
+  const initialPointId = spine[0];
   for (const [alias, value] of [['initialPointId', scenario.initialPointId], ['initialSceneId', scenario.initialSceneId]]) {
     if (value !== undefined && value !== initialPointId) {
       throw new Error(`scenario ${alias} compatibility alias must equal spine[0]: ${initialPointId}`);
@@ -104,17 +104,17 @@ function validateScenario(scenario) {
     }
     pointsById.set(point.id, { point, transitionsByEvent });
   }
-  return { pointsById, milestones, initialPointId };
+  return { pointsById, milestones, initialPointId, spine };
 }
 
 export class ExperienceDirector {
   constructor({ scenario, initialMilestones = [], startPointId }) {
-    const { pointsById, milestones, initialPointId } = validateScenario(scenario);
+    const { pointsById, milestones, initialPointId, spine } = validateScenario(scenario);
     const hydrated = assertStringArray(initialMilestones, 'initial milestones');
     for (const milestone of hydrated) if (!milestones.has(milestone)) throw new Error(`unknown initial milestone: ${milestone}`);
     const sessionStartPointId = startPointId ?? initialPointId;
     if (!pointsById.has(sessionStartPointId)) throw new Error(`unknown start point: ${String(sessionStartPointId)}`);
-    if (!scenario.spine.includes(sessionStartPointId)) {
+    if (!spine.includes(sessionStartPointId) || scenario.canonicalTerminalIsExit && sessionStartPointId === scenario.canonicalTerminalPointId) {
       throw new Error(`start point "${sessionStartPointId}" does not belong to the Scenario spine`);
     }
     this.scenario = scenario;

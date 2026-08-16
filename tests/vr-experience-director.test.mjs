@@ -416,11 +416,12 @@ const vocabulary = Object.freeze({
 const scenario = Object.freeze({
   id: 'test-scenario',
   initialPointId: 'A',
-  spine: Object.freeze(['A', 'B']),
+  canonicalTerminalPointId: 'B',
   vocabulary,
   points: Object.freeze([
     Object.freeze({
       id: 'A',
+      canonicalMainline: Object.freeze({ target: 'B' }),
       capabilities: Object.freeze(['CAN_START']),
       transitions: Object.freeze([
         Object.freeze({ kind: 'EXPLICIT', event: 'GO', target: 'B', milestonesToAdd: Object.freeze(['ARRIVED']), effects: Object.freeze(['REVEAL']) })
@@ -487,17 +488,17 @@ assert.equal(legacyDirector.getCurrentPointId(), 'A');
 legacyDirector.dispatch('GO');
 assert.equal(legacyDirector.getCurrentSceneId(), 'B');
 
-assert.throws(() => createVrExperienceDirector({ scenario: { ...scenario, initialPointId: 'MISSING' } }), /compatibility alias/);
+assert.throws(() => createVrExperienceDirector({ scenario: { ...scenario, initialPointId: 'MISSING' } }), /mainline start/);
 assert.throws(() => createVrExperienceDirector({ scenario: {
-  ...scenario, spine: ['A'],
+  ...scenario, canonicalTerminalPointId: 'A',
   points: [{ id: 'A', capabilities: ['CAN_START'], transitions: [{ kind: 'EXPLICIT', event: 'GO', target: 'MISSING' }] }]
 } }), /transition target/);
 assert.throws(() => createVrExperienceDirector({ scenario: {
-  ...scenario, spine: ['A'],
+  ...scenario, canonicalTerminalPointId: 'A',
   points: [{ id: 'A', capabilities: ['UNKNOWN'], transitions: [] }]
 } }), /unknown capability/);
 assert.throws(() => createVrExperienceDirector({ scenario: {
-  ...scenario, spine: ['A'],
+  ...scenario, canonicalTerminalPointId: 'A',
   points: [{ id: 'A', capabilities: [], transitions: [
     { kind: 'EXPLICIT', event: 'GO', target: 'A' },
     { kind: 'EXPLICIT', event: 'GO', target: 'A' }
@@ -506,12 +507,12 @@ assert.throws(() => createVrExperienceDirector({ scenario: {
 
 assert.throws(() => createVrExperienceDirector({ scenario: {
   ...scenario,
-  spine: ['A'],
+  canonicalTerminalPointId: 'A',
   points: [{ id: 'A', capabilities: [], transitions: [{ kind: 'COMPLETE', event: 'GO' }] }]
 } }), /last spine point/);
 assert.throws(() => createVrExperienceDirector({ scenario: {
   ...scenario,
-  spine: ['B'],
+  canonicalTerminalPointId: 'B',
   initialPointId: 'B',
   points: [
     { id: 'A', capabilities: [], transitions: [{ kind: 'COMPLETE', event: 'GO' }] },
@@ -521,7 +522,7 @@ assert.throws(() => createVrExperienceDirector({ scenario: {
 
 const choiceScenario = {
   initialPointId: '2.6.3',
-  spine: ['2.6.3'],
+  canonicalTerminalPointId: '2.6.3',
   vocabulary: { events: ['SELECTED'], capabilities: [], milestones: ['SECOND_SELECTED'], effects: ['SECOND_EFFECT'] },
   points: [
     { id: '2.6.3', capabilities: [], transitions: [
@@ -558,7 +559,7 @@ assert.equal(explicitTargetDirector.dispatch('SELECTED', { choice: 3 }).currentP
 
 const choiceValidationScenario = (transitions) => ({
   initialPointId: 'A',
-  spine: ['A'],
+  canonicalTerminalPointId: 'A',
   vocabulary: { events: ['SELECTED'], capabilities: [], milestones: [], effects: [] },
   points: [{ id: 'A', capabilities: [], transitions }]
 });
@@ -575,10 +576,11 @@ for (const invalidChoice of [0, -1, 1.5, '1']) {
 }
 
 const contractScenario = (transition, { source = 'A', spine = ['A', 'B'], targetPoints = [] } = {}) => ({
-  spine,
+  initialPointId: spine[0],
+  canonicalTerminalPointId: spine.at(-1),
   vocabulary: { events: ['GO'], capabilities: [], milestones: ['DONE'], effects: ['EFFECT'] },
   points: [
-    { id: 'A', capabilities: [], transitions: source === 'A' ? [transition] : [] },
+    { id: 'A', ...(spine[1] ? { canonicalMainline: { target: spine[1] } } : {}), capabilities: [], transitions: source === 'A' ? [transition] : [] },
     { id: 'B', capabilities: [], transitions: source === 'B' ? [transition] : [] },
     ...targetPoints.map((id) => ({ id, capabilities: [], transitions: source === id ? [transition] : [] }))
   ]
