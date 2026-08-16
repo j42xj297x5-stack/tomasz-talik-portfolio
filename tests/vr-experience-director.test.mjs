@@ -37,7 +37,8 @@ assert.equal('target' in vrExperienceScenario.points[0].transitions[0], false,
   'the Director does not need a redundant target for mainline completion');
 assert.equal(Object.isFrozen(productionChange), true);
 assert.deepEqual(productionChange.addedMilestones, [VR_SCENARIO_MILESTONE.XR_CALIBRATED]);
-assert.deepEqual(productionChange.effects, [VR_SCENARIO_EFFECT.BEGIN_INTRO_REVEAL]);
+assert.deepEqual(productionChange.effects, [VR_SCENARIO_EFFECT.BEGIN_INTRO_REVEAL],
+  'entering 1.20 executes the target-owned reveal effect');
 
 const bootstrapMilestones = [VR_SCENARIO_MILESTONE.XR_CALIBRATED];
 const arbitraryStartDirector = new ExperienceDirector({
@@ -100,12 +101,14 @@ assert.equal(new ExperienceDirector({ scenario: vrExperienceScenario }).dispatch
 const revealCompleteChange = productionDirector.dispatch(VR_SCENARIO_EVENT.INTRO_REVEAL_COMPLETE);
 assert.equal(revealCompleteChange.currentPointId, VR_EXPERIENCE_POINT['1.30']);
 assert.deepEqual(revealCompleteChange.addedMilestones, [VR_SCENARIO_MILESTONE.INTRO_REVEAL_COMPLETE]);
-assert.deepEqual(revealCompleteChange.effects, [VR_SCENARIO_EFFECT.BEGIN_POST_REVEAL_SILENCE]);
+assert.deepEqual(revealCompleteChange.effects, [VR_SCENARIO_EFFECT.BEGIN_POST_REVEAL_SILENCE],
+  'entering 1.30 executes the target-owned silence effect');
 assert.equal(productionDirector.dispatch(VR_SCENARIO_EVENT.INTRO_REVEAL_COMPLETE), null, 'completion transition is accepted once');
 const silenceCompleteChange = productionDirector.dispatch(VR_SCENARIO_EVENT.POST_REVEAL_SILENCE_COMPLETE);
 assert.equal(silenceCompleteChange.currentPointId, VR_EXPERIENCE_POINT['1.40']);
 assert.deepEqual(silenceCompleteChange.addedMilestones, [VR_SCENARIO_MILESTONE.POST_REVEAL_SILENCE_COMPLETE]);
-assert.deepEqual(silenceCompleteChange.effects, [VR_SCENARIO_EFFECT.BEGIN_CONTROLLER_ONBOARDING]);
+assert.deepEqual(silenceCompleteChange.effects, [VR_SCENARIO_EFFECT.BEGIN_CONTROLLER_ONBOARDING],
+  'entering 1.40 executes the target-owned onboarding effect');
 assert.equal(productionDirector.dispatch(VR_SCENARIO_EVENT.POST_REVEAL_SILENCE_COMPLETE), null, 'silence completion is accepted once');
 const guideOpenChange = productionDirector.dispatch(VR_SCENARIO_EVENT.PLAYER_OPENED_GUIDE);
 assert.equal(guideOpenChange.currentPointId, VR_EXPERIENCE_POINT['1.50']);

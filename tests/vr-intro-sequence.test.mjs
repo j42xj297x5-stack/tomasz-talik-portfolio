@@ -19,7 +19,7 @@ function fixture({ bypass = false, onReliquaryReveal = () => {} } = {}) {
   return { sequence, sector, monkeyMotionRoot, monkeyStoneRoot, glyphRing, head, panel, fog, locomotion, getMessage: () => message, getOverride: () => override, getRadius: () => radius, getAttention: () => attention, getRays: () => rays, getRevealComplete: () => revealComplete, getSilenceComplete: () => silenceComplete, getPlayerOpenedGuide: () => playerOpenedGuide, getPlayerViewedControls: () => playerViewedControls, getPlayerClosedGuide: () => playerClosedGuide, getMonkeyHovered: () => monkeyHovered, getMonkeyTriggered: () => monkeyTriggered, getMonkeyReachedThreshold: () => monkeyReachedThreshold, getPlayerEnteredRing: () => playerEnteredRing, getMonkeySettled: () => monkeySettled, getPlayerEntryPayloads: () => playerEntryPayloads, getMonkeySettledPayloads: () => monkeySettledPayloads, getGlyphHintTimeout: () => glyphHintTimeout, getReliquaryRevealCompleted: () => reliquaryRevealCompleted, getInvitationChoices: () => invitationChoices, getFollowPauseChanges: () => followPauseChanges, getThresholdChoices: () => thresholdChoices, getInteractionEnables: () => interactionEnables, getEndSessions: () => endSessions };
 }
 function reachThreshold(value) {
-  value.sequence.beginAfterXrCalibration(); value.sequence.update(10); assert.equal(value.sequence.beginPostRevealSilence(), true); value.sequence.update(2); assert.equal(value.sequence.beginControllerOnboarding(), true);
+  value.sequence.beginIntroReveal(); value.sequence.update(10); assert.equal(value.sequence.beginPostRevealSilence(), true); value.sequence.update(2); assert.equal(value.sequence.beginControllerOnboarding(), true);
   for (let i = 0; i < 10; i += 1) value.sequence.update(.01);
   value.panel.open = true; value.sequence.update(0); assert.equal(value.sequence.continueControllerOnboarding(), true); value.panel.section = 'controls'; value.panel.view = 'DETAIL'; value.sequence.update(0);
   assert.equal(value.sequence.continueControllerOnboarding(), true);
@@ -49,14 +49,14 @@ const f = fixture(); assert.equal(f.sequence.getState(), VR_INTRO_STATE.XR_CALIB
 assert.equal(f.sector.visible, true, 'normal Intro initialization does not hide floor sectors');
 f.sector.visible = false; f.sequence.reset();
 assert.equal(f.sector.visible, false, 'normal Intro reset preserves floor-owned hidden state');
-f.sector.visible = true; f.sequence.beginAfterXrCalibration(); f.sequence.update(1);
+f.sector.visible = true; f.sequence.beginIntroReveal(); f.sequence.update(1);
 assert.equal(f.sector.visible, true, 'normal Intro flow preserves a revealed sector');
 f.sequence.reset();
 assert.equal(f.sequence.continueControllerOnboarding(), false, 'runtime continuation rejects the wrong actor state');
 assert.equal(f.monkeyStoneRoot.visible, true); assert.equal(f.glyphRing.visible, true); assert.equal(f.fog.radius, 20);
-f.sequence.beginAfterXrCalibration();
+f.sequence.beginIntroReveal();
 assert.ok(Math.abs(f.sequence.getDebugSnapshot().monkeyRadius - 18) < 1e-6);
-f.head.x = 5; f.sequence.reset(); f.sequence.beginAfterXrCalibration();
+f.head.x = 5; f.sequence.reset(); f.sequence.beginIntroReveal();
 assert.ok(Math.abs(f.sequence.getDebugSnapshot().monkeyRadius - 18) < 1e-6, 'physical head offset never changes Monkey start');
 f.head.x = 0;
 f.sequence.update(5); assert.equal(f.sequence.getState(), VR_INTRO_STATE.FOG_REVEAL); assert.equal(f.fog.radius, 18.5);
@@ -260,7 +260,7 @@ lateEntry.sequence.update(59.9); assert.equal(lateEntry.getGlyphHintTimeout(), 0
 lateEntry.sequence.update(.1); assert.equal(lateEntry.getGlyphHintTimeout(), 1, 'late-entry regression emits exactly one timeout fact at 60 seconds');
 assert.equal(lateEntry.getAttention(), 0, 'late-entry timeout still waits for Runtime');
 assert.equal(lateEntry.sequence.showGlyphHint(), true); assert.equal(lateEntry.getAttention(), 1);
-const hint = fixture(); hint.sequence.beginAfterXrCalibration(); hint.sequence.getDebugSnapshot(); // bypass choreography for timer is covered through public flow above
+const hint = fixture(); hint.sequence.beginIntroReveal(); hint.sequence.getDebugSnapshot(); // bypass choreography for timer is covered through public flow above
 const bypassed = fixture({ bypass: true }); assert.equal(bypassed.sequence.getState(), VR_INTRO_STATE.BYPASSED); assert.equal(bypassed.fog.progress, 1); assert.equal(bypassed.monkeyStoneRoot.visible, true);
 bypassed.sector.visible = false; bypassed.sequence.reset();
 assert.equal(bypassed.sector.visible, false, 'QA bypass does not reveal floor sectors through a separate visibility path');
@@ -272,7 +272,7 @@ assert.equal(bypassed.getMonkeyHovered(), 0, 'QA bypass does not synthesize Monk
 assert.equal(bypassed.getMonkeyTriggered(), 0, 'QA bypass does not synthesize Monkey trigger');
 f.sector.visible = true; f.sequence.reset(); assert.equal(f.sequence.getState(), VR_INTRO_STATE.XR_CALIBRATING); assert.equal(f.sequence.getDebugSnapshot().glyphExploreResolved, false);
 assert.equal(f.sector.visible, true, 'XR re-entry reset leaves an already revealed sector visible');
-f.sequence.beginAfterXrCalibration(); f.sequence.update(10); assert.equal(f.getRevealComplete(), 2, 'reset permits exactly one completion in the next run');
+f.sequence.beginIntroReveal(); f.sequence.update(10); assert.equal(f.getRevealComplete(), 2, 'reset permits exactly one completion in the next run');
 assert.equal(f.sequence.beginPostRevealSilence(), true, 'reset flow can resume through Runtime again');
 f.sequence.update(2); assert.equal(f.getSilenceComplete(), 2, 'reset permits exactly one silence completion in the next run');
 assert.equal(f.sequence.beginControllerOnboarding(), true, 'reset flow can resume controller onboarding through Runtime again');
