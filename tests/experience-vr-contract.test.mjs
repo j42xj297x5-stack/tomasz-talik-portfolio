@@ -143,25 +143,25 @@ assert.match(vr, /readTrackedXrHead[\s\S]*getXrHeadWorldPosition\(\{ renderer, c
 assert.doesNotMatch(vr, /renderer\.xr\.getCamera\(camera\)\.getWorldPosition\(/,
   'active P0 code must not rebuild the detached WebXR ArrayCamera matrix');
 assert.match(vr, /new ExperienceDirector\(\{ scenario: vrExperienceScenario \}\)/);
-assert.match(vr, /new RuntimeExperience\(\{[\s\S]*VR_SCENARIO_EFFECT\.BEGIN_INTRO_REVEAL[\s\S]*introSequence\.beginAfterXrCalibration\(\);[\s\S]*if \(introQaBypass\) vrControllers\.setRaysEnabled\(true\);/,
+assert.match(vr, /new RuntimeExperience\(\{[\s\S]*VR_SCENARIO_EFFECT\.BEGIN_INTRO_REVEAL[\s\S]*introSequence\.beginIntroReveal\(\)\)[\s\S]*throw new Error[\s\S]*if \(introQaBypass\) vrControllers\.setRaysEnabled\(true\);/,
   'RuntimeExperience effect adapter owns Intro start and QA rays');
 assert.match(vr, /if \(xrStartCalibration\.processFrame\(\)\) \{\s*renderer\.render\(scene, camera\);\s*return;/,
   'calibration is one-shot and skips ordinary locomotion/update work in that frame');
 const calibrationBlock = vr.match(/if \(xrStartCalibration\.processFrame\(\)\)[\s\S]*?\n  }/)?.[0] ?? '';
-assert.doesNotMatch(calibrationBlock, /introSequence\.beginAfterXrCalibration|setRaysEnabled\(true\)/,
+assert.doesNotMatch(calibrationBlock, /introSequence\.beginIntroReveal|setRaysEnabled\(true\)/,
   'calibration block contains only the semantic dispatch');
-assert.equal((vr.match(/introSequence\.beginAfterXrCalibration\(\)/g) ?? []).length, 1,
-  'there is no second calibration fallback');
+assert.equal((vr.match(/introSequence\.beginIntroReveal\(\)/g) ?? []).length, 1,
+  'there is no second intro-reveal start path');
 assert.match(vr, /onIntroRevealComplete: \(\) => runtimeExperience\.dispatch\(VR_SCENARIO_EVENT\.INTRO_REVEAL_COMPLETE\)/,
   'Intro completion callback performs only semantic dispatch');
 assert.match(vr, /VR_SCENARIO_EFFECT\.BEGIN_POST_REVEAL_SILENCE[\s\S]*introSequence\.beginPostRevealSilence\(\)[\s\S]*throw new Error/,
-  'post-reveal effect resumes the waiting Intro actor and rejects composition bugs explicitly');
+  'target-owned post-reveal effect starts the Intro beat and rejects composition bugs explicitly');
 assert.equal((vr.match(/introSequence\.beginPostRevealSilence\(\)/g) ?? []).length, 1,
   'there is no second post-reveal silence start path');
 assert.match(vr, /onPostRevealSilenceComplete: \(\) => runtimeExperience\.dispatch\(VR_SCENARIO_EVENT\.POST_REVEAL_SILENCE_COMPLETE\)/,
   'silence completion callback performs only semantic dispatch');
 assert.match(vr, /VR_SCENARIO_EFFECT\.BEGIN_CONTROLLER_ONBOARDING[\s\S]*introSequence\.beginControllerOnboarding\(\)[\s\S]*throw new Error/,
-  'controller onboarding effect resumes the waiting Intro actor and rejects composition bugs explicitly');
+  'target-owned onboarding effect starts the Intro beat and rejects composition bugs explicitly');
 assert.equal((vr.match(/introSequence\.beginControllerOnboarding\(\)/g) ?? []).length, 1,
   'there is no second controller onboarding start path');
 assert.match(vr, /onPlayerOpenedGuide: \(\) => runtimeExperience\.dispatch\(VR_SCENARIO_EVENT\.PLAYER_OPENED_GUIDE\)/,

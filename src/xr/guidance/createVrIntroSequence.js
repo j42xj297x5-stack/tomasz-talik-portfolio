@@ -156,9 +156,24 @@ export function createVrIntroSequence({ monkeyGuide, monkeyMotionRoot, monkeyVis
     fogReveal?.skipToEnd();
     state = VR_INTRO_STATE.GLYPH_FREE_EXPLORE;
   }
-  function beginAfterXrCalibration() { xrCalibrated = true; if (state !== VR_INTRO_STATE.XR_CALIBRATING) return; monkeyRadius = spatial.monkeyStartRadius; placeAtRadius(); state = VR_INTRO_STATE.FOG_REVEAL; fogReveal?.start(); }
-  function beginPostRevealSilence() { if (state !== VR_INTRO_STATE.WAIT_RUNTIME_AFTER_REVEAL) return false; silenceElapsed = 0; state = VR_INTRO_STATE.POST_REVEAL_SILENCE; return true; }
-  function beginControllerOnboarding() { if (state !== VR_INTRO_STATE.WAIT_RUNTIME_AFTER_POST_REVEAL_SILENCE) return false; beginPanelTutorial(); return true; }
+  function prepareRevealedIntro() {
+    monkeyRadius = spatial.monkeyStartRadius; placeAtRadius(); fogReveal?.skipToEnd();
+  }
+  function beginIntroReveal() {
+    if (state !== VR_INTRO_STATE.XR_CALIBRATING) return false;
+    xrCalibrated = true; monkeyRadius = spatial.monkeyStartRadius; placeAtRadius(); state = VR_INTRO_STATE.FOG_REVEAL; fogReveal?.start();
+    return true;
+  }
+  function beginPostRevealSilence() {
+    if (state !== VR_INTRO_STATE.XR_CALIBRATING && state !== VR_INTRO_STATE.WAIT_RUNTIME_AFTER_REVEAL) return false;
+    if (state === VR_INTRO_STATE.XR_CALIBRATING) prepareRevealedIntro();
+    xrCalibrated = true; silenceElapsed = 0; state = VR_INTRO_STATE.POST_REVEAL_SILENCE; return true;
+  }
+  function beginControllerOnboarding() {
+    if (state !== VR_INTRO_STATE.XR_CALIBRATING && state !== VR_INTRO_STATE.WAIT_RUNTIME_AFTER_POST_REVEAL_SILENCE) return false;
+    if (state === VR_INTRO_STATE.XR_CALIBRATING) prepareRevealedIntro();
+    xrCalibrated = true; beginPanelTutorial(); return true;
+  }
   function continueControllerOnboarding() {
     if (state === VR_INTRO_STATE.WAIT_RUNTIME_AFTER_PLAYER_GUIDE_OPEN) { state = VR_INTRO_STATE.WAIT_CONTROLS_VIEW; return true; }
     if (state === VR_INTRO_STATE.WAIT_RUNTIME_AFTER_CONTROLS_VIEWED) { state = VR_INTRO_STATE.WAIT_PANEL_CLOSE; return true; }
@@ -210,7 +225,7 @@ export function createVrIntroSequence({ monkeyGuide, monkeyMotionRoot, monkeyVis
     }
   }
   reset();
-  return { update, reset, hydrateScenarioState, beginAfterXrCalibration, beginPostRevealSilence, beginControllerOnboarding, continueControllerOnboarding, continueInvitation, continueFollowPauseChanged, presentThresholdChoice, continueThresholdChoice, beginGlyphFreeExplore, showGlyphHint, beginFirstCrystalDiscovery, beginReliquaryReveal, completeReliquaryReveal, getState: () => state, isGuidePaused: () => walkingPaused,
+  return { update, reset, hydrateScenarioState, beginIntroReveal, beginPostRevealSilence, beginControllerOnboarding, continueControllerOnboarding, continueInvitation, continueFollowPauseChanged, presentThresholdChoice, continueThresholdChoice, beginGlyphFreeExplore, showGlyphHint, beginFirstCrystalDiscovery, beginReliquaryReveal, completeReliquaryReveal, getState: () => state, isGuidePaused: () => walkingPaused,
     getDebugSnapshot: () => { const head = getHeadPosition(); const fog = fogReveal?.getSnapshot() ?? {}; return { state, headRadius: radiusOf(head), monkeyRadius: radiusOf(monkeyMotionRoot), headToMonkeyDistance: Math.hypot(head.x - monkeyMotionRoot.getWorldPosition(new THREE.Vector3()).x, head.z - monkeyMotionRoot.getWorldPosition(new THREE.Vector3()).z), fogRadius: fog.radius, fogRevealProgress: fog.progress ?? (state === VR_INTRO_STATE.FOG_REVEAL ? 0 : 1), postRevealSilenceRemaining: state === VR_INTRO_STATE.POST_REVEAL_SILENCE ? Math.max(0, (settings.postRevealSilenceDuration ?? 2) - silenceElapsed) : 0, playerGuideOpen: playerGuidePanel?.isOpen() ?? false, playerGuideSection: playerGuidePanel?.getActiveSectionId() ?? null, followCheckResolved, walkingPaused, playerEnteredRing, playerSafelyInside, monkeySettled, glyphExploreElapsed, glyphExploreResolved, glyphHintTriggered, glyphHintShown, ringRadius, xrCalibrated, visualRoot: monkeyVisualRoot?.name ?? null }; }
   };
 }
