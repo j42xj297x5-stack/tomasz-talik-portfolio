@@ -1,4 +1,4 @@
-const OWNER_SECTIONS = Object.freeze(['monkey', 'intro', 'locomotion', 'reliquary', 'progression',
+const OWNER_SECTIONS = Object.freeze(['monkey', 'intro', 'locomotion', 'reliquary', 'portal', 'progression',
   'progressFloor', 'crystals', 'postRing']);
 
 // Canonical baseline restoration is an explicit precondition. This seam only

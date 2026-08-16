@@ -3,7 +3,7 @@ import { VR_BACKGROUND_COLOR } from '../../config/experienceVrSettings.js';
 
 /** Renders a black, platform-local radial mask on an explicit set of roots. */
 export function createVrIntroFogReveal({ center, roots = [], color = VR_BACKGROUND_COLOR, duration = 10,
-  initialRadius = 20, revealedRadius = 17 }) {
+  initialRadius = 20, revealedRadius: configuredRevealedRadius = 17, revealTarget = null, feather = 0.35 }) {
   if (!center?.isObject3D) throw new TypeError('VR intro fog requires a platform center Object3D');
   const uniforms = {
     worldToPlatform: { value: new THREE.Matrix4() },
@@ -12,6 +12,22 @@ export function createVrIntroFogReveal({ center, roots = [], color = VR_BACKGROU
   };
   const patched = new Map();
   let elapsed = 0; let progress = 0; let active = false; let installed = false;
+  let revealedRadius = configuredRevealedRadius;
+
+  function calculateRevealedRadius() {
+    if (!revealTarget?.isObject3D) return configuredRevealedRadius;
+    center.updateWorldMatrix(true, false);
+    revealTarget.updateWorldMatrix(true, true);
+    const bounds = new THREE.Box3().setFromObject(revealTarget);
+    if (bounds.isEmpty()) throw new Error('VR intro fog reveal target must have visible geometry');
+    const inverse = center.matrixWorld.clone().invert();
+    const points = [];
+    for (const x of [bounds.min.x, bounds.max.x]) for (const y of [bounds.min.y, bounds.max.y]) {
+      for (const z of [bounds.min.z, bounds.max.z]) points.push(new THREE.Vector3(x, y, z).applyMatrix4(inverse));
+    }
+    const sphere = new THREE.Box3().setFromPoints(points).getBoundingSphere(new THREE.Sphere());
+    return Math.max(0, Math.hypot(sphere.center.x, sphere.center.z) - sphere.radius - feather);
+  }
 
   function syncCenter() {
     center.updateWorldMatrix(true, false);
@@ -46,7 +62,7 @@ vec4 vrFogWorldPosition = vec4(transformed, 1.0);
 vrFogWorldPosition = modelMatrix * vrFogWorldPosition;
 vrFogPlatformPosition = (vrFogWorldToPlatform * vrFogWorldPosition).xyz;`);
           shader.fragmentShader = `uniform float vrFogRadius; uniform vec3 vrFogColor; varying vec3 vrFogPlatformPosition;\n${shader.fragmentShader}`
-            .replace('#include <tonemapping_fragment>', `float vrFogEdge = smoothstep(vrFogRadius - 0.35, vrFogRadius + 0.35, length(vrFogPlatformPosition.xz));\n gl_FragColor.rgb = mix(vrFogColor, gl_FragColor.rgb, vrFogEdge);\n#include <tonemapping_fragment>`);
+            .replace('#include <tonemapping_fragment>', `float vrFogEdge = smoothstep(vrFogRadius - ${feather}, vrFogRadius + ${feather}, length(vrFogPlatformPosition.xz));\n gl_FragColor.rgb = mix(vrFogColor, gl_FragColor.rgb, vrFogEdge);\n#include <tonemapping_fragment>`);
         };
         material.needsUpdate = true;
       }
@@ -59,7 +75,7 @@ vrFogPlatformPosition = (vrFogWorldToPlatform * vrFogWorldPosition).xyz;`);
   }
   function setRadius(radius) { uniforms.radius.value = Math.max(0, radius); syncCenter(); }
   function restart() { uninstall(); elapsed = 0; progress = 0; active = false; uniforms.radius.value = initialRadius; install(); }
-  function start() { elapsed = 0; progress = 0; active = true; setRadius(initialRadius); }
+  function start() { revealedRadius = calculateRevealedRadius(); elapsed = 0; progress = 0; active = true; setRadius(initialRadius); }
   function update(delta) {
     if (!installed) return;
     syncCenter();

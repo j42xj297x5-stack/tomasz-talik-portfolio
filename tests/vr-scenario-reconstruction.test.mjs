@@ -50,6 +50,7 @@ assert.throws(
 );
 assert.deepEqual(reconstructVrScenarioState(vrExperienceScenario, '1.10'), {});
 const productionAtTwoTen = reconstructVrScenarioState(vrExperienceScenario, '2.10');
+assert.equal(productionAtTwoTen.portal, undefined, 'portal is not settled before the reliquary reveal');
 assert.deepEqual(productionAtTwoTen, {
   monkey: { placement: 'FINAL_STONE', visible: true, stoneVisible: true },
   intro: { phase: 'GLYPH_FREE_EXPLORE', fog: 'CLEARED', glyphRingVisible: true,
@@ -67,6 +68,7 @@ assert.equal(productionAtThreeTen.progression.tier, 2);
 assert.equal(productionAtThreeTen.progression.activatedPageIds.length, 5);
 assert.equal(productionAtThreeTen.progressFloor.activatedPages.length, 5);
 assert.deepEqual(productionAtThreeTen.reliquary, { revealed: true, interactionEnabled: true });
+assert.deepEqual(productionAtThreeTen.portal, { visible: true });
 assert.deepEqual(productionAtThreeTen.crystals, { consumedTier: 1 });
 assert.equal(productionAtThreeTen.postRing, undefined,
   'the active 3.10 presentation is not settled history at entry');

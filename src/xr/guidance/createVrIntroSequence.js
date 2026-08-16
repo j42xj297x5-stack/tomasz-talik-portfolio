@@ -189,7 +189,8 @@ export function createVrIntroSequence({ monkeyGuide, monkeyMotionRoot, monkeyVis
       }
       if (!walkingPaused && monkeyRadius > stopRadius) { monkeyRadius = Math.max(stopRadius, monkeyRadius - settings.guideSpeed * delta); placeAtRadius(); }
       const followProgress = THREE.MathUtils.clamp((spatial.monkeyStartRadius - monkeyRadius) / (spatial.monkeyStartRadius - stopRadius), 0, 1);
-      fogReveal?.setRadius(THREE.MathUtils.lerp(17, 6, followProgress));
+      const revealRadius = fogReveal?.getSnapshot().revealedRadius ?? 6;
+      fogReveal?.setRadius(THREE.MathUtils.lerp(revealRadius, 6, followProgress));
       if (monkeyRadius <= stopRadius + 1e-4) {
         state = VR_INTRO_STATE.WAIT_RUNTIME_AFTER_MONKEY_REACHED_THRESHOLD;
         onMonkeyReachedThreshold();
