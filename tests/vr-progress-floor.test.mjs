@@ -11,7 +11,15 @@ const CONTRACTS = {
   wood: { base: 'VR_PROGRESS_SECTOR_WOOD_BASE', body: 'path1', prefix: 'VR_PROGRESS_CARD_WOOD_', panelCount: 3 }
 };
 
-function createSectorModel(sourceType, { missingObject = null, radialStep = 1.25, radii = null, bodyOpacity = 1 } = {}) {
+function createSectorModel(sourceType, {
+  missingObject = null,
+  radialStep = 1.25,
+  radii = null,
+  bodyOpacity = 1,
+  bodyTransparent = false,
+  bodyDepthWrite = true,
+  bodySide = THREE.FrontSide
+} = {}) {
   const contract = CONTRACTS[sourceType];
   const source = new THREE.Group();
   source.name = `${sourceType}FloorSource`;
@@ -25,7 +33,13 @@ function createSectorModel(sourceType, { missingObject = null, radialStep = 1.25
   if (contract.body !== missingObject) {
     const authoredBodyOverlay = new THREE.Mesh(
       new THREE.BoxGeometry(0.9, 0.02, 0.9),
-      new THREE.MeshStandardMaterial({ color: 0xff5500, opacity: bodyOpacity })
+      new THREE.MeshStandardMaterial({
+        color: 0xff5500,
+        opacity: bodyOpacity,
+        transparent: bodyTransparent,
+        depthWrite: bodyDepthWrite,
+        side: bodySide
+      })
     );
     authoredBodyOverlay.name = contract.body;
     source.add(authoredBodyOverlay);
@@ -227,13 +241,16 @@ const completedCopy = floor.getCompletedTiers();
 completedCopy.length = 0;
 assert.deepEqual(floor.getCompletedTiers(), [1, 2, 3, 4, 5]);
 
-const createRevealFloor = ({ creativeOpacity = 1 } = {}) => createVrProgressFloor({
-  parent: new THREE.Group(), creativeSectorModel: createSectorModel('creative', { bodyOpacity: creativeOpacity }),
+const createRevealFloor = ({ creativeOpacity = 1, creativeSide = THREE.FrontSide } = {}) => createVrProgressFloor({
+  parent: new THREE.Group(), creativeSectorModel: createSectorModel('creative', {
+    bodyOpacity: creativeOpacity,
+    bodySide: creativeSide
+  }),
   ethicsSectorModel: createSectorModel('ethics'), haikuSectorModel: createSectorModel('water'),
   digSectorModel: createSectorModel('metal'), aiGuideSectorModel: createSectorModel('wood'),
   emission: { responseSpeed: 100 }
 });
-const reversedFloor = createRevealFloor({ creativeOpacity: 0.42 });
+const reversedFloor = createRevealFloor({ creativeOpacity: 0.42, creativeSide: THREE.DoubleSide });
 const reversedSectors = reversedFloor.geometryRoot.children.filter(({ name }) => name.startsWith('VrProgressFloorSector:'));
 const reversedFire = reversedSectors.find(({ userData }) => userData.glyphId === 'creative-ai');
 const reversedWater = reversedSectors.find(({ userData }) => userData.glyphId === 'haiku-cosmos');
@@ -257,6 +274,9 @@ assert.ok(reversedSectors.every(({ visible }) => visible === false),
 assert.equal(reversedFloor.activatePage({ glyphId: 'creative-ai', order: 2 }), true, 'a non-order-1 first page reveals its sector');
 assert.equal(reversedFire.visible, true);
 assert.equal(reversedWater.visible, false);
+assert.equal(overlayMaterial(reversedFire).transparent, true, 'ornament uses the transient transparent fade state during reveal');
+assert.equal(overlayMaterial(reversedFire).depthWrite, false);
+assert.equal(overlayMaterial(reversedFire).side, THREE.DoubleSide, 'fade preparation preserves the authored side');
 integrationIntro.reset();
 assert.equal(reversedFire.visible, true, 'Intro reset preserves a revealed sector across XR re-entry');
 assert.ok(reversedSectors.filter((sector) => sector !== reversedFire).every(({ visible }) => visible === false),
@@ -264,6 +284,10 @@ assert.ok(reversedSectors.filter((sector) => sector !== reversedFire).every(({ v
 reversedFloor.update(1);
 assert.ok(overlayMaterial(reversedFire).opacity > 0.41 && overlayMaterial(reversedFire).opacity <= 0.42,
   'reveal restores each authored target opacity instead of assuming one');
+assert.equal(overlayMaterial(reversedFire).opacity, 0.42, 'settled ornament restores authored opacity exactly');
+assert.equal(overlayMaterial(reversedFire).transparent, false, 'settled ornament restores authored transparency mode');
+assert.equal(overlayMaterial(reversedFire).depthWrite, true, 'settled ornament restores authored depth-write mode');
+assert.equal(overlayMaterial(reversedFire).side, THREE.DoubleSide, 'settled ornament preserves authored side');
 assert.equal(overlayMaterial(reversedWater).opacity, 0);
 assert.equal(reversedFloor.activatePage({ glyphId: 'haiku-cosmos', order: 1 }), true, 'sectors can reveal in reverse branch order');
 assert.equal(reversedWater.visible, true);
@@ -273,8 +297,48 @@ assert.ok(overlayMaterial(reversedFire).opacity > 0.41, 'revealing another secto
 assert.ok(reversedSectors.every((sector) => sector.getObjectByName(CONTRACTS[sector.userData.sourceType].base).visible === false),
   'reference BASE objects remain hidden across activation order and XR re-entry');
 assert.deepEqual(reversedFloor.getRevealedSectorIds(), ['creative-ai', 'haiku-cosmos']);
+reversedFloor.reset();
+assert.equal(reversedFire.visible, false, 'reset hides the sector for the next reveal');
+assert.equal(overlayMaterial(reversedFire).opacity, 0, 'reset prepares ornament opacity for another fade');
+assert.equal(overlayMaterial(reversedFire).transparent, true, 'reset restores transient fade transparency');
+assert.equal(overlayMaterial(reversedFire).depthWrite, false, 'reset restores transient fade depth-write state');
+assert.equal(overlayMaterial(reversedFire).side, THREE.DoubleSide, 'reset does not alter authored side');
+assert.equal(reversedFire.getObjectByName(CONTRACTS.creative.base).visible, false, 'reset keeps reference BASE hidden');
+assert.equal(reversedFloor.activatePage({ glyphId: 'creative-ai', order: 1 }), true);
+reversedFloor.update(1);
+assert.deepEqual(
+  {
+    opacity: overlayMaterial(reversedFire).opacity,
+    transparent: overlayMaterial(reversedFire).transparent,
+    depthWrite: overlayMaterial(reversedFire).depthWrite,
+    side: overlayMaterial(reversedFire).side
+  },
+  { opacity: 0.42, transparent: false, depthWrite: true, side: THREE.DoubleSide },
+  'a repeated reveal settles back to the authored material contract'
+);
+assert.equal(reversedFire.getObjectByName(CONTRACTS.creative.base).visible, false, 'repeated reveal keeps reference BASE hidden');
 reversedFloor.dispose();
 assert.deepEqual(reversedFloor.getRevealedSectorIds(), [], 'dispose clears local reveal state');
+
+const hydratedFloor = createRevealFloor({ creativeOpacity: 0.42, creativeSide: THREE.DoubleSide });
+const hydratedFire = hydratedFloor.geometryRoot.children.find(({ userData }) => userData.glyphId === 'creative-ai');
+hydratedFloor.hydrateScenarioState({
+  activatedPages: [{ glyphId: 'creative-ai', order: 1 }],
+  completedTier: 1
+});
+assert.equal(hydratedFire.visible, true);
+assert.deepEqual(
+  {
+    opacity: overlayMaterial(hydratedFire).opacity,
+    transparent: overlayMaterial(hydratedFire).transparent,
+    depthWrite: overlayMaterial(hydratedFire).depthWrite,
+    side: overlayMaterial(hydratedFire).side
+  },
+  { opacity: 0.42, transparent: false, depthWrite: true, side: THREE.DoubleSide },
+  'Tier 1 hydration settles ornament directly in its authored material state'
+);
+assert.equal(hydratedFire.getObjectByName(CONTRACTS.creative.base).visible, false, 'hydration keeps reference BASE hidden');
+hydratedFloor.dispose();
 
 for (const missingObject of ['VR_PROGRESS_CARD_WATER_04', 'VR_PROGRESS_CARD_WATER_05']) {
   assert.throws(() => createVrProgressFloor({

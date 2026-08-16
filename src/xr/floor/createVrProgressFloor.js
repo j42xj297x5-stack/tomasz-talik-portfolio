@@ -120,7 +120,13 @@ function makePresentationBodyTransparent(sector, bodyNames, sectorConfig) {
       if (!object.isMesh || !object.material) return;
       const meshMaterials = Array.isArray(object.material) ? object.material : [object.material];
       meshMaterials.forEach((material) => {
-        if (!materials.has(material)) materials.set(material, material.opacity);
+        if (!materials.has(material)) {
+          materials.set(material, {
+            opacity: material.opacity,
+            transparent: material.transparent,
+            depthWrite: material.depthWrite
+          });
+        }
         material.transparent = true;
         material.opacity = 0;
         material.depthWrite = false;
@@ -128,7 +134,23 @@ function makePresentationBodyTransparent(sector, bodyNames, sectorConfig) {
       });
     });
   });
-  return [...materials].map(([material, targetOpacity]) => ({ material, targetOpacity }));
+  return [...materials].map(([material, authoredState]) => ({ material, authoredState }));
+}
+
+function preparePresentationMaterialForFade({ material }) {
+  const transparentChanged = material.transparent !== true;
+  material.opacity = 0;
+  material.transparent = true;
+  material.depthWrite = false;
+  if (transparentChanged) material.needsUpdate = true;
+}
+
+function restorePresentationMaterial({ material, authoredState }) {
+  const transparentChanged = material.transparent !== authoredState.transparent;
+  material.opacity = authoredState.opacity;
+  material.transparent = authoredState.transparent;
+  material.depthWrite = authoredState.depthWrite;
+  if (transparentChanged) material.needsUpdate = true;
 }
 
 export function createVrProgressFloor({
@@ -323,8 +345,12 @@ export function createVrProgressFloor({
     const safeDelta = Math.max(0, Number.isFinite(delta) ? delta : 0);
     const blend = 1 - Math.exp(-config.responseSpeed * safeDelta);
     revealedSectorIds.forEach((glyphId) => {
-      sectorsByGlyphId.get(glyphId)?.presentationMaterials.forEach(({ material, targetOpacity }) => {
-        material.opacity += (targetOpacity - material.opacity) * blend;
+      sectorsByGlyphId.get(glyphId)?.presentationMaterials.forEach((presentationMaterial) => {
+        const { material, authoredState } = presentationMaterial;
+        material.opacity += (authoredState.opacity - material.opacity) * blend;
+        if (Math.abs(authoredState.opacity - material.opacity) <= 1e-4) {
+          restorePresentationMaterial(presentationMaterial);
+        }
       });
     });
     activatedEntries.forEach(({ panel }, key) => {
@@ -363,7 +389,7 @@ export function createVrProgressFloor({
     revealedSectorIds.clear(); activatedEntries.clear(); pulseRemaining.clear(); completedTiers.clear();
     sectorsByGlyphId.forEach(({ object: sector, panelsByOrder, presentationMaterials }) => {
       sector.visible = false;
-      presentationMaterials.forEach(({ material }) => { material.opacity = 0; });
+      presentationMaterials.forEach(preparePresentationMaterialForFade);
       panelsByOrder.forEach(({ materials }) => materials.forEach((material) => { material.emissiveIntensity = 0; }));
     });
     tierRings.forEach((ring) => { ring.pulseRemaining = 0; ring.material.opacity = 0; });
