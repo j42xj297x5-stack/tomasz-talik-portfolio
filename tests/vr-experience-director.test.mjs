@@ -113,7 +113,18 @@ assert.equal(productionDirector.dispatch(VR_SCENARIO_EVENT.POST_REVEAL_SILENCE_C
 const guideOpenChange = productionDirector.dispatch(VR_SCENARIO_EVENT.PLAYER_OPENED_GUIDE);
 assert.equal(guideOpenChange.currentPointId, VR_EXPERIENCE_POINT['1.50']);
 assert.deepEqual(guideOpenChange.addedMilestones, []);
-assert.deepEqual(guideOpenChange.effects, [VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING]);
+const pointOneForty = vrExperienceScenario.points.find(({ id }) => id === VR_EXPERIENCE_POINT['1.40']);
+const pointOneFifty = vrExperienceScenario.points.find(({ id }) => id === VR_EXPERIENCE_POINT['1.50']);
+assert.deepEqual(pointOneForty.transitions[0].effects, undefined,
+  '1.40 completion does not own the target beat as a transition-local effect');
+assert.deepEqual(pointOneFifty.entryEffects, [VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING],
+  '1.50 owns the existing onboarding continuation through its entry contract');
+assert.deepEqual(guideOpenChange.effects, pointOneFifty.entryEffects,
+  'natural entry into 1.50 executes its target-owned entry exactly once');
+const directOneFifty = new ExperienceDirector({ scenario: vrExperienceScenario, startPointId: VR_EXPERIENCE_POINT['1.50'] });
+assert.deepEqual(directOneFifty.activateCurrentPoint().effects, pointOneFifty.entryEffects,
+  'direct activation of 1.50 uses the same target entry contract');
+assert.equal(directOneFifty.activateCurrentPoint(), null, 'direct activation executes 1.50 entry exactly once');
 assert.equal(productionDirector.dispatch(VR_SCENARIO_EVENT.PLAYER_OPENED_GUIDE), null, 'guide opening is accepted once');
 const controlsViewedChange = productionDirector.dispatch(VR_SCENARIO_EVENT.PLAYER_VIEWED_CONTROLS);
 assert.equal(controlsViewedChange.currentPointId, VR_EXPERIENCE_POINT['1.60']);
