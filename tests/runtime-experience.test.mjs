@@ -103,4 +103,18 @@ const entryChange = entryRuntime.activateCurrentPoint();
 assert.deepEqual(entryCalls, entryChange.effects, 'Runtime executes arbitrary-start entry effects through its canonical adapter');
 assert.equal(entryRuntime.activateCurrentPoint(), null);
 assert.equal(entryCalls.length, 2, 'repeated activation executes no effects');
+
+const introEntryCalls = [];
+const introEntryRuntime = new RuntimeExperience({
+  director: new ExperienceDirector({ scenario: vrExperienceScenario, startPointId: '1.50' }),
+  effectHandlers: {
+    [VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING]: () => introEntryCalls.push(VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING)
+  }
+});
+const introEntryChange = introEntryRuntime.activateCurrentPoint();
+assert.deepEqual(introEntryChange.effects, [VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING],
+  'Runtime direct activation executes the authored 1.50 entry contract');
+assert.equal(introEntryRuntime.activateCurrentPoint(), null);
+assert.deepEqual(introEntryCalls, [VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING],
+  'Runtime executes the 1.50 entry command exactly once');
 console.log('RuntimeExperience assertions passed');
