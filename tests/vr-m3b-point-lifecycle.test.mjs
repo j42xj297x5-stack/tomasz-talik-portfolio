@@ -8,7 +8,8 @@ import {
 
 const stateAt = (pointId) => stateAtVrScenarioPoint(vrExperienceScenario, pointId);
 assert.deepEqual(stateAt('1.10'), {}, 'stateAt(initial) has no current-point or historical state');
-assert.deepEqual(stateAt('1.130'), {}, 'stateAt is exclusive of the target consequences');
+assert.equal(stateAt('1.130').intro.stage, 'REVEALED');
+assert.equal(stateAt('1.130').monkey, undefined, 'stateAt is exclusive of the target consequences');
 assert.equal(stateAt('2.10').intro.phase, 'GLYPH_FREE_EXPLORE');
 assert.equal(stateAt('2.10').monkey.placement, 'FINAL_STONE');
 assert.equal(stateAt('2.20').reliquary, undefined,
