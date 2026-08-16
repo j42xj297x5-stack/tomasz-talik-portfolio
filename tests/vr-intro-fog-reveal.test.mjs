@@ -12,12 +12,18 @@ assert.match(runtimeSource, /color: VR_BACKGROUND_COLOR/);
 const platform = new THREE.Group();
 platform.position.set(3, 2, -4); platform.rotation.set(.4, .7, -.2);
 const material = new THREE.MeshBasicMaterial();
+material.customProgramCacheKey = () => 'base-material-program';
 const root = new THREE.Group(); root.add(new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), material));
 platform.add(root); platform.updateWorldMatrix(true, true);
 const originalCompile = material.onBeforeCompile;
+const originalProgramCacheKey = material.customProgramCacheKey;
+const baseProgramKey = originalProgramCacheKey.call(material);
 const reveal = createVrIntroFogReveal({ center: platform, roots: [root], duration: 10 });
 
 assert.notEqual(material.onBeforeCompile, originalCompile, 'fog is installed before the first renderable frame');
+const initialFogProgramKey = material.customProgramCacheKey();
+assert.notEqual(initialFogProgramKey, baseProgramKey,
+  'the installed fog variant has a renderer-visible program cache key');
 
 // MeshBasicMaterial does not require Three's conditionally declared worldPosition.
 // Compile the patch against a minimal shader representing that exact code path.
@@ -78,7 +84,34 @@ reveal.update(5); assert.equal(reveal.getSnapshot().radius, 17);
 reveal.update(100); assert.equal(reveal.getSnapshot().radius, 17, 'completed reveal holds its radius and shader patch');
 reveal.setRadius(6); assert.equal(reveal.getSnapshot().radius, 6);
 reveal.setRadius(0); assert.equal(reveal.getSnapshot().radius, 0);
-reveal.dispose(); assert.equal(material.onBeforeCompile, originalCompile, 'dispose restores the material lifecycle');
+reveal.skipToEnd();
+assert.equal(material.onBeforeCompile, originalCompile, 'skipToEnd removes the fog shader patch');
+assert.equal(material.customProgramCacheKey, originalProgramCacheKey,
+  'skipToEnd restores the material program cache contract');
+assert.equal(material.customProgramCacheKey(), baseProgramKey,
+  'the completed P2-style state selects the original program variant');
+
+reveal.restart();
+assert.notEqual(material.customProgramCacheKey(), baseProgramKey,
+  'a P0-style restart cannot reuse the cached program without fog');
+assert.equal(material.customProgramCacheKey(), initialFogProgramKey,
+  'reinstalling the same fog shader produces a stable cache key');
+const restartedCompile = material.onBeforeCompile;
+reveal.restart();
+assert.notEqual(material.onBeforeCompile, restartedCompile, 'restart replaces rather than wraps the installed callback');
+const restartedShader = {
+  uniforms: {},
+  vertexShader: 'void main() { vec3 transformed = position; #include <worldpos_vertex> }',
+  fragmentShader: 'void main() { gl_FragColor = vec4(1.0); #include <tonemapping_fragment> }'
+};
+material.onBeforeCompile(restartedShader, {});
+assert.equal(restartedShader.fragmentShader.match(/uniform float vrFogRadius/g)?.length, 1,
+  'repeated restarts install exactly one fog patch');
+assert.equal(material.customProgramCacheKey(), initialFogProgramKey,
+  'repeated restarts keep the fog cache contract idempotent');
+reveal.dispose();
+assert.equal(material.onBeforeCompile, originalCompile, 'dispose restores the material lifecycle');
+assert.equal(material.customProgramCacheKey, originalProgramCacheKey, 'dispose restores the original cache key callback');
 
 const monkey = new THREE.Group();
 const monkeyMaterial = new THREE.MeshBasicMaterial();
