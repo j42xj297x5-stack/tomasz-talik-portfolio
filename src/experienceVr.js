@@ -636,7 +636,9 @@ runtimeExperience = new RuntimeExperience({
   director: experienceDirector,
   effectHandlers: {
     [VR_SCENARIO_EFFECT.BEGIN_INTRO_REVEAL]: () => {
-      introSequence.beginAfterXrCalibration();
+      if (!introSequence.beginIntroReveal()) {
+        throw new Error('BEGIN_INTRO_REVEAL rejected by Intro actor after accepted Scenario point activation');
+      }
       if (introQaBypass) vrControllers.setRaysEnabled(true);
     },
     [VR_SCENARIO_EFFECT.BEGIN_POST_REVEAL_SILENCE]: () => {

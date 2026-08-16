@@ -242,8 +242,7 @@ const points = Object.freeze([
     transitions: Object.freeze([
       Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.COMPLETE,
         event: VR_SCENARIO_EVENT.XR_CALIBRATED,
-        milestonesToAdd: Object.freeze([VR_SCENARIO_MILESTONE.XR_CALIBRATED]),
-        effects: Object.freeze([VR_SCENARIO_EFFECT.BEGIN_INTRO_REVEAL])
+        milestonesToAdd: Object.freeze([VR_SCENARIO_MILESTONE.XR_CALIBRATED])
       })
     ])
   }),
@@ -252,11 +251,11 @@ const points = Object.freeze([
     settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
     label: 'Intro reveal',
     capabilities: Object.freeze([]),
+    entryEffects: Object.freeze([VR_SCENARIO_EFFECT.BEGIN_INTRO_REVEAL]),
     transitions: Object.freeze([
       Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.COMPLETE,
         event: VR_SCENARIO_EVENT.INTRO_REVEAL_COMPLETE,
-        milestonesToAdd: Object.freeze([VR_SCENARIO_MILESTONE.INTRO_REVEAL_COMPLETE]),
-        effects: Object.freeze([VR_SCENARIO_EFFECT.BEGIN_POST_REVEAL_SILENCE])
+        milestonesToAdd: Object.freeze([VR_SCENARIO_MILESTONE.INTRO_REVEAL_COMPLETE])
       })
     ])
   }),
@@ -265,11 +264,11 @@ const points = Object.freeze([
     settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
     label: 'Cisza po revealu',
     capabilities: Object.freeze([]),
+    entryEffects: Object.freeze([VR_SCENARIO_EFFECT.BEGIN_POST_REVEAL_SILENCE]),
     transitions: Object.freeze([
       Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.COMPLETE,
         event: VR_SCENARIO_EVENT.POST_REVEAL_SILENCE_COMPLETE,
-        milestonesToAdd: Object.freeze([VR_SCENARIO_MILESTONE.POST_REVEAL_SILENCE_COMPLETE]),
-        effects: Object.freeze([VR_SCENARIO_EFFECT.BEGIN_CONTROLLER_ONBOARDING])
+        milestonesToAdd: Object.freeze([VR_SCENARIO_MILESTONE.POST_REVEAL_SILENCE_COMPLETE])
       })
     ])
   }),
@@ -278,6 +277,7 @@ const points = Object.freeze([
     settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
     label: 'Controller onboarding',
     capabilities: Object.freeze([]),
+    entryEffects: Object.freeze([VR_SCENARIO_EFFECT.BEGIN_CONTROLLER_ONBOARDING]),
     transitions: Object.freeze([
       Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.COMPLETE,
         event: VR_SCENARIO_EVENT.PLAYER_OPENED_GUIDE,
