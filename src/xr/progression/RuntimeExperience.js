@@ -1,8 +1,9 @@
 export class RuntimeExperience {
-  constructor({ director, effectHandlers = {} }) {
+  constructor({ director, effectHandlers = {}, pointLifecycle = null }) {
     if (!director) throw new TypeError('director is required');
     this.director = director;
     this.effectHandlers = effectHandlers instanceof Map ? new Map(effectHandlers) : new Map(Object.entries(effectHandlers));
+    this.pointLifecycle = pointLifecycle;
     this.disposed = false;
   }
   dispatch(eventType, payload) {
@@ -18,6 +19,21 @@ export class RuntimeExperience {
     if (!change) return null;
     this.#executeEffects(change);
     return change;
+  }
+  activatePoint(pointId) {
+    if (this.disposed) return null;
+    const lifecycle = this.pointLifecycle;
+    if (!lifecycle || typeof lifecycle.stateAt !== 'function'
+      || typeof lifecycle.hydrate !== 'function' || typeof lifecycle.createDirector !== 'function') {
+      throw new Error('arbitrary point activation requires the canonical point lifecycle');
+    }
+    lifecycle.restoreBaseline?.();
+    const state = lifecycle.stateAt(pointId);
+    lifecycle.hydrate(state);
+    lifecycle.synchronize?.();
+    this.replaceDirector(lifecycle.createDirector(pointId));
+    const activation = this.activateCurrentPoint();
+    return Object.freeze({ state, activation });
   }
   #executeEffects(change, payload) {
     for (const effect of change.effects) {
