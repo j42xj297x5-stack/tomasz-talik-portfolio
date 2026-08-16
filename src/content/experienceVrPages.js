@@ -38,6 +38,16 @@ export const experienceVrPagesByGlyphId = Object.freeze(Object.fromEntries(
 
 export const experienceVrPages = Object.freeze(portalCards.map((card) => pagesByCardId.get(card.id)));
 
+const pageIdsByTier = new Map();
+for (const card of portalCards) {
+  const ids = pageIdsByTier.get(card.order) ?? [];
+  ids.push(card.id);
+  pageIdsByTier.set(card.order, ids);
+}
+export const experienceVrPageIdsByTier = Object.freeze(Object.fromEntries(
+  [...pageIdsByTier].map(([tier, ids]) => [tier, Object.freeze(ids)])
+));
+
 export function getExperienceVrPages(glyphId) {
   return experienceVrPagesByGlyphId[glyphId] ?? Object.freeze([]);
 }

@@ -53,17 +53,51 @@ export function createVrProgressionController({ pages }) {
   function reset() { activatedPageIds.clear(); currentTier = 1; }
 
   function hydrateScenarioState(state) {
-    if (!Array.isArray(state?.activatedPageIds) || state.completedTier !== 1 || state.tier !== 2) {
-      throw new Error('Progression owner only supports the settled Tier 1 completion state');
+    if (!Array.isArray(state?.activatedPageIds)) {
+      throw new TypeError('Progression hydration requires activatedPageIds');
     }
-    activatedPageIds.clear();
+
+    // Validate and derive against an isolated candidate first. Hydration replaces
+    // persistent truth only after the complete state has passed owner invariants.
+    const candidateIds = new Set();
     for (const pageId of state.activatedPageIds) {
-      if (!orderedPages.some(({ id }) => id === pageId)) throw new Error(`Unknown hydrated page: ${pageId}`);
-      activatedPageIds.add(pageId);
+      if (typeof pageId !== 'string' || !orderedPages.some(({ id }) => id === pageId)) {
+        throw new Error(`Unknown hydrated page: ${pageId}`);
+      }
+      if (candidateIds.has(pageId)) throw new Error(`Duplicate hydrated page: ${pageId}`);
+      candidateIds.add(pageId);
     }
-    currentTier = 1;
-    advanceTier();
-    if (currentTier !== 2 || !isTierComplete(1)) throw new Error('Hydrated Tier 1 pages are incomplete');
+
+    const candidateTierComplete = (tier) => REQUIRED_BRANCHES_BY_TIER[tier]?.every((branchId) => {
+      const page = pagesByBranchAndTier.get(`${branchId}:${tier}`);
+      return page && candidateIds.has(page.id);
+    }) ?? false;
+    let candidateTier = 1;
+    while (candidateTier < 5 && candidateTierComplete(candidateTier)) candidateTier += 1;
+
+    for (const page of orderedPages) {
+      if (!candidateIds.has(page.id)) continue;
+      for (let tier = 1; tier < page.order; tier += 1) {
+        if (!candidateTierComplete(tier)) {
+          throw new Error(`Hydrated page violates tier ordering: ${page.id}`);
+        }
+        const previousPage = pagesByBranchAndTier.get(`${page.glyphId}:${tier}`);
+        if (previousPage && !candidateIds.has(previousPage.id)) {
+          throw new Error(`Hydrated page violates branch ordering: ${page.id}`);
+        }
+      }
+    }
+    if (state.tier !== undefined && state.tier !== candidateTier) {
+      throw new Error('Hydrated tier does not match activated pages');
+    }
+    if (state.completedTier !== undefined
+      && state.completedTier !== (candidateTier > 1 ? candidateTier - 1 : null)) {
+      throw new Error('Hydrated completed tier does not match activated pages');
+    }
+
+    activatedPageIds.clear();
+    candidateIds.forEach((pageId) => activatedPageIds.add(pageId));
+    currentTier = candidateTier;
   }
 
   return { getCurrentTier, canInsertCrystal, getNextPage, commitPage, hasActivatedPage, getActivatedPageIds,

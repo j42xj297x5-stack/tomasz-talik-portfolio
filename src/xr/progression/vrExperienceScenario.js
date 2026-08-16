@@ -1,4 +1,5 @@
 import { deriveScenarioSpine } from './scenarioSpineNavigation.js';
+import { experienceVrPageIdsByTier } from '../../content/experienceVrPages.js';
 
 function immutableIdentifiers(names) {
   return Object.freeze(Object.fromEntries(names.map((name) => [name, name])));
@@ -192,11 +193,7 @@ const RELIQUARY_REVEALED_SETTLED_CONSEQUENCES = Object.freeze({
 });
 const FIRST_RING_COMPLETE_SETTLED_CONSEQUENCES = Object.freeze({
   progression: Object.freeze({ tier: 2, completedTier: 1,
-    activatedPageIds: Object.freeze([
-      'portal-card-ethics-life-protection-foundation',
-      'portal-card-creative-ai-digital-domain', 'portal-card-ai-guide-orientation',
-      'portal-card-spotify-digger-exploration-system', 'portal-card-haiku-cosmos-overview'
-    ]) }),
+    activatedPageIds: experienceVrPageIdsByTier[1] }),
   progressFloor: Object.freeze({ completedTier: 1,
     activatedPages: Object.freeze([
       Object.freeze({ glyphId: 'ethics-life-protection', order: 1 }),
