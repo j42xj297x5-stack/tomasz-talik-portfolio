@@ -740,6 +740,7 @@ const enterVrDebugCheckpoint = createVrDebugCheckpointController({
   scenario: vrExperienceScenario,
   owners: scenarioOwners,
   restoreBaseline: restoreVrScenarioBaseline,
+  synchronizeDerivedState: syncAmbientSequence,
   runtime: runtimeExperience,
   spawnIntro: resetPlayerRigToSpawn,
   spawnRing: spawnPlayerInsideRingFacingMonkey,

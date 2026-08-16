@@ -17,9 +17,12 @@ const runtime = {
 };
 const enter = createVrDebugCheckpointController({ scenario: vrExperienceScenario, owners: {}, runtime,
   restoreBaseline() {}, spawnIntro() { order.push('spawn:INTRO'); }, spawnRing() { order.push('spawn:RING'); },
+  synchronizeDerivedState() { order.push('synchronize'); },
   startCanonicalIntro() { order.push('intro:start'); },
-  prepareSession({ pointId }) {
-    order.push('baseline', `reconstruct:${pointId}`, 'hydrate', `director:${pointId}`);
+  prepareSession({ pointId, synchronizeDerivedState }) {
+    order.push('baseline', `reconstruct:${pointId}`, 'hydrate');
+    synchronizeDerivedState();
+    order.push(`director:${pointId}`);
     return { state: Object.freeze({}), director: { pointId, dispose() {} } };
   }
 });
@@ -30,7 +33,7 @@ for (const id of ['P0', 'P1', 'P2', 'P0', 'P2', 'P1']) {
     ? ['spawn:INTRO', `activate:${checkpoint.pointId}`, 'intro:start']
     : ['spawn:RING', `activate:${checkpoint.pointId}`];
   assert.deepEqual(order.slice(start), ['baseline', `reconstruct:${checkpoint.pointId}`, 'hydrate',
-    `director:${checkpoint.pointId}`, `replace:${checkpoint.pointId}`, ...spawn]);
+    'synchronize', `director:${checkpoint.pointId}`, `replace:${checkpoint.pointId}`, ...spawn]);
   assert.equal(currentDirector.pointId, checkpoint.pointId);
 }
 console.log('VR debug checkpoint registry and switching assertions passed.');
