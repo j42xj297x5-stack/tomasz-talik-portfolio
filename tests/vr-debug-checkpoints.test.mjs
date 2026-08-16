@@ -18,7 +18,7 @@ const runtime = {
 const enter = createVrDebugCheckpointController({ scenario: vrExperienceScenario, owners: {}, runtime,
   restoreBaseline() {}, spawnIntro() { order.push('spawn:INTRO'); }, spawnRing() { order.push('spawn:RING'); },
   synchronizeDerivedState() { order.push('synchronize'); },
-  startCanonicalIntro() { order.push('intro:start'); },
+  requestCanonicalXrStartCalibration() { order.push('calibration:request'); },
   prepareSession({ pointId, synchronizeDerivedState }) {
     order.push('baseline', `reconstruct:${pointId}`, 'hydrate');
     synchronizeDerivedState();
@@ -30,7 +30,7 @@ for (const id of ['P0', 'P1', 'P2', 'P0', 'P2', 'P1']) {
   const start = order.length;
   const { checkpoint } = enter(id);
   const spawn = id === 'P0'
-    ? ['spawn:INTRO', `activate:${checkpoint.pointId}`, 'intro:start']
+    ? ['spawn:INTRO', `activate:${checkpoint.pointId}`, 'calibration:request']
     : ['spawn:RING', `activate:${checkpoint.pointId}`];
   assert.deepEqual(order.slice(start), ['baseline', `reconstruct:${checkpoint.pointId}`, 'hydrate',
     'synchronize', `director:${checkpoint.pointId}`, `replace:${checkpoint.pointId}`, ...spawn]);

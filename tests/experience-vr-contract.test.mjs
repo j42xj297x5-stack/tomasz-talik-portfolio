@@ -136,18 +136,18 @@ assert.match(vr, /requestSession\('immersive-vr'/);
 assert.match(vr, /renderer\.setAnimationLoop\(renderFrame\)/);
 assert.match(vr, /renderer\.setAnimationLoop\(null\)/);
 assert.doesNotMatch(vr, /requestAnimationFrame/);
-assert.match(vr, /await renderer\.xr\.setSession\(requestedSession\);\s*xrStartCalibrationPending = true;/,
+assert.match(vr, /await renderer\.xr\.setSession\(requestedSession\);\s*xrStartCalibration\.request\(\);/,
   'session entry defers start calibration to an XR animation frame');
-assert.match(vr, /if \(xrStartCalibrationPending\)[\s\S]*getXrHeadWorldPosition\(\{ renderer, camera, playerRig \}\)[\s\S]*calibrateXrHeadToPlatform/,
+assert.match(vr, /readTrackedXrHead[\s\S]*getXrHeadWorldPosition\(\{ renderer, camera, playerRig \}\)[\s\S]*createCanonicalXrStartCalibration\([\s\S]*calibrateXrHeadToPlatform/,
   'the pending frame uses the canonical WebXR matrix reader before calibration');
 assert.doesNotMatch(vr, /renderer\.xr\.getCamera\(camera\)\.getWorldPosition\(/,
   'active P0 code must not rebuild the detached WebXR ArrayCamera matrix');
 assert.match(vr, /new ExperienceDirector\(\{ scenario: vrExperienceScenario \}\)/);
 assert.match(vr, /new RuntimeExperience\(\{[\s\S]*VR_SCENARIO_EFFECT\.BEGIN_INTRO_REVEAL[\s\S]*introSequence\.beginAfterXrCalibration\(\);[\s\S]*if \(introQaBypass\) vrControllers\.setRaysEnabled\(true\);/,
   'RuntimeExperience effect adapter owns Intro start and QA rays');
-assert.match(vr, /xrStartCalibrationPending = false;\s*runtimeExperience\.dispatch\(VR_SCENARIO_EVENT\.XR_CALIBRATED\);\s*renderer\.render\(scene, camera\);\s*return;/,
+assert.match(vr, /if \(xrStartCalibration\.processFrame\(\)\) \{\s*renderer\.render\(scene, camera\);\s*return;/,
   'calibration is one-shot and skips ordinary locomotion/update work in that frame');
-const calibrationBlock = vr.match(/if \(xrStartCalibrationPending\)[\s\S]*?\n  }/)?.[0] ?? '';
+const calibrationBlock = vr.match(/if \(xrStartCalibration\.processFrame\(\)\)[\s\S]*?\n  }/)?.[0] ?? '';
 assert.doesNotMatch(calibrationBlock, /introSequence\.beginAfterXrCalibration|setRaysEnabled\(true\)/,
   'calibration block contains only the semantic dispatch');
 assert.equal((vr.match(/introSequence\.beginAfterXrCalibration\(\)/g) ?? []).length, 1,
@@ -216,11 +216,11 @@ assert.equal((vr.match(/restoreVrScenarioBaseline\(\);/g) ?? []).length, 3,
   'normal entry, session end, and failed entry share the canonical baseline path');
 assert.match(vr, /function handleSessionEnd\(\)[\s\S]*restoreVrScenarioBaseline\(\)/);
 assert.match(vr, /async function enterVr\(\)[\s\S]*if \(activeSession\) return;\s*restoreVrScenarioBaseline\(\)/);
-assert.match(vr, /catch \(error\)[\s\S]*xrStartCalibrationPending = false;[\s\S]*restoreVrScenarioBaseline\(\)/);
+assert.match(vr, /catch \(error\)[\s\S]*xrStartCalibration\.cancel\(\);[\s\S]*restoreVrScenarioBaseline\(\)/);
 assert.equal((vr.match(/runtimeExperience\.resetSession\(\)/g) ?? []).length, 1,
   'session state cannot be reset outside the canonical baseline');
 assert.match(vr, /window\.addEventListener\('pagehide', \(\) => \{\s*runtimeExperience\.dispose\(\)/);
-assert.match(vr, /function handleSessionEnd\(\)[\s\S]*xrStartCalibrationPending = false;[\s\S]*restoreVrScenarioBaseline\(\)/,
+assert.match(vr, /function handleSessionEnd\(\)[\s\S]*xrStartCalibration\.cancel\(\);[\s\S]*restoreVrScenarioBaseline\(\)/,
   'session end clears pending calibration and restores the canonical baseline for re-entry');
 assert.match(vr, /function restoreVrScenarioBaseline\(\)[\s\S]*introSequence\.reset\(\)/,
   'the canonical baseline resets the intro actor');
