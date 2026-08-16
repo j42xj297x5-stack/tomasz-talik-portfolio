@@ -145,4 +145,18 @@ assert.deepEqual(pointerEntryChange.effects, [VR_SCENARIO_EFFECT.CONTINUE_CONTRO
 assert.equal(pointerEntryRuntime.activateCurrentPoint(), null);
 assert.deepEqual(pointerEntryCalls, [VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING],
   'Runtime executes the 1.70 entry command exactly once');
+
+const monkeyHoverEntryCalls = [];
+const monkeyHoverEntryRuntime = new RuntimeExperience({
+  director: new ExperienceDirector({ scenario: vrExperienceScenario, startPointId: '1.80' }),
+  effectHandlers: {
+    [VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING]: () => monkeyHoverEntryCalls.push(VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING)
+  }
+});
+const monkeyHoverEntryChange = monkeyHoverEntryRuntime.activateCurrentPoint();
+assert.deepEqual(monkeyHoverEntryChange.effects, [VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING],
+  'Runtime direct activation executes the authored 1.80 entry contract');
+assert.equal(monkeyHoverEntryRuntime.activateCurrentPoint(), null);
+assert.deepEqual(monkeyHoverEntryCalls, [VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING],
+  'Runtime executes the 1.80 entry command exactly once');
 console.log('RuntimeExperience assertions passed');
