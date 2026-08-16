@@ -131,4 +131,18 @@ assert.deepEqual(controlsEntryChange.effects, [VR_SCENARIO_EFFECT.CONTINUE_CONTR
 assert.equal(controlsEntryRuntime.activateCurrentPoint(), null);
 assert.deepEqual(controlsEntryCalls, [VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING],
   'Runtime executes the 1.60 entry command exactly once');
+
+const pointerEntryCalls = [];
+const pointerEntryRuntime = new RuntimeExperience({
+  director: new ExperienceDirector({ scenario: vrExperienceScenario, startPointId: '1.70' }),
+  effectHandlers: {
+    [VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING]: () => pointerEntryCalls.push(VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING)
+  }
+});
+const pointerEntryChange = pointerEntryRuntime.activateCurrentPoint();
+assert.deepEqual(pointerEntryChange.effects, [VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING],
+  'Runtime direct activation executes the authored 1.70 entry contract');
+assert.equal(pointerEntryRuntime.activateCurrentPoint(), null);
+assert.deepEqual(pointerEntryCalls, [VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING],
+  'Runtime executes the 1.70 entry command exactly once');
 console.log('RuntimeExperience assertions passed');

@@ -116,6 +116,7 @@ assert.deepEqual(guideOpenChange.addedMilestones, []);
 const pointOneForty = vrExperienceScenario.points.find(({ id }) => id === VR_EXPERIENCE_POINT['1.40']);
 const pointOneFifty = vrExperienceScenario.points.find(({ id }) => id === VR_EXPERIENCE_POINT['1.50']);
 const pointOneSixty = vrExperienceScenario.points.find(({ id }) => id === VR_EXPERIENCE_POINT['1.60']);
+const pointOneSeventy = vrExperienceScenario.points.find(({ id }) => id === VR_EXPERIENCE_POINT['1.70']);
 assert.deepEqual(pointOneForty.transitions[0].effects, undefined,
   '1.40 completion does not own the target beat as a transition-local effect');
 assert.deepEqual(pointOneFifty.entryEffects, [VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING],
@@ -144,7 +145,16 @@ assert.equal(productionDirector.dispatch(VR_SCENARIO_EVENT.PLAYER_VIEWED_CONTROL
 const guideClosedChange = productionDirector.dispatch(VR_SCENARIO_EVENT.PLAYER_CLOSED_GUIDE);
 assert.equal(guideClosedChange.currentPointId, VR_EXPERIENCE_POINT['1.70']);
 assert.deepEqual(guideClosedChange.addedMilestones, []);
-assert.deepEqual(guideClosedChange.effects, [VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING]);
+assert.deepEqual(pointOneSixty.transitions[0].effects, undefined,
+  '1.60 completion does not own the target beat as a transition-local effect');
+assert.deepEqual(pointOneSeventy.entryEffects, [VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING],
+  '1.70 owns the existing onboarding continuation through its entry contract');
+assert.deepEqual(guideClosedChange.effects, pointOneSeventy.entryEffects,
+  'natural entry into 1.70 executes its target-owned entry exactly once');
+const directOneSeventy = new ExperienceDirector({ scenario: vrExperienceScenario, startPointId: VR_EXPERIENCE_POINT['1.70'] });
+assert.deepEqual(directOneSeventy.activateCurrentPoint().effects, pointOneSeventy.entryEffects,
+  'direct activation of 1.70 uses the same target entry contract');
+assert.equal(directOneSeventy.activateCurrentPoint(), null, 'direct activation executes 1.70 entry exactly once');
 assert.equal(productionDirector.dispatch(VR_SCENARIO_EVENT.PLAYER_CLOSED_GUIDE), null, 'guide closing is accepted once');
 const monkeyHoveredChange = productionDirector.dispatch(VR_SCENARIO_EVENT.MONKEY_HOVERED);
 assert.equal(monkeyHoveredChange.currentPointId, VR_EXPERIENCE_POINT['1.80']);
