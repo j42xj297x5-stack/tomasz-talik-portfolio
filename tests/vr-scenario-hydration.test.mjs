@@ -30,9 +30,11 @@ const result = prepareVrScenarioSession({
     return reconstructVrScenarioState(scenario, pointId);
   },
   hydrate(value, targetOwners) { order.push('hydrate'); hydrateVrScenarioState(value, targetOwners); },
+  synchronizeDerivedState() { order.push('synchronize'); },
   createDirector(options) { order.push('director'); return createVrExperienceDirector(options); }
 });
-assert.deepEqual(order, ['baseline', 'reconstruct:2.10', 'hydrate', 'hydrate:monkey', 'hydrate:intro', 'hydrate:locomotion', 'director']);
+assert.deepEqual(order, ['baseline', 'reconstruct:2.10', 'hydrate', 'hydrate:monkey', 'hydrate:intro',
+  'hydrate:locomotion', 'synchronize', 'director']);
 assert.equal(result.director.currentPointId, '2.10');
 assert.equal(result.director.can(VR_SCENARIO_CAPABILITY.CAN_USE_GLYPHS), true);
 assert.deepEqual(events, []); assert.deepEqual(effects, []);
@@ -40,6 +42,11 @@ const firstHydration = structuredClone(hydrated);
 for (const key of Object.keys(hydrated)) delete hydrated[key];
 hydrateVrScenarioState(result.state, verticalOwners);
 assert.deepEqual(hydrated, firstHydration, 'repeated hydration materializes the same settled facts');
+
+assert.throws(() => prepareVrScenarioSession({
+  pointId: '2.10', scenario: vrExperienceScenario, owners: {}, restoreBaseline() {},
+  synchronizeDerivedState: true
+}), /synchronizeDerivedState must be a function/);
 
 const p2Calls = [];
 const p2Owners = Object.fromEntries(['monkey', 'intro', 'locomotion', 'reliquary', 'progression',
