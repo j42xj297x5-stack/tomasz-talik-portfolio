@@ -289,8 +289,7 @@ const points = Object.freeze([
     transitions: Object.freeze([
       Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.COMPLETE,
         event: VR_SCENARIO_EVENT.PLAYER_CLOSED_GUIDE,
-        milestonesToAdd: Object.freeze([]),
-        effects: Object.freeze([VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING])
+        milestonesToAdd: Object.freeze([])
       })
     ])
   }),
@@ -300,6 +299,7 @@ const points = Object.freeze([
     settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
     label: 'Pointer tutorial uruchomiony / oczekiwanie na wskazanie Monkey',
     capabilities: Object.freeze([]),
+    entryEffects: Object.freeze([VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING]),
     transitions: Object.freeze([
       Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.COMPLETE,
         event: VR_SCENARIO_EVENT.MONKEY_HOVERED,
