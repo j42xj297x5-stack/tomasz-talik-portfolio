@@ -271,6 +271,7 @@ const asterionProductionController = createVrAsterionProductionController({
     getProgress: () => astroFurnaceActivateInteraction?.getProgress?.() ?? 0,
     getProcessKind: () => astroFurnaceActivateInteraction?.getProcessKind?.() ?? null
   },
+  onClaimed: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.ASTERION_CLAIMED),
   getChamberState: () => astroFurnaceOpenInteraction?.getState?.() ?? 'CLOSED',
   getContentState: () => astroFurnaceContentInteraction?.getState?.() ?? 'EMPTY'
 });
@@ -753,7 +754,9 @@ const scenarioOwners = Object.freeze({
   monkey: monkeyActor, intro: introSequence, locomotion, reliquary: crystalReliquary,
   portal: portalDisplay,
   progression: progressionController, progressFloor, crystals: crystalCollection,
-  postRing: postRingPresentation
+  postRing: postRingPresentation,
+  furnace: astroFurnace, furnaceProgression: furnaceProgressionController,
+  astroProduction: astroAttractorProductionController, asterionProduction: asterionProductionController
 });
 const enterVrDebugCheckpoint = createVrDebugCheckpointController({
   scenario: vrExperienceScenario,
@@ -859,6 +862,7 @@ function restoreVrScenarioBaseline() {
   ambientSequencer.reset();
   vrAudio.resetAsterionSphereAudio();
   astroFurnace.resetBaseline();
+  furnaceProgressionController.resetBaseline();
   furnacePanel.reset();
   playerGuidePanel.reset();
   astroFurnaceOptionInteraction.reset();
@@ -887,8 +891,8 @@ function restoreVrScenarioBaseline() {
   vrControllers.reset();
   asterionGyroInteraction.reset();
   asterionSphere.reset();
-  asterionProductionController.resetSession();
-  astroAttractorProductionController.resetSession();
+  asterionProductionController.resetBaseline();
+  astroAttractorProductionController.resetBaseline();
   handModeController.reset();
   postRingMonkeyDialogue.reset();
   furnaceIntro.reset();

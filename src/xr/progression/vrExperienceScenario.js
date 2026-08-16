@@ -168,6 +168,7 @@ export const VR_EXPERIENCE_POINT = immutableIdentifiers([
   '3.60',
   '3.70',
   '3.80',
+  '4.10',
   '100.10'
 ]);
 
@@ -207,6 +208,19 @@ const FIRST_RING_COMPLETE_SETTLED_CONSEQUENCES = Object.freeze({
 const ACT_TWO_ENTRY_SETTLED_CONSEQUENCES = Object.freeze({
   postRing: Object.freeze({ shellFieldVisible: true, shellInteractionEnabled: false,
     mainGlyphsElevated: true })
+});
+const FURNACE_REVEALED_SETTLED_CONSEQUENCES = Object.freeze({
+  furnace: Object.freeze({ revealed: true })
+});
+const ASTRO_EARNED_SETTLED_CONSEQUENCES = Object.freeze({
+  astroProduction: Object.freeze({ state: 'EARNED' })
+});
+const ASTERION_EARNED_SETTLED_CONSEQUENCES = Object.freeze({
+  furnaceProgression: Object.freeze({ absorbedShellIds: Object.freeze([
+    'shell-relic-1', 'shell-relic-2', 'shell-relic-3',
+    'shell-relic-4', 'shell-relic-5', 'shell-relic-6'
+  ]) }),
+  asterionProduction: Object.freeze({ state: 'EARNED' })
 });
 
 const points = Object.freeze([
@@ -488,7 +502,7 @@ const points = Object.freeze([
   Object.freeze({
     id: VR_EXPERIENCE_POINT['3.40'],
     canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['3.50'] }),
-    settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
+    settledConsequences: FURNACE_REVEALED_SETTLED_CONSEQUENCES,
     entryEffects: Object.freeze([VR_SCENARIO_EFFECT.BEGIN_FURNACE_INTRO]),
     label: 'Monkey → Furnace intro',
     capabilities: Object.freeze([]),
@@ -515,7 +529,7 @@ const points = Object.freeze([
   }),
   Object.freeze({
     id: VR_EXPERIENCE_POINT['3.70'],
-    canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['3.80'] }), settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
+    canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['3.80'] }), settledConsequences: ASTRO_EARNED_SETTLED_CONSEQUENCES,
     label: 'Physical Astro available / waiting for claim',
     capabilities: Object.freeze([VR_SCENARIO_CAPABILITY.CAN_USE_FURNACE, VR_SCENARIO_CAPABILITY.CAN_OPEN_FURNACE]),
     transitions: Object.freeze([Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.COMPLETE,
@@ -523,12 +537,39 @@ const points = Object.freeze([
   }),
   Object.freeze({
     id: VR_EXPERIENCE_POINT['3.80'],
-    canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['100.10'] }), settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
+    canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['4.10'] }), settledConsequences: ASTERION_EARNED_SETTLED_CONSEQUENCES,
     label: 'Astro Attractor physically claimed / EARNED',
     capabilities: Object.freeze([VR_SCENARIO_CAPABILITY.CAN_EQUIP_ASTRO, VR_SCENARIO_CAPABILITY.CAN_SCAN_SHELLS,
       VR_SCENARIO_CAPABILITY.CAN_TARGET_SHELLS, VR_SCENARIO_CAPABILITY.CAN_USE_FURNACE,
       VR_SCENARIO_CAPABILITY.CAN_OPEN_FURNACE, VR_SCENARIO_CAPABILITY.CAN_INSERT_FURNACE_MATERIAL,
-      VR_SCENARIO_CAPABILITY.CAN_START_FURNACE_PROCESS]), transitions: Object.freeze([])
+      VR_SCENARIO_CAPABILITY.CAN_START_FURNACE_PROCESS]), transitions: Object.freeze([
+      Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.COMPLETE,
+        event: VR_SCENARIO_EVENT.ASTERION_CLAIMED, milestonesToAdd: Object.freeze([]), effects: Object.freeze([]) })
+    ])
+  }),
+  Object.freeze({
+    id: VR_EXPERIENCE_POINT['4.10'],
+    canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['100.10'] }), settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
+    label: 'Asterion physically claimed / second crystal cycle active',
+    capabilities: Object.freeze([
+      VR_SCENARIO_CAPABILITY.CAN_USE_GLYPHS, VR_SCENARIO_CAPABILITY.CAN_USE_RELIQUARY,
+      VR_SCENARIO_CAPABILITY.CAN_ACTIVATE_RELIQUARY, VR_SCENARIO_CAPABILITY.CAN_RELEASE_RELIQUARY,
+      VR_SCENARIO_CAPABILITY.CAN_EQUIP_ASTRO, VR_SCENARIO_CAPABILITY.CAN_USE_FURNACE,
+      VR_SCENARIO_CAPABILITY.CAN_OPEN_FURNACE, VR_SCENARIO_CAPABILITY.CAN_INSERT_FURNACE_MATERIAL,
+      VR_SCENARIO_CAPABILITY.CAN_START_FURNACE_PROCESS, VR_SCENARIO_CAPABILITY.CAN_EQUIP_ASTERION,
+      VR_SCENARIO_CAPABILITY.CAN_CONTROL_PLATFORM
+    ]),
+    transitions: Object.freeze([
+      Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.STAY, event: VR_SCENARIO_EVENT.RELIQUARY_HINT_TIMEOUT,
+        milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.SHOW_RELIQUARY_CONTEXT_HINT]) }),
+      Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.STAY, event: VR_SCENARIO_EVENT.CRYSTAL_ACTIVATED,
+        milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.PRESENT_ACTIVE_CARD_PREVIEW]) }),
+      Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.STAY, event: VR_SCENARIO_EVENT.CARD_COMMITTED,
+        milestonesToAdd: Object.freeze([VR_SCENARIO_MILESTONE.CARD_COMMITTED]), effects: Object.freeze([
+          VR_SCENARIO_EFFECT.UPDATE_COMMITTED_CARD_PRESENTATION,
+          VR_SCENARIO_EFFECT.PLAY_CARD_COMMIT_FEEDBACK
+        ]) })
+    ])
   }),
   Object.freeze({
     id: VR_EXPERIENCE_POINT['100.10'],

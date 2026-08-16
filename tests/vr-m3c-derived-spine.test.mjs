@@ -6,7 +6,7 @@ import { vrExperienceScenario } from '../src/xr/progression/vrExperienceScenario
 const expected = [
   '1.10', '1.20', '1.30', '1.40', '1.50', '1.60', '1.70', '1.80',
   '1.100', '1.110', '1.120', '1.130', '2.10', '2.20', '2.30', '2.40',
-  '3.10', '3.20', '3.30', '3.40', '3.50', '3.60', '3.70', '3.80', '100.10'
+  '3.10', '3.20', '3.30', '3.40', '3.50', '3.60', '3.70', '3.80', '4.10', '100.10'
 ];
 assert.deepEqual(deriveScenarioSpine(vrExperienceScenario), expected);
 assert.deepEqual(vrExperienceScenario.spine, expected, 'compatibility value is a derived projection');

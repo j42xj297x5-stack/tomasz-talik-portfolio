@@ -14,10 +14,10 @@ Spine posiada kolejność mainline, Scenario punkty/events/effects/capabilities,
 1.10 → 1.20 → 1.30 → 1.40 → 1.50 → 1.60 → 1.70 → 1.80
 → 1.100 → 1.110 → 1.120 → 1.130
 → 2.10 → 2.20 → 2.30 → 2.40
-→ 3.10 → 3.20 → 3.30 → 3.40 → 3.50 → 3.60 → 3.70 → 3.80 → 100.10
+→ 3.10 → 3.20 → 3.30 → 3.40 → 3.50 → 3.60 → 3.70 → 3.80 → 4.10 → 100.10
 ```
 
-`100.10` jest pełnoprawnym canonical terminalem authored mainline i częścią fabuły. Prowadzi do niego zarówno normalne zakończenie obecnie authored flow po `3.80`, jak i wcześniejsze jawne drogi wyjścia. Terminal pozostaje niedozwolonym celem reconstruction/checkpoint start. WHERE, FOLLOW pause, BEYOND i hinty są lokalnymi `STAY`, nie dodatkowymi technical points.
+`100.10` jest pełnoprawnym canonical terminalem authored mainline i częścią fabuły. Prowadzi do niego zarówno normalne zakończenie obecnie authored flow po `4.10`, jak i wcześniejsze jawne drogi wyjścia. Terminal pozostaje niedozwolonym celem reconstruction/checkpoint start. WHERE, FOLLOW pause, BEYOND i hinty są lokalnymi `STAY`, nie dodatkowymi technical points.
 
 ## Intro i pierwszy ring
 
@@ -36,9 +36,10 @@ Pierwszy trwały wynik `5/5` emituje `FIRST_RING_COMPLETED`, kończy `2.30` i wp
 | `3.50` | Astro production ready. Gracz świadomie wybiera `Utwórz astro przyciągacz` w panelu Pieca; produkcja nie jest automatyczna. |
 | `3.60` | Konstrukcja Astro używa osobnego `ASTRO_ATTRACTOR_CONSTRUCTION`, nigdy `ASTERION_CONSTRUCTION`. |
 | `3.70` | Fizyczne Astro jest `AVAILABLE` w otwartej komorze, ale nie `EARNED` ani equipable. Claim wymaga prawej `NORMAL_HAND`, ordinary ray, rzeczywistego target hit i trigger/`selectstart`. |
-| `3.80` | Zakończony physical handoff emituje `ASTRO_ATTRACTOR_CLAIMED`. Dopiero tu Astro jest `EARNED`, equipable i dostępne prawej ręce, a Scenario przyznaje `CAN_EQUIP_ASTRO`, `CAN_SCAN_SHELLS`, `CAN_TARGET_SHELLS`. |
+| `3.80` | Astro jest `EARNED`; trwa shell/Furnace/Asterion loop. Fizyczny claim Asteriona emituje `ASTERION_CLAIMED` i kończy punkt. |
+| `4.10` | Asterion jest fizycznie odebrany, a capabilities Scenario aktywują drugi cykl Glyph → Crystal → Reliquary. Reusable events pozostają lokalnymi `STAY`. |
 
-Pole skorup w `3.80` nie jest revealowane ponownie: to pole pokazane już w `3.10`. Dalsza authored shell progression oraz pełny Asterion loop są **NEXT / NOT YET AUTHORED**, mimo że domenowe mechaniki mogą istnieć w runtime.
+Pole skorup w `3.80` nie jest revealowane ponownie: to pole pokazane już w `3.10`. Scenario authoruje semantic completion Asteriona oraz settled facts potrzebne do reconstruction `4.10`; nie authoruje jeszcze zakończenia Tier 2 ani P4.
 
 ## Astro i Furnace ownership
 
@@ -62,9 +63,9 @@ Regression guards: `vr-first-ring-live-flow`, `vr-astro-first-claim-live-flow`, 
 
 Reconstruction jest settled historią ściśle przed targetem. Dlatego stan dla `3.10` nie zawiera jeszcze `postRing`, natomiast stan dla `3.20` zawiera widoczne, nieinteraktywne shells i uniesione główne glify. Timery, pulse, audio, dialogi, reveal/completion animations i historyczne effects nie są rekonstruowane. Scenario deklaruje opcjonalne `entryEffects`; Director aktywuje punkt jednokrotnie, a Runtime wykonuje effects tym samym adapterem co `dispatch`. Naturalna zmiana punktu dołącza entry effects celu po transition-local effects; bezpośredni start wymaga jawnego `activateCurrentPoint()`.
 
-Designer macro checkpoint jest aliasem QA, a nie technical Scenario point i nie zastępuje Spine ID. Aktywny registry zawiera wyłącznie `P0 → 1.10` (normal intro spawn/start), `P1 → 2.10` (ring/crystals) oraz `P2 → 3.10` (Tier 1 complete/Act 2). `?debug` ujawnia te trzy aliasy w Player Panel. Każde live przełączenie przechodzi pełną ścieżkę baseline → reconstruct → hydrate → nowy Director → spawn; poprzedni Director jest odłączany.
+Designer macro checkpoint jest aliasem QA, a nie technical Scenario point i nie zastępuje Spine ID. Aktywny registry zawiera `P0 → 1.10` (normal intro spawn/start), `P1 → 2.10` (ring/crystals), `P2 → 3.10` (Tier 1 complete/Act 2) oraz `P3 → 4.10` (Asterion claimed / drugi cykl). `?debug` ujawnia te cztery aliasy w Player Panel. Każde live przełączenie przechodzi pełną ścieżkę baseline → reconstruct → hydrate → nowy Director → spawn; poprzedni Director jest odłączany.
 
-Ustalony future macro contract, obecnie **nieaktywny i nieimplementowany**: P3 = shells complete, Astro owned/in pocket, Furnace ready for Astro Sphere; P4 = Tier 2 glyphs complete, Act 3, small glyphs, nowa radialna warstwa i komunikat Monkey o zmianie zasięgu przyciskiem B. P3/P4 nie należą do registry ani UI.
+Aktywny `P3 → 4.10` reprezentuje świat po fizycznym odebraniu Asteriona i korzysta z tego samego baseline → reconstruction → hydration → Director lifecycle co pozostałe checkpointy. P4 pozostaje nieaktywny i niezauthorowany.
 
 Hydration zakłada uprzedni canonical baseline i nie jest patchem dowolnego live state. Reconstruction skorup, Astro Sphere, Tier 2/small glyphs, save/persistence i pełny checkpoint save system pozostają deferred.
 

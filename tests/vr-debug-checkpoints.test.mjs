@@ -4,10 +4,10 @@ import { VR_DEBUG_CHECKPOINTS, resolveVrDebugCheckpoint } from '../src/xr/progre
 import { vrExperienceScenario } from '../src/xr/progression/vrExperienceScenario.js';
 
 assert.deepEqual(VR_DEBUG_CHECKPOINTS.map(({ id, pointId }) => [id, pointId]),
-  [['P0', '1.10'], ['P1', '2.10'], ['P2', '3.10']]);
+  [['P0', '1.10'], ['P1', '2.10'], ['P2', '3.10'], ['P3', '4.10']]);
 assert.equal(VR_DEBUG_CHECKPOINTS.every(({ pointId }) => vrExperienceScenario.spine.includes(pointId)), true);
-assert.equal(VR_DEBUG_CHECKPOINTS.some(({ id }) => id === 'P3' || id === 'P4'), false);
-assert.throws(() => resolveVrDebugCheckpoint('P3'), /Unknown VR debug checkpoint/);
+assert.equal(resolveVrDebugCheckpoint('P3').spawn, 'RING');
+assert.equal(VR_DEBUG_CHECKPOINTS.some(({ id }) => id === 'P4'), false);
 
 const order = [];
 let currentDirector = null;
@@ -26,7 +26,7 @@ const enter = createVrDebugCheckpointController({ scenario: vrExperienceScenario
     return { state: Object.freeze({}), director: { pointId, dispose() {} } };
   }
 });
-for (const id of ['P0', 'P1', 'P2', 'P0', 'P2', 'P1']) {
+for (const id of ['P0', 'P1', 'P2', 'P3', 'P0', 'P3', 'P2', 'P1']) {
   const start = order.length;
   const { checkpoint } = enter(id);
   const spawn = id === 'P0'
