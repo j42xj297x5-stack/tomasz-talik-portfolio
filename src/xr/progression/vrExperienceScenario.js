@@ -176,9 +176,13 @@ export const VR_EXPERIENCE_SCENE = VR_EXPERIENCE_POINT;
 // Canonical order is authored on point graph edges and derived below.
 
 const EMPTY_SETTLED_CONSEQUENCES = Object.freeze({});
+const INTRO_REVEALED_SETTLED_CONSEQUENCES = Object.freeze({
+  intro: Object.freeze({ stage: 'REVEALED', fog: 'CLEARED', glyphRingVisible: true,
+    progressionFixturesVisible: true, guideInteractionEnabled: false })
+});
 const INTRO_COMPLETE_SETTLED_CONSEQUENCES = Object.freeze({
   monkey: Object.freeze({ placement: 'FINAL_STONE', visible: true, stoneVisible: true }),
-  intro: Object.freeze({ phase: 'GLYPH_FREE_EXPLORE', fog: 'CLEARED', glyphRingVisible: true,
+  intro: Object.freeze({ stage: 'GLYPH_FREE_EXPLORE', phase: 'GLYPH_FREE_EXPLORE', fog: 'CLEARED', glyphRingVisible: true,
     progressionFixturesVisible: true, guideInteractionEnabled: true }),
   locomotion: Object.freeze({ boundary: 'GLYPH_RING' })
 });
@@ -225,7 +229,7 @@ const points = Object.freeze([
   Object.freeze({
     id: VR_EXPERIENCE_POINT['1.20'],
     canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['1.30'] }),
-    settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
+    settledConsequences: INTRO_REVEALED_SETTLED_CONSEQUENCES,
     label: 'Intro reveal',
     capabilities: Object.freeze([]),
     entryEffects: Object.freeze([VR_SCENARIO_EFFECT.BEGIN_INTRO_REVEAL]),

@@ -143,18 +143,22 @@ export function createVrIntroSequence({ monkeyGuide, monkeyMotionRoot, monkeyVis
     state = VR_INTRO_STATE.XR_CALIBRATING; fogReveal?.setRadius(20); monkeyGuide.setInteractionEnabled?.(false);
   }
   function hydrateScenarioState(value) {
-    if (value?.phase !== 'GLYPH_FREE_EXPLORE' || value.fog !== 'CLEARED') {
-      throw new Error('Intro actor only supports the settled GLYPH_FREE_EXPLORE scenario state');
+    const stage = value?.stage ?? value?.phase;
+    if (!['REVEALED', 'GLYPH_FREE_EXPLORE'].includes(stage) || value.fog !== 'CLEARED') {
+      throw new Error('Intro actor only supports settled REVEALED or GLYPH_FREE_EXPLORE scenario state');
     }
     queue = []; phase = null; done = null; elapsed = silenceElapsed = glyphExploreElapsed = 0;
-    followCheckResolved = true; walkingPaused = false; playerEnteredRing = playerSafelyInside = monkeySettled = true;
+    const introComplete = stage === 'GLYPH_FREE_EXPLORE';
+    followCheckResolved = introComplete; walkingPaused = false;
+    playerEnteredRing = playerSafelyInside = monkeySettled = introComplete;
     glyphExploreResolved = glyphHintTriggered = glyphHintShown = false; xrCalibrated = true;
     monkeyGuide.setDialogueOverride(null); monkeyGuide.showMessage('');
     monkeyGuide.setInteractionEnabled?.(value.guideInteractionEnabled === true);
     platformFixturesRoot.visible = value.progressionFixturesVisible === true;
     glyphRing.visible = value.glyphRingVisible === true;
     fogReveal?.skipToEnd();
-    state = VR_INTRO_STATE.GLYPH_FREE_EXPLORE;
+    if (introComplete) state = VR_INTRO_STATE.GLYPH_FREE_EXPLORE;
+    else { prepareRevealedIntro(); state = VR_INTRO_STATE.XR_CALIBRATING; }
   }
   function prepareRevealedIntro() {
     monkeyRadius = spatial.monkeyStartRadius; placeAtRadius(); fogReveal?.skipToEnd();
