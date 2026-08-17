@@ -3,7 +3,6 @@ import { VR_EXPERIENCE_SCENARIO_SPINE } from './vrExperienceScenario.js';
 export const VR_DEBUG_CHECKPOINT_SPAWN = Object.freeze({ INTRO: 'INTRO', RING: 'RING' });
 
 export const VR_DEBUG_CHECKPOINTS = Object.freeze([
-  Object.freeze({ id: 'P0', pointId: '1.10', label: 'P0', spawn: VR_DEBUG_CHECKPOINT_SPAWN.INTRO }),
   Object.freeze({ id: 'P1', pointId: '2.10', label: 'P1', spawn: VR_DEBUG_CHECKPOINT_SPAWN.RING }),
   Object.freeze({ id: 'P2', pointId: '3.10', label: 'P2', spawn: VR_DEBUG_CHECKPOINT_SPAWN.RING }),
   Object.freeze({ id: 'P3', pointId: '4.10', label: 'P3', spawn: VR_DEBUG_CHECKPOINT_SPAWN.RING })
