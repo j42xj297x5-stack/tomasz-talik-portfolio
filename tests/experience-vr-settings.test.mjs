@@ -67,6 +67,8 @@ assert.deepEqual(DEFAULT_EXPERIENCE_VR_SETTINGS.portal.position, { x: -2.910428,
 assert.deepEqual(DEFAULT_EXPERIENCE_VR_SETTINGS.furnace.position, { x: 2.910428, y: 0, z: -0.727607 });
 const publicOverrides = JSON.parse(await readFile(new URL('../public/data/experience-vr-settings.json', import.meta.url), 'utf8'));
 const activeSettings = normalizeExperienceVrSettings(publicOverrides);
+assert.deepEqual(activeSettings.introCrystalTutorial, { spawnRadius: 19, interactionHeightAboveFloor: 1.2, handoffDistanceFromMonkey: 0.5 });
+assert.deepEqual(normalizeExperienceVrSettings({ schemaVersion: 1 }).introCrystalTutorial, { spawnRadius: 19, interactionHeightAboveFloor: 1.2, handoffDistanceFromMonkey: 0.5 });
 assert.deepEqual(activeSettings.portal.position, { x: -2.910428, y: 0, z: -0.727607 });
 assert.deepEqual(activeSettings.furnace.position, { x: 2.910428, y: 0, z: -0.727607 });
 assert.equal('position' in (publicOverrides.reliquary ?? {}), false, 'public reliquary override does not restore legacy absolute placement');

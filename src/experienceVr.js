@@ -628,7 +628,7 @@ introSequence = createVrIntroSequence({
 introCrystalTutorial = createVrIntroCrystalTutorial({
   monkeyGuide,
   monkeyRoot: monkeyMotionRoot,
-  getWorldPointAtRadius: (radius) => introSequence.getWorldPointAtRadius(radius),
+  getWorldPointAtRadius: (radius, options) => introSequence.getWorldPointAtRadius(radius, options),
   crystalCollection,
   crystalDefinition: experienceVrPages.find((page) => page.glyphId === 'haiku-cosmos' && page.order === 1),
   settings: { ...settings.introCrystalTutorial, messageDisplayDuration: settings.intro.messageDisplayDuration },

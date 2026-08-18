@@ -56,7 +56,11 @@ export function createVrIntroSequence({ monkeyGuide, monkeyMotionRoot, monkeyVis
   let silenceElapsed = 0, monkeyRadius = 0, startRadius = 0, turnElapsed = 0, finalTurnElapsed = 0;
   let followCheckResolved = false, walkingPaused = false, playerEnteredRing = false, playerSafelyInside = false;
   let monkeySettled = false, glyphExploreElapsed = 0, glyphExploreResolved = false, glyphHintTriggered = false, glyphHintShown = false, xrCalibrated = false;
-  const getWorldPointAtRadius = (radius) => { const p = new THREE.Vector3(direction.x * radius, canonicalY, direction.z * radius); center.updateWorldMatrix(true, false); return center.localToWorld(p); };
+  const getWorldPointAtRadius = (radius, { heightAboveFloor = 0 } = {}) => {
+    if (!Number.isFinite(radius) || !Number.isFinite(heightAboveFloor)) throw new TypeError('Intro radial point requires finite radius and heightAboveFloor');
+    const p = new THREE.Vector3(direction.x * radius, canonicalY + heightAboveFloor, direction.z * radius);
+    center.updateWorldMatrix(true, false); return center.localToWorld(p);
+  };
   const pointAtRadius = (radius) => { const p = getWorldPointAtRadius(radius); return monkeyMotionRoot.parent?.worldToLocal(p) ?? p; };
   const placeAtRadius = () => monkeyMotionRoot.position.copy(pointAtRadius(monkeyRadius));
   const radiusOf = (value) => { const p = value?.isObject3D ? value.getWorldPosition(new THREE.Vector3()) : value.clone(); center.updateWorldMatrix(true, false); center.worldToLocal(p); return Math.hypot(p.x, p.z); };
