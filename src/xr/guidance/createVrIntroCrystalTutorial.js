@@ -15,7 +15,7 @@ export const VR_INTRO_CRYSTAL_TUTORIAL_COPY = Object.freeze({
   })
 });
 
-export function createVrIntroCrystalTutorial({ monkeyGuide, monkeyRoot, getPlayerPosition, crystalCollection,
+export function createVrIntroCrystalTutorial({ monkeyGuide, monkeyRoot, getWorldPointAtRadius, crystalCollection,
   crystalDefinition, settings, locale = 'en', onHandoffRequested = () => {}, onCompleted = () => {},
   playConsume = () => {} }) {
   const copy = VR_INTRO_CRYSTAL_TUTORIAL_COPY[locale === 'pl' ? 'pl' : 'en'];
@@ -49,11 +49,7 @@ export function createVrIntroCrystalTutorial({ monkeyGuide, monkeyRoot, getPlaye
     return true;
   }
   function spawnAndInstruct() {
-    monkeyRoot.getWorldPosition(monkeyPosition);
-    playerPosition.copy(getPlayerPosition());
-    const direction = playerPosition.sub(monkeyPosition); direction.y = 0;
-    if (direction.lengthSq() < 1e-8) direction.set(0, 0, 1);
-    const spawnPosition = monkeyPosition.clone().addScaledVector(direction.normalize(), settings.spawnDistanceFromMonkey);
+    const spawnPosition = getWorldPointAtRadius(settings.spawnRadius);
     crystal = crystalCollection.spawnTransientTutorialCrystal(crystalDefinition, spawnPosition);
     if (!crystal) throw new Error('Intro crystal tutorial could not spawn its transient crystal');
     enqueue([{ text: copy.instruction }]);
