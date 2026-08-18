@@ -2,6 +2,10 @@
 
 Status: current binding decisions organized by implementation status, not patch chronology. Synchronized after the Scenario / Director / Actors documentation audit on 2026-08-16.
 
+## 2026-08-18 — canonical Scenario point authoring standard
+
+Każdy nowy canonical Experience VR Scenario point musi spełniać [`VR_SCENARIO_POINT_AUTHORING_STANDARD.md`](../technical/VR_SCENARIO_POINT_AUTHORING_STANDARD.md), w szczególności target-owned exactly-once entry, jednoznaczne ownership persistent truth oraz pełny reconstruction/hydration/direct-activation parity contract. Istniejące legacy seams są udokumentowanymi wyjątkami i nie stanowią precedensu architektonicznego.
+
 ## 2026-08-16 — repository entry and canonical story terminal
 
 1. Repository documentation routing starts at the existing `README.md`, `docs/README.md`, current documentation hub and Project Index. No additional private architect input belongs to, is required by or is expected in the repository.
