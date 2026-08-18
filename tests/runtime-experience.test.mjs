@@ -4,6 +4,11 @@ import { RuntimeExperience } from '../src/xr/progression/RuntimeExperience.js';
 import { VR_SCENARIO_EFFECT, VR_SCENARIO_EVENT, vrExperienceScenario } from '../src/xr/progression/vrExperienceScenario.js';
 
 const freeze = (value) => Object.freeze(value);
+const AUDIO_EFFECT_HANDLERS = Object.fromEntries([
+  'SET_INTRO_AMBIENT_01', 'SET_INTRO_AMBIENT_02', 'SET_INTRO_AMBIENT_03',
+  'SET_INTRO_AMBIENT_04', 'SET_INTRO_AMBIENT_05', 'BEGIN_MAIN_AMBIENT_SEQUENCE'
+].map((effect) => [effect, () => {}]));
+
 const scenario = freeze({ initialPointId: 'A', canonicalTerminalPointId: 'B', vocabulary: freeze({ events: freeze(['GO', 'IGNORED']),
   capabilities: freeze(['CAN_GO', 'CAN_DONE']), milestones: freeze(['DONE']), effects: freeze(['FIRST', 'SECOND']) }),
 points: freeze([
@@ -13,7 +18,7 @@ points: freeze([
 ]) });
 const calls = []; const payload = { nested: { retained: true } };
 const director = new ExperienceDirector({ scenario });
-const runtime = new RuntimeExperience({ director, effectHandlers: {
+const runtime = new RuntimeExperience({ director, effectHandlers: { ...AUDIO_EFFECT_HANDLERS,
   FIRST: (change, received) => calls.push(['FIRST', change, received]),
   SECOND: (change, received) => calls.push(['SECOND', change, received])
 } });
@@ -38,13 +43,13 @@ const choiceScenario = freeze({ initialPointId: '2.6.3', canonicalTerminalPointI
   freeze({ id: '7.4.9', capabilities: freeze([]), transitions: freeze([]) })
 ]) });
 const choiceRuntime = new RuntimeExperience({ director: new ExperienceDirector({ scenario: choiceScenario }),
-  effectHandlers: { CHOICE_EFFECT: (acceptedChoice, receivedPayload) => choiceCalls.push([acceptedChoice, receivedPayload]) } });
+  effectHandlers: { ...AUDIO_EFFECT_HANDLERS, CHOICE_EFFECT: (acceptedChoice, receivedPayload) => choiceCalls.push([acceptedChoice, receivedPayload]) } });
 const choiceRuntimeChange = choiceRuntime.dispatch('SELECTED', choicePayload);
 assert.equal(choiceRuntimeChange.currentPointId, '7.4.9');
 assert.equal(choiceRuntimeChange.event.payload, choicePayload);
 assert.equal(choiceCalls.length, 1); assert.equal(choiceCalls[0][0], choiceRuntimeChange);
 assert.equal(choiceCalls[0][1], choicePayload, 'Runtime forwards the exact numeric-choice payload to effect handlers');
-const missing = new RuntimeExperience({ director: new ExperienceDirector({ scenario }), effectHandlers: { FIRST() {} } });
+const missing = new RuntimeExperience({ director: new ExperienceDirector({ scenario }), effectHandlers: { ...AUDIO_EFFECT_HANDLERS, FIRST() {} } });
 assert.throws(() => missing.dispatch('GO'), /Missing effect handler: SECOND/);
 let disposeCalls = 0; let dispatchCalls = 0;
 const ownedDirector = { dispatch() { dispatchCalls += 1; return freeze({ effects: freeze([]) }); }, can() {}, hasMilestone() {},
@@ -52,7 +57,7 @@ const ownedDirector = { dispatch() { dispatchCalls += 1; return freeze({ effects
 const disposable = new RuntimeExperience({ director: ownedDirector }); disposable.dispose(); disposable.dispose();
 assert.equal(disposeCalls, 1); assert.equal(disposable.dispatch('GO'), null); assert.equal(dispatchCalls, 0);
 const productionCalls = []; const productionChoicePayloads = [];
-const productionRuntime = new RuntimeExperience({ director: new ExperienceDirector({ scenario: vrExperienceScenario }), effectHandlers: {
+const productionRuntime = new RuntimeExperience({ director: new ExperienceDirector({ scenario: vrExperienceScenario }), effectHandlers: { ...AUDIO_EFFECT_HANDLERS,
   [VR_SCENARIO_EFFECT.BEGIN_INTRO_REVEAL]: () => productionCalls.push(VR_SCENARIO_EFFECT.BEGIN_INTRO_REVEAL),
   [VR_SCENARIO_EFFECT.BEGIN_POST_REVEAL_SILENCE]: () => productionCalls.push(VR_SCENARIO_EFFECT.BEGIN_POST_REVEAL_SILENCE),
   [VR_SCENARIO_EFFECT.BEGIN_CONTROLLER_ONBOARDING]: () => productionCalls.push(VR_SCENARIO_EFFECT.BEGIN_CONTROLLER_ONBOARDING),
@@ -99,7 +104,7 @@ assert.equal(productionChoicePayloads.at(-1), productionThresholdPayload, 'Runti
 const entryCalls = [];
 const entryRuntime = new RuntimeExperience({
   director: new ExperienceDirector({ scenario: vrExperienceScenario, startPointId: '3.10' }),
-  effectHandlers: {
+  effectHandlers: { ...AUDIO_EFFECT_HANDLERS,
     [VR_SCENARIO_EFFECT.REVEAL_SHELL_FIELD_PRESENTATION]: () => entryCalls.push(VR_SCENARIO_EFFECT.REVEAL_SHELL_FIELD_PRESENTATION),
     [VR_SCENARIO_EFFECT.ELEVATE_MAIN_GLYPHS]: () => entryCalls.push(VR_SCENARIO_EFFECT.ELEVATE_MAIN_GLYPHS)
   }
@@ -112,12 +117,12 @@ assert.equal(entryCalls.length, 2, 'repeated activation executes no effects');
 const introEntryCalls = [];
 const introEntryRuntime = new RuntimeExperience({
   director: new ExperienceDirector({ scenario: vrExperienceScenario, startPointId: '1.50' }),
-  effectHandlers: {
+  effectHandlers: { ...AUDIO_EFFECT_HANDLERS,
     [VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING]: () => introEntryCalls.push(VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING)
   }
 });
 const introEntryChange = introEntryRuntime.activateCurrentPoint();
-assert.deepEqual(introEntryChange.effects, [VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING],
+assert.deepEqual(introEntryChange.effects, [VR_SCENARIO_EFFECT.SET_INTRO_AMBIENT_02, VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING],
   'Runtime direct activation executes the authored 1.50 entry contract');
 assert.equal(introEntryRuntime.activateCurrentPoint(), null);
 assert.deepEqual(introEntryCalls, [VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING],
@@ -126,12 +131,12 @@ assert.deepEqual(introEntryCalls, [VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOAR
 const controlsEntryCalls = [];
 const controlsEntryRuntime = new RuntimeExperience({
   director: new ExperienceDirector({ scenario: vrExperienceScenario, startPointId: '1.60' }),
-  effectHandlers: {
+  effectHandlers: { ...AUDIO_EFFECT_HANDLERS,
     [VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING]: () => controlsEntryCalls.push(VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING)
   }
 });
 const controlsEntryChange = controlsEntryRuntime.activateCurrentPoint();
-assert.deepEqual(controlsEntryChange.effects, [VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING],
+assert.deepEqual(controlsEntryChange.effects, [VR_SCENARIO_EFFECT.SET_INTRO_AMBIENT_02, VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING],
   'Runtime direct activation executes the authored 1.60 entry contract');
 assert.equal(controlsEntryRuntime.activateCurrentPoint(), null);
 assert.deepEqual(controlsEntryCalls, [VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING],
@@ -140,12 +145,12 @@ assert.deepEqual(controlsEntryCalls, [VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONB
 const pointerEntryCalls = [];
 const pointerEntryRuntime = new RuntimeExperience({
   director: new ExperienceDirector({ scenario: vrExperienceScenario, startPointId: '1.70' }),
-  effectHandlers: {
+  effectHandlers: { ...AUDIO_EFFECT_HANDLERS,
     [VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING]: () => pointerEntryCalls.push(VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING)
   }
 });
 const pointerEntryChange = pointerEntryRuntime.activateCurrentPoint();
-assert.deepEqual(pointerEntryChange.effects, [VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING],
+assert.deepEqual(pointerEntryChange.effects, [VR_SCENARIO_EFFECT.SET_INTRO_AMBIENT_03, VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING],
   'Runtime direct activation executes the authored 1.70 entry contract');
 assert.equal(pointerEntryRuntime.activateCurrentPoint(), null);
 assert.deepEqual(pointerEntryCalls, [VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING],
@@ -154,12 +159,12 @@ assert.deepEqual(pointerEntryCalls, [VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBO
 const monkeyHoverEntryCalls = [];
 const monkeyHoverEntryRuntime = new RuntimeExperience({
   director: new ExperienceDirector({ scenario: vrExperienceScenario, startPointId: '1.80' }),
-  effectHandlers: {
+  effectHandlers: { ...AUDIO_EFFECT_HANDLERS,
     [VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING]: () => monkeyHoverEntryCalls.push(VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING)
   }
 });
 const monkeyHoverEntryChange = monkeyHoverEntryRuntime.activateCurrentPoint();
-assert.deepEqual(monkeyHoverEntryChange.effects, [VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING],
+assert.deepEqual(monkeyHoverEntryChange.effects, [VR_SCENARIO_EFFECT.SET_INTRO_AMBIENT_03, VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING],
   'Runtime direct activation executes the authored 1.80 entry contract');
 assert.equal(monkeyHoverEntryRuntime.activateCurrentPoint(), null);
 assert.deepEqual(monkeyHoverEntryCalls, [VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING],
@@ -168,12 +173,12 @@ assert.deepEqual(monkeyHoverEntryCalls, [VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_
 const monkeyTriggerEntryCalls = [];
 const monkeyTriggerEntryRuntime = new RuntimeExperience({
   director: new ExperienceDirector({ scenario: vrExperienceScenario, startPointId: '1.100' }),
-  effectHandlers: {
+  effectHandlers: { ...AUDIO_EFFECT_HANDLERS,
     [VR_SCENARIO_EFFECT.BEGIN_INTRO_INVITATION]: () => monkeyTriggerEntryCalls.push(VR_SCENARIO_EFFECT.BEGIN_INTRO_INVITATION)
   }
 });
 const monkeyTriggerEntryChange = monkeyTriggerEntryRuntime.activateCurrentPoint();
-assert.deepEqual(monkeyTriggerEntryChange.effects, [VR_SCENARIO_EFFECT.BEGIN_INTRO_INVITATION],
+assert.deepEqual(monkeyTriggerEntryChange.effects, [VR_SCENARIO_EFFECT.SET_INTRO_AMBIENT_04, VR_SCENARIO_EFFECT.BEGIN_INTRO_INVITATION],
   'Runtime direct activation executes the authored 1.100 entry contract');
 assert.equal(monkeyTriggerEntryRuntime.activateCurrentPoint(), null);
 assert.deepEqual(monkeyTriggerEntryCalls, [VR_SCENARIO_EFFECT.BEGIN_INTRO_INVITATION],
@@ -182,12 +187,12 @@ assert.deepEqual(monkeyTriggerEntryCalls, [VR_SCENARIO_EFFECT.BEGIN_INTRO_INVITA
 const followEntryCalls = [];
 const followEntryRuntime = new RuntimeExperience({
   director: new ExperienceDirector({ scenario: vrExperienceScenario, startPointId: '1.110' }),
-  effectHandlers: {
+  effectHandlers: { ...AUDIO_EFFECT_HANDLERS,
     [VR_SCENARIO_EFFECT.CONTINUE_INTRO_INVITATION]: () => followEntryCalls.push(VR_SCENARIO_EFFECT.CONTINUE_INTRO_INVITATION)
   }
 });
 const followEntryChange = followEntryRuntime.activateCurrentPoint();
-assert.deepEqual(followEntryChange.effects, [VR_SCENARIO_EFFECT.CONTINUE_INTRO_INVITATION],
+assert.deepEqual(followEntryChange.effects, [VR_SCENARIO_EFFECT.SET_INTRO_AMBIENT_04, VR_SCENARIO_EFFECT.CONTINUE_INTRO_INVITATION],
   'Runtime direct activation executes the authored 1.110 entry contract');
 assert.equal(followEntryRuntime.activateCurrentPoint(), null);
 assert.deepEqual(followEntryCalls, [VR_SCENARIO_EFFECT.CONTINUE_INTRO_INVITATION],

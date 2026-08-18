@@ -113,6 +113,12 @@ export const VR_SCENARIO_MILESTONE = immutableIdentifiers([
 ]);
 
 export const VR_SCENARIO_EFFECT = immutableIdentifiers([
+  'SET_INTRO_AMBIENT_01',
+  'SET_INTRO_AMBIENT_02',
+  'SET_INTRO_AMBIENT_03',
+  'SET_INTRO_AMBIENT_04',
+  'SET_INTRO_AMBIENT_05',
+  'BEGIN_MAIN_AMBIENT_SEQUENCE',
   'BEGIN_INTRO_REVEAL',
   'BEGIN_POST_REVEAL_SILENCE',
   'BEGIN_CONTROLLER_ONBOARDING',
@@ -235,6 +241,7 @@ const points = Object.freeze([
     canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['1.20'] }),
     settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
     label: 'Bootstrap / oczekiwanie na kalibrację XR',
+    entryEffects: Object.freeze([VR_SCENARIO_EFFECT.SET_INTRO_AMBIENT_01]),
     capabilities: Object.freeze([]),
     transitions: Object.freeze([
       Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.COMPLETE,
@@ -249,7 +256,7 @@ const points = Object.freeze([
     settledConsequences: INTRO_REVEALED_SETTLED_CONSEQUENCES,
     label: 'Intro reveal',
     capabilities: Object.freeze([]),
-    entryEffects: Object.freeze([VR_SCENARIO_EFFECT.BEGIN_INTRO_REVEAL]),
+    entryEffects: Object.freeze([VR_SCENARIO_EFFECT.SET_INTRO_AMBIENT_01, VR_SCENARIO_EFFECT.BEGIN_INTRO_REVEAL]),
     transitions: Object.freeze([
       Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.COMPLETE,
         event: VR_SCENARIO_EVENT.INTRO_REVEAL_COMPLETE,
@@ -263,7 +270,7 @@ const points = Object.freeze([
     settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
     label: 'Cisza po revealu',
     capabilities: Object.freeze([]),
-    entryEffects: Object.freeze([VR_SCENARIO_EFFECT.BEGIN_POST_REVEAL_SILENCE]),
+    entryEffects: Object.freeze([VR_SCENARIO_EFFECT.SET_INTRO_AMBIENT_01, VR_SCENARIO_EFFECT.BEGIN_POST_REVEAL_SILENCE]),
     transitions: Object.freeze([
       Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.COMPLETE,
         event: VR_SCENARIO_EVENT.POST_REVEAL_SILENCE_COMPLETE,
@@ -277,7 +284,7 @@ const points = Object.freeze([
     settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
     label: 'Controller onboarding',
     capabilities: Object.freeze([]),
-    entryEffects: Object.freeze([VR_SCENARIO_EFFECT.BEGIN_CONTROLLER_ONBOARDING]),
+    entryEffects: Object.freeze([VR_SCENARIO_EFFECT.SET_INTRO_AMBIENT_02, VR_SCENARIO_EFFECT.BEGIN_CONTROLLER_ONBOARDING]),
     transitions: Object.freeze([
       Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.COMPLETE,
         event: VR_SCENARIO_EVENT.PLAYER_OPENED_GUIDE,
@@ -291,7 +298,7 @@ const points = Object.freeze([
     settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
     label: 'Player Guide otwarty / oczekiwanie na obejrzenie controls',
     capabilities: Object.freeze([]),
-    entryEffects: Object.freeze([VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING]),
+    entryEffects: Object.freeze([VR_SCENARIO_EFFECT.SET_INTRO_AMBIENT_02, VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING]),
     transitions: Object.freeze([
       Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.COMPLETE,
         event: VR_SCENARIO_EVENT.PLAYER_VIEWED_CONTROLS,
@@ -305,7 +312,7 @@ const points = Object.freeze([
     settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
     label: 'Controls obejrzane / oczekiwanie na zamknięcie panelu',
     capabilities: Object.freeze([]),
-    entryEffects: Object.freeze([VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING]),
+    entryEffects: Object.freeze([VR_SCENARIO_EFFECT.SET_INTRO_AMBIENT_02, VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING]),
     transitions: Object.freeze([
       Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.COMPLETE,
         event: VR_SCENARIO_EVENT.PLAYER_CLOSED_GUIDE,
@@ -319,7 +326,7 @@ const points = Object.freeze([
     settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
     label: 'Pointer tutorial uruchomiony / oczekiwanie na wskazanie Monkey',
     capabilities: Object.freeze([]),
-    entryEffects: Object.freeze([VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING]),
+    entryEffects: Object.freeze([VR_SCENARIO_EFFECT.SET_INTRO_AMBIENT_03, VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING]),
     transitions: Object.freeze([
       Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.COMPLETE,
         event: VR_SCENARIO_EVENT.MONKEY_HOVERED,
@@ -333,7 +340,7 @@ const points = Object.freeze([
     settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
     label: 'Monkey wskazany / oczekiwanie na trigger',
     capabilities: Object.freeze([]),
-    entryEffects: Object.freeze([VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING]),
+    entryEffects: Object.freeze([VR_SCENARIO_EFFECT.SET_INTRO_AMBIENT_03, VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING]),
     transitions: Object.freeze([
       Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.COMPLETE,
         event: VR_SCENARIO_EVENT.MONKEY_TRIGGERED,
@@ -347,7 +354,7 @@ const points = Object.freeze([
     settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
     label: 'Tutorial chwytania i podania kryształu Monkey',
     capabilities: Object.freeze([]),
-    entryEffects: Object.freeze([VR_SCENARIO_EFFECT.BEGIN_INTRO_CRYSTAL_TUTORIAL]),
+    entryEffects: Object.freeze([VR_SCENARIO_EFFECT.SET_INTRO_AMBIENT_03, VR_SCENARIO_EFFECT.BEGIN_INTRO_CRYSTAL_TUTORIAL]),
     transitions: Object.freeze([
       Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.STAY,
         event: VR_SCENARIO_EVENT.INTRO_CRYSTAL_HANDOFF_REQUESTED,
@@ -364,7 +371,7 @@ const points = Object.freeze([
     settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
     label: 'Sekwencja po triggerze / invitation / oczekiwanie na wybór',
     capabilities: Object.freeze([]),
-    entryEffects: Object.freeze([VR_SCENARIO_EFFECT.BEGIN_INTRO_INVITATION]),
+    entryEffects: Object.freeze([VR_SCENARIO_EFFECT.SET_INTRO_AMBIENT_04, VR_SCENARIO_EFFECT.BEGIN_INTRO_INVITATION]),
     transitions: Object.freeze([
       Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.COMPLETE, event: VR_SCENARIO_EVENT.INTRO_INVITATION_SELECTED, choice: 1, milestonesToAdd: Object.freeze([]) }),
       Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.STAY, event: VR_SCENARIO_EVENT.INTRO_INVITATION_SELECTED, choice: 2, milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.CONTINUE_INTRO_INVITATION]) }),
@@ -377,7 +384,7 @@ const points = Object.freeze([
     settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
     label: 'Gracz zgadza się iść za Monkey / FOLLOWING zaczyna się',
     capabilities: Object.freeze([]),
-    entryEffects: Object.freeze([VR_SCENARIO_EFFECT.CONTINUE_INTRO_INVITATION]),
+    entryEffects: Object.freeze([VR_SCENARIO_EFFECT.SET_INTRO_AMBIENT_04, VR_SCENARIO_EFFECT.CONTINUE_INTRO_INVITATION]),
     transitions: Object.freeze([
       Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.STAY,
         event: VR_SCENARIO_EVENT.FOLLOW_PAUSE_CHANGED,
@@ -396,6 +403,7 @@ const points = Object.freeze([
     canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['1.130'] }),
     settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
     label: 'Monkey dotarła do progu / threshold dialogue prezentowany',
+    entryEffects: Object.freeze([VR_SCENARIO_EFFECT.SET_INTRO_AMBIENT_05]),
     capabilities: Object.freeze([]),
     transitions: Object.freeze([
       Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.COMPLETE, event: VR_SCENARIO_EVENT.THRESHOLD_SELECTED, choice: 1, milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.CONTINUE_THRESHOLD_CHOICE]) }),
@@ -408,6 +416,7 @@ const points = Object.freeze([
     canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['2.10'] }),
     settledConsequences: INTRO_COMPLETE_SETTLED_CONSEQUENCES,
     label: 'Gracz przekracza próg / CROSSING rozpoczyna się',
+    entryEffects: Object.freeze([VR_SCENARIO_EFFECT.SET_INTRO_AMBIENT_05]),
     capabilities: Object.freeze([]),
     transitions: Object.freeze([
       Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.COMPLETE_IF, condition: 'crossingComplete', event: VR_SCENARIO_EVENT.PLAYER_ENTERED_RING, milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.BEGIN_GLYPH_FREE_EXPLORE]) }),
@@ -419,6 +428,7 @@ const points = Object.freeze([
     canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['2.20'] }),
     settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
     label: 'GLYPH_FREE_EXPLORE rozpoczęte',
+    entryEffects: Object.freeze([VR_SCENARIO_EFFECT.BEGIN_MAIN_AMBIENT_SEQUENCE]),
     capabilities: Object.freeze([VR_SCENARIO_CAPABILITY.CAN_USE_GLYPHS]),
     transitions: Object.freeze([
       Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.STAY, event: VR_SCENARIO_EVENT.GLYPH_HINT_TIMEOUT, milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.SHOW_GLYPH_HINT]) }),

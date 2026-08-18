@@ -37,7 +37,7 @@ assert.equal('target' in vrExperienceScenario.points[0].transitions[0], false,
   'the Director does not need a redundant target for mainline completion');
 assert.equal(Object.isFrozen(productionChange), true);
 assert.deepEqual(productionChange.addedMilestones, [VR_SCENARIO_MILESTONE.XR_CALIBRATED]);
-assert.deepEqual(productionChange.effects, [VR_SCENARIO_EFFECT.BEGIN_INTRO_REVEAL],
+assert.deepEqual(productionChange.effects, [VR_SCENARIO_EFFECT.SET_INTRO_AMBIENT_01, VR_SCENARIO_EFFECT.BEGIN_INTRO_REVEAL],
   'entering 1.20 executes the target-owned reveal effect');
 
 const bootstrapMilestones = [VR_SCENARIO_MILESTONE.XR_CALIBRATED];
@@ -107,13 +107,13 @@ assert.equal(new ExperienceDirector({ scenario: vrExperienceScenario }).dispatch
 const revealCompleteChange = productionDirector.dispatch(VR_SCENARIO_EVENT.INTRO_REVEAL_COMPLETE);
 assert.equal(revealCompleteChange.currentPointId, VR_EXPERIENCE_POINT['1.30']);
 assert.deepEqual(revealCompleteChange.addedMilestones, [VR_SCENARIO_MILESTONE.INTRO_REVEAL_COMPLETE]);
-assert.deepEqual(revealCompleteChange.effects, [VR_SCENARIO_EFFECT.BEGIN_POST_REVEAL_SILENCE],
+assert.deepEqual(revealCompleteChange.effects, [VR_SCENARIO_EFFECT.SET_INTRO_AMBIENT_01, VR_SCENARIO_EFFECT.BEGIN_POST_REVEAL_SILENCE],
   'entering 1.30 executes the target-owned silence effect');
 assert.equal(productionDirector.dispatch(VR_SCENARIO_EVENT.INTRO_REVEAL_COMPLETE), null, 'completion transition is accepted once');
 const silenceCompleteChange = productionDirector.dispatch(VR_SCENARIO_EVENT.POST_REVEAL_SILENCE_COMPLETE);
 assert.equal(silenceCompleteChange.currentPointId, VR_EXPERIENCE_POINT['1.40']);
 assert.deepEqual(silenceCompleteChange.addedMilestones, [VR_SCENARIO_MILESTONE.POST_REVEAL_SILENCE_COMPLETE]);
-assert.deepEqual(silenceCompleteChange.effects, [VR_SCENARIO_EFFECT.BEGIN_CONTROLLER_ONBOARDING],
+assert.deepEqual(silenceCompleteChange.effects, [VR_SCENARIO_EFFECT.SET_INTRO_AMBIENT_02, VR_SCENARIO_EFFECT.BEGIN_CONTROLLER_ONBOARDING],
   'entering 1.40 executes the target-owned onboarding effect');
 assert.equal(productionDirector.dispatch(VR_SCENARIO_EVENT.POST_REVEAL_SILENCE_COMPLETE), null, 'silence completion is accepted once');
 const guideOpenChange = productionDirector.dispatch(VR_SCENARIO_EVENT.PLAYER_OPENED_GUIDE);
@@ -129,7 +129,7 @@ const pointOneHundred = vrExperienceScenario.points.find(({ id }) => id === VR_E
 const pointOneHundredTen = vrExperienceScenario.points.find(({ id }) => id === VR_EXPERIENCE_POINT['1.110']);
 assert.deepEqual(pointOneForty.transitions[0].effects, undefined,
   '1.40 completion does not own the target beat as a transition-local effect');
-assert.deepEqual(pointOneFifty.entryEffects, [VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING],
+assert.deepEqual(pointOneFifty.entryEffects, [VR_SCENARIO_EFFECT.SET_INTRO_AMBIENT_02, VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING],
   '1.50 owns the existing onboarding continuation through its entry contract');
 assert.deepEqual(guideOpenChange.effects, pointOneFifty.entryEffects,
   'natural entry into 1.50 executes its target-owned entry exactly once');
@@ -143,7 +143,7 @@ assert.equal(controlsViewedChange.currentPointId, VR_EXPERIENCE_POINT['1.60']);
 assert.deepEqual(controlsViewedChange.addedMilestones, [VR_SCENARIO_MILESTONE.PLAYER_VIEWED_CONTROLS]);
 assert.deepEqual(pointOneFifty.transitions[0].effects, undefined,
   '1.50 completion does not own the target beat as a transition-local effect');
-assert.deepEqual(pointOneSixty.entryEffects, [VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING],
+assert.deepEqual(pointOneSixty.entryEffects, [VR_SCENARIO_EFFECT.SET_INTRO_AMBIENT_02, VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING],
   '1.60 owns the existing onboarding continuation through its entry contract');
 assert.deepEqual(controlsViewedChange.effects, pointOneSixty.entryEffects,
   'natural entry into 1.60 executes its target-owned entry exactly once');
@@ -157,7 +157,7 @@ assert.equal(guideClosedChange.currentPointId, VR_EXPERIENCE_POINT['1.70']);
 assert.deepEqual(guideClosedChange.addedMilestones, []);
 assert.deepEqual(pointOneSixty.transitions[0].effects, undefined,
   '1.60 completion does not own the target beat as a transition-local effect');
-assert.deepEqual(pointOneSeventy.entryEffects, [VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING],
+assert.deepEqual(pointOneSeventy.entryEffects, [VR_SCENARIO_EFFECT.SET_INTRO_AMBIENT_03, VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING],
   '1.70 owns the existing onboarding continuation through its entry contract');
 assert.deepEqual(guideClosedChange.effects, pointOneSeventy.entryEffects,
   'natural entry into 1.70 executes its target-owned entry exactly once');
@@ -171,7 +171,7 @@ assert.equal(monkeyHoveredChange.currentPointId, VR_EXPERIENCE_POINT['1.80']);
 assert.deepEqual(monkeyHoveredChange.addedMilestones, []);
 assert.deepEqual(pointOneSeventy.transitions[0].effects, undefined,
   '1.70 completion does not own the target beat as a transition-local effect');
-assert.deepEqual(pointOneEighty.entryEffects, [VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING],
+assert.deepEqual(pointOneEighty.entryEffects, [VR_SCENARIO_EFFECT.SET_INTRO_AMBIENT_03, VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING],
   '1.80 owns the existing onboarding continuation through its entry contract');
 assert.deepEqual(monkeyHoveredChange.effects, pointOneEighty.entryEffects,
   'natural entry into 1.80 executes its target-owned entry exactly once');
@@ -185,15 +185,15 @@ assert.equal(monkeyTriggeredChange.currentPointId, VR_EXPERIENCE_POINT['1.90']);
 assert.deepEqual(monkeyTriggeredChange.addedMilestones, []);
 assert.deepEqual(pointOneEighty.transitions[0].effects, undefined,
   '1.80 completion does not own the target beat as a transition-local effect');
-assert.deepEqual(pointOneNinety.entryEffects, [VR_SCENARIO_EFFECT.BEGIN_INTRO_CRYSTAL_TUTORIAL]);
+assert.deepEqual(pointOneNinety.entryEffects, [VR_SCENARIO_EFFECT.SET_INTRO_AMBIENT_03, VR_SCENARIO_EFFECT.BEGIN_INTRO_CRYSTAL_TUTORIAL]);
 assert.deepEqual(monkeyTriggeredChange.effects, pointOneNinety.entryEffects);
 const handoff = productionDirector.dispatch(VR_SCENARIO_EVENT.INTRO_CRYSTAL_HANDOFF_REQUESTED);
 assert.equal(handoff.currentPointId, VR_EXPERIENCE_POINT['1.90']);
 assert.deepEqual(handoff.effects, [VR_SCENARIO_EFFECT.ACCEPT_INTRO_CRYSTAL_HANDOFF]);
 const tutorialComplete = productionDirector.dispatch(VR_SCENARIO_EVENT.INTRO_CRYSTAL_TUTORIAL_COMPLETED);
 assert.equal(tutorialComplete.currentPointId, VR_EXPERIENCE_POINT['1.100']);
-assert.deepEqual(tutorialComplete.effects, [VR_SCENARIO_EFFECT.BEGIN_INTRO_INVITATION]);
-assert.deepEqual(pointOneHundred.entryEffects, [VR_SCENARIO_EFFECT.BEGIN_INTRO_INVITATION]);
+assert.deepEqual(tutorialComplete.effects, [VR_SCENARIO_EFFECT.SET_INTRO_AMBIENT_04, VR_SCENARIO_EFFECT.BEGIN_INTRO_INVITATION]);
+assert.deepEqual(pointOneHundred.entryEffects, [VR_SCENARIO_EFFECT.SET_INTRO_AMBIENT_04, VR_SCENARIO_EFFECT.BEGIN_INTRO_INVITATION]);
 const directOneHundred = new ExperienceDirector({ scenario: vrExperienceScenario, startPointId: VR_EXPERIENCE_POINT['1.100'] });
 assert.deepEqual(directOneHundred.activateCurrentPoint().effects, pointOneHundred.entryEffects,
   'direct activation of 1.100 uses the same target entry contract');
@@ -205,7 +205,7 @@ assert.equal(goChange.currentPointId, VR_EXPERIENCE_POINT['1.110']);
 assert.equal(goChange.transitionKind, VR_SCENARIO_TRANSITION_KIND.COMPLETE);
 assert.deepEqual(pointOneHundred.transitions[0].effects, undefined,
   '1.100 mainline completion does not own the target follow beat as a transition-local effect');
-assert.deepEqual(pointOneHundredTen.entryEffects, [VR_SCENARIO_EFFECT.CONTINUE_INTRO_INVITATION],
+assert.deepEqual(pointOneHundredTen.entryEffects, [VR_SCENARIO_EFFECT.SET_INTRO_AMBIENT_04, VR_SCENARIO_EFFECT.CONTINUE_INTRO_INVITATION],
   '1.110 owns the unchanged follow-Monkey command through its entry contract');
 assert.deepEqual(goChange.effects, pointOneHundredTen.entryEffects,
   'natural entry into 1.110 executes its target-owned entry exactly once');
@@ -232,12 +232,12 @@ const thresholdChange = productionDirector.dispatch(VR_SCENARIO_EVENT.MONKEY_REA
 assert.equal(thresholdChange.previousPointId, VR_EXPERIENCE_POINT['1.110']);
 assert.equal(thresholdChange.currentPointId, VR_EXPERIENCE_POINT['1.120']);
 assert.deepEqual(thresholdChange.addedMilestones, []);
-assert.deepEqual(thresholdChange.effects, [VR_SCENARIO_EFFECT.PRESENT_THRESHOLD_CHOICE]);
+assert.deepEqual(thresholdChange.effects, [VR_SCENARIO_EFFECT.PRESENT_THRESHOLD_CHOICE, VR_SCENARIO_EFFECT.SET_INTRO_AMBIENT_05]);
 assert.equal(productionDirector.dispatch(VR_SCENARIO_EVENT.MONKEY_REACHED_THRESHOLD), null, 'threshold arrival is accepted exactly once');
 for (const payload of [undefined, {}, { choice: 4 }, { choice: '1' }]) assert.equal(productionDirector.dispatch(VR_SCENARIO_EVENT.THRESHOLD_SELECTED, payload), null);
 const crossChange = productionDirector.dispatch(VR_SCENARIO_EVENT.THRESHOLD_SELECTED, { choice: 1 });
 assert.equal(crossChange.currentPointId, VR_EXPERIENCE_POINT['1.130']);
-assert.deepEqual(crossChange.effects, [VR_SCENARIO_EFFECT.CONTINUE_THRESHOLD_CHOICE]);
+assert.deepEqual(crossChange.effects, [VR_SCENARIO_EFFECT.CONTINUE_THRESHOLD_CHOICE, VR_SCENARIO_EFFECT.SET_INTRO_AMBIENT_05]);
 assert.deepEqual(crossChange.addedMilestones, []);
 assert.equal(productionDirector.dispatch(VR_SCENARIO_EVENT.THRESHOLD_SELECTED, { choice: 1 }), null, 'CROSS terminal rejects duplicates');
 assert.equal(productionDirector.can(VR_SCENARIO_CAPABILITY.CAN_USE_GLYPHS), false);
@@ -251,7 +251,7 @@ assert.equal(enteredDuplicate.currentPointId, VR_EXPERIENCE_POINT['1.130'], 'a r
 assert.deepEqual(enteredDuplicate.effects, []);
 const settledSecond = productionDirector.dispatch(VR_SCENARIO_EVENT.MONKEY_SETTLED, { crossingComplete: true });
 assert.equal(settledSecond.currentPointId, VR_EXPERIENCE_POINT['2.10']);
-assert.deepEqual(settledSecond.effects, [VR_SCENARIO_EFFECT.BEGIN_GLYPH_FREE_EXPLORE]);
+assert.deepEqual(settledSecond.effects, [VR_SCENARIO_EFFECT.BEGIN_GLYPH_FREE_EXPLORE, VR_SCENARIO_EFFECT.BEGIN_MAIN_AMBIENT_SEQUENCE]);
 assert.deepEqual(settledSecond.addedMilestones, []);
 assert.equal(productionDirector.can(VR_SCENARIO_CAPABILITY.CAN_USE_GLYPHS), true);
 assert.equal(productionDirector.dispatch(VR_SCENARIO_EVENT.MONKEY_SETTLED), null, 'completed join rejects duplicate facts');
@@ -394,7 +394,7 @@ assert.equal(settledDuplicate.currentPointId, VR_EXPERIENCE_POINT['1.130']);
 assert.deepEqual(settledDuplicate.effects, []);
 const enteredSecond = settledFirstDirector.dispatch(VR_SCENARIO_EVENT.PLAYER_ENTERED_RING, { crossingComplete: true });
 assert.equal(enteredSecond.currentPointId, VR_EXPERIENCE_POINT['2.10']);
-assert.deepEqual(enteredSecond.effects, [VR_SCENARIO_EFFECT.BEGIN_GLYPH_FREE_EXPLORE]);
+assert.deepEqual(enteredSecond.effects, [VR_SCENARIO_EFFECT.BEGIN_GLYPH_FREE_EXPLORE, VR_SCENARIO_EFFECT.BEGIN_MAIN_AMBIENT_SEQUENCE]);
 assert.equal(settledFirstDirector.can(VR_SCENARIO_CAPABILITY.CAN_USE_GLYPHS), true);
 const discoveredBeforeHint = settledFirstDirector.dispatch(VR_SCENARIO_EVENT.FIRST_CRYSTAL_DISCOVERED);
 assert.equal(discoveredBeforeHint.previousPointId, VR_EXPERIENCE_POINT['2.10']);
@@ -703,3 +703,21 @@ for (const [transition, options, expected] of [
 }
 
 console.log('VR experience Director assertions passed');
+
+const introAudioMap = new Map([
+  ['1.10', 'SET_INTRO_AMBIENT_01'], ['1.20', 'SET_INTRO_AMBIENT_01'], ['1.30', 'SET_INTRO_AMBIENT_01'],
+  ['1.40', 'SET_INTRO_AMBIENT_02'], ['1.50', 'SET_INTRO_AMBIENT_02'], ['1.60', 'SET_INTRO_AMBIENT_02'],
+  ['1.70', 'SET_INTRO_AMBIENT_03'], ['1.80', 'SET_INTRO_AMBIENT_03'], ['1.90', 'SET_INTRO_AMBIENT_03'],
+  ['1.100', 'SET_INTRO_AMBIENT_04'], ['1.110', 'SET_INTRO_AMBIENT_04'],
+  ['1.120', 'SET_INTRO_AMBIENT_05'], ['1.130', 'SET_INTRO_AMBIENT_05'],
+  ['2.10', 'BEGIN_MAIN_AMBIENT_SEQUENCE']
+]);
+for (const [pointId, effect] of introAudioMap) {
+  const point = vrExperienceScenario.points.find(({ id }) => id === pointId);
+  assert.equal(point.entryEffects.includes(VR_SCENARIO_EFFECT[effect]), true, `${pointId} owns canonical ${effect}`);
+}
+for (const pointId of ['1.90', '1.120', '2.10']) {
+  const direct = new ExperienceDirector({ scenario: vrExperienceScenario, startPointId: pointId });
+  assert.equal(direct.activateCurrentPoint().effects.includes(VR_SCENARIO_EFFECT[introAudioMap.get(pointId)]), true,
+    `direct ${pointId} executes its self-contained audio entry`);
+}

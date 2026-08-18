@@ -322,3 +322,14 @@ test('Asterion Sphere reset/dispose stop both loops and asynchronous failures re
   await flush();
   assert.equal(failed.handles.length, 0); failed.bridge.dispose();
 });
+
+test('overlapping-loop primitive is forwarded on AMBIENT and remains fail-soft', async () => {
+  const calls = [], warnings = [];
+  const bridge = createVrAudioBridge({ manager: {
+    startVrOverlappingLoopSource(...args) { calls.push(args); throw new Error('decode'); }
+  }, warn: (...args) => warnings.push(args) });
+  const result = await bridge.startOverlappingLoopSource('/audio/ambient_intro_01.mp3', 'AMBIENT', { overlapSeconds: 5 });
+  assert.equal(result, null);
+  assert.deepEqual(calls, [['/audio/ambient_intro_01.mp3', 'AMBIENT', { overlapSeconds: 5 }]]);
+  assert.equal(warnings.length, 1);
+});

@@ -261,6 +261,17 @@ export function createVrAudioBridge({ manager = audioManager, warn = console.war
     }
   }
 
+  function startOverlappingLoopSource(path, bus, options) {
+    if (disposed) return Promise.resolve(null);
+    try {
+      return Promise.resolve(manager.startVrOverlappingLoopSource(path, bus, options))
+        .catch((error) => { reportFailure(`start overlapping loop ${path}`, error); return null; });
+    } catch (error) {
+      reportFailure(`start overlapping loop ${path}`, error);
+      return Promise.resolve(null);
+    }
+  }
+
   function clearFinishTimer() {
     if (finishTimer !== null) clearTimeout(finishTimer);
     finishTimer = null;
@@ -375,7 +386,7 @@ export function createVrAudioBridge({ manager = audioManager, warn = console.war
     if (completionPath) playOneShot(completionPath, 'WORLD');
   }
 
-  return { runOptional, prepareOneShots, prepareAttractorLoops, playOneShot, startFiniteSource, startFurnaceProcess, stopFurnaceProcess, startAsterionCreate, stopAsterionCreate,
+  return { runOptional, prepareOneShots, prepareAttractorLoops, playOneShot, startFiniteSource, startOverlappingLoopSource, startFurnaceProcess, stopFurnaceProcess, startAsterionCreate, stopAsterionCreate,
     startGlyphAcquisition, missGlyphAcquisition, setAsterionSphereState, resetAsterionSphereAudio,
     cancelGlyphAcquisition, completeGlyphAcquisition, dispose,
     startAttractor, missAttractor, cancelAttractor, handoffAttractor,

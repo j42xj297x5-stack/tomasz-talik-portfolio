@@ -74,3 +74,7 @@ Hydration zakłada uprzedni canonical baseline i nie jest patchem dowolnego live
 ## Canonical runtime baseline
 
 `restoreVrScenarioBaseline()` jest jednym production seamem, który orkiestruje istniejące API resetu ownerów i actorów. Zwykłe wejście do VR korzysta z niego przed utworzeniem sesji XR; ten sam seam jest używany po zakończeniu sesji oraz po nieudanej próbie wejścia. Baseline dotyczy wyłącznie już utworzonych obiektów runtime: nie powtarza bootstrapu, nie wykonuje effects Scenario, reconstruction ani hydration. Teardown sesji XR i UI pozostaje osobnym lifecycle concernem.
+
+## Canonical Intro background audio effects
+
+Canonical entries `1.10–1.130` deklarują symboliczny `SET_INTRO_AMBIENT_01–05` zgodnie z segmentami Intro; powtórzony effect tego samego segmentu jest idempotentnym NO-OP aktora. Entry `2.10` deklaruje `BEGIN_MAIN_AMBIENT_SEQUENCE`. Runtime mapuje te transient effects do wyspecjalizowanych audio actors; Director, composition root i actors nie porównują point IDs jako audio policy, a audio nie trafia do settled consequences ani hydration.

@@ -334,6 +334,44 @@ class AudioManager {
     return handle;
   }
 
+  async startVrOverlappingLoopSource(path, bus = 'AMBIENT', { overlapSeconds = 5, signal } = {}) {
+    if (!VR_AUDIO_BUSES.includes(bus)) return null;
+    const buffer = await this.loadTransientBuffer(path, { signal });
+    const context = this.context, busNode = this.vrBusNodes.get(bus);
+    if (!buffer || !context || !busNode) return null;
+    const overlap = Math.min(Math.max(0, overlapSeconds), buffer.duration / 2);
+    const stride = Math.max(0.01, buffer.duration - overlap);
+    const output = context.createGain(); output.gain.setValueAtTime(1, context.currentTime); output.connect(busNode);
+    const sources = new Set(); let stopped = false, timer = null, nextAt = context.currentTime + 0.02;
+    const owner = this;
+    function schedule() {
+      if (stopped) return;
+      while (nextAt < context.currentTime + stride * 2) {
+        const source = context.createBufferSource(); source.buffer = buffer; source.connect(output);
+        sources.add(source);
+        source.onended = () => { sources.delete(source); try { source.disconnect(); } catch (_) {} };
+        source.start(nextAt); nextAt += stride;
+      }
+      const milliseconds = Math.max(20, (nextAt - stride - context.currentTime) * 500);
+      timer = setTimeout(schedule, milliseconds);
+    }
+    const handle = {
+      buffer,
+      rampTo(target, duration) {
+        const now = context.currentTime, parameter = output.gain;
+        parameter.cancelScheduledValues(now); parameter.setValueAtTime(parameter.value, now);
+        parameter.linearRampToValueAtTime(clamp01(target), now + Math.max(0, duration));
+      },
+      stop() {
+        if (stopped) return; stopped = true; if (timer !== null) clearTimeout(timer);
+        for (const source of sources) { try { source.stop(); } catch (_) {} source.buffer = null; }
+        sources.clear(); try { output.disconnect(); } catch (_) {}
+        owner.activeVrSources.delete(handle); this.buffer = null;
+      }
+    };
+    this.activeVrSources.add(handle); schedule(); return handle;
+  }
+
   setVrBusGain(bus, value) {
     if (!VR_AUDIO_BUSES.includes(bus)) return false;
     const node = this.vrBusNodes.get(bus);
