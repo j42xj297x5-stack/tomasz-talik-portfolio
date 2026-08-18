@@ -44,12 +44,13 @@ export function createVrIntroCrystalTutorial({ monkeyGuide, monkeyRoot, getWorld
     if (active) return false;
     reset();
     active = true;
+    monkeyGuide.setInteractionEnabled?.(false);
     monkeyGuide.setDialogueOverride(null);
     enqueue(copy.seen.map((text, index) => ({ text, after: index === copy.seen.length - 1 ? spawnAndInstruct : null })));
     return true;
   }
   function spawnAndInstruct() {
-    const spawnPosition = getWorldPointAtRadius(settings.spawnRadius);
+    const spawnPosition = getWorldPointAtRadius(settings.spawnRadius, { heightAboveFloor: settings.interactionHeightAboveFloor });
     crystal = crystalCollection.spawnTransientTutorialCrystal(crystalDefinition, spawnPosition);
     if (!crystal) throw new Error('Intro crystal tutorial could not spawn its transient crystal');
     enqueue([{ text: copy.instruction }]);
@@ -60,7 +61,7 @@ export function createVrIntroCrystalTutorial({ monkeyGuide, monkeyRoot, getWorld
     handoffAccepted = true;
     playConsume();
     enqueue([{ text: copy.unavailable }, { text: copy.complete, after: () => {
-      if (!completionEmitted) { completionEmitted = true; active = false; onCompleted(); }
+      if (!completionEmitted) { completionEmitted = true; active = false; monkeyGuide.setInteractionEnabled?.(true); onCompleted(); }
     } }]);
     return true;
   }
@@ -79,6 +80,8 @@ export function createVrIntroCrystalTutorial({ monkeyGuide, monkeyRoot, getWorld
     }
     if (!handoffRequested && crystal && crystalCollection.isHeld(crystal)) {
       monkeyRoot.getWorldPosition(monkeyPosition);
+      monkeyPosition.add(getWorldPointAtRadius(0, { heightAboveFloor: settings.interactionHeightAboveFloor }))
+        .sub(getWorldPointAtRadius(0));
       if (crystalCollection.getWorldPosition(crystal, playerPosition)
         .distanceTo(monkeyPosition) <= settings.handoffDistanceFromMonkey) {
         handoffRequested = true;
@@ -91,8 +94,17 @@ export function createVrIntroCrystalTutorial({ monkeyGuide, monkeyRoot, getWorld
     crystal = null; queue = []; current = null; elapsed = 0; active = false;
     handoffRequested = handoffAccepted = completionEmitted = false;
     monkeyGuide.showMessage('');
+    monkeyGuide.setInteractionEnabled?.(true);
   }
   function dispose() { reset(); }
   return { begin, acceptHandoff, update, reset, dispose,
-    getSnapshot: () => ({ active, crystal, handoffRequested, handoffAccepted, completionEmitted }) };
+    getSnapshot: () => {
+      const worldPosition = crystal ? crystalCollection.getWorldPosition(crystal, new THREE.Vector3()) : null;
+      let effectivelyVisible = Boolean(crystal?.object?.parent);
+      for (let node = crystal?.object; node; node = node.parent) effectivelyVisible &&= node.visible !== false;
+      return { active, crystal, crystalState: crystal?.state ?? null, worldPosition: worldPosition?.toArray() ?? null,
+        targetPosition: crystal?.targetPosition?.toArray?.() ?? null, effectivelyVisible,
+        parentName: crystal?.object?.parent?.name ?? null, assetId: crystal?.crystalAssetId ?? crystalDefinition?.crystalAssetId ?? null,
+        handoffRequested, handoffAccepted, completionEmitted };
+    } };
 }

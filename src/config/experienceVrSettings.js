@@ -200,6 +200,7 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
   },
   introCrystalTutorial: {
     spawnRadius: 19.0,
+    interactionHeightAboveFloor: 1.2,
     handoffDistanceFromMonkey: 0.5
   },
   portal: {
@@ -605,6 +606,11 @@ export function normalizeExperienceVrSettings(candidate) {
         defaults.intro.messageGapDuration, { min: 0, max: 5 }),
       questionGapDuration: finiteNumber(candidate.intro?.questionGapDuration,
         defaults.intro.questionGapDuration, { min: 0, max: 5 })
+    },
+    introCrystalTutorial: {
+      spawnRadius: finiteNumber(candidate.introCrystalTutorial?.spawnRadius, defaults.introCrystalTutorial.spawnRadius, { min: 0, max: 100 }),
+      interactionHeightAboveFloor: finiteNumber(candidate.introCrystalTutorial?.interactionHeightAboveFloor, defaults.introCrystalTutorial.interactionHeightAboveFloor, { min: 0.3, max: 2.5 }),
+      handoffDistanceFromMonkey: finiteNumber(candidate.introCrystalTutorial?.handoffDistanceFromMonkey, defaults.introCrystalTutorial.handoffDistanceFromMonkey, { min: 0.1, max: 2 })
     },
     portal: {
       enabled: typeof candidate.portal?.enabled === 'boolean' ? candidate.portal.enabled : defaults.portal.enabled,

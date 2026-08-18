@@ -383,6 +383,7 @@ export function createVrCrystalCollection({ scene, assetManager, controllers, po
   }
 
   function spawnTransientTutorialCrystal(definition, spawnPosition) {
+    if (![spawnPosition?.x, spawnPosition?.y, spawnPosition?.z].every(Number.isFinite)) throw new TypeError('Transient tutorial crystal spawn position must contain finite x/y/z');
     if (!definition || instances.some((instance) => instance.transient && instance.state !== 'released')) return null;
     const instance = spawnOne(definition, {
       glyphWorldPosition: spawnPosition,
