@@ -22,7 +22,7 @@ function harness({ reject = false } = {}) {
 }
 
 test('full threshold follows ambient, silence, six quiet repetitions, silence and repeat', async () => {
-  const h = harness(); h.sequencer.setState({ fullThreshold: 3 }); await flush();
+  const h = harness(); h.sequencer.setState({ fullThreshold: 3 }); h.sequencer.enable(); await flush();
   assert.equal(h.starts[0].path, '/audio/ambient_03.mp3'); assert.equal(h.starts[0].options.repetitions, 1);
   await h.finish(); assert.equal(h.timers[0].delay, 30000); await h.tick();
   assert.equal(h.starts[1].path, VR_QUIET_QUEUE[0]);
@@ -33,6 +33,7 @@ test('full threshold follows ambient, silence, six quiet repetitions, silence an
 test('quiet queue is exactly 01 through 13, wraps and never requests 14', async () => {
   const h = harness();
   assert.deepEqual(VR_QUIET_QUEUE, Array.from({ length: 13 }, (_, index) => `/audio/noise_quiete_loop_${String(index + 1).padStart(2, '0')}.mp3`));
+  h.sequencer.enable();
   for (let index = 0; index < 14; index += 1) {
     h.sequencer.setState({ fullThreshold: index % 2 ? 2 : 1 }); await flush(); await h.finish(); await h.tick();
     assert.equal(h.starts.at(-1).path, VR_QUIET_QUEUE[index % 13]); await h.finish(); await h.tick();
@@ -42,8 +43,8 @@ test('quiet queue is exactly 01 through 13, wraps and never requests 14', async 
 });
 
 test('subthreshold uses ambient_loop_01 x13 and the shared quiet cursor', async () => {
-  const h = harness(); h.sequencer.setState({ fullThreshold: 1 }); await flush(); await h.finish(); await h.tick(); await h.finish();
-  h.sequencer.setState({ fullThreshold: 2, asterionSubthreshold: true }); await flush();
+  const h = harness(); h.sequencer.setState({ fullThreshold: 1 }); h.sequencer.enable(); await flush(); await h.finish(); await h.tick(); await h.finish();
+  h.sequencer.setState({ fullThreshold: 2, asterionSubthreshold: true }); h.sequencer.enable(); await flush();
   assert.equal(h.starts.at(-1).path, '/audio/ambient_loop_01.mp3'); assert.equal(h.starts.at(-1).options.repetitions, 13);
   await h.finish(); await h.tick(); assert.equal(h.starts.at(-1).path, VR_QUIET_QUEUE[1]); h.sequencer.dispose();
 });
@@ -51,11 +52,20 @@ test('subthreshold uses ambient_loop_01 x13 and the shared quiet cursor', async 
 test('state replacement invalidates a late source and reset/dispose are idempotent', async () => {
   const resolvers = []; const late = { stopped: 0, finished: Promise.resolve(), stop() { this.stopped += 1; } };
   const sequencer = createVrAmbientSequencer({ bridge: { startFiniteSource: () => new Promise((resolve) => { resolvers.push(resolve); }) } });
-  sequencer.setState({ fullThreshold: 1 }); await flush(); sequencer.setState({ fullThreshold: 2 }); resolvers[0](late); await flush();
+  sequencer.setState({ fullThreshold: 1 }); sequencer.enable(); await flush(); sequencer.setState({ fullThreshold: 2 }); resolvers[0](late); await flush();
   assert.equal(late.stopped, 1); assert.doesNotThrow(() => { sequencer.reset(); sequencer.reset(); sequencer.dispose(); sequencer.dispose(); });
 });
 
 test('asset rejection remains fail-soft and advances to bounded silence', async () => {
-  const h = harness({ reject: true }); assert.doesNotThrow(() => h.sequencer.setState({ fullThreshold: 1 })); await flush();
+  const h = harness({ reject: true }); assert.doesNotThrow(() => h.sequencer.setState({ fullThreshold: 1 })); h.sequencer.enable(); await flush();
   assert.equal(h.timers[0].delay, 30000); h.sequencer.dispose();
+});
+
+test('main sequence remembers state but remains silent until canonical enable and reset closes the gate', async () => {
+  const h = harness(); h.sequencer.setState({ fullThreshold: 1 }); await flush();
+  assert.equal(h.starts.length, 0); assert.equal(h.sequencer.enabled, false);
+  h.sequencer.enable(); await flush(); assert.equal(h.starts[0].path, '/audio/ambient_01.mp3');
+  h.sequencer.reset(); assert.equal(h.sequencer.enabled, false); assert.equal(h.starts[0].handle.stopped, 1);
+  h.sequencer.setState({ fullThreshold: 2 }); await flush(); assert.equal(h.starts.length, 1);
+  h.sequencer.dispose();
 });

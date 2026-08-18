@@ -5,7 +5,7 @@ export const VR_QUIET_QUEUE = Object.freeze(Array.from({ length: 13 }, (_, index
 const SUBTHRESHOLD_AMBIENT = '/audio/ambient_loop_01.mp3';
 
 export function createVrAmbientSequencer({ bridge, setTimer = setTimeout, clearTimer = clearTimeout } = {}) {
-  let generation = 0, threshold = 0, subthreshold = false, quietCursor = 0, disposed = false;
+  let generation = 0, threshold = 0, subthreshold = false, quietCursor = 0, disposed = false, enabled = false;
   let activeHandle = null, timer = null, timerResolve = null;
   let pendingController = null;
 
@@ -61,11 +61,19 @@ export function createVrAmbientSequencer({ bridge, setTimer = setTimeout, clearT
     const nextSubthreshold = Boolean(asterionSubthreshold);
     if (nextThreshold === threshold && nextSubthreshold === subthreshold) return;
     cancelWork(); threshold = nextThreshold; subthreshold = nextSubthreshold;
+    if (!enabled) return;
     const token = generation;
     if (subthreshold) void runSubthreshold(token);
     else if (threshold > 0) void runFull(token);
   }
-  function reset() { if (disposed) return; cancelWork(); threshold = 0; subthreshold = false; quietCursor = 0; }
+  function enable() {
+    if (disposed || enabled) return;
+    enabled = true; cancelWork();
+    const token = generation;
+    if (subthreshold) void runSubthreshold(token);
+    else if (threshold > 0) void runFull(token);
+  }
+  function reset() { if (disposed) return; cancelWork(); threshold = 0; subthreshold = false; quietCursor = 0; enabled = false; }
   function dispose() { if (disposed) return; cancelWork(); disposed = true; }
-  return { setState, reset, dispose, get quietCursor() { return quietCursor; } };
+  return { setState, enable, reset, dispose, get enabled() { return enabled; }, get quietCursor() { return quietCursor; } };
 }

@@ -265,3 +265,21 @@ The prefix map supplies only a default classification. Every new MP3 must still 
 ## Implementation boundary
 
 This document records the current audio contract. The implementation includes the shared Master Volume, five unity-gain VR buses, events explicitly marked `IMPLEMENTED`, glyph and shell lifecycle fades/recovery, Asterion Sphere equipment/drive loops, and the transient full-threshold/subthreshold ambient sequencer composed by `experienceVr.js`. Anything marked `PLANNED`, `RESERVED` or `UNASSIGNED` remains outside runtime. This model does not authorize new playback mappings, assets, renaming, mastering or spatialization.
+
+## Intro Background Sequencer
+
+Status: **IMPLEMENTED**. Intro jest transient aktorem sterowanym wyłącznie symbolicznymi `entryEffects` canonical Scenario points i korzysta z istniejącego `AudioContext`, granicy fail-soft `VrAudioBridge` oraz busa `AMBIENT`.
+
+| Cue | Canonical points | Beat |
+| --- | --- | --- |
+| `ambient_intro_01` | `1.10`, `1.20`, `1.30` | start / reveal / początkowa cisza |
+| `ambient_intro_02` | `1.40`, `1.50`, `1.60` | menu Y / controller onboarding |
+| `ambient_intro_03` | `1.70`, `1.80`, `1.90` | pointer + trigger + crystal grab/handoff |
+| `ambient_intro_04` | `1.100`, `1.110` | invitation / follow |
+| `ambient_intro_05` | `1.120`, `1.130` | threshold / crossing |
+
+Każdy asset ma authored około 5 s fade na początku i końcu. Powtórzenia tego samego cue są planowane zegarem `AudioContext` ze stride `buffer.duration - 5 s`, dzięki czemu ich authored head/tail nachodzą około 5 s bez dodatkowych programowych fade'ów. Powtórzenie aktywnego cue jest NO-OP. Zmiana cue uruchamia incoming natychmiast bez programowego fade-in, a wspólny output outgoing cue wygasza programowo dokładnie 5 s i następnie sprząta wszystkie jego sources.
+
+Główny sequencer jest transientnie disabled podczas Intro. Canonical entry `2.10` emituje handoff: Intro wygasza się przez 5 s, a główna sekwencja zaczyna natychmiast od aktualnego threshold (`ambient_01` dla Tier 1) i zachowuje dalszy istniejący cykl ambient / silence / quiet loop. Reset wyłącza main gate i natychmiast czyści Intro. Audio nie należy do reconstruction/hydration.
+
+`ambient_intro_06.mp3`, `ambient_intro_07.mp3` i `ambient_intro_08.mp3` mają status **RESERVED / UNASSIGNED** i nie posiadają Scenario mappingu.

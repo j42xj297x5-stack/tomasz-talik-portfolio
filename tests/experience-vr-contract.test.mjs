@@ -136,8 +136,8 @@ assert.match(vr, /requestSession\('immersive-vr'/);
 assert.match(vr, /renderer\.setAnimationLoop\(renderFrame\)/);
 assert.match(vr, /renderer\.setAnimationLoop\(null\)/);
 assert.doesNotMatch(vr, /requestAnimationFrame/);
-assert.match(vr, /await renderer\.xr\.setSession\(requestedSession\);\s*xrStartCalibration\.request\(\);/,
-  'session entry defers start calibration to an XR animation frame');
+assert.match(vr, /await renderer\.xr\.setSession\(requestedSession\);\s*runtimeExperience\.activateCurrentPoint\(\);\s*xrStartCalibration\.request\(\);/,
+  'session entry canonically activates 1.10 before deferring start calibration to an XR animation frame');
 assert.match(vr, /readTrackedXrHead[\s\S]*getXrHeadWorldPosition\(\{ renderer, camera, playerRig \}\)[\s\S]*createCanonicalXrStartCalibration\([\s\S]*calibrateXrHeadToPlatform/,
   'the pending frame uses the canonical WebXR matrix reader before calibration');
 assert.doesNotMatch(vr, /renderer\.xr\.getCamera\(camera\)\.getWorldPosition\(/,

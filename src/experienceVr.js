@@ -55,6 +55,7 @@ import { createVrIntroFogReveal } from './xr/guidance/createVrIntroFogReveal.js'
 import { createVrReliquaryHints } from './xr/guidance/createVrReliquaryHints.js';
 import { createVrAudioBridge } from './xr/audio/createVrAudioBridge.js';
 import { createVrAmbientSequencer } from './xr/audio/createVrAmbientSequencer.js';
+import { createVrIntroAmbientSequencer } from './xr/audio/createVrIntroAmbientSequencer.js';
 import { ExperienceDirector } from './xr/progression/ExperienceDirector.js';
 import { RuntimeExperience } from './xr/progression/RuntimeExperience.js';
 import { stateAtVrScenarioPoint } from './xr/progression/reconstructVrScenarioState.js';
@@ -305,6 +306,7 @@ const locomotion = createVrLocomotion({
 });
 const progressionController = createVrProgressionController({ pages: experienceVrPages });
 const ambientSequencer = createVrAmbientSequencer({ bridge: vrAudio });
+const introAmbientSequencer = createVrIntroAmbientSequencer({ bridge: vrAudio });
 function syncAmbientSequence() {
   const fullThreshold = progressionController.getCurrentTier();
   const shellsComplete = furnaceProgressionController.getAsterionSphereProgress().complete;
@@ -664,6 +666,15 @@ runtimeExperience = new RuntimeExperience({
     createDirector: (pointId) => new ExperienceDirector({ scenario: vrExperienceScenario, startPointId: pointId })
   },
   effectHandlers: {
+    [VR_SCENARIO_EFFECT.SET_INTRO_AMBIENT_01]: () => { introAmbientSequencer.setCue('01'); },
+    [VR_SCENARIO_EFFECT.SET_INTRO_AMBIENT_02]: () => { introAmbientSequencer.setCue('02'); },
+    [VR_SCENARIO_EFFECT.SET_INTRO_AMBIENT_03]: () => { introAmbientSequencer.setCue('03'); },
+    [VR_SCENARIO_EFFECT.SET_INTRO_AMBIENT_04]: () => { introAmbientSequencer.setCue('04'); },
+    [VR_SCENARIO_EFFECT.SET_INTRO_AMBIENT_05]: () => { introAmbientSequencer.setCue('05'); },
+    [VR_SCENARIO_EFFECT.BEGIN_MAIN_AMBIENT_SEQUENCE]: () => {
+      introAmbientSequencer.stop();
+      ambientSequencer.enable();
+    },
     [VR_SCENARIO_EFFECT.BEGIN_INTRO_REVEAL]: () => {
       if (!introSequence.beginIntroReveal()) {
         throw new Error('BEGIN_INTRO_REVEAL rejected by Intro actor after accepted Scenario point activation');
@@ -884,6 +895,7 @@ function showReadyState({ ended = false } = {}) {
 function restoreVrScenarioBaseline() {
   runtimeExperience.resetSession();
   ambientSequencer.reset();
+  introAmbientSequencer.reset();
   vrAudio.resetAsterionSphereAudio();
   astroFurnace.resetBaseline();
   furnaceProgressionController.resetBaseline();
@@ -954,6 +966,7 @@ async function enterVr() {
     renderer.xr.setReferenceSpaceType(referenceSpaceType);
     requestedSession.addEventListener('end', handleSessionEnd, { once: true });
     await renderer.xr.setSession(requestedSession);
+    runtimeExperience.activateCurrentPoint();
     xrStartCalibration.request();
     activeSession = requestedSession;
     syncAmbientSequence();
@@ -989,6 +1002,7 @@ window.addEventListener('pagehide', () => {
   unsubscribeAmbientFurnace();
   unsubscribeAmbientAsterion();
   ambientSequencer.dispose();
+  introAmbientSequencer.dispose();
   vrAudio.dispose();
   asterionGyroInteraction.dispose();
   asterionProductionController.dispose();
