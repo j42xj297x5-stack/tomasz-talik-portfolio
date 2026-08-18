@@ -8,7 +8,7 @@ import { createVrHandModeController, VR_LEFT_HAND_MODES } from '../src/xr/input/
 import { VR_EXPERIENCE_POINT, vrExperienceScenario } from '../src/xr/progression/vrExperienceScenario.js';
 
 const canonicalLivePointIds = [
-  '1.10', '1.20', '1.30', '1.40', '1.50', '1.60', '1.70', '1.80',
+  '1.10', '1.20', '1.30', '1.40', '1.50', '1.60', '1.70', '1.80', '1.90',
   '1.100', '1.110', '1.120', '1.130', '2.10', '2.20', '2.30', '2.40',
   '3.10', '3.20', '3.30', '3.40', '3.50', '3.60', '3.70', '3.80', '4.10', '100.10'
 ];
@@ -19,7 +19,7 @@ const retiredPointIds = [
 ];
 assert.deepEqual(vrExperienceScenario.points.map(({ id }) => id), canonicalLivePointIds);
 assert.deepEqual(Object.values(VR_EXPERIENCE_POINT), canonicalLivePointIds);
-assert.equal('1.90' in VR_EXPERIENCE_POINT, false, 'reserved crystal tutorial is not LIVE');
+assert.equal(VR_EXPERIENCE_POINT['1.90'], '1.90', 'crystal tutorial is canonical LIVE');
 for (const retiredId of retiredPointIds) assert.equal(retiredId in VR_EXPERIENCE_POINT, false);
 assert.deepEqual(canonicalLivePointIds.filter((id) => id.startsWith('3.')), ['3.10', '3.20', '3.30', '3.40', '3.50', '3.60', '3.70', '3.80'],
   'authoring stops at the physical Astro claim boundary');

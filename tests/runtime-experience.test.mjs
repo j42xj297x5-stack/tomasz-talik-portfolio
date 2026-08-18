@@ -57,6 +57,8 @@ const productionRuntime = new RuntimeExperience({ director: new ExperienceDirect
   [VR_SCENARIO_EFFECT.BEGIN_POST_REVEAL_SILENCE]: () => productionCalls.push(VR_SCENARIO_EFFECT.BEGIN_POST_REVEAL_SILENCE),
   [VR_SCENARIO_EFFECT.BEGIN_CONTROLLER_ONBOARDING]: () => productionCalls.push(VR_SCENARIO_EFFECT.BEGIN_CONTROLLER_ONBOARDING),
   [VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING]: () => productionCalls.push(VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING),
+  [VR_SCENARIO_EFFECT.BEGIN_INTRO_CRYSTAL_TUTORIAL]: () => productionCalls.push(VR_SCENARIO_EFFECT.BEGIN_INTRO_CRYSTAL_TUTORIAL),
+  [VR_SCENARIO_EFFECT.BEGIN_INTRO_INVITATION]: () => productionCalls.push(VR_SCENARIO_EFFECT.BEGIN_INTRO_INVITATION),
   [VR_SCENARIO_EFFECT.PRESENT_THRESHOLD_CHOICE]: () => productionCalls.push(VR_SCENARIO_EFFECT.PRESENT_THRESHOLD_CHOICE),
   [VR_SCENARIO_EFFECT.APPLY_FOLLOW_PAUSE_STATE]: (change, payload) => { productionCalls.push(VR_SCENARIO_EFFECT.APPLY_FOLLOW_PAUSE_STATE); productionChoicePayloads.push(payload); },
   [VR_SCENARIO_EFFECT.CONTINUE_THRESHOLD_CHOICE]: (change, payload) => { productionCalls.push(VR_SCENARIO_EFFECT.CONTINUE_THRESHOLD_CHOICE); productionChoicePayloads.push(payload); },
@@ -70,14 +72,15 @@ productionRuntime.dispatch(VR_SCENARIO_EVENT.PLAYER_VIEWED_CONTROLS);
 productionRuntime.dispatch(VR_SCENARIO_EVENT.PLAYER_CLOSED_GUIDE);
 productionRuntime.dispatch(VR_SCENARIO_EVENT.MONKEY_HOVERED);
 productionRuntime.dispatch(VR_SCENARIO_EVENT.MONKEY_TRIGGERED);
+productionRuntime.dispatch(VR_SCENARIO_EVENT.INTRO_CRYSTAL_TUTORIAL_COMPLETED);
 const productionInvitationPayload = { choice: 2 };
 productionRuntime.dispatch(VR_SCENARIO_EVENT.INTRO_INVITATION_SELECTED, productionInvitationPayload);
 assert.equal(productionChoicePayloads[0], productionInvitationPayload);
 assert.deepEqual(productionCalls, [VR_SCENARIO_EFFECT.BEGIN_INTRO_REVEAL, VR_SCENARIO_EFFECT.BEGIN_POST_REVEAL_SILENCE,
   VR_SCENARIO_EFFECT.BEGIN_CONTROLLER_ONBOARDING, VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING,
   VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING, VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING,
-  VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING, VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING,
-  VR_SCENARIO_EFFECT.CONTINUE_INTRO_INVITATION]);
+  VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING, VR_SCENARIO_EFFECT.BEGIN_INTRO_CRYSTAL_TUTORIAL,
+  VR_SCENARIO_EFFECT.BEGIN_INTRO_INVITATION, VR_SCENARIO_EFFECT.CONTINUE_INTRO_INVITATION]);
 productionRuntime.dispatch(VR_SCENARIO_EVENT.INTRO_INVITATION_SELECTED, { choice: 1 });
 assert.equal(productionCalls.filter((effect) => effect === VR_SCENARIO_EFFECT.CONTINUE_INTRO_INVITATION).length, 2,
   'natural 1.110 entry executes the follow-Monkey command exactly once after the earlier STAY command');
@@ -166,14 +169,14 @@ const monkeyTriggerEntryCalls = [];
 const monkeyTriggerEntryRuntime = new RuntimeExperience({
   director: new ExperienceDirector({ scenario: vrExperienceScenario, startPointId: '1.100' }),
   effectHandlers: {
-    [VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING]: () => monkeyTriggerEntryCalls.push(VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING)
+    [VR_SCENARIO_EFFECT.BEGIN_INTRO_INVITATION]: () => monkeyTriggerEntryCalls.push(VR_SCENARIO_EFFECT.BEGIN_INTRO_INVITATION)
   }
 });
 const monkeyTriggerEntryChange = monkeyTriggerEntryRuntime.activateCurrentPoint();
-assert.deepEqual(monkeyTriggerEntryChange.effects, [VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING],
+assert.deepEqual(monkeyTriggerEntryChange.effects, [VR_SCENARIO_EFFECT.BEGIN_INTRO_INVITATION],
   'Runtime direct activation executes the authored 1.100 entry contract');
 assert.equal(monkeyTriggerEntryRuntime.activateCurrentPoint(), null);
-assert.deepEqual(monkeyTriggerEntryCalls, [VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING],
+assert.deepEqual(monkeyTriggerEntryCalls, [VR_SCENARIO_EFFECT.BEGIN_INTRO_INVITATION],
   'Runtime executes the 1.100 entry command exactly once');
 
 const followEntryCalls = [];

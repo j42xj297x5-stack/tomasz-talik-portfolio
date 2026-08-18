@@ -8,7 +8,7 @@ import { VR_EXPERIENCE_POINT, VR_SCENARIO_CAPABILITY, VR_SCENARIO_EFFECT, VR_SCE
 assert.equal(Object.isFrozen(vrExperienceScenario), true);
 assert.equal(vrExperienceScenario.points, vrExperienceScenario.scenes);
 assert.equal(vrExperienceScenario.initialPointId, vrExperienceScenario.initialSceneId);
-assert.deepEqual(vrExperienceScenario.points.map(({ id }) => id), ['1.10', '1.20', '1.30', '1.40', '1.50', '1.60', '1.70', '1.80', '1.100', '1.110', '1.120', '1.130', '2.10', '2.20', '2.30', '2.40', '3.10', '3.20', '3.30', '3.40', '3.50', '3.60', '3.70', '3.80', '4.10', '100.10']);
+assert.deepEqual(vrExperienceScenario.points.map(({ id }) => id), ['1.10', '1.20', '1.30', '1.40', '1.50', '1.60', '1.70', '1.80', '1.90', '1.100', '1.110', '1.120', '1.130', '2.10', '2.20', '2.30', '2.40', '3.10', '3.20', '3.30', '3.40', '3.50', '3.60', '3.70', '3.80', '4.10', '100.10']);
 assert.equal(Object.isFrozen(vrExperienceScenario.points[0]), true);
 assert.equal(Object.isFrozen(vrExperienceScenario.points[0].transitions[0]), true);
 assert.equal(Object.isFrozen(vrExperienceScenario.points[0].transitions[0].effects), true);
@@ -124,6 +124,7 @@ const pointOneFifty = vrExperienceScenario.points.find(({ id }) => id === VR_EXP
 const pointOneSixty = vrExperienceScenario.points.find(({ id }) => id === VR_EXPERIENCE_POINT['1.60']);
 const pointOneSeventy = vrExperienceScenario.points.find(({ id }) => id === VR_EXPERIENCE_POINT['1.70']);
 const pointOneEighty = vrExperienceScenario.points.find(({ id }) => id === VR_EXPERIENCE_POINT['1.80']);
+const pointOneNinety = vrExperienceScenario.points.find(({ id }) => id === VR_EXPERIENCE_POINT['1.90']);
 const pointOneHundred = vrExperienceScenario.points.find(({ id }) => id === VR_EXPERIENCE_POINT['1.100']);
 const pointOneHundredTen = vrExperienceScenario.points.find(({ id }) => id === VR_EXPERIENCE_POINT['1.110']);
 assert.deepEqual(pointOneForty.transitions[0].effects, undefined,
@@ -180,14 +181,19 @@ assert.deepEqual(directOneEighty.activateCurrentPoint().effects, pointOneEighty.
 assert.equal(directOneEighty.activateCurrentPoint(), null, 'direct activation executes 1.80 entry exactly once');
 assert.equal(productionDirector.dispatch(VR_SCENARIO_EVENT.MONKEY_HOVERED), null, 'Monkey hover is accepted once');
 const monkeyTriggeredChange = productionDirector.dispatch(VR_SCENARIO_EVENT.MONKEY_TRIGGERED);
-assert.equal(monkeyTriggeredChange.currentPointId, VR_EXPERIENCE_POINT['1.100']);
+assert.equal(monkeyTriggeredChange.currentPointId, VR_EXPERIENCE_POINT['1.90']);
 assert.deepEqual(monkeyTriggeredChange.addedMilestones, []);
 assert.deepEqual(pointOneEighty.transitions[0].effects, undefined,
   '1.80 completion does not own the target beat as a transition-local effect');
-assert.deepEqual(pointOneHundred.entryEffects, [VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING],
-  '1.100 owns the existing onboarding continuation through its entry contract');
-assert.deepEqual(monkeyTriggeredChange.effects, pointOneHundred.entryEffects,
-  'natural entry into 1.100 executes its target-owned entry exactly once');
+assert.deepEqual(pointOneNinety.entryEffects, [VR_SCENARIO_EFFECT.BEGIN_INTRO_CRYSTAL_TUTORIAL]);
+assert.deepEqual(monkeyTriggeredChange.effects, pointOneNinety.entryEffects);
+const handoff = productionDirector.dispatch(VR_SCENARIO_EVENT.INTRO_CRYSTAL_HANDOFF_REQUESTED);
+assert.equal(handoff.currentPointId, VR_EXPERIENCE_POINT['1.90']);
+assert.deepEqual(handoff.effects, [VR_SCENARIO_EFFECT.ACCEPT_INTRO_CRYSTAL_HANDOFF]);
+const tutorialComplete = productionDirector.dispatch(VR_SCENARIO_EVENT.INTRO_CRYSTAL_TUTORIAL_COMPLETED);
+assert.equal(tutorialComplete.currentPointId, VR_EXPERIENCE_POINT['1.100']);
+assert.deepEqual(tutorialComplete.effects, [VR_SCENARIO_EFFECT.BEGIN_INTRO_INVITATION]);
+assert.deepEqual(pointOneHundred.entryEffects, [VR_SCENARIO_EFFECT.BEGIN_INTRO_INVITATION]);
 const directOneHundred = new ExperienceDirector({ scenario: vrExperienceScenario, startPointId: VR_EXPERIENCE_POINT['1.100'] });
 assert.deepEqual(directOneHundred.activateCurrentPoint().effects, pointOneHundred.entryEffects,
   'direct activation of 1.100 uses the same target entry contract');
@@ -374,6 +380,7 @@ assert.equal(vrExperienceScenario.points.some(({ transitions }) => transitions.s
 
 const settledFirstDirector = new ExperienceDirector({ scenario: vrExperienceScenario });
 for (const event of [VR_SCENARIO_EVENT.XR_CALIBRATED, VR_SCENARIO_EVENT.INTRO_REVEAL_COMPLETE, VR_SCENARIO_EVENT.POST_REVEAL_SILENCE_COMPLETE, VR_SCENARIO_EVENT.PLAYER_OPENED_GUIDE, VR_SCENARIO_EVENT.PLAYER_VIEWED_CONTROLS, VR_SCENARIO_EVENT.PLAYER_CLOSED_GUIDE, VR_SCENARIO_EVENT.MONKEY_HOVERED, VR_SCENARIO_EVENT.MONKEY_TRIGGERED]) settledFirstDirector.dispatch(event);
+settledFirstDirector.dispatch(VR_SCENARIO_EVENT.INTRO_CRYSTAL_TUTORIAL_COMPLETED);
 settledFirstDirector.dispatch(VR_SCENARIO_EVENT.INTRO_INVITATION_SELECTED, { choice: 1 });
 settledFirstDirector.dispatch(VR_SCENARIO_EVENT.MONKEY_REACHED_THRESHOLD);
 settledFirstDirector.dispatch(VR_SCENARIO_EVENT.THRESHOLD_SELECTED, { choice: 1 });
@@ -401,6 +408,7 @@ assert.deepEqual(settledFirstDirector.dispatch(VR_SCENARIO_EVENT.MONKEY_TRIGGERE
 const reachInvitation = (director) => {
   director.resetSession();
   for (const event of [VR_SCENARIO_EVENT.XR_CALIBRATED, VR_SCENARIO_EVENT.INTRO_REVEAL_COMPLETE, VR_SCENARIO_EVENT.POST_REVEAL_SILENCE_COMPLETE, VR_SCENARIO_EVENT.PLAYER_OPENED_GUIDE, VR_SCENARIO_EVENT.PLAYER_VIEWED_CONTROLS, VR_SCENARIO_EVENT.PLAYER_CLOSED_GUIDE, VR_SCENARIO_EVENT.MONKEY_HOVERED, VR_SCENARIO_EVENT.MONKEY_TRIGGERED]) assert.notEqual(director.dispatch(event), null);
+  assert.notEqual(director.dispatch(VR_SCENARIO_EVENT.INTRO_CRYSTAL_TUTORIAL_COMPLETED), null);
 };
 reachInvitation(productionDirector);
 assert.equal(productionDirector.dispatch(VR_SCENARIO_EVENT.MONKEY_REACHED_THRESHOLD), null, 'threshold arrival is rejected before FOLLOWING');

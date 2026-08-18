@@ -12,7 +12,7 @@ Spine posiada kolejność mainline, Scenario punkty/events/effects/capabilities,
 
 ```text
 1.10 → 1.20 → 1.30 → 1.40 → 1.50 → 1.60 → 1.70 → 1.80
-→ 1.100 → 1.110 → 1.120 → 1.130
+→ 1.90 → 1.100 → 1.110 → 1.120 → 1.130
 → 2.10 → 2.20 → 2.30 → 2.40
 → 3.10 → 3.20 → 3.30 → 3.40 → 3.50 → 3.60 → 3.70 → 3.80 → 4.10 → 100.10
 ```
@@ -20,6 +20,8 @@ Spine posiada kolejność mainline, Scenario punkty/events/effects/capabilities,
 `100.10` jest pełnoprawnym canonical terminalem authored mainline i częścią fabuły. Prowadzi do niego zarówno normalne zakończenie obecnie authored flow po `4.10`, jak i wcześniejsze jawne drogi wyjścia. Terminal pozostaje niedozwolonym celem reconstruction/checkpoint start. WHERE, FOLLOW pause, BEYOND i hinty są lokalnymi `STAY`, nie dodatkowymi technical points.
 
 ## Intro i pierwszy ring
+
+`1.90` jest pojedynczym transient beatem nauki zwykłego ray + grip: samowystarczalne entry tworzy wodny kryształ tutorialowy, a zaakceptowany lokalny handoff uruchamia istniejący consume lifecycle bez strony, Reliquary i progression. Po rzeczywistym zakończeniu finalnej kwestii semantic completion prowadzi przez Spine do samowystarczalnego invitation entry `1.100`. Point nie ma settled consequences i nie jest debug macro checkpointem.
 
 `1.130` kończy się dopiero, gdy Intro actor potwierdzi łącznie `playerEnteredRing` i `monkeySettled`. `2.10` prowadzi przez pierwszy kryształ, `2.20` przez świadome uruchomienie Małpy i fizyczny reveal Reliquary, a `2.30` obejmuje pełny loop pięciu pierwszych kart. `createVrProgressionController` jest jedynym źródłem trwałego `5/5`.
 

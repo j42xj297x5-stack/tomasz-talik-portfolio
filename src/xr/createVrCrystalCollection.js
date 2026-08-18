@@ -209,6 +209,11 @@ export function createVrCrystalCollection({ scene, assetManager, controllers, po
       instance.state = 'available';
       return instance;
     }
+    if (instance.transient) {
+      scene.attach(instance.object);
+      instance.state = 'available';
+      return instance;
+    }
     instance.model.updateWorldMatrix(true, true);
     const crystalCenter = new THREE.Box3().setFromObject(instance.model).getCenter(rayOrigin);
     const insertionSphere = insertionTarget?.hasValidInsertZone
@@ -377,6 +382,63 @@ export function createVrCrystalCollection({ scene, assetManager, controllers, po
     }).filter(Boolean);
   }
 
+  function spawnTransientTutorialCrystal(definition, spawnPosition) {
+    if (!definition || instances.some((instance) => instance.transient && instance.state !== 'released')) return null;
+    const instance = spawnOne(definition, {
+      glyphWorldPosition: spawnPosition,
+      centerWorldPosition: spawnPosition
+    });
+    if (!instance) return null;
+    instance.transient = true;
+    instance.progressionEligible = false;
+    delete instance.glyphId;
+    delete instance.tier;
+    instance.targetPosition.copy(spawnPosition);
+    instance.object.position.x = spawnPosition.x;
+    instance.object.position.z = spawnPosition.z;
+    return instance;
+  }
+
+  function isHeld(instance) {
+    return Boolean(instance?.transient && instance.heldBy && heldByController.get(instance.heldBy) === instance
+      && ['pulling', 'held'].includes(instance.state));
+  }
+
+  function getWorldPosition(instance, target = new THREE.Vector3()) {
+    return instance?.object?.getWorldPosition(target) ?? target.setScalar(Infinity);
+  }
+
+  function takeoverAndConsumeTransient(instance) {
+    if (!instance?.transient || instance.state === 'consuming' || instance.state === 'released') return false;
+    if (!isHeld(instance)) return false;
+    heldByController.delete(instance.heldBy);
+    instance.heldBy = null;
+    scene.attach(instance.object);
+    instance.state = 'consuming';
+    instance.consumeElapsed = 0;
+    instance.consumeStartScale = instance.object.scale.clone();
+    instance.consumeStartYaw = instance.object.rotation.y;
+    createConsumeEffect(instance);
+    return true;
+  }
+
+  function removeTransientCrystal(instance) {
+    if (!instance?.transient) return false;
+    if (instance.heldBy) heldByController.delete(instance.heldBy);
+    instance.heldBy = null;
+    setHighlighted(instance, false);
+    removeConsumeEffect(instance);
+    instance.halo.dispose();
+    instance.state = 'released';
+    instance.object.visible = false;
+    instance.object.removeFromParent();
+    instance.object.traverse((child) => objectToCrystal.delete(child));
+    const index = instances.indexOf(instance);
+    if (index >= 0) instances.splice(index, 1);
+    controllers.forEach((record) => { if (record.currentCrystalHit === instance) clearControllerHit(record); });
+    return true;
+  }
+
   function update(delta = 0) {
     if (disposed || !instances.length) {
       controllers.forEach(clearControllerHit);
@@ -523,6 +585,7 @@ export function createVrCrystalCollection({ scene, assetManager, controllers, po
     listeners.length = 0;
   }
 
-  return { instances, heldByController, spawn, spawnOne, update, grab, release, getInsertedInstance, activateInserted,
+  return { instances, heldByController, spawn, spawnOne, spawnTransientTutorialCrystal, isHeld, getWorldPosition,
+    takeoverAndConsumeTransient, removeTransientCrystal, update, grab, release, getInsertedInstance, activateInserted,
     releaseInserted, reset, hydrateScenarioState, dispose };
 }
