@@ -49,6 +49,20 @@ function harness(canGrabController = () => true, canUseReliquary = () => true) {
 }
 
 const stocked = harness();
+const tutorialDefinition = experienceVrPages.find((page) => page.glyphId === 'haiku-cosmos' && page.order === 1);
+const tutorialCrystal = stocked.collection.spawnTransientTutorialCrystal(tutorialDefinition, new THREE.Vector3(0, 1, -1));
+assert.equal(tutorialCrystal.transient, true);
+assert.equal(tutorialCrystal.progressionEligible, false);
+assert.equal('tier' in tutorialCrystal, false); assert.equal('pageId' in tutorialCrystal, false);
+stocked.collection.update(1); stocked.record.currentCrystalHit = tutorialCrystal; stocked.record.currentCrystalHitDistance = 0.1;
+assert.equal(stocked.collection.grab(stocked.record), tutorialCrystal, 'tutorial crystal reuses ordinary grab');
+stocked.collection.update(1); assert.equal(stocked.collection.isHeld(tutorialCrystal), true);
+assert.equal(stocked.collection.takeoverAndConsumeTransient(tutorialCrystal), true);
+assert.equal(stocked.collection.takeoverAndConsumeTransient(tutorialCrystal), false, 'takeover is idempotent');
+assert.equal(stocked.collection.heldByController.has(stocked.record), false);
+assert.equal(tutorialCrystal.state, 'consuming'); assert.ok(tutorialCrystal.consumeEffect, 'tutorial takeover reuses consume lifecycle');
+assert.equal(stocked.progressionController.getActivatedPageIds().length, 0);
+stocked.collection.update(1); assert.equal(tutorialCrystal.state, 'released');
 const crystals = [1, 2, 3].map(() => stocked.collection.spawnOne('creative-ai', glyphFrame));
 assert.deepEqual(crystals.map(({ tier }) => tier), [1, 2, 3]);
 assert.ok(crystals[0].targetPosition.distanceTo(calculatedSpawn) < 1e-8);

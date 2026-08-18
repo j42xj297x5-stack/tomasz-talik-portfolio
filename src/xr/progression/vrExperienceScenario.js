@@ -21,6 +21,8 @@ export const VR_SCENARIO_EVENT = immutableIdentifiers([
   'PLAYER_CLOSED_GUIDE',
   'MONKEY_HOVERED',
   'MONKEY_TRIGGERED',
+  'INTRO_CRYSTAL_HANDOFF_REQUESTED',
+  'INTRO_CRYSTAL_TUTORIAL_COMPLETED',
   'INTRO_INVITATION_SELECTED',
   'FOLLOW_PAUSE_CHANGED',
   'MONKEY_REACHED_THRESHOLD',
@@ -115,6 +117,9 @@ export const VR_SCENARIO_EFFECT = immutableIdentifiers([
   'BEGIN_POST_REVEAL_SILENCE',
   'BEGIN_CONTROLLER_ONBOARDING',
   'CONTINUE_CONTROLLER_ONBOARDING',
+  'BEGIN_INTRO_CRYSTAL_TUTORIAL',
+  'ACCEPT_INTRO_CRYSTAL_HANDOFF',
+  'BEGIN_INTRO_INVITATION',
   'CONTINUE_INTRO_INVITATION',
   'APPLY_FOLLOW_PAUSE_STATE',
   'PRESENT_THRESHOLD_CHOICE',
@@ -152,6 +157,7 @@ export const VR_EXPERIENCE_POINT = immutableIdentifiers([
   '1.60',
   '1.70',
   '1.80',
+  '1.90',
   '1.100',
   '1.110',
   '1.120',
@@ -323,7 +329,7 @@ const points = Object.freeze([
   }),
   Object.freeze({
     id: VR_EXPERIENCE_POINT['1.80'],
-    canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['1.100'] }),
+    canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['1.90'] }),
     settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
     label: 'Monkey wskazany / oczekiwanie na trigger',
     capabilities: Object.freeze([]),
@@ -336,12 +342,29 @@ const points = Object.freeze([
     ])
   }),
   Object.freeze({
+    id: VR_EXPERIENCE_POINT['1.90'],
+    canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['1.100'] }),
+    settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
+    label: 'Tutorial chwytania i podania kryształu Monkey',
+    capabilities: Object.freeze([]),
+    entryEffects: Object.freeze([VR_SCENARIO_EFFECT.BEGIN_INTRO_CRYSTAL_TUTORIAL]),
+    transitions: Object.freeze([
+      Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.STAY,
+        event: VR_SCENARIO_EVENT.INTRO_CRYSTAL_HANDOFF_REQUESTED,
+        milestonesToAdd: Object.freeze([]),
+        effects: Object.freeze([VR_SCENARIO_EFFECT.ACCEPT_INTRO_CRYSTAL_HANDOFF]) }),
+      Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.COMPLETE,
+        event: VR_SCENARIO_EVENT.INTRO_CRYSTAL_TUTORIAL_COMPLETED,
+        milestonesToAdd: Object.freeze([]) })
+    ])
+  }),
+  Object.freeze({
     id: VR_EXPERIENCE_POINT['1.100'],
     canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['1.110'] }),
     settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
     label: 'Sekwencja po triggerze / invitation / oczekiwanie na wybór',
     capabilities: Object.freeze([]),
-    entryEffects: Object.freeze([VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING]),
+    entryEffects: Object.freeze([VR_SCENARIO_EFFECT.BEGIN_INTRO_INVITATION]),
     transitions: Object.freeze([
       Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.COMPLETE, event: VR_SCENARIO_EVENT.INTRO_INVITATION_SELECTED, choice: 1, milestonesToAdd: Object.freeze([]) }),
       Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.STAY, event: VR_SCENARIO_EVENT.INTRO_INVITATION_SELECTED, choice: 2, milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.CONTINUE_INTRO_INVITATION]) }),

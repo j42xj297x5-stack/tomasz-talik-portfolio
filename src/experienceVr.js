@@ -50,6 +50,7 @@ import { createVrMonkeyGuide } from './xr/guidance/createVrMonkeyGuide.js';
 import { createVrPostRingMonkeyDialogue } from './xr/guidance/createVrPostRingMonkeyDialogue.js';
 import { createVrFurnaceIntro } from './xr/guidance/createVrFurnaceIntro.js';
 import { createVrIntroSequence } from './xr/guidance/createVrIntroSequence.js';
+import { createVrIntroCrystalTutorial } from './xr/guidance/createVrIntroCrystalTutorial.js';
 import { createVrIntroFogReveal } from './xr/guidance/createVrIntroFogReveal.js';
 import { createVrReliquaryHints } from './xr/guidance/createVrReliquaryHints.js';
 import { createVrAudioBridge } from './xr/audio/createVrAudioBridge.js';
@@ -398,6 +399,7 @@ const monkeyGuide = createVrMonkeyGuide({
     && !(asterionSphere.isEquipped() && record.handedness === 'left')
 });
 let introSequence = null;
+let introCrystalTutorial = null;
 let astroFurnaceActivateInteraction = null;
 let astroFurnaceContentInteraction = null;
 let astroFurnaceOptionInteraction = null;
@@ -621,6 +623,18 @@ introSequence = createVrIntroSequence({
   },
   onEndSession: () => { void activeSession?.end(); }
 });
+introCrystalTutorial = createVrIntroCrystalTutorial({
+  monkeyGuide,
+  monkeyRoot: monkeyMotionRoot,
+  getPlayerPosition: () => getXrHeadWorldPosition({ renderer, camera, playerRig }),
+  crystalCollection,
+  crystalDefinition: experienceVrPages.find((page) => page.glyphId === 'haiku-cosmos' && page.order === 1),
+  settings: { ...settings.introCrystalTutorial, messageDisplayDuration: settings.intro.messageDisplayDuration },
+  locale: language,
+  playConsume: () => playVrWorld(VR_AUDIO.reliquaryConsume),
+  onHandoffRequested: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.INTRO_CRYSTAL_HANDOFF_REQUESTED),
+  onCompleted: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.INTRO_CRYSTAL_TUTORIAL_COMPLETED)
+});
 
 const experienceDirector = new ExperienceDirector({ scenario: vrExperienceScenario });
 const postRingPresentation = createVrPostRingPresentation({ glyphRing, shellSystem,
@@ -670,6 +684,15 @@ runtimeExperience = new RuntimeExperience({
       if (!introSequence.continueControllerOnboarding()) {
         throw new Error('CONTINUE_CONTROLLER_ONBOARDING rejected by Intro actor after accepted Scenario transition');
       }
+    },
+    [VR_SCENARIO_EFFECT.BEGIN_INTRO_CRYSTAL_TUTORIAL]: () => {
+      if (!introCrystalTutorial.begin()) throw new Error('BEGIN_INTRO_CRYSTAL_TUTORIAL rejected by tutorial actor');
+    },
+    [VR_SCENARIO_EFFECT.ACCEPT_INTRO_CRYSTAL_HANDOFF]: () => {
+      if (!introCrystalTutorial.acceptHandoff()) throw new Error('ACCEPT_INTRO_CRYSTAL_HANDOFF rejected by tutorial actor');
+    },
+    [VR_SCENARIO_EFFECT.BEGIN_INTRO_INVITATION]: () => {
+      if (!introSequence.beginInvitation()) throw new Error('BEGIN_INTRO_INVITATION rejected by Intro actor');
     },
     [VR_SCENARIO_EFFECT.CONTINUE_INTRO_INVITATION]: (change, payload) => {
       if (!introSequence.continueInvitation(payload.choice)) {
@@ -805,6 +828,7 @@ function renderFrame() {
   playerGuidePanel.update(delta);
   monkeyGuide.update(delta);
   introSequence.update(delta);
+  introCrystalTutorial.update(delta);
   crystalReliquary.update(delta);
   portalDisplay.update(delta);
   locomotion.setLeftYawLocked(playerGuidePanel.isOpen());
@@ -902,6 +926,7 @@ function restoreVrScenarioBaseline() {
   monkeyStoneRoot.visible = true;
   monkeyVisualRoot.visible = true;
   introSequence.reset();
+  introCrystalTutorial.reset();
 }
 
 function handleSessionEnd() {
@@ -959,6 +984,7 @@ enterButton.addEventListener('click', enterVr);
 exitButton.addEventListener('click', () => { void activeSession?.end(); });
 window.addEventListener('pagehide', () => {
   runtimeExperience.dispose();
+  introCrystalTutorial.dispose();
   introFogReveal.dispose();
   unsubscribeAmbientFurnace();
   unsubscribeAmbientAsterion();

@@ -25,7 +25,7 @@ function reachThreshold(value) {
   value.panel.open = true; value.sequence.update(0); assert.equal(value.sequence.continueControllerOnboarding(), true); value.panel.section = 'controls'; value.panel.view = 'DETAIL'; value.sequence.update(0);
   assert.equal(value.sequence.continueControllerOnboarding(), true);
   value.panel.open = false; value.sequence.update(0); assert.equal(value.sequence.continueControllerOnboarding(), true); for (let i = 0; i < 10; i += 1) value.sequence.update(.01);
-  value.getOverride().onMonkeyHover(); assert.equal(value.sequence.continueControllerOnboarding(), true); value.getOverride().onMonkeyPress(); assert.equal(value.sequence.continueControllerOnboarding(), true); for (let i = 0; i < 8; i += 1) value.sequence.update(.01);
+  value.getOverride().onMonkeyHover(); assert.equal(value.sequence.continueControllerOnboarding(), true); value.getOverride().onMonkeyPress(); assert.equal(value.sequence.beginInvitation(), true); for (let i = 0; i < 8; i += 1) value.sequence.update(.01);
   value.getOverride().onSelect('go'); assert.equal(value.sequence.continueInvitation(1), true);
   for (let i = 0; i < 30 && value.sequence.getState() === VR_INTRO_STATE.FOLLOWING; i += 1) {
     value.head.copy(value.monkeyMotionRoot.getWorldPosition(new THREE.Vector3())); value.sequence.update(.5);
@@ -124,9 +124,10 @@ assert.equal(f.getMonkeyTriggered(), 1, 'runtime wait emits Monkey trigger exact
 assert.equal(f.sequence.getState(), VR_INTRO_STATE.WAIT_RUNTIME_AFTER_MONKEY_TRIGGERED);
 assert.equal(f.getMessage(), VR_INTRO_COPY.en.trigger, 'seen flow remains stopped before Runtime continuation');
 assert.equal(f.getOverride().options, undefined, 'invitation options are not installed before Runtime continuation');
-assert.equal(f.sequence.continueControllerOnboarding(), true); assert.equal(f.sequence.continueControllerOnboarding(), false);
+assert.equal(f.sequence.continueControllerOnboarding(), false, 'tutorial boundary no longer continues private post-trigger state');
+assert.equal(f.sequence.beginInvitation(), true);
 for (let i = 0; i < 8; i += 1) f.sequence.update(.01);
-assert.equal(f.getMessage(), VR_INTRO_COPY.en.going, 'legacy seen sequence and invitation question remain unchanged');
+assert.equal(f.getMessage(), VR_INTRO_COPY.en.going, 'self-contained invitation starts the existing question');
 f.getOverride().onSelect('go');
 assert.equal(f.sequence.getState(), VR_INTRO_STATE.WAIT_RUNTIME_AFTER_INVITATION_SELECTED);
 assert.deepEqual(f.getInvitationChoices(), [1]);

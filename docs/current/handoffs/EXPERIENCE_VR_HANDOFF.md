@@ -4,7 +4,7 @@ Status: **CURRENT**. Operacyjny obraz dla następnego architekta; canonical mode
 
 ## IMPLEMENTED
 
-- Intro `1.10–1.130`, pierwszy crystal, świadomy Monkey trigger i Reliquary reveal (`2.10–2.20`).
+- Intro `1.10–1.130`, w tym `1.90` z transient wodnym kryształem uczącym zwykłego chwytu i handoffu bez progression; `1.100` rozpoczyna invitation samowystarczalnym entry. Pierwszy progression crystal, świadomy Monkey trigger i Reliquary reveal pozostają w `2.10–2.20`.
 - Pełny loop pięciu kart Tier 1 w `2.30`.
 - First-ring bridge: trwałe `5/5` → `FIRST_RING_COMPLETED` → `2.40`; `createVrFirstRingFlow` posiada presentation/audio seam, a dopiero `FIRST_RING_PRESENTATION_COMPLETED` prowadzi do `3.10`.
 - `3.10`: jednokrotna aktywacja point-entry uruchamia reveal widocznego, jeszcze nieinteraktywnego pola skorup i elevację głównych glifów; punkt czeka na rzeczywiste zakończenie prezentacji.
