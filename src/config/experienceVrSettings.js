@@ -199,7 +199,7 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
     questionGapDuration: 2.0
   },
   introCrystalTutorial: {
-    spawnDistanceFromMonkey: 1.0,
+    spawnRadius: 19.0,
     handoffDistanceFromMonkey: 0.5
   },
   portal: {

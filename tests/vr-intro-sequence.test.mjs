@@ -47,6 +47,19 @@ assert.deepEqual(VR_INTRO_COPY.pl.opening, ['Dobrze.', 'Masz ręce.', 'Sprawdźm
 assert.equal(VR_INTRO_COPY.pl.panelPrompt, 'Naciśnij Y, żeby wejść do menu.');
 assert.equal(VR_INTRO_COPY.en.panelPrompt, 'Press Y to open the menu.');
 const f = fixture(); assert.equal(f.sequence.getState(), VR_INTRO_STATE.XR_CALIBRATING);
+const monkeyStart = f.sequence.getWorldPointAtRadius(18);
+const crystalTutorial = f.sequence.getWorldPointAtRadius(19);
+const playerStart = f.sequence.getWorldPointAtRadius(20);
+assert.equal(Math.hypot(monkeyStart.x, monkeyStart.z), 18);
+assert.equal(Math.hypot(crystalTutorial.x, crystalTutorial.z), 19);
+assert.equal(Math.hypot(playerStart.x, playerStart.z), 20);
+assert.equal(monkeyStart.y, crystalTutorial.y); assert.equal(crystalTutorial.y, playerStart.y,
+  'canonical radial points preserve the Intro floor-relative height');
+assert.ok(crystalTutorial.clone().sub(monkeyStart).cross(playerStart.clone().sub(crystalTutorial)).lengthSq() < 1e-8,
+  'radii 18, 19 and 20 share one radial axis');
+f.head.set(90, 4, -70);
+assert.deepEqual(f.sequence.getWorldPointAtRadius(19).toArray(), crystalTutorial.toArray(),
+  'physical headset offset does not move a canonical radial point');
 assert.equal(f.locomotion.resetCalls, 0, 'Intro initialization does not reset the locomotion owner');
 assert.equal(f.sector.visible, true, 'normal Intro initialization does not hide floor sectors');
 f.sector.visible = false; f.sequence.reset();
