@@ -373,7 +373,6 @@ const astroAttractorProductionController = createVrAstroAttractorProductionContr
   canRequest: () => runtimeExperience.can(VR_SCENARIO_CAPABILITY.CAN_START_FURNACE_PROCESS),
   settings: { ...settings.asterionSphere.production, contentClearance: settings.furnace.content.contentClearance },
   haloSettings: settings.targetHalo,
-  onRequested: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.ASTRO_ATTRACTOR_PRODUCTION_REQUESTED),
   onProduced: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.ASTRO_ATTRACTOR_PRODUCED),
   onClaimed: () => { runtimeExperience.dispatch(VR_SCENARIO_EVENT.ASTRO_ATTRACTOR_CLAIMED);
     shellSystem.setInteractionEnabled(runtimeExperience.can(VR_SCENARIO_CAPABILITY.CAN_TARGET_SHELLS));
@@ -414,7 +413,10 @@ const furnacePanel = createVrAstroFurnacePanel({
   parent: platformFixturesRoot, furnace: astroFurnace, controllers: vrControllers.controllers,
   progressionController: furnaceProgressionController, productionController: asterionProductionController,
   astroProductionController: astroAttractorProductionController,
-  canUseAstroProduction: () => runtimeExperience?.getCurrentPointId() === '3.50',
+  canUseAstroProduction: () => runtimeExperience.can(VR_SCENARIO_CAPABILITY.CAN_START_FURNACE_PROCESS),
+  requestAstroProduction: () => runtimeExperience.dispatch(
+    VR_SCENARIO_EVENT.ASTRO_ATTRACTOR_PRODUCTION_REQUESTED
+  ) !== null,
   asterionModel: asterionSphere.object, settings: settings.furnace.panel,
   processSource: createVrAstroFurnaceProcessSource(() => astroFurnaceActivateInteraction),
   contentSource: {
@@ -795,6 +797,11 @@ runtimeExperience = new RuntimeExperience({
     [VR_SCENARIO_EFFECT.BEGIN_MONKEY_ATTENTION]: () => { postRingMonkeyDialogue.begin(); },
     [VR_SCENARIO_EFFECT.BEGIN_FURNACE_INTRO]: () => {
       if (!furnaceIntro.begin()) throw new Error('BEGIN_FURNACE_INTRO rejected by Furnace intro actor');
+    },
+    [VR_SCENARIO_EFFECT.BEGIN_ASTRO_ATTRACTOR_CONSTRUCTION]: () => {
+      if (!astroAttractorProductionController.beginConstruction()) {
+        throw new Error('BEGIN_ASTRO_ATTRACTOR_CONSTRUCTION accepted Scenario command rejected by Astro production actor');
+      }
     }
   }
 });

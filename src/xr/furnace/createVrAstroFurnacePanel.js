@@ -21,6 +21,7 @@ export const wireframeDissolveVisible = (segment, progress) => progress < 1 && s
 
 export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], progressionController, processSource, contentSource,
   productionController = null, astroProductionController = null, canUseAstroProduction = () => false,
+  requestAstroProduction = () => false,
   asterionModel = null, settings = {}, onEnterModule = () => {}, onReturnHome = () => {}, onCreate = () => {} }) {
   const config = { width: 1.55, height: 1.05, gapFromFurnace: 0.10, verticalOffset: 0.15, yawDegrees: -12,
     canvasWidth: 1536, canvasHeight: 1024, appearDuration: 0.32, disappearDuration: 0.20,
@@ -253,8 +254,9 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
     moduleListeners.forEach((listener) => listener('floor_gyroscope_sphere'));
     onEnterModule();
   } else if (id === 'module-astro-attractor') {
+    if (!canUseAstroProduction() || astroProductionController?.canCreate?.() !== true) return false;
+    if (requestAstroProduction() !== true) return false;
     moduleListeners.forEach((listener) => listener('astro_attractor'));
-    if (!canUseAstroProduction() || !astroProductionController?.requestCreate?.()) return false;
     onCreate();
   } else if (id === 'back-modules') { screen = ASTRO_FURNACE_PANEL_SCREENS.HOME; onReturnHome(); }
   else if (id === 'create-asterion') { if (!productionController?.requestCreate?.()) return false; onCreate(); }
