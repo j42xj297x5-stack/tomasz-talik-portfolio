@@ -121,7 +121,8 @@ milkyWayBackground.update(0, camera);
 galaxyBackgroundScene.add(milkyWayBackground.group);
 galaxyBackgroundScene.add(galaxyLayer.group);
 
-await loadMonkeyModel({ actorParent: scene, fixtureParent: scene, fallbackObject: centralPlaceholder, assetManager });
+const monkeyActor = await loadMonkeyModel({ actorParent: scene, fixtureParent: scene, fallbackObject: centralPlaceholder, assetManager });
+monkeyActor.dockStoneToCharacter();
 
 const { group: orbitGroup, nodes, orbit } = createOrbitNodes(portfolioNodes, { assetManager });
 scene.add(orbitGroup);
