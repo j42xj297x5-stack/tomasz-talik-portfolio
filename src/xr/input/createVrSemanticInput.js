@@ -3,7 +3,8 @@ const XR_STANDARD_BUTTONS = Object.freeze({
   grabAction: 1,
   toggleLeftTool: 4,
   togglePlayerGuidePanel: 5,
-  toggleRightTool: 4
+  toggleRightTool: 4,
+  switchRightToolBand: 5
 });
 
 const clamp01 = (value) => Math.min(1, Math.max(0, Number.isFinite(value) ? value : 0));
@@ -16,10 +17,12 @@ export function createVrSemanticInput({ renderer }) {
   let previousLeftTogglePressed = false;
   let previousRightTogglePressed = false;
   let previousPlayerGuideTogglePressed = false;
+  let previousRightBandSwitchPressed = false;
   const state = {
     toggleLeftTool: false,
     toggleRightTool: false,
     togglePlayerGuidePanel: false,
+    switchRightToolBand: false,
     primaryAction: 0,
     grabAction: 0,
     leftPrimaryAction: 0,
@@ -36,10 +39,12 @@ export function createVrSemanticInput({ renderer }) {
     const leftTogglePressed = Boolean(leftButtons[XR_STANDARD_BUTTONS.toggleLeftTool]?.pressed);
     const rightTogglePressed = Boolean(rightButtons[XR_STANDARD_BUTTONS.toggleRightTool]?.pressed);
     const playerGuideTogglePressed = Boolean(leftButtons[XR_STANDARD_BUTTONS.togglePlayerGuidePanel]?.pressed);
+    const rightBandSwitchPressed = Boolean(rightButtons[XR_STANDARD_BUTTONS.switchRightToolBand]?.pressed);
     const leftAxes = leftSource?.gamepad?.axes ?? [];
     state.toggleLeftTool = leftTogglePressed && !previousLeftTogglePressed;
     state.toggleRightTool = rightTogglePressed && !previousRightTogglePressed;
     state.togglePlayerGuidePanel = playerGuideTogglePressed && !previousPlayerGuideTogglePressed;
+    state.switchRightToolBand = rightBandSwitchPressed && !previousRightBandSwitchPressed;
     state.primaryAction = clamp01(rightButtons[XR_STANDARD_BUTTONS.primaryAction]?.value);
     state.grabAction = clamp01(rightButtons[XR_STANDARD_BUTTONS.grabAction]?.value);
     state.leftPrimaryAction = clamp01(leftButtons[XR_STANDARD_BUTTONS.primaryAction]?.value);
@@ -48,6 +53,7 @@ export function createVrSemanticInput({ renderer }) {
     previousLeftTogglePressed = leftTogglePressed;
     previousRightTogglePressed = rightTogglePressed;
     previousPlayerGuideTogglePressed = playerGuideTogglePressed;
+    previousRightBandSwitchPressed = rightBandSwitchPressed;
     return state;
   }
 
@@ -55,9 +61,11 @@ export function createVrSemanticInput({ renderer }) {
     previousLeftTogglePressed = false;
     previousRightTogglePressed = false;
     previousPlayerGuideTogglePressed = false;
+    previousRightBandSwitchPressed = false;
     state.toggleLeftTool = false;
     state.toggleRightTool = false;
     state.togglePlayerGuidePanel = false;
+    state.switchRightToolBand = false;
     state.primaryAction = 0;
     state.grabAction = 0;
     state.leftPrimaryAction = 0;

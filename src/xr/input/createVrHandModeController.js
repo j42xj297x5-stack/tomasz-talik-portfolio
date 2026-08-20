@@ -1,3 +1,5 @@
+import { VR_ATTRACTOR_STATES } from '../tools/createVrAttractorTool.js';
+
 export const VR_RIGHT_HAND_MODES = Object.freeze({
   NORMAL_HAND: 'NORMAL_HAND',
   ASTRO_ATTRACTOR: 'ASTRO_ATTRACTOR'
@@ -8,6 +10,11 @@ export const VR_LEFT_HAND_MODES = Object.freeze({
   ASTERION_SPHERE: 'ASTERION_SPHERE'
 });
 
+export const VR_ATTRACTOR_BANDS = Object.freeze({
+  SHELLS: 'SHELLS',
+  SMALL_GLYPHS: 'SMALL_GLYPHS'
+});
+
 export function createVrHandModeController({
   controllers,
   semanticInput,
@@ -15,10 +22,22 @@ export function createVrHandModeController({
   asterionSphere = null,
   isUnlocked,
   isAsterionAvailable = () => false,
-  isLeftToolToggleBlocked = () => false
+  isLeftToolToggleBlocked = () => false,
+  canSwitchAttractorBand = () => false
 }) {
   let rightMode = VR_RIGHT_HAND_MODES.NORMAL_HAND;
   let leftMode = VR_LEFT_HAND_MODES.NORMAL_HAND;
+  let attractorBand = VR_ATTRACTOR_BANDS.SHELLS;
+
+  function setAttractorBand(nextBand) {
+    if (attractorBand === nextBand) return;
+    attractorBand = nextBand;
+    attractorTool.setTarget(null);
+    attractorTool.setPullStrength(0);
+    if (rightMode === VR_RIGHT_HAND_MODES.ASTRO_ATTRACTOR) {
+      attractorTool.setState(VR_ATTRACTOR_STATES.IDLE);
+    }
+  }
 
   function update(deltaSeconds) {
     const input = semanticInput.update();
@@ -31,12 +50,21 @@ export function createVrHandModeController({
     attractorTool.attachToTargetRay(rightRecord?.controller ?? null);
 
     if (!unlocked && rightMode !== VR_RIGHT_HAND_MODES.NORMAL_HAND) setRightMode(VR_RIGHT_HAND_MODES.NORMAL_HAND);
+    if (canSwitchAttractorBand() !== true && attractorBand !== VR_ATTRACTOR_BANDS.SHELLS) {
+      setAttractorBand(VR_ATTRACTOR_BANDS.SHELLS);
+    }
     if (!asterionAvailable && leftMode !== VR_LEFT_HAND_MODES.NORMAL_HAND) setLeftMode(VR_LEFT_HAND_MODES.NORMAL_HAND);
 
     if (unlocked && input.toggleRightTool) {
       setRightMode(rightMode === VR_RIGHT_HAND_MODES.NORMAL_HAND
         ? VR_RIGHT_HAND_MODES.ASTRO_ATTRACTOR
         : VR_RIGHT_HAND_MODES.NORMAL_HAND);
+    }
+    if (unlocked && rightMode === VR_RIGHT_HAND_MODES.ASTRO_ATTRACTOR
+      && canSwitchAttractorBand() === true && input.switchRightToolBand) {
+      setAttractorBand(attractorBand === VR_ATTRACTOR_BANDS.SHELLS
+        ? VR_ATTRACTOR_BANDS.SMALL_GLYPHS
+        : VR_ATTRACTOR_BANDS.SHELLS);
     }
     if (input.toggleLeftTool && !isLeftToolToggleBlocked()) {
       if (leftMode === VR_LEFT_HAND_MODES.ASTERION_SPHERE) setLeftMode(VR_LEFT_HAND_MODES.NORMAL_HAND);
@@ -97,6 +125,7 @@ export function createVrHandModeController({
   function reset() {
     leftMode = VR_LEFT_HAND_MODES.NORMAL_HAND;
     rightMode = VR_RIGHT_HAND_MODES.NORMAL_HAND;
+    attractorBand = VR_ATTRACTOR_BANDS.SHELLS;
     semanticInput.reset();
     attractorTool.reset();
     (asterionSphere?.unequipFromHand ?? asterionSphere?.unequip)?.call(asterionSphere);
@@ -116,6 +145,7 @@ export function createVrHandModeController({
     getMode: () => rightMode,
     getRightMode: () => rightMode,
     getLeftMode: () => leftMode,
+    getAttractorBand: () => attractorBand,
     equipLeftAsterion,
     equipRightAstro
   };

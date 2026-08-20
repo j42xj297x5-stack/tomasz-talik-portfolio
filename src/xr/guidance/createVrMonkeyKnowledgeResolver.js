@@ -1,5 +1,12 @@
 const PL_TOPICS = Object.freeze([
   Object.freeze({
+    id: 'knowledge.astro.bandSwitch',
+    groupId: 'astro',
+    label: 'CO ROBI B?',
+    text: 'Narzędzia zmieniają się razem ze światem.\nB przełącza pasmo Astrolabium.',
+    root: false
+  }),
+  Object.freeze({
     id: 'knowledge.astro.whatIsIt',
     groupId: 'astro',
     label: 'CO TO JEST ASTROLABIUM WIĘZI?',
@@ -29,9 +36,13 @@ const PL_TOPICS = Object.freeze([
   })
 ]);
 
-export function createVrMonkeyKnowledgeResolver({ locale, hasAstroKnowledge, hasAsterionKnowledge }) {
+export function createVrMonkeyKnowledgeResolver({ locale, hasAstroKnowledge, hasAstroBandSwitchKnowledge,
+  hasAsterionKnowledge }) {
   if (typeof hasAstroKnowledge !== 'function') throw new TypeError('hasAstroKnowledge must be a function.');
   if (typeof hasAsterionKnowledge !== 'function') throw new TypeError('hasAsterionKnowledge must be a function.');
+  if (typeof hasAstroBandSwitchKnowledge !== 'function') {
+    throw new TypeError('hasAstroBandSwitchKnowledge must be a function.');
+  }
 
   function availableTopics() {
     if (locale !== 'pl') return [];
@@ -39,6 +50,9 @@ export function createVrMonkeyKnowledgeResolver({ locale, hasAstroKnowledge, has
     const asterionAvailable = hasAsterionKnowledge() === true;
     return PL_TOPICS.filter((topic) => {
       if (topic.id === 'knowledge.astro.next') return astroAvailable && !asterionAvailable;
+      if (topic.id === 'knowledge.astro.bandSwitch') {
+        return astroAvailable && hasAstroBandSwitchKnowledge() === true;
+      }
       if (topic.groupId === 'astro') return astroAvailable;
       return asterionAvailable;
     });

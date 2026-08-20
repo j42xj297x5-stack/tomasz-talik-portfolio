@@ -28,7 +28,7 @@ const TASK_BODY_BY_POINT = Object.freeze({
   [VR_EXPERIENCE_POINT['3.80']]: 'KULA ASTERIONOWA — ZGROMADŹ SKORUPY I ZBUDUJ',
   [VR_EXPERIENCE_POINT['4.20']]: 'OBSERWUJ ZMIANĘ ŚWIATA',
   [VR_EXPERIENCE_POINT['4.30']]: 'OBSERWUJ ZMIANĘ ŚWIATA',
-  [VR_EXPERIENCE_POINT['4.40']]: 'OBSERWUJ ZMIANĘ ŚWIATA',
+  [VR_EXPERIENCE_POINT['4.40']]: 'B — zmień pasmo celu',
   [VR_EXPERIENCE_POINT['100.10']]: 'KONIEC DOŚWIADCZENIA'
 });
 
@@ -72,7 +72,13 @@ export function createVrPlayerGuideProjection({ locale, getCurrentPointId, can, 
   function getTools() {
     if (locale !== 'pl') return [];
     return TOOLS.filter(({ capability }) => can(capability))
-      .map(({ label, body }) => ({ label, body }));
+      .map(({ label, body }) => ({
+        label,
+        body: label === 'ASTROLABIUM WIĘZI'
+          && can(VR_SCENARIO_CAPABILITY.CAN_SWITCH_ASTRO_BAND)
+          ? `${body}\nB — zmień pasmo celu`
+          : body
+      }));
   }
 
   return { getCurrentTask, getTools };

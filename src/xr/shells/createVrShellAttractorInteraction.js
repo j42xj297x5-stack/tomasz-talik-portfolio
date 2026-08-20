@@ -1,25 +1,18 @@
 import * as THREE from '../../vendor/three.js';
 import { createVrTargetHalo } from '../createVrTargetHalo.js';
-import { createVrAttractorScanCone } from '../tools/createVrAttractorScanCone.js';
+import { createVrAttractorScanCone, selectAttractorConeTarget } from '../tools/createVrAttractorScanCone.js';
 import { VR_ATTRACTOR_STATES } from '../tools/createVrAttractorTool.js';
+import { VR_ATTRACTOR_BANDS } from '../input/createVrHandModeController.js';
 
 const LOCAL_DIRECTION = new THREE.Vector3(0, 0, -1);
 const clamp01 = (value) => Math.min(1, Math.max(0, value));
 
 export function selectConeTarget({ candidates, origin, direction, maxDistance, halfAngleRadians }) {
-  const tanHalfAngle = Math.tan(halfAngleRadians), toTarget = new THREE.Vector3(), radial = new THREE.Vector3();
-  const hits = [];
-  for (const candidate of candidates) {
-    const center = candidate.getWorldCenter(new THREE.Vector3()); toTarget.subVectors(center, origin);
-    const depth = toTarget.dot(direction); if (depth <= 0 || depth > maxDistance + candidate.radius) continue;
-    radial.copy(toTarget).addScaledVector(direction, -depth);
-    const radialDistance = radial.length(), coneRadius = tanHalfAngle * Math.min(depth, maxDistance);
-    if (radialDistance > coneRadius + candidate.radius) continue;
-    hits.push({ shell: candidate.shell, distance: depth, angularScore: Math.max(0, radialDistance - candidate.radius) / Math.max(depth, 1e-6) });
-  }
-  hits.sort((a, b) => Math.abs(a.angularScore - b.angularScore) > 1e-6
-    ? a.angularScore - b.angularScore : a.distance - b.distance);
-  return hits[0] ?? null;
+  const hit = selectAttractorConeTarget({
+    candidates: candidates.map((candidate) => ({ ...candidate, target: candidate.shell })),
+    origin, direction, maxDistance, halfAngleRadians
+  });
+  return hit ? { shell: hit.target, distance: hit.distance, angularScore: hit.angularScore } : null;
 }
 
 export function calculateShellCapturePosition({ masterRingWorldPosition, controllerRayDirection,
@@ -30,6 +23,7 @@ export function calculateShellCapturePosition({ masterRingWorldPosition, control
 export function createVrShellAttractorInteraction({ controllers, shellSystem, handModeController, semanticInput,
   attractorTool, settings, haloSettings, settledParent = shellSystem.object.parent,
   crystalHeldByController = new Map(), isHigherPriorityInteractionActive = () => false,
+  canScanShells = () => true, canTargetShells = () => true,
   onPullStart = () => {}, onPullCancel = () => {}, onHandoff = () => {} }) {
   const maxTargetDistance = shellSystem.innerRadius * settings.targetDistanceRadiusMultiplier;
   const halfAngleRadians = THREE.MathUtils.degToRad(settings.scanCone.halfAngleDegrees);
@@ -50,6 +44,7 @@ export function createVrShellAttractorInteraction({ controllers, shellSystem, ha
   let pullSpeed = 0, pullStartDistance = 1;
   let disposed = false;
   const isEquipped = () => handModeController.getMode() === 'ASTRO_ATTRACTOR';
+  const ownsAttractorBand = () => handModeController.getAttractorBand() === VR_ATTRACTOR_BANDS.SHELLS;
   const isValidCandidate = ({ shell }) => shell.visible !== false && shell.userData.attractorTarget === true
     && shell.userData.attractorType === 'shell' && ['orbiting', 'targeted'].includes(shell.userData.shellState);
   function syncHalo(shell) { halos.get(shell)?.setVisible(shell === target || shell === leftRayTarget || placedRayTargets.has(shell)); }
@@ -58,13 +53,13 @@ export function createVrShellAttractorInteraction({ controllers, shellSystem, ha
   function setTarget(shell) { if (target === shell) return; clearTarget(); target = shell;
     if (target) { target.userData.shellState = 'targeted'; syncHalo(target); } }
   function setWorldPosition(object, position) { localPosition.copy(position); object.parent.worldToLocal(localPosition); object.position.copy(localPosition); }
-  function finishTool() { attractorTool.setTarget(null); attractorTool.setPullStrength(0);
+  function finishTool() { if (!ownsAttractorBand()) return; attractorTool.setTarget(null); attractorTool.setPullStrength(0);
     if (isEquipped()) attractorTool.setState(VR_ATTRACTOR_STATES.IDLE); }
   function beginReturn(shell) { onPullCancel({ target: shell }); halos.get(shell)?.setVisible(false); shellSystem.returnToOrbit(shell, settings.returnDuration);
     if (captureReady === shell) captureReady = null; activePull = null; pullSpeed = 0; target = null; finishTool(); }
   function currentInput() { return semanticInput.getState?.() ?? { primaryAction: 0, grabAction: 0 }; }
   function handIsFree(leftRecord = getLeftRecord()) { return Boolean(leftRecord?.isConnected && !heldShell && !crystalHeldByController.has(leftRecord)); }
-  function findTarget(rightRecord = getRightRecord()) { if (!rightRecord?.controller || !rightRecord.isConnected) return null;
+  function findTarget(rightRecord = getRightRecord()) { if (!canTargetShells() || !rightRecord?.controller || !rightRecord.isConnected) return null;
     rightRecord.controller.getWorldPosition(origin); rightRecord.controller.getWorldQuaternion(worldQuaternion);
     direction.copy(LOCAL_DIRECTION).applyQuaternion(worldQuaternion).normalize();
     return selectConeTarget({ candidates: candidates.filter(isValidCandidate), origin, direction,
@@ -161,6 +156,11 @@ export function createVrShellAttractorInteraction({ controllers, shellSystem, ha
     const rightRecord = getRightRecord();
     const leftRecord = getLeftRecord();
     updatePlacedShellHits();
+    if (!ownsAttractorBand()) {
+      scanCone.update(delta, false); clearTarget();
+      if (activePull) beginReturn(activePull);
+      return;
+    }
     if (!rightRecord?.controller || !rightRecord.isConnected) {
       scanCone.update(delta, false); clearTarget();
       if (activePull) beginReturn(activePull); else finishTool();
@@ -170,7 +170,8 @@ export function createVrShellAttractorInteraction({ controllers, shellSystem, ha
     if (captureAnchor.parent !== settledParent) settledParent.add(captureAnchor);
     updateCaptureAnchor(rightRecord); updateLeftRayHit(leftRecord);
     const { primaryAction = 0, grabAction = 0 } = currentInput();
-    const scanning = shellSystem.active && rightRecord.isConnected && isEquipped() && grabAction > settings.scanThreshold;
+    const scanning = shellSystem.active && rightRecord.isConnected && isEquipped() && canScanShells() === true
+      && grabAction > settings.scanThreshold;
     scanCone.update(delta, scanning);
     if (activePull) {
       if (!scanning || primaryAction <= settings.triggerThreshold) { beginReturn(activePull); return; }
