@@ -24,6 +24,7 @@ import { createVrCrystalReliquary } from './xr/createVrCrystalReliquary.js';
 import { createVrReliquaryActivateButton } from './xr/createVrReliquaryActivateButton.js';
 import { createVrReliquaryReleaseButton } from './xr/createVrReliquaryReleaseButton.js';
 import { createVrProgressFloor } from './xr/floor/createVrProgressFloor.js';
+import { createVrRuneBridgeActor } from './xr/runes/createVrRuneBridgeActor.js';
 import { createVrProgressionController } from './xr/progression/createVrProgressionController.js';
 import { createVrFirstRingFlow } from './xr/progression/createVrFirstRingFlow.js';
 import { createVrProgressionShortcut } from './xr/progression/applyVrProgressionShortcut.js';
@@ -176,7 +177,7 @@ worldStableRoot.add(centralPlaceholder);
 
 const asterionSphereQa = settings.asterionSphere.enabled && searchParams.has(settings.asterionSphere.qaQueryParam);
 const vrAssets = getPreloadAssets([...INITIAL_PRELOAD_GROUPS, ...DEFERRED_PRELOAD_GROUPS])
-  .filter(({ id }) => id === 'vr-asterion-sphere-model' || id === 'gltf-loader-module' || id === 'monkey-model' || id === 'monkey-stone-model' || id === 'vr-portal-model' || id === 'vr-astro-attractor-model' || id === 'vr-astro-furnace-model' || id.startsWith('vr-progress-floor-') || id === 'vr-crystal-reliquary-model' || id.startsWith('vr-crystal-reliquary-button-') || id.startsWith('glyph-') || id.startsWith('vr-crystal-') || id.startsWith('shell-relic-'))
+  .filter(({ id }) => id === 'vr-asterion-sphere-model' || id === 'vr-rune-bridge-model' || id === 'gltf-loader-module' || id === 'monkey-model' || id === 'monkey-stone-model' || id === 'vr-portal-model' || id === 'vr-astro-attractor-model' || id === 'vr-astro-furnace-model' || id.startsWith('vr-progress-floor-') || id === 'vr-crystal-reliquary-model' || id.startsWith('vr-crystal-reliquary-button-') || id.startsWith('glyph-') || id.startsWith('vr-crystal-') || id.startsWith('shell-relic-'))
   .map((asset) => ({ ...asset, critical: asset.id === 'gltf-loader-module' }));
 const loadingDiagnostics = createLoadingDiagnostics(vrAssets);
 const assetManager = createAssetManager({ diagnostics: loadingDiagnostics });
@@ -199,6 +200,10 @@ const progressFloor = createVrProgressFloor({
   haikuSectorModel: assetManager.cloneGltfScene('vr-progress-floor-haiku-model'),
   digSectorModel: assetManager.cloneGltfScene('vr-progress-floor-dig-model'),
   aiGuideSectorModel: assetManager.cloneGltfScene('vr-progress-floor-ai-guide-model')
+});
+const runeBridgeActor = createVrRuneBridgeActor({
+  assetManager,
+  getSectorMount: (branchId) => progressFloor.getRuneBridgeMount(branchId)
 });
 const platformFixturesRoot = new THREE.Group();
 platformFixturesRoot.name = 'VrPlatformFixturesRoot';
@@ -915,6 +920,7 @@ function restoreVrScenarioBaseline() {
   resetPlayerRigToSpawn();
   progressionController.reset();
   progressFloor.reset();
+  runeBridgeActor.reset();
   glyphOrbit.reset();
   postRingPresentation.reset();
   firstRingFlow.reset();
@@ -1025,6 +1031,7 @@ window.addEventListener('pagehide', () => {
   releaseButton.dispose();
   crystalCollection.dispose();
   crystalReliquary.dispose();
+  runeBridgeActor.dispose();
   progressFloor.dispose();
   postRingPresentation.dispose();
   shellSystem.dispose();
