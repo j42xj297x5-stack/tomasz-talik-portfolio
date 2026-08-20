@@ -181,6 +181,7 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
     glyphElevationDuration: 2.5,
     shellRevealDuration: 1.5
   },
+  p2RadialPresentation: { durationSeconds: 2.5 },
   observationWindow: { durationSeconds: 10.0 },
   intro: {
     enabled: true,
@@ -582,6 +583,10 @@ export function normalizeExperienceVrSettings(candidate) {
         defaults.postRingPresentation.glyphElevationDuration, { min: 0.1, max: 30 }),
       shellRevealDuration: finiteNumber(candidate.postRingPresentation?.shellRevealDuration,
         defaults.postRingPresentation.shellRevealDuration, { min: 0, max: 30 })
+    },
+    p2RadialPresentation: {
+      durationSeconds: finiteNumber(candidate.p2RadialPresentation?.durationSeconds,
+        defaults.p2RadialPresentation.durationSeconds, { min: 0.1, max: 60 })
     },
     observationWindow: {
       durationSeconds: finiteNumber(candidate.observationWindow?.durationSeconds,

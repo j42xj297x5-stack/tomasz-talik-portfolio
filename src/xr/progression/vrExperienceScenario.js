@@ -1,5 +1,5 @@
 import { deriveScenarioSpine } from './scenarioSpineNavigation.js';
-import { experienceVrPageIdsByTier } from '../../content/experienceVrPages.js';
+import { experienceVrPageIdsByTier, experienceVrPages } from '../../content/experienceVrPages.js';
 
 function immutableIdentifiers(names) {
   return Object.freeze(Object.fromEntries(names.map((name) => [name, name])));
@@ -52,6 +52,7 @@ export const VR_SCENARIO_EVENT = immutableIdentifiers([
   'ASTRO_ATTRACTOR_PRODUCED',
   'ASTRO_ATTRACTOR_CLAIMED',
   'TIER_COMPLETED',
+  'P2_RADIAL_PRESENTATION_COMPLETED',
   'ASTRO_UNLOCKED',
   'SHELL_PULL_STARTED',
   'SHELL_PULL_CANCELLED',
@@ -144,6 +145,8 @@ export const VR_SCENARIO_EFFECT = immutableIdentifiers([
   'PLAY_CARD_COMMIT_FEEDBACK',
   'BEGIN_FIRST_RING_PRESENTATION',
   'PLAY_FIRST_RING_COMPLETE_FEEDBACK',
+  'APPLY_TIER_COMPLETE_FEEDBACK',
+  'BEGIN_P2_RADIAL_PRESENTATION',
   'REVEAL_SHELL_FIELD_PRESENTATION',
   'ELEVATE_MAIN_GLYPHS',
   'BEGIN_OBSERVATION_WINDOW',
@@ -183,6 +186,8 @@ export const VR_EXPERIENCE_POINT = immutableIdentifiers([
   '3.70',
   '3.80',
   '4.10',
+  '4.20',
+  '4.30',
   '100.10'
 ]);
 
@@ -219,6 +224,32 @@ const FIRST_RING_COMPLETE_SETTLED_CONSEQUENCES = Object.freeze({
     ]) }),
   crystals: Object.freeze({ consumedTier: 1 })
 });
+const completedMainGlyphPagesThroughTier = (completedTier) => Object.freeze(
+  experienceVrPages
+    .filter(({ order }) => order <= completedTier)
+    .map(({ glyphId, order }) => Object.freeze({ glyphId, order }))
+);
+const SECOND_RING_COMPLETE_SETTLED_CONSEQUENCES = Object.freeze({
+  progression: Object.freeze({ tier: 3, completedTier: 2,
+    activatedPageIds: Object.freeze([
+      ...experienceVrPageIdsByTier[1],
+      ...experienceVrPageIdsByTier[2]
+    ]) }),
+  progressFloor: Object.freeze({ completedTier: 2,
+    activatedPages: completedMainGlyphPagesThroughTier(2) }),
+  crystals: Object.freeze({ consumedTier: 2 })
+});
+const P2_RADIAL_PRESENTED_SETTLED_CONSEQUENCES = Object.freeze({
+  p2World: Object.freeze({ mainGlyphsRadial: true })
+});
+const P2_MAIN_GLYPH_CAPABILITIES = Object.freeze([
+  VR_SCENARIO_CAPABILITY.CAN_USE_GLYPHS, VR_SCENARIO_CAPABILITY.CAN_USE_RELIQUARY,
+  VR_SCENARIO_CAPABILITY.CAN_ACTIVATE_RELIQUARY, VR_SCENARIO_CAPABILITY.CAN_RELEASE_RELIQUARY,
+  VR_SCENARIO_CAPABILITY.CAN_EQUIP_ASTRO, VR_SCENARIO_CAPABILITY.CAN_USE_FURNACE,
+  VR_SCENARIO_CAPABILITY.CAN_OPEN_FURNACE, VR_SCENARIO_CAPABILITY.CAN_INSERT_FURNACE_MATERIAL,
+  VR_SCENARIO_CAPABILITY.CAN_START_FURNACE_PROCESS, VR_SCENARIO_CAPABILITY.CAN_EQUIP_ASTERION,
+  VR_SCENARIO_CAPABILITY.CAN_CONTROL_PLATFORM
+]);
 const ACT_TWO_ENTRY_SETTLED_CONSEQUENCES = Object.freeze({
   postRing: Object.freeze({ shellFieldVisible: true, shellInteractionEnabled: false,
     mainGlyphsElevated: true })
@@ -585,16 +616,10 @@ const points = Object.freeze([
   }),
   Object.freeze({
     id: VR_EXPERIENCE_POINT['4.10'],
-    canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['100.10'] }), settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
+    canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['4.20'] }),
+    settledConsequences: SECOND_RING_COMPLETE_SETTLED_CONSEQUENCES,
     label: 'Asterion physically claimed / second crystal cycle active',
-    capabilities: Object.freeze([
-      VR_SCENARIO_CAPABILITY.CAN_USE_GLYPHS, VR_SCENARIO_CAPABILITY.CAN_USE_RELIQUARY,
-      VR_SCENARIO_CAPABILITY.CAN_ACTIVATE_RELIQUARY, VR_SCENARIO_CAPABILITY.CAN_RELEASE_RELIQUARY,
-      VR_SCENARIO_CAPABILITY.CAN_EQUIP_ASTRO, VR_SCENARIO_CAPABILITY.CAN_USE_FURNACE,
-      VR_SCENARIO_CAPABILITY.CAN_OPEN_FURNACE, VR_SCENARIO_CAPABILITY.CAN_INSERT_FURNACE_MATERIAL,
-      VR_SCENARIO_CAPABILITY.CAN_START_FURNACE_PROCESS, VR_SCENARIO_CAPABILITY.CAN_EQUIP_ASTERION,
-      VR_SCENARIO_CAPABILITY.CAN_CONTROL_PLATFORM
-    ]),
+    capabilities: P2_MAIN_GLYPH_CAPABILITIES,
     transitions: Object.freeze([
       Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.STAY, event: VR_SCENARIO_EVENT.RELIQUARY_HINT_TIMEOUT,
         milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.SHOW_RELIQUARY_CONTEXT_HINT]) }),
@@ -604,8 +629,34 @@ const points = Object.freeze([
         milestonesToAdd: Object.freeze([VR_SCENARIO_MILESTONE.CARD_COMMITTED]), effects: Object.freeze([
           VR_SCENARIO_EFFECT.UPDATE_COMMITTED_CARD_PRESENTATION,
           VR_SCENARIO_EFFECT.PLAY_CARD_COMMIT_FEEDBACK
+        ]) }),
+      Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.COMPLETE, event: VR_SCENARIO_EVENT.TIER_COMPLETED,
+        milestonesToAdd: Object.freeze([]), effects: Object.freeze([
+          VR_SCENARIO_EFFECT.APPLY_TIER_COMPLETE_FEEDBACK
         ]) })
     ])
+  }),
+  Object.freeze({
+    id: VR_EXPERIENCE_POINT['4.20'],
+    canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['4.30'] }),
+    settledConsequences: P2_RADIAL_PRESENTED_SETTLED_CONSEQUENCES,
+    entryEffects: Object.freeze([VR_SCENARIO_EFFECT.BEGIN_P2_RADIAL_PRESENTATION]),
+    label: 'Tier 2 complete / P2 radial world presentation',
+    capabilities: P2_MAIN_GLYPH_CAPABILITIES,
+    transitions: Object.freeze([
+      Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.COMPLETE,
+        event: VR_SCENARIO_EVENT.P2_RADIAL_PRESENTATION_COMPLETED,
+        milestonesToAdd: Object.freeze([]), effects: Object.freeze([]) })
+    ])
+  }),
+  Object.freeze({
+    id: VR_EXPERIENCE_POINT['4.30'],
+    canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['100.10'] }),
+    settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
+    entryEffects: Object.freeze([]),
+    label: 'P2 radial world ready / small glyph integration boundary',
+    capabilities: P2_MAIN_GLYPH_CAPABILITIES,
+    transitions: Object.freeze([])
   }),
   Object.freeze({
     id: VR_EXPERIENCE_POINT['100.10'],
