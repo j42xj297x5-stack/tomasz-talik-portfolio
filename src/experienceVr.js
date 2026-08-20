@@ -27,6 +27,7 @@ import { createVrProgressFloor } from './xr/floor/createVrProgressFloor.js';
 import { createVrRuneBridgeActor } from './xr/runes/createVrRuneBridgeActor.js';
 import { createVrProgressionController } from './xr/progression/createVrProgressionController.js';
 import { createVrFirstRingFlow } from './xr/progression/createVrFirstRingFlow.js';
+import { createVrProgressionSemanticHandoff } from './xr/progression/createVrProgressionSemanticHandoff.js';
 import { createVrProgressionShortcut } from './xr/progression/applyVrProgressionShortcut.js';
 import { createVrShellSystem } from './xr/shells/createVrShellSystem.js';
 import { createVrShellAttractorInteraction } from './xr/shells/createVrShellAttractorInteraction.js';
@@ -319,8 +320,10 @@ function syncAmbientSequence() {
   ambientSequencer.setState({ fullThreshold, asterionSubthreshold: fullThreshold === 2 && shellsComplete && sphereBuilt });
 }
 const firstRingFlow = createVrFirstRingFlow({
-  progressionController,
   progressFloor,
+  dispatch: (event, payload) => runtimeExperience.dispatch(event, payload)
+});
+const progressionSemanticHandoff = createVrProgressionSemanticHandoff({
   dispatch: (event, payload) => runtimeExperience.dispatch(event, payload),
   syncAmbientSequence
 });
@@ -495,7 +498,7 @@ const crystalCollection = createVrCrystalCollection({
     return true;
   },
   onPreview: (page) => runtimeExperience.dispatch(VR_SCENARIO_EVENT.CRYSTAL_ACTIVATED, { page }),
-  onCommit: firstRingFlow.commitPage
+  onCommit: progressionSemanticHandoff.onPageCommitted
 });
 createVrProgressionShortcut({ search: location.search, pages: experienceVrPages, progressionController,
   progressFloor, syncQaPostP1WorldState })();
