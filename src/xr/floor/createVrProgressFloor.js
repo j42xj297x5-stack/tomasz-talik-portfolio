@@ -112,6 +112,28 @@ function requireSectorObject(sector, objectName, sectorConfig) {
   return object;
 }
 
+function getBoundsRelativeTo(root, relativeTo) {
+  const bounds = new THREE.Box3().makeEmpty();
+  const inverseRelativeMatrix = new THREE.Matrix4().copy(relativeTo.matrixWorld).invert();
+  const relativeMatrix = new THREE.Matrix4();
+  const corner = new THREE.Vector3();
+  root.traverse((object) => {
+    if (!object.geometry) return;
+    if (!object.geometry.boundingBox) object.geometry.computeBoundingBox();
+    const objectBounds = object.geometry.boundingBox;
+    if (!objectBounds || objectBounds.isEmpty()) return;
+    relativeMatrix.multiplyMatrices(inverseRelativeMatrix, object.matrixWorld);
+    for (const x of [objectBounds.min.x, objectBounds.max.x]) {
+      for (const y of [objectBounds.min.y, objectBounds.max.y]) {
+        for (const z of [objectBounds.min.z, objectBounds.max.z]) {
+          bounds.expandByPoint(corner.set(x, y, z).applyMatrix4(relativeMatrix));
+        }
+      }
+    }
+  });
+  return bounds;
+}
+
 function makePresentationBodyTransparent(sector, bodyNames, sectorConfig) {
   const materials = new Map();
   bodyNames.forEach((bodyName) => {
@@ -194,6 +216,7 @@ export function createVrProgressFloor({
     wood: aiGuideSectorModel
   };
   const sectorsByGlyphId = new Map();
+  const runeBridgeMountsByBranchId = new Map();
   const revealedSectorIds = new Set();
   const activatedEntries = new Map();
   const pulseRemaining = new Map();
@@ -220,6 +243,23 @@ export function createVrProgressFloor({
       cloneMaterials(sector, ownedMaterials);
       const referenceBase = requireSectorObject(sector, contract.referenceBaseName, sectorConfig);
       referenceBase.visible = false;
+      sector.updateMatrixWorld(true);
+      referenceBase.updateMatrixWorld(true);
+      const referenceBounds = getBoundsRelativeTo(referenceBase, sector);
+      if (referenceBounds.isEmpty()) {
+        throw new Error(`[VrProgressFloor] Cannot derive rune bridge mount from "${contract.referenceBaseName}".`);
+      }
+      const outerArc = new THREE.Vector3(
+        referenceBounds.max.x,
+        referenceBounds.max.y,
+        (referenceBounds.min.z + referenceBounds.max.z) / 2
+      );
+      const bridgeMount = new THREE.Object3D();
+      bridgeMount.name = `VrRuneBridgeMount_${sectorConfig.branchId.toUpperCase()}`;
+      bridgeMount.position.copy(outerArc);
+      bridgeMount.userData = { ...bridgeMount.userData, branchId: sectorConfig.branchId };
+      sector.add(bridgeMount);
+      runeBridgeMountsByBranchId.set(sectorConfig.branchId, bridgeMount);
       const presentationMaterials = makePresentationBodyTransparent(sector, contract.presentationBodyNames, sectorConfig);
       const panelsByOrder = new Map();
       contract.panelNames.forEach((panelName, panelIndex) => {
@@ -404,6 +444,11 @@ export function createVrProgressFloor({
     ownedGeometries.forEach((geometry) => geometry.dispose());
     ownedGeometries.clear();
     revealedSectorIds.clear();
+    runeBridgeMountsByBranchId.clear();
+  }
+
+  function getRuneBridgeMount(branchId) {
+    return runeBridgeMountsByBranchId.get(String(branchId).toLowerCase()) ?? null;
   }
 
   return {
@@ -417,6 +462,7 @@ export function createVrProgressFloor({
     getActivatedEntries: () => [...activatedEntries.values()].map(({ glyphId, order }) => ({ glyphId, order })),
     getRevealedSectorIds: () => [...revealedSectorIds],
     getCompletedTiers: () => [...completedTiers],
+    getRuneBridgeMount,
     dispose
   };
 }
