@@ -148,6 +148,7 @@ export const VR_SCENARIO_EFFECT = immutableIdentifiers([
   'ELEVATE_MAIN_GLYPHS',
   'BEGIN_OBSERVATION_WINDOW',
   'BEGIN_MONKEY_ATTENTION',
+  'BEGIN_ASTRO_ATTRACTOR_CONSTRUCTION',
   'BEGIN_FURNACE_INTRO',
   'REVEAL_SHELL_FIELD',
   'REVEAL_FURNACE',
@@ -557,6 +558,7 @@ const points = Object.freeze([
   Object.freeze({
     id: VR_EXPERIENCE_POINT['3.60'],
     canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['3.70'] }), settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
+    entryEffects: Object.freeze([VR_SCENARIO_EFFECT.BEGIN_ASTRO_ATTRACTOR_CONSTRUCTION]),
     label: 'Astro Attractor construction', capabilities: Object.freeze([VR_SCENARIO_CAPABILITY.CAN_USE_FURNACE]),
     transitions: Object.freeze([Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.COMPLETE,
       event: VR_SCENARIO_EVENT.ASTRO_ATTRACTOR_PRODUCED, milestonesToAdd: Object.freeze([]), effects: Object.freeze([]) })])

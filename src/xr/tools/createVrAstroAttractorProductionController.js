@@ -28,7 +28,7 @@ function boundsRelativeTo(root, reference) {
 
 export function createVrAstroAttractorProductionController({ model, contentAnchor, chamber, chamberCylinder, energyCell = null, controllers = [],
   processDriver, getChamberState = () => 'CLOSED', getRightMode = () => 'NORMAL_HAND', canRequest = () => false,
-  settings = {}, haloSettings = {}, onRequested = () => {}, onProduced = () => {}, onClaimed = () => {} }) {
+  settings = {}, haloSettings = {}, onProduced = () => {}, onClaimed = () => {} }) {
   if (!model || !contentAnchor || !chamber || !chamberCylinder) {
     throw new TypeError('model, contentAnchor, chamber and chamberCylinder are required');
   }
@@ -83,8 +83,12 @@ export function createVrAstroAttractorProductionController({ model, contentAncho
   }
   function canCreate() { return !disposed && state === 'READY' && canRequest() && getChamberState() === 'CLOSED'
     && processDriver?.canStartConstruction?.(ASTRO_ATTRACTOR_CONSTRUCTION) === true; }
-  function requestCreate() { if (!canCreate() || processDriver.startConstruction(ASTRO_ATTRACTOR_CONSTRUCTION) !== true) return false;
-    place(); progress = 0; setFormation(0); state = 'BUILDING'; onRequested(); emit(); return true; }
+  function beginConstruction() {
+    if (disposed || state !== 'READY' || getChamberState() !== 'CLOSED'
+      || processDriver?.canStartConstruction?.(ASTRO_ATTRACTOR_CONSTRUCTION) !== true
+      || processDriver.startConstruction(ASTRO_ATTRACTOR_CONSTRUCTION) !== true) return false;
+    place(); progress = 0; setFormation(0); state = 'BUILDING'; emit(); return true;
+  }
   function clearHits() { hits.forEach((_, record) => hits.set(record, false)); halo.setVisible(false); }
   function updateHits() { let hovered = false; controllers.forEach((record) => { let hit = false;
     if (state === 'AVAILABLE' && getChamberState() === 'OPEN' && record.handedness === 'right'
@@ -120,7 +124,7 @@ export function createVrAstroAttractorProductionController({ model, contentAncho
   }
   function dispose() { if (disposed) return; disposed = true; listeners.forEach(({ record, listener }) => record.controller.removeEventListener?.('selectstart', listener));
     clearHits(); halo.dispose(); object.removeFromParent(); ownedMaterials.forEach((material) => material.dispose()); subscribers.clear(); }
-  return { object, requestCreate, canCreate, claim, update, resetSession, resetBaseline, hydrateScenarioState, dispose, getState: () => state, getSnapshot: snapshot,
+  return { object, beginConstruction, canCreate, claim, update, resetSession, resetBaseline, hydrateScenarioState, dispose, getState: () => state, getSnapshot: snapshot,
     isEarned: () => state === 'EARNED', hasCurrentHit: (record) => hits.get(record) === true,
     subscribe(listener) { subscribers.add(listener); return () => subscribers.delete(listener); },
     getDiagnostics: () => ({ state, producedCount, claimedCount, visualRootName: authoritativeVisualRoot.name,
