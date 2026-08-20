@@ -16,6 +16,7 @@ export function createVrGlyphOrbit({ nodes, center = new THREE.Vector3(), settin
   }));
   if (!Number.isFinite(radius) || radius <= 0) throw new Error('VR glyph orbit requires one canonical radius.');
   const effectiveRadius = radius;
+  let currentRadius = effectiveRadius;
   const entryAngle = Math.atan2(entryDirection.z, entryDirection.x);
   let phase = 0;
   let entryReady = null;
@@ -24,11 +25,11 @@ export function createVrGlyphOrbit({ nodes, center = new THREE.Vector3(), settin
   function applyPositions() {
     records.forEach(({ node, initialAngle, y, rotation }) => {
       const angle = initialAngle + phase;
-      node.position.set(center.x + Math.cos(angle) * effectiveRadius, center.y + y, center.z + Math.sin(angle) * effectiveRadius);
+      node.position.set(center.x + Math.cos(angle) * currentRadius, center.y + y, center.z + Math.sin(angle) * currentRadius);
       // Experience 3D keeps glyph model rotation independent from its orbital phase.
       node.rotation.copy(rotation);
       node.userData.vrOrbitAngle = angle;
-      node.userData.vrOrbitRadius = effectiveRadius;
+      node.userData.vrOrbitRadius = currentRadius;
     });
   }
 
@@ -51,8 +52,22 @@ export function createVrGlyphOrbit({ nodes, center = new THREE.Vector3(), settin
     return entryReady;
   }
 
-  function reset() { if (!disposed) { phase = 0; entryReady = null; applyPositions(); } }
+  function getRadius() { return currentRadius; }
+  function setRadius(nextRadius) {
+    if (disposed || !Number.isFinite(nextRadius) || nextRadius <= 0) return false;
+    currentRadius = nextRadius;
+    applyPositions();
+    return true;
+  }
+  function reset() {
+    if (!disposed) {
+      phase = 0;
+      entryReady = null;
+      currentRadius = effectiveRadius;
+      applyPositions();
+    }
+  }
   function dispose() { if (!disposed) { disposed = true; entryReady = null; records.length = 0; } }
   applyPositions();
-  return { effectiveRadius, get entryReady() { return entryReady; }, update, reset, dispose };
+  return { effectiveRadius, get entryReady() { return entryReady; }, getRadius, setRadius, update, reset, dispose };
 }

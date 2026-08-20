@@ -538,7 +538,9 @@ export function createVrCrystalCollection({ scene, assetManager, controllers, po
   }
 
   function hydrateScenarioState(state) {
-    if (state?.consumedTier !== 1) throw new Error('Crystal collection only supports consumed Tier 1 hydration');
+    if (!Number.isInteger(state?.consumedTier) || state.consumedTier < 1 || state.consumedTier > 5) {
+      throw new Error('Crystal collection requires a canonical consumed tier from 1 through 5');
+    }
     reset();
   }
 

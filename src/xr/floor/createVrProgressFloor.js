@@ -418,11 +418,25 @@ export function createVrProgressFloor({
   }
 
   function hydrateScenarioState(state) {
-    if (!Array.isArray(state?.activatedPages) || state.completedTier !== 1) {
-      throw new Error('Progress floor only supports the settled Tier 1 completion state');
+    if (!Array.isArray(state?.activatedPages) || !Number.isInteger(state.completedTier)
+      || state.completedTier < 1 || state.completedTier > 5) {
+      throw new Error('Progress floor requires a canonical completed tier from 1 through 5');
     }
-    state.activatedPages.forEach((page) => activatePage(page));
-    completeTier(1);
+    const hydratedEntries = new Set();
+    state.activatedPages.forEach((page) => {
+      const glyphId = page?.glyphId;
+      const order = page?.order;
+      const key = `${glyphId}:${order}`;
+      if (!sectorsByGlyphId.has(glyphId) || !Number.isInteger(order)
+        || order < 1 || order > 5 || order > state.completedTier || hydratedEntries.has(key)) {
+        throw new Error(`Progress floor received invalid activated page ${key}`);
+      }
+      hydratedEntries.add(key);
+      if (!activatePage(page)) throw new Error(`Progress floor could not hydrate activated page ${key}`);
+    });
+    for (let tier = 1; tier <= state.completedTier; tier += 1) {
+      if (!completeTier(tier)) throw new Error(`Progress floor could not hydrate completed Tier ${tier}`);
+    }
     update(10);
   }
   function reset() {
