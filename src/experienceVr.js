@@ -68,6 +68,7 @@ import { createVrDebugCheckpointController } from './xr/progression/enterVrDebug
 import { VR_DEBUG_CHECKPOINTS } from './xr/progression/vrDebugCheckpoints.js';
 import { createVrPostRingPresentation } from './xr/progression/createVrPostRingPresentation.js';
 import { createVrObservationWindow } from './xr/progression/createVrObservationWindow.js';
+import { createVrP2RadialPresentation } from './xr/progression/createVrP2RadialPresentation.js';
 import { VR_SCENARIO_CAPABILITY, VR_SCENARIO_EFFECT, VR_SCENARIO_EVENT, vrExperienceScenario } from './xr/progression/vrExperienceScenario.js';
 import { experienceVrPages, getExperienceVrPages, resolveExperienceVrPage } from './content/experienceVrPages.js';
 import { publicPath } from './utils/publicPath.js';
@@ -672,6 +673,12 @@ const postRingPresentation = createVrPostRingPresentation({ glyphRing, shellSyst
   settings: settings.postRingPresentation,
   onCompleted: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.POST_RING_WORLD_PRESENTATION_COMPLETED)
 });
+const p2RadialPresentation = createVrP2RadialPresentation({
+  glyphOrbit,
+  getTargetRadius: () => glyphOrbit.effectiveRadius + settings.controllers.rayLength,
+  durationSeconds: settings.p2RadialPresentation.durationSeconds,
+  onCompleted: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.P2_RADIAL_PRESENTATION_COMPLETED)
+});
 const observationWindow = createVrObservationWindow({
   durationSeconds: settings.observationWindow.durationSeconds,
   onCompleted: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.OBSERVATION_WINDOW_COMPLETED)
@@ -811,6 +818,20 @@ runtimeExperience = new RuntimeExperience({
     [VR_SCENARIO_EFFECT.PLAY_FIRST_RING_COMPLETE_FEEDBACK]: () => {
       playVrWorld(VR_AUDIO.tierComplete);
     },
+    [VR_SCENARIO_EFFECT.APPLY_TIER_COMPLETE_FEEDBACK]: (change, payload) => {
+      if (!Number.isInteger(payload?.tier)) {
+        throw new Error('APPLY_TIER_COMPLETE_FEEDBACK requires an integer completed tier');
+      }
+      if (!progressFloor.completeTier(payload.tier)) {
+        throw new Error(`Progress floor rejected accepted canonical Tier ${payload.tier} completion`);
+      }
+      playVrWorld(VR_AUDIO.tierComplete);
+    },
+    [VR_SCENARIO_EFFECT.BEGIN_P2_RADIAL_PRESENTATION]: () => {
+      if (!p2RadialPresentation.begin()) {
+        throw new Error('BEGIN_P2_RADIAL_PRESENTATION rejected by P2 radial presentation actor');
+      }
+    },
     [VR_SCENARIO_EFFECT.REVEAL_SHELL_FIELD_PRESENTATION]: () => {
       postRingPresentation.revealShellField();
     },
@@ -834,7 +855,7 @@ const scenarioOwners = Object.freeze({
   monkey: monkeyActor, intro: introSequence, locomotion, reliquary: crystalReliquary,
   portal: portalDisplay,
   progression: progressionController, progressFloor, crystals: crystalCollection,
-  postRing: postRingPresentation,
+  postRing: postRingPresentation, p2World: p2RadialPresentation,
   furnace: astroFurnace, furnaceProgression: furnaceProgressionController,
   astroProduction: astroAttractorProductionController, asterionProduction: asterionProductionController
 });
@@ -897,6 +918,7 @@ function renderFrame() {
   astroFurnaceContentInteraction.update(delta);
   glyphOrbit.update(delta);
   postRingPresentation.update(delta);
+  p2RadialPresentation.update(delta);
   observationWindow.update(delta);
   postRingMonkeyDialogue.update(delta);
   furnaceIntro.update(delta);
@@ -965,6 +987,7 @@ function restoreVrScenarioBaseline() {
   progressFloor.reset();
   runeBridgeActor.reset();
   glyphOrbit.reset();
+  p2RadialPresentation.reset();
   postRingPresentation.reset();
   firstRingFlow.reset();
   observationWindow.reset();
