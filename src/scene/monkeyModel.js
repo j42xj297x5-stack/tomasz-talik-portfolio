@@ -89,8 +89,32 @@ function createMonkeyActor({ actorParent, fixtureParent, fallbackObject, model, 
     return true;
   }
 
+  function dockStoneToCharacter() {
+    if (!stoneAsset || !characterAnchor || !seatAnchor || !stoneRoot.parent) return false;
+    characterAnchor.updateWorldMatrix(true, true);
+    stoneRoot.updateWorldMatrix(true, true);
+    const seatInStone = matrixRelativeTo(seatAnchor, stoneRoot);
+    const seatPosition = new THREE.Vector3();
+    const seatQuaternion = new THREE.Quaternion();
+    const ignoredSeatScale = new THREE.Vector3();
+    seatInStone.decompose(seatPosition, seatQuaternion, ignoredSeatScale);
+
+    const characterPosition = characterAnchor.getWorldPosition(new THREE.Vector3());
+    const characterQuaternion = characterAnchor.getWorldQuaternion(new THREE.Quaternion());
+    const stoneScale = stoneRoot.getWorldScale(new THREE.Vector3());
+    const stoneQuaternion = characterQuaternion.multiply(seatQuaternion.invert());
+    const seatWorldOffset = seatPosition.clone().multiply(stoneScale).applyQuaternion(stoneQuaternion);
+    const stonePosition = characterPosition.sub(seatWorldOffset);
+
+    const stoneWorld = new THREE.Matrix4().compose(stonePosition, stoneQuaternion, stoneScale);
+    const stoneLocal = stoneRoot.parent.matrixWorld.clone().invert().multiply(stoneWorld);
+    setMatrix(stoneRoot, stoneLocal);
+    stoneRoot.updateWorldMatrix(true, true);
+    return true;
+  }
+
   return { motionRoot, visualRoot, characterRoot, interactionRoot: characterRoot, stoneRoot, model,
-    characterAnchor, authoredStoneRoot, seatAnchor, dockCharacterToStone,
+    characterAnchor, authoredStoneRoot, seatAnchor, dockCharacterToStone, dockStoneToCharacter,
     captureScenarioFinalPlacement, hydrateScenarioState };
 }
 
