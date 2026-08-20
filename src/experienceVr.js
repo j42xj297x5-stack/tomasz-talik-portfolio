@@ -16,6 +16,7 @@ import { createVrControllers } from './xr/createVrControllers.js';
 import { createVrGlyphInteraction } from './xr/createVrGlyphInteraction.js';
 import { createVrGlyphOrbit } from './xr/createVrGlyphOrbit.js';
 import { createVrSmallGlyphSystem } from './xr/glyphs/createVrSmallGlyphSystem.js';
+import { createVrSmallGlyphAttractorTargeting } from './xr/glyphs/createVrSmallGlyphAttractorTargeting.js';
 import { createVrGlyphLights } from './xr/createVrGlyphLights.js';
 import { createVrSpatialPlaque } from './xr/createVrSpatialPlaque.js';
 import { createVrPortalDisplay } from './xr/createVrPortalDisplay.js';
@@ -379,6 +380,9 @@ const handModeController = createVrHandModeController({
   attractorTool,
   asterionSphere,
   isUnlocked: () => introQaBypass || runtimeExperience.can(VR_SCENARIO_CAPABILITY.CAN_EQUIP_ASTRO),
+  canSwitchAttractorBand: () => runtimeExperience?.can(
+    VR_SCENARIO_CAPABILITY.CAN_SWITCH_ASTRO_BAND
+  ) === true,
   isAsterionAvailable: () => asterionProductionController.isEarned() || asterionSphereQa,
   isLeftToolToggleBlocked: () => playerGuidePanel.isOpen()
 });
@@ -427,6 +431,9 @@ const monkeyKnowledgeResolver = createVrMonkeyKnowledgeResolver({
   locale: language,
   hasAstroKnowledge: () => runtimeExperience?.can(
     VR_SCENARIO_CAPABILITY.CAN_EQUIP_ASTRO
+  ) === true,
+  hasAstroBandSwitchKnowledge: () => runtimeExperience?.can(
+    VR_SCENARIO_CAPABILITY.CAN_SWITCH_ASTRO_BAND
   ) === true,
   hasAsterionKnowledge: () => runtimeExperience?.can(
     VR_SCENARIO_CAPABILITY.CAN_EQUIP_ASTERION
@@ -626,6 +633,8 @@ shellAttractorInteraction = createVrShellAttractorInteraction({
   controllers: vrControllers.controllers, shellSystem, handModeController, semanticInput, attractorTool,
   settings: settings.shellAttractor, haloSettings: settings.targetHalo, settledParent: worldStableRoot,
   crystalHeldByController: crystalCollection.heldByController,
+  canScanShells: () => runtimeExperience?.can(VR_SCENARIO_CAPABILITY.CAN_SCAN_SHELLS) === true,
+  canTargetShells: () => runtimeExperience?.can(VR_SCENARIO_CAPABILITY.CAN_TARGET_SHELLS) === true,
   onPullStart: ({ target }) => vrAudio.startAttractor(target.userData.attractorId, 'shell'),
   onPullCancel: ({ target }) => vrAudio.cancelAttractor(target.userData.attractorId),
   onHandoff: ({ target }) => vrAudio.handoffAttractor(target.userData.attractorId),
@@ -633,6 +642,33 @@ shellAttractorInteraction = createVrShellAttractorInteraction({
     || releaseButton.hits.get(record) || astroFurnaceOpenInteraction.hasCurrentHit(record)
     || astroFurnaceActivateInteraction.hasCurrentHit(record) || astroFurnaceOptionInteraction.hasCurrentHit(record)
     || furnacePanel.hasCurrentHit(record) || monkeyGuide.hasCurrentHit(record) || record.currentHit)
+});
+const smallGlyphAttractorTargeting = createVrSmallGlyphAttractorTargeting({
+  controllers: vrControllers.controllers,
+  smallGlyphSystem,
+  handModeController,
+  semanticInput,
+  attractorTool,
+  maxTargetDistance: glyphOrbit.effectiveRadius * settings.shellAttractor.targetDistanceRadiusMultiplier,
+  scanThreshold: settings.shellAttractor.scanThreshold,
+  scanConeSettings: settings.shellAttractor.scanCone,
+  haloSettings: settings.targetHalo,
+  canScanSmallGlyphs: () => runtimeExperience?.can(
+    VR_SCENARIO_CAPABILITY.CAN_SCAN_SMALL_GLYPHS
+  ) === true,
+  canTargetSmallGlyphs: () => runtimeExperience?.can(
+    VR_SCENARIO_CAPABILITY.CAN_TARGET_SMALL_GLYPHS
+  ) === true,
+  isHigherPriorityInteractionActive: (record) => Boolean(
+    activateButton.hits.get(record)
+    || releaseButton.hits.get(record)
+    || astroFurnaceOpenInteraction.hasCurrentHit(record)
+    || astroFurnaceActivateInteraction.hasCurrentHit(record)
+    || astroFurnaceOptionInteraction.hasCurrentHit(record)
+    || furnacePanel.hasCurrentHit(record)
+    || monkeyGuide.hasCurrentHit(record)
+    || record.currentHit
+  )
 });
 
 const introFogReveal = createVrIntroFogReveal({
@@ -960,6 +996,7 @@ function renderFrame() {
   activateButton.update(delta);
   releaseButton.update(delta);
   shellAttractorInteraction.update(delta);
+  smallGlyphAttractorTargeting.update(delta);
   asterionProductionController.update(delta);
   astroAttractorProductionController.update(delta);
   furnacePanel.update(delta);
@@ -1021,6 +1058,7 @@ function restoreVrScenarioBaseline() {
   firstRingFlow.reset();
   observationWindow.reset();
   shellAttractorInteraction.reset();
+  smallGlyphAttractorTargeting.reset();
   shellSystem.reset();
   syncQaPostP1WorldState();
   glyphLights.reset();
@@ -1119,6 +1157,7 @@ window.addEventListener('pagehide', () => {
   furnaceProgressionController.dispose();
   astroFurnace.dispose();
   shellAttractorInteraction.dispose();
+  smallGlyphAttractorTargeting.dispose();
   handModeController.dispose();
   activateButton.reset();
   releaseButton.reset();

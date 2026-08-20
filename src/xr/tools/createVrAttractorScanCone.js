@@ -1,5 +1,27 @@
 import * as THREE from '../../vendor/three.js';
 
+export function selectAttractorConeTarget({ candidates, origin, direction, maxDistance, halfAngleRadians }) {
+  const tanHalfAngle = Math.tan(halfAngleRadians);
+  const toTarget = new THREE.Vector3();
+  const radial = new THREE.Vector3();
+  const hits = [];
+  for (const candidate of candidates) {
+    const center = candidate.getWorldCenter(new THREE.Vector3());
+    toTarget.subVectors(center, origin);
+    const depth = toTarget.dot(direction);
+    if (depth <= 0 || depth > maxDistance + candidate.radius) continue;
+    radial.copy(toTarget).addScaledVector(direction, -depth);
+    const radialDistance = radial.length();
+    const coneRadius = tanHalfAngle * Math.min(depth, maxDistance);
+    if (radialDistance > coneRadius + candidate.radius) continue;
+    hits.push({ target: candidate.target, distance: depth,
+      angularScore: Math.max(0, radialDistance - candidate.radius) / Math.max(depth, 1e-6) });
+  }
+  hits.sort((a, b) => Math.abs(a.angularScore - b.angularScore) > 1e-6
+    ? a.angularScore - b.angularScore : a.distance - b.distance);
+  return hits[0] ?? null;
+}
+
 export function createVrAttractorScanCone({ parent, length, settings }) {
   const halfAngleRadians = THREE.MathUtils.degToRad(settings.halfAngleDegrees);
   const radius = Math.tan(halfAngleRadians) * length;
