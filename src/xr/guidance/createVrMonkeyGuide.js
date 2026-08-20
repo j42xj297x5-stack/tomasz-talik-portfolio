@@ -8,7 +8,7 @@ const COPY = Object.freeze({
   en: Object.freeze({ progress: 'HOW AM I DOING?', close: 'CLOSE', history: (count) => `Discovered cards: ${count}. Select a sign.` })
 });
 
-export const VR_MONKEY_GUIDE_SCREEN = Object.freeze({ MENU: 'MENU', HISTORY: 'HISTORY', CARD: 'CARD' });
+export const VR_MONKEY_GUIDE_SCREEN = Object.freeze({ MENU: 'MENU', HISTORY: 'HISTORY', CARD: 'CARD', KNOWLEDGE: 'KNOWLEDGE' });
 export const unreadPulseAlpha = (seconds) => 0.5 - 0.5 * Math.cos(Math.PI * Math.max(0, seconds));
 const degToRad = (degrees) => degrees * Math.PI / 180;
 
@@ -97,7 +97,7 @@ function createTwoSidedCanvasPlane({ name, width, height, canvasWidth, canvasHei
 
 export function createVrMonkeyGuide({
   actorRoot, visualRoot, floorRoot = actorRoot, interactionRoot = visualRoot, controllers = [], progressionController,
-  locale = 'en', settings = {},
+  locale = 'en', settings = {}, knowledgeResolver = null,
   isOrdinaryRayAvailable = () => true, onOpenChange = () => {}, onPanelClick = () => {},
   onAttentionStart = () => {}
 }) {
@@ -200,6 +200,8 @@ export function createVrMonkeyGuide({
   let historyPage = 0;
   let selectedPageId = null;
   let cardPage = 0;
+  let selectedKnowledgeGroupId = null;
+  let selectedKnowledgeTopicId = null;
   let historyPulseRedrawElapsed = 0;
   let dialogueOverride = null;
   let monkeyWasHovered = false;
@@ -288,9 +290,14 @@ export function createVrMonkeyGuide({
     }
     if (screen === VR_MONKEY_GUIDE_SCREEN.HISTORY) { drawHistory(context, canvas); texture.needsUpdate = true; return; }
     if (screen === VR_MONKEY_GUIDE_SCREEN.CARD) { drawCardNavigation(context, canvas); texture.needsUpdate = true; return; }
-    const options = progressCount() > 0
-      ? [{ id: 'progress', label: copy.progress }, { id: 'close', label: copy.close }]
-      : [{ id: 'close', label: copy.close }];
+    if (screen === VR_MONKEY_GUIDE_SCREEN.KNOWLEDGE) { drawKnowledge(context, canvas); texture.needsUpdate = true; return; }
+    const options = [
+      ...(progressCount() > 0 ? [{ id: 'progress', label: copy.progress }] : []),
+      ...(knowledgeResolver?.getRootTopics?.() ?? []).map((topic) => ({
+        id: `knowledge:${topic.id}`, label: topic.label
+      })),
+      { id: 'close', label: copy.close }
+    ];
     const gap = settings.dialogue.gap;
     const padding = settings.dialogue.padding;
     context.font = `${settings.dialogue.fontWeight} ${settings.dialogue.fontSize}px sans-serif`;
@@ -423,6 +430,26 @@ export function createVrMonkeyGuide({
     if (pages.length > 1 && cardPage < pages.length - 1) { const next = addRegion({ id: 'card-next', x: canvas.width - padding - 150,
       y: navTop, width: 150, height }); drawButton(context, next, '›'); }
   }
+  function drawKnowledge(context, canvas) {
+    interactiveRegions = [];
+    const topics = knowledgeResolver?.getGroupTopics?.(selectedKnowledgeGroupId) ?? [];
+    const padding = settings.dialogue.padding; const gap = settings.dialogue.gap;
+    const height = settings.dialogue.fontSize + settings.dialogue.menuPaddingY * 2;
+    context.font = `${settings.dialogue.fontWeight} ${settings.dialogue.fontSize}px sans-serif`;
+    topics.forEach((topic, index) => {
+      const region = addRegion({ id: `knowledge:${topic.id}`, x: padding,
+        y: padding + index * (height + gap),
+        width: Math.min(canvas.width - padding * 2,
+          context.measureText(topic.label).width + settings.dialogue.menuPaddingX * 2), height });
+      context.fillStyle = drawInteractiveRegion(context, region, hoveredOption === region.id);
+      context.textAlign = 'left'; context.textBaseline = 'middle';
+      context.fillText(topic.label, region.x + settings.dialogue.menuPaddingX, region.y + region.height / 2);
+    });
+    const back = addRegion({ id: 'back-knowledge', x: padding,
+      y: canvas.height - padding - settings.dialogue.historyNavigationHeight,
+      width: settings.dialogue.navigationWidth, height: settings.dialogue.historyNavigationHeight });
+    drawButton(context, back, '←');
+  }
 
   function showMessage(text) {
     message = String(text ?? '').trim();
@@ -452,13 +479,25 @@ export function createVrMonkeyGuide({
     hoveredOption = null;
     hits.forEach((_, record) => hits.set(record, null));
     if (open) clearAttention();
-    else { screen = VR_MONKEY_GUIDE_SCREEN.MENU; selectedPageId = null; cardPage = 0; historyPage = 0; showMessage(''); }
+    else { screen = VR_MONKEY_GUIDE_SCREEN.MENU; selectedPageId = null; cardPage = 0; historyPage = 0;
+      selectedKnowledgeGroupId = null; selectedKnowledgeTopicId = null; showMessage(''); }
     drawDialogue();
     if (notify && open !== previous) onOpenChange(open);
   }
   function close() { setOpen(false); }
   function openDialogue() { setOpen(true); }
   function activateOption(id) {
+    if (id?.startsWith('knowledge:')) {
+      const topic = knowledgeResolver?.getTopic?.(id.slice('knowledge:'.length));
+      if (!topic) return false;
+      screen = VR_MONKEY_GUIDE_SCREEN.KNOWLEDGE;
+      selectedKnowledgeGroupId = topic.groupId;
+      selectedKnowledgeTopicId = topic.id;
+      showMessage(topic.text); drawDialogue(); return true;
+    }
+    if (id === 'back-knowledge') { screen = VR_MONKEY_GUIDE_SCREEN.MENU;
+      selectedKnowledgeGroupId = null; selectedKnowledgeTopicId = null;
+      showMessage(''); drawDialogue(); return true; }
     if (id === 'progress' && progressCount() > 0) { screen = VR_MONKEY_GUIDE_SCREEN.HISTORY; historyPage = 0;
       showMessage(copy.history(progressCount())); drawDialogue(); return true; }
     if (id?.startsWith('page:')) { selectedPageId = id.slice(5); unreadPageIds.delete(selectedPageId);
@@ -595,6 +634,8 @@ export function createVrMonkeyGuide({
     hasCurrentHit: (record) => Boolean(hits.get(record)), reset, dispose, press,
     isAttentionPending: () => attentionPending,
     getScreen: () => screen, getHistoryEntries: historyEntries, getSelectedPageId: () => selectedPageId,
+    getSelectedKnowledgeGroupId: () => selectedKnowledgeGroupId,
+    getSelectedKnowledgeTopicId: () => selectedKnowledgeTopicId,
     getHistoryPage: () => historyPage, getCardPage: () => cardPage, getCardPageCount: () => cardPages().length,
     getUnreadPageIds: () => [...unreadPageIds],
     getInteractiveRegions: () => interactiveRegions.map((region) => ({ ...region })),
