@@ -2,6 +2,10 @@
 
 Status: current binding decisions organized by implementation status, not patch chronology. Synchronized after the Scenario / Director / Actors documentation audit on 2026-08-16.
 
+## 2026-08-20 — rozdzielenie kanonu komunikacji Experience VR
+
+Experience VR communication ma dwa rozdzielone canonical sources: [`EXPERIENCE_VR_COMMUNICATION_MECHANICS.md`](../concept/EXPERIENCE_VR_COMMUNICATION_MECHANICS.md) określa kiedy, gdzie i jakiego typu komunikacja jest należna, a [`EXPERIENCE_VR_PLAYER_COMMUNICATION_COPY.md`](../concept/EXPERIENCE_VR_PLAYER_COMMUNICATION_COPY.md) zawiera zatwierdzone teksty PL. Narrative baseline pozostaje dokumentem przebiegu doświadczenia i nie duplikuje tych danych. Decyzja nie stanowi twierdzenia, że odpowiadający jej system Guidance jest już zaimplementowany.
+
 ## 2026-08-18 — canonical Scenario point authoring standard
 
 Każdy nowy canonical Experience VR Scenario point musi spełniać [`VR_SCENARIO_POINT_AUTHORING_STANDARD.md`](../technical/VR_SCENARIO_POINT_AUTHORING_STANDARD.md), w szczególności target-owned exactly-once entry, jednoznaczne ownership persistent truth oraz pełny reconstruction/hydration/direct-activation parity contract. Istniejące legacy seams są udokumentowanymi wyjątkami i nie stanowią precedensu architektonicznego.
@@ -9,7 +13,7 @@ Każdy nowy canonical Experience VR Scenario point musi spełniać [`VR_SCENARIO
 ## 2026-08-16 — repository entry and canonical story terminal
 
 1. Repository documentation routing starts at the existing `README.md`, `docs/README.md`, current documentation hub and Project Index. No additional private architect input belongs to, is required by or is expected in the repository.
-2. `100.10` is the canonical authored mainline story terminal. Normal completion after `3.80` and every earlier explicit exit route converge there. It may remain forbidden as a reconstruction/checkpoint start; that restriction does not remove it from mainline or from the story.
+2. `100.10` is the canonical authored mainline story terminal. Normal completion after `4.10` and every earlier explicit exit route converge there. It may remain forbidden as a reconstruction/checkpoint start; that restriction does not remove it from mainline or from the story.
 
 ## Experience VR Scenario and Director — binding after M2.2
 
@@ -20,7 +24,7 @@ Każdy nowy canonical Experience VR Scenario point musi spełniać [`VR_SCENARIO
 5. `2.30` represents the complete first-ring five-card loop. Per-card preview, commit feedback and hints are local `STAY`; `createVrProgressionController` alone owns the tier completion fact. Its first-tier `5/5` produces `FIRST_RING_COMPLETED`, which completes `2.30` through Spine to `2.40`.
 6. `2.40` is the canonical first-ring-completed `5/5` presentation point. `createVrFirstRingFlow` owns the local presentation seam; only `FIRST_RING_PRESENTATION_COMPLETED` advances to `3.10`.
 7. Scenario capabilities may make the whole vessel loop available, but domain interaction state enforces Activate only for `inserted` and Release only for `active`. Interaction phases are not story points.
-8. Reconstruction remains `stateAt(X) = fold(settledConsequences of Spine points strictly before X)`. It never reconstructs transient/live state. Direct activation through `RuntimeExperience.activatePoint()` and canonical reconstruction/hydration-backed P0/P1/P2 lifecycle are implemented in their supported scope. Stable state after `3.40`, Astro `AVAILABLE`/`EARNED`, Shell/Furnace/Asterion hydration, future P3/P4 and durable save remain partial or not yet authored. Authored progression terminates at `100.10` after `3.80`.
+8. Reconstruction remains `stateAt(X) = fold(settledConsequences of Spine points strictly before X)`. It never reconstructs transient/live state. Direct activation through `RuntimeExperience.activatePoint()` and canonical reconstruction/hydration-backed P0/P1/P2/P3 lifecycle are implemented in their supported scope. P3 targets `4.10`, after the physical Asterion claim, and authored progression then reaches `100.10`; Tier 2 completion, P4 and durable save remain not yet authored.
 
 ## 2026-08-14 — P4 rune stones and sector vessels canonical target model
 
