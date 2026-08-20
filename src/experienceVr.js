@@ -15,6 +15,7 @@ import { getXrHeadWorldPosition } from './xr/getXrHeadWorldPosition.js';
 import { createVrControllers } from './xr/createVrControllers.js';
 import { createVrGlyphInteraction } from './xr/createVrGlyphInteraction.js';
 import { createVrGlyphOrbit } from './xr/createVrGlyphOrbit.js';
+import { createVrSmallGlyphSystem } from './xr/glyphs/createVrSmallGlyphSystem.js';
 import { createVrGlyphLights } from './xr/createVrGlyphLights.js';
 import { createVrSpatialPlaque } from './xr/createVrSpatialPlaque.js';
 import { createVrPortalDisplay } from './xr/createVrPortalDisplay.js';
@@ -181,7 +182,7 @@ worldStableRoot.add(centralPlaceholder);
 
 const asterionSphereQa = settings.asterionSphere.enabled && searchParams.has(settings.asterionSphere.qaQueryParam);
 const vrAssets = getPreloadAssets([...INITIAL_PRELOAD_GROUPS, ...DEFERRED_PRELOAD_GROUPS])
-  .filter(({ id }) => id === 'vr-asterion-sphere-model' || id === 'vr-rune-bridge-model' || id === 'gltf-loader-module' || id === 'monkey-model' || id === 'monkey-stone-model' || id === 'vr-portal-model' || id === 'vr-astro-attractor-model' || id === 'vr-astro-furnace-model' || id.startsWith('vr-progress-floor-') || id === 'vr-crystal-reliquary-model' || id.startsWith('vr-crystal-reliquary-button-') || id.startsWith('glyph-') || id.startsWith('vr-crystal-') || id.startsWith('shell-relic-'))
+  .filter(({ id }) => id === 'vr-asterion-sphere-model' || id === 'vr-rune-bridge-model' || id === 'gltf-loader-module' || id === 'monkey-model' || id === 'monkey-stone-model' || id === 'vr-portal-model' || id === 'vr-astro-attractor-model' || id === 'vr-astro-furnace-model' || id.startsWith('vr-progress-floor-') || id === 'vr-crystal-reliquary-model' || id.startsWith('vr-crystal-reliquary-button-') || id.startsWith('glyph-') || id.startsWith('vr-crystal-') || id.startsWith('shell-relic-') || id.startsWith('small-glyph-relic-'))
   .map((asset) => ({ ...asset, critical: asset.id === 'gltf-loader-module' }));
 const loadingDiagnostics = createLoadingDiagnostics(vrAssets);
 const assetManager = createAssetManager({ diagnostics: loadingDiagnostics });
@@ -238,6 +239,27 @@ const floorWalkRadius = glyphOrbit.effectiveRadius;
 const playerRigSpawnLocalPosition = playerRig.position.clone();
 const playerRigSpawnLocalQuaternion = playerRig.quaternion.clone();
 const playerRigSpawnLocalScale = playerRig.scale.clone();
+const smallGlyphSystem = createVrSmallGlyphSystem({
+  parent: worldStableRoot,
+  assetManager,
+  assetIds: [
+    'small-glyph-relic-1',
+    'small-glyph-relic-2',
+    'small-glyph-relic-3',
+    'small-glyph-relic-4',
+    'small-glyph-relic-5',
+    'small-glyph-relic-6'
+  ],
+  copiesPerVisualVariant: settings.smallGlyphField.copiesPerVisualVariant,
+  center: { x: 0, y: settings.spatial.worldStableCenterY, z: 0 },
+  innerRadius: glyphOrbit.effectiveRadius,
+  outerRadius: glyphOrbit.effectiveRadius + settings.controllers.rayLength,
+  materializeDurationSeconds: settings.smallGlyphField.materializeDurationSeconds,
+  staggerSeconds: settings.smallGlyphField.staggerSeconds,
+  onPresentationCompleted: () => runtimeExperience.dispatch(
+    VR_SCENARIO_EVENT.SMALL_GLYPH_FIELD_PRESENTATION_COMPLETED
+  )
+});
 const shellSystem = createVrShellSystem({ parent: worldStableRoot, assetManager, baseRadius: glyphOrbit.effectiveRadius,
   centerY: settings.spatial.worldStableCenterY,
   emissionSettings: settings.shellAttractor });
@@ -832,6 +854,11 @@ runtimeExperience = new RuntimeExperience({
         throw new Error('BEGIN_P2_RADIAL_PRESENTATION rejected by P2 radial presentation actor');
       }
     },
+    [VR_SCENARIO_EFFECT.BEGIN_SMALL_GLYPH_FIELD_PRESENTATION]: () => {
+      if (!smallGlyphSystem.beginPresentation()) {
+        throw new Error('BEGIN_SMALL_GLYPH_FIELD_PRESENTATION rejected by small glyph field actor');
+      }
+    },
     [VR_SCENARIO_EFFECT.REVEAL_SHELL_FIELD_PRESENTATION]: () => {
       postRingPresentation.revealShellField();
     },
@@ -855,7 +882,7 @@ const scenarioOwners = Object.freeze({
   monkey: monkeyActor, intro: introSequence, locomotion, reliquary: crystalReliquary,
   portal: portalDisplay,
   progression: progressionController, progressFloor, crystals: crystalCollection,
-  postRing: postRingPresentation, p2World: p2RadialPresentation,
+  postRing: postRingPresentation, p2World: p2RadialPresentation, smallGlyphField: smallGlyphSystem,
   furnace: astroFurnace, furnaceProgression: furnaceProgressionController,
   astroProduction: astroAttractorProductionController, asterionProduction: asterionProductionController
 });
@@ -919,6 +946,7 @@ function renderFrame() {
   glyphOrbit.update(delta);
   postRingPresentation.update(delta);
   p2RadialPresentation.update(delta);
+  smallGlyphSystem.update(delta);
   observationWindow.update(delta);
   postRingMonkeyDialogue.update(delta);
   furnaceIntro.update(delta);
@@ -988,6 +1016,7 @@ function restoreVrScenarioBaseline() {
   runeBridgeActor.reset();
   glyphOrbit.reset();
   p2RadialPresentation.reset();
+  smallGlyphSystem.reset();
   postRingPresentation.reset();
   firstRingFlow.reset();
   observationWindow.reset();
@@ -1100,6 +1129,7 @@ window.addEventListener('pagehide', () => {
   runeBridgeActor.dispose();
   progressFloor.dispose();
   postRingPresentation.dispose();
+  smallGlyphSystem.dispose();
   shellSystem.dispose();
 }, { once: true });
 showReadyState();
