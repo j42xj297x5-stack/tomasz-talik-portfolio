@@ -53,7 +53,7 @@ function drawWrappedText(context, text, x, y, maxWidth, lineHeight, maxLines = I
 
 export function createVrPlayerGuidePanel({ leftGrip, semanticInput, locale = 'en', settings = {},
   onOpenChange = () => {}, onPanelClick = () => {}, debugCheckpoints = [],
-  onDebugCheckpoint = () => {} }) {
+  onDebugCheckpoint = () => {}, projection = null }) {
   const config = normalizeSettings(settings);
   const content = resolveVrPlayerGuideContent(locale);
   const canvas = document.createElement('canvas');
@@ -137,12 +137,12 @@ export function createVrPlayerGuidePanel({ leftGrip, semanticInput, locale = 'en
     context.fillText(viewState === VIEW_STATE.MENU ? content.menuHint : content.detailHint, 28, canvas.height - 30);
   }
 
-  function drawMainMenu() {
+  function drawMainMenu(items) {
     const boxWidth = canvas.width - 72;
-    const boxHeight = 132;
-    const gap = 34;
-    const startY = 154;
-    content.items.forEach((item, index) => {
+    const boxHeight = items.length > 2 ? 104 : 132;
+    const gap = items.length > 2 ? 20 : 34;
+    const startY = items.length > 2 ? 126 : 154;
+    items.forEach((item, index) => {
       const x = 36;
       const y = startY + index * (boxHeight + gap);
       if (index === selectedIndex) {
@@ -161,7 +161,7 @@ export function createVrPlayerGuidePanel({ leftGrip, semanticInput, locale = 'en
       context.textBaseline = 'alphabetic';
     });
     if (debugCheckpoints.length) {
-      const selected = selectedIndex === content.items.length;
+      const selected = selectedIndex === items.length;
       const y = canvas.height - 132;
       context.strokeStyle = selected ? config.colors.border : 'rgba(117, 215, 255, 0.35)';
       context.lineWidth = 3;
@@ -187,6 +187,43 @@ export function createVrPlayerGuidePanel({ leftGrip, semanticInput, locale = 'en
     context.fillStyle = config.colors.muted;
     context.font = '27px sans-serif';
     drawWrappedText(context, item.body, 36, 230, canvas.width - 72, 38, 5);
+  }
+
+  function drawToolsCard(item) {
+    let y = 142;
+    for (const tool of item.tools) {
+      context.fillStyle = config.colors.text;
+      context.font = '700 28px sans-serif';
+      context.fillText(tool.label, 36, y);
+      y += 42;
+      context.fillStyle = config.colors.muted;
+      context.font = '23px sans-serif';
+      for (const line of tool.body.split('\n')) {
+        y = drawWrappedText(context, line, 36, y, canvas.width - 72, 31, 2);
+      }
+      y += 22;
+    }
+  }
+
+  function resolveItems() {
+    const currentTask = projection?.getCurrentTask?.() ?? null;
+    const tools = projection?.getTools?.() ?? [];
+    return content.items.map((item) => item.id === 'current-task' && currentTask
+      ? { ...item, body: currentTask.body }
+      : item).concat(tools.length ? [{ id: 'tools', label: 'NARZĘDZIA', tools }] : []);
+  }
+
+  function reconcileDynamicSections(items) {
+    const previousSelectedIndex = selectedIndex;
+    const previousViewState = viewState;
+    const rowCount = items.length + (debugCheckpoints.length ? 1 : 0);
+    selectedIndex = Math.min(selectedIndex, Math.max(0, rowCount - 1));
+    if (viewState === VIEW_STATE.DETAIL && activeSectionId === 'tools'
+      && !items.some((item) => item.id === 'tools')) {
+      viewState = VIEW_STATE.MENU;
+      activeSectionId = null;
+    }
+    return selectedIndex !== previousSelectedIndex || viewState !== previousViewState;
   }
 
   function drawControlsCard(item) {
@@ -217,14 +254,17 @@ export function createVrPlayerGuidePanel({ leftGrip, semanticInput, locale = 'en
   }
 
   function draw() {
+    const items = resolveItems();
+    reconcileDynamicSections(items);
     const { width, height } = canvas;
     drawFrame(width, height);
     drawHeader();
     if (viewState === VIEW_STATE.MENU) {
-      drawMainMenu();
+      drawMainMenu(items);
     } else {
-      const activeItem = content.items.find((item) => item.id === activeSectionId) ?? content.items[0];
+      const activeItem = items.find((item) => item.id === activeSectionId) ?? items[0];
       if (activeItem?.id === 'controls') drawControlsCard(activeItem);
+      else if (activeItem?.id === 'tools') drawToolsCard(activeItem);
       else drawCurrentTaskCard(activeItem);
     }
     texture.needsUpdate = true;
@@ -238,6 +278,8 @@ export function createVrPlayerGuidePanel({ leftGrip, semanticInput, locale = 'en
   function isOpen() { return open; }
   function update() {
     if (disposed) return;
+    const items = resolveItems();
+    if (reconcileDynamicSections(items)) draw();
     const input = semanticInput.getState?.() ?? {};
     if (input.togglePlayerGuidePanel) {
       if (open && viewState === VIEW_STATE.DETAIL) {
@@ -253,7 +295,7 @@ export function createVrPlayerGuidePanel({ leftGrip, semanticInput, locale = 'en
     const axis = input.leftStickY ?? 0;
     const direction = Math.abs(axis) >= config.navigationThreshold ? Math.sign(axis) : 0;
     if (viewState === VIEW_STATE.MENU && direction && direction !== previousNavDirection) {
-      const rowCount = content.items.length + (debugCheckpoints.length ? 1 : 0);
+      const rowCount = items.length + (debugCheckpoints.length ? 1 : 0);
       selectedIndex = (selectedIndex + (direction > 0 ? 1 : -1) + rowCount) % rowCount;
       draw();
       onPanelClick();
@@ -261,7 +303,7 @@ export function createVrPlayerGuidePanel({ leftGrip, semanticInput, locale = 'en
     previousNavDirection = direction;
     const horizontalAxis = input.leftStickX ?? 0;
     const horizontalDirection = Math.abs(horizontalAxis) >= config.navigationThreshold ? Math.sign(horizontalAxis) : 0;
-    if (viewState === VIEW_STATE.MENU && selectedIndex === content.items.length && horizontalDirection
+    if (viewState === VIEW_STATE.MENU && selectedIndex === items.length && horizontalDirection
       && horizontalDirection !== previousHorizontalDirection) {
       selectedDebugIndex = (selectedDebugIndex + (horizontalDirection > 0 ? 1 : -1)
         + debugCheckpoints.length) % debugCheckpoints.length;
@@ -271,12 +313,12 @@ export function createVrPlayerGuidePanel({ leftGrip, semanticInput, locale = 'en
     const confirmPressed = Boolean(input.toggleLeftTool);
     if (confirmPressed && !previousConfirmPressed) {
       if (viewState === VIEW_STATE.MENU) {
-        if (selectedIndex === content.items.length && debugCheckpoints.length) {
+        if (selectedIndex === items.length && debugCheckpoints.length) {
           onDebugCheckpoint(debugCheckpoints[selectedDebugIndex].id);
           setOpen(false);
           onPanelClick();
         } else {
-          activeSectionId = content.items[selectedIndex]?.id ?? activeSectionId;
+          activeSectionId = items[selectedIndex]?.id ?? activeSectionId;
           viewState = VIEW_STATE.DETAIL;
           draw(); onPanelClick();
         }

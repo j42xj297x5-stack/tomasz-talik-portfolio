@@ -48,6 +48,7 @@ import { createVrAsterionSphere } from './xr/asterion/createVrAsterionSphere.js'
 import { createVrAsterionGyroInteraction } from './xr/asterion/createVrAsterionGyroInteraction.js';
 import { createVrAsterionProductionController } from './xr/asterion/createVrAsterionProductionController.js';
 import { createVrPlayerGuidePanel } from './xr/guidance/createVrPlayerGuidePanel.js';
+import { createVrPlayerGuideProjection } from './xr/guidance/createVrPlayerGuideProjection.js';
 import { createVrMonkeyGuide } from './xr/guidance/createVrMonkeyGuide.js';
 import { createVrMonkeyKnowledgeResolver } from './xr/guidance/createVrMonkeyKnowledgeResolver.js';
 import { createVrPostRingMonkeyDialogue } from './xr/guidance/createVrPostRingMonkeyDialogue.js';
@@ -382,11 +383,18 @@ const astroAttractorProductionController = createVrAstroAttractorProductionContr
     shellSystem.setInteractionEnabled(runtimeExperience.can(VR_SCENARIO_CAPABILITY.CAN_TARGET_SHELLS));
     handModeController.equipRightAstro(); }
 });
+const playerGuideProjection = createVrPlayerGuideProjection({
+  locale: language,
+  getCurrentPointId: () => runtimeExperience?.getCurrentPointId(),
+  can: (capability) => runtimeExperience?.can(capability) === true,
+  getActivatedPageIds: () => progressionController.getActivatedPageIds()
+});
 const playerGuidePanel = createVrPlayerGuidePanel({
   leftGrip: vrControllers.controllers[0]?.grip,
   semanticInput,
   locale: language,
   settings: settings.playerGuidePanel,
+  projection: playerGuideProjection,
   onOpenChange: (open) => playVrUi(open ? VR_AUDIO.playerOpen : VR_AUDIO.playerClose),
   onPanelClick: () => playVrUi(VR_AUDIO.click),
   debugCheckpoints: debugCheckpointsEnabled ? VR_DEBUG_CHECKPOINTS : [],
