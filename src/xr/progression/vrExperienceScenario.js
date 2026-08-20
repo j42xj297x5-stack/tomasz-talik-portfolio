@@ -53,6 +53,7 @@ export const VR_SCENARIO_EVENT = immutableIdentifiers([
   'ASTRO_ATTRACTOR_CLAIMED',
   'TIER_COMPLETED',
   'P2_RADIAL_PRESENTATION_COMPLETED',
+  'SMALL_GLYPH_FIELD_PRESENTATION_COMPLETED',
   'ASTRO_UNLOCKED',
   'SHELL_PULL_STARTED',
   'SHELL_PULL_CANCELLED',
@@ -147,6 +148,7 @@ export const VR_SCENARIO_EFFECT = immutableIdentifiers([
   'PLAY_FIRST_RING_COMPLETE_FEEDBACK',
   'APPLY_TIER_COMPLETE_FEEDBACK',
   'BEGIN_P2_RADIAL_PRESENTATION',
+  'BEGIN_SMALL_GLYPH_FIELD_PRESENTATION',
   'REVEAL_SHELL_FIELD_PRESENTATION',
   'ELEVATE_MAIN_GLYPHS',
   'BEGIN_OBSERVATION_WINDOW',
@@ -188,6 +190,7 @@ export const VR_EXPERIENCE_POINT = immutableIdentifiers([
   '4.10',
   '4.20',
   '4.30',
+  '4.40',
   '100.10'
 ]);
 
@@ -241,6 +244,9 @@ const SECOND_RING_COMPLETE_SETTLED_CONSEQUENCES = Object.freeze({
 });
 const P2_RADIAL_PRESENTED_SETTLED_CONSEQUENCES = Object.freeze({
   p2World: Object.freeze({ mainGlyphsRadial: true })
+});
+const SMALL_GLYPH_FIELD_PRESENTED_SETTLED_CONSEQUENCES = Object.freeze({
+  smallGlyphField: Object.freeze({ materialized: true })
 });
 const P2_MAIN_GLYPH_CAPABILITIES = Object.freeze([
   VR_SCENARIO_CAPABILITY.CAN_USE_GLYPHS, VR_SCENARIO_CAPABILITY.CAN_USE_RELIQUARY,
@@ -651,10 +657,23 @@ const points = Object.freeze([
   }),
   Object.freeze({
     id: VR_EXPERIENCE_POINT['4.30'],
+    canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['4.40'] }),
+    settledConsequences: SMALL_GLYPH_FIELD_PRESENTED_SETTLED_CONSEQUENCES,
+    entryEffects: Object.freeze([VR_SCENARIO_EFFECT.BEGIN_SMALL_GLYPH_FIELD_PRESENTATION]),
+    label: 'P2 radial world ready / small glyph integration boundary',
+    capabilities: P2_MAIN_GLYPH_CAPABILITIES,
+    transitions: Object.freeze([
+      Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.COMPLETE,
+        event: VR_SCENARIO_EVENT.SMALL_GLYPH_FIELD_PRESENTATION_COMPLETED,
+        milestonesToAdd: Object.freeze([]), effects: Object.freeze([]) })
+    ])
+  }),
+  Object.freeze({
+    id: VR_EXPERIENCE_POINT['4.40'],
     canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['100.10'] }),
     settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
     entryEffects: Object.freeze([]),
-    label: 'P2 radial world ready / small glyph integration boundary',
+    label: 'Small glyph field ready / Astro band integration boundary',
     capabilities: P2_MAIN_GLYPH_CAPABILITIES,
     transitions: Object.freeze([])
   }),

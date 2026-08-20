@@ -182,6 +182,11 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
     shellRevealDuration: 1.5
   },
   p2RadialPresentation: { durationSeconds: 2.5 },
+  smallGlyphField: {
+    copiesPerVisualVariant: 2,
+    materializeDurationSeconds: 1.4,
+    staggerSeconds: 0.08
+  },
   observationWindow: { durationSeconds: 10.0 },
   intro: {
     enabled: true,
@@ -587,6 +592,14 @@ export function normalizeExperienceVrSettings(candidate) {
     p2RadialPresentation: {
       durationSeconds: finiteNumber(candidate.p2RadialPresentation?.durationSeconds,
         defaults.p2RadialPresentation.durationSeconds, { min: 0.1, max: 60 })
+    },
+    smallGlyphField: {
+      copiesPerVisualVariant: Math.round(finiteNumber(candidate.smallGlyphField?.copiesPerVisualVariant,
+        defaults.smallGlyphField.copiesPerVisualVariant, { min: 1, max: 8 })),
+      materializeDurationSeconds: finiteNumber(candidate.smallGlyphField?.materializeDurationSeconds,
+        defaults.smallGlyphField.materializeDurationSeconds, { min: Number.EPSILON }),
+      staggerSeconds: finiteNumber(candidate.smallGlyphField?.staggerSeconds,
+        defaults.smallGlyphField.staggerSeconds, { min: 0 })
     },
     observationWindow: {
       durationSeconds: finiteNumber(candidate.observationWindow?.durationSeconds,
