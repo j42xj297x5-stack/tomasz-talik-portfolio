@@ -49,6 +49,7 @@ import { createVrAsterionGyroInteraction } from './xr/asterion/createVrAsterionG
 import { createVrAsterionProductionController } from './xr/asterion/createVrAsterionProductionController.js';
 import { createVrPlayerGuidePanel } from './xr/guidance/createVrPlayerGuidePanel.js';
 import { createVrMonkeyGuide } from './xr/guidance/createVrMonkeyGuide.js';
+import { createVrMonkeyKnowledgeResolver } from './xr/guidance/createVrMonkeyKnowledgeResolver.js';
 import { createVrPostRingMonkeyDialogue } from './xr/guidance/createVrPostRingMonkeyDialogue.js';
 import { createVrFurnaceIntro } from './xr/guidance/createVrFurnaceIntro.js';
 import { createVrIntroSequence } from './xr/guidance/createVrIntroSequence.js';
@@ -391,6 +392,15 @@ const playerGuidePanel = createVrPlayerGuidePanel({
   debugCheckpoints: debugCheckpointsEnabled ? VR_DEBUG_CHECKPOINTS : [],
   onDebugCheckpoint: (checkpointId) => enterVrDebugCheckpoint?.(checkpointId)
 });
+const monkeyKnowledgeResolver = createVrMonkeyKnowledgeResolver({
+  locale: language,
+  hasAstroKnowledge: () => runtimeExperience?.can(
+    VR_SCENARIO_CAPABILITY.CAN_EQUIP_ASTRO
+  ) === true,
+  hasAsterionKnowledge: () => runtimeExperience?.can(
+    VR_SCENARIO_CAPABILITY.CAN_EQUIP_ASTERION
+  ) === true
+});
 const monkeyGuide = createVrMonkeyGuide({
   actorRoot: monkeyMotionRoot,
   floorRoot: progressFloor.object,
@@ -398,6 +408,7 @@ const monkeyGuide = createVrMonkeyGuide({
   interactionRoot: monkeyInteractionRoot,
   controllers: vrControllers.controllers,
   progressionController,
+  knowledgeResolver: monkeyKnowledgeResolver,
   locale: language,
   settings: settings.monkeyGuide,
   onOpenChange: (open) => playVrUi(open ? VR_AUDIO.monkeyOpen : VR_AUDIO.monkeyClose),
