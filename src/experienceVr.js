@@ -715,6 +715,11 @@ runtimeExperience = new RuntimeExperience({
         throw new Error('CONTINUE_INTRO_INVITATION rejected by Intro actor after accepted Scenario transition');
       }
     },
+    [VR_SCENARIO_EFFECT.START_MONKEY_FOLLOW]: () => {
+      if (!introSequence.startMonkeyFollow()) {
+        throw new Error('START_MONKEY_FOLLOW rejected by Intro actor after accepted Scenario point activation');
+      }
+    },
     [VR_SCENARIO_EFFECT.APPLY_FOLLOW_PAUSE_STATE]: (change, payload) => {
       if (!introSequence.continueFollowPauseChanged(payload.paused)) {
         throw new Error('APPLY_FOLLOW_PAUSE_STATE rejected by Intro actor after accepted Scenario transition');
@@ -728,6 +733,11 @@ runtimeExperience = new RuntimeExperience({
     [VR_SCENARIO_EFFECT.CONTINUE_THRESHOLD_CHOICE]: (change, payload) => {
       if (!introSequence.continueThresholdChoice(payload.choice)) {
         throw new Error('CONTINUE_THRESHOLD_CHOICE rejected by Intro actor after accepted Scenario transition');
+      }
+    },
+    [VR_SCENARIO_EFFECT.BEGIN_THRESHOLD_CROSSING]: () => {
+      if (!introSequence.beginThresholdCrossing()) {
+        throw new Error('BEGIN_THRESHOLD_CROSSING rejected by Intro actor after accepted Scenario point activation');
       }
     },
     [VR_SCENARIO_EFFECT.BEGIN_GLYPH_FREE_EXPLORE]: () => {
@@ -769,7 +779,7 @@ runtimeExperience = new RuntimeExperience({
     [VR_SCENARIO_EFFECT.PLAY_CARD_COMMIT_FEEDBACK]: () => {
       playVrWorld(VR_AUDIO.reliquaryConsume);
     },
-    [VR_SCENARIO_EFFECT.COMPLETE_FIRST_RING_PRESENTATION]: () => {
+    [VR_SCENARIO_EFFECT.BEGIN_FIRST_RING_PRESENTATION]: () => {
       firstRingFlow.beginPresentation();
     },
     [VR_SCENARIO_EFFECT.PLAY_FIRST_RING_COMPLETE_FEEDBACK]: () => {

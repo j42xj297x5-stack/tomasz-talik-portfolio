@@ -80,10 +80,14 @@ export function createVrIntroSequence({ monkeyGuide, monkeyMotionRoot, monkeyVis
   function beginPointerTutorial() { state = VR_INTRO_STATE.CONTROLLER_ONBOARDING; show(copy.panelDone, () => { state = VR_INTRO_STATE.WAIT_HOVER; monkeyGuide.setDialogueOverride({ onMonkeyHover() { if (state === VR_INTRO_STATE.WAIT_HOVER) { state = VR_INTRO_STATE.WAIT_RUNTIME_AFTER_MONKEY_HOVERED; onMonkeyHovered(); } }, onMonkeyPress() { if (state !== VR_INTRO_STATE.WAIT_TRIGGER) return true; state = VR_INTRO_STATE.WAIT_RUNTIME_AFTER_MONKEY_TRIGGERED; onMonkeyTriggered(); return true; } }); }); }
   function selectInvitation(id) { const choice = invitationChoices[id]; if (state !== VR_INTRO_STATE.INVITATION || !choice) return true; state = VR_INTRO_STATE.WAIT_RUNTIME_AFTER_INVITATION_SELECTED; onInvitationSelected(choice); return true; }
   function continueInvitation(choice) {
-    if (state !== VR_INTRO_STATE.WAIT_RUNTIME_AFTER_INVITATION_SELECTED || ![1, 2, 3].includes(choice)) return false;
-    if (choice === 1) { state = VR_INTRO_STATE.FOLLOWING; capture(); monkeyGuide.showMessage(''); startRadius = monkeyRadius; turnElapsed = 0; }
-    else if (choice === 2) { monkeyGuide.setDialogueOverride(null); show(copy.where, invitation, copy.going); }
+    if (state !== VR_INTRO_STATE.WAIT_RUNTIME_AFTER_INVITATION_SELECTED || ![2, 3].includes(choice)) return false;
+    if (choice === 2) { monkeyGuide.setDialogueOverride(null); show(copy.where, invitation, copy.going); }
     else { state = VR_INTRO_STATE.ENDING; monkeyGuide.setDialogueOverride(null); show(copy.no, onEndSession); }
+    return true;
+  }
+  function startMonkeyFollow() {
+    if (state !== VR_INTRO_STATE.WAIT_RUNTIME_AFTER_INVITATION_SELECTED) return false;
+    state = VR_INTRO_STATE.FOLLOWING; capture(); monkeyGuide.showMessage(''); startRadius = monkeyRadius; turnElapsed = 0;
     return true;
   }
   const thresholdChoice = () => { state = VR_INTRO_STATE.THRESHOLD; fogReveal?.setRadius(6); show(copy.threshold.slice(0, -1), () => options(copy.thresholdOptions, selectThreshold), copy.threshold.at(-1)); };
@@ -114,13 +118,18 @@ export function createVrIntroSequence({ monkeyGuide, monkeyMotionRoot, monkeyVis
   } });
   function selectThreshold(id) { const choice = thresholdChoices[id]; if (state !== VR_INTRO_STATE.THRESHOLD || !choice) return true; state = VR_INTRO_STATE.WAIT_RUNTIME_AFTER_THRESHOLD_SELECTED; onThresholdSelected(choice); return true; }
   function continueThresholdChoice(choice) {
-    if (state !== VR_INTRO_STATE.WAIT_RUNTIME_AFTER_THRESHOLD_SELECTED || ![1, 2, 3].includes(choice)) return false;
-    if (choice === 1) { state = VR_INTRO_STATE.CROSSING; capture(); monkeyGuide.showMessage(''); }
-    else if (choice === 2) { state = VR_INTRO_STATE.THRESHOLD; monkeyGuide.setDialogueOverride(null); show(copy.beyond, () => options(copy.thresholdOptions, selectThreshold)); }
+    if (state !== VR_INTRO_STATE.WAIT_RUNTIME_AFTER_THRESHOLD_SELECTED || ![2, 3].includes(choice)) return false;
+    if (choice === 2) { state = VR_INTRO_STATE.THRESHOLD; monkeyGuide.setDialogueOverride(null); show(copy.beyond, () => options(copy.thresholdOptions, selectThreshold)); }
     else { state = VR_INTRO_STATE.ENDING; monkeyGuide.setDialogueOverride(null); show(copy.returning, onEndSession); }
     return true;
   }
+  function beginThresholdCrossing() {
+    if (state !== VR_INTRO_STATE.WAIT_RUNTIME_AFTER_THRESHOLD_SELECTED) return false;
+    state = VR_INTRO_STATE.CROSSING; capture(); monkeyGuide.showMessage('');
+    return true;
+  }
   function beginGlyphFreeExplore() {
+    if (state === VR_INTRO_STATE.GLYPH_FREE_EXPLORE) return true;
     if (state !== VR_INTRO_STATE.MONKEY_SETTLING) return false;
     monkeyMotionRoot.quaternion.copy(canonicalQuaternion); fogReveal?.dispose(); monkeyGuide.setDialogueOverride(null); monkeyGuide.showMessage(''); state = VR_INTRO_STATE.GLYPH_FREE_EXPLORE; glyphExploreElapsed = 0;
     return true;
@@ -239,7 +248,7 @@ export function createVrIntroSequence({ monkeyGuide, monkeyMotionRoot, monkeyVis
     }
   }
   reset();
-  return { update, reset, hydrateScenarioState, beginIntroReveal, beginPostRevealSilence, beginControllerOnboarding, continueControllerOnboarding, beginInvitation, continueInvitation, continueFollowPauseChanged, presentThresholdChoice, continueThresholdChoice, beginGlyphFreeExplore, showGlyphHint, beginFirstCrystalDiscovery, beginReliquaryReveal, completeReliquaryReveal, getWorldPointAtRadius, getState: () => state, isGuidePaused: () => walkingPaused,
+  return { update, reset, hydrateScenarioState, beginIntroReveal, beginPostRevealSilence, beginControllerOnboarding, continueControllerOnboarding, beginInvitation, continueInvitation, startMonkeyFollow, continueFollowPauseChanged, presentThresholdChoice, continueThresholdChoice, beginThresholdCrossing, beginGlyphFreeExplore, showGlyphHint, beginFirstCrystalDiscovery, beginReliquaryReveal, completeReliquaryReveal, getWorldPointAtRadius, getState: () => state, isGuidePaused: () => walkingPaused,
     getDebugSnapshot: () => { const head = getHeadPosition(); const fog = fogReveal?.getSnapshot() ?? {}; return { state, headRadius: radiusOf(head), monkeyRadius: radiusOf(monkeyMotionRoot), headToMonkeyDistance: Math.hypot(head.x - monkeyMotionRoot.getWorldPosition(new THREE.Vector3()).x, head.z - monkeyMotionRoot.getWorldPosition(new THREE.Vector3()).z), fogRadius: fog.radius, fogRevealProgress: fog.progress ?? (state === VR_INTRO_STATE.FOG_REVEAL ? 0 : 1), postRevealSilenceRemaining: state === VR_INTRO_STATE.POST_REVEAL_SILENCE ? Math.max(0, (settings.postRevealSilenceDuration ?? 2) - silenceElapsed) : 0, playerGuideOpen: playerGuidePanel?.isOpen() ?? false, playerGuideSection: playerGuidePanel?.getActiveSectionId() ?? null, followCheckResolved, walkingPaused, playerEnteredRing, playerSafelyInside, monkeySettled, glyphExploreElapsed, glyphExploreResolved, glyphHintTriggered, glyphHintShown, ringRadius, xrCalibrated, visualRoot: monkeyVisualRoot?.name ?? null }; }
   };
 }
