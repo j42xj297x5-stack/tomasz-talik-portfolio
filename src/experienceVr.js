@@ -659,10 +659,12 @@ const observationWindow = createVrObservationWindow({
 });
 const postRingMonkeyDialogue = createVrPostRingMonkeyDialogue({
   monkeyGuide,
+  secondsPerLine: settings.intro.messageDisplayDuration,
   onCompleted: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.POST_RING_MONKEY_DIALOGUE_COMPLETED)
 });
 const furnaceIntro = createVrFurnaceIntro({
   monkeyGuide,
+  secondsPerLine: settings.intro.messageDisplayDuration,
   revealFurnace: () => { astroFurnace.object.visible = true; return true; },
   onCompleted: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.FURNACE_INTRO_COMPLETED)
 });
@@ -877,6 +879,8 @@ function renderFrame() {
   glyphOrbit.update(delta);
   postRingPresentation.update(delta);
   observationWindow.update(delta);
+  postRingMonkeyDialogue.update(delta);
+  furnaceIntro.update(delta);
   shellSystem.update(delta);
   glyphRing.updateMatrixWorld(true);
   glyphInteraction.update(delta);
