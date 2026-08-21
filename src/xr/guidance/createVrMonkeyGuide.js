@@ -2,6 +2,8 @@ import * as THREE from '../../vendor/three.js';
 import { experienceVrPages, resolveExperienceVrPage } from '../../content/experienceVrPages.js';
 import { createVrTargetHalo } from '../createVrTargetHalo.js';
 import { resolveVrPageProtoAstro } from '../protoAstro/resolveVrPageProtoAstro.js';
+import { createVrMonkeyProgressionMessage } from './createVrMonkeyProgressionMessage.js';
+import { VR_MONKEY_MESSAGE_TIMING } from './vrMonkeyCommunicationCopy.js';
 
 const COPY = Object.freeze({
   pl: Object.freeze({ progress: 'JAK MI IDZIE?', close: 'ZAMKNIJ', history: (count) => `Odkryte karty: ${count}. Wybierz znak.` }),
@@ -23,24 +25,18 @@ function roundedRect(context, x, y, width, height, radius) {
   context.closePath();
 }
 
-function wrapText(context, text, maxWidth, maxLines) {
-  const words = String(text).split(/\s+/).filter(Boolean);
+function wrapText(context, text, maxWidth) {
   const lines = [];
-  let line = '';
-  for (const word of words) {
-    const candidate = line ? `${line} ${word}` : word;
-    if (line && context.measureText(candidate).width > maxWidth) {
-      lines.push(line);
-      line = word;
-      if (lines.length === maxLines) break;
-    } else line = candidate;
-  }
-  if (line && lines.length < maxLines) lines.push(line);
-  if (words.length && lines.length === maxLines) {
-    while (context.measureText(`${lines.at(-1)}…`).width > maxWidth && lines.at(-1).includes(' ')) {
-      lines[lines.length - 1] = lines.at(-1).replace(/\s+\S+$/, '');
+  for (const authoredLine of String(text ?? '').split('\n')) {
+    const words = authoredLine.trim().split(/\s+/).filter(Boolean);
+    let line = '';
+    for (const word of words) {
+      const candidate = line ? `${line} ${word}` : word;
+      if (line && context.measureText(candidate).width > maxWidth) {
+        lines.push(line); line = word;
+      } else line = candidate;
     }
-    lines[lines.length - 1] += '…';
+    if (line) lines.push(line);
   }
   return lines;
 }
@@ -206,6 +202,7 @@ export function createVrMonkeyGuide({
   let dialogueOverride = null;
   let monkeyWasHovered = false;
   let interactionEnabled = true;
+  let knowledgeSequence = null;
   const knownActivatedPageIds = new Set(progressionController.getActivatedPageIds());
   const unreadPageIds = new Set();
   const pagesById = new Map(experienceVrPages.map((page) => [page.id, page]));
@@ -249,7 +246,7 @@ export function createVrMonkeyGuide({
     }
     context.font = `${settings.message.fontWeight} ${settings.message.fontSize}px sans-serif`;
     const maxTextWidth = settings.message.maxBubbleWidthPx - settings.message.paddingX * 2;
-    const lines = wrapText(context, message, maxTextWidth, settings.message.maxLines);
+    const lines = wrapText(context, message, maxTextWidth);
     const measuredWidth = Math.max(...lines.map((line) => context.measureText(line).width), 1);
     const boxWidth = Math.min(settings.message.maxBubbleWidthPx, measuredWidth + settings.message.paddingX * 2);
     const boxHeight = Math.min(canvas.height, lines.length * settings.message.lineHeight + settings.message.paddingY * 2);
@@ -458,7 +455,7 @@ export function createVrMonkeyGuide({
     if (!message) return { lineCount: 0 };
     messagePanel.context.font = `${settings.message.fontWeight} ${settings.message.fontSize}px sans-serif`;
     const maxTextWidth = settings.message.maxBubbleWidthPx - settings.message.paddingX * 2;
-    return { lineCount: wrapText(messagePanel.context, message, maxTextWidth, settings.message.maxLines).length };
+    return { lineCount: wrapText(messagePanel.context, message, maxTextWidth).length };
   }
   function clearAttention() {
     attentionPending = false;
@@ -479,7 +476,7 @@ export function createVrMonkeyGuide({
     hoveredOption = null;
     hits.forEach((_, record) => hits.set(record, null));
     if (open) clearAttention();
-    else { screen = VR_MONKEY_GUIDE_SCREEN.MENU; selectedPageId = null; cardPage = 0; historyPage = 0;
+    else { knowledgeSequence?.reset(); knowledgeSequence = null; screen = VR_MONKEY_GUIDE_SCREEN.MENU; selectedPageId = null; cardPage = 0; historyPage = 0;
       selectedKnowledgeGroupId = null; selectedKnowledgeTopicId = null; showMessage(''); }
     drawDialogue();
     if (notify && open !== previous) onOpenChange(open);
@@ -492,10 +489,13 @@ export function createVrMonkeyGuide({
       if (!topic) return false;
       screen = VR_MONKEY_GUIDE_SCREEN.KNOWLEDGE;
       selectedKnowledgeGroupId = topic.groupId;
-      selectedKnowledgeTopicId = topic.id;
-      showMessage(topic.text); drawDialogue(); return true;
+      knowledgeSequence?.reset(); selectedKnowledgeTopicId = topic.id;
+      knowledgeSequence = createVrMonkeyProgressionMessage({ monkeyGuide: api, blocks: topic.blocks,
+        secondsPerLine: VR_MONKEY_MESSAGE_TIMING.secondsPerLine, gapSeconds: VR_MONKEY_MESSAGE_TIMING.gapSeconds,
+        onCompleted() { knowledgeResolver?.completeTopic?.(topic.id); knowledgeSequence = null; drawDialogue(); } });
+      knowledgeSequence.begin(); drawDialogue(); return true;
     }
-    if (id === 'back-knowledge') { screen = VR_MONKEY_GUIDE_SCREEN.MENU;
+    if (id === 'back-knowledge') { knowledgeSequence?.reset(); knowledgeSequence = null; screen = VR_MONKEY_GUIDE_SCREEN.MENU;
       selectedKnowledgeGroupId = null; selectedKnowledgeTopicId = null;
       showMessage(''); drawDialogue(); return true; }
     if (id === 'progress' && progressCount() > 0) { screen = VR_MONKEY_GUIDE_SCREEN.HISTORY; historyPage = 0;
@@ -601,6 +601,7 @@ export function createVrMonkeyGuide({
     }
     updateHits();
     halo.update(delta);
+    knowledgeSequence?.update(delta);
   }
   function reset() {
     dialogueOverride = null; monkeyWasHovered = false;
@@ -611,6 +612,7 @@ export function createVrMonkeyGuide({
     knownActivatedPageIds.clear();
     progressionController.getActivatedPageIds().forEach((pageId) => knownActivatedPageIds.add(pageId));
     unreadPageIds.clear(); historyPulseRedrawElapsed = 0;
+    knowledgeSequence?.reset(); knowledgeSequence = null; knowledgeResolver?.reset?.();
     halo.setVisible(false);
   }
   function dispose() {
@@ -628,7 +630,7 @@ export function createVrMonkeyGuide({
 
   drawMessage();
   drawDialogue();
-  return {
+  const api = {
     object: root, messagePanel, dialoguePanel, attentionRoot, arcs, halo, hits,
     update, notifyAttention, showMessage, open: openDialogue, close, isOpen: () => open,
     hasCurrentHit: (record) => Boolean(hits.get(record)), reset, dispose, press,
@@ -658,4 +660,5 @@ export function createVrMonkeyGuide({
     },
     hasDialogueOverride: () => Boolean(dialogueOverride)
   };
+  return api;
 }

@@ -21,7 +21,7 @@ const tutorial = createVrIntroCrystalTutorial({
   monkeyGuide: { showMessage: (text) => messages.push(text), setDialogueOverride() {}, setInteractionEnabled() {} },
   monkeyRoot, getWorldPointAtRadius: (radius, { heightAboveFloor = 0 } = {}) => { resolvedRadii.push(radius); return entryDirection.clone().multiplyScalar(radius).setY(heightAboveFloor); }, crystalCollection: collection,
   crystalDefinition: { asset: 'water-1' }, locale: 'pl',
-  settings: { spawnRadius: 19, interactionHeightAboveFloor: 1.2, handoffDistanceFromMonkey: 0.5, messageDisplayDuration: 1 },
+  settings: { spawnRadius: 19, interactionHeightAboveFloor: 1.2, handoffDistanceFromMonkey: 0.5, messageDisplayDuration: 1, messageGapDuration: .5 },
   onHandoffRequested: () => { handoffs += 1; }, onCompleted: () => { completions += 1; }, playConsume: () => { audio += 1; }
 });
 
@@ -42,8 +42,10 @@ assert.equal(takeovers, 0, 'semantic request does not mutate ownership before ac
 assert.equal(tutorial.acceptHandoff(), true); assert.equal(tutorial.acceptHandoff(), false);
 assert.equal(takeovers, 1); assert.equal(audio, 1); assert.equal(completions, 0);
 assert.equal(messages.at(-1), VR_INTRO_CRYSTAL_TUTORIAL_COPY.pl.unavailable);
-tutorial.update(1); assert.equal(messages.at(-1), VR_INTRO_CRYSTAL_TUTORIAL_COPY.pl.complete); assert.equal(completions, 0);
-tutorial.update(1); assert.equal(completions, 1, 'completion follows real final-line duration');
+tutorial.update(1); assert.equal(messages.at(-1), ''); tutorial.update(.5);
+assert.equal(messages.at(-1), VR_INTRO_CRYSTAL_TUTORIAL_COPY.pl.complete); assert.equal(completions, 0);
+tutorial.update(1); assert.equal(completions, 0); tutorial.update(.5);
+assert.equal(completions, 1, 'completion follows real final-line duration and final canonical gap');
 tutorial.update(100); assert.equal(completions, 1);
 tutorial.reset(); assert.equal(removed, 1); assert.equal(tutorial.getSnapshot().crystal, null);
 console.log('VR intro crystal tutorial assertions passed');

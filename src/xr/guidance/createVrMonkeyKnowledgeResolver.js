@@ -1,70 +1,43 @@
-const PL_TOPICS = Object.freeze([
-  Object.freeze({
-    id: 'knowledge.astro.bandSwitch',
-    groupId: 'astro',
-    label: 'CO ROBI B?',
-    text: 'Narzędzia zmieniają się razem ze światem.\nB przełącza pasmo Astrolabium.',
-    root: false
-  }),
-  Object.freeze({
-    id: 'knowledge.astro.whatIsIt',
-    groupId: 'astro',
-    label: 'CO TO JEST ASTROLABIUM WIĘZI?',
-    text: 'To narzędzie do rzeczy, które są daleko,\na chciałbyś, żeby były bliżej.\nChwytem namierzasz. Spustem przyciągasz.\nJeśli chcesz coś zachować — użyj Szpili i chwyć.',
-    root: true
-  }),
-  Object.freeze({
-    id: 'knowledge.astro.why',
-    groupId: 'astro',
-    label: 'A PO CO MI TO?',
-    text: 'Żebyś mógł sięgnąć trochę dalej.\nGlify niestety trochę ci uciekły.\nTak już to zaprojektowano.',
-    root: false
-  }),
-  Object.freeze({
-    id: 'knowledge.astro.next',
-    groupId: 'astro',
-    label: 'CO DALEJ?',
-    text: 'Potrzebujesz Kuli Asterionowej.\nPiec potrafi ją zbudować.\nZgromadź skorupy.',
-    root: false
-  }),
-  Object.freeze({
-    id: 'knowledge.asterion.whatIsIt',
-    groupId: 'asterion',
-    label: 'CO TO JEST KULA ASTERIONOWA?',
-    text: 'To narzędzie do zmiany horyzontu.\nNie przybliża tego, co jest daleko.\nZmienia to, skąd patrzysz.\nDzięki temu dosięgniesz tego, czego wcześniej nie mogłeś.',
-    root: true
-  })
-]);
+import { VR_MONKEY_COMMUNICATION_COPY_PL, VR_MONKEY_KNOWLEDGE_POLICY } from './vrMonkeyCommunicationCopy.js';
+
+export const VR_MONKEY_KNOWLEDGE_LIFECYCLE = Object.freeze({
+  LOCKED: 'LOCKED', NEW: 'NEW', READ: 'READ', ARCHIVED: 'ARCHIVED'
+});
 
 export function createVrMonkeyKnowledgeResolver({ locale, hasAstroKnowledge, hasAstroBandSwitchKnowledge,
   hasAsterionKnowledge }) {
   if (typeof hasAstroKnowledge !== 'function') throw new TypeError('hasAstroKnowledge must be a function.');
   if (typeof hasAsterionKnowledge !== 'function') throw new TypeError('hasAsterionKnowledge must be a function.');
-  if (typeof hasAstroBandSwitchKnowledge !== 'function') {
-    throw new TypeError('hasAstroBandSwitchKnowledge must be a function.');
-  }
+  if (typeof hasAstroBandSwitchKnowledge !== 'function') throw new TypeError('hasAstroBandSwitchKnowledge must be a function.');
+  const topics = Object.entries(VR_MONKEY_COMMUNICATION_COPY_PL.knowledge)
+    .filter(([id]) => id.startsWith('knowledge.astro.') || id === 'knowledge.asterion.whatIsIt')
+    .map(([id, topic]) => Object.freeze({ id, ...topic, label: topic.question }));
+  const read = new Set();
 
-  function availableTopics() {
-    if (locale !== 'pl') return [];
-    const astroAvailable = hasAstroKnowledge() === true;
-    const asterionAvailable = hasAsterionKnowledge() === true;
-    return PL_TOPICS.filter((topic) => {
-      if (topic.id === 'knowledge.astro.next') return astroAvailable && !asterionAvailable;
-      if (topic.id === 'knowledge.astro.bandSwitch') {
-        return astroAvailable && hasAstroBandSwitchKnowledge() === true;
-      }
-      if (topic.groupId === 'astro') return astroAvailable;
-      return asterionAvailable;
-    });
+  function unlocked(topic) {
+    if (locale !== 'pl') return false;
+    const astro = hasAstroKnowledge() === true; const asterion = hasAsterionKnowledge() === true;
+    if (topic.id === 'knowledge.astro.next') return astro && !asterion;
+    if (topic.id === 'knowledge.astro.bandSwitch') return astro && hasAstroBandSwitchKnowledge() === true;
+    return topic.groupId === 'astro' ? astro : asterion;
   }
-  const project = (topics) => topics.map((topic) => Object.freeze({ ...topic }));
-
+  function getLifecycle(topicId) {
+    const topic = topics.find(({ id }) => id === topicId);
+    if (!topic || !unlocked(topic)) return read.has(topicId) || topic?.policy === VR_MONKEY_KNOWLEDGE_POLICY.CONTEXTUAL
+      ? VR_MONKEY_KNOWLEDGE_LIFECYCLE.ARCHIVED : VR_MONKEY_KNOWLEDGE_LIFECYCLE.LOCKED;
+    if (!read.has(topicId)) return VR_MONKEY_KNOWLEDGE_LIFECYCLE.NEW;
+    return topic.policy !== VR_MONKEY_KNOWLEDGE_POLICY.ONCE
+      ? VR_MONKEY_KNOWLEDGE_LIFECYCLE.READ : VR_MONKEY_KNOWLEDGE_LIFECYCLE.ARCHIVED;
+  }
+  const available = () => topics.filter((topic) => [VR_MONKEY_KNOWLEDGE_LIFECYCLE.NEW,
+    VR_MONKEY_KNOWLEDGE_LIFECYCLE.READ].includes(getLifecycle(topic.id)));
+  const project = (items) => items.map((topic) => Object.freeze({ ...topic, lifecycle: getLifecycle(topic.id) }));
   return Object.freeze({
-    getRootTopics: () => project(availableTopics().filter((topic) => topic.root)),
-    getGroupTopics: (groupId) => project(availableTopics().filter((topic) => topic.groupId === groupId)),
-    getTopic: (topicId) => {
-      const topic = availableTopics().find((candidate) => candidate.id === topicId);
-      return topic ? Object.freeze({ ...topic }) : null;
-    }
+    getRootTopics: () => project(available().filter(({ root }) => root)),
+    getGroupTopics: (groupId) => project(available().filter((topic) => topic.groupId === groupId)),
+    getTopic: (topicId) => project(available().filter(({ id }) => id === topicId))[0] ?? null,
+    getLifecycle,
+    completeTopic(topicId) { if (topics.some(({ id }) => id === topicId) && unlocked(topics.find(({ id }) => id === topicId))) read.add(topicId); },
+    reset() { read.clear(); }
   });
 }

@@ -1,5 +1,8 @@
+import { VR_MONKEY_COMMUNICATION_COPY_PL } from './vrMonkeyCommunicationCopy.js';
+
 export const VR_RELIQUARY_HINT_COPY = Object.freeze({
-  pl: Object.freeze({ inserted: 'Aktywuj Kryształ, odsłoń jego znaczenie.', active: 'Można już go uwolnić. Spełnił swoją rolę.' }),
+  pl: Object.freeze({ inserted: VR_MONKEY_COMMUNICATION_COPY_PL.hints['hint.reliquary.inserted'].blocks[0],
+    active: VR_MONKEY_COMMUNICATION_COPY_PL.hints['hint.reliquary.active'].blocks[0] }),
   en: Object.freeze({ inserted: 'Activate the Crystal and reveal its meaning.', active: 'It can now be released. It has fulfilled its purpose.' })
 });
 
