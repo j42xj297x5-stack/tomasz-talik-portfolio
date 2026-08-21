@@ -108,11 +108,30 @@ export function createVrSmallGlyphSystem({
   const fullPresentationDuration = materializeDurationSeconds + (instanceCount - 1) * staggerSeconds;
 
   function restoreRecord(record, glyphState, visible = true) {
+    if (record.instance.parent !== object) object.add(record.instance);
     record.instance.position.copy(record.authoredPosition);
     record.instance.quaternion.copy(record.authoredQuaternion);
     record.instance.scale.copy(record.authoredScale);
     record.instance.visible = visible;
     record.instance.userData.smallGlyphState = glyphState;
+  }
+
+  function getFieldTransform(instance) {
+    const record = records.find((candidate) => candidate.instance === instance);
+    if (!record) return null;
+    return { position: record.authoredPosition.clone(), quaternion: record.authoredQuaternion.clone(),
+      scale: record.authoredScale.clone() };
+  }
+
+  function restoreInstanceToField(instance) {
+    if (disposed) return false;
+    const record = records.find((candidate) => candidate.instance === instance);
+    if (!record) return false;
+    const materialized = state === SYSTEM_STATE.MATERIALIZED;
+    const glyphState = materialized ? GLYPH_STATE.FIELD
+      : state === SYSTEM_STATE.MATERIALIZING ? GLYPH_STATE.MATERIALIZING : GLYPH_STATE.HIDDEN;
+    restoreRecord(record, glyphState, materialized || state === SYSTEM_STATE.MATERIALIZING);
+    return true;
   }
 
   function beginPresentation() {
@@ -189,6 +208,8 @@ export function createVrSmallGlyphSystem({
     hydrateScenarioState,
     dispose,
     getState: () => state,
+    getFieldTransform,
+    restoreInstanceToField,
     getInstances: () => records.map(({ instance }) => instance)
   };
 }
