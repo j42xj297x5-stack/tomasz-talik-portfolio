@@ -59,10 +59,10 @@ export function createVrAstroFurnaceContentInteraction({
   if (volume) volume.visible = false;
   if (config.enabled !== false && !insertionReady) console.warn('[Experience VR] Astro furnace content insertion is disabled: chamber geometry, insert marker, or content anchor is missing.');
   const feedbackGeometry = insertionReady ? new THREE.CylinderGeometry(chamberCylinder.radius, chamberCylinder.radius, chamberCylinder.height, 24, 1, true) : null;
-  const feedbackMaterial = insertionReady ? new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthTest: false,
+  const feedbackMaterial = insertionReady ? new THREE.MeshBasicMaterial({ transparent: true, opacity: 0,
     depthWrite: false, side: THREE.DoubleSide, color: config.validColor }) : null;
   const feedback = insertionReady ? new THREE.Mesh(feedbackGeometry, feedbackMaterial) : null;
-  if (feedback) { feedback.name = 'VrAstroFurnaceInsertFeedback'; feedback.renderOrder = 1000; feedback.visible = false; furnace.object.add(feedback); }
+  if (feedback) { feedback.name = 'VrAstroFurnaceInsertFeedback'; feedback.visible = false; furnace.object.add(feedback); }
 
   const position = new THREE.Vector3(), local = new THREE.Vector3(), worldScale = new THREE.Vector3();
   const baselines = new WeakMap(), materialBases = [], listeners = new Set();
@@ -128,6 +128,7 @@ export function createVrAstroFurnaceContentInteraction({
     const held = candidateKind === kinds.SMALL_GLYPH ? reportedHeldSmallGlyph : reportedHeldShell;
     if (!held || !canEvaluate(candidateKind) || !isNear(held)) {
       if ([states.CANDIDATE_VALID, states.CANDIDATE_INVALID].includes(state)) setState(states.EMPTY);
+      hideFeedback();
       return;
     }
     const valid = candidateKind === kinds.SHELL ? validateShell(held) : validateSmallGlyph(held);
@@ -173,9 +174,7 @@ export function createVrAstroFurnaceContentInteraction({
       const center = worldCenter(held, new THREE.Vector3()), origin = held.parent?.getWorldPosition(new THREE.Vector3());
       if (origin) constrainHeldShellToDeviceSurfaces({ shell: held, shellCenter: center, origin, radius: worldRadius(held),
         deviceRoots: [furnace.object], excludedRoots: openInteraction?.getState?.() === 'OPEN' ? [chamber] : [], clearance: config.surfaceClearance }); });
-    syncFeedbackTransform(); if (state === states.EMPTY && (canEvaluate(kinds.SHELL) || canEvaluate(kinds.SMALL_GLYPH))) {
-      if (feedback) { feedback.material.opacity = config.guideOpacity; feedback.visible = true; }
-    } else if (![states.CANDIDATE_VALID, states.CANDIDATE_INVALID].includes(state)) hideFeedback();
+    syncFeedbackTransform(); if (![states.CANDIDATE_VALID, states.CANDIDATE_INVALID].includes(state)) hideFeedback();
     updateConsumption(); commitConsumedContent(); reportedHeldShell = null; reportedHeldSmallGlyph = null; }
   function reset() { hideFeedback(); if (insertedContent) {
       if (insertedKind === kinds.SMALL_GLYPH) smallGlyphSystem.restoreInstanceToField(insertedContent);
