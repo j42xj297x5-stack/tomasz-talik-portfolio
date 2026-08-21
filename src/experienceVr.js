@@ -473,7 +473,9 @@ const furnacePanel = createVrAstroFurnacePanel({
   parent: platformFixturesRoot, furnace: astroFurnace, controllers: vrControllers.controllers,
   progressionController: furnaceProgressionController, productionController: asterionProductionController,
   astroProductionController: astroAttractorProductionController,
-  canUseAstroProduction: () => runtimeExperience.can(VR_SCENARIO_CAPABILITY.CAN_START_FURNACE_PROCESS),
+  canUseAstroProduction: () => runtimeExperience?.can(
+    VR_SCENARIO_CAPABILITY.CAN_START_FURNACE_PROCESS
+  ) === true,
   canUseAstroTuning: () => runtimeExperience?.can(
     VR_SCENARIO_CAPABILITY.CAN_EXTRACT_SMALL_GLYPH_ESSENCE
   ) === true && astroAttractorProductionController?.getState?.() === 'EARNED',
