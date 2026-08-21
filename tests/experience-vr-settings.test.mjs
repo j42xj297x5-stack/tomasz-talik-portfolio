@@ -43,6 +43,11 @@ assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.monkeyGuide.colors.dialogueButtonTex
 assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.monkeyGuide.colors.dialogueButtonHoverBackground, '#ffaa63');
 assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.monkeyGuide.colors.dialogueButtonHoverText, '#090909');
 assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.targetHalo.thicknessPixels, 3);
+assert.deepEqual(DEFAULT_EXPERIENCE_VR_SETTINGS.attractorPresentation.bandColors,
+  { shells: 0xff0000, smallGlyphs: 0xffff00 });
+assert.deepEqual(normalizeExperienceVrSettings({ schemaVersion: 1, attractorPresentation: {
+  bandColors: { shells: 0x123456, smallGlyphs: 0xabcdef }
+} }).attractorPresentation.bandColors, { shells: 0x123456, smallGlyphs: 0xabcdef });
 assert.deepEqual(DEFAULT_EXPERIENCE_VR_SETTINGS.furnace.optionButton.halo,
   { opacity: 0.52, thicknessPixels: 5, pulseDuration: 1.1 });
 assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.furnace.openButton.emissionHover, 4.5);

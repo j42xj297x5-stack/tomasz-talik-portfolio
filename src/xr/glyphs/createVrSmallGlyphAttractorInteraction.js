@@ -61,6 +61,7 @@ export function createVrSmallGlyphAttractorInteraction({ controllers, smallGlyph
   const getLeftRecord = () => controllers.find(({ handedness }) => handedness === 'left') ?? null;
   const ownsBand = () => handModeController.getAttractorBand() === VR_ATTRACTOR_BANDS.SMALL_GLYPHS;
   const isEquipped = () => handModeController.getRightMode() === VR_RIGHT_HAND_MODES.ASTRO_ATTRACTOR;
+  const ownsEquippedBand = () => ownsBand() && isEquipped();
   function ensureHalos() { instances.forEach((instance) => { if (!halos.has(instance))
     halos.set(instance, createVrTargetHalo({ root: instance, settings: haloSettings })); }); }
   function isFieldCandidate(instance) { if (states.get(instance) !== INTERACTION_STATE.FIELD
@@ -98,7 +99,8 @@ export function createVrSmallGlyphAttractorInteraction({ controllers, smallGlyph
     if (activePull === glyph) activePull = null; if (captureReady === glyph) captureReady = null;
     if (heldGlyph === glyph) { heldGlyph = null; heldByRecord = null; }
     if (target === glyph) target = null; pullSpeed = 0;
-    if (ownsBand()) { attractorTool.setTarget(null); attractorTool.setPullStrength(0); if (isEquipped()) attractorTool.setState(VR_ATTRACTOR_STATES.IDLE); }
+    if (ownsEquippedBand()) { attractorTool.setTarget(null); attractorTool.setPullStrength(0);
+      attractorTool.setState(VR_ATTRACTOR_STATES.IDLE); }
   }
   function updateReturn(delta) { if (!returning) return; const record = returning; record.elapsed += delta;
     const progress = clamp01(record.elapsed / settings.returnDuration), eased = progress * progress * (3 - 2 * progress);
@@ -123,15 +125,15 @@ export function createVrSmallGlyphAttractorInteraction({ controllers, smallGlyph
     const glyph = captureReady; record.holdSocket.attach(glyph); heldGlyph = glyph; heldByRecord = record;
     states.set(glyph, INTERACTION_STATE.HELD); captureReady = null; activePull = null; setTarget(null);
     clearLeftSmallGlyphHit(); halos.get(glyph)?.setVisible(false);
-    if (ownsBand()) { attractorTool.setTarget(null); attractorTool.setPullStrength(0);
-      if (isEquipped()) attractorTool.setState(VR_ATTRACTOR_STATES.IDLE); } return true; }
+    if (ownsEquippedBand()) { attractorTool.setTarget(null); attractorTool.setPullStrength(0);
+      attractorTool.setState(VR_ATTRACTOR_STATES.IDLE); } return true; }
   function transferHeldGlyph(glyph) {
     if (!glyph || glyph !== heldGlyph) return false;
     heldGlyph = null; heldByRecord = null; clearLeftSmallGlyphHit();
     if (target === glyph) setTarget(null);
     states.set(glyph, INTERACTION_STATE.FIELD);
-    if (ownsBand()) { attractorTool.setTarget(null); attractorTool.setPullStrength(0);
-      if (isEquipped()) attractorTool.setState(VR_ATTRACTOR_STATES.IDLE); }
+    if (ownsEquippedBand()) { attractorTool.setTarget(null); attractorTool.setPullStrength(0);
+      attractorTool.setState(VR_ATTRACTOR_STATES.IDLE); }
     return true;
   }
   const squeezeListeners = controllers.filter(({ handedness }) => handedness === 'left').map((record) => {
@@ -141,7 +143,7 @@ export function createVrSmallGlyphAttractorInteraction({ controllers, smallGlyph
     return { record, onSqueezeStart, onSqueezeEnd }; });
   function update(deltaSeconds = 0) { if (disposed) return; const delta = Math.max(0, Number.isFinite(deltaSeconds) ? deltaSeconds : 0);
     updateReturn(delta); if (heldGlyph && canPullSmallGlyphs() !== true) beginReturn(heldGlyph);
-    const right = getRightRecord(); if (!ownsBand()) { scanCone.update(delta, false); setTarget(null);
+    const right = getRightRecord(); if (!ownsEquippedBand()) { scanCone.update(delta, false); setTarget(null);
       clearLeftSmallGlyphHit(); if (activePull || captureReady) beginReturn(activePull || captureReady); return; }
     if (!right?.controller || !right.isConnected) { scanCone.update(delta, false); setTarget(null);
       if (activePull || captureReady) beginReturn(activePull || captureReady); else { attractorTool.setTarget(null); attractorTool.setPullStrength(0); attractorTool.setState(VR_ATTRACTOR_STATES.IDLE); } return; }
@@ -184,8 +186,8 @@ export function createVrSmallGlyphAttractorInteraction({ controllers, smallGlyph
       throw new Error('Small glyph system rejected transient glyph restoration.'); states.set(glyph, INTERACTION_STATE.FIELD); }); }
   function reset() { restoreTransientGlyphs(); scanCone.update(0, false); setTarget(null); activePull = null; captureReady = null;
     heldGlyph = null; heldByRecord = null; returning = null; pullSpeed = 0; clearLeftSmallGlyphHit();
-    halos.forEach((halo) => halo.setVisible(false)); if (ownsBand()) { attractorTool.setTarget(null); attractorTool.setPullStrength(0);
-      if (isEquipped()) attractorTool.setState(VR_ATTRACTOR_STATES.IDLE); } }
+    halos.forEach((halo) => halo.setVisible(false)); if (ownsEquippedBand()) { attractorTool.setTarget(null); attractorTool.setPullStrength(0);
+      attractorTool.setState(VR_ATTRACTOR_STATES.IDLE); } }
   function dispose() { if (disposed) return; reset(); squeezeListeners.forEach(({ record, onSqueezeStart, onSqueezeEnd }) => {
     record.controller.removeEventListener('squeezestart', onSqueezeStart); record.controller.removeEventListener('squeezeend', onSqueezeEnd); });
     clearLeftSmallGlyphHit(); scanCone.dispose(); halos.forEach((halo) => halo.dispose()); halos.clear();

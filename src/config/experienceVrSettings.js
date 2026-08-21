@@ -152,6 +152,7 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
     rayRadialSegments: 6
   },
   targetHalo: { color: 0xbfe9ff, opacity: 0.28, thicknessPixels: 3, pulseDuration: 1.45 },
+  attractorPresentation: { bandColors: { shells: 0xff0000, smallGlyphs: 0xffff00 } },
   shellAttractor: {
     targetDistanceRadiusMultiplier: 3,
     scanThreshold: 0.1,
@@ -525,6 +526,14 @@ export function normalizeExperienceVrSettings(candidate) {
       thicknessPixels: finiteNumber(candidate.targetHalo?.thicknessPixels,
         defaults.targetHalo.thicknessPixels, { min: 0.5, max: 8 }),
       pulseDuration: finiteNumber(candidate.targetHalo?.pulseDuration, defaults.targetHalo.pulseDuration, { min: 1.3, max: 1.6 })
+    },
+    attractorPresentation: {
+      bandColors: {
+        shells: Math.round(finiteNumber(candidate.attractorPresentation?.bandColors?.shells,
+          defaults.attractorPresentation.bandColors.shells, { min: 0, max: 0xffffff })),
+        smallGlyphs: Math.round(finiteNumber(candidate.attractorPresentation?.bandColors?.smallGlyphs,
+          defaults.attractorPresentation.bandColors.smallGlyphs, { min: 0, max: 0xffffff }))
+      }
     },
     shellAttractor: {
       targetDistanceRadiusMultiplier: finiteNumber(candidate.shellAttractor?.targetDistanceRadiusMultiplier,

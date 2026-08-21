@@ -655,7 +655,9 @@ const glyphInteraction = createVrGlyphInteraction({
 });
 shellAttractorInteraction = createVrShellAttractorInteraction({
   controllers: vrControllers.controllers, shellSystem, handModeController, semanticInput, attractorTool,
-  settings: settings.shellAttractor, haloSettings: settings.targetHalo, settledParent: worldStableRoot,
+  settings: { ...settings.shellAttractor, scanCone: { ...settings.shellAttractor.scanCone,
+    color: settings.attractorPresentation.bandColors.shells } },
+  haloSettings: settings.targetHalo, settledParent: worldStableRoot,
   crystalHeldByController: crystalCollection.heldByController,
   isControllerOccupiedByOtherInteraction: (record) => smallGlyphAttractorInteraction?.isHeldBy(record) === true,
   canScanShells: () => runtimeExperience?.can(VR_SCENARIO_CAPABILITY.CAN_SCAN_SHELLS) === true,
@@ -683,7 +685,8 @@ smallGlyphAttractorInteraction = createVrSmallGlyphAttractorInteraction({
     maxPullSpeed: settings.shellAttractor.maxPullSpeed,
     captureRadius: settings.shellAttractor.captureRadius,
     returnDuration: settings.shellAttractor.returnDuration,
-    scanCone: settings.shellAttractor.scanCone
+    scanCone: { ...settings.shellAttractor.scanCone,
+      color: settings.attractorPresentation.bandColors.smallGlyphs }
   },
   haloSettings: settings.targetHalo,
   settledParent: worldStableRoot,

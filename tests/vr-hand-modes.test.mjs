@@ -1,6 +1,9 @@
 import assert from 'node:assert/strict';
+import * as THREE from '../src/vendor/three.js';
+import { createVrSmallGlyphAttractorInteraction } from '../src/xr/glyphs/createVrSmallGlyphAttractorInteraction.js';
 import { createVrSemanticInput, XR_STANDARD_BUTTONS } from '../src/xr/input/createVrSemanticInput.js';
-import { createVrHandModeController, VR_LEFT_HAND_MODES, VR_RIGHT_HAND_MODES } from '../src/xr/input/createVrHandModeController.js';
+import { createVrHandModeController, VR_ATTRACTOR_BANDS,
+  VR_LEFT_HAND_MODES, VR_RIGHT_HAND_MODES } from '../src/xr/input/createVrHandModeController.js';
 
 function button({ pressed = false, value = 0 } = {}) { return { pressed, value }; }
 function source(handedness, buttons = []) { return { handedness, gamepad: { buttons } }; }
@@ -95,6 +98,34 @@ function makeControllerHarness({ asterionAvailable = true, rightUnlocked = true 
   h.controller.reset();
   assert.equal(h.controller.getLeftMode(), VR_LEFT_HAND_MODES.NORMAL_HAND, 'reset restores left normal');
   assert.equal(h.controller.getRightMode(), VR_RIGHT_HAND_MODES.NORMAL_HAND, 'reset restores right normal');
+}
+
+{
+  const parent = new THREE.Group(), rightController = new THREE.Group(); parent.add(rightController);
+  const toolCalls = [];
+  const interaction = createVrSmallGlyphAttractorInteraction({
+    controllers: [{ handedness: 'right', controller: rightController, isConnected: true }],
+    smallGlyphSystem: { object: parent, getInstances: () => [], getState: () => 'MATERIALIZED',
+      getFieldTransform: () => null, restoreInstanceToField: () => false },
+    handModeController: { getRightMode: () => VR_RIGHT_HAND_MODES.NORMAL_HAND,
+      getLeftMode: () => VR_LEFT_HAND_MODES.NORMAL_HAND,
+      getAttractorBand: () => VR_ATTRACTOR_BANDS.SMALL_GLYPHS },
+    semanticInput: { getState: () => ({ primaryAction: 0, grabAction: 0 }) },
+    attractorTool: { setTarget: (value) => toolCalls.push(['target', value]),
+      setPullStrength: (value) => toolCalls.push(['strength', value]),
+      setState: (value) => toolCalls.push(['state', value]),
+      getMasterRingWorldPosition: (target) => target.set(0, 0, 0) },
+    maxTargetDistance: 10,
+    settings: { scanThreshold: 0.1, triggerThreshold: 0.1, captureForwardDistance: 1.3,
+      pullAcceleration: 10, maxPullSpeed: 8.5, captureRadius: 0.28, returnDuration: 0.8,
+      scanCone: { color: 0xffff00, halfAngleDegrees: 2.5, opacityMin: 0.035,
+        opacityMax: 0.065, pulseDuration: 1.6, radialSegments: 14 } },
+    haloSettings: {}, settledParent: parent
+  });
+  interaction.update(0.016);
+  assert.deepEqual(toolCalls, [], 'small-glyph actor cannot mutate or reveal unequipped Astro in NORMAL_HAND');
+  assert.equal(interaction.scanCone.object.visible, false, 'NORMAL_HAND clears the small-glyph scan cone');
+  interaction.dispose();
 }
 
 {
