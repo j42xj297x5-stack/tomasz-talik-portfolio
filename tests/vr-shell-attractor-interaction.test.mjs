@@ -52,7 +52,8 @@ const masterRingPosition = new THREE.Vector3(0.4, 0.2, -0.5);
 const tool = { setState(v) { calls.states.push(v); }, setTarget(v) { calls.targets.push(v); }, setPullStrength(v) { calls.strengths.push(v); },
   getMasterRingWorldPosition(target) { return target.copy(masterRingPosition); } };
 const interaction = createVrShellAttractorInteraction({ controllers: [right, left], shellSystem,
-  handModeController: { getMode: () => mode }, semanticInput: { getState: () => ({ primaryAction, grabAction }) }, attractorTool: tool,
+  handModeController: { getMode: () => mode, getAttractorBand: () => 'SHELLS' },
+  semanticInput: { getState: () => ({ primaryAction, grabAction }) }, attractorTool: tool,
   settings: shellSettings, haloSettings: {}, settledParent: parent, isHigherPriorityInteractionActive: () => higherPriority });
 assert.equal(interaction.maxTargetDistance, 30);
 assert.equal(interaction.scanCone.length, 30); assert.equal(interaction.halfAngleRadians, THREE.MathUtils.degToRad(2.5));
@@ -137,7 +138,8 @@ function assertLateHandednessLifecycle({ leftIndex, rightIndex }) {
   const lifecycleTool = { setState() {}, setTarget() {}, setPullStrength() {}, getMasterRingWorldPosition(target) { return target.set(0, 0, 0); } };
   let lifecycleInteraction;
   assert.doesNotThrow(() => { lifecycleInteraction = createVrShellAttractorInteraction({ controllers: records,
-    shellSystem: lifecycleShellSystem, handModeController: { getMode: () => 'ASTRO_ATTRACTOR' },
+    shellSystem: lifecycleShellSystem,
+    handModeController: { getMode: () => 'ASTRO_ATTRACTOR', getAttractorBand: () => 'SHELLS' },
     semanticInput: { getState: () => ({ primaryAction: lifecyclePrimaryAction, grabAction: lifecycleGrabAction }) },
     attractorTool: lifecycleTool, settings: shellSettings, haloSettings: {}, settledParent: lifecycleParent }); });
   assert.equal(lifecycleInteraction.scanCone.object.parent, null, 'cone has no hand parent before WebXR connected');
