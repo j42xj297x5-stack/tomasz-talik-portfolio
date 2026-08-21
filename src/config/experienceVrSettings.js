@@ -153,6 +153,11 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
   },
   targetHalo: { color: 0xbfe9ff, opacity: 0.28, thicknessPixels: 3, pulseDuration: 1.45 },
   attractorPresentation: { bandColors: { shells: 0xff0000, smallGlyphs: 0xffff00 } },
+  placedObjectIdleMotion: {
+    verticalAmplitude: 0.20,
+    verticalCycleDuration: 4.8,
+    rotationSpeed: 0.12
+  },
   shellAttractor: {
     targetDistanceRadiusMultiplier: 3,
     scanThreshold: 0.1,
@@ -534,6 +539,14 @@ export function normalizeExperienceVrSettings(candidate) {
         smallGlyphs: Math.round(finiteNumber(candidate.attractorPresentation?.bandColors?.smallGlyphs,
           defaults.attractorPresentation.bandColors.smallGlyphs, { min: 0, max: 0xffffff }))
       }
+    },
+    placedObjectIdleMotion: {
+      verticalAmplitude: finiteNumber(candidate.placedObjectIdleMotion?.verticalAmplitude,
+        defaults.placedObjectIdleMotion.verticalAmplitude, { min: 0, max: 1 }),
+      verticalCycleDuration: finiteNumber(candidate.placedObjectIdleMotion?.verticalCycleDuration,
+        defaults.placedObjectIdleMotion.verticalCycleDuration, { min: 0.5, max: 30 }),
+      rotationSpeed: finiteNumber(candidate.placedObjectIdleMotion?.rotationSpeed,
+        defaults.placedObjectIdleMotion.rotationSpeed, { min: 0, max: 2 })
     },
     shellAttractor: {
       targetDistanceRadiusMultiplier: finiteNumber(candidate.shellAttractor?.targetDistanceRadiusMultiplier,

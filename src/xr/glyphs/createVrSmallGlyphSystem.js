@@ -9,7 +9,8 @@ const SYSTEM_STATE = Object.freeze({
 const GLYPH_STATE = Object.freeze({
   HIDDEN: 'HIDDEN',
   MATERIALIZING: 'MATERIALIZING',
-  FIELD: 'FIELD'
+  FIELD: 'FIELD',
+  PLACED: 'PLACED'
 });
 
 function requireFiniteVector(value, name) {
@@ -28,6 +29,7 @@ export function createVrSmallGlyphSystem({
   outerRadius,
   materializeDurationSeconds,
   staggerSeconds,
+  idleMotionSettings = {},
   onPresentationCompleted = () => {}
 }) {
   if (!parent || typeof parent.add !== 'function') throw new TypeError('parent.add must be a function');
@@ -63,6 +65,9 @@ export function createVrSmallGlyphSystem({
   const records = [];
   const instanceCount = assetIds.length * copiesPerVisualVariant;
   const goldenAngle = Math.PI * (3 - Math.sqrt(5));
+  const idleAmplitude = idleMotionSettings.verticalAmplitude ?? 0.20;
+  const idleAngularSpeed = Math.PI * 2 / (idleMotionSettings.verticalCycleDuration ?? 4.8);
+  const idleRotationSpeed = idleMotionSettings.rotationSpeed ?? 0.12;
 
   assetIds.forEach((assetId, variantIndex) => {
     for (let copyIndex = 0; copyIndex < copiesPerVisualVariant; copyIndex += 1) {
@@ -96,7 +101,13 @@ export function createVrSmallGlyphSystem({
         instance,
         authoredPosition: instance.position.clone(),
         authoredQuaternion: instance.quaternion.clone(),
-        authoredScale: instance.scale.clone()
+        authoredScale: instance.scale.clone(),
+        placedPosition: new THREE.Vector3(),
+        placedQuaternion: new THREE.Quaternion(),
+        placedAt: 0,
+        idlePhase: (index * goldenAngle) % (Math.PI * 2),
+        idleAxis: new THREE.Vector3(Math.sin((index + 1) * 1.37), 0.65,
+          Math.cos((index + 1) * 1.91)).normalize()
       });
     }
   });
@@ -105,6 +116,7 @@ export function createVrSmallGlyphSystem({
   let elapsed = 0;
   let completionSent = false;
   let disposed = false;
+  const idleQuaternion = new THREE.Quaternion();
   const fullPresentationDuration = materializeDurationSeconds + (instanceCount - 1) * staggerSeconds;
 
   function restoreRecord(record, glyphState, visible = true) {
@@ -147,9 +159,21 @@ export function createVrSmallGlyphSystem({
     return true;
   }
 
+  function updatePlacedRecords() { records.forEach((record) => {
+    if (record.instance.userData.smallGlyphState !== GLYPH_STATE.PLACED) return;
+    const idleElapsed = elapsed - record.placedAt;
+    const yOffset = idleAmplitude * 0.5 * (Math.sin(record.idlePhase + idleElapsed * idleAngularSpeed)
+      - Math.sin(record.idlePhase));
+    record.instance.position.copy(record.placedPosition); record.instance.position.y += yOffset;
+    record.instance.quaternion.copy(record.placedQuaternion).multiply(
+      idleQuaternion.setFromAxisAngle(record.idleAxis, idleElapsed * idleRotationSpeed));
+  }); }
+
   function update(delta) {
-    if (disposed || state !== SYSTEM_STATE.MATERIALIZING) return;
+    if (disposed) return;
     elapsed += Math.max(0, Number.isFinite(delta) ? delta : 0);
+    updatePlacedRecords();
+    if (state !== SYSTEM_STATE.MATERIALIZING) return;
     let allComplete = true;
     records.forEach((record, index) => {
       const progress = THREE.MathUtils.clamp(
@@ -168,6 +192,13 @@ export function createVrSmallGlyphSystem({
       completionSent = true;
       onPresentationCompleted();
     }
+  }
+
+  function placeInstance(instance) {
+    if (disposed || state !== SYSTEM_STATE.MATERIALIZED) return false;
+    const record = records.find((candidate) => candidate.instance === instance); if (!record) return false;
+    record.placedPosition.copy(instance.position); record.placedQuaternion.copy(instance.quaternion); record.placedAt = elapsed;
+    instance.userData.smallGlyphState = GLYPH_STATE.PLACED; instance.visible = true; return true;
   }
 
   function reset() {
@@ -210,6 +241,7 @@ export function createVrSmallGlyphSystem({
     getState: () => state,
     getFieldTransform,
     restoreInstanceToField,
+    placeInstance,
     getInstances: () => records.map(({ instance }) => instance)
   };
 }

@@ -258,6 +258,7 @@ const smallGlyphSystem = createVrSmallGlyphSystem({
   outerRadius: glyphOrbit.effectiveRadius + settings.controllers.rayLength,
   materializeDurationSeconds: settings.smallGlyphField.materializeDurationSeconds,
   staggerSeconds: settings.smallGlyphField.staggerSeconds,
+  idleMotionSettings: settings.placedObjectIdleMotion,
   onPresentationCompleted: () => runtimeExperience.dispatch(
     VR_SCENARIO_EVENT.SMALL_GLYPH_FIELD_PRESENTATION_COMPLETED
   )
@@ -265,7 +266,8 @@ const smallGlyphSystem = createVrSmallGlyphSystem({
 const protoAstroTuningController = createVrProtoAstroTuningController();
 const shellSystem = createVrShellSystem({ parent: worldStableRoot, assetManager, baseRadius: glyphOrbit.effectiveRadius,
   centerY: settings.spatial.worldStableCenterY,
-  emissionSettings: settings.shellAttractor });
+  emissionSettings: settings.shellAttractor,
+  idleMotionSettings: settings.placedObjectIdleMotion });
 const asterionSphereGltf = assetManager.getGltf('vr-asterion-sphere-model');
 const asterionSphere = createVrAsterionSphere({
   model: assetManager.cloneGltfScene('vr-asterion-sphere-model'),

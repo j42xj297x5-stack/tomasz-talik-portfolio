@@ -6,12 +6,16 @@ const ASSET_IDS = Object.freeze(Array.from({ length: 6 }, (_, index) => `shell-r
 const SUFFIXES = Object.freeze(['a', 'b', 'c']);
 const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5));
 
-export function createVrShellSystem({ parent, assetManager, baseRadius, centerY = 0, emissionSettings = {} }) {
+export function createVrShellSystem({ parent, assetManager, baseRadius, centerY = 0, emissionSettings = {},
+  idleMotionSettings = {} }) {
   if (!parent?.add || !assetManager?.cloneGltfScene) throw new Error('VrShellSystem requires parent and assetManager.');
   if (!Number.isFinite(baseRadius) || baseRadius <= 0) throw new Error('VrShellSystem requires a positive baseRadius.');
   const claimedMin = emissionSettings.claimedEmissionMin ?? 1;
   const claimedMax = emissionSettings.claimedEmissionMax ?? 2;
   const claimedDuration = emissionSettings.claimedEmissionPulseDuration ?? 1.4;
+  const idleAmplitude = idleMotionSettings.verticalAmplitude ?? 0.20;
+  const idleAngularSpeed = TAU / (idleMotionSettings.verticalCycleDuration ?? 4.8);
+  const idleRotationSpeed = idleMotionSettings.rotationSpeed ?? 0.12;
   const object = new THREE.Group(); object.name = 'VrShellSystem'; object.visible = false; parent.add(object);
   let active = false, interactionEnabled = false, elapsed = 0, disposed = false, currentDelta = 0;
   const instances = [], records = [], ownedMaterials = new Set(), panelWireframes = new Map();
@@ -38,7 +42,9 @@ export function createVrShellSystem({ parent, assetManager, baseRadius, centerY 
       selfRotationAxis: new THREE.Vector3(Math.sin((index + 1) * 1.71), 0.45 + ((index * 7) % 5) * 0.17,
         Math.cos((index + 1) * 2.13)).normalize(), selfRotationSpeed: 0.10 + (index % 7) * 0.02,
       initialQuaternion: shell.quaternion.clone(), orbitPosition: new THREE.Vector3(), returnStart: new THREE.Vector3(),
-      returnElapsed: 0, returnDuration: 0.8, returnEmissionStart: 0, returning: false };
+      returnElapsed: 0, returnDuration: 0.8, returnEmissionStart: 0, returning: false,
+      placedPosition: new THREE.Vector3(), placedQuaternion: new THREE.Quaternion(), placedAt: 0,
+      idlePhase: (index * GOLDEN_ANGLE) % TAU };
     shell.name = attractorId;
     Object.assign(shell.userData, { attractorTarget: false, attractorType: 'shell', attractorId, shellState: 'orbiting',
       shellAssetId: assetId, panelWireframe, shellOrbit: Object.freeze({ radius: record.radius, phase: record.phase, inclination: record.inclination,
@@ -63,6 +69,14 @@ export function createVrShellSystem({ parent, assetManager, baseRadius, centerY 
       if (t >= 1) { record.returning = false; record.object.userData.shellState = 'orbiting';
         record.object.userData.attractorTarget = interactionEnabled; setEmission(record.object, 0); }
     } else if (['orbiting', 'targeted'].includes(state)) { record.object.position.copy(record.orbitPosition); setEmission(record.object, 0); }
+    if (state === 'placed') {
+      const idleElapsed = elapsed - record.placedAt;
+      const yOffset = idleAmplitude * 0.5 * (Math.sin(record.idlePhase + idleElapsed * idleAngularSpeed)
+        - Math.sin(record.idlePhase));
+      record.object.position.copy(record.placedPosition); record.object.position.y += yOffset;
+      record.object.quaternion.copy(record.placedQuaternion).multiply(
+        scratchQuaternion.setFromAxisAngle(record.selfRotationAxis, idleElapsed * idleRotationSpeed * record.direction));
+    }
     if (!['held', 'placed', 'capture_ready', 'inserted', 'consuming', 'consumed'].includes(state)) record.object.quaternion.copy(record.initialQuaternion).multiply(
       scratchQuaternion.setFromAxisAngle(record.selfRotationAxis, elapsed * record.selfRotationSpeed * record.direction));
     if (state === 'capture_ready') setEmission(record.object, 1);
@@ -82,8 +96,10 @@ export function createVrShellSystem({ parent, assetManager, baseRadius, centerY 
     object.attach(shell); record.returnStart.copy(shell.position); record.returnElapsed = 0; record.returnDuration = Math.max(0.001, duration);
     record.returnEmissionStart = record.emissiveMaterials[0]?.emissiveIntensity ?? 0; record.returning = true;
     shell.userData.shellState = 'returning'; shell.userData.attractorTarget = false; return true; }
+  function placeInstance(shell) { const record = getRecord(shell); if (!record || disposed) return false;
+    record.placedPosition.copy(shell.position); record.placedQuaternion.copy(shell.quaternion); record.placedAt = elapsed;
+    shell.userData.shellState = 'placed'; shell.userData.attractorTarget = false; return true; }
   function reset() { if (disposed) return; active = false; interactionEnabled = false; object.visible = false; elapsed = 0; currentDelta = 0; records.forEach((record) => {
-    if (record.object.userData.shellState === 'placed') return;
     if (record.object.parent !== object) object.attach(record.object); record.returning = false; record.returnElapsed = 0;
     record.object.userData.shellState = 'orbiting'; record.object.userData.attractorTarget = interactionEnabled; setEmission(record.object, 0);
   }); applyPositions(); }
@@ -100,5 +116,5 @@ export function createVrShellSystem({ parent, assetManager, baseRadius, centerY 
   return { object, instances, records, innerRadius: baseRadius, outerRadius: baseRadius * 2,
     panelWireframes, getPanelWireframe: (assetId) => panelWireframes.get(assetId) ?? null,
     get active() { return active; }, get interactionEnabled() { return interactionEnabled; }, getRecord, setEmission, setActive,
-    setPresentationVisible, setInteractionEnabled, update, returnToOrbit, removeInstance, reset, dispose };
+    setPresentationVisible, setInteractionEnabled, update, returnToOrbit, placeInstance, removeInstance, reset, dispose };
 }
