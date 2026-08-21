@@ -95,6 +95,11 @@ export function createVrAstroFurnace({
   const placementListeners = new Set();
   const visibleBounds = new THREE.Box3();
   const geometryBounds = new THREE.Box3();
+  const localVisibleBounds = new THREE.Box3();
+  const localGeometryBounds = new THREE.Box3();
+  const objectWorldInverse = new THREE.Matrix4();
+  const nodeToObject = new THREE.Matrix4();
+  const authoredModelRootPosition = modelRoot.position.clone();
   const resolvedWorldPosition = new THREE.Vector3();
 
   function calculateVisibleBounds() {
@@ -110,8 +115,23 @@ export function createVrAstroFurnace({
     return visibleBounds;
   }
 
+  function calculateLocalVisibleBounds() {
+    localVisibleBounds.makeEmpty();
+    object.updateWorldMatrix(true, true);
+    objectWorldInverse.copy(object.matrixWorld).invert();
+    model?.traverse((node) => {
+      if (!isVisibleGeometry(node, model)) return;
+      if (!node.geometry.boundingBox) node.geometry.computeBoundingBox();
+      if (node.geometry.boundingBox) localVisibleBounds.union(localGeometryBounds
+        .copy(node.geometry.boundingBox)
+        .applyMatrix4(nodeToObject.multiplyMatrices(objectWorldInverse, node.matrixWorld)));
+    });
+    return localVisibleBounds;
+  }
+
   function place() {
     if (disposed) return false;
+    modelRoot.position.copy(authoredModelRootPosition);
     object.position.set(settings.position.x, settings.position.y, settings.position.z);
     object.rotation.set(
       THREE.MathUtils.degToRad(settings.rotationDegrees.x),
@@ -119,8 +139,11 @@ export function createVrAstroFurnace({
       THREE.MathUtils.degToRad(settings.rotationDegrees.z)
     );
     object.scale.setScalar(settings.scale);
-    const bounds = calculateVisibleBounds();
-    if (!bounds.isEmpty()) modelRoot.position.y += (settings.floorOffset - bounds.min.y) / settings.scale;
+    const bounds = calculateLocalVisibleBounds();
+    if (!bounds.isEmpty()) {
+      const localFloorY = (settings.floorOffset - object.position.y) / settings.scale;
+      modelRoot.position.y = authoredModelRootPosition.y + localFloorY - bounds.min.y;
+    }
     object.visible = settings.enabled && Boolean(model);
     calculateVisibleBounds();
     object.getWorldPosition(resolvedWorldPosition);

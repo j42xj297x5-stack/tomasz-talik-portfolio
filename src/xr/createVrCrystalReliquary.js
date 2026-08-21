@@ -95,12 +95,14 @@ export function createVrCrystalReliquary({ parent, portalAnchor, reliquaryModel,
 
   const portalForward = new THREE.Vector3();
   const portalLeft = new THREE.Vector3();
-  const portalQuaternion = new THREE.Quaternion();
-  const portalWorldPosition = new THREE.Vector3();
-  const reliquaryWorldPosition = new THREE.Vector3();
-  const inversePlacementQuaternion = new THREE.Quaternion();
-  const buttonWorldOffset = new THREE.Vector3();
-  const worldUp = new THREE.Vector3(0, 1, 0);
+  const portalLocalPosition = new THREE.Vector3();
+  const portalLocalQuaternion = new THREE.Quaternion();
+  const portalLocalScale = new THREE.Vector3();
+  const parentWorldInverse = new THREE.Matrix4();
+  const portalToParent = new THREE.Matrix4();
+  const buttonLocalOffset = new THREE.Vector3();
+  const localUp = new THREE.Vector3(0, 1, 0);
+  const localForward = new THREE.Vector3(0, 0, 1);
   const worldScale = new THREE.Vector3();
   const insertFeedbackWorldScale = new THREE.Vector3();
   const companions = new Map();
@@ -112,14 +114,13 @@ export function createVrCrystalReliquary({ parent, portalAnchor, reliquaryModel,
   let disposed = false;
 
   function updateButtonPlacement() {
-    companionsRoot.getWorldQuaternion(inversePlacementQuaternion).invert();
     for (const companion of companions.values()) {
       const placement = companion.settings ?? settings.buttons ?? {};
       const sideSign = companion.side === 'right' ? -1 : 1;
-      buttonWorldOffset.copy(portalForward).multiplyScalar(placement.forwardDistance ?? 1)
+      buttonLocalOffset.set(0, 0, 1).multiplyScalar(placement.forwardDistance ?? 1)
         .addScaledVector(portalLeft, sideSign * (placement.lateralOffset ?? 0.5));
-      buttonWorldOffset.y = placement.verticalOffset ?? 0;
-      companion.placementRoot.position.copy(buttonWorldOffset).applyQuaternion(inversePlacementQuaternion);
+      buttonLocalOffset.y = placement.verticalOffset ?? 0;
+      companion.placementRoot.position.copy(buttonLocalOffset);
     }
   }
 
@@ -130,21 +131,17 @@ export function createVrCrystalReliquary({ parent, portalAnchor, reliquaryModel,
     }
     const rotation = settings.rotationDegrees ?? { x: 0, y: 0, z: 0 };
     portalAnchor.updateWorldMatrix(true, false);
-    portalAnchor.getWorldQuaternion(portalQuaternion);
-    portalForward.set(0, 0, 1).applyQuaternion(portalQuaternion).setY(0).normalize();
-    portalAnchor.getWorldPosition(portalWorldPosition);
-    reliquaryWorldPosition.copy(portalWorldPosition)
-      .addScaledVector(portalForward, settings.distanceFromPortal ?? 1.5);
     parent.updateWorldMatrix(true, false);
-    object.position.copy(parent.worldToLocal(reliquaryWorldPosition));
+    portalToParent.multiplyMatrices(parentWorldInverse.copy(parent.matrixWorld).invert(), portalAnchor.matrixWorld)
+      .decompose(portalLocalPosition, portalLocalQuaternion, portalLocalScale);
+    portalForward.set(0, 0, 1).applyQuaternion(portalLocalQuaternion).setY(0).normalize();
+    object.position.copy(portalLocalPosition).addScaledVector(portalForward, settings.distanceFromPortal ?? 1.5);
     object.rotation.set(
       THREE.MathUtils.degToRad(rotation.x),
       THREE.MathUtils.degToRad(rotation.y),
       THREE.MathUtils.degToRad(rotation.z)
     );
-    object.getWorldQuaternion(portalQuaternion);
-    portalForward.set(0, 0, 1).applyQuaternion(portalQuaternion).setY(0).normalize();
-    portalLeft.crossVectors(portalForward, worldUp).normalize();
+    portalLeft.crossVectors(localForward, localUp).normalize();
     modelRoot.position.y = settings.heightOffset ?? 0.5;
     object.visible = true;
     object.updateWorldMatrix(true, true);

@@ -49,7 +49,8 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
   const renderPlanes = [frontPlane, backPlane];
   root.add(...renderPlanes); (parent ?? furnace?.object?.parent)?.add(root);
   const raycaster = new THREE.Raycaster(), origin = new THREE.Vector3(), direction = new THREE.Vector3();
-  const quaternion = new THREE.Quaternion(), furnaceQuaternion = new THREE.Quaternion(), right = new THREE.Vector3();
+  const quaternion = new THREE.Quaternion(), furnaceQuaternion = new THREE.Quaternion();
+  const right = new THREE.Vector3(), up = new THREE.Vector3();
   const desiredWorldPosition = new THREE.Vector3(), desiredWorldQuaternion = new THREE.Quaternion(), desiredWorldScale = new THREE.Vector3();
   const yawQuaternion = new THREE.Quaternion(), yawAxis = new THREE.Vector3(0, 1, 0);
   const hits = new Map(controllers.map((record) => [record, null]));
@@ -282,13 +283,14 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
   function place() {
     furnace.object.updateWorldMatrix(true, true); furnace.object.getWorldQuaternion(furnaceQuaternion);
     right.set(1, 0, 0).applyQuaternion(furnaceQuaternion).normalize();
+    up.set(0, 1, 0).applyQuaternion(furnaceQuaternion).normalize();
     const boundsData = furnace.diagnostics.visibleBounds;
     const bounds = boundsData ? new THREE.Box3(new THREE.Vector3().fromArray(boundsData.min), new THREE.Vector3().fromArray(boundsData.max)) : new THREE.Box3().setFromObject(furnace.object);
     const center = bounds.getCenter(new THREE.Vector3());
     const size = bounds.getSize(new THREE.Vector3());
     const projectedHalfWidth = (Math.abs(right.x) * size.x + Math.abs(right.y) * size.y + Math.abs(right.z) * size.z) / 2;
     desiredWorldPosition.copy(center).addScaledVector(right, projectedHalfWidth + config.gapFromFurnace);
-    desiredWorldPosition.y = center.y + config.verticalOffset;
+    desiredWorldPosition.addScaledVector(up, config.verticalOffset);
     yawQuaternion.setFromAxisAngle(yawAxis, THREE.MathUtils.degToRad(config.yawDegrees));
     desiredWorldQuaternion.copy(furnaceQuaternion).multiply(yawQuaternion);
     desiredWorldScale.set(0.001, 0.92, 1);
