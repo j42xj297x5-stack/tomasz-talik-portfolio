@@ -188,10 +188,15 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
     shellRevealDuration: 1.5
   },
   p2RadialPresentation: { durationSeconds: 2.5 },
+  shellFieldMotion: { direction: 1 },
   smallGlyphField: {
     copiesPerVisualVariant: 2,
     materializeDurationSeconds: 1.4,
-    staggerSeconds: 0.08
+    staggerSeconds: 0.08,
+    radialLayerGap: 2.3,
+    orbitAngularSpeed: 0.05,
+    selfRotationSpeed: 0.12,
+    direction: -1
   },
   observationWindow: { durationSeconds: 10.0 },
   intro: {
@@ -615,13 +620,23 @@ export function normalizeExperienceVrSettings(candidate) {
       durationSeconds: finiteNumber(candidate.p2RadialPresentation?.durationSeconds,
         defaults.p2RadialPresentation.durationSeconds, { min: 0.1, max: 60 })
     },
+    shellFieldMotion: {
+      direction: candidate.shellFieldMotion?.direction === -1 ? -1 : 1
+    },
     smallGlyphField: {
       copiesPerVisualVariant: Math.round(finiteNumber(candidate.smallGlyphField?.copiesPerVisualVariant,
         defaults.smallGlyphField.copiesPerVisualVariant, { min: 1, max: 8 })),
       materializeDurationSeconds: finiteNumber(candidate.smallGlyphField?.materializeDurationSeconds,
         defaults.smallGlyphField.materializeDurationSeconds, { min: Number.EPSILON }),
       staggerSeconds: finiteNumber(candidate.smallGlyphField?.staggerSeconds,
-        defaults.smallGlyphField.staggerSeconds, { min: 0 })
+        defaults.smallGlyphField.staggerSeconds, { min: 0 }),
+      radialLayerGap: finiteNumber(candidate.smallGlyphField?.radialLayerGap,
+        defaults.smallGlyphField.radialLayerGap, { min: Number.EPSILON, max: 20 }),
+      orbitAngularSpeed: finiteNumber(candidate.smallGlyphField?.orbitAngularSpeed,
+        defaults.smallGlyphField.orbitAngularSpeed, { min: 0, max: 2 }),
+      selfRotationSpeed: finiteNumber(candidate.smallGlyphField?.selfRotationSpeed,
+        defaults.smallGlyphField.selfRotationSpeed, { min: 0, max: 2 }),
+      direction: candidate.smallGlyphField?.direction === 1 ? 1 : -1
     },
     observationWindow: {
       durationSeconds: finiteNumber(candidate.observationWindow?.durationSeconds,

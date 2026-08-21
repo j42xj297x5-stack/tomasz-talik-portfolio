@@ -25,8 +25,10 @@ export function createVrSmallGlyphSystem({
   assetIds,
   copiesPerVisualVariant,
   center,
-  innerRadius,
-  outerRadius,
+  orbitRadius,
+  orbitAngularSpeed,
+  selfRotationSpeed,
+  direction,
   materializeDurationSeconds,
   staggerSeconds,
   idleMotionSettings = {},
@@ -45,10 +47,12 @@ export function createVrSmallGlyphSystem({
     throw new TypeError('copiesPerVisualVariant must be an integer greater than or equal to 1');
   }
   requireFiniteVector(center, 'center');
-  if (!Number.isFinite(innerRadius) || innerRadius <= 0) throw new TypeError('innerRadius must be finite and greater than 0');
-  if (!Number.isFinite(outerRadius) || outerRadius <= innerRadius) {
-    throw new TypeError('outerRadius must be finite and greater than innerRadius');
-  }
+  if (!Number.isFinite(orbitRadius) || orbitRadius <= 0) throw new TypeError('orbitRadius must be finite and greater than 0');
+  if (!Number.isFinite(orbitAngularSpeed) || orbitAngularSpeed < 0)
+    throw new TypeError('orbitAngularSpeed must be finite and greater than or equal to 0');
+  if (!Number.isFinite(selfRotationSpeed) || selfRotationSpeed < 0)
+    throw new TypeError('selfRotationSpeed must be finite and greater than or equal to 0');
+  if (direction !== 1 && direction !== -1) throw new TypeError('direction must be 1 or -1');
   if (!Number.isFinite(materializeDurationSeconds) || materializeDurationSeconds <= 0) {
     throw new TypeError('materializeDurationSeconds must be finite and greater than 0');
   }
@@ -76,16 +80,7 @@ export function createVrSmallGlyphSystem({
       if (!instance || !instance.position || !instance.quaternion || !instance.scale) {
         throw new Error(`Unable to clone small glyph visual variant: ${assetId}`);
       }
-      const t = (index + 1) / (instanceCount + 1);
-      const radius = THREE.MathUtils.lerp(innerRadius, outerRadius, t);
       const directionY = 1 - (2 * (index + 0.5)) / instanceCount;
-      const horizontal = Math.sqrt(Math.max(0, 1 - directionY * directionY));
-      const azimuth = index * goldenAngle;
-      instance.position.set(
-        center.x + radius * horizontal * Math.cos(azimuth),
-        center.y + radius * directionY,
-        center.z + radius * horizontal * Math.sin(azimuth)
-      );
       const variantLabel = String(variantIndex + 1).padStart(2, '0');
       const copyLabel = String.fromCharCode(97 + copyIndex);
       instance.name = `small-glyph-${variantLabel}-${copyLabel}`;
@@ -99,9 +94,13 @@ export function createVrSmallGlyphSystem({
       object.add(instance);
       records.push({
         instance,
-        authoredPosition: instance.position.clone(),
         authoredQuaternion: instance.quaternion.clone(),
         authoredScale: instance.scale.clone(),
+        phase: index * goldenAngle,
+        inclination: Math.asin(directionY),
+        ascendingNode: (index * goldenAngle * 0.61) % (Math.PI * 2),
+        fieldPosition: new THREE.Vector3(),
+        fieldQuaternion: new THREE.Quaternion(),
         placedPosition: new THREE.Vector3(),
         placedQuaternion: new THREE.Quaternion(),
         placedAt: 0,
@@ -114,15 +113,33 @@ export function createVrSmallGlyphSystem({
 
   let state = SYSTEM_STATE.HIDDEN;
   let elapsed = 0;
+  let fieldElapsed = 0;
   let completionSent = false;
   let disposed = false;
   const idleQuaternion = new THREE.Quaternion();
+  const fieldRotationQuaternion = new THREE.Quaternion();
   const fullPresentationDuration = materializeDurationSeconds + (instanceCount - 1) * staggerSeconds;
+
+  function updateCanonicalFieldTransform(record) {
+    const angle = record.phase + fieldElapsed * orbitAngularSpeed * direction;
+    const x = Math.cos(angle) * orbitRadius;
+    const planeY = Math.sin(angle) * orbitRadius;
+    const y = center.y + planeY * Math.sin(record.inclination);
+    const z = planeY * Math.cos(record.inclination);
+    const cosNode = Math.cos(record.ascendingNode), sinNode = Math.sin(record.ascendingNode);
+    record.fieldPosition.set(center.x + x * cosNode - z * sinNode, y,
+      center.z + x * sinNode + z * cosNode);
+    record.fieldQuaternion.copy(record.authoredQuaternion).multiply(fieldRotationQuaternion.setFromAxisAngle(
+      record.idleAxis, fieldElapsed * selfRotationSpeed * direction));
+  }
+
+  records.forEach(updateCanonicalFieldTransform);
 
   function restoreRecord(record, glyphState, visible = true) {
     if (record.instance.parent !== object) object.add(record.instance);
-    record.instance.position.copy(record.authoredPosition);
-    record.instance.quaternion.copy(record.authoredQuaternion);
+    updateCanonicalFieldTransform(record);
+    record.instance.position.copy(record.fieldPosition);
+    record.instance.quaternion.copy(record.fieldQuaternion);
     record.instance.scale.copy(record.authoredScale);
     record.instance.visible = visible;
     record.instance.userData.smallGlyphState = glyphState;
@@ -131,7 +148,8 @@ export function createVrSmallGlyphSystem({
   function getFieldTransform(instance) {
     const record = records.find((candidate) => candidate.instance === instance);
     if (!record) return null;
-    return { position: record.authoredPosition.clone(), quaternion: record.authoredQuaternion.clone(),
+    updateCanonicalFieldTransform(record);
+    return { position: record.fieldPosition.clone(), quaternion: record.fieldQuaternion.clone(),
       scale: record.authoredScale.clone() };
   }
 
@@ -171,7 +189,15 @@ export function createVrSmallGlyphSystem({
 
   function update(delta) {
     if (disposed) return;
-    elapsed += Math.max(0, Number.isFinite(delta) ? delta : 0);
+    const safeDelta = Math.max(0, Number.isFinite(delta) ? delta : 0);
+    elapsed += safeDelta;
+    if (state === SYSTEM_STATE.MATERIALIZED) fieldElapsed += safeDelta;
+    records.forEach((record) => {
+      updateCanonicalFieldTransform(record);
+      if (record.instance.userData.smallGlyphState !== GLYPH_STATE.FIELD) return;
+      record.instance.position.copy(record.fieldPosition);
+      record.instance.quaternion.copy(record.fieldQuaternion);
+    });
     updatePlacedRecords();
     if (state !== SYSTEM_STATE.MATERIALIZING) return;
     let allComplete = true;
@@ -205,6 +231,7 @@ export function createVrSmallGlyphSystem({
     if (disposed) return;
     state = SYSTEM_STATE.HIDDEN;
     elapsed = 0;
+    fieldElapsed = 0;
     completionSent = false;
     object.visible = false;
     records.forEach((record) => restoreRecord(record, GLYPH_STATE.HIDDEN, false));
@@ -219,6 +246,7 @@ export function createVrSmallGlyphSystem({
     object.visible = true;
     state = SYSTEM_STATE.MATERIALIZED;
     elapsed = fullPresentationDuration;
+    fieldElapsed = 0;
     completionSent = true;
     records.forEach((record) => restoreRecord(record, GLYPH_STATE.FIELD));
   }
