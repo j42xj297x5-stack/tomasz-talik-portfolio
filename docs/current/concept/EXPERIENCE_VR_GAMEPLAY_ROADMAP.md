@@ -1,24 +1,31 @@
 # Experience VR Gameplay Roadmap
 
-Status: **CURRENT concept roadmap**. Runtime authority: [`VR_RUNTIME_MODEL.md`](../technical/VR_RUNTIME_MODEL.md); Scenario authority: [`VR_SCENARIO_DIRECTOR_MODEL.md`](../technical/VR_SCENARIO_DIRECTOR_MODEL.md).
+Status: **CURRENT concept roadmap**. Runtime authority: [`VR_RUNTIME_MODEL.md`](../technical/VR_RUNTIME_MODEL.md); Proto-Astro authority: [`VR_PROTO_ASTRO_MODEL.md`](../technical/VR_PROTO_ASTRO_MODEL.md).
 
-## Implemented authored baseline
+## IMPLEMENTED
 
-Intro, first crystal/Reliquary reveal, five Tier-1 cards, first-ring presentation bridge and mainline `3.10–3.80` są implemented. Kolejność po `5/5` prowadzi przez post-ring presentation, observation, świadomie otwierany Monkey dialogue, Furnace reveal, świadomą produkcję Astro, construction, physical availability oraz physical claim.
+- authored Scenario przez Tier 2, radial presentation `4.20`, small glyph field presentation `4.30` i stable boundary `4.40`;
+- deterministic world-stable small glyph field: 6 wariantów, po 2 instancje;
+- semantic input B i dokładnie dwa runtime bands: `SHELLS`, `SMALL_GLYPHS`;
+- small glyph scan/target/pull, left-hand handoff i return do authored field transform;
+- jeden Furnace chamber owner dla shells i small glyphs;
+- natural essence extraction `K/T/S/L/R`, persistent `extractedFamilyCodes` oraz implemented `canAttractLargeGlyph` domain seam.
 
-Tier 1 nie daje automatycznie Astro. Dopiero `ASTRO_ATTRACTOR_CLAIMED` w `3.80` czyni je `EARNED` i przyznaje `CAN_EQUIP_ASTRO`, `CAN_SCAN_SHELLS`, `CAN_TARGET_SHELLS`. Widoczne od `3.10` pole skorup nie jest przed claimem interaktywne ani revealowane ponownie.
+Brak `PLACED`, inventory i persistent small-glyph ownership. VI pozostaje interaktywnym small glyphem, ale nie jest P2 tunable.
 
-## CURRENT AUTHORED BOUNDARY / NEXT
+## NEXT BOUNDED GAMEPLAY STAGE — APPROVED / NOT IMPLEMENTED
 
-Obecny authored gameplay dochodzi przez `3.80` do canonical terminala fabuły `100.10`. Shell progression i pełny Asterion loop nie mają obecnie authored punktów między tym gameplay boundary a terminalem i są **NEXT / NOT YET AUTHORED**, mimo istniejących domenowych mechanik runtime. Najbliższe zadania to:
+Najbliższa realna granica to `LARGE_GLYPHS` band wraz z family-gated large-glyph targeting opartym na pobranych esencjach. Rzeczywisty targeting/pull, jego physics/capture/completion oraz authored P2 continuation nie istnieją. Semantyczna integracja paneli Astrolabium może wejść w tym samym lub kolejnym ograniczonym etapie; nie jest ukończona.
 
-- hardware/perceptual QA `3.10–3.80`;
-- przyszły, osobno zatwierdzony authored zakres shell/Furnace/Asterion;
-- następnie małe glify i dalsze akty zgodnie z kanonem.
+## LATER — APPROVED / NOT IMPLEMENTED
 
-## Future systems
+- `RUNESTONES` band i mechanika Rune Stones;
+- dalsze akty, radar/sector targety, spatial audio, durable persistence i full-game reset.
 
-- progression-unlocked Astro bands wybierane przyciskiem B;
-- radar/sector targeting i antenna;
-- Rune Stones oraz Emanation Matrix jako osobny zaprojektowany późniejszy etap, nie wdrożone następstwo `3.80`;
-- final radar/finale, spatial audio, durable persistence i full-game reset.
+## RESERVED / NOT YET DESIGNED
+
+VI/Eter z odpowiadającą rodziną poziomu 6 skorup jest zarezerwowane dla późnego finału Haiku Cosmos. Recipe, placement i final flow pozostają otwarte. Band identity jest semantyczne; dokładne kolory i symbole nie są ustalone.
+
+## QA
+
+Bootstrap READY zachowuje istniejące **HARDWARE VALIDATED — Meta Quest 3S**. Nowy zakres P2/small glyph nie otrzymuje przez tę synchronizację hardware/perceptual PASS.

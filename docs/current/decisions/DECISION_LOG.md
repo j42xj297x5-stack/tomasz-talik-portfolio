@@ -1,6 +1,21 @@
 # Decision Log
 
-Status: current binding decisions organized by implementation status, not patch chronology. Synchronized after the Scenario / Director / Actors documentation audit on 2026-08-16.
+Status: current binding decisions organized by implementation status, not patch chronology. Synchronized through the P2 Proto-Astro decision on 2026-08-21.
+
+## 2026-08-21 — P2 Proto-Astro / small glyph tuning foundation
+
+1. Canonical small-glyph asset mapping is: `1 → SI / S / water / Haiku Cosmos`, `2 → KI / K / earth / Ethics / Life Protection`, `3 → TI / T / metal / DIG Engine / spotify-digger`, `4 → RI / R / fire / Creative AI`, `5 → LI / L / tree / AI Guide`, `6 → VI / V / astro / produktowo Eter`. `V = astro` remains the registry truth; Eter is product meaning, not a new family ID.
+2. Natural compatibility is small form I → large form A of the identical natural family: `KI↔KA`, `TI↔TA`, `SI↔SA`, `LI↔LA`, `RI↔RA`.
+3. VI is a full transportable small glyph but does not participate in current P2 extraction/tuning and unlocks no large glyph.
+4. `ProtoAstroTuningController` is the sole owner of extracted natural family essences `K/T/S/L/R` and the implemented `canAttractLargeGlyph` compatibility seam.
+5. One Furnace chamber/content owner handles shells in `floor_gyroscope_sphere` Asterion mode and natural small-glyph essence in `astro_attractor` mode.
+6. After extraction the physical small glyph returns to field. Persistent truth is family essence, not a consumed asset or inventory item; duplicate family extraction is invalid.
+7. Implemented Astro bands are exactly `SHELLS` and `SMALL_GLYPHS`; semantic B switches only bands available to the player.
+8. `LARGE_GLYPHS` and `RUNESTONES` are **APPROVED / NOT IMPLEMENTED**; no final B cycle order is established.
+9. Band identity is semantic, not `RED/YELLOW/GREEN/BLUE/ULTRAVIOLET`. Exact colors/symbols remain open and fuel family colors are not band colors.
+10. Four authored panels have the approved target semantics recorded in [`VR_PROTO_ASTRO_MODEL.md`](../technical/VR_PROTO_ASTRO_MODEL.md). Existing panel system/shell projection is current; Panels 2–4 and universal target projection are **NOT IMPLEMENTED**.
+11. VI/Eter plus the level-6 shell family are **RESERVED / NOT YET DESIGNED** for the later Haiku Cosmos finale. Future platform placement is approved direction, not current runtime.
+12. Scenario is authored through Tier 2, `4.20`, `4.30` and stable `4.40`. Point `4.40` has mainline target `100.10` but no transition and therefore does not auto-advance.
 
 ## 2026-08-20 — rozdzielenie kanonu komunikacji Experience VR
 
@@ -13,7 +28,7 @@ Każdy nowy canonical Experience VR Scenario point musi spełniać [`VR_SCENARIO
 ## 2026-08-16 — repository entry and canonical story terminal
 
 1. Repository documentation routing starts at the existing `README.md`, `docs/README.md`, current documentation hub and Project Index. No additional private architect input belongs to, is required by or is expected in the repository.
-2. `100.10` is the canonical authored mainline story terminal. Normal completion after `4.10` and every earlier explicit exit route converge there. It may remain forbidden as a reconstruction/checkpoint start; that restriction does not remove it from mainline or from the story.
+2. `100.10` is the canonical authored mainline story terminal. **UPDATED BY 2026-08-21 DECISION:** mainline metadata reaches it from stable `4.40`, which has no transition and does not auto-advance; every earlier explicit exit route still converges there. It may remain forbidden as a reconstruction/checkpoint start; that restriction does not remove it from mainline or from the story.
 
 ## Experience VR Scenario and Director — binding after M2.2
 
@@ -24,7 +39,7 @@ Każdy nowy canonical Experience VR Scenario point musi spełniać [`VR_SCENARIO
 5. `2.30` represents the complete first-ring five-card loop. Per-card preview, commit feedback and hints are local `STAY`; `createVrProgressionController` alone owns the tier completion fact. Its first-tier `5/5` produces `FIRST_RING_COMPLETED`, which completes `2.30` through Spine to `2.40`.
 6. `2.40` is the canonical first-ring-completed `5/5` presentation point. `createVrFirstRingFlow` owns the local presentation seam; only `FIRST_RING_PRESENTATION_COMPLETED` advances to `3.10`.
 7. Scenario capabilities may make the whole vessel loop available, but domain interaction state enforces Activate only for `inserted` and Release only for `active`. Interaction phases are not story points.
-8. Reconstruction remains `stateAt(X) = fold(settledConsequences of Spine points strictly before X)`. It never reconstructs transient/live state. Direct activation through `RuntimeExperience.activatePoint()` and canonical reconstruction/hydration-backed P0/P1/P2/P3 lifecycle are implemented in their supported scope. P3 targets `4.10`, after the physical Asterion claim, and authored progression then reaches `100.10`; Tier 2 completion, P4 and durable save remain not yet authored.
+8. Reconstruction remains `stateAt(X) = fold(settledConsequences of Spine points strictly before X)`. It never reconstructs transient/live state. **UPDATED BY 2026-08-21 DECISION:** authored reconstruction now includes Tier 2, radial and small-glyph-field truth through `stateAt(4.40)`; durable save and later P2/P4 remain not authored.
 
 ## 2026-08-14 — P4 rune stones and sector vessels canonical target model
 
@@ -119,12 +134,12 @@ Każdy nowy canonical Experience VR Scenario point musi spełniać [`VR_SCENARIO
 
 ## Approved future gameplay direction — not implemented
 
-1. **B will select only Astro bands already unlocked by progression. B is currently not implemented.**
-2. Planned bands remain RED/YELLOW/GREEN/BLUE/ULTRAVIOLET, but no future band implies an unrestricted global scene raycast.
-3. Small glyph progression remains future after production sphere construction.
+1. **SUPERSEDED BY 2026-08-21 DECISION:** B now implements selection of available `SHELLS` / `SMALL_GLYPHS`; the unlocked-only rule remains binding.
+2. **SUPERSEDED BY 2026-08-21 DECISION:** color-named bands are not canonical identity. Semantic bands are `SHELLS`, `SMALL_GLYPHS`, future `LARGE_GLYPHS`, future `RUNESTONES`; unrestricted global scene raycast remains disallowed.
+3. **SUPERSEDED BY 2026-08-21 DECISION:** small-glyph field, transport and natural essence extraction are implemented; real large-glyph targeting remains future.
 4. Radar sectors, antenna, runes, Emanation Matrix processing, final radar/finale, spatial audio, durable persistence and full-game reset remain future systems. Ambient sequencing and Asterion active-control sound are implemented and binding audio behavior.
 5. Platform rotation under a world-stable glyph ring is implemented; production radar/sectors still need design and validation.
 
 ## Explicit current exclusions
 
-Small glyph progression, Astro B/bands, radar/sector gameplay, final radar, teleport, jump, snap turn and rigid-body physics are outside the current Experience VR contract. Current Meta Quest 3S defects in physical Sphere placement and contour continuity are implementation QA issues, not exclusions or future features.
+Real `LARGE_GLYPHS`/`RUNESTONES`, radar/sector gameplay, final radar, teleport, jump, snap turn and rigid-body physics are outside the current implemented Experience VR contract. Current Meta Quest 3S defects in physical Sphere placement and contour continuity are implementation QA issues, not exclusions or future features.

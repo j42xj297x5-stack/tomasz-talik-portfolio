@@ -2,47 +2,71 @@
 
 ## Documentation flow
 
-[`README.md`](../../../README.md) → [`docs/README.md`](../../README.md) → [`maps/PROJECT_INDEX.md`](PROJECT_INDEX.md) → najmniejszy task-specific current model. Zasady dowodów i walidacji: [`COLLABORATION_PROTOCOL.md`](../operations/COLLABORATION_PROTOCOL.md).
+`PROJECT_INDEX → canonical task model → DEPENDENCY_MAP / DECISION_LOG`. Proto-Astro/small-glyph/bands/tuning zaczyna się w [`VR_PROTO_ASTRO_MODEL.md`](../technical/VR_PROTO_ASTRO_MODEL.md), a potem przechodzi do Runtime, Scenario albo communication docs zależnie od zadania.
 
 ## Experience VR composition
 
 ```text
-experienceVr bootstrap
-→ preload all assets
-→ nullable runtimeExperience binding (construction-safe)
-→ Scenario → Director → RuntimeExperience → actors/domain owners
-→ READY
+experienceVr composition root
+→ Scenario → Director → RuntimeExperience
+→ effect handlers / semantic callbacks
+→ actors and single domain owners
 ```
 
-`canUseAstroProduction` jest `false` przed pełnym bindem i deleguje do rzeczywistego gate po bindzie. Ten bootstrap fix jest **HARDWARE VALIDATED — Meta Quest 3S** dla przejścia poza `41/41`; nie kwalifikuje pozostałego flow.
+Nie istnieje centralny global gameplay store.
 
-## Authored progression and production
+## Authored progression
 
 ```text
-2.30 durable 5/5
-→ FIRST_RING_COMPLETED → 2.40
-→ createVrFirstRingFlow presentation complete
-→ 3.10 shell-field presentation (non-interactive)
-→ 3.20 observation
-→ 3.30 player-opened Monkey dialogue
-→ 3.40 Furnace reveal
-→ 3.50 conscious Astro production request
-→ 3.60 ASTRO_ATTRACTOR_CONSTRUCTION
-→ 3.70 physical AVAILABLE in chamber
-→ 3.80 physical claim / EARNED
-→ CAN_EQUIP_ASTRO + CAN_SCAN_SHELLS + CAN_TARGET_SHELLS
-→ 100.10 canonical story terminal
+3.80 Astro EARNED + shell/Furnace/Asterion loop
+→ 4.10 second Glyph → Crystal → Reliquary
+→ TIER_COMPLETED / Tier 2 complete
+→ 4.20 radial presentation
+→ P2_RADIAL_PRESENTATION_COMPLETED
+→ 4.30 small glyph materialization
+→ SMALL_GLYPH_FIELD_PRESENTATION_COMPLETED
+→ 4.40 stable P2 Proto-Astro boundary (no transition)
+→ 100.10 canonicalMainline target / story terminal, no auto-advance
 ```
+
+## Proto-Astro and small glyph dependencies
 
 ```text
-createVrAstroAttractorProductionController
-  READY → BUILDING → AVAILABLE → CLAIMING → EARNED
-  ↓ physical output under VR_FURNACE_CONTENT_ANCHOR
-createVrAttractorTool (single gameplay equipment object)
+smallGlyphSystem
+→ smallGlyphAttractorInteraction
+→ Furnace content interaction
+
+protoAstroRegistry
+→ small-glyph resolver
+→ ProtoAstroTuningController
+← large-glyph/page resolver
+
+ProtoAstroTuningController
+→ implemented canAttractLargeGlyph domain seam
+→ future LARGE_GLYPHS target/pull
 ```
 
-Production representation i gameplay equipment mają rozdzielone lifecycle ownership. `CLAIMING` nie jest story point. Furnace mode `astro_attractor` i `ASTRO_ATTRACTOR_CONSTRUCTION` są odrębne od Asterion mode i `ASTERION_CONSTRUCTION`, ale używają shared Furnace process driver.
+`smallGlyphSystem` owns field geometry; interaction owns transient transport; TuningController alone owns extracted natural family truth.
 
-## Existing domain mechanics versus authored boundary
+## Furnace content boundary
 
-Shell targeting, Furnace material progression and Asterion production/control mogą istnieć jako domenowe runtime mechanics, ale nie są authored punktami między `3.80` a canonical terminalem `100.10`. P0/P1/P2 używają wdrożonego direct activation oraz canonical reconstruction/hydration lifecycle. Stable state po `3.40`, Astro `AVAILABLE`/`EARNED`, Shell/Furnace/Asterion hydration, P3/P4 i durable save pozostają partial/deferred; Rune Stones, małe glify i dalsze akty pozostają future systems.
+```text
+SHELL ───────┐
+             ├→ one createVrAstroFurnaceContentInteraction chamber owner
+SMALL_GLYPH ─┘
+```
+
+`floor_gyroscope_sphere` routes shells to Asterion progression. `astro_attractor` routes natural small glyphs to essence extraction and TuningController, then restores the physical glyph to field.
+
+## Guidance projection
+
+```text
+Scenario capabilities + domain truth
+→ Monkey knowledge resolver
+→ Player Guide current task / tools
+→ capability-gated B line
+```
+
+## Future seams
+
+`LARGE_GLYPHS`, panel semantics and later P2 authoring are **APPROVED / NOT IMPLEMENTED**. `RUNESTONES` remains future; VI/Eter finale is **RESERVED / NOT YET DESIGNED**.
