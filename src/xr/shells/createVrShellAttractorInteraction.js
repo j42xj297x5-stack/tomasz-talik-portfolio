@@ -143,7 +143,7 @@ export function createVrShellAttractorInteraction({ controllers, shellSystem, ha
     heldShell = shell; heldByRecord = record; clearPlacedShellHit(record); return true;
   }
   function placeHeldShell(record) { if (!record?.isConnected || heldByRecord !== record || !heldShell) return false;
-    const shell = heldShell; settledParent.attach(shell); shell.userData.shellState = 'placed'; shell.userData.attractorTarget = false;
+    const shell = heldShell; settledParent.attach(shell); shellSystem.placeInstance(shell);
     heldShell = null; heldByRecord = null; return true; }
   function transferHeldShell(shell) {
     if (!shell || heldShell !== shell) return false;

@@ -106,7 +106,7 @@ function makeControllerHarness({ asterionAvailable = true, rightUnlocked = true 
   const interaction = createVrSmallGlyphAttractorInteraction({
     controllers: [{ handedness: 'right', controller: rightController, isConnected: true }],
     smallGlyphSystem: { object: parent, getInstances: () => [], getState: () => 'MATERIALIZED',
-      getFieldTransform: () => null, restoreInstanceToField: () => false },
+      getFieldTransform: () => null, restoreInstanceToField: () => false, placeInstance: () => false },
     handModeController: { getRightMode: () => VR_RIGHT_HAND_MODES.NORMAL_HAND,
       getLeftMode: () => VR_LEFT_HAND_MODES.NORMAL_HAND,
       getAttractorBand: () => VR_ATTRACTOR_BANDS.SMALL_GLYPHS },

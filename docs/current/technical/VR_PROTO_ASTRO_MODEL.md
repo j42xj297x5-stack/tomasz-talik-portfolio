@@ -57,10 +57,10 @@ To API jest gotowym seamem domenowym; rzeczywiste `LARGE_GLYPHS` targeting/pull 
 **IMPLEMENTED:** sześć wariantów × dwie instancje = 12 obiektów; deterministic spatial distribution, world-stable field, presentation materialization oraz hydration do stabilnego `MATERIALIZED`.
 
 ```text
-FIELD → TARGETING → PULLING → CAPTURE_READY → HELD → RETURNING → FIELD
+FIELD → TARGETING → PULLING → CAPTURE_READY → HELD → PLACED → HELD
 ```
 
-Right Astro: chwyt skanuje/namierza, spust przyciąga. Left ordinary ray/Szpila + left squeeze przekazuje obiekt do `holdSocket`. Release zwraca go do authored field transform. Nie ma `PLACED`, inventory ani persistent ownership. Zmiana bandu lub schowanie Astro po `HELD` nie odbiera obiektu automatycznie; capability loss, release i reset przywracają canonical field zgodnie z kontraktem.
+Right Astro: chwyt skanuje/namierza, spust przyciąga. Left ordinary ray/Szpila + left squeeze przekazuje obiekt do `holdSocket`. Świadomy release tworzy world-stable `PLACED`, który lewituje względem zapamiętanego transformu i może zostać ponownie przejęty Szpilą. Anulowany pull, capability loss, transfer do Furnace oraz reset nie tworzą `PLACED`; przywracają canonical field zgodnie z kontraktem.
 
 ## 9. FURNACE ESSENCE EXTRACTION
 
@@ -101,9 +101,7 @@ Rodzina symboli bandów i dokładne kolory nie są jeszcze zaprojektowane. Panel
 
 ## 13. VI / ETER
 
-**IMPLEMENTED:** VI jest pełnym small glyphem: jest widoczny, targetowalny, przyciągalny i możliwy do przejęcia; release zwraca go do field. Nie daje esencji i nie odblokowuje large glyph.
-
-**APPROVED / NOT IMPLEMENTED:** możliwość pozostawienia VI na platformie.
+**IMPLEMENTED:** VI jest pełnym small glyphem: jest widoczny, targetowalny, przyciągalny, możliwy do przejęcia i pozostawienia na platformie. Nie daje esencji i nie odblokowuje large glyph.
 
 **RESERVED / NOT YET DESIGNED:** VI/Eter wraz z odpowiadającą rodziną poziomu 6 skorup dla końcowego etapu Haiku Cosmos. Recipe, placement i final flow nie są authored.
 

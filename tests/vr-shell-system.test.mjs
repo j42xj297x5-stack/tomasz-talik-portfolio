@@ -48,7 +48,6 @@ first.system.update(0.05); assert.equal(returningShell.userData.attractorTarget,
 first.system.update(0.05);
 assert.equal(returningShell.userData.shellState, 'orbiting');
 assert.equal(returningShell.userData.attractorTarget, true, 'completed return restores cone eligibility');
-
 const second = makeSystem();
 assert.deepEqual(second.system.instances.map((shell) => shell.userData.shellOrbit), first.system.instances.map((shell) => shell.userData.shellOrbit));
 assert.deepEqual(second.system.instances.map((shell) => shell.userData.selfRotationAxis.toArray()),
@@ -62,6 +61,15 @@ first.system.instances.forEach((shell) => {
 });
 assert.equal(ids.size, 18);
 assert.ok(new Set(first.system.instances.map((shell) => shell.userData.shellOrbit.inclination)).size > 1);
+const placedShell = first.system.instances[1];
+placedShell.position.set(1, 2, 3); placedShell.quaternion.identity();
+assert.equal(first.system.placeInstance(placedShell), true);
+const placedBaseline = placedShell.position.clone(), placedRotation = placedShell.quaternion.clone();
+first.system.update(0);
+assert.ok(placedShell.position.distanceTo(placedBaseline) < 1e-12, 'placement starts without a teleport');
+first.system.update(1);
+assert.ok(Math.abs(placedShell.position.y - placedBaseline.y) <= 0.2, 'placed shell keeps bounded vertical idle motion');
+assert.ok(placedShell.quaternion.angleTo(placedRotation) > 0, 'placed shell rotates slowly');
 first.system.reset();
 assert.ok(first.system.instances[0].quaternion.angleTo(baselineQuaternion) < 1e-12);
 assert.deepEqual(first.system.instances.map((shell) => shell.position.toArray()), second.system.instances.map((shell) => shell.position.toArray()));
