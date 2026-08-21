@@ -158,7 +158,8 @@ export function createVrAstroFurnaceContentInteraction({
       setState(states.CONSUMED); } }
   function commitConsumedContent() { if (state !== states.CONSUMED || activateInteraction?.getState?.() !== 'COMPLETE' || !insertedContent) return false;
     if (insertedKind === kinds.SHELL) { if (!pendingShellAssetId || !progressionController.commitAbsorbedShell(pendingShellAssetId)) return false;
-      shellSystem.removeInstance?.(insertedContent);
+      if (shellSystem.consumeInstance?.(insertedContent) !== true)
+        throw new Error('Shell system rejected committed shell consumption.');
     } else { if (activateInteraction?.getProcessKind?.() !== ASTRO_FURNACE_PROCESS_KINDS.SMALL_GLYPH_ESSENCE_EXTRACTION)
         throw new Error('Small glyph content completed with an invalid furnace process kind.');
       if (!protoAstroTuningController.commitExtractedSmallGlyph(insertedContent))
@@ -178,7 +179,7 @@ export function createVrAstroFurnaceContentInteraction({
     updateConsumption(); commitConsumedContent(); reportedHeldShell = null; reportedHeldSmallGlyph = null; }
   function reset() { hideFeedback(); if (insertedContent) {
       if (insertedKind === kinds.SMALL_GLYPH) smallGlyphSystem.restoreInstanceToField(insertedContent);
-      else shellSystem.removeInstance?.(insertedContent); }
+      else shellSystem.restoreInstanceToOrbit?.(insertedContent); }
     insertedContent = null; insertedKind = null; pendingShellAssetId = null; snapTarget = null; desiredWorldScale = null;
     reportedHeldShell = null; reportedHeldSmallGlyph = null;
     materialBases.length = 0; setState(states.EMPTY); }

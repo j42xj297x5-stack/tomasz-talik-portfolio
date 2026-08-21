@@ -10,18 +10,22 @@ assert.ok(processRotationPulse(Math.PI * 2) < 1e-12, 'shell pulse follows the sa
 function fixture({ emptyVolume = false } = {}) {
   const object = new THREE.Group(), volume = emptyVolume ? new THREE.Group() : new THREE.Mesh(new THREE.SphereGeometry(.5)), anchor = new THREE.Group();
   const chamberGeometry = new THREE.CylinderGeometry(.4, .4, 1.2);
-  const chamber = new THREE.Mesh(chamberGeometry, new THREE.MeshBasicMaterial()); object.add(volume, anchor, chamber); const records = []; let open = 'OPEN', process = 'IDLE', modeActive = true, progress = 0, commits = 0, removed;
+  const chamber = new THREE.Mesh(chamberGeometry, new THREE.MeshBasicMaterial()); object.add(volume, anchor, chamber); const records = []; let open = 'OPEN', process = 'IDLE', modeActive = true, progress = 0, commits = 0, consumed, restored;
   const progression = createVrAstroFurnaceProgressionController(), commit = progression.commitAbsorbedShell;
   progression.commitAbsorbedShell = (id) => { commits++; return commit(id); };
   const interaction = createVrAstroFurnaceContentInteraction({ furnace: { object, nodes: { VR_FURNACE_INSERT_VOLUME: volume,
-    VR_FURNACE_CONTENT_ANCHOR: anchor, komora: chamber } }, shellSystem: { records, getRecord(shell) { return records.find((record) => record.object === shell); }, removeInstance(shell) { removed = shell; shell.removeFromParent(); return true; } },
+    VR_FURNACE_CONTENT_ANCHOR: anchor, komora: chamber } }, shellSystem: { records, getRecord(shell) { return records.find((record) => record.object === shell); },
+      consumeInstance(shell) { consumed = shell; shell.visible = false; return true; },
+      restoreInstanceToOrbit(shell) { restored = shell; shell.visible = true; object.add(shell); return true; } },
+  smallGlyphSystem: { restoreInstanceToField() { return true; } },
+  protoAstroTuningController: { canExtractSmallGlyph() { return false; }, commitExtractedSmallGlyph() { return false; } },
   openInteraction: { getState: () => open }, activateInteraction: { getState: () => process, getExtractionProgress: () => progress }, progressionController: progression,
   isModeActive: () => modeActive,
   settings: emptyVolume ? { volumeRadius: .5, rejectDuration: .1 } : { rejectDuration: .1 } });
   const makeShell = (id = 'shell-relic-1', radius = .1) => { const shell = new THREE.Mesh(new THREE.SphereGeometry(radius), new THREE.MeshStandardMaterial());
     shell.userData.shellAssetId = id; object.add(shell); records.push({ object: shell, boundingCenter: new THREE.Vector3(), boundingRadius: radius }); return shell; };
   return { interaction, progression, anchor, makeShell, setOpen: (v) => { open = v; }, setProcess: (v) => { process = v; }, setModeActive: (v) => { modeActive = v; },
-    setProgress: (v) => { progress = v; }, get commits() { return commits; }, get removed() { return removed; } };
+    setProgress: (v) => { progress = v; }, get commits() { return commits; }, get consumed() { return consumed; }, get restored() { return restored; } };
 }
 {
   const t = fixture(), shell = t.makeShell();
@@ -119,12 +123,13 @@ function insert(test, shell) { test.interaction.reportHeldShell(shell); test.int
   t.setProcess('EXTRACTION'); t.setProgress(.5); t.interaction.update(.01);
   assert.equal(shell.material.opacity, .5, 'physical shell uses the canonical halfway extraction progress'); assert.equal(shell.visible, true); assert.equal(t.commits, 0);
   t.setProgress(1); t.interaction.update(.01); assert.equal(t.interaction.getState(), S.CONSUMED); assert.equal(t.commits, 0);
-  t.setProcess('COMPLETE'); t.interaction.update(.01); assert.equal(t.commits, 1); assert.equal(t.removed, shell);
+  t.setProcess('COMPLETE'); t.interaction.update(.01); assert.equal(t.commits, 1); assert.equal(t.consumed, shell);
   assert.equal(t.progression.getSnapshot().asterionSphere.absorbed, 1); t.interaction.update(1); assert.equal(t.commits, 1); t.interaction.dispose();
 }
 {
   const t = fixture(), shell = t.makeShell('shell-relic-4'); insert(t, shell); t.interaction.reset();
-  assert.equal(t.interaction.getState(), S.EMPTY); assert.equal(t.progression.getSnapshot().asterionSphere.absorbed, 0); t.interaction.dispose();
+  assert.equal(t.interaction.getState(), S.EMPTY); assert.equal(t.restored, shell);
+  assert.equal(t.progression.getSnapshot().asterionSphere.absorbed, 0); t.interaction.dispose();
 }
 
 // Candidate volume uses the cached geometry center and release has a small boundary grace.

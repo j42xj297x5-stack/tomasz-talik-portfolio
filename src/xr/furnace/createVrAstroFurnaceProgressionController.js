@@ -22,6 +22,7 @@ export function createVrAstroFurnaceProgressionController() {
   }
   const getSnapshot = () => ({ asterionSphere: getAsterionSphereProgress() });
   const hasAbsorbedShell = (assetId) => absorbedShells.has(assetId);
+  const getAbsorbedShellIds = () => [...absorbedShells];
   const canAbsorbShell = (assetId) => !disposed
     && REQUIRED_ASTERION_SHELLS.includes(assetId) && !absorbedShells.has(assetId);
   function commitAbsorbedShell(assetId) {
@@ -46,6 +47,6 @@ export function createVrAstroFurnaceProgressionController() {
     absorbedShells.clear(); value.absorbedShellIds.forEach((assetId) => absorbedShells.add(assetId)); notify();
   }
   function dispose() { disposed = true; subscribers.clear(); }
-  return { getSnapshot, getAsterionSphereProgress, hasAbsorbedShell, canAbsorbShell,
+  return { getSnapshot, getAsterionSphereProgress, getAbsorbedShellIds, hasAbsorbedShell, canAbsorbShell,
     commitAbsorbedShell, subscribe, resetBaseline, hydrateScenarioState, dispose };
 }

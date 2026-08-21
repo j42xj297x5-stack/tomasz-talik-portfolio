@@ -60,6 +60,25 @@ first.system.instances.forEach((shell) => {
   ids.add(shell.userData.attractorId);
 });
 assert.equal(ids.size, 18);
+const consumed = first.system.instances[0];
+assert.equal(first.system.consumeInstance(consumed), true);
+assert.equal(first.system.instances.length, 18, 'consumption preserves the canonical pool');
+assert.equal(consumed.visible, false);
+assert.equal(consumed.userData.attractorTarget, false);
+first.system.applyAbsorbedShellIds(Array.from({ length: 6 }, (_, index) => `shell-relic-${index + 1}`));
+const availableByFamily = new Map();
+first.system.instances.filter((shell) => shell.visible).forEach((shell) => availableByFamily.set(shell.userData.shellAssetId,
+  (availableByFamily.get(shell.userData.shellAssetId) ?? 0) + 1));
+assert.equal(first.system.instances.filter((shell) => shell.visible).length, 12);
+assert.deepEqual([...availableByFamily.values()], [2, 2, 2, 2, 2, 2]);
+first.system.applyAbsorbedShellIds([]);
+first.system.applyAbsorbedShellIds(Array.from({ length: 6 }, (_, index) => `shell-relic-${index + 1}`));
+assert.equal(first.system.instances.filter((shell) => shell.visible).length, 12,
+  'repeated reconstruction is independent of checkpoint history');
+first.system.reset();
+assert.equal(first.system.instances.length, 18);
+assert.ok(first.system.instances.every((shell) => shell.visible && shell.userData.shellState === 'orbiting'));
+first.system.setActive(true);
 assert.ok(new Set(first.system.instances.map((shell) => shell.userData.shellOrbit.inclination)).size > 1);
 const placedShell = first.system.instances[1];
 placedShell.position.set(1, 2, 3); placedShell.quaternion.identity();
