@@ -1,5 +1,10 @@
 import * as THREE from '../../vendor/three.js';
 
+export function calculateAttractorCapturePosition({ masterRingWorldPosition, controllerRayDirection,
+  captureForwardDistance, target = new THREE.Vector3() }) {
+  return target.copy(masterRingWorldPosition).addScaledVector(controllerRayDirection, captureForwardDistance);
+}
+
 export function selectAttractorConeTarget({ candidates, origin, direction, maxDistance, halfAngleRadians }) {
   const tanHalfAngle = Math.tan(halfAngleRadians);
   const toTarget = new THREE.Vector3();
