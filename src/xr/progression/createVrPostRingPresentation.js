@@ -15,6 +15,12 @@ export function createVrPostRingPresentation({ glyphRing, shellSystem, settings,
     glyphStarted = true;
     return true;
   }
+  function enableShellFieldInteraction() {
+    if (disposed) return false;
+    shellSystem.setPresentationVisible(true);
+    shellSystem.setInteractionEnabled(true);
+    return true;
+  }
   function update(delta) {
     if (disposed || completed || (!shellStarted && !glyphStarted)) return;
     elapsed += Math.max(0, Number.isFinite(delta) ? delta : 0);
@@ -36,15 +42,15 @@ export function createVrPostRingPresentation({ glyphRing, shellSystem, settings,
     shellSystem.setPresentationVisible(false);
   }
   function hydrateScenarioState(state) {
-    if (state?.shellFieldVisible !== true || state.shellInteractionEnabled !== false
+    if (state?.shellFieldVisible !== true || typeof state.shellInteractionEnabled !== 'boolean'
       || state.mainGlyphsElevated !== true) throw new Error('Unsupported post-ring Scenario state');
     shellStarted = glyphStarted = completed = true;
     elapsed = Math.max(settings.shellRevealDuration, settings.glyphElevationDuration);
     shellSystem.setPresentationVisible(true);
-    shellSystem.setInteractionEnabled(false);
+    shellSystem.setInteractionEnabled(state.shellInteractionEnabled);
     glyphRing.position.y = baseGlyphY + settings.glyphVerticalOffset;
   }
   function dispose() { if (!disposed) { reset(); disposed = true; } }
-  return { revealShellField, elevateMainGlyphs, update, reset, hydrateScenarioState, dispose,
+  return { revealShellField, elevateMainGlyphs, enableShellFieldInteraction, update, reset, hydrateScenarioState, dispose,
     get completed() { return completed; }, get glyphOffset() { return glyphRing.position.y - baseGlyphY; } };
 }

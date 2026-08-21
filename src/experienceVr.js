@@ -349,6 +349,10 @@ function syncAmbientSequence() {
   const sphereBuilt = asterionProductionController.getSnapshot().built;
   ambientSequencer.setState({ fullThreshold, asterionSubthreshold: fullThreshold === 2 && shellsComplete && sphereBuilt });
 }
+function synchronizeReconstructionDerivedState() {
+  syncAmbientSequence();
+  shellSystem.applyAbsorbedShellIds(furnaceProgressionController.getAbsorbedShellIds());
+}
 const firstRingFlow = createVrFirstRingFlow({
   progressFloor,
   dispatch: (event, payload) => runtimeExperience.dispatch(event, payload)
@@ -417,7 +421,6 @@ const astroAttractorProductionController = createVrAstroAttractorProductionContr
   haloSettings: settings.targetHalo,
   onProduced: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.ASTRO_ATTRACTOR_PRODUCED),
   onClaimed: () => { runtimeExperience.dispatch(VR_SCENARIO_EVENT.ASTRO_ATTRACTOR_CLAIMED);
-    shellSystem.setInteractionEnabled(runtimeExperience.can(VR_SCENARIO_CAPABILITY.CAN_TARGET_SHELLS));
     handModeController.equipRightAstro(); }
 });
 const playerGuideProjection = createVrPlayerGuideProjection({
@@ -802,7 +805,7 @@ runtimeExperience = new RuntimeExperience({
     stateAt: (pointId) => stateAtVrScenarioPoint(vrExperienceScenario, pointId),
     hydrate: (state) => hydrateVrScenarioState(state, scenarioOwners),
     restoreBaseline: restoreVrScenarioBaseline,
-    synchronize: syncAmbientSequence,
+    synchronize: synchronizeReconstructionDerivedState,
     createDirector: (pointId) => new ExperienceDirector({ scenario: vrExperienceScenario, startPointId: pointId })
   },
   effectHandlers: {
@@ -954,6 +957,11 @@ runtimeExperience = new RuntimeExperience({
       if (!astroAttractorProductionController.beginConstruction()) {
         throw new Error('BEGIN_ASTRO_ATTRACTOR_CONSTRUCTION accepted Scenario command rejected by Astro production actor');
       }
+    },
+    [VR_SCENARIO_EFFECT.ENABLE_SHELL_FIELD_INTERACTION]: () => {
+      if (!postRingPresentation.enableShellFieldInteraction()) {
+        throw new Error('ENABLE_SHELL_FIELD_INTERACTION rejected by post-ring owner');
+      }
     }
   }
 });
@@ -971,7 +979,7 @@ const enterVrDebugCheckpoint = createVrDebugCheckpointController({
   scenario: vrExperienceScenario,
   owners: scenarioOwners,
   restoreBaseline: restoreVrScenarioBaseline,
-  synchronizeDerivedState: syncAmbientSequence,
+  synchronizeDerivedState: synchronizeReconstructionDerivedState,
   runtime: runtimeExperience,
   spawnIntro: resetPlayerRigToSpawn,
   spawnRing: spawnPlayerInsideRingFacingMonkey,

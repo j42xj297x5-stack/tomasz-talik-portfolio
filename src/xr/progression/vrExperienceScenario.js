@@ -159,6 +159,7 @@ export const VR_SCENARIO_EFFECT = immutableIdentifiers([
   'BEGIN_OBSERVATION_WINDOW',
   'BEGIN_MONKEY_ATTENTION',
   'BEGIN_ASTRO_ATTRACTOR_CONSTRUCTION',
+  'ENABLE_SHELL_FIELD_INTERACTION',
   'BEGIN_FURNACE_INTRO',
   'REVEAL_SHELL_FIELD',
   'REVEAL_FURNACE',
@@ -278,6 +279,8 @@ const FURNACE_REVEALED_SETTLED_CONSEQUENCES = Object.freeze({
   furnace: Object.freeze({ revealed: true })
 });
 const ASTRO_EARNED_SETTLED_CONSEQUENCES = Object.freeze({
+  postRing: Object.freeze({ shellFieldVisible: true, shellInteractionEnabled: true,
+    mainGlyphsElevated: true }),
   astroProduction: Object.freeze({ state: 'EARNED' })
 });
 const ASTERION_EARNED_SETTLED_CONSEQUENCES = Object.freeze({
@@ -625,6 +628,7 @@ const points = Object.freeze([
   Object.freeze({
     id: VR_EXPERIENCE_POINT['3.80'],
     canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['4.10'] }), settledConsequences: ASTERION_EARNED_SETTLED_CONSEQUENCES,
+    entryEffects: Object.freeze([VR_SCENARIO_EFFECT.ENABLE_SHELL_FIELD_INTERACTION]),
     label: 'Astro Attractor physically claimed / EARNED',
     capabilities: Object.freeze([VR_SCENARIO_CAPABILITY.CAN_EQUIP_ASTRO, VR_SCENARIO_CAPABILITY.CAN_SCAN_SHELLS,
       VR_SCENARIO_CAPABILITY.CAN_TARGET_SHELLS, VR_SCENARIO_CAPABILITY.CAN_USE_FURNACE,
