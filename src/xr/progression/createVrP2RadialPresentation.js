@@ -6,7 +6,9 @@ const STATE = Object.freeze({
 
 export function createVrP2RadialPresentation({
   glyphOrbit,
+  nodes,
   getTargetRadius,
+  largeGlyphScaleMultiplier,
   durationSeconds,
   onCompleted = () => {}
 }) {
@@ -16,6 +18,13 @@ export function createVrP2RadialPresentation({
   }
   if (typeof getTargetRadius !== 'function') {
     throw new TypeError('P2 radial presentation requires getTargetRadius');
+  }
+  if (!Array.isArray(nodes) || nodes.length === 0 || nodes.some((node) => !node?.isObject3D
+    || !Number.isFinite(node.userData?.baseScale))) {
+    throw new TypeError('P2 radial presentation requires glyph nodes with canonical baseScale');
+  }
+  if (!Number.isFinite(largeGlyphScaleMultiplier) || largeGlyphScaleMultiplier < 1) {
+    throw new TypeError('P2 radial presentation largeGlyphScaleMultiplier must be at least one');
   }
   if (!Number.isFinite(durationSeconds) || durationSeconds <= 0) {
     throw new TypeError('P2 radial presentation durationSeconds must be finite and greater than zero');
@@ -28,6 +37,12 @@ export function createVrP2RadialPresentation({
   let elapsed = 0;
   let startRadius = null;
   let targetRadius = null;
+  let startScales = null;
+
+  function setNodeBaseScale(node, scale) {
+    node.userData.baseScale = scale;
+    node.scale.setScalar(scale * (node.userData.targetScale ?? 1));
+  }
 
   function begin() {
     if (state !== STATE.IDLE) return false;
@@ -37,6 +52,7 @@ export function createVrP2RadialPresentation({
       || nextTargetRadius <= nextStartRadius) return false;
     startRadius = nextStartRadius;
     targetRadius = nextTargetRadius;
+    startScales = nodes.map((node) => node.userData.baseScale);
     elapsed = 0;
     state = STATE.ACTIVE;
     return true;
@@ -51,10 +67,13 @@ export function createVrP2RadialPresentation({
     if (!glyphOrbit.setRadius(radius)) {
       throw new Error('P2 radial presentation could not update the glyph orbit radius');
     }
+    nodes.forEach((node, index) => setNodeBaseScale(node,
+      startScales[index] + (largeGlyphScaleMultiplier - startScales[index]) * eased));
     if (progress === 1) {
       if (!glyphOrbit.setRadius(targetRadius)) {
         throw new Error('P2 radial presentation could not settle the glyph orbit radius');
       }
+      nodes.forEach((node) => setNodeBaseScale(node, largeGlyphScaleMultiplier));
       state = STATE.COMPLETED;
       onCompleted();
     }
@@ -65,6 +84,8 @@ export function createVrP2RadialPresentation({
     elapsed = 0;
     startRadius = null;
     targetRadius = null;
+    startScales = null;
+    nodes.forEach((node) => setNodeBaseScale(node, 1));
   }
 
   function hydrateScenarioState(value) {
@@ -79,9 +100,11 @@ export function createVrP2RadialPresentation({
     if (!glyphOrbit.setRadius(hydratedTargetRadius)) {
       throw new Error('P2 radial presentation could not hydrate the glyph orbit radius');
     }
+    nodes.forEach((node) => setNodeBaseScale(node, largeGlyphScaleMultiplier));
     elapsed = durationSeconds;
     startRadius = null;
     targetRadius = hydratedTargetRadius;
+    startScales = null;
     state = STATE.COMPLETED;
   }
 
