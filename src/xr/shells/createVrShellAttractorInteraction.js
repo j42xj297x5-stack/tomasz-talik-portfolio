@@ -1,6 +1,7 @@
 import * as THREE from '../../vendor/three.js';
 import { createVrTargetHalo } from '../createVrTargetHalo.js';
-import { createVrAttractorScanCone, selectAttractorConeTarget } from '../tools/createVrAttractorScanCone.js';
+import { calculateAttractorCapturePosition, createVrAttractorScanCone,
+  selectAttractorConeTarget } from '../tools/createVrAttractorScanCone.js';
 import { VR_ATTRACTOR_STATES } from '../tools/createVrAttractorTool.js';
 import { VR_ATTRACTOR_BANDS } from '../input/createVrHandModeController.js';
 
@@ -17,14 +18,19 @@ export function selectConeTarget({ candidates, origin, direction, maxDistance, h
 
 export function calculateShellCapturePosition({ masterRingWorldPosition, controllerRayDirection,
   shellCaptureForwardDistance, target = new THREE.Vector3() }) {
-  return target.copy(masterRingWorldPosition).addScaledVector(controllerRayDirection, shellCaptureForwardDistance);
+  return calculateAttractorCapturePosition({ masterRingWorldPosition, controllerRayDirection,
+    captureForwardDistance: shellCaptureForwardDistance, target });
 }
 
 export function createVrShellAttractorInteraction({ controllers, shellSystem, handModeController, semanticInput,
   attractorTool, settings, haloSettings, settledParent = shellSystem.object.parent,
   crystalHeldByController = new Map(), isHigherPriorityInteractionActive = () => false,
+  isControllerOccupiedByOtherInteraction = () => false,
   canScanShells = () => true, canTargetShells = () => true,
   onPullStart = () => {}, onPullCancel = () => {}, onHandoff = () => {} }) {
+  if (typeof isControllerOccupiedByOtherInteraction !== 'function') {
+    throw new TypeError('isControllerOccupiedByOtherInteraction must be a function.');
+  }
   const maxTargetDistance = shellSystem.innerRadius * settings.targetDistanceRadiusMultiplier;
   const halfAngleRadians = THREE.MathUtils.degToRad(settings.scanCone.halfAngleDegrees);
   const origin = new THREE.Vector3(), direction = new THREE.Vector3(), anchorWorldPosition = new THREE.Vector3();
@@ -58,7 +64,8 @@ export function createVrShellAttractorInteraction({ controllers, shellSystem, ha
   function beginReturn(shell) { onPullCancel({ target: shell }); halos.get(shell)?.setVisible(false); shellSystem.returnToOrbit(shell, settings.returnDuration);
     if (captureReady === shell) captureReady = null; activePull = null; pullSpeed = 0; target = null; finishTool(); }
   function currentInput() { return semanticInput.getState?.() ?? { primaryAction: 0, grabAction: 0 }; }
-  function handIsFree(leftRecord = getLeftRecord()) { return Boolean(leftRecord?.isConnected && !heldShell && !crystalHeldByController.has(leftRecord)); }
+  function handIsFree(leftRecord = getLeftRecord()) { return Boolean(leftRecord?.isConnected && !heldShell
+    && !crystalHeldByController.has(leftRecord) && isControllerOccupiedByOtherInteraction(leftRecord) !== true); }
   function findTarget(rightRecord = getRightRecord()) { if (!canTargetShells() || !rightRecord?.controller || !rightRecord.isConnected) return null;
     rightRecord.controller.getWorldPosition(origin); rightRecord.controller.getWorldQuaternion(worldQuaternion);
     direction.copy(LOCAL_DIRECTION).applyQuaternion(worldQuaternion).normalize();
@@ -210,6 +217,7 @@ export function createVrShellAttractorInteraction({ controllers, shellSystem, ha
     captureAnchor.removeFromParent(); scanCone.dispose();
     halos.forEach((halo) => halo.dispose()); halos.clear(); }
   return { captureAnchor, scanCone, maxTargetDistance, halfAngleRadians, update, reset, dispose, transferHeldShell,
+    isHeldBy: (record) => heldByRecord === record,
     hasCurrentShellHit: (record) => hasCurrentPlacedShellHit(record) || hasCurrentShellHit(record),
     get target() { return target; }, get activePull() { return activePull; }, get captureReady() { return captureReady; },
     get heldShell() { return heldShell; } };
