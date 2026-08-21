@@ -3,7 +3,7 @@
   "atmosphere": {
     "stones": {
       "enabled": true,
-      "count": 30,
+      "count": 18,
       "models": [
         "/glb/stone_01.glb",
         "/glb/stone_02.glb",
@@ -25,7 +25,7 @@
     },
     "shells": {
       "enabled": true,
-      "count": 27,
+      "count": 20,
       "models": [
         "/glb/shell_01.glb",
         "/glb/shell_02.glb",
@@ -42,8 +42,8 @@
         "#9c7bff",
         "#f0a6a6"
       ],
-      "minScale": 1.29,
-      "maxScale": 1.88,
+      "minScale": 0.92,
+      "maxScale": 1.14,
       "innerRadius": 7.5,
       "outerRadius": 12.5,
       "rotationSpeedMin": 0.047,
@@ -54,7 +54,7 @@
     },
     "smallGlyphs": {
       "enabled": true,
-      "count": 34,
+      "count": 11,
       "models": [
         "/glb/small_glyph_01.glb",
         "/glb/small_glyph_02.glb",
@@ -63,8 +63,8 @@
         "/glb/small_glyph_05.glb",
         "/glb/small_glyph_06.glb"
       ],
-      "minScale": 1.66,
-      "maxScale": 2.25,
+      "minScale": 0.7,
+      "maxScale": 0.77,
       "innerRadius": 7.5,
       "outerRadius": 14.3,
       "rotationSpeedMin": 0.291,
