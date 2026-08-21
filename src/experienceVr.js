@@ -246,13 +246,15 @@ const shellSystem = createVrShellSystem({ parent: worldStableRoot, assetManager,
   emissionSettings: settings.shellAttractor,
   idleMotionSettings: settings.placedObjectIdleMotion,
   direction: settings.shellFieldMotion.direction });
-const smallGlyphOrbitRadius = shellSystem.outerRadius + settings.smallGlyphField.radialLayerGap;
+const smallGlyphInnerRadius = glyphOrbit.effectiveRadius * settings.smallGlyphField.innerRadiusMultiplier;
+const smallGlyphOuterRadius = glyphOrbit.effectiveRadius * settings.smallGlyphField.outerRadiusMultiplier;
 const smallGlyphMaxTargetDistance = glyphOrbit.effectiveRadius
   * settings.shellAttractor.targetDistanceRadiusMultiplier;
-if (smallGlyphOrbitRadius > smallGlyphMaxTargetDistance) {
+if (smallGlyphOuterRadius > smallGlyphMaxTargetDistance) {
   throw new Error('Small Glyph radial layer exceeds the configured Astrolabium target distance.');
 }
-const largeGlyphTargetRadius = smallGlyphOrbitRadius + settings.smallGlyphField.radialLayerGap;
+const largeGlyphTargetRadius = glyphOrbit.effectiveRadius
+  * settings.p2RadialPresentation.largeGlyphRadiusMultiplier;
 const smallGlyphSystem = createVrSmallGlyphSystem({
   parent: worldStableRoot,
   assetManager,
@@ -266,7 +268,8 @@ const smallGlyphSystem = createVrSmallGlyphSystem({
   ],
   copiesPerVisualVariant: settings.smallGlyphField.copiesPerVisualVariant,
   center: { x: 0, y: settings.spatial.worldStableCenterY, z: 0 },
-  orbitRadius: smallGlyphOrbitRadius,
+  innerRadius: smallGlyphInnerRadius,
+  outerRadius: smallGlyphOuterRadius,
   orbitAngularSpeed: settings.smallGlyphField.orbitAngularSpeed,
   selfRotationSpeed: settings.smallGlyphField.selfRotationSpeed,
   direction: settings.smallGlyphField.direction,
@@ -1095,6 +1098,9 @@ function showReadyState({ ended = false } = {}) {
 // restoring the Scenario baseline must never recreate or dispose application objects.
 function restoreVrScenarioBaseline() {
   runtimeExperience.resetSession();
+  // The gyro owns the platform quaternion. Neutralize it before platform fixtures
+  // reconstruct their authored local transforms.
+  asterionGyroInteraction.reset();
   ambientSequencer.reset();
   introAmbientSequencer.reset();
   vrAudio.resetAsterionSphereAudio();
@@ -1131,7 +1137,6 @@ function restoreVrScenarioBaseline() {
   glyphLights.reset();
   glyphInteraction.reset();
   vrControllers.reset();
-  asterionGyroInteraction.reset();
   asterionSphere.reset();
   asterionProductionController.resetBaseline();
   astroAttractorProductionController.resetBaseline();

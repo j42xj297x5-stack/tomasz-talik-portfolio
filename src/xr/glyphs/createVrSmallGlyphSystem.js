@@ -25,7 +25,8 @@ export function createVrSmallGlyphSystem({
   assetIds,
   copiesPerVisualVariant,
   center,
-  orbitRadius,
+  innerRadius,
+  outerRadius,
   orbitAngularSpeed,
   selfRotationSpeed,
   direction,
@@ -47,7 +48,12 @@ export function createVrSmallGlyphSystem({
     throw new TypeError('copiesPerVisualVariant must be an integer greater than or equal to 1');
   }
   requireFiniteVector(center, 'center');
-  if (!Number.isFinite(orbitRadius) || orbitRadius <= 0) throw new TypeError('orbitRadius must be finite and greater than 0');
+  if (!Number.isFinite(innerRadius) || innerRadius <= 0) {
+    throw new TypeError('innerRadius must be finite and greater than 0');
+  }
+  if (!Number.isFinite(outerRadius) || outerRadius <= innerRadius) {
+    throw new TypeError('outerRadius must be finite and greater than innerRadius');
+  }
   if (!Number.isFinite(orbitAngularSpeed) || orbitAngularSpeed < 0)
     throw new TypeError('orbitAngularSpeed must be finite and greater than or equal to 0');
   if (!Number.isFinite(selfRotationSpeed) || selfRotationSpeed < 0)
@@ -85,6 +91,7 @@ export function createVrSmallGlyphSystem({
       const copyLabel = String.fromCharCode(97 + copyIndex);
       instance.name = `small-glyph-${variantLabel}-${copyLabel}`;
       instance.userData = {
+        attractorId: instance.name,
         smallGlyphAssetId: assetId,
         smallGlyphVisualVariant: variantIndex + 1,
         smallGlyphCopyIndex: copyIndex,
@@ -97,6 +104,7 @@ export function createVrSmallGlyphSystem({
         authoredQuaternion: instance.quaternion.clone(),
         authoredScale: instance.scale.clone(),
         phase: index * goldenAngle,
+        radius: innerRadius + (outerRadius - innerRadius) * ((index + 0.5) / instanceCount),
         inclination: Math.asin(directionY),
         ascendingNode: (index * goldenAngle * 0.61) % (Math.PI * 2),
         fieldPosition: new THREE.Vector3(),
@@ -122,8 +130,8 @@ export function createVrSmallGlyphSystem({
 
   function updateCanonicalFieldTransform(record) {
     const angle = record.phase + fieldElapsed * orbitAngularSpeed * direction;
-    const x = Math.cos(angle) * orbitRadius;
-    const planeY = Math.sin(angle) * orbitRadius;
+    const x = Math.cos(angle) * record.radius;
+    const planeY = Math.sin(angle) * record.radius;
     const y = center.y + planeY * Math.sin(record.inclination);
     const z = planeY * Math.cos(record.inclination);
     const cosNode = Math.cos(record.ascendingNode), sinNode = Math.sin(record.ascendingNode);
