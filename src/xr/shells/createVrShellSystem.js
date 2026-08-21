@@ -26,22 +26,26 @@ export function createVrShellSystem({ parent, assetManager, baseRadius, centerY 
     const shell = assetManager.cloneGltfScene(assetId);
     if (!panelWireframes.has(assetId)) panelWireframes.set(assetId, createObjectWireframeData(shell));
     const panelWireframe = panelWireframes.get(assetId);
-    const emissiveMaterials = [];
+    const emissiveMaterials = [], materialBaselines = [];
     shell.traverse((child) => { if (!child.isMesh || !child.material) return;
       const cloneMaterial = (material) => { const clone = material.clone(); ownedMaterials.add(clone);
-        if ('emissiveIntensity' in clone) { clone.emissiveIntensity = 0; emissiveMaterials.push(clone); } return clone; };
+        if ('emissiveIntensity' in clone) { clone.emissiveIntensity = 0; emissiveMaterials.push(clone); }
+        materialBaselines.push({ material: clone, color: clone.color?.clone(), emissive: clone.emissive?.clone(),
+          emissiveIntensity: clone.emissiveIntensity ?? 0, opacity: clone.opacity ?? 1, transparent: clone.transparent ?? false });
+        return clone; };
       child.material = Array.isArray(child.material) ? child.material.map(cloneMaterial) : cloneMaterial(child.material);
     });
     shell.updateMatrixWorld(true);
     const bounds = new THREE.Box3().setFromObject(shell).getBoundingSphere(new THREE.Sphere());
     const attractorId = `shell-${String(assetIndex + 1).padStart(2, '0')}-${suffix}`;
-    const record = { object: shell, emissiveMaterials, panelWireframe, boundingCenter: shell.worldToLocal(bounds.center.clone()), boundingRadius: bounds.radius,
+    const record = { object: shell, emissiveMaterials, materialBaselines, panelWireframe,
+      boundingCenter: shell.worldToLocal(bounds.center.clone()), boundingRadius: bounds.radius,
       radius: baseRadius * (1 + index / 17), phase: index * GOLDEN_ANGLE, inclination: -Math.PI / 3 + (index % 7) * Math.PI / 18,
       ascendingNode: (index * GOLDEN_ANGLE * 0.61) % TAU, angularSpeed: 0.035 + (index % 5) * 0.006,
       direction: index % 2 === 0 ? 1 : -1,
       selfRotationAxis: new THREE.Vector3(Math.sin((index + 1) * 1.71), 0.45 + ((index * 7) % 5) * 0.17,
         Math.cos((index + 1) * 2.13)).normalize(), selfRotationSpeed: 0.10 + (index % 7) * 0.02,
-      initialQuaternion: shell.quaternion.clone(), orbitPosition: new THREE.Vector3(), returnStart: new THREE.Vector3(),
+      initialQuaternion: shell.quaternion.clone(), initialScale: shell.scale.clone(), orbitPosition: new THREE.Vector3(), returnStart: new THREE.Vector3(),
       returnElapsed: 0, returnDuration: 0.8, returnEmissionStart: 0, returning: false,
       placedPosition: new THREE.Vector3(), placedQuaternion: new THREE.Quaternion(), placedAt: 0,
       idlePhase: (index * GOLDEN_ANGLE) % TAU };
@@ -99,16 +103,36 @@ export function createVrShellSystem({ parent, assetManager, baseRadius, centerY 
   function placeInstance(shell) { const record = getRecord(shell); if (!record || disposed) return false;
     record.placedPosition.copy(shell.position); record.placedQuaternion.copy(shell.quaternion); record.placedAt = elapsed;
     shell.userData.shellState = 'placed'; shell.userData.attractorTarget = false; return true; }
+  function restoreMaterialBaseline(record) { record.materialBaselines.forEach((baseline) => {
+    if (baseline.material.color && baseline.color) baseline.material.color.copy(baseline.color);
+    if (baseline.material.emissive && baseline.emissive) baseline.material.emissive.copy(baseline.emissive);
+    if ('emissiveIntensity' in baseline.material) baseline.material.emissiveIntensity = baseline.emissiveIntensity;
+    baseline.material.opacity = baseline.opacity; baseline.material.transparent = baseline.transparent;
+  }); }
+  function restoreInstanceToOrbit(shell) { const record = getRecord(shell); if (!record || disposed) return false;
+    if (shell.parent !== object) object.attach(shell);
+    record.returning = false; record.returnElapsed = 0; shell.visible = true; shell.scale.copy(record.initialScale);
+    shell.quaternion.copy(record.initialQuaternion); shell.userData.shellState = 'orbiting';
+    shell.userData.attractorTarget = interactionEnabled; restoreMaterialBaseline(record); applyPositions(); return true; }
+  function consumeInstance(shell) { const record = getRecord(shell); if (!record || disposed) return false;
+    if (shell.parent !== object) object.attach(shell);
+    record.returning = false; shell.userData.shellState = 'consumed'; shell.userData.attractorTarget = false;
+    shell.visible = false; return true; }
   function reset() { if (disposed) return; active = false; interactionEnabled = false; object.visible = false; elapsed = 0; currentDelta = 0; records.forEach((record) => {
-    if (record.object.parent !== object) object.attach(record.object); record.returning = false; record.returnElapsed = 0;
-    record.object.userData.shellState = 'orbiting'; record.object.userData.attractorTarget = interactionEnabled; setEmission(record.object, 0);
+    restoreInstanceToOrbit(record.object);
   }); applyPositions(); }
-  function removeInstance(shell) { const record = getRecord(shell); if (!record || disposed) return false;
-    const recordIndex = records.indexOf(record); if (recordIndex >= 0) records.splice(recordIndex, 1);
-    const instanceIndex = instances.indexOf(shell); if (instanceIndex >= 0) instances.splice(instanceIndex, 1);
-    shell.traverse((child) => { const materials = Array.isArray(child.material) ? child.material : [child.material];
-      materials.filter(Boolean).forEach((material) => { if (ownedMaterials.delete(material)) material.dispose?.(); }); });
-    shell.removeFromParent(); return true; }
+  function applyAbsorbedShellIds(absorbedShellIds) {
+    if (!absorbedShellIds || typeof absorbedShellIds[Symbol.iterator] !== 'function')
+      throw new TypeError('absorbedShellIds must be iterable');
+    records.forEach((record) => restoreInstanceToOrbit(record.object));
+    const absorbed = new Set(absorbedShellIds);
+    absorbed.forEach((assetId) => {
+      if (!ASSET_IDS.includes(assetId)) throw new TypeError(`Unknown absorbed shell asset id: ${assetId}`);
+      const record = records.find((candidate) => candidate.object.userData.shellAssetId === assetId
+        && candidate.object.userData.shellState === 'orbiting');
+      if (record) consumeInstance(record.object);
+    });
+  }
   function dispose() { if (disposed) return; disposed = true; active = false; object.visible = false;
     object.remove(...instances); parent.remove(object); ownedMaterials.forEach((material) => material.dispose()); ownedMaterials.clear();
     instances.length = 0; records.length = 0; }
@@ -116,5 +140,6 @@ export function createVrShellSystem({ parent, assetManager, baseRadius, centerY 
   return { object, instances, records, innerRadius: baseRadius, outerRadius: baseRadius * 2,
     panelWireframes, getPanelWireframe: (assetId) => panelWireframes.get(assetId) ?? null,
     get active() { return active; }, get interactionEnabled() { return interactionEnabled; }, getRecord, setEmission, setActive,
-    setPresentationVisible, setInteractionEnabled, update, returnToOrbit, placeInstance, removeInstance, reset, dispose };
+    setPresentationVisible, setInteractionEnabled, update, returnToOrbit, placeInstance, consumeInstance,
+    restoreInstanceToOrbit, applyAbsorbedShellIds, reset, dispose };
 }
