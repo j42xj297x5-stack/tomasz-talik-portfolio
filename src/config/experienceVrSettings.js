@@ -187,7 +187,11 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
     glyphElevationDuration: 2.5,
     shellRevealDuration: 1.5
   },
-  p2RadialPresentation: { durationSeconds: 2.5, largeGlyphRadiusMultiplier: 3.2 },
+  p2RadialPresentation: {
+    durationSeconds: 2.5,
+    largeGlyphRadiusMultiplier: 3.3,
+    largeGlyphScaleMultiplier: 3
+  },
   shellFieldMotion: { direction: 1 },
   smallGlyphField: {
     copiesPerVisualVariant: 2,
@@ -621,7 +625,9 @@ export function normalizeExperienceVrSettings(candidate) {
       durationSeconds: finiteNumber(candidate.p2RadialPresentation?.durationSeconds,
         defaults.p2RadialPresentation.durationSeconds, { min: 0.1, max: 60 }),
       largeGlyphRadiusMultiplier: finiteNumber(candidate.p2RadialPresentation?.largeGlyphRadiusMultiplier,
-        defaults.p2RadialPresentation.largeGlyphRadiusMultiplier, { min: 1, max: 10 })
+        defaults.p2RadialPresentation.largeGlyphRadiusMultiplier, { min: 1, max: 10 }),
+      largeGlyphScaleMultiplier: finiteNumber(candidate.p2RadialPresentation?.largeGlyphScaleMultiplier,
+        defaults.p2RadialPresentation.largeGlyphScaleMultiplier, { min: 1, max: 10 })
     },
     shellFieldMotion: {
       direction: candidate.shellFieldMotion?.direction === -1 ? -1 : 1

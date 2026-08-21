@@ -82,10 +82,23 @@ export function createVrSmallGlyphSystem({
   assetIds.forEach((assetId, variantIndex) => {
     for (let copyIndex = 0; copyIndex < copiesPerVisualVariant; copyIndex += 1) {
       const index = records.length;
-      const instance = assetManager.cloneGltfScene(assetId);
-      if (!instance || !instance.position || !instance.quaternion || !instance.scale) {
+      const visualModel = assetManager.cloneGltfScene(assetId);
+      if (!visualModel || !visualModel.position || !visualModel.quaternion || !visualModel.scale) {
         throw new Error(`Unable to clone small glyph visual variant: ${assetId}`);
       }
+      const instance = new THREE.Group();
+      instance.add(visualModel);
+      object.add(instance);
+      instance.updateMatrixWorld(true);
+      const visualBounds = new THREE.Box3().setFromObject(visualModel);
+      if (visualBounds.isEmpty()) throw new Error(`Small glyph visual has empty bounds: ${assetId}`);
+      const visualCenter = visualBounds.getCenter(new THREE.Vector3());
+      if (![visualCenter.x, visualCenter.y, visualCenter.z].every(Number.isFinite)) {
+        throw new Error(`Small glyph visual has invalid bounds: ${assetId}`);
+      }
+      instance.worldToLocal(visualCenter);
+      visualModel.position.sub(visualCenter);
+      instance.updateMatrixWorld(true);
       const directionY = 1 - (2 * (index + 0.5)) / instanceCount;
       const variantLabel = String(variantIndex + 1).padStart(2, '0');
       const copyLabel = String.fromCharCode(97 + copyIndex);
@@ -98,7 +111,6 @@ export function createVrSmallGlyphSystem({
         smallGlyphState: GLYPH_STATE.HIDDEN
       };
       instance.visible = false;
-      object.add(instance);
       records.push({
         instance,
         authoredQuaternion: instance.quaternion.clone(),

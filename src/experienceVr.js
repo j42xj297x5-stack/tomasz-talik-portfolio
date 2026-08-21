@@ -356,6 +356,16 @@ const locomotion = createVrLocomotion({
 const progressionController = createVrProgressionController({ pages: experienceVrPages });
 const ambientSequencer = createVrAmbientSequencer({ bridge: vrAudio });
 const introAmbientSequencer = createVrIntroAmbientSequencer({ bridge: vrAudio });
+const ambientScenarioOwner = Object.freeze({
+  hydrateScenarioState(state) {
+    if (!state || typeof state !== 'object' || Array.isArray(state)
+      || Object.keys(state).length !== 1 || state.mainAmbientActive !== true) {
+      throw new TypeError('audio state must be exactly { mainAmbientActive: true }');
+    }
+    introAmbientSequencer.stop();
+    ambientSequencer.enable();
+  }
+});
 function syncAmbientSequence() {
   const fullThreshold = progressionController.getCurrentTier();
   const shellsComplete = furnaceProgressionController.getAsterionSphereProgress().complete;
@@ -719,6 +729,7 @@ smallGlyphAttractorInteraction = createVrSmallGlyphAttractorInteraction({
   ) === true,
   onPullStart: ({ target }) => vrAudio.startAttractor(target.userData.attractorId, 'smallGlyph'),
   onPullCancel: ({ target }) => vrAudio.cancelAttractor(target.userData.attractorId),
+  onHandoff: ({ target }) => vrAudio.handoffAttractor(target.userData.attractorId),
   isControllerOccupiedByOtherInteraction: (record) => crystalCollection.heldByController.has(record)
     || shellAttractorInteraction?.isHeldBy(record) === true,
   isHigherPriorityInteractionActive: (record) => Boolean(
@@ -795,7 +806,9 @@ const postRingPresentation = createVrPostRingPresentation({ glyphRing, shellSyst
 });
 const p2RadialPresentation = createVrP2RadialPresentation({
   glyphOrbit,
+  nodes,
   getTargetRadius: () => largeGlyphTargetRadius,
+  largeGlyphScaleMultiplier: settings.p2RadialPresentation.largeGlyphScaleMultiplier,
   durationSeconds: settings.p2RadialPresentation.durationSeconds,
   onCompleted: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.P2_RADIAL_PRESENTATION_COMPLETED)
 });
@@ -988,7 +1001,8 @@ const scenarioOwners = Object.freeze({
   postRing: postRingPresentation, p2World: p2RadialPresentation, smallGlyphField: smallGlyphSystem,
   furnace: astroFurnace, furnaceProgression: furnaceProgressionController,
   astroProduction: astroAttractorProductionController, asterionProduction: asterionProductionController,
-  protoAstroTuning: protoAstroTuningController
+  protoAstroTuning: protoAstroTuningController,
+  audio: ambientScenarioOwner
 });
 const enterVrDebugCheckpoint = createVrDebugCheckpointController({
   scenario: vrExperienceScenario,
