@@ -462,6 +462,8 @@ Wersja angielska pozostaje osobnym zadaniem lokalizacyjnym. Ten dokument ustala 
 
 ## `progression.p2.smallGlyphsIntro`
 
+**STATUS:** **APPROVED COPY / NOT YET ACTIVE** — real `LARGE_GLYPHS` targeting/pull nie jest zaimplementowany.
+
 **TYP:** `PROGRESSION_MESSAGE`  
 **TRIGGER:** druga seria kryształów ukończona; duże glify oddalają się; małe glify stają się aktualną mechaniką  
 **MIEJSCE:** Małpa  
@@ -476,6 +478,8 @@ Wersja angielska pozostaje osobnym zadaniem lokalizacyjnym. Ten dokument ustala 
 ---
 
 ## `knowledge.p2.tuneGlyphs`
+
+**STATUS:** **APPROVED COPY / NOT YET ACTIVE** — nie uruchamiać przed realnym `LARGE_GLYPHS` targeting/pull.
 
 **TYP:** `KNOWLEDGE_TOPIC`
 
@@ -493,6 +497,8 @@ Wersja angielska pozostaje osobnym zadaniem lokalizacyjnym. Ten dokument ustala 
 
 ## `knowledge.astro.bandSwitch`
 
+**STATUS:** **IMPLEMENTED** po capability przełączania bandu.
+
 **TYP:** `KNOWLEDGE_TOPIC`
 
 **PYTANIE:**
@@ -507,6 +513,8 @@ Wersja angielska pozostaje osobnym zadaniem lokalizacyjnym. Ten dokument ustala 
 ---
 
 ## `tool.astro.bandSwitch`
+
+**STATUS:** **IMPLEMENTED**; projekcja Y dopisuje linię po właściwym capability.
 
 **TYP:** `TOOL_REFERENCE`  
 **MIEJSCE:** `Y → NARZĘDZIA → ASTROLABIUM WIĘZI`  

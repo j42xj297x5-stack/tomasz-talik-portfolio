@@ -501,30 +501,15 @@ Jeżeli odpowiedź na punkt 7 brzmi „tylko przewija zdanie” — tekst należ
 
 ## 11. Aktualny stan implementacji
 
-Obecny runtime posiada:
+**IMPLEMENTED:**
 
-- panel wypowiedzi Małpy;
-- panel dialogowy;
-- attention arcs;
-- halo;
-- menu historii kart;
-- panel Y;
-- sterowanie panelem Y;
-- mechanizm dialogue override;
-- punktowe hinty przy Naczyniu.
+- wspólny actor automatycznych progression messages bez `DALEJ`, w tym post-ring i Furnace;
+- dynamiczny resolver wiedzy Małpy dla Astro i Asteriona;
+- capability-gated `knowledge.astro.bandSwitch`;
+- dynamiczna projekcja Player Guide/Y: `AKTUALNE ZADANIE`, `NARZĘDZIA` i tool references;
+- dopisywanie linii B dopiero po właściwym capability.
 
-Brakuje:
-
-- dynamicznego menu wiedzy Małpy;
-- sekcji `NARZĘDZIA` w panelu Y;
-- trwałych wpisów o Astrolabium i Kuli;
-- wspólnej klasyfikacji hintów;
-- dalszych komunikatów P2/P3/antena;
-- pełnego resolvera aktualnego zadania.
-
-Obecne dialogi post-ring i Furnace używające `DALEJ` powinny zostać później dostosowane do zasad z tego dokumentu.
-
----
+`progression.p2.smallGlyphsIntro` oraz `knowledge.p2.tuneGlyphs` są **APPROVED COPY / NOT YET ACTIVE**, ponieważ realny `LARGE_GLYPHS` targeting/pull nie istnieje. `knowledge.astro.bandSwitch` i `tool.astro.bandSwitch` są **IMPLEMENTED**. Wspólna klasyfikacja/eskalacja hintów oraz dalsza komunikacja późniejszych aktów pozostają **APPROVED / NOT IMPLEMENTED**.
 
 ## 12. Reguła końcowa
 

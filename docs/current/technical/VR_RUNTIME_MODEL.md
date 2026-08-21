@@ -6,7 +6,7 @@ Status: canonical description of the implemented runtime synchronized after M2.2
 
 The implemented composition follows `Spine → Scenario → Director → Runtime / actors / domain owners`. Spine owns authored mainline order, Scenario defines points and accepted events, and Director owns `currentPointId` and interprets `STAY`, `COMPLETE`, `EXPLICIT` and the crossing-only `COMPLETE_IF`. Runtime remains the symbolic-effect execution boundary. Actors and domain controllers retain physical, transient and committed domain state; Director does not use technical point IDs as memory for that state.
 
-WHERE, BEYOND, FOLLOW pause and hints are local `STAY` reactions. Crossing exists only at `1.130`: the Intro actor owns `playerEnteredRing` and `monkeySettled`, reports `crossingComplete`, and Director advances only after that combined fact resolves completion. `100.10` is the canonical authored story terminal in Spine: normal completion after `3.80` and all earlier explicit exit routes converge there. It remains unavailable as a reconstruction/checkpoint start.
+WHERE, BEYOND, FOLLOW pause and hints are local `STAY` reactions. Crossing exists only at `1.130`: the Intro actor owns `playerEnteredRing` and `monkeySettled`, reports `crossingComplete`, and Director advances only after that combined fact resolves completion. `100.10` is the canonical authored story terminal in Spine: the mainline metadata reaches it after stable `4.40`, while earlier explicit exit routes also converge there; `4.40` has no transition and does not auto-advance. It remains unavailable as a reconstruction/checkpoint start.
 
 ## Runtime boundary and lifecycle
 
@@ -206,34 +206,56 @@ The controller uses braking distance to choose speed toward COMMAND, caps angula
 
 After every asset preload, Runtime must compose before READY. `runtimeExperience` therefore has an early safe nullable binding: construction-time callbacks may execute before the final Runtime bind. `canUseAstroProduction` returns safe `false` before binding and the real Scenario/runtime gate afterwards. `vr-runtime-bootstrap` captured this production regression RED before the fix and GREEN afterwards. Wizjoner confirmed startup passes `41/41` and no longer stalls before READY: **HARDWARE VALIDATED — Meta Quest 3S** for this bootstrap fix only. Full `3.10–3.80` perceptual/hardware QA remains pending.
 
+## Proto-Astro, Astro bands and small glyphs
+
+Canonical domain detail: [`VR_PROTO_ASTRO_MODEL.md`](VR_PROTO_ASTRO_MODEL.md).
+
+**IMPLEMENTED:** semantic input B is routed to `HandModeController`, which owns transient selection between exactly `SHELLS` and `SMALL_GLYPHS`. B switches only currently available bands. `LARGE_GLYPHS` and `RUNESTONES` are **APPROVED / NOT IMPLEMENTED** and are not active runtime enums. Band identity is semantic; exact visual colors/symbols remain open.
+
+`createVrSmallGlyphSystem` owns a world-stable, deterministic field of 12 instances: six visual variants with two instances each. Scenario presentation materializes the field and hydration restores stable `MATERIALIZED`. Identity is resolved through the canonical Proto-Astro adapter rather than inferred directly from asset number.
+
+Small-glyph Astro transport is **IMPLEMENTED**:
+
+```text
+FIELD → TARGETING → PULLING → CAPTURE_READY → HELD → RETURNING → FIELD
+```
+
+Right Astro squeeze scans/targets and trigger pulls. A real left ordinary-ray/Szpila hit plus left squeeze hands off to `holdSocket`. Release returns the object to its authored field transform. There is no `PLACED`, inventory or persistent ownership. Band change/Astro unequip after `HELD` does not automatically revoke the held glyph; capability loss, release and reset restore canonical field state.
+
+`ProtoAstroTuningController` is the sole owner of persistent `extractedFamilyCodes`, limited to natural `K/T/S/L/R`; `V` is excluded. Same-family I→A compatibility powers the implemented `canAttractLargeGlyph` API, while actual large-glyph targeting/pull remains **NOT IMPLEMENTED**.
+
+## Furnace small-glyph essence extraction
+
+One `createVrAstroFurnaceContentInteraction` owns the physical chamber content for both `SHELL` and `SMALL_GLYPH`; there are not parallel chamber owners. Asterion mode `floor_gyroscope_sphere` processes shells. Astro tuning mode `astro_attractor` processes a not-yet-extracted natural small glyph through `SMALL_GLYPH_ESSENCE_EXTRACTION`. VI is invalid in current P2.
+
+Completion commits only the family essence to TuningController, then returns the physical glyph instance to its authored field. It creates no inventory and does not persistently consume the asset. A second physical glyph of the family remains available, but duplicate extraction is rejected.
+
+## Attractor panel boundary
+
+The physical four-panel system exists. Current implementation includes the panel system and shell-glyph projection for Panel 1; it is not a universal projection for every target class. Panel 2 current-band symbol/color, Panel 3 dynamic `2×3` target options, and Panel 4 distance meter are **APPROVED / NOT IMPLEMENTED**. Exact band colors and SVG symbols are not defined.
+
 ## Implemented boundary
 
-Implemented: runtime/session lifecycle, Intro and glyph/crystal/Reliquary progression, first-ring bridge, authored post-ring and physical Astro-claim mainline through `3.80`, floor panels/rings, semantic input, independent hand modes, Astro production and existing shell/Furnace/Asterion domain mechanics, player/Monkey guidance, ambient sequencing and bounded VR audio. Existing shell/Furnace/Asterion mechanics beyond the Astro claim are not an authored continuation after `3.80`.
+Implemented: runtime/session lifecycle, Intro, both authored Glyph → Crystal → Reliquary tiers, first-ring/post-ring, Astro/shell/Furnace/Asterion domain, authored radial presentation `4.20`, small-glyph field presentation `4.30`, stable P2 boundary `4.40`, B switching, `SHELLS`/`SMALL_GLYPHS`, transient small-glyph transport, natural essence extraction, Proto-Astro identity/resolvers/tuning and dynamic Monkey/Player Guide projections.
 
-Not implemented: authored narrative/quests/Monkey personality or stuck-player guidance, small glyph progression, B band selection/Astro bands, antenna, rune processing, final radar/finale, durable persistence, full-game reset, spatial audio and gameplay audio for target/process classes that do not yet exist.
+Not implemented: `LARGE_GLYPHS` and `RUNESTONES` bands, real large-glyph targeting/pull despite the ready `canAttractLargeGlyph` API, universal four-panel semantics, later authored P2 continuation, VI placement/final mechanics, durable persistence, full-game reset and unimplemented later spatial/gameplay audio.
 
 ## Scenario-driven runtime flow
 
-Intro choices and follow/crossing observations are transported through Runtime without turning local actor phases into story topology. WHERE, BEYOND and FOLLOW pause remain at their current story points through `STAY`. The whole physical crossing is represented by `1.130`; its join state belongs to `createVrIntroSequence`, not to Director. Once the actor reports `crossingComplete`, Director completes `1.130` through Spine and Runtime begins glyph free exploration.
+Canonical authored flow is:
 
-The first-ring runtime then proceeds through glyph free explore (`2.10`), the Scenario-owned Naczynie reveal sequence (`2.20`) and the complete five-card loop (`2.30`). `FIRST_CRYSTAL_DISCOVERED` completes `2.10` and starts discovery/attention only. In `2.20`, Monkey activation emits `MONKEY_TRIGGERED`; its `STAY` emits `BEGIN_RELIQUARY_REVEAL`, Runtime performs the physical reveal, and `RELIQUARY_REVEAL_COMPLETED` completes `2.20 → 2.30`. Within `2.30`, a hint, accepted Activate and `CARD_COMMITTED` all resolve to `STAY`; preview and per-card feedback execute without changing the story point, so progress from one through four committed cards remains at `2.30`.
+```text
+1.10 → … → 3.80 → 4.10 → 4.20 → 4.30 → 4.40 → 100.10
+```
 
-`createVrProgressionController` is the sole source of truth for committed cards and tier completion. Runtime emits `FIRST_RING_COMPLETED` only for the first durable `5/5` result. Director resolves that event as `COMPLETE`, emits `COMPLETE_FIRST_RING_PRESENTATION` and `PLAY_FIRST_RING_COMPLETE_FEEDBACK`, asks `Spine.next('2.30')`, and enters `2.40`. Runtime handles those effects with `progressFloor.completeTier(1)` and the existing tier-completion audio respectively. Point `2.40` is the durable first-ring completion state and has no transition back into the card loop. Its authored completion route enters `3.10`, followed by `3.20` observation, interaction-gated `3.30` Monkey dialogue and the implemented `3.40–3.80` Furnace/physical-claim sequence.
+`4.10` owns the second ring until `TIER_COMPLETED`. Entry `4.20` begins radial presentation; its completion settles `p2World.mainGlyphsRadial = true`. Entry `4.30` materializes the small-glyph field; its completion settles `smallGlyphField.materialized = true`. `4.40` grants the integrated P2 capabilities and has no transition, although its mainline metadata targets the story terminal. It therefore does not auto-advance.
 
-`CAN_USE_RELIQUARY` is the active, global Scenario-owned insertion gate in `2.30`; Runtime supplies it to the crystal collection. Branch/tier/socket checks and crystal/reliquary transient state remain domain-owned. `CAN_ACTIVATE_RELIQUARY` and `CAN_RELEASE_RELIQUARY` are separate capabilities, while the Naczynie domain permits Activate only while the crystal is `inserted` and Release only while it is `active`. These phases remain owned by interaction/domain state and are not represented as story points.
+Reconstruction is exclusive: `stateAt(4.20)` includes completed Tier 2, `stateAt(4.30)` adds radial world truth, and `stateAt(4.40)` adds materialized field truth. Current `stateAt(4.40)` does not declare tuning essences, so direct activation correctly hydrates the P2 world and starts TuningController empty. The hydrator already delegates a future `protoAstroTuning` owner section. Transient target/pull/held/Furnace process state is never reconstructed.
 
-`syncAmbientSequence()` remains a Runtime/domain-state projection and has not moved into Scenario; it still reacts to current tier, Furnace progression and Asterion production. Canonical direct activation through `RuntimeExperience.activatePoint()` and reconstruction/hydration-backed P0/P1/P2 are implemented in their supported scope. The target Furnace → physical Astro claim flow proceeds through `3.80` to the authored terminal `100.10`. Stable reconstruction after `3.40`, Astro `AVAILABLE`/`EARNED`, Shell/Furnace/Asterion hydration, P3/P4 and durable save remain partial or not yet authored.
+## Guidance implementation boundary
 
-## Act 3 runtime boundary
+The shared automatic progression-message actor presents post-ring and Furnace messages without `DALEJ`. Dynamic Monkey knowledge resolves Astro, Asterion and capability-gated `knowledge.astro.bandSwitch`. Dynamic Player Guide/Y projection supplies current task and tool references, appending `B — zmień pasmo celu` only after `CAN_SWITCH_ASTRO_BAND`. Approved `progression.p2.smallGlyphsIntro` and `knowledge.p2.tuneGlyphs` remain inactive because real `LARGE_GLYPHS` targeting/pull is absent.
 
-**IMPLEMENTED:** points `3.10–3.30`. Point `3.10` maps the two authored effects to one local post-ring presentation actor. The shell field becomes visible and continues its orbit update while target eligibility remains disabled; the shared main-glyph root receives one configured, eased vertical offset. The actor waits for both configured presentation durations and emits `POST_RING_WORLD_PRESENTATION_COMPLETED` exactly once. At `3.20`, a local actor measures the configured 10-second window from render-loop deltas and emits `OBSERVATION_WINDOW_COMPLETED` exactly once. Its reset cancels the local run without emitting; it does not own shells, glyphs, Furnace, Astro or Monkey. `?p1` retains its separate compatibility behavior and does not shorten this window.
+## QA boundary
 
-**IMPLEMENTED (`3.30`):** `BEGIN_MONKEY_ATTENTION` starts existing checheszki and makes a dialogue available without opening it. A real Monkey press presents, in order, `No i świat przestał być uprzejmy.`, `To, czego potrzebujesz, jest teraz poza zasięgiem.`, `Na szczęście nie na długo.` Guidance owns its line/panel state and emits one `POST_RING_MONKEY_DIALOGUE_COMPLETED` only after the final acknowledgement; reset emits nothing and restores no late completion. The existing contextual progress/history/close menu is then restored, with no Astro/shell questions added.
-
-**IMPLEMENTED (`3.40`):** `BEGIN_FURNACE_INTRO` reveals the Furnace and presents exactly `Spójrz na Piec.` then `Tam coś na ciebie czeka.`
-
-## Implemented Astro first physical claim (`3.40–3.80`)
-
-The local Furnace-intro actor reveals the Furnace before presenting exactly `Spójrz na Piec.` and `Tam coś na ciebie czeka.` The enabled home action `Utwórz astro przyciągacz` selects the explicit `astro_attractor` mode and starts the shared Furnace driver as `ASTRO_ATTRACTOR_CONSTRUCTION`. A presentation-only clone materializes under `VR_FURNACE_CONTENT_ANCHOR` and remains `AVAILABLE` in the chamber. Only an open chamber, right `NORMAL_HAND` ordinary-ray hit and trigger start the short physical handoff. Its completion emits `ASTRO_ATTRACTOR_CLAIMED`; only `3.80` grants Astro equip and shell scan/target capabilities. The shell field is neither revealed nor restarted again.
-
-**STOP BOUNDARY:** further shell progression / Asterion loop remains the next authored stage. Hardware/perceptual QA of reveal, materialization, scale, hover and handoff on Meta Quest 3S is NOT PERFORMED.
+The bootstrap fix alone retains **HARDWARE VALIDATED — Meta Quest 3S** for reaching READY after preload. `4.20–4.40`, field, B switching, small-glyph pull/handoff and Furnace essence extraction remain hardware/perceptual QA pending. No automated or hardware PASS is inferred by this documentation sync.
