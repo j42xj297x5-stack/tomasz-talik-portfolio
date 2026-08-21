@@ -14,7 +14,8 @@ export function createVrSmallGlyphAttractorInteraction({ controllers, smallGlyph
   semanticInput, attractorTool, maxTargetDistance, settings, haloSettings, settledParent,
   canScanSmallGlyphs = () => false, canTargetSmallGlyphs = () => false, canPullSmallGlyphs = () => false,
   isHigherPriorityInteractionActive = () => false,
-  isControllerOccupiedByOtherInteraction = () => false }) {
+  isControllerOccupiedByOtherInteraction = () => false,
+  onPullStart = () => {}, onPullCancel = () => {} }) {
   if (!Array.isArray(controllers)) throw new TypeError('controllers must be an array.');
   if (!smallGlyphSystem?.object?.isObject3D || typeof smallGlyphSystem.object.add !== 'function'
     || typeof smallGlyphSystem.getInstances !== 'function' || typeof smallGlyphSystem.getState !== 'function'
@@ -40,7 +41,7 @@ export function createVrSmallGlyphAttractorInteraction({ controllers, smallGlyph
   });
   if (!settings?.scanCone || typeof settings.scanCone !== 'object') throw new TypeError('settings.scanCone must be an object.');
   [canScanSmallGlyphs, canTargetSmallGlyphs, canPullSmallGlyphs, isHigherPriorityInteractionActive,
-    isControllerOccupiedByOtherInteraction].forEach((dependency) => { if (typeof dependency !== 'function')
+    isControllerOccupiedByOtherInteraction, onPullStart, onPullCancel].forEach((dependency) => { if (typeof dependency !== 'function')
     throw new TypeError('Small glyph interaction dependencies must be functions.'); });
 
   const instances = smallGlyphSystem.getInstances();
@@ -114,6 +115,7 @@ export function createVrSmallGlyphAttractorInteraction({ controllers, smallGlyph
     clearLeftSmallGlyphHit(); halos.get(glyph)?.setVisible(false); smallGlyphSystem.object.attach(glyph);
     returning = { glyph, startPosition: glyph.position.clone(),
       startQuaternion: glyph.quaternion.clone(), startScale: glyph.scale.clone(), elapsed: 0 };
+    if (states.get(glyph) === INTERACTION_STATE.PULLING) onPullCancel({ target: glyph });
     states.set(glyph, INTERACTION_STATE.RETURNING);
     glyph.userData.smallGlyphState = INTERACTION_STATE.RETURNING;
     if (activePull === glyph) activePull = null; if (captureReady === glyph) captureReady = null;
@@ -194,6 +196,7 @@ export function createVrSmallGlyphAttractorInteraction({ controllers, smallGlyph
         attractorTool.setPullStrength(1); attractorTool.setState(VR_ATTRACTOR_STATES.CAPTURED); return; }
       captureAnchor.getWorldPosition(anchorWorld); activePull.getWorldPosition(worldPosition);
       const distance = worldPosition.distanceTo(anchorWorld); if (distance <= settings.captureRadius) {
+        onPullCancel({ target: activePull });
         captureAnchor.attach(activePull); states.set(activePull, INTERACTION_STATE.CAPTURE_READY); captureReady = activePull;
         activePull.userData.smallGlyphState = INTERACTION_STATE.CAPTURE_READY;
         attractorTool.setPullStrength(1); attractorTool.setState(VR_ATTRACTOR_STATES.CAPTURED); return; }
@@ -217,13 +220,15 @@ export function createVrSmallGlyphAttractorInteraction({ controllers, smallGlyph
       activePull.userData.smallGlyphState = INTERACTION_STATE.PULLING;
       activePull.getWorldPosition(worldPosition); captureAnchor.getWorldPosition(anchorWorld);
       pullStartDistance = Math.max(worldPosition.distanceTo(anchorWorld), 1e-6);
-      attractorTool.setPullStrength(0); attractorTool.setState(VR_ATTRACTOR_STATES.PULLING); }
+      attractorTool.setPullStrength(0); attractorTool.setState(VR_ATTRACTOR_STATES.PULLING);
+      onPullStart({ target: activePull }); }
   }
   function restoreTransientGlyphs() { const transient = new Set([...instances.filter((glyph) => states.get(glyph) === INTERACTION_STATE.PLACED),
     activePull, captureReady, heldGlyph, returning?.glyph].filter(Boolean));
     transient.forEach((glyph) => { if (!smallGlyphSystem.restoreInstanceToField(glyph))
       throw new Error('Small glyph system rejected transient glyph restoration.'); states.set(glyph, INTERACTION_STATE.FIELD); }); }
-  function reset() { restoreTransientGlyphs(); scanCone.update(0, false); setTarget(null); activePull = null; captureReady = null;
+  function reset() { if (activePull && states.get(activePull) === INTERACTION_STATE.PULLING) onPullCancel({ target: activePull });
+    restoreTransientGlyphs(); scanCone.update(0, false); setTarget(null); activePull = null; captureReady = null;
     heldGlyph = null; heldByRecord = null; returning = null; pullSpeed = 0; clearLeftSmallGlyphHit(true);
     halos.forEach((halo) => halo.setVisible(false)); if (ownsEquippedBand()) { attractorTool.setTarget(null); attractorTool.setPullStrength(0);
       attractorTool.setState(VR_ATTRACTOR_STATES.IDLE); } }

@@ -714,6 +714,8 @@ smallGlyphAttractorInteraction = createVrSmallGlyphAttractorInteraction({
   canPullSmallGlyphs: () => runtimeExperience?.can(
     VR_SCENARIO_CAPABILITY.CAN_PULL_SMALL_GLYPHS
   ) === true,
+  onPullStart: ({ target }) => vrAudio.startAttractor(target.userData.attractorId, 'smallGlyph'),
+  onPullCancel: ({ target }) => vrAudio.cancelAttractor(target.userData.attractorId),
   isControllerOccupiedByOtherInteraction: (record) => crystalCollection.heldByController.has(record)
     || shellAttractorInteraction?.isHeldBy(record) === true,
   isHigherPriorityInteractionActive: (record) => Boolean(
