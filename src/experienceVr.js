@@ -46,6 +46,7 @@ import { createVrAstroFurnacePanel } from './xr/furnace/createVrAstroFurnacePane
 import { createVrAstroFurnaceProcessSource } from './xr/furnace/createVrAstroFurnaceProcessSource.js';
 import { createVrAstroFurnaceProgressionController } from './xr/furnace/createVrAstroFurnaceProgressionController.js';
 import { createVrAstroFurnaceContentInteraction } from './xr/furnace/createVrAstroFurnaceContentInteraction.js';
+import { createVrProtoAstroTuningController } from './xr/protoAstro/createVrProtoAstroTuningController.js';
 import { createVrAsterionSphere } from './xr/asterion/createVrAsterionSphere.js';
 import { createVrAsterionGyroInteraction } from './xr/asterion/createVrAsterionGyroInteraction.js';
 import { createVrAsterionProductionController } from './xr/asterion/createVrAsterionProductionController.js';
@@ -261,6 +262,7 @@ const smallGlyphSystem = createVrSmallGlyphSystem({
     VR_SCENARIO_EVENT.SMALL_GLYPH_FIELD_PRESENTATION_COMPLETED
   )
 });
+const protoAstroTuningController = createVrProtoAstroTuningController();
 const shellSystem = createVrShellSystem({ parent: worldStableRoot, assetManager, baseRadius: glyphOrbit.effectiveRadius,
   centerY: settings.spatial.worldStableCenterY,
   emissionSettings: settings.shellAttractor });
@@ -472,6 +474,9 @@ const furnacePanel = createVrAstroFurnacePanel({
   progressionController: furnaceProgressionController, productionController: asterionProductionController,
   astroProductionController: astroAttractorProductionController,
   canUseAstroProduction: () => runtimeExperience.can(VR_SCENARIO_CAPABILITY.CAN_START_FURNACE_PROCESS),
+  canUseAstroTuning: () => runtimeExperience?.can(
+    VR_SCENARIO_CAPABILITY.CAN_EXTRACT_SMALL_GLYPH_ESSENCE
+  ) === true && astroAttractorProductionController?.getState?.() === 'EARNED',
   requestAstroProduction: () => runtimeExperience.dispatch(
     VR_SCENARIO_EVENT.ASTRO_ATTRACTOR_PRODUCTION_REQUESTED
   ) !== null,
@@ -511,7 +516,11 @@ astroFurnaceActivateInteraction = createVrAstroFurnaceActivateInteraction({
   haloSettings: settings.targetHalo,
   openInteraction: astroFurnaceOpenInteraction,
   canActivateInput: () => astroFurnaceContentInteraction?.hasValidInsertedContent() === true,
-  isModeActive: () => astroFurnaceOptionInteraction?.getActiveMode?.() === ASTRO_FURNACE_ACTIVE_MODE,
+  isModeActive: () => [ASTRO_FURNACE_ACTIVE_MODE, ASTRO_FURNACE_ASTRO_ATTRACTOR_MODE]
+    .includes(astroFurnaceOptionInteraction?.getActiveMode?.()),
+  getExtractionProcessKind: () => astroFurnaceContentInteraction?.getInsertedContentKind?.() === 'SMALL_GLYPH'
+    ? ASTRO_FURNACE_PROCESS_KINDS.SMALL_GLYPH_ESSENCE_EXTRACTION
+    : ASTRO_FURNACE_PROCESS_KINDS.SHELL_EXTRACTION,
   qaAllowWithoutInput: furnaceProcessQa,
   isOrdinaryRayAvailable: ordinaryFurnaceRayAvailable,
   onProcessStart: ({ processKind }) => [ASTRO_FURNACE_PROCESS_KINDS.ASTERION_CONSTRUCTION, ASTRO_ATTRACTOR_CONSTRUCTION].includes(processKind)
@@ -520,11 +529,17 @@ astroFurnaceActivateInteraction = createVrAstroFurnaceActivateInteraction({
     ? vrAudio.stopAsterionCreate() : vrAudio.stopFurnaceProcess()
 });
 astroFurnaceContentInteraction = createVrAstroFurnaceContentInteraction({
-  furnace: astroFurnace, shellSystem, openInteraction: astroFurnaceOpenInteraction,
+  furnace: astroFurnace, shellSystem, smallGlyphSystem, protoAstroTuningController,
+  openInteraction: astroFurnaceOpenInteraction,
   activateInteraction: astroFurnaceActivateInteraction, progressionController: furnaceProgressionController,
   isModeActive: () => astroFurnaceOptionInteraction?.getActiveMode?.() === ASTRO_FURNACE_ACTIVE_MODE,
   controllers: vrControllers.controllers, settings: settings.furnace.content,
-  takeHeldShell: (shell) => shellAttractorInteraction?.transferHeldShell(shell) === true
+  takeHeldShell: (shell) => shellAttractorInteraction?.transferHeldShell(shell) === true,
+  takeHeldSmallGlyph: (glyph) => smallGlyphAttractorInteraction?.transferHeldGlyph(glyph) === true,
+  isSmallGlyphModeActive: () => astroFurnaceOptionInteraction?.getActiveMode?.() === ASTRO_FURNACE_ASTRO_ATTRACTOR_MODE,
+  canExtractSmallGlyphEssence: () => runtimeExperience?.can(
+    VR_SCENARIO_CAPABILITY.CAN_EXTRACT_SMALL_GLYPH_ESSENCE
+  ) === true
 });
 astroFurnaceContentInteraction.subscribe(() => furnacePanel.redraw());
 astroFurnaceOptionInteraction = createVrAstroFurnaceOptionInteraction({
@@ -942,7 +957,8 @@ const scenarioOwners = Object.freeze({
   progression: progressionController, progressFloor, crystals: crystalCollection,
   postRing: postRingPresentation, p2World: p2RadialPresentation, smallGlyphField: smallGlyphSystem,
   furnace: astroFurnace, furnaceProgression: furnaceProgressionController,
-  astroProduction: astroAttractorProductionController, asterionProduction: asterionProductionController
+  astroProduction: astroAttractorProductionController, asterionProduction: asterionProductionController,
+  protoAstroTuning: protoAstroTuningController
 });
 const enterVrDebugCheckpoint = createVrDebugCheckpointController({
   scenario: vrExperienceScenario,
@@ -1000,6 +1016,7 @@ function renderFrame() {
   astroFurnaceOpenInteraction.update(delta);
   astroFurnaceActivateInteraction.update(delta);
   astroFurnaceContentInteraction.reportHeldShell(shellAttractorInteraction?.heldShell);
+  astroFurnaceContentInteraction.reportHeldSmallGlyph(smallGlyphAttractorInteraction?.heldGlyph);
   astroFurnaceContentInteraction.update(delta);
   glyphOrbit.update(delta);
   postRingPresentation.update(delta);
@@ -1062,6 +1079,7 @@ function restoreVrScenarioBaseline() {
   astroFurnaceOpenInteraction.reset();
   astroFurnaceActivateInteraction.reset();
   astroFurnaceContentInteraction.reset();
+  protoAstroTuningController.resetBaseline();
   crystalCollection.reset();
   reliquaryHints.reset();
   activateButton.reset();
@@ -1192,5 +1210,6 @@ window.addEventListener('pagehide', () => {
   postRingPresentation.dispose();
   smallGlyphSystem.dispose();
   shellSystem.dispose();
+  protoAstroTuningController.dispose();
 }, { once: true });
 showReadyState();

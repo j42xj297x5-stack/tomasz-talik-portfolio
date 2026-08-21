@@ -21,6 +21,7 @@ export const wireframeDissolveVisible = (segment, progress) => progress < 1 && s
 
 export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], progressionController, processSource, contentSource,
   productionController = null, astroProductionController = null, canUseAstroProduction = () => false,
+  canUseAstroTuning = () => false,
   requestAstroProduction = () => false,
   asterionModel = null, settings = {}, onEnterModule = () => {}, onReturnHome = () => {}, onCreate = () => {} }) {
   const config = { width: 1.55, height: 1.05, gapFromFurnace: 0.10, verticalOffset: 0.15, yawDegrees: -12,
@@ -79,7 +80,7 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
       ['module-asterion-sphere', 'SFERA ASTERIONOWA', 'Rdzeń żyroskopowy sterowania kręgiem', 'SKORUPY', `${progress.absorbed} / 6   DOSTĘPNE`, true],
       ['module-astro-attractor', 'ASTRO PRZYCIĄGACZ', 'Astrolabium Więzi // narzędzie przyciągania', 'TRYB',
         astroProductionController?.getState?.() === 'AVAILABLE' ? 'ASTROLABIUM WIĘZI // GOTOWE' : 'Utwórz astro przyciągacz',
-        canUseAstroProduction() && astroProductionController?.canCreate?.() === true],
+        (canUseAstroProduction() && astroProductionController?.canCreate?.() === true) || canUseAstroTuning()],
       ['module-emanation-matrix', 'MATRYCA EMANACJI', 'Przetwarzanie kamieni runicznych', 'KAMIENIE', 'W PRZYGOTOWANIU', false]
     ];
     interactiveRegions = cards.map((card, index) => {
@@ -254,10 +255,13 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
     moduleListeners.forEach((listener) => listener('floor_gyroscope_sphere'));
     onEnterModule();
   } else if (id === 'module-astro-attractor') {
-    if (!canUseAstroProduction() || astroProductionController?.canCreate?.() !== true) return false;
-    if (requestAstroProduction() !== true) return false;
-    moduleListeners.forEach((listener) => listener('astro_attractor'));
-    onCreate();
+    const canCreate = canUseAstroProduction() && astroProductionController?.canCreate?.() === true;
+    if (canCreate) {
+      if (requestAstroProduction() !== true) return false;
+      moduleListeners.forEach((listener) => listener('astro_attractor')); onCreate();
+    } else if (canUseAstroTuning()) {
+      moduleListeners.forEach((listener) => listener('astro_attractor')); onEnterModule();
+    } else return false;
   } else if (id === 'back-modules') { screen = ASTRO_FURNACE_PANEL_SCREENS.HOME; onReturnHome(); }
   else if (id === 'create-asterion') { if (!productionController?.requestCreate?.()) return false; onCreate(); }
   else return false; hoveredRegion = null; draw(); return true; }

@@ -8,7 +8,8 @@ export const ASTRO_FURNACE_PROCESS_STATES = Object.freeze({
   PREPARING_CONSTRUCTION: 'PREPARING_CONSTRUCTION'
 });
 export const ASTRO_FURNACE_PROCESS_KINDS = Object.freeze({
-  SHELL_EXTRACTION: 'SHELL_EXTRACTION', ASTERION_CONSTRUCTION: 'ASTERION_CONSTRUCTION',
+  SHELL_EXTRACTION: 'SHELL_EXTRACTION', SMALL_GLYPH_ESSENCE_EXTRACTION: 'SMALL_GLYPH_ESSENCE_EXTRACTION',
+  ASTERION_CONSTRUCTION: 'ASTERION_CONSTRUCTION',
   ASTRO_ATTRACTOR_CONSTRUCTION: 'ASTRO_ATTRACTOR_CONSTRUCTION'
 });
 
@@ -38,8 +39,10 @@ function cloneMaterials(root, owned) {
 export function createVrAstroFurnaceActivateInteraction({
   furnace, controllers = [], settings = {}, processSettings = {}, haloSettings = {},
   openInteraction, canActivateInput = () => false, isModeActive = () => true, qaAllowWithoutInput = false,
+  getExtractionProcessKind = () => ASTRO_FURNACE_PROCESS_KINDS.SHELL_EXTRACTION,
   isOrdinaryRayAvailable = () => true, onProcessStart = () => {}, onProcessStop = () => {}
 }) {
+  if (typeof getExtractionProcessKind !== 'function') throw new TypeError('getExtractionProcessKind must be a function.');
   const states = ASTRO_FURNACE_PROCESS_STATES;
   const button = furnace?.nodes?.button_activate;
   const buttonMeshes = [];
@@ -207,7 +210,11 @@ export function createVrAstroFurnaceActivateInteraction({
     if (!canActivate()) return false;
     state = states.PRESSING; clearHits(); setButtonEmission(settings.emissionPressed ?? 5);
     action.stop(); action.reset(); action.timeScale = 1; action.clampWhenFinished = true; action.play();
-    processKind = ASTRO_FURNACE_PROCESS_KINDS.SHELL_EXTRACTION;
+    processKind = getExtractionProcessKind();
+    if (![ASTRO_FURNACE_PROCESS_KINDS.SHELL_EXTRACTION,
+      ASTRO_FURNACE_PROCESS_KINDS.SMALL_GLYPH_ESSENCE_EXTRACTION].includes(processKind)) {
+      throw new Error(`Unsupported Astro furnace extraction process kind: ${processKind}`);
+    }
     processStarted = true; onProcessStart({ processKind });
     return true;
   }
@@ -215,7 +222,8 @@ export function createVrAstroFurnaceActivateInteraction({
     if (![ASTRO_FURNACE_PROCESS_KINDS.ASTERION_CONSTRUCTION, ASTRO_FURNACE_PROCESS_KINDS.ASTRO_ATTRACTOR_CONSTRUCTION].includes(processKindToStart)) return false;
     if (!capabilityReady || disposed || openInteraction?.getState?.() !== 'CLOSED' || openInteraction?.isTransitioning?.()) return false;
     return (state === states.IDLE && processKind == null)
-      || (state === states.COMPLETE && processKind === ASTRO_FURNACE_PROCESS_KINDS.SHELL_EXTRACTION);
+      || (state === states.COMPLETE && [ASTRO_FURNACE_PROCESS_KINDS.SHELL_EXTRACTION,
+        ASTRO_FURNACE_PROCESS_KINDS.SMALL_GLYPH_ESSENCE_EXTRACTION].includes(processKind));
   }
   let pendingConstructionKind = ASTRO_FURNACE_PROCESS_KINDS.ASTERION_CONSTRUCTION;
   function beginConstructionProcess() {
