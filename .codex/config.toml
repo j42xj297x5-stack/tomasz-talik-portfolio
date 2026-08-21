@@ -1,0 +1,13 @@
+approvals_reviewer = "user"
+approval_policy = "untrusted"
+sandbox_mode = "workspace-write"
+allow_login_shell = false
+
+[agents]
+enabled = false
+
+[features]
+multi_agent = false
+
+[sandbox_workspace_write]
+network_access = false
