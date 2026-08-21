@@ -16,10 +16,10 @@ export const PROTO_ASTRO_FORMS = Object.freeze({
   U: Object.freeze({ code: 'U', id: 'runestone' })
 });
 
-const NATURAL_FAMILY_CODES = Object.freeze(['K', 'T', 'S', 'L', 'R']);
+export const PROTO_ASTRO_NATURAL_FAMILY_CODES = Object.freeze(['K', 'T', 'S', 'L', 'R']);
 const NATURAL_FORM_CODES = Object.freeze(['A', 'O', 'I', 'U']);
 const SYLLABLE_CODES = Object.freeze([
-  ...NATURAL_FAMILY_CODES.flatMap((familyCode) => NATURAL_FORM_CODES.map((formCode) => `${familyCode}${formCode}`)),
+  ...PROTO_ASTRO_NATURAL_FAMILY_CODES.flatMap((familyCode) => NATURAL_FORM_CODES.map((formCode) => `${familyCode}${formCode}`)),
   'VO', 'VI'
 ]);
 
