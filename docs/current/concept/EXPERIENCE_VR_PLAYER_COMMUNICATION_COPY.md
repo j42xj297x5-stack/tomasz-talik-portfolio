@@ -36,7 +36,10 @@ Wersja angielska pozostaje osobnym zadaniem lokalizacyjnym. Ten dokument ustala 
 
 **TEKST:**
 
-> Dobrze.  
+> Dobrze.
+>
+> --- BLOCK ---
+>
 > Masz ręce.  
 > To już więcej, niż ma większość problemów.
 
@@ -51,7 +54,9 @@ Wersja angielska pozostaje osobnym zadaniem lokalizacyjnym. Ten dokument ustala 
 
 **TEKST:**
 
-> Najpierw sprawdźmy, czy świat cię słucha.
+> Jak zapomnisz — przypomnę.
+>
+> Zobaczmny, czy świat cię słucha.
 
 ---
 
@@ -762,3 +767,29 @@ Nowe teksty należy dopisywać zgodnie z mechaniką z pierwszego dokumentu, a ni
 
 > **Komunikat progresji mówi tylko tyle, ile gracz musi teraz usłyszeć.**  
 > **Reszta czeka, aż sam zapyta.**
+
+---
+
+# Canonical authored-block errata (2026-08)
+
+Runtime source of truth mirrors the approved PL catalog in `src/xr/guidance/vrMonkeyCommunicationCopy.js`. `--- BLOCK ---` below means a cleared bubble and canonical gap; line breaks inside a block remain authored lines.
+
+## Active authored blocks
+
+- `progression.intro.openPlayerGuide`: `Sprawdźmy tylko, gdzie co masz.`; then persistent `Naciśnij Y, żeby wejść do menu.`
+- `progression.intro.afterPlayerGuide`: `Jak zapomnisz — przypomnę.` --- BLOCK --- `Zobaczmny, czy świat cię słucha.` --- BLOCK --- `Wskaż mnie.`
+- `progression.intro.pointerLearned`: `Widzisz?\nJuż nauczyłeś świat, gdzie patrzysz.`
+- crystal handoff: `Tak, tego jeszcze nie możemy użyć.` --- BLOCK --- `Podstawy poznałeś.`
+- `progression.glyphs.firstInstruction`: `Pięć znaków.` --- BLOCK --- `Nie pytaj jeszcze, co znaczą.\nDotknij jednego Szpilą.`
+- `progression.postRing.changedWorld`: `No i świat przestał być uprzejmy.` --- BLOCK --- `To, czego potrzebujesz, jest teraz poza zasięgiem.\nNa szczęście nie na długo.`
+- `progression.furnace.look`: `Spójrz na Piec.` --- BLOCK --- `Tam coś na ciebie czeka.`
+
+## Knowledge policy catalog
+
+- `knowledge.astro.whatIsIt` — `PERSISTENT`; two approved blocks.
+- `knowledge.astro.why` — `ONCE`; two approved blocks; archives only after complete response.
+- `knowledge.astro.next` — `CONTEXTUAL`; `Potrzebujesz Kuli Asterionowej.\nPiec potrafi ją zbudować.\nZgromadź skorupy.`
+- `knowledge.astro.bandSwitch` — `ONCE`; available with `CAN_SWITCH_ASTRO_BAND`.
+- `knowledge.asterion.whatIsIt` — `PERSISTENT`; two approved blocks. There is no `knowledge.asterion.why`.
+
+P2 (`progression.p2.smallGlyphsIntro`, `knowledge.p2.tuneGlyphs`) remains sync-only until its real gameplay boundary. All `progression.p3.*` entries remain future copy and are not implemented gameplay flows.

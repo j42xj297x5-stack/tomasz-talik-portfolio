@@ -1,8 +1,10 @@
 import * as THREE from '../../vendor/three.js';
+import { createVrMonkeyProgressionMessage } from './createVrMonkeyProgressionMessage.js';
+import { VR_MONKEY_COMMUNICATION_COPY_PL, VR_MONKEY_MESSAGE_TIMING } from './vrMonkeyCommunicationCopy.js';
 
 export const VR_INTRO_CRYSTAL_TUTORIAL_COPY = Object.freeze({
   pl: Object.freeze({
-    seen: Object.freeze(['Widzisz?', 'Już nauczyłeś świat, gdzie patrzysz.']),
+    seen: VR_MONKEY_COMMUNICATION_COPY_PL.tutorial.crystal.pointerLearned,
     instruction: 'A teraz złap kryształ i podaj go mnie.',
     unavailable: 'Tak, tego jeszcze nie możemy użyć.',
     complete: 'Podstawy poznałeś.'
@@ -22,62 +24,46 @@ export function createVrIntroCrystalTutorial({ monkeyGuide, monkeyRoot, getWorld
   const monkeyPosition = new THREE.Vector3();
   const playerPosition = new THREE.Vector3();
   let crystal = null;
-  let queue = [];
-  let current = null;
-  let elapsed = 0;
   let active = false;
   let handoffRequested = false;
   let handoffAccepted = false;
   let completionEmitted = false;
+  let sequence = null;
 
-  function showNext() {
-    current = queue.shift() ?? null;
-    if (!current) return;
-    monkeyGuide.showMessage(current.text);
-    elapsed = 0;
-  }
-  function enqueue(items) {
-    queue.push(...items);
-    if (!current) showNext();
-  }
   function begin() {
     if (active) return false;
     reset();
     active = true;
     monkeyGuide.setInteractionEnabled?.(false);
     monkeyGuide.setDialogueOverride(null);
-    enqueue(copy.seen.map((text, index) => ({ text, after: index === copy.seen.length - 1 ? spawnAndInstruct : null })));
+    sequence = createVrMonkeyProgressionMessage({ monkeyGuide, blocks: copy.seen,
+      secondsPerLine: settings.messageDisplayDuration ?? VR_MONKEY_MESSAGE_TIMING.secondsPerLine,
+      gapSeconds: settings.messageGapDuration ?? VR_MONKEY_MESSAGE_TIMING.gapSeconds, onCompleted: spawnAndInstruct });
+    sequence.begin();
     return true;
   }
   function spawnAndInstruct() {
     const spawnPosition = getWorldPointAtRadius(settings.spawnRadius, { heightAboveFloor: settings.interactionHeightAboveFloor });
     crystal = crystalCollection.spawnTransientTutorialCrystal(crystalDefinition, spawnPosition);
     if (!crystal) throw new Error('Intro crystal tutorial could not spawn its transient crystal');
-    enqueue([{ text: copy.instruction }]);
+    monkeyGuide.showMessage(copy.instruction);
   }
   function acceptHandoff() {
     if (!active || !handoffRequested || handoffAccepted || !crystal) return false;
     if (!crystalCollection.takeoverAndConsumeTransient(crystal)) return false;
     handoffAccepted = true;
     playConsume();
-    enqueue([{ text: copy.unavailable }, { text: copy.complete, after: () => {
+    monkeyGuide.showMessage('');
+    sequence = createVrMonkeyProgressionMessage({ monkeyGuide, blocks: [copy.unavailable, copy.complete],
+      secondsPerLine: settings.messageDisplayDuration ?? VR_MONKEY_MESSAGE_TIMING.secondsPerLine,
+      gapSeconds: settings.messageGapDuration ?? VR_MONKEY_MESSAGE_TIMING.gapSeconds, onCompleted: () => {
       if (!completionEmitted) { completionEmitted = true; active = false; monkeyGuide.setInteractionEnabled?.(true); onCompleted(); }
-    } }]);
+    } }); sequence.begin();
     return true;
   }
   function update(delta = 0) {
     if (!active) return;
-    if (current) {
-      elapsed += Math.max(0, delta);
-      const duration = settings.messageDisplayDuration;
-      if (elapsed >= duration) {
-        const finished = current;
-        current = null;
-        monkeyGuide.showMessage('');
-        finished?.after?.();
-        if (queue.length) showNext();
-      }
-    }
+    if (sequence) { sequence.update(delta); if (sequence.getState() === 'COMPLETED') sequence = null; }
     if (!handoffRequested && crystal && crystalCollection.isHeld(crystal)) {
       monkeyRoot.getWorldPosition(monkeyPosition);
       monkeyPosition.add(getWorldPointAtRadius(0, { heightAboveFloor: settings.interactionHeightAboveFloor }))
@@ -91,7 +77,7 @@ export function createVrIntroCrystalTutorial({ monkeyGuide, monkeyRoot, getWorld
   }
   function reset() {
     if (crystal) crystalCollection.removeTransientCrystal(crystal);
-    crystal = null; queue = []; current = null; elapsed = 0; active = false;
+    sequence?.reset(); sequence = null; crystal = null; active = false;
     handoffRequested = handoffAccepted = completionEmitted = false;
     monkeyGuide.showMessage('');
     monkeyGuide.setInteractionEnabled?.(true);

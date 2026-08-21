@@ -26,7 +26,7 @@ function reachThreshold(value) {
   assert.equal(value.sequence.continueControllerOnboarding(), true);
   value.panel.open = false; value.sequence.update(0); assert.equal(value.sequence.continueControllerOnboarding(), true); for (let i = 0; i < 10; i += 1) value.sequence.update(.01);
   value.getOverride().onMonkeyHover(); assert.equal(value.sequence.continueControllerOnboarding(), true); value.getOverride().onMonkeyPress(); assert.equal(value.sequence.beginInvitation(), true); for (let i = 0; i < 8; i += 1) value.sequence.update(.01);
-  value.getOverride().onSelect('go'); assert.equal(value.sequence.continueInvitation(1), true);
+  value.getOverride().onSelect('go'); assert.equal(value.sequence.startMonkeyFollow(), true);
   for (let i = 0; i < 30 && value.sequence.getState() === VR_INTRO_STATE.FOLLOWING; i += 1) {
     value.head.copy(value.monkeyMotionRoot.getWorldPosition(new THREE.Vector3())); value.sequence.update(.5);
   }
@@ -37,13 +37,13 @@ function reachThreshold(value) {
 }
 function reachGlyphExplore(value) {
   reachThreshold(value);
-  value.getOverride().onSelect('cross'); assert.equal(value.sequence.continueThresholdChoice(1), true); value.head.set(0, 1.7, 6.8);
+  value.getOverride().onSelect('cross'); assert.equal(value.sequence.beginThresholdCrossing(), true); value.head.set(0, 1.7, 6.8);
   for (let i = 0; i < 30 && (!value.sequence.getDebugSnapshot().playerEnteredRing || !value.sequence.getDebugSnapshot().monkeySettled); i += 1) value.sequence.update(.25);
   assert.equal(value.sequence.getState(), VR_INTRO_STATE.MONKEY_SETTLING, 'actor waits for Runtime after emitting both facts');
   assert.equal(value.sequence.beginGlyphFreeExplore(), true);
-  assert.equal(value.sequence.beginGlyphFreeExplore(), false, 'free-explore continuation is accepted exactly once');
+  assert.equal(value.sequence.beginGlyphFreeExplore(), true, 'free-explore continuation is idempotent');
 }
-assert.deepEqual(VR_INTRO_COPY.pl.opening, ['Dobrze.', 'Masz ręce.', 'Sprawdźmy tylko, gdzie co masz.']);
+assert.deepEqual(VR_INTRO_COPY.pl.opening, ['Dobrze.', 'Masz ręce.\nTo już więcej, niż ma większość problemów.', 'Sprawdźmy tylko, gdzie co masz.']);
 assert.equal(VR_INTRO_COPY.pl.panelPrompt, 'Naciśnij Y, żeby wejść do menu.');
 assert.equal(VR_INTRO_COPY.en.panelPrompt, 'Press Y to open the menu.');
 const f = fixture(); assert.equal(f.sequence.getState(), VR_INTRO_STATE.XR_CALIBRATING);
@@ -145,7 +145,7 @@ f.getOverride().onSelect('go');
 assert.equal(f.sequence.getState(), VR_INTRO_STATE.WAIT_RUNTIME_AFTER_INVITATION_SELECTED);
 assert.deepEqual(f.getInvitationChoices(), [1]);
 f.getOverride().onSelect('go'); assert.deepEqual(f.getInvitationChoices(), [1], 'runtime wait emits invitation choice exactly once');
-assert.equal(f.sequence.continueInvitation(1), true);
+assert.equal(f.sequence.startMonkeyFollow(), true);
 assert.ok(f.sequence.getDebugSnapshot().monkeyRadius > 5, 'FOLLOWING has positive distance from radius 18 to threshold 5');
 const stationaryStonePosition = f.monkeyStoneRoot.position.clone();
 // Passing the three-metre grace point while actually following must not pause.
@@ -184,7 +184,7 @@ f.sequence.update(100); assert.equal(f.fog.radius, 6, 'threshold wait holds radi
 assert.deepEqual(f.monkeyStoneRoot.position.toArray(), stationaryStonePosition.toArray(), 'stone is stationary during FOLLOWING');
 assert.equal(f.glyphRing.visible, true); assert.equal(f.monkeyStoneRoot.visible, true, 'stone appears with ring reveal');
 for (let i = 0; i < 12 && typeof f.getOverride()?.onSelect !== 'function'; i += 1) f.sequence.update(.01);
-f.getOverride().onSelect('cross'); assert.equal(f.sequence.continueThresholdChoice(1), true); f.head.set(0, 1.7, 7.59); f.sequence.update(.1); assert.ok(f.fog.radius < 6); assert.equal(f.sequence.getDebugSnapshot().playerSafelyInside, false); assert.equal(f.getRadius(), 7.6);
+f.getOverride().onSelect('cross'); assert.equal(f.sequence.beginThresholdCrossing(), true); f.head.set(0, 1.7, 7.59); f.sequence.update(.1); assert.ok(f.fog.radius < 6); assert.equal(f.sequence.getDebugSnapshot().playerSafelyInside, false); assert.equal(f.getRadius(), 7.6);
 f.head.z = 6.8; for (let i = 0; i < 28 && !f.sequence.getDebugSnapshot().monkeySettled; i += 1) f.sequence.update(.25);
 assert.equal(f.sequence.getState(), VR_INTRO_STATE.MONKEY_SETTLING); assert.equal(f.getPlayerEnteredRing(), 1); assert.equal(f.getMonkeySettled(), 1);
 assert.deepEqual(f.getPlayerEntryPayloads(), [{ crossingComplete: false }], 'player-first event reports a local STAY condition');
@@ -253,9 +253,9 @@ assert.equal(thresholdBeyond.getEndSessions(), 1);
 const thresholdCross = fixture(); reachThreshold(thresholdCross); const beforeCrossMessage = thresholdCross.getMessage();
 thresholdCross.getOverride().onSelect('cross'); assert.deepEqual(thresholdCross.getThresholdChoices(), [1]);
 assert.equal(thresholdCross.sequence.getState(), VR_INTRO_STATE.WAIT_RUNTIME_AFTER_THRESHOLD_SELECTED); assert.equal(thresholdCross.getMessage(), beforeCrossMessage);
-assert.equal(thresholdCross.sequence.continueThresholdChoice(1), true); assert.equal(thresholdCross.sequence.getState(), VR_INTRO_STATE.CROSSING); assert.equal(thresholdCross.getMessage(), '');
-assert.equal(thresholdCross.sequence.continueThresholdChoice(1), false);
-const lateEntry = fixture(); reachThreshold(lateEntry); lateEntry.getOverride().onSelect('cross'); assert.equal(lateEntry.sequence.continueThresholdChoice(1), true); lateEntry.head.set(0, 1.7, 7.8);
+assert.equal(thresholdCross.sequence.beginThresholdCrossing(), true); assert.equal(thresholdCross.sequence.getState(), VR_INTRO_STATE.CROSSING); assert.equal(thresholdCross.getMessage(), '');
+assert.equal(thresholdCross.sequence.beginThresholdCrossing(), false);
+const lateEntry = fixture(); reachThreshold(lateEntry); lateEntry.getOverride().onSelect('cross'); assert.equal(lateEntry.sequence.beginThresholdCrossing(), true); lateEntry.head.set(0, 1.7, 7.8);
 for (let i = 0; i < 40 && !lateEntry.sequence.getDebugSnapshot().monkeySettled; i += 1) lateEntry.sequence.update(.25);
 assert.equal(lateEntry.sequence.getState(), VR_INTRO_STATE.MONKEY_SETTLING);
 assert.equal(lateEntry.sequence.getDebugSnapshot().monkeySettled, true);

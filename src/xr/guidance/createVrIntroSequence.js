@@ -1,4 +1,5 @@
 import * as THREE from '../../vendor/three.js';
+import { VR_MONKEY_COMMUNICATION_COPY_PL } from './vrMonkeyCommunicationCopy.js';
 
 export const VR_INTRO_STATE = Object.freeze({
   XR_CALIBRATING: 'XR_CALIBRATING', FOG_REVEAL: 'FOG_REVEAL', WAIT_RUNTIME_AFTER_REVEAL: 'WAIT_RUNTIME_AFTER_REVEAL',
@@ -19,15 +20,16 @@ export const VR_INTRO_STATE = Object.freeze({
 });
 
 export const VR_INTRO_COPY = Object.freeze({
-  pl: { opening: ['Dobrze.', 'Masz ręce.', 'Sprawdźmy tylko, gdzie co masz.'], panelPrompt: 'Naciśnij Y, żeby wejść do menu.',
-    panelDone: ['Jak zapomnisz — przypomnę.', 'Najpierw sprawdźmy, czy świat cię słucha.', 'Wskaż mnie.'], trigger: 'Teraz spust.',
-    seen: ['Widzisz?', 'Już nauczyłeś świat, gdzie patrzysz.'], going: 'Idziesz?',
+  pl: { opening: [...VR_MONKEY_COMMUNICATION_COPY_PL.progression['progression.intro.firstPresence'].blocks,
+      ...VR_MONKEY_COMMUNICATION_COPY_PL.progression['progression.intro.openPlayerGuide'].blocks], panelPrompt: 'Naciśnij Y, żeby wejść do menu.',
+    panelDone: VR_MONKEY_COMMUNICATION_COPY_PL.progression['progression.intro.afterPlayerGuide'].blocks, trigger: 'Teraz spust.',
+    seen: VR_MONKEY_COMMUNICATION_COPY_PL.progression['progression.intro.pointerLearned'].blocks, going: 'Idziesz?',
     invitation: [{ id: 'go', label: 'IDĘ' }, { id: 'where', label: 'DOKĄD?' }, { id: 'no', label: 'NIE' }],
-    where: ['Gdybym ci powiedział, poszedłbyś do odpowiedzi.', 'A ja pytam, czy pójdziesz za mną.'], no: ['Dobrze.', 'Nie każda droga musi być twoja.'],
-    threshold: ['Dalej jest próg.', 'Możesz go nie przekraczać.', 'Jeśli przekroczysz — wrócisz dopiero wtedy, kiedy droga się skończy.', 'Wchodzisz?'],
+    where: ['Gdybym ci powiedział, poszedłbyś do odpowiedzi.\nA ja pytam, czy pójdziesz za mną.'], no: ['Dobrze.\nNie każda droga musi być twoja.'],
+    threshold: ['Dalej jest próg.\nMożesz go nie przekraczać.\nJeśli przekroczysz — wrócisz dopiero wtedy, kiedy droga się skończy.', 'Wchodzisz?'],
     thresholdOptions: [{ id: 'cross', label: 'PRZEKRACZAM PRÓG' }, { id: 'beyond', label: 'CO JEST PO DRUGIEJ STRONIE?' }, { id: 'return', label: 'WRACAM' }],
-    beyond: ['Po tej stronie pytasz.', 'Po tamtej będziesz sprawdzał.'], returning: ['Mądra decyzja.', 'Albo tchórzliwa.', 'Czasem to ta sama decyzja. Dopiero później wiadomo.'],
-    glyphHint: ['Pięć znaków.', 'Nie pytaj jeszcze, co znaczą.', 'Dotknij jednego Szpilą.'], glyphDiscovered: 'O, wydaje mi się, że można tego użyć.' },
+    beyond: ['Po tej stronie pytasz.\nPo tamtej będziesz sprawdzał.'], returning: ['Mądra decyzja.', 'Albo tchórzliwa.', 'Czasem to ta sama decyzja.\nDopiero później wiadomo.'],
+    glyphHint: ['Pięć znaków.', 'Nie pytaj jeszcze, co znaczą.\nDotknij jednego Szpilą.'], glyphDiscovered: 'O, wydaje mi się, że można tego użyć.' },
   en: { opening: ['Good.', 'You have hands.', 'Let us make sure you know where everything is.'], panelPrompt: 'Press Y to open the menu.',
     panelDone: ["If you forget — I'll remind you.", 'First, let us see if the world listens to you.', 'Point at me.'], trigger: 'Now pull the trigger.',
     seen: ['See?', 'You have already taught the world where you are looking.'], going: 'Will you walk?',

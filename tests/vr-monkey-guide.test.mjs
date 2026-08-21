@@ -162,6 +162,15 @@ assert.equal(oneLineBoxY, 540 - (78 + 31 * 2), 'one-line message box is anchored
 roundedRectStarts.length = 0;
 const wrappedMetrics = guide.showMessage('This message contains enough words to wrap onto a second line in the panel');
 assert.ok(wrappedMetrics.lineCount > 1, 'metrics use actual measured wrapping');
+drawnText.length = 0;
+const authoredMetrics = guide.showMessage('Pierwsza linia\nDruga linia');
+assert.equal(authoredMetrics.lineCount, 2, 'explicit authored newlines produce separate rendered lines');
+const longWords = Array.from({ length: 30 }, (_, index) => `word${index}`);
+drawnText.length = 0; const longMetrics = guide.showMessage(longWords.join(' '));
+assert.ok(longMetrics.lineCount > DEFAULT_EXPERIENCE_VR_SETTINGS.monkeyGuide.message.maxLines,
+  'maxLines is not destructive truncation');
+assert.deepEqual(drawnText.join(' ').split(/\s+/), longWords, 'a long message renders every word without loss');
+assert.equal(drawnText.some((line) => line.endsWith('…')), false, 'renderer never adds a truncation ellipsis');
 const multiLineBoxY = roundedRectStarts.at(-1).y;
 assert.ok(multiLineBoxY < oneLineBoxY, 'additional lines grow the message box upward');
 assert.ok(fillStyles.includes('#e99a55'), 'message uses its darker saturated panel color');

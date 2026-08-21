@@ -517,3 +517,23 @@ Jeżeli odpowiedź na punkt 7 brzmi „tylko przewija zdanie” — tekst należ
 > **Małpa pomaga zrozumieć.**  
 > **Y pomaga pamiętać.**  
 > **Gracz decyduje, ile chce wiedzieć.**
+
+---
+
+## Kontrakt prezentacji authored BLOCK (kanoniczny)
+
+`BLOCK` jest semantyczną jednostką wypowiedzi autora, a nie wynikiem automatycznego zawijania. Jawne znaki nowej linii są zachowywane; każda authored line może zostać dodatkowo zawinięta do szerokości panelu. Renderer pokazuje całą treść i nie wolno mu ucinać słów ani dopisywać destrukcyjnego `…`.
+
+Automatyczna sekwencja ma stany `IDLE → DISPLAY → GAP → … → COMPLETED`. Czas `DISPLAY` wynosi **2 s × rzeczywista liczba wyrenderowanych linii**, a po każdym bloku — także ostatnim — następuje co najmniej **0,5 s** pustego `GAP`. Nie ma przycisku `DALEJ` ani `NEXT`. Prompt oczekujący na realną akcję lub decyzję pozostaje widoczny do tej akcji.
+
+### Lifecycle wiedzy Małpy
+
+Transient session state należy wyłącznie do Guidance i przyjmuje wartości `LOCKED`, `NEW`, `READ`, `ARCHIVED`. Temat jest oznaczany jako przeczytany dopiero po pełnej odpowiedzi i finalnym gap; anulowanie odpowiedzi pozostawia go `NEW`.
+
+| Policy | Po odblokowaniu | Po pełnym przeczytaniu |
+|---|---|---|
+| `PERSISTENT` | `NEW` | `READ`, nadal w aktywnym menu |
+| `ONCE` | `NEW` | `ARCHIVED`, znika z aktywnego menu |
+| `CONTEXTUAL` | `NEW`, gdy warunek domenowy jest prawdziwy | widoczność nadal wynika z aktualności warunku; po utracie kontekstu `ARCHIVED` |
+
+Małpa jest rozmową i wiedzą aktualną. Panel Y jest trwałą praktyczną pamięcią sterowania (`TOOL_REFERENCE`); archiwizacja pytania Małpy nigdy nie usuwa instrukcji z panelu Y. Nie istnieje osobny interfejs archiwum pytań.
