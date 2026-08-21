@@ -109,12 +109,13 @@ export function createVrSmallGlyphAttractorInteraction({ controllers, smallGlyph
       captureForwardDistance: settings.captureForwardDistance, target: anchorWorld });
     setWorldPosition(captureAnchor, anchorWorld); }
   function beginReturn(glyph) { if (!glyph || returning?.glyph === glyph) return;
-    const fieldTransform = smallGlyphSystem.getFieldTransform(glyph);
-    if (!fieldTransform) throw new Error('Small glyph interaction cannot return an unknown field instance.');
+    if (!smallGlyphSystem.getFieldTransform(glyph))
+      throw new Error('Small glyph interaction cannot return an unknown field instance.');
     clearLeftSmallGlyphHit(); halos.get(glyph)?.setVisible(false); smallGlyphSystem.object.attach(glyph);
-    returning = { glyph, fieldTransform, startPosition: glyph.position.clone(),
+    returning = { glyph, startPosition: glyph.position.clone(),
       startQuaternion: glyph.quaternion.clone(), startScale: glyph.scale.clone(), elapsed: 0 };
     states.set(glyph, INTERACTION_STATE.RETURNING);
+    glyph.userData.smallGlyphState = INTERACTION_STATE.RETURNING;
     if (activePull === glyph) activePull = null; if (captureReady === glyph) captureReady = null;
     if (heldGlyph === glyph) { heldGlyph = null; heldByRecord = null; }
     if (target === glyph) target = null; pullSpeed = 0;
@@ -122,10 +123,12 @@ export function createVrSmallGlyphAttractorInteraction({ controllers, smallGlyph
       attractorTool.setState(VR_ATTRACTOR_STATES.IDLE); }
   }
   function updateReturn(delta) { if (!returning) return; const record = returning; record.elapsed += delta;
+    const fieldTransform = smallGlyphSystem.getFieldTransform(record.glyph);
+    if (!fieldTransform) throw new Error('Small glyph interaction lost its canonical field transform.');
     const progress = clamp01(record.elapsed / settings.returnDuration), eased = progress * progress * (3 - 2 * progress);
-    record.glyph.position.lerpVectors(record.startPosition, record.fieldTransform.position, eased);
-    record.glyph.quaternion.slerpQuaternions(record.startQuaternion, record.fieldTransform.quaternion, eased);
-    record.glyph.scale.lerpVectors(record.startScale, record.fieldTransform.scale, eased);
+    record.glyph.position.lerpVectors(record.startPosition, fieldTransform.position, eased);
+    record.glyph.quaternion.slerpQuaternions(record.startQuaternion, fieldTransform.quaternion, eased);
+    record.glyph.scale.lerpVectors(record.startScale, fieldTransform.scale, eased);
     if (progress !== 1) return; if (!smallGlyphSystem.restoreInstanceToField(record.glyph))
       throw new Error('Small glyph system rejected restoration of its field instance.');
     states.set(record.glyph, INTERACTION_STATE.FIELD); returning = null; }
@@ -192,6 +195,7 @@ export function createVrSmallGlyphAttractorInteraction({ controllers, smallGlyph
       captureAnchor.getWorldPosition(anchorWorld); activePull.getWorldPosition(worldPosition);
       const distance = worldPosition.distanceTo(anchorWorld); if (distance <= settings.captureRadius) {
         captureAnchor.attach(activePull); states.set(activePull, INTERACTION_STATE.CAPTURE_READY); captureReady = activePull;
+        activePull.userData.smallGlyphState = INTERACTION_STATE.CAPTURE_READY;
         attractorTool.setPullStrength(1); attractorTool.setState(VR_ATTRACTOR_STATES.CAPTURED); return; }
       pullSpeed = Math.min(settings.maxPullSpeed, pullSpeed + settings.pullAcceleration * delta);
       movement.subVectors(anchorWorld, worldPosition).normalize().multiplyScalar(Math.min(distance, pullSpeed * delta));
@@ -210,6 +214,7 @@ export function createVrSmallGlyphAttractorInteraction({ controllers, smallGlyph
     attractorTool.setState(VR_ATTRACTOR_STATES.TARGETING);
     if (!returning && primaryAction > settings.triggerThreshold && canPullSmallGlyphs() === true && leftHandIsFree()) {
       activePull = target; states.set(activePull, INTERACTION_STATE.PULLING); pullSpeed = 0;
+      activePull.userData.smallGlyphState = INTERACTION_STATE.PULLING;
       activePull.getWorldPosition(worldPosition); captureAnchor.getWorldPosition(anchorWorld);
       pullStartDistance = Math.max(worldPosition.distanceTo(anchorWorld), 1e-6);
       attractorTool.setPullStrength(0); attractorTool.setState(VR_ATTRACTOR_STATES.PULLING); }

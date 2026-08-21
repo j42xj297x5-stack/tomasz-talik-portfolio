@@ -7,9 +7,10 @@ const SUFFIXES = Object.freeze(['a', 'b', 'c']);
 const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5));
 
 export function createVrShellSystem({ parent, assetManager, baseRadius, centerY = 0, emissionSettings = {},
-  idleMotionSettings = {} }) {
+  idleMotionSettings = {}, direction = 1 }) {
   if (!parent?.add || !assetManager?.cloneGltfScene) throw new Error('VrShellSystem requires parent and assetManager.');
   if (!Number.isFinite(baseRadius) || baseRadius <= 0) throw new Error('VrShellSystem requires a positive baseRadius.');
+  if (direction !== 1 && direction !== -1) throw new Error('VrShellSystem direction must be 1 or -1.');
   const claimedMin = emissionSettings.claimedEmissionMin ?? 1;
   const claimedMax = emissionSettings.claimedEmissionMax ?? 2;
   const claimedDuration = emissionSettings.claimedEmissionPulseDuration ?? 1.4;
@@ -42,7 +43,7 @@ export function createVrShellSystem({ parent, assetManager, baseRadius, centerY 
       boundingCenter: shell.worldToLocal(bounds.center.clone()), boundingRadius: bounds.radius,
       radius: baseRadius * (1 + index / 17), phase: index * GOLDEN_ANGLE, inclination: -Math.PI / 3 + (index % 7) * Math.PI / 18,
       ascendingNode: (index * GOLDEN_ANGLE * 0.61) % TAU, angularSpeed: 0.035 + (index % 5) * 0.006,
-      direction: index % 2 === 0 ? 1 : -1,
+      direction,
       selfRotationAxis: new THREE.Vector3(Math.sin((index + 1) * 1.71), 0.45 + ((index * 7) % 5) * 0.17,
         Math.cos((index + 1) * 2.13)).normalize(), selfRotationSpeed: 0.10 + (index % 7) * 0.02,
       initialQuaternion: shell.quaternion.clone(), initialScale: shell.scale.clone(), orbitPosition: new THREE.Vector3(), returnStart: new THREE.Vector3(),

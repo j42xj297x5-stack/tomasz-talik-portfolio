@@ -241,6 +241,18 @@ const floorWalkRadius = glyphOrbit.effectiveRadius;
 const playerRigSpawnLocalPosition = playerRig.position.clone();
 const playerRigSpawnLocalQuaternion = playerRig.quaternion.clone();
 const playerRigSpawnLocalScale = playerRig.scale.clone();
+const shellSystem = createVrShellSystem({ parent: worldStableRoot, assetManager, baseRadius: glyphOrbit.effectiveRadius,
+  centerY: settings.spatial.worldStableCenterY,
+  emissionSettings: settings.shellAttractor,
+  idleMotionSettings: settings.placedObjectIdleMotion,
+  direction: settings.shellFieldMotion.direction });
+const smallGlyphOrbitRadius = shellSystem.outerRadius + settings.smallGlyphField.radialLayerGap;
+const smallGlyphMaxTargetDistance = glyphOrbit.effectiveRadius
+  * settings.shellAttractor.targetDistanceRadiusMultiplier;
+if (smallGlyphOrbitRadius > smallGlyphMaxTargetDistance) {
+  throw new Error('Small Glyph radial layer exceeds the configured Astrolabium target distance.');
+}
+const largeGlyphTargetRadius = smallGlyphOrbitRadius + settings.smallGlyphField.radialLayerGap;
 const smallGlyphSystem = createVrSmallGlyphSystem({
   parent: worldStableRoot,
   assetManager,
@@ -254,8 +266,10 @@ const smallGlyphSystem = createVrSmallGlyphSystem({
   ],
   copiesPerVisualVariant: settings.smallGlyphField.copiesPerVisualVariant,
   center: { x: 0, y: settings.spatial.worldStableCenterY, z: 0 },
-  innerRadius: glyphOrbit.effectiveRadius,
-  outerRadius: glyphOrbit.effectiveRadius + settings.controllers.rayLength,
+  orbitRadius: smallGlyphOrbitRadius,
+  orbitAngularSpeed: settings.smallGlyphField.orbitAngularSpeed,
+  selfRotationSpeed: settings.smallGlyphField.selfRotationSpeed,
+  direction: settings.smallGlyphField.direction,
   materializeDurationSeconds: settings.smallGlyphField.materializeDurationSeconds,
   staggerSeconds: settings.smallGlyphField.staggerSeconds,
   idleMotionSettings: settings.placedObjectIdleMotion,
@@ -264,10 +278,6 @@ const smallGlyphSystem = createVrSmallGlyphSystem({
   )
 });
 const protoAstroTuningController = createVrProtoAstroTuningController();
-const shellSystem = createVrShellSystem({ parent: worldStableRoot, assetManager, baseRadius: glyphOrbit.effectiveRadius,
-  centerY: settings.spatial.worldStableCenterY,
-  emissionSettings: settings.shellAttractor,
-  idleMotionSettings: settings.placedObjectIdleMotion });
 const asterionSphereGltf = assetManager.getGltf('vr-asterion-sphere-model');
 const asterionSphere = createVrAsterionSphere({
   model: assetManager.cloneGltfScene('vr-asterion-sphere-model'),
@@ -681,7 +691,7 @@ smallGlyphAttractorInteraction = createVrSmallGlyphAttractorInteraction({
   handModeController,
   semanticInput,
   attractorTool,
-  maxTargetDistance: glyphOrbit.effectiveRadius * settings.shellAttractor.targetDistanceRadiusMultiplier,
+  maxTargetDistance: smallGlyphMaxTargetDistance,
   settings: {
     scanThreshold: settings.shellAttractor.scanThreshold,
     triggerThreshold: settings.shellAttractor.triggerThreshold,
@@ -780,7 +790,7 @@ const postRingPresentation = createVrPostRingPresentation({ glyphRing, shellSyst
 });
 const p2RadialPresentation = createVrP2RadialPresentation({
   glyphOrbit,
-  getTargetRadius: () => glyphOrbit.effectiveRadius + settings.controllers.rayLength,
+  getTargetRadius: () => largeGlyphTargetRadius,
   durationSeconds: settings.p2RadialPresentation.durationSeconds,
   onCompleted: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.P2_RADIAL_PRESENTATION_COMPLETED)
 });
