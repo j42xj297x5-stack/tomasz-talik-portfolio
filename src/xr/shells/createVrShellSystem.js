@@ -1,15 +1,15 @@
 import * as THREE from '../../vendor/three.js';
 import { createObjectWireframeData } from '../visuals/createObjectWireframeData.js';
+import { createVrSphericalLayerActor } from '../world/createVrSphericalLayerActor.js';
 
 const TAU = Math.PI * 2;
 const ASSET_IDS = Object.freeze(Array.from({ length: 6 }, (_, index) => `shell-relic-${index + 1}`));
 const SUFFIXES = Object.freeze(['a', 'b', 'c']);
 const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5));
 
-export function createVrShellSystem({ parent, assetManager, baseRadius, centerY = 0, emissionSettings = {},
+export function createVrShellSystem({ parent, assetManager, layer, angularSpeed = 0, emissionSettings = {},
   idleMotionSettings = {}, direction = 1 }) {
   if (!parent?.add || !assetManager?.cloneGltfScene) throw new Error('VrShellSystem requires parent and assetManager.');
-  if (!Number.isFinite(baseRadius) || baseRadius <= 0) throw new Error('VrShellSystem requires a positive baseRadius.');
   if (direction !== 1 && direction !== -1) throw new Error('VrShellSystem direction must be 1 or -1.');
   const claimedMin = emissionSettings.claimedEmissionMin ?? 1;
   const claimedMax = emissionSettings.claimedEmissionMax ?? 2;
@@ -17,7 +17,9 @@ export function createVrShellSystem({ parent, assetManager, baseRadius, centerY 
   const idleAmplitude = idleMotionSettings.verticalAmplitude ?? 0.20;
   const idleAngularSpeed = TAU / (idleMotionSettings.verticalCycleDuration ?? 4.8);
   const idleRotationSpeed = idleMotionSettings.rotationSpeed ?? 0.12;
-  const object = new THREE.Group(); object.name = 'VrShellSystem'; object.visible = false; parent.add(object);
+  const layerActor = createVrSphericalLayerActor({ parent, layer, slotCount: ASSET_IDS.length * SUFFIXES.length,
+    angularSpeed, direction });
+  const object = new THREE.Group(); object.name = 'VrShellSystem'; object.visible = false; layerActor.object.add(object);
   let active = false, interactionEnabled = false, elapsed = 0, disposed = false, currentDelta = 0;
   const instances = [], records = [], ownedMaterials = new Set(), panelWireframes = new Map();
   const scratchQuaternion = new THREE.Quaternion();
@@ -41,8 +43,7 @@ export function createVrShellSystem({ parent, assetManager, baseRadius, centerY 
     const attractorId = `shell-${String(assetIndex + 1).padStart(2, '0')}-${suffix}`;
     const record = { object: shell, emissiveMaterials, materialBaselines, panelWireframe,
       boundingCenter: shell.worldToLocal(bounds.center.clone()), boundingRadius: bounds.radius,
-      radius: baseRadius * (1 + index / 17), phase: index * GOLDEN_ANGLE, inclination: -Math.PI / 3 + (index % 7) * Math.PI / 18,
-      ascendingNode: (index * GOLDEN_ANGLE * 0.61) % TAU, angularSpeed: 0.035 + (index % 5) * 0.006,
+      slotIndex: index,
       direction,
       selfRotationAxis: new THREE.Vector3(Math.sin((index + 1) * 1.71), 0.45 + ((index * 7) % 5) * 0.17,
         Math.cos((index + 1) * 2.13)).normalize(), selfRotationSpeed: 0.10 + (index % 7) * 0.02,
@@ -52,8 +53,7 @@ export function createVrShellSystem({ parent, assetManager, baseRadius, centerY 
       idlePhase: (index * GOLDEN_ANGLE) % TAU };
     shell.name = attractorId;
     Object.assign(shell.userData, { attractorTarget: false, attractorType: 'shell', attractorId, shellState: 'orbiting',
-      shellAssetId: assetId, panelWireframe, shellOrbit: Object.freeze({ radius: record.radius, phase: record.phase, inclination: record.inclination,
-        ascendingNode: record.ascendingNode, angularSpeed: record.angularSpeed, direction: record.direction }),
+      shellAssetId: assetId, panelWireframe, sphericalLayerId: layer.id, sphericalSlotIndex: index,
       selfRotationAxis: record.selfRotationAxis.clone(), selfRotationSpeed: record.selfRotationSpeed });
     object.add(shell); instances.push(shell); records.push(record);
   }));
@@ -62,11 +62,8 @@ export function createVrShellSystem({ parent, assetManager, baseRadius, centerY 
     record?.emissiveMaterials.forEach((material) => { material.emissiveIntensity = value; }); }
   function getRecord(shell) { return records.find((item) => item.object === shell) ?? null; }
   function applyPositions() { records.forEach((record) => {
-    const angle = record.phase + elapsed * record.angularSpeed * record.direction;
-    const x = Math.cos(angle) * record.radius, planeY = Math.sin(angle) * record.radius;
-    const y = centerY + planeY * Math.sin(record.inclination), z = planeY * Math.cos(record.inclination);
-    const cosNode = Math.cos(record.ascendingNode), sinNode = Math.sin(record.ascendingNode);
-    record.orbitPosition.set(x * cosNode - z * sinNode, y, x * sinNode + z * cosNode);
+    try { record.orbitPosition.copy(layerActor.getSlotTransform(record.slotIndex, record.boundingRadius).position); }
+    catch (error) { throw new Error(`Shell layer ${layer.id}, asset ${record.object.userData.shellAssetId}, bounding radius ${record.boundingRadius}, available thickness ${layer.thickness}: ${error.message}`); }
     const state = record.object.userData.shellState;
     if (record.returning) { record.returnElapsed += currentDelta; const t = Math.min(1, record.returnElapsed / record.returnDuration);
       const eased = t * t * (3 - 2 * t); record.object.position.lerpVectors(record.returnStart, record.orbitPosition, eased);
@@ -96,7 +93,7 @@ export function createVrShellSystem({ parent, assetManager, baseRadius, centerY 
   // Compatibility seam used by the explicit post-P1 QA path.
   function setActive(value) { setPresentationVisible(value); setInteractionEnabled(value); }
   function update(deltaSeconds) { if (disposed || !active) return; currentDelta = Math.max(0, Number.isFinite(deltaSeconds) ? deltaSeconds : 0);
-    elapsed += currentDelta; applyPositions(); }
+    elapsed += currentDelta; layerActor.update(currentDelta); applyPositions(); }
   function returnToOrbit(shell, duration = 0.8) { const record = getRecord(shell); if (!record || disposed || shell.userData.shellState === 'placed') return false;
     object.attach(shell); record.returnStart.copy(shell.position); record.returnElapsed = 0; record.returnDuration = Math.max(0.001, duration);
     record.returnEmissionStart = record.emissiveMaterials[0]?.emissiveIntensity ?? 0; record.returning = true;
@@ -119,7 +116,7 @@ export function createVrShellSystem({ parent, assetManager, baseRadius, centerY 
     if (shell.parent !== object) object.attach(shell);
     record.returning = false; shell.userData.shellState = 'consumed'; shell.userData.attractorTarget = false;
     shell.visible = false; return true; }
-  function reset() { if (disposed) return; active = false; interactionEnabled = false; object.visible = false; elapsed = 0; currentDelta = 0; records.forEach((record) => {
+  function reset() { if (disposed) return; active = false; interactionEnabled = false; object.visible = false; elapsed = 0; currentDelta = 0; layerActor.reset(); records.forEach((record) => {
     restoreInstanceToOrbit(record.object);
   }); applyPositions(); }
   function applyAbsorbedShellIds(absorbedShellIds) {
@@ -135,10 +132,10 @@ export function createVrShellSystem({ parent, assetManager, baseRadius, centerY 
     });
   }
   function dispose() { if (disposed) return; disposed = true; active = false; object.visible = false;
-    object.remove(...instances); parent.remove(object); ownedMaterials.forEach((material) => material.dispose()); ownedMaterials.clear();
+    object.remove(...instances); layerActor.dispose(); ownedMaterials.forEach((material) => material.dispose()); ownedMaterials.clear();
     instances.length = 0; records.length = 0; }
   applyPositions();
-  return { object, instances, records, innerRadius: baseRadius, outerRadius: baseRadius * 2,
+  return { object, layerActor, instances, records, innerRadius: layer.innerRadius, outerRadius: layer.outerRadius,
     panelWireframes, getPanelWireframe: (assetId) => panelWireframes.get(assetId) ?? null,
     get active() { return active; }, get interactionEnabled() { return interactionEnabled; }, getRecord, setEmission, setActive,
     setPresentationVisible, setInteractionEnabled, update, returnToOrbit, placeInstance, consumeInstance,

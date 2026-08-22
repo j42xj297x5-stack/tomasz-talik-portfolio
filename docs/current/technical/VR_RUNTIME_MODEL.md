@@ -65,7 +65,7 @@ The progress floor has five authored sectors, 18 panels and five optional proced
 
 The authored bridge is `2.30 durable 5/5 → FIRST_RING_COMPLETED → 2.40`. `createVrFirstRingFlow` owns the local ring presentation/audio seam; only its real completion emits `FIRST_RING_PRESENTATION_COMPLETED` and enters `3.10`. The shell field is revealed as presentation in `3.10`, but remains non-interactive until physical Astro claim completes at `3.80`.
 
-The executable and authored mainline now extends through the physical-claim boundary `3.80`: Tier 1 completion does not unlock Astro or activate the shell field. `?p1` remains an explicit one-shot QA/showcase path that commits the five tier-1 pages, mirrors them to the floor, completes the first ring and restores access to the existing post-P1 runtime. In that QA world state the field contains **18 shells: six cached `shell-relic-*` assets cloned three times each**. Their deterministic orbits occupy radii `[R, 2R]`, where `R` is the effective glyph-ring radius.
+The executable and authored mainline now extends through the physical-claim boundary `3.80`: Tier 1 completion does not unlock Astro or activate the shell field. `?p1` remains an explicit one-shot QA/showcase path that commits the five tier-1 pages, mirrors them to the floor, completes the first ring and restores access to the existing post-P1 runtime. In that QA world state the field contains **18 shells: six cached `shell-relic-*` assets cloned three times each**. Their deterministic Fibonacci slots fill the world-stable `SHELLS` spherical volume `[R, 2R]` around `(0, 0, 0)`; bounds-aware clearance keeps visible geometry inside it. The whole field may rotate rigidly, but individual shells do not follow tilted orbits.
 
 Semantic input maps standard-gamepad button `4` to edge-triggered `toggleRightTool` on the right hand and `toggleLeftTool` on the left hand, button `1` to analog `grabAction` (squeeze) and button `0` to analog `primaryAction` (trigger). Right A toggles `NORMAL_HAND ↔ ASTRO_ATTRACTOR` only with Scenario capability `CAN_EQUIP_ASTRO` or an explicit QA bypass; mainline grants it only after completed physical claim at `3.80`. Left X toggles `NORMAL_HAND ↔ ASTERION_SPHERE` only after production `EARNED` or when the independent `?asterionSphere` QA availability override is present. `AVAILABLE` alone never enables X.
 
@@ -84,7 +84,7 @@ worldPosition(PIVOT_RING_MASTER)
 + worldDirection(controller local -Z) * 1.3 m
 ```
 
-The public sequence is `orbiting → targeted → pulling → capture_ready → held → placed`; `returning` is an internal recovery state. Cancelling scan or trigger before left-hand takeover sends the shell through a `0.8 s` smooth return to its continuously advancing orbit. During return `attractorTarget=false`; after completion state is `orbiting` and `attractorTarget=true`.
+The public sequence is `orbiting → targeted → pulling → capture_ready → held → placed`; `returning` is an internal recovery state. Cancelling scan or trigger before left-hand takeover sends the shell through a `0.8 s` smooth return to its continuously moving canonical spherical slot. During return `attractorTarget=false`; after completion state is `orbiting` and `attractorTarget=true`.
 
 ### Handoff, placement and re-grab
 
@@ -208,7 +208,7 @@ After every asset preload, Runtime must compose before READY. `runtimeExperience
 
 ## Proto-Astro, Astro bands and small glyphs
 
-Canonical domain detail: [`VR_PROTO_ASTRO_MODEL.md`](VR_PROTO_ASTRO_MODEL.md).
+Canonical domain detail: [`VR_PROTO_ASTRO_MODEL.md`](VR_PROTO_ASTRO_MODEL.md). Spatial ownership and ranges: [`VR_SPHERICAL_LAYERS_MODEL.md`](VR_SPHERICAL_LAYERS_MODEL.md).
 
 **IMPLEMENTED:** semantic input B is routed to `HandModeController`, which owns transient selection between exactly `SHELLS` and `SMALL_GLYPHS`. B switches only currently available bands. `LARGE_GLYPHS` and `RUNESTONES` are **APPROVED / NOT IMPLEMENTED** and are not active runtime enums. Band identity is semantic; exact visual colors/symbols remain open.
 

@@ -6,7 +6,7 @@ Status: **CURRENT concept roadmap**. Runtime authority: [`VR_RUNTIME_MODEL.md`](
 
 - authored Scenario przez Tier 2, radial presentation `4.20`, entry beat materializacji small glyph field w `4.30` oraz stable boundary `4.40`;
 - checkpointy debug są wyłącznie aliasami canonical lifecycle: `P1 → 2.10`, `P2 → 3.10`, `P3 → 4.10`, `P4 → 4.30`; wszystkie używają spawnu `RING` i normalnego `activatePoint()` bez osobnego stanu QA;
-- deterministic, world-stable small glyph field: 6 wariantów po 2 instancje, presentation materialization i hydration;
+- deterministic, world-stable `SMALL_GLYPHS` spherical volume field: 6 wariantów po 2 instancje, presentation materialization i hydration;
 - semantic input `B` i dokładnie dwa aktywne runtime bands: `SHELLS`, `SMALL_GLYPHS`;
 - Small Glyph scan/target/pull oraz transport `FIELD → TARGETING → PULLING → CAPTURE_READY → HELD → PLACED → HELD`: przejęcie lewą Szpilą, world-stable placement i ponowne przejęcie są zaimplementowane;
 - jeden Furnace chamber/content owner dla shells i Small Glyph; istniejąca ekstrakcja naturalnych rodzin `K/T/S/L/R`, persistent `extractedFamilyCodes` oraz domain seam `canAttractLargeGlyph`;
@@ -21,12 +21,7 @@ Poniższe etapy są uporządkowaną kolejką. Nie stanowią opisu aktualnego run
 
 ### A. RADIAL LAYOUT + MOTION
 
-Docelowa kolejność radialna: **platforma → skorupy → małe glify → duże glify**.
-
-- Small Glyph przechodzą na własną docelową orbitę, wewnątrz przyszłej orbity Large Glyph;
-- orbita Small Glyph porusza się przeciwnie do pola skorup;
-- każdy Small Glyph otrzymuje także powolną rotację wokół lokalnego środka ciężkości, analogicznie do skorup;
-- dokładne promienie i prędkości pozostają tuningiem.
+Canonical spatial order and ranges are defined by [`VR_SPHERICAL_LAYERS_MODEL.md`](../technical/VR_SPHERICAL_LAYERS_MODEL.md). Shell and Small Glyph runtime fields are full, concentric spherical volumes; the Small Glyph field rotates rigidly opposite to the Shell field, while local self rotation remains independent.
 
 ### B. SMALL GLYPH AUDIO
 

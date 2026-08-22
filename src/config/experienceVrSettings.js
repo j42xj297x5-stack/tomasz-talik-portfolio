@@ -193,13 +193,17 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
     largeGlyphScaleMultiplier: 3
   },
   shellFieldMotion: { direction: 1 },
+  sphericalLayers: {
+    shells: { thickness: 7.6, angularSpeed: 0.05 },
+    smallGlyphs: { thickness: 7.6, angularSpeed: 0.05 },
+    runeStones: { thickness: 7.6 },
+    stars: { thickness: 7.6 },
+    hiddenGlyphs: { thickness: 7.6 }
+  },
   smallGlyphField: {
     copiesPerVisualVariant: 2,
     materializeDurationSeconds: 1.4,
     staggerSeconds: 0.08,
-    innerRadiusMultiplier: 2,
-    outerRadiusMultiplier: 3,
-    orbitAngularSpeed: 0.05,
     selfRotationSpeed: 0.12,
     direction: -1
   },
@@ -632,6 +636,11 @@ export function normalizeExperienceVrSettings(candidate) {
     shellFieldMotion: {
       direction: candidate.shellFieldMotion?.direction === -1 ? -1 : 1
     },
+    sphericalLayers: Object.fromEntries(Object.entries(defaults.sphericalLayers).map(([key, fallback]) => [key, {
+      thickness: finiteNumber(candidate.sphericalLayers?.[key]?.thickness, fallback.thickness, { min: Number.EPSILON }),
+      ...(Number.isFinite(fallback.angularSpeed) ? { angularSpeed: finiteNumber(candidate.sphericalLayers?.[key]?.angularSpeed,
+        fallback.angularSpeed, { min: 0, max: 2 }) } : {})
+    }])),
     smallGlyphField: {
       copiesPerVisualVariant: Math.round(finiteNumber(candidate.smallGlyphField?.copiesPerVisualVariant,
         defaults.smallGlyphField.copiesPerVisualVariant, { min: 1, max: 8 })),
@@ -639,12 +648,6 @@ export function normalizeExperienceVrSettings(candidate) {
         defaults.smallGlyphField.materializeDurationSeconds, { min: Number.EPSILON }),
       staggerSeconds: finiteNumber(candidate.smallGlyphField?.staggerSeconds,
         defaults.smallGlyphField.staggerSeconds, { min: 0 }),
-      innerRadiusMultiplier: finiteNumber(candidate.smallGlyphField?.innerRadiusMultiplier,
-        defaults.smallGlyphField.innerRadiusMultiplier, { min: 1, max: 10 }),
-      outerRadiusMultiplier: finiteNumber(candidate.smallGlyphField?.outerRadiusMultiplier,
-        defaults.smallGlyphField.outerRadiusMultiplier, { min: 1, max: 10 }),
-      orbitAngularSpeed: finiteNumber(candidate.smallGlyphField?.orbitAngularSpeed,
-        defaults.smallGlyphField.orbitAngularSpeed, { min: 0, max: 2 }),
       selfRotationSpeed: finiteNumber(candidate.smallGlyphField?.selfRotationSpeed,
         defaults.smallGlyphField.selfRotationSpeed, { min: 0, max: 2 }),
       direction: candidate.smallGlyphField?.direction === 1 ? 1 : -1
