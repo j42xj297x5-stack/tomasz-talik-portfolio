@@ -194,11 +194,12 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
   },
   shellFieldMotion: { direction: 1 },
   sphericalLayers: {
+    defaultGapRadiusMultiplier: 0.25,
     shells: { thickness: 7.6, angularSpeed: 0.05 },
     smallGlyphs: { thickness: 7.6, angularSpeed: 0.05 },
     runeStones: { thickness: 7.6 },
     stars: { thickness: 7.6 },
-    hiddenGlyphs: { thickness: 7.6 }
+    hiddenGlyphs: { thickness: 7.6, gapAfterMultiplier: 0 }
   },
   smallGlyphField: {
     copiesPerVisualVariant: 2,
@@ -636,11 +637,22 @@ export function normalizeExperienceVrSettings(candidate) {
     shellFieldMotion: {
       direction: candidate.shellFieldMotion?.direction === -1 ? -1 : 1
     },
-    sphericalLayers: Object.fromEntries(Object.entries(defaults.sphericalLayers).map(([key, fallback]) => [key, {
-      thickness: finiteNumber(candidate.sphericalLayers?.[key]?.thickness, fallback.thickness, { min: Number.EPSILON }),
-      ...(Number.isFinite(fallback.angularSpeed) ? { angularSpeed: finiteNumber(candidate.sphericalLayers?.[key]?.angularSpeed,
-        fallback.angularSpeed, { min: 0, max: 2 }) } : {})
-    }])),
+    sphericalLayers: {
+      defaultGapRadiusMultiplier: finiteNumber(candidate.sphericalLayers?.defaultGapRadiusMultiplier,
+        defaults.sphericalLayers.defaultGapRadiusMultiplier, { min: 0 }),
+      ...Object.fromEntries(Object.entries(defaults.sphericalLayers)
+        .filter(([, fallback]) => fallback && typeof fallback === 'object')
+        .map(([key, fallback]) => [key, {
+          thickness: finiteNumber(candidate.sphericalLayers?.[key]?.thickness, fallback.thickness, { min: Number.EPSILON }),
+          ...(Number.isFinite(fallback.angularSpeed) ? { angularSpeed: finiteNumber(candidate.sphericalLayers?.[key]?.angularSpeed,
+            fallback.angularSpeed, { min: 0, max: 2 }) } : {}),
+          ...(Number.isFinite(candidate.sphericalLayers?.[key]?.gapAfterMultiplier)
+            || Number.isFinite(fallback.gapAfterMultiplier) ? {
+              gapAfterMultiplier: finiteNumber(candidate.sphericalLayers?.[key]?.gapAfterMultiplier,
+                fallback.gapAfterMultiplier ?? defaults.sphericalLayers.defaultGapRadiusMultiplier, { min: 0 })
+            } : {})
+        }]))
+    },
     smallGlyphField: {
       copiesPerVisualVariant: Math.round(finiteNumber(candidate.smallGlyphField?.copiesPerVisualVariant,
         defaults.smallGlyphField.copiesPerVisualVariant, { min: 1, max: 8 })),

@@ -25,12 +25,13 @@ export function resolveVrSphericalLayerRanges({ baseRadius, layers }) {
   if (!Number.isFinite(baseRadius) || baseRadius <= 0) throw new TypeError('baseRadius must be positive and finite');
   if (!Array.isArray(layers) || layers.length < 1) throw new TypeError('layers must be a non-empty array');
   let cursor = baseRadius;
-  return Object.freeze(layers.map(({ id, thickness, status }) => {
-    if (typeof id !== 'string' || !id || !Number.isFinite(thickness) || thickness <= 0) {
-      throw new TypeError('Every spherical layer requires an id and positive finite thickness');
+  return Object.freeze(layers.map(({ id, thickness, gapAfter = 0, status }) => {
+    if (typeof id !== 'string' || !id || !Number.isFinite(thickness) || thickness <= 0
+      || !Number.isFinite(gapAfter) || gapAfter < 0) {
+      throw new TypeError('Every spherical layer requires an id, positive finite thickness and non-negative finite gapAfter');
     }
-    const range = Object.freeze({ id, thickness, innerRadius: cursor, outerRadius: cursor + thickness, status });
-    cursor = range.outerRadius;
+    const range = Object.freeze({ id, thickness, gapAfter, innerRadius: cursor, outerRadius: cursor + thickness, status });
+    cursor = range.outerRadius + gapAfter;
     return range;
   }));
 }

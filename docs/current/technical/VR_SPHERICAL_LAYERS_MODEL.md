@@ -6,15 +6,15 @@
 
 ## Registry i zakresy
 
-Jedynym bazowym promieniem jest effective radius istniejącego glyph ring (`R = 7.6 m`). Ustawienia przechowują osobną dodatnią, skończoną `thickness` każdej warstwy. Resolver kumuluje grubości; pary promieni nie są zapisywane ręcznie.
+Jedynym bazowym promieniem jest effective radius istniejącego glyph ring (`R = 7.6 m`). Ustawienia rozdzielają dwa niezależne pojęcia: dodatnią, skończoną `thickness` warstwy oraz nieujemny `gapAfter`, czyli pustą przestrzeń radialną przed następną warstwą. Domyślny gap wynosi `0.25R`; opcjonalny `gapAfterMultiplier` warstwy może go nadpisać. Gap nie należy do żadnej warstwy, nie ma Object3D, aktora, contentu ani Astro bandu. Resolver kumuluje `thickness + gapAfter`; pary promieni nie są zapisywane ręcznie.
 
-| layer id | thickness | range przy R=7.6 | status |
-| --- | ---: | ---: | --- |
-| `SHELLS` | 7.6 m | 7.6–15.2 m | IMPLEMENTED |
-| `SMALL_GLYPHS` | 7.6 m | 15.2–22.8 m | IMPLEMENTED |
-| `RUNE_STONES` | 7.6 m | 22.8–30.4 m | RESERVED / NOT IMPLEMENTED |
-| `STARS` | 7.6 m | 30.4–38.0 m | RESERVED / NOT IMPLEMENTED |
-| `HIDDEN_GLYPHS` | 7.6 m | 38.0–45.6 m | RESERVED / NOT IMPLEMENTED |
+| layer id | thickness | range przy R=7.6 | gap after | status |
+| --- | ---: | ---: | ---: | --- |
+| `SHELLS` | 7.6 m | 7.6–15.2 m | 1.9 m | IMPLEMENTED |
+| `SMALL_GLYPHS` | 7.6 m | 17.1–24.7 m | 1.9 m | IMPLEMENTED |
+| `RUNE_STONES` | 7.6 m | 26.6–34.2 m | 1.9 m | RESERVED / NOT IMPLEMENTED |
+| `STARS` | 7.6 m | 36.1–43.7 m | 1.9 m | RESERVED / NOT IMPLEMENTED |
+| `HIDDEN_GLYPHS` | 7.6 m | 45.6–53.2 m | 0 m | RESERVED / NOT IMPLEMENTED |
 
 Reserved oznacza wyłącznie kontrakt przestrzenny. Nie powstają dla tych warstw runtime Object3D, content, count, renderer, interaction, band ani Scenario point.
 
@@ -34,6 +34,6 @@ Actor root należy bezpośrednio do `WorldStableRoot`. `VrTiltableFloorRoot` i p
 
 Field-owned Shell i Small Glyph dostają stale przypisany slot. Materialization Small Glyph odbywa się w finalnym slocie. Return interpoluje do transformu canonical slotu odczytywanego w każdym frame, dlatego podąża za rigid field zamiast za martwym snapshotem. `HELD`, `PLACED`, `CAPTURE_READY`, transport i Furnace pozostają poza ownership aktora warstwy. Reset i hydration wracają do tej samej baseline orientation i tych samych slotów.
 
-## Open spatial integration
+## Large Glyph spatial integration
 
-**OPEN SPATIAL INTEGRATION:** obecny Large Glyph radius `3.3R = 25.08 m` przecina reserved Rune Stones layer `3R→4R = 22.8–30.4 m`. Konflikt wymaga osobnej decyzji przed implementacją Rune Stones. Ten fix nie przesuwa Large Glyph, nie zmienia warstwy Rune Stones i nie dodaje exclusion volume.
+Obecny Large Glyph radius `3.3R = 25.08 m` zajmuje skonfigurowany pusty gap `24.7–26.6 m` pomiędzy `SMALL_GLYPHS` i reserved `RUNE_STONES`. Nie należy do spherical layer registry i nie przecina żadnej z tych warstw.
