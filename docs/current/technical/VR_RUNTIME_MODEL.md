@@ -214,6 +214,8 @@ Canonical domain detail: [`VR_PROTO_ASTRO_MODEL.md`](VR_PROTO_ASTRO_MODEL.md). S
 
 `createVrSmallGlyphSystem` owns a world-stable, deterministic field of 12 instances: six visual variants with two instances each. Scenario presentation materializes the field and hydration restores stable `MATERIALIZED`. Identity is resolved through the canonical Proto-Astro adapter rather than inferred directly from asset number.
 
+The spherical registry resolves layer thickness independently from the empty `gapAfter` between adjacent layers. At the current `R = 7.6 m`, Shells occupy `7.6–15.2 m`, the first empty gap is `15.2–17.1 m`, and Small Glyphs occupy `17.1–24.7 m`; domain actors, parent ownership and deterministic slot math are unchanged.
+
 Small-glyph Astro transport is **IMPLEMENTED**:
 
 ```text
