@@ -1,16 +1,4 @@
 prefix_rule(
-    pattern = ["git", "push"],
-    decision = "forbidden",
-    justification = "Push należy do Wizjonera; Codex pozostawia lokalne zmiany robocze.",
-)
-
-prefix_rule(
-    pattern = ["git", "commit"],
-    decision = "forbidden",
-    justification = "Commit należy do Wizjonera; Codex pozostawia lokalne zmiany robocze.",
-)
-
-prefix_rule(
     pattern = ["git", "merge"],
     decision = "forbidden",
     justification = "Merge należy do Wizjonera; Codex pozostawia lokalne zmiany robocze.",
@@ -47,7 +35,7 @@ prefix_rule(
 )
 
 prefix_rule(
-    pattern = ["gh", "pr", ["create", "merge", "review", "edit", "close", "reopen", "ready"]],
+    pattern = ["gh", "pr", ["merge", "review", "edit", "close", "reopen", "ready"]],
     decision = "forbidden",
-    justification = "Mutowanie pull requestów należy do Wizjonera; Codex pozostawia lokalne zmiany robocze.",
+    justification = "Akceptacja, merge i mutowanie istniejących pull requestów należą do Wizjonera.",
 )
