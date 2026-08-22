@@ -42,8 +42,10 @@ export function createVrSphericalLayerActor({ parent, layer, slotCount, angularS
   if (direction !== 1 && direction !== -1) throw new TypeError('direction must be 1 or -1');
   if (!Number.isFinite(angularSpeed) || angularSpeed < 0) throw new TypeError('angularSpeed must be finite and non-negative');
   const { id, innerRadius, outerRadius, thickness } = layer;
-  if (!Number.isFinite(innerRadius) || !Number.isFinite(outerRadius) || outerRadius <= innerRadius
-    || thickness !== outerRadius - innerRadius) throw new TypeError(`Invalid spherical layer range: ${id}`);
+  if (typeof id !== 'string' || !id || !Number.isFinite(innerRadius) || !Number.isFinite(outerRadius)
+    || !Number.isFinite(thickness) || innerRadius < 0 || outerRadius <= innerRadius || thickness <= 0) {
+    throw new TypeError(`Invalid spherical layer range: ${id}`);
+  }
   const object = new THREE.Group(); object.name = `VrSphericalLayer:${id}`; parent.add(object);
   const phase = unitPhase(id, 'direction') * Math.PI * 2;
   const radialPhase = unitPhase(id, 'radial');
@@ -52,20 +54,30 @@ export function createVrSphericalLayerActor({ parent, layer, slotCount, angularS
   const baseline = new THREE.Quaternion().setFromAxisAngle(axis, unitPhase(id, 'orientation') * Math.PI * 2);
   let elapsed = 0, disposed = false;
   const motion = new THREE.Quaternion();
+  const slots = Array.from({ length: slotCount }, (_, index) => {
+    const y = 1 - 2 * (index + 0.5) / slotCount;
+    const horizontal = Math.sqrt(Math.max(0, 1 - y * y));
+    const theta = GOLDEN_ANGLE * index + phase;
+    return {
+      direction: new THREE.Vector3(Math.cos(theta) * horizontal, y, Math.sin(theta) * horizontal).normalize(),
+      radialValue: (radialPhase + (index + 0.5) * RADIAL_CONJUGATE) % 1,
+      transformsByClearance: new Map()
+    };
+  });
 
   function getSlotTransform(index, clearance = 0) {
     if (!Number.isInteger(index) || index < 0 || index >= slotCount) throw new RangeError(`Invalid ${id} slot index: ${index}`);
     if (!Number.isFinite(clearance) || clearance < 0) throw new TypeError('clearance must be finite and non-negative');
+    const slot = slots[index];
+    const cachedTransform = slot.transformsByClearance.get(clearance);
+    if (cachedTransform) return cachedTransform;
     const effectiveInner = innerRadius + clearance, effectiveOuter = outerRadius - clearance;
     if (effectiveOuter <= effectiveInner) throw new Error(`Spherical layer ${id}: clearance ${clearance} exceeds available thickness ${thickness}`);
-    const y = 1 - 2 * (index + 0.5) / slotCount;
-    const horizontal = Math.sqrt(Math.max(0, 1 - y * y));
-    const theta = GOLDEN_ANGLE * index + phase;
-    const directionVector = new THREE.Vector3(Math.cos(theta) * horizontal, y, Math.sin(theta) * horizontal).normalize();
-    const u = (radialPhase + (index + 0.5) * RADIAL_CONJUGATE) % 1;
-    const radius = Math.cbrt(effectiveInner ** 3 + u * (effectiveOuter ** 3 - effectiveInner ** 3));
-    return { position: directionVector.multiplyScalar(radius), quaternion: new THREE.Quaternion(), radius,
+    const radius = Math.cbrt(effectiveInner ** 3 + slot.radialValue * (effectiveOuter ** 3 - effectiveInner ** 3));
+    const transform = { position: slot.direction.clone().multiplyScalar(radius), quaternion: new THREE.Quaternion(), radius,
       clearance, effectiveInner, effectiveOuter };
+    slot.transformsByClearance.set(clearance, transform);
+    return transform;
   }
   function update(delta = 0) { if (disposed) return; elapsed += Math.max(0, Number.isFinite(delta) ? delta : 0);
     object.quaternion.copy(baseline).multiply(motion.setFromAxisAngle(axis, elapsed * angularSpeed * direction)); }
