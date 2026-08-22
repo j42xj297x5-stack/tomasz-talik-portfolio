@@ -1,4 +1,5 @@
 import * as THREE from '../../vendor/three.js';
+import { createVrSphericalLayerActor } from '../world/createVrSphericalLayerActor.js';
 
 const SYSTEM_STATE = Object.freeze({
   HIDDEN: 'HIDDEN',
@@ -13,21 +14,13 @@ const GLYPH_STATE = Object.freeze({
   PLACED: 'PLACED'
 });
 
-function requireFiniteVector(value, name) {
-  if (!value || !Number.isFinite(value.x) || !Number.isFinite(value.y) || !Number.isFinite(value.z)) {
-    throw new TypeError(`${name} must have finite x, y and z values`);
-  }
-}
-
 export function createVrSmallGlyphSystem({
   parent,
   assetManager,
   assetIds,
   copiesPerVisualVariant,
-  center,
-  innerRadius,
-  outerRadius,
-  orbitAngularSpeed,
+  layer,
+  angularSpeed,
   selfRotationSpeed,
   direction,
   materializeDurationSeconds,
@@ -47,15 +40,6 @@ export function createVrSmallGlyphSystem({
   if (!Number.isInteger(copiesPerVisualVariant) || copiesPerVisualVariant < 1) {
     throw new TypeError('copiesPerVisualVariant must be an integer greater than or equal to 1');
   }
-  requireFiniteVector(center, 'center');
-  if (!Number.isFinite(innerRadius) || innerRadius <= 0) {
-    throw new TypeError('innerRadius must be finite and greater than 0');
-  }
-  if (!Number.isFinite(outerRadius) || outerRadius <= innerRadius) {
-    throw new TypeError('outerRadius must be finite and greater than innerRadius');
-  }
-  if (!Number.isFinite(orbitAngularSpeed) || orbitAngularSpeed < 0)
-    throw new TypeError('orbitAngularSpeed must be finite and greater than or equal to 0');
   if (!Number.isFinite(selfRotationSpeed) || selfRotationSpeed < 0)
     throw new TypeError('selfRotationSpeed must be finite and greater than or equal to 0');
   if (direction !== 1 && direction !== -1) throw new TypeError('direction must be 1 or -1');
@@ -67,13 +51,14 @@ export function createVrSmallGlyphSystem({
   }
   if (typeof onPresentationCompleted !== 'function') throw new TypeError('onPresentationCompleted must be a function');
 
+  const instanceCount = assetIds.length * copiesPerVisualVariant;
+  const layerActor = createVrSphericalLayerActor({ parent, layer, slotCount: instanceCount, angularSpeed, direction });
   const object = new THREE.Group();
   object.name = 'VrSmallGlyphField';
   object.visible = false;
-  parent.add(object);
+  layerActor.object.add(object);
 
   const records = [];
-  const instanceCount = assetIds.length * copiesPerVisualVariant;
   const goldenAngle = Math.PI * (3 - Math.sqrt(5));
   const idleAmplitude = idleMotionSettings.verticalAmplitude ?? 0.20;
   const idleAngularSpeed = Math.PI * 2 / (idleMotionSettings.verticalCycleDuration ?? 4.8);
@@ -90,6 +75,7 @@ export function createVrSmallGlyphSystem({
       instance.add(visualModel);
       object.add(instance);
       instance.updateMatrixWorld(true);
+      const boundingSphere = new THREE.Box3().setFromObject(visualModel).getBoundingSphere(new THREE.Sphere());
       const visualBounds = new THREE.Box3().setFromObject(visualModel);
       if (visualBounds.isEmpty()) throw new Error(`Small glyph visual has empty bounds: ${assetId}`);
       const visualCenter = visualBounds.getCenter(new THREE.Vector3());
@@ -99,7 +85,6 @@ export function createVrSmallGlyphSystem({
       instance.worldToLocal(visualCenter);
       visualModel.position.sub(visualCenter);
       instance.updateMatrixWorld(true);
-      const directionY = 1 - (2 * (index + 0.5)) / instanceCount;
       const variantLabel = String(variantIndex + 1).padStart(2, '0');
       const copyLabel = String.fromCharCode(97 + copyIndex);
       instance.name = `small-glyph-${variantLabel}-${copyLabel}`;
@@ -115,10 +100,8 @@ export function createVrSmallGlyphSystem({
         instance,
         authoredQuaternion: instance.quaternion.clone(),
         authoredScale: instance.scale.clone(),
-        phase: index * goldenAngle,
-        radius: innerRadius + (outerRadius - innerRadius) * ((index + 0.5) / instanceCount),
-        inclination: Math.asin(directionY),
-        ascendingNode: (index * goldenAngle * 0.61) % (Math.PI * 2),
+        slotIndex: index,
+        boundingRadius: boundingSphere.radius,
         fieldPosition: new THREE.Vector3(),
         fieldQuaternion: new THREE.Quaternion(),
         placedPosition: new THREE.Vector3(),
@@ -141,14 +124,8 @@ export function createVrSmallGlyphSystem({
   const fullPresentationDuration = materializeDurationSeconds + (instanceCount - 1) * staggerSeconds;
 
   function updateCanonicalFieldTransform(record) {
-    const angle = record.phase + fieldElapsed * orbitAngularSpeed * direction;
-    const x = Math.cos(angle) * record.radius;
-    const planeY = Math.sin(angle) * record.radius;
-    const y = center.y + planeY * Math.sin(record.inclination);
-    const z = planeY * Math.cos(record.inclination);
-    const cosNode = Math.cos(record.ascendingNode), sinNode = Math.sin(record.ascendingNode);
-    record.fieldPosition.set(center.x + x * cosNode - z * sinNode, y,
-      center.z + x * sinNode + z * cosNode);
+    try { record.fieldPosition.copy(layerActor.getSlotTransform(record.slotIndex, record.boundingRadius).position); }
+    catch (error) { throw new Error(`Small Glyph layer ${layer.id}, asset ${record.instance.userData.smallGlyphAssetId}, bounding radius ${record.boundingRadius}, available thickness ${layer.thickness}: ${error.message}`); }
     record.fieldQuaternion.copy(record.authoredQuaternion).multiply(fieldRotationQuaternion.setFromAxisAngle(
       record.idleAxis, fieldElapsed * selfRotationSpeed * direction));
   }
@@ -212,6 +189,7 @@ export function createVrSmallGlyphSystem({
     const safeDelta = Math.max(0, Number.isFinite(delta) ? delta : 0);
     elapsed += safeDelta;
     if (state === SYSTEM_STATE.MATERIALIZED) fieldElapsed += safeDelta;
+    layerActor.update(state === SYSTEM_STATE.MATERIALIZED ? safeDelta : 0);
     records.forEach((record) => {
       updateCanonicalFieldTransform(record);
       if (record.instance.userData.smallGlyphState !== GLYPH_STATE.FIELD) return;
@@ -252,6 +230,7 @@ export function createVrSmallGlyphSystem({
     state = SYSTEM_STATE.HIDDEN;
     elapsed = 0;
     fieldElapsed = 0;
+    layerActor.reset();
     completionSent = false;
     object.visible = false;
     records.forEach((record) => restoreRecord(record, GLYPH_STATE.HIDDEN, false));
@@ -267,20 +246,20 @@ export function createVrSmallGlyphSystem({
     state = SYSTEM_STATE.MATERIALIZED;
     elapsed = fullPresentationDuration;
     fieldElapsed = 0;
+    layerActor.reset();
     completionSent = true;
     records.forEach((record) => restoreRecord(record, GLYPH_STATE.FIELD));
   }
 
   function dispose() {
     if (disposed) return;
-    parent.remove(object);
-    object.clear();
+    object.clear(); layerActor.dispose();
     records.length = 0;
     disposed = true;
   }
 
   return {
-    object,
+    object, layerActor,
     beginPresentation,
     update,
     reset,

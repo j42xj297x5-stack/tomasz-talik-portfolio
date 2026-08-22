@@ -32,6 +32,7 @@ import { createVrFirstRingFlow } from './xr/progression/createVrFirstRingFlow.js
 import { createVrProgressionSemanticHandoff } from './xr/progression/createVrProgressionSemanticHandoff.js';
 import { createVrProgressionShortcut } from './xr/progression/applyVrProgressionShortcut.js';
 import { createVrShellSystem } from './xr/shells/createVrShellSystem.js';
+import { resolveVrSphericalLayerRanges, VR_SPHERICAL_LAYER_IDS } from './xr/world/createVrSphericalLayerActor.js';
 import { createVrShellAttractorInteraction } from './xr/shells/createVrShellAttractorInteraction.js';
 import { createVrSemanticInput } from './xr/input/createVrSemanticInput.js';
 import { createVrHandModeController } from './xr/input/createVrHandModeController.js';
@@ -238,19 +239,30 @@ worldStableRoot.add(glyphRing);
 const glyphOrbit = createVrGlyphOrbit({ nodes, center: new THREE.Vector3(0, settings.spatial.worldStableCenterY, 0),
   settings: settings.glyphRing, entryDirection, radius: settings.spatial.ringRadius });
 const floorWalkRadius = glyphOrbit.effectiveRadius;
+const sphericalLayerRanges = resolveVrSphericalLayerRanges({
+  baseRadius: glyphOrbit.effectiveRadius,
+  layers: [
+    { id: VR_SPHERICAL_LAYER_IDS.SHELLS, ...settings.sphericalLayers.shells, status: 'IMPLEMENTED' },
+    { id: VR_SPHERICAL_LAYER_IDS.SMALL_GLYPHS, ...settings.sphericalLayers.smallGlyphs, status: 'IMPLEMENTED' },
+    { id: VR_SPHERICAL_LAYER_IDS.RUNE_STONES, ...settings.sphericalLayers.runeStones, status: 'RESERVED' },
+    { id: VR_SPHERICAL_LAYER_IDS.STARS, ...settings.sphericalLayers.stars, status: 'RESERVED' },
+    { id: VR_SPHERICAL_LAYER_IDS.HIDDEN_GLYPHS, ...settings.sphericalLayers.hiddenGlyphs, status: 'RESERVED' }
+  ]
+});
+const sphericalLayer = (id) => sphericalLayerRanges.find((range) => range.id === id);
 const playerRigSpawnLocalPosition = playerRig.position.clone();
 const playerRigSpawnLocalQuaternion = playerRig.quaternion.clone();
 const playerRigSpawnLocalScale = playerRig.scale.clone();
-const shellSystem = createVrShellSystem({ parent: worldStableRoot, assetManager, baseRadius: glyphOrbit.effectiveRadius,
-  centerY: settings.spatial.worldStableCenterY,
+const shellSystem = createVrShellSystem({ parent: worldStableRoot, assetManager,
+  layer: sphericalLayer(VR_SPHERICAL_LAYER_IDS.SHELLS),
+  angularSpeed: settings.sphericalLayers.shells.angularSpeed,
   emissionSettings: settings.shellAttractor,
   idleMotionSettings: settings.placedObjectIdleMotion,
   direction: settings.shellFieldMotion.direction });
-const smallGlyphInnerRadius = glyphOrbit.effectiveRadius * settings.smallGlyphField.innerRadiusMultiplier;
-const smallGlyphOuterRadius = glyphOrbit.effectiveRadius * settings.smallGlyphField.outerRadiusMultiplier;
+const smallGlyphLayer = sphericalLayer(VR_SPHERICAL_LAYER_IDS.SMALL_GLYPHS);
 const smallGlyphMaxTargetDistance = glyphOrbit.effectiveRadius
   * settings.shellAttractor.targetDistanceRadiusMultiplier;
-if (smallGlyphOuterRadius > smallGlyphMaxTargetDistance) {
+if (smallGlyphLayer.outerRadius > smallGlyphMaxTargetDistance) {
   throw new Error('Small Glyph radial layer exceeds the configured Astrolabium target distance.');
 }
 const largeGlyphTargetRadius = glyphOrbit.effectiveRadius
@@ -267,10 +279,8 @@ const smallGlyphSystem = createVrSmallGlyphSystem({
     'small-glyph-relic-6'
   ],
   copiesPerVisualVariant: settings.smallGlyphField.copiesPerVisualVariant,
-  center: { x: 0, y: settings.spatial.worldStableCenterY, z: 0 },
-  innerRadius: smallGlyphInnerRadius,
-  outerRadius: smallGlyphOuterRadius,
-  orbitAngularSpeed: settings.smallGlyphField.orbitAngularSpeed,
+  layer: smallGlyphLayer,
+  angularSpeed: settings.sphericalLayers.smallGlyphs.angularSpeed,
   selfRotationSpeed: settings.smallGlyphField.selfRotationSpeed,
   direction: settings.smallGlyphField.direction,
   materializeDurationSeconds: settings.smallGlyphField.materializeDurationSeconds,

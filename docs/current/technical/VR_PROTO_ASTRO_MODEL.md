@@ -114,3 +114,8 @@ Rodzina symboli bandów i dokładne kolory nie są jeszcze zaprojektowane. Panel
 ## 15. QA STATUS
 
 Istniejące potwierdzenie `bootstrap READY` ma status **HARDWARE VALIDATED — Meta Quest 3S** wyłącznie w dotychczas potwierdzonym zakresie. `4.20`, `4.30`, `4.40`, field, B switching, pull/handoff i Furnace extraction nie uzyskują w tej synchronizacji hardware/perceptual PASS.
+
+
+## Spherical field ownership
+
+Natural Small Glyph `FIELD` positions belong to the world-stable `SMALL_GLYPHS` spherical volume described in [`VR_SPHERICAL_LAYERS_MODEL.md`](VR_SPHERICAL_LAYERS_MODEL.md), not to per-object tilted orbits. Materialization and recovery use the same deterministic moving slots; pull, handoff, placement and Furnace remain owned by the existing domain actors.
