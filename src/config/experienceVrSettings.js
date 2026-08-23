@@ -179,11 +179,10 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
   largeGlyphs: {
     scaleMultiplier: 3,
     initialRadius: 8.5,
-    rotation: { enabled: true, angularSpeed: 0.14, direction: 1 }
+    rotation: { enabled: true, angularSpeed: 0.14, direction: 1 },
+    elevation: { offset: 2.4, durationSeconds: 2.5 }
   },
   postRingPresentation: {
-    glyphVerticalOffset: 2.4,
-    glyphElevationDuration: 2.5,
     shellRevealDuration: 1.5
   },
   p2RadialPresentation: {
@@ -624,13 +623,15 @@ export function normalizeExperienceVrSettings(candidate) {
         angularSpeed: finiteNumber(candidate.largeGlyphs?.rotation?.angularSpeed,
           defaults.largeGlyphs.rotation.angularSpeed, { min: 0, max: 2 }),
         direction: candidate.largeGlyphs?.rotation?.direction === -1 ? -1 : 1
+      },
+      elevation: {
+        offset: finiteNumber(candidate.largeGlyphs?.elevation?.offset,
+          defaults.largeGlyphs.elevation.offset, { min: 0, max: 20 }),
+        durationSeconds: finiteNumber(candidate.largeGlyphs?.elevation?.durationSeconds,
+          defaults.largeGlyphs.elevation.durationSeconds, { min: 0.1, max: 30 })
       }
     },
     postRingPresentation: {
-      glyphVerticalOffset: finiteNumber(candidate.postRingPresentation?.glyphVerticalOffset,
-        defaults.postRingPresentation.glyphVerticalOffset, { min: 0, max: 20 }),
-      glyphElevationDuration: finiteNumber(candidate.postRingPresentation?.glyphElevationDuration,
-        defaults.postRingPresentation.glyphElevationDuration, { min: 0.1, max: 30 }),
       shellRevealDuration: finiteNumber(candidate.postRingPresentation?.shellRevealDuration,
         defaults.postRingPresentation.shellRevealDuration, { min: 0, max: 30 })
     },
