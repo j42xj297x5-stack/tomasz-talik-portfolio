@@ -41,13 +41,13 @@ export function createVrPostRingPresentation({ largeGlyphActor, shellSystem, set
     shellSystem.setPresentationVisible(false);
   }
   function hydrateScenarioState(state) {
-    if (state?.shellFieldVisible !== true || typeof state.shellInteractionEnabled !== 'boolean'
-      || state.mainGlyphsElevated !== true) throw new Error('Unsupported post-ring Scenario state');
+    if (state?.shellFieldVisible !== true || typeof state.shellInteractionEnabled !== 'boolean') {
+      throw new Error('Unsupported post-ring Scenario state');
+    }
     shellStarted = glyphStarted = completed = true;
     elapsed = settings.shellRevealDuration;
     shellSystem.setPresentationVisible(true);
     shellSystem.setInteractionEnabled(state.shellInteractionEnabled);
-    largeGlyphActor.hydrateScenarioState({ stage: VR_LARGE_GLYPH_ELEVATED_STAGE });
   }
   function dispose() { if (!disposed) { reset(); disposed = true; } }
   return { revealShellField, elevateMainGlyphs, enableShellFieldInteraction, update, reset, hydrateScenarioState, dispose,
