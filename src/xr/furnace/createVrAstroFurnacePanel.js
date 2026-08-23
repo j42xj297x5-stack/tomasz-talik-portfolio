@@ -172,23 +172,68 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
       const column = index % 3;
       const row = Math.floor(index / 3);
       const x = 90 + column * 455;
-      const y = 310 + row * 315;
+      const y = 310 + row * 160;
       const family = families.get(protoAstro.descriptor.familyCode);
       const supported = Boolean(family);
       const extracted = family?.extracted === true;
       const processing = supported && insertedAssetId === assetId
         && ['INSERTED', 'CONSUMING', 'CONSUMED'].includes(contentState);
       const color = extracted ? accents.complete : processing ? accents.process : supported ? accents.attractor : accents.idle;
-      panelRect(x, y, 405, 270, { variant: 'monitor', active: supported && !extracted,
+      panelRect(x, y, 405, 145, { variant: 'monitor', active: supported && !extracted,
         completed: extracted, locked: !supported, accentColor: color });
-      text(protoAstro.descriptor.syllable, x + 24, y + 40, 25, color);
-      drawMaterialCardVisual(context, { x: x + 10, y: y + 48, width: 385, height: 180,
-        glyphRatio: .46, padding: 10, glyphImage: image, color,
+      text(protoAstro.descriptor.syllable, x + 20, y + 32, 22, color);
+      drawMaterialCardVisual(context, { x: x + 8, y: y + 34, width: 389, height: 82,
+        glyphRatio: .46, padding: 6, glyphImage: image, color,
         drawPreview: ({ cx, cy, scale }) => drawSmallGlyphWireframe(context,
           { assetId, cx, cy, scale, color, alpha: supported ? .95 : .34 }) });
       text(extracted ? 'WYEKSTRAHOWANY' : processing ? 'PRZETWARZANIE' : supported ? 'GOTOWY' : 'NIEAKTYWNY',
-        x + 24, y + 250, 18, color);
+        x + 20, y + 134, 16, color);
     });
+    drawSmallGlyphExtractionMonitor();
+  }
+  function drawSmallGlyphExtractionMonitor() {
+    const x = 90, y = 655, width = 1315, height = 300;
+    const protoAstro = contentSource?.getInsertedSmallGlyphProtoAstro?.() ?? null;
+    const contentState = contentSource?.getState?.() ?? 'EMPTY';
+    const contentKind = contentSource?.getInsertedContentKind?.() ?? null;
+    const processKind = processSource?.getProcessKind?.() ?? null;
+    const concernsSmallGlyph = contentKind === 'SMALL_GLYPH'
+      && (processKind === null || processKind === 'SMALL_GLYPH_ESSENCE_EXTRACTION');
+    const telemetry = concernsSmallGlyph ? readTelemetry() : resolveProcessTelemetry({ contentState: 'EMPTY' });
+    const color = accents[telemetry.colorKey];
+    panelRect(x, y, width, height, { variant: 'monitor', active: concernsSmallGlyph && telemetry.active,
+      completed: concernsSmallGlyph && telemetry.phase === 'COMPLETE', accentColor: color });
+    text('PRZEBIEG EKSTRAKCJI', x + 28, y + 42, 22, color);
+    drawInsertedSmallGlyphWireframe(concernsSmallGlyph ? protoAstro : null, telemetry, x + 300, y + 155, 118);
+    text(protoAstro && concernsSmallGlyph ? `MAŁY GLIF // ${protoAstro.descriptor.syllable}` : 'MAŁY GLIF // OCZEKIWANIE',
+      x + 610, y + 92, 23, protoAstro && concernsSmallGlyph ? color : accents.idle);
+    telemetry.label.split('\n').forEach((line, index) => text(`${index ? '' : 'STATUS // '}${line}`,
+      x + 610, y + 137 + index * 28, 20, color));
+    const progress = concernsSmallGlyph ? telemetry.extractionProgress : 0;
+    const barX = x + 610, barY = y + 218, barWidth = 560;
+    context.fillStyle = '#18303c'; context.fillRect(barX, barY, barWidth, 16);
+    context.fillStyle = color; context.fillRect(barX, barY, barWidth * progress, 16);
+    text(`${Math.round(progress * 100)}%`, barX + barWidth + 18, barY + 17, 20, '#b9dce8');
+    const contentLabels = { INSERTED: 'GOTOWY', CONSUMING: 'EKSTRAKCJA', CONSUMED: 'ZABEZPIECZONO' };
+    if (concernsSmallGlyph && contentLabels[contentState]) text(`MATERIAŁ // ${contentLabels[contentState]}`, x + 610, y + 270, 18, '#88b8cf');
+  }
+  function drawInsertedSmallGlyphWireframe(protoAstro, telemetry, cx, cy, scale) {
+    const segments = protoAstro ? SMALL_GLYPH_WIREFRAME_DATA.byAssetId[protoAstro.assetId]?.segments3d : null;
+    if (!segments?.length || ['COOLDOWN', 'COMPLETE'].includes(telemetry.phase)) return;
+    const dissolve = telemetry.phase === 'EXTRACTION' ? telemetry.extractionProgress : 0;
+    const processing = telemetry.active || (contentSource?.getState?.() ?? 'EMPTY') !== 'INSERTED';
+    const yaw = telemetryElapsed * (processing ? .38 : .16), cosY = Math.cos(yaw), sinY = Math.sin(yaw);
+    const tilt = -.28, cosX = Math.cos(tilt), sinX = Math.sin(tilt);
+    const project = (x, y, z) => { const rx = x * cosY + z * sinY, rz = -x * sinY + z * cosY;
+      const ry = y * cosX - rz * sinX, depth = 1 / Math.max(.65, 1 + (y * sinX + rz * cosX) * .16);
+      return [cx + rx * scale * depth, cy - ry * scale * depth]; };
+    context.save(); context.globalAlpha = .78 + .22 * Math.sin(telemetryElapsed * (processing ? 5 : 3));
+    context.strokeStyle = accents[telemetry.colorKey]; context.lineWidth = processing ? 2.2 : 1.7;
+    context.shadowColor = accents[telemetry.colorKey]; context.shadowBlur = processing ? 12 : 7; context.beginPath();
+    segments.forEach((segment) => { if (!wireframeDissolveVisible(segment, dissolve)) return;
+      const a = project(segment.ax, segment.ay, segment.az), b = project(segment.bx, segment.by, segment.bz);
+      context.moveTo(a[0], a[1]); context.lineTo(b[0], b[1]); });
+    context.stroke(); context.restore();
   }
   function drawSphere(progress) {
     interactiveRegions = [{ id: 'back-modules', x: 90, y: 55, width: 260, height: 70, enabled: true }];
