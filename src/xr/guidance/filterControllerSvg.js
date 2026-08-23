@@ -1,4 +1,4 @@
-export const CONTROLLER_SEMANTIC_IDS = Object.freeze(['trigger', 'grab', 'rotate', 'move', 'X', 'Y']);
+export const CONTROLLER_SEMANTIC_IDS = Object.freeze(['trigger', 'grab', 'rotate', 'move', 'A', 'B', 'X', 'Y']);
 export const INITIAL_VISIBLE_CONTROL_IDS = Object.freeze(['trigger', 'grab', 'rotate', 'move', 'Y']);
 
 export function normalizeVisibleControlIds(ids) {

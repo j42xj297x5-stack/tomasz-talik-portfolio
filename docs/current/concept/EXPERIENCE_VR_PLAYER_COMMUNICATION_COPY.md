@@ -793,3 +793,11 @@ Runtime source of truth mirrors the approved PL catalog in `src/xr/guidance/vrMo
 - `knowledge.asterion.whatIsIt` — `PERSISTENT`; two approved blocks. There is no `knowledge.asterion.why`.
 
 P2 (`progression.p2.smallGlyphsIntro`, `knowledge.p2.tuneGlyphs`) remains sync-only until its real gameplay boundary. All `progression.p3.*` entries remain future copy and are not implemented gameplay flows.
+
+## Current P2 completion contract (4.40–4.80)
+
+The implemented canonical boundary is `4.80`. Point `4.40` owns a dedicated observation window; `4.50` exposes Monkey attention only; `4.60` plays the mandatory P2 message; `4.70` grants the existing B, Small Glyph, Furnace essence, family-gated Large Glyph, crystal, Reliquary and order-3 card rights; five order-3 cards complete into stable point `4.80`.
+
+Mandatory Monkey communication uses one guidance contract: attention arcs never start copy; pointing and triggering Monkey consumes the trigger for the mandatory beat; ordinary menu, history and knowledge stay hidden through attention and playback; the menu returns only after the final automatic block. This contract is active for the post-ring message at `3.30` and P2 at `4.50–4.60`.
+
+Stable reconstruction at `4.80` contains completed Tier 3, all page IDs/orders through 3, progress-floor completion through Tier 3, consumed crystal Tier 3, and Proto-Astro natural essences `K/T/S/L/R`. It reconstructs no transient pulls, held objects, timers or panels. P3 and later mechanics are not implemented.
