@@ -10,7 +10,8 @@ export function createVrLargeGlyphActor({
   assetManager = null,
   initialRadius = 8.5,
   worldY = 0,
-  scaleMultiplier = 3
+  scaleMultiplier = 3,
+  rotation = { enabled: true, angularSpeed: 0.14, direction: 1 }
 }) {
   if (!Array.isArray(items) || items.length !== LARGE_GLYPH_COUNT) {
     throw new TypeError('VrLargeGlyphActor requires exactly five Large Glyph identities.');
@@ -30,6 +31,7 @@ export function createVrLargeGlyphActor({
   object.add(transientRoot);
 
   const slots = [];
+  const assetForward = new THREE.Vector3(0, 0, 1);
   const nodes = items.map((item, index) => {
     const identity = resolveVrPageProtoAstro({ glyphId: item.id });
     if (!identity) throw new TypeError(`Missing canonical Proto-Astro identity for Large Glyph ${item.id}.`);
@@ -37,6 +39,7 @@ export function createVrLargeGlyphActor({
     const slot = new THREE.Group();
     slot.name = `Slot_${identity.descriptor.syllable}`;
     slot.position.set(Math.cos(angle) * initialRadius, 0, Math.sin(angle) * initialRadius);
+    slot.quaternion.setFromUnitVectors(assetForward, slot.position.clone().normalize().negate());
     slot.userData.item = item;
     slot.userData.identity = identity.descriptor;
     rotationRoot.add(slot);
@@ -44,19 +47,37 @@ export function createVrLargeGlyphActor({
 
     const node = createGlyphVisualNode(item, { assetManager });
     node.name = identity.descriptor.syllable;
-    node.position.copy(slot.position);
+    node.position.set(0, 0, 0);
+    node.quaternion.identity();
     node.scale.setScalar(scaleMultiplier);
     node.userData.baseScale = scaleMultiplier;
     node.userData.orbitAngle = angle;
     node.userData.orbitRadius = initialRadius;
     node.userData.yOffset = 0;
     node.userData.largeGlyphSlot = slot;
-    object.add(node);
+    slot.add(node);
     return node;
   });
 
   const baseline = Object.freeze({ worldY, initialRadius, scaleMultiplier });
+  let currentRadius = initialRadius;
   let disposed = false;
+  function setCompatibilityRadius(nextRadius) {
+    if (disposed || !Number.isFinite(nextRadius) || nextRadius <= 0) return false;
+    currentRadius = nextRadius;
+    slots.forEach((slot, index) => {
+      const angle = (Math.PI * 2 * index) / LARGE_GLYPH_COUNT;
+      slot.position.set(Math.cos(angle) * currentRadius, 0, Math.sin(angle) * currentRadius);
+    });
+    return true;
+  }
+  function update(deltaSeconds = 0) {
+    if (disposed || !rotation.enabled) return;
+    const delta = Math.max(0, Number.isFinite(deltaSeconds) ? deltaSeconds : 0);
+    // Three.js Y rotation maps an initial angle to angle - rotation.y, so the
+    // negative sign preserves the legacy angle = initialAngle + phase motion.
+    rotationRoot.rotation.y -= delta * rotation.angularSpeed * rotation.direction;
+  }
   function reset() {
     object.position.set(0, baseline.worldY, 0);
     object.quaternion.identity();
@@ -65,8 +86,11 @@ export function createVrLargeGlyphActor({
     object.userData.stage = VR_LARGE_GLYPH_INITIAL_STAGE;
     rotationRoot.position.set(0, 0, 0);
     rotationRoot.quaternion.identity();
+    currentRadius = baseline.initialRadius;
     nodes.forEach((node, index) => {
-      node.position.copy(slots[index].position);
+      const angle = (Math.PI * 2 * index) / LARGE_GLYPH_COUNT;
+      slots[index].position.set(Math.cos(angle) * currentRadius, 0, Math.sin(angle) * currentRadius);
+      node.position.set(0, 0, 0);
       node.quaternion.identity();
       node.scale.setScalar(baseline.scaleMultiplier);
       node.userData.baseScale = baseline.scaleMultiplier;
@@ -82,6 +106,9 @@ export function createVrLargeGlyphActor({
     slots: Object.freeze(slots),
     transientRoot,
     nodes: Object.freeze(nodes),
+    update,
+    getCompatibilityRadius: () => currentRadius,
+    setCompatibilityRadius,
     reset,
     dispose() {
       if (disposed) return;

@@ -241,13 +241,13 @@ const largeGlyphActor = createVrLargeGlyphActor({
   assetManager,
   initialRadius: settings.largeGlyphs.initialRadius,
   worldY: settings.spatial.worldStableCenterY,
-  scaleMultiplier: settings.largeGlyphs.scaleMultiplier
+  scaleMultiplier: settings.largeGlyphs.scaleMultiplier,
+  rotation: settings.largeGlyphs.rotation
 });
 const { nodes } = largeGlyphActor;
 const glyphRing = largeGlyphActor.object;
 worldStableRoot.add(largeGlyphActor.object);
-const glyphOrbit = createVrGlyphOrbit({ nodes, center: new THREE.Vector3(),
-  settings: settings.glyphRing, entryDirection, radius: settings.largeGlyphs.initialRadius });
+const glyphOrbit = createVrGlyphOrbit({ nodes, actor: largeGlyphActor });
 const worldBaseRadius = settings.spatial.ringRadius;
 const floorWalkRadius = worldBaseRadius;
 const sphericalLayerRanges = resolveVrSphericalLayerRanges({
@@ -1106,7 +1106,7 @@ function renderFrame() {
   astroFurnaceContentInteraction.reportHeldShell(shellAttractorInteraction?.heldShell);
   astroFurnaceContentInteraction.reportHeldSmallGlyph(smallGlyphAttractorInteraction?.heldGlyph);
   astroFurnaceContentInteraction.update(delta);
-  glyphOrbit.update(delta);
+  largeGlyphActor.update(delta);
   largeGlyphAttractorInteraction.update(delta);
   postRingPresentation.update(delta);
   p2RadialPresentation.update(delta);

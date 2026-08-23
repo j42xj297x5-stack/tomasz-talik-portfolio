@@ -176,13 +176,10 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
   largeGlyphAttractor: { minimumClearance: 0.8 },
   glyphInteraction: { holdDurationSeconds: 0.5, holdLostGraceSeconds: 0.15 },
   glyphLights: { inwardOffset: 1 },
-  largeGlyphs: { scaleMultiplier: 3, initialRadius: 8.5 },
-  glyphRing: {
-    enabled: true,
-    angularSpeed: 0.14,
-    direction: 1,
-    entryAngleThreshold: 0.24,
-    entryAngleHysteresis: 0.04
+  largeGlyphs: {
+    scaleMultiplier: 3,
+    initialRadius: 8.5,
+    rotation: { enabled: true, angularSpeed: 0.14, direction: 1 }
   },
   postRingPresentation: {
     glyphVerticalOffset: 2.4,
@@ -620,14 +617,14 @@ export function normalizeExperienceVrSettings(candidate) {
       scaleMultiplier: finiteNumber(candidate.largeGlyphs?.scaleMultiplier,
         defaults.largeGlyphs.scaleMultiplier, { min: 1, max: 10 }),
       initialRadius: finiteNumber(candidate.largeGlyphs?.initialRadius,
-        defaults.largeGlyphs.initialRadius, { min: 1, max: 50 })
-    },
-    glyphRing: {
-      enabled: typeof candidate.glyphRing?.enabled === 'boolean' ? candidate.glyphRing.enabled : defaults.glyphRing.enabled,
-      angularSpeed: finiteNumber(candidate.glyphRing?.angularSpeed, defaults.glyphRing.angularSpeed, { min: 0, max: 2 }),
-      direction: candidate.glyphRing?.direction === -1 ? -1 : 1,
-      entryAngleThreshold: finiteNumber(candidate.glyphRing?.entryAngleThreshold, defaults.glyphRing.entryAngleThreshold, { min: 0.01, max: Math.PI }),
-      entryAngleHysteresis: finiteNumber(candidate.glyphRing?.entryAngleHysteresis, defaults.glyphRing.entryAngleHysteresis, { min: 0, max: 0.5 })
+        defaults.largeGlyphs.initialRadius, { min: 1, max: 50 }),
+      rotation: {
+        enabled: typeof candidate.largeGlyphs?.rotation?.enabled === 'boolean'
+          ? candidate.largeGlyphs.rotation.enabled : defaults.largeGlyphs.rotation.enabled,
+        angularSpeed: finiteNumber(candidate.largeGlyphs?.rotation?.angularSpeed,
+          defaults.largeGlyphs.rotation.angularSpeed, { min: 0, max: 2 }),
+        direction: candidate.largeGlyphs?.rotation?.direction === -1 ? -1 : 1
+      }
     },
     postRingPresentation: {
       glyphVerticalOffset: finiteNumber(candidate.postRingPresentation?.glyphVerticalOffset,
