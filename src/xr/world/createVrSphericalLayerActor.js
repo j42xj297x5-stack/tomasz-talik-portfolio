@@ -21,14 +21,19 @@ export const VR_SPHERICAL_LAYER_IDS = Object.freeze({
   STARS: 'STARS', HIDDEN_GLYPHS: 'HIDDEN_GLYPHS'
 });
 
-export function resolveVrSphericalLayerRanges({ baseRadius, layers }) {
+export function resolveVrSphericalLayerRanges({ baseRadius, defaultGapRadiusMultiplier, layers }) {
   if (!Number.isFinite(baseRadius) || baseRadius <= 0) throw new TypeError('baseRadius must be positive and finite');
+  if (!Number.isFinite(defaultGapRadiusMultiplier) || defaultGapRadiusMultiplier < 0) {
+    throw new TypeError('defaultGapRadiusMultiplier must be finite and non-negative');
+  }
   if (!Array.isArray(layers) || layers.length < 1) throw new TypeError('layers must be a non-empty array');
   let cursor = baseRadius;
-  return Object.freeze(layers.map(({ id, thickness, gapAfter = 0, status }) => {
+  return Object.freeze(layers.map(({ id, thickness, gapAfterMultiplier, status }) => {
+    const resolvedGapMultiplier = gapAfterMultiplier ?? defaultGapRadiusMultiplier;
+    const gapAfter = baseRadius * resolvedGapMultiplier;
     if (typeof id !== 'string' || !id || !Number.isFinite(thickness) || thickness <= 0
-      || !Number.isFinite(gapAfter) || gapAfter < 0) {
-      throw new TypeError('Every spherical layer requires an id, positive finite thickness and non-negative finite gapAfter');
+      || !Number.isFinite(resolvedGapMultiplier) || resolvedGapMultiplier < 0) {
+      throw new TypeError('Every spherical layer requires an id, positive finite thickness and non-negative finite gapAfterMultiplier');
     }
     const range = Object.freeze({ id, thickness, gapAfter, innerRadius: cursor, outerRadius: cursor + thickness, status });
     cursor = range.outerRadius + gapAfter;
