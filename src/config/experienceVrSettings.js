@@ -176,7 +176,7 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
   largeGlyphAttractor: { minimumClearance: 0.8 },
   glyphInteraction: { holdDurationSeconds: 0.5, holdLostGraceSeconds: 0.15 },
   glyphLights: { inwardOffset: 1 },
-  largeGlyphs: { scaleMultiplier: 3 },
+  largeGlyphs: { scaleMultiplier: 3, initialRadius: 8.5 },
   glyphRing: {
     enabled: true,
     angularSpeed: 0.14,
@@ -618,7 +618,9 @@ export function normalizeExperienceVrSettings(candidate) {
     },
     largeGlyphs: {
       scaleMultiplier: finiteNumber(candidate.largeGlyphs?.scaleMultiplier,
-        defaults.largeGlyphs.scaleMultiplier, { min: 1, max: 10 })
+        defaults.largeGlyphs.scaleMultiplier, { min: 1, max: 10 }),
+      initialRadius: finiteNumber(candidate.largeGlyphs?.initialRadius,
+        defaults.largeGlyphs.initialRadius, { min: 1, max: 50 })
     },
     glyphRing: {
       enabled: typeof candidate.glyphRing?.enabled === 'boolean' ? candidate.glyphRing.enabled : defaults.glyphRing.enabled,

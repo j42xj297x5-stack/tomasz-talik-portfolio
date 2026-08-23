@@ -3,7 +3,6 @@ import { resolvePortfolioNodes } from './content/resolvePortfolioNodes.js';
 import { createCentralObject } from './scene/centralObject.js';
 import { addLights } from './scene/lights.js';
 import { loadMonkeyModel } from './scene/monkeyModel.js';
-import { createOrbitNodes } from './scene/orbitNodes.js';
 import { createAssetManager } from './assets/assetManager.js';
 import { createLoadingDiagnostics, preloadAssets } from './assets/preloadAssets.js';
 import { ASSET_STAGES, getPreloadAssets, INITIAL_PRELOAD_GROUPS, DEFERRED_PRELOAD_GROUPS } from './assets/assetManifest.js';
@@ -18,6 +17,7 @@ import { createVrGlyphOrbit } from './xr/createVrGlyphOrbit.js';
 import { createVrSmallGlyphSystem } from './xr/glyphs/createVrSmallGlyphSystem.js';
 import { createVrSmallGlyphAttractorInteraction } from './xr/glyphs/createVrSmallGlyphAttractorInteraction.js';
 import { createVrLargeGlyphAttractorInteraction } from './xr/glyphs/createVrLargeGlyphAttractorInteraction.js';
+import { createVrLargeGlyphActor } from './xr/glyphs/createVrLargeGlyphActor.js';
 import { createVrGlyphLights } from './xr/createVrGlyphLights.js';
 import { createVrSpatialPlaque } from './xr/createVrSpatialPlaque.js';
 import { createVrPortalDisplay } from './xr/createVrPortalDisplay.js';
@@ -236,17 +236,22 @@ monkeyMotionRoot.position.set(settings.spatial.monkeyFinal.x, settings.spatial.m
 monkeyActor.dockCharacterToStone();
 monkeyActor.captureScenarioFinalPlacement();
 const resolvedPortfolioNodes = resolvePortfolioNodes(language);
-const { group: glyphRing, nodes } = createOrbitNodes(resolvedPortfolioNodes, { assetManager });
-nodes.forEach((node) => {
-  node.userData.baseScale = settings.largeGlyphs.scaleMultiplier;
-  node.scale.setScalar(settings.largeGlyphs.scaleMultiplier);
+const largeGlyphActor = createVrLargeGlyphActor({
+  items: resolvedPortfolioNodes,
+  assetManager,
+  initialRadius: settings.largeGlyphs.initialRadius,
+  worldY: settings.spatial.worldStableCenterY,
+  scaleMultiplier: settings.largeGlyphs.scaleMultiplier
 });
-worldStableRoot.add(glyphRing);
-const glyphOrbit = createVrGlyphOrbit({ nodes, center: new THREE.Vector3(0, settings.spatial.worldStableCenterY, 0),
-  settings: settings.glyphRing, entryDirection, radius: settings.spatial.ringRadius });
-const floorWalkRadius = glyphOrbit.effectiveRadius;
+const { nodes } = largeGlyphActor;
+const glyphRing = largeGlyphActor.object;
+worldStableRoot.add(largeGlyphActor.object);
+const glyphOrbit = createVrGlyphOrbit({ nodes, center: new THREE.Vector3(),
+  settings: settings.glyphRing, entryDirection, radius: settings.largeGlyphs.initialRadius });
+const worldBaseRadius = settings.spatial.ringRadius;
+const floorWalkRadius = worldBaseRadius;
 const sphericalLayerRanges = resolveVrSphericalLayerRanges({
-  baseRadius: glyphOrbit.effectiveRadius,
+  baseRadius: worldBaseRadius,
   defaultGapRadiusMultiplier: settings.sphericalLayers.defaultGapRadiusMultiplier,
   layers: [
     { id: VR_SPHERICAL_LAYER_IDS.SHELLS, ...settings.sphericalLayers.shells, status: 'IMPLEMENTED' },
@@ -268,7 +273,7 @@ const shellSystem = createVrShellSystem({ parent: worldStableRoot, assetManager,
   direction: settings.shellFieldMotion.direction });
 const smallGlyphLayer = sphericalLayer(VR_SPHERICAL_LAYER_IDS.SMALL_GLYPHS);
 const smallGlyphMaxTargetDistance = smallGlyphLayer.outerRadius;
-const largeGlyphTargetRadius = glyphOrbit.effectiveRadius
+const largeGlyphTargetRadius = worldBaseRadius
   * settings.p2RadialPresentation.largeGlyphRadiusMultiplier;
 const largeGlyphMaxTargetDistance = largeGlyphTargetRadius + floorWalkRadius;
 const smallGlyphSystem = createVrSmallGlyphSystem({
@@ -1179,6 +1184,7 @@ function restoreVrScenarioBaseline() {
   progressFloor.reset();
   runeBridgeActor.reset();
   largeGlyphAttractorInteraction.reset();
+  largeGlyphActor.reset();
   glyphOrbit.reset();
   p2RadialPresentation.reset();
   smallGlyphAttractorInteraction.reset();
@@ -1296,6 +1302,8 @@ window.addEventListener('pagehide', () => {
   runeBridgeActor.dispose();
   progressFloor.dispose();
   postRingPresentation.dispose();
+  glyphOrbit.dispose();
+  largeGlyphActor.dispose();
   smallGlyphSystem.dispose();
   shellSystem.dispose();
   protoAstroTuningController.dispose();
