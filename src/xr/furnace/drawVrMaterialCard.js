@@ -14,10 +14,11 @@ export function resolveMaterialCardLayout({ x, y, width, height, glyphRatio = .5
 
 export function drawMaterialCardVisual(context, options) {
   const layout = resolveMaterialCardLayout(options);
-  const { glyphImage, color = '#e8f7ff', drawPreview } = options;
+  const { glyphImage, glyphScale = 1, color = '#e8f7ff', drawPreview } = options;
 
   if (glyphImage?.complete && glyphImage.naturalWidth > 0) {
-    const ratio = Math.min(layout.glyph.width / glyphImage.naturalWidth, layout.glyph.height / glyphImage.naturalHeight);
+    const ratio = Math.min(layout.glyph.width / glyphImage.naturalWidth, layout.glyph.height / glyphImage.naturalHeight)
+      * glyphScale;
     const width = glyphImage.naturalWidth * ratio;
     const height = glyphImage.naturalHeight * ratio;
     const cacheKey = `${color}:${Math.ceil(width)}x${Math.ceil(height)}`;
