@@ -7,6 +7,9 @@ import { assemblySegmentVisible, createAsterionModelWireframeMap, createAsterion
 import { drawMaterialCardVisual } from './drawVrMaterialCard.js';
 import { resolveAttractorShellGlyph } from '../tools/vrAttractorShellGlyphs.js';
 import { drawVrAstroAttractorPreview } from './drawVrAstroAttractorPreview.js';
+import { SMALL_GLYPH_WIREFRAME_DATA } from './smallGlyphWireframeData.js';
+import { drawSmallGlyphWireframe } from './drawSmallGlyphWireframe.js';
+import { resolveVrSmallGlyphProtoAstro } from '../protoAstro/resolveVrSmallGlyphProtoAstro.js';
 
 export const ASTRO_FURNACE_PANEL_STATES = Object.freeze({
   HIDDEN: 'HIDDEN', APPEARING: 'APPEARING', VISIBLE: 'VISIBLE', DISAPPEARING: 'DISAPPEARING'
@@ -24,7 +27,7 @@ const smoothstep = (value) => value * value * (3 - 2 * value);
 export const wireframeDissolveVisible = (segment, progress) => progress < 1 && segment.dissolveOrder >= Math.max(0, progress);
 
 export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], progressionController, processSource, contentSource,
-  productionController = null, astroProductionController = null, canUseAstroProduction = () => false,
+  productionController = null, astroProductionController = null, protoAstroTuningController = null, canUseAstroProduction = () => false,
   canUseAstroTuning = () => false,
   requestAstroProduction = () => false,
   asterionModel = null, settings = {}, onEnterModule = () => {}, onReturnHome = () => {}, onCreate = () => {} }) {
@@ -72,6 +75,14 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
     if (glyph) image.src = glyph.url;
     return [assetId, image];
   }));
+  const smallGlyphEntries = Object.keys(SMALL_GLYPH_WIREFRAME_DATA.byAssetId).map((assetId) => {
+    const protoAstro = resolveVrSmallGlyphProtoAstro(assetId);
+    if (!protoAstro) throw new Error(`Missing canonical Proto-Astro identity for Small Glyph "${assetId}".`);
+    const image = new Image();
+    image.onload = () => { if (!disposed) draw(); };
+    image.src = protoAstro.assetUrl;
+    return Object.freeze({ assetId, protoAstro, image });
+  });
 
   function panelRect(x, y, width, height, options = {}) {
     drawFurnaceFrame(context, { x, y, width, height, cornerSize: options.cornerSize ?? config.frameCornerSizePx, ...options });
@@ -152,14 +163,32 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
     text('STROJENIE ASTROLABIUM', 90, 190, 48);
     text('Trwała konfiguracja Astrolabium Więzi', 90, 238, 24, '#b9a779');
 
-    const tuningAvailable = canUseAstroTuning();
-    panelRect(90, 285, 1315, 330, { variant: 'monitor', active: tuningAvailable,
-      accentColor: accents.attractor, locked: !tuningAvailable });
-    text('OBSZAR STROJENIA', 135, 350, 22, '#8fb1c1');
-    text('MAŁE GLIFY', 135, 430, 40, tuningAvailable ? '#f1fbff' : '#78909d');
-    text(tuningAvailable ? 'DOSTĘPNE' : 'NIEDOSTĘPNE', 135, 500, 24,
-      tuningAvailable ? accents.complete : '#91afbe');
-    text('Panel strojenia przygotowany do dalszej konfiguracji.', 135, 565, 21, '#91afbe');
+    text('MAŁE GLIFY', 90, 282, 31, canUseAstroTuning() ? '#f1fbff' : '#78909d');
+    const tuningSnapshot = protoAstroTuningController?.getSnapshot?.() ?? { families: [] };
+    const families = new Map(tuningSnapshot.families.map((family) => [family.familyCode, family]));
+    const insertedAssetId = contentSource?.getInsertedSmallGlyphAssetId?.() ?? null;
+    const contentState = contentSource?.getState?.() ?? 'EMPTY';
+    smallGlyphEntries.forEach(({ assetId, protoAstro, image }, index) => {
+      const column = index % 3;
+      const row = Math.floor(index / 3);
+      const x = 90 + column * 455;
+      const y = 310 + row * 315;
+      const family = families.get(protoAstro.descriptor.familyCode);
+      const supported = Boolean(family);
+      const extracted = family?.extracted === true;
+      const processing = supported && insertedAssetId === assetId
+        && ['INSERTED', 'CONSUMING', 'CONSUMED'].includes(contentState);
+      const color = extracted ? accents.complete : processing ? accents.process : supported ? accents.attractor : accents.idle;
+      panelRect(x, y, 405, 270, { variant: 'monitor', active: supported && !extracted,
+        completed: extracted, locked: !supported, accentColor: color });
+      text(protoAstro.descriptor.syllable, x + 24, y + 40, 25, color);
+      drawMaterialCardVisual(context, { x: x + 10, y: y + 48, width: 385, height: 180,
+        glyphRatio: .46, padding: 10, glyphImage: image, color,
+        drawPreview: ({ cx, cy, scale }) => drawSmallGlyphWireframe(context,
+          { assetId, cx, cy, scale, color, alpha: supported ? .95 : .34 }) });
+      text(extracted ? 'WYEKSTRAHOWANY' : processing ? 'PRZETWARZANIE' : supported ? 'GOTOWY' : 'NIEAKTYWNY',
+        x + 24, y + 250, 18, color);
+    });
   }
   function drawSphere(progress) {
     interactiveRegions = [{ id: 'back-modules', x: 90, y: 55, width: 260, height: 70, enabled: true }];
@@ -368,8 +397,9 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
   const unsubscribe = progressionController.subscribe(() => draw());
   const unsubscribeProduction = productionController?.subscribe?.(() => draw()) ?? (() => {});
   const unsubscribeAstroProduction = astroProductionController?.subscribe?.(() => draw()) ?? (() => {});
+  const unsubscribeProtoAstroTuning = protoAstroTuningController?.subscribe?.(() => draw()) ?? (() => {});
   const unsubscribePlacement = furnace.subscribePlacement?.(() => place()) ?? (() => {});
-  function dispose() { if (disposed) return; disposed = true; unsubscribe(); unsubscribeProduction(); unsubscribeAstroProduction(); unsubscribePlacement(); moduleListeners.clear(); listeners.forEach(({ record, listener }) => record.controller.removeEventListener('selectstart', listener)); root.removeFromParent(); renderPlanes.forEach((plane) => { plane.geometry.dispose(); plane.material.dispose(); }); texture.dispose(); canvas.width = 0; canvas.height = 0; hits.clear(); }
+  function dispose() { if (disposed) return; disposed = true; unsubscribe(); unsubscribeProduction(); unsubscribeAstroProduction(); unsubscribeProtoAstroTuning(); unsubscribePlacement(); moduleListeners.clear(); listeners.forEach(({ record, listener }) => record.controller.removeEventListener('selectstart', listener)); root.removeFromParent(); renderPlanes.forEach((plane) => { plane.geometry.dispose(); plane.material.dispose(); }); texture.dispose(); canvas.width = 0; canvas.height = 0; hits.clear(); }
   reset();
   return { object: root, mesh: frontPlane, renderPlanes, canvas, texture, hits, show, hide, toggle, place, update, press, reset, dispose, activateRegion, redraw: draw,
     subscribeModuleActivation(listener) { moduleListeners.add(listener); return () => moduleListeners.delete(listener); },

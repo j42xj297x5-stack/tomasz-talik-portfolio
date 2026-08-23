@@ -512,6 +512,7 @@ const furnacePanel = createVrAstroFurnacePanel({
   parent: platformFixturesRoot, furnace: astroFurnace, controllers: vrControllers.controllers,
   progressionController: furnaceProgressionController, productionController: asterionProductionController,
   astroProductionController: astroAttractorProductionController,
+  protoAstroTuningController,
   canUseAstroProduction: () => runtimeExperience?.can(
     VR_SCENARIO_CAPABILITY.CAN_START_FURNACE_PROCESS
   ) === true,
@@ -527,6 +528,7 @@ const furnacePanel = createVrAstroFurnacePanel({
     getState: () => astroFurnaceContentInteraction?.getState?.() ?? 'EMPTY',
     getInsertedShellAssetId: () => astroFurnaceContentInteraction?.getInsertedShellAssetId?.() ?? null,
     getInsertedShellWireframe: () => astroFurnaceContentInteraction?.getInsertedShellWireframe?.() ?? null,
+    getInsertedSmallGlyphAssetId: () => astroFurnaceContentInteraction?.getInsertedSmallGlyphProtoAstro?.()?.assetId ?? null,
     getChamberState: () => astroFurnaceOpenInteraction?.getState?.() ?? 'CLOSED'
   },
   onEnterModule: () => playVrUi(VR_AUDIO.furnaceDeeper),
