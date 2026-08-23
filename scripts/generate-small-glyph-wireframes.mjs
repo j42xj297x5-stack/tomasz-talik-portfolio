@@ -83,7 +83,7 @@ const quantize = (value) => {
   const result = Math.round(value / QUANTIZATION) * QUANTIZATION;
   return Object.is(result, -0) ? 0 : Number(result.toFixed(4));
 };
-const pointKey = (point) => `${point[0].toFixed(4)},${point[1].toFixed(4)}`;
+const pointKey = (point) => point.map((value) => value.toFixed(4)).join(',');
 
 function generateWireframe(document, binary) {
   const readAccessor = createAccessorReader(document, binary);
@@ -109,7 +109,7 @@ function generateWireframe(document, binary) {
       for (let index = 0; index + 1 < positions.count; index += 2) {
         a.fromBufferAttribute(positions, index).applyMatrix4(matrixToRoot);
         b.fromBufferAttribute(positions, index + 1).applyMatrix4(matrixToRoot);
-        rawSegments.push([[a.x, a.y], [b.x, b.y]]);
+        rawSegments.push([[a.x, a.y, a.z], [b.x, b.y, b.z]]);
       }
       edges.dispose();
       geometry.dispose();
@@ -134,7 +134,29 @@ function generateWireframe(document, binary) {
     const segment = forward ? [...projectedStart, ...projectedEnd] : [...projectedEnd, ...projectedStart];
     deduplicated.set(forward ? `${startKey}|${endKey}` : `${endKey}|${startKey}`, segment);
   });
-  return { sourceSegmentCount: rawSegments.length, segments2d: [...deduplicated.values()] };
+  const bounds3d = rawSegments.reduce((box, segment) => {
+    segment.forEach(([x, y, z]) => box.expandByPoint(new THREE.Vector3(x, y, z)));
+    return box;
+  }, new THREE.Box3());
+  const center3d = bounds3d.getCenter(new THREE.Vector3());
+  const size3d = bounds3d.getSize(new THREE.Vector3());
+  const scale3d = 2 / (Math.max(size3d.x, size3d.y, size3d.z) || 1);
+  const deduplicated3d = new Map();
+  rawSegments.forEach(([start, end]) => {
+    const normalizedStart = start.map((value, axis) => quantize((value - center3d.getComponent(axis)) * scale3d));
+    const normalizedEnd = end.map((value, axis) => quantize((value - center3d.getComponent(axis)) * scale3d));
+    const startKey = pointKey(normalizedStart), endKey = pointKey(normalizedEnd);
+    if (startKey === endKey) return;
+    const forward = startKey < endKey;
+    deduplicated3d.set(forward ? `${startKey}|${endKey}` : `${endKey}|${startKey}`,
+      forward ? [...normalizedStart, ...normalizedEnd] : [...normalizedEnd, ...normalizedStart]);
+  });
+  const normalized3d = [...deduplicated3d.values()];
+  const segments3d = normalized3d.map(([ax, ay, az, bx, by, bz], index) => ({
+    ax, ay, az, bx, by, bz,
+    dissolveOrder: normalized3d.length <= 1 ? 0 : ((index * 73) % normalized3d.length) / (normalized3d.length - 1)
+  }));
+  return { sourceSegmentCount: rawSegments.length, segments2d: [...deduplicated.values()], segments3d };
 }
 
 const byAssetId = {};
@@ -148,7 +170,9 @@ for (const source of SOURCES) {
     sourceSha256: createHash('sha256').update(buffer).digest('hex'),
     sourceSegmentCount: wireframe.sourceSegmentCount,
     finalSegmentCount: wireframe.segments2d.length,
-    segments2d: wireframe.segments2d
+    segments2d: wireframe.segments2d,
+    finalSegment3dCount: wireframe.segments3d.length,
+    segments3d: wireframe.segments3d
   };
 }
 
