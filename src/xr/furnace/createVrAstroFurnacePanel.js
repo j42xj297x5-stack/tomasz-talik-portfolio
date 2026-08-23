@@ -12,13 +12,14 @@ export const ASTRO_FURNACE_PANEL_STATES = Object.freeze({
   HIDDEN: 'HIDDEN', APPEARING: 'APPEARING', VISIBLE: 'VISIBLE', DISAPPEARING: 'DISAPPEARING'
 });
 export const ASTRO_FURNACE_PANEL_SCREENS = Object.freeze({
-  HOME: 'HOME', ASTERION_SPHERE: 'ASTERION_SPHERE', ASTROLABIUM_WIEZI: 'ASTROLABIUM_WIEZI'
+  HOME: 'HOME', ASTERION_SPHERE: 'ASTERION_SPHERE',
+  ASTROLABIUM_PRODUCTION: 'ASTROLABIUM_PRODUCTION', ASTROLABIUM_TUNING: 'ASTROLABIUM_TUNING'
 });
 export const asterionPreviewAnimationActive = ({ panelState, screen }) =>
   panelState === ASTRO_FURNACE_PANEL_STATES.VISIBLE && screen === ASTRO_FURNACE_PANEL_SCREENS.ASTERION_SPHERE;
 export const furnacePanelAnimationActive = ({ panelState, screen }) => panelState === ASTRO_FURNACE_PANEL_STATES.VISIBLE
   && [ASTRO_FURNACE_PANEL_SCREENS.HOME, ASTRO_FURNACE_PANEL_SCREENS.ASTERION_SPHERE,
-    ASTRO_FURNACE_PANEL_SCREENS.ASTROLABIUM_WIEZI].includes(screen);
+    ASTRO_FURNACE_PANEL_SCREENS.ASTROLABIUM_PRODUCTION, ASTRO_FURNACE_PANEL_SCREENS.ASTROLABIUM_TUNING].includes(screen);
 const smoothstep = (value) => value * value * (3 - 2 * value);
 export const wireframeDissolveVisible = (segment, progress) => progress < 1 && segment.dissolveOrder >= Math.max(0, progress);
 
@@ -85,7 +86,7 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
     const cards = [
       ['module-asterion-sphere', 'SFERA ASTERIONOWA', 'Rdzeń żyroskopowy sterowania kręgiem', 'SKORUPY', `${progress.absorbed} / 6   DOSTĘPNE`, true],
       ['module-astro-attractor', 'ASTROLABIUM WIĘZI', 'Narzędzie przyciągania i synchronizacji', 'STATUS',
-        astroProductionState === 'AVAILABLE' ? 'GOTOWE // ODBIERZ' : astroProductionState === 'EARNED' ? 'AKTYWNE' : 'WEJDŹ DO MODUŁU',
+        astroProductionState === 'AVAILABLE' ? 'GOTOWE // ODBIERZ' : astroProductionState === 'EARNED' ? 'STROJENIE' : 'WEJDŹ DO MODUŁU',
         astroModuleAvailable],
       ['module-emanation-matrix', 'MATRYCA EMANACJI', 'Przetwarzanie kamieni runicznych', 'KAMIENIE', 'W PRZYGOTOWANIU', false]
     ];
@@ -104,7 +105,7 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
       return rect;
     });
   }
-  function drawAstrolabiumWiezi() {
+  function drawAstrolabiumProduction() {
     interactiveRegions = [{ id: 'back-modules', x: 90, y: 55, width: 260, height: 70, enabled: true }];
     panelRect(90, 55, 260, 70, { hovered: hoveredRegion === 'back-modules', accentColor: accents.attractor });
     text('← MODUŁY', 120, 102, 27);
@@ -125,11 +126,10 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
       READY: ['GOTOWE DO UTWORZENIA', 'Rozpocznij świadomie proces w Piecu.'],
       BUILDING: ['MATERIALIZACJA', 'Proces konstrukcji trwa w komorze.'],
       AVAILABLE: ['ASTROLABIUM GOTOWE', 'Otwórz komorę i odbierz obiekt.'],
-      CLAIMING: ['PRZEKAZYWANIE', 'Fizyczny odbiór Astrolabium trwa.'],
-      EARNED: ['ASTROLABIUM AKTYWNE', 'Narzędzie należy do Ciebie.']
+      CLAIMING: ['PRZEKAZYWANIE', 'Fizyczny odbiór Astrolabium trwa.']
     };
     const [title, detail] = labels[production.state] ?? ['NIEDOSTĘPNE', 'Stan produkcji jest poza kontraktem modułu.'];
-    text(title, 940, 425, 29, ['AVAILABLE', 'EARNED'].includes(production.state) ? accents.complete : accents.attractor);
+    text(title, 940, 425, 29, production.state === 'AVAILABLE' ? accents.complete : accents.attractor);
     text(detail, 940, 470, 19, '#91afbe');
     if (production.state === 'BUILDING') {
       const progress = Math.max(0, Math.min(1, production.constructionProgress ?? production.buildProgress ?? 0));
@@ -144,6 +144,22 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
         active: true, accentColor: accents.complete });
       text('UTWÓRZ', create.x + 76, create.y + 53, 32, accents.complete);
     }
+  }
+  function drawAstrolabiumTuning() {
+    interactiveRegions = [{ id: 'back-modules', x: 90, y: 55, width: 260, height: 70, enabled: true }];
+    panelRect(90, 55, 260, 70, { hovered: hoveredRegion === 'back-modules', accentColor: accents.attractor });
+    text('← MODUŁY', 120, 102, 27);
+    text('STROJENIE ASTROLABIUM', 90, 190, 48);
+    text('Trwała konfiguracja Astrolabium Więzi', 90, 238, 24, '#b9a779');
+
+    const tuningAvailable = canUseAstroTuning();
+    panelRect(90, 285, 1315, 330, { variant: 'monitor', active: tuningAvailable,
+      accentColor: accents.attractor, locked: !tuningAvailable });
+    text('OBSZAR STROJENIA', 135, 350, 22, '#8fb1c1');
+    text('MAŁE GLIFY', 135, 430, 40, tuningAvailable ? '#f1fbff' : '#78909d');
+    text(tuningAvailable ? 'DOSTĘPNE' : 'NIEDOSTĘPNE', 135, 500, 24,
+      tuningAvailable ? accents.complete : '#91afbe');
+    text('Panel strojenia przygotowany do dalszej konfiguracji.', 135, 565, 21, '#91afbe');
   }
   function drawSphere(progress) {
     interactiveRegions = [{ id: 'back-modules', x: 90, y: 55, width: 260, height: 70, enabled: true }];
@@ -272,12 +288,18 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
   }
   function draw() {
     if (!context) return; redrawCount += 1; context.clearRect(0, 0, canvas.width, canvas.height);
+    if (screen === ASTRO_FURNACE_PANEL_SCREENS.ASTROLABIUM_PRODUCTION
+      && astroProductionController?.getState?.() === 'EARNED') {
+      screen = ASTRO_FURNACE_PANEL_SCREENS.ASTROLABIUM_TUNING;
+      hoveredRegion = null;
+    }
     context.fillStyle = 'rgba(3,9,17,.96)'; context.fillRect(0, 0, canvas.width, canvas.height);
     drawFurnaceFrame(context, { x: 18, y: 18, width: canvas.width - 36, height: canvas.height - 36, variant: 'panel', cornerSize: config.frameCornerSizePx * 1.5, accentColor: '#4d89a5', opacity: .8 });
     const progress = progressionController.getAsterionSphereProgress();
     if (screen === ASTRO_FURNACE_PANEL_SCREENS.HOME) drawHome(progress);
     else if (screen === ASTRO_FURNACE_PANEL_SCREENS.ASTERION_SPHERE) drawSphere(progress);
-    else drawAstrolabiumWiezi();
+    else if (screen === ASTRO_FURNACE_PANEL_SCREENS.ASTROLABIUM_PRODUCTION) drawAstrolabiumProduction();
+    else drawAstrolabiumTuning();
     texture.needsUpdate = true;
   }
   function place() {
@@ -305,7 +327,9 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
     moduleListeners.forEach((listener) => listener('floor_gyroscope_sphere'));
     onEnterModule();
   } else if (id === 'module-astro-attractor') {
-    screen = ASTRO_FURNACE_PANEL_SCREENS.ASTROLABIUM_WIEZI;
+    screen = astroProductionController?.getState?.() === 'EARNED'
+      ? ASTRO_FURNACE_PANEL_SCREENS.ASTROLABIUM_TUNING
+      : ASTRO_FURNACE_PANEL_SCREENS.ASTROLABIUM_PRODUCTION;
     moduleListeners.forEach((listener) => listener('astro_attractor'));
     onEnterModule();
   } else if (id === 'back-modules') { screen = ASTRO_FURNACE_PANEL_SCREENS.HOME; onReturnHome(); }

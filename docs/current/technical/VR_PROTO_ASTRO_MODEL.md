@@ -50,6 +50,8 @@ Asset number nie jest gameplay family poza canonical resolverem.
 
 **IMPLEMENTED:** persistent runtime-domain truth `extractedFamilyCodes` należy wyłącznie do `ProtoAstroTuningController` i może zawierać tylko `K/T/S/L/R`, nigdy `V`. Jedną rodzinę można commitować raz. `canAttractLargeGlyph(largeGlyphIdentity)` zwraca `true` dla zgodnej naturalnej formy A po pobraniu jej esencji.
 
+Panel Astro Pieca rozdziela jednorazowy lifecycle `production → EARNED` od trwałej funkcji strojenia. Po `EARNED` karta Astrolabium prowadzi wyłącznie do landing panelu `STROJENIE ASTROLABIUM`, z pierwszym obszarem `MAŁE GLIFY`; panel nie kopiuje stanu produkcji ani stanu TuningControllera. Pełna prezentacja rodzin i obsługa strojenia w tym panelu nie są jeszcze zaimplementowane.
+
 To API jest gotowym seamem domenowym; rzeczywiste `LARGE_GLYPHS` targeting/pull jest **APPROVED / NOT IMPLEMENTED**.
 
 ## 8. SMALL GLYPH FIELD + TRANSPORT
