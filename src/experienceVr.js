@@ -74,7 +74,6 @@ import { createVrDebugCheckpointController } from './xr/progression/enterVrDebug
 import { VR_DEBUG_CHECKPOINTS } from './xr/progression/vrDebugCheckpoints.js';
 import { createVrPostRingPresentation } from './xr/progression/createVrPostRingPresentation.js';
 import { createVrObservationWindow } from './xr/progression/createVrObservationWindow.js';
-import { createVrP2RadialPresentation } from './xr/progression/createVrP2RadialPresentation.js';
 import { VR_SCENARIO_CAPABILITY, VR_SCENARIO_EFFECT, VR_SCENARIO_EVENT, vrExperienceScenario } from './xr/progression/vrExperienceScenario.js';
 import { experienceVrPages, getExperienceVrPages, resolveExperienceVrPage } from './content/experienceVrPages.js';
 import { publicPath } from './utils/publicPath.js';
@@ -243,12 +242,15 @@ const largeGlyphActor = createVrLargeGlyphActor({
   worldY: settings.spatial.worldStableCenterY,
   scaleMultiplier: settings.largeGlyphs.scaleMultiplier,
   rotation: settings.largeGlyphs.rotation,
-  elevation: settings.largeGlyphs.elevation
+  elevation: settings.largeGlyphs.elevation,
+  expansion: settings.largeGlyphs.expansion,
+  onExpansionCompleted: () => runtimeExperience.dispatch(
+    VR_SCENARIO_EVENT.P2_RADIAL_PRESENTATION_COMPLETED)
 });
 const { nodes } = largeGlyphActor;
 const glyphRing = largeGlyphActor.object;
 worldStableRoot.add(largeGlyphActor.object);
-const glyphOrbit = createVrGlyphOrbit({ nodes, actor: largeGlyphActor });
+const glyphOrbit = createVrGlyphOrbit({ nodes });
 const worldBaseRadius = settings.spatial.ringRadius;
 const floorWalkRadius = worldBaseRadius;
 const sphericalLayerRanges = resolveVrSphericalLayerRanges({
@@ -274,9 +276,7 @@ const shellSystem = createVrShellSystem({ parent: worldStableRoot, assetManager,
   direction: settings.shellFieldMotion.direction });
 const smallGlyphLayer = sphericalLayer(VR_SPHERICAL_LAYER_IDS.SMALL_GLYPHS);
 const smallGlyphMaxTargetDistance = smallGlyphLayer.outerRadius;
-const largeGlyphTargetRadius = worldBaseRadius
-  * settings.p2RadialPresentation.largeGlyphRadiusMultiplier;
-const largeGlyphMaxTargetDistance = largeGlyphTargetRadius + floorWalkRadius;
+const largeGlyphMaxTargetDistance = largeGlyphActor.getTargetingRange() + floorWalkRadius;
 const smallGlyphSystem = createVrSmallGlyphSystem({
   parent: worldStableRoot,
   assetManager,
@@ -851,11 +851,14 @@ const postRingPresentation = createVrPostRingPresentation({ largeGlyphActor, she
   settings: settings.postRingPresentation,
   onCompleted: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.POST_RING_WORLD_PRESENTATION_COMPLETED)
 });
-const p2RadialPresentation = createVrP2RadialPresentation({
-  glyphOrbit,
-  getTargetRadius: () => largeGlyphTargetRadius,
-  durationSeconds: settings.p2RadialPresentation.durationSeconds,
-  onCompleted: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.P2_RADIAL_PRESENTATION_COMPLETED)
+const p2WorldScenarioAdapter = Object.freeze({
+  hydrateScenarioState(value) {
+    if (!value || typeof value !== 'object' || Array.isArray(value)
+      || Object.keys(value).length !== 1 || value.mainGlyphsRadial !== true) {
+      throw new Error('P2 world hydration requires settled mainGlyphsRadial truth');
+    }
+    largeGlyphActor.hydrateScenarioState({ stage: 'RING_EXPANDED' });
+  }
 });
 const observationWindow = createVrObservationWindow({
   durationSeconds: settings.observationWindow.durationSeconds,
@@ -1006,8 +1009,8 @@ runtimeExperience = new RuntimeExperience({
       playVrWorld(VR_AUDIO.tierComplete);
     },
     [VR_SCENARIO_EFFECT.BEGIN_P2_RADIAL_PRESENTATION]: () => {
-      if (!p2RadialPresentation.begin()) {
-        throw new Error('BEGIN_P2_RADIAL_PRESENTATION rejected by P2 radial presentation actor');
+      if (!largeGlyphActor.beginExpansion()) {
+        throw new Error('BEGIN_P2_RADIAL_PRESENTATION rejected by Large Glyph actor');
       }
     },
     [VR_SCENARIO_EFFECT.BEGIN_SMALL_GLYPH_FIELD_PRESENTATION]: () => {
@@ -1043,7 +1046,7 @@ const scenarioOwners = Object.freeze({
   monkey: monkeyActor, intro: introSequence, locomotion, reliquary: crystalReliquary,
   portal: portalDisplay,
   progression: progressionController, progressFloor, crystals: crystalCollection,
-  postRing: postRingPresentation, p2World: p2RadialPresentation, smallGlyphField: smallGlyphSystem,
+  postRing: postRingPresentation, p2World: p2WorldScenarioAdapter, smallGlyphField: smallGlyphSystem,
   furnace: astroFurnace, furnaceProgression: furnaceProgressionController,
   astroProduction: astroAttractorProductionController, asterionProduction: asterionProductionController,
   protoAstroTuning: protoAstroTuningController,
@@ -1110,7 +1113,6 @@ function renderFrame() {
   largeGlyphActor.update(delta);
   largeGlyphAttractorInteraction.update(delta);
   postRingPresentation.update(delta);
-  p2RadialPresentation.update(delta);
   smallGlyphSystem.update(delta);
   observationWindow.update(delta);
   postRingMonkeyDialogue.update(delta);
@@ -1187,7 +1189,6 @@ function restoreVrScenarioBaseline() {
   largeGlyphAttractorInteraction.reset();
   largeGlyphActor.reset();
   glyphOrbit.reset();
-  p2RadialPresentation.reset();
   smallGlyphAttractorInteraction.reset();
   smallGlyphSystem.reset();
   postRingPresentation.reset();
