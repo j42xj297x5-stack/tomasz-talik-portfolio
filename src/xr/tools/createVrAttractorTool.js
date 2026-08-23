@@ -2,6 +2,7 @@ import * as THREE from '../../vendor/three.js';
 import { createVrAttractorPanelSystem, resolveAttractorGlyphFamilyColors,
   VR_ATTRACTOR_PANEL_NAMES } from './createVrAttractorPanelSystem.js';
 import { resolveAttractorShellGlyph } from './vrAttractorShellGlyphs.js';
+import { resolveVrSmallGlyphProtoAstro } from '../protoAstro/resolveVrSmallGlyphProtoAstro.js';
 
 export const VR_ATTRACTOR_STATES = Object.freeze({
   UNEQUIPPED: 'UNEQUIPPED', IDLE: 'IDLE', TARGETING: 'TARGETING', PULLING: 'PULLING', CAPTURED: 'CAPTURED'
@@ -206,7 +207,13 @@ export function createVrAttractorTool({ model, config = VR_ATTRACTOR_VISUAL_CONF
   function setTrigger(value) { trigger = clamp01(value); }
   function setTarget(value) {
     target = value ?? null; targetProximity = clamp01(value?.proximity);
-    const glyph = resolveAttractorShellGlyph(value?.target ?? value);
+    const previewTarget = value?.target ?? value;
+    const shellGlyph = resolveAttractorShellGlyph(previewTarget);
+    const smallGlyph = shellGlyph ? null : resolveVrSmallGlyphProtoAstro(previewTarget);
+    const glyph = shellGlyph ?? (smallGlyph ? {
+      syllable: smallGlyph.descriptor.syllable,
+      url: smallGlyph.assetUrl
+    } : null);
     panelSystem.setPrimaryGlyph(glyph).catch((error) => logger.warn(error.message));
     panelSystem.setPrimaryPresentation({ isPulling: state === VR_ATTRACTOR_STATES.PULLING, targetProximity });
   }

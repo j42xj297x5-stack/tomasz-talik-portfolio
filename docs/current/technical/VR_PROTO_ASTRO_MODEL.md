@@ -94,7 +94,7 @@ Astrolabium fizycznie ma cztery authored panels.
 
 | Panel | Approved target semantics | Status |
 | --- | --- | --- |
-| 1 | aktualny target; docelowo właściwy Proto-Astro SVG | istniejący panel system i shell glyph projection **IMPLEMENTED**; uniwersalna projekcja target classes nieukończona |
+| 1 | aktualny target: Shell → form O SVG; Small Glyph → form I SVG | wspólny panel system i canonical Proto-Astro projection **IMPLEMENTED** |
 | 2 | current band: symbol + kolor zgodny z beam/scan cone | **APPROVED / NOT IMPLEMENTED** |
 | 3 | dostępne targety current band, `2×3`, maks. 6 Proto-Astro SVG, filtrowane przez domain truth | **APPROVED / NOT IMPLEMENTED** |
 | 4 | miernik odległości do current target | **APPROVED / NOT IMPLEMENTED** |
