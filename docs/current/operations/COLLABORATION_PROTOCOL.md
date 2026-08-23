@@ -45,6 +45,8 @@ Nie jest nim:
 
 Brak `make_pr`, `gh`, `origin`, sieci, serwera MCP lub innego mechanizmu tworzenia Pull Requesta **nie jest blokadą** zadania `IMPLEMENT`, jeżeli task commit został poprawnie utworzony. Brak PR nie jest odstępstwem. Codex nie traktuje braku `make_pr` jako błędu implementacji i nie podejmuje prób naprawy środowiska, instalowania zależności, otwierania sieci lub proxy, rekonfiguracji remote, dodawania credentiali ani poszukiwania fallbacku tylko po to, aby stworzyć Pull Request.
 
+Brak opcjonalnego narzędzia, którego bieżące zadanie jawnie nie wymaga, nie jest blokadą, nie uruchamia fallbacku ani naprawy środowiska i nie jest raportowany w Summary.
+
 ## Ekonomia wykonania
 
 Domyślny przebieg `IMPLEMENT` to:
