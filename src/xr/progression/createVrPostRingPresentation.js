@@ -1,6 +1,9 @@
-export function createVrPostRingPresentation({ glyphRing, shellSystem, settings, onCompleted = () => {} }) {
-  if (!glyphRing || !shellSystem) throw new Error('Post-ring presentation requires glyphRing and shellSystem.');
-  const baseGlyphY = glyphRing.position.y;
+import { VR_LARGE_GLYPH_ELEVATED_STAGE } from '../glyphs/createVrLargeGlyphActor.js';
+
+export function createVrPostRingPresentation({ largeGlyphActor, shellSystem, settings, onCompleted = () => {} }) {
+  if (!largeGlyphActor || !shellSystem) {
+    throw new Error('Post-ring presentation requires largeGlyphActor and shellSystem.');
+  }
   let shellStarted = false, glyphStarted = false, elapsed = 0, completed = false, disposed = false;
 
   function revealShellField() {
@@ -12,6 +15,7 @@ export function createVrPostRingPresentation({ glyphRing, shellSystem, settings,
   }
   function elevateMainGlyphs() {
     if (disposed || glyphStarted) return false;
+    if (!largeGlyphActor.beginElevation()) return false;
     glyphStarted = true;
     return true;
   }
@@ -23,13 +27,9 @@ export function createVrPostRingPresentation({ glyphRing, shellSystem, settings,
   }
   function update(delta) {
     if (disposed || completed || (!shellStarted && !glyphStarted)) return;
-    elapsed += Math.max(0, Number.isFinite(delta) ? delta : 0);
-    if (glyphStarted) {
-      const progress = Math.min(1, elapsed / settings.glyphElevationDuration);
-      const eased = progress * progress * (3 - 2 * progress);
-      glyphRing.position.y = baseGlyphY + settings.glyphVerticalOffset * eased;
-    }
-    if (shellStarted && glyphStarted && elapsed >= Math.max(settings.shellRevealDuration, settings.glyphElevationDuration)) {
+    if (shellStarted) elapsed += Math.max(0, Number.isFinite(delta) ? delta : 0);
+    if (shellStarted && glyphStarted && elapsed >= settings.shellRevealDuration
+      && largeGlyphActor.getStage() === VR_LARGE_GLYPH_ELEVATED_STAGE) {
       completed = true;
       onCompleted();
     }
@@ -37,7 +37,6 @@ export function createVrPostRingPresentation({ glyphRing, shellSystem, settings,
   function reset() {
     if (disposed) return;
     shellStarted = false; glyphStarted = false; elapsed = 0; completed = false;
-    glyphRing.position.y = baseGlyphY;
     shellSystem.setInteractionEnabled(false);
     shellSystem.setPresentationVisible(false);
   }
@@ -45,12 +44,12 @@ export function createVrPostRingPresentation({ glyphRing, shellSystem, settings,
     if (state?.shellFieldVisible !== true || typeof state.shellInteractionEnabled !== 'boolean'
       || state.mainGlyphsElevated !== true) throw new Error('Unsupported post-ring Scenario state');
     shellStarted = glyphStarted = completed = true;
-    elapsed = Math.max(settings.shellRevealDuration, settings.glyphElevationDuration);
+    elapsed = settings.shellRevealDuration;
     shellSystem.setPresentationVisible(true);
     shellSystem.setInteractionEnabled(state.shellInteractionEnabled);
-    glyphRing.position.y = baseGlyphY + settings.glyphVerticalOffset;
+    largeGlyphActor.hydrateScenarioState({ stage: VR_LARGE_GLYPH_ELEVATED_STAGE });
   }
   function dispose() { if (!disposed) { reset(); disposed = true; } }
   return { revealShellField, elevateMainGlyphs, enableShellFieldInteraction, update, reset, hydrateScenarioState, dispose,
-    get completed() { return completed; }, get glyphOffset() { return glyphRing.position.y - baseGlyphY; } };
+    get completed() { return completed; } };
 }

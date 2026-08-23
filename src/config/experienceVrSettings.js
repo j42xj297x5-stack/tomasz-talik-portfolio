@@ -176,22 +176,15 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
   largeGlyphAttractor: { minimumClearance: 0.8 },
   glyphInteraction: { holdDurationSeconds: 0.5, holdLostGraceSeconds: 0.15 },
   glyphLights: { inwardOffset: 1 },
-  largeGlyphs: { scaleMultiplier: 3 },
-  glyphRing: {
-    enabled: true,
-    angularSpeed: 0.14,
-    direction: 1,
-    entryAngleThreshold: 0.24,
-    entryAngleHysteresis: 0.04
+  largeGlyphs: {
+    scaleMultiplier: 3,
+    initialRadius: 8.5,
+    rotation: { enabled: true, angularSpeed: 0.14, direction: 1 },
+    elevation: { offset: 2.4, durationSeconds: 2.5 },
+    expansion: { radius: 18.5, durationSeconds: 2.5 }
   },
   postRingPresentation: {
-    glyphVerticalOffset: 2.4,
-    glyphElevationDuration: 2.5,
     shellRevealDuration: 1.5
-  },
-  p2RadialPresentation: {
-    durationSeconds: 2.5,
-    largeGlyphRadiusMultiplier: 3.3
   },
   shellFieldMotion: { direction: 1 },
   sphericalLayers: {
@@ -326,6 +319,15 @@ export function normalizeExperienceVrSettings(candidate) {
   if (!(spinupEnd < steadyEnd && steadyEnd < extractionEnd)) {
     ({ spinupEnd, steadyEnd, extractionEnd } = defaults.furnace.process);
   }
+  const candidateLargeGlyphInitialRadius = finiteNumber(candidate.largeGlyphs?.initialRadius,
+    defaults.largeGlyphs.initialRadius, { min: 1, max: 50 });
+  const candidateLargeGlyphExpandedRadius = finiteNumber(candidate.largeGlyphs?.expansion?.radius,
+    defaults.largeGlyphs.expansion.radius, { min: 1, max: 100 });
+  const hasValidLargeGlyphRadii = candidateLargeGlyphExpandedRadius > candidateLargeGlyphInitialRadius;
+  const largeGlyphInitialRadius = hasValidLargeGlyphRadii
+    ? candidateLargeGlyphInitialRadius : defaults.largeGlyphs.initialRadius;
+  const largeGlyphExpandedRadius = hasValidLargeGlyphRadii
+    ? candidateLargeGlyphExpandedRadius : defaults.largeGlyphs.expansion.radius;
 
   return {
     schemaVersion: EXPERIENCE_VR_SETTINGS_SCHEMA_VERSION,
@@ -618,28 +620,30 @@ export function normalizeExperienceVrSettings(candidate) {
     },
     largeGlyphs: {
       scaleMultiplier: finiteNumber(candidate.largeGlyphs?.scaleMultiplier,
-        defaults.largeGlyphs.scaleMultiplier, { min: 1, max: 10 })
-    },
-    glyphRing: {
-      enabled: typeof candidate.glyphRing?.enabled === 'boolean' ? candidate.glyphRing.enabled : defaults.glyphRing.enabled,
-      angularSpeed: finiteNumber(candidate.glyphRing?.angularSpeed, defaults.glyphRing.angularSpeed, { min: 0, max: 2 }),
-      direction: candidate.glyphRing?.direction === -1 ? -1 : 1,
-      entryAngleThreshold: finiteNumber(candidate.glyphRing?.entryAngleThreshold, defaults.glyphRing.entryAngleThreshold, { min: 0.01, max: Math.PI }),
-      entryAngleHysteresis: finiteNumber(candidate.glyphRing?.entryAngleHysteresis, defaults.glyphRing.entryAngleHysteresis, { min: 0, max: 0.5 })
+        defaults.largeGlyphs.scaleMultiplier, { min: 1, max: 10 }),
+      initialRadius: largeGlyphInitialRadius,
+      rotation: {
+        enabled: typeof candidate.largeGlyphs?.rotation?.enabled === 'boolean'
+          ? candidate.largeGlyphs.rotation.enabled : defaults.largeGlyphs.rotation.enabled,
+        angularSpeed: finiteNumber(candidate.largeGlyphs?.rotation?.angularSpeed,
+          defaults.largeGlyphs.rotation.angularSpeed, { min: 0, max: 2 }),
+        direction: candidate.largeGlyphs?.rotation?.direction === -1 ? -1 : 1
+      },
+      elevation: {
+        offset: finiteNumber(candidate.largeGlyphs?.elevation?.offset,
+          defaults.largeGlyphs.elevation.offset, { min: 0, max: 20 }),
+        durationSeconds: finiteNumber(candidate.largeGlyphs?.elevation?.durationSeconds,
+          defaults.largeGlyphs.elevation.durationSeconds, { min: 0.1, max: 30 })
+      },
+      expansion: {
+        radius: largeGlyphExpandedRadius,
+        durationSeconds: finiteNumber(candidate.largeGlyphs?.expansion?.durationSeconds,
+          defaults.largeGlyphs.expansion.durationSeconds, { min: 0.1, max: 60 })
+      }
     },
     postRingPresentation: {
-      glyphVerticalOffset: finiteNumber(candidate.postRingPresentation?.glyphVerticalOffset,
-        defaults.postRingPresentation.glyphVerticalOffset, { min: 0, max: 20 }),
-      glyphElevationDuration: finiteNumber(candidate.postRingPresentation?.glyphElevationDuration,
-        defaults.postRingPresentation.glyphElevationDuration, { min: 0.1, max: 30 }),
       shellRevealDuration: finiteNumber(candidate.postRingPresentation?.shellRevealDuration,
         defaults.postRingPresentation.shellRevealDuration, { min: 0, max: 30 })
-    },
-    p2RadialPresentation: {
-      durationSeconds: finiteNumber(candidate.p2RadialPresentation?.durationSeconds,
-        defaults.p2RadialPresentation.durationSeconds, { min: 0.1, max: 60 }),
-      largeGlyphRadiusMultiplier: finiteNumber(candidate.p2RadialPresentation?.largeGlyphRadiusMultiplier,
-        defaults.p2RadialPresentation.largeGlyphRadiusMultiplier, { min: 1, max: 10 })
     },
     shellFieldMotion: {
       direction: candidate.shellFieldMotion?.direction === -1 ? -1 : 1

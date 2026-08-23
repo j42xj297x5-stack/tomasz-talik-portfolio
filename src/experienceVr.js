@@ -3,7 +3,6 @@ import { resolvePortfolioNodes } from './content/resolvePortfolioNodes.js';
 import { createCentralObject } from './scene/centralObject.js';
 import { addLights } from './scene/lights.js';
 import { loadMonkeyModel } from './scene/monkeyModel.js';
-import { createOrbitNodes } from './scene/orbitNodes.js';
 import { createAssetManager } from './assets/assetManager.js';
 import { createLoadingDiagnostics, preloadAssets } from './assets/preloadAssets.js';
 import { ASSET_STAGES, getPreloadAssets, INITIAL_PRELOAD_GROUPS, DEFERRED_PRELOAD_GROUPS } from './assets/assetManifest.js';
@@ -18,6 +17,7 @@ import { createVrGlyphOrbit } from './xr/createVrGlyphOrbit.js';
 import { createVrSmallGlyphSystem } from './xr/glyphs/createVrSmallGlyphSystem.js';
 import { createVrSmallGlyphAttractorInteraction } from './xr/glyphs/createVrSmallGlyphAttractorInteraction.js';
 import { createVrLargeGlyphAttractorInteraction } from './xr/glyphs/createVrLargeGlyphAttractorInteraction.js';
+import { createVrLargeGlyphActor } from './xr/glyphs/createVrLargeGlyphActor.js';
 import { createVrGlyphLights } from './xr/createVrGlyphLights.js';
 import { createVrSpatialPlaque } from './xr/createVrSpatialPlaque.js';
 import { createVrPortalDisplay } from './xr/createVrPortalDisplay.js';
@@ -74,7 +74,6 @@ import { createVrDebugCheckpointController } from './xr/progression/enterVrDebug
 import { VR_DEBUG_CHECKPOINTS } from './xr/progression/vrDebugCheckpoints.js';
 import { createVrPostRingPresentation } from './xr/progression/createVrPostRingPresentation.js';
 import { createVrObservationWindow } from './xr/progression/createVrObservationWindow.js';
-import { createVrP2RadialPresentation } from './xr/progression/createVrP2RadialPresentation.js';
 import { VR_SCENARIO_CAPABILITY, VR_SCENARIO_EFFECT, VR_SCENARIO_EVENT, vrExperienceScenario } from './xr/progression/vrExperienceScenario.js';
 import { experienceVrPages, getExperienceVrPages, resolveExperienceVrPage } from './content/experienceVrPages.js';
 import { publicPath } from './utils/publicPath.js';
@@ -236,17 +235,26 @@ monkeyMotionRoot.position.set(settings.spatial.monkeyFinal.x, settings.spatial.m
 monkeyActor.dockCharacterToStone();
 monkeyActor.captureScenarioFinalPlacement();
 const resolvedPortfolioNodes = resolvePortfolioNodes(language);
-const { group: glyphRing, nodes } = createOrbitNodes(resolvedPortfolioNodes, { assetManager });
-nodes.forEach((node) => {
-  node.userData.baseScale = settings.largeGlyphs.scaleMultiplier;
-  node.scale.setScalar(settings.largeGlyphs.scaleMultiplier);
+const largeGlyphActor = createVrLargeGlyphActor({
+  items: resolvedPortfolioNodes,
+  assetManager,
+  initialRadius: settings.largeGlyphs.initialRadius,
+  worldY: settings.spatial.worldStableCenterY,
+  scaleMultiplier: settings.largeGlyphs.scaleMultiplier,
+  rotation: settings.largeGlyphs.rotation,
+  elevation: settings.largeGlyphs.elevation,
+  expansion: settings.largeGlyphs.expansion,
+  onExpansionCompleted: () => runtimeExperience.dispatch(
+    VR_SCENARIO_EVENT.P2_RADIAL_PRESENTATION_COMPLETED)
 });
-worldStableRoot.add(glyphRing);
-const glyphOrbit = createVrGlyphOrbit({ nodes, center: new THREE.Vector3(0, settings.spatial.worldStableCenterY, 0),
-  settings: settings.glyphRing, entryDirection, radius: settings.spatial.ringRadius });
-const floorWalkRadius = glyphOrbit.effectiveRadius;
+const { nodes } = largeGlyphActor;
+const glyphRing = largeGlyphActor.object;
+worldStableRoot.add(largeGlyphActor.object);
+const glyphOrbit = createVrGlyphOrbit({ nodes });
+const worldBaseRadius = settings.spatial.ringRadius;
+const floorWalkRadius = worldBaseRadius;
 const sphericalLayerRanges = resolveVrSphericalLayerRanges({
-  baseRadius: glyphOrbit.effectiveRadius,
+  baseRadius: worldBaseRadius,
   defaultGapRadiusMultiplier: settings.sphericalLayers.defaultGapRadiusMultiplier,
   layers: [
     { id: VR_SPHERICAL_LAYER_IDS.SHELLS, ...settings.sphericalLayers.shells, status: 'IMPLEMENTED' },
@@ -268,9 +276,7 @@ const shellSystem = createVrShellSystem({ parent: worldStableRoot, assetManager,
   direction: settings.shellFieldMotion.direction });
 const smallGlyphLayer = sphericalLayer(VR_SPHERICAL_LAYER_IDS.SMALL_GLYPHS);
 const smallGlyphMaxTargetDistance = smallGlyphLayer.outerRadius;
-const largeGlyphTargetRadius = glyphOrbit.effectiveRadius
-  * settings.p2RadialPresentation.largeGlyphRadiusMultiplier;
-const largeGlyphMaxTargetDistance = largeGlyphTargetRadius + floorWalkRadius;
+const largeGlyphMaxTargetDistance = largeGlyphActor.getTargetingRange() + floorWalkRadius;
 const smallGlyphSystem = createVrSmallGlyphSystem({
   parent: worldStableRoot,
   assetManager,
@@ -841,15 +847,18 @@ introCrystalTutorial = createVrIntroCrystalTutorial({
 });
 
 const experienceDirector = new ExperienceDirector({ scenario: vrExperienceScenario });
-const postRingPresentation = createVrPostRingPresentation({ glyphRing, shellSystem,
+const postRingPresentation = createVrPostRingPresentation({ largeGlyphActor, shellSystem,
   settings: settings.postRingPresentation,
   onCompleted: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.POST_RING_WORLD_PRESENTATION_COMPLETED)
 });
-const p2RadialPresentation = createVrP2RadialPresentation({
-  glyphOrbit,
-  getTargetRadius: () => largeGlyphTargetRadius,
-  durationSeconds: settings.p2RadialPresentation.durationSeconds,
-  onCompleted: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.P2_RADIAL_PRESENTATION_COMPLETED)
+const p2WorldScenarioAdapter = Object.freeze({
+  hydrateScenarioState(value) {
+    if (!value || typeof value !== 'object' || Array.isArray(value)
+      || Object.keys(value).length !== 1 || value.mainGlyphsRadial !== true) {
+      throw new Error('P2 world hydration requires settled mainGlyphsRadial truth');
+    }
+    largeGlyphActor.hydrateScenarioState({ stage: 'RING_EXPANDED' });
+  }
 });
 const observationWindow = createVrObservationWindow({
   durationSeconds: settings.observationWindow.durationSeconds,
@@ -1000,8 +1009,8 @@ runtimeExperience = new RuntimeExperience({
       playVrWorld(VR_AUDIO.tierComplete);
     },
     [VR_SCENARIO_EFFECT.BEGIN_P2_RADIAL_PRESENTATION]: () => {
-      if (!p2RadialPresentation.begin()) {
-        throw new Error('BEGIN_P2_RADIAL_PRESENTATION rejected by P2 radial presentation actor');
+      if (!largeGlyphActor.beginExpansion()) {
+        throw new Error('BEGIN_P2_RADIAL_PRESENTATION rejected by Large Glyph actor');
       }
     },
     [VR_SCENARIO_EFFECT.BEGIN_SMALL_GLYPH_FIELD_PRESENTATION]: () => {
@@ -1037,7 +1046,7 @@ const scenarioOwners = Object.freeze({
   monkey: monkeyActor, intro: introSequence, locomotion, reliquary: crystalReliquary,
   portal: portalDisplay,
   progression: progressionController, progressFloor, crystals: crystalCollection,
-  postRing: postRingPresentation, p2World: p2RadialPresentation, smallGlyphField: smallGlyphSystem,
+  postRing: postRingPresentation, p2World: p2WorldScenarioAdapter, smallGlyphField: smallGlyphSystem,
   furnace: astroFurnace, furnaceProgression: furnaceProgressionController,
   astroProduction: astroAttractorProductionController, asterionProduction: asterionProductionController,
   protoAstroTuning: protoAstroTuningController,
@@ -1101,10 +1110,9 @@ function renderFrame() {
   astroFurnaceContentInteraction.reportHeldShell(shellAttractorInteraction?.heldShell);
   astroFurnaceContentInteraction.reportHeldSmallGlyph(smallGlyphAttractorInteraction?.heldGlyph);
   astroFurnaceContentInteraction.update(delta);
-  glyphOrbit.update(delta);
+  largeGlyphActor.update(delta);
   largeGlyphAttractorInteraction.update(delta);
   postRingPresentation.update(delta);
-  p2RadialPresentation.update(delta);
   smallGlyphSystem.update(delta);
   observationWindow.update(delta);
   postRingMonkeyDialogue.update(delta);
@@ -1179,8 +1187,8 @@ function restoreVrScenarioBaseline() {
   progressFloor.reset();
   runeBridgeActor.reset();
   largeGlyphAttractorInteraction.reset();
+  largeGlyphActor.reset();
   glyphOrbit.reset();
-  p2RadialPresentation.reset();
   smallGlyphAttractorInteraction.reset();
   smallGlyphSystem.reset();
   postRingPresentation.reset();
@@ -1296,6 +1304,8 @@ window.addEventListener('pagehide', () => {
   runeBridgeActor.dispose();
   progressFloor.dispose();
   postRingPresentation.dispose();
+  glyphOrbit.dispose();
+  largeGlyphActor.dispose();
   smallGlyphSystem.dispose();
   shellSystem.dispose();
   protoAstroTuningController.dispose();
