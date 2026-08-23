@@ -52,7 +52,7 @@ Asset number nie jest gameplay family poza canonical resolverem.
 
 Panel Astro Pieca rozdziela jednorazowy lifecycle `production → EARNED` od trwałej funkcji strojenia. Po `EARNED` karta Astrolabium prowadzi do panelu `STROJENIE ASTROLABIUM`, którego obszar `MAŁE GLIFY` przedstawia sześć family cards z canonical SVG i wygenerowanym offline wireframe rzeczywistych GLB. Pod kartami dynamiczny monitor extraction obraca projekcję 3D topologii aktualnie włożonego Small Glyph; podczas właściwej fazy `EXTRACTION` kontur zanika według istniejącego Furnace `extractionProgress`. Dla `K/T/S/L/R` panel projektuje istniejący stan extraction z TuningControllera oraz bieżący stan procesu z content ownera; nie kopiuje żadnego z tych stanów. `VI` ma pełną identity, SVG i geometry preview, lecz pozostaje nieaktywny względem extraction, którego gameplay nie jest authored.
 
-To API jest gotowym seamem domenowym; rzeczywiste `LARGE_GLYPHS` targeting/pull jest **APPROVED / NOT IMPLEMENTED**.
+**IMPLEMENTED:** rzeczywisty band `LARGE_GLYPHS` używa tego API jako jedynego family gate dla targetingu i pull.
 
 ## 8. SMALL GLYPH FIELD + TRANSPORT
 
@@ -75,7 +75,7 @@ Naturalne `K/T/S/L/R` jest valid tylko przed pobraniem danej rodziny. `VI` jest 
 
 ## 10. SCENARIO / CAPABILITIES / HYDRATION
 
-**IMPLEMENTED:** `4.40` posiada prawa do Astro, shells, B switching, small-glyph scan/target/pull, Furnace, natural essence extraction oraz istniejącej kontroli Asteriona/platformy. `stateAt(4.20)` zawiera ukończony Tier 2; `stateAt(4.30)` dodatkowo `p2World.mainGlyphsRadial = true`; `stateAt(4.40)` dodatkowo `smallGlyphField.materialized = true`.
+**IMPLEMENTED:** `4.40` posiada prawa do Astro, shells, B switching, small- i large-glyph scan/target/pull, Furnace, natural essence extraction oraz istniejącej kontroli Asteriona/platformy. `stateAt(4.20)` zawiera ukończony Tier 2; `stateAt(4.30)` dodatkowo `p2World.mainGlyphsRadial = true`; `stateAt(4.40)` dodatkowo `smallGlyphField.materialized = true`.
 
 Obecne `stateAt(4.40)` nie deklaruje `protoAstroTuning.extractedFamilyCodes`. Direct activation materializuje canonical P2 world i uruchamia TuningController z pustym zestawem — to prawidłowy kontrakt. Hydrator zna owner section `protoAstroTuning` dla przyszłych authored states.
 
@@ -83,10 +83,10 @@ Obecne `stateAt(4.40)` nie deklaruje `protoAstroTuning.extractedFamilyCodes`. Di
 
 | Status | Bands |
 | --- | --- |
-| **IMPLEMENTED** | `SHELLS`, `SMALL_GLYPHS` |
-| **APPROVED / NOT IMPLEMENTED** | `LARGE_GLYPHS`, `RUNESTONES` |
+| **IMPLEMENTED** | `SHELLS`, `SMALL_GLYPHS`, family-gated `LARGE_GLYPHS` |
+| **APPROVED / NOT IMPLEMENTED** | `RUNESTONES` |
 
-Semantic input `B` przełącza wyłącznie aktualnie dostępne bands; obecny HandModeController ma dokładnie dwa implemented bands. Nie ustalono finalnej kolejności cyklu po przyszłych unlockach. Identity bandu jest semantyczne, nie `RED/YELLOW/GREEN/BLUE/ULTRAVIOLET`. Dokładne kolory i symbole pozostają otwarte; przyszły kolor bandu ma być spójny między beam/scan cone i Panelem 2, ale nie wynika automatycznie z fuel family color.
+Semantic input `B` cyklicznie przełącza aktualnie dostępne bands. `LARGE_GLYPHS` dołącza po prawie Scenario i pierwszej naturalnej esencji; wcześniej cykl zachowuje dwa bandy. Nie ustalono finalnej kolejności cyklu po przyszłych unlockach. Identity bandu jest semantyczne, nie `RED/YELLOW/GREEN/BLUE/ULTRAVIOLET`. Dokładne kolory i symbole pozostają otwarte; przyszły kolor bandu ma być spójny między beam/scan cone i Panelem 2, ale nie wynika automatycznie z fuel family color.
 
 ## 12. FOUR-PANEL TARGET CONTRACT
 
@@ -94,7 +94,7 @@ Astrolabium fizycznie ma cztery authored panels.
 
 | Panel | Approved target semantics | Status |
 | --- | --- | --- |
-| 1 | aktualny target: Shell → form O SVG; Small Glyph → form I SVG | wspólny panel system i canonical Proto-Astro projection **IMPLEMENTED** |
+| 1 | aktualny target: Shell → O SVG; Small Glyph → I SVG; Large Glyph → A SVG | wspólny panel system i canonical Proto-Astro projection **IMPLEMENTED** |
 | 2 | current band: symbol + kolor zgodny z beam/scan cone | **APPROVED / NOT IMPLEMENTED** |
 | 3 | dostępne targety current band, `2×3`, maks. 6 Proto-Astro SVG, filtrowane przez domain truth | **APPROVED / NOT IMPLEMENTED** |
 | 4 | miernik odległości do current target | **APPROVED / NOT IMPLEMENTED** |

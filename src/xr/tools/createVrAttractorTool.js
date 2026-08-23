@@ -3,6 +3,7 @@ import { createVrAttractorPanelSystem, resolveAttractorGlyphFamilyColors,
   VR_ATTRACTOR_PANEL_NAMES } from './createVrAttractorPanelSystem.js';
 import { resolveAttractorShellGlyph } from './vrAttractorShellGlyphs.js';
 import { resolveVrSmallGlyphProtoAstro } from '../protoAstro/resolveVrSmallGlyphProtoAstro.js';
+import { resolveVrPageProtoAstro } from '../protoAstro/resolveVrPageProtoAstro.js';
 
 export const VR_ATTRACTOR_STATES = Object.freeze({
   UNEQUIPPED: 'UNEQUIPPED', IDLE: 'IDLE', TARGETING: 'TARGETING', PULLING: 'PULLING', CAPTURED: 'CAPTURED'
@@ -210,9 +211,11 @@ export function createVrAttractorTool({ model, config = VR_ATTRACTOR_VISUAL_CONF
     const previewTarget = value?.target ?? value;
     const shellGlyph = resolveAttractorShellGlyph(previewTarget);
     const smallGlyph = shellGlyph ? null : resolveVrSmallGlyphProtoAstro(previewTarget);
-    const glyph = shellGlyph ?? (smallGlyph ? {
-      syllable: smallGlyph.descriptor.syllable,
-      url: smallGlyph.assetUrl
+    const largeGlyph = shellGlyph || smallGlyph ? null : resolveVrPageProtoAstro(previewTarget?.userData ?? previewTarget);
+    const resolvedGlyph = smallGlyph ?? largeGlyph;
+    const glyph = shellGlyph ?? (resolvedGlyph ? {
+      syllable: resolvedGlyph.descriptor.syllable,
+      url: resolvedGlyph.assetUrl
     } : null);
     panelSystem.setPrimaryGlyph(glyph).catch((error) => logger.warn(error.message));
     panelSystem.setPrimaryPresentation({ isPulling: state === VR_ATTRACTOR_STATES.PULLING, targetProximity });

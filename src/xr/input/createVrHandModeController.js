@@ -12,7 +12,8 @@ export const VR_LEFT_HAND_MODES = Object.freeze({
 
 export const VR_ATTRACTOR_BANDS = Object.freeze({
   SHELLS: 'SHELLS',
-  SMALL_GLYPHS: 'SMALL_GLYPHS'
+  SMALL_GLYPHS: 'SMALL_GLYPHS',
+  LARGE_GLYPHS: 'LARGE_GLYPHS'
 });
 
 export function createVrHandModeController({
@@ -23,7 +24,8 @@ export function createVrHandModeController({
   isUnlocked,
   isAsterionAvailable = () => false,
   isLeftToolToggleBlocked = () => false,
-  canSwitchAttractorBand = () => false
+  canSwitchAttractorBand = () => false,
+  getAvailableAttractorBands = () => [VR_ATTRACTOR_BANDS.SHELLS, VR_ATTRACTOR_BANDS.SMALL_GLYPHS]
 }) {
   let rightMode = VR_RIGHT_HAND_MODES.NORMAL_HAND;
   let leftMode = VR_LEFT_HAND_MODES.NORMAL_HAND;
@@ -50,7 +52,8 @@ export function createVrHandModeController({
     attractorTool.attachToTargetRay(rightRecord?.controller ?? null);
 
     if (!unlocked && rightMode !== VR_RIGHT_HAND_MODES.NORMAL_HAND) setRightMode(VR_RIGHT_HAND_MODES.NORMAL_HAND);
-    if (canSwitchAttractorBand() !== true && attractorBand !== VR_ATTRACTOR_BANDS.SHELLS) {
+    const availableBands = getAvailableAttractorBands();
+    if (!Array.isArray(availableBands) || !availableBands.includes(attractorBand)) {
       setAttractorBand(VR_ATTRACTOR_BANDS.SHELLS);
     }
     if (!asterionAvailable && leftMode !== VR_LEFT_HAND_MODES.NORMAL_HAND) setLeftMode(VR_LEFT_HAND_MODES.NORMAL_HAND);
@@ -62,9 +65,9 @@ export function createVrHandModeController({
     }
     if (unlocked && rightMode === VR_RIGHT_HAND_MODES.ASTRO_ATTRACTOR
       && canSwitchAttractorBand() === true && input.switchRightToolBand) {
-      setAttractorBand(attractorBand === VR_ATTRACTOR_BANDS.SHELLS
-        ? VR_ATTRACTOR_BANDS.SMALL_GLYPHS
-        : VR_ATTRACTOR_BANDS.SHELLS);
+      const bands = getAvailableAttractorBands();
+      const index = bands.indexOf(attractorBand);
+      setAttractorBand(bands[(Math.max(0, index) + 1) % bands.length] ?? VR_ATTRACTOR_BANDS.SHELLS);
     }
     if (input.toggleLeftTool && !isLeftToolToggleBlocked()) {
       if (leftMode === VR_LEFT_HAND_MODES.ASTERION_SPHERE) setLeftMode(VR_LEFT_HAND_MODES.NORMAL_HAND);

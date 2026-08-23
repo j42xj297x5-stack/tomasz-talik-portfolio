@@ -35,7 +35,7 @@ Intro oraz pierwszy cykl Glyph → Crystal → Reliquary prowadzą do trwałego 
 | `4.30` | target entry `BEGIN_SMALL_GLYPH_FIELD_PRESENTATION`; materializacja field; completion `SMALL_GLYPH_FIELD_PRESENTATION_COMPLETED` | `smallGlyphField.materialized = true` |
 | `4.40` | stable P2 Proto-Astro integration boundary | brak transition i brak własnej settled consequence |
 
-`4.40` posiada capabilities dla Astro equipment, shells, B band switching, small-glyph scan/target/pull, Furnace, natural small-glyph essence extraction oraz istniejącej kontroli Asteriona/platformy. Szczegółowy podział ownerów opisuje [`VR_PROTO_ASTRO_MODEL.md`](VR_PROTO_ASTRO_MODEL.md).
+`4.40` posiada capabilities dla Astro equipment, shells, B band switching, small-glyph scan/target/pull, Large Glyph scan/target/pull, Furnace, natural small-glyph essence extraction oraz istniejącej kontroli Asteriona/platformy. Szczegółowy podział ownerów opisuje [`VR_PROTO_ASTRO_MODEL.md`](VR_PROTO_ASTRO_MODEL.md).
 
 ## Reconstruction i hydration
 

@@ -7,11 +7,12 @@ Status: **CURRENT concept roadmap**. Runtime authority: [`VR_RUNTIME_MODEL.md`](
 - authored Scenario przez Tier 2, radial presentation `4.20`, entry beat materializacji small glyph field w `4.30` oraz stable boundary `4.40`;
 - checkpointy debug są wyłącznie aliasami canonical lifecycle: `P1 → 2.10`, `P2 → 3.10`, `P3 → 4.10`, `P4 → 4.30`; wszystkie używają spawnu `RING` i normalnego `activatePoint()` bez osobnego stanu QA;
 - deterministic, world-stable `SMALL_GLYPHS` spherical volume field: 6 wariantów po 2 instancje, presentation materialization i hydration;
-- semantic input `B` i dokładnie dwa aktywne runtime bands: `SHELLS`, `SMALL_GLYPHS`;
+- semantic input `B` i trzy runtime bands: `SHELLS`, `SMALL_GLYPHS` oraz odblokowywany esencją `LARGE_GLYPHS`;
 - Small Glyph scan/target/pull oraz transport `FIELD → TARGETING → PULLING → CAPTURE_READY → HELD → PLACED → HELD`: przejęcie lewą Szpilą, world-stable placement i ponowne przejęcie są zaimplementowane;
 - jeden Furnace chamber/content owner dla shells i Small Glyph; istniejąca ekstrakcja naturalnych rodzin `K/T/S/L/R`, persistent `extractedFamilyCodes` oraz domain seam `canAttractLargeGlyph`;
 - VI jest pełnym Small Glyph w field i handoff/placement, ale obecnie nie daje esencji ani nie odblokowuje Large Glyph;
-- Panel 1 Astrolabium pokazuje aktualny target; właściwa projekcja glyph SVG dla shell jest zaimplementowana. Uniwersalna obsługa kolejnych klas targetu, w tym Small Glyph, nie jest jeszcze ukończona.
+- family-gated scan/target/pull Large Glyph z bezpiecznym capture stand-off i powrotem do ruchomego canonical slotu orbity;
+- Panel 1 Astrolabium pokazuje canonical O/I/A SVG aktualnego targetu.
 
 Nie ma inventory ani persistent ownership Small Glyph. Ponowne użycie instancji po procesie zachowuje canonical field contract.
 
@@ -60,7 +61,6 @@ Panel 1 oznacza aktualny target. Shell i Small Glyph mają otrzymać własne wł
 
 Backlog bandów, bez aktywowania ich w runtime:
 
-- `LARGE_GLYPHS` → zielony scan cone;
 - `RUNESTONES` → niebieski;
 - późne dalekie wyszukiwanie dwóch glifów → fioletowy;
 - finalne wyszukiwanie Haiku Cosmos → tęczowy.
@@ -69,8 +69,6 @@ Backlog bandów, bez aktywowania ich w runtime:
 
 Po powyższym pozostają:
 
-- real `LARGE_GLYPHS` band;
-- family-gated targeting/pull dużych glifów;
 - `RUNESTONES`;
 - późna authored progression.
 

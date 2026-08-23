@@ -6,7 +6,7 @@ Status: **CURRENT / canonical** jako lekka orientacja w przebiegu doświadczenia
 
 Intro prowadzi do pierwszego cyklu Glyph → Crystal → Reliquary i pierwszego ringu. Post-ring odsłania skorupy oraz Piec; gracz wytwarza i fizycznie odbiera Astrolabium, kompletuje skorupy, buduje Kulę Asterionową i przejmuje kontrolę nad platformą.
 
-Drugi ring jest authored i kończy Tier 2. Następnie duże glify odsuwają się radialnie poza zwykły zasięg, a świat materializuje pole małych glifów. B przełącza Astrolabium między dostępnymi pasmami `SHELLS` i `SMALL_GLYPHS`. Gracz może namierzyć, przyciągnąć i przejąć mały glif, a po puszczeniu glif wraca do pola. Naturalny small glyph można przetworzyć w Piecu, zdobywając trwałą rodzinną esencję dla Astrolabium bez trwałego zużywania fizycznego reliktu.
+Drugi ring jest authored i kończy Tier 2. Następnie duże glify odsuwają się radialnie poza zwykły zasięg, a świat materializuje pole małych glifów. B przełącza Astrolabium między dostępnymi pasmami `SHELLS` i `SMALL_GLYPHS`. Gracz może namierzyć, przyciągnąć i przejąć mały glif, a po puszczeniu glif wraca do pola. Naturalny small glyph można przetworzyć w Piecu, zdobywając trwałą rodzinną esencję dla Astrolabium bez trwałego zużywania fizycznego reliktu. Esencja udostępnia rodzinny Large Glyph w zielonym bandzie; glif można przyciągnąć do bezpiecznego stand-off i odesłać do bieżącego slotu orbity.
 
 ```text
 1.10 → … → 3.80 → 4.10 → 4.20 → 4.30 → 4.40 → 100.10
@@ -18,9 +18,6 @@ Drugi ring jest authored i kończy Tier 2. Następnie duże glify odsuwają się
 
 **APPROVED / NOT IMPLEMENTED:**
 
-- real `LARGE_GLYPHS` band;
-- użycie pobranych naturalnych esencji do family-gated targetingu/pull dużych glifów;
-- semantyczna projekcja paneli Astrolabium;
 - dalsza authored progresja P2;
 - później `RUNESTONES` i dalsze akty.
 
@@ -32,4 +29,4 @@ Drugi ring jest authored i kończy Tier 2. Następnie duże glify odsuwają się
 
 ## Hardware status
 
-Tylko dotychczas potwierdzony bootstrap READY ma status **HARDWARE VALIDATED — Meta Quest 3S**. P2 `4.20–4.40` i nowe small-glyph mechanics pozostają hardware/perceptual QA pending.
+Tylko dotychczas potwierdzony bootstrap READY ma status **HARDWARE VALIDATED — Meta Quest 3S**. P2 `4.20–4.40`, Small Glyph i Large Glyph attraction pozostają hardware/perceptual QA pending.

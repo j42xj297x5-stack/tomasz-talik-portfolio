@@ -7,6 +7,7 @@ export function angularDifference(a, b) {
 }
 
 export function createVrGlyphOrbit({ nodes, center = new THREE.Vector3(), settings, entryDirection, radius }) {
+  const suspended = new Set();
   const records = nodes.map((node, index) => ({
     node,
     initialAngle: Number.isFinite(node.userData.orbitAngle)
@@ -25,7 +26,13 @@ export function createVrGlyphOrbit({ nodes, center = new THREE.Vector3(), settin
   function applyPositions() {
     records.forEach(({ node, initialAngle, y, rotation }) => {
       const angle = initialAngle + phase;
-      node.position.set(center.x + Math.cos(angle) * currentRadius, center.y + y, center.z + Math.sin(angle) * currentRadius);
+      const canonicalPosition = new THREE.Vector3(center.x + Math.cos(angle) * currentRadius, center.y + y,
+        center.z + Math.sin(angle) * currentRadius);
+      const canonicalQuaternion = new THREE.Quaternion().setFromEuler(rotation);
+      node.userData.vrCanonicalOrbitTransform = { position: canonicalPosition, quaternion: canonicalQuaternion,
+        scale: node.scale.clone() };
+      if (suspended.has(node)) return;
+      node.position.copy(canonicalPosition);
       // Experience 3D keeps glyph model rotation independent from its orbital phase.
       node.rotation.copy(rotation);
       node.userData.vrOrbitAngle = angle;
@@ -53,6 +60,13 @@ export function createVrGlyphOrbit({ nodes, center = new THREE.Vector3(), settin
   }
 
   function getRadius() { return currentRadius; }
+  function suspendNode(node) { if (!records.some((record) => record.node === node)) return false; suspended.add(node); return true; }
+  function getCanonicalTransform(node) { const transform = node?.userData?.vrCanonicalOrbitTransform;
+    return transform ? { position: transform.position.clone(), quaternion: transform.quaternion.clone(),
+      scale: transform.scale.clone() } : null; }
+  function resumeNode(node) { if (!suspended.delete(node)) return false; const transform = getCanonicalTransform(node);
+    if (transform) { node.position.copy(transform.position); node.quaternion.copy(transform.quaternion); node.scale.copy(transform.scale); }
+    return true; }
   function setRadius(nextRadius) {
     if (disposed || !Number.isFinite(nextRadius) || nextRadius <= 0) return false;
     currentRadius = nextRadius;
@@ -64,10 +78,12 @@ export function createVrGlyphOrbit({ nodes, center = new THREE.Vector3(), settin
       phase = 0;
       entryReady = null;
       currentRadius = effectiveRadius;
+      suspended.clear();
       applyPositions();
     }
   }
   function dispose() { if (!disposed) { disposed = true; entryReady = null; records.length = 0; } }
   applyPositions();
-  return { effectiveRadius, get entryReady() { return entryReady; }, getRadius, setRadius, update, reset, dispose };
+  return { effectiveRadius, get entryReady() { return entryReady; }, getRadius, setRadius, suspendNode,
+    getCanonicalTransform, resumeNode, update, reset, dispose };
 }
