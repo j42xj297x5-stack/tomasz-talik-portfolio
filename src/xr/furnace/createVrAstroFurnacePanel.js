@@ -185,10 +185,10 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
         completed: extracted, locked: !supported, accentColor: color });
       text(protoAstro.descriptor.syllable, x + 20, y + 32, 22, color);
       drawMaterialCardVisual(context, { x: x + 8, y: y + 34, width: 389, height: 82,
-        glyphRatio: .46, padding: 6, glyphImage: image, color,
+        glyphRatio: .46, glyphScale: 1.9, padding: 6, glyphImage: image, color,
         drawPreview: ({ cx, cy, scale }) => drawSmallGlyphWireframe(context,
           { assetId, cx, cy, scale, color, alpha: supported ? .95 : .34 }) });
-      text(extracted ? 'WYEKSTRAHOWANY' : processing ? 'PRZETWARZANIE' : supported ? 'GOTOWY' : 'NIEAKTYWNY',
+      text(extracted ? 'DOSTROJONY' : processing ? 'PRZETWARZANIE' : supported ? 'GOTOWY' : 'NIEAKTYWNY',
         x + 20, y + 134, 16, color);
     });
     drawSmallGlyphExtractionMonitor();
@@ -201,7 +201,7 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
     const telemetry = readTelemetry();
     const smallGlyphProcess = processKind === ASTRO_FURNACE_PROCESS_KINDS.SMALL_GLYPH_ESSENCE_EXTRACTION;
     if (currentAssetId) lastSmallGlyphProcessAssetId = currentAssetId;
-    else if ((processKind && !smallGlyphProcess) || (telemetry.phase === 'IDLE' && !smallGlyphProcess))
+    else if ((processKind && !smallGlyphProcess) || telemetry.phase === 'IDLE')
       lastSmallGlyphProcessAssetId = null;
     const presentationAssetId = currentAssetId ?? lastSmallGlyphProcessAssetId;
     const presentationTail = Boolean(presentationAssetId && telemetry.phase === 'COMPLETE');
