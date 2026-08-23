@@ -53,11 +53,11 @@ The left joystick continuously yaws `playerRig`. The right joystick translates i
 
 ## Large Glyph actor
 
-`createVrLargeGlyphActor` is the sole physical/spatial owner of the five Large Glyphs. Under `WorldStableRoot`, `VrLargeGlyphActor` contains one rigid `RotationRoot` with identity slots `Slot_KA`, `Slot_TA`, `Slot_SA`, `Slot_LA`, `Slot_RA`, plus actor-owned `TransientRoot`. The five slots remain separated by `72°`, use a canonical `3×` scale and move through exactly `RING_INITIAL` (`8.5 m`), `RING_ELEVATED` (`8.5 m`, `+2.4 m`) and `RING_EXPANDED` (`18.5 m`). `SPHERE_FAR` is **FUTURE / NOT AUTHORED / NOT IMPLEMENTED**.
+`createVrLargeGlyphActor` is the sole physical/spatial owner of the five Large Glyphs. Under `WorldStableRoot`, `VrLargeGlyphActor` contains one rigid `RotationRoot` with identity slots `Slot_KA`, `Slot_TA`, `Slot_SA`, `Slot_LA`, `Slot_RA`, plus actor-owned `TransientRoot`. The five slots use a canonical `3×` scale and move through `RING_INITIAL` (`8.5 m`), `RING_ELEVATED` (`8.5 m`, `+2.4 m`), `RING_EXPANDED` (`46 m`) and `SPHERE_FAR` (`80 m`). The first three stages retain the ordered ring. On completion of Tier 3, `SPHERE_FAR` uses five actor-owned deterministic 3D directions spanning positive and negative heights, so the slots no longer share a ring or plane.
 
 The actor owns physical nodes, rigid rotation, canonical slots, elevation/expansion, spatial stage, presentation visibility (`setPresentationVisible`), transient hierarchy, targeting extent/range, hydration, reset and disposal. Intro passes visibility intent through the actor; `intro.largeGlyphsVisible` is presentation truth and is distinct from spatial reconstruction. Scenario settled truth is exclusively `largeGlyphs.stage`; PostRing requests `beginElevation()`, while `BEGIN_P2_RADIAL_PRESENTATION` requests `beginExpansion()`.
 
-Large Glyph radii `8.5 / 18.5 m` are independent from `worldBaseRadius = 7.6 m`. Large Glyph is not a spherical layer. Its expanded structure intentionally overlaps the Small Glyph volume `17.1–24.7 m`; this is an **ACCEPTED PRODUCT DECISION** and does not alter the spherical registry.
+Large Glyph radii `8.5 / 46 / 80 m` are independent from `worldBaseRadius = 7.6 m`. Large Glyph is not a spherical layer and does not alter the spherical registry.
 
 ## Glyphs, crystals and reliquary
 

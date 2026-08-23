@@ -6,6 +6,15 @@ const LARGE_GLYPH_COUNT = 5;
 export const VR_LARGE_GLYPH_INITIAL_STAGE = 'RING_INITIAL';
 export const VR_LARGE_GLYPH_ELEVATED_STAGE = 'RING_ELEVATED';
 export const VR_LARGE_GLYPH_EXPANDED_STAGE = 'RING_EXPANDED';
+export const VR_LARGE_GLYPH_SPHERE_STAGE = 'SPHERE_FAR';
+
+const SPHERE_DIRECTIONS = Object.freeze([
+  new THREE.Vector3(0.36, 0.82, 0.44).normalize(),
+  new THREE.Vector3(-0.79, 0.38, 0.48).normalize(),
+  new THREE.Vector3(0.91, 0.08, -0.41).normalize(),
+  new THREE.Vector3(-0.35, -0.55, -0.76).normalize(),
+  new THREE.Vector3(0.21, -0.88, 0.43).normalize()
+]);
 
 export function createVrLargeGlyphActor({
   items,
@@ -15,7 +24,8 @@ export function createVrLargeGlyphActor({
   scaleMultiplier = 3,
   rotation = { enabled: true, angularSpeed: 0.14, direction: 1 },
   elevation = { offset: 2.4, durationSeconds: 2.5 },
-  expansion = { radius: 18.5, durationSeconds: 2.5 },
+  expansion = { radius: 46, durationSeconds: 2.5 },
+  sphere = { radius: 80, durationSeconds: 2.5 },
   onExpansionCompleted = () => {}
 }) {
   if (!Array.isArray(items) || items.length !== LARGE_GLYPH_COUNT) {
@@ -24,6 +34,10 @@ export function createVrLargeGlyphActor({
   if (!Number.isFinite(expansion.radius) || expansion.radius <= initialRadius
     || !Number.isFinite(expansion.durationSeconds) || expansion.durationSeconds <= 0) {
     throw new TypeError('VrLargeGlyphActor requires valid expansion settings.');
+  }
+  if (!Number.isFinite(sphere.radius) || sphere.radius <= expansion.radius
+    || !Number.isFinite(sphere.durationSeconds) || sphere.durationSeconds <= 0) {
+    throw new TypeError('VrLargeGlyphActor requires valid sphere settings.');
   }
   if (typeof onExpansionCompleted !== 'function') {
     throw new TypeError('VrLargeGlyphActor onExpansionCompleted must be a function.');
@@ -80,6 +94,7 @@ export function createVrLargeGlyphActor({
   let stage = VR_LARGE_GLYPH_INITIAL_STAGE;
   let elevationElapsed = null;
   let expansionElapsed = null;
+  let sphereElapsed = null;
   let disposed = false;
   function settleStage(nextStage) {
     stage = nextStage;
@@ -92,12 +107,23 @@ export function createVrLargeGlyphActor({
     slots.forEach((slot, index) => {
       const angle = (Math.PI * 2 * index) / LARGE_GLYPH_COUNT;
       slot.position.set(Math.cos(angle) * radius, 0, Math.sin(angle) * radius);
+      slot.quaternion.setFromUnitVectors(assetForward, slot.position.clone().normalize().negate());
     });
+  }
+  function setSphereLayout(progress = 1) {
+    slots.forEach((slot, index) => {
+      const angle = (Math.PI * 2 * index) / LARGE_GLYPH_COUNT;
+      const ringPosition = new THREE.Vector3(Math.cos(angle) * expansion.radius, 0, Math.sin(angle) * expansion.radius);
+      slot.position.lerpVectors(ringPosition, SPHERE_DIRECTIONS[index].clone().multiplyScalar(sphere.radius), progress);
+      slot.quaternion.setFromUnitVectors(assetForward, slot.position.clone().normalize().negate());
+    });
+    currentRadius = THREE.MathUtils.lerp(expansion.radius, sphere.radius, progress);
   }
   function hydrateScenarioState(state) {
     if (disposed || (state?.stage !== VR_LARGE_GLYPH_INITIAL_STAGE
       && state?.stage !== VR_LARGE_GLYPH_ELEVATED_STAGE
-      && state?.stage !== VR_LARGE_GLYPH_EXPANDED_STAGE)) {
+      && state?.stage !== VR_LARGE_GLYPH_EXPANDED_STAGE
+      && state?.stage !== VR_LARGE_GLYPH_SPHERE_STAGE)) {
       throw new Error('Unsupported Large Glyph Scenario stage');
     }
     if (transientLeases.size > 0) {
@@ -105,6 +131,9 @@ export function createVrLargeGlyphActor({
     }
     elevationElapsed = null;
     expansionElapsed = null;
+    sphereElapsed = null;
+    if (state.stage === VR_LARGE_GLYPH_SPHERE_STAGE) setSphereLayout();
+    else
     setCanonicalRadius(state.stage === VR_LARGE_GLYPH_EXPANDED_STAGE
       ? expansion.radius : baseline.initialRadius);
     settleStage(state.stage);
@@ -126,6 +155,12 @@ export function createVrLargeGlyphActor({
       || elevationElapsed !== null || expansionElapsed !== null) return false;
     setCanonicalRadius(baseline.initialRadius);
     expansionElapsed = 0;
+    return true;
+  }
+  function beginSphereDistribution() {
+    if (transientLeases.size > 0) throw new Error('Cannot distribute Large Glyph actor during a transient lease.');
+    if (disposed || stage !== VR_LARGE_GLYPH_EXPANDED_STAGE || sphereElapsed !== null) return false;
+    sphereElapsed = 0;
     return true;
   }
   function requireOwnedNode(node) {
@@ -200,6 +235,16 @@ export function createVrLargeGlyphActor({
         onExpansionCompleted();
       }
     }
+    if (sphereElapsed !== null) {
+      sphereElapsed += delta;
+      const progress = Math.min(1, sphereElapsed / sphere.durationSeconds);
+      setSphereLayout(progress * progress * (3 - 2 * progress));
+      if (progress === 1) {
+        sphereElapsed = null;
+        setSphereLayout();
+        settleStage(VR_LARGE_GLYPH_SPHERE_STAGE);
+      }
+    }
   }
   function setPresentationVisible(value) {
     if (disposed) throw new Error('Cannot change presentation visibility of a disposed Large Glyph actor.');
@@ -213,6 +258,7 @@ export function createVrLargeGlyphActor({
     [...transientLeases].forEach(restoreToSlot);
     elevationElapsed = null;
     expansionElapsed = null;
+    sphereElapsed = null;
     object.position.set(0, baseline.worldY, 0);
     object.quaternion.identity();
     object.scale.set(1, 1, 1);
@@ -238,10 +284,11 @@ export function createVrLargeGlyphActor({
     update,
     getStage: () => stage,
     getSpatialExtent: () => currentRadius,
-    getTargetingRange: () => expansion.radius,
+    getTargetingRange: () => sphere.radius,
     setPresentationVisible,
     beginElevation,
     beginExpansion,
+    beginSphereDistribution,
     beginTransient,
     getSlotWorldTransform,
     restoreToSlot,

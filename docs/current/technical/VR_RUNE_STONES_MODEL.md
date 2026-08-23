@@ -155,9 +155,9 @@ Nazwy implementacyjne mogą się zmienić, lecz poniższa semantyka jest **KANON
 
 ### `FREE`
 
-A future `FREE` stone originates in its deterministic slot in the reserved world-stable `RUNE_STONES` spherical layer (`26.6–34.2 m` at the current `R=7.6 m`), as defined by [`VR_SPHERICAL_LAYERS_MODEL.md`](VR_SPHERICAL_LAYERS_MODEL.md). Leaving `FREE` enters the transport contract below; the spherical layer does not replace `LOCKED_BY_ASTRO`, `CARRIED_ORBIT`, capture or installation.
+A future `FREE` stone originates in its deterministic slot in the reserved world-stable `RUNE_STONES` spherical layer (`50–75 m`), as defined by [`VR_SPHERICAL_LAYERS_MODEL.md`](VR_SPHERICAL_LAYERS_MODEL.md). Leaving `FREE` enters the transport contract below; the spherical layer does not replace `LOCKED_BY_ASTRO`, `CARRIED_ORBIT`, capture or installation.
 
-Large Glyph is not a spherical layer. Its `RING_EXPANDED = 18.5 m` overlaps the Small Glyph volume by accepted product decision and remains separate from the reserved Rune Stones range `26.6–34.2 m`.
+Large Glyph is not a spherical layer. Its ordered `RING_EXPANDED = 46 m` and full-sphere `SPHERE_FAR = 80 m` remain separate from the reserved Rune Stones range `50–75 m`.
 
 Kamień istnieje w świecie, odtwarza własny loop animacji i emituje własny spatial audio loop. Targetowanie jest możliwe tylko wtedy, gdy progresja/Director udostępnia odpowiednią zdolność.
 

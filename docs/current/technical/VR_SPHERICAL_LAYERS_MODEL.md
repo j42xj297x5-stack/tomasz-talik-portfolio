@@ -6,15 +6,15 @@
 
 ## Registry i zakresy
 
-Jedynym bazowym promieniem world/platform jest jawne `worldBaseRadius = 7.6 m`. Ustawienia rozdzielają dwa niezależne pojęcia: dodatnią, skończoną `thickness` warstwy oraz nieujemny `gapAfter`, czyli pustą przestrzeń radialną przed następną warstwą. Domyślny gap wynosi `0.25R`; opcjonalny `gapAfterMultiplier` warstwy może go nadpisać. Gap nie należy do żadnej warstwy, nie ma Object3D, aktora, contentu ani Astro bandu. Resolver kumuluje `thickness + gapAfter`; pary promieni nie są zapisywane ręcznie.
+Promień platformy pozostaje jawny jako `worldBaseRadius = 7.6 m`, a niezależny początek registry warstw to `sphericalLayers.innerRadius = 13 m`. Ustawienia rozdzielają dodatnią, skończoną `thickness` warstwy oraz nieujemny `gapAfter`, czyli pustą przestrzeń radialną przed następną warstwą. Opcjonalny `gapAfterMultiplier` warstwy wyznacza gap względem `innerRadius`. Gap nie należy do żadnej warstwy, nie ma Object3D, aktora, contentu ani Astro bandu. Resolver kumuluje `thickness + gapAfter`; pary promieni pozostają wynikiem istniejącego kontraktu registry.
 
-| layer id | thickness | range przy R=7.6 | gap after | status |
+| layer id | thickness | world-space range | gap after | status |
 | --- | ---: | ---: | ---: | --- |
-| `SHELLS` | 7.6 m | 7.6–15.2 m | 1.9 m | IMPLEMENTED |
-| `SMALL_GLYPHS` | 7.6 m | 17.1–24.7 m | 1.9 m | IMPLEMENTED |
-| `RUNE_STONES` | 7.6 m | 26.6–34.2 m | 1.9 m | RESERVED / NOT IMPLEMENTED |
-| `STARS` | 7.6 m | 36.1–43.7 m | 1.9 m | RESERVED / NOT IMPLEMENTED |
-| `HIDDEN_GLYPHS` | 7.6 m | 45.6–53.2 m | 0 m | RESERVED / NOT IMPLEMENTED |
+| `SHELLS` | 12 m | 13–25 m | 5 m | IMPLEMENTED |
+| `SMALL_GLYPHS` | 15 m | 30–45 m | 5 m | IMPLEMENTED |
+| `RUNE_STONES` | 25 m | 50–75 m | 10 m | RESERVED / NOT IMPLEMENTED |
+| `STARS` | 45 m | 85–130 m | 3.25 m | RESERVED / NOT IMPLEMENTED |
+| `HIDDEN_GLYPHS` | 7.6 m | 133.25–140.85 m | 0 m | RESERVED / NOT IMPLEMENTED |
 
 Reserved oznacza wyłącznie kontrakt przestrzenny. Nie powstają dla tych warstw runtime Object3D, content, count, renderer, interaction, band ani Scenario point.
 
@@ -36,4 +36,4 @@ Field-owned Shell i Small Glyph dostają stale przypisany slot. Materialization 
 
 ## Large Glyph spatial integration
 
-Large Glyph nie należy do `VR_SPHERICAL_LAYER_IDS` ani do spherical layer registry. Jego actor-owned stage `RING_EXPANDED` ma promień `18.5 m` i świadomie przecina volume `SMALL_GLYPHS` (`17.1–24.7 m`). Ten overlap jest **ACCEPTED PRODUCT DECISION**: nie jest bugiem ani gapem do naprawienia i nie zmienia registry ani żadnego z powyższych ranges.
+Large Glyph nie należy do `VR_SPHERICAL_LAYER_IDS` ani do spherical layer registry. Actor zachowuje pierścieniowe stadia `RING_INITIAL = 8.5 m` i `RING_EXPANDED = 46 m`. Po ukończeniu trzeciego kręgu istniejący event `TIER_COMPLETED` przełącza actor na `SPHERE_FAR = 80 m`: pięć stabilnych kierunków o dodatnich i ujemnych wysokościach daje deterministyczny, niewspółpłaszczyznowy układ pełnej sfery.

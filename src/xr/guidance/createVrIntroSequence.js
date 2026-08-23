@@ -219,7 +219,7 @@ export function createVrIntroSequence({ monkeyGuide, monkeyMotionRoot, monkeyVis
     if (state === VR_INTRO_STATE.WAIT_PANEL_CLOSE && !playerGuidePanel?.isOpen()) { state = VR_INTRO_STATE.WAIT_RUNTIME_AFTER_PLAYER_GUIDE_CLOSED; onPlayerClosedGuide(); }
     if (state === VR_INTRO_STATE.FOLLOWING) {
       turnElapsed += delta; monkeyMotionRoot.quaternion.slerpQuaternions(canonicalQuaternion, walkingQuaternion, Math.min(1, turnElapsed / (settings.guideTurnDuration ?? 1)));
-      const stopRadius = worldBaseRadius + spatial.thresholdOutsideDistance; const walked = startRadius - monkeyRadius; const head = getHeadPosition(); const monkey = monkeyMotionRoot.getWorldPosition(new THREE.Vector3()); const distance = Math.hypot(head.x - monkey.x, head.z - monkey.z);
+      const stopRadius = spatial.monkeyIntroStopRadius; const walked = startRadius - monkeyRadius; const head = getHeadPosition(); const monkey = monkeyMotionRoot.getWorldPosition(new THREE.Vector3()); const distance = Math.hypot(head.x - monkey.x, head.z - monkey.z);
       if (walked >= settings.followGraceDistance) {
         followCheckResolved = true;
         if (!walkingPaused && distance > settings.pauseDistance) { state = VR_INTRO_STATE.WAIT_RUNTIME_AFTER_FOLLOW_PAUSE_CHANGED; onFollowPauseChanged(true); }

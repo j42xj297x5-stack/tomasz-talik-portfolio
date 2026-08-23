@@ -110,7 +110,7 @@ Rodzina symboli bandów i dokładne kolory nie są jeszcze zaprojektowane. Przys
 ## 14. IMPLEMENTED VS APPROVED FUTURE
 
 - **IMPLEMENTED:** identity/resolvers, field i transport, `SHELLS`/`SMALL_GLYPHS`/`LARGE_GLYPHS`, B, natural essence extraction, persistent family tuning truth, `canAttractLargeGlyph`, family-gated real Large Glyph targeting oraz actor-owned transient pull/return. Panel 1 projektuje canonical Large Glyph target.
-- **APPROVED / NOT IMPLEMENTED:** `RUNESTONES`, Panele 2–4 i placement VI. `SPHERE_FAR` pozostaje **FUTURE / NOT AUTHORED / NOT IMPLEMENTED**.
+- **APPROVED / NOT IMPLEMENTED:** `RUNESTONES`, Panele 2–4 i placement VI. Spatial stage Large Glyph `SPHERE_FAR` jest **IMPLEMENTED** i nie implementuje przyszłego gameplayu Runic Stones.
 - **RESERVED / NOT YET DESIGNED:** VI/Eter finale z level-6 shell family.
 
 ## 15. QA STATUS
