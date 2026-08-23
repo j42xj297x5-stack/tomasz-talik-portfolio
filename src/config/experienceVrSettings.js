@@ -175,6 +175,7 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
   },
   glyphInteraction: { holdDurationSeconds: 0.5, holdLostGraceSeconds: 0.15 },
   glyphLights: { inwardOffset: 1 },
+  largeGlyphs: { scaleMultiplier: 3 },
   glyphRing: {
     enabled: true,
     angularSpeed: 0.14,
@@ -189,8 +190,7 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
   },
   p2RadialPresentation: {
     durationSeconds: 2.5,
-    largeGlyphRadiusMultiplier: 3.3,
-    largeGlyphScaleMultiplier: 3
+    largeGlyphRadiusMultiplier: 3.3
   },
   shellFieldMotion: { direction: 1 },
   sphericalLayers: {
@@ -611,6 +611,10 @@ export function normalizeExperienceVrSettings(candidate) {
       inwardOffset: finiteNumber(candidate.glyphLights?.inwardOffset,
         defaults.glyphLights.inwardOffset, { min: 0, max: 5 })
     },
+    largeGlyphs: {
+      scaleMultiplier: finiteNumber(candidate.largeGlyphs?.scaleMultiplier,
+        defaults.largeGlyphs.scaleMultiplier, { min: 1, max: 10 })
+    },
     glyphRing: {
       enabled: typeof candidate.glyphRing?.enabled === 'boolean' ? candidate.glyphRing.enabled : defaults.glyphRing.enabled,
       angularSpeed: finiteNumber(candidate.glyphRing?.angularSpeed, defaults.glyphRing.angularSpeed, { min: 0, max: 2 }),
@@ -630,9 +634,7 @@ export function normalizeExperienceVrSettings(candidate) {
       durationSeconds: finiteNumber(candidate.p2RadialPresentation?.durationSeconds,
         defaults.p2RadialPresentation.durationSeconds, { min: 0.1, max: 60 }),
       largeGlyphRadiusMultiplier: finiteNumber(candidate.p2RadialPresentation?.largeGlyphRadiusMultiplier,
-        defaults.p2RadialPresentation.largeGlyphRadiusMultiplier, { min: 1, max: 10 }),
-      largeGlyphScaleMultiplier: finiteNumber(candidate.p2RadialPresentation?.largeGlyphScaleMultiplier,
-        defaults.p2RadialPresentation.largeGlyphScaleMultiplier, { min: 1, max: 10 })
+        defaults.p2RadialPresentation.largeGlyphRadiusMultiplier, { min: 1, max: 10 })
     },
     shellFieldMotion: {
       direction: candidate.shellFieldMotion?.direction === -1 ? -1 : 1

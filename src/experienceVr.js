@@ -235,6 +235,10 @@ monkeyActor.dockCharacterToStone();
 monkeyActor.captureScenarioFinalPlacement();
 const resolvedPortfolioNodes = resolvePortfolioNodes(language);
 const { group: glyphRing, nodes } = createOrbitNodes(resolvedPortfolioNodes, { assetManager });
+nodes.forEach((node) => {
+  node.userData.baseScale = settings.largeGlyphs.scaleMultiplier;
+  node.scale.setScalar(settings.largeGlyphs.scaleMultiplier);
+});
 worldStableRoot.add(glyphRing);
 const glyphOrbit = createVrGlyphOrbit({ nodes, center: new THREE.Vector3(0, settings.spatial.worldStableCenterY, 0),
   settings: settings.glyphRing, entryDirection, radius: settings.spatial.ringRadius });
@@ -813,9 +817,7 @@ const postRingPresentation = createVrPostRingPresentation({ glyphRing, shellSyst
 });
 const p2RadialPresentation = createVrP2RadialPresentation({
   glyphOrbit,
-  nodes,
   getTargetRadius: () => largeGlyphTargetRadius,
-  largeGlyphScaleMultiplier: settings.p2RadialPresentation.largeGlyphScaleMultiplier,
   durationSeconds: settings.p2RadialPresentation.durationSeconds,
   onCompleted: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.P2_RADIAL_PRESENTATION_COMPLETED)
 });
