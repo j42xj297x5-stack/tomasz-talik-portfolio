@@ -26,11 +26,11 @@ export function createVrShellSystem({ parent, assetManager, layer, angularSpeed 
 
   ASSET_IDS.forEach((assetId, assetIndex) => SUFFIXES.forEach((suffix, copyIndex) => {
     const index = assetIndex * SUFFIXES.length + copyIndex;
-    const shell = assetManager.cloneGltfScene(assetId);
-    if (!panelWireframes.has(assetId)) panelWireframes.set(assetId, createObjectWireframeData(shell));
+    const visualModel = assetManager.cloneGltfScene(assetId);
+    if (!panelWireframes.has(assetId)) panelWireframes.set(assetId, createObjectWireframeData(visualModel));
     const panelWireframe = panelWireframes.get(assetId);
     const emissiveMaterials = [], materialBaselines = [];
-    shell.traverse((child) => { if (!child.isMesh || !child.material) return;
+    visualModel.traverse((child) => { if (!child.isMesh || !child.material) return;
       const cloneMaterial = (material) => { const clone = material.clone(); ownedMaterials.add(clone);
         if ('emissiveIntensity' in clone) { clone.emissiveIntensity = 0; emissiveMaterials.push(clone); }
         materialBaselines.push({ material: clone, color: clone.color?.clone(), emissive: clone.emissive?.clone(),
@@ -38,11 +38,16 @@ export function createVrShellSystem({ parent, assetManager, layer, angularSpeed 
         return clone; };
       child.material = Array.isArray(child.material) ? child.material.map(cloneMaterial) : cloneMaterial(child.material);
     });
+    const shell = new THREE.Group();
+    shell.add(visualModel); object.add(shell);
     shell.updateMatrixWorld(true);
-    const bounds = new THREE.Box3().setFromObject(shell).getBoundingSphere(new THREE.Sphere());
+    const bounds = new THREE.Box3().setFromObject(visualModel).getBoundingSphere(new THREE.Sphere());
+    const boundingCenter = shell.worldToLocal(bounds.center.clone());
+    visualModel.position.sub(boundingCenter);
+    shell.updateMatrixWorld(true);
     const attractorId = `shell-${String(assetIndex + 1).padStart(2, '0')}-${suffix}`;
     const record = { object: shell, emissiveMaterials, materialBaselines, panelWireframe,
-      boundingCenter: shell.worldToLocal(bounds.center.clone()), boundingRadius: bounds.radius,
+      boundingCenter, boundingRadius: bounds.radius,
       slotIndex: index,
       direction,
       selfRotationAxis: new THREE.Vector3(Math.sin((index + 1) * 1.71), 0.45 + ((index * 7) % 5) * 0.17,
@@ -55,7 +60,7 @@ export function createVrShellSystem({ parent, assetManager, layer, angularSpeed 
     Object.assign(shell.userData, { attractorTarget: false, attractorType: 'shell', attractorId, shellState: 'orbiting',
       shellAssetId: assetId, panelWireframe, sphericalLayerId: layer.id, sphericalSlotIndex: index,
       selfRotationAxis: record.selfRotationAxis.clone(), selfRotationSpeed: record.selfRotationSpeed });
-    object.add(shell); instances.push(shell); records.push(record);
+    instances.push(shell); records.push(record);
   }));
 
   function setEmission(shell, value) { const record = records.find((item) => item.object === shell);
