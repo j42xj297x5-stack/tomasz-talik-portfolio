@@ -56,7 +56,8 @@ import { createVrPlayerGuidePanel } from './xr/guidance/createVrPlayerGuidePanel
 import { createVrPlayerGuideProjection } from './xr/guidance/createVrPlayerGuideProjection.js';
 import { createVrMonkeyGuide } from './xr/guidance/createVrMonkeyGuide.js';
 import { createVrMonkeyKnowledgeResolver } from './xr/guidance/createVrMonkeyKnowledgeResolver.js';
-import { createVrPostRingMonkeyDialogue } from './xr/guidance/createVrPostRingMonkeyDialogue.js';
+import { createVrMandatoryMonkeyCommunication } from './xr/guidance/createVrMandatoryMonkeyCommunication.js';
+import { VR_MONKEY_COMMUNICATION_COPY_PL } from './xr/guidance/vrMonkeyCommunicationCopy.js';
 import { createVrFurnaceIntro } from './xr/guidance/createVrFurnaceIntro.js';
 import { createVrIntroSequence } from './xr/guidance/createVrIntroSequence.js';
 import { createVrIntroCrystalTutorial } from './xr/guidance/createVrIntroCrystalTutorial.js';
@@ -474,7 +475,8 @@ const playerGuideProjection = createVrPlayerGuideProjection({
   locale: language,
   getCurrentPointId: () => runtimeExperience?.getCurrentPointId(),
   can: (capability) => runtimeExperience?.can(capability) === true,
-  getActivatedPageIds: () => progressionController.getActivatedPageIds()
+  getActivatedPageIds: () => progressionController.getActivatedPageIds(),
+  getExtractedFamilyCodes: () => protoAstroTuningController.getExtractedFamilyCodes()
 });
 const playerGuidePanel = createVrPlayerGuidePanel({
   leftGrip: vrControllers.controllers[0]?.grip,
@@ -497,7 +499,8 @@ const monkeyKnowledgeResolver = createVrMonkeyKnowledgeResolver({
   ) === true,
   hasAsterionKnowledge: () => runtimeExperience?.can(
     VR_SCENARIO_CAPABILITY.CAN_EQUIP_ASTERION
-  ) === true
+  ) === true,
+  hasP2Knowledge: () => runtimeExperience?.can(VR_SCENARIO_CAPABILITY.CAN_SWITCH_ASTRO_BAND) === true
 });
 const monkeyGuide = createVrMonkeyGuide({
   actorRoot: monkeyMotionRoot,
@@ -852,10 +855,21 @@ const observationWindow = createVrObservationWindow({
   durationSeconds: settings.observationWindow.durationSeconds,
   onCompleted: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.OBSERVATION_WINDOW_COMPLETED)
 });
-const postRingMonkeyDialogue = createVrPostRingMonkeyDialogue({
-  monkeyGuide,
+const p2ObservationWindow = createVrObservationWindow({
+  durationSeconds: settings.observationWindow.durationSeconds,
+  onCompleted: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.P2_OBSERVATION_WINDOW_COMPLETED)
+});
+const postRingMonkeyDialogue = createVrMandatoryMonkeyCommunication({ monkeyGuide,
+  blocks: VR_MONKEY_COMMUNICATION_COPY_PL.progression['progression.postRing.changedWorld'].blocks,
   secondsPerLine: settings.intro.messageDisplayDuration,
+  onTriggered: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.MONKEY_TRIGGERED),
   onCompleted: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.POST_RING_MONKEY_DIALOGUE_COMPLETED)
+});
+const p2MonkeyDialogue = createVrMandatoryMonkeyCommunication({ monkeyGuide,
+  blocks: VR_MONKEY_COMMUNICATION_COPY_PL.progression['progression.p2.smallGlyphsIntro'].blocks,
+  secondsPerLine: settings.intro.messageDisplayDuration,
+  onTriggered: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.MONKEY_TRIGGERED),
+  onCompleted: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.P2_MONKEY_DIALOGUE_COMPLETED)
 });
 const furnaceIntro = createVrFurnaceIntro({
   monkeyGuide,
@@ -1013,7 +1027,11 @@ runtimeExperience = new RuntimeExperience({
       postRingPresentation.elevateMainGlyphs();
     },
     [VR_SCENARIO_EFFECT.BEGIN_OBSERVATION_WINDOW]: () => { observationWindow.begin(); },
-    [VR_SCENARIO_EFFECT.BEGIN_MONKEY_ATTENTION]: () => { postRingMonkeyDialogue.begin(); },
+    [VR_SCENARIO_EFFECT.BEGIN_MONKEY_ATTENTION]: () => { postRingMonkeyDialogue.beginAttention(); },
+    [VR_SCENARIO_EFFECT.BEGIN_POST_RING_MONKEY_DIALOGUE]: () => { postRingMonkeyDialogue.beginPlayback(); },
+    [VR_SCENARIO_EFFECT.BEGIN_P2_OBSERVATION_WINDOW]: () => { p2ObservationWindow.begin(); },
+    [VR_SCENARIO_EFFECT.BEGIN_P2_MONKEY_ATTENTION]: () => { p2MonkeyDialogue.beginAttention(); },
+    [VR_SCENARIO_EFFECT.BEGIN_P2_MONKEY_DIALOGUE]: () => { p2MonkeyDialogue.beginPlayback(); },
     [VR_SCENARIO_EFFECT.BEGIN_FURNACE_INTRO]: () => {
       if (!furnaceIntro.begin()) throw new Error('BEGIN_FURNACE_INTRO rejected by Furnace intro actor');
     },
@@ -1103,7 +1121,9 @@ function renderFrame() {
   postRingPresentation.update(delta);
   smallGlyphSystem.update(delta);
   observationWindow.update(delta);
+  p2ObservationWindow.update(delta);
   postRingMonkeyDialogue.update(delta);
+  p2MonkeyDialogue.update(delta);
   furnaceIntro.update(delta);
   shellSystem.update(delta);
   largeGlyphActor.object.updateMatrixWorld(true);
@@ -1181,6 +1201,7 @@ function restoreVrScenarioBaseline() {
   postRingPresentation.reset();
   firstRingFlow.reset();
   observationWindow.reset();
+  p2ObservationWindow.reset();
   shellAttractorInteraction.reset();
   shellSystem.reset();
   syncQaPostP1WorldState();
@@ -1192,6 +1213,7 @@ function restoreVrScenarioBaseline() {
   astroAttractorProductionController.resetBaseline();
   handModeController.reset();
   postRingMonkeyDialogue.reset();
+  p2MonkeyDialogue.reset();
   furnaceIntro.reset();
   monkeyGuide.reset();
   platformFixturesRoot.visible = true;
@@ -1290,6 +1312,8 @@ window.addEventListener('pagehide', () => {
   runeBridgeActor.dispose();
   progressFloor.dispose();
   postRingPresentation.dispose();
+  p2ObservationWindow.reset();
+  p2MonkeyDialogue.reset();
   largeGlyphActor.dispose();
   smallGlyphSystem.dispose();
   shellSystem.dispose();

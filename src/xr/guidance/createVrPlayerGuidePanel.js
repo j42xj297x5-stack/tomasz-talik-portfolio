@@ -278,6 +278,7 @@ export function createVrPlayerGuidePanel({ leftGrip, semanticInput, locale = 'en
   function isOpen() { return open; }
   function update() {
     if (disposed) return;
+    setVisibleControlIds(projection?.getVisibleControlIds?.() ?? INITIAL_VISIBLE_CONTROL_IDS);
     const items = resolveItems();
     if (reconcileDynamicSections(items)) draw();
     const input = semanticInput.getState?.() ?? {};

@@ -46,6 +46,8 @@ export const VR_SCENARIO_EVENT = immutableIdentifiers([
   'FIRST_RING_PRESENTATION_COMPLETED',
   'POST_RING_WORLD_PRESENTATION_COMPLETED',
   'OBSERVATION_WINDOW_COMPLETED',
+  'P2_OBSERVATION_WINDOW_COMPLETED',
+  'P2_MONKEY_DIALOGUE_COMPLETED',
   'POST_RING_MONKEY_DIALOGUE_COMPLETED',
   'FURNACE_INTRO_COMPLETED',
   'ASTRO_ATTRACTOR_PRODUCTION_REQUESTED',
@@ -161,6 +163,10 @@ export const VR_SCENARIO_EFFECT = immutableIdentifiers([
   'ELEVATE_MAIN_GLYPHS',
   'BEGIN_OBSERVATION_WINDOW',
   'BEGIN_MONKEY_ATTENTION',
+  'BEGIN_POST_RING_MONKEY_DIALOGUE',
+  'BEGIN_P2_OBSERVATION_WINDOW',
+  'BEGIN_P2_MONKEY_ATTENTION',
+  'BEGIN_P2_MONKEY_DIALOGUE',
   'BEGIN_ASTRO_ATTRACTOR_CONSTRUCTION',
   'ENABLE_SHELL_FIELD_INTERACTION',
   'BEGIN_FURNACE_INTRO',
@@ -200,6 +206,10 @@ export const VR_EXPERIENCE_POINT = immutableIdentifiers([
   '4.20',
   '4.30',
   '4.40',
+  '4.50',
+  '4.60',
+  '4.70',
+  '4.80',
   '100.10'
 ]);
 
@@ -241,6 +251,13 @@ const completedMainGlyphPagesThroughTier = (completedTier) => Object.freeze(
     .filter(({ order }) => order <= completedTier)
     .map(({ glyphId, order }) => Object.freeze({ glyphId, order }))
 );
+const THIRD_RING_COMPLETE_SETTLED_CONSEQUENCES = Object.freeze({
+  progression: Object.freeze({ tier: 4, completedTier: 3,
+    activatedPageIds: Object.freeze([...experienceVrPageIdsByTier[1], ...experienceVrPageIdsByTier[2], ...experienceVrPageIdsByTier[3]]) }),
+  progressFloor: Object.freeze({ completedTier: 3, activatedPages: completedMainGlyphPagesThroughTier(3) }),
+  crystals: Object.freeze({ consumedTier: 3 }),
+  protoAstroTuning: Object.freeze({ extractedFamilyCodes: Object.freeze(['K', 'T', 'S', 'L', 'R']) })
+});
 const SECOND_RING_COMPLETE_SETTLED_CONSEQUENCES = Object.freeze({
   progression: Object.freeze({ tier: 3, completedTier: 2,
     activatedPageIds: Object.freeze([
@@ -593,6 +610,11 @@ const points = Object.freeze([
     capabilities: Object.freeze([]),
     transitions: Object.freeze([
       Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.COMPLETE,
+        event: VR_SCENARIO_EVENT.MONKEY_TRIGGERED,
+        milestonesToAdd: Object.freeze([]),
+        effects: Object.freeze([VR_SCENARIO_EFFECT.BEGIN_POST_RING_MONKEY_DIALOGUE])
+      }),
+      Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.COMPLETE,
         event: VR_SCENARIO_EVENT.POST_RING_MONKEY_DIALOGUE_COMPLETED,
         milestonesToAdd: Object.freeze([]),
         effects: Object.freeze([])
@@ -690,7 +712,7 @@ const points = Object.freeze([
     settledConsequences: SMALL_GLYPH_FIELD_PRESENTED_SETTLED_CONSEQUENCES,
     entryEffects: Object.freeze([VR_SCENARIO_EFFECT.BEGIN_SMALL_GLYPH_FIELD_PRESENTATION]),
     label: 'P2 radial world ready / small glyph integration boundary',
-    capabilities: P2_SMALL_GLYPH_TARGETING_CAPABILITIES,
+    capabilities: P2_MAIN_GLYPH_CAPABILITIES,
     transitions: Object.freeze([
       Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.COMPLETE,
         event: VR_SCENARIO_EVENT.SMALL_GLYPH_FIELD_PRESENTATION_COMPLETED,
@@ -699,12 +721,42 @@ const points = Object.freeze([
   }),
   Object.freeze({
     id: VR_EXPERIENCE_POINT['4.40'],
-    canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['100.10'] }),
+    canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['4.50'] }),
     settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
-    entryEffects: Object.freeze([]),
-    label: 'Small glyph field ready / Astro band integration boundary',
-    capabilities: P2_LARGE_GLYPH_TARGETING_CAPABILITIES,
-    transitions: Object.freeze([])
+    entryEffects: Object.freeze([VR_SCENARIO_EFFECT.BEGIN_P2_OBSERVATION_WINDOW]),
+    label: 'P2 observation window', capabilities: P2_MAIN_GLYPH_CAPABILITIES,
+    transitions: Object.freeze([Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.COMPLETE,
+      event: VR_SCENARIO_EVENT.P2_OBSERVATION_WINDOW_COMPLETED, milestonesToAdd: Object.freeze([]) })])
+  }),
+  Object.freeze({
+    id: VR_EXPERIENCE_POINT['4.50'], canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['4.60'] }),
+    settledConsequences: EMPTY_SETTLED_CONSEQUENCES, entryEffects: Object.freeze([VR_SCENARIO_EFFECT.BEGIN_P2_MONKEY_ATTENTION]),
+    label: 'P2 Monkey attention', capabilities: P2_MAIN_GLYPH_CAPABILITIES,
+    transitions: Object.freeze([Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.COMPLETE,
+      event: VR_SCENARIO_EVENT.MONKEY_TRIGGERED, milestonesToAdd: Object.freeze([]) })])
+  }),
+  Object.freeze({
+    id: VR_EXPERIENCE_POINT['4.60'], canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['4.70'] }),
+    settledConsequences: EMPTY_SETTLED_CONSEQUENCES, entryEffects: Object.freeze([VR_SCENARIO_EFFECT.BEGIN_P2_MONKEY_DIALOGUE]),
+    label: 'Mandatory P2 Monkey dialogue', capabilities: P2_MAIN_GLYPH_CAPABILITIES,
+    transitions: Object.freeze([Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.COMPLETE,
+      event: VR_SCENARIO_EVENT.P2_MONKEY_DIALOGUE_COMPLETED, milestonesToAdd: Object.freeze([]) })])
+  }),
+  Object.freeze({
+    id: VR_EXPERIENCE_POINT['4.70'], canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['4.80'] }),
+    settledConsequences: THIRD_RING_COMPLETE_SETTLED_CONSEQUENCES,
+    label: 'P2 tuning loop / third ring', capabilities: P2_LARGE_GLYPH_TARGETING_CAPABILITIES,
+    transitions: Object.freeze([
+      Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.STAY, event: VR_SCENARIO_EVENT.RELIQUARY_HINT_TIMEOUT, milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.SHOW_RELIQUARY_CONTEXT_HINT]) }),
+      Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.STAY, event: VR_SCENARIO_EVENT.CRYSTAL_ACTIVATED, milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.PRESENT_ACTIVE_CARD_PREVIEW]) }),
+      Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.STAY, event: VR_SCENARIO_EVENT.CARD_COMMITTED, milestonesToAdd: Object.freeze([VR_SCENARIO_MILESTONE.CARD_COMMITTED]), effects: Object.freeze([VR_SCENARIO_EFFECT.UPDATE_COMMITTED_CARD_PRESENTATION, VR_SCENARIO_EFFECT.PLAY_CARD_COMMIT_FEEDBACK]) }),
+      Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.COMPLETE, event: VR_SCENARIO_EVENT.TIER_COMPLETED, milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.APPLY_TIER_COMPLETE_FEEDBACK]) })
+    ])
+  }),
+  Object.freeze({
+    id: VR_EXPERIENCE_POINT['4.80'], canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['100.10'] }),
+    settledConsequences: EMPTY_SETTLED_CONSEQUENCES, entryEffects: Object.freeze([]),
+    label: 'Stable P3 entry boundary', capabilities: P2_LARGE_GLYPH_TARGETING_CAPABILITIES, transitions: Object.freeze([])
   }),
   Object.freeze({
     id: VR_EXPERIENCE_POINT['100.10'],
@@ -739,7 +791,7 @@ export const vrExperienceScenario = Object.freeze({
     effects: Object.freeze(Object.values(VR_SCENARIO_EFFECT))
   }),
   metadata: Object.freeze({
-    stage: 'M3_ASTRO_PHYSICAL_CLAIM',
+    stage: 'P2_THIRD_RING_STABLE_BOUNDARY',
     authoritativeForLiveGameplay: true,
     // Canonical routing topology lives on authored point graph edges.
   })

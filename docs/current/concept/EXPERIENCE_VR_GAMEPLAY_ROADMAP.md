@@ -1,77 +1,32 @@
 # Experience VR Gameplay Roadmap
 
-Status: **CURRENT concept roadmap**. Runtime authority: [`VR_RUNTIME_MODEL.md`](../technical/VR_RUNTIME_MODEL.md); Proto-Astro authority: [`VR_PROTO_ASTRO_MODEL.md`](../technical/VR_PROTO_ASTRO_MODEL.md).
+Status: **CURRENT**. Runtime authority: [`VR_RUNTIME_MODEL.md`](../technical/VR_RUNTIME_MODEL.md).
 
-## IMPLEMENTED — CURRENT RUNTIME
+## IMPLEMENTED — through stable boundary 4.80
 
-- authored Scenario przez Tier 2, radial presentation `4.20`, entry beat materializacji small glyph field w `4.30` oraz stable boundary `4.40`;
-- checkpointy debug są wyłącznie aliasami canonical lifecycle: `P1 → 2.10`, `P2 → 3.10`, `P3 → 4.10`, `P4 → 4.30`; wszystkie używają spawnu `RING` i normalnego `activatePoint()` bez osobnego stanu QA;
-- deterministic, world-stable `SMALL_GLYPHS` spherical volume field: 6 wariantów po 2 instancje, presentation materialization i hydration;
-- semantic input `B` i trzy runtime bands: `SHELLS`, `SMALL_GLYPHS` oraz odblokowywany esencją `LARGE_GLYPHS`;
-- Small Glyph scan/target/pull oraz transport `FIELD → TARGETING → PULLING → CAPTURE_READY → HELD → PLACED → HELD`: przejęcie lewą Szpilą, world-stable placement i ponowne przejęcie są zaimplementowane;
-- jeden Furnace chamber/content owner dla shells i Small Glyph; istniejąca ekstrakcja naturalnych rodzin `K/T/S/L/R`, persistent `extractedFamilyCodes` oraz domain seam `canAttractLargeGlyph`;
-- VI jest pełnym Small Glyph w field i handoff/placement, ale obecnie nie daje esencji ani nie odblokowuje Large Glyph;
-- family-gated scan/target/pull Large Glyph z bezpiecznym capture stand-off i powrotem do ruchomego canonical slotu orbity;
-- Panel 1 Astrolabium pokazuje canonical O/I/A SVG aktualnego targetu.
+Canonical P2 runs `4.30 → 4.40 → 4.50 → 4.60 → 4.70 → 4.80`: Small Glyph presentation, a dedicated ten-second observation window, Monkey attention, mandatory P2 message, and the playable five-family tuning/card loop. Gameplay rights for B, Small Glyph processing and family-gated Large Glyph attraction begin only at `4.70`. The existing Furnace, Proto-Astro tuning, crystal, Reliquary and card owners complete order 3; `4.80` is the stable P3 entry boundary.
 
-Nie ma inventory ani persistent ownership Small Glyph. Ponowne użycie instancji po procesie zachowuje canonical field contract.
+VI remains outside the natural `K/T/S/L/R` P2 tuning loop.
 
-## APPROVED WORK QUEUE — NOT IMPLEMENTED
+## FUTURE target spine — NOT IMPLEMENTED
 
-Poniższe etapy są uporządkowaną kolejką. Nie stanowią opisu aktualnego runtime.
+These are authored dramaturgical targets only. They are not Scenario points and define no runtime events, effects, capabilities, actors, recipes, geometry or tuning.
 
-### A. RADIAL LAYOUT + MOTION
-
-Canonical spatial order and ranges are defined by [`VR_SPHERICAL_LAYERS_MODEL.md`](../technical/VR_SPHERICAL_LAYERS_MODEL.md). Shell and Small Glyph runtime fields are full, concentric spherical volumes; the Small Glyph field rotates rigidly opposite to the Shell field, while local self rotation remains independent.
-
-### B. SMALL GLYPH AUDIO
-
-Podłączyć istniejący i już przypisany dźwięk przyciągania Small Glyph. Nie projektować nowego assetu audio.
-
-### C. SMALL GLYPH HANDOFF / SZPILA
-
-Mechanika `HELD → PLACED → HELD` jest **IMPLEMENTED**, nie jest zadaniem implementacyjnym. Pozostaje w zakresie hardware QA i ewentualnego dopracowania razem z dalszym flow Small Glyph.
-
-### D. ASTROLABIUM WIĘZI / FURNACE
-
-Docelowa player-facing nazwa narzędzia to **Astrolabium Więzi**. Nie wymaga to masowego rename wewnętrznych identyfikatorów `AstroAttractor`.
-
-Furnace ma otrzymać osobny moduł/wejście **Astrolabium Więzi**, zawierające docelowo co najmniej:
-
-1. utworzenie Astro Przyciągacza;
-2. późniejsze strojenie pasma Astrolabium Więzi.
-
-UI i jego flow nie są jeszcze implementowane w tym zakresie.
-
-### E. SMALL GLYPH FURNACE PROCESS
-
-Docelowo przez Piec przechodzi wszystkich 6 typów Small Glyph. Proces otrzymuje player-facing feedback analogiczny do ekstrakcji skorup:
-
-- właściwy obiekt/proces w Piecu;
-- informację na ekranie/panelu Pieca o pozyskiwaniu;
-- wynik używany dalej przez strojenie Astrolabium Więzi.
-
-Ta decyzja zastępuje starsze założenie, że VI jest całkowicie poza takim processingiem. Szczegółowy rezultat VI i późny finał Eteru pozostają nieustalone, dopóki nie wynikają z authored kanonu.
-
-### F. ASTROLABIUM TARGET PREVIEW
-
-Panel 1 oznacza aktualny target. Shell i Small Glyph mają otrzymać własne właściwe projekcje SVG; dla Small Glyph przyszła implementacja wykorzysta istniejące przyporządkowane krzywe/SVG z repozytorium, tak jak aktualna obsługa skorup.
-
-### G. DALSZE BANDY
-
-Backlog bandów, bez aktywowania ich w runtime:
-
-- `RUNESTONES` → niebieski;
-- późne dalekie wyszukiwanie dwóch glifów → fioletowy;
-- finalne wyszukiwanie Haiku Cosmos → tęczowy.
-
-### H. DALSZA PROGRESJA
-
-Po powyższym pozostają:
-
-- `RUNESTONES`;
-- późna authored progression.
-
-## QA
-
-Bootstrap READY zachowuje istniejące **HARDWARE VALIDATED — Meta Quest 3S** wyłącznie dla wcześniej potwierdzonego zakresu. `4.20`, `4.30`, `4.40`, Small Glyph field, przełączanie bandów, pull/handoff/placement i Furnace extraction nie otrzymują przez tę synchronizację hardware/perceptual PASS. P4 wymaga potwierdzenia na urządzeniu, że canonical entry `4.30` rozpoczyna normalny beat materializacji.
+- `5.10` — P3 WORLD PRESENTATION: Large Glyphs recede farther and the stars field appears.
+- `5.20` — ten-second world observation.
+- `5.30` — Monkey attention arcs.
+- `5.40` — mandatory P3 dialogue.
+- `5.50` — P3 recipes / sector activation.
+- `5.60` — first active sector; future Sphere grab control of the active sector.
+- `5.70` — three required sectors active; antenna ready.
+- `5.80` — radar / distant Metal and Water search.
+- `6.10` — P4 Runestone materialization and mount activation.
+- `6.20` — first four stones installed.
+- `6.30` — Water stone unlocked.
+- `6.40` — fifth stone installed / final-search capability.
+- `7.10` — final Haiku Cosmos search.
+- `7.20` — final crystal / final card.
+- `7.30` — final Monkey statement.
+- `7.40` — world disintegration.
+- `7.50` — black to white.
+- `100.10` — EXIT EXPERIENCE VR.
