@@ -35,7 +35,19 @@ prefix_rule(
 )
 
 prefix_rule(
-    pattern = ["gh", "pr", ["merge", "review", "edit", "close", "reopen", "ready"]],
+    pattern = ["git", "push"],
     decision = "forbidden",
-    justification = "Akceptacja, merge i mutowanie istniejących pull requestów należą do Wizjonera.",
+    justification = "Publikacja zmian i Pull Request delivery należą do Wizjonera.",
+)
+
+prefix_rule(
+    pattern = ["gh", "pr", ["create", "edit", "ready", "review", "merge", "close", "reopen"]],
+    decision = "forbidden",
+    justification = "Tworzenie, publikacja, akceptacja, merge i mutowanie pull requestów należą do Wizjonera.",
+)
+
+prefix_rule(
+    pattern = ["/opt/codex/mcp/make_pr.py"],
+    decision = "forbidden",
+    justification = "Codex nie uruchamia lokalnego mechanizmu MCP w celu utworzenia Pull Requesta.",
 )
