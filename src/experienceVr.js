@@ -45,6 +45,7 @@ import { resolveChamberCylinder } from './xr/furnace/vrAstroFurnaceChamberCylind
 import { ASTRO_FURNACE_ACTIVE_MODE, ASTRO_FURNACE_ASTRO_ATTRACTOR_MODE, createVrAstroFurnaceOptionInteraction } from './xr/furnace/createVrAstroFurnaceOptionInteraction.js';
 import { createVrAstroFurnacePanel } from './xr/furnace/createVrAstroFurnacePanel.js';
 import { createVrAstroFurnaceProcessSource } from './xr/furnace/createVrAstroFurnaceProcessSource.js';
+import { createVrAstroFurnaceContentSource } from './xr/furnace/createVrAstroFurnaceContentSource.js';
 import { createVrAstroFurnaceProgressionController } from './xr/furnace/createVrAstroFurnaceProgressionController.js';
 import { createVrAstroFurnaceContentInteraction } from './xr/furnace/createVrAstroFurnaceContentInteraction.js';
 import { createVrProtoAstroTuningController } from './xr/protoAstro/createVrProtoAstroTuningController.js';
@@ -508,6 +509,10 @@ let introCrystalTutorial = null;
 let astroFurnaceActivateInteraction = null;
 let astroFurnaceContentInteraction = null;
 let astroFurnaceOptionInteraction = null;
+const furnaceContentSource = createVrAstroFurnaceContentSource({
+  getInteraction: () => astroFurnaceContentInteraction,
+  getChamberState: () => astroFurnaceOpenInteraction?.getState?.() ?? 'CLOSED'
+});
 const furnacePanel = createVrAstroFurnacePanel({
   parent: platformFixturesRoot, furnace: astroFurnace, controllers: vrControllers.controllers,
   progressionController: furnaceProgressionController, productionController: asterionProductionController,
@@ -524,13 +529,7 @@ const furnacePanel = createVrAstroFurnacePanel({
   ) !== null,
   asterionModel: asterionSphere.object, settings: settings.furnace.panel,
   processSource: createVrAstroFurnaceProcessSource(() => astroFurnaceActivateInteraction),
-  contentSource: {
-    getState: () => astroFurnaceContentInteraction?.getState?.() ?? 'EMPTY',
-    getInsertedShellAssetId: () => astroFurnaceContentInteraction?.getInsertedShellAssetId?.() ?? null,
-    getInsertedShellWireframe: () => astroFurnaceContentInteraction?.getInsertedShellWireframe?.() ?? null,
-    getInsertedSmallGlyphAssetId: () => astroFurnaceContentInteraction?.getInsertedSmallGlyphProtoAstro?.()?.assetId ?? null,
-    getChamberState: () => astroFurnaceOpenInteraction?.getState?.() ?? 'CLOSED'
-  },
+  contentSource: furnaceContentSource,
   onEnterModule: () => playVrUi(VR_AUDIO.furnaceDeeper),
   onReturnHome: () => playVrUi(VR_AUDIO.click)
 });

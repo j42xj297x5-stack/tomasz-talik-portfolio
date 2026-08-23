@@ -189,6 +189,7 @@ export function createVrAstroFurnaceContentInteraction({
     getInsertedShellAssetId: () => insertedKind === kinds.SHELL ? shellAssetId(insertedContent) : null,
     getInsertedShellWireframe: () => insertedKind === kinds.SHELL ? insertedContent?.userData?.panelWireframe ?? null : null,
     getInsertedSmallGlyph: () => insertedKind === kinds.SMALL_GLYPH ? insertedContent : null,
+    getInsertedSmallGlyphAssetId: () => insertedKind === kinds.SMALL_GLYPH ? resolveSmallGlyph(insertedContent)?.assetId ?? null : null,
     getInsertedSmallGlyphProtoAstro: () => insertedKind === kinds.SMALL_GLYPH ? resolveSmallGlyph(insertedContent) : null,
     hasInsertedContent: () => [states.INSERTED, states.CONSUMING, states.CONSUMED].includes(state),
     hasValidInsertedContent: () => state === states.INSERTED && (insertedKind === kinds.SHELL

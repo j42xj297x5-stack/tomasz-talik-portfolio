@@ -10,6 +10,7 @@ import { drawVrAstroAttractorPreview } from './drawVrAstroAttractorPreview.js';
 import { SMALL_GLYPH_WIREFRAME_DATA } from './smallGlyphWireframeData.js';
 import { drawSmallGlyphWireframe } from './drawSmallGlyphWireframe.js';
 import { resolveVrSmallGlyphProtoAstro } from '../protoAstro/resolveVrSmallGlyphProtoAstro.js';
+import { ASTRO_FURNACE_PROCESS_KINDS } from './createVrAstroFurnaceActivateInteraction.js';
 
 export const ASTRO_FURNACE_PANEL_STATES = Object.freeze({
   HIDDEN: 'HIDDEN', APPEARING: 'APPEARING', VISIBLE: 'VISIBLE', DISAPPEARING: 'DISAPPEARING'
@@ -60,6 +61,7 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
   const hits = new Map(controllers.map((record) => [record, null]));
   let state = ASTRO_FURNACE_PANEL_STATES.HIDDEN, screen = ASTRO_FURNACE_PANEL_SCREENS.HOME;
   let elapsed = 0, telemetryElapsed = 0, lastTelemetryRedraw = 0, completedUntil = 0, previousProcessState = 'IDLE';
+  let lastSmallGlyphProcessAssetId = null;
   let hoveredRegion = null, interactiveRegions = [], disposed = false, redrawCount = 0;
   const moduleListeners = new Set();
   // The expensive UV subdivision and cube-face mapping happen exactly once per panel.
@@ -193,23 +195,29 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
   }
   function drawSmallGlyphExtractionMonitor() {
     const x = 90, y = 655, width = 1315, height = 300;
-    const protoAstro = contentSource?.getInsertedSmallGlyphProtoAstro?.() ?? null;
+    const currentAssetId = contentSource?.getInsertedSmallGlyphAssetId?.() ?? null;
     const contentState = contentSource?.getState?.() ?? 'EMPTY';
-    const contentKind = contentSource?.getInsertedContentKind?.() ?? null;
     const processKind = processSource?.getProcessKind?.() ?? null;
-    const concernsSmallGlyph = contentKind === 'SMALL_GLYPH'
-      && (processKind === null || processKind === 'SMALL_GLYPH_ESSENCE_EXTRACTION');
-    const telemetry = concernsSmallGlyph ? readTelemetry() : resolveProcessTelemetry({ contentState: 'EMPTY' });
-    const color = accents[telemetry.colorKey];
-    panelRect(x, y, width, height, { variant: 'monitor', active: concernsSmallGlyph && telemetry.active,
-      completed: concernsSmallGlyph && telemetry.phase === 'COMPLETE', accentColor: color });
+    const telemetry = readTelemetry();
+    const smallGlyphProcess = processKind === ASTRO_FURNACE_PROCESS_KINDS.SMALL_GLYPH_ESSENCE_EXTRACTION;
+    if (currentAssetId) lastSmallGlyphProcessAssetId = currentAssetId;
+    else if ((processKind && !smallGlyphProcess) || (telemetry.phase === 'IDLE' && !smallGlyphProcess))
+      lastSmallGlyphProcessAssetId = null;
+    const presentationAssetId = currentAssetId ?? lastSmallGlyphProcessAssetId;
+    const presentationTail = Boolean(presentationAssetId && telemetry.phase === 'COMPLETE');
+    const concernsSmallGlyph = Boolean(currentAssetId || smallGlyphProcess || presentationTail);
+    const protoAstro = concernsSmallGlyph ? resolveVrSmallGlyphProtoAstro(presentationAssetId) : null;
+    const shownTelemetry = concernsSmallGlyph ? telemetry : resolveProcessTelemetry({ contentState: 'EMPTY' });
+    const color = accents[shownTelemetry.colorKey];
+    panelRect(x, y, width, height, { variant: 'monitor', active: concernsSmallGlyph && shownTelemetry.active,
+      completed: concernsSmallGlyph && shownTelemetry.phase === 'COMPLETE', accentColor: color });
     text('PRZEBIEG EKSTRAKCJI', x + 28, y + 42, 22, color);
-    drawInsertedSmallGlyphWireframe(concernsSmallGlyph ? protoAstro : null, telemetry, x + 300, y + 155, 118);
+    drawInsertedSmallGlyphWireframe(protoAstro, shownTelemetry, x + 300, y + 155, 118);
     text(protoAstro && concernsSmallGlyph ? `MAŁY GLIF // ${protoAstro.descriptor.syllable}` : 'MAŁY GLIF // OCZEKIWANIE',
       x + 610, y + 92, 23, protoAstro && concernsSmallGlyph ? color : accents.idle);
-    telemetry.label.split('\n').forEach((line, index) => text(`${index ? '' : 'STATUS // '}${line}`,
+    shownTelemetry.label.split('\n').forEach((line, index) => text(`${index ? '' : 'STATUS // '}${line}`,
       x + 610, y + 137 + index * 28, 20, color));
-    const progress = concernsSmallGlyph ? telemetry.extractionProgress : 0;
+    const progress = shownTelemetry.showProgress ? shownTelemetry.extractionProgress : 0;
     const barX = x + 610, barY = y + 218, barWidth = 560;
     context.fillStyle = '#18303c'; context.fillRect(barX, barY, barWidth, 16);
     context.fillStyle = color; context.fillRect(barX, barY, barWidth * progress, 16);
