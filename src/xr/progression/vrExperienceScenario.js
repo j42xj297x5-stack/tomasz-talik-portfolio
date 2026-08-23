@@ -210,12 +210,12 @@ export const VR_EXPERIENCE_SCENE = VR_EXPERIENCE_POINT;
 
 const EMPTY_SETTLED_CONSEQUENCES = Object.freeze({});
 const INTRO_REVEALED_SETTLED_CONSEQUENCES = Object.freeze({
-  intro: Object.freeze({ stage: 'REVEALED', fog: 'CLEARED', glyphRingVisible: true,
+  intro: Object.freeze({ stage: 'REVEALED', fog: 'CLEARED', largeGlyphsVisible: true,
     progressionFixturesVisible: true, guideInteractionEnabled: false })
 });
 const INTRO_COMPLETE_SETTLED_CONSEQUENCES = Object.freeze({
   monkey: Object.freeze({ placement: 'FINAL_STONE', visible: true, stoneVisible: true }),
-  intro: Object.freeze({ stage: 'GLYPH_FREE_EXPLORE', phase: 'GLYPH_FREE_EXPLORE', fog: 'CLEARED', glyphRingVisible: true,
+  intro: Object.freeze({ stage: 'GLYPH_FREE_EXPLORE', phase: 'GLYPH_FREE_EXPLORE', fog: 'CLEARED', largeGlyphsVisible: true,
     progressionFixturesVisible: true, guideInteractionEnabled: true }),
   locomotion: Object.freeze({ boundary: 'GLYPH_RING' })
 });

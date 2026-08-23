@@ -38,8 +38,7 @@ assert.deepEqual(atFourTen.astroProduction, { state: 'EARNED' });
 assert.deepEqual(atFourTen.asterionProduction, { state: 'EARNED' });
 assert.equal(atFourTen.furnaceProgression.absorbedShellIds.length, 6);
 const atThreeEighty = reconstructVrScenarioState(vrExperienceScenario, '3.80');
-assert.deepEqual(atThreeEighty.postRing, { shellFieldVisible: true, shellInteractionEnabled: true,
-  mainGlyphsElevated: true });
+assert.deepEqual(atThreeEighty.postRing, { shellFieldVisible: true, shellInteractionEnabled: true });
 assert.deepEqual(atThreeEighty.astroProduction, { state: 'EARNED' });
 for (const pointId of ['4.10', '4.20', '4.30', '4.40']) {
   const capabilities = vrExperienceScenario.points.find(({ id }) => id === pointId).capabilities;

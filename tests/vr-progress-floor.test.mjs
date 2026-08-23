@@ -261,11 +261,11 @@ const integrationIntro = createVrIntroSequence({
   monkeyMotionRoot: introMonkeyRoot,
   monkeyVisualRoot: new THREE.Group(),
   playerRig: new THREE.Group(),
-  glyphRing: new THREE.Group(),
+  largeGlyphActor: { object: new THREE.Group(), setPresentationVisible() { return true; } },
   progressFloor: reversedFloor,
   platformFixturesRoot: new THREE.Group(),
   locomotion: { reset() {}, setWalkRadius() {} },
-  spatial: { monkeyFinal: { x: 0, y: 0, z: 0 }, entryDirection: { x: 0, y: 0, z: 1 }, ringRadius: 7, monkeyStartRadius: 12 },
+  spatial: { monkeyFinal: { x: 0, y: 0, z: 0 }, entryDirection: { x: 0, y: 0, z: 1 }, worldBaseRadius: 7, monkeyStartRadius: 12 },
   settings: { enabled: true, locale: 'en' }
 });
 integrationIntro.reset();

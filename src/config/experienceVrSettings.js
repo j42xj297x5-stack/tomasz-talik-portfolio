@@ -11,7 +11,7 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
     playerStartRadius: 20,
     monkeyStartRadius: 18,
     monkeyFinal: { x: 0, y: 0, z: 0 },
-    ringRadius: 7.6,
+    worldBaseRadius: 7.6,
     worldStableCenterY: 1.05,
     thresholdOutsideDistance: 1
   },
@@ -339,7 +339,7 @@ export function normalizeExperienceVrSettings(candidate) {
       playerStartRadius: finiteNumber(candidate.spatial?.playerStartRadius, defaults.spatial.playerStartRadius, { min: 1, max: 100 }),
       monkeyStartRadius: finiteNumber(candidate.spatial?.monkeyStartRadius, defaults.spatial.monkeyStartRadius, { min: 1, max: 100 }),
       monkeyFinal: normalizeVector(candidate.spatial?.monkeyFinal, defaults.spatial.monkeyFinal),
-      ringRadius: finiteNumber(candidate.spatial?.ringRadius, defaults.spatial.ringRadius, { min: 1, max: 50 }),
+      worldBaseRadius: finiteNumber(candidate.spatial?.worldBaseRadius, defaults.spatial.worldBaseRadius, { min: 1, max: 50 }),
       worldStableCenterY: finiteNumber(candidate.spatial?.worldStableCenterY, defaults.spatial.worldStableCenterY, { min: -10, max: 10 }),
       thresholdOutsideDistance: finiteNumber(candidate.spatial?.thresholdOutsideDistance,
         defaults.spatial.thresholdOutsideDistance, { min: 0.05, max: 10 })
