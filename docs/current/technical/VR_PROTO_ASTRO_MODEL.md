@@ -75,7 +75,7 @@ Naturalne `K/T/S/L/R` jest valid tylko przed pobraniem danej rodziny. `VI` jest 
 
 ## 10. SCENARIO / CAPABILITIES / HYDRATION
 
-**IMPLEMENTED:** `4.40` posiada prawa do Astro, shells, B switching, small- i large-glyph scan/target/pull, Furnace, natural essence extraction oraz istniejącej kontroli Asteriona/platformy. `stateAt(4.20)` zawiera ukończony Tier 2; `stateAt(4.30)` dodatkowo `p2World.mainGlyphsRadial = true`; `stateAt(4.40)` dodatkowo `smallGlyphField.materialized = true`.
+**IMPLEMENTED:** `4.40` posiada prawa do Astro, shells, B switching, small- i large-glyph scan/target/pull, Furnace, natural essence extraction oraz istniejącej kontroli Asteriona/platformy. `stateAt(4.20)` zawiera ukończony Tier 2 i `largeGlyphs.stage = RING_ELEVATED`; `stateAt(4.30)` dodatkowo `largeGlyphs.stage = RING_EXPANDED`; `stateAt(4.40)` dodatkowo `smallGlyphField.materialized = true`.
 
 Obecne `stateAt(4.40)` nie deklaruje `protoAstroTuning.extractedFamilyCodes`. Direct activation materializuje canonical P2 world i uruchamia TuningController z pustym zestawem — to prawidłowy kontrakt. Hydrator zna owner section `protoAstroTuning` dla przyszłych authored states.
 
@@ -99,7 +99,7 @@ Astrolabium fizycznie ma cztery authored panels.
 | 3 | dostępne targety current band, `2×3`, maks. 6 Proto-Astro SVG, filtrowane przez domain truth | **APPROVED / NOT IMPLEMENTED** |
 | 4 | miernik odległości do current target | **APPROVED / NOT IMPLEMENTED** |
 
-Rodzina symboli bandów i dokładne kolory nie są jeszcze zaprojektowane. Panel 3 dla przyszłego `LARGE_GLYPHS` ma pokazywać wyłącznie rodziny z pobraną esencją.
+Rodzina symboli bandów i dokładne kolory nie są jeszcze zaprojektowane. Przyszły Panel 3 dla bandu `LARGE_GLYPHS` ma pokazywać wyłącznie rodziny z pobraną esencją.
 
 ## 13. VI / ETER
 
@@ -109,13 +109,13 @@ Rodzina symboli bandów i dokładne kolory nie są jeszcze zaprojektowane. Panel
 
 ## 14. IMPLEMENTED VS APPROVED FUTURE
 
-- **IMPLEMENTED:** identity/resolvers, field i transport, `SHELLS`/`SMALL_GLYPHS`, B, natural essence extraction, persistent family tuning truth i `canAttractLargeGlyph` API.
-- **APPROVED / NOT IMPLEMENTED:** `LARGE_GLYPHS`, family-gated real large targeting/pull, `RUNESTONES`, pełna semantyka paneli 1–4 i placement VI.
+- **IMPLEMENTED:** identity/resolvers, field i transport, `SHELLS`/`SMALL_GLYPHS`/`LARGE_GLYPHS`, B, natural essence extraction, persistent family tuning truth, `canAttractLargeGlyph`, family-gated real Large Glyph targeting oraz actor-owned transient pull/return. Panel 1 projektuje canonical Large Glyph target.
+- **APPROVED / NOT IMPLEMENTED:** `RUNESTONES`, Panele 2–4 i placement VI. `SPHERE_FAR` pozostaje **FUTURE / NOT AUTHORED / NOT IMPLEMENTED**.
 - **RESERVED / NOT YET DESIGNED:** VI/Eter finale z level-6 shell family.
 
 ## 15. QA STATUS
 
-Istniejące potwierdzenie `bootstrap READY` ma status **HARDWARE VALIDATED — Meta Quest 3S** wyłącznie w dotychczas potwierdzonym zakresie. `4.20`, `4.30`, `4.40`, field, B switching, pull/handoff i Furnace extraction nie uzyskują w tej synchronizacji hardware/perceptual PASS.
+**HARDWARE VALIDATED — Meta Quest 3S:** Wizjoner potwierdził wyłącznie zmigrowany Large Glyph flow M1–M7A. Nie rozszerza to walidacji na Small Glyph Furnace extraction, całe P2, Panele 2–4, wszystkie audio paths ani przyszłe features.
 
 
 ## Spherical field ownership

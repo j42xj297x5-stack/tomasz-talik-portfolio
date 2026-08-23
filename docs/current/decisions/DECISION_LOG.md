@@ -2,6 +2,18 @@
 
 Status: current binding decisions organized by implementation status, not patch chronology. Synchronized through the P2 Proto-Astro decision on 2026-08-21.
 
+## 2026-08-23 — Large Glyph Actor ownership migration completed
+
+1. `LargeGlyphActor` is the single physical/spatial owner of the five Large Glyphs. World/platform `worldBaseRadius = 7.6 m` is independent from actor radii.
+2. Canonical actor progression is `RING_INITIAL` at `8.5 m` → `RING_ELEVATED` at `+2.4 m` → `RING_EXPANDED` at `18.5 m`. One rigid `RotationRoot` owns five identity slots separated by `72°`.
+3. Actor-owned `TransientRoot` owns pulled physical nodes; `LargeGlyphAttractorInteraction` owns gameplay lifecycle and `ProtoAstroTuningController.canAttractLargeGlyph(...)` owns natural family compatibility. `LARGE_GLYPHS` family-gated scan/target/pull is **IMPLEMENTED**.
+4. Scenario reconstruction truth is exclusively `largeGlyphs.stage`; `intro.largeGlyphsVisible` remains separate presentation truth delegated through the actor.
+5. Large Glyph is not a spherical layer. Its `18.5 m` expanded radius intentionally overlaps `SMALL_GLYPHS` volume `17.1–24.7 m`; this is an **ACCEPTED PRODUCT DECISION** and does not change spherical ranges.
+6. `SPHERE_FAR` remains **FUTURE / NOT AUTHORED / NOT IMPLEMENTED**. Future long-range attraction requires separate design.
+7. **HARDWARE VALIDATED — Meta Quest 3S:** Wizjoner confirmed the migrated Large Glyph flow after M7A, limited to Large Glyph Actor migration M1–M7A. This does not validate independent P2, Furnace, panel, audio or future-feature scope.
+
+This decision supersedes earlier binding statements that assigned world-stable ownership to a raw glyph ring, derived the walking/layer radius from `glyphOrbit.effectiveRadius`, or classified real `LARGE_GLYPHS` targeting/pull as not implemented.
+
 ## 2026-08-21 — P2 Proto-Astro / small glyph tuning foundation
 
 1. Canonical small-glyph asset mapping is: `1 → SI / S / water / Haiku Cosmos`, `2 → KI / K / earth / Ethics / Life Protection`, `3 → TI / T / metal / DIG Engine / spotify-digger`, `4 → RI / R / fire / Creative AI`, `5 → LI / L / tree / AI Guide`, `6 → VI / V / astro / produktowo Eter`. `V = astro` remains the registry truth; Eter is product meaning, not a new family ID.
@@ -11,7 +23,7 @@ Status: current binding decisions organized by implementation status, not patch 
 5. One Furnace chamber/content owner handles shells in `floor_gyroscope_sphere` Asterion mode and natural small-glyph essence in `astro_attractor` mode.
 6. After extraction the physical small glyph returns to field. Persistent truth is family essence, not a consumed asset or inventory item; duplicate family extraction is invalid.
 7. Implemented Astro bands are exactly `SHELLS` and `SMALL_GLYPHS`; semantic B switches only bands available to the player.
-8. `LARGE_GLYPHS` and `RUNESTONES` are **APPROVED / NOT IMPLEMENTED**; no final B cycle order is established.
+8. **UPDATED BY 2026-08-23 DECISION:** `LARGE_GLYPHS` is implemented with family-gated real target/pull; `RUNESTONES` remains **APPROVED / NOT IMPLEMENTED**. No final future B cycle order is established.
 9. Band identity is semantic, not `RED/YELLOW/GREEN/BLUE/ULTRAVIOLET`. Exact colors/symbols remain open and fuel family colors are not band colors.
 10. Four authored panels have the approved target semantics recorded in [`VR_PROTO_ASTRO_MODEL.md`](../technical/VR_PROTO_ASTRO_MODEL.md). Existing panel system/shell projection is current; Panels 2–4 and universal target projection are **NOT IMPLEMENTED**.
 11. VI/Eter plus the level-6 shell family are **RESERVED / NOT YET DESIGNED** for the later Haiku Cosmos finale. Future platform placement is approved direction, not current runtime.
@@ -55,12 +67,12 @@ Każdy nowy canonical Experience VR Scenario point musi spełniać [`VR_SCENARIO
 ### Runtime, progress and platform
 
 1. Classic 2D, Experience 3D and Experience VR are separate presentations. `src/experienceVr.js` owns the independent WebXR scene, rig, lifecycle and loop; WebXR owns the tracked camera.
-2. `VrTiltableFloorRoot` is the active platform transform root and the visual progress-floor root. The world-stable glyph ring, shell field and cosmos remain outside it.
+2. `VrTiltableFloorRoot` is the active platform transform root and the visual progress-floor root. **UPDATED BY 2026-08-23 DECISION:** the world-stable `LargeGlyphActor`, shell field and cosmos remain outside it.
 3. Platform-relative children include floor sectors/rings, `VrMonkeyMotionRoot`, `VrPlatformFixturesRoot` and `VrFloorPassengerRoot/playerRig`.
 4. `VrPlatformFixturesRoot` is a structural platform-relative container. Its direct fixture children include `VrMonkeyStoneRoot`, portal, reliquary, Astro Furnace and furnace panel; their visibility is controlled individually rather than by treating the container as one device.
 5. `VrFloorPassengerRoot` carries `playerRig`; camera, controllers and grips inherit the platform. There is no world-stable/horizon-lock camera compensation.
 6. Smooth locomotion is tracked-head-relative right-stick translation on the platform-local tangent plane plus left-stick continuous rig yaw. Platform normal replaces world Y, local rig Y is preserved and diagonal input is capped.
-7. The walking boundary is the snapshot `glyphOrbit.effectiveRadius`; outward movement at the boundary is blocked while tangent movement remains allowed.
+7. **UPDATED BY 2026-08-23 DECISION:** the walking boundary is the explicit `worldBaseRadius = 7.6 m`; outward movement at the boundary is blocked while tangent movement remains allowed.
 8. Ordinary controller rays have a maximum range of `2.3 m` and shorten only to reported real interaction hits.
 9. Five branches contain 18 cards in counts `3 / 3 / 3 / 4 / 5`. Physical crystals are branch+tier instances without persistent page/card identity; acquisition is additive and insertion is current-tier gated.
 10. Player-facing Release is disabled for `inserted`. Activate advances `inserted → active` and previews; only physical Release from `active` commits through `VrProgressionController`, projects to the floor and consumes. Internal recovery APIs do not define player actions. Invalid insertion returns without progress.
@@ -135,11 +147,11 @@ Każdy nowy canonical Experience VR Scenario point musi spełniać [`VR_SCENARIO
 ## Approved future gameplay direction — not implemented
 
 1. **SUPERSEDED BY 2026-08-21 DECISION:** B now implements selection of available `SHELLS` / `SMALL_GLYPHS`; the unlocked-only rule remains binding.
-2. **SUPERSEDED BY 2026-08-21 DECISION:** color-named bands are not canonical identity. Semantic bands are `SHELLS`, `SMALL_GLYPHS`, future `LARGE_GLYPHS`, future `RUNESTONES`; unrestricted global scene raycast remains disallowed.
-3. **SUPERSEDED BY 2026-08-21 DECISION:** small-glyph field, transport and natural essence extraction are implemented; real large-glyph targeting remains future.
+2. **SUPERSEDED BY 2026-08-21 DECISION:** color-named bands are not canonical identity. Semantic bands are `SHELLS`, `SMALL_GLYPHS`, implemented `LARGE_GLYPHS`, future `RUNESTONES`; unrestricted global scene raycast remains disallowed.
+3. **SUPERSEDED BY 2026-08-21 DECISION:** small-glyph field, transport, natural essence extraction and real family-gated Large Glyph targeting/pull are implemented.
 4. Radar sectors, antenna, runes, Emanation Matrix processing, final radar/finale, spatial audio, durable persistence and full-game reset remain future systems. Ambient sequencing and Asterion active-control sound are implemented and binding audio behavior.
 5. Platform rotation under a world-stable glyph ring is implemented; production radar/sectors still need design and validation.
 
 ## Explicit current exclusions
 
-Real `LARGE_GLYPHS`/`RUNESTONES`, radar/sector gameplay, final radar, teleport, jump, snap turn and rigid-body physics are outside the current implemented Experience VR contract. Current Meta Quest 3S defects in physical Sphere placement and contour continuity are implementation QA issues, not exclusions or future features.
+`RUNESTONES`, radar/sector gameplay, final radar, teleport, jump, snap turn and rigid-body physics are outside the current implemented Experience VR contract. Current Meta Quest 3S defects in physical Sphere placement and contour continuity are implementation QA issues, not exclusions or future features.

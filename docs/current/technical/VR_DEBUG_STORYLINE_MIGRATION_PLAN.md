@@ -210,7 +210,7 @@ W kolumnie „Direct entry safe?” oceniono semantyczną równoważność z nat
 
 1. **Intro → Portal/Reliquary/Furnace:** callbacks `onProgressionFixturesHidden`, `onBypassFixturesVisible` i `onReliquaryReveal` wykonują cross-domain mutations.
 2. **Intro → locomotion:** `reset()` woła `locomotion.reset()`, ustawia radius i boundary, podczas gdy baseline i hydration mają osobnego locomotion ownera.
-3. **Intro → shared scene presentation:** bezpośrednio zmienia `platformFixturesRoot.visible`, `glyphRing.visible`, Monkey visibility/stone i fog. Należy rozstrzygnąć osobne owners; Intro może zlecać effect bieżącego beatu, nie posiadać baseline tych domen.
+3. **Intro → shared scene presentation:** historycznie bezpośrednio zmieniał `platformFixturesRoot.visible` i raw Large Glyph visibility oraz Monkey visibility/stone i fog; current Intro przekazuje visibility intent przez `largeGlyphActor.setPresentationVisible(...)`. Należy rozstrzygnąć osobne owners; Intro może zlecać effect bieżącego beatu, nie posiadać baseline tych domen.
 4. **Intro → Monkey Guidance:** globalny dialogue override, message i interaction enabled są współdzielone z post-ring dialogue i Furnace intro. Bez jawnego lease/replace/reset contract kolejność resetów decyduje o wyniku.
 5. **Furnace intro composition callback:** `revealFurnace` ustawia bezpośrednio `astroFurnace.object.visible`; powinno wołać semantyczne API Furnace ownera (`reveal/reset/hydrate`), nigdy mesh field.
 6. **Portal helper:** `restorePortalWaitingState()` w composition root może orkiestracyjnie wybrać baseline, ale materializacja musi należeć do Portal ownera.

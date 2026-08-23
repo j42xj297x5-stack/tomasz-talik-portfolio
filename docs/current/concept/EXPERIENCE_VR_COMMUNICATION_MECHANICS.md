@@ -509,7 +509,7 @@ Jeżeli odpowiedź na punkt 7 brzmi „tylko przewija zdanie” — tekst należ
 - dynamiczna projekcja Player Guide/Y: `AKTUALNE ZADANIE`, `NARZĘDZIA` i tool references;
 - dopisywanie linii B dopiero po właściwym capability.
 
-`progression.p2.smallGlyphsIntro` oraz `knowledge.p2.tuneGlyphs` są **APPROVED COPY / NOT YET ACTIVE**, ponieważ realny `LARGE_GLYPHS` targeting/pull nie istnieje. `knowledge.astro.bandSwitch` i `tool.astro.bandSwitch` są **IMPLEMENTED**. Wspólna klasyfikacja/eskalacja hintów oraz dalsza komunikacja późniejszych aktów pozostają **APPROVED / NOT IMPLEMENTED**.
+`progression.p2.smallGlyphsIntro` oraz `knowledge.p2.tuneGlyphs` zachowują własny status authoringu komunikacji; realny `LARGE_GLYPHS` targeting/pull jest **IMPLEMENTED**, więc nie stanowi już blokady runtime. `knowledge.astro.bandSwitch` i `tool.astro.bandSwitch` są **IMPLEMENTED**. Wspólna klasyfikacja/eskalacja hintów oraz dalsza komunikacja późniejszych aktów pozostają **APPROVED / NOT IMPLEMENTED**.
 
 ## 12. Reguła końcowa
 
