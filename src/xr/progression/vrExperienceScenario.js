@@ -252,7 +252,7 @@ const SECOND_RING_COMPLETE_SETTLED_CONSEQUENCES = Object.freeze({
   crystals: Object.freeze({ consumedTier: 2 })
 });
 const P2_RADIAL_PRESENTED_SETTLED_CONSEQUENCES = Object.freeze({
-  p2World: Object.freeze({ mainGlyphsRadial: true })
+  largeGlyphs: Object.freeze({ stage: 'RING_EXPANDED' })
 });
 const MAIN_AMBIENT_ACTIVE_SETTLED_CONSEQUENCES = Object.freeze({
   audio: Object.freeze({ mainAmbientActive: true })
@@ -284,15 +284,14 @@ const P2_LARGE_GLYPH_TARGETING_CAPABILITIES = Object.freeze([
   VR_SCENARIO_CAPABILITY.CAN_PULL_LARGE_GLYPHS
 ]);
 const ACT_TWO_ENTRY_SETTLED_CONSEQUENCES = Object.freeze({
-  postRing: Object.freeze({ shellFieldVisible: true, shellInteractionEnabled: false,
-    mainGlyphsElevated: true })
+  postRing: Object.freeze({ shellFieldVisible: true, shellInteractionEnabled: false }),
+  largeGlyphs: Object.freeze({ stage: 'RING_ELEVATED' })
 });
 const FURNACE_REVEALED_SETTLED_CONSEQUENCES = Object.freeze({
   furnace: Object.freeze({ revealed: true })
 });
 const ASTRO_EARNED_SETTLED_CONSEQUENCES = Object.freeze({
-  postRing: Object.freeze({ shellFieldVisible: true, shellInteractionEnabled: true,
-    mainGlyphsElevated: true }),
+  postRing: Object.freeze({ shellFieldVisible: true, shellInteractionEnabled: true }),
   astroProduction: Object.freeze({ state: 'EARNED' })
 });
 const ASTERION_EARNED_SETTLED_CONSEQUENCES = Object.freeze({

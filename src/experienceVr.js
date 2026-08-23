@@ -849,15 +849,6 @@ const postRingPresentation = createVrPostRingPresentation({ largeGlyphActor, she
   settings: settings.postRingPresentation,
   onCompleted: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.POST_RING_WORLD_PRESENTATION_COMPLETED)
 });
-const p2WorldScenarioAdapter = Object.freeze({
-  hydrateScenarioState(value) {
-    if (!value || typeof value !== 'object' || Array.isArray(value)
-      || Object.keys(value).length !== 1 || value.mainGlyphsRadial !== true) {
-      throw new Error('P2 world hydration requires settled mainGlyphsRadial truth');
-    }
-    largeGlyphActor.hydrateScenarioState({ stage: 'RING_EXPANDED' });
-  }
-});
 const observationWindow = createVrObservationWindow({
   durationSeconds: settings.observationWindow.durationSeconds,
   onCompleted: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.OBSERVATION_WINDOW_COMPLETED)
@@ -1044,7 +1035,7 @@ const scenarioOwners = Object.freeze({
   monkey: monkeyActor, intro: introSequence, locomotion, reliquary: crystalReliquary,
   portal: portalDisplay,
   progression: progressionController, progressFloor, crystals: crystalCollection,
-  postRing: postRingPresentation, p2World: p2WorldScenarioAdapter, smallGlyphField: smallGlyphSystem,
+  postRing: postRingPresentation, largeGlyphs: largeGlyphActor, smallGlyphField: smallGlyphSystem,
   furnace: astroFurnace, furnaceProgression: furnaceProgressionController,
   astroProduction: astroAttractorProductionController, asterionProduction: asterionProductionController,
   protoAstroTuning: protoAstroTuningController,
