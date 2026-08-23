@@ -17,6 +17,7 @@ import { createVrGlyphInteraction } from './xr/createVrGlyphInteraction.js';
 import { createVrGlyphOrbit } from './xr/createVrGlyphOrbit.js';
 import { createVrSmallGlyphSystem } from './xr/glyphs/createVrSmallGlyphSystem.js';
 import { createVrSmallGlyphAttractorInteraction } from './xr/glyphs/createVrSmallGlyphAttractorInteraction.js';
+import { createVrLargeGlyphAttractorInteraction } from './xr/glyphs/createVrLargeGlyphAttractorInteraction.js';
 import { createVrGlyphLights } from './xr/createVrGlyphLights.js';
 import { createVrSpatialPlaque } from './xr/createVrSpatialPlaque.js';
 import { createVrPortalDisplay } from './xr/createVrPortalDisplay.js';
@@ -35,7 +36,7 @@ import { createVrShellSystem } from './xr/shells/createVrShellSystem.js';
 import { resolveVrSphericalLayerRanges, VR_SPHERICAL_LAYER_IDS } from './xr/world/createVrSphericalLayerActor.js';
 import { createVrShellAttractorInteraction } from './xr/shells/createVrShellAttractorInteraction.js';
 import { createVrSemanticInput } from './xr/input/createVrSemanticInput.js';
-import { createVrHandModeController } from './xr/input/createVrHandModeController.js';
+import { createVrHandModeController, VR_ATTRACTOR_BANDS } from './xr/input/createVrHandModeController.js';
 import { createVrAttractorTool } from './xr/tools/createVrAttractorTool.js';
 import { ASTRO_ATTRACTOR_CONSTRUCTION, createVrAstroAttractorProductionController } from './xr/tools/createVrAstroAttractorProductionController.js';
 import { createVrAstroFurnace } from './xr/furnace/createVrAstroFurnace.js';
@@ -269,6 +270,7 @@ const smallGlyphLayer = sphericalLayer(VR_SPHERICAL_LAYER_IDS.SMALL_GLYPHS);
 const smallGlyphMaxTargetDistance = smallGlyphLayer.outerRadius;
 const largeGlyphTargetRadius = glyphOrbit.effectiveRadius
   * settings.p2RadialPresentation.largeGlyphRadiusMultiplier;
+const largeGlyphMaxTargetDistance = largeGlyphTargetRadius + floorWalkRadius;
 const smallGlyphSystem = createVrSmallGlyphSystem({
   parent: worldStableRoot,
   assetManager,
@@ -419,6 +421,7 @@ const attractorTool = createVrAttractorTool({ model: assetManager.cloneGltfScene
 const semanticInput = createVrSemanticInput({ renderer });
 let shellAttractorInteraction = null;
 let smallGlyphAttractorInteraction = null;
+let largeGlyphAttractorInteraction = null;
 const handModeController = createVrHandModeController({
   controllers: vrControllers.controllers,
   semanticInput,
@@ -428,6 +431,12 @@ const handModeController = createVrHandModeController({
   canSwitchAttractorBand: () => runtimeExperience?.can(
     VR_SCENARIO_CAPABILITY.CAN_SWITCH_ASTRO_BAND
   ) === true,
+  getAvailableAttractorBands: () => {
+    const bands = [VR_ATTRACTOR_BANDS.SHELLS, VR_ATTRACTOR_BANDS.SMALL_GLYPHS];
+    if (runtimeExperience?.can(VR_SCENARIO_CAPABILITY.CAN_SCAN_LARGE_GLYPHS) === true
+      && protoAstroTuningController.getExtractedFamilyCodes().length > 0) bands.push(VR_ATTRACTOR_BANDS.LARGE_GLYPHS);
+    return bands;
+  },
   isAsterionAvailable: () => asterionProductionController.isEarned() || asterionSphereQa,
   isLeftToolToggleBlocked: () => {
     const leftRecord = vrControllers.controllers.find(({ handedness }) => handedness === 'left') ?? null;
@@ -755,6 +764,26 @@ smallGlyphAttractorInteraction = createVrSmallGlyphAttractorInteraction({
     || record.currentHit
   )
 });
+largeGlyphAttractorInteraction = createVrLargeGlyphAttractorInteraction({
+  controllers: vrControllers.controllers, nodes, glyphOrbit, handModeController, semanticInput, attractorTool,
+  protoAstroTuningController, maxTargetDistance: largeGlyphMaxTargetDistance,
+  settings: { scanThreshold: settings.shellAttractor.scanThreshold,
+    triggerThreshold: settings.shellAttractor.triggerThreshold,
+    pullAcceleration: settings.shellAttractor.pullAcceleration, maxPullSpeed: settings.shellAttractor.maxPullSpeed,
+    captureRadius: settings.shellAttractor.captureRadius, returnDuration: settings.shellAttractor.returnDuration,
+    minimumClearance: settings.largeGlyphAttractor.minimumClearance,
+    scanCone: { ...settings.shellAttractor.scanCone, color: settings.attractorPresentation.bandColors.largeGlyphs } },
+  haloSettings: settings.targetHalo,
+  canScanLargeGlyphs: () => runtimeExperience?.can(VR_SCENARIO_CAPABILITY.CAN_SCAN_LARGE_GLYPHS) === true,
+  canTargetLargeGlyphs: () => runtimeExperience?.can(VR_SCENARIO_CAPABILITY.CAN_TARGET_LARGE_GLYPHS) === true,
+  canPullLargeGlyphs: () => runtimeExperience?.can(VR_SCENARIO_CAPABILITY.CAN_PULL_LARGE_GLYPHS) === true,
+  onPullStart: ({ target }) => vrAudio.startAttractor(target.userData.id, 'largeGlyph'),
+  onPullCancel: ({ target }) => vrAudio.cancelAttractor(target.userData.id),
+  isHigherPriorityInteractionActive: (record) => Boolean(activateButton.hits.get(record)
+    || releaseButton.hits.get(record) || astroFurnaceOpenInteraction.hasCurrentHit(record)
+    || astroFurnaceActivateInteraction.hasCurrentHit(record) || astroFurnaceOptionInteraction.hasCurrentHit(record)
+    || furnacePanel.hasCurrentHit(record) || monkeyGuide.hasCurrentHit(record) || record.currentHit)
+});
 
 const introFogReveal = createVrIntroFogReveal({
   center: progressFloor.object,
@@ -1073,6 +1102,7 @@ function renderFrame() {
   astroFurnaceContentInteraction.reportHeldSmallGlyph(smallGlyphAttractorInteraction?.heldGlyph);
   astroFurnaceContentInteraction.update(delta);
   glyphOrbit.update(delta);
+  largeGlyphAttractorInteraction.update(delta);
   postRingPresentation.update(delta);
   p2RadialPresentation.update(delta);
   smallGlyphSystem.update(delta);
@@ -1148,6 +1178,7 @@ function restoreVrScenarioBaseline() {
   progressionController.reset();
   progressFloor.reset();
   runeBridgeActor.reset();
+  largeGlyphAttractorInteraction.reset();
   glyphOrbit.reset();
   p2RadialPresentation.reset();
   smallGlyphAttractorInteraction.reset();
@@ -1254,6 +1285,7 @@ window.addEventListener('pagehide', () => {
   astroFurnace.dispose();
   shellAttractorInteraction.dispose();
   smallGlyphAttractorInteraction.dispose();
+  largeGlyphAttractorInteraction.dispose();
   handModeController.dispose();
   activateButton.reset();
   releaseButton.reset();

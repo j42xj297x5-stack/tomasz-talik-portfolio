@@ -93,6 +93,9 @@ export const VR_SCENARIO_CAPABILITY = immutableIdentifiers([
   'CAN_SCAN_SMALL_GLYPHS',
   'CAN_TARGET_SMALL_GLYPHS',
   'CAN_PULL_SMALL_GLYPHS',
+  'CAN_SCAN_LARGE_GLYPHS',
+  'CAN_TARGET_LARGE_GLYPHS',
+  'CAN_PULL_LARGE_GLYPHS',
   'CAN_EXTRACT_SMALL_GLYPH_ESSENCE',
   'CAN_USE_FURNACE',
   'CAN_OPEN_FURNACE',
@@ -273,6 +276,12 @@ const P2_SMALL_GLYPH_TARGETING_CAPABILITIES = Object.freeze([
   VR_SCENARIO_CAPABILITY.CAN_TARGET_SMALL_GLYPHS,
   VR_SCENARIO_CAPABILITY.CAN_PULL_SMALL_GLYPHS,
   VR_SCENARIO_CAPABILITY.CAN_EXTRACT_SMALL_GLYPH_ESSENCE
+]);
+const P2_LARGE_GLYPH_TARGETING_CAPABILITIES = Object.freeze([
+  ...P2_SMALL_GLYPH_TARGETING_CAPABILITIES,
+  VR_SCENARIO_CAPABILITY.CAN_SCAN_LARGE_GLYPHS,
+  VR_SCENARIO_CAPABILITY.CAN_TARGET_LARGE_GLYPHS,
+  VR_SCENARIO_CAPABILITY.CAN_PULL_LARGE_GLYPHS
 ]);
 const ACT_TWO_ENTRY_SETTLED_CONSEQUENCES = Object.freeze({
   postRing: Object.freeze({ shellFieldVisible: true, shellInteractionEnabled: false,
@@ -695,7 +704,7 @@ const points = Object.freeze([
     settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
     entryEffects: Object.freeze([]),
     label: 'Small glyph field ready / Astro band integration boundary',
-    capabilities: P2_SMALL_GLYPH_TARGETING_CAPABILITIES,
+    capabilities: P2_LARGE_GLYPH_TARGETING_CAPABILITIES,
     transitions: Object.freeze([])
   }),
   Object.freeze({

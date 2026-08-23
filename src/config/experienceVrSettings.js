@@ -152,7 +152,7 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
     rayRadialSegments: 6
   },
   targetHalo: { color: 0xbfe9ff, opacity: 0.28, thicknessPixels: 3, pulseDuration: 1.45 },
-  attractorPresentation: { bandColors: { shells: 0xff0000, smallGlyphs: 0xffff00 } },
+  attractorPresentation: { bandColors: { shells: 0xff0000, smallGlyphs: 0xffff00, largeGlyphs: 0x78ff9c } },
   placedObjectIdleMotion: {
     verticalAmplitude: 0.20,
     verticalCycleDuration: 4.8,
@@ -173,6 +173,7 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
     scanCone: { color: 0x78ff9c, halfAngleDegrees: 2.5, opacityMin: 0.035, opacityMax: 0.065,
       pulseDuration: 1.6, radialSegments: 14 }
   },
+  largeGlyphAttractor: { minimumClearance: 0.8 },
   glyphInteraction: { holdDurationSeconds: 0.5, holdLostGraceSeconds: 0.15 },
   glyphLights: { inwardOffset: 1 },
   largeGlyphs: { scaleMultiplier: 3 },
@@ -552,7 +553,9 @@ export function normalizeExperienceVrSettings(candidate) {
         shells: Math.round(finiteNumber(candidate.attractorPresentation?.bandColors?.shells,
           defaults.attractorPresentation.bandColors.shells, { min: 0, max: 0xffffff })),
         smallGlyphs: Math.round(finiteNumber(candidate.attractorPresentation?.bandColors?.smallGlyphs,
-          defaults.attractorPresentation.bandColors.smallGlyphs, { min: 0, max: 0xffffff }))
+          defaults.attractorPresentation.bandColors.smallGlyphs, { min: 0, max: 0xffffff })),
+        largeGlyphs: Math.round(finiteNumber(candidate.attractorPresentation?.bandColors?.largeGlyphs,
+          defaults.attractorPresentation.bandColors.largeGlyphs, { min: 0, max: 0xffffff }))
       }
     },
     placedObjectIdleMotion: {
@@ -601,6 +604,8 @@ export function normalizeExperienceVrSettings(candidate) {
           defaults.shellAttractor.scanCone.radialSegments, { min: 3, max: 32 }))
       }
     },
+    largeGlyphAttractor: { minimumClearance: finiteNumber(candidate.largeGlyphAttractor?.minimumClearance,
+      defaults.largeGlyphAttractor.minimumClearance, { min: 0.2, max: 4 }) },
     glyphInteraction: {
       holdDurationSeconds: finiteNumber(candidate.glyphInteraction?.holdDurationSeconds,
         defaults.glyphInteraction.holdDurationSeconds, { min: 0.1, max: 5 }),
