@@ -53,6 +53,8 @@ The left joystick continuously yaws `playerRig`. The right joystick translates i
 
 ## Glyphs, crystals and reliquary
 
+Large Glyph nodes have one canonical Experience VR visual baseline of `3×` from their creation, before Intro reveal and ring entry. Hover and transition effects remain relative to that node-owned baseline. The P2 presentation at `4.20` owns only the radial move to the existing target radius; it does not own or animate Large Glyph scale, and reset or reconstruction does not replace the `3×` baseline.
+
 Each controller raycasts the real visible glyph meshes. A `0.5 s` hold spawns the next unrepresented branch tier; a miss pauses progress for `0.15 s`, then cancels it. The crystal position is the glyph's captured world position offset `0.30 m` toward the central object. Acquisition is additive and not gated by the current global tier.
 
 The five branches contain `3 / 3 / 3 / 4 / 5` cards. Fifteen preloaded GLBs provide three cyclic crystal variants per branch. A physical crystal carries branch/glyph identity, tier, visual variant and transient interaction state, but no persistent card/page identity. Available crystals use the ordinary `2.3 m` ray and squeeze-grab.
