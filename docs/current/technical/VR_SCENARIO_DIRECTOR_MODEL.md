@@ -31,7 +31,7 @@ Intro oraz pierwszy cykl Glyph → Crystal → Reliquary prowadzą do trwałego 
 | Point | Beat i completion | Stabilny skutek po ukończeniu |
 | --- | --- | --- |
 | `4.10` | drugi Glyph → Crystal → Reliquary; `TIER_COMPLETED` dla Tier 2 kończy fazę | canonical Tier 2 progression/floor/crystal completion |
-| `4.20` | target entry `BEGIN_P2_RADIAL_PRESENTATION`; duże glify odsuwają się radialnie poza ordinary-ray reach; completion `P2_RADIAL_PRESENTATION_COMPLETED` | `p2World.mainGlyphsRadial = true` |
+| `4.20` | target entry `BEGIN_P2_RADIAL_PRESENTATION`; actor rozszerza Large Glyph structure; completion `P2_RADIAL_PRESENTATION_COMPLETED` | `largeGlyphs.stage = RING_EXPANDED` |
 | `4.30` | target entry `BEGIN_SMALL_GLYPH_FIELD_PRESENTATION`; materializacja field; completion `SMALL_GLYPH_FIELD_PRESENTATION_COMPLETED` | `smallGlyphField.materialized = true` |
 | `4.40` | stable P2 Proto-Astro integration boundary | brak transition i brak własnej settled consequence |
 
@@ -41,8 +41,9 @@ Intro oraz pierwszy cykl Glyph → Crystal → Reliquary prowadzą do trwałego 
 
 Obowiązuje `stateAt(X) = fold(settledConsequences pointów ściśle przed X)`:
 
-- `stateAt(4.20)` zawiera stabilną prawdę ukończenia Tier 2;
-- `stateAt(4.30)` dodatkowo zawiera `p2World.mainGlyphsRadial = true`;
+- po settled `3.10` prawdą aktora jest `largeGlyphs.stage = RING_ELEVATED`;
+- `stateAt(4.20)` zawiera stabilną prawdę ukończenia Tier 2 oraz `largeGlyphs.stage = RING_ELEVATED`;
+- `stateAt(4.30)` dodatkowo zawiera `largeGlyphs.stage = RING_EXPANDED`;
 - `stateAt(4.40)` dodatkowo zawiera `smallGlyphField.materialized = true`.
 
 Bieżące `stateAt(4.40)` nie authoruje `protoAstroTuning.extractedFamilyCodes`. Direct activation `4.40` poprawnie odtwarza canonical P2 world i startuje TuningController z pustym zestawem esencji. Hydrator ma już owner section `protoAstroTuning` dla przyszłych authored consequences. Rekonstrukcja nie odtwarza transient pull/hold/process.
@@ -55,12 +56,11 @@ Scenario authoruje należność progression beats, ale Guidance renderuje komuni
 
 ## APPROVED / NOT IMPLEMENTED
 
-- real `LARGE_GLYPHS` band oraz family-gated targeting/pull dużych glifów;
 - semantyczna integracja czterech paneli Astrolabium poza istniejącą projekcją Panelu 1;
 - dalsze authored P2 continuation i completion point;
 - `RUNESTONES` i późniejsze akty.
 
-Nie ustalono large pull physics, capture/completion eventu, finalnego cyklu B, kolorów/symboli bands ani mechaniki VI/Eter.
+Nie ustalono finalnego cyklu B, kolorów/symboli przyszłych bands ani mechaniki VI/Eter. `SPHERE_FAR` pozostaje **FUTURE / NOT AUTHORED / NOT IMPLEMENTED**.
 
 ## Bootstrap i QA
 

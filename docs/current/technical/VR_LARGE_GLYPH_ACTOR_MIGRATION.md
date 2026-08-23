@@ -1,16 +1,29 @@
 # Experience VR Large Glyph Actor Migration
 
-Status: **CURRENT MIGRATION CONTRACT / NOT RUNTIME AUTHORITY**
+Status: **MIGRATION COMPLETE / IMPLEMENTATION RECORD / NOT RUNTIME AUTHORITY**
+
+## Completion status
+
+- M1 COMPLETE — `5b47549` foundation
+- M2 COMPLETE — `77df0b3` rigid rotation
+- M3 COMPLETE — `4135302` elevation
+- M4 COMPLETE — `c725fda` expansion
+- M5 COMPLETE — `ffa88ab` transient ownership
+- M6 COMPLETE — `d971b88` Scenario ownership
+- M7A COMPLETE — `9ad4cbf` cleanup
+- M7B COMPLETE — documentation synchronization
+
+**CURRENT runtime authority znajduje się w canonical runtime/domain docs i kodzie. Sekcje CURRENT w tym dokumencie opisują pre-migration audit/history i nie są bieżącym runtime.**
 
 ## 1. STATUS / PURPOSE
 
-This document is the single execution source for migrating the five Experience VR Large Glyphs from the current distributed `glyphRing + glyphOrbit + postRing + p2Radial` model to one physical/spatial actor. It is deliberately divided into three kinds of statements:
+This document is the completed historical execution contract for migrating the five Experience VR Large Glyphs from the current distributed `glyphRing + glyphOrbit + postRing + p2Radial` model to one physical/spatial actor. It is deliberately divided into three kinds of statements:
 
 - **CURRENT** is an audit of the code that exists now. The current runtime and its canonical runtime models remain authority for implemented behavior.
 - **TARGET** is the approved migration contract. It becomes runtime truth only as the named M1–M7 phases are implemented and their canonical docs are synchronized.
 - **FUTURE** is designed capacity, not implemented runtime. In particular, `SPHERE_FAR` has no authored Scenario point, event, capability, or transition.
 
-This is an audit-and-planning artifact. It does not claim that `LargeGlyphActor`, the new radii, rigid rotation, consolidated hydration, or `SPHERE_FAR` exist today. Future Codex tasks must read this document, select exactly one phase (`M1`–`M7`), read only that phase's listed dependencies, implement its completion condition, and stop. They must not reconstruct or redesign the whole subsystem.
+This is an implementation record, not an instruction to begin M1. `LargeGlyphActor`, its implemented stages, rigid rotation and consolidated hydration are current runtime; `SPHERE_FAR` alone remains **FUTURE / NOT AUTHORED / NOT IMPLEMENTED**. Ordinary work must begin in canonical runtime/domain documentation, not here.
 
 ## 2. PRODUCT DECISIONS
 
@@ -32,9 +45,9 @@ The following values and rules are binding for the migration and must not be rei
 | Stable per-child spatial recalculation | none | no per-frame child `sin/cos`, radial position write, or compensation quaternion |
 | Large Glyph layer type | separate five-slot surface structure | never a `VR_SPHERICAL_LAYER_IDS` volume |
 
-The canonical stage names selected by this contract are `RING_INITIAL`, `RING_ELEVATED`, `RING_EXPANDED`, and `SPHERE_FAR`.
+The implemented canonical stage names are `RING_INITIAL`, `RING_ELEVATED`, and `RING_EXPANDED`. `SPHERE_FAR` remains **FUTURE / NOT AUTHORED / NOT IMPLEMENTED**.
 
-## 3. CURRENT ARCHITECTURE
+## 3. PRE-MIGRATION BASELINE / HISTORICAL
 
 ### 3.1 Construction and composition
 
@@ -64,7 +77,7 @@ The canonical stage names selected by this contract are `RING_INITIAL`, `RING_EL
 - Intro fog traverses `glyphRing` only as a visual patch root; Intro hydration directly writes `glyphRing.visible`.
 - Scenario and reconstruction split settled Large Glyph truth between `postRing.mainGlyphsElevated` and `p2World.mainGlyphsRadial`.
 
-## 4. CURRENT OWNERSHIP PROBLEMS
+## 4. PRE-MIGRATION OWNERSHIP PROBLEMS / HISTORICAL
 
 | Conflict | Current owners | Why invalid |
 | --- | --- | --- |
@@ -80,7 +93,7 @@ The canonical stage names selected by this contract are `RING_INITIAL`, `RING_EL
 
 The primary migration cause is therefore **multiple transform and lifecycle owners for one physical entity**, not performance. Five `sin/cos` calls are cheap; the ownership model is wrong and blocks coherent future stages.
 
-## 5. CURRENT DEPENDENCY GRAPH
+## 5. PRE-MIGRATION DEPENDENCY GRAPH / HISTORICAL
 
 ```text
 experienceVr.js
@@ -115,7 +128,7 @@ experienceVr.js
    └─ SmallGlyphSystem
 ```
 
-## 6. CURRENT SYMBOL INVENTORY
+## 6. PRE-MIGRATION SYMBOL INVENTORY / HISTORICAL
 
 | Symbol | File | Current role | Target disposition |
 | --- | --- | --- | --- |

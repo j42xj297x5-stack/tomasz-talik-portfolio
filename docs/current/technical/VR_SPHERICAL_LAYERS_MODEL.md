@@ -6,7 +6,7 @@
 
 ## Registry i zakresy
 
-Jedynym bazowym promieniem jest effective radius istniejącego glyph ring (`R = 7.6 m`). Ustawienia rozdzielają dwa niezależne pojęcia: dodatnią, skończoną `thickness` warstwy oraz nieujemny `gapAfter`, czyli pustą przestrzeń radialną przed następną warstwą. Domyślny gap wynosi `0.25R`; opcjonalny `gapAfterMultiplier` warstwy może go nadpisać. Gap nie należy do żadnej warstwy, nie ma Object3D, aktora, contentu ani Astro bandu. Resolver kumuluje `thickness + gapAfter`; pary promieni nie są zapisywane ręcznie.
+Jedynym bazowym promieniem world/platform jest jawne `worldBaseRadius = 7.6 m`. Ustawienia rozdzielają dwa niezależne pojęcia: dodatnią, skończoną `thickness` warstwy oraz nieujemny `gapAfter`, czyli pustą przestrzeń radialną przed następną warstwą. Domyślny gap wynosi `0.25R`; opcjonalny `gapAfterMultiplier` warstwy może go nadpisać. Gap nie należy do żadnej warstwy, nie ma Object3D, aktora, contentu ani Astro bandu. Resolver kumuluje `thickness + gapAfter`; pary promieni nie są zapisywane ręcznie.
 
 | layer id | thickness | range przy R=7.6 | gap after | status |
 | --- | ---: | ---: | ---: | --- |
@@ -36,4 +36,4 @@ Field-owned Shell i Small Glyph dostają stale przypisany slot. Materialization 
 
 ## Large Glyph spatial integration
 
-Obecny Large Glyph radius `3.3R = 25.08 m` zajmuje skonfigurowany pusty gap `24.7–26.6 m` pomiędzy `SMALL_GLYPHS` i reserved `RUNE_STONES`. Nie należy do spherical layer registry i nie przecina żadnej z tych warstw.
+Large Glyph nie należy do `VR_SPHERICAL_LAYER_IDS` ani do spherical layer registry. Jego actor-owned stage `RING_EXPANDED` ma promień `18.5 m` i świadomie przecina volume `SMALL_GLYPHS` (`17.1–24.7 m`). Ten overlap jest **ACCEPTED PRODUCT DECISION**: nie jest bugiem ani gapem do naprawienia i nie zmienia registry ani żadnego z powyższych ranges.

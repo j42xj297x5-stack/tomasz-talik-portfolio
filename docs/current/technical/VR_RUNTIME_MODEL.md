@@ -1,6 +1,6 @@
 # Experience VR Runtime Model
 
-Status: canonical description of the implemented runtime synchronized after M2.2 on 2026-08-15. Approved future gameplay is documented in the [gameplay roadmap](../concept/EXPERIENCE_VR_GAMEPLAY_ROADMAP.md).
+Status: canonical description of the implemented runtime synchronized after Large Glyph Actor migration M7B on 2026-08-23. Approved future gameplay is documented in the [gameplay roadmap](../concept/EXPERIENCE_VR_GAMEPLAY_ROADMAP.md).
 
 ## Scenario composition boundary
 
@@ -14,7 +14,7 @@ WHERE, BEYOND, FOLLOW pause and hints are local `STAY` reactions. Crossing exist
 
 The composition root owns the small `VrAudioBridge` lifecycle. Optional VR audio requests cross its fail-soft boundary, which contains both synchronous exceptions and Promise rejections and reports them as `[vr-audio]` warnings. Calls are fire-and-forget side effects after gameplay transitions; they are never awaited by session, input, progression, state-machine or render-frame flows. The bridge delegates Web Audio ownership to the shared `audioManager`, stores no gameplay state and is disposed idempotently on `pagehide`. Five unity-gain VR buses (`SPACE`, `AMBIENT`, `DEVICE`, `WORLD`, `UI`) feed the existing Master Volume/mute. UI and world/device one-shots, glyph acquisition, the shell-pull loop and both Asterion Sphere loops are **IMPLEMENTED**. `experienceVr.js` also actively composes `createVrAmbientSequencer`: the current full tier and the completed-shell/built-Sphere subthreshold select finite ambient/quiet-loop sequences. Other Attractor target classes and spatial audio remain **FUTURE**. Detailed lifecycle and asset mapping belong to [`VR_AUDIO_MODEL.md`](VR_AUDIO_MODEL.md).
 
-Experience VR uses one metre-based spatial contract: platform center and the canonical transform of `VrMonkeyMotionRoot` are `(0,0,0)`, the platform plane is `Y=0`, entry is `+Z`, the player viewpoint starts at radius `20`, the Monkey starts at radius `18`, and the glyph ring has one explicit canonical radius. Every session moves only `playerRig` so the tracked head reaches the canonical player point while preserving physical head height. Tracking never positions the Monkey, ring, stone, or fixtures. Session exit/re-entry clears transient crystals, shell interaction, controller hits, halos, glyph state, reliquary/buttons, Asterion QA state and portal preview, while committed progress and floor projection survive in the already prepared page runtime. Reload/navigation recreates them. There is no durable save or full-game reset.
+Experience VR uses one metre-based spatial contract: platform center and the canonical transform of `VrMonkeyMotionRoot` are `(0,0,0)`, the platform plane is `Y=0`, entry is `+Z`, the player viewpoint starts at radius `20`, the Monkey starts at radius `18`, and world/platform uses the explicit `worldBaseRadius = 7.6 m`, independent from Large Glyph actor radii. Every session moves only `playerRig` so the tracked head reaches the canonical player point while preserving physical head height. Tracking never positions the Monkey, Large Glyph actor, stone, or fixtures. Session exit/re-entry clears transient crystals, shell interaction, controller hits, halos, glyph state, reliquary/buttons, Asterion QA state and portal preview, while committed progress and floor projection survive in the already prepared page runtime. Reload/navigation recreates them. There is no durable save or full-game reset.
 
 Controller records may be constructed with `handedness === ''`. Hand identity is resolved only at runtime after WebXR's `connected` event; semantic input and hand-mode lookup therefore do not assume handedness during construction.
 
@@ -24,7 +24,7 @@ The active hierarchy is platform-relative for floor gameplay and world-stable fo
 
 ```text
 ExperienceVrRoot
-├── WorldStableRoot → glyphRing / shell field / cosmos
+├── WorldStableRoot → VrLargeGlyphActor / shell field / cosmos
 └── VrTiltableFloorRoot (identity position and scale)
     ├── floor sectors / rings
     ├── VrMonkeyMotionRoot → visual root / Monkey Guide
@@ -49,7 +49,15 @@ RIGHT: A / existing toggle → NORMAL_HAND ↔ ASTRO_ATTRACTOR
 
 `createVrHandModeController` owns equip/unequip for both tools. In right `NORMAL_HAND`, the Astro Attractor model is hidden and the connected right ordinary ray is active. In right `ASTRO_ATTRACTOR`, Astro is visible and the right ordinary ray is hidden. In left `ASTERION_SPHERE`, the Asterion Sphere is equipped and the left ordinary ray is hidden; in left `NORMAL_HAND`, the sphere is unequipped and the left ordinary ray returns immediately. The two modes do not block each other, so Asterion Sphere and Astro Attractor can be equipped at the same time.
 
-The left joystick continuously yaws `playerRig`. The right joystick translates it on the current platform-local tangent plane: the platform normal replaces world Y, movement is resolved from the viewer direction projected onto that local plane, diagonal input is capped, and the rig's local Y is preserved. The walking boundary is the snapshot `glyphOrbit.effectiveRadius` captured for the platform passenger root; at the radial boundary, the outward component is blocked while tangent motion remains allowed. Teleport, jump, snap turn and horizon-lock camera compensation are absent: the camera/controllers/grips inherit `VrTiltableFloorRoot` through `VrFloorPassengerRoot`.
+The left joystick continuously yaws `playerRig`. The right joystick translates it on the current platform-local tangent plane: the platform normal replaces world Y, movement is resolved from the viewer direction projected onto that local plane, diagonal input is capped, and the rig's local Y is preserved. The walking boundary is the explicit `worldBaseRadius = 7.6 m` captured for the platform passenger root; at the radial boundary, the outward component is blocked while tangent motion remains allowed. Teleport, jump, snap turn and horizon-lock camera compensation are absent: the camera/controllers/grips inherit `VrTiltableFloorRoot` through `VrFloorPassengerRoot`.
+
+## Large Glyph actor
+
+`createVrLargeGlyphActor` is the sole physical/spatial owner of the five Large Glyphs. Under `WorldStableRoot`, `VrLargeGlyphActor` contains one rigid `RotationRoot` with identity slots `Slot_KA`, `Slot_TA`, `Slot_SA`, `Slot_LA`, `Slot_RA`, plus actor-owned `TransientRoot`. The five slots remain separated by `72°`, use a canonical `3×` scale and move through exactly `RING_INITIAL` (`8.5 m`), `RING_ELEVATED` (`8.5 m`, `+2.4 m`) and `RING_EXPANDED` (`18.5 m`). `SPHERE_FAR` is **FUTURE / NOT AUTHORED / NOT IMPLEMENTED**.
+
+The actor owns physical nodes, rigid rotation, canonical slots, elevation/expansion, spatial stage, presentation visibility (`setPresentationVisible`), transient hierarchy, targeting extent/range, hydration, reset and disposal. Intro passes visibility intent through the actor; `intro.largeGlyphsVisible` is presentation truth and is distinct from spatial reconstruction. Scenario settled truth is exclusively `largeGlyphs.stage`; PostRing requests `beginElevation()`, while `BEGIN_P2_RADIAL_PRESENTATION` requests `beginExpansion()`.
+
+Large Glyph radii `8.5 / 18.5 m` are independent from `worldBaseRadius = 7.6 m`. Large Glyph is not a spherical layer. Its expanded structure intentionally overlaps the Small Glyph volume `17.1–24.7 m`; this is an **ACCEPTED PRODUCT DECISION** and does not alter the spherical registry.
 
 ## Glyphs, crystals and reliquary
 
@@ -214,7 +222,7 @@ After every asset preload, Runtime must compose before READY. `runtimeExperience
 
 Canonical domain detail: [`VR_PROTO_ASTRO_MODEL.md`](VR_PROTO_ASTRO_MODEL.md). Spatial ownership and ranges: [`VR_SPHERICAL_LAYERS_MODEL.md`](VR_SPHERICAL_LAYERS_MODEL.md).
 
-**IMPLEMENTED:** semantic input B is routed to `HandModeController`, which owns transient selection between exactly `SHELLS` and `SMALL_GLYPHS`. B switches only currently available bands. `LARGE_GLYPHS` and `RUNESTONES` are **APPROVED / NOT IMPLEMENTED** and are not active runtime enums. Band identity is semantic; exact visual colors/symbols remain open.
+**IMPLEMENTED:** semantic input B is routed to `HandModeController`, which owns transient selection among currently available `SHELLS`, `SMALL_GLYPHS` and family-gated `LARGE_GLYPHS`. `RUNESTONES` is **APPROVED / NOT IMPLEMENTED**. Band identity is semantic; exact visual colors/symbols remain open.
 
 `createVrSmallGlyphSystem` owns a world-stable, deterministic field of 12 instances: six visual variants with two instances each. Scenario presentation materializes the field and hydration restores stable `MATERIALIZED`. Identity is resolved through the canonical Proto-Astro adapter rather than inferred directly from asset number.
 
@@ -228,7 +236,7 @@ FIELD → TARGETING → PULLING → CAPTURE_READY → HELD → RETURNING → FIE
 
 Right Astro squeeze scans/targets and trigger pulls. A real left ordinary-ray/Szpila hit plus left squeeze hands off to `holdSocket`. Release returns the object to its authored field transform. There is no `PLACED`, inventory or persistent ownership. Band change/Astro unequip after `HELD` does not automatically revoke the held glyph; capability loss, release and reset restore canonical field state.
 
-`ProtoAstroTuningController` is the sole owner of persistent `extractedFamilyCodes`, limited to natural `K/T/S/L/R`; `V` is excluded. Same-family I→A compatibility powers the implemented `canAttractLargeGlyph` API, while actual large-glyph targeting/pull remains **NOT IMPLEMENTED**.
+`ProtoAstroTuningController` is the sole owner of persistent `extractedFamilyCodes`, limited to natural `K/T/S/L/R`; `V` is excluded. Same-family I→A compatibility powers `canAttractLargeGlyph` and the implemented real Large Glyph targeting/pull. `createVrLargeGlyphAttractorInteraction` owns `ORBIT → PULLING → CAPTURED → RETURNING → ORBIT`; the actor owns the physical transient lease and exact slot restore.
 
 ## Furnace small-glyph essence extraction
 
@@ -242,9 +250,9 @@ The physical four-panel system exists. Current implementation includes the panel
 
 ## Implemented boundary
 
-Implemented: runtime/session lifecycle, Intro, both authored Glyph → Crystal → Reliquary tiers, first-ring/post-ring, Astro/shell/Furnace/Asterion domain, authored radial presentation `4.20`, small-glyph field presentation `4.30`, stable P2 boundary `4.40`, B switching, `SHELLS`/`SMALL_GLYPHS`, transient small-glyph transport, natural essence extraction, Proto-Astro identity/resolvers/tuning and dynamic Monkey/Player Guide projections.
+Implemented: runtime/session lifecycle, Intro, both authored Glyph → Crystal → Reliquary tiers, first-ring/post-ring, Astro/shell/Furnace/Asterion domain, actor-owned expansion at `4.20`, small-glyph field presentation `4.30`, stable P2 boundary `4.40`, B switching, `SHELLS`/`SMALL_GLYPHS`/`LARGE_GLYPHS`, transient small-glyph transport, natural essence extraction, Proto-Astro identity/resolvers/tuning and dynamic Monkey/Player Guide projections.
 
-Not implemented: `LARGE_GLYPHS` and `RUNESTONES` bands, real large-glyph targeting/pull despite the ready `canAttractLargeGlyph` API, universal four-panel semantics, later authored P2 continuation, VI placement/final mechanics, durable persistence, full-game reset and unimplemented later spatial/gameplay audio.
+Not implemented: `RUNESTONES`, `SPHERE_FAR`, universal four-panel semantics, later authored P2 continuation, VI placement/final mechanics, durable persistence, full-game reset and unimplemented later spatial/gameplay audio.
 
 ## Scenario-driven runtime flow
 
@@ -254,13 +262,13 @@ Canonical authored flow is:
 1.10 → … → 3.80 → 4.10 → 4.20 → 4.30 → 4.40 → 100.10
 ```
 
-`4.10` owns the second ring until `TIER_COMPLETED`. Entry `4.20` begins radial presentation; its completion settles `p2World.mainGlyphsRadial = true`. Entry `4.30` materializes the small-glyph field; its completion settles `smallGlyphField.materialized = true`. `4.40` grants the integrated P2 capabilities and has no transition, although its mainline metadata targets the story terminal. It therefore does not auto-advance.
+`4.10` owns the second ring until `TIER_COMPLETED`. Entry `4.20` begins radial presentation; its completion settles `largeGlyphs.stage = RING_EXPANDED`. Settled `3.10` establishes `largeGlyphs.stage = RING_ELEVATED`. Entry `4.30` materializes the small-glyph field; its completion settles `smallGlyphField.materialized = true`. `4.40` grants the integrated P2 capabilities and has no transition, although its mainline metadata targets the story terminal. It therefore does not auto-advance.
 
-Reconstruction is exclusive: `stateAt(4.20)` includes completed Tier 2, `stateAt(4.30)` adds radial world truth, and `stateAt(4.40)` adds materialized field truth. Current `stateAt(4.40)` does not declare tuning essences, so direct activation correctly hydrates the P2 world and starts TuningController empty. The hydrator already delegates a future `protoAstroTuning` owner section. Transient target/pull/held/Furnace process state is never reconstructed.
+Reconstruction is exclusive: `stateAt(4.20)` includes completed Tier 2, `stateAt(4.30)` adds `largeGlyphs.stage = RING_EXPANDED`, and `stateAt(4.40)` adds materialized field truth. Current `stateAt(4.40)` does not declare tuning essences, so direct activation correctly hydrates the P2 world and starts TuningController empty. The hydrator already delegates a future `protoAstroTuning` owner section. Transient target/pull/held/Furnace process state is never reconstructed.
 
 ## Guidance implementation boundary
 
-The shared automatic progression-message actor presents post-ring and Furnace messages without `DALEJ`. Dynamic Monkey knowledge resolves Astro, Asterion and capability-gated `knowledge.astro.bandSwitch`. Dynamic Player Guide/Y projection supplies current task and tool references, appending `B — zmień pasmo celu` only after `CAN_SWITCH_ASTRO_BAND`. Approved `progression.p2.smallGlyphsIntro` and `knowledge.p2.tuneGlyphs` remain inactive because real `LARGE_GLYPHS` targeting/pull is absent.
+The shared automatic progression-message actor presents post-ring and Furnace messages without `DALEJ`. Dynamic Monkey knowledge resolves Astro, Asterion and capability-gated `knowledge.astro.bandSwitch`. Dynamic Player Guide/Y projection supplies current task and tool references, appending `B — zmień pasmo celu` only after `CAN_SWITCH_ASTRO_BAND`. Guidance activation remains owned by its authored communication contract; real `LARGE_GLYPHS` targeting/pull is implemented and is no longer a reason to classify it as future.
 
 ## QA boundary
 

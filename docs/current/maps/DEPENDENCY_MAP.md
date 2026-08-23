@@ -41,9 +41,14 @@ protoAstroRegistry
 → ProtoAstroTuningController
 ← large-glyph/page resolver
 
-ProtoAstroTuningController
-→ implemented canAttractLargeGlyph domain seam
-→ future LARGE_GLYPHS target/pull
+Scenario capabilities
+→ LargeGlyphAttractorInteraction
+→ ProtoAstroTuningController family gate
+→ LargeGlyphActor transient ownership
+
+Scenario settledConsequences
+→ largeGlyphs.stage
+→ LargeGlyphActor hydration
 ```
 
 `smallGlyphSystem` owns field geometry; interaction owns transient transport; TuningController alone owns extracted natural family truth.
@@ -69,4 +74,4 @@ Scenario capabilities + domain truth
 
 ## Future seams
 
-`LARGE_GLYPHS`, panel semantics and later P2 authoring are **APPROVED / NOT IMPLEMENTED**. `RUNESTONES` remains future; VI/Eter finale is **RESERVED / NOT YET DESIGNED**.
+`LARGE_GLYPHS` family-gated target/pull jest **IMPLEMENTED**. Panele 2–4 i later P2 authoring pozostają future. `RUNESTONES` remains future; VI/Eter finale is **RESERVED / NOT YET DESIGNED**; `SPHERE_FAR` is **FUTURE / NOT AUTHORED / NOT IMPLEMENTED**.
