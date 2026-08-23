@@ -10,6 +10,7 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
     entryDirection: { x: 0, y: 0, z: 1 },
     playerStartRadius: 20,
     monkeyStartRadius: 18,
+    monkeyIntroStopRadius: 11,
     monkeyFinal: { x: 0, y: 0, z: 0 },
     worldBaseRadius: 7.6,
     worldStableCenterY: 1.05,
@@ -181,18 +182,20 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
     initialRadius: 8.5,
     rotation: { enabled: true, angularSpeed: 0.14, direction: 1 },
     elevation: { offset: 2.4, durationSeconds: 2.5 },
-    expansion: { radius: 18.5, durationSeconds: 2.5 }
+    expansion: { radius: 46, durationSeconds: 2.5 },
+    sphere: { radius: 80, durationSeconds: 2.5 }
   },
   postRingPresentation: {
     shellRevealDuration: 1.5
   },
   shellFieldMotion: { direction: 1 },
   sphericalLayers: {
+    innerRadius: 13,
     defaultGapRadiusMultiplier: 0.25,
-    shells: { thickness: 7.6, angularSpeed: 0.05 },
-    smallGlyphs: { thickness: 7.6, angularSpeed: 0.05 },
-    runeStones: { thickness: 7.6 },
-    stars: { thickness: 7.6 },
+    shells: { thickness: 12, gapAfterMultiplier: 5 / 13, angularSpeed: 0.05 },
+    smallGlyphs: { thickness: 15, gapAfterMultiplier: 5 / 13, angularSpeed: 0.05 },
+    runeStones: { thickness: 25, gapAfterMultiplier: 10 / 13 },
+    stars: { thickness: 45 },
     hiddenGlyphs: { thickness: 7.6, gapAfterMultiplier: 0 }
   },
   smallGlyphField: {
@@ -338,6 +341,8 @@ export function normalizeExperienceVrSettings(candidate) {
       entryDirection: normalizeVector(candidate.spatial?.entryDirection, defaults.spatial.entryDirection),
       playerStartRadius: finiteNumber(candidate.spatial?.playerStartRadius, defaults.spatial.playerStartRadius, { min: 1, max: 100 }),
       monkeyStartRadius: finiteNumber(candidate.spatial?.monkeyStartRadius, defaults.spatial.monkeyStartRadius, { min: 1, max: 100 }),
+      monkeyIntroStopRadius: finiteNumber(candidate.spatial?.monkeyIntroStopRadius,
+        defaults.spatial.monkeyIntroStopRadius, { min: 1, max: 100 }),
       monkeyFinal: normalizeVector(candidate.spatial?.monkeyFinal, defaults.spatial.monkeyFinal),
       worldBaseRadius: finiteNumber(candidate.spatial?.worldBaseRadius, defaults.spatial.worldBaseRadius, { min: 1, max: 50 }),
       worldStableCenterY: finiteNumber(candidate.spatial?.worldStableCenterY, defaults.spatial.worldStableCenterY, { min: -10, max: 10 }),
@@ -639,6 +644,12 @@ export function normalizeExperienceVrSettings(candidate) {
         radius: largeGlyphExpandedRadius,
         durationSeconds: finiteNumber(candidate.largeGlyphs?.expansion?.durationSeconds,
           defaults.largeGlyphs.expansion.durationSeconds, { min: 0.1, max: 60 })
+      },
+      sphere: {
+        radius: finiteNumber(candidate.largeGlyphs?.sphere?.radius,
+          defaults.largeGlyphs.sphere.radius, { min: 1, max: 200 }),
+        durationSeconds: finiteNumber(candidate.largeGlyphs?.sphere?.durationSeconds,
+          defaults.largeGlyphs.sphere.durationSeconds, { min: 0.1, max: 60 })
       }
     },
     postRingPresentation: {
@@ -649,6 +660,8 @@ export function normalizeExperienceVrSettings(candidate) {
       direction: candidate.shellFieldMotion?.direction === -1 ? -1 : 1
     },
     sphericalLayers: {
+      innerRadius: finiteNumber(candidate.sphericalLayers?.innerRadius,
+        defaults.sphericalLayers.innerRadius, { min: 1 }),
       defaultGapRadiusMultiplier: finiteNumber(candidate.sphericalLayers?.defaultGapRadiusMultiplier,
         defaults.sphericalLayers.defaultGapRadiusMultiplier, { min: 0 }),
       ...Object.fromEntries(Object.entries(defaults.sphericalLayers)

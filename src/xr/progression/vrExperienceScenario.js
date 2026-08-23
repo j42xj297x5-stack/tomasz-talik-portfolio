@@ -158,6 +158,7 @@ export const VR_SCENARIO_EFFECT = immutableIdentifiers([
   'PLAY_FIRST_RING_COMPLETE_FEEDBACK',
   'APPLY_TIER_COMPLETE_FEEDBACK',
   'BEGIN_P2_RADIAL_PRESENTATION',
+  'DISTRIBUTE_LARGE_GLYPHS_ON_SPHERE',
   'BEGIN_SMALL_GLYPH_FIELD_PRESENTATION',
   'REVEAL_SHELL_FIELD_PRESENTATION',
   'ELEVATE_MAIN_GLYPHS',
@@ -252,6 +253,7 @@ const completedMainGlyphPagesThroughTier = (completedTier) => Object.freeze(
     .map(({ glyphId, order }) => Object.freeze({ glyphId, order }))
 );
 const THIRD_RING_COMPLETE_SETTLED_CONSEQUENCES = Object.freeze({
+  largeGlyphs: Object.freeze({ stage: 'SPHERE_FAR' }),
   progression: Object.freeze({ tier: 4, completedTier: 3,
     activatedPageIds: Object.freeze([...experienceVrPageIdsByTier[1], ...experienceVrPageIdsByTier[2], ...experienceVrPageIdsByTier[3]]) }),
   progressFloor: Object.freeze({ completedTier: 3, activatedPages: completedMainGlyphPagesThroughTier(3) }),
@@ -750,7 +752,7 @@ const points = Object.freeze([
       Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.STAY, event: VR_SCENARIO_EVENT.RELIQUARY_HINT_TIMEOUT, milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.SHOW_RELIQUARY_CONTEXT_HINT]) }),
       Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.STAY, event: VR_SCENARIO_EVENT.CRYSTAL_ACTIVATED, milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.PRESENT_ACTIVE_CARD_PREVIEW]) }),
       Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.STAY, event: VR_SCENARIO_EVENT.CARD_COMMITTED, milestonesToAdd: Object.freeze([VR_SCENARIO_MILESTONE.CARD_COMMITTED]), effects: Object.freeze([VR_SCENARIO_EFFECT.UPDATE_COMMITTED_CARD_PRESENTATION, VR_SCENARIO_EFFECT.PLAY_CARD_COMMIT_FEEDBACK]) }),
-      Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.COMPLETE, event: VR_SCENARIO_EVENT.TIER_COMPLETED, milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.APPLY_TIER_COMPLETE_FEEDBACK]) })
+      Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.COMPLETE, event: VR_SCENARIO_EVENT.TIER_COMPLETED, milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.APPLY_TIER_COMPLETE_FEEDBACK, VR_SCENARIO_EFFECT.DISTRIBUTE_LARGE_GLYPHS_ON_SPHERE]) })
     ])
   }),
   Object.freeze({

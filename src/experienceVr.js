@@ -244,6 +244,7 @@ const largeGlyphActor = createVrLargeGlyphActor({
   rotation: settings.largeGlyphs.rotation,
   elevation: settings.largeGlyphs.elevation,
   expansion: settings.largeGlyphs.expansion,
+  sphere: settings.largeGlyphs.sphere,
   onExpansionCompleted: () => runtimeExperience.dispatch(
     VR_SCENARIO_EVENT.P2_RADIAL_PRESENTATION_COMPLETED)
 });
@@ -252,7 +253,7 @@ worldStableRoot.add(largeGlyphActor.object);
 const worldBaseRadius = settings.spatial.worldBaseRadius;
 const floorWalkRadius = worldBaseRadius;
 const sphericalLayerRanges = resolveVrSphericalLayerRanges({
-  baseRadius: worldBaseRadius,
+  baseRadius: settings.sphericalLayers.innerRadius,
   defaultGapRadiusMultiplier: settings.sphericalLayers.defaultGapRadiusMultiplier,
   layers: [
     { id: VR_SPHERICAL_LAYER_IDS.SHELLS, ...settings.sphericalLayers.shells, status: 'IMPLEMENTED' },
@@ -1013,6 +1014,11 @@ runtimeExperience = new RuntimeExperience({
     [VR_SCENARIO_EFFECT.BEGIN_P2_RADIAL_PRESENTATION]: () => {
       if (!largeGlyphActor.beginExpansion()) {
         throw new Error('BEGIN_P2_RADIAL_PRESENTATION rejected by Large Glyph actor');
+      }
+    },
+    [VR_SCENARIO_EFFECT.DISTRIBUTE_LARGE_GLYPHS_ON_SPHERE]: () => {
+      if (!largeGlyphActor.beginSphereDistribution()) {
+        throw new Error('DISTRIBUTE_LARGE_GLYPHS_ON_SPHERE rejected by Large Glyph actor');
       }
     },
     [VR_SCENARIO_EFFECT.BEGIN_SMALL_GLYPH_FIELD_PRESENTATION]: () => {
