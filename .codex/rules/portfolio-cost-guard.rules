@@ -51,3 +51,21 @@ prefix_rule(
     decision = "forbidden",
     justification = "Codex nie uruchamia lokalnego mechanizmu MCP w celu utworzenia Pull Requesta.",
 )
+
+prefix_rule(
+    pattern = [["python", "python3", "/usr/bin/python", "/usr/bin/python3"], "/opt/codex/mcp/make_pr.py"],
+    decision = "forbidden",
+    justification = "Codex nie uruchamia helpera make_pr przez interpreter Python.",
+)
+
+prefix_rule(
+    pattern = [["chromium", "chromium-browser", "google-chrome", "google-chrome-stable", "playwright", "puppeteer"]],
+    decision = "forbidden",
+    justification = "Browser automation, screenshoty i perceptual QA należą do Wizjonera, o ile bieżący task nie zleca konkretnej walidacji browserowej.",
+)
+
+prefix_rule(
+    pattern = ["npx", "playwright"],
+    decision = "forbidden",
+    justification = "Codex nie uruchamia autonomicznie Playwright przez npx.",
+)
