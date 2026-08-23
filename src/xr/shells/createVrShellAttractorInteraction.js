@@ -43,7 +43,7 @@ export function createVrShellAttractorInteraction({ controllers, shellSystem, ha
   const scanCone = createVrAttractorScanCone({ parent: null, length: maxTargetDistance, settings: settings.scanCone });
   const halos = new Map(shellSystem.instances.map((shell) => [shell, createVrTargetHalo({ root: shell, settings: haloSettings })]));
   const candidates = shellSystem.records.map((record) => ({ shell: record.object, radius: record.boundingRadius,
-    getWorldCenter(result) { result.copy(record.boundingCenter); record.object.localToWorld(result); record.object.getWorldScale(scale);
+    getWorldCenter(result) { result.set(0, 0, 0); record.object.localToWorld(result); record.object.getWorldScale(scale);
       this.radius = record.boundingRadius * Math.max(scale.x, scale.y, scale.z); return result; } }));
   let target = null, activePull = null, captureReady = null, heldShell = null, heldByRecord = null, leftRayTarget = null;
   const placedRayTargets = new Set();
