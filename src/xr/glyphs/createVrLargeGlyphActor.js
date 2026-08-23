@@ -4,6 +4,7 @@ import { resolveVrPageProtoAstro } from '../protoAstro/resolveVrPageProtoAstro.j
 
 const LARGE_GLYPH_COUNT = 5;
 export const VR_LARGE_GLYPH_INITIAL_STAGE = 'RING_INITIAL';
+export const VR_LARGE_GLYPH_ELEVATED_STAGE = 'RING_ELEVATED';
 
 export function createVrLargeGlyphActor({
   items,
@@ -11,7 +12,8 @@ export function createVrLargeGlyphActor({
   initialRadius = 8.5,
   worldY = 0,
   scaleMultiplier = 3,
-  rotation = { enabled: true, angularSpeed: 0.14, direction: 1 }
+  rotation = { enabled: true, angularSpeed: 0.14, direction: 1 },
+  elevation = { offset: 2.4, durationSeconds: 2.5 }
 }) {
   if (!Array.isArray(items) || items.length !== LARGE_GLYPH_COUNT) {
     throw new TypeError('VrLargeGlyphActor requires exactly five Large Glyph identities.');
@@ -61,7 +63,28 @@ export function createVrLargeGlyphActor({
 
   const baseline = Object.freeze({ worldY, initialRadius, scaleMultiplier });
   let currentRadius = initialRadius;
+  let stage = VR_LARGE_GLYPH_INITIAL_STAGE;
+  let elevationElapsed = null;
   let disposed = false;
+  function settleStage(nextStage) {
+    stage = nextStage;
+    object.userData.stage = stage;
+    object.position.y = baseline.worldY
+      + (stage === VR_LARGE_GLYPH_ELEVATED_STAGE ? elevation.offset : 0);
+  }
+  function hydrateScenarioState(state) {
+    if (disposed || (state?.stage !== VR_LARGE_GLYPH_INITIAL_STAGE
+      && state?.stage !== VR_LARGE_GLYPH_ELEVATED_STAGE)) {
+      throw new Error('Unsupported Large Glyph Scenario stage');
+    }
+    elevationElapsed = null;
+    settleStage(state.stage);
+  }
+  function beginElevation() {
+    if (disposed || stage !== VR_LARGE_GLYPH_INITIAL_STAGE || elevationElapsed !== null) return false;
+    elevationElapsed = 0;
+    return true;
+  }
   function setCompatibilityRadius(nextRadius) {
     if (disposed || !Number.isFinite(nextRadius) || nextRadius <= 0) return false;
     currentRadius = nextRadius;
@@ -72,18 +95,31 @@ export function createVrLargeGlyphActor({
     return true;
   }
   function update(deltaSeconds = 0) {
-    if (disposed || !rotation.enabled) return;
+    if (disposed) return;
     const delta = Math.max(0, Number.isFinite(deltaSeconds) ? deltaSeconds : 0);
-    // Three.js Y rotation maps an initial angle to angle - rotation.y, so the
-    // negative sign preserves the legacy angle = initialAngle + phase motion.
-    rotationRoot.rotation.y -= delta * rotation.angularSpeed * rotation.direction;
+    if (rotation.enabled) {
+      // Three.js Y rotation maps an initial angle to angle - rotation.y, so the
+      // negative sign preserves the legacy angle = initialAngle + phase motion.
+      rotationRoot.rotation.y -= delta * rotation.angularSpeed * rotation.direction;
+    }
+    if (elevationElapsed !== null) {
+      elevationElapsed += delta;
+      const progress = Math.min(1, elevationElapsed / elevation.durationSeconds);
+      const eased = progress * progress * (3 - 2 * progress);
+      object.position.y = baseline.worldY + elevation.offset * eased;
+      if (progress === 1) {
+        elevationElapsed = null;
+        settleStage(VR_LARGE_GLYPH_ELEVATED_STAGE);
+      }
+    }
   }
   function reset() {
+    elevationElapsed = null;
     object.position.set(0, baseline.worldY, 0);
     object.quaternion.identity();
     object.scale.set(1, 1, 1);
     object.visible = true;
-    object.userData.stage = VR_LARGE_GLYPH_INITIAL_STAGE;
+    settleStage(VR_LARGE_GLYPH_INITIAL_STAGE);
     rotationRoot.position.set(0, 0, 0);
     rotationRoot.quaternion.identity();
     currentRadius = baseline.initialRadius;
@@ -107,6 +143,9 @@ export function createVrLargeGlyphActor({
     transientRoot,
     nodes: Object.freeze(nodes),
     update,
+    getStage: () => stage,
+    beginElevation,
+    hydrateScenarioState,
     getCompatibilityRadius: () => currentRadius,
     setCompatibilityRadius,
     reset,

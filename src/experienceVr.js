@@ -242,7 +242,8 @@ const largeGlyphActor = createVrLargeGlyphActor({
   initialRadius: settings.largeGlyphs.initialRadius,
   worldY: settings.spatial.worldStableCenterY,
   scaleMultiplier: settings.largeGlyphs.scaleMultiplier,
-  rotation: settings.largeGlyphs.rotation
+  rotation: settings.largeGlyphs.rotation,
+  elevation: settings.largeGlyphs.elevation
 });
 const { nodes } = largeGlyphActor;
 const glyphRing = largeGlyphActor.object;
@@ -846,7 +847,7 @@ introCrystalTutorial = createVrIntroCrystalTutorial({
 });
 
 const experienceDirector = new ExperienceDirector({ scenario: vrExperienceScenario });
-const postRingPresentation = createVrPostRingPresentation({ glyphRing, shellSystem,
+const postRingPresentation = createVrPostRingPresentation({ largeGlyphActor, shellSystem,
   settings: settings.postRingPresentation,
   onCompleted: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.POST_RING_WORLD_PRESENTATION_COMPLETED)
 });
