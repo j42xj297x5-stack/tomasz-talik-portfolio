@@ -1,4 +1,4 @@
-# KANONICZNY PROTOKÓŁ WSPÓŁPRACY — WIZJONER → ARCHITEKT → CODEX v1.3
+# KANONICZNY PROTOKÓŁ WSPÓŁPRACY — WIZJONER → ARCHITEKT → CODEX v1.4
 
 Status: **CURRENT / NORMATIVE**. Kod runtime rozstrzyga status **IMPLEMENTED**; decyzje Wizjonera rozstrzygają kanon produktu, progresji, komunikacji i hardware validation.
 
@@ -10,55 +10,58 @@ Codex może:
 
 - czytać pliki w minimalnym zakresie potrzebnym do zadania;
 - edytować wyłącznie zakres wskazany przez Wizjonera lub Architekta;
-- używać Git w zakresie potrzebnym do przygotowania task branch i task commit po implementacji oraz wymaganej walidacji;
-- przekazać lub opublikować zmianę i przygotować Pull Request przez natywny mechanizm Codex Cloud;
+- używać read-only Git w zakresie potrzebnym do pracy;
+- utworzyć jeden task commit dla ukończonego zadania `IMPLEMENT`, obejmujący wyłącznie zakres zadania;
+- pozostawić czysty working tree po task commicie;
 - zwrócić Summary.
 
 Codex nie może:
 
 - wykonywać `merge`, `rebase`, `cherry-pick`, `revert`, `reset` lub `clean`;
+- wykonywać `git push` ani rekonfigurować remote lub dodawać credentiali;
+- wykonywać `gh pr create`, `gh pr edit`, `gh pr ready`, `gh pr review`, `gh pr merge`, `gh pr close` lub `gh pr reopen`;
+- uruchamiać `make_pr`, `/opt/codex/mcp/make_pr.py` ani lokalnego serwera MCP w celu utworzenia Pull Requesta;
+- instalować zależności, otwierać sieci lub proxy albo szukać shellowego lub MCP fallbacku w celu utworzenia Pull Requesta;
 - zatwierdzać własnej zmiany, scalać PR, publikować/deployować aplikacji ani uruchamiać workflow GitHub;
 - wykonywać PR review lub code review bez osobnego, jawnego zadania;
 - tworzyć subagentów, delegować pracy ani uruchamiać automatycznego approval reviewera.
 
-Wizjoner pozostaje acceptance ownerem: wykonuje review i podejmuje decyzję o merge. Codex może przygotować delivery, ale nie może zaakceptować ani scalić własnej zmiany.
+Wizjoner pozostaje wyłącznym właścicielem PR delivery i acceptance: publikuje lub pushuje zmianę z interfejsu Codex Cloud / GitHub, tworzy Pull Request, wykonuje review, podejmuje decyzję o merge i odpowiada za finalną publikację. Codex kończy pracę po task commicie i Summary.
 
-## Codex Cloud delivery
+## Granice delivery
 
-Dla `IMPLEMENT` Codex jest pojedynczym wykonawcą technicznym. Po zakończeniu poprawnej implementacji i jawnie autoryzowanej walidacji może:
+Delivery ma dwie rozłączne granice odpowiedzialności:
 
-- przygotować branch taska;
-- utworzyć commit obejmujący wyłącznie zakres bieżącego zadania, bez obcych lub przypadkowych untracked zmian, z opisem odpowiadającym zadaniu;
-- przekazać lub opublikować zmianę przez natywny mechanizm Codex Cloud;
-- przygotować Pull Request do canonical base branch wraz z tytułem, opisem, change summary i validation summary.
+1. **LOCAL TASK DELIVERY — właściciel Codex:** minimalny odczyt, lokalna edycja, wyłącznie jawnie autoryzowana walidacja, jeden task commit i Summary.
+2. **PR DELIVERY / ACCEPTANCE — właściciel Użytkownik / Wizjoner:** publikacja lub push z interfejsu, utworzenie Pull Requesta, review, decyzja o merge i finalna publikacja.
 
-Canonical delivery contract to:
+Canonical `IMPLEMENT` flow to:
 
-`CODEX IMPLEMENTS → CODEX COMMITS → CODEX PREPARES PR → USER REVIEWS → USER MERGES`
+`READ MINIMUM → LOCAL EDIT → AUTHORIZED VALIDATION → TASK COMMIT → SUMMARY → STOP`
 
-Codex nie zatwierdza własnej zmiany, nie uruchamia self-review jako bramy publikacji i nie wykonuje merge. `PR READY` oznacza wyłącznie zmianę przygotowaną do review użytkownika, nie zmianę scaloną.
+Nie jest nim:
 
-Preferowany jest natywny mechanizm delivery Codex Cloud. Poprawnie skonfigurowany push może być częścią standardowego mechanizmu taska, ale Codex nie musi zawsze wykonywać shellowego `git push` ani `gh pr create`. Brak zwykłego `origin` lub uwierzytelnionego `gh` w shell sandboxie nie jest sam w sobie blokadą, jeśli platforma nadal może wystawić zmianę do GitHub. Codex nie tworzy ani nie podmienia remote, nie dopisuje credentiali, nie obchodzi sandboxu i nie uruchamia własnego mechanizmu uwierzytelnienia.
+`READ → EDIT → COMMIT → PUSH → MAKE_PR → PR → REVIEW`
 
-Jeśli żaden standardowy mechanizm cloud delivery nie jest dostępny, Codex zachowuje working diff lub task commit, dokładną listę plików i status walidacji, a następnie raportuje `DELIVERY BLOCKED` z konkretną przyczyną. Nie odtwarza zmiany, nie rekonfiguruje remote i nie stosuje niebezpiecznych workaroundów.
+Brak `make_pr`, `gh`, `origin`, sieci, serwera MCP lub innego mechanizmu tworzenia Pull Requesta **nie jest blokadą** zadania `IMPLEMENT`, jeżeli task commit został poprawnie utworzony. Brak PR nie jest odstępstwem. Codex nie traktuje braku `make_pr` jako błędu implementacji i nie podejmuje prób naprawy środowiska, instalowania zależności, otwierania sieci lub proxy, rekonfiguracji remote, dodawania credentiali ani poszukiwania fallbacku tylko po to, aby stworzyć Pull Request.
 
 ## Ekonomia wykonania
 
 Domyślny przebieg `IMPLEMENT` to:
 
-`READ MINIMUM → LOCAL EDIT → AUTHORIZED VALIDATION → TASK COMMIT / CLOUD DELIVERY → PR READY → SUMMARY → STOP`
+`READ MINIMUM → LOCAL EDIT → AUTHORIZED VALIDATION → TASK COMMIT → SUMMARY → STOP`
 
 Nie jest nim autonomiczna pętla:
 
 `READ → IMPLEMENT → TEST → REVIEW → FIX REVIEW → RETRY`
 
-`READ` i `AUDIT` pozostają osobnymi trybami i bez zapisywanego artefaktu nie tworzą automatycznie commitów ani PR. Jawnie wymagany artefakt audytu może być dostarczony jak zwykły task PR. `REVIEW` pozostaje osobnym zadaniem wykonywanym tylko na jawne polecenie. Codex nie uruchamia dodatkowego agenta ani dodatkowego przebiegu tylko po to, aby potwierdzić własną pracę.
+`READ` i `AUDIT` pozostają osobnymi trybami i bez zapisywanego artefaktu nie tworzą automatycznie commitów. Jawnie wymagany artefakt audytu może być dostarczony jak zwykły task commit. `REVIEW` pozostaje osobnym zadaniem wykonywanym tylko na jawne polecenie. Codex nie uruchamia dodatkowego agenta ani dodatkowego przebiegu tylko po to, aby potwierdzić własną pracę.
 
 Pierwszeństwo instrukcji jest następujące:
 
 `EXPLICIT CURRENT-TASK INSTRUCTION > CANONICAL PROJECT PROTOCOL > PROJECT CODEX DEFAULTS`
 
-Prompt bieżącego zadania może jawnie wymagać `NO COMMIT`, ale bez takiego wyjątku ukończony `IMPLEMENT` może zakończyć się standardowym cloud delivery i PR. Prompty nie powinny rutynowo powtarzać boilerplate `NO COMMIT / NO PUSH / NO PR`.
+Prompt bieżącego zadania może jawnie wymagać `NO COMMIT`, ale bez takiego wyjątku ukończony `IMPLEMENT` kończy się jednym task commitem, Summary i zatrzymaniem pracy Codexa. PR delivery pozostaje poza zakresem Codexa.
 
 ## Testy i walidacje wykonawcze
 
@@ -85,12 +88,16 @@ ZMIENIONE PLIKI
 
 - ...
 
+TASK COMMIT
+
+- `<hash>` — `<message>`
+
 BLOKADY / ODSTĘPSTWA
 
 - brak
 ```
 
-Sekcję `BLOKADY / ODSTĘPSTWA` rozwija się tylko wtedy, gdy rzeczywiście wystąpiła blokada albo wymaganej polityki nie można było ustanowić technicznie. Raport może zawierać status brancha, task commitu i PR oraz wykonane walidacje, ale nie instrukcję automatycznego merge ani sugestię self-review.
+Sekcję `BLOKADY / ODSTĘPSTWA` rozwija się tylko wtedy, gdy rzeczywiście wystąpiła blokada albo wymaganej polityki nie można było ustanowić technicznie. Raport podaje hash i message task commita. Nie zawiera sekcji `PR STATUS`, `PR READY` ani `DELIVERY BLOCKED`; brak PR nie jest odstępstwem i nie raportuje się braku `make_pr`.
 
 ## Dowody i walidacja
 
