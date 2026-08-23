@@ -43,6 +43,13 @@ export function createVrLargeGlyphActor({
   object.add(transientRoot);
 
   const slots = [];
+  const canonicalSlots = new Map();
+  const transientLeases = new Set();
+  const canonicalNodeLocalMatrix = new THREE.Matrix4().compose(
+    new THREE.Vector3(),
+    new THREE.Quaternion(),
+    new THREE.Vector3(scaleMultiplier, scaleMultiplier, scaleMultiplier)
+  );
   const assetForward = new THREE.Vector3(0, 0, 1);
   const nodes = items.map((item, index) => {
     const identity = resolveVrPageProtoAstro({ glyphId: item.id });
@@ -68,6 +75,7 @@ export function createVrLargeGlyphActor({
     node.userData.yOffset = 0;
     node.userData.largeGlyphSlot = slot;
     slot.add(node);
+    canonicalSlots.set(node, slot);
     return node;
   });
 
@@ -96,6 +104,9 @@ export function createVrLargeGlyphActor({
       && state?.stage !== VR_LARGE_GLYPH_EXPANDED_STAGE)) {
       throw new Error('Unsupported Large Glyph Scenario stage');
     }
+    if (transientLeases.size > 0) {
+      throw new Error('Cannot hydrate Large Glyph actor during a transient lease.');
+    }
     elevationElapsed = null;
     expansionElapsed = null;
     setCanonicalRadius(state.stage === VR_LARGE_GLYPH_EXPANDED_STAGE
@@ -103,16 +114,63 @@ export function createVrLargeGlyphActor({
     settleStage(state.stage);
   }
   function beginElevation() {
+    if (transientLeases.size > 0) {
+      throw new Error('Cannot elevate Large Glyph actor during a transient lease.');
+    }
     if (disposed || stage !== VR_LARGE_GLYPH_INITIAL_STAGE
       || elevationElapsed !== null || expansionElapsed !== null) return false;
     elevationElapsed = 0;
     return true;
   }
   function beginExpansion() {
+    if (transientLeases.size > 0) {
+      throw new Error('Cannot expand Large Glyph actor during a transient lease.');
+    }
     if (disposed || stage !== VR_LARGE_GLYPH_ELEVATED_STAGE
       || elevationElapsed !== null || expansionElapsed !== null) return false;
     setCanonicalRadius(baseline.initialRadius);
     expansionElapsed = 0;
+    return true;
+  }
+  function requireOwnedNode(node) {
+    const slot = canonicalSlots.get(node);
+    if (!slot) throw new TypeError('Large Glyph node does not belong to this actor.');
+    return slot;
+  }
+  function setCanonicalNodeTransform(node) {
+    node.position.set(0, 0, 0);
+    node.quaternion.identity();
+    node.scale.setScalar(baseline.scaleMultiplier);
+  }
+  function beginTransient(node) {
+    const slot = requireOwnedNode(node);
+    if (disposed) throw new Error('Cannot lease a node from a disposed Large Glyph actor.');
+    if (transientLeases.has(node)) throw new Error('Large Glyph node already has a transient lease.');
+    if (elevationElapsed !== null || expansionElapsed !== null) {
+      throw new Error('Cannot lease a Large Glyph node during an actor transition.');
+    }
+    if (node.parent !== slot) throw new Error('Large Glyph node is outside its canonical slot.');
+    transientRoot.attach(node);
+    transientLeases.add(node);
+    return true;
+  }
+  function getSlotWorldTransform(node) {
+    const slot = requireOwnedNode(node);
+    object.updateMatrixWorld(true);
+    const matrix = new THREE.Matrix4().multiplyMatrices(slot.matrixWorld, canonicalNodeLocalMatrix);
+    const position = new THREE.Vector3();
+    const quaternion = new THREE.Quaternion();
+    const scale = new THREE.Vector3();
+    matrix.decompose(position, quaternion, scale);
+    return { position, quaternion, scale };
+  }
+  function restoreToSlot(node) {
+    const slot = requireOwnedNode(node);
+    if (!transientLeases.has(node)) throw new Error('Large Glyph node has no transient lease.');
+    if (node.parent !== transientRoot) throw new Error('Leased Large Glyph node left the actor TransientRoot.');
+    slot.add(node);
+    setCanonicalNodeTransform(node);
+    transientLeases.delete(node);
     return true;
   }
   function update(deltaSeconds = 0) {
@@ -148,6 +206,7 @@ export function createVrLargeGlyphActor({
     }
   }
   function reset() {
+    [...transientLeases].forEach(restoreToSlot);
     elevationElapsed = null;
     expansionElapsed = null;
     object.position.set(0, baseline.worldY, 0);
@@ -182,10 +241,14 @@ export function createVrLargeGlyphActor({
     getTargetingRange: () => expansion.radius,
     beginElevation,
     beginExpansion,
+    beginTransient,
+    getSlotWorldTransform,
+    restoreToSlot,
     hydrateScenarioState,
     reset,
     dispose() {
       if (disposed) return;
+      [...transientLeases].forEach(restoreToSlot);
       disposed = true;
       object.removeFromParent();
       nodes.forEach((node) => {

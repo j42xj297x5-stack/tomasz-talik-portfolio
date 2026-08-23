@@ -13,7 +13,6 @@ import { createCanonicalXrStartCalibration } from './xr/calibration/createCanoni
 import { getXrHeadWorldPosition } from './xr/getXrHeadWorldPosition.js';
 import { createVrControllers } from './xr/createVrControllers.js';
 import { createVrGlyphInteraction } from './xr/createVrGlyphInteraction.js';
-import { createVrGlyphOrbit } from './xr/createVrGlyphOrbit.js';
 import { createVrSmallGlyphSystem } from './xr/glyphs/createVrSmallGlyphSystem.js';
 import { createVrSmallGlyphAttractorInteraction } from './xr/glyphs/createVrSmallGlyphAttractorInteraction.js';
 import { createVrLargeGlyphAttractorInteraction } from './xr/glyphs/createVrLargeGlyphAttractorInteraction.js';
@@ -250,7 +249,6 @@ const largeGlyphActor = createVrLargeGlyphActor({
 const { nodes } = largeGlyphActor;
 const glyphRing = largeGlyphActor.object;
 worldStableRoot.add(largeGlyphActor.object);
-const glyphOrbit = createVrGlyphOrbit({ nodes });
 const worldBaseRadius = settings.spatial.ringRadius;
 const floorWalkRadius = worldBaseRadius;
 const sphericalLayerRanges = resolveVrSphericalLayerRanges({
@@ -771,7 +769,7 @@ smallGlyphAttractorInteraction = createVrSmallGlyphAttractorInteraction({
   )
 });
 largeGlyphAttractorInteraction = createVrLargeGlyphAttractorInteraction({
-  controllers: vrControllers.controllers, nodes, glyphOrbit, handModeController, semanticInput, attractorTool,
+  controllers: vrControllers.controllers, largeGlyphActor, handModeController, semanticInput, attractorTool,
   protoAstroTuningController, maxTargetDistance: largeGlyphMaxTargetDistance,
   settings: { scanThreshold: settings.shellAttractor.scanThreshold,
     triggerThreshold: settings.shellAttractor.triggerThreshold,
@@ -1188,7 +1186,6 @@ function restoreVrScenarioBaseline() {
   runeBridgeActor.reset();
   largeGlyphAttractorInteraction.reset();
   largeGlyphActor.reset();
-  glyphOrbit.reset();
   smallGlyphAttractorInteraction.reset();
   smallGlyphSystem.reset();
   postRingPresentation.reset();
@@ -1304,7 +1301,6 @@ window.addEventListener('pagehide', () => {
   runeBridgeActor.dispose();
   progressFloor.dispose();
   postRingPresentation.dispose();
-  glyphOrbit.dispose();
   largeGlyphActor.dispose();
   smallGlyphSystem.dispose();
   shellSystem.dispose();
