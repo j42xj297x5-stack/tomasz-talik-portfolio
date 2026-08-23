@@ -1,6 +1,6 @@
 import * as THREE from '../../vendor/three.js';
 import { createVrTargetHalo } from '../createVrTargetHalo.js';
-import { VR_ATTRACTOR_BANDS, VR_LEFT_HAND_MODES, VR_RIGHT_HAND_MODES } from '../input/createVrHandModeController.js';
+import { VR_ATTRACTOR_BANDS, VR_RIGHT_HAND_MODES } from '../input/createVrHandModeController.js';
 import { calculateAttractorCapturePosition, createVrAttractorScanCone,
   selectAttractorConeTarget } from '../tools/createVrAttractorScanCone.js';
 import { VR_ATTRACTOR_STATES } from '../tools/createVrAttractorTool.js';
@@ -24,7 +24,7 @@ export function createVrSmallGlyphAttractorInteraction({ controllers, smallGlyph
     || typeof smallGlyphSystem.placeInstance !== 'function') {
     throw new TypeError('smallGlyphSystem must expose its Object3D and field transform API.');
   }
-  if (typeof handModeController?.getRightMode !== 'function' || typeof handModeController?.getLeftMode !== 'function'
+  if (typeof handModeController?.getRightMode !== 'function'
     || typeof handModeController?.getAttractorBand !== 'function') throw new TypeError('Invalid handModeController.');
   if (typeof semanticInput?.getState !== 'function') throw new TypeError('semanticInput.getState must be a function.');
   if (typeof attractorTool?.setTarget !== 'function' || typeof attractorTool?.setPullStrength !== 'function'
@@ -86,8 +86,7 @@ export function createVrSmallGlyphAttractorInteraction({ controllers, smallGlyph
     if (current.visible === false) return false; if (current === glyph) return true; } return false; }
   function updatePlacedHit(record = getLeftRecord()) {
     clearLeftSmallGlyphHit(true);
-    if (!record?.controller || !record.isConnected || handModeController.getLeftMode() !== VR_LEFT_HAND_MODES.NORMAL_HAND
-      || !Number.isFinite(record.currentRayLength) || heldByRecord === record
+    if (!record?.controller || !record.isConnected || !Number.isFinite(record.currentRayLength) || heldByRecord === record
       || isHigherPriorityInteractionActive(record) === true) return;
     record.controller.getWorldPosition(origin); record.controller.getWorldQuaternion(quaternion);
     direction.copy(LOCAL_DIRECTION).applyQuaternion(quaternion).normalize(); raycaster.set(origin, direction);
@@ -100,8 +99,7 @@ export function createVrSmallGlyphAttractorInteraction({ controllers, smallGlyph
   }
   function hasCurrentSmallGlyphHit(record) { return Boolean(captureReady && record?.currentSmallGlyphHit === captureReady
     && Number.isFinite(record.currentSmallGlyphHitDistance) && record.currentSmallGlyphHitDistance <= record.currentRayLength); }
-  function leftHandIsFree(record = getLeftRecord()) { return Boolean(record?.isConnected
-    && handModeController.getLeftMode() === VR_LEFT_HAND_MODES.NORMAL_HAND && !heldGlyph
+  function leftHandIsFree(record = getLeftRecord()) { return Boolean(record?.isConnected && !heldGlyph
     && isControllerOccupiedByOtherInteraction(record) !== true); }
   function updateCaptureAnchor(rightRecord) { rightRecord.controller.getWorldQuaternion(quaternion);
     direction.copy(LOCAL_DIRECTION).applyQuaternion(quaternion).normalize();
@@ -138,7 +136,6 @@ export function createVrSmallGlyphAttractorInteraction({ controllers, smallGlyph
     states.set(record.glyph, INTERACTION_STATE.FIELD); returning = null; }
   function updateLeftHit(record = getLeftRecord()) { clearLeftSmallGlyphHit();
     if (!captureReady || !record?.controller || !record.isConnected
-      || handModeController.getLeftMode() !== VR_LEFT_HAND_MODES.NORMAL_HAND
       || !Number.isFinite(record.currentRayLength) || isHigherPriorityInteractionActive(record) === true) return;
     record.controller.getWorldPosition(origin); record.controller.getWorldQuaternion(quaternion);
     direction.copy(LOCAL_DIRECTION).applyQuaternion(quaternion).normalize(); raycaster.set(origin, direction);
