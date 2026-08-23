@@ -7,7 +7,7 @@ import {
 } from '../src/config/experienceVrSettings.js';
 
 assert.deepEqual(normalizeExperienceVrSettings(null), DEFAULT_EXPERIENCE_VR_SETTINGS);
-assert.deepEqual(DEFAULT_EXPERIENCE_VR_SETTINGS.spatial, { entryDirection: { x: 0, y: 0, z: 1 }, playerStartRadius: 20, monkeyStartRadius: 18, monkeyFinal: { x: 0, y: 0, z: 0 }, ringRadius: 7.6, worldStableCenterY: 1.05, thresholdOutsideDistance: 1 });
+assert.deepEqual(DEFAULT_EXPERIENCE_VR_SETTINGS.spatial, { entryDirection: { x: 0, y: 0, z: 1 }, playerStartRadius: 20, monkeyStartRadius: 18, monkeyFinal: { x: 0, y: 0, z: 0 }, worldBaseRadius: 7.6, worldStableCenterY: 1.05, thresholdOutsideDistance: 1 });
 assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.glyphInteraction.holdDurationSeconds, 0.5);
 assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.glyphInteraction.holdLostGraceSeconds, 0.15);
 assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.controllers.rayLength, 2.3);
@@ -83,7 +83,7 @@ assert.deepEqual(normalizeExperienceVrSettings({ schemaVersion: 2 }), DEFAULT_EX
 const normalized = normalizeExperienceVrSettings({
   schemaVersion: 1,
   referenceSpaceType: 'local',
-  spatial: { entryDirection: { x: 0, y: 'bad', z: 2 }, playerStartRadius: 200, monkeyStartRadius: 0, monkeyFinal: { x: 1, y: 0, z: 2 }, ringRadius: 0, worldStableCenterY: 99, thresholdOutsideDistance: 20 },
+  spatial: { entryDirection: { x: 0, y: 'bad', z: 2 }, playerStartRadius: 200, monkeyStartRadius: 0, monkeyFinal: { x: 1, y: 0, z: 2 }, worldBaseRadius: 0, worldStableCenterY: 99, thresholdOutsideDistance: 20 },
   renderer: { pixelRatioCap: 99, antialias: false },
   controllers: { enabled: false, rayLength: 0, rayOpacity: 4, rayDiameter: 2, rayTipFraction: 1, rayRadialSegments: 99 },
   targetHalo: { color: -1, opacity: 4, thicknessPixels: 20, pulseDuration: 9 },
@@ -100,7 +100,7 @@ const normalized = normalizeExperienceVrSettings({
   ignored: true
 });
 assert.equal(normalized.referenceSpaceType, 'local');
-assert.deepEqual(normalized.spatial, { entryDirection: { x: 0, y: 0, z: 2 }, playerStartRadius: 100, monkeyStartRadius: 1, monkeyFinal: { x: 1, y: 0, z: 2 }, ringRadius: 1, worldStableCenterY: 10, thresholdOutsideDistance: 10 });
+assert.deepEqual(normalized.spatial, { entryDirection: { x: 0, y: 0, z: 2 }, playerStartRadius: 100, monkeyStartRadius: 1, monkeyFinal: { x: 1, y: 0, z: 2 }, worldBaseRadius: 1, worldStableCenterY: 10, thresholdOutsideDistance: 10 });
 assert.equal(normalized.renderer.pixelRatioCap, 2);
 assert.equal(normalized.renderer.antialias, false);
 assert.deepEqual(normalized.controllers, {
@@ -158,10 +158,10 @@ assert.equal(normalizedGuide.colors.messagePanel, '#123456', 'legacy panel color
 assert.equal(normalizedGuide.colors.dialoguePanel, '#123456', 'legacy panel color remains a safe dialogue fallback');
 
 const server = await loadExperienceVrSettings({
-  fetchImpl: async () => ({ ok: true, json: async () => ({ ...DEFAULT_EXPERIENCE_VR_SETTINGS, spatial: { ...DEFAULT_EXPERIENCE_VR_SETTINGS.spatial, ringRadius: 8 } }) })
+  fetchImpl: async () => ({ ok: true, json: async () => ({ ...DEFAULT_EXPERIENCE_VR_SETTINGS, spatial: { ...DEFAULT_EXPERIENCE_VR_SETTINGS.spatial, worldBaseRadius: 8 } }) })
 });
 assert.equal(server.settingsSource, 'server');
-assert.equal(server.settings.spatial.ringRadius, 8);
+assert.equal(server.settings.spatial.worldBaseRadius, 8);
 assert.equal(server.settingsLoadError, null);
 
 const fallback = await loadExperienceVrSettings({ fetchImpl: async () => { throw new Error('offline'); } });

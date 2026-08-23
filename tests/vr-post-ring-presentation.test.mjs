@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import * as THREE from '../src/vendor/three.js';
 import { createVrPostRingPresentation } from '../src/xr/progression/createVrPostRingPresentation.js';
 
-const glyphRing = new THREE.Group(); glyphRing.position.y = 3;
+const presentationRoot = new THREE.Group(); presentationRoot.position.y = 3;
 const calls = [];
 const shellSystem = {
   visible: false, interactionEnabled: false,
@@ -10,7 +10,7 @@ const shellSystem = {
   setInteractionEnabled(value) { this.interactionEnabled = value; calls.push(['interaction', value]); }
 };
 let completions = 0;
-const presentation = createVrPostRingPresentation({ glyphRing, shellSystem,
+const presentation = createVrPostRingPresentation({ presentationRoot, shellSystem,
   settings: { glyphVerticalOffset: 2.4, glyphElevationDuration: 2, shellRevealDuration: 1 },
   onCompleted: () => { completions += 1; }
 });
@@ -30,13 +30,13 @@ presentation.update(20);
 assert.ok(Math.abs(presentation.glyphOffset - 2.4) < 1e-12, 'elevation is never accumulated');
 assert.equal(completions, 1, 'semantic completion is one-shot');
 presentation.reset();
-assert.equal(glyphRing.position.y, 3);
+assert.equal(presentationRoot.position.y, 3);
 assert.equal(presentation.glyphOffset, 0);
 assert.equal(shellSystem.visible, false);
 assert.equal(shellSystem.interactionEnabled, false);
 assert.equal(presentation.completed, false);
 assert.deepEqual(calls.slice(-2), [['interaction', false], ['visible', false]]);
-presentation.hydrateScenarioState({ shellFieldVisible: true, shellInteractionEnabled: true, mainGlyphsElevated: true });
+presentation.hydrateScenarioState({ shellFieldVisible: true, shellInteractionEnabled: true });
 assert.equal(shellSystem.visible, true);
 assert.equal(shellSystem.interactionEnabled, true);
 presentation.reset();

@@ -10,7 +10,7 @@ import {
 const stateAt = (id) => stateAtVrScenarioPoint(vrExperienceScenario, id);
 const atReveal = stateAt('1.30');
 assert.deepEqual(atReveal.intro, {
-  stage: 'REVEALED', fog: 'CLEARED', glyphRingVisible: true,
+  stage: 'REVEALED', fog: 'CLEARED', largeGlyphsVisible: true,
   progressionFixturesVisible: true, guideInteractionEnabled: false
 }, 'the completed reveal belongs to 1.20 and is visible after that point');
 assert.equal(stateAt('1.20').intro, undefined, 'the target point remains exclusive');

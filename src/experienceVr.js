@@ -247,9 +247,8 @@ const largeGlyphActor = createVrLargeGlyphActor({
     VR_SCENARIO_EVENT.P2_RADIAL_PRESENTATION_COMPLETED)
 });
 const { nodes } = largeGlyphActor;
-const glyphRing = largeGlyphActor.object;
 worldStableRoot.add(largeGlyphActor.object);
-const worldBaseRadius = settings.spatial.ringRadius;
+const worldBaseRadius = settings.spatial.worldBaseRadius;
 const floorWalkRadius = worldBaseRadius;
 const sphericalLayerRanges = resolveVrSphericalLayerRanges({
   baseRadius: worldBaseRadius,
@@ -791,14 +790,14 @@ largeGlyphAttractorInteraction = createVrLargeGlyphAttractorInteraction({
 
 const introFogReveal = createVrIntroFogReveal({
   center: progressFloor.object,
-  roots: [monkeyVisualRoot, glyphRing, monkeyStoneRoot],
+  roots: [monkeyVisualRoot, largeGlyphActor.object, monkeyStoneRoot],
   revealTarget: monkeyVisualRoot,
   color: VR_BACKGROUND_COLOR,
   duration: settings.intro.introRevealDuration
 });
 
 introSequence = createVrIntroSequence({
-  monkeyGuide, monkeyMotionRoot, monkeyVisualRoot, monkeyStoneRoot, playerRig, glyphRing, progressFloor,
+  monkeyGuide, monkeyMotionRoot, monkeyVisualRoot, monkeyStoneRoot, playerRig, largeGlyphActor, progressFloor,
   platformFixturesRoot, locomotion, playerGuidePanel, fogReveal: introFogReveal,
   spatial: settings.spatial,
   settings: { ...settings.intro, locale: language }, bypass: introQaBypass,
@@ -1107,7 +1106,7 @@ function renderFrame() {
   postRingMonkeyDialogue.update(delta);
   furnaceIntro.update(delta);
   shellSystem.update(delta);
-  glyphRing.updateMatrixWorld(true);
+  largeGlyphActor.object.updateMatrixWorld(true);
   glyphInteraction.update(delta);
   crystalCollection.update(delta);
   reliquaryHints.update(delta);
@@ -1196,7 +1195,6 @@ function restoreVrScenarioBaseline() {
   furnaceIntro.reset();
   monkeyGuide.reset();
   platformFixturesRoot.visible = true;
-  glyphRing.visible = true;
   monkeyStoneRoot.visible = true;
   monkeyVisualRoot.visible = true;
   introSequence.reset();

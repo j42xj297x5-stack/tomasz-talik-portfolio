@@ -269,7 +269,7 @@ assert.doesNotMatch(vr, /onProgressionFixturesHidden|onBypassFixturesVisible/,
 assert.doesNotMatch(baselineBody, /restorePortalWaitingState\(\)|astroFurnace\.object\.visible/,
   'canonical baseline uses owner reset APIs instead of ordering-dependent Portal/Furnace patches');
 assert.match(vr, /crystalCollection\.update\(delta\)/);
-assert.match(vr, /glyphOrbit\.update\(delta\)/);
+assert.match(vr, /largeGlyphActor\.update\(delta\)/);
 assert.doesNotMatch(vr.match(/onComplete:[\s\S]*?\n  }\n}/)?.[0] ?? '', /portalDisplay\.place|portalCanvas\.hide/);
 assert.match(vr, /function restorePortalWaitingState\(\)[\s\S]*portalCanvas\.show/);
 assert.match(vr, /locomotion\.setLeftYawLocked\(playerGuidePanel\.isOpen\(\)\)/);
@@ -346,7 +346,7 @@ assert.doesNotMatch(vr, /shellSystem\.setActive\(progressionController\.isTierCo
   'session reset and re-entry cannot project Tier 1 completion into shell visibility');
 assert.match(vr, /loadMonkeyModel\(\{ actorParent: progressFloor\.object, fixtureParent: progressFloor\.object/,
   'Monkey stone is a stationary platform child, not a hidden fixtures child');
-assert.match(vr, /roots: \[monkeyVisualRoot, glyphRing, monkeyStoneRoot\]/);
+assert.match(vr, /roots: \[monkeyVisualRoot, largeGlyphActor\.object, monkeyStoneRoot\]/);
 assert.doesNotMatch(vr, /roots: \[worldStableRoot\]/);
 assert.match(vr, /monkeyMotionRoot\.position\.set\(settings\.spatial\.monkeyFinal[\s\S]*monkeyActor\.dockCharacterToStone\(\)/);
 assert.doesNotMatch(vr, /sceneLayout|uklad_sceny|ANCHOR_PLAYER_SPAWN/);

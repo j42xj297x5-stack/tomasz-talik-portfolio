@@ -70,10 +70,6 @@ export function createVrLargeGlyphActor({
     node.quaternion.identity();
     node.scale.setScalar(scaleMultiplier);
     node.userData.baseScale = scaleMultiplier;
-    node.userData.orbitAngle = angle;
-    node.userData.orbitRadius = initialRadius;
-    node.userData.yOffset = 0;
-    node.userData.largeGlyphSlot = slot;
     slot.add(node);
     canonicalSlots.set(node, slot);
     return node;
@@ -205,6 +201,14 @@ export function createVrLargeGlyphActor({
       }
     }
   }
+  function setPresentationVisible(value) {
+    if (disposed) throw new Error('Cannot change presentation visibility of a disposed Large Glyph actor.');
+    if (typeof value !== 'boolean') {
+      throw new TypeError('Large Glyph actor presentation visibility must be a boolean.');
+    }
+    object.visible = value;
+    return true;
+  }
   function reset() {
     [...transientLeases].forEach(restoreToSlot);
     elevationElapsed = null;
@@ -217,15 +221,11 @@ export function createVrLargeGlyphActor({
     rotationRoot.position.set(0, 0, 0);
     rotationRoot.quaternion.identity();
     setCanonicalRadius(baseline.initialRadius);
-    nodes.forEach((node, index) => {
-      const angle = (Math.PI * 2 * index) / LARGE_GLYPH_COUNT;
+    nodes.forEach((node) => {
       node.position.set(0, 0, 0);
       node.quaternion.identity();
       node.scale.setScalar(baseline.scaleMultiplier);
       node.userData.baseScale = baseline.scaleMultiplier;
-      node.userData.orbitAngle = (Math.PI * 2 * index) / LARGE_GLYPH_COUNT;
-      node.userData.orbitRadius = baseline.initialRadius;
-      node.userData.yOffset = 0;
     });
   }
 
@@ -239,6 +239,7 @@ export function createVrLargeGlyphActor({
     getStage: () => stage,
     getSpatialExtent: () => currentRadius,
     getTargetingRange: () => expansion.radius,
+    setPresentationVisible,
     beginElevation,
     beginExpansion,
     beginTransient,

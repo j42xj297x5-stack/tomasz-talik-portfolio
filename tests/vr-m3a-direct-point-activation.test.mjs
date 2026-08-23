@@ -19,9 +19,9 @@ function createIntroActor() {
     monkeyMotionRoot, monkeyVisualRoot: new THREE.Group(), monkeyStoneRoot: new THREE.Group(),
     platformRoot: new THREE.Group(), playerRig: new THREE.Group(),
     playerGuidePanel: { isOpen: () => false, getActiveSectionId: () => null, getViewState: () => 'MENU' },
-    fogReveal, glyphRing: new THREE.Group(), progressFloor, platformFixturesRoot: new THREE.Group(),
+    fogReveal, largeGlyphActor: { object: new THREE.Group(), setPresentationVisible() { return true; } }, progressFloor, platformFixturesRoot: new THREE.Group(),
     locomotion: { reset() {}, setWalkRadius() {} }, getHeadPosition: () => new THREE.Vector3(0, 1.7, 20),
-    spatial: { monkeyFinal: { x: 0, y: 0, z: 0 }, entryDirection: { x: 0, y: 0, z: 1 }, monkeyStartRadius: 18, ringRadius: 7.6 },
+    spatial: { monkeyFinal: { x: 0, y: 0, z: 0 }, entryDirection: { x: 0, y: 0, z: 1 }, monkeyStartRadius: 18, worldBaseRadius: 7.6 },
     settings: { enabled: true, locale: 'en', messageDisplayDuration: 0, messageGapDuration: 0, questionGapDuration: 0 }
   });
 }
