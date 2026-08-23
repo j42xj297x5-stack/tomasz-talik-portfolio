@@ -16,6 +16,12 @@ function unitPhase(seed, salt) {
   return stableHash(`${seed}:${salt}`) / 0x100000000;
 }
 
+function canonicalizeAxisOrientation(axis) {
+  const firstSignificantComponent = [axis.x, axis.y, axis.z]
+    .find((component) => Math.abs(component) > Number.EPSILON);
+  return firstSignificantComponent < 0 ? axis.negate() : axis;
+}
+
 export const VR_SPHERICAL_LAYER_IDS = Object.freeze({
   SHELLS: 'SHELLS', SMALL_GLYPHS: 'SMALL_GLYPHS', RUNE_STONES: 'RUNE_STONES',
   STARS: 'STARS', HIDDEN_GLYPHS: 'HIDDEN_GLYPHS'
@@ -55,8 +61,8 @@ export function createVrSphericalLayerActor({ parent, layer, slotCount, angularS
   const object = new THREE.Group(); object.name = `VrSphericalLayer:${id}`; parent.add(object);
   const phase = unitPhase(id, 'direction') * Math.PI * 2;
   const radialPhase = unitPhase(id, 'radial');
-  const axis = new THREE.Vector3(unitPhase(id, 'axis-x') * 2 - 1, unitPhase(id, 'axis-y') * 2 - 1,
-    unitPhase(id, 'axis-z') * 2 - 1).normalize();
+  const axis = canonicalizeAxisOrientation(new THREE.Vector3(unitPhase(id, 'axis-x') * 2 - 1,
+    unitPhase(id, 'axis-y') * 2 - 1, unitPhase(id, 'axis-z') * 2 - 1).normalize());
   const baseline = new THREE.Quaternion().setFromAxisAngle(axis, unitPhase(id, 'orientation') * Math.PI * 2);
   let elapsed = 0, disposed = false;
   const motion = new THREE.Quaternion();
