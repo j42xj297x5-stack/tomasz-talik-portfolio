@@ -1,9 +1,5 @@
 export const VR_MONKEY_MESSAGE_TIMING = Object.freeze({ secondsPerLine: 2, gapSeconds: 0.5 });
 
-export const VR_MONKEY_KNOWLEDGE_POLICY = Object.freeze({
-  ONCE: 'ONCE', CONTEXTUAL: 'CONTEXTUAL'
-});
-
 export const VR_MONKEY_KNOWLEDGE_CATEGORIES_PL = Object.freeze({
   'category.whatNow': Object.freeze({ label: 'CO TERAZ?', groupId: 'currentGuidance' })
 });
@@ -57,11 +53,8 @@ export const VR_MONKEY_COMMUNICATION_COPY_PL = Object.freeze({
     asterion: Object.freeze({ blocks: ['To narzędzie do zmiany horyzontu.\nNie przybliża tego, co jest daleko.', 'Zmienia to, skąd patrzysz.\nDzięki temu dosięgniesz tego, czego wcześniej nie mogłeś.'] })
   }),
   knowledge: Object.freeze({
-    'knowledge.astro.next': { groupId: 'currentGuidance', contextId: 'ASTERION_SHELL_COLLECTION', policy: 'CONTEXTUAL', question: 'CO DALEJ?', blocks: ['Potrzebujesz Kuli Asterionowej.\nPiec potrafi ją zbudować.\nZgromadź skorupy.'] },
     'knowledge.intro.where': { groupId: 'intro', policy: 'CONTEXTUAL', question: 'DOKĄD?', blocks: ['Gdybym ci powiedział, poszedłbyś do odpowiedzi.', 'A ja pytam, czy pójdziesz za mną.'] },
     'knowledge.threshold.otherSide': { groupId: 'threshold', policy: 'CONTEXTUAL', question: 'CO JEST PO DRUGIEJ STRONIE?', blocks: ['Po tej stronie pytasz.\nPo tamtej będziesz sprawdzał.'] },
-    'knowledge.threshold.easier': { groupId: 'threshold', policy: 'CONTEXTUAL', question: 'DLACZEGO ŁATWIEJ?', blocks: ['Nie musisz już wybierać, czy wejść.'] },
-    'knowledge.p2.whatNow': { groupId: 'currentGuidance', contextId: 'P2_ASTRO_TUNING', policy: 'CONTEXTUAL', question: 'CO TERAZ?', blocks: ['Astrolabium słucha teraz na więcej niż jednym paśmie.', 'B zmienia pasmo.', 'Poszukaj tego, co pojawiło się razem z nowym światem.'] },
-    'knowledge.p2.tuneAstrolabium': { groupId: 'currentGuidance', contextId: 'P2_ASTRO_TUNING', policy: 'CONTEXTUAL', question: 'JAK DOSTROIĆ ASTROLABIUM?', blocks: ['Najpierw znajdź mały glif.', 'Potem wróć do Pieca.', 'On potrafi nauczyć narzędzie nowych rzeczy.'] }
+    'knowledge.threshold.easier': { groupId: 'threshold', policy: 'CONTEXTUAL', question: 'DLACZEGO ŁATWIEJ?', blocks: ['Nie musisz już wybierać, czy wejść.'] }
   })
 });

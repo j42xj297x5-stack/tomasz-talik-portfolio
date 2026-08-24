@@ -53,10 +53,10 @@ import { createVrAsterionSphere } from './xr/asterion/createVrAsterionSphere.js'
 import { createVrAsterionGyroInteraction } from './xr/asterion/createVrAsterionGyroInteraction.js';
 import { createVrAsterionProductionController } from './xr/asterion/createVrAsterionProductionController.js';
 import { createVrPlayerGuidePanel } from './xr/guidance/createVrPlayerGuidePanel.js';
+import { createVrCurrentObjectiveProjection } from './xr/guidance/createVrCurrentObjectiveProjection.js';
 import { createVrPlayerGuideProjection } from './xr/guidance/createVrPlayerGuideProjection.js';
 import { createVrMonkeyGuide } from './xr/guidance/createVrMonkeyGuide.js';
 import { createVrMonkeyKnowledgeResolver } from './xr/guidance/createVrMonkeyKnowledgeResolver.js';
-import { createVrMonkeyGuidanceContextResolver } from './xr/guidance/createVrMonkeyGuidanceContextResolver.js';
 import { createVrMandatoryMonkeyCommunication } from './xr/guidance/createVrMandatoryMonkeyCommunication.js';
 import { createVrToolGuidanceLifecycle } from './xr/guidance/createVrToolGuidanceLifecycle.js';
 import { VR_MONKEY_COMMUNICATION_COPY_PL } from './xr/guidance/vrMonkeyCommunicationCopy.js';
@@ -481,12 +481,18 @@ const astroAttractorProductionController = createVrAstroAttractorProductionContr
     toolGuidanceLifecycle?.notifyAstroClaimed();
     handModeController.equipRightAstro(); }
 });
-const playerGuideProjection = createVrPlayerGuideProjection({
+const currentObjectiveProjection = createVrCurrentObjectiveProjection({
   locale: language,
   getCurrentPointId: () => runtimeExperience?.getCurrentPointId(),
-  can: (capability) => runtimeExperience?.can(capability) === true,
   getActivatedPageIds: () => progressionController.getActivatedPageIds(),
+  getAsterionProductionState: () => asterionProductionController.getState(),
+  getAsterionSphereProgress: () => furnaceProgressionController.getAsterionSphereProgress(),
   getExtractedFamilyCodes: () => protoAstroTuningController.getExtractedFamilyCodes()
+});
+const playerGuideProjection = createVrPlayerGuideProjection({
+  locale: language,
+  can: (capability) => runtimeExperience?.can(capability) === true,
+  getCurrentObjective: () => currentObjectiveProjection.getCurrentObjective()
 });
 const playerGuidePanel = createVrPlayerGuidePanel({
   leftGrip: vrControllers.controllers[0]?.grip,
@@ -499,20 +505,9 @@ const playerGuidePanel = createVrPlayerGuidePanel({
   debugCheckpoints: debugCheckpointsEnabled ? VR_DEBUG_CHECKPOINTS : [],
   onDebugCheckpoint: (checkpointId) => enterVrDebugCheckpoint?.(checkpointId)
 });
-const monkeyGuidanceContextResolver = createVrMonkeyGuidanceContextResolver({
-  can: (capability) => runtimeExperience?.can(capability) === true,
-  getAsterionProductionState: () => asterionProductionController.getState(),
-  getExtractedFamilyCodes: () => protoAstroTuningController.getExtractedFamilyCodes()
-});
 const monkeyKnowledgeResolver = createVrMonkeyKnowledgeResolver({
   locale: language,
-  hasAstroKnowledge: () => runtimeExperience?.can(
-    VR_SCENARIO_CAPABILITY.CAN_EQUIP_ASTRO
-  ) === true,
-  hasAstroBandSwitchKnowledge: () => runtimeExperience?.can(
-    VR_SCENARIO_CAPABILITY.CAN_SWITCH_ASTRO_BAND
-  ) === true,
-  getCurrentGuidanceContextId: () => monkeyGuidanceContextResolver.getCurrentContextId()
+  getCurrentObjective: () => currentObjectiveProjection.getCurrentObjective()
 });
 monkeyGuide = createVrMonkeyGuide({
   actorRoot: monkeyMotionRoot,
