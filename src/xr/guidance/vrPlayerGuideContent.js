@@ -5,6 +5,19 @@ const VR_PLAYER_GUIDE_CONTENT = Object.freeze({
       Object.freeze({ id: 'controls', label: 'STEROWANIE', body: 'Mapa podstawowych wejść kontrolerów.' }),
       Object.freeze({ id: 'current-task', label: 'AKTUALNE ZADANIE', body: 'Dokonaj wyboru.' })
     ]),
+    tools: Object.freeze({
+      astro: Object.freeze({
+        label: 'ASTROLABIUM WIĘZI',
+        description: 'To narzędzie do rzeczy, które są daleko,\na chciałbyś, żeby były bliżej.',
+        controls: 'A — wyposaż / schowaj\nChwyt — namierzanie\nSpust — przyciąganie\nSzpila + chwyt — przejęcie obiektu',
+        bandSwitchControl: 'B — zmień pasmo celu'
+      }),
+      asterion: Object.freeze({
+        label: 'KULA ASTERIONOWA',
+        description: 'To narzędzie do zmiany horyzontu.\nNie przybliża tego, co jest daleko.\nZmienia to, skąd patrzysz.\nDzięki temu dosięgniesz tego, czego wcześniej nie mogłeś.',
+        controls: 'X — wyposaż / schowaj\nSpust — zmieniaj orientację platformy'
+      })
+    }),
     menuHint: 'Lewy drążek — wybór · X — otwórz · Y — zamknij',
     detailHint: 'Lewy drążek — wybór · X — otwórz · Y — wróć',
     controllersFallback: 'Schemat kontrolerów niedostępny.'

@@ -504,9 +504,6 @@ const monkeyKnowledgeResolver = createVrMonkeyKnowledgeResolver({
   hasAstroBandSwitchKnowledge: () => runtimeExperience?.can(
     VR_SCENARIO_CAPABILITY.CAN_SWITCH_ASTRO_BAND
   ) === true,
-  hasAsterionKnowledge: () => runtimeExperience?.can(
-    VR_SCENARIO_CAPABILITY.CAN_EQUIP_ASTERION
-  ) === true,
   getCurrentGuidanceContextId: () => monkeyGuidanceContextResolver.getCurrentContextId()
 });
 const monkeyGuide = createVrMonkeyGuide({

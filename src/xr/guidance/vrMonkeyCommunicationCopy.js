@@ -5,8 +5,7 @@ export const VR_MONKEY_KNOWLEDGE_POLICY = Object.freeze({
 });
 
 export const VR_MONKEY_KNOWLEDGE_CATEGORIES_PL = Object.freeze({
-  'category.astro': Object.freeze({ label: 'CO TO JEST ASTROLABIUM WIĘZI?', groupId: 'astro' }),
-  'category.asterion': Object.freeze({ label: 'CO TO JEST KULA ASTERIONOWA?', groupId: 'asterion' }),
+  'category.astro': Object.freeze({ label: 'ASTROLABIUM WIĘZI', groupId: 'astro' }),
   'category.whatNow': Object.freeze({ label: 'CO TERAZ?', groupId: 'currentGuidance' })
 });
 
@@ -53,11 +52,9 @@ export const VR_MONKEY_COMMUNICATION_COPY_PL = Object.freeze({
     'hint.reliquary.active': { blocks: ['Można już go uwolnić. Spełnił swoją rolę.'] }
   }),
   knowledge: Object.freeze({
-    'knowledge.astro.whatIsIt': { groupId: 'astro', policy: 'PERSISTENT', question: 'CO TO JEST ASTROLABIUM WIĘZI?', blocks: ['To narzędzie do rzeczy, które są daleko,\na chciałbyś, żeby były bliżej.', 'Chwytem namierzasz. Spustem przyciągasz.', 'Jeśli chcesz coś zachować — użyj Szpili drugiej ręki i chwyć.'] },
     'knowledge.astro.why': { groupId: 'astro', policy: 'ONCE', question: 'A PO CO MI TO?', blocks: ['Żebyś mógł sięgnąć dalej.'] },
     'knowledge.astro.next': { groupId: 'currentGuidance', contextId: 'ASTERION_SHELL_COLLECTION', policy: 'CONTEXTUAL', question: 'CO DALEJ?', blocks: ['Potrzebujesz Kuli Asterionowej.\nPiec potrafi ją zbudować.\nZgromadź skorupy.'] },
     'knowledge.astro.bandSwitch': { groupId: 'astro', policy: 'ONCE', question: 'CO ROBI B?', blocks: ['Narzędzia zmieniają się razem ze światem.\nB przełącza pasmo Astrolabium.', 'Teraz możesz sięgnąć po inne obiekty'] },
-    'knowledge.asterion.whatIsIt': { groupId: 'asterion', policy: 'PERSISTENT', question: 'CO TO JEST KULA ASTERIONOWA?', blocks: ['To narzędzie do zmiany horyzontu.\nNie przybliża tego, co jest daleko.', 'Zmienia to, skąd patrzysz.\nDzięki temu dosięgniesz tego, czego wcześniej nie mogłeś.'] },
     'knowledge.intro.where': { groupId: 'intro', policy: 'CONTEXTUAL', question: 'DOKĄD?', blocks: ['Gdybym ci powiedział, poszedłbyś do odpowiedzi.', 'A ja pytam, czy pójdziesz za mną.'] },
     'knowledge.threshold.otherSide': { groupId: 'threshold', policy: 'CONTEXTUAL', question: 'CO JEST PO DRUGIEJ STRONIE?', blocks: ['Po tej stronie pytasz.\nPo tamtej będziesz sprawdzał.'] },
     'knowledge.threshold.easier': { groupId: 'threshold', policy: 'CONTEXTUAL', question: 'DLACZEGO ŁATWIEJ?', blocks: ['Nie musisz już wybierać, czy wejść.'] },
