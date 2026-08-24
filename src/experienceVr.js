@@ -311,9 +311,11 @@ const asterionSphere = createVrAsterionSphere({
   enabled: settings.asterionSphere.enabled,
   debug: searchParams.has('debug') || asterionSphereQa
 });
+let monkeyGuide = null;
 const asterionGyroInteraction = createVrAsterionGyroInteraction({
   sphere: asterionSphere, controllers: vrControllers.controllers, progressFloor, worldRoot: worldStableRoot, renderer,
-  settings: settings.asterionSphere, enabled: settings.asterionSphere.enabled
+  settings: settings.asterionSphere, enabled: settings.asterionSphere.enabled,
+  isInteractionBlocked: (record) => monkeyGuide?.hasCurrentHit(record) === true
 });
 const glyphLights = createVrGlyphLights({ nodes, settings: settings.glyphLights });
 const portalDisplay = createVrPortalDisplay({
@@ -512,7 +514,7 @@ const monkeyKnowledgeResolver = createVrMonkeyKnowledgeResolver({
   ) === true,
   getCurrentGuidanceContextId: () => monkeyGuidanceContextResolver.getCurrentContextId()
 });
-const monkeyGuide = createVrMonkeyGuide({
+monkeyGuide = createVrMonkeyGuide({
   actorRoot: monkeyMotionRoot,
   floorRoot: progressFloor.object,
   visualRoot: monkeyVisualRoot,
@@ -524,10 +526,7 @@ const monkeyGuide = createVrMonkeyGuide({
   settings: settings.monkeyGuide,
   onOpenChange: (open) => playVrUi(open ? VR_AUDIO.monkeyOpen : VR_AUDIO.monkeyClose),
   onPanelClick: () => playVrUi(VR_AUDIO.click),
-  onAttentionStart: () => playVrWorld(VR_AUDIO.monkeyThinking),
-  isOrdinaryRayAvailable: (record) => !(record.handedness === 'right'
-    && handModeController.getRightMode() === 'ASTRO_ATTRACTOR')
-    && !(asterionSphere.isEquipped() && record.handedness === 'left')
+  onAttentionStart: () => playVrWorld(VR_AUDIO.monkeyThinking)
 });
 toolGuidanceLifecycle = createVrToolGuidanceLifecycle({
   monkeyGuide,

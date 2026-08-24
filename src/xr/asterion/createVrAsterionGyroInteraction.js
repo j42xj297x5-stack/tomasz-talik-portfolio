@@ -16,7 +16,8 @@ function getLeftPrimaryAction(renderer) {
   return Math.min(1, Math.max(0, Number.isFinite(value) ? value : 0));
 }
 
-export function createVrAsterionGyroInteraction({ sphere, controllers, progressFloor, worldRoot, renderer, settings, enabled = false }) {
+export function createVrAsterionGyroInteraction({ sphere, controllers, progressFloor, worldRoot, renderer, settings,
+  enabled = false, isInteractionBlocked = () => false }) {
   const previewQuaternion = new THREE.Quaternion();
   const commandQuaternion = new THREE.Quaternion();
   const currentQuaternion = new THREE.Quaternion();
@@ -120,7 +121,8 @@ export function createVrAsterionGyroInteraction({ sphere, controllers, progressF
       handReferenceValid = false;
     }
     wasEquipped = equipped;
-    const triggerDown = equipped && (getLeftPrimaryAction(renderer) > TRIGGER_THRESHOLD || Boolean(leftRecord?.isSelecting));
+    const triggerDown = equipped && !isInteractionBlocked(leftRecord)
+      && (getLeftPrimaryAction(renderer) > TRIGGER_THRESHOLD || Boolean(leftRecord?.isSelecting));
     const floorParent = progressFloor?.object?.parent ?? worldRoot ?? null;
     floorParent?.updateWorldMatrix?.(true, false);
     floorParent?.getWorldQuaternion?.(parentWorldQuaternion) ?? parentWorldQuaternion.identity();

@@ -94,7 +94,7 @@ function createTwoSidedCanvasPlane({ name, width, height, canvasWidth, canvasHei
 export function createVrMonkeyGuide({
   actorRoot, visualRoot, floorRoot = actorRoot, interactionRoot = visualRoot, controllers = [], progressionController,
   locale = 'en', settings = {}, knowledgeResolver = null,
-  isOrdinaryRayAvailable = () => true, onOpenChange = () => {}, onPanelClick = () => {},
+  onOpenChange = () => {}, onPanelClick = () => {},
   onAttentionStart = () => {}
 }) {
   const copy = COPY[locale === 'pl' ? 'pl' : 'en'];
@@ -539,7 +539,7 @@ export function createVrMonkeyGuide({
     let monkeyHovered = false;
     controllers.forEach((record) => {
       let hit = null;
-      if (interactionEnabled && settings.enabled && isOrdinaryRayAvailable(record)) {
+      if (interactionEnabled && settings.enabled) {
         record.controller.updateWorldMatrix(true, false);
         record.controller.getWorldPosition(origin);
         record.controller.getWorldQuaternion(quaternion);
