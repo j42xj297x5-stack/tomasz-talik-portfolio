@@ -71,18 +71,21 @@ export function createVrAsterionProductionController({
     onBuildStop(false); emit(); return true;
   }
   function clearHits() { hits.forEach((_, record) => hits.set(record, false)); halo?.setVisible(false); }
+  function hasNormalHandMode(record) {
+    return record?.handedness === 'left' ? modeController?.getLeftMode?.() === 'NORMAL_HAND'
+      : record?.handedness === 'right' && modeController?.getRightMode?.() === 'NORMAL_HAND';
+  }
   function updateRayHits() {
-    let leftHit = false; sphere?.object?.updateWorldMatrix?.(true, true);
+    let hovered = false; sphere?.object?.updateWorldMatrix?.(true, true);
     controllers.forEach((record) => { let hit = false;
-      if (state === 'AVAILABLE' && getChamberState() === 'OPEN' && record.handedness === 'left'
-        && modeController?.getLeftMode?.() === 'NORMAL_HAND' && record.ray?.visible !== false) {
+      if (state === 'AVAILABLE' && getChamberState() === 'OPEN' && hasNormalHandMode(record) && record.ray?.visible !== false) {
         record.controller.updateWorldMatrix?.(true, false); record.controller.getWorldPosition(origin); record.controller.getWorldQuaternion(quaternion);
         direction.set(0, 0, -1).applyQuaternion(quaternion).normalize(); raycaster.set(origin, direction);
         raycaster.far = Math.min(rayMaxDistance, record.currentRayLength ?? rayMaxDistance);
         const intersection = raycaster.intersectObject(sphere.object, true).find(({ object }) => !object.userData?.vrTargetHalo);
-        if (intersection) { hit = true; leftHit = true; record.reportRayHit?.(intersection.distance); }
+        if (intersection) { hit = true; hovered = true; record.reportRayHit?.(intersection.distance); }
       } hits.set(record, hit);
-    }); halo?.setVisible(leftHit);
+    }); halo?.setVisible(hovered);
   }
   function update(delta = 0) {
     if (disposed) return; syncGate(); const step = Math.max(0, Number.isFinite(delta) ? delta : 0);
@@ -99,8 +102,8 @@ export function createVrAsterionProductionController({
     }
     updateRayHits(); halo?.update(step);
   }
-  function claim(record) { if (disposed || state !== 'AVAILABLE' || getChamberState() !== 'OPEN' || record?.handedness !== 'left'
-    || modeController?.getLeftMode?.() !== 'NORMAL_HAND' || !hits.get(record)) return false;
+  function claim(record) { if (disposed || state !== 'AVAILABLE' || getChamberState() !== 'OPEN'
+    || !hasNormalHandMode(record) || !hits.get(record)) return false;
     state = 'EARNED'; earnedCommits += 1; clearHits(); sphere.restorePresentationMaterials?.(); clearPresentation(); emit();
     modeController?.equipLeftAsterion?.(); onClaimed(); return true; }
   const listeners = controllers.map((record) => { const listener = () => claim(record); record.controller.addEventListener?.('squeezestart', listener); return { record, listener }; });
