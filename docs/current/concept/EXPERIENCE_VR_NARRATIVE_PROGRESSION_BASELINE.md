@@ -10,7 +10,13 @@ Intro prowadzi przez naukę panelu Y i kontakt z Małpą do pierwszego cyklu Gly
 1.10 → … → 2.30 → … → 3.80 → 4.10 → … → 4.70 → 4.80
 ```
 
-`4.80` jest aktualną stabilną granicą gameplayową; dalsze akty nie należą do bieżącego kontraktu Guidance.
+`4.80` jest aktualną stabilną granicą gameplayową i wejściem do zatwierdzonego, lecz niezaimplementowanego Rune Stone Act. Kanoniczny kontrakt tego aktu należy wyłącznie do [`VR_RUNE_STONES_MODEL.md`](../technical/VR_RUNE_STONES_MODEL.md); nie rozszerza on bieżącego kontraktu Guidance ani nie twierdzi, że runtime wyszedł poza `4.80`.
+
+## Zatwierdzony akt po Tier 3 — NOT IMPLEMENTED
+
+Po `4.80` pojawiają się Rune Stones w istniejącym płaszczu `50–75 m`, a Large Glyph przechodzą na pełną sferę `SPHERE_FAR = 80 m` z czarną, nieoświetlaną bazą i bardzo wolnym ruchem. Kamienie nie są od razu targetowalne: Astrolabium musi najpierw zsynchronizować rodzinę przez dwuskładnikową recepturę Wu Xing w Piecu.
+
+Eligibility wynika wyłącznie z pełnego ukończenia sektora. Po Tier 3 daje to Earth / Ethics, Fire / Creative AI i Wood / AI Guide; Metal i Water czekają na własne dalsze panele. Nie obowiązuje dawny model „cztery kamienie, potem piąty”. Pierwsza stabilna granica późniejszego wdrożenia to `FIRST_RUNE_INSTALLED`; późniejsze sterowanie sektorem/anteną pozostaje osobnym projektem.
 
 ## Prowadzenie gracza
 

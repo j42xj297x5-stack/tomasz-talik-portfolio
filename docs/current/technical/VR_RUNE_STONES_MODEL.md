@@ -1,427 +1,324 @@
-# Experience VR — kanoniczny model kamieni runicznych P4
+# Experience VR — kanoniczny model aktu kamieni runicznych
 
-## 1. Status dokumentu
+## 1. Status i authority
 
 - **Status:** **TARGET / KANONICZNY MODEL TECHNICZNO-GAMEPLAYOWY / NOT IMPLEMENTED**.
-- Dokument jest źródłem prawdy dla przyszłego przygotowania assetów i mechaniki pięciu kamieni runicznych P4 oraz pięciu odpowiadających im naczyń sektorowych.
-- Nie opisuje stanu wdrożonego. Obecny runtime nie ma tej mechaniki, assetów runicznych, spatial audio kamieni ani integracji P4 z progresją.
-- Oznaczenia normatywne:
-  - **KANON** — zasada wiążąca dla przyszłych assetów, runtime'u i integracji;
-  - **TUNING** — wartość lub zachowanie dobierane w prototypie i na Meta Quest 3S;
-  - **OTWARTE** — decyzja celowo nierozstrzygnięta;
-  - **CURRENT** — fakt o aktualnym repozytorium;
-  - **TARGET / NOT IMPLEMENTED** — zatwierdzony kierunek, którego kod jeszcze nie realizuje.
+- Ten dokument jest jedynym kanonicznym źródłem prawdy przyszłego Rune Stone Act: synchronizacji Astrolabium, Pieca, pięciu pair-specific par, mostów, transportu i pierwszej instalacji.
+- Akt zaczyna się po ukończeniu Tier 3, na obecnej stabilnej granicy `4.80`. Nie zmienia to faktu, że runtime kończy się dziś na `4.80`; wszystkie zachowania poniżej są przyszłe.
+- Status implementacji rozstrzygają kod i [`VR_RUNTIME_MODEL.md`](VR_RUNTIME_MODEL.md). Identity Proto-Astro rozstrzyga [`VR_PROTO_ASTRO_MODEL.md`](VR_PROTO_ASTRO_MODEL.md), warstwy przestrzenne — [`VR_SPHERICAL_LAYERS_MODEL.md`](VR_SPHERICAL_LAYERS_MODEL.md), a authored progression — [`VR_SCENARIO_DIRECTOR_MODEL.md`](VR_SCENARIO_DIRECTOR_MODEL.md).
 
-W razie sprzeczności status implementacji rozstrzygają kod i [VR Runtime Model](VR_RUNTIME_MODEL.md), a ownership przebiegu — [Scenario / Director Model](VR_SCENARIO_DIRECTOR_MODEL.md). Ten dokument rozstrzyga wyłącznie docelowy kontrakt systemu kamieni P4. Żadna liczba niewymieniona jawnie jako **KANON** nie może zostać uznana za wiążącą.
+`KANON` oznacza kontrakt wiążący, `TUNING` wartość dobieraną w prototypie/Quest 3S, a `OPEN DESIGN DECISION` świadomie nierozstrzygnięty produktowy warunek.
 
-## 2. Cel i zakres
+## 2. Granica aktu i przestrzeń po Tier 3
 
-Dokument definiuje:
+Po settled Tier 3 / `4.80`:
 
-- jednostkę `kamień + naczynie` i pair-specific przygotowanie;
-- rooty, pivoty i helpery eksportowane w GLB;
-- semantyczne stany kamienia;
-- prowadzenie kamienia rozwiniętym Astrolabium Więzi po zewnętrznej orbicie platformy;
-- przejęcie przez socket, finalne osadzenie i commit progresji;
-- lekką blokadę logiczną przez już zainstalowane kamienie;
-- spatial audio kamieni;
-- rozdział odpowiedzialności Blender / runtime Three.js / Scenario / Director;
-- kolejność osobnych przyszłych etapów wdrożenia.
+1. Rune Stones materializują się w **istniejącym** world-stable płaszczu `RUNE_STONES = 50–75 m`. Nie powstaje nowy promień ani drugi registry.
+2. Large Glyph Actor przełącza istniejącą fizyczną możliwość `SPHERE_FAR = 80 m`: pięć glifów rozmieszcza po pełnej sferze, nie na pierścieniu; porusza je bardzo wolno i daje im bazową czarną, nieoświetlaną przez świat prezentację. Przyszły feedback targetowania może ją czasowo nadpisywać.
+3. Large Glyph pozostaje osobnym `LargeGlyphActor`, poza spherical-layer registry.
+4. Sama materializacja kamienia nie daje prawa pull. Istniejący, lecz niesynchronizowany kamień nie jest valid targetem.
 
-Poza zakresem są: implementacja runtime, finalny interfejs JavaScript, skrypty Blendera, nowe assety, input mapping, pełna fizyka, save system, cała narracja P4 oraz przepisanie Astrolabium. Nazwy helperów i stanów poniżej są kontraktem semantycznym; implementacja może dostosować zapis do istniejących konwencji wyłącznie bez utraty znaczenia.
+## 3. Eligibility, synchronizacja i persistent truth
 
-## 3. Relacja z P4 i istniejącym Experience VR
+### 3.1. Eligibility bez drugiej listy
 
-**KANON:** kamienie runiczne są dużymi obiektami świata późnego etapu Experience VR. Nie są materiałami wkładanymi do Astro Pieca. Po odblokowaniu właściwej zdolności rozwinięte Astrolabium Więzi przyciąga i prowadzi je do specjalnych naczyń na końcach sektorów platformy. Pierwsze cztery kamienie otwierają możliwość zdobycia ostatniego; komplet pięciu przygotowuje platformę do finalnego etapu.
+Rodzina może zostać wybrana do strojenia wyłącznie wtedy, gdy istniejący owner progresji sektorów potwierdza pełną sekwencję **wszystkich paneli tego sektora**. System kamieni odczytuje ten fakt; nie kopiuje progresji podłogi i nie utrzymuje `initialRuneStoneIds`.
 
-Ten dokument nie rozpisuje całego P4 ani nie nadaje mu point IDs. Aktualny produkcyjny przebieg kończy się na Kuli Asterionowej i sterowaniu platformą; P4 pozostaje **TARGET / NOT IMPLEMENTED**. Scenario musi później opisać kolejność i dostępność P4, bez kopiowania mechaniki kamieni. Kula Asterionowa nadal odpowiada za orientację `VrTiltableFloorRoot`; niniejszy model nie zmienia jej kontraktu.
+W stanie po Tier 3 reguła daje dokładnie:
 
-## 4. Fundament: dokładnie pięć par
+| Rodzina | Sektor | Eligibility po `4.80` |
+| --- | --- | --- |
+| ZIEMIA | Ethics | tak |
+| OGIEŃ | Creative AI | tak |
+| DREWNO | AI Guide | tak |
+| METAL | DIG Engine | nie — sektor ma dalszy panel |
+| WODA | Haiku Cosmos | nie — sektor ma dalsze panele |
+
+Metal staje się eligible po ukończeniu całej sekwencji Metalu, a Woda po ukończeniu całej sekwencji Wody. **Nie istnieje kanon „cztery kamienie odblokowują piąty” ani sztuczna kolejność `4 → 5`.**
+
+### 3.2. RuneStoneProgressionController
+
+Przyszły `RuneStoneProgressionController` (lub równoważnie nazwany domain owner) jest jedynym właścicielem co najmniej:
+
+- `tunedRuneFamilies` — trwały fakt „Astrolabium jest zsynchronizowane z rodziną X”;
+- `installedRuneFamilies` — trwały fakt ukończonej instalacji właściwego kamienia.
+
+Nie posiada kopii paneli sektorów. Eligibility czyta z ich istniejącego ownera. `ProtoAstroTuningController` nadal posiada wyłącznie naturalne family essences używane dla Large Glyph i **nie** posiada rune tuning ani installation truth.
+
+Po pierwszym commicie `tunedRuneFamilies` Scenario może nadać Astrolabium przyszłe pasmo `RUNESTONES`. Pasmo widzi wyłącznie kamienie rodzin w `tunedRuneFamilies`; rodzina eligible, lecz jeszcze nietuned, nie jest targetem.
+
+## 4. Receptura Wu Xing
+
+Receptura używa cyklu tworzenia. Pierwszy element relacji dostarcza **Small Glyph**, drugi **Shell**, a wynik stroi Rune Stone drugiego elementu. Asset IDs zawsze przechodzą przez istniejące canonical resolvery Proto-Astro; nie wolno tworzyć równoległej tabeli identity.
+
+| Small Glyph | Shell | Target tuned Rune Stone |
+| --- | --- | --- |
+| ZIEMIA | METAL | METAL |
+| METAL | WODA | WODA |
+| WODA | DREWNO | DREWNO |
+| DREWNO | OGIEŃ | OGIEŃ |
+| OGIEŃ | ZIEMIA | ZIEMIA |
+
+Wybrana rodzina targetu musi być eligible, a para musi dokładnie rozwiązać się do tej rodziny. Nieprawidłowa para nie może rozpocząć procesu.
+
+## 5. Astro Piec — ownership i dwuslotowy kontrakt
+
+### 5.1. Dwa ownerstwa, bez przepisywania istniejących procesów
+
+- istniejący single-content `createVrAstroFurnaceContentInteraction` pozostaje właścicielem dotychczasowych procesów Shell / Small Glyph i istniejącego `VR_FURNACE_CONTENT_ANCHOR`;
+- przyszły `RuneRecipeInteraction` jest osobnym ownerem dwóch typed slots i działa wyłącznie w rune-tuning mode;
+- tylko jeden z tych ownerów może przyjmować content w danym trybie; `experienceVr.js` wyłącznie je komponuje.
+
+### 5.2. Kontrakt helperów assetu
+
+Komora zachowuje `VR_FURNACE_INSERT_VOLUME` jako wspólną strefę wkładania oraz `VR_FURNACE_CONTENT_ANCHOR` dla dotychczasowych procesów. Rune recipe wymaga dwóch stabilnych authored snap anchors:
 
 ```text
-5 różnych kamieni runicznych
-+
-5 odpowiadających naczyń / uchwytów sektorowych
-=
-5 par
+RUNE_RECIPE_SMALL_GLYPH_SLOT
+RUNE_RECIPE_SHELL_SLOT
 ```
 
-**KANON:** podstawową jednostką przygotowania, walidacji i konfiguracji jest **PARA: konkretny kamień + właściwe naczynie + właściwy sektor**.
+Small Glyph może trafić wyłącznie do pierwszego slotu, Shell wyłącznie do drugiego. Przy otwartej komorze oba składniki mogą być osadzone jednocześnie, w dowolnej kolejności, bez pośredniego procesu i bez zamykania/otwierania Pieca pomiędzy nimi. Ten dokument nie modyfikuje GLB ani skryptów Blender; brak helperów wymaga osobnego zadania assetowego.
 
-Kamienie są odrębnymi assetami. Mogą różnić się geometrią, skalą, pełną obwiednią animacji, wypieczonym loopem, charakterem ruchu, pivotem, wysokością i orientacją instalacji. Naczynia należą do jednej rodziny wizualno-konstrukcyjnej i mogą współdzielić sposób przygotowania, ale mogą różnić się detalem, materiałem lub wariantem rodziny/żywiołu.
+### 5.3. Warunki Activate i pojedynczy cycle
 
-Wspólny runtime nie może zakładać identycznych brył ani jednej globalnej wysokości socketu. Każda para wymaga osobnej inspekcji pełnego loopa i sprzętowego QA.
+Rune tuning może rozpocząć się tylko, gdy jednocześnie:
 
-## 5. Model naczynia i orientacja sektorowa
+- gracz wybrał konkretną eligible rodzinę kamienia;
+- oba typed slots są zajęte;
+- Small Glyph i Shell tworzą poprawną recepturę dla wybranej rodziny;
+- komora jest zamknięta;
+- Piec jest idle;
+- gracz wykonuje zaakceptowane `Activate`.
 
-### 5.1. Ustawienie w świecie
+Jeden poprawny komplet uruchamia **jeden** nowy semantyczny rune-tuning process kind i dokładnie jeden canonical cycle `18 s`, nie dwie kolejne obróbki po 18 sekund.
 
-**KANON:** każde naczynie:
+### 5.4. Prezentacja wszystkich procesów Pieca
 
-- leży podłużnie **wzdłuż osi swojego sektora platformy**, zamiast tworzyć wysoki pionowy postument;
-- znajduje się na końcu właściwego sektora;
-- jest lekko odsunięte od powierzchni platformy;
-- wzmacnia czytelność pięciu sektorów i może wizualnie działać jak końcowy wzmacniacz / rezonator anteny;
-- pozostawia czytelne centrum i ogranicza zasłanianie pola widzenia.
+Docelowo podczas właściwego procesu — shell, Small Glyph, rune tuning lub device construction:
 
-Kamień unoszący się nad podłużnym naczyniem ma wyglądać jak aktywna część konstrukcji, nie trofeum na cokole. Dokładny offset, kąt, orientacja i wysokość naczynia są **TUNINGIEM** po teście na rzeczywistym sektorze oraz Quest 3S; dokument nie ustanawia wartości w metrach.
+- komora nie wykonuje mechanicznego process-spin;
+- dolna pokrywa nie wykonuje process-spin;
+- fizyczny obrót komory/pokryw służy wyłącznie otwieraniu i zamykaniu;
+- emisja komory i reakcja `fire_cell` mogą pozostać;
+- wewnętrzne światło i cztery istniejące energy points nadal mogą orbitować;
+- wewnętrzny process angle może pozostać zegarem/fazą światła, punktów i pulsów, ale nie jest aplikowany jako rotation komory ani pokrywy.
 
-### 5.2. Kontrakt hierarchii GLB
+To zmiana prezentacyjna, nie zmiana czasu ani ownership progresji.
 
-Zalecana nazwa zachowująca wymagane znaczenia:
+### 5.5. Audio i wynik
+
+| Asset | Semantyka |
+| --- | --- |
+| `astro_piec_work_01.mp3` | istniejący proces Shell |
+| `astro_piec_work_02.mp3` | istniejący proces Small Glyph |
+| `astro_piec_work_03.mp3` | przyszłe strojenie Astrolabium z pary Small Glyph + Shell |
+| `astro_piec_work_create_01.mp3` | istniejąca produkcja urządzeń |
+
+Nie powstaje czwarty work sound. `work_03` nie oznacza fizycznej obróbki kamienia: Rune Stone nigdy nie trafia do Pieca i pozostaje w świecie. Ukończony, poprawny cycle commituje w domain ownerze wyłącznie fakt synchronizacji rodziny.
+
+> **OPEN DESIGN DECISION — los fizycznych składników po udanym rune-tuning cycle.** Nie rozstrzygnięto, czy Shell jest konsumowana, a Small Glyph wraca do field, czy oba wracają, czy obowiązuje inna semantyka. Milestone'y poprzedzające finalny commit receptury mogą powstać bez tej decyzji; RUNE A5 musi ją mieć rozstrzygniętą przed implementacją.
+
+## 6. Dokładnie pięć pair-specific par
+
+Jednostką konfiguracji jest konkretna `kamień + sektor + naczynie/socket + most`. Pięć kamieni może różnić się geometrią, loopem, pivotem, wysokością i safe envelope. Nie wolno zakładać jednej globalnej wysokości socketu ani magicznych offsetów.
+
+Zalecany kontrakt GLB zachowuje istniejącą semantykę:
 
 ```text
+RUNE_STONE_<TYPE>_ROOT
+
 RUNE_VESSEL_<TYPE>_ROOT
 ├── RUNE_VESSEL_<TYPE>_MESH
 ├── RUNE_VESSEL_<TYPE>_SOCKET_POINT
 └── RUNE_VESSEL_<TYPE>_SOCKET_ZONE
 ```
 
-`<TYPE>` musi stabilnie identyfikować rodzinę/parę. Helpery mogą być Empty lub innymi eksportowalnymi węzłami, o ile loader GLB zachowuje ich nazwy i transformacje.
+Runtime transformuje wyłącznie stabilny root kamienia. `SOCKET_POINT` jest pair-specific finalną transformacją; `SOCKET_ZONE` wybaczającą strefą przejęcia, nigdy finalnym transformem. Safe envelope uwzględnia maksymalny zakres pełnego baked loopa, nie tylko pierwszą klatkę. Format envelope, geometria zone, wysokość, easing i tolerancje pozostają `TUNING`.
 
-#### `VESSEL_ROOT`
+Wewnętrzne animacje pozostają w GLB, działają w `FREE`, mogą działać podczas transportu/capture i nie zatrzymują się po instalacji.
 
-**KANON:** jest lokalnym rootem całego naczynia. Służy do ustawienia naczynia w sektorze i oddziela transformację montażową od geometrii. Mesh i helpery pozostają w jego przestrzeni lokalnej.
+## 7. RuneBridgeActor
 
-#### `SOCKET_POINT`
-
-**KANON:** jest precyzyjną finalną transformacją root/pivota właściwego kamienia w stanie `INSTALLED`: pozycją, wysokością i orientacją. Jest authored pair-specific i eksportowany z assetem. Runtime nie wylicza go z przypadkowego bounding boxa naczynia.
-
-#### `SOCKET_ZONE`
-
-**KANON:** jest dużą, wybaczającą strefą przejęcia, a nie finalną pozycją kamienia. Wykrywa wejście poprawnie prowadzonego kamienia wystarczająco blisko właściwego naczynia i pozwala rozpocząć kontrolowany snap do `SOCKET_POINT`.
-
-Pierwszym preferowanym modelem logicznym jest sfera nad naczyniem: niezależna od kierunku podejścia, prosta i wybaczająca w VR. Jej promień jest **TUNINGIEM**. Gdy próba konkretnej pary wykaże przewagę kapsuły lub cylindra, para może użyć takiego kształtu przy zachowaniu tej samej semantyki. Geometria i rozmiar zone są pair-specific.
-
-## 6. Model kamienia, root i pivot
-
-Zalecana hierarchia:
+Jedna pair-specific instancja `RuneBridgeActor` przypada na sektor/parę. Jest aktorem presentation/mechanics: nie zna Scenario pointów, nie posiada progresji, nie odblokowuje kamienia i wykonuje wyłącznie semantyczne komendy.
 
 ```text
-RUNE_STONE_<TYPE>_ROOT
-└── istniejąca hierarchia animowanego kamienia
+HIDDEN → DOCKED → EXTENDING → EXTENDED → ORBITING
 ```
 
-**KANON:** każdy kamień otrzymuje jeden nadrzędny, stabilny root będący reprezentantem całego obiektu dla runtime'u. Runtime targetuje, przesuwa po orbicie, snapuje i instaluje wyłącznie ten root. Istniejące kontrolery, kości, animated nodes i inne gałęzie pozostają pod nim.
+| Stan | Kontrakt |
+| --- | --- |
+| `HIDDEN` | przed synchronizacją rodziny most nie istnieje wizualnie |
+| `DOCKED` | po synchronizacji materializuje się, zespolony z końcem właściwego sektora |
+| `EXTENDING` | gdy poprawny tuned kamień zbliża się do właściwego miejsca instalacji, odjeżdża na zewnątrz wzdłuż radialnej osi sektora |
+| `EXTENDED` | utrzymuje układ `platforma → kamień → most` i przestrzeń dla capture |
+| `ORBITING` | po instalacji stale obraca się wokół osi `środek platformy → kamień → most` |
 
-Pivot/root jest świadomie dobierany dla konkretnego kamienia tak, aby:
+Jeśli podejście zostanie przerwane przed capture/installation, most wraca do `DOCKED`. Interpolacja mostu jest transient mechanics, nie Scenario point ani reconstruction truth. `installedRuneFamilies` wystarcza do odtworzenia settled prezentacji `ORBITING`.
 
-- cały obiekt dało się prowadzić jednym transformem;
-- nie naruszyć istniejących animacji i ich przestrzeni lokalnej;
-- uzyskać estetyczną finalną pozę nad naczyniem;
-- pełny loop nie przecinał naczynia ani platformy.
-
-**KANON:** finalna wysokość i orientacja kamienia są właściwością **pary**, nie globalnym parametrem systemu. Dodanie rootu musi zachować world transforms istniejącej hierarchii.
-
-## 7. Pair-specific preparation i safe envelope
-
-Przyszły wspólny system może korzystać z pięciu pair-specific konfiguracji o semantyce roboczo nazwanej `RuneStonePairConfig`. To nie jest projekt finalnego interfejsu JS. Konfiguracja może później wskazywać:
-
-- stabilne `stoneId`, `vesselId` i `sectorId`;
-- helper `SOCKET_POINT` i opis `SOCKET_ZONE`;
-- parametry orbity i bezpiecznej obwiedni;
-- zajętość orbity;
-- loop audio;
-- opcjonalny pair-specific `animationTimeScale` i tolerancje.
-
-Dopasowanie kamienia do naczynia musi używać jawnej semantyki typu/ID. Nie wolno opierać go na kolorze grafiki, nazwie materiału ani indeksie kolejności w scenie. Dokładne nazwy pól zostaną ustalone w osobnym zadaniu implementacyjnym.
-
-Ponieważ kamień jest animowany, statyczny bounding box pierwszej klatki nie jest wystarczającym kontraktem. Przygotowanie każdej pary musi uwzględnić **maksymalną przestrzeń zajmowaną podczas pełnego loopa**. Safe envelope może pomóc dobrać socket height/zone, minimalny dystans od platformy i szerokość blokady orbitalnej. Jego format — promień, sfera, kapsuła, inna uproszczona obwiednia lub konfiguracja — jest **OTWARTY**.
-
-## 8. Animacje GLB
-
-**KANON:** charakter, geometria i choreografia wewnętrznego ruchu pozostają wypieczone w GLB. Runtime prowadzi wyłącznie root całego kamienia i nie odtwarza w JavaScript wewnętrznych orbit, osi, obrotów ani ruchów części.
-
-Własny loop kamienia:
-
-- działa w `FREE`;
-- może działać podczas locku, prowadzenia i snapu;
-- **nie zatrzymuje się po instalacji**;
-- sprawia, że `INSTALLED` pozostaje żywym, aktywnym reliktem.
-
-Runtime może ustawić globalną prędkość klipu. Lekkie spowolnienie podczas przenoszenia lub instalacji jest dopuszczalne wyłącznie po próbie wizualnej. `animationTimeScale` jest pair-specific **TUNINGIEM**; pięć kamieni nie musi dzielić jednej wartości.
-
-## 9. Semantyczne stany runtime
+## 8. Transport i instalacja
 
 ```text
-FREE
-→ LOCKED_BY_ASTRO
-→ CARRIED_ORBIT
-→ SOCKET_CAPTURE
-→ INSTALLED
+FREE → LOCKED_BY_ASTRO → CARRIED_ORBIT → SOCKET_CAPTURE → INSTALLED
 ```
 
-Nazwy implementacyjne mogą się zmienić, lecz poniższa semantyka jest **KANONEM**.
+- `FREE`: kamień istnieje w deterministic slocie `RUNE_STONES 50–75 m`, odtwarza loop i spatial audio; target jest legalny tylko dla tuned family.
+- `LOCKED_BY_ASTRO`: Astro ma prawidłowy lock; kamień nie teleportuje się do ręki ani gracza.
+- `CARRIED_ORBIT`: aktywny pull prowadzi root po zewnętrznej stronie platformy z pair-specific safe envelope i lekkim orbit constraint.
+- `SOCKET_CAPTURE`: poprawny stone/sector match wchodzi w `SOCKET_ZONE`; aktor wygasza pull i interpoluje do `SOCKET_POINT`.
+- `INSTALLED`: dopiero ukończony snap commituje persistent installed fact; własny baked loop i spatial audio trwają dalej.
 
-### `FREE`
+Zainstalowane kamienie mogą blokować kolejne przez lekkie pair-specific occupied arcs, bez rigid-body i animated mesh collision. Zachowanie po release poza capture oraz szczegóły blockerów pozostają tuningiem/otwartą decyzją i nie zmieniają pierwszej stabilnej granicy.
 
-A future `FREE` stone originates in its deterministic slot in the reserved world-stable `RUNE_STONES` spherical layer (`50–75 m`), as defined by [`VR_SPHERICAL_LAYERS_MODEL.md`](VR_SPHERICAL_LAYERS_MODEL.md). Leaving `FREE` enters the transport contract below; the spherical layer does not replace `LOCKED_BY_ASTRO`, `CARRIED_ORBIT`, capture or installation.
+## 9. Spatial audio
 
-Large Glyph is not a spherical layer. Its ordered `RING_EXPANDED = 46 m` and full-sphere `SPHERE_FAR = 80 m` remain separate from the reserved Rune Stones range `50–75 m`.
+Każdy kamień ma własny cichy spatial loop związany z rootem lub dedykowanym anchor: aktywny w `FREE`, poruszający się w `CARRIED_ORBIT` i pozostający przy `INSTALLED`. Three.js/Web Audio i fail-soft `VrAudioBridge` posiadają playback/dispose; Blender nie eksportuje aktywnego audio, a audio nie posiada progresji. Asset, gain, attenuation i zasięg są pair-specific `TUNING` na Quest 3S.
 
-Kamień istnieje w świecie, odtwarza własny loop animacji i emituje własny spatial audio loop. Targetowanie jest możliwe tylko wtedy, gdy progresja/Director udostępnia odpowiednią zdolność.
+## 10. Scenario, Director i reconstruction
 
-### `LOCKED_BY_ASTRO`
-
-Astrolabium ma prawidłowy target/lock. Lock nie teleportuje kamienia do ręki, twarzy ani gracza.
-
-### `CARRIED_ORBIT`
-
-Aktywne przyciąganie prowadzi kamień po zewnętrznym pasie platformy. Gracz przemieszcza się po platformie i prowadzi obiekt wokół niej.
-
-### `SOCKET_CAPTURE`
-
-Poprawny kamień wszedł do `SOCKET_ZONE` właściwego naczynia. Ręczne prowadzenie wygasa, a runtime płynnie przejmuje ostatni odcinek do `SOCKET_POINT`.
-
-### `INSTALLED`
-
-Kamień osiągnął finalną transformację i instalacja została zatwierdzona. Nadal odtwarza animację i spatial audio, staje się trwałą częścią sektora, faktem P4 oraz przeszkodą dla kolejnych kamieni.
-
-Stan po utracie przyciągania przed capture musi być bezpieczny, ale jego dokładne zachowanie jest **OTWARTE**; patrz §25.
-
-## 10. Astrolabium Więzi i prowadzenie gracza
-
-Ten model rozszerza istniejące Astrolabium tylko dla P4:
-
-- po odblokowaniu zdolności runicznej może targetować duże kamienie;
-- pull trwa tak długo, jak gracz aktywnie prowadzi obiekt;
-- utrata lub zwolnienie przyciągania kończy aktywne prowadzenie;
-- wejście poprawnego kamienia w poprawny `SOCKET_ZONE` przekazuje sterowanie instalacji.
-
-**KANON:** duży kamień nie jest przyciągany do dłoni, przed twarz, do klatki gracza ani do wnętrza platformy. Pozostaje po **zewnętrznej stronie platformy**, zachowując skalę i czytelność obrazu. Nie wymyśla się nowego inputu: dokładny mapping pozostaje zgodny z istniejącym runtime i dokumentacją Astrolabium, a przyszła integracja ma wykorzystać istniejącą warstwę semantic input.
-
-Gracz musi kolejno znaleźć kamień, uzyskać lock, rozpocząć i utrzymać pull, fizycznie przejść ku właściwemu sektorowi, prowadzić kamień wokół platformy, wejść nim w zone, a dopiero potem pozwolić systemowi na finalne osadzenie. To transport przestrzenny, nie teleport z odległości.
-
-## 11. Ograniczenie do zewnętrznej orbity
-
-W `CARRIED_ORBIT` root kamienia podlega lekkiemu ograniczeniu logicznemu runtime względem centrum `VrTiltableFloorRoot`, a nie pełnej symulacji fizycznej.
-
-**KANON:** kamień:
-
-- ma kontrolowany minimalny promień względem centrum platformy;
-- nie może zostać przeciągnięty do jej wnętrza;
-- pozostaje w zewnętrznym pasie konstrukcji;
-- płynnie zmienia pozycję kątową, gdy gracz chodzi po platformie.
-
-Możliwa lekka reprezentacja, nie finalne API:
+Obowiązuje bez wyjątku:
 
 ```text
-platformCenter
-carryRadius / minimumRadius
-carryAngle
-carryHeight
+SPINE → SCENARIO → DIRECTOR → RuntimeExperience → ACTORS / DOMAIN OWNERS
 ```
 
-Zależność od pozycji gracza i Astro, carry radius/height, smoothing, lag i prędkość podążania są **TUNINGIEM**. Safe envelope konkretnego kamienia musi uczestniczyć w ustalaniu bezpiecznej odległości; sam root-point nie wystarcza.
+- Scenario authoruje istotne beaty po `4.80`, capabilities, semantic events/effects i settled consequences.
+- Director posiada `currentPointId` i legalność przejścia.
+- RuntimeExperience wykonuje symbolic effects.
+- Actors posiadają transient mechanics; domain owners persistent truth.
+- `experienceVr.js` pozostaje composition rootem bez ukrytej maszyny progresji.
 
-## 12. Socket zone, point i capture
+Nie tworzy się pointów dla interpolacji mostu, timera `18 s`, stanów slotu, targetingu, pull ani `SOCKET_CAPTURE`. Point powstaje tylko dla istotnego beatu lub stabilnej granicy praw/progresji. Target `entryEffects` rozpoczyna beat, a actor emituje semantic completion event.
 
-`SOCKET_ZONE` odpowiada wyłącznie na pytanie „czy poprawny kamień jest wystarczająco blisko właściwego naczynia?”. `SOCKET_POINT` odpowiada „jaka jest finalna transformacja rootu?”. Nie wolno łączyć tych ról.
+Reconstruction składa wyłącznie settled `tunedRuneFamilies` i `installedRuneFamilies` (oraz inne już istniejące owner truths). Nie rekonstruuje pull, held objects, zawartości slotów, trwającego Furnace process, timera, bridge interpolation ani capture. Pierwsza stabilna granica aktu to **`FIRST_RUNE_INSTALLED`**.
 
-```text
-CARRIED_ORBIT
-→ poprawny stone/vessel/sector match i wejście w SOCKET_ZONE
-→ SOCKET_CAPTURE
-→ root osiąga SOCKET_POINT
-→ INSTALLED
-→ commit progresji
-```
+Sterowanie/obracanie aktywnego sektora lub anteny po pierwszej instalacji wymaga późniejszego, osobnego aktora i osobnego projektu; nie należy do tego modelu.
 
-W `SOCKET_CAPTURE` runtime wygasza manualne prowadzenie i płynnie interpoluje root do authored transformacji. Wewnętrzna animacja może nadal działać. Czas, easing, tolerancja końca oraz feedback świetlny i dźwiękowy są **TUNINGIEM**.
+## 11. Ownership matrix
 
-**KANON:** samo wejście do dużej zone nie jest commitem. Dopiero ukończony capture poprawnego typu we właściwym sockecie daje `INSTALLED` i emituje semantyczny fakt, który Scenario/Director może zaakceptować jako ukończenie instalacji.
-
-## 13. Instalacja, progresja i save boundary
-
-Scenario opisuje, kiedy P4 jest dostępne, kolejność pierwszych czterech kamieni, warunek dostępności piątego i zdarzenie kompletu. Director decyduje, czy dany kamień może teraz zostać zdobyty lub zainstalowany oraz czy fakt P4 jest dopuszczalny w bieżącym punkcie. Kontroler domenowy może przechowywać fakty instalacji; Scenario nie kopiuje jego całej maszyny lokalnej.
-
-Runtime wykrywa techniczne ukończenie capture i emituje fakt, ale nie wybiera następnego beatu. Asset nie przechowuje progresji.
-
-W przyszłym save modelu `INSTALLED` jest kandydatem na trwały stan. `CARRIED_ORBIT` nie jest bezpiecznym checkpointem, a połowa `SOCKET_CAPTURE` nie może być trwałym zapisem. Ten dokument nie projektuje ani nie implementuje save'u.
-
-## 14. Zainstalowane kamienie blokują orbitę
-
-**KANON:** kamień `INSTALLED` jest realną logiczną przeszkodą przestrzenną. Aktywnie prowadzony kamień nie może przez niego przejść ani zostać „przepchnięty” siłą Astrolabium.
-
-Preferowany lekki model rezerwuje fragment zewnętrznej orbity dla zainstalowanego kamienia/sektora, np. semantycznie:
-
-```text
-occupiedAngle
-occupiedHalfWidth
-```
-
-Dokładny algorytm nie jest kanonem. Reprezentacja ma uwzględniać pair-specific safe envelope i wymuszać znalezienie poprawnej strony podejścia bez dynamicznego mesh-vs-mesh collision.
-
-Gdy gracz napiera na zajęty obszar, kamień nie przenika przeszkody, a gracz ostatecznie zwalnia/utraci pull i podchodzi ponownie. Miękki opór versus natychmiastowy release, timeout i wcześniejszy feedback to **TUNING UX / OTWARTE**.
-
-## 15. Spatial audio
-
-**KANON:** każdy kamień ma własny, ciągły, raczej cichy spatial loop: szum, rezonans lub ambientową obecność. Emitter jest związany z rootem kamienia albo dedykowanym runtime audio anchor i porusza się z nim.
-
-```text
-FREE          → spatial loop aktywny przy kamieniu
-CARRIED_ORBIT → emitter porusza się z rootem
-INSTALLED     → loop pozostaje przy kamieniu w sektorze
-```
-
-Dźwięk może pomagać w orientacji: z daleka ledwo słyszalny, wyraźniejszy przy zbliżeniu. Pliki, gain, `refDistance`, rolloff, `maxDistance`, krzywa tłumienia i dystans słyszalności są pair-specific **TUNINGIEM** testowanym na Quest 3S.
-
-Blender nie eksportuje aktywnego systemu audio. Three.js/runtime odpowiada za Web Audio / `PositionalAudio`, start/stop/dispose, pozycję i reakcję na stan. Integracja musi respektować fail-soft ownership istniejącego `VrAudioBridge`; audio nie może blokować gameplayu ani posiadać progresji.
-
-## 16. Podział odpowiedzialności
-
-| Warstwa | Jest właścicielem | Nie jest właścicielem |
+| Owner | Posiada | Nie posiada |
 | --- | --- | --- |
-| **Blender / GLB** | geometria i materiały; stabilne rooty; pair-specific pivot; helpery naczynia; authored `SOCKET_POINT`; zachowanie kontrolerów i wypieczonych animacji; eksport GLB | input, Web Audio, targetowanie, progresja, decyzja o instalacji |
-| **Runtime Three.js / aktor mechaniki** | targeting i lock Astro; transform rootu; orbit constraint; distance/zone tests; occupied arcs; capture/snap; odtwarzanie AnimationMixer; emitter spatial audio; feedback; reset/dispose lokalnej mechaniki | kolejność P4, dostępność piątego kamienia, wybór następnego punktu Scenario |
-| **Kontroler domenowy P4** | fakty domenowe par, poprawność technicznego commitu i odczyt zainstalowanego zestawu, jeśli zostanie wydzielony | authored przebieg i fizyczne wykonanie Three.js |
-| **Scenario** | kiedy P4 jest dostępne; authored kolejność; kiedy dostępny jest piąty kamień; co oznacza komplet; mapowanie faktów na jawne przejścia i symbolic effects | transformy, kolizje, audio lifecycle, socket math, kopiowanie lokalnego stanu aktora |
-| **Director** | current point; legalność eventu/przejścia; capabilities; decyzja, czy dany kamień wolno teraz zdobyć/zainstalować; przyjęcie warunku P4 | wywołania Three.js, interpolacja snapu, odległości, mesh/pivot, odtwarzanie audio |
-| **RuntimeExperience** | przekazanie eventu do Directora i wykonanie zwróconych symbolic effects przez wstrzyknięte handlery | decyzje fabularne, alternatywna progresja, własny drugi cursor |
+| owner progresji sektorów | kompletność paneli sektora | tuned/installed rune truth |
+| `RuneStoneProgressionController` | tuned i installed families | kopia paneli, transient transport |
+| existing Furnace ContentInteraction | istniejący single-content lifecycle | dwa rune slots |
+| `RuneRecipeInteraction` | dwa typed slots i transient recipe content | persistent tuning, stare procesy |
+| Rune Stone actor | lock/orbit/capture/audio/animation | authored progression |
+| `RuneBridgeActor` | presentation/mechanics stanów mostu | pointy, unlock, persistent truth |
+| Scenario / Director / RuntimeExperience | authored meaning / legalność / wykonanie effects | domain truth i fizyczna mechanika |
+| Blender / GLB | roots, pivots, authored helpers, baked loops | input, audio runtime, progresja |
 
-Scenario/Director mają oceniać globalną legalność. Aktor zachowuje actor-local correctness: właściwy typ, stan, geometria, wejście w zone i ukończenie snapu. `experienceVr.js` pozostaje composition rootem, a nie miejscem nowej równoległej maszyny P4.
+## 12. Kolejność późniejszego wdrożenia
 
-## 17. Kontrakt przyszłych skryptów Blender 5.1.2
+Każdy milestone jest osobnym bounded taskiem i kończy się przed rozpoczęciem następnego.
 
-Każdy osobny skrypt przygotowujący konkretną parę ma:
+### RUNE A1 — Furnace process presentation simplification
+- **Cel:** usunąć process-spin komory i dolnej pokrywy ze wszystkich procesów.
+- **Właściciel:** Furnace activation/presentation actor.
+- **Wejście:** istniejący process angle, emission, `fire_cell`, światło i cztery energy points.
+- **Rezultat:** obracają się tylko efekty wewnętrzne; komora/pokrywa obracają się wyłącznie przy open/close.
+- **Nie implementuje:** zmian receptur, slotów ani czasu.
+- **Kryterium zakończenia:** każdy process zachowuje emission/energy feedback bez process rotation obudowy.
 
-1. działać w Blenderze **5.1.2**;
-2. analizować konkretny kamień, w tym pełny wypieczony loop;
-3. korzystać ze wspólnego modelu konstrukcyjnego naczynia, ale zachować pair-specific ustawienia;
-4. utworzyć lub zweryfikować stabilny root kamienia i `VESSEL_ROOT`;
-5. utworzyć/ustawić `SOCKET_POINT` i `SOCKET_ZONE`;
-6. zachować world transforms, istniejącą geometrię, materiały, animacje, kontrolery i charakter ruchu;
-7. nie kasować całej sceny i nie przebudowywać kamienia proceduralnie bez potrzeby;
-8. być idempotentny — ponowne uruchomienie nie duplikuje rootów/helperów ani nie degraduje assetu;
-9. eksponować pair-specific tuning zamiast jednej magicznej wartości dla pięciu par;
-10. przygotować GLB do prostego odczytu hierarchii, transformacji i klipów przez Three.js.
+### RUNE A2 — Furnace dual-recipe asset contract
+- **Cel:** dostarczyć dwa authored rune-recipe anchors.
+- **Właściciel:** Furnace GLB/asset contract.
+- **Wejście:** istniejące `VR_FURNACE_INSERT_VOLUME` i `VR_FURNACE_CONTENT_ANCHOR`.
+- **Rezultat:** stabilne helpery obu typed slots; shared insert volume pozostaje jeden.
+- **Nie implementuje:** gameplayu receptury.
+- **Kryterium zakończenia:** GLB jednoznacznie eksponuje oba anchor IDs; jeśli ich brak, domyka je osobne zadanie Blender/GLB.
 
-Repozytorium nie zawiera obecnie kanonicznej osobnej referencji skryptowania Blender 5.1.2. Powyższe wymagania są minimalnym kontraktem tego systemu, nie kompletnym style guide'em API `bpy`. Skrypty nie powstają w ramach tego dokumentu.
+### RUNE A3 — RuneRecipeInteraction dual slots
+- **Cel:** umożliwić jednoczesne osadzenie Small Glyph i Shell.
+- **Właściciel:** nowy `RuneRecipeInteraction`.
+- **Wejście:** A2, otwarta komora, typed held objects.
+- **Rezultat:** dwa niezależne typed slots przy dowolnej kolejności wkładania.
+- **Nie implementuje:** trwałego strojenia; nie zmienia starego ContentInteraction.
+- **Kryterium zakończenia:** oba składniki pozostają jednocześnie osadzone i wrong type jest odrzucany.
 
-## 18. Kontrakt przyszłego runtime
+### RUNE A4 — Rune recipe validation + Furnace panel selection
+- **Cel:** wybrać konkretną eligible rodzinę i zwalidować Wu Xing pair.
+- **Właściciel:** panel projection + recipe resolver; eligibility ownerem pozostaje progresja sektorów.
+- **Wejście:** A3, canonical Proto-Astro resolver, sector completeness.
+- **Rezultat:** tylko właściwa para dla wybranego targetu może zezwolić na Activate.
+- **Nie implementuje:** procesu i commitu tuning truth.
+- **Kryterium zakończenia:** nieeligible target i każda błędna para nie rozpoczynają procesu.
 
-Przyszły runtime powinien:
+### RUNE A5 — Rune tuning process
+- **Cel:** wykonać i commitować jedno strojenie rodziny.
+- **Właściciel:** Furnace process actor + `RuneStoneProgressionController`.
+- **Wejście:** A4 oraz rozstrzygnięta OPEN DESIGN DECISION o losie składników.
+- **Rezultat:** nowy process kind, jeden `18 s` cycle, `astro_piec_work_03.mp3`, committed tuned family.
+- **Nie implementuje:** fizycznego procesu kamienia ani instalacji.
+- **Kryterium zakończenia:** dokładnie jeden poprawny cycle tworzy jeden idempotentny tuned fact.
 
-- ładować helpery i rooty po stabilnych identyfikatorach, walidując brak/duplikat;
-- zachować wspólną maszynę stanów i osobne konfiguracje pięciu par;
-- targetować i transformować wyłącznie `RUNE_STONE_<TYPE>_ROOT`;
-- odtwarzać assetowe klipy bez rekonstrukcji ruchu w kodzie;
-- wykonywać proste testy wektorowe/dystansowe, orbit constraint i uproszczone occupied arcs;
-- wymagać jawnego type/sector match przed capture;
-- commitować fakt dopiero po zakończonym snapie;
-- utrzymywać spatial audio oraz animację po instalacji;
-- bezpiecznie resetować i dispose'ować transient pull/capture/audio bez fałszywego commitu;
-- emitować fakty semantyczne przez istniejącą granicę Scenario → Director → RuntimeExperience, nie omijać jej nową progresją.
+### RUNE A6 — Post-Tier-3 spatial transition
+- **Cel:** przedstawić przestrzenną zmianę aktu.
+- **Właściciel:** Rune Stone presentation + `LargeGlyphActor`.
+- **Wejście:** settled Tier 3 / `4.80`.
+- **Rezultat:** kamienie w istniejącym `50–75 m`; Large Glyph w `SPHERE_FAR 80 m`, black/unlit i bardzo wolne.
+- **Nie implementuje:** targetowania niesynchronizowanych kamieni.
+- **Kryterium zakończenia:** warstwy są widoczne, lecz tylko spatial/presentation truth ulega zmianie.
 
-Finalny podział modułów, API konfiguracji i event vocabulary pozostają dla osobnego projektu implementacyjnego.
+### RUNE A7 — RUNESTONES Astro band
+- **Cel:** udostępnić semantyczny band po pierwszym tuning.
+- **Właściciel:** Astro band controller/projection.
+- **Wejście:** co najmniej jedna tuned family.
+- **Rezultat:** valid targets ograniczone do tuned families.
+- **Nie implementuje:** instalacji.
+- **Kryterium zakończenia:** eligible-but-untuned i locked families nie pojawiają się jako targets.
 
-## 19. Performance i QA Meta Quest 3S
+### RUNE A8 — RuneBridgeActor first pair
+- **Cel:** pionowy slice jednego mostu.
+- **Właściciel:** `RuneBridgeActor` pierwszej pary.
+- **Wejście:** tuned fact i pair-specific radial axis/config.
+- **Rezultat:** `HIDDEN → DOCKED → EXTENDING/EXTENDED → ORBITING`, z powrotem do `DOCKED` po przerwanym podejściu.
+- **Nie implementuje:** generalizacji na pięć par ani progresji.
+- **Kryterium zakończenia:** semantic commands deterministycznie sterują pełną prezentacją pierwszego mostu.
 
-**KANON:** fundamentem są lekkie testy odległości, operacje wektorowe, promienie/kąty, uproszczone strefy i obwiednie. Nie jest wymagany rigid-body engine, dynamiczne CSG ani mesh-vs-mesh collision każdego animowanego fragmentu.
+### RUNE A9 — First Rune Stone transport + installation
+- **Cel:** zainstalować jedną zwalidowaną parę.
+- **Właściciel:** Rune Stone transport actor + progression owner; bridge współpracuje przez komendy.
+- **Wejście:** A7–A8, tuned family, pair-specific socket/safe envelope.
+- **Rezultat:** `FREE → LOCKED_BY_ASTRO → CARRIED_ORBIT → SOCKET_CAPTURE → INSTALLED` i persistent installed fact.
+- **Nie implementuje:** sterowania sektorem po instalacji.
+- **Kryterium zakończenia:** ukończony capture jednej pary daje stable installed truth, loop/audio i bridge orbit.
 
-Zainstalowane kamienie nadal odtwarzają wizualne loopy, dlatego budżet należy oceniać dla pięciu jednocześnie aktywnych assetów i pięciu emiterów. Automatyczna walidacja kontraktu GLB nie zastępuje testów czytelności, komfortu, kolizji wizualnej, audio i performance na Meta Quest 3S. Hardware QA każdej pary oraz pełnego zestawu jest osobną obowiązkową bramką.
+### RUNE A10 — Scenario / Director integration
+- **Cel:** zaauthorować beaty po `4.80` do stabilnej granicy.
+- **Właściciel:** Scenario / Director / RuntimeExperience.
+- **Wejście:** semantic events/effects i domain APIs A1–A9.
+- **Rezultat:** target `entryEffects`, semantic completions i reconstruction settled tuned/installed truth.
+- **Nie implementuje:** reconstruction pull, bridge interpolation, Furnace process, slot/held/capture state.
+- **Kryterium zakończenia:** natural flow i canonical boundary kończą się na `FIRST_RUNE_INSTALLED` bez technicznych pointów.
 
-## 20. Czego nie robić
+### RUNE A11 — Generalizacja na trzy początkowe rodziny
+- **Cel:** rozszerzyć działający slice na Earth / Fire / Wood.
+- **Właściciel:** pair-configured actors i assety.
+- **Wejście:** A10 oraz trzy eligible families z sector truth.
+- **Rezultat:** trzy niezależne pair-specific konfiguracje.
+- **Nie implementuje:** globalnych magicznych offsetów ani założenia wspólnej wysokości/socket envelope.
+- **Kryterium zakończenia:** każda para działa z własnym socket height, safe envelope i config.
 
-Zakazane kierunki:
+### RUNE A12 — Quest 3S hardware QA + tuning
+- **Cel:** sprzętowo zatwierdzić cały pierwszy zestaw.
+- **Właściciel:** hardware QA + właściciele subsystemów.
+- **Wejście:** A1–A11.
+- **Rezultat:** tuning dual-slot readability, `18 s`, black Large Glyph, kamieni `50–75 m`, transportu trzech kamieni, bridge clearance/motion/orbit, performance i audio.
+- **Nie implementuje:** aktora sterowania sektorami/anteny.
+- **Kryterium zakończenia:** trzy pary i Furnace spełniają kontrakt na Quest 3S z zapisanymi parametrami i defektami.
 
-- jeden identyczny socket height lub bounding założony dla pięciu kamieni;
-- zatrzymywanie animacji po instalacji;
-- teleport z odległości prosto do naczynia;
-- prowadzenie przez wnętrze platformy albo do dłoni/twarzy/klatki gracza;
-- przechodzenie aktywnego kamienia przez `INSTALLED`;
-- pełne rigid-body jako fundament albo mesh-vs-mesh collision wszystkich animated nodes;
-- przepisywanie wewnętrznych animacji GLB w JavaScript;
-- używanie `SOCKET_ZONE` jako finalnej transformacji;
-- wyliczanie `SOCKET_POINT` z przypadkowego bounding boxa;
-- dopasowanie przez materiał, kolor lub kolejność obiektów;
-- progresja P4 przechowywana w assetach;
-- decyzje Scenario w runtime actorze lub assetach;
-- wykonywanie mechaniki Three.js przez Director;
-- drugi progression cursor w systemie kamieni lub `experienceVr.js`.
+Po A12 dopiero powstaje osobny projekt aktora sterowania sektorami/anteny.
 
-## 21. KANON — zestaw wiążący
+## 13. Zakazy i otwarte tuning decisions
 
-1. Istnieje dokładnie pięć pair-specific par: pięć różnych kamieni i pięć naczyń jednej rodziny.
-2. Naczynia leżą w osi sektorów, na ich końcach, lekko nad platformą.
-3. Każdy kamień ma własny stabilny root/pivot; finalna poza jest właściwością pary.
-4. Każde naczynie ma authored `VESSEL_ROOT`, precyzyjny `SOCKET_POINT` i wybaczający `SOCKET_ZONE`.
-5. Pair match używa jawnych stabilnych IDs/typów i sector identity.
-6. Safe envelope uwzględnia maksymalną przestrzeń pełnego loopa, nie tylko pierwszą klatkę.
-7. Wewnętrzne animacje pozostają w GLB i działają po instalacji; runtime prowadzi tylko root.
-8. Stany zachowują semantykę `FREE → LOCKED_BY_ASTRO → CARRIED_ORBIT → SOCKET_CAPTURE → INSTALLED`.
-9. Astro prowadzi duży kamień na dystans po zewnętrznej stronie platformy; kamień nie wchodzi do środka ani do przestrzeni ciała gracza.
-10. Gracz fizycznie obchodzi platformę z aktywnym pullem i doprowadza kamień do właściwego sektora.
-11. Poprawna zone rozpoczyna płynny capture; dopiero ukończony snap do point daje `INSTALLED` i commit.
-12. Zainstalowane kamienie blokują drogę kolejnym bez kosztownej pełnej fizyki i nie można ich przeciąć.
-13. Każdy kamień ma ciągłe spatial audio w `FREE`, podczas transportu i po instalacji.
-14. Blender, actor runtime, domenowe fakty oraz Scenario/Director zachowują rozdzielone ownership.
-15. Pierwsze cztery kamienie umożliwiają zdobycie piątego; komplet pięciu przygotowuje platformę do finału.
+Zakazane są: drugi registry/radius runiczny; hardcoded initial family list; gate `4 → 5`; rune truth w ProtoAstroTuningController; wkładanie kamienia do Pieca; dwa kolejne 18-sekundowe procesy; przepisywanie starego single-content ownera; process-spin komory/pokrywy; pointy dla transient mechanics; globalny socket height; teleport kamienia do ręki; drugi progression cursor w `experienceVr.js`.
 
-## 22. TUNING — celowo niezamrożony
+Poza jawną decyzją o losie składników otwarte/tuning pozostają pair-specific socket geometry, safe envelope, release behavior, occupied arcs, carry parameters, capture easing, bridge clearance/timing oraz spatial-audio assets/attenuation. Nie wolno przypadkowo zamrażać ich jako globalnych wartości.
 
-- offset, kąt, orientacja i wysokość naczynia nad platformą;
-- pair-specific położenie i orientacja `SOCKET_POINT`;
-- geometria, pozycja i rozmiar `SOCKET_ZONE`;
-- safe envelope format i marginesy;
-- carry/minimum radius, carry height i bezpieczny dystans od gracza/platformy;
-- zależność pozycji kamienia od gracza/Astro, smoothing, lag i prędkość;
-- pair-specific `animationTimeScale`;
-- occupied arc width i dokładna reakcja na blocker;
-- timing release, timeout i feedback oporu;
-- czas, easing i tolerancja `SOCKET_CAPTURE`;
-- pliki/loopy, gain, `refDistance`, rolloff, `maxDistance` i krzywe spatial audio;
-- audio, światło i inne efekty instalacji.
+## 14. Powiązane dokumenty
 
-## 23. Otwarte decyzje Projektanta
-
-1. Dokładna geometria i rozmiar `SOCKET_ZONE` dla każdej pary.
-2. Dokładny carry radius względem platformy.
-3. Dokładna bezpieczna odległość kamienia od gracza.
-4. **OTWARTE: zachowanie kamienia po release poza socketem** — powrót do pozycji/orbity R4, pozostanie, płynny powrót lub inny stabilny stan.
-5. Czy blocker najpierw daje miękki opór, czy natychmiast kończy pull.
-6. Dokładny algorytm i reprezentacja occupied arcs.
-7. Finalna wysokość i orientacja każdego z pięciu kamieni.
-8. Pair-specific prędkości animacji.
-9. Konkretne spatial audio loops i wszystkie parametry.
-10. Audio/wizualny efekt snapu i instalacji.
-11. Dokładna receptura/capability odblokowująca Astrolabium dla kamieni.
-12. Dokładne pozycje R4 pięciu kamieni w świecie.
-13. Format safe envelope i miejsce przechowywania pair-specific konfiguracji.
-
-Punkty te nie mogą zostać domknięte przypadkową wartością w pierwszej implementacji bez decyzji/prototypu i aktualizacji kanonu.
-
-## 24. Kolejność przyszłego wdrożenia
-
-Rekomendowana sekwencja małych, osobno walidowanych etapów:
-
-```text
-RUNE M1  — ten kanoniczny dokument
-RUNE M2  — pierwsza para w Blenderze 5.1.2: kamień + naczynie + root + helpery
-RUNE M3  — walidacja GLB pierwszej pary w scenie
-RUNE M4  — prototyp CARRIED_ORBIT bez progresji
-RUNE M5  — zewnętrzny constraint + bezpieczny dystans
-RUNE M6  — SOCKET_ZONE + SOCKET_CAPTURE + INSTALLED
-RUNE M7  — occupied arcs / blocker zainstalowanego kamienia
-RUNE M8  — spatial audio pierwszego kamienia
-RUNE M9  — integracja faktów P4 z Scenario / Director
-RUNE M10 — cztery pozostałe pary, każda analizowana osobno
-RUNE M11 — hardware QA Quest 3S, także pięć aktywnych par
-RUNE M12 — pełna synchronizacja dokumentacji po wdrożeniu
-```
-
-**KANON procesu:** najpierw jedna kompletna para, następnie mechanika na tej parze, a dopiero potem pozostałe cztery. Nie przygotowuje się wszystkich pięciu według niezwalidowanych globalnych założeń.
-
-## 25. Powiązane dokumenty
-
-- [Project Documentation Index](../maps/PROJECT_INDEX.md) — router obowiązkowego pakietu dokumentacji.
-- [Experience VR Runtime Model](VR_RUNTIME_MODEL.md) — stan aktualnej implementacji, hierarchy platformy, input i lifecycle.
-- [Experience VR Scenario / Director Model](VR_SCENARIO_DIRECTOR_MODEL.md) — wiążący ownership Scenario, Director i `RuntimeExperience`.
-- [Experience VR Narrative & Progression Baseline](../concept/EXPERIENCE_VR_NARRATIVE_PROGRESSION_BASELINE.md) — aktualna progresja i granica post-Sphere.
-- [Experience VR Gameplay Roadmap](../concept/EXPERIENCE_VR_GAMEPLAY_ROADMAP.md) — szerszy kierunek przyszłego gameplayu.
-- [Experience VR Audio Model](VR_AUDIO_MODEL.md) — obecny audio owner, lifecycle i fail-soft boundary.
-- [Experience VR Progress Floor Model](VR_PROGRESS_FLOOR_MODEL.md) — pięć sektorów platformy i aktualna projekcja progresji.
-- [Experience VR Handoff](../handoffs/EXPERIENCE_VR_HANDOFF.md) — bieżący status implementacji i hardware QA.
-- [Decision Log](../decisions/DECISION_LOG.md) — wiążące decyzje repozytorium.
-
-Nie znaleziono aktualnego, osobnego kanonicznego dokumentu zasad skryptowania Blender 5.1.2. Dlatego przyszłe zadanie Blender musi rozpocząć się od tego modelu i zweryfikować dostępne instrukcje repozytorium przed napisaniem skryptu.
+- [`VR_PROTO_ASTRO_MODEL.md`](VR_PROTO_ASTRO_MODEL.md) — canonical identity resolver i granica natural essences vs rune truth.
+- [`VR_SPHERICAL_LAYERS_MODEL.md`](VR_SPHERICAL_LAYERS_MODEL.md) — istniejący `RUNE_STONES 50–75 m`.
+- [`VR_PROGRESS_FLOOR_MODEL.md`](VR_PROGRESS_FLOOR_MODEL.md) — owner kompletności paneli sektorów.
+- [`VR_AUDIO_MODEL.md`](VR_AUDIO_MODEL.md) — work sounds i spatial audio boundary.
+- [`VR_SCENARIO_POINT_AUTHORING_STANDARD.md`](VR_SCENARIO_POINT_AUTHORING_STANDARD.md) — obowiązkowy standard pointów po `4.80`.

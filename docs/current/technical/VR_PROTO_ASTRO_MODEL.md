@@ -15,6 +15,8 @@ Status: **CURRENT / BINDING** dla identity, tuningu, Astro bands i styku small g
 | `createVrSmallGlyphSystem` | authored field geometry i canonical field transforms |
 | `createVrSmallGlyphAttractorInteraction` | transient transport interaction |
 | `createVrAstroFurnaceContentInteraction` | jeden physical chamber/content owner dla `SHELL` i `SMALL_GLYPH` |
+| przyszły `RuneRecipeInteraction` | osobny, rune-mode-only owner dwóch typed slots; nie zastępuje istniejącego content ownera |
+| przyszły `RuneStoneProgressionController` | jedyny owner tuned/installed rune families; czyta eligibility z progresji sektorów |
 | Scenario | capabilities i authored world beats |
 | `HandModeController` | transient wybrane Astro band |
 | Attractor tool / panels | presentation i projection |
@@ -88,6 +90,8 @@ Obecne `stateAt(4.40)` nie deklaruje `protoAstroTuning.extractedFamilyCodes`. Di
 
 Semantic input `B` cyklicznie przełącza aktualnie dostępne bands. `LARGE_GLYPHS` dołącza po prawie Scenario i pierwszej naturalnej esencji; wcześniej cykl zachowuje dwa bandy. Nie ustalono finalnej kolejności cyklu po przyszłych unlockach. Identity bandu jest semantyczne, nie `RED/YELLOW/GREEN/BLUE/ULTRAVIOLET`. Dokładne kolory i symbole pozostają otwarte; przyszły kolor bandu ma być spójny między beam/scan cone i Panelem 2, ale nie wynika automatycznie z fuel family color.
 
+Przyszły `RUNESTONES` dołącza dopiero po pierwszym rune-tuning commicie i widzi wyłącznie rodziny zapisane jako tuned przez osobnego rune progression ownera. Kompletność sektora daje eligibility do strojenia, ale sama nie daje targetu. Receptura, dwa sloty Pieca, transport i instalacja należą do [`VR_RUNE_STONES_MODEL.md`](VR_RUNE_STONES_MODEL.md).
+
 ## 12. FOUR-PANEL TARGET CONTRACT
 
 Astrolabium fizycznie ma cztery authored panels.
@@ -129,3 +133,7 @@ The implemented canonical boundary is `4.80`. Point `4.40` owns a dedicated obse
 Mandatory Monkey communication uses one guidance contract: attention arcs never start copy; pointing and triggering Monkey consumes the trigger for the mandatory beat; ordinary menu, history and knowledge stay hidden through attention and playback; the menu returns only after the final automatic block. This contract is active for the post-ring message at `3.30` and P2 at `4.50–4.60`.
 
 Stable reconstruction at `4.80` contains completed Tier 3, all page IDs/orders through 3, progress-floor completion through Tier 3, consumed crystal Tier 3, and Proto-Astro natural essences `K/T/S/L/R`. It reconstructs no transient pulls, held objects, timers or panels. P3 and later mechanics are not implemented.
+
+## Future Rune Stone Act boundary — approved, not implemented
+
+Po `4.80` istniejący `ProtoAstroTuningController` nadal posiada wyłącznie naturalne essences `K/T/S/L/R` dla Large Glyph. Nie wolno rozszerzać go o trwałe rune tuning/installation facts. Rune recipe rozwiązuje asset identity przez canonical Proto-Astro resolvery, ale zapisuje `tunedRuneFamilies` i `installedRuneFamilies` u osobnego przyszłego domain ownera. Po Tier 3 sector-completeness daje dokładnie Earth / Fire / Wood jako eligible; nie istnieje druga hardcoded lista rodzin.

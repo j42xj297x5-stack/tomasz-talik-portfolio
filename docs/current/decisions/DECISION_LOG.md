@@ -1,6 +1,20 @@
 # Decision Log
 
-Status: current binding decisions organized by implementation status, not patch chronology. Synchronized through the P2 Proto-Astro decision on 2026-08-21.
+Status: current binding decisions organized by implementation status, not patch chronology. Synchronized through the Rune Stone Act decision on 2026-08-24.
+
+## 2026-08-24 — Rune Stone Act after Tier 3 and Furnace target contract
+
+1. The future Rune Stone Act begins after settled Tier 3 at the currently implemented stable boundary `4.80`. Rune Stones reuse the existing world-stable `RUNE_STONES = 50–75 m`; Large Glyph remains a separate actor and uses its existing `SPHERE_FAR = 80 m` capability with full-sphere, very slow, black/unlit baseline presentation.
+2. Rune tuning eligibility is derived only from completion of every panel in the relevant sector. After Tier 3 this yields exactly Earth / Ethics, Fire / Creative AI and Wood / AI Guide. Metal and Water become eligible only after their full sector sequences. This supersedes the former four-stones-then-fifth gate; no `initialRuneStoneIds` list is allowed.
+3. Wu Xing creation recipes are `Earth glyph + Metal shell → Metal stone`, `Metal + Water → Water`, `Water + Wood → Wood`, `Wood + Fire → Fire`, `Fire + Earth → Earth`. Asset identity uses canonical Proto-Astro resolvers rather than a parallel map.
+4. Existing single-content Furnace interaction remains owner of existing Shell / Small Glyph processes. Future rune mode adds a separate two-slot `RuneRecipeInteraction`, using the shared `VR_FURNACE_INSERT_VOLUME`, preserving `VR_FURNACE_CONTENT_ANCHOR`, and requiring two authored typed anchors. One valid pair starts one 18-second cycle.
+5. All target Furnace work presentations remove mechanical process-spin from chamber and lower lid while retaining emission, `fire_cell`, internal light and four energy points. Physical chamber/lid rotation remains open/close-only.
+6. `astro_piec_work_03.mp3` is reassigned from any future physical stone-process meaning to rune tuning of Astrolabium from Small Glyph + Shell. The Rune Stone never enters the Furnace; no fourth work sound is added. `work_01`, `work_02` and `work_create_01` retain their shell, Small Glyph and device-production meanings.
+7. Future `RuneStoneProgressionController` exclusively owns tuned and installed rune families and reads, but never copies, sector progression. `ProtoAstroTuningController` remains exclusive owner of natural family essences for Large Glyph.
+8. One pair-specific `RuneBridgeActor` per sector owns only `HIDDEN → DOCKED → EXTENDING/EXTENDED → ORBITING` presentation/mechanics. It knows no point and owns no progression. Stone transport remains `FREE → LOCKED_BY_ASTRO → CARRIED_ORBIT → SOCKET_CAPTURE → INSTALLED` with persistent commit only after completed capture.
+9. First implementation stability ends at `FIRST_RUNE_INSTALLED`; sector/antenna control is a later separate actor/design. Scenario points represent only meaningful beats or stable rights, never slots, timer, targeting, pull, bridge interpolation or capture.
+10. **OPEN DESIGN DECISION:** physical disposition of Small Glyph and Shell after a successful rune-tuning cycle is intentionally unresolved. The milestone that commits rune tuning cannot be implemented until this is decided.
+11. The authoritative milestone sequence is RUNE A1–A12 in [`VR_RUNE_STONES_MODEL.md`](../technical/VR_RUNE_STONES_MODEL.md). All behavior remains **TARGET / NOT IMPLEMENTED** until bounded runtime tasks land.
 
 ## 2026-08-23 — Large Glyph Actor ownership migration completed
 
@@ -59,7 +73,7 @@ Każdy nowy canonical Experience VR Scenario point musi spełniać [`VR_SCENARIO
 2. Every stone has one stable runtime root; every vessel exports a root, precise authored `SOCKET_POINT` and forgiving `SOCKET_ZONE`. Existing internal stone animation remains baked in GLB and continues after installation.
 3. The developed Astrolabium guides a large stone around the platform's exterior, never into the player or platform interior. Installation requires physical orbital transport, correct pair/sector capture and a completed controlled snap; zone entry alone is not a progression commit.
 4. Installed stones logically block later stones through a lightweight occupied-orbit model, not full rigid-body or animated mesh collision. Every stone retains a moving/installed spatial audio loop owned by Three.js/Web Audio, not Blender.
-5. Scenario owns authored P4 availability/order, the fifth-stone gate and completion meaning; Director owns transition legality; runtime actors execute targeting/orbit/capture/audio; Blender owns asset hierarchy/pivots/animation. The model is **TARGET / NOT IMPLEMENTED** and is normative in [`VR_RUNE_STONES_MODEL.md`](../technical/VR_RUNE_STONES_MODEL.md).
+5. **SUPERSEDED BY 2026-08-24 DECISION:** availability is sector-completeness-driven and there is no fifth-stone gate. Scenario owns authored beats/capabilities; Director owns transition legality; runtime actors execute targeting/orbit/capture/audio; Blender owns asset hierarchy/pivots/animation. The model remains **TARGET / NOT IMPLEMENTED** and is normative in [`VR_RUNE_STONES_MODEL.md`](../technical/VR_RUNE_STONES_MODEL.md).
 6. Dimensions, radii, timings, easing, audio parameters, release behavior and occupied-arc algorithm remain tuning/open decisions. Implementation must validate one complete Blender 5.1.2 pair before expanding to the other four and requires Meta Quest 3S QA.
 
 ## Implemented and binding
