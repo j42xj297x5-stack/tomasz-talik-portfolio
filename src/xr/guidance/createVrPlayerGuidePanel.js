@@ -141,7 +141,13 @@ export function createVrPlayerGuidePanel({ leftGrip, semanticInput, locale = 'en
     context.fillText(content.title, 28, 60);
     context.fillStyle = config.colors.muted;
     context.font = '23px sans-serif';
-    context.fillText(viewState === VIEW_STATE.MAIN_MENU ? content.menuHint : content.detailHint, 28, canvas.height - 30);
+    const footerByViewState = {
+      [VIEW_STATE.MAIN_MENU]: content.mainMenuHint,
+      [VIEW_STATE.TOOL_LIST]: content.toolListHint,
+      [VIEW_STATE.SECTION_DETAIL]: content.sectionDetailHint,
+      [VIEW_STATE.TOOL_DETAIL]: content.toolDetailHint
+    };
+    context.fillText(footerByViewState[viewState], 28, canvas.height - 30);
   }
 
   function drawMainMenu(items) {

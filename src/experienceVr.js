@@ -492,7 +492,8 @@ const currentObjectiveProjection = createVrCurrentObjectiveProjection({
 const playerGuideProjection = createVrPlayerGuideProjection({
   locale: language,
   can: (capability) => runtimeExperience?.can(capability) === true,
-  getCurrentObjective: () => currentObjectiveProjection.getCurrentObjective()
+  getCurrentObjective: () => currentObjectiveProjection.getCurrentObjective(),
+  isFurnaceRevealed: () => astroFurnace.object.visible === true
 });
 const playerGuidePanel = createVrPlayerGuidePanel({
   leftGrip: vrControllers.controllers[0]?.grip,
