@@ -20,6 +20,22 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
     pixelRatioCap: 1.5,
     antialias: true
   },
+  celestial: {
+    revealDurationSeconds: 60,
+    sun: {
+      outwardOffsetFromPointLight: 2.3,
+      facingCorrectionDegrees: { x: 0, y: 0, z: 0 }
+    },
+    stars: {
+      count: 3200,
+      clusterCount: 24,
+      clusteredFraction: 0.68,
+      clusterAngularSpreadRadians: 0.14,
+      clusterRadialSpreadMeters: 7,
+      pointSizeMinPx: 1.4,
+      pointSizeMaxPx: 3.6
+    }
+  },
   furnace: {
     enabled: true,
     floorOffset: 0,
@@ -354,6 +370,32 @@ export function normalizeExperienceVrSettings(candidate) {
       antialias: typeof candidate.renderer?.antialias === 'boolean'
         ? candidate.renderer.antialias
         : defaults.renderer.antialias
+    },
+    celestial: {
+      revealDurationSeconds: finiteNumber(candidate.celestial?.revealDurationSeconds,
+        defaults.celestial.revealDurationSeconds, { min: 0.1, max: 600 }),
+      sun: {
+        outwardOffsetFromPointLight: finiteNumber(candidate.celestial?.sun?.outwardOffsetFromPointLight,
+          defaults.celestial.sun.outwardOffsetFromPointLight, { min: 0.01, max: 100 }),
+        facingCorrectionDegrees: normalizeVector(candidate.celestial?.sun?.facingCorrectionDegrees,
+          defaults.celestial.sun.facingCorrectionDegrees)
+      },
+      stars: {
+        count: Math.max(1, Math.round(finiteNumber(candidate.celestial?.stars?.count,
+          defaults.celestial.stars.count, { min: 1, max: 100000 }))),
+        clusterCount: Math.max(1, Math.round(finiteNumber(candidate.celestial?.stars?.clusterCount,
+          defaults.celestial.stars.clusterCount, { min: 1, max: 1000 }))),
+        clusteredFraction: finiteNumber(candidate.celestial?.stars?.clusteredFraction,
+          defaults.celestial.stars.clusteredFraction, { min: 0, max: 1 }),
+        clusterAngularSpreadRadians: finiteNumber(candidate.celestial?.stars?.clusterAngularSpreadRadians,
+          defaults.celestial.stars.clusterAngularSpreadRadians, { min: 0, max: Math.PI }),
+        clusterRadialSpreadMeters: finiteNumber(candidate.celestial?.stars?.clusterRadialSpreadMeters,
+          defaults.celestial.stars.clusterRadialSpreadMeters, { min: 0, max: 100 }),
+        pointSizeMinPx: finiteNumber(candidate.celestial?.stars?.pointSizeMinPx,
+          defaults.celestial.stars.pointSizeMinPx, { min: 0.1, max: 32 }),
+        pointSizeMaxPx: finiteNumber(candidate.celestial?.stars?.pointSizeMaxPx,
+          defaults.celestial.stars.pointSizeMaxPx, { min: 0.1, max: 32 })
+      }
     },
     furnace: {
       enabled: typeof candidate.furnace?.enabled === 'boolean'

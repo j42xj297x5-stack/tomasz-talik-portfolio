@@ -13,10 +13,12 @@ Promień platformy pozostaje jawny jako `worldBaseRadius = 7.6 m`, a niezależny
 | `SHELLS` | 12 m | 13–25 m | 5 m | IMPLEMENTED |
 | `SMALL_GLYPHS` | 15 m | 30–45 m | 5 m | IMPLEMENTED |
 | `RUNE_STONES` | 25 m | 50–75 m | 10 m | RESERVED / NOT IMPLEMENTED |
-| `STARS` | 45 m | 85–130 m | 3.25 m | RESERVED / NOT IMPLEMENTED |
+| `STARS` | 45 m | 85–130 m | 3.25 m | IMPLEMENTED |
 | `HIDDEN_GLYPHS` | 7.6 m | 133.25–140.85 m | 0 m | RESERVED / NOT IMPLEMENTED |
 
 Reserved oznacza wyłącznie kontrakt przestrzenny. Nie powstają dla tych warstw runtime Object3D, content, count, renderer, interaction, band ani Scenario point.
+
+`STARS` jest wyjątkiem od kontraktu dyskretnych slotów `createVrSphericalLayerActor`: stanowi lekkie proceduralne pole wizualne renderowane jednym `THREE.Points`. Deterministyczny clustered sampling tworzy delikatne skupiska z rozproszonym tłem w całej objętości `85–130 m` i na pełnym `4π`. Pole pozostaje world-stable, bez interakcji, rotacji, driftu i twinkle.
 
 ## Deterministyczne sloty objętościowe
 

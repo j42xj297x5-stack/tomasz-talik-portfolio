@@ -12,7 +12,7 @@ VI remains outside the natural `K/T/S/L/R` P2 tuning loop.
 
 These are authored dramaturgical targets only. They are not Scenario points and define no runtime events, effects, capabilities, actors, recipes, geometry or tuning.
 
-- `5.10` — P3 WORLD PRESENTATION: Large Glyphs recede farther and the stars field appears.
+- `5.10` — P3 WORLD PRESENTATION: Large Glyphs recede farther against the Star Field already present since `2.10`.
 - `5.20` — ten-second world observation.
 - `5.30` — Monkey attention arcs.
 - `5.40` — mandatory P3 dialogue.

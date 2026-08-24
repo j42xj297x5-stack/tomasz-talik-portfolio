@@ -131,6 +131,7 @@ export const VR_SCENARIO_EFFECT = immutableIdentifiers([
   'SET_INTRO_AMBIENT_04',
   'SET_INTRO_AMBIENT_05',
   'BEGIN_MAIN_AMBIENT_SEQUENCE',
+  'BEGIN_CELESTIAL_REVEAL',
   'BEGIN_INTRO_REVEAL',
   'BEGIN_POST_REVEAL_SILENCE',
   'BEGIN_CONTROLLER_ONBOARDING',
@@ -273,8 +274,9 @@ const SECOND_RING_COMPLETE_SETTLED_CONSEQUENCES = Object.freeze({
 const P2_RADIAL_PRESENTED_SETTLED_CONSEQUENCES = Object.freeze({
   largeGlyphs: Object.freeze({ stage: 'RING_EXPANDED' })
 });
-const MAIN_AMBIENT_ACTIVE_SETTLED_CONSEQUENCES = Object.freeze({
-  audio: Object.freeze({ mainAmbientActive: true })
+const GLYPH_FREE_EXPLORE_SETTLED_CONSEQUENCES = Object.freeze({
+  audio: Object.freeze({ mainAmbientActive: true }),
+  celestial: Object.freeze({ active: true })
 });
 const SMALL_GLYPH_FIELD_PRESENTED_SETTLED_CONSEQUENCES = Object.freeze({
   smallGlyphField: Object.freeze({ materialized: true })
@@ -511,9 +513,10 @@ const points = Object.freeze([
   Object.freeze({
     id: VR_EXPERIENCE_POINT['2.10'],
     canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['2.20'] }),
-    settledConsequences: MAIN_AMBIENT_ACTIVE_SETTLED_CONSEQUENCES,
+    settledConsequences: GLYPH_FREE_EXPLORE_SETTLED_CONSEQUENCES,
     label: 'GLYPH_FREE_EXPLORE rozpoczęte',
-    entryEffects: Object.freeze([VR_SCENARIO_EFFECT.BEGIN_MAIN_AMBIENT_SEQUENCE, VR_SCENARIO_EFFECT.BEGIN_GLYPH_FREE_EXPLORE]),
+    entryEffects: Object.freeze([VR_SCENARIO_EFFECT.BEGIN_MAIN_AMBIENT_SEQUENCE,
+      VR_SCENARIO_EFFECT.BEGIN_CELESTIAL_REVEAL, VR_SCENARIO_EFFECT.BEGIN_GLYPH_FREE_EXPLORE]),
     capabilities: Object.freeze([VR_SCENARIO_CAPABILITY.CAN_USE_GLYPHS]),
     transitions: Object.freeze([
       Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.STAY, event: VR_SCENARIO_EVENT.GLYPH_HINT_TIMEOUT, milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.SHOW_GLYPH_HINT]) }),
