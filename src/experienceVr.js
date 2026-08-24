@@ -269,8 +269,6 @@ const sphericalLayerRanges = resolveVrSphericalLayerRanges({
 });
 const sphericalLayer = (id) => sphericalLayerRanges.find((range) => range.id === id);
 const starLayer = sphericalLayer(VR_SPHERICAL_LAYER_IDS.STARS);
-camera.far = Math.max(camera.far, starLayer.outerRadius + 5);
-camera.updateProjectionMatrix();
 const celestialActor = createVrCelestialActor({
   parent: worldStableRoot,
   assetManager,
@@ -278,6 +276,8 @@ const celestialActor = createVrCelestialActor({
   layer: starLayer,
   settings: settings.celestial
 });
+camera.far = Math.max(camera.far, starLayer.outerRadius + 5, celestialActor.requiredCameraFar);
+camera.updateProjectionMatrix();
 const playerRigSpawnLocalPosition = playerRig.position.clone();
 const playerRigSpawnLocalQuaternion = playerRig.quaternion.clone();
 const playerRigSpawnLocalScale = playerRig.scale.clone();
