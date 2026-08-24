@@ -104,6 +104,9 @@ export function createVrCelestialActor({ parent, assetManager, keyLight, layer, 
   if (!parent?.add || !assetManager?.cloneGltfScene || !keyLight?.isDirectionalLight || !settings) {
     throw new TypeError('VrCelestialActor requires parent, assetManager, keyLight and settings');
   }
+  if (!Number.isFinite(settings.sun?.scale) || settings.sun.scale <= 0) {
+    throw new TypeError('VrCelestialActor requires settings.sun.scale to be positive and finite');
+  }
   validateLayer(layer);
   const sunModel = assetManager.cloneGltfScene('sun-model');
   if (!sunModel) throw new Error('VrCelestialActor requires cached sun-model');
