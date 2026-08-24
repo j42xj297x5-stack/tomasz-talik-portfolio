@@ -58,6 +58,7 @@ import { createVrMonkeyGuide } from './xr/guidance/createVrMonkeyGuide.js';
 import { createVrMonkeyKnowledgeResolver } from './xr/guidance/createVrMonkeyKnowledgeResolver.js';
 import { createVrMonkeyGuidanceContextResolver } from './xr/guidance/createVrMonkeyGuidanceContextResolver.js';
 import { createVrMandatoryMonkeyCommunication } from './xr/guidance/createVrMandatoryMonkeyCommunication.js';
+import { createVrToolGuidanceLifecycle } from './xr/guidance/createVrToolGuidanceLifecycle.js';
 import { VR_MONKEY_COMMUNICATION_COPY_PL } from './xr/guidance/vrMonkeyCommunicationCopy.js';
 import { createVrFurnaceIntro } from './xr/guidance/createVrFurnaceIntro.js';
 import { createVrIntroSequence } from './xr/guidance/createVrIntroSequence.js';
@@ -148,6 +149,7 @@ const exitButton = app.querySelector('[data-vr-exit]');
 const controls = app.querySelector('.vr-runtime__controls');
 const audioControl = document.querySelector('[data-audio-control]');
 let runtimeExperience = null;
+let toolGuidanceLifecycle = null;
 if (audioControl) app.querySelector('[data-vr-audio-slot]').append(audioControl);
 const loadedSettings = await loadExperienceVrSettings({ debug: new URLSearchParams(location.search).has('debug') });
 const settings = loadedSettings.settings;
@@ -342,7 +344,8 @@ const asterionProductionController = createVrAsterionProductionController({
     getProgress: () => astroFurnaceActivateInteraction?.getProgress?.() ?? 0,
     getProcessKind: () => astroFurnaceActivateInteraction?.getProcessKind?.() ?? null
   },
-  onClaimed: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.ASTERION_CLAIMED),
+  onClaimed: () => { runtimeExperience.dispatch(VR_SCENARIO_EVENT.ASTERION_CLAIMED);
+    toolGuidanceLifecycle?.notifyAsterionClaimed(); },
   getChamberState: () => astroFurnaceOpenInteraction?.getState?.() ?? 'CLOSED',
   getContentState: () => astroFurnaceContentInteraction?.getState?.() ?? 'EMPTY'
 });
@@ -469,8 +472,10 @@ const astroAttractorProductionController = createVrAstroAttractorProductionContr
   canRequest: () => runtimeExperience.can(VR_SCENARIO_CAPABILITY.CAN_START_FURNACE_PROCESS),
   settings: { ...settings.asterionSphere.production, contentClearance: settings.furnace.content.contentClearance },
   haloSettings: settings.targetHalo,
-  onProduced: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.ASTRO_ATTRACTOR_PRODUCED),
+  onProduced: () => { runtimeExperience.dispatch(VR_SCENARIO_EVENT.ASTRO_ATTRACTOR_PRODUCED);
+    toolGuidanceLifecycle?.notifyAstroAvailable(); },
   onClaimed: () => { runtimeExperience.dispatch(VR_SCENARIO_EVENT.ASTRO_ATTRACTOR_CLAIMED);
+    toolGuidanceLifecycle?.notifyAstroClaimed();
     handModeController.equipRightAstro(); }
 });
 const playerGuideProjection = createVrPlayerGuideProjection({
@@ -522,6 +527,14 @@ const monkeyGuide = createVrMonkeyGuide({
   isOrdinaryRayAvailable: (record) => !(record.handedness === 'right'
     && handModeController.getRightMode() === 'ASTRO_ATTRACTOR')
     && !(asterionSphere.isEquipped() && record.handedness === 'left')
+});
+toolGuidanceLifecycle = createVrToolGuidanceLifecycle({
+  monkeyGuide,
+  copy: VR_MONKEY_COMMUNICATION_COPY_PL,
+  canStartAstroProduction: () => language === 'pl' && runtimeExperience?.can(
+    VR_SCENARIO_CAPABILITY.CAN_START_FURNACE_PROCESS
+  ) === true,
+  getAstroProductionState: () => astroAttractorProductionController.getState()
 });
 let introSequence = null;
 let introCrystalTutorial = null;
@@ -1150,6 +1163,7 @@ function renderFrame() {
   smallGlyphAttractorInteraction.update(delta);
   asterionProductionController.update(delta);
   astroAttractorProductionController.update(delta);
+  toolGuidanceLifecycle.update(delta);
   furnacePanel.update(delta);
   asterionSphere.update(delta);
   asterionGyroInteraction.update(delta);
@@ -1227,6 +1241,7 @@ function restoreVrScenarioBaseline() {
   postRingMonkeyDialogue.reset();
   p2MonkeyDialogue.reset();
   furnaceIntro.reset();
+  toolGuidanceLifecycle.reset();
   monkeyGuide.reset();
   platformFixturesRoot.visible = true;
   monkeyStoneRoot.visible = true;
@@ -1307,6 +1322,7 @@ window.addEventListener('pagehide', () => {
   astroFurnaceContentInteraction.dispose();
   astroFurnaceOptionInteraction.dispose();
   playerGuidePanel.dispose();
+  toolGuidanceLifecycle.dispose();
   monkeyGuide.dispose();
   furnacePanel.dispose();
   furnaceProgressionController.dispose();

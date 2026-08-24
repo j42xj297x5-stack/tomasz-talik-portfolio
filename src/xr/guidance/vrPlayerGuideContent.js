@@ -6,6 +6,11 @@ const VR_PLAYER_GUIDE_CONTENT = Object.freeze({
       Object.freeze({ id: 'current-task', label: 'AKTUALNE ZADANIE', body: 'Dokonaj wyboru.' })
     ]),
     tools: Object.freeze({
+      furnace: Object.freeze({
+        label: 'PIEC',
+        description: 'Otwórz panel informacyjny Pieca i wybierz odpowiedni moduł lub operację.',
+        controls: 'Otwórz komorę, gdy wkładasz lub odbierasz obiekt.\nŚrodkowy przycisk uruchamia proces dopiero, gdy Piec jest poprawnie przygotowany.\nJeśli Piec odpycha wkładany obiekt, najpierw sprawdź wybraną operację.'
+      }),
       astro: Object.freeze({
         label: 'ASTROLABIUM WIĘZI',
         description: 'To narzędzie do rzeczy, które są daleko,\na chciałbyś, żeby były bliżej.',

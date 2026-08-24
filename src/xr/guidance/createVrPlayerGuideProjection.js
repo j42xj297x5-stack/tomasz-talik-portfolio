@@ -38,6 +38,10 @@ const TASK_BODY_BY_POINT = Object.freeze({
 
 const TOOLS = Object.freeze([
   Object.freeze({
+    id: 'furnace',
+    capability: VR_SCENARIO_CAPABILITY.CAN_USE_FURNACE
+  }),
+  Object.freeze({
     id: 'astro',
     capability: VR_SCENARIO_CAPABILITY.CAN_EQUIP_ASTRO
   }),
