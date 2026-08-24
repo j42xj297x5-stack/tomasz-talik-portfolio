@@ -21,19 +21,39 @@ export function createVrToolGuidanceLifecycle({ monkeyGuide, copy, canStartAstro
   const pendingMessages = [];
   let activeMessage = null;
 
-  function enqueue(blocks) {
-    pendingMessages.push(blocks);
+  function enqueue(message) {
+    if (activeMessage?.descriptor.id === message.id
+      || pendingMessages.some(({ id }) => id === message.id)) return;
+    pendingMessages.push(message);
+  }
+
+  function discardIrrelevantMessages() {
+    for (let index = pendingMessages.length - 1; index >= 0; index -= 1) {
+      if (!pendingMessages[index].isStillRelevant()) pendingMessages.splice(index, 1);
+    }
+    if (activeMessage?.actor.getPhase() === 'ATTENTION'
+      && !activeMessage.descriptor.isStillRelevant()) {
+      activeMessage.actor.reset();
+      monkeyGuide.cancelAttention();
+      activeMessage = null;
+    }
   }
 
   function beginNextMessage() {
-    if (activeMessage || !pendingMessages.length || monkeyGuide.hasDialogueOverride()) return;
-    activeMessage = createVrMandatoryMonkeyCommunication({
+    if (activeMessage || !pendingMessages.length || monkeyGuide.hasDialogueOverride()
+      || monkeyGuide.isOpen()) return;
+    const descriptor = pendingMessages.shift();
+    let actor = null;
+    actor = createVrMandatoryMonkeyCommunication({
       monkeyGuide,
-      blocks: pendingMessages.shift(),
+      blocks: descriptor.blocks,
       secondsPerLine: VR_MONKEY_MESSAGE_TIMING.secondsPerLine,
-      onCompleted() { activeMessage = null; }
+      openMenuOnCompleted: false,
+      onTriggered() { actor.beginPlayback(); },
+      onCompleted() { if (activeMessage?.actor === actor) activeMessage = null; }
     });
-    activeMessage.beginAttention();
+    activeMessage = { descriptor, actor };
+    actor.beginAttention();
   }
 
   function notifyAstroAvailable() {
@@ -44,11 +64,19 @@ export function createVrToolGuidanceLifecycle({ monkeyGuide, copy, canStartAstro
   function notifyAstroClaimed() {
     astroAvailableResolved = true;
     astroAvailableElapsed = null;
-    delayedAcquisitions.push({ elapsed: 0, blocks: copy.acquisition.astro.blocks });
+    delayedAcquisitions.push({
+      elapsed: 0,
+      message: { id: 'acquisition-astro', blocks: copy.acquisition.astro.blocks,
+        isStillRelevant: () => true }
+    });
   }
 
   function notifyAsterionClaimed() {
-    delayedAcquisitions.push({ elapsed: 0, blocks: copy.acquisition.asterion.blocks });
+    delayedAcquisitions.push({
+      elapsed: 0,
+      message: { id: 'acquisition-asterion', blocks: copy.acquisition.asterion.blocks,
+        isStillRelevant: () => true }
+    });
   }
 
   function update(delta = 0) {
@@ -62,7 +90,11 @@ export function createVrToolGuidanceLifecycle({ monkeyGuide, copy, canStartAstro
         astroStartElapsed += step;
         if (astroStartElapsed >= ASTRO_START_DELAY_SECONDS) {
           astroStartResolved = true;
-          enqueue(copy.hints['hint.furnace.astroStart'].blocks);
+          enqueue({
+            id: 'furnace-astro-start',
+            blocks: copy.hints['hint.furnace.astroStart'].blocks,
+            isStillRelevant: () => getAstroProductionState() === 'READY'
+          });
         }
       }
     }
@@ -77,7 +109,11 @@ export function createVrToolGuidanceLifecycle({ monkeyGuide, copy, canStartAstro
         if (astroAvailableElapsed >= ASTRO_AVAILABLE_DELAY_SECONDS) {
           astroAvailableResolved = true;
           astroAvailableElapsed = null;
-          enqueue(copy.hints['hint.furnace.astroAvailable'].blocks);
+          enqueue({
+            id: 'furnace-astro-available',
+            blocks: copy.hints['hint.furnace.astroAvailable'].blocks,
+            isStillRelevant: () => getAstroProductionState() === 'AVAILABLE'
+          });
         }
       }
     }
@@ -86,16 +122,21 @@ export function createVrToolGuidanceLifecycle({ monkeyGuide, copy, canStartAstro
       const acquisition = delayedAcquisitions[index];
       acquisition.elapsed += step;
       if (acquisition.elapsed >= ACQUISITION_DELAY_SECONDS) {
-        enqueue(acquisition.blocks);
+        enqueue(acquisition.message);
         delayedAcquisitions.splice(index, 1);
       }
     }
-    activeMessage?.update(step);
+    discardIrrelevantMessages();
+    activeMessage?.actor.update(step);
     beginNextMessage();
   }
 
   function reset() {
-    activeMessage?.reset();
+    if (activeMessage) {
+      const phase = activeMessage.actor.getPhase();
+      activeMessage.actor.reset();
+      if (phase === 'ATTENTION') monkeyGuide.cancelAttention();
+    }
     activeMessage = null;
     pendingMessages.length = 0;
     delayedAcquisitions.length = 0;
