@@ -46,6 +46,7 @@ The entry shell exposes three modes: Classic 2D, Experience 3D, and capability-g
 - [`technical/VR_RUNE_STONES_MODEL.md`](../technical/VR_RUNE_STONES_MODEL.md) — canonical target model for the five P4 rune-stone/vessel pairs, GLB helpers, outer-orbit transport, installation, blocking and spatial audio; not an implemented runtime claim.
 - [`technical/VR_SCENARIO_POINT_AUTHORING_STANDARD.md`](../technical/VR_SCENARIO_POINT_AUTHORING_STANDARD.md) — wiążący standard konstrukcji i walidacji każdego nowego canonical Experience VR Scenario pointu; czytać przed modelem Scenario/Director.
 - [`audits/progression/EXPERIENCE_VR_SCENARIO_MIGRATION_AUDIT_2026-08-12.md`](../audits/progression/EXPERIENCE_VR_SCENARIO_MIGRATION_AUDIT_2026-08-12.md) — working evidence and migration inventory for the future Experience VR Scenario + Director refactor; not a runtime architecture change.
+- [`audits/guidance/EXPERIENCE_VR_MONKEY_GUIDANCE_MIGRATION_PLAN_2026-08-24.md`](../audits/guidance/EXPERIENCE_VR_MONKEY_GUIDANCE_MIGRATION_PLAN_2026-08-24.md) — **PLANNED** execution roadmap wyłącznie dla migracji G1–G6; nie jest runtime authority, nie zastępuje canonical communication docs.
 
 ## Scope rules
 
