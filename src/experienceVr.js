@@ -469,6 +469,7 @@ const astroAttractorProductionController = createVrAstroAttractorProductionContr
   },
   getChamberState: () => astroFurnaceOpenInteraction?.getState?.() ?? 'CLOSED',
   getRightMode: () => handModeController.getRightMode(),
+  getLeftMode: () => handModeController.getLeftMode(),
   canRequest: () => runtimeExperience.can(VR_SCENARIO_CAPABILITY.CAN_START_FURNACE_PROCESS),
   settings: { ...settings.asterionSphere.production, contentClearance: settings.furnace.content.contentClearance },
   haloSettings: settings.targetHalo,

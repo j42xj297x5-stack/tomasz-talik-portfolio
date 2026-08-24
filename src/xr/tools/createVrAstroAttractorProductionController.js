@@ -27,7 +27,7 @@ function boundsRelativeTo(root, reference) {
 }
 
 export function createVrAstroAttractorProductionController({ model, contentAnchor, chamber, chamberCylinder, energyCell = null, controllers = [],
-  processDriver, getChamberState = () => 'CLOSED', getRightMode = () => 'NORMAL_HAND', canRequest = () => false,
+  processDriver, getChamberState = () => 'CLOSED', getRightMode = () => 'NORMAL_HAND', getLeftMode = () => 'NORMAL_HAND', canRequest = () => false,
   settings = {}, haloSettings = {}, onProduced = () => {}, onClaimed = () => {} }) {
   if (!model || !contentAnchor || !chamber || !chamberCylinder) {
     throw new TypeError('model, contentAnchor, chamber and chamberCylinder are required');
@@ -90,17 +90,20 @@ export function createVrAstroAttractorProductionController({ model, contentAncho
     place(); progress = 0; setFormation(0); state = 'BUILDING'; emit(); return true;
   }
   function clearHits() { hits.forEach((_, record) => hits.set(record, false)); halo.setVisible(false); }
+  function hasNormalHandMode(record) {
+    return record?.handedness === 'left' ? getLeftMode() === 'NORMAL_HAND'
+      : record?.handedness === 'right' && getRightMode() === 'NORMAL_HAND';
+  }
   function updateHits() { let hovered = false; controllers.forEach((record) => { let hit = false;
-    if (state === 'AVAILABLE' && getChamberState() === 'OPEN' && record.handedness === 'right'
-      && getRightMode() === 'NORMAL_HAND' && record.ray?.visible !== false) {
+    if (state === 'AVAILABLE' && getChamberState() === 'OPEN' && hasNormalHandMode(record) && record.ray?.visible !== false) {
       record.controller.updateWorldMatrix?.(true, false); record.controller.getWorldPosition(origin); record.controller.getWorldQuaternion(quaternion);
       direction.set(0, 0, -1).applyQuaternion(quaternion).normalize(); raycaster.set(origin, direction);
       raycaster.far = Math.min(settings.rayMaxDistance ?? 2.3, record.currentRayLength ?? settings.rayMaxDistance ?? 2.3);
       const intersection = raycaster.intersectObject(object, true).find(({ object: target }) => !target.userData?.vrTargetHalo);
       if (intersection) { hit = true; hovered = true; record.reportRayHit?.(intersection.distance); }
     } hits.set(record, hit); }); halo.setVisible(hovered); }
-  function claim(record) { if (state !== 'AVAILABLE' || getChamberState() !== 'OPEN' || record?.handedness !== 'right'
-    || getRightMode() !== 'NORMAL_HAND' || !hits.get(record)) return false;
+  function claim(record) { if (state !== 'AVAILABLE' || getChamberState() !== 'OPEN'
+    || !hasNormalHandMode(record) || !hits.get(record)) return false;
     state = 'CLAIMING'; handoffElapsed = 0; clearHits(); object.updateWorldMatrix(true, true); record.controller.attach(object); emit(); return true; }
   function update(delta = 0) { if (disposed) return; const step = Math.max(0, delta);
     if (state === 'BUILDING' && processDriver?.getProcessKind?.() === ASTRO_ATTRACTOR_CONSTRUCTION) {
@@ -112,7 +115,7 @@ export function createVrAstroAttractorProductionController({ model, contentAncho
     }
     updateHits(); halo.update(step);
   }
-  const listeners = controllers.map((record) => { const listener = () => claim(record); record.controller.addEventListener?.('selectstart', listener); return { record, listener }; });
+  const listeners = controllers.map((record) => { const listener = () => claim(record); record.controller.addEventListener?.('squeezestart', listener); return { record, listener }; });
   function resetSession() { clearHits(); if (state === 'BUILDING') { state = 'READY'; progress = 0; object.visible = false; object.removeFromParent(); }
     else if (state === 'AVAILABLE') { place(); setFormation(1); } else if (state === 'CLAIMING') { state = 'AVAILABLE'; place(); setFormation(1); } emit(); }
   function resetBaseline() { clearHits(); state = 'READY'; progress = 0; handoffElapsed = 0;
@@ -122,7 +125,7 @@ export function createVrAstroAttractorProductionController({ model, contentAncho
     clearHits(); state = 'EARNED'; progress = 1; handoffElapsed = 0;
     object.visible = false; object.removeFromParent(); emit();
   }
-  function dispose() { if (disposed) return; disposed = true; listeners.forEach(({ record, listener }) => record.controller.removeEventListener?.('selectstart', listener));
+  function dispose() { if (disposed) return; disposed = true; listeners.forEach(({ record, listener }) => record.controller.removeEventListener?.('squeezestart', listener));
     clearHits(); halo.dispose(); object.removeFromParent(); ownedMaterials.forEach((material) => material.dispose()); subscribers.clear(); }
   return { object, beginConstruction, canCreate, claim, update, resetSession, resetBaseline, hydrateScenarioState, dispose, getState: () => state, getSnapshot: snapshot,
     isEarned: () => state === 'EARNED', hasCurrentHit: (record) => hits.get(record) === true,
