@@ -8,13 +8,12 @@ export const VR_MONKEY_KNOWLEDGE_LIFECYCLE = Object.freeze({
 });
 
 export function createVrMonkeyKnowledgeResolver({ locale, hasAstroKnowledge, hasAstroBandSwitchKnowledge,
-  hasAsterionKnowledge, getCurrentGuidanceContextId }) {
+  getCurrentGuidanceContextId }) {
   if (typeof hasAstroKnowledge !== 'function') throw new TypeError('hasAstroKnowledge must be a function.');
-  if (typeof hasAsterionKnowledge !== 'function') throw new TypeError('hasAsterionKnowledge must be a function.');
   if (typeof getCurrentGuidanceContextId !== 'function') throw new TypeError('getCurrentGuidanceContextId must be a function.');
   if (typeof hasAstroBandSwitchKnowledge !== 'function') throw new TypeError('hasAstroBandSwitchKnowledge must be a function.');
   const topics = Object.entries(VR_MONKEY_COMMUNICATION_COPY_PL.knowledge)
-    .filter(([id]) => id.startsWith('knowledge.astro.') || id.startsWith('knowledge.p2.') || id === 'knowledge.asterion.whatIsIt')
+    .filter(([id]) => id.startsWith('knowledge.astro.') || id.startsWith('knowledge.p2.'))
     .map(([id, topic]) => Object.freeze({ id, ...topic, label: topic.question,
       type: VR_MONKEY_KNOWLEDGE_ITEM_TYPE.TOPIC }));
   const categories = Object.entries(VR_MONKEY_KNOWLEDGE_CATEGORIES_PL)
@@ -23,12 +22,12 @@ export function createVrMonkeyKnowledgeResolver({ locale, hasAstroKnowledge, has
 
   function unlocked(topic) {
     if (locale !== 'pl') return false;
-    const astro = hasAstroKnowledge() === true; const asterion = hasAsterionKnowledge() === true;
+    const astro = hasAstroKnowledge() === true;
     if (topic.policy === VR_MONKEY_KNOWLEDGE_POLICY.CONTEXTUAL && topic.contextId) {
       return topic.contextId === getCurrentGuidanceContextId();
     }
     if (topic.id === 'knowledge.astro.bandSwitch') return astro && hasAstroBandSwitchKnowledge() === true;
-    return topic.groupId === 'astro' ? astro : asterion;
+    return topic.groupId === 'astro' ? astro : true;
   }
   function getLifecycle(topicId) {
     const topic = topics.find(({ id }) => id === topicId);

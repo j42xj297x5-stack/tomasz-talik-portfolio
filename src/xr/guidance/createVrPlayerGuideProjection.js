@@ -1,6 +1,6 @@
 import { experienceVrPages } from '../../content/experienceVrPages.js';
 import { VR_EXPERIENCE_POINT, VR_SCENARIO_CAPABILITY } from '../progression/vrExperienceScenario.js';
-import { VR_MONKEY_COMMUNICATION_COPY_PL } from './vrMonkeyCommunicationCopy.js';
+import { resolveVrPlayerGuideContent } from './vrPlayerGuideContent.js';
 
 const TASK_BODY_BY_POINT = Object.freeze({
   [VR_EXPERIENCE_POINT['1.10']]: 'KALIBRACJA XR',
@@ -39,17 +39,11 @@ const TASK_BODY_BY_POINT = Object.freeze({
 const TOOLS = Object.freeze([
   Object.freeze({
     id: 'astro',
-    capability: VR_SCENARIO_CAPABILITY.CAN_EQUIP_ASTRO,
-    label: 'ASTROLABIUM WIĘZI',
-    description: VR_MONKEY_COMMUNICATION_COPY_PL.knowledge['knowledge.astro.whatIsIt'].blocks[0],
-    body: 'A — wyposaż / schowaj\nChwyt — namierzanie\nSpust — przyciąganie\nSzpila + chwyt — przejęcie obiektu'
+    capability: VR_SCENARIO_CAPABILITY.CAN_EQUIP_ASTRO
   }),
   Object.freeze({
     id: 'asterion',
-    capability: VR_SCENARIO_CAPABILITY.CAN_EQUIP_ASTERION,
-    label: 'KULA ASTERIONOWA',
-    description: VR_MONKEY_COMMUNICATION_COPY_PL.knowledge['knowledge.asterion.whatIsIt'].blocks.join('\n'),
-    body: 'X — wyposaż / schowaj\nSpust — zmieniaj orientację platformy'
+    capability: VR_SCENARIO_CAPABILITY.CAN_EQUIP_ASTERION
   })
 ]);
 
@@ -83,14 +77,15 @@ export function createVrPlayerGuideProjection({ locale, getCurrentPointId, can, 
 
   function getTools() {
     if (locale !== 'pl') return [];
+    const content = resolveVrPlayerGuideContent(locale);
     return TOOLS.filter(({ capability }) => can(capability))
-      .map(({ id, label, description, body }) => ({
+      .map(({ id }) => ({
         id,
-        label,
-        body: `${description}\n\n${id === 'astro'
+        label: content.tools[id].label,
+        body: `${content.tools[id].description}\n\n${id === 'astro'
           && can(VR_SCENARIO_CAPABILITY.CAN_SWITCH_ASTRO_BAND)
-          ? `${body}\nB — zmień pasmo celu`
-          : body}`
+          ? `${content.tools[id].controls}\n${content.tools[id].bandSwitchControl}`
+          : content.tools[id].controls}`
       }));
   }
 
