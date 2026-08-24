@@ -120,8 +120,10 @@ export function createVrCelestialActor({ parent, assetManager, fillLight, layer,
   fillLight.updateWorldMatrix(true, false);
   const centerWorld = root.getWorldPosition(new THREE.Vector3());
   const lightWorld = fillLight.getWorldPosition(new THREE.Vector3());
-  const sunWorld = lightWorld.clone().add(lightWorld.clone().sub(centerWorld).normalize()
-    .multiplyScalar(settings.sun.outwardOffsetFromPointLight));
+  const sunDirection = lightWorld.clone().sub(centerWorld).normalize();
+  const sunWorld = centerWorld.clone().addScaledVector(
+    sunDirection, settings.sun.distanceFromWorldCenter
+  );
   sunRoot.position.copy(root.worldToLocal(sunWorld));
   sunRoot.lookAt(centerWorld);
   const correction = settings.sun.facingCorrectionDegrees;
@@ -137,10 +139,36 @@ export function createVrCelestialActor({ parent, assetManager, fillLight, layer,
       const material = original.clone();
       sunMaterials.push({ material, baseOpacity: original.opacity });
       material.transparent = true;
+      if (material.emissive?.isColor) {
+        material.emissive.set(settings.sun.emissiveColor);
+        material.emissiveIntensity = settings.sun.emissiveIntensity;
+      }
       return material;
     });
     node.material = Array.isArray(node.material) ? clones : clones[0];
   });
+  root.updateWorldMatrix(true, true);
+  const sunBounds = new THREE.Box3().setFromObject(sunModel);
+  const sunBoundingSphere = sunBounds.getBoundingSphere(new THREE.Sphere());
+  const boundingRadius = sunBoundingSphere.radius;
+  const lightOffsetFromSun = Math.max(3, boundingRadius * 2.5);
+  const requiredRadius = boundingRadius * 1.15;
+  const sunLight = new THREE.SpotLight(
+    settings.sun.light.color,
+    settings.sun.light.intensity,
+    lightOffsetFromSun + boundingRadius * 1.25,
+    Math.atan(requiredRadius / lightOffsetFromSun)
+  );
+  sunLight.name = 'VrCelestialSunLight';
+  sunLight.castShadow = false;
+  const lightTarget = new THREE.Object3D();
+  lightTarget.name = 'VrCelestialSunLightTarget';
+  lightTarget.position.copy(root.worldToLocal(sunWorld.clone()));
+  sunLight.position.copy(root.worldToLocal(
+    sunWorld.clone().addScaledVector(sunDirection, lightOffsetFromSun)
+  ));
+  sunLight.target = lightTarget;
+  root.add(sunLight, lightTarget);
   const starField = createStarField(layer, settings.stars);
   root.add(starField.points);
   let opacity = 0;
@@ -151,6 +179,7 @@ export function createVrCelestialActor({ parent, assetManager, fillLight, layer,
   function applyOpacity(value) {
     opacity = THREE.MathUtils.clamp(value, 0, 1);
     for (const entry of sunMaterials) entry.material.opacity = entry.baseOpacity * opacity;
+    sunLight.intensity = settings.sun.light.intensity * opacity;
     starField.material.uniforms.opacity.value = opacity;
   }
   function beginReveal() {
@@ -189,5 +218,14 @@ export function createVrCelestialActor({ parent, assetManager, fillLight, layer,
     root.clear();
   }
   reset();
-  return { object: root, beginReveal, beginFadeOut, update, reset, hydrateScenarioState, dispose };
+  return {
+    object: root,
+    requiredCameraFar: settings.sun.distanceFromWorldCenter + boundingRadius + 5,
+    beginReveal,
+    beginFadeOut,
+    update,
+    reset,
+    hydrateScenarioState,
+    dispose
+  };
 }

@@ -23,15 +23,18 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
   celestial: {
     revealDurationSeconds: 60,
     sun: {
-      outwardOffsetFromPointLight: 2.3,
+      distanceFromWorldCenter: 110,
+      emissiveColor: '#ffb85c',
+      emissiveIntensity: 0.25,
+      light: { color: '#fff1d6', intensity: 8 },
       facingCorrectionDegrees: { x: 0, y: 0, z: 0 }
     },
     stars: {
       count: 3200,
       clusterCount: 24,
-      clusteredFraction: 0.68,
-      clusterAngularSpreadRadians: 0.14,
-      clusterRadialSpreadMeters: 7,
+      clusteredFraction: 0.38,
+      clusterAngularSpreadRadians: 0.24,
+      clusterRadialSpreadMeters: 11,
       pointSizeMinPx: 1.4,
       pointSizeMaxPx: 3.6
     }
@@ -375,8 +378,16 @@ export function normalizeExperienceVrSettings(candidate) {
       revealDurationSeconds: finiteNumber(candidate.celestial?.revealDurationSeconds,
         defaults.celestial.revealDurationSeconds, { min: 0.1, max: 600 }),
       sun: {
-        outwardOffsetFromPointLight: finiteNumber(candidate.celestial?.sun?.outwardOffsetFromPointLight,
-          defaults.celestial.sun.outwardOffsetFromPointLight, { min: 0.01, max: 100 }),
+        distanceFromWorldCenter: finiteNumber(candidate.celestial?.sun?.distanceFromWorldCenter,
+          defaults.celestial.sun.distanceFromWorldCenter, { min: 0.01, max: 1000 }),
+        emissiveColor: candidate.celestial?.sun?.emissiveColor || defaults.celestial.sun.emissiveColor,
+        emissiveIntensity: finiteNumber(candidate.celestial?.sun?.emissiveIntensity,
+          defaults.celestial.sun.emissiveIntensity, { min: 0, max: 10 }),
+        light: {
+          color: candidate.celestial?.sun?.light?.color || defaults.celestial.sun.light.color,
+          intensity: finiteNumber(candidate.celestial?.sun?.light?.intensity,
+            defaults.celestial.sun.light.intensity, { min: 0, max: 100 })
+        },
         facingCorrectionDegrees: normalizeVector(candidate.celestial?.sun?.facingCorrectionDegrees,
           defaults.celestial.sun.facingCorrectionDegrees)
       },
