@@ -653,7 +653,8 @@ export function createVrMonkeyGuide({
   drawDialogue();
   const api = {
     object: root, messagePanel, dialoguePanel, attentionRoot, arcs, halo, hits,
-    update, notifyAttention, showMessage, open: openDialogue, close, isOpen: () => open,
+    update, notifyAttention, cancelAttention: clearAttention, showMessage,
+    open: openDialogue, close, isOpen: () => open,
     hasCurrentHit: (record) => Boolean(hits.get(record)), reset, dispose, press,
     isAttentionPending: () => attentionPending,
     getScreen: () => screen, getHistoryEntries: historyEntries, getSelectedPageId: () => selectedPageId,
