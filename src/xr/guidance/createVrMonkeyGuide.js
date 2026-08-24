@@ -6,8 +6,10 @@ import { createVrMonkeyProgressionMessage } from './createVrMonkeyProgressionMes
 import { VR_MONKEY_MESSAGE_TIMING } from './vrMonkeyCommunicationCopy.js';
 
 const COPY = Object.freeze({
-  pl: Object.freeze({ progress: 'JAK MI IDZIE?', close: 'ZAMKNIJ', history: (count) => `Odkryte karty: ${count}. Wybierz znak.` }),
-  en: Object.freeze({ progress: 'HOW AM I DOING?', close: 'CLOSE', history: (count) => `Discovered cards: ${count}. Select a sign.` })
+  pl: Object.freeze({ progress: 'JAK MI IDZIE?', close: 'ZAMKNIJ',
+    history: (count) => `Odkryte karty: ${count}.${count > 0 ? ' Wybierz znak.' : ''}` }),
+  en: Object.freeze({ progress: 'HOW AM I DOING?', close: 'CLOSE',
+    history: (count) => `Discovered cards: ${count}.${count > 0 ? ' Select a sign.' : ''}` })
 });
 
 export const VR_MONKEY_GUIDE_SCREEN = Object.freeze({ MENU: 'MENU', HISTORY: 'HISTORY', CARD: 'CARD', KNOWLEDGE: 'KNOWLEDGE' });
@@ -318,6 +320,11 @@ export function createVrMonkeyGuide({
     context.textAlign = 'center'; context.textBaseline = 'middle';
     context.fillText(label, region.x + region.width / 2, region.y + region.height / 2);
   }
+  function navigationWidth(context, label) {
+    context.font = `${settings.dialogue.fontWeight} ${settings.dialogue.fontSize}px sans-serif`;
+    return Math.max(settings.dialogue.navigationWidth,
+      context.measureText(label).width + settings.dialogue.menuPaddingX * 2);
+  }
   function drawPagedList(context, canvas, items, pageIndex, setPageIndex, itemHeight,
     { backId, backLabel, previousId, nextId }) {
     interactiveRegions = [];
@@ -337,11 +344,8 @@ export function createVrMonkeyGuide({
       context.textAlign = 'left'; context.textBaseline = 'middle';
       context.fillText(item.label, region.x + settings.dialogue.menuPaddingX, region.y + region.height / 2);
     });
-    context.strokeStyle = settings.colors.dialogueButtonBorder; context.lineWidth = 2; context.beginPath();
-    context.moveTo(padding, navTop - settings.dialogue.historyNavigationGap / 2);
-    context.lineTo(canvas.width - padding, navTop - settings.dialogue.historyNavigationGap / 2); context.stroke();
     const back = addRegion({ id: backId, x: padding, y: navTop,
-      width: settings.dialogue.navigationWidth, height: navHeight });
+      width: navigationWidth(context, backLabel), height: navHeight });
     drawButton(context, back, backLabel);
     const nextX = canvas.width - padding - 140;
     if (page > 0) { const previous = addRegion({ id: previousId, x: nextX - 152,
@@ -417,12 +421,8 @@ export function createVrMonkeyGuide({
         glyphY + glyphSize + settings.dialogue.historyGlyphStarGap + settings.dialogue.historyStarFontSize / 2);
       context.globalAlpha = 1;
     });
-    context.strokeStyle = settings.colors.dialogueButtonBorder;
-    context.lineWidth = 2; context.beginPath();
-    context.moveTo(padding, navTop - settings.dialogue.historyNavigationGap / 2);
-    context.lineTo(canvas.width - padding, navTop - settings.dialogue.historyNavigationGap / 2); context.stroke();
     const back = addRegion({ id: 'back-menu', x: padding, y: navTop,
-      width: settings.dialogue.navigationWidth, height: navHeight }); drawButton(context, back, '←');
+      width: navigationWidth(context, '←'), height: navHeight }); drawButton(context, back, '←');
     const nextX = canvas.width - padding - 140;
     if (totalPages > 1 && historyPage > 0) { const previous = addRegion({ id: 'history-previous', x: nextX - 152,
       y: navTop, width: 140, height: navHeight }); drawButton(context, previous, '‹'); }
@@ -439,11 +439,8 @@ export function createVrMonkeyGuide({
     interactiveRegions = []; const padding = settings.dialogue.padding;
     const height = settings.dialogue.historyNavigationHeight;
     const navTop = canvas.height - padding - height;
-    context.strokeStyle = settings.colors.dialogueButtonBorder;
-    context.lineWidth = 2; context.beginPath();
-    context.moveTo(padding, navTop - settings.dialogue.historyNavigationGap / 2);
-    context.lineTo(canvas.width - padding, navTop - settings.dialogue.historyNavigationGap / 2); context.stroke();
-    const back = addRegion({ id: 'back-history', x: padding, y: navTop, width: settings.dialogue.navigationWidth, height });
+    const back = addRegion({ id: 'back-history', x: padding, y: navTop,
+      width: navigationWidth(context, '←'), height });
     drawButton(context, back, '←'); const pages = cardPages();
     if (pages.length > 1 && cardPage > 0) { const previous = addRegion({ id: 'card-previous', x: canvas.width / 2 - 190,
       y: navTop, width: 150, height }); drawButton(context, previous, '‹'); }

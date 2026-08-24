@@ -23,8 +23,10 @@ const VR_PLAYER_GUIDE_CONTENT = Object.freeze({
         controls: 'X — wyposaż / schowaj\nSpust — zmieniaj orientację platformy'
       })
     }),
-    menuHint: 'Lewy drążek — wybór · X — otwórz · Y — zamknij',
-    detailHint: 'Lewy drążek — wybór · X — otwórz · Y — wróć',
+    mainMenuHint: 'Lewy drążek — wybór · X — otwórz · Y — zamknij',
+    toolListHint: 'Lewy drążek — wybór · X — otwórz · Y — wróć',
+    sectionDetailHint: 'Y — wróć',
+    toolDetailHint: 'Y — wróć',
     controllersFallback: 'Schemat kontrolerów niedostępny.'
   }),
   en: Object.freeze({
@@ -33,8 +35,10 @@ const VR_PLAYER_GUIDE_CONTENT = Object.freeze({
       Object.freeze({ id: 'controls', label: 'CONTROLS', body: 'Basic controller input map.' }),
       Object.freeze({ id: 'current-task', label: 'CURRENT TASK', body: 'Make a choice.' })
     ]),
-    menuHint: 'Left stick — select · X — open · Y — close',
-    detailHint: 'Left stick — select · X — open · Y — back',
+    mainMenuHint: 'Left stick — select · X — open · Y — close',
+    toolListHint: 'Left stick — select · X — open · Y — back',
+    sectionDetailHint: 'Y — back',
+    toolDetailHint: 'Y — back',
     controllersFallback: 'Controller diagram unavailable.'
   })
 });

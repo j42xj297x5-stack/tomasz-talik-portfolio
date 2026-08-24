@@ -3,8 +3,7 @@ import { resolveVrPlayerGuideContent } from './vrPlayerGuideContent.js';
 
 const TOOLS = Object.freeze([
   Object.freeze({
-    id: 'furnace',
-    capability: VR_SCENARIO_CAPABILITY.CAN_USE_FURNACE
+    id: 'furnace'
   }),
   Object.freeze({
     id: 'astro',
@@ -16,8 +15,9 @@ const TOOLS = Object.freeze([
   })
 ]);
 
-export function createVrPlayerGuideProjection({ locale, can, getCurrentObjective }) {
-  if (typeof can !== 'function' || typeof getCurrentObjective !== 'function') {
+export function createVrPlayerGuideProjection({ locale, can, getCurrentObjective, isFurnaceRevealed }) {
+  if (typeof can !== 'function' || typeof getCurrentObjective !== 'function'
+    || typeof isFurnaceRevealed !== 'function') {
     throw new TypeError('Player guide projection dependencies must be functions.');
   }
 
@@ -26,7 +26,7 @@ export function createVrPlayerGuideProjection({ locale, can, getCurrentObjective
   function getTools() {
     if (locale !== 'pl') return [];
     const content = resolveVrPlayerGuideContent(locale);
-    return TOOLS.filter(({ capability }) => can(capability))
+    return TOOLS.filter(({ id, capability }) => id === 'furnace' ? isFurnaceRevealed() : can(capability))
       .map(({ id }) => ({
         id,
         label: content.tools[id].label,
