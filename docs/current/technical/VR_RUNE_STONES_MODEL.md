@@ -72,14 +72,17 @@ Wybrana rodzina targetu musi być eligible, a para musi dokładnie rozwiązać s
 
 ### 5.2. Kontrakt helperów assetu
 
-Komora zachowuje `VR_FURNACE_INSERT_VOLUME` jako wspólną strefę wkładania oraz `VR_FURNACE_CONTENT_ANCHOR` dla dotychczasowych procesów. Rune recipe wymaga dwóch stabilnych authored snap anchors:
+Komora zachowuje `VR_FURNACE_INSERT_VOLUME` jako wspólną strefę wkładania oraz `VR_FURNACE_CONTENT_ANCHOR` dla dotychczasowych procesów. Kontrakt A2 obejmuje dwa stabilne authored snap anchors dla rune recipe oraz authored volume produktów Pieca:
 
 ```text
 RUNE_RECIPE_SMALL_GLYPH_SLOT
 RUNE_RECIPE_SHELL_SLOT
+VR_FURNACE_PRODUCT_VOLUME
 ```
 
 Small Glyph może trafić wyłącznie do pierwszego slotu, Shell wyłącznie do drugiego. Przy otwartej komorze oba składniki mogą być osadzone jednocześnie, w dowolnej kolejności, bez pośredniego procesu i bez zamykania/otwierania Pieca pomiędzy nimi. Ten dokument nie modyfikuje GLB ani skryptów Blender; brak helperów wymaga osobnego zadania assetowego.
+
+`VR_FURNACE_PRODUCT_VOLUME` nie należy do receptury runicznej i nie jest jej trzecim składnikiem. Jest wspólnym authored kontraktem przestrzennym dla przyszłych fizycznych produktów tworzonych wewnątrz komory; jego transform, geometria i bounds pochodzą z assetu.
 
 ### 5.3. Warunki Activate i pojedynczy cycle
 
@@ -270,13 +273,13 @@ Każdy milestone jest osobnym bounded taskiem i kończy się przed rozpoczęciem
 - **Nie implementuje:** zmian receptur, slotów ani czasu.
 - **Kryterium zakończenia:** każdy process zachowuje emission/energy feedback bez process rotation obudowy.
 
-### RUNE A2 — Furnace dual-recipe asset contract
-- **Cel:** dostarczyć dwa authored rune-recipe anchors.
+### RUNE A2 — Furnace authored slot/volume contract
+- **Cel:** dostarczyć dwa authored rune-recipe anchors oraz jeden authored product volume.
 - **Właściciel:** Furnace GLB/asset contract.
 - **Wejście:** istniejące `VR_FURNACE_INSERT_VOLUME` i `VR_FURNACE_CONTENT_ANCHOR`.
-- **Rezultat:** stabilne helpery obu typed slots; shared insert volume pozostaje jeden.
+- **Rezultat:** stabilne helpery obu typed slots i `VR_FURNACE_PRODUCT_VOLUME`; shared insert volume pozostaje jeden, a product volume nie należy do receptury runicznej.
 - **Nie implementuje:** gameplayu receptury.
-- **Kryterium zakończenia:** GLB jednoznacznie eksponuje oba anchor IDs; jeśli ich brak, domyka je osobne zadanie Blender/GLB.
+- **Kryterium zakończenia:** GLB jednoznacznie eksponuje oba anchor IDs oraz product volume; jeśli ich brak, domyka je osobne zadanie Blender/GLB.
 
 ### RUNE A3 — RuneRecipeInteraction dual slots
 - **Cel:** umożliwić jednoczesne osadzenie Small Glyph i Shell.

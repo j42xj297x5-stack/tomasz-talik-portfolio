@@ -8,7 +8,8 @@ const REQUIRED_NODE_NAMES = Object.freeze([
   'PIVOT_FURNACE_PROCESS_SPIN', 'komora', 'pokrywa', 'pokrywa_gora',
   'zatrzask_lewy', 'zatrzask_prawy', 'zatrzask_gora', 'fire_cell',
   'VR_FURNACE_INSERT_VOLUME', 'VR_FURNACE_CONTENT_ANCHOR', 'VR_FURNACE_LIGHT_ORBIT',
-  'VR_FURNACE_ESSENCE_ANCHOR'
+  'VR_FURNACE_ESSENCE_ANCHOR', 'RUNE_RECIPE_SMALL_GLYPH_SLOT',
+  'RUNE_RECIPE_SHELL_SLOT', 'VR_FURNACE_PRODUCT_VOLUME'
 ]);
 
 const REQUIRED_CLIP_NAMES = Object.freeze([
@@ -79,7 +80,11 @@ export function createVrAstroFurnace({
     insertionReady: settings.content?.enabled !== false
       && hasAll(nodes, ['VR_FURNACE_INSERT_VOLUME', 'VR_FURNACE_CONTENT_ANCHOR'])
       && (Boolean(nodes.VR_FURNACE_INSERT_VOLUME.geometry) || Number(settings.content?.volumeRadius) > 0),
-    essenceOutputReady: Boolean(nodes.VR_FURNACE_ESSENCE_ANCHOR)
+    essenceOutputReady: Boolean(nodes.VR_FURNACE_ESSENCE_ANCHOR),
+    runeRecipeAnchorsReady: hasAll(nodes, [
+      'RUNE_RECIPE_SMALL_GLYPH_SLOT', 'RUNE_RECIPE_SHELL_SLOT', 'VR_FURNACE_INSERT_VOLUME'
+    ]),
+    productVolumeReady: Boolean(nodes.VR_FURNACE_PRODUCT_VOLUME)
   });
   const diagnostics = {
     nodeNames: Object.freeze(Object.keys(nodes)),
