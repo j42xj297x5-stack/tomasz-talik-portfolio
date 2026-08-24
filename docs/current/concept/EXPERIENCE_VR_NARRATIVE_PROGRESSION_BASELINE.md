@@ -14,9 +14,11 @@ Intro prowadzi przez naukę panelu Y i kontakt z Małpą do pierwszego cyklu Gly
 
 ## Zatwierdzony akt po Tier 3 — NOT IMPLEMENTED
 
-Po `4.80` pojawiają się Rune Stones w istniejącym płaszczu `50–75 m`, a Large Glyph przechodzą na pełną sferę `SPHERE_FAR = 80 m` z czarną, nieoświetlaną bazą i bardzo wolnym ruchem. Kamienie nie są od razu targetowalne: Astrolabium musi najpierw zsynchronizować rodzinę przez dwuskładnikową recepturę Wu Xing w Piecu.
+Po `4.80` pojawiają się Rune Stones w istniejącym płaszczu `50–75 m`, a wszystkie pięć już wcześniej zestrojonych Large Glyph przechodzi na pełną sferę `SPHERE_FAR = 80 m` z czarną, nieoświetlaną bazą i bardzo wolnym ruchem. Kamienie nie są od razu targetowalne: Astrolabium musi najpierw zsynchronizować rodzinę przez dwuskładnikową recepturę Wu Xing w Piecu. Poprawny cycle konsumuje Small Glyph i Shell, tworząc wyłącznie trwałą semantyczną sylabę strojenia u rune progression ownera.
 
-Eligibility wynika wyłącznie z pełnego ukończenia sektora. Po Tier 3 daje to Earth / Ethics, Fire / Creative AI i Wood / AI Guide; Metal i Water czekają na własne dalsze panele. Nie obowiązuje dawny model „cztery kamienie, potem piąty”. Pierwsza stabilna granica późniejszego wdrożenia to `FIRST_RUNE_INSTALLED`; późniejsze sterowanie sektorem/anteną pozostaje osobnym projektem.
+Eligibility normalnie wynika z pełnego ukończenia sektora. Po Tier 3 daje to Earth / Ethics, Fire / Creative AI i Wood / AI Guide. Ich trzy instalacje uruchamiają osobny przyszły system anteny, który pozwala odnaleźć już tuned Large Glyph Metal i Water; oba kryształy kończą Tier 4, domykając Metal i pozostawiając Water `4/5`. Metal przechodzi normalną recepturę i czwartą instalację, po której technologiczny overload odsuwa Large Glyph do osobnego późnego spatial stage bez ustalonego promienia.
+
+Water `4/5` tworzy zamierzony finalny deadlock. Specjalny szósty kamień Eter pojawia się nad Małpą i zostaje przez nią przechwycony; nie ma sektora, vessel/socketu ani szóstego elemental slotu. Beat nadaje jedynie Water eligibility override. Water nadal wymaga receptury Small Glyph Metal + Shell Water i pełnej piątej instalacji. Dopiero wtedy rozpoczyna się `FINAL_WATER_HUNT` z timerem `180 s` (**TUNING**), prowadzący przez ostatni Crystal i Reliquary do Water `5/5`, Tier 5 oraz istniejącego finału świata. Skutek timeoutu pozostaje otwartą decyzją.
 
 ## Prowadzenie gracza
 

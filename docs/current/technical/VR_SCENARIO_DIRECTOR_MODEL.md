@@ -60,7 +60,7 @@ Scenario authoruje należność progression beats, ale Guidance renderuje komuni
 - dalsze authored P2 continuation i completion point;
 - `RUNESTONES` i późniejsze akty.
 
-Nie ustalono finalnego cyklu B, kolorów/symboli przyszłych bands ani mechaniki VI/Eter. `SPHERE_FAR` pozostaje **FUTURE / NOT AUTHORED / NOT IMPLEMENTED**.
+Nie ustalono finalnego cyklu B ani kolorów/symboli przyszłych bands. Po `4.80` zatwierdzony target przenosi pięć już zestrojonych naturalnych Large Glyph do `SPHERE_FAR = 80 m`; późniejszy retreat po `FOURTH_RUNE_INSTALLED` nie ma jeszcze promienia. VI/Eter jest specjalnym authored beatem Małpy nadającym Water-only eligibility override, nie szóstą rodziną/sektorem.
 
 ## Bootstrap i QA
 
@@ -73,3 +73,5 @@ The implemented canonical boundary is `4.80`. Point `4.40` owns a dedicated obse
 Mandatory Monkey communication uses one guidance contract: attention arcs never start copy; pointing and triggering Monkey consumes the trigger for the mandatory beat; ordinary menu, history and knowledge stay hidden through attention and playback; the menu returns only after the final automatic block. This contract is active for the post-ring message at `3.30` and P2 at `4.50–4.60`.
 
 Stable reconstruction at `4.80` contains completed Tier 3, all page IDs/orders through 3, progress-floor completion through Tier 3, consumed crystal Tier 3, and Proto-Astro natural essences `K/T/S/L/R`. It reconstructs no transient pulls, held objects, timers or panels. P3 and later mechanics are not implemented.
+
+Późny Rune Stone Act zachowuje `SPINE → SCENARIO → DIRECTOR → RuntimeExperience → actors/domain owners`. Scenario authoruje wyłącznie znaczące beaty i semantic `START`/`SUCCESS` oraz ewentualny przyszły `TIMEOUT` finalnego hunt. Nie tworzy pointów dla Furnace timera, pull, bridge interpolation, antenna tracking frame, odliczania każdej sekundy ani socket capture. Ether/Monkey actor wykonuje prezentację, `RuneStoneProgressionController` posiada Water override, a transient timer `180 s` (**TUNING**) należy do final-hunt ownera i startuje dopiero po pełnej instalacji Water oraz rzeczywistym rozpoczęciu `FINAL_WATER_HUNT`. `FINAL_HUNT_TIMEOUT_BEHAVIOR` pozostaje **OPEN DESIGN DECISION**.

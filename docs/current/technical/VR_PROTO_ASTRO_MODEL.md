@@ -109,13 +109,13 @@ Rodzina symboli bandów i dokładne kolory nie są jeszcze zaprojektowane. Przys
 
 **IMPLEMENTED:** VI jest pełnym small glyphem: jest widoczny, targetowalny, przyciągalny, możliwy do przejęcia i pozostawienia na platformie. Nie daje esencji i nie odblokowuje large glyph.
 
-**RESERVED / NOT YET DESIGNED:** VI/Eter wraz z odpowiadającą rodziną poziomu 6 skorup dla końcowego etapu Haiku Cosmos. Recipe, placement i final flow nie są authored.
+**APPROVED / NOT IMPLEMENTED:** VI/Eter jest specjalnym Rune Stone finalnego kryzysu nad Małpą, a nie naturalną rodziną ani szóstą parą sektorową. Nie ma standardowego vessel/socketu, nie jest targetem `RUNESTONES` i nie trafia do Pieca. Jego authored intervention nadaje u `RuneStoneProgressionController` wyłącznie Water eligibility override; normalna receptura Water nadal wymaga Small Glyph Metal + Shell Water.
 
 ## 14. IMPLEMENTED VS APPROVED FUTURE
 
 - **IMPLEMENTED:** identity/resolvers, field i transport, `SHELLS`/`SMALL_GLYPHS`/`LARGE_GLYPHS`, B, natural essence extraction, persistent family tuning truth, `canAttractLargeGlyph`, family-gated real Large Glyph targeting oraz actor-owned transient pull/return. Panel 1 projektuje canonical Large Glyph target.
 - **APPROVED / NOT IMPLEMENTED:** `RUNESTONES`, Panele 2–4 i placement VI. Spatial stage Large Glyph `SPHERE_FAR` jest **IMPLEMENTED** i nie implementuje przyszłego gameplayu Runic Stones.
-- **RESERVED / NOT YET DESIGNED:** VI/Eter finale z level-6 shell family.
+- **APPROVED / NOT IMPLEMENTED:** specjalny VI/Eter finale, Water-only knowledge override, piąty Water Rune i finalny timed Water hunt; bez level-6 sector family.
 
 ## 15. QA STATUS
 
@@ -136,4 +136,4 @@ Stable reconstruction at `4.80` contains completed Tier 3, all page IDs/orders t
 
 ## Future Rune Stone Act boundary — approved, not implemented
 
-Po `4.80` istniejący `ProtoAstroTuningController` nadal posiada wyłącznie naturalne essences `K/T/S/L/R` dla Large Glyph. Nie wolno rozszerzać go o trwałe rune tuning/installation facts. Rune recipe rozwiązuje asset identity przez canonical Proto-Astro resolvery, ale zapisuje `tunedRuneFamilies` i `installedRuneFamilies` u osobnego przyszłego domain ownera. Po Tier 3 sector-completeness daje dokładnie Earth / Fire / Wood jako eligible; nie istnieje druga hardcoded lista rodzin.
+Po `4.80` istniejący `ProtoAstroTuningController` nadal posiada wyłącznie naturalne essences `K/T/S/L/R` dla pięciu już zestrojonych Large Glyph. Nie wolno rozszerzać go o trwałe rune tuning/installation facts. Rune recipe konsumuje oba fizyczne składniki i rozwiązuje asset identity przez canonical Proto-Astro resolvery, ale zapisuje semantyczną sylabę jako `tunedRuneFamilies` oraz instalacje u osobnego przyszłego domain ownera; nie tworzy fizycznego itemu „sylaba”. Po Tier 3 sector-completeness daje dokładnie Earth / Fire / Wood jako eligible; późny Water-only override jest jedynym finalnym wyjątkiem i nie tworzy drugiej hardcoded listy rodzin.
