@@ -1,7 +1,7 @@
 export const VR_MONKEY_MESSAGE_TIMING = Object.freeze({ secondsPerLine: 2, gapSeconds: 0.5 });
 
 export const VR_MONKEY_KNOWLEDGE_POLICY = Object.freeze({
-  PERSISTENT: 'PERSISTENT', ONCE: 'ONCE', CONTEXTUAL: 'CONTEXTUAL'
+  ONCE: 'ONCE', CONTEXTUAL: 'CONTEXTUAL'
 });
 
 export const VR_MONKEY_KNOWLEDGE_CATEGORIES_PL = Object.freeze({
