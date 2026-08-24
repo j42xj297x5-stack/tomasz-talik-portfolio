@@ -13,6 +13,7 @@ const COPY = Object.freeze({
 });
 
 export const VR_MONKEY_GUIDE_SCREEN = Object.freeze({ MENU: 'MENU', HISTORY: 'HISTORY', CARD: 'CARD', KNOWLEDGE: 'KNOWLEDGE' });
+export const VR_MONKEY_DIALOGUE_PRIORITY = Object.freeze({ OPTIONAL: 1, ACQUISITION: 2, MANDATORY: 3 });
 export const unreadPulseAlpha = (seconds) => 0.5 - 0.5 * Math.cos(Math.PI * Math.max(0, seconds));
 const degToRad = (degrees) => degrees * Math.PI / 180;
 
@@ -465,8 +466,16 @@ export function createVrMonkeyGuide({
     const maxTextWidth = settings.message.maxBubbleWidthPx - settings.message.paddingX * 2;
     return { lineCount: wrapText(messagePanel.context, message, maxTextWidth).length };
   }
+  let dialogueOwner = null;
+  const legacyDialogueOwner = Symbol('VrMonkeyGuideSequencedDialogue');
+  let dialoguePriority = 0;
+  let dialoguePreemptible = true;
+  let onDialoguePreempt = null;
+  let attentionOwner = null;
+
   function clearAttention() {
     attentionPending = false;
+    attentionOwner = null;
     attentionRoot.visible = false;
     arcMaterials.forEach((material) => { material.opacity = 0; });
   }
@@ -476,6 +485,18 @@ export function createVrMonkeyGuide({
     elapsed = 0;
     attentionRoot.visible = true;
     onAttentionStart();
+  }
+  function notifyOwnedAttention(owner) {
+    if (dialogueOwner !== owner) return false;
+    if (attentionPending && attentionOwner !== owner) return false;
+    attentionOwner = owner;
+    notifyAttention();
+    return true;
+  }
+  function cancelOwnedAttention(owner) {
+    if (attentionOwner !== owner) return false;
+    clearAttention();
+    return true;
   }
   function setOpen(nextOpen, { notify = true } = {}) {
     const previous = open;
@@ -622,7 +643,8 @@ export function createVrMonkeyGuide({
     knowledgeSequence?.update(delta);
   }
   function reset() {
-    dialogueOverride = null; monkeyWasHovered = false;
+    dialogueOverride = null; dialogueOwner = null; dialoguePriority = 0;
+    dialoguePreemptible = true; onDialoguePreempt = null; monkeyWasHovered = false;
     setOpen(false, { notify: false });
     clearAttention();
     showMessage('');
@@ -670,14 +692,57 @@ export function createVrMonkeyGuide({
     },
     isInteractionEnabled: () => interactionEnabled,
     setDialogueOverride(override) {
-      dialogueOverride = override || null;
-      open = Boolean(dialogueOverride?.options?.length);
-      dialoguePanel.group.visible = open;
-      hoveredOption = null; monkeyWasHovered = false;
-      hits.forEach((_, record) => hits.set(record, null));
-      drawDialogue();
+      if (!override) { api.releaseDialogue(legacyDialogueOwner); return; }
+      api.tryAcquireDialogue(legacyDialogueOwner, override, {
+        priority: VR_MONKEY_DIALOGUE_PRIORITY.MANDATORY,
+        preemptible: false
+      });
     },
     hasDialogueOverride: () => Boolean(dialogueOverride)
+  };
+  function applyDialogueOverride(override) {
+    dialogueOverride = override || null;
+    open = Boolean(dialogueOverride?.options?.length);
+    dialoguePanel.group.visible = open;
+    hoveredOption = null; monkeyWasHovered = false;
+    hits.forEach((_, record) => hits.set(record, null));
+    drawDialogue();
+  }
+  api.tryAcquireDialogue = (owner, override, options = {}) => {
+    if (!owner) throw new TypeError('Dialogue owner is required.');
+    const priority = options.priority ?? VR_MONKEY_DIALOGUE_PRIORITY.OPTIONAL;
+    if (dialogueOwner && dialogueOwner !== owner) {
+      if (!dialoguePreemptible || priority <= dialoguePriority) return false;
+      const previousOwner = dialogueOwner;
+      onDialoguePreempt?.();
+      if (dialogueOwner === previousOwner) return false;
+    }
+    dialogueOwner = owner;
+    dialoguePriority = priority;
+    dialoguePreemptible = options.preemptible !== false;
+    onDialoguePreempt = options.onPreempt ?? null;
+    applyDialogueOverride(override);
+    return true;
+  };
+  api.updateDialogue = (owner, override, options = {}) => {
+    if (dialogueOwner !== owner) return false;
+    if ('preemptible' in options) dialoguePreemptible = options.preemptible !== false;
+    applyDialogueOverride(override);
+    return true;
+  };
+  api.releaseDialogue = (owner) => {
+    if (dialogueOwner !== owner) return false;
+    cancelOwnedAttention(owner);
+    dialogueOwner = null; dialoguePriority = 0; dialoguePreemptible = true; onDialoguePreempt = null;
+    applyDialogueOverride(null);
+    return true;
+  };
+  api.ownsDialogue = (owner) => dialogueOwner === owner;
+  api.notifyDialogueAttention = notifyOwnedAttention;
+  api.cancelDialogueAttention = cancelOwnedAttention;
+  api.showDialogueMessage = (owner, text) => {
+    if (dialogueOwner !== owner) return null;
+    return showMessage(text);
   };
   return api;
 }

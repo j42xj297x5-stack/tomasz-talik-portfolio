@@ -1,4 +1,5 @@
 import { createVrMandatoryMonkeyCommunication } from './createVrMandatoryMonkeyCommunication.js';
+import { VR_MONKEY_DIALOGUE_PRIORITY } from './createVrMonkeyGuide.js';
 import { VR_MONKEY_MESSAGE_TIMING } from './vrMonkeyCommunicationCopy.js';
 
 const ASTRO_START_DELAY_SECONDS = 180;
@@ -25,35 +26,46 @@ export function createVrToolGuidanceLifecycle({ monkeyGuide, copy, canStartAstro
     if (activeMessage?.descriptor.id === message.id
       || pendingMessages.some(({ id }) => id === message.id)) return;
     pendingMessages.push(message);
+    pendingMessages.sort((a, b) => b.priority - a.priority);
   }
 
   function discardIrrelevantMessages() {
     for (let index = pendingMessages.length - 1; index >= 0; index -= 1) {
       if (!pendingMessages[index].isStillRelevant()) pendingMessages.splice(index, 1);
     }
-    if (activeMessage?.actor.getPhase() === 'ATTENTION'
+    if (['WAITING', 'ATTENTION'].includes(activeMessage?.actor.getPhase())
       && !activeMessage.descriptor.isStillRelevant()) {
       activeMessage.actor.reset();
-      monkeyGuide.cancelAttention();
       activeMessage = null;
     }
   }
 
   function beginNextMessage() {
-    if (activeMessage || !pendingMessages.length || monkeyGuide.hasDialogueOverride()
-      || monkeyGuide.isOpen()) return;
+    if (activeMessage || !pendingMessages.length || monkeyGuide.isOpen()) return;
     const descriptor = pendingMessages.shift();
     let actor = null;
     actor = createVrMandatoryMonkeyCommunication({
       monkeyGuide,
       blocks: descriptor.blocks,
       secondsPerLine: VR_MONKEY_MESSAGE_TIMING.secondsPerLine,
+      priority: descriptor.priority,
       openMenuOnCompleted: false,
       onTriggered() { actor.beginPlayback(); },
       onCompleted() { if (activeMessage?.actor === actor) activeMessage = null; }
     });
     activeMessage = { descriptor, actor };
     actor.beginAttention();
+  }
+
+  function yieldToHigherPriorityPendingMessage() {
+    if (!activeMessage || !pendingMessages.length) return;
+    const phase = activeMessage.actor.getPhase();
+    if (!['WAITING', 'ATTENTION'].includes(phase)
+      || pendingMessages[0].priority <= activeMessage.descriptor.priority) return;
+    const descriptor = activeMessage.descriptor;
+    activeMessage.actor.reset();
+    activeMessage = null;
+    enqueue(descriptor);
   }
 
   function notifyAstroAvailable() {
@@ -67,6 +79,7 @@ export function createVrToolGuidanceLifecycle({ monkeyGuide, copy, canStartAstro
     delayedAcquisitions.push({
       elapsed: 0,
       message: { id: 'acquisition-astro', blocks: copy.acquisition.astro.blocks,
+        priority: VR_MONKEY_DIALOGUE_PRIORITY.ACQUISITION,
         isStillRelevant: () => true }
     });
   }
@@ -75,6 +88,7 @@ export function createVrToolGuidanceLifecycle({ monkeyGuide, copy, canStartAstro
     delayedAcquisitions.push({
       elapsed: 0,
       message: { id: 'acquisition-asterion', blocks: copy.acquisition.asterion.blocks,
+        priority: VR_MONKEY_DIALOGUE_PRIORITY.ACQUISITION,
         isStillRelevant: () => true }
     });
   }
@@ -93,6 +107,7 @@ export function createVrToolGuidanceLifecycle({ monkeyGuide, copy, canStartAstro
           enqueue({
             id: 'furnace-astro-start',
             blocks: copy.hints['hint.furnace.astroStart'].blocks,
+            priority: VR_MONKEY_DIALOGUE_PRIORITY.OPTIONAL,
             isStillRelevant: () => getAstroProductionState() === 'READY'
           });
         }
@@ -112,6 +127,7 @@ export function createVrToolGuidanceLifecycle({ monkeyGuide, copy, canStartAstro
           enqueue({
             id: 'furnace-astro-available',
             blocks: copy.hints['hint.furnace.astroAvailable'].blocks,
+            priority: VR_MONKEY_DIALOGUE_PRIORITY.OPTIONAL,
             isStillRelevant: () => getAstroProductionState() === 'AVAILABLE'
           });
         }
@@ -127,15 +143,14 @@ export function createVrToolGuidanceLifecycle({ monkeyGuide, copy, canStartAstro
       }
     }
     discardIrrelevantMessages();
+    yieldToHigherPriorityPendingMessage();
     activeMessage?.actor.update(step);
     beginNextMessage();
   }
 
   function reset() {
     if (activeMessage) {
-      const phase = activeMessage.actor.getPhase();
       activeMessage.actor.reset();
-      if (phase === 'ATTENTION') monkeyGuide.cancelAttention();
     }
     activeMessage = null;
     pendingMessages.length = 0;
