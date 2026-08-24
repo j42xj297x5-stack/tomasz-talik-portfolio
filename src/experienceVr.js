@@ -33,6 +33,7 @@ import { createVrProgressionSemanticHandoff } from './xr/progression/createVrPro
 import { createVrProgressionShortcut } from './xr/progression/applyVrProgressionShortcut.js';
 import { createVrShellSystem } from './xr/shells/createVrShellSystem.js';
 import { resolveVrSphericalLayerRanges, VR_SPHERICAL_LAYER_IDS } from './xr/world/createVrSphericalLayerActor.js';
+import { createVrCelestialActor } from './xr/world/createVrCelestialActor.js';
 import { createVrShellAttractorInteraction } from './xr/shells/createVrShellAttractorInteraction.js';
 import { createVrSemanticInput } from './xr/input/createVrSemanticInput.js';
 import { createVrHandModeController, VR_ATTRACTOR_BANDS } from './xr/input/createVrHandModeController.js';
@@ -183,13 +184,13 @@ playerRig.add(camera);
 orientPlayerRig(playerRig, settings.spatial.monkeyFinal);
 const vrControllers = createVrControllers({ renderer, playerRig, settings: settings.controllers });
 
-addLights(scene);
+const sceneLights = addLights(scene);
 const centralPlaceholder = createCentralObject();
 worldStableRoot.add(centralPlaceholder);
 
 const asterionSphereQa = settings.asterionSphere.enabled && searchParams.has(settings.asterionSphere.qaQueryParam);
 const vrAssets = getPreloadAssets([...INITIAL_PRELOAD_GROUPS, ...DEFERRED_PRELOAD_GROUPS])
-  .filter(({ id }) => id === 'vr-asterion-sphere-model' || id === 'vr-rune-bridge-model' || id === 'gltf-loader-module' || id === 'monkey-model' || id === 'monkey-stone-model' || id === 'vr-portal-model' || id === 'vr-astro-attractor-model' || id === 'vr-astro-furnace-model' || id.startsWith('vr-progress-floor-') || id === 'vr-crystal-reliquary-model' || id.startsWith('vr-crystal-reliquary-button-') || id.startsWith('glyph-') || id.startsWith('vr-crystal-') || id.startsWith('shell-relic-') || id.startsWith('small-glyph-relic-'))
+  .filter(({ id }) => id === 'sun-model' || id === 'vr-asterion-sphere-model' || id === 'vr-rune-bridge-model' || id === 'gltf-loader-module' || id === 'monkey-model' || id === 'monkey-stone-model' || id === 'vr-portal-model' || id === 'vr-astro-attractor-model' || id === 'vr-astro-furnace-model' || id.startsWith('vr-progress-floor-') || id === 'vr-crystal-reliquary-model' || id.startsWith('vr-crystal-reliquary-button-') || id.startsWith('glyph-') || id.startsWith('vr-crystal-') || id.startsWith('shell-relic-') || id.startsWith('small-glyph-relic-'))
   .map((asset) => ({ ...asset, critical: asset.id === 'gltf-loader-module' }));
 const loadingDiagnostics = createLoadingDiagnostics(vrAssets);
 const assetManager = createAssetManager({ diagnostics: loadingDiagnostics });
@@ -262,11 +263,21 @@ const sphericalLayerRanges = resolveVrSphericalLayerRanges({
     { id: VR_SPHERICAL_LAYER_IDS.SHELLS, ...settings.sphericalLayers.shells, status: 'IMPLEMENTED' },
     { id: VR_SPHERICAL_LAYER_IDS.SMALL_GLYPHS, ...settings.sphericalLayers.smallGlyphs, status: 'IMPLEMENTED' },
     { id: VR_SPHERICAL_LAYER_IDS.RUNE_STONES, ...settings.sphericalLayers.runeStones, status: 'RESERVED' },
-    { id: VR_SPHERICAL_LAYER_IDS.STARS, ...settings.sphericalLayers.stars, status: 'RESERVED' },
+    { id: VR_SPHERICAL_LAYER_IDS.STARS, ...settings.sphericalLayers.stars, status: 'IMPLEMENTED' },
     { id: VR_SPHERICAL_LAYER_IDS.HIDDEN_GLYPHS, ...settings.sphericalLayers.hiddenGlyphs, status: 'RESERVED' }
   ]
 });
 const sphericalLayer = (id) => sphericalLayerRanges.find((range) => range.id === id);
+const starLayer = sphericalLayer(VR_SPHERICAL_LAYER_IDS.STARS);
+camera.far = Math.max(camera.far, starLayer.outerRadius + 5);
+camera.updateProjectionMatrix();
+const celestialActor = createVrCelestialActor({
+  parent: worldStableRoot,
+  assetManager,
+  fillLight: sceneLights.fill,
+  layer: starLayer,
+  settings: settings.celestial
+});
 const playerRigSpawnLocalPosition = playerRig.position.clone();
 const playerRigSpawnLocalQuaternion = playerRig.quaternion.clone();
 const playerRigSpawnLocalScale = playerRig.scale.clone();
@@ -912,6 +923,7 @@ runtimeExperience = new RuntimeExperience({
       introAmbientSequencer.stop();
       ambientSequencer.enable();
     },
+    [VR_SCENARIO_EFFECT.BEGIN_CELESTIAL_REVEAL]: () => { celestialActor.beginReveal(); },
     [VR_SCENARIO_EFFECT.BEGIN_INTRO_REVEAL]: () => {
       if (!introSequence.beginIntroReveal()) {
         throw new Error('BEGIN_INTRO_REVEAL rejected by Intro actor after accepted Scenario point activation');
@@ -1077,7 +1089,8 @@ const scenarioOwners = Object.freeze({
   furnace: astroFurnace, furnaceProgression: furnaceProgressionController,
   astroProduction: astroAttractorProductionController, asterionProduction: asterionProductionController,
   protoAstroTuning: protoAstroTuningController,
-  audio: ambientScenarioOwner
+  audio: ambientScenarioOwner,
+  celestial: celestialActor
 });
 const enterVrDebugCheckpoint = createVrDebugCheckpointController({
   scenario: vrExperienceScenario,
@@ -1141,6 +1154,7 @@ function renderFrame() {
   largeGlyphAttractorInteraction.update(delta);
   postRingPresentation.update(delta);
   smallGlyphSystem.update(delta);
+  celestialActor.update(delta);
   observationWindow.update(delta);
   p2ObservationWindow.update(delta);
   postRingMonkeyDialogue.update(delta);
@@ -1190,6 +1204,7 @@ function showReadyState({ ended = false } = {}) {
 // restoring the Scenario baseline must never recreate or dispose application objects.
 function restoreVrScenarioBaseline() {
   runtimeExperience.resetSession();
+  celestialActor.reset();
   // The gyro owns the platform quaternion. Neutralize it before platform fixtures
   // reconstruct their authored local transforms.
   asterionGyroInteraction.reset();
@@ -1302,6 +1317,7 @@ enterButton.addEventListener('click', enterVr);
 exitButton.addEventListener('click', () => { void activeSession?.end(); });
 window.addEventListener('pagehide', () => {
   runtimeExperience.dispose();
+  celestialActor.dispose();
   introCrystalTutorial.dispose();
   introFogReveal.dispose();
   unsubscribeAmbientFurnace();

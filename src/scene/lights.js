@@ -9,4 +9,5 @@ export function addLights(scene) {
   fill.position.set(-3.2, 2.2, -1.6);
 
   scene.add(ambient, key, fill);
+  return Object.freeze({ ambient, key, fill });
 }

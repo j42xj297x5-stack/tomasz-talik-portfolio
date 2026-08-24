@@ -24,7 +24,8 @@ The active hierarchy is platform-relative for floor gameplay and world-stable fo
 
 ```text
 ExperienceVrRoot
-├── WorldStableRoot → VrLargeGlyphActor / shell field / cosmos
+├── WorldStableRoot → VrLargeGlyphActor / shell field / VrCelestialActor
+│   └── Sun root/model + procedural Star Field
 └── VrTiltableFloorRoot (identity position and scale)
     ├── floor sectors / rings
     ├── VrMonkeyMotionRoot → visual root / Monkey Guide
@@ -35,6 +36,8 @@ ExperienceVrRoot
 ```
 
 `VrTiltableFloorRoot` remains at canonical `(0,0,0)` and owns only inherited Asterion tilt. `VrMonkeyStoneRoot` is a direct child of `VrPlatformFixturesRoot`; it is never parented to `VrMonkeyMotionRoot`. `VrPlatformFixturesRoot` is only a structural transform container: intro and reset logic keep the container present and control the visibility/reveal of the stone, portal, reliquary and furnace individually. Fixtures, the Monkey actor and `VrFloorPassengerRoot/playerRig` inherit the platform quaternion. No initial-composition `attach()` or runtime scene-layout override exists.
+
+`VrCelestialActor` is the single runtime owner of the authored Sun model and the procedural Star Field. Entry to Scenario point `2.10` sends `BEGIN_CELESTIAL_REVEAL`, starting one shared linear 60-second opacity reveal. The Sun remains fixed beyond the scene fill PointLight on the same center-to-light ray and faces the world center; the deterministic clustered Star Field remains fixed across the full resolved `STARS` volume and `4π`. Reset restores both to opacity `0`, while reconstruction after completed `2.10` silently hydrates both at stable opacity `1`; actor-owned fade-out exists but is not connected to the Scenario finale.
 
 ## Ordinary rays, hand modes and locomotion
 
