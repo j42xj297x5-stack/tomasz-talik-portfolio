@@ -1,40 +1,31 @@
 # Experience VR — Narrative & Progression Baseline
 
-Status: **CURRENT / canonical** jako lekka orientacja w przebiegu doświadczenia. Technicznym źródłem Scenario jest [`VR_SCENARIO_DIRECTOR_MODEL.md`](../technical/VR_SCENARIO_DIRECTOR_MODEL.md), a identity/tuning opisuje [`VR_PROTO_ASTRO_MODEL.md`](../technical/VR_PROTO_ASTRO_MODEL.md).
+**Status:** CURRENT / canonical. Technicznym źródłem Scenario pozostaje [`VR_SCENARIO_DIRECTOR_MODEL.md`](../technical/VR_SCENARIO_DIRECTOR_MODEL.md).
 
-## IMPLEMENTED / AUTHORED — aktualna droga gracza
+## Aktualna droga gracza
 
-Intro prowadzi do pierwszego cyklu Glyph → Crystal → Reliquary i pierwszego ringu. Post-ring odsłania skorupy oraz Piec; gracz wytwarza i fizycznie odbiera Astrolabium, kompletuje skorupy, buduje Kulę Asterionową i przejmuje kontrolę nad platformą.
-
-Drugi ring jest authored i kończy Tier 2. Następnie duże glify odsuwają się radialnie poza zwykły zasięg, a świat materializuje pole małych glifów. B przełącza Astrolabium między dostępnymi pasmami `SHELLS` i `SMALL_GLYPHS`. Gracz może namierzyć, przyciągnąć i przejąć mały glif, a po puszczeniu glif wraca do pola. Naturalny small glyph można przetworzyć w Piecu, zdobywając trwałą rodzinną esencję dla Astrolabium bez trwałego zużywania fizycznego reliktu. Esencja udostępnia rodzinny Large Glyph w zielonym bandzie; glif można przyciągnąć do bezpiecznego stand-off i odesłać do bieżącego slotu orbity.
+Intro prowadzi przez naukę panelu Y i kontakt z Małpą do pierwszego cyklu Glyph → Crystal → Reliquary i pierwszego kręgu. Po nim świat odsłania skorupy oraz Piec; gracz produkuje i odbiera Astrolabium Więzi, zbiera skorupy, buduje i odbiera Kulę Asterionową, kończy drugi krąg, a następnie stroi Astrolabium i buduje trzeci krąg.
 
 ```text
-1.10 → … → 3.80 → 4.10 → 4.20 → 4.30 → 4.40 → 100.10
+1.10 → … → 2.30 → … → 3.80 → 4.10 → … → 4.70 → 4.80
 ```
 
-`4.40` jest aktualną stabilną granicą gameplayową bez transition; terminal `100.10` pozostaje w Spine, ale nie następuje automatycznie.
+`4.80` jest aktualną stabilną granicą gameplayową; dalsze akty nie należą do bieżącego kontraktu Guidance.
 
-## NEXT / NOT YET AUTHORED
+## Prowadzenie gracza
 
-**APPROVED / NOT IMPLEMENTED:**
+**Monkey first teacher:** Małpa prowadzi obowiązkowe beaty progresji, sygnalizuje sytuacyjne hinty, jednorazowo uczy narzędzia po fizycznym claim, pokazuje bieżące `CO TERAZ?` i udostępnia historię kart. **Player Y persistent memory:** Y przechowuje praktyczne instrukcje Pieca, Astro i Asteriona oraz pokazuje `AKTUALNE ZADANIE`.
 
-- dalsza authored progresja P2;
-- później `RUNESTONES` i dalsze akty.
+Nie istnieją dwa modele „co teraz”. Obie powierzchnie odczytują jeden bezstanowy CURRENT OBJECTIVE z `createVrCurrentObjectiveProjection`, oparty o canonical point i realny stan domeny. Dzięki temu normalny przebieg, hydration i direct activation prowadzą do tego samego celu.
 
-**RESERVED / NOT YET DESIGNED:** późniejsza rola VI/Eter i level-6 shell family w finale Haiku Cosmos.
+## Nauczanie i pomoc sytuacyjna
 
-## Komunikacja
+Po claim Astro lub Asteriona Małpa po około 5 s zwraca uwagę, czeka na świadome kliknięcie i odtwarza jednorazowe pierwsze nauczanie. Nie przechodzi potem do ordinary menu; trwała instrukcja pozostaje w Y.
 
-Świat pokazuje, Małpa pomaga zrozumieć, Y pomaga pamiętać, a gracz decyduje, ile chce wiedzieć. Automatyczne messages nie używają `DALEJ`; Guidance projektuje istniejącą prawdę, nie posiada progresji.
+Jeżeli gracz przez około 180 s nie rozpocznie produkcji Astro, Małpa może zaoferować opcjonalną instrukcję Pieca. Jeżeli gotowe Astro pozostaje nieodebrane przez około 60 s, może zaoferować claim hint. Hint czeka na wolne ordinary menu i jest anulowany, jeśli przestaje być aktualny.
 
-## Hardware status
+Mandatory, acquisition i optional komunikacja współdzielą jawny arbitration contract o priorytecie `MANDATORY > ACQUISITION > OPTIONAL`. Rozpoczęty playback nie jest przerywany.
 
-Tylko dotychczas potwierdzony bootstrap READY ma status **HARDWARE VALIDATED — Meta Quest 3S**. P2 `4.20–4.40`, Small Glyph i Large Glyph attraction pozostają hardware/perceptual QA pending.
+## Interakcja
 
-## Current P2 completion contract (4.40–4.80)
-
-The implemented canonical boundary is `4.80`. Point `4.40` owns a dedicated observation window; `4.50` exposes Monkey attention only; `4.60` plays the mandatory P2 message; `4.70` grants the existing B, Small Glyph, Furnace essence, family-gated Large Glyph, crystal, Reliquary and order-3 card rights; five order-3 cards complete into stable point `4.80`.
-
-Mandatory Monkey communication uses one guidance contract: attention arcs never start copy; pointing and triggering Monkey consumes the trigger for the mandatory beat; ordinary menu, history and knowledge stay hidden through attention and playback; the menu returns only after the final automatic block. This contract is active for the post-ring message at `3.30` and P2 at `4.50–4.60`.
-
-Stable reconstruction at `4.80` contains completed Tier 3, all page IDs/orders through 3, progress-floor completion through Tier 3, consumed crystal Tier 3, and Proto-Astro natural essences `K/T/S/L/R`. It reconstructs no transient pulls, held objects, timers or panels. P3 and later mechanics are not implemented.
+Oba narzędzia można odebrać Grabem po wskazaniu legalnym rayem dowolnej ręki; Astro trafia do prawego canonical slotu, Asterion do lewej ręki. Małpa pozostaje dostępna także z jednym lub oboma narzędziami wyposażonymi, bez unequip i bez zmiany hand mode.
