@@ -14,7 +14,6 @@ export const ASTRO_FURNACE_PROCESS_KINDS = Object.freeze({
 });
 
 const CLIP_NAME = 'AstroFurnace_ButtonActivate_Lock';
-const LOCAL_AXIS = new THREE.Vector3(0, 1, 0);
 const TAU = Math.PI * 2;
 const clamp01 = (value) => THREE.MathUtils.clamp(value, 0, 1);
 const smooth = (value) => { const t = clamp01(value); return t * t * (3 - 2 * t); };
@@ -85,9 +84,9 @@ export function createVrAstroFurnaceActivateInteraction({
   action?.setLoop(THREE.LoopOnce, 1);
   if (action) { action.clampWhenFinished = true; action.enabled = true; }
   const capabilityReady = settings.enabled !== false
-    && Boolean(buttonMeshes.length && buttonPivot && spinPivot && lidSpinPivot && clip && action);
+    && Boolean(buttonMeshes.length && buttonPivot && spinPivot && clip && action);
   if (settings.enabled !== false && !capabilityReady) {
-    console.warn('[Experience VR] Astro furnace activate interaction is disabled: button geometry, pivots, or exact lock clip are missing.');
+    console.warn('[Experience VR] Astro furnace activate interaction is disabled: button geometry, process reference pivot, or exact lock clip is missing.');
   }
   const ownedMaterials = new Set();
   const buttonMaterials = cloneMaterials(button, ownedMaterials).filter((material) => 'emissiveIntensity' in material);
@@ -106,7 +105,6 @@ export function createVrAstroFurnaceActivateInteraction({
   const halo = button ? createVrTargetHalo({ root: button, settings: haloSettings }) : null;
   const baseSpinQuaternion = spinPivot?.quaternion.clone();
   const baseLidQuaternion = lidSpinPivot?.quaternion.clone();
-  const lidSpin = new THREE.Quaternion();
   const energyRoot = new THREE.Group();
   energyRoot.name = 'VrAstroFurnaceEnergyPoints';
   const energyGeometry = new THREE.SphereGeometry(0.018, 8, 6);
@@ -124,7 +122,6 @@ export function createVrAstroFurnaceActivateInteraction({
   const origin = new THREE.Vector3();
   const direction = new THREE.Vector3();
   const worldQuaternion = new THREE.Quaternion();
-  const localSpin = new THREE.Quaternion();
   const hits = new Map(controllers.map((record) => [record, false]));
   const listeners = [];
   let state = states.IDLE;
@@ -165,15 +162,6 @@ export function createVrAstroFurnaceActivateInteraction({
     chamberBases.forEach(({ material, baseEmissiveIntensity }) => {
       material.emissiveIntensity = baseEmissiveIntensity;
     });
-  }
-  function applyAngle() {
-    if (!spinPivot || !baseSpinQuaternion) return;
-    localSpin.setFromAxisAngle(LOCAL_AXIS, angle);
-    spinPivot.quaternion.copy(baseSpinQuaternion).multiply(localSpin);
-    if (lidSpinPivot && baseLidQuaternion) {
-      lidSpin.setFromAxisAngle(LOCAL_AXIS, angle * 0.5);
-      lidSpinPivot.quaternion.copy(baseLidQuaternion).multiply(lidSpin);
-    }
   }
   function updateEnergyPoints(intensity, speedMultiplier = 1) {
     const energy = clamp01(intensity);
@@ -361,7 +349,7 @@ export function createVrAstroFurnaceActivateInteraction({
     const pulseMinimum = processSettings.fireCellPulseMinEmission ?? 0.05;
     const pulseMaximum = processSettings.fireCellPulseMaxEmission ?? emission;
     setFireEnergy(THREE.MathUtils.lerp(pulseMinimum, pulseMaximum, pulse), whiteMix);
-    setChamberEmission(chamberEmission); applyAngle();
+    setChamberEmission(chamberEmission);
     setProcessLight(lightIntensity); updateEnergyPoints(energyIntensity, energySpeed);
     if (progress >= 1) {
       state = states.COMPLETE; angularSpeed = 0; angle = 0;
