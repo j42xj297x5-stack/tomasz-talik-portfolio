@@ -291,7 +291,7 @@ export function createVrMonkeyGuide({
     if (screen === VR_MONKEY_GUIDE_SCREEN.CARD) { drawCardNavigation(context, canvas); texture.needsUpdate = true; return; }
     if (screen === VR_MONKEY_GUIDE_SCREEN.KNOWLEDGE) { drawKnowledge(context, canvas); texture.needsUpdate = true; return; }
     const options = [
-      ...(progressCount() > 0 ? [{ id: 'progress', label: copy.progress }] : []),
+      { id: 'progress', label: copy.progress },
       ...(knowledgeResolver?.getRootItems?.() ?? []).map((item) => ({
         id: item.type === 'CATEGORY' ? `category:${item.id}` : `knowledge:${item.id}`, label: item.label
       })),
@@ -515,7 +515,7 @@ export function createVrMonkeyGuide({
     if (id === 'back-knowledge') { knowledgeSequence?.reset(); knowledgeSequence = null; screen = VR_MONKEY_GUIDE_SCREEN.MENU;
       selectedKnowledgeGroupId = null; selectedKnowledgeTopicId = null; knowledgePage = 0;
       showMessage(''); drawDialogue(); return true; }
-    if (id === 'progress' && progressCount() > 0) { screen = VR_MONKEY_GUIDE_SCREEN.HISTORY; historyPage = 0;
+    if (id === 'progress') { screen = VR_MONKEY_GUIDE_SCREEN.HISTORY; historyPage = 0;
       showMessage(copy.history(progressCount())); drawDialogue(); return true; }
     if (id?.startsWith('page:')) { selectedPageId = id.slice(5); unreadPageIds.delete(selectedPageId);
       screen = VR_MONKEY_GUIDE_SCREEN.CARD; cardPage = 0;
