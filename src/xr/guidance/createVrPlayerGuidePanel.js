@@ -73,9 +73,16 @@ export function createVrPlayerGuidePanel({ leftGrip, semanticInput, locale = 'en
 
   let open = false;
   let selectedIndex = 0;
-  const VIEW_STATE = Object.freeze({ MENU: 'MENU', DETAIL: 'DETAIL' });
-  let viewState = VIEW_STATE.MENU;
+  const VIEW_STATE = Object.freeze({
+    MAIN_MENU: 'MAIN_MENU',
+    SECTION_DETAIL: 'SECTION_DETAIL',
+    TOOL_LIST: 'TOOL_LIST',
+    TOOL_DETAIL: 'TOOL_DETAIL'
+  });
+  let viewState = VIEW_STATE.MAIN_MENU;
   let activeSectionId = null;
+  let activeToolId = null;
+  let selectedToolIndex = 0;
   let previousNavDirection = 0;
   let previousHorizontalDirection = 0;
   let selectedDebugIndex = 0;
@@ -134,7 +141,7 @@ export function createVrPlayerGuidePanel({ leftGrip, semanticInput, locale = 'en
     context.fillText(content.title, 28, 60);
     context.fillStyle = config.colors.muted;
     context.font = '23px sans-serif';
-    context.fillText(viewState === VIEW_STATE.MENU ? content.menuHint : content.detailHint, 28, canvas.height - 30);
+    context.fillText(viewState === VIEW_STATE.MAIN_MENU ? content.menuHint : content.detailHint, 28, canvas.height - 30);
   }
 
   function drawMainMenu(items) {
@@ -189,19 +196,41 @@ export function createVrPlayerGuidePanel({ leftGrip, semanticInput, locale = 'en
     drawWrappedText(context, item.body, 36, 230, canvas.width - 72, 38, 5);
   }
 
-  function drawToolsCard(item) {
-    let y = 142;
-    for (const tool of item.tools) {
-      context.fillStyle = config.colors.text;
-      context.font = '700 28px sans-serif';
-      context.fillText(tool.label, 36, y);
-      y += 42;
-      context.fillStyle = config.colors.muted;
-      context.font = '23px sans-serif';
-      for (const line of tool.body.split('\n')) {
-        y = drawWrappedText(context, line, 36, y, canvas.width - 72, 31, 2);
+  function drawToolList(item) {
+    const rows = [...item.tools, { id: null, label: '←' }];
+    const boxWidth = canvas.width - 72;
+    const boxHeight = 104;
+    const gap = 20;
+    const startY = 126;
+    rows.forEach((tool, index) => {
+      const x = 36;
+      const y = startY + index * (boxHeight + gap);
+      if (index === selectedToolIndex) {
+        context.fillStyle = config.colors.selected;
+        context.fillRect(x, y, boxWidth, boxHeight);
       }
-      y += 22;
+      context.strokeStyle = index === selectedToolIndex ? config.colors.border : 'rgba(117, 215, 255, 0.35)';
+      context.lineWidth = 4;
+      context.strokeRect(x, y, boxWidth, boxHeight);
+      context.fillStyle = config.colors.text;
+      context.font = '700 38px sans-serif';
+      context.textAlign = 'center';
+      context.textBaseline = 'middle';
+      context.fillText(tool.label, x + boxWidth / 2, y + boxHeight / 2);
+      context.textAlign = 'start';
+      context.textBaseline = 'alphabetic';
+    });
+  }
+
+  function drawToolDetail(tool) {
+    context.fillStyle = config.colors.text;
+    context.font = '700 28px sans-serif';
+    context.fillText(tool.label, 36, 132);
+    context.fillStyle = config.colors.muted;
+    context.font = '23px sans-serif';
+    let y = 178;
+    for (const line of tool.body.split('\n')) {
+      y = line ? drawWrappedText(context, line, 36, y, canvas.width - 72, 31, 3) : y + 16;
     }
   }
 
@@ -216,14 +245,25 @@ export function createVrPlayerGuidePanel({ leftGrip, semanticInput, locale = 'en
   function reconcileDynamicSections(items) {
     const previousSelectedIndex = selectedIndex;
     const previousViewState = viewState;
+    const previousToolIndex = selectedToolIndex;
+    const previousToolId = activeToolId;
     const rowCount = items.length + (debugCheckpoints.length ? 1 : 0);
     selectedIndex = Math.min(selectedIndex, Math.max(0, rowCount - 1));
-    if (viewState === VIEW_STATE.DETAIL && activeSectionId === 'tools'
-      && !items.some((item) => item.id === 'tools')) {
-      viewState = VIEW_STATE.MENU;
+    const toolsItem = items.find((item) => item.id === 'tools');
+    if ((viewState === VIEW_STATE.TOOL_LIST || viewState === VIEW_STATE.TOOL_DETAIL) && !toolsItem) {
+      viewState = VIEW_STATE.MAIN_MENU;
       activeSectionId = null;
+      activeToolId = null;
+      selectedToolIndex = 0;
+    } else if (toolsItem) {
+      selectedToolIndex = Math.min(selectedToolIndex, toolsItem.tools.length);
+      if (viewState === VIEW_STATE.TOOL_DETAIL && !toolsItem.tools.some((tool) => tool.id === activeToolId)) {
+        viewState = VIEW_STATE.TOOL_LIST;
+        activeToolId = null;
+      }
     }
-    return selectedIndex !== previousSelectedIndex || viewState !== previousViewState;
+    return selectedIndex !== previousSelectedIndex || viewState !== previousViewState
+      || selectedToolIndex !== previousToolIndex || activeToolId !== previousToolId;
   }
 
   function drawControlsCard(item) {
@@ -259,12 +299,16 @@ export function createVrPlayerGuidePanel({ leftGrip, semanticInput, locale = 'en
     const { width, height } = canvas;
     drawFrame(width, height);
     drawHeader();
-    if (viewState === VIEW_STATE.MENU) {
+    if (viewState === VIEW_STATE.MAIN_MENU) {
       drawMainMenu(items);
+    } else if (viewState === VIEW_STATE.TOOL_LIST) {
+      drawToolList(items.find((item) => item.id === 'tools'));
+    } else if (viewState === VIEW_STATE.TOOL_DETAIL) {
+      const tool = items.find((item) => item.id === 'tools')?.tools.find(({ id }) => id === activeToolId);
+      if (tool) drawToolDetail(tool);
     } else {
       const activeItem = items.find((item) => item.id === activeSectionId) ?? items[0];
       if (activeItem?.id === 'controls') drawControlsCard(activeItem);
-      else if (activeItem?.id === 'tools') drawToolsCard(activeItem);
       else drawCurrentTaskCard(activeItem);
     }
     texture.needsUpdate = true;
@@ -283,8 +327,18 @@ export function createVrPlayerGuidePanel({ leftGrip, semanticInput, locale = 'en
     if (reconcileDynamicSections(items)) draw();
     const input = semanticInput.getState?.() ?? {};
     if (input.togglePlayerGuidePanel) {
-      if (open && viewState === VIEW_STATE.DETAIL) {
-        viewState = VIEW_STATE.MENU;
+      if (open && viewState === VIEW_STATE.TOOL_DETAIL) {
+        viewState = VIEW_STATE.TOOL_LIST;
+        activeToolId = null;
+        draw();
+        onPanelClick();
+      } else if (open && viewState === VIEW_STATE.TOOL_LIST) {
+        viewState = VIEW_STATE.MAIN_MENU;
+        activeSectionId = null;
+        draw();
+        onPanelClick();
+      } else if (open && viewState === VIEW_STATE.SECTION_DETAIL) {
+        viewState = VIEW_STATE.MAIN_MENU;
         activeSectionId = null;
         draw();
         onPanelClick();
@@ -295,16 +349,22 @@ export function createVrPlayerGuidePanel({ leftGrip, semanticInput, locale = 'en
     if (!open) { previousNavDirection = 0; previousConfirmPressed = false; return; }
     const axis = input.leftStickY ?? 0;
     const direction = Math.abs(axis) >= config.navigationThreshold ? Math.sign(axis) : 0;
-    if (viewState === VIEW_STATE.MENU && direction && direction !== previousNavDirection) {
+    if (viewState === VIEW_STATE.MAIN_MENU && direction && direction !== previousNavDirection) {
       const rowCount = items.length + (debugCheckpoints.length ? 1 : 0);
       selectedIndex = (selectedIndex + (direction > 0 ? 1 : -1) + rowCount) % rowCount;
+      draw();
+      onPanelClick();
+    } else if (viewState === VIEW_STATE.TOOL_LIST && direction && direction !== previousNavDirection) {
+      const tools = items.find((item) => item.id === 'tools')?.tools ?? [];
+      const rowCount = tools.length + 1;
+      selectedToolIndex = (selectedToolIndex + (direction > 0 ? 1 : -1) + rowCount) % rowCount;
       draw();
       onPanelClick();
     }
     previousNavDirection = direction;
     const horizontalAxis = input.leftStickX ?? 0;
     const horizontalDirection = Math.abs(horizontalAxis) >= config.navigationThreshold ? Math.sign(horizontalAxis) : 0;
-    if (viewState === VIEW_STATE.MENU && selectedIndex === items.length && horizontalDirection
+    if (viewState === VIEW_STATE.MAIN_MENU && selectedIndex === items.length && horizontalDirection
       && horizontalDirection !== previousHorizontalDirection) {
       selectedDebugIndex = (selectedDebugIndex + (horizontalDirection > 0 ? 1 : -1)
         + debugCheckpoints.length) % debugCheckpoints.length;
@@ -313,21 +373,32 @@ export function createVrPlayerGuidePanel({ leftGrip, semanticInput, locale = 'en
     previousHorizontalDirection = horizontalDirection;
     const confirmPressed = Boolean(input.toggleLeftTool);
     if (confirmPressed && !previousConfirmPressed) {
-      if (viewState === VIEW_STATE.MENU) {
+      if (viewState === VIEW_STATE.MAIN_MENU) {
         if (selectedIndex === items.length && debugCheckpoints.length) {
           onDebugCheckpoint(debugCheckpoints[selectedDebugIndex].id);
           setOpen(false);
           onPanelClick();
         } else {
           activeSectionId = items[selectedIndex]?.id ?? activeSectionId;
-          viewState = VIEW_STATE.DETAIL;
+          viewState = activeSectionId === 'tools' ? VIEW_STATE.TOOL_LIST : VIEW_STATE.SECTION_DETAIL;
           draw(); onPanelClick();
         }
+      } else if (viewState === VIEW_STATE.TOOL_LIST) {
+        const tools = items.find((item) => item.id === 'tools')?.tools ?? [];
+        const selectedTool = tools[selectedToolIndex];
+        if (selectedTool) {
+          activeToolId = selectedTool.id;
+          viewState = VIEW_STATE.TOOL_DETAIL;
+        } else {
+          viewState = VIEW_STATE.MAIN_MENU;
+          activeSectionId = null;
+        }
+        draw(); onPanelClick();
       }
     }
     previousConfirmPressed = confirmPressed;
   }
-  function reset() { selectedIndex = 0; selectedDebugIndex = 0; viewState = VIEW_STATE.MENU; activeSectionId = null; previousNavDirection = 0; previousHorizontalDirection = 0; previousConfirmPressed = false;
+  function reset() { selectedIndex = 0; selectedDebugIndex = 0; selectedToolIndex = 0; viewState = VIEW_STATE.MAIN_MENU; activeSectionId = null; activeToolId = null; previousNavDirection = 0; previousHorizontalDirection = 0; previousConfirmPressed = false;
     suppressOpenNotification = true; setOpen(false); suppressOpenNotification = false; }
   function dispose() {
     if (disposed) return;
@@ -345,5 +416,6 @@ export function createVrPlayerGuidePanel({ leftGrip, semanticInput, locale = 'en
   return { object, isOpen, update, reset, dispose, setVisibleControlIds,
     getVisibleControlIds: () => [...visibleControlIds], getViewState: () => viewState,
     getSelectedIndex: () => selectedIndex, getSelectedDebugIndex: () => selectedDebugIndex,
-    getActiveSectionId: () => activeSectionId };
+    getActiveSectionId: () => activeSectionId, getSelectedToolIndex: () => selectedToolIndex,
+    getActiveToolId: () => activeToolId };
 }
