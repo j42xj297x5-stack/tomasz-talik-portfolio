@@ -4,7 +4,7 @@ Status: canonical, living technical model for Experience VR audio synchronized o
 
 ## SUMMARY DLA ARCHITEKTA
 
-The bounded Experience VR Astro Attractor lifecycle and both Astro Furnace process sounds are **IMPLEMENTED**. Shell extraction plays `astro_piec_work_01.mp3`; production construction plays `astro_piec_work_create_01.mp3` instead, exactly once on DEVICE after an accepted cycle. Neither loops or determines gameplay timing, and reset/dispose stops it through the fail-soft `VrAudioBridge`. Small/large glyph and rune-stone mappings remain **PLANNED**. The canonical background sequencer, its Asterion subthreshold override, and both Asterion Sphere DEVICE loops are **IMPLEMENTED**. Spatial audio remains unimplemented.
+The bounded Experience VR Astro Attractor lifecycle and implemented Astro Furnace process sounds remain **IMPLEMENTED**. Shell extraction plays `astro_piec_work_01.mp3`; production construction plays `astro_piec_work_create_01.mp3` instead, exactly once on DEVICE after an accepted cycle. Neither loops or determines gameplay timing, and reset/dispose stops it through the fail-soft `VrAudioBridge`. Small-glyph work and rune tuning remain **PLANNED**; rune-stone spatial mappings remain **PLANNED**. The canonical background sequencer, its Asterion subthreshold override, and both Asterion Sphere DEVICE loops are **IMPLEMENTED**. Spatial audio remains unimplemented.
 
 ## Status vocabulary and authority
 
@@ -118,7 +118,7 @@ In short: insert → `turn_page_01`, activate → `creating_short_01`, consume �
 - Accepted transition start `CLOSED → OPENING` / `OPEN → CLOSING` → `astro_piec_open.mp3` / `astro_piec_close.mp3` on `DEVICE`, once per transition; blocked presses, stable requested states, animation frames, and reset are silent.
 - Shell process → `astro_piec_work_01.mp3` (**IMPLEMENTED**, accepted-cycle one-shot on DEVICE).
 - Small-glyph process → `astro_piec_work_02.mp3` (**TODO gameplay**).
-- Stone process → `astro_piec_work_03.mp3` (**TODO gameplay**).
+- Rune tuning Astrolabium from one Small Glyph + Shell recipe → `astro_piec_work_03.mp3` (**PLANNED / NOT IMPLEMENTED**). To nie jest fizyczny stone process: kamień nigdy nie trafia do Pieca. Jeden poprawny komplet uruchamia jeden canonical 18-second cycle; nie powstaje czwarty work sound.
 - Accepted Production Asterion Sphere `UTWÓRZ` construction cycle → `astro_piec_work_create_01.mp3` (**IMPLEMENTED**, once on DEVICE). The furnace process kind suppresses `astro_piec_work_01.mp3` for this cycle. Audio never determines duration: construction always follows the canonical 18-second furnace clock; interruption stops the create source. Future Astro Attractor creation may reuse the authored family but has no runtime action yet.
 
 ### Monkey and panels

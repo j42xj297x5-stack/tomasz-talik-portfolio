@@ -25,8 +25,10 @@ Nie istnieje centralny global gameplay store.
 → P2_RADIAL_PRESENTATION_COMPLETED
 → 4.30 small glyph materialization
 → SMALL_GLYPH_FIELD_PRESENTATION_COMPLETED
-→ 4.40 stable P2 Proto-Astro boundary (no transition)
-→ 100.10 canonicalMainline target / story terminal, no auto-advance
+→ 4.40 observation / guidance continuation
+→ 4.50–4.70 mandatory P2 communication and Tier-3 rights
+→ 4.80 stable implemented Tier-3 boundary
+→ future Rune Stone Act → FIRST_RUNE_INSTALLED (TARGET / NOT IMPLEMENTED)
 ```
 
 ## Proto-Astro and small glyph dependencies
@@ -63,6 +65,22 @@ SMALL_GLYPH ─┘
 
 `floor_gyroscope_sphere` routes shells to Asterion progression. `astro_attractor` routes natural small glyphs to essence extraction and TuningController, then restores the physical glyph to field.
 
+Future rune tuning does not replace this owner:
+
+```text
+sector progression completeness ─→ rune eligibility
+canonical Proto-Astro resolvers ─→ Wu Xing recipe resolver
+Small Glyph ─┐
+             ├→ RuneRecipeInteraction (two typed slots) → one 18 s Furnace cycle
+Shell ───────┘                                      └→ RuneStoneProgressionController.tunedRuneFamilies
+
+tunedRuneFamilies → RUNESTONES band valid targets
+Rune Stone actor + RuneBridgeActor → completed capture
+                                   └→ RuneStoneProgressionController.installedRuneFamilies
+```
+
+`RuneStoneProgressionController` nie kopiuje paneli sektorów i nie należy do `ProtoAstroTuningController`. Rune Stones używają istniejącej warstwy `50–75 m`; Large Glyph pozostaje osobnym aktorem używającym istniejącego `SPHERE_FAR = 80 m`.
+
 ## Guidance projection
 
 ```text
@@ -74,4 +92,4 @@ Scenario capabilities + domain truth
 
 ## Future seams
 
-`LARGE_GLYPHS` family-gated target/pull jest **IMPLEMENTED**. Panele 2–4 i later P2 authoring pozostają future. `RUNESTONES` remains future; VI/Eter finale is **RESERVED / NOT YET DESIGNED**; `SPHERE_FAR` is **FUTURE / NOT AUTHORED / NOT IMPLEMENTED**.
+`LARGE_GLYPHS` family-gated target/pull jest **IMPLEMENTED**. Panele 2–4 pozostają future. `RUNESTONES`, rune recipe/bridge/transport i authored pointy po `4.80` są **TARGET / NOT IMPLEMENTED**; VI/Eter finale jest **RESERVED / NOT YET DESIGNED**. Fizyczna możliwość stage `SPHERE_FAR` istnieje w Large Glyph actorze, lecz post-Tier-3 przejście i jego prezentacja są **NOT AUTHORED / NOT IMPLEMENTED**.
