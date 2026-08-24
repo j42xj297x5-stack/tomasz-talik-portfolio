@@ -6,8 +6,7 @@ export const VR_INTRO_CRYSTAL_TUTORIAL_COPY = Object.freeze({
   pl: Object.freeze({
     seen: VR_MONKEY_COMMUNICATION_COPY_PL.tutorial.crystal.pointerLearned,
     instruction: 'A teraz złap kryształ i podaj go mnie.',
-    unavailable: 'Tak, tego jeszcze nie możemy użyć.',
-    complete: 'Podstawy poznałeś.'
+    handoff: VR_MONKEY_COMMUNICATION_COPY_PL.tutorial.crystal.handoff
   }),
   en: Object.freeze({
     seen: Object.freeze(['See?', 'You have already taught the world where you are looking.']),
@@ -54,7 +53,7 @@ export function createVrIntroCrystalTutorial({ monkeyGuide, monkeyRoot, getWorld
     handoffAccepted = true;
     playConsume();
     monkeyGuide.showMessage('');
-    sequence = createVrMonkeyProgressionMessage({ monkeyGuide, blocks: [copy.unavailable, copy.complete],
+    sequence = createVrMonkeyProgressionMessage({ monkeyGuide, blocks: copy.handoff ?? [copy.unavailable, copy.complete],
       secondsPerLine: settings.messageDisplayDuration ?? VR_MONKEY_MESSAGE_TIMING.secondsPerLine,
       gapSeconds: settings.messageGapDuration ?? VR_MONKEY_MESSAGE_TIMING.gapSeconds, onCompleted: () => {
       if (!completionEmitted) { completionEmitted = true; active = false; monkeyGuide.setInteractionEnabled?.(true); onCompleted(); }

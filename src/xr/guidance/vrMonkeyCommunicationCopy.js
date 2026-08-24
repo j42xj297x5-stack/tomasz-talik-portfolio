@@ -47,7 +47,7 @@ export const VR_MONKEY_COMMUNICATION_COPY_PL = Object.freeze({
     'hint.reliquary.active': { blocks: ['Można już go uwolnić. Spełnił swoją rolę.'] }
   }),
   knowledge: Object.freeze({
-    'knowledge.astro.whatIsIt': { groupId: 'astro', root: true, policy: 'PERSISTENT', question: 'CO TO JEST ASTROLABIUM WIĘZI?', blocks: ['To narzędzie do rzeczy, które są daleko,\na chciałbyś, żeby były bliżej.', 'Chwytem namierzasz. Spustem przyciągasz.\nJeśli chcesz coś zachować — użyj Szpili drugiej ręki i chwyć.'] },
+    'knowledge.astro.whatIsIt': { groupId: 'astro', root: true, policy: 'PERSISTENT', question: 'CO TO JEST ASTROLABIUM WIĘZI?', blocks: ['To narzędzie do rzeczy, które są daleko,\na chciałbyś, żeby były bliżej.', 'Chwytem namierzasz. Spustem przyciągasz.', 'Jeśli chcesz coś zachować — użyj Szpili drugiej ręki i chwyć.'] },
     'knowledge.astro.why': { groupId: 'astro', policy: 'ONCE', question: 'A PO CO MI TO?', blocks: ['Żebyś mógł sięgnąć dalej.'] },
     'knowledge.astro.next': { groupId: 'astro', policy: 'CONTEXTUAL', question: 'CO DALEJ?', blocks: ['Potrzebujesz Kuli Asterionowej.\nPiec potrafi ją zbudować.\nZgromadź skorupy.'] },
     'knowledge.astro.bandSwitch': { groupId: 'astro', policy: 'ONCE', question: 'CO ROBI B?', blocks: ['Narzędzia zmieniają się razem ze światem.\nB przełącza pasmo Astrolabium.', 'Teraz możesz sięgnąć po inne obiekty'] },

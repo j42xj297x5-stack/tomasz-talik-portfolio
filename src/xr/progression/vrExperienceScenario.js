@@ -611,7 +611,7 @@ const points = Object.freeze([
     label: 'Monkey post-ring dialogue / attention, świadoma interakcja i obowiązkowa wiadomość',
     capabilities: Object.freeze([]),
     transitions: Object.freeze([
-      Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.COMPLETE,
+      Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.STAY,
         event: VR_SCENARIO_EVENT.MONKEY_TRIGGERED,
         milestonesToAdd: Object.freeze([]),
         effects: Object.freeze([VR_SCENARIO_EFFECT.BEGIN_POST_RING_MONKEY_DIALOGUE])
