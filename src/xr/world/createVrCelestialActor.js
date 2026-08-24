@@ -100,9 +100,9 @@ function createStarField(layer, settings) {
   return { points, geometry, material };
 }
 
-export function createVrCelestialActor({ parent, assetManager, fillLight, layer, settings }) {
-  if (!parent?.add || !assetManager?.cloneGltfScene || !fillLight?.getWorldPosition || !settings) {
-    throw new TypeError('VrCelestialActor requires parent, assetManager, fillLight and settings');
+export function createVrCelestialActor({ parent, assetManager, keyLight, layer, settings }) {
+  if (!parent?.add || !assetManager?.cloneGltfScene || !keyLight?.isDirectionalLight || !settings) {
+    throw new TypeError('VrCelestialActor requires parent, assetManager, keyLight and settings');
   }
   validateLayer(layer);
   const sunModel = assetManager.cloneGltfScene('sun-model');
@@ -112,14 +112,14 @@ export function createVrCelestialActor({ parent, assetManager, fillLight, layer,
   parent.add(root);
   const sunRoot = new THREE.Group();
   sunRoot.name = 'VrCelestialSunRoot';
-  sunRoot.scale.set(1, 1, 1);
+  sunRoot.scale.setScalar(settings.sun.scale);
   sunRoot.add(sunModel);
   root.add(sunRoot);
 
   root.updateWorldMatrix(true, false);
-  fillLight.updateWorldMatrix(true, false);
-  const centerWorld = root.getWorldPosition(new THREE.Vector3());
-  const lightWorld = fillLight.getWorldPosition(new THREE.Vector3());
+  keyLight.updateWorldMatrix(true, false);
+  const centerWorld = parent.getWorldPosition(new THREE.Vector3());
+  const lightWorld = keyLight.getWorldPosition(new THREE.Vector3());
   const sunDirection = lightWorld.clone().sub(centerWorld).normalize();
   const sunWorld = centerWorld.clone().addScaledVector(
     sunDirection, settings.sun.distanceFromWorldCenter
@@ -148,16 +148,16 @@ export function createVrCelestialActor({ parent, assetManager, fillLight, layer,
     node.material = Array.isArray(node.material) ? clones : clones[0];
   });
   root.updateWorldMatrix(true, true);
-  const sunBounds = new THREE.Box3().setFromObject(sunModel);
+  const sunBounds = new THREE.Box3().setFromObject(sunRoot);
   const sunBoundingSphere = sunBounds.getBoundingSphere(new THREE.Sphere());
   const boundingRadius = sunBoundingSphere.radius;
-  const lightOffsetFromSun = Math.max(3, boundingRadius * 2.5);
   const requiredRadius = boundingRadius * 1.15;
+  const lightOffsetFromSun = Math.max(3, requiredRadius * 2.5);
   const sunLight = new THREE.SpotLight(
     settings.sun.light.color,
     settings.sun.light.intensity,
-    lightOffsetFromSun + boundingRadius * 1.25,
-    Math.atan(requiredRadius / lightOffsetFromSun)
+    lightOffsetFromSun + requiredRadius,
+    Math.asin(requiredRadius / lightOffsetFromSun)
   );
   sunLight.name = 'VrCelestialSunLight';
   sunLight.castShadow = false;
@@ -165,7 +165,7 @@ export function createVrCelestialActor({ parent, assetManager, fillLight, layer,
   lightTarget.name = 'VrCelestialSunLightTarget';
   lightTarget.position.copy(root.worldToLocal(sunWorld.clone()));
   sunLight.position.copy(root.worldToLocal(
-    sunWorld.clone().addScaledVector(sunDirection, lightOffsetFromSun)
+    sunWorld.clone().addScaledVector(sunDirection, -lightOffsetFromSun)
   ));
   sunLight.target = lightTarget;
   root.add(sunLight, lightTarget);

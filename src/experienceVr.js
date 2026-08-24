@@ -272,7 +272,7 @@ const starLayer = sphericalLayer(VR_SPHERICAL_LAYER_IDS.STARS);
 const celestialActor = createVrCelestialActor({
   parent: worldStableRoot,
   assetManager,
-  fillLight: sceneLights.fill,
+  keyLight: sceneLights.key,
   layer: starLayer,
   settings: settings.celestial
 });
