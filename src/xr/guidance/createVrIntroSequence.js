@@ -218,7 +218,7 @@ export function createVrIntroSequence({ monkeyGuide, monkeyMotionRoot, monkeyVis
     if (state === VR_INTRO_STATE.POST_REVEAL_SILENCE) { silenceElapsed += delta; if (silenceElapsed >= (settings.postRevealSilenceDuration ?? 2)) { state = VR_INTRO_STATE.WAIT_RUNTIME_AFTER_POST_REVEAL_SILENCE; onPostRevealSilenceComplete(); } return; }
     updateMessages(delta);
     if (state === VR_INTRO_STATE.WAIT_PLAYER_PANEL_OPEN && playerGuidePanel?.isOpen()) { monkeyGuide.showMessage(''); state = VR_INTRO_STATE.WAIT_RUNTIME_AFTER_PLAYER_GUIDE_OPEN; onPlayerOpenedGuide(); }
-    if (state === VR_INTRO_STATE.WAIT_CONTROLS_VIEW && playerGuidePanel?.getActiveSectionId() === 'controls' && playerGuidePanel?.getViewState() === 'DETAIL') { state = VR_INTRO_STATE.WAIT_RUNTIME_AFTER_CONTROLS_VIEWED; onPlayerViewedControls(); }
+    if (state === VR_INTRO_STATE.WAIT_CONTROLS_VIEW && playerGuidePanel?.getActiveSectionId() === 'controls' && playerGuidePanel?.getViewState() === 'SECTION_DETAIL') { state = VR_INTRO_STATE.WAIT_RUNTIME_AFTER_CONTROLS_VIEWED; onPlayerViewedControls(); }
     if (state === VR_INTRO_STATE.WAIT_PANEL_CLOSE && !playerGuidePanel?.isOpen()) { state = VR_INTRO_STATE.WAIT_RUNTIME_AFTER_PLAYER_GUIDE_CLOSED; onPlayerClosedGuide(); }
     if (state === VR_INTRO_STATE.FOLLOWING) {
       turnElapsed += delta; monkeyMotionRoot.quaternion.slerpQuaternions(canonicalQuaternion, walkingQuaternion, Math.min(1, turnElapsed / (settings.guideTurnDuration ?? 1)));
