@@ -75,7 +75,7 @@ import { VR_DEBUG_CHECKPOINTS } from './xr/progression/vrDebugCheckpoints.js';
 import { createVrPostRingPresentation } from './xr/progression/createVrPostRingPresentation.js';
 import { createVrObservationWindow } from './xr/progression/createVrObservationWindow.js';
 import { VR_SCENARIO_CAPABILITY, VR_SCENARIO_EFFECT, VR_SCENARIO_EVENT, vrExperienceScenario } from './xr/progression/vrExperienceScenario.js';
-import { experienceVrPages, getExperienceVrPages, resolveExperienceVrPage } from './content/experienceVrPages.js';
+import { experienceVrPages, resolveExperienceVrPage } from './content/experienceVrPages.js';
 import { publicPath } from './utils/publicPath.js';
 
 const app = document.querySelector('#app');
@@ -676,10 +676,12 @@ const reliquaryHints = createVrReliquaryHints({
 });
 function getNextCrystalTier(node) {
   const branchId = node?.userData?.id;
-  return [...getExperienceVrPages(branchId)].sort((a, b) => a.order - b.order)
-    .find((page) => !progressionController.hasActivatedPage(page.id)
-      && !crystalCollection.instances.some((instance) => instance.branchId === branchId
-        && instance.tier === page.order && instance.state !== 'released'))?.order ?? null;
+  const currentTier = progressionController.getCurrentTier();
+  const page = progressionController.getNextPage(branchId, currentTier);
+  if (!page) return null;
+  const hasUnresolvedCrystal = crystalCollection.instances.some((instance) => instance.branchId === branchId
+    && instance.tier === currentTier && instance.state !== 'released');
+  return hasUnresolvedCrystal ? null : page.order;
 }
 function isGlyphActive(node) {
   const introAllowsGameplay = introQaBypass || runtimeExperience.can(VR_SCENARIO_CAPABILITY.CAN_USE_GLYPHS);
