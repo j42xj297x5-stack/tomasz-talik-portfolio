@@ -863,6 +863,7 @@ const p2ObservationWindow = createVrObservationWindow({
 const postRingMonkeyDialogue = createVrMandatoryMonkeyCommunication({ monkeyGuide,
   blocks: VR_MONKEY_COMMUNICATION_COPY_PL.progression['progression.postRing.changedWorld'].blocks,
   secondsPerLine: settings.intro.messageDisplayDuration,
+  openMenuOnCompleted: false,
   onTriggered: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.MONKEY_TRIGGERED),
   onCompleted: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.POST_RING_MONKEY_DIALOGUE_COMPLETED)
 });
