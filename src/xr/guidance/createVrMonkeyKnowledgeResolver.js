@@ -13,7 +13,7 @@ export function createVrMonkeyKnowledgeResolver({ locale, hasAstroKnowledge, has
   if (typeof getCurrentGuidanceContextId !== 'function') throw new TypeError('getCurrentGuidanceContextId must be a function.');
   if (typeof hasAstroBandSwitchKnowledge !== 'function') throw new TypeError('hasAstroBandSwitchKnowledge must be a function.');
   const topics = Object.entries(VR_MONKEY_COMMUNICATION_COPY_PL.knowledge)
-    .filter(([id]) => id.startsWith('knowledge.astro.') || id.startsWith('knowledge.p2.'))
+    .filter(([, topic]) => topic.groupId === 'currentGuidance')
     .map(([id, topic]) => Object.freeze({ id, ...topic, label: topic.question,
       type: VR_MONKEY_KNOWLEDGE_ITEM_TYPE.TOPIC }));
   const categories = Object.entries(VR_MONKEY_KNOWLEDGE_CATEGORIES_PL)
@@ -22,12 +22,10 @@ export function createVrMonkeyKnowledgeResolver({ locale, hasAstroKnowledge, has
 
   function unlocked(topic) {
     if (locale !== 'pl') return false;
-    const astro = hasAstroKnowledge() === true;
     if (topic.policy === VR_MONKEY_KNOWLEDGE_POLICY.CONTEXTUAL && topic.contextId) {
       return topic.contextId === getCurrentGuidanceContextId();
     }
-    if (topic.id === 'knowledge.astro.bandSwitch') return astro && hasAstroBandSwitchKnowledge() === true;
-    return topic.groupId === 'astro' ? astro : true;
+    return true;
   }
   function getLifecycle(topicId) {
     const topic = topics.find(({ id }) => id === topicId);
@@ -40,8 +38,7 @@ export function createVrMonkeyKnowledgeResolver({ locale, hasAstroKnowledge, has
   const available = () => topics.filter((topic) => [VR_MONKEY_KNOWLEDGE_LIFECYCLE.NEW,
     VR_MONKEY_KNOWLEDGE_LIFECYCLE.READ].includes(getLifecycle(topic.id)));
   const project = (items) => items.map((topic) => Object.freeze({ ...topic, lifecycle: getLifecycle(topic.id) }));
-  const availableCategories = () => locale === 'pl' ? categories.filter((category) => category.id === 'category.whatNow'
-    || available().some((topic) => topic.groupId === category.groupId)) : [];
+  const availableCategories = () => locale === 'pl' ? categories.filter((category) => category.id === 'category.whatNow') : [];
   return Object.freeze({
     getRootItems: () => availableCategories(),
     getGroupTopics: (groupId) => project(available().filter((topic) => topic.groupId === groupId)),

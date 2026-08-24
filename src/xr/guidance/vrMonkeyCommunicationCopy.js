@@ -5,7 +5,6 @@ export const VR_MONKEY_KNOWLEDGE_POLICY = Object.freeze({
 });
 
 export const VR_MONKEY_KNOWLEDGE_CATEGORIES_PL = Object.freeze({
-  'category.astro': Object.freeze({ label: 'ASTROLABIUM WIĘZI', groupId: 'astro' }),
   'category.whatNow': Object.freeze({ label: 'CO TERAZ?', groupId: 'currentGuidance' })
 });
 
@@ -49,12 +48,16 @@ export const VR_MONKEY_COMMUNICATION_COPY_PL = Object.freeze({
     'hint.reliquary.inserted': { blocks: ['Aktywuj Kryształ, odsłoń jego znaczenie.'] },
     'hint.reliquary.activate.soft': { blocks: ['Niektóre rzeczy trzeba obudzić.'] },
     'hint.reliquary.activate.medium': { blocks: ['Zobacz. Może coś się stanie.'] },
-    'hint.reliquary.active': { blocks: ['Można już go uwolnić. Spełnił swoją rolę.'] }
+    'hint.reliquary.active': { blocks: ['Można już go uwolnić. Spełnił swoją rolę.'] },
+    'hint.furnace.astroStart': { blocks: ['Otwórz panel informacyjny Pieca.', 'Wybierz moduł Astrolabium Więzi.', 'Zamknij komorę i użyj środkowego przycisku, gdy Piec jest poprawnie przygotowany.', 'Jeśli Piec odpycha obiekt, najpierw sprawdź wybraną operację.'] },
+    'hint.furnace.astroAvailable': { blocks: ['Otwórz komorę i wyciągnij swoje narzędzie.', 'Złap je.'] }
+  }),
+  acquisition: Object.freeze({
+    astro: Object.freeze({ blocks: ['To narzędzie do rzeczy, które są daleko,\na chciałbyś, żeby były bliżej.', 'Chwyt służy do namierzania.', 'Spust przyciąga namierzony obiekt.', 'Szpila i chwyt pozwalają przejąć obiekt.'] }),
+    asterion: Object.freeze({ blocks: ['To narzędzie do zmiany horyzontu.\nNie przybliża tego, co jest daleko.', 'Zmienia to, skąd patrzysz.\nDzięki temu dosięgniesz tego, czego wcześniej nie mogłeś.'] })
   }),
   knowledge: Object.freeze({
-    'knowledge.astro.why': { groupId: 'astro', policy: 'ONCE', question: 'A PO CO MI TO?', blocks: ['Żebyś mógł sięgnąć dalej.'] },
     'knowledge.astro.next': { groupId: 'currentGuidance', contextId: 'ASTERION_SHELL_COLLECTION', policy: 'CONTEXTUAL', question: 'CO DALEJ?', blocks: ['Potrzebujesz Kuli Asterionowej.\nPiec potrafi ją zbudować.\nZgromadź skorupy.'] },
-    'knowledge.astro.bandSwitch': { groupId: 'astro', policy: 'ONCE', question: 'CO ROBI B?', blocks: ['Narzędzia zmieniają się razem ze światem.\nB przełącza pasmo Astrolabium.', 'Teraz możesz sięgnąć po inne obiekty'] },
     'knowledge.intro.where': { groupId: 'intro', policy: 'CONTEXTUAL', question: 'DOKĄD?', blocks: ['Gdybym ci powiedział, poszedłbyś do odpowiedzi.', 'A ja pytam, czy pójdziesz za mną.'] },
     'knowledge.threshold.otherSide': { groupId: 'threshold', policy: 'CONTEXTUAL', question: 'CO JEST PO DRUGIEJ STRONIE?', blocks: ['Po tej stronie pytasz.\nPo tamtej będziesz sprawdzał.'] },
     'knowledge.threshold.easier': { groupId: 'threshold', policy: 'CONTEXTUAL', question: 'DLACZEGO ŁATWIEJ?', blocks: ['Nie musisz już wybierać, czy wejść.'] },
