@@ -2,6 +2,17 @@
 
 Status: current binding decisions organized by implementation status, not patch chronology. Synchronized through the Rune Stone Act decision on 2026-08-24.
 
+## 2026-08-24 — Final Rune Stone Act progression and Ether intervention
+
+1. Poprawna rune recipe konsumuje Small Glyph i Shell. Ekstrakcja tworzy nie fizyczny item, lecz trwałą semantyczną sylabę u `RuneStoneProgressionController`, zapisaną jako tuned family; wcześniejsze naturalne essence Large Glyph pozostają wyłączną prawdą `ProtoAstroTuningController`.
+2. Po `4.80` wszystkie pięć naturalnych Large Glyph jest już tuned i przechodzi do pełnosferycznego `SPHERE_FAR = 80 m`, black/unlit, z bardzo wolnym ruchem. Earth, Fire i Wood mogą przejść standardowy rune flow, a ich trzy instalacje uruchamiają późniejszy, osobny system anteny.
+3. Antena odnajduje Metal i Water Large Glyph. Ich Crystal/Reliquary flow kończy Tier 4: Metal jest complete, Water pozostaje celowo `4/5`. Metal otrzymuje normalną recepturę i czwartą instalację.
+4. `FOURTH_RUNE_INSTALLED` wywołuje authored technology-overload retreat Large Glyph. Późny spatial stage nie ma zatwierdzonego promienia i nie używa arbitralnie reserved `HIDDEN_GLYPHS` range.
+5. Water `4/5` jest zamierzonym deadlockiem. Model ma pięć standardowych elemental pairs oraz jeden specjalny ETER/VI bez sektora, vessela/socketu, elemental slotu, standardowego targetowania i procesu Pieca. Małpa przechwytuje Eter w authored beacie, którego jedynym progression skutkiem jest trwały Water-only knowledge/eligibility override.
+6. Eter nie zastępuje receptury: Water nadal wymaga Small Glyph Metal + Shell Water, sylaby, targetowania, transportu, capture i piątej instalacji. Dopiero pięć installed elemental families tworzy finalne narzędzie.
+7. `FINAL_WATER_HUNT` zaczyna się dopiero po pełnej instalacji Water. Timer ma startowe `180 s` ze statusem **TUNING** i jest transient mechaniką final-hunt ownera; Scenario widzi tylko semantic start/success oraz ewentualny przyszły timeout. **`FINAL_HUNT_TIMEOUT_BEHAVIOR = OPEN DESIGN DECISION`.** Ostatni Water Crystal przechodzi przez Reliquary do Water `5/5`, Tier 5 i istniejącego finału.
+8. Authority i pełna roadmapa RUNE A1–A21 znajdują się w [`VR_RUNE_STONES_MODEL.md`](../technical/VR_RUNE_STONES_MODEL.md). Wszystko pozostaje **TARGET / NOT IMPLEMENTED**.
+
 ## 2026-08-24 — Rune Stone Act after Tier 3 and Furnace target contract
 
 1. The future Rune Stone Act begins after settled Tier 3 at the currently implemented stable boundary `4.80`. Rune Stones reuse the existing world-stable `RUNE_STONES = 50–75 m`; Large Glyph remains a separate actor and uses its existing `SPHERE_FAR = 80 m` capability with full-sphere, very slow, black/unlit baseline presentation.
@@ -11,10 +22,10 @@ Status: current binding decisions organized by implementation status, not patch 
 5. All target Furnace work presentations remove mechanical process-spin from chamber and lower lid while retaining emission, `fire_cell`, internal light and four energy points. Physical chamber/lid rotation remains open/close-only.
 6. `astro_piec_work_03.mp3` is reassigned from any future physical stone-process meaning to rune tuning of Astrolabium from Small Glyph + Shell. The Rune Stone never enters the Furnace; no fourth work sound is added. `work_01`, `work_02` and `work_create_01` retain their shell, Small Glyph and device-production meanings.
 7. Future `RuneStoneProgressionController` exclusively owns tuned and installed rune families and reads, but never copies, sector progression. `ProtoAstroTuningController` remains exclusive owner of natural family essences for Large Glyph.
-8. One pair-specific `RuneBridgeActor` per sector owns only `HIDDEN → DOCKED → EXTENDING/EXTENDED → ORBITING` presentation/mechanics. It knows no point and owns no progression. Stone transport remains `FREE → LOCKED_BY_ASTRO → CARRIED_ORBIT → SOCKET_CAPTURE → INSTALLED` with persistent commit only after completed capture.
+8. One pair-specific `RuneBridgeActor` per elemental sector owns only `HIDDEN → DOCKED → EXTENDING/EXTENDED → ORBITING` presentation/mechanics. It knows no point and owns no progression. Stone transport remains `FREE → LOCKED_BY_ASTRO → CARRIED_ORBIT → SOCKET_CAPTURE → INSTALLED` with persistent commit only after completed capture.
 9. First implementation stability ends at `FIRST_RUNE_INSTALLED`; sector/antenna control is a later separate actor/design. Scenario points represent only meaningful beats or stable rights, never slots, timer, targeting, pull, bridge interpolation or capture.
-10. **OPEN DESIGN DECISION:** physical disposition of Small Glyph and Shell after a successful rune-tuning cycle is intentionally unresolved. The milestone that commits rune tuning cannot be implemented until this is decided.
-11. The authoritative milestone sequence is RUNE A1–A12 in [`VR_RUNE_STONES_MODEL.md`](../technical/VR_RUNE_STONES_MODEL.md). All behavior remains **TARGET / NOT IMPLEMENTED** until bounded runtime tasks land.
+10. **UPDATED BY FINAL 2026-08-24 DECISION:** successful rune tuning consumes both physical ingredients and creates only a persistent semantic syllable/tuned-family fact.
+11. **UPDATED BY FINAL 2026-08-24 DECISION:** the authoritative milestone sequence is RUNE A1–A21 in [`VR_RUNE_STONES_MODEL.md`](../technical/VR_RUNE_STONES_MODEL.md). All behavior remains **TARGET / NOT IMPLEMENTED** until bounded runtime tasks land.
 
 ## 2026-08-23 — Large Glyph Actor ownership migration completed
 
@@ -40,7 +51,7 @@ This decision supersedes earlier binding statements that assigned world-stable o
 8. **UPDATED BY 2026-08-23 DECISION:** `LARGE_GLYPHS` is implemented with family-gated real target/pull; `RUNESTONES` remains **APPROVED / NOT IMPLEMENTED**. No final future B cycle order is established.
 9. Band identity is semantic, not `RED/YELLOW/GREEN/BLUE/ULTRAVIOLET`. Exact colors/symbols remain open and fuel family colors are not band colors.
 10. Four authored panels have the approved target semantics recorded in [`VR_PROTO_ASTRO_MODEL.md`](../technical/VR_PROTO_ASTRO_MODEL.md). Existing panel system/shell projection is current; Panels 2–4 and universal target projection are **NOT IMPLEMENTED**.
-11. VI/Eter plus the level-6 shell family are **RESERVED / NOT YET DESIGNED** for the later Haiku Cosmos finale. Future platform placement is approved direction, not current runtime.
+11. **UPDATED BY FINAL 2026-08-24 DECISION:** VI/Eter is a special final-crisis stone captured by the Monkey, not a natural family or standard platform placement. It grants only the Water eligibility override described above.
 12. Scenario is authored through Tier 2, `4.20`, `4.30` and stable `4.40`. Point `4.40` has mainline target `100.10` but no transition and therefore does not auto-advance.
 
 ## 2026-08-20 — rozdzielenie kanonu komunikacji Experience VR
