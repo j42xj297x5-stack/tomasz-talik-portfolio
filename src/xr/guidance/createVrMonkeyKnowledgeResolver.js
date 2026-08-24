@@ -1,27 +1,33 @@
-import { VR_MONKEY_COMMUNICATION_COPY_PL, VR_MONKEY_KNOWLEDGE_POLICY } from './vrMonkeyCommunicationCopy.js';
+import { VR_MONKEY_COMMUNICATION_COPY_PL, VR_MONKEY_KNOWLEDGE_CATEGORIES_PL,
+  VR_MONKEY_KNOWLEDGE_POLICY } from './vrMonkeyCommunicationCopy.js';
+
+export const VR_MONKEY_KNOWLEDGE_ITEM_TYPE = Object.freeze({ CATEGORY: 'CATEGORY', TOPIC: 'TOPIC' });
 
 export const VR_MONKEY_KNOWLEDGE_LIFECYCLE = Object.freeze({
   LOCKED: 'LOCKED', NEW: 'NEW', READ: 'READ', ARCHIVED: 'ARCHIVED'
 });
 
 export function createVrMonkeyKnowledgeResolver({ locale, hasAstroKnowledge, hasAstroBandSwitchKnowledge,
-  hasAsterionKnowledge, hasP2Knowledge }) {
+  getCurrentGuidanceContextId }) {
   if (typeof hasAstroKnowledge !== 'function') throw new TypeError('hasAstroKnowledge must be a function.');
-  if (typeof hasAsterionKnowledge !== 'function') throw new TypeError('hasAsterionKnowledge must be a function.');
-  if (typeof hasP2Knowledge !== 'function') throw new TypeError('hasP2Knowledge must be a function.');
+  if (typeof getCurrentGuidanceContextId !== 'function') throw new TypeError('getCurrentGuidanceContextId must be a function.');
   if (typeof hasAstroBandSwitchKnowledge !== 'function') throw new TypeError('hasAstroBandSwitchKnowledge must be a function.');
   const topics = Object.entries(VR_MONKEY_COMMUNICATION_COPY_PL.knowledge)
-    .filter(([id]) => id.startsWith('knowledge.astro.') || id.startsWith('knowledge.p2.') || id === 'knowledge.asterion.whatIsIt')
-    .map(([id, topic]) => Object.freeze({ id, ...topic, label: topic.question }));
+    .filter(([id]) => id.startsWith('knowledge.astro.') || id.startsWith('knowledge.p2.'))
+    .map(([id, topic]) => Object.freeze({ id, ...topic, label: topic.question,
+      type: VR_MONKEY_KNOWLEDGE_ITEM_TYPE.TOPIC }));
+  const categories = Object.entries(VR_MONKEY_KNOWLEDGE_CATEGORIES_PL)
+    .map(([id, category]) => Object.freeze({ id, ...category, type: VR_MONKEY_KNOWLEDGE_ITEM_TYPE.CATEGORY }));
   const read = new Set();
 
   function unlocked(topic) {
     if (locale !== 'pl') return false;
-    const astro = hasAstroKnowledge() === true; const asterion = hasAsterionKnowledge() === true;
-    if (topic.id === 'knowledge.astro.next') return astro && !asterion;
+    const astro = hasAstroKnowledge() === true;
+    if (topic.policy === VR_MONKEY_KNOWLEDGE_POLICY.CONTEXTUAL && topic.contextId) {
+      return topic.contextId === getCurrentGuidanceContextId();
+    }
     if (topic.id === 'knowledge.astro.bandSwitch') return astro && hasAstroBandSwitchKnowledge() === true;
-    if (topic.groupId === 'p2') return hasP2Knowledge() === true;
-    return topic.groupId === 'astro' ? astro : asterion;
+    return topic.groupId === 'astro' ? astro : true;
   }
   function getLifecycle(topicId) {
     const topic = topics.find(({ id }) => id === topicId);
@@ -34,9 +40,12 @@ export function createVrMonkeyKnowledgeResolver({ locale, hasAstroKnowledge, has
   const available = () => topics.filter((topic) => [VR_MONKEY_KNOWLEDGE_LIFECYCLE.NEW,
     VR_MONKEY_KNOWLEDGE_LIFECYCLE.READ].includes(getLifecycle(topic.id)));
   const project = (items) => items.map((topic) => Object.freeze({ ...topic, lifecycle: getLifecycle(topic.id) }));
+  const availableCategories = () => locale === 'pl' ? categories.filter((category) => category.id === 'category.whatNow'
+    || available().some((topic) => topic.groupId === category.groupId)) : [];
   return Object.freeze({
-    getRootTopics: () => project(available().filter(({ root }) => root)),
+    getRootItems: () => availableCategories(),
     getGroupTopics: (groupId) => project(available().filter((topic) => topic.groupId === groupId)),
+    getCategory: (categoryId) => availableCategories().find(({ id }) => id === categoryId) ?? null,
     getTopic: (topicId) => project(available().filter(({ id }) => id === topicId))[0] ?? null,
     getLifecycle,
     completeTopic(topicId) { if (topics.some(({ id }) => id === topicId) && unlocked(topics.find(({ id }) => id === topicId))) read.add(topicId); },

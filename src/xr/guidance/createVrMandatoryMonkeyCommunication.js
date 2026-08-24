@@ -3,12 +3,13 @@ import { createVrMonkeyProgressionMessage } from './createVrMonkeyProgressionMes
 const PHASE = Object.freeze({ IDLE: 'IDLE', ATTENTION: 'ATTENTION', PLAYBACK: 'PLAYBACK', COMPLETE: 'COMPLETE' });
 
 export function createVrMandatoryMonkeyCommunication({ monkeyGuide, blocks, secondsPerLine,
-  onTriggered = () => {}, onCompleted = () => {} }) {
+  onTriggered = () => {}, onCompleted = () => {}, openMenuOnCompleted = true }) {
   let phase = PHASE.IDLE;
   const playback = createVrMonkeyProgressionMessage({ monkeyGuide, blocks, secondsPerLine,
     onCompleted() {
       phase = PHASE.COMPLETE;
       monkeyGuide.setDialogueOverride(null);
+      if (openMenuOnCompleted) monkeyGuide.open();
       onCompleted();
     }
   });

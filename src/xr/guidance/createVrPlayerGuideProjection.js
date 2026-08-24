@@ -1,5 +1,6 @@
 import { experienceVrPages } from '../../content/experienceVrPages.js';
 import { VR_EXPERIENCE_POINT, VR_SCENARIO_CAPABILITY } from '../progression/vrExperienceScenario.js';
+import { resolveVrPlayerGuideContent } from './vrPlayerGuideContent.js';
 
 const TASK_BODY_BY_POINT = Object.freeze({
   [VR_EXPERIENCE_POINT['1.10']]: 'KALIBRACJA XR',
@@ -37,14 +38,12 @@ const TASK_BODY_BY_POINT = Object.freeze({
 
 const TOOLS = Object.freeze([
   Object.freeze({
-    capability: VR_SCENARIO_CAPABILITY.CAN_EQUIP_ASTRO,
-    label: 'ASTROLABIUM WIĘZI',
-    body: 'A — wyposaż / schowaj\nChwyt — namierzanie\nSpust — przyciąganie\nSzpila + chwyt — przejęcie obiektu'
+    id: 'astro',
+    capability: VR_SCENARIO_CAPABILITY.CAN_EQUIP_ASTRO
   }),
   Object.freeze({
-    capability: VR_SCENARIO_CAPABILITY.CAN_EQUIP_ASTERION,
-    label: 'KULA ASTERIONOWA',
-    body: 'X — wyposaż / schowaj\nSpust — zmieniaj orientację platformy'
+    id: 'asterion',
+    capability: VR_SCENARIO_CAPABILITY.CAN_EQUIP_ASTERION
   })
 ]);
 
@@ -78,13 +77,15 @@ export function createVrPlayerGuideProjection({ locale, getCurrentPointId, can, 
 
   function getTools() {
     if (locale !== 'pl') return [];
+    const content = resolveVrPlayerGuideContent(locale);
     return TOOLS.filter(({ capability }) => can(capability))
-      .map(({ label, body }) => ({
-        label,
-        body: label === 'ASTROLABIUM WIĘZI'
+      .map(({ id }) => ({
+        id,
+        label: content.tools[id].label,
+        body: `${content.tools[id].description}\n\n${id === 'astro'
           && can(VR_SCENARIO_CAPABILITY.CAN_SWITCH_ASTRO_BAND)
-          ? `${body}\nB — zmień pasmo celu`
-          : body
+          ? `${content.tools[id].controls}\n${content.tools[id].bandSwitchControl}`
+          : content.tools[id].controls}`
       }));
   }
 

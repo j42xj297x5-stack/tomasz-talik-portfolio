@@ -4,6 +4,11 @@ export const VR_MONKEY_KNOWLEDGE_POLICY = Object.freeze({
   PERSISTENT: 'PERSISTENT', ONCE: 'ONCE', CONTEXTUAL: 'CONTEXTUAL'
 });
 
+export const VR_MONKEY_KNOWLEDGE_CATEGORIES_PL = Object.freeze({
+  'category.astro': Object.freeze({ label: 'ASTROLABIUM WIĘZI', groupId: 'astro' }),
+  'category.whatNow': Object.freeze({ label: 'CO TERAZ?', groupId: 'currentGuidance' })
+});
+
 export const VR_MONKEY_COMMUNICATION_COPY_PL = Object.freeze({
   progression: Object.freeze({
     'progression.intro.firstPresence': { blocks: ['Dobrze.', 'Masz ręce.\nTo już więcej, niż ma większość problemów.'] },
@@ -47,15 +52,13 @@ export const VR_MONKEY_COMMUNICATION_COPY_PL = Object.freeze({
     'hint.reliquary.active': { blocks: ['Można już go uwolnić. Spełnił swoją rolę.'] }
   }),
   knowledge: Object.freeze({
-    'knowledge.astro.whatIsIt': { groupId: 'astro', root: true, policy: 'PERSISTENT', question: 'CO TO JEST ASTROLABIUM WIĘZI?', blocks: ['To narzędzie do rzeczy, które są daleko,\na chciałbyś, żeby były bliżej.', 'Chwytem namierzasz. Spustem przyciągasz.\nJeśli chcesz coś zachować — użyj Szpili drugiej ręki i chwyć.'] },
     'knowledge.astro.why': { groupId: 'astro', policy: 'ONCE', question: 'A PO CO MI TO?', blocks: ['Żebyś mógł sięgnąć dalej.'] },
-    'knowledge.astro.next': { groupId: 'astro', policy: 'CONTEXTUAL', question: 'CO DALEJ?', blocks: ['Potrzebujesz Kuli Asterionowej.\nPiec potrafi ją zbudować.\nZgromadź skorupy.'] },
+    'knowledge.astro.next': { groupId: 'currentGuidance', contextId: 'ASTERION_SHELL_COLLECTION', policy: 'CONTEXTUAL', question: 'CO DALEJ?', blocks: ['Potrzebujesz Kuli Asterionowej.\nPiec potrafi ją zbudować.\nZgromadź skorupy.'] },
     'knowledge.astro.bandSwitch': { groupId: 'astro', policy: 'ONCE', question: 'CO ROBI B?', blocks: ['Narzędzia zmieniają się razem ze światem.\nB przełącza pasmo Astrolabium.', 'Teraz możesz sięgnąć po inne obiekty'] },
-    'knowledge.asterion.whatIsIt': { groupId: 'asterion', root: true, policy: 'PERSISTENT', question: 'CO TO JEST KULA ASTERIONOWA?', blocks: ['To narzędzie do zmiany horyzontu.\nNie przybliża tego, co jest daleko.', 'Zmienia to, skąd patrzysz.\nDzięki temu dosięgniesz tego, czego wcześniej nie mogłeś.'] },
     'knowledge.intro.where': { groupId: 'intro', policy: 'CONTEXTUAL', question: 'DOKĄD?', blocks: ['Gdybym ci powiedział, poszedłbyś do odpowiedzi.', 'A ja pytam, czy pójdziesz za mną.'] },
     'knowledge.threshold.otherSide': { groupId: 'threshold', policy: 'CONTEXTUAL', question: 'CO JEST PO DRUGIEJ STRONIE?', blocks: ['Po tej stronie pytasz.\nPo tamtej będziesz sprawdzał.'] },
     'knowledge.threshold.easier': { groupId: 'threshold', policy: 'CONTEXTUAL', question: 'DLACZEGO ŁATWIEJ?', blocks: ['Nie musisz już wybierać, czy wejść.'] },
-    'knowledge.p2.whatNow': { groupId: 'p2', root: true, policy: 'CONTEXTUAL', question: 'CO TERAZ?', blocks: ['Astrolabium słucha teraz na więcej niż jednym paśmie.', 'B zmienia pasmo.', 'Poszukaj tego, co pojawiło się razem z nowym światem.'] },
-    'knowledge.p2.tuneAstrolabium': { groupId: 'p2', root: true, policy: 'CONTEXTUAL', question: 'JAK DOSTROIĆ ASTROLABIUM?', blocks: ['Najpierw znajdź mały glif.', 'Potem wróć do Pieca.', 'On potrafi nauczyć narzędzie nowych rzeczy.'] }
+    'knowledge.p2.whatNow': { groupId: 'currentGuidance', contextId: 'P2_ASTRO_TUNING', policy: 'CONTEXTUAL', question: 'CO TERAZ?', blocks: ['Astrolabium słucha teraz na więcej niż jednym paśmie.', 'B zmienia pasmo.', 'Poszukaj tego, co pojawiło się razem z nowym światem.'] },
+    'knowledge.p2.tuneAstrolabium': { groupId: 'currentGuidance', contextId: 'P2_ASTRO_TUNING', policy: 'CONTEXTUAL', question: 'JAK DOSTROIĆ ASTROLABIUM?', blocks: ['Najpierw znajdź mały glif.', 'Potem wróć do Pieca.', 'On potrafi nauczyć narzędzie nowych rzeczy.'] }
   })
 });

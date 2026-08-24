@@ -56,6 +56,7 @@ import { createVrPlayerGuidePanel } from './xr/guidance/createVrPlayerGuidePanel
 import { createVrPlayerGuideProjection } from './xr/guidance/createVrPlayerGuideProjection.js';
 import { createVrMonkeyGuide } from './xr/guidance/createVrMonkeyGuide.js';
 import { createVrMonkeyKnowledgeResolver } from './xr/guidance/createVrMonkeyKnowledgeResolver.js';
+import { createVrMonkeyGuidanceContextResolver } from './xr/guidance/createVrMonkeyGuidanceContextResolver.js';
 import { createVrMandatoryMonkeyCommunication } from './xr/guidance/createVrMandatoryMonkeyCommunication.js';
 import { VR_MONKEY_COMMUNICATION_COPY_PL } from './xr/guidance/vrMonkeyCommunicationCopy.js';
 import { createVrFurnaceIntro } from './xr/guidance/createVrFurnaceIntro.js';
@@ -75,7 +76,7 @@ import { VR_DEBUG_CHECKPOINTS } from './xr/progression/vrDebugCheckpoints.js';
 import { createVrPostRingPresentation } from './xr/progression/createVrPostRingPresentation.js';
 import { createVrObservationWindow } from './xr/progression/createVrObservationWindow.js';
 import { VR_SCENARIO_CAPABILITY, VR_SCENARIO_EFFECT, VR_SCENARIO_EVENT, vrExperienceScenario } from './xr/progression/vrExperienceScenario.js';
-import { experienceVrPages, getExperienceVrPages, resolveExperienceVrPage } from './content/experienceVrPages.js';
+import { experienceVrPages, resolveExperienceVrPage } from './content/experienceVrPages.js';
 import { publicPath } from './utils/publicPath.js';
 
 const app = document.querySelector('#app');
@@ -490,6 +491,11 @@ const playerGuidePanel = createVrPlayerGuidePanel({
   debugCheckpoints: debugCheckpointsEnabled ? VR_DEBUG_CHECKPOINTS : [],
   onDebugCheckpoint: (checkpointId) => enterVrDebugCheckpoint?.(checkpointId)
 });
+const monkeyGuidanceContextResolver = createVrMonkeyGuidanceContextResolver({
+  can: (capability) => runtimeExperience?.can(capability) === true,
+  getAsterionProductionState: () => asterionProductionController.getState(),
+  getExtractedFamilyCodes: () => protoAstroTuningController.getExtractedFamilyCodes()
+});
 const monkeyKnowledgeResolver = createVrMonkeyKnowledgeResolver({
   locale: language,
   hasAstroKnowledge: () => runtimeExperience?.can(
@@ -498,10 +504,7 @@ const monkeyKnowledgeResolver = createVrMonkeyKnowledgeResolver({
   hasAstroBandSwitchKnowledge: () => runtimeExperience?.can(
     VR_SCENARIO_CAPABILITY.CAN_SWITCH_ASTRO_BAND
   ) === true,
-  hasAsterionKnowledge: () => runtimeExperience?.can(
-    VR_SCENARIO_CAPABILITY.CAN_EQUIP_ASTERION
-  ) === true,
-  hasP2Knowledge: () => runtimeExperience?.can(VR_SCENARIO_CAPABILITY.CAN_SWITCH_ASTRO_BAND) === true
+  getCurrentGuidanceContextId: () => monkeyGuidanceContextResolver.getCurrentContextId()
 });
 const monkeyGuide = createVrMonkeyGuide({
   actorRoot: monkeyMotionRoot,
@@ -676,10 +679,12 @@ const reliquaryHints = createVrReliquaryHints({
 });
 function getNextCrystalTier(node) {
   const branchId = node?.userData?.id;
-  return [...getExperienceVrPages(branchId)].sort((a, b) => a.order - b.order)
-    .find((page) => !progressionController.hasActivatedPage(page.id)
-      && !crystalCollection.instances.some((instance) => instance.branchId === branchId
-        && instance.tier === page.order && instance.state !== 'released'))?.order ?? null;
+  const currentTier = progressionController.getCurrentTier();
+  const page = progressionController.getNextPage(branchId, currentTier);
+  if (!page) return null;
+  const hasUnresolvedCrystal = crystalCollection.instances.some((instance) => instance.branchId === branchId
+    && instance.tier === currentTier && instance.state !== 'released');
+  return hasUnresolvedCrystal ? null : page.order;
 }
 function isGlyphActive(node) {
   const introAllowsGameplay = introQaBypass || runtimeExperience.can(VR_SCENARIO_CAPABILITY.CAN_USE_GLYPHS);
@@ -863,6 +868,7 @@ const p2ObservationWindow = createVrObservationWindow({
 const postRingMonkeyDialogue = createVrMandatoryMonkeyCommunication({ monkeyGuide,
   blocks: VR_MONKEY_COMMUNICATION_COPY_PL.progression['progression.postRing.changedWorld'].blocks,
   secondsPerLine: settings.intro.messageDisplayDuration,
+  openMenuOnCompleted: false,
   onTriggered: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.MONKEY_TRIGGERED),
   onCompleted: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.POST_RING_MONKEY_DIALOGUE_COMPLETED)
 });

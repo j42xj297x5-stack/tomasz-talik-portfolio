@@ -24,7 +24,7 @@ Reserved oznacza wyłącznie kontrakt przestrzenny. Nie powstają dla tych warst
 
 Głębokość jest zdekorrelowana od polarnego indeksu przez low-discrepancy golden-ratio sequence z osobną stable phase. Promień ma rozkład objętościowy `cbrt(inner³ + u(outer³-inner³))`, więc sloty nie leżą na jednej powierzchni.
 
-Dla visual bounds actor przyjmuje radial clearance równy promieniowi bounding sphere: efektywny zakres środka to `[inner + clearance, outer - clearance]`. Gdy nie ma dodatniego zakresu, inicjalizacja kończy się błędem zawierającym layer, clearance i thickness; asset nie jest skalowany ani przenoszony.
+Dla visual bounds actor przyjmuje radial clearance równy promieniowi bounding sphere: efektywny zakres środka to `[inner + clearance, outer - clearance]`. Każda instancja Shell lokalnie przesuwa swój visual o ujemny wyliczony `boundingCenter`, dlatego środek bounding sphere pokrywa się z originem wrappera i slotu, a clearance pozostaje samym `boundingRadius` względem tego samego originu. Gdy nie ma dodatniego zakresu, inicjalizacja kończy się błędem zawierającym layer, clearance i thickness; asset nie jest skalowany ani przenoszony.
 
 ## Ownership i ruch
 
