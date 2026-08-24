@@ -1,803 +1,151 @@
-# EXPERIENCE VR — KANONICZNE TEKSTY KOMUNIKACJI
+# Experience VR — kanoniczne teksty komunikacji
 
-**Status:** kanoniczny katalog copy PL  
-**Mechanika:** `EXPERIENCE_VR_COMMUNICATION_MECHANICS.md`  
-**Zakres:** teksty obecne i zatwierdzone kierunkowo dla kolejnych etapów Experience VR
+**Status:** CURRENT / canonical copy PL po G6
+**Mechanika:** [`EXPERIENCE_VR_COMMUNICATION_MECHANICS.md`](EXPERIENCE_VR_COMMUNICATION_MECHANICS.md)
 
----
+## Ownership copy
 
-## 1. Zasady użycia
+| Klasa | Powierzchnia i trwałość | Źródło |
+| --- | --- | --- |
+| A. PROGRESSION / MANDATORY COPY | Małpa; obowiązkowe beaty | `VR_MONKEY_COMMUNICATION_COPY_PL.progression`, `decisions` i tutorial |
+| B. TIMED / SITUATIONAL HINT COPY | Małpa; ephemeral, tylko gdy relevant | `VR_MONKEY_COMMUNICATION_COPY_PL.hints` |
+| C. ACQUISITION COPY | Małpa; one-shot first teaching po claim | `VR_MONKEY_COMMUNICATION_COPY_PL.acquisition` |
+| D. CURRENT OBJECTIVE COPY | wspólny projection; Y + Małpa | `createVrCurrentObjectiveProjection` |
+| E. PERSISTENT TOOL KNOWLEDGE | wyłącznie panel Y | `vrPlayerGuideContent.js` |
 
-Każdy wpis posiada typ zgodny z:
+Te klasy mogą opisywać ten sam przedmiot w różnych momentach i celach, ale nie są konkurującymi trwałymi źródłami prawdy. Małpa nie ma persistent tool knowledge.
 
-`EXPERIENCE_VR_COMMUNICATION_MECHANICS.md`
+## A. Progression / mandatory
 
-Nie wolno:
+Aktywne mandatory copy jest przechowywane jako authored blocks w `vrMonkeyCommunicationCopy.js`. Blok jest jednostką autorską; jawne nowe linie są zachowane, nie ma `DALEJ`, a progression completion następuje dopiero po pełnym playback i finalnym gap. Ten katalog nie tworzy kopii objective ani instrukcji Y.
 
-- dzielić tych tekstów na pojedyncze linie wymagające `DALEJ`;
-- zmieniać typu tekstu bez decyzji projektowej;
-- pokazywać tematu przed jego warunkiem odblokowania;
-- przenosić instrukcji sterowania z panelu Y do obowiązkowego monologu Małpy.
+## B. Timed / situational hints
 
-Wersja angielska pozostaje osobnym zadaniem lokalizacyjnym. Ten dokument ustala copy polskie.
+### `hint.furnace.astroStart`
 
----
-
-# 2. P0 — wejście
-
-## `progression.intro.firstPresence`
-
-**TYP:** `PROGRESSION_MESSAGE`  
-**TRIGGER:** reveal Małpy  
-**MIEJSCE:** panel wypowiedzi Małpy  
-**WARUNEK ODBLOKOWANIA:** wejście do intro  
-**CZY BLOKUJE PROGRESJĘ:** nie przez kliknięcie; timing należy do sekwencji  
-**CZY ZOSTAJE W PAMIĘCI:** nie
-
-**TEKST:**
-
-> Dobrze.
+> Otwórz panel informacyjny Pieca.
 >
 > --- BLOCK ---
 >
-> Masz ręce.  
-> To już więcej, niż ma większość problemów.
-
----
-
-## `progression.intro.worldListens`
-
-**TYP:** `PROGRESSION_MESSAGE`  
-**TRIGGER:** onboarding podstawowej interakcji  
-**MIEJSCE:** Małpa  
-**CZY BLOKUJE PROGRESJĘ:** sam tekst nie; progresję kończy rzeczywista interakcja
-
-**TEKST:**
-
-> Jak zapomnisz — przypomnę.
+> Wybierz moduł Astrolabium Więzi.
 >
-> Zobaczmny, czy świat cię słucha.
-
----
-
-## `progression.intro.pointAtMonkey`
-
-**TYP:** `PROGRESSION_MESSAGE`
-
-**TEKST:**
-
-> Wskaż mnie.
-
----
-
-## `progression.intro.triggerMonkey`
-
-**TYP:** `PROGRESSION_MESSAGE`
-
-**TEKST:**
-
-> Teraz spust.
-
----
-
-## `progression.intro.pointerLearned`
-
-**TYP:** `PROGRESSION_MESSAGE`
-
-**TEKST:**
-
-> Widzisz?  
-> Już nauczyłeś świat, gdzie patrzysz.
-
----
-
-# 3. P0 — zaproszenie
-
-## `decision.intro.go`
-
-**TYP:** `PLAYER_DECISION`  
-**MIEJSCE:** Małpa + panel odpowiedzi  
-**CZY BLOKUJE PROGRESJĘ:** tak
-
-**PYTANIE:**
-
-> Idziesz?
-
-**OPCJE:**
-
-- `IDĘ`
-- `DOKĄD?`
-- `NIE`
-
----
-
-## `knowledge.intro.where`
-
-**TYP:** `KNOWLEDGE_TOPIC`
-
-**TRIGGER:** gracz wybiera `DOKĄD?`
-
-**TEKST:**
-
-> Gdybym ci powiedział, poszedłbyś do odpowiedzi.  
-> A ja pytam, czy pójdziesz za mną.
-
----
-
-## `decision.intro.no`
-
-**TYP:** `PLAYER_DECISION`
-
-**TEKST:**
-
-> Dobrze.  
-> Nie każda droga musi być twoja.
-
----
-
-## `progression.intro.follow`
-
-**TYP:** `PROGRESSION_MESSAGE`
-
-**TEKST:**
-
-> To chodź.
-
----
-
-# 4. P0 — próg
-
-## `decision.threshold.enter`
-
-**TYP:** `PLAYER_DECISION`  
-**CZY BLOKUJE PROGRESJĘ:** tak
-
-**TEKST:**
-
-> Dalej jest próg.  
-> Możesz go nie przekraczać.  
-> Jeśli przekroczysz — wrócisz dopiero wtedy, kiedy droga się skończy.  
-> Wchodzisz?
-
-**OPCJE:**
-
-- `PRZEKRACZAM PRÓG`
-- `CO JEST PO DRUGIEJ STRONIE?`
-- `WRACAM`
-
----
-
-## `knowledge.threshold.otherSide`
-
-**TYP:** `KNOWLEDGE_TOPIC`
-
-**TEKST:**
-
-> Po tej stronie pytasz.  
-> Po tamtej będziesz sprawdzał.
-
----
-
-## `decision.threshold.return`
-
-**TYP:** `PLAYER_DECISION`
-
-**TEKST:**
-
-> Mądra decyzja. Albo tchórzliwa.  
-> Czasem to ta sama decyzja.  
-> Dopiero później wiadomo.
-
----
-
-## `progression.threshold.crossed`
-
-**TYP:** `PROGRESSION_MESSAGE`
-
-**TEKST:**
-
-> No.  
-> Teraz jest łatwiej.
-
----
-
-## `knowledge.threshold.easier`
-
-**TYP:** `KNOWLEDGE_TOPIC`
-
-**TEKST:**
-
-> Nie musisz już wybierać, czy wejść.
-
----
-
-# 5. P1 — pierwsze glify i kryształ
-
-## `progression.glyphs.firstInstruction`
-
-**TYP:** `PROGRESSION_MESSAGE`
-
-**TEKST:**
-
-> Pięć znaków.  
-> Nie pytaj jeszcze, co znaczą.  
-> Dotknij jednego Szpilą.
-
----
-
-## `hint.glyphs.how.soft`
-
-**TYP:** `HINT_SOFT`
-
-**TEKST:**
-
-> Wskaż znak.  
-> Spust.
-
----
-
-## `progression.crystal.firstCreated`
-
-**TYP:** `PROGRESSION_MESSAGE`
-
-**TEKST:**
-
-> Odpowiedział.
-
----
-
-## `hint.crystal.whatNow.soft`
-
-**TYP:** `HINT_SOFT`
-
-**TEKST:**
-
-> Najpierw go weź.
-
----
-
-## `hint.crystal.grab.medium`
-
-**TYP:** `HINT_MEDIUM`
-
-**TEKST:**
-
-> Chwyt.
-
----
-
-# 6. P1 — Naczynie
-
-## `progression.reliquary.idea`
-
-**TYP:** `PROGRESSION_MESSAGE`
-
-**TRIGGER:** pierwszy kryształ przyniesiony do Małpy
-
-**TEKST:**
-
-> Co możemy z tym zrobić…  
-> Hmm.  
-> Może potrzebuje naczynia.
-
----
-
-## `hint.reliquary.activate.soft`
-
-**TYP:** `HINT_SOFT`
-
-**TEKST:**
-
-> Niektóre rzeczy trzeba obudzić.
-
----
-
-## `hint.reliquary.activate.medium`
-
-**TYP:** `HINT_MEDIUM`
-
-**WORLD_CUE:** halo / światło przy `Activate`
-
-**TEKST:**
-
-> Uruchomić?  
-> Zobacz. Może coś się stanie.
-
----
-
-## `progression.card.first`
-
-**TYP:** `PROGRESSION_MESSAGE`
-
-**TEKST:**
-
-> Jedna.
-
----
-
-# 7. P1 complete — przejście do Astrolabium
-
-## `progression.postRing.changedWorld`
-
-**TYP:** `PROGRESSION_MESSAGE`  
-**TRIGGER:** zakończenie prezentacji pierwszego ringu / wejście w nową fazę  
-**MIEJSCE:** Małpa  
-**CZY BLOKUJE PROGRESJĘ:** nie przez przycisk
-
-**TEKST:**
-
-> No i świat przestał być uprzejmy.  
-> To, czego potrzebujesz, jest teraz poza zasięgiem.  
-> Na szczęście nie na długo.
-
-**UWAGA:** cały komunikat jest jednym beatem. Bez `DALEJ` między zdaniami.
-
----
-
-## `progression.furnace.look`
-
-**TYP:** `PROGRESSION_MESSAGE`
-
-**TEKST:**
-
-> Spójrz na Piec.  
-> Tam coś na ciebie czeka.
-
-**UWAGA:** jeden komunikat. Bez `DALEJ`.
-
----
-
-# 8. Astrolabium Więzi
-
-## `knowledge.astro.whatIsIt`
-
-**TYP:** `KNOWLEDGE_TOPIC`  
-**TRIGGER:** temat dostępny po fizycznym odebraniu Astrolabium  
-**MIEJSCE:** menu Małpy  
-**WARUNEK ODBLOKOWANIA:** Astro `EARNED` / fizyczny claim  
-**CZY BLOKUJE PROGRESJĘ:** nie  
-**CZY ZOSTAJE W PAMIĘCI:** tak — temat Małpy + panel Y
-
-**PYTANIE W MENU:**
-
-> CO TO JEST ASTROLABIUM WIĘZI?
-
-**TEKST:**
-
-> To narzędzie do rzeczy, które są daleko,  
-> a chciałbyś, żeby były bliżej.  
-> Chwytem namierzasz. Spustem przyciągasz.  
-> Jeśli chcesz coś zachować — użyj Szpili i chwyć.
-
-**POWIĄZANE TEMATY:**
-
-- `A PO CO MI TO?`
-- `CO DALEJ?`
-
----
-
-## `knowledge.astro.why`
-
-**TYP:** `KNOWLEDGE_TOPIC`
-
-**PYTANIE:**
-
-> A PO CO MI TO?
-
-**TEKST:**
-
-> Żebyś mógł sięgnąć trochę dalej.  
-> Glify niestety trochę ci uciekły.  
-> Tak już to zaprojektowano.
-
----
-
-## `knowledge.astro.next`
-
-**TYP:** `KNOWLEDGE_TOPIC`
-
-**PYTANIE:**
-
-> CO DALEJ?
-
-**TEKST:**
-
-> Potrzebujesz Kuli Asterionowej.  
-> Piec potrafi ją zbudować.  
-> Zgromadź skorupy.
-
----
-
-## `tool.astro.basic`
-
-**TYP:** `TOOL_REFERENCE`  
-**MIEJSCE:** `Y → NARZĘDZIA → ASTROLABIUM WIĘZI`  
-**WARUNEK ODBLOKOWANIA:** fizyczny claim Astrolabium  
-**CZY ZOSTAJE W PAMIĘCI:** tak
-
-**TEKST:**
-
-> A — wyposaż / schowaj  
-> Chwyt — namierzanie  
-> Spust — przyciąganie  
-> Szpila + chwyt — przejęcie obiektu
-
----
-
-# 9. Kula Asterionowa
-
-## `knowledge.asterion.whatIsIt`
-
-**TYP:** `KNOWLEDGE_TOPIC`  
-**TRIGGER:** temat dostępny po fizycznym odebraniu Kuli  
-**MIEJSCE:** menu Małpy  
-**WARUNEK ODBLOKOWANIA:** Kula `EARNED` / fizyczny claim  
-**CZY BLOKUJE PROGRESJĘ:** nie  
-**CZY ZOSTAJE W PAMIĘCI:** tak
-
-**PYTANIE W MENU:**
-
-> CO TO JEST KULA ASTERIONOWA?
-
-**TEKST:**
-
-> To narzędzie do zmiany horyzontu.  
-> Nie przybliża tego, co jest daleko.  
-> Zmienia to, skąd patrzysz.  
+> --- BLOCK ---
+>
+> Zamknij komorę i użyj środkowego przycisku, gdy Piec jest poprawnie przygotowany.
+>
+> --- BLOCK ---
+>
+> Jeśli Piec odpycha obiekt, najpierw sprawdź wybraną operację.
+
+### `hint.furnace.astroAvailable`
+
+> Otwórz komorę i wyciągnij swoje narzędzie.
+>
+> --- BLOCK ---
+>
+> Złap je.
+
+Pierwszy hint staje się należny po około 180 s bez rozpoczęcia produkcji Astro; drugi po około 60 s nieodebranego stanu `AVAILABLE`. Oba wymagają attention → click → playback, czekają na zamknięcie ordinary menu i są anulowane przed kliknięciem, gdy przestają być relevant.
+
+## C. Acquisition — one-shot first teaching
+
+### Astro
+
+> To narzędzie do rzeczy, które są daleko,
+> a chciałbyś, żeby były bliżej.
+>
+> --- BLOCK ---
+>
+> Chwyt służy do namierzania.
+>
+> --- BLOCK ---
+>
+> Spust przyciąga namierzony obiekt.
+>
+> --- BLOCK ---
+>
+> Szpila i chwyt pozwalają przejąć obiekt.
+
+### Asterion
+
+> To narzędzie do zmiany horyzontu.
+> Nie przybliża tego, co jest daleko.
+>
+> --- BLOCK ---
+>
+> Zmienia to, skąd patrzysz.
 > Dzięki temu dosięgniesz tego, czego wcześniej nie mogłeś.
 
----
+Każda sekwencja występuje tylko po fizycznym claim: około 5 s → attention → kliknięcie Małpy → bezpośredni playback → completion. Nie otwiera ordinary menu i nie zostawia w nim trwałego pytania.
 
-## `tool.asterion.basic`
+## D. CURRENT OBJECTIVE — wspólny Y + Małpa
 
-**TYP:** `TOOL_REFERENCE`  
-**MIEJSCE:** `Y → NARZĘDZIA → KULA ASTERIONOWA`  
-**WARUNEK ODBLOKOWANIA:** fizyczny claim Kuli
+Copy powstaje wyłącznie w `createVrCurrentObjectiveProjection`; dokument nie utrzymuje drugiej niezależnej mapy. Dynamiczne teksty CURRENT:
 
-**TEKST:**
+- `PIERWSZY KRĄG — n/5`;
+- `ZGROMADŹ SKORUPY — n/6`;
+- `ZBUDUJ KULĘ ASTERIONOWĄ`;
+- `KULA ASTERIONOWA — PRODUKCJA`;
+- `ODBIERZ KULĘ ASTERIONOWĄ`;
+- `DRUGI KRĄG — n/5`;
+- `DOSTRÓJ ASTROLABIUM — n/5 · TRZECI KRĄG — n/5`;
+- `TRZECI KRĄG — n/5`.
 
-> X — wyposaż / schowaj  
-> Spust — zmieniaj orientację platformy
+Y przedstawia wynik jako `AKTUALNE ZADANIE`, a Małpa jako pojedynczy temat pod `CO TERAZ?`.
 
-**UWAGA:** późniejsze funkcje Kuli dopisujemy dopiero po ich odblokowaniu.
+## E. Persistent tool knowledge — panel Y
 
----
+Poniższe teksty są dokładną zawartością CURRENT `vrPlayerGuideContent.js`.
 
-# 10. P2 — druga seria kryształów / małe glify
+### PIEC
 
-## `progression.p2.smallGlyphsIntro`
+**Opis:**
 
-**STATUS:** **APPROVED COPY / NOT YET ACTIVE** — real `LARGE_GLYPHS` targeting/pull nie jest zaimplementowany.
+> Otwórz panel informacyjny Pieca i wybierz odpowiedni moduł lub operację.
 
-**TYP:** `PROGRESSION_MESSAGE`  
-**TRIGGER:** druga seria kryształów ukończona; duże glify oddalają się; małe glify stają się aktualną mechaniką  
-**MIEJSCE:** Małpa  
-**CZY BLOKUJE PROGRESJĘ:** nie przez kliknięcie
+**Sterowanie:**
 
-**TEKST:**
+> Otwórz komorę, gdy wkładasz lub odbierasz obiekt.
+> Środkowy przycisk uruchamia proces dopiero, gdy Piec jest poprawnie przygotowany.
+> Jeśli Piec odpycha wkładany obiekt, najpierw sprawdź wybraną operację.
 
-> Świat idzie do przodu. Ty też powinieneś.  
-> Glify możesz przyciągnąć.  
-> Najpierw jednak trzeba je dostroić.
+### ASTROLABIUM WIĘZI
 
----
+**Opis:**
 
-## `knowledge.p2.tuneGlyphs`
+> To narzędzie do rzeczy, które są daleko,
+> a chciałbyś, żeby były bliżej.
 
-**STATUS:** **APPROVED COPY / NOT YET ACTIVE** — nie uruchamiać przed realnym `LARGE_GLYPHS` targeting/pull.
+**Sterowanie:**
 
-**TYP:** `KNOWLEDGE_TOPIC`
+> A — wyposaż / schowaj
+> Chwyt — namierzanie
+> Spust — przyciąganie
+> Szpila + chwyt — przejęcie obiektu
 
-**PYTANIE:**
-
-> JAK DOSTROIĆ GLIFY?
-
-**TEKST:**
-
-> Małe glify są sprzężone z dużymi.  
-> Pomogą Astrolabium je rozpoznać.  
-> Przycisk B zmienia to, czego narzędzie szuka.
-
----
-
-## `knowledge.astro.bandSwitch`
-
-**STATUS:** **IMPLEMENTED** po capability przełączania bandu.
-
-**TYP:** `KNOWLEDGE_TOPIC`
-
-**PYTANIE:**
-
-> CO ROBI B?
-
-**TEKST:**
-
-> Narzędzia zmieniają się razem ze światem.  
-> B przełącza pasmo Astrolabium.
-
----
-
-## `tool.astro.bandSwitch`
-
-**STATUS:** **IMPLEMENTED**; projekcja Y dopisuje linię po właściwym capability.
-
-**TYP:** `TOOL_REFERENCE`  
-**MIEJSCE:** `Y → NARZĘDZIA → ASTROLABIUM WIĘZI`  
-**WARUNEK ODBLOKOWANIA:** P2 / pierwsze nowe pasmo
-
-**DOPISZ DO INSTRUKCJI:**
+Po uzyskaniu capability zmiany pasma:
 
 > B — zmień pasmo celu
 
----
+### KULA ASTERIONOWA
 
-# 11. P3 — trzecia seria kryształów / gwiazdy
+**Opis:**
 
-## `progression.p3.starsIntro`
+> To narzędzie do zmiany horyzontu.
+> Nie przybliża tego, co jest daleko.
+> Zmienia to, skąd patrzysz.
+> Dzięki temu dosięgniesz tego, czego wcześniej nie mogłeś.
 
-**TYP:** `PROGRESSION_MESSAGE`  
-**TRIGGER:** ukończenie trzeciej serii; glify odchodzą bardzo daleko; pojawia się pole gwiazd  
-**MIEJSCE:** Małpa
+**Sterowanie:**
 
-**TEKST:**
+> X — wyposaż / schowaj
+> Spust — zmieniaj orientację platformy
 
-> Rozświetlasz to miejsce.  
-> Ale glify lubią być w cieniu.  
-> Możesz ich poszukać.  
-> Najpierw jednak przygotuj kolejne narzędzie.
+## Ordinary Monkey copy
 
----
+Root zawiera `JAK MI IDZIE?` i, tylko gdy objective istnieje, `CO TERAZ?`. Historia używa dokładnie:
 
-## `progression.p3.furnaceNewFunction`
+- `Odkryte karty: 0.`;
+- `Odkryte karty: {count}. Wybierz znak.`.
 
-**TYP:** `PROGRESSION_MESSAGE`  
-**TRIGGER:** bezpośrednio po poprzednim beatcie albo jako drugi krótki komunikat po przerwie  
-**MIEJSCE:** Małpa
-
-**TEKST:**
-
-> Piec chyba ma nową funkcję.  
-> Jeśli się nie mylę.
-
----
-
-# 12. P3 — pierwszy aktywny sektor
-
-## `progression.p3.firstSector`
-
-**TYP:** `PROGRESSION_MESSAGE`  
-**TRIGGER:** pierwsza poprawna kombinacja skorupy i małego glifu aktywuje sektor  
-**MIEJSCE:** Małpa
-
-**TEKST:**
-
-> Teraz możesz kontrolować jedną część.  
-> Żeby znaleźć glify, potrzebujesz trzech.
-
----
-
-## `tool.asterion.sectors`
-
-**TYP:** `TOOL_REFERENCE`  
-**MIEJSCE:** `Y → NARZĘDZIA → KULA ASTERIONOWA`  
-**WARUNEK ODBLOKOWANIA:** pierwszy aktywny sektor
-
-**TEKST:**
-
-> Chwyt — sterowanie aktywnym sektorem  
-> Spust — orientacja całej platformy
-
-**UWAGA:** dokładne nazwy wejść należy zsynchronizować z finalnym kontraktem implementacji sektora.
-
----
-
-# 13. P3 — gotowa antena
-
-## `progression.p3.antennaReady`
-
-**TYP:** `PROGRESSION_MESSAGE`  
-**TRIGGER:** trzy wymagane sektory tworzą gotową antenę  
-**MIEJSCE:** Małpa  
-**CZY BLOKUJE PROGRESJĘ:** nie
-
-**TEKST:**
-
-> A teraz zapytaj świat.  
-> Może ci odpowie.
-
-**WORLD_CUE:**
-
-Od tego momentu prowadzenie przejmuje radar / reakcja świata. Nie dodajemy automatycznego wykładu Małpy.
-
----
-
-# 14. Wzorzec menu Małpy
-
-Menu nie musi pokazywać wszystkich tematów jednocześnie.
-
-Przykładowy stan po zdobyciu Astrolabium:
-
-```text
-JAK MI IDZIE?
-CO TO JEST ASTROLABIUM WIĘZI?
-ZAMKNIJ
-```
-
-Po zdobyciu Kuli:
-
-```text
-JAK MI IDZIE?
-NARZĘDZIA >
-ZAMKNIJ
-```
-
-`NARZĘDZIA >`:
-
-```text
-ASTROLABIUM WIĘZI
-KULA ASTERIONOWA
-←
-```
-
-Po wejściu w Astrolabium:
-
-```text
-CO TO JEST?
-A PO CO MI TO?
-CO DALEJ?
-←
-```
-
-Później mogą dochodzić:
-
-```text
-JAK DOSTROIĆ GLIFY?
-CO ROBI B?
-```
-
-Nie pokazujemy tematów przyszłych przed odblokowaniem.
-
----
-
-# 15. Wzorzec panelu Y
-
-### Początek
-
-```text
-STEROWANIE
-AKTUALNE ZADANIE
-```
-
-### Po Astrolabium
-
-```text
-STEROWANIE
-AKTUALNE ZADANIE
-NARZĘDZIA
-```
-
-`NARZĘDZIA`:
-
-```text
-ASTROLABIUM WIĘZI
-```
-
-### Po Kuli
-
-```text
-NARZĘDZIA
-├── ASTROLABIUM WIĘZI
-└── KULA ASTERIONOWA
-```
-
-### P2
-
-Astrolabium otrzymuje dodatkową linijkę o `B`.
-
-### P3 / pierwszy sektor
-
-Kula otrzymuje dodatkową sekcję sterowania sektorami.
-
-Panel rośnie wraz z wiedzą gracza.
-
----
-
-# 16. Teksty wymagające przebudowy w obecnym runtime
-
-Obecne:
-
-```text
-No i świat przestał być uprzejmy.
-DALEJ
-To, czego potrzebujesz, jest teraz poza zasięgiem.
-DALEJ
-Na szczęście nie na długo.
-DALEJ
-```
-
-Docelowo:
-
-```text
-No i świat przestał być uprzejmy.
-To, czego potrzebujesz, jest teraz poza zasięgiem.
-Na szczęście nie na długo.
-```
-
-Jeden `PROGRESSION_MESSAGE`. Bez przycisku.
-
-Obecne:
-
-```text
-Spójrz na Piec.
-DALEJ
-Tam coś na ciebie czeka.
-DALEJ
-```
-
-Docelowo:
-
-```text
-Spójrz na Piec.
-Tam coś na ciebie czeka.
-```
-
-Jeden `PROGRESSION_MESSAGE`. Bez przycisku.
-
----
-
-# 17. Teksty jeszcze nieustalone
-
-Ten dokument nie ustanawia copy dla:
-
-- pełnych receptur P2;
-- pełnych receptur P3;
-- wszystkich hintów małych glifów;
-- radaru i locka;
-- kamieni runicznych;
-- ostatniego glifu;
-- finału poza już istniejącym kierunkiem;
-- dokładnych komunikatów błędu;
-- wersji angielskiej.
-
-Nowe teksty należy dopisywać zgodnie z mechaniką z pierwszego dokumentu, a nie jako luźne stringi przy aktorach.
-
----
-
-# 18. Reguła końcowa
-
-> **Komunikat progresji mówi tylko tyle, ile gracz musi teraz usłyszeć.**  
-> **Reszta czeka, aż sam zapyta.**
-
----
-
-# Canonical authored-block errata (2026-08)
-
-Runtime source of truth mirrors the approved PL catalog in `src/xr/guidance/vrMonkeyCommunicationCopy.js`. `--- BLOCK ---` below means a cleared bubble and canonical gap; line breaks inside a block remain authored lines.
-
-## Active authored blocks
-
-- `progression.intro.openPlayerGuide`: `Sprawdźmy tylko, gdzie co masz.`; then persistent `Naciśnij Y, żeby wejść do menu.`
-- `progression.intro.afterPlayerGuide`: `Jak zapomnisz — przypomnę.` --- BLOCK --- `Zobaczmny, czy świat cię słucha.` --- BLOCK --- `Wskaż mnie.`
-- `progression.intro.pointerLearned`: `Widzisz?\nJuż nauczyłeś świat, gdzie patrzysz.`
-- crystal handoff: `Tak, tego jeszcze nie możemy użyć.` --- BLOCK --- `Podstawy poznałeś.`
-- `progression.glyphs.firstInstruction`: `Pięć znaków.` --- BLOCK --- `Nie pytaj jeszcze, co znaczą.\nDotknij jednego Szpilą.`
-- `progression.postRing.changedWorld`: `No i świat przestał być uprzejmy.` --- BLOCK --- `To, czego potrzebujesz, jest teraz poza zasięgiem.\nNa szczęście nie na długo.`
-- `progression.furnace.look`: `Spójrz na Piec.` --- BLOCK --- `Tam coś na ciebie czeka.`
-
-## Knowledge policy catalog
-
-- `knowledge.astro.whatIsIt` — `PERSISTENT`; two approved blocks.
-- `knowledge.astro.why` — `ONCE`; two approved blocks; archives only after complete response.
-- `knowledge.astro.next` — `CONTEXTUAL`; `Potrzebujesz Kuli Asterionowej.\nPiec potrafi ją zbudować.\nZgromadź skorupy.`
-- `knowledge.astro.bandSwitch` — `ONCE`; available with `CAN_SWITCH_ASTRO_BAND`.
-- `knowledge.asterion.whatIsIt` — `PERSISTENT`; two approved blocks. There is no `knowledge.asterion.why`.
-
-P2 (`progression.p2.smallGlyphsIntro`, `knowledge.p2.tuneGlyphs`) remains sync-only until its real gameplay boundary. All `progression.p3.*` entries remain future copy and are not implemented gameplay flows.
-
-## Current P2 completion contract (4.40–4.80)
-
-The implemented canonical boundary is `4.80`. Point `4.40` owns a dedicated observation window; `4.50` exposes Monkey attention only; `4.60` plays the mandatory P2 message; `4.70` grants the existing B, Small Glyph, Furnace essence, family-gated Large Glyph, crystal, Reliquary and order-3 card rights; five order-3 cards complete into stable point `4.80`.
-
-Mandatory Monkey communication uses one guidance contract: attention arcs never start copy; pointing and triggering Monkey consumes the trigger for the mandatory beat; ordinary menu, history and knowledge stay hidden through attention and playback; the menu returns only after the final automatic block. This contract is active for the post-ring message at `3.30` and P2 at `4.50–4.60`.
-
-Stable reconstruction at `4.80` contains completed Tier 3, all page IDs/orders through 3, progress-floor completion through Tier 3, consumed crystal Tier 3, and Proto-Astro natural essences `K/T/S/L/R`. It reconstructs no transient pulls, held objects, timers or panels. P3 and later mechanics are not implemented.
+Ordinary menu nie posiada persistent `co to jest?` dla Astro/Asteriona, strojenia Astrolabium, `CO DALEJ?` ani dawnych contextual topics.

@@ -104,7 +104,19 @@ A placed shell retains `attractorTarget=false`, so Astro cannot acquire it again
 
 ## Player guidance and Monkey communication
 
-Two **IMPLEMENTED** interfaces are distinct. The left-grip player guide opens with Y, presents the current-task and controller-reference sections, uses the left stick for menu navigation and X for selection, and temporarily blocks left-tool toggling while open. It is a player reference panel, not a narrative state owner.
+Guidance has two distinct **IMPLEMENTED** surfaces. **Monkey first teacher** owns mandatory progression communication, situational attention, one-shot acquisition teaching, `CO TERAZ?` and discovered-card history. **Player Y persistent memory** owns practical Furnace, Astro and Asterion references plus `AKTUALNE ZADANIE`. Monkey ordinary knowledge is not a persistent tool manual.
+
+`createVrCurrentObjectiveProjection` is the single owner of CURRENT OBJECTIVE. One stateless projection reads the canonical Scenario point and live domain owners; it owns no timers or completion state. The same getter supplies Y and Monkey, including dynamic ring counts, Asterion shell/production/claim phases and combined Astro tuning/third-ring progress. Getter-based composition makes the result valid during normal runtime, hydration and direct activation. `CO TERAZ?` is omitted when the projection returns no objective and otherwise contains exactly one topic.
+
+Y opens with Y, uses `MAIN_MENU → SECTION_DETAIL` and `MAIN_MENU → TOOL_LIST → TOOL_DETAIL`, left stick selection and X activation. In `MAIN_MENU`, Y closes the panel; section and tool-list detail return to main, while tool detail returns to the tool list. Furnace enters the persistent list at actual reveal without granting Furnace capability. Astro/Asterion entries remain acquired/capability-driven.
+
+Acquisition guidance for each tool starts only from the physical claim callback, waits about `5 s`, requests attention, requires a Monkey click and plays its one-shot blocks directly before returning Monkey to idle. It never opens ordinary menu and is not reconstructed from an already acquired hydrated state. Optional Tool Guidance offers Furnace production help after about `180 s` and an unclaimed `AVAILABLE` Astro hint after about `60 s`; it waits for an open ordinary menu to close and cancels pending/attention when the problem stops being relevant.
+
+Monkey dialogue, attention and playback use an explicit owner lease with strict priority `MANDATORY > ACQUISITION > OPTIONAL`. Only one lease is active. Owner-guarded operations cannot clear another actor's state; a strictly higher priority may preempt lower `WAITING`/`ATTENTION`, but `PLAYBACK` is nonpreemptible. Preempted work remains pending while relevant. Full Monkey reset may clear the global communication state.
+
+Monkey interaction is independent from ordinary world-ray availability. Both normal hands, Astro, Asterion, and Astro plus Asterion can target the Monkey without unequip or a hand-mode change. A current Monkey hit locally wins over Astro interaction and Asterion gyro input; leaving the target restores normal tool behavior without globally exposing tool rays.
+
+The ordinary root contains `JAK MI IDZIE?`, optional `CO TERAZ?`, and close. History is permanent; persistent Astro/Asterion what-is-it topics, tuning help, `CO DALEJ?` and legacy contextual categories are absent. List navigation has a separate spaced band without a separator; labels and back/close controls are bounded, multiline height participates in pagination, and visual and hit regions match.
 
 ### Intro P0
 
@@ -116,18 +128,18 @@ After the reveal and short silence, three timed orientation lines precede a pers
 
 `createVrIntroSequence` moves only `monkeyMotionRoot`. Its start and final positions come from the shared `spatial` contract; tracked head is read only for follow/pause and ring-entry diagnostics. Declining either choice ends the session; QA routes may use `BYPASSED`.
 
-The Monkey guide exposes technical channels for future authored guidance without defining story or dialogue content:
+The Monkey guide exposes technical channels for authored guidance:
 
 - `notifyAttention()` starts three pulsing attention arcs and its one-shot cue; repeated notification while pending does not restart it;
 - `showMessage(text)` displays a short, system/Monkey-initiated message panel, while `open()` exposes a separate dialogue/choice panel;
 - a real ordinary-ray hit on the Monkey opens/closes the panel; real ray hits on its regions plus trigger select an offered option;
-- the implemented menu currently offers the progress question when at least one card is committed, plus close;
+- the menu always offers the progress question, conditionally offers exactly one current objective, and offers close;
 - progress opens paginated history derived exclusively from `VrProgressionController`; choosing an existing entry opens the localized card and supports multipage reading/back navigation;
 - newly committed cards are tracked as unread, pulse in history, and become read when opened. A progression commit requests attention. These unread markers are transient page-runtime UI state, not durable progression.
 
 The actor-local attention anchor uses Y `1.5`; the dialogue base uses Y `0.80`. Runtime applies a floor-local clearance guard so the transformed dialogue panel cannot cross the floor. HISTORY renders eight items in a `4 × 2` grid and reserves a separate lower navigation band for back/previous/next controls.
 
-Outside the bounded intro P0 copy and sequence described above, the runtime supplies channels and current progress/history behavior only. Further narrative sequencing, Monkey messages between progression stages, quests, personality and stuck-player logic are **NOT DESIGNED / FUTURE**.
+The communication actors project Scenario and domain truth; they do not advance gameplay independently.
 
 ### Monkey physical assembly
 
@@ -163,7 +175,7 @@ The shipped GLBs verify each required name exactly once, finite TRS with nonzero
 
 The Furnace is physically revealed at `3.40`. At `3.50` Scenario activates the Astro card and the player deliberately chooses `Utwórz astro przyciągacz`; no automatic production occurs. Furnace mode `astro_attractor` is distinct from the existing Asterion mode. `ASTRO_ATTRACTOR_CONSTRUCTION` is distinct from `ASTERION_CONSTRUCTION`, although both use the shared Furnace process driver. The physical output is parented below `VR_FURNACE_CONTENT_ANCHOR` and remains in the chamber until claim.
 
-`createVrAstroAttractorProductionController` owns `READY → BUILDING → AVAILABLE → CLAIMING → EARNED`; `CLAIMING` is transient, not a Scenario point. Production representation is separate from the equipment lifecycle managed by `createVrAttractorTool`; the production clone is not a second gameplay Astro. `3.70` is only `AVAILABLE`. A valid claim requires an open chamber, right `NORMAL_HAND`, ordinary ray, real target hit and trigger/`selectstart`; only completion emits `ASTRO_ATTRACTOR_CLAIMED` and enters `3.80`/`EARNED`.
+`createVrAstroAttractorProductionController` owns `READY → BUILDING → AVAILABLE → CLAIMING → EARNED`; `CLAIMING` is transient, not a Scenario point. Production representation is separate from the equipment lifecycle managed by `createVrAttractorTool`; the production clone is not a second gameplay Astro. `3.70` is only `AVAILABLE`. With the chamber open, a legal ordinary ray from either hand may target the output and Grab/squeeze initiates claim; Astro then lands in its canonical right slot. Only completion emits `ASTRO_ATTRACTOR_CLAIMED` and enters `3.80`/`EARNED`. Asterion follows the same either-hand claim input and lands in its canonical left hand; this does not remove handedness from later tool use.
 
 The Furnace panel treats production and tuning as explicit phases of the same player-facing Astrolabium module. Before `EARNED`, its home card routes to the one-time production screen. At `EARNED`, that screen is no longer reachable and an open production view deterministically redirects to the persistent `STROJENIE ASTROLABIUM` landing screen. Its first area is `MAŁE GLIFY`; the landing screen currently exposes availability through the existing `canUseAstroTuning` capability seam only and does not render family data or perform extraction.
 

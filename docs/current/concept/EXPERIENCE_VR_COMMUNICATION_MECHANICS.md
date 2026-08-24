@@ -1,547 +1,88 @@
-# EXPERIENCE VR — MECHANIKA KOMUNIKACJI Z GRACZEM
+# Experience VR — mechanika komunikacji z graczem
 
-**Status:** kanoniczna podstawa projektowania komunikacji  
-**Zakres:** Małpa, panel Y, komunikaty progresji, hinty, pytania, wiedza o narzędziach  
-**Powiązany katalog tekstów:** `EXPERIENCE_VR_PLAYER_COMMUNICATION_COPY.md`
+**Status:** CURRENT / canonical po G6
+**Zakres:** Guidance, Małpa, panel Y i komunikacja gracza
 
----
+## Podział odpowiedzialności
 
-## 1. Cel
+**Monkey first teacher.** Małpa jest właścicielem mandatory progression communication, sytuacyjnego attention, jednorazowego nauczania po acquisition, bieżącego `CO TERAZ?` oraz historii odkrytych kart. Nie jest trwałym magazynem praktycznej wiedzy o narzędziach.
 
-Ten dokument określa:
+**Player Y persistent memory.** Panel Y przechowuje trwałą wiedzę praktyczną o Piecu, Astrolabium Więzi i Kuli Asterionowej oraz pokazuje `AKTUALNE ZADANIE`. Guidance projektuje prawdę Scenario i domain owners; nie posiada gameplayu ani completion progresji.
 
-- **kiedy** gracz otrzymuje komunikat;
-- **gdzie** komunikat się pojawia;
-- **jakiego typu** jest tekst;
-- **czy wymaga reakcji gracza**;
-- **czy zostaje zapamiętany**;
-- **kto jest właścicielem warunku jego pojawienia się**.
+## Jeden CURRENT OBJECTIVE
 
-Nie zawiera właściwego copy. Teksty znajdują się w:
+Jedynym ownerem modelu bieżącego celu jest `createVrCurrentObjectiveProjection`. Ta sama instancja i ten sam wynik `{ id, body }` zasilają `Y → AKTUALNE ZADANIE` oraz `Małpa → CO TERAZ?`.
 
-`EXPERIENCE_VR_PLAYER_COMMUNICATION_COPY.md`
+Projection jest bezstanowy: czyta canonical point i aktualny domain state, nie ma timerów, nie zapisuje completion i działa tak samo w normalnym runtime, po hydration oraz direct activation. Dynamiczne przypadki:
 
-Główna zasada:
+| Point | Projekcja |
+| --- | --- |
+| `2.30` | `PIERWSZY KRĄG — n/5` |
+| `3.80` | `ZGROMADŹ SKORUPY — n/6` → `ZBUDUJ KULĘ ASTERIONOWĄ` → `KULA ASTERIONOWA — PRODUKCJA` → `ODBIERZ KULĘ ASTERIONOWĄ` |
+| `4.10` | `DRUGI KRĄG — n/5` |
+| `4.70` | `DOSTRÓJ ASTROLABIUM — n/5 · TRZECI KRĄG — n/5`; po pełnym strojeniu tylko `TRZECI KRĄG — n/5` |
 
-> **Nie klikamy „DALEJ”, żeby Małpa skończyła zdanie.**
+`CO TERAZ?` istnieje wyłącznie, gdy projection zwraca objective, pokazuje dokładnie jeden objective i nigdy nie otwiera pustej kategorii.
 
-Interakcja pojawia się tylko wtedy, gdy gracz:
+## Acquisition — jednorazowe pierwsze nauczanie
 
-- podejmuje decyzję;
-- zadaje pytanie;
-- wybiera temat;
-- świadomie prosi o głębszą pomoc;
-- przegląda zapamiętaną wiedzę.
-
----
-
-## 2. Cztery powierzchnie komunikacji
-
-### 2.1. ŚWIAT
-
-Świat jest pierwszym nauczycielem.
-
-Komunikuje przez:
-
-- ruch;
-- światło;
-- halo;
-- emisję;
-- dźwięk;
-- zmianę odległości;
-- materializację;
-- reakcję urządzeń;
-- Proto-Astro;
-- zmianę układu przestrzeni.
-
-Świat nie używa tekstu, jeśli może czytelnie pokazać zależność.
-
----
-
-### 2.2. MAŁPA — KOMUNIKAT
-
-Krótka wypowiedź pojawiająca się nad Małpą.
-
-Służy do:
-
-- komentarza progresji;
-- zwrócenia uwagi na zmianę świata;
-- krótkiego kierunku;
-- ustanowienia tonu sceny.
-
-Reguły:
-
-- maksymalnie **3–4 wiersze** w jednym panelu;
-- bez przycisku `DALEJ`;
-- nie dzielić jednego sensownego zdania na kilka ekranów;
-- nie blokować gameplayu tylko dlatego, że tekst trwa;
-- jeśli treść jest dłuższa, skrócić ją albo rozłożyć na **pytania gracza**, nie na kolejne `DALEJ`.
-
-Typ:
-
-`PROGRESSION_MESSAGE`
-
-Przykład:
-
-> Świat idzie do przodu. Ty też powinieneś.  
-> Glify możesz przyciągnąć.  
-> Najpierw jednak trzeba je dostroić.
-
----
-
-### 2.3. MAŁPA — DIALOG / WIEDZA
-
-Gracz sam klika Małpę i wybiera temat.
-
-Służy do:
-
-- wyjaśniania mechanik;
-- tłumaczenia znaczenia świata;
-- przypominania wiedzy;
-- rozwijania hintów;
-- odpowiadania na pytania „co to jest?” / „po co?” / „co dalej?”.
-
-Nie jest automatycznym tutorialem.
-
-Typy:
-
-- `KNOWLEDGE_TOPIC`
-- `HINT_SOFT`
-- `HINT_MEDIUM`
-- `HINT_DIRECT`
-- `PLAYER_DECISION`
-
-Menu jest generowane z wiedzy, którą gracz **ma już prawo znać**.
-
-Nie pokazujemy przyszłych systemów jako wyszarzonych pozycji.
-
----
-
-### 2.4. PANEL Y — PAMIĘĆ PRAKTYCZNA
-
-Panel Y odpowiada na:
-
-> **„Co mogę teraz zrobić i jak obsługiwać to, co już znam?”**
-
-Docelowe sekcje:
-
-1. `STEROWANIE`
-2. `AKTUALNE ZADANIE`
-3. `NARZĘDZIA`
-4. później ewentualnie `POSTĘP`
-
-Panel Y nie mówi głosem Małpy.
-
-Język jest rzeczowy i instrukcyjny.
-
-Typ:
-
-`TOOL_REFERENCE`
-
-Wiedza w Y pozostaje dostępna po odblokowaniu, aby gracz mógł do niej wrócić.
-
----
-
-## 3. Klasy tekstów
-
-### `PROGRESSION_MESSAGE`
-
-Automatyczny komunikat po zmianie świata lub ważnym progu.
-
-- miejsce: panel wypowiedzi Małpy;
-- wejście gracza: nie;
-- `DALEJ`: nigdy;
-- trwała pamięć: nie musi;
-- trigger: Scenario / Director przez symboliczny efekt.
-
----
-
-### `PLAYER_DECISION`
-
-Pytanie wymagające rzeczywistego wyboru.
-
-- miejsce: panel wypowiedzi + panel odpowiedzi;
-- wejście gracza: tak;
-- przejście progresji może czekać na wybór;
-- przykłady: `Idziesz?`, `Przekraczasz próg?`.
-
----
-
-### `KNOWLEDGE_TOPIC`
-
-Temat otwierany z menu Małpy.
-
-- miejsce: panel dialogowy Małpy;
-- wejście gracza: tak;
-- nie zmienia progresji;
-- może odblokować podtematy;
-- może zostać dostępny przez resztę doświadczenia.
-
-Przykłady:
-
-- `Co to jest Astrolabium Więzi?`
-- `A po co mi to?`
-- `Co to jest Kula Asterionowa?`
-
----
-
-### `HINT_SOFT`
-
-Najmniejsza pomoc.
-
-- daje kierunek;
-- nie podaje pełnej procedury;
-- preferowana pierwsza odpowiedź po utknięciu.
-
----
-
-### `HINT_MEDIUM`
-
-Pomoc mechaniczna.
-
-- mówi, czego użyć albo z czym połączyć;
-- nadal nie musi wskazywać dokładnego celu.
-
----
-
-### `HINT_DIRECT`
-
-Ostatni poziom pomocy.
-
-- mówi dokładnie, co zrobić;
-- może uruchomić podświetlenie / halo / demonstrację;
-- używany dopiero po świadomej prośbie gracza.
-
----
-
-### `TOOL_REFERENCE`
-
-Praktyczna instrukcja w panelu Y.
-
-- bez narracji;
-- bez humoru;
-- bez filozofii;
-- tylko dostępne funkcje;
-- rośnie razem z narzędziem.
-
----
-
-### `WORLD_CUE`
-
-Bez tekstu.
-
-- światło;
-- halo;
-- dźwięk;
-- reakcja geometrii;
-- zmiana emisji;
-- materializacja.
-
-Jeśli `WORLD_CUE` wystarcza, nie dokładamy wypowiedzi Małpy.
-
----
-
-## 4. Zasada odkrywania wiedzy
-
-Wiedza ma własny moment odblokowania.
-
-### Astrolabium Więzi
-
-Temat staje się dostępny dopiero po **fizycznym odebraniu narzędzia**.
-
-Od tego momentu:
-
-- Małpa może odpowiadać, czym jest;
-- panel Y może pokazać jego instrukcję;
-- późniejsze odblokowania mogą dopisywać nowe funkcje, np. `B`.
-
-### Kula Asterionowa
-
-Temat staje się dostępny dopiero po **fizycznym odebraniu Kuli**.
-
-Od tego momentu:
-
-- Małpa może wyjaśniać jej sens;
-- panel Y pokazuje bieżące sterowanie;
-- późniejsze akty mogą dopisywać funkcje sektorowe.
-
-### Następny cel może być nazwany
-
-Nie pokazujemy przyszłych mechanik przypadkiem.
-
-Możemy jednak nazwać następne narzędzie lub system, kiedy **jego zdobycie staje się aktualnym celem progresji**.
-
-To nie jest spoiler. To jest aktualne zadanie.
-
----
-
-## 5. Zasada eskalacji pomocy
-
-Domyślna kolejność:
+Dla Astro i Asteriona obowiązuje ten sam lifecycle:
 
 ```text
-ŚWIAT
-→ gracz próbuje
-→ Małpa sygnalizuje, że ma podpowiedź
-→ gracz pyta
-→ HINT_SOFT
-→ gracz pyta ponownie
-→ HINT_MEDIUM
-→ gracz prosi o konkret
-→ HINT_DIRECT / POKAŻ MI
+claim → około 5 s → checheszki / attention → kliknięcie Małpy
+→ bezpośredni one-shot playback → completion → zwykła Małpa wraca do idle
 ```
 
-System może wykrywać utknięcie, ale nie powinien automatycznie wygłaszać rozwiązania.
+Acquisition nie jest ordinary Monkey knowledge i nie otwiera automatycznie zwykłego menu. Po completion praktyczna instrukcja pozostaje permanentnie w Y, a ordinary menu Małpy nie otrzymuje trwałego tematu „co to jest?”. Hydration stanu już zdobytego narzędzia nie odtwarza acquisition.
 
-Dozwolone automatyczne zachowanie po utknięciu:
+## Timed Tool Guidance
 
-- łuki komunikacyjne;
-- subtelne halo;
-- wzrost emisji;
-- sygnał audio.
+- Po około 180 s bez rozpoczęcia produkcji Astro opcjonalny Furnace guidance sygnalizuje uwagę checheszkami, czeka na kliknięcie i odtwarza instrukcję.
+- Po około 60 s, gdy Astro jest `AVAILABLE` i nie zostało odebrane, analogicznie dostępny jest optional claim guidance.
+- Pending/attention znika, jeśli problem przestał istnieć przed kliknięciem; nieaktualna instrukcja nie jest odtwarzana.
+- Optional Tool Guidance nie przejmuje otwartego ordinary menu Małpy; pozostaje pending i czeka.
 
-Znaczenie:
+## Arbitration komunikacji Małpy
 
-> **„Jeśli chcesz, możesz zapytać.”**
-
----
-
-## 6. Zasada długości
-
-### Komunikat progresji
-
-Maksymalnie 3–4 wiersze.
-
-Jeśli tekst nie mieści się naturalnie:
-
-- skrócić;
-- usunąć wyjaśnienie mechaniczne;
-- przenieść szczegół do `KNOWLEDGE_TOPIC`;
-- przenieść sterowanie do `TOOL_REFERENCE`.
-
-### Odpowiedź Małpy
-
-Preferowane 1–4 krótkie zdania.
-
-Jeśli temat ma kilka warstw:
+Dialogue, attention i playback mają jawnego ownera. Priorytet jest ścisły:
 
 ```text
-CO TO JEST?
-→ krótka odpowiedź
-
-A PO CO MI TO?
-→ sens w progresji
-
-JAK TEGO UŻYWAĆ?
-→ konkret
-
-CO DALEJ?
-→ następny cel
+MANDATORY > ACQUISITION > OPTIONAL
 ```
 
-Nie robimy z tego liniowego samouczka.
+- istnieje tylko jeden aktywny dialogue lease;
+- actor może aktualizować, zwolnić lub wyczyścić wyłącznie swój stan;
+- wyższy priorytet może wywłaszczyć niższy wyłącznie w `WAITING`/`ATTENTION`;
+- rozpoczęty `PLAYBACK` jest niepreemptowalny;
+- wywłaszczona komunikacja pozostaje pending, jeśli nadal jest relevant;
+- semantic cancellation usuwa nieaktualny pending/attention;
+- reset całego subsystemu Małpy może globalnie wyczyścić ownera, attention i dialogue.
 
----
+## Dostępność Małpy z narzędziami
 
-## 7. Zasada interakcji
+Małpa jest niezależnym communication interaction ownerem, a nie zwykłym world-ray targetem. Można targetować Małpę i obsługiwać jej panel obiema rękami w `NORMAL`, z wyposażonym Astro, z wyposażonym Asterionem oraz z oboma narzędziami jednocześnie. Nie wymaga to unequip ani zmiany hand mode.
 
-### Nie wymaga kliknięcia
+Monkey hit ma lokalny priorytet nad Astro interaction i Asterion gyro input. Po opuszczeniu targetu narzędzia działają normalnie; kontrakt nie odsłania globalnie tool rays.
 
-- komentarz;
-- obserwacja;
-- wiadomość progresji;
-- wskazanie kierunku;
-- sygnał o zmianie świata.
+## Panel Y
 
-### Wymaga kliknięcia
-
-- decyzja;
-- pytanie gracza;
-- wybór tematu;
-- prośba o kolejną warstwę pomocy;
-- przegląd kart / historii / narzędzi.
-
-`DALEJ` nie jest standardowym elementem dialogu.
-
-Może istnieć wyłącznie jako techniczna paginacja długiej treści referencyjnej, ale nie jako sposób prowadzenia normalnej rozmowy.
-
-Preferowane przyciski paginacji:
-
-`←` `‹` `›`
-
----
-
-## 8. Właściciele
-
-### Scenario
-
-Określa:
-
-- kiedy komunikat staje się należny;
-- kiedy temat wiedzy zostaje odblokowany;
-- kiedy zmiana świata wymaga komentarza;
-- kiedy decyzja gracza ma znaczenie dla progresji.
-
-Scenario nie renderuje tekstu.
-
----
-
-### Director
-
-Określa:
-
-- gdzie jesteśmy;
-- czy zdarzenie może przeprowadzić progresję dalej.
-
-Director nie jest właścicielem copy.
-
----
-
-### Guidance
-
-Odpowiada za:
-
-- wyświetlenie komunikatu;
-- menu Małpy;
-- dostępne tematy;
-- panel Y;
-- hinty;
-- trwałą pamięć instrukcji UI.
-
-Guidance nie jest właścicielem gameplayu.
-
----
-
-### Aktorzy / runtime
-
-Wykonują:
-
-- pokazanie panelu;
-- halo;
-- łuki;
-- animację;
-- światło;
-- dźwięk;
-- reakcję obiektu.
-
-Aktor nie decyduje sam, że gracz przeszedł do kolejnego aktu.
-
----
-
-### Domain owners
-
-Pozostają źródłem prawdy o:
-
-- kartach;
-- skorupach;
-- narzędziach;
-- Piecu;
-- Kuli;
-- sektorach;
-- dalszych systemach.
-
-Guidance tylko projektuje tę prawdę do komunikacji.
-
----
-
-## 9. Schemat wpisu w katalogu tekstów
-
-Każdy tekst powinien mieć minimum:
+Hierarchia nawigacji:
 
 ```text
-ID:
-TYP:
-TRIGGER:
-MIEJSCE:
-WARUNEK ODBLOKOWANIA:
-CZY BLOKUJE PROGRESJĘ:
-CZY ZOSTAJE W PAMIĘCI:
-TEKST:
-POWIĄZANE TEMATY:
+MAIN_MENU → SECTION_DETAIL
+MAIN_MENU → TOOL_LIST → TOOL_DETAIL
 ```
 
-Opcjonalnie:
+`Y` zamyka panel w `MAIN_MENU`, wraca do `MAIN_MENU` z `SECTION_DETAIL` i `TOOL_LIST`, a z `TOOL_DETAIL` wraca do `TOOL_LIST`.
 
-```text
-POZIOM HINTU:
-WORLD_CUE:
-PANEL Y:
-UWAGI:
-```
+Lista trwałych narzędzi to `PIEC`, `ASTROLABIUM WIĘZI`, `KULA ASTERIONOWA`. Piec pojawia się od faktycznego reveal Pieca; sama widoczność wpisu nie przyznaje capability jego używania. Astro i Asterion są widoczne zgodnie z odpowiednią acquired/capability truth.
 
-ID powinno być stabilne i semantyczne, np.:
+## Odbiór narzędzi
 
-```text
-progression.p2.smallGlyphsIntro
-knowledge.astro.whatIsIt
-knowledge.astro.why
-knowledge.asterion.whatIsIt
-hint.antenna.firstSector.soft
-tool.astro.basic
-tool.astro.bandSwitch
-```
+Oba narzędzia odbiera się przez Grab/squeeze. Legalny ray lewej albo prawej ręki może wskazać Astro lub Asteriona, a Grab inicjuje claim. Astro trafia finalnie do prawego canonical slotu/ręki, Asterion do lewej canonical ręki. Guidance nie uczy, którą ręką trzeba odebrać narzędzie; późniejsze używanie nadal zachowuje własny handedness.
 
----
+## Ordinary menu i stabilny kontrakt UI
 
-## 10. Reguła projektowania przyszłego tekstu
+Root zawiera `JAK MI IDZIE?` oraz warunkowe `CO TERAZ?`. Historia pokazuje `Odkryte karty: 0.` albo `Odkryte karty: {count}. Wybierz znak.`. Nie ma trwałych tematów Astro/Asteriona, `JAK DOSTROIĆ ASTROLABIUM?`, `CO DALEJ?` ani dawnych kategorii kontekstowych.
 
-Przed napisaniem każdej nowej kwestii należy odpowiedzieć:
-
-1. Czy świat może to pokazać bez tekstu?
-2. Czy gracz musi to wiedzieć teraz?
-3. Czy to komunikat, pytanie, hint czy instrukcja?
-4. Czy gracz powinien sam poprosić o tę wiedzę?
-5. Czy informacja ma zostać zapamiętana w panelu Y?
-6. Czy tekst mieści się w 3–4 wierszach?
-7. Czy kliknięcie zmienia decyzję gracza, czy tylko służy do przewijania zdania?
-
-Jeżeli odpowiedź na punkt 7 brzmi „tylko przewija zdanie” — tekst należy przepisać.
-
----
-
-## 11. Aktualny stan implementacji
-
-**IMPLEMENTED:**
-
-- wspólny actor automatycznych progression messages bez `DALEJ`, w tym post-ring i Furnace;
-- dynamiczny resolver wiedzy Małpy dla Astro i Asteriona;
-- capability-gated `knowledge.astro.bandSwitch`;
-- dynamiczna projekcja Player Guide/Y: `AKTUALNE ZADANIE`, `NARZĘDZIA` i tool references;
-- dopisywanie linii B dopiero po właściwym capability.
-
-`progression.p2.smallGlyphsIntro` oraz `knowledge.p2.tuneGlyphs` zachowują własny status authoringu komunikacji; realny `LARGE_GLYPHS` targeting/pull jest **IMPLEMENTED**, więc nie stanowi już blokady runtime. `knowledge.astro.bandSwitch` i `tool.astro.bandSwitch` są **IMPLEMENTED**. Wspólna klasyfikacja/eskalacja hintów oraz dalsza komunikacja późniejszych aktów pozostają **APPROVED / NOT IMPLEMENTED**.
-
-## 12. Reguła końcowa
-
-> **Świat pokazuje.**  
-> **Małpa pomaga zrozumieć.**  
-> **Y pomaga pamiętać.**  
-> **Gracz decyduje, ile chce wiedzieć.**
-
----
-
-## Kontrakt prezentacji authored BLOCK (kanoniczny)
-
-`BLOCK` jest semantyczną jednostką wypowiedzi autora, a nie wynikiem automatycznego zawijania. Jawne znaki nowej linii są zachowywane; każda authored line może zostać dodatkowo zawinięta do szerokości panelu. Renderer pokazuje całą treść i nie wolno mu ucinać słów ani dopisywać destrukcyjnego `…`.
-
-Automatyczna sekwencja ma stany `IDLE → DISPLAY → GAP → … → COMPLETED`. Czas `DISPLAY` wynosi **2 s × rzeczywista liczba wyrenderowanych linii**, a po każdym bloku — także ostatnim — następuje co najmniej **0,5 s** pustego `GAP`. Nie ma przycisku `DALEJ` ani `NEXT`. Prompt oczekujący na realną akcję lub decyzję pozostaje widoczny do tej akcji.
-
-### Lifecycle wiedzy Małpy
-
-Transient session state należy wyłącznie do Guidance i przyjmuje wartości `LOCKED`, `NEW`, `READ`, `ARCHIVED`. Temat jest oznaczany jako przeczytany dopiero po pełnej odpowiedzi i finalnym gap; anulowanie odpowiedzi pozostawia go `NEW`.
-
-| Policy | Po odblokowaniu | Po pełnym przeczytaniu |
-|---|---|---|
-| `PERSISTENT` | `NEW` | `READ`, nadal w aktywnym menu |
-| `ONCE` | `NEW` | `ARCHIVED`, znika z aktywnego menu |
-| `CONTEXTUAL` | `NEW`, gdy warunek domenowy jest prawdziwy | widoczność nadal wynika z aktualności warunku; po utracie kontekstu `ARCHIVED` |
-
-Małpa jest rozmową i wiedzą aktualną. Panel Y jest trwałą praktyczną pamięcią sterowania (`TOOL_REFERENCE`); archiwizacja pytania Małpy nigdy nie usuwa instrukcji z panelu Y. Nie istnieje osobny interfejs archiwum pytań.
-
-## Current P2 completion contract (4.40–4.80)
-
-The implemented canonical boundary is `4.80`. Point `4.40` owns a dedicated observation window; `4.50` exposes Monkey attention only; `4.60` plays the mandatory P2 message; `4.70` grants the existing B, Small Glyph, Furnace essence, family-gated Large Glyph, crystal, Reliquary and order-3 card rights; five order-3 cards complete into stable point `4.80`.
-
-Mandatory Monkey communication uses one guidance contract: attention arcs never start copy; pointing and triggering Monkey consumes the trigger for the mandatory beat; ordinary menu, history and knowledge stay hidden through attention and playback; the menu returns only after the final automatic block. This contract is active for the post-ring message at `3.30` and P2 at `4.50–4.60`.
-
-Stable reconstruction at `4.80` contains completed Tier 3, all page IDs/orders through 3, progress-floor completion through Tier 3, consumed crystal Tier 3, and Proto-Astro natural essences `K/T/S/L/R`. It reconstructs no transient pulls, held objects, timers or panels. P3 and later mechanics are not implemented.
+Navigation jest oddzielona spacingiem, bez separatora. Przycisk back/close uwzględnia pełny label. Długie dynamiczne etykiety są bounded i mogą być multiline; hit region odpowiada visual region, a paginacja uwzględnia dynamiczną wysokość itemów.
