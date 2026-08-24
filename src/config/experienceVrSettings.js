@@ -381,6 +381,8 @@ export function normalizeExperienceVrSettings(candidate) {
       sun: {
         distanceFromWorldCenter: finiteNumber(candidate.celestial?.sun?.distanceFromWorldCenter,
           defaults.celestial.sun.distanceFromWorldCenter, { min: 0.01, max: 1000 }),
+        scale: finiteNumber(candidate.celestial?.sun?.scale,
+          defaults.celestial.sun.scale, { min: 0.01, max: 100 }),
         emissiveColor: candidate.celestial?.sun?.emissiveColor || defaults.celestial.sun.emissiveColor,
         emissiveIntensity: finiteNumber(candidate.celestial?.sun?.emissiveIntensity,
           defaults.celestial.sun.emissiveIntensity, { min: 0, max: 10 }),
