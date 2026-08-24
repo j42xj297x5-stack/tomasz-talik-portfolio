@@ -3,6 +3,7 @@ const STATE = Object.freeze({ IDLE: 'IDLE', DISPLAY: 'DISPLAY', GAP: 'GAP', COMP
 
 export function createVrMonkeyProgressionMessage({
   monkeyGuide,
+  owner = null,
   message, blocks = message ? [message] : null,
   secondsPerLine = VR_MONKEY_MESSAGE_TIMING.secondsPerLine,
   gapSeconds = VR_MONKEY_MESSAGE_TIMING.gapSeconds,
@@ -26,7 +27,7 @@ export function createVrMonkeyProgressionMessage({
   let blockIndex = 0;
 
   function displayBlock() {
-    const metrics = monkeyGuide.showMessage(blocks[blockIndex]);
+    const metrics = owner ? monkeyGuide.showDialogueMessage(owner, blocks[blockIndex]) : monkeyGuide.showMessage(blocks[blockIndex]);
     displayDuration = secondsPerLine * Math.max(1, metrics?.lineCount ?? 1);
     elapsed = 0; state = STATE.DISPLAY;
   }
@@ -45,7 +46,10 @@ export function createVrMonkeyProgressionMessage({
     const duration = state === STATE.DISPLAY ? displayDuration : gapSeconds;
     if (elapsed < duration) return;
     elapsed -= duration;
-    if (state === STATE.DISPLAY) { monkeyGuide.showMessage(''); state = STATE.GAP; return; }
+    if (state === STATE.DISPLAY) {
+      if (owner) monkeyGuide.showDialogueMessage(owner, ''); else monkeyGuide.showMessage('');
+      state = STATE.GAP; return;
+    }
     blockIndex += 1;
     if (blockIndex < blocks.length) { displayBlock(); return; }
     state = STATE.COMPLETED;
@@ -62,7 +66,9 @@ export function createVrMonkeyProgressionMessage({
     displayDuration = 0;
     completionSent = false;
     blockIndex = 0;
-    if (ownedBubble) monkeyGuide.showMessage('');
+    if (ownedBubble) {
+      if (owner) monkeyGuide.showDialogueMessage(owner, ''); else monkeyGuide.showMessage('');
+    }
   }
 
   return {
