@@ -300,8 +300,7 @@ export function createVrMonkeyGuide({
       })),
     ];
     context.font = `${settings.dialogue.fontWeight} ${settings.dialogue.fontSize}px sans-serif`;
-    const height = settings.dialogue.fontSize + settings.dialogue.menuPaddingY * 2;
-    drawPagedList(context, canvas, options, menuPage, (page) => { menuPage = page; }, height,
+    drawPagedList(context, canvas, options, menuPage, (page) => { menuPage = page; },
       { backId: 'close', backLabel: copy.close, previousId: 'menu-previous', nextId: 'menu-next' });
     texture.needsUpdate = true;
   }
@@ -326,24 +325,43 @@ export function createVrMonkeyGuide({
     return Math.max(settings.dialogue.navigationWidth,
       context.measureText(label).width + settings.dialogue.menuPaddingX * 2);
   }
-  function drawPagedList(context, canvas, items, pageIndex, setPageIndex, itemHeight,
+  function drawPagedList(context, canvas, items, pageIndex, setPageIndex,
     { backId, backLabel, previousId, nextId }) {
     interactiveRegions = [];
     const padding = settings.dialogue.padding; const gap = settings.dialogue.gap;
     const navHeight = settings.dialogue.historyNavigationHeight;
     const navTop = canvas.height - padding - navHeight;
     const contentHeight = Math.max(0, navTop - settings.dialogue.historyNavigationGap / 2 - padding);
-    const pageSize = Math.max(1, Math.floor((contentHeight + gap) / (itemHeight + gap)));
-    const pageCount = Math.max(1, Math.ceil(items.length / pageSize));
+    const maxButtonWidth = canvas.width - padding * 2;
+    const maxTextWidth = maxButtonWidth - settings.dialogue.menuPaddingX * 2;
+    const lineHeight = settings.dialogue.fontSize * 1.2;
+    const layouts = items.map((item) => {
+      const lines = wrapText(context, item.label, maxTextWidth);
+      const textWidth = Math.max(0, ...lines.map((line) => context.measureText(line).width));
+      return { item, lines, width: Math.min(maxButtonWidth,
+        textWidth + settings.dialogue.menuPaddingX * 2),
+      height: settings.dialogue.fontSize + Math.max(0, lines.length - 1) * lineHeight
+        + settings.dialogue.menuPaddingY * 2 };
+    });
+    const pages = [[]];
+    layouts.forEach((layout) => {
+      const currentPage = pages[pages.length - 1];
+      const usedHeight = currentPage.reduce((total, entry) => total + entry.height, 0)
+        + Math.max(0, currentPage.length - 1) * gap;
+      if (currentPage.length && usedHeight + gap + layout.height > contentHeight) pages.push([layout]);
+      else currentPage.push(layout);
+    });
+    const pageCount = pages.length;
     const page = Math.max(0, Math.min(pageIndex, pageCount - 1));
     setPageIndex(page);
-    items.slice(page * pageSize, (page + 1) * pageSize).forEach((item, index) => {
-      const region = addRegion({ ...item, x: padding, y: padding + index * (itemHeight + gap),
-        width: Math.min(canvas.width - padding * 2,
-          context.measureText(item.label).width + settings.dialogue.menuPaddingX * 2), height: itemHeight });
+    let itemY = padding;
+    pages[page].forEach(({ item, lines, width, height }) => {
+      const region = addRegion({ ...item, x: padding, y: itemY, width, height });
       context.fillStyle = drawInteractiveRegion(context, region, hoveredOption === region.id);
       context.textAlign = 'left'; context.textBaseline = 'middle';
-      context.fillText(item.label, region.x + settings.dialogue.menuPaddingX, region.y + region.height / 2);
+      lines.forEach((line, lineIndex) => context.fillText(line, region.x + settings.dialogue.menuPaddingX,
+        region.y + settings.dialogue.menuPaddingY + settings.dialogue.fontSize / 2 + lineHeight * lineIndex));
+      itemY += region.height + gap;
     });
     const back = addRegion({ id: backId, x: padding, y: navTop,
       width: navigationWidth(context, backLabel), height: navHeight });
@@ -450,10 +468,9 @@ export function createVrMonkeyGuide({
   }
   function drawKnowledge(context, canvas) {
     const topics = knowledgeResolver?.getGroupTopics?.(selectedKnowledgeGroupId) ?? [];
-    const height = settings.dialogue.fontSize + settings.dialogue.menuPaddingY * 2;
     context.font = `${settings.dialogue.fontWeight} ${settings.dialogue.fontSize}px sans-serif`;
     drawPagedList(context, canvas, topics.map((topic) => ({ id: `knowledge:${topic.id}`, label: topic.label })),
-      knowledgePage, (page) => { knowledgePage = page; }, height,
+      knowledgePage, (page) => { knowledgePage = page; },
       { backId: 'back-knowledge', backLabel: '←', previousId: 'knowledge-previous', nextId: 'knowledge-next' });
   }
 
