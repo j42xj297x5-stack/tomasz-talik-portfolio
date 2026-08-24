@@ -56,6 +56,7 @@ import { createVrPlayerGuidePanel } from './xr/guidance/createVrPlayerGuidePanel
 import { createVrPlayerGuideProjection } from './xr/guidance/createVrPlayerGuideProjection.js';
 import { createVrMonkeyGuide } from './xr/guidance/createVrMonkeyGuide.js';
 import { createVrMonkeyKnowledgeResolver } from './xr/guidance/createVrMonkeyKnowledgeResolver.js';
+import { createVrMonkeyGuidanceContextResolver } from './xr/guidance/createVrMonkeyGuidanceContextResolver.js';
 import { createVrMandatoryMonkeyCommunication } from './xr/guidance/createVrMandatoryMonkeyCommunication.js';
 import { VR_MONKEY_COMMUNICATION_COPY_PL } from './xr/guidance/vrMonkeyCommunicationCopy.js';
 import { createVrFurnaceIntro } from './xr/guidance/createVrFurnaceIntro.js';
@@ -490,6 +491,11 @@ const playerGuidePanel = createVrPlayerGuidePanel({
   debugCheckpoints: debugCheckpointsEnabled ? VR_DEBUG_CHECKPOINTS : [],
   onDebugCheckpoint: (checkpointId) => enterVrDebugCheckpoint?.(checkpointId)
 });
+const monkeyGuidanceContextResolver = createVrMonkeyGuidanceContextResolver({
+  can: (capability) => runtimeExperience?.can(capability) === true,
+  getAsterionProductionState: () => asterionProductionController.getState(),
+  getExtractedFamilyCodes: () => protoAstroTuningController.getExtractedFamilyCodes()
+});
 const monkeyKnowledgeResolver = createVrMonkeyKnowledgeResolver({
   locale: language,
   hasAstroKnowledge: () => runtimeExperience?.can(
@@ -501,7 +507,7 @@ const monkeyKnowledgeResolver = createVrMonkeyKnowledgeResolver({
   hasAsterionKnowledge: () => runtimeExperience?.can(
     VR_SCENARIO_CAPABILITY.CAN_EQUIP_ASTERION
   ) === true,
-  hasP2Knowledge: () => runtimeExperience?.can(VR_SCENARIO_CAPABILITY.CAN_SWITCH_ASTRO_BAND) === true
+  getCurrentGuidanceContextId: () => monkeyGuidanceContextResolver.getCurrentContextId()
 });
 const monkeyGuide = createVrMonkeyGuide({
   actorRoot: monkeyMotionRoot,
