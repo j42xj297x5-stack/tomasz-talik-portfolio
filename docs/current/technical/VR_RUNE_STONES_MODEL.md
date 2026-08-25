@@ -289,6 +289,8 @@ Każdy milestone jest osobnym bounded taskiem i kończy się przed rozpoczęciem
 - **Nie implementuje:** trwałego strojenia; nie zmienia starego ContentInteraction.
 - **Kryterium zakończenia:** oba składniki pozostają jednocześnie osadzone i wrong type jest odrzucany.
 
+**IMPLEMENTED FOUNDATION:** osobny `createVrAstroFurnaceRuneRecipeInteraction` utrzymuje dwa niezależne fizyczne typed slots (`SMALL_GLYPH` i `SHELL`), przyjmuje składniki w dowolnej kolejności i osadza je według transformów authored `RUNE_RECIPE_SMALL_GLYPH_SLOT` oraz `RUNE_RECIPE_SHELL_SLOT`. A3 nie waliduje receptury, nie uruchamia procesu i nie wykonuje commitu tuningu; production wiring do rzeczywistego rune-tuning mode pozostaje zakresem A4.
+
 ### RUNE A4 — Rune recipe validation + Furnace panel selection
 - **Cel:** wybrać konkretną eligible rodzinę i zwalidować Wu Xing pair.
 - **Właściciel:** panel projection + recipe resolver; eligibility ownerem pozostaje progresja sektorów.
