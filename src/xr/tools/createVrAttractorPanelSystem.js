@@ -4,7 +4,7 @@ export const VR_ATTRACTOR_PANEL_NAMES = Object.freeze(
   Array.from({ length: 4 }, (_, index) => `glyph_panel_0${index + 1}`)
 );
 
-const DEFAULT_CONTENTS = Object.freeze(['', '02', '03', '04']);
+const DEFAULT_CONTENTS = Object.freeze(['', '', '03', '04']);
 const MAX_CANVAS_EDGE = 512;
 const PROXIMITY_BUCKETS = 28;
 const STATE_STYLES = Object.freeze({
@@ -86,7 +86,7 @@ export function createVrAttractorPanelSystem({ panels, canvasFactory, imageFacto
     const originalMaterial = panel.material;
     panel.material = material;
     return { panel, canvas, context, maskCanvas, maskContext, texture, material, originalMaterial,
-      content: DEFAULT_CONTENTS[index], glyph: null, syllable: null, drawCount: 0 };
+      content: DEFAULT_CONTENTS[index], glyph: null, syllable: null, presentationColor: null, drawCount: 0 };
   });
 
   const glyphImages = new Map();
@@ -114,7 +114,9 @@ export function createVrAttractorPanelSystem({ panels, canvasFactory, imageFacto
       const height = positiveNumber(record.glyph.naturalHeight) ?? positiveNumber(record.glyph.height) ?? 1;
       const scale = Math.min(availableWidth / width, availableHeight / height);
       const x = (canvas.width - width * scale) / 2, y = (canvas.height - height * scale) / 2;
-      const familyColor = familyColors[record.syllable] ?? '#8feaff';
+      const familyColor = new THREE.Color(
+        record.presentationColor ?? familyColors[record.syllable] ?? '#8feaff'
+      ).getStyle();
       const p = proximityBucket / PROXIMITY_BUCKETS;
       const whiteMix = pulling ? 0.10 + 0.35 * p : 0;
       const color = new THREE.Color(familyColor).lerp(new THREE.Color('#ffffff'), whiteMix).getStyle();
@@ -147,22 +149,30 @@ export function createVrAttractorPanelSystem({ panels, canvasFactory, imageFacto
     record.drawCount += 1; texture.needsUpdate = true;
   }
 
-  async function setPrimaryGlyph(glyph) {
+  async function setPanelGlyph(index, glyph) {
     if (disposed) return false;
     const descriptor = typeof glyph === 'string' ? { url: glyph } : glyph;
     const url = descriptor?.url ?? null;
-    const record = records[0];
+    const record = records[index];
+    if (!record) throw new RangeError(`[VrAttractorPanels] Panel index ${index} is outside 0..3.`);
     if (url && record.requestedGlyphUrl === url && record.glyph) {
-      if (descriptor.syllable && descriptor.syllable !== record.syllable) { record.syllable = descriptor.syllable; draw(record); }
+      const nextSyllable = descriptor?.syllable ?? null;
+      const nextColor = descriptor?.presentationColor ?? null;
+      if (nextSyllable !== record.syllable || nextColor !== record.presentationColor) {
+        record.syllable = nextSyllable; record.presentationColor = nextColor; draw(record);
+      }
       return true;
     }
     record.requestedGlyphUrl = url; record.syllable = descriptor?.syllable ?? null;
+    record.presentationColor = descriptor?.presentationColor ?? null;
     record.content = ''; record.glyph = null; draw(record);
     if (!url) return true;
     const image = await loadGlyph(url);
     if (disposed || record.requestedGlyphUrl !== url) return false;
     record.glyph = image; draw(record); return true;
   }
+
+  function setPrimaryGlyph(glyph) { return setPanelGlyph(0, glyph); }
 
   function setPrimaryPresentation({ isPulling = false, targetProximity = 0 } = {}) {
     if (disposed) return false;
@@ -191,7 +201,7 @@ export function createVrAttractorPanelSystem({ panels, canvasFactory, imageFacto
     if (disposed) return;
     state = 'idle'; pulling = false; proximityBucket = 0;
     records.forEach((record, index) => { record.content = DEFAULT_CONTENTS[index]; record.glyph = null;
-      record.syllable = null; record.requestedGlyphUrl = null; draw(record); });
+      record.syllable = null; record.presentationColor = null; record.requestedGlyphUrl = null; draw(record); });
   }
   function dispose() {
     if (disposed) return;
@@ -206,6 +216,6 @@ export function createVrAttractorPanelSystem({ panels, canvasFactory, imageFacto
   }
 
   reset();
-  return { panels: records, setPanelContent, setPanelContents, setPrimaryGlyph, setPrimaryPresentation,
+  return { panels: records, setPanelContent, setPanelContents, setPanelGlyph, setPrimaryGlyph, setPrimaryPresentation,
     setVisualState, reset, dispose, glyphImages };
 }

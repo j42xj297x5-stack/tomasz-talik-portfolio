@@ -450,6 +450,16 @@ function spawnPlayerInsideRingFacingMonkey() {
   locomotion.teleportLocal(spawnLocal, monkeyLocal);
 }
 const attractorTool = createVrAttractorTool({ model: assetManager.cloneGltfScene('vr-astro-attractor-model') });
+const attractorBandPresentations = Object.freeze({
+  [VR_ATTRACTOR_BANDS.SHELLS]: { url: publicPath('/svg/band_01.svg'),
+    presentationColor: settings.attractorPresentation.bandColors.shells },
+  [VR_ATTRACTOR_BANDS.SMALL_GLYPHS]: { url: publicPath('/svg/band_02.svg'),
+    presentationColor: settings.attractorPresentation.bandColors.smallGlyphs },
+  [VR_ATTRACTOR_BANDS.LARGE_GLYPHS]: { url: publicPath('/svg/band_03.svg'),
+    presentationColor: settings.attractorPresentation.bandColors.largeGlyphs },
+  [VR_ATTRACTOR_BANDS.RUNESTONES]: { url: publicPath('/svg/band_04.svg'),
+    presentationColor: settings.attractorPresentation.bandColors.shells }
+});
 const semanticInput = createVrSemanticInput({ renderer });
 const runeStoneProgressionController = createVrRuneStoneProgressionController();
 const runeStoneAttractorBandProjection = createVrRuneStoneAttractorBandProjection({
@@ -463,6 +473,7 @@ const handModeController = createVrHandModeController({
   controllers: vrControllers.controllers,
   semanticInput,
   attractorTool,
+  getAttractorBandPresentation: (band) => attractorBandPresentations[band] ?? attractorBandPresentations.SHELLS,
   asterionSphere,
   isUnlocked: () => introQaBypass || runtimeExperience.can(VR_SCENARIO_CAPABILITY.CAN_EQUIP_ASTRO),
   canSwitchAttractorBand: () => runtimeExperience?.can(
