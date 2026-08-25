@@ -3,13 +3,13 @@
 ## 1. Status i authority
 
 - **Status:** **KANONICZNY MODEL TECHNICZNO-GAMEPLAYOWY / PARTIALLY IMPLEMENTED**.
-- **Implemented:** `RUNE A1–A8`, `RUNE UI-1 — Astro Furnace panel structure and readability normalization` oraz `RUNE A9.1 — canonical Rune Stone asset identity + physical natural Rune Stone actor foundation`.
+- **Implemented:** `RUNE A1–A8`, `RUNE UI-1 — Astro Furnace panel structure and readability normalization`, `RUNE A9.1 — canonical Rune Stone asset identity + physical natural Rune Stone actor foundation`, A9 foundation hardening (`authored origin + live world bounds`) oraz `RUNE A9.2 — physical RUNESTONES target resolution + LOCKED_BY_ASTRO foundation`.
 - **Foundation correction:** natural Rune tuning sector gate — **RESOLVED**; implementation evidence: `1d8d5ad — Decouple natural Rune tuning from sector completion`.
-- **RUNE A9:** **PARTIALLY IMPLEMENTED**; kolejnym bounded actor slice jest physical `RUNESTONES` target resolution + `LOCKED_BY_ASTRO` foundation.
+- **RUNE A9:** **PARTIALLY IMPLEMENTED**; kolejnym bounded actor slice jest physical transport od `LOCKED_BY_ASTRO` w stronę `CARRIED_ORBIT`.
 - **Scenario authoring:** **DEFERRED TO SEPARATE THREAD**.
 - **Canonical authored Scenario/runtime progression boundary:** `4.80`.
 - Dokument jest kanonicznym źródłem prawdy Rune Stone Act: strojenia Astrolabium, targetability, pięciu naturalnych pair-specific par, mostów, transportu, instalacji, specjalnego flow Eteru i finalnego polowania Wody.
-- A1–A8 i A9.1 są foundations/domain behavior bez rozszerzenia authored Scenario spine. Pozostała część A9 oraz A10–A21 są targetem; Scenario, Director i literalna komunikacja gracza zostaną zaprojektowane osobno.
+- A1–A8, A9.1, A9 foundation hardening i A9.2 są foundations/domain behavior bez rozszerzenia authored Scenario spine. Pozostała część A9 oraz A10–A21 są targetem; Scenario, Director i literalna komunikacja gracza zostaną zaprojektowane osobno.
 
 `KANON` oznacza wiążący kontrakt, `TUNING` wartość dobieraną w prototypie/Quest 3S, a `OPEN DESIGN DECISION` świadomie nierozstrzygnięty warunek.
 
@@ -41,7 +41,21 @@ Natural family availability wynika wyłącznie z `PROTO_ASTRO_NATURAL_FAMILY_COD
 natural targetability = tunedRuneFamilies
 ```
 
-Nastrojona naturalna rodzina jest legalnym targetem Astrolabium w paśmie `RUNESTONES`, niezależnie od installation readiness. Przykładowo `Water tuned = true` przy `Water platform readiness = false` oznacza, że Water Rune Stone można targetować i przyciągać, ale nie można jeszcze ukończyć jego instalacji. A7 implementuje dokładnie tę semantykę dla naturalnego target set.
+Nastrojona naturalna rodzina jest legalnym targetem Astrolabium w paśmie `RUNESTONES`, niezależnie od installation readiness. Przykładowo `Water tuned = true` przy `Water platform readiness = false` oznacza, że Water Rune Stone może zostać scanned, targeted i `LOCKED_BY_ASTRO`, ale nie może jeszcze zostać zainstalowany. A7 pozostaje semanticznym ownerem permission, a A9.2 implementuje fizyczne resolution tego permission:
+
+```text
+RuneStoneProgressionController
+        ↓
+tunedRuneFamilies
+        ↓
+RuneStoneAttractorBandProjection
+        ↓
+physical RuneStoneAttractorInteraction
+        ↓
+legal RuneStoneActor candidate
+```
+
+`RuneStoneAttractorInteraction` nie posiada własnej kopii tuned truth. Legalny physical candidate musi jednocześnie mieć `descriptor.natural === true`, istniejący i widoczny physical `ActorRoot`, transient state `FREE` oraz potwierdzoną przez projekcję A7 family targetability. Sector completeness, platform installation readiness, bridge state i Scenario point nie uczestniczą w tym rozstrzygnięciu.
 
 ### 3.3. Platform installation readiness
 
@@ -111,11 +125,11 @@ Canonical asset identity obejmuje sześć kamieni, lecz standardowa natural Rune
 | `stone_05.glb` | WATER | `S` | `water` | natural branch `water` | `SU` |
 | `stone_06.glb` | ETHER | `V` | `astro` | **SPECIAL**, `branchId: null` | brak; `VU` nie istnieje |
 
-Jeden pair-generic physical Rune Stone owner materializuje pięć naturalnych stones. Każdy z nich posiada canonical descriptor, `familyCode`, `familyId`, `branchId`, asset identity, stabilny `RuneStoneActorRoot`, `RuneStoneVisualRoot` z klonem authored GLB hierarchy, własne `Box3`, `BoundingSphere` i `interactionRadius`, initial deterministic transform oraz początkowy transient state `FREE`. Jeżeli asset zawiera clips, kamień posiada również własny `AnimationMixer` i actions.
+Jeden pair-generic physical Rune Stone owner materializuje pięć naturalnych stones. Każdy z nich posiada canonical descriptor, `familyCode`, `familyId`, `branchId`, asset identity, stabilny `RuneStoneActorRoot`, `RuneStoneVisualRoot` z klonem authored GLB hierarchy, live bounds, initial deterministic transform oraz transient state `FREE` lub `LOCKED_BY_ASTRO`. Jeżeli asset zawiera clips, kamień posiada również własny `AnimationMixer` i actions. Actor jest ownerem physical records, rootów, authored animations, live bounds, transient state oraz komend `lockByAstro()` i `unlockFromAstro()`.
 
-`RuneStoneActorRoot` jest stabilnym gameplay/transport rootem. `RuneStoneVisualRoot` zawiera authored GLB. Wewnętrzne `RELIC_*`, animated controllers, meshes i keyframes nie są gameplay transport rootem. Visual hierarchy jest recenterowana względem geometrycznego center bez przebudowy binarnego GLB i bez modyfikowania pojedynczych animated nodes.
+`RuneStoneActorRoot` jest stabilnym gameplay/transport pivotem. Authored local `(0,0,0)` jest gameplay origin, a `RuneStoneVisualRoot` pozostaje neutralny i zawiera authored GLB. Nie istnieje geometryczne recentering przez centroid AABB. Wewnętrzne `RELIC_*`, animated controllers, meshes i keyframes nie są gameplay transport rootem.
 
-Rune Stones zachowują authored scale; runtime **nie** normalizuje sześciu kamieni do wspólnego rozmiaru. Znana charakterystyka assetów to większe WOOD / `stone_04` i METAL / `stone_02`, mniejsze WATER / `stone_05` i ETHER / `stone_06` oraz pośrednie FIRE / `stone_01` i EARTH / `stone_03`. Są to opisy assetów, nie gameplay size categories. Rzeczywisty `interactionRadius` jest wyliczany osobno z geometrii każdego modelu.
+Rune Stones zachowują authored scale; runtime **nie** normalizuje sześciu kamieni do wspólnego rozmiaru. Znana charakterystyka assetów to większe WOOD / `stone_04` i METAL / `stone_02`, mniejsze WATER / `stone_05` i ETHER / `stone_06` oraz pośrednie FIRE / `stone_01` i EARTH / `stone_03`. Są to opisy assetów, nie gameplay size categories. Construction-time `placementClearanceRadius` służy wyłącznie spherical placement. `getBoundingBox(branchId)` zwraca aktualny world-space `Box3`, `getBoundingSphere(branchId)` aktualny world-space `BoundingSphere`, a `getInteractionRadius(branchId)` aktualny live radius. Te live bounds uwzględniają authored animation pose w chwili odczytu; nie istnieje baked full-animation envelope sampler.
 
 **Authored animation lifecycle — IMPLEMENTED:** clips są zachowywane; per-stone `AnimationMixer` istnieje, jeżeli asset ma clips; runtime `update()` aktualizuje owned mixers; `reset()` restartuje authored actions od deterministycznego początku; `dispose()` zatrzymuje owned animation lifecycle. Transport nie manipuluje wewnętrznymi animated controller nodes. Nie jest to claim implementacji gameplayowego transportu.
 
@@ -156,19 +170,29 @@ HIDDEN → DOCKED → EXTENDING → EXTENDED → ORBITING
 
 ## 8. Transport i instalacja
 
-**A9.1 physical foundation jest IMPLEMENTED; poniższa pełna maszyna transportu i instalacji pozostaje TARGET / NOT IMPLEMENTED poza początkowym stanem `FREE`.**
+**A9.1 physical foundation, jego authored-origin/live-bounds hardening oraz A9.2 physical targeting i Astro-lock foundation są IMPLEMENTED. Pełny transport i instalacja pozostają TARGET / NOT IMPLEMENTED.**
 
 ```text
-FREE → LOCKED_BY_ASTRO → CARRIED_ORBIT → SOCKET_CAPTURE → INSTALLED
+FREE → LOCKED_BY_ASTRO                 IMPLEMENTED
+LOCKED_BY_ASTRO → FREE                 IMPLEMENTED
+LOCKED_BY_ASTRO → CARRIED_ORBIT        TARGET / NOT IMPLEMENTED
+CARRIED_ORBIT → SOCKET_CAPTURE         TARGET / NOT IMPLEMENTED
+SOCKET_CAPTURE → INSTALLED             TARGET / NOT IMPLEMENTED
 ```
 
 - `FREE`: naturalny kamień istnieje w `RUNE_STONES = 50–75 m`; może być targetowany tylko, gdy family is tuned.
-- `LOCKED_BY_ASTRO`: Astrolabium posiada legalny lock; kamień nie teleportuje się do ręki.
+- `LOCKED_BY_ASTRO`: Astrolabium posiada semantic ownership; kamień pozostaje fizycznie w swojej pozycji pola `RUNE_STONES`, a authored internal animation nadal działa. Stan nie oznacza ruchu, pull, carried orbit, attachment, bridge approach ani install.
 - `CARRIED_ORBIT`: pull prowadzi root według pair-specific config i safe envelope.
 - `SOCKET_CAPTURE`: wymaga gotowej właściwej platformy i poprawnego stone/pair match; aktor interpoluje do pair-specific `SOCKET_POINT`.
 - `INSTALLED`: dopiero ukończony socket snap zapisuje persistent installed fact.
 
-Target i transport nie wymagają installation readiness, natomiast `SOCKET_CAPTURE` i `INSTALLED` jej wymagają. Metal lub Water mogą więc zostać przyciągnięte wcześniej, ale nie zainstalowane. Dokument nie zamraża arbitralnego zachowania kamienia po nieudanej próbie instalacji.
+Physical `RUNESTONES` candidates pochodzą z dokładnie pięciu naturalnych `RuneStoneActor` records: `earth`, `fire`, `wood`, `metal`, `water`. Ether nie jest naturalnym candidate i nie należy do A9.2.
+
+**SCAN / HALO — IMPLEMENTED:** `RUNESTONES` używa istniejącego Astro Attractor na prawym kontrolerze, hand mode `ASTRO_ATTRACTOR` i bandu `RUNESTONES`, canonical scan cone helpera, canonical target selection helpera oraz istniejących scan/trigger threshold semantics. Halo otrzymuje wyłącznie aktualny legalny candidate; untuned stone nie otrzymuje halo. `AttractorTool` używa istniejących stanów `TARGETING` / `IDLE`. Nie jest to implementacja pull.
+
+`RuneStoneAttractorInteraction` posiada najwyżej jeden aktywny natural Rune Stone lock; multi-lock nie istnieje. Interaction posiada scan, candidate selection, halo, pojedynczy aktywny lock i interaction cleanup. Obecny lock jest zwalniany po utracie interaction, w tym release triggera, utracie scanu/control, zmianie bandu, zmianie hand mode, utracie targetability, higher-priority interaction, reset lub dispose. Unlock ustawia state `FREE`; return animation nie istnieje, ponieważ A9.2 nie przesuwa kamienia.
+
+Target i lock nie wymagają installation readiness, natomiast przyszłe `SOCKET_CAPTURE` i `INSTALLED` będą jej wymagały. **OPEN DESIGN DECISION:** przed pełnym physical transport lifecycle trzeba rozstrzygnąć zachowanie po rozpoczęciu pull/carry, gdy gracz zwolni trigger, zmieni band, schowa Astrolabium albo przerwie transport przed socket capture. Dokument nie zamraża return-to-field, parking, hold-in-place, orbit persistence ani timeout. Obecne unlock → `FREE` jest bezproblemowe wyłącznie dlatego, że kamień jeszcze się nie porusza.
 
 Każdy kamień może zachowywać pair-specific cichy spatial loop w `FREE`, `CARRIED_ORBIT` i `INSTALLED`. Audio playback/dispose należy do runtime audio bridge, a asset, gain i attenuation pozostają `TUNING`; audio nie posiada progression truth.
 
@@ -179,7 +203,9 @@ Każdy kamień może zachowywać pair-specific cichy spatial loop w `FREE`, `CAR
 | owner progresji sektorów | kompletność paneli sektorów | rune tuning/installed truth |
 | `RuneStoneProgressionController` lub jawny rune-domain contract | naturalne `tunedRuneFamilies`; docelowo `installedRuneFamilies`, special Ether tuned truth i Water installation readiness override | kopia paneli, transient transport |
 | recipe/Furnace actors | typed slots, transient recipe i process | installed truth |
-| Rune Stone actor | transient physical/presentation state; docelowo lock, transport i capture mechanics | tuning truth, platform installation readiness truth, installed progression truth i Scenario cursor |
+| `RuneStoneAttractorBandProjection` | natural target permission A7 | własna kopia tuned truth, physical interaction |
+| `RuneStoneAttractorInteraction` | scan, candidate selection, halo, jeden aktywny lock i interaction cleanup | tuned truth, installation readiness, transport |
+| `RuneStoneActor` | physical records, `ActorRoot` / `VisualRoot`, authored animations, live bounds, transient state, `lockByAstro()` i `unlockFromAstro()` | tuning truth, platform installation readiness truth, installed progression truth i Scenario cursor |
 | `RuneBridgeActor` | transient bridge mechanics/presentation | tuning, readiness source i installed progression |
 | Monkey/Ether actor | transient Ether presentation/capture mechanics | progression truth |
 | Scenario / Director | authored beat legality i semantic orchestration | interpolacje, pull, slot/capture mechanics |
@@ -318,10 +344,12 @@ Ten dokument nie ustala literal copy. Copy należy później zsynchronizować z 
 - **Status:** **PARTIALLY IMPLEMENTED**.
 - **A9.1 — IMPLEMENTED:** canonical asset identity + physical natural Rune Stone actor foundation.
 - **Implementation evidence:** `c52775f — Implement canonical Rune Stone asset identities and actor foundation`.
-- A9.1 obejmuje canonical six-asset identity, five-natural actor collection, Ether special descriptor, physical natural stones, real per-asset bounds, stable transport roots, authored animation lifecycle, deterministic natural placement w `RUNE_STONES = 50–75 m`, world-stable `update()`/`reset()`/`dispose()` composition i initial `FREE` state.
-- **A9 remaining target:** `FREE → LOCKED_BY_ASTRO → CARRIED_ORBIT → SOCKET_CAPTURE → INSTALLED`.
-- **TARGET / NOT IMPLEMENTED:** physical `RUNESTONES` scan, target candidate resolver, target halo, Astro lock, `LOCKED_BY_ASTRO` transition, pull, `CARRIED_ORBIT`, safe player carry distance, bridge readiness synchronization, bridge extension cooperation, socket approach, `SOCKET_CAPTURE`, snap, `installedRuneFamilies`, `INSTALLED` commit, `RuneBridgeActor.setInstalled()` cooperation, spatial audio, Ether materialization, Ether special targeting/transport, Monkey capture i Scenario integration.
-- Następny bounded actor slice to physical `RUNESTONES` target resolution + `LOCKED_BY_ASTRO` foundation; nie przesądza jeszcze pełnego pull/carry/capture.
+- A9.1 obejmuje canonical six-asset identity, five-natural actor collection, Ether special descriptor, physical natural stones, stable transport roots, authored animation lifecycle, deterministic natural placement w `RUNE_STONES = 50–75 m`, world-stable `update()`/`reset()`/`dispose()` composition i initial `FREE` state.
+- **A9 FOUNDATION HARDENING — IMPLEMENTED:** authored local `(0,0,0)` jako gameplay origin, neutralny `RuneStoneVisualRoot`, brak AABB-centroid recentering, `ActorRoot` jako gameplay/transport pivot oraz aktualne world-space live bounds uwzględniające bieżącą authored animation pose.
+- **A9.2 — IMPLEMENTED:** physical `RUNESTONES` target resolution + `LOCKED_BY_ASTRO` foundation. Implementation subject: `Implement physical Rune Stone targeting and Astro lock`; lokalny task SHA nie jest zapisany jako trwałe canonical GitHub evidence.
+- A9.2 obejmuje physical scan i target selection dokładnie pięciu naturalnych actors, halo legalnego candidate, pojedynczy Astro lock oraz przejścia `FREE ↔ LOCKED_BY_ASTRO`. Permission pochodzi z `tunedRuneFamilies` przez projekcję A7; interaction nie posiada tuned truth, a installation readiness nie uczestniczy w targetowaniu. Ether pozostaje poza candidate set.
+- **A9 remaining target / NOT IMPLEMENTED:** `CARRIED_ORBIT`, `SOCKET_CAPTURE`, `INSTALLED`, Rune Stone movement, physical pull, safe carry distance, release/return/parking transport behavior, bridge readiness synchronization, bridge extension cooperation, socket approach, capture, snap, `installedRuneFamilies`, `RuneBridgeActor.setInstalled()` cooperation, Rune Stone audio, Ether targetability i materialization, Monkey capture, Water readiness override oraz Scenario integration.
+- Następny bounded actor slice to physical transport od `LOCKED_BY_ASTRO` w stronę `CARRIED_ORBIT`; nie przesądza jeszcze capture/install ani zachowania przerwanego transportu.
 
 ### RUNE A10 — Scenario / Director integration
 
@@ -392,6 +420,7 @@ Ten dokument nie ustala literal copy. Copy należy później zsynchronizować z 
 - `FIVE_ELEMENTAL_RUNES_INSTALLED` otwiera flow ostatniego Water Large Glyph.
 - Zakazane są: drugi registry/radius; kopia panel completion; jeden globalny socket height/offset/envelope; teleport kamienia do ręki; progression truth w actorze; techniczne Scenario pointy dla interpolacji, timera, pull lub capture; nowe authored Scenario po `4.80` w ramach actor foundations.
 - Pair-specific geometry, safe envelope, occupied arcs, carry/capture easing, bridge timing, spatial audio, release/return/parking behavior, late retreat distance i timeout behavior pozostają `TUNING` lub `OPEN DESIGN DECISION`.
+- Zachowanie przerwanego physical pull/carry przed socket capture jest **OPEN DESIGN DECISION** i musi zostać rozstrzygnięte przed pełnym transport lifecycle.
 - A9 nie jest jeszcze kompletne, a Scenario boundary pozostaje `4.80`.
 
 ## 15. Current implementation checkpoint
@@ -405,11 +434,19 @@ NATURAL RUNE TUNING SECTOR GATE: RESOLVED
 RUNE A9: PARTIALLY IMPLEMENTED
 
 A9.1: IMPLEMENTED
-canonical Rune Stone asset identity + physical actor foundation
-evidence: c52775f
+physical natural Rune Stone actor foundation
 
-NEXT ACTOR SLICE:
-RUNE A9 — physical RUNESTONES targeting / lock foundation
+A9 FOUNDATION HARDENING: IMPLEMENTED
+authored origin + live world bounds
+
+A9.2: IMPLEMENTED
+physical RUNESTONES targeting + LOCKED_BY_ASTRO
+
+NEXT:
+physical transport from LOCKED_BY_ASTRO toward CARRIED_ORBIT
+
+BLOCKING PRODUCT DECISION BEFORE FULL TRANSPORT:
+interrupted pull/carry behavior
 
 SCENARIO AUTHORING:
 DEFERRED TO SEPARATE THREAD
