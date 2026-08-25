@@ -1,14 +1,11 @@
 import { PROTO_ASTRO_NATURAL_FAMILY_CODES } from '../protoAstro/protoAstroRegistry.js';
-import { resolveVrBranchIdByProtoAstroFamily } from '../protoAstro/resolveVrPageProtoAstro.js';
 import { resolveVrSmallGlyphProtoAstro } from '../protoAstro/resolveVrSmallGlyphProtoAstro.js';
 import { resolveAttractorShellGlyph } from '../tools/vrAttractorShellGlyphs.js';
 import { ASTRO_FURNACE_RUNE_RECIPE_SLOT_STATES } from '../furnace/createVrAstroFurnaceRuneRecipeInteraction.js';
 import { resolveVrRuneRecipeForTargetFamily } from './resolveVrRuneRecipe.js';
 
-export function createVrRuneRecipeSelectionController({ progressionController, runeRecipeInteraction,
+export function createVrRuneRecipeSelectionController({ runeRecipeInteraction,
   runeStoneProgressionController }) {
-  if (typeof progressionController?.isBranchComplete !== 'function')
-    throw new TypeError('Rune recipe selection requires branch completion reads.');
   if (typeof runeRecipeInteraction?.getSnapshot !== 'function')
     throw new TypeError('Rune recipe selection requires RuneRecipeInteraction.');
   if (typeof runeStoneProgressionController?.isFamilyTuned !== 'function')
@@ -17,22 +14,20 @@ export function createVrRuneRecipeSelectionController({ progressionController, r
   let selectedFamilyCode = null;
   let disposed = false;
 
-  function isFamilyEligible(familyCode) {
+  function isFamilyAvailable(familyCode) {
     const family = String(familyCode ?? '').toUpperCase();
-    if (!PROTO_ASTRO_NATURAL_FAMILY_CODES.includes(family)) return false;
-    const branchId = resolveVrBranchIdByProtoAstroFamily(family);
-    return Boolean(branchId && progressionController.isBranchComplete(branchId));
+    return PROTO_ASTRO_NATURAL_FAMILY_CODES.includes(family);
   }
   function synchronizeSelection() {
     if (selectedFamilyCode && !isFamilyTunable(selectedFamilyCode)) selectedFamilyCode = null;
     return selectedFamilyCode;
   }
-  function getEligibleFamilyCodes() {
+  function getAvailableFamilyCodes() {
     synchronizeSelection();
-    return PROTO_ASTRO_NATURAL_FAMILY_CODES.filter(isFamilyEligible);
+    return [...PROTO_ASTRO_NATURAL_FAMILY_CODES];
   }
   function isFamilyTuned(familyCode) { return runeStoneProgressionController.isFamilyTuned(familyCode); }
-  function isFamilyTunable(familyCode) { return isFamilyEligible(familyCode) && !isFamilyTuned(familyCode); }
+  function isFamilyTunable(familyCode) { return isFamilyAvailable(familyCode) && !isFamilyTuned(familyCode); }
   function getTunableFamilyCodes() { return PROTO_ASTRO_NATURAL_FAMILY_CODES.filter(isFamilyTunable); }
   function emitChange() { const snapshot = getSnapshot(); listeners.forEach((listener) => listener(snapshot)); }
   function selectFamily(familyCode) {
@@ -67,7 +62,7 @@ export function createVrRuneRecipeSelectionController({ progressionController, r
     const selected = getSelectedFamilyCode();
     const ingredients = resolveIngredients();
     const recipeValid = isRecipeValid();
-    return Object.freeze({ eligibleFamilyCodes: getEligibleFamilyCodes(), tunableFamilyCodes: getTunableFamilyCodes(),
+    return Object.freeze({ availableFamilyCodes: getAvailableFamilyCodes(), tunableFamilyCodes: getTunableFamilyCodes(),
       tunedFamilyCodes: runeStoneProgressionController.getTunedFamilyCodes(), selectedFamilyCode: selected,
       expectedRecipe: selected ? resolveVrRuneRecipeForTargetFamily(selected) : null,
       ...ingredients, recipeValid, readyForTuning: recipeValid });
@@ -76,7 +71,7 @@ export function createVrRuneRecipeSelectionController({ progressionController, r
   const unsubscribeProgression = runeStoneProgressionController.subscribe(() => { synchronizeSelection(); emitChange(); });
   function reset() { if (selectedFamilyCode) { selectedFamilyCode = null; emitChange(); } }
   function dispose() { if (disposed) return; reset(); disposed = true; unsubscribeInteraction(); unsubscribeProgression(); listeners.clear(); }
-  return { getEligibleFamilyCodes, getTunableFamilyCodes, isFamilyEligible, isFamilyTuned, isFamilyTunable,
+  return { getAvailableFamilyCodes, getTunableFamilyCodes, isFamilyAvailable, isFamilyTuned, isFamilyTunable,
     selectFamily, clearSelection, getSelectedFamilyCode,
     getExpectedRecipe, getSnapshot, isRecipeValid, isReadyForTuning: isRecipeValid,
     subscribe(listener) { if (typeof listener !== 'function') throw new TypeError('Rune selection listener must be a function.'); listeners.add(listener); return () => listeners.delete(listener); },
