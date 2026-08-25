@@ -27,6 +27,7 @@ import { createVrReliquaryActivateButton } from './xr/createVrReliquaryActivateB
 import { createVrReliquaryReleaseButton } from './xr/createVrReliquaryReleaseButton.js';
 import { createVrProgressFloor } from './xr/floor/createVrProgressFloor.js';
 import { createVrRuneBridgeActor } from './xr/runes/createVrRuneBridgeActor.js';
+import { createVrRuneStoneActor } from './xr/runes/createVrRuneStoneActor.js';
 import { createVrProgressionController } from './xr/progression/createVrProgressionController.js';
 import { createVrFirstRingFlow } from './xr/progression/createVrFirstRingFlow.js';
 import { createVrProgressionSemanticHandoff } from './xr/progression/createVrProgressionSemanticHandoff.js';
@@ -52,6 +53,7 @@ import { createVrAstroFurnaceContentInteraction } from './xr/furnace/createVrAst
 import { createVrAstroFurnaceRuneRecipeInteraction } from './xr/furnace/createVrAstroFurnaceRuneRecipeInteraction.js';
 import { createVrRuneRecipeSelectionController } from './xr/runes/createVrRuneRecipeSelectionController.js';
 import { createVrRuneStoneProgressionController } from './xr/runes/createVrRuneStoneProgressionController.js';
+import { createVrRuneStoneAttractorBandProjection } from './xr/runes/createVrRuneStoneAttractorBandProjection.js';
 import { createVrRuneTuningController } from './xr/runes/createVrRuneTuningController.js';
 import { createVrProtoAstroTuningController } from './xr/protoAstro/createVrProtoAstroTuningController.js';
 import { createVrAsterionSphere } from './xr/asterion/createVrAsterionSphere.js';
@@ -194,7 +196,7 @@ worldStableRoot.add(centralPlaceholder);
 
 const asterionSphereQa = settings.asterionSphere.enabled && searchParams.has(settings.asterionSphere.qaQueryParam);
 const vrAssets = getPreloadAssets([...INITIAL_PRELOAD_GROUPS, ...DEFERRED_PRELOAD_GROUPS])
-  .filter(({ id }) => id === 'sun-model' || id === 'vr-asterion-sphere-model' || id === 'vr-rune-bridge-model' || id === 'gltf-loader-module' || id === 'monkey-model' || id === 'monkey-stone-model' || id === 'vr-portal-model' || id === 'vr-astro-attractor-model' || id === 'vr-astro-furnace-model' || id.startsWith('vr-progress-floor-') || id === 'vr-crystal-reliquary-model' || id.startsWith('vr-crystal-reliquary-button-') || id.startsWith('glyph-') || id.startsWith('vr-crystal-') || id.startsWith('shell-relic-') || id.startsWith('small-glyph-relic-'))
+  .filter(({ id }) => id === 'sun-model' || id === 'vr-asterion-sphere-model' || id === 'vr-rune-bridge-model' || id === 'gltf-loader-module' || id === 'monkey-model' || id === 'monkey-stone-model' || id === 'vr-portal-model' || id === 'vr-astro-attractor-model' || id === 'vr-astro-furnace-model' || id.startsWith('vr-progress-floor-') || id === 'vr-crystal-reliquary-model' || id.startsWith('vr-crystal-reliquary-button-') || id.startsWith('glyph-') || id.startsWith('vr-crystal-') || id.startsWith('vr-rune-stone-') || id.startsWith('shell-relic-') || id.startsWith('small-glyph-relic-'))
   .map((asset) => ({ ...asset, critical: asset.id === 'gltf-loader-module' }));
 const loadingDiagnostics = createLoadingDiagnostics(vrAssets);
 const assetManager = createAssetManager({ diagnostics: loadingDiagnostics });
@@ -266,12 +268,17 @@ const sphericalLayerRanges = resolveVrSphericalLayerRanges({
   layers: [
     { id: VR_SPHERICAL_LAYER_IDS.SHELLS, ...settings.sphericalLayers.shells, status: 'IMPLEMENTED' },
     { id: VR_SPHERICAL_LAYER_IDS.SMALL_GLYPHS, ...settings.sphericalLayers.smallGlyphs, status: 'IMPLEMENTED' },
-    { id: VR_SPHERICAL_LAYER_IDS.RUNE_STONES, ...settings.sphericalLayers.runeStones, status: 'RESERVED' },
+    { id: VR_SPHERICAL_LAYER_IDS.RUNE_STONES, ...settings.sphericalLayers.runeStones, status: 'IMPLEMENTED' },
     { id: VR_SPHERICAL_LAYER_IDS.STARS, ...settings.sphericalLayers.stars, status: 'IMPLEMENTED' },
     { id: VR_SPHERICAL_LAYER_IDS.HIDDEN_GLYPHS, ...settings.sphericalLayers.hiddenGlyphs, status: 'RESERVED' }
   ]
 });
 const sphericalLayer = (id) => sphericalLayerRanges.find((range) => range.id === id);
+const runeStoneActor = createVrRuneStoneActor({
+  parent: worldStableRoot,
+  assetManager,
+  layer: sphericalLayer(VR_SPHERICAL_LAYER_IDS.RUNE_STONES)
+});
 const starLayer = sphericalLayer(VR_SPHERICAL_LAYER_IDS.STARS);
 const celestialActor = createVrCelestialActor({
   parent: worldStableRoot,
@@ -442,6 +449,10 @@ function spawnPlayerInsideRingFacingMonkey() {
 }
 const attractorTool = createVrAttractorTool({ model: assetManager.cloneGltfScene('vr-astro-attractor-model') });
 const semanticInput = createVrSemanticInput({ renderer });
+const runeStoneProgressionController = createVrRuneStoneProgressionController();
+const runeStoneAttractorBandProjection = createVrRuneStoneAttractorBandProjection({
+  runeStoneProgressionController
+});
 let shellAttractorInteraction = null;
 let smallGlyphAttractorInteraction = null;
 let largeGlyphAttractorInteraction = null;
@@ -458,6 +469,7 @@ const handModeController = createVrHandModeController({
     const bands = [VR_ATTRACTOR_BANDS.SHELLS, VR_ATTRACTOR_BANDS.SMALL_GLYPHS];
     if (runtimeExperience?.can(VR_SCENARIO_CAPABILITY.CAN_SCAN_LARGE_GLYPHS) === true
       && protoAstroTuningController.getExtractedFamilyCodes().length > 0) bands.push(VR_ATTRACTOR_BANDS.LARGE_GLYPHS);
+    if (runeStoneAttractorBandProjection.isAvailable()) bands.push(VR_ATTRACTOR_BANDS.RUNESTONES);
     return bands;
   },
   isAsterionAvailable: () => asterionProductionController.isEarned() || asterionSphereQa,
@@ -555,9 +567,8 @@ const astroFurnaceRuneRecipeInteraction = createVrAstroFurnaceRuneRecipeInteract
   takeHeldShell: (shell) => shellAttractorInteraction?.transferHeldShell(shell) === true,
   takeHeldSmallGlyph: (glyph) => smallGlyphAttractorInteraction?.transferHeldGlyph(glyph) === true
 });
-const runeStoneProgressionController = createVrRuneStoneProgressionController();
 const runeRecipeSelectionController = createVrRuneRecipeSelectionController({
-  progressionController, runeRecipeInteraction: astroFurnaceRuneRecipeInteraction,
+  runeRecipeInteraction: astroFurnaceRuneRecipeInteraction,
   runeStoneProgressionController
 });
 const runeTuningController = createVrRuneTuningController({
@@ -1197,6 +1208,7 @@ function renderFrame() {
   largeGlyphAttractorInteraction.update(delta);
   postRingPresentation.update(delta);
   smallGlyphSystem.update(delta);
+  runeStoneActor.update(delta);
   celestialActor.update(delta);
   observationWindow.update(delta);
   p2ObservationWindow.update(delta);
@@ -1278,6 +1290,7 @@ function restoreVrScenarioBaseline() {
   progressionController.reset();
   progressFloor.reset();
   runeBridgeActor.reset();
+  runeStoneActor.reset();
   largeGlyphAttractorInteraction.reset();
   largeGlyphActor.reset();
   smallGlyphAttractorInteraction.reset();
@@ -1401,6 +1414,7 @@ window.addEventListener('pagehide', () => {
   crystalCollection.dispose();
   crystalReliquary.dispose();
   runeBridgeActor.dispose();
+  runeStoneActor.dispose();
   progressFloor.dispose();
   postRingPresentation.dispose();
   p2ObservationWindow.reset();

@@ -1,5 +1,6 @@
 import { portfolioNodes } from '../content/portfolioNodes.js';
 import { experienceVrPages } from '../content/experienceVrPages.js';
+import { VR_RUNE_STONE_ASSETS } from '../xr/runes/vrRuneStoneRegistry.js';
 
 export const ASSET_STAGES = Object.freeze({
   CRITICAL_INITIAL: 'criticalInitial',
@@ -29,12 +30,18 @@ const glyphModelAssets = portfolioNodes.map((node) => withStage({
 }, ASSET_STAGES.CRITICAL_INITIAL));
 
 const atmosphereRelicAssets = Object.freeze([
-  ...['stone', 'shell'].flatMap((prefix) => Array.from({ length: 6 }, (_, index) => withStage({
-    id: `${prefix}-relic-${index + 1}`,
-    label: `${prefix} relic ${index + 1}`,
-    path: `/glb/${prefix}_${String(index + 1).padStart(2, '0')}.glb`,
+  ...VR_RUNE_STONE_ASSETS.map(({ assetId, assetIdentity, path }) => withStage({
+    id: assetId,
+    label: `${assetIdentity} Rune Stone model`,
+    path,
     type: 'model'
-  }, ASSET_STAGES.DEFERRED_WARM))),
+  }, ASSET_STAGES.DEFERRED_WARM)),
+  ...Array.from({ length: 6 }, (_, index) => withStage({
+    id: `shell-relic-${index + 1}`,
+    label: `shell relic ${index + 1}`,
+    path: `/glb/shell_${String(index + 1).padStart(2, '0')}.glb`,
+    type: 'model'
+  }, ASSET_STAGES.DEFERRED_WARM)),
   ...Array.from({ length: 6 }, (_, index) => withStage({
     id: `small-glyph-relic-${index + 1}`,
     label: `small glyph relic ${index + 1}`,
