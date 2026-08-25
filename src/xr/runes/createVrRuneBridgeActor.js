@@ -1,6 +1,13 @@
 import * as THREE from '../../vendor/three.js';
 
 export const VR_RUNE_BRIDGE_BRANCH_IDS = Object.freeze(['earth', 'fire', 'wood', 'metal', 'water']);
+export const VR_RUNE_BRIDGE_STATES = Object.freeze({
+  HIDDEN: 'HIDDEN',
+  DOCKED: 'DOCKED',
+  EXTENDING: 'EXTENDING',
+  EXTENDED: 'EXTENDED',
+  ORBITING: 'ORBITING'
+});
 
 const REQUIRED_NODE_NAMES = Object.freeze([
   'BRIDGE_ROOT',
@@ -69,7 +76,13 @@ export function createVrRuneBridgeActor({ assetManager, getSectorMount }) {
       mount.add(instance);
       alignInstance(instance, nodes);
       instance.visible = false;
-      instances.set(branchId, { instance, bridgeRoot, nodes, captureRadius: null });
+      instances.set(branchId, {
+        instance,
+        bridgeRoot,
+        nodes,
+        captureRadius: null,
+        state: VR_RUNE_BRIDGE_STATES.HIDDEN
+      });
       const captureRadius = Number(nodes.BRIDGE_STONE_CAPTURE.userData?.capture_radius_m);
       if (!Number.isFinite(captureRadius) || captureRadius <= 0) {
         throw new Error('[VrRuneBridgeActor] BRIDGE_STONE_CAPTURE requires positive authored capture_radius_m metadata.');
@@ -82,15 +95,65 @@ export function createVrRuneBridgeActor({ assetManager, getSectorMount }) {
   }
 
   const getInstance = (branchId) => instances.get(String(branchId).toLowerCase()) ?? null;
-  function setRevealed(branchId, revealed) {
+  function transition(branchId, command, allowedStates, nextState) {
     const entry = getInstance(branchId);
     if (!entry || disposed) return false;
-    entry.instance.visible = Boolean(revealed);
+    if (!allowedStates.includes(entry.state)) {
+      throw new Error(`[VrRuneBridgeActor] Cannot ${command} for "${branchId}" from ${entry.state}.`);
+    }
+    entry.state = nextState;
+    entry.instance.visible = nextState !== VR_RUNE_BRIDGE_STATES.HIDDEN;
     return true;
+  }
+  function setInstallationReady(branchId, ready) {
+    const entry = getInstance(branchId);
+    if (!entry || disposed) return false;
+    const nextState = ready ? VR_RUNE_BRIDGE_STATES.DOCKED : VR_RUNE_BRIDGE_STATES.HIDDEN;
+    return transition(
+      branchId,
+      `set installation readiness to ${Boolean(ready)}`,
+      [VR_RUNE_BRIDGE_STATES.HIDDEN, VR_RUNE_BRIDGE_STATES.DOCKED],
+      nextState
+    );
+  }
+  function beginExtension(branchId) {
+    return transition(
+      branchId,
+      'begin extension',
+      [VR_RUNE_BRIDGE_STATES.DOCKED],
+      VR_RUNE_BRIDGE_STATES.EXTENDING
+    );
+  }
+  function completeExtension(branchId) {
+    return transition(
+      branchId,
+      'complete extension',
+      [VR_RUNE_BRIDGE_STATES.EXTENDING],
+      VR_RUNE_BRIDGE_STATES.EXTENDED
+    );
+  }
+  function cancelExtension(branchId) {
+    return transition(
+      branchId,
+      'cancel extension',
+      [VR_RUNE_BRIDGE_STATES.DOCKED, VR_RUNE_BRIDGE_STATES.EXTENDING, VR_RUNE_BRIDGE_STATES.EXTENDED],
+      VR_RUNE_BRIDGE_STATES.DOCKED
+    );
+  }
+  function setInstalled(branchId) {
+    return transition(
+      branchId,
+      'set installed',
+      [VR_RUNE_BRIDGE_STATES.EXTENDED],
+      VR_RUNE_BRIDGE_STATES.ORBITING
+    );
   }
   function reset() {
     if (disposed) return;
-    instances.forEach(({ instance }) => { instance.visible = false; });
+    instances.forEach((entry) => {
+      entry.state = VR_RUNE_BRIDGE_STATES.HIDDEN;
+      entry.instance.visible = false;
+    });
   }
   function dispose() {
     if (disposed) return;
@@ -100,8 +163,12 @@ export function createVrRuneBridgeActor({ assetManager, getSectorMount }) {
   }
 
   return {
-    setRevealed,
-    isRevealed: (branchId) => getInstance(branchId)?.instance.visible === true,
+    getState: (branchId) => getInstance(branchId)?.state ?? null,
+    setInstallationReady,
+    beginExtension,
+    completeExtension,
+    cancelExtension,
+    setInstalled,
     getStoneAnchor: (branchId) => getInstance(branchId)?.nodes.BRIDGE_STONE_ANCHOR ?? null,
     getStoneCapture: (branchId) => {
       const entry = getInstance(branchId);
