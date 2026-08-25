@@ -7,14 +7,17 @@ import { VR_RUNE_STONE_STATE } from './createVrRuneStoneActor.js';
 
 const LOCAL_DIRECTION = new THREE.Vector3(0, 0, -1);
 const clamp01 = (value) => Math.min(1, Math.max(0, value));
+export const RUNE_STONE_PLATFORM_MIN_RADIUS_M = 9.0;
 
 export function createVrRuneStoneAttractorInteraction({ controllers, runeStoneActor,
   runeStoneAttractorBandProjection, handModeController, semanticInput, attractorTool,
-  maxTargetDistance, settings, haloSettings, isHigherPriorityInteractionActive = () => false }) {
+  maxTargetDistance, settings, haloSettings, platformCenter, getPlayerWorldPosition,
+  isHigherPriorityInteractionActive = () => false }) {
   if (!Array.isArray(controllers)) throw new TypeError('controllers must be an array.');
   if (!runeStoneActor?.getStones || !runeStoneActor?.getBoundingSphere
-    || !runeStoneActor?.lockByAstro || !runeStoneActor?.unlockFromAstro) {
-    throw new TypeError('runeStoneActor must expose physical records, live bounds and Astro lock commands.');
+    || !runeStoneActor?.lockByAstro || !runeStoneActor?.beginCarriedOrbit
+    || !runeStoneActor?.releaseFromAstro) {
+    throw new TypeError('runeStoneActor must expose physical records, live bounds and Astro transport commands.');
   }
   if (!runeStoneAttractorBandProjection?.isFamilyTargetable) {
     throw new TypeError('runeStoneAttractorBandProjection must expose target permission.');
@@ -22,7 +25,10 @@ export function createVrRuneStoneAttractorInteraction({ controllers, runeStoneAc
   if (!Number.isFinite(maxTargetDistance) || maxTargetDistance <= 0) {
     throw new TypeError('maxTargetDistance must be positive.');
   }
-  ['scanThreshold', 'triggerThreshold'].forEach((key) => {
+  if (!platformCenter?.getWorldPosition || typeof getPlayerWorldPosition !== 'function') {
+    throw new TypeError('platformCenter and getPlayerWorldPosition are required.');
+  }
+  ['scanThreshold', 'triggerThreshold', 'pullAcceleration', 'maxPullSpeed'].forEach((key) => {
     if (!Number.isFinite(settings?.[key]) || settings[key] < 0) {
       throw new TypeError(`settings.${key} must be non-negative.`);
     }
@@ -34,6 +40,12 @@ export function createVrRuneStoneAttractorInteraction({ controllers, runeStoneAc
   const origin = new THREE.Vector3();
   const direction = new THREE.Vector3();
   const quaternion = new THREE.Quaternion();
+  const stonePosition = new THREE.Vector3();
+  const playerPosition = new THREE.Vector3();
+  const centerPosition = new THREE.Vector3();
+  const candidatePosition = new THREE.Vector3();
+  const radialDirection = new THREE.Vector3();
+  const localPosition = new THREE.Vector3();
   const candidates = records.map((record) => ({
     target: record,
     radius: 0,
@@ -45,6 +57,9 @@ export function createVrRuneStoneAttractorInteraction({ controllers, runeStoneAc
   }));
   let target = null;
   let active = null;
+  let pullSpeed = 0;
+  let transportStartRadius = RUNE_STONE_PLATFORM_MIN_RADIUS_M;
+  let transportStartY = 0;
   let disposed = false;
 
   const rightRecord = () => controllers.find(({ handedness }) => handedness === 'right') ?? null;
@@ -68,11 +83,65 @@ export function createVrRuneStoneAttractorInteraction({ controllers, runeStoneAc
     attractorTool.setPullStrength(0);
     if (ownsBand()) attractorTool.setState(VR_ATTRACTOR_STATES.IDLE);
   }
-  function unlockActive() {
-    if (active) runeStoneActor.unlockFromAstro(active.branchId);
+  function setRootWorldPosition(root, worldPosition) {
+    localPosition.copy(worldPosition);
+    root.parent.worldToLocal(localPosition);
+    root.position.copy(localPosition);
+  }
+  function releaseActive() {
+    if (active) runeStoneActor.releaseFromAstro(active.branchId);
     active = null;
+    pullSpeed = 0;
     setTarget(null);
     clearTool();
+  }
+  function beginTransport(record) {
+    platformCenter.updateWorldMatrix(true, false);
+    record.root.updateWorldMatrix(true, false);
+    platformCenter.getWorldPosition(centerPosition);
+    record.root.getWorldPosition(stonePosition);
+    transportStartRadius = Math.hypot(stonePosition.x - centerPosition.x, stonePosition.z - centerPosition.z);
+    transportStartY = stonePosition.y;
+    pullSpeed = 0;
+    return runeStoneActor.beginCarriedOrbit(record.branchId);
+  }
+  function updateTransport(delta) {
+    platformCenter.updateWorldMatrix(true, false);
+    active.root.updateWorldMatrix(true, false);
+    platformCenter.getWorldPosition(centerPosition);
+    active.root.getWorldPosition(stonePosition);
+    getPlayerWorldPosition(playerPosition);
+
+    pullSpeed = Math.min(settings.maxPullSpeed, pullSpeed + settings.pullAcceleration * delta);
+    direction.subVectors(playerPosition, stonePosition);
+    const distance = direction.length();
+    candidatePosition.copy(stonePosition);
+    if (distance > 0) candidatePosition.addScaledVector(direction, Math.min(distance, pullSpeed * delta) / distance);
+
+    radialDirection.set(candidatePosition.x - centerPosition.x, 0, candidatePosition.z - centerPosition.z);
+    let radius = radialDirection.length();
+    if (radius < RUNE_STONE_PLATFORM_MIN_RADIUS_M) {
+      if (radius <= Number.EPSILON) {
+        radialDirection.set(stonePosition.x - centerPosition.x, 0, stonePosition.z - centerPosition.z);
+        if (radialDirection.lengthSq() <= Number.EPSILON) radialDirection.set(1, 0, 0);
+      }
+      radialDirection.normalize();
+      radius = RUNE_STONE_PLATFORM_MIN_RADIUS_M;
+      candidatePosition.x = centerPosition.x + radialDirection.x * radius;
+      candidatePosition.z = centerPosition.z + radialDirection.z * radius;
+    }
+
+    const radialTravel = Math.max(0, transportStartRadius - RUNE_STONE_PLATFORM_MIN_RADIUS_M);
+    const surfaceProgress = radialTravel <= Number.EPSILON
+      ? 1 : clamp01((transportStartRadius - radius) / radialTravel);
+    candidatePosition.y = THREE.MathUtils.lerp(transportStartY, centerPosition.y, surfaceProgress);
+    if (radius <= RUNE_STONE_PLATFORM_MIN_RADIUS_M) candidatePosition.y = centerPosition.y;
+    setRootWorldPosition(active.root, candidatePosition);
+
+    attractorTool.setTarget({ target: active.root, branchId: active.branchId,
+      familyCode: active.familyCode, distance, proximity: 1 });
+    attractorTool.setPullStrength(clamp01(pullSpeed / settings.maxPullSpeed));
+    attractorTool.setState(VR_ATTRACTOR_STATES.PULLING);
   }
   function update(deltaSeconds = 0) {
     if (disposed) return;
@@ -82,7 +151,7 @@ export function createVrRuneStoneAttractorInteraction({ controllers, runeStoneAc
     const scanning = ownsBand() && grabAction > settings.scanThreshold;
     if (!right?.controller || !right.isConnected || !scanning) {
       scanCone.update(delta, false);
-      if (active) unlockActive();
+      if (active) releaseActive();
       else { setTarget(null); clearTool(); }
       return;
     }
@@ -92,15 +161,17 @@ export function createVrRuneStoneAttractorInteraction({ controllers, runeStoneAc
       if (primaryAction <= settings.triggerThreshold || !ownsBand()
         || !isPhysical(active) || !isTargetableFamily(active)
         || isHigherPriorityInteractionActive(right) === true) {
-        unlockActive();
+        releaseActive();
         return;
       }
       setTarget(active);
       halos.get(active)?.update(delta);
-      attractorTool.setTarget({ target: active.root, branchId: active.branchId,
-        familyCode: active.familyCode, distance: 0, proximity: 1 });
-      attractorTool.setPullStrength(0);
-      attractorTool.setState(VR_ATTRACTOR_STATES.TARGETING);
+      if (runeStoneActor.getState(active.branchId) === VR_RUNE_STONE_STATE.LOCKED_BY_ASTRO
+        && !beginTransport(active)) {
+        releaseActive();
+        return;
+      }
+      updateTransport(delta);
       return;
     }
     if (isHigherPriorityInteractionActive(right) === true) {
@@ -124,7 +195,7 @@ export function createVrRuneStoneAttractorInteraction({ controllers, runeStoneAc
       && runeStoneActor.lockByAstro(target.branchId) === true) active = target;
   }
   function reset() {
-    unlockActive();
+    releaseActive();
     scanCone.update(0, false);
     halos.forEach((halo) => halo.setVisible(false));
   }
