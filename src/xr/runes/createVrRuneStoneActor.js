@@ -2,7 +2,10 @@ import * as THREE from '../../vendor/three.js';
 import { createVrSphericalLayerActor } from '../world/createVrSphericalLayerActor.js';
 import { VR_NATURAL_RUNE_STONE_ASSETS } from './vrRuneStoneRegistry.js';
 
-export const VR_RUNE_STONE_STATE = Object.freeze({ FREE: 'FREE' });
+export const VR_RUNE_STONE_STATE = Object.freeze({
+  FREE: 'FREE',
+  LOCKED_BY_ASTRO: 'LOCKED_BY_ASTRO'
+});
 
 export function createVrRuneStoneActor({ parent, assetManager, layer }) {
   if (!parent?.add || !assetManager?.getGltf || !assetManager?.cloneGltfScene) {
@@ -75,6 +78,22 @@ export function createVrRuneStoneActor({ parent, assetManager, layer }) {
   }
 
   const getRecord = (branchId) => records.get(String(branchId ?? '').toLowerCase()) ?? null;
+  const lockByAstro = (branchId) => {
+    const record = getRecord(branchId);
+    if (!record) return false;
+    if (record.state === VR_RUNE_STONE_STATE.LOCKED_BY_ASTRO) return true;
+    if (record.state !== VR_RUNE_STONE_STATE.FREE) return false;
+    record.state = VR_RUNE_STONE_STATE.LOCKED_BY_ASTRO;
+    return true;
+  };
+  const unlockFromAstro = (branchId) => {
+    const record = getRecord(branchId);
+    if (!record) return false;
+    if (record.state === VR_RUNE_STONE_STATE.FREE) return true;
+    if (record.state !== VR_RUNE_STONE_STATE.LOCKED_BY_ASTRO) return false;
+    record.state = VR_RUNE_STONE_STATE.FREE;
+    return true;
+  };
   const getBoundingBox = (branchId) => {
     const record = getRecord(branchId);
     if (!record) return null;
@@ -117,6 +136,7 @@ export function createVrRuneStoneActor({ parent, assetManager, layer }) {
   return {
     object: layerActor.object,
     getStone: getRecord,
+    getStones: () => Array.from(records.values()),
     getRoot: (branchId) => getRecord(branchId)?.root ?? null,
     getState: (branchId) => getRecord(branchId)?.state ?? null,
     getDescriptor: (branchId) => getRecord(branchId)?.descriptor ?? null,
@@ -124,6 +144,8 @@ export function createVrRuneStoneActor({ parent, assetManager, layer }) {
     getBoundingSphere,
     getInteractionRadius: (branchId) => getBoundingSphere(branchId)?.radius ?? null,
     getFamilyCode: (branchId) => getRecord(branchId)?.familyCode ?? null,
+    lockByAstro,
+    unlockFromAstro,
     update,
     reset,
     dispose
