@@ -52,6 +52,7 @@ import { createVrAstroFurnaceContentInteraction } from './xr/furnace/createVrAst
 import { createVrAstroFurnaceRuneRecipeInteraction } from './xr/furnace/createVrAstroFurnaceRuneRecipeInteraction.js';
 import { createVrRuneRecipeSelectionController } from './xr/runes/createVrRuneRecipeSelectionController.js';
 import { createVrRuneStoneProgressionController } from './xr/runes/createVrRuneStoneProgressionController.js';
+import { createVrRuneStoneAttractorBandProjection } from './xr/runes/createVrRuneStoneAttractorBandProjection.js';
 import { createVrRuneTuningController } from './xr/runes/createVrRuneTuningController.js';
 import { createVrProtoAstroTuningController } from './xr/protoAstro/createVrProtoAstroTuningController.js';
 import { createVrAsterionSphere } from './xr/asterion/createVrAsterionSphere.js';
@@ -442,6 +443,10 @@ function spawnPlayerInsideRingFacingMonkey() {
 }
 const attractorTool = createVrAttractorTool({ model: assetManager.cloneGltfScene('vr-astro-attractor-model') });
 const semanticInput = createVrSemanticInput({ renderer });
+const runeStoneProgressionController = createVrRuneStoneProgressionController();
+const runeStoneAttractorBandProjection = createVrRuneStoneAttractorBandProjection({
+  runeStoneProgressionController
+});
 let shellAttractorInteraction = null;
 let smallGlyphAttractorInteraction = null;
 let largeGlyphAttractorInteraction = null;
@@ -458,6 +463,7 @@ const handModeController = createVrHandModeController({
     const bands = [VR_ATTRACTOR_BANDS.SHELLS, VR_ATTRACTOR_BANDS.SMALL_GLYPHS];
     if (runtimeExperience?.can(VR_SCENARIO_CAPABILITY.CAN_SCAN_LARGE_GLYPHS) === true
       && protoAstroTuningController.getExtractedFamilyCodes().length > 0) bands.push(VR_ATTRACTOR_BANDS.LARGE_GLYPHS);
+    if (runeStoneAttractorBandProjection.isAvailable()) bands.push(VR_ATTRACTOR_BANDS.RUNESTONES);
     return bands;
   },
   isAsterionAvailable: () => asterionProductionController.isEarned() || asterionSphereQa,
@@ -555,7 +561,6 @@ const astroFurnaceRuneRecipeInteraction = createVrAstroFurnaceRuneRecipeInteract
   takeHeldShell: (shell) => shellAttractorInteraction?.transferHeldShell(shell) === true,
   takeHeldSmallGlyph: (glyph) => smallGlyphAttractorInteraction?.transferHeldGlyph(glyph) === true
 });
-const runeStoneProgressionController = createVrRuneStoneProgressionController();
 const runeRecipeSelectionController = createVrRuneRecipeSelectionController({
   progressionController, runeRecipeInteraction: astroFurnaceRuneRecipeInteraction,
   runeStoneProgressionController

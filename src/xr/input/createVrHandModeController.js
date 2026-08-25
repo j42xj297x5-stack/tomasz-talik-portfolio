@@ -13,7 +13,8 @@ export const VR_LEFT_HAND_MODES = Object.freeze({
 export const VR_ATTRACTOR_BANDS = Object.freeze({
   SHELLS: 'SHELLS',
   SMALL_GLYPHS: 'SMALL_GLYPHS',
-  LARGE_GLYPHS: 'LARGE_GLYPHS'
+  LARGE_GLYPHS: 'LARGE_GLYPHS',
+  RUNESTONES: 'RUNESTONES'
 });
 
 export function createVrHandModeController({
