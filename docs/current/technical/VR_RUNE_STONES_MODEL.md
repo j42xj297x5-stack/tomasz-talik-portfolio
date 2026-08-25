@@ -4,143 +4,96 @@
 
 - **Status:** **KANONICZNY MODEL TECHNICZNO-GAMEPLAYOWY / PARTIALLY IMPLEMENTED**.
 - **Implemented:** `RUNE A1–A7` oraz `RUNE UI-1 — Astro Furnace panel structure and readability normalization`.
-- **Next gameplay milestone:** `RUNE A8 — RuneBridgeActor first pair`.
-- **Canonical Scenario/runtime progression boundary:** `4.80`.
-- Ten dokument jest jedynym kanonicznym źródłem prawdy całego Rune Stone Act: synchronizacji Astrolabium, Pieca, pięciu pair-specific par elementarnych, specjalnego kamienia Eter, mostów, transportu, instalacji i finalnego polowania Wody.
-- Część kontraktów A1–A7 istnieje w runtime jako foundations/domain behavior bez rozszerzenia authored Scenario spine. Opis A8–A21 pozostaje targetem. Kod rozstrzyga faktyczny status implementacji, a authored progression nadal kończy się na stabilnej granicy `4.80`.
-- Status implementacji rozstrzygają kod i [`VR_RUNTIME_MODEL.md`](VR_RUNTIME_MODEL.md). Identity Proto-Astro rozstrzyga [`VR_PROTO_ASTRO_MODEL.md`](VR_PROTO_ASTRO_MODEL.md), warstwy przestrzenne — [`VR_SPHERICAL_LAYERS_MODEL.md`](VR_SPHERICAL_LAYERS_MODEL.md), a authored progression — [`VR_SCENARIO_DIRECTOR_MODEL.md`](VR_SCENARIO_DIRECTOR_MODEL.md).
+- **Next actor milestone:** `RUNE A8 — pair-generic RuneBridgeActor state machine`; Earth jest pierwszym reference slice, nie obowiązkowym pierwszym wyborem gracza.
+- **Scenario authoring:** **DEFERRED TO SEPARATE THREAD**.
+- **Canonical authored Scenario/runtime progression boundary:** `4.80`.
+- Dokument jest kanonicznym źródłem prawdy Rune Stone Act: strojenia Astrolabium, targetability, pięciu naturalnych pair-specific par, mostów, transportu, instalacji, specjalnego flow Eteru i finalnego polowania Wody.
+- A1–A7 są foundations/domain behavior bez rozszerzenia authored Scenario spine. A8–A21 są targetem; actor/domain foundations powstają teraz, a Scenario, Director i literalna komunikacja gracza zostaną zaprojektowane osobno.
 
-`KANON` oznacza kontrakt wiążący, `TUNING` wartość dobieraną w prototypie/Quest 3S, a `OPEN DESIGN DECISION` świadomie nierozstrzygnięty produktowy warunek.
+`KANON` oznacza wiążący kontrakt, `TUNING` wartość dobieraną w prototypie/Quest 3S, a `OPEN DESIGN DECISION` świadomie nierozstrzygnięty warunek.
 
-## 2. Granica aktu i przestrzeń po Tier 3
+## 2. Granica aktu i przestrzeń
 
-### Stan zaimplementowany po `4.80`
+Po `4.80` pięć naturalnych Large Glyph zachowuje Proto-Astro tuning `K/T/S/L/R`. Istniejący transition przenosi je do `SPHERE_FAR = 80 m`, rozmieszcza deterministycznie po pełnej sferze, nadaje black/unlit presentation i bardzo wolny ruch (`0.01 rad/s`) oraz odcina stary direct scan/target/pull. Large Glyph pozostają osobnymi aktorami poza spherical-layer registry.
 
-- Pięć naturalnych Large Glyph zachowuje Proto-Astro tuning `K/T/S/L/R`.
-- Istniejący transition przenosi je do `SPHERE_FAR = 80 m` i rozmieszcza deterministycznie po pełnej sferze, nie na pierścieniu.
-- Bazowa prezentacja jest black/unlit, a ruch po sferze bardzo wolny (`0.01 rad/s`).
-- Stary direct Large Glyph scan/target/pull jest po `4.80` odcięty.
-- Large Glyph pozostaje osobnym `LargeGlyphActor`, poza spherical-layer registry.
+Pięć naturalnych Rune Stones — Earth, Fire, Wood, Metal i Water — to niezależne obiekty świata. Docelowo istnieją lub materializują się w już zarezerwowanym world-stable layer `RUNE_STONES = 50–75 m`; nie powstaje nowy radius ani drugi registry. Ich obecność jest niezależna od tuning i platform installation readiness oraz sama nie nadaje prawa targetowania.
 
-### Docelowe wejście Rune Stone Act — jeszcze niewdrożone
+W trakcie aktu gracz może stroić, targetować i przyciągać różne naturalne kamienie w dowolnej kolejności. Nie istnieje wymuszony pierwszy kamień gameplayowy. Earth jest wyłącznie pierwszą parą referencyjną do implementacji i inspekcji actor mechanics.
 
-- Rune Stones mają materializować się w **istniejącym** world-stable płaszczu `RUNE_STONES = 50–75 m`. Nie powstaje nowy promień ani drugi registry.
-- Sama materializacja kamienia nie daje prawa pull.
-- Untuned family nie jest valid Rune Stone targetem.
-- Przyszłe targetowanie należy do pasma `RUNESTONES`.
+## 3. Trzy niezależne prawa
 
-## 3. Eligibility, synchronizacja i persistent truth
+Nie istnieje jedno wspólne `eligibility`. System bezwzględnie rozdziela:
 
-### 3.1. Eligibility bez drugiej listy
+1. **RUNE TUNING** — czy Astrolabium zostało nastrojone do rodziny;
+2. **RUNE STONE TARGETABILITY** — czy kamień może być legalnym targetem pasma `RUNESTONES`;
+3. **PLATFORM INSTALLATION READINESS** — czy pair-specific platforma może przyjąć kamień.
 
-**IMPLEMENTED FOUNDATION:** rodzina może zostać wybrana do strojenia wyłącznie wtedy, gdy istniejący owner progresji sektorów potwierdza pełną sekwencję **wszystkich paneli tego sektora**. System kamieni odczytuje ten fakt; nie kopiuje progresji podłogi i nie utrzymuje `initialRuneStoneIds`.
+### 3.1. Natural Rune tuning
 
-W stanie po Tier 3 reguła daje dokładnie:
+Od wejścia w Rune Stone Act wszystkie pięć naturalnych rodzin może być wybierane i strojone w Astro Piecu. Kompletność paneli sektora **nie blokuje** natural Rune tuning. Gracz może nastroić dowolną liczbę rodzin bez wymuszonej kolejności.
 
-| Rodzina | Sektor | Eligibility po `4.80` |
-| --- | --- | --- |
-| ZIEMIA | Ethics | tak |
-| OGIEŃ | Creative AI | tak |
-| DREWNO | AI Guide | tak |
-| METAL | DIG Engine | nie — sektor ma dalszy panel |
-| WODA | Haiku Cosmos | nie — sektor ma dalsze panele |
+Aktualny runtime A4 nadal wylicza tuning eligibility z kompletności sektorów. Jest to **jawna rozbieżność implementacyjna** względem niniejszego kanonu. Wymagany późniejszy, bounded follow-up runtime brzmi: **natural Rune tuning must no longer be gated by sector completeness**. Korekta nie jest zaimplementowana w tym zadaniu.
 
-Po Tier 3 Earth, Fire i Wood są naturalnie eligible, natomiast Metal i Water pozostają locked zgodnie z realnymi stronami swoich sektorów. Metal staje się normalnie eligible po ukończeniu całej sekwencji Metalu. **FUTURE:** po Tier 4 Water pozostaje `4/5`, więc nie spełnia normalnego kontraktu; wyłącznie finalna interwencja Eter może nadać ograniczony Water eligibility override opisany w sekcji 10. **Nie istnieje kanon „cztery kamienie odblokowują piąty” ani sztuczna kolejność `4 → 5`.**
+### 3.2. Natural Rune Stone targetability
 
-### 3.2. RuneStoneProgressionController
+```text
+natural targetability = tunedRuneFamilies
+```
 
-`RuneStoneProgressionController` istnieje. Jego obecny i docelowy ownership jest rozdzielony następująco:
+Nastrojona naturalna rodzina jest legalnym targetem Astrolabium w paśmie `RUNESTONES`, niezależnie od installation readiness. Przykładowo `Water tuned = true` przy `Water platform readiness = false` oznacza, że Water Rune Stone można targetować i przyciągać, ale nie można jeszcze ukończyć jego instalacji. A7 implementuje dokładnie tę semantykę dla naturalnego target set.
 
-- **IMPLEMENTED:** `tunedRuneFamilies` — trwały fakt „Astrolabium jest zsynchronizowane z rodziną X”.
-- **IMPLEMENTED:** bezstanowa projekcja/pasmo A7 `RUNESTONES`, którego targetable family set jest projekcją `tunedRuneFamilies`.
-- **FUTURE:** fizyczne targetowanie Rune Stones.
-- **TARGET / NOT IMPLEMENTED:** `installedRuneFamilies` — trwały fakt ukończonej instalacji właściwego kamienia.
-- **TARGET / NOT IMPLEMENTED:** trwały, ograniczony wyłącznie do finalnego flow Wody fakt zastępujący brakującą wiedzę piątego panelu Water (semantycznie `WATER_RUNE_KNOWLEDGE_OVERRIDE`; nazwa implementacyjna pozostaje otwarta).
+### 3.3. Platform installation readiness
 
-Nie posiada kopii paneli sektorów. Eligibility czyta z ich istniejącego ownera. `ProtoAstroTuningController` nadal posiada wyłącznie naturalne family essences używane dla Large Glyph i **nie** posiada rune tuning ani installation truth.
+Installation readiness jest osobnym prawem, normalnie pochodzącym wyłącznie z ukończenia wszystkich paneli właściwego sektora. Rune domain czyta istniejącego ownera progresji sektora i nie tworzy drugiej listy ukończonych paneli. Readiness nie jest kopią progression.
 
-Na podstawie istniejącego `tunedRuneFamilies` Astrolabium posiada pasmo `RUNESTONES`, dostępne wtedy i tylko wtedy, gdy istnieje co najmniej jedna tuned family. Bezstanowa projekcja widzi wyłącznie rodziny w `tunedRuneFamilies`; rodzina eligible, lecz jeszcze nietuned, rodzina locked oraz Eter nie są targetami. Fizyczne Rune Stone targets pozostają przyszłością.
+| Naturalna para | Installation readiness po `4.80` |
+| --- | --- |
+| EARTH | `true` |
+| FIRE | `true` |
+| WOOD | `true` |
+| METAL | `false`, do ukończenia całego sektora Metal |
+| WATER | `false`, do specjalnego Water-only override |
 
-## 4. Receptura Wu Xing
+Water nie osiąga zwykłego sector-complete przed finalnym rozwiązaniem opisanym w sekcji 10.
 
-**IMPLEMENTED:** canonical resolver Wu Xing używa cyklu tworzenia. Pierwszy element relacji dostarcza **Small Glyph**, drugi **Shell**, a wynik stroi Rune Stone drugiego elementu. Asset identity nadal pochodzi z istniejących canonical resolverów Proto-Astro; nie istnieje równoległa tabela asset IDs.
+## 4. Naturalne receptury Wu Xing
+
+Canonical resolver Wu Xing używa niezmienionego cyklu tworzenia. Pierwszy element dostarcza **Small Glyph**, drugi **Shell**, a wynik stroi Rune Stone drugiego elementu.
 
 | Small Glyph | Shell | Target tuned Rune Stone |
 | --- | --- | --- |
-| ZIEMIA | METAL | METAL |
-| METAL | WODA | WODA |
-| WODA | DREWNO | DREWNO |
-| DREWNO | OGIEŃ | OGIEŃ |
-| OGIEŃ | ZIEMIA | ZIEMIA |
+| EARTH | METAL | METAL |
+| METAL | WATER | WATER |
+| WATER | WOOD | WOOD |
+| WOOD | FIRE | FIRE |
+| FIRE | EARTH | EARTH |
 
-Wybrana rodzina targetu musi być eligible, a para musi dokładnie rozwiązać się do tej rodziny. Nieprawidłowa para nie może rozpocząć procesu.
+Wybrana naturalna rodzina i poprawna para wystarczają do walidacji receptury; sector completeness nie jest kanonicznym gate tuningu. Nieprawidłowa para nie rozpoczyna procesu. Asset identity nadal pochodzi z istniejących resolverów Proto-Astro, bez równoległej tabeli asset IDs.
 
-## 5. Astro Piec — ownership i dwuslotowy kontrakt
+## 5. Astro Piec — ownership i proces
 
-### 5.1. Dwa ownerstwa, bez przepisywania istniejących procesów
+- Existing single-content `createVrAstroFurnaceContentInteraction` zachowuje dotychczasowe procesy i `VR_FURNACE_CONTENT_ANCHOR`.
+- `createVrAstroFurnaceRuneRecipeInteraction` jest osobnym ownerem dwóch typed slots i działa w `rune_tuning` mode.
+- `RUNE_RECIPE_SMALL_GLYPH_SLOT` przyjmuje Small Glyph, a `RUNE_RECIPE_SHELL_SLOT` Shell; składniki można osadzić w dowolnej kolejności.
+- `VR_FURNACE_PRODUCT_VOLUME` jest authored bounds/placement contract dla produktów urządzeń, nie trzecim składnikiem receptury.
+- Jeden poprawny komplet i zaakceptowane `Activate` uruchamiają jeden `RUNE_TUNING` cycle `18 s`, używający `astro_piec_work_03.mp3`.
+- Successful COMPLETE konsumuje oba składniki i atomowo zapisuje naturalną rodzinę w `tunedRuneFamilies`; abort nie konsumuje składników i nie zapisuje truth.
+- Wynikiem jest semantyczna sylaba, nie fizyczny item. Rune Stone nigdy nie trafia do Pieca.
+- Komora i dolna pokrywa nie wykonują process-spin; wewnętrzne światło i energy points mogą używać fazy procesu.
 
-- istniejący single-content `createVrAstroFurnaceContentInteraction` pozostaje właścicielem dotychczasowych procesów Shell / Small Glyph i istniejącego `VR_FURNACE_CONTENT_ANCHOR`;
-- istniejący `createVrAstroFurnaceRuneRecipeInteraction` jest osobnym ownerem dwóch typed slots i działa wyłącznie w `rune_tuning` mode;
-- tylko jeden z tych ownerów może przyjmować content w danym trybie; `experienceVr.js` wyłącznie je komponuje.
+Naturalne `tunedRuneFamilies`, specjalny Ether tuning truth oraz `installedRuneFamilies` są odrębnymi faktami. `ProtoAstroTuningController` zachowuje wyłącznie naturalne essences dla Large Glyph i nie posiada Rune Stone tuning ani installation truth.
 
-### 5.2. Kontrakt helperów assetu
+## 6. Pięć pair-specific par i generic actor contract
 
-Komora zachowuje `VR_FURNACE_INSERT_VOLUME` jako wspólną strefę wkładania oraz `VR_FURNACE_CONTENT_ANCHOR` dla dotychczasowych procesów. Kontrakt A2 obejmuje dwa stabilne authored snap anchors dla rune recipe oraz authored volume produktów Pieca:
+Istnieje dokładnie pięć naturalnych par: `earth`, `fire`, `wood`, `metal`, `water`. Każda składa się z:
 
 ```text
-RUNE_RECIPE_SMALL_GLYPH_SLOT
-RUNE_RECIPE_SHELL_SLOT
-VR_FURNACE_PRODUCT_VOLUME
+Rune Stone + sector + bridge + vessel/socket + pair-specific authored transforms/config
 ```
 
-Small Glyph może trafić wyłącznie do pierwszego slotu, Shell wyłącznie do drugiego. Przy otwartej komorze oba składniki mogą być osadzone jednocześnie, w dowolnej kolejności, bez pośredniego procesu i bez zamykania/otwierania Pieca pomiędzy nimi. Ten dokument nie modyfikuje GLB ani skryptów Blender; brak helperów wymaga osobnego zadania assetowego.
+Aktorzy są projektowani **pair-generic** od początku, używając `branchId`/family/pair config. Nie powstaje pięć implementacji tej samej maszyny ani późniejsza migracja z jednorazowego Earth slice. Każda para zachowuje własne authored transformy, socket height, socket zone, radial axis, safe envelope, occupied arcs i parametry ruchu. Zakazane są jeden globalny socket height, magiczny world offset i globalny safe envelope.
 
-**IMPLEMENTED:** `VR_FURNACE_PRODUCT_VOLUME` nie należy do receptury runicznej i nie jest jej trzecim składnikiem. Jest authored geometry/bounds contract wewnątrz komory i obsługuje placement Kuli Asterionowej oraz Astro Przyciągacza. Jego własna techniczna geometria nie renderuje się, ale node pozostaje aktywnym parentem produktów, a bounds są dostępne runtime. Transform, geometria i bounds pochodzą z assetu. `VR_FURNACE_CONTENT_ANCHOR` pozostaje kontraktem wejścia dla istniejącego single-content flow i nie jest fallbackiem placementu produktów.
-
-### 5.3. Warunki Activate i pojedynczy cycle
-
-Rune tuning może rozpocząć się tylko, gdy jednocześnie:
-
-- gracz wybrał konkretną eligible rodzinę kamienia;
-- oba typed slots są zajęte;
-- Small Glyph i Shell tworzą poprawną recepturę dla wybranej rodziny;
-- komora jest zamknięta;
-- Piec jest idle;
-- gracz wykonuje zaakceptowane `Activate`.
-
-Jeden poprawny komplet uruchamia **jeden** nowy semantyczny rune-tuning process kind i dokładnie jeden canonical cycle `18 s`, nie dwie kolejne obróbki po 18 sekund.
-
-### 5.4. Prezentacja wszystkich procesów Pieca
-
-**IMPLEMENTED:** podczas właściwego procesu — shell, Small Glyph, rune tuning lub device construction:
-
-- komora nie wykonuje mechanicznego process-spin;
-- dolna pokrywa nie wykonuje process-spin;
-- fizyczny obrót komory/pokryw służy wyłącznie otwieraniu i zamykaniu;
-- emisja komory i reakcja `fire_cell` mogą pozostać;
-- wewnętrzne światło i cztery istniejące energy points nadal mogą orbitować;
-- wewnętrzny process angle może pozostać zegarem/fazą światła, punktów i pulsów, ale nie jest aplikowany jako rotation komory ani pokrywy.
-
-To zmiana prezentacyjna, nie zmiana czasu ani ownership progresji.
-
-### 5.5. Audio i wynik
-
-| Asset | Semantyka |
-| --- | --- |
-| `astro_piec_work_01.mp3` | istniejący proces Shell |
-| `astro_piec_work_02.mp3` | istniejący proces Small Glyph |
-| `astro_piec_work_03.mp3` | strojenie Astrolabium z pary Small Glyph + Shell |
-| `astro_piec_work_create_01.mp3` | istniejąca produkcja urządzeń |
-
-Nie powstaje czwarty work sound. `work_03` nie oznacza fizycznej obróbki kamienia: Rune Stone nigdy nie trafia do Pieca i pozostaje w świecie. Ukończony, poprawny cycle ekstrahuje i **konsumuje oba fizyczne składniki**: Small Glyph nie wraca do field, a Shell również zostaje zużyta. Wynikiem jest semantyczna **sylaba strojenia**, nie fizyczny item ani inventory object. `RuneStoneProgressionController` zapisuje ją jako trwały fakt nastrojenia właściwej rodziny w `tunedRuneFamilies`; po wdrożeniu `RUNESTONES` fakt ten da przyszłemu bandowi prawo targetowania tej rodziny.
-
-To zużycie dotyczy wyłącznie rune recipe. Wcześniejszy `ProtoAstroTuningController` nadal obsługuje naturalne esencje Small Glyph, stroi nimi Large Glyph i zachowuje własny kontrakt powrotu fizycznego Small Glyph do field. Ownerów ani ich persistent truths nie wolno łączyć.
-
-## 6. Dokładnie pięć pair-specific par
-
-Jednostką konfiguracji jest konkretna `kamień + sektor + naczynie/socket + most`. Pięć kamieni może różnić się geometrią, loopem, pivotem, wysokością i safe envelope. Nie wolno zakładać jednej globalnej wysokości socketu ani magicznych offsetów.
-
-Zalecany kontrakt GLB zachowuje istniejącą semantykę:
+Zalecany kontrakt GLB:
 
 ```text
 RUNE_STONE_<TYPE>_ROOT
@@ -151,13 +104,11 @@ RUNE_VESSEL_<TYPE>_ROOT
 └── RUNE_VESSEL_<TYPE>_SOCKET_ZONE
 ```
 
-Runtime transformuje wyłącznie stabilny root kamienia. `SOCKET_POINT` jest pair-specific finalną transformacją; `SOCKET_ZONE` wybaczającą strefą przejęcia, nigdy finalnym transformem. Safe envelope uwzględnia maksymalny zakres pełnego baked loopa, nie tylko pierwszą klatkę. Format envelope, geometria zone, wysokość, easing i tolerancje pozostają `TUNING`.
+Runtime transformuje stabilny root kamienia. `SOCKET_POINT` jest pair-specific finalnym transformem, a `SOCKET_ZONE` strefą przejęcia. Safe envelope obejmuje pełny baked loop. Geometry, tolerancje, easing i release/return/parking behavior pozostają `TUNING` lub actor implementation decision, o ile nie rozstrzyga ich osobny kontrakt.
 
-Wewnętrzne animacje pozostają w GLB, działają w `FREE`, mogą działać podczas transportu/capture i nie zatrzymują się po instalacji.
+## 7. Pair-generic RuneBridgeActor
 
-## 7. RuneBridgeActor
-
-Jedna pair-specific instancja `RuneBridgeActor` przypada na sektor/parę. Jest aktorem presentation/mechanics: nie zna Scenario pointów, nie posiada progresji, nie odblokowuje kamienia i wykonuje wyłącznie semantyczne komendy.
+Jedna pair-configured instancja `RuneBridgeActor` przypada na każdą naturalną parę. Aktor prezentacji/mechaniki nie zna Scenario pointów, nie posiada progression truth i reaguje na semantic commands.
 
 ```text
 HIDDEN → DOCKED → EXTENDING → EXTENDED → ORBITING
@@ -165,13 +116,13 @@ HIDDEN → DOCKED → EXTENDING → EXTENDED → ORBITING
 
 | Stan | Kontrakt |
 | --- | --- |
-| `HIDDEN` | przed synchronizacją rodziny most nie istnieje wizualnie |
-| `DOCKED` | po synchronizacji materializuje się, zespolony z końcem właściwego sektora |
-| `EXTENDING` | gdy poprawny tuned kamień zbliża się do właściwego miejsca instalacji, odjeżdża na zewnątrz wzdłuż radialnej osi sektora |
-| `EXTENDED` | utrzymuje układ `platforma → kamień → most` i przestrzeń dla capture |
-| `ORBITING` | po instalacji stale obraca się wokół osi `środek platformy → kamień → most` |
+| `HIDDEN` | platforma pary nie jest gotowa do instalacji |
+| `DOCKED` | platforma jest gotowa; most istnieje i czeka na właściwy kamień |
+| `EXTENDING` | właściwy kamień zbliża się do pair-specific installation area |
+| `EXTENDED` | most przygotował przestrzeń dla capture |
+| `ORBITING` | właściwy kamień został prawidłowo zainstalowany |
 
-Jeśli podejście zostanie przerwane przed capture/installation, most wraca do `DOCKED`. Interpolacja mostu jest transient mechanics, nie Scenario point ani reconstruction truth. `installedRuneFamilies` wystarcza do odtworzenia settled prezentacji `ORBITING`.
+**Platform installation readiness**, a nie tuning truth, pozwala mostowi przejść z `HIDDEN` do `DOCKED`. Przerwane podejście przed capture powoduje `EXTENDING / EXTENDED → DOCKED`. Po `4.80` mosty Earth, Fire i Wood mogą być `DOCKED`; Metal pozostaje `HIDDEN` do pełnego ukończenia sektora Metal, a Water do specjalnego finalnego override.
 
 ## 8. Transport i instalacja
 
@@ -179,383 +130,251 @@ Jeśli podejście zostanie przerwane przed capture/installation, most wraca do `
 FREE → LOCKED_BY_ASTRO → CARRIED_ORBIT → SOCKET_CAPTURE → INSTALLED
 ```
 
-- `FREE`: kamień istnieje w deterministic slocie `RUNE_STONES 50–75 m`, odtwarza loop i spatial audio; target jest legalny tylko dla tuned family.
-- `LOCKED_BY_ASTRO`: Astro ma prawidłowy lock; kamień nie teleportuje się do ręki ani gracza.
-- `CARRIED_ORBIT`: aktywny pull prowadzi root po zewnętrznej stronie platformy z pair-specific safe envelope i lekkim orbit constraint.
-- `SOCKET_CAPTURE`: poprawny stone/sector match wchodzi w `SOCKET_ZONE`; aktor wygasza pull i interpoluje do `SOCKET_POINT`.
-- `INSTALLED`: dopiero ukończony snap commituje persistent installed fact; własny baked loop i spatial audio trwają dalej.
+- `FREE`: naturalny kamień istnieje w `RUNE_STONES = 50–75 m`; może być targetowany tylko, gdy family is tuned.
+- `LOCKED_BY_ASTRO`: Astrolabium posiada legalny lock; kamień nie teleportuje się do ręki.
+- `CARRIED_ORBIT`: pull prowadzi root według pair-specific config i safe envelope.
+- `SOCKET_CAPTURE`: wymaga gotowej właściwej platformy i poprawnego stone/pair match; aktor interpoluje do pair-specific `SOCKET_POINT`.
+- `INSTALLED`: dopiero ukończony socket snap zapisuje persistent installed fact.
 
-Zainstalowane kamienie mogą blokować kolejne przez lekkie pair-specific occupied arcs, bez rigid-body i animated mesh collision. Zachowanie po release poza capture oraz szczegóły blockerów pozostają tuningiem/otwartą decyzją i nie zmieniają pierwszej stabilnej granicy.
+Target i transport nie wymagają installation readiness, natomiast `SOCKET_CAPTURE` i `INSTALLED` jej wymagają. Metal lub Water mogą więc zostać przyciągnięte wcześniej, ale nie zainstalowane. Dokument nie zamraża arbitralnego zachowania kamienia po nieudanej próbie instalacji.
 
-## 9. Spatial audio
+Każdy kamień może zachowywać pair-specific cichy spatial loop w `FREE`, `CARRIED_ORBIT` i `INSTALLED`. Audio playback/dispose należy do runtime audio bridge, a asset, gain i attenuation pozostają `TUNING`; audio nie posiada progression truth.
 
-Każdy kamień ma własny cichy spatial loop związany z rootem lub dedykowanym anchor: aktywny w `FREE`, poruszający się w `CARRIED_ORBIT` i pozostający przy `INSTALLED`. Three.js/Web Audio i fail-soft `VrAudioBridge` posiadają playback/dispose; Blender nie eksportuje aktywnego audio, a audio nie posiada progresji. Asset, gain, attenuation i zasięg są pair-specific `TUNING` na Quest 3S.
+## 9. Ownership i persistent truth
 
-## 10. Późna progresja: antena, Eter i finalna Woda
+| Owner | Posiada | Nie posiada |
+| --- | --- | --- |
+| owner progresji sektorów | kompletność paneli sektorów | rune tuning/installed truth |
+| `RuneStoneProgressionController` lub jawny rune-domain contract | naturalne `tunedRuneFamilies`; docelowo `installedRuneFamilies`, special Ether tuned truth i Water installation readiness override | kopia paneli, transient transport |
+| recipe/Furnace actors | typed slots, transient recipe i process | installed truth |
+| Rune Stone actor | lock, transport, capture mechanics, presentation | progression i Scenario cursor |
+| `RuneBridgeActor` | transient bridge mechanics/presentation | tuning, readiness source i installed progression |
+| Monkey/Ether actor | transient Ether presentation/capture mechanics | progression truth |
+| Scenario / Director | authored beat legality i semantic orchestration | interpolacje, pull, slot/capture mechanics |
 
-### 10.1. Trzy pierwsze kamienie i antena
+Nazwa API special Ether tuned truth pozostaje otwarta; dokument zamraża jego semantykę, nie przypadkowy identifier.
 
-Po Tier 3 kompletne są Earth, Fire i Wood. Każda rodzina przechodzi pełny standardowy flow `rune recipe → syllable → RUNESTONES tuning → transport → installation`. Po instalacji wszystkich trzech platforma może uruchomić przyszły system anteny. Sterowanie sektorami i antenna actor są osobnym późniejszym subsystemem, a nie odpowiedzialnością kamieni ani wcześniejszych milestone'ów.
+## 10. Eter / VI — specjalny późny flow
 
-Antena odnajduje w `SPHERE_FAR` dwa istotne, już wcześniej zestrojone Large Glyph: Metal i Water. Dla każdego gracz wykonuje `find → lock → pull → Crystal → Reliquary`. Te dwa kryształy domykają Tier 4: Metal otrzymuje czwarty panel i pełny sektor, natomiast Water pozostaje świadomie niepełne `4/5`.
+Eter nie jest szóstą naturalną `familyCode`, szóstą standardową Rune Stone pair, szóstym sektorem, vessel/socketem ani installed elemental slotem. Nie należy do `PROTO_ASTRO_NATURAL_FAMILY_CODES`; nie istnieje i nie wolno tworzyć naturalnego kodu `VU`.
 
-### 10.2. Czwarty kamień Metal i retreat Large Glyph
+### 10.1. Trigger i Monkey beat contract
 
-Pełny sektor Metal nadaje normalne prawo do receptury `Small Glyph Earth + Shell Metal → sylaba Metal`. Następnie Astrolabium targetuje Metal Rune Stone, a standardowy transport i capture kończą się instalacją. Platforma ma wtedy cztery standardowe kamienie: Earth, Fire, Wood i Metal.
+Ścieżka Eteru jest niedostępna na początku aktu. Jej stabilnym triggerem jest `FOURTH_RUNE_INSTALLED`, czyli ukończona instalacja Metal Rune Stone, nie chwilowe przyciągnięcie Metalu. Po czwartej instalacji ujawnia się, że Water sector nadal nie może zostać normalnie ukończony.
 
-`FOURTH_RUNE_INSTALLED` jest osobnym progiem dramaturgicznym: nadmiar technologii na platformie oddala glify; glify tego nie lubią. Large Glyph przechodzą do osobnego, późnego/finalnego spatial stage. Kanon nie nadaje temu stage'owi promienia i nie przypisuje arbitralnie reserved `HIDDEN_GLYPHS` range do `LargeGlyphActor`.
+Przyszły, lekko żartobliwy beat Małpy ma semantyczny rezultat **UNLOCK ETHER RUNE TUNING**. Przed nim Ether tuning nie może się rozpocząć. Ten dokument określa wyłącznie gameplay contract: nie authoruje dialogu, Scenario pointów, events/effects, Director transitions ani literalnych hintów.
 
-### 10.3. Zamierzony Water deadlock i specjalny Eter
+### 10.2. Special Ether tuning i targetability
 
-Po Tier 4 Metal jest complete, a Water ma `4/5`. Normalny kontrakt wymaga kompletnego sektora, więc Water Rune Stone nie jest eligible. Zarazem finalnego piątego panelu Water nie da się zdobyć bez uzbrojenia platformy w Water Rune Stone. Jest to celowy finalny deadlock dramaturgiczny, nie błąd progresji.
+```text
+Ether Shell + Ether Small Glyph
+→ Astrolabium tuned for special Ether Rune Stone
+```
 
-Model zawiera dokładnie **pięć elementarnych par Rune Stone** — Earth, Fire, Wood, Metal, Water — oraz **jeden specjalny kamień ETER / VI**. Eter:
+Ta para nie używa naturalnego resolvera Wu Xing i nie zmienia pięciu naturalnych receptur. Special Ether tuned truth jest trwałym faktem jednoznacznego rune-domain ownera i pozostaje odrębny od naturalnego `tunedRuneFamilies`.
 
-- nie jest szóstą naturalną `familyCode` ani szóstą standardową parą sektorową;
-- nie ma własnego sektora, vessel/socketu ani miejsca w pięciu installed elemental slots;
-- nie jest zwykłym targetem `RUNESTONES` i nie trafia do Pieca;
-- pojawia się w finalnym kryzysie nad Małpą, która przechwytuje go jako osobny authored beat;
-- reprezentuje brakującą ostatnią esencję/więź i nadaje wyłącznie finalne prawo eligibility dla Water, zastępując brakującą wiedzę piątego panelu, a nie samą recepturę.
+Ether Rune Stone staje się specjalnym legalnym targetem dopiero po obu warunkach:
 
-Scenario authoruje kryzys i Ether intervention oraz daje semantic effect rozpoczęcia beatu. Ether/Monkey presentation actor wykonuje pojawienie i przechwycenie, ale nie posiada progresji. `RuneStoneProgressionController` posiada trwały Water override, `tunedRuneFamilies` i `installedRuneFamilies`. Director wyłącznie akceptuje semantic completion event; nie animuje Małpy ani kamienia. Guidance może jedynie komunikować beat, jeśli zostanie później zaprojektowana.
+1. przyszły Monkey beat odblokował Ether tuning;
+2. ukończono poprawne Ether Shell + Ether Small Glyph tuning.
 
-### 10.4. Piąty kamień Water i finalny timed hunt
+A7 implementuje naturalny target set. Przyszłe rozszerzenie o specjalny Ether target nie zmienia natural family contract A7 i nie czyni Eteru naturalną rodziną.
 
-Po Ether intervention Water jest wyjątkowo eligible mimo `4/5`, ale nadal wymaga normalnej receptury `Small Glyph Metal + Shell Water → sylaba Water → Astro tuned for Water Rune Stone`. Eter zastępuje wyłącznie brakującą wiedzę/progression eligibility. Water Rune Stone nadal przechodzi `target → transport → SOCKET_CAPTURE → INSTALLED`.
+### 10.3. Ether transport, Monkey capture i rezultat
 
-Po instalacji pięciu elementarnych Rune Stones platforma jest kompletna jako finalne narzędzie. Eter pozostaje elementem beatu Małpy i nie zajmuje szóstego slotu. Dopiero rzeczywiste rozpoczęcie `FINAL_WATER_HUNT` po pełnej instalacji Water uruchamia timer:
+Ether Rune Stone nie należy do pięciu początkowych naturalnych kamieni platformy. Jego presentation/availability pojawia się dopiero w specjalnym flow po `FOURTH_RUNE_INSTALLED`. Po special tuning gracz targetuje Ether, przyciąga go i prowadzi do Małpy. Ether nie trafia do bridge ani vessel; Małpa przechwytuje go jako osobny authored/presentation beat.
+
+Monkey capture nie nadaje prawa do Water tuning. Jego jedynym trwałym rezultatem jest:
+
+```text
+WATER PLATFORM INSTALLATION READINESS OVERRIDE
+```
+
+Override pozwala Water platform przyjąć Water Rune Stone mimo braku zwykłego sector-complete. Nie zmienia Water Wu Xing recipe, Water tuned truth, panel completion truth ani natural family definitions. Persistent ownerem jest `RuneStoneProgressionController` lub jego jawny rune-domain contract; nazwa implementacyjna pozostaje otwarta. Poprzednie znaczenie `WATER_RUNE_KNOWLEDGE_OVERRIDE` / Water tuning eligibility override jest superseded.
+
+### 10.4. Piąta instalacja Water
+
+Po Monkey capture Water bridge może przejść `HIDDEN → DOCKED`. Water może być już wcześniej tuned i wtedy nie wymaga ponownego strojenia. Jeśli nie jest tuned, używa normalnej receptury `Metal Small Glyph + Water Shell → Water`.
+
+```text
+Water Rune Stone
+→ target
+→ transport
+→ SOCKET_CAPTURE
+→ INSTALLED
+```
+
+Po instalacji `installedRuneFamilies` zawiera pięć naturalnych rodzin. Eter nie zajmuje szóstego slotu.
+
+## 11. Kompletna platforma i finalna Woda
+
+`FIVE_ELEMENTAL_RUNES_INSTALLED` ujawnia lub umożliwia finalne odnalezienie ostatniego Water Large Glyph. Może on następnie zostać targetowany i przyciągnięty istniejącą późną mechaniką platformy/anteny.
 
 ```text
 FIVE_ELEMENTAL_RUNES_INSTALLED
 → FINAL_WATER_HUNT (180 s, TUNING)
-→ finalny Large Glyph Water: find / pull
+→ finalny Water Large Glyph: find / pull
 → ostatni Water Crystal
 → Reliquary
 → ostatni panel Water
-→ ukończenie doświadczenia
-→ istniejący finał świata
+→ ukończenie Experience VR
+→ istniejący finale handoff
 ```
 
-Timer `180 s` jest startową wartością **TUNING** do hardware QA. Nie biegnie podczas Ether intervention, receptury, transportu Water Rune Stone, `SOCKET_CAPTURE` ani wcześniejszego dialogu. Jest transient mechaniką aktora/final-hunt ownera; Scenario potrzebuje wyłącznie semantycznych `START`, `SUCCESS` i ewentualnego przyszłego `TIMEOUT`. Odliczanie każdej sekundy nie jest Scenario pointem. **`FINAL_HUNT_TIMEOUT_BEHAVIOR = OPEN DESIGN DECISION`**: kanon nie zakłada game over, restartu ani automatycznego sukcesu.
+Timer `180 s` pozostaje **TUNING** i zaczyna się dopiero z rzeczywistym `FINAL_WATER_HUNT`, nie podczas Ether flow, Water tuning, transportu ani capture. Timer jest transient mechaniką final-hunt ownera. `FINAL_HUNT_TIMEOUT_BEHAVIOR` pozostaje `OPEN DESIGN DECISION`.
 
-## 11. Scenario, Director i reconstruction
+## 12. Scenario, Director i reconstruction — deferred authoring
 
-Obowiązuje bez wyjątku:
+Obowiązuje architektura:
 
 ```text
 SPINE → SCENARIO → DIRECTOR → RuntimeExperience → ACTORS / DOMAIN OWNERS
 ```
 
-- Scenario authoruje istotne beaty po `4.80`, capabilities, semantic events/effects i settled consequences.
-- Director posiada `currentPointId` i legalność przejścia.
-- RuntimeExperience wykonuje symbolic effects.
-- Actors posiadają transient mechanics; domain owners persistent truth.
-- `experienceVr.js` pozostaje composition rootem bez ukrytej maszyny progresji.
+Scenario authoring Rune Stone Act jest **DEFERRED TO SEPARATE THREAD**. Obecny etap buduje actor/domain foundations. Nie powstają tu nowe Scenario point IDs, numerowane beaty, capabilities, events/effects ani Director transitions. Canonical authored Scenario/runtime boundary pozostaje `4.80`, dopóki osobne zadanie nie rozpocznie authoringu po tej granicy.
 
-Nie tworzy się pointów dla interpolacji mostu, timera `18 s`, stanów slotu, targetingu, pull ani `SOCKET_CAPTURE`. Point powstaje tylko dla istotnego beatu lub stabilnej granicy praw/progresji. Target `entryEffects` rozpoczyna beat, a actor emituje semantic completion event.
+Przyszłe Scenario zachowa ownership istotnych beatów i semantic orchestration; Director legalność przejść; RuntimeExperience symbolic effects; actors transient mechanics; domain owners persistent truths. Interpolacja mostu, sloty, tuning timer, target/pull i `SOCKET_CAPTURE` nie są Scenario pointami. Reconstruction składa settled truths, nie odtwarza trwających procesów i interpolacji.
 
-Reconstruction składa wyłącznie settled `tunedRuneFamilies` i `installedRuneFamilies` (oraz inne już istniejące owner truths). Nie rekonstruuje pull, held objects, zawartości slotów, trwającego Furnace process, timera, bridge interpolation ani capture. Pierwsza stabilna granica aktu to **`FIRST_RUNE_INSTALLED`**.
+### DEFERRED PLAYER COMMUNICATION REQUIREMENTS
 
-Sterowanie/obracanie aktywnego sektora lub anteny po pierwszej instalacji wymaga późniejszego, osobnego aktora i osobnego projektu; nie należy do tego modelu.
+Osobny przyszły wątek Scenario / Player Communication musi zaprojektować co najmniej:
 
-## 12. Ownership matrix
+- komunikację niezależności tuning i installation readiness;
+- informację, że nastrojony kamień może nie mieć przygotowanego miejsca;
+- beat po czwartej instalacji wyjaśniający problem ostatniego Water panel/glifu;
+- żartobliwą interwencję Małpy i ujawnienie ścieżki Eteru;
+- instrukcję special Ether tuning;
+- prowadzenie Ether Rune Stone do Małpy;
+- komunikat po capture Eteru, że Water installation path jest gotowa;
+- komunikat po `FIVE_ELEMENTAL_RUNES_INSTALLED` prowadzący do ostatniego glifu.
 
-| Owner | Posiada | Nie posiada |
-| --- | --- | --- |
-| owner progresji sektorów | kompletność paneli sektora | tuned/installed rune truth |
-| `RuneStoneProgressionController` | obecnie `tunedRuneFamilies`; docelowo także `installedRuneFamilies` i Water-only override | kopia paneli, transient transport |
-| existing Furnace ContentInteraction | istniejący single-content lifecycle | dwa rune slots |
-| `RuneRecipeInteraction` | dwa typed slots i transient recipe content | persistent tuning, stare procesy |
-| Rune Stone actor | lock/orbit/capture/audio/animation | authored progression |
-| `RuneBridgeActor` | presentation/mechanics stanów mostu | pointy, unlock, persistent truth |
-| sector-control / antenna subsystem | późniejsze sterowanie sektorami oraz find/lock odległych Large Glyph | rune truth, Large Glyph natural tuning |
-| Ether/Monkey presentation actor | pojawienie i przechwycenie Eter | Water override i progression truth |
-| final-hunt actor/owner | transient timer i mechanika finalnego polowania | authored progression i timeout policy |
-| Scenario / Director / RuntimeExperience | authored meaning / legalność / wykonanie effects | domain truth i fizyczna mechanika |
-| Blender / GLB | roots, pivots, authored helpers, baked loops | input, audio runtime, progresja |
+Ten dokument nie ustala literal copy. Copy należy później zsynchronizować z canonical communication mechanics/copy docs; tych dokumentów nie zmienia się w tym zadaniu.
 
-## 13. Kolejność późniejszego wdrożenia
+## 13. Milestones
 
-Każdy milestone jest osobnym bounded taskiem i kończy się przed rozpoczęciem następnego.
+### RUNE A1–A6 i RUNE UI-1
 
-**CURRENT IMPLEMENTATION CHECKPOINT:** RUNE A7 complete → `RUNE UI-1` complete → next gameplay milestone RUNE A8.
-
-### RUNE A1 — Furnace process presentation simplification
-- **Status:** **IMPLEMENTED**
-- **Cel:** usunąć process-spin komory i dolnej pokrywy ze wszystkich procesów.
-- **Właściciel:** Furnace activation/presentation actor.
-- **Wejście:** istniejący process angle, emission, `fire_cell`, światło i cztery energy points.
-- **Rezultat:** obracają się tylko efekty wewnętrzne; komora/pokrywa obracają się wyłącznie przy open/close.
-- **Nie implementuje:** zmian receptur, slotów ani czasu.
-- **Kryterium zakończenia:** każdy process zachowuje emission/energy feedback bez process rotation obudowy.
-
-### RUNE A2 — Furnace authored slot/volume contract
-- **Status:** **IMPLEMENTED**
-- **Cel:** dostarczyć dwa authored rune-recipe anchors oraz jeden authored product volume.
-- **Właściciel:** Furnace GLB/asset contract.
-- **Wejście:** istniejące `VR_FURNACE_INSERT_VOLUME` i `VR_FURNACE_CONTENT_ANCHOR`.
-- **Rezultat:** stabilne `RUNE_RECIPE_SMALL_GLYPH_SLOT`, `RUNE_RECIPE_SHELL_SLOT` i `VR_FURNACE_PRODUCT_VOLUME` oraz runtime readiness `runeRecipeAnchorsReady` i `productVolumeReady`; shared insert volume pozostaje jeden, product volume nie należy do receptury runicznej, a produkty już korzystają z niego do placementu.
-- **Nie implementuje:** gameplayu receptury.
-- **Kryterium zakończenia:** GLB jednoznacznie eksponuje oba anchor IDs oraz product volume; jeśli ich brak, domyka je osobne zadanie Blender/GLB.
-
-### RUNE A3 — RuneRecipeInteraction dual slots
-- **Status:** **IMPLEMENTED**
-- **Cel:** umożliwić jednoczesne osadzenie Small Glyph i Shell.
-- **Właściciel:** nowy `RuneRecipeInteraction`.
-- **Wejście:** A2, otwarta komora, typed held objects.
-- **Rezultat:** dwa niezależne typed slots przy dowolnej kolejności wkładania.
-- **Nie implementuje:** trwałego strojenia; nie zmienia starego ContentInteraction.
-- **Kryterium zakończenia:** oba składniki pozostają jednocześnie osadzone i wrong type jest odrzucany.
-
-Osobny `createVrAstroFurnaceRuneRecipeInteraction` utrzymuje dwa niezależne fizyczne typed slots (`SMALL_GLYPH` i `SHELL`), przyjmuje składniki w dowolnej kolejności i osadza je według transformów authored `RUNE_RECIPE_SMALL_GLYPH_SLOT` oraz `RUNE_RECIPE_SHELL_SLOT`. Historyczny zakres A3 nie walidował receptury, nie uruchamiał procesu i nie wykonywał commitu tuningu; production wiring do rzeczywistego `rune_tuning` mode dostarczyło A4.
-
-### RUNE A4 — Rune recipe validation + Furnace panel selection
-- **Status:** **IMPLEMENTED**
-- **Cel:** wybrać konkretną eligible rodzinę i zwalidować Wu Xing pair.
-- **Właściciel:** panel projection + recipe resolver; eligibility ownerem pozostaje progresja sektorów.
-- **Wejście:** A3, canonical Proto-Astro resolver, sector completeness.
-- **Rezultat:** tylko właściwa para dla wybranego targetu może zezwolić na Activate.
-- **Nie implementuje:** procesu i commitu tuning truth.
-- **Kryterium zakończenia:** nieeligible target i każda błędna para nie rozpoczynają procesu.
-
-A4 dostarczyło sector-derived eligibility z realnych stron istniejącego ownera progresji, canonical resolver Wu Xing, transient wybór targetu w `RuneRecipeSelectionController`, walidację dwóch fizycznych slotów, semantyczny `rune_tuning` Furnace mode, kartę `MATRYCA EMANACJI` z occupancy/ready gate oraz production wiring A3. Brak jawnego kąta pozostawia option pivot bez nowego targetu. A5 później podłączyło Activate i process; canonical Scenario availability pozostaje targetem RUNE A10.
-
-### RUNE A5 — Rune tuning process
-- **Status:** **IMPLEMENTED**
-- **Cel:** wykonać i commitować jedno strojenie rodziny.
-- **Właściciel:** Furnace process actor + `RuneStoneProgressionController`.
-- **Wejście:** A4 i oba fizyczne składniki poprawnej receptury.
-- **Rezultat:** nowy process kind, jeden `18 s` cycle, `astro_piec_work_03.mp3`, konsumpcja obu składników i trwała semantyczna sylaba jako committed tuned family.
-- **Nie implementuje:** fizycznego procesu kamienia ani instalacji.
-- **Kryterium zakończenia:** dokładnie jeden poprawny cycle konsumuje Small Glyph i Shell oraz tworzy jeden idempotentny tuned fact bez fizycznego itemu „sylaba”.
-
-Fizyczny Activate uruchamia jeden semantyczny proces `RUNE_TUNING` przez wspólny canonical driver i dokładnie jeden cycle `18 s`. Frozen transaction target nie zmienia się w trakcie cyklu. Proces używa `astro_piec_work_03.mp3`; dopiero successful COMPLETE konsumuje osadzone Small Glyph i Shell oraz atomowo kończy transakcję commitem naturalnej rodziny do `RuneStoneProgressionController.tunedRuneFamilies`. Wynikowa sylaba pozostaje derived semantic result canonical descriptoru `family + U`, bez fizycznego itemu ani inventory. Abort nie konsumuje składników i nie zapisuje tuned truth.
-
-Poza A5 pozostają: integracja persistence/reconstruction ze Scenario, pasmo `RUNESTONES`, fizyczny Rune Stone field, materializacja i instalacja kamieni, bridge oraz Water override.
-
-### RUNE A6 — Post-Tier-3 spatial transition
-- **Status:** **IMPLEMENTED** dla istniejącego transition `SPHERE_FAR = 80 m`, deterministic full-sphere layout, black/unlit far presentation, very slow far movement i odcięcia starego direct Large Glyph scan/target/pull po `4.80`. Naturalne Proto-Astro tuning truth `K/T/S/L/R` pozostaje zachowane.
-- **Cel:** post-Tier3 Large Glyph retreat presentation/access.
-- **Właściciel:** `LargeGlyphActor` + Scenario capability gating dla utraty starego direct targetowania.
-- **Wejście:** settled Tier 3 / `4.80`.
-- **Rezultat:** existing `SPHERE_FAR = 80 m`, deterministic full-sphere, black/unlit, sphere angular speed `0.01 rad/s`, zachowane `K/T/S/L/R` oraz usunięte po `4.80` direct Large Glyph scan/target/pull.
-- **Nie implementuje:** Rune Stone materialization, field `RUNE_STONES`, pasma `RUNESTONES`, anteny, późniejszego polowania na Large Glyph Metal/Water ani technology-overload retreat poza obecne `80 m`.
-- **Kryterium zakończenia:** post-Tier3 presentation/access Large Glyph odpowiada rezultatowi bez przypisywania A6 prezentacji Rune Stones.
-
-### RUNE UI-1 — Astro Furnace panel structure and readability normalization
-- **Status:** **IMPLEMENTED**
-- **Implementation evidence:** `1ba2421 — Implement Astro Furnace UI hierarchy normalization`. Hardware/perceptual VR QA nie zostało wykonane; skala, padding, odstępy i intensywność wireframe pozostają **TUNING** do późniejszej oceny.
-- **Cel:** przed rozpoczęciem A7 przebudować nawigację i warstwę prezentacyjną panelu Astro Pieca tak, aby istniejące oraz przyszłe strojenia używały jednego czytelnego języka UI.
-- **Właściciel:** Furnace panel projection/presentation. Gameplay ownerzy, istniejące procesy i progression truth pozostają bez zmian.
-- **Granica:** zadanie UI/presentation. Nie zmienia A1–A6, nie implementuje pasma `RUNESTONES`, materializacji kamieni, transportu, instalacji ani nowych Scenario pointów.
-
-#### Nawigacja Pieca
-
-Panel zachowuje trzy główne opcje.
-
-- **Kula Asterionowa** — w tym zadaniu zachowuje istniejący flow i zachowanie.
-- **Astrolabium Więzi** — staje się wejściem do podmenu:
-  1. **Utwórz Astrolabium Więzi** — otwiera obecną planszę tworzenia Astrolabium, bez zmiany jej istniejącego gameplayu;
-  2. **Strojenie Glifów** — otwiera istniejącą, już zaimplementowaną planszę strojenia glifów;
-  3. **Strojenie Kamieni Runicznych** — nowa powierzchnia UI dla rune-tuning flow; samo pojawienie się tej pozycji nie implementuje A7 ani nowej mechaniki targetowania kamieni.
-- Trzecia istniejąca główna opcja Pieca pozostaje poza zakresem tego zadania i nie jest przemianowywana ani przebudowywana.
-
-#### Wspólny porządek rodzin w tabelach
-
-Dla tabel skorup, Small Glyph oraz przyszłej tabeli Kamieni Runicznych obowiązuje jeden układ `3 × 2`:
-
-```text
-DREWNO | OGIEŃ | ZIEMIA
-METAL  | WODA  | ETER
-```
-
-Jest to kontrakt kolejności **prezentacji UI**, a nie nowa definicja naturalnych rodzin progresji. Eter pozostaje specjalnym `VI` zgodnie z sekcją 10.3 i nie staje się szóstą naturalną `familyCode`, szóstą standardową parą ani szóstym installed slotem.
-
-- Zachować obecne łacińskie oznaczenia rodzin (`Ki`, `Ti` itd.) jako pomocnicze podpisy czytelności.
-- Usunąć z obecnej planszy strojenia wskazany dodatkowy, aktualnie nieaktywny element UI. Usunięcie nie może usuwać ani zastępować pola **Eter** w docelowej tabeli `3 × 2`.
-
-#### Czytelność komórek
-
-- Każda komórka wykorzystuje możliwie dużą część własnej bezpiecznej powierzchni na znak lub ikonę.
-- Znaki rodzin, mimo wcześniejszego powiększenia, mogą zostać powiększone dalej do granicy czytelnego marginesu.
-- Ikony Small Glyph wymagają wyraźnego powiększenia względem obecnej prezentacji.
-- Nie pozostawiać pustej przestrzeni bez funkcji; margines ma jedynie chronić przed clippingiem i wzajemnym nachodzeniem elementów.
-- Dokładna skala znaków, ikon i padding pozostają **TUNING** do oceny w VR.
-
-#### Strojenie Kamieni Runicznych
-
-- Komórki tabeli wyboru pokazują wyłącznie znaki rodzin.
-- Nie pokazują fizycznych reprezentacji dużych Kamieni Runicznych, ponieważ gameplay operuje na pair-specific parach świata, a panel ma identyfikować rodzinę, nie zastępować obiektu świata miniaturą.
-
-#### Normalizacja strefy ekstrakcji
-
-Dolna strefa ekstrakcji w modułach **Kula Asterionowa** i **Astrolabium Więzi** ma używać wspólnego kontraktu ustawienia pasków:
-
-- znormalizować ich geometrię i wzajemne wyrównanie;
-- odsunąć je bardziej ku zewnętrznym krawędziom całego panelu, zachowując czytelny margines;
-- dokładny offset pozostaje **TUNING**.
-
-Dla modułu strojenia Kamieni Runicznych wizualizacja ekstrakcji pokazuje jednocześnie dwa konsumowane składniki:
-
-- **Shell** i **Small Glyph** obok siebie;
-- jako uproszczone, rotujące siatki/wireframe zgodne z językiem istniejących osobnych wizualizacji;
-- z takim odstępem, aby nie nachodziły na siebie podczas pełnego obrotu.
-
-#### Wizualizacje Kuli i Astrolabium
-
-- W module tworzenia **Kuli Asterionowej** pełna wizualizacja Kuli ze skorupami przyklejonymi na powierzchni ma w fazie wizualizacji ekstrakcji całkowicie zaniknąć.
-- Jej miejsce w centrum zajmuje uproszczona siatka krawędziowa / wireframe Kuli Asterionowej.
-- Siatki krawędziowe Kuli Asterionowej i Astrolabium Więzi należy poprawić pod względem czytelności i jakości; obecne uproszczenia nie są poziomem docelowym.
-- Pozostałe zachowanie i prezentacja istniejących modułów pozostają bez zmian.
-
-- **Kryterium zakończenia:** przebudowany panel zachowuje istniejący gameplay Kuli i strojenia glifów, udostępnia jednoznaczną hierarchię Astrolabium, wszystkie wskazane tabele mają ten sam porządek `3 × 2`, znaki/ikony efektywnie wypełniają komórki, strefy ekstrakcji są wyrównane, a wizualizacje Kuli/Astrolabium oraz pary Shell + Small Glyph spełniają powyższy kontrakt bez zmiany progression truth.
+- **Status:** **IMPLEMENTED**.
+- A1–A5 dostarczyły rune-domain foundation, dwa typed recipe slots, naturalny resolver Wu Xing, panel selection, pojedynczy `18 s` process i trwałe `tunedRuneFamilies`.
+- A4 zachowuje zaimplementowane sector-derived tuning eligibility, obecnie znane jako rozbieżność z nowym kanonem.
+- A6 dostarczyło post-Tier-3 transition Large Glyph do `SPHERE_FAR = 80 m` i odcięcie starego direct targetowania po `4.80`.
+- UI-1 dostarczyło hierarchię Furnace UI i wspólną prezentację `3 × 2`; Eter w UI pozostaje specjalnym `VI`, nie naturalną rodziną.
 
 ### RUNE A7 — RUNESTONES Astro band
-- **Status:** **IMPLEMENTED**
-- **Cel:** udostępnić semantyczny band po pierwszym tuning.
-- **Właściciel:** Astro band controller/projection.
-- **Wejście:** co najmniej jedna tuned family.
-- **Rezultat:** pasmo `RUNESTONES` istnieje w `VR_ATTRACTOR_BANDS` i staje się dostępne po co najmniej jednym tuned family; targetable family set jest bezstanową projekcją `tunedRuneFamilies`. Eligible-but-untuned i locked families oraz Eter nie należą do target set.
-- **Nie implementuje:** fizycznych Rune Stone targets, Rune Stone actora, scan, pull, materialization, transportu ani instalacji.
-- **Kryterium zakończenia:** eligible-but-untuned i locked families nie pojawiają się jako targets.
+
+- **Status:** **IMPLEMENTED**.
 - **Implementation evidence:** `097d5d5 — Implement RUNESTONES Astro band`.
+- `VR_ATTRACTOR_BANDS.RUNESTONES` istnieje i jest available po co najmniej jednej naturalnej tuned family.
+- Natural targetable family set pochodzi bezpośrednio z `tunedRuneFamilies`; projekcja jest bezstanowa i nie posiada własnego eligibility ani persistence.
+- A7 nie tworzy fizycznych Rune Stone targets ani actorów, materialization, scan/pull, transportu i instalacji.
+- A7 implementuje natural target set. Special Ether target zostanie dodany później przez special Ether flow bez zmiany natural family contract.
 
-### RUNE A8 — RuneBridgeActor first pair
-- **Status:** **TARGET / NOT IMPLEMENTED**
-- **Cel:** pionowy slice jednego mostu.
-- **Właściciel:** `RuneBridgeActor` pierwszej pary.
-- **Wejście:** tuned fact i pair-specific radial axis/config.
-- **Rezultat:** `HIDDEN → DOCKED → EXTENDING/EXTENDED → ORBITING`, z powrotem do `DOCKED` po przerwanym podejściu.
-- **Nie implementuje:** generalizacji na pięć par ani progresji.
-- **Kryterium zakończenia:** semantic commands deterministycznie sterują pełną prezentacją pierwszego mostu.
+### RUNE A8 — Pair-generic RuneBridgeActor state machine
 
-### RUNE A9 — First Rune Stone transport + installation
-- **Status:** **TARGET / NOT IMPLEMENTED**
-- **Cel:** zainstalować jedną zwalidowaną parę.
-- **Właściciel:** Rune Stone transport actor + progression owner; bridge współpracuje przez komendy.
-- **Wejście:** A7–A8, tuned family, pair-specific socket/safe envelope.
-- **Rezultat:** `FREE → LOCKED_BY_ASTRO → CARRIED_ORBIT → SOCKET_CAPTURE → INSTALLED` i persistent installed fact.
-- **Nie implementuje:** sterowania sektorem po instalacji.
-- **Kryterium zakończenia:** ukończony capture jednej pary daje stable installed truth, loop/audio i bridge orbit.
+- **Status:** **TARGET / NOT IMPLEMENTED**.
+- **Cel:** generic state machine `HIDDEN → DOCKED → EXTENDING → EXTENDED → ORBITING` dla istniejącego modelu `earth/fire/wood/metal/water`, z pair-specific config.
+- **Reference slice:** Earth, wyłącznie do pierwszej inspekcji/tuningu mechaniki.
+- **Wejście:** platform installation readiness oraz pair config; tuning truth nie jest gate mostu.
+- **Nie implementuje:** Rune Stone transport, socket capture, installed truth ani Scenario progression.
+
+### RUNE A9 — Pair-generic Rune Stone transport + installation mechanics
+
+- **Status:** **TARGET / NOT IMPLEMENTED**.
+- **Cel:** actor mechanics projektowane od początku dla pięciu pair configs; Earth może być pierwszą referencyjną parą.
+- **Wejście:** A7–A8, tuned family dla target/transport, platform readiness dla capture/install oraz pair-specific socket/safe envelope.
+- **Rezultat:** generic `FREE → LOCKED_BY_ASTRO → CARRIED_ORBIT → SOCKET_CAPTURE → INSTALLED` i persistent installed fact po ukończonym snap.
+- **Nie implementuje:** Scenario progression ani globalnych parametrów przestrzennych.
 
 ### RUNE A10 — Scenario / Director integration
-- **Status:** **TARGET / NOT IMPLEMENTED**
-- **Cel:** zaauthorować beaty po `4.80` do stabilnej granicy.
-- **Właściciel:** Scenario / Director / RuntimeExperience.
-- **Wejście:** semantic events/effects i domain APIs A1–A9.
-- **Rezultat:** target `entryEffects`, semantic completions i reconstruction settled tuned/installed truth.
-- **Nie implementuje:** reconstruction pull, bridge interpolation, Furnace process, slot/held/capture state.
-- **Kryterium zakończenia:** natural flow i canonical boundary kończą się na `FIRST_RUNE_INSTALLED` bez technicznych pointów.
 
-### RUNE A11 — Generalizacja na trzy początkowe rodziny
-- **Status:** **TARGET / NOT IMPLEMENTED**
-- **Cel:** rozszerzyć działający slice na Earth / Fire / Wood.
-- **Właściciel:** pair-configured actors i assety.
-- **Wejście:** A10 oraz trzy eligible families z sector truth.
-- **Rezultat:** trzy niezależne pair-specific konfiguracje.
-- **Nie implementuje:** globalnych magicznych offsetów ani założenia wspólnej wysokości/socket envelope.
-- **Kryterium zakończenia:** każda para działa z własnym socket height, safe envelope i config.
+- **Status:** **DEFERRED TO SEPARATE THREAD / NOT IMPLEMENTED**.
+- Historyczny plan authoringu po `4.80` pozostaje odroczony. To zadanie nie tworzy nowych point IDs ani nie przesuwa boundary `4.80`.
 
-### RUNE A12 — Quest 3S hardware QA + tuning
-- **Status:** **TARGET / NOT IMPLEMENTED**
-- **Cel:** sprzętowo zatwierdzić cały pierwszy zestaw.
-- **Właściciel:** hardware QA + właściciele subsystemów.
-- **Wejście:** A1–A11.
-- **Rezultat:** tuning dual-slot readability, `18 s`, black Large Glyph, kamieni `50–75 m`, transportu trzech kamieni, bridge clearance/motion/orbit, performance i audio.
-- **Nie implementuje:** aktora sterowania sektorami/anteny.
-- **Kryterium zakończenia:** trzy pary i Furnace spełniają kontrakt na Quest 3S z zapisanymi parametrami i defektami.
+### RUNE A11 — historyczny etap generalizacji
 
-### RUNE A13 — Sector-control foundation po FIRST_RUNE_INSTALLED
-- **Status:** **TARGET / NOT IMPLEMENTED**
-- **Cel:** zbudować osobny fundament sterowania sektorami po pierwszej instalacji.
-- **Właściciel:** przyszły sector-control subsystem/actor.
-- **Wejście:** `FIRST_RUNE_INSTALLED` oraz semantyczne komendy platformy.
-- **Rezultat:** jawna granica API dla późniejszej anteny bez przenoszenia progresji do aktora.
-- **Nie implementuje:** antenna tracking frame, polowania Metal/Water ani kolejnych kamieni.
-- **Kryterium zakończenia:** sektor może być sterowany przez osobnego ownera bez pointów dla interpolacji i bez zmiany rune truths.
+- **Status:** **SUPERSEDED AS A LATER MIGRATION**.
+- Historyczny plan późniejszego rozszerzenia Earth slice na Earth/Fire/Wood został zastąpiony decyzją, że A8/A9 tworzą pair-generic contract od początku dla wszystkich pięciu naturalnych par.
+- Pair-specific authored config i QA nadal są wymagane, lecz generalizacja nie jest osobną późniejszą migracją.
 
-### RUNE A14 — Three-rune antenna activation
-- **Status:** **TARGET / NOT IMPLEMENTED**
-- **Cel:** uruchomić antenę po trzech instalacjach.
-- **Właściciel:** Scenario dla beatu; antenna actor dla presentation/mechanics; progression owner dostarcza installed truth.
-- **Wejście:** zainstalowane Earth + Fire + Wood oraz A13.
-- **Rezultat:** platforma otrzymuje prawo użycia anteny.
-- **Nie implementuje:** samego hunt Metal/Water ani tracking-frame pointów.
-- **Kryterium zakończenia:** semantic activation zachodzi dokładnie po komplecie trzech rodzin, a aktor nie posiada progresji.
+### RUNE A12–A15
 
-### RUNE A15 — Metal + Water Large Glyph antenna hunt / Tier 4
-- **Status:** **TARGET / NOT IMPLEMENTED**
-- **Cel:** pozyskać dwa odległe kryształy i domknąć Tier 4.
-- **Właściciel:** antenna/Large Glyph actors dla mechaniki; istniejący Crystal/Reliquary i sector progression owners dla commitów.
-- **Wejście:** A14 oraz tuned natural Large Glyph Metal i Water w `SPHERE_FAR`.
-- **Rezultat:** `find → lock → pull → Crystal → Reliquary` dla Metal i Water; Metal complete, Water `4/5`.
-- **Nie implementuje:** ponownego natural tuning, Metal Rune recipe ani technicznych Scenario pointów dla pull/tracking.
-- **Kryterium zakończenia:** Tier 4 jest complete, czwarty panel Metal świeci, pełny sektor Metal jest dostępny, a Water pozostaje `4/5`.
+- **Status:** **TARGET / NOT IMPLEMENTED**.
+- A12 pozostaje Quest 3S hardware QA i tuning pair-specific parametrów.
+- A13 pozostaje osobnym sector-control foundation po pierwszej instalacji.
+- A14 pozostaje aktywacją przyszłej anteny po zainstalowaniu Earth + Fire + Wood.
+- A15 pozostaje antenna hunt Metal + Water Large Glyph i Tier 4: Metal complete, Water `4/5`.
 
-### RUNE A16 — Metal rune tuning + fourth installation
-- **Status:** **TARGET / NOT IMPLEMENTED**
-- **Cel:** przygotować i zainstalować czwarty standardowy Rune Stone.
-- **Właściciel:** `RuneRecipeInteraction`, `RuneStoneProgressionController` i pair-specific Metal actors.
-- **Wejście:** pełny sektor Metal i receptura Small Glyph Earth + Shell Metal.
-- **Rezultat:** sylaba Metal, tuned Metal, transport i persistent Metal installed truth.
-- **Nie implementuje:** Ether, Water override ani retreat presentation.
-- **Kryterium zakończenia:** platforma ma installed Earth + Fire + Wood + Metal po ukończonym capture.
+### RUNE A16 — Metal platform readiness + fourth installation
+
+- **Status:** **TARGET / NOT IMPLEMENTED**.
+- Metal może być tuned wcześniej; ukończenie sektora Metal nie rozpoczyna ani nie warunkuje jego naturalnego tuningu.
+- A16 dotyczy Metal platform readiness po sector-complete oraz transportu, capture i instalacji Metal.
+- Rezultatem jest `FOURTH_RUNE_INSTALLED` i installed Earth + Fire + Wood + Metal.
 
 ### RUNE A17 — Fourth-rune technology-overload / Large Glyph retreat
-- **Status:** **TARGET / NOT IMPLEMENTED**
-- **Cel:** zaauthorować dramaturgiczny próg oddalenia glifów.
-- **Właściciel:** Scenario dla beatu; `LargeGlyphActor` dla spatial presentation.
-- **Wejście:** `FOURTH_RUNE_INSTALLED`.
-- **Rezultat:** Large Glyph przechodzą do jawnego późnego/finalnego spatial stage.
-- **Nie implementuje:** arbitralnego promienia, `HIDDEN_GLYPHS` mapping ani Ether intervention.
-- **Kryterium zakończenia:** retreat jest odrębnym semantic beatem, a konfiguracja nie zamraża niezatwierdzonego dystansu.
 
-### RUNE A18 — Ether Stone + Monkey intervention + Water override
-- **Status:** **TARGET / NOT IMPLEMENTED**
-- **Cel:** rozwiązać zamierzony Water deadlock przez specjalny beat.
-- **Właściciel:** Scenario, Ether/Monkey presentation actor i `RuneStoneProgressionController` zgodnie z rozdzielonym ownership.
-- **Wejście:** Metal complete, Water `4/5`, A17 i finalny kryzys.
-- **Rezultat:** Małpa przechwytuje Eter; controller zapisuje trwały, Water-only eligibility override.
-- **Nie implementuje:** szóstego sektora/vessela, zwykłego RUNESTONES targetu Eter ani receptury Water.
-- **Kryterium zakończenia:** semantic completion beatu nadaje wyłącznie prawo rozpoczęcia finalnej receptury Water.
+- **Status:** **TARGET / NOT IMPLEMENTED**.
+- `FOURTH_RUNE_INSTALLED` pozostaje semantycznym progiem późnej prezentacji; konkretny promień retreat pozostaje otwarty. Scenario authoring beatu jest odroczony.
 
-### RUNE A19 — Water rune tuning + fifth installation
-- **Status:** **TARGET / NOT IMPLEMENTED**
-- **Cel:** wykonać normalną recepturę i instalację Water z wyjątkowym eligibility.
-- **Właściciel:** rune recipe/progression owner oraz pair-specific Water actors.
-- **Wejście:** A18, Small Glyph Metal + Shell Water.
-- **Rezultat:** sylaba Water, tuned Water, transport, capture i pięć installed elemental families.
-- **Nie implementuje:** zastąpienia receptury przez Eter ani uruchamiania timera przed instalacją.
-- **Kryterium zakończenia:** Water jest installed, Eter nie zajmuje slotu, a platforma jest kompletnym finalnym narzędziem.
+### RUNE A18 — Special Ether flow + Water installation readiness override
+
+- **Status:** **TARGET / NOT IMPLEMENTED**.
+- Kontrakt: `FOURTH_RUNE_INSTALLED → Monkey reveals Ether route → Ether tuning unlocked → Ether Shell + Ether Small Glyph special tuning → Ether Rune targetable → Ether transported to Monkey → Monkey captures Ether → Water installation readiness override`.
+- Nie implementuje szóstej naturalnej rodziny, sektora, bridge, vessel ani installed slotu.
+
+### RUNE A19 — Water readiness, transport i fifth installation
+
+- **Status:** **TARGET / NOT IMPLEMENTED**.
+- Water nie wymaga nowego tuningu, jeśli zostało tuned wcześniej. Jeśli nie, zachowuje naturalną recepturę Wu Xing.
+- A19 obejmuje Water bridge/readiness po override, target/transport, capture i piątą instalację.
 
 ### RUNE A20 — Final Water timed hunt
-- **Status:** **TARGET / NOT IMPLEMENTED**
-- **Cel:** odnaleźć i ściągnąć ostatni Large Glyph Water w czasowym wyzwaniu.
-- **Właściciel:** final-hunt owner/actor dla transient timer/mechanics; Scenario dla semantic start/success.
-- **Wejście:** `FIVE_ELEMENTAL_RUNES_INSTALLED` i rzeczywisty start `FINAL_WATER_HUNT`.
-- **Rezultat:** timer `180 s` (**TUNING**) oraz możliwość pozyskania ostatniego Water Crystal.
-- **Nie implementuje:** czasu podczas wcześniejszych beatów ani rozstrzygnięcia timeoutu.
-- **Kryterium zakończenia:** timer startuje dopiero z huntem, success jest semantic eventem, a `FINAL_HUNT_TIMEOUT_BEHAVIOR` pozostaje open.
 
-### RUNE A21 — Last Crystal / Tier 5 / existing finale handoff
-- **Status:** **TARGET / NOT IMPLEMENTED**
-- **Cel:** domknąć ostatni panel i przekazać sterowanie do istniejącego finału świata.
-- **Właściciel:** Crystal/Reliquary/sector progression owners oraz Scenario/Director dla semantic handoff.
-- **Wejście:** sukces A20 i ostatni Water Crystal.
-- **Rezultat:** Reliquary commit, Water `5/5`, Tier 5 complete, experience completion i istniejący finale handoff.
-- **Nie implementuje:** nowego finału świata ani alternatywnej timeout policy.
-- **Kryterium zakończenia:** ostatni panel Water jest committed dokładnie raz, po czym canonical flow przechodzi do istniejącego finału.
+- **Status:** **TARGET / NOT IMPLEMENTED**.
+- Prerequisite: `FIVE_ELEMENTAL_RUNES_INSTALLED`.
+- Zachowuje finalny Water Large Glyph, `FINAL_WATER_HUNT` i timer `180 s` jako **TUNING**, a następnie pozyskanie ostatniego Water Crystal.
 
-## 14. Zakazy i otwarte tuning decisions
+### RUNE A21 — Last Crystal / final panel / finale handoff
 
-Zakazane są: drugi registry/radius runiczny; hardcoded initial family list; gate `4 → 5`; rune truth w ProtoAstroTuningController; wkładanie kamienia do Pieca; dwa kolejne 18-sekundowe procesy; przepisywanie starego single-content ownera; process-spin komory/pokrywy; pointy dla Furnace timera, pull, bridge interpolation, antenna tracking frame, sekund timera lub socket capture; globalny socket height; teleport kamienia do ręki; drugi progression cursor w `experienceVr.js`; szósta platforma, szósty vessel lub VI/Eter jako szósta naturalna familyCode.
+- **Status:** **TARGET / NOT IMPLEMENTED**.
+- Reliquary commit ostatniego Water Crystal domyka Water `5/5`, Experience VR i przekazuje flow do istniejącego finale handoff.
 
-Otwarte/tuning pozostają pair-specific socket geometry, safe envelope, release behavior, occupied arcs, carry parameters, capture easing, bridge clearance/timing, spatial-audio assets/attenuation, liczbowy dystans late Large Glyph retreat oraz skutek timeoutu finalnego hunt. Nie wolno przypadkowo zamrażać ich jako globalnych wartości.
+## 14. Inwarianty, zakazy i otwarte decyzje
 
-## 14. Powiązane dokumenty
+- Istnieje dokładnie pięć naturalnych Rune Stone families i pięć naturalnych installed slots.
+- Eter nie jest naturalną family, standardową parą, sektorem, vessel/socketem ani installed slotem; `VU` nie istnieje.
+- Pięć naturalnych Wu Xing recipes pozostaje bez zmian.
+- Natural tuning nie zależy od sector completion; natural targetability zależy od tuned truth; installation readiness zależy od platform/sector readiness lub jawnego Water-only override.
+- Earth/Fire/Wood są installation-ready po `4.80`; Metal po ukończeniu sektora; Water po Monkey capture Eteru.
+- Water może być tuned przed override. Ether tuning jest zablokowany do przyszłego Monkey beat i używa Ether Shell + Ether Small Glyph.
+- Ether jest specjalnym późnym targetem transportowanym do Małpy, nie do platformy.
+- `FIVE_ELEMENTAL_RUNES_INSTALLED` otwiera flow ostatniego Water Large Glyph.
+- Zakazane są: drugi registry/radius; kopia panel completion; jeden globalny socket height/offset/envelope; teleport kamienia do ręki; progression truth w actorze; techniczne Scenario pointy dla interpolacji, timera, pull lub capture; nowe authored Scenario po `4.80` w ramach actor foundations.
+- Pair-specific geometry, safe envelope, occupied arcs, carry/capture easing, bridge timing, spatial audio, release/return/parking behavior, late retreat distance i timeout behavior pozostają `TUNING` lub `OPEN DESIGN DECISION`.
 
-- [`VR_PROTO_ASTRO_MODEL.md`](VR_PROTO_ASTRO_MODEL.md) — canonical identity resolver i granica natural essences vs rune truth.
-- [`VR_SPHERICAL_LAYERS_MODEL.md`](VR_SPHERICAL_LAYERS_MODEL.md) — istniejący `RUNE_STONES 50–75 m`.
+## 15. Current implementation checkpoint
+
+```text
+RUNE A1–A7: IMPLEMENTED
+RUNE UI-1: IMPLEMENTED
+
+NEXT ACTOR MILESTONE:
+RUNE A8 — pair-generic RuneBridgeActor state machine
+Earth = first reference slice
+
+SCENARIO AUTHORING:
+DEFERRED TO SEPARATE THREAD
+
+CANONICAL AUTHORED SCENARIO/RUNTIME PROGRESSION BOUNDARY:
+4.80
+```
+
+**Known implementation divergence:** current natural Rune tuning is still sector-gated in runtime A4 and requires a later bounded correction to match the revised canon. Ten follow-up nie jest zaimplementowany w ramach aktualizacji dokumentacji.
+
+## 16. Powiązane dokumenty i przyszły sync
+
+- [`VR_PROTO_ASTRO_MODEL.md`](VR_PROTO_ASTRO_MODEL.md) — identity resolver i natural essences vs rune truth.
+- [`VR_SPHERICAL_LAYERS_MODEL.md`](VR_SPHERICAL_LAYERS_MODEL.md) — istniejący `RUNE_STONES = 50–75 m`.
 - [`VR_PROGRESS_FLOOR_MODEL.md`](VR_PROGRESS_FLOOR_MODEL.md) — owner kompletności paneli sektorów.
-- [`VR_AUDIO_MODEL.md`](VR_AUDIO_MODEL.md) — work sounds i spatial audio boundary.
-- [`VR_SCENARIO_POINT_AUTHORING_STANDARD.md`](VR_SCENARIO_POINT_AUTHORING_STANDARD.md) — obowiązkowy standard pointów po `4.80`.
+- [`VR_SCENARIO_DIRECTOR_MODEL.md`](VR_SCENARIO_DIRECTOR_MODEL.md) — authored Scenario/Director ownership; Rune Stone authoring pozostaje osobnym zadaniem.
+- Canonical communication mechanics/copy docs wymagają przyszłej synchronizacji literalnego copy po zaprojektowaniu osobnego wątku Player Communication; nie są zmieniane tutaj.
