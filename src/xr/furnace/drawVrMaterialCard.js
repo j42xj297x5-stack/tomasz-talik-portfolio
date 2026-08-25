@@ -17,8 +17,9 @@ export function drawMaterialCardVisual(context, options) {
   const { glyphImage, glyphScale = 1, color = '#e8f7ff', drawPreview } = options;
 
   if (glyphImage?.complete && glyphImage.naturalWidth > 0) {
+    const containedScale = Math.min(1, Math.max(0, Number.isFinite(glyphScale) ? glyphScale : 1));
     const ratio = Math.min(layout.glyph.width / glyphImage.naturalWidth, layout.glyph.height / glyphImage.naturalHeight)
-      * glyphScale;
+      * containedScale;
     const width = glyphImage.naturalWidth * ratio;
     const height = glyphImage.naturalHeight * ratio;
     const cacheKey = `${color}:${Math.ceil(width)}x${Math.ceil(height)}`;
@@ -36,14 +37,26 @@ export function drawMaterialCardVisual(context, options) {
       imageCache.set(cacheKey, glyphCanvas);
       tintedGlyphs.set(glyphImage, imageCache);
     }
+    context.save();
+    context.beginPath();
+    context.rect(layout.glyph.x, layout.glyph.y, layout.glyph.width, layout.glyph.height);
+    context.clip();
     context.drawImage(glyphCanvas, layout.glyph.x + (layout.glyph.width - width) / 2,
       layout.glyph.y + (layout.glyph.height - height) / 2, width, height);
+    context.restore();
   }
 
-  drawPreview?.({
-    cx: layout.preview.x + layout.preview.width / 2,
-    cy: layout.preview.y + layout.preview.height / 2,
-    scale: Math.min(layout.preview.width, layout.preview.height) * .44
-  });
+  if (drawPreview) {
+    context.save();
+    context.beginPath();
+    context.rect(layout.preview.x, layout.preview.y, layout.preview.width, layout.preview.height);
+    context.clip();
+    drawPreview({
+      cx: layout.preview.x + layout.preview.width / 2,
+      cy: layout.preview.y + layout.preview.height / 2,
+      scale: Math.min(layout.preview.width, layout.preview.height) * .44
+    });
+    context.restore();
+  }
   return layout;
 }

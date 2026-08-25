@@ -1,6 +1,6 @@
 import * as THREE from '../../vendor/three.js';
 import { createVrSphericalLayerActor } from '../world/createVrSphericalLayerActor.js';
-import { VR_NATURAL_RUNE_STONE_ASSETS } from './vrRuneStoneRegistry.js';
+import { VR_NATURAL_RUNE_STONE_ASSETS, VR_RUNE_STONE_ASSETS } from './vrRuneStoneRegistry.js';
 
 export const VR_RUNE_STONE_STATE = Object.freeze({
   FREE: 'FREE',
@@ -8,10 +8,22 @@ export const VR_RUNE_STONE_STATE = Object.freeze({
   CARRIED_ORBIT: 'CARRIED_ORBIT'
 });
 
+const previewModelsByFamilyCode = new Map();
+
+export function resolveVrRuneStonePreviewModel(familyCode) {
+  return previewModelsByFamilyCode.get(String(familyCode ?? '').toUpperCase()) ?? null;
+}
+
 export function createVrRuneStoneActor({ parent, assetManager, layer }) {
   if (!parent?.add || !assetManager?.getGltf || !assetManager?.cloneGltfScene) {
     throw new Error('[VrRuneStoneActor] Parent and preloaded AssetManager are required.');
   }
+  VR_RUNE_STONE_ASSETS.forEach((descriptor) => {
+    const gltf = assetManager.getGltf(descriptor.assetId);
+    if (!gltf?.scene) throw new Error(`[VrRuneStoneActor] Missing preloaded asset: ${descriptor.assetId}.`);
+    previewModelsByFamilyCode.set(descriptor.familyCode, gltf.scene);
+  });
+
   const layerActor = createVrSphericalLayerActor({
     parent,
     layer,
@@ -74,6 +86,7 @@ export function createVrRuneStoneActor({ parent, assetManager, layer }) {
       });
     });
   } catch (error) {
+    VR_RUNE_STONE_ASSETS.forEach(({ familyCode }) => previewModelsByFamilyCode.delete(familyCode));
     layerActor.dispose();
     throw error;
   }
@@ -139,6 +152,7 @@ export function createVrRuneStoneActor({ parent, assetManager, layer }) {
       record.root.removeFromParent();
     });
     records.clear();
+    VR_RUNE_STONE_ASSETS.forEach(({ familyCode }) => previewModelsByFamilyCode.delete(familyCode));
     layerActor.dispose();
   }
 
