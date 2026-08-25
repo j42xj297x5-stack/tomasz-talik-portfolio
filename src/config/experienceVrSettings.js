@@ -24,10 +24,10 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
     revealDurationSeconds: 60,
     sun: {
       distanceFromWorldCenter: 110,
-      scale: 3,
+      scale: 4,
       emissiveColor: '#ffb85c',
       emissiveIntensity: 0.25,
-      light: { color: '#fff1d6', intensity: 50, decay: 0, distance: 0 },
+      light: { color: '#ffe0a6', intensity: 5, decay: 0, distance: 0 },
       facingCorrectionDegrees: { x: 0, y: 0, z: 0 }
     },
     stars: {
