@@ -3,11 +3,11 @@
 ## 1. Status i authority
 
 - **Status:** **KANONICZNY MODEL TECHNICZNO-GAMEPLAYOWY / PARTIALLY IMPLEMENTED**.
-- **Implemented:** `RUNE A1–A6` oraz `RUNE UI-1 — Astro Furnace panel structure and readability normalization`.
-- **Next gameplay milestone:** `RUNE A7 — RUNESTONES Astro band`.
-- **Canonical runtime boundary:** `4.80`.
+- **Implemented:** `RUNE A1–A7` oraz `RUNE UI-1 — Astro Furnace panel structure and readability normalization`.
+- **Next gameplay milestone:** `RUNE A8 — RuneBridgeActor first pair`.
+- **Canonical Scenario/runtime progression boundary:** `4.80`.
 - Ten dokument jest jedynym kanonicznym źródłem prawdy całego Rune Stone Act: synchronizacji Astrolabium, Pieca, pięciu pair-specific par elementarnych, specjalnego kamienia Eter, mostów, transportu, instalacji i finalnego polowania Wody.
-- Część kontraktów A1–A6 istnieje w runtime jako foundations/domain behavior bez rozszerzenia authored Scenario spine. Opis A7–A21 pozostaje targetem. Kod rozstrzyga faktyczny status implementacji, a authored progression nadal kończy się na stabilnej granicy `4.80`.
+- Część kontraktów A1–A7 istnieje w runtime jako foundations/domain behavior bez rozszerzenia authored Scenario spine. Opis A8–A21 pozostaje targetem. Kod rozstrzyga faktyczny status implementacji, a authored progression nadal kończy się na stabilnej granicy `4.80`.
 - Status implementacji rozstrzygają kod i [`VR_RUNTIME_MODEL.md`](VR_RUNTIME_MODEL.md). Identity Proto-Astro rozstrzyga [`VR_PROTO_ASTRO_MODEL.md`](VR_PROTO_ASTRO_MODEL.md), warstwy przestrzenne — [`VR_SPHERICAL_LAYERS_MODEL.md`](VR_SPHERICAL_LAYERS_MODEL.md), a authored progression — [`VR_SCENARIO_DIRECTOR_MODEL.md`](VR_SCENARIO_DIRECTOR_MODEL.md).
 
 `KANON` oznacza kontrakt wiążący, `TUNING` wartość dobieraną w prototypie/Quest 3S, a `OPEN DESIGN DECISION` świadomie nierozstrzygnięty produktowy warunek.
@@ -52,12 +52,14 @@ Po Tier 3 Earth, Fire i Wood są naturalnie eligible, natomiast Metal i Water po
 `RuneStoneProgressionController` istnieje. Jego obecny i docelowy ownership jest rozdzielony następująco:
 
 - **IMPLEMENTED:** `tunedRuneFamilies` — trwały fakt „Astrolabium jest zsynchronizowane z rodziną X”.
+- **IMPLEMENTED:** bezstanowa projekcja/pasmo A7 `RUNESTONES`, którego targetable family set jest projekcją `tunedRuneFamilies`.
+- **FUTURE:** fizyczne targetowanie Rune Stones.
 - **TARGET / NOT IMPLEMENTED:** `installedRuneFamilies` — trwały fakt ukończonej instalacji właściwego kamienia.
 - **TARGET / NOT IMPLEMENTED:** trwały, ograniczony wyłącznie do finalnego flow Wody fakt zastępujący brakującą wiedzę piątego panelu Water (semantycznie `WATER_RUNE_KNOWLEDGE_OVERRIDE`; nazwa implementacyjna pozostaje otwarta).
 
 Nie posiada kopii paneli sektorów. Eligibility czyta z ich istniejącego ownera. `ProtoAstroTuningController` nadal posiada wyłącznie naturalne family essences używane dla Large Glyph i **nie** posiada rune tuning ani installation truth.
 
-Na podstawie istniejącego `tunedRuneFamilies` przyszłe Scenario może nadać Astrolabium pasmo `RUNESTONES`. Pasmo widzi wyłącznie kamienie rodzin w `tunedRuneFamilies`; rodzina eligible, lecz jeszcze nietuned, nie jest targetem.
+Na podstawie istniejącego `tunedRuneFamilies` Astrolabium posiada pasmo `RUNESTONES`, dostępne wtedy i tylko wtedy, gdy istnieje co najmniej jedna tuned family. Bezstanowa projekcja widzi wyłącznie rodziny w `tunedRuneFamilies`; rodzina eligible, lecz jeszcze nietuned, rodzina locked oraz Eter nie są targetami. Fizyczne Rune Stone targets pozostają przyszłością.
 
 ## 4. Receptura Wu Xing
 
@@ -276,7 +278,7 @@ Sterowanie/obracanie aktywnego sektora lub anteny po pierwszej instalacji wymaga
 
 Każdy milestone jest osobnym bounded taskiem i kończy się przed rozpoczęciem następnego.
 
-**CURRENT IMPLEMENTATION CHECKPOINT:** RUNE A6 complete → `RUNE UI-1` complete → next gameplay milestone RUNE A7.
+**CURRENT IMPLEMENTATION CHECKPOINT:** RUNE A7 complete → `RUNE UI-1` complete → next gameplay milestone RUNE A8.
 
 ### RUNE A1 — Furnace process presentation simplification
 - **Status:** **IMPLEMENTED**
@@ -409,13 +411,14 @@ Dla modułu strojenia Kamieni Runicznych wizualizacja ekstrakcji pokazuje jednoc
 - **Kryterium zakończenia:** przebudowany panel zachowuje istniejący gameplay Kuli i strojenia glifów, udostępnia jednoznaczną hierarchię Astrolabium, wszystkie wskazane tabele mają ten sam porządek `3 × 2`, znaki/ikony efektywnie wypełniają komórki, strefy ekstrakcji są wyrównane, a wizualizacje Kuli/Astrolabium oraz pary Shell + Small Glyph spełniają powyższy kontrakt bez zmiany progression truth.
 
 ### RUNE A7 — RUNESTONES Astro band
-- **Status:** **TARGET / NOT IMPLEMENTED**
+- **Status:** **IMPLEMENTED**
 - **Cel:** udostępnić semantyczny band po pierwszym tuning.
 - **Właściciel:** Astro band controller/projection.
 - **Wejście:** co najmniej jedna tuned family.
-- **Rezultat:** valid targets ograniczone do tuned families.
-- **Nie implementuje:** instalacji.
+- **Rezultat:** pasmo `RUNESTONES` istnieje w `VR_ATTRACTOR_BANDS` i staje się dostępne po co najmniej jednym tuned family; targetable family set jest bezstanową projekcją `tunedRuneFamilies`. Eligible-but-untuned i locked families oraz Eter nie należą do target set.
+- **Nie implementuje:** fizycznych Rune Stone targets, Rune Stone actora, scan, pull, materialization, transportu ani instalacji.
 - **Kryterium zakończenia:** eligible-but-untuned i locked families nie pojawiają się jako targets.
+- **Implementation evidence:** `097d5d5 — Implement RUNESTONES Astro band`.
 
 ### RUNE A8 — RuneBridgeActor first pair
 - **Status:** **TARGET / NOT IMPLEMENTED**
