@@ -4,7 +4,8 @@ import { VR_NATURAL_RUNE_STONE_ASSETS } from './vrRuneStoneRegistry.js';
 
 export const VR_RUNE_STONE_STATE = Object.freeze({
   FREE: 'FREE',
-  LOCKED_BY_ASTRO: 'LOCKED_BY_ASTRO'
+  LOCKED_BY_ASTRO: 'LOCKED_BY_ASTRO',
+  CARRIED_ORBIT: 'CARRIED_ORBIT'
 });
 
 export function createVrRuneStoneActor({ parent, assetManager, layer }) {
@@ -86,11 +87,19 @@ export function createVrRuneStoneActor({ parent, assetManager, layer }) {
     record.state = VR_RUNE_STONE_STATE.LOCKED_BY_ASTRO;
     return true;
   };
-  const unlockFromAstro = (branchId) => {
+  const beginCarriedOrbit = (branchId) => {
+    const record = getRecord(branchId);
+    if (!record) return false;
+    if (record.state !== VR_RUNE_STONE_STATE.LOCKED_BY_ASTRO) return false;
+    record.state = VR_RUNE_STONE_STATE.CARRIED_ORBIT;
+    return true;
+  };
+  const releaseFromAstro = (branchId) => {
     const record = getRecord(branchId);
     if (!record) return false;
     if (record.state === VR_RUNE_STONE_STATE.FREE) return true;
-    if (record.state !== VR_RUNE_STONE_STATE.LOCKED_BY_ASTRO) return false;
+    if (record.state !== VR_RUNE_STONE_STATE.LOCKED_BY_ASTRO
+      && record.state !== VR_RUNE_STONE_STATE.CARRIED_ORBIT) return false;
     record.state = VR_RUNE_STONE_STATE.FREE;
     return true;
   };
@@ -145,7 +154,8 @@ export function createVrRuneStoneActor({ parent, assetManager, layer }) {
     getInteractionRadius: (branchId) => getBoundingSphere(branchId)?.radius ?? null,
     getFamilyCode: (branchId) => getRecord(branchId)?.familyCode ?? null,
     lockByAstro,
-    unlockFromAstro,
+    beginCarriedOrbit,
+    releaseFromAstro,
     update,
     reset,
     dispose

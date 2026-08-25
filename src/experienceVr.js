@@ -886,9 +886,13 @@ runeStoneAttractorInteraction = createVrRuneStoneAttractorInteraction({
   handModeController, semanticInput, attractorTool, maxTargetDistance: runeStoneMaxTargetDistance,
   settings: { scanThreshold: settings.shellAttractor.scanThreshold,
     triggerThreshold: settings.shellAttractor.triggerThreshold,
+    pullAcceleration: settings.shellAttractor.pullAcceleration,
+    maxPullSpeed: settings.shellAttractor.maxPullSpeed,
     scanCone: { ...settings.shellAttractor.scanCone,
       color: settings.attractorPresentation.bandColors.shells } },
   haloSettings: settings.targetHalo,
+  platformCenter: progressFloor.object,
+  getPlayerWorldPosition: (target) => getXrHeadWorldPosition({ renderer, camera, playerRig, target }),
   isHigherPriorityInteractionActive: (record) => Boolean(activateButton.hits.get(record)
     || releaseButton.hits.get(record) || astroFurnaceOpenInteraction.hasCurrentHit(record)
     || astroFurnaceActivateInteraction.hasCurrentHit(record) || astroFurnaceOptionInteraction.hasCurrentHit(record)
