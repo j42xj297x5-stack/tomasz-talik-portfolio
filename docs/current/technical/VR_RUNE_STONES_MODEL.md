@@ -4,6 +4,7 @@
 
 - **Status:** **KANONICZNY MODEL TECHNICZNO-GAMEPLAYOWY / PARTIALLY IMPLEMENTED**.
 - **Implemented through:** `RUNE A6`.
+- **Queued before next gameplay milestone:** `RUNE UI-1 — Astro Furnace panel structure and readability normalization`.
 - **Next milestone:** `RUNE A7 — RUNESTONES Astro band`.
 - **Canonical runtime boundary:** `4.80`.
 - Ten dokument jest jedynym kanonicznym źródłem prawdy całego Rune Stone Act: synchronizacji Astrolabium, Pieca, pięciu pair-specific par elementarnych, specjalnego kamienia Eter, mostów, transportu, instalacji i finalnego polowania Wody.
@@ -276,7 +277,7 @@ Sterowanie/obracanie aktywnego sektora lub anteny po pierwszej instalacji wymaga
 
 Każdy milestone jest osobnym bounded taskiem i kończy się przed rozpoczęciem następnego.
 
-**CURRENT IMPLEMENTATION CHECKPOINT:** RUNE A6 complete → next RUNE A7.
+**CURRENT IMPLEMENTATION CHECKPOINT:** RUNE A6 complete → `RUNE UI-1` queued → next gameplay milestone RUNE A7.
 
 ### RUNE A1 — Furnace process presentation simplification
 - **Status:** **IMPLEMENTED**
@@ -339,6 +340,73 @@ Poza A5 pozostają: integracja persistence/reconstruction ze Scenario, pasmo `RU
 - **Rezultat:** existing `SPHERE_FAR = 80 m`, deterministic full-sphere, black/unlit, sphere angular speed `0.01 rad/s`, zachowane `K/T/S/L/R` oraz usunięte po `4.80` direct Large Glyph scan/target/pull.
 - **Nie implementuje:** Rune Stone materialization, field `RUNE_STONES`, pasma `RUNESTONES`, anteny, późniejszego polowania na Large Glyph Metal/Water ani technology-overload retreat poza obecne `80 m`.
 - **Kryterium zakończenia:** post-Tier3 presentation/access Large Glyph odpowiada rezultatowi bez przypisywania A6 prezentacji Rune Stones.
+
+### RUNE UI-1 — Astro Furnace panel structure and readability normalization
+- **Status:** **QUEUED / NOT IMPLEMENTED**
+- **Cel:** przed rozpoczęciem A7 przebudować nawigację i warstwę prezentacyjną panelu Astro Pieca tak, aby istniejące oraz przyszłe strojenia używały jednego czytelnego języka UI.
+- **Właściciel:** Furnace panel projection/presentation. Gameplay ownerzy, istniejące procesy i progression truth pozostają bez zmian.
+- **Granica:** zadanie UI/presentation. Nie zmienia A1–A6, nie implementuje pasma `RUNESTONES`, materializacji kamieni, transportu, instalacji ani nowych Scenario pointów.
+
+#### Nawigacja Pieca
+
+Panel zachowuje trzy główne opcje.
+
+- **Kula Asterionowa** — w tym zadaniu zachowuje istniejący flow i zachowanie.
+- **Astrolabium Więzi** — staje się wejściem do podmenu:
+  1. **Utwórz Astrolabium Więzi** — otwiera obecną planszę tworzenia Astrolabium, bez zmiany jej istniejącego gameplayu;
+  2. **Strojenie Glifów** — otwiera istniejącą, już zaimplementowaną planszę strojenia glifów;
+  3. **Strojenie Kamieni Runicznych** — nowa powierzchnia UI dla rune-tuning flow; samo pojawienie się tej pozycji nie implementuje A7 ani nowej mechaniki targetowania kamieni.
+- Trzecia istniejąca główna opcja Pieca pozostaje poza zakresem tego zadania i nie jest przemianowywana ani przebudowywana.
+
+#### Wspólny porządek rodzin w tabelach
+
+Dla tabel skorup, Small Glyph oraz przyszłej tabeli Kamieni Runicznych obowiązuje jeden układ `3 × 2`:
+
+```text
+DREWNO | OGIEŃ | ZIEMIA
+METAL  | WODA  | ETER
+```
+
+Jest to kontrakt kolejności **prezentacji UI**, a nie nowa definicja naturalnych rodzin progresji. Eter pozostaje specjalnym `VI` zgodnie z sekcją 10.3 i nie staje się szóstą naturalną `familyCode`, szóstą standardową parą ani szóstym installed slotem.
+
+- Zachować obecne łacińskie oznaczenia rodzin (`Ki`, `Ti` itd.) jako pomocnicze podpisy czytelności.
+- Usunąć z obecnej planszy strojenia wskazany dodatkowy, aktualnie nieaktywny element UI. Usunięcie nie może usuwać ani zastępować pola **Eter** w docelowej tabeli `3 × 2`.
+
+#### Czytelność komórek
+
+- Każda komórka wykorzystuje możliwie dużą część własnej bezpiecznej powierzchni na znak lub ikonę.
+- Znaki rodzin, mimo wcześniejszego powiększenia, mogą zostać powiększone dalej do granicy czytelnego marginesu.
+- Ikony Small Glyph wymagają wyraźnego powiększenia względem obecnej prezentacji.
+- Nie pozostawiać pustej przestrzeni bez funkcji; margines ma jedynie chronić przed clippingiem i wzajemnym nachodzeniem elementów.
+- Dokładna skala znaków, ikon i padding pozostają **TUNING** do oceny w VR.
+
+#### Strojenie Kamieni Runicznych
+
+- Komórki tabeli wyboru pokazują wyłącznie znaki rodzin.
+- Nie pokazują fizycznych reprezentacji dużych Kamieni Runicznych, ponieważ gameplay operuje na pair-specific parach świata, a panel ma identyfikować rodzinę, nie zastępować obiektu świata miniaturą.
+
+#### Normalizacja strefy ekstrakcji
+
+Dolna strefa ekstrakcji w modułach **Kula Asterionowa** i **Astrolabium Więzi** ma używać wspólnego kontraktu ustawienia pasków:
+
+- znormalizować ich geometrię i wzajemne wyrównanie;
+- odsunąć je bardziej ku zewnętrznym krawędziom całego panelu, zachowując czytelny margines;
+- dokładny offset pozostaje **TUNING**.
+
+Dla modułu strojenia Kamieni Runicznych wizualizacja ekstrakcji pokazuje jednocześnie dwa konsumowane składniki:
+
+- **Shell** i **Small Glyph** obok siebie;
+- jako uproszczone, rotujące siatki/wireframe zgodne z językiem istniejących osobnych wizualizacji;
+- z takim odstępem, aby nie nachodziły na siebie podczas pełnego obrotu.
+
+#### Wizualizacje Kuli i Astrolabium
+
+- W module tworzenia **Kuli Asterionowej** pełna wizualizacja Kuli ze skorupami przyklejonymi na powierzchni ma w fazie wizualizacji ekstrakcji całkowicie zaniknąć.
+- Jej miejsce w centrum zajmuje uproszczona siatka krawędziowa / wireframe Kuli Asterionowej.
+- Siatki krawędziowe Kuli Asterionowej i Astrolabium Więzi należy poprawić pod względem czytelności i jakości; obecne uproszczenia nie są poziomem docelowym.
+- Pozostałe zachowanie i prezentacja istniejących modułów pozostają bez zmian.
+
+- **Kryterium zakończenia:** przebudowany panel zachowuje istniejący gameplay Kuli i strojenia glifów, udostępnia jednoznaczną hierarchię Astrolabium, wszystkie wskazane tabele mają ten sam porządek `3 × 2`, znaki/ikony efektywnie wypełniają komórki, strefy ekstrakcji są wyrównane, a wizualizacje Kuli/Astrolabium oraz pary Shell + Small Glyph spełniają powyższy kontrakt bez zmiany progression truth.
 
 ### RUNE A7 — RUNESTONES Astro band
 - **Status:** **TARGET / NOT IMPLEMENTED**
