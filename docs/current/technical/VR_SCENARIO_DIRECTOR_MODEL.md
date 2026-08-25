@@ -50,6 +50,8 @@ Bieżące `stateAt(4.40)` nie authoruje `protoAstroTuning.extractedFamilyCodes`.
 
 Designer checkpoint jest aliasem QA, nie drugim pointem ani źródłem capabilities. P3 nie jest jedyną późną reconstruction-backed możliwością: production `stateAt/activatePoint` obejmuje canonical pointy przez `4.40` w opisanym zakresie. `100.10` pozostaje niedozwolonym reconstruction startem. Nazwy przyszłych P3/P4 etapów narracyjnych nie zmieniają obecnej granicy.
 
+Canonical debug checkpoint intent `p5` ma hydratować stable settled state odpowiadający wejściu w Rune Stone Act / boundary `4.80`: trzeci krąg jest ukończony, wszystkie wcześniejsze konsekwencje są settled, a Large Glyph, Small Glyph, Shell i world presentation mają właściwy stan wejściowy. `p5` pozostaje aliasem debug/QA; nie jest nowym authored Scenario pointem, nie nadaje własnych capabilities i nie zmienia canonical graphu.
+
 ## Communication i domain seams
 
 Scenario authoruje należność progression beats, ale Guidance renderuje komunikację. Dynamic Monkey knowledge, Player Guide current task/tools oraz B line są runtime projections capabilities/domain truth. Tuning truth nie należy do Directora ani Scenario.
