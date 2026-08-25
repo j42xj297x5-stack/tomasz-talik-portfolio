@@ -343,10 +343,7 @@ const astroFurnace = createVrAstroFurnace({
 const furnaceProgressionController = createVrAstroFurnaceProgressionController();
 const asterionProductionController = createVrAsterionProductionController({
   progressionController: furnaceProgressionController, sphere: asterionSphere,
-  contentAnchor: astroFurnace.nodes.VR_FURNACE_CONTENT_ANCHOR,
-  chamber: astroFurnace.nodes.komora,
-  chamberCylinder: resolveChamberCylinder(astroFurnace.nodes.komora, settings.furnace.content.chamberClearance),
-  energyCell: astroFurnace.nodes.energy_cell ?? astroFurnace.nodes.fire_cell,
+  productVolume: astroFurnace.nodes.VR_FURNACE_PRODUCT_VOLUME,
   controllers: vrControllers.controllers, settings: { ...settings.asterionSphere.production,
     contentClearance: settings.furnace.content.contentClearance },
   haloSettings: settings.targetHalo,
@@ -469,10 +466,7 @@ const handModeController = createVrHandModeController({
 asterionProductionController.setHandModeController(handModeController);
 const astroAttractorProductionController = createVrAstroAttractorProductionController({
   model: assetManager.cloneGltfScene('vr-astro-attractor-model'),
-  contentAnchor: astroFurnace.nodes.VR_FURNACE_CONTENT_ANCHOR,
-  chamber: astroFurnace.nodes.komora,
-  chamberCylinder: resolveChamberCylinder(astroFurnace.nodes.komora, settings.furnace.content.chamberClearance),
-  energyCell: astroFurnace.nodes.energy_cell ?? astroFurnace.nodes.fire_cell,
+  productVolume: astroFurnace.nodes.VR_FURNACE_PRODUCT_VOLUME,
   controllers: vrControllers.controllers,
   processDriver: {
     startConstruction: (kind) => astroFurnaceActivateInteraction?.startConstruction?.(kind) === true,
