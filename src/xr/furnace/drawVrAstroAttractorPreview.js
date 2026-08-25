@@ -4,11 +4,13 @@ const TAU = Math.PI * 2;
 // grip, outer cage, calibration rings and the five energy guides. It deliberately
 // contains no triangulated/mesh edges, so rotation cannot expose a broken polygon grid.
 export const ASTRO_ATTRACTOR_PANEL_CURVES = Object.freeze([
+  { id: 'spine', points: [[0, -.92, -.04], [-.10, -.42, .02], [.10, .38, .08], [0, .98, .04]] },
   { id: 'grip-left', points: [[-.18, -.92, .02], [-.34, -.72, .06], [-.31, -.42, .08], [-.23, -.20, .03]] },
   { id: 'grip-right', points: [[.18, -.92, .02], [.34, -.72, .06], [.31, -.42, .08], [.23, -.20, .03]] },
   { id: 'cage-left', points: [[-.23, -.20, .03], [-.72, -.02, .12], [-.78, .54, .02], [-.38, .78, -.02]] },
   { id: 'cage-right', points: [[.23, -.20, .03], [.72, -.02, .12], [.78, .54, .02], [.38, .78, -.02]] },
   { id: 'crown', points: [[-.38, .78, -.02], [-.18, .98, .04], [.18, .98, .04], [.38, .78, -.02]] },
+  { id: 'shoulders', points: [[-.72, -.02, .12], [-.38, .18, .28], [.38, .18, .28], [.72, -.02, .12]] },
   { id: 'fuel-earth', points: [[-.20, -.15, .11], [-.50, .10, .26], [-.47, .54, .18], [-.22, .70, .08]] },
   { id: 'fuel-water', points: [[.20, -.15, .11], [.50, .10, .26], [.47, .54, .18], [.22, .70, .08]] },
   { id: 'fuel-fire', points: [[-.12, -.20, -.10], [-.24, .12, -.30], [-.20, .52, -.25], [-.08, .72, -.10]] },
@@ -17,7 +19,8 @@ export const ASTRO_ATTRACTOR_PANEL_CURVES = Object.freeze([
 ]);
 
 export const ASTRO_ATTRACTOR_PANEL_RINGS = Object.freeze([
-  { y: .34, radius: .48, depth: .03 }, { y: .38, radius: .37, depth: .02 }, { y: .42, radius: .27, depth: 0 }
+  { y: .30, radius: .54, depth: .04 }, { y: .36, radius: .42, depth: .02 },
+  { y: .42, radius: .30, depth: 0 }, { y: .46, radius: .18, depth: -.01 }
 ]);
 
 function rotate([x, y, z], yaw, pitch) {
@@ -35,8 +38,8 @@ function project(point, cx, cy, scale, yaw, pitch) {
 export function drawVrAstroAttractorPreview(context, { cx, cy, scale, elapsed = 0, color = '#c8ac70', bright = false }) {
   const yaw = elapsed * .34, pitch = -.16;
   context.save(); context.strokeStyle = color; context.lineCap = 'round'; context.lineJoin = 'round';
-  context.globalAlpha = bright ? .98 : .74; context.lineWidth = bright ? 3.2 : 2.35;
-  context.shadowColor = color; context.shadowBlur = bright ? 18 : 8;
+  context.globalAlpha = bright ? .98 : .82; context.lineWidth = bright ? 3.5 : 2.7;
+  context.shadowColor = color; context.shadowBlur = bright ? 20 : 10;
   ASTRO_ATTRACTOR_PANEL_CURVES.forEach(({ points }) => {
     const [start, controlA, controlB, end] = points.map((point) => project(point, cx, cy, scale, yaw, pitch));
     context.beginPath(); context.moveTo(...start); context.bezierCurveTo(...controlA, ...controlB, ...end); context.stroke();
