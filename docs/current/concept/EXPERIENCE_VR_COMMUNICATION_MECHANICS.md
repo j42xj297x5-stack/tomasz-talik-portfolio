@@ -9,6 +9,8 @@
 
 **Player Y persistent memory.** Panel Y przechowuje trwałą wiedzę praktyczną o Piecu, Astrolabium Więzi i Kuli Asterionowej oraz pokazuje `AKTUALNE ZADANIE`. Guidance projektuje prawdę Scenario i domain owners; nie posiada gameplayu ani completion progresji.
 
+**WORLD EXISTS BEFORE MECHANIC — communication consequence.** Gdy world object był widoczny przed odblokowaniem jego mechaniki, późniejsza komunikacja ujawnia jego znaczenie lub nową capability zamiast sugerować, że obiekt właśnie się pojawił. Literalne copy pozostaje osobnym zadaniem; Guidance nie zmienia visibility w capability ani targetability.
+
 ## Jeden CURRENT OBJECTIVE
 
 Jedynym ownerem modelu bieżącego celu jest `createVrCurrentObjectiveProjection`. Ta sama instancja i ten sam wynik `{ id, body }` zasilają `Y → AKTUALNE ZADANIE` oraz `Małpa → CO TERAZ?`.
