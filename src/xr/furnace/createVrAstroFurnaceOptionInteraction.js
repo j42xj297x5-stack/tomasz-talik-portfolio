@@ -3,6 +3,7 @@ import { createVrTargetHalo } from '../createVrTargetHalo.js';
 
 export const ASTRO_FURNACE_ACTIVE_MODE = 'floor_gyroscope_sphere';
 export const ASTRO_FURNACE_ASTRO_ATTRACTOR_MODE = 'astro_attractor';
+export const ASTRO_FURNACE_RUNE_TUNING_MODE = 'rune_tuning';
 
 export function createVrAstroFurnaceOptionInteraction({ furnace, panel, controllers = [], settings = {}, haloSettings = {},
   isOrdinaryRayAvailable = () => true, isHigherPriorityInteractionActive = () => false, onPanelOpen = () => {} }) {
@@ -38,10 +39,12 @@ export function createVrAstroFurnaceOptionInteraction({ furnace, panel, controll
   function press(record) { if (disposed || !hits.get(record) || !isOrdinaryRayAvailable(record)) return false;
     const opening = !panel.isVisible(); panel.toggle(); if (opening) onPanelOpen(); return true; }
   function selectMode(mode) {
-    if (![ASTRO_FURNACE_ACTIVE_MODE, ASTRO_FURNACE_ASTRO_ATTRACTOR_MODE].includes(mode)) return false;
+    if (![ASTRO_FURNACE_ACTIVE_MODE, ASTRO_FURNACE_ASTRO_ATTRACTOR_MODE, ASTRO_FURNACE_RUNE_TUNING_MODE].includes(mode)) return false;
     const angle = moduleAngles?.[mode] ?? (mode === ASTRO_FURNACE_ASTRO_ATTRACTOR_MODE ? 0 : undefined);
-    if (!pivot || !Number.isFinite(angle)) return false;
-    activeMode = mode; tweenStart = currentAngle; tweenTarget = THREE.MathUtils.degToRad(angle); tweenElapsed = 0;
+    activeMode = mode;
+    if (pivot && Number.isFinite(angle)) {
+      tweenStart = currentAngle; tweenTarget = THREE.MathUtils.degToRad(angle); tweenElapsed = 0;
+    }
     return true;
   }
   const unsubscribeModule = panel.subscribeModuleActivation?.(selectMode) ?? (() => {});

@@ -43,12 +43,14 @@ import { createVrAstroFurnace } from './xr/furnace/createVrAstroFurnace.js';
 import { createVrAstroFurnaceOpenInteraction } from './xr/furnace/createVrAstroFurnaceOpenInteraction.js';
 import { ASTRO_FURNACE_PROCESS_KINDS, createVrAstroFurnaceActivateInteraction } from './xr/furnace/createVrAstroFurnaceActivateInteraction.js';
 import { resolveChamberCylinder } from './xr/furnace/vrAstroFurnaceChamberCylinder.js';
-import { ASTRO_FURNACE_ACTIVE_MODE, ASTRO_FURNACE_ASTRO_ATTRACTOR_MODE, createVrAstroFurnaceOptionInteraction } from './xr/furnace/createVrAstroFurnaceOptionInteraction.js';
+import { ASTRO_FURNACE_ACTIVE_MODE, ASTRO_FURNACE_ASTRO_ATTRACTOR_MODE, ASTRO_FURNACE_RUNE_TUNING_MODE, createVrAstroFurnaceOptionInteraction } from './xr/furnace/createVrAstroFurnaceOptionInteraction.js';
 import { createVrAstroFurnacePanel } from './xr/furnace/createVrAstroFurnacePanel.js';
 import { createVrAstroFurnaceProcessSource } from './xr/furnace/createVrAstroFurnaceProcessSource.js';
 import { createVrAstroFurnaceContentSource } from './xr/furnace/createVrAstroFurnaceContentSource.js';
 import { createVrAstroFurnaceProgressionController } from './xr/furnace/createVrAstroFurnaceProgressionController.js';
 import { createVrAstroFurnaceContentInteraction } from './xr/furnace/createVrAstroFurnaceContentInteraction.js';
+import { createVrAstroFurnaceRuneRecipeInteraction } from './xr/furnace/createVrAstroFurnaceRuneRecipeInteraction.js';
+import { createVrRuneRecipeSelectionController } from './xr/runes/createVrRuneRecipeSelectionController.js';
 import { createVrProtoAstroTuningController } from './xr/protoAstro/createVrProtoAstroTuningController.js';
 import { createVrAsterionSphere } from './xr/asterion/createVrAsterionSphere.js';
 import { createVrAsterionGyroInteraction } from './xr/asterion/createVrAsterionGyroInteraction.js';
@@ -542,6 +544,18 @@ let introCrystalTutorial = null;
 let astroFurnaceActivateInteraction = null;
 let astroFurnaceContentInteraction = null;
 let astroFurnaceOptionInteraction = null;
+const runeOpenInteractionSource = { getState: () => astroFurnaceOpenInteraction?.getState?.() ?? 'CLOSED' };
+const runeActivateInteractionSource = { getState: () => astroFurnaceActivateInteraction?.getState?.() ?? 'IDLE' };
+const astroFurnaceRuneRecipeInteraction = createVrAstroFurnaceRuneRecipeInteraction({
+  furnace: astroFurnace, shellSystem, smallGlyphSystem,
+  openInteraction: runeOpenInteractionSource, activateInteraction: runeActivateInteractionSource,
+  isModeActive: () => astroFurnaceOptionInteraction?.getActiveMode?.() === ASTRO_FURNACE_RUNE_TUNING_MODE,
+  takeHeldShell: (shell) => shellAttractorInteraction?.transferHeldShell(shell) === true,
+  takeHeldSmallGlyph: (glyph) => smallGlyphAttractorInteraction?.transferHeldGlyph(glyph) === true
+});
+const runeRecipeSelectionController = createVrRuneRecipeSelectionController({
+  progressionController, runeRecipeInteraction: astroFurnaceRuneRecipeInteraction
+});
 const furnaceContentSource = createVrAstroFurnaceContentSource({
   getInteraction: () => astroFurnaceContentInteraction,
   getChamberState: () => astroFurnaceOpenInteraction?.getState?.() ?? 'CLOSED'
@@ -551,6 +565,8 @@ const furnacePanel = createVrAstroFurnacePanel({
   progressionController: furnaceProgressionController, productionController: asterionProductionController,
   astroProductionController: astroAttractorProductionController,
   protoAstroTuningController,
+  runeRecipeInteraction: astroFurnaceRuneRecipeInteraction,
+  runeRecipeSelectionController,
   canUseAstroProduction: () => runtimeExperience?.can(
     VR_SCENARIO_CAPABILITY.CAN_START_FURNACE_PROCESS
   ) === true,
@@ -576,7 +592,8 @@ const astroFurnaceOpenInteraction = createVrAstroFurnaceOpenInteraction({
   haloSettings: settings.targetHalo,
   isOrdinaryRayAvailable: ordinaryFurnaceRayAvailable,
   canToggle: () => !astroFurnaceActivateInteraction?.isProcessing(),
-  isModeActive: () => [ASTRO_FURNACE_ACTIVE_MODE, ASTRO_FURNACE_ASTRO_ATTRACTOR_MODE].includes(astroFurnaceOptionInteraction?.getActiveMode?.()),
+  isModeActive: () => [ASTRO_FURNACE_ACTIVE_MODE, ASTRO_FURNACE_ASTRO_ATTRACTOR_MODE, ASTRO_FURNACE_RUNE_TUNING_MODE]
+    .includes(astroFurnaceOptionInteraction?.getActiveMode?.()),
   onOpeningStart: () => {
     astroFurnaceActivateInteraction?.releaseForOpening();
     playVrDevice(VR_AUDIO.chamberOpen);
@@ -1144,6 +1161,9 @@ function renderFrame() {
   astroFurnaceContentInteraction.reportHeldShell(shellAttractorInteraction?.heldShell);
   astroFurnaceContentInteraction.reportHeldSmallGlyph(smallGlyphAttractorInteraction?.heldGlyph);
   astroFurnaceContentInteraction.update(delta);
+  astroFurnaceRuneRecipeInteraction.reportHeldShell(shellAttractorInteraction?.heldShell);
+  astroFurnaceRuneRecipeInteraction.reportHeldSmallGlyph(smallGlyphAttractorInteraction?.heldGlyph);
+  astroFurnaceRuneRecipeInteraction.update(delta);
   largeGlyphActor.update(delta);
   largeGlyphAttractorInteraction.update(delta);
   postRingPresentation.update(delta);
@@ -1213,6 +1233,8 @@ function restoreVrScenarioBaseline() {
   astroFurnaceOpenInteraction.reset();
   astroFurnaceActivateInteraction.reset();
   astroFurnaceContentInteraction.reset();
+  astroFurnaceRuneRecipeInteraction.resetBaseline();
+  runeRecipeSelectionController.reset();
   protoAstroTuningController.resetBaseline();
   crystalCollection.reset();
   reliquaryHints.reset();
@@ -1326,6 +1348,8 @@ window.addEventListener('pagehide', () => {
   astroFurnaceOpenInteraction.dispose();
   astroFurnaceActivateInteraction.dispose();
   astroFurnaceContentInteraction.dispose();
+  astroFurnaceRuneRecipeInteraction.dispose();
+  runeRecipeSelectionController.dispose();
   astroFurnaceOptionInteraction.dispose();
   playerGuidePanel.dispose();
   toolGuidanceLifecycle.dispose();
