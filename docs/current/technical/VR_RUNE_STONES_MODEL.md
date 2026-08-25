@@ -4,8 +4,8 @@
 
 - **Status:** **KANONICZNY MODEL TECHNICZNO-GAMEPLAYOWY / PARTIALLY IMPLEMENTED**.
 - **Implemented:** `RUNE A1–A8` oraz `RUNE UI-1 — Astro Furnace panel structure and readability normalization`.
-- **Next required foundation correction:** natural Rune tuning must no longer be gated by sector completeness.
-- **Next actor milestone after that:** `RUNE A9 — pair-generic Rune Stone transport + installation`.
+- **Foundation correction:** natural Rune tuning sector gate — **RESOLVED**; implementation evidence: `1d8d5ad — Decouple natural Rune tuning from sector completion`.
+- **Next actor milestone:** `RUNE A9 — pair-generic Rune Stone transport + installation`.
 - **Scenario authoring:** **DEFERRED TO SEPARATE THREAD**.
 - **Canonical authored Scenario/runtime progression boundary:** `4.80`.
 - Dokument jest kanonicznym źródłem prawdy Rune Stone Act: strojenia Astrolabium, targetability, pięciu naturalnych pair-specific par, mostów, transportu, instalacji, specjalnego flow Eteru i finalnego polowania Wody.
@@ -33,7 +33,7 @@ Nie istnieje jedno wspólne `eligibility`. System bezwzględnie rozdziela:
 
 Od wejścia w Rune Stone Act wszystkie pięć naturalnych rodzin może być wybierane i strojone w Astro Piecu. Kompletność paneli sektora **nie blokuje** natural Rune tuning. Gracz może nastroić dowolną liczbę rodzin bez wymuszonej kolejności.
 
-Aktualny runtime A4 nadal wylicza tuning eligibility z kompletności sektorów. Jest to **jawna rozbieżność implementacyjna** względem niniejszego kanonu. Wymagany późniejszy, bounded follow-up runtime brzmi: **natural Rune tuning must no longer be gated by sector completeness**. Korekta nie jest zaimplementowana w tym zadaniu.
+Natural family availability wynika wyłącznie z `PROTO_ASTRO_NATURAL_FAMILY_CODES`. Rodzina jest tunable wtedy i tylko wtedy, gdy jest naturalna i nie została jeszcze nastrojona; rodziny obecnej w `tunedRuneFamilies` nie można nastroić ponownie. Availability i tunability nie zależą od sector completeness, bridge readiness, installation readiness, zainstalowanych Rune Stones ani kolejności progresji platformy.
 
 ### 3.2. Natural Rune Stone targetability
 
@@ -46,6 +46,8 @@ Nastrojona naturalna rodzina jest legalnym targetem Astrolabium w paśmie `RUNES
 ### 3.3. Platform installation readiness
 
 Installation readiness jest osobnym prawem, normalnie pochodzącym wyłącznie z ukończenia wszystkich paneli właściwego sektora. Rune domain czyta istniejącego ownera progresji sektora i nie tworzy drugiej listy ukończonych paneli. Readiness nie jest kopią progression.
+
+Aktualna foundation correction nie podłącza installation readiness do aktora mostu. Synchronizacja bridge readiness pozostaje przyszłym zakresem integration/domain; sector completeness może nadal być źródłem platform installation readiness, lecz nigdy natural Rune tuning.
 
 | Naturalna para | Installation readiness po `4.80` |
 | --- | --- |
@@ -81,6 +83,10 @@ Wybrana naturalna rodzina i poprawna para wystarczają do walidacji receptury; s
 - Successful COMPLETE konsumuje oba składniki i atomowo zapisuje naturalną rodzinę w `tunedRuneFamilies`; abort nie konsumuje składników i nie zapisuje truth.
 - Wynikiem jest semantyczna sylaba, nie fizyczny item. Rune Stone nigdy nie trafia do Pieca.
 - Komora i dolna pokrywa nie wykonują process-spin; wewnętrzne światło i energy points mogą używać fazy procesu.
+
+`RuneRecipeSelectionController` nie zależy od `progressionController` i nie odczytuje `isBranchComplete()`, sector state, bridge state, installation readiness ani Scenario state. Publiczna semantyka selection używa `isFamilyAvailable()`, `getAvailableFamilyCodes()` i `availableFamilyCodes`; zachowane są `isFamilyTunable()`, `getTunableFamilyCodes()`, `tunableFamilyCodes` oraz `tunedFamilyCodes`.
+
+HOME pokazuje neutralne `5 RODZIN`, bez licznika `X ELIGIBLE`. Naturalne rodziny używają stanów `DOSTĘPNA`, `WYBRANA` i `ZESTROJONA`. Eter pozostaje nieaktywnym `SPECJALNY` poza naturalnym tuning contract; ta korekta nie jest przebudową layoutu UI.
 
 Naturalne `tunedRuneFamilies`, specjalny Ether tuning truth oraz `installedRuneFamilies` są odrębnymi faktami. `ProtoAstroTuningController` zachowuje wyłącznie naturalne essences dla Large Glyph i nie posiada Rune Stone tuning ani installation truth.
 
@@ -261,7 +267,8 @@ Ten dokument nie ustala literal copy. Copy należy później zsynchronizować z 
 
 - **Status:** **IMPLEMENTED**.
 - A1–A5 dostarczyły rune-domain foundation, dwa typed recipe slots, naturalny resolver Wu Xing, panel selection, pojedynczy `18 s` process i trwałe `tunedRuneFamilies`.
-- A4 zachowuje zaimplementowane sector-derived tuning eligibility, obecnie znane jako rozbieżność z nowym kanonem.
+- Historyczny A4 pierwotnie dostarczył sector-derived tuning eligibility. Current contract został skorygowany przez bounded follow-up `1d8d5ad`, który usunął ten gate zgodnie ze zrewidowanym kanonem; A4 pozostaje **IMPLEMENTED**.
+- **Implementation evidence follow-up:** `1d8d5ad — Decouple natural Rune tuning from sector completion`.
 - A6 dostarczyło post-Tier-3 transition Large Glyph do `SPHERE_FAR = 80 m` i odcięcie starego direct targetowania po `4.80`.
 - UI-1 dostarczyło hierarchię Furnace UI i wspólną prezentację `3 × 2`; Eter w UI pozostaje specjalnym `VI`, nie naturalną rodziną.
 
@@ -364,10 +371,11 @@ Ten dokument nie ustala literal copy. Copy należy później zsynchronizować z 
 RUNE A1–A8: IMPLEMENTED
 RUNE UI-1: IMPLEMENTED
 
-NEXT REQUIRED FOUNDATION CORRECTION:
-natural Rune tuning must no longer be gated by sector completeness
+FOUNDATION CORRECTION:
+natural Rune tuning sector gate — RESOLVED
+evidence: 1d8d5ad
 
-NEXT ACTOR MILESTONE AFTER THAT:
+NEXT ACTOR MILESTONE:
 RUNE A9 — pair-generic Rune Stone transport + installation
 
 SCENARIO AUTHORING:
@@ -377,7 +385,7 @@ CANONICAL AUTHORED SCENARIO/RUNTIME PROGRESSION BOUNDARY:
 4.80
 ```
 
-**Known implementation divergence:** current natural Rune tuning is still sector-gated in runtime A4 and requires a later bounded correction to match the revised canon. Ten follow-up nie jest zaimplementowany w ramach aktualizacji dokumentacji.
+**Known implementation divergence — RESOLVED:** sector-gated natural Rune tuning was resolved by `1d8d5ad — Decouple natural Rune tuning from sector completion`.
 
 ## 16. Powiązane dokumenty i przyszły sync
 
