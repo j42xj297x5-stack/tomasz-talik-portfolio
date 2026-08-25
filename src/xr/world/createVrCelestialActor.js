@@ -156,13 +156,18 @@ export function createVrCelestialActor({ parent, assetManager, keyLight, layer, 
   const boundingRadius = sunBoundingSphere.radius;
   const requiredRadius = boundingRadius * 1.15;
   const lightOffsetFromSun = Math.max(3, requiredRadius * 2.5);
+  const sunLightRig = new THREE.Group();
+  sunLightRig.name = 'VrCelestialSunLightRig';
   const sunLight = new THREE.SpotLight(
     settings.sun.light.color,
     settings.sun.light.intensity,
-    lightOffsetFromSun + requiredRadius,
+    settings.sun.light.distance,
     Math.asin(requiredRadius / lightOffsetFromSun)
   );
   sunLight.name = 'VrCelestialSunLight';
+  sunLight.intensity = settings.sun.light.intensity;
+  sunLight.decay = settings.sun.light.decay;
+  sunLight.distance = settings.sun.light.distance;
   sunLight.castShadow = false;
   const lightTarget = new THREE.Object3D();
   lightTarget.name = 'VrCelestialSunLightTarget';
@@ -171,7 +176,8 @@ export function createVrCelestialActor({ parent, assetManager, keyLight, layer, 
     sunWorld.clone().addScaledVector(sunDirection, -lightOffsetFromSun)
   ));
   sunLight.target = lightTarget;
-  root.add(sunLight, lightTarget);
+  sunLightRig.add(sunLight, lightTarget);
+  root.add(sunLightRig);
   const starField = createStarField(layer, settings.stars);
   root.add(starField.points);
   let opacity = 0;
