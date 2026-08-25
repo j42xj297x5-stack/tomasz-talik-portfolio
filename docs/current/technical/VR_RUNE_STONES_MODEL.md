@@ -314,12 +314,15 @@ Każdy milestone jest osobnym bounded taskiem i kończy się przed rozpoczęciem
 Poza A5 pozostają: integracja persistence/reconstruction ze Scenario, pasmo `RUNESTONES`, fizyczny Rune Stone field, materializacja i instalacja kamieni, bridge oraz Water override.
 
 ### RUNE A6 — Post-Tier-3 spatial transition
+- **Status:** **IMPLEMENTED** dla istniejącego transition `SPHERE_FAR = 80 m`, deterministic full-sphere layout, black/unlit far presentation, very slow far movement i odcięcia starego direct Large Glyph scan/target/pull po `4.80`. Naturalne Proto-Astro tuning truth `K/T/S/L/R` pozostaje zachowane.
 - **Cel:** przedstawić przestrzenną zmianę aktu.
 - **Właściciel:** Rune Stone presentation + `LargeGlyphActor`.
 - **Wejście:** settled Tier 3 / `4.80`.
 - **Rezultat:** kamienie w istniejącym `50–75 m`; Large Glyph w `SPHERE_FAR 80 m`, black/unlit i bardzo wolne.
 - **Nie implementuje:** targetowania niesynchronizowanych kamieni.
 - **Kryterium zakończenia:** warstwy są widoczne, lecz tylko spatial/presentation truth ulega zmianie.
+
+**NOT IMPLEMENTED:** materializacja Rune Stone, pasmo Astro `RUNESTONES`, antena, późniejsze polowanie na Large Glyph Metal/Water oraz technology-overload retreat poza obecne `80 m`.
 
 ### RUNE A7 — RUNESTONES Astro band
 - **Cel:** udostępnić semantyczny band po pierwszym tuning.
