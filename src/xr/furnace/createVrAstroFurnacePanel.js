@@ -19,13 +19,14 @@ export const ASTRO_FURNACE_PANEL_STATES = Object.freeze({
 });
 export const ASTRO_FURNACE_PANEL_SCREENS = Object.freeze({
   HOME: 'HOME', ASTERION_SPHERE: 'ASTERION_SPHERE',
+  ASTROLABIUM_MENU: 'ASTROLABIUM_MENU',
   ASTROLABIUM_PRODUCTION: 'ASTROLABIUM_PRODUCTION', ASTROLABIUM_TUNING: 'ASTROLABIUM_TUNING',
   RUNE_TUNING: 'RUNE_TUNING'
 });
 export const asterionPreviewAnimationActive = ({ panelState, screen }) =>
   panelState === ASTRO_FURNACE_PANEL_STATES.VISIBLE && screen === ASTRO_FURNACE_PANEL_SCREENS.ASTERION_SPHERE;
 export const furnacePanelAnimationActive = ({ panelState, screen }) => panelState === ASTRO_FURNACE_PANEL_STATES.VISIBLE
-  && [ASTRO_FURNACE_PANEL_SCREENS.HOME, ASTRO_FURNACE_PANEL_SCREENS.ASTERION_SPHERE,
+  && [ASTRO_FURNACE_PANEL_SCREENS.HOME, ASTRO_FURNACE_PANEL_SCREENS.ASTERION_SPHERE, ASTRO_FURNACE_PANEL_SCREENS.ASTROLABIUM_MENU,
     ASTRO_FURNACE_PANEL_SCREENS.ASTROLABIUM_PRODUCTION, ASTRO_FURNACE_PANEL_SCREENS.ASTROLABIUM_TUNING,
     ASTRO_FURNACE_PANEL_SCREENS.RUNE_TUNING].includes(screen);
 const smoothstep = (value) => value * value * (3 - 2 * value);
@@ -65,6 +66,7 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
   const yawQuaternion = new THREE.Quaternion(), yawAxis = new THREE.Vector3(0, 1, 0);
   const hits = new Map(controllers.map((record) => [record, null]));
   let state = ASTRO_FURNACE_PANEL_STATES.HIDDEN, screen = ASTRO_FURNACE_PANEL_SCREENS.HOME;
+  let returnScreen = ASTRO_FURNACE_PANEL_SCREENS.HOME;
   let elapsed = 0, telemetryElapsed = 0, lastTelemetryRedraw = 0, completedUntil = 0, previousProcessState = 'IDLE';
   let lastSmallGlyphProcessAssetId = null;
   let hoveredRegion = null, interactiveRegions = [], disposed = false, redrawCount = 0;
@@ -90,6 +92,13 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
     image.src = protoAstro.assetUrl;
     return Object.freeze({ assetId, protoAstro, image });
   });
+  const FAMILY_GRID_CODES = Object.freeze(['L', 'R', 'K', 'T', 'S', 'V']);
+  const FAMILY_GRID = Object.freeze({ x: 90, y: 270, columns: 3, cellWidth: 405, cellHeight: 145, columnGap: 50, rowGap: 30 });
+  const familyGridRect = (index, prefix, enabled = true) => ({ id: `${prefix}-${FAMILY_GRID_CODES[index]}`,
+    x: FAMILY_GRID.x + index % FAMILY_GRID.columns * (FAMILY_GRID.cellWidth + FAMILY_GRID.columnGap),
+    y: FAMILY_GRID.y + Math.floor(index / FAMILY_GRID.columns) * (FAMILY_GRID.cellHeight + FAMILY_GRID.rowGap),
+    width: FAMILY_GRID.cellWidth, height: FAMILY_GRID.cellHeight, enabled });
+  const smallGlyphByFamily = new Map(smallGlyphEntries.map((entry) => [entry.protoAstro.descriptor.familyCode, entry]));
 
   function panelRect(x, y, width, height, options = {}) {
     drawFurnaceFrame(context, { x, y, width, height, cornerSize: options.cornerSize ?? config.frameCornerSizePx, ...options });
@@ -127,7 +136,27 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
       return rect;
     });
   }
-  const runeFamilyLabels = Object.freeze({ earth: 'ZIEMIA', metal: 'METAL', water: 'WODA', tree: 'DREWNO', fire: 'OGIEŃ' });
+  function drawAstrolabiumMenu() {
+    interactiveRegions = [{ id: 'back-modules', x: 90, y: 55, width: 260, height: 70, enabled: true }];
+    panelRect(90, 55, 260, 70, { hovered: hoveredRegion === 'back-modules', accentColor: accents.attractor });
+    text('← MODUŁY', 120, 102, 27); text('ASTROLABIUM WIĘZI', 90, 190, 48);
+    text('NARZĘDZIA SYNCHRONIZACJI', 90, 238, 24, '#b9a779');
+    const entries = [
+      ['astrolabium-create', 'UTWÓRZ ASTROLABIUM WIĘZI', 'Materializacja narzędzia w Astro Piecu'],
+      ['astrolabium-glyph-tuning', 'STROJENIE GLIFÓW', 'Trwała konfiguracja Małych Glifów'],
+      ['astrolabium-rune-tuning', 'STROJENIE KAMIENI RUNICZNYCH', 'Receptury rodzin Wu Xing']
+    ];
+    entries.forEach(([id, title, detail], index) => {
+      const enabled = id !== 'astrolabium-rune-tuning' || (furnace?.capabilities?.runeRecipeAnchorsReady === true
+        && (runeRecipeSelectionController?.getEligibleFamilyCodes?.().length ?? 0) > 0);
+      const rect = { id, x: 90, y: 285 + index * 215, width: 1315, height: 175, enabled };
+      interactiveRegions.push(rect); panelRect(rect.x, rect.y, rect.width, rect.height, { hovered: hoveredRegion === id,
+        active: enabled, locked: !enabled, accentColor: accents.attractor });
+      text(title, rect.x + 38, rect.y + 70, 32, enabled ? '#f1fbff' : '#78909d');
+      text(detail, rect.x + 38, rect.y + 122, 22, enabled ? '#91afbe' : '#667681');
+    });
+  }
+  const runeFamilyLabels = Object.freeze({ earth: 'ZIEMIA', metal: 'METAL', water: 'WODA', tree: 'DREWNO', fire: 'OGIEŃ', astro: 'ETER' });
   const runeLabel = (familyCode) => runeFamilyLabels[PROTO_ASTRO_FAMILIES[familyCode]?.id] ?? familyCode ?? '—';
   function drawRuneTuning() {
     const snapshot = runeRecipeSelectionController?.getSnapshot?.() ?? { eligibleFamilyCodes: [] };
@@ -137,37 +166,45 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
     text('← MODUŁY', 120, 102, 27);
     text('MATRYCA EMANACJI', 90, 180, 46);
     text('WYBIERZ DOCELOWĄ RODZINĘ KAMIENIA', 90, 225, 22, '#b89dd0');
-    PROTO_ASTRO_NATURAL_FAMILY_CODES.forEach((familyCode, index) => {
+    FAMILY_GRID_CODES.forEach((familyCode, index) => {
+      const natural = PROTO_ASTRO_NATURAL_FAMILY_CODES.includes(familyCode);
       const eligible = snapshot.eligibleFamilyCodes.includes(familyCode);
       const tuned = snapshot.tunedFamilyCodes?.includes(familyCode) === true;
       const tunable = snapshot.tunableFamilyCodes?.includes(familyCode) === true;
       const selected = snapshot.selectedFamilyCode === familyCode;
-      const rect = { id: `rune-family-${familyCode}`, x: 90 + index * 270, y: 270, width: 245, height: 125,
-        enabled: tunable && !tuning.processing };
-      interactiveRegions.push(rect);
+      const rect = familyGridRect(index, 'rune-family', natural && tunable && !tuning.processing);
+      if (natural) interactiveRegions.push(rect);
       panelRect(rect.x, rect.y, rect.width, rect.height, { hovered: hoveredRegion === rect.id, active: selected || eligible,
         locked: !eligible, accentColor: accents.emanation });
-      text(runeLabel(familyCode), rect.x + 20, rect.y + 48, 27, eligible ? '#f1eaff' : '#78909d');
-      text(tuned ? 'ZESTROJONA' : selected ? 'SELECTED' : eligible ? 'ELIGIBLE' : 'LOCKED', rect.x + 20, rect.y + 91, 18,
+      const glyph = smallGlyphByFamily.get(familyCode);
+      if (glyph) drawSmallGlyphWireframe(context, { assetId: glyph.assetId, cx: rect.x + rect.width - 82,
+        cy: rect.y + 72, scale: 64, color: eligible ? accents.emanation : accents.idle, alpha: natural ? .9 : .5 });
+      text(`${runeLabel(familyCode)} // ${glyph?.protoAstro.descriptor.syllable ?? familyCode}`, rect.x + 20, rect.y + 48, 27,
+        eligible ? '#f1eaff' : '#78909d');
+      text(!natural ? 'SPECJALNY' : tuned ? 'ZESTROJONA' : selected ? 'SELECTED' : eligible ? 'ELIGIBLE' : 'LOCKED', rect.x + 20, rect.y + 105, 18,
         tuned || selected ? accents.complete : eligible ? '#cdb5e4' : '#70828d');
     });
     const recipe = snapshot.expectedRecipe;
-    panelRect(90, 440, 650, 440, { variant: 'monitor', active: Boolean(recipe), accentColor: accents.emanation });
-    text('RECEPTURA WU XING', 125, 495, 22, '#a990c0');
-    text(`TARGET: ${runeLabel(recipe?.targetFamilyCode)}`, 125, 560, 28);
-    text(`SMALL GLYPH: ${runeLabel(recipe?.smallGlyphFamilyCode)}`, 125, 625, 25);
-    text(`SHELL: ${runeLabel(recipe?.shellFamilyCode)}`, 125, 690, 25);
-    panelRect(785, 440, 620, 440, { variant: 'monitor', active: snapshot.readyForTuning, accentColor: accents.emanation });
-    text('SLOTY RECEPTURY', 825, 495, 22, '#a990c0');
+    panelRect(90, 640, 650, 315, { variant: 'monitor', active: Boolean(recipe), accentColor: accents.emanation });
+    text('RECEPTURA WU XING', 125, 690, 22, '#a990c0');
+    text(`TARGET: ${runeLabel(recipe?.targetFamilyCode)}`, 125, 755, 28);
+    text(`SMALL GLYPH: ${runeLabel(recipe?.smallGlyphFamilyCode)}`, 125, 815, 25);
+    text(`SHELL: ${runeLabel(recipe?.shellFamilyCode)}`, 125, 870, 25);
+    panelRect(785, 640, 620, 315, { variant: 'monitor', active: snapshot.readyForTuning, accentColor: accents.emanation });
+    text('EKSTRAKCJA // SHELL + SMALL GLYPH', 825, 690, 22, '#a990c0');
     const glyphInserted = snapshot.slots?.smallGlyph?.state === 'INSERTED';
     const shellInserted = snapshot.slots?.shell?.state === 'INSERTED';
-    text(`SMALL GLYPH: ${glyphInserted ? `INSERTED / ${runeLabel(snapshot.smallGlyphFamilyCode)}` : 'EMPTY'}`, 825, 565, 23);
-    text(`SHELL: ${shellInserted ? `INSERTED / ${runeLabel(snapshot.shellFamilyCode)}` : 'EMPTY'}`, 825, 625, 23);
+    const runeTelemetry = readTelemetry();
+    drawInsertedShellWireframe(runeTelemetry, 940, 790, 72);
+    const insertedGlyph = resolveVrSmallGlyphProtoAstro(contentSource?.getInsertedSmallGlyphAssetId?.());
+    drawInsertedSmallGlyphWireframe(insertedGlyph, runeTelemetry, 1190, 790, 72);
+    text(`SHELL // ${shellInserted ? runeLabel(snapshot.shellFamilyCode) : 'EMPTY'}`, 850, 895, 18);
+    text(`SMALL GLYPH // ${glyphInserted ? runeLabel(snapshot.smallGlyphFamilyCode) : 'EMPTY'}`, 1080, 895, 18);
     const tuningProgress = Math.round((processSource?.getProgress?.() ?? 0) * 100);
     const status = tuning.processing ? `STROJENIE ${runeLabel(tuning.targetFamilyCode)} // ${tuningProgress}%`
       : !snapshot.selectedFamilyCode ? 'BRAK WYBORU' : !glyphInserted || !shellInserted ? 'NIEKOMPLETNA'
       : snapshot.readyForTuning ? 'GOTOWA DO STROJENIA' : 'NIEPRAWIDŁOWA';
-    text(`RECIPE: ${status}`, 825, 720, 22, snapshot.readyForTuning ? accents.complete : '#d6b3c3');
+    text(`RECIPE: ${status}`, 825, 935, 20, snapshot.readyForTuning ? accents.complete : '#d6b3c3');
   }
   function drawAstrolabiumProduction() {
     interactiveRegions = [{ id: 'back-modules', x: 90, y: 55, width: 260, height: 70, enabled: true }];
@@ -221,22 +258,20 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
     const families = new Map(tuningSnapshot.families.map((family) => [family.familyCode, family]));
     const insertedAssetId = contentSource?.getInsertedSmallGlyphAssetId?.() ?? null;
     const contentState = contentSource?.getState?.() ?? 'EMPTY';
-    smallGlyphEntries.forEach(({ assetId, protoAstro, image }, index) => {
-      const column = index % 3;
-      const row = Math.floor(index / 3);
-      const x = 90 + column * 455;
-      const y = 310 + row * 160;
+    FAMILY_GRID_CODES.forEach((familyCode, index) => {
+      const { assetId, protoAstro, image } = smallGlyphByFamily.get(familyCode);
+      const { x, y, width, height } = familyGridRect(index, 'small-glyph', false);
       const family = families.get(protoAstro.descriptor.familyCode);
       const supported = Boolean(family);
       const extracted = family?.extracted === true;
       const processing = supported && insertedAssetId === assetId
         && ['INSERTED', 'CONSUMING', 'CONSUMED'].includes(contentState);
       const color = extracted ? accents.complete : processing ? accents.process : supported ? accents.attractor : accents.idle;
-      panelRect(x, y, 405, 145, { variant: 'monitor', active: supported && !extracted,
+      panelRect(x, y, width, height, { variant: 'monitor', active: supported && !extracted,
         completed: extracted, locked: !supported, accentColor: color });
       text(protoAstro.descriptor.syllable, x + 20, y + 32, 22, color);
-      drawMaterialCardVisual(context, { x: x + 8, y: y + 34, width: 389, height: 82,
-        glyphRatio: .46, glyphScale: 1.9, padding: 6, glyphImage: image, color,
+      drawMaterialCardVisual(context, { x: x + 5, y: y + 25, width: width - 10, height: height - 34,
+        glyphRatio: .68, glyphScale: 2.75, padding: 3, glyphImage: image, color,
         drawPreview: ({ cx, cy, scale }) => drawSmallGlyphWireframe(context,
           { assetId, cx, cy, scale, color, alpha: supported ? .95 : .34 }) });
       text(extracted ? 'DOSTROJONY' : processing ? 'PRZETWARZANIE' : supported ? 'GOTOWY' : 'NIEAKTYWNY',
@@ -245,7 +280,7 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
     drawSmallGlyphExtractionMonitor();
   }
   function drawSmallGlyphExtractionMonitor() {
-    const x = 90, y = 655, width = 1315, height = 300;
+    const x = 58, y = 655, width = 1420, height = 300;
     const currentAssetId = contentSource?.getInsertedSmallGlyphAssetId?.() ?? null;
     const contentState = contentSource?.getState?.() ?? 'EMPTY';
     const processKind = processSource?.getProcessKind?.() ?? null;
@@ -300,12 +335,16 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
     text('SFERA ASTERIONOWA', 90, 190, 48); text('Rdzeń żyroskopowy sterowania kręgiem', 90, 238, 24, '#88b8cf');
     const currentAssetId = contentSource?.getInsertedShellAssetId?.();
     const currentState = contentSource?.getState?.() ?? 'EMPTY';
-    progress.shells.forEach((shell, index) => {
-      const col = index % 3, row = Math.floor(index / 3), x = 90 + col * 455, y = 270 + row * 175;
+    const shellsByFamily = new Map(progress.shells.map((shell) => [resolveAttractorShellGlyph(shell.assetId)?.descriptor?.familyCode, shell]));
+    FAMILY_GRID_CODES.forEach((familyCode, index) => {
+      const shell = shellsByFamily.get(familyCode) ?? progress.shells[index];
+      if (!shell) return;
+      const { x, y, width, height } = familyGridRect(index, 'shell', false);
       const processing = shell.assetId === currentAssetId && !shell.absorbed && ['CONSUMING', 'CONSUMED'].includes(currentState);
-      panelRect(x, y, 405, 145, { active: shell.absorbed || processing, completed: shell.absorbed, accentColor: shell.absorbed ? accents.asterion : processing ? accents.process : accents.idle });
+      panelRect(x, y, width, height, { active: shell.absorbed || processing, completed: shell.absorbed, accentColor: shell.absorbed ? accents.asterion : processing ? accents.process : accents.idle });
       const color = shell.absorbed ? accents.complete : processing ? accents.process : accents.idle;
-      drawMaterialCardVisual(context, { x, y, width: 405, height: 145, glyphImage: shellGlyphImages[shell.assetId], color,
+      drawMaterialCardVisual(context, { x, y, width, height, glyphRatio: .66, glyphScale: 2.35, padding: 4,
+        glyphImage: shellGlyphImages[shell.assetId], color,
         drawPreview: ({ cx, cy, scale }) => drawShellMiniature(patchDataByAssetId[shell.assetId], cx, cy, scale, color, shell.absorbed || processing) });
     });
     drawProcessMonitor();
@@ -336,7 +375,7 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
       contentState: contentSource?.getState?.() ?? 'EMPTY', chamberState: contentSource?.getChamberState?.() ?? 'CLOSED' });
   }
   function drawProcessMonitor() {
-    const telemetry = readTelemetry(), x = 90, y = 645, width = 1315, height = 325;
+    const telemetry = readTelemetry(), x = 58, y = 645, width = 1420, height = 325;
     const production = productionController?.getSnapshot?.() ?? { state: 'LOCKED', constructionProgress: 0, formationProgress: 0 };
     const constructing = production.state === 'BUILDING';
     panelRect(x, y, width, height, { variant: 'monitor', active: telemetry.active, completed: telemetry.phase === 'COMPLETE', accentColor: accents[telemetry.colorKey] });
@@ -402,19 +441,22 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
     const production = productionController?.getSnapshot?.() ?? { state: 'LOCKED', constructionProgress: 0, formationProgress: 0 };
     const constructing = production.state === 'BUILDING' || production.state === 'AVAILABLE';
     const patchOpacity = production.state === 'AVAILABLE' ? .08 : constructing ? resolveConstructionPatchOpacity(production.formationProgress) : 1;
-    drawPatches(() => true, '#6aa6b8', .1 * patchOpacity);
-    drawPatches((id) => states[id]?.committed, accents.complete, (progress.complete ? .94 + Math.sin(telemetryElapsed * 2) * .04 : .9) * patchOpacity, 9);
-    drawPatches((id, fragment) => states[id]?.pending && assemblySegmentVisible(fragment, states[id].assemblyProgress), accents.process, .9, 10);
+    const extracting = telemetry.phase === 'EXTRACTION';
+    if (!extracting) {
+      drawPatches(() => true, '#6aa6b8', .1 * patchOpacity);
+      drawPatches((id) => states[id]?.committed, accents.complete, (progress.complete ? .94 + Math.sin(telemetryElapsed * 2) * .04 : .9) * patchOpacity, 9);
+      drawPatches((id, fragment) => states[id]?.pending && assemblySegmentVisible(fragment, states[id].assemblyProgress), accents.process, .9, 10);
+    }
     context.save(); context.strokeStyle = '#588797'; context.globalAlpha = .22; context.lineWidth = 1.2; context.beginPath(); context.arc(cx, cy, radius, 0, Math.PI * 2); context.stroke(); context.restore();
-    if (constructing) drawAsterionModelContour(cx, cy, radius, production.state === 'AVAILABLE' ? 1 : production.formationProgress);
+    if (constructing || extracting) drawAsterionModelContour(cx, cy, radius, extracting || production.state === 'AVAILABLE' ? 1 : production.formationProgress);
   }
   function drawAsterionModelContour(cx, cy, radius, reveal) {
     if (!asterionWireframeMap.segments.length || reveal <= 0) return;
     const yaw = telemetryElapsed * .18, pitch = -.24, cyaw = Math.cos(yaw), syaw = Math.sin(yaw), cp = Math.cos(pitch), sp = Math.sin(pitch);
     const project = ([x, y, z]) => { const rx = x * cyaw + z * syaw, rz = -x * syaw + z * cyaw;
       const ry = y * cp - rz * sp, depth = 1 / Math.max(.7, 1 + (y * sp + rz * cp) * .14); return [cx + rx * radius * depth, cy - ry * radius * depth]; };
-    context.save(); context.strokeStyle = accents.process; context.globalAlpha = .2 + .8 * reveal; context.lineWidth = 1.35;
-    context.shadowColor = accents.process; context.shadowBlur = 7; context.beginPath();
+    context.save(); context.strokeStyle = accents.process; context.globalAlpha = .3 + .7 * reveal; context.lineWidth = 2.05;
+    context.shadowColor = accents.process; context.shadowBlur = 11; context.beginPath();
     asterionWireframeMap.segments.forEach((segment) => { if (!assemblySegmentVisible(segment, reveal)) return;
       const a = project(segment.a), b = project(segment.b); context.moveTo(a[0], a[1]); context.lineTo(b[0], b[1]); });
     context.stroke(); context.restore();
@@ -431,6 +473,7 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
     const progress = progressionController.getAsterionSphereProgress();
     if (screen === ASTRO_FURNACE_PANEL_SCREENS.HOME) drawHome(progress);
     else if (screen === ASTRO_FURNACE_PANEL_SCREENS.ASTERION_SPHERE) drawSphere(progress);
+    else if (screen === ASTRO_FURNACE_PANEL_SCREENS.ASTROLABIUM_MENU) drawAstrolabiumMenu();
     else if (screen === ASTRO_FURNACE_PANEL_SCREENS.ASTROLABIUM_PRODUCTION) drawAstrolabiumProduction();
     else if (screen === ASTRO_FURNACE_PANEL_SCREENS.RUNE_TUNING) drawRuneTuning();
     else drawAstrolabiumTuning();
@@ -458,23 +501,33 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
   function toggle() { if (state === ASTRO_FURNACE_PANEL_STATES.HIDDEN || state === ASTRO_FURNACE_PANEL_STATES.DISAPPEARING) show(); else hide(); }
   function activateRegion(id) { if (id === 'module-asterion-sphere') {
     screen = ASTRO_FURNACE_PANEL_SCREENS.ASTERION_SPHERE;
+    returnScreen = ASTRO_FURNACE_PANEL_SCREENS.HOME;
     moduleListeners.forEach((listener) => listener('floor_gyroscope_sphere'));
     onEnterModule();
   } else if (id === 'module-astro-attractor') {
-    screen = astroProductionController?.getState?.() === 'EARNED'
-      ? ASTRO_FURNACE_PANEL_SCREENS.ASTROLABIUM_TUNING
-      : ASTRO_FURNACE_PANEL_SCREENS.ASTROLABIUM_PRODUCTION;
+    screen = ASTRO_FURNACE_PANEL_SCREENS.ASTROLABIUM_MENU;
     moduleListeners.forEach((listener) => listener('astro_attractor'));
     onEnterModule();
   } else if (id === 'module-emanation-matrix') {
     if (!runeRecipeSelectionController || furnace?.capabilities?.runeRecipeAnchorsReady !== true
       || runeRecipeSelectionController.getEligibleFamilyCodes().length === 0) return false;
     screen = ASTRO_FURNACE_PANEL_SCREENS.RUNE_TUNING;
+    returnScreen = ASTRO_FURNACE_PANEL_SCREENS.HOME;
     moduleListeners.forEach((listener) => listener(ASTRO_FURNACE_RUNE_TUNING_MODE));
     onEnterModule();
+  } else if (id === 'astrolabium-create') {
+    screen = ASTRO_FURNACE_PANEL_SCREENS.ASTROLABIUM_PRODUCTION; returnScreen = ASTRO_FURNACE_PANEL_SCREENS.ASTROLABIUM_MENU;
+  } else if (id === 'astrolabium-glyph-tuning') {
+    screen = ASTRO_FURNACE_PANEL_SCREENS.ASTROLABIUM_TUNING; returnScreen = ASTRO_FURNACE_PANEL_SCREENS.ASTROLABIUM_MENU;
+  } else if (id === 'astrolabium-rune-tuning') {
+    screen = ASTRO_FURNACE_PANEL_SCREENS.RUNE_TUNING; returnScreen = ASTRO_FURNACE_PANEL_SCREENS.ASTROLABIUM_MENU;
+    moduleListeners.forEach((listener) => listener(ASTRO_FURNACE_RUNE_TUNING_MODE)); onEnterModule();
   } else if (id.startsWith('rune-family-')) {
     if (runeRecipeSelectionController?.selectFamily(id.slice('rune-family-'.length)) !== true) return false;
-  } else if (id === 'back-modules') { screen = ASTRO_FURNACE_PANEL_SCREENS.HOME; onReturnHome(); }
+  } else if (id === 'back-modules') {
+    if (screen === ASTRO_FURNACE_PANEL_SCREENS.ASTROLABIUM_MENU) { screen = ASTRO_FURNACE_PANEL_SCREENS.HOME; onReturnHome(); }
+    else { screen = returnScreen; if (returnScreen === ASTRO_FURNACE_PANEL_SCREENS.HOME) onReturnHome(); }
+  }
   else if (id === 'create-asterion') { if (!productionController?.requestCreate?.()) return false; onCreate(); }
   else if (id === 'create-astro-attractor') { if (astroProductionController?.canCreate?.() !== true
     || requestAstroProduction() !== true) return false; onCreate(); }

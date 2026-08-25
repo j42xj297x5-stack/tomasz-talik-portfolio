@@ -32,7 +32,7 @@ export const assemblySegmentVisible = (segment, progress) => progress > 0 && seg
 export const resolveConstructionPatchOpacity = (formationProgress) => 1 - .86 * Math.max(0, Math.min(1, formationProgress));
 
 const modelWireframeCache = new WeakMap();
-export function createAsterionModelWireframeMap(model, { maxSegments = 900, minLength = .012, thresholdAngle = 28 } = {}) {
+export function createAsterionModelWireframeMap(model, { maxSegments = 1100, minLength = .010, thresholdAngle = 24 } = {}) {
   if (!model) return Object.freeze({ segments: Object.freeze([]), cacheHit: false });
   if (modelWireframeCache.has(model)) return modelWireframeCache.get(model);
   model.updateWorldMatrix(true, true);
