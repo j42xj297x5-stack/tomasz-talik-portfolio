@@ -203,7 +203,7 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
     rotation: { enabled: true, angularSpeed: 0.14, direction: 1 },
     elevation: { offset: 2.4, durationSeconds: 2.5 },
     expansion: { radius: 46, durationSeconds: 2.5 },
-    sphere: { radius: 80, durationSeconds: 2.5 }
+    sphere: { radius: 80, durationSeconds: 2.5, angularSpeed: 0.01 }
   },
   postRingPresentation: {
     shellRevealDuration: 1.5
@@ -705,7 +705,9 @@ export function normalizeExperienceVrSettings(candidate) {
         radius: finiteNumber(candidate.largeGlyphs?.sphere?.radius,
           defaults.largeGlyphs.sphere.radius, { min: 1, max: 200 }),
         durationSeconds: finiteNumber(candidate.largeGlyphs?.sphere?.durationSeconds,
-          defaults.largeGlyphs.sphere.durationSeconds, { min: 0.1, max: 60 })
+          defaults.largeGlyphs.sphere.durationSeconds, { min: 0.1, max: 60 }),
+        angularSpeed: finiteNumber(candidate.largeGlyphs?.sphere?.angularSpeed,
+          defaults.largeGlyphs.sphere.angularSpeed, { min: 0, max: 2 })
       }
     },
     postRingPresentation: {

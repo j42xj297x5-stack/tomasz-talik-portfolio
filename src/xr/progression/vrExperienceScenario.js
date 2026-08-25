@@ -761,7 +761,7 @@ const points = Object.freeze([
   Object.freeze({
     id: VR_EXPERIENCE_POINT['4.80'], canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['100.10'] }),
     settledConsequences: EMPTY_SETTLED_CONSEQUENCES, entryEffects: Object.freeze([]),
-    label: 'Stable P3 entry boundary', capabilities: P2_LARGE_GLYPH_TARGETING_CAPABILITIES, transitions: Object.freeze([])
+    label: 'Stable P3 entry boundary', capabilities: P2_SMALL_GLYPH_TARGETING_CAPABILITIES, transitions: Object.freeze([])
   }),
   Object.freeze({
     id: VR_EXPERIENCE_POINT['100.10'],

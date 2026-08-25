@@ -25,7 +25,7 @@ export function createVrLargeGlyphActor({
   rotation = { enabled: true, angularSpeed: 0.14, direction: 1 },
   elevation = { offset: 2.4, durationSeconds: 2.5 },
   expansion = { radius: 46, durationSeconds: 2.5 },
-  sphere = { radius: 80, durationSeconds: 2.5 },
+  sphere = { radius: 80, durationSeconds: 2.5, angularSpeed: 0.01 },
   onExpansionCompleted = () => {}
 }) {
   if (!Array.isArray(items) || items.length !== LARGE_GLYPH_COUNT) {
@@ -36,7 +36,8 @@ export function createVrLargeGlyphActor({
     throw new TypeError('VrLargeGlyphActor requires valid expansion settings.');
   }
   if (!Number.isFinite(sphere.radius) || sphere.radius <= expansion.radius
-    || !Number.isFinite(sphere.durationSeconds) || sphere.durationSeconds <= 0) {
+    || !Number.isFinite(sphere.durationSeconds) || sphere.durationSeconds <= 0
+    || !Number.isFinite(sphere.angularSpeed) || sphere.angularSpeed < 0) {
     throw new TypeError('VrLargeGlyphActor requires valid sphere settings.');
   }
   if (typeof onExpansionCompleted !== 'function') {
@@ -89,6 +90,42 @@ export function createVrLargeGlyphActor({
     return node;
   });
 
+  const presentationEntries = [];
+  nodes.forEach((node) => {
+    node.traverse((child) => {
+      if (!child.isMesh) return;
+      const authoredMaterials = (Array.isArray(child.material) ? child.material : [child.material])
+        .map((material) => material.clone());
+      const authoredBaselines = authoredMaterials.map((material) => material.clone());
+      const farMaterials = authoredMaterials.map((material) => new THREE.MeshBasicMaterial({
+        color: 0x000000,
+        side: material.side,
+        transparent: material.transparent,
+        opacity: material.opacity,
+        alphaTest: material.alphaTest,
+        depthTest: material.depthTest,
+        depthWrite: material.depthWrite,
+        alphaMap: material.alphaMap ?? null
+      }));
+      farMaterials.forEach((material, materialIndex) => {
+        material.visible = authoredMaterials[materialIndex].visible;
+      });
+      child.material = Array.isArray(child.material) ? authoredMaterials : authoredMaterials[0];
+      presentationEntries.push({ child, authoredMaterials, authoredBaselines, farMaterials });
+    });
+    const authoredHoverUpdate = node.userData.updateHoverEffects;
+    node.userData.updateHoverEffects = (...args) => {
+      if (stage === VR_LARGE_GLYPH_SPHERE_STAGE) {
+        node.userData.currentHoverLightIntensity = 0;
+        node.userData.targetHoverLightIntensity = 0;
+        node.userData.hoverPointLight.intensity = 0;
+        node.userData.hoverPointLight.visible = false;
+        return;
+      }
+      authoredHoverUpdate(...args);
+    };
+  });
+
   const baseline = Object.freeze({ worldY, initialRadius, scaleMultiplier });
   let currentRadius = initialRadius;
   let stage = VR_LARGE_GLYPH_INITIAL_STAGE;
@@ -96,11 +133,30 @@ export function createVrLargeGlyphActor({
   let expansionElapsed = null;
   let sphereElapsed = null;
   let disposed = false;
+  function applyStagePresentation(nextStage) {
+    const isFar = nextStage === VR_LARGE_GLYPH_SPHERE_STAGE;
+    presentationEntries.forEach(({ child, authoredMaterials, authoredBaselines, farMaterials }) => {
+      if (!isFar) {
+        authoredMaterials.forEach((material, index) => material.copy(authoredBaselines[index]));
+      }
+      child.material = Array.isArray(child.material)
+        ? (isFar ? farMaterials : authoredMaterials)
+        : (isFar ? farMaterials[0] : authoredMaterials[0]);
+    });
+    nodes.forEach((node) => {
+      const light = node.userData.hoverPointLight;
+      node.userData.currentHoverLightIntensity = 0;
+      node.userData.targetHoverLightIntensity = 0;
+      light.intensity = 0;
+      light.visible = false;
+    });
+  }
   function settleStage(nextStage) {
     stage = nextStage;
     object.userData.stage = stage;
     object.position.y = baseline.worldY
       + (stage === VR_LARGE_GLYPH_INITIAL_STAGE ? 0 : elevation.offset);
+    applyStagePresentation(stage);
   }
   function setCanonicalRadius(radius) {
     currentRadius = radius;
@@ -210,7 +266,9 @@ export function createVrLargeGlyphActor({
     if (rotation.enabled) {
       // Three.js Y rotation maps an initial angle to angle - rotation.y, so the
       // negative sign preserves the legacy angle = initialAngle + phase motion.
-      rotationRoot.rotation.y -= delta * rotation.angularSpeed * rotation.direction;
+      const angularSpeed = sphereElapsed !== null || stage === VR_LARGE_GLYPH_SPHERE_STAGE
+        ? sphere.angularSpeed : rotation.angularSpeed;
+      rotationRoot.rotation.y -= delta * angularSpeed * rotation.direction;
     }
     if (elevationElapsed !== null) {
       elevationElapsed += delta;
@@ -301,7 +359,9 @@ export function createVrLargeGlyphActor({
       object.removeFromParent();
       nodes.forEach((node) => {
         node.geometry.dispose();
-        node.material.dispose();
+      });
+      presentationEntries.forEach(({ authoredMaterials, authoredBaselines, farMaterials }) => {
+        [...authoredMaterials, ...authoredBaselines, ...farMaterials].forEach((material) => material.dispose());
       });
     }
   });
