@@ -27,7 +27,7 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
       scale: 3,
       emissiveColor: '#ffb85c',
       emissiveIntensity: 0.25,
-      light: { color: '#fff1d6', intensity: 40 },
+      light: { color: '#fff1d6', intensity: 400 },
       facingCorrectionDegrees: { x: 0, y: 0, z: 0 }
     },
     stars: {
