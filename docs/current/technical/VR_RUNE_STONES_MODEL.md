@@ -299,6 +299,8 @@ Każdy milestone jest osobnym bounded taskiem i kończy się przed rozpoczęciem
 - **Nie implementuje:** procesu i commitu tuning truth.
 - **Kryterium zakończenia:** nieeligible target i każda błędna para nie rozpoczynają procesu.
 
+**IMPLEMENTED FOUNDATION:** kompletność brancha jest wyliczana z realnych stron istniejącego ownera progresji, a naturalne eligibility przechodzi przez canonical mapping Proto-Astro family ↔ branch. Osobny resolver Wu Xing i transient `RuneRecipeSelectionController` posiadają wybór targetu oraz walidację dwóch fizycznych slotów. Istniejąca karta `MATRYCA EMANACJI` prezentuje pięć naturalnych rodzin, oczekiwaną recepturę, occupancy i ready gate. Production composition podłącza A3 wyłącznie do semantycznego `rune_tuning` mode; brak jawnego kąta pozostawia option pivot bez nowego targetu. Open/close akceptuje ten mode, ale Activate nadal obsługuje wyłącznie wcześniejsze procesy. Canonical Scenario availability zostanie przejęte przez RUNE A10.
+
 ### RUNE A5 — Rune tuning process
 - **Cel:** wykonać i commitować jedno strojenie rodziny.
 - **Właściciel:** Furnace process actor + `RuneStoneProgressionController`.
@@ -306,6 +308,8 @@ Każdy milestone jest osobnym bounded taskiem i kończy się przed rozpoczęciem
 - **Rezultat:** nowy process kind, jeden `18 s` cycle, `astro_piec_work_03.mp3`, konsumpcja obu składników i trwała semantyczna sylaba jako committed tuned family.
 - **Nie implementuje:** fizycznego procesu kamienia ani instalacji.
 - **Kryterium zakończenia:** dokładnie jeden poprawny cycle konsumuje Small Glyph i Shell oraz tworzy jeden idempotentny tuned fact bez fizycznego itemu „sylaba”.
+
+**NOT IMPLEMENTED:** nie istnieją jeszcze rune process kind, cycle `18 s`, playback `work_03`, konsumpcja składników, wynikowa sylaba ani commit `tunedRuneFamilies`.
 
 ### RUNE A6 — Post-Tier-3 spatial transition
 - **Cel:** przedstawić przestrzenną zmianę aktu.

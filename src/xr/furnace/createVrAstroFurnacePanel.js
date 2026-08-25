@@ -11,25 +11,30 @@ import { SMALL_GLYPH_WIREFRAME_DATA } from './smallGlyphWireframeData.js';
 import { drawSmallGlyphWireframe } from './drawSmallGlyphWireframe.js';
 import { resolveVrSmallGlyphProtoAstro } from '../protoAstro/resolveVrSmallGlyphProtoAstro.js';
 import { ASTRO_FURNACE_PROCESS_KINDS } from './createVrAstroFurnaceActivateInteraction.js';
+import { ASTRO_FURNACE_RUNE_TUNING_MODE } from './createVrAstroFurnaceOptionInteraction.js';
+import { PROTO_ASTRO_FAMILIES, PROTO_ASTRO_NATURAL_FAMILY_CODES } from '../protoAstro/protoAstroRegistry.js';
 
 export const ASTRO_FURNACE_PANEL_STATES = Object.freeze({
   HIDDEN: 'HIDDEN', APPEARING: 'APPEARING', VISIBLE: 'VISIBLE', DISAPPEARING: 'DISAPPEARING'
 });
 export const ASTRO_FURNACE_PANEL_SCREENS = Object.freeze({
   HOME: 'HOME', ASTERION_SPHERE: 'ASTERION_SPHERE',
-  ASTROLABIUM_PRODUCTION: 'ASTROLABIUM_PRODUCTION', ASTROLABIUM_TUNING: 'ASTROLABIUM_TUNING'
+  ASTROLABIUM_PRODUCTION: 'ASTROLABIUM_PRODUCTION', ASTROLABIUM_TUNING: 'ASTROLABIUM_TUNING',
+  RUNE_TUNING: 'RUNE_TUNING'
 });
 export const asterionPreviewAnimationActive = ({ panelState, screen }) =>
   panelState === ASTRO_FURNACE_PANEL_STATES.VISIBLE && screen === ASTRO_FURNACE_PANEL_SCREENS.ASTERION_SPHERE;
 export const furnacePanelAnimationActive = ({ panelState, screen }) => panelState === ASTRO_FURNACE_PANEL_STATES.VISIBLE
   && [ASTRO_FURNACE_PANEL_SCREENS.HOME, ASTRO_FURNACE_PANEL_SCREENS.ASTERION_SPHERE,
-    ASTRO_FURNACE_PANEL_SCREENS.ASTROLABIUM_PRODUCTION, ASTRO_FURNACE_PANEL_SCREENS.ASTROLABIUM_TUNING].includes(screen);
+    ASTRO_FURNACE_PANEL_SCREENS.ASTROLABIUM_PRODUCTION, ASTRO_FURNACE_PANEL_SCREENS.ASTROLABIUM_TUNING,
+    ASTRO_FURNACE_PANEL_SCREENS.RUNE_TUNING].includes(screen);
 const smoothstep = (value) => value * value * (3 - 2 * value);
 export const wireframeDissolveVisible = (segment, progress) => progress < 1 && segment.dissolveOrder >= Math.max(0, progress);
 
 export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], progressionController, processSource, contentSource,
   productionController = null, astroProductionController = null, protoAstroTuningController = null, canUseAstroProduction = () => false,
   canUseAstroTuning = () => false,
+  runeRecipeInteraction = null, runeRecipeSelectionController = null,
   requestAstroProduction = () => false,
   asterionModel = null, settings = {}, onEnterModule = () => {}, onReturnHome = () => {}, onCreate = () => {} }) {
   const config = { width: 1.55, height: 1.05, gapFromFurnace: 0.10, verticalOffset: 0.15, yawDegrees: -12,
@@ -96,12 +101,16 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
     text('ASTRO PIEC', 90, 100, 52); text('MODUŁY TRANSFORMACJI', 90, 152, 25, '#83b8d1');
     const astroProductionState = astroProductionController?.getState?.() ?? 'READY';
     const astroModuleAvailable = canUseAstroProduction() || canUseAstroTuning() || astroProductionState !== 'READY';
+    const runeSnapshot = runeRecipeSelectionController?.getSnapshot?.();
+    const runeFoundationAvailable = furnace?.capabilities?.runeRecipeAnchorsReady === true
+      && Boolean(runeRecipeSelectionController) && (runeSnapshot?.eligibleFamilyCodes?.length ?? 0) > 0;
     const cards = [
       ['module-asterion-sphere', 'SFERA ASTERIONOWA', 'Rdzeń żyroskopowy sterowania kręgiem', 'SKORUPY', `${progress.absorbed} / 6   DOSTĘPNE`, true],
       ['module-astro-attractor', 'ASTROLABIUM WIĘZI', 'Narzędzie przyciągania i synchronizacji', 'STATUS',
         astroProductionState === 'AVAILABLE' ? 'GOTOWE // ODBIERZ' : astroProductionState === 'EARNED' ? 'STROJENIE' : 'WEJDŹ DO MODUŁU',
         astroModuleAvailable],
-      ['module-emanation-matrix', 'MATRYCA EMANACJI', 'Przetwarzanie kamieni runicznych', 'KAMIENIE', 'W PRZYGOTOWANIU', false]
+      ['module-emanation-matrix', 'MATRYCA EMANACJI', 'Przetwarzanie kamieni runicznych', 'KAMIENIE',
+        runeFoundationAvailable ? `${runeSnapshot.eligibleFamilyCodes.length} ELIGIBLE` : 'NIEDOSTĘPNE', runeFoundationAvailable]
     ];
     interactiveRegions = cards.map((card, index) => {
       const rect = { id: card[0], x: 90, y: 205 + index * 245, width: 1356, height: 205, enabled: card[5] };
@@ -117,6 +126,42 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
       });
       return rect;
     });
+  }
+  const runeFamilyLabels = Object.freeze({ earth: 'ZIEMIA', metal: 'METAL', water: 'WODA', tree: 'DREWNO', fire: 'OGIEŃ' });
+  const runeLabel = (familyCode) => runeFamilyLabels[PROTO_ASTRO_FAMILIES[familyCode]?.id] ?? familyCode ?? '—';
+  function drawRuneTuning() {
+    const snapshot = runeRecipeSelectionController?.getSnapshot?.() ?? { eligibleFamilyCodes: [] };
+    interactiveRegions = [{ id: 'back-modules', x: 90, y: 55, width: 260, height: 70, enabled: true }];
+    panelRect(90, 55, 260, 70, { hovered: hoveredRegion === 'back-modules', accentColor: accents.emanation });
+    text('← MODUŁY', 120, 102, 27);
+    text('MATRYCA EMANACJI', 90, 180, 46);
+    text('WYBIERZ DOCELOWĄ RODZINĘ KAMIENIA', 90, 225, 22, '#b89dd0');
+    PROTO_ASTRO_NATURAL_FAMILY_CODES.forEach((familyCode, index) => {
+      const eligible = snapshot.eligibleFamilyCodes.includes(familyCode);
+      const selected = snapshot.selectedFamilyCode === familyCode;
+      const rect = { id: `rune-family-${familyCode}`, x: 90 + index * 270, y: 270, width: 245, height: 125, enabled: eligible };
+      interactiveRegions.push(rect);
+      panelRect(rect.x, rect.y, rect.width, rect.height, { hovered: hoveredRegion === rect.id, active: selected || eligible,
+        locked: !eligible, accentColor: accents.emanation });
+      text(runeLabel(familyCode), rect.x + 20, rect.y + 48, 27, eligible ? '#f1eaff' : '#78909d');
+      text(selected ? 'SELECTED' : eligible ? 'ELIGIBLE' : 'LOCKED', rect.x + 20, rect.y + 91, 18,
+        selected ? accents.complete : eligible ? '#cdb5e4' : '#70828d');
+    });
+    const recipe = snapshot.expectedRecipe;
+    panelRect(90, 440, 650, 440, { variant: 'monitor', active: Boolean(recipe), accentColor: accents.emanation });
+    text('RECEPTURA WU XING', 125, 495, 22, '#a990c0');
+    text(`TARGET: ${runeLabel(recipe?.targetFamilyCode)}`, 125, 560, 28);
+    text(`SMALL GLYPH: ${runeLabel(recipe?.smallGlyphFamilyCode)}`, 125, 625, 25);
+    text(`SHELL: ${runeLabel(recipe?.shellFamilyCode)}`, 125, 690, 25);
+    panelRect(785, 440, 620, 440, { variant: 'monitor', active: snapshot.readyForTuning, accentColor: accents.emanation });
+    text('SLOTY RECEPTURY', 825, 495, 22, '#a990c0');
+    const glyphInserted = snapshot.slots?.smallGlyph?.state === 'INSERTED';
+    const shellInserted = snapshot.slots?.shell?.state === 'INSERTED';
+    text(`SMALL GLYPH: ${glyphInserted ? `INSERTED / ${runeLabel(snapshot.smallGlyphFamilyCode)}` : 'EMPTY'}`, 825, 565, 23);
+    text(`SHELL: ${shellInserted ? `INSERTED / ${runeLabel(snapshot.shellFamilyCode)}` : 'EMPTY'}`, 825, 625, 23);
+    const status = !snapshot.selectedFamilyCode ? 'BRAK WYBORU' : !glyphInserted || !shellInserted ? 'NIEKOMPLETNA'
+      : snapshot.readyForTuning ? 'GOTOWA DO STROJENIA' : 'NIEPRAWIDŁOWA';
+    text(`RECIPE: ${status}`, 825, 720, 22, snapshot.readyForTuning ? accents.complete : '#d6b3c3');
   }
   function drawAstrolabiumProduction() {
     interactiveRegions = [{ id: 'back-modules', x: 90, y: 55, width: 260, height: 70, enabled: true }];
@@ -381,6 +426,7 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
     if (screen === ASTRO_FURNACE_PANEL_SCREENS.HOME) drawHome(progress);
     else if (screen === ASTRO_FURNACE_PANEL_SCREENS.ASTERION_SPHERE) drawSphere(progress);
     else if (screen === ASTRO_FURNACE_PANEL_SCREENS.ASTROLABIUM_PRODUCTION) drawAstrolabiumProduction();
+    else if (screen === ASTRO_FURNACE_PANEL_SCREENS.RUNE_TUNING) drawRuneTuning();
     else drawAstrolabiumTuning();
     texture.needsUpdate = true;
   }
@@ -414,6 +460,14 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
       : ASTRO_FURNACE_PANEL_SCREENS.ASTROLABIUM_PRODUCTION;
     moduleListeners.forEach((listener) => listener('astro_attractor'));
     onEnterModule();
+  } else if (id === 'module-emanation-matrix') {
+    if (!runeRecipeSelectionController || furnace?.capabilities?.runeRecipeAnchorsReady !== true
+      || runeRecipeSelectionController.getEligibleFamilyCodes().length === 0) return false;
+    screen = ASTRO_FURNACE_PANEL_SCREENS.RUNE_TUNING;
+    moduleListeners.forEach((listener) => listener(ASTRO_FURNACE_RUNE_TUNING_MODE));
+    onEnterModule();
+  } else if (id.startsWith('rune-family-')) {
+    if (runeRecipeSelectionController?.selectFamily(id.slice('rune-family-'.length)) !== true) return false;
   } else if (id === 'back-modules') { screen = ASTRO_FURNACE_PANEL_SCREENS.HOME; onReturnHome(); }
   else if (id === 'create-asterion') { if (!productionController?.requestCreate?.()) return false; onCreate(); }
   else if (id === 'create-astro-attractor') { if (astroProductionController?.canCreate?.() !== true
@@ -451,8 +505,10 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
   const unsubscribeProduction = productionController?.subscribe?.(() => draw()) ?? (() => {});
   const unsubscribeAstroProduction = astroProductionController?.subscribe?.(() => draw()) ?? (() => {});
   const unsubscribeProtoAstroTuning = protoAstroTuningController?.subscribe?.(() => draw()) ?? (() => {});
+  const unsubscribeRuneSelection = runeRecipeSelectionController?.subscribe?.(() => draw()) ?? (() => {});
+  const unsubscribeRuneRecipe = runeRecipeInteraction?.subscribe?.(() => draw()) ?? (() => {});
   const unsubscribePlacement = furnace.subscribePlacement?.(() => place()) ?? (() => {});
-  function dispose() { if (disposed) return; disposed = true; unsubscribe(); unsubscribeProduction(); unsubscribeAstroProduction(); unsubscribeProtoAstroTuning(); unsubscribePlacement(); moduleListeners.clear(); listeners.forEach(({ record, listener }) => record.controller.removeEventListener('selectstart', listener)); root.removeFromParent(); renderPlanes.forEach((plane) => { plane.geometry.dispose(); plane.material.dispose(); }); texture.dispose(); canvas.width = 0; canvas.height = 0; hits.clear(); }
+  function dispose() { if (disposed) return; disposed = true; unsubscribe(); unsubscribeProduction(); unsubscribeAstroProduction(); unsubscribeProtoAstroTuning(); unsubscribeRuneSelection(); unsubscribeRuneRecipe(); unsubscribePlacement(); moduleListeners.clear(); listeners.forEach(({ record, listener }) => record.controller.removeEventListener('selectstart', listener)); root.removeFromParent(); renderPlanes.forEach((plane) => { plane.geometry.dispose(); plane.material.dispose(); }); texture.dispose(); canvas.width = 0; canvas.height = 0; hits.clear(); }
   reset();
   return { object: root, mesh: frontPlane, renderPlanes, canvas, texture, hits, show, hide, toggle, place, update, press, reset, dispose, activateRegion, redraw: draw,
     subscribeModuleActivation(listener) { moduleListeners.add(listener); return () => moduleListeners.delete(listener); },

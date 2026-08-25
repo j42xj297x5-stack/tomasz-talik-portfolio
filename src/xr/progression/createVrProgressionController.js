@@ -20,6 +20,11 @@ export function createVrProgressionController({ pages }) {
     }));
   }
 
+  function isBranchComplete(branchId) {
+    const branchPages = orderedPages.filter((page) => page.glyphId === branchId);
+    return branchPages.length > 0 && branchPages.every((page) => activatedPageIds.has(page.id));
+  }
+
   function advanceTier() {
     while (currentTier < 5 && isTierComplete(currentTier)) currentTier += 1;
   }
@@ -101,5 +106,5 @@ export function createVrProgressionController({ pages }) {
   }
 
   return { getCurrentTier, canInsertCrystal, getNextPage, commitPage, hasActivatedPage, getActivatedPageIds,
-    isTierComplete, hydrateScenarioState, reset };
+    isTierComplete, isBranchComplete, hydrateScenarioState, reset };
 }
