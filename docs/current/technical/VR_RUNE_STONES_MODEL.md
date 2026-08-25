@@ -3,12 +3,13 @@
 ## 1. Status i authority
 
 - **Status:** **KANONICZNY MODEL TECHNICZNO-GAMEPLAYOWY / PARTIALLY IMPLEMENTED**.
-- **Implemented:** `RUNE A1–A7` oraz `RUNE UI-1 — Astro Furnace panel structure and readability normalization`.
-- **Next actor milestone:** `RUNE A8 — pair-generic RuneBridgeActor state machine`; Earth jest pierwszym reference slice, nie obowiązkowym pierwszym wyborem gracza.
+- **Implemented:** `RUNE A1–A8` oraz `RUNE UI-1 — Astro Furnace panel structure and readability normalization`.
+- **Next required foundation correction:** natural Rune tuning must no longer be gated by sector completeness.
+- **Next actor milestone after that:** `RUNE A9 — pair-generic Rune Stone transport + installation`.
 - **Scenario authoring:** **DEFERRED TO SEPARATE THREAD**.
 - **Canonical authored Scenario/runtime progression boundary:** `4.80`.
 - Dokument jest kanonicznym źródłem prawdy Rune Stone Act: strojenia Astrolabium, targetability, pięciu naturalnych pair-specific par, mostów, transportu, instalacji, specjalnego flow Eteru i finalnego polowania Wody.
-- A1–A7 są foundations/domain behavior bez rozszerzenia authored Scenario spine. A8–A21 są targetem; actor/domain foundations powstają teraz, a Scenario, Director i literalna komunikacja gracza zostaną zaprojektowane osobno.
+- A1–A8 są foundations/domain behavior bez rozszerzenia authored Scenario spine. A9–A21 są targetem; actor/domain foundations powstają teraz, a Scenario, Director i literalna komunikacja gracza zostaną zaprojektowane osobno.
 
 `KANON` oznacza wiążący kontrakt, `TUNING` wartość dobieraną w prototypie/Quest 3S, a `OPEN DESIGN DECISION` świadomie nierozstrzygnięty warunek.
 
@@ -108,11 +109,13 @@ Runtime transformuje stabilny root kamienia. `SOCKET_POINT` jest pair-specific f
 
 ## 7. Pair-generic RuneBridgeActor
 
-Jedna pair-configured instancja `RuneBridgeActor` przypada na każdą naturalną parę. Aktor prezentacji/mechaniki nie zna Scenario pointów, nie posiada progression truth i reaguje na semantic commands.
+Istnieje pięć niezależnych pair-configured instancji `RuneBridgeActor`: `earth`, `fire`, `wood`, `metal` i `water`. Każda posiada własny transient state. Earth nie ma specjalnej implementacji, a dla Eteru nie istnieje bridge. Aktor nie zna Scenario pointów, nie posiada progression truth ani tuning truth i reaguje przez jawne semantic command API: `getState(branchId)`, `setInstallationReady(branchId, ready)`, `beginExtension(branchId)`, `completeExtension(branchId)`, `cancelExtension(branchId)`, `setInstalled(branchId)`, `reset()` oraz `dispose()`.
 
 ```text
 HIDDEN → DOCKED → EXTENDING → EXTENDED → ORBITING
 ```
+
+`VR_RUNE_BRIDGE_STATES` eksportuje dokładnie pięć stanów: `HIDDEN`, `DOCKED`, `EXTENDING`, `EXTENDED` i `ORBITING`. Legalne przejścia to `HIDDEN → DOCKED`, `DOCKED → HIDDEN`, `DOCKED → EXTENDING`, `EXTENDING → EXTENDED`, `EXTENDING → DOCKED`, `EXTENDED → DOCKED` oraz `EXTENDED → ORBITING`; próba nielegalnego przejścia zgłasza błąd kontraktu. `reset()` przywraca wszystkie pięć par do `HIDDEN`.
 
 | Stan | Kontrakt |
 | --- | --- |
@@ -122,7 +125,9 @@ HIDDEN → DOCKED → EXTENDING → EXTENDED → ORBITING
 | `EXTENDED` | most przygotował przestrzeń dla capture |
 | `ORBITING` | właściwy kamień został prawidłowo zainstalowany |
 
-**Platform installation readiness**, a nie tuning truth, pozwala mostowi przejść z `HIDDEN` do `DOCKED`. Przerwane podejście przed capture powoduje `EXTENDING / EXTENDED → DOCKED`. Po `4.80` mosty Earth, Fire i Wood mogą być `DOCKED`; Metal pozostaje `HIDDEN` do pełnego ukończenia sektora Metal, a Water do specjalnego finalnego override.
+**Platform installation readiness** jest dostarczane aktorowi z zewnątrz i, w przeciwieństwie do tuning truth, pozwala mostowi przejść z `HIDDEN` do `DOCKED`. Aktor nie czyta sector progression i nie posiada installed progression truth; `setInstalled()` zapisuje wyłącznie transient bridge state `ORBITING`. Przerwane podejście przed capture powoduje `EXTENDING / EXTENDED → DOCKED`. Po `4.80` mosty Earth, Fire i Wood mogą być `DOCKED`; Metal pozostaje `HIDDEN` do pełnego ukończenia sektora Metal, a Water do specjalnego finalnego override.
+
+**STATE MACHINE = IMPLEMENTED. PHYSICAL BRIDGE MOTION = TARGET / TUNING.** A8 implementuje state/command foundation, nie fizyczną animację ruchu mostu. Obecnie `HIDDEN` oznacza niewidoczną instancję, a każdy stan non-`HIDDEN` — widoczną instancję. Zachowane są authored bridge alignment, `bridgeRoot`, helper nodes i capture radius. Metry extension, duration, easing, retract distance, orbit speed, socket height, safe envelope i procedural deformation nie są zaimplementowane ani zamrożone; pozostają `TUNING` lub zakresem późniejszego actor contractu.
 
 ## 8. Transport i instalacja
 
@@ -271,11 +276,12 @@ Ten dokument nie ustala literal copy. Copy należy później zsynchronizować z 
 
 ### RUNE A8 — Pair-generic RuneBridgeActor state machine
 
-- **Status:** **TARGET / NOT IMPLEMENTED**.
-- **Cel:** generic state machine `HIDDEN → DOCKED → EXTENDING → EXTENDED → ORBITING` dla istniejącego modelu `earth/fire/wood/metal/water`, z pair-specific config.
-- **Reference slice:** Earth, wyłącznie do pierwszej inspekcji/tuningu mechaniki.
-- **Wejście:** platform installation readiness oraz pair config; tuning truth nie jest gate mostu.
-- **Nie implementuje:** Rune Stone transport, socket capture, installed truth ani Scenario progression.
+- **Status:** **IMPLEMENTED**.
+- **Implementation evidence:** `42f237c — Implement pair-generic RuneBridge state machine`.
+- Pięć niezależnych pair-generic instancji `earth/fire/wood/metal/water` implementuje pięć transient states i jawne semantic commands; Earth nie ma specjalnego wariantu, a Eter nie ma bridge.
+- Platform installation readiness jest wejściem zewnętrznym. Aktor nie odczytuje tuning truth ani sector progression oraz nie posiada installed progression truth; `setInstalled()` ustawia wyłącznie transient state `ORBITING`.
+- Nielegalne transitions są odrzucane, a `reset()` przywraca wszystkie pary do `HIDDEN`.
+- **Nie implementuje:** fizycznej animacji bridge motion ani jej parametrów, Rune Stone transportu, socket capture, persistent installed truth i Scenario progression.
 
 ### RUNE A9 — Pair-generic Rune Stone transport + installation mechanics
 
@@ -355,12 +361,14 @@ Ten dokument nie ustala literal copy. Copy należy później zsynchronizować z 
 ## 15. Current implementation checkpoint
 
 ```text
-RUNE A1–A7: IMPLEMENTED
+RUNE A1–A8: IMPLEMENTED
 RUNE UI-1: IMPLEMENTED
 
-NEXT ACTOR MILESTONE:
-RUNE A8 — pair-generic RuneBridgeActor state machine
-Earth = first reference slice
+NEXT REQUIRED FOUNDATION CORRECTION:
+natural Rune tuning must no longer be gated by sector completeness
+
+NEXT ACTOR MILESTONE AFTER THAT:
+RUNE A9 — pair-generic Rune Stone transport + installation
 
 SCENARIO AUTHORING:
 DEFERRED TO SEPARATE THREAD
