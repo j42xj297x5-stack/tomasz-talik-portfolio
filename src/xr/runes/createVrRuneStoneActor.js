@@ -34,18 +34,14 @@ export function createVrRuneStoneActor({ parent, assetManager, layer }) {
       layerActor.object.add(root);
 
       root.updateMatrixWorld(true);
-      const sourceBox = new THREE.Box3().setFromObject(visualModel);
-      const geometricCenter = sourceBox.getCenter(new THREE.Vector3());
-      visualRoot.position.sub(visualRoot.worldToLocal(geometricCenter.clone()));
-      root.updateMatrixWorld(true);
-      const boundingBox = new THREE.Box3().setFromObject(visualRoot);
-      const boundingSphere = boundingBox.getBoundingSphere(new THREE.Sphere());
-      const interactionRadius = boundingSphere.radius;
-      if (!Number.isFinite(interactionRadius) || interactionRadius <= 0) {
+      const placementClearanceRadius = new THREE.Box3()
+        .setFromObject(visualRoot)
+        .getBoundingSphere(new THREE.Sphere()).radius;
+      if (!Number.isFinite(placementClearanceRadius) || placementClearanceRadius <= 0) {
         throw new Error(`[VrRuneStoneActor] Invalid geometry bounds: ${descriptor.assetIdentity}.`);
       }
 
-      const transform = layerActor.getSlotTransform(slotIndex, interactionRadius);
+      const transform = layerActor.getSlotTransform(slotIndex, placementClearanceRadius);
       root.position.copy(transform.position);
       root.quaternion.copy(transform.quaternion);
       const animationMixer = gltf.animations?.length ? new THREE.AnimationMixer(visualModel) : null;
@@ -68,9 +64,7 @@ export function createVrRuneStoneActor({ parent, assetManager, layer }) {
         visualRoot,
         animationMixer,
         actions,
-        boundingBox,
-        boundingSphere,
-        interactionRadius,
+        placementClearanceRadius,
         initialTransform,
         state: VR_RUNE_STONE_STATE.FREE
       });
@@ -81,6 +75,16 @@ export function createVrRuneStoneActor({ parent, assetManager, layer }) {
   }
 
   const getRecord = (branchId) => records.get(String(branchId ?? '').toLowerCase()) ?? null;
+  const getBoundingBox = (branchId) => {
+    const record = getRecord(branchId);
+    if (!record) return null;
+    record.root.updateWorldMatrix(true, true);
+    return new THREE.Box3().setFromObject(record.visualRoot);
+  };
+  const getBoundingSphere = (branchId) => {
+    const boundingBox = getBoundingBox(branchId);
+    return boundingBox?.getBoundingSphere(new THREE.Sphere()) ?? null;
+  };
   function update(deltaSeconds = 0) {
     if (disposed) return;
     const delta = Number.isFinite(deltaSeconds) ? Math.max(0, deltaSeconds) : 0;
@@ -116,9 +120,9 @@ export function createVrRuneStoneActor({ parent, assetManager, layer }) {
     getRoot: (branchId) => getRecord(branchId)?.root ?? null,
     getState: (branchId) => getRecord(branchId)?.state ?? null,
     getDescriptor: (branchId) => getRecord(branchId)?.descriptor ?? null,
-    getBoundingBox: (branchId) => getRecord(branchId)?.boundingBox.clone() ?? null,
-    getBoundingSphere: (branchId) => getRecord(branchId)?.boundingSphere.clone() ?? null,
-    getInteractionRadius: (branchId) => getRecord(branchId)?.interactionRadius ?? null,
+    getBoundingBox,
+    getBoundingSphere,
+    getInteractionRadius: (branchId) => getBoundingSphere(branchId)?.radius ?? null,
     getFamilyCode: (branchId) => getRecord(branchId)?.familyCode ?? null,
     update,
     reset,
