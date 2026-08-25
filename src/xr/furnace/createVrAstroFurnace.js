@@ -23,9 +23,10 @@ const hasAll = (lookup, names) => names.every((name) => Boolean(lookup[name]));
 const GLTF_CHANNEL_TYPE = Object.freeze({
   position: 'translation', quaternion: 'rotation', scale: 'scale', morphTargetInfluences: 'weights'
 });
+const PRODUCT_VOLUME_NODE_NAME = 'VR_FURNACE_PRODUCT_VOLUME';
 
 function isVisibleGeometry(node, root) {
-  if (!node.geometry || !node.isMesh) return false;
+  if (!node.geometry || !node.isMesh || node.name === PRODUCT_VOLUME_NODE_NAME) return false;
   for (let current = node; current; current = current.parent) {
     if (!current.visible) return false;
     if (current === root) break;
@@ -179,6 +180,9 @@ export function createVrAstroFurnace({
     runtimeMaterialBranches.set(root, materials);
     return materials;
   }
+  ensureRuntimeMaterials(nodes[PRODUCT_VOLUME_NODE_NAME]).forEach((material) => {
+    material.visible = false;
+  });
   function refreshVisibleBounds() {
     const bounds = calculateVisibleBounds();
     diagnostics.visibleBounds = bounds.isEmpty() ? null : {
