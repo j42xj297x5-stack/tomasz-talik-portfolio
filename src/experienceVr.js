@@ -27,6 +27,7 @@ import { createVrReliquaryActivateButton } from './xr/createVrReliquaryActivateB
 import { createVrReliquaryReleaseButton } from './xr/createVrReliquaryReleaseButton.js';
 import { createVrProgressFloor } from './xr/floor/createVrProgressFloor.js';
 import { createVrRuneBridgeActor } from './xr/runes/createVrRuneBridgeActor.js';
+import { createVrRuneStoneActor } from './xr/runes/createVrRuneStoneActor.js';
 import { createVrProgressionController } from './xr/progression/createVrProgressionController.js';
 import { createVrFirstRingFlow } from './xr/progression/createVrFirstRingFlow.js';
 import { createVrProgressionSemanticHandoff } from './xr/progression/createVrProgressionSemanticHandoff.js';
@@ -195,7 +196,7 @@ worldStableRoot.add(centralPlaceholder);
 
 const asterionSphereQa = settings.asterionSphere.enabled && searchParams.has(settings.asterionSphere.qaQueryParam);
 const vrAssets = getPreloadAssets([...INITIAL_PRELOAD_GROUPS, ...DEFERRED_PRELOAD_GROUPS])
-  .filter(({ id }) => id === 'sun-model' || id === 'vr-asterion-sphere-model' || id === 'vr-rune-bridge-model' || id === 'gltf-loader-module' || id === 'monkey-model' || id === 'monkey-stone-model' || id === 'vr-portal-model' || id === 'vr-astro-attractor-model' || id === 'vr-astro-furnace-model' || id.startsWith('vr-progress-floor-') || id === 'vr-crystal-reliquary-model' || id.startsWith('vr-crystal-reliquary-button-') || id.startsWith('glyph-') || id.startsWith('vr-crystal-') || id.startsWith('shell-relic-') || id.startsWith('small-glyph-relic-'))
+  .filter(({ id }) => id === 'sun-model' || id === 'vr-asterion-sphere-model' || id === 'vr-rune-bridge-model' || id === 'gltf-loader-module' || id === 'monkey-model' || id === 'monkey-stone-model' || id === 'vr-portal-model' || id === 'vr-astro-attractor-model' || id === 'vr-astro-furnace-model' || id.startsWith('vr-progress-floor-') || id === 'vr-crystal-reliquary-model' || id.startsWith('vr-crystal-reliquary-button-') || id.startsWith('glyph-') || id.startsWith('vr-crystal-') || id.startsWith('vr-rune-stone-') || id.startsWith('shell-relic-') || id.startsWith('small-glyph-relic-'))
   .map((asset) => ({ ...asset, critical: asset.id === 'gltf-loader-module' }));
 const loadingDiagnostics = createLoadingDiagnostics(vrAssets);
 const assetManager = createAssetManager({ diagnostics: loadingDiagnostics });
@@ -267,12 +268,17 @@ const sphericalLayerRanges = resolveVrSphericalLayerRanges({
   layers: [
     { id: VR_SPHERICAL_LAYER_IDS.SHELLS, ...settings.sphericalLayers.shells, status: 'IMPLEMENTED' },
     { id: VR_SPHERICAL_LAYER_IDS.SMALL_GLYPHS, ...settings.sphericalLayers.smallGlyphs, status: 'IMPLEMENTED' },
-    { id: VR_SPHERICAL_LAYER_IDS.RUNE_STONES, ...settings.sphericalLayers.runeStones, status: 'RESERVED' },
+    { id: VR_SPHERICAL_LAYER_IDS.RUNE_STONES, ...settings.sphericalLayers.runeStones, status: 'IMPLEMENTED' },
     { id: VR_SPHERICAL_LAYER_IDS.STARS, ...settings.sphericalLayers.stars, status: 'IMPLEMENTED' },
     { id: VR_SPHERICAL_LAYER_IDS.HIDDEN_GLYPHS, ...settings.sphericalLayers.hiddenGlyphs, status: 'RESERVED' }
   ]
 });
 const sphericalLayer = (id) => sphericalLayerRanges.find((range) => range.id === id);
+const runeStoneActor = createVrRuneStoneActor({
+  parent: worldStableRoot,
+  assetManager,
+  layer: sphericalLayer(VR_SPHERICAL_LAYER_IDS.RUNE_STONES)
+});
 const starLayer = sphericalLayer(VR_SPHERICAL_LAYER_IDS.STARS);
 const celestialActor = createVrCelestialActor({
   parent: worldStableRoot,
@@ -1202,6 +1208,7 @@ function renderFrame() {
   largeGlyphAttractorInteraction.update(delta);
   postRingPresentation.update(delta);
   smallGlyphSystem.update(delta);
+  runeStoneActor.update(delta);
   celestialActor.update(delta);
   observationWindow.update(delta);
   p2ObservationWindow.update(delta);
@@ -1283,6 +1290,7 @@ function restoreVrScenarioBaseline() {
   progressionController.reset();
   progressFloor.reset();
   runeBridgeActor.reset();
+  runeStoneActor.reset();
   largeGlyphAttractorInteraction.reset();
   largeGlyphActor.reset();
   smallGlyphAttractorInteraction.reset();
@@ -1406,6 +1414,7 @@ window.addEventListener('pagehide', () => {
   crystalCollection.dispose();
   crystalReliquary.dispose();
   runeBridgeActor.dispose();
+  runeStoneActor.dispose();
   progressFloor.dispose();
   postRingPresentation.dispose();
   p2ObservationWindow.reset();
