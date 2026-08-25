@@ -112,14 +112,14 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
     const astroModuleAvailable = canUseAstroProduction() || canUseAstroTuning() || astroProductionState !== 'READY';
     const runeSnapshot = runeRecipeSelectionController?.getSnapshot?.();
     const runeFoundationAvailable = furnace?.capabilities?.runeRecipeAnchorsReady === true
-      && Boolean(runeRecipeSelectionController) && (runeSnapshot?.eligibleFamilyCodes?.length ?? 0) > 0;
+      && Boolean(runeRecipeSelectionController);
     const cards = [
       ['module-asterion-sphere', 'SFERA ASTERIONOWA', 'Rdzeń żyroskopowy sterowania kręgiem', 'SKORUPY', `${progress.absorbed} / 6   DOSTĘPNE`, true],
       ['module-astro-attractor', 'ASTROLABIUM WIĘZI', 'Narzędzie przyciągania i synchronizacji', 'STATUS',
         astroProductionState === 'AVAILABLE' ? 'GOTOWE // ODBIERZ' : astroProductionState === 'EARNED' ? 'STROJENIE' : 'WEJDŹ DO MODUŁU',
         astroModuleAvailable],
       ['module-emanation-matrix', 'MATRYCA EMANACJI', 'Przetwarzanie kamieni runicznych', 'KAMIENIE',
-        runeFoundationAvailable ? `${runeSnapshot.eligibleFamilyCodes.length} ELIGIBLE` : 'NIEDOSTĘPNE', runeFoundationAvailable]
+        runeFoundationAvailable ? `${runeSnapshot.availableFamilyCodes.length} RODZIN` : 'NIEDOSTĘPNE', runeFoundationAvailable]
     ];
     interactiveRegions = cards.map((card, index) => {
       const rect = { id: card[0], x: 90, y: 205 + index * 245, width: 1356, height: 205, enabled: card[5] };
@@ -148,7 +148,7 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
     ];
     entries.forEach(([id, title, detail], index) => {
       const enabled = id !== 'astrolabium-rune-tuning' || (furnace?.capabilities?.runeRecipeAnchorsReady === true
-        && (runeRecipeSelectionController?.getEligibleFamilyCodes?.().length ?? 0) > 0);
+        && Boolean(runeRecipeSelectionController));
       const rect = { id, x: 90, y: 285 + index * 215, width: 1315, height: 175, enabled };
       interactiveRegions.push(rect); panelRect(rect.x, rect.y, rect.width, rect.height, { hovered: hoveredRegion === id,
         active: enabled, locked: !enabled, accentColor: accents.attractor });
@@ -159,7 +159,7 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
   const runeFamilyLabels = Object.freeze({ earth: 'ZIEMIA', metal: 'METAL', water: 'WODA', tree: 'DREWNO', fire: 'OGIEŃ', astro: 'ETER' });
   const runeLabel = (familyCode) => runeFamilyLabels[PROTO_ASTRO_FAMILIES[familyCode]?.id] ?? familyCode ?? '—';
   function drawRuneTuning() {
-    const snapshot = runeRecipeSelectionController?.getSnapshot?.() ?? { eligibleFamilyCodes: [] };
+    const snapshot = runeRecipeSelectionController?.getSnapshot?.() ?? { availableFamilyCodes: [] };
     const tuning = runeTuningController?.getSnapshot?.() ?? { processing: false, targetFamilyCode: null };
     interactiveRegions = [{ id: 'back-modules', x: 90, y: 55, width: 260, height: 70, enabled: true }];
     panelRect(90, 55, 260, 70, { hovered: hoveredRegion === 'back-modules', accentColor: accents.emanation });
@@ -168,21 +168,21 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
     text('WYBIERZ DOCELOWĄ RODZINĘ KAMIENIA', 90, 225, 22, '#b89dd0');
     FAMILY_GRID_CODES.forEach((familyCode, index) => {
       const natural = PROTO_ASTRO_NATURAL_FAMILY_CODES.includes(familyCode);
-      const eligible = snapshot.eligibleFamilyCodes.includes(familyCode);
+      const available = snapshot.availableFamilyCodes.includes(familyCode);
       const tuned = snapshot.tunedFamilyCodes?.includes(familyCode) === true;
       const tunable = snapshot.tunableFamilyCodes?.includes(familyCode) === true;
       const selected = snapshot.selectedFamilyCode === familyCode;
       const rect = familyGridRect(index, 'rune-family', natural && tunable && !tuning.processing);
       if (natural) interactiveRegions.push(rect);
-      panelRect(rect.x, rect.y, rect.width, rect.height, { hovered: hoveredRegion === rect.id, active: selected || eligible,
-        locked: !eligible, accentColor: accents.emanation });
+      panelRect(rect.x, rect.y, rect.width, rect.height, { hovered: hoveredRegion === rect.id, active: selected || available,
+        locked: !available, accentColor: accents.emanation });
       const glyph = smallGlyphByFamily.get(familyCode);
       if (glyph) drawSmallGlyphWireframe(context, { assetId: glyph.assetId, cx: rect.x + rect.width - 82,
-        cy: rect.y + 72, scale: 64, color: eligible ? accents.emanation : accents.idle, alpha: natural ? .9 : .5 });
+        cy: rect.y + 72, scale: 64, color: available ? accents.emanation : accents.idle, alpha: natural ? .9 : .5 });
       text(`${runeLabel(familyCode)} // ${glyph?.protoAstro.descriptor.syllable ?? familyCode}`, rect.x + 20, rect.y + 48, 27,
-        eligible ? '#f1eaff' : '#78909d');
-      text(!natural ? 'SPECJALNY' : tuned ? 'ZESTROJONA' : selected ? 'SELECTED' : eligible ? 'ELIGIBLE' : 'LOCKED', rect.x + 20, rect.y + 105, 18,
-        tuned || selected ? accents.complete : eligible ? '#cdb5e4' : '#70828d');
+        available ? '#f1eaff' : '#78909d');
+      text(!natural ? 'SPECJALNY' : tuned ? 'ZESTROJONA' : selected ? 'WYBRANA' : 'DOSTĘPNA', rect.x + 20, rect.y + 105, 18,
+        tuned || selected ? accents.complete : available ? '#cdb5e4' : '#70828d');
     });
     const recipe = snapshot.expectedRecipe;
     panelRect(90, 640, 650, 315, { variant: 'monitor', active: Boolean(recipe), accentColor: accents.emanation });
@@ -510,7 +510,7 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
     onEnterModule();
   } else if (id === 'module-emanation-matrix') {
     if (!runeRecipeSelectionController || furnace?.capabilities?.runeRecipeAnchorsReady !== true
-      || runeRecipeSelectionController.getEligibleFamilyCodes().length === 0) return false;
+      || runeRecipeSelectionController.getAvailableFamilyCodes().length === 0) return false;
     screen = ASTRO_FURNACE_PANEL_SCREENS.RUNE_TUNING;
     returnScreen = ASTRO_FURNACE_PANEL_SCREENS.HOME;
     moduleListeners.forEach((listener) => listener(ASTRO_FURNACE_RUNE_TUNING_MODE));

@@ -562,7 +562,7 @@ const astroFurnaceRuneRecipeInteraction = createVrAstroFurnaceRuneRecipeInteract
   takeHeldSmallGlyph: (glyph) => smallGlyphAttractorInteraction?.transferHeldGlyph(glyph) === true
 });
 const runeRecipeSelectionController = createVrRuneRecipeSelectionController({
-  progressionController, runeRecipeInteraction: astroFurnaceRuneRecipeInteraction,
+  runeRecipeInteraction: astroFurnaceRuneRecipeInteraction,
   runeStoneProgressionController
 });
 const runeTuningController = createVrRuneTuningController({
