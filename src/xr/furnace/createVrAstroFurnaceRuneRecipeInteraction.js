@@ -28,6 +28,8 @@ export function createVrAstroFurnaceRuneRecipeInteraction({
     throw new TypeError('shellSystem must expose restoreInstanceToOrbit.');
   if (typeof smallGlyphSystem?.restoreInstanceToField !== 'function')
     throw new TypeError('smallGlyphSystem must expose restoreInstanceToField.');
+  if (typeof shellSystem?.consumeInstance !== 'function' || typeof smallGlyphSystem?.consumeInstance !== 'function')
+    throw new TypeError('Rune recipe domain systems must expose consumeInstance.');
 
   const states = ASTRO_FURNACE_RUNE_RECIPE_SLOT_STATES;
   const config = { enabled: true, snapDuration: .42, chamberClearance: .012, ...settings };
@@ -136,6 +138,27 @@ export function createVrAstroFurnaceRuneRecipeInteraction({
     if (restoredSmallGlyph || restoredShell) emitChange();
   }
   function resetBaseline() { resetSession(); }
+  function canConsumeInsertedIngredients(expected = {}) {
+    return !disposed && smallGlyph.state === states.INSERTED && shell.state === states.INSERTED
+      && smallGlyph.content !== null && shell.content !== null
+      && (!expected.smallGlyph || expected.smallGlyph === smallGlyph.content)
+      && (!expected.shell || expected.shell === shell.content)
+      && smallGlyphSystem.getInstances().includes(smallGlyph.content)
+      && shellSystem.getRecord(shell.content) !== null;
+  }
+  function consumeInsertedIngredients(expected = {}) {
+    if (!canConsumeInsertedIngredients(expected)) return false;
+    const glyph = smallGlyph.content;
+    const insertedShell = shell.content;
+    if (!smallGlyphSystem.consumeInstance(glyph))
+      throw new Error('Small glyph system rejected a known rune recipe ingredient.');
+    if (!shellSystem.consumeInstance(insertedShell))
+      throw new Error('Shell system rejected a known rune recipe ingredient.');
+    smallGlyph.content = null; smallGlyph.state = states.EMPTY; smallGlyph.elapsed = 0;
+    shell.content = null; shell.state = states.EMPTY; shell.elapsed = 0;
+    emitChange();
+    return true;
+  }
   function dispose() {
     if (disposed) return;
     resetSession();
@@ -149,6 +172,8 @@ export function createVrAstroFurnaceRuneRecipeInteraction({
     update,
     resetSession,
     resetBaseline,
+    canConsumeInsertedIngredients,
+    consumeInsertedIngredients,
     dispose,
     subscribe(listener) {
       if (typeof listener !== 'function') throw new TypeError('Rune recipe listener must be a function.');

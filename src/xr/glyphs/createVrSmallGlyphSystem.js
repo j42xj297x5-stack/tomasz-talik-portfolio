@@ -11,7 +11,8 @@ const GLYPH_STATE = Object.freeze({
   HIDDEN: 'HIDDEN',
   MATERIALIZING: 'MATERIALIZING',
   FIELD: 'FIELD',
-  PLACED: 'PLACED'
+  PLACED: 'PLACED',
+  CONSUMED: 'CONSUMED'
 });
 
 export function createVrSmallGlyphSystem({
@@ -161,6 +162,16 @@ export function createVrSmallGlyphSystem({
     return true;
   }
 
+  function consumeInstance(instance) {
+    if (disposed) return false;
+    const record = records.find((candidate) => candidate.instance === instance);
+    if (!record) return false;
+    if (instance.parent !== object) object.add(instance);
+    instance.visible = false;
+    instance.userData.smallGlyphState = GLYPH_STATE.CONSUMED;
+    return true;
+  }
+
   function beginPresentation() {
     if (disposed || state !== SYSTEM_STATE.HIDDEN) return false;
     object.visible = true;
@@ -268,6 +279,7 @@ export function createVrSmallGlyphSystem({
     getState: () => state,
     getFieldTransform,
     restoreInstanceToField,
+    consumeInstance,
     placeInstance,
     getInstances: () => records.map(({ instance }) => instance)
   };

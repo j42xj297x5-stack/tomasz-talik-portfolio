@@ -9,6 +9,7 @@ export const ASTRO_FURNACE_PROCESS_STATES = Object.freeze({
 });
 export const ASTRO_FURNACE_PROCESS_KINDS = Object.freeze({
   SHELL_EXTRACTION: 'SHELL_EXTRACTION', SMALL_GLYPH_ESSENCE_EXTRACTION: 'SMALL_GLYPH_ESSENCE_EXTRACTION',
+  RUNE_TUNING: 'RUNE_TUNING',
   ASTERION_CONSTRUCTION: 'ASTERION_CONSTRUCTION',
   ASTRO_ATTRACTOR_CONSTRUCTION: 'ASTRO_ATTRACTOR_CONSTRUCTION'
 });
@@ -38,10 +39,10 @@ function cloneMaterials(root, owned) {
 export function createVrAstroFurnaceActivateInteraction({
   furnace, controllers = [], settings = {}, processSettings = {}, haloSettings = {},
   openInteraction, canActivateInput = () => false, isModeActive = () => true, qaAllowWithoutInput = false,
-  getExtractionProcessKind = () => ASTRO_FURNACE_PROCESS_KINDS.SHELL_EXTRACTION,
+  getActivationProcessKind = () => ASTRO_FURNACE_PROCESS_KINDS.SHELL_EXTRACTION,
   isOrdinaryRayAvailable = () => true, onProcessStart = () => {}, onProcessStop = () => {}
 }) {
-  if (typeof getExtractionProcessKind !== 'function') throw new TypeError('getExtractionProcessKind must be a function.');
+  if (typeof getActivationProcessKind !== 'function') throw new TypeError('getActivationProcessKind must be a function.');
   const states = ASTRO_FURNACE_PROCESS_STATES;
   const button = furnace?.nodes?.button_activate;
   const buttonMeshes = [];
@@ -198,10 +199,11 @@ export function createVrAstroFurnaceActivateInteraction({
     if (!canActivate()) return false;
     state = states.PRESSING; clearHits(); setButtonEmission(settings.emissionPressed ?? 5);
     action.stop(); action.reset(); action.timeScale = 1; action.clampWhenFinished = true; action.play();
-    processKind = getExtractionProcessKind();
+    processKind = getActivationProcessKind();
     if (![ASTRO_FURNACE_PROCESS_KINDS.SHELL_EXTRACTION,
-      ASTRO_FURNACE_PROCESS_KINDS.SMALL_GLYPH_ESSENCE_EXTRACTION].includes(processKind)) {
-      throw new Error(`Unsupported Astro furnace extraction process kind: ${processKind}`);
+      ASTRO_FURNACE_PROCESS_KINDS.SMALL_GLYPH_ESSENCE_EXTRACTION,
+      ASTRO_FURNACE_PROCESS_KINDS.RUNE_TUNING].includes(processKind)) {
+      throw new Error(`Unsupported Astro furnace activation process kind: ${processKind}`);
     }
     processStarted = true; onProcessStart({ processKind });
     return true;

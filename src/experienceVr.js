@@ -51,6 +51,8 @@ import { createVrAstroFurnaceProgressionController } from './xr/furnace/createVr
 import { createVrAstroFurnaceContentInteraction } from './xr/furnace/createVrAstroFurnaceContentInteraction.js';
 import { createVrAstroFurnaceRuneRecipeInteraction } from './xr/furnace/createVrAstroFurnaceRuneRecipeInteraction.js';
 import { createVrRuneRecipeSelectionController } from './xr/runes/createVrRuneRecipeSelectionController.js';
+import { createVrRuneStoneProgressionController } from './xr/runes/createVrRuneStoneProgressionController.js';
+import { createVrRuneTuningController } from './xr/runes/createVrRuneTuningController.js';
 import { createVrProtoAstroTuningController } from './xr/protoAstro/createVrProtoAstroTuningController.js';
 import { createVrAsterionSphere } from './xr/asterion/createVrAsterionSphere.js';
 import { createVrAsterionGyroInteraction } from './xr/asterion/createVrAsterionGyroInteraction.js';
@@ -553,8 +555,15 @@ const astroFurnaceRuneRecipeInteraction = createVrAstroFurnaceRuneRecipeInteract
   takeHeldShell: (shell) => shellAttractorInteraction?.transferHeldShell(shell) === true,
   takeHeldSmallGlyph: (glyph) => smallGlyphAttractorInteraction?.transferHeldGlyph(glyph) === true
 });
+const runeStoneProgressionController = createVrRuneStoneProgressionController();
 const runeRecipeSelectionController = createVrRuneRecipeSelectionController({
-  progressionController, runeRecipeInteraction: astroFurnaceRuneRecipeInteraction
+  progressionController, runeRecipeInteraction: astroFurnaceRuneRecipeInteraction,
+  runeStoneProgressionController
+});
+const runeTuningController = createVrRuneTuningController({
+  runeRecipeInteraction: astroFurnaceRuneRecipeInteraction,
+  runeRecipeSelectionController,
+  runeStoneProgressionController
 });
 const furnaceContentSource = createVrAstroFurnaceContentSource({
   getInteraction: () => astroFurnaceContentInteraction,
@@ -567,6 +576,7 @@ const furnacePanel = createVrAstroFurnacePanel({
   protoAstroTuningController,
   runeRecipeInteraction: astroFurnaceRuneRecipeInteraction,
   runeRecipeSelectionController,
+  runeTuningController,
   canUseAstroProduction: () => runtimeExperience?.can(
     VR_SCENARIO_CAPABILITY.CAN_START_FURNACE_PROCESS
   ) === true,
@@ -607,18 +617,37 @@ astroFurnaceActivateInteraction = createVrAstroFurnaceActivateInteraction({
   processSettings: settings.furnace.process,
   haloSettings: settings.targetHalo,
   openInteraction: astroFurnaceOpenInteraction,
-  canActivateInput: () => astroFurnaceContentInteraction?.hasValidInsertedContent() === true,
-  isModeActive: () => [ASTRO_FURNACE_ACTIVE_MODE, ASTRO_FURNACE_ASTRO_ATTRACTOR_MODE]
+  canActivateInput: () => astroFurnaceOptionInteraction?.getActiveMode?.() === ASTRO_FURNACE_RUNE_TUNING_MODE
+    ? runeTuningController.canStart()
+    : astroFurnaceContentInteraction?.hasValidInsertedContent() === true,
+  isModeActive: () => [ASTRO_FURNACE_ACTIVE_MODE, ASTRO_FURNACE_ASTRO_ATTRACTOR_MODE,
+    ASTRO_FURNACE_RUNE_TUNING_MODE]
     .includes(astroFurnaceOptionInteraction?.getActiveMode?.()),
-  getExtractionProcessKind: () => astroFurnaceContentInteraction?.getInsertedContentKind?.() === 'SMALL_GLYPH'
-    ? ASTRO_FURNACE_PROCESS_KINDS.SMALL_GLYPH_ESSENCE_EXTRACTION
-    : ASTRO_FURNACE_PROCESS_KINDS.SHELL_EXTRACTION,
+  getActivationProcessKind: () => astroFurnaceOptionInteraction?.getActiveMode?.() === ASTRO_FURNACE_RUNE_TUNING_MODE
+    ? ASTRO_FURNACE_PROCESS_KINDS.RUNE_TUNING
+    : astroFurnaceContentInteraction?.getInsertedContentKind?.() === 'SMALL_GLYPH'
+      ? ASTRO_FURNACE_PROCESS_KINDS.SMALL_GLYPH_ESSENCE_EXTRACTION
+      : ASTRO_FURNACE_PROCESS_KINDS.SHELL_EXTRACTION,
   qaAllowWithoutInput: furnaceProcessQa,
   isOrdinaryRayAvailable: ordinaryFurnaceRayAvailable,
-  onProcessStart: ({ processKind }) => [ASTRO_FURNACE_PROCESS_KINDS.ASTERION_CONSTRUCTION, ASTRO_ATTRACTOR_CONSTRUCTION].includes(processKind)
-    ? vrAudio.startAsterionCreate() : vrAudio.startFurnaceProcess(),
-  onProcessStop: ({ processKind }) => [ASTRO_FURNACE_PROCESS_KINDS.ASTERION_CONSTRUCTION, ASTRO_ATTRACTOR_CONSTRUCTION].includes(processKind)
-    ? vrAudio.stopAsterionCreate() : vrAudio.stopFurnaceProcess()
+  onProcessStart: ({ processKind }) => {
+    if (processKind === ASTRO_FURNACE_PROCESS_KINDS.RUNE_TUNING) {
+      runeTuningController.beginTuning(); vrAudio.startRuneTuningProcess(); return;
+    }
+    if ([ASTRO_FURNACE_PROCESS_KINDS.ASTERION_CONSTRUCTION, ASTRO_ATTRACTOR_CONSTRUCTION].includes(processKind))
+      vrAudio.startAsterionCreate();
+    else vrAudio.startFurnaceProcess();
+  },
+  onProcessStop: ({ completed, processKind }) => {
+    if (processKind === ASTRO_FURNACE_PROCESS_KINDS.RUNE_TUNING) {
+      vrAudio.stopRuneTuningProcess();
+      if (completed) runeTuningController.completeTuning(); else runeTuningController.abortTuning();
+      return;
+    }
+    if ([ASTRO_FURNACE_PROCESS_KINDS.ASTERION_CONSTRUCTION, ASTRO_ATTRACTOR_CONSTRUCTION].includes(processKind))
+      vrAudio.stopAsterionCreate();
+    else vrAudio.stopFurnaceProcess();
+  }
 });
 astroFurnaceContentInteraction = createVrAstroFurnaceContentInteraction({
   furnace: astroFurnace, shellSystem, smallGlyphSystem, protoAstroTuningController,
@@ -1232,9 +1261,11 @@ function restoreVrScenarioBaseline() {
   astroFurnaceOptionInteraction.reset();
   astroFurnaceOpenInteraction.reset();
   astroFurnaceActivateInteraction.reset();
+  runeTuningController.reset();
   astroFurnaceContentInteraction.reset();
   astroFurnaceRuneRecipeInteraction.resetBaseline();
   runeRecipeSelectionController.reset();
+  runeStoneProgressionController.reset();
   protoAstroTuningController.resetBaseline();
   crystalCollection.reset();
   reliquaryHints.reset();
@@ -1349,7 +1380,9 @@ window.addEventListener('pagehide', () => {
   astroFurnaceActivateInteraction.dispose();
   astroFurnaceContentInteraction.dispose();
   astroFurnaceRuneRecipeInteraction.dispose();
+  runeTuningController.dispose();
   runeRecipeSelectionController.dispose();
+  runeStoneProgressionController.dispose();
   astroFurnaceOptionInteraction.dispose();
   playerGuidePanel.dispose();
   toolGuidanceLifecycle.dispose();
