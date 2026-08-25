@@ -3,9 +3,8 @@
 ## 1. Status i authority
 
 - **Status:** **KANONICZNY MODEL TECHNICZNO-GAMEPLAYOWY / PARTIALLY IMPLEMENTED**.
-- **Implemented through:** `RUNE A6`.
-- **Queued before next gameplay milestone:** `RUNE UI-1 — Astro Furnace panel structure and readability normalization`.
-- **Next milestone:** `RUNE A7 — RUNESTONES Astro band`.
+- **Implemented:** `RUNE A1–A6` oraz `RUNE UI-1 — Astro Furnace panel structure and readability normalization`.
+- **Next gameplay milestone:** `RUNE A7 — RUNESTONES Astro band`.
 - **Canonical runtime boundary:** `4.80`.
 - Ten dokument jest jedynym kanonicznym źródłem prawdy całego Rune Stone Act: synchronizacji Astrolabium, Pieca, pięciu pair-specific par elementarnych, specjalnego kamienia Eter, mostów, transportu, instalacji i finalnego polowania Wody.
 - Część kontraktów A1–A6 istnieje w runtime jako foundations/domain behavior bez rozszerzenia authored Scenario spine. Opis A7–A21 pozostaje targetem. Kod rozstrzyga faktyczny status implementacji, a authored progression nadal kończy się na stabilnej granicy `4.80`.
@@ -277,7 +276,7 @@ Sterowanie/obracanie aktywnego sektora lub anteny po pierwszej instalacji wymaga
 
 Każdy milestone jest osobnym bounded taskiem i kończy się przed rozpoczęciem następnego.
 
-**CURRENT IMPLEMENTATION CHECKPOINT:** RUNE A6 complete → `RUNE UI-1` queued → next gameplay milestone RUNE A7.
+**CURRENT IMPLEMENTATION CHECKPOINT:** RUNE A6 complete → `RUNE UI-1` complete → next gameplay milestone RUNE A7.
 
 ### RUNE A1 — Furnace process presentation simplification
 - **Status:** **IMPLEMENTED**
@@ -342,7 +341,8 @@ Poza A5 pozostają: integracja persistence/reconstruction ze Scenario, pasmo `RU
 - **Kryterium zakończenia:** post-Tier3 presentation/access Large Glyph odpowiada rezultatowi bez przypisywania A6 prezentacji Rune Stones.
 
 ### RUNE UI-1 — Astro Furnace panel structure and readability normalization
-- **Status:** **QUEUED / NOT IMPLEMENTED**
+- **Status:** **IMPLEMENTED**
+- **Implementation evidence:** `1ba2421 — Implement Astro Furnace UI hierarchy normalization`. Hardware/perceptual VR QA nie zostało wykonane; skala, padding, odstępy i intensywność wireframe pozostają **TUNING** do późniejszej oceny.
 - **Cel:** przed rozpoczęciem A7 przebudować nawigację i warstwę prezentacyjną panelu Astro Pieca tak, aby istniejące oraz przyszłe strojenia używały jednego czytelnego języka UI.
 - **Właściciel:** Furnace panel projection/presentation. Gameplay ownerzy, istniejące procesy i progression truth pozostają bez zmian.
 - **Granica:** zadanie UI/presentation. Nie zmienia A1–A6, nie implementuje pasma `RUNESTONES`, materializacji kamieni, transportu, instalacji ani nowych Scenario pointów.
