@@ -1,6 +1,6 @@
 import * as THREE from '../../vendor/three.js';
 import { createVrTargetHalo } from '../createVrTargetHalo.js';
-import { isWorldPointInsideChamberCylinder, resolveFurnaceContentSnapTarget } from '../furnace/vrAstroFurnaceChamberCylinder.js';
+import { centerPresentationInProductVolume, productBoundsFitVolume, resolveProductVolumeBounds } from '../furnace/vrFurnaceProductVolume.js';
 
 export const VR_ASTERION_PRODUCTION_STATES = Object.freeze({
   LOCKED: 'LOCKED', READY: 'READY', BUILDING: 'BUILDING', AVAILABLE: 'AVAILABLE', EARNED: 'EARNED'
@@ -13,19 +13,21 @@ const PRESENTATION_LEVITATION_AXIS = new THREE.Vector3(0, 1, 0);
 export const resolveAsterionFormationProgress = (constructionProgress) => clamp01((constructionProgress - 1 / 3) / (1 / 2));
 
 export function createVrAsterionProductionController({
-  progressionController, sphere, contentAnchor, chamber = null, chamberCylinder = null, energyCell = null, controllers = [], handModeController = null,
+  progressionController, sphere, productVolume, controllers = [], handModeController = null,
   processDriver = null, getChamberState = () => 'CLOSED', getContentState = () => 'EMPTY', settings = {}, haloSettings = {},
   onBuildStart = () => {}, onBuildStop = () => {}, onStateChange = () => {}, onClaimed = () => {}
 }) {
   const duration = Math.max(18, settings.buildDurationSeconds ?? 18);
   const rayMaxDistance = Math.max(0.1, settings.rayMaxDistance ?? 2.3);
   const raycaster = new THREE.Raycaster(), origin = new THREE.Vector3(), direction = new THREE.Vector3(), quaternion = new THREE.Quaternion();
-  const center = new THREE.Vector3(), chamberLocalCenter = new THREE.Vector3();
   const hits = new Map(controllers.map((record) => [record, false]));
   const subscribers = new Set();
   let state = progressionController?.getAsterionSphereProgress?.().complete ? 'READY' : 'LOCKED';
   let disposed = false, committedBuilds = 0, earnedCommits = 0, modeController = handModeController;
   let constructionProgress = 0, presentationElapsed = 0, presentationTarget = null;
+  let presentedProductBounds = null, effectiveLevitationAmplitude = 0;
+  if (!productVolume) throw new TypeError('VR_FURNACE_PRODUCT_VOLUME is required');
+  const productVolumeBounds = resolveProductVolumeBounds(productVolume);
   const sphereWasVisible = sphere?.object?.visible;
   if (sphere?.object) sphere.object.visible = true;
   const halo = sphere?.object ? createVrTargetHalo({ root: sphere.object, settings: haloSettings }) : null;
@@ -38,31 +40,31 @@ export function createVrAsterionProductionController({
   function emit() { const snapshot = getSnapshot(); subscribers.forEach((listener) => listener(snapshot)); onStateChange(snapshot); }
   function syncGate() { if (state === 'LOCKED' && progressionController?.getAsterionSphereProgress?.().complete === true) { state = 'READY'; emit(); } }
   const unsubscribeProgress = progressionController?.subscribe?.(syncGate) ?? (() => {});
-  function isCenterInsideChamber() {
-    if (!sphere?.object || !chamber || !chamberCylinder) return null;
-    sphere.object.updateWorldMatrix(true, true); chamber.updateWorldMatrix(true, false);
-    new THREE.Box3().setFromObject(sphere.object).getCenter(center);
-    return isWorldPointInsideChamberCylinder(center, chamber, chamberCylinder, chamberLocalCenter);
-  }
-  function canCreate() { return !disposed && state === 'READY' && !sphere?.isPresented?.() && contentAnchor
+  function canCreate() { return !disposed && state === 'READY' && !sphere?.isPresented?.() && productVolume
     && progressionController?.getAsterionSphereProgress?.().complete === true && getChamberState() === 'CLOSED'
     && getContentState() === 'EMPTY' && processDriver?.canStartConstruction?.() === true; }
-  // Every furnace-produced object is first parented to VR_FURNACE_CONTENT_ANCHOR and then
-  // positioned by the same geometry/energy-cell contract used for inserted content.
-  function presentAtFurnaceSnapTarget() {
-    if (!sphere?.presentAt?.(contentAnchor, 1, new THREE.Vector3())) return false;
-    presentationTarget = resolveFurnaceContentSnapTarget({ object: sphere.socket, visibleRoot: sphere.object,
-      anchor: contentAnchor, energyCell, contentClearance: settings.contentClearance ?? .012, centerVisibleBounds: true });
-    sphere.socket.position.copy(presentationTarget); presentationElapsed = 0;
+  function presentInProductVolume() {
+    if (!sphere?.presentAt?.(productVolume, 1, new THREE.Vector3())) return false;
+    presentedProductBounds = centerPresentationInProductVolume({ presentationRoot: sphere.socket,
+      visibleRoot: sphere.object, productVolume, volumeBounds: productVolumeBounds });
+    if (!productBoundsFitVolume(presentedProductBounds, productVolumeBounds)) {
+      throw new Error('Asterion presentation at scale 1 does not fit VR_FURNACE_PRODUCT_VOLUME');
+    }
+    presentationTarget = sphere.socket.position.clone();
+    const verticalClearance = Math.min(productVolumeBounds.max.y - presentedProductBounds.max.y,
+      presentedProductBounds.min.y - productVolumeBounds.min.y);
+    effectiveLevitationAmplitude = Math.min(PRESENTATION_LEVITATION_AMPLITUDE, Math.max(0, verticalClearance));
+    presentationElapsed = 0;
     return true;
   }
   function clearPresentation() {
-    presentationTarget = null; presentationElapsed = 0; sphere?.clearPresentation?.();
+    presentationTarget = null; presentedProductBounds = null; effectiveLevitationAmplitude = 0;
+    presentationElapsed = 0; sphere?.clearPresentation?.();
   }
   function requestCreate() {
     syncGate(); if (!canCreate() || processDriver?.startConstruction?.() !== true) return false;
     state = 'BUILDING'; constructionProgress = 0;
-    presentAtFurnaceSnapTarget(); sphere.setMaterializationProgress?.(0);
+    presentInProductVolume(); sphere.setMaterializationProgress?.(0);
     onBuildStart(); emit(); return true;
   }
   function finishBuild() {
@@ -98,7 +100,7 @@ export function createVrAsterionProductionController({
     } else if (state === 'AVAILABLE') {
       presentationElapsed += step; sphere.socket.rotation.y += step * .22;
       if (presentationTarget) sphere.socket.position.copy(presentationTarget).addScaledVector(
-        PRESENTATION_LEVITATION_AXIS, PRESENTATION_LEVITATION_AMPLITUDE * Math.sin(presentationElapsed * Math.PI * 2 / PRESENTATION_LEVITATION_PERIOD));
+        PRESENTATION_LEVITATION_AXIS, effectiveLevitationAmplitude * Math.sin(presentationElapsed * Math.PI * 2 / PRESENTATION_LEVITATION_PERIOD));
     }
     updateRayHits(); halo?.update(step);
   }
@@ -110,7 +112,7 @@ export function createVrAsterionProductionController({
   function resetSession() { clearHits(); if (state === 'BUILDING') { sphere.restorePresentationMaterials?.(); clearPresentation(); constructionProgress = 0;
       state = 'READY'; onBuildStop(true); emit(); }
     else if (state === 'AVAILABLE') {
-      presentAtFurnaceSnapTarget(); sphere.restorePresentationMaterials?.();
+      presentInProductVolume(); sphere.restorePresentationMaterials?.();
     } else clearPresentation(); }
   function resetBaseline() {
     clearHits();
@@ -132,5 +134,11 @@ export function createVrAsterionProductionController({
     setHandModeController: (next) => { modeController = next; }, subscribe(listener) { if (disposed || typeof listener !== 'function') return () => {};
       subscribers.add(listener); return () => subscribers.delete(listener); },
     getDiagnostics: () => ({ state, committedBuilds, earnedCommits, duration, constructionProgress, formationProgress: resolveAsterionFormationProgress(constructionProgress),
-      parentIsContentAnchor: sphere?.socket?.parent === contentAnchor, centerInsideChamber: isCenterInsideChamber(), ...sphere?.getDiagnostics?.() }) };
+      parentIsProductVolume: sphere?.socket?.parent === productVolume, productVolumeName: productVolume.name,
+      productVolumeBounds: productVolumeBounds ? { min: productVolumeBounds.min.toArray(), max: productVolumeBounds.max.toArray(),
+        size: productVolumeBounds.getSize(new THREE.Vector3()).toArray() } : null,
+      productCenterInsideVolume: presentedProductBounds
+        ? productVolumeBounds.containsPoint(presentedProductBounds.getCenter(new THREE.Vector3())) : null,
+      productFitsVolume: presentedProductBounds ? productBoundsFitVolume(presentedProductBounds, productVolumeBounds) : null,
+      effectiveLevitationAmplitude, ...sphere?.getDiagnostics?.() }) };
 }

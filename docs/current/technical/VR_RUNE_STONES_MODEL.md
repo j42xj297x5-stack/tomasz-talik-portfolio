@@ -82,7 +82,7 @@ VR_FURNACE_PRODUCT_VOLUME
 
 Small Glyph może trafić wyłącznie do pierwszego slotu, Shell wyłącznie do drugiego. Przy otwartej komorze oba składniki mogą być osadzone jednocześnie, w dowolnej kolejności, bez pośredniego procesu i bez zamykania/otwierania Pieca pomiędzy nimi. Ten dokument nie modyfikuje GLB ani skryptów Blender; brak helperów wymaga osobnego zadania assetowego.
 
-`VR_FURNACE_PRODUCT_VOLUME` nie należy do receptury runicznej i nie jest jej trzecim składnikiem. Jest wspólnym authored kontraktem przestrzennym dla przyszłych fizycznych produktów tworzonych wewnątrz komory; jego transform, geometria i bounds pochodzą z assetu.
+`VR_FURNACE_PRODUCT_VOLUME` nie należy do receptury runicznej i nie jest jej trzecim składnikiem. Jest wspólnym authored kontraktem przestrzennym prezentacji fizycznych produktów tworzonych wewnątrz komory, w tym Kuli Asterionowej i Astro Przyciągacza; jego transform, geometria i bounds pochodzą z assetu. `VR_FURNACE_CONTENT_ANCHOR` pozostaje kontraktem wejścia dla istniejącego single-content flow i nie jest fallbackiem placementu produktów.
 
 ### 5.3. Warunki Activate i pojedynczy cycle
 
