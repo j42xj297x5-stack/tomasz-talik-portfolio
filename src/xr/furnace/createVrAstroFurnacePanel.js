@@ -34,7 +34,7 @@ export const wireframeDissolveVisible = (segment, progress) => progress < 1 && s
 export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], progressionController, processSource, contentSource,
   productionController = null, astroProductionController = null, protoAstroTuningController = null, canUseAstroProduction = () => false,
   canUseAstroTuning = () => false,
-  runeRecipeInteraction = null, runeRecipeSelectionController = null,
+  runeRecipeInteraction = null, runeRecipeSelectionController = null, runeTuningController = null,
   requestAstroProduction = () => false,
   asterionModel = null, settings = {}, onEnterModule = () => {}, onReturnHome = () => {}, onCreate = () => {} }) {
   const config = { width: 1.55, height: 1.05, gapFromFurnace: 0.10, verticalOffset: 0.15, yawDegrees: -12,
@@ -131,6 +131,7 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
   const runeLabel = (familyCode) => runeFamilyLabels[PROTO_ASTRO_FAMILIES[familyCode]?.id] ?? familyCode ?? '—';
   function drawRuneTuning() {
     const snapshot = runeRecipeSelectionController?.getSnapshot?.() ?? { eligibleFamilyCodes: [] };
+    const tuning = runeTuningController?.getSnapshot?.() ?? { processing: false, targetFamilyCode: null };
     interactiveRegions = [{ id: 'back-modules', x: 90, y: 55, width: 260, height: 70, enabled: true }];
     panelRect(90, 55, 260, 70, { hovered: hoveredRegion === 'back-modules', accentColor: accents.emanation });
     text('← MODUŁY', 120, 102, 27);
@@ -138,14 +139,17 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
     text('WYBIERZ DOCELOWĄ RODZINĘ KAMIENIA', 90, 225, 22, '#b89dd0');
     PROTO_ASTRO_NATURAL_FAMILY_CODES.forEach((familyCode, index) => {
       const eligible = snapshot.eligibleFamilyCodes.includes(familyCode);
+      const tuned = snapshot.tunedFamilyCodes?.includes(familyCode) === true;
+      const tunable = snapshot.tunableFamilyCodes?.includes(familyCode) === true;
       const selected = snapshot.selectedFamilyCode === familyCode;
-      const rect = { id: `rune-family-${familyCode}`, x: 90 + index * 270, y: 270, width: 245, height: 125, enabled: eligible };
+      const rect = { id: `rune-family-${familyCode}`, x: 90 + index * 270, y: 270, width: 245, height: 125,
+        enabled: tunable && !tuning.processing };
       interactiveRegions.push(rect);
       panelRect(rect.x, rect.y, rect.width, rect.height, { hovered: hoveredRegion === rect.id, active: selected || eligible,
         locked: !eligible, accentColor: accents.emanation });
       text(runeLabel(familyCode), rect.x + 20, rect.y + 48, 27, eligible ? '#f1eaff' : '#78909d');
-      text(selected ? 'SELECTED' : eligible ? 'ELIGIBLE' : 'LOCKED', rect.x + 20, rect.y + 91, 18,
-        selected ? accents.complete : eligible ? '#cdb5e4' : '#70828d');
+      text(tuned ? 'ZESTROJONA' : selected ? 'SELECTED' : eligible ? 'ELIGIBLE' : 'LOCKED', rect.x + 20, rect.y + 91, 18,
+        tuned || selected ? accents.complete : eligible ? '#cdb5e4' : '#70828d');
     });
     const recipe = snapshot.expectedRecipe;
     panelRect(90, 440, 650, 440, { variant: 'monitor', active: Boolean(recipe), accentColor: accents.emanation });
@@ -159,7 +163,9 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
     const shellInserted = snapshot.slots?.shell?.state === 'INSERTED';
     text(`SMALL GLYPH: ${glyphInserted ? `INSERTED / ${runeLabel(snapshot.smallGlyphFamilyCode)}` : 'EMPTY'}`, 825, 565, 23);
     text(`SHELL: ${shellInserted ? `INSERTED / ${runeLabel(snapshot.shellFamilyCode)}` : 'EMPTY'}`, 825, 625, 23);
-    const status = !snapshot.selectedFamilyCode ? 'BRAK WYBORU' : !glyphInserted || !shellInserted ? 'NIEKOMPLETNA'
+    const tuningProgress = Math.round((processSource?.getProgress?.() ?? 0) * 100);
+    const status = tuning.processing ? `STROJENIE ${runeLabel(tuning.targetFamilyCode)} // ${tuningProgress}%`
+      : !snapshot.selectedFamilyCode ? 'BRAK WYBORU' : !glyphInserted || !shellInserted ? 'NIEKOMPLETNA'
       : snapshot.readyForTuning ? 'GOTOWA DO STROJENIA' : 'NIEPRAWIDŁOWA';
     text(`RECIPE: ${status}`, 825, 720, 22, snapshot.readyForTuning ? accents.complete : '#d6b3c3');
   }

@@ -309,7 +309,9 @@ Każdy milestone jest osobnym bounded taskiem i kończy się przed rozpoczęciem
 - **Nie implementuje:** fizycznego procesu kamienia ani instalacji.
 - **Kryterium zakończenia:** dokładnie jeden poprawny cycle konsumuje Small Glyph i Shell oraz tworzy jeden idempotentny tuned fact bez fizycznego itemu „sylaba”.
 
-**NOT IMPLEMENTED:** nie istnieją jeszcze rune process kind, cycle `18 s`, playback `work_03`, konsumpcja składników, wynikowa sylaba ani commit `tunedRuneFamilies`.
+**IMPLEMENTED FOUNDATION:** fizyczny Activate uruchamia jeden semantyczny proces `RUNE_TUNING` przez wspólny canonical driver i dokładnie jeden cycle `18 s`. Proces używa `astro_piec_work_03.mp3`; dopiero successful COMPLETE konsumuje osadzone Small Glyph i Shell oraz atomowo kończy transakcję commitem naturalnej rodziny do `RuneStoneProgressionController.tunedRuneFamilies`. Wynikowa sylaba pozostaje derived semantic result canonical descriptoru `family + U`, bez fizycznego itemu ani inventory. Abort nie konsumuje składników i nie zapisuje tuned truth.
+
+Poza A5 pozostają: integracja persistence/reconstruction ze Scenario, pasmo `RUNESTONES`, fizyczny Rune Stone field, materializacja i instalacja kamieni, bridge oraz Water override.
 
 ### RUNE A6 — Post-Tier-3 spatial transition
 - **Cel:** przedstawić przestrzenną zmianę aktu.
