@@ -27,6 +27,7 @@ import { createVrReliquaryActivateButton } from './xr/createVrReliquaryActivateB
 import { createVrReliquaryReleaseButton } from './xr/createVrReliquaryReleaseButton.js';
 import { createVrProgressFloor } from './xr/floor/createVrProgressFloor.js';
 import { createVrRuneBridgeActor } from './xr/runes/createVrRuneBridgeActor.js';
+import { createVrRuneInstallationReadinessProjection } from './xr/runes/createVrRuneInstallationReadinessProjection.js';
 import { createVrRuneStoneActor } from './xr/runes/createVrRuneStoneActor.js';
 import { createVrRuneStoneAttractorInteraction } from './xr/runes/createVrRuneStoneAttractorInteraction.js';
 import { createVrProgressionController } from './xr/progression/createVrProgressionController.js';
@@ -400,6 +401,13 @@ const locomotion = createVrLocomotion({
   walkRadius: floorWalkRadius, scenarioGlyphRingRadius: floorWalkRadius
 });
 const progressionController = createVrProgressionController({ pages: experienceVrPages });
+const runeInstallationReadinessProjection = createVrRuneInstallationReadinessProjection({
+  isBranchComplete: (branchId) => progressionController.isBranchComplete(branchId)
+});
+const synchronizeRuneBridgeReadiness = () => {
+  runeInstallationReadinessProjection.synchronizeBridges(runeBridgeActor);
+};
+synchronizeRuneBridgeReadiness();
 const ambientSequencer = createVrAmbientSequencer({ bridge: vrAudio });
 const introAmbientSequencer = createVrIntroAmbientSequencer({ bridge: vrAudio });
 const ambientScenarioOwner = Object.freeze({
@@ -419,6 +427,7 @@ function syncAmbientSequence() {
   ambientSequencer.setState({ fullThreshold, asterionSubthreshold: fullThreshold === 2 && shellsComplete && sphereBuilt });
 }
 function synchronizeReconstructionDerivedState() {
+  synchronizeRuneBridgeReadiness();
   syncAmbientSequence();
   shellSystem.applyAbsorbedShellIds(furnaceProgressionController.getAbsorbedShellIds());
 }
@@ -1101,6 +1110,7 @@ runtimeExperience = new RuntimeExperience({
     },
     [VR_SCENARIO_EFFECT.UPDATE_COMMITTED_CARD_PRESENTATION]: (change, payload) => {
       progressFloor.activatePage(payload.page);
+      synchronizeRuneBridgeReadiness();
     },
     [VR_SCENARIO_EFFECT.PLAY_CARD_COMMIT_FEEDBACK]: () => {
       playVrWorld(VR_AUDIO.reliquaryConsume);
@@ -1322,6 +1332,7 @@ function restoreVrScenarioBaseline() {
   progressionController.reset();
   progressFloor.reset();
   runeBridgeActor.reset();
+  synchronizeRuneBridgeReadiness();
   runeStoneActor.reset();
   runeStoneAttractorInteraction.reset();
   largeGlyphAttractorInteraction.reset();
