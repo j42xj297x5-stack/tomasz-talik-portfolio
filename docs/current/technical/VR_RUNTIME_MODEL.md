@@ -263,9 +263,9 @@ Readiness normally reads sector completion through `isBranchComplete` and projec
 
 ## Current implemented boundary
 
-Implemented authored Scenario ends at `4.80`: `4.40 → 4.50 → 4.60 → 4.70 → 4.80`. Stable reconstruction includes Tier 3 and Proto-Astro essences `K/T/S/L/R`; it does not recreate transient interactions. Natural Rune A9.1–A9.6 foundation is complete without authored Scenario continuation: `runeProgression` silently hydrates tuned/installed truth, then readiness synchronization and `RuneInstalledStateProjection` reconstruct stable installed anchors and extended `ORBITING` bridges without replay.
+Implemented authored Scenario ends at `4.80`: `4.40 → 4.50 → 4.60 → 4.70 → 4.80`. Stable reconstruction includes Tier 3 and Proto-Astro essences `K/T/S/L/R`; it does not recreate transient interactions. Natural Rune A9.1–A9.6 foundation is complete without authored Scenario continuation: `runeStones` hydrates presentation visibility / physical actor presentation, while the separate `runeProgression` owner silently hydrates tuned/installed truth. Readiness synchronization and `RuneInstalledStateProjection` then reconstruct stable installed anchors and extended `ORBITING` bridges without replay.
 
-Not implemented: Scenario after `4.80`, Water override trigger, Ether flow, Panels 3–4, physical Rune Stone movement/spatial audio, durable persistence and full-game reset.
+Not implemented: Scenario after `4.80`, Water override trigger, Ether flow, Panels 3–4, Rune Stone idle/presentation movement and spatial audio, bridge `ORBITING` spin/presentation, durable full-game persistence and full-game reset. Physical Rune transport and installation movement are implemented.
 
 ## Closed runtime reconciliation gaps
 

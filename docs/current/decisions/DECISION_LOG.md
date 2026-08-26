@@ -2,6 +2,18 @@
 
 Status: current binding decisions with preserved history. Synchronized on 2026-08-26 through the closed runtime reconciliation gaps.
 
+## 2026-08-26 — CURRENT Natural Rune A9 foundation checkpoint after A9.6 (superseding)
+
+This is the binding Rune checkpoint and supersedes conflicting CURRENT status claims in the A9.5 follow-up, runtime-reconciliation follow-up and 2026-08-25 reconciliation below. Those entries remain historical evidence.
+
+1. Rune A1–A8 and natural Rune A9.1–A9.6 foundations are **IMPLEMENTED**; **NATURAL RUNE A9 FOUNDATION = COMPLETE**. This does not complete the Rune Act, post-`4.80` Scenario or game.
+2. A9.5 uses the invisible logical platform-centered handoff sphere (`9.0 m` transport minimum, `10 m` handoff radius), legality and ownership handoff, then actor-local `APPROACH → BRIDGE_OPEN → DESCENT → INSTALLED`. `BRIDGE_STONE_CAPTURE` is private asset/calibration evidence, not a gameplay trigger; accepted handoff does not pass through `FREE`, and player trigger input no longer controls installation.
+3. Physical bridge extension is **IMPLEMENTED**: `BridgeMotionRoot` moves radially through `DOCKED → EXTENDING → EXTENDED` by authored-derived `extensionDistance`; installation ends in `ORBITING`. `ORBITING` spin/presentation remains future.
+4. A9.6 persistent hydration and settled physical reconstruction are **IMPLEMENTED**. `runeProgression` hydrates the `RuneStoneProgressionController` facts `tunedRuneFamilies` and `installedRuneFamilies`, preserving `installedRuneFamilies ⊆ tunedRuneFamilies`; `runeStones` separately hydrates presentation visibility. `RuneInstalledStateProjection` restores installed stones and bridges directly to `INSTALLED` / `ORBITING` without replaying transient transport, capture, tween or extension flow.
+5. Reconstruction synchronizes bridge readiness, installed Rune physical state, Furnace redraw without a fake domain event, then remaining derived state. This is owner ordering, not a new Scenario mechanic.
+6. Carried Rune Stone ↔ installed Rune Stone collision is **SUPERSEDED / REMOVED FROM TARGET / NOT NEXT**. Earlier claims that collision is NEXT, bridge extension is not implemented, A9.5 is the latest reconstruction checkpoint, or authored socket/capture radius triggers gameplay are historical and non-binding.
+7. Authored Scenario still ends at `4.80`. Post-`4.80` Scenario, the Water override trigger, special Ether flow, bridge spin, Rune Stone spatial audio, antenna/finale work and durable full-game persistence remain future and are not named A9.7 or NEXT A9.
+
 ## 2026-08-26 — CURRENT Platform Energy VFX target architecture
 
 1. Future procedural platform-energy presentation has one pair-generic `PlatformEnergyVfxActor` shared by the `RUNE_INSTALL` and `FLOOR_DRIVE` profiles.
@@ -21,15 +33,15 @@ This decision supersedes every conflicting earlier CURRENT claim about polling/f
 4. There is no `ambient_06`. After `ambient_05` plays once, the post-main tail alternates the same quiet queue with repository assets `ambient_loop_01 → 02 → 03 → 04`, each for 6 repetitions. Behavior after `ambient_loop_04` is exhausted remains undecided; no tail wrap is established.
 5. This is **CURRENT / BINDING TARGET, NOT YET FULLY IMPLEMENTED**. Current code still selects from tier, retains the old Asterion subthreshold and two 30-second gaps, and lacks the post-main tail. Those facts are an implementation gap, not an active alternative contract.
 
-## 2026-08-26 — CURRENT Rune A9.5 follow-up
+## 2026-08-26 — Rune A9.5 follow-up (HISTORICAL; SUPERSEDED BY A9.6 CHECKPOINT ABOVE)
 
 A9.5 socket capture + persistent installed truth is **IMPLEMENTED**. This supersedes CURRENT claims that A9.5 is next; Rune A9 remains partially implemented and **NEXT = carried Rune Stone ↔ installed Rune Stone collision**. Scenario remains implemented only through `4.80`, and physical bridge extension motion remains not implemented / tuning target.
 
-## 2026-08-26 — CURRENT runtime reconciliation follow-up
+## 2026-08-26 — Runtime reconciliation follow-up (HISTORICAL RUNE STATUS; SUPERSEDED BY A9.6 CHECKPOINT ABOVE)
 
 The four previously remaining runtime gaps are **IMPLEMENTED**: recipe insertion family validation, recipe-change player-facing eject, debug `P5 → 4.80`, and early natural Rune Stone presentation at celestial reveal. This follow-up supersedes only their earlier open-gap status; Scenario after `4.80` remains deferred and Rune A9 remains partially implemented with socket capture + persistent installed truth next.
 
-## 2026-08-25 — CURRENT Experience VR runtime reconciliation (superseding)
+## 2026-08-25 — Experience VR runtime reconciliation (HISTORICAL RUNE STATUS; SUPERSEDED BY A9.6 CHECKPOINT ABOVE)
 
 This decision is CURRENT and supersedes conflicting status/eligibility claims in the 2026-08-24, 2026-08-23 and 2026-08-21 entries below; those entries remain historical records.
 
@@ -118,7 +130,7 @@ Każdy nowy canonical Experience VR Scenario point musi spełniać [`VR_SCENARIO
 7. Scenario capabilities may make the whole vessel loop available, but domain interaction state enforces Activate only for `inserted` and Release only for `active`. Interaction phases are not story points.
 8. Reconstruction remains `stateAt(X) = fold(settledConsequences of Spine points strictly before X)`. It never reconstructs transient/live state. **UPDATED BY 2026-08-21 DECISION:** authored reconstruction now includes Tier 2, radial and small-glyph-field truth through `stateAt(4.40)`; durable save and later P2/P4 remain not authored.
 
-## 2026-08-14 — P4 rune stones and sector vessels canonical target model
+## 2026-08-14 — P4 rune stones and sector vessels canonical target model (HISTORICAL; SUPERSEDED BY A9.6 CHECKPOINT ABOVE)
 
 1. P4 uses exactly five pair-specific units: five distinct animated rune stones and five corresponding sector vessels from one visual/construction family. The pair, not a global socket assumption, owns final stone pose and safe envelope.
 2. Every stone has one stable runtime root; every vessel exports a root, precise authored `SOCKET_POINT` and forgiving `SOCKET_ZONE`. Existing internal stone animation remains baked in GLB and continues after installation.
