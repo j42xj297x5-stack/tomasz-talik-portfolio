@@ -16,7 +16,7 @@ export function createVrRuneStoneAttractorInteraction({ controllers, runeStoneAc
   if (!Array.isArray(controllers)) throw new TypeError('controllers must be an array.');
   if (!runeStoneActor?.getStones || !runeStoneActor?.getBoundingSphere
     || !runeStoneActor?.lockByAstro || !runeStoneActor?.beginCarriedOrbit
-    || !runeStoneActor?.releaseFromAstro) {
+    || !runeStoneActor?.releaseFromAstro || !runeStoneActor?.isPresentationVisible) {
     throw new TypeError('runeStoneActor must expose physical records, live bounds and Astro transport commands.');
   }
   if (!runeStoneAttractorBandProjection?.isFamilyTargetable) {
@@ -67,7 +67,8 @@ export function createVrRuneStoneAttractorInteraction({ controllers, runeStoneAc
     && handModeController.getAttractorBand() === VR_ATTRACTOR_BANDS.RUNESTONES;
   const isTargetableFamily = (record) => runeStoneAttractorBandProjection
     .isFamilyTargetable(record.familyCode) === true;
-  const isPhysical = (record) => record?.descriptor?.natural === true && record.root?.parent
+  const isPhysical = (record) => runeStoneActor.isPresentationVisible() === true
+    && record?.descriptor?.natural === true && record.root?.parent
     && record.root.visible !== false;
   const isFreeCandidate = (record) => isPhysical(record)
     && runeStoneActor.getState(record.branchId) === VR_RUNE_STONE_STATE.FREE

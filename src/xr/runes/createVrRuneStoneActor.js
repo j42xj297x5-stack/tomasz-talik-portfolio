@@ -91,6 +91,15 @@ export function createVrRuneStoneActor({ parent, assetManager, layer }) {
     throw error;
   }
 
+  const setPresentationVisible = (value) => {
+    if (disposed) return false;
+    layerActor.object.visible = value === true;
+    return true;
+  };
+  const isPresentationVisible = () => layerActor.object.visible === true;
+  const hydrateScenarioState = (state) => {
+    setPresentationVisible(state?.presentationVisible === true);
+  };
   const getRecord = (branchId) => records.get(String(branchId ?? '').toLowerCase()) ?? null;
   const lockByAstro = (branchId) => {
     const record = getRecord(branchId);
@@ -134,6 +143,7 @@ export function createVrRuneStoneActor({ parent, assetManager, layer }) {
   function reset() {
     if (disposed) return;
     layerActor.reset();
+    setPresentationVisible(false);
     records.forEach((record) => {
       record.state = VR_RUNE_STONE_STATE.FREE;
       record.root.position.copy(record.initialTransform.position);
@@ -156,6 +166,8 @@ export function createVrRuneStoneActor({ parent, assetManager, layer }) {
     layerActor.dispose();
   }
 
+  setPresentationVisible(false);
+
   return {
     object: layerActor.object,
     getStone: getRecord,
@@ -167,6 +179,9 @@ export function createVrRuneStoneActor({ parent, assetManager, layer }) {
     getBoundingSphere,
     getInteractionRadius: (branchId) => getBoundingSphere(branchId)?.radius ?? null,
     getFamilyCode: (branchId) => getRecord(branchId)?.familyCode ?? null,
+    setPresentationVisible,
+    isPresentationVisible,
+    hydrateScenarioState,
     lockByAstro,
     beginCarriedOrbit,
     releaseFromAstro,
