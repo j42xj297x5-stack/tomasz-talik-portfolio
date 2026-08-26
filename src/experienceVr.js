@@ -76,7 +76,7 @@ import { createVrIntroCrystalTutorial } from './xr/guidance/createVrIntroCrystal
 import { createVrIntroFogReveal } from './xr/guidance/createVrIntroFogReveal.js';
 import { createVrReliquaryHints } from './xr/guidance/createVrReliquaryHints.js';
 import { createVrAudioBridge } from './xr/audio/createVrAudioBridge.js';
-import { createVrAmbientSequencer } from './xr/audio/createVrAmbientSequencer.js';
+import { createVrAmbientSequencer, VR_MAIN_AMBIENT_PROGRAMS } from './xr/audio/createVrAmbientSequencer.js';
 import { createVrIntroAmbientSequencer } from './xr/audio/createVrIntroAmbientSequencer.js';
 import { ExperienceDirector } from './xr/progression/ExperienceDirector.js';
 import { RuntimeExperience } from './xr/progression/RuntimeExperience.js';
@@ -132,8 +132,7 @@ const GLYPH_COMPLETION_AUDIO = Object.freeze({
   'spotify-digger': ['/audio/glif_metal_4s_01.mp3', '/audio/glif_metal_4s_02.mp3', '/audio/glif_metal_4s_03.mp3', '/audio/glif_metal_4s_04.mp3'],
   'haiku-cosmos': ['/audio/glif_water_4s_01.mp3', '/audio/glif_water_4s_02.mp3', '/audio/glif_water_4s_03.mp3', '/audio/glif_water_4s_04.mp3', '/audio/glif_water_4s_01.mp3']
 });
-vrAudio.prepareOneShots([...Object.values(VR_AUDIO), ...Object.values(GLYPH_COMPLETION_AUDIO).flat()]);
-vrAudio.prepareAttractorLoops();
+const REQUIRED_VR_AUDIO = Object.freeze([...Object.values(VR_AUDIO), ...Object.values(GLYPH_COMPLETION_AUDIO).flat()]);
 const playVrUi = (path) => vrAudio.playOneShot(path, 'UI');
 const playVrWorld = (path) => vrAudio.playOneShot(path, 'WORLD');
 const playVrDevice = (path) => vrAudio.playOneShot(path, 'DEVICE');
@@ -214,6 +213,7 @@ await preloadAssets(vrAssets, {
   stage: ASSET_STAGES.CRITICAL_INITIAL,
   markComplete: true
 });
+await vrAudio.prepareRuntimeAudio(REQUIRED_VR_AUDIO);
 unsubscribe();
 const progressFloor = createVrProgressFloor({
   parent: experienceRoot,
@@ -419,7 +419,6 @@ const ambientScenarioOwner = Object.freeze({
       throw new TypeError('audio state must be exactly { mainAmbientActive: true }');
     }
     introAmbientSequencer.stop();
-    ambientSequencer.enable();
   }
 });
 function synchronizeReconstructionDerivedState() {
@@ -1022,12 +1021,11 @@ runtimeExperience = new RuntimeExperience({
     [VR_SCENARIO_EFFECT.SET_INTRO_AMBIENT_05]: () => { introAmbientSequencer.setCue('05'); },
     [VR_SCENARIO_EFFECT.SET_MAIN_AMBIENT_01]: () => {
       introAmbientSequencer.stop();
-      ambientSequencer.selectMainAmbient(1);
-      ambientSequencer.enable();
+      ambientSequencer.setProgram(VR_MAIN_AMBIENT_PROGRAMS.ambient01);
     },
-    [VR_SCENARIO_EFFECT.SET_MAIN_AMBIENT_02]: () => { ambientSequencer.selectMainAmbient(2); },
-    [VR_SCENARIO_EFFECT.SET_MAIN_AMBIENT_03]: () => { ambientSequencer.selectMainAmbient(3); },
-    [VR_SCENARIO_EFFECT.SET_MAIN_AMBIENT_04]: () => { ambientSequencer.selectMainAmbient(4); },
+    [VR_SCENARIO_EFFECT.SET_MAIN_AMBIENT_02]: () => { ambientSequencer.setProgram(VR_MAIN_AMBIENT_PROGRAMS.ambient02); },
+    [VR_SCENARIO_EFFECT.SET_MAIN_AMBIENT_03]: () => { ambientSequencer.setProgram(VR_MAIN_AMBIENT_PROGRAMS.ambient03); },
+    [VR_SCENARIO_EFFECT.SET_MAIN_AMBIENT_04]: () => { ambientSequencer.setProgram(VR_MAIN_AMBIENT_PROGRAMS.ambient04); },
     [VR_SCENARIO_EFFECT.BEGIN_CELESTIAL_REVEAL]: () => { celestialActor.beginReveal(); },
     [VR_SCENARIO_EFFECT.REVEAL_NATURAL_RUNE_STONES]: () => {
       runeStoneActor.setPresentationVisible(true);

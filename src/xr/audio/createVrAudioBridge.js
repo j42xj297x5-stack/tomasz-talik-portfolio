@@ -1,6 +1,14 @@
 import { audioManager } from '../../audio/audioManager.js';
 
 const WARNING_PREFIX = '[vr-audio] Optional audio operation failed:';
+const STARTED = 'started';
+const FAILED = 'failed';
+const CANCELLED = 'cancelled';
+const REQUIRED_LONG_FORM_PATHS = Object.freeze([
+  ...Array.from({ length: 5 }, (_, index) => `/audio/ambient_intro_0${index + 1}.mp3`),
+  ...Array.from({ length: 4 }, (_, index) => `/audio/ambient_0${index + 1}.mp3`),
+  ...Array.from({ length: 13 }, (_, index) => `/audio/noise_quiete_loop_${String(index + 1).padStart(2, '0')}.mp3`)
+]);
 
 export function createVrAudioBridge({ manager = audioManager, warn = console.warn, setTimer = setTimeout, clearTimer = clearTimeout } = {}) {
   let disposed = false;
@@ -53,6 +61,20 @@ export function createVrAudioBridge({ manager = audioManager, warn = console.war
       }
     } catch (error) {
       reportFailure(operation, error);
+    }
+  }
+
+  async function prepareRuntimeAudio(paths = []) {
+    if (disposed) throw new Error('Cannot prepare disposed VR audio.');
+    const required = [...REQUIRED_LONG_FORM_PATHS, ...paths, GLYPH_PROCESS_PATH,
+      FURNACE_PROCESS_PATH, RUNE_TUNING_PROCESS_PATH, ASTERION_CREATE_PATH,
+      ASTERION_BACKGROUND_PATH, ASTERION_WORK_PATH, ...Object.values(ATTRACTOR_PATHS)];
+    try {
+      await manager.prepareVrAudio(required);
+      return true;
+    } catch (error) {
+      reportFailure('prepare required VR audio', error);
+      throw error;
     }
   }
 
@@ -241,17 +263,17 @@ export function createVrAudioBridge({ manager = audioManager, warn = console.war
       return;
     }
     if (attractorId) replaceAttractorLifecycle();
-    attractorId = nextId; attractorClass = soundClass; attractorState = 'active';
+    attractorId = nextId; attractorClass = soundClass; attractorState = 'starting';
     const token = attractorToken;
     runOptional('start Astro Attractor', (audio) => {
       let request;
       try { request = audio.startVrProcessSource(ATTRACTOR_PATHS[soundClass], 'DEVICE', { loop: true }); }
       catch (error) { if (token === attractorToken) stopAttractorLifecycle(); throw error; }
       return Promise.resolve(request).then((handle) => {
-      if (!handle) return;
-      if (disposed || token !== attractorToken || !['active', 'recovering'].includes(attractorState)) { stopAttractorHandle(handle); return; }
+      if (!handle) { if (token === attractorToken) stopAttractorLifecycle(); return; }
+      if (disposed || token !== attractorToken || attractorState !== 'starting') { stopAttractorHandle(handle); return; }
       attractorHandle = handle;
-      if (attractorState === 'recovering') handle.rampTo?.(0, 1);
+      attractorState = 'active';
       }).catch((error) => { if (token === attractorToken) stopAttractorLifecycle(); throw error; });
     });
   }
@@ -274,24 +296,32 @@ export function createVrAudioBridge({ manager = audioManager, warn = console.war
   }
 
   function startFiniteSource(path, bus, options) {
-    if (disposed) return Promise.resolve(null);
+    if (disposed || options?.signal?.aborted) return Promise.resolve({ status: CANCELLED });
     try {
       return Promise.resolve(manager.startVrFiniteSource(path, bus, options))
-        .catch((error) => { reportFailure(`start finite ${path}`, error); return null; });
+        .then((handle) => {
+          if (options?.signal?.aborted || disposed) { try { handle?.stop?.(); } catch (_) {} return { status: CANCELLED }; }
+          return handle ? { status: STARTED, handle } : { status: FAILED };
+        })
+        .catch((error) => { reportFailure(`start finite ${path}`, error); return { status: FAILED }; });
     } catch (error) {
       reportFailure(`start finite ${path}`, error);
-      return Promise.resolve(null);
+      return Promise.resolve({ status: FAILED });
     }
   }
 
   function startOverlappingLoopSource(path, bus, options) {
-    if (disposed) return Promise.resolve(null);
+    if (disposed || options?.signal?.aborted) return Promise.resolve({ status: CANCELLED });
     try {
       return Promise.resolve(manager.startVrOverlappingLoopSource(path, bus, options))
-        .catch((error) => { reportFailure(`start overlapping loop ${path}`, error); return null; });
+        .then((handle) => {
+          if (options?.signal?.aborted || disposed) { try { handle?.stop?.(); } catch (_) {} return { status: CANCELLED }; }
+          return handle ? { status: STARTED, handle } : { status: FAILED };
+        })
+        .catch((error) => { reportFailure(`start overlapping loop ${path}`, error); return { status: FAILED }; });
     } catch (error) {
       reportFailure(`start overlapping loop ${path}`, error);
-      return Promise.resolve(null);
+      return Promise.resolve({ status: FAILED });
     }
   }
 
@@ -345,18 +375,21 @@ export function createVrAudioBridge({ manager = audioManager, warn = console.war
       try { request = audio.startVrProcessSource(GLYPH_PROCESS_PATH, 'WORLD'); }
       catch (error) { glyphStartPending = false; throw error; }
       return Promise.resolve(request).then((handle) => {
-        if (!handle) return;
-        if (disposed || token !== glyphToken || !['active', 'recovering'].includes(glyphState)) { stopHandle(handle); return; }
+        if (!handle) { if (token === glyphToken) { glyphId = null; glyphState = 'idle'; } return; }
+        if (disposed || token !== glyphToken || glyphState !== 'starting') { stopHandle(handle); return; }
         glyphHandle = handle;
-        if (glyphState === 'recovering') handle.rampTo?.(0, 1);
+        glyphState = 'active';
         handle.onEnded?.(() => {
           if (glyphHandle !== handle) return;
           glyphHandle = null;
-          if (!disposed && glyphState === 'active' && token === glyphToken) startGlyphSource(token);
+          if (!disposed && glyphState === 'active' && token === glyphToken) {
+            glyphState = 'starting';
+            startGlyphSource(token);
+          }
         });
       }).finally(() => {
         glyphStartPending = false;
-        if (!disposed && glyphState === 'active' && !glyphHandle && token !== glyphToken) startGlyphSource(glyphToken);
+        if (!disposed && glyphState === 'starting' && !glyphHandle && token !== glyphToken) startGlyphSource(glyphToken);
       });
     });
   }
@@ -374,7 +407,7 @@ export function createVrAudioBridge({ manager = audioManager, warn = console.war
     if (glyphId && glyphId !== nextGlyphId) retireGlyphForReplacement();
     else stopGlyphLifecycle();
     glyphId = nextGlyphId;
-    glyphState = 'active';
+    glyphState = 'starting';
     const token = glyphToken;
     startGlyphSource(token);
   }
@@ -409,7 +442,7 @@ export function createVrAudioBridge({ manager = audioManager, warn = console.war
     if (completionPath) playOneShot(completionPath, 'WORLD');
   }
 
-  return { runOptional, prepareOneShots, prepareAttractorLoops, playOneShot, startFiniteSource, startOverlappingLoopSource, startFurnaceProcess, stopFurnaceProcess, startRuneTuningProcess, stopRuneTuningProcess, startAsterionCreate, stopAsterionCreate,
+  return { runOptional, prepareRuntimeAudio, prepareOneShots, prepareAttractorLoops, playOneShot, startFiniteSource, startOverlappingLoopSource, startFurnaceProcess, stopFurnaceProcess, startRuneTuningProcess, stopRuneTuningProcess, startAsterionCreate, stopAsterionCreate,
     startGlyphAcquisition, missGlyphAcquisition, setAsterionSphereState, resetAsterionSphereAudio,
     cancelGlyphAcquisition, completeGlyphAcquisition, dispose,
     startAttractor, missAttractor, cancelAttractor, handoffAttractor,

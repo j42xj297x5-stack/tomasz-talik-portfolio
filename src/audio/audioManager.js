@@ -186,13 +186,22 @@ class AudioManager {
     return Promise.allSettled([...new Set(paths)].map((path) => this.loadBuffer(path)));
   }
 
+  async prepareVrAudio(paths = []) {
+    if (!this.ensureContext()) throw new Error('Web Audio is unavailable.');
+    const uniquePaths = [...new Set(paths)];
+    const buffers = await Promise.all(uniquePaths.map((path) => this.loadBuffer(path)));
+    const missing = uniquePaths.filter((path, index) => !buffers[index]);
+    if (missing.length) throw new Error(`Required VR audio could not be prepared: ${missing.join(', ')}`);
+    return true;
+  }
+
   async playVrOneShot(path, bus = 'UI') {
     if (!VR_AUDIO_BUSES.includes(bus)) {
       console.warn(`[audio] Unknown VR audio bus: ${bus}`);
       return;
     }
     if (!await this.unlock()) return;
-    const buffer = this.buffers.get(path) || await this.loadBuffer(path);
+    const buffer = this.buffers.get(path);
     const busNode = this.vrBusNodes.get(bus);
     if (!buffer || !this.context || !busNode) return;
     const source = this.context.createBufferSource();
@@ -213,7 +222,7 @@ class AudioManager {
   async startVrProcessSource(path, bus = 'WORLD', { loop = false } = {}) {
     if (!VR_AUDIO_BUSES.includes(bus)) return null;
     if (!await this.unlock()) return null;
-    const buffer = this.buffers.get(path) || await this.loadBuffer(path);
+    const buffer = this.buffers.get(path);
     const busNode = this.vrBusNodes.get(bus);
     if (!buffer || !this.context || !busNode) return null;
     const source = this.context.createBufferSource();
@@ -262,22 +271,11 @@ class AudioManager {
     return handle;
   }
 
-  async loadTransientBuffer(path, { signal } = {}) {
-    if (!await this.unlock()) return null;
-    try {
-      const response = await fetch(publicPath(path), { signal });
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      return await this.context.decodeAudioData(await response.arrayBuffer());
-    } catch (error) {
-      console.warn(`[audio] Optional transient sound unavailable: ${path}`, error);
-      return null;
-    }
-  }
-
   async startVrFiniteSource(path, bus = 'AMBIENT', { repetitions = 1, fadeIn = 0, fadeOut = 0,
     seamGuard = path.endsWith('.mp3') ? VR_MP3_SEAM_GUARD_SECONDS : 0, signal } = {}) {
     if (!VR_AUDIO_BUSES.includes(bus)) return null;
-    const buffer = await this.loadTransientBuffer(path, { signal });
+    if (signal?.aborted || !await this.unlock() || signal?.aborted) return null;
+    const buffer = this.buffers.get(path);
     const context = this.context, busNode = this.vrBusNodes.get(bus);
     if (!buffer || !context || !busNode) return null;
     const count = Math.max(1, Math.floor(repetitions));
@@ -336,7 +334,8 @@ class AudioManager {
 
   async startVrOverlappingLoopSource(path, bus = 'AMBIENT', { overlapSeconds = 5, signal } = {}) {
     if (!VR_AUDIO_BUSES.includes(bus)) return null;
-    const buffer = await this.loadTransientBuffer(path, { signal });
+    if (signal?.aborted || !await this.unlock() || signal?.aborted) return null;
+    const buffer = this.buffers.get(path);
     const context = this.context, busNode = this.vrBusNodes.get(bus);
     if (!buffer || !context || !busNode) return null;
     const overlap = Math.min(Math.max(0, overlapSeconds), buffer.duration / 2);
