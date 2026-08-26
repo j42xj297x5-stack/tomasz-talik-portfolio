@@ -225,7 +225,7 @@ const progressFloor = createVrProgressFloor({
 });
 const runeBridgeActor = createVrRuneBridgeActor({
   assetManager,
-  getSectorMount: (branchId) => progressFloor.getRuneBridgeMount(branchId)
+  getSectorMount: (branchId) => progressFloor.getRuneInstallationFrame(branchId)
 });
 const platformFixturesRoot = new THREE.Group();
 platformFixturesRoot.name = 'VrPlatformFixturesRoot';

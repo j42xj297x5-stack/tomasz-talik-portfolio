@@ -1,4 +1,5 @@
 import * as THREE from '../../vendor/three.js';
+import { createVrProgressFloorSectorActor } from './createVrProgressFloorSectorActor.js';
 
 export const VR_PROGRESS_FLOOR_SOURCE_CONTRACTS = Object.freeze({
   creative: Object.freeze({
@@ -50,8 +51,6 @@ const SECTOR_LAYOUT = Object.freeze([
   Object.freeze({ glyphId: 'creative-ai', branchId: 'fire', placeholder: false, sourceType: 'creative' }),
   Object.freeze({ glyphId: 'ethics-life-protection', branchId: 'earth', placeholder: false, sourceType: 'ethics' })
 ]);
-const SECTOR_COUNT = SECTOR_LAYOUT.length;
-
 export const VR_PROGRESS_FLOOR_EMISSION = Object.freeze({
   stableIntensity: 1.35,
   pulseIntensity: 2.8,
@@ -71,109 +70,6 @@ export const VR_PROGRESS_FLOOR_RINGS = Object.freeze({
   ringResponseSpeed: 16,
   ringColor: 0xeaf4ff
 });
-
-function cloneMaterials(root, ownedMaterials) {
-  root.traverse((object) => {
-    if (!object.isMesh || !object.material) return;
-    if (Array.isArray(object.material)) {
-      object.material = object.material.map((material) => {
-        const clone = material.clone();
-        ownedMaterials.add(clone);
-        return clone;
-      });
-      return;
-    }
-    object.material = object.material.clone();
-    ownedMaterials.add(object.material);
-  });
-}
-
-function getPanelMaterials(panel, fallbackColor) {
-  const materials = new Set();
-  panel.traverse((object) => {
-    if (!object.isMesh || !object.material) return;
-    const meshMaterials = Array.isArray(object.material) ? object.material : [object.material];
-    meshMaterials.forEach((material) => {
-      if (!material.emissive?.isColor) material.emissive = new THREE.Color(fallbackColor);
-      else if (material.emissive.getHex() === 0) material.emissive.setHex(fallbackColor);
-      material.emissiveIntensity = 0;
-      material.needsUpdate = true;
-      materials.add(material);
-    });
-  });
-  return [...materials];
-}
-
-function requireSectorObject(sector, objectName, sectorConfig) {
-  const object = sector.getObjectByName(objectName);
-  if (!object) {
-    throw new Error(`[VrProgressFloor] Missing required object "${objectName}" for sector "${sectorConfig.glyphId}" (source: ${sectorConfig.sourceType}).`);
-  }
-  return object;
-}
-
-function getBoundsRelativeTo(root, relativeTo) {
-  const bounds = new THREE.Box3().makeEmpty();
-  const inverseRelativeMatrix = new THREE.Matrix4().copy(relativeTo.matrixWorld).invert();
-  const relativeMatrix = new THREE.Matrix4();
-  const corner = new THREE.Vector3();
-  root.traverse((object) => {
-    if (!object.geometry) return;
-    if (!object.geometry.boundingBox) object.geometry.computeBoundingBox();
-    const objectBounds = object.geometry.boundingBox;
-    if (!objectBounds || objectBounds.isEmpty()) return;
-    relativeMatrix.multiplyMatrices(inverseRelativeMatrix, object.matrixWorld);
-    for (const x of [objectBounds.min.x, objectBounds.max.x]) {
-      for (const y of [objectBounds.min.y, objectBounds.max.y]) {
-        for (const z of [objectBounds.min.z, objectBounds.max.z]) {
-          bounds.expandByPoint(corner.set(x, y, z).applyMatrix4(relativeMatrix));
-        }
-      }
-    }
-  });
-  return bounds;
-}
-
-function makePresentationBodyTransparent(sector, bodyNames, sectorConfig) {
-  const materials = new Map();
-  bodyNames.forEach((bodyName) => {
-    const bodyPart = requireSectorObject(sector, bodyName, sectorConfig);
-    bodyPart.traverse((object) => {
-      if (!object.isMesh || !object.material) return;
-      const meshMaterials = Array.isArray(object.material) ? object.material : [object.material];
-      meshMaterials.forEach((material) => {
-        if (!materials.has(material)) {
-          materials.set(material, {
-            opacity: material.opacity,
-            transparent: material.transparent,
-            depthWrite: material.depthWrite
-          });
-        }
-        material.transparent = true;
-        material.opacity = 0;
-        material.depthWrite = false;
-        material.needsUpdate = true;
-      });
-    });
-  });
-  return [...materials].map(([material, authoredState]) => ({ material, authoredState }));
-}
-
-function preparePresentationMaterialForFade({ material }) {
-  const transparentChanged = material.transparent !== true;
-  material.opacity = 0;
-  material.transparent = true;
-  material.depthWrite = false;
-  if (transparentChanged) material.needsUpdate = true;
-}
-
-function restorePresentationMaterial({ material, authoredState }) {
-  const transparentChanged = material.transparent !== authoredState.transparent;
-  material.opacity = authoredState.opacity;
-  material.transparent = authoredState.transparent;
-  material.depthWrite = authoredState.depthWrite;
-  if (transparentChanged) material.needsUpdate = true;
-}
 
 export function createVrProgressFloor({
   parent,
@@ -216,69 +112,37 @@ export function createVrProgressFloor({
     wood: aiGuideSectorModel
   };
   const sectorsByGlyphId = new Map();
-  const runeBridgeMountsByBranchId = new Map();
+  const sectorActorsByBranchId = new Map();
   const revealedSectorIds = new Set();
   const activatedEntries = new Map();
-  const pulseRemaining = new Map();
   const completedTiers = new Set();
   const tierRings = new Map();
+  const sectorActors = new Set();
   let disposed = false;
 
   try {
     SECTOR_LAYOUT.forEach((sectorConfig, index) => {
       const sourceModel = sourceModels[sectorConfig.sourceType];
       const contract = VR_PROGRESS_FLOOR_SOURCE_CONTRACTS[sectorConfig.sourceType];
-      const sector = sourceModel.clone(true);
-      sector.name = `VrProgressFloorSector:${sectorConfig.glyphId}`;
-      sector.rotation.y = index * (Math.PI * 2 / SECTOR_COUNT);
-      sector.userData = {
-        ...sector.userData,
-        glyphId: sectorConfig.glyphId,
-        branchId: sectorConfig.branchId,
-        rotationIndex: index,
-        placeholder: sectorConfig.placeholder,
-        sourceType: sectorConfig.sourceType
-      };
-      sector.visible = false;
-      cloneMaterials(sector, ownedMaterials);
-      const referenceBase = requireSectorObject(sector, contract.referenceBaseName, sectorConfig);
-      referenceBase.visible = false;
-      sector.updateMatrixWorld(true);
-      referenceBase.updateMatrixWorld(true);
-      const referenceBounds = getBoundsRelativeTo(referenceBase, sector);
-      if (referenceBounds.isEmpty()) {
-        throw new Error(`[VrProgressFloor] Cannot derive rune bridge mount from "${contract.referenceBaseName}".`);
-      }
-      const outerArc = new THREE.Vector3(
-        referenceBounds.max.x,
-        referenceBounds.max.y,
-        (referenceBounds.min.z + referenceBounds.max.z) / 2
-      );
-      const bridgeMount = new THREE.Object3D();
-      bridgeMount.name = `VrRuneBridgeMount_${sectorConfig.branchId.toUpperCase()}`;
-      bridgeMount.position.copy(outerArc);
-      bridgeMount.userData = { ...bridgeMount.userData, branchId: sectorConfig.branchId };
-      sector.add(bridgeMount);
-      runeBridgeMountsByBranchId.set(sectorConfig.branchId, bridgeMount);
-      const presentationMaterials = makePresentationBodyTransparent(sector, contract.presentationBodyNames, sectorConfig);
-      const panelsByOrder = new Map();
-      contract.panelNames.forEach((panelName, panelIndex) => {
-        const panel = requireSectorObject(sector, panelName, sectorConfig);
-        panelsByOrder.set(panelIndex + 1, {
-          object: panel,
-          materials: getPanelMaterials(panel, config.fallbackColors[sectorConfig.sourceType])
-        });
+      const descriptor = { ...sectorConfig, rotationIndex: index };
+      const actor = createVrProgressFloorSectorActor({
+        descriptor,
+        sourceModel,
+        contract,
+        emission: { ...config, fallbackColor: config.fallbackColors[sectorConfig.sourceType] }
       });
-      sectorsByGlyphId.set(sectorConfig.glyphId, { object: sector, panelsByOrder, presentationMaterials });
-      geometryRoot.add(sector);
+      sectorsByGlyphId.set(sectorConfig.glyphId, actor);
+      sectorActorsByBranchId.set(sectorConfig.branchId, actor);
+      sectorActors.add(actor);
+      geometryRoot.add(actor.object);
     });
 
     object.updateMatrixWorld(true);
     const candidateRadii = [];
     for (let tier = 1; tier <= 5; tier += 1) {
       const samples = [];
-      sectorsByGlyphId.forEach(({ panelsByOrder }) => {
-        const panel = panelsByOrder.get(tier)?.object;
+      sectorsByGlyphId.forEach((actor) => {
+        const panel = actor.getPanelObject(tier);
         if (!panel) return;
         const center = new THREE.Box3().setFromObject(panel).getCenter(new THREE.Vector3());
         object.worldToLocal(center);
@@ -356,6 +220,7 @@ export function createVrProgressFloor({
       console.warn('[VrProgressFloor] Tier rings are unavailable; continuing without the optional visual layer.', error);
     }
   } catch (error) {
+    sectorActors.forEach((actor) => actor.dispose());
     ownedMaterials.forEach((material) => material.dispose());
     ownedGeometries.forEach((geometry) => geometry.dispose());
     throw error;
@@ -367,40 +232,22 @@ export function createVrProgressFloor({
     const glyphId = page?.glyphId;
     const order = page?.order;
     const sector = sectorsByGlyphId.get(glyphId);
-    const panel = sector?.panelsByOrder.get(order);
+    const panel = sector?.getPanelObject(order);
     const key = `${glyphId}:${order}`;
     if (disposed || !panel || activatedEntries.has(key)) return false;
     const firstReveal = !revealedSectorIds.has(glyphId);
     if (firstReveal) {
-      sector.object.visible = true;
       revealedSectorIds.add(glyphId);
     }
-    activatedEntries.set(key, { glyphId, order, panel });
-    pulseRemaining.set(key, config.pulseDuration);
+    if (!sector.activatePanel(order)) return false;
+    activatedEntries.set(key, { glyphId, order });
     return true;
   }
 
   function update(delta = 0) {
     if (disposed) return;
     const safeDelta = Math.max(0, Number.isFinite(delta) ? delta : 0);
-    const blend = 1 - Math.exp(-config.responseSpeed * safeDelta);
-    revealedSectorIds.forEach((glyphId) => {
-      sectorsByGlyphId.get(glyphId)?.presentationMaterials.forEach((presentationMaterial) => {
-        const { material, authoredState } = presentationMaterial;
-        material.opacity += (authoredState.opacity - material.opacity) * blend;
-        if (Math.abs(authoredState.opacity - material.opacity) <= 1e-4) {
-          restorePresentationMaterial(presentationMaterial);
-        }
-      });
-    });
-    activatedEntries.forEach(({ panel }, key) => {
-      const remaining = Math.max(0, (pulseRemaining.get(key) ?? 0) - safeDelta);
-      pulseRemaining.set(key, remaining);
-      const target = remaining > 0 ? config.pulseIntensity : config.stableIntensity;
-      panel.materials.forEach((material) => {
-        material.emissiveIntensity += (target - material.emissiveIntensity) * blend;
-      });
-    });
+    sectorsByGlyphId.forEach((actor) => actor.update(safeDelta));
     completedTiers.forEach((tier) => {
       const ring = tierRings.get(tier);
       ring.pulseRemaining = Math.max(0, ring.pulseRemaining - safeDelta);
@@ -440,12 +287,8 @@ export function createVrProgressFloor({
     update(10);
   }
   function reset() {
-    revealedSectorIds.clear(); activatedEntries.clear(); pulseRemaining.clear(); completedTiers.clear();
-    sectorsByGlyphId.forEach(({ object: sector, panelsByOrder, presentationMaterials }) => {
-      sector.visible = false;
-      presentationMaterials.forEach(preparePresentationMaterialForFade);
-      panelsByOrder.forEach(({ materials }) => materials.forEach((material) => { material.emissiveIntensity = 0; }));
-    });
+    revealedSectorIds.clear(); activatedEntries.clear(); completedTiers.clear();
+    sectorsByGlyphId.forEach((actor) => actor.reset());
     tierRings.forEach((ring) => { ring.pulseRemaining = 0; ring.material.opacity = 0; });
   }
 
@@ -453,16 +296,18 @@ export function createVrProgressFloor({
     if (disposed) return;
     disposed = true;
     object.removeFromParent();
+    sectorActors.forEach((actor) => actor.dispose());
+    sectorActors.clear();
     ownedMaterials.forEach((material) => material.dispose());
     ownedMaterials.clear();
     ownedGeometries.forEach((geometry) => geometry.dispose());
     ownedGeometries.clear();
     revealedSectorIds.clear();
-    runeBridgeMountsByBranchId.clear();
+    sectorActorsByBranchId.clear();
   }
 
-  function getRuneBridgeMount(branchId) {
-    return runeBridgeMountsByBranchId.get(String(branchId).toLowerCase()) ?? null;
+  function getRuneInstallationFrame(branchId) {
+    return sectorActorsByBranchId.get(String(branchId).toLowerCase())?.getRuneInstallationFrame() ?? null;
   }
 
   return {
@@ -476,7 +321,7 @@ export function createVrProgressFloor({
     getActivatedEntries: () => [...activatedEntries.values()].map(({ glyphId, order }) => ({ glyphId, order })),
     getRevealedSectorIds: () => [...revealedSectorIds],
     getCompletedTiers: () => [...completedTiers],
-    getRuneBridgeMount,
+    getRuneInstallationFrame,
     dispose
   };
 }
