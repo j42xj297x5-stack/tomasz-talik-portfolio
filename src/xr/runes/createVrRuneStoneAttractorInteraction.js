@@ -12,6 +12,7 @@ export const RUNE_STONE_PLATFORM_MIN_RADIUS_M = 9.0;
 export function createVrRuneStoneAttractorInteraction({ controllers, runeStoneActor,
   runeStoneAttractorBandProjection, handModeController, semanticInput, attractorTool,
   maxTargetDistance, settings, haloSettings, platformCenter, getPlayerWorldPosition,
+  tryBeginInstallationCapture = () => false,
   isHigherPriorityInteractionActive = () => false }) {
   if (!Array.isArray(controllers)) throw new TypeError('controllers must be an array.');
   if (!runeStoneActor?.getStones || !runeStoneActor?.getBoundingSphere
@@ -96,6 +97,12 @@ export function createVrRuneStoneAttractorInteraction({ controllers, runeStoneAc
     setTarget(null);
     clearTool();
   }
+  function handoffActive() {
+    active = null;
+    pullSpeed = 0;
+    setTarget(null);
+    clearTool();
+  }
   function beginTransport(record) {
     platformCenter.updateWorldMatrix(true, false);
     record.root.updateWorldMatrix(true, false);
@@ -173,6 +180,7 @@ export function createVrRuneStoneAttractorInteraction({ controllers, runeStoneAc
         return;
       }
       updateTransport(delta);
+      if (tryBeginInstallationCapture(active) === true) handoffActive();
       return;
     }
     if (isHigherPriorityInteractionActive(right) === true) {
