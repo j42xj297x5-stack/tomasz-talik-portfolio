@@ -1,4 +1,11 @@
-# Experience VR Platform Antenna Model
+# Experience VR Platform Antenna Model — superseded
+
+> **Status: SUPERSEDED.** The earlier three-sector antenna model in this file is
+> no longer canonical. The current late-game contract is the Rune Stones →
+> sectors → Asterion Resonator flow defined in
+> [`EXPERIENCE_VR_RUNES_RESONATOR_FINALE.md`](../concept/EXPERIENCE_VR_RUNES_RESONATOR_FINALE.md).
+> Do not implement the antenna described below; the remainder is retained only
+> as historical design context until it is moved to legacy documentation.
 
 ## 1. Status and authority
 
