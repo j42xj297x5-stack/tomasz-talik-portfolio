@@ -211,11 +211,11 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
   },
   shellFieldMotion: { direction: 1 },
   sphericalLayers: {
-    innerRadius: 13,
-    defaultGapRadiusMultiplier: 0.25,
-    shells: { thickness: 12, gapAfterMultiplier: 5 / 13, angularSpeed: 0.05 },
-    smallGlyphs: { thickness: 15, gapAfterMultiplier: 5 / 13, angularSpeed: 0.05 },
-    runeStones: { thickness: 25, gapAfterMultiplier: 10 / 13 },
+    innerRadius: 10,
+    defaultGapRadiusMultiplier: 3.25 / 10,
+    shells: { thickness: 3, gapAfterMultiplier: 2 / 10, angularSpeed: 0.05 },
+    smallGlyphs: { thickness: 5, gapAfterMultiplier: 30 / 10, angularSpeed: 0.05 },
+    runeStones: { thickness: 25, gapAfterMultiplier: 10 / 10 },
     stars: { thickness: 45 },
     hiddenGlyphs: { thickness: 7.6, gapAfterMultiplier: 0 }
   },
