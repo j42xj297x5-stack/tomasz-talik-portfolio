@@ -592,12 +592,16 @@ const astroFurnaceRuneRecipeInteraction = createVrAstroFurnaceRuneRecipeInteract
   openInteraction: runeOpenInteractionSource, activateInteraction: runeActivateInteractionSource,
   isModeActive: () => astroFurnaceOptionInteraction?.getActiveMode?.() === ASTRO_FURNACE_RUNE_TUNING_MODE,
   getExpectedRecipe: runeRecipeSelectionSource.getExpectedRecipe,
+  settledParent: worldStableRoot,
+  getPlayerWorldPosition: (target) => getXrHeadWorldPosition({ renderer, camera, playerRig, target }),
+  settleEjectedSmallGlyph: (glyph) => smallGlyphAttractorInteraction?.settleTransferredGlyph(glyph) === true,
   takeHeldShell: (shell) => shellAttractorInteraction?.transferHeldShell(shell) === true,
   takeHeldSmallGlyph: (glyph) => smallGlyphAttractorInteraction?.transferHeldGlyph(glyph) === true
 });
 runeRecipeSelectionController = createVrRuneRecipeSelectionController({
   runeRecipeInteraction: astroFurnaceRuneRecipeInteraction,
-  runeStoneProgressionController
+  runeStoneProgressionController,
+  prepareRecipeChange: () => astroFurnaceRuneRecipeInteraction.ejectInsertedIngredients()
 });
 const runeTuningController = createVrRuneTuningController({
   runeRecipeInteraction: astroFurnaceRuneRecipeInteraction,
