@@ -118,7 +118,7 @@ In short: insert → `turn_page_01`, activate → `creating_short_01`, consume �
 - Accepted transition start `CLOSED → OPENING` / `OPEN → CLOSING` → `astro_piec_open.mp3` / `astro_piec_close.mp3` on `DEVICE`, once per transition; blocked presses, stable requested states, animation frames, and reset are silent.
 - Shell process → `astro_piec_work_01.mp3` (**IMPLEMENTED**, accepted-cycle one-shot on DEVICE).
 - Small-glyph process → `astro_piec_work_02.mp3` (**TODO gameplay**).
-- Rune tuning Astrolabium from one Small Glyph + Shell recipe → `astro_piec_work_03.mp3` (**PLANNED / NOT IMPLEMENTED**). To nie jest fizyczny stone process: kamień nigdy nie trafia do Pieca. Jeden poprawny komplet uruchamia jeden canonical 18-second cycle; nie powstaje czwarty work sound.
+- Rune tuning Astrolabium from one Small Glyph + Shell recipe → `astro_piec_work_03.mp3` (**IMPLEMENTED**). To nie jest physical Rune Stone transport audio: kamień nigdy nie trafia do Pieca. Jeden poprawny komplet uruchamia jeden canonical 18-second cycle; nie powstaje czwarty work sound.
 - Accepted Production Asterion Sphere `UTWÓRZ` construction cycle → `astro_piec_work_create_01.mp3` (**IMPLEMENTED**, once on DEVICE). The furnace process kind suppresses `astro_piec_work_01.mp3` for this cycle. Audio never determines duration: construction always follows the canonical 18-second furnace clock; interruption stops the create source. Future Astro Attractor creation may reuse the authored family but has no runtime action yet.
 
 ### Monkey and panels

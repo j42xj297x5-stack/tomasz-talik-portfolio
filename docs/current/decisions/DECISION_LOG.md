@@ -1,8 +1,21 @@
 # Decision Log
 
-Status: current binding decisions organized by implementation status, not patch chronology. Synchronized through the Rune Stone Act decision on 2026-08-24.
+Status: current binding decisions with preserved history. Synchronized on 2026-08-25 through Rune A9.4 and merge PR #624.
 
-## 2026-08-24 — Final Rune Stone Act progression and Ether intervention
+## 2026-08-25 — CURRENT Experience VR runtime reconciliation (superseding)
+
+This decision is CURRENT and supersedes conflicting status/eligibility claims in the 2026-08-24, 2026-08-23 and 2026-08-21 entries below; those entries remain historical records.
+
+1. Authored Scenario is implemented through `4.40 → 4.50 → 4.60 → 4.70 → 4.80`; `4.80` is the stable boundary. Scenario after `4.80` remains deferred.
+2. Large Glyph stages are `RING_INITIAL = 8.5 m`, `RING_ELEVATED = 8.5 m + 2.4 m`, `RING_EXPANDED = 46 m` and implemented `SPHERE_FAR = 80 m`.
+3. `RUNE_STONES = 50–75 m` and `RUNESTONES` are implemented. Rune A1–A9.4 are partially implemented domain foundations. Socket capture, persistent installed truth, later Ether/Water flow and A10+ Scenario remain future.
+4. Natural tuning is available for all five natural families and never reads sector completeness. Natural targetability equals `tunedRuneFamilies`. Sector completion gates only platform installation readiness.
+5. Normal readiness after `4.80` is Earth/Fire/Wood ready, Metal/Water not ready. The Water override seam affects readiness only and its trigger is not implemented.
+6. Panel 1 target projection includes natural Rune U forms; Panel 2 current-band art/color is implemented. Panels 3–4 remain future.
+7. `RuneInstallationReadinessProjection` reads the existing progression owner and projects Rune bridges to `HIDDEN/DOCKED`; it does not copy truth.
+8. Ether remains special: no sixth natural family, sector, bridge or platform slot.
+
+## 2026-08-24 — Final Rune Stone Act progression and Ether intervention (HISTORICAL; UPDATED BY 2026-08-25)
 
 1. Poprawna rune recipe konsumuje Small Glyph i Shell. Ekstrakcja tworzy nie fizyczny item, lecz trwałą semantyczną sylabę u `RuneStoneProgressionController`, zapisaną jako tuned family; wcześniejsze naturalne essence Large Glyph pozostają wyłączną prawdą `ProtoAstroTuningController`.
 2. Po `4.80` wszystkie pięć naturalnych Large Glyph jest już tuned i przechodzi do pełnosferycznego `SPHERE_FAR = 80 m`, black/unlit, z bardzo wolnym ruchem. Earth, Fire i Wood mogą przejść standardowy rune flow, a ich trzy instalacje uruchamiają późniejszy, osobny system anteny.
@@ -13,7 +26,7 @@ Status: current binding decisions organized by implementation status, not patch 
 7. `FINAL_WATER_HUNT` zaczyna się dopiero po pełnej instalacji Water. Timer ma startowe `180 s` ze statusem **TUNING** i jest transient mechaniką final-hunt ownera; Scenario widzi tylko semantic start/success oraz ewentualny przyszły timeout. **`FINAL_HUNT_TIMEOUT_BEHAVIOR = OPEN DESIGN DECISION`.** Ostatni Water Crystal przechodzi przez Reliquary do Water `5/5`, Tier 5 i istniejącego finału.
 8. Authority i pełna roadmapa RUNE A1–A21 znajdują się w [`VR_RUNE_STONES_MODEL.md`](../technical/VR_RUNE_STONES_MODEL.md). Wszystko pozostaje **TARGET / NOT IMPLEMENTED**.
 
-## 2026-08-24 — Rune Stone Act after Tier 3 and Furnace target contract
+## 2026-08-24 — Rune Stone Act after Tier 3 and Furnace target contract (HISTORICAL; SUPERSEDED IN PART BY 2026-08-25)
 
 1. The future Rune Stone Act begins after settled Tier 3 at the currently implemented stable boundary `4.80`. Rune Stones reuse the existing world-stable `RUNE_STONES = 50–75 m`; Large Glyph remains a separate actor and uses its existing `SPHERE_FAR = 80 m` capability with full-sphere, very slow, black/unlit baseline presentation.
 2. Rune tuning eligibility is derived only from completion of every panel in the relevant sector. After Tier 3 this yields exactly Earth / Ethics, Fire / Creative AI and Wood / AI Guide. Metal and Water become eligible only after their full sector sequences. This supersedes the former four-stones-then-fifth gate; no `initialRuneStoneIds` list is allowed.
@@ -27,7 +40,7 @@ Status: current binding decisions organized by implementation status, not patch 
 10. **UPDATED BY FINAL 2026-08-24 DECISION:** successful rune tuning consumes both physical ingredients and creates only a persistent semantic syllable/tuned-family fact.
 11. **UPDATED BY FINAL 2026-08-24 DECISION:** the authoritative milestone sequence is RUNE A1–A21 in [`VR_RUNE_STONES_MODEL.md`](../technical/VR_RUNE_STONES_MODEL.md). All behavior remains **TARGET / NOT IMPLEMENTED** until bounded runtime tasks land.
 
-## 2026-08-23 — Large Glyph Actor ownership migration completed
+## 2026-08-23 — Large Glyph Actor ownership migration completed (HISTORICAL; SPATIAL STATUS SUPERSEDED BY 2026-08-25)
 
 1. `LargeGlyphActor` is the single physical/spatial owner of the five Large Glyphs. World/platform `worldBaseRadius = 7.6 m` is independent from actor radii.
 2. Canonical actor progression is `RING_INITIAL` at `8.5 m` → `RING_ELEVATED` at `+2.4 m` → `RING_EXPANDED` at `18.5 m`. One rigid `RotationRoot` owns five identity slots separated by `72°`.
@@ -39,7 +52,7 @@ Status: current binding decisions organized by implementation status, not patch 
 
 This decision supersedes earlier binding statements that assigned world-stable ownership to a raw glyph ring, derived the walking/layer radius from `glyphOrbit.effectiveRadius`, or classified real `LARGE_GLYPHS` targeting/pull as not implemented.
 
-## 2026-08-21 — P2 Proto-Astro / small glyph tuning foundation
+## 2026-08-21 — P2 Proto-Astro / small glyph tuning foundation (HISTORICAL; STATUS SUPERSEDED BY 2026-08-25)
 
 1. Canonical small-glyph asset mapping is: `1 → SI / S / water / Haiku Cosmos`, `2 → KI / K / earth / Ethics / Life Protection`, `3 → TI / T / metal / DIG Engine / spotify-digger`, `4 → RI / R / fire / Creative AI`, `5 → LI / L / tree / AI Guide`, `6 → VI / V / astro / produktowo Eter`. `V = astro` remains the registry truth; Eter is product meaning, not a new family ID.
 2. Natural compatibility is small form I → large form A of the identical natural family: `KI↔KA`, `TI↔TA`, `SI↔SA`, `LI↔LA`, `RI↔RA`.

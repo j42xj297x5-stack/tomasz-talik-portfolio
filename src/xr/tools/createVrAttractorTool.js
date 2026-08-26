@@ -4,6 +4,7 @@ import { createVrAttractorPanelSystem, resolveAttractorGlyphFamilyColors,
 import { resolveAttractorShellGlyph } from './vrAttractorShellGlyphs.js';
 import { resolveVrSmallGlyphProtoAstro } from '../protoAstro/resolveVrSmallGlyphProtoAstro.js';
 import { resolveVrPageProtoAstro } from '../protoAstro/resolveVrPageProtoAstro.js';
+import { resolveProtoAstroAssetUrl, resolveProtoAstroDescriptor } from '../protoAstro/protoAstroRegistry.js';
 
 export const VR_ATTRACTOR_STATES = Object.freeze({
   UNEQUIPPED: 'UNEQUIPPED', IDLE: 'IDLE', TARGETING: 'TARGETING', PULLING: 'PULLING', CAPTURED: 'CAPTURED'
@@ -209,11 +210,18 @@ export function createVrAttractorTool({ model, config = VR_ATTRACTOR_VISUAL_CONF
   function setTarget(value) {
     target = value ?? null; targetProximity = clamp01(value?.proximity);
     const previewTarget = value?.target ?? value;
-    const shellGlyph = resolveAttractorShellGlyph(previewTarget);
-    const smallGlyph = shellGlyph ? null : resolveVrSmallGlyphProtoAstro(previewTarget);
-    const largeGlyph = shellGlyph || smallGlyph ? null : resolveVrPageProtoAstro(previewTarget?.userData ?? previewTarget);
+    const isRuneStone = value?.targetClass === 'runeStone';
+    const runeStoneDescriptor = isRuneStone
+      ? resolveProtoAstroDescriptor(value.familyCode, 'U') : null;
+    const shellGlyph = isRuneStone ? null : resolveAttractorShellGlyph(previewTarget);
+    const smallGlyph = isRuneStone || shellGlyph ? null : resolveVrSmallGlyphProtoAstro(previewTarget);
+    const largeGlyph = isRuneStone || shellGlyph || smallGlyph
+      ? null : resolveVrPageProtoAstro(previewTarget?.userData ?? previewTarget);
     const resolvedGlyph = smallGlyph ?? largeGlyph;
-    const glyph = shellGlyph ?? (resolvedGlyph ? {
+    const glyph = runeStoneDescriptor ? {
+      syllable: runeStoneDescriptor.syllable,
+      url: resolveProtoAstroAssetUrl(runeStoneDescriptor)
+    } : shellGlyph ?? (resolvedGlyph ? {
       syllable: resolvedGlyph.descriptor.syllable,
       url: resolvedGlyph.assetUrl
     } : null);

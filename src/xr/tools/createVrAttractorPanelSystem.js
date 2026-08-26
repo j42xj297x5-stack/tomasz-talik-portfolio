@@ -23,11 +23,11 @@ const hexCss = (value) => `#${Number(value).toString(16).padStart(6, '0')}`;
 // This is deliberately semantic: VO belongs to Astro, not to the five fuel elements.
 export function resolveAttractorGlyphFamilyColors(config) {
   return Object.freeze({
-    RO: hexCss(config.fuel.fire.color), RI: hexCss(config.fuel.fire.color), RA: hexCss(config.fuel.fire.color),
-    KO: hexCss(config.fuel.earth.color), KI: hexCss(config.fuel.earth.color), KA: hexCss(config.fuel.earth.color),
-    LO: hexCss(config.fuel.tree.color), LI: hexCss(config.fuel.tree.color), LA: hexCss(config.fuel.tree.color),
-    SO: hexCss(config.fuel.water.color), SI: hexCss(config.fuel.water.color), SA: hexCss(config.fuel.water.color),
-    TO: hexCss(config.fuel.metal.color), TI: hexCss(config.fuel.metal.color), TA: hexCss(config.fuel.metal.color),
+    RO: hexCss(config.fuel.fire.color), RI: hexCss(config.fuel.fire.color), RA: hexCss(config.fuel.fire.color), RU: hexCss(config.fuel.fire.color),
+    KO: hexCss(config.fuel.earth.color), KI: hexCss(config.fuel.earth.color), KA: hexCss(config.fuel.earth.color), KU: hexCss(config.fuel.earth.color),
+    LO: hexCss(config.fuel.tree.color), LI: hexCss(config.fuel.tree.color), LA: hexCss(config.fuel.tree.color), LU: hexCss(config.fuel.tree.color),
+    SO: hexCss(config.fuel.water.color), SI: hexCss(config.fuel.water.color), SA: hexCss(config.fuel.water.color), SU: hexCss(config.fuel.water.color),
+    TO: hexCss(config.fuel.metal.color), TI: hexCss(config.fuel.metal.color), TA: hexCss(config.fuel.metal.color), TU: hexCss(config.fuel.metal.color),
     VO: hexCss(config.energyCell.color), VI: hexCss(config.energyCell.color)
   });
 }

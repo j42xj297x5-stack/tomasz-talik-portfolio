@@ -138,7 +138,7 @@ export function createVrRuneStoneAttractorInteraction({ controllers, runeStoneAc
     if (radius <= RUNE_STONE_PLATFORM_MIN_RADIUS_M) candidatePosition.y = centerPosition.y;
     setRootWorldPosition(active.root, candidatePosition);
 
-    attractorTool.setTarget({ target: active.root, branchId: active.branchId,
+    attractorTool.setTarget({ target: active.root, targetClass: 'runeStone', branchId: active.branchId,
       familyCode: active.familyCode, distance, proximity: 1 });
     attractorTool.setPullStrength(clamp01(pullSpeed / settings.maxPullSpeed));
     attractorTool.setState(VR_ATTRACTOR_STATES.PULLING);
@@ -185,7 +185,7 @@ export function createVrRuneStoneAttractorInteraction({ controllers, runeStoneAc
     const hit = selectAttractorConeTarget({ candidates: candidates.filter(({ target: record }) => isFreeCandidate(record)),
       origin, direction, maxDistance: maxTargetDistance, halfAngleRadians: scanCone.halfAngleRadians });
     setTarget(hit?.target ?? null);
-    attractorTool.setTarget(hit ? { target: target.root, branchId: target.branchId,
+    attractorTool.setTarget(hit ? { target: target.root, targetClass: 'runeStone', branchId: target.branchId,
       familyCode: target.familyCode, distance: hit.distance,
       proximity: clamp01(1 - hit.distance / maxTargetDistance) } : null);
     attractorTool.setPullStrength(0);
