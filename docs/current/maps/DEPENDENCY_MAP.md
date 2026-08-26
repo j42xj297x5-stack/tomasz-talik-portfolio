@@ -47,6 +47,16 @@ Small Glyph + Shell
 
 Natural tuning does not read sector completeness. The `RUNESTONES` band becomes available after at least one tuned natural family; its target set is exactly the tuned natural families. Ether is excluded.
 
+## Platform energy VFX presentation (TARGET / NOT IMPLEMENTED)
+
+```text
+RuneStoneInstallationInteraction read-only transient state ─┐
+                                                            ├→ PlatformEnergyVfxProjection → PlatformEnergyVfxActor → sector-local / platform-bound procedural lightning
+AsterionGyroInteraction driveActive / angular speed / lock ─┘
+```
+
+The projection and shared actor are presentation-only and never write back to Rune, progression, gyro or platform-motion owners. Authority and tuning boundaries are defined in [`VR_PLATFORM_ENERGY_VFX_MODEL.md`](../technical/VR_PLATFORM_ENERGY_VFX_MODEL.md).
+
 ## Installation readiness
 
 ```text

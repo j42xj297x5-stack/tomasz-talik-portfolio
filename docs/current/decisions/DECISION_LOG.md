@@ -2,6 +2,15 @@
 
 Status: current binding decisions with preserved history. Synchronized on 2026-08-26 through the closed runtime reconciliation gaps.
 
+## 2026-08-26 — CURRENT Platform Energy VFX target architecture
+
+1. Future procedural platform-energy presentation has one pair-generic `PlatformEnergyVfxActor` shared by the `RUNE_INSTALL` and `FLOOR_DRIVE` profiles.
+2. A thin optional `PlatformEnergyVfxProjection` may read Rune installation transient state and Asterion `driveActive` / actual angular speed / lock state, then issue presentation commands. Projection and actor are read-only presentation owners and never write gameplay or platform-motion truth.
+3. Both profiles use sector-local, platform-bound underfloor lightning without magic world offsets. Exact visual parameters remain `TUNING`.
+4. Future work may adapt only the needed procedural/shader core of Sahil K's MIT-licensed Lightning-VFX demo, using the repository's vendored Three.js rather than importing its scene, tooling or a new runtime dependency. Material code adaptation requires preservation of the MIT copyright and permission notice.
+5. Meta Quest 3S is the performance and comfort boundary: bounded/poolable effects, stereo-safe WebXR presentation, no camera shake, screen-space flash, required postprocessing or debris physics. Hardware/perceptual QA remains a separate gate.
+6. The binding detailed contract is [`VR_PLATFORM_ENERGY_VFX_MODEL.md`](../technical/VR_PLATFORM_ENERGY_VFX_MODEL.md); the system remains **TARGET / NOT IMPLEMENTED**.
+
 ## 2026-08-26 — CURRENT Scenario-owned main background sequencing (superseding)
 
 This decision supersedes every conflicting earlier CURRENT claim about polling/full-tier thresholds, 30-second main-sequencer gaps, or the shells-complete + Asterion-built `ambient_loop_01` subthreshold. It does not change the separate Intro sequence or the independent Asterion Sphere DEVICE loops.
