@@ -55,8 +55,7 @@ export function createVrRuneStoneInstallationInteraction({
       || runeInstallationReadinessProjection.isInstallationReady(branchId) !== true) return false;
 
     const bridgeState = runeBridgeActor.getState(branchId);
-    if (bridgeState !== VR_RUNE_BRIDGE_STATES.DOCKED
-      && bridgeState !== VR_RUNE_BRIDGE_STATES.EXTENDED) return false;
+    if (bridgeState !== VR_RUNE_BRIDGE_STATES.DOCKED) return false;
     const capture = runeBridgeActor.getStoneCapture(branchId);
     const anchor = runeBridgeActor.getStoneAnchor(branchId);
     if (!capture?.node || !Number.isFinite(capture.radius) || capture.radius <= 0 || !anchor) return false;
@@ -66,19 +65,16 @@ export function createVrRuneStoneInstallationInteraction({
     capture.node.getWorldPosition(capturePosition);
     if (stonePosition.distanceTo(capturePosition) > capture.radius) return false;
 
-    let extendedHere = false;
+    let extensionStarted = false;
     try {
-      if (bridgeState === VR_RUNE_BRIDGE_STATES.DOCKED) {
-        runeBridgeActor.beginExtension(branchId);
-        extendedHere = true;
-        runeBridgeActor.completeExtension(branchId);
-      }
+      runeBridgeActor.beginExtension(branchId);
+      extensionStarted = true;
       if (!runeStoneActor.beginSocketCapture(branchId)) {
-        if (extendedHere) runeBridgeActor.cancelExtension(branchId);
+        runeBridgeActor.cancelExtension(branchId);
         return false;
       }
     } catch (error) {
-      if (extendedHere && runeStoneActor.getState(branchId) !== VR_RUNE_STONE_STATE.SOCKET_CAPTURE) {
+      if (extensionStarted && runeStoneActor.getState(branchId) !== VR_RUNE_STONE_STATE.SOCKET_CAPTURE) {
         runeBridgeActor.cancelExtension(branchId);
       }
       throw error;
@@ -111,6 +107,7 @@ export function createVrRuneStoneInstallationInteraction({
     const finalPosition = anchor.getWorldPosition(new THREE.Vector3());
     const finalQuaternion = anchor.getWorldQuaternion(new THREE.Quaternion());
     applyWorldTransform(record.root, finalPosition, finalQuaternion);
+    if (runeBridgeActor.getState(record.branchId) !== VR_RUNE_BRIDGE_STATES.EXTENDED) return;
     anchor.attach(record.root);
     if (!runeStoneActor.completeInstallation(record.branchId)) {
       throw new Error(`[VrRuneStoneInstallationInteraction] Actor rejected completed installation for ${record.branchId}.`);
