@@ -130,7 +130,10 @@ export const VR_SCENARIO_EFFECT = immutableIdentifiers([
   'SET_INTRO_AMBIENT_03',
   'SET_INTRO_AMBIENT_04',
   'SET_INTRO_AMBIENT_05',
-  'BEGIN_MAIN_AMBIENT_SEQUENCE',
+  'SET_MAIN_AMBIENT_01',
+  'SET_MAIN_AMBIENT_02',
+  'SET_MAIN_AMBIENT_03',
+  'SET_MAIN_AMBIENT_04',
   'BEGIN_CELESTIAL_REVEAL',
   'REVEAL_NATURAL_RUNE_STONES',
   'BEGIN_INTRO_REVEAL',
@@ -517,7 +520,7 @@ const points = Object.freeze([
     canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['2.20'] }),
     settledConsequences: GLYPH_FREE_EXPLORE_SETTLED_CONSEQUENCES,
     label: 'GLYPH_FREE_EXPLORE rozpoczęte',
-    entryEffects: Object.freeze([VR_SCENARIO_EFFECT.BEGIN_MAIN_AMBIENT_SEQUENCE,
+    entryEffects: Object.freeze([VR_SCENARIO_EFFECT.SET_MAIN_AMBIENT_01,
       VR_SCENARIO_EFFECT.BEGIN_CELESTIAL_REVEAL, VR_SCENARIO_EFFECT.REVEAL_NATURAL_RUNE_STONES,
       VR_SCENARIO_EFFECT.BEGIN_GLYPH_FREE_EXPLORE]),
     capabilities: Object.freeze([VR_SCENARIO_CAPABILITY.CAN_USE_GLYPHS]),
@@ -566,7 +569,8 @@ const points = Object.freeze([
     canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['3.10'] }),
     settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
     label: 'Pierwszy ring / pierwszy globalny poziom ukończony 5/5',
-    entryEffects: Object.freeze([VR_SCENARIO_EFFECT.BEGIN_FIRST_RING_PRESENTATION]),
+    entryEffects: Object.freeze([VR_SCENARIO_EFFECT.SET_MAIN_AMBIENT_02,
+      VR_SCENARIO_EFFECT.BEGIN_FIRST_RING_PRESENTATION]),
     capabilities: Object.freeze([]),
     transitions: Object.freeze([
       Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.COMPLETE,
@@ -705,7 +709,8 @@ const points = Object.freeze([
     id: VR_EXPERIENCE_POINT['4.20'],
     canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['4.30'] }),
     settledConsequences: P2_RADIAL_PRESENTED_SETTLED_CONSEQUENCES,
-    entryEffects: Object.freeze([VR_SCENARIO_EFFECT.BEGIN_P2_RADIAL_PRESENTATION]),
+    entryEffects: Object.freeze([VR_SCENARIO_EFFECT.SET_MAIN_AMBIENT_03,
+      VR_SCENARIO_EFFECT.BEGIN_P2_RADIAL_PRESENTATION]),
     label: 'Tier 2 complete / P2 radial world presentation',
     capabilities: P2_MAIN_GLYPH_CAPABILITIES,
     transitions: Object.freeze([
@@ -763,7 +768,8 @@ const points = Object.freeze([
   }),
   Object.freeze({
     id: VR_EXPERIENCE_POINT['4.80'], canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['100.10'] }),
-    settledConsequences: EMPTY_SETTLED_CONSEQUENCES, entryEffects: Object.freeze([]),
+    settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
+    entryEffects: Object.freeze([VR_SCENARIO_EFFECT.SET_MAIN_AMBIENT_04]),
     label: 'Stable P3 entry boundary', capabilities: P2_SMALL_GLYPH_TARGETING_CAPABILITIES, transitions: Object.freeze([])
   }),
   Object.freeze({
