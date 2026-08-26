@@ -1,4 +1,6 @@
 import * as THREE from '../../vendor/three.js';
+import { resolveVrSmallGlyphProtoAstro } from '../protoAstro/resolveVrSmallGlyphProtoAstro.js';
+import { resolveAttractorShellGlyph } from '../tools/vrAttractorShellGlyphs.js';
 import { isWorldPointInsideChamberCylinder, resolveChamberCylinder } from './vrAstroFurnaceChamberCylinder.js';
 
 export const ASTRO_FURNACE_RUNE_RECIPE_SLOT_STATES = Object.freeze({
@@ -19,9 +21,10 @@ export function createVrAstroFurnaceRuneRecipeInteraction({
   settings = {},
   takeHeldShell,
   takeHeldSmallGlyph,
-  isModeActive
+  isModeActive,
+  getExpectedRecipe
 }) {
-  [takeHeldShell, takeHeldSmallGlyph, isModeActive].forEach((dependency) => {
+  [takeHeldShell, takeHeldSmallGlyph, isModeActive, getExpectedRecipe].forEach((dependency) => {
     if (typeof dependency !== 'function') throw new TypeError('Rune recipe interaction dependencies must be functions.');
   });
   if (typeof shellSystem?.restoreInstanceToOrbit !== 'function')
@@ -79,13 +82,16 @@ export function createVrAstroFurnaceRuneRecipeInteraction({
     if (bounds.isEmpty()) content.getWorldPosition(center); else bounds.getCenter(center);
     return isWorldPointInsideChamberCylinder(center, chamber, chamberCylinder, local);
   }
-  function canAccept(slot, content) {
-    return !disposed && enabled && slot.state === states.EMPTY && Boolean(content)
-      && isModeActive() === true && openInteraction?.getState?.() === 'OPEN'
-      && activateInteraction?.getState?.() === 'IDLE' && isNear(content);
+  function canAccept(slot, content, resolveFamilyCode, expectedFamilyKey) {
+    if (disposed || !enabled || slot.state !== states.EMPTY || !content
+      || isModeActive() !== true || openInteraction?.getState?.() !== 'OPEN'
+      || activateInteraction?.getState?.() !== 'IDLE' || !isNear(content)) return false;
+    const expectedRecipe = getExpectedRecipe();
+    return expectedRecipe !== null
+      && resolveFamilyCode(content) === expectedRecipe[expectedFamilyKey];
   }
-  function accept(slot, content, takeHeld) {
-    if (!canAccept(slot, content) || takeHeld(content) !== true) return false;
+  function accept(slot, content, takeHeld, resolveFamilyCode, expectedFamilyKey) {
+    if (!canAccept(slot, content, resolveFamilyCode, expectedFamilyKey) || takeHeld(content) !== true) return false;
     slot.content = content;
     slot.anchor.attach(content);
     slot.startPosition.copy(content.position);
@@ -114,8 +120,10 @@ export function createVrAstroFurnaceRuneRecipeInteraction({
   function update(delta = 0) {
     if (disposed) return;
     const step = Math.max(0, Number.isFinite(delta) ? delta : 0);
-    accept(shell, reportedHeldShell, takeHeldShell);
-    accept(smallGlyph, reportedHeldSmallGlyph, takeHeldSmallGlyph);
+    accept(shell, reportedHeldShell, takeHeldShell,
+      (content) => resolveAttractorShellGlyph(content)?.familyCode ?? null, 'shellFamilyCode');
+    accept(smallGlyph, reportedHeldSmallGlyph, takeHeldSmallGlyph,
+      (content) => resolveVrSmallGlyphProtoAstro(content)?.descriptor?.familyCode ?? null, 'smallGlyphFamilyCode');
     updateSlot(shell, step);
     updateSlot(smallGlyph, step);
     reportedHeldShell = null;
