@@ -189,6 +189,15 @@ export function createVrRuneBridgeActor({ assetManager, getSectorMount, extensio
       VR_RUNE_BRIDGE_STATES.ORBITING
     );
   }
+  function restoreInstalled(branchId) {
+    const entry = getInstance(branchId);
+    if (!entry || disposed) return false;
+    entry.instance.visible = true;
+    entry.extensionElapsed = extensionDurationSeconds;
+    entry.motionRoot.position.set(0, 0, entry.extensionDistance);
+    entry.state = VR_RUNE_BRIDGE_STATES.ORBITING;
+    return true;
+  }
   function update(deltaSeconds = 0) {
     if (disposed) return;
     const delta = Math.max(0, Number.isFinite(deltaSeconds) ? deltaSeconds : 0);
@@ -223,6 +232,7 @@ export function createVrRuneBridgeActor({ assetManager, getSectorMount, extensio
     beginExtension,
     cancelExtension,
     setInstalled,
+    restoreInstalled,
     getStoneAnchor: (branchId) => getInstance(branchId)?.stoneAnchor ?? null,
     getStoneHoverAnchor: (branchId) => getInstance(branchId)?.hoverAnchor ?? null,
     getBridgeRoot: (branchId) => getInstance(branchId)?.bridgeRoot ?? null,
