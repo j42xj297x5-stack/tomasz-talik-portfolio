@@ -26,7 +26,7 @@ Existing Proto-Astro essence extraction remains distinct from Rune tuning. Natur
 
 All five natural recipes are available independently of sector completion. A valid selected recipe uses two typed slots and one `18 s` `RUNE_TUNING` cycle with `astro_piec_work_03.mp3`; ingredients are consumed only on successful completion. Persistent result is `RuneStoneProgressionController.tunedRuneFamilies`, not a physical Furnace item.
 
-Known gaps: slot acceptance does not yet validate the selected recipe's expected family, and recipe change does not yet perform canonical player-facing eject around `1 m`.
+Implemented corrections: slot acceptance validates the selected recipe's expected family before ownership transfer, and changing to a different selected recipe ejects snapping/inserted ingredients player-facing around `1 m` without consuming them. Final recipe transaction validation remains a separate safety layer.
 
 ## Astro bands
 
@@ -43,7 +43,7 @@ Known gaps: slot acceptance does not yet validate the selected recipe's expected
 
 ## Scenario boundary and spatial context
 
-The implemented authored tail is `4.40 → 4.50 → 4.60 → 4.70 → 4.80`. `4.80` is stable; continuation is deferred. At Tier 3 Large Glyph moves to implemented `SPHERE_FAR = 80 m`. Physical natural Rune Stones occupy the implemented `RUNE_STONES = 50–75 m` layer, but their first-reveal presentation gate is not yet wired.
+The implemented authored tail is `4.40 → 4.50 → 4.60 → 4.70 → 4.80`. `4.80` is stable; continuation is deferred. At Tier 3 Large Glyph moves to implemented `SPHERE_FAR = 80 m`. Physical natural Rune Stones occupy the implemented `RUNE_STONES = 50–75 m` layer. They begin hidden and the separate `REVEAL_NATURAL_RUNE_STONES` effect at `2.10` reveals them with the celestial world without granting targetability.
 
 ## Three independent Rune laws
 

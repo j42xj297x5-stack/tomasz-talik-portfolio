@@ -32,7 +32,9 @@ Five order-3 cards complete into `4.80`. No Scenario point after `4.80` is imple
 
 `stateAt(X)` folds settled consequences strictly before `X`; it never reconstructs held targets, pulls, Furnace cycles, timers or panel UI. Stable `stateAt(4.80)` contains completed Tier 3, page IDs/orders through 3, floor completion through Tier 3, consumed Tier-3 crystal, Proto-Astro essences `K/T/S/L/R`, and `largeGlyphs.stage = SPHERE_FAR`.
 
-Canonical debug intent `p5` is stable `4.80`. **Known implementation gap:** `src/xr/progression/vrDebugCheckpoints.js` still maps runtime `P5` to `4.40`. This document does not claim that alias behavior is fixed.
+Debug `P5 → pointId 4.80 → spawn RING` is **IMPLEMENTED**; P1–P4 are unchanged. `P5` remains an ordinary debug/QA alias, not a Scenario point or capability owner, and owns no settled consequences. Canonical `stateAt → reconstruction → activate` remains the hydration path.
+
+Point `2.10` now has the separate `REVEAL_NATURAL_RUNE_STONES` effect in the same entry beat as `BEGIN_CELESTIAL_REVEAL`. The settled consequence `runeStones.presentationVisible = true` accumulates into later `stateAt` results; this presentation truth neither grants targetability nor changes the graph or point IDs.
 
 ## Rune boundary
 

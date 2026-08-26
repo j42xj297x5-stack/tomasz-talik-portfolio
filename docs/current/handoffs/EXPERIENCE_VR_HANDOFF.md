@@ -1,6 +1,6 @@
 # Experience VR — Current Handoff
 
-Status: **CURRENT operational snapshot — 2026-08-25**, synchronized through merge PR #624. Authorities: [`VR_RUNTIME_MODEL.md`](../technical/VR_RUNTIME_MODEL.md), [`VR_SCENARIO_DIRECTOR_MODEL.md`](../technical/VR_SCENARIO_DIRECTOR_MODEL.md) and [`VR_RUNE_STONES_MODEL.md`](../technical/VR_RUNE_STONES_MODEL.md).
+Status: **CURRENT operational snapshot — 2026-08-26**. Authorities: [`VR_RUNTIME_MODEL.md`](../technical/VR_RUNTIME_MODEL.md), [`VR_SCENARIO_DIRECTOR_MODEL.md`](../technical/VR_SCENARIO_DIRECTOR_MODEL.md) and [`VR_RUNE_STONES_MODEL.md`](../technical/VR_RUNE_STONES_MODEL.md).
 
 ## Canonical checkpoint
 
@@ -20,12 +20,12 @@ Physical transport implements `FREE → LOCKED_BY_ASTRO → CARRIED_ORBIT`, plat
 
 **NEXT A9:** socket capture + persistent installed truth. Later work includes bridge extension timing, installed-stone blocking, Water override trigger, Ether flow, physical Rune Stone audio and authored Scenario continuation after `4.80`; none is implemented by the current foundation.
 
-## Known runtime gaps
+## Closed runtime reconciliation gaps
 
-1. Runtime `P5` still maps to `4.40`, not canonical debug intent `4.80`.
-2. Rune typed-slot acceptance does not validate the selected recipe's expected family at insertion.
-3. Recipe change lacks canonical player-facing eject around `1 m`.
-4. Natural Rune Stone actor composition lacks an explicit early reveal seam tied to Sun/Stars.
+- Recipe insertion family validation is **IMPLEMENTED**: wrong-family ingredients are rejected before ownership transfer, while final transaction validation remains in force.
+- Recipe-change eject is **IMPLEMENTED** for `SNAPPING`/`INSERTED` content without consume; Shell and Small Glyph finalize as legal placed objects.
+- Debug `P5 → 4.80` with spawn `RING` is **IMPLEMENTED** and remains an ordinary debug alias.
+- Early natural Rune Stone world presentation is **IMPLEMENTED**: five natural stones begin hidden, `2.10` reveals them with the celestial world, and accumulated `runeStones.presentationVisible` hydrates later points without granting targetability. Ether does not participate.
 
 ## Traceability
 

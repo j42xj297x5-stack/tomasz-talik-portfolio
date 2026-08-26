@@ -91,9 +91,9 @@ Canonical resolver Wu Xing używa niezmienionego cyklu tworzenia. Pierwszy eleme
 
 Wybrana naturalna rodzina i poprawna para wystarczają do walidacji receptury; sector completeness nie jest kanonicznym gate tuningu. Nieprawidłowa para nie rozpoczyna procesu. Asset identity nadal pochodzi z istniejących resolverów Proto-Astro, bez równoległej tabeli asset IDs.
 
-Po wybraniu naturalnej receptury oba typed slots znają expected family: `Small Glyph slot + expected family` oraz `Shell slot + expected family`. Piec **musi odrzucić niewłaściwy składnik już przy próbie insertion**; obiekt nie może wejść do slotu i wyglądać na poprawnie przyjęty aż do późniejszej walidacji. Receptury Rune Stone stosują tę samą filozofię co ograniczenia materiałów Pieca / Asterion Shell extraction: invalid material nie może wejść do legalnej operacji. Jest to canonical behavior, nie wskazanie konkretnej funkcji ani implementation detail.
+Po wybraniu naturalnej receptury oba typed slots znają expected family: `Small Glyph slot = Small Glyph type + expected family`, a `Shell slot = Shell type + expected family`. **Insertion validation jest IMPLEMENTED.** `RuneRecipeInteraction` pyta o expected recipe przez read-only seam do `RuneRecipeSelectionController`; nie kopiuje selection truth ani recipe table. Brak wybranej receptury blokuje insertion. Wrong Small Glyph family i wrong Shell family są odrzucane **przed ownership transfer**: składnik zostaje w ręce gracza i nie przechodzi do `SNAPPING` ani `INSERTED`. Poprawny składnik zachowuje istniejący snap lifecycle.
 
-Końcowa walidacja kompletnej receptury przy uruchamianiu/kończeniu procesu pozostaje obowiązkowym drugim safety layerem. Walidacja insertion poprawia UX/gameplay, ale nie zastępuje transakcyjnego invariant.
+Obowiązują dwa poziomy walidacji: LEVEL 1 — insertion validation dla gameplay/UX acceptance; LEVEL 2 — `isRecipeValid()` / Rune tuning transaction validation jako final safety przed consume/commit. Insertion validation nie zastępuje końcowego transakcyjnego invariant.
 
 ## 5. Astro Piec — ownership i proces
 
@@ -109,13 +109,16 @@ Końcowa walidacja kompletnej receptury przy uruchamianiu/kończeniu procesu poz
 Wybranie **innej** receptury atomowo wykonuje semantykę:
 
 ```text
-OLD RECIPE + currently inserted recipe ingredients
-→ eject all inserted ingredients
-→ clear both recipe slots
+OLD RECIPE + currently snapping/inserted recipe ingredients
+→ prepare recipe change
+→ begin eject
+→ recipe slots become EMPTY
 → select NEW RECIPE with empty slots
 ```
 
-Eject obejmuje Small Glyph i Shell: jeden obecny składnik jest wyrzucany, a w wyjątkowym stanie dwóch składników wyrzucane są oba. Zmiana receptury niczego nie konsumuje i nie przywraca składników do odległego Small Glyph field ani Shell orbit. Jest to fizyczny eject na zewnątrz komory, do kontrolowanej półprzestrzeni po stronie gracza / panelu / pokręteł, około `1 m` od Pieca, aby materiał był natychmiast widoczny i dostępny do ponownego użycia. Dokładny offset XYZ, kąt, easing i prędkość wyrzutu pozostają actor/runtime tuning; placement nie może być losowy wokół Pieca.
+**Recipe-change eject jest IMPLEMENTED** wyłącznie dla istniejącej selected recipe → innej selected recipe; nie zachodzi przy pierwszym wyborze ani ponownym wyborze tej samej family. Obejmuje jeden Small Glyph, jeden Shell albo oba, zarówno w `SNAPPING`, jak i `INSERTED`. Na początku eject slot dostaje `content = null`, `state = EMPTY`, `elapsed = 0`; składnik nie jest konsumowany. Normalny eject nie wysyła Shell do orbit ani Small Glyph do field.
+
+Target leży około `1.0 m` od Furnace insert/chamber center po stronie aktualnej pozycji gracza. Kierunek jest player-relative / platform-relative, nie globalnym `+X`/`+Z`; dwa składniki otrzymują deterministycznie rozdzielone targety. Duration, easing i lateral separation pozostają **TUNING**. Finalizacja przywraca legalne, ponownie podnoszalne obiekty: Shell kończy w canonical `placed`, a Small Glyph w canonical `PLACED` zarówno w `SmallGlyphSystem`, jak i transient ownerze `SmallGlyphAttractorInteraction`. Nie istnieje trwały domain state `EJECTED`. Explicit reset podczas transient eject nadal przywraca baseline: Shell → orbit, Small Glyph → field.
 
 `RuneRecipeSelectionController` nie zależy od `progressionController` i nie odczytuje `isBranchComplete()`, sector state, bridge state, installation readiness ani Scenario state. Publiczna semantyka selection używa `isFamilyAvailable()`, `getAvailableFamilyCodes()` i `availableFamilyCodes`; zachowane są `isFamilyTunable()`, `getTunableFamilyCodes()`, `tunableFamilyCodes` oraz `tunedFamilyCodes`.
 
@@ -352,6 +355,12 @@ Ten model jest preferowany zamiast `MECHANIC NEEDS OBJECT → OBJECT SUDDENLY AP
 
 Konsekwencja komunikacyjna: jeżeli obiekt był widoczny wcześniej, późniejsza komunikacja ma ujawniać jego znaczenie lub capability, nie udawać, że obiekt właśnie się pojawił. Literalne dialogi i copy pozostają osobnym zadaniem komunikacyjnym.
 
+Early natural Rune Stone presentation jest **IMPLEMENTED**. Pięć naturalnych aktorów powstaje podczas runtime construction z presentation baseline `HIDDEN`. Entry `2.10` uruchamia osobny effect `REVEAL_NATURAL_RUNE_STONES` w tym samym beacie co `BEGIN_CELESTIAL_REVEAL`: main ambient → celestial reveal → natural Rune Stone reveal → glyph free explore. Graph i point ID pozostają bez zmian.
+
+`RuneStoneActor` posiada presentation visibility przez contract odpowiadający `setPresentationVisible(value)`, `isPresentationVisible()` i `hydrateScenarioState(state)`. Scenario owner `runeStones` zapisuje od `2.10` settled consequence `runeStones.presentationVisible = true`, więc `stateAt(later point)` dziedziczy visibility przez accumulation. Reset przywraca initial natural field transforms, `FREE`, authored animation baseline i hidden presentation. Hydration `{ presentationVisible: true }` odtwarza wyłącznie presentation truth, bez tuning/readiness/transport truth.
+
+**Presence/visibility nie oznacza targetability.** Od `2.10` pięć naturalnych Rune Stones może być widoczne przy `tuned = false`, niedostępnym `RUNESTONES` i `targetability = false`; natural targetability nadal równa się `tunedRuneFamilies` przez istniejącą A7 projection. Hidden presentation dodatkowo blokuje physical candidate legality. Ether nie jest szóstym naturalnym recordem, nie jest ujawniany w `2.10` ani dodawany do natural targetability; pozostaje SPECIAL dla przyszłego Ether/Monkey flow.
+
 ## 13. Milestones and evidence
 
 - **A1–A6 + UI-1 — IMPLEMENTED:** two typed slots, Wu Xing resolver, `18 s` process, `tunedRuneFamilies`, Furnace UI and `SPHERE_FAR`. A6 evidence: task `b091b4e7095dc1ce881e47723f8703f66eb69db4`, merge `0fc4ce338d26e7088594c69fed49532594f978ce`.
@@ -377,18 +386,16 @@ A9.4 does not implement bridge extension timing, socket capture, installed truth
 ```text
 RUNE A1–A8: IMPLEMENTED
 RUNE A9.1–A9.4: IMPLEMENTED FOUNDATIONS
+ADDITIONAL RUNTIME CORRECTIONS: RECIPE INSERTION FAMILY VALIDATION, RECIPE-CHANGE EJECT, P5 → 4.80, EARLY NATURAL RUNE STONE WORLD PRESENTATION — IMPLEMENTED
 RUNE A9: PARTIALLY IMPLEMENTED
 NEXT A9: SOCKET_CAPTURE + PERSISTENT INSTALLED TRUTH
 AUTHORED SCENARIO BOUNDARY: 4.80
 POST-4.80 SCENARIO / A10+: DEFERRED / NOT IMPLEMENTED
 ```
 
-## 16. Known implementation gaps
+## 16. Closed runtime reconciliation gaps
 
-1. Runtime `P5` still maps to `4.40`; canonical debug intent is stable `4.80`.
-2. Typed-slot acceptance does not yet validate the selected recipe's expected family at insertion.
-3. Recipe change does not yet perform canonical player-facing eject around `1 m`.
-4. Natural Rune Stone composition has no explicit early presentation seam tied to Sun/Stars.
+Recipe insertion family validation, recipe-change player-facing eject, debug `P5 → 4.80` with spawn `RING`, and early natural Rune Stone world presentation are **IMPLEMENTED**. `P5` remains only a debug/QA alias; canonical `stateAt → reconstruction → activate` owns hydration, and the alias owns no Scenario point, capability or settled consequence.
 
 ## 17. Related authority
 

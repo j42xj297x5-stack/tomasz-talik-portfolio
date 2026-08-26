@@ -1,6 +1,10 @@
 # Decision Log
 
-Status: current binding decisions with preserved history. Synchronized on 2026-08-25 through Rune A9.4 and merge PR #624.
+Status: current binding decisions with preserved history. Synchronized on 2026-08-26 through the closed runtime reconciliation gaps.
+
+## 2026-08-26 — CURRENT runtime reconciliation follow-up
+
+The four previously remaining runtime gaps are **IMPLEMENTED**: recipe insertion family validation, recipe-change player-facing eject, debug `P5 → 4.80`, and early natural Rune Stone presentation at celestial reveal. This follow-up supersedes only their earlier open-gap status; Scenario after `4.80` remains deferred and Rune A9 remains partially implemented with socket capture + persistent installed truth next.
 
 ## 2026-08-25 — CURRENT Experience VR runtime reconciliation (superseding)
 

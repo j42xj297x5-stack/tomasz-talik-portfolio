@@ -27,4 +27,4 @@ After Tier 3, five Large Glyph slots use deterministic full-sphere directions, b
 
 ## Rune layer contract
 
-`RUNE_STONES` contains exactly five natural physical actors (`earth`, `fire`, `wood`, `metal`, `water`). Ether has a descriptor but is not part of this natural collection. Availability and legal targets come from `tunedRuneFamilies`; installation readiness does not participate in scan, lock or transport. The early authored reveal/presentation seam tying first visibility to Sun/Stars is still an implementation gap.
+`RUNE_STONES` contains exactly five natural physical actors (`earth`, `fire`, `wood`, `metal`, `water`). Ether has a descriptor but is not part of this natural collection or its early reveal. The actors begin hidden; at `2.10` a separate Scenario effect reveals them with the celestial world. Visibility does not grant targetability: availability and legal targets come from `tunedRuneFamilies`, hidden presentation blocks physical candidate legality, and installation readiness does not participate in scan, lock or transport.

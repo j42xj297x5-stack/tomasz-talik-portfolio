@@ -265,11 +265,6 @@ Implemented authored Scenario ends at `4.80`: `4.40 → 4.50 → 4.60 → 4.70 �
 
 Not implemented: Scenario after `4.80`, bridge extension timing, `SOCKET_CAPTURE`, persistent `INSTALLED` truth, installed-stone blocking, Water override trigger, Ether flow, Panels 3–4, physical Rune Stone movement/spatial audio, durable persistence and full-game reset.
 
-## Known implementation gaps
+## Closed runtime reconciliation gaps
 
-1. Runtime debug checkpoint `P5` still maps to `4.40`, although canonical intent is stable `4.80`.
-2. Typed-slot insertion does not yet verify the selected recipe's expected family at ingredient acceptance.
-3. Recipe change lacks canonical player-facing eject around `1 m`.
-4. Natural Rune Stone actors are composed under `WorldStableRoot`, but no explicit early presentation seam binds first reveal to Sun/Stars.
-
-These are documented gaps, not implemented behavior.
+Recipe insertion family validation, recipe-change player-facing eject, debug `P5 → 4.80`, and early natural Rune Stone presentation at celestial reveal are **IMPLEMENTED**. These corrections do not extend authored Scenario after `4.80`; Rune A9 remains partially implemented, with socket capture + persistent installed truth next.
