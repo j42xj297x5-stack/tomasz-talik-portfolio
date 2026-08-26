@@ -33,6 +33,8 @@ export function createVrProgressFloor({
     const key = `${glyphId}:${order}`;
     const panelCount = PANEL_COUNT_BY_GLYPH_ID.get(glyphId);
     if (disposed || !Number.isInteger(order) || order < 1 || order > panelCount || activatedEntries.has(key)) return false;
+    const isFirstActivatedPage = ![...activatedEntries.values()].some((entry) => entry.glyphId === glyphId);
+    if (isFirstActivatedPage && !actor.revealSector(glyphId)) return false;
     if (!actor.activatePanel(glyphId, order)) return false;
     activatedEntries.set(key, { glyphId, order });
     return true;
