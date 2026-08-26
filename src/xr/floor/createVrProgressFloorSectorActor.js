@@ -76,14 +76,22 @@ export function createVrProgressFloorSectorActor({ descriptor, sourceModel, cont
   const object = new THREE.Group();
   object.name = `VrProgressFloorSectorActorRoot:${descriptor.glyphId}`;
   object.position.set(0, 0, 0);
+  object.scale.set(1, 1, 1);
   object.rotation.y = descriptor.rotationIndex * (Math.PI * 2 / 5);
   object.userData = { ...object.userData, ...descriptor };
+
+  const motionRoot = new THREE.Group();
+  motionRoot.name = `VrProgressFloorSectorMotionRoot:${descriptor.glyphId}`;
+  motionRoot.position.set(0, 0, 0);
+  motionRoot.quaternion.identity();
+  motionRoot.scale.set(1, 1, 1);
+  object.add(motionRoot);
 
   const authoredVisual = sourceModel.clone(true);
   authoredVisual.name = `VrProgressFloorSector:${descriptor.glyphId}`;
   authoredVisual.position.set(0, 0, 0);
   authoredVisual.visible = false;
-  object.add(authoredVisual);
+  motionRoot.add(authoredVisual);
 
   const ownedMaterials = new Set();
   const panelsByOrder = new Map();
@@ -124,7 +132,7 @@ export function createVrProgressFloorSectorActor({ descriptor, sourceModel, cont
 
     object.updateMatrixWorld(true);
     const presentationBounds = new THREE.Box3().makeEmpty();
-    presentationBodies.forEach((body) => presentationBounds.union(getBoundsRelativeTo(body, object)));
+    presentationBodies.forEach((body) => presentationBounds.union(getBoundsRelativeTo(body, motionRoot)));
     if (presentationBounds.isEmpty()) {
       throw new Error(`[VrProgressFloorSectorActor] Cannot derive presentation bounds for "${descriptor.glyphId}".`);
     }
@@ -136,7 +144,14 @@ export function createVrProgressFloorSectorActor({ descriptor, sourceModel, cont
       presentationBounds.max.z
     );
     runeInstallationFrame.userData = { ...runeInstallationFrame.userData, branchId: descriptor.branchId, radialAxis: '+Z' };
-    object.add(runeInstallationFrame);
+    motionRoot.add(runeInstallationFrame);
+
+    function resetMotion() {
+      if (disposed) return;
+      motionRoot.position.set(0, 0, 0);
+      motionRoot.quaternion.identity();
+      motionRoot.scale.set(1, 1, 1);
+    }
 
     function reveal() {
       if (disposed || presentationState !== VR_PROGRESS_FLOOR_SECTOR_PRESENTATION_STATE.HIDDEN) return false;
@@ -185,6 +200,7 @@ export function createVrProgressFloorSectorActor({ descriptor, sourceModel, cont
 
     function reset() {
       if (disposed) return;
+      resetMotion();
       presentationState = VR_PROGRESS_FLOOR_SECTOR_PRESENTATION_STATE.HIDDEN;
       authoredVisual.visible = false;
       activeOrders.clear();
@@ -214,8 +230,14 @@ export function createVrProgressFloorSectorActor({ descriptor, sourceModel, cont
       reveal,
       activatePanel,
       update,
+      resetMotion,
       reset,
       dispose,
+      getMotionTransform: () => ({
+        position: motionRoot.position.clone(),
+        quaternion: motionRoot.quaternion.clone(),
+        scale: motionRoot.scale.clone()
+      }),
       getPanelObject: (order) => panelsByOrder.get(order)?.object ?? null,
       getRuneInstallationFrame: () => runeInstallationFrame,
       getPresentationState: () => presentationState
