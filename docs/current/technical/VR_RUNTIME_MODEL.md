@@ -1,6 +1,6 @@
 # Experience VR Runtime Model
 
-Status: canonical description of the implemented runtime synchronized through Rune A9.5 and the `4.80` Scenario boundary on 2026-08-25. Future authored gameplay is documented in the [gameplay roadmap](../concept/EXPERIENCE_VR_GAMEPLAY_ROADMAP.md).
+Status: canonical description of the implemented runtime synchronized through natural Rune A9.6 and the `4.80` Scenario boundary on 2026-08-26. Future authored gameplay is documented in the [gameplay roadmap](../concept/EXPERIENCE_VR_GAMEPLAY_ROADMAP.md).
 
 ## Scenario composition boundary
 
@@ -263,10 +263,10 @@ Readiness normally reads sector completion through `isBranchComplete` and projec
 
 ## Current implemented boundary
 
-Implemented authored Scenario ends at `4.80`: `4.40 → 4.50 → 4.60 → 4.70 → 4.80`. Stable reconstruction includes Tier 3 and Proto-Astro essences `K/T/S/L/R`; it does not recreate transient interactions. Rune A1–A9.5 are partially implemented domain foundations without authored Scenario continuation.
+Implemented authored Scenario ends at `4.80`: `4.40 → 4.50 → 4.60 → 4.70 → 4.80`. Stable reconstruction includes Tier 3 and Proto-Astro essences `K/T/S/L/R`; it does not recreate transient interactions. Natural Rune A9.1–A9.6 foundation is complete without authored Scenario continuation: `runeProgression` silently hydrates tuned/installed truth, then readiness synchronization and `RuneInstalledStateProjection` reconstruct stable installed anchors and extended `ORBITING` bridges without replay.
 
 Not implemented: Scenario after `4.80`, Water override trigger, Ether flow, Panels 3–4, physical Rune Stone movement/spatial audio, durable persistence and full-game reset.
 
 ## Closed runtime reconciliation gaps
 
-Recipe insertion family validation, recipe-change player-facing eject, debug `P5 → 4.80`, and early natural Rune Stone presentation at celestial reveal are **IMPLEMENTED**. These corrections do not extend authored Scenario after `4.80`; Rune A9 remains partially implemented; A9.5 handoff choreography, physical bridge extension and persistent installed truth are implemented. Carried Rune Stone ↔ installed Rune Stone collision is superseded and is not a future target.
+Recipe insertion family validation, recipe-change player-facing eject, debug `P5 → 4.80`, early natural Rune Stone presentation, A9.5 handoff choreography and A9.6 hydration/reconstruction foundation are **IMPLEMENTED**. Post-`4.80` Scenario direct-target parity remains deferred until Scenario authoring. Carried Rune Stone ↔ installed Rune Stone collision is superseded and is not a future target.

@@ -28,6 +28,7 @@ import { createVrReliquaryReleaseButton } from './xr/createVrReliquaryReleaseBut
 import { createVrProgressFloor } from './xr/floor/createVrProgressFloor.js';
 import { createVrRuneBridgeActor } from './xr/runes/createVrRuneBridgeActor.js';
 import { createVrRuneInstallationReadinessProjection } from './xr/runes/createVrRuneInstallationReadinessProjection.js';
+import { createVrRuneInstalledStateProjection } from './xr/runes/createVrRuneInstalledStateProjection.js';
 import { createVrRuneStoneActor } from './xr/runes/createVrRuneStoneActor.js';
 import { createVrRuneStoneAttractorInteraction } from './xr/runes/createVrRuneStoneAttractorInteraction.js';
 import { createVrRuneStoneInstallationInteraction } from './xr/runes/createVrRuneStoneInstallationInteraction.js';
@@ -410,7 +411,6 @@ const runeInstallationReadinessProjection = createVrRuneInstallationReadinessPro
 const synchronizeRuneBridgeReadiness = () => {
   runeInstallationReadinessProjection.synchronizeBridges(runeBridgeActor);
 };
-synchronizeRuneBridgeReadiness();
 const ambientSequencer = createVrAmbientSequencer({ bridge: vrAudio });
 const introAmbientSequencer = createVrIntroAmbientSequencer({ bridge: vrAudio });
 const ambientScenarioOwner = Object.freeze({
@@ -424,6 +424,8 @@ const ambientScenarioOwner = Object.freeze({
 });
 function synchronizeReconstructionDerivedState() {
   synchronizeRuneBridgeReadiness();
+  runeInstalledStateProjection.synchronize();
+  furnacePanel?.redraw();
   shellSystem.applyAbsorbedShellIds(furnaceProgressionController.getAbsorbedShellIds());
 }
 const firstRingFlow = createVrFirstRingFlow({
@@ -463,6 +465,10 @@ const attractorBandPresentations = Object.freeze({
 });
 const semanticInput = createVrSemanticInput({ renderer });
 const runeStoneProgressionController = createVrRuneStoneProgressionController();
+const runeInstalledStateProjection = createVrRuneInstalledStateProjection({
+  runeStoneProgressionController, runeStoneActor, runeBridgeActor
+});
+synchronizeRuneBridgeReadiness();
 const runeStoneAttractorBandProjection = createVrRuneStoneAttractorBandProjection({
   runeStoneProgressionController
 });
@@ -1200,7 +1206,8 @@ const scenarioOwners = Object.freeze({
   protoAstroTuning: protoAstroTuningController,
   audio: ambientScenarioOwner,
   celestial: celestialActor,
-  runeStones: runeStoneActor
+  runeStones: runeStoneActor,
+  runeProgression: runeStoneProgressionController
 });
 const enterVrDebugCheckpoint = createVrDebugCheckpointController({
   scenario: vrExperienceScenario,

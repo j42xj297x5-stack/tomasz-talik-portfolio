@@ -1,4 +1,6 @@
-import { PROTO_ASTRO_NATURAL_FAMILY_CODES } from '../protoAstro/protoAstroRegistry.js';
+import { VR_NATURAL_RUNE_STONE_ASSETS } from './vrRuneStoneRegistry.js';
+
+const NATURAL_FAMILY_CODES = Object.freeze(VR_NATURAL_RUNE_STONE_ASSETS.map(({ familyCode }) => familyCode));
 
 export function createVrRuneStoneProgressionController() {
   const tunedRuneFamilies = new Set();
@@ -8,10 +10,11 @@ export function createVrRuneStoneProgressionController() {
 
   const normalizeNaturalFamily = (familyCode) => {
     const family = String(familyCode ?? '').toUpperCase();
-    return PROTO_ASTRO_NATURAL_FAMILY_CODES.includes(family) ? family : null;
+    return NATURAL_FAMILY_CODES.includes(family) ? family : null;
   };
-  const getTunedFamilyCodes = () => Object.freeze([...tunedRuneFamilies]);
-  const getInstalledFamilyCodes = () => Object.freeze([...installedRuneFamilies]);
+  const canonicalFamilies = (families) => NATURAL_FAMILY_CODES.filter((family) => families.has(family));
+  const getTunedFamilyCodes = () => Object.freeze(canonicalFamilies(tunedRuneFamilies));
+  const getInstalledFamilyCodes = () => Object.freeze(canonicalFamilies(installedRuneFamilies));
   const getSnapshot = () => Object.freeze({
     tunedRuneFamilies: getTunedFamilyCodes(),
     installedRuneFamilies: getInstalledFamilyCodes()
@@ -34,6 +37,34 @@ export function createVrRuneStoneProgressionController() {
     if (installedRuneFamilies.has(family)) return false;
     installedRuneFamilies.add(family); emitChange(); return true;
   }
+  function hydrateScenarioState(state) {
+    if (!state || typeof state !== 'object' || Array.isArray(state)
+      || Object.keys(state).length !== 2
+      || !Object.prototype.hasOwnProperty.call(state, 'tunedRuneFamilies')
+      || !Object.prototype.hasOwnProperty.call(state, 'installedRuneFamilies')) {
+      throw new TypeError('runeProgression state must contain exactly tunedRuneFamilies and installedRuneFamilies');
+    }
+    const validateFamilies = (value, key) => {
+      if (!Array.isArray(value)) throw new TypeError(`${key} must be an array`);
+      const normalized = value.map((familyCode) => {
+        if (typeof familyCode !== 'string') throw new TypeError(`${key} must contain familyCode strings`);
+        const family = normalizeNaturalFamily(familyCode);
+        if (!family || family !== familyCode) throw new TypeError(`${key} contains invalid natural familyCode: ${familyCode}`);
+        return family;
+      });
+      if (new Set(normalized).size !== normalized.length) throw new TypeError(`${key} must not contain duplicates`);
+      return new Set(normalized);
+    };
+    const nextTuned = validateFamilies(state.tunedRuneFamilies, 'tunedRuneFamilies');
+    const nextInstalled = validateFamilies(state.installedRuneFamilies, 'installedRuneFamilies');
+    nextInstalled.forEach((family) => {
+      if (!nextTuned.has(family)) throw new Error(`Cannot hydrate installed untuned Rune Stone family: ${family}`);
+    });
+    tunedRuneFamilies.clear();
+    canonicalFamilies(nextTuned).forEach((family) => tunedRuneFamilies.add(family));
+    installedRuneFamilies.clear();
+    canonicalFamilies(nextInstalled).forEach((family) => installedRuneFamilies.add(family));
+  }
   function reset() {
     if (disposed || (tunedRuneFamilies.size === 0 && installedRuneFamilies.size === 0)) return;
     tunedRuneFamilies.clear(); installedRuneFamilies.clear(); emitChange();
@@ -42,6 +73,7 @@ export function createVrRuneStoneProgressionController() {
   return {
     commitTunedFamily,
     commitInstalledFamily,
+    hydrateScenarioState,
     isFamilyTuned: (familyCode) => tunedRuneFamilies.has(String(familyCode ?? '').toUpperCase()),
     isFamilyInstalled: (familyCode) => installedRuneFamilies.has(String(familyCode ?? '').toUpperCase()),
     getTunedFamilyCodes, getInstalledFamilyCodes, getSnapshot,

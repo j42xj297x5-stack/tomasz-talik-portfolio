@@ -196,7 +196,7 @@ Authored `BRIDGE_STONE_CAPTURE` może pozostać prywatnym asset/calibration evid
 
 ## 8. Transport i instalacja
 
-**A9.1–A9.5 są IMPLEMENTED foundations: A9.5 = `SOCKET_CAPTURE` + persistent installed truth. RUNE A9 pozostaje PARTIALLY IMPLEMENTED.**
+**A9.1–A9.6 są IMPLEMENTED foundations. NATURAL RUNE A9 FOUNDATION = COMPLETE.** Nie oznacza to ukończenia całego Rune Act ani authoringu Scenario po `4.80`.
 
 ```text
 FREE → LOCKED_BY_ASTRO                 IMPLEMENTED
@@ -231,7 +231,7 @@ Collision carried Rune Stone ↔ installed Rune Stone jest **SUPERSEDED** i nie 
 
 Każdy kamień może zachowywać pair-specific cichy spatial loop w `FREE`, `CARRIED_ORBIT` i `INSTALLED`. Audio playback/dispose należy do runtime audio bridge, a asset, gain i attenuation pozostają `TUNING`; audio nie posiada progression truth.
 
-**NEXT / NOT IMPLEMENTED:** installed natural Rune Stone ma fizycznie blokować transported natural Rune Stone. Przy blokadzie gracz ma puścić kamień, zmienić pozycję/kierunek i ponownie go przejąć albo później zmienić położenie/orientację platformy przez Asterion. Algorithm, AABB vs sphere, sweep, epsilon, response i exact envelope nie są zaimplementowane ani zamrożone.
+Collision installed/carried pozostaje świadomie poza modelem; nie istnieje gameplay collision system dla kamieni.
 
 ## 9. Ownership i persistent truth
 
@@ -246,6 +246,7 @@ Każdy kamień może zachowywać pair-specific cichy spatial loop w `FREE`, `CAR
 | `RuneStoneActor` | physical records, live bounds, `FREE` / `LOCKED_BY_ASTRO` / `CARRIED_ORBIT` / `SOCKET_CAPTURE` / `INSTALLED`, physical parenting/reset | tuning truth, installed progression truth, readiness |
 | `RuneBridgeActor` | authored bridge geometry/calibration, stabilne hover/installation anchors, radialny motion root i transient bridge state | tuning truth, readiness source i installed progression |
 | `RuneInstallationReadinessProjection` | installation permission projection; no persistent state | copied sector/rune truth |
+| `RuneInstalledStateProjection` | read-only reconstruction z installed truth do settled physical actors | persistent state, readiness truth, Scenario point IDs |
 | Monkey/Ether actor | transient Ether presentation/capture mechanics | progression truth |
 | Scenario / Director | authored beat legality i semantic orchestration | interpolacje, pull, slot/capture mechanics |
 
@@ -254,6 +255,10 @@ Każdy kamień może zachowywać pair-specific cichy spatial loop w `FREE`, `CAR
 Persistent commit zachodzi wyłącznie po completed snap, jako ostatnia operacja semantyczna: physical target reached → platform-bound parenting → `RuneStoneActor = INSTALLED` → `RuneBridgeActor = ORBITING` → commit `installedRuneFamilies`.
 
 Reset `RuneStoneActor` reparentuje captured/installed roots z anchor hierarchy do canonical Rune Stone field, przywraca initial transforms, `FREE`, authored animations i istniejący presentation baseline. Reset progression czyści `tunedRuneFamilies` i `installedRuneFamilies`. Reset `RuneStoneInstallationInteraction` anuluje active capture bez finalizacji i bez installed commit.
+
+Canonical owner section `runeProgression` deleguje dokładny serializowalny shape `{ tunedRuneFamilies, installedRuneFamilies }` do `RuneStoneProgressionController.hydrateScenarioState()`. Walidacja obu tablic, naturalnych `familyCode`, braku duplikatów i invariantu `installed ⊆ tuned` zachodzi przed mutation; zastosowanie jest atomowe, ciche, idempotentne i uporządkowane według naturalnego registry. Nie używa gameplay commands ani change eventów. Osobna sekcja `runeStones` nadal posiada wyłącznie `presentationVisible`.
+
+Po hydration reconstruction wykonuje kolejno readiness `HIDDEN/DOCKED`, następnie read-only `RuneInstalledStateProjection`. Każda installed family jest mapowana registry do branchu, stone jest bez choreografii parentowany do stabilnego InstallationAnchor w canonical local transform ze skalą authored i stanem `INSTALLED`, a bridge bez tweena otrzymuje dokładne `extensionDistance`, settled elapsed i `ORBITING`. Tuned-only stones pozostają po baseline `FREE`; ich bridge pozostaje readiness-derived. Projection nie posiada prawdy trwałej i nie zna point IDs.
 
 ## 10. Eter / VU — specjalna tożsamość poza naturalnym flow
 
@@ -389,27 +394,29 @@ Early natural Rune Stone presentation jest **IMPLEMENTED**. Pięć naturalnych a
 - **A9.3 — IMPLEMENTED:** `CARRIED_ORBIT`; task `8c3caca8419a099805fcc503d0174d97ac1b1a59`, merge `d23743d5cbad11344f5b155ca1b839158a1dda9d`.
 - **A9.4 — IMPLEMENTED:** `RuneInstallationReadinessProjection` reads `isBranchComplete`, applies the explicit future Water override seam, and synchronizes bridges to `HIDDEN/DOCKED`; task `38b46cf5118ff44354ec34fe7a1d515117a57a36`, merge `575dc1818f37b76ddc981136e06504e2b1cf735e`.
 - **A9.5 — IMPLEMENTED:** `SOCKET_CAPTURE` + persistent `installedRuneFamilies`, stable pair-specific capture/anchor, równoległy radialny bridge extension, stable platform-bound parenting i bridge `EXTENDED → ORBITING` handoff.
+- **A9.6 — IMPLEMENTED:** persistent natural Rune hydration (`runeProgression`) + silent physical reconstruction do `INSTALLED` / `ORBITING`, bez replay transient transportu, handoffu i extension choreography.
 - **Panel 2 — IMPLEMENTED:** task `d7e026fe565cf44b20f158564316c814a0e910e0`, merge `5dd2c59080f0501accb4cea546ee5ef68a5811e0`.
 - **Panel 1 Rune U projection — IMPLEMENTED:** task `b04605cb01b395ec188b153cd901941a446076ff`, merge `5510e78062dd0a3309be2e5f22e528ee2ed532ed`.
 
-A9.5 nie implementuje bridge spin/orbit, Water override trigger ani Ether flow. Installed-stone collision został superseded; nie jest remaining target.
+A9.6 nie implementuje bridge spin/presentation, spatial audio, Water override trigger, Ether flow, antenna/final Water flow ani Scenario po `4.80`. Installed-stone collision został superseded; nie jest remaining target.
 
 ## 14. Remaining target
 
-**Carried Rune Stone ↔ installed Rune Stone collision = SUPERSEDED / REMOVED FROM TARGET.** Later A9 work includes Rune Stone movement/spatial audio. A10 and all authored Scenario after `4.80` remain deferred. Later antenna, Metal/Water, Ether/Monkey, final Water hunt and finale milestones remain target/not implemented.
+**Carried Rune Stone ↔ installed Rune Stone collision = SUPERSEDED / REMOVED FROM TARGET.** Special Ether flow, Water readiness override, bridge ORBITING spin/presentation, spatial audio, antenna/final Water flow and all authored Scenario after `4.80` remain deferred.
 
 ## 15. Current implementation checkpoint
 
 ```text
 RUNE A1–A8: IMPLEMENTED
-RUNE A9.1–A9.5: IMPLEMENTED FOUNDATIONS
+RUNE A9.1–A9.6: IMPLEMENTED FOUNDATIONS
 ADDITIONAL RUNTIME CORRECTIONS: RECIPE INSERTION FAMILY VALIDATION, RECIPE-CHANGE EJECT, P5 → 4.80, EARLY NATURAL RUNE STONE WORLD PRESENTATION — IMPLEMENTED
-RUNE A9: PARTIALLY IMPLEMENTED
+NATURAL RUNE A9 FOUNDATION: COMPLETE
 CARRIED RUNE STONE ↔ INSTALLED RUNE STONE COLLISION: SUPERSEDED / NO GAMEPLAY COLLISION SYSTEM
 PHYSICAL BRIDGE EXTENSION: IMPLEMENTED
 INSTALLATION HANDOFF + APPROACH / BRIDGE_OPEN / DESCENT: IMPLEMENTED
 AUTHORED SCENARIO BOUNDARY: 4.80
 POST-4.80 SCENARIO / A10+: DEFERRED / NOT IMPLEMENTED
+POST-4.80 SCENARIO DIRECT-TARGET PARITY: DEFERRED UNTIL SCENARIO AUTHORING
 ```
 
 ## 16. Closed runtime reconciliation gaps

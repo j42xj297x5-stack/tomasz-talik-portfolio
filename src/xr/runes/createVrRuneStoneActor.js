@@ -139,6 +139,16 @@ export function createVrRuneStoneActor({ parent, assetManager, layer }) {
     record.state = VR_RUNE_STONE_STATE.INSTALLED;
     return true;
   };
+  const restoreInstalled = (branchId, installationAnchor) => {
+    const record = getRecord(branchId);
+    if (!record || !record.descriptor.natural || !installationAnchor?.add || disposed) return false;
+    if (record.root.parent !== installationAnchor) installationAnchor.add(record.root);
+    record.root.position.set(0, 0, 0);
+    record.root.quaternion.identity();
+    record.root.scale.copy(record.initialTransform.scale);
+    record.state = VR_RUNE_STONE_STATE.INSTALLED;
+    return true;
+  };
   const getBoundingBox = (branchId) => {
     const record = getRecord(branchId);
     if (!record) return null;
@@ -201,6 +211,7 @@ export function createVrRuneStoneActor({ parent, assetManager, layer }) {
     beginCarriedOrbit,
     beginSocketCapture,
     completeInstallation,
+    restoreInstalled,
     releaseFromAstro,
     update,
     reset,
