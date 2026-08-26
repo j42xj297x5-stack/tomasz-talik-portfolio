@@ -145,7 +145,7 @@ Canonical asset identity obejmuje sześć kamieni, lecz standardowa natural Rune
 | `stone_03.glb` | EARTH | `K` | `earth` | natural branch `earth` | `KU` |
 | `stone_04.glb` | WOOD | `L` | `tree` | natural branch `wood` | `LU` |
 | `stone_05.glb` | WATER | `S` | `water` | natural branch `water` | `SU` |
-| `stone_06.glb` | ETHER | `V` | `astro` | **SPECIAL**, `branchId: null` | brak; `VU` nie istnieje |
+| `stone_06.glb` | ETHER | `V` | `astro` | **SPECIAL**, `branchId: null` | `VU` |
 
 Jeden pair-generic physical Rune Stone owner materializuje pięć naturalnych stones. Każdy z nich posiada canonical descriptor, `familyCode`, `familyId`, `branchId`, asset identity, stabilny `RuneStoneActorRoot`, `RuneStoneVisualRoot` z klonem authored GLB hierarchy, live bounds, initial deterministic transform oraz transient state `FREE`, `LOCKED_BY_ASTRO`, `CARRIED_ORBIT`, `SOCKET_CAPTURE` lub `INSTALLED`. Jeżeli asset zawiera clips, kamień posiada również własny `AnimationMixer` i actions. Actor jest ownerem physical records, rootów, authored animations, live bounds, transient transport state i world-space motion commands.
 
@@ -247,11 +247,11 @@ Persistent commit zachodzi wyłącznie po completed snap, jako ostatnia operacja
 
 Reset `RuneStoneActor` reparentuje captured/installed roots z anchor hierarchy do canonical Rune Stone field, przywraca initial transforms, `FREE`, authored animations i istniejący presentation baseline. Reset progression czyści `tunedRuneFamilies` i `installedRuneFamilies`. Reset `RuneStoneInstallationInteraction` anuluje active capture bez finalizacji i bez installed commit.
 
-## 10. Eter / VI — specjalny późny flow
+## 10. Eter / VU — specjalna tożsamość poza naturalnym flow
 
-Eter nie jest szóstą naturalną `familyCode`, szóstą standardową Rune Stone pair, szóstym sektorem, vessel/socketem ani installed elemental slotem. Nie należy do `PROTO_ASTRO_NATURAL_FAMILY_CODES`; nie istnieje i nie wolno tworzyć naturalnego kodu `VU`.
+Eter nie jest szóstą naturalną `familyCode`, szóstą standardową Rune Stone pair, szóstym sektorem, vessel/socketem ani installed elemental slotem. Nie należy do `PROTO_ASTRO_NATURAL_FAMILY_CODES`. `VU` istnieje jako kanoniczna sylaba Proto-Astro: `V` (Astro/Ether) + `U` (Rune Stone), pozostając formą **SPECIAL**, a nie naturalnym kodem rodziny.
 
-`stone_06.glb` ma canonical physical asset identity ETHER / `V` / `astro` / **SPECIAL** z `branchId: null`, ale Ether nie jest naturalną Rune Stone syllable w tym registry. Nie jest jeszcze materializowany przez natural actor, nie należy do natural pair collection ani naturalnego spawnu `RUNE_STONES`, nie ma bridge, sektora ani natural installed slotu. Zostanie wykorzystany później przez special Ether / Monkey flow.
+`stone_06.glb` ma canonical physical asset identity ETHER / `V` / `astro` / **SPECIAL** z `branchId: null` i odpowiada sylabie Proto-Astro `VU`, której kanonicznym assetem prezentacyjnym jest `public/svg/VU.svg`. Nie jest jeszcze materializowany przez natural actor, nie należy do natural pair collection ani naturalnego spawnu `RUNE_STONES`, nie ma naturalnego tuningu, targetability, bridge, sektora ani natural installed slotu. Ewentualny gameplay Eteru wymaga osobnego przyszłego projektu i implementacji.
 
 ### 10.1. Trigger i Monkey beat contract
 
