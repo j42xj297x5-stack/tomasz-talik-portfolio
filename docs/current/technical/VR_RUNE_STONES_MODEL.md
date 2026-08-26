@@ -2,14 +2,14 @@
 
 ## 1. Status i authority
 
-- **Status:** **KANONICZNY MODEL TECHNICZNO-GAMEPLAYOWY / PARTIALLY IMPLEMENTED**.
-- **Implemented:** `RUNE A1–A8`, `RUNE UI-1`, A9.1 physical actor foundation, authored-origin/live-bounds hardening, A9.2 target resolution + `LOCKED_BY_ASTRO`, A9.3 `CARRIED_ORBIT` transport, A9.4 installation-readiness projection do `RuneBridgeActor` oraz A9.5 `SOCKET_CAPTURE` + persistent installed truth.
+- **Status:** **KANONICZNY MODEL TECHNICZNO-GAMEPLAYOWY / NATURAL RUNE A9 FOUNDATION COMPLETE**.
+- **Implemented:** `RUNE A1–A8`, `RUNE UI-1`, A9.1 physical actor foundation, authored-origin/live-bounds hardening, A9.2 target resolution + `LOCKED_BY_ASTRO`, A9.3 `CARRIED_ORBIT`, A9.4 installation-readiness projection, A9.5 platform-centered handoff + automatic installation choreography i A9.6 persistent hydration + settled physical reconstruction.
 - **Foundation correction:** natural Rune tuning sector gate — **RESOLVED**; task `d0f9a17e414f3ea8c386cde87bdd46dba6dad16c`, merge `c862b9bde2e717918e56d21d7f1cbbc0ad741d53`.
-- **RUNE A9:** **PARTIALLY IMPLEMENTED THROUGH A9.5**; końcowy transport i instalacja używają platform-centered handoff sphere oraz automatycznej choreografii. Collision carried Rune Stone ↔ installed Rune Stone jest **SUPERSEDED**.
+- **RUNE A9:** **A9.1–A9.6 IMPLEMENTED; NATURAL RUNE A9 FOUNDATION = COMPLETE**. Końcowy transport i instalacja używają platform-centered handoff sphere oraz automatycznej choreografii, a hydration odtwarza settled physical installation. Collision carried Rune Stone ↔ installed Rune Stone jest **SUPERSEDED / REMOVED FROM TARGET**.
 - **Scenario authoring:** **DEFERRED TO SEPARATE THREAD**.
 - **Canonical authored Scenario/runtime progression boundary:** `4.80`.
 - Dokument jest kanonicznym źródłem prawdy Rune Stone Act: strojenia Astrolabium, targetability, pięciu naturalnych pair-specific par, mostów, transportu, instalacji, specjalnego flow Eteru i finalnego polowania Wody.
-- A1–A9.4 są foundations/domain behavior bez rozszerzenia authored Scenario spine. Pozostała część A9 oraz A10–A21 są targetem; Scenario, Director i literalna komunikacja gracza zostaną zaprojektowane osobno.
+- A1–A9.6 są foundations/domain behavior bez rozszerzenia authored Scenario spine. A9 foundation jest zamknięty; dalszy authored Scenario, Director i literalna komunikacja gracza wymagają osobnego projektu, bez arbitralnego etykietowania ich jako kolejny krok A9.
 
 `KANON` oznacza wiążący kontrakt, `TUNING` wartość dobieraną w prototypie/Quest 3S, a `OPEN DESIGN DECISION` świadomie nierozstrzygnięty warunek.
 
@@ -65,7 +65,7 @@ legal RuneStoneActor candidate
 
 Installation readiness jest osobnym prawem, normalnie pochodzącym wyłącznie z ukończenia wszystkich paneli właściwego sektora. Rune domain czyta istniejącego ownera progresji sektora i nie tworzy drugiej listy ukończonych paneli. Readiness nie jest kopią progression.
 
-Aktualna foundation correction nie podłącza installation readiness do aktora mostu. Synchronizacja bridge readiness pozostaje przyszłym zakresem integration/domain; sector completeness może nadal być źródłem platform installation readiness, lecz nigdy natural Rune tuning.
+`ProgressionController.isBranchComplete()` zasila `RuneInstallationReadinessProjection`, która synchronizuje `RuneBridgeActor` do `HIDDEN/DOCKED`. **Bridge-readiness synchronization jest IMPLEMENTED.** Sector completeness jest źródłem platform installation readiness, lecz nigdy natural Rune tuning ani targetability.
 
 | Naturalna para | Installation readiness po `4.80` |
 | --- | --- |
@@ -153,7 +153,7 @@ Jeden pair-generic physical Rune Stone owner materializuje pięć naturalnych st
 
 Rune Stones zachowują authored scale; runtime **nie** normalizuje sześciu kamieni do wspólnego rozmiaru. Znana charakterystyka assetów to większe WOOD / `stone_04` i METAL / `stone_02`, mniejsze WATER / `stone_05` i ETHER / `stone_06` oraz pośrednie FIRE / `stone_01` i EARTH / `stone_03`. Są to opisy assetów, nie gameplay size categories. Construction-time `placementClearanceRadius` służy wyłącznie spherical placement. `getBoundingBox(branchId)` zwraca aktualny world-space `Box3`, `getBoundingSphere(branchId)` aktualny world-space `BoundingSphere`, a `getInteractionRadius(branchId)` aktualny live radius. Te live bounds uwzględniają authored animation pose w chwili odczytu; nie istnieje baked full-animation envelope sampler.
 
-**Authored animation lifecycle — IMPLEMENTED:** clips są zachowywane; per-stone `AnimationMixer` istnieje, jeżeli asset ma clips; runtime `update()` aktualizuje owned mixers; `reset()` restartuje authored actions od deterministycznego początku; `dispose()` zatrzymuje owned animation lifecycle. Transport nie manipuluje wewnętrznymi animated controller nodes. Nie jest to claim implementacji gameplayowego transportu.
+**Authored animation lifecycle i gameplay transport — IMPLEMENTED:** clips są zachowywane; per-stone `AnimationMixer` istnieje, jeżeli asset ma clips; runtime `update()` aktualizuje owned mixers; `reset()` restartuje authored actions od deterministycznego początku; `dispose()` zatrzymuje owned animation lifecycle. Transport `LOCKED_BY_ASTRO → CARRIED_ORBIT` manipuluje stabilnym rootem, nigdy wewnętrznymi animated controller nodes. Przyszłe pozostają idle/presentation movement oraz spatial audio, nie fizyczny transport.
 
 Zalecany kontrakt GLB:
 

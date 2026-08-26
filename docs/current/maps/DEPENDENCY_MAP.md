@@ -29,7 +29,7 @@ SphericalLayerRegistry.RUNE_STONES (50–75 m) → RuneStoneActor natural collec
 
 Large Glyph is not a spherical layer.
 
-## Rune tuning and targetability
+## Rune tuning, transport and installation
 
 ```text
 Small Glyph + Shell
@@ -37,15 +37,35 @@ Small Glyph + Shell
 → RuneStoneProgressionController.tunedRuneFamilies
 → RuneStoneAttractorBandProjection
 → RuneStoneAttractorInteraction
-→ natural RuneStoneActor target / LOCKED_BY_ASTRO / CARRIED_ORBIT
-→ RuneStoneInstallationInteraction
-→ authored BRIDGE_STONE_CAPTURE + capture_radius_m
-→ authored BRIDGE_STONE_ANCHOR / platform-bound INSTALLED
+→ RuneStoneActor LOCKED_BY_ASTRO
+→ CARRIED_ORBIT
+→ invisible platform-centered handoff sphere + legality check
+→ ownership handoff to RuneStoneInstallationInteraction
+→ SOCKET_CAPTURE / APPROACH
+→ BRIDGE_OPEN / RuneBridgeActor physical extension
+→ DESCENT
+→ RuneStoneActor INSTALLED
 → RuneBridgeActor ORBITING
 → RuneStoneProgressionController.installedRuneFamilies
 ```
 
-Natural tuning does not read sector completeness. The `RUNESTONES` band becomes available after at least one tuned natural family; its target set is exactly the tuned natural families. Ether is excluded.
+The platform root's current world-space position centers the handoff sphere. Current tuning is a `9.0 m` transport minimum and `10 m` handoff radius. `BRIDGE_STONE_CAPTURE` and `capture_radius_m` are not gameplay triggers; authored capture data may remain private calibration evidence. Accepted handoff does not pass through `FREE`, and trigger input no longer owns installation.
+
+Natural tuning does not read sector completeness. The `RUNESTONES` band target set is exactly tuned natural families. Installation readiness is checked only during handoff legality. Ether is excluded from the natural flow.
+
+## Rune reconstruction
+
+```text
+Scenario settled runeProgression
+→ hydrate RuneStoneProgressionController
+→ RuneInstalledStateProjection
+├→ RuneStoneActor.restoreInstalled
+└→ RuneBridgeActor.restoreInstalled
+```
+
+`runeProgression` owns `tunedRuneFamilies` and `installedRuneFamilies`, with `installedRuneFamilies ⊆ tunedRuneFamilies`. It is separate from `runeStones`, which hydrates only presentation visibility / physical actor presentation. The projection owns no persistent truth and restores settled `INSTALLED` stones and extended `ORBITING` bridges without replaying `LOCKED_BY_ASTRO`, `CARRIED_ORBIT`, capture, tween or `DOCKED → EXTENDING → EXTENDED`.
+
+Derived reconstruction ordering is: bridge readiness → installed Rune physical state → Furnace redraw without a fake domain event → remaining derived state such as absorbed shells. This is owner synchronization, not Scenario authoring.
 
 ## Platform energy VFX presentation (TARGET / NOT IMPLEMENTED)
 
@@ -60,22 +80,23 @@ The projection and shared actor are presentation-only and never write back to Ru
 ## Installation readiness
 
 ```text
-ProgressionController sector completeness (isBranchComplete)
+ProgressionController.isBranchComplete()
 → RuneInstallationReadinessProjection
 → RuneBridgeActor HIDDEN / DOCKED
 ```
 
-Normal readiness after stable `4.80`: Earth, Fire and Wood ready; Metal and Water not ready. The future `getWaterInstallationReadinessOverride` seam affects only Water installation readiness. It does not modify floor/panel truth, natural tuning or targetability.
+This flow is **IMPLEMENTED**. Normal readiness after stable `4.80` is Earth/Fire/Wood ready and Metal/Water not ready. The future Water override trigger affects Water installation readiness only; it never modifies floor/panel truth, natural tuning or targetability.
 
 ## Independent owners
 
 - `ProtoAstroTuningController`: natural essences for Large Glyph.
-- `RuneStoneProgressionController`: separate `tunedRuneFamilies` and `installedRuneFamilies`; installed commit follows completed snap.
+- `RuneStoneProgressionController`: canonical `tunedRuneFamilies` and `installedRuneFamilies` persistent truth.
 - sector progression owner: panel/sector completeness.
-- `RuneStoneActor`: transient physical states and parenting/reset; `RuneBridgeActor`: authored capture/anchor geometry and transient bridge state; neither copies progression truth.
-- `RuneStoneAttractorInteraction`: transport ownership and direct capture handoff.
-- `RuneStoneInstallationInteraction`: capture tween and final installation transaction orchestration.
+- `RuneStoneActor`: physical/transient stone state; `RuneBridgeActor`: authored geometry, stable anchors, extension translation and transient bridge state.
+- `RuneStoneAttractorInteraction`: target/transport ownership until accepted platform handoff.
+- `RuneStoneInstallationInteraction`: automatic installation choreography and final transaction orchestration.
+- projections: read-only interpretation/synchronization; no copied persistent truth.
 
 ## Remaining seams
 
-Socket capture and persistent installed truth are implemented. Carried-stone ↔ installed-stone collision is NEXT / NOT IMPLEMENTED; physical bridge extension motion remains NOT IMPLEMENTED / TUNING TARGET. Water override trigger, Ether flow, physical Rune Stone audio and authored Scenario after `4.80` remain future. Panels 1 and 2 are implemented; Panels 3 and 4 remain future.
+Natural Rune A9.1–A9.6 foundation is complete. Authored Scenario after `4.80`, Water readiness override trigger, special Ether flow, bridge `ORBITING` spin/presentation, Rune Stone spatial audio, antenna and later Metal/Water/finale beats, durable full-game persistence/save and full-game reset remain future. Carried ↔ installed collision is superseded and physical bridge extension is implemented; neither is a remaining seam.
