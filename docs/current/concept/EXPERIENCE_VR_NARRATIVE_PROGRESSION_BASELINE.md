@@ -1,39 +1,29 @@
 # Experience VR — Narrative & Progression Baseline
 
-**Status:** CURRENT / canonical. Technicznym źródłem Scenario pozostaje [`VR_SCENARIO_DIRECTOR_MODEL.md`](../technical/VR_SCENARIO_DIRECTOR_MODEL.md).
+Status: **CURRENT narrative baseline**. It defines no new literal player copy or Scenario points.
 
-## Aktualna droga gracza
-
-Intro prowadzi przez naukę panelu Y i kontakt z Małpą do pierwszego cyklu Glyph → Crystal → Reliquary i pierwszego kręgu. Po nim świat odsłania skorupy oraz Piec; gracz produkuje i odbiera Astrolabium Więzi, zbiera skorupy, buduje i odbiera Kulę Asterionową, kończy drugi krąg, a następnie stroi Astrolabium i buduje trzeci krąg.
+## Current player route
 
 ```text
-1.10 → … → 2.30 → … → 3.80 → 4.10 → … → 4.70 → 4.80
+1.10 → … → 2.30 → … → 3.80 → 4.10 → … → 4.40 → 4.50 → 4.60 → 4.70 → 4.80
 ```
 
-`4.80` jest aktualną stabilną granicą gameplayową i wejściem do zatwierdzonego, lecz niezaimplementowanego Rune Stone Act. Kanoniczny kontrakt tego aktu należy wyłącznie do [`VR_RUNE_STONES_MODEL.md`](../technical/VR_RUNE_STONES_MODEL.md); nie rozszerza on bieżącego kontraktu Guidance ani nie twierdzi, że runtime wyszedł poza `4.80`.
+`4.80` is the implemented stable authored boundary and the entry boundary for later Rune Stone authoring. Runtime-domain Rune foundations are already partially implemented through A9.4, but authored narrative continuation after `4.80` remains deferred.
 
-## Zatwierdzony akt po Tier 3 — NOT IMPLEMENTED
+## Runtime foundation versus future act
 
-Po `4.80` pojawiają się Rune Stones w istniejącym płaszczu `50–75 m`, a wszystkie pięć już wcześniej zestrojonych Large Glyph przechodzi na pełną sferę `SPHERE_FAR = 80 m` z czarną, nieoświetlaną bazą i bardzo wolnym ruchem. Kamienie nie są od razu targetowalne: Astrolabium musi najpierw zsynchronizować rodzinę przez dwuskładnikową recepturę Wu Xing w Piecu. Poprawny cycle konsumuje Small Glyph i Shell, tworząc wyłącznie trwałą semantyczną sylabę strojenia u rune progression ownera.
+The current world already contains five natural Rune Stone actors in the implemented `50–75 m` band, implemented natural tuning and targetability, physical lock/transport foundation, Rune bridges and readiness projection. Large Glyph already transitions to implemented `SPHERE_FAR = 80 m`. This does not mean that socket installation, Ether intervention, final Water flow or their narrative beats are authored.
 
-Eligibility normalnie wynika z pełnego ukończenia sektora. Po Tier 3 daje to Earth / Ethics, Fire / Creative AI i Wood / AI Guide. Ich trzy instalacje uruchamiają osobny przyszły system anteny, który pozwala odnaleźć już tuned Large Glyph Metal i Water; oba kryształy kończą Tier 4, domykając Metal i pozostawiając Water `4/5`. Metal przechodzi normalną recepturę i czwartą instalację, po której technologiczny overload odsuwa Large Glyph do osobnego późnego spatial stage bez ustalonego promienia.
+Future narrative must reveal meaning/capability without claiming that existing actors have only just been created. The current missing first-reveal seam tied to Sun/Stars is an implementation gap, not settled narrative behavior.
 
-Water `4/5` tworzy zamierzony finalny deadlock. Specjalny szósty kamień Eter pojawia się nad Małpą i zostaje przez nią przechwycony; nie ma sektora, vessel/socketu ani szóstego elemental slotu. Beat nadaje jedynie Water eligibility override. Water nadal wymaga receptury Small Glyph Metal + Shell Water i pełnej piątej instalacji. Dopiero wtedy rozpoczyna się `FINAL_WATER_HUNT` z timerem `180 s` (**TUNING**), prowadzący przez ostatni Crystal i Reliquary do Water `5/5`, Tier 5 oraz istniejącego finału świata. Skutek timeoutu pozostaje otwartą decyzją.
+## Three independent laws
 
-## Prowadzenie gracza
+- **Natural tuning:** all Earth/Fire/Wood/Metal/Water recipes are available regardless of sector completion.
+- **Natural targetability:** exactly the families in `tunedRuneFamilies` can be targeted and transported.
+- **Installation readiness:** normally follows the matching sector/panel completeness. After stable `4.80`, Earth/Fire/Wood are ready; Metal/Water are not. Future Water special override affects readiness only and never floor truth or tuning.
 
-**Monkey first teacher:** Małpa prowadzi obowiązkowe beaty progresji, sygnalizuje sytuacyjne hinty, jednorazowo uczy narzędzia po fizycznym claim, pokazuje bieżące `CO TERAZ?` i udostępnia historię kart. **Player Y persistent memory:** Y przechowuje praktyczne instrukcje Pieca, Astro i Asteriona oraz pokazuje `AKTUALNE ZADANIE`.
+Ether remains a special future authored flow, not a sixth natural family, sector, bridge or platform slot.
 
-Nie istnieją dwa modele „co teraz”. Obie powierzchnie odczytują jeden bezstanowy CURRENT OBJECTIVE z `createVrCurrentObjectiveProjection`, oparty o canonical point i realny stan domeny. Dzięki temu normalny przebieg, hydration i direct activation prowadzą do tego samego celu.
+## Deferred continuation
 
-## Nauczanie i pomoc sytuacyjna
-
-Po claim Astro lub Asteriona Małpa po około 5 s zwraca uwagę, czeka na świadome kliknięcie i odtwarza jednorazowe pierwsze nauczanie. Nie przechodzi potem do ordinary menu; trwała instrukcja pozostaje w Y.
-
-Jeżeli gracz przez około 180 s nie rozpocznie produkcji Astro, Małpa może zaoferować opcjonalną instrukcję Pieca. Jeżeli gotowe Astro pozostaje nieodebrane przez około 60 s, może zaoferować claim hint. Hint czeka na wolne ordinary menu i jest anulowany, jeśli przestaje być aktualny.
-
-Mandatory, acquisition i optional komunikacja współdzielą jawny arbitration contract o priorytecie `MANDATORY > ACQUISITION > OPTIONAL`. Rozpoczęty playback nie jest przerywany.
-
-## Interakcja
-
-Oba narzędzia można odebrać Grabem po wskazaniu legalnym rayem dowolnej ręki; Astro trafia do prawego canonical slotu, Asterion do lewej ręki. Małpa pozostaje dostępna także z jednym lub oboma narzędziami wyposażonymi, bez unequip i bez zmiany hand mode.
+Socket capture, persistent installed truth, bridge extension, later sector/antenna progression, Ether/Monkey intervention, Water override trigger, final Water hunt and finale remain **FUTURE / NOT IMPLEMENTED**. Their canonical technical target is routed through [`VR_RUNE_STONES_MODEL.md`](../technical/VR_RUNE_STONES_MODEL.md). Literal guidance remains owned by the communication documents and is not expanded here.

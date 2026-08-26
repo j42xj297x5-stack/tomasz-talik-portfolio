@@ -1,12 +1,12 @@
 # Experience VR Runtime Model
 
-Status: canonical description of the implemented runtime synchronized after Large Glyph Actor migration M7B on 2026-08-23. Approved future gameplay is documented in the [gameplay roadmap](../concept/EXPERIENCE_VR_GAMEPLAY_ROADMAP.md).
+Status: canonical description of the implemented runtime synchronized through Rune A9.4 and the `4.80` Scenario boundary on 2026-08-25. Future authored gameplay is documented in the [gameplay roadmap](../concept/EXPERIENCE_VR_GAMEPLAY_ROADMAP.md).
 
 ## Scenario composition boundary
 
 The implemented composition follows `Spine → Scenario → Director → Runtime / actors / domain owners`. Spine owns authored mainline order, Scenario defines points and accepted events, and Director owns `currentPointId` and interprets `STAY`, `COMPLETE`, `EXPLICIT` and the crossing-only `COMPLETE_IF`. Runtime remains the symbolic-effect execution boundary. Actors and domain controllers retain physical, transient and committed domain state; Director does not use technical point IDs as memory for that state.
 
-WHERE, BEYOND, FOLLOW pause and hints are local `STAY` reactions. Crossing exists only at `1.130`: the Intro actor owns `playerEnteredRing` and `monkeySettled`, reports `crossingComplete`, and Director advances only after that combined fact resolves completion. `100.10` is the canonical authored story terminal in Spine: the mainline metadata reaches it after stable `4.40`, while earlier explicit exit routes also converge there; `4.40` has no transition and does not auto-advance. It remains unavailable as a reconstruction/checkpoint start.
+WHERE, BEYOND, FOLLOW pause and hints are local `STAY` reactions. Crossing exists only at `1.130`: the Intro actor owns `playerEnteredRing` and `monkeySettled`, reports `crossingComplete`, and Director advances only after that combined fact resolves completion. The implemented P2 tail is `4.40 → 4.50 → 4.60 → 4.70 → 4.80`; `4.80` is the stable authored/runtime boundary. `100.10` remains the story terminal, but authored continuation after `4.80` is deferred.
 
 ## Runtime boundary and lifecycle
 
@@ -233,66 +233,43 @@ The controller uses braking distance to choose speed toward COMMAND, caps angula
 
 After every asset preload, Runtime must compose before READY. `runtimeExperience` therefore has an early safe nullable binding: construction-time callbacks may execute before the final Runtime bind. `canUseAstroProduction` returns safe `false` before binding and the real Scenario/runtime gate afterwards. `vr-runtime-bootstrap` captured this production regression RED before the fix and GREEN afterwards. Wizjoner confirmed startup passes `41/41` and no longer stalls before READY: **HARDWARE VALIDATED — Meta Quest 3S** for this bootstrap fix only. Full `3.10–3.80` perceptual/hardware QA remains pending.
 
-## Proto-Astro, Astro bands and small glyphs
+## Proto-Astro, Astro bands and Rune domain
 
-Canonical domain detail: [`VR_PROTO_ASTRO_MODEL.md`](VR_PROTO_ASTRO_MODEL.md). Spatial ownership and ranges: [`VR_SPHERICAL_LAYERS_MODEL.md`](VR_SPHERICAL_LAYERS_MODEL.md).
+Proto-Astro essence truth remains owned by `ProtoAstroTuningController`; Rune tuning truth remains owned by `RuneStoneProgressionController.tunedRuneFamilies`. Natural Rune tuning uses a separate two-typed-slot `RuneRecipeInteraction`, a single `18 s` `RUNE_TUNING` cycle and `astro_piec_work_03.mp3`. All five natural families may be tuned independently of sector completeness. Ingredients are consumed only after successful completion.
 
-**IMPLEMENTED:** semantic input B is routed to `HandModeController`, which owns transient selection among currently available `SHELLS`, `SMALL_GLYPHS` and family-gated `LARGE_GLYPHS`. `RUNESTONES` is **APPROVED / NOT IMPLEMENTED**. Band identity is semantic; exact visual colors/symbols remain open.
+The implemented semantic bands are `SHELLS`, `SMALL_GLYPHS`, `LARGE_GLYPHS` and `RUNESTONES`. `RUNESTONES` becomes available after at least one natural family is tuned and exposes exactly `tunedRuneFamilies`; Ether is excluded.
 
-`createVrSmallGlyphSystem` owns a world-stable, deterministic field of 12 instances: six visual variants with two instances each. Scenario presentation materializes the field and hydration restores stable `MATERIALIZED`. Identity is resolved through the canonical Proto-Astro adapter rather than inferred directly from asset number.
+The physical four-panel Astrolabium system has these boundaries:
 
-The spherical registry resolves layer thickness independently from the empty `gapAfter` between adjacent layers. At the current `R = 7.6 m`, Shells occupy `7.6–15.2 m`, the first empty gap is `15.2–17.1 m`, and Small Glyphs occupy `17.1–24.7 m`; domain actors, parent ownership and deterministic slot math are unchanged.
+- Panel 1 target projection is implemented for Shell O, Small Glyph I, Large Glyph A and natural Rune Stone U forms `RU/KU/LU/TU/SU`;
+- Panel 2 current-band presentation is implemented with authored `band_01.svg`–`band_04.svg` and presentation color;
+- Panels 3 and 4 remain future / not implemented.
 
-Small-glyph Astro transport is **IMPLEMENTED**:
+## Spherical allocation and Large Glyph
 
-```text
-FIELD → TARGETING → PULLING → CAPTURE_READY → HELD → RETURNING → FIELD
-```
+World-space spherical ranges are `SHELLS 13–25 m`, `SMALL_GLYPHS 30–45 m`, `RUNE_STONES 50–75 m`, `STARS 85–130 m` and `HIDDEN_GLYPHS 133.25–140.85 m`. `RUNE_STONES` is implemented. These ranges do not derive from platform `worldBaseRadius`.
 
-Right Astro squeeze scans/targets and trigger pulls. A real left ordinary-ray/Szpila hit plus left squeeze hands off to `holdSocket`. Release returns the object to its authored field transform. There is no `PLACED`, inventory or persistent ownership. Band change/Astro unequip after `HELD` does not automatically revoke the held glyph; capability loss, release and reset restore canonical field state.
+Large Glyph is not a spherical layer. Its implemented actor stages are `RING_INITIAL = 8.5 m`, `RING_ELEVATED = 8.5 m + 2.4 m`, `RING_EXPANDED = 46 m` and `SPHERE_FAR = 80 m`. After Tier 3 five glyphs occupy deterministic full-sphere directions, use black/unlit presentation and move at `0.01 rad/s`.
 
-`ProtoAstroTuningController` is the sole owner of persistent `extractedFamilyCodes`, limited to natural `K/T/S/L/R`; `V` is excluded. Same-family I→A compatibility powers `canAttractLargeGlyph` and the implemented real Large Glyph targeting/pull. `createVrLargeGlyphAttractorInteraction` owns `ORBIT → PULLING → CAPTURED → RETURNING → ORBIT`; the actor owns the physical transient lease and exact slot restore.
+## Rune actor and interaction composition
 
-## Furnace small-glyph essence extraction
+Runtime composition includes the five-natural-record `RuneStoneActor`, `RuneStoneAttractorBandProjection`, `RuneStoneAttractorInteraction`, five-branch `RuneBridgeActor` and `RuneInstallationReadinessProjection`. The physical actor keeps authored local `(0,0,0)` as gameplay origin, uses world-transform-aware live bounds and does not AABB-centroid recenter assets.
 
-One `createVrAstroFurnaceContentInteraction` owns the physical chamber content for both `SHELL` and `SMALL_GLYPH`; there are not parallel chamber owners. Asterion mode `floor_gyroscope_sphere` processes shells. Astro tuning mode `astro_attractor` processes a not-yet-extracted natural small glyph through `SMALL_GLYPH_ESSENCE_EXTRACTION`. VI is invalid in current P2.
+Target/transport foundation is `FREE → LOCKED_BY_ASTRO → CARRIED_ORBIT`, with `RUNE_STONE_PLATFORM_MIN_RADIUS_M = 9.0`, release in place and re-acquire from the current position. Target permission reads tuned families only; installation readiness does not participate.
 
-Completion commits only the family essence to TuningController, then returns the physical glyph instance to its authored field. It creates no inventory and does not persistently consume the asset. A second physical glyph of the family remains available, but duplicate extraction is rejected.
+Readiness normally reads sector completion through `isBranchComplete` and projects bridges to `HIDDEN` or `DOCKED`. After stable `4.80`, Earth, Fire and Wood are normally ready; Metal and Water are not. `getWaterInstallationReadinessOverride` is only a future readiness seam. The bridge actor owns transient mechanics/state, not tuning, readiness source or installed truth.
 
-## Attractor panel boundary
+## Current implemented boundary
 
-The physical four-panel system exists. Current implementation includes the panel system and shell-glyph projection for Panel 1; it is not a universal projection for every target class. Panel 2 current-band symbol/color, Panel 3 dynamic `2×3` target options, and Panel 4 distance meter are **APPROVED / NOT IMPLEMENTED**. Exact band colors and SVG symbols are not defined.
+Implemented authored Scenario ends at `4.80`: `4.40 → 4.50 → 4.60 → 4.70 → 4.80`. Stable reconstruction includes Tier 3 and Proto-Astro essences `K/T/S/L/R`; it does not recreate transient interactions. Rune A1–A9.4 are partially implemented domain foundations without authored Scenario continuation.
 
-## Implemented boundary
+Not implemented: Scenario after `4.80`, bridge extension timing, `SOCKET_CAPTURE`, persistent `INSTALLED` truth, installed-stone blocking, Water override trigger, Ether flow, Panels 3–4, physical Rune Stone movement/spatial audio, durable persistence and full-game reset.
 
-Implemented: runtime/session lifecycle, Intro, both authored Glyph → Crystal → Reliquary tiers, first-ring/post-ring, Astro/shell/Furnace/Asterion domain, actor-owned expansion at `4.20`, small-glyph field presentation `4.30`, stable P2 boundary `4.40`, B switching, `SHELLS`/`SMALL_GLYPHS`/`LARGE_GLYPHS`, transient small-glyph transport, natural essence extraction, Proto-Astro identity/resolvers/tuning and dynamic Monkey/Player Guide projections.
+## Known implementation gaps
 
-Not implemented: `RUNESTONES`, `SPHERE_FAR`, universal four-panel semantics, later authored P2 continuation, VI placement/final mechanics, durable persistence, full-game reset and unimplemented later spatial/gameplay audio.
+1. Runtime debug checkpoint `P5` still maps to `4.40`, although canonical intent is stable `4.80`.
+2. Typed-slot insertion does not yet verify the selected recipe's expected family at ingredient acceptance.
+3. Recipe change lacks canonical player-facing eject around `1 m`.
+4. Natural Rune Stone actors are composed under `WorldStableRoot`, but no explicit early presentation seam binds first reveal to Sun/Stars.
 
-## Scenario-driven runtime flow
-
-Canonical authored flow is:
-
-```text
-1.10 → … → 3.80 → 4.10 → 4.20 → 4.30 → 4.40 → 100.10
-```
-
-`4.10` owns the second ring until `TIER_COMPLETED`. Entry `4.20` begins radial presentation; its completion settles `largeGlyphs.stage = RING_EXPANDED`. Settled `3.10` establishes `largeGlyphs.stage = RING_ELEVATED`. Entry `4.30` materializes the small-glyph field; its completion settles `smallGlyphField.materialized = true`. `4.40` grants the integrated P2 capabilities and has no transition, although its mainline metadata targets the story terminal. It therefore does not auto-advance.
-
-Reconstruction is exclusive: `stateAt(4.20)` includes completed Tier 2, `stateAt(4.30)` adds `largeGlyphs.stage = RING_EXPANDED`, and `stateAt(4.40)` adds materialized field truth. Current `stateAt(4.40)` does not declare tuning essences, so direct activation correctly hydrates the P2 world and starts TuningController empty. The hydrator already delegates a future `protoAstroTuning` owner section. Transient target/pull/held/Furnace process state is never reconstructed.
-
-## Guidance implementation boundary
-
-The shared automatic progression-message actor presents post-ring and Furnace messages without `DALEJ`. Dynamic Monkey knowledge resolves Astro, Asterion and capability-gated `knowledge.astro.bandSwitch`. Dynamic Player Guide/Y projection supplies current task and tool references, appending `B — zmień pasmo celu` only after `CAN_SWITCH_ASTRO_BAND`. Guidance activation remains owned by its authored communication contract; real `LARGE_GLYPHS` targeting/pull is implemented and is no longer a reason to classify it as future.
-
-## QA boundary
-
-The bootstrap fix alone retains **HARDWARE VALIDATED — Meta Quest 3S** for reaching READY after preload. `4.20–4.40`, field, B switching, small-glyph pull/handoff and Furnace essence extraction remain hardware/perceptual QA pending. No automated or hardware PASS is inferred by this documentation sync.
-
-## Current P2 completion contract (4.40–4.80)
-
-The implemented canonical boundary is `4.80`. Point `4.40` owns a dedicated observation window; `4.50` exposes Monkey attention only; `4.60` plays the mandatory P2 message; `4.70` grants the existing B, Small Glyph, Furnace essence, family-gated Large Glyph, crystal, Reliquary and order-3 card rights; five order-3 cards complete into stable point `4.80`.
-
-Mandatory Monkey communication uses one guidance contract: attention arcs never start copy; pointing and triggering Monkey consumes the trigger for the mandatory beat; ordinary menu, history and knowledge stay hidden through attention and playback; the menu returns only after the final automatic block. This contract is active for the post-ring message at `3.30` and P2 at `4.50–4.60`.
-
-Stable reconstruction at `4.80` contains completed Tier 3, all page IDs/orders through 3, progress-floor completion through Tier 3, consumed crystal Tier 3, and Proto-Astro natural essences `K/T/S/L/R`. It reconstructs no transient pulls, held objects, timers or panels. P3 and later mechanics are not implemented.
+These are documented gaps, not implemented behavior.

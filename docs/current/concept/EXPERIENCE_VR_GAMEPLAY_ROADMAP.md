@@ -1,32 +1,27 @@
 # Experience VR Gameplay Roadmap
 
-Status: **CURRENT**. Runtime authority: [`VR_RUNTIME_MODEL.md`](../technical/VR_RUNTIME_MODEL.md).
+Status: **CURRENT authored-direction roadmap**. Runtime authority: [`VR_RUNTIME_MODEL.md`](../technical/VR_RUNTIME_MODEL.md); Rune authority: [`VR_RUNE_STONES_MODEL.md`](../technical/VR_RUNE_STONES_MODEL.md).
 
-## IMPLEMENTED — through stable boundary 4.80
+## Implemented authored Scenario
 
-Canonical P2 runs `4.30 → 4.40 → 4.50 → 4.60 → 4.70 → 4.80`: Small Glyph presentation, a dedicated ten-second observation window, Monkey attention, mandatory P2 message, and the playable five-family tuning/card loop. Gameplay rights for B, Small Glyph processing and family-gated Large Glyph attraction begin only at `4.70`. The existing Furnace, Proto-Astro tuning, crystal, Reliquary and card owners complete order 3; `4.80` is the stable P3 entry boundary.
+Canonical P2 runs `4.30 → 4.40 → 4.50 → 4.60 → 4.70 → 4.80`. `4.80` is the stable Tier-3 boundary. No new point IDs after it are authored here.
 
-VI remains outside the natural `K/T/S/L/R` P2 tuning loop.
+## Existing runtime-domain foundations
 
-## FUTURE target spine — NOT IMPLEMENTED
+Rune A1–A9.4 are partially implemented without extending Scenario: five natural physical Rune Stones already exist in the `50–75 m` layer; natural tuning and `tunedRuneFamilies`, RUNESTONES targeting, `LOCKED_BY_ASTRO`, `CARRIED_ORBIT`, RuneBridge state foundation and readiness projection are present. Large Glyph `SPHERE_FAR = 80 m`, Panel 1 Rune U projection and Panel 2 band presentation are also implemented.
 
-These are authored dramaturgical targets only. They are not Scenario points and define no runtime events, effects, capabilities, actors, recipes, geometry or tuning.
+This physical existence is a runtime foundation, not proof that the later authored reveal or dramatic beat has occurred. The explicit first-presentation seam tied to Sun/Stars remains missing.
 
-- `5.10` — P3 WORLD PRESENTATION: Large Glyphs recede farther against the Star Field already present since `2.10`.
-- `5.20` — ten-second world observation.
-- `5.30` — Monkey attention arcs.
-- `5.40` — mandatory P3 dialogue.
-- `5.50` — P3 recipes / sector activation.
-- `5.60` — first active sector; future Sphere grab control of the active sector.
-- `5.70` — three required sectors active; antenna ready.
-- `5.80` — radar / distant Metal and Water search.
-- `6.10` — P4 Runestone materialization and mount activation.
-- `6.20` — first four stones installed.
-- `6.30` — Water stone unlocked.
-- `6.40` — fifth stone installed / final-search capability.
-- `7.10` — final Haiku Cosmos search.
-- `7.20` — final crystal / final card.
-- `7.30` — final Monkey statement.
-- `7.40` — world disintegration.
-- `7.50` — black to white.
-- `100.10` — EXIT EXPERIENCE VR.
+## Future authored dramaturgy — deferred
+
+Existing future roadmap labels (including `6.10`) describe when the player is meant to understand, receive or use Rune Stone mechanics; they must not be read as future creation of actors that already exist in runtime. Future beats may author reveal/capability/orchestration but must use the existing domain owners.
+
+Future scope remains: socket capture, persistent installed truth, bridge motion/timing, later antenna and sector beats, special Ether/Monkey flow, Water readiness override trigger, five installations, final Water hunt and finale handoff. Scenario after `4.80` is **DEFERRED / NOT IMPLEMENTED**; this reconciliation authors no new point IDs or gameplay.
+
+## Invariants for future authoring
+
+- Natural tuning never reads sector completion.
+- Targetability equals tuned natural families.
+- Sector completion gates installation readiness only.
+- Ether is special: no sixth natural family, sector, bridge or platform slot.
+- `SPINE → SCENARIO → DIRECTOR → RuntimeExperience → actors / domain owners`; no central gameplay store.

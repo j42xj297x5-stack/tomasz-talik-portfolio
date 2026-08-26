@@ -3,13 +3,13 @@
 ## 1. Status i authority
 
 - **Status:** **KANONICZNY MODEL TECHNICZNO-GAMEPLAYOWY / PARTIALLY IMPLEMENTED**.
-- **Implemented:** `RUNE A1–A8`, `RUNE UI-1 — Astro Furnace panel structure and readability normalization`, `RUNE A9.1 — canonical Rune Stone asset identity + physical natural Rune Stone actor foundation`, A9 foundation hardening (`authored origin + live world bounds`), `RUNE A9.2 — physical RUNESTONES target resolution + LOCKED_BY_ASTRO foundation` oraz `RUNE A9.3 — physical Rune Stone transport / CARRIED_ORBIT foundation`.
-- **Foundation correction:** natural Rune tuning sector gate — **RESOLVED**; implementation evidence: `1d8d5ad — Decouple natural Rune tuning from sector completion`.
-- **RUNE A9:** **PARTIALLY IMPLEMENTED**; kolejnym bounded slice jest A9.4 platform installation readiness + synchronizacja `RuneBridgeActor` do `DOCKED`.
+- **Implemented:** `RUNE A1–A8`, `RUNE UI-1`, A9.1 physical actor foundation, authored-origin/live-bounds hardening, A9.2 target resolution + `LOCKED_BY_ASTRO`, A9.3 `CARRIED_ORBIT` transport oraz A9.4 installation-readiness projection do `RuneBridgeActor`.
+- **Foundation correction:** natural Rune tuning sector gate — **RESOLVED**; task `d0f9a17e414f3ea8c386cde87bdd46dba6dad16c`, merge `c862b9bde2e717918e56d21d7f1cbbc0ad741d53`.
+- **RUNE A9:** **PARTIALLY IMPLEMENTED THROUGH A9.4**; kolejny bounded slice to socket capture + persistent installed truth.
 - **Scenario authoring:** **DEFERRED TO SEPARATE THREAD**.
 - **Canonical authored Scenario/runtime progression boundary:** `4.80`.
 - Dokument jest kanonicznym źródłem prawdy Rune Stone Act: strojenia Astrolabium, targetability, pięciu naturalnych pair-specific par, mostów, transportu, instalacji, specjalnego flow Eteru i finalnego polowania Wody.
-- A1–A8, A9.1, A9 foundation hardening, A9.2 i A9.3 są foundations/domain behavior bez rozszerzenia authored Scenario spine. Pozostała część A9 oraz A10–A21 są targetem; Scenario, Director i literalna komunikacja gracza zostaną zaprojektowane osobno.
+- A1–A9.4 są foundations/domain behavior bez rozszerzenia authored Scenario spine. Pozostała część A9 oraz A10–A21 są targetem; Scenario, Director i literalna komunikacja gracza zostaną zaprojektowane osobno.
 
 `KANON` oznacza wiążący kontrakt, `TUNING` wartość dobieraną w prototypie/Quest 3S, a `OPEN DESIGN DECISION` świadomie nierozstrzygnięty warunek.
 
@@ -189,7 +189,7 @@ HIDDEN → DOCKED → EXTENDING → EXTENDED → ORBITING
 
 ## 8. Transport i instalacja
 
-**A9.1 physical foundation, jego authored-origin/live-bounds hardening, A9.2 physical targeting/Astro-lock oraz A9.3 physical transport / `CARRIED_ORBIT` foundation są IMPLEMENTED. Instalacja pozostaje TARGET / NOT IMPLEMENTED.**
+**A9.1 physical foundation, authored-origin/live-bounds hardening, A9.2 targeting/Astro-lock, A9.3 `CARRIED_ORBIT` i A9.4 installation-readiness projection są IMPLEMENTED. Socket capture i persistent installation pozostają TARGET / NOT IMPLEMENTED.**
 
 ```text
 FREE → LOCKED_BY_ASTRO                 IMPLEMENTED
@@ -352,167 +352,47 @@ Ten model jest preferowany zamiast `MECHANIC NEEDS OBJECT → OBJECT SUDDENLY AP
 
 Konsekwencja komunikacyjna: jeżeli obiekt był widoczny wcześniej, późniejsza komunikacja ma ujawniać jego znaczenie lub capability, nie udawać, że obiekt właśnie się pojawił. Literalne dialogi i copy pozostają osobnym zadaniem komunikacyjnym.
 
-## 13. Milestones
+## 13. Milestones and evidence
 
-### RUNE A1–A6 i RUNE UI-1
+- **A1–A6 + UI-1 — IMPLEMENTED:** two typed slots, Wu Xing resolver, `18 s` process, `tunedRuneFamilies`, Furnace UI and `SPHERE_FAR`. A6 evidence: task `b091b4e7095dc1ce881e47723f8703f66eb69db4`, merge `0fc4ce338d26e7088594c69fed49532594f978ce`.
+- **Natural tuning sector-gate correction — IMPLEMENTED:** task `d0f9a17e414f3ea8c386cde87bdd46dba6dad16c`, merge `c862b9bde2e717918e56d21d7f1cbbc0ad741d53`.
+- **A7 — IMPLEMENTED:** RUNESTONES band; task `cc77fb270dd120acad9d526f267343c6fb076ce0`, merge `83ec32f5c4ca870a5db55f7bf6a6f7f561e32229`.
+- **A8 — IMPLEMENTED:** pair-generic RuneBridge foundation; task `ad83cb23ea166ef015e9e8c5204540d4bba806bc`, merge `f98188a6617b6ecb1891ff107693591462298ca9`.
+- **A9.1 — IMPLEMENTED:** identities and physical actors; task `f03daad783cf73e559d7092dea736d6f34f6001b`, merge `3181dc98e04fe129a7efe9921c92f026a9499948`.
+- **A9 hardening — IMPLEMENTED:** authored origin/live bounds; task `9ab56aad1c5fb439b870bbb13851f921fee8989f`, merge `6b525111c50dc1a421a97d020b2c969c96bbb2a9`.
+- **A9.2 — IMPLEMENTED:** scan/target and `LOCKED_BY_ASTRO`; task `fd4e519bef6cacadca2e30fa24269f05242df71e`, merge `091b7da14f073bac245e776c67468be0f9438df0`.
+- **A9.3 — IMPLEMENTED:** `CARRIED_ORBIT`; task `8c3caca8419a099805fcc503d0174d97ac1b1a59`, merge `d23743d5cbad11344f5b155ca1b839158a1dda9d`.
+- **A9.4 — IMPLEMENTED:** `RuneInstallationReadinessProjection` reads `isBranchComplete`, applies the explicit future Water override seam, and synchronizes bridges to `HIDDEN/DOCKED`; task `38b46cf5118ff44354ec34fe7a1d515117a57a36`, merge `575dc1818f37b76ddc981136e06504e2b1cf735e`.
+- **Panel 2 — IMPLEMENTED:** task `d7e026fe565cf44b20f158564316c814a0e910e0`, merge `5dd2c59080f0501accb4cea546ee5ef68a5811e0`.
+- **Panel 1 Rune U projection — IMPLEMENTED:** task `b04605cb01b395ec188b153cd901941a446076ff`, merge `5510e78062dd0a3309be2e5f22e528ee2ed532ed`.
 
-- **Status:** **IMPLEMENTED**.
-- A1–A5 dostarczyły rune-domain foundation, dwa typed recipe slots, naturalny resolver Wu Xing, panel selection, pojedynczy `18 s` process i trwałe `tunedRuneFamilies`.
-- Historyczny A4 pierwotnie dostarczył sector-derived tuning eligibility. Current contract został skorygowany przez bounded follow-up `1d8d5ad`, który usunął ten gate zgodnie ze zrewidowanym kanonem; A4 pozostaje **IMPLEMENTED**.
-- **Implementation evidence follow-up:** `1d8d5ad — Decouple natural Rune tuning from sector completion`.
-- A6 dostarczyło post-Tier-3 transition Large Glyph do `SPHERE_FAR = 80 m` i odcięcie starego direct targetowania po `4.80`.
-- UI-1 dostarczyło hierarchię Furnace UI i wspólną prezentację `3 × 2`; Eter w UI pozostaje specjalnym `VI`, nie naturalną rodziną.
+A9.4 does not implement bridge extension timing, socket capture, installed truth, the Water override trigger or Ether flow.
 
-### RUNE A7 — RUNESTONES Astro band
+## 14. Remaining target
 
-- **Status:** **IMPLEMENTED**.
-- **Implementation evidence:** `097d5d5 — Implement RUNESTONES Astro band`.
-- `VR_ATTRACTOR_BANDS.RUNESTONES` istnieje i jest available po co najmniej jednej naturalnej tuned family.
-- Natural targetable family set pochodzi bezpośrednio z `tunedRuneFamilies`; projekcja jest bezstanowa i nie posiada własnego eligibility ani persistence.
-- A7 nie tworzy fizycznych Rune Stone targets ani actorów, materialization, scan/pull, transportu i instalacji.
-- A7 implementuje natural target set. Special Ether target zostanie dodany później przez special Ether flow bez zmiany natural family contract.
-
-### RUNE A8 — Pair-generic RuneBridgeActor state machine
-
-- **Status:** **IMPLEMENTED**.
-- **Implementation evidence:** `42f237c — Implement pair-generic RuneBridge state machine`.
-- Pięć niezależnych pair-generic instancji `earth/fire/wood/metal/water` implementuje pięć transient states i jawne semantic commands; Earth nie ma specjalnego wariantu, a Eter nie ma bridge.
-- Platform installation readiness jest wejściem zewnętrznym. Aktor nie odczytuje tuning truth ani sector progression oraz nie posiada installed progression truth; `setInstalled()` ustawia wyłącznie transient state `ORBITING`.
-- Nielegalne transitions są odrzucane, a `reset()` przywraca wszystkie pary do `HIDDEN`.
-- **Nie implementuje:** fizycznej animacji bridge motion ani jej parametrów, Rune Stone transportu, socket capture, persistent installed truth i Scenario progression.
-
-### RUNE A9 — Pair-generic Rune Stone transport + installation mechanics
-
-- **Status:** **PARTIALLY IMPLEMENTED**.
-- **A9.1 — IMPLEMENTED:** canonical asset identity + physical natural Rune Stone actor foundation.
-- **Implementation evidence:** `c52775f — Implement canonical Rune Stone asset identities and actor foundation`.
-- A9.1 obejmuje canonical six-asset identity, five-natural actor collection, Ether special descriptor, physical natural stones, stable transport roots, authored animation lifecycle, deterministic natural placement w `RUNE_STONES = 50–75 m`, world-stable `update()`/`reset()`/`dispose()` composition i initial `FREE` state.
-- **A9 FOUNDATION HARDENING — IMPLEMENTED:** authored local `(0,0,0)` jako gameplay origin, neutralny `RuneStoneVisualRoot`, brak AABB-centroid recentering, `ActorRoot` jako gameplay/transport pivot oraz aktualne world-space live bounds uwzględniające bieżącą authored animation pose.
-- **A9.2 — IMPLEMENTED:** physical `RUNESTONES` target resolution + `LOCKED_BY_ASTRO` foundation. Implementation subject: `Implement physical Rune Stone targeting and Astro lock`; lokalny task SHA nie jest zapisany jako trwałe canonical GitHub evidence.
-- A9.2 obejmuje physical scan i target selection dokładnie pięciu naturalnych actors, halo legalnego candidate, pojedynczy Astro lock oraz przejścia `FREE ↔ LOCKED_BY_ASTRO`. Permission pochodzi z `tunedRuneFamilies` przez projekcję A7; interaction nie posiada tuned truth, a installation readiness nie uczestniczy w targetowaniu. Ether pozostaje poza candidate set.
-- **A9.3 — IMPLEMENTED:** physical Rune Stone transport / `CARRIED_ORBIT` foundation, player/head-driven world-space motion, constraint `RUNE_STONE_PLATFORM_MIN_RADIUS_M = 9.0`, release-in-place oraz re-acquire z aktualnej pozycji.
-- **A9 remaining target / NOT IMPLEMENTED:** `SOCKET_CAPTURE`, `INSTALLED`, bridge readiness synchronization, bridge extension cooperation, socket approach, capture, snap, `installedRuneFamilies`, `RuneBridgeActor.setInstalled()` cooperation, collision carried Rune Stone ↔ installed Rune Stones, Rune Stone audio, Ether targetability i materialization, Monkey capture, Water readiness override oraz Scenario integration.
-- **NEXT A9.4:** platform installation readiness + synchronizacja `RuneBridgeActor` do `DOCKED`; następnie socket capture + persistent installed truth; potem collision carried Rune Stone ↔ installed Rune Stones.
-
-### RUNE A10 — Scenario / Director integration
-
-- **Status:** **DEFERRED TO SEPARATE THREAD / NOT IMPLEMENTED**.
-- Historyczny plan authoringu po `4.80` pozostaje odroczony. To zadanie nie tworzy nowych point IDs ani nie przesuwa boundary `4.80`.
-
-### RUNE A11 — historyczny etap generalizacji
-
-- **Status:** **SUPERSEDED AS A LATER MIGRATION**.
-- Historyczny plan późniejszego rozszerzenia Earth slice na Earth/Fire/Wood został zastąpiony decyzją, że A8/A9 tworzą pair-generic contract od początku dla wszystkich pięciu naturalnych par.
-- Pair-specific authored config i QA nadal są wymagane, lecz generalizacja nie jest osobną późniejszą migracją.
-
-### RUNE A12–A15
-
-- **Status:** **TARGET / NOT IMPLEMENTED**.
-- A12 pozostaje Quest 3S hardware QA i tuning pair-specific parametrów.
-- A13 pozostaje osobnym sector-control foundation po pierwszej instalacji.
-- A14 pozostaje aktywacją przyszłej anteny po zainstalowaniu Earth + Fire + Wood.
-- A15 pozostaje antenna hunt Metal + Water Large Glyph i Tier 4: Metal complete, Water `4/5`.
-
-### RUNE A16 — Metal platform readiness + fourth installation
-
-- **Status:** **TARGET / NOT IMPLEMENTED**.
-- Metal może być tuned wcześniej; ukończenie sektora Metal nie rozpoczyna ani nie warunkuje jego naturalnego tuningu.
-- A16 dotyczy Metal platform readiness po sector-complete oraz transportu, capture i instalacji Metal.
-- Rezultatem jest `FOURTH_RUNE_INSTALLED` i installed Earth + Fire + Wood + Metal.
-
-### RUNE A17 — Fourth-rune technology-overload / Large Glyph retreat
-
-- **Status:** **TARGET / NOT IMPLEMENTED**.
-- `FOURTH_RUNE_INSTALLED` pozostaje semantycznym progiem późnej prezentacji; konkretny promień retreat pozostaje otwarty. Scenario authoring beatu jest odroczony.
-
-### RUNE A18 — Special Ether flow + Water installation readiness override
-
-- **Status:** **TARGET / NOT IMPLEMENTED**.
-- Kontrakt: `FOURTH_RUNE_INSTALLED → Monkey reveals Ether route → Ether tuning unlocked → Ether Shell + Ether Small Glyph special tuning → Ether Rune targetable → Ether transported to Monkey → Monkey captures Ether → Water installation readiness override`.
-- Nie implementuje szóstej naturalnej rodziny, sektora, bridge, vessel ani installed slotu.
-
-### RUNE A19 — Water readiness, transport i fifth installation
-
-- **Status:** **TARGET / NOT IMPLEMENTED**.
-- Water nie wymaga nowego tuningu, jeśli zostało tuned wcześniej. Jeśli nie, zachowuje naturalną recepturę Wu Xing.
-- A19 obejmuje Water bridge/readiness po override, target/transport, capture i piątą instalację.
-
-### RUNE A20 — Final Water timed hunt
-
-- **Status:** **TARGET / NOT IMPLEMENTED**.
-- Prerequisite: `FIVE_ELEMENTAL_RUNES_INSTALLED`.
-- Zachowuje finalny Water Large Glyph, `FINAL_WATER_HUNT` i timer `180 s` jako **TUNING**, a następnie pozyskanie ostatniego Water Crystal.
-
-### RUNE A21 — Last Crystal / final panel / finale handoff
-
-- **Status:** **TARGET / NOT IMPLEMENTED**.
-- Reliquary commit ostatniego Water Crystal domyka Water `5/5`, Experience VR i przekazuje flow do istniejącego finale handoff.
-
-## 14. Inwarianty, zakazy i otwarte decyzje
-
-- Istnieje sześć canonical physical Rune Stone asset identities, dokładnie pięć naturalnych gameplay pairs/families i pięć naturalnych installed slots oraz jeden special Ether asset.
-- Eter nie jest naturalną family ani szóstą naturalną parą, sektorem, vessel/socketem ani installed slotem; `VU` nie istnieje.
-- Authored scale pozostaje per asset; natural stones nie są normalizowane do jednego rozmiaru, a bounds są wyliczane per asset.
-- Stabilny transport root nie jest żadnym wewnętrznym animated node.
-- Natural field używa wyłącznie istniejącego `RUNE_STONES = 50–75 m`.
-- Pięć naturalnych Wu Xing recipes pozostaje bez zmian.
-- Natural tuning nie zależy od sector completion; natural targetability zależy od tuned truth; installation readiness zależy od platform/sector readiness lub jawnego Water-only override.
-- Earth/Fire/Wood są installation-ready po `4.80`; Metal po ukończeniu sektora; Water po Monkey capture Eteru.
-- Water może być tuned przed override. Ether tuning jest zablokowany do przyszłego Monkey beat i używa Ether Shell + Ether Small Glyph.
-- Ether jest specjalnym późnym targetem transportowanym do Małpy, nie do platformy.
-- `FIVE_ELEMENTAL_RUNES_INSTALLED` otwiera flow ostatniego Water Large Glyph.
-- Zakazane są: drugi registry/radius; kopia panel completion; jeden globalny socket height/offset/envelope; teleport kamienia do ręki; progression truth w actorze; techniczne Scenario pointy dla interpolacji, timera, pull lub capture; nowe authored Scenario po `4.80` w ramach actor foundations.
-- Pair-specific geometry, safe envelope, occupied arcs, carry/capture easing, bridge timing, spatial audio, late retreat distance i timeout behavior pozostają `TUNING` lub `OPEN DESIGN DECISION`; release z `CARRIED_ORBIT` jest rozstrzygniętym release-in-place invariantem.
-- Collision carried Rune Stone ↔ installed Rune Stones pozostaje **CANONICAL TARGET / NOT IMPLEMENTED**.
-- A9 nie jest jeszcze kompletne, a Scenario boundary pozostaje `4.80`.
+**NEXT A9 = socket capture + persistent installed truth.** Later A9 work includes bridge/capture cooperation, installed-stone collision and Rune Stone movement/spatial audio. A10 and all authored Scenario after `4.80` remain deferred. Later antenna, Metal/Water, Ether/Monkey, final Water hunt and finale milestones remain target/not implemented.
 
 ## 15. Current implementation checkpoint
 
 ```text
 RUNE A1–A8: IMPLEMENTED
-RUNE UI-1: IMPLEMENTED
-
-NATURAL RUNE TUNING SECTOR GATE: RESOLVED
-
+RUNE A9.1–A9.4: IMPLEMENTED FOUNDATIONS
 RUNE A9: PARTIALLY IMPLEMENTED
-
-A9.1: IMPLEMENTED
-physical natural Rune Stone actor foundation
-
-A9 FOUNDATION HARDENING: IMPLEMENTED
-authored origin + live world bounds
-
-A9.2: IMPLEMENTED
-physical RUNESTONES targeting + LOCKED_BY_ASTRO
-
-A9.3: IMPLEMENTED
-physical Rune Stone transport + CARRIED_ORBIT foundation
-
-NEXT — A9.4:
-platform installation readiness + RuneBridge DOCKED synchronization
-
-THEN:
-socket capture + persistent installed truth
-
-THEN:
-collision carried Rune Stone ↔ installed Rune Stones
-
-CANONICAL DEBUG INTENT:
-p5 = settled Rune Stone Act entry / boundary 4.80
-
-SCENARIO AUTHORING:
-DEFERRED TO SEPARATE THREAD
-
-CANONICAL AUTHORED SCENARIO/RUNTIME PROGRESSION BOUNDARY:
-4.80
+NEXT A9: SOCKET_CAPTURE + PERSISTENT INSTALLED TRUTH
+AUTHORED SCENARIO BOUNDARY: 4.80
+POST-4.80 SCENARIO / A10+: DEFERRED / NOT IMPLEMENTED
 ```
 
-**Known implementation divergence — RESOLVED:** sector-gated natural Rune tuning was resolved by `1d8d5ad — Decouple natural Rune tuning from sector completion`.
+## 16. Known implementation gaps
 
-## 16. Powiązane dokumenty i przyszły sync
+1. Runtime `P5` still maps to `4.40`; canonical debug intent is stable `4.80`.
+2. Typed-slot acceptance does not yet validate the selected recipe's expected family at insertion.
+3. Recipe change does not yet perform canonical player-facing eject around `1 m`.
+4. Natural Rune Stone composition has no explicit early presentation seam tied to Sun/Stars.
 
-- [`VR_PROTO_ASTRO_MODEL.md`](VR_PROTO_ASTRO_MODEL.md) — identity resolver i natural essences vs rune truth.
-- [`VR_SPHERICAL_LAYERS_MODEL.md`](VR_SPHERICAL_LAYERS_MODEL.md) — istniejący `RUNE_STONES = 50–75 m`.
-- [`VR_PROGRESS_FLOOR_MODEL.md`](VR_PROGRESS_FLOOR_MODEL.md) — owner kompletności paneli sektorów.
-- [`VR_SCENARIO_DIRECTOR_MODEL.md`](VR_SCENARIO_DIRECTOR_MODEL.md) — authored Scenario/Director ownership; Rune Stone authoring pozostaje osobnym zadaniem.
-- Canonical communication mechanics/copy docs wymagają przyszłej synchronizacji literalnego copy po zaprojektowaniu osobnego wątku Player Communication; nie są zmieniane tutaj.
+## 17. Related authority
+
+- [`VR_PROTO_ASTRO_MODEL.md`](VR_PROTO_ASTRO_MODEL.md) — Proto-Astro identities/essences and panels.
+- [`VR_SPHERICAL_LAYERS_MODEL.md`](VR_SPHERICAL_LAYERS_MODEL.md) — `RUNE_STONES = 50–75 m`.
+- [`VR_PROGRESS_FLOOR_MODEL.md`](VR_PROGRESS_FLOOR_MODEL.md) — sector/panel truth.
+- [`VR_SCENARIO_DIRECTOR_MODEL.md`](VR_SCENARIO_DIRECTOR_MODEL.md) — authored boundary and reconstruction.
