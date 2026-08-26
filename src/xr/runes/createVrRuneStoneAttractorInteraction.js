@@ -12,7 +12,7 @@ export const RUNE_STONE_PLATFORM_MIN_RADIUS_M = 9.0;
 export function createVrRuneStoneAttractorInteraction({ controllers, runeStoneActor,
   runeStoneAttractorBandProjection, handModeController, semanticInput, attractorTool,
   maxTargetDistance, settings, haloSettings, platformCenter, getPlayerWorldPosition,
-  tryBeginInstallationCapture = () => false,
+  tryBeginInstallationHandoff = () => false,
   isHigherPriorityInteractionActive = () => false }) {
   if (!Array.isArray(controllers)) throw new TypeError('controllers must be an array.');
   if (!runeStoneActor?.getStones || !runeStoneActor?.getBoundingSphere
@@ -34,6 +34,10 @@ export function createVrRuneStoneAttractorInteraction({ controllers, runeStoneAc
       throw new TypeError(`settings.${key} must be non-negative.`);
     }
   });
+  if (!Number.isFinite(settings?.handoffRadiusMeters)
+    || settings.handoffRadiusMeters <= RUNE_STONE_PLATFORM_MIN_RADIUS_M) {
+    throw new TypeError(`settings.handoffRadiusMeters must be greater than ${RUNE_STONE_PLATFORM_MIN_RADIUS_M}.`);
+  }
 
   const records = runeStoneActor.getStones().filter(({ descriptor }) => descriptor?.natural === true);
   const scanCone = createVrAttractorScanCone({ parent: null, length: maxTargetDistance, settings: settings.scanCone });
@@ -151,6 +155,8 @@ export function createVrRuneStoneAttractorInteraction({ controllers, runeStoneAc
       familyCode: active.familyCode, distance, proximity: 1 });
     attractorTool.setPullStrength(clamp01(pullSpeed / settings.maxPullSpeed));
     attractorTool.setState(VR_ATTRACTOR_STATES.PULLING);
+    if (candidatePosition.distanceTo(centerPosition) <= settings.handoffRadiusMeters
+      && tryBeginInstallationHandoff(active) === true) handoffActive();
   }
   function update(deltaSeconds = 0) {
     if (disposed) return;
@@ -181,7 +187,6 @@ export function createVrRuneStoneAttractorInteraction({ controllers, runeStoneAc
         return;
       }
       updateTransport(delta);
-      if (tryBeginInstallationCapture(active) === true) handoffActive();
       return;
     }
     if (isHigherPriorityInteractionActive(right) === true) {

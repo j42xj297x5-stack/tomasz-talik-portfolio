@@ -8,7 +8,7 @@ Canonical P2 runs `4.30 → 4.40 → 4.50 → 4.60 → 4.70 → 4.80`. `4.80` is
 
 ## Existing runtime-domain foundations
 
-Rune A1–A9.4 are partially implemented without extending Scenario: five natural physical Rune Stones already exist in the `50–75 m` layer; natural tuning and `tunedRuneFamilies`, RUNESTONES targeting, `LOCKED_BY_ASTRO`, `CARRIED_ORBIT`, RuneBridge state foundation and readiness projection are present. Large Glyph `SPHERE_FAR = 80 m`, Panel 1 Rune U projection and Panel 2 band presentation are also implemented.
+Rune A1–A9.5 are partially implemented without extending Scenario: five natural physical Rune Stones already exist in the `50–75 m` layer; natural tuning and `tunedRuneFamilies`, RUNESTONES targeting, `LOCKED_BY_ASTRO`, `CARRIED_ORBIT`, RuneBridge readiness and physical extension, the platform-centered handoff sphere, automatic `APPROACH → BRIDGE_OPEN → DESCENT`, stable installed parenting and persistent installed truth are present. Large Glyph `SPHERE_FAR = 80 m`, Panel 1 Rune U projection and Panel 2 band presentation are also implemented.
 
 The five natural actors begin hidden and their first-presentation seam is implemented at `2.10`: a separate Scenario effect reveals them with the celestial world. Visibility remains independent of later targetability and dramatic understanding.
 
@@ -16,7 +16,7 @@ The five natural actors begin hidden and their first-presentation seam is implem
 
 Existing future roadmap labels (including `6.10`) describe when the player is meant to understand, receive or use Rune Stone mechanics; they must not be read as future creation of actors that already exist in runtime. Future beats may author reveal/capability/orchestration but must use the existing domain owners.
 
-Future scope remains: socket capture, persistent installed truth, bridge motion/timing, later antenna and sector beats, special Ether/Monkey flow, Water readiness override trigger, five installations, final Water hunt and finale handoff. Scenario after `4.80` is **DEFERRED / NOT IMPLEMENTED**; this reconciliation authors no new point IDs or gameplay.
+Future scope remains: later antenna and sector beats, special Ether/Monkey flow, Water readiness override trigger, five installations, final Water hunt and finale handoff. Carried-stone ↔ installed-stone collision is **SUPERSEDED** and removed from the plan. Scenario after `4.80` is **DEFERRED / NOT IMPLEMENTED**; this reconciliation authors no new point IDs or gameplay.
 
 ## Invariants for future authoring
 

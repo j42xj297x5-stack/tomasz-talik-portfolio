@@ -194,7 +194,7 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
     scanCone: { color: 0x78ff9c, halfAngleDegrees: 2.5, opacityMin: 0.035, opacityMax: 0.065,
       pulseDuration: 1.6, radialSegments: 14 }
   },
-  runeStoneInstallation: { socketCaptureDurationSeconds: 1.2 },
+  runeStoneInstallation: { handoffRadiusMeters: 10, hoverHeightMeters: 2, phaseDurationSeconds: 1.2 },
   largeGlyphAttractor: { minimumClearance: 0.8 },
   glyphInteraction: { holdDurationSeconds: 0.5, holdLostGraceSeconds: 0.15 },
   glyphLights: { inwardOffset: 1 },
@@ -669,9 +669,13 @@ export function normalizeExperienceVrSettings(candidate) {
       }
     },
     runeStoneInstallation: {
-      socketCaptureDurationSeconds: finiteNumber(
-        candidate.runeStoneInstallation?.socketCaptureDurationSeconds,
-        defaults.runeStoneInstallation.socketCaptureDurationSeconds,
+      handoffRadiusMeters: finiteNumber(candidate.runeStoneInstallation?.handoffRadiusMeters,
+        defaults.runeStoneInstallation.handoffRadiusMeters, { min: 9.01, max: 60 }),
+      hoverHeightMeters: finiteNumber(candidate.runeStoneInstallation?.hoverHeightMeters,
+        defaults.runeStoneInstallation.hoverHeightMeters, { min: Number.EPSILON, max: 20 }),
+      phaseDurationSeconds: finiteNumber(
+        candidate.runeStoneInstallation?.phaseDurationSeconds,
+        defaults.runeStoneInstallation.phaseDurationSeconds,
         { min: Number.EPSILON, max: 60 }
       )
     },

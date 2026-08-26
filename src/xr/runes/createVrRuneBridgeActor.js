@@ -63,11 +63,15 @@ function copyTransformRelativeTo(source, relativeTo, target) {
   relativeMatrix.decompose(target.position, target.quaternion, target.scale);
 }
 
-export function createVrRuneBridgeActor({ assetManager, getSectorMount, extensionDurationSeconds }) {
+export function createVrRuneBridgeActor({ assetManager, getSectorMount, extensionDurationSeconds,
+  hoverHeightMeters }) {
   if (!assetManager?.getGltf) throw new Error('[VrRuneBridgeActor] A preloaded AssetManager is required.');
   if (typeof getSectorMount !== 'function') throw new Error('[VrRuneBridgeActor] Sector mount access is required.');
   if (!Number.isFinite(extensionDurationSeconds) || extensionDurationSeconds <= 0) {
     throw new TypeError('[VrRuneBridgeActor] extensionDurationSeconds must be finite and positive.');
+  }
+  if (!Number.isFinite(hoverHeightMeters) || hoverHeightMeters <= 0) {
+    throw new TypeError('[VrRuneBridgeActor] hoverHeightMeters must be finite and positive.');
   }
   const templateScene = assetManager.getGltf('vr-rune-bridge-model')?.scene;
   if (!templateScene) throw new Error('[VrRuneBridgeActor] Preloaded bridge.glb is required.');
@@ -85,27 +89,24 @@ export function createVrRuneBridgeActor({ assetManager, getSectorMount, extensio
       const instance = new THREE.Group();
       instance.name = `VrRuneBridgeInstance_${suffix}`;
       instance.userData = { ...instance.userData, branchId };
-      const stoneCapture = new THREE.Group();
-      stoneCapture.name = `VrRuneStoneCapture_${suffix}`;
       const stoneAnchor = new THREE.Group();
       stoneAnchor.name = `VrRuneStoneInstallationAnchor_${suffix}`;
+      const hoverAnchor = new THREE.Group();
+      hoverAnchor.name = `VrRuneStoneHoverAnchor_${suffix}`;
       const motionRoot = new THREE.Group();
       motionRoot.name = `VrRuneBridgeMotionRoot_${suffix}`;
       const alignmentRoot = new THREE.Group();
       alignmentRoot.name = `VrRuneBridgeAlignmentRoot_${suffix}`;
-      instance.add(stoneCapture, stoneAnchor, motionRoot);
+      instance.add(stoneAnchor, hoverAnchor, motionRoot);
       motionRoot.add(alignmentRoot);
       alignmentRoot.add(bridgeRoot);
       mount.add(instance);
       alignBridge(alignmentRoot, instance, nodes);
       instance.updateMatrixWorld(true);
-      copyTransformRelativeTo(nodes.BRIDGE_STONE_CAPTURE, instance, stoneCapture);
       copyTransformRelativeTo(nodes.BRIDGE_STONE_ANCHOR, instance, stoneAnchor);
-
-      const captureRadius = Number(nodes.BRIDGE_STONE_CAPTURE.userData?.capture_radius_m);
-      if (!Number.isFinite(captureRadius) || captureRadius <= 0) {
-        throw new Error('[VrRuneBridgeActor] BRIDGE_STONE_CAPTURE requires positive authored capture_radius_m metadata.');
-      }
+      hoverAnchor.position.copy(stoneAnchor.position).add(new THREE.Vector3(0, hoverHeightMeters, 0));
+      hoverAnchor.quaternion.copy(stoneAnchor.quaternion);
+      hoverAnchor.scale.copy(stoneAnchor.scale);
       const socketPosition = positionRelativeTo(nodes.BRIDGE_PLATFORM_SOCKET, instance);
       const anchorPosition = positionRelativeTo(nodes.BRIDGE_STONE_ANCHOR, instance, new THREE.Vector3());
       const extensionDistance = anchorPosition.z - socketPosition.z;
@@ -118,9 +119,8 @@ export function createVrRuneBridgeActor({ assetManager, getSectorMount, extensio
         instance,
         bridgeRoot,
         motionRoot,
-        stoneCapture,
         stoneAnchor,
-        captureRadius,
+        hoverAnchor,
         extensionDistance,
         extensionElapsed: 0,
         state: VR_RUNE_BRIDGE_STATES.HIDDEN
@@ -224,10 +224,7 @@ export function createVrRuneBridgeActor({ assetManager, getSectorMount, extensio
     cancelExtension,
     setInstalled,
     getStoneAnchor: (branchId) => getInstance(branchId)?.stoneAnchor ?? null,
-    getStoneCapture: (branchId) => {
-      const entry = getInstance(branchId);
-      return entry ? { node: entry.stoneCapture, radius: entry.captureRadius } : null;
-    },
+    getStoneHoverAnchor: (branchId) => getInstance(branchId)?.hoverAnchor ?? null,
     getBridgeRoot: (branchId) => getInstance(branchId)?.bridgeRoot ?? null,
     update,
     reset,
