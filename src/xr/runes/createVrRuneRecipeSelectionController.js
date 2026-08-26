@@ -5,11 +5,13 @@ import { ASTRO_FURNACE_RUNE_RECIPE_SLOT_STATES } from '../furnace/createVrAstroF
 import { resolveVrRuneRecipeForTargetFamily } from './resolveVrRuneRecipe.js';
 
 export function createVrRuneRecipeSelectionController({ runeRecipeInteraction,
-  runeStoneProgressionController }) {
+  runeStoneProgressionController, prepareRecipeChange }) {
   if (typeof runeRecipeInteraction?.getSnapshot !== 'function')
     throw new TypeError('Rune recipe selection requires RuneRecipeInteraction.');
   if (typeof runeStoneProgressionController?.isFamilyTuned !== 'function')
     throw new TypeError('Rune recipe selection requires RuneStoneProgressionController.');
+  if (typeof prepareRecipeChange !== 'function')
+    throw new TypeError('Rune recipe selection requires prepareRecipeChange.');
   const listeners = new Set();
   let selectedFamilyCode = null;
   let disposed = false;
@@ -33,7 +35,9 @@ export function createVrRuneRecipeSelectionController({ runeRecipeInteraction,
   function selectFamily(familyCode) {
     const family = String(familyCode ?? '').toUpperCase();
     if (!isFamilyTunable(family)) return false;
-    if (selectedFamilyCode !== family) { selectedFamilyCode = family; emitChange(); }
+    if (selectedFamilyCode === family) return true;
+    if (selectedFamilyCode !== null && prepareRecipeChange(selectedFamilyCode, family) !== true) return false;
+    selectedFamilyCode = family; emitChange();
     return true;
   }
   function clearSelection() { if (selectedFamilyCode) { selectedFamilyCode = null; emitChange(); } }

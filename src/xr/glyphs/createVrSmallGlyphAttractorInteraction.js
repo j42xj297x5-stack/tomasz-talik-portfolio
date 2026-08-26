@@ -184,6 +184,19 @@ export function createVrSmallGlyphAttractorInteraction({ controllers, smallGlyph
       attractorTool.setState(VR_ATTRACTOR_STATES.IDLE); }
     return true;
   }
+  function settleTransferredGlyph(glyph) {
+    if (!glyph || !states.has(glyph) || disposed) return false;
+    if (!smallGlyphSystem.placeInstance(glyph)) return false;
+    clearAllSmallGlyphHits(); halos.get(glyph)?.setVisible(false);
+    if (target === glyph) setTarget(null);
+    if (activePull === glyph) activePull = null;
+    if (captureReady === glyph) captureReady = null;
+    if (heldGlyph === glyph) { heldGlyph = null; heldByRecord = null; }
+    if (returning?.glyph === glyph) returning = null;
+    states.set(glyph, INTERACTION_STATE.PLACED);
+    glyph.userData.smallGlyphState = INTERACTION_STATE.PLACED;
+    return true;
+  }
   const squeezeListeners = controllers.map((record) => {
     const onSqueezeStart = () => { if (!takePlaced(record) && record.handedness === 'left') handoff(record); };
     const onSqueezeEnd = () => { placeHeld(record); };
@@ -249,5 +262,6 @@ export function createVrSmallGlyphAttractorInteraction({ controllers, smallGlyph
     clearAllSmallGlyphHits(); scanCone.dispose(); halos.forEach((halo) => halo.dispose()); halos.clear();
     captureAnchor.removeFromParent(); disposed = true; }
   return { captureAnchor, scanCone, update, reset, dispose, hasCurrentSmallGlyphHit, transferHeldGlyph,
+    settleTransferredGlyph,
     isHeldBy: (record) => heldByRecord === record, getTarget: () => target, get heldGlyph() { return heldGlyph; } };
 }

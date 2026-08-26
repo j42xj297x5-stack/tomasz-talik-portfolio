@@ -22,11 +22,17 @@ export function createVrAstroFurnaceRuneRecipeInteraction({
   takeHeldShell,
   takeHeldSmallGlyph,
   isModeActive,
-  getExpectedRecipe
+  getExpectedRecipe,
+  settledParent,
+  getPlayerWorldPosition,
+  settleEjectedSmallGlyph
 }) {
-  [takeHeldShell, takeHeldSmallGlyph, isModeActive, getExpectedRecipe].forEach((dependency) => {
+  [takeHeldShell, takeHeldSmallGlyph, isModeActive, getExpectedRecipe,
+    getPlayerWorldPosition, settleEjectedSmallGlyph].forEach((dependency) => {
     if (typeof dependency !== 'function') throw new TypeError('Rune recipe interaction dependencies must be functions.');
   });
+  if (!settledParent?.isObject3D || typeof settledParent.attach !== 'function')
+    throw new TypeError('Rune recipe interaction requires the canonical settled parent.');
   if (typeof shellSystem?.restoreInstanceToOrbit !== 'function')
     throw new TypeError('shellSystem must expose restoreInstanceToOrbit.');
   if (typeof smallGlyphSystem?.restoreInstanceToField !== 'function')
@@ -35,7 +41,8 @@ export function createVrAstroFurnaceRuneRecipeInteraction({
     throw new TypeError('Rune recipe domain systems must expose consumeInstance.');
 
   const states = ASTRO_FURNACE_RUNE_RECIPE_SLOT_STATES;
-  const config = { enabled: true, snapDuration: .42, chamberClearance: .012, ...settings };
+  const config = { enabled: true, snapDuration: .42, chamberClearance: .012,
+    ejectDistance: 1, ejectDuration: .45, ejectSeparation: .22, ...settings };
   const volume = furnace?.nodes?.VR_FURNACE_INSERT_VOLUME;
   const chamber = furnace?.nodes?.komora;
   const chamberCylinder = resolveChamberCylinder(chamber, config.chamberClearance);
@@ -44,6 +51,10 @@ export function createVrAstroFurnaceRuneRecipeInteraction({
   const listeners = new Set();
   const local = new THREE.Vector3();
   const center = new THREE.Vector3();
+  const player = new THREE.Vector3();
+  const ejectDirection = new THREE.Vector3();
+  const ejectLateral = new THREE.Vector3();
+  const ejections = [];
   let reportedHeldShell = null;
   let reportedHeldSmallGlyph = null;
   let disposed = false;
@@ -117,6 +128,21 @@ export function createVrAstroFurnaceRuneRecipeInteraction({
     slot.state = states.INSERTED;
     emitChange();
   }
+  function updateEjections(delta) {
+    for (let index = ejections.length - 1; index >= 0; index -= 1) {
+      const ejection = ejections[index];
+      ejection.elapsed = Math.min(config.ejectDuration, ejection.elapsed + delta);
+      const progress = smoothstep(ejection.elapsed / Math.max(config.ejectDuration, 1e-6));
+      ejection.content.position.lerpVectors(ejection.startPosition, ejection.targetPosition, progress);
+      if (ejection.elapsed < config.ejectDuration) continue;
+      ejection.content.position.copy(ejection.targetPosition);
+      const settled = ejection.kind === 'smallGlyph'
+        ? settleEjectedSmallGlyph(ejection.content)
+        : shellSystem.placeInstance(ejection.content);
+      if (settled !== true) throw new Error(`Rune recipe ${ejection.kind} eject could not settle its ingredient.`);
+      ejections.splice(index, 1);
+    }
+  }
   function update(delta = 0) {
     if (disposed) return;
     const step = Math.max(0, Number.isFinite(delta) ? delta : 0);
@@ -126,8 +152,39 @@ export function createVrAstroFurnaceRuneRecipeInteraction({
       (content) => resolveVrSmallGlyphProtoAstro(content)?.descriptor?.familyCode ?? null, 'smallGlyphFamilyCode');
     updateSlot(shell, step);
     updateSlot(smallGlyph, step);
+    updateEjections(step);
     reportedHeldShell = null;
     reportedHeldSmallGlyph = null;
+  }
+  function ejectInsertedIngredients() {
+    if (disposed) return false;
+    const occupied = [
+      { slot: smallGlyph, kind: 'smallGlyph' },
+      { slot: shell, kind: 'shell' }
+    ].filter(({ slot }) => slot.content !== null);
+    if (occupied.length === 0) return true;
+    volume.updateWorldMatrix(true, false);
+    settledParent.updateWorldMatrix(true, false);
+    volume.getWorldPosition(center);
+    getPlayerWorldPosition(player);
+    settledParent.worldToLocal(center);
+    settledParent.worldToLocal(player);
+    ejectDirection.subVectors(player, center); ejectDirection.y = 0;
+    if (ejectDirection.lengthSq() < 1e-8) return false;
+    ejectDirection.normalize();
+    ejectLateral.set(-ejectDirection.z, 0, ejectDirection.x);
+    occupied.forEach(({ slot, kind }, index) => {
+      const content = slot.content;
+      slot.content = null; slot.state = states.EMPTY; slot.elapsed = 0;
+      settledParent.attach(content);
+      const lateralOffset = occupied.length > 1
+        ? (index === 0 ? -.5 : .5) * config.ejectSeparation : 0;
+      ejections.push({ content, kind, elapsed: 0, startPosition: content.position.clone(),
+        targetPosition: center.clone().addScaledVector(ejectDirection, config.ejectDistance)
+          .addScaledVector(ejectLateral, lateralOffset).setY(content.position.y) });
+    });
+    emitChange();
+    return true;
   }
   function restoreSlot(slot) {
     const content = slot.content;
@@ -143,7 +200,15 @@ export function createVrAstroFurnaceRuneRecipeInteraction({
     reportedHeldSmallGlyph = null;
     const restoredSmallGlyph = restoreSlot(smallGlyph);
     const restoredShell = restoreSlot(shell);
-    if (restoredSmallGlyph || restoredShell) emitChange();
+    let restoredEjection = false;
+    ejections.splice(0).forEach(({ content, kind }) => {
+      const restored = kind === 'smallGlyph'
+        ? smallGlyphSystem.restoreInstanceToField(content)
+        : shellSystem.restoreInstanceToOrbit(content);
+      if (!restored) throw new Error(`Rune recipe ${kind} eject could not restore its baseline.`);
+      restoredEjection = true;
+    });
+    if (restoredSmallGlyph || restoredShell || restoredEjection) emitChange();
   }
   function resetBaseline() { resetSession(); }
   function canConsumeInsertedIngredients(expected = {}) {
@@ -182,6 +247,7 @@ export function createVrAstroFurnaceRuneRecipeInteraction({
     resetBaseline,
     canConsumeInsertedIngredients,
     consumeInsertedIngredients,
+    ejectInsertedIngredients,
     dispose,
     subscribe(listener) {
       if (typeof listener !== 'function') throw new TypeError('Rune recipe listener must be a function.');
