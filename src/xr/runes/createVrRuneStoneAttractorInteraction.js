@@ -81,9 +81,10 @@ export function createVrRuneStoneAttractorInteraction({ controllers, runeStoneAc
     if (target) halos.get(target)?.setVisible(true);
   }
   function clearTool() {
+    if (!ownsBand()) return;
     attractorTool.setTarget(null);
     attractorTool.setPullStrength(0);
-    if (ownsBand()) attractorTool.setState(VR_ATTRACTOR_STATES.IDLE);
+    attractorTool.setState(VR_ATTRACTOR_STATES.IDLE);
   }
   function setRootWorldPosition(root, worldPosition) {
     localPosition.copy(worldPosition);
