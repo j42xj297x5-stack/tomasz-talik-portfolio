@@ -19,6 +19,7 @@ const REQUIRED_NODE_NAMES = Object.freeze([
   'BRIDGE_STONE_CAPTURE',
   'nosnik'
 ]);
+const smoothstep = (value) => value * value * (3 - 2 * value);
 
 function requireNodes(root) {
   const nodes = Object.fromEntries(REQUIRED_NODE_NAMES.map((name) => [name, root.getObjectByName(name)]));
@@ -34,7 +35,7 @@ function positionRelativeTo(object, relativeTo, target = new THREE.Vector3()) {
   return relativeTo.worldToLocal(target);
 }
 
-function alignInstance(instance, nodes) {
+function alignBridge(alignmentRoot, instance, nodes) {
   instance.updateMatrixWorld(true);
   const socket = positionRelativeTo(nodes.BRIDGE_PLATFORM_SOCKET, instance);
   const forward = positionRelativeTo(nodes.BRIDGE_STONE_ANCHOR, instance)
@@ -49,15 +50,25 @@ function alignInstance(instance, nodes) {
     throw new Error('[VrRuneBridgeActor] Authored bridge basis is degenerate.');
   }
 
-  // Canonical sector-local target basis is +X across, +Y normal and +Z radial.
+  // Canonical installation-frame basis is +X across, +Y normal and +Z radial outward.
   const authoredBasis = new THREE.Matrix4().makeBasis(across, normal, forward);
-  instance.quaternion.setFromRotationMatrix(authoredBasis).invert();
-  instance.position.copy(socket).applyQuaternion(instance.quaternion).multiplyScalar(-1);
+  alignmentRoot.quaternion.setFromRotationMatrix(authoredBasis).invert();
+  alignmentRoot.position.copy(socket).applyQuaternion(alignmentRoot.quaternion).multiplyScalar(-1);
 }
 
-export function createVrRuneBridgeActor({ assetManager, getSectorMount }) {
+function copyTransformRelativeTo(source, relativeTo, target) {
+  relativeTo.updateWorldMatrix(true, false);
+  source.updateWorldMatrix(true, false);
+  const relativeMatrix = new THREE.Matrix4().copy(relativeTo.matrixWorld).invert().multiply(source.matrixWorld);
+  relativeMatrix.decompose(target.position, target.quaternion, target.scale);
+}
+
+export function createVrRuneBridgeActor({ assetManager, getSectorMount, extensionDurationSeconds }) {
   if (!assetManager?.getGltf) throw new Error('[VrRuneBridgeActor] A preloaded AssetManager is required.');
   if (typeof getSectorMount !== 'function') throw new Error('[VrRuneBridgeActor] Sector mount access is required.');
+  if (!Number.isFinite(extensionDurationSeconds) || extensionDurationSeconds <= 0) {
+    throw new TypeError('[VrRuneBridgeActor] extensionDurationSeconds must be finite and positive.');
+  }
   const templateScene = assetManager.getGltf('vr-rune-bridge-model')?.scene;
   if (!templateScene) throw new Error('[VrRuneBridgeActor] Preloaded bridge.glb is required.');
   requireNodes(templateScene);
@@ -68,27 +79,52 @@ export function createVrRuneBridgeActor({ assetManager, getSectorMount }) {
     VR_RUNE_BRIDGE_BRANCH_IDS.forEach((branchId) => {
       const mount = getSectorMount(branchId);
       if (!mount?.add) throw new Error(`[VrRuneBridgeActor] Missing sector mount for "${branchId}".`);
+      const suffix = branchId.toUpperCase();
       const bridgeRoot = templateScene.getObjectByName('BRIDGE_ROOT').clone(true);
       const nodes = requireNodes(bridgeRoot);
       const instance = new THREE.Group();
-      instance.name = `VrRuneBridgeInstance_${branchId.toUpperCase()}`;
+      instance.name = `VrRuneBridgeInstance_${suffix}`;
       instance.userData = { ...instance.userData, branchId };
-      instance.add(bridgeRoot);
+      const stoneCapture = new THREE.Group();
+      stoneCapture.name = `VrRuneStoneCapture_${suffix}`;
+      const stoneAnchor = new THREE.Group();
+      stoneAnchor.name = `VrRuneStoneInstallationAnchor_${suffix}`;
+      const motionRoot = new THREE.Group();
+      motionRoot.name = `VrRuneBridgeMotionRoot_${suffix}`;
+      const alignmentRoot = new THREE.Group();
+      alignmentRoot.name = `VrRuneBridgeAlignmentRoot_${suffix}`;
+      instance.add(stoneCapture, stoneAnchor, motionRoot);
+      motionRoot.add(alignmentRoot);
+      alignmentRoot.add(bridgeRoot);
       mount.add(instance);
-      alignInstance(instance, nodes);
-      instance.visible = false;
-      instances.set(branchId, {
-        instance,
-        bridgeRoot,
-        nodes,
-        captureRadius: null,
-        state: VR_RUNE_BRIDGE_STATES.HIDDEN
-      });
+      alignBridge(alignmentRoot, instance, nodes);
+      instance.updateMatrixWorld(true);
+      copyTransformRelativeTo(nodes.BRIDGE_STONE_CAPTURE, instance, stoneCapture);
+      copyTransformRelativeTo(nodes.BRIDGE_STONE_ANCHOR, instance, stoneAnchor);
+
       const captureRadius = Number(nodes.BRIDGE_STONE_CAPTURE.userData?.capture_radius_m);
       if (!Number.isFinite(captureRadius) || captureRadius <= 0) {
         throw new Error('[VrRuneBridgeActor] BRIDGE_STONE_CAPTURE requires positive authored capture_radius_m metadata.');
       }
-      instances.get(branchId).captureRadius = captureRadius;
+      const socketPosition = positionRelativeTo(nodes.BRIDGE_PLATFORM_SOCKET, instance);
+      const anchorPosition = positionRelativeTo(nodes.BRIDGE_STONE_ANCHOR, instance, new THREE.Vector3());
+      const extensionDistance = anchorPosition.z - socketPosition.z;
+      if (!Number.isFinite(extensionDistance) || extensionDistance <= 0) {
+        throw new Error('[VrRuneBridgeActor] Authored socket-to-anchor radial extension must be finite and positive.');
+      }
+
+      instance.visible = false;
+      instances.set(branchId, {
+        instance,
+        bridgeRoot,
+        motionRoot,
+        stoneCapture,
+        stoneAnchor,
+        captureRadius,
+        extensionDistance,
+        extensionElapsed: 0,
+        state: VR_RUNE_BRIDGE_STATES.HIDDEN
+      });
     });
   } catch (error) {
     instances.forEach(({ instance }) => instance.removeFromParent());
@@ -96,6 +132,10 @@ export function createVrRuneBridgeActor({ assetManager, getSectorMount }) {
   }
 
   const getInstance = (branchId) => instances.get(String(branchId).toLowerCase()) ?? null;
+  function setMotionBaseline(entry, z = 0) {
+    entry.extensionElapsed = 0;
+    entry.motionRoot.position.set(0, 0, z);
+  }
   function transition(branchId, command, allowedStates, nextState) {
     const entry = getInstance(branchId);
     if (!entry || disposed) return false;
@@ -110,36 +150,36 @@ export function createVrRuneBridgeActor({ assetManager, getSectorMount }) {
     const entry = getInstance(branchId);
     if (!entry || disposed) return false;
     const nextState = ready ? VR_RUNE_BRIDGE_STATES.DOCKED : VR_RUNE_BRIDGE_STATES.HIDDEN;
-    return transition(
+    const changed = transition(
       branchId,
       `set installation readiness to ${Boolean(ready)}`,
       [VR_RUNE_BRIDGE_STATES.HIDDEN, VR_RUNE_BRIDGE_STATES.DOCKED],
       nextState
     );
+    if (changed) setMotionBaseline(entry);
+    return changed;
   }
   function beginExtension(branchId) {
-    return transition(
+    const entry = getInstance(branchId);
+    const changed = transition(
       branchId,
       'begin extension',
       [VR_RUNE_BRIDGE_STATES.DOCKED],
       VR_RUNE_BRIDGE_STATES.EXTENDING
     );
-  }
-  function completeExtension(branchId) {
-    return transition(
-      branchId,
-      'complete extension',
-      [VR_RUNE_BRIDGE_STATES.EXTENDING],
-      VR_RUNE_BRIDGE_STATES.EXTENDED
-    );
+    if (changed) setMotionBaseline(entry);
+    return changed;
   }
   function cancelExtension(branchId) {
-    return transition(
+    const entry = getInstance(branchId);
+    const changed = transition(
       branchId,
       'cancel extension',
       [VR_RUNE_BRIDGE_STATES.DOCKED, VR_RUNE_BRIDGE_STATES.EXTENDING, VR_RUNE_BRIDGE_STATES.EXTENDED],
       VR_RUNE_BRIDGE_STATES.DOCKED
     );
+    if (changed) setMotionBaseline(entry);
+    return changed;
   }
   function setInstalled(branchId) {
     return transition(
@@ -149,11 +189,25 @@ export function createVrRuneBridgeActor({ assetManager, getSectorMount }) {
       VR_RUNE_BRIDGE_STATES.ORBITING
     );
   }
+  function update(deltaSeconds = 0) {
+    if (disposed) return;
+    const delta = Math.max(0, Number.isFinite(deltaSeconds) ? deltaSeconds : 0);
+    instances.forEach((entry) => {
+      if (entry.state !== VR_RUNE_BRIDGE_STATES.EXTENDING) return;
+      entry.extensionElapsed = Math.min(extensionDurationSeconds, entry.extensionElapsed + delta);
+      const progress = entry.extensionElapsed / extensionDurationSeconds;
+      entry.motionRoot.position.z = entry.extensionDistance * smoothstep(progress);
+      if (entry.extensionElapsed < extensionDurationSeconds) return;
+      entry.motionRoot.position.z = entry.extensionDistance;
+      entry.state = VR_RUNE_BRIDGE_STATES.EXTENDED;
+    });
+  }
   function reset() {
     if (disposed) return;
     instances.forEach((entry) => {
       entry.state = VR_RUNE_BRIDGE_STATES.HIDDEN;
       entry.instance.visible = false;
+      setMotionBaseline(entry);
     });
   }
   function dispose() {
@@ -167,15 +221,15 @@ export function createVrRuneBridgeActor({ assetManager, getSectorMount }) {
     getState: (branchId) => getInstance(branchId)?.state ?? null,
     setInstallationReady,
     beginExtension,
-    completeExtension,
     cancelExtension,
     setInstalled,
-    getStoneAnchor: (branchId) => getInstance(branchId)?.nodes.BRIDGE_STONE_ANCHOR ?? null,
+    getStoneAnchor: (branchId) => getInstance(branchId)?.stoneAnchor ?? null,
     getStoneCapture: (branchId) => {
       const entry = getInstance(branchId);
-      return entry ? { node: entry.nodes.BRIDGE_STONE_CAPTURE, radius: entry.captureRadius } : null;
+      return entry ? { node: entry.stoneCapture, radius: entry.captureRadius } : null;
     },
     getBridgeRoot: (branchId) => getInstance(branchId)?.bridgeRoot ?? null,
+    update,
     reset,
     dispose
   };

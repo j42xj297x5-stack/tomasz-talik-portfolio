@@ -225,7 +225,8 @@ const progressFloor = createVrProgressFloor({
 });
 const runeBridgeActor = createVrRuneBridgeActor({
   assetManager,
-  getSectorMount: (branchId) => progressFloor.getRuneInstallationFrame(branchId)
+  getSectorMount: (branchId) => progressFloor.getRuneInstallationFrame(branchId),
+  extensionDurationSeconds: settings.runeStoneInstallation.socketCaptureDurationSeconds
 });
 const platformFixturesRoot = new THREE.Group();
 platformFixturesRoot.name = 'VrPlatformFixturesRoot';
@@ -1268,6 +1269,7 @@ function renderFrame() {
   smallGlyphSystem.update(delta);
   runeStoneActor.update(delta);
   runeStoneAttractorInteraction.update(delta);
+  runeBridgeActor.update(delta);
   runeStoneInstallationInteraction.update(delta);
   celestialActor.update(delta);
   observationWindow.update(delta);

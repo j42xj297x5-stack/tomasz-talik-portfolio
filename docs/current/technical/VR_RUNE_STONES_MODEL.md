@@ -170,7 +170,7 @@ Runtime transformuje stabilny root kamienia. `SOCKET_POINT` jest pair-specific f
 
 ## 7. Pair-generic RuneBridgeActor
 
-Istnieje pięć niezależnych pair-configured instancji `RuneBridgeActor`: `earth`, `fire`, `wood`, `metal` i `water`. Każda posiada własny transient state. Earth nie ma specjalnej implementacji, a dla Eteru nie istnieje bridge. Aktor nie zna Scenario pointów, nie posiada progression truth ani tuning truth i reaguje przez jawne semantic command API: `getState(branchId)`, `setInstallationReady(branchId, ready)`, `beginExtension(branchId)`, `completeExtension(branchId)`, `cancelExtension(branchId)`, `setInstalled(branchId)`, `reset()` oraz `dispose()`.
+Istnieje pięć niezależnych pair-configured instancji `RuneBridgeActor`: `earth`, `fire`, `wood`, `metal` i `water`. Każda posiada własny transient state. Earth nie ma specjalnej implementacji, a dla Eteru nie istnieje bridge. Aktor nie zna Scenario pointów, nie posiada progression truth ani tuning truth i reaguje przez jawne semantic command API: `getState(branchId)`, `setInstallationReady(branchId, ready)`, `beginExtension(branchId)`, `cancelExtension(branchId)`, `setInstalled(branchId)`, `update(delta)`, `reset()` oraz `dispose()`. Nie istnieje publiczne `completeExtension()`; wyłącznie actor-owned `update(delta)` może zakończyć fizyczne rozsuwanie.
 
 ```text
 HIDDEN → DOCKED → EXTENDING → EXTENDED → ORBITING
@@ -180,17 +180,19 @@ HIDDEN → DOCKED → EXTENDING → EXTENDED → ORBITING
 
 | Stan | Kontrakt |
 | --- | --- |
-| `HIDDEN` | platforma pary nie jest gotowa do instalacji |
-| `DOCKED` | platforma jest gotowa; most istnieje i czeka na właściwy kamień |
-| `EXTENDING` | właściwy kamień zbliża się do pair-specific installation area |
-| `EXTENDED` | most przygotował przestrzeń dla capture |
-| `ORBITING` | właściwy kamień został prawidłowo zainstalowany |
+| `HIDDEN` | platforma pary nie jest gotowa; most jest niewidoczny, a motion baseline wynosi `z = 0` |
+| `DOCKED` | platforma jest gotowa; most istnieje w authored pozycji i czeka na właściwy kamień, `z = 0` |
+| `EXTENDING` | most odjeżdża radialnie wyłącznie po installation-frame local `+Z` |
+| `EXTENDED` | most osiągnął authored-derived extension distance |
+| `ORBITING` | właściwy kamień został prawidłowo zainstalowany; most zachowuje extended placement bez zaimplementowanego spinu |
 
 **Platform installation readiness** jest dostarczane aktorowi z zewnątrz i, w przeciwieństwie do tuning truth, pozwala mostowi przejść z `HIDDEN` do `DOCKED`. Aktor nie czyta sector progression i nie posiada installed progression truth; `setInstalled()` zapisuje wyłącznie transient bridge state `ORBITING`. Przerwane podejście przed capture powoduje `EXTENDING / EXTENDED → DOCKED`. Po `4.80` mosty Earth, Fire i Wood mogą być `DOCKED`; Metal pozostaje `HIDDEN` do pełnego ukończenia sektora Metal, a Water do specjalnego finalnego override.
 
-`getStoneCapture(branchId)` zwraca authored `BRIDGE_STONE_CAPTURE` wraz z pair-specific `capture_radius_m`, a `getStoneAnchor(branchId)` zwraca authored `BRIDGE_STONE_ANCHOR`. Capture node jest trigger volume; anchor jest finalnym transformem i installed parentem. Są to rozłączne role.
+Każdy `VrRuneInstallationFrame_<BRANCH>` zawiera identity `VrRuneBridgeInstance_<BRANCH>`. Jego stabilnymi dziećmi są `VrRuneStoneCapture_<BRANCH>` i `VrRuneStoneInstallationAnchor_<BRANCH>`, natomiast ruchomy bridge znajduje się pod `VrRuneBridgeMotionRoot_<BRANCH> → VrRuneBridgeAlignmentRoot_<BRANCH> → BRIDGE_ROOT`. `BridgeMotionRoot` jest jedynym ownerem runtime translation; `BridgeAlignmentRoot` posiada wyłącznie authored glTF → canonical-frame alignment.
 
-**BRIDGE STATE MACHINE = IMPLEMENTED. PHYSICAL BRIDGE EXTENSION MOTION = NOT IMPLEMENTED / TUNING TARGET.** A8 implementuje state/command foundation, nie fizyczną animację ruchu mostu. Obecnie `HIDDEN` oznacza niewidoczną instancję, a każdy stan non-`HIDDEN` — widoczną instancję. Zachowane są authored bridge alignment, `bridgeRoot`, helper nodes i capture radius. Metry extension, duration, easing, retract distance, orbit speed, socket height, safe envelope i procedural deformation nie są zaimplementowane ani zamrożone; pozostają `TUNING` lub zakresem późniejszego actor contractu.
+Authored `BRIDGE_STONE_CAPTURE` i `BRIDGE_STONE_ANCHOR` pozostają prywatnym calibration evidence. Po canonical alignment ich pełne transformy względem identity instance są kopiowane do stabilnych runtime nodes poza `BridgeMotionRoot`; capture zachowuje authored `capture_radius_m`. `getStoneCapture(branchId)` i `getStoneAnchor(branchId)` zwracają odtąd te stabilne nodes, więc capture, tween target i installed parent nie odjeżdżają z mostem.
+
+**PHYSICAL BRIDGE EXTENSION MOTION = IMPLEMENTED.** Extension distance nie jest world offsetem: to dodatnia, skończona projekcja authored wektora `BRIDGE_PLATFORM_SOCKET → BRIDGE_STONE_ANCHOR` na installation-frame local `+Z` po canonical alignment. `beginExtension()` zeruje actor-local elapsed i przechodzi `DOCKED → EXTENDING` bez teleportu. `update(delta)` prowadzi motion root przez smoothstep od `z = 0` do `z = extensionDistance`, a po settlement ustawia dokładną wartość i stan `EXTENDED`. Duration współdzieli istniejące `runeStoneInstallation.socketCaptureDurationSeconds = 1.2` (**TUNING**). `cancelExtension()` i `reset()` przywracają `z = 0`; `ORBITING` zachowuje extended placement. Retract choreography, orbit/spin i dodatkowy clearance nie są zaimplementowane.
 
 ## 8. Transport i instalacja
 
@@ -209,15 +211,15 @@ SOCKET_CAPTURE → INSTALLED             IMPLEMENTED
 
 **SCAN / HALO — IMPLEMENTED:** `RUNESTONES` używa istniejącego Astro Attractor na prawym kontrolerze, hand mode `ASTRO_ATTRACTOR` i bandu `RUNESTONES`, canonical scan cone/target selection oraz istniejących threshold semantics. Halo otrzymuje wyłącznie aktualny legalny candidate. `RuneStoneAttractorInteraction` posiada najwyżej jeden aktywny natural Rune Stone lock; multi-lock nie istnieje.
 
-Capture rozpoczyna się wyłącznie dla naturalnego kamienia w `CARRIED_ORBIT`, tuned family, family jeszcze nie installed, gotowej własnej pary, legalnego stanu własnego bridge oraz `ActorRoot` wewnątrz authored capture volume. Wrong pair nie jest sprawdzana jako alternatywny socket. Physical candidates nadal pochodzą wyłącznie z pięciu naturalnych records; Ether nie uczestniczy.
+Capture rozpoczyna się wyłącznie dla naturalnego kamienia w `CARRIED_ORBIT`, tuned family, family jeszcze nie installed, gotowej własnej pary, własnego bridge w `DOCKED` oraz `ActorRoot` wewnątrz stabilnego capture volume. Wrong pair nie jest sprawdzana jako alternatywny socket. Physical candidates nadal pochodzą wyłącznie z pięciu naturalnych records; Ether nie uczestniczy.
 
-Canonical capture mierzy world-space distance `RuneStoneActorRoot ↔ own BRIDGE_STONE_CAPTURE` i używa `RuneBridgeActor.getStoneCapture(branchId)` oraz pair-specific authored `capture_radius_m`. Nie używa środka platformy, globalnego offsetu, wspólnego universal radius ani `9 m`; `9 m` pozostaje wyłącznie transport minimum. Finalny target pochodzi z `RuneBridgeActor.getStoneAnchor(branchId)` → authored `BRIDGE_STONE_ANCHOR`.
+Canonical capture mierzy world-space distance `RuneStoneActorRoot ↔ own VrRuneStoneCapture_<BRANCH>` i używa `RuneBridgeActor.getStoneCapture(branchId)` oraz pair-specific authored `capture_radius_m`. Nie używa środka platformy, globalnego offsetu, wspólnego universal radius ani `9 m`; `9 m` pozostaje wyłącznie transport minimum. Finalny target pochodzi z `RuneBridgeActor.getStoneAnchor(branchId)` i jest stabilnym `VrRuneStoneInstallationAnchor_<BRANCH>` skalibrowanym z authored `BRIDGE_STONE_ANCHOR`.
 
 `RuneStoneAttractorInteraction` przekazuje legalny active stone bezpośrednio do `RuneStoneInstallationInteraction`: czyści własne active ownership oraz halo/target/pull presentation i nie wywołuje `releaseFromAstro()`. Handoff to `CARRIED_ORBIT → SOCKET_CAPTURE`, nigdy `CARRIED_ORBIT → FREE → SOCKET_CAPTURE`.
 
-Socket snap jest delta-based i interpolowany: smoothstep, position lerp oraz quaternion slerp; nie teleportuje i zachowuje scale. `runeStoneInstallation.socketCaptureDurationSeconds = 1.2` ma status **TUNING**, nie trwałego dramaturgicznego invariant. Jeżeli bridge jest `DOCKED`, semantic foundation wykonuje `DOCKED → EXTENDING → EXTENDED` bez finalnej fizycznej animacji extension. Po ukończonym snapie bridge przechodzi `EXTENDED → ORBITING`.
+Bridge departure i socket snap rozpoczynają się jako jeden installation beat: najpierw `beginExtension()`, następnie `beginSocketCapture()`. Odrzucenie stone command przed active transaction wywołuje `cancelExtension()` i przywraca docked baseline; po poprawnym handoff `SOCKET_CAPTURE` pozostaje nieodwracalny. Oba ruchy współdzielą `runeStoneInstallation.socketCaptureDurationSeconds = 1.2`, które ma status **TUNING**.
 
-Po snapie `RuneStoneActor` przechodzi `SOCKET_CAPTURE → INSTALLED`, a `ActorRoot` jest parentowany do `BRIDGE_STONE_ANCHOR` w platform-bound bridge hierarchy. Ruch i obrót platformy przenosi installed stone; kamień nie pozostaje pod world-stable Rune Stone field.
+Socket snap jest delta-based i interpolowany: smoothstep, position lerp oraz quaternion slerp; nie teleportuje i zachowuje scale. Po zakończeniu tweenu kamień jest utrzymywany dokładnie na stabilnym anchorze, dopóki bridge nie osiągnie `EXTENDED`; dzięki temu wynik nie zależy od kolejności obu `update()` w render frame. Dopiero wspólne settlement wykonuje dokładny snap, parenting do stabilnego `VrRuneStoneInstallationAnchor_<BRANCH>`, `RuneStoneActor: SOCKET_CAPTURE → INSTALLED`, `RuneBridgeActor: EXTENDED → ORBITING` i persistent commit. Installed stone pozostaje sector/platform-bound, lecz nie jest dzieckiem motion/alignment root ani authored helpera.
 
 Transport nadal respektuje `RUNE_STONE_PLATFORM_MIN_RADIUS_M = 9.0`, release in place i re-acquire z aktualnej pozycji. Przerwanie przed capture pozostawia kamień w aktualnej world-space pozycji; nie powoduje return animation, teleportu ani autonomicznego ruchu. Wyłącznie explicit system/debug reset przywraca canonical initial field placement. Target i lock nie wymagają installation readiness; implemented `SOCKET_CAPTURE` wymaga readiness własnej pary.
 
@@ -236,7 +238,7 @@ Każdy kamień może zachowywać pair-specific cichy spatial loop w `FREE`, `CAR
 | `RuneStoneAttractorInteraction` | scan, target, lock ownership, player-driven transport i installation handoff | tuned truth, installation readiness |
 | `RuneStoneInstallationInteraction` | active capture tween, capture preflight, socket snap i final installation transaction orchestration | persistent tuning/installed truth |
 | `RuneStoneActor` | physical records, live bounds, `FREE` / `LOCKED_BY_ASTRO` / `CARRIED_ORBIT` / `SOCKET_CAPTURE` / `INSTALLED`, physical parenting/reset | tuning truth, installed progression truth, readiness |
-| `RuneBridgeActor` | authored bridge geometry, capture node/radius, anchor i transient bridge state | tuning, readiness source i installed progression |
+| `RuneBridgeActor` | authored bridge geometry/calibration, stabilne capture/anchor, radialny motion root i transient bridge state | tuning truth, readiness source i installed progression |
 | `RuneInstallationReadinessProjection` | installation permission projection; no persistent state | copied sector/rune truth |
 | Monkey/Ether actor | transient Ether presentation/capture mechanics | progression truth |
 | Scenario / Director | authored beat legality i semantic orchestration | interpolacje, pull, slot/capture mechanics |
@@ -380,11 +382,11 @@ Early natural Rune Stone presentation jest **IMPLEMENTED**. Pięć naturalnych a
 - **A9.2 — IMPLEMENTED:** scan/target and `LOCKED_BY_ASTRO`; task `fd4e519bef6cacadca2e30fa24269f05242df71e`, merge `091b7da14f073bac245e776c67468be0f9438df0`.
 - **A9.3 — IMPLEMENTED:** `CARRIED_ORBIT`; task `8c3caca8419a099805fcc503d0174d97ac1b1a59`, merge `d23743d5cbad11344f5b155ca1b839158a1dda9d`.
 - **A9.4 — IMPLEMENTED:** `RuneInstallationReadinessProjection` reads `isBranchComplete`, applies the explicit future Water override seam, and synchronizes bridges to `HIDDEN/DOCKED`; task `38b46cf5118ff44354ec34fe7a1d515117a57a36`, merge `575dc1818f37b76ddc981136e06504e2b1cf735e`.
-- **A9.5 — IMPLEMENTED:** `SOCKET_CAPTURE` + persistent `installedRuneFamilies`, pair-specific authored capture/snap, platform-bound parenting i bridge `EXTENDED → ORBITING` handoff.
+- **A9.5 — IMPLEMENTED:** `SOCKET_CAPTURE` + persistent `installedRuneFamilies`, stable pair-specific capture/anchor, równoległy radialny bridge extension, stable platform-bound parenting i bridge `EXTENDED → ORBITING` handoff.
 - **Panel 2 — IMPLEMENTED:** task `d7e026fe565cf44b20f158564316c814a0e910e0`, merge `5dd2c59080f0501accb4cea546ee5ef68a5811e0`.
 - **Panel 1 Rune U projection — IMPLEMENTED:** task `b04605cb01b395ec188b153cd901941a446076ff`, merge `5510e78062dd0a3309be2e5f22e528ee2ed532ed`.
 
-A9.5 does not implement physical bridge extension motion, installed-stone collision, the Water override trigger or Ether flow.
+A9.5 does not implement bridge spin/orbit, installed-stone collision, the Water override trigger or Ether flow.
 
 ## 14. Remaining target
 
