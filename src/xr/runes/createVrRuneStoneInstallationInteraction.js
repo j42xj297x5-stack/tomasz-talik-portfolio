@@ -2,6 +2,11 @@ import * as THREE from '../../vendor/three.js';
 import { VR_RUNE_BRIDGE_STATES } from './createVrRuneBridgeActor.js';
 import { VR_RUNE_STONE_STATE } from './createVrRuneStoneActor.js';
 
+const INSTALLATION_PHASE = Object.freeze({
+  APPROACH: 'APPROACH',
+  BRIDGE_OPEN: 'BRIDGE_OPEN',
+  DESCENT: 'DESCENT'
+});
 const smoothstep = (value) => value * value * (3 - 2 * value);
 
 export function createVrRuneStoneInstallationInteraction({
@@ -14,8 +19,8 @@ export function createVrRuneStoneInstallationInteraction({
   if (!runeStoneActor?.beginSocketCapture || !runeStoneActor?.completeInstallation) {
     throw new TypeError('[VrRuneStoneInstallationInteraction] RuneStoneActor commands are required.');
   }
-  if (!runeBridgeActor?.getStoneCapture || !runeBridgeActor?.getStoneAnchor) {
-    throw new TypeError('[VrRuneStoneInstallationInteraction] RuneBridgeActor geometry is required.');
+  if (!runeBridgeActor?.getStoneHoverAnchor || !runeBridgeActor?.getStoneAnchor) {
+    throw new TypeError('[VrRuneStoneInstallationInteraction] RuneBridgeActor anchors are required.');
   }
   if (!runeInstallationReadinessProjection?.isInstallationReady) {
     throw new TypeError('[VrRuneStoneInstallationInteraction] Installation readiness is required.');
@@ -23,19 +28,25 @@ export function createVrRuneStoneInstallationInteraction({
   if (!runeStoneProgressionController?.commitInstalledFamily) {
     throw new TypeError('[VrRuneStoneInstallationInteraction] Rune progression truth is required.');
   }
-  const duration = settings?.socketCaptureDurationSeconds;
+  const duration = settings?.phaseDurationSeconds;
   if (!Number.isFinite(duration) || duration <= 0) {
-    throw new TypeError('settings.socketCaptureDurationSeconds must be finite and positive.');
+    throw new TypeError('settings.phaseDurationSeconds must be finite and positive.');
   }
 
-  const stonePosition = new THREE.Vector3();
-  const capturePosition = new THREE.Vector3();
   const targetPosition = new THREE.Vector3();
   const targetQuaternion = new THREE.Quaternion();
+  const fromPosition = new THREE.Vector3();
+  const fromQuaternion = new THREE.Quaternion();
   const localPosition = new THREE.Vector3();
   const localQuaternion = new THREE.Quaternion();
   let active = null;
   let disposed = false;
+
+  function readWorldTransform(anchor, position, quaternion) {
+    anchor.updateWorldMatrix(true, false);
+    anchor.getWorldPosition(position);
+    anchor.getWorldQuaternion(quaternion);
+  }
 
   function applyWorldTransform(root, position, quaternion) {
     root.parent.updateWorldMatrix(true, false);
@@ -46,69 +57,69 @@ export function createVrRuneStoneInstallationInteraction({
     root.quaternion.copy(parentQuaternion.multiply(quaternion));
   }
 
-  function tryBeginCapture(record) {
+  function tryBeginHandoff(record) {
     if (disposed || active || record?.descriptor?.natural !== true) return false;
     const { branchId, familyCode, root } = record;
     if (runeStoneActor.getState(branchId) !== VR_RUNE_STONE_STATE.CARRIED_ORBIT
       || !runeStoneProgressionController.isFamilyTuned(familyCode)
       || runeStoneProgressionController.isFamilyInstalled(familyCode)
-      || runeInstallationReadinessProjection.isInstallationReady(branchId) !== true) return false;
+      || runeInstallationReadinessProjection.isInstallationReady(branchId) !== true
+      || runeBridgeActor.getState(branchId) !== VR_RUNE_BRIDGE_STATES.DOCKED) return false;
 
-    const bridgeState = runeBridgeActor.getState(branchId);
-    if (bridgeState !== VR_RUNE_BRIDGE_STATES.DOCKED) return false;
-    const capture = runeBridgeActor.getStoneCapture(branchId);
-    const anchor = runeBridgeActor.getStoneAnchor(branchId);
-    if (!capture?.node || !Number.isFinite(capture.radius) || capture.radius <= 0 || !anchor) return false;
+    const hoverAnchor = runeBridgeActor.getStoneHoverAnchor(branchId);
+    const installationAnchor = runeBridgeActor.getStoneAnchor(branchId);
+    if (!hoverAnchor || !installationAnchor || !runeStoneActor.beginSocketCapture(branchId)) return false;
+
     root.updateWorldMatrix(true, false);
-    capture.node.updateWorldMatrix(true, false);
-    root.getWorldPosition(stonePosition);
-    capture.node.getWorldPosition(capturePosition);
-    if (stonePosition.distanceTo(capturePosition) > capture.radius) return false;
-
-    let extensionStarted = false;
-    try {
-      runeBridgeActor.beginExtension(branchId);
-      extensionStarted = true;
-      if (!runeStoneActor.beginSocketCapture(branchId)) {
-        runeBridgeActor.cancelExtension(branchId);
-        return false;
-      }
-    } catch (error) {
-      if (extensionStarted && runeStoneActor.getState(branchId) !== VR_RUNE_STONE_STATE.SOCKET_CAPTURE) {
-        runeBridgeActor.cancelExtension(branchId);
-      }
-      throw error;
-    }
-
-    anchor.updateWorldMatrix(true, false);
     active = {
-      record, anchor, elapsed: 0,
+      record,
+      hoverAnchor,
+      installationAnchor,
+      phase: INSTALLATION_PHASE.APPROACH,
+      elapsed: 0,
       startPosition: root.getWorldPosition(new THREE.Vector3()),
-      startQuaternion: root.getWorldQuaternion(new THREE.Quaternion()),
-      startScale: root.getWorldScale(new THREE.Vector3()),
-      targetPosition: anchor.getWorldPosition(new THREE.Vector3()),
-      targetQuaternion: anchor.getWorldQuaternion(new THREE.Quaternion())
+      startQuaternion: root.getWorldQuaternion(new THREE.Quaternion())
     };
     return true;
   }
 
-  function update(deltaSeconds = 0) {
-    if (disposed || !active) return;
-    active.elapsed = Math.min(duration, active.elapsed
-      + Math.max(0, Number.isFinite(deltaSeconds) ? deltaSeconds : 0));
+  function updateApproach(delta) {
+    active.elapsed = Math.min(duration, active.elapsed + delta);
     const t = smoothstep(active.elapsed / duration);
-    targetPosition.lerpVectors(active.startPosition, active.targetPosition, t);
-    targetQuaternion.copy(active.startQuaternion).slerp(active.targetQuaternion, t);
+    readWorldTransform(active.hoverAnchor, targetPosition, targetQuaternion);
+    fromPosition.lerpVectors(active.startPosition, targetPosition, t);
+    fromQuaternion.copy(active.startQuaternion).slerp(targetQuaternion, t);
+    applyWorldTransform(active.record.root, fromPosition, fromQuaternion);
+    if (active.elapsed < duration) return;
     applyWorldTransform(active.record.root, targetPosition, targetQuaternion);
+    if (!runeBridgeActor.beginExtension(active.record.branchId)) {
+      throw new Error(`[VrRuneStoneInstallationInteraction] Bridge rejected extension for ${active.record.branchId}.`);
+    }
+    active.phase = INSTALLATION_PHASE.BRIDGE_OPEN;
+    active.elapsed = 0;
+  }
+
+  function updateBridgeOpen() {
+    readWorldTransform(active.hoverAnchor, targetPosition, targetQuaternion);
+    applyWorldTransform(active.record.root, targetPosition, targetQuaternion);
+    if (runeBridgeActor.getState(active.record.branchId) !== VR_RUNE_BRIDGE_STATES.EXTENDED) return;
+    active.phase = INSTALLATION_PHASE.DESCENT;
+    active.elapsed = 0;
+  }
+
+  function updateDescent(delta) {
+    active.elapsed = Math.min(duration, active.elapsed + delta);
+    const t = smoothstep(active.elapsed / duration);
+    readWorldTransform(active.hoverAnchor, fromPosition, fromQuaternion);
+    readWorldTransform(active.installationAnchor, targetPosition, targetQuaternion);
+    fromPosition.lerp(targetPosition, t);
+    fromQuaternion.slerp(targetQuaternion, t);
+    applyWorldTransform(active.record.root, fromPosition, fromQuaternion);
     if (active.elapsed < duration) return;
 
-    const { record, anchor } = active;
-    anchor.updateWorldMatrix(true, false);
-    const finalPosition = anchor.getWorldPosition(new THREE.Vector3());
-    const finalQuaternion = anchor.getWorldQuaternion(new THREE.Quaternion());
-    applyWorldTransform(record.root, finalPosition, finalQuaternion);
-    if (runeBridgeActor.getState(record.branchId) !== VR_RUNE_BRIDGE_STATES.EXTENDED) return;
-    anchor.attach(record.root);
+    const { record, installationAnchor } = active;
+    applyWorldTransform(record.root, targetPosition, targetQuaternion);
+    installationAnchor.attach(record.root);
     if (!runeStoneActor.completeInstallation(record.branchId)) {
       throw new Error(`[VrRuneStoneInstallationInteraction] Actor rejected completed installation for ${record.branchId}.`);
     }
@@ -117,6 +128,14 @@ export function createVrRuneStoneInstallationInteraction({
       throw new Error(`[VrRuneStoneInstallationInteraction] Duplicate installed truth for ${record.familyCode}.`);
     }
     active = null;
+  }
+
+  function update(deltaSeconds = 0) {
+    if (disposed || !active) return;
+    const delta = Math.max(0, Number.isFinite(deltaSeconds) ? deltaSeconds : 0);
+    if (active.phase === INSTALLATION_PHASE.APPROACH) updateApproach(delta);
+    else if (active.phase === INSTALLATION_PHASE.BRIDGE_OPEN) updateBridgeOpen();
+    else updateDescent(delta);
   }
 
   function reset() { active = null; }
@@ -129,5 +148,5 @@ export function createVrRuneStoneInstallationInteraction({
     disposed = true;
   }
 
-  return { tryBeginCapture, update, reset, dispose, getActiveCapture: () => active };
+  return { tryBeginHandoff, update, reset, dispose, getActiveInstallation: () => active };
 }

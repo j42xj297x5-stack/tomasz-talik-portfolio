@@ -226,7 +226,8 @@ const progressFloor = createVrProgressFloor({
 const runeBridgeActor = createVrRuneBridgeActor({
   assetManager,
   getSectorMount: (branchId) => progressFloor.getRuneInstallationFrame(branchId),
-  extensionDurationSeconds: settings.runeStoneInstallation.socketCaptureDurationSeconds
+  extensionDurationSeconds: settings.runeStoneInstallation.phaseDurationSeconds,
+  hoverHeightMeters: settings.runeStoneInstallation.hoverHeightMeters
 });
 const platformFixturesRoot = new THREE.Group();
 platformFixturesRoot.name = 'VrPlatformFixturesRoot';
@@ -905,12 +906,13 @@ runeStoneAttractorInteraction = createVrRuneStoneAttractorInteraction({
     triggerThreshold: settings.shellAttractor.triggerThreshold,
     pullAcceleration: settings.shellAttractor.pullAcceleration,
     maxPullSpeed: settings.shellAttractor.maxPullSpeed,
+    handoffRadiusMeters: settings.runeStoneInstallation.handoffRadiusMeters,
     scanCone: { ...settings.shellAttractor.scanCone,
       color: settings.attractorPresentation.bandColors.shells } },
   haloSettings: settings.targetHalo,
   platformCenter: progressFloor.object,
   getPlayerWorldPosition: (target) => getXrHeadWorldPosition({ renderer, camera, playerRig, target }),
-  tryBeginInstallationCapture: (record) => runeStoneInstallationInteraction.tryBeginCapture(record),
+  tryBeginInstallationHandoff: (record) => runeStoneInstallationInteraction.tryBeginHandoff(record),
   isHigherPriorityInteractionActive: (record) => Boolean(activateButton.hits.get(record)
     || releaseButton.hits.get(record) || astroFurnaceOpenInteraction.hasCurrentHit(record)
     || astroFurnaceActivateInteraction.hasCurrentHit(record) || astroFurnaceOptionInteraction.hasCurrentHit(record)
