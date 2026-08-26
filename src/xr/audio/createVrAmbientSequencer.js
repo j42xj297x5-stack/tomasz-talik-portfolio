@@ -2,10 +2,8 @@ const AMBIENTS = Object.freeze([null, '/audio/ambient_01.mp3', '/audio/ambient_0
   '/audio/ambient_03.mp3', '/audio/ambient_04.mp3', '/audio/ambient_05.mp3']);
 export const VR_QUIET_QUEUE = Object.freeze(Array.from({ length: 13 }, (_, index) => String(index + 1).padStart(2, '0'))
   .map((id) => `/audio/noise_quiete_loop_${id}.mp3`));
-const SUBTHRESHOLD_AMBIENT = '/audio/ambient_loop_01.mp3';
-
 export function createVrAmbientSequencer({ bridge, setTimer = setTimeout, clearTimer = clearTimeout } = {}) {
-  let generation = 0, threshold = 0, subthreshold = false, quietCursor = 0, disposed = false, enabled = false;
+  let generation = 0, mainAmbient = 0, quietCursor = 0, disposed = false, enabled = false;
   let activeHandle = null, timer = null, timerResolve = null;
   let pendingController = null;
 
@@ -39,41 +37,30 @@ export function createVrAmbientSequencer({ bridge, setTimer = setTimeout, clearT
     return token === generation && !disposed;
   }
   function nextQuiet() { const path = VR_QUIET_QUEUE[quietCursor]; quietCursor = (quietCursor + 1) % VR_QUIET_QUEUE.length; return path; }
-  async function runFull(token) {
-    while (token === generation && threshold > 0 && !subthreshold && !disposed) {
-      if (!await play(AMBIENTS[threshold], 'AMBIENT', 1, token)) return;
-      if (!await sleep(30000, token)) return;
+  async function runMain(token) {
+    while (token === generation && mainAmbient > 0 && !disposed) {
+      if (!await play(AMBIENTS[mainAmbient], 'AMBIENT', 1, token)) return;
+      if (!await sleep(10000, token)) return;
       if (!await play(nextQuiet(), 'SPACE', 6, token, { fadeIn: 10, fadeOut: 10 })) return;
-      if (!await sleep(30000, token)) return;
+      if (!await sleep(10000, token)) return;
     }
   }
-  async function runSubthreshold(token) {
-    while (token === generation && subthreshold && !disposed) {
-      if (!await play(SUBTHRESHOLD_AMBIENT, 'AMBIENT', 13, token, { fadeOut: 10 })) return;
-      if (!await sleep(30000, token)) return;
-      if (!await play(nextQuiet(), 'SPACE', 6, token, { fadeIn: 10, fadeOut: 10 })) return;
-      if (!await sleep(30000, token)) return;
-    }
-  }
-  function setState({ fullThreshold = threshold, asterionSubthreshold = subthreshold } = {}) {
+  function selectMainAmbient(index) {
     if (disposed) return;
-    const nextThreshold = Math.min(5, Math.max(0, Math.floor(Number(fullThreshold) || 0)));
-    const nextSubthreshold = Boolean(asterionSubthreshold);
-    if (nextThreshold === threshold && nextSubthreshold === subthreshold) return;
-    cancelWork(); threshold = nextThreshold; subthreshold = nextSubthreshold;
+    const nextMainAmbient = Math.min(4, Math.max(1, Math.floor(Number(index) || 0)));
+    if (nextMainAmbient === mainAmbient) return;
+    cancelWork(); mainAmbient = nextMainAmbient;
     if (!enabled) return;
     const token = generation;
-    if (subthreshold) void runSubthreshold(token);
-    else if (threshold > 0) void runFull(token);
+    void runMain(token);
   }
   function enable() {
     if (disposed || enabled) return;
     enabled = true; cancelWork();
     const token = generation;
-    if (subthreshold) void runSubthreshold(token);
-    else if (threshold > 0) void runFull(token);
+    if (mainAmbient > 0) void runMain(token);
   }
-  function reset() { if (disposed) return; cancelWork(); threshold = 0; subthreshold = false; quietCursor = 0; enabled = false; }
+  function reset() { if (disposed) return; cancelWork(); mainAmbient = 0; quietCursor = 0; enabled = false; }
   function dispose() { if (disposed) return; cancelWork(); disposed = true; }
-  return { setState, enable, reset, dispose, get enabled() { return enabled; }, get quietCursor() { return quietCursor; } };
+  return { selectMainAmbient, enable, reset, dispose, get enabled() { return enabled; }, get quietCursor() { return quietCursor; } };
 }

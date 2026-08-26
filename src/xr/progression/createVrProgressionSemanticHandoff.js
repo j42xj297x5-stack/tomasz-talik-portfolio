@@ -1,6 +1,6 @@
 import { VR_SCENARIO_EVENT } from './vrExperienceScenario.js';
 
-export function createVrProgressionSemanticHandoff({ dispatch, syncAmbientSequence = () => {} }) {
+export function createVrProgressionSemanticHandoff({ dispatch }) {
   if (typeof dispatch !== 'function') {
     throw new TypeError('Progression semantic handoff requires dispatch.');
   }
@@ -14,8 +14,6 @@ export function createVrProgressionSemanticHandoff({ dispatch, syncAmbientSequen
     } else if (page.order > 1) {
       dispatch(VR_SCENARIO_EVENT.TIER_COMPLETED, { tier: page.order });
     }
-
-    syncAmbientSequence();
   }
 
   return { onPageCommitted };

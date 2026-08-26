@@ -421,15 +421,8 @@ const ambientScenarioOwner = Object.freeze({
     ambientSequencer.enable();
   }
 });
-function syncAmbientSequence() {
-  const fullThreshold = progressionController.getCurrentTier();
-  const shellsComplete = furnaceProgressionController.getAsterionSphereProgress().complete;
-  const sphereBuilt = asterionProductionController.getSnapshot().built;
-  ambientSequencer.setState({ fullThreshold, asterionSubthreshold: fullThreshold === 2 && shellsComplete && sphereBuilt });
-}
 function synchronizeReconstructionDerivedState() {
   synchronizeRuneBridgeReadiness();
-  syncAmbientSequence();
   shellSystem.applyAbsorbedShellIds(furnaceProgressionController.getAbsorbedShellIds());
 }
 const firstRingFlow = createVrFirstRingFlow({
@@ -437,11 +430,8 @@ const firstRingFlow = createVrFirstRingFlow({
   dispatch: (event, payload) => runtimeExperience.dispatch(event, payload)
 });
 const progressionSemanticHandoff = createVrProgressionSemanticHandoff({
-  dispatch: (event, payload) => runtimeExperience.dispatch(event, payload),
-  syncAmbientSequence
+  dispatch: (event, payload) => runtimeExperience.dispatch(event, payload)
 });
-const unsubscribeAmbientFurnace = furnaceProgressionController.subscribe(syncAmbientSequence);
-const unsubscribeAmbientAsterion = asterionProductionController.subscribe(syncAmbientSequence);
 function syncQaPostP1WorldState() {
   if (postP1Qa) shellSystem.setActive(true);
 }
@@ -1029,10 +1019,14 @@ runtimeExperience = new RuntimeExperience({
     [VR_SCENARIO_EFFECT.SET_INTRO_AMBIENT_03]: () => { introAmbientSequencer.setCue('03'); },
     [VR_SCENARIO_EFFECT.SET_INTRO_AMBIENT_04]: () => { introAmbientSequencer.setCue('04'); },
     [VR_SCENARIO_EFFECT.SET_INTRO_AMBIENT_05]: () => { introAmbientSequencer.setCue('05'); },
-    [VR_SCENARIO_EFFECT.BEGIN_MAIN_AMBIENT_SEQUENCE]: () => {
+    [VR_SCENARIO_EFFECT.SET_MAIN_AMBIENT_01]: () => {
       introAmbientSequencer.stop();
+      ambientSequencer.selectMainAmbient(1);
       ambientSequencer.enable();
     },
+    [VR_SCENARIO_EFFECT.SET_MAIN_AMBIENT_02]: () => { ambientSequencer.selectMainAmbient(2); },
+    [VR_SCENARIO_EFFECT.SET_MAIN_AMBIENT_03]: () => { ambientSequencer.selectMainAmbient(3); },
+    [VR_SCENARIO_EFFECT.SET_MAIN_AMBIENT_04]: () => { ambientSequencer.selectMainAmbient(4); },
     [VR_SCENARIO_EFFECT.BEGIN_CELESTIAL_REVEAL]: () => { celestialActor.beginReveal(); },
     [VR_SCENARIO_EFFECT.REVEAL_NATURAL_RUNE_STONES]: () => {
       runeStoneActor.setPresentationVisible(true);
@@ -1418,7 +1412,6 @@ async function enterVr() {
     runtimeExperience.activateCurrentPoint();
     xrStartCalibration.request();
     activeSession = requestedSession;
-    syncAmbientSequence();
     hasEnteredSession = true;
     status.textContent = copy.ready;
     exitButton.hidden = false;
@@ -1449,8 +1442,6 @@ window.addEventListener('pagehide', () => {
   celestialActor.dispose();
   introCrystalTutorial.dispose();
   introFogReveal.dispose();
-  unsubscribeAmbientFurnace();
-  unsubscribeAmbientAsterion();
   ambientSequencer.dispose();
   introAmbientSequencer.dispose();
   vrAudio.dispose();
