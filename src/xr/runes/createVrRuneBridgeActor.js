@@ -43,13 +43,14 @@ function alignInstance(instance, nodes) {
   const across = positionRelativeTo(nodes.BRIDGE_MOUNT_TOP, instance)
     .sub(positionRelativeTo(nodes.BRIDGE_MOUNT_BOTTOM, instance, new THREE.Vector3()))
     .normalize();
-  const normal = new THREE.Vector3().crossVectors(across, forward).normalize();
-  across.crossVectors(forward, normal).normalize();
+  const normal = new THREE.Vector3().crossVectors(forward, across).normalize();
+  across.crossVectors(normal, forward).normalize();
   if (![forward, across, normal].every((axis) => Number.isFinite(axis.lengthSq()) && axis.lengthSq() > 0.999)) {
     throw new Error('[VrRuneBridgeActor] Authored bridge basis is degenerate.');
   }
 
-  const authoredBasis = new THREE.Matrix4().makeBasis(forward, normal, across);
+  // Canonical sector-local target basis is +X across, +Y normal and +Z radial.
+  const authoredBasis = new THREE.Matrix4().makeBasis(across, normal, forward);
   instance.quaternion.setFromRotationMatrix(authoredBasis).invert();
   instance.position.copy(socket).applyQuaternion(instance.quaternion).multiplyScalar(-1);
 }

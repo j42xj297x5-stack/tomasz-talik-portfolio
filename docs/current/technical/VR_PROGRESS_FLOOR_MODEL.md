@@ -4,9 +4,9 @@ Status: canonical technical description of the implemented progress-floor and pl
 
 ## Runtime ownership and lifecycle
 
-`createVrProgressFloor` in `src/xr/floor/createVrProgressFloor.js` is the subsystem factory. `src/experienceVr.js` composes it under `ExperienceVrRoot` after `AssetManager` has preloaded the five manifest models, passes clones of those models to the factory, calls `update(delta)` from the shared animation loop, and calls `dispose()` during page teardown.
+`createVrProgressFloor` in `src/xr/floor/createVrProgressFloor.js` is the subsystem factory and remains the owner of the shared platform root, the five-sector collection, tier rings, page-to-branch mapping and the public progress projection. It creates every sector through the single generic `createVrProgressFloorSectorActor` implementation. `src/experienceVr.js` composes the subsystem under `ExperienceVrRoot` after `AssetManager` has preloaded the five manifest models, calls `update(delta)` from the shared animation loop, and calls `dispose()` during page teardown.
 
-The factory creates one shared `THREE.Group` named `VrTiltableFloorRoot`. Its identity transform defines the absolute platform center `(0,0,0)` and the platform reference plane `Y=0`. It owns all five instantiated sectors, cloned sector materials and, when creation succeeds, five procedural tier rings with their materials and geometries. `dispose()` is idempotent: it marks the subsystem inactive, detaches the root, and disposes every owned material and procedural geometry; later activation, completion and update calls are inert.
+The factory creates one shared `THREE.Group` named `VrTiltableFloorRoot`. Its identity transform defines the absolute platform center `(0,0,0)` and the platform reference plane `Y=0`. Below `PlatformGeometryRoot` it owns five independent stable ActorRoots and, when creation succeeds, five procedural tier rings. Each Sector Actor owns its cloned authored visual hierarchy and cloned materials. Subsystem `dispose()` is idempotent and delegates sector presentation disposal before releasing procedural ring resources; later activation, completion and update calls are inert.
 
 `VrTiltableFloorRoot` now has two active roles: it is the visual progress floor root and the platform transform root driven by the QA Asterion gyro. Progress ownership and transform ownership remain separate. `createVrProgressFloor` only projects committed portfolio progress; the Asterion gyro writes the root quaternion and does not take over card, tier or furnace progression logic.
 
@@ -23,7 +23,15 @@ All authored sectors share the same local center, receive no local translation, 
 | 3 | `creative-ai` | Fire | Creative AI |
 | 4 | `ethics-life-protection` | Earth | Ethics |
 
-Each runtime instance is named `VrProgressFloorSector:${glyphId}`. Every sector has `placeholder: false`; no placeholder sector remains.
+Each actor root is named `VrProgressFloorSectorActorRoot:${glyphId}` and contains the authored visual hierarchy named `VrProgressFloorSector:${glyphId}`. Every ActorRoot has local position `(0,0,0)`, local Y rotation `rotationIndex * 2π / 5`, and remains a child of `PlatformGeometryRoot`, so it inherits the full `VrTiltableFloorRoot` transform. Every sector has `placeholder: false`; no placeholder sector remains and no branch-specific world translation exists.
+
+The generic Sector Actor owns reveal visibility, presentation-body fade, panel emission state and its own presentation lifecycle. It exposes commands `activatePanel(order)`, `update(delta)`, `reset()` and `dispose()`, plus the read-only queries `getPanelObject(order)`, `isRevealed()` and `getRuneInstallationFrame()`. It does not own Scenario points, progression truth, tier completion, Rune readiness/tuning or bridge state. The floor subsystem keeps those boundaries and delegates only sector presentation.
+
+### Canonical sector-local spatial frame
+
+Every ActorRoot uses the same right-handed frame: `+X` tangential/across the sector, `+Y` platform normal and `+Z` radial outward. A stable child `VrRuneInstallationFrame_<BRANCH>` is placed on `X=0`, at the outward `maxZ` boundary of the visible presentation body, with Y at the center of that body's thickness. Its transform is derived from `path4` for Creative and `path1` for all other sectors; the invisible reference BASE never supplies its installation plane. The frame inherits both the sector's 72-degree rotation and every later transform of `VrTiltableFloorRoot`.
+
+`createVrProgressFloor.getRuneInstallationFrame(branchId)` returns this stable frame without exposing mutable actor state. The current `RuneBridgeActor` instances are parented directly to these frames. Static alignment maps the authored `BRIDGE_PLATFORM_SOCKET` to frame origin, authored socket-to-`BRIDGE_STONE_ANCHOR` forward to sector-local `+Z`, bridge support normal to sector-local `+Y`, and bridge across to sector-local `+X`. Consequently every bridge is centered on the radial axis and follows sector/platform rotation without branch offsets.
 
 ## Asset and object contracts
 
@@ -41,7 +49,7 @@ The layout therefore contains **18 panels**: Creative AI 3, Ethics 3, AI Guide 3
 
 ## Materials and visibility
 
-Every sector instance starts with `visible = false`; `createVrProgressFloor` is the **only** owner of this visibility state. Intro neither reads nor changes `sector.visible`. The first successful commit in a branch reveals that branch's sector, and the discovered-sector registry survives XR exit and re-entry within the same prepared page runtime. Geometries may remain shared through the deep object clone, while every sector instance receives cloned materials.
+Every authored sector visual starts with `visible = false`; its Sector Actor is the only owner of this visibility state, while `createVrProgressFloor` owns the mapping from progression pages to that presentation command. Intro neither reads nor changes sector visibility. The first successful commit in a branch reveals that branch's sector, and the discovered-sector registry survives XR exit and re-entry within the same prepared page runtime. Geometries may remain shared through the deep object clone, while every sector instance receives cloned materials.
 
 The implemented production contract separates two sibling roles. The neutral `VR_PROGRESS_SECTOR_*_BASE` is a required technical/reference mesh (the reference "pizza") and its absence fails construction, but it is set permanently invisible and never participates in the reveal or final presentation. The authored `path4` for Creative and `path1` for the other four assets are independently required: they are the actual visible openwork sector geometry/ornament whose materials are prepared and animated for presentation.
 
