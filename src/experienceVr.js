@@ -583,14 +583,19 @@ let astroFurnaceContentInteraction = null;
 let astroFurnaceOptionInteraction = null;
 const runeOpenInteractionSource = { getState: () => astroFurnaceOpenInteraction?.getState?.() ?? 'CLOSED' };
 const runeActivateInteractionSource = { getState: () => astroFurnaceActivateInteraction?.getState?.() ?? 'IDLE' };
+let runeRecipeSelectionController = null;
+const runeRecipeSelectionSource = {
+  getExpectedRecipe: () => runeRecipeSelectionController?.getExpectedRecipe?.() ?? null
+};
 const astroFurnaceRuneRecipeInteraction = createVrAstroFurnaceRuneRecipeInteraction({
   furnace: astroFurnace, shellSystem, smallGlyphSystem,
   openInteraction: runeOpenInteractionSource, activateInteraction: runeActivateInteractionSource,
   isModeActive: () => astroFurnaceOptionInteraction?.getActiveMode?.() === ASTRO_FURNACE_RUNE_TUNING_MODE,
+  getExpectedRecipe: runeRecipeSelectionSource.getExpectedRecipe,
   takeHeldShell: (shell) => shellAttractorInteraction?.transferHeldShell(shell) === true,
   takeHeldSmallGlyph: (glyph) => smallGlyphAttractorInteraction?.transferHeldGlyph(glyph) === true
 });
-const runeRecipeSelectionController = createVrRuneRecipeSelectionController({
+runeRecipeSelectionController = createVrRuneRecipeSelectionController({
   runeRecipeInteraction: astroFurnaceRuneRecipeInteraction,
   runeStoneProgressionController
 });
