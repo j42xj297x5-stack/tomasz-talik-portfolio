@@ -1,10 +1,10 @@
 # Experience VR Audio Model
 
-Status: canonical, living technical model for Experience VR audio synchronized on 2026-08-09.
+Status: **CURRENT / BINDING**, living technical model for Experience VR audio synchronized on 2026-08-26.
 
 ## SUMMARY DLA ARCHITEKTA
 
-The bounded Experience VR Astro Attractor lifecycle and implemented Astro Furnace process sounds remain **IMPLEMENTED**. Shell extraction plays `astro_piec_work_01.mp3`; production construction plays `astro_piec_work_create_01.mp3` instead, exactly once on DEVICE after an accepted cycle. Neither loops or determines gameplay timing, and reset/dispose stops it through the fail-soft `VrAudioBridge`. Small-glyph work and rune tuning remain **PLANNED**; rune-stone spatial mappings remain **PLANNED**. The canonical background sequencer, its Asterion subthreshold override, and both Asterion Sphere DEVICE loops are **IMPLEMENTED**. Spatial audio remains unimplemented.
+The bounded Experience VR Astro Attractor lifecycle and implemented Astro Furnace process sounds remain **IMPLEMENTED**. Shell extraction plays `astro_piec_work_01.mp3`; production construction plays `astro_piec_work_create_01.mp3` instead, exactly once on DEVICE after an accepted cycle. Neither loops or determines gameplay timing, and reset/dispose stops it through the fail-soft `VrAudioBridge`. Small-glyph work and rune tuning remain **PLANNED**; rune-stone spatial mappings remain **PLANNED**. The main background contract is now **CURRENT / BINDING TARGET** and Scenario-driven, but is **NOT YET FULLY IMPLEMENTED**; the implementation still selects by tier, uses 30-second gaps and the old Asterion subthreshold, and has no post-main tail. Both Asterion Sphere DEVICE loops remain independent and **IMPLEMENTED**. Spatial audio remains unimplemented.
 
 ## Status vocabulary and authority
 
@@ -28,7 +28,7 @@ The VR mixer has five **IMPLEMENTED**, independently tunable gain buses:
 | Bus | Responsibility | Asset families |
 | --- | --- | --- |
 | `SPACE` | lowest cosmic background | `noise_quiete_loop_*`, `noise_loop_*` |
-| `AMBIENT` | ambients and main musical threads | `ambient_01–05`, `ambient_loop_01`, `ambient_loop_03–04` |
+| `AMBIENT` | ambients and main musical threads | `ambient_01–05`, `ambient_loop_01–04` |
 | `DEVICE` | loud device operation | `astro_piec_*`, `noise_laud_loop_01–08`, `asterion_sphere_*` |
 | `WORLD` | short world sounds | `creating_*`, `floor_panel_activate`, `glif_*`, `reliquiary_consume`, `monkey_thinking_01` |
 | `UI` | panels | `bell_*`, `click_panel_01`, `click_short_01`, `panel_sound_*`, `panel_sound_long_*` |
@@ -37,46 +37,51 @@ Each bus has its own `GainNode` and all five feed the existing shared **Master V
 
 ## Background sequencer
 
-### Full thresholds
+### CURRENT / BINDING Scenario entry contract
 
-| Active threshold | Entry condition | Main asset |
-| --- | --- | --- |
-| 1 | entry into the circle | `ambient_01.mp3` |
-| 2 | completion of the first panel circle for every branch | `ambient_02.mp3` |
-| 3 | second circle | `ambient_03.mp3` |
-| 4 | third circle | `ambient_04.mp3` |
-| 5 | fourth circle | `ambient_05.mp3` |
+Intro owns its separate `ambient_intro_*` sequence. The main sequence begins only after Intro, and Scenario semantic entries—not polling, runtime tier or generic thresholds—own selection:
 
-For the active threshold, the sequence is:
+| Scenario semantic entry | Scenario point | Main asset | Canonical status |
+| --- | --- | --- | --- |
+| crossing from `1.130` completed; Monkey seated; `GLYPH_FREE_EXPLORE` begins | `2.10` | `ambient_01.mp3` | **CURRENT / BINDING TARGET; entry seam exists, selection contract not fully implemented** |
+| ring 1 completed | `2.40` | `ambient_02.mp3` | **CURRENT / BINDING TARGET; NOT IMPLEMENTED** |
+| ring 2 completed | `4.20` | `ambient_03.mp3` | **CURRENT / BINDING TARGET; NOT IMPLEMENTED** |
+| ring 3 completed | `4.80` | `ambient_04.mp3` | **CURRENT / BINDING TARGET; NOT IMPLEMENTED** |
+| ring 4 completed | future point after `4.80`; point ID **NOT AUTHORED** | `ambient_05.mp3` | **CURRENT / BINDING TARGET; NOT AUTHORED / NOT IMPLEMENTED** |
 
-1. Play `ambient_N` once to its natural end.
-2. Hold 30 seconds of silence.
-3. Select the next `noise_quiete_loop` from the global queue.
-4. Fade in for 10 seconds.
-5. Play 6 complete repetitions of the seamless loop.
-6. Fade out for 10 seconds.
-7. Hold 30 seconds of silence.
-8. If the player remains in the same threshold, play `ambient_N` again and continue with the next quiet loop.
+Ring 5 completion is likewise **FUTURE / NOT AUTHORED**; this contract assigns it no point ID and no new main ambient.
 
-The quiet-loop cursor is global and **does not reset** when the threshold changes. The actual repository queue is:
+For `ambient_01–04`, until the next semantic Scenario entry replaces the main thread, the cycle is:
+
+1. Play the current `ambient_N` once to its natural end.
+2. Hold **10 seconds** of silence.
+3. Select the next `noise_quiete_loop_N` from the single global cursor; keep the existing 10-second fade-in, play 6 complete repetitions, then keep the existing 10-second fade-out.
+4. Hold **10 seconds** of silence.
+5. Repeat the same `ambient_N`, then continue with the next quiet loop.
+
+The quiet-loop cursor is global across the entire progression and **never resets** when a new main ambient replaces the current thread. Its repository queue is:
 
 ```text
-01 → 02 → 03 → 04 → 05 → 06 → 07 → 08 → 09 → 10 → 11 → 12 → 13 → wrap
+01 → 02 → 03 → 04 → 05 → 06 → 07 → 08 → 09 → 10 → 11 → 12 → 13 → 01 → …
 ```
 
-### Subthreshold override
+For example: `ambient_01 → quiet 01 → ambient_01 → quiet 02`; after the next semantic entry, `ambient_02 → quiet 03 → ambient_02 → quiet 04`. Replacement stops/replaces the active main musical thread but preserves the cursor.
 
-A subthreshold interrupts the normal full-threshold sequencer. The first defined subthreshold begins after all shells are complete and the Asterion Sphere has been built, before transition to the next full threshold. Its main layer is `ambient_loop_01.mp3`; `ambient_loop_03.mp3` and `ambient_loop_04.mp3` are **RESERVED**. The former `ambient_loop_02.mp3` content was renamed without recompression to `asterion_sphere_work.mp3` and is no longer part of the ambient family.
+### Post-main tail
 
-The subthreshold sequence is:
+There is no `ambient_06`. After the future Scenario entry for `ambient_05`, play `ambient_05` once and then use the existing `ambient_loop_*` inventory in ascending order. Each tail ambient plays 6 complete repetitions:
 
-1. Play `ambient_loop_N` for 13 seamless repetitions.
-2. Fade out for 10 seconds.
-3. Hold 30 seconds of silence.
-4. Select the next quiet loop from the same global cursor.
-5. Fade it in for 10 seconds, play 6 complete repetitions, fade it out for 10 seconds, then hold 30 seconds of silence.
-6. If the subthreshold remains active, repeat the cycle.
-7. When it ends, begin the sequence for the new higher full threshold.
+```text
+ambient_05 once
+→ 10 s silence → next quiet ×6 → 10 s silence
+→ ambient_loop_01 ×6
+→ 10 s silence → next quiet ×6 → 10 s silence
+→ ambient_loop_02 ×6 → … → ambient_loop_04 ×6
+```
+
+The quiet layers retain their 10-second fade-in and 10-second fade-out and the same global cursor, including `13 → 01`. Behavior after the last existing `ambient_loop_*` is exhausted remains a future decision; no tail wrap is established.
+
+The former canonical `shells complete + Asterion Sphere built → ambient_loop_01 subthreshold` is **SUPERSEDED** and is not part of the target main-music progression. This does not affect the independent DEVICE loops `asterion_sphere_background.mp3` and `asterion_sphere_work.mp3`.
 
 ## Interaction contracts
 
@@ -147,18 +152,19 @@ Actual active pull starts the selected source immediately without fade-in and us
 
 ## Complete repository MP3 inventory
 
-The inventory below contains every existing `public/audio/*.mp3` as of 2026-08-08, exactly one row per file. A layer classifies the family; it does not itself assign an event. `UNASSIGNED` in the Layer column means no VR layer is safely inferable.
+The inventory below contains every existing `public/audio/*.mp3` as of 2026-08-26, exactly one row per file. A layer classifies the family; it does not itself assign an event. `UNASSIGNED` in the Layer column means no VR layer is safely inferable.
 
 | Asset | Forma | Warstwa | Planowane użycie VR | Status | Uwagi |
 | --- | --- | --- | --- | --- | --- |
-| `ambient_01.mp3` | one-shot | AMBIENT | wejście do kręgu / pełny próg 1 | **IMPLEMENTED** | Playback jest obsługiwany przez kanoniczny transient background sequencer. |
-| `ambient_02.mp3` | one-shot | AMBIENT | ukończenie pierwszego kręgu paneli wszystkich gałęzi / pełny próg 2 | **IMPLEMENTED** | Playback jest obsługiwany przez kanoniczny transient background sequencer. |
-| `ambient_03.mp3` | one-shot | AMBIENT | pełny próg 3 (drugi krąg) | **IMPLEMENTED** | Playback jest obsługiwany przez kanoniczny transient background sequencer. |
-| `ambient_04.mp3` | one-shot | AMBIENT | pełny próg 4 (trzeci krąg) | **IMPLEMENTED** | Playback jest obsługiwany przez kanoniczny transient background sequencer. |
-| `ambient_05.mp3` | one-shot | AMBIENT | pełny próg 5 (czwarty krąg) | **IMPLEMENTED** | Playback jest obsługiwany przez kanoniczny transient background sequencer. |
-| `ambient_loop_01.mp3` | seamless loop | AMBIENT | podpróg: ukończone skorupy + zbudowana Kula Asterionowa | **IMPLEMENTED** | Playback jest obsługiwany przez kanoniczny transient background sequencer. |
-| `ambient_loop_03.mp3` | seamless loop | AMBIENT | — | **RESERVED** | Rodzina podprogów znana; event/mapping nieustalony. |
-| `ambient_loop_04.mp3` | seamless loop | AMBIENT | — | **RESERVED** | Rodzina podprogów znana; event/mapping nieustalony. |
+| `ambient_01.mp3` | one-shot | AMBIENT | Scenario entry `2.10`, po Intro | **PLANNED** | CURRENT / BINDING target; obecny runtime startuje main gate w `2.10`, ale nadal wybiera asset z tieru. |
+| `ambient_02.mp3` | one-shot | AMBIENT | ring 1 complete → Scenario entry `2.40` | **PLANNED** | CURRENT / BINDING Scenario mapping; jeszcze niezaimplementowany. |
+| `ambient_03.mp3` | one-shot | AMBIENT | ring 2 complete → Scenario entry `4.20` | **PLANNED** | CURRENT / BINDING Scenario mapping; jeszcze niezaimplementowany. |
+| `ambient_04.mp3` | one-shot | AMBIENT | ring 3 complete → Scenario entry `4.80` | **PLANNED** | CURRENT / BINDING Scenario mapping; jeszcze niezaimplementowany. |
+| `ambient_05.mp3` | one-shot | AMBIENT | ring 4 complete → przyszły point po `4.80` | **PLANNED** | Point ID NOT AUTHORED; playback i przejście do tail NOT IMPLEMENTED. |
+| `ambient_loop_01.mp3` | seamless loop | AMBIENT | post-main tail, po `ambient_05` i quiet | **PLANNED** | Istniejący asset; ×6. Stary Asterion subthreshold jest superseded. |
+| `ambient_loop_02.mp3` | seamless loop | AMBIENT | post-main tail po `ambient_loop_01` i quiet | **PLANNED** | Istniejący repozytoryjny asset; ×6. |
+| `ambient_loop_03.mp3` | seamless loop | AMBIENT | post-main tail po `ambient_loop_02` i quiet | **PLANNED** | Istniejący repozytoryjny asset; ×6. |
+| `ambient_loop_04.mp3` | seamless loop | AMBIENT | post-main tail po `ambient_loop_03` i quiet | **PLANNED** | Istniejący repozytoryjny asset; ×6; zachowanie po nim pozostaje nieustalone. |
 | `astro_piec_close.mp3` | one-shot | DEVICE | zamknięcie komory Astro Pieca | **IMPLEMENTED** | Playback one-shot jest wdrożony zgodnie z semantyką eventu powyżej. |
 | `astro_piec_open.mp3` | one-shot | DEVICE | otwarcie komory Astro Pieca | **IMPLEMENTED** | Playback one-shot jest wdrożony zgodnie z semantyką eventu powyżej. |
 | `astro_piec_work_01.mp3` | one-shot | DEVICE | proces skorup w Astro Piecu | **IMPLEMENTED** | Raz po zaakceptowanym starcie; bez loop/restartu; reset/dispose zatrzymuje aktywne źródło. |
@@ -216,19 +222,19 @@ The inventory below contains every existing `public/audio/*.mp3` as of 2026-08-0
 | `noise_loop_04.mp3` | seamless loop | SPACE | — | **UNASSIGNED** | Dostępny; przyszłe użycie pozostaje otwarte. |
 | `noise_loop_05.mp3` | seamless loop | SPACE | — | **UNASSIGNED** | Dostępny; przyszłe użycie pozostaje otwarte. |
 | `noise_loop_06.mp3` | seamless loop | SPACE | — | **UNASSIGNED** | Dostępny; przyszłe użycie pozostaje otwarte. |
-| `noise_quiete_loop_01.mp3` | seamless loop | SPACE | globalna kolejka cichego tła między blokami progu/podprogu | **IMPLEMENTED** | Playback jest obsługiwany przez kanoniczny transient background sequencer. |
-| `noise_quiete_loop_02.mp3` | seamless loop | SPACE | globalna kolejka cichego tła między blokami progu/podprogu | **IMPLEMENTED** | Playback jest obsługiwany przez kanoniczny transient background sequencer. |
-| `noise_quiete_loop_03.mp3` | seamless loop | SPACE | globalna kolejka cichego tła między blokami progu/podprogu | **IMPLEMENTED** | Playback jest obsługiwany przez kanoniczny transient background sequencer. |
-| `noise_quiete_loop_04.mp3` | seamless loop | SPACE | globalna kolejka cichego tła między blokami progu/podprogu | **IMPLEMENTED** | Playback jest obsługiwany przez kanoniczny transient background sequencer. |
-| `noise_quiete_loop_05.mp3` | seamless loop | SPACE | globalna kolejka cichego tła między blokami progu/podprogu | **IMPLEMENTED** | Playback jest obsługiwany przez kanoniczny transient background sequencer. |
-| `noise_quiete_loop_07.mp3` | seamless loop | SPACE | globalna kolejka cichego tła między blokami progu/podprogu | **IMPLEMENTED** | Playback jest obsługiwany przez kanoniczny transient background sequencer. |
-| `noise_quiete_loop_06.mp3` | seamless loop | SPACE | globalna kolejka cichego tła między blokami progu/podprogu | **IMPLEMENTED** | Playback jest obsługiwany przez kanoniczny transient background sequencer. |
-| `noise_quiete_loop_08.mp3` | seamless loop | SPACE | globalna kolejka cichego tła między blokami progu/podprogu | **IMPLEMENTED** | Playback jest obsługiwany przez kanoniczny transient background sequencer. |
-| `noise_quiete_loop_09.mp3` | seamless loop | SPACE | globalna kolejka cichego tła między blokami progu/podprogu | **IMPLEMENTED** | Playback jest obsługiwany przez kanoniczny transient background sequencer. |
-| `noise_quiete_loop_10.mp3` | seamless loop | SPACE | globalna kolejka cichego tła między blokami progu/podprogu | **IMPLEMENTED** | Playback jest obsługiwany przez kanoniczny transient background sequencer. |
-| `noise_quiete_loop_11.mp3` | seamless loop | SPACE | globalna kolejka cichego tła między blokami progu/podprogu | **IMPLEMENTED** | Playback jest obsługiwany przez kanoniczny transient background sequencer. |
-| `noise_quiete_loop_12.mp3` | seamless loop | SPACE | globalna kolejka cichego tła między blokami progu/podprogu | **IMPLEMENTED** | Playback jest obsługiwany przez kanoniczny transient background sequencer. |
-| `noise_quiete_loop_13.mp3` | seamless loop | SPACE | globalna kolejka cichego tła między blokami progu/podprogu | **IMPLEMENTED** | Playback jest obsługiwany przez kanoniczny transient background sequencer. |
+| `noise_quiete_loop_01.mp3` | seamless loop | SPACE | jeden globalny cursor głównej progresji i post-main tail | **PLANNED** | Asset i playback ×6 są wdrożone; pełny Scenario-driven kontrakt 10 s/tail nie jest. |
+| `noise_quiete_loop_02.mp3` | seamless loop | SPACE | jeden globalny cursor głównej progresji i post-main tail | **PLANNED** | Asset i playback ×6 są wdrożone; pełny Scenario-driven kontrakt 10 s/tail nie jest. |
+| `noise_quiete_loop_03.mp3` | seamless loop | SPACE | jeden globalny cursor głównej progresji i post-main tail | **PLANNED** | Asset i playback ×6 są wdrożone; pełny Scenario-driven kontrakt 10 s/tail nie jest. |
+| `noise_quiete_loop_04.mp3` | seamless loop | SPACE | jeden globalny cursor głównej progresji i post-main tail | **PLANNED** | Asset i playback ×6 są wdrożone; pełny Scenario-driven kontrakt 10 s/tail nie jest. |
+| `noise_quiete_loop_05.mp3` | seamless loop | SPACE | jeden globalny cursor głównej progresji i post-main tail | **PLANNED** | Asset i playback ×6 są wdrożone; pełny Scenario-driven kontrakt 10 s/tail nie jest. |
+| `noise_quiete_loop_06.mp3` | seamless loop | SPACE | jeden globalny cursor głównej progresji i post-main tail | **PLANNED** | Asset i playback ×6 są wdrożone; pełny Scenario-driven kontrakt 10 s/tail nie jest. |
+| `noise_quiete_loop_07.mp3` | seamless loop | SPACE | jeden globalny cursor głównej progresji i post-main tail | **PLANNED** | Asset i playback ×6 są wdrożone; pełny Scenario-driven kontrakt 10 s/tail nie jest. |
+| `noise_quiete_loop_08.mp3` | seamless loop | SPACE | jeden globalny cursor głównej progresji i post-main tail | **PLANNED** | Asset i playback ×6 są wdrożone; pełny Scenario-driven kontrakt 10 s/tail nie jest. |
+| `noise_quiete_loop_09.mp3` | seamless loop | SPACE | jeden globalny cursor głównej progresji i post-main tail | **PLANNED** | Asset i playback ×6 są wdrożone; pełny Scenario-driven kontrakt 10 s/tail nie jest. |
+| `noise_quiete_loop_10.mp3` | seamless loop | SPACE | jeden globalny cursor głównej progresji i post-main tail | **PLANNED** | Asset i playback ×6 są wdrożone; pełny Scenario-driven kontrakt 10 s/tail nie jest. |
+| `noise_quiete_loop_11.mp3` | seamless loop | SPACE | jeden globalny cursor głównej progresji i post-main tail | **PLANNED** | Asset i playback ×6 są wdrożone; pełny Scenario-driven kontrakt 10 s/tail nie jest. |
+| `noise_quiete_loop_12.mp3` | seamless loop | SPACE | jeden globalny cursor głównej progresji i post-main tail | **PLANNED** | Asset i playback ×6 są wdrożone; pełny Scenario-driven kontrakt 10 s/tail nie jest. |
+| `noise_quiete_loop_13.mp3` | seamless loop | SPACE | jeden globalny cursor głównej progresji i post-main tail | **PLANNED** | Asset i playback ×6 są wdrożone; pełny Scenario-driven kontrakt 10 s/tail nie jest. |
 | `panel_sound_01.mp3` | one-shot | UI | otwarcie panelu Option Astro Pieca | **IMPLEMENTED** | Playback one-shot na busie UI jest wdrożony. |
 | `panel_sound_02.mp3` | one-shot | UI | wejście głębiej w panel Astro Pieca | **IMPLEMENTED** | Playback one-shot na busie UI jest wdrożony. |
 | `panel_sound_03.mp3` | one-shot | UI | — | **UNASSIGNED** | Brak ustalonego użycia VR. |
@@ -258,13 +264,13 @@ The prefix map supplies only a default classification. Every new MP3 must still 
 - The concrete device asset for Asterion Sphere / floor operation.
 - Future uses of `noise_loop_*`.
 - Future uses of `creating_*` and `creating_short_*`.
-- Subthreshold mapping of reserved `ambient_loop_03–04`.
+- Behavior after exhaustion of the last existing post-main `ambient_loop_*`.
 - Whether individual effects should be spatial / `PositionalAudio`, and which ones.
-- Exact audio transition behavior on an ordinary full-threshold change while a block from the previous threshold is still active.
+
 
 ## Implementation boundary
 
-This document records the current audio contract. The implementation includes the shared Master Volume, five unity-gain VR buses, events explicitly marked `IMPLEMENTED`, glyph and shell lifecycle fades/recovery, Asterion Sphere equipment/drive loops, and the transient full-threshold/subthreshold ambient sequencer composed by `experienceVr.js`. Anything marked `PLANNED`, `RESERVED` or `UNASSIGNED` remains outside runtime. This model does not authorize new playback mappings, assets, renaming, mastering or spatialization.
+This document records the CURRENT / BINDING audio target. The implementation includes the shared Master Volume, five unity-gain VR buses, events explicitly marked `IMPLEMENTED`, glyph and shell lifecycle fades/recovery, Asterion Sphere equipment/drive loops, and a transient tier/subthreshold ambient sequencer composed by `experienceVr.js`. That sequencer is implementation evidence, not the canonical selection contract: Scenario-driven entries, 10-second gaps and the post-main tail remain to be synchronized in code. Anything marked `PLANNED`, `RESERVED` or `UNASSIGNED` remains outside runtime unless its note explicitly identifies a partially implemented primitive. This model does not authorize other playback mappings, assets, renaming, mastering or spatialization.
 
 ## Intro Background Sequencer
 
@@ -280,6 +286,6 @@ Status: **IMPLEMENTED**. Intro jest transient aktorem sterowanym wyłącznie sym
 
 Każdy asset ma authored około 5 s fade na początku i końcu. Powtórzenia tego samego cue są planowane zegarem `AudioContext` ze stride `buffer.duration - 5 s`, dzięki czemu ich authored head/tail nachodzą około 5 s bez dodatkowych programowych fade'ów. Powtórzenie aktywnego cue jest NO-OP. Zmiana cue uruchamia incoming natychmiast bez programowego fade-in, a wspólny output outgoing cue wygasza programowo dokładnie 5 s i następnie sprząta wszystkie jego sources.
 
-Główny sequencer jest transientnie disabled podczas Intro. Canonical entry `2.10` emituje handoff: Intro wygasza się przez 5 s, a główna sekwencja zaczyna natychmiast od aktualnego threshold (`ambient_01` dla Tier 1) i zachowuje dalszy istniejący cykl ambient / silence / quiet loop. Reset wyłącza main gate i natychmiast czyści Intro. Audio nie należy do reconstruction/hydration.
+Główny sequencer jest transientnie disabled podczas Intro. Canonical entry `2.10` emituje handoff: Intro wygasza się przez 5 s, a CURRENT / BINDING target rozpoczyna `ambient_01`. Obecna implementacja uruchamia gate, lecz wybiera asset z aktualnego tieru i nie realizuje jeszcze pełnego Scenario-driven kontraktu. Reset wyłącza main gate i natychmiast czyści Intro. Audio nie należy do reconstruction/hydration.
 
 `ambient_intro_06.mp3`, `ambient_intro_07.mp3` i `ambient_intro_08.mp3` mają status **RESERVED / UNASSIGNED** i nie posiadają Scenario mappingu.

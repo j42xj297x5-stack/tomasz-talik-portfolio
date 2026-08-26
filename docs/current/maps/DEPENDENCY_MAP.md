@@ -12,6 +12,14 @@ SPINE → SCENARIO → DIRECTOR → RuntimeExperience → actors / domain owners
 
 Scenario is implemented through `4.40 → 4.50 → 4.60 → 4.70 → 4.80`. Continuation after `4.80` is deferred.
 
+## Experience VR main-background ownership
+
+```text
+Scenario semantic audio entry → Ambient Sequencer → VrAudioBridge → audioManager
+```
+
+This is the CURRENT / BINDING target ownership. Runtime synchronization remains pending; the current composition still derives main-ambient selection from progression tier and an Asterion subthreshold.
+
 ## Spatial presentation
 
 ```text

@@ -2,6 +2,16 @@
 
 Status: current binding decisions with preserved history. Synchronized on 2026-08-26 through the closed runtime reconciliation gaps.
 
+## 2026-08-26 — CURRENT Scenario-owned main background sequencing (superseding)
+
+This decision supersedes every conflicting earlier CURRENT claim about polling/full-tier thresholds, 30-second main-sequencer gaps, or the shells-complete + Asterion-built `ambient_loop_01` subthreshold. It does not change the separate Intro sequence or the independent Asterion Sphere DEVICE loops.
+
+1. Canonical ownership is `Scenario semantic audio entry → Ambient Sequencer → VrAudioBridge → audioManager`.
+2. Scenario entries select `ambient_01` at `2.10` after crossing from `1.130`, `ambient_02` at ring-1 completion / `2.40`, `ambient_03` at ring-2 completion / `4.20`, and `ambient_04` at ring-3 completion / `4.80`. Ring-4 completion selects `ambient_05` at a future point after `4.80`; its point ID is **NOT AUTHORED**. Ring-5 completion is also FUTURE / NOT AUTHORED and receives no invented ID.
+3. For `ambient_01–04`, the active ambient plays once, followed by 10 seconds silence, the next global `noise_quiete_loop_01–13` for 6 repetitions with unchanged 10-second fade-in/out, then 10 seconds silence before the same ambient repeats. A semantic ambient entry replaces the active main thread but never resets the quiet cursor. The cursor wraps `13 → 01`.
+4. There is no `ambient_06`. After `ambient_05` plays once, the post-main tail alternates the same quiet queue with repository assets `ambient_loop_01 → 02 → 03 → 04`, each for 6 repetitions. Behavior after `ambient_loop_04` is exhausted remains undecided; no tail wrap is established.
+5. This is **CURRENT / BINDING TARGET, NOT YET FULLY IMPLEMENTED**. Current code still selects from tier, retains the old Asterion subthreshold and two 30-second gaps, and lacks the post-main tail. Those facts are an implementation gap, not an active alternative contract.
+
 ## 2026-08-26 — CURRENT Rune A9.5 follow-up
 
 A9.5 socket capture + persistent installed truth is **IMPLEMENTED**. This supersedes CURRENT claims that A9.5 is next; Rune A9 remains partially implemented and **NEXT = carried Rune Stone ↔ installed Rune Stone collision**. Scenario remains implemented only through `4.80`, and physical bridge extension motion remains not implemented / tuning target.
@@ -195,7 +205,7 @@ Każdy nowy canonical Experience VR Scenario point musi spełniać [`VR_SCENARIO
 1. **SUPERSEDED BY 2026-08-21 DECISION:** B now implements selection of available `SHELLS` / `SMALL_GLYPHS`; the unlocked-only rule remains binding.
 2. **SUPERSEDED BY 2026-08-21 DECISION:** color-named bands are not canonical identity. Semantic bands are `SHELLS`, `SMALL_GLYPHS`, implemented `LARGE_GLYPHS`, future `RUNESTONES`; unrestricted global scene raycast remains disallowed.
 3. **SUPERSEDED BY 2026-08-21 DECISION:** small-glyph field, transport, natural essence extraction and real family-gated Large Glyph targeting/pull are implemented.
-4. Radar sectors, antenna, runes, Emanation Matrix processing, final radar/finale, spatial audio, durable persistence and full-game reset remain future systems. Ambient sequencing and Asterion active-control sound are implemented and binding audio behavior.
+4. Radar sectors, antenna, runes, Emanation Matrix processing, final radar/finale, spatial audio, durable persistence and full-game reset remain future systems. Asterion active-control sound is implemented. Main ambient sequencing has a CURRENT / BINDING Scenario-owned target with the implementation gap recorded in the 2026-08-26 superseding decision.
 5. Platform rotation under a world-stable glyph ring is implemented; production radar/sectors still need design and validation.
 
 ## Explicit current exclusions

@@ -36,6 +36,20 @@ Debug `P5 → pointId 4.80 → spawn RING` is **IMPLEMENTED**; P1–P4 are uncha
 
 Point `2.10` now has the separate `REVEAL_NATURAL_RUNE_STONES` effect in the same entry beat as `BEGIN_CELESTIAL_REVEAL`. The settled consequence `runeStones.presentationVisible = true` accumulates into later `stateAt` results; this presentation truth neither grants targetability nor changes the graph or point IDs.
 
+## Main-background semantic entries
+
+Scenario owns the CURRENT / BINDING semantic selection of the main background thread; the Ambient Sequencer owns playback mechanics downstream. Existing anchors are:
+
+| Semantic entry | Scenario anchor | Main ambient |
+| --- | --- | --- |
+| crossing from `1.130` completed; Monkey seated; `GLYPH_FREE_EXPLORE` begins | `2.10` | `ambient_01.mp3` |
+| ring 1 completed | `2.40` | `ambient_02.mp3` |
+| ring 2 completed | `4.20` | `ambient_03.mp3` |
+| ring 3 completed | `4.80` | `ambient_04.mp3` |
+| ring 4 completed | future Scenario point after `4.80`; **NOT AUTHORED**, no point ID assigned | `ambient_05.mp3` |
+
+Ring 5 completion is also **FUTURE / NOT AUTHORED** and has no point ID. The Scenario-driven selection above is a binding target, **NOT YET FULLY IMPLEMENTED**: only the `2.10` main-sequence handoff exists, while runtime still derives later selection from the current tier. Playback cycles, global quiet cursor and post-main tail belong to [`VR_AUDIO_MODEL.md`](VR_AUDIO_MODEL.md).
+
 ## Rune boundary
 
 Rune A1–A9.4 are partially implemented runtime-domain foundations and do not extend Scenario. Natural tuning, targetability/transport and platform installation readiness remain independent domain laws. Socket capture, persistent installed truth, Water override trigger, Ether flow, further bridge mechanics and every authored continuation after `4.80` are **DEFERRED / NOT IMPLEMENTED**. Authority: [`VR_RUNE_STONES_MODEL.md`](VR_RUNE_STONES_MODEL.md).
