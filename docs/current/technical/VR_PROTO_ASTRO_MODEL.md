@@ -12,7 +12,7 @@ Status: **CURRENT / BINDING** for Proto-Astro identity, Furnace essence truth, A
 
 ## Identity and tuning
 
-Natural family codes are Earth `K`, Metal `T`, Water `S`, Wood `L`, Fire `R`. Ether `V/VI` is special and is not in `PROTO_ASTRO_NATURAL_FAMILY_CODES`.
+Natural family codes are Earth `K`, Metal `T`, Water `S`, Wood `L`, Fire `R`. The Astro/Ether family `V` is special and is not in `PROTO_ASTRO_NATURAL_FAMILY_CODES`. Its canonical forms are `VO` (Shell), `VI` (Small Glyph) and `VU` (Rune Stone); `VA` does not exist because no Large Glyph form has been approved for this family. `VU` uses the canonical presentation asset `public/svg/VU.svg`.
 
 Existing Proto-Astro essence extraction remains distinct from Rune tuning. Natural Rune recipes are:
 
@@ -36,7 +36,7 @@ Implemented corrections: slot acceptance validates the selected recipe's expecte
 
 | Panel | Current semantics | Status |
 | --- | --- | --- |
-| 1 | current target glyph: Shell O, Small Glyph I, Large Glyph A, Rune Stone U (`RU/KU/LU/TU/SU`) | IMPLEMENTED |
+| 1 | current target glyph: Shell `?O`, Small Glyph `?I`, Large Glyph `?A` only where that syllable exists, Rune Stone `?U` (`RU/TU/KU/LU/SU/VU`) | IMPLEMENTED for the current natural target flow; `VU` is canonical even though special `stone_06` target/display flow is not implemented |
 | 2 | current band authored `band_01.svg`–`band_04.svg` plus presentation color | IMPLEMENTED |
 | 3 | available targets for current band | FUTURE / NOT IMPLEMENTED |
 | 4 | current-target distance | FUTURE / NOT IMPLEMENTED |
@@ -51,4 +51,4 @@ The implemented authored tail is `4.40 → 4.50 → 4.60 → 4.70 → 4.80`. `4.
 2. **Natural targetability:** exactly `tunedRuneFamilies`.
 3. **Installation readiness:** normally sector completeness, projected separately to Rune bridges. After `4.80`: Earth/Fire/Wood ready, Metal/Water not ready. Future Water override affects readiness only.
 
-Ether remains special: no sixth natural family, sector, bridge, slot or standard tuning path.
+Ether `V`, including its `VU` Rune Stone form, remains special: no sixth natural family, sector, bridge, slot or standard tuning path.

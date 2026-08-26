@@ -20,7 +20,7 @@ export const PROTO_ASTRO_NATURAL_FAMILY_CODES = Object.freeze(['K', 'T', 'S', 'L
 const NATURAL_FORM_CODES = Object.freeze(['A', 'O', 'I', 'U']);
 const SYLLABLE_CODES = Object.freeze([
   ...PROTO_ASTRO_NATURAL_FAMILY_CODES.flatMap((familyCode) => NATURAL_FORM_CODES.map((formCode) => `${familyCode}${formCode}`)),
-  'VO', 'VI'
+  'VO', 'VI', 'VU'
 ]);
 
 const descriptorsBySyllable = new Map(SYLLABLE_CODES.map((syllable) => {
