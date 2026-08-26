@@ -2,6 +2,16 @@
 
 Status: current binding decisions with preserved history. Synchronized on 2026-08-26 through the closed runtime reconciliation gaps.
 
+## 2026-08-26 — CURRENT Asterion Resonator, Rune Binder and sandbox ownership (superseding antenna canon)
+
+1. Physical Rune tuning, legal pull, installation, sector control and Resonator creation depend on tools, world objects and domain conditions, never a `currentPoint >= X` gate. Scenario owns dramaturgy, required beats, revealed knowledge, Guidance/hints and crystal-acquisition gates; early sandbox mastery does not bypass crystal progression.
+2. **Zwornik Runiczny** is the narrative identity; `bridge.glb` may remain the technical asset. Sector-complete materializes a persistent Zwornik, independently of Rune installation, so EARTH/FIRE/WOOD Zworniki may exist before full ring-three completion. `RUNE_BINDER_REVEAL` presents that event; `RUNE_INSTALL` separately presents the later circuit closure.
+3. Zwornik spin is removed from target canon; historical `ORBITING` does not imply rotation. Presentation transform and final Rune Stone installation anchor are independent. Approximately `2×` visual scale and at least approximately `1 m` further radial placement are tuning only and must not move the current correct final stone location.
+4. A tuned/pulled stone without its Zwornik may legally remain near but outside the platform. This can produce a situational Monkey hint and is not a required Scenario point.
+5. From physical Asterion Sphere creation, GRIP may control a powered installed-stone sector locally; an unpowered sector does not respond. TRIGGER retains existing global platform orientation ownership. The two control modes are mutually exclusive.
+6. Three required powered cooperating sectors physically create the first Asterion Resonator, potentially before its story beat. Later Scenario must recognize an existing Resonator or guide to the same state if absent. The Resonator answers domain-supported legal distant targets and is not hardcoded to glyphs, a radar or a classical antenna.
+7. [`VR_ASTERION_RESONATOR_MODEL.md`](../technical/VR_ASTERION_RESONATOR_MODEL.md) is the binding technical CURRENT TARGET. The former antenna model is legacy and contributes no automatic detents, angles, three-volume intersection, DOF split or other unconfirmed parameters.
+
 ## 2026-08-26 — CURRENT Natural Rune A9 foundation checkpoint after A9.6 (superseding)
 
 This is the binding Rune checkpoint and supersedes conflicting CURRENT status claims in the A9.5 follow-up, runtime-reconciliation follow-up and 2026-08-25 reconciliation below. Those entries remain historical evidence.

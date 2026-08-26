@@ -1,6 +1,6 @@
 # Experience VR Platform Energy VFX Model
 
-Status: **KANON / TARGET / NOT IMPLEMENTED**. Ten dokument jest jednym kanonicznym kontraktem technicznym przyszłej warstwy proceduralnych wyładowań energii platformy dla instalacji Rune Stones i sterowania Kulą Asterionową. Nie ustanawia implementacji runtime ani wartości strojenia.
+Status: **KANON / TARGET / NOT IMPLEMENTED**. Ten dokument jest jednym kanonicznym kontraktem technicznym przyszłej warstwy proceduralnych wyładowań energii platformy dla materializacji Zworników Runicznych, instalacji Rune Stones i sterowania Kulą Asterionową. Nie ustanawia implementacji runtime ani wartości strojenia.
 
 ## Klasyfikacja ustaleń
 
@@ -12,7 +12,7 @@ Status: **KANON / TARGET / NOT IMPLEMENTED**. Ten dokument jest jednym kanoniczn
 
 **KANON:** fizycznym ownerem całej prezentacji jest jeden pair-generic actor `PlatformEnergyVfxActor`. Przewidywana ścieżka przyszłej implementacji to `src/xr/vfx/createVrPlatformEnergyVfxActor.js`; dokumentacja nie tworzy tego pliku.
 
-**KANON:** dopuszczalny jest cienki `PlatformEnergyVfxProjection`. Wyłącznie odczytuje istniejące read-only stany instalacji Rune i Asterion gyro, normalizuje je do komend prezentacyjnych i przekazuje aktorowi. Projection ani actor nie zapisują gameplay truth, nie rozstrzygają readiness, nie instalują kamienia i nie sterują platformą. Przepływ jest jednokierunkowy:
+**KANON:** dopuszczalny jest cienki `PlatformEnergyVfxProjection`. Wyłącznie odczytuje sector-complete, istniejące read-only stany instalacji Rune i Asterion gyro, normalizuje je do komend prezentacyjnych i przekazuje aktorowi. Projection ani actor nie zapisują gameplay truth, nie rozstrzygają readiness, nie instalują kamienia i nie sterują platformą. Przepływ jest jednokierunkowy:
 
 ```text
 RuneStoneInstallationInteraction
@@ -55,7 +55,14 @@ platform underfloor procedural lightning
 
 ## Wspólny język proceduralny
 
-**KANON:** oba profile korzystają z tego samego generatora i zasobów aktora: krótkich, nieregularnych ścieżek, opcjonalnych odgałęzień, wielowarstwowego boltu, camera-facing ribbon, `ShaderMaterial`, additive blending oraz krótkiego reveal/fade. Różnią się wejściem i envelope prezentacyjnym, nie osobnymi systemami VFX.
+**KANON:** wszystkie trzy profile korzystają z tego samego generatora i zasobów aktora: krótkich, nieregularnych ścieżek, opcjonalnych odgałęzień, wielowarstwowego boltu, camera-facing ribbon, `ShaderMaterial`, additive blending oraz krótkiego reveal/fade. Różnią się wejściem i envelope prezentacyjnym, nie osobnymi systemami VFX.
+
+### Profil `RUNE_BINDER_REVEAL`
+
+- **KANON:** źródłem zdarzenia jest ukończenie wszystkich paneli sektora (`sector complete`), nigdy Rune socket capture ani instalacja kamienia.
+- **KANON:** wyładowania biegną przez niewidoczną sector-local część pod ażurową podłogą, energia dochodzi do rejonu Zwornika, Zwornik materializuje się, następuje finalny impuls, a efekt wygasa.
+- **KANON:** profil prezentuje domenowy fakt ukończenia sektora i nie tworzy sector-complete, Zwornika ani installation readiness.
+- **TUNING:** czas dojścia energii, reveal geometry, natężenie i envelope finalnego impulsu.
 
 ### Profil `RUNE_INSTALL`
 
@@ -78,6 +85,7 @@ Dokładna sygnatura JavaScript pozostaje otwarta. Publiczna powierzchnia ma jedn
 
 | Operacja wysokiego poziomu | Semantyka i ownership |
 | --- | --- |
+| rozpoczęcie reveal Zwornika dla `branchId` | Obserwuje exactly-once sector-complete i uruchamia `RUNE_BINDER_REVEAL`; nie kończy sektora ani nie tworzy gameplay truth Zwornika. |
 | rozpoczęcie installation VFX dla `branchId` | Aktywuje `RUNE_INSTALL` dla jednej istniejącej sesji capture; nie rozpoczyna capture i nie ocenia readiness. |
 | aktualizacja postępu instalacji | Przyjmuje read-only, znormalizowaną projekcję istniejącego capture; steruje wyłącznie envelope VFX. |
 | zakończenie instalacji | Kończy profil, emituje exactly-once finalny impuls dla obserwowanego przejścia do `INSTALLED`, potem wygasza zasoby profilu. Nie wykonuje gameplay commitu. |
@@ -115,4 +123,4 @@ Dokładna sygnatura JavaScript pozostaje otwarta. Publiczna powierzchnia ma jedn
 
 ## Wyłączenia
 
-**KANON:** model nie projektuje audio, anteny, przyszłego sector control, Scenario ani Directora; nie zmienia Rune lifecycle, Asterion gyro, progresji ani dependency runtime. Implementacja systemu, wartości tuningowe i hardware/perceptual QA są osobnymi zadaniami.
+**KANON:** model nie projektuje audio, Rezonatora, przyszłego sector control, Scenario ani Directora; nie zmienia Rune lifecycle, Asterion gyro, progresji ani dependency runtime. Implementacja systemu, wartości tuningowe i hardware/perceptual QA są osobnymi zadaniami.

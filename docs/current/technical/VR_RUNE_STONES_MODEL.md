@@ -65,6 +65,8 @@ legal RuneStoneActor candidate
 
 Installation readiness jest osobnym prawem, normalnie pochodzącym wyłącznie z ukończenia wszystkich paneli właściwego sektora. Rune domain czyta istniejącego ownera progresji sektora i nie tworzy drugiej listy ukończonych paneli. Readiness nie jest kopią progression.
 
+Ukończenie sektora materializuje trwały **Zwornik Runiczny** (techniczny asset może pozostać `bridge.glb`) i dopiero istniejący właściwy Zwornik daje miejsce późniejszej instalacji. Reveal Zwornika nie jest skutkiem instalacji Rune Stone. EARTH, FIRE i WOOD mogą mieć Zworniki przed ukończeniem pełnego trzeciego kręgu.
+
 `ProgressionController.isBranchComplete()` zasila `RuneInstallationReadinessProjection`, która synchronizuje `RuneBridgeActor` do `HIDDEN/DOCKED`. **Bridge-readiness synchronization jest IMPLEMENTED.** Sector completeness jest źródłem platform installation readiness, lecz nigdy natural Rune tuning ani targetability.
 
 | Naturalna para | Installation readiness po `4.80` |
@@ -176,7 +178,7 @@ Istnieje pięć niezależnych pair-configured instancji `RuneBridgeActor`: `eart
 HIDDEN → DOCKED → EXTENDING → EXTENDED → ORBITING
 ```
 
-`VR_RUNE_BRIDGE_STATES` eksportuje dokładnie pięć stanów: `HIDDEN`, `DOCKED`, `EXTENDING`, `EXTENDED` i `ORBITING`. Legalne przejścia to `HIDDEN → DOCKED`, `DOCKED → HIDDEN`, `DOCKED → EXTENDING`, `EXTENDING → EXTENDED`, `EXTENDING → DOCKED`, `EXTENDED → DOCKED` oraz `EXTENDED → ORBITING`; próba nielegalnego przejścia zgłasza błąd kontraktu. `reset()` przywraca wszystkie pięć par do `HIDDEN`.
+`VR_RUNE_BRIDGE_STATES` eksportuje dokładnie pięć historycznych stanów technicznych: `HIDDEN`, `DOCKED`, `EXTENDING`, `EXTENDED` i `ORBITING`. Legalne przejścia to `HIDDEN → DOCKED`, `DOCKED → HIDDEN`, `DOCKED → EXTENDING`, `EXTENDING → EXTENDED`, `EXTENDING → DOCKED`, `EXTENDED → DOCKED` oraz `EXTENDED → ORBITING`; próba nielegalnego przejścia zgłasza błąd kontraktu. `reset()` przywraca wszystkie pięć par do `HIDDEN`. Nazwa `ORBITING` nie ustanawia obrotu/spinu Zwornika; przyszły spin jest usunięty z target canon.
 
 | Stan | Kontrakt |
 | --- | --- |
@@ -192,7 +194,9 @@ Każdy `VrRuneInstallationFrame_<BRANCH>` zawiera identity `VrRuneBridgeInstance
 
 Authored `BRIDGE_STONE_CAPTURE` może pozostać prywatnym asset/calibration evidence, lecz nie jest gameplay triggerem i nie ma publicznego API. Po canonical alignment transform authored `BRIDGE_STONE_ANCHOR` jest kopiowany do stabilnego InstallationAnchor poza `BridgeMotionRoot`; sibling HoverAnchor powstaje z canonical local `+Y` offsetu. `getStoneHoverAnchor(branchId)` i `getStoneAnchor(branchId)` są bounded read-only seams, więc targety choreografii i installed parent nie odjeżdżają z mostem.
 
-**PHYSICAL BRIDGE EXTENSION MOTION = IMPLEMENTED.** Extension distance nie jest world offsetem: to dodatnia, skończona projekcja authored wektora `BRIDGE_PLATFORM_SOCKET → BRIDGE_STONE_ANCHOR` na installation-frame local `+Z` po canonical alignment. `beginExtension()` zeruje actor-local elapsed i przechodzi `DOCKED → EXTENDING` bez teleportu. `update(delta)` prowadzi motion root przez smoothstep od `z = 0` do `z = extensionDistance`, a po settlement ustawia dokładną wartość i stan `EXTENDED`. Duration używa wspólnego `runeStoneInstallation.phaseDurationSeconds = 1.2` (**TUNING**), bez ustanawiania dramaturgicznego prawa. `cancelExtension()` i `reset()` przywracają `z = 0`; `ORBITING` zachowuje extended placement. Retract choreography, orbit/spin i dodatkowy clearance nie są zaimplementowane.
+**PHYSICAL BRIDGE EXTENSION MOTION = IMPLEMENTED.** Extension distance nie jest world offsetem: to dodatnia, skończona projekcja authored wektora `BRIDGE_PLATFORM_SOCKET → BRIDGE_STONE_ANCHOR` na installation-frame local `+Z` po canonical alignment. `beginExtension()` zeruje actor-local elapsed i przechodzi `DOCKED → EXTENDING` bez teleportu. `update(delta)` prowadzi motion root przez smoothstep od `z = 0` do `z = extensionDistance`, a po settlement ustawia dokładną wartość i stan `EXTENDED`. Duration używa wspólnego `runeStoneInstallation.phaseDurationSeconds = 1.2` (**TUNING**), bez ustanawiania dramaturgicznego prawa. `cancelExtension()` i `reset()` przywracają `z = 0`; `ORBITING` zachowuje extended placement bez spinu. Retract choreography i dodatkowy clearance nie są zaimplementowane.
+
+Prezentacyjna transformacja geometrii Zwornika jest niezależna od stabilnego InstallationAnchor. Zmiana skali lub radialnego odsunięcia geometrii nie może przesunąć finalnego miejsca kamienia. Około `2×` większa geometria i co najmniej około `1 m` dalsze radialne odsunięcie są wyłącznie **TUNINGIEM**; obecne poprawne finalne położenie Rune Stone pozostaje kotwicą kanoniczną.
 
 ## 8. Transport i instalacja
 
@@ -227,6 +231,8 @@ Po dokładnym settlement DESCENT root zostaje attached do stabilnego Installatio
 
 Transport przed handoff nadal respektuje `RUNE_STONE_PLATFORM_MIN_RADIUS_M = 9.0`, release in place i re-acquire z aktualnej pozycji. Przerwanie przed zaakceptowanym handoff nie powoduje autonomicznego ruchu. Wyłącznie explicit system/debug reset przywraca canonical initial field placement; handoff sphere nie ma persistent state, a transient choreography nie jest rekonstruowana przez Scenario.
 
+Jeżeli właściwy Zwornik jeszcze nie istnieje, tuned i legalnie przyciągnięty kamień może dotrzeć w pobliże platformy, ale nie rozpoczyna handoffu, nie zostaje zainstalowany i pozostaje poza platformą. Jest to legalny sandbox state oraz możliwe źródło sytuacyjnego hintu, nie obowiązkowy Scenario point.
+
 Collision carried Rune Stone ↔ installed Rune Stone jest **SUPERSEDED** i nie będzie implementowany. Runtime nie posiada gameplay collision systemu dla kamieni.
 
 Każdy kamień może zachowywać pair-specific cichy spatial loop w `FREE`, `CARRIED_ORBIT` i `INSTALLED`. Audio playback/dispose należy do runtime audio bridge, a asset, gain i attenuation pozostają `TUNING`; audio nie posiada progression truth.
@@ -248,7 +254,7 @@ Collision installed/carried pozostaje świadomie poza modelem; nie istnieje game
 | `RuneInstallationReadinessProjection` | installation permission projection; no persistent state | copied sector/rune truth |
 | `RuneInstalledStateProjection` | read-only reconstruction z installed truth do settled physical actors | persistent state, readiness truth, Scenario point IDs |
 | Monkey/Ether actor | transient Ether presentation/capture mechanics | progression truth |
-| Scenario / Director | authored beat legality i semantic orchestration | interpolacje, pull, slot/capture mechanics |
+| Scenario / Director | dramaturgia, obowiązkowe beaty, ujawniana wiedza, Guidance i ograniczenia pozyskania kolejnych kryształów | fizyczna dostępność tuning/pull/installation, interpolacje, slot/capture mechanics |
 
 `TUNED ≠ INSTALLED`. Publiczny installed contract odpowiada `commitInstalledFamily(familyCode)`, `isFamilyInstalled(familyCode)` i `getInstalledFamilyCodes()`, a snapshot zawiera `installedRuneFamilies`. Installed family musi być naturalna, wcześniej tuned i jeszcze nie installed; instalacja nie usuwa jej z `tunedRuneFamilies`. Target permission może nadal wynikać z tuning truth, ale physical candidate resolution wyklucza kamień, ponieważ `INSTALLED ≠ FREE`.
 
@@ -343,7 +349,7 @@ Scenario authoring Rune Stone Act jest **DEFERRED TO SEPARATE THREAD**. Obecny e
 
 Canonical debug intent `p5` oznacza stable settled state po ukończeniu trzeciego kręgu i wejście w Rune Stone Act: wszystkie wcześniejsze konsekwencje są settled, Large Glyph / Small Glyph / Shell / world presentation są w odpowiednim stanie, a Rune Stone Act foundation jest gotowe do interakcji. `p5` ma hydratować do settled state odpowiadającego boundary `4.80 — Stable P3 entry boundary`; jest aliasem debug/QA, nie nowym Scenario pointem, capability ani zmianą authored graphu.
 
-Przyszłe Scenario zachowa ownership istotnych beatów i semantic orchestration; Director legalność przejść; RuntimeExperience symbolic effects; actors transient mechanics; domain owners persistent truths. Interpolacja mostu, sloty, tuning timer, target/pull i `SOCKET_CAPTURE` nie są Scenario pointami. Reconstruction składa settled truths, nie odtwarza trwających procesów i interpolacji.
+Przyszłe Scenario zachowa ownership dramaturgii, obowiązkowych beatów, ujawnianej wiedzy, Guidance i ograniczeń pozyskania kolejnych kryształów; Director legalność przejść; RuntimeExperience symbolic effects; actors transient mechanics; domain owners persistent truths. Scenario nie jest fizycznym gate'em Rune tuning, target/pull ani installation i nie wolno dla nich wprowadzać prawa `currentPoint >= X`. Interpolacja Zwornika, sloty, tuning timer, target/pull i `SOCKET_CAPTURE` nie są Scenario pointami. Reconstruction składa settled truths, nie odtwarza trwających procesów i interpolacji.
 
 ### DEFERRED PLAYER COMMUNICATION REQUIREMENTS
 
@@ -398,11 +404,11 @@ Early natural Rune Stone presentation jest **IMPLEMENTED**. Pięć naturalnych a
 - **Panel 2 — IMPLEMENTED:** task `d7e026fe565cf44b20f158564316c814a0e910e0`, merge `5dd2c59080f0501accb4cea546ee5ef68a5811e0`.
 - **Panel 1 Rune U projection — IMPLEMENTED:** task `b04605cb01b395ec188b153cd901941a446076ff`, merge `5510e78062dd0a3309be2e5f22e528ee2ed532ed`.
 
-A9.6 nie implementuje bridge spin/presentation, spatial audio, Water override trigger, Ether flow, antenna/final Water flow ani Scenario po `4.80`. Installed-stone collision został superseded; nie jest remaining target.
+A9.6 nie implementuje docelowej prezentacji Zwornika, spatial audio, Water override trigger, Ether flow, Rezonatora/final Water flow ani Scenario po `4.80`. Spin Zwornika Installed-stone collision został superseded; nie jest remaining target.
 
 ## 14. Remaining target
 
-**Carried Rune Stone ↔ installed Rune Stone collision = SUPERSEDED / REMOVED FROM TARGET.** Special Ether flow, Water readiness override, bridge ORBITING spin/presentation, spatial audio, antenna/final Water flow and all authored Scenario after `4.80` remain deferred.
+**Carried Rune Stone ↔ installed Rune Stone collision = SUPERSEDED / REMOVED FROM TARGET.** Special Ether flow, Water readiness override, docelowa prezentacja Zwornika, spatial audio, Rezonator/final Water flow and all authored Scenario after `4.80` remain deferred. Zwornik spin jest usunięty z target canon.
 
 ## 15. Current implementation checkpoint
 
@@ -428,4 +434,5 @@ Recipe insertion family validation, recipe-change player-facing eject, debug `P5
 - [`VR_PROTO_ASTRO_MODEL.md`](VR_PROTO_ASTRO_MODEL.md) — Proto-Astro identities/essences and panels.
 - [`VR_SPHERICAL_LAYERS_MODEL.md`](VR_SPHERICAL_LAYERS_MODEL.md) — `RUNE_STONES = 50–75 m`.
 - [`VR_PROGRESS_FLOOR_MODEL.md`](VR_PROGRESS_FLOOR_MODEL.md) — sector/panel truth.
+- [`VR_ASTERION_RESONATOR_MODEL.md`](VR_ASTERION_RESONATOR_MODEL.md) — sandbox/Scenario boundary, sector control i Rezonator.
 - [`VR_SCENARIO_DIRECTOR_MODEL.md`](VR_SCENARIO_DIRECTOR_MODEL.md) — authored boundary and reconstruction.
