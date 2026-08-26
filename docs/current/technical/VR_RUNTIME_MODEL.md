@@ -253,18 +253,18 @@ Large Glyph is not a spherical layer. Its implemented actor stages are `RING_INI
 
 ## Rune actor and interaction composition
 
-Runtime composition includes the five-natural-record `RuneStoneActor`, `RuneStoneAttractorBandProjection`, `RuneStoneAttractorInteraction`, five-branch `RuneBridgeActor` and `RuneInstallationReadinessProjection`. The physical actor keeps authored local `(0,0,0)` as gameplay origin, uses world-transform-aware live bounds and does not AABB-centroid recenter assets.
+Runtime composition includes the five-natural-record `RuneStoneActor`, `RuneStoneAttractorBandProjection`, `RuneStoneAttractorInteraction`, `RuneStoneInstallationInteraction`, five-branch `RuneBridgeActor` and `RuneInstallationReadinessProjection`. The physical actor keeps authored local `(0,0,0)` as gameplay origin, uses world-transform-aware live bounds and does not AABB-centroid recenter assets.
 
-Target/transport foundation is `FREE → LOCKED_BY_ASTRO → CARRIED_ORBIT`, with `RUNE_STONE_PLATFORM_MIN_RADIUS_M = 9.0`, release in place and re-acquire from the current position. Target permission reads tuned families only; installation readiness does not participate.
+Physical foundation is `FREE → LOCKED_BY_ASTRO → CARRIED_ORBIT → SOCKET_CAPTURE → INSTALLED`, with pre-capture release to `FREE`, `RUNE_STONE_PLATFORM_MIN_RADIUS_M = 9.0` for transport only, release in place and re-acquire from the current position. Pair-specific capture uses authored `BRIDGE_STONE_CAPTURE` + `capture_radius_m`; interpolated snap targets authored `BRIDGE_STONE_ANCHOR`, then platform-bound parenting and bridge `ORBITING`. Attractor handoff does not pass through `FREE`. Target permission reads tuned families only; installation readiness participates only in capture legality, not target/lock permission.
 
-Readiness normally reads sector completion through `isBranchComplete` and projects bridges to `HIDDEN` or `DOCKED`. After stable `4.80`, Earth, Fire and Wood are normally ready; Metal and Water are not. `getWaterInstallationReadinessOverride` is only a future readiness seam. The bridge actor owns transient mechanics/state, not tuning, readiness source or installed truth.
+Readiness normally reads sector completion through `isBranchComplete` and projects bridges to `HIDDEN` or `DOCKED`. After stable `4.80`, Earth, Fire and Wood are normally ready; Metal and Water are not. `getWaterInstallationReadinessOverride` is only a future readiness seam. The bridge actor owns authored capture/anchor geometry and transient mechanics/state, not tuning, readiness source or installed truth. `RuneStoneProgressionController` separately owns `tunedRuneFamilies` and `installedRuneFamilies`; installed commit occurs only after completed snap and physical finalization.
 
 ## Current implemented boundary
 
-Implemented authored Scenario ends at `4.80`: `4.40 → 4.50 → 4.60 → 4.70 → 4.80`. Stable reconstruction includes Tier 3 and Proto-Astro essences `K/T/S/L/R`; it does not recreate transient interactions. Rune A1–A9.4 are partially implemented domain foundations without authored Scenario continuation.
+Implemented authored Scenario ends at `4.80`: `4.40 → 4.50 → 4.60 → 4.70 → 4.80`. Stable reconstruction includes Tier 3 and Proto-Astro essences `K/T/S/L/R`; it does not recreate transient interactions. Rune A1–A9.5 are partially implemented domain foundations without authored Scenario continuation.
 
-Not implemented: Scenario after `4.80`, bridge extension timing, `SOCKET_CAPTURE`, persistent `INSTALLED` truth, installed-stone blocking, Water override trigger, Ether flow, Panels 3–4, physical Rune Stone movement/spatial audio, durable persistence and full-game reset.
+Not implemented: Scenario after `4.80`, physical bridge extension motion, carried-stone ↔ installed-stone collision, Water override trigger, Ether flow, Panels 3–4, physical Rune Stone movement/spatial audio, durable persistence and full-game reset.
 
 ## Closed runtime reconciliation gaps
 
-Recipe insertion family validation, recipe-change player-facing eject, debug `P5 → 4.80`, and early natural Rune Stone presentation at celestial reveal are **IMPLEMENTED**. These corrections do not extend authored Scenario after `4.80`; Rune A9 remains partially implemented, with socket capture + persistent installed truth next.
+Recipe insertion family validation, recipe-change player-facing eject, debug `P5 → 4.80`, and early natural Rune Stone presentation at celestial reveal are **IMPLEMENTED**. These corrections do not extend authored Scenario after `4.80`; Rune A9 remains partially implemented; A9.5 socket capture + persistent installed truth is implemented, and carried Rune Stone ↔ installed Rune Stone collision is next.

@@ -2,6 +2,10 @@
 
 Status: current binding decisions with preserved history. Synchronized on 2026-08-26 through the closed runtime reconciliation gaps.
 
+## 2026-08-26 — CURRENT Rune A9.5 follow-up
+
+A9.5 socket capture + persistent installed truth is **IMPLEMENTED**. This supersedes CURRENT claims that A9.5 is next; Rune A9 remains partially implemented and **NEXT = carried Rune Stone ↔ installed Rune Stone collision**. Scenario remains implemented only through `4.80`, and physical bridge extension motion remains not implemented / tuning target.
+
 ## 2026-08-26 — CURRENT runtime reconciliation follow-up
 
 The four previously remaining runtime gaps are **IMPLEMENTED**: recipe insertion family validation, recipe-change player-facing eject, debug `P5 → 4.80`, and early natural Rune Stone presentation at celestial reveal. This follow-up supersedes only their earlier open-gap status; Scenario after `4.80` remains deferred and Rune A9 remains partially implemented with socket capture + persistent installed truth next.

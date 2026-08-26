@@ -7,18 +7,18 @@ Status: **CURRENT operational snapshot — 2026-08-26**. Authorities: [`VR_RUNTI
 - Scenario is implemented through `4.40 → 4.50 → 4.60 → 4.70 → 4.80`; `4.80` is the stable boundary. No authored continuation follows it yet.
 - Large Glyph stages are `8.5 m`, elevated `8.5 m + 2.4 m`, expanded `46 m`, and implemented `SPHERE_FAR = 80 m` with deterministic full-sphere black/unlit slow motion.
 - Spherical layers are Shells `13–25 m`, Small Glyphs `30–45 m`, implemented Rune Stones `50–75 m`, Stars `85–130 m`, Hidden Glyphs `133.25–140.85 m`.
-- Rune A1–A8 and A9.1–A9.4 foundations are implemented: natural tuning, tuned-family truth, RUNESTONES band, bridge state foundation, physical natural actors, lock, carried transport and installation-readiness projection.
+- Rune A1–A8 and A9.1–A9.5 foundations are implemented: natural tuning, tuned-family truth, RUNESTONES band, bridge state foundation, physical natural actors, lock, carried transport and installation-readiness projection.
 - Panel 1 projects O/I/A and natural Rune U forms; Panel 2 presents authored current-band art/color. Panels 3–4 remain future.
 
 ## Rune ownership checkpoint
 
 Natural tuning is independent of sectors. Natural targetability is exactly `tunedRuneFamilies`. Installation readiness normally reads sector completeness and projects `RuneBridgeActor` to `HIDDEN/DOCKED`; after `4.80` Earth/Fire/Wood are ready and Metal/Water are not. The Water override seam changes readiness only.
 
-Physical transport implements `FREE → LOCKED_BY_ASTRO → CARRIED_ORBIT`, platform minimum radius `9.0 m`, release in place and re-acquire. Socket capture and persistent installed truth are not implemented. Ether remains special and outside all natural collections.
+Physical runtime implements `FREE → LOCKED_BY_ASTRO → CARRIED_ORBIT → SOCKET_CAPTURE → INSTALLED`, with pre-capture release in place/re-acquire and `9.0 m` as transport minimum only. Capture uses own authored `BRIDGE_STONE_CAPTURE` + `capture_radius_m`; interpolated snap targets `BRIDGE_STONE_ANCHOR`, becomes platform-bound, ends the bridge in `ORBITING`, then commits separate `installedRuneFamilies`. Attractor handoff does not pass through `FREE`. Ether remains special and outside all natural collections.
 
 ## Next bounded work
 
-**NEXT A9:** socket capture + persistent installed truth. Later work includes bridge extension timing, installed-stone blocking, Water override trigger, Ether flow, physical Rune Stone audio and authored Scenario continuation after `4.80`; none is implemented by the current foundation.
+**NEXT A9:** carried Rune Stone ↔ installed Rune Stone collision — NOT IMPLEMENTED. Physical bridge extension motion remains NOT IMPLEMENTED / TUNING TARGET. Later work includes Water override trigger, Ether flow, physical Rune Stone audio and authored Scenario continuation after `4.80`; none is implemented by the current foundation.
 
 ## Closed runtime reconciliation gaps
 

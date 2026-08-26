@@ -30,6 +30,11 @@ Small Glyph + Shell
 → RuneStoneAttractorBandProjection
 → RuneStoneAttractorInteraction
 → natural RuneStoneActor target / LOCKED_BY_ASTRO / CARRIED_ORBIT
+→ RuneStoneInstallationInteraction
+→ authored BRIDGE_STONE_CAPTURE + capture_radius_m
+→ authored BRIDGE_STONE_ANCHOR / platform-bound INSTALLED
+→ RuneBridgeActor ORBITING
+→ RuneStoneProgressionController.installedRuneFamilies
 ```
 
 Natural tuning does not read sector completeness. The `RUNESTONES` band becomes available after at least one tuned natural family; its target set is exactly the tuned natural families. Ether is excluded.
@@ -47,10 +52,12 @@ Normal readiness after stable `4.80`: Earth, Fire and Wood ready; Metal and Wate
 ## Independent owners
 
 - `ProtoAstroTuningController`: natural essences for Large Glyph.
-- `RuneStoneProgressionController`: `tunedRuneFamilies`; future installed truth.
+- `RuneStoneProgressionController`: separate `tunedRuneFamilies` and `installedRuneFamilies`; installed commit follows completed snap.
 - sector progression owner: panel/sector completeness.
-- `RuneStoneActor` and `RuneBridgeActor`: transient mechanics, never copied progression truth.
+- `RuneStoneActor`: transient physical states and parenting/reset; `RuneBridgeActor`: authored capture/anchor geometry and transient bridge state; neither copies progression truth.
+- `RuneStoneAttractorInteraction`: transport ownership and direct capture handoff.
+- `RuneStoneInstallationInteraction`: capture tween and final installation transaction orchestration.
 
 ## Remaining seams
 
-Socket capture, persistent installed truth, bridge extension timing, Water override trigger, Ether flow, physical Rune Stone audio and authored Scenario after `4.80` remain future. Panels 1 and 2 are implemented; Panels 3 and 4 remain future.
+Socket capture and persistent installed truth are implemented. Carried-stone ↔ installed-stone collision is NEXT / NOT IMPLEMENTED; physical bridge extension motion remains NOT IMPLEMENTED / TUNING TARGET. Water override trigger, Ether flow, physical Rune Stone audio and authored Scenario after `4.80` remain future. Panels 1 and 2 are implemented; Panels 3 and 4 remain future.
