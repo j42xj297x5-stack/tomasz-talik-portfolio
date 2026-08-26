@@ -1,5 +1,11 @@
 import * as THREE from '../../vendor/three.js';
 
+export const VR_PROGRESS_FLOOR_SECTOR_PRESENTATION_STATE = Object.freeze({
+  HIDDEN: 'HIDDEN',
+  REVEALING: 'REVEALING',
+  REVEALED: 'REVEALED'
+});
+
 function cloneMaterials(root, ownedMaterials) {
   root.traverse((object) => {
     if (!object.isMesh || !object.material) return;
@@ -84,7 +90,7 @@ export function createVrProgressFloorSectorActor({ descriptor, sourceModel, cont
   const presentationMaterials = new Map();
   const activeOrders = new Set();
   const pulseRemaining = new Map();
-  let revealed = false;
+  let presentationState = VR_PROGRESS_FLOOR_SECTOR_PRESENTATION_STATE.HIDDEN;
   let disposed = false;
 
   try {
@@ -132,12 +138,15 @@ export function createVrProgressFloorSectorActor({ descriptor, sourceModel, cont
     runeInstallationFrame.userData = { ...runeInstallationFrame.userData, branchId: descriptor.branchId, radialAxis: '+Z' };
     object.add(runeInstallationFrame);
 
+    function reveal() {
+      if (disposed || presentationState !== VR_PROGRESS_FLOOR_SECTOR_PRESENTATION_STATE.HIDDEN) return false;
+      presentationState = VR_PROGRESS_FLOOR_SECTOR_PRESENTATION_STATE.REVEALING;
+      authoredVisual.visible = true;
+      return true;
+    }
+
     function activatePanel(order) {
       if (disposed || activeOrders.has(order) || !panelsByOrder.has(order)) return false;
-      if (!revealed) {
-        revealed = true;
-        authoredVisual.visible = true;
-      }
       activeOrders.add(order);
       pulseRemaining.set(order, emission.pulseDuration);
       return true;
@@ -147,16 +156,23 @@ export function createVrProgressFloorSectorActor({ descriptor, sourceModel, cont
       if (disposed) return;
       const safeDelta = Math.max(0, Number.isFinite(delta) ? delta : 0);
       const blend = 1 - Math.exp(-emission.responseSpeed * safeDelta);
-      if (revealed) presentationMaterials.forEach((authoredState, material) => {
-        material.opacity += (authoredState.opacity - material.opacity) * blend;
-        if (Math.abs(authoredState.opacity - material.opacity) <= 1e-4) {
-          const transparentChanged = material.transparent !== authoredState.transparent;
-          material.opacity = authoredState.opacity;
-          material.transparent = authoredState.transparent;
-          material.depthWrite = authoredState.depthWrite;
-          if (transparentChanged) material.needsUpdate = true;
+      if (presentationState === VR_PROGRESS_FLOOR_SECTOR_PRESENTATION_STATE.REVEALING) {
+        let settled = true;
+        presentationMaterials.forEach((authoredState, material) => {
+          material.opacity += (authoredState.opacity - material.opacity) * blend;
+          if (Math.abs(authoredState.opacity - material.opacity) > 1e-4) settled = false;
+        });
+        if (settled) {
+          presentationMaterials.forEach((authoredState, material) => {
+            const transparentChanged = material.transparent !== authoredState.transparent;
+            material.opacity = authoredState.opacity;
+            material.transparent = authoredState.transparent;
+            material.depthWrite = authoredState.depthWrite;
+            if (transparentChanged) material.needsUpdate = true;
+          });
+          presentationState = VR_PROGRESS_FLOOR_SECTOR_PRESENTATION_STATE.REVEALED;
         }
-      });
+      }
       activeOrders.forEach((order) => {
         const remaining = Math.max(0, (pulseRemaining.get(order) ?? 0) - safeDelta);
         pulseRemaining.set(order, remaining);
@@ -169,7 +185,7 @@ export function createVrProgressFloorSectorActor({ descriptor, sourceModel, cont
 
     function reset() {
       if (disposed) return;
-      revealed = false;
+      presentationState = VR_PROGRESS_FLOOR_SECTOR_PRESENTATION_STATE.HIDDEN;
       authoredVisual.visible = false;
       activeOrders.clear();
       pulseRemaining.clear();
@@ -195,13 +211,14 @@ export function createVrProgressFloorSectorActor({ descriptor, sourceModel, cont
 
     return {
       object,
+      reveal,
       activatePanel,
       update,
       reset,
       dispose,
       getPanelObject: (order) => panelsByOrder.get(order)?.object ?? null,
       getRuneInstallationFrame: () => runeInstallationFrame,
-      isRevealed: () => revealed
+      getPresentationState: () => presentationState
     };
   } catch (error) {
     ownedMaterials.forEach((material) => material.dispose());
