@@ -1024,6 +1024,9 @@ runtimeExperience = new RuntimeExperience({
       ambientSequencer.enable();
     },
     [VR_SCENARIO_EFFECT.BEGIN_CELESTIAL_REVEAL]: () => { celestialActor.beginReveal(); },
+    [VR_SCENARIO_EFFECT.REVEAL_NATURAL_RUNE_STONES]: () => {
+      runeStoneActor.setPresentationVisible(true);
+    },
     [VR_SCENARIO_EFFECT.BEGIN_INTRO_REVEAL]: () => {
       if (!introSequence.beginIntroReveal()) {
         throw new Error('BEGIN_INTRO_REVEAL rejected by Intro actor after accepted Scenario point activation');
@@ -1191,7 +1194,8 @@ const scenarioOwners = Object.freeze({
   astroProduction: astroAttractorProductionController, asterionProduction: asterionProductionController,
   protoAstroTuning: protoAstroTuningController,
   audio: ambientScenarioOwner,
-  celestial: celestialActor
+  celestial: celestialActor,
+  runeStones: runeStoneActor
 });
 const enterVrDebugCheckpoint = createVrDebugCheckpointController({
   scenario: vrExperienceScenario,
