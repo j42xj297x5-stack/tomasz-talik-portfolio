@@ -1,3 +1,7 @@
+# DEPRECATED — historyczny model anteny
+
+Ten dokument opisuje historyczny model anteny i nie jest źródłem bieżącego kanonu. Aktualnymi źródłami są [`VR_ASTERION_RESONATOR_MODEL.md`](../current/technical/VR_ASTERION_RESONATOR_MODEL.md) oraz [`EXPERIENCE_VR_RUNES_RESONATOR_FINALE.md`](../current/concept/EXPERIENCE_VR_RUNES_RESONATOR_FINALE.md).
+
 # Experience VR Platform Antenna Model — superseded
 
 > **Status: SUPERSEDED.** The earlier three-sector antenna model in this file is

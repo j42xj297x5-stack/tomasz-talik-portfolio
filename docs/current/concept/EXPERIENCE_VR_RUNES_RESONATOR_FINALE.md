@@ -15,6 +15,8 @@ kamienie runiczne
 
 Dokładne receptury strojenia pozostają kontraktem receptur i nie są definiowane tutaj. Runtime pozostaje źródłem prawdy o tym, co jest już zaimplementowane.
 
+**Reguła sandboxu:** poniższa kolejność jest dramaturgią i ścieżką Guidance, nie fizycznym gate'em mechanik. Rune tuning, legalny pull, instalacja przy istniejącym Zworniku, sector control i powstanie Rezonatora wynikają z narzędzi oraz stanu świata i mogą zajść wcześniej. Scenario nadal ogranicza obowiązkowe beaty i pozyskanie kolejnych kryształów, a wiedzę ujawnia zgodnie z tym, co gracz już odkrył. Nie stosuje się gate'u `currentPoint >= X` dla tych mechanik.
+
 ## 1. Glify znikają
 
 Po ukończeniu strojenia Astrolabium Więzi duże glify ponownie się oddalają. Tym razem nie są widoczne ani słyszalne, Astrolabium ich nie wykrywa i nie pozostaje nawet cień celu. Świat nie wystawia markera ani nowego obiektu; przez chwilę oferuje wyłącznie nocne niebo. Małpa może tylko zasygnalizować dostępność rozmowy łukami komunikacyjnymi.
@@ -48,7 +50,7 @@ Małpa przedstawia hipotezę, nie gotowe rozwiązanie, i nie nazywa jeszcze żad
 
 Piec otrzymuje funkcję strojenia Astrolabium pod rodzinę kamienia. Proces ma cięższy, niższy rezonans niż wcześniejsze operacje. Po zakończeniu Astrolabium rozpoznaje rodzinę, pokazuje właściwy znak i może obrać kamień za cel. Nie uruchamia to automatycznej wypowiedzi Małpy.
 
-Pierwszy pull reaguje prawidłowo, lecz nie sprowadza kamienia: cel jest poprawny, ale brakuje miejsca, do którego można go przywiązać. Narzędzie nie może wyglądać na uszkodzone.
+Przyciągnięcie kamienia bez istniejącego właściwego Zwornika jest legalnym stanem sandboxowym: cel dociera w pobliże platformy, pozostaje poza nią i czeka na miejsce związania. Nie jest to obowiązkowy Scenario point. Narzędzie nie może wyglądać na uszkodzone, a hint jest sytuacyjny i pomijalny, jeżeli gracz rozumie już stan.
 
 ### `hint.runes.pullFails.soft`
 
@@ -63,6 +65,8 @@ Pierwszy pull reaguje prawidłowo, lecz nie sprowadza kamienia: cel jest poprawn
 
 Struktury materializujące się wcześniej przy ukończonych częściach platformy noszą narracyjną nazwę **ZWORNIKI RUNICZNE**; asset techniczny może nadal nazywać się `bridge.glb`.
 
+Każdy Zwornik materializuje się dokładnie z ukończenia wszystkich paneli swojego sektora, nie z instalacji kamienia. Po reveal pozostaje trwały; dlatego Zworniki EARTH, WOOD i FIRE mogą istnieć przed ukończeniem pełnego trzeciego kręgu. Instalacja później wiąże kamień w niezależnej finalnej kotwicy. Prezentacyjna skala i radialne odsunięcie geometrii Zwornika nie mogą przesuwać tej kotwicy. Spin Zwornika nie należy do przyszłego kanonu.
+
 ### `knowledge.runes.binders`
 
 **CO TO JEST?**
@@ -71,7 +75,7 @@ Struktury materializujące się wcześniej przy ukończonych częściach platfor
 > Pojawiały się, kiedy domykałeś te części platformy.  
 > Wygląda na to, że nie były ozdobą.
 
-Skutecznie sprowadzić można tylko kamień odpowiadający sektorowi z aktywnym Zwornikiem. Gra nie pokazuje listy: informacją jest widoczna geometria platformy.
+Zainstalować można tylko kamień odpowiadający sektorowi z aktywnym Zwornikiem. Brak Zwornika nie unieważnia strojenia ani przyciągnięcia kamienia w pobliże platformy. Gra nie pokazuje listy: informacją jest widoczna geometria platformy.
 
 ## 4. Instalacja pierwszego kamienia
 
@@ -91,7 +95,7 @@ Gracz nie wkłada kamienia ręcznie do uchwytu.
 
 ## 5. Kula i lokalna kontrola sektora
 
-Pierwszy zasilony kamieniem sektor reaguje na Kulę Asterionową. Lewy grip tworzy szeroki, lekko łukowaty, wielobarwny strumień działający wyłącznie na aktywowane sektory. Utrzymanie go nad sektorem przez około sekundę daje **SECTOR LOCK**; dopiero po locku ruch dłoni wpływa na sektor.
+Od fizycznego stworzenia Kuli Asterionowej grip może tworzyć szeroki, lekko łukowaty, wielobarwny strumień. Odpowiadają wyłącznie sektory zasilone zainstalowanym kamieniem. Utrzymanie strumienia nad takim sektorem daje **SECTOR LOCK**; dopiero po locku ruch dłoni wpływa na sektor. Dokładny czas pozostaje tuningiem.
 
 ### `progression.runes.sectorControl`
 
@@ -106,7 +110,7 @@ Po pierwszym locku:
 
 ## 6. Pierwszy Rezonator Asterionowy
 
-Gracz powtarza proces dla trzech sektorów posiadających Zworniki. Dopiero trzy zainstalowane kamienie budzą wspólne pole sektorów i tworzą pierwszy układ poszukiwawczy: **REZONATOR ASTERIONOWY**. Nie jest on radarem ani klasyczną anteną; stroi przestrzeń i wykrywa odpowiedź obiektów w swoim wspólnym polu.
+Gdy trzy wymagane sektory są zasilone przez zainstalowane kamienie i mogą współpracować, fizyczny stan świata tworzy pierwszy układ poszukiwawczy: **REZONATOR ASTERIONOWY**. Nie powstaje on z wejścia w Scenario point i może istnieć przed tym beatem. Nie jest radarem ani klasyczną anteną; stroi przestrzeń i wykrywa odpowiedź legalnych odległych celów wspieranych przez właściwe domeny. Jeśli gracz utworzył go wcześniej, późniejsza dramaturgia uznaje ten fakt zamiast wymuszać ponowne odkrycie lub budowę.
 
 ### `progression.resonator.created`
 
@@ -124,13 +128,7 @@ Gracz powtarza proces dla trzech sektorów posiadających Zworniki. Dopiero trzy
 
 ## 7. Sterowanie Rezonatorem
 
-Trzy sąsiadujące sektory mają różne swobody:
-
-- lewy obraca się tylko w swoim dozwolonym kierunku;
-- prawy obraca się w przeciwnym dozwolonym kierunku;
-- środkowy porusza się góra–dół, zmieniając głębokość układu.
-
-Spust Kuli nadal orientuje całą platformę. Grip służy lokalnej kontroli wybranego sektora.
+Szczegółowe osie, swobody i algorytmy ruchu sektorów nie są jeszcze zamrożone. Spust Kuli nadal orientuje całą platformę, zachowując istniejący ownership globalnego obrotu. Grip służy lokalnej kontroli wybranego zasilonego sektora. Tryby są wzajemnie wykluczające i nigdy nie sterują równocześnie.
 
 ### `tool.asterion.resonator` — Panel Y / Kula Asterionowa
 
@@ -143,7 +141,7 @@ Panel Y przechowuje instrukcję; Małpa nie powtarza jej stale.
 
 ## 8. Pierwsze poszukiwanie i pierwszy odzyskany glif
 
-Rezonator nie daje markera glifu. Reaguje także na inne odległe obiekty: pokazuje ich znak i rodzinę, a natężenie zależy od ustawienia pola. Dzięki temu gracz widzi, że urządzenie działa nawet bez odnalezienia właściwego celu.
+Rezonator nie daje markera glifu i nie jest hardkodowany wyłącznie do glifów. Odpowiada także na inne legalne odległe cele wspierane przez właściwe domeny, na przykład skorupę: może pokazać znak i rodzinę, a natężenie zależy od ustawienia pola. Scenario nadaje znalezisku znaczenie, lecz nie posiada fizycznej odpowiedzi pola.
 
 ### `progression.resonator.search`
 

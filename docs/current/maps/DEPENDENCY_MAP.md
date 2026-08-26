@@ -2,7 +2,7 @@
 
 ## Documentation flow
 
-`PROJECT_INDEX → canonical technical model → runtime evidence`. Rune authority is [`VR_RUNE_STONES_MODEL.md`](../technical/VR_RUNE_STONES_MODEL.md).
+`PROJECT_INDEX → canonical technical model → runtime evidence`. Rune authority is [`VR_RUNE_STONES_MODEL.md`](../technical/VR_RUNE_STONES_MODEL.md), while sector-control/Rezonator authority is [`VR_ASTERION_RESONATOR_MODEL.md`](../technical/VR_ASTERION_RESONATOR_MODEL.md).
 
 ## Experience VR composition
 
@@ -11,6 +11,8 @@ SPINE → SCENARIO → DIRECTOR → RuntimeExperience → actors / domain owners
 ```
 
 Scenario is implemented through `4.40 → 4.50 → 4.60 → 4.70 → 4.80`. Continuation after `4.80` is deferred.
+
+Scenario owns dramaturgy, required progression beats, revealed knowledge, Guidance/hints and crystal-acquisition gates. It observes domain truth but does not gate physical Rune tuning, Rune pull, Rune installation, sector control or Resonator creation through `currentPoint`.
 
 ## Experience VR main-background ownership
 
@@ -45,13 +47,30 @@ Small Glyph + Shell
 → BRIDGE_OPEN / RuneBridgeActor physical extension
 → DESCENT
 → RuneStoneActor INSTALLED
-→ RuneBridgeActor ORBITING
+→ RuneBridgeActor ORBITING (technical settled state; no spin canon)
 → RuneStoneProgressionController.installedRuneFamilies
 ```
 
 The platform root's current world-space position centers the handoff sphere. Current tuning is a `9.0 m` transport minimum and `10 m` handoff radius. `BRIDGE_STONE_CAPTURE` and `capture_radius_m` are not gameplay triggers; authored capture data may remain private calibration evidence. Accepted handoff does not pass through `FREE`, and trigger input no longer owns installation.
 
-Natural tuning does not read sector completeness. The `RUNESTONES` band target set is exactly tuned natural families. Installation readiness is checked only during handoff legality. Ether is excluded from the natural flow.
+Natural tuning does not read sector completeness. The `RUNESTONES` band target set is exactly tuned natural families. Installation readiness is checked only during handoff legality. Ether is excluded from the natural flow. Without the proper existing Zwornik, a tuned legal stone may remain near but outside the platform; this is a legal sandbox state, not a required Scenario branch.
+
+## Zwornik, sector control and Rezonator (TARGET / NOT IMPLEMENTED)
+
+```text
+sector panels complete
+├→ persistent Zwornik Runiczny
+└→ read-only RUNE_BINDER_REVEAL presentation
+
+installed Rune Stone → sector powered → GRIP local sector lock/control
+Asterion Sphere TRIGGER → existing global platform orientation owner
+
+3 required powered cooperating sectors
+→ Resonator domain exists
+→ physical response to domain-supported legal distant targets
+```
+
+TRIGGER and GRIP control modes are mutually exclusive. Scenario/Guidance may interpret and explain these states but does not create them. Crystal acquisition remains Scenario/progression-gated even when the player forms the Resonator early.
 
 ## Rune reconstruction
 
@@ -70,7 +89,8 @@ Derived reconstruction ordering is: bridge readiness → installed Rune physical
 ## Platform energy VFX presentation (TARGET / NOT IMPLEMENTED)
 
 ```text
-RuneStoneInstallationInteraction read-only transient state ─┐
+sector-complete / Zwornik reveal ────────────────────────────┐
+RuneStoneInstallationInteraction read-only transient state ─┤
                                                             ├→ PlatformEnergyVfxProjection → PlatformEnergyVfxActor → sector-local / platform-bound procedural lightning
 AsterionGyroInteraction driveActive / angular speed / lock ─┘
 ```
@@ -99,4 +119,4 @@ This flow is **IMPLEMENTED**. Normal readiness after stable `4.80` is Earth/Fire
 
 ## Remaining seams
 
-Natural Rune A9.1–A9.6 foundation is complete. Authored Scenario after `4.80`, Water readiness override trigger, special Ether flow, bridge `ORBITING` spin/presentation, Rune Stone spatial audio, antenna and later Metal/Water/finale beats, durable full-game persistence/save and full-game reset remain future. Carried ↔ installed collision is superseded and physical bridge extension is implemented; neither is a remaining seam.
+Natural Rune A9.1–A9.6 foundation is complete. Authored Scenario after `4.80`, Water readiness override trigger, special Ether flow, target Zwornik presentation, Rune Stone spatial audio, sector control, Rezonator and later Metal/Water/finale beats, durable full-game persistence/save and full-game reset remain future. Bridge spin, the historical antenna model and carried ↔ installed collision are superseded; physical bridge extension is implemented.
