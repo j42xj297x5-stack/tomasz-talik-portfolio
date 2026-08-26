@@ -1,6 +1,6 @@
 # Experience VR Gameplay Roadmap
 
-Status: **CURRENT authored-direction roadmap**. Runtime authority: [`VR_RUNTIME_MODEL.md`](../technical/VR_RUNTIME_MODEL.md); Rune authority: [`VR_RUNE_STONES_MODEL.md`](../technical/VR_RUNE_STONES_MODEL.md).
+Status: **CURRENT authored-direction roadmap**. Runtime authority: [`VR_RUNTIME_MODEL.md`](../technical/VR_RUNTIME_MODEL.md); Rune authority: [`VR_RUNE_STONES_MODEL.md`](../technical/VR_RUNE_STONES_MODEL.md); platform-antenna target authority: [`VR_PLATFORM_ANTENNA_MODEL.md`](../technical/VR_PLATFORM_ANTENNA_MODEL.md).
 
 ## Implemented authored Scenario
 
