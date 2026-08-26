@@ -5,7 +5,9 @@ import { VR_NATURAL_RUNE_STONE_ASSETS, VR_RUNE_STONE_ASSETS } from './vrRuneSton
 export const VR_RUNE_STONE_STATE = Object.freeze({
   FREE: 'FREE',
   LOCKED_BY_ASTRO: 'LOCKED_BY_ASTRO',
-  CARRIED_ORBIT: 'CARRIED_ORBIT'
+  CARRIED_ORBIT: 'CARRIED_ORBIT',
+  SOCKET_CAPTURE: 'SOCKET_CAPTURE',
+  INSTALLED: 'INSTALLED'
 });
 
 const previewModelsByFamilyCode = new Map();
@@ -125,6 +127,18 @@ export function createVrRuneStoneActor({ parent, assetManager, layer }) {
     record.state = VR_RUNE_STONE_STATE.FREE;
     return true;
   };
+  const beginSocketCapture = (branchId) => {
+    const record = getRecord(branchId);
+    if (!record || record.state !== VR_RUNE_STONE_STATE.CARRIED_ORBIT) return false;
+    record.state = VR_RUNE_STONE_STATE.SOCKET_CAPTURE;
+    return true;
+  };
+  const completeInstallation = (branchId) => {
+    const record = getRecord(branchId);
+    if (!record || record.state !== VR_RUNE_STONE_STATE.SOCKET_CAPTURE) return false;
+    record.state = VR_RUNE_STONE_STATE.INSTALLED;
+    return true;
+  };
   const getBoundingBox = (branchId) => {
     const record = getRecord(branchId);
     if (!record) return null;
@@ -145,6 +159,7 @@ export function createVrRuneStoneActor({ parent, assetManager, layer }) {
     layerActor.reset();
     setPresentationVisible(false);
     records.forEach((record) => {
+      if (record.root.parent !== layerActor.object) layerActor.object.add(record.root);
       record.state = VR_RUNE_STONE_STATE.FREE;
       record.root.position.copy(record.initialTransform.position);
       record.root.quaternion.copy(record.initialTransform.quaternion);
@@ -184,6 +199,8 @@ export function createVrRuneStoneActor({ parent, assetManager, layer }) {
     hydrateScenarioState,
     lockByAstro,
     beginCarriedOrbit,
+    beginSocketCapture,
+    completeInstallation,
     releaseFromAstro,
     update,
     reset,

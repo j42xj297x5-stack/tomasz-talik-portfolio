@@ -30,6 +30,7 @@ import { createVrRuneBridgeActor } from './xr/runes/createVrRuneBridgeActor.js';
 import { createVrRuneInstallationReadinessProjection } from './xr/runes/createVrRuneInstallationReadinessProjection.js';
 import { createVrRuneStoneActor } from './xr/runes/createVrRuneStoneActor.js';
 import { createVrRuneStoneAttractorInteraction } from './xr/runes/createVrRuneStoneAttractorInteraction.js';
+import { createVrRuneStoneInstallationInteraction } from './xr/runes/createVrRuneStoneInstallationInteraction.js';
 import { createVrProgressionController } from './xr/progression/createVrProgressionController.js';
 import { createVrFirstRingFlow } from './xr/progression/createVrFirstRingFlow.js';
 import { createVrProgressionSemanticHandoff } from './xr/progression/createVrProgressionSemanticHandoff.js';
@@ -478,6 +479,7 @@ let shellAttractorInteraction = null;
 let smallGlyphAttractorInteraction = null;
 let largeGlyphAttractorInteraction = null;
 let runeStoneAttractorInteraction = null;
+let runeStoneInstallationInteraction = null;
 const handModeController = createVrHandModeController({
   controllers: vrControllers.controllers,
   semanticInput,
@@ -899,6 +901,13 @@ largeGlyphAttractorInteraction = createVrLargeGlyphAttractorInteraction({
     || astroFurnaceActivateInteraction.hasCurrentHit(record) || astroFurnaceOptionInteraction.hasCurrentHit(record)
     || furnacePanel.hasCurrentHit(record) || monkeyGuide.hasCurrentHit(record) || record.currentHit)
 });
+runeStoneInstallationInteraction = createVrRuneStoneInstallationInteraction({
+  runeStoneActor,
+  runeBridgeActor,
+  runeInstallationReadinessProjection,
+  runeStoneProgressionController,
+  settings: settings.runeStoneInstallation
+});
 runeStoneAttractorInteraction = createVrRuneStoneAttractorInteraction({
   controllers: vrControllers.controllers, runeStoneActor, runeStoneAttractorBandProjection,
   handModeController, semanticInput, attractorTool, maxTargetDistance: runeStoneMaxTargetDistance,
@@ -911,6 +920,7 @@ runeStoneAttractorInteraction = createVrRuneStoneAttractorInteraction({
   haloSettings: settings.targetHalo,
   platformCenter: progressFloor.object,
   getPlayerWorldPosition: (target) => getXrHeadWorldPosition({ renderer, camera, playerRig, target }),
+  tryBeginInstallationCapture: (record) => runeStoneInstallationInteraction.tryBeginCapture(record),
   isHigherPriorityInteractionActive: (record) => Boolean(activateButton.hits.get(record)
     || releaseButton.hits.get(record) || astroFurnaceOpenInteraction.hasCurrentHit(record)
     || astroFurnaceActivateInteraction.hasCurrentHit(record) || astroFurnaceOptionInteraction.hasCurrentHit(record)
@@ -1264,6 +1274,7 @@ function renderFrame() {
   smallGlyphSystem.update(delta);
   runeStoneActor.update(delta);
   runeStoneAttractorInteraction.update(delta);
+  runeStoneInstallationInteraction.update(delta);
   celestialActor.update(delta);
   observationWindow.update(delta);
   p2ObservationWindow.update(delta);
@@ -1344,6 +1355,7 @@ function restoreVrScenarioBaseline() {
   resetPlayerRigToSpawn();
   progressionController.reset();
   progressFloor.reset();
+  runeStoneInstallationInteraction.reset();
   runeBridgeActor.reset();
   synchronizeRuneBridgeReadiness();
   runeStoneActor.reset();
@@ -1452,7 +1464,6 @@ window.addEventListener('pagehide', () => {
   astroFurnaceRuneRecipeInteraction.dispose();
   runeTuningController.dispose();
   runeRecipeSelectionController.dispose();
-  runeStoneProgressionController.dispose();
   astroFurnaceOptionInteraction.dispose();
   playerGuidePanel.dispose();
   toolGuidanceLifecycle.dispose();
@@ -1464,6 +1475,8 @@ window.addEventListener('pagehide', () => {
   smallGlyphAttractorInteraction.dispose();
   largeGlyphAttractorInteraction.dispose();
   runeStoneAttractorInteraction.dispose();
+  runeStoneInstallationInteraction.dispose();
+  runeStoneProgressionController.dispose();
   handModeController.dispose();
   activateButton.reset();
   releaseButton.reset();
