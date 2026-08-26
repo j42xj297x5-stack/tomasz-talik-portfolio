@@ -1,21 +1,25 @@
-const AMBIENTS = Object.freeze([null, '/audio/ambient_01.mp3', '/audio/ambient_02.mp3',
-  '/audio/ambient_03.mp3', '/audio/ambient_04.mp3', '/audio/ambient_05.mp3']);
+export const VR_MAIN_AMBIENT_PROGRAMS = Object.freeze({
+  ambient01: Object.freeze({ id: 'ambient01', path: '/audio/ambient_01.mp3', tail: false }),
+  ambient02: Object.freeze({ id: 'ambient02', path: '/audio/ambient_02.mp3', tail: false }),
+  ambient03: Object.freeze({ id: 'ambient03', path: '/audio/ambient_03.mp3', tail: false }),
+  ambient04: Object.freeze({ id: 'ambient04', path: '/audio/ambient_04.mp3', tail: false }),
+  ambient05: Object.freeze({ id: 'ambient05', path: '/audio/ambient_05.mp3', tail: true })
+});
 const POST_MAIN_TAIL = Object.freeze([
-  '/audio/ambient_loop_01.mp3',
-  '/audio/ambient_loop_02.mp3',
-  '/audio/ambient_loop_03.mp3',
-  '/audio/ambient_loop_04.mp3',
+  '/audio/ambient_loop_01.mp3', '/audio/ambient_loop_02.mp3',
+  '/audio/ambient_loop_03.mp3', '/audio/ambient_loop_04.mp3'
 ]);
 export const VR_QUIET_QUEUE = Object.freeze(Array.from({ length: 13 }, (_, index) => String(index + 1).padStart(2, '0'))
   .map((id) => `/audio/noise_quiete_loop_${id}.mp3`));
-export function createVrAmbientSequencer({ bridge, setTimer = setTimeout, clearTimer = clearTimeout } = {}) {
-  let generation = 0, mainAmbient = 0, quietCursor = 0, disposed = false, enabled = false;
-  let activeHandle = null, timer = null, timerResolve = null;
-  let pendingController = null;
 
-  function cancelWork() {
+export function createVrAmbientSequencer({ bridge, setTimer = setTimeout, clearTimer = clearTimeout } = {}) {
+  let generation = 0, requestGeneration = 0, quietCursor = 0, disposed = false;
+  let committedProgram = null, activeHandle = null, timer = null, timerResolve = null;
+  let pendingController = null, candidateController = null, state = 'idle';
+
+  function cancelPlayback() {
     generation += 1;
-    try { activeHandle?.stop?.(); } catch (_) { /* optional audio must remain fail-soft */ }
+    try { activeHandle?.stop?.(); } catch (_) { /* optional audio remains fail-soft */ }
     activeHandle = null;
     pendingController?.abort(); pendingController = null;
     if (timer !== null) clearTimer(timer);
@@ -23,63 +27,106 @@ export function createVrAmbientSequencer({ bridge, setTimer = setTimeout, clearT
     timerResolve?.(false); timerResolve = null;
   }
   function sleep(milliseconds, token) {
+    state = 'silence';
     return new Promise((resolve) => {
       if (token !== generation || disposed) { resolve(false); return; }
       timerResolve = resolve;
       timer = setTimer(() => { timer = null; timerResolve = null; resolve(token === generation && !disposed); }, milliseconds);
     });
   }
-  async function play(path, bus, repetitions, token, fades = {}) {
-    let handle = null;
+  async function start(path, bus, repetitions, controller, fades = {}) {
+    return bridge.startFiniteSource(path, bus, { repetitions, ...fades, signal: controller?.signal });
+  }
+  async function playSegment(path, bus, repetitions, token, fades = {}) {
     const controller = typeof AbortController === 'undefined' ? null : new AbortController();
     pendingController = controller;
-    try { handle = await bridge?.startFiniteSource?.(path, bus, { repetitions, ...fades, signal: controller?.signal }); } catch (_) { return token === generation; }
+    state = 'starting';
+    const outcome = await start(path, bus, repetitions, controller, fades);
     if (pendingController === controller) pendingController = null;
-    if (token !== generation || disposed) { try { handle?.stop?.(); } catch (_) {} return false; }
-    if (!handle) return true;
-    activeHandle = handle;
-    try { await handle.finished; } catch (_) { /* failed playback advances rather than retrying tightly */ }
+    if (token !== generation || disposed || outcome.status === 'cancelled') {
+      try { outcome.handle?.stop?.(); } catch (_) {}
+      return 'cancelled';
+    }
+    if (outcome.status !== 'started') { state = 'failed'; return 'failed'; }
+    const handle = outcome.handle;
+    activeHandle = handle; state = 'playing';
+    try { await handle.finished; } catch (_) { state = 'failed'; return 'failed'; }
     if (activeHandle === handle) activeHandle = null;
-    return token === generation && !disposed;
+    if (token !== generation || disposed) return 'cancelled';
+    return 'ended';
   }
-  function nextQuiet() { const path = VR_QUIET_QUEUE[quietCursor]; quietCursor = (quietCursor + 1) % VR_QUIET_QUEUE.length; return path; }
-  async function runMain(token) {
-    while (token === generation && mainAmbient > 0 && mainAmbient < 5 && !disposed) {
-      if (!await play(AMBIENTS[mainAmbient], 'AMBIENT', 1, token)) return;
+  async function playQuiet(token) {
+    const path = VR_QUIET_QUEUE[quietCursor];
+    const controller = typeof AbortController === 'undefined' ? null : new AbortController();
+    pendingController = controller; state = 'starting';
+    const outcome = await start(path, 'SPACE', 6, controller, { fadeIn: 10, fadeOut: 10 });
+    if (pendingController === controller) pendingController = null;
+    if (token !== generation || disposed || outcome.status === 'cancelled') {
+      try { outcome.handle?.stop?.(); } catch (_) {}
+      return 'cancelled';
+    }
+    if (outcome.status !== 'started') { state = 'failed'; return 'failed'; }
+    quietCursor = (quietCursor + 1) % VR_QUIET_QUEUE.length;
+    const handle = outcome.handle; activeHandle = handle; state = 'playing';
+    try { await handle.finished; } catch (_) { state = 'failed'; return 'failed'; }
+    if (activeHandle === handle) activeHandle = null;
+    return token === generation && !disposed ? 'ended' : 'cancelled';
+  }
+  async function runMain(token, firstHandle) {
+    let handle = firstHandle;
+    while (token === generation && !disposed) {
+      if (handle) {
+        activeHandle = handle; state = 'playing';
+        try { await handle.finished; } catch (_) { state = 'failed'; return; }
+        if (activeHandle === handle) activeHandle = null;
+        if (token !== generation || disposed) return;
+        handle = null;
+      } else if (await playSegment(committedProgram.path, 'AMBIENT', 1, token) !== 'ended') return;
       if (!await sleep(10000, token)) return;
-      if (!await play(nextQuiet(), 'SPACE', 6, token, { fadeIn: 10, fadeOut: 10 })) return;
+      if (await playQuiet(token) !== 'ended') return;
       if (!await sleep(10000, token)) return;
     }
   }
-  async function runPostMainTail(token) {
-    if (!await play(AMBIENTS[5], 'AMBIENT', 1, token)) return;
+  async function runPostMainTail(token, firstHandle) {
+    activeHandle = firstHandle; state = 'playing';
+    try { await firstHandle.finished; } catch (_) { state = 'failed'; return; }
+    if (activeHandle === firstHandle) activeHandle = null;
     for (const tailAmbient of POST_MAIN_TAIL) {
       if (!await sleep(10000, token)) return;
-      if (!await play(nextQuiet(), 'SPACE', 6, token, { fadeIn: 10, fadeOut: 10 })) return;
+      if (await playQuiet(token) !== 'ended') return;
       if (!await sleep(10000, token)) return;
-      if (!await play(tailAmbient, 'AMBIENT', 6, token)) return;
+      if (await playSegment(tailAmbient, 'AMBIENT', 6, token) !== 'ended') return;
     }
+    if (token === generation) state = 'idle';
   }
-  function runSelectedMain(token) {
-    if (mainAmbient === 5) void runPostMainTail(token);
-    else if (mainAmbient > 0) void runMain(token);
+  function setProgram(program) {
+    if (disposed || !program?.id || !program?.path) return false;
+    if (committedProgram?.id === program.id && !['failed', 'idle'].includes(state)) return false;
+    const requestToken = ++requestGeneration;
+    candidateController?.abort();
+    const controller = typeof AbortController === 'undefined' ? null : new AbortController();
+    candidateController = controller;
+    void start(program.path, 'AMBIENT', 1, controller).then((outcome) => {
+      if (candidateController === controller) candidateController = null;
+      if (disposed || requestToken !== requestGeneration || outcome.status === 'cancelled') {
+        try { outcome.handle?.stop?.(); } catch (_) {}
+        return;
+      }
+      if (outcome.status !== 'started') { if (!committedProgram || committedProgram.id === program.id) state = 'failed'; return; }
+      cancelPlayback();
+      committedProgram = program;
+      const token = generation;
+      if (program.tail) void runPostMainTail(token, outcome.handle);
+      else void runMain(token, outcome.handle);
+    });
+    return true;
   }
-  function selectMainAmbient(index) {
+  function reset() {
     if (disposed) return;
-    const nextMainAmbient = Math.min(5, Math.max(1, Math.floor(Number(index) || 0)));
-    if (nextMainAmbient === mainAmbient) return;
-    cancelWork(); mainAmbient = nextMainAmbient;
-    if (!enabled) return;
-    const token = generation;
-    runSelectedMain(token);
+    requestGeneration += 1; candidateController?.abort(); candidateController = null;
+    cancelPlayback(); committedProgram = null; quietCursor = 0; state = 'idle';
   }
-  function enable() {
-    if (disposed || enabled) return;
-    enabled = true; cancelWork();
-    const token = generation;
-    runSelectedMain(token);
-  }
-  function reset() { if (disposed) return; cancelWork(); mainAmbient = 0; quietCursor = 0; enabled = false; }
-  function dispose() { if (disposed) return; cancelWork(); disposed = true; }
-  return { selectMainAmbient, enable, reset, dispose, get enabled() { return enabled; }, get quietCursor() { return quietCursor; } };
+  function dispose() { if (disposed) return; reset(); disposed = true; }
+  return { setProgram, reset, dispose, get state() { return state; },
+    get committedProgram() { return committedProgram; }, get quietCursor() { return quietCursor; } };
 }
