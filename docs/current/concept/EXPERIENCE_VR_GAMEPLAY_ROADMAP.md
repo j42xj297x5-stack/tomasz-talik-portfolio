@@ -10,7 +10,7 @@ Canonical P2 runs `4.30 → 4.40 → 4.50 → 4.60 → 4.70 → 4.80`. `4.80` is
 
 Rune A1–A9.4 are partially implemented without extending Scenario: five natural physical Rune Stones already exist in the `50–75 m` layer; natural tuning and `tunedRuneFamilies`, RUNESTONES targeting, `LOCKED_BY_ASTRO`, `CARRIED_ORBIT`, RuneBridge state foundation and readiness projection are present. Large Glyph `SPHERE_FAR = 80 m`, Panel 1 Rune U projection and Panel 2 band presentation are also implemented.
 
-This physical existence is a runtime foundation, not proof that the later authored reveal or dramatic beat has occurred. The explicit first-presentation seam tied to Sun/Stars remains missing.
+The five natural actors begin hidden and their first-presentation seam is implemented at `2.10`: a separate Scenario effect reveals them with the celestial world. Visibility remains independent of later targetability and dramatic understanding.
 
 ## Future authored dramaturgy — deferred
 
