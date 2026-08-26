@@ -1,41 +1,30 @@
-# Experience VR — współśrodkowe sferyczne płaszcze objętościowe
+# Experience VR — Spherical Layers Model
 
-## Status i definicja
+Status: **CURRENT / BINDING** for world-stable spherical volume allocation.
 
-**CURRENT / BINDING.** Płaszcz sferyczny jest objętością pomiędzy dwiema współśrodkowymi sferami, a nie orbitą, pierścieniem ani pasem równikowym. Wszystkie warstwy mają canonical center `(0, 0, 0)`, wspólny ze środkiem obrotu platformy. Dla środka obiektu zachodzi `innerRadius <= length(position) <= outerRadius`.
+## Canonical world-space registry
 
-## Registry i zakresy
+| Layer | World-space range | Status | Runtime content |
+| --- | ---: | --- | --- |
+| `SHELLS` | `13–25 m` | IMPLEMENTED | Shell field and interaction |
+| `SMALL_GLYPHS` | `30–45 m` | IMPLEMENTED | Small Glyph field and interaction |
+| `RUNE_STONES` | `50–75 m` | IMPLEMENTED | five natural Rune Stone actors, scan/target and transport foundation |
+| `STARS` | `85–130 m` | IMPLEMENTED | stars |
+| `HIDDEN_GLYPHS` | `133.25–140.85 m` | RESERVED / NOT IMPLEMENTED | no current gameplay content |
 
-Promień platformy pozostaje jawny jako `worldBaseRadius = 7.6 m`, a niezależny początek registry warstw to `sphericalLayers.innerRadius = 13 m`. Ustawienia rozdzielają dodatnią, skończoną `thickness` warstwy oraz nieujemny `gapAfter`, czyli pustą przestrzeń radialną przed następną warstwą. Opcjonalny `gapAfterMultiplier` warstwy wyznacza gap względem `innerRadius`. Gap nie należy do żadnej warstwy, nie ma Object3D, aktora, contentu ani Astro bandu. Resolver kumuluje `thickness + gapAfter`; pary promieni pozostają wynikiem istniejącego kontraktu registry.
+These are explicit world-space ranges. They are not derived from `worldBaseRadius = 7.6 m`; that value remains a separate platform/locomotion contract. Each layer owns deterministic placement bounds, while its domain actor owns identity, interaction and state.
 
-| layer id | thickness | world-space range | gap after | status |
-| --- | ---: | ---: | ---: | --- |
-| `SHELLS` | 12 m | 13–25 m | 5 m | IMPLEMENTED |
-| `SMALL_GLYPHS` | 15 m | 30–45 m | 5 m | IMPLEMENTED |
-| `RUNE_STONES` | 25 m | 50–75 m | 10 m | RESERVED / NOT IMPLEMENTED |
-| `STARS` | 45 m | 85–130 m | 3.25 m | IMPLEMENTED |
-| `HIDDEN_GLYPHS` | 7.6 m | 133.25–140.85 m | 0 m | RESERVED / NOT IMPLEMENTED |
+## Large Glyph exclusion
 
-Reserved oznacza wyłącznie kontrakt przestrzenny. Nie powstają dla tych warstw runtime Object3D, content, count, renderer, interaction, band ani Scenario point.
+Large Glyph is not a spherical layer and is not registered under `VR_SPHERICAL_LAYER_IDS`. Its actor owns:
 
-`STARS` jest wyjątkiem od kontraktu dyskretnych slotów `createVrSphericalLayerActor`: stanowi lekkie proceduralne pole wizualne renderowane jednym `THREE.Points`. Deterministyczny clustered sampling tworzy delikatne skupiska z rozproszonym tłem w całej objętości `85–130 m` i na pełnym `4π`. Pole pozostaje world-stable, bez interakcji, rotacji, driftu i twinkle.
+- `RING_INITIAL = 8.5 m`;
+- `RING_ELEVATED = 8.5 m + 2.4 m elevation`;
+- `RING_EXPANDED = 46 m`;
+- `SPHERE_FAR = 80 m` — **IMPLEMENTED**.
 
-## Deterministyczne sloty objętościowe
+After Tier 3, five Large Glyph slots use deterministic full-sphere directions, black/unlit presentation and very slow `0.01 rad/s` motion.
 
-`createVrSphericalLayerActor` wyznacza kierunki na pełnym `4π` przez Fibonacci sphere: `goldenAngle = PI * (3 - sqrt(5))`, `y = 1 - 2(i + 0.5)/N`, a azymut przez `goldenAngle*i + stable phase`. Stable FNV-1a hash jawnego layer id daje fazę oraz stałą orientację pola. Nie występuje `Math.random()`.
+## Rune layer contract
 
-Głębokość jest zdekorrelowana od polarnego indeksu przez low-discrepancy golden-ratio sequence z osobną stable phase. Promień ma rozkład objętościowy `cbrt(inner³ + u(outer³-inner³))`, więc sloty nie leżą na jednej powierzchni.
-
-Dla visual bounds actor przyjmuje radial clearance równy promieniowi bounding sphere: efektywny zakres środka to `[inner + clearance, outer - clearance]`. Każda instancja Shell lokalnie przesuwa swój visual o ujemny wyliczony `boundingCenter`, dlatego środek bounding sphere pokrywa się z originem wrappera i slotu, a clearance pozostaje samym `boundingRadius` względem tego samego originu. Gdy nie ma dodatniego zakresu, inicjalizacja kończy się błędem zawierającym layer, clearance i thickness; asset nie jest skalowany ani przenoszony.
-
-## Ownership i ruch
-
-`Scenario → Runtime effect → ShellSystem / SmallGlyphSystem → SphericalLayerActor → physical field transform`. Domain actors nadal posiadają stany, audio, handoff, Furnace, placement i progression facts. Director i Scenario nie znają promieni, Fibonacci ani slotów.
-
-Actor root należy bezpośrednio do `WorldStableRoot`. `VrTiltableFloorRoot` i passenger/player obracają się niezależnie wokół tego samego centrum. Nie ma horizon compensation. Opcjonalny ruch obraca quaternionem cały field jako rigid body, zachowując długość każdego wektora. Deterministyczna oś pochodząca z layer id ma canonical orientation: pierwsza niezerowa składowa w kolejności `x`, `y`, `z` jest dodatnia. Dopiero względem tej stabilnie zorientowanej osi actor stosuje nieujemne `angularSpeed` oraz semantyczny znak `direction`. Shell field używa kierunku `+1`, Small Glyph field `-1`; self rotation pozostaje właściwością obiektu.
-
-Field-owned Shell i Small Glyph dostają stale przypisany slot. Materialization Small Glyph odbywa się w finalnym slocie. Return interpoluje do transformu canonical slotu odczytywanego w każdym frame, dlatego podąża za rigid field zamiast za martwym snapshotem. `HELD`, `PLACED`, `CAPTURE_READY`, transport i Furnace pozostają poza ownership aktora warstwy. Reset i hydration wracają do tej samej baseline orientation i tych samych slotów.
-
-## Large Glyph spatial integration
-
-Large Glyph nie należy do `VR_SPHERICAL_LAYER_IDS` ani do spherical layer registry. Actor zachowuje pierścieniowe stadia `RING_INITIAL = 8.5 m` i `RING_EXPANDED = 46 m`. Po ukończeniu trzeciego kręgu istniejący event `TIER_COMPLETED` przełącza actor na `SPHERE_FAR = 80 m`: pięć stabilnych kierunków o dodatnich i ujemnych wysokościach daje deterministyczny, niewspółpłaszczyznowy układ pełnej sfery.
+`RUNE_STONES` contains exactly five natural physical actors (`earth`, `fire`, `wood`, `metal`, `water`). Ether has a descriptor but is not part of this natural collection. Availability and legal targets come from `tunedRuneFamilies`; installation readiness does not participate in scan, lock or transport. The early authored reveal/presentation seam tying first visibility to Sun/Stars is still an implementation gap.

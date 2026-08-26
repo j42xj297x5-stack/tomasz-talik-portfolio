@@ -2,94 +2,55 @@
 
 ## Documentation flow
 
-`PROJECT_INDEX → canonical task model → DEPENDENCY_MAP / DECISION_LOG`. Proto-Astro/small-glyph/bands/tuning zaczyna się w [`VR_PROTO_ASTRO_MODEL.md`](../technical/VR_PROTO_ASTRO_MODEL.md), a potem przechodzi do Runtime, Scenario albo communication docs zależnie od zadania.
+`PROJECT_INDEX → canonical technical model → runtime evidence`. Rune authority is [`VR_RUNE_STONES_MODEL.md`](../technical/VR_RUNE_STONES_MODEL.md).
 
 ## Experience VR composition
 
 ```text
-experienceVr composition root
-→ Scenario → Director → RuntimeExperience
-→ effect handlers / semantic callbacks
-→ actors and single domain owners
+SPINE → SCENARIO → DIRECTOR → RuntimeExperience → actors / domain owners
 ```
 
-Nie istnieje centralny global gameplay store.
+Scenario is implemented through `4.40 → 4.50 → 4.60 → 4.70 → 4.80`. Continuation after `4.80` is deferred.
 
-## Authored progression
+## Spatial presentation
 
 ```text
-3.80 Astro EARNED + shell/Furnace/Asterion loop
-→ 4.10 second Glyph → Crystal → Reliquary
-→ TIER_COMPLETED / Tier 2 complete
-→ 4.20 radial presentation
-→ P2_RADIAL_PRESENTATION_COMPLETED
-→ 4.30 small glyph materialization
-→ SMALL_GLYPH_FIELD_PRESENTATION_COMPLETED
-→ 4.40 observation / guidance continuation
-→ 4.50–4.70 mandatory P2 communication and Tier-3 rights
-→ 4.80 stable implemented Tier-3 boundary
-→ future Rune Stone Act → FIRST_RUNE_INSTALLED (TARGET / NOT IMPLEMENTED)
+Tier 3 completion → LargeGlyphActor.SPHERE_FAR (80 m)
+SphericalLayerRegistry.RUNE_STONES (50–75 m) → RuneStoneActor natural collection
 ```
 
-## Proto-Astro and small glyph dependencies
+Large Glyph is not a spherical layer.
+
+## Rune tuning and targetability
 
 ```text
-smallGlyphSystem
-→ smallGlyphAttractorInteraction
-→ Furnace content interaction
-
-protoAstroRegistry
-→ small-glyph resolver
-→ ProtoAstroTuningController
-← large-glyph/page resolver
-
-Scenario capabilities
-→ LargeGlyphAttractorInteraction
-→ ProtoAstroTuningController family gate
-→ LargeGlyphActor transient ownership
-
-Scenario settledConsequences
-→ largeGlyphs.stage
-→ LargeGlyphActor hydration
+Small Glyph + Shell
+→ RuneRecipeInteraction (two typed slots, 18 s RUNE_TUNING)
+→ RuneStoneProgressionController.tunedRuneFamilies
+→ RuneStoneAttractorBandProjection
+→ RuneStoneAttractorInteraction
+→ natural RuneStoneActor target / LOCKED_BY_ASTRO / CARRIED_ORBIT
 ```
 
-`smallGlyphSystem` owns field geometry; interaction owns transient transport; TuningController alone owns extracted natural family truth.
+Natural tuning does not read sector completeness. The `RUNESTONES` band becomes available after at least one tuned natural family; its target set is exactly the tuned natural families. Ether is excluded.
 
-## Furnace content boundary
+## Installation readiness
 
 ```text
-SHELL ───────┐
-             ├→ one createVrAstroFurnaceContentInteraction chamber owner
-SMALL_GLYPH ─┘
+ProgressionController sector completeness (isBranchComplete)
+→ RuneInstallationReadinessProjection
+→ RuneBridgeActor HIDDEN / DOCKED
 ```
 
-`floor_gyroscope_sphere` routes shells to Asterion progression. `astro_attractor` routes natural small glyphs to essence extraction and TuningController, then restores the physical glyph to field.
+Normal readiness after stable `4.80`: Earth, Fire and Wood ready; Metal and Water not ready. The future `getWaterInstallationReadinessOverride` seam affects only Water installation readiness. It does not modify floor/panel truth, natural tuning or targetability.
 
-Future rune tuning does not replace this owner:
+## Independent owners
 
-```text
-sector progression completeness ─→ rune eligibility
-canonical Proto-Astro resolvers ─→ Wu Xing recipe resolver
-Small Glyph ─┐
-             ├→ RuneRecipeInteraction (two typed slots) → one 18 s Furnace cycle
-Shell ───────┘                                      └→ RuneStoneProgressionController.tunedRuneFamilies
+- `ProtoAstroTuningController`: natural essences for Large Glyph.
+- `RuneStoneProgressionController`: `tunedRuneFamilies`; future installed truth.
+- sector progression owner: panel/sector completeness.
+- `RuneStoneActor` and `RuneBridgeActor`: transient mechanics, never copied progression truth.
 
-tunedRuneFamilies → RUNESTONES band valid targets
-Rune Stone actor + RuneBridgeActor → completed capture
-                                   └→ RuneStoneProgressionController.installedRuneFamilies
-```
+## Remaining seams
 
-`RuneStoneProgressionController` nie kopiuje paneli sektorów i nie należy do `ProtoAstroTuningController`. Rune Stones używają istniejącej warstwy `50–75 m`; Large Glyph pozostaje osobnym aktorem używającym istniejącego `SPHERE_FAR = 80 m`.
-
-## Guidance projection
-
-```text
-Scenario capabilities + domain truth
-→ Monkey knowledge resolver
-→ Player Guide current task / tools
-→ capability-gated B line
-```
-
-## Future seams
-
-`LARGE_GLYPHS` family-gated target/pull jest **IMPLEMENTED**. Panele 2–4 pozostają future. `RUNESTONES`, rune recipe/bridge/transport i authored pointy po `4.80` są **TARGET / NOT IMPLEMENTED**; VI/Eter finale jest **RESERVED / NOT YET DESIGNED**. Fizyczna możliwość stage `SPHERE_FAR` istnieje w Large Glyph actorze, lecz post-Tier-3 przejście i jego prezentacja są **NOT AUTHORED / NOT IMPLEMENTED**.
+Socket capture, persistent installed truth, bridge extension timing, Water override trigger, Ether flow, physical Rune Stone audio and authored Scenario after `4.80` remain future. Panels 1 and 2 are implemented; Panels 3 and 4 remain future.

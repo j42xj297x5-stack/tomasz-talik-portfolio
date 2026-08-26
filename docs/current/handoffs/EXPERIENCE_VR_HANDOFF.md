@@ -1,33 +1,32 @@
 # Experience VR — Current Handoff
 
-Status: **CURRENT operational snapshot** po Large Glyph Actor migration M7B (`2026-08-23`). Canonical authority: [`VR_RUNTIME_MODEL.md`](../technical/VR_RUNTIME_MODEL.md), [`VR_PROTO_ASTRO_MODEL.md`](../technical/VR_PROTO_ASTRO_MODEL.md) i [`VR_SCENARIO_DIRECTOR_MODEL.md`](../technical/VR_SCENARIO_DIRECTOR_MODEL.md).
+Status: **CURRENT operational snapshot — 2026-08-25**, synchronized through merge PR #624. Authorities: [`VR_RUNTIME_MODEL.md`](../technical/VR_RUNTIME_MODEL.md), [`VR_SCENARIO_DIRECTOR_MODEL.md`](../technical/VR_SCENARIO_DIRECTOR_MODEL.md) and [`VR_RUNE_STONES_MODEL.md`](../technical/VR_RUNE_STONES_MODEL.md).
 
-## Implemented snapshot
+## Canonical checkpoint
 
-- `LargeGlyphActor` jest jednym physical/spatial ownerem pięciu Large Glyphs pod `WorldStableRoot`.
-- Jeden rigid `RotationRoot` posiada pięć identity slots `KA/TA/SA/LA/RA`, rozdzielonych o `72°`; `TransientRoot` posiada leased physical nodes podczas pull/return.
-- Canonical stages to `RING_INITIAL` (`8.5 m`), `RING_ELEVATED` (`+2.4 m`) i `RING_EXPANDED` (`18.5 m`). Actor posiada elevation, expansion, presentation visibility, targeting range, hydration, reset i dispose.
-- `worldBaseRadius = 7.6 m` jest niezależnym contractem locomotion/platform/spherical layers; nie pochodzi z Large Glyph actor radius.
-- `LARGE_GLYPHS` band, family-gated scan/target/pull, `canAttractLargeGlyph` oraz real transient return do live canonical slotu są **IMPLEMENTED**. Naturalne pary to `KI↔KA`, `TI↔TA`, `SI↔SA`, `LI↔LA`, `RI↔RA`; `VI` nie odblokowuje Large Glyph.
-- Scenario reconstruction konsoliduje spatial truth wyłącznie jako `largeGlyphs.stage`: settled `3.10 → RING_ELEVATED`, settled `4.20 → RING_EXPANDED`; `stateAt(4.30)` zawiera expanded actor stage.
-- Large Glyph nie jest spherical layer. `18.5 m` świadomie przecina Small Glyph volume `17.1–24.7 m`; overlap jest **ACCEPTED PRODUCT DECISION** i nie zmienia layer registry.
+- Scenario is implemented through `4.40 → 4.50 → 4.60 → 4.70 → 4.80`; `4.80` is the stable boundary. No authored continuation follows it yet.
+- Large Glyph stages are `8.5 m`, elevated `8.5 m + 2.4 m`, expanded `46 m`, and implemented `SPHERE_FAR = 80 m` with deterministic full-sphere black/unlit slow motion.
+- Spherical layers are Shells `13–25 m`, Small Glyphs `30–45 m`, implemented Rune Stones `50–75 m`, Stars `85–130 m`, Hidden Glyphs `133.25–140.85 m`.
+- Rune A1–A8 and A9.1–A9.4 foundations are implemented: natural tuning, tuned-family truth, RUNESTONES band, bridge state foundation, physical natural actors, lock, carried transport and installation-readiness projection.
+- Panel 1 projects O/I/A and natural Rune U forms; Panel 2 presents authored current-band art/color. Panels 3–4 remain future.
 
-## Hardware validation
+## Rune ownership checkpoint
 
-**HARDWARE VALIDATED — Meta Quest 3S:** Wizjoner potwierdził aktualny zmigrowany Large Glyph flow po M7A, wyłącznie w zakresie migracji Large Glyph Actor M1–M7A. Nie jest to walidacja całego P2, Small Glyph Furnace extraction, Paneli 2–4, wszystkich audio paths ani przyszłych features.
+Natural tuning is independent of sectors. Natural targetability is exactly `tunedRuneFamilies`. Installation readiness normally reads sector completeness and projects `RuneBridgeActor` to `HIDDEN/DOCKED`; after `4.80` Earth/Fire/Wood are ready and Metal/Water are not. The Water override seam changes readiness only.
 
-## Future boundary
+Physical transport implements `FREE → LOCKED_BY_ASTRO → CARRIED_ORBIT`, platform minimum radius `9.0 m`, release in place and re-acquire. Socket capture and persistent installed truth are not implemented. Ether remains special and outside all natural collections.
 
-`SPHERE_FAR` jest **FUTURE / NOT AUTHORED / NOT IMPLEMENTED**. `RUNESTONES`, Panele 2–4, VI/Eter finale i future long-range attraction wymagają własnego authoringu/designu; nie wynikają z ukończenia migracji.
+## Next bounded work
 
-## Reconstruction snapshot
+**NEXT A9:** socket capture + persistent installed truth. Later work includes bridge extension timing, installed-stone blocking, Water override trigger, Ether flow, physical Rune Stone audio and authored Scenario continuation after `4.80`; none is implemented by the current foundation.
 
-`stateAt(4.20)` zachowuje `largeGlyphs.stage = RING_ELEVATED`; `stateAt(4.30)` zachowuje `largeGlyphs.stage = RING_EXPANDED`; `stateAt(4.40)` dodaje materialized Small Glyph field. Rekonstrukcja nie odtwarza transient pull/return ani live process state.
+## Known runtime gaps
 
-## Current P2 completion contract (4.40–4.80)
+1. Runtime `P5` still maps to `4.40`, not canonical debug intent `4.80`.
+2. Rune typed-slot acceptance does not validate the selected recipe's expected family at insertion.
+3. Recipe change lacks canonical player-facing eject around `1 m`.
+4. Natural Rune Stone actor composition lacks an explicit early reveal seam tied to Sun/Stars.
 
-The implemented canonical boundary is `4.80`. Point `4.40` owns a dedicated observation window; `4.50` exposes Monkey attention only; `4.60` plays the mandatory P2 message; `4.70` grants the existing B, Small Glyph, Furnace essence, family-gated Large Glyph, crystal, Reliquary and order-3 card rights; five order-3 cards complete into stable point `4.80`.
+## Traceability
 
-Mandatory Monkey communication uses one guidance contract: attention arcs never start copy; pointing and triggering Monkey consumes the trigger for the mandatory beat; ordinary menu, history and knowledge stay hidden through attention and playback; the menu returns only after the final automatic block. This contract is active for the post-ring message at `3.30` and P2 at `4.50–4.60`.
-
-Stable reconstruction at `4.80` contains completed Tier 3, all page IDs/orders through 3, progress-floor completion through Tier 3, consumed crystal Tier 3, and Proto-Astro natural essences `K/T/S/L/R`. It reconstructs no transient pulls, held objects, timers or panels. P3 and later mechanics are not implemented.
+Key task/merge evidence: A6 `b091b4e`/`0fc4ce3`; A7 `cc77fb2`/`83ec32f`; A8 `ad83cb2`/`f98188a`; tuning correction `d0f9a17`/`c862b9b`; A9.1 `f03daad`/`3181dc9`; hardening `9ab56aa`/`6b52511`; A9.2 `fd4e519`/`091b7da`; A9.3 `8c3caca`/`d23743d`; Panel 2 `d7e026f`/`5dd2c59`; A9.4 `38b46cf`/`575dc18`; Panel 1 U projection `b04605c`/`5510e78`.
