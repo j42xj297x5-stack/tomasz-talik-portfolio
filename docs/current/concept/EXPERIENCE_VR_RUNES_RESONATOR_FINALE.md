@@ -95,7 +95,7 @@ Gracz nie wkłada kamienia ręcznie do uchwytu.
 
 ## 5. Kula i lokalna kontrola sektora
 
-Od fizycznego stworzenia Kuli Asterionowej grip może tworzyć szeroki, lekko łukowaty, wielobarwny strumień. Odpowiadają wyłącznie sektory zasilone zainstalowanym kamieniem. Utrzymanie strumienia nad takim sektorem daje **SECTOR LOCK**; dopiero po locku ruch dłoni wpływa na sektor. Dokładny czas pozostaje tuningiem.
+Od fizycznego stworzenia Kuli Asterionowej grip może tworzyć szeroki, lekko łukowaty, wielobarwny strumień. Odpowiadają wyłącznie sektory zasilone zainstalowanym kamieniem. Strumień musi trafiać ten sam legalny, zasilony sektor nieprzerwanie przez pełne **1.0 s**; dopiero wtedy powstaje **SECTOR LOCK** i ruch dłoni może wpływać na sektor. Zmiana celu albo utrata legalnego trafienia przed upływem 1.0 s zeruje acquisition timer. Przed lockiem Kula nie steruje lokalnym sektorem, a po locku ruch jest interpretowany względem przejętego sektora, nie całej platformy.
 
 ### `progression.runes.sectorControl`
 
@@ -128,7 +128,7 @@ Gdy trzy wymagane sektory są zasilone przez zainstalowane kamienie i mogą wsp�
 
 ## 7. Sterowanie Rezonatorem
 
-Szczegółowe osie, swobody i algorytmy ruchu sektorów nie są jeszcze zamrożone. Spust Kuli nadal orientuje całą platformę, zachowując istniejący ownership globalnego obrotu. Grip służy lokalnej kontroli wybranego zasilonego sektora. Tryby są wzajemnie wykluczające i nigdy nie sterują równocześnie.
+Szczegółowe osie, swobody i algorytmy ruchu sektorów nie są jeszcze zamrożone. Spust Kuli nadal orientuje całą platformę, zachowując istniejący ownership globalnego obrotu. Grip służy lokalnej kontroli wybranego zasilonego sektora. Tryby są wzajemnie wykluczające i nigdy nie sterują równocześnie. Jeżeli TRIGGER i GRIP są fizycznie aktywne jednocześnie, **TRIGGER ma bezwzględne pierwszeństwo**: działa klasyczna Kula i globalny owner orientacji platformy, a lokalna ścieżka sector-control pozostaje nieaktywna. Dopiero po zwolnieniu TRIGGER wejście GRIP może prowadzić acquisition i SECTOR LOCK.
 
 ### `tool.asterion.resonator` — Panel Y / Kula Asterionowa
 

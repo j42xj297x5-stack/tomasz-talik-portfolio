@@ -65,7 +65,9 @@ Input jest wzajemnie wykluczający:
 
 - **TRIGGER** — istniejące sterowanie globalną orientacją całej platformy;
 - **GRIP** — sektorowy strumień i lokalne sterowanie jednym legalnym sektorem;
-- oba tryby nie mogą działać równocześnie.
+- oba tryby nie mogą działać równocześnie; jeżeli oba wejścia są fizycznie aktywne, **TRIGGER ma bezwzględne pierwszeństwo**: działa klasyczna Kula i globalny owner orientacji platformy, a lokalna ścieżka sector-control nie steruje sektorem. Dopiero nieaktywny TRIGGER pozwala GRIP rozpocząć acquisition/lock.
+
+GRIP nie przejmuje sektora natychmiast. Sektorowy strumień musi trafiać ten sam legalny, zasilony sektor nieprzerwanie przez pełne **1.0 s**; dopiero wtedy powstaje **SECTOR LOCK** i ruch kontrolera może sterować lokalnym sektorem. Zmiana celu albo utrata legalnego trafienia przed upływem 1.0 s zeruje acquisition timer. Przed lockiem Kula nie steruje lokalnym sektorem; po locku przyszły sector-control mode interpretuje ruch względem przejętego sektora, nie całej platformy.
 
 Ten kontrakt nie zmienia istniejącego ownership globalnego obrotu platformy. Nie zamraża osi, kątów, detentów, liczby swobód ani algorytmu lokalnego ruchu.
 
@@ -107,4 +109,3 @@ Scenario może nadawać odkryciu znaczenie, ograniczać prawo pozyskania kryszta
 Przyszła implementacja ma wyprowadzać dostępność z narzędzi, obiektów i domenowych warunków, a Scenario jedynie obserwować oraz interpretować wynik. Musi zachować reconstruction/hydration osiągniętego fizycznego stanu bez replayu dramaturgii.
 
 Poza zakresem i nadal niezamrożone są: konkretne API, nazwy nowych aktorów sector-control, szczegółowe algorytmy i osie ruchu sektorów, detenty, kąty, geometria/pole odpowiedzi, target scoring, parametry VFX/audio oraz nowe Scenario point IDs.
-

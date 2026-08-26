@@ -68,6 +68,16 @@ function getPanelMaterials(panel, fallbackColor) {
   return [...materials];
 }
 
+function isFiniteVector3(value) {
+  return value != null && Number.isFinite(value.x) && Number.isFinite(value.y) && Number.isFinite(value.z);
+}
+
+function isFiniteQuaternion(value) {
+  if (!isFiniteVector3(value) || !Number.isFinite(value.w)) return false;
+  const length = Math.hypot(value.x, value.y, value.z, value.w);
+  return Number.isFinite(length) && length > 0;
+}
+
 export function createVrProgressFloorSectorActor({ descriptor, sourceModel, contract, emission }) {
   if (!descriptor || !sourceModel?.clone || !contract) {
     throw new Error('[VrProgressFloorSectorActor] Descriptor, source model and source contract are required.');
@@ -153,6 +163,20 @@ export function createVrProgressFloorSectorActor({ descriptor, sourceModel, cont
       motionRoot.scale.set(1, 1, 1);
     }
 
+    function setMotionTransform({ position, quaternion } = {}) {
+      if (disposed || !isFiniteVector3(position) || !isFiniteQuaternion(quaternion)) return false;
+      const quaternionLength = Math.hypot(quaternion.x, quaternion.y, quaternion.z, quaternion.w);
+      motionRoot.position.set(position.x, position.y, position.z);
+      motionRoot.quaternion.set(
+        quaternion.x / quaternionLength,
+        quaternion.y / quaternionLength,
+        quaternion.z / quaternionLength,
+        quaternion.w / quaternionLength
+      );
+      motionRoot.scale.set(1, 1, 1);
+      return true;
+    }
+
     function reveal() {
       if (disposed || presentationState !== VR_PROGRESS_FLOOR_SECTOR_PRESENTATION_STATE.HIDDEN) return false;
       presentationState = VR_PROGRESS_FLOOR_SECTOR_PRESENTATION_STATE.REVEALING;
@@ -230,6 +254,7 @@ export function createVrProgressFloorSectorActor({ descriptor, sourceModel, cont
       reveal,
       activatePanel,
       update,
+      setMotionTransform,
       resetMotion,
       reset,
       dispose,
