@@ -54,3 +54,6 @@ There is no invented A9.7 or NEXT A9. The next gameplay slice requires a separat
 ## Traceability
 
 Key evidence: A6 `b091b4e`/`0fc4ce3`; A7 `cc77fb2`/`83ec32f`; A8 `ad83cb2`/`f98188a`; tuning correction `d0f9a17`/`c862b9b`; A9.1 `f03daad`/`3181dc9`; hardening `9ab56aa`/`6b52511`; A9.2 `fd4e519`/`091b7da`; A9.3 `8c3caca`/`d23743d`; A9.4 `38b46cf`/`575dc18`. Current HEAD code is authority for A9.5 platform handoff/extension and A9.6 hydration/reconstruction.
+# Asterion sector control handoff (R2B)
+
+Implemented composition now updates hand mode, R2A acquisition, R2B sector control, then the existing global gyro owner. R2B supports only EARTH, WOOD and FIRE, persists committed levels for the prepared runtime, resets all three to level 0/identity, and exposes defensive level/angle state plus `DETENT_COMMITTED` and motion-phase seams. VFX, audio, grip beam, Field Actor/descriptor, scoring, lensing and METAL/WATER movement remain explicit follow-up work.

@@ -95,3 +95,6 @@ Crystals are branch-and-tier bound and do not carry a page identity. `VrProgress
 - final progression sequence.
 
 Implemented in the current QA/platform stage, but not owned by `createVrProgressFloor`: platform quaternion control by the QA Asterion Sphere, passenger/fixtures inheritance and local-plane locomotion with the safe radial boundary.
+# R2B sector-motion projection
+
+Progress Floor remains the bounded physical projection for R2B through `setSectorMotion`, `getSectorMotionTransform` and `resetSectorMotion`; mutable sector actors and MotionRoots remain private. A new defensive `getSectorControlFrame(glyphId)` snapshot exposes only the stable sector frame position/quaternion needed to interpret hand intent without reading the moving MotionRoot. EARTH and WOOD rotate around canonical sector-local Z with opposite signs; FIRE rotates around canonical sector-local X. R2B changes quaternion only and keeps position at identity.

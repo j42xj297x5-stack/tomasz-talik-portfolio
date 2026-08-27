@@ -263,3 +263,11 @@ Każdy nowy canonical Experience VR Scenario point musi spełniać [`VR_SCENARIO
 5. `α` and `β` are intensities of opposed wings, not signed curvature directions. Minimum semantics may include `(α+β)/2`, `α-β`, separate activity flags and FIRE depth band; names, normalization and scoring are not frozen APIs.
 6. Sector control owns lock, local setting and bounded motion commands. Resonator Field Domain observes state read-only and owns descriptor/field response without controlling MotionRoot. `PlatformEnergyVfxActor` separately owns procedural platform/Zwornik energy. Field lensing is a separate read-only presentation concern.
 7. METAL and WATER remain later advanced tuning/amplification with wing rotation and tilt. Their philosophy is `0° = OFF`, followed by one-direction target detents `13° / 23° / 36°`; coupling, combinations, scoring, gesture mapping and descriptor roles remain open.
+
+## 2026-08-27 — IMPLEMENTED R2B local core-sector motor
+
+1. R2B owns runtime-local committed levels and continuous motor angles for EARTH, WOOD and FIRE only. Levels `0/1/2/3` map exactly to `0°/13°/23°/36°`; Progress Floor is only their bounded physical projection.
+2. Hand deflection is hysteretic direction intent, not a direct sector-angle mapping. Motion uses constant `16°/s`, pauses `0.12 s` at each new detent, continues while intent is held, and settles smoothly to the last committed detent after GRIP release.
+3. Trigger priority remains owned by R2A: it suppresses new local drive and causes a neutral-reference rebase before local control resumes. The existing global gyro owner is unchanged.
+4. Each real new detent emits exactly one semantic `DETENT_COMMITTED` event, including commits down to level 0. Defensive read-only level/angle and motion-phase seams are available to future Field/VFX/audio owners.
+5. Spark VFX, grip beam, detent/motion audio, Field Actor/descriptor, scoring/target response, lensing and METAL/WATER motion remain not implemented.

@@ -107,3 +107,6 @@ Dokładna nazwa klasy/API i podział projection/actor dla field lensing pozostaj
 ## 9. Język wizualny i granice implementacji
 
 Field lensing może używać inspirowanych grawitacyjnym soczewkowaniem rozjaśnień, powiększenia, zakrzywienia, caustic-like arcs, przesunięć i asymetrycznej deformacji, bez deklarowania realistycznej fizyki. Shader architecture, rendering, kolory, intensywności, audio, hardware/perceptual QA, finalne API, motion interpolation i gesture mapping są osobnymi zadaniami.
+# Runtime input status
+
+R2B now provides the future Field Domain with defensive read-only EARTH/WOOD/FIRE level and transient-angle snapshots. Its committed levels are discrete runtime truth, independent of Progress Floor quaternions, and its detents are `0°/13°/23°/36°`. The Resonator Field Actor, analytic descriptor runtime, target response/scoring and lensing presentation remain not implemented; this document does not transfer those responsibilities to sector control.

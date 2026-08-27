@@ -263,6 +263,13 @@ export function createVrProgressFloorSectorActor({ descriptor, sourceModel, cont
         quaternion: motionRoot.quaternion.clone(),
         scale: motionRoot.scale.clone()
       }),
+      getControlFrame: () => {
+        object.updateWorldMatrix(true, false);
+        return {
+          position: object.getWorldPosition(new THREE.Vector3()),
+          quaternion: object.getWorldQuaternion(new THREE.Quaternion())
+        };
+      },
       getPanelObject: (order) => panelsByOrder.get(order)?.object ?? null,
       getRuneInstallationFrame: () => runeInstallationFrame,
       getPresentationState: () => presentationState
