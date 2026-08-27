@@ -62,6 +62,7 @@ import { createVrRuneTuningController } from './xr/runes/createVrRuneTuningContr
 import { createVrProtoAstroTuningController } from './xr/protoAstro/createVrProtoAstroTuningController.js';
 import { createVrAsterionSphere } from './xr/asterion/createVrAsterionSphere.js';
 import { createVrAsterionGyroInteraction } from './xr/asterion/createVrAsterionGyroInteraction.js';
+import { createVrAsterionSectorAcquisitionInteraction } from './xr/asterion/createVrAsterionSectorAcquisitionInteraction.js';
 import { createVrAsterionProductionController } from './xr/asterion/createVrAsterionProductionController.js';
 import { createVrPlayerGuidePanel } from './xr/guidance/createVrPlayerGuidePanel.js';
 import { createVrCurrentObjectiveProjection } from './xr/guidance/createVrCurrentObjectiveProjection.js';
@@ -500,6 +501,14 @@ const handModeController = createVrHandModeController({
     return playerGuidePanel.isOpen() || shellAttractorInteraction?.isHeldBy(leftRecord) === true
       || smallGlyphAttractorInteraction?.isHeldBy(leftRecord) === true;
   }
+});
+const asterionSectorAcquisitionInteraction = createVrAsterionSectorAcquisitionInteraction({
+  sphere: asterionSphere,
+  controllers: vrControllers.controllers,
+  semanticInput,
+  progressFloor,
+  runeStoneProgressionController,
+  isInteractionBlocked: (record) => playerGuidePanel.isOpen() || monkeyGuide?.hasCurrentHit(record) === true
 });
 asterionProductionController.setHandModeController(handModeController);
 const astroAttractorProductionController = createVrAstroAttractorProductionController({
@@ -1253,6 +1262,7 @@ function renderFrame() {
   }
   vrControllers.beginRayHitFrame();
   handModeController.update(delta);
+  asterionSectorAcquisitionInteraction.update(delta);
   playerGuidePanel.update(delta);
   monkeyGuide.update(delta);
   introSequence.update(delta);
@@ -1332,6 +1342,7 @@ function restoreVrScenarioBaseline() {
   // The gyro owns the platform quaternion. Neutralize it before platform fixtures
   // reconstruct their authored local transforms.
   asterionGyroInteraction.reset();
+  asterionSectorAcquisitionInteraction.reset();
   ambientSequencer.reset();
   introAmbientSequencer.reset();
   vrAudio.resetAsterionSphereAudio();
@@ -1455,6 +1466,7 @@ window.addEventListener('pagehide', () => {
   introAmbientSequencer.dispose();
   vrAudio.dispose();
   asterionGyroInteraction.dispose();
+  asterionSectorAcquisitionInteraction.dispose();
   asterionProductionController.dispose();
   astroAttractorProductionController.dispose();
   asterionSphere.dispose();
