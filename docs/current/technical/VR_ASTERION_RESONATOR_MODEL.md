@@ -42,18 +42,19 @@ Panel Y i Guidance ujawniają wiedzę według Scenario oraz wiedzy już zdobytej
 Źródłem materializacji Zwornika jest ukończenie wszystkich paneli odpowiadającego sektora:
 
 ```text
-sector complete → RUNE_BINDER_REVEAL → trwały Zwornik Runiczny
+sector complete → runtime HIDDEN → DOCKED → trwały Zwornik Runiczny
+future presentation observes transition → RUNE_BINDER_REVEAL
 ```
 
 Zwornik nie materializuje się podczas instalowania kamienia. EARTH, WOOD i FIRE mogą dlatego istnieć przed ukończeniem pełnego trzeciego kręgu. Po reveal pozostaje trwałym elementem sektora i miejscem późniejszego związania właściwego Rune Stone.
 
-Obrót lub spin Zwornika nie należy do target canon. Historyczny stan techniczny `ORBITING` nie ustanawia prezentacji obrotowej.
+Obrót lub spin Zwornika nie należy do target canon. Historyczne `ORBITING` zostało usunięte; settled installed state to `BOUND`. Live successful page commit synchronizuje readiness i materializuje Zwornik w `DOCKED`, gdzie pozostaje niezależnie od późniejszej instalacji.
 
 ### Niezależność prezentacji i kotwicy
 
 Transformacja prezentacyjna geometrii Zwornika i finalna kotwica instalacji Rune Stone są niezależne. Skala, radialne odsunięcie albo inna korekta prezentacji Zwornika nie może przesuwać kanonicznego finalnego miejsca osadzenia kamienia.
 
-**TUNING, nie prawo architektoniczne:** docelowa geometria Zwornika ma być wizualnie około `2×` większa i odsunięta radialnie dalej o co najmniej około `1 m` względem obecnej prezentacji. Finalna lokalizacja kamienia pozostaje odpowiadająca obecnemu poprawnemu położeniu.
+**IMPLEMENTED CURRENT TUNING, nie prawo architektoniczne:** osobny presentation root skaluje geometrię Zwornika `2.0×` i odsuwa ją o `+1.0 m` po canonical sector-local `+Z`. Finalna lokalizacja kamienia pozostaje dokładnie w dotychczasowym InstallationAnchor poza presentation hierarchy. Parenting pod Rune Installation Frame / Sector MotionRoot zachowuje automatyczne dziedziczenie R2B motion.
 
 ## 5. Rune Stone bez istniejącego Zwornika
 

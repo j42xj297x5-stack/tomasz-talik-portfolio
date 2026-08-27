@@ -201,6 +201,7 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
       pulseDuration: 1.6, radialSegments: 14 }
   },
   runeStoneInstallation: { handoffRadiusMeters: 10, hoverHeightMeters: 2, phaseDurationSeconds: 1.2 },
+  runeBridge: { presentationScale: 2, radialPresentationOffsetMeters: 1 },
   largeGlyphAttractor: { minimumClearance: 0.8 },
   glyphInteraction: { holdDurationSeconds: 0.5, holdLostGraceSeconds: 0.15 },
   glyphLights: { inwardOffset: 1 },
@@ -694,6 +695,12 @@ export function normalizeExperienceVrSettings(candidate) {
         defaults.runeStoneInstallation.phaseDurationSeconds,
         { min: Number.EPSILON, max: 60 }
       )
+    },
+    runeBridge: {
+      presentationScale: finiteNumber(candidate.runeBridge?.presentationScale,
+        defaults.runeBridge.presentationScale, { min: Number.EPSILON, max: 10 }),
+      radialPresentationOffsetMeters: finiteNumber(candidate.runeBridge?.radialPresentationOffsetMeters,
+        defaults.runeBridge.radialPresentationOffsetMeters, { min: 0, max: 10 })
     },
     largeGlyphAttractor: { minimumClearance: finiteNumber(candidate.largeGlyphAttractor?.minimumClearance,
       defaults.largeGlyphAttractor.minimumClearance, { min: 0.2, max: 4 }) },

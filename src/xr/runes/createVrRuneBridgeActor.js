@@ -6,7 +6,7 @@ export const VR_RUNE_BRIDGE_STATES = Object.freeze({
   DOCKED: 'DOCKED',
   EXTENDING: 'EXTENDING',
   EXTENDED: 'EXTENDED',
-  ORBITING: 'ORBITING'
+  BOUND: 'BOUND'
 });
 
 const REQUIRED_NODE_NAMES = Object.freeze([
@@ -64,7 +64,7 @@ function copyTransformRelativeTo(source, relativeTo, target) {
 }
 
 export function createVrRuneBridgeActor({ assetManager, getSectorMount, extensionDurationSeconds,
-  hoverHeightMeters }) {
+  hoverHeightMeters, presentationScale, radialPresentationOffsetMeters }) {
   if (!assetManager?.getGltf) throw new Error('[VrRuneBridgeActor] A preloaded AssetManager is required.');
   if (typeof getSectorMount !== 'function') throw new Error('[VrRuneBridgeActor] Sector mount access is required.');
   if (!Number.isFinite(extensionDurationSeconds) || extensionDurationSeconds <= 0) {
@@ -72,6 +72,12 @@ export function createVrRuneBridgeActor({ assetManager, getSectorMount, extensio
   }
   if (!Number.isFinite(hoverHeightMeters) || hoverHeightMeters <= 0) {
     throw new TypeError('[VrRuneBridgeActor] hoverHeightMeters must be finite and positive.');
+  }
+  if (!Number.isFinite(presentationScale) || presentationScale <= 0) {
+    throw new TypeError('[VrRuneBridgeActor] presentationScale must be finite and positive.');
+  }
+  if (!Number.isFinite(radialPresentationOffsetMeters) || radialPresentationOffsetMeters < 0) {
+    throw new TypeError('[VrRuneBridgeActor] radialPresentationOffsetMeters must be finite and non-negative.');
   }
   const templateScene = assetManager.getGltf('vr-rune-bridge-model')?.scene;
   if (!templateScene) throw new Error('[VrRuneBridgeActor] Preloaded bridge.glb is required.');
@@ -95,10 +101,13 @@ export function createVrRuneBridgeActor({ assetManager, getSectorMount, extensio
       hoverAnchor.name = `VrRuneStoneHoverAnchor_${suffix}`;
       const motionRoot = new THREE.Group();
       motionRoot.name = `VrRuneBridgeMotionRoot_${suffix}`;
+      const presentationRoot = new THREE.Group();
+      presentationRoot.name = `VrRuneBridgePresentationRoot_${suffix}`;
       const alignmentRoot = new THREE.Group();
       alignmentRoot.name = `VrRuneBridgeAlignmentRoot_${suffix}`;
       instance.add(stoneAnchor, hoverAnchor, motionRoot);
-      motionRoot.add(alignmentRoot);
+      motionRoot.add(presentationRoot);
+      presentationRoot.add(alignmentRoot);
       alignmentRoot.add(bridgeRoot);
       mount.add(instance);
       alignBridge(alignmentRoot, instance, nodes);
@@ -113,6 +122,8 @@ export function createVrRuneBridgeActor({ assetManager, getSectorMount, extensio
       if (!Number.isFinite(extensionDistance) || extensionDistance <= 0) {
         throw new Error('[VrRuneBridgeActor] Authored socket-to-anchor radial extension must be finite and positive.');
       }
+      presentationRoot.position.set(0, 0, radialPresentationOffsetMeters);
+      presentationRoot.scale.setScalar(presentationScale);
 
       instance.visible = false;
       instances.set(branchId, {
@@ -186,7 +197,7 @@ export function createVrRuneBridgeActor({ assetManager, getSectorMount, extensio
       branchId,
       'set installed',
       [VR_RUNE_BRIDGE_STATES.EXTENDED],
-      VR_RUNE_BRIDGE_STATES.ORBITING
+      VR_RUNE_BRIDGE_STATES.BOUND
     );
   }
   function restoreInstalled(branchId) {
@@ -195,7 +206,7 @@ export function createVrRuneBridgeActor({ assetManager, getSectorMount, extensio
     entry.instance.visible = true;
     entry.extensionElapsed = extensionDurationSeconds;
     entry.motionRoot.position.set(0, 0, entry.extensionDistance);
-    entry.state = VR_RUNE_BRIDGE_STATES.ORBITING;
+    entry.state = VR_RUNE_BRIDGE_STATES.BOUND;
     return true;
   }
   function update(deltaSeconds = 0) {
