@@ -131,6 +131,8 @@ export function createVrProgressFloorActor({ parent, sourceModels, emission = {}
     },
     reset() { if (disposed) return; sectorsByGlyphId.forEach((sector) => sector.reset()); tierRings.forEach((ring) => { ring.pulseRemaining = 0; ring.material.opacity = 0; }); },
     getRuneInstallationFrame(branchId) { return sectorsByBranchId.get(String(branchId).toLowerCase())?.getRuneInstallationFrame() ?? null; },
+    getSectorEnergyVfxMount(branchId) { return sectorsByBranchId.get(String(branchId).toLowerCase())?.getEnergyVfxMount() ?? null; },
+    getSectorEnergyVfxBounds(branchId) { return sectorsByBranchId.get(String(branchId).toLowerCase())?.getEnergyVfxBounds() ?? null; },
     dispose() {
       if (disposed) return; disposed = true; object.removeFromParent(); sectorsByGlyphId.forEach((sector) => sector.dispose());
       sectorsByGlyphId.clear(); sectorsByBranchId.clear(); ownedMaterials.forEach((material) => material.dispose()); ownedGeometries.forEach((geometry) => geometry.dispose());

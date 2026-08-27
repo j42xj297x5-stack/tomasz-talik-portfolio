@@ -28,6 +28,8 @@ import { createVrReliquaryReleaseButton } from './xr/createVrReliquaryReleaseBut
 import { createVrProgressFloor } from './xr/floor/createVrProgressFloor.js';
 import { createVrRuneBridgeActor } from './xr/runes/createVrRuneBridgeActor.js';
 import { createVrRuneInstallationReadinessProjection } from './xr/runes/createVrRuneInstallationReadinessProjection.js';
+import { createVrPlatformEnergyVfxActor } from './xr/vfx/createVrPlatformEnergyVfxActor.js';
+import { createVrPlatformEnergyVfxProjection } from './xr/vfx/createVrPlatformEnergyVfxProjection.js';
 import { createVrRuneInstalledStateProjection } from './xr/runes/createVrRuneInstalledStateProjection.js';
 import { createVrRuneStoneActor } from './xr/runes/createVrRuneStoneActor.js';
 import { createVrRuneStoneAttractorInteraction } from './xr/runes/createVrRuneStoneAttractorInteraction.js';
@@ -412,9 +414,14 @@ const progressionController = createVrProgressionController({ pages: experienceV
 const runeInstallationReadinessProjection = createVrRuneInstallationReadinessProjection({
   isBranchComplete: (branchId) => progressionController.isBranchComplete(branchId)
 });
-const synchronizeRuneBridgeReadiness = () => {
-  runeInstallationReadinessProjection.synchronizeBridges(runeBridgeActor);
-};
+const platformEnergyVfxActor = createVrPlatformEnergyVfxActor({
+  getSectorMount: (branchId) => progressFloor.getSectorEnergyVfxMount(branchId),
+  getSectorBounds: (branchId) => progressFloor.getSectorEnergyVfxBounds(branchId),
+  runeBridgeActor,
+  settings: settings.platformEnergyVfx
+});
+const platformEnergyVfxProjection = createVrPlatformEnergyVfxProjection({ platformEnergyVfxActor });
+const synchronizeRuneBridgeReadiness = () => runeInstallationReadinessProjection.synchronizeBridges(runeBridgeActor);
 const ambientSequencer = createVrAmbientSequencer({ bridge: vrAudio });
 const introAmbientSequencer = createVrIntroAmbientSequencer({ bridge: vrAudio });
 const ambientScenarioOwner = Object.freeze({
@@ -752,7 +759,7 @@ const crystalCollection = createVrCrystalCollection({
   onPreview: (page) => runtimeExperience.dispatch(VR_SCENARIO_EVENT.CRYSTAL_ACTIVATED, { page }),
   onCommit: (page, meta) => {
     progressionSemanticHandoff.onPageCommitted(page, meta);
-    synchronizeRuneBridgeReadiness();
+    platformEnergyVfxProjection.presentReadinessTransitions(synchronizeRuneBridgeReadiness());
   }
 });
 createVrProgressionShortcut({ search: location.search, pages: experienceVrPages, progressionController,
@@ -1154,7 +1161,7 @@ runtimeExperience = new RuntimeExperience({
     },
     [VR_SCENARIO_EFFECT.UPDATE_COMMITTED_CARD_PRESENTATION]: (change, payload) => {
       progressFloor.activatePage(payload.page);
-      synchronizeRuneBridgeReadiness();
+      platformEnergyVfxProjection.presentReadinessTransitions(synchronizeRuneBridgeReadiness());
     },
     [VR_SCENARIO_EFFECT.PLAY_CARD_COMMIT_FEEDBACK]: () => {
       playVrWorld(VR_AUDIO.reliquaryConsume);
@@ -1300,6 +1307,7 @@ function renderFrame() {
   runeStoneActor.update(delta);
   runeStoneAttractorInteraction.update(delta);
   runeBridgeActor.update(delta);
+  platformEnergyVfxActor.update(delta);
   runeStoneInstallationInteraction.update(delta);
   celestialActor.update(delta);
   observationWindow.update(delta);
@@ -1383,6 +1391,8 @@ function restoreVrScenarioBaseline() {
   resetPlayerRigToSpawn();
   progressionController.reset();
   progressFloor.reset();
+  platformEnergyVfxActor.reset();
+  platformEnergyVfxProjection.reset();
   runeStoneInstallationInteraction.reset();
   runeBridgeActor.reset();
   synchronizeRuneBridgeReadiness();
@@ -1511,6 +1521,8 @@ window.addEventListener('pagehide', () => {
   releaseButton.dispose();
   crystalCollection.dispose();
   crystalReliquary.dispose();
+  platformEnergyVfxProjection.dispose();
+  platformEnergyVfxActor.dispose();
   runeBridgeActor.dispose();
   runeStoneActor.dispose();
   progressFloor.dispose();

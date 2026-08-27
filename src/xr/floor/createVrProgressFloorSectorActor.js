@@ -155,6 +155,9 @@ export function createVrProgressFloorSectorActor({ descriptor, sourceModel, cont
     );
     runeInstallationFrame.userData = { ...runeInstallationFrame.userData, branchId: descriptor.branchId, radialAxis: '+Z' };
     motionRoot.add(runeInstallationFrame);
+    const energyVfxMount = new THREE.Group();
+    energyVfxMount.name = `VrProgressFloorSectorEnergyVfxMount:${descriptor.glyphId}`;
+    motionRoot.add(energyVfxMount);
 
     function resetMotion() {
       if (disposed) return;
@@ -272,6 +275,8 @@ export function createVrProgressFloorSectorActor({ descriptor, sourceModel, cont
       },
       getPanelObject: (order) => panelsByOrder.get(order)?.object ?? null,
       getRuneInstallationFrame: () => runeInstallationFrame,
+      getEnergyVfxMount: () => energyVfxMount,
+      getEnergyVfxBounds: () => ({ min: presentationBounds.min.clone(), max: presentationBounds.max.clone() }),
       getPresentationState: () => presentationState
     };
   } catch (error) {

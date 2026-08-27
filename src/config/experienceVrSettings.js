@@ -202,6 +202,13 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
   },
   runeStoneInstallation: { handoffRadiusMeters: 10, hoverHeightMeters: 2, phaseDurationSeconds: 1.2 },
   runeBridge: { presentationScale: 2, radialPresentationOffsetMeters: 1 },
+  platformEnergyVfx: {
+    enabled: true, maxActiveBolts: 12, segmentsPerBolt: 12, maxBranchesPerBolt: 1,
+    underfloorOffsetMeters: 0.035, verticalJitterMeters: 0.025,
+    boltLifetimeSeconds: 0.18, spawnIntervalSeconds: 0.075,
+    revealTravelSeconds: 0.7, binderMaterializeSeconds: 0.42, finalPulseSeconds: 0.2,
+    boltWidth: 0.018, displacement: 0.09, opacity: 0.72, color: 0xdff8ff
+  },
   largeGlyphAttractor: { minimumClearance: 0.8 },
   glyphInteraction: { holdDurationSeconds: 0.5, holdLostGraceSeconds: 0.15 },
   glyphLights: { inwardOffset: 1 },
@@ -701,6 +708,23 @@ export function normalizeExperienceVrSettings(candidate) {
         defaults.runeBridge.presentationScale, { min: Number.EPSILON, max: 10 }),
       radialPresentationOffsetMeters: finiteNumber(candidate.runeBridge?.radialPresentationOffsetMeters,
         defaults.runeBridge.radialPresentationOffsetMeters, { min: 0, max: 10 })
+    },
+    platformEnergyVfx: {
+      enabled: typeof candidate.platformEnergyVfx?.enabled === 'boolean' ? candidate.platformEnergyVfx.enabled : defaults.platformEnergyVfx.enabled,
+      maxActiveBolts: Math.round(finiteNumber(candidate.platformEnergyVfx?.maxActiveBolts, defaults.platformEnergyVfx.maxActiveBolts, { min: 1, max: 32 })),
+      segmentsPerBolt: Math.round(finiteNumber(candidate.platformEnergyVfx?.segmentsPerBolt, defaults.platformEnergyVfx.segmentsPerBolt, { min: 4, max: 32 })),
+      maxBranchesPerBolt: Math.round(finiteNumber(candidate.platformEnergyVfx?.maxBranchesPerBolt, defaults.platformEnergyVfx.maxBranchesPerBolt, { min: 0, max: 2 })),
+      underfloorOffsetMeters: finiteNumber(candidate.platformEnergyVfx?.underfloorOffsetMeters, defaults.platformEnergyVfx.underfloorOffsetMeters, { min: 0, max: 0.3 }),
+      verticalJitterMeters: finiteNumber(candidate.platformEnergyVfx?.verticalJitterMeters, defaults.platformEnergyVfx.verticalJitterMeters, { min: 0, max: 0.2 }),
+      boltLifetimeSeconds: finiteNumber(candidate.platformEnergyVfx?.boltLifetimeSeconds, defaults.platformEnergyVfx.boltLifetimeSeconds, { min: 0.05, max: 1 }),
+      spawnIntervalSeconds: finiteNumber(candidate.platformEnergyVfx?.spawnIntervalSeconds, defaults.platformEnergyVfx.spawnIntervalSeconds, { min: 0.02, max: 1 }),
+      revealTravelSeconds: finiteNumber(candidate.platformEnergyVfx?.revealTravelSeconds, defaults.platformEnergyVfx.revealTravelSeconds, { min: 0.1, max: 4 }),
+      binderMaterializeSeconds: finiteNumber(candidate.platformEnergyVfx?.binderMaterializeSeconds, defaults.platformEnergyVfx.binderMaterializeSeconds, { min: 0.1, max: 4 }),
+      finalPulseSeconds: finiteNumber(candidate.platformEnergyVfx?.finalPulseSeconds, defaults.platformEnergyVfx.finalPulseSeconds, { min: 0.05, max: 1 }),
+      boltWidth: finiteNumber(candidate.platformEnergyVfx?.boltWidth, defaults.platformEnergyVfx.boltWidth, { min: 0.002, max: 0.1 }),
+      displacement: finiteNumber(candidate.platformEnergyVfx?.displacement, defaults.platformEnergyVfx.displacement, { min: 0, max: 0.5 }),
+      opacity: finiteNumber(candidate.platformEnergyVfx?.opacity, defaults.platformEnergyVfx.opacity, { min: 0, max: 1 }),
+      color: Math.round(finiteNumber(candidate.platformEnergyVfx?.color, defaults.platformEnergyVfx.color, { min: 0, max: 0xffffff }))
     },
     largeGlyphAttractor: { minimumClearance: finiteNumber(candidate.largeGlyphAttractor?.minimumClearance,
       defaults.largeGlyphAttractor.minimumClearance, { min: 0.2, max: 4 }) },
