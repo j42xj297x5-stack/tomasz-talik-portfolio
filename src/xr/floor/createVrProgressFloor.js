@@ -73,6 +73,8 @@ export function createVrProgressFloor({
     getActivatedEntries: () => [...activatedEntries.values()].map(({ glyphId, order }) => ({ glyphId, order })),
     getRevealedSectorIds: () => [...new Set([...activatedEntries.values()].map(({ glyphId }) => glyphId))],
     getCompletedTiers: () => [...completedTiers],
-    getRuneInstallationFrame: (branchId) => actor.getRuneInstallationFrame(branchId), dispose
+    getRuneInstallationFrame: (branchId) => actor.getRuneInstallationFrame(branchId),
+    getSectorEnergyVfxMount: (branchId) => actor.getSectorEnergyVfxMount(branchId),
+    getSectorEnergyVfxBounds: (branchId) => actor.getSectorEnergyVfxBounds(branchId), dispose
   };
 }

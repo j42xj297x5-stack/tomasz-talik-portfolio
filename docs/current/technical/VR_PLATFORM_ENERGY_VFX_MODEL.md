@@ -1,6 +1,12 @@
 # Experience VR Platform Energy VFX Model
 
-Status: **KANON / TARGET / NOT IMPLEMENTED**. Ten dokument jest jednym kanonicznym kontraktem technicznym przyszłej warstwy proceduralnych wyładowań energii platformy dla materializacji Zworników Runicznych, instalacji Rune Stones i sterowania Kulą Asterionową. Nie ustanawia implementacji runtime ani wartości strojenia.
+Status: **KANON / PARTIALLY IMPLEMENTED (R3b)**. Dokument opisuje wspólną warstwę proceduralnej energii platformy. Foundation oraz `RUNE_BINDER_REVEAL` działają w runtime; pozostałe profile pozostają targetem. Liczby w settings są TUNING, nie kanonem architektury.
+
+## Stan implementacji R3b
+
+**IMPLEMENTED:** jeden shared pair-generic `PlatformEnergyVfxActor`, cienka projection obserwująca rzeczywiste live `HIDDEN → DOCKED`, bounded pool reusable ribbon geometry/materials, sector-local mounty i wedge sampling z defensive presentation bounds, profil `RUNE_BINDER_REVEAL`, presentation-only materialization Zwornika, pojedynczy final pulse oraz reset/dispose bez backflow do gameplay.
+
+**NOT IMPLEMENTED:** `RUNE_INSTALL`, `FLOOR_DRIVE`, detent sparks, motion/detent/reveal audio, grip beam i field lensing.
 
 ## Klasyfikacja ustaleń
 
@@ -10,7 +16,7 @@ Status: **KANON / TARGET / NOT IMPLEMENTED**. Ten dokument jest jednym kanoniczn
 
 ## Ownership i granica systemu
 
-**KANON:** fizycznym ownerem całej prezentacji jest jeden pair-generic actor `PlatformEnergyVfxActor`. Przewidywana ścieżka przyszłej implementacji to `src/xr/vfx/createVrPlatformEnergyVfxActor.js`; dokumentacja nie tworzy tego pliku.
+**KANON / IMPLEMENTED FOUNDATION:** fizycznym ownerem prezentacji jest jeden pair-generic actor `PlatformEnergyVfxActor` w `src/xr/vfx/createVrPlatformEnergyVfxActor.js`.
 
 **KANON:** dopuszczalny jest cienki `PlatformEnergyVfxProjection`. Wyłącznie odczytuje sector-complete, istniejące read-only stany instalacji Rune i Asterion gyro, normalizuje je do komend prezentacyjnych i przekazuje aktorowi. Projection ani actor nie zapisują gameplay truth, nie rozstrzygają readiness, nie instalują kamienia i nie sterują platformą. Przepływ jest jednokierunkowy:
 
@@ -42,7 +48,7 @@ platform underfloor procedural lightning
 - **FACT:** aktywny capture udostępnia elapsed/duration przez istniejący transient record. Projection może z niego wyprowadzić read-only znormalizowany postęp prezentacyjny; nie utrwala go.
 - **FACT:** `AsterionGyroInteraction` posiada `driveActive`, rzeczywistą prędkość kątową i stan, w tym `LOCKED`; zapisuje rzeczywistą quaternion `VrTiltableFloorRoot`. VFX jedynie projektuje te dane i nie integruje własnego modelu ruchu.
 - **FACT:** `VrTiltableFloorRoot` jest wspólnym transform rootem platformy. Pięć sektorów zachowuje układ pięciu wycinków po 72°.
-- **FACT:** live successful sector-completing page commit synchronizuje istniejącą readiness projection z `RuneBridgeActor`, tworząc jednoznaczne pierwsze przejście `HIDDEN → DOCKED`. Przyszła presentation może je obserwować jako seam `RUNE_BINDER_REVEAL`; hydration odtwarza settled `DOCKED`/`BOUND` bez replayu reveal. `PlatformEnergyVfxActor`, lightning i audio nadal nie są zaimplementowane.
+- **FACT / IMPLEMENTED:** live successful sector-completing page commit zwraca rzeczywiste readiness transitions. Cienka VFX projection deduplikuje `HIDDEN → DOCKED` i atomowo rozpoczyna `RUNE_BINDER_REVEAL`; hydration nadal odtwarza settled `DOCKED`/`BOUND` bez replayu. Audio pozostaje poza zakresem.
 
 ## Kontrakt przestrzenny
 
@@ -80,7 +86,7 @@ platform underfloor procedural lightning
 - **KANON:** po ustabilizowaniu w `LOCKED` może wykonać jeden krótki impuls wygaszający. W spoczynku nie działa stała burza.
 - **TUNING:** progi aktywacji, frequency curve, wpływ prędkości na częstotliwość/długość, udział łuków między sektorami oraz envelope impulsu `LOCKED`.
 
-## Przyszły kontrakt lifecycle aktora
+## Kontrakt lifecycle aktora
 
 Dokładna sygnatura JavaScript pozostaje otwarta. Publiczna powierzchnia ma jednak zapewnić następujące semantyki:
 

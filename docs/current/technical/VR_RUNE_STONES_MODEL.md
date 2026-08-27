@@ -198,6 +198,8 @@ Authored `BRIDGE_STONE_CAPTURE` może pozostać prywatnym asset/calibration evid
 
 Prezentacyjna transformacja geometrii Zwornika jest niezależna od stabilnego InstallationAnchor. `VrRuneBridgePresentationRoot_<BRANCH>` jest dzieckiem motion root i właścicielem wyłącznie runtime scale `2.0` oraz sector-local radialnego offsetu `+Z = 1.0 m` (**CURRENT TUNING**). Stabilne InstallationAnchor i HoverAnchor są wyprowadzone z authored contract przed tym tuningiem i pozostają siblingami motion hierarchy, więc finalne miejsce oraz skala Rune Stone są niezmienione. Cała instancja pozostaje pod Rune Installation Frame / Sector MotionRoot, dlatego prezentacja i installed stone automatycznie dziedziczą R2B motion oraz globalny `VrTiltableFloorRoot`.
 
+**R3b RUNE_BINDER_REVEAL = IMPLEMENTED.** Readiness projection zwraca wyłącznie rzeczywiście wykonane transitiony, a live composition przekazuje `HIDDEN → DOCKED` do deduplikującej VFX projection. `RuneBridgeActor.setRevealPresentationProgress()` klonuje i moduluje wyłącznie materiały presentation geometry oraz dodatkowy transient scale bliski `1`; nie zmienia state, readiness, StoneAnchor, HoverAnchor ani settled `2.0× / +1.0 m`. Hydration nie przekazuje transitionów do VFX, więc odtwarza settled presentation bez replayu.
+
 ## 8. Transport i instalacja
 
 **A9.1–A9.6 są IMPLEMENTED foundations. NATURAL RUNE A9 FOUNDATION = COMPLETE.** Nie oznacza to ukończenia całego Rune Act ani authoringu Scenario po `4.80`.
@@ -404,7 +406,7 @@ Early natural Rune Stone presentation jest **IMPLEMENTED**. Pięć naturalnych a
 - **Panel 2 — IMPLEMENTED:** task `d7e026fe565cf44b20f158564316c814a0e910e0`, merge `5dd2c59080f0501accb4cea546ee5ef68a5811e0`.
 - **Panel 1 Rune U projection — IMPLEMENTED:** task `b04605cb01b395ec188b153cd901941a446076ff`, merge `5510e78062dd0a3309be2e5f22e528ee2ed532ed`.
 
-R3 implementuje docelowy runtime Zwornika: live materialization, trwały `DOCKED`/`BOUND`, presentation-only scale/offset i reconstruction bez replayu. Nie implementuje `RUNE_BINDER_REVEAL` lightning, Rune install energy VFX, detent spark/audio, motion audio, grip beam, Field Actor ani field lensing. A9.6 nie implementuje spatial audio, Water override trigger, Ether flow, Rezonatora/final Water flow ani Scenario po `4.80`. Spin Zwornika Installed-stone collision został superseded; nie jest remaining target.
+R3 implementuje runtime Zwornika, a R3b implementuje `RUNE_BINDER_REVEAL`: live materialization, pooled sector-local lightning, final pulse, trwały `DOCKED`/`BOUND`, presentation-only scale/offset i reconstruction bez replayu. Nadal nie implementuje Rune install energy VFX, detent spark/audio, motion audio, grip beam, Field Actor ani field lensing. A9.6 nie implementuje spatial audio, Water override trigger, Ether flow, Rezonatora/final Water flow ani Scenario po `4.80`.
 
 ## 14. Remaining target
 
@@ -419,6 +421,7 @@ ADDITIONAL RUNTIME CORRECTIONS: RECIPE INSERTION FAMILY VALIDATION, RECIPE-CHANG
 NATURAL RUNE A9 FOUNDATION: COMPLETE
 CARRIED RUNE STONE ↔ INSTALLED RUNE STONE COLLISION: SUPERSEDED / NO GAMEPLAY COLLISION SYSTEM
 PHYSICAL BRIDGE EXTENSION: IMPLEMENTED
+R3b RUNE_BINDER_REVEAL: IMPLEMENTED
 INSTALLATION HANDOFF + APPROACH / BRIDGE_OPEN / DESCENT: IMPLEMENTED
 AUTHORED SCENARIO BOUNDARY: 4.80
 POST-4.80 SCENARIO / A10+: DEFERRED / NOT IMPLEMENTED

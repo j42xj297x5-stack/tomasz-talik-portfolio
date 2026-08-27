@@ -124,6 +124,17 @@ export function createVrRuneBridgeActor({ assetManager, getSectorMount, extensio
       }
       presentationRoot.position.set(0, 0, radialPresentationOffsetMeters);
       presentationRoot.scale.setScalar(presentationScale);
+      const revealMaterials = [];
+      bridgeRoot.traverse((object) => {
+        if (!object.isMesh || !object.material) return;
+        const authoredMaterials = Array.isArray(object.material) ? object.material : [object.material];
+        const clonedMaterials = authoredMaterials.map((material) => {
+          const clone = material.clone();
+          revealMaterials.push({ material: clone, opacity: material.opacity, transparent: material.transparent, depthWrite: material.depthWrite });
+          return clone;
+        });
+        object.material = Array.isArray(object.material) ? clonedMaterials : clonedMaterials[0];
+      });
 
       instance.visible = false;
       instances.set(branchId, {
@@ -132,6 +143,8 @@ export function createVrRuneBridgeActor({ assetManager, getSectorMount, extensio
         motionRoot,
         stoneAnchor,
         hoverAnchor,
+        presentationRoot,
+        revealMaterials,
         extensionDistance,
         extensionElapsed: 0,
         state: VR_RUNE_BRIDGE_STATES.HIDDEN
@@ -168,7 +181,21 @@ export function createVrRuneBridgeActor({ assetManager, getSectorMount, extensio
       nextState
     );
     if (changed) setMotionBaseline(entry);
+    if (changed && !ready) setRevealPresentationProgress(branchId, 1);
     return changed;
+  }
+  function setRevealPresentationProgress(branchId, progress) {
+    const entry = getInstance(branchId);
+    if (!entry || disposed || !Number.isFinite(progress)) return false;
+    const value = THREE.MathUtils.clamp(progress, 0, 1);
+    entry.presentationRoot.scale.setScalar(presentationScale * (0.94 + value * 0.06));
+    entry.revealMaterials.forEach((baseline) => {
+      baseline.material.opacity = baseline.opacity * value;
+      baseline.material.transparent = value < 1 ? true : baseline.transparent;
+      baseline.material.depthWrite = value < 1 ? false : baseline.depthWrite;
+      baseline.material.needsUpdate = true;
+    });
+    return true;
   }
   function beginExtension(branchId) {
     const entry = getInstance(branchId);
@@ -228,12 +255,16 @@ export function createVrRuneBridgeActor({ assetManager, getSectorMount, extensio
       entry.state = VR_RUNE_BRIDGE_STATES.HIDDEN;
       entry.instance.visible = false;
       setMotionBaseline(entry);
+      setRevealPresentationProgress(entry.instance.userData.branchId, 1);
     });
   }
   function dispose() {
     if (disposed) return;
     disposed = true;
-    instances.forEach(({ instance }) => instance.removeFromParent());
+    instances.forEach(({ instance, revealMaterials }) => {
+      instance.removeFromParent();
+      revealMaterials.forEach(({ material }) => material.dispose());
+    });
     instances.clear();
   }
 
@@ -244,6 +275,7 @@ export function createVrRuneBridgeActor({ assetManager, getSectorMount, extensio
     cancelExtension,
     setInstalled,
     restoreInstalled,
+    setRevealPresentationProgress,
     getStoneAnchor: (branchId) => getInstance(branchId)?.stoneAnchor ?? null,
     getStoneHoverAnchor: (branchId) => getInstance(branchId)?.hoverAnchor ?? null,
     getBridgeRoot: (branchId) => getInstance(branchId)?.bridgeRoot ?? null,

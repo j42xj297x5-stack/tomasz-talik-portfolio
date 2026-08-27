@@ -40,13 +40,17 @@ export function createVrRuneInstallationReadinessProjection({
     if (!runeBridgeActor?.getState || !runeBridgeActor?.setInstallationReady) {
       throw new TypeError('[VrRuneInstallationReadinessProjection] RuneBridgeActor access is required.');
     }
+    const transitions = [];
     branchIds.forEach((branchId) => {
       const state = runeBridgeActor.getState(branchId);
       const ready = isInstallationReady(branchId);
       if (!LEGAL_READINESS_STATES.has(state)) return;
       if ((state === 'DOCKED') === ready) return;
-      runeBridgeActor.setInstallationReady(branchId, ready);
+      if (runeBridgeActor.setInstallationReady(branchId, ready)) {
+        transitions.push(Object.freeze({ branchId, previousState: state, state: runeBridgeActor.getState(branchId) }));
+      }
     });
+    return Object.freeze(transitions);
   }
 
   return { isInstallationReady, getReadyBranchIds, synchronizeBridges };
