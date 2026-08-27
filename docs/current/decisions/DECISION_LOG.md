@@ -253,3 +253,13 @@ Każdy nowy canonical Experience VR Scenario point musi spełniać [`VR_SCENARIO
 6. METAL and WATER later add wing rotation plus tilt as an advanced tuning/amplification layer over the same field. Their final DOF remain open.
 7. Field presentation uses a gravitational-lensing-inspired but non-literal language: brightening, magnification, curvature, caustic-like arcs, shifts and asymmetric distortion. Shader/VFX implementation is not established.
 8. The historical antenna model remains historical evidence only and must not be reactivated as implementation precedent.
+
+## 2026-08-27 — CURRENT Asterion Resonator canonical physical sector positions (SUPERSEDES SIGNED FIELD LEVELS ABOVE)
+
+1. The signed core model is superseded. EARTH `α`, WOOD `β` and FIRE `γ` each use levels `{0,1,2,3}` mapped to `0° / 13° / 23° / 36°`. `0°` is OFF; the active angles are CURRENT TARGET positions and may change only through a new explicit decision after hardware/perceptual QA.
+2. Motion begins flat and proceeds only in one canonical direction. EARTH raises its left edge, WOOD mirrors it by raising its right edge, and FIRE uses only a whole-sector semantic scoop. There are no negative positions, signed detents or fixed concave/rectangular/convex meanings. FIRE maps active levels to `FAR / MID / NEAR`.
+3. Installed Rune truth makes a sector powered, responsive and lockable, but not field-active. Field-active requires powered plus local level above zero; `0° → 13°` enables contribution. Three powered sectors make the Resonator exist even at `(0,0,0)`, where coarse field remains OFF.
+4. The physical core has 64 states. The fully active subset retains 27 configurations. Active lateral symmetry requires `α = β > 0`, producing 9 primary symmetric configurations across three active FIRE bands. Asymmetric and one-wing-active partial states are legal; exact scoring remains open.
+5. `α` and `β` are intensities of opposed wings, not signed curvature directions. Minimum semantics may include `(α+β)/2`, `α-β`, separate activity flags and FIRE depth band; names, normalization and scoring are not frozen APIs.
+6. Sector control owns lock, local setting and bounded motion commands. Resonator Field Domain observes state read-only and owns descriptor/field response without controlling MotionRoot. `PlatformEnergyVfxActor` separately owns procedural platform/Zwornik energy. Field lensing is a separate read-only presentation concern.
+7. METAL and WATER remain later advanced tuning/amplification with wing rotation and tilt. Their philosophy is `0° = OFF`, followed by one-direction target detents `13° / 23° / 36°`; coupling, combinations, scoring, gesture mapping and descriptor roles remain open.

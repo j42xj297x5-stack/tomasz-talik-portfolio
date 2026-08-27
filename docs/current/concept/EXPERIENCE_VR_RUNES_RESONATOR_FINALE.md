@@ -95,7 +95,7 @@ Gracz nie wkłada kamienia ręcznie do uchwytu.
 
 ## 5. Kula i lokalna kontrola sektora
 
-Od fizycznego stworzenia Kuli Asterionowej grip może tworzyć szeroki, lekko łukowaty, wielobarwny strumień. Odpowiadają wyłącznie sektory zasilone zainstalowanym kamieniem. Strumień musi trafiać ten sam legalny, zasilony sektor nieprzerwanie przez pełne **1.0 s**; dopiero wtedy powstaje **SECTOR LOCK** i ruch dłoni może wpływać na sektor. Zmiana celu albo utrata legalnego trafienia przed upływem 1.0 s zeruje acquisition timer. Przed lockiem Kula nie steruje lokalnym sektorem, a po locku ruch jest interpretowany względem przejętego sektora, nie całej platformy.
+Od fizycznego stworzenia Kuli Asterionowej grip może tworzyć szeroki, lekko łukowaty, wielobarwny strumień. Odpowiadają wyłącznie sektory **powered** przez zainstalowany kamień. Powered sector jest lockable nawet przy `LEVEL 0 / 0° / OFF`; **field-active** staje się dopiero po ustawieniu poziomu większego od zera. Strumień musi trafiać ten sam legalny, zasilony sektor nieprzerwanie przez pełne **1.0 s**; dopiero wtedy powstaje **SECTOR LOCK** i ruch dłoni może wpływać na sektor. Zmiana celu albo utrata legalnego trafienia przed upływem 1.0 s zeruje acquisition timer. Przed lockiem Kula nie steruje lokalnym sektorem, a po locku ruch jest interpretowany względem przejętego sektora, nie całej platformy.
 
 ### `progression.runes.sectorControl`
 
@@ -128,9 +128,11 @@ Gdy trzy wymagane sektory są zasilone przez zainstalowane kamienie i mogą wsp�
 
 ## 7. Sterowanie Rezonatorem
 
-Pierwszy Rezonator ma dyskretny rdzeń `(α, β, γ)`: EARTH kształtuje lewe skrzydło, WOOD lustrzane prawe skrzydło, a pochylenie FIRE wybiera dalekie, średnie lub bliskie pasmo głębokości. Daje to 27 konfiguracji, z których 9 symetrycznych jest głównymi stabilnymi presetami. Nierówne skrzydła nie kasują pola: tworzą legalną, mniej czytelną deformację i asymetryczne soczewkowanie. Wiążący detal techniczny opisuje [`VR_ASTERION_RESONATOR_FIELD_MODEL.md`](../technical/VR_ASTERION_RESONATOR_FIELD_MODEL.md).
+Pierwszy Rezonator ma dyskretny rdzeń `(α, β, γ)`, gdzie każdy kanał używa `LEVEL 0 / 0° / OFF` oraz aktywnych CURRENT TARGET positions `13° / 23° / 36°`, tylko w jednym kierunku. EARTH podnosi lewą krawędź lewego skrzydła, WOOD lustrzanie podnosi prawą krawędź prawego skrzydła, a „łyżka” FIRE mapuje aktywne pozycje na `FAR / MID / NEAR`. Signed detent model oraz sztywne concave/rectangular/convex nie obowiązują.
 
-Spust Kuli nadal orientuje całą platformę, zachowując istniejący ownership globalnego obrotu. Grip służy lokalnej kontroli wybranego zasilonego sektora. Tryby są wzajemnie wykluczające i nigdy nie sterują równocześnie. Jeżeli TRIGGER i GRIP są fizycznie aktywne jednocześnie, **TRIGGER ma bezwzględne pierwszeństwo**: działa klasyczna Kula i globalny owner orientacji platformy, a lokalna ścieżka sector-control pozostaje nieaktywna. Dopiero po zwolnieniu TRIGGER wejście GRIP może prowadzić acquisition i SECTOR LOCK. Fizyczne kąty, interpolacja i mapowanie gestu pozostają otwarte.
+Rdzeń ma 64 fizyczne stany, 27 pełnych aktywnych konfiguracji i 9 głównych aktywnych konfiguracji symetrycznych. Rezonator istnieje dzięki trzem powered sektorom nawet przy `(0,0,0)`, gdy coarse field jest OFF. Nierówne lub jednostronnie wyłączone skrzydła są legalnymi stanami częściowymi. Wiążący detal techniczny opisuje [`VR_ASTERION_RESONATOR_FIELD_MODEL.md`](../technical/VR_ASTERION_RESONATOR_FIELD_MODEL.md).
+
+Spust Kuli nadal orientuje całą platformę, zachowując istniejący ownership globalnego obrotu. Grip służy lokalnej kontroli wybranego zasilonego sektora. Tryby są wzajemnie wykluczające i nigdy nie sterują równocześnie. Jeżeli TRIGGER i GRIP są fizycznie aktywne jednocześnie, **TRIGGER ma bezwzględne pierwszeństwo**: działa klasyczna Kula i globalny owner orientacji platformy, a lokalna ścieżka sector-control pozostaje nieaktywna. Dopiero po zwolnieniu TRIGGER wejście GRIP może prowadzić acquisition i SECTOR LOCK. Interpolacja i mapowanie gestu pozostają otwarte; `0° / 13° / 23° / 36°` są CURRENT TARGET.
 
 ### `tool.asterion.resonator` — Panel Y / Kula Asterionowa
 
@@ -227,7 +229,7 @@ CZERWONY → ŻÓŁTY → POMARAŃCZOWY → ZIELONY
 → NIEBIESKI → FIOLETOWY → BIAŁY
 ```
 
-Biel oznacza maksimum. METAL i WATER są późniejszą warstwą advanced tuning / amplification istniejącego pola, nie osobnym polem. Oba potrafią wykonywać rotację skrzydłową i pochył, wzmacniając efekt oraz zwiększając elastyczność i precyzję strojenia. Końcowy Rezonator jest zatem bardziej elastyczny od trzysektorowego coarse field, ale finalne DOF tych sektorów i gotowa konfiguracja nie są jeszcze zamrożone.
+Biel oznacza maksimum. METAL i WATER są późniejszą warstwą advanced tuning / amplification istniejącego pola, nie osobnym polem. Oba docelowo mają rotację skrzydłową i pochył zgodne z filozofią `0° = OFF`, a następnie trzech poziomów tylko w jednym kierunku z target detentami `13° / 23° / 36°`. Sprzężenie osi, kombinacje poziomów, scoring, mapping gestu i dokładne role w descriptorze pozostają otwarte.
 
 ### `progression.resonator.fullArray`
 

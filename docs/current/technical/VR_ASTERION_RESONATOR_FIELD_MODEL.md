@@ -4,74 +4,102 @@
 
 Status: **CURRENT TARGET / NOT IMPLEMENTED**.
 
-Ten dokument jest wyspecjalizowanym sub-modelem nadrzędnego [`VR_ASTERION_RESONATOR_MODEL.md`](VR_ASTERION_RESONATOR_MODEL.md). Zamraża semantykę stopni swobody rdzenia pola, uproszczony model matematyczny, odpowiedź targetów i język wizualny. Nie tworzy konkurencyjnego kanonu, runtime, klas ani API JavaScript, algorytmu scoringu, shaderów lub wartości tuningowych.
+Ten dokument jest wyspecjalizowanym sub-modelem nadrzędnego [`VR_ASTERION_RESONATOR_MODEL.md`](VR_ASTERION_RESONATOR_MODEL.md). Zamraża semantykę poziomów rdzenia pola, aktualne docelowe pozycje fizyczne, uproszczony descriptor i granice ownership. Nie tworzy runtime, klas, API JavaScript, scoringu, shaderów ani mapowania gestu. Historyczny model anteny oraz wcześniejszy signed detent model nie są precedensem implementacyjnym.
 
-Historyczny model anteny jest wyłącznie źródłem historycznym. Nie jest precedensem implementacyjnym i nie wolno reaktywować jego detentów, kątów, podziału DOF ani wymogu literalnego przecięcia brył.
+## 2. Powered sector a field-active sector
 
-## 2. Rdzeń trzech sektorów
-
-Pierwszy Rezonator tworzą trzy zasilone, współpracujące sektory: **EARTH**, **WOOD** i **FIRE**. Ich stan opisuje dyskretna trójka `(α, β, γ)`:
-
-| Sektor | Parametr | Zakres | Odpowiedzialność |
-| --- | --- | --- | --- |
-| EARTH | `α ∈ {-1, 0, +1}` | lewe skrzydło | lokalna rotacja wokół własnej osi; lewa krawędź idzie w górę, kiedy prawa schodzi w dół |
-| WOOD | `β ∈ {-1, 0, +1}` | prawe skrzydło | lustrzana lokalna rotacja; prawa krawędź idzie w górę, kiedy lewa schodzi w dół |
-| FIRE | `γ ∈ {0, 1, 2}` | głębokość | wyłącznie pochylenie całego sektora, semantyczna „łyżka” wybierająca pasmo odległości |
-
-Ruchy EARTH i WOOD są lokalną konfiguracją skrzydeł pola, a nie globalnym obrotem platformy. FIRE nie realizuje rotacji skrzydłowej lewo–prawo i nie kształtuje różnicy między bokami.
-
-Dla `α` i `β`: `-1` oznacza wklęsłe ustawienie skrzydła, `0` prostokątne / neutralne, a `+1` wypukłe. Dla `γ`: `0` oznacza pasmo dalekie i minimalne wychylenie FIRE, `1` pasmo średnie i ustawienie pośrednie, a `2` pasmo bliskie i maksymalne wychylenie.
-
-Pierwsza wersja jest jawnie uproszczona i dyskretna: `3 × 3 × 3 = 27` bazowych konfiguracji. Dokument nie ustanawia jeszcze kątów fizycznych, interpolacji, detentów ani mapowania ruchu kontrolera na wartości.
-
-## 3. Symetria, presety i legalna deformacja
-
-Konfiguracja jest **symetryczna**, gdy `α = β`. Trzy równe pary skrzydeł tworzą rodziny: wklęsłą `(-1,-1)`, prostokątną `(0,0)` i wypukłą `(+1,+1)`. Po połączeniu każdej z trzema wartościami `γ` powstaje **9 głównych stabilnych presetów** pierwszego Rezonatora. Są najczytelniejszymi ustawieniami bazowymi, a nie kompletnym zbiorem legalnych stanów.
-
-Gdy `α ≠ β`, pole nadal istnieje i konfiguracja jest legalna. Różnica skrzydeł tworzy mniej stabilną i mniej czytelną deformację: shear/przekoszenie, zakrzywienie, niesymetryczne soczewkowanie, przesunięcie lub zafałszowanie obrazu oraz lokalne przybliżenie po jednej stronie i oddalenie po drugiej. Asymetria nie oznacza automatycznie błędu ani „złego” ustawienia; może być potrzebnym wariantem strojenia, lecz nie należy do 9 głównych presetów.
-
-## 4. Analityczny descriptor pola
-
-Pole nie wymaga dosłownego fizycznego przecięcia brył lub objętości. Kanoniczną podstawą przyszłej odpowiedzi jest **analityczny field descriptor wyprowadzany ze stanu sektorów**. Descriptor opisuje pole, a wspierające domeny targetów mogą użyć go do oceny odpowiedzi legalnego celu.
-
-Minimalna semantyka descriptoru obejmuje `leftShape` z `α`, `rightShape` z `β`, `symmetry` / `asymmetry`, `depthBand` (`FAR`, `MID`, `NEAR`) z `γ`, opcjonalne `power` / `gain` oraz opcjonalny `distortionProfile`. Nazwy są semantyczne, nie są zamrożonym API.
+**POWERED SECTOR** ma zainstalowany właściwy Rune Stone, może odpowiedzieć na Kulę, zostać namierzony i uzyskać SECTOR LOCK. **FIELD-ACTIVE SECTOR** jest powered i ma lokalny poziom ruchu większy od `0`. Instalacja Rune nie jest więc prawdą `fieldActive`.
 
 ```text
-overallCurvature = (α + β) / 2
-fieldAsymmetry  = α - β
-depthBand       = band(γ)
+Rune installed → powered → lockable → LEVEL 0 / 0° → field contribution OFF
 ```
 
-Średnia `α` i `β` opisuje ogólną krzywiznę / typ pola, a ich różnica deformację lub shear. Znaki, skale, normalizacja, tolerancje i pełny scoring pozostają otwarte. Literalna geometria może kiedyś wspierać prezentację, lecz nie może stać się jedynym warunkiem istnienia i oceny pola.
+Pierwsze przejście `0° → 13°` włącza udział sektora w polu. Pozycja zerowa działa jak połączone z wyłącznikiem pokrętło: mechanizm jest zasilony i dostępny, ale kanał nie wnosi jeszcze wkładu.
 
-## 5. Odpowiedź legalnych targetów
+## 3. Kanoniczne poziomy i ruch rdzenia
 
-Rezonator nie jest hardkodowany do glifów. Descriptor stanowi przyszłą podstawę odpowiedzi legalnych odległych obiektów jawnie wspieranych przez ich domeny runtime. Domain owner zachowuje legalność i prawdę targetu; Resonator dostarcza opis pola, a Scenario jedynie interpretuje rezultat dramaturgicznie.
+Każdy kanał rdzenia ma cztery stabilne poziomy, bez pozycji ujemnych i bez ruchu `-36° ← 0° → +36°`:
 
-Legalny target może odpowiadać silniej przy zgodności depth band i kształtu pola, słabiej, mniej stabilnie lub z większym zniekształceniem przy asymetrii oraz z intensywnością zależną od power/gain. Nie ustanawia to exact scoring formula, progów pozyskania, automatycznego wyboru targetu ani nowych crystal-acquisition rights.
+| Poziom | Pozycja | Stan ogólny |
+| --- | --- | --- |
+| `LEVEL 0` | `0°` | `OFF` |
+| `LEVEL 1` | `13°` | `LOW` |
+| `LEVEL 2` | `23°` | `MID` |
+| `LEVEL 3` | `36°` | `HIGH` |
+
+`13°`, `23°` i `36°` są **CURRENT TARGET** dla pierwszej implementacji, a nie przykładami. Ich zmiana po hardware/perceptual QA wymaga jawnej nowej decyzji. Ruch zaczyna się w pozycji płaskiej i przebiega wyłącznie w jednym kanonicznym kierunku.
+
+### EARTH — `α`
+
+`α ∈ {0,1,2,3}` steruje lewym skrzydłem i mapuje się na `0° / 13° / 23° / 36°`. Wraz ze wzrostem `α` lewa krawędź EARTH idzie coraz wyżej, a prawa coraz niżej. Nie istnieje przeciwne wychylenie. `α = 0` wyłącza wkład EARTH do descriptoru.
+
+### WOOD — `β`
+
+`β ∈ {0,1,2,3}` steruje prawym skrzydłem i mapuje się na `0° / 13° / 23° / 36°`. Jest lustrzanym odpowiednikiem EARTH: wraz ze wzrostem `β` prawa krawędź WOOD idzie coraz wyżej, a lewa coraz niżej. Nie istnieje przeciwne wychylenie. `β = 0` wyłącza wkład WOOD.
+
+### FIRE — `γ`
+
+FIRE nie ma rotacji skrzydłowej lewo/prawo. `γ ∈ {0,1,2,3}` steruje wyłącznie jednokierunkowym lokalnym pochyleniem całego sektora — semantyczną „łyżką”:
+
+| `γ` | Pozycja | Depth band |
+| --- | --- | --- |
+| `0` | `0°` | `OFF / NONE` |
+| `1` | `13°` | `FAR` |
+| `2` | `23°` | `MID` |
+| `3` | `36°` | `NEAR` |
+
+Większe wychylenie wybiera bliższe pasmo przestrzeni. Signed FIRE tilt nie istnieje.
+
+## 4. State-space, symetria i legalna asymetria
+
+Fizyczny state-space rdzenia wynosi `4 × 4 × 4 = 64`. Rezonator może istnieć przy `α = β = γ = 0`, jeśli trzy wymagane sektory są powered, ale coarse field nie ma wtedy aktywnego wkładu sektorów.
+
+Pełny aktywny rdzeń wymaga `α > 0`, `β > 0` i `γ > 0`, dlatego zachowuje `3 × 3 × 3 = 27` pełnych aktywnych konfiguracji coarse field. Liczba `27` nie opisuje wszystkich fizycznych stanów platformy.
+
+Aktywna konfiguracja boczna jest symetryczna, gdy `α = β` oraz `α > 0`. Pary `(1,1)`, `(2,2)` i `(3,3)` po połączeniu z trzema aktywnymi depth bands dają `3 × 3 = 9` głównych symetrycznych konfiguracji coarse field. Poziomom `13° / 23° / 36°` nie przypisuje się jeszcze sztywnych nazw `CONCAVE / RECTANGULAR / CONVEX`; wynikowy kształt należy do przyszłego modelu/presentation i strojenia.
+
+Gdy `α ≠ β`, pole może być legalnie asymetryczne. Legalne są też częściowe stany `α = 0, β > 0` oraz `β = 0, α > 0`. Mogą dawać bardzo słabą odpowiedź, silny shear, lensing bias, przesunięcie obrazu, jednostronne powiększenie/oddalenie lub mocną deformację. Dokument nie ustanawia ich exact scoringu.
+
+## 5. Analityczny descriptor pola
+
+Pole nie wymaga literalnego przecięcia brył. Resonator Field Domain wyprowadza read-only descriptor ze stanu sektorów; `α` i `β` są poziomami intensywności dwóch przeciwstawnych skrzydeł, a nie znakami przeciwnych kierunków krzywizny. Minimalna semantyka może obejmować:
+
+```text
+lateralStrength = (α + β) / 2
+fieldAsymmetry  = α - β
+leftActive      = α > 0
+rightActive     = β > 0
+depthActive     = γ > 0
+depthBand       = OFF/NONE | FAR | MID | NEAR
+```
+
+Nazwy nie są zamrożonym API. Exact normalization, tolerancje, target selection i scoring formula pozostają otwarte. Wspierana domena targetu zachowuje legalność targetu i może użyć descriptoru do różnicowania siły, stabilności lub deformacji odpowiedzi; Scenario posiada znaczenie narracyjne i crystal-acquisition gates, nie fizyczną odpowiedź pola.
 
 ## 6. METAL i WATER — późniejsza warstwa
 
-METAL i WATER są rozszerzeniem istniejącego Rezonatora, a nie osobnymi polami. Każdy ma docelowo dwa typy ruchu: **rotację skrzydłową** i **pochył**. Trzy sektory rdzeniowe tworzą `coarse field`; METAL i WATER tworzą późniejszą warstwę `advanced tuning / amplification`.
+METAL i WATER pozostają warstwą `advanced tuning / amplification`. Każdy docelowo ma ruch skrzydłowy i pochył, przy czym ogólna filozofia obu kanałów to `0° = OFF`, a następnie wyłącznie jednokierunkowe target detenty `13° / 23° / 36°`.
 
-Warstwa ma wzmacniać efekt, zwiększać elastyczność i precyzję kombinacji oraz rozszerzać geometryczne i wizualne kształtowanie odpowiedzi. Finalne osie, zakresy, dyskretyzacja, sprzężenia i szczegółowe DOF METAL/WATER pozostają niezamrożone.
+Sprzężenie osi, kombinacje poziomów, scoring, finalne mapowanie gestu oraz dokładna rola METAL i WATER w descriptorze nie są jeszcze zaprojektowane.
 
-## 7. Input i SECTOR LOCK
+## 7. Ownership
 
-- Jednoczesne **TRIGGER + GRIP** zawsze rozstrzyga się na korzyść TRIGGER; lokalna ścieżka GRIP jest wtedy nieaktywna.
-- GRIP może przejąć wyłącznie legalny sektor zasilony zainstalowanym Rune Stone.
-- SECTOR LOCK wymaga pełnej `1.0 s` ciągłego trafiania strumieniem w ten sam legalny sektor.
-- Zmiana celu lub utrata legalnego trafienia zeruje timer.
-- Dopiero po locku ruch kontrolera interpretuje się względem przejętego sektora, nie całej platformy.
+| Domena | Posiada | Nie posiada |
+| --- | --- | --- |
+| sector-control | lock, lokalne ustawienie sektora i bounded motion commands | field descriptor, target response, wizualne wyładowania |
+| Resonator Field Domain / actor | read-only obserwację konfiguracji i wyprowadzenie descriptoru oraz reakcji pola | fizyczny `MotionRoot`, Scenario truth, platform energy lightning |
+| `PlatformEnergyVfxActor` | proceduralne wyładowania i energię platformy/Zworników | descriptor, interpretację `α/β/γ` jako gameplay truth, target response i field lensing |
+| field lensing presentation | read-only prezentację wyniku Field Domain | gameplay truth i proceduralną energię platformy |
 
-## 8. Język wizualny pola
+Dokładna nazwa klasy/API i podział projection/actor dla field lensing pozostają otwarte. Field lensing nie należy do `PlatformEnergyVfxActor`; nie wolno tworzyć jednego megasystemu VFX + field + motion.
 
-Pole używa języka inspirowanego **gravitational lensing**, lecz nie deklaruje realistycznej fizyki, elektrofizyki ani symulacji relatywistycznej. Sygnatury obejmują rozjaśnienie, powiększenie, zakrzywienie obrazu, łuki podobne do kaustyk, asymetryczne zniekształcenie, przesunięcie jednej strony względem drugiej i wizualne soczewkowanie.
+## 8. Input i SECTOR LOCK
 
-Poprawna / dobrze dopasowana konfiguracja daje stabilniejszy obraz, czytelniejszy znak lub target oraz mocniejszą, spójną odpowiedź. Konfiguracja asymetryczna albo nietrafiona daje obraz mniej stabilny, zakrzywiony, rozciągnięty, częściowo przesunięty oraz lokalnie przybliżony lub oddalony. Zniekształcenie komunikuje descriptor i jakość odpowiedzi, a nie awarię renderera.
+- TRIGGER ma pierwszeństwo nad GRIP.
+- GRIP może namierzyć tylko powered sector.
+- Pełne `1.0 s` tego samego legalnego celu daje SECTOR LOCK.
+- Zmiana lub utrata celu przed lockiem resetuje timer.
+- Dopiero po locku sektor może otrzymać local motion command.
 
-To kontrakt semantyczny prezentacji. Shader architecture, technika renderingu, postprocessing, budżet efektu, kolory, intensywności, audio i hardware/perceptual QA są osobnymi zadaniami.
+## 9. Język wizualny i granice implementacji
 
-## 9. Granice przyszłej implementacji
-
-Przyszły runtime ma zachować rozdział: sector-control ustawia lokalny stan sektorów, Resonator wyprowadza descriptor, domain owner ocenia wspierany legalny target, a presentation odwzorowuje odpowiedź bez przejmowania gameplay truth. Nadal otwarte są finalne API, klasy, ciągły model ruchu, target selection, scoring, shadery i parametry VFX/audio.
+Field lensing może używać inspirowanych grawitacyjnym soczewkowaniem rozjaśnień, powiększenia, zakrzywienia, caustic-like arcs, przesunięć i asymetrycznej deformacji, bez deklarowania realistycznej fizyki. Shader architecture, rendering, kolory, intensywności, audio, hardware/perceptual QA, finalne API, motion interpolation i gesture mapping są osobnymi zadaniami.

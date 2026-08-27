@@ -62,20 +62,24 @@ sector panels complete
 ├→ persistent Zwornik Runiczny
 └→ read-only RUNE_BINDER_REVEAL presentation
 
-installed Rune Stone → sector powered → GRIP local sector lock/control
+installed Rune Stone → sector powered / lockable
+local LEVEL > 0 → sector field-active
+GRIP + 1.0 s same powered target → SECTOR LOCK → bounded local motion command
 Asterion Sphere TRIGGER → existing global platform orientation owner
 
 3 required powered cooperating sectors
-→ Resonator domain exists
-→ (EARTH α, WOOD β, FIRE γ)
-→ analytic field descriptor (shape / symmetry / depth / optional power-distortion)
+→ Resonator exists, including at (0,0,0) with field contribution OFF
+→ (EARTH α, WOOD β, FIRE γ), each LEVEL 0..3
+→ 0° OFF; active CURRENT TARGET positions 13° / 23° / 36°
+→ Resonator Field Domain read-only descriptor
 → response evaluated by domain-supported legal distant targets
+→ separate read-only field lensing presentation
 
 later METAL + WATER
 → advanced tuning / amplification of the same field
 ```
 
-The discrete core contains 27 configurations and 9 primary symmetric presets. `α ≠ β` yields a legal distorted field rather than no field. TRIGGER and GRIP control modes are mutually exclusive, with TRIGGER priority and a continuous 1.0 s same-powered-sector lock requirement. Scenario/Guidance may interpret and explain these states but does not create them. Crystal acquisition remains Scenario/progression-gated even when the player forms the Resonator early.
+The physical core contains `4 × 4 × 4 = 64` states. Its fully active subset contains 27 configurations, including 9 primary active symmetric configurations (`α = β > 0`). Asymmetric and one-wing-active states are legal. Sector control owns lock/setting/motion commands; Field Domain owns descriptor/field response; `PlatformEnergyVfxActor` separately owns procedural platform energy; lensing only reads Field output. TRIGGER retains priority over GRIP. Scenario/Guidance interprets but does not create these states, and crystal acquisition remains progression-gated.
 
 ## Rune reconstruction
 
