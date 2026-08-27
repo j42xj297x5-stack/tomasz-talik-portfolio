@@ -4,7 +4,7 @@
 
 Status: **CURRENT TARGET / NOT IMPLEMENTED**.
 
-Ten dokument jest jedynym aktualnym technicznym modelem Rezonatora Asterionowego. Zamraża granice sandboxu, Scenario, Guidance, Zworników Runicznych, lokalnego sterowania sektorami i odpowiedzi Rezonatora. Nie definiuje API, nazw nowych aktorów sector-control, algorytmów ruchu ani parametrów dawnego modelu anteny.
+Ten dokument jest nadrzędnym aktualnym technicznym modelem Rezonatora Asterionowego. Zamraża granice sandboxu, Scenario, Guidance, Zworników Runicznych, lokalnego sterowania sektorami i odpowiedzi Rezonatora. Wyspecjalizowany [`VR_ASTERION_RESONATOR_FIELD_MODEL.md`](VR_ASTERION_RESONATOR_FIELD_MODEL.md) jest jego podporządkowanym CURRENT sub-modelem pola; nie stanowi alternatywnego kanonu. Dokumenty nie definiują finalnego API ani nazw nowych aktorów sector-control.
 
 Model koncepcyjny przebiegu pozostaje w [`EXPERIENCE_VR_RUNES_RESONATOR_FINALE.md`](../concept/EXPERIENCE_VR_RUNES_RESONATOR_FINALE.md). Model Rune Stones posiada tuning, transport, instalację i persistent Rune truth. Model progress floor posiada panel/sector completeness i globalny transform platformy. Ten dokument posiada techniczny kontrakt współpracy zasilonych sektorów i Rezonatora.
 
@@ -69,7 +69,7 @@ Input jest wzajemnie wykluczający:
 
 GRIP nie przejmuje sektora natychmiast. Sektorowy strumień musi trafiać ten sam legalny, zasilony sektor nieprzerwanie przez pełne **1.0 s**; dopiero wtedy powstaje **SECTOR LOCK** i ruch kontrolera może sterować lokalnym sektorem. Zmiana celu albo utrata legalnego trafienia przed upływem 1.0 s zeruje acquisition timer. Przed lockiem Kula nie steruje lokalnym sektorem; po locku przyszły sector-control mode interpretuje ruch względem przejętego sektora, nie całej platformy.
 
-Ten kontrakt nie zmienia istniejącego ownership globalnego obrotu platformy. Nie zamraża osi, kątów, detentów, liczby swobód ani algorytmu lokalnego ruchu.
+Ten kontrakt nie zmienia istniejącego ownership globalnego obrotu platformy. Semantyczne osie i dyskretne stopnie swobody rdzenia pola zamraża sub-model pola; fizyczne kąty, interpolacja, detenty i algorytm mapowania ruchu pozostają otwarte.
 
 ## 7. Powstanie Rezonatora Asterionowego
 
@@ -83,13 +83,17 @@ Pierwszy Rezonator powstaje z fizycznego stanu świata, nie z wejścia w Scenari
 
 Może to nastąpić przed późnym aktem fabularnym. Jeżeli już istnieje, późniejszy Scenario/Monkey uznaje rezultat i nie zmusza do ponownego budowania lub „odkrywania”. Jeżeli nie istnieje, późniejsza dramaturgia i Guidance mogą poprowadzić do dokładnie tego samego fizycznego rezultatu.
 
-Rezonator nie jest klasyczną anteną ani radarem. Nie dziedziczy automatycznie detentów, konkretnych kątów, modelu przecięcia trzech objętości, dawnego podziału DOF ani innych parametrów historycznego modelu anteny.
+Rezonator nie jest klasyczną anteną ani radarem. Pierwszy układ tworzą EARTH, WOOD i FIRE: EARTH ustawia lewe skrzydło pola (`α`), WOOD prawe (`β`), a FIRE wybiera pasmo głębokości (`γ`). Dyskretny rdzeń ma 27 konfiguracji, w tym 9 głównych presetów symetrycznych; asymetria jest legalną deformacją, nie zanikiem pola. Szczegółowy kontrakt znajduje się w sub-modelu pola.
+
+Rezonator wyprowadza analityczny descriptor ze stanu sektorów i nie wymaga literalnego przecięcia brył jako jedynej podstawy wyniku. Nie dziedziczy detentów, konkretnych kątów, dawnego podziału DOF ani innych parametrów historycznego modelu anteny; modelu historycznego nie wolno reaktywować jako precedensu implementacyjnego.
 
 ## 8. Odpowiedź na legalne odległe cele
 
 Rezonator jest projektowany jako system odpowiedzi na legalne odległe cele wspierane przez odpowiednie domeny. Nie jest hardkodowany wyłącznie do glifów. Pierwszą praktyczną odpowiedzią może być glif, skorupa albo inny legalny target wspierany przez domain ownera.
 
-Scenario może nadawać odkryciu znaczenie, ograniczać prawo pozyskania kryształu i prowadzić gracza, ale nie posiada samej fizycznej odpowiedzi pola. Szczegółowy model pola, wybór targetu, miary odpowiedzi oraz algorytm sterowania pozostają poza zakresem tego dokumentu.
+Scenario może nadawać odkryciu znaczenie, ograniczać prawo pozyskania kryształu i prowadzić gracza, ale nie posiada samej fizycznej odpowiedzi pola. Field descriptor może opisywać lewe/prawe skrzydło, symetrię, depth band, opcjonalną moc i deformację; wspierana domena targetu może na tej podstawie różnicować siłę, stabilność i zniekształcenie odpowiedzi. Exact scoring, target selection i API pozostają otwarte.
+
+METAL i WATER są późniejszą warstwą advanced tuning / amplification istniejącego coarse field. Oba docelowo oferują rotację skrzydłową i pochył, lecz ich finalne DOF nie są jeszcze zamrożone.
 
 ## 9. Ownership i zależności
 
@@ -108,4 +112,4 @@ Scenario może nadawać odkryciu znaczenie, ograniczać prawo pozyskania kryszta
 
 Przyszła implementacja ma wyprowadzać dostępność z narzędzi, obiektów i domenowych warunków, a Scenario jedynie obserwować oraz interpretować wynik. Musi zachować reconstruction/hydration osiągniętego fizycznego stanu bez replayu dramaturgii.
 
-Poza zakresem i nadal niezamrożone są: konkretne API, nazwy nowych aktorów sector-control, szczegółowe algorytmy i osie ruchu sektorów, detenty, kąty, geometria/pole odpowiedzi, target scoring, parametry VFX/audio oraz nowe Scenario point IDs.
+Poza zakresem i nadal niezamrożone są: konkretne API, nazwy nowych aktorów sector-control, szczegółowe algorytmy ruchu, fizyczne kąty i interpolacja, detenty, target selection/scoring, shader implementation, parametry VFX/audio oraz nowe Scenario point IDs. Semantyczne osie rdzenia, descriptor i język wizualny są już CURRENT w sub-modelu pola.

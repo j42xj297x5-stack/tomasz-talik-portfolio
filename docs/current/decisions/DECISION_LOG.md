@@ -242,3 +242,14 @@ Każdy nowy canonical Experience VR Scenario point musi spełniać [`VR_SCENARIO
 ## Explicit current exclusions
 
 `RUNESTONES`, radar/sector gameplay, final radar, teleport, jump, snap turn and rigid-body physics are outside the current implemented Experience VR contract. Current Meta Quest 3S defects in physical Sphere placement and contour continuity are implementation QA issues, not exclusions or future features.
+
+## 2026-08-27 — CURRENT Asterion Resonator analytic field model
+
+1. The binding Resonator authority remains [`VR_ASTERION_RESONATOR_MODEL.md`](../technical/VR_ASTERION_RESONATOR_MODEL.md); [`VR_ASTERION_RESONATOR_FIELD_MODEL.md`](../technical/VR_ASTERION_RESONATOR_FIELD_MODEL.md) is its subordinate detailed field contract. Both are **CURRENT TARGET / NOT IMPLEMENTED**.
+2. The first coarse field uses EARTH `α` for the left wing, WOOD `β` for the right wing and FIRE tilt `γ` for depth only. With `α, β ∈ {-1,0,+1}` and `γ ∈ {0,1,2}`, it has 27 base configurations and 9 primary symmetric presets.
+3. `α = β` identifies the concave, rectangular/neutral and convex symmetric families. `α ≠ β` remains legal and creates shear, curvature and asymmetric lensing rather than cancelling the field. The mean of `α,β` describes overall curvature and their difference deformation.
+4. Resonator response is based on an analytic descriptor derived from sector state, not a mandatory literal intersection of physical volumes. Minimum semantics are left/right shape, symmetry/asymmetry, depth band and optional power/gain and distortion; final runtime API and exact scoring remain open.
+5. Legal distant targets supported by runtime domains may vary response by depth/shape match, asymmetry and power. The Resonator is not glyph-only, and Scenario retains narrative meaning and crystal-acquisition gates rather than physical field ownership.
+6. METAL and WATER later add wing rotation plus tilt as an advanced tuning/amplification layer over the same field. Their final DOF remain open.
+7. Field presentation uses a gravitational-lensing-inspired but non-literal language: brightening, magnification, curvature, caustic-like arcs, shifts and asymmetric distortion. Shader/VFX implementation is not established.
+8. The historical antenna model remains historical evidence only and must not be reactivated as implementation precedent.

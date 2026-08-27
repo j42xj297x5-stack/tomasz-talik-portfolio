@@ -128,7 +128,9 @@ Gdy trzy wymagane sektory są zasilone przez zainstalowane kamienie i mogą wsp�
 
 ## 7. Sterowanie Rezonatorem
 
-Szczegółowe osie, swobody i algorytmy ruchu sektorów nie są jeszcze zamrożone. Spust Kuli nadal orientuje całą platformę, zachowując istniejący ownership globalnego obrotu. Grip służy lokalnej kontroli wybranego zasilonego sektora. Tryby są wzajemnie wykluczające i nigdy nie sterują równocześnie. Jeżeli TRIGGER i GRIP są fizycznie aktywne jednocześnie, **TRIGGER ma bezwzględne pierwszeństwo**: działa klasyczna Kula i globalny owner orientacji platformy, a lokalna ścieżka sector-control pozostaje nieaktywna. Dopiero po zwolnieniu TRIGGER wejście GRIP może prowadzić acquisition i SECTOR LOCK.
+Pierwszy Rezonator ma dyskretny rdzeń `(α, β, γ)`: EARTH kształtuje lewe skrzydło, WOOD lustrzane prawe skrzydło, a pochylenie FIRE wybiera dalekie, średnie lub bliskie pasmo głębokości. Daje to 27 konfiguracji, z których 9 symetrycznych jest głównymi stabilnymi presetami. Nierówne skrzydła nie kasują pola: tworzą legalną, mniej czytelną deformację i asymetryczne soczewkowanie. Wiążący detal techniczny opisuje [`VR_ASTERION_RESONATOR_FIELD_MODEL.md`](../technical/VR_ASTERION_RESONATOR_FIELD_MODEL.md).
+
+Spust Kuli nadal orientuje całą platformę, zachowując istniejący ownership globalnego obrotu. Grip służy lokalnej kontroli wybranego zasilonego sektora. Tryby są wzajemnie wykluczające i nigdy nie sterują równocześnie. Jeżeli TRIGGER i GRIP są fizycznie aktywne jednocześnie, **TRIGGER ma bezwzględne pierwszeństwo**: działa klasyczna Kula i globalny owner orientacji platformy, a lokalna ścieżka sector-control pozostaje nieaktywna. Dopiero po zwolnieniu TRIGGER wejście GRIP może prowadzić acquisition i SECTOR LOCK. Fizyczne kąty, interpolacja i mapowanie gestu pozostają otwarte.
 
 ### `tool.asterion.resonator` — Panel Y / Kula Asterionowa
 
@@ -141,7 +143,7 @@ Panel Y przechowuje instrukcję; Małpa nie powtarza jej stale.
 
 ## 8. Pierwsze poszukiwanie i pierwszy odzyskany glif
 
-Rezonator nie daje markera glifu i nie jest hardkodowany wyłącznie do glifów. Odpowiada także na inne legalne odległe cele wspierane przez właściwe domeny, na przykład skorupę: może pokazać znak i rodzinę, a natężenie zależy od ustawienia pola. Scenario nadaje znalezisku znaczenie, lecz nie posiada fizycznej odpowiedzi pola.
+Rezonator nie daje markera glifu i nie jest hardkodowany wyłącznie do glifów. Analityczny descriptor pola — zamiast obowiązkowego literalnego przecięcia brył — może wywołać odpowiedź innych legalnych odległych celów wspieranych przez właściwe domeny, na przykład skorupy. Zgodność kształtu i depth band wzmacnia i stabilizuje znak; asymetria może go zakrzywiać, rozciągać, przesuwać i lokalnie przybliżać lub oddalać. Scenario nadaje znalezisku znaczenie, lecz nie posiada fizycznej odpowiedzi pola.
 
 ### `progression.resonator.search`
 
@@ -225,7 +227,7 @@ CZERWONY → ŻÓŁTY → POMARAŃCZOWY → ZIELONY
 → NIEBIESKI → FIOLETOWY → BIAŁY
 ```
 
-Biel oznacza maksimum. Dwa później aktywowane sektory potrafią zarówno obracać się w dozwolonej osi, jak i zmieniać położenie góra–dół / głębokość. Końcowy Rezonator jest zatem bardziej elastyczny od pierwszej wersji, ale nie ujawnia gotowej konfiguracji.
+Biel oznacza maksimum. METAL i WATER są późniejszą warstwą advanced tuning / amplification istniejącego pola, nie osobnym polem. Oba potrafią wykonywać rotację skrzydłową i pochył, wzmacniając efekt oraz zwiększając elastyczność i precyzję strojenia. Końcowy Rezonator jest zatem bardziej elastyczny od trzysektorowego coarse field, ale finalne DOF tych sektorów i gotowa konfiguracja nie są jeszcze zamrożone.
 
 ### `progression.resonator.fullArray`
 
