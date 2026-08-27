@@ -124,3 +124,6 @@ Dokładna sygnatura JavaScript pozostaje otwarta. Publiczna powierzchnia ma jedn
 ## Wyłączenia
 
 **KANON:** model nie projektuje audio, Rezonatora, przyszłego sector control, Scenario ani Directora; nie zmienia Rune lifecycle, Asterion gyro, progresji ani dependency runtime. Implementacja systemu, wartości tuningowe i hardware/perceptual QA są osobnymi zadaniami.
+
+
+Pole Rezonatora ma odrębny język prezentacyjny inspirowany soczewkowaniem grawitacyjnym — rozjaśnienie, powiększenie, zakrzywienie, caustic-like arcs i deformację obrazu — zamrożony w [`VR_ASTERION_RESONATOR_FIELD_MODEL.md`](VR_ASTERION_RESONATOR_FIELD_MODEL.md). Nie należy utożsamiać go z proceduralnymi wyładowaniami tego aktora ani rozszerzać `PlatformEnergyVfxActor` o ownership descriptoru lub target response bez osobnej decyzji.

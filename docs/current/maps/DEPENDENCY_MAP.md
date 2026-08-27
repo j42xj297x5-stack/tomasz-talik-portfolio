@@ -2,7 +2,7 @@
 
 ## Documentation flow
 
-`PROJECT_INDEX → canonical technical model → runtime evidence`. Rune authority is [`VR_RUNE_STONES_MODEL.md`](../technical/VR_RUNE_STONES_MODEL.md), while sector-control/Rezonator authority is [`VR_ASTERION_RESONATOR_MODEL.md`](../technical/VR_ASTERION_RESONATOR_MODEL.md).
+`PROJECT_INDEX → canonical technical model → runtime evidence`. Rune authority is [`VR_RUNE_STONES_MODEL.md`](../technical/VR_RUNE_STONES_MODEL.md), while sector-control/Rezonator authority is [`VR_ASTERION_RESONATOR_MODEL.md`](../technical/VR_ASTERION_RESONATOR_MODEL.md) with its subordinate field contract in [`VR_ASTERION_RESONATOR_FIELD_MODEL.md`](../technical/VR_ASTERION_RESONATOR_FIELD_MODEL.md).
 
 ## Experience VR composition
 
@@ -67,10 +67,15 @@ Asterion Sphere TRIGGER → existing global platform orientation owner
 
 3 required powered cooperating sectors
 → Resonator domain exists
-→ physical response to domain-supported legal distant targets
+→ (EARTH α, WOOD β, FIRE γ)
+→ analytic field descriptor (shape / symmetry / depth / optional power-distortion)
+→ response evaluated by domain-supported legal distant targets
+
+later METAL + WATER
+→ advanced tuning / amplification of the same field
 ```
 
-TRIGGER and GRIP control modes are mutually exclusive. Scenario/Guidance may interpret and explain these states but does not create them. Crystal acquisition remains Scenario/progression-gated even when the player forms the Resonator early.
+The discrete core contains 27 configurations and 9 primary symmetric presets. `α ≠ β` yields a legal distorted field rather than no field. TRIGGER and GRIP control modes are mutually exclusive, with TRIGGER priority and a continuous 1.0 s same-powered-sector lock requirement. Scenario/Guidance may interpret and explain these states but does not create them. Crystal acquisition remains Scenario/progression-gated even when the player forms the Resonator early.
 
 ## Rune reconstruction
 
