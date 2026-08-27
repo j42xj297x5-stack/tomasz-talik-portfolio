@@ -121,3 +121,8 @@ Field lensing presentation może otrzymywać read-only wynik Field Domain, lecz 
 Przyszła implementacja ma wyprowadzać dostępność z narzędzi, obiektów i domenowych warunków, a Scenario jedynie obserwować oraz interpretować wynik. Musi zachować reconstruction/hydration osiągniętego fizycznego stanu bez replayu dramaturgii.
 
 Poza zakresem i nadal niezamrożone są: konkretne API, nazwy aktorów, algorytmy ruchu i interpolacja, mapowanie gestu, target selection/scoring, shadery, parametry VFX/audio i nowe Scenario point IDs. Semantyczne osie, poziomy i target detenty rdzenia, descriptor i język wizualny są CURRENT w sub-modelu pola.
+# R2B implementation boundary
+
+R2A powered-sector acquisition, one-second transient SECTOR LOCK and trigger-priority arbitration are implemented. R2B now owns runtime-local EARTH/WOOD/FIRE levels `0/1/2/3`, continuous constant-speed motor positions, physical `0°/13°/23°/36°` detents, a short detent hold, and smooth release-to-last-committed settle. Held directional intent continues across successive detents without a new GRIP press. Trigger priority freezes user-driven local motion and forces a hand-reference rebase when local control returns.
+
+The bounded read-only level/angle snapshot and exactly-once semantic `DETENT_COMMITTED` subscription seam are implemented. Spark VFX, grip-beam presentation, detent/motion audio, Resonator Field Actor and descriptor runtime, scoring/target response, lensing, and METAL/WATER motion are not implemented.

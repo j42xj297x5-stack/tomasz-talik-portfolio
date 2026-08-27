@@ -118,6 +118,12 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
     lockDelaySeconds: 0.18,
     production: { buildDurationSeconds: 18, rayMaxDistance: 2.3 }
   },
+  asterionSectorControl: {
+    angularSpeedDegrees: 16,
+    detentPauseSeconds: 0.12,
+    gestureEngageDegrees: 18,
+    gestureReleaseDegrees: 10
+  },
   playerGuidePanel: {
     enabled: true,
     width: 0.34,
@@ -546,6 +552,16 @@ export function normalizeExperienceVrSettings(candidate) {
         buildDurationSeconds: finiteNumber(candidate.asterionSphere?.production?.buildDurationSeconds, defaults.asterionSphere.production.buildDurationSeconds, { min: 18, max: 18 }),
         rayMaxDistance: finiteNumber(candidate.asterionSphere?.production?.rayMaxDistance, defaults.asterionSphere.production.rayMaxDistance, { min: 0.1, max: 2.3 })
       }
+    },
+    asterionSectorControl: {
+      angularSpeedDegrees: finiteNumber(candidate.asterionSectorControl?.angularSpeedDegrees,
+        defaults.asterionSectorControl.angularSpeedDegrees, { min: 0.1, max: 90 }),
+      detentPauseSeconds: finiteNumber(candidate.asterionSectorControl?.detentPauseSeconds,
+        defaults.asterionSectorControl.detentPauseSeconds, { min: 0, max: 1 }),
+      gestureEngageDegrees: finiteNumber(candidate.asterionSectorControl?.gestureEngageDegrees,
+        defaults.asterionSectorControl.gestureEngageDegrees, { min: 1, max: 90 }),
+      gestureReleaseDegrees: finiteNumber(candidate.asterionSectorControl?.gestureReleaseDegrees,
+        defaults.asterionSectorControl.gestureReleaseDegrees, { min: 0, max: 89 })
     },
     playerGuidePanel: {
       enabled: typeof candidate.playerGuidePanel?.enabled === 'boolean' ? candidate.playerGuidePanel.enabled : defaults.playerGuidePanel.enabled,

@@ -68,6 +68,7 @@ export function createVrProgressFloor({
     update: (delta) => actor.update(delta),
     setSectorMotion: (glyphId, transform) => !disposed && actor.setSectorMotion(glyphId, transform),
     getSectorMotionTransform: (glyphId) => disposed ? null : actor.getSectorMotionTransform(glyphId),
+    getSectorControlFrame: (glyphId) => disposed ? null : actor.getSectorControlFrame(glyphId),
     resetSectorMotion: (glyphId) => !disposed && actor.resetSectorMotion(glyphId),
     getActivatedEntries: () => [...activatedEntries.values()].map(({ glyphId, order }) => ({ glyphId, order })),
     getRevealedSectorIds: () => [...new Set([...activatedEntries.values()].map(({ glyphId }) => glyphId))],
