@@ -2,7 +2,11 @@
 
 ## 1. Status i authority
 
-Status: **CURRENT TARGET / NOT IMPLEMENTED**.
+Status: **CURRENT TARGET / PARTIALLY IMPLEMENTED**.
+
+Runtime R2A implements the semantic left GRIP, target-ray acquisition of an existing powered sector, installed-Rune verification, continuous `1.0 s` dwell, trigger-priority suppression and transient `SECTOR LOCK`. The bounded interaction exposes read-only acquisition/lock state and does not persist it.
+
+Still not implemented are controller-driven local sector motion, detent snapping, the `α/β/γ` runtime, Field Actor/descriptor, field or lensing presentation, and grip-beam presentation. This partial foundation does not mark the Asterion Resonator as implemented.
 
 Ten dokument jest nadrzędnym aktualnym technicznym modelem Rezonatora Asterionowego. Zamraża granice sandboxu, Scenario, Guidance, Zworników Runicznych, lokalnego sterowania sektorami i odpowiedzi Rezonatora. Wyspecjalizowany [`VR_ASTERION_RESONATOR_FIELD_MODEL.md`](VR_ASTERION_RESONATOR_FIELD_MODEL.md) jest jego podporządkowanym CURRENT sub-modelem pola; nie stanowi alternatywnego kanonu. Dokumenty nie definiują finalnego API ani nazw nowych aktorów sector-control.
 

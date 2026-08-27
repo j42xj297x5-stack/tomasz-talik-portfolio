@@ -2,6 +2,12 @@
 
 Status: **CURRENT operational snapshot — 2026-08-26**. Authorities: [`VR_RUNTIME_MODEL.md`](../technical/VR_RUNTIME_MODEL.md), [`VR_SCENARIO_DIRECTOR_MODEL.md`](../technical/VR_SCENARIO_DIRECTOR_MODEL.md) and [`VR_RUNE_STONES_MODEL.md`](../technical/VR_RUNE_STONES_MODEL.md).
 
+## Asterion sector-control R2A boundary
+
+Implemented runtime foundation: semantic left GRIP input, target-ray resolution of existing progress-floor sectors, installed-Rune powered checks, continuous `1.0 s` acquisition, transient `SECTOR LOCK`, and TRIGGER-priority suppression. The acquisition interaction is updated after the hand-mode controller and participates in baseline reset and disposal.
+
+Not implemented: controller-driven local sector motion, detent snapping, `α/β/γ` runtime, Field Actor/descriptor, field/lensing presentation, or grip-beam presentation. Global platform orientation remains owned by the existing Asterion Gyro interaction.
+
 ## Canonical checkpoint
 
 - Scenario is implemented through `4.40 → 4.50 → 4.60 → 4.70 → 4.80`; `4.80` is the stable authored boundary. `P5 → 4.80` is only a debug/QA alias.

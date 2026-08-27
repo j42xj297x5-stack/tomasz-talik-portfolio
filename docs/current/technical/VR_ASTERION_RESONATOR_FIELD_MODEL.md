@@ -2,7 +2,11 @@
 
 ## 1. Status, authority i zakres
 
-Status: **CURRENT TARGET / NOT IMPLEMENTED**.
+Status: **CURRENT TARGET / R2A INPUT-LOCK FOUNDATION IMPLEMENTED; FIELD NOT IMPLEMENTED**.
+
+The runtime now has semantic left GRIP input and bounded powered-sector target-ray acquisition: the same legal sector held for `1.0 s` produces transient `SECTOR LOCK`, while TRIGGER suppresses the local path. Powered truth is read from the corresponding installed Rune Stone.
+
+Actual local sector motion, detent snapping, `α/β/γ`, the Field Actor/descriptor, field/lensing presentation and grip-beam presentation remain unimplemented.
 
 Ten dokument jest wyspecjalizowanym sub-modelem nadrzędnego [`VR_ASTERION_RESONATOR_MODEL.md`](VR_ASTERION_RESONATOR_MODEL.md). Zamraża semantykę poziomów rdzenia pola, aktualne docelowe pozycje fizyczne, uproszczony descriptor i granice ownership. Nie tworzy runtime, klas, API JavaScript, scoringu, shaderów ani mapowania gestu. Historyczny model anteny oraz wcześniejszy signed detent model nie są precedensem implementacyjnym.
 
