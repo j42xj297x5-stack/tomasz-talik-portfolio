@@ -230,7 +230,9 @@ const runeBridgeActor = createVrRuneBridgeActor({
   assetManager,
   getSectorMount: (branchId) => progressFloor.getRuneInstallationFrame(branchId),
   extensionDurationSeconds: settings.runeStoneInstallation.phaseDurationSeconds,
-  hoverHeightMeters: settings.runeStoneInstallation.hoverHeightMeters
+  hoverHeightMeters: settings.runeStoneInstallation.hoverHeightMeters,
+  presentationScale: settings.runeBridge.presentationScale,
+  radialPresentationOffsetMeters: settings.runeBridge.radialPresentationOffsetMeters
 });
 const platformFixturesRoot = new THREE.Group();
 platformFixturesRoot.name = 'VrPlatformFixturesRoot';
@@ -748,7 +750,10 @@ const crystalCollection = createVrCrystalCollection({
     return true;
   },
   onPreview: (page) => runtimeExperience.dispatch(VR_SCENARIO_EVENT.CRYSTAL_ACTIVATED, { page }),
-  onCommit: progressionSemanticHandoff.onPageCommitted
+  onCommit: (page, meta) => {
+    progressionSemanticHandoff.onPageCommitted(page, meta);
+    synchronizeRuneBridgeReadiness();
+  }
 });
 createVrProgressionShortcut({ search: location.search, pages: experienceVrPages, progressionController,
   progressFloor, syncQaPostP1WorldState })();

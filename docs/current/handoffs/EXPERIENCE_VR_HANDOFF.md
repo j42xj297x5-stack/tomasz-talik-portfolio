@@ -1,6 +1,6 @@
 # Experience VR — Current Handoff
 
-Status: **CURRENT operational snapshot — 2026-08-26**. Authorities: [`VR_RUNTIME_MODEL.md`](../technical/VR_RUNTIME_MODEL.md), [`VR_SCENARIO_DIRECTOR_MODEL.md`](../technical/VR_SCENARIO_DIRECTOR_MODEL.md) and [`VR_RUNE_STONES_MODEL.md`](../technical/VR_RUNE_STONES_MODEL.md).
+Status: **CURRENT operational snapshot — 2026-08-27**. Authorities: [`VR_RUNTIME_MODEL.md`](../technical/VR_RUNTIME_MODEL.md), [`VR_SCENARIO_DIRECTOR_MODEL.md`](../technical/VR_SCENARIO_DIRECTOR_MODEL.md) and [`VR_RUNE_STONES_MODEL.md`](../technical/VR_RUNE_STONES_MODEL.md).
 
 ## Asterion sector-control R2A boundary
 
@@ -17,7 +17,7 @@ Not implemented: controller-driven local sector motion, detent snapping, `α/β/
 
 ## Rune ownership and readiness
 
-Natural tuning is independent of sectors. Targetability equals `tunedRuneFamilies`. Installation readiness alone reads sector completion through `ProgressionController.isBranchComplete() → RuneInstallationReadinessProjection → RuneBridgeActor HIDDEN/DOCKED`. After `4.80`, Earth/Fire/Wood are normally ready; Metal/Water are not. The Water override seam exists, but its real trigger is not implemented.
+Natural tuning is independent of sectors. Targetability equals `tunedRuneFamilies`. Installation readiness alone reads sector completion through `ProgressionController.isBranchComplete() → RuneInstallationReadinessProjection → RuneBridgeActor HIDDEN/DOCKED`. Every successful live crystal/page commit synchronizes that seam after the existing semantic handoff, so the completing panel produces exactly one idempotent `HIDDEN → DOCKED` materialization without Scenario ownership; the bridge then remains visible before installation. After `4.80`, Earth/Fire/Wood are normally ready; Metal/Water are not. The Water override seam exists, but its real trigger is not implemented.
 
 `RuneStoneProgressionController` is the canonical persistent owner of separate `tunedRuneFamilies` and `installedRuneFamilies`, with `installedRuneFamilies ⊆ tunedRuneFamilies`. `runeProgression` hydrates both facts silently and atomically. The distinct `runeStones` owner section hydrates presentation visibility only; no central Rune store or duplicate truth exists.
 
@@ -39,17 +39,17 @@ CARRIED_ORBIT
 
 Accepted handoff never passes through `FREE`; afterward player trigger state no longer controls installation. Authored `BRIDGE_STONE_CAPTURE` / `capture_radius_m` may remain private asset calibration evidence but are not gameplay triggers.
 
-Every natural pair exposes stable `VrRuneStoneHoverAnchor_<BRANCH>` and `VrRuneStoneInstallationAnchor_<BRANCH>`. `VrRuneBridgeMotionRoot_<BRANCH>` owns implemented radial bridge translation; its distance derives from authored geometry/canonical alignment rather than a magic world offset. Extension settles `DOCKED → EXTENDING → EXTENDED`, then completed installation sets the bridge to `ORBITING`. `ORBITING` spin/rotation presentation is not implemented.
+Every natural pair exposes stable `VrRuneStoneHoverAnchor_<BRANCH>` and `VrRuneStoneInstallationAnchor_<BRANCH>`. `VrRuneBridgeMotionRoot_<BRANCH>` owns implemented radial bridge translation; its distance derives from authored geometry/canonical alignment rather than a magic world offset. Extension settles `DOCKED → EXTENDING → EXTENDED`, then completed installation sets the bridge to settled `BOUND`; historical `ORBITING` no longer exists. A private presentation root applies shared `2.0×` scale and sector-local `+Z 1.0 m` offset only to bridge geometry. Stable stone/hover anchors remain unchanged siblings, and Rune Installation Frame parenting carries the bridge and installed stone with R2B sector motion.
 
 ## A9.6 hydration and reconstruction
 
-`RuneInstalledStateProjection` reads installed truth, resolves family to natural branch, obtains the stable InstallationAnchor and issues only bounded reconstruction commands. `RuneStoneActor.restoreInstalled()` restores canonical local pose, authored scale, anchor parenting and `INSTALLED`. `RuneBridgeActor.restoreInstalled()` directly restores visibility, authored-derived extension distance and `ORBITING`. Neither path replays lock, carried transport, capture, tween or bridge extension transitions.
+`RuneInstalledStateProjection` reads installed truth, resolves family to natural branch, obtains the stable InstallationAnchor and issues only bounded reconstruction commands. `RuneStoneActor.restoreInstalled()` restores canonical local pose, authored scale, anchor parenting and `INSTALLED`. `RuneBridgeActor.restoreInstalled()` directly restores visibility, authored-derived extension distance and `BOUND`. Neither path replays lock, carried transport, capture, tween or bridge extension or reveal transitions.
 
 Reconstruction order is bridge readiness → installed Rune physical state → Furnace redraw without a fake domain event → remaining derived state such as absorbed shells. The lifecycle remains `restoreBaseline → stateAt(X) → hydrate owners → synchronize derived state → Director at X → activate X`. A9.6 prepares the domain for future points; it does not provide production direct-target parity after `4.80`, because no such Scenario points exist.
 
 ## Next bounded work
 
-There is no invented A9.7 or NEXT A9. The next gameplay slice requires a separate architecture/authoring decision. Future scope includes authored Scenario after `4.80`, the Water override trigger, special Ether flow, bridge spin/presentation, Rune Stone spatial audio, antenna and late Metal/Water/finale beats, durable full-game persistence and full-game reset. Collision is superseded and not a target.
+There is no invented A9.7 or NEXT A9. The next gameplay slice requires a separate architecture/authoring decision. Future scope includes authored Scenario after `4.80`, the Water override trigger, special Ether flow, `RUNE_BINDER_REVEAL` lightning, Rune install energy VFX, detent spark/audio, motion audio, grip beam, Field Actor/lensing, Rune Stone spatial audio, antenna and late Metal/Water/finale beats, durable full-game persistence and full-game reset. Collision is superseded and not a target.
 
 ## Traceability
 

@@ -42,6 +42,7 @@ platform underfloor procedural lightning
 - **FACT:** aktywny capture udostępnia elapsed/duration przez istniejący transient record. Projection może z niego wyprowadzić read-only znormalizowany postęp prezentacyjny; nie utrwala go.
 - **FACT:** `AsterionGyroInteraction` posiada `driveActive`, rzeczywistą prędkość kątową i stan, w tym `LOCKED`; zapisuje rzeczywistą quaternion `VrTiltableFloorRoot`. VFX jedynie projektuje te dane i nie integruje własnego modelu ruchu.
 - **FACT:** `VrTiltableFloorRoot` jest wspólnym transform rootem platformy. Pięć sektorów zachowuje układ pięciu wycinków po 72°.
+- **FACT:** live successful sector-completing page commit synchronizuje istniejącą readiness projection z `RuneBridgeActor`, tworząc jednoznaczne pierwsze przejście `HIDDEN → DOCKED`. Przyszła presentation może je obserwować jako seam `RUNE_BINDER_REVEAL`; hydration odtwarza settled `DOCKED`/`BOUND` bez replayu reveal. `PlatformEnergyVfxActor`, lightning i audio nadal nie są zaimplementowane.
 
 ## Kontrakt przestrzenny
 
