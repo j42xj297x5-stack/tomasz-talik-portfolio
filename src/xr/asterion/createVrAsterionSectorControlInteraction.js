@@ -17,10 +17,10 @@ const HALF_SECTOR_ANGLE = Math.PI / 5;
 const RAD_TO_DEG = 180 / Math.PI;
 const EPSILON = 1e-6;
 
-const SECTORS = Object.freeze({
-  'ethics-life-protection': Object.freeze({ branchId: 'earth', axis: Object.freeze({ x: Math.sin(HALF_SECTOR_ANGLE), y: 0, z: Math.cos(HALF_SECTOR_ANGLE) }), motionSign: 1, hinge: 'ORIGIN' }),
-  'ai-guide': Object.freeze({ branchId: 'wood', axis: Object.freeze({ x: -Math.sin(HALF_SECTOR_ANGLE), y: 0, z: Math.cos(HALF_SECTOR_ANGLE) }), motionSign: -1, hinge: 'ORIGIN' }),
-  'creative-ai': Object.freeze({ branchId: 'fire', axis: Object.freeze({ x: 1, y: 0, z: 0 }), motionSign: 1, hinge: 'MIN_Z' })
+const SECTOR_DEFINITIONS = Object.freeze({
+  'ethics-life-protection': Object.freeze({ branchId: 'earth', motionAxis: Object.freeze({ x: Math.sin(HALF_SECTOR_ANGLE), y: 0, z: Math.cos(HALF_SECTOR_ANGLE) }), gestureAxis: Object.freeze({ x: 0, y: 0, z: 1 }), gestureSign: 1, motionSign: 1, hinge: 'ORIGIN' }),
+  'ai-guide': Object.freeze({ branchId: 'wood', motionAxis: Object.freeze({ x: -Math.sin(HALF_SECTOR_ANGLE), y: 0, z: Math.cos(HALF_SECTOR_ANGLE) }), gestureAxis: Object.freeze({ x: 0, y: 0, z: 1 }), gestureSign: 1, motionSign: -1, hinge: 'ORIGIN' }),
+  'creative-ai': Object.freeze({ branchId: 'fire', motionAxis: Object.freeze({ x: 1, y: 0, z: 0 }), gestureAxis: Object.freeze({ x: 1, y: 0, z: 0 }), gestureSign: -1, motionSign: 1, hinge: 'MIN_Z' })
 });
 
 function clampStep(current, target, maximumStep) {
@@ -35,9 +35,18 @@ export function createVrAsterionSectorControlInteraction({
   const config = {
     angularSpeedDegrees: Math.max(0.1, Number(settings.angularSpeedDegrees) || 16),
     detentPauseSeconds: Math.max(0, Number(settings.detentPauseSeconds) || 0.12),
-    gestureEngageDegrees: Math.max(1, Number(settings.gestureEngageDegrees) || 18),
+    sideGestureEngageDegrees: Math.max(1, Number(settings.sideGestureEngageDegrees) || 45),
+    fireGestureEngageDegrees: Math.max(1, Number(settings.fireGestureEngageDegrees) || 30),
     gestureReleaseDegrees: Math.max(0, Number(settings.gestureReleaseDegrees) || 10)
   };
+  const SECTORS = Object.freeze(Object.fromEntries(Object.entries(SECTOR_DEFINITIONS).map(([glyphId, descriptor]) => [
+    glyphId,
+    Object.freeze({
+      ...descriptor,
+      gestureEngageDegrees: descriptor.branchId === 'fire'
+        ? config.fireGestureEngageDegrees : config.sideGestureEngageDegrees
+    })
+  ])));
   const sectorStates = new Map(Object.keys(SECTORS).map((glyphId) => [glyphId, {
     committedLevel: 0,
     currentAngleDegrees: 0
@@ -74,7 +83,7 @@ export function createVrAsterionSectorControlInteraction({
       motionQuaternion.identity();
       return progressFloor.setSectorMotion(glyphId, { position: IDENTITY_POSITION, quaternion: motionQuaternion });
     }
-    axis.set(descriptor.axis.x, descriptor.axis.y, descriptor.axis.z);
+    axis.set(descriptor.motionAxis.x, descriptor.motionAxis.y, descriptor.motionAxis.z);
     motionQuaternion.setFromAxisAngle(axis, THREE.MathUtils.degToRad(state.currentAngleDegrees * descriptor.motionSign));
     if (descriptor.hinge === 'ORIGIN') {
       return progressFloor.setSectorMotion(glyphId, { position: IDENTITY_POSITION, quaternion: motionQuaternion });
@@ -109,12 +118,13 @@ export function createVrAsterionSectorControlInteraction({
     relativeQuaternion.copy(controlFrameQuaternion).invert().multiply(currentControllerQuaternion).normalize();
     deltaQuaternion.copy(neutralRelativeQuaternion).invert().multiply(relativeQuaternion).normalize();
     const descriptor = SECTORS[glyphId];
-    const component = deltaQuaternion.x * descriptor.axis.x
-      + deltaQuaternion.y * descriptor.axis.y + deltaQuaternion.z * descriptor.axis.z;
-    const signedDegrees = 2 * Math.atan2(component, Math.abs(deltaQuaternion.w)) * RAD_TO_DEG;
+    const component = deltaQuaternion.x * descriptor.gestureAxis.x
+      + deltaQuaternion.y * descriptor.gestureAxis.y + deltaQuaternion.z * descriptor.gestureAxis.z;
+    const signedDegrees = 2 * Math.atan2(component, Math.abs(deltaQuaternion.w))
+      * RAD_TO_DEG * descriptor.gestureSign;
     if (intent === 0) {
-      if (signedDegrees >= config.gestureEngageDegrees) return 1;
-      if (signedDegrees <= -config.gestureEngageDegrees) return -1;
+      if (signedDegrees >= descriptor.gestureEngageDegrees) return 1;
+      if (signedDegrees <= -descriptor.gestureEngageDegrees) return -1;
       return 0;
     }
     if (intent > 0) return signedDegrees <= config.gestureReleaseDegrees ? 0 : 1;
