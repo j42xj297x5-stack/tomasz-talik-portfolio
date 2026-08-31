@@ -4,7 +4,7 @@ Status: **CURRENT operational snapshot — 2026-08-27**. Authorities: [`VR_RUNTI
 
 ## Asterion sector-control and Field R4 boundary
 
-Implemented runtime: R2A semantic left GRIP powered-sector acquisition and transient `SECTOR LOCK`; R2B committed EARTH/WOOD/FIRE `0/1/2/3` detents; and R4's event-driven Resonator Field Actor. R4 derives `resonatorExists`, runtime `α/β/γ`, POWERED/FIELD-ACTIVE, partial/full/symmetric/asymmetric state, depth band and analytic lateral values in an immutable descriptor with exactly-on-change subscriptions. Hydration/reconstruction and baseline reset explicitly synchronize it after upstream owners.
+Implemented runtime: R2A semantic left GRIP powered-sector acquisition and transient `SECTOR LOCK`; R2B committed EARTH/WOOD/FIRE `0/1/2/3` detents; and R4's event-driven Resonator Field Actor. R4 derives `resonatorExists`, runtime `α/β/γ`, POWERED/FIELD-ACTIVE, partial/full/symmetric/asymmetric state, depth band and analytic lateral values in an immutable descriptor with exactly-on-change subscriptions. Hydration/reconstruction and baseline reset explicitly synchronize it after upstream owners. Its downstream subscription boundary commits descriptor truth before notification and is fail-soft: one consumer exception cannot propagate into gameplay or block delivery to the remaining consumers.
 
 Not implemented: target selection/scoring or response, field/lensing presentation, grip beam, field audio, or METAL/WATER field contribution. Global platform orientation remains owned by the existing Asterion Gyro interaction.
 

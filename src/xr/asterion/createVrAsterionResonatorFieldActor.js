@@ -69,7 +69,13 @@ export function createVrAsterionResonatorFieldActor({
     if (nextSignature === signature) return descriptor;
     descriptor = nextDescriptor;
     signature = nextSignature;
-    [...listeners].forEach((listener) => listener(descriptor));
+    [...listeners].forEach((listener) => {
+      try {
+        listener(descriptor);
+      } catch (error) {
+        console.warn('[VrAsterionResonatorFieldActor] Field listener failed.', error);
+      }
+    });
     return descriptor;
   }
 
