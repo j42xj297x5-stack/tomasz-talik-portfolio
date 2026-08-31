@@ -105,6 +105,7 @@ export function createVrProgressFloorActor({ parent, sourceModels, emission = {}
     activatePanel(glyphId, order) { return !disposed && (sectorsByGlyphId.get(glyphId)?.activatePanel(order) ?? false); },
     setSectorMotion(glyphId, transform) { return !disposed && (sectorsByGlyphId.get(glyphId)?.setMotionTransform(transform) ?? false); },
     getSectorMotionTransform(glyphId) { return !disposed ? sectorsByGlyphId.get(glyphId)?.getMotionTransform() ?? null : null; },
+    getSectorMotionBounds(glyphId) { return !disposed ? sectorsByGlyphId.get(glyphId)?.getMotionBounds() ?? null : null; },
     getSectorControlFrame(glyphId) { return !disposed ? sectorsByGlyphId.get(glyphId)?.getControlFrame() ?? null : null; },
     getAsterionSectorTargetWorldPosition(glyphId) { return !disposed ? sectorsByGlyphId.get(glyphId)?.getAsterionTargetWorldPosition() ?? null : null; },
     setAsterionSectorAcquisitionGlow(glyphId, strength) { return !disposed && (sectorsByGlyphId.get(glyphId)?.setAsterionAcquisitionGlow(strength) ?? false); },

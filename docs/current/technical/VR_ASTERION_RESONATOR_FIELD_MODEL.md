@@ -35,11 +35,11 @@ Każdy kanał rdzenia ma cztery stabilne poziomy, bez pozycji ujemnych i bez ruc
 
 ### EARTH — `α`
 
-`α ∈ {0,1,2,3}` steruje lewym skrzydłem i mapuje się na `0° / 13° / 23° / 36°`. Wraz ze wzrostem `α` lewa krawędź EARTH idzie coraz wyżej, a prawa coraz niżej. Nie istnieje przeciwne wychylenie. `α = 0` wyłącza wkład EARTH do descriptoru.
+`α ∈ {0,1,2,3}` steruje lewym skrzydłem i mapuje się na `0° / 13° / 23° / 36°`. EARTH jest downward-folding side wing: zawias leży na bocznej krawędzi `maxX`, a przeciwna krawędź schodzi coraz głębiej pod platformę wraz ze wzrostem `α`. Żadna krawędź nie jest unoszona ponad flat walking surface. `α = 0` wyłącza wkład EARTH do descriptoru.
 
 ### WOOD — `β`
 
-`β ∈ {0,1,2,3}` steruje prawym skrzydłem i mapuje się na `0° / 13° / 23° / 36°`. Jest lustrzanym odpowiednikiem EARTH: wraz ze wzrostem `β` prawa krawędź WOOD idzie coraz wyżej, a lewa coraz niżej. Nie istnieje przeciwne wychylenie. `β = 0` wyłącza wkład WOOD.
+`β ∈ {0,1,2,3}` steruje prawym skrzydłem i mapuje się na `0° / 13° / 23° / 36°`. WOOD jest lustrzanym downward-folding side wing: zawias leży na bocznej krawędzi `minX`, a przeciwna krawędź schodzi coraz głębiej pod platformę wraz ze wzrostem `β`. Żadna krawędź nie jest unoszona ponad flat walking surface. `β = 0` wyłącza wkład WOOD.
 
 ### FIRE — `γ`
 
@@ -52,7 +52,9 @@ FIRE nie ma rotacji skrzydłowej lewo/prawo. `γ ∈ {0,1,2,3}` steruje wyłącz
 | `2` | `23°` | `MID` |
 | `3` | `36°` | `NEAR` |
 
-Większe wychylenie wybiera bliższe pasmo przestrzeni. Signed FIRE tilt nie istnieje.
+FIRE jest centralnym downward pitch wokół wewnętrznej radialnej krawędzi: wraz ze wzrostem `γ` część outward schodzi coraz głębiej pod platformę. Większe wychylenie nadal wybiera bliższe pasmo przestrzeni; semantyka `FAR / MID / NEAR` i brak signed FIRE tilt pozostają bez zmian.
+
+Physical motion direction odwrócono względem wcześniejszej implementacji, ponieważ wcześniejszy runtime był geometrycznym mirror względem flat platform surface. Zmiana dotyczy wyłącznie fizycznej projekcji; `α/β/γ`, committed levels, descriptor i `DETENT_COMMITTED` zachowują znaczenie.
 
 ## 4. State-space, symetria i legalna asymetria
 
