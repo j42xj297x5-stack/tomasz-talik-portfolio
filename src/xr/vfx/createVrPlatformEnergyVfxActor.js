@@ -87,19 +87,19 @@ function setWidthEnvelope(slot, segments, baseWidth) {
   }
 }
 
-function selectBranchOriginIndex(slot, segments, incoming, outgoing) {
+function selectBranchOriginIndex(slot, segments, incoming, outgoing, curvatureBias) {
   let totalCurvature = 0;
   for (let index = 1; index < segments; index += 1) {
     incoming.copy(slot.points[index]).sub(slot.points[index - 1]).normalize();
     outgoing.copy(slot.points[index + 1]).sub(slot.points[index]).normalize();
-    totalCurvature += 1 - THREE.MathUtils.clamp(incoming.dot(outgoing), -1, 1);
+    totalCurvature += Math.pow(1 - THREE.MathUtils.clamp(incoming.dot(outgoing), -1, 1), curvatureBias);
   }
   if (totalCurvature <= 1e-12) return 1 + Math.floor(Math.random() * (segments - 1));
   let selection = Math.random() * totalCurvature;
   for (let index = 1; index < segments; index += 1) {
     incoming.copy(slot.points[index]).sub(slot.points[index - 1]).normalize();
     outgoing.copy(slot.points[index + 1]).sub(slot.points[index]).normalize();
-    selection -= 1 - THREE.MathUtils.clamp(incoming.dot(outgoing), -1, 1);
+    selection -= Math.pow(1 - THREE.MathUtils.clamp(incoming.dot(outgoing), -1, 1), curvatureBias);
     if (selection <= 0) return index;
   }
   return segments - 1;
@@ -168,11 +168,16 @@ export function createVrPlatformEnergyVfxActor({ getSectorMount, getSectorBounds
   config.brightnessVariationMax = Math.max(config.brightnessVariationMin, finiteOr(config.brightnessVariationMax, 1.15));
   config.lifetimeVariationMin = finiteOr(config.lifetimeVariationMin, 0.85);
   config.lifetimeVariationMax = Math.max(config.lifetimeVariationMin, finiteOr(config.lifetimeVariationMax, 1.2));
-  config.branchChance = finiteOr(config.branchChance, 0.55);
+  config.maxBranchesPerBolt = Math.max(0, Math.min(3, Math.floor(finiteOr(config.maxBranchesPerBolt, 3))));
+  config.branchChance = finiteOr(config.branchChance, 0.7);
   config.branchWidthFactor = finiteOr(config.branchWidthFactor, 0.45);
   config.branchBrightnessFactor = finiteOr(config.branchBrightnessFactor, 0.7);
-  config.branchLengthFactorMin = finiteOr(config.branchLengthFactorMin, 0.12);
-  config.branchLengthFactorMax = Math.max(config.branchLengthFactorMin, finiteOr(config.branchLengthFactorMax, 0.32));
+  config.branchLengthFactorMin = finiteOr(config.branchLengthFactorMin, 0.18);
+  config.branchLengthFactorMax = Math.max(config.branchLengthFactorMin, finiteOr(config.branchLengthFactorMax, 0.42));
+  config.branchAngleMinDegrees = finiteOr(config.branchAngleMinDegrees, 25);
+  config.branchAngleMaxDegrees = Math.max(config.branchAngleMinDegrees, finiteOr(config.branchAngleMaxDegrees, 55));
+  config.branchCurvatureBias = finiteOr(config.branchCurvatureBias, 2);
+  config.branchTortuosityFactor = finiteOr(config.branchTortuosityFactor, 0.65);
   config.surfaceLiftMeters = finiteOr(config.surfaceLiftMeters, 0.04);
   config.tortuosityFactor = finiteOr(config.tortuosityFactor, 0.14);
   config.tortuosityMinMeters = finiteOr(config.tortuosityMinMeters, 0.06);
@@ -187,7 +192,9 @@ export function createVrPlatformEnergyVfxActor({ getSectorMount, getSectorBounds
   const revealProfiles = new Map(); const acquisitionProfiles = new Map(); const driveProfiles = new Map();
   const pool = Array.from({ length: Math.max(1, Math.floor(config.maxActiveBolts)) }, () => createBoltSlot(segments, config));
   const tangent = new THREE.Vector3(); const branchDirection = new THREE.Vector3(); const worldTarget = new THREE.Vector3();
+  const branchLateral = new THREE.Vector3(); const branchDepth = new THREE.Vector3(); const branchReference = new THREE.Vector3();
   const branchIncoming = new THREE.Vector3(); const branchOutgoing = new THREE.Vector3();
+  const selectedBranchOrigins = new Int32Array(3);
   const pathScratch = {
     direction: new THREE.Vector3(), lateral: new THREE.Vector3(), depth: new THREE.Vector3(), reference: new THREE.Vector3()
   };
@@ -216,19 +223,37 @@ export function createVrPlatformEnergyVfxActor({ getSectorMount, getSectorBounds
   function spawnBranches(mainSlot, profile, strength, kind, mainLength) {
     const acquisitionFactor = kind === 'ACQUISITION' ? clamp01((strength - config.acquisitionStrengthMin) / Math.max(0.001, config.acquisitionStrengthMax - config.acquisitionStrengthMin)) : 1;
     const maximum = kind === 'ACQUISITION' ? 1 : config.maxBranchesPerBolt;
+    selectedBranchOrigins.fill(-1); let selectedOriginCount = 0;
     for (let branchIndex = 0; branchIndex < maximum; branchIndex += 1) {
       if (Math.random() >= config.branchChance * acquisitionFactor) continue;
+      const pointIndex = selectBranchOriginIndex(mainSlot, segments, branchIncoming, branchOutgoing, config.branchCurvatureBias);
+      let duplicateOrigin = false;
+      for (let index = 0; index < selectedOriginCount; index += 1) duplicateOrigin ||= selectedBranchOrigins[index] === pointIndex;
+      if (duplicateOrigin) continue;
+      selectedBranchOrigins[selectedOriginCount++] = pointIndex;
       const branchSlot = acquireSlot(); if (!branchSlot) return;
-      const pointIndex = selectBranchOriginIndex(mainSlot, segments, branchIncoming, branchOutgoing);
       const startPoint = branchSlot.points[0].copy(mainSlot.points[pointIndex]);
-      tangent.copy(mainSlot.points[Math.min(segments, pointIndex + 1)]).sub(mainSlot.points[Math.max(0, pointIndex - 1)]).normalize();
+      tangent.copy(mainSlot.points[Math.min(segments, pointIndex + 1)]).sub(mainSlot.points[Math.max(0, pointIndex - 1)]);
+      if (tangent.lengthSq() <= 1e-12) tangent.copy(branchOutgoing).add(branchIncoming);
+      if (tangent.lengthSq() <= 1e-12) tangent.copy(branchOutgoing);
+      if (tangent.lengthSq() <= 1e-12) tangent.set(0, 0, 1);
+      tangent.normalize(); branchReference.set(0, 1, 0);
+      branchLateral.crossVectors(branchReference, tangent);
+      if (branchLateral.lengthSq() < 1e-8) {
+        branchReference.set(Math.abs(tangent.x) <= Math.abs(tangent.z) ? 1 : 0, 0,
+          Math.abs(tangent.x) <= Math.abs(tangent.z) ? 0 : 1);
+        branchLateral.crossVectors(branchReference, tangent);
+      }
+      branchLateral.normalize(); branchDepth.crossVectors(tangent, branchLateral).normalize();
       const sign = Math.random() < 0.5 ? -1 : 1;
-      branchDirection.set(-tangent.z * sign, (Math.random() * 2 - 1) * 0.35, tangent.x * sign).normalize();
+      branchLateral.multiplyScalar(sign).addScaledVector(branchDepth, (Math.random() * 2 - 1) * 0.35).normalize();
+      const branchAngle = THREE.MathUtils.degToRad(randomBetween(config.branchAngleMinDegrees, config.branchAngleMaxDegrees));
+      branchDirection.copy(tangent).multiplyScalar(Math.cos(branchAngle)).addScaledVector(branchLateral, Math.sin(branchAngle)).normalize();
       const branchLength = mainLength * randomBetween(config.branchLengthFactorMin, config.branchLengthFactorMax);
       const endPoint = branchSlot.points[segments].copy(startPoint).addScaledVector(branchDirection, branchLength);
       branchSlot.envelope.copy(profile.bounds); branchSlot.envelope.min.y -= config.surfaceLiftMeters; branchSlot.envelope.max.y += config.surfaceLiftMeters;
       branchSlot.envelope.expandByPoint(startPoint).expandByPoint(endPoint);
-      generateFractalPath(branchSlot, segments, startPoint, endPoint, branchSlot.envelope, config, 0.45, pathScratch);
+      generateFractalPath(branchSlot, segments, startPoint, endPoint, branchSlot.envelope, config, config.branchTortuosityFactor, pathScratch);
       activate(branchSlot, profile, strength, config.branchWidthFactor * randomBetween(config.widthVariationMin, config.widthVariationMax), config.branchBrightnessFactor * randomBetween(config.brightnessVariationMin, config.brightnessVariationMax), randomBetween(0.55, 0.75));
     }
   }
