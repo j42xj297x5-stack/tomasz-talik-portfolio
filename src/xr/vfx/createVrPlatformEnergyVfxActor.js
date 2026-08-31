@@ -4,50 +4,90 @@ const BRANCH_IDS = Object.freeze(['earth', 'fire', 'wood', 'metal', 'water']);
 const HALF_WEDGE_ANGLE = Math.PI / 5;
 const clamp01 = (value) => Math.max(0, Math.min(1, value));
 const smoothstep = (value) => value * value * (3 - 2 * value);
+const randomBetween = (minimum, maximum) => THREE.MathUtils.lerp(minimum, maximum, Math.random());
 const vertexShader = `
-attribute vec3 previous; attribute vec3 next; attribute float side; uniform float boltWidth;
-void main() { vec4 currentView = modelViewMatrix * vec4(position, 1.0); vec2 previousView = (modelViewMatrix * vec4(previous, 1.0)).xy; vec2 nextView = (modelViewMatrix * vec4(next, 1.0)).xy; vec2 direction = normalize(nextView - previousView + vec2(0.00001, 0.0)); currentView.xy += vec2(-direction.y, direction.x) * side * boltWidth; gl_Position = projectionMatrix * currentView; }`;
-const fragmentShader = `uniform vec3 boltColor; uniform float boltOpacity; void main() { gl_FragColor = vec4(boltColor, boltOpacity); }`;
+attribute vec3 previous; attribute vec3 next; attribute float side; attribute float width;
+varying float lateral;
+void main() {
+  vec4 currentView = modelViewMatrix * vec4(position, 1.0);
+  vec2 previousView = (modelViewMatrix * vec4(previous, 1.0)).xy;
+  vec2 nextView = (modelViewMatrix * vec4(next, 1.0)).xy;
+  vec2 direction = normalize(nextView - previousView + vec2(0.00001, 0.0));
+  currentView.xy += vec2(-direction.y, direction.x) * side * width;
+  lateral = side;
+  gl_Position = projectionMatrix * currentView;
+}`;
+const fragmentShader = `
+uniform vec3 boltColor; uniform float boltOpacity; uniform float coreWidthFactor; uniform float haloOpacityFactor;
+varying float lateral;
+void main() {
+  float distanceFromCenter = abs(lateral);
+  float core = 1.0 - smoothstep(coreWidthFactor * 0.45, coreWidthFactor, distanceFromCenter);
+  float halo = (1.0 - smoothstep(coreWidthFactor, 1.0, distanceFromCenter)) * haloOpacityFactor;
+  float edge = 1.0 - smoothstep(0.72, 1.0, distanceFromCenter);
+  vec3 energyColor = mix(boltColor, vec3(1.0), core * 0.92);
+  gl_FragColor = vec4(energyColor, boltOpacity * (core + halo) * edge);
+}`;
 
 function createBoltSlot(segments, settings) {
   const fractalSegments = 2 ** Math.ceil(Math.log2(segments));
   const vertexCount = segments * 6;
   const position = new Float32Array(vertexCount * 3); const previous = new Float32Array(vertexCount * 3);
-  const next = new Float32Array(vertexCount * 3); const side = new Float32Array(vertexCount);
+  const next = new Float32Array(vertexCount * 3); const side = new Float32Array(vertexCount); const width = new Float32Array(vertexCount);
   const geometry = new THREE.BufferGeometry();
   geometry.setAttribute('position', new THREE.BufferAttribute(position, 3));
   geometry.setAttribute('previous', new THREE.BufferAttribute(previous, 3));
   geometry.setAttribute('next', new THREE.BufferAttribute(next, 3));
   geometry.setAttribute('side', new THREE.BufferAttribute(side, 1));
+  geometry.setAttribute('width', new THREE.BufferAttribute(width, 1));
   const material = new THREE.ShaderMaterial({
-    uniforms: { boltWidth: { value: settings.boltWidth }, boltOpacity: { value: 0 }, boltColor: { value: new THREE.Color(settings.color) } },
+    uniforms: {
+      boltOpacity: { value: 0 }, boltColor: { value: new THREE.Color(settings.color) },
+      coreWidthFactor: { value: settings.coreWidthFactor }, haloOpacityFactor: { value: settings.haloOpacityFactor }
+    },
     vertexShader, fragmentShader, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide
   });
   const mesh = new THREE.Mesh(geometry, material); mesh.frustumCulled = false; mesh.visible = false;
-  return { mesh, geometry, material, position, previous, next, side,
-    points: Array.from({ length: segments + 1 }, () => new THREE.Vector3()),
+  return {
+    mesh, geometry, material, position, previous, next, side, width,
+    points: Array.from({ length: segments + 1 }, () => new THREE.Vector3()), widths: new Float32Array(segments + 1),
     fractalPoints: Array.from({ length: fractalSegments + 1 }, () => new THREE.Vector3()),
-    fractalSegments, active: false, age: 0, lifetime: 0, strength: 1 };
+    envelope: new THREE.Box3(), fractalSegments, active: false, age: 0, lifetime: 0, strength: 1, brightness: 1, seed: 0
+  };
 }
 
-function writeVertex(slot, vertexIndex, point, before, after, side) {
+function writeVertex(slot, vertexIndex, point, before, after, side, width) {
   const offset = vertexIndex * 3;
-  slot.position.set([point.x, point.y, point.z], offset); slot.previous.set([before.x, before.y, before.z], offset);
-  slot.next.set([after.x, after.y, after.z], offset); slot.side[vertexIndex] = side;
+  slot.position[offset] = point.x; slot.position[offset + 1] = point.y; slot.position[offset + 2] = point.z;
+  slot.previous[offset] = before.x; slot.previous[offset + 1] = before.y; slot.previous[offset + 2] = before.z;
+  slot.next[offset] = after.x; slot.next[offset + 1] = after.y; slot.next[offset + 2] = after.z;
+  slot.side[vertexIndex] = side; slot.width[vertexIndex] = width;
 }
+
 function updateRibbon(slot, segments) {
   let vertex = 0;
   for (let index = 0; index < segments; index += 1) {
     const a = slot.points[index]; const b = slot.points[index + 1];
     const beforeA = slot.points[Math.max(0, index - 1)]; const afterB = slot.points[Math.min(segments, index + 2)];
-    writeVertex(slot, vertex++, a, beforeA, b, -1); writeVertex(slot, vertex++, a, beforeA, b, 1);
-    writeVertex(slot, vertex++, b, a, afterB, -1); writeVertex(slot, vertex++, b, a, afterB, -1);
-    writeVertex(slot, vertex++, a, beforeA, b, 1); writeVertex(slot, vertex++, b, a, afterB, 1);
+    const widthA = slot.widths[index]; const widthB = slot.widths[index + 1];
+    writeVertex(slot, vertex++, a, beforeA, b, -1, widthA); writeVertex(slot, vertex++, a, beforeA, b, 1, widthA);
+    writeVertex(slot, vertex++, b, a, afterB, -1, widthB); writeVertex(slot, vertex++, b, a, afterB, -1, widthB);
+    writeVertex(slot, vertex++, a, beforeA, b, 1, widthA); writeVertex(slot, vertex++, b, a, afterB, 1, widthB);
   }
-  ['position', 'previous', 'next', 'side'].forEach((name) => { slot.geometry.getAttribute(name).needsUpdate = true; });
-  slot.geometry.computeBoundingSphere();
+  ['position', 'previous', 'next', 'side', 'width'].forEach((name) => { slot.geometry.getAttribute(name).needsUpdate = true; });
 }
-function generateFractalPath(slot, segments, startPoint, endPoint, bounds, displacement, verticalJitter) {
+
+function setWidthEnvelope(slot, segments, baseWidth) {
+  for (let index = 0; index <= segments; index += 1) {
+    const t = index / segments;
+    const envelope = t < 0.46
+      ? THREE.MathUtils.lerp(0.45, 1, smoothstep(t / 0.46))
+      : THREE.MathUtils.lerp(1, 0.3, smoothstep((t - 0.46) / 0.54));
+    slot.widths[index] = baseWidth * envelope;
+  }
+}
+
+function generateFractalPath(slot, segments, startPoint, endPoint, bounds, displacement, surfaceLift) {
   const { fractalPoints, fractalSegments } = slot; fractalPoints[0].copy(startPoint); fractalPoints[fractalSegments].copy(endPoint);
   let stride = fractalSegments; let amplitude = displacement;
   while (stride > 1) {
@@ -55,7 +95,8 @@ function generateFractalPath(slot, segments, startPoint, endPoint, bounds, displ
     for (let left = 0; left < fractalSegments; left += stride) {
       const midpoint = left + halfStride;
       const point = fractalPoints[midpoint].copy(fractalPoints[left]).lerp(fractalPoints[left + stride], 0.5);
-      point.x += (Math.random() * 2 - 1) * amplitude; point.y += (Math.random() * 2 - 1) * Math.min(verticalJitter, amplitude);
+      point.x += (Math.random() * 2 - 1) * amplitude;
+      point.y += (Math.random() * 2 - 1) * Math.min(surfaceLift, amplitude);
       point.z += (Math.random() * 2 - 1) * amplitude * 0.12;
       point.x = THREE.MathUtils.clamp(point.x, bounds.min.x, bounds.max.x);
       point.y = THREE.MathUtils.clamp(point.y, bounds.min.y, bounds.max.y);
@@ -76,8 +117,10 @@ export function createVrPlatformEnergyVfxActor({ getSectorMount, getSectorBounds
   const config = { ...settings }; const segments = Math.max(4, Math.floor(config.segmentsPerBolt));
   const revealProfiles = new Map(); const acquisitionProfiles = new Map(); const driveProfiles = new Map();
   const pool = Array.from({ length: Math.max(1, Math.floor(config.maxActiveBolts)) }, () => createBoltSlot(segments, config));
+  const tangent = new THREE.Vector3(); const branchDirection = new THREE.Vector3(); const worldTarget = new THREE.Vector3();
   let disposed = false;
   function release(slot) { slot.active = false; slot.mesh.visible = false; slot.mesh.removeFromParent(); }
+  function acquireSlot() { return pool.find((candidate) => !candidate.active); }
   function resolveProfile(branchId) {
     const normalized = String(branchId ?? '').toLowerCase(); if (!BRANCH_IDS.includes(normalized)) return null;
     const mount = getSectorMount(normalized); const bounds = getSectorBounds(normalized);
@@ -90,9 +133,36 @@ export function createVrPlatformEnergyVfxActor({ getSectorMount, getSectorBounds
     if (!broad) target.z = THREE.MathUtils.lerp(radialMin, radialMax, 0.25 + Math.random() * 0.5);
     return target;
   }
+  function activate(slot, profile, strength, widthFactor, brightnessFactor, lifetimeFactor) {
+    setWidthEnvelope(slot, segments, config.boltWidth * strength * widthFactor);
+    updateRibbon(slot, segments); slot.active = true; slot.age = 0;
+    slot.lifetime = config.boltLifetimeSeconds * (strength > 1 ? 1.3 : 1) * lifetimeFactor;
+    slot.strength = strength; slot.brightness = brightnessFactor; slot.seed = Math.random() * 1000;
+    profile.mount.add(slot.mesh); slot.mesh.visible = true;
+  }
+  function spawnBranches(mainSlot, profile, strength, kind, mainLength) {
+    const acquisitionFactor = kind === 'ACQUISITION' ? clamp01((strength - config.acquisitionStrengthMin) / Math.max(0.001, config.acquisitionStrengthMax - config.acquisitionStrengthMin)) : 1;
+    const maximum = kind === 'ACQUISITION' ? 1 : config.maxBranchesPerBolt;
+    for (let branchIndex = 0; branchIndex < maximum; branchIndex += 1) {
+      if (Math.random() >= config.branchChance * acquisitionFactor) continue;
+      const branchSlot = acquireSlot(); if (!branchSlot) return;
+      const pointIndex = 1 + Math.floor(Math.random() * (segments - 1));
+      const startPoint = branchSlot.points[0].copy(mainSlot.points[pointIndex]);
+      tangent.copy(mainSlot.points[Math.min(segments, pointIndex + 1)]).sub(mainSlot.points[Math.max(0, pointIndex - 1)]).normalize();
+      const sign = Math.random() < 0.5 ? -1 : 1;
+      branchDirection.set(-tangent.z * sign, (Math.random() * 2 - 1) * 0.35, tangent.x * sign).normalize();
+      const branchLength = mainLength * randomBetween(config.branchLengthFactorMin, config.branchLengthFactorMax);
+      const endPoint = branchSlot.points[segments].copy(startPoint).addScaledVector(branchDirection, branchLength);
+      branchSlot.envelope.copy(profile.bounds); branchSlot.envelope.min.y -= config.surfaceLiftMeters; branchSlot.envelope.max.y += config.surfaceLiftMeters;
+      branchSlot.envelope.expandByPoint(startPoint).expandByPoint(endPoint);
+      generateFractalPath(branchSlot, segments, startPoint, endPoint, branchSlot.envelope, config.displacement * 0.45, config.surfaceLiftMeters);
+      activate(branchSlot, profile, strength, config.branchWidthFactor * randomBetween(config.widthVariationMin, config.widthVariationMax), config.branchBrightnessFactor * randomBetween(config.brightnessVariationMin, config.brightnessVariationMax), randomBetween(0.55, 0.75));
+    }
+  }
   function spawn(profile, strength = 1, kind = 'REVEAL') {
-    const slot = pool.find((candidate) => !candidate.active); if (!slot) return false;
-    const startPoint = slot.points[0]; const endPoint = slot.points[segments]; let envelope = profile.bounds;
+    const slot = acquireSlot(); if (!slot) return false;
+    const startPoint = slot.points[0]; const endPoint = slot.points[segments];
+    slot.envelope.copy(profile.bounds); slot.envelope.min.y -= config.surfaceLiftMeters; slot.envelope.max.y += config.surfaceLiftMeters;
     if (kind === 'REVEAL') {
       const travel = smoothstep(clamp01(profile.elapsed / config.revealTravelSeconds));
       const radialMin = Math.max(0, profile.bounds.min.z); const radialMax = Math.max(radialMin + 0.001, profile.bounds.max.z);
@@ -103,17 +173,22 @@ export function createVrPlatformEnergyVfxActor({ getSectorMount, getSectorBounds
     } else {
       surfacePoint(startPoint, profile.bounds, kind === 'DRIVE');
       if (kind === 'BINDER') {
-        const worldTarget = runeBridgeActor.getEnergyTargetWorldPosition(profile.branchId); if (!worldTarget) return false;
-        profile.mount.updateWorldMatrix(true, false); endPoint.copy(profile.mount.worldToLocal(worldTarget.clone()));
-        envelope = new THREE.Box3(profile.bounds.min.clone(), profile.bounds.max.clone()).expandByPoint(startPoint).expandByPoint(endPoint);
+        const target = runeBridgeActor.getEnergyTargetWorldPosition(profile.branchId, worldTarget); if (!target) return false;
+        worldTarget.copy(target); profile.mount.updateWorldMatrix(true, false); endPoint.copy(profile.mount.worldToLocal(worldTarget));
+        slot.envelope.expandByPoint(startPoint).expandByPoint(endPoint);
       } else {
         surfacePoint(endPoint, profile.bounds, kind === 'DRIVE');
         if (kind === 'ACQUISITION') endPoint.lerp(startPoint, 0.45);
       }
     }
-    generateFractalPath(slot, segments, startPoint, endPoint, envelope, config.displacement, config.verticalJitterMeters);
-    updateRibbon(slot, segments); slot.active = true; slot.age = 0; slot.lifetime = config.boltLifetimeSeconds * (strength > 1 ? 1.3 : 1); slot.strength = strength;
-    slot.material.uniforms.boltWidth.value = config.boltWidth * strength; profile.mount.add(slot.mesh); slot.mesh.visible = true; return true;
+    const displacementVariation = randomBetween(0.85, 1.15);
+    generateFractalPath(slot, segments, startPoint, endPoint, slot.envelope, config.displacement * displacementVariation, config.surfaceLiftMeters);
+    const widthVariation = randomBetween(config.widthVariationMin, config.widthVariationMax);
+    const brightnessVariation = randomBetween(config.brightnessVariationMin, config.brightnessVariationMax);
+    const lifetimeVariation = randomBetween(config.lifetimeVariationMin, config.lifetimeVariationMax);
+    activate(slot, profile, strength, widthVariation, brightnessVariation, lifetimeVariation);
+    spawnBranches(slot, profile, strength, kind, startPoint.distanceTo(endPoint));
+    return true;
   }
   function beginRuneBinderReveal(branchId) {
     const profile = resolveProfile(branchId); if (disposed || !config.enabled || !profile || revealProfiles.has(profile.branchId)) return false;
@@ -134,7 +209,12 @@ export function createVrPlatformEnergyVfxActor({ getSectorMount, getSectorBounds
   }
   function update(deltaSeconds = 0) {
     if (disposed) return; const delta = Math.max(0, Number.isFinite(deltaSeconds) ? deltaSeconds : 0);
-    pool.forEach((slot) => { if (!slot.active) return; slot.age += delta; const life = clamp01(slot.age / slot.lifetime); slot.material.uniforms.boltOpacity.value = config.opacity * slot.strength * Math.sin(Math.PI * life); if (life >= 1) release(slot); });
+    pool.forEach((slot) => {
+      if (!slot.active) return; slot.age += delta; const life = clamp01(slot.age / slot.lifetime);
+      const flicker = 0.88 + 0.08 * Math.sin(slot.age * 83 + slot.seed) + 0.04 * Math.sin(slot.age * 137 + slot.seed * 1.7);
+      slot.material.uniforms.boltOpacity.value = config.opacity * slot.strength * slot.brightness * Math.sin(Math.PI * life) * flicker;
+      if (life >= 1) release(slot);
+    });
     revealProfiles.forEach((profile, branchId) => {
       profile.elapsed += delta; const materializeStart = config.revealTravelSeconds; const materializeEnd = materializeStart + config.binderMaterializeSeconds;
       if (profile.elapsed >= materializeStart) runeBridgeActor.setRevealPresentationProgress(branchId, clamp01((profile.elapsed - materializeStart) / config.binderMaterializeSeconds));
