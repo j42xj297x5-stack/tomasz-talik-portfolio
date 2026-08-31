@@ -114,7 +114,22 @@ function generateFractalPath(slot, segments, startPoint, endPoint, bounds, displ
 export function createVrPlatformEnergyVfxActor({ getSectorMount, getSectorBounds, runeBridgeActor, settings }) {
   if (typeof getSectorMount !== 'function' || typeof getSectorBounds !== 'function') throw new TypeError('[VrPlatformEnergyVfxActor] Sector-local mount and bounds access are required.');
   if (!runeBridgeActor?.setRevealPresentationProgress || !runeBridgeActor?.getEnergyTargetWorldPosition) throw new TypeError('[VrPlatformEnergyVfxActor] RuneBridgeActor presentation access is required.');
-  const config = { ...settings }; const segments = Math.max(4, Math.floor(config.segmentsPerBolt));
+  const config = { ...settings }; const finiteOr = (value, fallback) => Number.isFinite(value) ? value : fallback;
+  config.widthVariationMin = finiteOr(config.widthVariationMin, 0.75);
+  config.widthVariationMax = Math.max(config.widthVariationMin, finiteOr(config.widthVariationMax, 1.35));
+  config.brightnessVariationMin = finiteOr(config.brightnessVariationMin, 0.85);
+  config.brightnessVariationMax = Math.max(config.brightnessVariationMin, finiteOr(config.brightnessVariationMax, 1.15));
+  config.lifetimeVariationMin = finiteOr(config.lifetimeVariationMin, 0.85);
+  config.lifetimeVariationMax = Math.max(config.lifetimeVariationMin, finiteOr(config.lifetimeVariationMax, 1.2));
+  config.branchChance = finiteOr(config.branchChance, 0.55);
+  config.branchWidthFactor = finiteOr(config.branchWidthFactor, 0.45);
+  config.branchBrightnessFactor = finiteOr(config.branchBrightnessFactor, 0.7);
+  config.branchLengthFactorMin = finiteOr(config.branchLengthFactorMin, 0.12);
+  config.branchLengthFactorMax = Math.max(config.branchLengthFactorMin, finiteOr(config.branchLengthFactorMax, 0.32));
+  config.surfaceLiftMeters = finiteOr(config.surfaceLiftMeters, 0.04);
+  config.coreWidthFactor = finiteOr(config.coreWidthFactor, 0.28);
+  config.haloOpacityFactor = finiteOr(config.haloOpacityFactor, 0.45);
+  const segments = Math.max(4, Math.floor(config.segmentsPerBolt));
   const revealProfiles = new Map(); const acquisitionProfiles = new Map(); const driveProfiles = new Map();
   const pool = Array.from({ length: Math.max(1, Math.floor(config.maxActiveBolts)) }, () => createBoltSlot(segments, config));
   const tangent = new THREE.Vector3(); const branchDirection = new THREE.Vector3(); const worldTarget = new THREE.Vector3();
