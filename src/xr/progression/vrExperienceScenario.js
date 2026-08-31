@@ -66,6 +66,7 @@ export const VR_SCENARIO_EVENT = immutableIdentifiers([
   'FURNACE_PROCESS_ABORTED',
   'SHELL_ABSORBED',
   'SHELL_SET_COMPLETED',
+  'RESONATOR_READY',
   'ASTERION_BUILD_REQUESTED',
   'ASTERION_BUILD_STARTED',
   'ASTERION_BUILT',
@@ -179,7 +180,8 @@ export const VR_SCENARIO_EFFECT = immutableIdentifiers([
   'REVEAL_SHELL_FIELD',
   'REVEAL_FURNACE',
   'PRESENT_ASTERION',
-  'SHOW_ASTERION_EARNED_CUE'
+  'SHOW_ASTERION_EARNED_CUE',
+  'CHECK_RESONATOR_JOIN'
 ]);
 
 export const VR_EXPERIENCE_POINT = immutableIdentifiers([
@@ -216,6 +218,7 @@ export const VR_EXPERIENCE_POINT = immutableIdentifiers([
   '4.60',
   '4.70',
   '4.80',
+  '5.10',
   '100.10'
 ]);
 
@@ -264,6 +267,12 @@ const THIRD_RING_COMPLETE_SETTLED_CONSEQUENCES = Object.freeze({
   progressFloor: Object.freeze({ completedTier: 3, activatedPages: completedMainGlyphPagesThroughTier(3) }),
   crystals: Object.freeze({ consumedTier: 3 }),
   protoAstroTuning: Object.freeze({ extractedFamilyCodes: Object.freeze(['K', 'T', 'S', 'L', 'R']) })
+});
+const CORE_RESONATOR_READY_SETTLED_CONSEQUENCES = Object.freeze({
+  runeProgression: Object.freeze({
+    tunedRuneFamilies: Object.freeze(['R', 'K', 'L']),
+    installedRuneFamilies: Object.freeze(['R', 'K', 'L'])
+  })
 });
 const SECOND_RING_COMPLETE_SETTLED_CONSEQUENCES = Object.freeze({
   progression: Object.freeze({ tier: 3, completedTier: 2,
@@ -767,10 +776,19 @@ const points = Object.freeze([
     ])
   }),
   Object.freeze({
-    id: VR_EXPERIENCE_POINT['4.80'], canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['100.10'] }),
+    id: VR_EXPERIENCE_POINT['4.80'], canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['5.10'] }),
+    settledConsequences: CORE_RESONATOR_READY_SETTLED_CONSEQUENCES,
+    entryEffects: Object.freeze([VR_SCENARIO_EFFECT.SET_MAIN_AMBIENT_04, VR_SCENARIO_EFFECT.CHECK_RESONATOR_JOIN]),
+    label: 'Third ring complete / waiting for Resonator join', capabilities: P2_SMALL_GLYPH_TARGETING_CAPABILITIES,
+    transitions: Object.freeze([Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.COMPLETE,
+      event: VR_SCENARIO_EVENT.RESONATOR_READY, milestonesToAdd: Object.freeze([]) })])
+  }),
+  Object.freeze({
+    id: VR_EXPERIENCE_POINT['5.10'], canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['100.10'] }),
     settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
-    entryEffects: Object.freeze([VR_SCENARIO_EFFECT.SET_MAIN_AMBIENT_04]),
-    label: 'Stable P3 entry boundary', capabilities: P2_SMALL_GLYPH_TARGETING_CAPABILITIES, transitions: Object.freeze([])
+    entryEffects: Object.freeze([]),
+    label: 'Third ring + Resonator stable join', capabilities: P2_SMALL_GLYPH_TARGETING_CAPABILITIES,
+    transitions: Object.freeze([])
   }),
   Object.freeze({
     id: VR_EXPERIENCE_POINT['100.10'],
