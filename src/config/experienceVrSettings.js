@@ -390,6 +390,14 @@ export function normalizeExperienceVrSettings(candidate) {
     ? candidateLargeGlyphInitialRadius : defaults.largeGlyphs.initialRadius;
   const largeGlyphExpandedRadius = hasValidLargeGlyphRadii
     ? candidateLargeGlyphExpandedRadius : defaults.largeGlyphs.expansion.radius;
+  const platformEnergyWidthVariationMin = finiteNumber(candidate.platformEnergyVfx?.widthVariationMin,
+    defaults.platformEnergyVfx.widthVariationMin, { min: 0.1, max: 3 });
+  const platformEnergyBrightnessVariationMin = finiteNumber(candidate.platformEnergyVfx?.brightnessVariationMin,
+    defaults.platformEnergyVfx.brightnessVariationMin, { min: 0.1, max: 3 });
+  const platformEnergyLifetimeVariationMin = finiteNumber(candidate.platformEnergyVfx?.lifetimeVariationMin,
+    defaults.platformEnergyVfx.lifetimeVariationMin, { min: 0.1, max: 3 });
+  const platformEnergyBranchLengthFactorMin = finiteNumber(candidate.platformEnergyVfx?.branchLengthFactorMin,
+    defaults.platformEnergyVfx.branchLengthFactorMin, { min: 0.01, max: 1 });
 
   return {
     schemaVersion: EXPERIENCE_VR_SETTINGS_SCHEMA_VERSION,
@@ -770,7 +778,31 @@ export function normalizeExperienceVrSettings(candidate) {
       boltWidth: finiteNumber(candidate.platformEnergyVfx?.boltWidth, defaults.platformEnergyVfx.boltWidth, { min: 0.002, max: 0.1 }),
       displacement: finiteNumber(candidate.platformEnergyVfx?.displacement, defaults.platformEnergyVfx.displacement, { min: 0, max: 0.5 }),
       opacity: finiteNumber(candidate.platformEnergyVfx?.opacity, defaults.platformEnergyVfx.opacity, { min: 0, max: 1 }),
-      color: Math.round(finiteNumber(candidate.platformEnergyVfx?.color, defaults.platformEnergyVfx.color, { min: 0, max: 0xffffff }))
+      color: Math.round(finiteNumber(candidate.platformEnergyVfx?.color, defaults.platformEnergyVfx.color, { min: 0, max: 0xffffff })),
+      widthVariationMin: platformEnergyWidthVariationMin,
+      widthVariationMax: finiteNumber(candidate.platformEnergyVfx?.widthVariationMax,
+        defaults.platformEnergyVfx.widthVariationMax, { min: platformEnergyWidthVariationMin, max: 3 }),
+      brightnessVariationMin: platformEnergyBrightnessVariationMin,
+      brightnessVariationMax: finiteNumber(candidate.platformEnergyVfx?.brightnessVariationMax,
+        defaults.platformEnergyVfx.brightnessVariationMax, { min: platformEnergyBrightnessVariationMin, max: 3 }),
+      lifetimeVariationMin: platformEnergyLifetimeVariationMin,
+      lifetimeVariationMax: finiteNumber(candidate.platformEnergyVfx?.lifetimeVariationMax,
+        defaults.platformEnergyVfx.lifetimeVariationMax, { min: platformEnergyLifetimeVariationMin, max: 3 }),
+      branchChance: finiteNumber(candidate.platformEnergyVfx?.branchChance,
+        defaults.platformEnergyVfx.branchChance, { min: 0, max: 1 }),
+      branchWidthFactor: finiteNumber(candidate.platformEnergyVfx?.branchWidthFactor,
+        defaults.platformEnergyVfx.branchWidthFactor, { min: 0.05, max: 1 }),
+      branchBrightnessFactor: finiteNumber(candidate.platformEnergyVfx?.branchBrightnessFactor,
+        defaults.platformEnergyVfx.branchBrightnessFactor, { min: 0.05, max: 1 }),
+      branchLengthFactorMin: platformEnergyBranchLengthFactorMin,
+      branchLengthFactorMax: finiteNumber(candidate.platformEnergyVfx?.branchLengthFactorMax,
+        defaults.platformEnergyVfx.branchLengthFactorMax, { min: platformEnergyBranchLengthFactorMin, max: 1 }),
+      surfaceLiftMeters: finiteNumber(candidate.platformEnergyVfx?.surfaceLiftMeters,
+        defaults.platformEnergyVfx.surfaceLiftMeters, { min: 0, max: 0.3 }),
+      coreWidthFactor: finiteNumber(candidate.platformEnergyVfx?.coreWidthFactor,
+        defaults.platformEnergyVfx.coreWidthFactor, { min: 0.01, max: 1 }),
+      haloOpacityFactor: finiteNumber(candidate.platformEnergyVfx?.haloOpacityFactor,
+        defaults.platformEnergyVfx.haloOpacityFactor, { min: 0, max: 1 })
     },
     largeGlyphAttractor: { minimumClearance: finiteNumber(candidate.largeGlyphAttractor?.minimumClearance,
       defaults.largeGlyphAttractor.minimumClearance, { min: 0.2, max: 4 }) },
