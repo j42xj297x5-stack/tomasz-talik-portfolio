@@ -16,5 +16,9 @@ export function createVrProgressionSemanticHandoff({ dispatch }) {
     }
   }
 
-  return { onPageCommitted };
+  function onResonatorStateChanged(descriptor) {
+    if (descriptor?.resonatorExists === true) dispatch(VR_SCENARIO_EVENT.RESONATOR_READY);
+  }
+
+  return { onPageCommitted, onResonatorStateChanged };
 }

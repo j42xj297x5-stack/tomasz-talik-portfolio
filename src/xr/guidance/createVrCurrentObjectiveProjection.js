@@ -22,9 +22,11 @@ const OBJECTIVE_BODY_BY_POINT = Object.freeze({
 });
 
 export function createVrCurrentObjectiveProjection({ locale, getCurrentPointId, getActivatedPageIds,
-  getAsterionProductionState, getAsterionSphereProgress, getExtractedFamilyCodes }) {
+  getAsterionProductionState, getAsterionSphereProgress, getExtractedFamilyCodes,
+  getRuneProgressionSnapshot, getResonatorDescriptor }) {
   if ([getCurrentPointId, getActivatedPageIds, getAsterionProductionState, getAsterionSphereProgress,
-    getExtractedFamilyCodes].some((dependency) => typeof dependency !== 'function')) {
+    getExtractedFamilyCodes, getRuneProgressionSnapshot, getResonatorDescriptor]
+    .some((dependency) => typeof dependency !== 'function')) {
     throw new TypeError('Current objective projection dependencies must be functions.');
   }
   function countActivatedPages(tier) {
@@ -55,8 +57,13 @@ export function createVrCurrentObjectiveProjection({ locale, getCurrentPointId, 
         : objective('third-ring-progress', `TRZECI KRĄG — ${ringCount}/${ringTotal}`);
     }
     if (pointId === VR_EXPERIENCE_POINT['4.80']) {
-      const total = experienceVrPageIdsByTier[3].length;
-      return objective('third-ring-complete', `TRZECI KRĄG — ${total}/${total}`);
+      if (getResonatorDescriptor().resonatorExists) return null;
+      const { tunedRuneFamilies, installedRuneFamilies } = getRuneProgressionSnapshot();
+      const coreFamilies = ['K', 'R', 'L'];
+      const tuned = coreFamilies.filter((family) => tunedRuneFamilies.includes(family)).length;
+      const installed = coreFamilies.filter((family) => installedRuneFamilies.includes(family)).length;
+      return objective('resonator-core',
+        `PRZYGOTUJ REZONATOR — STROJENIE ${tuned}/3 · INSTALACJA ${installed}/3`);
     }
     const body = OBJECTIVE_BODY_BY_POINT[pointId];
     return body ? objective(`scenario-${pointId}`, body) : null;

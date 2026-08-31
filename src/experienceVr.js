@@ -558,6 +558,9 @@ const asterionResonatorFieldActor = createVrAsterionResonatorFieldActor({
   runeStoneProgressionController,
   sectorControlInteraction: asterionSectorControlInteraction
 });
+const unsubscribeResonatorScenarioHandoff = runeStoneProgressionController.subscribe(() => {
+  progressionSemanticHandoff.onResonatorStateChanged(asterionResonatorFieldActor.getDescriptor());
+});
 asterionProductionController.setHandModeController(handModeController);
 const astroAttractorProductionController = createVrAstroAttractorProductionController({
   model: assetManager.cloneGltfScene('vr-astro-attractor-model'),
@@ -587,7 +590,9 @@ const currentObjectiveProjection = createVrCurrentObjectiveProjection({
   getActivatedPageIds: () => progressionController.getActivatedPageIds(),
   getAsterionProductionState: () => asterionProductionController.getState(),
   getAsterionSphereProgress: () => furnaceProgressionController.getAsterionSphereProgress(),
-  getExtractedFamilyCodes: () => protoAstroTuningController.getExtractedFamilyCodes()
+  getExtractedFamilyCodes: () => protoAstroTuningController.getExtractedFamilyCodes(),
+  getRuneProgressionSnapshot: () => runeStoneProgressionController.getSnapshot(),
+  getResonatorDescriptor: () => asterionResonatorFieldActor.getDescriptor()
 });
 const playerGuideProjection = createVrPlayerGuideProjection({
   locale: language,
@@ -1094,6 +1099,9 @@ runtimeExperience = new RuntimeExperience({
     [VR_SCENARIO_EFFECT.SET_MAIN_AMBIENT_02]: () => { ambientSequencer.setProgram(VR_MAIN_AMBIENT_PROGRAMS.ambient02); },
     [VR_SCENARIO_EFFECT.SET_MAIN_AMBIENT_03]: () => { ambientSequencer.setProgram(VR_MAIN_AMBIENT_PROGRAMS.ambient03); },
     [VR_SCENARIO_EFFECT.SET_MAIN_AMBIENT_04]: () => { ambientSequencer.setProgram(VR_MAIN_AMBIENT_PROGRAMS.ambient04); },
+    [VR_SCENARIO_EFFECT.CHECK_RESONATOR_JOIN]: () => {
+      progressionSemanticHandoff.onResonatorStateChanged(asterionResonatorFieldActor.getDescriptor());
+    },
     [VR_SCENARIO_EFFECT.BEGIN_CELESTIAL_REVEAL]: () => { celestialActor.beginReveal(); },
     [VR_SCENARIO_EFFECT.REVEAL_NATURAL_RUNE_STONES]: () => {
       runeStoneActor.setPresentationVisible(true);
@@ -1532,6 +1540,7 @@ window.addEventListener('pagehide', () => {
   asterionSectorControlInteraction.dispose();
   asterionSectorAcquisitionPresentation.dispose();
   asterionPlatformEnergyVfxProjection.dispose();
+  unsubscribeResonatorScenarioHandoff();
   asterionResonatorFieldActor.dispose();
   asterionProductionController.dispose();
   astroAttractorProductionController.dispose();
