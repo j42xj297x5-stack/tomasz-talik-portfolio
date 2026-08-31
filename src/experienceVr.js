@@ -30,6 +30,7 @@ import { createVrRuneBridgeActor } from './xr/runes/createVrRuneBridgeActor.js';
 import { createVrRuneInstallationReadinessProjection } from './xr/runes/createVrRuneInstallationReadinessProjection.js';
 import { createVrPlatformEnergyVfxActor } from './xr/vfx/createVrPlatformEnergyVfxActor.js';
 import { createVrPlatformEnergyVfxProjection } from './xr/vfx/createVrPlatformEnergyVfxProjection.js';
+import { createVrAsterionPlatformEnergyVfxProjection } from './xr/vfx/createVrAsterionPlatformEnergyVfxProjection.js';
 import { createVrRuneInstalledStateProjection } from './xr/runes/createVrRuneInstalledStateProjection.js';
 import { createVrRuneStoneActor } from './xr/runes/createVrRuneStoneActor.js';
 import { createVrRuneStoneAttractorInteraction } from './xr/runes/createVrRuneStoneAttractorInteraction.js';
@@ -546,6 +547,12 @@ const asterionSectorAcquisitionPresentation = createVrAsterionSectorAcquisitionP
   acquisitionInteraction: asterionSectorAcquisitionInteraction,
   progressFloor,
   settings: settings.asterionSectorBeam
+});
+const asterionPlatformEnergyVfxProjection = createVrAsterionPlatformEnergyVfxProjection({
+  acquisitionInteraction: asterionSectorAcquisitionInteraction,
+  sectorControlInteraction: asterionSectorControlInteraction,
+  progressFloor,
+  platformEnergyVfxActor
 });
 const asterionResonatorFieldActor = createVrAsterionResonatorFieldActor({
   runeStoneProgressionController,
@@ -1309,6 +1316,7 @@ function renderFrame() {
   asterionSectorAcquisitionInteraction.update(delta);
   asterionSectorControlInteraction.update(delta);
   asterionSectorAcquisitionPresentation.update(delta);
+  asterionPlatformEnergyVfxProjection.update(delta);
   playerGuidePanel.update(delta);
   monkeyGuide.update(delta);
   introSequence.update(delta);
@@ -1392,6 +1400,7 @@ function restoreVrScenarioBaseline() {
   asterionSectorAcquisitionInteraction.reset();
   asterionSectorControlInteraction.reset();
   asterionSectorAcquisitionPresentation.reset();
+  asterionPlatformEnergyVfxProjection.reset();
   ambientSequencer.reset();
   introAmbientSequencer.reset();
   vrAudio.resetAsterionSphereAudio();
@@ -1522,6 +1531,7 @@ window.addEventListener('pagehide', () => {
   asterionSectorAcquisitionInteraction.dispose();
   asterionSectorControlInteraction.dispose();
   asterionSectorAcquisitionPresentation.dispose();
+  asterionPlatformEnergyVfxProjection.dispose();
   asterionResonatorFieldActor.dispose();
   asterionProductionController.dispose();
   astroAttractorProductionController.dispose();

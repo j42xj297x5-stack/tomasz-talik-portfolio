@@ -121,6 +121,10 @@ export function createVrProgressFloorActor({ parent, sourceModels, emission = {}
       return true;
     },
     getSectorPresentationState(glyphId) { return sectorsByGlyphId.get(glyphId)?.getPresentationState() ?? null; },
+    getSectorBranchId(glyphId) {
+      if (disposed) return null;
+      return SECTOR_LAYOUT.find((descriptor) => descriptor.glyphId === glyphId)?.branchId ?? null;
+    },
     completeTier(tier) {
       const ring = tierRings.get(tier);
       if (disposed || !Number.isInteger(tier) || !ring || ring.pulseRemaining > 0 || ring.material.opacity > 0) return false;
