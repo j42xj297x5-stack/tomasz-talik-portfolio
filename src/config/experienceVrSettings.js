@@ -218,14 +218,20 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
   runeStoneInstallation: { handoffRadiusMeters: 10, hoverHeightMeters: 2, phaseDurationSeconds: 1.2 },
   runeBridge: { presentationScale: 2, radialPresentationOffsetMeters: 1 },
   platformEnergyVfx: {
-    enabled: true, maxActiveBolts: 12, segmentsPerBolt: 12, maxBranchesPerBolt: 1,
+    enabled: true, maxActiveBolts: 12, segmentsPerBolt: 12, maxBranchesPerBolt: 2,
     underfloorOffsetMeters: 0.035, verticalJitterMeters: 0.025,
     boltLifetimeSeconds: 0.18, spawnIntervalSeconds: 0.075,
     revealTravelSeconds: 0.7, binderMaterializeSeconds: 0.42, finalPulseSeconds: 0.2,
     acquisitionSpawnIntervalStartSeconds: 0.22, acquisitionSpawnIntervalEndSeconds: 0.07,
     acquisitionStrengthMin: 0.35, acquisitionStrengthMax: 0.8,
     driveSpawnIntervalSeconds: 0.055, driveBinderBoltChance: 0.3, driveStrength: 1,
-    boltWidth: 0.018, displacement: 0.09, opacity: 0.72, color: 0xdff8ff
+    boltWidth: 0.018, displacement: 0.09, opacity: 0.72, color: 0xdff8ff,
+    widthVariationMin: 0.75, widthVariationMax: 1.35,
+    brightnessVariationMin: 0.85, brightnessVariationMax: 1.15,
+    lifetimeVariationMin: 0.85, lifetimeVariationMax: 1.2,
+    branchChance: 0.55, branchWidthFactor: 0.45, branchBrightnessFactor: 0.7,
+    branchLengthFactorMin: 0.12, branchLengthFactorMax: 0.32,
+    surfaceLiftMeters: 0.04, coreWidthFactor: 0.28, haloOpacityFactor: 0.45
   },
   largeGlyphAttractor: { minimumClearance: 0.8 },
   glyphInteraction: { holdDurationSeconds: 0.5, holdLostGraceSeconds: 0.15 },

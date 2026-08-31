@@ -1,12 +1,12 @@
 # Experience VR Platform Energy VFX Model
 
-Status: **KANON / PARTIALLY IMPLEMENTED (R3b + R3c)**. Dokument opisuje wspólną warstwę proceduralnej energii platformy. Foundation oraz `RUNE_BINDER_REVEAL` działają w runtime, a osobna projection R3c synchronizuje jego start z audio; pozostałe profile pozostają targetem. Liczby w settings są TUNING, nie kanonem architektury.
+Status: **KANON / PARTIALLY IMPLEMENTED (R3b + R3c + Asterion energy profiles and arc visual upgrade)**. Dokument opisuje wspólną warstwę proceduralnej energii platformy. `RUNE_BINDER_REVEAL`, `SECTOR_ACQUISITION` i `FLOOR_DRIVE` działają w runtime; `RUNE_INSTALL` pozostaje targetem. Liczby w settings są TUNING, nie kanonem architektury.
 
 ## Stan implementacji R3b
 
-**IMPLEMENTED:** jeden shared pair-generic `PlatformEnergyVfxActor`, cienka projection obserwująca rzeczywiste live `HIDDEN → DOCKED`, midpoint/fractal displacement z hierarchicznie malejącą amplitudą, bounded pool reusable ribbon geometry/materials, sector-local mounty i wedge sampling z defensive presentation bounds, profil `RUNE_BINDER_REVEAL`, presentation-only materialization Zwornika, pojedynczy final pulse oraz reset/dispose bez backflow do gameplay.
+**IMPLEMENTED:** jeden shared pair-generic `PlatformEnergyVfxActor`, cienkie read-only projections, midpoint/fractal displacement z hierarchicznie malejącą amplitudą, longitudinal variable width, jasny wąski core i miękka additive halo w jednym ribbon shaderze, bounded per-bolt variation szerokości/jasności/lifetime/displacement, płytki 3D surface lift, bounded `0..N` jednopoziomowe branches oraz profile `RUNE_BINDER_REVEAL`, `SECTOR_ACQUISITION` i `FLOOR_DRIVE`. Branches zajmują zwykłe sloty tego samego bounded poola, nie rekurują i są fail-soft pomijane przy saturation. Reusable slot geometry/material powstają tylko przy construction; spawn nie alokuje nowych GPU resources ani nie przelicza bounding sphere. Binder feed zachowuje exact true presentation endpoint, a pierwszy i ostatni punkt main path pozostają exact.
 
-**NOT IMPLEMENTED:** branch bolts, multilayer bolt, true bridge-endpoint targeting, gwarantowany retry final pulse przy wyczerpanym poolu, `RUNE_INSTALL`, `FLOOR_DRIVE`, detent sparks, motion/detent/reveal audio, grip beam i field lensing.
+**NOT IMPLEMENTED:** niezależne wielowarstwowe bolt shells (core + halo jest jednym shaderem), gwarantowany retry final pulse przy wyczerpanym poolu, `RUNE_INSTALL`, detent sparks, motion/detent audio, field/lensing i target response.
 
 ## Klasyfikacja ustaleń
 
@@ -62,7 +62,7 @@ platform underfloor procedural lightning
 
 ## Wspólny język proceduralny
 
-**KANON:** wszystkie trzy profile docelowo korzystają z tego samego generatora i zasobów aktora: krótkich, nieregularnych ścieżek, opcjonalnych odgałęzień, wielowarstwowego boltu, camera-facing ribbon, `ShaderMaterial`, additive blending oraz krótkiego reveal/fade. Obecny R3b implementuje pojedynczą pooled ribbon warstwę bez branchingu; profile mają różnić się wejściem i envelope prezentacyjnym, nie osobnymi systemami VFX.
+**KANON / IMPLEMENTED:** aktywne profile korzystają z tego samego generatora i zasobów aktora: krótkich midpoint/fractal paths, longitudinal width envelope, bounded variation, płytkiego local-normal lift, opcjonalnych jednopoziomowych odnóg, camera-facing ribbon, `ShaderMaterial`, additive core + halo oraz krótkiego reveal/fade. Każda odnoga zaczyna się dokładnie w wewnętrznym punkcie main path, jest krótsza, cieńsza, ciemniejsza i nie tworzy branch-of-branch. Profile różnią się strength/spawn envelope, nie rendererem ani generatorem.
 
 ### Profil `RUNE_BINDER_REVEAL`
 
@@ -142,4 +142,6 @@ The one shared bounded ribbon pool and midpoint/fractal generator now serve thre
 
 A thin read-only Asterion projection resolves glyphs through Progress Floor and detects physical drive solely from same-frame changes in `currentAngleDegrees` (epsilon `1e-4°`) plus the moving glyph. Consequently stale `DRIVING` during trigger suppression produces no energy, while real `SETTLING` motion does. Drive bolts sample the full sector wedge; a bounded fraction feeds the authored `BRIDGE_STONE_CAPTURE`. Rune Bridge returns its defensive world position from inside the scaled/offset presentation subtree, and the actor converts it with `mount.worldToLocal`; the feed envelope is the union of sector bounds and explicit endpoints, so downward MotionRoot hinges and the true endpoint remain intact. Missing endpoints fail soft to surface bolts.
 
-Still not implemented: `RUNE_INSTALL`, detent sparks, motion/detent audio, branch bolts, multilayer bolts, Field/lensing, target response, and Metal/Water motion. Hardware/perceptual QA has not been performed.
+The visual upgrade is implemented across all three profiles: asymmetric longitudinal width, a near-white narrow core with a soft colored halo and edge falloff, subtle per-spawn width/brightness/lifetime/displacement variation, deterministic seeded pseudo-flicker, shallow 3D surface lift, and bounded `0..2` one-generation branches. Acquisition scales branch probability with strength and allows at most one branch, while drive and reveal can use the full bounded tuning. Branches consume ordinary slots in the same pool and are omitted at saturation; no geometry/material is allocated and no bounding sphere is recomputed per spawn. Main endpoints, including the true Binder endpoint, remain exact.
+
+Still not implemented: independent multilayer bolt shells beyond the equivalent single-shader core + halo, `RUNE_INSTALL`, detent sparks, motion/detent audio, Field/lensing, target response, and Metal/Water motion. Hardware/perceptual QA has not been performed.
