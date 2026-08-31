@@ -219,7 +219,7 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
   runeStoneInstallation: { handoffRadiusMeters: 10, hoverHeightMeters: 2, phaseDurationSeconds: 1.2 },
   runeBridge: { presentationScale: 2, radialPresentationOffsetMeters: 1 },
   platformEnergyVfx: {
-    enabled: true, maxActiveBolts: 12, segmentsPerBolt: 12, maxBranchesPerBolt: 2,
+    enabled: true, maxActiveBolts: 12, segmentsPerBolt: 12, maxBranchesPerBolt: 3,
     underfloorOffsetMeters: 0.035, verticalJitterMeters: 0.025,
     boltLifetimeSeconds: 0.18, spawnIntervalSeconds: 0.075,
     revealTravelSeconds: 0.7, binderMaterializeSeconds: 0.42, finalPulseSeconds: 0.2,
@@ -233,8 +233,10 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
     widthVariationMin: 0.75, widthVariationMax: 1.35,
     brightnessVariationMin: 0.85, brightnessVariationMax: 1.15,
     lifetimeVariationMin: 0.85, lifetimeVariationMax: 1.2,
-    branchChance: 0.55, branchWidthFactor: 0.45, branchBrightnessFactor: 0.7,
-    branchLengthFactorMin: 0.12, branchLengthFactorMax: 0.32,
+    branchChance: 0.7, branchWidthFactor: 0.45, branchBrightnessFactor: 0.7,
+    branchLengthFactorMin: 0.18, branchLengthFactorMax: 0.42,
+    branchAngleMinDegrees: 25, branchAngleMaxDegrees: 55,
+    branchCurvatureBias: 2, branchTortuosityFactor: 0.65,
     surfaceLiftMeters: 0.04, coreWidthFactor: 0.28, haloOpacityFactor: 0.45
   },
   largeGlyphAttractor: { minimumClearance: 0.8 },
@@ -402,6 +404,8 @@ export function normalizeExperienceVrSettings(candidate) {
     defaults.platformEnergyVfx.lifetimeVariationMin, { min: 0.1, max: 3 });
   const platformEnergyBranchLengthFactorMin = finiteNumber(candidate.platformEnergyVfx?.branchLengthFactorMin,
     defaults.platformEnergyVfx.branchLengthFactorMin, { min: 0.01, max: 1 });
+  const platformEnergyBranchAngleMin = finiteNumber(candidate.platformEnergyVfx?.branchAngleMinDegrees,
+    defaults.platformEnergyVfx.branchAngleMinDegrees, { min: 5, max: 80 });
   const platformEnergyTortuosityMin = finiteNumber(candidate.platformEnergyVfx?.tortuosityMinMeters,
     defaults.platformEnergyVfx.tortuosityMinMeters, { min: 0.01, max: 0.5 });
   const legacyGestureEngageDegrees = candidate.asterionSectorControl?.gestureEngageDegrees;
@@ -776,7 +780,7 @@ export function normalizeExperienceVrSettings(candidate) {
       enabled: typeof candidate.platformEnergyVfx?.enabled === 'boolean' ? candidate.platformEnergyVfx.enabled : defaults.platformEnergyVfx.enabled,
       maxActiveBolts: Math.round(finiteNumber(candidate.platformEnergyVfx?.maxActiveBolts, defaults.platformEnergyVfx.maxActiveBolts, { min: 1, max: 32 })),
       segmentsPerBolt: Math.round(finiteNumber(candidate.platformEnergyVfx?.segmentsPerBolt, defaults.platformEnergyVfx.segmentsPerBolt, { min: 4, max: 32 })),
-      maxBranchesPerBolt: Math.round(finiteNumber(candidate.platformEnergyVfx?.maxBranchesPerBolt, defaults.platformEnergyVfx.maxBranchesPerBolt, { min: 0, max: 2 })),
+      maxBranchesPerBolt: Math.round(finiteNumber(candidate.platformEnergyVfx?.maxBranchesPerBolt, defaults.platformEnergyVfx.maxBranchesPerBolt, { min: 0, max: 3 })),
       underfloorOffsetMeters: finiteNumber(candidate.platformEnergyVfx?.underfloorOffsetMeters, defaults.platformEnergyVfx.underfloorOffsetMeters, { min: 0, max: 0.3 }),
       verticalJitterMeters: finiteNumber(candidate.platformEnergyVfx?.verticalJitterMeters, defaults.platformEnergyVfx.verticalJitterMeters, { min: 0, max: 0.2 }),
       boltLifetimeSeconds: finiteNumber(candidate.platformEnergyVfx?.boltLifetimeSeconds, defaults.platformEnergyVfx.boltLifetimeSeconds, { min: 0.05, max: 1 }),
@@ -825,6 +829,13 @@ export function normalizeExperienceVrSettings(candidate) {
       branchLengthFactorMin: platformEnergyBranchLengthFactorMin,
       branchLengthFactorMax: finiteNumber(candidate.platformEnergyVfx?.branchLengthFactorMax,
         defaults.platformEnergyVfx.branchLengthFactorMax, { min: platformEnergyBranchLengthFactorMin, max: 1 }),
+      branchAngleMinDegrees: platformEnergyBranchAngleMin,
+      branchAngleMaxDegrees: finiteNumber(candidate.platformEnergyVfx?.branchAngleMaxDegrees,
+        defaults.platformEnergyVfx.branchAngleMaxDegrees, { min: platformEnergyBranchAngleMin, max: 90 }),
+      branchCurvatureBias: finiteNumber(candidate.platformEnergyVfx?.branchCurvatureBias,
+        defaults.platformEnergyVfx.branchCurvatureBias, { min: 0, max: 10 }),
+      branchTortuosityFactor: finiteNumber(candidate.platformEnergyVfx?.branchTortuosityFactor,
+        defaults.platformEnergyVfx.branchTortuosityFactor, { min: 0.1, max: 1 }),
       surfaceLiftMeters: finiteNumber(candidate.platformEnergyVfx?.surfaceLiftMeters,
         defaults.platformEnergyVfx.surfaceLiftMeters, { min: 0, max: 0.3 }),
       coreWidthFactor: finiteNumber(candidate.platformEnergyVfx?.coreWidthFactor,
