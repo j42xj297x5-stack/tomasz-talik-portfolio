@@ -66,6 +66,7 @@ import { createVrAsterionSphere } from './xr/asterion/createVrAsterionSphere.js'
 import { createVrAsterionGyroInteraction } from './xr/asterion/createVrAsterionGyroInteraction.js';
 import { createVrAsterionSectorAcquisitionInteraction } from './xr/asterion/createVrAsterionSectorAcquisitionInteraction.js';
 import { createVrAsterionSectorControlInteraction } from './xr/asterion/createVrAsterionSectorControlInteraction.js';
+import { createVrAsterionResonatorFieldActor } from './xr/asterion/createVrAsterionResonatorFieldActor.js';
 import { createVrAsterionProductionController } from './xr/asterion/createVrAsterionProductionController.js';
 import { createVrPlayerGuidePanel } from './xr/guidance/createVrPlayerGuidePanel.js';
 import { createVrCurrentObjectiveProjection } from './xr/guidance/createVrCurrentObjectiveProjection.js';
@@ -447,6 +448,7 @@ const ambientScenarioOwner = Object.freeze({
 function synchronizeReconstructionDerivedState() {
   synchronizeRuneBridgeReadiness();
   runeInstalledStateProjection.synchronize();
+  asterionResonatorFieldActor.synchronize();
   furnacePanel?.redraw();
   shellSystem.applyAbsorbedShellIds(furnaceProgressionController.getAbsorbedShellIds());
 }
@@ -536,6 +538,10 @@ const asterionSectorControlInteraction = createVrAsterionSectorControlInteractio
   progressFloor,
   sectorAcquisitionInteraction: asterionSectorAcquisitionInteraction,
   settings: settings.asterionSectorControl
+});
+const asterionResonatorFieldActor = createVrAsterionResonatorFieldActor({
+  runeStoneProgressionController,
+  sectorControlInteraction: asterionSectorControlInteraction
 });
 asterionProductionController.setHandModeController(handModeController);
 const astroAttractorProductionController = createVrAstroAttractorProductionController({
@@ -1391,6 +1397,7 @@ function restoreVrScenarioBaseline() {
   astroFurnaceRuneRecipeInteraction.resetBaseline();
   runeRecipeSelectionController.reset();
   runeStoneProgressionController.reset();
+  asterionResonatorFieldActor.reset();
   protoAstroTuningController.resetBaseline();
   crystalCollection.reset();
   reliquaryHints.reset();
@@ -1504,6 +1511,7 @@ window.addEventListener('pagehide', () => {
   asterionGyroInteraction.dispose();
   asterionSectorAcquisitionInteraction.dispose();
   asterionSectorControlInteraction.dispose();
+  asterionResonatorFieldActor.dispose();
   asterionProductionController.dispose();
   astroAttractorProductionController.dispose();
   asterionSphere.dispose();

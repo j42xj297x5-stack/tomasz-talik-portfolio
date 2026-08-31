@@ -2,11 +2,11 @@
 
 ## 1. Status, authority i zakres
 
-Status: **CURRENT TARGET / R2A INPUT-LOCK FOUNDATION IMPLEMENTED; FIELD NOT IMPLEMENTED**.
+Status: **CURRENT / R2A + R2B + R4 CORE FIELD DOMAIN IMPLEMENTED**.
 
-The runtime now has semantic left GRIP input and bounded powered-sector target-ray acquisition: the same legal sector held for `1.0 s` produces transient `SECTOR LOCK`, while TRIGGER suppresses the local path. Powered truth is read from the corresponding installed Rune Stone.
+The runtime has semantic left GRIP acquisition/lock and R2B local EARTH/WOOD/FIRE motion with committed `0/1/2/3` detents. R4 reads installed Rune truth plus those committed levels and exposes an immutable, exactly-on-change `FieldDescriptor`; transient motor angles are not field truth.
 
-Actual local sector motion, detent snapping, `α/β/γ`, the Field Actor/descriptor, field/lensing presentation and grip-beam presentation remain unimplemented.
+Target selection/scoring and response, field/lensing presentation, grip beam, field audio and METAL/WATER contribution remain unimplemented.
 
 Ten dokument jest wyspecjalizowanym sub-modelem nadrzędnego [`VR_ASTERION_RESONATOR_MODEL.md`](VR_ASTERION_RESONATOR_MODEL.md). Zamraża semantykę poziomów rdzenia pola, aktualne docelowe pozycje fizyczne, uproszczony descriptor i granice ownership. Nie tworzy runtime, klas, API JavaScript, scoringu, shaderów ani mapowania gestu. Historyczny model anteny oraz wcześniejszy signed detent model nie są precedensem implementacyjnym.
 
@@ -66,18 +66,18 @@ Gdy `α ≠ β`, pole może być legalnie asymetryczne. Legalne są też częśc
 
 ## 5. Analityczny descriptor pola
 
-Pole nie wymaga literalnego przecięcia brył. Resonator Field Domain wyprowadza read-only descriptor ze stanu sektorów; `α` i `β` są poziomami intensywności dwóch przeciwstawnych skrzydeł, a nie znakami przeciwnych kierunków krzywizny. Minimalna semantyka może obejmować:
+Pole nie wymaga literalnego przecięcia brył. Resonator Field Domain wyprowadza read-only descriptor ze stanu sektorów; `α` i `β` są poziomami intensywności dwóch przeciwstawnych skrzydeł, a nie znakami przeciwnych kierunków krzywizny. Implemented minimal canonical semantics include:
 
 ```text
 lateralStrength = (α + β) / 2
 fieldAsymmetry  = α - β
-leftActive      = α > 0
-rightActive     = β > 0
-depthActive     = γ > 0
-depthBand       = OFF/NONE | FAR | MID | NEAR
+leftActive      = earthPowered && α > 0
+rightActive     = woodPowered && β > 0
+depthActive     = firePowered && γ > 0
+depthBand       = NONE | FAR | MID | NEAR
 ```
 
-Nazwy nie są zamrożonym API. Exact normalization, tolerancje, target selection i scoring formula pozostają otwarte. Wspierana domena targetu zachowuje legalność targetu i może użyć descriptoru do różnicowania siły, stabilności lub deformacji odpowiedzi; Scenario posiada znaczenie narracyjne i crystal-acquisition gates, nie fizyczną odpowiedź pola.
+The R4 descriptor names and unnormalized analytic values are a frozen runtime API. Exact target selection, response and scoring formula remain open. Wspierana domena targetu zachowuje legalność targetu i może użyć descriptoru do różnicowania siły, stabilności lub deformacji odpowiedzi; Scenario posiada znaczenie narracyjne i crystal-acquisition gates, nie fizyczną odpowiedź pola.
 
 ## 6. METAL i WATER — późniejsza warstwa
 
@@ -107,6 +107,6 @@ Dokładna nazwa klasy/API i podział projection/actor dla field lensing pozostaj
 ## 9. Język wizualny i granice implementacji
 
 Field lensing może używać inspirowanych grawitacyjnym soczewkowaniem rozjaśnień, powiększenia, zakrzywienia, caustic-like arcs, przesunięć i asymetrycznej deformacji, bez deklarowania realistycznej fizyki. Shader architecture, rendering, kolory, intensywności, audio, hardware/perceptual QA, finalne API, motion interpolation i gesture mapping są osobnymi zadaniami.
-# Runtime input status
+# Runtime input and R4 status
 
-R2B now provides the future Field Domain with defensive read-only EARTH/WOOD/FIRE level and transient-angle snapshots. Its committed levels are discrete runtime truth, independent of Progress Floor quaternions, and its detents are `0°/13°/23°/36°`. The Resonator Field Actor, analytic descriptor runtime, target response/scoring and lensing presentation remain not implemented; this document does not transfer those responsibilities to sector control.
+R2B provides defensive read-only EARTH/WOOD/FIRE committed levels and transient-angle snapshots. R4 consumes only the discrete committed levels, maps them to `α/β/γ`, derives POWERED from installed Rune families, and publishes frozen nested descriptor state including `depthBand`, `lateralStrength`, signed `fieldAsymmetry`, activity count and symmetry flags. Creation, hydration/reconstruction and source-owner reset explicitly synchronize the actor; live Rune changes and `DETENT_COMMITTED` drive deduplicated subscriptions. Target response/scoring and lensing presentation remain not implemented and separate from sector control and Field ownership.
