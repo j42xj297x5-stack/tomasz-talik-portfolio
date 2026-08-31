@@ -1,6 +1,6 @@
 # Experience VR Platform Energy VFX Model
 
-Status: **KANON / PARTIALLY IMPLEMENTED (R3b)**. Dokument opisuje wspólną warstwę proceduralnej energii platformy. Foundation oraz `RUNE_BINDER_REVEAL` działają w runtime; pozostałe profile pozostają targetem. Liczby w settings są TUNING, nie kanonem architektury.
+Status: **KANON / PARTIALLY IMPLEMENTED (R3b + R3c)**. Dokument opisuje wspólną warstwę proceduralnej energii platformy. Foundation oraz `RUNE_BINDER_REVEAL` działają w runtime, a osobna projection R3c synchronizuje jego start z audio; pozostałe profile pozostają targetem. Liczby w settings są TUNING, nie kanonem architektury.
 
 ## Stan implementacji R3b
 
@@ -48,7 +48,7 @@ platform underfloor procedural lightning
 - **FACT:** aktywny capture udostępnia elapsed/duration przez istniejący transient record. Projection może z niego wyprowadzić read-only znormalizowany postęp prezentacyjny; nie utrwala go.
 - **FACT:** `AsterionGyroInteraction` posiada `driveActive`, rzeczywistą prędkość kątową i stan, w tym `LOCKED`; zapisuje rzeczywistą quaternion `VrTiltableFloorRoot`. VFX jedynie projektuje te dane i nie integruje własnego modelu ruchu.
 - **FACT:** `VrTiltableFloorRoot` jest wspólnym transform rootem platformy. Pięć sektorów zachowuje układ pięciu wycinków po 72°.
-- **FACT / IMPLEMENTED:** live successful sector-completing page commit zwraca rzeczywiste readiness transitions. Cienka VFX projection deduplikuje `HIDDEN → DOCKED` i atomowo rozpoczyna `RUNE_BINDER_REVEAL`; hydration nadal odtwarza settled `DOCKED`/`BOUND` bez replayu. Audio pozostaje poza zakresem.
+- **FACT / IMPLEMENTED:** live successful sector-completing page commit zwraca rzeczywiste readiness transitions. Niezależne VFX i audio projections konsumują tę samą immutable listę: VFX deduplikuje `HIDDEN → DOCKED` i rozpoczyna `RUNE_BINDER_REVEAL`, a audio równolegle rozpoczyna odpowiadający WORLD one-shot bez uzależnienia od sukcesu aktora VFX. Hydration nadal odtwarza settled `DOCKED`/`BOUND` bez replayu VFX lub audio. Audio ownership i mapping pozostają w [`VR_AUDIO_MODEL.md`](VR_AUDIO_MODEL.md), nie w `PlatformEnergyVfxActor`.
 
 ## Kontrakt przestrzenny
 

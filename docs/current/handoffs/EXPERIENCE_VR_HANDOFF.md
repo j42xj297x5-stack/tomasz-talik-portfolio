@@ -17,7 +17,7 @@ Not implemented: controller-driven local sector motion, detent snapping, `α/β/
 
 ## Rune ownership and readiness
 
-Natural tuning is independent of sectors. Targetability equals `tunedRuneFamilies`. Installation readiness alone reads sector completion through `ProgressionController.isBranchComplete() → RuneInstallationReadinessProjection → RuneBridgeActor HIDDEN/DOCKED`. Every successful live crystal/page commit synchronizes that seam after the existing semantic handoff, so the completing panel produces exactly one idempotent `HIDDEN → DOCKED` materialization without Scenario ownership; the bridge then remains visible before installation. After `4.80`, Earth/Fire/Wood are normally ready; Metal/Water are not. The Water override seam exists, but its real trigger is not implemented.
+Natural tuning is independent of sectors. Targetability equals `tunedRuneFamilies`. Installation readiness alone reads sector completion through `ProgressionController.isBranchComplete() → RuneInstallationReadinessProjection → RuneBridgeActor HIDDEN/DOCKED`. Every successful live crystal/page commit synchronizes that seam once after the existing semantic handoff, so the completing panel produces exactly one idempotent `HIDDEN → DOCKED` materialization without Scenario ownership; independent VFX and R3c audio projections consume the same transition list. The audio projection starts one WORLD one-shot in deterministic `creating_01 → 02 → 03 → 01` order and does not own readiness or depend on VFX success. The bridge then remains visible before installation. After `4.80`, Earth/Fire/Wood are normally ready; Metal/Water are not. The Water override seam exists, but its real trigger is not implemented.
 
 `RuneStoneProgressionController` is the canonical persistent owner of separate `tunedRuneFamilies` and `installedRuneFamilies`, with `installedRuneFamilies ⊆ tunedRuneFamilies`. `runeProgression` hydrates both facts silently and atomically. The distinct `runeStones` owner section hydrates presentation visibility only; no central Rune store or duplicate truth exists.
 
@@ -49,7 +49,7 @@ Reconstruction order is bridge readiness → installed Rune physical state → F
 
 ## Next bounded work
 
-R3b adds the shared `PlatformEnergyVfxActor` foundation and the only active profile, `RUNE_BINDER_REVEAL`. Live readiness transitions start sector-local pooled ribbon lightning, binder presentation materialization and one final pulse; reconstruction stays settled and silent. Future scope includes authored Scenario after `4.80`, the Water override trigger, special Ether flow, Rune install/Floor drive VFX, detent spark/audio, motion audio, grip beam, Field Actor/lensing, Rune Stone spatial audio, antenna and late Metal/Water/finale beats, durable full-game persistence and full-game reset.
+R3b adds the shared `PlatformEnergyVfxActor` foundation and the only active profile, `RUNE_BINDER_REVEAL`. R3c adds a separate audio projection: live readiness transitions start sector-local pooled ribbon lightning, binder presentation materialization and one mandatory-preloaded WORLD creation one-shot, followed by the existing final VFX pulse; reconstruction stays settled and silent. Future scope includes authored Scenario after `4.80`, the Water override trigger, special Ether flow, Rune install/Floor drive VFX, installation/detent/motion audio, detent sparks, grip beam, Field Actor/lensing, spatial binder/Rune Stone audio, antenna and late Metal/Water/finale beats, durable full-game persistence and full-game reset.
 
 ## Traceability
 

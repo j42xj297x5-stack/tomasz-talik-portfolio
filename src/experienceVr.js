@@ -81,6 +81,7 @@ import { createVrIntroCrystalTutorial } from './xr/guidance/createVrIntroCrystal
 import { createVrIntroFogReveal } from './xr/guidance/createVrIntroFogReveal.js';
 import { createVrReliquaryHints } from './xr/guidance/createVrReliquaryHints.js';
 import { createVrAudioBridge } from './xr/audio/createVrAudioBridge.js';
+import { BINDER_REVEAL_AUDIO, createVrRuneBinderRevealAudioProjection } from './xr/audio/createVrRuneBinderRevealAudioProjection.js';
 import { createVrAmbientSequencer, VR_MAIN_AMBIENT_PROGRAMS } from './xr/audio/createVrAmbientSequencer.js';
 import { createVrIntroAmbientSequencer } from './xr/audio/createVrIntroAmbientSequencer.js';
 import { ExperienceDirector } from './xr/progression/ExperienceDirector.js';
@@ -137,7 +138,11 @@ const GLYPH_COMPLETION_AUDIO = Object.freeze({
   'spotify-digger': ['/audio/glif_metal_4s_01.mp3', '/audio/glif_metal_4s_02.mp3', '/audio/glif_metal_4s_03.mp3', '/audio/glif_metal_4s_04.mp3'],
   'haiku-cosmos': ['/audio/glif_water_4s_01.mp3', '/audio/glif_water_4s_02.mp3', '/audio/glif_water_4s_03.mp3', '/audio/glif_water_4s_04.mp3', '/audio/glif_water_4s_01.mp3']
 });
-const REQUIRED_VR_AUDIO = Object.freeze([...Object.values(VR_AUDIO), ...Object.values(GLYPH_COMPLETION_AUDIO).flat()]);
+const REQUIRED_VR_AUDIO = Object.freeze([
+  ...Object.values(VR_AUDIO),
+  ...Object.values(GLYPH_COMPLETION_AUDIO).flat(),
+  ...BINDER_REVEAL_AUDIO
+]);
 const playVrUi = (path) => vrAudio.playOneShot(path, 'UI');
 const playVrWorld = (path) => vrAudio.playOneShot(path, 'WORLD');
 const playVrDevice = (path) => vrAudio.playOneShot(path, 'DEVICE');
@@ -421,7 +426,13 @@ const platformEnergyVfxActor = createVrPlatformEnergyVfxActor({
   settings: settings.platformEnergyVfx
 });
 const platformEnergyVfxProjection = createVrPlatformEnergyVfxProjection({ platformEnergyVfxActor });
+const runeBinderRevealAudioProjection = createVrRuneBinderRevealAudioProjection({ audioBridge: vrAudio });
 const synchronizeRuneBridgeReadiness = () => runeInstallationReadinessProjection.synchronizeBridges(runeBridgeActor);
+function presentLiveRuneBridgeReadinessTransitions() {
+  const transitions = synchronizeRuneBridgeReadiness();
+  platformEnergyVfxProjection.presentReadinessTransitions(transitions);
+  runeBinderRevealAudioProjection.presentReadinessTransitions(transitions);
+}
 const ambientSequencer = createVrAmbientSequencer({ bridge: vrAudio });
 const introAmbientSequencer = createVrIntroAmbientSequencer({ bridge: vrAudio });
 const ambientScenarioOwner = Object.freeze({
@@ -759,7 +770,7 @@ const crystalCollection = createVrCrystalCollection({
   onPreview: (page) => runtimeExperience.dispatch(VR_SCENARIO_EVENT.CRYSTAL_ACTIVATED, { page }),
   onCommit: (page, meta) => {
     progressionSemanticHandoff.onPageCommitted(page, meta);
-    platformEnergyVfxProjection.presentReadinessTransitions(synchronizeRuneBridgeReadiness());
+    presentLiveRuneBridgeReadinessTransitions();
   }
 });
 createVrProgressionShortcut({ search: location.search, pages: experienceVrPages, progressionController,
@@ -1161,7 +1172,7 @@ runtimeExperience = new RuntimeExperience({
     },
     [VR_SCENARIO_EFFECT.UPDATE_COMMITTED_CARD_PRESENTATION]: (change, payload) => {
       progressFloor.activatePage(payload.page);
-      platformEnergyVfxProjection.presentReadinessTransitions(synchronizeRuneBridgeReadiness());
+      presentLiveRuneBridgeReadinessTransitions();
     },
     [VR_SCENARIO_EFFECT.PLAY_CARD_COMMIT_FEEDBACK]: () => {
       playVrWorld(VR_AUDIO.reliquaryConsume);
@@ -1393,6 +1404,7 @@ function restoreVrScenarioBaseline() {
   progressFloor.reset();
   platformEnergyVfxActor.reset();
   platformEnergyVfxProjection.reset();
+  runeBinderRevealAudioProjection.reset();
   runeStoneInstallationInteraction.reset();
   runeBridgeActor.reset();
   synchronizeRuneBridgeReadiness();
@@ -1521,6 +1533,7 @@ window.addEventListener('pagehide', () => {
   releaseButton.dispose();
   crystalCollection.dispose();
   crystalReliquary.dispose();
+  runeBinderRevealAudioProjection.dispose();
   platformEnergyVfxProjection.dispose();
   platformEnergyVfxActor.dispose();
   runeBridgeActor.dispose();

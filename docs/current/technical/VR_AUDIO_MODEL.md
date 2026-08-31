@@ -115,6 +115,12 @@ Each shorthand above denotes `glif_<element>_4s_<NN>.mp3`. `glif_earth_4s_04.mp3
 
 In short: insert → `turn_page_01`, activate → `creating_short_01`, consume → `reliquiary_consume`, complete → additional `floor_panel_activate`. These remain four distinct gameplay events.
 
+### Zwornik live reveal
+
+R3c is **IMPLEMENTED** as a thin, read-only audio projection beside the R3b VFX projection. Each first live readiness transition `HIDDEN → DOCKED` starts exactly one `WORLD` one-shot at the start of `RUNE_BINDER_REVEAL`. Variants cycle deterministically in accepted transition order: `creating_01.mp3 → creating_02.mp3 → creating_03.mp3 → creating_01.mp3`; the choice is not assigned to a family or branch. Per-session branch deduplication prevents repeated synchronization from replaying the transition, while the cursor advances for every accepted reveal even if optional fail-soft playback fails.
+
+All three samples use the existing mandatory `REQUIRED_VR_AUDIO → prepareRuntimeAudio(...)` preload/decode path before READY, so live playback is cache-only. Reset clears the projection's dedupe state and returns the cursor to `creating_01`; disposal makes it inert. Hydration and reconstruction synchronize settled readiness without presenting their transitions to the audio projection, so they remain silent. Rune installation audio, sector motion loops, detent audio and spatial binder audio are **NOT IMPLEMENTED**.
+
 ### Astro Furnace
 
 - Open Option panel → `panel_sound_01.mp3`.
@@ -178,9 +184,9 @@ The inventory below contains every existing `public/audio/*.mp3` as of 2026-08-2
 | `asterion_sphere_work.mp3` | seamless loop | DEVICE | aktywne sterowanie podłogą Kulą | **IMPLEMENTED** | Start przy drive; release wygasza przez 2 s, a retrigger zachowuje source/playhead. |
 | `click_panel_01.mp3` | one-shot | UI | klik wewnątrz panelu małpy lub gracza Y; powrót panelu Astro Pieca do menu głównego | **IMPLEMENTED** | Playback one-shot na busie UI jest wdrożony. |
 | `click_short_01.mp3` | one-shot | UI | panelowe kliknięcia wcześniej mapowane jako `turn_page_*` | **IMPLEMENTED** | W bieżącym Experience VR nie było takich mapowań; istniejących świadomych klików nie zmieniono. |
-| `creating_01.mp3` | one-shot | WORLD | — | **UNASSIGNED** | Dostępny; przyszłe użycie pozostaje otwarte. |
-| `creating_02.mp3` | one-shot | WORLD | — | **UNASSIGNED** | Dostępny; przyszłe użycie pozostaje otwarte. |
-| `creating_03.mp3` | one-shot | WORLD | — | **UNASSIGNED** | Dostępny; przyszłe użycie pozostaje otwarte. |
+| `creating_01.mp3` | one-shot | WORLD | live Zwornik `HIDDEN → DOCKED` reveal | **IMPLEMENTED** | Pierwszy wariant deterministycznego cyklu R3c; obowiązkowo przygotowany przed READY. |
+| `creating_02.mp3` | one-shot | WORLD | live Zwornik `HIDDEN → DOCKED` reveal | **IMPLEMENTED** | Drugi wariant deterministycznego cyklu R3c; obowiązkowo przygotowany przed READY. |
+| `creating_03.mp3` | one-shot | WORLD | live Zwornik `HIDDEN → DOCKED` reveal | **IMPLEMENTED** | Trzeci wariant deterministycznego cyklu R3c; obowiązkowo przygotowany przed READY. |
 | `creating_04.mp3` | one-shot | WORLD | — | **UNASSIGNED** | Dostępny; przyszłe użycie pozostaje otwarte. |
 | `creating_05.mp3` | one-shot | WORLD | — | **UNASSIGNED** | Dostępny; przyszłe użycie pozostaje otwarte. |
 | `creating_06.mp3` | one-shot | WORLD | — | **UNASSIGNED** | Dostępny; przyszłe użycie pozostaje otwarte. |
@@ -263,7 +269,7 @@ The prefix map supplies only a default classification. Every new MP3 must still 
 
 - The concrete device asset for Asterion Sphere / floor operation.
 - Future uses of `noise_loop_*`.
-- Future uses of `creating_*` and `creating_short_*`.
+- Future uses of unassigned `creating_04–08` and any additional `creating_short_*` mapping.
 - Behavior after exhaustion of the last existing post-main `ambient_loop_*`.
 - Whether individual effects should be spatial / `PositionalAudio`, and which ones.
 
