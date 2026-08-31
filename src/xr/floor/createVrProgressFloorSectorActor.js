@@ -300,6 +300,10 @@ export function createVrProgressFloorSectorActor({ descriptor, sourceModel, cont
         quaternion: motionRoot.quaternion.clone(),
         scale: motionRoot.scale.clone()
       }),
+      getMotionBounds: () => ({
+        min: presentationBounds.min.clone(),
+        max: presentationBounds.max.clone()
+      }),
       getControlFrame: () => {
         object.updateWorldMatrix(true, false);
         return {

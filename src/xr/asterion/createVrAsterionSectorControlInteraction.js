@@ -17,9 +17,9 @@ const RAD_TO_DEG = 180 / Math.PI;
 const EPSILON = 1e-6;
 
 const SECTORS = Object.freeze({
-  'ethics-life-protection': Object.freeze({ branchId: 'earth', axis: Object.freeze({ x: 0, y: 0, z: 1 }), motionSign: -1 }),
-  'ai-guide': Object.freeze({ branchId: 'wood', axis: Object.freeze({ x: 0, y: 0, z: 1 }), motionSign: 1 }),
-  'creative-ai': Object.freeze({ branchId: 'fire', axis: Object.freeze({ x: 1, y: 0, z: 0 }), motionSign: -1 })
+  'ethics-life-protection': Object.freeze({ branchId: 'earth', axis: Object.freeze({ x: 0, y: 0, z: 1 }), motionSign: 1, hinge: 'MAX_X' }),
+  'ai-guide': Object.freeze({ branchId: 'wood', axis: Object.freeze({ x: 0, y: 0, z: 1 }), motionSign: -1, hinge: 'MIN_X' }),
+  'creative-ai': Object.freeze({ branchId: 'fire', axis: Object.freeze({ x: 1, y: 0, z: 0 }), motionSign: 1, hinge: 'MIN_Z' })
 });
 
 function clampStep(current, target, maximumStep) {
@@ -50,6 +50,9 @@ export function createVrAsterionSectorControlInteraction({
   const deltaQuaternion = new THREE.Quaternion();
   const motionQuaternion = new THREE.Quaternion();
   const axis = new THREE.Vector3();
+  const pivot = new THREE.Vector3();
+  const rotatedPivot = new THREE.Vector3();
+  const motionPosition = new THREE.Vector3();
   let phase = VR_ASTERION_SECTOR_CONTROL_PHASES.IDLE;
   let movingGlyphId = null;
   let lockedGlyphId = null;
@@ -66,9 +69,20 @@ export function createVrAsterionSectorControlInteraction({
     const descriptor = SECTORS[glyphId];
     const state = sectorStates.get(glyphId);
     if (!descriptor || !state) return false;
+    if (Math.abs(state.currentAngleDegrees) <= EPSILON) {
+      motionQuaternion.identity();
+      return progressFloor.setSectorMotion(glyphId, { position: IDENTITY_POSITION, quaternion: motionQuaternion });
+    }
+    const bounds = progressFloor.getSectorMotionBounds?.(glyphId);
+    if (!bounds?.min || !bounds?.max) return false;
+    if (descriptor.hinge === 'MAX_X') pivot.set(bounds.max.x, bounds.max.y, 0);
+    else if (descriptor.hinge === 'MIN_X') pivot.set(bounds.min.x, bounds.max.y, 0);
+    else pivot.set(0, bounds.max.y, bounds.min.z);
     axis.set(descriptor.axis.x, descriptor.axis.y, descriptor.axis.z);
     motionQuaternion.setFromAxisAngle(axis, THREE.MathUtils.degToRad(state.currentAngleDegrees * descriptor.motionSign));
-    return progressFloor.setSectorMotion(glyphId, { position: IDENTITY_POSITION, quaternion: motionQuaternion });
+    rotatedPivot.copy(pivot).applyQuaternion(motionQuaternion);
+    motionPosition.copy(pivot).sub(rotatedPivot);
+    return progressFloor.setSectorMotion(glyphId, { position: motionPosition, quaternion: motionQuaternion });
   }
 
   function captureNeutral(glyphId, leftRecord) {
