@@ -4,9 +4,9 @@
 
 Status: **CURRENT TARGET / PARTIALLY IMPLEMENTED**.
 
-Runtime R2A implements the semantic left GRIP, target-ray acquisition of an existing powered sector, installed-Rune verification, continuous `1.0 s` dwell, trigger-priority suppression and transient `SECTOR LOCK`. The bounded interaction exposes read-only acquisition/lock state and does not persist it.
+Runtime R2A implements powered-sector acquisition and transient `SECTOR LOCK`; R2B implements controller-driven EARTH/WOOD/FIRE motion and committed `0/1/2/3` detents. R4 implements the event-driven Resonator Field Actor: derived `resonatorExists`, immutable runtime `α/β/γ` descriptor, POWERED/FIELD-ACTIVE and partial/full/symmetric/asymmetric coarse-field semantics with bounded read-only queries and exactly-on-change subscriptions.
 
-Still not implemented are controller-driven local sector motion, detent snapping, the `α/β/γ` runtime, Field Actor/descriptor, field or lensing presentation, and grip-beam presentation. This partial foundation does not mark the Asterion Resonator as implemented.
+Target selection/scoring and response, field/lensing presentation, grip beam, field audio and METAL/WATER contribution remain not implemented.
 
 Ten dokument jest nadrzędnym aktualnym technicznym modelem Rezonatora Asterionowego. Zamraża granice sandboxu, Scenario, Guidance, Zworników Runicznych, lokalnego sterowania sektorami i odpowiedzi Rezonatora. Wyspecjalizowany [`VR_ASTERION_RESONATOR_FIELD_MODEL.md`](VR_ASTERION_RESONATOR_FIELD_MODEL.md) jest jego podporządkowanym CURRENT sub-modelem pola; nie stanowi alternatywnego kanonu. Dokumenty nie definiują finalnego API ani nazw nowych aktorów sector-control.
 
@@ -126,4 +126,4 @@ Poza zakresem i nadal niezamrożone są: konkretne API, nazwy aktorów, algorytm
 
 R2A powered-sector acquisition, one-second transient SECTOR LOCK and trigger-priority arbitration are implemented. R2B now owns runtime-local EARTH/WOOD/FIRE levels `0/1/2/3`, continuous constant-speed motor positions, physical `0°/13°/23°/36°` detents, a short detent hold, and smooth release-to-last-committed settle. Held directional intent continues across successive detents without a new GRIP press. Trigger priority freezes user-driven local motion and forces a hand-reference rebase when local control returns.
 
-The bounded read-only level/angle snapshot and exactly-once semantic `DETENT_COMMITTED` subscription seam are implemented. Spark VFX, grip-beam presentation, detent/motion audio, Resonator Field Actor and descriptor runtime, scoring/target response, lensing, and METAL/WATER motion are not implemented.
+The bounded read-only level/angle snapshot and exactly-once semantic `DETENT_COMMITTED` subscription seam are implemented. Spark VFX, grip-beam presentation, detent/motion audio, Target selection/scoring and response, field/lensing presentation, grip beam, field audio and METAL/WATER motion or field contribution are not implemented. R4's Field Actor and immutable analytic descriptor runtime are implemented from installed Rune truth and R2B committed levels; transient angles do not contribute.

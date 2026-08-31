@@ -79,6 +79,8 @@ later METAL + WATER
 → advanced tuning / amplification of the same field
 ```
 
+R4 composition creates one derived Field Actor after the Rune progression and R2B owners. It reads canonical installed families and committed levels only, freezes the descriptor and nested values, deduplicates semantic changes, and synchronizes explicitly after hydration/reconstruction and source resets. It has no frame update; METAL/WATER changes are outside its core signature.
+
 The physical core contains `4 × 4 × 4 = 64` states. Its fully active subset contains 27 configurations, including 9 primary active symmetric configurations (`α = β > 0`). Asymmetric and one-wing-active states are legal. Sector control owns lock/setting/motion commands; Field Domain owns descriptor/field response; `PlatformEnergyVfxActor` separately owns procedural platform energy; lensing only reads Field output. TRIGGER retains priority over GRIP. Scenario/Guidance interprets but does not create these states, and crystal acquisition remains progression-gated.
 
 ## Rune reconstruction

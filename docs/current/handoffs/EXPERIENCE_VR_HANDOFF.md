@@ -2,11 +2,11 @@
 
 Status: **CURRENT operational snapshot — 2026-08-27**. Authorities: [`VR_RUNTIME_MODEL.md`](../technical/VR_RUNTIME_MODEL.md), [`VR_SCENARIO_DIRECTOR_MODEL.md`](../technical/VR_SCENARIO_DIRECTOR_MODEL.md) and [`VR_RUNE_STONES_MODEL.md`](../technical/VR_RUNE_STONES_MODEL.md).
 
-## Asterion sector-control R2A boundary
+## Asterion sector-control and Field R4 boundary
 
-Implemented runtime foundation: semantic left GRIP input, target-ray resolution of existing progress-floor sectors, installed-Rune powered checks, continuous `1.0 s` acquisition, transient `SECTOR LOCK`, and TRIGGER-priority suppression. The acquisition interaction is updated after the hand-mode controller and participates in baseline reset and disposal.
+Implemented runtime: R2A semantic left GRIP powered-sector acquisition and transient `SECTOR LOCK`; R2B committed EARTH/WOOD/FIRE `0/1/2/3` detents; and R4's event-driven Resonator Field Actor. R4 derives `resonatorExists`, runtime `α/β/γ`, POWERED/FIELD-ACTIVE, partial/full/symmetric/asymmetric state, depth band and analytic lateral values in an immutable descriptor with exactly-on-change subscriptions. Hydration/reconstruction and baseline reset explicitly synchronize it after upstream owners.
 
-Not implemented: controller-driven local sector motion, detent snapping, `α/β/γ` runtime, Field Actor/descriptor, field/lensing presentation, or grip-beam presentation. Global platform orientation remains owned by the existing Asterion Gyro interaction.
+Not implemented: target selection/scoring or response, field/lensing presentation, grip beam, field audio, or METAL/WATER field contribution. Global platform orientation remains owned by the existing Asterion Gyro interaction.
 
 ## Canonical checkpoint
 
@@ -49,11 +49,11 @@ Reconstruction order is bridge readiness → installed Rune physical state → F
 
 ## Next bounded work
 
-R3b adds the shared `PlatformEnergyVfxActor` foundation and the only active profile, `RUNE_BINDER_REVEAL`. R3c adds a separate audio projection: live readiness transitions start sector-local pooled ribbon lightning, binder presentation materialization and one mandatory-preloaded WORLD creation one-shot, followed by the existing final VFX pulse; reconstruction stays settled and silent. Future scope includes authored Scenario after `4.80`, the Water override trigger, special Ether flow, Rune install/Floor drive VFX, installation/detent/motion audio, detent sparks, grip beam, Field Actor/lensing, spatial binder/Rune Stone audio, antenna and late Metal/Water/finale beats, durable full-game persistence and full-game reset.
+R3b adds the shared `PlatformEnergyVfxActor` foundation and the only active profile, `RUNE_BINDER_REVEAL`. R3c adds a separate audio projection: live readiness transitions start sector-local pooled ribbon lightning, binder presentation materialization and one mandatory-preloaded WORLD creation one-shot, followed by the existing final VFX pulse; reconstruction stays settled and silent. Future scope includes authored Scenario after `4.80`, the Water override trigger, special Ether flow, Rune install/Floor drive VFX, installation/detent/motion audio, detent sparks, grip beam, target response/field lensing, spatial binder/Rune Stone audio, antenna and late Metal/Water/finale beats, durable full-game persistence and full-game reset.
 
 ## Traceability
 
 Key evidence: A6 `b091b4e`/`0fc4ce3`; A7 `cc77fb2`/`83ec32f`; A8 `ad83cb2`/`f98188a`; tuning correction `d0f9a17`/`c862b9b`; A9.1 `f03daad`/`3181dc9`; hardening `9ab56aa`/`6b52511`; A9.2 `fd4e519`/`091b7da`; A9.3 `8c3caca`/`d23743d`; A9.4 `38b46cf`/`575dc18`. Current HEAD code is authority for A9.5 platform handoff/extension and A9.6 hydration/reconstruction.
 # Asterion sector control handoff (R2B)
 
-Implemented composition now updates hand mode, R2A acquisition, R2B sector control, then the existing global gyro owner. R2B supports only EARTH, WOOD and FIRE. Sector-local R3b reveal VFX inherits its motion automatically; Floor drive/detent VFX, audio, grip beam, Field Actor/descriptor, scoring, lensing and METAL/WATER movement remain explicit follow-up work.
+Implemented composition now updates hand mode, R2A acquisition, R2B sector control, then the existing global gyro owner. R2B supports only EARTH, WOOD and FIRE. Sector-local R3b reveal VFX inherits its motion automatically; R4 observes R2B `DETENT_COMMITTED` and installed Rune truth without a frame update; its immutable descriptor remains unchanged during transient DRIVING. Floor drive/detent VFX, field audio, grip beam, target selection/scoring/response, lensing and METAL/WATER movement/contribution remain explicit follow-up work.
