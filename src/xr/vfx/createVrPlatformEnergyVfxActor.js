@@ -87,6 +87,24 @@ function setWidthEnvelope(slot, segments, baseWidth) {
   }
 }
 
+function selectBranchOriginIndex(slot, segments, incoming, outgoing) {
+  let totalCurvature = 0;
+  for (let index = 1; index < segments; index += 1) {
+    incoming.copy(slot.points[index]).sub(slot.points[index - 1]).normalize();
+    outgoing.copy(slot.points[index + 1]).sub(slot.points[index]).normalize();
+    totalCurvature += 1 - THREE.MathUtils.clamp(incoming.dot(outgoing), -1, 1);
+  }
+  if (totalCurvature <= 1e-12) return 1 + Math.floor(Math.random() * (segments - 1));
+  let selection = Math.random() * totalCurvature;
+  for (let index = 1; index < segments; index += 1) {
+    incoming.copy(slot.points[index]).sub(slot.points[index - 1]).normalize();
+    outgoing.copy(slot.points[index + 1]).sub(slot.points[index]).normalize();
+    selection -= 1 - THREE.MathUtils.clamp(incoming.dot(outgoing), -1, 1);
+    if (selection <= 0) return index;
+  }
+  return segments - 1;
+}
+
 function generateFractalPath(slot, segments, startPoint, endPoint, bounds, config, amplitudeFactor, scratch) {
   const { fractalPoints, fractalSegments } = slot; fractalPoints[0].copy(startPoint); fractalPoints[fractalSegments].copy(endPoint);
   const boltLength = startPoint.distanceTo(endPoint);
@@ -169,6 +187,7 @@ export function createVrPlatformEnergyVfxActor({ getSectorMount, getSectorBounds
   const revealProfiles = new Map(); const acquisitionProfiles = new Map(); const driveProfiles = new Map();
   const pool = Array.from({ length: Math.max(1, Math.floor(config.maxActiveBolts)) }, () => createBoltSlot(segments, config));
   const tangent = new THREE.Vector3(); const branchDirection = new THREE.Vector3(); const worldTarget = new THREE.Vector3();
+  const branchIncoming = new THREE.Vector3(); const branchOutgoing = new THREE.Vector3();
   const pathScratch = {
     direction: new THREE.Vector3(), lateral: new THREE.Vector3(), depth: new THREE.Vector3(), reference: new THREE.Vector3()
   };
@@ -200,7 +219,7 @@ export function createVrPlatformEnergyVfxActor({ getSectorMount, getSectorBounds
     for (let branchIndex = 0; branchIndex < maximum; branchIndex += 1) {
       if (Math.random() >= config.branchChance * acquisitionFactor) continue;
       const branchSlot = acquireSlot(); if (!branchSlot) return;
-      const pointIndex = 1 + Math.floor(Math.random() * (segments - 1));
+      const pointIndex = selectBranchOriginIndex(mainSlot, segments, branchIncoming, branchOutgoing);
       const startPoint = branchSlot.points[0].copy(mainSlot.points[pointIndex]);
       tangent.copy(mainSlot.points[Math.min(segments, pointIndex + 1)]).sub(mainSlot.points[Math.max(0, pointIndex - 1)]).normalize();
       const sign = Math.random() < 0.5 ? -1 : 1;
