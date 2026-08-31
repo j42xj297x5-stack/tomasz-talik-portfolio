@@ -57,3 +57,9 @@ Key evidence: A6 `b091b4e`/`0fc4ce3`; A7 `cc77fb2`/`83ec32f`; A8 `ad83cb2`/`f981
 # Asterion sector control handoff (R2B)
 
 Implemented composition now updates hand mode, R2A acquisition, R2B sector control, then the existing global gyro owner. R2B supports only EARTH, WOOD and FIRE. Sector-local R3b reveal VFX inherits its motion automatically; R4 observes R2B `DETENT_COMMITTED` and installed Rune truth without a frame update; its immutable descriptor remains unchanged during transient DRIVING. Floor drive/detent VFX, field audio, grip beam, target selection/scoring/response, lensing and METAL/WATER movement/contribution remain explicit follow-up work.
+
+## Asterion sector acquisition beam handoff — IMPLEMENTED
+
+The runtime now composes a presentation-only acquisition owner after Sphere, Progress Floor and acquisition/control owners. Frame order is hand mode → acquisition interaction → sector control → acquisition presentation, so the ribbon consumes current gameplay truth and the panel-3 anchor's same-frame R2B transform. The beam is a reusable curved, tapered, spectral camera-facing ribbon; ACQUIRING shows progress-driven pulsing whole-sector glow and LOCKED shows a settled lock glow. Target changes clear the previous sector immediately. Reset and dispose clear feedback, and dispose releases owned GPU resources without touching dependencies.
+
+The precise powered-sector raycast and existing `1.0 s` dwell remain authoritative and unchanged. Acquisition lightning/sparks, `FLOOR_DRIVE` lightning, drive/detent audio, `RUNE_INSTALL` VFX/audio, field/lensing presentation and target response remain **NOT IMPLEMENTED** and are separate bounded work.

@@ -106,6 +106,13 @@ export function createVrProgressFloorActor({ parent, sourceModels, emission = {}
     setSectorMotion(glyphId, transform) { return !disposed && (sectorsByGlyphId.get(glyphId)?.setMotionTransform(transform) ?? false); },
     getSectorMotionTransform(glyphId) { return !disposed ? sectorsByGlyphId.get(glyphId)?.getMotionTransform() ?? null : null; },
     getSectorControlFrame(glyphId) { return !disposed ? sectorsByGlyphId.get(glyphId)?.getControlFrame() ?? null : null; },
+    getAsterionSectorTargetWorldPosition(glyphId) { return !disposed ? sectorsByGlyphId.get(glyphId)?.getAsterionTargetWorldPosition() ?? null : null; },
+    setAsterionSectorAcquisitionGlow(glyphId, strength) { return !disposed && (sectorsByGlyphId.get(glyphId)?.setAsterionAcquisitionGlow(strength) ?? false); },
+    getPlatformWorldNormal() {
+      if (disposed) return null;
+      object.updateWorldMatrix(true, false);
+      return new THREE.Vector3(0, 1, 0).transformDirection(object.matrixWorld);
+    },
     resetSectorMotion(glyphId) {
       const sector = sectorsByGlyphId.get(glyphId);
       if (disposed || !sector) return false;
