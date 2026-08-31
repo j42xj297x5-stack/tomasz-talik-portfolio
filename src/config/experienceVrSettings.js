@@ -124,6 +124,19 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
     gestureEngageDegrees: 18,
     gestureReleaseDegrees: 10
   },
+  asterionSectorBeam: {
+    enabled: true,
+    startOffsetMeters: 0.20,
+    segments: 18,
+    startWidthMeters: 0.006,
+    endWidthMeters: 0.14,
+    arcHeightFactor: 0.08,
+    opacity: 0.78,
+    rainbowStrength: 0.6,
+    acquisitionPulseHz: 3,
+    acquisitionGlowOpacity: 0.34,
+    lockedGlowOpacity: 0.42
+  },
   playerGuidePanel: {
     enabled: true,
     width: 0.34,
@@ -570,6 +583,19 @@ export function normalizeExperienceVrSettings(candidate) {
         defaults.asterionSectorControl.gestureEngageDegrees, { min: 1, max: 90 }),
       gestureReleaseDegrees: finiteNumber(candidate.asterionSectorControl?.gestureReleaseDegrees,
         defaults.asterionSectorControl.gestureReleaseDegrees, { min: 0, max: 89 })
+    },
+    asterionSectorBeam: {
+      enabled: typeof candidate.asterionSectorBeam?.enabled === 'boolean' ? candidate.asterionSectorBeam.enabled : defaults.asterionSectorBeam.enabled,
+      startOffsetMeters: finiteNumber(candidate.asterionSectorBeam?.startOffsetMeters, defaults.asterionSectorBeam.startOffsetMeters, { min: 0, max: 1 }),
+      segments: Math.round(finiteNumber(candidate.asterionSectorBeam?.segments, defaults.asterionSectorBeam.segments, { min: 6, max: 48 })),
+      startWidthMeters: finiteNumber(candidate.asterionSectorBeam?.startWidthMeters, defaults.asterionSectorBeam.startWidthMeters, { min: 0.001, max: 0.1 }),
+      endWidthMeters: finiteNumber(candidate.asterionSectorBeam?.endWidthMeters, defaults.asterionSectorBeam.endWidthMeters, { min: 0.01, max: 0.5 }),
+      arcHeightFactor: finiteNumber(candidate.asterionSectorBeam?.arcHeightFactor, defaults.asterionSectorBeam.arcHeightFactor, { min: 0, max: 0.5 }),
+      opacity: finiteNumber(candidate.asterionSectorBeam?.opacity, defaults.asterionSectorBeam.opacity, { min: 0, max: 1 }),
+      rainbowStrength: finiteNumber(candidate.asterionSectorBeam?.rainbowStrength, defaults.asterionSectorBeam.rainbowStrength, { min: 0, max: 1 }),
+      acquisitionPulseHz: finiteNumber(candidate.asterionSectorBeam?.acquisitionPulseHz, defaults.asterionSectorBeam.acquisitionPulseHz, { min: 0, max: 12 }),
+      acquisitionGlowOpacity: finiteNumber(candidate.asterionSectorBeam?.acquisitionGlowOpacity, defaults.asterionSectorBeam.acquisitionGlowOpacity, { min: 0, max: 1 }),
+      lockedGlowOpacity: finiteNumber(candidate.asterionSectorBeam?.lockedGlowOpacity, defaults.asterionSectorBeam.lockedGlowOpacity, { min: 0, max: 1 })
     },
     playerGuidePanel: {
       enabled: typeof candidate.playerGuidePanel?.enabled === 'boolean' ? candidate.playerGuidePanel.enabled : defaults.playerGuidePanel.enabled,

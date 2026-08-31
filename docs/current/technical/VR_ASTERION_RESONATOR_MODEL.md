@@ -127,3 +127,11 @@ Poza zakresem i nadal niezamrożone są: konkretne API, nazwy aktorów, algorytm
 R2A powered-sector acquisition, one-second transient SECTOR LOCK and trigger-priority arbitration are implemented. R2B now owns runtime-local EARTH/WOOD/FIRE levels `0/1/2/3`, continuous constant-speed motor positions, physical `0°/13°/23°/36°` detents, a short detent hold, and smooth release-to-last-committed settle. Held directional intent continues across successive detents without a new GRIP press. Trigger priority freezes user-driven local motion and forces a hand-reference rebase when local control returns.
 
 The bounded read-only level/angle snapshot and exactly-once semantic `DETENT_COMMITTED` subscription seam are implemented. Spark VFX, grip-beam presentation, detent/motion audio, Target selection/scoring and response, field/lensing presentation, grip beam, field audio and METAL/WATER motion or field contribution are not implemented. R4's Field Actor and immutable analytic descriptor runtime are implemented from installed Rune truth and R2B committed levels; transient angles do not contribute.
+
+## R2A acquisition presentation — IMPLEMENTED
+
+`AsterionSectorAcquisitionPresentation` is a presentation-only reader of the existing acquisition owner. The existing precise powered-sector raycast remains the sole gameplay authority; the beam neither performs targeting nor changes candidate, lock, powered, dwell, R2B, Scenario or Field state. `ACQUIRING` uses `candidateGlyphId` and acquisition progress, while `LOCKED` uses `lockedGlyphId`; `IDLE`, target loss and reset clear all feedback.
+
+The reusable additive WebXR ribbon starts along the live Sphere-to-target direction, is narrow at the Sphere and wider at the sector, follows a quadratic arc based on the tiltable platform's current world normal, and mixes an energetic white core with a restrained spectral hue. Its endpoint is the canonical panel-3 bounds-center anchor, not the ray hit point. Acquisition glow grows and pulses with the existing one-second dwell; LOCKED retains a settled glow. Reset/dispose clear the beam and sector glow, and dispose releases only owned presentation resources.
+
+Still **NOT IMPLEMENTED**: acquisition lightning/sparks, `FLOOR_DRIVE` lightning, drive/detent audio, `RUNE_INSTALL` VFX/audio, field/lensing presentation and target response.

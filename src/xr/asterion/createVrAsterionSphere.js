@@ -194,7 +194,13 @@ export function createVrAsterionSphere({ model, animations = [], settings, enabl
   function reset() { actions.forEach((a) => { a.reset(); a.play(); }); mixer.setTime(0); targetRingWeight = 1; targetRingTargetWeight = 1; if (innerRing1Action) innerRing1Action.setEffectiveWeight(0); targetRingActions.forEach((a) => a.setEffectiveWeight(1)); unequipFromHand(); }
   function dispose() { if (disposed) return; actions.forEach((a) => a.stop()); mixer.stopAllAction(); unequipFromHand(); clearPresentation(); disposed = true; }
   function isEquipped() { return Boolean(equippedRecord && object.visible && socket.parent); }
+  function getBeamOriginWorldPosition() {
+    const origin = requiredNodes.srodek ?? object;
+    origin.updateWorldMatrix(true, false);
+    return origin.getWorldPosition(new THREE.Vector3());
+  }
   return { object, socket, equipTo, unequip, unequipFromHand, presentAt, setPresentationScale, setMaterializationProgress, restorePresentationMaterials, clearPresentation, update, reset, dispose, syncGimbals, setTargetRingsStabilized, isEquipped, isPresented: () => Boolean(presentationAnchor && object.visible), getEquippedRecord: () => equippedRecord,
+    getBeamOriginWorldPosition,
     getIdleActionByClipName: (clipName) => actionByClipName.get(clipName) ?? null, getTargetRingWeight: () => targetRingWeight, getIdleClipCount: () => idleClips.length, getStartedIdleClipCount: () => playableIdleClips.length, getRequiredNodes: () => ({ ...requiredNodes }), getDiagnostics: () => {
       object.updateWorldMatrix(true, true); const worldBounds = new THREE.Box3().setFromObject(object);
       const worldSize = worldBounds.getSize(new THREE.Vector3()), worldCenter = worldBounds.getCenter(new THREE.Vector3());

@@ -98,3 +98,9 @@ Implemented in the current QA/platform stage, but not owned by `createVrProgress
 # R2B sector-motion projection
 
 Progress Floor remains the bounded physical projection for R2B through `setSectorMotion`, `getSectorMotionTransform` and `resetSectorMotion`; mutable sector actors and MotionRoots remain private. A new defensive `getSectorControlFrame(glyphId)` snapshot exposes only the stable sector frame position/quaternion needed to interpret hand intent without reading the moving MotionRoot. EARTH and WOOD rotate around canonical sector-local Z with opposite signs; FIRE rotates around canonical sector-local X. R2B changes quaternion only and keeps position at identity.
+
+## Asterion acquisition target and glow — IMPLEMENTED
+
+Each sector owns `VrAsterionSectorTargetAnchor:<glyphId>` at the actual bounds center of authored panel order 3 in `VrProgressFloorSectorMotionRoot:<glyphId>` local space. The hierarchy therefore inherits ActorRoot, `VrTiltableFloorRoot` and R2B motion without world-space resynchronization. Floor APIs expose only defensive current world-position/platform-normal queries and the bounded presentation command `setAsterionSectorAcquisitionGlow`; no mutable anchor or sector registry escapes.
+
+The presentation-only whole-sector overlay reuses authored geometry with an owned additive material and does not overwrite progression emissive state. It is hidden at zero, cleared by reset/dispose, and its owned material is disposed with the sector. Acquisition lightning/sparks, `FLOOR_DRIVE`, drive/detent audio, `RUNE_INSTALL` VFX/audio, field/lensing presentation and target response remain **NOT IMPLEMENTED**.

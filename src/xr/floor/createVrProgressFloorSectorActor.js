@@ -108,6 +108,9 @@ export function createVrProgressFloorSectorActor({ descriptor, sourceModel, cont
   const presentationMaterials = new Map();
   const activeOrders = new Set();
   const pulseRemaining = new Map();
+  let acquisitionOverlay = null;
+  let acquisitionOverlayMaterial = null;
+  let asterionTargetAnchor = null;
   let presentationState = VR_PROGRESS_FLOOR_SECTOR_PRESENTATION_STATE.HIDDEN;
   let disposed = false;
 
@@ -141,6 +144,35 @@ export function createVrProgressFloorSectorActor({ descriptor, sourceModel, cont
     });
 
     object.updateMatrixWorld(true);
+    const targetBounds = getBoundsRelativeTo(panelsByOrder.get(3).object, motionRoot);
+    if (targetBounds.isEmpty()) throw new Error(`[VrProgressFloorSectorActor] Cannot derive panel-3 target for "${descriptor.glyphId}".`);
+    asterionTargetAnchor = new THREE.Object3D();
+    asterionTargetAnchor.name = `VrAsterionSectorTargetAnchor:${descriptor.glyphId}`;
+    asterionTargetAnchor.position.copy(targetBounds.getCenter(new THREE.Vector3()));
+    motionRoot.add(asterionTargetAnchor);
+
+    acquisitionOverlayMaterial = new THREE.MeshBasicMaterial({
+      color: emission.fallbackColor,
+      transparent: true,
+      opacity: 0,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      side: THREE.DoubleSide
+    });
+    ownedMaterials.add(acquisitionOverlayMaterial);
+    acquisitionOverlay = new THREE.Group();
+    acquisitionOverlay.name = `VrAsterionSectorAcquisitionOverlay:${descriptor.glyphId}`;
+    presentationBodies.forEach((body) => {
+      const overlayBody = body.clone(true);
+      overlayBody.traverse((child) => {
+        if (!child.isMesh) return;
+        child.material = acquisitionOverlayMaterial;
+        child.renderOrder = 3;
+      });
+      acquisitionOverlay.add(overlayBody);
+    });
+    acquisitionOverlay.visible = false;
+    motionRoot.add(acquisitionOverlay);
     const presentationBounds = new THREE.Box3().makeEmpty();
     presentationBodies.forEach((body) => presentationBounds.union(getBoundsRelativeTo(body, motionRoot)));
     if (presentationBounds.isEmpty()) {
@@ -240,6 +272,8 @@ export function createVrProgressFloorSectorActor({ descriptor, sourceModel, cont
         if (transparentChanged) material.needsUpdate = true;
       });
       panelsByOrder.forEach(({ materials }) => materials.forEach((material) => { material.emissiveIntensity = 0; }));
+      acquisitionOverlay.visible = false;
+      acquisitionOverlayMaterial.opacity = 0;
     }
 
     function dispose() {
@@ -277,6 +311,18 @@ export function createVrProgressFloorSectorActor({ descriptor, sourceModel, cont
       getRuneInstallationFrame: () => runeInstallationFrame,
       getEnergyVfxMount: () => energyVfxMount,
       getEnergyVfxBounds: () => ({ min: presentationBounds.min.clone(), max: presentationBounds.max.clone() }),
+      getAsterionTargetWorldPosition: () => {
+        if (disposed) return null;
+        asterionTargetAnchor.updateWorldMatrix(true, false);
+        return asterionTargetAnchor.getWorldPosition(new THREE.Vector3());
+      },
+      setAsterionAcquisitionGlow: (strength) => {
+        if (disposed) return false;
+        const safeStrength = THREE.MathUtils.clamp(Number.isFinite(strength) ? strength : 0, 0, 1);
+        acquisitionOverlayMaterial.opacity = safeStrength;
+        acquisitionOverlay.visible = safeStrength > 0 && authoredVisual.visible;
+        return true;
+      },
       getPresentationState: () => presentationState
     };
   } catch (error) {
