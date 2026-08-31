@@ -35,11 +35,11 @@ Każdy kanał rdzenia ma cztery stabilne poziomy, bez pozycji ujemnych i bez ruc
 
 ### EARTH — `α`
 
-`α ∈ {0,1,2,3}` steruje lewym skrzydłem i mapuje się na `0° / 13° / 23° / 36°`. EARTH jest downward-folding side wing: zawias leży na bocznej krawędzi `maxX`, a przeciwna krawędź schodzi coraz głębiej pod platformę wraz ze wzrostem `α`. Żadna krawędź nie jest unoszona ponad flat walking surface. `α = 0` wyłącza wkład EARTH do descriptoru.
+`α ∈ {0,1,2,3}` steruje lewym skrzydłem i mapuje się na `0° / 13° / 23° / 36°`. EARTH jest downward-folding side wing: zawias jest zewnętrzną radialną krawędzią 72° wedge skierowaną `+36°` od sector-local `+Z` i przechodzącą przez `(0,0,0)`. MotionRoot.position pozostaje zero, outer edge jest nieruchoma w flat plane, a przeciwna inner edge skierowana ku FIRE schodzi coraz głębiej pod platformę wraz ze wzrostem `α`. `α = 0` wyłącza wkład EARTH do descriptoru.
 
 ### WOOD — `β`
 
-`β ∈ {0,1,2,3}` steruje prawym skrzydłem i mapuje się na `0° / 13° / 23° / 36°`. WOOD jest lustrzanym downward-folding side wing: zawias leży na bocznej krawędzi `minX`, a przeciwna krawędź schodzi coraz głębiej pod platformę wraz ze wzrostem `β`. Żadna krawędź nie jest unoszona ponad flat walking surface. `β = 0` wyłącza wkład WOOD.
+`β ∈ {0,1,2,3}` steruje prawym skrzydłem i mapuje się na `0° / 13° / 23° / 36°`. WOOD jest lustrzanym downward-folding side wing: zawias jest zewnętrzną radialną krawędzią 72° wedge skierowaną `-36°` od sector-local `+Z` i przechodzącą przez `(0,0,0)`. Przeciwny signed quaternion zachowuje MotionRoot.position równe zero i nieruchomą outer edge, a inner edge skierowana ku FIRE schodzi wraz ze wzrostem `β`. `β = 0` wyłącza wkład WOOD.
 
 ### FIRE — `γ`
 

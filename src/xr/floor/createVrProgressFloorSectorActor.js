@@ -110,13 +110,35 @@ export function createVrProgressFloorSectorActor({ descriptor, sourceModel, cont
   const pulseRemaining = new Map();
   let acquisitionOverlay = null;
   let acquisitionOverlayMaterial = null;
+  let targetSurface = null;
+  let targetSurfaceMaterial = null;
   let asterionTargetAnchor = null;
   let presentationState = VR_PROGRESS_FLOOR_SECTOR_PRESENTATION_STATE.HIDDEN;
   let disposed = false;
 
   try {
     cloneMaterials(authoredVisual, ownedMaterials);
-    requireObject(authoredVisual, contract.referenceBaseName, descriptor).visible = false;
+    const referenceBase = requireObject(authoredVisual, contract.referenceBaseName, descriptor);
+    referenceBase.visible = false;
+    object.updateMatrixWorld(true);
+    const targetSurfaceMatrix = new THREE.Matrix4()
+      .copy(object.matrixWorld).invert().multiply(referenceBase.matrixWorld);
+    targetSurfaceMaterial = new THREE.MeshBasicMaterial({
+      transparent: true,
+      opacity: 0,
+      depthWrite: false,
+      colorWrite: false,
+      side: THREE.DoubleSide
+    });
+    ownedMaterials.add(targetSurfaceMaterial);
+    targetSurface = referenceBase.clone(true);
+    targetSurface.name = `VrAsterionSectorTargetSurface:${descriptor.glyphId}`;
+    targetSurfaceMatrix.decompose(targetSurface.position, targetSurface.quaternion, targetSurface.scale);
+    targetSurface.traverse((child) => {
+      child.visible = true;
+      if (child.isMesh) child.material = targetSurfaceMaterial;
+    });
+    object.add(targetSurface);
     const presentationBodies = contract.presentationBodyNames.map((name) => requireObject(authoredVisual, name, descriptor));
     presentationBodies.forEach((body) => body.traverse((child) => {
       if (!child.isMesh || !child.material) return;
@@ -286,6 +308,18 @@ export function createVrProgressFloorSectorActor({ descriptor, sourceModel, cont
       pulseRemaining.clear();
     }
 
+    function raycastAsterionTarget(raycaster) {
+      if (disposed || !raycaster?.intersectObject) return null;
+      const hit = raycaster.intersectObject(targetSurface, true)[0];
+      if (!hit) return null;
+      return {
+        glyphId: descriptor.glyphId,
+        branchId: descriptor.branchId,
+        distance: hit.distance,
+        point: hit.point.clone()
+      };
+    }
+
     return {
       object,
       reveal,
@@ -295,6 +329,7 @@ export function createVrProgressFloorSectorActor({ descriptor, sourceModel, cont
       resetMotion,
       reset,
       dispose,
+      raycastAsterionTarget,
       getMotionTransform: () => ({
         position: motionRoot.position.clone(),
         quaternion: motionRoot.quaternion.clone(),

@@ -10,7 +10,6 @@ export const VR_ASTERION_SECTOR_ACQUISITION_STATES = Object.freeze({
 export const SECTOR_LOCK_DWELL_SECONDS = 1.0;
 
 const ACTION_THRESHOLD = 0.1;
-const SECTOR_ROOT_PREFIX = 'VrProgressFloorSectorActorRoot:';
 
 export function createVrAsterionSectorAcquisitionInteraction({
   sphere,
@@ -43,16 +42,6 @@ export function createVrAsterionSectorAcquisitionInteraction({
     triggerPriority = false;
   }
 
-  function resolveSectorRoot(object) {
-    let current = object;
-    while (current && current !== progressFloor?.geometryRoot?.parent) {
-      if (current.name?.startsWith(SECTOR_ROOT_PREFIX)
-        && current.userData?.glyphId && current.userData?.branchId) return current;
-      current = current.parent;
-    }
-    return null;
-  }
-
   function findPoweredSector(leftRecord) {
     const targetRay = leftRecord?.controller;
     if (!targetRay || !Number.isFinite(leftRecord.currentRayLength) || leftRecord.currentRayLength <= 0) return null;
@@ -63,13 +52,11 @@ export function createVrAsterionSectorAcquisitionInteraction({
     raycaster.set(rayOrigin, rayDirection);
     raycaster.near = 0;
     raycaster.far = leftRecord.currentRayLength;
-    const hits = raycaster.intersectObject(progressFloor.geometryRoot, true);
-    for (const hit of hits) {
-      const sectorRoot = resolveSectorRoot(hit.object);
-      if (!sectorRoot) continue;
-      const runeStone = resolveRuneStoneByBranchId(sectorRoot.userData.branchId);
+    const hit = progressFloor.raycastAsterionSectorTarget(raycaster);
+    if (hit) {
+      const runeStone = resolveRuneStoneByBranchId(hit.branchId);
       if (runeStone && runeStoneProgressionController.isFamilyInstalled(runeStone.familyCode)) {
-        return { glyphId: sectorRoot.userData.glyphId };
+        return { glyphId: hit.glyphId };
       }
     }
     return null;
