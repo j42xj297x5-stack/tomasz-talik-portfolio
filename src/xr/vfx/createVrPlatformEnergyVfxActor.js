@@ -25,6 +25,7 @@ void main() { gl_FragColor = vec4(boltColor, boltOpacity); }
 `;
 
 function createBoltSlot(segments, settings) {
+  const fractalSegments = 2 ** Math.ceil(Math.log2(segments));
   const vertexCount = segments * 6;
   const position = new Float32Array(vertexCount * 3);
   const previous = new Float32Array(vertexCount * 3);
@@ -52,7 +53,11 @@ function createBoltSlot(segments, settings) {
   mesh.frustumCulled = false;
   mesh.visible = false;
   const points = Array.from({ length: segments + 1 }, () => new THREE.Vector3());
-  return { mesh, geometry, material, position, previous, next, side, points, active: false, age: 0, lifetime: 0, strength: 1 };
+  const fractalPoints = Array.from({ length: fractalSegments + 1 }, () => new THREE.Vector3());
+  return {
+    mesh, geometry, material, position, previous, next, side, points, fractalPoints, fractalSegments,
+    active: false, age: 0, lifetime: 0, strength: 1
+  };
 }
 
 function writeVertex(slot, vertexIndex, point, before, after, side) {
@@ -79,6 +84,38 @@ function updateRibbon(slot, segments) {
   }
   ['position', 'previous', 'next', 'side'].forEach((name) => { slot.geometry.getAttribute(name).needsUpdate = true; });
   slot.geometry.computeBoundingSphere();
+}
+
+function generateFractalPath(slot, segments, startPoint, endPoint, bounds, displacement, verticalJitter) {
+  const { fractalPoints, fractalSegments } = slot;
+  fractalPoints[0].copy(startPoint);
+  fractalPoints[fractalSegments].copy(endPoint);
+  let stride = fractalSegments;
+  let amplitude = displacement;
+  while (stride > 1) {
+    const halfStride = stride / 2;
+    for (let left = 0; left < fractalSegments; left += stride) {
+      const right = left + stride;
+      const midpoint = left + halfStride;
+      const point = fractalPoints[midpoint].copy(fractalPoints[left]).lerp(fractalPoints[right], 0.5);
+      const xMargin = Math.max(0, Math.min(point.x - bounds.min.x, bounds.max.x - point.x));
+      const yAmplitude = Math.min(verticalJitter, amplitude);
+      point.x += (Math.random() * 2 - 1) * Math.min(amplitude, xMargin * 0.9);
+      point.y += (Math.random() * 2 - 1) * yAmplitude;
+      point.z += (Math.random() * 2 - 1) * amplitude * 0.12;
+      point.x = THREE.MathUtils.clamp(point.x, bounds.min.x, bounds.max.x);
+      point.y = THREE.MathUtils.clamp(point.y, bounds.min.y, bounds.max.y);
+      point.z = THREE.MathUtils.clamp(point.z, startPoint.z, endPoint.z);
+    }
+    stride = halfStride;
+    amplitude *= 0.55;
+  }
+  for (let index = 0; index <= segments; index += 1) {
+    const fractalPosition = (index / segments) * fractalSegments;
+    const before = Math.floor(fractalPosition);
+    const after = Math.min(fractalSegments, before + 1);
+    slot.points[index].copy(fractalPoints[before]).lerp(fractalPoints[after], fractalPosition - before);
+  }
 }
 
 export function createVrPlatformEnergyVfxActor({ getSectorMount, getSectorBounds, runeBridgeActor, settings }) {
@@ -113,16 +150,13 @@ export function createVrPlatformEnergyVfxActor({ getSectorMount, getSectorBounds
     const endRadial = Math.min(radialMax, centerRadial + length * strength);
     const angle = (Math.random() * 2 - 1) * HALF_WEDGE_ANGLE;
     const surfaceY = bounds.max.y - config.underfloorOffsetMeters;
-    for (let index = 0; index <= segments; index += 1) {
-      const t = index / segments;
-      const radial = startRadial + (endRadial - startRadial) * t;
-      const taper = Math.sin(Math.PI * t);
-      slot.points[index].set(
-        THREE.MathUtils.clamp(Math.tan(angle) * radial, bounds.min.x, bounds.max.x) + (Math.random() * 2 - 1) * config.displacement * taper,
-        surfaceY + (Math.random() * 2 - 1) * config.verticalJitterMeters * taper,
-        radial + (Math.random() * 2 - 1) * config.displacement * taper
-      );
-    }
+    const startPoint = slot.points[0].set(
+      THREE.MathUtils.clamp(Math.tan(angle) * startRadial, bounds.min.x, bounds.max.x), surfaceY, startRadial
+    );
+    const endPoint = slot.points[segments].set(
+      THREE.MathUtils.clamp(Math.tan(angle) * endRadial, bounds.min.x, bounds.max.x), surfaceY, endRadial
+    );
+    generateFractalPath(slot, segments, startPoint, endPoint, bounds, config.displacement, config.verticalJitterMeters);
     updateRibbon(slot, segments);
     slot.active = true;
     slot.age = 0;

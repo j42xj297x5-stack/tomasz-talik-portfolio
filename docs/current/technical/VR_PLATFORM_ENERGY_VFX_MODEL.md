@@ -4,9 +4,9 @@ Status: **KANON / PARTIALLY IMPLEMENTED (R3b + R3c)**. Dokument opisuje wspóln�
 
 ## Stan implementacji R3b
 
-**IMPLEMENTED:** jeden shared pair-generic `PlatformEnergyVfxActor`, cienka projection obserwująca rzeczywiste live `HIDDEN → DOCKED`, bounded pool reusable ribbon geometry/materials, sector-local mounty i wedge sampling z defensive presentation bounds, profil `RUNE_BINDER_REVEAL`, presentation-only materialization Zwornika, pojedynczy final pulse oraz reset/dispose bez backflow do gameplay.
+**IMPLEMENTED:** jeden shared pair-generic `PlatformEnergyVfxActor`, cienka projection obserwująca rzeczywiste live `HIDDEN → DOCKED`, midpoint/fractal displacement z hierarchicznie malejącą amplitudą, bounded pool reusable ribbon geometry/materials, sector-local mounty i wedge sampling z defensive presentation bounds, profil `RUNE_BINDER_REVEAL`, presentation-only materialization Zwornika, pojedynczy final pulse oraz reset/dispose bez backflow do gameplay.
 
-**NOT IMPLEMENTED:** `RUNE_INSTALL`, `FLOOR_DRIVE`, detent sparks, motion/detent/reveal audio, grip beam i field lensing.
+**NOT IMPLEMENTED:** branch bolts, multilayer bolt, true bridge-endpoint targeting, gwarantowany retry final pulse przy wyczerpanym poolu, `RUNE_INSTALL`, `FLOOR_DRIVE`, detent sparks, motion/detent/reveal audio, grip beam i field lensing.
 
 ## Klasyfikacja ustaleń
 
@@ -62,7 +62,7 @@ platform underfloor procedural lightning
 
 ## Wspólny język proceduralny
 
-**KANON:** wszystkie trzy profile korzystają z tego samego generatora i zasobów aktora: krótkich, nieregularnych ścieżek, opcjonalnych odgałęzień, wielowarstwowego boltu, camera-facing ribbon, `ShaderMaterial`, additive blending oraz krótkiego reveal/fade. Różnią się wejściem i envelope prezentacyjnym, nie osobnymi systemami VFX.
+**KANON:** wszystkie trzy profile docelowo korzystają z tego samego generatora i zasobów aktora: krótkich, nieregularnych ścieżek, opcjonalnych odgałęzień, wielowarstwowego boltu, camera-facing ribbon, `ShaderMaterial`, additive blending oraz krótkiego reveal/fade. Obecny R3b implementuje pojedynczą pooled ribbon warstwę bez branchingu; profile mają różnić się wejściem i envelope prezentacyjnym, nie osobnymi systemami VFX.
 
 ### Profil `RUNE_BINDER_REVEAL`
 
