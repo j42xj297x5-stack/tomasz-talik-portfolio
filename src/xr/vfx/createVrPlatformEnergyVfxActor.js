@@ -87,22 +87,51 @@ function setWidthEnvelope(slot, segments, baseWidth) {
   }
 }
 
-function generateFractalPath(slot, segments, startPoint, endPoint, bounds, displacement, surfaceLift) {
+function generateFractalPath(slot, segments, startPoint, endPoint, bounds, config, amplitudeFactor, scratch) {
   const { fractalPoints, fractalSegments } = slot; fractalPoints[0].copy(startPoint); fractalPoints[fractalSegments].copy(endPoint);
-  let stride = fractalSegments; let amplitude = displacement;
+  const boltLength = startPoint.distanceTo(endPoint);
+  let stride = fractalSegments;
+  let amplitude = THREE.MathUtils.clamp(
+    boltLength * config.tortuosityFactor,
+    config.tortuosityMinMeters,
+    config.tortuosityMaxMeters
+  ) * amplitudeFactor;
+  let level = 0;
   while (stride > 1) {
     const halfStride = stride / 2;
     for (let left = 0; left < fractalSegments; left += stride) {
       const midpoint = left + halfStride;
-      const point = fractalPoints[midpoint].copy(fractalPoints[left]).lerp(fractalPoints[left + stride], 0.5);
-      point.x += (Math.random() * 2 - 1) * amplitude;
-      point.y += (Math.random() * 2 - 1) * Math.min(surfaceLift, amplitude);
-      point.z += (Math.random() * 2 - 1) * amplitude * 0.12;
+      const leftPoint = fractalPoints[left]; const rightPoint = fractalPoints[left + stride];
+      const point = fractalPoints[midpoint].copy(leftPoint).lerp(rightPoint, 0.5);
+      scratch.direction.copy(rightPoint).sub(leftPoint);
+      if (scratch.direction.lengthSq() > 1e-12) {
+        scratch.direction.normalize(); scratch.reference.set(0, 1, 0);
+        scratch.lateral.crossVectors(scratch.reference, scratch.direction);
+        if (scratch.lateral.lengthSq() < 1e-8) {
+          scratch.reference.set(Math.abs(scratch.direction.x) <= Math.abs(scratch.direction.z) ? 1 : 0, 0,
+            Math.abs(scratch.direction.x) <= Math.abs(scratch.direction.z) ? 0 : 1);
+          scratch.lateral.crossVectors(scratch.reference, scratch.direction);
+        }
+        scratch.lateral.normalize(); scratch.depth.crossVectors(scratch.direction, scratch.lateral).normalize();
+        const macro = level < 2;
+        const lateralMagnitude = macro
+          ? THREE.MathUtils.lerp(config.tortuosityMacroMinimumFraction, 1, Math.random())
+          : Math.random();
+        const lateralSign = Math.random() < 0.5 ? -1 : 1;
+        const depthMagnitude = macro
+          ? THREE.MathUtils.lerp(config.tortuosityMacroMinimumFraction, 1, Math.random())
+          : Math.random();
+        const depthSign = Math.random() < 0.5 ? -1 : 1;
+        point.addScaledVector(scratch.lateral, lateralSign * lateralMagnitude * amplitude);
+        point.addScaledVector(scratch.depth, depthSign * depthMagnitude * amplitude * config.tortuosityDepthFactor);
+      }
       point.x = THREE.MathUtils.clamp(point.x, bounds.min.x, bounds.max.x);
       point.y = THREE.MathUtils.clamp(point.y, bounds.min.y, bounds.max.y);
       point.z = THREE.MathUtils.clamp(point.z, bounds.min.z, bounds.max.z);
     }
-    stride = halfStride; amplitude *= 0.55;
+    stride = halfStride;
+    amplitude *= level < 1 ? config.tortuosityMacroDecay : config.tortuosityMicroDecay;
+    level += 1;
   }
   for (let index = 0; index <= segments; index += 1) {
     const position = (index / segments) * fractalSegments; const before = Math.floor(position);
@@ -127,12 +156,22 @@ export function createVrPlatformEnergyVfxActor({ getSectorMount, getSectorBounds
   config.branchLengthFactorMin = finiteOr(config.branchLengthFactorMin, 0.12);
   config.branchLengthFactorMax = Math.max(config.branchLengthFactorMin, finiteOr(config.branchLengthFactorMax, 0.32));
   config.surfaceLiftMeters = finiteOr(config.surfaceLiftMeters, 0.04);
+  config.tortuosityFactor = finiteOr(config.tortuosityFactor, 0.14);
+  config.tortuosityMinMeters = finiteOr(config.tortuosityMinMeters, 0.06);
+  config.tortuosityMaxMeters = Math.max(config.tortuosityMinMeters, finiteOr(config.tortuosityMaxMeters, 0.32));
+  config.tortuosityDepthFactor = finiteOr(config.tortuosityDepthFactor, 0.35);
+  config.tortuosityMacroDecay = finiteOr(config.tortuosityMacroDecay, 0.58);
+  config.tortuosityMicroDecay = finiteOr(config.tortuosityMicroDecay, 0.42);
+  config.tortuosityMacroMinimumFraction = finiteOr(config.tortuosityMacroMinimumFraction, 0.35);
   config.coreWidthFactor = finiteOr(config.coreWidthFactor, 0.28);
   config.haloOpacityFactor = finiteOr(config.haloOpacityFactor, 0.45);
   const segments = Math.max(4, Math.floor(config.segmentsPerBolt));
   const revealProfiles = new Map(); const acquisitionProfiles = new Map(); const driveProfiles = new Map();
   const pool = Array.from({ length: Math.max(1, Math.floor(config.maxActiveBolts)) }, () => createBoltSlot(segments, config));
   const tangent = new THREE.Vector3(); const branchDirection = new THREE.Vector3(); const worldTarget = new THREE.Vector3();
+  const pathScratch = {
+    direction: new THREE.Vector3(), lateral: new THREE.Vector3(), depth: new THREE.Vector3(), reference: new THREE.Vector3()
+  };
   let disposed = false;
   function release(slot) { slot.active = false; slot.mesh.visible = false; slot.mesh.removeFromParent(); }
   function acquireSlot() { return pool.find((candidate) => !candidate.active); }
@@ -170,7 +209,7 @@ export function createVrPlatformEnergyVfxActor({ getSectorMount, getSectorBounds
       const endPoint = branchSlot.points[segments].copy(startPoint).addScaledVector(branchDirection, branchLength);
       branchSlot.envelope.copy(profile.bounds); branchSlot.envelope.min.y -= config.surfaceLiftMeters; branchSlot.envelope.max.y += config.surfaceLiftMeters;
       branchSlot.envelope.expandByPoint(startPoint).expandByPoint(endPoint);
-      generateFractalPath(branchSlot, segments, startPoint, endPoint, branchSlot.envelope, config.displacement * 0.45, config.surfaceLiftMeters);
+      generateFractalPath(branchSlot, segments, startPoint, endPoint, branchSlot.envelope, config, 0.45, pathScratch);
       activate(branchSlot, profile, strength, config.branchWidthFactor * randomBetween(config.widthVariationMin, config.widthVariationMax), config.branchBrightnessFactor * randomBetween(config.brightnessVariationMin, config.brightnessVariationMax), randomBetween(0.55, 0.75));
     }
   }
@@ -196,8 +235,8 @@ export function createVrPlatformEnergyVfxActor({ getSectorMount, getSectorBounds
         if (kind === 'ACQUISITION') endPoint.lerp(startPoint, 0.45);
       }
     }
-    const displacementVariation = randomBetween(0.85, 1.15);
-    generateFractalPath(slot, segments, startPoint, endPoint, slot.envelope, config.displacement * displacementVariation, config.surfaceLiftMeters);
+    const tortuosityVariation = randomBetween(0.85, 1.15);
+    generateFractalPath(slot, segments, startPoint, endPoint, slot.envelope, config, tortuosityVariation, pathScratch);
     const widthVariation = randomBetween(config.widthVariationMin, config.widthVariationMax);
     const brightnessVariation = randomBetween(config.brightnessVariationMin, config.brightnessVariationMax);
     const lifetimeVariation = randomBetween(config.lifetimeVariationMin, config.lifetimeVariationMax);

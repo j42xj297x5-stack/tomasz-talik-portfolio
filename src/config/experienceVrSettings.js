@@ -226,7 +226,10 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
     acquisitionSpawnIntervalStartSeconds: 0.22, acquisitionSpawnIntervalEndSeconds: 0.07,
     acquisitionStrengthMin: 0.35, acquisitionStrengthMax: 0.8,
     driveSpawnIntervalSeconds: 0.055, driveBinderBoltChance: 0.3, driveStrength: 1,
-    boltWidth: 0.018, displacement: 0.09, opacity: 0.72, color: 0xdff8ff,
+    boltWidth: 0.018, opacity: 0.72, color: 0xdff8ff,
+    tortuosityFactor: 0.14, tortuosityMinMeters: 0.06, tortuosityMaxMeters: 0.32,
+    tortuosityDepthFactor: 0.35, tortuosityMacroDecay: 0.58, tortuosityMicroDecay: 0.42,
+    tortuosityMacroMinimumFraction: 0.35,
     widthVariationMin: 0.75, widthVariationMax: 1.35,
     brightnessVariationMin: 0.85, brightnessVariationMax: 1.15,
     lifetimeVariationMin: 0.85, lifetimeVariationMax: 1.2,
@@ -399,6 +402,8 @@ export function normalizeExperienceVrSettings(candidate) {
     defaults.platformEnergyVfx.lifetimeVariationMin, { min: 0.1, max: 3 });
   const platformEnergyBranchLengthFactorMin = finiteNumber(candidate.platformEnergyVfx?.branchLengthFactorMin,
     defaults.platformEnergyVfx.branchLengthFactorMin, { min: 0.01, max: 1 });
+  const platformEnergyTortuosityMin = finiteNumber(candidate.platformEnergyVfx?.tortuosityMinMeters,
+    defaults.platformEnergyVfx.tortuosityMinMeters, { min: 0.01, max: 0.5 });
   const legacyGestureEngageDegrees = candidate.asterionSectorControl?.gestureEngageDegrees;
   const sideGestureEngageDegrees = finiteNumber(
     candidate.asterionSectorControl?.sideGestureEngageDegrees ?? legacyGestureEngageDegrees,
@@ -787,7 +792,19 @@ export function normalizeExperienceVrSettings(candidate) {
       driveBinderBoltChance: finiteNumber(candidate.platformEnergyVfx?.driveBinderBoltChance, defaults.platformEnergyVfx.driveBinderBoltChance, { min: 0, max: 1 }),
       driveStrength: finiteNumber(candidate.platformEnergyVfx?.driveStrength, defaults.platformEnergyVfx.driveStrength, { min: 0, max: 2 }),
       boltWidth: finiteNumber(candidate.platformEnergyVfx?.boltWidth, defaults.platformEnergyVfx.boltWidth, { min: 0.002, max: 0.1 }),
-      displacement: finiteNumber(candidate.platformEnergyVfx?.displacement, defaults.platformEnergyVfx.displacement, { min: 0, max: 0.5 }),
+      tortuosityFactor: finiteNumber(candidate.platformEnergyVfx?.tortuosityFactor,
+        defaults.platformEnergyVfx.tortuosityFactor, { min: 0.02, max: 0.5 }),
+      tortuosityMinMeters: platformEnergyTortuosityMin,
+      tortuosityMaxMeters: finiteNumber(candidate.platformEnergyVfx?.tortuosityMaxMeters,
+        defaults.platformEnergyVfx.tortuosityMaxMeters, { min: platformEnergyTortuosityMin, max: 1 }),
+      tortuosityDepthFactor: finiteNumber(candidate.platformEnergyVfx?.tortuosityDepthFactor,
+        defaults.platformEnergyVfx.tortuosityDepthFactor, { min: 0, max: 1 }),
+      tortuosityMacroDecay: finiteNumber(candidate.platformEnergyVfx?.tortuosityMacroDecay,
+        defaults.platformEnergyVfx.tortuosityMacroDecay, { min: 0.2, max: 0.9 }),
+      tortuosityMicroDecay: finiteNumber(candidate.platformEnergyVfx?.tortuosityMicroDecay,
+        defaults.platformEnergyVfx.tortuosityMicroDecay, { min: 0.1, max: 0.8 }),
+      tortuosityMacroMinimumFraction: finiteNumber(candidate.platformEnergyVfx?.tortuosityMacroMinimumFraction,
+        defaults.platformEnergyVfx.tortuosityMacroMinimumFraction, { min: 0, max: 0.8 }),
       opacity: finiteNumber(candidate.platformEnergyVfx?.opacity, defaults.platformEnergyVfx.opacity, { min: 0, max: 1 }),
       color: Math.round(finiteNumber(candidate.platformEnergyVfx?.color, defaults.platformEnergyVfx.color, { min: 0, max: 0xffffff })),
       widthVariationMin: platformEnergyWidthVariationMin,
