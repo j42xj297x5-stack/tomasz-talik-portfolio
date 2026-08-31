@@ -134,3 +134,12 @@ Dokładna sygnatura JavaScript pozostaje otwarta. Publiczna powierzchnia ma jedn
 
 
 Pole Rezonatora ma odrębny język prezentacyjny inspirowany soczewkowaniem grawitacyjnym — rozjaśnienie, powiększenie, zakrzywienie, caustic-like arcs i deformację obrazu — zamrożony w [`VR_ASTERION_RESONATOR_FIELD_MODEL.md`](VR_ASTERION_RESONATOR_FIELD_MODEL.md). Field lensing presentation może otrzymywać read-only wynik Resonator Field Domain, lecz nie należy do `PlatformEnergyVfxActor`; dokładna nazwa klasy/API i podział projection/actor pozostają otwarte. `PlatformEnergyVfxActor` nie wyprowadza descriptoru, nie interpretuje `α/β/γ` jako gameplay truth i nie posiada target response. Nie wolno łączyć platform energy VFX, field, lensing i motion w jeden megasystem.
+
+
+## Asterion energy profiles — IMPLEMENTED
+
+The one shared bounded ribbon pool and midpoint/fractal generator now serve three presentation-transient semantics: `RUNE_BINDER_REVEAL`, `SECTOR_ACQUISITION`, and `FLOOR_DRIVE`. Acquisition reads the existing 1.0 s progress and increases a conservative shallow sector-local arc rate and strength; leaving `ACQUIRING`, including transition to `LOCKED`, stops new acquisition spawns while existing bolts expire naturally.
+
+A thin read-only Asterion projection resolves glyphs through Progress Floor and detects physical drive solely from same-frame changes in `currentAngleDegrees` (epsilon `1e-4°`) plus the moving glyph. Consequently stale `DRIVING` during trigger suppression produces no energy, while real `SETTLING` motion does. Drive bolts sample the full sector wedge; a bounded fraction feeds the authored `BRIDGE_STONE_CAPTURE`. Rune Bridge returns its defensive world position from inside the scaled/offset presentation subtree, and the actor converts it with `mount.worldToLocal`; the feed envelope is the union of sector bounds and explicit endpoints, so downward MotionRoot hinges and the true endpoint remain intact. Missing endpoints fail soft to surface bolts.
+
+Still not implemented: `RUNE_INSTALL`, detent sparks, motion/detent audio, branch bolts, multilayer bolts, Field/lensing, target response, and Metal/Water motion. Hardware/perceptual QA has not been performed.

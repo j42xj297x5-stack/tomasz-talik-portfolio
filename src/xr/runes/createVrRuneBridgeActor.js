@@ -144,6 +144,7 @@ export function createVrRuneBridgeActor({ assetManager, getSectorMount, extensio
         stoneAnchor,
         hoverAnchor,
         presentationRoot,
+        energyTarget: nodes.BRIDGE_STONE_CAPTURE,
         revealMaterials,
         extensionDistance,
         extensionElapsed: 0,
@@ -276,6 +277,12 @@ export function createVrRuneBridgeActor({ assetManager, getSectorMount, extensio
     setInstalled,
     restoreInstalled,
     setRevealPresentationProgress,
+    getEnergyTargetWorldPosition: (branchId) => {
+      const target = getInstance(branchId)?.energyTarget;
+      if (disposed || !target) return null;
+      target.updateWorldMatrix(true, false);
+      return target.getWorldPosition(new THREE.Vector3());
+    },
     getStoneAnchor: (branchId) => getInstance(branchId)?.stoneAnchor ?? null,
     getStoneHoverAnchor: (branchId) => getInstance(branchId)?.hoverAnchor ?? null,
     getBridgeRoot: (branchId) => getInstance(branchId)?.bridgeRoot ?? null,

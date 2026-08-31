@@ -135,3 +135,8 @@ The bounded read-only level/angle snapshot and exactly-once semantic `DETENT_COM
 The reusable additive WebXR ribbon starts along the live Sphere-to-target direction, is narrow at the Sphere and wider at the sector, follows a quadratic arc based on the tiltable platform's current world normal, and mixes an energetic white core with a restrained spectral hue. Its endpoint is the canonical panel-3 bounds-center anchor, not the ray hit point. Acquisition glow grows and pulses with the existing one-second dwell; LOCKED retains a settled glow. Reset/dispose clear the beam and sector glow, and dispose releases only owned presentation resources.
 
 Still **NOT IMPLEMENTED**: acquisition lightning/sparks, `FLOOR_DRIVE` lightning, drive/detent audio, `RUNE_INSTALL` VFX/audio, field/lensing presentation and target response.
+
+
+## Platform energy extension — IMPLEMENTED
+
+A presentation-only projection now adds existing-progress `SECTOR_ACQUISITION` lightning and actual-angle-change `FLOOR_DRIVE` lightning without changing acquisition, R2B, Field, or progression truth. Acquisition stops at `LOCKED`; stationary `DRIVING`/`DETENT_HOLD` produces no drive energy, while physically changing `SETTLING` angles do. The single shared bounded pool emits sector surface bolts and fail-soft Binder feeds to the authored `BRIDGE_STONE_CAPTURE` inside the scaled, radially offset bridge presentation subtree. World-to-sector-local conversion preserves the true endpoint through the same downward MotionRoot hinge inheritance. `RUNE_INSTALL`, detent sparks, motion/detent audio, branch/multilayer bolts, Field/lensing, target response, and Metal/Water motion remain not implemented. Hardware QA remains outstanding.
