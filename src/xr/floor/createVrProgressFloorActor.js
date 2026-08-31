@@ -108,6 +108,15 @@ export function createVrProgressFloorActor({ parent, sourceModels, emission = {}
     getSectorMotionBounds(glyphId) { return !disposed ? sectorsByGlyphId.get(glyphId)?.getMotionBounds() ?? null : null; },
     getSectorControlFrame(glyphId) { return !disposed ? sectorsByGlyphId.get(glyphId)?.getControlFrame() ?? null : null; },
     getAsterionSectorTargetWorldPosition(glyphId) { return !disposed ? sectorsByGlyphId.get(glyphId)?.getAsterionTargetWorldPosition() ?? null : null; },
+    raycastAsterionSectorTarget(raycaster) {
+      if (disposed) return null;
+      let nearest = null;
+      sectorsByGlyphId.forEach((sector) => {
+        const hit = sector.raycastAsterionTarget(raycaster);
+        if (hit && (!nearest || hit.distance < nearest.distance)) nearest = hit;
+      });
+      return nearest ? { ...nearest, point: nearest.point.clone() } : null;
+    },
     setAsterionSectorAcquisitionGlow(glyphId, strength) { return !disposed && (sectorsByGlyphId.get(glyphId)?.setAsterionAcquisitionGlow(strength) ?? false); },
     getPlatformWorldNormal() {
       if (disposed) return null;
