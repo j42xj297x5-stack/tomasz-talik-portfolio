@@ -2,13 +2,13 @@
 
 ## 1. Status i authority
 
-Status: **CURRENT TARGET / PARTIALLY IMPLEMENTED**.
+Status: **CANONICAL CURRENT MODEL / R2A + R2B + R4 CORE IMPLEMENTED**.
 
 Runtime R2A implements powered-sector acquisition and transient `SECTOR LOCK`; R2B implements controller-driven EARTH/WOOD/FIRE motion and committed `0/1/2/3` detents. R4 implements the event-driven Resonator Field Actor: derived `resonatorExists`, immutable runtime `α/β/γ` descriptor, POWERED/FIELD-ACTIVE and partial/full/symmetric/asymmetric coarse-field semantics with bounded read-only queries and exactly-on-change subscriptions.
 
-Target selection/scoring and response, field/lensing presentation, grip beam, field audio and METAL/WATER contribution remain not implemented.
+The volumetric sector acquisition beam and bounded Platform Energy extension are implemented. Target selection/scoring and response beyond current acquisition, Field/lensing presentation, Field audio, METAL/WATER contribution and the later finale remain future.
 
-Ten dokument jest nadrzędnym aktualnym technicznym modelem Rezonatora Asterionowego. Zamraża granice sandboxu, Scenario, Guidance, Zworników Runicznych, lokalnego sterowania sektorami i odpowiedzi Rezonatora. Wyspecjalizowany [`VR_ASTERION_RESONATOR_FIELD_MODEL.md`](VR_ASTERION_RESONATOR_FIELD_MODEL.md) jest jego podporządkowanym CURRENT sub-modelem pola; nie stanowi alternatywnego kanonu. Dokumenty nie definiują finalnego API ani nazw nowych aktorów sector-control.
+This document is the primary CURRENT technical model of the Asterion Resonator. It freezes the sandbox, Scenario, Guidance, Rune Binder, implemented local sector-control and implemented Field-domain boundaries. The specialized [`VR_ASTERION_RESONATOR_FIELD_MODEL.md`](VR_ASTERION_RESONATOR_FIELD_MODEL.md) is its subordinate CURRENT Field sub-model, not an alternative canon. API and actor naming remain open only for genuinely future target-response, Field/lensing presentation, audio, METAL/WATER and finale work; implemented R2A/R2B/R4 and presentation seams are established runtime contracts.
 
 Model koncepcyjny przebiegu pozostaje w [`EXPERIENCE_VR_RUNES_RESONATOR_FINALE.md`](../concept/EXPERIENCE_VR_RUNES_RESONATOR_FINALE.md). Model Rune Stones posiada tuning, transport, instalację i persistent Rune truth. Model progress floor posiada panel/sector completeness i globalny transform platformy. Ten dokument posiada techniczny kontrakt współpracy zasilonych sektorów i Rezonatora.
 
@@ -128,7 +128,7 @@ R2A powered-sector acquisition, one-second transient SECTOR LOCK and trigger-pri
 
 Gesture input is independent from physical hinge geometry and is measured from the controller neutral captured in the stable sector-local control frame. EARTH/WOOD read left/right hand roll around sector-local `+Z` and engage at `±45°`, while retaining their physical outer-edge hinge axes at `+36°/-36°`. FIRE reads pitch around sector-local `+X` with inverted input sign: HAND DOWN produces positive intent, increases the level and lowers the sector; HAND UP produces negative intent and returns it toward LEVEL 0. FIRE engages at `±30°`. All three channels release inside the shared `10°` hysteresis threshold; gesture magnitude selects only `-1/0/+1` intent and never changes the constant motor speed or the `0°/13°/23°/36°` detents.
 
-The bounded read-only level/angle snapshot and exactly-once semantic `DETENT_COMMITTED` subscription seam are implemented. Spark VFX, grip-beam presentation, detent/motion audio, Target selection/scoring and response, field/lensing presentation, grip beam, field audio and METAL/WATER motion or field contribution are not implemented. R4's Field Actor and immutable analytic descriptor runtime are implemented from installed Rune truth and R2B committed levels; transient angles do not contribute.
+The bounded read-only level/angle snapshot and exactly-once semantic `DETENT_COMMITTED` subscription seam are implemented. The sector acquisition beam is implemented as described below. Spark VFX, detent/motion audio, target selection/scoring and response beyond current acquisition, Field/lensing presentation, Field audio and METAL/WATER motion or Field contribution are not implemented. R4's Field Actor and immutable analytic descriptor runtime are implemented from installed Rune truth and R2B committed levels; transient angles do not contribute.
 
 ## R2A acquisition presentation — IMPLEMENTED
 

@@ -29,7 +29,7 @@ The entry shell exposes three modes: Classic 2D, Experience 3D, and capability-g
 | Classic 2D | [`technical/ENTRY_FLOW_AND_MODES_MODEL.md`](../technical/ENTRY_FLOW_AND_MODES_MODEL.md) | `src/classic2d.js`, `src/content/portfolioNodes.js` |
 | Audio | [`technical/AUDIO_RUNTIME_MODEL.md`](../technical/AUDIO_RUNTIME_MODEL.md) | `src/audio/audioManager.js`, `src/main.js` |
 | Assets and deployment | [`technical/DEPLOYMENT_MODEL.md`](../technical/DEPLOYMENT_MODEL.md) | `src/assets/assetManifest.js`, `src/assets/assetManager.js`, `src/utils/publicPath.js` |
-| Documentation synchronization | affected canonical model, [`maps/DEPENDENCY_MAP.md`](DEPENDENCY_MAP.md), [`decisions/DECISION_LOG.md`](../decisions/DECISION_LOG.md) | only code needed to prove the contract |
+| Documentation synchronization | affected canonical model, [`maps/DEPENDENCY_MAP.md`](DEPENDENCY_MAP.md), [`decisions/DECISION_LOG.md`](../decisions/DECISION_LOG.md); include the CURRENT handoff and collaboration/process contract only when the affected slice changes operational handoff or process truth | only code needed to prove the contract |
 
 ## Canonical navigation
 
@@ -46,8 +46,8 @@ The entry shell exposes three modes: Classic 2D, Experience 3D, and capability-g
 - [`technical/VR_PROTO_ASTRO_MODEL.md`](../technical/VR_PROTO_ASTRO_MODEL.md) — canonical identity, tuning, small-glyph transport, Astro bands and Furnace essence contract.
 - [`technical/VR_SPHERICAL_LAYERS_MODEL.md`](../technical/VR_SPHERICAL_LAYERS_MODEL.md) — canonical world-stable concentric volume layers, deterministic slots, ranges and ownership.
 - [`technical/VR_RUNE_STONES_MODEL.md`](../technical/VR_RUNE_STONES_MODEL.md) — canonical model and implementation boundary for the complete A9 foundation of the five-pair natural Rune domain, including tuning, targetability, transport, readiness, installation and reconstruction.
-- [`technical/VR_PLATFORM_ENERGY_VFX_MODEL.md`](../technical/VR_PLATFORM_ENERGY_VFX_MODEL.md) — canonical target contract for the shared, read-only platform energy VFX presentation used by Rune installation and Asterion drive.
-- [`technical/VR_ASTERION_RESONATOR_MODEL.md`](../technical/VR_ASTERION_RESONATOR_MODEL.md) — canonical CURRENT TARGET for sandbox/Scenario ownership, Zworniki, sector control and the Asterion Resonator; the historical antenna model is legacy only.
+- [`technical/VR_PLATFORM_ENERGY_VFX_MODEL.md`](../technical/VR_PLATFORM_ENERGY_VFX_MODEL.md) — canonical CURRENT, partially implemented contract for the shared read-only platform-energy presentation; Binder reveal, sector acquisition and local-sector drive are implemented, while Rune installation remains future.
+- [`technical/VR_ASTERION_RESONATOR_MODEL.md`](../technical/VR_ASTERION_RESONATOR_MODEL.md) — canonical CURRENT model for sandbox/Scenario ownership, Zworniki, the implemented R2A/R2B/R4 Resonator core and acquisition presentation, with explicit future response, presentation and finale boundaries; the historical antenna model is legacy only.
 - [`technical/VR_ASTERION_RESONATOR_FIELD_MODEL.md`](../technical/VR_ASTERION_RESONATOR_FIELD_MODEL.md) — subordinate CURRENT field sub-model for EARTH/WOOD/FIRE DOF, 27 configurations, 9 symmetric presets, analytic descriptor, Metal/Water expansion and lensing-inspired visual language.
 - [`concept/EXPERIENCE_VR_RUNES_RESONATOR_FINALE.md`](../concept/EXPERIENCE_VR_RUNES_RESONATOR_FINALE.md) — current working canon for Rune Stones, sector control, the Asterion Resonator, final glyph hunt and world-dissolution finale; supersedes the earlier full-antenna flow.
 - [`technical/VR_SCENARIO_POINT_AUTHORING_STANDARD.md`](../technical/VR_SCENARIO_POINT_AUTHORING_STANDARD.md) — wiążący standard konstrukcji i walidacji każdego nowego canonical Experience VR Scenario pointu; czytać przed modelem Scenario/Director.

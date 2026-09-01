@@ -14,100 +14,73 @@ Status: **KANON / PARTIALLY IMPLEMENTED (R3b + R3c + Asterion energy profiles an
 - **FACT** — istniejący stan runtime, na którym model polega i którego VFX nie może zastąpić.
 - **TUNING** — parametr prezentacyjny wymagający osobnej decyzji i testów; nie jest prawem architektonicznym.
 
-## Ownership i granica systemu
+## Current ownership and source flows
 
-**KANON / IMPLEMENTED FOUNDATION:** fizycznym ownerem prezentacji jest jeden pair-generic actor `PlatformEnergyVfxActor` w `src/xr/vfx/createVrPlatformEnergyVfxActor.js`.
+One pair-generic `PlatformEnergyVfxActor` is the implemented owner of reusable platform-energy presentation resources. Thin projections read existing owner state and issue bounded presentation commands. Actor and projections never write progression, Rune installation truth, acquisition truth, sector levels, physical motion or Resonator Field truth.
 
-**KANON:** dopuszczalny jest cienki `PlatformEnergyVfxProjection`. Wyłącznie odczytuje sector-complete, istniejące read-only stany instalacji Rune i Asterion gyro, normalizuje je do komend prezentacyjnych i przekazuje aktorowi. Projection ani actor nie zapisują gameplay truth, nie rozstrzygają readiness, nie instalują kamienia i nie sterują platformą. Przepływ jest jednokierunkowy:
-
-```text
-RuneStoneInstallationInteraction
-        ↓ read-only transient state
-PlatformEnergyVfxProjection
-        ↓ presentation command
-PlatformEnergyVfxActor
-        ↓
-sector-local procedural lightning
-```
+Implemented flows are:
 
 ```text
-AsterionGyroInteraction
-        ↓ driveActive / angular speed / lock state
-PlatformEnergyVfxProjection
-        ↓ presentation command
-PlatformEnergyVfxActor
-        ↓
-platform underfloor procedural lightning
+sector-complete readiness transition → RUNE_BINDER_REVEAL ─┐
+R2A ACQUIRING state + progress       → SECTOR_ACQUISITION ─┼→ read-only projections → PlatformEnergyVfxActor → sector-local ribbon bolts
+R2B same-frame physical angle change → FLOOR_DRIVE ────────┘
 ```
 
-**KANON:** nie istnieje strzałka zwrotna od VFX do ownerów gameplay. VFX jest odtwarzalną, resetowalną projekcją i nie jest właścicielem progresji, Rune tuning, installation readiness, transient Rune lifecycle, persistent installed truth, komendy ruchu ani modelu ruchu platformy.
+`RUNE_INSTALL` is a separate future profile. Its intended source is read-only Rune installation transient state, but no current projection or actor API implements that profile. The CURRENT `FLOOR_DRIVE` source is local EARTH/WOOD/FIRE physical angle change, not the old global Asterion Gyro `driveActive` / angular-speed / lock contract. This current ownership does not prohibit a separately designed global-drive energy concept in the future.
 
-## Istniejące źródła prawdy
+### Implemented source truth
 
-- **FACT:** `RuneStoneInstallationInteraction` prowadzi transient capture właściwego `branchId`; Rune Stone przechodzi przez `SOCKET_CAPTURE`, a ukończony snap kończy się stanem `INSTALLED` i dopiero istniejąca transakcja commituję persistent installed truth. VFX obserwuje ten proces, nie tworzy równoległego lifecycle.
-- **FACT:** aktywny capture udostępnia elapsed/duration przez istniejący transient record. Projection może z niego wyprowadzić read-only znormalizowany postęp prezentacyjny; nie utrwala go.
-- **FACT:** `AsterionGyroInteraction` posiada `driveActive`, rzeczywistą prędkość kątową i stan, w tym `LOCKED`; zapisuje rzeczywistą quaternion `VrTiltableFloorRoot`. VFX jedynie projektuje te dane i nie integruje własnego modelu ruchu.
-- **FACT:** `VrTiltableFloorRoot` jest wspólnym transform rootem platformy. Pięć sektorów zachowuje układ pięciu wycinków po 72°.
-- **FACT / IMPLEMENTED:** live successful sector-completing page commit zwraca rzeczywiste readiness transitions. Niezależne VFX i audio projections konsumują tę samą immutable listę: VFX deduplikuje `HIDDEN → DOCKED` i rozpoczyna `RUNE_BINDER_REVEAL`, a audio równolegle rozpoczyna odpowiadający WORLD one-shot bez uzależnienia od sukcesu aktora VFX. Hydration nadal odtwarza settled `DOCKED`/`BOUND` bez replayu VFX lub audio. Audio ownership i mapping pozostają w [`VR_AUDIO_MODEL.md`](VR_AUDIO_MODEL.md), nie w `PlatformEnergyVfxActor`.
+- `RUNE_BINDER_REVEAL` consumes live successful sector-complete readiness transitions. Hydration restores settled `DOCKED`/`BOUND` state without replaying VFX or audio.
+- `SECTOR_ACQUISITION` consumes only the existing R2A `ACQUIRING` state and normalized acquisition progress. Leaving `ACQUIRING`, including transition to `LOCKED`, stops new acquisition spawns.
+- `FLOOR_DRIVE` requires the moving glyph plus an actual same-frame change in `currentAngleDegrees`. Stationary `DRIVING` or `DETENT_HOLD` labels do not produce energy, while physically changing `SETTLING` angles do.
+- Binder feeds query the live Rune Bridge presentation endpoint. When it is available, world-to-sector-local conversion preserves the true moving endpoint; when unavailable, the actor fails soft to a sector-surface bolt.
+- `VrTiltableFloorRoot` remains the common global platform transform. Sector-local mounts and bounds make effects inherit global and local MotionRoot transforms without magic world offsets.
 
-## Kontrakt przestrzenny
+### Spatial and rendering contract
 
-**KANON:** każdy sektor posiada logiczną, niewidzialną `sector energy wedge` pod swoją powierzchnią. Jest to sector-local objętość odpowiadająca wycinkowi 72°, używana wyłącznie do losowania punktów początku i końca łuków. Nie jest colliderem, triggerem ani źródłem gameplay truth.
+Each sector provides a bounded, invisible sector-local energy region used only to sample bolt endpoints. It is not a collider, trigger or gameplay source. Platform Energy bolts are shader-expanded screen-facing ribbons with longitudinal variable width and a combined near-white narrow core plus softer additive halo in one shader/material. They are distinct from the sector acquisition beam, which is a separate true volumetric tapered tube.
 
-**KANON:** efekty sektorowe są osadzane w lokalnym układzie właściwego sektora lub mountu pod `VrTiltableFloorRoot`, dzięki czemu dziedziczą pełną transformację platformy. Punkty między sąsiednimi sektorami są rozwiązywane z ich lokalnych stref i wspólnego platform-local frame. Magiczne globalne world offsety są zabronione.
+The shared stochastic, leader-inspired / physics-inspired generator creates angular, unsmoothed paths in stable bolt-local perpendicular frames. Macro tortuosity scales from bolt length and smaller hierarchical bends provide micro structure with bounded shallow depth. Spawn-time path and variation sampling uses `Math.random()`; per-frame flicker is deterministic from stored seed and age. This is presentation, not an electromagnetic simulation.
 
-**KANON:** łuki przebiegają przede wszystkim pod ażurową podłogą i mają być widoczne przez jej otwory. Nie przedstawiają piorunów spadających z nieba.
+Branches are implemented and bounded. Origins are curvature-biased from final rendered main-path points, with a legal internal-point fallback for practically straight paths. One-generation branches depart forward from the local parent tangent in a stable bolt-local perpendicular frame, use reduced leader tortuosity and never create branches of branches. Reveal, `FLOOR_DRIVE` and Binder feeds allow `0..3`; acquisition is strength-scaled and capped at one. A saturated shared pool may omit a branch without cancelling its main bolt. Independent multilayer bolt shells are future and not implemented.
 
-**TUNING:** radial range, pionowy offset pod powierzchnią, grubość wedge, marginesy i dokładny rozkład losowania pozostają nieustalone. Żadna wartość w metrach nie jest częścią tego kontraktu.
+### Profiles
 
-## Wspólny język proceduralny
+#### `RUNE_BINDER_REVEAL` — implemented
 
-**KANON / IMPLEMENTED:** aktywne profile korzystają z tego samego generatora i zasobów aktora: krótkich midpoint/fractal paths, longitudinal width envelope, bounded variation, płytkiego local-normal lift, opcjonalnych jednopoziomowych odnóg, camera-facing ribbon, `ShaderMaterial`, additive core + halo oraz krótkiego reveal/fade. Każda odnoga zaczyna się dokładnie w wybranym według curvature finalnej renderowanej ścieżki punkcie wewnętrznym, zachowuje forward momentum lokalnego parent tangenta i odchodzi w bolt-local frame pod konfigurowalnym kątem około `25–55°`. Ma około `18–42%` długości main channel, jest cieńsza i ciemniejsza, używa tego samego leader-inspired generatora z obniżoną tortuosity i nie tworzy branch-of-branch. Profile różnią się strength/spawn envelope, nie rendererem ani generatorem.
+Sector completion materializes the persistent Rune Binder independently of Rune installation. The profile carries sector-local energy toward the live Binder presentation endpoint and drives reveal progress without creating readiness or persistent truth. A final reveal pulse may be omitted if the pool is saturated; retry is not guaranteed.
 
-### Profil `RUNE_BINDER_REVEAL`
+#### `SECTOR_ACQUISITION` — implemented
 
-- **KANON:** źródłem zdarzenia jest ukończenie wszystkich paneli sektora (`sector complete`), nigdy Rune socket capture ani instalacja kamienia.
-- **KANON:** wyładowania biegną przez niewidoczną sector-local część pod ażurową podłogą, energia dochodzi do rejonu Zwornika, Zwornik materializuje się, następuje finalny impuls, a efekt wygasa.
-- **KANON:** profil prezentuje domenowy fakt ukończenia sektora i nie tworzy sector-complete, Zwornika ani installation readiness.
-- **TUNING:** czas dojścia energii, reveal geometry, natężenie i envelope finalnego impulsu.
+Acquisition progress controls a conservative sector-local spawn rate and strength. The profile owns presentation only and stops spawning at `LOCKED`; it does not acquire, power or lock a sector.
 
-### Profil `RUNE_INSTALL`
+#### `FLOOR_DRIVE` — implemented
 
-- **KANON:** działa tylko dla `branchId`, którego istniejący stan to aktywny `SOCKET_CAPTURE`.
-- **KANON:** krótkie łuki powstają wewnątrz właściwego `sector energy wedge`; część może łączyć rejon podłogi z lokalnym rejonem bridge/socket.
-- **KANON:** przejście do `INSTALLED` uruchamia jeden krótki, mocniejszy finalny impuls, po którym efekt instalacyjny gaśnie.
-- **KANON:** semantyka brzmi „obwód jest domykany”, nie „podłoga zostaje uszkodzona”.
-- **TUNING:** zależność frequency/intensity od postępu capture, długość, udział połączeń do socketu i envelope finalnego impulsu.
+Actual same-frame local sector angle changes drive sector-local arcs. A bounded fraction may feed the live Binder endpoint. The profile does not infer motion from stale phase names and does not integrate or command sector motion.
 
-### Profil `FLOOR_DRIVE`
+#### `RUNE_INSTALL` — future / not implemented
 
-- **KANON:** reaguje na rzeczywisty `driveActive`, rzeczywistą prędkość kątową i stan lock przekazane read-only z gyro.
-- **KANON:** używa proceduralnych łuków wewnątrz sektorów; sporadyczne łuki mogą łączyć sąsiednie sektory.
-- **KANON:** po ustabilizowaniu w `LOCKED` może wykonać jeden krótki impuls wygaszający. W spoczynku nie działa stała burza.
-- **TUNING:** progi aktywacji, frequency curve, wpływ prędkości na częstotliwość/długość, udział łuków między sektorami oraz envelope impulsu `LOCKED`.
+A future profile may read an existing legal installation transient and present circuit closure without owning capture, readiness, installation or persistent truth. Its exact command surface and final-pulse semantics remain future work.
 
-## Kontrakt lifecycle aktora
+## Actor lifecycle and API status
 
-Dokładna sygnatura JavaScript pozostaje otwarta. Publiczna powierzchnia ma jednak zapewnić następujące semantyki:
-
-| Operacja wysokiego poziomu | Semantyka i ownership |
+| Operation | Current status and ownership |
 | --- | --- |
-| rozpoczęcie reveal Zwornika dla `branchId` | Obserwuje exactly-once sector-complete i uruchamia `RUNE_BINDER_REVEAL`; nie kończy sektora ani nie tworzy gameplay truth Zwornika. |
-| rozpoczęcie installation VFX dla `branchId` | Aktywuje `RUNE_INSTALL` dla jednej istniejącej sesji capture; nie rozpoczyna capture i nie ocenia readiness. |
-| aktualizacja postępu instalacji | Przyjmuje read-only, znormalizowaną projekcję istniejącego capture; steruje wyłącznie envelope VFX. |
-| zakończenie instalacji | Kończy profil, emituje exactly-once finalny impuls dla obserwowanego przejścia do `INSTALLED`, potem wygasza zasoby profilu. Nie wykonuje gameplay commitu. |
-| aktualizacja drive platformy | Przyjmuje `driveActive`, rzeczywistą angular speed i lock state; nie przyjmuje komendy sterującej i nie oblicza ruchu. |
-| `update(deltaSeconds)` | Aktualizuje bounded symulację prezentacyjną, reveal/fade i pooled bolty w czasie klatki. |
-| `reset()` | Czyści transient presentation state i aktywne impulsy bez zmiany jakiejkolwiek prawdy gameplay; aktor pozostaje zdatny do ponownego użycia. |
-| `dispose()` | Idempotentnie odłącza owned presentation nodes i zwalnia należące do aktora materiały, geometrie oraz pule; późniejsze komendy są inert. |
+| `beginRuneBinderReveal(branchId)` | **IMPLEMENTED:** begins presentation for an observed readiness transition; does not complete a sector or create Binder truth. |
+| `setSectorAcquisitionEnergy(branchId, strength)` | **IMPLEMENTED:** accepts read-only acquisition progress and controls only its VFX envelope. |
+| `setFloorDriveEnergy(branchId, active)` | **IMPLEMENTED:** receives the result of actual-angle-change detection; does not accept or create a motion command. |
+| `update(deltaSeconds)` | **IMPLEMENTED:** advances bounded presentation lifetimes, deterministic seeded flicker, reveal progress and pooled bolts. |
+| `reset()` | **IMPLEMENTED:** clears transient presentation state and active bolts without changing gameplay truth or replaying persistent state. |
+| `dispose()` | **IMPLEMENTED:** releases actor-owned geometry/material resources without disposing dependencies. |
+| Rune installation start/progress/completion commands | **FUTURE / NOT IMPLEMENTED:** reserved for `RUNE_INSTALL`; no current actor API owns them. |
 
-**KANON:** projection odpowiada za deduplikację obserwowanych przejść na komendy prezentacyjne (w szczególności finalnego impulsu), a actor za fizyczną prezentację, pule i zasoby GPU. Ani jeden nie rekonstruuje persistent truth.
+The known settings contract does not restore ordering for `acquisitionSpawnIntervalStartSeconds` / `acquisitionSpawnIntervalEndSeconds` or `acquisitionStrengthMin` / `acquisitionStrengthMax`. Values retain finite runtime paths, so this gap is not an undefined/NaN-path failure.
 
 ## Adaptacja Lightning-VFX
 
 **FACT:** źródłem inspiracji/adaptacji jest [Lightning-VFX](https://github.com/SahilK-027/Lightning-VFX), autor Sahil K, licencja MIT (2026). Upstream jest demem Three.js, nie biblioteką o docelowym API projektu.
 
-**KANON — adaptować tylko potrzebny rdzeń:** proceduralne generowanie ścieżki, midpoint/fractal displacement, opcjonalne branchowanie, wielowarstwowy bolt, camera-facing ribbon w shaderze, `ShaderMaterial`, additive blending, krótki reveal/fade oraz opcjonalnie bardzo oszczędne sparks albo lokalny flash geometrii.
+**KANON — adaptować tylko potrzebny rdzeń:** procedural path generation, midpoint/fractal displacement, bounded one-generation branching, a shader-expanded screen-facing ribbon, `ShaderMaterial`, additive blending and short reveal/fade oraz opcjonalnie bardzo oszczędne sparks albo lokalny flash geometrii.
 
 **KANON — nie przenosić:** upstreamowej sceny, kamery, camera shake, screen flash/overlay, terrain/grid, ground cracks, debris, shockwave, auto storm, `lil-gui`, `vite-plugin-glsl` ani osobnej zależności npm `three`.
 
@@ -130,7 +103,7 @@ Dokładna sygnatura JavaScript pozostaje otwarta. Publiczna powierzchnia ma jedn
 
 ## Wyłączenia
 
-**KANON:** model nie projektuje audio, Rezonatora, przyszłego sector control, Scenario ani Directora; nie zmienia Rune lifecycle, Asterion gyro, progresji ani dependency runtime. Implementacja systemu, wartości tuningowe i hardware/perceptual QA są osobnymi zadaniami.
+**CANON:** the model does not own audio, Resonator Field truth, Scenario or Director behavior and does not change Rune lifecycle, acquisition, sector-control, progression or runtime dependencies. `RUNE_INSTALL`, independent multilayer shells, Field/lensing, target response, relevant audio and hardware/perceptual QA remain outside the implemented boundary.
 
 
 Pole Rezonatora ma odrębny język prezentacyjny inspirowany soczewkowaniem grawitacyjnym — rozjaśnienie, powiększenie, zakrzywienie, caustic-like arcs i deformację obrazu — zamrożony w [`VR_ASTERION_RESONATOR_FIELD_MODEL.md`](VR_ASTERION_RESONATOR_FIELD_MODEL.md). Field lensing presentation może otrzymywać read-only wynik Resonator Field Domain, lecz nie należy do `PlatformEnergyVfxActor`; dokładna nazwa klasy/API i podział projection/actor pozostają otwarte. `PlatformEnergyVfxActor` nie wyprowadza descriptoru, nie interpretuje `α/β/γ` jako gameplay truth i nie posiada target response. Nie wolno łączyć platform energy VFX, field, lensing i motion w jeden megasystem.
