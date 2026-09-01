@@ -77,6 +77,7 @@ import { createVrMonkeyGuide } from './xr/guidance/createVrMonkeyGuide.js';
 import { createVrMonkeyKnowledgeResolver } from './xr/guidance/createVrMonkeyKnowledgeResolver.js';
 import { createVrMandatoryMonkeyCommunication } from './xr/guidance/createVrMandatoryMonkeyCommunication.js';
 import { createVrToolGuidanceLifecycle } from './xr/guidance/createVrToolGuidanceLifecycle.js';
+import { createVrEarlyExperienceGuidance } from './xr/guidance/createVrEarlyExperienceGuidance.js';
 import { VR_MONKEY_COMMUNICATION_COPY_PL } from './xr/guidance/vrMonkeyCommunicationCopy.js';
 import { createVrFurnaceIntro } from './xr/guidance/createVrFurnaceIntro.js';
 import { createVrIntroSequence } from './xr/guidance/createVrIntroSequence.js';
@@ -172,6 +173,7 @@ const controls = app.querySelector('.vr-runtime__controls');
 const audioControl = document.querySelector('[data-audio-control]');
 let runtimeExperience = null;
 let toolGuidanceLifecycle = null;
+let earlyExperienceGuidance = null;
 if (audioControl) app.querySelector('[data-vr-audio-slot]').append(audioControl);
 const loadedSettings = await loadExperienceVrSettings({ debug: new URLSearchParams(location.search).has('debug') });
 const settings = loadedSettings.settings;
@@ -637,6 +639,13 @@ toolGuidanceLifecycle = createVrToolGuidanceLifecycle({
   ) === true,
   getAstroProductionState: () => astroAttractorProductionController.getState()
 });
+earlyExperienceGuidance = createVrEarlyExperienceGuidance({
+  monkeyGuide,
+  copy: VR_MONKEY_COMMUNICATION_COPY_PL,
+  getCurrentPointId: () => runtimeExperience?.getCurrentPointId?.() ?? null,
+  hasProtoAstroTuning: () => protoAstroTuningController.getExtractedFamilyCodes().length > 0,
+  onFirstCrystalResponseCompleted: () => introSequence?.beginFirstCrystalDiscovery()
+});
 let introSequence = null;
 let introCrystalTutorial = null;
 let astroFurnaceActivateInteraction = null;
@@ -795,6 +804,7 @@ const crystalCollection = createVrCrystalCollection({
   },
   onPreview: (page) => runtimeExperience.dispatch(VR_SCENARIO_EVENT.CRYSTAL_ACTIVATED, { page }),
   onCommit: (page, meta) => {
+    earlyExperienceGuidance.notifyCardCommitted();
     progressionSemanticHandoff.onPageCommitted(page, meta);
     presentLiveRuneBridgeReadinessTransitions();
   }
@@ -876,6 +886,7 @@ const glyphInteraction = createVrGlyphInteraction({
     const centerWorldPosition = progressFloor.object.getWorldPosition(new THREE.Vector3());
     const crystal = crystalCollection.spawnOne(node.userData.id, { glyphWorldPosition, centerWorldPosition });
     if (crystal) {
+      earlyExperienceGuidance.notifyCrystalCreated(crystal);
       runtimeExperience.dispatch(VR_SCENARIO_EVENT.FIRST_CRYSTAL_DISCOVERED);
       vrAudio.completeGlyphAcquisition(node.userData.id, GLYPH_COMPLETION_AUDIO[node.userData.id]?.[tier - 1]);
     }
@@ -1016,7 +1027,7 @@ introSequence = createVrIntroSequence({
   onThresholdSelected: (choice) => runtimeExperience.dispatch(VR_SCENARIO_EVENT.THRESHOLD_SELECTED, { choice }),
   onPlayerEnteredRing: (crossing) => runtimeExperience.dispatch(VR_SCENARIO_EVENT.PLAYER_ENTERED_RING, crossing),
   onMonkeySettled: (crossing) => runtimeExperience.dispatch(VR_SCENARIO_EVENT.MONKEY_SETTLED, crossing),
-  onGlyphHintTimeout: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.GLYPH_HINT_TIMEOUT),
+  onGlyphHintTimeout: () => {},
   onReliquaryRevealCompleted: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.RELIQUARY_REVEAL_COMPLETED),
   onOpeningRaysReady: () => vrControllers.setRaysEnabled(true),
   onReliquaryReveal: (duration) => {
@@ -1068,6 +1079,7 @@ const postRingMonkeyDialogue = createVrMandatoryMonkeyCommunication({ monkeyGuid
 const p2MonkeyDialogue = createVrMandatoryMonkeyCommunication({ monkeyGuide,
   blocks: VR_MONKEY_COMMUNICATION_COPY_PL.progression['progression.p2.smallGlyphsIntro'].blocks,
   secondsPerLine: settings.intro.messageDisplayDuration,
+  openMenuOnCompleted: false,
   onTriggered: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.MONKEY_TRIGGERED),
   onCompleted: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.P2_MONKEY_DIALOGUE_COMPLETED)
 });
@@ -1170,6 +1182,7 @@ runtimeExperience = new RuntimeExperience({
       if (!introSequence.beginGlyphFreeExplore()) {
         throw new Error('BEGIN_GLYPH_FREE_EXPLORE rejected by Intro actor after accepted Scenario transition');
       }
+      earlyExperienceGuidance.notifyGlyphFreeExploreStarted();
     },
     [VR_SCENARIO_EFFECT.SHOW_GLYPH_HINT]: () => {
       if (!introSequence.showGlyphHint()) {
@@ -1177,9 +1190,7 @@ runtimeExperience = new RuntimeExperience({
       }
     },
     [VR_SCENARIO_EFFECT.REVEAL_RELIQUARY]: () => {
-      if (!introSequence.beginFirstCrystalDiscovery()) {
-        throw new Error('REVEAL_RELIQUARY rejected by Intro actor after accepted Scenario transition');
-      }
+      earlyExperienceGuidance.notifyFirstCrystalRevealDue();
     },
     [VR_SCENARIO_EFFECT.BEGIN_RELIQUARY_REVEAL]: () => {
       if (!introSequence.beginReliquaryReveal()) {
@@ -1190,6 +1201,7 @@ runtimeExperience = new RuntimeExperience({
       if (!introSequence.completeReliquaryReveal()) {
         throw new Error('COMPLETE_RELIQUARY_REVEAL rejected by Intro actor after accepted Scenario transition');
       }
+      earlyExperienceGuidance.notifyReliquaryRevealCompleted();
     },
     [VR_SCENARIO_EFFECT.SHOW_RELIQUARY_CONTEXT_HINT]: () => {
       if (!reliquaryHints.showHint()) {
@@ -1371,6 +1383,7 @@ function renderFrame() {
   asterionProductionController.update(delta);
   astroAttractorProductionController.update(delta);
   toolGuidanceLifecycle.update(delta);
+  earlyExperienceGuidance.update(delta);
   furnacePanel.update(delta);
   asterionSphere.update(delta);
   asterionGyroInteraction.update(delta);
@@ -1466,6 +1479,7 @@ function restoreVrScenarioBaseline() {
   p2MonkeyDialogue.reset();
   furnaceIntro.reset();
   toolGuidanceLifecycle.reset();
+  earlyExperienceGuidance.reset();
   monkeyGuide.reset();
   platformFixturesRoot.visible = true;
   monkeyStoneRoot.visible = true;
@@ -1554,6 +1568,7 @@ window.addEventListener('pagehide', () => {
   astroFurnaceOptionInteraction.dispose();
   playerGuidePanel.dispose();
   toolGuidanceLifecycle.dispose();
+  earlyExperienceGuidance.reset();
   monkeyGuide.dispose();
   furnacePanel.dispose();
   furnaceProgressionController.dispose();

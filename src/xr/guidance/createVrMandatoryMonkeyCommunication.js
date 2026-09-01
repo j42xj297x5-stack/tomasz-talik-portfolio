@@ -5,7 +5,7 @@ const PHASE = Object.freeze({ IDLE: 'IDLE', WAITING: 'WAITING', ATTENTION: 'ATTE
 
 export function createVrMandatoryMonkeyCommunication({ monkeyGuide, blocks, secondsPerLine,
   onTriggered = () => {}, onCompleted = () => {}, openMenuOnCompleted = true,
-  priority = VR_MONKEY_DIALOGUE_PRIORITY.MANDATORY }) {
+  priority = VR_MONKEY_DIALOGUE_PRIORITY.MANDATORY, requiresAttention = true }) {
   const owner = Symbol('VrMonkeyCommunication');
   let phase = PHASE.IDLE;
   const playback = createVrMonkeyProgressionMessage({ monkeyGuide, owner, blocks, secondsPerLine,
@@ -33,8 +33,14 @@ export function createVrMandatoryMonkeyCommunication({ monkeyGuide, blocks, seco
         phase = PHASE.WAITING;
       } });
     if (!acquired) return false;
-    phase = PHASE.ATTENTION;
-    monkeyGuide.notifyDialogueAttention(owner);
+    if (!requiresAttention) {
+      phase = PHASE.PLAYBACK;
+      monkeyGuide.updateDialogue(owner, override, { preemptible: false });
+      onTriggered();
+    } else {
+      phase = PHASE.ATTENTION;
+      monkeyGuide.notifyDialogueAttention(owner);
+    }
     return true;
   }
   function beginAttention() {
