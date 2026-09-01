@@ -6,7 +6,7 @@ Status: **CANONICAL CURRENT MODEL / R2A + R2B + R4 CORE IMPLEMENTED**.
 
 Runtime R2A implements powered-sector acquisition and transient `SECTOR LOCK`; R2B implements controller-driven EARTH/WOOD/FIRE motion and committed `0/1/2/3` detents. R4 implements the event-driven Resonator Field Actor: derived `resonatorExists`, immutable runtime `α/β/γ` descriptor, POWERED/FIELD-ACTIVE and partial/full/symmetric/asymmetric coarse-field semantics with bounded read-only queries and exactly-on-change subscriptions.
 
-The volumetric sector acquisition beam and bounded Platform Energy extension are implemented. Target selection/scoring and response beyond current acquisition, Field/lensing presentation, Field audio, METAL/WATER contribution and the later finale remain future.
+The volumetric sector acquisition beam, bounded Platform Energy extension, discovery Guidance through first Resonator, and Scenario semantic join `4.80 → 5.10` are implemented. Target selection/scoring and response beyond current acquisition, Field/lensing presentation, Field audio, METAL/WATER contribution and the later finale remain future.
 
 This document is the primary CURRENT technical model of the Asterion Resonator. It freezes the sandbox, Scenario, Guidance, Rune Binder, implemented local sector-control and implemented Field-domain boundaries. The specialized [`VR_ASTERION_RESONATOR_FIELD_MODEL.md`](VR_ASTERION_RESONATOR_FIELD_MODEL.md) is its subordinate CURRENT Field sub-model, not an alternative canon. API and actor naming remain open only for genuinely future target-response, Field/lensing presentation, audio, METAL/WATER and finale work; implemented R2A/R2B/R4 and presentation seams are established runtime contracts.
 
@@ -94,7 +94,19 @@ Trzy installed Rune Stones czynią sektory **powered**, lockable i zdolne utworz
 
 Rezonator wyprowadza analityczny descriptor ze stanu sektorów i nie wymaga literalnego przecięcia brył. `α` i `β` są poziomami intensywności przeciwstawnych skrzydeł, nie znakami przeciwnych krzywizn. Nie dziedziczy historycznych detentów ani dawnego podziału DOF; modelu historycznego nie wolno reaktywować jako precedensu.
 
-## 8. Odpowiedź na legalne odległe cele
+## 7a. CURRENT Guidance and Scenario join
+
+Guidance is a read-only observer of first live Binder `HIDDEN → DOCKED`, first installed Rune (`installedRuneFamilies 0 → 1`), first live sector lock and first Resonator (`resonatorExists false → true`). Binder discovery unlocks Monkey/Y knowledge without attention or automatic speech. Sector acquisition exposes a bounded live-only `LOCKED` semantic subscription for the first-lock Guidance reaction; this subscription does not own acquisition or sector truth. Hydration/direct activation/reset does not replay these discoveries.
+
+```text
+Resonator Field Domain.resonatorExists === true
+→ RESONATOR_READY
+→ Scenario 4.80 → 5.10
+```
+
+`CHECK_RESONATOR_JOIN` handles the opposite event order. Scenario recognizes the existing physical result without gating its creation. `P6 → 5.10` is a debug/QA alias only, just as `P5 → 4.80`; neither owns gameplay truth or consequences. Physical target response remains future.
+
+## 8. Odpowiedź na legalne odległe cele — FUTURE
 
 Rezonator jest projektowany jako system odpowiedzi na legalne odległe cele wspierane przez odpowiednie domeny. Nie jest hardkodowany wyłącznie do glifów. Pierwszą praktyczną odpowiedzią może być glif, skorupa albo inny legalny target wspierany przez domain ownera.
 
@@ -121,7 +133,7 @@ Field lensing presentation może otrzymywać read-only wynik Field Domain, lecz 
 
 Przyszła implementacja ma wyprowadzać dostępność z narzędzi, obiektów i domenowych warunków, a Scenario jedynie obserwować oraz interpretować wynik. Musi zachować reconstruction/hydration osiągniętego fizycznego stanu bez replayu dramaturgii.
 
-Poza zakresem i nadal niezamrożone są: konkretne API, nazwy aktorów, target selection/scoring, shadery, parametry VFX/audio i nowe Scenario point IDs. Semantyczne osie, poziomy i target detenty rdzenia, descriptor i język wizualny są CURRENT w sub-modelu pola.
+Poza zakresem i nadal niezamrożone są: future target-response API/actors, target selection/scoring, shadery, parametry VFX/audio i Scenario point IDs after the existing `5.10` boundary. Semantyczne osie, poziomy i target detenty rdzenia, descriptor i język wizualny są CURRENT w sub-modelu pola.
 # R2B implementation boundary
 
 R2A powered-sector acquisition, one-second transient SECTOR LOCK and trigger-priority arbitration are implemented. R2B now owns runtime-local EARTH/WOOD/FIRE levels `0/1/2/3`, continuous constant-speed motor positions, physical `0°/13°/23°/36°` detents, a short detent hold, and smooth release-to-last-committed settle. EARTH/WOOD are a mirror pair rotating about the actual outer radial wedge edges through origin; only their MotionRoot quaternion changes, while FIRE preserves its bounds-derived inner radial hinge and downward pitch. The whole MotionRoot subtree—including target anchor, energy mount, Rune Installation Frame, Zwornik and installed Rune—remains one rigid chain. Held directional intent continues across successive detents without a new GRIP press. Trigger priority freezes user-driven local motion and forces a hand-reference rebase when local control returns. `DETENT_COMMITTED.direction` remains semantic: `UP` increases the level and `DOWN` decreases it, independent of spatial downward motion.

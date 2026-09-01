@@ -1,29 +1,23 @@
-# Experience VR — Narrative & Progression Baseline
+# Experience VR — Narrative Progression Baseline
 
-Status: **CURRENT narrative baseline**. It defines no new literal player copy or Scenario points.
+Status: **CURRENT**, synchronized with the implemented runtime on 2026-09-01.
 
 ## Current player route
 
 ```text
-1.10 → … → 2.30 → … → 3.80 → 4.10 → … → 4.40 → 4.50 → 4.60 → 4.70 → 4.80
+1.10 → … → 2.30 → … → 3.80 → 4.10 → … → 4.40 → 4.50 → 4.60 → 4.70 → 4.80 → 5.10
 ```
 
-`4.80` is the implemented stable authored boundary and the entry boundary for later Rune Stone authoring. Runtime-domain Rune foundations are already partially implemented through A9.4, but authored narrative continuation after `4.80` remains deferred.
+`4.80` means third ring complete and waiting for the physical Resonator result. Existing domain truth (`resonatorExists === true`) joins through semantic `RESONATOR_READY`; `CHECK_RESONATOR_JOIN` also handles a Resonator created before entry. `5.10` is the stable third-ring + Resonator join and current authored/runtime boundary. It has no objective, entry dialogue or continuation to `100.10`.
 
-## Runtime foundation versus future act
+## Current late-act foundation
 
-The current world already contains five natural Rune Stone actors in the implemented `50–75 m` band, implemented natural tuning and targetability, physical lock/transport foundation, Rune bridges and readiness projection. Large Glyph already transitions to implemented `SPHERE_FAR = 80 m`. This does not mean that socket installation, Ether intervention, final Water flow or their narrative beats are authored.
+Rune tuning/transport/install, persistent installed truth, Binder readiness/materialization, powered-sector acquisition and control, and the Resonator core are implemented sandbox mechanics. They are not gated by Scenario and may be discovered early where domain conditions allow.
 
-Future narrative must reveal meaning/capability without claiming that existing actors have only just been created. The current missing first-reveal seam tied to Sun/Stars is an implementation gap, not settled narrative behavior.
+Implemented Guidance reacts to live third-ring completion, unresolved legal Rune transport without installation readiness, first installed Rune, first sector lock and first Resonator. First Binder `HIDDEN → DOCKED` unlocks discovered-world knowledge without automatic speech. Hydration/direct activation/reset does not replay these live one-shots.
 
-## Three independent laws
+The authored route recognizes the completed physical result at `4.80 → 5.10`. Physical target selection/scoring/response, glyph reacquisition through Resonator, later Metal/Water/Ether flow and finale continuation remain **FUTURE**.
 
-- **Natural tuning:** all Earth/Fire/Wood/Metal/Water recipes are available regardless of sector completion.
-- **Natural targetability:** exactly the families in `tunedRuneFamilies` can be targeted and transported.
-- **Installation readiness:** normally follows the matching sector/panel completeness. After stable `4.80`, Earth/Fire/Wood are ready; Metal/Water are not. Future Water special override affects readiness only and never floor truth or tuning.
+## Ownership
 
-Ether remains a special future authored flow, not a sixth natural family, sector, bridge or platform slot.
-
-## Deferred continuation
-
-Socket capture, persistent installed truth, bridge extension, later sector/antenna progression, Ether/Monkey intervention, Water override trigger, final Water hunt and finale remain **FUTURE / NOT IMPLEMENTED**. Their canonical technical target is routed through [`VR_RUNE_STONES_MODEL.md`](../technical/VR_RUNE_STONES_MODEL.md). Literal guidance remains owned by the communication documents and is not expanded here.
+Scenario owns dramaturgy, crystal-acquisition gates and the semantic join. Rune, sector and Resonator domains own physical legality and truth. Guidance and Y are read-only communication projections. Detailed mechanics and literal copy belong to [`EXPERIENCE_VR_COMMUNICATION_MECHANICS.md`](EXPERIENCE_VR_COMMUNICATION_MECHANICS.md) and [`EXPERIENCE_VR_PLAYER_COMMUNICATION_COPY.md`](EXPERIENCE_VR_PLAYER_COMMUNICATION_COPY.md).

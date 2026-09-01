@@ -7,7 +7,7 @@
 - **Foundation correction:** natural Rune tuning sector gate — **RESOLVED**; task `d0f9a17e414f3ea8c386cde87bdd46dba6dad16c`, merge `c862b9bde2e717918e56d21d7f1cbbc0ad741d53`.
 - **RUNE A9:** **A9.1–A9.6 IMPLEMENTED; NATURAL RUNE A9 FOUNDATION = COMPLETE**. Końcowy transport i instalacja używają platform-centered handoff sphere oraz automatycznej choreografii, a hydration odtwarza settled physical installation. Collision carried Rune Stone ↔ installed Rune Stone jest **SUPERSEDED / REMOVED FROM TARGET**.
 - **Scenario authoring:** **DEFERRED TO SEPARATE THREAD**.
-- **Canonical authored Scenario/runtime progression boundary:** `4.80`.
+- **Canonical authored Scenario/runtime progression boundary:** `5.10`; the bounded semantic join is `4.80 → 5.10`.
 - Dokument jest kanonicznym źródłem prawdy Rune Stone Act: strojenia Astrolabium, targetability, pięciu naturalnych pair-specific par, mostów, transportu, instalacji, specjalnego flow Eteru i finalnego polowania Wody.
 - A1–A9.6 są foundations/domain behavior bez rozszerzenia authored Scenario spine. A9 foundation jest zamknięty; dalszy authored Scenario, Director i literalna komunikacja gracza wymagają osobnego projektu, bez arbitralnego etykietowania ich jako kolejny krok A9.
 
@@ -202,7 +202,7 @@ Prezentacyjna transformacja geometrii Zwornika jest niezależna od stabilnego In
 
 ## 8. Transport i instalacja
 
-**A9.1–A9.6 są IMPLEMENTED foundations. NATURAL RUNE A9 FOUNDATION = COMPLETE.** Nie oznacza to ukończenia całego Rune Act ani authoringu Scenario po `4.80`.
+**A9.1–A9.6 są IMPLEMENTED foundations. NATURAL RUNE A9 FOUNDATION = COMPLETE.** Nie oznacza to ukończenia target-response ani późnego authoringu po `5.10`.
 
 ```text
 FREE → LOCKED_BY_ASTRO                 IMPLEMENTED
@@ -339,7 +339,7 @@ FIVE_ELEMENTAL_RUNES_INSTALLED
 
 Timer `180 s` pozostaje **TUNING** i zaczyna się dopiero z rzeczywistym `FINAL_WATER_HUNT`, nie podczas Ether flow, Water tuning, transportu ani capture. Timer jest transient mechaniką final-hunt ownera. `FINAL_HUNT_TIMEOUT_BEHAVIOR` pozostaje `OPEN DESIGN DECISION`.
 
-## 12. Scenario, Director i reconstruction — deferred authoring
+## 12. Scenario, Director, Guidance i reconstruction — current bounded join
 
 Obowiązuje architektura:
 
@@ -347,9 +347,9 @@ Obowiązuje architektura:
 SPINE → SCENARIO → DIRECTOR → RuntimeExperience → ACTORS / DOMAIN OWNERS
 ```
 
-Scenario authoring Rune Stone Act jest **DEFERRED TO SEPARATE THREAD**. Obecny etap buduje actor/domain foundations. Nie powstają tu nowe Scenario point IDs, numerowane beaty, capabilities, events/effects ani Director transitions. Canonical authored Scenario/runtime boundary pozostaje `4.80`, dopóki osobne zadanie nie rozpocznie authoringu po tej granicy.
+Authored Scenario now contains the bounded semantic join `4.80 → 5.10`. Existing `resonatorExists === true` projects `RESONATOR_READY`; `CHECK_RESONATOR_JOIN` handles a Resonator that already exists on entry. The join observes domain truth and does not gate Rune, Binder, sector or Resonator mechanics. `5.10` is the current authored boundary; physical target response and later Metal/Water/Ether/finale authoring remain future.
 
-Canonical debug intent `p5` oznacza stable settled state po ukończeniu trzeciego kręgu i wejście w Rune Stone Act: wszystkie wcześniejsze konsekwencje są settled, Large Glyph / Small Glyph / Shell / world presentation są w odpowiednim stanie, a Rune Stone Act foundation jest gotowe do interakcji. `p5` ma hydratować do settled state odpowiadającego boundary `4.80 — Stable P3 entry boundary`; jest aliasem debug/QA, nie nowym Scenario pointem, capability ani zmianą authored graphu.
+Canonical debug aliases are `P5 → 4.80` and `P6 → 5.10`. Both are QA/debug entry conveniences, not Scenario points, capabilities, gameplay owners or sources of settled consequences.
 
 Przyszłe Scenario zachowa ownership dramaturgii, obowiązkowych beatów, ujawnianej wiedzy, Guidance i ograniczeń pozyskania kolejnych kryształów; Director legalność przejść; RuntimeExperience symbolic effects; actors transient mechanics; domain owners persistent truths. Scenario nie jest fizycznym gate'em Rune tuning, target/pull ani installation i nie wolno dla nich wprowadzać prawa `currentPoint >= X`. Interpolacja Zwornika, sloty, tuning timer, target/pull i `SOCKET_CAPTURE` nie są Scenario pointami. Reconstruction składa settled truths, nie odtwarza trwających procesów i interpolacji.
 
@@ -406,11 +406,11 @@ Early natural Rune Stone presentation jest **IMPLEMENTED**. Pięć naturalnych a
 - **Panel 2 — IMPLEMENTED:** task `d7e026fe565cf44b20f158564316c814a0e910e0`, merge `5dd2c59080f0501accb4cea546ee5ef68a5811e0`.
 - **Panel 1 Rune U projection — IMPLEMENTED:** task `b04605cb01b395ec188b153cd901941a446076ff`, merge `5510e78062dd0a3309be2e5f22e528ee2ed532ed`.
 
-R3 implementuje runtime Zwornika, a R3b implementuje `RUNE_BINDER_REVEAL`: live materialization, pooled sector-local lightning, final pulse, trwały `DOCKED`/`BOUND`, presentation-only scale/offset i reconstruction bez replayu. Nadal nie implementuje Rune install energy VFX, detent spark/audio, motion audio, grip beam, Field Actor ani field lensing. A9.6 nie implementuje spatial audio, Water override trigger, Ether flow, Rezonatora/final Water flow ani Scenario po `4.80`.
+R3 implementuje runtime Zwornika, a R3b implementuje `RUNE_BINDER_REVEAL`: live materialization, pooled sector-local lightning, final pulse, trwały `DOCKED`/`BOUND`, presentation-only scale/offset i reconstruction bez replayu. Nadal nie implementuje Rune install energy VFX, detent spark/audio, motion audio, grip beam, Field Actor ani field lensing. A9.6 nie implementuje spatial audio, Water override trigger ani Ether/final Water flow. R4 Resonator core, Guidance through first Resonator and Scenario join through `5.10` are implemented by their respective owners.
 
 ## 14. Remaining target
 
-**Carried Rune Stone ↔ installed Rune Stone collision = SUPERSEDED / REMOVED FROM TARGET.** Special Ether flow, Water readiness override, spatial audio, Rezonator/final Water flow and all authored Scenario after `4.80` remain deferred. Zwornik spin jest usunięty z target canon.
+**Carried Rune Stone ↔ installed Rune Stone collision = SUPERSEDED / REMOVED FROM TARGET.** Special Ether flow, Water readiness override, spatial audio, target response, final Water flow and authored Scenario after `5.10` remain deferred. Zwornik spin jest usunięty z target canon.
 
 ## 15. Current implementation checkpoint
 
@@ -423,9 +423,9 @@ CARRIED RUNE STONE ↔ INSTALLED RUNE STONE COLLISION: SUPERSEDED / NO GAMEPLAY 
 PHYSICAL BRIDGE EXTENSION: IMPLEMENTED
 R3b RUNE_BINDER_REVEAL: IMPLEMENTED
 INSTALLATION HANDOFF + APPROACH / BRIDGE_OPEN / DESCENT: IMPLEMENTED
-AUTHORED SCENARIO BOUNDARY: 4.80
-POST-4.80 SCENARIO / A10+: DEFERRED / NOT IMPLEMENTED
-POST-4.80 SCENARIO DIRECT-TARGET PARITY: DEFERRED UNTIL SCENARIO AUTHORING
+AUTHORED SCENARIO BOUNDARY: 5.10
+SCENARIO JOIN 4.80 → 5.10: IMPLEMENTED; CONTINUATION AFTER 5.10: FUTURE
+RESONATOR TARGET RESPONSE: FUTURE; NOT IMPLIED BY THE 5.10 JOIN
 ```
 
 ## 16. Closed runtime reconciliation gaps

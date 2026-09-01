@@ -1,56 +1,243 @@
 # Experience VR — kanoniczne teksty komunikacji
 
-**Status:** CURRENT / canonical copy PL po G6
+**Status:** CURRENT / canonical copy PL synchronized on 2026-09-01  
 **Mechanika:** [`EXPERIENCE_VR_COMMUNICATION_MECHANICS.md`](EXPERIENCE_VR_COMMUNICATION_MECHANICS.md)
 
-## Ownership copy
+Runtime Monkey copy is authored as `blocks[]`. Each quotation below preserves one block as one bubble. `--- BLOCK ---` occurs only between separate array elements; a line break without that separator is an authored `\n` inside the same block.
 
-| Klasa | Powierzchnia i trwałość | Źródło |
-| --- | --- | --- |
-| A. PROGRESSION / MANDATORY COPY | Małpa; obowiązkowe beaty | `VR_MONKEY_COMMUNICATION_COPY_PL.progression`, `decisions` i tutorial |
-| B. TIMED / SITUATIONAL HINT COPY | Małpa; ephemeral, tylko gdy relevant | `VR_MONKEY_COMMUNICATION_COPY_PL.hints` |
-| C. ACQUISITION COPY | Małpa; one-shot first teaching po claim | `VR_MONKEY_COMMUNICATION_COPY_PL.acquisition` |
-| D. CURRENT OBJECTIVE COPY | wspólny projection; Y + Małpa | `createVrCurrentObjectiveProjection` |
-| E. PERSISTENT TOOL KNOWLEDGE | wyłącznie panel Y | `vrPlayerGuideContent.js` |
+## Progression — implemented early and Rune/Resonator entries
 
-Te klasy mogą opisywać ten sam przedmiot w różnych momentach i celach, ale nie są konkurującymi trwałymi źródłami prawdy. Małpa nie ma persistent tool knowledge.
+### `progression.threshold.crossed`
+> No.
+> Teraz jest łatwiej.
 
-## A. Progression / mandatory
+### `progression.crystal.firstCreated`
+> Odpowiedział.
 
-Aktywne mandatory copy jest przechowywane jako authored blocks w `vrMonkeyCommunicationCopy.js`. Blok jest jednostką autorską; jawne nowe linie są zachowane, nie ma `DALEJ`, a progression completion następuje dopiero po pełnym playback i finalnym gap. Ten katalog nie tworzy kopii objective ani instrukcji Y.
+### `progression.card.first`
+> Jedna.
 
-## B. Timed / situational hints
-
-### `hint.furnace.astroStart`
-
-> Otwórz panel informacyjny Pieca.
+### `progression.p2.smallGlyphsIntro`
+> Znowu.
 >
 > --- BLOCK ---
 >
-> Wybierz moduł Astrolabium Więzi.
+> Świat odsunął to, czego szukasz.
 >
 > --- BLOCK ---
 >
-> Zamknij komorę i użyj środkowego przycisku, gdy Piec jest poprawnie przygotowany.
+> Świat lubi odsuwać rzeczy.
+> Ty nie musisz za nimi biegać.
 >
 > --- BLOCK ---
 >
-> Jeśli Piec odpycha obiekt, najpierw sprawdź wybraną operację.
-
-### `hint.furnace.astroAvailable`
-
-> Otwórz komorę i wyciągnij swoje narzędzie.
+> Czasem wystarczy dostroić to, co już masz.
 >
 > --- BLOCK ---
 >
-> Złap je.
+> Astrolabium ma pasma.
+> B zmienia to, czego słucha.
+>
+> --- BLOCK ---
+>
+> Widzisz te małe glify?
+>
+> --- BLOCK ---
+>
+> Małe rzeczy czasem prowadzą dalej niż duże.
+>
+> --- BLOCK ---
+>
+> Piec pomoże ci dostroić Astrolabium.
+>
+> --- BLOCK ---
+>
+> Wtedy duże glify znów będą mogły odpowiedzieć.
+>
+> --- BLOCK ---
+>
+> I kolejne karty także.
 
-Pierwszy hint staje się należny po około 180 s bez rozpoczęcia produkcji Astro; drugi po około 60 s nieodebranego stanu `AVAILABLE`. Oba wymagają attention → click → playback, czekają na zamknięcie ordinary menu i są anulowane przed kliknięciem, gdy przestają być relevant.
+### `progression.p3.glyphsGone`
+> No.
+>
+> --- BLOCK ---
+>
+> Tym razem naprawdę uciekły.
+>
+> --- BLOCK ---
+>
+> Nie widać ich. Nie słychać.
 
-## C. Acquisition — one-shot first teaching
+### `progression.p3.firstRuneInstalled`
+> O.
+>
+> --- BLOCK ---
+>
+> Sam wiedział, gdzie ma trafić.
+>
+> --- BLOCK ---
+>
+> Teraz możesz kontrolować jedną część.
+> Żeby znaleźć glify, potrzebujesz trzech.
+>
+> --- BLOCK ---
+>
+> Teraz odpowiada na Kulę.
+>
+> --- BLOCK ---
+>
+> Przytrzymaj chwyt nad sektorem.
+> Nie puszczaj od razu.
+>
+> --- BLOCK ---
+>
+> Gdy już go przywiążesz, możesz nim sterować.
+> Jak całą platformą.
+>
+> --- BLOCK ---
+>
+> No prawie...
+
+### `progression.p3.firstSectorLock`
+> No.
+>
+> --- BLOCK ---
+>
+> Teraz ruszasz częścią świata.
+
+### `progression.p3.resonator`
+> No dobrze.
+>
+> --- BLOCK ---
+>
+> Trzy razem zaczynają słuchać.
+>
+> --- BLOCK ---
+>
+> Chyba zbudowałeś Rezonator Asterionowy.
+>
+> --- BLOCK ---
+>
+> Radar mówiłby ci, gdzie coś jest.
+>
+> --- BLOCK ---
+>
+> To jest bardziej uparte.
+>
+> --- BLOCK ---
+>
+> Musisz zapytać przestrzeń we właściwym kierunku.
+>
+> --- BLOCK ---
+>
+> A teraz zapytaj świat.
+> Może ci odpowie.
+
+## Timed / situational hints
+
+### `hint.crystal.whatNow.soft`
+> Najpierw go weź.
+
+### `hint.crystal.grab.medium`
+> Chwyt.
+
+### `hint.glyphs.how.soft`
+> Wskaż znak.
+> Spust. Przytrzymaj aż otrzymasz kryształ
+
+### `hint.glyphs.how.strong`
+> Dotknij glif Szpilą.
+>
+> --- BLOCK ---
+>
+> Przytrzymaj spust.
+>
+> --- BLOCK ---
+>
+> Wydobądź kryształ.
+
+### `hint.reliquary.firstCrystal`
+> Co możemy z tym zrobić…
+>
+> --- BLOCK ---
+>
+> Może potrzebuje naczynia.
+
+### `hint.protoAstro.tuning`
+> Małe glify są związane z dużymi.
+>
+> --- BLOCK ---
+>
+> Astrolabium potrafi przyciągnąć duże.
+>
+> --- BLOCK ---
+>
+> Gdy wie czego szukać.
+
+### `hint.rune.noBinder.soft`
+> Działa.
+>
+> --- BLOCK ---
+>
+> Tylko nie ma gdzie go przywiązać.
+
+### `hint.rune.noBinder.medium`
+> Spójrz na sektory.
+> Ukończone posiadają zwornik.
+>
+> --- BLOCK ---
+>
+> On pozwoli Ci przywiązać kamień.
+
+## Ordinary Monkey discovered-world knowledge
+
+### `knowledge.p3.stonesLead` — `CO TERAZ?`
+Question: `Zostały jeszcze kamienie.`
+
+> Możemy patrzeć w niebo.
+>
+> --- BLOCK ---
+>
+> Albo sprawić, żeby to miejsce patrzyło dalej niż my.
+>
+> --- BLOCK ---
+>
+> Zostały jeszcze kamienie.
+
+### `knowledge.p3.stones` — `CO TERAZ?`
+Question: `KAMIENIE`
+
+> Są daleko.
+>
+> --- BLOCK ---
+>
+> Piec potrafi stroić rzeczy.
+>
+> --- BLOCK ---
+>
+> Astrolabium potrafi je sprowadzać.
+>
+> --- BLOCK ---
+>
+> Sprawdźmy, czy to wystarczy.
+
+### `knowledge.p3.binders` — `CO TO JEST?`
+Question: `ZWORNIKI`
+
+> Zworniki.
+>
+> --- BLOCK ---
+>
+> Pojawiały się, kiedy domykałeś te części platformy.
+>
+> --- BLOCK ---
+>
+> Wygląda na to, że nie są ozdobą.
+
+## Acquisition — one-shot teaching
 
 ### Astro
-
 > To narzędzie do rzeczy, które są daleko,
 > a chciałbyś, żeby były bliżej.
 >
@@ -64,10 +251,9 @@ Pierwszy hint staje się należny po około 180 s bez rozpoczęcia produkcji Ast
 >
 > --- BLOCK ---
 >
-> Szpila i chwyt pozwalają przejąć obiekt.
+> Szpila i chwyt drugiej ręki pozwalają przejąć obiekt.
 
 ### Asterion
-
 > To narzędzie do zmiany horyzontu.
 > Nie przybliża tego, co jest daleko.
 >
@@ -76,76 +262,63 @@ Pierwszy hint staje się należny po około 180 s bez rozpoczęcia produkcji Ast
 > Zmienia to, skąd patrzysz.
 > Dzięki temu dosięgniesz tego, czego wcześniej nie mogłeś.
 
-Każda sekwencja występuje tylko po fizycznym claim: około 5 s → attention → kliknięcie Małpy → bezpośredni playback → completion. Nie otwiera ordinary menu i nie zostawia w nim trwałego pytania.
+## CURRENT OBJECTIVE — exact dynamic strings
 
-## D. CURRENT OBJECTIVE — wspólny Y + Małpa
+- `2.30`: `UKOŃCZ PIERWSZY KRĄG — n/5`
+- `3.80`: `ZGROMADŹ SKORUPY — n/6` or `ZBUDUJ KULĘ ASTERIONOWĄ` or `KULA ASTERIONOWA — PRODUKCJA` or `ODBIERZ KULĘ ASTERIONOWĄ`
+- `4.10`: `UKOŃCZ DRUGI KRĄG — n/5`
+- `4.70`, incomplete tuning: `DOSTRÓJ ASTROLABIUM — n/5 · UKOŃCZ TRZECI KRĄG — n/5`
+- `4.70`, full tuning: `UKOŃCZ TRZECI KRĄG — n/5`
+- `4.80`, no Resonator: `PRZYGOTUJ REZONATOR — STROJENIE n/3 · INSTALACJA n/3`
+- `4.80`, Resonator exists, and `5.10`: no objective.
 
-Copy powstaje wyłącznie w `createVrCurrentObjectiveProjection`; dokument nie utrzymuje drugiej niezależnej mapy. Dynamiczne teksty CURRENT:
-
-- `PIERWSZY KRĄG — n/5`;
-- `ZGROMADŹ SKORUPY — n/6`;
-- `ZBUDUJ KULĘ ASTERIONOWĄ`;
-- `KULA ASTERIONOWA — PRODUKCJA`;
-- `ODBIERZ KULĘ ASTERIONOWĄ`;
-- `DRUGI KRĄG — n/5`;
-- `DOSTRÓJ ASTROLABIUM — n/5 · TRZECI KRĄG — n/5`;
-- `TRZECI KRĄG — n/5`.
-
-Y przedstawia wynik jako `AKTUALNE ZADANIE`, a Małpa jako pojedynczy temat pod `CO TERAZ?`.
-
-## E. Persistent tool knowledge — panel Y
-
-Poniższe teksty są dokładną zawartością CURRENT `vrPlayerGuideContent.js`.
+## Player Y — exact persistent tool copy
 
 ### PIEC
-
-**Opis:**
-
 > Otwórz panel informacyjny Pieca i wybierz odpowiedni moduł lub operację.
-
-**Sterowanie:**
 
 > Otwórz komorę, gdy wkładasz lub odbierasz obiekt.
 > Środkowy przycisk uruchamia proces dopiero, gdy Piec jest poprawnie przygotowany.
 > Jeśli Piec odpycha wkładany obiekt, najpierw sprawdź wybraną operację.
 
 ### ASTROLABIUM WIĘZI
-
-**Opis:**
-
 > To narzędzie do rzeczy, które są daleko,
 > a chciałbyś, żeby były bliżej.
-
-**Sterowanie:**
 
 > A — wyposaż / schowaj
 > Chwyt — namierzanie
 > Spust — przyciąganie
-> Szpila + chwyt — przejęcie obiektu
-
-Po uzyskaniu capability zmiany pasma:
-
+> Szpila + chwyt drugiej ręki — przejęcie obiektu
 > B — zmień pasmo celu
 
 ### KULA ASTERIONOWA
-
-**Opis:**
-
 > To narzędzie do zmiany horyzontu.
 > Nie przybliża tego, co jest daleko.
 > Zmienia to, skąd patrzysz.
 > Dzięki temu dosięgniesz tego, czego wcześniej nie mogłeś.
 
-**Sterowanie:**
-
 > X — wyposaż / schowaj
 > Spust — zmieniaj orientację platformy
+> Chwyt - przywiąż sektor i zmień jego położenie
 
-## Ordinary Monkey copy
+## Player Y — exact WIEDZA copy
 
-Root zawiera `JAK MI IDZIE?` i, tylko gdy objective istnieje, `CO TERAZ?`. Historia używa dokładnie:
+### SKORUPY
+> Małe elementy tego świata
 
-- `Odkryte karty: 0.`;
-- `Odkryte karty: {count}. Wybierz znak.`.
+### KAMIENIE RUNICZNE
+> Są daleko.
+> Piec potrafi stroić rzeczy.
+> Astrolabium potrafi je sprowadzać.
+> Sprawdźmy, czy to wystarczy.
 
-Ordinary menu nie posiada persistent `co to jest?` dla Astro/Asteriona, strojenia Astrolabium, `CO DALEJ?` ani dawnych contextual topics.
+### ZWORNIKI
+> Zworniki.
+> Pojawiały się, kiedy domykałeś te części platformy.
+> Wygląda na to, że nie są ozdobą.
+
+### SEKTOR
+> Spust — orientacja całej platformy
+> Chwyt — połącz się z aktywnym sektorem
+> Przytrzymaj strumień — zablokuj sektor
+> Ruch dłoni — zmieniaj jego ustawienie
