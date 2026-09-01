@@ -14,19 +14,24 @@ const VR_PLAYER_GUIDE_CONTENT = Object.freeze({
       astro: Object.freeze({
         label: 'ASTROLABIUM WIĘZI',
         description: 'To narzędzie do rzeczy, które są daleko,\na chciałbyś, żeby były bliżej.',
-        controls: 'A — wyposaż / schowaj\nChwyt — namierzanie\nSpust — przyciąganie\nSzpila + chwyt — przejęcie obiektu',
+        controls: 'A — wyposaż / schowaj\nChwyt — namierzanie\nSpust — przyciąganie\nSzpila + chwyt drugiej ręki — przejęcie obiektu',
         bandSwitchControl: 'B — zmień pasmo celu'
       }),
       asterion: Object.freeze({
         label: 'KULA ASTERIONOWA',
         description: 'To narzędzie do zmiany horyzontu.\nNie przybliża tego, co jest daleko.\nZmienia to, skąd patrzysz.\nDzięki temu dosięgniesz tego, czego wcześniej nie mogłeś.',
-        controls: 'X — wyposaż / schowaj\nSpust — zmieniaj orientację platformy'
+        controls: 'X — wyposaż / schowaj\nSpust — zmieniaj orientację platformy\nChwyt - przywiąż sektor i zmień jego położenie'
       })
+    }),
+    knowledge: Object.freeze({
+      shells: Object.freeze({ label: 'SKORUPY', body: 'Małe elementy tego świata' })
     }),
     mainMenuHint: 'Lewy drążek — wybór · X — otwórz · Y — zamknij',
     toolListHint: 'Lewy drążek — wybór · X — otwórz · Y — wróć',
     sectionDetailHint: 'Y — wróć',
     toolDetailHint: 'Y — wróć',
+    knowledgeListHint: 'Lewy drążek — wybór · X — otwórz · Y — wróć',
+    knowledgeDetailHint: 'Y — wróć',
     controllersFallback: 'Schemat kontrolerów niedostępny.'
   }),
   en: Object.freeze({

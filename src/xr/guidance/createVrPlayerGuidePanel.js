@@ -77,12 +77,16 @@ export function createVrPlayerGuidePanel({ leftGrip, semanticInput, locale = 'en
     MAIN_MENU: 'MAIN_MENU',
     SECTION_DETAIL: 'SECTION_DETAIL',
     TOOL_LIST: 'TOOL_LIST',
-    TOOL_DETAIL: 'TOOL_DETAIL'
+    TOOL_DETAIL: 'TOOL_DETAIL',
+    KNOWLEDGE_LIST: 'KNOWLEDGE_LIST',
+    KNOWLEDGE_DETAIL: 'KNOWLEDGE_DETAIL'
   });
   let viewState = VIEW_STATE.MAIN_MENU;
   let activeSectionId = null;
   let activeToolId = null;
   let selectedToolIndex = 0;
+  let activeKnowledgeId = null;
+  let selectedKnowledgeIndex = 0;
   let previousNavDirection = 0;
   let previousHorizontalDirection = 0;
   let selectedDebugIndex = 0;
@@ -145,7 +149,9 @@ export function createVrPlayerGuidePanel({ leftGrip, semanticInput, locale = 'en
       [VIEW_STATE.MAIN_MENU]: content.mainMenuHint,
       [VIEW_STATE.TOOL_LIST]: content.toolListHint,
       [VIEW_STATE.SECTION_DETAIL]: content.sectionDetailHint,
-      [VIEW_STATE.TOOL_DETAIL]: content.toolDetailHint
+      [VIEW_STATE.TOOL_DETAIL]: content.toolDetailHint,
+      [VIEW_STATE.KNOWLEDGE_LIST]: content.knowledgeListHint,
+      [VIEW_STATE.KNOWLEDGE_DETAIL]: content.knowledgeDetailHint
     };
     context.fillText(footerByViewState[viewState], 28, canvas.height - 30);
   }
@@ -240,12 +246,50 @@ export function createVrPlayerGuidePanel({ leftGrip, semanticInput, locale = 'en
     }
   }
 
+  function drawKnowledgeList(item) {
+    const rows = [...item.knowledge, { id: null, label: '←' }];
+    const boxWidth = canvas.width - 72;
+    const boxHeight = 104;
+    const gap = 20;
+    const startY = 126;
+    rows.forEach((knowledge, index) => {
+      const x = 36;
+      const y = startY + index * (boxHeight + gap);
+      if (index === selectedKnowledgeIndex) {
+        context.fillStyle = config.colors.selected;
+        context.fillRect(x, y, boxWidth, boxHeight);
+      }
+      context.strokeStyle = index === selectedKnowledgeIndex ? config.colors.border : 'rgba(117, 215, 255, 0.35)';
+      context.lineWidth = 4;
+      context.strokeRect(x, y, boxWidth, boxHeight);
+      context.fillStyle = config.colors.text;
+      context.font = '700 38px sans-serif';
+      context.textAlign = 'center';
+      context.textBaseline = 'middle';
+      context.fillText(knowledge.label, x + boxWidth / 2, y + boxHeight / 2);
+      context.textAlign = 'start';
+      context.textBaseline = 'alphabetic';
+    });
+  }
+
+  function drawKnowledgeDetail(knowledge) {
+    context.fillStyle = config.colors.text;
+    context.font = '700 31px sans-serif';
+    context.fillText(knowledge.label, 36, 186);
+    context.fillStyle = config.colors.muted;
+    context.font = '27px sans-serif';
+    drawWrappedText(context, knowledge.body, 36, 230, canvas.width - 72, 38, 5);
+  }
+
   function resolveItems() {
     const currentTask = projection?.getCurrentTask?.() ?? null;
     const tools = projection?.getTools?.() ?? [];
+    const knowledge = projection?.getKnowledge?.() ?? [];
     return content.items.map((item) => item.id === 'current-task' && currentTask
       ? { ...item, body: currentTask.body }
-      : item).concat(tools.length ? [{ id: 'tools', label: 'NARZĘDZIA', tools }] : []);
+      : item)
+      .concat(tools.length ? [{ id: 'tools', label: 'NARZĘDZIA', tools }] : [])
+      .concat(knowledge.length ? [{ id: 'knowledge', label: 'WIEDZA', knowledge }] : []);
   }
 
   function reconcileDynamicSections(items) {
@@ -253,6 +297,8 @@ export function createVrPlayerGuidePanel({ leftGrip, semanticInput, locale = 'en
     const previousViewState = viewState;
     const previousToolIndex = selectedToolIndex;
     const previousToolId = activeToolId;
+    const previousKnowledgeIndex = selectedKnowledgeIndex;
+    const previousKnowledgeId = activeKnowledgeId;
     const rowCount = items.length + (debugCheckpoints.length ? 1 : 0);
     selectedIndex = Math.min(selectedIndex, Math.max(0, rowCount - 1));
     const toolsItem = items.find((item) => item.id === 'tools');
@@ -268,8 +314,23 @@ export function createVrPlayerGuidePanel({ leftGrip, semanticInput, locale = 'en
         activeToolId = null;
       }
     }
+    const knowledgeItem = items.find((item) => item.id === 'knowledge');
+    if ((viewState === VIEW_STATE.KNOWLEDGE_LIST || viewState === VIEW_STATE.KNOWLEDGE_DETAIL) && !knowledgeItem) {
+      viewState = VIEW_STATE.MAIN_MENU;
+      activeSectionId = null;
+      activeKnowledgeId = null;
+      selectedKnowledgeIndex = 0;
+    } else if (knowledgeItem) {
+      selectedKnowledgeIndex = Math.min(selectedKnowledgeIndex, knowledgeItem.knowledge.length);
+      if (viewState === VIEW_STATE.KNOWLEDGE_DETAIL
+        && !knowledgeItem.knowledge.some((knowledge) => knowledge.id === activeKnowledgeId)) {
+        viewState = VIEW_STATE.KNOWLEDGE_LIST;
+        activeKnowledgeId = null;
+      }
+    }
     return selectedIndex !== previousSelectedIndex || viewState !== previousViewState
-      || selectedToolIndex !== previousToolIndex || activeToolId !== previousToolId;
+      || selectedToolIndex !== previousToolIndex || activeToolId !== previousToolId
+      || selectedKnowledgeIndex !== previousKnowledgeIndex || activeKnowledgeId !== previousKnowledgeId;
   }
 
   function drawControlsCard(item) {
@@ -312,6 +373,12 @@ export function createVrPlayerGuidePanel({ leftGrip, semanticInput, locale = 'en
     } else if (viewState === VIEW_STATE.TOOL_DETAIL) {
       const tool = items.find((item) => item.id === 'tools')?.tools.find(({ id }) => id === activeToolId);
       if (tool) drawToolDetail(tool);
+    } else if (viewState === VIEW_STATE.KNOWLEDGE_LIST) {
+      drawKnowledgeList(items.find((item) => item.id === 'knowledge'));
+    } else if (viewState === VIEW_STATE.KNOWLEDGE_DETAIL) {
+      const knowledge = items.find((item) => item.id === 'knowledge')?.knowledge
+        .find(({ id }) => id === activeKnowledgeId);
+      if (knowledge) drawKnowledgeDetail(knowledge);
     } else {
       const activeItem = items.find((item) => item.id === activeSectionId) ?? items[0];
       if (activeItem?.id === 'controls') drawControlsCard(activeItem);
@@ -336,6 +403,16 @@ export function createVrPlayerGuidePanel({ leftGrip, semanticInput, locale = 'en
       if (open && viewState === VIEW_STATE.TOOL_DETAIL) {
         viewState = VIEW_STATE.TOOL_LIST;
         activeToolId = null;
+        draw();
+        onPanelClick();
+      } else if (open && viewState === VIEW_STATE.KNOWLEDGE_DETAIL) {
+        viewState = VIEW_STATE.KNOWLEDGE_LIST;
+        activeKnowledgeId = null;
+        draw();
+        onPanelClick();
+      } else if (open && viewState === VIEW_STATE.KNOWLEDGE_LIST) {
+        viewState = VIEW_STATE.MAIN_MENU;
+        activeSectionId = null;
         draw();
         onPanelClick();
       } else if (open && viewState === VIEW_STATE.TOOL_LIST) {
@@ -366,6 +443,12 @@ export function createVrPlayerGuidePanel({ leftGrip, semanticInput, locale = 'en
       selectedToolIndex = (selectedToolIndex + (direction > 0 ? 1 : -1) + rowCount) % rowCount;
       draw();
       onPanelClick();
+    } else if (viewState === VIEW_STATE.KNOWLEDGE_LIST && direction && direction !== previousNavDirection) {
+      const knowledge = items.find((item) => item.id === 'knowledge')?.knowledge ?? [];
+      const rowCount = knowledge.length + 1;
+      selectedKnowledgeIndex = (selectedKnowledgeIndex + (direction > 0 ? 1 : -1) + rowCount) % rowCount;
+      draw();
+      onPanelClick();
     }
     previousNavDirection = direction;
     const horizontalAxis = input.leftStickX ?? 0;
@@ -386,7 +469,8 @@ export function createVrPlayerGuidePanel({ leftGrip, semanticInput, locale = 'en
           onPanelClick();
         } else {
           activeSectionId = items[selectedIndex]?.id ?? activeSectionId;
-          viewState = activeSectionId === 'tools' ? VIEW_STATE.TOOL_LIST : VIEW_STATE.SECTION_DETAIL;
+          viewState = activeSectionId === 'tools' ? VIEW_STATE.TOOL_LIST
+            : activeSectionId === 'knowledge' ? VIEW_STATE.KNOWLEDGE_LIST : VIEW_STATE.SECTION_DETAIL;
           draw(); onPanelClick();
         }
       } else if (viewState === VIEW_STATE.TOOL_LIST) {
@@ -400,11 +484,22 @@ export function createVrPlayerGuidePanel({ leftGrip, semanticInput, locale = 'en
           activeSectionId = null;
         }
         draw(); onPanelClick();
+      } else if (viewState === VIEW_STATE.KNOWLEDGE_LIST) {
+        const knowledge = items.find((item) => item.id === 'knowledge')?.knowledge ?? [];
+        const selectedKnowledge = knowledge[selectedKnowledgeIndex];
+        if (selectedKnowledge) {
+          activeKnowledgeId = selectedKnowledge.id;
+          viewState = VIEW_STATE.KNOWLEDGE_DETAIL;
+        } else {
+          viewState = VIEW_STATE.MAIN_MENU;
+          activeSectionId = null;
+        }
+        draw(); onPanelClick();
       }
     }
     previousConfirmPressed = confirmPressed;
   }
-  function reset() { selectedIndex = 0; selectedDebugIndex = 0; selectedToolIndex = 0; viewState = VIEW_STATE.MAIN_MENU; activeSectionId = null; activeToolId = null; previousNavDirection = 0; previousHorizontalDirection = 0; previousConfirmPressed = false;
+  function reset() { selectedIndex = 0; selectedDebugIndex = 0; selectedToolIndex = 0; selectedKnowledgeIndex = 0; viewState = VIEW_STATE.MAIN_MENU; activeSectionId = null; activeToolId = null; activeKnowledgeId = null; previousNavDirection = 0; previousHorizontalDirection = 0; previousConfirmPressed = false;
     suppressOpenNotification = true; setOpen(false); suppressOpenNotification = false; }
   function dispose() {
     if (disposed) return;
@@ -423,5 +518,6 @@ export function createVrPlayerGuidePanel({ leftGrip, semanticInput, locale = 'en
     getVisibleControlIds: () => [...visibleControlIds], getViewState: () => viewState,
     getSelectedIndex: () => selectedIndex, getSelectedDebugIndex: () => selectedDebugIndex,
     getActiveSectionId: () => activeSectionId, getSelectedToolIndex: () => selectedToolIndex,
-    getActiveToolId: () => activeToolId };
+    getActiveToolId: () => activeToolId, getSelectedKnowledgeIndex: () => selectedKnowledgeIndex,
+    getActiveKnowledgeId: () => activeKnowledgeId };
 }
