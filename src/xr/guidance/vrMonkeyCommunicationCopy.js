@@ -11,19 +11,16 @@ export const VR_MONKEY_COMMUNICATION_COPY_PL = Object.freeze({
     'progression.intro.afterPlayerGuide': { blocks: ['Jak zapomnisz — przypomnę.', 'Zobaczmy, czy świat cię słucha.', 'Wskaż mnie.'] },
     'progression.intro.triggerMonkey': { blocks: ['Teraz spust.'] },
     'progression.intro.pointerLearned': { blocks: ['Widzisz?\nJuż nauczyłeś świat, gdzie patrzysz.'] },
-    'progression.intro.follow': { blocks: ['To chodź.'] },
     'progression.intro.followPause': { blocks: ['Idziesz?'] },
     'progression.threshold.crossed': { blocks: ['No.\nTeraz jest łatwiej.'] },
     'progression.glyphs.firstInstruction': { blocks: ['Pięć znaków.', 'Nie pytaj jeszcze, co znaczą.\nDotknij jednego Szpilą.'] },
     'progression.glyphs.firstDiscovery': { blocks: ['O, wydaje mi się, że można tego użyć.'] },
     'progression.crystal.firstCreated': { blocks: ['Odpowiedział.'] },
-    'progression.reliquary.idea': { blocks: ['Co możemy z tym zrobić…  Hmm...', 'Może potrzebuje naczynia.'] },
+    'progression.reliquary.idea': { blocks: ['Co możemy z tym zrobić…', 'Może potrzebuje naczynia.'] },
     'progression.card.first': { blocks: ['Jedna.'] },
     'progression.postRing.changedWorld': { blocks: ['No i świat przestał być uprzejmy.', 'To, czego potrzebujesz, jest teraz poza zasięgiem.', 'Na szczęście nie na długo.'] },
     'progression.furnace.look': { blocks: ['Spójrz na Piec.', 'Tam coś na ciebie czeka.'] },
-    'progression.p2.smallGlyphsIntro': { blocks: ['Znowu.', 'Świat odsunął to, czego szukasz.', 'Świat lubi odsuwać rzeczy.\nTy nie musisz za nim biegać.', 'Czasem wystarczy dostroić to, co już masz.', 'Astrolabium ma nowe pasmo.\nB zmienia to, czego słucha.', 'Pojawiły się małe glify.', 'Małe rzeczy czasem prowadzą dalej niż duże.', 'Piec pomoże ci dostroić Astrolabium.', 'Wtedy duże glify znów będą mogły odpowiedzieć.', 'I kolejne karty także.'] },
-    'progression.p3.starsIntro': { blocks: ['Rozświetlasz to miejsce.\nAle glify lubią być w cieniu.', 'Możesz ich poszukać.\nNajpierw jednak przygotuj kolejne narzędzie.'] },
-    'progression.p3.furnaceNewFunction': { blocks: ['Piec chyba ma nową funkcję.\nJeśli się nie mylę.'] },
+    'progression.p2.smallGlyphsIntro': { blocks: ['Znowu.', 'Świat odsunął to, czego szukasz.', 'Świat lubi odsuwać rzeczy.\nTy nie musisz za nimi biegać.', 'Czasem wystarczy dostroić to, co już masz.', 'Astrolabium ma pasma.\nB zmienia to, czego słucha.', 'Widzisz te małe glify?', 'Małe rzeczy czasem prowadzą dalej niż duże.', 'Piec pomoże ci dostroić Astrolabium.', 'Wtedy duże glify znów będą mogły odpowiedzieć.', 'I kolejne karty także.'] },
     'progression.p3.firstSector': { blocks: ['Teraz możesz kontrolować jedną część.\nŻeby znaleźć glify, potrzebujesz trzech.'] },
     'progression.p3.antennaReady': { blocks: ['A teraz zapytaj świat.\nMoże ci odpowie.'] }
   }),
@@ -41,15 +38,16 @@ export const VR_MONKEY_COMMUNICATION_COPY_PL = Object.freeze({
   hints: Object.freeze({
     'hint.crystal.whatNow.soft': { blocks: ['Najpierw go weź.'] }, 'hint.crystal.grab.medium': { blocks: ['Chwyt.'] },
     'hint.glyphs.how.soft': { blocks: ['Wskaż znak.\nSpust. Przytrzymaj aż otrzymasz kryształ'] },
+    'hint.glyphs.how.strong': { blocks: ['Dotknij glif Szpilą.', 'Przytrzymaj spust.', 'Wydobądź kryształ.'] },
+    'hint.reliquary.firstCrystal': { blocks: ['Co możemy z tym zrobić…', 'Może potrzebuje naczynia.'] },
+    'hint.protoAstro.tuning': { blocks: ['Małe glify są związane z dużymi.', 'Astrolabium potrafi przyciągnąć duże.', 'Gdy wie czego szukać.'] },
     'hint.reliquary.inserted': { blocks: ['Aktywuj Kryształ, odsłoń jego znaczenie.'] },
-    'hint.reliquary.activate.soft': { blocks: ['Niektóre rzeczy trzeba obudzić.'] },
-    'hint.reliquary.activate.medium': { blocks: ['Zobacz. Może coś się stanie.'] },
     'hint.reliquary.active': { blocks: ['Można już go uwolnić. Spełnił swoją rolę.'] },
     'hint.furnace.astroStart': { blocks: ['Otwórz panel informacyjny Pieca.', 'Wybierz moduł Astrolabium Więzi.', 'Zamknij komorę i użyj środkowego przycisku, gdy Piec jest poprawnie przygotowany.', 'Jeśli Piec odpycha obiekt, najpierw sprawdź wybraną operację.'] },
     'hint.furnace.astroAvailable': { blocks: ['Otwórz komorę i wyciągnij swoje narzędzie.', 'Złap je.'] }
   }),
   acquisition: Object.freeze({
-    astro: Object.freeze({ blocks: ['To narzędzie do rzeczy, które są daleko,\na chciałbyś, żeby były bliżej.', 'Chwyt służy do namierzania.', 'Spust przyciąga namierzony obiekt.', 'Szpila i chwyt pozwalają przejąć obiekt.'] }),
+    astro: Object.freeze({ blocks: ['To narzędzie do rzeczy, które są daleko,\na chciałbyś, żeby były bliżej.', 'Chwyt służy do namierzania.', 'Spust przyciąga namierzony obiekt.', 'Szpila i chwyt drugiej ręki pozwalają przejąć obiekt.'] }),
     asterion: Object.freeze({ blocks: ['To narzędzie do zmiany horyzontu.\nNie przybliża tego, co jest daleko.', 'Zmienia to, skąd patrzysz.\nDzięki temu dosięgniesz tego, czego wcześniej nie mogłeś.'] })
   }),
   knowledge: Object.freeze({
