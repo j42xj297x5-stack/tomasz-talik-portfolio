@@ -6,7 +6,7 @@ const CORE_CHANNELS = Object.freeze({
   wood: Object.freeze({ glyphId: 'ai-guide', levelKey: 'beta' }),
   fire: Object.freeze({ glyphId: 'creative-ai', levelKey: 'gamma' })
 });
-const DEPTH_BANDS = Object.freeze(['NONE', 'FAR', 'MID', 'NEAR']);
+const DEPTH_BANDS = Object.freeze(['NONE', 'NEAR', 'MID', 'FAR']);
 
 function readCoreState(runeStoneProgressionController, sectorControlInteraction) {
   const powered = {};
