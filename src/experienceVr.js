@@ -78,6 +78,7 @@ import { createVrMonkeyKnowledgeResolver } from './xr/guidance/createVrMonkeyKno
 import { createVrMandatoryMonkeyCommunication } from './xr/guidance/createVrMandatoryMonkeyCommunication.js';
 import { createVrToolGuidanceLifecycle } from './xr/guidance/createVrToolGuidanceLifecycle.js';
 import { createVrEarlyExperienceGuidance } from './xr/guidance/createVrEarlyExperienceGuidance.js';
+import { createVrRuneResonatorGuidance } from './xr/guidance/createVrRuneResonatorGuidance.js';
 import { VR_MONKEY_COMMUNICATION_COPY_PL } from './xr/guidance/vrMonkeyCommunicationCopy.js';
 import { createVrFurnaceIntro } from './xr/guidance/createVrFurnaceIntro.js';
 import { createVrIntroSequence } from './xr/guidance/createVrIntroSequence.js';
@@ -435,6 +436,7 @@ const runeBinderRevealAudioProjection = createVrRuneBinderRevealAudioProjection(
 const synchronizeRuneBridgeReadiness = () => runeInstallationReadinessProjection.synchronizeBridges(runeBridgeActor);
 function presentLiveRuneBridgeReadinessTransitions() {
   const transitions = synchronizeRuneBridgeReadiness();
+  runeResonatorGuidance?.notifyBridgeTransitions(transitions);
   platformEnergyVfxProjection.presentReadinessTransitions(transitions);
   runeBinderRevealAudioProjection.presentReadinessTransitions(transitions);
 }
@@ -493,6 +495,7 @@ const attractorBandPresentations = Object.freeze({
 });
 const semanticInput = createVrSemanticInput({ renderer });
 const runeStoneProgressionController = createVrRuneStoneProgressionController();
+let previousRuneProgressionSnapshot = runeStoneProgressionController.getSnapshot();
 const runeInstalledStateProjection = createVrRuneInstalledStateProjection({
   runeStoneProgressionController, runeStoneActor, runeBridgeActor
 });
@@ -505,6 +508,8 @@ let smallGlyphAttractorInteraction = null;
 let largeGlyphAttractorInteraction = null;
 let runeStoneAttractorInteraction = null;
 let runeStoneInstallationInteraction = null;
+let runeResonatorGuidance = null;
+let monkeyKnowledgeResolver = null;
 const handModeController = createVrHandModeController({
   controllers: vrControllers.controllers,
   semanticInput,
@@ -563,6 +568,18 @@ const asterionResonatorFieldActor = createVrAsterionResonatorFieldActor({
 const unsubscribeResonatorScenarioHandoff = runeStoneProgressionController.subscribe(() => {
   progressionSemanticHandoff.onResonatorStateChanged(asterionResonatorFieldActor.getDescriptor());
 });
+const unsubscribeRuneGuidance = runeStoneProgressionController.subscribe((snapshot) => {
+  runeResonatorGuidance?.notifyRuneProgression(previousRuneProgressionSnapshot, snapshot);
+  previousRuneProgressionSnapshot = snapshot;
+});
+let previousResonatorDescriptor = asterionResonatorFieldActor.getDescriptor();
+const unsubscribeResonatorGuidance = asterionResonatorFieldActor.subscribe((descriptor) => {
+  runeResonatorGuidance?.notifyResonatorChanged(previousResonatorDescriptor, descriptor);
+  previousResonatorDescriptor = descriptor;
+});
+const unsubscribeSectorLockGuidance = asterionSectorAcquisitionInteraction.subscribeLocked(() => {
+  runeResonatorGuidance?.notifySectorLocked();
+});
 asterionProductionController.setHandModeController(handModeController);
 const astroAttractorProductionController = createVrAstroAttractorProductionController({
   model: assetManager.cloneGltfScene('vr-astro-attractor-model'),
@@ -601,7 +618,10 @@ const playerGuideProjection = createVrPlayerGuideProjection({
   can: (capability) => runtimeExperience?.can(capability) === true,
   getCurrentObjective: () => currentObjectiveProjection.getCurrentObjective(),
   isFurnaceRevealed: () => astroFurnace.object.visible === true,
-  isShellFieldRevealed: () => shellSystem.active === true
+  isShellFieldRevealed: () => shellSystem.active === true,
+  hasReadRuneStones: () => monkeyKnowledgeResolver?.hasReadStones() === true,
+  hasDiscoveredBinders: () => monkeyKnowledgeResolver?.hasDiscoveredBinders() === true,
+  hasInstalledRune: () => runeStoneProgressionController.getInstalledFamilyCodes().length > 0
 });
 const playerGuidePanel = createVrPlayerGuidePanel({
   leftGrip: vrControllers.controllers[0]?.grip,
@@ -614,9 +634,11 @@ const playerGuidePanel = createVrPlayerGuidePanel({
   debugCheckpoints: debugCheckpointsEnabled ? VR_DEBUG_CHECKPOINTS : [],
   onDebugCheckpoint: (checkpointId) => enterVrDebugCheckpoint?.(checkpointId)
 });
-const monkeyKnowledgeResolver = createVrMonkeyKnowledgeResolver({
+monkeyKnowledgeResolver = createVrMonkeyKnowledgeResolver({
   locale: language,
-  getCurrentObjective: () => currentObjectiveProjection.getCurrentObjective()
+  getCurrentObjective: () => currentObjectiveProjection.getCurrentObjective(),
+  isPostRingStoneGuidance: () => runtimeExperience?.getCurrentPointId() === '4.80'
+    && asterionResonatorFieldActor.getDescriptor().resonatorExists === false
 });
 monkeyGuide = createVrMonkeyGuide({
   actorRoot: monkeyMotionRoot,
@@ -631,6 +653,18 @@ monkeyGuide = createVrMonkeyGuide({
   onOpenChange: (open) => playVrUi(open ? VR_AUDIO.monkeyOpen : VR_AUDIO.monkeyClose),
   onPanelClick: () => playVrUi(VR_AUDIO.click),
   onAttentionStart: () => playVrWorld(VR_AUDIO.monkeyThinking)
+});
+runeResonatorGuidance = createVrRuneResonatorGuidance({
+  monkeyGuide, copy: VR_MONKEY_COMMUNICATION_COPY_PL,
+  secondsPerLine: settings.intro.messageDisplayDuration,
+  getCurrentPointId: () => runtimeExperience?.getCurrentPointId?.() ?? null,
+  getUnresolvedRuneBranchId: () => {
+    const stone = runeStoneAttractorInteraction?.getLockedStone?.();
+    return stone && runeStoneActor.getState(stone.branchId) === 'CARRIED_ORBIT'
+      && runeInstallationReadinessProjection.isInstallationReady(stone.branchId) !== true
+      ? stone.branchId : null;
+  },
+  knowledgeResolver: monkeyKnowledgeResolver
 });
 toolGuidanceLifecycle = createVrToolGuidanceLifecycle({
   monkeyGuide,
@@ -1233,6 +1267,7 @@ runtimeExperience = new RuntimeExperience({
         throw new Error(`Progress floor rejected accepted canonical Tier ${payload.tier} completion`);
       }
       playVrWorld(VR_AUDIO.tierComplete);
+      if (change.previousPointId === '4.70') runeResonatorGuidance.notifyThirdRingCompleted();
     },
     [VR_SCENARIO_EFFECT.BEGIN_P2_RADIAL_PRESENTATION]: () => {
       if (!largeGlyphActor.beginExpansion()) {
@@ -1385,6 +1420,7 @@ function renderFrame() {
   astroAttractorProductionController.update(delta);
   toolGuidanceLifecycle.update(delta);
   earlyExperienceGuidance.update(delta);
+  runeResonatorGuidance.update(delta);
   furnacePanel.update(delta);
   asterionSphere.update(delta);
   asterionGyroInteraction.update(delta);
@@ -1430,6 +1466,8 @@ function restoreVrScenarioBaseline() {
   furnaceProgressionController.resetBaseline();
   furnacePanel.reset();
   playerGuidePanel.reset();
+  runeResonatorGuidance.reset();
+  monkeyKnowledgeResolver.reset();
   astroFurnaceOptionInteraction.reset();
   astroFurnaceOpenInteraction.reset();
   astroFurnaceActivateInteraction.reset();
@@ -1556,6 +1594,9 @@ window.addEventListener('pagehide', () => {
   asterionSectorAcquisitionPresentation.dispose();
   asterionPlatformEnergyVfxProjection.dispose();
   unsubscribeResonatorScenarioHandoff();
+  unsubscribeRuneGuidance();
+  unsubscribeResonatorGuidance();
+  unsubscribeSectorLockGuidance();
   asterionResonatorFieldActor.dispose();
   asterionProductionController.dispose();
   astroAttractorProductionController.dispose();

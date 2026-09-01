@@ -30,6 +30,7 @@ export function createVrAsterionSectorAcquisitionInteraction({
   let gripActive = false;
   let triggerPriority = false;
   let disposed = false;
+  const lockListeners = new Set();
 
   const getLeftRecord = () => controllers.find(({ handedness }) => handedness === 'left') ?? null;
 
@@ -102,11 +103,12 @@ export function createVrAsterionSectorAcquisitionInteraction({
       acquisitionSeconds = SECTOR_LOCK_DWELL_SECONDS;
       lockedGlyphId = candidateGlyphId;
       state = VR_ASTERION_SECTOR_ACQUISITION_STATES.LOCKED;
+      [...lockListeners].forEach((listener) => listener(Object.freeze({ glyphId: lockedGlyphId })));
     }
   }
 
   function reset() { if (!disposed) clearSession(); }
-  function dispose() { if (disposed) return; clearSession(); disposed = true; }
+  function dispose() { if (disposed) return; clearSession(); lockListeners.clear(); disposed = true; }
 
   return {
     update,
@@ -116,6 +118,11 @@ export function createVrAsterionSectorAcquisitionInteraction({
     getCandidateGlyphId: () => candidateGlyphId,
     getLockedGlyphId: () => lockedGlyphId,
     getAcquisitionProgress: () => Math.min(1, Math.max(0, acquisitionSeconds / SECTOR_LOCK_DWELL_SECONDS)),
+    subscribeLocked(listener) {
+      if (typeof listener !== 'function' || disposed) return () => {};
+      lockListeners.add(listener);
+      return () => lockListeners.delete(listener);
+    },
     isControlAvailable: () => state === VR_ASTERION_SECTOR_ACQUISITION_STATES.LOCKED
       && gripActive && !triggerPriority && Boolean(sphere?.isEquipped?.())
   };

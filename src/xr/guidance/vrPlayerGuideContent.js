@@ -24,7 +24,10 @@ const VR_PLAYER_GUIDE_CONTENT = Object.freeze({
       })
     }),
     knowledge: Object.freeze({
-      shells: Object.freeze({ label: 'SKORUPY', body: 'Małe elementy tego świata' })
+      shells: Object.freeze({ label: 'SKORUPY', body: 'Małe elementy tego świata' }),
+      runeStones: Object.freeze({ label: 'KAMIENIE RUNICZNE', body: 'Są daleko.\nPiec potrafi stroić rzeczy.\nAstrolabium potrafi je sprowadzać.\nSprawdźmy, czy to wystarczy.' }),
+      binders: Object.freeze({ label: 'ZWORNIKI', body: 'Zworniki.\nPojawiały się, kiedy domykałeś te części platformy.\nWygląda na to, że nie są ozdobą.' }),
+      sector: Object.freeze({ label: 'SEKTOR', body: 'Spust — orientacja całej platformy\nChwyt — połącz się z aktywnym sektorem\nPrzytrzymaj strumień — zablokuj sektor\nRuch dłoni — zmieniaj jego ustawienie' })
     }),
     mainMenuHint: 'Lewy drążek — wybór · X — otwórz · Y — zamknij',
     toolListHint: 'Lewy drążek — wybór · X — otwórz · Y — wróć',
