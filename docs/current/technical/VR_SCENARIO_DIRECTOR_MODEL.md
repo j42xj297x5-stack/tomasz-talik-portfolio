@@ -1,55 +1,45 @@
-# Experience VR — Scenario and Director Model
+# Experience VR Scenario and Director Model
 
-Status: **CURRENT / BINDING**. Runtime graph and reconstruction are implemented through stable `4.80`; authored continuation is deferred.
+Status: **CURRENT / BINDING**, synchronized on 2026-09-01. Runtime graph and reconstruction are implemented through stable `5.10`.
 
-## Architecture and ownership
+## Ownership
 
-```text
-SPINE → SCENARIO → DIRECTOR → RuntimeExperience → actors / domain owners
-```
+`Spine → Scenario → Director → Runtime / domain owners`. Scenario owns authored dramaturgy, accepted semantic events, entry effects and capabilities. Director owns the current point and graph interpretation. Runtime/domain owners retain physical and committed gameplay truth; point IDs and debug aliases never replace that truth.
 
-Spine owns authored order, Scenario owns declarative points and settled consequences, Director owns transition legality, RuntimeExperience composes semantic effects, and actors/domain owners retain their own transient or persistent truths. No central gameplay store is introduced.
-
-## Implemented authored graph
+## Authored spine
 
 ```text
-1.10 → … → 4.10 → 4.20 → 4.30 → 4.40 → 4.50 → 4.60 → 4.70 → 4.80
+1.10 → … → 4.10 → 4.20 → 4.30 → 4.40 → 4.50 → 4.60 → 4.70 → 4.80 → 5.10
 ```
 
-The implemented P2 tail is:
-
-| Point | Canonical role |
+| Point | CURRENT role |
 | --- | --- |
-| `4.40` | dedicated observation window |
-| `4.50` | Monkey attention only |
-| `4.60` | mandatory P2 message |
-| `4.70` | grants existing B, Small Glyph, Furnace essence, family-gated Large Glyph, Crystal, Reliquary and order-3 card rights |
-| `4.80` | stable settled Tier-3 boundary and entry boundary for later Rune Stone authoring |
+| `4.70` | Proto-Astro tuning and third-ring completion |
+| `4.80` | third ring complete; waiting for the existing physical Resonator result |
+| `5.10` | stable third-ring + Resonator join; current authored/runtime boundary |
 
-Five order-3 cards complete into `4.80`. No Scenario point after `4.80` is implemented or authored by the Rune domain foundations. `100.10` remains the story terminal, but it is not presented as a direct implemented gameplay continuation from `4.80`.
+`4.80` targets `5.10`, enters with `SET_MAIN_AMBIENT_04` and `CHECK_RESONATOR_JOIN`, and accepts `RESONATOR_READY`. The check covers the event order in which Resonator already exists on entry. Otherwise `resonatorExists === true` is projected as `RESONATOR_READY`. This semantic join does not gate or own Resonator creation.
 
-## Reconstruction
+`5.10` has no entry effects, CURRENT OBJECTIVE, transitions or blocking entry dialogue. It has no direct transition to `100.10`; the latter remains a separate story terminal used by an earlier explicit Intro choice.
 
-`stateAt(X)` folds settled consequences strictly before `X`; it never reconstructs held targets, pulls, Furnace cycles, timers or panel UI. Stable `stateAt(4.80)` contains completed Tier 3, page IDs/orders through 3, floor completion through Tier 3, consumed Tier-3 crystal, Proto-Astro essences `K/T/S/L/R`, and `largeGlyphs.stage = SPHERE_FAR`.
+## CURRENT OBJECTIVE
 
-Debug `P5 → pointId 4.80 → spawn RING` is **IMPLEMENTED**; P1–P4 are unchanged. `P5` remains an ordinary debug/QA alias, not a Scenario point or capability owner, and owns no settled consequences. Canonical `stateAt → reconstruction → activate` remains the hydration path.
+The read-only Guidance projection derives these exact live strings:
 
-Point `2.10` now has the separate `REVEAL_NATURAL_RUNE_STONES` effect in the same entry beat as `BEGIN_CELESTIAL_REVEAL`. The settled consequence `runeStones.presentationVisible = true` accumulates into later `stateAt` results; this presentation truth neither grants targetability nor changes the graph or point IDs.
+- `2.30`: `UKOŃCZ PIERWSZY KRĄG — n/5`
+- `3.80`: `ZGROMADŹ SKORUPY — n/6`, `ZBUDUJ KULĘ ASTERIONOWĄ`, `KULA ASTERIONOWA — PRODUKCJA` or `ODBIERZ KULĘ ASTERIONOWĄ`
+- `4.10`: `UKOŃCZ DRUGI KRĄG — n/5`
+- `4.70`, incomplete Proto-Astro tuning: `DOSTRÓJ ASTROLABIUM — n/5 · UKOŃCZ TRZECI KRĄG — n/5`
+- `4.70`, full tuning: `UKOŃCZ TRZECI KRĄG — n/5`
+- `4.80`, while Resonator does not exist: `PRZYGOTUJ REZONATOR — STROJENIE n/3 · INSTALACJA n/3`
+- `4.80`, when Resonator exists, and `5.10`: no objective.
 
-## Main-background semantic entries
+## Reconstruction and debug aliases
 
-Scenario owns the CURRENT / BINDING semantic selection of the main background thread; the Ambient Sequencer owns playback mechanics downstream. Existing anchors are:
+`stateAt(X)` folds settled consequences strictly before `X` and never recreates transient interactions. Hydration/direct activation/reset must not replay live-only discovery Guidance.
 
-| Semantic entry | Scenario anchor | Main ambient |
-| --- | --- | --- |
-| crossing from `1.130` completed; Monkey seated; `GLYPH_FREE_EXPLORE` begins | `2.10` | `ambient_01.mp3` |
-| ring 1 completed | `2.40` | `ambient_02.mp3` |
-| ring 2 completed | `4.20` | `ambient_03.mp3` |
-| ring 3 completed | `4.80` | `ambient_04.mp3` |
-| ring 4 completed | future Scenario point after `4.80`; **NOT AUTHORED**, no point ID assigned | `ambient_05.mp3` |
+`P5 → 4.80` and `P6 → 5.10` are implemented debug/QA aliases only. Neither owns gameplay truth, capability truth or Scenario consequences; canonical hydration remains `stateAt → reconstruction → activate`.
 
-Ring 5 completion is also **FUTURE / NOT AUTHORED** and has no point ID. The Scenario-driven selection above is a binding target, **NOT YET FULLY IMPLEMENTED**: only the `2.10` main-sequence handoff exists, while runtime still derives later selection from the current tier. Playback cycles, global quiet cursor and post-main tail belong to [`VR_AUDIO_MODEL.md`](VR_AUDIO_MODEL.md).
+## Boundary
 
-## Rune boundary
-
-Rune A1–A9.4 are partially implemented runtime-domain foundations and do not extend Scenario. Natural tuning, targetability/transport and platform installation readiness remain independent domain laws. Socket capture, persistent installed truth, Water override trigger, Ether flow, further bridge mechanics and every authored continuation after `4.80` are **DEFERRED / NOT IMPLEMENTED**. Authority: [`VR_RUNE_STONES_MODEL.md`](VR_RUNE_STONES_MODEL.md).
+Rune tuning, transport, installation, Binder readiness, sector control and Resonator creation are independent domain laws. Scenario observes their semantic results. Discovery Guidance through the first Resonator is implemented; physical Resonator target response, Metal/Water/Ether progression and later finale authoring remain future. Rune authority: [`VR_RUNE_STONES_MODEL.md`](VR_RUNE_STONES_MODEL.md). Resonator authority: [`VR_ASTERION_RESONATOR_MODEL.md`](VR_ASTERION_RESONATOR_MODEL.md).

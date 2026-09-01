@@ -2,6 +2,17 @@
 
 Status: current binding decisions with preserved history. Synchronized on 2026-09-01 through the Asterion Resonator core and Platform Energy VFX implementation checkpoints.
 
+## 2026-09-01 — CURRENT Scenario 5.10, discovery Guidance and Y knowledge (superseding status claims)
+
+This entry supersedes conflicting CURRENT status claims that Scenario ends at `4.80`, all post-`4.80` Rune/Resonator Guidance is future, Y contains only persistent tool knowledge, or ordinary `CO TERAZ?` is always exactly the generic objective projection. Older entries remain historical evidence.
+
+1. Scenario implements `4.80 → 5.10`; `5.10` is the stable current authored/runtime boundary and `P6` target. `P5 → 4.80` and `P6 → 5.10` remain debug/QA aliases only.
+2. Existing Resonator domain truth joins through `RESONATOR_READY`; `CHECK_RESONATOR_JOIN` handles either event order. Scenario does not own or gate physical Resonator creation.
+3. Rune/Binder/Sector/Resonator discovery Guidance through first Resonator is implemented and observes domain truth without owning it.
+4. Player Y now includes dynamic persistent session `WIEDZA` alongside controls, current task and tools.
+5. Ordinary Monkey may expose bounded contextual discovered-world stone/Binder knowledge, while persistent practical tool reference remains in Y.
+6. Physical Resonator target selection/scoring/response and later Metal/Water/Ether/finale continuation remain future.
+
 ## 2026-08-26 — CURRENT Asterion Resonator, Rune Binder and sandbox ownership (superseding antenna canon)
 
 1. Physical Rune tuning, legal pull, installation, sector control and Resonator creation depend on tools, world objects and domain conditions, never a `currentPoint >= X` gate. Scenario owns dramaturgy, required beats, revealed knowledge, Guidance/hints and crystal-acquisition gates; early sandbox mastery does not bypass crystal progression.

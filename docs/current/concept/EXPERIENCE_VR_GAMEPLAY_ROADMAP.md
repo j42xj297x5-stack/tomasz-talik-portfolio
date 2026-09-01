@@ -1,27 +1,26 @@
-# Experience VR Gameplay Roadmap
+# Experience VR — Gameplay Roadmap
 
-Status: **CURRENT authored-direction roadmap**. Runtime authority: [`VR_RUNTIME_MODEL.md`](../technical/VR_RUNTIME_MODEL.md); Rune authority: [`VR_RUNE_STONES_MODEL.md`](../technical/VR_RUNE_STONES_MODEL.md); platform-antenna target authority: [`VR_PLATFORM_ANTENNA_MODEL.md`](../technical/VR_PLATFORM_ANTENNA_MODEL.md).
+Status: **CURRENT roadmap**, synchronized on 2026-09-01. Technical models remain runtime authority.
 
-## Implemented authored Scenario
+## Implemented through the current boundary
 
-Canonical P2 runs `4.30 → 4.40 → 4.50 → 4.60 → 4.70 → 4.80`. `4.80` is the stable Tier-3 boundary. No new point IDs after it are authored here.
+- authored Scenario tail `4.40 → 4.50 → 4.60 → 4.70 → 4.80 → 5.10`;
+- `4.80 → 5.10` semantic join of existing `resonatorExists` through `RESONATOR_READY`, without Scenario gating physical creation;
+- `P5 → 4.80` and `P6 → 5.10` as debug/QA aliases only;
+- natural Rune A9 tuning, transport, installation and reconstruction foundation;
+- persistent Binder readiness/materialization and installed truth;
+- R2A powered-sector acquisition, R2B EARTH/WOOD/FIRE control and R4 Resonator core/descriptor;
+- Rune/Binder/Sector/Resonator Guidance through first Resonator discovery;
+- Player Y dynamic `WIEDZA` and persistent tool reference.
 
-## Existing runtime-domain foundations
+Authority for active Resonator work is [`VR_ASTERION_RESONATOR_MODEL.md`](../technical/VR_ASTERION_RESONATOR_MODEL.md) and its [`VR_ASTERION_RESONATOR_FIELD_MODEL.md`](../technical/VR_ASTERION_RESONATOR_FIELD_MODEL.md) sub-model. The historical antenna model is not CURRENT authority.
 
-Natural Rune A9.1–A9.6 foundation is complete without extending Scenario: five natural physical Rune Stones already exist in the `50–75 m` layer; natural tuning and `tunedRuneFamilies`, RUNESTONES targeting, transport, readiness, platform-centered handoff, generic pair installation choreography, physical bridge extension, stable installation and persistent installed truth are implemented. A9.6 adds silent validated `runeProgression` hydration and read-only reconstruction directly to settled installed anchors and extended `ORBITING` bridges. Large Glyph `SPHERE_FAR = 80 m`, Panel 1 Rune U projection and Panel 2 band presentation are also implemented.
+## Future
 
-The five natural actors begin hidden and their first-presentation seam is implemented at `2.10`: a separate Scenario effect reveals them with the celestial world. Visibility remains independent of later targetability and dramatic understanding.
+- physical Resonator target selection, scoring and response actor/path;
+- glyph reacquisition through Resonator;
+- Metal/Water expansion, Water special override and Ether intervention;
+- final Water hunt, world dissolution and remaining late-act/finale Scenario authoring after `5.10`;
+- field presentation/audio, Rune-install VFX/audio and other explicitly open presentation work.
 
-## Future authored dramaturgy — deferred
-
-Existing future roadmap labels (including `6.10`) describe when the player is meant to understand, receive or use Rune Stone mechanics; they must not be read as future creation of actors that already exist in runtime. Future beats may author reveal/capability/orchestration but must use the existing domain owners.
-
-The generic pair installation mechanic is **IMPLEMENTED**. Future scope is the not-yet-authored five-installation dramaturgy/progression plus later antenna and sector beats, special Ether/Monkey flow, Water readiness override trigger, bridge spin/presentation and Rune Stone spatial audio, final Water hunt and finale handoff. Carried-stone ↔ installed-stone collision is **SUPERSEDED** and removed from the plan. Scenario and production direct-target parity after `4.80` are **DEFERRED UNTIL SCENARIO AUTHORING**; A9.6 authors no new point IDs or gameplay.
-
-## Invariants for future authoring
-
-- Natural tuning never reads sector completion.
-- Targetability equals tuned natural families.
-- Sector completion gates installation readiness only.
-- Ether is special: no sixth natural family, sector, bridge or platform slot.
-- `SPINE → SCENARIO → DIRECTOR → RuntimeExperience → actors / domain owners`; no central gameplay store.
+The implemented sandbox core does not make the future target-response/finale path implemented.

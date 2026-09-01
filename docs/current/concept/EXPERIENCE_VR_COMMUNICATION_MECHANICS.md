@@ -1,90 +1,55 @@
-# Experience VR — mechanika komunikacji z graczem
+# Experience VR — Communication Mechanics
 
-**Status:** CURRENT / canonical po G6
-**Zakres:** Guidance, Małpa, panel Y i komunikacja gracza
+Status: **CURRENT / BINDING**, synchronized on 2026-09-01. Literal Polish text is owned by [`EXPERIENCE_VR_PLAYER_COMMUNICATION_COPY.md`](EXPERIENCE_VR_PLAYER_COMMUNICATION_COPY.md).
 
-## Podział odpowiedzialności
+## Surfaces and ownership
 
-**Monkey first teacher.** Małpa jest właścicielem mandatory progression communication, sytuacyjnego attention, jednorazowego nauczania po acquisition, bieżącego `CO TERAZ?` oraz historii odkrytych kart. Nie jest trwałym magazynem praktycznej wiedzy o narzędziach.
+**Monkey first teacher** owns mandatory progression communication, situational hints, one-shot acquisition teaching, ordinary questions and discovered-card history. **Player Y persistent memory** owns controls, current task, practical tool reference and read-only discovered-world `WIEDZA`. Neither surface owns gameplay progression truth.
 
-**Player Y persistent memory.** Panel Y przechowuje trwałą wiedzę praktyczną o Piecu, Astrolabium Więzi i Kuli Asterionowej oraz pokazuje `AKTUALNE ZADANIE`. Guidance projektuje prawdę Scenario i domain owners; nie posiada gameplayu ani completion progresji.
+Two bounded Guidance lifecycles are implemented: early Experience Guidance and Rune/Resonator Guidance. They observe existing Scenario semantics and domain transitions. Hydration, direct activation and reset establish a baseline and must not replay live discovery one-shots.
 
-**WORLD EXISTS BEFORE MECHANIC — communication consequence.** Gdy world object był widoczny przed odblokowaniem jego mechaniki, późniejsza komunikacja ujawnia jego znaczenie lub nową capability zamiast sugerować, że obiekt właśnie się pojawił. Literalne copy pozostaje osobnym zadaniem; Guidance nie zmienia visibility w capability ani targetability.
+## Arbitration
 
-## Jeden CURRENT OBJECTIVE
+Priority is strictly `MANDATORY > ACQUISITION > OPTIONAL`. One lease plays at a time. A higher priority can preempt lower pending/attention work, but started playback is non-preemptible. Pending or attention work is cancelled when no longer relevant; cancelled discoveries do not mutate domain truth.
 
-Jedynym ownerem modelu bieżącego celu jest `createVrCurrentObjectiveProjection`. Ta sama instancja i ten sam wynik `{ id, body }` zasilają `Y → AKTUALNE ZADANIE` oraz `Małpa → CO TERAZ?`.
+## CURRENT OBJECTIVE
 
-Projection jest bezstanowy: czyta canonical point i aktualny domain state, nie ma timerów, nie zapisuje completion i działa tak samo w normalnym runtime, po hydration oraz direct activation. Dynamiczne przypadki:
+`createVrCurrentObjectiveProjection` is the only objective owner. It is a stateless, read-only projection of Scenario point plus live owners. Y shows it under `AKTUALNE ZADANIE`.
 
-| Point | Projekcja |
-| --- | --- |
-| `2.30` | `PIERWSZY KRĄG — n/5` |
-| `3.80` | `ZGROMADŹ SKORUPY — n/6` → `ZBUDUJ KULĘ ASTERIONOWĄ` → `KULA ASTERIONOWA — PRODUKCJA` → `ODBIERZ KULĘ ASTERIONOWĄ` |
-| `4.10` | `DRUGI KRĄG — n/5` |
-| `4.70` | `DOSTRÓJ ASTROLABIUM — n/5 · TRZECI KRĄG — n/5`; po pełnym strojeniu tylko `TRZECI KRĄG — n/5` |
+Normally Monkey `CO TERAZ?` projects that same objective. At `4.80`, while Resonator does not exist, it instead uses the authored discovery flow: first stone lead, then `KAMIENIE`. At `5.10` there is no objective. Therefore ordinary Monkey is not universally an exact generic-objective mirror.
 
-`CO TERAZ?` istnieje wyłącznie, gdy projection zwraca objective, pokazuje dokładnie jeden objective i nigdy nie otwiera pustej kategorii.
+After first live Binder `HIDDEN → DOCKED`, ordinary Monkey additionally exposes `CO TO JEST? → ZWORNIKI`. This is discovered-world knowledge, not a persistent tool manual. Removed Astro/Asterion contextual manuals and legacy categories remain absent.
 
-## Acquisition — jednorazowe pierwsze nauczanie
+## Player Y
 
-Dla Astro i Asteriona obowiązuje ten sam lifecycle:
+The hierarchy is:
 
-```text
-claim → około 5 s → checheszki / attention → kliknięcie Małpy
-→ bezpośredni one-shot playback → completion → zwykła Małpa wraca do idle
-```
+- `STEROWANIE`;
+- `AKTUALNE ZADANIE`;
+- `NARZĘDZIA`, when at least one tool entry exists;
+- `WIEDZA`, when at least one knowledge item exists.
 
-Acquisition nie jest ordinary Monkey knowledge i nie otwiera automatycznie zwykłego menu. Po completion praktyczna instrukcja pozostaje permanentnie w Y, a ordinary menu Małpy nie otrzymuje trwałego tematu „co to jest?”. Hydration stanu już zdobytego narzędzia nie odtwarza acquisition.
+Navigation is `MAIN_MENU → SECTION_DETAIL`, `MAIN_MENU → TOOL_LIST → TOOL_DETAIL` and `MAIN_MENU → KNOWLEDGE_LIST → KNOWLEDGE_DETAIL`.
 
-## Timed Tool Guidance
+`WIEDZA` is runtime-session communication memory cleared by canonical baseline reset; there is no durable save. Unlocks are read-only projections:
 
-- Po około 180 s bez rozpoczęcia produkcji Astro opcjonalny Furnace guidance sygnalizuje uwagę checheszkami, czeka na kliknięcie i odtwarza instrukcję.
-- Po około 60 s, gdy Astro jest `AVAILABLE` i nie zostało odebrane, analogicznie dostępny jest optional claim guidance.
-- Pending/attention znika, jeśli problem przestał istnieć przed kliknięciem; nieaktualna instrukcja nie jest odtwarzana.
-- Optional Tool Guidance nie przejmuje otwartego ordinary menu Małpy; pozostaje pending i czeka.
+- `SKORUPY` from Shell field presentation truth;
+- `KAMIENIE RUNICZNE` after the player reads Monkey `KAMIENIE`;
+- `ZWORNIKI` after the first live Binder `HIDDEN → DOCKED`, remaining available after `BOUND`;
+- `SEKTOR` after first installed Rune discovery.
 
-## Arbitration komunikacji Małpy
+Physical Astro acquisition grants `CAN_EQUIP_ASTRO` and `CAN_SWITCH_ASTRO_BAND`; the base bands already include `SHELLS` and `SMALL_GLYPHS`, so B may cycle them immediately. `LARGE_GLYPHS` and `RUNESTONES` retain their later domain/tuning conditions. This does not move Small Glyph materialization or Large Glyph/Rune targetability earlier.
 
-Dialogue, attention i playback mają jawnego ownera. Priorytet jest ścisły:
+## Implemented Rune/Resonator reactions
 
-```text
-MANDATORY > ACQUISITION > OPTIONAL
-```
+1. Live third-ring completion → `5 s` → attention → `progression.p3.glyphsGone`.
+2. Failed legal Rune transport without readiness: `5 s` unresolved → soft hint; after soft completion and another unresolved `5 s` → medium hint. Pending work cancels when resolved.
+3. `installedRuneFamilies 0 → 1` → `5 s` → attention → one-shot `progression.p3.firstRuneInstalled`.
+4. Live-only sector `LOCKED` notification → `5 s` → automatic playback without attention → `progression.p3.firstSectorLock`.
+5. `resonatorExists false → true` → `5 s` → attention → `progression.p3.resonator`.
 
-- istnieje tylko jeden aktywny dialogue lease;
-- actor może aktualizować, zwolnić lub wyczyścić wyłącznie swój stan;
-- wyższy priorytet może wywłaszczyć niższy wyłącznie w `WAITING`/`ATTENTION`;
-- rozpoczęty `PLAYBACK` jest niepreemptowalny;
-- wywłaszczona komunikacja pozostaje pending, jeśli nadal jest relevant;
-- semantic cancellation usuwa nieaktualny pending/attention;
-- reset całego subsystemu Małpy może globalnie wyczyścić ownera, attention i dialogue.
+First Binder discovery unlocks knowledge without Monkey attention or automatic speech. All these beats react to domain truth, are not mechanic gates and can happen before `4.80`.
 
-## Dostępność Małpy z narzędziami
+## Copy representation
 
-Małpa jest niezależnym communication interaction ownerem, a nie zwykłym world-ray targetem. Można targetować Małpę i obsługiwać jej panel obiema rękami w `NORMAL`, z wyposażonym Astro, z wyposażonym Asterionem oraz z oboma narzędziami jednocześnie. Nie wymaga to unequip ani zmiany hand mode.
-
-Monkey hit ma lokalny priorytet nad Astro interaction i Asterion gyro input. Po opuszczeniu targetu narzędzia działają normalnie; kontrakt nie odsłania globalnie tool rays.
-
-## Panel Y
-
-Hierarchia nawigacji:
-
-```text
-MAIN_MENU → SECTION_DETAIL
-MAIN_MENU → TOOL_LIST → TOOL_DETAIL
-```
-
-`Y` zamyka panel w `MAIN_MENU`, wraca do `MAIN_MENU` z `SECTION_DETAIL` i `TOOL_LIST`, a z `TOOL_DETAIL` wraca do `TOOL_LIST`.
-
-Lista trwałych narzędzi to `PIEC`, `ASTROLABIUM WIĘZI`, `KULA ASTERIONOWA`. Piec pojawia się od faktycznego reveal Pieca; sama widoczność wpisu nie przyznaje capability jego używania. Astro i Asterion są widoczne zgodnie z odpowiednią acquired/capability truth.
-
-## Odbiór narzędzi
-
-Oba narzędzia odbiera się przez Grab/squeeze. Legalny ray lewej albo prawej ręki może wskazać Astro lub Asteriona, a Grab inicjuje claim. Astro trafia finalnie do prawego canonical slotu/ręki, Asterion do lewej canonical ręki. Guidance nie uczy, którą ręką trzeba odebrać narzędzie; późniejsze używanie nadal zachowuje własny handedness.
-
-## Ordinary menu i stabilny kontrakt UI
-
-Root zawiera `JAK MI IDZIE?` oraz warunkowe `CO TERAZ?`. Historia pokazuje `Odkryte karty: 0.` albo `Odkryte karty: {count}. Wybierz znak.`. Nie ma trwałych tematów Astro/Asteriona, `JAK DOSTROIĆ ASTROLABIUM?`, `CO DALEJ?` ani dawnych kategorii kontekstowych.
-
-Navigation jest oddzielona spacingiem, bez separatora. Przycisk back/close uwzględnia pełny label. Długie dynamiczne etykiety są bounded i mogą być multiline; hit region odpowiada visual region, a paginacja uwzględnia dynamiczną wysokość itemów.
+Runtime Monkey copy is authored as `blocks[]`: one element is one bubble; `\n` inside an element is a mandatory line break in that bubble. Documentation must neither merge nor split blocks and uses `--- BLOCK ---` only between elements.

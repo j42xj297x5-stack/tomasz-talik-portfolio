@@ -2,7 +2,7 @@
 
 ## Status i reguła nadrzędna
 
-Status: **CURRENT WORKING CANON / TARGET, NOT IMPLEMENTED** dla późnego etapu Experience VR.
+Status: **CURRENT WORKING CANON / SPLIT IMPLEMENTATION STATUS**. Rune tuning/transport/install, Binder readiness/materialization, powered-sector acquisition/control, Resonator core/descriptor, discovery Guidance through first Resonator and Scenario join through `5.10` are **CURRENT / IMPLEMENTED** under their technical owners. Physical Resonator target selection/scoring/response, glyph reacquisition, Metal/Water/Ether expansion and the finale continuation are **FUTURE**.
 
 Ten przebieg zastępuje wcześniejszą wersję, w której trzy sektory tworzyły pełną antenę przed etapem kamieni runicznych:
 
@@ -17,17 +17,30 @@ Dokładne receptury strojenia pozostają kontraktem receptur i nie są definiowa
 
 **Reguła sandboxu:** poniższa kolejność jest dramaturgią i ścieżką Guidance, nie fizycznym gate'em mechanik. Rune tuning, legalny pull, instalacja przy istniejącym Zworniku, sector control i powstanie Rezonatora wynikają z narzędzi oraz stanu świata i mogą zajść wcześniej. Scenario nadal ogranicza obowiązkowe beaty i pozyskanie kolejnych kryształów, a wiedzę ujawnia zgodnie z tym, co gracz już odkrył. Nie stosuje się gate'u `currentPoint >= X` dla tych mechanik.
 
+## Granica implementacji
+
+| Zakres | Status |
+| --- | --- |
+| Rune tuning/transport/install i persistent truth | CURRENT / IMPLEMENTED |
+| Binder readiness/materialization | CURRENT / IMPLEMENTED |
+| Powered-sector acquisition/control i Resonator core/descriptor | CURRENT / IMPLEMENTED |
+| Rune/Binder/Sector/Resonator Guidance oraz `4.80 → 5.10` | CURRENT / IMPLEMENTED |
+| Resonator target selection/scoring/response i glyph reacquisition | FUTURE |
+| Metal/Water, Water override, Ether, final Water hunt, dissolution/finale after `5.10` | FUTURE |
+
+Sections describing target response and later finale are design canon, not implementation claims.
+
 ## 1. Glify znikają
 
 Po ukończeniu strojenia Astrolabium Więzi duże glify ponownie się oddalają. Tym razem nie są widoczne ani słyszalne, Astrolabium ich nie wykrywa i nie pozostaje nawet cień celu. Świat nie wystawia markera ani nowego obiektu; przez chwilę oferuje wyłącznie nocne niebo. Małpa może tylko zasygnalizować dostępność rozmowy łukami komunikacyjnymi.
 
-### `progression.runes.glyphsGone` — `PROGRESSION_MESSAGE`
+### `progression.p3.glyphsGone` — **IMPLEMENTED** — `PROGRESSION_MESSAGE`
 
 > No.  
 > Tym razem naprawdę uciekły.  
 > Nie widać ich. Nie słychać.
 
-### `knowledge.runes.whatNow`
+### `knowledge.p3.stonesLead` — **IMPLEMENTED**
 
 **CO TERAZ?**
 
@@ -35,7 +48,7 @@ Po ukończeniu strojenia Astrolabium Więzi duże glify ponownie się oddalają.
 > Albo sprawić, żeby to miejsce patrzyło dalej niż my.  
 > Zostały jeszcze kamienie.
 
-### `knowledge.runes.whyStones`
+### `knowledge.p3.stones` — **IMPLEMENTED**
 
 **KAMIENIE?**
 
@@ -52,12 +65,12 @@ Piec otrzymuje funkcję strojenia Astrolabium pod rodzinę kamienia. Proces ma c
 
 Przyciągnięcie kamienia bez istniejącego właściwego Zwornika jest legalnym stanem sandboxowym: cel dociera w pobliże platformy, pozostaje poza nią i czeka na miejsce związania. Nie jest to obowiązkowy Scenario point. Narzędzie nie może wyglądać na uszkodzone, a hint jest sytuacyjny i pomijalny, jeżeli gracz rozumie już stan.
 
-### `hint.runes.pullFails.soft`
+### `hint.rune.noBinder.soft` — **IMPLEMENTED**
 
 > Działa.  
 > Tylko nie ma gdzie go przywiązać.
 
-### `hint.runes.pullFails.medium`
+### `hint.rune.noBinder.medium` — **IMPLEMENTED**
 
 > Spójrz na krawędzie sektorów.
 
@@ -67,7 +80,7 @@ Struktury materializujące się wcześniej przy ukończonych częściach platfor
 
 Każdy Zwornik materializuje się dokładnie z ukończenia wszystkich paneli swojego sektora, nie z instalacji kamienia. Po reveal pozostaje trwały; dlatego Zworniki EARTH, WOOD i FIRE mogą istnieć przed ukończeniem pełnego trzeciego kręgu. Instalacja później wiąże kamień w niezależnej finalnej kotwicy. Prezentacyjna skala i radialne odsunięcie geometrii Zwornika nie mogą przesuwać tej kotwicy. Spin Zwornika nie należy do przyszłego kanonu.
 
-### `knowledge.runes.binders`
+### `knowledge.p3.binders` — **IMPLEMENTED**
 
 **CO TO JEST?**
 
@@ -88,7 +101,7 @@ przyciągnięcie → przejęcie przez Zwornik → lot do pozycji
 
 Gracz nie wkłada kamienia ręcznie do uchwytu.
 
-### `progression.runes.firstInstalled`
+### `progression.p3.firstRuneInstalled` — **IMPLEMENTED**
 
 > O.  
 > Sam wiedział, gdzie ma trafić.
@@ -97,7 +110,7 @@ Gracz nie wkłada kamienia ręcznie do uchwytu.
 
 Od fizycznego stworzenia Kuli Asterionowej grip może tworzyć szeroki, lekko łukowaty, wielobarwny strumień. Odpowiadają wyłącznie sektory **powered** przez zainstalowany kamień. Powered sector jest lockable nawet przy `LEVEL 0 / 0° / OFF`; **field-active** staje się dopiero po ustawieniu poziomu większego od zera. Strumień musi trafiać ten sam legalny, zasilony sektor nieprzerwanie przez pełne **1.0 s**; dopiero wtedy powstaje **SECTOR LOCK** i ruch dłoni może wpływać na sektor. Zmiana celu albo utrata legalnego trafienia przed upływem 1.0 s zeruje acquisition timer. Przed lockiem Kula nie steruje lokalnym sektorem, a po locku ruch jest interpretowany względem przejętego sektora, nie całej platformy.
 
-### `progression.runes.sectorControl`
+### `progression.p3.firstSectorLock` — **IMPLEMENTED**
 
 > Teraz odpowiada na Kulę.  
 > Przytrzymaj chwyt nad sektorem.  
@@ -112,7 +125,7 @@ Po pierwszym locku:
 
 Gdy trzy wymagane sektory są zasilone przez zainstalowane kamienie i mogą współpracować, fizyczny stan świata tworzy pierwszy układ poszukiwawczy: **REZONATOR ASTERIONOWY**. Nie powstaje on z wejścia w Scenario point i może istnieć przed tym beatem. Nie jest radarem ani klasyczną anteną; stroi przestrzeń i wykrywa odpowiedź legalnych odległych celów wspieranych przez właściwe domeny. Jeśli gracz utworzył go wcześniej, późniejsza dramaturgia uznaje ten fakt zamiast wymuszać ponowne odkrycie lub budowę.
 
-### `progression.resonator.created`
+### `progression.p3.resonator` — **IMPLEMENTED**
 
 > No dobrze.  
 > Trzy razem zaczynają słuchać.  

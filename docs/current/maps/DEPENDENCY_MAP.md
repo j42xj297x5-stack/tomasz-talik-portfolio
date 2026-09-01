@@ -10,7 +10,7 @@
 SPINE → SCENARIO → DIRECTOR → RuntimeExperience → actors / domain owners
 ```
 
-Scenario is implemented through `4.40 → 4.50 → 4.60 → 4.70 → 4.80`. Continuation after `4.80` is deferred.
+Scenario is implemented through `4.40 → 4.50 → 4.60 → 4.70 → 4.80 → 5.10`; `5.10` is the stable authored/runtime boundary. `P6 → 5.10` is a debug/QA alias only.
 
 Scenario owns dramaturgy, required progression beats, revealed knowledge, Guidance/hints and crystal-acquisition gates. It observes domain truth but does not gate physical Rune tuning, Rune pull, Rune installation, sector control or Resonator creation through `currentPoint`.
 
@@ -83,6 +83,16 @@ R4 composition creates one derived Field Actor after the Rune progression and R2
 
 The physical core contains `4 × 4 × 4 = 64` states. Its fully active subset contains 27 configurations, including 9 primary active symmetric configurations (`α = β > 0`). Asymmetric and one-wing-active states are legal. Sector control owns lock/setting/motion commands; Field Domain owns descriptor/field response; `PlatformEnergyVfxActor` separately owns procedural platform energy; lensing only reads Field output. TRIGGER retains priority over GRIP. Scenario/Guidance interprets but does not create these states, and crystal acquisition remains progression-gated.
 
+## Resonator semantic join and read-only Guidance
+
+```text
+Resonator Field Domain.resonatorExists
+→ semantic RESONATOR_READY
+→ Scenario 4.80 → 5.10
+```
+
+`CHECK_RESONATOR_JOIN` at `4.80` handles the opposite event order. The join observes an existing physical result and never gates Resonator creation. Read-only Guidance separately observes Binder `HIDDEN → DOCKED`, installed Rune `0 → 1`, live sector `LOCKED`, and `resonatorExists false → true`; it owns no Rune, sector or Field state.
+
 ## Rune reconstruction
 
 ```text
@@ -97,7 +107,7 @@ Scenario settled runeProgression
 
 Derived reconstruction ordering is: bridge readiness → installed Rune physical state → Furnace redraw without a fake domain event → remaining derived state such as absorbed shells. This is owner synchronization, not Scenario authoring.
 
-The implemented core includes the presentation-only volumetric sector acquisition beam, whose endpoint follows the moving panel-3 anchor. Future scope remains target selection/response beyond current acquisition, Field/lensing presentation, Field audio, detent VFX/audio, `RUNE_INSTALL`, METAL/WATER contribution and later finale work.
+The implemented core includes the presentation-only volumetric sector acquisition beam, whose endpoint follows the moving panel-3 anchor. Guidance observes first Binder, first installed Rune, the live-only sector `LOCKED` notification and first Resonator without owning their truth. Future scope remains target selection/response beyond current acquisition, Field/lensing presentation, Field audio, detent VFX/audio, `RUNE_INSTALL`, METAL/WATER contribution and later finale work.
 
 ## Platform energy VFX presentation (PARTIALLY IMPLEMENTED)
 
@@ -117,7 +127,7 @@ ProgressionController.isBranchComplete()
 → RuneBridgeActor HIDDEN / DOCKED
 ```
 
-This flow is **IMPLEMENTED**. Normal readiness after stable `4.80` is Earth/Fire/Wood ready and Metal/Water not ready. The future Water override trigger affects Water installation readiness only; it never modifies floor/panel truth, natural tuning or targetability.
+This flow is **IMPLEMENTED**. At the third-ring boundary Earth/Fire/Wood are normally ready and Metal/Water are not ready. The future Water override trigger affects Water installation readiness only; it never modifies floor/panel truth, natural tuning or targetability.
 
 ## Independent owners
 
@@ -131,4 +141,4 @@ This flow is **IMPLEMENTED**. Normal readiness after stable `4.80` is Earth/Fire
 
 ## Remaining seams
 
-Natural Rune A9.1–A9.6 foundation is complete. R2A acquisition, R2B EARTH/WOOD/FIRE sector control, the R4 Resonator Field Actor, the volumetric sector acquisition beam, Binder reveal energy, acquisition energy and local-sector `FLOOR_DRIVE` are implemented. Authored Scenario after `4.80`, Water readiness override trigger, special Ether flow, Rune Stone spatial audio, `RUNE_INSTALL`, target response, Field presentation/audio, detent VFX/audio, later Metal/Water contribution/finale beats, durable full-game persistence/save and full-game reset remain future. Bridge spin, the historical antenna model and carried ↔ installed collision are superseded; physical bridge extension is implemented.
+Natural Rune A9.1–A9.6 foundation, R2A/R2B/R4 core, Guidance through first Resonator, and authored join `4.80 → 5.10` are implemented. Physical target response, Water override trigger, special Ether flow, Rune Stone spatial audio, `RUNE_INSTALL`, Field presentation/audio, detent VFX/audio, later Metal/Water/finale beats, durable full-game persistence/save and full-game reset remain future. Bridge spin, the historical antenna model and carried ↔ installed collision are superseded; physical bridge extension is implemented.
