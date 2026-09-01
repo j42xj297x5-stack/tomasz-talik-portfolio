@@ -16,7 +16,8 @@ const TOOLS = Object.freeze([
 ]);
 
 export function createVrPlayerGuideProjection({ locale, can, getCurrentObjective, isFurnaceRevealed,
-  isShellFieldRevealed }) {
+  isShellFieldRevealed, hasReadRuneStones = () => false, hasDiscoveredBinders = () => false,
+  hasInstalledRune = () => false }) {
   if (typeof can !== 'function' || typeof getCurrentObjective !== 'function'
     || typeof isFurnaceRevealed !== 'function' || typeof isShellFieldRevealed !== 'function') {
     throw new TypeError('Player guide projection dependencies must be functions.');
@@ -24,8 +25,13 @@ export function createVrPlayerGuideProjection({ locale, can, getCurrentObjective
 
   function getKnowledge() {
     if (locale !== 'pl' || !isShellFieldRevealed()) return [];
-    const shells = resolveVrPlayerGuideContent(locale).knowledge.shells;
-    return [{ id: 'shells', label: shells.label, body: shells.body }];
+    const knowledge = resolveVrPlayerGuideContent(locale).knowledge;
+    return [
+      { id: 'shells', ...knowledge.shells },
+      ...(hasReadRuneStones() ? [{ id: 'runeStones', ...knowledge.runeStones }] : []),
+      ...(hasDiscoveredBinders() ? [{ id: 'binders', ...knowledge.binders }] : []),
+      ...(hasInstalledRune() ? [{ id: 'sector', ...knowledge.sector }] : [])
+    ];
   }
 
   const getCurrentTask = () => getCurrentObjective();

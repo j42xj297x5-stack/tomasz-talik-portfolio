@@ -1,7 +1,8 @@
 export const VR_MONKEY_MESSAGE_TIMING = Object.freeze({ secondsPerLine: 2, gapSeconds: 0.5 });
 
 export const VR_MONKEY_KNOWLEDGE_CATEGORIES_PL = Object.freeze({
-  'category.whatNow': Object.freeze({ label: 'CO TERAZ?', groupId: 'currentGuidance' })
+  'category.whatNow': Object.freeze({ label: 'CO TERAZ?', groupId: 'currentGuidance' }),
+  'category.whatIsIt': Object.freeze({ label: 'CO TO JEST?', groupId: 'discoveredWorld' })
 });
 
 export const VR_MONKEY_COMMUNICATION_COPY_PL = Object.freeze({
@@ -21,8 +22,10 @@ export const VR_MONKEY_COMMUNICATION_COPY_PL = Object.freeze({
     'progression.postRing.changedWorld': { blocks: ['No i świat przestał być uprzejmy.', 'To, czego potrzebujesz, jest teraz poza zasięgiem.', 'Na szczęście nie na długo.'] },
     'progression.furnace.look': { blocks: ['Spójrz na Piec.', 'Tam coś na ciebie czeka.'] },
     'progression.p2.smallGlyphsIntro': { blocks: ['Znowu.', 'Świat odsunął to, czego szukasz.', 'Świat lubi odsuwać rzeczy.\nTy nie musisz za nimi biegać.', 'Czasem wystarczy dostroić to, co już masz.', 'Astrolabium ma pasma.\nB zmienia to, czego słucha.', 'Widzisz te małe glify?', 'Małe rzeczy czasem prowadzą dalej niż duże.', 'Piec pomoże ci dostroić Astrolabium.', 'Wtedy duże glify znów będą mogły odpowiedzieć.', 'I kolejne karty także.'] },
-    'progression.p3.firstSector': { blocks: ['Teraz możesz kontrolować jedną część.\nŻeby znaleźć glify, potrzebujesz trzech.'] },
-    'progression.p3.antennaReady': { blocks: ['A teraz zapytaj świat.\nMoże ci odpowie.'] }
+    'progression.p3.glyphsGone': { blocks: ['No.', 'Tym razem naprawdę uciekły.', 'Nie widać ich. Nie słychać.'] },
+    'progression.p3.firstRuneInstalled': { blocks: ['O.', 'Sam wiedział, gdzie ma trafić.', 'Teraz możesz kontrolować jedną część.\nŻeby znaleźć glify, potrzebujesz trzech.', 'Teraz odpowiada na Kulę.', 'Przytrzymaj chwyt nad sektorem.\nNie puszczaj od razu.', 'Gdy już go przywiążesz, możesz nim sterować.\nJak całą platformą.', 'No prawie...'] },
+    'progression.p3.firstSectorLock': { blocks: ['No.', 'Teraz ruszasz częścią świata.'] },
+    'progression.p3.resonator': { blocks: ['No dobrze.', 'Trzy razem zaczynają słuchać.', 'Chyba zbudowałeś Rezonator Asterionowy.', 'Radar mówiłby ci, gdzie coś jest.', 'To jest bardziej uparte.', 'Musisz zapytać przestrzeń we właściwym kierunku.', 'A teraz zapytaj świat.\nMoże ci odpowie.'] }
   }),
   tutorial: Object.freeze({ crystal: Object.freeze({
     pointerLearned: ['Widzisz?\nJuż nauczyłeś świat, gdzie patrzysz.'],
@@ -44,7 +47,9 @@ export const VR_MONKEY_COMMUNICATION_COPY_PL = Object.freeze({
     'hint.reliquary.inserted': { blocks: ['Aktywuj Kryształ, odsłoń jego znaczenie.'] },
     'hint.reliquary.active': { blocks: ['Można już go uwolnić. Spełnił swoją rolę.'] },
     'hint.furnace.astroStart': { blocks: ['Otwórz panel informacyjny Pieca.', 'Wybierz moduł Astrolabium Więzi.', 'Zamknij komorę i użyj środkowego przycisku, gdy Piec jest poprawnie przygotowany.', 'Jeśli Piec odpycha obiekt, najpierw sprawdź wybraną operację.'] },
-    'hint.furnace.astroAvailable': { blocks: ['Otwórz komorę i wyciągnij swoje narzędzie.', 'Złap je.'] }
+    'hint.furnace.astroAvailable': { blocks: ['Otwórz komorę i wyciągnij swoje narzędzie.', 'Złap je.'] },
+    'hint.rune.noBinder.soft': { blocks: ['Działa.', 'Tylko nie ma gdzie go przywiązać.'] },
+    'hint.rune.noBinder.medium': { blocks: ['Spójrz na sektory.\nUkończone posiadają zwornik.', 'On pozwoli Ci przywiązać kamień.'] }
   }),
   acquisition: Object.freeze({
     astro: Object.freeze({ blocks: ['To narzędzie do rzeczy, które są daleko,\na chciałbyś, żeby były bliżej.', 'Chwyt służy do namierzania.', 'Spust przyciąga namierzony obiekt.', 'Szpila i chwyt drugiej ręki pozwalają przejąć obiekt.'] }),
@@ -53,6 +58,9 @@ export const VR_MONKEY_COMMUNICATION_COPY_PL = Object.freeze({
   knowledge: Object.freeze({
     'knowledge.intro.where': { groupId: 'intro', policy: 'CONTEXTUAL', question: 'DOKĄD?', blocks: ['Gdybym ci powiedział, poszedłbyś do odpowiedzi.', 'A ja pytam, czy pójdziesz za mną.'] },
     'knowledge.threshold.otherSide': { groupId: 'threshold', policy: 'CONTEXTUAL', question: 'CO JEST PO DRUGIEJ STRONIE?', blocks: ['Po tej stronie pytasz.\nPo tamtej będziesz sprawdzał.'] },
-    'knowledge.threshold.easier': { groupId: 'threshold', policy: 'CONTEXTUAL', question: 'DLACZEGO ŁATWIEJ?', blocks: ['Nie musisz już wybierać, czy wejść.'] }
+    'knowledge.threshold.easier': { groupId: 'threshold', policy: 'CONTEXTUAL', question: 'DLACZEGO ŁATWIEJ?', blocks: ['Nie musisz już wybierać, czy wejść.'] },
+    'knowledge.p3.stonesLead': { groupId: 'currentGuidance', question: 'Zostały jeszcze kamienie.', blocks: ['Możemy patrzeć w niebo.', 'Albo sprawić, żeby to miejsce patrzyło dalej niż my.', 'Zostały jeszcze kamienie.'] },
+    'knowledge.p3.stones': { groupId: 'currentGuidance', question: 'KAMIENIE', blocks: ['Są daleko.', 'Piec potrafi stroić rzeczy.', 'Astrolabium potrafi je sprowadzać.', 'Sprawdźmy, czy to wystarczy.'] },
+    'knowledge.p3.binders': { groupId: 'discoveredWorld', question: 'ZWORNIKI', blocks: ['Zworniki.', 'Pojawiały się, kiedy domykałeś te części platformy.', 'Wygląda na to, że nie są ozdobą.'] }
   })
 });
