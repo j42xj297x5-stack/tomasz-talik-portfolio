@@ -6,7 +6,7 @@ Status: **CANONICAL CURRENT MODEL / R2A + R2B + R4 CORE IMPLEMENTED**.
 
 Runtime R2A implements powered-sector acquisition and transient `SECTOR LOCK`; R2B implements controller-driven EARTH/WOOD/FIRE motion and committed `0/1/2/3` detents. R4 implements the event-driven Resonator Field Actor: derived `resonatorExists`, immutable runtime `α/β/γ` descriptor, POWERED/FIELD-ACTIVE and partial/full/symmetric/asymmetric coarse-field semantics with bounded read-only queries and exactly-on-change subscriptions.
 
-The volumetric sector acquisition beam, bounded Platform Energy extension, discovery Guidance through first Resonator, and Scenario semantic join `4.80 → 5.10` are implemented. Target selection/scoring and response beyond current acquisition, Field/lensing presentation, Field audio, METAL/WATER contribution and the later finale remain future.
+The volumetric sector acquisition beam, bounded Platform Energy extension, discovery Guidance through first Resonator, and Scenario semantic join `4.80 → 5.10` are implemented. The 16-point rounded field cage, translucent-skin/curved-skeleton presentation, supported-object response, target scoring, Field audio, METAL/WATER contribution, and the later finale remain future implementation targets.
 
 This document is the primary CURRENT technical model of the Asterion Resonator. It freezes the sandbox, Scenario, Guidance, Rune Binder, implemented local sector-control and implemented Field-domain boundaries. The specialized [`VR_ASTERION_RESONATOR_FIELD_MODEL.md`](VR_ASTERION_RESONATOR_FIELD_MODEL.md) is its subordinate CURRENT Field sub-model, not an alternative canon. API and actor naming remain open only for genuinely future target-response, Field/lensing presentation, audio, METAL/WATER and finale work; implemented R2A/R2B/R4 and presentation seams are established runtime contracts.
 
@@ -92,6 +92,10 @@ Rezonator nie jest klasyczną anteną ani radarem. EARTH ustawia lewe downward-f
 
 Trzy installed Rune Stones czynią sektory **powered**, lockable i zdolne utworzyć Rezonator, lecz **field-active** wymaga też lokalnego poziomu większego od `0`. Rezonator może istnieć przy `α = β = γ = 0`, gdy coarse field pozostaje OFF. Fizyczny rdzeń ma 64 stany; 27 oznacza pełne aktywne konfiguracje, a 9 — główne aktywne konfiguracje symetryczne. Legalne są asymetria i częściowe stany jednego aktywnego skrzydła. Szczegółowy kontrakt znajduje się w sub-modelu pola.
 
+The CURRENT visual target uses Resonator-local `X` for outward depth, `Y` for height, and `Z` for lateral width (`Z-` left, `Z+` right). One continuous 16-point cage spans four canonical slices from `X=0 m` to `X=130 m`. EARTH/`α` supplies the left profile, WOOD/`β` the right profile, and FIRE/`γ` canonically selects `0=NONE`, `1=NEAR`, `2=MID`, `3=FAR`. The runtime descriptor still exposes the old `NONE / FAR / MID / NEAR` order; this is an explicit implementation gap, not runtime alignment.
+
+All 27 fully active states remain legal, and nine are laterally symmetric. Only coherent presets `(1,1,1)`, `(2,2,2)`, and `(3,3,3)` may fully reveal a distant Large Glyph. Mismatches drive stronger rounded deformation of the cage. The target presentation is one lightweight translucent deformable skin plus one brighter curved skeleton, and the approved supported-object response is a bright green halo with its Proto-Astro sign and no extra marker or UI. Exact scoring and presentation tuning remain open in the field sub-model.
+
 Rezonator wyprowadza analityczny descriptor ze stanu sektorów i nie wymaga literalnego przecięcia brył. `α` i `β` są poziomami intensywności przeciwstawnych skrzydeł, nie znakami przeciwnych krzywizn. Nie dziedziczy historycznych detentów ani dawnego podziału DOF; modelu historycznego nie wolno reaktywować jako precedensu.
 
 ## 7a. CURRENT Guidance and Scenario join
@@ -127,7 +131,7 @@ METAL i WATER są późniejszą warstwą advanced tuning / amplification. Oba do
 | Scenario / Guidance / Panel Y | dramaturgię, obowiązkowe beaty, ujawnianą wiedzę, hinty i crystal-acquisition gates | fizyczne gate'y Rune/sector/Rezonator oparte na `currentPoint` |
 | `PlatformEnergyVfxActor` | profile proceduralnej energii platformy/Zworników | gameplay truth, field descriptor, interpretację `α/β/γ`, target response i field lensing |
 
-Field lensing presentation może otrzymywać read-only wynik Field Domain, lecz nie należy do `PlatformEnergyVfxActor`; dokładna nazwa klasy/API i podział projection/actor pozostają otwarte. Nie wolno scalać sector control, field, platform energy VFX i lensing w jeden megasystem.
+Field Presentation receives committed Field Domain output read-only and remains separate from `PlatformEnergyVfxActor`. Its frozen target is a low-vertex rounded cage rendered as a translucent skin and brighter curved skeleton; it does not own gameplay truth. The exact class/API split remains open, and sector control, Field Domain, platform energy, and Field Presentation must not become one megasystem.
 
 ## 10. Granice przyszłej implementacji
 
