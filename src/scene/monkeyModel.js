@@ -1,5 +1,7 @@
 import * as THREE from '../vendor/three.js';
 
+export const VR_MONKEY_INTERACTION_LAYER = 1;
+
 function findUniqueNode(root, name) {
   const matches = [];
   root.traverse((object) => { if (object.name === name) matches.push(object); });
@@ -29,7 +31,7 @@ export function assembleMonkeyAssets({ characterAsset, stoneAsset }) {
 }
 
 function createMonkeyActor({ actorParent, fixtureParent, fallbackObject, model, characterRoot = model, stoneAsset = null,
-  characterAnchor = null, authoredStoneRoot = null, seatAnchor = null, scale = 1 }) {
+  characterAnchor = null, authoredStoneRoot = null, seatAnchor = null, interactionRoot = characterRoot, scale = 1 }) {
   const motionRoot = new THREE.Group();
   motionRoot.name = 'VrMonkeyMotionRoot';
   const visualRoot = new THREE.Group();
@@ -41,6 +43,7 @@ function createMonkeyActor({ actorParent, fixtureParent, fallbackObject, model, 
   motionRoot.add(visualRoot);
   if (model === fallbackObject) { model.position.set(0, 0, 0); model.quaternion.identity(); }
   visualRoot.add(characterRoot);
+  if (interactionRoot !== characterRoot) visualRoot.add(interactionRoot);
   visualRoot.scale.setScalar(scale);
   if (stoneAsset) { fixtureParent.add(stoneRoot); stoneRoot.add(stoneAsset); stoneRoot.scale.setScalar(scale); }
 
@@ -113,13 +116,14 @@ function createMonkeyActor({ actorParent, fixtureParent, fallbackObject, model, 
     return true;
   }
 
-  return { motionRoot, visualRoot, characterRoot, interactionRoot: characterRoot, stoneRoot, model,
+  return { motionRoot, visualRoot, characterRoot, interactionRoot, stoneRoot, model,
     characterAnchor, authoredStoneRoot, seatAnchor, dockCharacterToStone, dockStoneToCharacter,
     captureScenarioFinalPlacement, hydrateScenarioState };
 }
 
 export async function loadMonkeyModel({ actorParent, fixtureParent = actorParent, fallbackObject, assetManager = null }) {
   const characterAsset = assetManager?.cloneGltfScene?.('monkey-model');
+  const silhouetteAsset = assetManager?.cloneGltfScene?.('monkey-silhouette-model');
   const stoneAsset = assetManager?.cloneGltfScene?.('monkey-stone-model');
   if (!characterAsset || !stoneAsset) {
     console.info('[monkeyModel] Placeholder fallback retained because the authored Monkey assets were not in AssetManager cache.');
@@ -127,7 +131,22 @@ export async function loadMonkeyModel({ actorParent, fixtureParent = actorParent
   }
 
   const composition = assembleMonkeyAssets({ characterAsset, stoneAsset });
-  const actor = createMonkeyActor({ actorParent, fixtureParent, fallbackObject, model: characterAsset, ...composition });
+  let interactionRoot = characterAsset;
+  if (silhouetteAsset) {
+    silhouetteAsset.name = 'VrMonkeyInteractionProxy';
+    silhouetteAsset.userData.vrMonkeyInteractionLayer = VR_MONKEY_INTERACTION_LAYER;
+    silhouetteAsset.traverse((object) => {
+      if (!object.isMesh || !object.geometry) return;
+      object.layers.set(VR_MONKEY_INTERACTION_LAYER);
+      if (!object.geometry.boundingBox) object.geometry.computeBoundingBox();
+      if (!object.geometry.boundingSphere) object.geometry.computeBoundingSphere();
+    });
+    interactionRoot = silhouetteAsset;
+  } else {
+    console.info('[monkeyModel] Monkey silhouette proxy was not in AssetManager cache; full character interaction fallback retained.');
+  }
+  const actor = createMonkeyActor({ actorParent, fixtureParent, fallbackObject, model: characterAsset,
+    interactionRoot, ...composition });
   fallbackObject.visible = false;
   console.info('[monkeyModel] Authored Monkey actor and stationary stone fixture attached from AssetManager cache. Placeholder hidden.');
   return actor;
