@@ -68,6 +68,7 @@ const milkyWayBackgroundAsset = withStage({
 const criticalInitialAssets = Object.freeze([
   withStage({ id: 'gltf-loader-module', label: 'Vendored GLTFLoader module', path: '/vendor/three/examples/jsm/loaders/GLTFLoader.js', type: 'script' }, ASSET_STAGES.CRITICAL_INITIAL),
   withStage({ id: 'monkey-model', label: 'Central monkey model', path: '/glb/monkey.glb', type: 'model' }, ASSET_STAGES.CRITICAL_INITIAL),
+  withStage({ id: 'monkey-silhouette-model', label: 'Monkey interaction silhouette model', path: '/glb/monkey_silhuette.glb', type: 'model' }, ASSET_STAGES.CRITICAL_INITIAL),
   withStage({ id: 'monkey-stone-model', label: 'Monkey stone model', path: '/glb/monkey_stone.glb', type: 'model' }, ASSET_STAGES.CRITICAL_INITIAL),
   ...glyphModelAssets,
   withStage({ id: 'sun-model', label: 'Sun model', path: '/glb/sun.glb', type: 'model' }, ASSET_STAGES.CRITICAL_INITIAL),

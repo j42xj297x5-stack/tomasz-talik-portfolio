@@ -1,6 +1,7 @@
 import * as THREE from '../../vendor/three.js';
 import { experienceVrPages, resolveExperienceVrPage } from '../../content/experienceVrPages.js';
 import { createVrTargetHalo } from '../createVrTargetHalo.js';
+import { VR_MONKEY_INTERACTION_LAYER } from '../../scene/monkeyModel.js';
 import { resolveVrPageProtoAstro } from '../protoAstro/resolveVrPageProtoAstro.js';
 import { createVrMonkeyProgressionMessage } from './createVrMonkeyProgressionMessage.js';
 import { VR_MONKEY_MESSAGE_TIMING } from './vrMonkeyCommunicationCopy.js';
@@ -108,8 +109,13 @@ export function createVrMonkeyGuide({
   // Capture the static model before guide meshes are attached, so its ray target never grows to include UI.
   const monkeyTargets = [];
   interactionRoot.traverse((object) => {
-    if (object.isMesh && object.geometry && object.visible !== false) monkeyTargets.push(object);
+    if (object.isMesh && object.geometry && object.visible !== false) {
+      if (!object.geometry.boundingBox) object.geometry.computeBoundingBox();
+      if (!object.geometry.boundingSphere) object.geometry.computeBoundingSphere();
+      monkeyTargets.push(object);
+    }
   });
+  const usesInteractionLayer = interactionRoot.userData.vrMonkeyInteractionLayer === VR_MONKEY_INTERACTION_LAYER;
   const halo = createVrTargetHalo({ root: interactionRoot, settings: settings.halo });
 
   const attentionRoot = new THREE.Group();
@@ -581,7 +587,9 @@ export function createVrMonkeyGuide({
         direction.set(0, 0, -1).applyQuaternion(quaternion).normalize();
         raycaster.set(origin, direction);
         raycaster.far = Math.min(record.currentRayLength ?? settings.rayMaxDistance, settings.rayMaxDistance);
+        raycaster.layers.set(usesInteractionLayer ? VR_MONKEY_INTERACTION_LAYER : 0);
         const monkeyHit = raycaster.intersectObjects(monkeyTargets, false)[0] ?? null;
+        raycaster.layers.set(0);
         const panelHit = open ? raycaster.intersectObjects(dialoguePanel.planes, false)[0] ?? null : null;
         const nearest = [monkeyHit && { kind: 'monkey', intersection: monkeyHit },
           panelHit && { kind: 'panel', intersection: panelHit }]
