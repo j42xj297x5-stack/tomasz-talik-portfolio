@@ -1,114 +1,123 @@
 # Experience VR — Asterion Resonator Field Model
 
-## 1. Status, authority i zakres
+## 1. Status, authority, and scope
 
-Status: **CURRENT / R2A + R2B + R4 CORE FIELD DOMAIN IMPLEMENTED**.
+Status: **CURRENT TARGET / R4 FIELD DOMAIN IMPLEMENTED / FIELD PRESENTATION AND TARGET RESPONSE NOT IMPLEMENTED**.
 
-The runtime has semantic left GRIP acquisition/lock and R2B local EARTH/WOOD/FIRE motion with committed `0/1/2/3` detents. R4 reads installed Rune truth plus those committed levels and exposes an immutable, exactly-on-change `FieldDescriptor`; transient motor angles are not field truth.
+This subordinate model freezes the semantic field geometry and visual-presentation target. The runtime R4 actor already derives an immutable `FieldDescriptor` from installed Rune truth and committed EARTH/WOOD/FIRE levels. It does not yet implement the geometry, presentation, target response, or revised depth-band meaning defined here.
 
-Target selection/scoring and response, field/lensing presentation, grip beam, field audio and METAL/WATER contribution remain unimplemented.
+Sector motion remains `0° / 13° / 23° / 36°`. Sector control, Rune, Scenario, Guidance, and platform-energy ownership do not change. This model does not define scoring, shader constants, or METAL/WATER contribution.
 
-Ten dokument jest wyspecjalizowanym sub-modelem nadrzędnego [`VR_ASTERION_RESONATOR_MODEL.md`](VR_ASTERION_RESONATOR_MODEL.md). Zamraża semantykę poziomów rdzenia pola, aktualne docelowe pozycje fizyczne, uproszczony descriptor i granice ownership. Nie tworzy runtime, klas, API JavaScript, scoringu, shaderów ani mapowania gestu. Historyczny model anteny oraz wcześniejszy signed detent model nie są precedensem implementacyjnym.
+## 2. Powered and field-active sectors
 
-## 2. Powered sector a field-active sector
-
-**POWERED SECTOR** ma zainstalowany właściwy Rune Stone, może odpowiedzieć na Kulę, zostać namierzony i uzyskać SECTOR LOCK. **FIELD-ACTIVE SECTOR** jest powered i ma lokalny poziom ruchu większy od `0`. Instalacja Rune nie jest więc prawdą `fieldActive`.
+A **POWERED SECTOR** has its correct Rune Stone installed and is responsive and lockable. A **FIELD-ACTIVE SECTOR** is powered and has a committed level above `0`. Therefore Rune installation alone is not `fieldActive`.
 
 ```text
 Rune installed → powered → lockable → LEVEL 0 / 0° → field contribution OFF
 ```
 
-Pierwsze przejście `0° → 13°` włącza udział sektora w polu. Pozycja zerowa działa jak połączone z wyłącznikiem pokrętło: mechanizm jest zasilony i dostępny, ale kanał nie wnosi jeszcze wkładu.
+Each core channel retains four stable levels: `LEVEL 0 / 0° / OFF`, then active levels `1 / 13°`, `2 / 23°`, and `3 / 36°`.
 
-## 3. Kanoniczne poziomy i ruch rdzenia
+## 3. Field coordinate system and continuous control cage
 
-Każdy kanał rdzenia ma cztery stabilne poziomy, bez pozycji ujemnych i bez ruchu `-36° ← 0° → +36°`:
+The visual field uses Resonator-local coordinates:
 
-| Poziom | Pozycja | Stan ogólny |
+- `X` = depth outward from the platform;
+- `Y` = vertical height;
+- `Z` = lateral width;
+- `Z-` = left;
+- `Z+` = right.
+
+One continuous 16-point control cage defines the field: four depth cross-sections, each with four corners. For every slice the corners are `(X, ±height/2, ±width/2)`.
+
+| Slice | `X` | Width along `Z` | Height along `Y` | Four corners |
+| --- | ---: | ---: | ---: | --- |
+| `S0` | `0 m` | `8.25 m` | `5.50 m` | `(0, ±2.75, ±4.125)` |
+| `S1` | `43.333333 m` | `11.75 m` | `8.50 m` | `(43.333333, ±4.25, ±5.875)` |
+| `S2` | `86.666667 m` | `18.25 m` | `11.50 m` | `(86.666667, ±5.75, ±9.125)` |
+| `S3` | `130 m` | `27.75 m` | `14.50 m` | `(130, ±7.25, ±13.875)` |
+
+The values intentionally make the average dimensions of the three depth spans equal to the approved bands:
+
+| Level | Span | Average width | Average height |
+| --- | --- | ---: | ---: |
+| `LEVEL 1` | `S0 → S1`, `0–43.333333 m` | `~10 m` | `~7 m` |
+| `LEVEL 2` | `S1 → S2`, `43.333333–86.666667 m` | `~15 m` | `~10 m` |
+| `LEVEL 3` | `S2 → S3`, `86.666667–130 m` | `~23 m` | `~13 m` |
+
+## 4. Channel semantics and implementation gap
+
+- EARTH / `α` controls the **left** field profile.
+- WOOD / `β` controls the **right** field profile.
+- FIRE / `γ` selects the **depth span**.
+
+The canonical target mapping is:
+
+| `γ` | Meaning | Selected span |
 | --- | --- | --- |
-| `LEVEL 0` | `0°` | `OFF` |
-| `LEVEL 1` | `13°` | `LOW` |
-| `LEVEL 2` | `23°` | `MID` |
-| `LEVEL 3` | `36°` | `HIGH` |
+| `0` | `NONE / OFF` | none |
+| `1` | `NEAR` | `S0 → S1` |
+| `2` | `MID` | `S1 → S2` |
+| `3` | `FAR` | `S2 → S3` |
 
-`13°`, `23°` i `36°` są **CURRENT TARGET** dla pierwszej implementacji, a nie przykładami. Ich zmiana po hardware/perceptual QA wymaga jawnej nowej decyzji. Ruch zaczyna się w pozycji płaskiej i przebiega wyłącznie w jednym kanonicznym kierunku.
+**CURRENT IMPLEMENTATION GAP:** `createVrAsterionResonatorFieldActor.js` still exposes `0=NONE, 1=FAR, 2=MID, 3=NEAR`. Runtime therefore does not yet align with the canonical `NONE / NEAR / MID / FAR` target. This documentation does not change the actor or `FieldDescriptor`.
 
-### EARTH — `α`
+## 5. Active field construction and state space
 
-`α ∈ {0,1,2,3}` steruje lewym skrzydłem i mapuje się na `0° / 13° / 23° / 36°`. EARTH jest downward-folding side wing: zawias jest zewnętrzną radialną krawędzią 72° wedge skierowaną `+36°` od sector-local `+Z` i przechodzącą przez `(0,0,0)`. MotionRoot.position pozostaje zero, outer edge jest nieruchoma w flat plane, a przeciwna inner edge skierowana ku FIRE schodzi coraz głębiej pod platformę wraz ze wzrostem `α`. `α = 0` wyłącza wkład EARTH do descriptoru.
+For a fully active state `(α, β, γ)`:
 
-### WOOD — `β`
+1. `γ` selects the `X` coordinates of the near and far field planes.
+2. `α` selects the two endpoint dimensions of the **left half-profile** from its corresponding canonical band.
+3. `β` selects the two endpoint dimensions of the **right half-profile** from its corresponding canonical band.
+4. Those left and right profiles are transplanted onto the depth span selected by `γ`.
+5. The result supplies the nominal eight corners of the active field volume; the continuous cage and curvature rules turn those corners into the rendered shape.
 
-`β ∈ {0,1,2,3}` steruje prawym skrzydłem i mapuje się na `0° / 13° / 23° / 36°`. WOOD jest lustrzanym downward-folding side wing: zawias jest zewnętrzną radialną krawędzią 72° wedge skierowaną `-36°` od sector-local `+Z` i przechodzącą przez `(0,0,0)`. Przeciwny signed quaternion zachowuje MotionRoot.position równe zero i nieruchomą outer edge, a inner edge skierowana ku FIRE schodzi wraz ze wzrostem `β`. `β = 0` wyłącza wkład WOOD.
+The physical core has `4 × 4 × 4 = 64` states. The fully active subset has `3 × 3 × 3 = 27` states. The nine states with `α = β > 0` remain laterally symmetric across the three active depth spans.
 
-### FIRE — `γ`
+Only three coherent full-field presets permit full Large Glyph revelation: `(1,1,1)`, `(2,2,2)`, and `(3,3,3)`. The other 24 fully active configurations remain legal field states. They may lose stability or energy and may produce responses from other supported objects, but they must not fully reveal the distant Large Glyph target. Partial and asymmetric states also remain legal. Exact scoring is not frozen.
 
-FIRE nie ma rotacji skrzydłowej lewo/prawo. `γ ∈ {0,1,2,3}` steruje wyłącznie jednokierunkowym lokalnym pochyleniem całego sektora — semantyczną „łyżką”:
+## 6. Curvature and fillet target
 
-| `γ` | Pozycja | Depth band |
-| --- | --- | --- |
-| `0` | `0°` | `OFF / NONE` |
-| `1` | `13°` | `FAR` |
-| `2` | `23°` | `MID` |
-| `3` | `36°` | `NEAR` |
-
-FIRE jest centralnym downward pitch wokół wewnętrznej radialnej krawędzi: wraz ze wzrostem `γ` część outward schodzi coraz głębiej pod platformę. Większe wychylenie nadal wybiera bliższe pasmo przestrzeni; semantyka `FAR / MID / NEAR` i brak signed FIRE tilt pozostają bez zmian.
-
-Physical motion direction odwrócono względem wcześniejszej implementacji, ponieważ wcześniejszy runtime był geometrycznym mirror względem flat platform surface. Zmiana dotyczy wyłącznie fizycznej projekcji; `α/β/γ`, committed levels, descriptor i `DETENT_COMMITTED` zachowują znaczenie.
-
-## 4. State-space, symetria i legalna asymetria
-
-Fizyczny state-space rdzenia wynosi `4 × 4 × 4 = 64`. Rezonator może istnieć przy `α = β = γ = 0`, jeśli trzy wymagane sektory są powered, ale coarse field nie ma wtedy aktywnego wkładu sektorów.
-
-Pełny aktywny rdzeń wymaga `α > 0`, `β > 0` i `γ > 0`, dlatego zachowuje `3 × 3 × 3 = 27` pełnych aktywnych konfiguracji coarse field. Liczba `27` nie opisuje wszystkich fizycznych stanów platformy.
-
-Aktywna konfiguracja boczna jest symetryczna, gdy `α = β` oraz `α > 0`. Pary `(1,1)`, `(2,2)` i `(3,3)` po połączeniu z trzema aktywnymi depth bands dają `3 × 3 = 9` głównych symetrycznych konfiguracji coarse field. Poziomom `13° / 23° / 36°` nie przypisuje się jeszcze sztywnych nazw `CONCAVE / RECTANGULAR / CONVEX`; wynikowy kształt należy do przyszłego modelu/presentation i strojenia.
-
-Gdy `α ≠ β`, pole może być legalnie asymetryczne. Legalne są też częściowe stany `α = 0, β > 0` oraz `β = 0, α > 0`. Mogą dawać bardzo słabą odpowiedź, silny shear, lensing bias, przesunięcie obrazu, jednostronne powiększenie/oddalenie lub mocną deformację. Dokument nie ustanawia ich exact scoringu.
-
-## 5. Analityczny descriptor pola
-
-Pole nie wymaga literalnego przecięcia brył. Resonator Field Domain wyprowadza read-only descriptor ze stanu sektorów; `α` i `β` są poziomami intensywności dwóch przeciwstawnych skrzydeł, a nie znakami przeciwnych kierunków krzywizny. Implemented minimal canonical semantics include:
+The nominal corners define a deformable rounded cage, not a sharp rectangular box. For each side:
 
 ```text
-lateralStrength = (α + β) / 2
-fieldAsymmetry  = α - β
-leftActive      = earthPowered && α > 0
-rightActive     = woodPowered && β > 0
-depthActive     = firePowered && γ > 0
-depthBand       = NONE | FAR | MID | NEAR
+dLeft  = abs(α - γ)
+dRight = abs(β - γ)
 ```
 
-The R4 descriptor names and unnormalized analytic values are a frozen runtime API. Exact target selection, response and scoring formula remain open. Wspierana domena targetu zachowuje legalność targetu i może użyć descriptoru do różnicowania siły, stabilności lub deformacji odpowiedzi; Scenario posiada znaczenie narracyjne i crystal-acquisition gates, nie fizyczną odpowiedź pola.
+Initial CURRENT TARGET edge-trim / fillet tuning is:
 
-## 6. METAL i WATER — późniejsza warstwa
+| Difference | Fillet strength |
+| ---: | ---: |
+| `0` | `8%` |
+| `1` | `15%` |
+| `2` | `22%` |
 
-METAL i WATER pozostają warstwą `advanced tuning / amplification`. Każdy docelowo ma ruch skrzydłowy i pochył, przy czym ogólna filozofia obu kanałów to `0° = OFF`, a następnie wyłącznie jednokierunkowe target detenty `13° / 23° / 36°`.
+Greater mismatch creates stronger rounding and deformation. Signed mismatch (`α-γ` or `β-γ`) may determine the bow direction of the corresponding wall. Exact bow amplitude remains **TUNING** and is not frozen.
 
-Sprzężenie osi, kombinacje poziomów, scoring, finalne mapowanie gestu oraz dokładna rola METAL i WATER w descriptorze nie są jeszcze zaprojektowane.
+## 7. Presentation architecture — CURRENT TARGET, NOT IMPLEMENTED
 
-## 7. Ownership
+The primary field presentation consists of:
 
-| Domena | Posiada | Nie posiada |
+1. one lightweight, lightly translucent deformable skin;
+2. one brighter curved edge/skeleton layer.
+
+The 16-point cage is the semantic shape source. The target implementation direction is a custom indexed `BufferGeometry`, rounded corner paths using quadratic/cubic Bézier-style interpolation, a small number of intermediate cross-sections, and a low vertex count. Presentation reads committed `FieldDescriptor` state and never owns gameplay truth.
+
+The field must have no visually sharp 90-degree corners. Edges are more visible than surfaces, and the result must read as an electromagnetic/resonant volume rather than a glass box. CSG, boolean geometry, raymarching, mandatory volumetric textures, and 27 separately authored meshes are excluded. Exact opacity, shader values, subdivision counts, line thickness, and transition timing remain **TUNING**.
+
+## 8. Supported-object response — CURRENT TARGET, NOT IMPLEMENTED
+
+A supported object inside the active field may respond visually. The approved base response is a bright green halo plus the object's Proto-Astro sign, with no additional quest marker or UI decoration. Full Large Glyph revelation remains restricted to `(1,1,1)`, `(2,2,2)`, and `(3,3,3)`.
+
+## 9. Ownership and boundaries
+
+| Owner | Owns | Does not own |
 | --- | --- | --- |
-| sector-control | lock, lokalne ustawienie sektora i bounded motion commands | field descriptor, target response, wizualne wyładowania |
-| Resonator Field Domain / actor | read-only obserwację konfiguracji i wyprowadzenie descriptoru oraz reakcji pola | fizyczny `MotionRoot`, Scenario truth, platform energy lightning |
-| `PlatformEnergyVfxActor` | proceduralne wyładowania i energię platformy/Zworników | descriptor, interpretację `α/β/γ` jako gameplay truth, target response i field lensing |
-| field lensing presentation | read-only prezentację wyniku Field Domain | gameplay truth i proceduralną energię platformy |
+| sector control | lock, local sector setting, bounded motion commands | field geometry, descriptor interpretation, response |
+| Resonator Field Domain / R4 actor | read-only committed state and current immutable descriptor | MotionRoot, Scenario truth, presentation geometry |
+| Field Presentation | read-only projection of descriptor into skin, skeleton, and supported-object visuals | gameplay truth, scoring, sector motion |
+| `PlatformEnergyVfxActor` | procedural platform/Zwornik energy | field skin, field skeleton, target response |
+| Scenario / Guidance | narrative meaning, guidance, crystal-acquisition gates | physical field ownership |
 
-Dokładna nazwa klasy/API i podział projection/actor dla field lensing pozostają otwarte. Field lensing nie należy do `PlatformEnergyVfxActor`; nie wolno tworzyć jednego megasystemu VFX + field + motion.
-
-## 8. Input i SECTOR LOCK
-
-- TRIGGER ma pierwszeństwo nad GRIP.
-- GRIP może namierzyć tylko powered sector.
-- Pełne `1.0 s` tego samego legalnego celu daje SECTOR LOCK.
-- Zmiana lub utrata celu przed lockiem resetuje timer.
-- Dopiero po locku sektor może otrzymać local motion command.
-
-## 9. Język wizualny i granice implementacji
-
-Field lensing może używać inspirowanych grawitacyjnym soczewkowaniem rozjaśnień, powiększenia, zakrzywienia, caustic-like arcs, przesunięć i asymetrycznej deformacji, bez deklarowania realistycznej fizyki. Shader architecture, rendering, kolory, intensywności, audio, hardware/perceptual QA, finalne API, motion interpolation i gesture mapping są osobnymi zadaniami.
-# Runtime input and R4 status
-
-R2B provides defensive read-only EARTH/WOOD/FIRE committed levels and transient-angle snapshots. R4 consumes only the discrete committed levels, maps them to `α/β/γ`, derives POWERED from installed Rune families, and publishes frozen nested descriptor state including `depthBand`, `lateralStrength`, signed `fieldAsymmetry`, activity count and symmetry flags. Creation, hydration/reconstruction and source-owner reset explicitly synchronize the actor; live Rune changes and `DETENT_COMMITTED` drive deduplicated subscriptions. The Field Actor commits descriptor truth before notification and its downstream subscription boundary is fail-soft: one consumer exception is reported locally, does not propagate into gameplay, and does not prevent the remaining consumers from receiving the emission. Target response/scoring and lensing presentation remain not implemented and separate from sector control and Field ownership.
+METAL/WATER contribution, exact target selection and scoring, field audio, and implementation of the approved presentation remain future work.

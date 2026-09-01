@@ -141,9 +141,11 @@ Gdy trzy wymagane sektory są zasilone przez zainstalowane kamienie i mogą wsp�
 
 ## 7. Sterowanie Rezonatorem
 
-Pierwszy Rezonator ma dyskretny rdzeń `(α, β, γ)`, gdzie każdy kanał używa `LEVEL 0 / 0° / OFF` oraz aktywnych CURRENT TARGET positions `13° / 23° / 36°`, tylko w jednym kierunku. EARTH podnosi lewą krawędź lewego skrzydła, WOOD lustrzanie podnosi prawą krawędź prawego skrzydła, a „łyżka” FIRE mapuje aktywne pozycje na `FAR / MID / NEAR`. Signed detent model oraz sztywne concave/rectangular/convex nie obowiązują.
+The first Resonator has a discrete `(α, β, γ)` core. Every channel uses `LEVEL 0 / 0° / OFF` and the one-direction CURRENT TARGET positions `13° / 23° / 36°`. EARTH/`α` controls the left field profile, WOOD/`β` controls the right profile, and FIRE/`γ` selects `NONE / NEAR / MID / FAR` (`0 / 1 / 2 / 3`). The unchanged runtime still reports the old `NONE / FAR / MID / NEAR` order; that is a CURRENT IMPLEMENTATION GAP, not the target meaning.
 
-Rdzeń ma 64 fizyczne stany, 27 pełnych aktywnych konfiguracji i 9 głównych aktywnych konfiguracji symetrycznych. Rezonator istnieje dzięki trzem powered sektorom nawet przy `(0,0,0)`, gdy coarse field jest OFF. Nierówne lub jednostronnie wyłączone skrzydła są legalnymi stanami częściowymi. Wiążący detal techniczny opisuje [`VR_ASTERION_RESONATOR_FIELD_MODEL.md`](../technical/VR_ASTERION_RESONATOR_FIELD_MODEL.md).
+The core has 64 physical states, 27 fully active configurations, and nine laterally symmetric configurations. All 27 fully active states remain legal, but only coherent presets `(1,1,1)`, `(2,2,2)`, and `(3,3,3)` can fully reveal the distant Large Glyph. Other configurations may be less stable or energetic and can still affect other supported objects. The Resonator exists from three powered sectors even at `(0,0,0)`, where the coarse field is OFF. Unequal or one-sided wings remain legal partial states. Exact scoring is deliberately not defined here.
+
+The visible field is one continuous rounded 16-point cage across four depth slices, presented as a lightly translucent deformable skin and a brighter curved skeleton. Profile/depth mismatch increases fillet and deformation; the result must read as a resonant electromagnetic volume, not a sharp glass box. Binding dimensions and tuning are defined by [`VR_ASTERION_RESONATOR_FIELD_MODEL.md`](../technical/VR_ASTERION_RESONATOR_FIELD_MODEL.md). This presentation is a CURRENT design target and is not implemented.
 
 Spust Kuli nadal orientuje całą platformę, zachowując istniejący ownership globalnego obrotu. Grip służy lokalnej kontroli wybranego zasilonego sektora. Tryby są wzajemnie wykluczające i nigdy nie sterują równocześnie. Jeżeli TRIGGER i GRIP są fizycznie aktywne jednocześnie, **TRIGGER ma bezwzględne pierwszeństwo**: działa klasyczna Kula i globalny owner orientacji platformy, a lokalna ścieżka sector-control pozostaje nieaktywna. Dopiero po zwolnieniu TRIGGER wejście GRIP może prowadzić acquisition i SECTOR LOCK. Interpolacja i mapowanie gestu pozostają otwarte; `0° / 13° / 23° / 36°` są CURRENT TARGET.
 
@@ -158,7 +160,7 @@ Panel Y przechowuje instrukcję; Małpa nie powtarza jej stale.
 
 ## 8. Pierwsze poszukiwanie i pierwszy odzyskany glif
 
-Rezonator nie daje markera glifu i nie jest hardkodowany wyłącznie do glifów. Analityczny descriptor pola — zamiast obowiązkowego literalnego przecięcia brył — może wywołać odpowiedź innych legalnych odległych celów wspieranych przez właściwe domeny, na przykład skorupy. Zgodność kształtu i depth band wzmacnia i stabilizuje znak; asymetria może go zakrzywiać, rozciągać, przesuwać i lokalnie przybliżać lub oddalać. Scenario nadaje znalezisku znaczenie, lecz nie posiada fizycznej odpowiedzi pola.
+The Resonator provides no glyph marker and is not hardcoded only for glyphs. A supported object inside the active field may respond with the approved base visual: a bright green halo and its Proto-Astro sign, without any additional quest marker or UI decoration. Only `(1,1,1)`, `(2,2,2)`, and `(3,3,3)` may produce full Large Glyph revelation. Other legal states may vary stability or energy and may affect other supported objects; the future scoring formula remains open. Scenario gives the discovery meaning but does not own the physical response.
 
 ### `progression.resonator.search`
 
