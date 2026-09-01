@@ -38,7 +38,7 @@ export function createVrCurrentObjectiveProjection({ locale, getCurrentPointId, 
     if (locale !== 'pl') return null;
     const pointId = getCurrentPointId();
     if (pointId === VR_EXPERIENCE_POINT['2.30']) return objective('first-ring-progress',
-      `PIERWSZY KRĄG — ${countActivatedPages(1)}/${experienceVrPageIdsByTier[1].length}`);
+      `UKOŃCZ PIERWSZY KRĄG — ${countActivatedPages(1)}/${experienceVrPageIdsByTier[1].length}`);
     if (pointId === VR_EXPERIENCE_POINT['3.80']) {
       const progress = getAsterionSphereProgress(); const state = getAsterionProductionState();
       if (!progress.complete) return objective('asterion-shell-collection', `ZGROMADŹ SKORUPY — ${progress.absorbed}/${progress.required}`);
@@ -48,13 +48,13 @@ export function createVrCurrentObjectiveProjection({ locale, getCurrentPointId, 
       return null;
     }
     if (pointId === VR_EXPERIENCE_POINT['4.10']) return objective('second-ring-progress',
-      `DRUGI KRĄG — ${countActivatedPages(2)}/${experienceVrPageIdsByTier[2].length}`);
+      `UKOŃCZ DRUGI KRĄG — ${countActivatedPages(2)}/${experienceVrPageIdsByTier[2].length}`);
     if (pointId === VR_EXPERIENCE_POINT['4.70']) {
       const tunedCount = getExtractedFamilyCodes().length; const tunedTotal = PROTO_ASTRO_NATURAL_FAMILY_CODES.length;
       const ringCount = countActivatedPages(3); const ringTotal = experienceVrPageIdsByTier[3].length;
       return tunedCount < tunedTotal
-        ? objective('astro-tuning-and-third-ring', `DOSTRÓJ ASTROLABIUM — ${tunedCount}/${tunedTotal} · TRZECI KRĄG — ${ringCount}/${ringTotal}`)
-        : objective('third-ring-progress', `TRZECI KRĄG — ${ringCount}/${ringTotal}`);
+        ? objective('astro-tuning-and-third-ring', `DOSTRÓJ ASTROLABIUM — ${tunedCount}/${tunedTotal} · UKOŃCZ TRZECI KRĄG — ${ringCount}/${ringTotal}`)
+        : objective('third-ring-progress', `UKOŃCZ TRZECI KRĄG — ${ringCount}/${ringTotal}`);
     }
     if (pointId === VR_EXPERIENCE_POINT['4.80']) {
       if (getResonatorDescriptor().resonatorExists) return null;

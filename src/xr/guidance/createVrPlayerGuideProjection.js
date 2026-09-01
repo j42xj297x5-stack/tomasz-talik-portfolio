@@ -15,10 +15,17 @@ const TOOLS = Object.freeze([
   })
 ]);
 
-export function createVrPlayerGuideProjection({ locale, can, getCurrentObjective, isFurnaceRevealed }) {
+export function createVrPlayerGuideProjection({ locale, can, getCurrentObjective, isFurnaceRevealed,
+  isShellFieldRevealed }) {
   if (typeof can !== 'function' || typeof getCurrentObjective !== 'function'
-    || typeof isFurnaceRevealed !== 'function') {
+    || typeof isFurnaceRevealed !== 'function' || typeof isShellFieldRevealed !== 'function') {
     throw new TypeError('Player guide projection dependencies must be functions.');
+  }
+
+  function getKnowledge() {
+    if (locale !== 'pl' || !isShellFieldRevealed()) return [];
+    const shells = resolveVrPlayerGuideContent(locale).knowledge.shells;
+    return [{ id: 'shells', label: shells.label, body: shells.body }];
   }
 
   const getCurrentTask = () => getCurrentObjective();
@@ -45,5 +52,5 @@ export function createVrPlayerGuideProjection({ locale, can, getCurrentObjective
     return ids;
   }
 
-  return { getCurrentTask, getTools, getVisibleControlIds };
+  return { getCurrentTask, getTools, getKnowledge, getVisibleControlIds };
 }
