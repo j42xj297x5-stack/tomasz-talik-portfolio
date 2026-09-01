@@ -55,7 +55,7 @@ The platform root's current world-space position centers the handoff sphere. Cur
 
 Natural tuning does not read sector completeness. The `RUNESTONES` band target set is exactly tuned natural families. Installation readiness is checked only during handoff legality. Ether is excluded from the natural flow. Without the proper existing Zwornik, a tuned legal stone may remain near but outside the platform; this is a legal sandbox state, not a required Scenario branch.
 
-## Zwornik, sector control and Rezonator (TARGET / NOT IMPLEMENTED)
+## Zwornik, sector control and Rezonator (R2A + R2B + R4 CORE IMPLEMENTED)
 
 ```text
 sector panels complete
@@ -97,16 +97,17 @@ Scenario settled runeProgression
 
 Derived reconstruction ordering is: bridge readiness → installed Rune physical state → Furnace redraw without a fake domain event → remaining derived state such as absorbed shells. This is owner synchronization, not Scenario authoring.
 
-## Platform energy VFX presentation (TARGET / NOT IMPLEMENTED)
+The implemented core includes the presentation-only volumetric sector acquisition beam, whose endpoint follows the moving panel-3 anchor. Future scope remains target selection/response beyond current acquisition, Field/lensing presentation, Field audio, detent VFX/audio, `RUNE_INSTALL`, METAL/WATER contribution and later finale work.
+
+## Platform energy VFX presentation (PARTIALLY IMPLEMENTED)
 
 ```text
-sector-complete / Zwornik reveal ────────────────────────────┐
-RuneStoneInstallationInteraction read-only transient state ─┤
-                                                            ├→ PlatformEnergyVfxProjection → PlatformEnergyVfxActor → sector-local / platform-bound procedural lightning
-AsterionGyroInteraction driveActive / angular speed / lock ─┘
+sector-complete readiness transition ─→ RUNE_BINDER_REVEAL ─┐
+R2A ACQUIRING state + progress ───────→ SECTOR_ACQUISITION ─┼→ read-only projections → shared PlatformEnergyVfxActor → sector-local / platform-bound procedural lightning
+R2B same-frame physical angle change ─→ FLOOR_DRIVE ────────┘
 ```
 
-The projection and shared actor are presentation-only and never write back to Rune, progression, gyro or platform-motion owners. Authority and tuning boundaries are defined in [`VR_PLATFORM_ENERGY_VFX_MODEL.md`](../technical/VR_PLATFORM_ENERGY_VFX_MODEL.md).
+These three profiles are implemented. The projections and shared actor are presentation-only and never write back to Rune, progression, acquisition, sector-control, platform-motion or Field owners. `RUNE_INSTALL` remains future; this CURRENT local-sector `FLOOR_DRIVE` contract does not decide whether a distinct global-drive energy concept may be designed later. Authority and tuning boundaries are defined in [`VR_PLATFORM_ENERGY_VFX_MODEL.md`](../technical/VR_PLATFORM_ENERGY_VFX_MODEL.md).
 
 ## Installation readiness
 
@@ -130,4 +131,4 @@ This flow is **IMPLEMENTED**. Normal readiness after stable `4.80` is Earth/Fire
 
 ## Remaining seams
 
-Natural Rune A9.1–A9.6 foundation is complete. Authored Scenario after `4.80`, Water readiness override trigger, special Ether flow, target Zwornik presentation, Rune Stone spatial audio, sector control, Rezonator and later Metal/Water/finale beats, durable full-game persistence/save and full-game reset remain future. Bridge spin, the historical antenna model and carried ↔ installed collision are superseded; physical bridge extension is implemented.
+Natural Rune A9.1–A9.6 foundation is complete. R2A acquisition, R2B EARTH/WOOD/FIRE sector control, the R4 Resonator Field Actor, the volumetric sector acquisition beam, Binder reveal energy, acquisition energy and local-sector `FLOOR_DRIVE` are implemented. Authored Scenario after `4.80`, Water readiness override trigger, special Ether flow, Rune Stone spatial audio, `RUNE_INSTALL`, target response, Field presentation/audio, detent VFX/audio, later Metal/Water contribution/finale beats, durable full-game persistence/save and full-game reset remain future. Bridge spin, the historical antenna model and carried ↔ installed collision are superseded; physical bridge extension is implemented.

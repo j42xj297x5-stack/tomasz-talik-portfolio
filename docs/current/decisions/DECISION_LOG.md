@@ -1,6 +1,6 @@
 # Decision Log
 
-Status: current binding decisions with preserved history. Synchronized on 2026-08-26 through the closed runtime reconciliation gaps.
+Status: current binding decisions with preserved history. Synchronized on 2026-09-01 through the Asterion Resonator core and Platform Energy VFX implementation checkpoints.
 
 ## 2026-08-26 — CURRENT Asterion Resonator, Rune Binder and sandbox ownership (superseding antenna canon)
 
@@ -271,3 +271,47 @@ Każdy nowy canonical Experience VR Scenario point musi spełniać [`VR_SCENARIO
 3. Trigger priority remains owned by R2A: it suppresses new local drive and causes a neutral-reference rebase before local control resumes. The existing global gyro owner is unchanged.
 4. Each real new detent emits exactly one semantic `DETENT_COMMITTED` event, including commits down to level 0. Defensive read-only level/angle and motion-phase seams are available to future Field/VFX/audio owners.
 5. Spark VFX, grip beam, detent/motion audio, Field Actor/descriptor, scoring/target response, lensing and METAL/WATER motion remain not implemented.
+
+## 2026-09-01 — CURRENT implemented R2A acquisition and volumetric presentation checkpoint
+
+This checkpoint supersedes only earlier status statements that presented R2A acquisition or its sector acquisition beam as not implemented.
+
+1. R2A powered-sector acquisition is implemented. It raycasts only the separate invisible flat target surfaces derived from each authored sector BASE, then independently applies installed-Rune powered legality and requires `1.0 s` on the same legal target for `SECTOR LOCK`.
+2. Each flat target surface remains above and outside local MotionRoot, inherits the global platform transform and does not tilt with local sector motion. The presentation endpoint is instead the moving panel-3 anchor inside MotionRoot.
+3. The presentation-only sector acquisition beam is implemented as a reusable tapered volumetric tube, distinct from Platform Energy ribbon bolts. It starts at the live Asterion Sphere center, follows the quadratic path with stable transported frames and terminates in a rounded volumetric contact at the moving panel-3 endpoint.
+4. Acquisition presentation and glow do not own powered truth, candidate/lock truth, progression, sector motion or Field truth. Target selection/response beyond this implemented acquisition contract, Field presentation and related audio remain future.
+
+## 2026-09-01 — CURRENT implemented R4 Resonator Field Actor checkpoint
+
+This checkpoint supersedes only earlier status statements that presented the core Field Actor or descriptor as not implemented. Historical signed-field decisions remain preserved history and remain superseded by the unsigned-level decision of 2026-08-27.
+
+1. One R4 Resonator Field Actor is implemented as an event-driven, read-only derived owner. It consumes canonical installed Rune truth and committed EARTH/WOOD/FIRE levels only; transient physical angles do not enter Field truth.
+2. Its immutable descriptor preserves the unsigned `0/1/2/3` level semantics, POWERED versus FIELD-ACTIVE distinction, 64 physical states, 27 fully active configurations and 9 primary active symmetric configurations established on 2026-08-27.
+3. Semantic descriptor changes are deduplicated. Descriptor truth commits before notification, and subscriber failures are isolated so one consumer cannot corrupt committed state or block other subscribers.
+4. METAL and WATER do not contribute to the implemented core Field. Target selection/scoring and response, Field/lensing presentation and Field audio remain future.
+
+## 2026-09-01 — CURRENT final R2B physical and gesture checkpoint
+
+This checkpoint refines the implemented R2B motor decision and supersedes conflicting edge-direction or gesture-status wording without changing unsigned levels, detent semantics or Field state-space decisions.
+
+1. EARTH and WOOD rotate around fixed mirrored outer radial hinges at `+36°` and `-36°` from sector-local `+Z`. Both axes pass through sector origin; MotionRoot position remains identity, and only the mirrored hinge quaternion changes. Their inner edges facing FIRE descend while the outer hinge edges remain fixed.
+2. FIRE retains its bounds-derived inner radial pivot and downward physical pitch. All three core sectors retain exact physical detents `0° / 13° / 23° / 36°`, and the rigid MotionRoot subtree remains the physical movement boundary.
+3. Gesture geometry is independent from physical hinge geometry. EARTH/WOOD read sector-local `+Z` at a `45°` engage threshold. FIRE reads local `+X` with the existing negative gesture sign at a `30°` engage threshold, so HAND DOWN increases level/physical descent and HAND UP returns toward level 0. All share `10°` release hysteresis.
+4. Gesture input produces only semantic intent `-1 / 0 / +1`; motor speed is constant rather than proportional to hand angle. `DETENT_COMMITTED` remains semantic `UP` for a level increase and `DOWN` for a decrease, not a description of world-space movement.
+
+## 2026-09-01 — CURRENT implemented Platform Energy profiles and ownership checkpoint
+
+This checkpoint supersedes only the target-status and obsolete active-source statements in the 2026-08-26 Platform Energy decision.
+
+1. One shared bounded `PlatformEnergyVfxActor` is implemented with `RUNE_BINDER_REVEAL`, `SECTOR_ACQUISITION` and `FLOOR_DRIVE`. `RUNE_INSTALL` remains future and not implemented.
+2. Binder reveal consumes live sector-complete readiness transitions and targets the live Rune Bridge presentation endpoint when available, failing soft to a surface bolt when that endpoint is unavailable. Acquisition energy reads only R2A acquisition state/progress.
+3. CURRENT `FLOOR_DRIVE` reads actual same-frame EARTH/WOOD/FIRE physical angle changes through the R2B projection. It does not activate from stale motion-state labels and does not use the old global Asterion Gyro source contract. This does not prohibit a separately designed global-drive energy concept in the future.
+4. Actor and projections are read-only presentation owners. They never write progression, Rune installation truth, acquisition truth, sector levels, physical motion or Field truth.
+
+## 2026-09-01 — CURRENT bounded leader-inspired lightning checkpoint
+
+1. Platform Energy uses a bounded reusable pool of shader-expanded screen-facing ribbon bolts. Geometry, material and path storage are allocated for reuse rather than created at spawn; the combined shader provides a near-white narrow core and softer halo. The volumetric sector acquisition beam is a separate presentation system.
+2. Morphology is stochastic, leader-inspired and physics-inspired presentation, not an electromagnetic simulation. Spawn-time variation uses `Math.random()`; per-frame flicker is deterministic from stored seed and age. Width, brightness, lifetime, tortuosity and branching remain bounded.
+3. Branch origins are curvature-biased from final rendered main-path points with a practically straight-path fallback. Branches are one generation only, use the local parent tangent and stable bolt-local perpendicular frame, and fail soft at shared-pool saturation without cancelling the main bolt.
+4. Reveal, `FLOOR_DRIVE` and Binder feeds allow `0..3` branches; acquisition allows at most one. Independent multilayer bolt shells remain future. A final reveal pulse suppressed by pool saturation is not guaranteed to retry.
+5. Settings normalization does not restore ordering for `acquisitionSpawnIntervalStartSeconds` / `acquisitionSpawnIntervalEndSeconds` or `acquisitionStrengthMin` / `acquisitionStrengthMax`. This is a known settings-contract gap, not an undefined/NaN runtime path.

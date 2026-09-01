@@ -2,6 +2,13 @@
 
 Status: **CURRENT / NORMATIVE**. Kod runtime rozstrzyga status **IMPLEMENTED**; decyzje Wizjonera rozstrzygają kanon produktu, progresji, komunikacji i hardware validation.
 
+## Binding language and no-guess rules
+
+1. Codex prompts are written in English.
+2. Newly written repository documentation is written in English.
+3. Design discussion between Visionary and Architect may remain in Polish.
+4. Codex must not guess when implementation depends on an unresolved fact or product decision. It must stop and report the unresolved fact or decision instead.
+
 ## Role i odpowiedzialność
 
 Codex jest pojedynczym wykonawcą technicznym patcha w plikach repozytorium. Nie tworzy subagentów, nie deleguje pracy, nie wysyła im poleceń i nie uruchamia automatycznego approval reviewera. Approval reviewerem jest zawsze użytkownik, nigdy `auto_review`.
