@@ -48,7 +48,11 @@ Branches are implemented and bounded. Origins are curvature-biased from final re
 
 #### `RUNE_BINDER_REVEAL` — implemented
 
-Sector completion materializes the persistent Rune Binder independently of Rune installation. The profile carries sector-local energy toward the live Binder presentation endpoint and drives reveal progress without creating readiness or persistent truth. A final reveal pulse may be omitted if the pool is saturated; retry is not guaranteed.
+Sector completion materializes the persistent Rune Binder independently of Rune installation. The profile carries sector-local energy toward the live Binder presentation endpoint and drives reveal progress without creating readiness or persistent truth. The physical live arrival remains `arrivalDistanceMeters = 130` and `arrivalDurationSeconds = 4.0`; RuneBridge, not VFX, owns `HIDDEN → ARRIVING → DOCKED` truth and translation.
+
+**CURRENT TUNING:** `revealTravelSeconds = 0.7` and `binderMaterializeSeconds = 0.42` still control only the initial travel/materialization choreography. They are not stretched to four seconds. `platformEnergyVfx.runeBinderRevealDurationSeconds = 4.0` instead defines the **spawn lifecycle duration**: from `t=0.0`, ordinary short-lived pooled reveal bolts continue spawning through the early materialization and after it, until approximately `t=4.0 s`. Then the actor stops scheduling ordinary reveal bolts and attempts the final reveal pulse; already-active slots expire naturally according to their unchanged short `boltLifetimeSeconds`. A final pulse may be omitted if the pool is saturated; retry is not guaranteed.
+
+The sustained presentation does not increase `maxActiveBolts`, extend individual bolt lifetime or create simultaneous unbounded geometry. It extends only the temporal duration of the existing stochastic presentation over the same bounded shared pool, preserving Quest 3S as the performance boundary. Hydration/reconstruction of an already-complete Binder restores settled state directly: no live four-second arrival, reveal lifecycle, `electricity_short_06` or `zwornik_*` replay.
 
 #### `SECTOR_ACQUISITION` — implemented
 
