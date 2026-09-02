@@ -1378,6 +1378,7 @@ function renderFrame() {
   asterionSectorControlInteraction.update(delta);
   asterionSectorAcquisitionPresentation.update(delta);
   asterionPlatformEnergyVfxProjection.update(delta);
+  asterionResonatorFieldPresentation.update(delta);
   playerGuidePanel.update(delta);
   monkeyGuide.update(delta);
   introSequence.update(delta);
@@ -1482,6 +1483,7 @@ function restoreVrScenarioBaseline() {
   runeRecipeSelectionController.reset();
   runeStoneProgressionController.reset();
   asterionResonatorFieldActor.reset();
+  asterionResonatorFieldPresentation.reset();
   protoAstroTuningController.resetBaseline();
   crystalCollection.reset();
   reliquaryHints.reset();

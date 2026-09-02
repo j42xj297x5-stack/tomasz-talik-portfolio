@@ -5,6 +5,8 @@ const PERIMETER_POINTS = 16;
 const DEPTH_STATIONS = 5;
 const RADIAL_SEGMENTS = 4;
 const TUBE_RADIUS = 0.018;
+const BOW_FRACTION = 0.08;
+const MORPH_DURATION_SECONDS = 0.32;
 
 const skinVertexShader = `
 varying vec3 vViewNormal;
@@ -113,6 +115,8 @@ export function createVrAsterionResonatorFieldPresentation({ parent, fieldActor 
   const nearMidpoints = new Float32Array(12);
   const farMidpoints = new Float32Array(12);
   const skinPositions = new Float32Array(PERIMETER_POINTS * DEPTH_STATIONS * 3);
+  const skinSourcePositions = new Float32Array(skinPositions.length);
+  const skinTargetPositions = new Float32Array(skinPositions.length);
   const skinNormals = new Float32Array(skinPositions.length);
   const skinIndices = new Uint16Array((DEPTH_STATIONS - 1) * PERIMETER_POINTS * 6);
   let skinIndexOffset = 0;
@@ -128,8 +132,14 @@ export function createVrAsterionResonatorFieldPresentation({ parent, fieldActor 
     }
   }
   const skinGeometry = new THREE.BufferGeometry();
-  skinGeometry.setAttribute('position', new THREE.BufferAttribute(skinPositions, 3));
-  skinGeometry.setAttribute('normal', new THREE.BufferAttribute(skinNormals, 3));
+  const skinPositionAttribute = new THREE.BufferAttribute(skinPositions, 3);
+  const skinNormalAttribute = new THREE.BufferAttribute(skinNormals, 3);
+  if (THREE.DynamicDrawUsage !== undefined && skinPositionAttribute.setUsage) {
+    skinPositionAttribute.setUsage(THREE.DynamicDrawUsage);
+    skinNormalAttribute.setUsage(THREE.DynamicDrawUsage);
+  }
+  skinGeometry.setAttribute('position', skinPositionAttribute);
+  skinGeometry.setAttribute('normal', skinNormalAttribute);
   skinGeometry.setIndex(new THREE.BufferAttribute(skinIndices, 1));
   const skinMaterial = new THREE.ShaderMaterial({
     uniforms: { color: { value: new THREE.Color(0xffffff) }, opacity: { value: 0.055 } },
@@ -148,11 +158,19 @@ export function createVrAsterionResonatorFieldPresentation({ parent, fieldActor 
   const pathPointCounts = [PERIMETER_POINTS, PERIMETER_POINTS, 5, 5, 5, 5];
   const tubePointCount = pathPointCounts.reduce((sum, count) => sum + count, 0);
   const tubeCenters = new Float32Array(tubePointCount * 3);
+  const tubeSourceCenters = new Float32Array(tubeCenters.length);
+  const tubeTargetCenters = new Float32Array(tubeCenters.length);
   const skeletonPositions = new Float32Array(tubePointCount * RADIAL_SEGMENTS * 3);
   const skeletonNormals = new Float32Array(skeletonPositions.length);
   const skeletonGeometry = new THREE.BufferGeometry();
-  skeletonGeometry.setAttribute('position', new THREE.BufferAttribute(skeletonPositions, 3));
-  skeletonGeometry.setAttribute('normal', new THREE.BufferAttribute(skeletonNormals, 3));
+  const skeletonPositionAttribute = new THREE.BufferAttribute(skeletonPositions, 3);
+  const skeletonNormalAttribute = new THREE.BufferAttribute(skeletonNormals, 3);
+  if (THREE.DynamicDrawUsage !== undefined && skeletonPositionAttribute.setUsage) {
+    skeletonPositionAttribute.setUsage(THREE.DynamicDrawUsage);
+    skeletonNormalAttribute.setUsage(THREE.DynamicDrawUsage);
+  }
+  skeletonGeometry.setAttribute('position', skeletonPositionAttribute);
+  skeletonGeometry.setAttribute('normal', skeletonNormalAttribute);
   skeletonGeometry.setIndex(new THREE.BufferAttribute(createTubeIndices(pathPointCounts), 1));
   const skeletonMaterial = new THREE.MeshBasicMaterial({
     color: 0xffffff,
@@ -205,31 +223,66 @@ export function createVrAsterionResonatorFieldPresentation({ parent, fieldActor 
     }
   }
 
-  function present(descriptor) {
-    const shape = resolveAsterionResonatorFieldShape(descriptor);
-    owner.visible = shape !== null;
-    if (!shape) return;
+  function bowOffsetAt(shape, t, z, leftBoundaryZ, rightBoundaryZ) {
+    const lateralMix = Math.max(0, Math.min(1,
+      (z - leftBoundaryZ) / (rightBoundaryZ - leftBoundaryZ)
+    ));
+    const envelope = Math.sin(Math.PI * t);
+    const leftOffset = -shape.deformation.leftBowSign
+      * (shape.deformation.leftMismatch / 2) * BOW_FRACTION * Math.abs(leftBoundaryZ) * envelope;
+    const rightOffset = shape.deformation.rightBowSign
+      * (shape.deformation.rightMismatch / 2) * BOW_FRACTION * Math.abs(rightBoundaryZ) * envelope;
+    return leftOffset + (rightOffset - leftOffset) * lateralMix;
+  }
+
+  function buildTarget(shape) {
     writeRoundedPerimeter(shape, 'near', nearPerimeter, nearMidpoints, nearNominal);
     writeRoundedPerimeter(shape, 'far', farPerimeter, farMidpoints, farNominal);
     for (let station = 0; station < DEPTH_STATIONS; station += 1) {
       const t = station / (DEPTH_STATIONS - 1);
-      for (let coordinate = 0; coordinate < PERIMETER_POINTS * 3; coordinate += 1) {
-        skinPositions[station * PERIMETER_POINTS * 3 + coordinate]
-          = nearPerimeter[coordinate] + (farPerimeter[coordinate] - nearPerimeter[coordinate]) * t;
+      const leftBoundaryZ = shape.corners.nearTopLeft.z
+        + (shape.corners.farTopLeft.z - shape.corners.nearTopLeft.z) * t;
+      const rightBoundaryZ = shape.corners.nearTopRight.z
+        + (shape.corners.farTopRight.z - shape.corners.nearTopRight.z) * t;
+      for (let point = 0; point < PERIMETER_POINTS; point += 1) {
+        const sourceOffset = point * 3;
+        const targetOffset = (station * PERIMETER_POINTS + point) * 3;
+        for (let axis = 0; axis < 3; axis += 1) {
+          skinTargetPositions[targetOffset + axis] = nearPerimeter[sourceOffset + axis]
+            + (farPerimeter[sourceOffset + axis] - nearPerimeter[sourceOffset + axis]) * t;
+        }
+        skinTargetPositions[targetOffset + 2] += bowOffsetAt(
+          shape, t, skinTargetPositions[targetOffset + 2], leftBoundaryZ, rightBoundaryZ
+        );
       }
     }
-    tubeCenters.set(nearPerimeter, 0);
-    tubeCenters.set(farPerimeter, PERIMETER_POINTS * 3);
+    tubeTargetCenters.set(skinTargetPositions.subarray(0, PERIMETER_POINTS * 3), 0);
+    tubeTargetCenters.set(
+      skinTargetPositions.subarray((DEPTH_STATIONS - 1) * PERIMETER_POINTS * 3),
+      PERIMETER_POINTS * 3
+    );
     let railOffset = PERIMETER_POINTS * 2 * 3;
     for (let corner = 0; corner < 4; corner += 1) {
       for (let station = 0; station < DEPTH_STATIONS; station += 1) {
         const t = station / (DEPTH_STATIONS - 1);
+        const leftBoundaryZ = shape.corners.nearTopLeft.z
+          + (shape.corners.farTopLeft.z - shape.corners.nearTopLeft.z) * t;
+        const rightBoundaryZ = shape.corners.nearTopRight.z
+          + (shape.corners.farTopRight.z - shape.corners.nearTopRight.z) * t;
+        const centerOffset = railOffset;
         for (let axis = 0; axis < 3; axis += 1) {
           const offset = corner * 3 + axis;
-          tubeCenters[railOffset++] = nearMidpoints[offset] + (farMidpoints[offset] - nearMidpoints[offset]) * t;
+          tubeTargetCenters[railOffset++] = nearMidpoints[offset]
+            + (farMidpoints[offset] - nearMidpoints[offset]) * t;
         }
+        tubeTargetCenters[centerOffset + 2] += bowOffsetAt(
+          shape, t, tubeTargetCenters[centerOffset + 2], leftBoundaryZ, rightBoundaryZ
+        );
       }
     }
+  }
+
+  function uploadGeometry() {
     let pointOffset = 0;
     pathPointCounts.forEach((pointCount, pathIndex) => {
       rewriteTubePath(pointOffset, pointCount, pathIndex < 2);
@@ -242,8 +295,59 @@ export function createVrAsterionResonatorFieldPresentation({ parent, fieldActor 
     skeletonGeometry.attributes.normal.needsUpdate = true;
   }
 
-  present(fieldActor.getDescriptor());
+  let morphElapsed = 0;
+  let morphActive = false;
+
+  function present(descriptor, immediate = false) {
+    const shape = resolveAsterionResonatorFieldShape(descriptor);
+    if (!shape) {
+      morphActive = false;
+      owner.visible = false;
+      return;
+    }
+    buildTarget(shape);
+    if (!owner.visible || immediate) {
+      morphActive = false;
+      skinPositions.set(skinTargetPositions);
+      tubeCenters.set(tubeTargetCenters);
+      owner.visible = true;
+      uploadGeometry();
+      return;
+    }
+    skinSourcePositions.set(skinPositions);
+    tubeSourceCenters.set(tubeCenters);
+    morphElapsed = 0;
+    morphActive = true;
+  }
+
+  function update(deltaSeconds) {
+    if (!morphActive) return;
+    morphElapsed += Math.max(0, deltaSeconds || 0);
+    const p = Math.min(1, morphElapsed / MORPH_DURATION_SECONDS);
+    const smooth = p * p * (3 - 2 * p);
+    if (p === 1) {
+      skinPositions.set(skinTargetPositions);
+      tubeCenters.set(tubeTargetCenters);
+    } else {
+      for (let index = 0; index < skinPositions.length; index += 1) {
+        skinPositions[index] = skinSourcePositions[index]
+          + (skinTargetPositions[index] - skinSourcePositions[index]) * smooth;
+      }
+      for (let index = 0; index < tubeCenters.length; index += 1) {
+        tubeCenters[index] = tubeSourceCenters[index]
+          + (tubeTargetCenters[index] - tubeSourceCenters[index]) * smooth;
+      }
+    }
+    uploadGeometry();
+    if (p === 1) morphActive = false;
+  }
+
+  owner.visible = false;
+  present(fieldActor.getDescriptor(), true);
   const unsubscribe = fieldActor.subscribe(present);
+  function reset() {
+    present(fieldActor.getDescriptor(), true);
+  }
   let disposed = false;
   function dispose() {
     if (disposed) return;
@@ -255,5 +359,5 @@ export function createVrAsterionResonatorFieldPresentation({ parent, fieldActor 
     skeletonGeometry.dispose();
     skeletonMaterial.dispose();
   }
-  return { object: owner, dispose };
+  return { object: owner, update, reset, dispose };
 }
