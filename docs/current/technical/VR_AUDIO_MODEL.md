@@ -4,7 +4,7 @@ Status: **CURRENT / BINDING**, living technical model for Experience VR audio sy
 
 ## SUMMARY DLA ARCHITEKTA
 
-The bounded Experience VR Astro Attractor lifecycle and Astro Furnace process sounds remain **IMPLEMENTED**. The Asterion sector acquisition/drive choreography, four-second Rune Binder arrival, anticipatory Rune installation one-shots and installed Rune Stone spatial loops are also **IMPLEMENTED** under the observer-only audio architecture below. The main background contract remains Scenario-driven but **NOT YET FULLY IMPLEMENTED**. Both Asterion Sphere DEVICE loops remain independent and **IMPLEMENTED**.
+The bounded Experience VR Astro Attractor lifecycle, spatial Astro Furnace physical sounds and spatial installed Rune Stone loops are **IMPLEMENTED**. One composition-level XR listener update serves every spatial projection. The Asterion sector acquisition/drive choreography, four-second Rune Binder arrival and anticipatory Rune installation one-shots are also **IMPLEMENTED** under the observer-only audio architecture below. The main background contract remains Scenario-driven but **NOT YET FULLY IMPLEMENTED**. Both Asterion Sphere DEVICE loops remain independent and **IMPLEMENTED**.
 
 ## Status vocabulary and authority
 
@@ -135,16 +135,41 @@ Hydration, reconstruction and debug restoration of an already completed sector a
 
 The `creating_*` family is reassigned from Binder reveal to Rune Stone installation: EARTH → `creating_01.mp3`, FIRE → `creating_02.mp3`, WOOD → `creating_03.mp3`, METAL → `creating_04.mp3`, WATER → `creating_05.mp3`. During a live installation, with `installAudioLeadSeconds = 1.0`, play the branch one-shot exactly once when remaining final `DESCENT` time first becomes `<= 1.0 s`; if future tuning makes the entire `DESCENT <= 1.0 s`, play it once at `DESCENT` start. This presentation anticipation does not install the stone: `INSTALLED`, bridge `BOUND`, `commitInstalledFamily()` and eligibility for the persistent installed spatial loop remain tied to actual physical completion. Do not move this sound to `APPROACH`, `BRIDGE_OPEN` or attractor handoff, and hydration/reconstruction remains silent. `creating_06–08.mp3` remain **UNASSIGNED**, and `creating_short_01.mp3` retains its existing Reliquary activation role.
 
-### Astro Furnace
+### Astro Furnace spatial audio — CURRENT / IMPLEMENTED
 
-- Open Option panel → `panel_sound_01.mp3`.
-- Enter deeper → `panel_sound_02.mp3`.
-- Return to main menu → `click_panel_01.mp3`.
-- Accepted transition start `CLOSED → OPENING` / `OPEN → CLOSING` → `astro_piec_open.mp3` / `astro_piec_close.mp3` on `DEVICE`, once per transition; blocked presses, stable requested states, animation frames, and reset are silent.
-- Shell process → `astro_piec_work_01.mp3` (**IMPLEMENTED**, accepted-cycle one-shot on DEVICE).
-- Small-glyph process → `astro_piec_work_02.mp3` (**TODO gameplay**).
-- Rune tuning Astrolabium from one Small Glyph + Shell recipe → `astro_piec_work_03.mp3` (**IMPLEMENTED**). To nie jest physical Rune Stone transport audio: kamień nigdy nie trafia do Pieca. Jeden poprawny komplet uruchamia jeden canonical 18-second cycle; nie powstaje czwarty work sound.
-- Accepted Production Asterion Sphere `UTWÓRZ` construction cycle → `astro_piec_work_create_01.mp3` (**IMPLEMENTED**, once on DEVICE). The furnace process kind suppresses `astro_piec_work_01.mp3` for this cycle. Audio never determines duration: construction always follows the canonical 18-second furnace clock; interruption stops the create source. Future Astro Attractor creation may reuse the authored family but has no runtime action yet.
+The physical machine uses spatial `DEVICE` sources at one stable `VrAstroFurnaceSpatialAudioAnchor`. Panel/interface feedback remains non-spatial `UI`: Open Option → `panel_sound_01.mp3`, enter deeper → `panel_sound_02.mp3`, and return to the main menu → `click_panel_01.mp3`. This boundary does not spatialize those sounds or any other panel feedback.
+
+Physical mappings preserve their gameplay triggers while changing presentation only:
+
+- accepted `CLOSED → OPENING` / `OPEN → CLOSING` transition → `astro_piec_open.mp3` / `astro_piec_close.mp3`, once per transition;
+- ordinary Shell process → `astro_piec_work_01.mp3`;
+- Rune tuning Astrolabium from one Small Glyph + Shell recipe → `astro_piec_work_03.mp3` (one canonical 18-second cycle; the physical Rune Stone never enters the Furnace);
+- accepted Production Asterion Sphere or Astro Attractor construction → `astro_piec_work_create_01.mp3`; this construction kind suppresses the ordinary work source;
+- `astro_piec_work_02.mp3` remains unimplemented and has no new role from this correction.
+
+Blocked presses, stable requested chamber states, animation frames, reset and hydration/reconstruction are silent. Audio never determines the process kind, duration or completion truth; interruption stops the corresponding active process source.
+
+The anchor hierarchy is:
+
+```text
+VrTiltableFloorRoot
+→ VrPlatformFixturesRoot
+→ VrAstroFurnace
+  └─ VrAstroFurnaceSpatialAudioAnchor
+```
+
+`VrAstroFurnace` directly owns the anchor; it is not attached to chamber, lid, latch, button, process-spin node or any animated GLB child. Placement calculates its local position once from the center of the Furnace's final local visible bounds after floor alignment, failing soft to the Furnace local origin when valid bounds are unavailable. There are no per-frame geometry scans or parallel world-position calculations. Hierarchy inheritance makes the anchor follow both the Furnace and global platform gyro.
+
+`AstroFurnaceAudioProjection` owns the active physical-source presentation lifecycle. While a source is active it reads this stable anchor's world position and updates the handle, so gyro motion is followed. `VrAudioBridge` remains generic and does not own Furnace-specific process handles; `VrAstroFurnace` owns the physical object/anchor; gameplay interactions remain Furnace truth; and composition owns the shared listener update.
+
+```js
+furnaceSpatialAudio: {
+  maxDistanceMeters: 4.0,
+  refDistanceMeters: 0.25
+}
+```
+
+Each physical source uses `panningModel = HRTF`, `distanceModel = linear`, `rolloffFactor = 1` and the `DEVICE` bus. At distance `>= 4.0 m`, its gain is zero under this model.
 
 ### Monkey and panels
 
@@ -179,7 +204,19 @@ VrTiltableFloorRoot
 
 The anchor therefore inherits the platform global transform, global gyro, authored platform-layout yaw and static sector radial yaw, but not individual detent pitch/tilt. Rune Stone state determines **whether** the source exists; this fixed sector anchor determines **where** it exists. It does not follow the physical Rune Stone root, installation anchor or RuneBridge center.
 
-The shared architecture is `AudioManager → VrAudioBridge → RuneStoneAudioProjection`. Gameplay/composition never accesses `AudioContext` directly. `AudioManager` owns cache, buses and the shared spatial primitive; `VrAudioBridge` is fail-soft; `RuneStoneAudioProjection` observes installed truth, owns installed presentation synchronization and updates source/listener poses. The conceptual chain is:
+`AudioManager` owns Web Audio, cache, buses and the shared Panner primitive. `VrAudioBridge` is the generic fail-soft runtime boundary. `RuneStoneAudioProjection` observes installed truth, owns installed-source synchronization and updates only Rune emitter positions; `AstroFurnaceAudioProjection` likewise owns Furnace physical sources and updates only the Furnace emitter position.
+
+There is exactly one spatial-listener update per VR frame, at Experience composition level:
+
+```text
+WebXR tracked camera
+→ getXrHeadWorldPose(...)
+→ experienceVr composition
+→ VrAudioBridge.setSpatialListenerPose(...)
+→ AudioManager / AudioListener
+```
+
+The internal WebXR `ArrayCamera` is detached from the ordinary Three.js parent hierarchy. The helper therefore updates `playerRig` world matrices, asks `renderer.xr` to update the camera, obtains the prepared XR camera, and extracts position/quaternion directly from its prepared `matrixWorld`. Calling `xrCamera.updateWorldMatrix(...)`, `getWorldPosition(...)` or `getWorldQuaternion(...)` on that detached camera is not the listener path because it can rebuild the matrix and lose the player-rig transform. The listener and every emitter consequently use the same Experience VR world coordinate system; no spatial subsystem maintains a separate listener. Gameplay/composition never accesses `AudioContext` directly. The source chain is:
 
 ```text
 AudioBufferSourceNode → source GainNode → PannerNode → DEVICE bus
@@ -189,15 +226,15 @@ Spatial settings and their roles are canonical:
 
 ```js
 runeStoneSpatialAudio: {
-  maxDistanceMeters: 2.0,      // exact outer audible range
+  maxDistanceMeters: 4.0,      // exact outer audible range
   refDistanceMeters: 0.25,     // attenuation tuning inside the range
   platformRadiusMeters: 8.0    // stable sector-audio-anchor radius
 }
 ```
 
-The source uses `loop = true`, `panningModel = HRTF`, `distanceModel = linear` and `rolloffFactor = 1`. At distance `>= 2.0 m`, source gain is exactly zero; attenuation inside that range is presentation **TUNING**, never gameplay-distance logic. The listener follows the actual XR head/camera world pose, while emitter position follows the fixed sector-local anchor.
+The source uses `loop = true`, `panningModel = HRTF`, `distanceModel = linear` and `rolloffFactor = 1`. At distance `>= 4.0 m`, source gain is exactly zero; attenuation inside that range is presentation **TUNING**, never gameplay-distance logic. The shared listener follows the actual XR head world pose, while this projection updates only the fixed sector-local emitter anchor.
 
-All audio reachable in Experience VR is prepared and decoded before READY; gameplay is cache-only. For this implemented package the relevant set includes `electricity_short_01–06`, `electricity_long_01–04`, `zwornik_01–04`, `creating_01–05` and `noise_laud_loop_04–08`. Reserved `electricity_short_07–08` and unassigned `creating_06–08` are not reachable runtime behavior.
+All audio reachable in Experience VR is prepared and decoded before READY; gameplay is cache-only. For this implemented package the relevant set includes `electricity_short_01–06`, `electricity_long_01–04`, `zwornik_01–04`, `creating_01–05`, `noise_laud_loop_04–08`, and the reachable physical Furnace set `astro_piec_open`, `astro_piec_close`, `astro_piec_work_01`, `astro_piec_work_03`, `astro_piec_work_create_01`. Reserved `electricity_short_07–08` and unassigned `creating_06–08` are not reachable runtime behavior.
 
 ### Asterion Sphere / floor
 
@@ -226,12 +263,12 @@ The inventory below contains every existing `public/audio/*.mp3` as of 2026-08-2
 | `ambient_loop_02.mp3` | seamless loop | AMBIENT | post-main tail po `ambient_loop_01` i quiet | **PLANNED** | Istniejący repozytoryjny asset; ×6. |
 | `ambient_loop_03.mp3` | seamless loop | AMBIENT | post-main tail po `ambient_loop_02` i quiet | **PLANNED** | Istniejący repozytoryjny asset; ×6. |
 | `ambient_loop_04.mp3` | seamless loop | AMBIENT | post-main tail po `ambient_loop_03` i quiet | **PLANNED** | Istniejący repozytoryjny asset; ×6; zachowanie po nim pozostaje nieustalone. |
-| `astro_piec_close.mp3` | one-shot | DEVICE | zamknięcie komory Astro Pieca | **IMPLEMENTED** | Playback one-shot jest wdrożony zgodnie z semantyką eventu powyżej. |
-| `astro_piec_open.mp3` | one-shot | DEVICE | otwarcie komory Astro Pieca | **IMPLEMENTED** | Playback one-shot jest wdrożony zgodnie z semantyką eventu powyżej. |
-| `astro_piec_work_01.mp3` | one-shot | DEVICE | proces skorup w Astro Piecu | **IMPLEMENTED** | Raz po zaakceptowanym starcie; bez loop/restartu; reset/dispose zatrzymuje aktywne źródło. |
-| `astro_piec_work_create_01.mp3` | one-shot | DEVICE | Production Asterion `UTWÓRZ`; exactly once per accepted build, stopped on interrupted build | **IMPLEMENTED** | Fail-soft source; no loop and no duplicate generic click. |
+| `astro_piec_close.mp3` | one-shot | DEVICE | zamknięcie komory Astro Pieca | **IMPLEMENTED** | Spatial at the stable Furnace anchor; once per accepted transition. |
+| `astro_piec_open.mp3` | one-shot | DEVICE | otwarcie komory Astro Pieca | **IMPLEMENTED** | Spatial at the stable Furnace anchor; once per accepted transition. |
+| `astro_piec_work_01.mp3` | one-shot | DEVICE | zwykły proces skorup w Astro Piecu | **IMPLEMENTED** | Spatial at the stable Furnace anchor; active handle follows gyro; reset/dispose stops it. |
+| `astro_piec_work_create_01.mp3` | one-shot | DEVICE | Production Asterion / Astro Attractor construction | **IMPLEMENTED** | Spatial at the stable Furnace anchor; stopped on interrupted build; no duplicate ordinary source. |
 | `astro_piec_work_02.mp3` | one-shot | DEVICE | proces małych glifów w Astro Piecu (TODO gameplay) | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
-| `astro_piec_work_03.mp3` | one-shot | DEVICE | proces kamieni w Astro Piecu (TODO gameplay) | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
+| `astro_piec_work_03.mp3` | one-shot | DEVICE | Rune tuning Astrolabium z Small Glyph + Shell | **IMPLEMENTED** | Spatial at the stable Furnace anchor during the current canonical 18-second tuning cycle. |
 | `bell_01.mp3` | one-shot | UI | otwarcie panelu gracza Y | **IMPLEMENTED** | Playback one-shot na busie UI jest wdrożony. |
 | `bell_02.mp3` | one-shot | UI | zamknięcie panelu gracza Y | **IMPLEMENTED** | Playback one-shot na busie UI jest wdrożony. |
 | `bell_03.mp3` | one-shot | UI | — | **UNASSIGNED** | Brak ustalonego użycia VR. |
@@ -284,11 +321,11 @@ The inventory below contains every existing `public/audio/*.mp3` as of 2026-08-2
 | `noise_laud_loop_01.mp3` | seamless loop | DEVICE | Astro Przyciągacz: małe glify | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
 | `noise_laud_loop_02.mp3` | seamless loop | DEVICE | Astro Przyciągacz: skorupy | **IMPLEMENTED** | Aktywny lifecycle skorup: immediate loop, recovery i handoff fade. |
 | `noise_laud_loop_03.mp3` | seamless loop | DEVICE | Astro Przyciągacz: duże glify | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
-| `noise_laud_loop_04.mp3` | seamless loop | DEVICE | FIRE / stone_01 Attractor + INSTALLED spatial emitter | **IMPLEMENTED** | Installed audible range exactly 2.0 m. |
-| `noise_laud_loop_05.mp3` | seamless loop | DEVICE | METAL / stone_02 Attractor + INSTALLED spatial emitter | **IMPLEMENTED** | Installed audible range exactly 2.0 m. |
-| `noise_laud_loop_06.mp3` | seamless loop | DEVICE | EARTH / stone_03 Attractor + INSTALLED spatial emitter | **IMPLEMENTED** | Installed audible range exactly 2.0 m. |
-| `noise_laud_loop_07.mp3` | seamless loop | DEVICE | WOOD / stone_04 Attractor + INSTALLED spatial emitter | **IMPLEMENTED** | Installed audible range exactly 2.0 m. |
-| `noise_laud_loop_08.mp3` | seamless loop | DEVICE | WATER / stone_05 Attractor + INSTALLED spatial emitter | **IMPLEMENTED** | Installed audible range exactly 2.0 m. |
+| `noise_laud_loop_04.mp3` | seamless loop | DEVICE | FIRE / stone_01 Attractor + INSTALLED spatial emitter | **IMPLEMENTED** | Installed audible range exactly 4.0 m. |
+| `noise_laud_loop_05.mp3` | seamless loop | DEVICE | METAL / stone_02 Attractor + INSTALLED spatial emitter | **IMPLEMENTED** | Installed audible range exactly 4.0 m. |
+| `noise_laud_loop_06.mp3` | seamless loop | DEVICE | EARTH / stone_03 Attractor + INSTALLED spatial emitter | **IMPLEMENTED** | Installed audible range exactly 4.0 m. |
+| `noise_laud_loop_07.mp3` | seamless loop | DEVICE | WOOD / stone_04 Attractor + INSTALLED spatial emitter | **IMPLEMENTED** | Installed audible range exactly 4.0 m. |
+| `noise_laud_loop_08.mp3` | seamless loop | DEVICE | WATER / stone_05 Attractor + INSTALLED spatial emitter | **IMPLEMENTED** | Installed audible range exactly 4.0 m. |
 | `noise_loop_01.mp3` | seamless loop | SPACE | — | **UNASSIGNED** | Dostępny; przyszłe użycie pozostaje otwarte. |
 | `noise_loop_02.mp3` | seamless loop | SPACE | — | **UNASSIGNED** | Dostępny; przyszłe użycie pozostaje otwarte. |
 | `noise_loop_03.mp3` | seamless loop | SPACE | — | **UNASSIGNED** | Dostępny; przyszłe użycie pozostaje otwarte. |
@@ -342,7 +379,7 @@ The prefix map supplies only a default classification. Every new MP3 must still 
 - Future uses of `noise_loop_*`.
 - Future uses of unassigned `creating_06–08` and any additional `creating_short_*` mapping.
 - Behavior after exhaustion of the last existing post-main `ambient_loop_*`.
-- Attenuation shape within the frozen 2.0 m installed Rune Stone range.
+- Attenuation shape within the frozen 4.0 m installed Rune Stone range.
 
 
 ## Implementation boundary
