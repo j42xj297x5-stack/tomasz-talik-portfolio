@@ -88,6 +88,8 @@ import { createVrIntroFogReveal } from './xr/guidance/createVrIntroFogReveal.js'
 import { createVrReliquaryHints } from './xr/guidance/createVrReliquaryHints.js';
 import { createVrAudioBridge } from './xr/audio/createVrAudioBridge.js';
 import { BINDER_REVEAL_AUDIO, createVrRuneBinderRevealAudioProjection } from './xr/audio/createVrRuneBinderRevealAudioProjection.js';
+import { ASTERION_SECTOR_ACQUISITION_AUDIO, ASTERION_SECTOR_DRIVE_AUDIO,
+  createVrAsterionSectorAudioProjection } from './xr/audio/createVrAsterionSectorAudioProjection.js';
 import { createVrAmbientSequencer, VR_MAIN_AMBIENT_PROGRAMS } from './xr/audio/createVrAmbientSequencer.js';
 import { createVrIntroAmbientSequencer } from './xr/audio/createVrIntroAmbientSequencer.js';
 import { ExperienceDirector } from './xr/progression/ExperienceDirector.js';
@@ -147,7 +149,9 @@ const GLYPH_COMPLETION_AUDIO = Object.freeze({
 const REQUIRED_VR_AUDIO = Object.freeze([
   ...Object.values(VR_AUDIO),
   ...Object.values(GLYPH_COMPLETION_AUDIO).flat(),
-  ...BINDER_REVEAL_AUDIO
+  ...BINDER_REVEAL_AUDIO,
+  ...Object.values(ASTERION_SECTOR_ACQUISITION_AUDIO),
+  ...new Set(Object.values(ASTERION_SECTOR_DRIVE_AUDIO))
 ]);
 const playVrUi = (path) => vrAudio.playOneShot(path, 'UI');
 const playVrWorld = (path) => vrAudio.playOneShot(path, 'WORLD');
@@ -247,7 +251,9 @@ const runeBridgeActor = createVrRuneBridgeActor({
   extensionDurationSeconds: settings.runeStoneInstallation.phaseDurationSeconds,
   hoverHeightMeters: settings.runeStoneInstallation.hoverHeightMeters,
   presentationScale: settings.runeBridge.presentationScale,
-  radialPresentationOffsetMeters: settings.runeBridge.radialPresentationOffsetMeters
+  radialPresentationOffsetMeters: settings.runeBridge.radialPresentationOffsetMeters,
+  arrivalDistanceMeters: settings.runeBridge.arrivalDistanceMeters,
+  arrivalDurationSeconds: settings.runeBridge.arrivalDurationSeconds
 });
 const platformFixturesRoot = new THREE.Group();
 platformFixturesRoot.name = 'VrPlatformFixturesRoot';
@@ -434,13 +440,11 @@ const platformEnergyVfxActor = createVrPlatformEnergyVfxActor({
   settings: settings.platformEnergyVfx
 });
 const platformEnergyVfxProjection = createVrPlatformEnergyVfxProjection({ platformEnergyVfxActor });
-const runeBinderRevealAudioProjection = createVrRuneBinderRevealAudioProjection({ audioBridge: vrAudio });
+const runeBinderRevealAudioProjection = createVrRuneBinderRevealAudioProjection({ audioBridge: vrAudio, runeBridgeActor });
 const synchronizeRuneBridgeReadiness = () => runeInstallationReadinessProjection.synchronizeBridges(runeBridgeActor);
 function presentLiveRuneBridgeReadinessTransitions() {
-  const transitions = synchronizeRuneBridgeReadiness();
-  runeResonatorGuidance?.notifyBridgeTransitions(transitions);
+  const transitions = runeInstallationReadinessProjection.synchronizeBridges(runeBridgeActor, { live: true });
   platformEnergyVfxProjection.presentReadinessTransitions(transitions);
-  runeBinderRevealAudioProjection.presentReadinessTransitions(transitions);
 }
 const ambientSequencer = createVrAmbientSequencer({ bridge: vrAudio });
 const introAmbientSequencer = createVrIntroAmbientSequencer({ bridge: vrAudio });
@@ -550,6 +554,11 @@ const asterionSectorControlInteraction = createVrAsterionSectorControlInteractio
   sectorAcquisitionInteraction: asterionSectorAcquisitionInteraction,
   settings: settings.asterionSectorControl
 });
+const asterionSectorAudioProjection = createVrAsterionSectorAudioProjection({
+  audioBridge: vrAudio,
+  acquisitionInteraction: asterionSectorAcquisitionInteraction,
+  sectorControlInteraction: asterionSectorControlInteraction
+});
 const asterionSectorAcquisitionPresentation = createVrAsterionSectorAcquisitionPresentation({
   parent: scene,
   sphere: asterionSphere,
@@ -585,6 +594,9 @@ const unsubscribeResonatorGuidance = asterionResonatorFieldActor.subscribe((desc
 });
 const unsubscribeSectorLockGuidance = asterionSectorAcquisitionInteraction.subscribeLocked(() => {
   runeResonatorGuidance?.notifySectorLocked();
+});
+const unsubscribeRuneBridgeGuidance = runeBridgeActor.subscribe((event) => {
+  if (event?.type === 'ARRIVAL_COMPLETED') runeResonatorGuidance?.notifyBridgeTransitions([event]);
 });
 asterionProductionController.setHandModeController(handModeController);
 const astroAttractorProductionController = createVrAstroAttractorProductionController({
@@ -1464,6 +1476,7 @@ function restoreVrScenarioBaseline() {
   asterionGyroInteraction.reset();
   asterionSectorAcquisitionInteraction.reset();
   asterionSectorControlInteraction.reset();
+  asterionSectorAudioProjection.reset();
   asterionSectorAcquisitionPresentation.reset();
   asterionPlatformEnergyVfxProjection.reset();
   ambientSequencer.reset();
@@ -1599,12 +1612,14 @@ window.addEventListener('pagehide', () => {
   asterionGyroInteraction.dispose();
   asterionSectorAcquisitionInteraction.dispose();
   asterionSectorControlInteraction.dispose();
+  asterionSectorAudioProjection.dispose();
   asterionSectorAcquisitionPresentation.dispose();
   asterionPlatformEnergyVfxProjection.dispose();
   unsubscribeResonatorScenarioHandoff();
   unsubscribeRuneGuidance();
   unsubscribeResonatorGuidance();
   unsubscribeSectorLockGuidance();
+  unsubscribeRuneBridgeGuidance();
   asterionResonatorFieldPresentation.dispose();
   asterionResonatorFieldActor.dispose();
   asterionProductionController.dispose();
