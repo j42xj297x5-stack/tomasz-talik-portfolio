@@ -216,7 +216,7 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
       pulseDuration: 1.6, radialSegments: 14 }
   },
   runeStoneInstallation: { handoffRadiusMeters: 10, hoverHeightMeters: 2, phaseDurationSeconds: 1.2 },
-  runeStoneSpatialAudio: { maxDistanceMeters: 2.0, refDistanceMeters: 0.25 },
+  runeStoneSpatialAudio: { maxDistanceMeters: 2.0, refDistanceMeters: 0.25, platformRadiusMeters: 8.0 },
   runeBridge: { presentationScale: 2, radialPresentationOffsetMeters: 1,
     arrivalDistanceMeters: 130, arrivalDurationSeconds: 3.0 },
   platformEnergyVfx: {
@@ -770,7 +770,9 @@ export function normalizeExperienceVrSettings(candidate) {
         defaults.runeStoneSpatialAudio.maxDistanceMeters, { min: 0.01, max: 20 });
       const refDistanceMeters = finiteNumber(candidate.runeStoneSpatialAudio?.refDistanceMeters,
         defaults.runeStoneSpatialAudio.refDistanceMeters, { min: Number.EPSILON, max: maxDistanceMeters - Number.EPSILON });
-      return { maxDistanceMeters, refDistanceMeters };
+      const platformRadiusMeters = finiteNumber(candidate.runeStoneSpatialAudio?.platformRadiusMeters,
+        defaults.runeStoneSpatialAudio.platformRadiusMeters, { min: Number.EPSILON, max: 1000 });
+      return { maxDistanceMeters, refDistanceMeters, platformRadiusMeters };
     })(),
     runeBridge: {
       presentationScale: finiteNumber(candidate.runeBridge?.presentationScale,
