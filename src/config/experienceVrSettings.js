@@ -121,8 +121,7 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
   asterionSectorControl: {
     angularSpeedDegrees: 16,
     detentPauseSeconds: 0.12,
-    sideGestureEngageDegrees: 45,
-    fireGestureEngageDegrees: 30,
+    gestureMaxDegrees: 90,
     gestureReleaseDegrees: 10
   },
   asterionSectorBeam: {
@@ -408,17 +407,12 @@ export function normalizeExperienceVrSettings(candidate) {
     defaults.platformEnergyVfx.branchAngleMinDegrees, { min: 5, max: 80 });
   const platformEnergyTortuosityMin = finiteNumber(candidate.platformEnergyVfx?.tortuosityMinMeters,
     defaults.platformEnergyVfx.tortuosityMinMeters, { min: 0.01, max: 0.5 });
-  const legacyGestureEngageDegrees = candidate.asterionSectorControl?.gestureEngageDegrees;
-  const sideGestureEngageDegrees = finiteNumber(
-    candidate.asterionSectorControl?.sideGestureEngageDegrees ?? legacyGestureEngageDegrees,
-    defaults.asterionSectorControl.sideGestureEngageDegrees, { min: 10, max: 75 });
-  const fireGestureEngageDegrees = finiteNumber(
-    candidate.asterionSectorControl?.fireGestureEngageDegrees ?? legacyGestureEngageDegrees,
-    defaults.asterionSectorControl.fireGestureEngageDegrees, { min: 10, max: 60 });
+  const gestureMaxDegrees = finiteNumber(candidate.asterionSectorControl?.gestureMaxDegrees,
+    defaults.asterionSectorControl.gestureMaxDegrees, { min: 1, max: 180 });
   const gestureReleaseDegrees = Math.min(
     finiteNumber(candidate.asterionSectorControl?.gestureReleaseDegrees,
       defaults.asterionSectorControl.gestureReleaseDegrees, { min: 0, max: 89 }),
-    Math.min(sideGestureEngageDegrees, fireGestureEngageDegrees) - 1);
+    gestureMaxDegrees);
 
   return {
     schemaVersion: EXPERIENCE_VR_SETTINGS_SCHEMA_VERSION,
@@ -619,8 +613,7 @@ export function normalizeExperienceVrSettings(candidate) {
         defaults.asterionSectorControl.angularSpeedDegrees, { min: 0.1, max: 90 }),
       detentPauseSeconds: finiteNumber(candidate.asterionSectorControl?.detentPauseSeconds,
         defaults.asterionSectorControl.detentPauseSeconds, { min: 0, max: 1 }),
-      sideGestureEngageDegrees,
-      fireGestureEngageDegrees,
+      gestureMaxDegrees,
       gestureReleaseDegrees
     },
     asterionSectorBeam: {
