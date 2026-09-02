@@ -87,6 +87,7 @@ import { createVrIntroCrystalTutorial } from './xr/guidance/createVrIntroCrystal
 import { createVrIntroFogReveal } from './xr/guidance/createVrIntroFogReveal.js';
 import { createVrReliquaryHints } from './xr/guidance/createVrReliquaryHints.js';
 import { createVrAudioBridge } from './xr/audio/createVrAudioBridge.js';
+import { createVrAstroFurnaceAudioProjection } from './xr/audio/createVrAstroFurnaceAudioProjection.js';
 import { createVrRuneStoneAudioProjection, VR_RUNE_STONE_INSTALL_AUDIO } from './xr/audio/createVrRuneStoneAudioProjection.js';
 import { BINDER_REVEAL_AUDIO, createVrRuneBinderRevealAudioProjection } from './xr/audio/createVrRuneBinderRevealAudioProjection.js';
 import { ASTERION_SECTOR_ACQUISITION_AUDIO, ASTERION_SECTOR_DRIVE_AUDIO,
@@ -137,6 +138,7 @@ const VR_AUDIO = Object.freeze({
   tierComplete: '/audio/floor_panel_activate.mp3', monkeyThinking: '/audio/monkey_thinking_01.mp3',
   chamberOpen: '/audio/astro_piec_open.mp3', chamberClose: '/audio/astro_piec_close.mp3',
   furnaceProcess: '/audio/astro_piec_work_01.mp3',
+  runeTuningProcess: '/audio/astro_piec_work_03.mp3',
   asterionCreate: '/audio/astro_piec_work_create_01.mp3',
   glyphProcess: '/audio/glif_hover_loop.mp3'
 });
@@ -157,7 +159,6 @@ const REQUIRED_VR_AUDIO = Object.freeze([
 ]);
 const playVrUi = (path) => vrAudio.playOneShot(path, 'UI');
 const playVrWorld = (path) => vrAudio.playOneShot(path, 'WORLD');
-const playVrDevice = (path) => vrAudio.playOneShot(path, 'DEVICE');
 app.innerHTML = `
   <main class="vr-runtime" aria-label="${copy.title}">
     <canvas id="vr-scene-canvas" class="vr-runtime__canvas"></canvas>
@@ -385,6 +386,11 @@ const astroFurnace = createVrAstroFurnace({
   model: assetManager.cloneGltfScene('vr-astro-furnace-model'),
   animations: astroFurnaceGltf?.animations ?? [],
   settings: settings.furnace
+});
+const furnaceAudioProjection = createVrAstroFurnaceAudioProjection({
+  audioBridge: vrAudio,
+  getEmitterAnchor: () => astroFurnace.getSpatialAudioAnchor(),
+  spatialSettings: settings.furnaceSpatialAudio
 });
 const furnaceProgressionController = createVrAstroFurnaceProgressionController();
 const asterionProductionController = createVrAsterionProductionController({
@@ -777,9 +783,9 @@ const astroFurnaceOpenInteraction = createVrAstroFurnaceOpenInteraction({
     .includes(astroFurnaceOptionInteraction?.getActiveMode?.()),
   onOpeningStart: () => {
     astroFurnaceActivateInteraction?.releaseForOpening();
-    playVrDevice(VR_AUDIO.chamberOpen);
+    furnaceAudioProjection.playPhysicalOneShot(VR_AUDIO.chamberOpen);
   },
-  onClosingStart: () => playVrDevice(VR_AUDIO.chamberClose)
+  onClosingStart: () => furnaceAudioProjection.playPhysicalOneShot(VR_AUDIO.chamberClose)
 });
 astroFurnaceActivateInteraction = createVrAstroFurnaceActivateInteraction({
   furnace: astroFurnace,
@@ -803,21 +809,21 @@ astroFurnaceActivateInteraction = createVrAstroFurnaceActivateInteraction({
   isOrdinaryRayAvailable: ordinaryFurnaceRayAvailable,
   onProcessStart: ({ processKind }) => {
     if (processKind === ASTRO_FURNACE_PROCESS_KINDS.RUNE_TUNING) {
-      runeTuningController.beginTuning(); vrAudio.startRuneTuningProcess(); return;
+      runeTuningController.beginTuning(); furnaceAudioProjection.startProcess('runeTuning'); return;
     }
     if ([ASTRO_FURNACE_PROCESS_KINDS.ASTERION_CONSTRUCTION, ASTRO_ATTRACTOR_CONSTRUCTION].includes(processKind))
-      vrAudio.startAsterionCreate();
-    else vrAudio.startFurnaceProcess();
+      furnaceAudioProjection.startProcess('construction');
+    else furnaceAudioProjection.startProcess('ordinary');
   },
   onProcessStop: ({ completed, processKind }) => {
     if (processKind === ASTRO_FURNACE_PROCESS_KINDS.RUNE_TUNING) {
-      vrAudio.stopRuneTuningProcess();
+      furnaceAudioProjection.stopProcess('runeTuning');
       if (completed) runeTuningController.completeTuning(); else runeTuningController.abortTuning();
       return;
     }
     if ([ASTRO_FURNACE_PROCESS_KINDS.ASTERION_CONSTRUCTION, ASTRO_ATTRACTOR_CONSTRUCTION].includes(processKind))
-      vrAudio.stopAsterionCreate();
-    else vrAudio.stopFurnaceProcess();
+      furnaceAudioProjection.stopProcess('construction');
+    else furnaceAudioProjection.stopProcess('ordinary');
   }
 });
 astroFurnaceContentInteraction = createVrAstroFurnaceContentInteraction({
@@ -1047,16 +1053,7 @@ const listenerPose = Object.freeze({ position: listenerPosition, forward: listen
 runeStoneAudioProjection = createVrRuneStoneAudioProjection({
   audioBridge: vrAudio, runeStoneActor, runeStoneProgressionController,
   getEmitterAnchor: (branchId) => progressFloor.getRuneStoneSpatialAudioAnchor(branchId),
-  spatialSettings: settings.runeStoneSpatialAudio,
-  getListenerWorldPose: () => {
-    if (!renderer.xr.isPresenting) return null;
-    getXrHeadWorldPose({
-      renderer, camera, playerRig, positionTarget: listenerPosition, quaternionTarget: listenerQuaternion
-    });
-    listenerForward.set(0, 0, -1).applyQuaternion(listenerQuaternion).normalize();
-    listenerUp.set(0, 1, 0).applyQuaternion(listenerQuaternion).normalize();
-    return listenerPose;
-  }
+  spatialSettings: settings.runeStoneSpatialAudio
 });
 const unsubscribeRuneStoneInstallAudioCue = runeStoneInstallationInteraction
   .subscribeInstallAudioCue((event) => runeStoneAudioProjection.presentInstallAudioCue(event));
@@ -1450,7 +1447,16 @@ function renderFrame() {
   runeBridgeActor.update(delta);
   platformEnergyVfxActor.update(delta);
   runeStoneInstallationInteraction.update(delta);
+  if (renderer.xr.isPresenting) {
+    getXrHeadWorldPose({
+      renderer, camera, playerRig, positionTarget: listenerPosition, quaternionTarget: listenerQuaternion
+    });
+    listenerForward.set(0, 0, -1).applyQuaternion(listenerQuaternion).normalize();
+    listenerUp.set(0, 1, 0).applyQuaternion(listenerQuaternion).normalize();
+    vrAudio.setSpatialListenerPose(listenerPose);
+  }
   runeStoneAudioProjection.update();
+  furnaceAudioProjection.update();
   celestialActor.update(delta);
   observationWindow.update(delta);
   p2ObservationWindow.update(delta);
@@ -1516,6 +1522,7 @@ function restoreVrScenarioBaseline() {
   introAmbientSequencer.reset();
   vrAudio.resetAsterionSphereAudio();
   astroFurnace.resetBaseline();
+  furnaceAudioProjection.reset();
   furnaceProgressionController.resetBaseline();
   furnacePanel.reset();
   playerGuidePanel.reset();
@@ -1645,6 +1652,7 @@ window.addEventListener('pagehide', () => {
   unsubscribeRuneStoneInstallAudioCue();
   unsubscribeRuneStoneInstalledAudio();
   runeStoneAudioProjection.dispose();
+  furnaceAudioProjection.dispose();
   vrAudio.dispose();
   asterionGyroInteraction.dispose();
   asterionSectorAcquisitionInteraction.dispose();

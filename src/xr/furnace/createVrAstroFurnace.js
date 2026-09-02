@@ -39,6 +39,9 @@ export function createVrAstroFurnace({
 }) {
   const object = new THREE.Group();
   object.name = 'VrAstroFurnace';
+  const spatialAudioAnchor = new THREE.Object3D();
+  spatialAudioAnchor.name = 'VrAstroFurnaceSpatialAudioAnchor';
+  object.add(spatialAudioAnchor);
   const modelRoot = new THREE.Group();
   modelRoot.name = 'VrAstroFurnaceModelRoot';
   object.add(modelRoot);
@@ -107,6 +110,7 @@ export function createVrAstroFurnace({
   const nodeToObject = new THREE.Matrix4();
   const authoredModelRootPosition = modelRoot.position.clone();
   const resolvedWorldPosition = new THREE.Vector3();
+  const localVisibleCenter = new THREE.Vector3();
 
   function calculateVisibleBounds() {
     visibleBounds.makeEmpty();
@@ -150,6 +154,9 @@ export function createVrAstroFurnace({
       const localFloorY = (settings.floorOffset - object.position.y) / settings.scale;
       modelRoot.position.y = authoredModelRootPosition.y + localFloorY - bounds.min.y;
     }
+    const finalLocalBounds = calculateLocalVisibleBounds();
+    if (finalLocalBounds.isEmpty()) spatialAudioAnchor.position.set(0, 0, 0);
+    else spatialAudioAnchor.position.copy(finalLocalBounds.getCenter(localVisibleCenter));
     object.visible = settings.enabled && Boolean(model);
     calculateVisibleBounds();
     object.getWorldPosition(resolvedWorldPosition);
@@ -228,5 +235,6 @@ export function createVrAstroFurnace({
 
   return { object, model, nodes, clips, capabilities, place, update, reset, resetBaseline, hydrateScenarioState, dispose, diagnostics, refreshVisibleBounds,
     ensureRuntimeMaterials,
+    getSpatialAudioAnchor() { return spatialAudioAnchor; },
     subscribePlacement(listener) { placementListeners.add(listener); return () => placementListeners.delete(listener); } };
 }

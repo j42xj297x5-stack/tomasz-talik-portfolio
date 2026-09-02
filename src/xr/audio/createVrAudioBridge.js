@@ -31,12 +31,6 @@ export function createVrAudioBridge({ manager = audioManager, warn = console.war
   });
   let attractorState = 'idle', attractorId = null, attractorClass = null, attractorHandle = null;
   let attractorToken = 0, attractorTimer = null;
-  const FURNACE_PROCESS_PATH = '/audio/astro_piec_work_01.mp3';
-  let furnaceHandle = null, furnaceToken = 0, furnacePending = false;
-  const RUNE_TUNING_PROCESS_PATH = '/audio/astro_piec_work_03.mp3';
-  let runeTuningHandle = null, runeTuningToken = 0, runeTuningPending = false;
-  const ASTERION_CREATE_PATH = '/audio/astro_piec_work_create_01.mp3';
-  let asterionCreateHandle = null, asterionCreateToken = 0, asterionCreatePending = false;
   const ASTERION_BACKGROUND_PATH = '/audio/asterion_sphere_background.mp3';
   const ASTERION_WORK_PATH = '/audio/asterion_sphere_work.mp3';
   let asterionEquipped = false, asterionDriveActive = false;
@@ -69,7 +63,6 @@ export function createVrAudioBridge({ manager = audioManager, warn = console.war
   async function prepareRuntimeAudio(paths = []) {
     if (disposed) throw new Error('Cannot prepare disposed VR audio.');
     const required = [...REQUIRED_LONG_FORM_PATHS, ...paths, GLYPH_PROCESS_PATH,
-      FURNACE_PROCESS_PATH, RUNE_TUNING_PROCESS_PATH, ASTERION_CREATE_PATH,
       ASTERION_BACKGROUND_PATH, ASTERION_WORK_PATH, ...Object.values(ATTRACTOR_PATHS)];
     try {
       await manager.prepareVrAudio(required);
@@ -84,9 +77,6 @@ export function createVrAudioBridge({ manager = audioManager, warn = console.war
     if (disposed) return;
     stopGlyphLifecycle();
     stopAttractorLifecycle();
-    stopFurnaceProcess();
-    stopRuneTuningProcess();
-    stopAsterionCreate();
     resetAsterionSphereAudio();
     resetSectorDriveAudio();
     runOptional('stop VR audio', (audio) => audio.stopVrAudio());
@@ -210,69 +200,6 @@ export function createVrAudioBridge({ manager = audioManager, warn = console.war
     }, 1000);
   }
   function resetSectorDriveAudio() { retireSectorDrive(); }
-
-  function stopFurnaceProcess() {
-    furnaceToken += 1;
-    furnacePending = false;
-    const handle = furnaceHandle; furnaceHandle = null;
-    try { handle?.stop?.(); } catch (error) { reportFailure('stop Astro Furnace process', error); }
-  }
-
-  function startFurnaceProcess() {
-    if (disposed || furnaceHandle || furnacePending) return false;
-    const token = ++furnaceToken;
-    furnacePending = true;
-    runOptional('start Astro Furnace process', (audio) => Promise.resolve(
-      audio.startVrProcessSource(FURNACE_PROCESS_PATH, 'DEVICE', { loop: false })
-    ).then((handle) => {
-      furnacePending = false;
-      if (!handle) return;
-      if (disposed || token !== furnaceToken) { handle.stop?.(); return; }
-      furnaceHandle = handle;
-      handle.onEnded?.(() => { if (furnaceHandle === handle) furnaceHandle = null; });
-    }).catch((error) => { if (token === furnaceToken) furnacePending = false; throw error; }));
-    return true;
-  }
-
-  function stopRuneTuningProcess() {
-    runeTuningToken += 1; runeTuningPending = false;
-    const handle = runeTuningHandle; runeTuningHandle = null;
-    try { handle?.stop?.(); } catch (error) { reportFailure('stop Rune tuning process', error); }
-  }
-  function startRuneTuningProcess() {
-    if (disposed || runeTuningHandle || runeTuningPending) return false;
-    const token = ++runeTuningToken; runeTuningPending = true;
-    runOptional('start Rune tuning process', (audio) => Promise.resolve(
-      audio.startVrProcessSource(RUNE_TUNING_PROCESS_PATH, 'DEVICE', { loop: false })
-    ).then((handle) => {
-      runeTuningPending = false;
-      if (!handle) return;
-      if (disposed || token !== runeTuningToken) { handle.stop?.(); return; }
-      runeTuningHandle = handle;
-      handle.onEnded?.(() => { if (runeTuningHandle === handle) runeTuningHandle = null; });
-    }).catch((error) => { if (token === runeTuningToken) runeTuningPending = false; throw error; }));
-    return true;
-  }
-
-  function stopAsterionCreate() {
-    asterionCreateToken += 1; asterionCreatePending = false;
-    const handle = asterionCreateHandle; asterionCreateHandle = null;
-    try { handle?.stop?.(); } catch (error) { reportFailure('stop Asterion creation', error); }
-  }
-  function startAsterionCreate() {
-    if (disposed || asterionCreateHandle || asterionCreatePending) return false;
-    const token = ++asterionCreateToken; asterionCreatePending = true;
-    runOptional('start Asterion creation', (audio) => Promise.resolve(
-      audio.startVrProcessSource(ASTERION_CREATE_PATH, 'DEVICE', { loop: false })
-    ).then((handle) => {
-      asterionCreatePending = false;
-      if (!handle) return;
-      if (disposed || token !== asterionCreateToken) { handle.stop?.(); return; }
-      asterionCreateHandle = handle;
-      handle.onEnded?.(() => { if (asterionCreateHandle === handle) asterionCreateHandle = null; });
-    }).catch((error) => { if (token === asterionCreateToken) asterionCreatePending = false; throw error; }));
-    return true;
-  }
 
   function prepareOneShots(paths) {
     runOptional('prepare VR one-shots', (audio) => audio.prepareVrOneShots(paths));
@@ -509,7 +436,7 @@ export function createVrAudioBridge({ manager = audioManager, warn = console.war
     if (completionPath) playOneShot(completionPath, 'WORLD');
   }
 
-  return { runOptional, prepareRuntimeAudio, prepareOneShots, prepareAttractorLoops, playOneShot, startFiniteSource, startOverlappingLoopSource, startFurnaceProcess, stopFurnaceProcess, startRuneTuningProcess, stopRuneTuningProcess, startAsterionCreate, stopAsterionCreate,
+  return { runOptional, prepareRuntimeAudio, prepareOneShots, prepareAttractorLoops, playOneShot, startFiniteSource, startOverlappingLoopSource,
     startGlyphAcquisition, missGlyphAcquisition, setAsterionSphereState, resetAsterionSphereAudio,
     cancelGlyphAcquisition, completeGlyphAcquisition, startSectorDrive, fadeSectorDrive, resetSectorDriveAudio, dispose,
     startAttractor, missAttractor, cancelAttractor, handoffAttractor,
