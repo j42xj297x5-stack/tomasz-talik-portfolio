@@ -78,7 +78,7 @@ Przyciągnięcie kamienia bez istniejącego właściwego Zwornika jest legalnym 
 
 Struktury materializujące się wcześniej przy ukończonych częściach platformy noszą narracyjną nazwę **ZWORNIKI RUNICZNE**; asset techniczny może nadal nazywać się `bridge.glb`.
 
-Każdy Zwornik materializuje się dokładnie z ukończenia wszystkich paneli swojego sektora, nie z instalacji kamienia. Po reveal pozostaje trwały; dlatego Zworniki EARTH, WOOD i FIRE mogą istnieć przed ukończeniem pełnego trzeciego kręgu. Instalacja później wiąże kamień w niezależnej finalnej kotwicy. Prezentacyjna skala i radialne odsunięcie geometrii Zwornika nie mogą przesuwać tej kotwicy. Spin Zwornika nie należy do przyszłego kanonu.
+Każdy Zwornik materializuje się dokładnie z ukończenia wszystkich paneli swojego sektora, nie z instalacji kamienia. Po reveal pozostaje trwały; dlatego Zworniki EARTH, WOOD i FIRE mogą istnieć przed ukończeniem pełnego trzeciego kręgu. Instalacja później wiąże kamień w niezależnej finalnej kotwicy. Prezentacyjna skala i radialne odsunięcie geometrii Zwornika nie mogą przesuwać tej kotwicy. Spin Zwornika nie należy do przyszłego kanonu. Live reveal ma jednoznaczny rytm: `HIDDEN → ARRIVING → DOCKED`; w `t=0` Zwornik pojawia się 130 m dalej radialnie i wraz z `electricity_short_06` rozpoczyna lot, a po 4.0 s osiąga canonical dock, odtwarza family-specific `zwornik_*` i dopiero wtedy udostępnia instalację. Translację posiada wyłącznie `RuneBridgeActor`, nie Platform Energy VFX. Reconstruction już ukończonej gałęzi przywraca cichy, finalny `DOCKED` bez lotu i obu one-shotów.
 
 ### `knowledge.p3.binders` — **IMPLEMENTED**
 
@@ -99,7 +99,7 @@ przyciągnięcie → przejęcie przez Zwornik → lot do pozycji
 → osadzenie → energia → stabilizacja
 ```
 
-Gracz nie wkłada kamienia ręcznie do uchwytu.
+Gracz nie wkłada kamienia ręcznie do uchwytu. W finalnej fazie `DESCENT` family-specific `creating_01–05` zaczyna się prezentacyjnie na pierwszej klatce z `<= 1.0 s` do końca (albo przy starcie `DESCENT`, gdy cała faza jest krótsza). Nie jest to wcześniejszy commit: dopiero exact dock i udane operacje Actor/Bridge/progression ustanawiają `INSTALLED`/`BOUND`. Wtedy staje się legalny persistent spatial loop, emitowany z płaskiego sector-local anchoru 8.0 m od środka platformy, a nie z fizycznego rootu kamienia; jego audible range kończy się dokładnie przy 2.0 m.
 
 ### `progression.p3.firstRuneInstalled` — **IMPLEMENTED**
 
@@ -108,7 +108,7 @@ Gracz nie wkłada kamienia ręcznie do uchwytu.
 
 ## 5. Kula i lokalna kontrola sektora
 
-Od fizycznego stworzenia Kuli Asterionowej grip może tworzyć szeroki, lekko łukowaty, wielobarwny strumień. Odpowiadają wyłącznie sektory **powered** przez zainstalowany kamień. Powered sector jest lockable nawet przy `LEVEL 0 / 0° / OFF`; **field-active** staje się dopiero po ustawieniu poziomu większego od zera. Strumień musi trafiać ten sam legalny, zasilony sektor nieprzerwanie przez pełne **1.0 s**; dopiero wtedy powstaje **SECTOR LOCK** i ruch dłoni może wpływać na sektor. Zmiana celu albo utrata legalnego trafienia przed upływem 1.0 s zeruje acquisition timer. Przed lockiem Kula nie steruje lokalnym sektorem, a po locku ruch jest interpretowany względem przejętego sektora, nie całej platformy.
+Od fizycznego stworzenia Kuli Asterionowej grip może tworzyć szeroki, lekko łukowaty, wielobarwny strumień. Odpowiadają wyłącznie sektory **powered** przez zainstalowany kamień. Powered sector jest lockable nawet przy `LEVEL 0 / 0° / OFF`; **field-active** staje się dopiero po ustawieniu poziomu większego od zera. Strumień musi trafiać ten sam legalny, zasilony sektor nieprzerwanie przez pełne **1.0 s**; dopiero wtedy powstaje **SECTOR LOCK** i ruch dłoni może wpływać na sektor. Zmiana celu albo utrata legalnego trafienia przed upływem 1.0 s zeruje acquisition timer. Pierwsza valid klatka nowego `ACQUIRING` odtwarza `electricity_short_*` natychmiast jako kontakt elektryczny; dźwięk nie czeka na późniejsze `LOCKED`. Przed lockiem Kula nie steruje lokalnym sektorem, a po locku ruch jest interpretowany względem przejętego sektora, nie całej platformy.
 
 ### `progression.p3.firstSectorLock` — **IMPLEMENTED**
 

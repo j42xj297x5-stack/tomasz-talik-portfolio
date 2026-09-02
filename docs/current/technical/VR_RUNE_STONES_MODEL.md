@@ -3,7 +3,7 @@
 ## 1. Status i authority
 
 - **Status:** **KANONICZNY MODEL TECHNICZNO-GAMEPLAYOWY / NATURAL RUNE A9 FOUNDATION COMPLETE**.
-- **Implemented:** `RUNE A1–A8`, `RUNE UI-1`, A9.1 physical actor foundation, authored-origin/live-bounds hardening, A9.2 target resolution + `LOCKED_BY_ASTRO`, A9.3 `CARRIED_ORBIT`, A9.4 installation-readiness projection, A9.5 platform-centered handoff + automatic installation choreography i A9.6 persistent hydration + settled physical reconstruction.
+- **Implemented:** `RUNE A1–A8`, `RUNE UI-1`, A9.1 physical actor foundation, authored-origin/live-bounds hardening, A9.2 target resolution + `LOCKED_BY_ASTRO`, A9.3 `CARRIED_ORBIT`, A9.4 installation-readiness projection, A9.5 platform-centered handoff + automatic installation choreography i A9.6 persistent hydration + settled physical reconstruction oraz wdrożona choreografia/audio Bindera, instalacji i installed spatial audio.
 - **Foundation correction:** natural Rune tuning sector gate — **RESOLVED**; task `d0f9a17e414f3ea8c386cde87bdd46dba6dad16c`, merge `c862b9bde2e717918e56d21d7f1cbbc0ad741d53`.
 - **RUNE A9:** **A9.1–A9.6 IMPLEMENTED; NATURAL RUNE A9 FOUNDATION = COMPLETE**. Końcowy transport i instalacja używają platform-centered handoff sphere oraz automatycznej choreografii, a hydration odtwarza settled physical installation. Collision carried Rune Stone ↔ installed Rune Stone jest **SUPERSEDED / REMOVED FROM TARGET**.
 - **Scenario authoring:** **DEFERRED TO SEPARATE THREAD**.
@@ -67,7 +67,7 @@ Installation readiness jest osobnym prawem, normalnie pochodzącym wyłącznie z
 
 Ukończenie sektora materializuje trwały **Zwornik Runiczny** (techniczny asset może pozostać `bridge.glb`) i dopiero istniejący właściwy Zwornik daje miejsce późniejszej instalacji. Reveal Zwornika nie jest skutkiem instalacji Rune Stone. EARTH, FIRE i WOOD mogą mieć Zworniki przed ukończeniem pełnego trzeciego kręgu.
 
-`ProgressionController.isBranchComplete()` zasila `RuneInstallationReadinessProjection`. Obecny runtime synchronizuje Zwornik bezpośrednio `HIDDEN → DOCKED`; **wiążący target live reveal supersedes tę natychmiastowość** jako `HIDDEN → ARRIVING → DOCKED`: dokładnie 4.0 s z pozycji 130 m dalej radialnie do canonical final position. Dopiero settled `DOCKED` nadaje installation readiness. Reconstruction/hydration/debug restore omija ARRIVING i odtwarza bezgłośnie finalny `DOCKED`. Sector completeness jest źródłem platform installation readiness, lecz nigdy natural Rune tuning ani targetability.
+`ProgressionController.isBranchComplete()` zasila `RuneInstallationReadinessProjection`. Obecny live runtime synchronizuje Zwornik jako `HIDDEN → ARRIVING → DOCKED`: dokładnie 4.0 s z pozycji 130 m dalej radialnie do canonical final position. Dopiero settled `DOCKED` nadaje installation readiness. Reconstruction/hydration/debug restore omija ARRIVING i odtwarza bezgłośnie finalny `DOCKED`. Sector completeness jest źródłem platform installation readiness, lecz nigdy natural Rune tuning ani targetability.
 
 | Naturalna para | Installation readiness po `4.80` |
 | --- | --- |
@@ -155,7 +155,7 @@ Jeden pair-generic physical Rune Stone owner materializuje pięć naturalnych st
 
 Rune Stones zachowują authored scale; runtime **nie** normalizuje sześciu kamieni do wspólnego rozmiaru. Znana charakterystyka assetów to większe WOOD / `stone_04` i METAL / `stone_02`, mniejsze WATER / `stone_05` i ETHER / `stone_06` oraz pośrednie FIRE / `stone_01` i EARTH / `stone_03`. Są to opisy assetów, nie gameplay size categories. Construction-time `placementClearanceRadius` służy wyłącznie spherical placement. `getBoundingBox(branchId)` zwraca aktualny world-space `Box3`, `getBoundingSphere(branchId)` aktualny world-space `BoundingSphere`, a `getInteractionRadius(branchId)` aktualny live radius. Te live bounds uwzględniają authored animation pose w chwili odczytu; nie istnieje baked full-animation envelope sampler.
 
-**Authored animation lifecycle i gameplay transport — IMPLEMENTED:** clips są zachowywane; per-stone `AnimationMixer` istnieje, jeżeli asset ma clips; runtime `update()` aktualizuje owned mixers; `reset()` restartuje authored actions od deterministycznego początku; `dispose()` zatrzymuje owned animation lifecycle. Transport `LOCKED_BY_ASTRO → CARRIED_ORBIT` manipuluje stabilnym rootem, nigdy wewnętrznymi animated controller nodes. Przyszłe pozostają idle/presentation movement oraz spatial audio, nie fizyczny transport.
+**Authored animation lifecycle i gameplay transport — IMPLEMENTED:** clips są zachowywane; per-stone `AnimationMixer` istnieje, jeżeli asset ma clips; runtime `update()` aktualizuje owned mixers; `reset()` restartuje authored actions od deterministycznego początku; `dispose()` zatrzymuje owned animation lifecycle. Transport `LOCKED_BY_ASTRO → CARRIED_ORBIT` manipuluje stabilnym rootem, nigdy wewnętrznymi animated controller nodes. Idle/presentation movement pozostaje przyszłe; installed spatial audio jest osobną, wdrożoną projekcją i nie należy do fizycznego transportu.
 
 Zalecany kontrakt GLB:
 
@@ -175,14 +175,15 @@ Runtime transformuje stabilny root kamienia. `SOCKET_POINT` jest pair-specific f
 Istnieje pięć niezależnych pair-configured instancji `RuneBridgeActor`: `earth`, `fire`, `wood`, `metal` i `water`. Każda posiada własny transient state. Earth nie ma specjalnej implementacji, a dla Eteru nie istnieje bridge. Aktor nie zna Scenario pointów, nie posiada progression truth ani tuning truth i reaguje przez jawne semantic command API: `getState(branchId)`, `setInstallationReady(branchId, ready)`, `beginExtension(branchId)`, `cancelExtension(branchId)`, `setInstalled(branchId)`, `update(delta)`, `reset()` oraz `dispose()`. Nie istnieje publiczne `completeExtension()`; wyłącznie actor-owned `update(delta)` może zakończyć fizyczne rozsuwanie.
 
 ```text
-HIDDEN → DOCKED → EXTENDING → EXTENDED → BOUND
+HIDDEN → ARRIVING → DOCKED → EXTENDING → EXTENDED → BOUND
 ```
 
-`VR_RUNE_BRIDGE_STATES` eksportuje dokładnie pięć kanonicznych stanów runtime: `HIDDEN`, `DOCKED`, `EXTENDING`, `EXTENDED` i `BOUND`. Legalne przejścia to `HIDDEN → DOCKED`, `DOCKED → HIDDEN`, `DOCKED → EXTENDING`, `EXTENDING → EXTENDED`, `EXTENDING → DOCKED`, `EXTENDED → DOCKED` oraz `EXTENDED → BOUND`; próba nielegalnego przejścia zgłasza błąd kontraktu. `reset()` przywraca wszystkie pięć par do `HIDDEN`. `BOUND` oznacza settled, trwały i nieruchomy Zwornik związany z zainstalowanym kamieniem; spin nie należy do target canon.
+`VR_RUNE_BRIDGE_STATES` eksportuje sześć kanonicznych stanów runtime: `HIDDEN`, `ARRIVING`, `DOCKED`, `EXTENDING`, `EXTENDED` i `BOUND`. Live readiness rozpoczyna `HIDDEN → ARRIVING`; wyłącznie `RuneBridgeActor` przesuwa prezentację z punktu 130 m dalej radialnie do canonical dock przez dokładnie 4.0 s, po czym emituje `ARRIVAL_COMPLETED` i przechodzi `ARRIVING → DOCKED`. Platform Energy VFX może prezentować reveal, ale nie posiada tej translacji. Settled reconstruction używa bezpośredniego, cichego `HIDDEN → DOCKED`. Dalej legalne są `DOCKED → EXTENDING`, `EXTENDING → EXTENDED`, powroty do `DOCKED` przed commit oraz `EXTENDED → BOUND`; próba nielegalnego przejścia zgłasza błąd kontraktu. `reset()` przywraca wszystkie pięć par do `HIDDEN`. `BOUND` oznacza settled, trwały i nieruchomy Zwornik związany z zainstalowanym kamieniem; spin nie należy do target canon.
 
 | Stan | Kontrakt |
 | --- | --- |
 | `HIDDEN` | platforma pary nie jest gotowa; most jest niewidoczny, a motion baseline wynosi `z = 0` |
+| `ARRIVING` | live reveal trwa; prezentacja leci przez 4.0 s z pozycji 130 m dalej radialnie; instalacja jest niedostępna |
 | `DOCKED` | platforma jest gotowa; most istnieje w authored pozycji i czeka na właściwy kamień, `z = 0` |
 | `EXTENDING` | most odjeżdża radialnie wyłącznie po installation-frame local `+Z` |
 | `EXTENDED` | most osiągnął authored-derived extension distance |
@@ -239,9 +240,8 @@ Jeżeli właściwy Zwornik jeszcze nie istnieje, tuned i legalnie przyciągnięt
 
 Collision carried Rune Stone ↔ installed Rune Stone jest **SUPERSEDED** i nie będzie implementowany. Runtime nie posiada gameplay collision systemu dla kamieni.
 
-Pair-specific audio identity jest fizyczna: FIRE / `stone_01` → `noise_laud_loop_04.mp3`, METAL / `stone_02` → `05`, EARTH / `stone_03` → `06`, WOOD / `stone_04` → `07`, WATER / `stone_05` → `08`. Te same assets obsługują osobny lifecycle Astro Attractor oraz persistent stone-local spatial loop wymagany po `INSTALLED`; wcześniejsze wymaganie cichej emisji przez `FREE` i `CARRIED_ORBIT` jest **SUPERSEDED**. Installed source śledzi realny root/installation anchor, listener śledzi XR head pose, a przy dystansie `>= 2.0 m` audible gain wynosi zero. Krzywa attenuacji wewnątrz 2 m pozostaje `TUNING`; shared runtime audio boundary posiada playback, a audio nie posiada progression truth.
+Pair-specific audio identity jest fizyczna: FIRE / `stone_01` → `noise_laud_loop_04.mp3`, METAL / `stone_02` → `05`, EARTH / `stone_03` → `06`, WOOD / `stone_04` → `07`, WATER / `stone_05` → `08`. Te same assets obsługują dwa osobne wdrożone lifecycle: Astro Attractor od zaakceptowanego physical pull do cancel/handoff oraz persistent installed spatial loop. Hover/targeting nie uruchamia audio, a wcześniejsza cicha emisja przez `FREE` i `CARRIED_ORBIT` jest **SUPERSEDED**. Persistent source wymaga jednocześnie physical `INSTALLED` i installed-family progression truth; nie istnieje w `FREE`, `LOCKED_BY_ASTRO`, `CARRIED_ORBIT` ani `SOCKET_CAPTURE`. Stan kamienia rozstrzyga **czy** source istnieje, lecz jego pozycję rozstrzyga stabilny Progress Floor sector anchor: sector-local `+Z`, 8.0 m od środka, sibling `SectorMotionRoot`, więc nie dziedziczy detent pitch/tilt i nie śledzi stone root, installation anchor ani bridge center. Listener śledzi XR head pose; `maxDistanceMeters = 2.0`, `refDistanceMeters = 0.25`, a `platformRadiusMeters = 8.0` oznacza wyłącznie promień audio anchor. Pełny Web Audio i reconstruction/reset contract posiada [`VR_AUDIO_MODEL.md`](VR_AUDIO_MODEL.md).
 
-Planowana rodzinna oprawa instalacji używa: EARTH → `creating_01.mp3`, FIRE → `creating_02.mp3`, WOOD → `creating_03.mp3`, METAL → `creating_04.mp3`, WATER → `creating_05.mp3`. Ten zapis nie ustala dokładnego momentu triggera instalacji.
 
 Collision installed/carried pozostaje świadomie poza modelem; nie istnieje gameplay collision system dla kamieni.
 
@@ -259,6 +259,9 @@ Collision installed/carried pozostaje świadomie poza modelem; nie istnieje game
 | `RuneBridgeActor` | authored bridge geometry/calibration, stabilne hover/installation anchors, radialny motion root i transient bridge state | tuning truth, readiness source i installed progression |
 | `RuneInstallationReadinessProjection` | installation permission projection; no persistent state | copied sector/rune truth |
 | `RuneInstalledStateProjection` | read-only reconstruction z installed truth do settled physical actors | persistent state, readiness truth, Scenario point IDs |
+| Progress Floor / `SectorActor` | stabilne sector-local installed-audio anchory w płaskim LEVEL 0 | Rune/installed truth, playback lifecycle |
+| `RuneStoneAudioProjection` | observer audio cue i persistent installed-source synchronization | physical/progression truth, anchor ownership |
+| `VrAudioBridge` / `AudioManager` | fail-soft audio boundary / Web Audio, cache, buses i spatial primitive | gameplay authority |
 | Monkey/Ether actor | transient Ether presentation/capture mechanics | progression truth |
 | Scenario / Director | dramaturgia, obowiązkowe beaty, ujawniana wiedza, Guidance i ograniczenia pozyskania kolejnych kryształów | fizyczna dostępność tuning/pull/installation, interpolacje, slot/capture mechanics |
 
@@ -270,7 +273,7 @@ Reset `RuneStoneActor` reparentuje captured/installed roots z anchor hierarchy d
 
 Canonical owner section `runeProgression` deleguje dokładny serializowalny shape `{ tunedRuneFamilies, installedRuneFamilies }` do `RuneStoneProgressionController.hydrateScenarioState()`. Walidacja obu tablic, naturalnych `familyCode`, braku duplikatów i invariantu `installed ⊆ tuned` zachodzi przed mutation; zastosowanie jest atomowe, ciche, idempotentne i uporządkowane według naturalnego registry. Nie używa gameplay commands ani change eventów. Osobna sekcja `runeStones` nadal posiada wyłącznie `presentationVisible`.
 
-Po hydration reconstruction wykonuje kolejno readiness `HIDDEN/DOCKED`, następnie read-only `RuneInstalledStateProjection`. Każda installed family jest mapowana registry do branchu, stone jest bez choreografii parentowany do stabilnego InstallationAnchor w canonical local transform ze skalą authored i stanem `INSTALLED`, a bridge bez tweena otrzymuje dokładne `extensionDistance`, settled elapsed i `BOUND`. Tuned-only stones pozostają po baseline `FREE`; ich bridge pozostaje readiness-derived. Projection nie posiada prawdy trwałej i nie zna point IDs.
+Po hydration reconstruction wykonuje kolejno readiness `HIDDEN/DOCKED`, następnie read-only `RuneInstalledStateProjection`. Nie odtwarza arrival, Attractora, instalacji ani `creating_*`; po złożeniu canonical installed truth `RuneStoneAudioProjection` idempotentnie przywraca wymagane persistent sources przy stałych sektorowych anchorach 8.0 m. Każda installed family jest mapowana registry do branchu, stone jest bez choreografii parentowany do stabilnego InstallationAnchor w canonical local transform ze skalą authored i stanem `INSTALLED`, a bridge bez tweena otrzymuje dokładne `extensionDistance`, settled elapsed i `BOUND`. Tuned-only stones pozostają po baseline `FREE`; ich bridge pozostaje readiness-derived. Projection nie posiada prawdy trwałej i nie zna point IDs.
 
 ## 10. Eter / VU — specjalna tożsamość poza naturalnym flow
 
@@ -410,11 +413,11 @@ Early natural Rune Stone presentation jest **IMPLEMENTED**. Pięć naturalnych a
 - **Panel 2 — IMPLEMENTED:** task `d7e026fe565cf44b20f158564316c814a0e910e0`, merge `5dd2c59080f0501accb4cea546ee5ef68a5811e0`.
 - **Panel 1 Rune U projection — IMPLEMENTED:** task `b04605cb01b395ec188b153cd901941a446076ff`, merge `5510e78062dd0a3309be2e5f22e528ee2ed532ed`.
 
-R3 implementuje runtime Zwornika, a R3b implementuje `RUNE_BINDER_REVEAL`: live materialization, pooled sector-local lightning, final pulse, trwały `DOCKED`/`BOUND`, presentation-only scale/offset i reconstruction bez replayu. Nadal nie implementuje Rune install energy VFX, detent spark/audio, motion audio, grip beam, Field Actor ani field lensing. A9.6 nie implementuje spatial audio, Water override trigger ani Ether/final Water flow. R4 Resonator core, Guidance through first Resonator and Scenario join through `5.10` are implemented by their respective owners.
+R3 implementuje runtime Zwornika, a R3b implementuje `RUNE_BINDER_REVEAL`: live materialization, pooled sector-local lightning, final pulse, trwały `DOCKED`/`BOUND`, presentation-only scale/offset i reconstruction bez replayu. Nadal nie implementuje Rune install energy VFX, detent spark/audio i grip beam; sector-drive audio jest wdrożone osobno, Field Actor ani field lensing. A9.6 nie implementuje Water override trigger ani Ether/final Water flow; installed spatial audio jest wdrożone przez osobną projekcję. R4 Resonator core, Guidance through first Resonator and Scenario join through `5.10` are implemented by their respective owners.
 
 ## 14. Remaining target
 
-**Carried Rune Stone ↔ installed Rune Stone collision = SUPERSEDED / REMOVED FROM TARGET.** Special Ether flow, Water readiness override, spatial audio, target response, final Water flow and authored Scenario after `5.10` remain deferred. Zwornik spin jest usunięty z target canon.
+**Carried Rune Stone ↔ installed Rune Stone collision = SUPERSEDED / REMOVED FROM TARGET.** Special Ether flow, Water readiness override, target response, final Water flow and authored Scenario after `5.10` remain deferred. Zwornik spin jest usunięty z target canon.
 
 ## 15. Current implementation checkpoint
 
