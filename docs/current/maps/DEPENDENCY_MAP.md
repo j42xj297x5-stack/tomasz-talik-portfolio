@@ -72,8 +72,10 @@ Asterion Sphere TRIGGER → existing global platform orientation owner
 → (EARTH α, WOOD β, FIRE γ), each LEVEL 0..3
 → 0° OFF; active CURRENT TARGET positions 13° / 23° / 36°
 → Resonator Field Domain read-only descriptor
-→ response evaluated by domain-supported legal distant targets
-→ separate read-only field lensing presentation
+→ dedicated Resonator Field Frame + nominal revised shape
+→ generic canonical-anchor containment
+→ Resonator Target Acquisition
+→ read-only Target Response Presentation
 
 later METAL + WATER
 → advanced tuning / amplification of the same field
@@ -83,9 +85,9 @@ R4 composition creates one derived Field Actor after the Rune progression and R2
 
 The physical core contains `4 × 4 × 4 = 64` states and 27 fully active configurations with equal target-detection authority. `α`, `β`, and `γ` define geometry only; no coherent preset, scoring rule, or Large Glyph privilege exists. A partial configuration containing any core LEVEL 0 performs no target acquisition. EARTH/`α` selects the LEFT aperture half-profile, WOOD/`β` independently selects the RIGHT, and FIRE/`γ` controls depth only: `NONE`, `NEAR 10–50 m`, `MID 50–90 m`, `FAR 90–130 m`. Side half-extents are level 1 `23 m` LATERAL / `7 m` VERTICAL, level 2 `13 / 13 m`, and level 3 `7 / 23 m`. Sector control owns lock/setting/motion commands; Field Domain owns descriptor/field response; `PlatformEnergyVfxActor` separately owns procedural platform energy; Field Presentation reads committed output only. TRIGGER retains priority over GRIP. Scenario/Guidance interprets but does not create these states, and crystal acquisition remains progression-gated.
 
-The semantic axes are FORWARD / LATERAL / VERTICAL, mapped for the current Three.js target to platform-local `+Z / X / Y`. The progress-floor sector layout must author FIRE's outward radial axis along canonical `entryDirection / FORWARD`; fixtures and player passengers do not join that layout alignment. A reusable rounded 16-corner cage uses depth planes `10 / 50 / 90 / 130 m`, nominal independent side apertures, a translucent skin, and a brighter curved skeleton; bow is only secondary tuning. Runtime still uses the superseded origin-based fixed `S0–S3` cage, mounts presentation under fixtures, and has not intentionally aligned FIRE to entryDirection. Future nominal-geometry containment feeds per-target resonance: family-colored Proto-Astro sign on detection, rings at `2 / 4 / 6 s`, and exactly three rings as `PULL_READY`. Rings decay outside at one per `20 s`; the sign persists through decay plus `60 s` sign-only memory. Field visuals never affect containment; Astrolabium owns pull after eligibility.
+The semantic axes are FORWARD / LATERAL / VERTICAL, mapped for the current Three.js target to platform-local `+Z / X / Y`. The progress-floor sector layout must author FIRE's outward radial axis along canonical `entryDirection / FORWARD`; fixtures and player passengers do not join that layout alignment. A reusable rounded 16-corner cage uses depth planes `10 / 50 / 90 / 130 m`, nominal independent side apertures, a translucent skin, and a brighter curved skeleton; bow is only secondary tuning. Runtime implements the dedicated Field Frame, aligned FIRE/entryDirection composition and revised nominal cage. Implemented nominal-geometry containment feeds independent per-target resonance: family-colored Proto-Astro sign on detection, rings at `2 / 4 / 6 s`, and exactly three rings as `PULL_READY`. Rings decay outside at one per `20 s`; the sign persists through decay plus `60 s` sign-only memory. Field visuals never affect containment; Astrolabium owns pull after eligibility.
 
-Future containment owns only the canonical-anchor inside/outside result against the Field Domain's nominal fully active shape. Future resonance acquisition owns per-target completed stages, timing, decay, sign memory, and `PULL_READY`. Astrolabium Więzi owns attraction after eligibility. Field Presentation is read-only, while Scenario/Guidance interprets meaning without owning containment or resonance truth.
+Resonator Target Acquisition owns generic canonical-anchor containment against the Field Domain nominal shape plus per-target completed stages, timing, decay, sign memory and `PULL_READY`. Target Response Presentation reads that truth only. `Target Acquisition.PULL_READY → Large Glyph Astrolabium eligibility → existing Astrolabium pull owner`; Astrolabium checks readiness during candidate legality, before pull start and continuously during pull, but owns selection, attraction, capture and cancellation/return. Scenario/Guidance only interprets meaning.
 
 ## Resonator semantic join and read-only Guidance
 
@@ -111,7 +113,7 @@ Scenario settled runeProgression
 
 Derived reconstruction ordering is: bridge readiness → installed Rune physical state → Furnace redraw without a fake domain event → remaining derived state such as absorbed shells. This is owner synchronization, not Scenario authoring.
 
-The implemented core includes the presentation-only volumetric sector acquisition beam, whose endpoint follows the moving panel-3 anchor. Guidance observes first Binder, first installed Rune, the live-only sector `LOCKED` notification and first Resonator without owning their truth. Future scope remains physical target containment/resonance and response beyond current acquisition, Field/lensing presentation, Field audio, detent VFX/audio, `RUNE_INSTALL`, METAL/WATER contribution and later finale work.
+The implemented core includes the presentation-only volumetric sector acquisition beam, revised Field presentation, target acquisition/response, five Large Glyph registrations and `PULL_READY` Astrolabium eligibility. Guidance observes first Binder, first installed Rune, live sector `LOCKED` and first Resonator without owning their truth. Future scope remains Field/target audio, detent VFX/audio, `RUNE_INSTALL`, later target classes, METAL/WATER/ETHER contribution, Scenario after `5.10` and later finale work.
 
 ## Platform energy VFX presentation (PARTIALLY IMPLEMENTED)
 
@@ -145,4 +147,4 @@ This flow is **IMPLEMENTED**. At the third-ring boundary Earth/Fire/Wood are nor
 
 ## Remaining seams
 
-Natural Rune A9.1–A9.6 foundation, R2A/R2B/R4 core, Guidance through first Resonator, and authored join `4.80 → 5.10` are implemented. Physical target response, Water override trigger, special Ether flow, Rune Stone spatial audio, `RUNE_INSTALL`, Field presentation/audio, detent VFX/audio, later Metal/Water/finale beats, durable full-game persistence/save and full-game reset remain future. Bridge spin, the historical antenna model and carried ↔ installed collision are superseded; physical bridge extension is implemented.
+Natural Rune A9.1–A9.6 foundation, R2A/R2B/R4 core, Guidance through first Resonator, and authored join `4.80 → 5.10` are implemented. Water override trigger, special Ether flow, Resonator field/target audio, `RUNE_INSTALL`, detent VFX/audio, later supported target classes, Scenario after `5.10`, later Metal/Water/finale beats, durable full-game persistence/save and full-game reset remain future. Resonator target runtime and Rune Stone spatial audio are implemented; hardware/perceptual QA remains outstanding. Bridge spin, the historical antenna model and carried ↔ installed collision are superseded; physical bridge extension is implemented.
