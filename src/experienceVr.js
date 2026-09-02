@@ -70,6 +70,7 @@ import { createVrAsterionSectorControlInteraction } from './xr/asterion/createVr
 import { createVrAsterionSectorAcquisitionPresentation } from './xr/asterion/createVrAsterionSectorAcquisitionPresentation.js';
 import { createVrAsterionResonatorFieldActor } from './xr/asterion/createVrAsterionResonatorFieldActor.js';
 import { createVrAsterionResonatorFieldPresentation } from './xr/asterion/createVrAsterionResonatorFieldPresentation.js';
+import { createVrAsterionResonatorTargetAcquisitionActor } from './xr/asterion/createVrAsterionResonatorTargetAcquisitionActor.js';
 import { createVrAsterionProductionController } from './xr/asterion/createVrAsterionProductionController.js';
 import { createVrPlayerGuidePanel } from './xr/guidance/createVrPlayerGuidePanel.js';
 import { createVrCurrentObjectiveProjection } from './xr/guidance/createVrCurrentObjectiveProjection.js';
@@ -590,6 +591,13 @@ const asterionResonatorFieldActor = createVrAsterionResonatorFieldActor({
 const asterionResonatorFieldPresentation = createVrAsterionResonatorFieldPresentation({
   parent: progressFloor.getAsterionResonatorFieldFrame(),
   fieldActor: asterionResonatorFieldActor
+});
+const asterionResonatorTargetAcquisitionActor = createVrAsterionResonatorTargetAcquisitionActor({
+  fieldActor: asterionResonatorFieldActor,
+  fieldFrame: progressFloor.getAsterionResonatorFieldFrame()
+});
+largeGlyphActor.nodes.forEach((node) => {
+  asterionResonatorTargetAcquisitionActor.registerTarget({ id: node.userData.id, anchor: node });
 });
 const unsubscribeResonatorScenarioHandoff = runeStoneProgressionController.subscribe(() => {
   progressionSemanticHandoff.onResonatorStateChanged(asterionResonatorFieldActor.getDescriptor());
@@ -1482,6 +1490,7 @@ function renderFrame() {
   furnacePanel.update(delta);
   asterionSphere.update(delta);
   asterionGyroInteraction.update(delta);
+  asterionResonatorTargetAcquisitionActor.update(delta);
   vrAudio.setAsterionSphereState({
     equipped: asterionSphere.isEquipped(),
     driveActive: asterionGyroInteraction.isDriveActive()
@@ -1538,6 +1547,7 @@ function restoreVrScenarioBaseline() {
   runeStoneProgressionController.reset();
   runeStoneAudioProjection.reset();
   asterionResonatorFieldActor.reset();
+  asterionResonatorTargetAcquisitionActor.reset();
   asterionResonatorFieldPresentation.reset();
   protoAstroTuningController.resetBaseline();
   crystalCollection.reset();
@@ -1666,6 +1676,7 @@ window.addEventListener('pagehide', () => {
   unsubscribeSectorLockGuidance();
   unsubscribeRuneBridgeGuidance();
   asterionResonatorFieldPresentation.dispose();
+  asterionResonatorTargetAcquisitionActor.dispose();
   asterionResonatorFieldActor.dispose();
   asterionProductionController.dispose();
   astroAttractorProductionController.dispose();

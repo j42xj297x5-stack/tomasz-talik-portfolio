@@ -27,8 +27,6 @@ export function resolveAsterionResonatorFieldShape(descriptor) {
   const rightBottomY = -rightProfile.verticalHalfExtent;
   const leftMismatch = Math.abs(alpha - gamma);
   const rightMismatch = Math.abs(beta - gamma);
-  const coherentPreset = alpha === beta && beta === gamma && alpha > 0;
-
   const levels = Object.freeze({ alpha, beta, gamma });
   const corners = Object.freeze({
     nearTopLeft: createCorner(leftX, leftTopY, zNear),
@@ -53,8 +51,22 @@ export function resolveAsterionResonatorFieldShape(descriptor) {
     levels,
     depthBand: descriptor.depthBand,
     corners,
-    deformation,
-    coherentPreset,
-    largeGlyphRevealEligible: coherentPreset
+    deformation
   });
+}
+
+export function containsPointInAsterionResonatorField(shape, point) {
+  if (!shape || !point) return false;
+
+  const { nearTopLeft, nearTopRight, nearBottomLeft, farTopLeft } = shape.corners;
+  if (point.z < nearTopLeft.z || point.z > farTopLeft.z
+    || point.x < nearTopLeft.x || point.x > nearTopRight.x) return false;
+
+  const lateralSpan = nearTopRight.x - nearTopLeft.x;
+  if (lateralSpan <= 0) return false;
+  const lateralT = (point.x - nearTopLeft.x) / lateralSpan;
+  const topY = nearTopLeft.y + ((nearTopRight.y - nearTopLeft.y) * lateralT);
+  const bottomY = nearBottomLeft.y
+    + ((shape.corners.nearBottomRight.y - nearBottomLeft.y) * lateralT);
+  return point.y >= bottomY && point.y <= topY;
 }
