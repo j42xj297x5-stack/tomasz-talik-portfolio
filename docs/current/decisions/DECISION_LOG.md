@@ -1,6 +1,14 @@
 # Decision Log
 
-Status: current binding decisions with preserved history. Synchronized on 2026-09-01 through the Asterion Resonator core and Platform Energy VFX implementation checkpoints.
+Status: current binding decisions with preserved history. Synchronized on 2026-09-02 through the platform, Zwornik and Rune Stone audio choreography target.
+
+## 2026-09-02 — BINDING platform, Zwornik and Rune Stone audio choreography
+
+1. Completed sector acquisition maps `electricity_short_01–05` to EARTH/FIRE/WOOD/METAL/WATER. Finite sector-drive sources map `electricity_long_01–04` by family, preserve a continuous playhead through manipulation/detent hold, fade out in exactly 1.0 s, recover the same source in exactly 0.2 s, and never loop or naturally restart.
+2. Live sector completion starts `electricity_short_06` and one owner-controlled Zwornik translation from 130 m outward to canonical dock over exactly 3.0 s; only then is it `DOCKED`, installation-ready, and plays branch-specific `zwornik_01–04`. Settled reconstruction is direct and silent.
+3. The former Binder use of `creating_01–03` is superseded. `creating_01–05` are mapped by family to future Rune Stone installation, while `creating_06–08` remain unassigned and `creating_short_01` remains Reliquary activation.
+4. Rune Stone `noise_laud_loop_04–08` identity is frozen by physical stone. Each asset separately serves Attractor interaction and an `INSTALLED` stone-local spatial emitter with zero audible gain at and beyond 2.0 m; FREE/CARRIED_ORBIT persistent emission is no longer required.
+5. `electricity_short_07/08` are reserved only for future real Metal/Water Large Glyph containment detection. All reachable audio remains mandatory-preloaded/decoded before READY and cache-only during gameplay.
 
 ## 2026-09-01 — CURRENT Scenario 5.10, discovery Guidance and Y knowledge (superseding status claims)
 
