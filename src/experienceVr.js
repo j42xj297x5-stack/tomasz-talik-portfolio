@@ -234,6 +234,7 @@ await vrAudio.prepareRuntimeAudio(REQUIRED_VR_AUDIO);
 unsubscribe();
 const progressFloor = createVrProgressFloor({
   parent: experienceRoot,
+  forwardDirection: settings.spatial.entryDirection,
   creativeSectorModel: assetManager.cloneGltfScene('vr-progress-floor-creative-model'),
   ethicsSectorModel: assetManager.cloneGltfScene('vr-progress-floor-ethics-model'),
   haikuSectorModel: assetManager.cloneGltfScene('vr-progress-floor-haiku-model'),
@@ -567,7 +568,7 @@ const asterionResonatorFieldActor = createVrAsterionResonatorFieldActor({
   sectorControlInteraction: asterionSectorControlInteraction
 });
 const asterionResonatorFieldPresentation = createVrAsterionResonatorFieldPresentation({
-  parent: platformFixturesRoot,
+  parent: progressFloor.getAsterionResonatorFieldFrame(),
   fieldActor: asterionResonatorFieldActor
 });
 const unsubscribeResonatorScenarioHandoff = runeStoneProgressionController.subscribe(() => {
