@@ -67,7 +67,7 @@ Installation readiness jest osobnym prawem, normalnie pochodzącym wyłącznie z
 
 Ukończenie sektora materializuje trwały **Zwornik Runiczny** (techniczny asset może pozostać `bridge.glb`) i dopiero istniejący właściwy Zwornik daje miejsce późniejszej instalacji. Reveal Zwornika nie jest skutkiem instalacji Rune Stone. EARTH, FIRE i WOOD mogą mieć Zworniki przed ukończeniem pełnego trzeciego kręgu.
 
-`ProgressionController.isBranchComplete()` zasila `RuneInstallationReadinessProjection`, która synchronizuje `RuneBridgeActor` do `HIDDEN/DOCKED`. **Bridge-readiness synchronization jest IMPLEMENTED także na live successful crystal/page commit:** composition po semantic handoff synchronizuje read-only projection, więc pierwsza zmiana readiness materializuje właściwy Zwornik przez jednoznaczne `HIDDEN → DOCKED`, bez Scenario eventu i bez drugiego registry. ** Sector completeness jest źródłem platform installation readiness, lecz nigdy natural Rune tuning ani targetability.
+`ProgressionController.isBranchComplete()` zasila `RuneInstallationReadinessProjection`. Obecny runtime synchronizuje Zwornik bezpośrednio `HIDDEN → DOCKED`; **wiążący target live reveal supersedes tę natychmiastowość** jako `HIDDEN → ARRIVING → DOCKED`: dokładnie 3.0 s z pozycji 130 m dalej radialnie do canonical final position. Dopiero settled `DOCKED` nadaje installation readiness. Reconstruction/hydration/debug restore omija ARRIVING i odtwarza bezgłośnie finalny `DOCKED`. Sector completeness jest źródłem platform installation readiness, lecz nigdy natural Rune tuning ani targetability.
 
 | Naturalna para | Installation readiness po `4.80` |
 | --- | --- |
@@ -237,7 +237,9 @@ Jeżeli właściwy Zwornik jeszcze nie istnieje, tuned i legalnie przyciągnięt
 
 Collision carried Rune Stone ↔ installed Rune Stone jest **SUPERSEDED** i nie będzie implementowany. Runtime nie posiada gameplay collision systemu dla kamieni.
 
-Każdy kamień może zachowywać pair-specific cichy spatial loop w `FREE`, `CARRIED_ORBIT` i `INSTALLED`. Audio playback/dispose należy do runtime audio bridge, a asset, gain i attenuation pozostają `TUNING`; audio nie posiada progression truth.
+Pair-specific audio identity jest fizyczna: FIRE / `stone_01` → `noise_laud_loop_04.mp3`, METAL / `stone_02` → `05`, EARTH / `stone_03` → `06`, WOOD / `stone_04` → `07`, WATER / `stone_05` → `08`. Te same assets obsługują osobny lifecycle Astro Attractor oraz persistent stone-local spatial loop wymagany po `INSTALLED`; wcześniejsze wymaganie cichej emisji przez `FREE` i `CARRIED_ORBIT` jest **SUPERSEDED**. Installed source śledzi realny root/installation anchor, listener śledzi XR head pose, a przy dystansie `>= 2.0 m` audible gain wynosi zero. Krzywa attenuacji wewnątrz 2 m pozostaje `TUNING`; shared runtime audio boundary posiada playback, a audio nie posiada progression truth.
+
+Planowana rodzinna oprawa instalacji używa: EARTH → `creating_01.mp3`, FIRE → `creating_02.mp3`, WOOD → `creating_03.mp3`, METAL → `creating_04.mp3`, WATER → `creating_05.mp3`. Ten zapis nie ustala dokładnego momentu triggera instalacji.
 
 Collision installed/carried pozostaje świadomie poza modelem; nie istnieje gameplay collision system dla kamieni.
 

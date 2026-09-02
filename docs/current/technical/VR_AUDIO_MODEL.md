@@ -4,7 +4,7 @@ Status: **CURRENT / BINDING**, living technical model for Experience VR audio sy
 
 ## SUMMARY DLA ARCHITEKTA
 
-The bounded Experience VR Astro Attractor lifecycle and implemented Astro Furnace process sounds remain **IMPLEMENTED**. Shell extraction plays `astro_piec_work_01.mp3`; production construction plays `astro_piec_work_create_01.mp3` instead, exactly once on DEVICE after an accepted cycle. Neither loops or determines gameplay timing, and reset/dispose stops it through the fail-soft `VrAudioBridge`. Small-glyph work and rune tuning remain **PLANNED**; rune-stone spatial mappings remain **PLANNED**. The main background contract is now **CURRENT / BINDING TARGET** and Scenario-driven, but is **NOT YET FULLY IMPLEMENTED**; the implementation still selects by tier, uses 30-second gaps and the old Asterion subthreshold, and has no post-main tail. Both Asterion Sphere DEVICE loops remain independent and **IMPLEMENTED**. Spatial audio remains unimplemented.
+The bounded Experience VR Astro Attractor lifecycle and implemented Astro Furnace process sounds remain **IMPLEMENTED**. Shell extraction plays `astro_piec_work_01.mp3`; production construction plays `astro_piec_work_create_01.mp3` instead, exactly once on DEVICE after an accepted cycle. Neither loops or determines gameplay timing, and reset/dispose stops it through the fail-soft `VrAudioBridge`. The newly frozen platform, Zwornik and Rune Stone mappings below are **CURRENT / BINDING TARGETS** unless explicitly marked implemented. The main background contract remains Scenario-driven but **NOT YET FULLY IMPLEMENTED**. Both Asterion Sphere DEVICE loops remain independent and **IMPLEMENTED**.
 
 ## Status vocabulary and authority
 
@@ -115,11 +115,25 @@ Each shorthand above denotes `glif_<element>_4s_<NN>.mp3`. `glif_earth_4s_04.mp3
 
 In short: insert → `turn_page_01`, activate → `creating_short_01`, consume → `reliquiary_consume`, complete → additional `floor_panel_activate`. These remain four distinct gameplay events.
 
-### Zwornik live reveal
+### Platform sector acquisition and drive — CURRENT / BINDING TARGET
 
-R3c is **IMPLEMENTED** as a thin, read-only audio projection beside the R3b VFX projection. Each first live readiness transition `HIDDEN → DOCKED` starts exactly one `WORLD` one-shot at the start of `RUNE_BINDER_REVEAL`. Variants cycle deterministically in accepted transition order: `creating_01.mp3 → creating_02.mp3 → creating_03.mp3 → creating_01.mp3`; the choice is not assigned to a family or branch. Per-session branch deduplication prevents repeated synchronization from replaying the transition, while the cursor advances for every accepted reveal even if optional fail-soft playback fails.
+A successfully completed sector acquisition, when control is ready rather than on initial GRIP, plays one `WORLD` one-shot: EARTH → `electricity_short_01.mp3`, FIRE → `electricity_short_02.mp3`, WOOD → `electricity_short_03.mp3`, METAL → `electricity_short_04.mp3`, WATER → `electricity_short_05.mp3`. This complete mapping does not add sector-control gameplay: the current runtime physically drives only EARTH/WOOD/FIRE, and each mapping becomes active only with its corresponding legal sector interaction.
 
-All three samples use the existing mandatory `REQUIRED_VR_AUDIO → prepareRuntimeAudio(...)` preload/decode path before READY, so live playback is cache-only. Reset clears the projection's dedupe state and returns the cursor to `creating_01`; disposal makes it inert. Hydration and reconstruction synchronize settled readiness without presenting their transitions to the audio projection, so they remain silent. Rune installation audio, sector motion loops, detent audio and spatial binder audio are **NOT IMPLEMENTED**.
+Active sector drive uses finite, non-looping process sources: EARTH → `electricity_long_01.mp3`, FIRE → `electricity_long_02.mp3`, WOOD → `electricity_long_03.mp3`, METAL → `electricity_long_04.mp3`, WATER → `electricity_long_04.mp3`. A new real drive-audio lifecycle starts its asset from the beginning. Continuous adjustment preserves the source/playhead, including a short detent hold within the same manipulation. End of active manipulation or release ramps gain to zero over exactly `1.0 s`; reacquiring the same sector before that fade completes preserves its source/playhead and ramps to full gain over exactly `0.2 s`. Only after gain reaches zero may the source stop/dispose; a later lifecycle starts from the beginning. Natural file end is silent and never restarts automatically.
+
+### Zwornik live arrival — CURRENT / BINDING TARGET
+
+The implemented instantaneous R3c audio cycle using `creating_01–03` is **SUPERSEDED**. On a live sector-completion transition, at `t=0.0 s`, play `electricity_short_06.mp3` immediately on `WORLD` and begin one owner-controlled Zwornik arrival from exactly `130 m` farther outward along that sector's radial axis relative to its canonical docked position. Over exactly `3.0 s` it translates along that axis to the exact final position. Existing Binder lightning/materialization may accompany the reveal but must not own or duplicate this translation.
+
+At `t=3.0 s` the Zwornik becomes fully `DOCKED` and installation-ready, then plays its branch-specific `WORLD` one-shot: EARTH → `zwornik_01.mp3`, FIRE → `zwornik_02.mp3`, WOOD → `zwornik_03.mp3`, METAL → `zwornik_04.mp3`, WATER → `zwornik_03.mp3`. Installation cannot begin during live arrival. The semantic state path is `HIDDEN → ARRIVING → DOCKED`; runtime naming may differ, but ARRIVING and settled DOCKED must remain distinguishable.
+
+Hydration, reconstruction and debug restoration of an already completed sector are silent and settled: restore directly at final `DOCKED`, with no 130 m motion, `electricity_short_06` or `zwornik_*` playback.
+
+### Reserved field detection and Rune Stone installation
+
+`electricity_short_07.mp3` is **RESERVED** for detecting the Metal Large Glyph inside the future Resonator field; `electricity_short_08.mp3` is **RESERVED** for the Water Large Glyph. They remain TODO until real target-containment semantics exist; no proxy trigger is authorized.
+
+The `creating_*` family is reassigned from Binder reveal to later Rune Stone installation: EARTH → `creating_01.mp3`, FIRE → `creating_02.mp3`, WOOD → `creating_03.mp3`, METAL → `creating_04.mp3`, WATER → `creating_05.mp3`. Exact installation timing is not frozen. `creating_06–08.mp3` remain **UNASSIGNED**, and `creating_short_01.mp3` retains its existing Reliquary activation role.
 
 ### Astro Furnace
 
@@ -143,6 +157,10 @@ All three samples use the existing mandatory `REQUIRED_VR_AUDIO → prepareRunti
 The target beds are seamless DEVICE loops at source gain `1.0`: small glyphs → `noise_laud_loop_01.mp3`, shells → `02`, large glyphs → `03`, and stones 1–5 → `04–08` respectively. Shells and small glyphs are current gameplay target classes. Only shell bed `02` is **IMPLEMENTED**; small-glyph bed `01` remains **PLANNED** because its current target interaction does not wire attractor-audio callbacks. Large-glyph and rune mappings remain **PLANNED** without synthetic target logic. All eight existing assets are prepared non-blockingly.
 
 Actual active pull starts the selected source immediately without fade-in and uses true source looping, never per-frame restarts. Successful takeover by the ordinary Spike ray fades it out over `0.5 s`. Temporary target loss keeps the same source and playhead while fading from its current gain toward zero over `1.0 s`; reacquiring the same logical target within that window cancels the prior automation and returns from the current gain to `1.0` in about `0.1 s`. A full second without recovery stops and idempotently cleans up the source. Deliberate release/cancel uses a shorter safe fade instead of recovery. A different logical target always ends the previous lifecycle and starts a new source from the beginning, even when both targets share an asset class. Audio observes gameplay success and identity; it does not decide either.
+
+The stone identities are explicit: FIRE / `stone_01` → `noise_laud_loop_04.mp3`, METAL / `stone_02` → `05`, EARTH / `stone_03` → `06`, WOOD / `stone_04` → `07`, WATER / `stone_05` → `08`. Each pair-specific asset has two separate lifecycles: Astro Attractor process audio while interacting with that stone, and a persistent spatial loop emitted by the same physical stone once `INSTALLED`. The installed emitter follows the real stone root/installation anchor; the listener follows the XR head pose. Gain is inaudible at distance `>= 2.0 m`; attenuation inside `2.0 m` is **TUNING**. At most five natural installed emitters are expected. The shared Web Audio/runtime audio boundary owns this presentation, not per-frame gameplay volume code in stone actors, and audio never owns progression truth.
+
+All audio reachable in Experience VR, including these new mappings, remains subject to mandatory preload and decode before READY. Gameplay playback is cache-only and must not fetch or decode on demand.
 
 ### Asterion Sphere / floor
 
@@ -184,15 +202,27 @@ The inventory below contains every existing `public/audio/*.mp3` as of 2026-08-2
 | `asterion_sphere_work.mp3` | seamless loop | DEVICE | aktywne sterowanie podłogą Kulą | **IMPLEMENTED** | Start przy drive; release wygasza przez 2 s, a retrigger zachowuje source/playhead. |
 | `click_panel_01.mp3` | one-shot | UI | klik wewnątrz panelu małpy lub gracza Y; powrót panelu Astro Pieca do menu głównego | **IMPLEMENTED** | Playback one-shot na busie UI jest wdrożony. |
 | `click_short_01.mp3` | one-shot | UI | panelowe kliknięcia wcześniej mapowane jako `turn_page_*` | **IMPLEMENTED** | W bieżącym Experience VR nie było takich mapowań; istniejących świadomych klików nie zmieniono. |
-| `creating_01.mp3` | one-shot | WORLD | live Zwornik `HIDDEN → DOCKED` reveal | **IMPLEMENTED** | Pierwszy wariant deterministycznego cyklu R3c; obowiązkowo przygotowany przed READY. |
-| `creating_02.mp3` | one-shot | WORLD | live Zwornik `HIDDEN → DOCKED` reveal | **IMPLEMENTED** | Drugi wariant deterministycznego cyklu R3c; obowiązkowo przygotowany przed READY. |
-| `creating_03.mp3` | one-shot | WORLD | live Zwornik `HIDDEN → DOCKED` reveal | **IMPLEMENTED** | Trzeci wariant deterministycznego cyklu R3c; obowiązkowo przygotowany przed READY. |
-| `creating_04.mp3` | one-shot | WORLD | — | **UNASSIGNED** | Dostępny; przyszłe użycie pozostaje otwarte. |
-| `creating_05.mp3` | one-shot | WORLD | — | **UNASSIGNED** | Dostępny; przyszłe użycie pozostaje otwarte. |
+| `creating_01.mp3` | one-shot | WORLD | instalacja Rune Stone EARTH | **PLANNED** | Supersedes implemented Binder-cycle assignment; exact installation timing not frozen. |
+| `creating_02.mp3` | one-shot | WORLD | instalacja Rune Stone FIRE | **PLANNED** | Supersedes implemented Binder-cycle assignment; exact installation timing not frozen. |
+| `creating_03.mp3` | one-shot | WORLD | instalacja Rune Stone WOOD | **PLANNED** | Supersedes implemented Binder-cycle assignment; exact installation timing not frozen. |
+| `creating_04.mp3` | one-shot | WORLD | instalacja Rune Stone METAL | **PLANNED** | Exact installation timing not frozen. |
+| `creating_05.mp3` | one-shot | WORLD | instalacja Rune Stone WATER | **PLANNED** | Exact installation timing not frozen. |
 | `creating_06.mp3` | one-shot | WORLD | — | **UNASSIGNED** | Dostępny; przyszłe użycie pozostaje otwarte. |
 | `creating_07.mp3` | one-shot | WORLD | — | **UNASSIGNED** | Dostępny; przyszłe użycie pozostaje otwarte. |
 | `creating_08.mp3` | one-shot | WORLD | — | **UNASSIGNED** | Dostępny; przyszłe użycie pozostaje otwarte. |
 | `creating_short_01.mp3` | one-shot | WORLD | zaakceptowana aktywacja kryształu w relikwiarzu / AKTYWUJ | **IMPLEMENTED** | Raz na faktycznie zaakceptowaną aktywację; audio nie rozstrzyga poprawności gameplayu. |
+| `electricity_long_01.mp3` | finite one-shot | WORLD | EARTH sector drive | **PLANNED** | Non-looping lifecycle; 1.0 s fade-out / 0.2 s recovery. |
+| `electricity_long_02.mp3` | finite one-shot | WORLD | FIRE sector drive | **PLANNED** | Non-looping lifecycle; 1.0 s fade-out / 0.2 s recovery. |
+| `electricity_long_03.mp3` | finite one-shot | WORLD | WOOD sector drive | **PLANNED** | Non-looping lifecycle; 1.0 s fade-out / 0.2 s recovery. |
+| `electricity_long_04.mp3` | finite one-shot | WORLD | METAL and WATER sector drive | **PLANNED** | Mapping is canonical; corresponding physical controls remain future. |
+| `electricity_short_01.mp3` | one-shot | WORLD | EARTH acquisition completed/locked | **PLANNED** | Plays on successful completion, not initial GRIP. |
+| `electricity_short_02.mp3` | one-shot | WORLD | FIRE acquisition completed/locked | **PLANNED** | Plays on successful completion, not initial GRIP. |
+| `electricity_short_03.mp3` | one-shot | WORLD | WOOD acquisition completed/locked | **PLANNED** | Plays on successful completion, not initial GRIP. |
+| `electricity_short_04.mp3` | one-shot | WORLD | METAL acquisition completed/locked | **PLANNED** | Mapping reserved for corresponding legal interaction. |
+| `electricity_short_05.mp3` | one-shot | WORLD | WATER acquisition completed/locked | **PLANNED** | Mapping reserved for corresponding legal interaction. |
+| `electricity_short_06.mp3` | one-shot | WORLD | live sector completion / Zwornik arrival start | **PLANNED** | At t=0.0 s of the 3.0 s arrival. |
+| `electricity_short_07.mp3` | one-shot | WORLD | future Metal Large Glyph field detection | **RESERVED** | No trigger until real containment semantics exist. |
+| `electricity_short_08.mp3` | one-shot | WORLD | future Water Large Glyph field detection | **RESERVED** | No trigger until real containment semantics exist. |
 | `floor_panel_activate.mp3` | one-shot | WORLD | dodatkowo po Release kończącym pełny próg | **IMPLEMENTED** | Playback one-shot jest wdrożony zgodnie z semantyką eventu powyżej. |
 | `glif_earth_4s_01.mp3` | one-shot | WORLD | Ethics / Earth: kryształ 1 | **IMPLEMENTED** | Playback VR jest wdrożony zgodnie z mappingiem acquisition. |
 | `glif_earth_4s_02.mp3` | one-shot | WORLD | Ethics / Earth: kryształ 2 | **IMPLEMENTED** | Playback VR jest wdrożony zgodnie z mappingiem acquisition. |
@@ -217,11 +247,11 @@ The inventory below contains every existing `public/audio/*.mp3` as of 2026-08-2
 | `noise_laud_loop_01.mp3` | seamless loop | DEVICE | Astro Przyciągacz: małe glify | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
 | `noise_laud_loop_02.mp3` | seamless loop | DEVICE | Astro Przyciągacz: skorupy | **IMPLEMENTED** | Aktywny lifecycle skorup: immediate loop, recovery i handoff fade. |
 | `noise_laud_loop_03.mp3` | seamless loop | DEVICE | Astro Przyciągacz: duże glify | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
-| `noise_laud_loop_04.mp3` | seamless loop | DEVICE | Astro Przyciągacz: kamień 1 | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
-| `noise_laud_loop_05.mp3` | seamless loop | DEVICE | Astro Przyciągacz: kamień 2 | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
-| `noise_laud_loop_06.mp3` | seamless loop | DEVICE | Astro Przyciągacz: kamień 3 | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
-| `noise_laud_loop_07.mp3` | seamless loop | DEVICE | Astro Przyciągacz: kamień 4 | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
-| `noise_laud_loop_08.mp3` | seamless loop | DEVICE | Astro Przyciągacz: kamień 5 | **PLANNED** | Asset istnieje; playback VR nie jest jeszcze wdrożony. |
+| `noise_laud_loop_04.mp3` | seamless loop | DEVICE | FIRE / stone_01 Attractor + INSTALLED spatial emitter | **PLANNED** | Installed audible range exactly 2.0 m. |
+| `noise_laud_loop_05.mp3` | seamless loop | DEVICE | METAL / stone_02 Attractor + INSTALLED spatial emitter | **PLANNED** | Installed audible range exactly 2.0 m. |
+| `noise_laud_loop_06.mp3` | seamless loop | DEVICE | EARTH / stone_03 Attractor + INSTALLED spatial emitter | **PLANNED** | Installed audible range exactly 2.0 m. |
+| `noise_laud_loop_07.mp3` | seamless loop | DEVICE | WOOD / stone_04 Attractor + INSTALLED spatial emitter | **PLANNED** | Installed audible range exactly 2.0 m. |
+| `noise_laud_loop_08.mp3` | seamless loop | DEVICE | WATER / stone_05 Attractor + INSTALLED spatial emitter | **PLANNED** | Installed audible range exactly 2.0 m. |
 | `noise_loop_01.mp3` | seamless loop | SPACE | — | **UNASSIGNED** | Dostępny; przyszłe użycie pozostaje otwarte. |
 | `noise_loop_02.mp3` | seamless loop | SPACE | — | **UNASSIGNED** | Dostępny; przyszłe użycie pozostaje otwarte. |
 | `noise_loop_03.mp3` | seamless loop | SPACE | — | **UNASSIGNED** | Dostępny; przyszłe użycie pozostaje otwarte. |
@@ -252,6 +282,10 @@ The inventory below contains every existing `public/audio/*.mp3` as of 2026-08-2
 | `start.mp3` | one-shot | UNASSIGNED | — | **UNASSIGNED** | Brak przypisanej funkcji i warstwy VR. |
 | `turn_page_01.mp3` | one-shot | WORLD | włożenie kryształu do relikwiarza | **IMPLEMENTED** | Playback one-shot jest wdrożony dla faktycznie zaakceptowanego insertu. |
 | `turn_page_02.mp3` | one-shot | UI | — | **UNASSIGNED** | Brak ustalonego użycia VR. |
+| `zwornik_01.mp3` | one-shot | WORLD | EARTH Zwornik dock at t=3.0 s | **PLANNED** | Only after live arrival reaches exact settled position. |
+| `zwornik_02.mp3` | one-shot | WORLD | FIRE Zwornik dock at t=3.0 s | **PLANNED** | Only after live arrival reaches exact settled position. |
+| `zwornik_03.mp3` | one-shot | WORLD | WOOD and WATER Zwornik dock at t=3.0 s | **PLANNED** | Branch-specific shared asset. |
+| `zwornik_04.mp3` | one-shot | WORLD | METAL Zwornik dock at t=3.0 s | **PLANNED** | Only after live arrival reaches exact settled position. |
 
 ## Prefix map for future assets
 
@@ -269,9 +303,9 @@ The prefix map supplies only a default classification. Every new MP3 must still 
 
 - The concrete device asset for Asterion Sphere / floor operation.
 - Future uses of `noise_loop_*`.
-- Future uses of unassigned `creating_04–08` and any additional `creating_short_*` mapping.
+- Future uses of unassigned `creating_06–08` and any additional `creating_short_*` mapping.
 - Behavior after exhaustion of the last existing post-main `ambient_loop_*`.
-- Whether individual effects should be spatial / `PositionalAudio`, and which ones.
+- Attenuation shape within the frozen 2.0 m installed Rune Stone range.
 
 
 ## Implementation boundary
