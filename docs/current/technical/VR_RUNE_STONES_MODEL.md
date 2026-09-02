@@ -21,7 +21,7 @@ Pięć naturalnych Rune Stones — Earth, Fire, Wood, Metal i Water — jest fiz
 
 **Canonical presentation:** pięć naturalnych Rune Stones jest widocznych od pierwszego pełnego odsłonięcia świata po wejściu gracza do kręgu / settled Monkey arrival, razem z gwiazdami, słońcem i pozostałym nieboskłonem. Od tego momentu istnieją jako odległe, animowane elementy świata, lecz interaction pozostaje disabled do czasu przyznania późniejszych capabilities. Ether nie podlega temu early reveal: jest `SPECIAL`, a jego materialization/reveal należy do późniejszego Ether/Monkey flow.
 
-**VISIBILITY ≠ TARGETABILITY.** Wizualna obecność, tuning i targetability są niezależnymi prawami. Natural Rune Stone może być widoczny przy `tuned = false`, niedostępnym paśmie `RUNESTONES` i `targetability = false`; dopiero późniejszy tuning nadaje prawo targetowania. Platform installation readiness pozostaje trzecim, osobnym prawem gameplayowym opisanym poniżej.
+**VISIBILITY ≠ TARGETABILITY ≠ INSTALLATION READINESS.** Wizualna obecność, tuning i targetability są niezależnymi prawami. Po fizycznym pozyskaniu Astrolabium pasmo `RUNESTONES` jest selectable nawet przy `tuned = false` i pustym zbiorze legalnych celów; dopiero późniejszy tuning nadaje rodzinie prawo targetowania. Immediate-all-band behavior pozostaje **CURRENT TARGET / NOT IMPLEMENTED**, ponieważ runtime nadal filtruje pasma. Platform installation readiness pozostaje trzecim, osobnym prawem gameplayowym opisanym poniżej.
 
 W trakcie aktu gracz może stroić, targetować i przyciągać różne naturalne kamienie w dowolnej kolejności. Nie istnieje wymuszony pierwszy kamień gameplayowy. Earth jest wyłącznie pierwszą parą referencyjną do implementacji i inspekcji actor mechanics.
 
@@ -45,7 +45,7 @@ Natural family availability wynika wyłącznie z `PROTO_ASTRO_NATURAL_FAMILY_COD
 natural targetability = tunedRuneFamilies
 ```
 
-Nastrojona naturalna rodzina jest legalnym targetem Astrolabium w paśmie `RUNESTONES`, niezależnie od installation readiness. Przykładowo `Water tuned = true` przy `Water platform readiness = false` oznacza, że Water Rune Stone może zostać scanned, targeted i `LOCKED_BY_ASTRO`, ale nie może jeszcze zostać zainstalowany. A7 pozostaje semanticznym ownerem permission, a A9.2 implementuje fizyczne resolution tego permission:
+Pasmo klasy `RUNESTONES` istnieje niezależnie od jego zawartości. Nastrojona naturalna rodzina jest legalnym targetem Astrolabium w tym paśmie, niezależnie od installation readiness. Successful Wu Xing completion uczy Astrolabium wynikowej rodziny; nie odblokowuje samego przycisku/pasma. Przykładowo `Water tuned = true` przy `Water platform readiness = false` oznacza, że Water Rune Stone może zostać scanned, targeted i `LOCKED_BY_ASTRO`, ale nie może jeszcze zostać zainstalowany. A7 pozostaje semanticznym ownerem permission, a A9.2 implementuje fizyczne resolution tego permission:
 
 ```text
 RuneStoneProgressionController
