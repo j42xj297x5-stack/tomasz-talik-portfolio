@@ -69,6 +69,7 @@ import { createVrAsterionSectorAcquisitionInteraction } from './xr/asterion/crea
 import { createVrAsterionSectorControlInteraction } from './xr/asterion/createVrAsterionSectorControlInteraction.js';
 import { createVrAsterionSectorAcquisitionPresentation } from './xr/asterion/createVrAsterionSectorAcquisitionPresentation.js';
 import { createVrAsterionResonatorFieldActor } from './xr/asterion/createVrAsterionResonatorFieldActor.js';
+import { createVrAsterionResonatorFieldPresentation } from './xr/asterion/createVrAsterionResonatorFieldPresentation.js';
 import { createVrAsterionProductionController } from './xr/asterion/createVrAsterionProductionController.js';
 import { createVrPlayerGuidePanel } from './xr/guidance/createVrPlayerGuidePanel.js';
 import { createVrCurrentObjectiveProjection } from './xr/guidance/createVrCurrentObjectiveProjection.js';
@@ -564,6 +565,10 @@ const asterionPlatformEnergyVfxProjection = createVrAsterionPlatformEnergyVfxPro
 const asterionResonatorFieldActor = createVrAsterionResonatorFieldActor({
   runeStoneProgressionController,
   sectorControlInteraction: asterionSectorControlInteraction
+});
+const asterionResonatorFieldPresentation = createVrAsterionResonatorFieldPresentation({
+  parent: platformFixturesRoot,
+  fieldActor: asterionResonatorFieldActor
 });
 const unsubscribeResonatorScenarioHandoff = runeStoneProgressionController.subscribe(() => {
   progressionSemanticHandoff.onResonatorStateChanged(asterionResonatorFieldActor.getDescriptor());
@@ -1597,6 +1602,7 @@ window.addEventListener('pagehide', () => {
   unsubscribeRuneGuidance();
   unsubscribeResonatorGuidance();
   unsubscribeSectorLockGuidance();
+  asterionResonatorFieldPresentation.dispose();
   asterionResonatorFieldActor.dispose();
   asterionProductionController.dispose();
   astroAttractorProductionController.dispose();
