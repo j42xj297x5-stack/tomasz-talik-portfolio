@@ -223,15 +223,15 @@ export function createVrAsterionResonatorFieldPresentation({ parent, fieldActor 
     }
   }
 
-  function bowOffsetAt(shape, t, z, leftBoundaryZ, rightBoundaryZ) {
+  function bowOffsetAt(shape, t, x, leftBoundaryX, rightBoundaryX) {
     const lateralMix = Math.max(0, Math.min(1,
-      (z - leftBoundaryZ) / (rightBoundaryZ - leftBoundaryZ)
+      (x - leftBoundaryX) / (rightBoundaryX - leftBoundaryX)
     ));
     const envelope = Math.sin(Math.PI * t);
     const leftOffset = -shape.deformation.leftBowSign
-      * (shape.deformation.leftMismatch / 2) * BOW_FRACTION * Math.abs(leftBoundaryZ) * envelope;
+      * (shape.deformation.leftMismatch / 2) * BOW_FRACTION * Math.abs(leftBoundaryX) * envelope;
     const rightOffset = shape.deformation.rightBowSign
-      * (shape.deformation.rightMismatch / 2) * BOW_FRACTION * Math.abs(rightBoundaryZ) * envelope;
+      * (shape.deformation.rightMismatch / 2) * BOW_FRACTION * Math.abs(rightBoundaryX) * envelope;
     return leftOffset + (rightOffset - leftOffset) * lateralMix;
   }
 
@@ -240,10 +240,10 @@ export function createVrAsterionResonatorFieldPresentation({ parent, fieldActor 
     writeRoundedPerimeter(shape, 'far', farPerimeter, farMidpoints, farNominal);
     for (let station = 0; station < DEPTH_STATIONS; station += 1) {
       const t = station / (DEPTH_STATIONS - 1);
-      const leftBoundaryZ = shape.corners.nearTopLeft.z
-        + (shape.corners.farTopLeft.z - shape.corners.nearTopLeft.z) * t;
-      const rightBoundaryZ = shape.corners.nearTopRight.z
-        + (shape.corners.farTopRight.z - shape.corners.nearTopRight.z) * t;
+      const leftBoundaryX = shape.corners.nearTopLeft.x
+        + (shape.corners.farTopLeft.x - shape.corners.nearTopLeft.x) * t;
+      const rightBoundaryX = shape.corners.nearTopRight.x
+        + (shape.corners.farTopRight.x - shape.corners.nearTopRight.x) * t;
       for (let point = 0; point < PERIMETER_POINTS; point += 1) {
         const sourceOffset = point * 3;
         const targetOffset = (station * PERIMETER_POINTS + point) * 3;
@@ -251,8 +251,8 @@ export function createVrAsterionResonatorFieldPresentation({ parent, fieldActor 
           skinTargetPositions[targetOffset + axis] = nearPerimeter[sourceOffset + axis]
             + (farPerimeter[sourceOffset + axis] - nearPerimeter[sourceOffset + axis]) * t;
         }
-        skinTargetPositions[targetOffset + 2] += bowOffsetAt(
-          shape, t, skinTargetPositions[targetOffset + 2], leftBoundaryZ, rightBoundaryZ
+        skinTargetPositions[targetOffset] += bowOffsetAt(
+          shape, t, skinTargetPositions[targetOffset], leftBoundaryX, rightBoundaryX
         );
       }
     }
@@ -265,18 +265,18 @@ export function createVrAsterionResonatorFieldPresentation({ parent, fieldActor 
     for (let corner = 0; corner < 4; corner += 1) {
       for (let station = 0; station < DEPTH_STATIONS; station += 1) {
         const t = station / (DEPTH_STATIONS - 1);
-        const leftBoundaryZ = shape.corners.nearTopLeft.z
-          + (shape.corners.farTopLeft.z - shape.corners.nearTopLeft.z) * t;
-        const rightBoundaryZ = shape.corners.nearTopRight.z
-          + (shape.corners.farTopRight.z - shape.corners.nearTopRight.z) * t;
+        const leftBoundaryX = shape.corners.nearTopLeft.x
+          + (shape.corners.farTopLeft.x - shape.corners.nearTopLeft.x) * t;
+        const rightBoundaryX = shape.corners.nearTopRight.x
+          + (shape.corners.farTopRight.x - shape.corners.nearTopRight.x) * t;
         const centerOffset = railOffset;
         for (let axis = 0; axis < 3; axis += 1) {
           const offset = corner * 3 + axis;
           tubeTargetCenters[railOffset++] = nearMidpoints[offset]
             + (farMidpoints[offset] - nearMidpoints[offset]) * t;
         }
-        tubeTargetCenters[centerOffset + 2] += bowOffsetAt(
-          shape, t, tubeTargetCenters[centerOffset + 2], leftBoundaryZ, rightBoundaryZ
+        tubeTargetCenters[centerOffset] += bowOffsetAt(
+          shape, t, tubeTargetCenters[centerOffset], leftBoundaryX, rightBoundaryX
         );
       }
     }

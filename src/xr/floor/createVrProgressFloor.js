@@ -17,10 +17,10 @@ const PANEL_COUNT_BY_GLYPH_ID = new Map([
 
 export function createVrProgressFloor({
   parent, creativeSectorModel, ethicsSectorModel, haikuSectorModel, digSectorModel, aiGuideSectorModel,
-  emission = {}, rings = {}
+  forwardDirection, emission = {}, rings = {}
 }) {
   const actor = createVrProgressFloorActor({
-    parent, emission, rings,
+    parent, forwardDirection, emission, rings,
     sourceModels: { creative: creativeSectorModel, ethics: ethicsSectorModel, water: haikuSectorModel, metal: digSectorModel, wood: aiGuideSectorModel }
   });
   const activatedEntries = new Map();
@@ -81,6 +81,8 @@ export function createVrProgressFloor({
     getCompletedTiers: () => [...completedTiers],
     getRuneInstallationFrame: (branchId) => actor.getRuneInstallationFrame(branchId),
     getSectorEnergyVfxMount: (branchId) => actor.getSectorEnergyVfxMount(branchId),
-    getSectorEnergyVfxBounds: (branchId) => actor.getSectorEnergyVfxBounds(branchId), dispose
+    getSectorEnergyVfxBounds: (branchId) => actor.getSectorEnergyVfxBounds(branchId),
+    getAsterionResonatorFieldFrame: () => actor.getAsterionResonatorFieldFrame(),
+    dispose
   };
 }

@@ -26,8 +26,12 @@ export const VR_PROGRESS_FLOOR_RINGS = Object.freeze({
   ringStableOpacity: 0.24, ringPulseOpacity: 0.9, ringPulseDuration: 0.24, ringResponseSpeed: 16, ringColor: 0xeaf4ff
 });
 
-export function createVrProgressFloorActor({ parent, sourceModels, emission = {}, rings = {} }) {
+export function createVrProgressFloorActor({ parent, sourceModels, forwardDirection, emission = {}, rings = {} }) {
   if (!parent?.add) throw new Error('[VrProgressFloorActor] A valid parent is required.');
+  const forwardLength = Math.hypot(forwardDirection?.x, forwardDirection?.z);
+  if (!Number.isFinite(forwardLength) || forwardLength <= 1e-8) {
+    throw new Error('[VrProgressFloorActor] A finite, non-zero horizontal forward direction is required.');
+  }
   SECTOR_LAYOUT.forEach(({ sourceType }) => {
     if (!sourceModels?.[sourceType]?.clone) throw new Error(`[VrProgressFloorActor] A valid ${sourceType} sector model is required.`);
   });
@@ -37,7 +41,18 @@ export function createVrProgressFloorActor({ parent, sourceModels, emission = {}
   object.name = 'VrTiltableFloorRoot';
   const geometryRoot = new THREE.Group();
   geometryRoot.name = 'PlatformGeometryRoot';
+  const fireLayoutIndex = SECTOR_LAYOUT.findIndex(({ branchId }) => branchId === 'fire');
+  const sectorStep = Math.PI * 2 / 5;
+  const fireYaw = fireLayoutIndex * sectorStep;
+  const forwardYaw = Math.atan2(forwardDirection.x / forwardLength, forwardDirection.z / forwardLength);
+  geometryRoot.rotation.y = forwardYaw - fireYaw;
   object.add(geometryRoot);
+  const asterionResonatorFieldFrame = new THREE.Object3D();
+  asterionResonatorFieldFrame.name = 'VrAsterionResonatorFieldFrame';
+  asterionResonatorFieldFrame.position.set(0, 0, 0);
+  asterionResonatorFieldFrame.rotation.y = fireYaw;
+  asterionResonatorFieldFrame.scale.set(1, 1, 1);
+  geometryRoot.add(asterionResonatorFieldFrame);
   const sectorsByGlyphId = new Map();
   const sectorsByBranchId = new Map();
   const tierRings = new Map();
@@ -101,6 +116,7 @@ export function createVrProgressFloorActor({ parent, sourceModels, emission = {}
 
   return {
     object, geometryRoot,
+    getAsterionResonatorFieldFrame() { return asterionResonatorFieldFrame; },
     revealSector(glyphId) { return !disposed && (sectorsByGlyphId.get(glyphId)?.reveal() ?? false); },
     activatePanel(glyphId, order) { return !disposed && (sectorsByGlyphId.get(glyphId)?.activatePanel(order) ?? false); },
     setSectorMotion(glyphId, transform) { return !disposed && (sectorsByGlyphId.get(glyphId)?.setMotionTransform(transform) ?? false); },
