@@ -241,6 +241,7 @@ unsubscribe();
 const progressFloor = createVrProgressFloor({
   parent: experienceRoot,
   forwardDirection: settings.spatial.entryDirection,
+  spatialAudioRadiusMeters: settings.runeStoneSpatialAudio.platformRadiusMeters,
   creativeSectorModel: assetManager.cloneGltfScene('vr-progress-floor-creative-model'),
   ethicsSectorModel: assetManager.cloneGltfScene('vr-progress-floor-ethics-model'),
   haikuSectorModel: assetManager.cloneGltfScene('vr-progress-floor-haiku-model'),
@@ -1045,6 +1046,7 @@ const listenerUp = new THREE.Vector3();
 const listenerPose = Object.freeze({ position: listenerPosition, forward: listenerForward, up: listenerUp });
 runeStoneAudioProjection = createVrRuneStoneAudioProjection({
   audioBridge: vrAudio, runeStoneActor, runeStoneProgressionController,
+  getEmitterAnchor: (branchId) => progressFloor.getRuneStoneSpatialAudioAnchor(branchId),
   spatialSettings: settings.runeStoneSpatialAudio,
   getListenerWorldPose: () => {
     if (!renderer.xr.isPresenting) return null;

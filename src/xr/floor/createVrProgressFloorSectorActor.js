@@ -78,9 +78,12 @@ function isFiniteQuaternion(value) {
   return Number.isFinite(length) && length > 0;
 }
 
-export function createVrProgressFloorSectorActor({ descriptor, sourceModel, contract, emission }) {
+export function createVrProgressFloorSectorActor({ descriptor, sourceModel, contract, emission, spatialAudioRadiusMeters }) {
   if (!descriptor || !sourceModel?.clone || !contract) {
     throw new Error('[VrProgressFloorSectorActor] Descriptor, source model and source contract are required.');
+  }
+  if (!Number.isFinite(spatialAudioRadiusMeters) || spatialAudioRadiusMeters <= 0) {
+    throw new Error('[VrProgressFloorSectorActor] A positive spatial audio radius is required.');
   }
 
   const object = new THREE.Group();
@@ -89,6 +92,16 @@ export function createVrProgressFloorSectorActor({ descriptor, sourceModel, cont
   object.scale.set(1, 1, 1);
   object.rotation.y = descriptor.rotationIndex * (Math.PI * 2 / 5);
   object.userData = { ...object.userData, ...descriptor };
+
+  const runeStoneSpatialAudioAnchor = new THREE.Object3D();
+  runeStoneSpatialAudioAnchor.name = `VrRuneStoneSpatialAudioAnchor_${descriptor.branchId.toUpperCase()}`;
+  runeStoneSpatialAudioAnchor.position.set(0, 0, spatialAudioRadiusMeters);
+  runeStoneSpatialAudioAnchor.userData = {
+    ...runeStoneSpatialAudioAnchor.userData,
+    branchId: descriptor.branchId,
+    radialAxis: '+Z'
+  };
+  object.add(runeStoneSpatialAudioAnchor);
 
   const motionRoot = new THREE.Group();
   motionRoot.name = `VrProgressFloorSectorMotionRoot:${descriptor.glyphId}`;
@@ -347,6 +360,7 @@ export function createVrProgressFloorSectorActor({ descriptor, sourceModel, cont
         };
       },
       getPanelObject: (order) => panelsByOrder.get(order)?.object ?? null,
+      getRuneStoneSpatialAudioAnchor: () => runeStoneSpatialAudioAnchor,
       getRuneInstallationFrame: () => runeInstallationFrame,
       getEnergyVfxMount: () => energyVfxMount,
       getEnergyVfxBounds: () => ({ min: presentationBounds.min.clone(), max: presentationBounds.max.clone() }),

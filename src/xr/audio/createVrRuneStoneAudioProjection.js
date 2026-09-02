@@ -15,13 +15,16 @@ export const VR_RUNE_STONE_INSTALL_AUDIO = Object.freeze(
 );
 
 export function createVrRuneStoneAudioProjection({ audioBridge, runeStoneActor,
-  runeStoneProgressionController, getListenerWorldPose, spatialSettings }) {
+  runeStoneProgressionController, getEmitterAnchor, getListenerWorldPose, spatialSettings }) {
   if (!audioBridge?.startSpatialProcessSource || !audioBridge?.setSpatialListenerPose) {
     throw new TypeError('Rune Stone audio projection requires the VR audio bridge.');
   }
-  if (!runeStoneActor?.getRoot || !runeStoneActor?.getState
+  if (!runeStoneActor?.getState
     || !runeStoneProgressionController?.isFamilyInstalled) {
     throw new TypeError('Rune Stone physical and progression truth are required.');
+  }
+  if (typeof getEmitterAnchor !== 'function') {
+    throw new TypeError('Rune Stone audio projection requires a platform emitter anchor accessor.');
   }
   const maxDistanceMeters = spatialSettings?.maxDistanceMeters;
   const refDistanceMeters = spatialSettings?.refDistanceMeters;
@@ -35,6 +38,13 @@ export function createVrRuneStoneAudioProjection({ audioBridge, runeStoneActor,
 
   const isInstalled = ({ descriptor }) => runeStoneActor.getState(descriptor.branchId) === VR_RUNE_STONE_STATE.INSTALLED
     && runeStoneProgressionController.isFamilyInstalled(descriptor.familyCode);
+  function readEmitterPosition(branchId) {
+    const anchor = getEmitterAnchor(branchId);
+    if (!anchor?.getWorldPosition) return false;
+    anchor.updateWorldMatrix(true, false);
+    anchor.getWorldPosition(emitterPosition);
+    return true;
+  }
   function stopEntry(entry) {
     entry.token += 1; entry.pending = false;
     try { entry.handle?.stop?.(); } catch (_) { /* Optional audio is fail-soft. */ }
@@ -42,10 +52,7 @@ export function createVrRuneStoneAudioProjection({ audioBridge, runeStoneActor,
   }
   function startEntry(entry) {
     if (entry.handle || entry.pending || !isInstalled(entry)) return;
-    const root = runeStoneActor.getRoot(entry.descriptor.branchId);
-    if (!root) return;
-    root.updateWorldMatrix(true, false); root.getWorldPosition(emitterPosition);
-    const initial = { x: emitterPosition.x, y: emitterPosition.y, z: emitterPosition.z };
+    if (!readEmitterPosition(entry.descriptor.branchId)) return;
     const token = ++entry.token, expectedGeneration = generation;
     entry.pending = true;
     void audioBridge.startSpatialProcessSource(AUDIO_BY_BRANCH[entry.descriptor.branchId].loop, 'DEVICE', {
@@ -58,8 +65,12 @@ export function createVrRuneStoneAudioProjection({ audioBridge, runeStoneActor,
         try { handle.stop?.(); } catch (_) { /* Late optional source. */ }
         return;
       }
+      if (!readEmitterPosition(entry.descriptor.branchId)) {
+        try { handle.stop?.(); } catch (_) { /* Missing platform anchor. */ }
+        return;
+      }
+      handle.setPosition(emitterPosition.x, emitterPosition.y, emitterPosition.z);
       entry.handle = handle;
-      handle.setPosition(initial.x, initial.y, initial.z);
       handle.onEnded(() => { if (entry.handle === handle) entry.handle = null; });
     });
   }
@@ -78,9 +89,7 @@ export function createVrRuneStoneAudioProjection({ audioBridge, runeStoneActor,
     if (pose) audioBridge.setSpatialListenerPose(pose);
     entries.forEach((entry) => {
       if (!entry.handle) return;
-      const root = runeStoneActor.getRoot(entry.descriptor.branchId);
-      if (!root || !isInstalled(entry)) { stopEntry(entry); return; }
-      root.updateWorldMatrix(true, false); root.getWorldPosition(emitterPosition);
+      if (!isInstalled(entry) || !readEmitterPosition(entry.descriptor.branchId)) { stopEntry(entry); return; }
       entry.handle.setPosition(emitterPosition.x, emitterPosition.y, emitterPosition.z);
     });
   }

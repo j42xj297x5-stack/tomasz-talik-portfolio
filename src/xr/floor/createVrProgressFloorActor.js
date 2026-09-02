@@ -26,7 +26,8 @@ export const VR_PROGRESS_FLOOR_RINGS = Object.freeze({
   ringStableOpacity: 0.24, ringPulseOpacity: 0.9, ringPulseDuration: 0.24, ringResponseSpeed: 16, ringColor: 0xeaf4ff
 });
 
-export function createVrProgressFloorActor({ parent, sourceModels, forwardDirection, emission = {}, rings = {} }) {
+export function createVrProgressFloorActor({ parent, sourceModels, forwardDirection, spatialAudioRadiusMeters,
+  emission = {}, rings = {} }) {
   if (!parent?.add) throw new Error('[VrProgressFloorActor] A valid parent is required.');
   const forwardLength = Math.hypot(forwardDirection?.x, forwardDirection?.z);
   if (!Number.isFinite(forwardLength) || forwardLength <= 1e-8) {
@@ -65,6 +66,7 @@ export function createVrProgressFloorActor({ parent, sourceModels, forwardDirect
       const actor = createVrProgressFloorSectorActor({
         descriptor: { ...sectorConfig, rotationIndex }, sourceModel: sourceModels[sectorConfig.sourceType],
         contract: VR_PROGRESS_FLOOR_SOURCE_CONTRACTS[sectorConfig.sourceType],
+        spatialAudioRadiusMeters,
         emission: { ...config, fallbackColor: config.fallbackColors[sectorConfig.sourceType] }
       });
       sectorsByGlyphId.set(sectorConfig.glyphId, actor);
@@ -168,6 +170,9 @@ export function createVrProgressFloorActor({ parent, sourceModels, forwardDirect
     },
     reset() { if (disposed) return; sectorsByGlyphId.forEach((sector) => sector.reset()); tierRings.forEach((ring) => { ring.pulseRemaining = 0; ring.material.opacity = 0; }); },
     getRuneInstallationFrame(branchId) { return sectorsByBranchId.get(String(branchId).toLowerCase())?.getRuneInstallationFrame() ?? null; },
+    getRuneStoneSpatialAudioAnchor(branchId) {
+      return sectorsByBranchId.get(String(branchId).toLowerCase())?.getRuneStoneSpatialAudioAnchor() ?? null;
+    },
     getSectorEnergyVfxMount(branchId) { return sectorsByBranchId.get(String(branchId).toLowerCase())?.getEnergyVfxMount() ?? null; },
     getSectorEnergyVfxBounds(branchId) { return sectorsByBranchId.get(String(branchId).toLowerCase())?.getEnergyVfxBounds() ?? null; },
     dispose() {
