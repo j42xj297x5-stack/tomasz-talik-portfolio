@@ -10,7 +10,7 @@ import { loadExperienceVrSettings, VR_BACKGROUND_COLOR } from './config/experien
 import { orientPlayerRig } from './xr/playerRigOrientation.js';
 import { calibrateXrHeadToPlatform } from './xr/calibration/calibrateXrHeadToPlatform.js';
 import { createCanonicalXrStartCalibration } from './xr/calibration/createCanonicalXrStartCalibration.js';
-import { getXrHeadWorldPosition } from './xr/getXrHeadWorldPosition.js';
+import { getXrHeadWorldPose, getXrHeadWorldPosition } from './xr/getXrHeadWorldPosition.js';
 import { createVrControllers } from './xr/createVrControllers.js';
 import { createVrGlyphInteraction } from './xr/createVrGlyphInteraction.js';
 import { createVrSmallGlyphSystem } from './xr/glyphs/createVrSmallGlyphSystem.js';
@@ -1050,9 +1050,9 @@ runeStoneAudioProjection = createVrRuneStoneAudioProjection({
   spatialSettings: settings.runeStoneSpatialAudio,
   getListenerWorldPose: () => {
     if (!renderer.xr.isPresenting) return null;
-    const xrCamera = renderer.xr.getCamera(camera);
-    xrCamera.updateWorldMatrix(true, false);
-    xrCamera.getWorldPosition(listenerPosition); xrCamera.getWorldQuaternion(listenerQuaternion);
+    getXrHeadWorldPose({
+      renderer, camera, playerRig, positionTarget: listenerPosition, quaternionTarget: listenerQuaternion
+    });
     listenerForward.set(0, 0, -1).applyQuaternion(listenerQuaternion).normalize();
     listenerUp.set(0, 1, 0).applyQuaternion(listenerQuaternion).normalize();
     return listenerPose;
