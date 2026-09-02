@@ -2,7 +2,7 @@
 
 ## Status i reguła nadrzędna
 
-Status: **CURRENT WORKING CANON / SPLIT IMPLEMENTATION STATUS**. Rune tuning/transport/install, Binder readiness/materialization, powered-sector acquisition/control, Resonator core/descriptor, discovery Guidance through first Resonator and Scenario join through `5.10` are **CURRENT / IMPLEMENTED** under their technical owners. Physical Resonator target selection/scoring/response, glyph reacquisition, Metal/Water/Ether expansion and the finale continuation are **FUTURE**.
+Status: **CURRENT WORKING CANON / SPLIT IMPLEMENTATION STATUS**. Rune tuning/transport/install, Binder readiness/materialization, powered-sector acquisition/control, Resonator core/descriptor, discovery Guidance through first Resonator and Scenario join through `5.10` are **CURRENT / IMPLEMENTED** under their technical owners. Physical Resonator containment/resonance response, glyph reacquisition, Metal/Water/Ether expansion and the finale continuation are **FUTURE**.
 
 Ten przebieg zastępuje wcześniejszą wersję, w której trzy sektory tworzyły pełną antenę przed etapem kamieni runicznych:
 
@@ -25,7 +25,7 @@ Dokładne receptury strojenia pozostają kontraktem receptur i nie są definiowa
 | Binder readiness/materialization | CURRENT / IMPLEMENTED |
 | Powered-sector acquisition/control i Resonator core/descriptor | CURRENT / IMPLEMENTED |
 | Rune/Binder/Sector/Resonator Guidance oraz `4.80 → 5.10` | CURRENT / IMPLEMENTED |
-| Resonator target selection/scoring/response i glyph reacquisition | FUTURE |
+| Resonator containment/resonance response i glyph reacquisition | FUTURE |
 | Metal/Water, Water override, Ether, final Water hunt, dissolution/finale after `5.10` | FUTURE |
 
 Sections describing target response and later finale are design canon, not implementation claims.
@@ -143,7 +143,7 @@ Gdy trzy wymagane sektory są zasilone przez zainstalowane kamienie i mogą wsp�
 
 The first Resonator has a discrete `(α, β, γ)` core. Every channel uses `LEVEL 0 / 0° / OFF` and the one-direction positions `13° / 23° / 36°`. EARTH/`α` independently controls the LEFT aperture half-profile, WOOD/`β` the RIGHT half-profile, and FIRE/`γ` controls depth only: `NONE`, `NEAR 10–50 m`, `MID 50–90 m`, or `FAR 90–130 m` (`0 / 1 / 2 / 3`). Side-profile half-extents from the center axis are level 1 `23 m` lateral / `7 m` vertical, level 2 `13 / 13 m`, and level 3 `7 / 23 m`.
 
-The core has 64 physical states and 27 fully active configurations. All 27 are legal, but only `111` (NEAR, wide/low), `222` (MID, balanced/square), and `333` (FAR, narrow/high) can fully reveal the distant Large Glyph. The Resonator exists from three powered sectors even at `(0,0,0)`, where the field is OFF. Unequal or one-sided wings remain legal partial states, and unequal active sides create intentionally asymmetric apertures. Exact scoring is deliberately not defined here.
+The core has 64 physical states and 27 fully active configurations. All 27 have equal target-detection authority; `α`, `β`, and `γ` define geometry only, with no family, scoring, revelation, or Large Glyph privilege for `111`, `222`, or `333`. The Resonator exists from three powered sectors even at `(0,0,0)`, where the field is OFF. Unequal active sides create intentionally asymmetric apertures, but any partial configuration containing a core LEVEL 0 performs no target acquisition.
 
 Canonical field semantics are FORWARD, LATERAL, and VERTICAL; the current Three.js target maps them to platform-local `+Z`, `X`, and `Y`. The authored floor/sector layout aligns FIRE's outward radial axis and field FORWARD with canonical `entryDirection`, independently of Monkey head rotation and without rotating unrelated fixtures or the player passenger hierarchy. The visible field retains a rounded 16-corner cage, translucent deformable skin, brighter curved skeleton, and morphing; nominal aperture coordinates create the primary shape while bow remains secondary tuning. Binding details are defined by [`VR_ASTERION_RESONATOR_FIELD_MODEL.md`](../technical/VR_ASTERION_RESONATOR_FIELD_MODEL.md). Runtime still uses the superseded origin-based `S0–S3` shape, fixture parent, and unaligned sector layout, so the revised geometry is CURRENT DESIGN TARGET rather than implemented runtime.
 
@@ -160,14 +160,17 @@ Panel Y przechowuje instrukcję; Małpa nie powtarza jej stale.
 
 ## 8. Pierwsze poszukiwanie i pierwszy odzyskany glif
 
-The Resonator provides no glyph marker and is not hardcoded only for glyphs. A supported object inside the active field may respond with the approved base visual: a bright green halo and its Proto-Astro sign, without any additional quest marker or UI decoration. Only `(1,1,1)`, `(2,2,2)`, and `(3,3,3)` may produce full Large Glyph revelation. Other legal states may vary stability or energy and may affect other supported objects; the future scoring formula remains open. Scenario gives the discovery meaning but does not own the physical response.
+A supported target is detected only while its canonical anchor is contained by the nominal field of any fully active configuration. This generic mechanism is not hardcoded to glyphs, and presentation-only field deformation cannot affect containment.
 
+On first detection the family-colored Proto-Astro sign appears, faces the player's current head, and retains approximately constant apparent size across depth. Continuous containment adds one thin target-centered ring every `2.0 s`; at `2 / 4 / 6 s` the target has one/two/three rings. Exactly three rings mean `PULL_READY`, and the rings pulse slowly. Only then may Astrolabium Więzi target and pull it; attraction remains Astrolabium-owned.
+
+Outside the field, fractional acquisition is discarded and one completed ring decays every `20 s`. Three rings remain ready until the `3 → 2` transition. Re-entry resets the current decay interval and resumes from retained rings (`0 / 2 / 4 / 6 s` required from three/two/one/zero). The sign remains through ring decay and for another `60 s` after ring 0; this sign-only state is not ready and requires the full `6 s`. It then returns to undiscovered presentation. Exact sizing, ring geometry, pulse and fade curves remain tuning. Scenario gives discovery meaning but owns none of this physical truth.
 ### `progression.resonator.search`
 
 > Teraz szukaj.  
 > Jeśli przestrzeń odpowie — zobaczysz znak.
 
-Następnie Małpa milczy. Gracz ustawia sektory, obraca platformę, znajduje właściwą odpowiedź, stabilizuje target Astrolabium i przyciąga glif. Lepszy lock wzmacnia emisję, czytelność znaku i stabilność targetu. Po pozyskaniu kryształu nie ma komentarza: gracz sam rozwiązał problem.
+Następnie Małpa milczy. Gracz ustawia sektory, obraca platformę, znajduje właściwą odpowiedź, stabilizuje target Astrolabium i przyciąga glif. Po pozyskaniu kryształu nie ma komentarza: gracz sam rozwiązał problem.
 
 ## 9. Za mały zasięg i czwarty kamień
 
@@ -244,7 +247,7 @@ CZERWONY → ŻÓŁTY → POMARAŃCZOWY → ZIELONY
 → NIEBIESKI → FIOLETOWY → BIAŁY
 ```
 
-Biel oznacza maksimum. METAL i WATER są późniejszą warstwą advanced tuning / amplification istniejącego pola, nie osobnym polem. Oba docelowo mają rotację skrzydłową i pochył zgodne z filozofią `0° = OFF`, a następnie trzech poziomów tylko w jednym kierunku z target detentami `13° / 23° / 36°`. Sprzężenie osi, kombinacje poziomów, scoring, mapping gestu i dokładne role w descriptorze pozostają otwarte.
+Biel oznacza maksimum. METAL i WATER są późniejszą warstwą advanced tuning / amplification istniejącego pola, nie osobnym polem. Oba docelowo mają rotację skrzydłową i pochył zgodne z filozofią `0° = OFF`, a następnie trzech poziomów tylko w jednym kierunku z target detentami `13° / 23° / 36°`. Sprzężenie osi, kombinacje poziomów, mapping gestu i dokładne role w descriptorze pozostają otwarte.
 
 ### `progression.resonator.fullArray`
 
