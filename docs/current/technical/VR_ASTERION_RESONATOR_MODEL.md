@@ -42,13 +42,13 @@ Panel Y i Guidance ujawniają wiedzę według Scenario oraz wiedzy już zdobytej
 Źródłem materializacji Zwornika jest ukończenie wszystkich paneli odpowiadającego sektora:
 
 ```text
-sector complete → target live HIDDEN → ARRIVING (3.0 s) → DOCKED → trwały Zwornik Runiczny
+sector complete → target live HIDDEN → ARRIVING (4.0 s) → DOCKED → trwały Zwornik Runiczny
 future presentation observes transition → RUNE_BINDER_REVEAL
 ```
 
 Zwornik nie materializuje się podczas instalowania kamienia. EARTH, WOOD i FIRE mogą dlatego istnieć przed ukończeniem pełnego trzeciego kręgu. Po reveal pozostaje trwałym elementem sektora i miejscem późniejszego związania właściwego Rune Stone.
 
-Obrót lub spin Zwornika nie należy do target canon. Historyczne `ORBITING` zostało usunięte; settled installed state to `BOUND`. Current runtime materializuje Zwornik natychmiast w `DOCKED`; wiążący target live transition wprowadza semantyczne `ARRIVING`: start 130 m dalej radialnie, jeden owner translacji i dokładnie 3.0 s do canonical final position. Installation readiness zaczyna się dopiero w `DOCKED`. Hydration, reconstruction i debug restoration odtwarzają bezgłośnie finalny `DOCKED` bez arrival replay.
+Obrót lub spin Zwornika nie należy do target canon. Historyczne `ORBITING` zostało usunięte; settled installed state to `BOUND`. Current runtime materializuje Zwornik natychmiast w `DOCKED`; wiążący target live transition wprowadza semantyczne `ARRIVING`: start 130 m dalej radialnie, jeden owner translacji i dokładnie 4.0 s do canonical final position. `electricity_short_06.mp3` pozostaje przypisane do startu w `t=0.0 s`, a branch-specific `zwornik_*` do fizycznego zakończenia arrival w `t=4.0 s`. Installation readiness zaczyna się dopiero w `DOCKED`. Hydration, reconstruction i debug restoration odtwarzają bezgłośnie finalny `DOCKED` bez arrival replay.
 
 ### Niezależność prezentacji i kotwicy
 
