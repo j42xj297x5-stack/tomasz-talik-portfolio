@@ -19,7 +19,7 @@ const EPSILON = 1e-6;
 
 const SECTOR_DEFINITIONS = Object.freeze({
   'ethics-life-protection': Object.freeze({ branchId: 'earth', motionAxis: Object.freeze({ x: Math.sin(HALF_SECTOR_ANGLE), y: 0, z: Math.cos(HALF_SECTOR_ANGLE) }), gestureAxis: Object.freeze({ x: 0, y: 0, z: 1 }), gestureSign: 1, motionSign: 1, hinge: 'ORIGIN' }),
-  'ai-guide': Object.freeze({ branchId: 'wood', motionAxis: Object.freeze({ x: -Math.sin(HALF_SECTOR_ANGLE), y: 0, z: Math.cos(HALF_SECTOR_ANGLE) }), gestureAxis: Object.freeze({ x: 0, y: 0, z: 1 }), gestureSign: 1, motionSign: -1, hinge: 'ORIGIN' }),
+  'ai-guide': Object.freeze({ branchId: 'wood', motionAxis: Object.freeze({ x: -Math.sin(HALF_SECTOR_ANGLE), y: 0, z: Math.cos(HALF_SECTOR_ANGLE) }), gestureAxis: Object.freeze({ x: 0, y: 0, z: 1 }), gestureSign: -1, motionSign: -1, hinge: 'ORIGIN' }),
   'creative-ai': Object.freeze({ branchId: 'fire', motionAxis: Object.freeze({ x: 1, y: 0, z: 0 }), gestureAxis: Object.freeze({ x: 1, y: 0, z: 0 }), gestureSign: -1, motionSign: 1, hinge: 'MIN_Z' })
 });
 
@@ -35,21 +35,16 @@ export function createVrAsterionSectorControlInteraction({
   const config = {
     angularSpeedDegrees: Math.max(0.1, Number(settings.angularSpeedDegrees) || 16),
     detentPauseSeconds: Math.max(0, Number(settings.detentPauseSeconds) || 0.12),
-    sideGestureEngageDegrees: Math.max(1, Number(settings.sideGestureEngageDegrees) || 45),
-    fireGestureEngageDegrees: Math.max(1, Number(settings.fireGestureEngageDegrees) || 30),
+    gestureMaxDegrees: Math.max(1, Number(settings.gestureMaxDegrees) || 90),
     gestureReleaseDegrees: Math.max(0, Number(settings.gestureReleaseDegrees) || 10)
   };
-  const SECTORS = Object.freeze(Object.fromEntries(Object.entries(SECTOR_DEFINITIONS).map(([glyphId, descriptor]) => [
-    glyphId,
-    Object.freeze({
-      ...descriptor,
-      gestureEngageDegrees: descriptor.branchId === 'fire'
-        ? config.fireGestureEngageDegrees : config.sideGestureEngageDegrees
-    })
-  ])));
+  const SECTORS = SECTOR_DEFINITIONS;
   const sectorStates = new Map(Object.keys(SECTORS).map((glyphId) => [glyphId, {
     committedLevel: 0,
-    currentAngleDegrees: 0
+    currentAngleDegrees: 0,
+    pendingSourceLevel: null,
+    pendingLevel: null,
+    pendingDirection: 0
   }]));
   const listeners = new Set();
   const neutralControllerQuaternion = new THREE.Quaternion();
@@ -120,15 +115,14 @@ export function createVrAsterionSectorControlInteraction({
     const descriptor = SECTORS[glyphId];
     const component = deltaQuaternion.x * descriptor.gestureAxis.x
       + deltaQuaternion.y * descriptor.gestureAxis.y + deltaQuaternion.z * descriptor.gestureAxis.z;
-    const signedDegrees = 2 * Math.atan2(component, Math.abs(deltaQuaternion.w))
+    const measuredDegrees = 2 * Math.atan2(component, Math.abs(deltaQuaternion.w))
       * RAD_TO_DEG * descriptor.gestureSign;
-    if (intent === 0) {
-      if (signedDegrees >= descriptor.gestureEngageDegrees) return 1;
-      if (signedDegrees <= -descriptor.gestureEngageDegrees) return -1;
-      return 0;
-    }
-    if (intent > 0) return signedDegrees <= config.gestureReleaseDegrees ? 0 : 1;
-    return signedDegrees >= -config.gestureReleaseDegrees ? 0 : -1;
+    const signedDegrees = THREE.MathUtils.clamp(
+      measuredDegrees, -config.gestureMaxDegrees, config.gestureMaxDegrees
+    );
+    if (signedDegrees > config.gestureReleaseDegrees) return 1;
+    if (signedDegrees < -config.gestureReleaseDegrees) return -1;
+    return 0;
   }
 
   function emitDetent(glyphId, previousLevel, level, direction) {
@@ -144,41 +138,59 @@ export function createVrAsterionSectorControlInteraction({
     [...listeners].forEach((listener) => listener(event));
   }
 
-  function settle(delta) {
-    if (!movingGlyphId) return;
-    const state = sectorStates.get(movingGlyphId);
-    const target = DETENT_ANGLES_DEGREES[state.committedLevel];
-    state.currentAngleDegrees = clampStep(state.currentAngleDegrees, target, config.angularSpeedDegrees * delta);
-    applyMotion(movingGlyphId);
-    if (Math.abs(state.currentAngleDegrees - target) <= EPSILON) {
-      state.currentAngleDegrees = target;
-      applyMotion(movingGlyphId);
-      movingGlyphId = null;
-      phase = VR_ASTERION_SECTOR_CONTROL_PHASES.IDLE;
-    }
+  function clearPending(state) {
+    state.pendingSourceLevel = null;
+    state.pendingLevel = null;
+    state.pendingDirection = 0;
   }
 
-  function drive(delta) {
-    const state = sectorStates.get(lockedGlyphId);
-    const targetLevel = state.committedLevel + driveDirection;
+  function beginStep(glyphId, direction) {
+    const state = sectorStates.get(glyphId);
+    const targetLevel = state.committedLevel + direction;
     if (targetLevel < 0 || targetLevel >= DETENT_ANGLES_DEGREES.length) {
       phase = VR_ASTERION_SECTOR_CONTROL_PHASES.IDLE;
       movingGlyphId = null;
-      return;
+      driveDirection = 0;
+      return false;
     }
+    state.pendingSourceLevel = state.committedLevel;
+    state.pendingLevel = targetLevel;
+    state.pendingDirection = direction;
+    movingGlyphId = glyphId;
+    driveDirection = direction;
+    phase = VR_ASTERION_SECTOR_CONTROL_PHASES.DRIVING;
+    return true;
+  }
+
+  function advancePending(delta, activelyDriven, controlAvailable) {
+    if (!movingGlyphId) return;
+    const state = sectorStates.get(movingGlyphId);
+    if (!state || state.pendingLevel === null) return;
+    phase = activelyDriven
+      ? VR_ASTERION_SECTOR_CONTROL_PHASES.DRIVING
+      : VR_ASTERION_SECTOR_CONTROL_PHASES.SETTLING;
+    const targetLevel = state.pendingLevel;
     const targetAngle = DETENT_ANGLES_DEGREES[targetLevel];
     state.currentAngleDegrees = clampStep(state.currentAngleDegrees, targetAngle, config.angularSpeedDegrees * delta);
-    movingGlyphId = lockedGlyphId;
-    phase = VR_ASTERION_SECTOR_CONTROL_PHASES.DRIVING;
-    applyMotion(lockedGlyphId);
+    applyMotion(movingGlyphId);
     if (Math.abs(state.currentAngleDegrees - targetAngle) > EPSILON) return;
-    const previousLevel = state.committedLevel;
+    const completedGlyphId = movingGlyphId;
+    const previousLevel = state.pendingSourceLevel;
+    const direction = state.pendingDirection;
     state.currentAngleDegrees = targetAngle;
     state.committedLevel = targetLevel;
-    applyMotion(lockedGlyphId);
-    phase = VR_ASTERION_SECTOR_CONTROL_PHASES.DETENT_HOLD;
-    holdRemaining = config.detentPauseSeconds;
-    emitDetent(lockedGlyphId, previousLevel, targetLevel, driveDirection);
+    clearPending(state);
+    applyMotion(completedGlyphId);
+    emitDetent(completedGlyphId, previousLevel, targetLevel, direction);
+    movingGlyphId = null;
+    if (controlAvailable) {
+      phase = VR_ASTERION_SECTOR_CONTROL_PHASES.DETENT_HOLD;
+      holdRemaining = config.detentPauseSeconds;
+      driveDirection = direction;
+    } else {
+      phase = VR_ASTERION_SECTOR_CONTROL_PHASES.IDLE;
+      driveDirection = 0;
+    }
   }
 
   function update(delta = 0) {
@@ -190,26 +202,22 @@ export function createVrAsterionSectorControlInteraction({
     const leftRecord = getLeftRecord();
 
     if (!available) {
-      if (acquisitionGlyphId === lockedGlyphId) {
-        controlWasAvailable = false;
-        neutralValid = false;
-        intent = 0;
-        return;
-      }
       controlWasAvailable = false;
+      neutralValid = false;
       intent = 0;
-      const releasedState = sectorStates.get(lockedGlyphId);
-      const releasedTarget = releasedState ? DETENT_ANGLES_DEGREES[releasedState.committedLevel] : null;
-      if (releasedState && Math.abs(releasedState.currentAngleDegrees - releasedTarget) > EPSILON) {
-        movingGlyphId = lockedGlyphId;
-        phase = VR_ASTERION_SECTOR_CONTROL_PHASES.SETTLING;
-      } else if (phase === VR_ASTERION_SECTOR_CONTROL_PHASES.DRIVING
-        || phase === VR_ASTERION_SECTOR_CONTROL_PHASES.DETENT_HOLD) {
-        movingGlyphId = null;
+      if (movingGlyphId) advancePending(safeDelta, false, false);
+      else {
         phase = VR_ASTERION_SECTOR_CONTROL_PHASES.IDLE;
+        holdRemaining = 0;
+        driveDirection = 0;
+        if (!acquisitionGlyphId) lockedGlyphId = null;
       }
-      if (phase === VR_ASTERION_SECTOR_CONTROL_PHASES.SETTLING) settle(safeDelta);
-      if (!acquisitionGlyphId && phase !== VR_ASTERION_SECTOR_CONTROL_PHASES.SETTLING) lockedGlyphId = null;
+      return;
+    }
+
+    if (movingGlyphId && acquisitionGlyphId !== movingGlyphId) {
+      intent = 0;
+      advancePending(safeDelta, false, false);
       return;
     }
 
@@ -220,15 +228,14 @@ export function createVrAsterionSectorControlInteraction({
     controlWasAvailable = true;
     intent = readIntent(lockedGlyphId, leftRecord);
 
-    if (phase === VR_ASTERION_SECTOR_CONTROL_PHASES.SETTLING) {
-      settle(safeDelta);
+    if (movingGlyphId) {
+      advancePending(safeDelta, intent === driveDirection, true);
       return;
     }
     if (phase === VR_ASTERION_SECTOR_CONTROL_PHASES.DETENT_HOLD) {
       holdRemaining = Math.max(0, holdRemaining - safeDelta);
       if (holdRemaining > 0) return;
       phase = VR_ASTERION_SECTOR_CONTROL_PHASES.IDLE;
-      movingGlyphId = null;
       if (intent !== driveDirection) return;
     }
     if (intent === 0) {
@@ -236,8 +243,7 @@ export function createVrAsterionSectorControlInteraction({
       movingGlyphId = null;
       return;
     }
-    driveDirection = intent;
-    drive(safeDelta);
+    if (beginStep(lockedGlyphId, intent)) advancePending(safeDelta, true, true);
   }
 
   function reset() {
@@ -245,6 +251,7 @@ export function createVrAsterionSectorControlInteraction({
     sectorStates.forEach((state, glyphId) => {
       state.committedLevel = 0;
       state.currentAngleDegrees = 0;
+      clearPending(state);
       progressFloor.resetSectorMotion(glyphId);
     });
     phase = VR_ASTERION_SECTOR_CONTROL_PHASES.IDLE;
