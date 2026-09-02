@@ -1,5 +1,4 @@
 import * as THREE from '../../vendor/three.js';
-import { createVrTargetHalo } from '../createVrTargetHalo.js';
 import { VR_ATTRACTOR_BANDS, VR_RIGHT_HAND_MODES } from '../input/createVrHandModeController.js';
 import { createVrAttractorScanCone, selectAttractorConeTarget } from '../tools/createVrAttractorScanCone.js';
 import { VR_ATTRACTOR_STATES } from '../tools/createVrAttractorTool.js';
@@ -9,8 +8,9 @@ const STATE = Object.freeze({ ORBIT: 'ORBIT', PULLING: 'PULLING', CAPTURED: 'CAP
 const clamp01 = (value) => Math.min(1, Math.max(0, value));
 
 export function createVrLargeGlyphAttractorInteraction({ controllers, largeGlyphActor, handModeController,
-  semanticInput, attractorTool, protoAstroTuningController, maxTargetDistance, settings, haloSettings,
+  semanticInput, attractorTool, protoAstroTuningController, maxTargetDistance, settings,
   canScanLargeGlyphs = () => false, canTargetLargeGlyphs = () => false, canPullLargeGlyphs = () => false,
+  isTargetPullReady = () => false,
   isHigherPriorityInteractionActive = () => false, onPullStart = () => {}, onPullCancel = () => {} }) {
   if (!Array.isArray(controllers)) throw new TypeError('controllers must be an array.');
   if (!Array.isArray(largeGlyphActor?.nodes) || !largeGlyphActor?.beginTransient
@@ -24,7 +24,6 @@ export function createVrLargeGlyphAttractorInteraction({ controllers, largeGlyph
       throw new TypeError(`settings.${key} must be non-negative.`); });
   const scanCone = createVrAttractorScanCone({ parent: null, length: maxTargetDistance, settings: settings.scanCone });
   const states = new Map(nodes.map((node) => [node, STATE.ORBIT]));
-  const halos = new Map(nodes.map((node) => [node, createVrTargetHalo({ root: node, settings: haloSettings })]));
   const box = new THREE.Box3(), sphere = new THREE.Sphere(), origin = new THREE.Vector3();
   const direction = new THREE.Vector3(), position = new THREE.Vector3(), anchor = new THREE.Vector3();
   const local = new THREE.Vector3(), quaternion = new THREE.Quaternion();
@@ -37,9 +36,9 @@ export function createVrLargeGlyphAttractorInteraction({ controllers, largeGlyph
   const ownsBand = () => handModeController.getAttractorBand() === VR_ATTRACTOR_BANDS.LARGE_GLYPHS
     && handModeController.getRightMode() === VR_RIGHT_HAND_MODES.ASTRO_ATTRACTOR;
   const legal = (node) => states.get(node) === STATE.ORBIT && node?.visible !== false && node.parent
-    && canTargetLargeGlyphs() === true && protoAstroTuningController.canAttractLargeGlyph(node.userData.id) === true;
-  function setTarget(next) { if (target === next) return; if (target) halos.get(target)?.setVisible(false);
-    target = next; if (target) halos.get(target)?.setVisible(true); }
+    && canTargetLargeGlyphs() === true && protoAstroTuningController.canAttractLargeGlyph(node.userData.id) === true
+    && isTargetPullReady(node) === true;
+  function setTarget(next) { target = next; }
   function setWorldPosition(node, world) { local.copy(world); node.parent.worldToLocal(local); node.position.copy(local); }
   function updateCaptureAnchor(record, node) { record.controller.getWorldQuaternion(quaternion);
     direction.copy(LOCAL_DIRECTION).applyQuaternion(quaternion).normalize();
@@ -78,16 +77,17 @@ export function createVrLargeGlyphAttractorInteraction({ controllers, largeGlyph
     if (scanCone.object.parent !== right.controller) right.controller.add(scanCone.object); scanCone.update(delta, true);
     if (active) {
       if (primaryAction <= settings.triggerThreshold || canPullLargeGlyphs() !== true
-        || !protoAstroTuningController.canAttractLargeGlyph(active.userData.id) || !ownsBand()) { beginReturn(active); return; }
+        || !protoAstroTuningController.canAttractLargeGlyph(active.userData.id) || !ownsBand()
+        || isTargetPullReady(active) !== true) { beginReturn(active); return; }
       updateCaptureAnchor(right, active); active.getWorldPosition(position); const distance = position.distanceTo(anchor);
       if (states.get(active) === STATE.CAPTURED || distance <= settings.captureRadius) {
         states.set(active, STATE.CAPTURED); setWorldPosition(active, anchor);
-        halos.get(active)?.update(delta); attractorTool.setPullStrength(1); attractorTool.setState(VR_ATTRACTOR_STATES.CAPTURED); return;
+        attractorTool.setPullStrength(1); attractorTool.setState(VR_ATTRACTOR_STATES.CAPTURED); return;
       }
       pullSpeed = Math.min(settings.maxPullSpeed, pullSpeed + settings.pullAcceleration * delta);
       position.add(direction.subVectors(anchor, position).normalize().multiplyScalar(Math.min(distance, pullSpeed * delta)));
       setWorldPosition(active, position);
-      halos.get(active)?.update(delta); attractorTool.setPullStrength(clamp01(1 - distance / pullStartDistance));
+      attractorTool.setPullStrength(clamp01(1 - distance / pullStartDistance));
       attractorTool.setState(VR_ATTRACTOR_STATES.PULLING); return;
     }
     if (isHigherPriorityInteractionActive(right) === true || canTargetLargeGlyphs() !== true) { setTarget(null);
@@ -99,8 +99,8 @@ export function createVrLargeGlyphAttractorInteraction({ controllers, largeGlyph
     setTarget(hit?.target ?? null); attractorTool.setTarget(hit ? { target, distance: hit.distance,
       proximity: clamp01(1 - hit.distance / maxTargetDistance) } : null); attractorTool.setPullStrength(0);
     attractorTool.setState(hit ? VR_ATTRACTOR_STATES.TARGETING : VR_ATTRACTOR_STATES.IDLE);
-    if (target) halos.get(target)?.update(delta);
-    if (target && primaryAction > settings.triggerThreshold && canPullLargeGlyphs() === true) {
+    if (target && primaryAction > settings.triggerThreshold && canPullLargeGlyphs() === true
+      && isTargetPullReady(target) === true) {
       active = target; setTarget(null); largeGlyphActor.beginTransient(active);
       states.set(active, STATE.PULLING); active.getWorldPosition(position); updateCaptureAnchor(right, active);
       pullStartDistance = Math.max(position.distanceTo(anchor), 1e-6); pullSpeed = 0;
@@ -109,8 +109,8 @@ export function createVrLargeGlyphAttractorInteraction({ controllers, largeGlyph
   }
   function reset() { const leased = active ?? returning?.node; if (leased) { onPullCancel({ target: leased }); largeGlyphActor.restoreToSlot(leased);
       states.set(leased, STATE.ORBIT); } active = null; returning = null; pullSpeed = 0; setTarget(null);
-    scanCone.update(0, false); halos.forEach((halo) => halo.setVisible(false)); attractorTool.setTarget(null);
+    scanCone.update(0, false); attractorTool.setTarget(null);
     attractorTool.setPullStrength(0); }
-  function dispose() { if (disposed) return; reset(); scanCone.dispose(); halos.forEach((halo) => halo.dispose()); halos.clear(); disposed = true; }
+  function dispose() { if (disposed) return; reset(); scanCone.dispose(); disposed = true; }
   return { scanCone, update, reset, dispose, getTarget: () => target };
 }

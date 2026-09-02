@@ -1051,10 +1051,10 @@ largeGlyphAttractorInteraction = createVrLargeGlyphAttractorInteraction({
     captureRadius: settings.shellAttractor.captureRadius, returnDuration: settings.shellAttractor.returnDuration,
     minimumClearance: settings.largeGlyphAttractor.minimumClearance,
     scanCone: { ...settings.shellAttractor.scanCone, color: settings.attractorPresentation.bandColors.largeGlyphs } },
-  haloSettings: settings.targetHalo,
   canScanLargeGlyphs: () => runtimeExperience?.can(VR_SCENARIO_CAPABILITY.CAN_SCAN_LARGE_GLYPHS) === true,
   canTargetLargeGlyphs: () => runtimeExperience?.can(VR_SCENARIO_CAPABILITY.CAN_TARGET_LARGE_GLYPHS) === true,
   canPullLargeGlyphs: () => runtimeExperience?.can(VR_SCENARIO_CAPABILITY.CAN_PULL_LARGE_GLYPHS) === true,
+  isTargetPullReady: (node) => asterionResonatorTargetAcquisitionActor.isPullReady(node.userData.id),
   onPullStart: ({ target }) => vrAudio.startAttractor(target.userData.id, 'largeGlyph'),
   onPullCancel: ({ target }) => vrAudio.cancelAttractor(target.userData.id),
   isHigherPriorityInteractionActive: (record) => Boolean(activateButton.hits.get(record)
@@ -1463,6 +1463,8 @@ function renderFrame() {
   astroFurnaceRuneRecipeInteraction.reportHeldSmallGlyph(smallGlyphAttractorInteraction?.heldGlyph);
   astroFurnaceRuneRecipeInteraction.update(delta);
   largeGlyphActor.update(delta);
+  asterionResonatorTargetAcquisitionActor.update(delta);
+  asterionResonatorTargetResponsePresentation.update(delta);
   largeGlyphAttractorInteraction.update(delta);
   postRingPresentation.update(delta);
   smallGlyphSystem.update(delta);
@@ -1506,8 +1508,6 @@ function renderFrame() {
   furnacePanel.update(delta);
   asterionSphere.update(delta);
   asterionGyroInteraction.update(delta);
-  asterionResonatorTargetAcquisitionActor.update(delta);
-  asterionResonatorTargetResponsePresentation.update(delta);
   vrAudio.setAsterionSphereState({
     equipped: asterionSphere.isEquipped(),
     driveActive: asterionGyroInteraction.isDriveActive()
