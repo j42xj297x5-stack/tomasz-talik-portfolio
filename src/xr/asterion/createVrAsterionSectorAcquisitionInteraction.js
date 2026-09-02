@@ -30,6 +30,7 @@ export function createVrAsterionSectorAcquisitionInteraction({
   let gripActive = false;
   let triggerPriority = false;
   let disposed = false;
+  const acquisitionStartedListeners = new Set();
   const lockListeners = new Set();
 
   const getLeftRecord = () => controllers.find(({ handedness }) => handedness === 'left') ?? null;
@@ -57,7 +58,7 @@ export function createVrAsterionSectorAcquisitionInteraction({
     if (hit) {
       const runeStone = resolveRuneStoneByBranchId(hit.branchId);
       if (runeStone && runeStoneProgressionController.isFamilyInstalled(runeStone.familyCode)) {
-        return { glyphId: hit.glyphId };
+        return { glyphId: hit.glyphId, branchId: hit.branchId };
       }
     }
     return null;
@@ -96,6 +97,9 @@ export function createVrAsterionSectorAcquisitionInteraction({
     if (candidateGlyphId !== candidate.glyphId) {
       candidateGlyphId = candidate.glyphId;
       acquisitionSeconds = 0;
+      state = VR_ASTERION_SECTOR_ACQUISITION_STATES.ACQUIRING;
+      const event = Object.freeze({ glyphId: candidate.glyphId, branchId: candidate.branchId });
+      [...acquisitionStartedListeners].forEach((listener) => listener(event));
     }
     state = VR_ASTERION_SECTOR_ACQUISITION_STATES.ACQUIRING;
     acquisitionSeconds += Math.max(0, Number.isFinite(delta) ? delta : 0);
@@ -108,7 +112,13 @@ export function createVrAsterionSectorAcquisitionInteraction({
   }
 
   function reset() { if (!disposed) clearSession(); }
-  function dispose() { if (disposed) return; clearSession(); lockListeners.clear(); disposed = true; }
+  function dispose() {
+    if (disposed) return;
+    clearSession();
+    acquisitionStartedListeners.clear();
+    lockListeners.clear();
+    disposed = true;
+  }
 
   return {
     update,
@@ -118,6 +128,11 @@ export function createVrAsterionSectorAcquisitionInteraction({
     getCandidateGlyphId: () => candidateGlyphId,
     getLockedGlyphId: () => lockedGlyphId,
     getAcquisitionProgress: () => Math.min(1, Math.max(0, acquisitionSeconds / SECTOR_LOCK_DWELL_SECONDS)),
+    subscribeAcquisitionStarted(listener) {
+      if (typeof listener !== 'function' || disposed) return () => {};
+      acquisitionStartedListeners.add(listener);
+      return () => acquisitionStartedListeners.delete(listener);
+    },
     subscribeLocked(listener) {
       if (typeof listener !== 'function' || disposed) return () => {};
       lockListeners.add(listener);

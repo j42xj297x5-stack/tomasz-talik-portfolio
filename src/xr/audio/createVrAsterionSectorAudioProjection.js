@@ -12,12 +12,12 @@ export const ASTERION_SECTOR_DRIVE_AUDIO = Object.freeze({
 });
 
 export function createVrAsterionSectorAudioProjection({ audioBridge, acquisitionInteraction, sectorControlInteraction }) {
-  if (!audioBridge?.playOneShot || !acquisitionInteraction?.subscribeLocked
+  if (!audioBridge?.playOneShot || !acquisitionInteraction?.subscribeAcquisitionStarted
     || !sectorControlInteraction?.subscribeDriveActivity || !sectorControlInteraction?.supportsGlyph) {
     throw new TypeError('[VrAsterionSectorAudioProjection] Audio and sector interaction access is required.');
   }
   let disposed = false;
-  const unsubscribeLocked = acquisitionInteraction.subscribeLocked(({ glyphId }) => {
+  const unsubscribeAcquisitionStarted = acquisitionInteraction.subscribeAcquisitionStarted(({ glyphId }) => {
     if (disposed || !sectorControlInteraction.supportsGlyph(glyphId)) return;
     const path = ASTERION_SECTOR_ACQUISITION_AUDIO[glyphId];
     if (path) audioBridge.playOneShot(path, 'WORLD');
@@ -28,6 +28,6 @@ export function createVrAsterionSectorAudioProjection({ audioBridge, acquisition
     else audioBridge.fadeSectorDrive(glyphId);
   });
   function reset() { if (!disposed) audioBridge.resetSectorDriveAudio(); }
-  function dispose() { if (disposed) return; disposed = true; unsubscribeLocked(); unsubscribeDrive(); audioBridge.resetSectorDriveAudio(); }
+  function dispose() { if (disposed) return; disposed = true; unsubscribeAcquisitionStarted(); unsubscribeDrive(); audioBridge.resetSectorDriveAudio(); }
   return { reset, dispose };
 }
