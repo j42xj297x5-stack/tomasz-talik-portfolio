@@ -139,6 +139,19 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
     acquisitionGlowOpacity: 0.34,
     lockedGlowOpacity: 0.42
   },
+  asterionTargetResponse: {
+    familyColors: { K: 0xc8752a, T: 0x8cd1ff, S: 0x35a9ff, L: 0x29e86f, R: 0xff4b2b },
+    signAngularHeightDegrees: 2.2,
+    signVerticalOffsetDegrees: 2.8,
+    signOpacity: 0.92,
+    ringAngularDiametersDegrees: [3.4, 4.1, 4.8],
+    ringLineWidthFraction: 0.018,
+    ringOpacity: 0.68,
+    pullReadyPulsePeriodSeconds: 2.4,
+    pullReadyPulseOpacityMin: 0.42,
+    pullReadyPulseOpacityMax: 0.88,
+    pullReadyPulseScaleAmplitude: 0.035
+  },
   playerGuidePanel: {
     enabled: true,
     width: 0.34,
@@ -636,6 +649,19 @@ export function normalizeExperienceVrSettings(candidate) {
       acquisitionPulseHz: finiteNumber(candidate.asterionSectorBeam?.acquisitionPulseHz, defaults.asterionSectorBeam.acquisitionPulseHz, { min: 0, max: 12 }),
       acquisitionGlowOpacity: finiteNumber(candidate.asterionSectorBeam?.acquisitionGlowOpacity, defaults.asterionSectorBeam.acquisitionGlowOpacity, { min: 0, max: 1 }),
       lockedGlowOpacity: finiteNumber(candidate.asterionSectorBeam?.lockedGlowOpacity, defaults.asterionSectorBeam.lockedGlowOpacity, { min: 0, max: 1 })
+    },
+    asterionTargetResponse: {
+      familyColors: { ...defaults.asterionTargetResponse.familyColors, ...(candidate.asterionTargetResponse?.familyColors ?? {}) },
+      signAngularHeightDegrees: finiteNumber(candidate.asterionTargetResponse?.signAngularHeightDegrees, defaults.asterionTargetResponse.signAngularHeightDegrees, { min: 0.1, max: 20 }),
+      signVerticalOffsetDegrees: finiteNumber(candidate.asterionTargetResponse?.signVerticalOffsetDegrees, defaults.asterionTargetResponse.signVerticalOffsetDegrees, { min: 0, max: 20 }),
+      signOpacity: finiteNumber(candidate.asterionTargetResponse?.signOpacity, defaults.asterionTargetResponse.signOpacity, { min: 0, max: 1 }),
+      ringAngularDiametersDegrees: [0, 1, 2].map((index) => finiteNumber(candidate.asterionTargetResponse?.ringAngularDiametersDegrees?.[index], defaults.asterionTargetResponse.ringAngularDiametersDegrees[index], { min: 0.1, max: 30 })),
+      ringLineWidthFraction: finiteNumber(candidate.asterionTargetResponse?.ringLineWidthFraction, defaults.asterionTargetResponse.ringLineWidthFraction, { min: 0.001, max: 0.25 }),
+      ringOpacity: finiteNumber(candidate.asterionTargetResponse?.ringOpacity, defaults.asterionTargetResponse.ringOpacity, { min: 0, max: 1 }),
+      pullReadyPulsePeriodSeconds: finiteNumber(candidate.asterionTargetResponse?.pullReadyPulsePeriodSeconds, defaults.asterionTargetResponse.pullReadyPulsePeriodSeconds, { min: 0.1, max: 30 }),
+      pullReadyPulseOpacityMin: finiteNumber(candidate.asterionTargetResponse?.pullReadyPulseOpacityMin, defaults.asterionTargetResponse.pullReadyPulseOpacityMin, { min: 0, max: 1 }),
+      pullReadyPulseOpacityMax: finiteNumber(candidate.asterionTargetResponse?.pullReadyPulseOpacityMax, defaults.asterionTargetResponse.pullReadyPulseOpacityMax, { min: 0, max: 1 }),
+      pullReadyPulseScaleAmplitude: finiteNumber(candidate.asterionTargetResponse?.pullReadyPulseScaleAmplitude, defaults.asterionTargetResponse.pullReadyPulseScaleAmplitude, { min: 0, max: 0.5 })
     },
     playerGuidePanel: {
       enabled: typeof candidate.playerGuidePanel?.enabled === 'boolean' ? candidate.playerGuidePanel.enabled : defaults.playerGuidePanel.enabled,
