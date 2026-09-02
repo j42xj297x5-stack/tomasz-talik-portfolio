@@ -271,6 +271,68 @@ class AudioManager {
     return handle;
   }
 
+  async startVrSpatialProcessSource(path, bus = 'WORLD', { loop = false,
+    maxDistanceMeters = 2, refDistanceMeters = 0.25, panningModel = 'HRTF',
+    distanceModel = 'linear', rolloffFactor = 1 } = {}) {
+    if (!VR_AUDIO_BUSES.includes(bus) || !await this.unlock()) return null;
+    const buffer = this.buffers.get(path), context = this.context, busNode = this.vrBusNodes.get(bus);
+    if (!buffer || !context || !busNode) return null;
+    const source = context.createBufferSource(), sourceGain = context.createGain(), panner = context.createPanner();
+    source.buffer = buffer; source.loop = loop; sourceGain.gain.value = 1;
+    panner.panningModel = panningModel; panner.distanceModel = distanceModel;
+    panner.maxDistance = maxDistanceMeters; panner.refDistance = refDistanceMeters; panner.rolloffFactor = rolloffFactor;
+    source.connect(sourceGain).connect(panner).connect(busNode);
+    let endedCallback = null, cleaned = false, ramp = null;
+    const handle = {
+      setPosition(x, y, z) {
+        if (cleaned) return;
+        const now = context.currentTime;
+        if (panner.positionX?.setValueAtTime) {
+          panner.positionX.setValueAtTime(x, now); panner.positionY.setValueAtTime(y, now); panner.positionZ.setValueAtTime(z, now);
+        } else panner.setPosition?.(x, y, z);
+      },
+      rampTo(target, duration) {
+        if (cleaned) return;
+        const now = context.currentTime, parameter = sourceGain.gain;
+        let current = parameter.value;
+        if (ramp && now < ramp.endsAt) current = ramp.from + (ramp.to - ramp.from)
+          * Math.max(0, Math.min(1, (now - ramp.startsAt) / (ramp.endsAt - ramp.startsAt)));
+        if (parameter.cancelAndHoldAtTime) parameter.cancelAndHoldAtTime(now);
+        else { parameter.cancelScheduledValues(now); parameter.setValueAtTime(current, now); }
+        const seconds = Math.max(0, duration), value = clamp01(target);
+        if (seconds === 0) parameter.setValueAtTime(value, now);
+        else parameter.linearRampToValueAtTime(value, now + seconds);
+        ramp = { from: current, to: value, startsAt: now, endsAt: now + seconds };
+      },
+      stop() { try { source.stop(); } catch (_) { /* Already stopped. */ } },
+      onEnded(callback) { endedCallback = callback; }
+    };
+    this.activeVrSources.add(handle);
+    source.onended = () => {
+      if (cleaned) return; cleaned = true; this.activeVrSources.delete(handle);
+      try { source.disconnect(); sourceGain.disconnect(); panner.disconnect(); } catch (_) { /* Already disconnected. */ }
+      endedCallback?.();
+    };
+    source.start();
+    return handle;
+  }
+
+  setVrSpatialListenerPose({ position, forward, up } = {}) {
+    const context = this.context;
+    if (!context || !position || !forward || !up) return false;
+    const listener = context.listener, now = context.currentTime;
+    if (listener.positionX?.setValueAtTime) {
+      listener.positionX.setValueAtTime(position.x, now); listener.positionY.setValueAtTime(position.y, now);
+      listener.positionZ.setValueAtTime(position.z, now); listener.forwardX.setValueAtTime(forward.x, now);
+      listener.forwardY.setValueAtTime(forward.y, now); listener.forwardZ.setValueAtTime(forward.z, now);
+      listener.upX.setValueAtTime(up.x, now); listener.upY.setValueAtTime(up.y, now); listener.upZ.setValueAtTime(up.z, now);
+    } else {
+      listener.setPosition?.(position.x, position.y, position.z);
+      listener.setOrientation?.(forward.x, forward.y, forward.z, up.x, up.y, up.z);
+    }
+    return true;
+  }
+
   async startVrFiniteSource(path, bus = 'AMBIENT', { repetitions = 1, fadeIn = 0, fadeOut = 0,
     seamGuard = path.endsWith('.mp3') ? VR_MP3_SEAM_GUARD_SECONDS : 0, signal } = {}) {
     if (!VR_AUDIO_BUSES.includes(bus)) return null;

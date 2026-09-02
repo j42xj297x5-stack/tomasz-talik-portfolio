@@ -347,6 +347,21 @@ export function createVrAudioBridge({ manager = audioManager, warn = console.war
     runOptional(`play ${path} on ${bus}`, (audio) => audio.playVrOneShot(path, bus));
   }
 
+  function startSpatialProcessSource(path, bus, options) {
+    if (disposed) return Promise.resolve(null);
+    try {
+      return Promise.resolve(manager.startVrSpatialProcessSource(path, bus, options))
+        .catch((error) => { reportFailure(`start spatial ${path}`, error); return null; });
+    } catch (error) {
+      reportFailure(`start spatial ${path}`, error);
+      return Promise.resolve(null);
+    }
+  }
+
+  function setSpatialListenerPose(pose) {
+    runOptional('update spatial listener pose', (audio) => audio.setVrSpatialListenerPose(pose));
+  }
+
   function startFiniteSource(path, bus, options) {
     if (disposed || options?.signal?.aborted) return Promise.resolve({ status: CANCELLED });
     try {
@@ -498,5 +513,6 @@ export function createVrAudioBridge({ manager = audioManager, warn = console.war
     startGlyphAcquisition, missGlyphAcquisition, setAsterionSphereState, resetAsterionSphereAudio,
     cancelGlyphAcquisition, completeGlyphAcquisition, startSectorDrive, fadeSectorDrive, resetSectorDriveAudio, dispose,
     startAttractor, missAttractor, cancelAttractor, handoffAttractor,
+    startSpatialProcessSource, setSpatialListenerPose,
     get glyphAcquisitionState() { return glyphState; }, get attractorState() { return attractorState; } };
 }
