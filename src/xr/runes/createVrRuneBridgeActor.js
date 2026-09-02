@@ -3,6 +3,7 @@ import * as THREE from '../../vendor/three.js';
 export const VR_RUNE_BRIDGE_BRANCH_IDS = Object.freeze(['earth', 'fire', 'wood', 'metal', 'water']);
 export const VR_RUNE_BRIDGE_STATES = Object.freeze({
   HIDDEN: 'HIDDEN',
+  ARRIVING: 'ARRIVING',
   DOCKED: 'DOCKED',
   EXTENDING: 'EXTENDING',
   EXTENDED: 'EXTENDED',
@@ -64,7 +65,8 @@ function copyTransformRelativeTo(source, relativeTo, target) {
 }
 
 export function createVrRuneBridgeActor({ assetManager, getSectorMount, extensionDurationSeconds,
-  hoverHeightMeters, presentationScale, radialPresentationOffsetMeters }) {
+  hoverHeightMeters, presentationScale, radialPresentationOffsetMeters,
+  arrivalDistanceMeters, arrivalDurationSeconds }) {
   if (!assetManager?.getGltf) throw new Error('[VrRuneBridgeActor] A preloaded AssetManager is required.');
   if (typeof getSectorMount !== 'function') throw new Error('[VrRuneBridgeActor] Sector mount access is required.');
   if (!Number.isFinite(extensionDurationSeconds) || extensionDurationSeconds <= 0) {
@@ -79,11 +81,18 @@ export function createVrRuneBridgeActor({ assetManager, getSectorMount, extensio
   if (!Number.isFinite(radialPresentationOffsetMeters) || radialPresentationOffsetMeters < 0) {
     throw new TypeError('[VrRuneBridgeActor] radialPresentationOffsetMeters must be finite and non-negative.');
   }
+  if (!Number.isFinite(arrivalDistanceMeters) || arrivalDistanceMeters <= 0) {
+    throw new TypeError('[VrRuneBridgeActor] arrivalDistanceMeters must be finite and positive.');
+  }
+  if (!Number.isFinite(arrivalDurationSeconds) || arrivalDurationSeconds <= 0) {
+    throw new TypeError('[VrRuneBridgeActor] arrivalDurationSeconds must be finite and positive.');
+  }
   const templateScene = assetManager.getGltf('vr-rune-bridge-model')?.scene;
   if (!templateScene) throw new Error('[VrRuneBridgeActor] Preloaded bridge.glb is required.');
   requireNodes(templateScene);
 
   const instances = new Map();
+  const listeners = new Set();
   let disposed = false;
   try {
     VR_RUNE_BRIDGE_BRANCH_IDS.forEach((branchId) => {
@@ -148,6 +157,8 @@ export function createVrRuneBridgeActor({ assetManager, getSectorMount, extensio
         revealMaterials,
         extensionDistance,
         extensionElapsed: 0,
+        arrivalElapsed: 0,
+        finalPresentationZ: radialPresentationOffsetMeters,
         state: VR_RUNE_BRIDGE_STATES.HIDDEN
       });
     });
@@ -160,6 +171,10 @@ export function createVrRuneBridgeActor({ assetManager, getSectorMount, extensio
   function setMotionBaseline(entry, z = 0) {
     entry.extensionElapsed = 0;
     entry.motionRoot.position.set(0, 0, z);
+  }
+  function emit(type, branchId, previousState, state) {
+    const event = Object.freeze({ type, branchId, previousState, state });
+    [...listeners].forEach((listener) => listener(event));
   }
   function transition(branchId, command, allowedStates, nextState) {
     const entry = getInstance(branchId);
@@ -184,6 +199,15 @@ export function createVrRuneBridgeActor({ assetManager, getSectorMount, extensio
     if (changed) setMotionBaseline(entry);
     if (changed && !ready) setRevealPresentationProgress(branchId, 1);
     return changed;
+  }
+  function beginArrival(branchId) {
+    const entry = getInstance(branchId);
+    const changed = transition(branchId, 'begin arrival', [VR_RUNE_BRIDGE_STATES.HIDDEN], VR_RUNE_BRIDGE_STATES.ARRIVING);
+    if (!changed) return false;
+    entry.arrivalElapsed = 0;
+    entry.presentationRoot.position.z = entry.finalPresentationZ + arrivalDistanceMeters;
+    emit('ARRIVAL_STARTED', String(branchId).toLowerCase(), VR_RUNE_BRIDGE_STATES.HIDDEN, VR_RUNE_BRIDGE_STATES.ARRIVING);
+    return true;
   }
   function setRevealPresentationProgress(branchId, progress) {
     const entry = getInstance(branchId);
@@ -241,6 +265,18 @@ export function createVrRuneBridgeActor({ assetManager, getSectorMount, extensio
     if (disposed) return;
     const delta = Math.max(0, Number.isFinite(deltaSeconds) ? deltaSeconds : 0);
     instances.forEach((entry) => {
+      if (entry.state === VR_RUNE_BRIDGE_STATES.ARRIVING) {
+        entry.arrivalElapsed = Math.min(arrivalDurationSeconds, entry.arrivalElapsed + delta);
+        const progress = smoothstep(entry.arrivalElapsed / arrivalDurationSeconds);
+        entry.presentationRoot.position.z = entry.finalPresentationZ + arrivalDistanceMeters * (1 - progress);
+        if (entry.arrivalElapsed >= arrivalDurationSeconds) {
+          entry.presentationRoot.position.z = entry.finalPresentationZ;
+          entry.arrivalElapsed = 0;
+          entry.state = VR_RUNE_BRIDGE_STATES.DOCKED;
+          emit('ARRIVAL_COMPLETED', entry.instance.userData.branchId, VR_RUNE_BRIDGE_STATES.ARRIVING, VR_RUNE_BRIDGE_STATES.DOCKED);
+        }
+        return;
+      }
       if (entry.state !== VR_RUNE_BRIDGE_STATES.EXTENDING) return;
       entry.extensionElapsed = Math.min(extensionDurationSeconds, entry.extensionElapsed + delta);
       const progress = entry.extensionElapsed / extensionDurationSeconds;
@@ -255,6 +291,8 @@ export function createVrRuneBridgeActor({ assetManager, getSectorMount, extensio
     instances.forEach((entry) => {
       entry.state = VR_RUNE_BRIDGE_STATES.HIDDEN;
       entry.instance.visible = false;
+      entry.arrivalElapsed = 0;
+      entry.presentationRoot.position.z = entry.finalPresentationZ;
       setMotionBaseline(entry);
       setRevealPresentationProgress(entry.instance.userData.branchId, 1);
     });
@@ -267,11 +305,13 @@ export function createVrRuneBridgeActor({ assetManager, getSectorMount, extensio
       revealMaterials.forEach(({ material }) => material.dispose());
     });
     instances.clear();
+    listeners.clear();
   }
 
   return {
     getState: (branchId) => getInstance(branchId)?.state ?? null,
     setInstallationReady,
+    beginArrival,
     beginExtension,
     cancelExtension,
     setInstalled,
@@ -288,6 +328,11 @@ export function createVrRuneBridgeActor({ assetManager, getSectorMount, extensio
     getBridgeRoot: (branchId) => getInstance(branchId)?.bridgeRoot ?? null,
     update,
     reset,
-    dispose
+    dispose,
+    subscribe(listener) {
+      if (disposed || typeof listener !== 'function') return () => {};
+      listeners.add(listener);
+      return () => listeners.delete(listener);
+    }
   };
 }

@@ -47,6 +47,7 @@ export function createVrAsterionSectorControlInteraction({
     pendingDirection: 0
   }]));
   const listeners = new Set();
+  const driveActivityListeners = new Set();
   const neutralControllerQuaternion = new THREE.Quaternion();
   const controlFrameQuaternion = new THREE.Quaternion();
   const currentControllerQuaternion = new THREE.Quaternion();
@@ -67,6 +68,19 @@ export function createVrAsterionSectorControlInteraction({
   let controlWasAvailable = false;
   let neutralValid = false;
   let disposed = false;
+  let driveActivityGlyphId = null;
+  let driveActivityActive = false;
+
+  function setDriveActivity(glyphId, active) {
+    const nextActive = Boolean(active && glyphId && SECTORS[glyphId]);
+    const nextGlyphId = nextActive ? glyphId : (driveActivityGlyphId ?? glyphId);
+    if (driveActivityActive === nextActive && (!nextActive || driveActivityGlyphId === nextGlyphId)) return;
+    driveActivityActive = nextActive;
+    driveActivityGlyphId = nextActive ? nextGlyphId : null;
+    if (!nextGlyphId || !SECTORS[nextGlyphId]) return;
+    const event = Object.freeze({ glyphId: nextGlyphId, branchId: SECTORS[nextGlyphId].branchId, active: nextActive });
+    [...driveActivityListeners].forEach((listener) => listener(event));
+  }
 
   const getLeftRecord = () => controllers.find(({ handedness, isConnected, grip }) => handedness === 'left' && isConnected && grip) ?? null;
 
@@ -202,6 +216,7 @@ export function createVrAsterionSectorControlInteraction({
     const leftRecord = getLeftRecord();
 
     if (!available) {
+      setDriveActivity(movingGlyphId ?? lockedGlyphId, false);
       controlWasAvailable = false;
       neutralValid = false;
       intent = 0;
@@ -216,6 +231,7 @@ export function createVrAsterionSectorControlInteraction({
     }
 
     if (movingGlyphId && acquisitionGlyphId !== movingGlyphId) {
+      setDriveActivity(movingGlyphId, false);
       intent = 0;
       advancePending(safeDelta, false, false);
       return;
@@ -229,25 +245,32 @@ export function createVrAsterionSectorControlInteraction({
     intent = readIntent(lockedGlyphId, leftRecord);
 
     if (movingGlyphId) {
+      setDriveActivity(movingGlyphId, intent === driveDirection);
       advancePending(safeDelta, intent === driveDirection, true);
       return;
     }
     if (phase === VR_ASTERION_SECTOR_CONTROL_PHASES.DETENT_HOLD) {
+      setDriveActivity(lockedGlyphId, intent === driveDirection);
       holdRemaining = Math.max(0, holdRemaining - safeDelta);
       if (holdRemaining > 0) return;
       phase = VR_ASTERION_SECTOR_CONTROL_PHASES.IDLE;
       if (intent !== driveDirection) return;
     }
     if (intent === 0) {
+      setDriveActivity(lockedGlyphId, false);
       phase = VR_ASTERION_SECTOR_CONTROL_PHASES.IDLE;
       movingGlyphId = null;
       return;
     }
-    if (beginStep(lockedGlyphId, intent)) advancePending(safeDelta, true, true);
+    if (beginStep(lockedGlyphId, intent)) {
+      setDriveActivity(lockedGlyphId, true);
+      advancePending(safeDelta, true, true);
+    } else setDriveActivity(lockedGlyphId, false);
   }
 
   function reset() {
     if (disposed) return;
+    setDriveActivity(movingGlyphId ?? lockedGlyphId, false);
     sectorStates.forEach((state, glyphId) => {
       state.committedLevel = 0;
       state.currentAngleDegrees = 0;
@@ -268,6 +291,7 @@ export function createVrAsterionSectorControlInteraction({
     if (disposed) return;
     reset();
     listeners.clear();
+    driveActivityListeners.clear();
     disposed = true;
   }
 
@@ -283,12 +307,18 @@ export function createVrAsterionSectorControlInteraction({
     }))),
     getMotionPhase: () => phase,
     getMovingGlyphId: () => movingGlyphId,
+    supportsGlyph: (glyphId) => Boolean(SECTORS[glyphId]),
     isMoving: () => phase === VR_ASTERION_SECTOR_CONTROL_PHASES.DRIVING
       || phase === VR_ASTERION_SECTOR_CONTROL_PHASES.SETTLING,
     subscribe(listener) {
       if (disposed || typeof listener !== 'function') return () => {};
       listeners.add(listener);
       return () => listeners.delete(listener);
+    },
+    subscribeDriveActivity(listener) {
+      if (disposed || typeof listener !== 'function') return () => {};
+      driveActivityListeners.add(listener);
+      return () => driveActivityListeners.delete(listener);
     }
   };
 }

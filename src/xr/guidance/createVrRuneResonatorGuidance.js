@@ -34,7 +34,7 @@ export function createVrRuneResonatorGuidance({ monkeyGuide, copy, secondsPerLin
   function schedule(communication) { communication.beginAttention(); }
   function notifyBridgeTransitions(transitions) {
     if (!armed || knowledgeResolver.hasDiscoveredBinders()) return;
-    if (transitions.some(({ previousState, state }) => previousState === 'HIDDEN' && state === 'DOCKED')) {
+    if (transitions.some(({ previousState, state }) => previousState === 'ARRIVING' && state === 'DOCKED')) {
       knowledgeResolver.unlockBinders();
     }
   }

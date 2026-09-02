@@ -216,7 +216,8 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
       pulseDuration: 1.6, radialSegments: 14 }
   },
   runeStoneInstallation: { handoffRadiusMeters: 10, hoverHeightMeters: 2, phaseDurationSeconds: 1.2 },
-  runeBridge: { presentationScale: 2, radialPresentationOffsetMeters: 1 },
+  runeBridge: { presentationScale: 2, radialPresentationOffsetMeters: 1,
+    arrivalDistanceMeters: 130, arrivalDurationSeconds: 3.0 },
   platformEnergyVfx: {
     enabled: true, maxActiveBolts: 12, segmentsPerBolt: 12, maxBranchesPerBolt: 3,
     underfloorOffsetMeters: 0.035, verticalJitterMeters: 0.025,
@@ -767,7 +768,11 @@ export function normalizeExperienceVrSettings(candidate) {
       presentationScale: finiteNumber(candidate.runeBridge?.presentationScale,
         defaults.runeBridge.presentationScale, { min: Number.EPSILON, max: 10 }),
       radialPresentationOffsetMeters: finiteNumber(candidate.runeBridge?.radialPresentationOffsetMeters,
-        defaults.runeBridge.radialPresentationOffsetMeters, { min: 0, max: 10 })
+        defaults.runeBridge.radialPresentationOffsetMeters, { min: 0, max: 10 }),
+      arrivalDistanceMeters: finiteNumber(candidate.runeBridge?.arrivalDistanceMeters,
+        defaults.runeBridge.arrivalDistanceMeters, { min: Number.EPSILON, max: 1000 }),
+      arrivalDurationSeconds: finiteNumber(candidate.runeBridge?.arrivalDurationSeconds,
+        defaults.runeBridge.arrivalDurationSeconds, { min: Number.EPSILON, max: 60 })
     },
     platformEnergyVfx: {
       enabled: typeof candidate.platformEnergyVfx?.enabled === 'boolean' ? candidate.platformEnergyVfx.enabled : defaults.platformEnergyVfx.enabled,

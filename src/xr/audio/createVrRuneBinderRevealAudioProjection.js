@@ -1,44 +1,26 @@
 export const BINDER_REVEAL_AUDIO = Object.freeze([
-  '/audio/creating_01.mp3',
-  '/audio/creating_02.mp3',
-  '/audio/creating_03.mp3'
+  '/audio/electricity_short_06.mp3',
+  '/audio/zwornik_01.mp3', '/audio/zwornik_02.mp3',
+  '/audio/zwornik_03.mp3', '/audio/zwornik_04.mp3'
 ]);
+const DOCK_AUDIO = Object.freeze({
+  earth: '/audio/zwornik_01.mp3', fire: '/audio/zwornik_02.mp3',
+  wood: '/audio/zwornik_03.mp3', metal: '/audio/zwornik_04.mp3', water: '/audio/zwornik_03.mp3'
+});
 
-export function createVrRuneBinderRevealAudioProjection({ audioBridge }) {
-  if (!audioBridge?.playOneShot) {
-    throw new TypeError('[VrRuneBinderRevealAudioProjection] VrAudioBridge access is required.');
+export function createVrRuneBinderRevealAudioProjection({ audioBridge, runeBridgeActor }) {
+  if (!audioBridge?.playOneShot || !runeBridgeActor?.subscribe) {
+    throw new TypeError('[VrRuneBinderRevealAudioProjection] Audio bridge and RuneBridgeActor access are required.');
   }
-
-  const presentedTransitions = new Set();
-  let cursor = 0;
   let disposed = false;
-
-  function presentReadinessTransitions(transitions) {
-    if (disposed || !Array.isArray(transitions)) return;
-    transitions.forEach((transition) => {
-      if (transition?.previousState !== 'HIDDEN' || transition?.state !== 'DOCKED') return;
-      const branchId = String(transition.branchId ?? '').toLowerCase();
-      const key = `${branchId}:HIDDEN:DOCKED`;
-      if (presentedTransitions.has(key)) return;
-
-      presentedTransitions.add(key);
-      const path = BINDER_REVEAL_AUDIO[cursor];
-      cursor = (cursor + 1) % BINDER_REVEAL_AUDIO.length;
-      audioBridge.playOneShot(path, 'WORLD');
-    });
-  }
-
-  function reset() {
+  const unsubscribe = runeBridgeActor.subscribe((event) => {
     if (disposed) return;
-    presentedTransitions.clear();
-    cursor = 0;
-  }
-
-  function dispose() {
-    disposed = true;
-    presentedTransitions.clear();
-    cursor = 0;
-  }
-
-  return { presentReadinessTransitions, reset, dispose };
+    if (event?.type === 'ARRIVAL_STARTED') audioBridge.playOneShot(BINDER_REVEAL_AUDIO[0], 'WORLD');
+    if (event?.type === 'ARRIVAL_COMPLETED' && DOCK_AUDIO[event.branchId]) {
+      audioBridge.playOneShot(DOCK_AUDIO[event.branchId], 'WORLD');
+    }
+  });
+  function reset() {}
+  function dispose() { if (disposed) return; disposed = true; unsubscribe(); }
+  return { reset, dispose };
 }

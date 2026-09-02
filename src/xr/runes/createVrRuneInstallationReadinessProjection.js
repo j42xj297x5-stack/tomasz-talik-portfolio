@@ -8,7 +8,7 @@ const PROGRESSION_BRANCH_BY_RUNE_BRANCH = Object.freeze({
   water: 'haiku-cosmos'
 });
 
-const LEGAL_READINESS_STATES = new Set(['HIDDEN', 'DOCKED']);
+const LEGAL_READINESS_STATES = new Set(['HIDDEN', 'ARRIVING', 'DOCKED']);
 
 export function createVrRuneInstallationReadinessProjection({
   isBranchComplete,
@@ -36,7 +36,7 @@ export function createVrRuneInstallationReadinessProjection({
     return branchIds.filter(isInstallationReady);
   }
 
-  function synchronizeBridges(runeBridgeActor) {
+  function synchronizeBridges(runeBridgeActor, { live = false } = {}) {
     if (!runeBridgeActor?.getState || !runeBridgeActor?.setInstallationReady) {
       throw new TypeError('[VrRuneInstallationReadinessProjection] RuneBridgeActor access is required.');
     }
@@ -45,8 +45,12 @@ export function createVrRuneInstallationReadinessProjection({
       const state = runeBridgeActor.getState(branchId);
       const ready = isInstallationReady(branchId);
       if (!LEGAL_READINESS_STATES.has(state)) return;
+      if (state === 'ARRIVING') return;
       if ((state === 'DOCKED') === ready) return;
-      if (runeBridgeActor.setInstallationReady(branchId, ready)) {
+      const changed = live && ready && state === 'HIDDEN'
+        ? runeBridgeActor.beginArrival?.(branchId)
+        : runeBridgeActor.setInstallationReady(branchId, ready);
+      if (changed) {
         transitions.push(Object.freeze({ branchId, previousState: state, state: runeBridgeActor.getState(branchId) }));
       }
     });

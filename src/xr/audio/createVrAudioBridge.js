@@ -42,6 +42,8 @@ export function createVrAudioBridge({ manager = audioManager, warn = console.war
   let asterionEquipped = false, asterionDriveActive = false;
   let asterionBackgroundHandle = null, asterionBackgroundToken = 0, asterionBackgroundPending = false;
   let asterionWorkHandle = null, asterionWorkToken = 0, asterionWorkPending = false, asterionWorkTimer = null;
+  let sectorDriveIdentity = null, sectorDriveHandle = null, sectorDriveToken = 0;
+  let sectorDrivePending = false, sectorDriveActive = false, sectorDriveTimer = null, sectorDriveExhausted = false;
 
   function reportFailure(operation, error) {
     try {
@@ -86,6 +88,7 @@ export function createVrAudioBridge({ manager = audioManager, warn = console.war
     stopRuneTuningProcess();
     stopAsterionCreate();
     resetAsterionSphereAudio();
+    resetSectorDriveAudio();
     runOptional('stop VR audio', (audio) => audio.stopVrAudio());
     disposed = true;
   }
@@ -158,6 +161,55 @@ export function createVrAudioBridge({ manager = audioManager, warn = console.war
     asterionEquipped = false; asterionDriveActive = false;
     stopAsterionBackground(); stopAsterionWork();
   }
+
+  function clearSectorDriveTimer() { if (sectorDriveTimer !== null) clearTimer(sectorDriveTimer); sectorDriveTimer = null; }
+  function retireSectorDrive() {
+    sectorDriveToken += 1; sectorDrivePending = false; clearSectorDriveTimer();
+    const handle = sectorDriveHandle; sectorDriveHandle = null;
+    try { handle?.stop?.(); } catch (error) { reportFailure('stop sector drive', error); }
+    sectorDriveIdentity = null; sectorDriveActive = false; sectorDriveExhausted = false;
+  }
+  function startSectorDrive(identity, path) {
+    if (disposed || !identity || !path) return;
+    if (sectorDriveIdentity && sectorDriveIdentity !== identity) retireSectorDrive();
+    sectorDriveActive = true;
+    if (sectorDriveIdentity === identity) {
+      if (sectorDriveTimer !== null && sectorDriveHandle) {
+        clearSectorDriveTimer();
+        try { sectorDriveHandle.rampTo?.(1, 0.2); } catch (error) { reportFailure('resume sector drive', error); }
+      }
+      return;
+    }
+    sectorDriveIdentity = identity; sectorDriveExhausted = false;
+    const token = ++sectorDriveToken; sectorDrivePending = true;
+    runOptional('start sector drive', (audio) => Promise.resolve(
+      audio.startVrProcessSource(path, 'DEVICE', { loop: false })
+    ).then((handle) => {
+      if (token === sectorDriveToken) sectorDrivePending = false;
+      if (!handle) return;
+      if (disposed || token !== sectorDriveToken || sectorDriveIdentity !== identity) { handle.stop?.(); return; }
+      sectorDriveHandle = handle;
+      handle.onEnded?.(() => {
+        if (sectorDriveHandle !== handle) return;
+        sectorDriveHandle = null; clearSectorDriveTimer(); sectorDriveExhausted = true;
+        if (!sectorDriveActive) retireSectorDrive();
+      });
+      if (!sectorDriveActive) fadeSectorDrive(identity);
+    }).catch((error) => { if (token === sectorDriveToken) sectorDrivePending = false; throw error; }));
+  }
+  function fadeSectorDrive(identity) {
+    if (disposed || sectorDriveIdentity !== identity) return;
+    sectorDriveActive = false;
+    if (sectorDriveExhausted || (!sectorDriveHandle && !sectorDrivePending)) { retireSectorDrive(); return; }
+    if (!sectorDriveHandle || sectorDriveTimer !== null) return;
+    const handle = sectorDriveHandle, token = sectorDriveToken;
+    try { handle.rampTo?.(0, 1); } catch (error) { reportFailure('fade sector drive', error); }
+    sectorDriveTimer = setTimer(() => {
+      sectorDriveTimer = null;
+      if (token === sectorDriveToken && !sectorDriveActive && sectorDriveHandle === handle) retireSectorDrive();
+    }, 1000);
+  }
+  function resetSectorDriveAudio() { retireSectorDrive(); }
 
   function stopFurnaceProcess() {
     furnaceToken += 1;
@@ -444,7 +496,7 @@ export function createVrAudioBridge({ manager = audioManager, warn = console.war
 
   return { runOptional, prepareRuntimeAudio, prepareOneShots, prepareAttractorLoops, playOneShot, startFiniteSource, startOverlappingLoopSource, startFurnaceProcess, stopFurnaceProcess, startRuneTuningProcess, stopRuneTuningProcess, startAsterionCreate, stopAsterionCreate,
     startGlyphAcquisition, missGlyphAcquisition, setAsterionSphereState, resetAsterionSphereAudio,
-    cancelGlyphAcquisition, completeGlyphAcquisition, dispose,
+    cancelGlyphAcquisition, completeGlyphAcquisition, startSectorDrive, fadeSectorDrive, resetSectorDriveAudio, dispose,
     startAttractor, missAttractor, cancelAttractor, handoffAttractor,
     get glyphAcquisitionState() { return glyphState; }, get attractorState() { return attractorState; } };
 }
