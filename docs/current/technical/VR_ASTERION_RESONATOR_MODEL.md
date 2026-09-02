@@ -6,7 +6,7 @@ Status: **CANONICAL CURRENT MODEL / R2A + R2B + R4 + TARGET RUNTIME IMPLEMENTED;
 
 Runtime R2A implements powered-sector acquisition and transient `SECTOR LOCK`; R2B implements controller-driven EARTH/WOOD/FIRE motion and committed `0/1/2/3` detents. R4 implements the event-driven Resonator Field Actor: derived `resonatorExists`, immutable runtime `α/β/γ` descriptor, POWERED/FIELD-ACTIVE and partial/full/symmetric/asymmetric coarse-field semantics with bounded read-only queries and exactly-on-change subscriptions.
 
-The volumetric sector acquisition beam, bounded Platform Energy extension, revised aligned nominal field/presentation, generic registered-target containment, per-target resonance, sign/ring response, and `PULL_READY`-gated Large Glyph Astrolabium eligibility are **IMPLEMENTED**. The current composition registers the five Large Glyph nodes. Discovery Guidance and the Scenario semantic join `4.80 → 5.10` are implemented, but `5.10` has no authored continuation. Field/target audio, METAL/WATER/ETHER contribution, later supported target classes and the finale remain **FUTURE / NOT IMPLEMENTED**; hardware/perceptual QA remains outstanding.
+The volumetric sector acquisition beam, bounded Platform Energy extension, revised aligned nominal field/presentation, generic registered-target containment, per-target resonance, sign/ring response, and broad runtime `PULL_READY`-gated Large Glyph Astrolabium eligibility are **IMPLEMENTED**. The current composition registers the five Large Glyph nodes. Discovery Guidance and the Scenario semantic join `4.80 → 5.10` are implemented, but `5.10` has no authored continuation. Field/target audio, METAL/WATER/ETHER contribution, later supported target classes and the finale remain **FUTURE / NOT IMPLEMENTED**; hardware/perceptual QA remains outstanding.
 
 This document is the primary CURRENT technical model of the Asterion Resonator. It freezes the sandbox, Scenario, Guidance, Rune Binder, implemented local sector-control and implemented Field-domain boundaries. The specialized [`VR_ASTERION_RESONATOR_FIELD_MODEL.md`](VR_ASTERION_RESONATOR_FIELD_MODEL.md) is its subordinate CURRENT Field sub-model, not an alternative canon. Implemented R2A/R2B/R4, Field Frame/presentation, target acquisition/response and Astrolabium eligibility seams are established runtime contracts. API naming remains open only for genuinely future audio, METAL/WATER/ETHER, later target classes and finale work.
 
@@ -124,7 +124,18 @@ The sign and up to three thin target-centered rings use the target's Proto-Astro
 
 Scenario may interpret discovery and gate crystal acquisition, but it owns neither containment nor resonance truth. Resonator Target Acquisition owns the inside/outside decision; Resonator Target Acquisition owns per-target stages, timers, decay, sign memory, and `PULL_READY`; Field Presentation is read-only.
 
-METAL i WATER są późniejszą warstwą advanced tuning / amplification. Oba docelowo oferują rotację skrzydłową i pochył zgodne z filozofią `0° = OFF`, a potem jednokierunkowe target detenty `13° / 23° / 36°`. Sprzężenie osi, kombinacje, mapping gestu i role w descriptorze pozostają otwarte.
+`PULL_READY` is a transient late pull grant, not family knowledge. In ordinary early gameplay a learned Large Glyph family is sufficient without Resonator; only a late escaped/reacquisition target additionally requires `PULL_READY`. The current runtime gate is too broad. This correction and the late-state predicate are **CURRENT TARGET / NOT IMPLEMENTED** and must not create a Scenario point ID.
+
+## 8a. Late motion and advanced wings — CURRENT TARGET / NOT IMPLEMENTED
+
+Late escaped Large Glyphs retain slightly faster angular/spherical world motion and independently oscillate in Resonator-relative depth approximately `20–110 m`: `depth(t) = 65 m + 45 m * sin(2πt / T + phase)`. About `20 s` usable dwell in the shortest ordinary band is the gameplay target; `T ≈ 135 s`, phase, angular speed, and easing are initial tuning. The motion crosses NEAR/MID/FAR. The three-wing core can still acquire it, but tracking one FIRE band becomes difficult.
+
+METAL and WATER are two additional controllable wings refining the same field, each conceptually exposing independently adjustable angle and tilt at levels `0..3`; `0° / 13° / 23° / 36°` remains the current target language. Exact hinges, gestures, coupling, and full mappings remain tuning/future.
+
+- **METAL = DEPTH BANDWIDTH / AMPLIFICATION.** FIRE still selects depth center/region; Metal broadens effective FORWARD coverage. Balanced `M(2,2)` targets roughly 80% of `10–130 m` (illustratively `20–115 m`, not immutable boundaries).
+- **WATER = FREQUENCY / PHASE SYNCHRONIZATION.** It changes global field frequency, communicated by hue rather than ordinary containment geometry. Matching Water frequency while the target participates in the field slows, but never stops, Water Large Glyph motion toward its earlier character. This truth is consumed by Large Glyph motion/presentation, never Target Acquisition.
+
+The balanced full-array solution is `222 / M(2,2) / W(2,2)`: symmetric core, broad useful Metal envelope, BLUE frequency lock, Water synchronization, and slowed Water target. It is an intelligible balance solution, not a password/scoring preset. Field hue means frequency/tuning. The former linear power-color ramp ending in WHITE and white-as-mandatory maximum are **SUPERSEDED**. Separate strength presentation remains open.
 
 ## 9. Ownership i zależności
 
@@ -138,7 +149,10 @@ METAL i WATER są późniejszą warstwą advanced tuning / amplification. Oba do
 | Resonator Field Domain / actor | authoritative active-field state, nominal field shape, Field Frame and read-only descriptor | physical MotionRoot, resonance memory, attraction, Scenario meaning |
 | Resonator Target Acquisition | generic canonical-anchor containment; per-target stages, acquisition/decay, sign memory and `PULL_READY` | presentation geometry, attraction/pull, Scenario meaning |
 | Target Response Presentation | read-only sign/ring projection | containment, timing, eligibility, pull |
-| Astrolabium Więzi | targetability and attraction/pull after eligibility | containment and resonance truth |
+| future Astrolabium Tuning Domain | interprets existing family truth and bounded eligibility | duplicated progression, recipes, Resonator timers, Scenario |
+| Astrolabium Więzi attractor | selection and attraction/pull after legal eligibility | family-learning truth, containment and resonance truth |
+| future advanced Resonator domain | Metal bandwidth, Water frequency and synchronization truth | Large Glyph motion, acquisition stages/timers |
+| Large Glyph Actor | physical motion, future late depth oscillation and synchronization response | Water-frequency truth, pull permission |
 | Scenario / Guidance / Panel Y | dramaturgię, obowiązkowe beaty, ujawnianą wiedzę, hinty i crystal-acquisition gates | fizyczne gate'y Rune/sector/Rezonator oparte na `currentPoint` |
 | `PlatformEnergyVfxActor` | profile proceduralnej energii platformy/Zworników | gameplay truth, field descriptor, interpretację `α/β/γ`, target response i field lensing |
 
@@ -148,7 +162,7 @@ Field Presentation receives committed Field Domain output read-only and remains 
 
 Przyszła implementacja ma wyprowadzać dostępność z narzędzi, obiektów i domenowych warunków, a Scenario jedynie obserwować oraz interpretować wynik. Musi zachować reconstruction/hydration osiągniętego fizycznego stanu bez replayu dramaturgii.
 
-Poza zakresem i nadal niezamrożone są: future audio, METAL/WATER/ETHER, later target classes/finale APIs oraz Scenario point IDs after the existing `5.10` boundary. Semantyczne osie, poziomy i target detenty rdzenia, descriptor i język wizualny są CURRENT w sub-modelu pola.
+Poza runtime i **NOT IMPLEMENTED** pozostają: corrected early/late `PULL_READY` policy, late depth/angular motion, Metal and Water wings/contribution, advanced frequency/hue, Water slowdown, future audio, later target classes/finale APIs oraz Scenario point IDs after the existing `5.10` boundary. Ich role gameplayowe są zamrożone; exact mathematics, slowdown, transitions and physical control remain tuning/future. Semantyczne osie, poziomy i target detenty rdzenia, descriptor i język wizualny są CURRENT w sub-modelu pola.
 # R2B implementation boundary
 
 R2A powered-sector acquisition, one-second transient SECTOR LOCK and trigger-priority arbitration are implemented. R2B now owns runtime-local EARTH/WOOD/FIRE levels `0/1/2/3`, continuous constant-speed motor positions, physical `0°/13°/23°/36°` detents, a short detent hold, and smooth release-to-last-committed settle. EARTH/WOOD are a mirror pair rotating about the actual outer radial wedge edges through origin; only their MotionRoot quaternion changes, while FIRE preserves its bounds-derived inner radial hinge and downward pitch. The whole MotionRoot subtree—including target anchor, energy mount, Rune Installation Frame, Zwornik and installed Rune—remains one rigid chain. Held directional intent continues across successive detents without a new GRIP press. Trigger priority freezes user-driven local motion and forces a hand-reference rebase when local control returns. `DETENT_COMMITTED.direction` remains semantic: `UP` increases the level and `DOWN` decreases it, independent of spatial downward motion.

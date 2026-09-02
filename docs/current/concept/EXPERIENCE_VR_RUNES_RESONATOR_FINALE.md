@@ -2,7 +2,7 @@
 
 ## Status i reguła nadrzędna
 
-Status: **CURRENT WORKING CANON / SPLIT IMPLEMENTATION STATUS**. Rune tuning/transport/install, Binder readiness/materialization, powered-sector acquisition/control, Resonator core/descriptor, discovery Guidance through first Resonator and Scenario join through `5.10` are **CURRENT / IMPLEMENTED** under their technical owners. Physical Resonator containment/resonance response and Large Glyph reacquisition are **IMPLEMENTED** sandbox mechanics. The authored search beat after `5.10`, Metal/Water/Ether expansion and the finale continuation are **FUTURE**.
+Status: **CURRENT WORKING CANON / SPLIT IMPLEMENTATION STATUS**. Rune tuning/transport/install, Binder readiness/materialization, powered-sector acquisition/control, Resonator core/descriptor, discovery Guidance through first Resonator and Scenario join through `5.10` are **CURRENT / IMPLEMENTED** under their technical owners. Physical Resonator containment/resonance response and the current broad Large Glyph pull integration are **IMPLEMENTED** sandbox mechanics. Correct early/late reacquisition policy, late motion, the authored search beat after `5.10`, Metal/Water/Ether expansion and the finale continuation are **FUTURE / NOT IMPLEMENTED**.
 
 Ten przebieg zastępuje wcześniejszą wersję, w której trzy sektory tworzyły pełną antenę przed etapem kamieni runicznych:
 
@@ -28,7 +28,7 @@ Dokładne receptury strojenia pozostają kontraktem receptur i nie są definiowa
 | Resonator containment/resonance response i Large Glyph reacquisition | CURRENT / IMPLEMENTED (sandbox mechanic) |
 | Metal/Water, Water override, Ether, final Water hunt, dissolution/finale after `5.10` | FUTURE |
 
-The physical target-response/reacquisition mechanics below are implemented runtime; their authored dramaturgical continuation after `5.10` and the later finale remain design canon / FUTURE.
+The physical target-response core is implemented runtime. Its corrected late-only pull policy, escaped-target motion, authored dramaturgical continuation after `5.10`, advanced wings and later finale remain binding design canon / FUTURE / NOT IMPLEMENTED.
 
 ## 1. Glify znikają
 
@@ -158,122 +158,44 @@ Spust Kuli nadal orientuje całą platformę, zachowując istniejący ownership 
 
 Panel Y przechowuje instrukcję; Małpa nie powtarza jej stale.
 
-## 8. Pierwsze poszukiwanie i pierwszy odzyskany glif
+## 8. Late reacquisition — **FUTURE / NOT AUTHORED AFTER `5.10`**
 
-A supported target is detected only while its canonical anchor is contained by the nominal field of any fully active configuration. This generic mechanism is not hardcoded to glyphs, and presentation-only field deformation cannot affect containment.
+Earlier Large Glyph attraction needs learned family knowledge, not Resonator. In the late fourth-crystal/escaped phase the family remains known, but physical pull additionally needs the target's transient `PULL_READY`. Resonator finds/stabilizes; Astrolabium still selects and pulls. The existing runtime's universal Large Glyph readiness gate is broader than this target and remains to be corrected without inventing a Scenario point.
 
-On first detection the family-colored Proto-Astro sign appears, faces the player's current head, and retains approximately constant apparent size across depth. Continuous containment adds one thin target-centered ring every `2.0 s`; at `2 / 4 / 6 s` the target has one/two/three rings. Exactly three rings mean `PULL_READY`, and the rings pulse slowly. Only then may Astrolabium Więzi target and pull it; attraction remains Astrolabium-owned.
+Escaped targets move slightly faster angularly than their earlier slow character and independently oscillate in depth approximately `20–110 m`: `65 m + 45 m × sin(2πt/T + phase)`. The design aims for about `20 s` useful dwell in the shortest ordinary depth band; `T ≈ 135 s` is initial tuning. Thus one fixed FIRE band cannot hold a target forever.
 
-Outside the field, fractional acquisition is discarded and one completed ring decays every `20 s`. Three rings remain ready until the `3 → 2` transition. Re-entry resets the current decay interval and resumes from retained rings (`0 / 2 / 4 / 6 s` required from three/two/one/zero). The sign remains through ring decay and for another `60 s` after ring 0; this sign-only state is not ready and requires the full `6 s`. It then returns to undiscovered presentation. Exact sizing, ring geometry, pulse and fade curves remain tuning. Scenario gives discovery meaning but owns none of this physical truth.
-### `progression.resonator.search` — **FUTURE / NOT AUTHORED AFTER `5.10`**
+## 9. Why the first Resonator becomes difficult
 
-> Teraz szukaj.  
-> Jeśli przestrzeń odpowie — zobaczysz znak.
+EARTH/WOOD/FIRE remains functional and all 27 fully active core configurations retain equal detection authority. Difficulty comes from angular motion, depth oscillation, and one FIRE depth band at a time. A skilled player can still acquire a target for the existing six-second mechanic, but retention is demanding. This motivates expansion rather than a fiction that the core is broken or underpowered.
 
-Następnie Małpa milczy. Gracz ustawia sektory, obraca platformę, znajduje właściwą odpowiedź, stabilizuje target Astrolabium i przyciąga glif. Po pozyskaniu kryształu nie ma komentarza: gracz sam rozwiązał problem.
+## 10. METAL — advanced depth-bandwidth wing
 
-## 9. Za mały zasięg i czwarty kamień
+METAL adds one controllable wing to the same field. FIRE selects the primary depth region/center; Metal broadens effective FORWARD depth coverage. Metal angle and tilt each use conceptual `0..3` levels. At balanced `M(2,2)`, the target is roughly 80% of the `10–130 m` domain; `20–115 m` is an initial illustration, not immutable geometry. Exact hinges, gestures, mapping for all 16 pairs, and interval boundaries remain tuning.
 
-Drugiego glifu pierwszy Rezonator nie potrafi ujawnić. Jest sprawny, lecz za słaby. Dopiero po dłuższej bezskutecznej pracy Małpa udostępnia pomoc.
+## 11. WATER — advanced frequency wing
 
-### `hint.resonator.notEnoughPower.soft`
+WATER adds a second controllable wing to the same field, with conceptual angle and tilt `0..3`. It tunes resonance frequency/phase rather than another ordinary geometric dimension. Field hue communicates frequency. When Water frequency matches and the Water Large Glyph participates in the field, its movement slows toward the earlier pre-final character but never stops. Exact slowdown and transition remain tuning and belong to Large Glyph motion/presentation, not Target Acquisition.
 
-> Rezonator działa.  
-> Tylko chyba już nie sięga wystarczająco daleko.
+## 12. Balanced full array and BLUE lock
 
-### `knowledge.resonator.morePower`
-
-**POTRZEBUJEMY WIĘCEJ MOCY?**
-
-> Potrzebujemy ostatnich kamieni.  
-> Jeden możesz już osadzić.  
-> Z drugim mamy problem.
-
-Wcześniej zdobyty kryształ lub postęp gałęzi odblokowuje kolejny Zwornik. Gracz stroi, sprowadza i instaluje czwarty kamień. Czwarty sektor dołącza do pola, ale nadal nie zapewnia wystarczającego zasięgu.
-
-## 10. Blokada Wody
-
-Kamień Wody istnieje, można go nastroić, namierzyć i przyciągnąć. Blokuje go platforma: sektor Wody wymaga ostatniego kryształu Haiku Cosmos, którego nie można odnaleźć bez mocniejszego Rezonatora.
-
-### `knowledge.runes.waterBlocked`
-
-**DLACZEGO WODA NIE WCHODZI?**
-
-> Platforma jej nie przyjmuje.  
-> Chce kryształu Haiku Cosmos.  
-> Którego właśnie próbujemy znaleźć.
-
-*pauza*
-
-> Bardzo eleganckie.
-
-## 11. Eter — Kamień Więzi
-
-Szóstym kamieniem jest widziany wcześniej **ETER — KAMIEŃ WIĘZI**. Nie stanowi kolejnego żywiołu sektorowego; wiąże cały układ.
-
-### `knowledge.runes.ether`
-
-**I CO TERAZ?**
-
-> Jest jeszcze Eter.  
-> Kamień Więzi.  
-> Już go widziałeś.
-
-Kolejna odpowiedź tego samego tematu:
-
-> Jeśli go sprowadzisz, mogę na chwilę nagiąć zasadę Wody.
-
-Ponieważ obejście jest czasowe, gracz musi otrzymać instrukcję przed rozpoczęciem okna.
-
-### `progression.runes.etherPreparation`
-
-> Najpierw nastrój Wodę.  
-> Potem sprowadź Eter.  
-> Kiedy Eter zwiąże układ — nie zatrzymuj się.  
-> To będzie tylko chwila.
-
-Opcjonalne pytanie **DLACZEGO TYLKO CHWILA?**:
-
-> Bo na tyle mi pozwolono.
-
-Gracz najpierw przygotowuje strojenie Wody, następnie sprowadza Eter. Eter wiąże układ i czasowo uchyla blokadę sektora, po czym gracz natychmiast sprowadza Wodę. Zwornik przyjmuje ją mimo braku finalnego kryształu. To jedyny moment Experience, w którym Małpa świadomie nagina regułę świata: nie działa za gracza, tylko otwiera możliwość.
-
-## 12. Pełny układ sześciu kamieni
-
-Dopiero po związaniu wszystkich sześciu kamieni ustawienie platformy zaczyna sterować kolorem mocy. Wcześniej pole pozostaje zielone. Skala rosnącej mocy to:
+The discoverable full-array solution is:
 
 ```text
-CZERWONY → ŻÓŁTY → POMARAŃCZOWY → ZIELONY
-→ NIEBIESKI → FIOLETOWY → BIAŁY
+EARTH = 2 / WOOD = 2 / FIRE = 2
+METAL angle = 2 / tilt = 2
+WATER angle = 2 / tilt = 2
+= 222 / M(2,2) / W(2,2)
 ```
 
-Biel oznacza maksimum. METAL i WATER są późniejszą warstwą advanced tuning / amplification istniejącego pola, nie osobnym polem. Oba docelowo mają rotację skrzydłową i pochył zgodne z filozofią `0° = OFF`, a następnie trzech poziomów tylko w jednym kierunku z target detentami `13° / 23° / 36°`. Sprzężenie osi, kombinacje poziomów, mapping gestu i dokładne role w descriptorze pozostają otwarte.
+Symmetry communicates the solution: balanced geometry → stable broad field → correct BLUE frequency → Water synchronization. `2` is the balanced active midpoint. This is not a hidden numerical password, family scoring preset, or revival of special `111 / 222 / 333` authority.
 
-### `progression.resonator.fullArray`
+## 13. Frequency color supersedes power-to-white
 
-> Teraz dopiero stroisz całość.  
-> Nie szukaj konkretnego kąta.  
-> Szukaj najsilniejszego pola.  
-> Będziesz wiedział.
+Field hue means resonance frequency/tuning state. BLUE is canonical Water synchronization. The former `RED → YELLOW → ORANGE → GREEN → BLUE → VIOLET → WHITE` increasing-power scale, mandatory white maximum, and final-white field requirement are **SUPERSEDED**. If field strength later needs presentation, brightness, emission, density, activity, audio, or another dimension remains open; this document does not invent it. Target-family sign/ring colors remain separate from global field-frequency hue.
 
-### `knowledge.resonator.powerColor`
+## 14. Final Water hunt
 
-**SKĄD MAM WIEDZIEĆ?**
-
-> Patrz na pole.  
-> Im bliżej bieli, tym większa moc.
-
-## 13. Strojenie końcowe
-
-Konfiguracje mogą osłabiać, zawężać lub rozpraszać rezonans i obniżać kolor skali albo wzmacniać układ, przesuwać pole ku fioletowi i bieli oraz zwiększać zasięg. Nie istnieje tekstowy wskaźnik procentowy.
-
-Osiągnięcie bieli musi być natychmiast rozpoznawalne przez pełną białą emisję, charakterystyczny rezonans audio, reakcję wszystkich kamieni i zsynchronizowane wyładowania Zworników.
-
-## 14. Ostatnie poszukiwanie i glif
-
-Przy białym polu gracz łączy wszystkie poznane działania: globalnie obraca platformę, lokalnie ustawia sektory, obserwuje pole, rozpoznaje znak, utrzymuje lock, korzysta z Astrolabium, przyciąga glif, używa Szpili i pozyskuje kryształ. Odpowiada znak Haiku Cosmos; Małpa tego nie komentuje.
-
-Ostatni glif jest bardzo daleko i porusza się wolno. Rezonator utrzymuje go widocznym tylko przy dostatecznie silnym polu. Gracz zachowuje orientację układu, namierza i przyciąga glif, a następnie po raz ostatni domyka znaną pętlę pozyskaniem kryształu.
+At balanced `222 / M(2,2) / W(2,2)`, Metal provides a broad useful depth envelope, Water locks BLUE, and the Water target slows. The player recognizes structural balance rather than solving a password, keeps the moving target contained to obtain `PULL_READY`, and then uses already learned family knowledge plus Astrolabium for late physical reacquisition. Exact Scenario beats after `5.10`, copy, advanced controls, color interpolation, slowdown, and motion tuning remain **FUTURE / NOT IMPLEMENTED**.
 
 ## 15. Ostatnia karta
 

@@ -5,10 +5,12 @@ Status: **CURRENT / BINDING** for Proto-Astro identity, Furnace essence truth, A
 ## Ownership
 
 - `ProtoAstroTuningController` exclusively owns natural Large Glyph essences `K/T/S/L/R`.
+- Furnace progression exclusively owns successfully processed/absorbed Shell truth.
 - `RuneStoneProgressionController` is implemented and separately owns `tunedRuneFamilies`; future installed truth remains in the Rune domain.
 - `RuneRecipeInteraction` is implemented as the rune-mode owner of two typed Furnace slots.
 - sector progression owns panel/sector completeness; it does not gate natural tuning.
-- Attractor tool/panels are projections, not truth owners.
+- Attractor band UI owns only the selected object class. Attractor/panels are projections, not family-learning truth owners.
+- A future **Astrolabium Tuning Domain / Actor** will interpret existing owner facts as family knowledge and bounded pull eligibility. It must not duplicate recipes, Furnace/extraction/Rune truth, Resonator timers, Scenario progress, or sector state; its exact API/name is not frozen and it is **NOT IMPLEMENTED**.
 
 ## Identity and tuning
 
@@ -30,7 +32,31 @@ Implemented corrections: slot acceptance validates the selected recipe's expecte
 
 ## Astro bands
 
-`SHELLS`, `SMALL_GLYPHS`, `LARGE_GLYPHS` and `RUNESTONES` are implemented. `RUNESTONES` becomes available after at least one tuned natural family and exposes exactly the tuned natural families. Ether is not a natural target.
+The canonical progression separates three questions:
+
+```text
+BAND EXISTS ≠ TARGET FAMILY IS UNDERSTOOD ≠ TARGET MAY CURRENTLY BE PULLED
+```
+
+After Astrolabium Więzi is physically acquired, all four implemented class bands — `SHELLS`, `SMALL_GLYPHS`, `LARGE_GLYPHS`, and `RUNESTONES` — are selectable. A band can legally contain zero known targets. It asks which object class to search; it does not promise that every family is understood. World visibility likewise grants no targetability. Stars remain celestial environment, not a fifth band.
+
+This immediate-all-band policy is a **CURRENT / BINDING DESIGN TARGET, NOT IMPLEMENTED**: runtime still progression-filters the switchable list, including `RUNESTONES`. That behavior is an implementation gap and no longer canon.
+
+## Progressive family knowledge — CURRENT TARGET / NOT IMPLEMENTED AS A UNIFIED DOMAIN
+
+Astrolabium begins with five natural Shell families: Earth/K, Metal/T, Water/S, Wood/L, and Fire/R. Each is a legal `SHELLS` target immediately after tool acquisition. Per-family learning then deepens that vocabulary:
+
+```text
+processed natural Shell K/T/S/L/R → matching Small Glyph family becomes attractable
+processed natural Small Glyph K/T/S/L/R → matching Large Glyph family becomes normally attractable
+successful canonical Wu Xing recipe → resulting Rune Stone family becomes a legal RUNESTONES target
+```
+
+These rules are family-specific. Small Glyph extraction remains persistent learned Large Glyph-family knowledge; Resonator discovery does not replace or teach it. The existing recipe mapping and `tunedRuneFamilies` remain authoritative.
+
+After all five natural Shell families have been successfully processed, special Shell `V / VO` becomes a legal next Shell target. It is not initial vocabulary. Processing it completes the six-Shell sequence toward Asterion Sphere creation. Its reveal-versus-recognition presentation remains open. `V` remains special, never enters `PROTO_ASTRO_NATURAL_FAMILY_CODES`, and does not create `VA`.
+
+For ordinary early Large Glyph play, learned family knowledge is sufficient for attraction subject to ordinary legality. In the late escaped/reacquisition state it remains required, but transient Resonator `PULL_READY` is additionally required for physical pull. `PULL_READY` neither unlocks the band nor becomes permanent family knowledge. Runtime currently applies this gate too broadly; the corrected early/late policy and its exact late-state predicate are **NOT IMPLEMENTED** and must not invent a Scenario point.
 
 ## Four-panel contract
 
