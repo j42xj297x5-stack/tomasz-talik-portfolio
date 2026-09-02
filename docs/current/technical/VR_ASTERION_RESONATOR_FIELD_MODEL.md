@@ -2,9 +2,9 @@
 
 ## 1. Status, authority, and scope
 
-Status: **CURRENT DESIGN TARGET / R4 FIELD DOMAIN AND PREVIOUS FIELD PRESENTATION IMPLEMENTED / REVISED GEOMETRY NOT IMPLEMENTED / TARGET RESPONSE NOT IMPLEMENTED**.
+Status: **CURRENT / BINDING — REVISED FIELD, TARGET ACQUISITION, TARGET RESPONSE AND ASTROLABIUM ELIGIBILITY IMPLEMENTED; HARDWARE QA OUTSTANDING**.
 
-This subordinate model is the binding authority for Resonator field geometry, future containment, resonance acquisition, and presentation target. The runtime R4 actor derives an immutable `FieldDescriptor` from installed Rune truth and committed EARTH/WOOD/FIRE levels, and a presentation currently renders the superseded cage. The revised aperture geometry, canonical forward alignment, containment, resonance acquisition, target response, and Astrolabium eligibility integration below are not runtime claims.
+This subordinate model is the binding authority for Resonator field geometry, nominal containment, resonance acquisition, and read-only presentation. Runtime derives the immutable `FieldDescriptor`, resolves the revised nominal aperture geometry in a dedicated Resonator Field Frame, evaluates registered targets, projects their response, and exposes bounded `PULL_READY` eligibility to Astrolabium.
 
 Sector motion remains `0° / 13° / 23° / 36°`. Sector control, FieldActor, Rune, Scenario, Guidance, and platform-energy ownership do not change. This model does not define a runtime transform/registry/rendering API, shader constants, numerical presentation tuning, or METAL/WATER contribution.
 
@@ -26,9 +26,9 @@ The semantic field axes are authoritative:
 - **LATERAL** — left ↔ right across the field;
 - **VERTICAL** — down ↔ up.
 
-For the current Three.js implementation target, `FORWARD → platform-local +Z`, `LATERAL → platform-local X`, and `VERTICAL → platform-local Y`. Engine-axis letters are implementation detail and do not redefine the semantic contract.
+In the current Three.js implementation, `FORWARD → platform-local +Z`, `LATERAL → platform-local X`, and `VERTICAL → platform-local Y`. Engine-axis letters are implementation detail and do not redefine the semantic contract.
 
-Current settings expose `spatial.entryDirection = (0, 0, +1)`. FIRE is the central Resonator sector. The authored progress-floor geometry / sector layout must be aligned so FIRE's outward radial axis points along canonical `FORWARD / entryDirection`, and the Resonator field forward axis follows it:
+Current settings expose `spatial.entryDirection = (0, 0, +1)`. FIRE is the central Resonator sector. The implemented progress-floor composition aligns the authored geometry / sector layout so FIRE's outward radial axis points along canonical `FORWARD / entryDirection`, and the Resonator field forward axis follows it:
 
 ```text
 Monkey / player reference direction
@@ -104,7 +104,7 @@ Rounded corners and Bézier-style fillets remain part of the target. Presentatio
 
 The approved read-only presentation remains one lightweight translucent deformable skin plus one brighter curved geometric skeleton, with fixed/reusable topology and morphing between committed configurations. CSG, boolean geometry, raymarching, mandatory volumetric textures, and 27 authored meshes are excluded. Exact opacity, skeleton radius, morph duration, and bow amplitude remain **TUNING**.
 
-## 8. Target containment and resonance — CURRENT TARGET, NOT IMPLEMENTED
+## 8. Target containment and resonance — IMPLEMENTED
 
 A registered supported distant target accumulates resonance only while its canonical detection anchor is inside the nominal active field of a fully active configuration. Containment uses nominal field geometry. Presentation-only fillets, bow, skin morphing, skeleton geometry, opacity, and other visual tuning never alter the containment result. This mechanism is generic and is not hardcoded to Large Glyphs.
 
@@ -114,35 +114,28 @@ Leaving the field stops acquisition and begins decay. One completed stage is los
 
 The Proto-Astro sign remains visible throughout acquisition, `PULL_READY`, and ring decay. After the final ring disappears it persists for an additional `60 s`; during this sign-only memory the target is not ready and needs the full `6 s` to reacquire. After that additional minute outside the field, the sign disappears and the target returns to its undiscovered presentation state.
 
-The response consists only of the target's Proto-Astro sign and up to three thin target-centered resonance rings, using that target's Proto-Astro family presentation color. The sign always faces the player's current head position and keeps an approximately constant apparent size across target depth. Exact angular size, world-scale calculation, scale clamps, ring dimensions, line thickness, spacing, pulse values, and fade curves are **TUNING**, not canon. No exact renderer, shader, billboard mechanism, actor name, or registry API is established here.
+The response consists only of the target's Proto-Astro sign and up to three thin target-centered resonance rings, using that target's Proto-Astro family presentation color. The sign always faces the player's current head position and keeps an approximately constant apparent size across target depth. Exact angular size, world-scale calculation, scale clamps, ring dimensions, line thickness, spacing, pulse values, and fade curves are **TUNING**, not canon. The runtime presentation is a read-only projection of acquisition truth. Its exact angular sizes, opacity, ring thickness, palette, pulse amplitude/period, and scale calculations remain **TUNING**, not architectural law.
 
-## 9. CURRENT IMPLEMENTED RUNTIME gaps
+## 9. Remaining runtime gaps and validation boundary
 
-The current runtime correctly reflects the superseded canon but is not yet aligned with this revised CURRENT DESIGN TARGET:
+The revised nominal shape, depth planes, side profiles, dedicated Field Frame/alignment, containment, per-target acquisition/decay/sign memory, sign-and-ring response, and Astrolabium eligibility are **IMPLEMENTED**. The active shape result no longer carries the superseded `coherentPreset` or `largeGlyphRevealEligible` fields.
 
-1. the shape resolver still uses the superseded fixed `S0–S3` geometry;
-2. its field begins at the previous origin/depth model rather than `10 m` along FORWARD;
-3. side levels do not use the new `23 / 13 / 7 m` LATERAL and `7 / 13 / 23 m` VERTICAL half-extent mapping;
-4. presentation signed bow is derived from the superseded geometry and becomes only a secondary effect under the revised model;
-5. Field Presentation is mounted under the fixture hierarchy rather than a future sector-layout-aligned field frame;
-6. sector layout has not yet been intentionally realigned so the FIRE outward radial axis and field FORWARD match canonical `entryDirection`.
-7. physical target containment, per-target resonance stages/decay/sign memory, sign-and-ring response, and Astrolabium eligibility integration do not exist;
-8. field-shape code still exposes the superseded `coherentPreset / largeGlyphRevealEligible` concept.
+Genuine **FUTURE / NOT IMPLEMENTED** scope is limited here to Resonator field/target audio, METAL/WATER contribution and advanced amplification, registration of later supported target classes beyond the currently composed five Large Glyph nodes, and later Scenario/finale systems.
 
-These are implementation gaps introduced by the superseding design decision, not defects in the previous implementation. Runtime code and settings are unchanged by this documentation task.
+**HARDWARE QA OUTSTANDING:** this synchronization does not validate Quest comfort, perceptual sign size, ring or family-color readability, pulse comfort, ease of maintaining containment, or the practical feel of `6 s` acquisition and `20 s` decay. This validation gap does not regress implemented architecture.
 
 ## 10. Ownership and boundaries
 
 | Owner | Owns | Does not own |
 | --- | --- | --- |
-| progress-floor geometry / sector layout | authored FIRE-radial-to-FORWARD relationship | fixture positions/orientations, player passenger hierarchy, live Monkey tracking |
+| progress-floor geometry / sector layout | implemented FIRE-radial-to-FORWARD relationship and dedicated Resonator Field Frame | fixture positions/orientations, player passenger hierarchy, live Monkey tracking |
 | sector control | lock, local sector setting, bounded motion commands | field geometry, descriptor interpretation, response |
-| Resonator Field Domain / R4 actor | authoritative active field state, nominal field shape, and immutable descriptor | MotionRoot, containment, resonance memory, Scenario truth, presentation geometry |
-| future containment | whether a registered supported target's canonical anchor is inside the nominal fully active field | presentation geometry, resonance memory, attraction |
-| future resonance acquisition | per-target completed stages, acquisition timing, decay, sign memory, and `PULL_READY` | field geometry, attraction/pull, Scenario meaning |
+| Resonator Field Domain / R4 actor | authoritative active field state, nominal field shape, immutable descriptor and Field Frame | MotionRoot, resonance memory, Scenario truth, presentation geometry |
+| Resonator Target Acquisition | generic registered-target canonical-anchor containment in Field Frame local coordinates; per-target completed stages, acquisition/decay, sign memory and `PULL_READY` | raycasting, scene traversal, physics, presentation geometry, attraction/pull, Scenario meaning |
+| Target Response Presentation | read-only Proto-Astro sign and ring projection from acquisition truth | containment, timing, eligibility, pull |
 | Field Presentation | read-only projection of descriptor into skin and skeleton | gameplay/containment/resonance truth, sector motion |
 | Astrolabium Więzi | targetability and attraction/pull after `PULL_READY` eligibility | containment and resonance eligibility truth |
 | `PlatformEnergyVfxActor` | procedural platform/Zwornik energy | field skin, field skeleton, target response |
 | Scenario / Guidance | narrative meaning, guidance, crystal-acquisition gates | containment and resonance truth |
 
-METAL/WATER contribution, field audio, and implementation of revised geometry, containment, resonance acquisition, approved response, and Astrolabium eligibility integration remain future work.
+METAL/WATER contribution, Resonator field/target audio, later supported target registrations, and later finale systems remain **FUTURE / NOT IMPLEMENTED**.

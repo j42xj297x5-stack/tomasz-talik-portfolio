@@ -1,6 +1,6 @@
 # Experience VR Runtime Model
 
-Status: canonical description of the implemented runtime synchronized through the `5.10` Scenario boundary, Rune/Resonator Guidance and Player Y `WIEDZA` on 2026-09-01. Future authored gameplay is documented in the [gameplay roadmap](../concept/EXPERIENCE_VR_GAMEPLAY_ROADMAP.md).
+Status: canonical description of the implemented runtime synchronized through the `5.10` Scenario boundary and the implemented Resonator target-runtime slice on 2026-09-02. Future authored gameplay is documented in the [gameplay roadmap](../concept/EXPERIENCE_VR_GAMEPLAY_ROADMAP.md).
 
 ## Scenario composition boundary
 
@@ -63,6 +63,12 @@ The left joystick continuously yaws `playerRig`. The right joystick translates i
 The actor owns physical nodes, rigid rotation, canonical slots, elevation/expansion, spatial stage, presentation visibility (`setPresentationVisible`), transient hierarchy, targeting extent/range, hydration, reset and disposal. Intro passes visibility intent through the actor; `intro.largeGlyphsVisible` is presentation truth and is distinct from spatial reconstruction. Scenario settled truth is exclusively `largeGlyphs.stage`; PostRing requests `beginElevation()`, while `BEGIN_P2_RADIAL_PRESENTATION` requests `beginExpansion()`.
 
 Large Glyph radii `8.5 / 46 / 80 m` are independent from `worldBaseRadius = 7.6 m`. Large Glyph is not a spherical layer and does not alter the spherical registry.
+
+### Resonator target-runtime composition — IMPLEMENTED
+
+The composed Resonator resolves the revised `10 / 50 / 90 / 130 m` nominal field through a dedicated Field Frame aligned with FIRE outward / canonical `entryDirection`. Its target-acquisition actor evaluates registered canonical anchors against nominal geometry, independently tracks completed resonance stages, decay, sign memory and `PULL_READY`, and does not derive gameplay truth from presentation meshes. The five existing Large Glyph nodes are the currently registered supported targets; this does not claim registration of every future object class.
+
+A read-only target response presents each detected target's family-colored Proto-Astro sign and up to three rings. Large Glyph Astrolabium selection consumes `PULL_READY` during candidate legality, immediately before pull start and throughout active pull, while retaining existing Scenario capability and Proto-Astro tuning gates. Loss of readiness uses existing cancellation/return choreography; Astrolabium does not compute containment or acquisition and does not reset/freeze Resonator state. Detailed geometry and timing remain canonical in [`VR_ASTERION_RESONATOR_FIELD_MODEL.md`](VR_ASTERION_RESONATOR_FIELD_MODEL.md). Scenario remains authored only through `5.10`; Resonator audio and hardware/perceptual QA are not completed by this runtime implementation.
 
 ## Glyphs, crystals and reliquary
 
@@ -271,4 +277,4 @@ Not implemented: Scenario after `5.10`, Water override trigger, Ether flow, Pane
 
 ## Closed runtime reconciliation gaps
 
-Recipe insertion family validation, recipe-change player-facing eject, debug `P5 → 4.80` and `P6 → 5.10`, early natural Rune Stone presentation, A9.5 handoff choreography and A9.6 hydration/reconstruction foundation are **IMPLEMENTED**. Physical Resonator target response and authored continuation after `5.10` remain future. Carried Rune Stone ↔ installed Rune Stone collision is superseded and is not a future target.
+Recipe insertion family validation, recipe-change player-facing eject, debug `P5 → 4.80` and `P6 → 5.10`, early natural Rune Stone presentation, A9.5 handoff choreography, A9.6 hydration/reconstruction foundation and physical Resonator target response are **IMPLEMENTED**. Authored continuation after `5.10` remains future. Carried Rune Stone ↔ installed Rune Stone collision is superseded and is not a future target.

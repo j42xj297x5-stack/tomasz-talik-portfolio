@@ -2,7 +2,7 @@
 
 ## Status i reguła nadrzędna
 
-Status: **CURRENT WORKING CANON / SPLIT IMPLEMENTATION STATUS**. Rune tuning/transport/install, Binder readiness/materialization, powered-sector acquisition/control, Resonator core/descriptor, discovery Guidance through first Resonator and Scenario join through `5.10` are **CURRENT / IMPLEMENTED** under their technical owners. Physical Resonator containment/resonance response, glyph reacquisition, Metal/Water/Ether expansion and the finale continuation are **FUTURE**.
+Status: **CURRENT WORKING CANON / SPLIT IMPLEMENTATION STATUS**. Rune tuning/transport/install, Binder readiness/materialization, powered-sector acquisition/control, Resonator core/descriptor, discovery Guidance through first Resonator and Scenario join through `5.10` are **CURRENT / IMPLEMENTED** under their technical owners. Physical Resonator containment/resonance response and Large Glyph reacquisition are **IMPLEMENTED** sandbox mechanics. The authored search beat after `5.10`, Metal/Water/Ether expansion and the finale continuation are **FUTURE**.
 
 Ten przebieg zastępuje wcześniejszą wersję, w której trzy sektory tworzyły pełną antenę przed etapem kamieni runicznych:
 
@@ -25,10 +25,10 @@ Dokładne receptury strojenia pozostają kontraktem receptur i nie są definiowa
 | Binder readiness/materialization | CURRENT / IMPLEMENTED |
 | Powered-sector acquisition/control i Resonator core/descriptor | CURRENT / IMPLEMENTED |
 | Rune/Binder/Sector/Resonator Guidance oraz `4.80 → 5.10` | CURRENT / IMPLEMENTED |
-| Resonator containment/resonance response i glyph reacquisition | FUTURE |
+| Resonator containment/resonance response i Large Glyph reacquisition | CURRENT / IMPLEMENTED (sandbox mechanic) |
 | Metal/Water, Water override, Ether, final Water hunt, dissolution/finale after `5.10` | FUTURE |
 
-Sections describing target response and later finale are design canon, not implementation claims.
+The physical target-response/reacquisition mechanics below are implemented runtime; their authored dramaturgical continuation after `5.10` and the later finale remain design canon / FUTURE.
 
 ## 1. Glify znikają
 
@@ -145,7 +145,7 @@ The first Resonator has a discrete `(α, β, γ)` core. Every channel uses `LEVE
 
 The core has 64 physical states and 27 fully active configurations. All 27 have equal target-detection authority; `α`, `β`, and `γ` define geometry only, with no family, scoring, revelation, or Large Glyph privilege for `111`, `222`, or `333`. The Resonator exists from three powered sectors even at `(0,0,0)`, where the field is OFF. Unequal active sides create intentionally asymmetric apertures, but any partial configuration containing a core LEVEL 0 performs no target acquisition.
 
-Canonical field semantics are FORWARD, LATERAL, and VERTICAL; the current Three.js target maps them to platform-local `+Z`, `X`, and `Y`. The authored floor/sector layout aligns FIRE's outward radial axis and field FORWARD with canonical `entryDirection`, independently of Monkey head rotation and without rotating unrelated fixtures or the player passenger hierarchy. The visible field retains a rounded 16-corner cage, translucent deformable skin, brighter curved skeleton, and morphing; nominal aperture coordinates create the primary shape while bow remains secondary tuning. Binding details are defined by [`VR_ASTERION_RESONATOR_FIELD_MODEL.md`](../technical/VR_ASTERION_RESONATOR_FIELD_MODEL.md). Runtime still uses the superseded origin-based `S0–S3` shape, fixture parent, and unaligned sector layout, so the revised geometry is CURRENT DESIGN TARGET rather than implemented runtime.
+Canonical field semantics are FORWARD, LATERAL, and VERTICAL; the current Three.js target maps them to platform-local `+Z`, `X`, and `Y`. The authored floor/sector layout aligns FIRE's outward radial axis and field FORWARD with canonical `entryDirection`, independently of Monkey head rotation and without rotating unrelated fixtures or the player passenger hierarchy. The visible field retains a rounded 16-corner cage, translucent deformable skin, brighter curved skeleton, and morphing; nominal aperture coordinates create the primary shape while bow remains secondary tuning. Binding details are defined by [`VR_ASTERION_RESONATOR_FIELD_MODEL.md`](../technical/VR_ASTERION_RESONATOR_FIELD_MODEL.md). Runtime implements this revised nominal shape through the dedicated Resonator Field Frame and current progress-floor FIRE/entryDirection alignment; skin morphing and bow remain presentation tuning.
 
 Spust Kuli nadal orientuje całą platformę, zachowując istniejący ownership globalnego obrotu. Grip służy lokalnej kontroli wybranego zasilonego sektora. Tryby są wzajemnie wykluczające i nigdy nie sterują równocześnie. Jeżeli TRIGGER i GRIP są fizycznie aktywne jednocześnie, **TRIGGER ma bezwzględne pierwszeństwo**: działa klasyczna Kula i globalny owner orientacji platformy, a lokalna ścieżka sector-control pozostaje nieaktywna. Dopiero po zwolnieniu TRIGGER wejście GRIP może prowadzić acquisition i SECTOR LOCK. Interpolacja i mapowanie gestu pozostają otwarte; `0° / 13° / 23° / 36°` są CURRENT TARGET.
 
@@ -165,7 +165,7 @@ A supported target is detected only while its canonical anchor is contained by t
 On first detection the family-colored Proto-Astro sign appears, faces the player's current head, and retains approximately constant apparent size across depth. Continuous containment adds one thin target-centered ring every `2.0 s`; at `2 / 4 / 6 s` the target has one/two/three rings. Exactly three rings mean `PULL_READY`, and the rings pulse slowly. Only then may Astrolabium Więzi target and pull it; attraction remains Astrolabium-owned.
 
 Outside the field, fractional acquisition is discarded and one completed ring decays every `20 s`. Three rings remain ready until the `3 → 2` transition. Re-entry resets the current decay interval and resumes from retained rings (`0 / 2 / 4 / 6 s` required from three/two/one/zero). The sign remains through ring decay and for another `60 s` after ring 0; this sign-only state is not ready and requires the full `6 s`. It then returns to undiscovered presentation. Exact sizing, ring geometry, pulse and fade curves remain tuning. Scenario gives discovery meaning but owns none of this physical truth.
-### `progression.resonator.search`
+### `progression.resonator.search` — **FUTURE / NOT AUTHORED AFTER `5.10`**
 
 > Teraz szukaj.  
 > Jeśli przestrzeń odpowie — zobaczysz znak.
