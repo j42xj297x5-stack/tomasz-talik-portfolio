@@ -15,8 +15,8 @@ export const VR_RUNE_STONE_INSTALL_AUDIO = Object.freeze(
 );
 
 export function createVrRuneStoneAudioProjection({ audioBridge, runeStoneActor,
-  runeStoneProgressionController, getEmitterAnchor, getListenerWorldPose, spatialSettings }) {
-  if (!audioBridge?.startSpatialProcessSource || !audioBridge?.setSpatialListenerPose) {
+  runeStoneProgressionController, getEmitterAnchor, spatialSettings }) {
+  if (!audioBridge?.startSpatialProcessSource) {
     throw new TypeError('Rune Stone audio projection requires the VR audio bridge.');
   }
   if (!runeStoneActor?.getState
@@ -88,8 +88,6 @@ export function createVrRuneStoneAudioProjection({ audioBridge, runeStoneActor,
   }
   function update() {
     if (disposed) return;
-    const pose = getListenerWorldPose();
-    if (pose) audioBridge.setSpatialListenerPose(pose);
     entries.forEach((entry) => {
       if (!entry.handle) return;
       if (!isInstalled(entry) || !readEmitterPosition(entry.descriptor.branchId)) { stopEntry(entry); return; }
