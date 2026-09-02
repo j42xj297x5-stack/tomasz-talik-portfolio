@@ -76,6 +76,12 @@ const criticalInitialAssets = Object.freeze([
 ]);
 
 const deferredWarmAssets = Object.freeze([
+  ...['KA', 'TA', 'SA', 'LA', 'RA'].map((syllable) => withStage({
+    id: `proto-astro-${syllable.toLowerCase()}-image`,
+    label: `${syllable} Proto-Astro sign`,
+    path: `/svg/${syllable}.svg`,
+    type: 'image'
+  }, ASSET_STAGES.DEFERRED_WARM)),
   withStage({ id: 'vr-astro-attractor-model', label: 'VR Astro attractor tool', path: '/glb/astro_grabber.glb', type: 'model' }, ASSET_STAGES.DEFERRED_WARM),
   withStage({ id: 'vr-astro-furnace-model', label: 'VR Astro furnace', path: '/glb/astral_stove.glb', type: 'model' }, ASSET_STAGES.DEFERRED_WARM),
   withStage({ id: 'vr-asterion-sphere-model', label: 'VR Asterion Sphere physical prototype', path: '/glb/asterion_sphere.glb', type: 'model' }, ASSET_STAGES.DEFERRED_WARM),

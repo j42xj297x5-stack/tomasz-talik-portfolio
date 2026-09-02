@@ -71,6 +71,8 @@ import { createVrAsterionSectorAcquisitionPresentation } from './xr/asterion/cre
 import { createVrAsterionResonatorFieldActor } from './xr/asterion/createVrAsterionResonatorFieldActor.js';
 import { createVrAsterionResonatorFieldPresentation } from './xr/asterion/createVrAsterionResonatorFieldPresentation.js';
 import { createVrAsterionResonatorTargetAcquisitionActor } from './xr/asterion/createVrAsterionResonatorTargetAcquisitionActor.js';
+import { createVrAsterionResonatorTargetResponsePresentation } from './xr/asterion/createVrAsterionResonatorTargetResponsePresentation.js';
+import { resolveVrPageProtoAstro } from './xr/protoAstro/resolveVrPageProtoAstro.js';
 import { createVrAsterionProductionController } from './xr/asterion/createVrAsterionProductionController.js';
 import { createVrPlayerGuidePanel } from './xr/guidance/createVrPlayerGuidePanel.js';
 import { createVrCurrentObjectiveProjection } from './xr/guidance/createVrCurrentObjectiveProjection.js';
@@ -223,7 +225,7 @@ worldStableRoot.add(centralPlaceholder);
 
 const asterionSphereQa = settings.asterionSphere.enabled && searchParams.has(settings.asterionSphere.qaQueryParam);
 const vrAssets = getPreloadAssets([...INITIAL_PRELOAD_GROUPS, ...DEFERRED_PRELOAD_GROUPS])
-  .filter(({ id }) => id === 'sun-model' || id === 'vr-asterion-sphere-model' || id === 'vr-rune-bridge-model' || id === 'gltf-loader-module' || id === 'monkey-model' || id === 'monkey-silhouette-model' || id === 'monkey-stone-model' || id === 'vr-portal-model' || id === 'vr-astro-attractor-model' || id === 'vr-astro-furnace-model' || id.startsWith('vr-progress-floor-') || id === 'vr-crystal-reliquary-model' || id.startsWith('vr-crystal-reliquary-button-') || id.startsWith('glyph-') || id.startsWith('vr-crystal-') || id.startsWith('vr-rune-stone-') || id.startsWith('shell-relic-') || id.startsWith('small-glyph-relic-'))
+  .filter(({ id }) => id === 'sun-model' || id === 'vr-asterion-sphere-model' || id === 'vr-rune-bridge-model' || id === 'gltf-loader-module' || id === 'monkey-model' || id === 'monkey-silhouette-model' || id === 'monkey-stone-model' || id === 'vr-portal-model' || id === 'vr-astro-attractor-model' || id === 'vr-astro-furnace-model' || id.startsWith('vr-progress-floor-') || id === 'vr-crystal-reliquary-model' || id.startsWith('vr-crystal-reliquary-button-') || id.startsWith('glyph-') || id.startsWith('vr-crystal-') || id.startsWith('vr-rune-stone-') || id.startsWith('shell-relic-') || id.startsWith('small-glyph-relic-') || id.startsWith('proto-astro-'))
   .map((asset) => ({ ...asset, critical: asset.id === 'gltf-loader-module' }));
 const loadingDiagnostics = createLoadingDiagnostics(vrAssets);
 const assetManager = createAssetManager({ diagnostics: loadingDiagnostics });
@@ -598,6 +600,20 @@ const asterionResonatorTargetAcquisitionActor = createVrAsterionResonatorTargetA
 });
 largeGlyphActor.nodes.forEach((node) => {
   asterionResonatorTargetAcquisitionActor.registerTarget({ id: node.userData.id, anchor: node });
+});
+const asterionResonatorTargetResponsePresentation = createVrAsterionResonatorTargetResponsePresentation({
+  parent: scene,
+  acquisitionActor: asterionResonatorTargetAcquisitionActor,
+  getPlayerHeadWorldPosition: (target) => getXrHeadWorldPosition({ renderer, camera, playerRig, target }),
+  settings: settings.asterionTargetResponse
+});
+largeGlyphActor.nodes.forEach((node) => {
+  const id = node.userData.id;
+  const protoAstro = resolveVrPageProtoAstro({ glyphId: id });
+  const signImage = protoAstro ? assetManager.getAssetByPath(protoAstro.descriptor.path)?.image : null;
+  if (!protoAstro || !signImage) throw new Error(`Missing prepared canonical Proto-Astro sign image for target: ${id}`);
+  const color = settings.asterionTargetResponse.familyColors[protoAstro.descriptor.familyCode];
+  asterionResonatorTargetResponsePresentation.registerTarget({ id, anchor: node, protoAstro, signImage, color });
 });
 const unsubscribeResonatorScenarioHandoff = runeStoneProgressionController.subscribe(() => {
   progressionSemanticHandoff.onResonatorStateChanged(asterionResonatorFieldActor.getDescriptor());
@@ -1491,6 +1507,7 @@ function renderFrame() {
   asterionSphere.update(delta);
   asterionGyroInteraction.update(delta);
   asterionResonatorTargetAcquisitionActor.update(delta);
+  asterionResonatorTargetResponsePresentation.update(delta);
   vrAudio.setAsterionSphereState({
     equipped: asterionSphere.isEquipped(),
     driveActive: asterionGyroInteraction.isDriveActive()
@@ -1548,6 +1565,7 @@ function restoreVrScenarioBaseline() {
   runeStoneAudioProjection.reset();
   asterionResonatorFieldActor.reset();
   asterionResonatorTargetAcquisitionActor.reset();
+  asterionResonatorTargetResponsePresentation.reset();
   asterionResonatorFieldPresentation.reset();
   protoAstroTuningController.resetBaseline();
   crystalCollection.reset();
@@ -1676,6 +1694,7 @@ window.addEventListener('pagehide', () => {
   unsubscribeSectorLockGuidance();
   unsubscribeRuneBridgeGuidance();
   asterionResonatorFieldPresentation.dispose();
+  asterionResonatorTargetResponsePresentation.dispose();
   asterionResonatorTargetAcquisitionActor.dispose();
   asterionResonatorFieldActor.dispose();
   asterionProductionController.dispose();
