@@ -32,6 +32,10 @@ export function createVrRuneStoneInstallationInteraction({
   if (!Number.isFinite(duration) || duration <= 0) {
     throw new TypeError('settings.phaseDurationSeconds must be finite and positive.');
   }
+  const installAudioLeadSeconds = settings?.installAudioLeadSeconds;
+  if (!Number.isFinite(installAudioLeadSeconds) || installAudioLeadSeconds < 0) {
+    throw new TypeError('settings.installAudioLeadSeconds must be finite and non-negative.');
+  }
 
   const targetPosition = new THREE.Vector3();
   const targetQuaternion = new THREE.Quaternion();
@@ -41,7 +45,23 @@ export function createVrRuneStoneInstallationInteraction({
   const localQuaternion = new THREE.Quaternion();
   let active = null;
   let disposed = false;
+  const installAudioCueListeners = new Set();
   const installedListeners = new Set();
+
+  function createInstallationEvent(record) {
+    return Object.freeze({ branchId: record.branchId, familyCode: record.familyCode,
+      assetIdentity: record.descriptor.assetIdentity });
+  }
+
+  function emitInstallAudioCueIfDue() {
+    if (active.installAudioCueEmitted || duration - active.elapsed > installAudioLeadSeconds) return;
+    active.installAudioCueEmitted = true;
+    const event = createInstallationEvent(active.record);
+    installAudioCueListeners.forEach((listener) => {
+      try { listener(event); }
+      catch (error) { console.warn('[VrRuneStoneInstallationInteraction] Install audio cue observer failed.', error); }
+    });
+  }
 
   function readWorldTransform(anchor, position, quaternion) {
     anchor.updateWorldMatrix(true, false);
@@ -78,6 +98,7 @@ export function createVrRuneStoneInstallationInteraction({
       installationAnchor,
       phase: INSTALLATION_PHASE.APPROACH,
       elapsed: 0,
+      installAudioCueEmitted: false,
       startPosition: root.getWorldPosition(new THREE.Vector3()),
       startQuaternion: root.getWorldQuaternion(new THREE.Quaternion())
     };
@@ -106,10 +127,12 @@ export function createVrRuneStoneInstallationInteraction({
     if (runeBridgeActor.getState(active.record.branchId) !== VR_RUNE_BRIDGE_STATES.EXTENDED) return;
     active.phase = INSTALLATION_PHASE.DESCENT;
     active.elapsed = 0;
+    emitInstallAudioCueIfDue();
   }
 
   function updateDescent(delta) {
     active.elapsed = Math.min(duration, active.elapsed + delta);
+    emitInstallAudioCueIfDue();
     const t = smoothstep(active.elapsed / duration);
     readWorldTransform(active.hoverAnchor, fromPosition, fromQuaternion);
     readWorldTransform(active.installationAnchor, targetPosition, targetQuaternion);
@@ -131,8 +154,7 @@ export function createVrRuneStoneInstallationInteraction({
       throw new Error(`[VrRuneStoneInstallationInteraction] Duplicate installed truth for ${record.familyCode}.`);
     }
     active = null;
-    const event = Object.freeze({ branchId: record.branchId, familyCode: record.familyCode,
-      assetIdentity: record.descriptor.assetIdentity });
+    const event = createInstallationEvent(record);
     installedListeners.forEach((listener) => {
       try { listener(event); }
       catch (error) { console.warn('[VrRuneStoneInstallationInteraction] Installed observer failed.', error); }
@@ -155,10 +177,16 @@ export function createVrRuneStoneInstallationInteraction({
       if (root.parent !== runeStoneActor.object) runeStoneActor.object.attach(root);
     });
     disposed = true;
+    installAudioCueListeners.clear();
     installedListeners.clear();
   }
 
   return { tryBeginHandoff, update, reset, dispose,
+    subscribeInstallAudioCue(listener) {
+      if (typeof listener !== 'function') throw new TypeError('Install audio cue listener must be a function.');
+      installAudioCueListeners.add(listener);
+      return () => installAudioCueListeners.delete(listener);
+    },
     subscribeInstalled(listener) {
       if (typeof listener !== 'function') throw new TypeError('Installed listener must be a function.');
       installedListeners.add(listener);

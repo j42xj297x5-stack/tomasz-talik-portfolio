@@ -1058,6 +1058,8 @@ runeStoneAudioProjection = createVrRuneStoneAudioProjection({
     return listenerPose;
   }
 });
+const unsubscribeRuneStoneInstallAudioCue = runeStoneInstallationInteraction
+  .subscribeInstallAudioCue((event) => runeStoneAudioProjection.presentInstallAudioCue(event));
 const unsubscribeRuneStoneInstalledAudio = runeStoneInstallationInteraction
   .subscribeInstalled((event) => runeStoneAudioProjection.presentInstalled(event));
 runeStoneAttractorInteraction = createVrRuneStoneAttractorInteraction({
@@ -1640,6 +1642,7 @@ window.addEventListener('pagehide', () => {
   introFogReveal.dispose();
   ambientSequencer.dispose();
   introAmbientSequencer.dispose();
+  unsubscribeRuneStoneInstallAudioCue();
   unsubscribeRuneStoneInstalledAudio();
   runeStoneAudioProjection.dispose();
   vrAudio.dispose();

@@ -78,9 +78,12 @@ export function createVrRuneStoneAudioProjection({ audioBridge, runeStoneActor,
     if (disposed) return;
     entries.forEach((entry) => { if (isInstalled(entry)) startEntry(entry); else stopEntry(entry); });
   }
-  function presentInstalled(event) {
+  function presentInstallAudioCue(event) {
     if (disposed || !AUDIO_BY_BRANCH[event?.branchId]) return;
     audioBridge.playOneShot(AUDIO_BY_BRANCH[event.branchId].install, 'WORLD');
+  }
+  function presentInstalled(event) {
+    if (disposed || !AUDIO_BY_BRANCH[event?.branchId]) return;
     synchronizeInstalledEmitters();
   }
   function update() {
@@ -95,5 +98,5 @@ export function createVrRuneStoneAudioProjection({ audioBridge, runeStoneActor,
   }
   function reset() { generation += 1; entries.forEach(stopEntry); }
   function dispose() { if (disposed) return; reset(); disposed = true; }
-  return { presentInstalled, synchronizeInstalledEmitters, update, reset, dispose };
+  return { presentInstallAudioCue, presentInstalled, synchronizeInstalledEmitters, update, reset, dispose };
 }

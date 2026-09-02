@@ -215,7 +215,9 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
     scanCone: { color: 0x78ff9c, halfAngleDegrees: 2.5, opacityMin: 0.035, opacityMax: 0.065,
       pulseDuration: 1.6, radialSegments: 14 }
   },
-  runeStoneInstallation: { handoffRadiusMeters: 10, hoverHeightMeters: 2, phaseDurationSeconds: 1.2 },
+  runeStoneInstallation: {
+    handoffRadiusMeters: 10, hoverHeightMeters: 2, phaseDurationSeconds: 1.2, installAudioLeadSeconds: 1.0
+  },
   runeStoneSpatialAudio: { maxDistanceMeters: 2.0, refDistanceMeters: 0.25, platformRadiusMeters: 8.0 },
   runeBridge: { presentationScale: 2, radialPresentationOffsetMeters: 1,
     arrivalDistanceMeters: 130, arrivalDurationSeconds: 4.0 },
@@ -763,6 +765,11 @@ export function normalizeExperienceVrSettings(candidate) {
         candidate.runeStoneInstallation?.phaseDurationSeconds,
         defaults.runeStoneInstallation.phaseDurationSeconds,
         { min: Number.EPSILON, max: 60 }
+      ),
+      installAudioLeadSeconds: finiteNumber(
+        candidate.runeStoneInstallation?.installAudioLeadSeconds,
+        defaults.runeStoneInstallation.installAudioLeadSeconds,
+        { min: 0 }
       )
     },
     runeStoneSpatialAudio: (() => {
