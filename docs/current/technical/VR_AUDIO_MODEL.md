@@ -117,15 +117,15 @@ In short: insert → `turn_page_01`, activate → `creating_short_01`, consume �
 
 ### Platform sector acquisition and drive — CURRENT / BINDING TARGET
 
-A successfully completed sector acquisition, when control is ready rather than on initial GRIP, plays one `WORLD` one-shot: EARTH → `electricity_short_01.mp3`, FIRE → `electricity_short_02.mp3`, WOOD → `electricity_short_03.mp3`, METAL → `electricity_short_04.mp3`, WATER → `electricity_short_05.mp3`. This complete mapping does not add sector-control gameplay: the current runtime physically drives only EARTH/WOOD/FIRE, and each mapping becomes active only with its corresponding legal sector interaction.
+The first valid frame of each genuinely new sector-acquisition attempt plays one branch-specific `WORLD` one-shot: EARTH → `electricity_short_01.mp3`, FIRE → `electricity_short_02.mp3`, WOOD → `electricity_short_03.mp3`, METAL → `electricity_short_04.mp3`, WATER → `electricity_short_05.mp3`. The trigger is the live `IDLE / no candidate → ACQUIRING valid powered sector candidate` transition while the Asterion Sphere is equipped and acquisition input is active, so it coincides with the tube's first electrical contact; it does **not** wait for the unchanged `1.0 s` `LOCKED` gameplay truth. GRIP without valid contact, invalid or unpowered sectors, empty space, blocked interaction, reconstruction and reset are silent. Contact loss followed later by a genuinely new valid acquisition attempt may play the one-shot again. This mapping does not add sector-control gameplay: the current runtime physically drives only EARTH/WOOD/FIRE, and each mapping becomes active only with its corresponding legal sector interaction.
 
 Active sector drive uses finite, non-looping process sources: EARTH → `electricity_long_01.mp3`, FIRE → `electricity_long_02.mp3`, WOOD → `electricity_long_03.mp3`, METAL → `electricity_long_04.mp3`, WATER → `electricity_long_04.mp3`. A new real drive-audio lifecycle starts its asset from the beginning. Continuous adjustment preserves the source/playhead, including a short detent hold within the same manipulation. End of active manipulation or release ramps gain to zero over exactly `1.0 s`; reacquiring the same sector before that fade completes preserves its source/playhead and ramps to full gain over exactly `0.2 s`. Only after gain reaches zero may the source stop/dispose; a later lifecycle starts from the beginning. Natural file end is silent and never restarts automatically.
 
 ### Zwornik live arrival — CURRENT / BINDING TARGET
 
-The implemented instantaneous R3c audio cycle using `creating_01–03` is **SUPERSEDED**. On a live sector-completion transition, at `t=0.0 s`, play `electricity_short_06.mp3` immediately on `WORLD` and begin one owner-controlled Zwornik arrival from exactly `130 m` farther outward along that sector's radial axis relative to its canonical docked position. Over exactly `3.0 s` it translates along that axis to the exact final position. Existing Binder lightning/materialization may accompany the reveal but must not own or duplicate this translation.
+The implemented instantaneous R3c audio cycle using `creating_01–03` is **SUPERSEDED**. On a live sector-completion transition, at `t=0.0 s`, play `electricity_short_06.mp3` immediately on `WORLD` and begin one owner-controlled Zwornik arrival from exactly `130 m` farther outward along that sector's radial axis relative to its canonical docked position. Over exactly `4.0 s` it translates along that axis to the exact final position. Existing Binder lightning/materialization may accompany the reveal but must not own or duplicate this translation.
 
-At `t=3.0 s` the Zwornik becomes fully `DOCKED` and installation-ready, then plays its branch-specific `WORLD` one-shot: EARTH → `zwornik_01.mp3`, FIRE → `zwornik_02.mp3`, WOOD → `zwornik_03.mp3`, METAL → `zwornik_04.mp3`, WATER → `zwornik_03.mp3`. Installation cannot begin during live arrival. The semantic state path is `HIDDEN → ARRIVING → DOCKED`; runtime naming may differ, but ARRIVING and settled DOCKED must remain distinguishable.
+At `t=4.0 s` the Zwornik reaches the exact canonical dock position, becomes fully `DOCKED` and installation-ready, then plays its branch-specific `WORLD` one-shot: EARTH → `zwornik_01.mp3`, FIRE → `zwornik_02.mp3`, WOOD → `zwornik_03.mp3`, METAL → `zwornik_04.mp3`, WATER → `zwornik_03.mp3`. Installation cannot begin during live arrival. The semantic state path is `HIDDEN → ARRIVING → DOCKED`; runtime naming may differ, but ARRIVING and settled DOCKED must remain distinguishable.
 
 Hydration, reconstruction and debug restoration of an already completed sector are silent and settled: restore directly at final `DOCKED`, with no 130 m motion, `electricity_short_06` or `zwornik_*` playback.
 
@@ -133,7 +133,7 @@ Hydration, reconstruction and debug restoration of an already completed sector a
 
 `electricity_short_07.mp3` is **RESERVED** for detecting the Metal Large Glyph inside the future Resonator field; `electricity_short_08.mp3` is **RESERVED** for the Water Large Glyph. They remain TODO until real target-containment semantics exist; no proxy trigger is authorized.
 
-The `creating_*` family is reassigned from Binder reveal to later Rune Stone installation: EARTH → `creating_01.mp3`, FIRE → `creating_02.mp3`, WOOD → `creating_03.mp3`, METAL → `creating_04.mp3`, WATER → `creating_05.mp3`. Exact installation timing is not frozen. `creating_06–08.mp3` remain **UNASSIGNED**, and `creating_short_01.mp3` retains its existing Reliquary activation role.
+The `creating_*` family is reassigned from Binder reveal to Rune Stone installation: EARTH → `creating_01.mp3`, FIRE → `creating_02.mp3`, WOOD → `creating_03.mp3`, METAL → `creating_04.mp3`, WATER → `creating_05.mp3`. During a live installation, with `installAudioLeadSeconds = 1.0`, play the branch one-shot exactly once when remaining final `DESCENT` time first becomes `<= 1.0 s`; if future tuning makes the entire `DESCENT <= 1.0 s`, play it once at `DESCENT` start. This presentation anticipation does not install the stone: `INSTALLED`, bridge `BOUND`, `commitInstalledFamily()` and eligibility for the persistent installed spatial loop remain tied to actual physical completion. Do not move this sound to `APPROACH`, `BRIDGE_OPEN` or attractor handoff, and hydration/reconstruction remains silent. `creating_06–08.mp3` remain **UNASSIGNED**, and `creating_short_01.mp3` retains its existing Reliquary activation role.
 
 ### Astro Furnace
 
@@ -202,11 +202,11 @@ The inventory below contains every existing `public/audio/*.mp3` as of 2026-08-2
 | `asterion_sphere_work.mp3` | seamless loop | DEVICE | aktywne sterowanie podłogą Kulą | **IMPLEMENTED** | Start przy drive; release wygasza przez 2 s, a retrigger zachowuje source/playhead. |
 | `click_panel_01.mp3` | one-shot | UI | klik wewnątrz panelu małpy lub gracza Y; powrót panelu Astro Pieca do menu głównego | **IMPLEMENTED** | Playback one-shot na busie UI jest wdrożony. |
 | `click_short_01.mp3` | one-shot | UI | panelowe kliknięcia wcześniej mapowane jako `turn_page_*` | **IMPLEMENTED** | W bieżącym Experience VR nie było takich mapowań; istniejących świadomych klików nie zmieniono. |
-| `creating_01.mp3` | one-shot | WORLD | instalacja Rune Stone EARTH | **PLANNED** | Supersedes implemented Binder-cycle assignment; exact installation timing not frozen. |
-| `creating_02.mp3` | one-shot | WORLD | instalacja Rune Stone FIRE | **PLANNED** | Supersedes implemented Binder-cycle assignment; exact installation timing not frozen. |
-| `creating_03.mp3` | one-shot | WORLD | instalacja Rune Stone WOOD | **PLANNED** | Supersedes implemented Binder-cycle assignment; exact installation timing not frozen. |
-| `creating_04.mp3` | one-shot | WORLD | instalacja Rune Stone METAL | **PLANNED** | Exact installation timing not frozen. |
-| `creating_05.mp3` | one-shot | WORLD | instalacja Rune Stone WATER | **PLANNED** | Exact installation timing not frozen. |
+| `creating_01.mp3` | one-shot | WORLD | instalacja Rune Stone EARTH | **PLANNED** | Once when final DESCENT first has `<= 1.0 s` remaining; silent reconstruction. |
+| `creating_02.mp3` | one-shot | WORLD | instalacja Rune Stone FIRE | **PLANNED** | Once when final DESCENT first has `<= 1.0 s` remaining; silent reconstruction. |
+| `creating_03.mp3` | one-shot | WORLD | instalacja Rune Stone WOOD | **PLANNED** | Once when final DESCENT first has `<= 1.0 s` remaining; silent reconstruction. |
+| `creating_04.mp3` | one-shot | WORLD | instalacja Rune Stone METAL | **PLANNED** | Once when final DESCENT first has `<= 1.0 s` remaining; silent reconstruction. |
+| `creating_05.mp3` | one-shot | WORLD | instalacja Rune Stone WATER | **PLANNED** | Once when final DESCENT first has `<= 1.0 s` remaining; silent reconstruction. |
 | `creating_06.mp3` | one-shot | WORLD | — | **UNASSIGNED** | Dostępny; przyszłe użycie pozostaje otwarte. |
 | `creating_07.mp3` | one-shot | WORLD | — | **UNASSIGNED** | Dostępny; przyszłe użycie pozostaje otwarte. |
 | `creating_08.mp3` | one-shot | WORLD | — | **UNASSIGNED** | Dostępny; przyszłe użycie pozostaje otwarte. |
@@ -215,12 +215,12 @@ The inventory below contains every existing `public/audio/*.mp3` as of 2026-08-2
 | `electricity_long_02.mp3` | finite one-shot | WORLD | FIRE sector drive | **PLANNED** | Non-looping lifecycle; 1.0 s fade-out / 0.2 s recovery. |
 | `electricity_long_03.mp3` | finite one-shot | WORLD | WOOD sector drive | **PLANNED** | Non-looping lifecycle; 1.0 s fade-out / 0.2 s recovery. |
 | `electricity_long_04.mp3` | finite one-shot | WORLD | METAL and WATER sector drive | **PLANNED** | Mapping is canonical; corresponding physical controls remain future. |
-| `electricity_short_01.mp3` | one-shot | WORLD | EARTH acquisition completed/locked | **PLANNED** | Plays on successful completion, not initial GRIP. |
-| `electricity_short_02.mp3` | one-shot | WORLD | FIRE acquisition completed/locked | **PLANNED** | Plays on successful completion, not initial GRIP. |
-| `electricity_short_03.mp3` | one-shot | WORLD | WOOD acquisition completed/locked | **PLANNED** | Plays on successful completion, not initial GRIP. |
-| `electricity_short_04.mp3` | one-shot | WORLD | METAL acquisition completed/locked | **PLANNED** | Mapping reserved for corresponding legal interaction. |
-| `electricity_short_05.mp3` | one-shot | WORLD | WATER acquisition completed/locked | **PLANNED** | Mapping reserved for corresponding legal interaction. |
-| `electricity_short_06.mp3` | one-shot | WORLD | live sector completion / Zwornik arrival start | **PLANNED** | At t=0.0 s of the 3.0 s arrival. |
+| `electricity_short_01.mp3` | one-shot | WORLD | EARTH valid acquisition attempt starts | **PLANNED** | First valid `ACQUIRING` frame; does not wait for lock. |
+| `electricity_short_02.mp3` | one-shot | WORLD | FIRE valid acquisition attempt starts | **PLANNED** | First valid `ACQUIRING` frame; does not wait for lock. |
+| `electricity_short_03.mp3` | one-shot | WORLD | WOOD valid acquisition attempt starts | **PLANNED** | First valid `ACQUIRING` frame; does not wait for lock. |
+| `electricity_short_04.mp3` | one-shot | WORLD | METAL valid acquisition attempt starts | **PLANNED** | First valid `ACQUIRING` frame; corresponding legality remains required. |
+| `electricity_short_05.mp3` | one-shot | WORLD | WATER valid acquisition attempt starts | **PLANNED** | First valid `ACQUIRING` frame; corresponding legality remains required. |
+| `electricity_short_06.mp3` | one-shot | WORLD | live sector completion / Zwornik arrival start | **PLANNED** | At t=0.0 s of the 4.0 s arrival. |
 | `electricity_short_07.mp3` | one-shot | WORLD | future Metal Large Glyph field detection | **RESERVED** | No trigger until real containment semantics exist. |
 | `electricity_short_08.mp3` | one-shot | WORLD | future Water Large Glyph field detection | **RESERVED** | No trigger until real containment semantics exist. |
 | `floor_panel_activate.mp3` | one-shot | WORLD | dodatkowo po Release kończącym pełny próg | **IMPLEMENTED** | Playback one-shot jest wdrożony zgodnie z semantyką eventu powyżej. |
@@ -282,10 +282,10 @@ The inventory below contains every existing `public/audio/*.mp3` as of 2026-08-2
 | `start.mp3` | one-shot | UNASSIGNED | — | **UNASSIGNED** | Brak przypisanej funkcji i warstwy VR. |
 | `turn_page_01.mp3` | one-shot | WORLD | włożenie kryształu do relikwiarza | **IMPLEMENTED** | Playback one-shot jest wdrożony dla faktycznie zaakceptowanego insertu. |
 | `turn_page_02.mp3` | one-shot | UI | — | **UNASSIGNED** | Brak ustalonego użycia VR. |
-| `zwornik_01.mp3` | one-shot | WORLD | EARTH Zwornik dock at t=3.0 s | **PLANNED** | Only after live arrival reaches exact settled position. |
-| `zwornik_02.mp3` | one-shot | WORLD | FIRE Zwornik dock at t=3.0 s | **PLANNED** | Only after live arrival reaches exact settled position. |
-| `zwornik_03.mp3` | one-shot | WORLD | WOOD and WATER Zwornik dock at t=3.0 s | **PLANNED** | Branch-specific shared asset. |
-| `zwornik_04.mp3` | one-shot | WORLD | METAL Zwornik dock at t=3.0 s | **PLANNED** | Only after live arrival reaches exact settled position. |
+| `zwornik_01.mp3` | one-shot | WORLD | EARTH Zwornik dock at t=4.0 s | **PLANNED** | Only after live arrival reaches exact settled position. |
+| `zwornik_02.mp3` | one-shot | WORLD | FIRE Zwornik dock at t=4.0 s | **PLANNED** | Only after live arrival reaches exact settled position. |
+| `zwornik_03.mp3` | one-shot | WORLD | WOOD and WATER Zwornik dock at t=4.0 s | **PLANNED** | Branch-specific shared asset. |
+| `zwornik_04.mp3` | one-shot | WORLD | METAL Zwornik dock at t=4.0 s | **PLANNED** | Only after live arrival reaches exact settled position. |
 
 ## Prefix map for future assets
 
