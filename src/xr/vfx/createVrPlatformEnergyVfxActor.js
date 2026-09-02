@@ -314,11 +314,14 @@ export function createVrPlatformEnergyVfxActor({ getSectorMount, getSectorBounds
       if (life >= 1) release(slot);
     });
     revealProfiles.forEach((profile, branchId) => {
-      profile.elapsed += delta; const materializeStart = config.revealTravelSeconds; const materializeEnd = materializeStart + config.binderMaterializeSeconds;
+      const previousElapsed = profile.elapsed; profile.elapsed += delta;
+      const materializeStart = config.revealTravelSeconds;
       if (profile.elapsed >= materializeStart) runeBridgeActor.setRevealPresentationProgress(branchId, clamp01((profile.elapsed - materializeStart) / config.binderMaterializeSeconds));
-      if (profile.elapsed < materializeEnd) { profile.spawnElapsed += delta; while (profile.spawnElapsed >= config.spawnIntervalSeconds) { profile.spawnElapsed -= config.spawnIntervalSeconds; spawn(profile); } }
-      else if (!profile.finalPulseSpawned) { profile.finalPulseSpawned = true; spawn(profile, 1.8); }
-      if (profile.elapsed >= materializeEnd + config.finalPulseSeconds + config.boltLifetimeSeconds) { runeBridgeActor.setRevealPresentationProgress(branchId, 1); revealProfiles.delete(branchId); }
+      const revealDelta = Math.max(0, Math.min(delta, config.runeBinderRevealDurationSeconds - previousElapsed));
+      profile.spawnElapsed += revealDelta;
+      while (profile.spawnElapsed >= config.spawnIntervalSeconds) { profile.spawnElapsed -= config.spawnIntervalSeconds; spawn(profile); }
+      if (profile.elapsed >= config.runeBinderRevealDurationSeconds && !profile.finalPulseSpawned) { profile.finalPulseSpawned = true; spawn(profile, 1.8); }
+      if (profile.elapsed >= config.runeBinderRevealDurationSeconds + config.finalPulseSeconds + config.boltLifetimeSeconds) { runeBridgeActor.setRevealPresentationProgress(branchId, 1); revealProfiles.delete(branchId); }
     });
     acquisitionProfiles.forEach((profile) => {
       const shaped = smoothstep(profile.strength); const interval = THREE.MathUtils.lerp(config.acquisitionSpawnIntervalStartSeconds, config.acquisitionSpawnIntervalEndSeconds, shaped);

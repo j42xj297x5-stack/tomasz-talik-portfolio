@@ -218,14 +218,15 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
   runeStoneInstallation: {
     handoffRadiusMeters: 10, hoverHeightMeters: 2, phaseDurationSeconds: 1.2, installAudioLeadSeconds: 1.0
   },
-  runeStoneSpatialAudio: { maxDistanceMeters: 2.0, refDistanceMeters: 0.25, platformRadiusMeters: 8.0 },
+  runeStoneSpatialAudio: { maxDistanceMeters: 3.0, refDistanceMeters: 0.25, platformRadiusMeters: 8.0 },
   runeBridge: { presentationScale: 2, radialPresentationOffsetMeters: 1,
     arrivalDistanceMeters: 130, arrivalDurationSeconds: 4.0 },
   platformEnergyVfx: {
     enabled: true, maxActiveBolts: 12, segmentsPerBolt: 12, maxBranchesPerBolt: 3,
     underfloorOffsetMeters: 0.035, verticalJitterMeters: 0.025,
     boltLifetimeSeconds: 0.18, spawnIntervalSeconds: 0.075,
-    revealTravelSeconds: 0.7, binderMaterializeSeconds: 0.42, finalPulseSeconds: 0.2,
+    revealTravelSeconds: 0.7, binderMaterializeSeconds: 0.42,
+    runeBinderRevealDurationSeconds: 4.0, finalPulseSeconds: 0.2,
     acquisitionSpawnIntervalStartSeconds: 0.22, acquisitionSpawnIntervalEndSeconds: 0.07,
     acquisitionStrengthMin: 0.35, acquisitionStrengthMax: 0.8,
     driveSpawnIntervalSeconds: 0.055, driveBinderBoltChance: 0.3, driveStrength: 1,
@@ -802,6 +803,8 @@ export function normalizeExperienceVrSettings(candidate) {
       spawnIntervalSeconds: finiteNumber(candidate.platformEnergyVfx?.spawnIntervalSeconds, defaults.platformEnergyVfx.spawnIntervalSeconds, { min: 0.02, max: 1 }),
       revealTravelSeconds: finiteNumber(candidate.platformEnergyVfx?.revealTravelSeconds, defaults.platformEnergyVfx.revealTravelSeconds, { min: 0.1, max: 4 }),
       binderMaterializeSeconds: finiteNumber(candidate.platformEnergyVfx?.binderMaterializeSeconds, defaults.platformEnergyVfx.binderMaterializeSeconds, { min: 0.1, max: 4 }),
+      runeBinderRevealDurationSeconds: finiteNumber(candidate.platformEnergyVfx?.runeBinderRevealDurationSeconds,
+        defaults.platformEnergyVfx.runeBinderRevealDurationSeconds, { min: Number.EPSILON, max: 60 }),
       finalPulseSeconds: finiteNumber(candidate.platformEnergyVfx?.finalPulseSeconds, defaults.platformEnergyVfx.finalPulseSeconds, { min: 0.05, max: 1 }),
       acquisitionSpawnIntervalStartSeconds: finiteNumber(candidate.platformEnergyVfx?.acquisitionSpawnIntervalStartSeconds, defaults.platformEnergyVfx.acquisitionSpawnIntervalStartSeconds, { min: 0.02, max: 1 }),
       acquisitionSpawnIntervalEndSeconds: finiteNumber(candidate.platformEnergyVfx?.acquisitionSpawnIntervalEndSeconds, defaults.platformEnergyVfx.acquisitionSpawnIntervalEndSeconds, { min: 0.02, max: 1 }),
