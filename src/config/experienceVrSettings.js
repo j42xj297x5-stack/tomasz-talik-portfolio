@@ -218,7 +218,7 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
   runeStoneInstallation: { handoffRadiusMeters: 10, hoverHeightMeters: 2, phaseDurationSeconds: 1.2 },
   runeStoneSpatialAudio: { maxDistanceMeters: 2.0, refDistanceMeters: 0.25, platformRadiusMeters: 8.0 },
   runeBridge: { presentationScale: 2, radialPresentationOffsetMeters: 1,
-    arrivalDistanceMeters: 130, arrivalDurationSeconds: 3.0 },
+    arrivalDistanceMeters: 130, arrivalDurationSeconds: 4.0 },
   platformEnergyVfx: {
     enabled: true, maxActiveBolts: 12, segmentsPerBolt: 12, maxBranchesPerBolt: 3,
     underfloorOffsetMeters: 0.035, verticalJitterMeters: 0.025,
