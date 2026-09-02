@@ -41,6 +41,7 @@ export function createVrRuneStoneInstallationInteraction({
   const localQuaternion = new THREE.Quaternion();
   let active = null;
   let disposed = false;
+  const installedListeners = new Set();
 
   function readWorldTransform(anchor, position, quaternion) {
     anchor.updateWorldMatrix(true, false);
@@ -123,11 +124,19 @@ export function createVrRuneStoneInstallationInteraction({
     if (!runeStoneActor.completeInstallation(record.branchId)) {
       throw new Error(`[VrRuneStoneInstallationInteraction] Actor rejected completed installation for ${record.branchId}.`);
     }
-    runeBridgeActor.setInstalled(record.branchId);
+    if (!runeBridgeActor.setInstalled(record.branchId)) {
+      throw new Error(`[VrRuneStoneInstallationInteraction] Bridge rejected completed installation for ${record.branchId}.`);
+    }
     if (!runeStoneProgressionController.commitInstalledFamily(record.familyCode)) {
       throw new Error(`[VrRuneStoneInstallationInteraction] Duplicate installed truth for ${record.familyCode}.`);
     }
     active = null;
+    const event = Object.freeze({ branchId: record.branchId, familyCode: record.familyCode,
+      assetIdentity: record.descriptor.assetIdentity });
+    installedListeners.forEach((listener) => {
+      try { listener(event); }
+      catch (error) { console.warn('[VrRuneStoneInstallationInteraction] Installed observer failed.', error); }
+    });
   }
 
   function update(deltaSeconds = 0) {
@@ -146,7 +155,14 @@ export function createVrRuneStoneInstallationInteraction({
       if (root.parent !== runeStoneActor.object) runeStoneActor.object.attach(root);
     });
     disposed = true;
+    installedListeners.clear();
   }
 
-  return { tryBeginHandoff, update, reset, dispose, getActiveInstallation: () => active };
+  return { tryBeginHandoff, update, reset, dispose,
+    subscribeInstalled(listener) {
+      if (typeof listener !== 'function') throw new TypeError('Installed listener must be a function.');
+      installedListeners.add(listener);
+      return () => installedListeners.delete(listener);
+    },
+    getActiveInstallation: () => active };
 }

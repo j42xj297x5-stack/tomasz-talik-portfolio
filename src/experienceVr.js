@@ -87,6 +87,7 @@ import { createVrIntroCrystalTutorial } from './xr/guidance/createVrIntroCrystal
 import { createVrIntroFogReveal } from './xr/guidance/createVrIntroFogReveal.js';
 import { createVrReliquaryHints } from './xr/guidance/createVrReliquaryHints.js';
 import { createVrAudioBridge } from './xr/audio/createVrAudioBridge.js';
+import { createVrRuneStoneAudioProjection, VR_RUNE_STONE_INSTALL_AUDIO } from './xr/audio/createVrRuneStoneAudioProjection.js';
 import { BINDER_REVEAL_AUDIO, createVrRuneBinderRevealAudioProjection } from './xr/audio/createVrRuneBinderRevealAudioProjection.js';
 import { ASTERION_SECTOR_ACQUISITION_AUDIO, ASTERION_SECTOR_DRIVE_AUDIO,
   createVrAsterionSectorAudioProjection } from './xr/audio/createVrAsterionSectorAudioProjection.js';
@@ -152,6 +153,7 @@ const REQUIRED_VR_AUDIO = Object.freeze([
   ...BINDER_REVEAL_AUDIO,
   ...Object.values(ASTERION_SECTOR_ACQUISITION_AUDIO),
   ...new Set(Object.values(ASTERION_SECTOR_DRIVE_AUDIO))
+  , ...VR_RUNE_STONE_INSTALL_AUDIO
 ]);
 const playVrUi = (path) => vrAudio.playOneShot(path, 'UI');
 const playVrWorld = (path) => vrAudio.playOneShot(path, 'WORLD');
@@ -460,6 +462,7 @@ const ambientScenarioOwner = Object.freeze({
 function synchronizeReconstructionDerivedState() {
   synchronizeRuneBridgeReadiness();
   runeInstalledStateProjection.synchronize();
+  runeStoneAudioProjection?.synchronizeInstalledEmitters();
   asterionResonatorFieldActor.synchronize();
   furnacePanel?.redraw();
   shellSystem.applyAbsorbedShellIds(furnaceProgressionController.getAbsorbedShellIds());
@@ -513,6 +516,7 @@ let shellAttractorInteraction = null;
 let smallGlyphAttractorInteraction = null;
 let largeGlyphAttractorInteraction = null;
 let runeStoneAttractorInteraction = null;
+let runeStoneAudioProjection = null;
 let runeStoneInstallationInteraction = null;
 let runeResonatorGuidance = null;
 let monkeyKnowledgeResolver = null;
@@ -1034,6 +1038,26 @@ runeStoneInstallationInteraction = createVrRuneStoneInstallationInteraction({
   runeStoneProgressionController,
   settings: settings.runeStoneInstallation
 });
+const listenerPosition = new THREE.Vector3();
+const listenerQuaternion = new THREE.Quaternion();
+const listenerForward = new THREE.Vector3();
+const listenerUp = new THREE.Vector3();
+const listenerPose = Object.freeze({ position: listenerPosition, forward: listenerForward, up: listenerUp });
+runeStoneAudioProjection = createVrRuneStoneAudioProjection({
+  audioBridge: vrAudio, runeStoneActor, runeStoneProgressionController,
+  spatialSettings: settings.runeStoneSpatialAudio,
+  getListenerWorldPose: () => {
+    if (!renderer.xr.isPresenting) return null;
+    const xrCamera = renderer.xr.getCamera(camera);
+    xrCamera.updateWorldMatrix(true, false);
+    xrCamera.getWorldPosition(listenerPosition); xrCamera.getWorldQuaternion(listenerQuaternion);
+    listenerForward.set(0, 0, -1).applyQuaternion(listenerQuaternion).normalize();
+    listenerUp.set(0, 1, 0).applyQuaternion(listenerQuaternion).normalize();
+    return listenerPose;
+  }
+});
+const unsubscribeRuneStoneInstalledAudio = runeStoneInstallationInteraction
+  .subscribeInstalled((event) => runeStoneAudioProjection.presentInstalled(event));
 runeStoneAttractorInteraction = createVrRuneStoneAttractorInteraction({
   controllers: vrControllers.controllers, runeStoneActor, runeStoneAttractorBandProjection,
   handModeController, semanticInput, attractorTool, maxTargetDistance: runeStoneMaxTargetDistance,
@@ -1048,6 +1072,10 @@ runeStoneAttractorInteraction = createVrRuneStoneAttractorInteraction({
   platformCenter: progressFloor.object,
   getPlayerWorldPosition: (target) => getXrHeadWorldPosition({ renderer, camera, playerRig, target }),
   tryBeginInstallationHandoff: (record) => runeStoneInstallationInteraction.tryBeginHandoff(record),
+  onPullStart: (record) => vrAudio.startAttractor(record.descriptor.assetIdentity,
+    `runeStone${record.descriptor.assetIdentity.slice(-2).replace(/^0/, '')}`),
+  onPullCancel: (record) => vrAudio.cancelAttractor(record.descriptor.assetIdentity),
+  onHandoff: (record) => vrAudio.handoffAttractor(record.descriptor.assetIdentity),
   isHigherPriorityInteractionActive: (record) => Boolean(activateButton.hits.get(record)
     || releaseButton.hits.get(record) || astroFurnaceOpenInteraction.hasCurrentHit(record)
     || astroFurnaceActivateInteraction.hasCurrentHit(record) || astroFurnaceOptionInteraction.hasCurrentHit(record)
@@ -1418,6 +1446,7 @@ function renderFrame() {
   runeBridgeActor.update(delta);
   platformEnergyVfxActor.update(delta);
   runeStoneInstallationInteraction.update(delta);
+  runeStoneAudioProjection.update();
   celestialActor.update(delta);
   observationWindow.update(delta);
   p2ObservationWindow.update(delta);
@@ -1496,6 +1525,7 @@ function restoreVrScenarioBaseline() {
   astroFurnaceRuneRecipeInteraction.resetBaseline();
   runeRecipeSelectionController.reset();
   runeStoneProgressionController.reset();
+  runeStoneAudioProjection.reset();
   asterionResonatorFieldActor.reset();
   asterionResonatorFieldPresentation.reset();
   protoAstroTuningController.resetBaseline();
@@ -1608,6 +1638,8 @@ window.addEventListener('pagehide', () => {
   introFogReveal.dispose();
   ambientSequencer.dispose();
   introAmbientSequencer.dispose();
+  unsubscribeRuneStoneInstalledAudio();
+  runeStoneAudioProjection.dispose();
   vrAudio.dispose();
   asterionGyroInteraction.dispose();
   asterionSectorAcquisitionInteraction.dispose();

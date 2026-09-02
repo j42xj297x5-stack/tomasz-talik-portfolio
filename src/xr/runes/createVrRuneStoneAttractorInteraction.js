@@ -13,6 +13,7 @@ export function createVrRuneStoneAttractorInteraction({ controllers, runeStoneAc
   runeStoneAttractorBandProjection, handModeController, semanticInput, attractorTool,
   maxTargetDistance, settings, haloSettings, platformCenter, getPlayerWorldPosition,
   tryBeginInstallationHandoff = () => false,
+  onPullStart = () => {}, onPullCancel = () => {}, onHandoff = () => {},
   isHigherPriorityInteractionActive = () => false }) {
   if (!Array.isArray(controllers)) throw new TypeError('controllers must be an array.');
   if (!runeStoneActor?.getStones || !runeStoneActor?.getBoundingSphere
@@ -96,13 +97,17 @@ export function createVrRuneStoneAttractorInteraction({ controllers, runeStoneAc
     root.position.copy(localPosition);
   }
   function releaseActive() {
-    if (active) runeStoneActor.releaseFromAstro(active.branchId);
+    if (active) {
+      runeStoneActor.releaseFromAstro(active.branchId);
+      onPullCancel(active);
+    }
     active = null;
     pullSpeed = 0;
     setTarget(null);
     clearTool();
   }
   function handoffActive() {
+    onHandoff(active);
     active = null;
     pullSpeed = 0;
     setTarget(null);
@@ -207,7 +212,10 @@ export function createVrRuneStoneAttractorInteraction({ controllers, runeStoneAc
     attractorTool.setState(hit ? VR_ATTRACTOR_STATES.TARGETING : VR_ATTRACTOR_STATES.IDLE);
     if (target) halos.get(target)?.update(delta);
     if (target && primaryAction > settings.triggerThreshold
-      && runeStoneActor.lockByAstro(target.branchId) === true) active = target;
+      && runeStoneActor.lockByAstro(target.branchId) === true) {
+      active = target;
+      onPullStart(active);
+    }
   }
   function reset() {
     releaseActive();
