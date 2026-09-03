@@ -9,7 +9,7 @@ const LOCAL_DIRECTION = new THREE.Vector3(0, 0, -1);
 const clamp01 = (value) => Math.min(1, Math.max(0, value));
 export const RUNE_STONE_PLATFORM_MIN_RADIUS_M = 9.0;
 
-export function createVrRuneStoneAttractorInteraction({ controllers, runeStoneActor,
+export function createVrRuneStoneAttractorInteraction({ controllers, runeStoneActor, etherRuneStoneActor = null,
   isFamilyTargetable = () => false, handModeController, semanticInput, attractorTool,
   maxTargetDistance, settings, haloSettings, platformCenter, getPlayerWorldPosition,
   tryBeginInstallationHandoff = () => false,
@@ -38,9 +38,10 @@ export function createVrRuneStoneAttractorInteraction({ controllers, runeStoneAc
     throw new TypeError(`settings.handoffRadiusMeters must be greater than ${RUNE_STONE_PLATFORM_MIN_RADIUS_M}.`);
   }
 
-  const records = runeStoneActor.getStones().filter(({ descriptor }) => descriptor?.natural === true);
+  const sources = [runeStoneActor, etherRuneStoneActor].filter(Boolean);
+  const records = sources.flatMap((source) => source.getStones().map((record) => ({ record, source })));
   const scanCone = createVrAttractorScanCone({ parent: null, length: maxTargetDistance, settings: settings.scanCone });
-  const halos = new Map(records.map((record) => [record, createVrTargetHalo({ root: record.root, settings: haloSettings })]));
+  const halos = new Map(records.map(({ record }) => [record, createVrTargetHalo({ root: record.root, settings: haloSettings })]));
   const origin = new THREE.Vector3();
   const direction = new THREE.Vector3();
   const quaternion = new THREE.Quaternion();
@@ -50,11 +51,12 @@ export function createVrRuneStoneAttractorInteraction({ controllers, runeStoneAc
   const candidatePosition = new THREE.Vector3();
   const radialDirection = new THREE.Vector3();
   const localPosition = new THREE.Vector3();
-  const candidates = records.map((record) => ({
+  const candidates = records.map(({ record, source }) => ({
     target: record,
+    source,
     radius: 0,
     getWorldCenter(result) {
-      const sphere = runeStoneActor.getBoundingSphere(record.branchId);
+      const sphere = source.getBoundingSphere(record.branchId ?? record.familyCode);
       this.radius = sphere?.radius ?? 0;
       return record.root.getWorldPosition(result);
     }
@@ -70,11 +72,13 @@ export function createVrRuneStoneAttractorInteraction({ controllers, runeStoneAc
   const ownsBand = () => handModeController.getRightMode() === VR_RIGHT_HAND_MODES.ASTRO_ATTRACTOR
     && handModeController.getAttractorBand() === VR_ATTRACTOR_BANDS.RUNESTONES;
   const isTargetableFamily = (record) => isFamilyTargetable(record.familyCode) === true;
-  const isPhysical = (record) => runeStoneActor.isPresentationVisible() === true
-    && record?.descriptor?.natural === true && record.root?.parent
+  const sourceFor = (record) => records.find(({ record: candidate }) => candidate === record)?.source ?? null;
+  const recordKey = (record) => record.branchId ?? record.familyCode;
+  const isPhysical = (record) => sourceFor(record)?.isPresentationVisible() === true
+    && record?.descriptor && record.root?.parent
     && record.root.visible !== false;
   const isFreeCandidate = (record) => isPhysical(record)
-    && runeStoneActor.getState(record.branchId) === VR_RUNE_STONE_STATE.FREE
+    && sourceFor(record)?.getState(recordKey(record)) === VR_RUNE_STONE_STATE.FREE
     && isTargetableFamily(record);
   function setTarget(next) {
     if (target === next) return;
@@ -95,7 +99,7 @@ export function createVrRuneStoneAttractorInteraction({ controllers, runeStoneAc
   }
   function releaseActive() {
     if (active) {
-      runeStoneActor.releaseFromAstro(active.branchId);
+      sourceFor(active)?.releaseFromAstro(recordKey(active));
       onPullCancel(active);
     }
     active = null;
@@ -118,7 +122,7 @@ export function createVrRuneStoneAttractorInteraction({ controllers, runeStoneAc
     transportStartRadius = Math.hypot(stonePosition.x - centerPosition.x, stonePosition.z - centerPosition.z);
     transportStartY = stonePosition.y;
     pullSpeed = 0;
-    return runeStoneActor.beginCarriedOrbit(record.branchId);
+    return sourceFor(record)?.beginCarriedOrbit(recordKey(record)) === true;
   }
   function updateTransport(delta) {
     platformCenter.updateWorldMatrix(true, false);
@@ -157,7 +161,8 @@ export function createVrRuneStoneAttractorInteraction({ controllers, runeStoneAc
       familyCode: active.familyCode, distance, proximity: 1 });
     attractorTool.setPullStrength(clamp01(pullSpeed / settings.maxPullSpeed));
     attractorTool.setState(VR_ATTRACTOR_STATES.PULLING);
-    if (candidatePosition.distanceTo(centerPosition) <= settings.handoffRadiusMeters
+    if (active.descriptor.natural === true
+      && candidatePosition.distanceTo(centerPosition) <= settings.handoffRadiusMeters
       && tryBeginInstallationHandoff(active) === true) handoffActive();
   }
   function update(deltaSeconds = 0) {
@@ -183,7 +188,7 @@ export function createVrRuneStoneAttractorInteraction({ controllers, runeStoneAc
       }
       setTarget(active);
       halos.get(active)?.update(delta);
-      if (runeStoneActor.getState(active.branchId) === VR_RUNE_STONE_STATE.LOCKED_BY_ASTRO
+      if (sourceFor(active)?.getState(recordKey(active)) === VR_RUNE_STONE_STATE.LOCKED_BY_ASTRO
         && !beginTransport(active)) {
         releaseActive();
         return;
@@ -209,7 +214,7 @@ export function createVrRuneStoneAttractorInteraction({ controllers, runeStoneAc
     attractorTool.setState(hit ? VR_ATTRACTOR_STATES.TARGETING : VR_ATTRACTOR_STATES.IDLE);
     if (target) halos.get(target)?.update(delta);
     if (target && primaryAction > settings.triggerThreshold
-      && runeStoneActor.lockByAstro(target.branchId) === true) {
+      && sourceFor(target)?.lockByAstro(recordKey(target)) === true) {
       active = target;
       onPullStart(active);
     }

@@ -144,6 +144,7 @@ export const VR_SCENARIO_EFFECT = immutableIdentifiers([
   'SET_MAIN_AMBIENT_04',
   'BEGIN_CELESTIAL_REVEAL',
   'REVEAL_NATURAL_RUNE_STONES',
+  'REVEAL_ETHER_RUNE',
   'BEGIN_INTRO_REVEAL',
   'BEGIN_POST_REVEAL_SILENCE',
   'BEGIN_CONTROLLER_ONBOARDING',
@@ -862,8 +863,8 @@ const points = Object.freeze([
   Object.freeze({
     id: VR_EXPERIENCE_POINT['5.40'], canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['100.10'] }),
     settledConsequences: ETHER_RUNE_TUNED_SETTLED_CONSEQUENCES,
-    entryEffects: Object.freeze([]),
-    label: 'Ether Rune tuned / transport pending',
+    entryEffects: Object.freeze([VR_SCENARIO_EFFECT.REVEAL_ETHER_RUNE]),
+    label: 'Ether Rune tuned / transport available',
     capabilities: Object.freeze([...P2_SMALL_GLYPH_TARGETING_CAPABILITIES,
       VR_SCENARIO_CAPABILITY.CAN_TUNE_ETHER_RUNE]),
     transitions: TIER_4_CARD_LIFECYCLE_TRANSITIONS

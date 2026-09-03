@@ -34,6 +34,7 @@ import { createVrPlatformEnergyVfxProjection } from './xr/vfx/createVrPlatformEn
 import { createVrAsterionPlatformEnergyVfxProjection } from './xr/vfx/createVrAsterionPlatformEnergyVfxProjection.js';
 import { createVrRuneInstalledStateProjection } from './xr/runes/createVrRuneInstalledStateProjection.js';
 import { createVrRuneStoneActor } from './xr/runes/createVrRuneStoneActor.js';
+import { createVrEtherRuneStoneActor } from './xr/runes/createVrEtherRuneStoneActor.js';
 import { createVrRuneStoneAttractorInteraction } from './xr/runes/createVrRuneStoneAttractorInteraction.js';
 import { createVrRuneStoneInstallationInteraction } from './xr/runes/createVrRuneStoneInstallationInteraction.js';
 import { createVrProgressionController } from './xr/progression/createVrProgressionController.js';
@@ -319,6 +320,11 @@ const runeStoneActor = createVrRuneStoneActor({
   assetManager,
   layer: sphericalLayer(VR_SPHERICAL_LAYER_IDS.RUNE_STONES)
 });
+const etherRuneStoneActor = createVrEtherRuneStoneActor({
+  parent: worldStableRoot,
+  assetManager,
+  layer: sphericalLayer(VR_SPHERICAL_LAYER_IDS.RUNE_STONES)
+});
 const starLayer = sphericalLayer(VR_SPHERICAL_LAYER_IDS.STARS);
 const celestialActor = createVrCelestialActor({
   parent: worldStableRoot,
@@ -553,7 +559,7 @@ const handModeController = createVrHandModeController({
     VR_ATTRACTOR_BANDS.SHELLS,
     VR_ATTRACTOR_BANDS.SMALL_GLYPHS,
     VR_ATTRACTOR_BANDS.LARGE_GLYPHS,
-    VR_ATTRACTOR_BANDS.RUNESTONES
+    ...(runeStoneAttractorBandProjection.isAvailable() ? [VR_ATTRACTOR_BANDS.RUNESTONES] : [])
   ],
   isAsterionAvailable: () => asterionProductionController.isEarned() || asterionSphereQa,
   isLeftToolToggleBlocked: () => {
@@ -1093,10 +1099,8 @@ const unsubscribeRuneStoneInstallAudioCue = runeStoneInstallationInteraction
 const unsubscribeRuneStoneInstalledAudio = runeStoneInstallationInteraction
   .subscribeInstalled((event) => runeStoneAudioProjection.presentInstalled(event));
 runeStoneAttractorInteraction = createVrRuneStoneAttractorInteraction({
-  controllers: vrControllers.controllers, runeStoneActor,
-  isFamilyTargetable: (familyCode) => astrolabiumTuningActor.isFamilyTargetable(
-    VR_ATTRACTOR_BANDS.RUNESTONES, familyCode
-  ),
+  controllers: vrControllers.controllers, runeStoneActor, etherRuneStoneActor,
+  isFamilyTargetable: (familyCode) => runeStoneAttractorBandProjection.isFamilyTargetable(familyCode),
   handModeController, semanticInput, attractorTool, maxTargetDistance: runeStoneMaxTargetDistance,
   settings: { scanThreshold: settings.shellAttractor.scanThreshold,
     triggerThreshold: settings.shellAttractor.triggerThreshold,
@@ -1109,9 +1113,13 @@ runeStoneAttractorInteraction = createVrRuneStoneAttractorInteraction({
   platformCenter: progressFloor.object,
   getPlayerWorldPosition: (target) => getXrHeadWorldPosition({ renderer, camera, playerRig, target }),
   tryBeginInstallationHandoff: (record) => runeStoneInstallationInteraction.tryBeginHandoff(record),
-  onPullStart: (record) => vrAudio.startAttractor(record.descriptor.assetIdentity,
-    `runeStone${record.descriptor.assetIdentity.slice(-2).replace(/^0/, '')}`),
-  onPullCancel: (record) => vrAudio.cancelAttractor(record.descriptor.assetIdentity),
+  onPullStart: (record) => {
+    if (record.descriptor.natural) vrAudio.startAttractor(record.descriptor.assetIdentity,
+      `runeStone${record.descriptor.assetIdentity.slice(-2).replace(/^0/, '')}`);
+  },
+  onPullCancel: (record) => {
+    if (record.descriptor.natural) vrAudio.cancelAttractor(record.descriptor.assetIdentity);
+  },
   onHandoff: (record) => vrAudio.handoffAttractor(record.descriptor.assetIdentity),
   isHigherPriorityInteractionActive: (record) => Boolean(activateButton.hits.get(record)
     || releaseButton.hits.get(record) || astroFurnaceOpenInteraction.hasCurrentHit(record)
@@ -1240,6 +1248,9 @@ runtimeExperience = new RuntimeExperience({
     [VR_SCENARIO_EFFECT.BEGIN_CELESTIAL_REVEAL]: () => { celestialActor.beginReveal(); },
     [VR_SCENARIO_EFFECT.REVEAL_NATURAL_RUNE_STONES]: () => {
       runeStoneActor.setPresentationVisible(true);
+    },
+    [VR_SCENARIO_EFFECT.REVEAL_ETHER_RUNE]: () => {
+      etherRuneStoneActor.setPresentationVisible(true);
     },
     [VR_SCENARIO_EFFECT.BEGIN_INTRO_REVEAL]: () => {
       if (!introSequence.beginIntroReveal()) {
@@ -1485,6 +1496,7 @@ function renderFrame() {
   postRingPresentation.update(delta);
   smallGlyphSystem.update(delta);
   runeStoneActor.update(delta);
+  etherRuneStoneActor.update(delta);
   runeStoneAttractorInteraction.update(delta);
   runeBridgeActor.update(delta);
   platformEnergyVfxActor.update(delta);
@@ -1603,6 +1615,7 @@ function restoreVrScenarioBaseline() {
   runeBridgeActor.reset();
   synchronizeRuneBridgeReadiness();
   runeStoneActor.reset();
+  etherRuneStoneActor.reset();
   runeStoneAttractorInteraction.reset();
   largeGlyphAttractorInteraction.reset();
   largeGlyphActor.reset();
@@ -1751,6 +1764,7 @@ window.addEventListener('pagehide', () => {
   platformEnergyVfxActor.dispose();
   runeBridgeActor.dispose();
   runeStoneActor.dispose();
+  etherRuneStoneActor.dispose();
   progressFloor.dispose();
   postRingPresentation.dispose();
   p2ObservationWindow.reset();
