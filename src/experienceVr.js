@@ -1267,6 +1267,11 @@ runtimeExperience = new RuntimeExperience({
         throw new Error('BEGIN_WATER_PATH_OPEN_COMMUNICATION rejected by Monkey communication actor');
       }
     },
+    [VR_SCENARIO_EFFECT.BEGIN_FULL_RESONATOR_COMMUNICATION]: () => {
+      if (!runeResonatorGuidance.beginFullResonatorCommunication()) {
+        throw new Error('BEGIN_FULL_RESONATOR_COMMUNICATION rejected by Rune/Resonator Guidance actor');
+      }
+    },
     [VR_SCENARIO_EFFECT.BEGIN_CELESTIAL_REVEAL]: () => { celestialActor.beginReveal(); },
     [VR_SCENARIO_EFFECT.REVEAL_NATURAL_RUNE_STONES]: () => {
       runeStoneActor.setPresentationVisible(true);

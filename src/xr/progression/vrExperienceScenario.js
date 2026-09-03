@@ -80,6 +80,7 @@ export const VR_SCENARIO_EVENT = immutableIdentifiers([
   'ETHER_INTERVENTION_COMPLETED',
   'ETHER_RUNE_TUNED',
   'ETHER_MONKEY_CAPTURED',
+  'FIVE_ELEMENTAL_RUNES_INSTALLED',
   'XR_SESSION_ENDING',
   'XR_SESSION_ENDED',
   'XR_SESSION_START_FAILED'
@@ -113,7 +114,8 @@ export const VR_SCENARIO_CAPABILITY = immutableIdentifiers([
   'CAN_EQUIP_ASTERION',
   'CAN_CONTROL_PLATFORM',
   'CAN_TUNE_ETHER_RUNE',
-  'CAN_INSTALL_WATER_RUNE'
+  'CAN_INSTALL_WATER_RUNE',
+  'CAN_USE_ADVANCED_RESONATOR'
 ]);
 
 export const VR_SCENARIO_MILESTONE = immutableIdentifiers([
@@ -132,7 +134,8 @@ export const VR_SCENARIO_MILESTONE = immutableIdentifiers([
   'FOURTH_RUNE_INSTALLED',
   'ETHER_TUNING_UNLOCKED',
   'ETHER_RUNE_TUNED',
-  'ETHER_MONKEY_CAPTURED'
+  'ETHER_MONKEY_CAPTURED',
+  'FIVE_ELEMENTAL_RUNES_INSTALLED'
 ]);
 
 export const VR_SCENARIO_EFFECT = immutableIdentifiers([
@@ -194,7 +197,8 @@ export const VR_SCENARIO_EFFECT = immutableIdentifiers([
   'SHOW_ASTERION_EARNED_CUE',
   'CHECK_RESONATOR_JOIN',
   'BEGIN_ETHER_INTERVENTION',
-  'BEGIN_WATER_PATH_OPEN_COMMUNICATION'
+  'BEGIN_WATER_PATH_OPEN_COMMUNICATION',
+  'BEGIN_FULL_RESONATOR_COMMUNICATION'
 ]);
 
 export const VR_EXPERIENCE_POINT = immutableIdentifiers([
@@ -236,6 +240,7 @@ export const VR_EXPERIENCE_POINT = immutableIdentifiers([
   '5.30',
   '5.40',
   '5.50',
+  '5.60',
   '100.10'
 ]);
 
@@ -313,6 +318,14 @@ const ETHER_MONKEY_CAPTURED_SETTLED_CONSEQUENCES = Object.freeze({
   runeProgression: Object.freeze({
     tunedRuneFamilies: Object.freeze(['R', 'T', 'K', 'L']),
     installedRuneFamilies: Object.freeze(['R', 'T', 'K', 'L']),
+    etherRuneTuned: true,
+    waterInstallationReadinessOverride: true
+  })
+});
+const FIVE_ELEMENTAL_RUNES_INSTALLED_SETTLED_CONSEQUENCES = Object.freeze({
+  runeProgression: Object.freeze({
+    tunedRuneFamilies: Object.freeze(['R', 'T', 'K', 'L', 'S']),
+    installedRuneFamilies: Object.freeze(['R', 'T', 'K', 'L', 'S']),
     etherRuneTuned: true,
     waterInstallationReadinessOverride: true
   })
@@ -891,12 +904,27 @@ const points = Object.freeze([
     ])
   }),
   Object.freeze({
-    id: VR_EXPERIENCE_POINT['5.50'], canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['100.10'] }),
-    settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
+    id: VR_EXPERIENCE_POINT['5.50'], canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['5.60'] }),
+    settledConsequences: FIVE_ELEMENTAL_RUNES_INSTALLED_SETTLED_CONSEQUENCES,
     entryEffects: Object.freeze([VR_SCENARIO_EFFECT.BEGIN_WATER_PATH_OPEN_COMMUNICATION]),
     label: 'Ether captured / Water installation path open',
     capabilities: Object.freeze([...P2_SMALL_GLYPH_TARGETING_CAPABILITIES,
       VR_SCENARIO_CAPABILITY.CAN_TUNE_ETHER_RUNE, VR_SCENARIO_CAPABILITY.CAN_INSTALL_WATER_RUNE]),
+    transitions: Object.freeze([
+      ...TIER_4_CARD_LIFECYCLE_TRANSITIONS,
+      Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.COMPLETE,
+        event: VR_SCENARIO_EVENT.FIVE_ELEMENTAL_RUNES_INSTALLED,
+        milestonesToAdd: Object.freeze([VR_SCENARIO_MILESTONE.FIVE_ELEMENTAL_RUNES_INSTALLED]) })
+    ])
+  }),
+  Object.freeze({
+    id: VR_EXPERIENCE_POINT['5.60'], canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['100.10'] }),
+    settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
+    entryEffects: Object.freeze([VR_SCENARIO_EFFECT.BEGIN_FULL_RESONATOR_COMMUNICATION]),
+    label: 'Five elemental Runes installed / full Resonator unlocked',
+    capabilities: Object.freeze([...P2_SMALL_GLYPH_TARGETING_CAPABILITIES,
+      VR_SCENARIO_CAPABILITY.CAN_TUNE_ETHER_RUNE, VR_SCENARIO_CAPABILITY.CAN_INSTALL_WATER_RUNE,
+      VR_SCENARIO_CAPABILITY.CAN_USE_ADVANCED_RESONATOR]),
     transitions: TIER_4_CARD_LIFECYCLE_TRANSITIONS
   }),
   Object.freeze({
@@ -932,7 +960,7 @@ export const vrExperienceScenario = Object.freeze({
     effects: Object.freeze(Object.values(VR_SCENARIO_EFFECT))
   }),
   metadata: Object.freeze({
-    stage: 'ETHER_TUNING_SEMANTICALLY_UNLOCKED',
+    stage: 'FULL_RESONATOR_SEMANTICALLY_UNLOCKED',
     authoritativeForLiveGameplay: true,
     // Canonical routing topology lives on authored point graph edges.
   })

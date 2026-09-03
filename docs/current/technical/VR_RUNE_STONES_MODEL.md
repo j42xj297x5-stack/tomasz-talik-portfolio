@@ -6,8 +6,8 @@
 - **Implemented:** `RUNE A1–A8`, `RUNE UI-1`, A9.1 physical actor foundation, authored-origin/live-bounds hardening, A9.2 target resolution + `LOCKED_BY_ASTRO`, A9.3 `CARRIED_ORBIT`, A9.4 installation-readiness projection, A9.5 platform-centered handoff + automatic installation choreography i A9.6 persistent hydration + settled physical reconstruction oraz wdrożona choreografia/audio Bindera, instalacji i installed spatial audio.
 - **Foundation correction:** natural Rune tuning sector gate — **RESOLVED**; task `d0f9a17e414f3ea8c386cde87bdd46dba6dad16c`, merge `c862b9bde2e717918e56d21d7f1cbbc0ad741d53`.
 - **RUNE A9:** **A9.1–A9.6 IMPLEMENTED; NATURAL RUNE A9 FOUNDATION = COMPLETE**. Końcowy transport i instalacja używają platform-centered handoff sphere oraz automatycznej choreografii, a hydration odtwarza settled physical installation. Collision carried Rune Stone ↔ installed Rune Stone jest **SUPERSEDED / REMOVED FROM TARGET**.
-- **Scenario authoring:** **DEFERRED TO SEPARATE THREAD**.
-- **Canonical authored Scenario/runtime progression boundary:** `5.50`; `FOURTH_RUNE_INSTALLED → Monkey Ether reveal → CAN_TUNE_ETHER_RUNE → ETHER_RUNE_TUNED → ETHER_MONKEY_CAPTURED` is implemented/authored after the `4.80 → 5.10` join.
+- **Scenario authoring:** Water natural installation now projects `FIVE_ELEMENTAL_RUNES_INSTALLED` and reaches the implemented `5.60` full-Resonator semantic boundary.
+- **Canonical authored Scenario/runtime progression boundary:** `5.60`; `FOURTH_RUNE_INSTALLED → Monkey Ether reveal → CAN_TUNE_ETHER_RUNE → ETHER_RUNE_TUNED → ETHER_MONKEY_CAPTURED → FIVE_ELEMENTAL_RUNES_INSTALLED → full-array Monkey acknowledgement → CAN_USE_ADVANCED_RESONATOR` is implemented/authored after the `4.80 → 5.10` join.
 - Dokument jest kanonicznym źródłem prawdy Rune Stone Act: strojenia Astrolabium, targetability, pięciu naturalnych pair-specific par, mostów, transportu, instalacji, specjalnego flow Eteru i finalnego polowania Wody.
 - A1–A9.6 są foundations/domain behavior bez rozszerzenia authored Scenario spine. A9 foundation jest zamknięty; dalszy authored Scenario, Director i literalna komunikacja gracza wymagają osobnego projektu, bez arbitralnego etykietowania ich jako kolejny krok A9.
 
@@ -331,7 +331,7 @@ Po instalacji `installedRuneFamilies` zawiera pięć naturalnych rodzin. Eter ni
 
 ## 11. Kompletna platforma i finalna Woda
 
-`FIVE_ELEMENTAL_RUNES_INSTALLED` makes the Water sector physically available for future advanced control. It does not by itself authorize the final Haiku Cosmos pull. Final recovery requires installed Water, harmonic `222 / M22 / W22`, synchronized field contact, late context, family knowledge and `PULL_READY`, as owned by the Resonator/finale models.
+`FIVE_ELEMENTAL_RUNES_INSTALLED` semantically permits the future advanced/full Resonator phase through `CAN_USE_ADVANCED_RESONATOR`; it does not implement Metal or Water controls and does not by itself authorize the final Haiku Cosmos pull. Final recovery requires installed Water, harmonic `222 / M22 / W22`, synchronized field contact, late context, family knowledge and `PULL_READY`, as owned by the Resonator/finale models.
 
 ```text
 FIVE_ELEMENTAL_RUNES_INSTALLED
@@ -355,7 +355,7 @@ Obowiązuje architektura:
 SPINE → SCENARIO → DIRECTOR → RuntimeExperience → ACTORS / DOMAIN OWNERS
 ```
 
-Authored Scenario contains the bounded semantic join `4.80 → 5.10` and continuation `5.10 → 5.20 → 5.30 → 5.40 → 5.50 → 100.10`. The live Rune snapshot crossing from fewer than four to exactly four installed natural families projects `FOURTH_RUNE_INSTALLED`; `5.20` owns the mandatory Monkey Ether reveal, and its completion grants `CAN_TUNE_ETHER_RUNE` at `5.30`; live `etherRuneTuned: false → true` projects `ETHER_RUNE_TUNED` and reaches stable `5.40`. Hydration restores the complete settled Rune truth silently. Physical Ether reveal, targetability, SPECIAL transport, Monkey capture, persistent Water readiness override, Water Binder readiness and Scenario `5.50` are implemented. Water installation completion and the later finale remain future.
+Authored Scenario contains the bounded semantic join `4.80 → 5.10` and continuation `5.10 → 5.20 → 5.30 → 5.40 → 5.50 → 5.60 → 100.10`. The live Rune snapshot crossing from fewer than four to exactly four installed natural families projects `FOURTH_RUNE_INSTALLED`; `5.20` owns the mandatory Monkey Ether reveal, and its completion grants `CAN_TUNE_ETHER_RUNE` at `5.30`; live `etherRuneTuned: false → true` projects `ETHER_RUNE_TUNED` and reaches stable `5.40`. Hydration restores the complete settled Rune truth silently. Physical Ether reveal, targetability, SPECIAL transport, Monkey capture, persistent Water readiness override and Water Binder readiness are implemented. The normal Water installation crossing commits natural family `S`, projects `FIVE_ELEMENTAL_RUNES_INSTALLED`, records its milestone, and advances to `5.60`; that target owns the mandatory full-array Monkey acknowledgement and exposes semantic permission `CAN_USE_ADVANCED_RESONATOR`. Reconstruction restores `R/T/K/L/S` as tuned and installed, with Ether still special and absent from those arrays. Physical Metal/Water advanced controls, `222 / M22 / W22`, Water Sync, the final Water hunt and finale remain future.
 
 Canonical debug aliases are `P5 → 4.80` and `P6 → 5.10`. Both are QA/debug entry conveniences, not Scenario points, capabilities, gameplay owners or sources of settled consequences.
 
@@ -418,7 +418,7 @@ R3 implementuje runtime Zwornika, a R3b implementuje `RUNE_BINDER_REVEAL`: live 
 
 ## 14. Remaining target
 
-**Carried Rune Stone ↔ installed Rune Stone collision = SUPERSEDED / REMOVED FROM TARGET.** Physical Ether reveal, targetability and shared Astro transport through SPECIAL `CARRIED_ORBIT` are implemented at `5.40`; Monkey capture, Water readiness override and final Water flow remain deferred. Zwornik spin jest usunięty z target canon.
+**Carried Rune Stone ↔ installed Rune Stone collision = SUPERSEDED / REMOVED FROM TARGET.** Physical Ether reveal, targetability and shared Astro transport through SPECIAL `CARRIED_ORBIT` are implemented at `5.40`; Monkey capture, Water readiness override and normal Water installation through the `5.60` semantic unlock are implemented. Advanced Metal/Water control, harmonic/Water Sync logic and the final hunt remain deferred. Zwornik spin jest usunięty z target canon.
 
 ## 15. Current implementation checkpoint
 
@@ -431,7 +431,7 @@ CARRIED RUNE STONE ↔ INSTALLED RUNE STONE COLLISION: SUPERSEDED / NO GAMEPLAY 
 PHYSICAL BRIDGE EXTENSION: IMPLEMENTED
 R3b RUNE_BINDER_REVEAL: IMPLEMENTED
 INSTALLATION HANDOFF + APPROACH / BRIDGE_OPEN / DESCENT: IMPLEMENTED
-AUTHORED SCENARIO BOUNDARY: 5.50 — ETHER CAPTURED / WATER INSTALLATION PATH OPEN
+AUTHORED SCENARIO BOUNDARY: 5.60 — FIVE NATURAL RUNES INSTALLED / FULL RESONATOR SEMANTICALLY UNLOCKED
 SCENARIO `FOURTH_RUNE_INSTALLED → MONKEY ETHER REVEAL → CAN_TUNE_ETHER_RUNE`: IMPLEMENTED
 RESONATOR TARGET RESPONSE: FUTURE; NOT IMPLIED BY THE 5.10 JOIN
 ```

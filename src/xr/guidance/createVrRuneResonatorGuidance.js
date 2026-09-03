@@ -31,11 +31,12 @@ export function createVrRuneResonatorGuidance({ monkeyGuide, copy, secondsPerLin
     true,
     onEtherInterventionCompleted
   );
+  const fullResonator = makeCommunication(copy.progression['progression.p4.fullResonator'].blocks);
   const noBinderMedium = makeCommunication(copy.hints['hint.rune.noBinder.medium'].blocks);
   const noBinderSoft = makeCommunication(copy.hints['hint.rune.noBinder.soft'].blocks, true, () => {
     if (getUnresolvedRuneBranchId()) { unresolvedSeconds = 0; mediumDue = true; }
   });
-  const communications = [glyphsGone, installed, sectorLock, resonator, etherIntervention,
+  const communications = [glyphsGone, installed, sectorLock, resonator, etherIntervention, fullResonator,
     noBinderSoft, noBinderMedium];
 
   function schedule(communication) { communication.beginAttention(); }
@@ -68,6 +69,7 @@ export function createVrRuneResonatorGuidance({ monkeyGuide, copy, secondsPerLin
     resonator._due = DELAY_SECONDS;
   }
   function beginEtherIntervention() { return etherIntervention.beginAttention(); }
+  function beginFullResonatorCommunication() { return fullResonator.beginAttention(); }
   function update(deltaSeconds = 0) {
     const delta = Math.max(0, Number.isFinite(deltaSeconds) ? deltaSeconds : 0);
     const pointId = getCurrentPointId();
@@ -101,5 +103,5 @@ export function createVrRuneResonatorGuidance({ monkeyGuide, copy, secondsPerLin
     communications.forEach((communication) => { delete communication._due; communication.reset(); });
   }
   return { update, reset, notifyThirdRingCompleted, notifyBridgeTransitions, notifyRuneProgression,
-    notifySectorLocked, notifyResonatorChanged, beginEtherIntervention };
+    notifySectorLocked, notifyResonatorChanged, beginEtherIntervention, beginFullResonatorCommunication };
 }
