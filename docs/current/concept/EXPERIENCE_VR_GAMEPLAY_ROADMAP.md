@@ -1,6 +1,6 @@
 # Experience VR — Gameplay Roadmap
 
-Status: **CURRENT roadmap**, synchronized on 2026-09-02. Technical models remain runtime authority.
+Status: **CURRENT roadmap**, synchronized on 2026-09-03. Technical models remain runtime authority.
 
 ## Implemented through the current boundary
 
@@ -12,6 +12,8 @@ Status: **CURRENT roadmap**, synchronized on 2026-09-02. Technical models remain
 - R2A powered-sector acquisition, R2B EARTH/WOOD/FIRE control and R4 Resonator core/descriptor;
 - Rune/Binder/Sector/Resonator Guidance through first Resonator discovery;
 - Player Y dynamic `WIEDZA` and persistent tool reference.
+- early Large Glyph family-only pull eligibility versus late `SPHERE_FAR` family + `PULL_READY` eligibility;
+- Large Glyph Actor late motion at approximately `0.02 rad/s`, deterministic `20–110 m` radial oscillation and approximately `135 s` period.
 
 Authority for active Resonator work is [`VR_ASTERION_RESONATOR_MODEL.md`](../technical/VR_ASTERION_RESONATOR_MODEL.md) and its [`VR_ASTERION_RESONATOR_FIELD_MODEL.md`](../technical/VR_ASTERION_RESONATOR_FIELD_MODEL.md) sub-model. The historical antenna model is not CURRENT authority.
 
@@ -19,10 +21,12 @@ Authority for active Resonator work is [`VR_ASTERION_RESONATOR_MODEL.md`](../tec
 
 - immediate selection of all four Astrolabium bands after tool acquisition and a future non-duplicating Astrolabium Tuning Domain interpreting per-family Shell → Small Glyph, Small Glyph → Large Glyph, and Wu Xing → Rune knowledge;
 - V Shell eligibility after all five natural Shells are processed;
-- corrected early/late Large Glyph policy: learned family suffices ordinarily, while late escaped targets additionally need transient `PULL_READY`;
-- late `20–110 m` depth oscillation and faster angular motion (`~135 s` period is initial tuning);
-- Metal angle/tilt wing for depth bandwidth and Water angle/tilt wing for frequency synchronization;
-- balanced `222 / M(2,2) / W(2,2)` BLUE lock and Water-target slowdown, replacing the power-to-white concept;
-- Water special override/Ether intervention, final Water hunt, world dissolution, field/target audio, and remaining Scenario authoring after `5.10`.
+- Metal angle/tilt control where `M22` adds zero range and maximum presentation fillet, while every other active pair expands LATERAL, FORWARD or both for hunting;
+- Ether recovery → Monkey's one exceptional Water intervention → Water recovery/installation and advanced control;
+- Water angle hue (`GREEN / BLUE / VIOLET`) and tilt luminance (`dark / medium / bright`);
+- installed Water + compact, highly rounded, medium-BLUE pulsating `222 / M22 / W22` → Water Sync Lock;
+- Water Sync Lock + Haiku Cosmos field containment → Water Sync Contact → strong angular/radial damping;
+- hard final Haiku gate: family knowledge + late context + `PULL_READY` + Water Sync Contact; generic acquisition and retained rings cannot bypass Water;
+- world dissolution, field/target audio, and remaining Scenario authoring after `5.10`.
 
 The implemented sandbox core does not make the future target-response/finale path implemented.

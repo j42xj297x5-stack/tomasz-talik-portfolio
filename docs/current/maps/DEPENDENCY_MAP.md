@@ -44,12 +44,20 @@ late escaped Large Glyph: learned family + late state + Resonator PULL_READY
 → additional transient physical-pull grant
 
 advanced Resonator (FUTURE / NOT IMPLEMENTED)
-├→ METAL angle/tilt → expanded depth bandwidth
-└→ WATER angle/tilt → frequency synchronization / BLUE lock
-    → Large Glyph Actor motion response / Water slowdown
+├→ off-center METAL → LATERAL/FORWARD expanded containment for hunting
+├→ METAL M22 → zero extra expansion → maximum rounding presentation
+├→ installed WATER + 222/M22/W22 → Water Sync Lock
+└→ Water Sync Lock + Haiku inside active field → Water Sync Contact
+    → Large Glyph Actor angular/radial damping
+
+family knowledge + late context + PULL_READY + Water Sync Contact
+→ final Haiku physical-pull eligibility
+
+Ether recovered → Monkey's exceptional Water rule intervention
+→ Water recovery/installability → installed Water / advanced control
 ```
 
-The future Astrolabium Tuning Domain interprets these owners; it does not copy their persistence. Band UI owns selected class, Target Acquisition owns containment/stages/decay/sign memory/`PULL_READY`, advanced Resonator owns Metal/Water truth, Large Glyph Actor owns motion, and Attractor owns legal selection/pull/capture.
+The future Astrolabium Tuning Domain interprets these owners; it does not copy their persistence. Band UI owns selected class; Target Acquisition remains generic and owns containment/stages/decay/sign memory/`PULL_READY`; advanced Resonator owns Metal expansion/harmonic state and Water Sync Lock/Contact; Field Presentation observes Metal rounding, Water hue/luminance and the BLUE pulse; Large Glyph Actor owns motion; Attractor owns legal selection/pull/capture. Retained rings and Metal-expanded containment cannot bypass Water contact for final Haiku.
 
 ## Rune tuning, transport and installation
 
@@ -98,7 +106,8 @@ Asterion Sphere TRIGGER → existing global platform orientation owner
 → read-only Target Response Presentation
 
 later METAL + WATER
-→ advanced tuning / amplification of the same field
+→ Metal LATERAL/FORWARD expansion or harmonic maximum rounding
+→ Water hue/luminance and synchronized-contact truth
 ```
 
 R4 composition creates one derived Field Actor after the Rune progression and R2B owners. It reads canonical installed families and committed levels only, freezes the descriptor and nested values, deduplicates semantic changes, and synchronizes explicitly after hydration/reconstruction and source resets. It has no frame update; METAL/WATER changes are outside its core signature.

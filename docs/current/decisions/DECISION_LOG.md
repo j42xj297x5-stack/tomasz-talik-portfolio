@@ -1,16 +1,35 @@
 # Decision Log
 
-Status: current binding decisions with preserved history. Synchronized on 2026-09-02 through shared XR spatial audio and sustained Rune Binder VFX.
+Status: current binding decisions with preserved history. Synchronized on 2026-09-03 through the final Metal/Water resonance canon.
+
+## 2026-09-03 — CURRENT final Metal/Water resonance and Haiku anti-bypass canon (SUPERSEDING)
+
+1. `M(2,2)` adds no field expansion.
+2. Every other active Metal pair expands at least one controlled dimension.
+3. Metal expands LATERAL width and FORWARD depth, never VERTICAL; exact DOF assignment remains tuning.
+4. `M22` provides maximum presentation-only fillet/edge rounding.
+5. Metal extremes `1/3` expand their dimension while reducing fillet; fillet never changes containment.
+6. Water angle maps `1 → GREEN`, `2 → BLUE`, `3 → VIOLET/PURPLE`.
+7. Water tilt maps `1 → very dark`, `2 → medium`, `3 → very bright`; it is not generic power.
+8. `222 / M22 / W22` is compact, strongly rounded, medium BLUE and gently pulsating.
+9. The harmonic array is not maximum range, size or power. This supersedes `M22 ≈ 80%`, illustrative `20–115 m`, broad-balanced-Metal and broadest-full-array claims.
+10. Ether recovery precedes Monkey's one exceptional rule intervention, which makes Water legally recoverable/installable; Ether is not a sixth natural family.
+11. Installed Water is required before final synchronization can exist.
+12. Installed Water plus `222 / M22 / W22` derives Water Sync Lock; lock plus Haiku inside the active field derives Water Sync Contact, which strongly damps angular and radial late motion.
+13. Final Haiku pull requires family knowledge + late context + `PULL_READY` + current Water Sync Contact.
+14. Generic acquisition may detect Haiku and reach/retain readiness before Water, but neither that truth nor Metal expansion bypasses Water.
+15. Exact Metal expansion and Haiku slowdown/recovery remain tuning. Late-only `SPHERE_FAR` readiness and deterministic angular plus `20–110 m` / approximately `135 s` radial motion are implemented; advanced Metal/Water/Ether/finale systems are not.
+16. This decision changes documentation only and performs no runtime implementation.
 
 ## 2026-09-02 — CURRENT Astrolabium learning and advanced Resonator canon (SUPERSEDING)
 
 1. After physical acquisition, all four existing Astrolabium bands are selectable; band availability is independent of learned families and current pull eligibility. The five natural Shell families are initial vocabulary. Per-family processed Shell teaches its Small Glyph; processed/extracted Small Glyph teaches its Large Glyph; successful canonical Wu Xing completion teaches/tunes the resulting Rune Stone family.
 2. Special `V/VO` remains outside natural families and becomes a legal Shell target only after all five natural Shells are processed; it completes the Shell sequence and creates no `VA`.
-3. Learned Large Glyph families are normally pullable without Resonator. Late escaped/reacquisition targets retain that knowledge but additionally require transient Resonator `PULL_READY` for physical pull. The current broad runtime gate is an implementation mismatch.
-4. Late Large Glyphs target slightly faster angular motion plus approximately `20–110 m` sinusoidal depth motion. About `20 s` useful base-band dwell is the gameplay target; about `135 s` period is initial tuning.
-5. METAL is the future depth-bandwidth wing; WATER is the future frequency-synchronization wing. Balanced `222 / M(2,2) / W(2,2)` produces BLUE Water synchronization and slows, but does not stop, the Water target. Symmetry, not a password/scoring preset, communicates the solution.
+3. Learned Large Glyph families are normally pullable without Resonator. Late escaped/reacquisition targets retain that knowledge but additionally require transient Resonator `PULL_READY` for physical pull. **IMPLEMENTED; final Haiku additionally follows the 2026-09-03 Water-contact rule above.**
+4. Late Large Glyphs use slightly faster angular motion plus approximately `20–110 m` sinusoidal depth motion and approximately `135 s` initial period tuning. **IMPLEMENTED CURRENT.**
+5. **SUPERSEDED BY 2026-09-03:** the former broad/bandwidth `M22` reading is no longer current; the entry above owns Metal expansion, Water synchronization and the full harmonic array.
 6. Field hue means frequency/tuning, superseding the linear power-to-WHITE scale and white-as-maximum finale requirement. Strength presentation and exact advanced mathematics, motion, slowdown, interpolation, hinges, and gestures remain future tuning.
-7. A future Astrolabium Tuning Domain interprets authoritative Furnace, Proto-Astro, Rune, and Resonator facts without duplicating them. This decision performs no runtime implementation; immediate-all-band behavior, unified interpretation, early/late gate correction, motion, Metal, Water, frequency/color, slowdown, and post-`5.10` Scenario continuation remain **NOT IMPLEMENTED**.
+7. A future Astrolabium Tuning Domain interprets authoritative Furnace, Proto-Astro, Rune, and Resonator facts without duplicating them. Immediate-all-band behavior, unified interpretation, Metal, Water, slowdown and post-`5.10` Scenario continuation remain **NOT IMPLEMENTED**; early/late gate correction and late motion are now implemented.
 
 ## 2026-09-02 — CURRENT shared spatial audio and sustained Binder reveal (SUPERSEDING)
 
