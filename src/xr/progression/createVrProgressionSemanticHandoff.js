@@ -24,6 +24,9 @@ export function createVrProgressionSemanticHandoff({ dispatch }) {
     const before = previous?.installedRuneFamilies?.length ?? 0;
     const after = current?.installedRuneFamilies?.length ?? 0;
     if (before < 4 && after === 4) dispatch(VR_SCENARIO_EVENT.FOURTH_RUNE_INSTALLED);
+    if (previous?.etherRuneTuned === false && current?.etherRuneTuned === true) {
+      dispatch(VR_SCENARIO_EVENT.ETHER_RUNE_TUNED);
+    }
   }
 
   return { onPageCommitted, onResonatorStateChanged, onRuneProgressionChanged };

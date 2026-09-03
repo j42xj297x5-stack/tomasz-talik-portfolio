@@ -771,6 +771,7 @@ const astroFurnaceRuneRecipeInteraction = createVrAstroFurnaceRuneRecipeInteract
 runeRecipeSelectionController = createVrRuneRecipeSelectionController({
   runeRecipeInteraction: astroFurnaceRuneRecipeInteraction,
   runeStoneProgressionController,
+  canTuneEtherRune: () => runtimeExperience?.can(VR_SCENARIO_CAPABILITY.CAN_TUNE_ETHER_RUNE) === true,
   prepareRecipeChange: () => astroFurnaceRuneRecipeInteraction.ejectInsertedIngredients()
 });
 const runeTuningController = createVrRuneTuningController({

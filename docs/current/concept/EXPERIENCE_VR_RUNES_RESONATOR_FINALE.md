@@ -2,7 +2,7 @@
 
 ## Status i reguła nadrzędna
 
-Status: **CURRENT WORKING CANON / SPLIT IMPLEMENTATION STATUS**. Rune tuning/transport/install, Binder readiness/materialization, powered-sector acquisition/control, Resonator core/descriptor, discovery Guidance and `FOURTH_RUNE_INSTALLED → Monkey Ether reveal → CAN_TUNE_ETHER_RUNE` through Scenario `5.30` are **CURRENT / IMPLEMENTED** under their technical owners. Physical containment/resonance response, late-only `SPHERE_FAR` `PULL_READY` eligibility and late Large Glyph angular/radial motion are also **IMPLEMENTED**. Physical Ether tuning, Ether transport/capture, Water override, Metal/Water advanced control, synchronization, Haiku damping/anti-bypass gate and later finale remain **FUTURE / NOT IMPLEMENTED**.
+Status: **CURRENT WORKING CANON / SPLIT IMPLEMENTATION STATUS**. Rune tuning/transport/install, Binder readiness/materialization, powered-sector acquisition/control, Resonator core/descriptor, discovery Guidance and `FOURTH_RUNE_INSTALLED → Monkey Ether reveal → CAN_TUNE_ETHER_RUNE` and physical Ether tuning through Scenario `5.40` are **CURRENT / IMPLEMENTED** under their technical owners. Physical containment/resonance response, late-only `SPHERE_FAR` `PULL_READY` eligibility and late Large Glyph angular/radial motion are also **IMPLEMENTED**. Physical Ether materialization, targetability, transport/capture, Water override, Metal/Water advanced control, synchronization, Haiku damping/anti-bypass gate and later finale remain **FUTURE / NOT IMPLEMENTED**.
 
 Ten przebieg zastępuje wcześniejszą wersję, w której trzy sektory tworzyły pełną antenę przed etapem kamieni runicznych:
 
@@ -24,11 +24,11 @@ Dokładne receptury strojenia pozostają kontraktem receptur i nie są definiowa
 | Rune tuning/transport/install i persistent truth | CURRENT / IMPLEMENTED |
 | Binder readiness/materialization | CURRENT / IMPLEMENTED |
 | Powered-sector acquisition/control i Resonator core/descriptor | CURRENT / IMPLEMENTED |
-| Rune/Binder/Sector/Resonator Guidance oraz Scenario do semantycznego Ether unlock w `5.30` | CURRENT / IMPLEMENTED |
+| Rune/Binder/Sector/Resonator Guidance oraz Scenario i fizyczne strojenie Eteru do `5.40` | CURRENT / IMPLEMENTED |
 | Resonator containment/resonance response, late-only eligibility and late motion | CURRENT / IMPLEMENTED (sandbox mechanic) |
-| Fizyczny Ether tuning/transport/capture, Metal/Water, Water override, final Water hunt, dissolution/finale after `5.30` | FUTURE |
+| Fizyczna materializacja/targetability/transport/capture Eteru, Metal/Water, Water override, final Water hunt, dissolution/finale after `5.40` | FUTURE |
 
-The physical target-response core, corrected late-only pull policy, escaped-target motion and semantic Ether unlock through `5.30` are implemented runtime. Physical Ether flow, advanced wings, Water synchronization and later finale remain binding design canon / FUTURE / NOT IMPLEMENTED.
+The physical target-response core, corrected late-only pull policy, escaped-target motion and physical Ether tuning through `5.40` are implemented runtime. Physical Ether materialization, targetability, transport/capture, advanced wings, Water synchronization and later finale remain binding design canon / FUTURE / NOT IMPLEMENTED.
 
 ## 1. Glify znikają
 
@@ -178,7 +178,7 @@ Metal simultaneously drives presentation-only rounding: `M22` gives maximum edge
 
 ## 11. ETHER → Monkey → WATER — **SEMANTIC UNLOCK IMPLEMENTED / PHYSICAL FLOW FUTURE**
 
-Ether remains special and is not a sixth natural Wu Xing family. The canonical `FOURTH_RUNE_INSTALLED` crossing now advances `5.10 → 5.20`, starts the mandatory Monkey Ether reveal from the target point entry effect, and completion reaches stable `5.30` with `CAN_TUNE_ETHER_RUNE`. This is semantic permission only. Physical Ether tuning, Ether transport/capture, Water readiness override and all subsequent Water/finale mechanics remain future / not implemented.
+Ether remains special and is not a sixth natural Wu Xing family. The canonical `FOURTH_RUNE_INSTALLED` crossing now advances `5.10 → 5.20`, starts the mandatory Monkey Ether reveal from the target point entry effect, and completion reaches `5.30` with `CAN_TUNE_ETHER_RUNE`. The special `VI + VO → VU` recipe then reuses the 18 s Rune transaction, persists `etherRuneTuned`, and advances on the live crossing to stable `5.40`. Physical Ether materialization, targetability, transport/capture, Water readiness override and all subsequent Water/finale mechanics remain future / not implemented.
 
 Water uses angle and tilt levels `0..3` and does not widen containment. Angle selects hue: `1 → GREEN`, `2 → BLUE`, `3 → VIOLET/PURPLE`. Tilt selects luminance: `1 → very dark`, `2 → medium`, `3 → very bright`. `0` is OFF. `W(2,2)` is medium BLUE, the Haiku Cosmos synchronization frequency. Luminance is frequency-state presentation, not generic power; exact colors and luminance remain tuning.
 
@@ -214,7 +214,7 @@ late moving targets → off-center Metal hunt → Ether recovered
 → final Haiku Cosmos crystal / remaining portfolio completion
 ```
 
-The puzzle reverses “largest field = best”: Metal range helps interception, but centered balance completes harmony. Exact advanced controls, expansion, pulse, slowdown/recovery easing and post-`5.30` Scenario beats remain **FUTURE / NOT IMPLEMENTED**.
+The puzzle reverses “largest field = best”: Metal range helps interception, but centered balance completes harmony. Exact advanced controls, expansion, pulse, slowdown/recovery easing and post-`5.40` Scenario beats remain **FUTURE / NOT IMPLEMENTED**.
 
 ## 15. Ostatnia karta
 

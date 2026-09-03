@@ -78,6 +78,7 @@ export const VR_SCENARIO_EVENT = immutableIdentifiers([
   'ASTERION_DRIVE_STOPPED',
   'FOURTH_RUNE_INSTALLED',
   'ETHER_INTERVENTION_COMPLETED',
+  'ETHER_RUNE_TUNED',
   'XR_SESSION_ENDING',
   'XR_SESSION_ENDED',
   'XR_SESSION_START_FAILED'
@@ -127,7 +128,8 @@ export const VR_SCENARIO_MILESTONE = immutableIdentifiers([
   'ASTERION_BUILT',
   'ASTERION_EARNED',
   'FOURTH_RUNE_INSTALLED',
-  'ETHER_TUNING_UNLOCKED'
+  'ETHER_TUNING_UNLOCKED',
+  'ETHER_RUNE_TUNED'
 ]);
 
 export const VR_SCENARIO_EFFECT = immutableIdentifiers([
@@ -227,6 +229,7 @@ export const VR_EXPERIENCE_POINT = immutableIdentifiers([
   '5.10',
   '5.20',
   '5.30',
+  '5.40',
   '100.10'
 ]);
 
@@ -279,13 +282,22 @@ const THIRD_RING_COMPLETE_SETTLED_CONSEQUENCES = Object.freeze({
 const CORE_RESONATOR_READY_SETTLED_CONSEQUENCES = Object.freeze({
   runeProgression: Object.freeze({
     tunedRuneFamilies: Object.freeze(['R', 'K', 'L']),
-    installedRuneFamilies: Object.freeze(['R', 'K', 'L'])
+    installedRuneFamilies: Object.freeze(['R', 'K', 'L']),
+    etherRuneTuned: false
   })
 });
 const FOURTH_RUNE_INSTALLED_SETTLED_CONSEQUENCES = Object.freeze({
   runeProgression: Object.freeze({
     tunedRuneFamilies: Object.freeze(['R', 'T', 'K', 'L']),
-    installedRuneFamilies: Object.freeze(['R', 'T', 'K', 'L'])
+    installedRuneFamilies: Object.freeze(['R', 'T', 'K', 'L']),
+    etherRuneTuned: false
+  })
+});
+const ETHER_RUNE_TUNED_SETTLED_CONSEQUENCES = Object.freeze({
+  runeProgression: Object.freeze({
+    tunedRuneFamilies: Object.freeze(['R', 'T', 'K', 'L']),
+    installedRuneFamilies: Object.freeze(['R', 'T', 'K', 'L']),
+    etherRuneTuned: true
   })
 });
 const SECOND_RING_COMPLETE_SETTLED_CONSEQUENCES = Object.freeze({
@@ -834,10 +846,24 @@ const points = Object.freeze([
     ])
   }),
   Object.freeze({
-    id: VR_EXPERIENCE_POINT['5.30'], canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['100.10'] }),
+    id: VR_EXPERIENCE_POINT['5.30'], canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['5.40'] }),
     settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
     entryEffects: Object.freeze([]),
     label: 'Ether tuning unlocked / stable boundary',
+    capabilities: Object.freeze([...P2_SMALL_GLYPH_TARGETING_CAPABILITIES,
+      VR_SCENARIO_CAPABILITY.CAN_TUNE_ETHER_RUNE]),
+    transitions: Object.freeze([
+      ...TIER_4_CARD_LIFECYCLE_TRANSITIONS,
+      Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.COMPLETE,
+        event: VR_SCENARIO_EVENT.ETHER_RUNE_TUNED,
+        milestonesToAdd: Object.freeze([VR_SCENARIO_MILESTONE.ETHER_RUNE_TUNED]) })
+    ])
+  }),
+  Object.freeze({
+    id: VR_EXPERIENCE_POINT['5.40'], canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['100.10'] }),
+    settledConsequences: ETHER_RUNE_TUNED_SETTLED_CONSEQUENCES,
+    entryEffects: Object.freeze([]),
+    label: 'Ether Rune tuned / transport pending',
     capabilities: Object.freeze([...P2_SMALL_GLYPH_TARGETING_CAPABILITIES,
       VR_SCENARIO_CAPABILITY.CAN_TUNE_ETHER_RUNE]),
     transitions: TIER_4_CARD_LIFECYCLE_TRANSITIONS
