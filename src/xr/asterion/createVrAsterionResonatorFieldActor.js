@@ -21,7 +21,7 @@ function readCoreState(runeStoneProgressionController, sectorControlInteraction)
   return { powered, levels };
 }
 
-function createDescriptor(runeStoneProgressionController, sectorControlInteraction) {
+function createDescriptor(runeStoneProgressionController, sectorControlInteraction, canUseAdvancedResonator) {
   const { powered, levels } = readCoreState(runeStoneProgressionController, sectorControlInteraction);
   const frozenPowered = Object.freeze(powered);
   const frozenLevels = Object.freeze(levels);
@@ -33,6 +33,18 @@ function createDescriptor(runeStoneProgressionController, sectorControlInteracti
   const fullActiveCore = resonatorExists && leftActive && rightActive && depthActive;
   const lateralSymmetric = leftActive && rightActive && levels.alpha === levels.beta;
   const lateralAsymmetric = (leftActive || rightActive) && !lateralSymmetric;
+  const metalRune = resolveRuneStoneByBranchId('metal');
+  const metalPowered = Boolean(metalRune
+    && runeStoneProgressionController.isFamilyInstalled(metalRune.familyCode));
+  const angleLevel = sectorControlInteraction.getMetalAngleLevel?.() ?? 0;
+  const tiltLevel = sectorControlInteraction.getMetalTiltLevel?.() ?? 0;
+  const metal = Object.freeze({
+    powered: metalPowered,
+    angleLevel,
+    tiltLevel,
+    active: metalPowered && canUseAdvancedResonator() === true
+      && (angleLevel > 0 || tiltLevel > 0)
+  });
 
   return Object.freeze({
     resonatorExists,
@@ -49,22 +61,24 @@ function createDescriptor(runeStoneProgressionController, sectorControlInteracti
     activeChannelCount,
     lateralStrength: (levels.alpha + levels.beta) / 2,
     fieldAsymmetry: levels.alpha - levels.beta,
-    depthBand: DEPTH_BANDS[levels.gamma]
+    depthBand: DEPTH_BANDS[levels.gamma],
+    metal
   });
 }
 
 export function createVrAsterionResonatorFieldActor({
   runeStoneProgressionController,
-  sectorControlInteraction
+  sectorControlInteraction,
+  canUseAdvancedResonator = () => false
 }) {
   const listeners = new Set();
-  let descriptor = createDescriptor(runeStoneProgressionController, sectorControlInteraction);
+  let descriptor = createDescriptor(runeStoneProgressionController, sectorControlInteraction, canUseAdvancedResonator);
   let signature = JSON.stringify(descriptor);
   let disposed = false;
 
   function synchronize() {
     if (disposed) return descriptor;
-    const nextDescriptor = createDescriptor(runeStoneProgressionController, sectorControlInteraction);
+    const nextDescriptor = createDescriptor(runeStoneProgressionController, sectorControlInteraction, canUseAdvancedResonator);
     const nextSignature = JSON.stringify(nextDescriptor);
     if (nextSignature === signature) return descriptor;
     descriptor = nextDescriptor;

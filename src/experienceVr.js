@@ -577,6 +577,7 @@ const asterionSectorAcquisitionInteraction = createVrAsterionSectorAcquisitionIn
   semanticInput,
   progressFloor,
   runeStoneProgressionController,
+  canUseAdvancedResonator: () => runtimeExperience?.can(VR_SCENARIO_CAPABILITY.CAN_USE_ADVANCED_RESONATOR) === true,
   isInteractionBlocked: (record) => playerGuidePanel.isOpen() || monkeyGuide?.hasCurrentHit(record) === true
 });
 const asterionSectorControlInteraction = createVrAsterionSectorControlInteraction({
@@ -605,7 +606,8 @@ const asterionPlatformEnergyVfxProjection = createVrAsterionPlatformEnergyVfxPro
 });
 const asterionResonatorFieldActor = createVrAsterionResonatorFieldActor({
   runeStoneProgressionController,
-  sectorControlInteraction: asterionSectorControlInteraction
+  sectorControlInteraction: asterionSectorControlInteraction,
+  canUseAdvancedResonator: () => runtimeExperience?.can(VR_SCENARIO_CAPABILITY.CAN_USE_ADVANCED_RESONATOR) === true
 });
 const asterionResonatorFieldPresentation = createVrAsterionResonatorFieldPresentation({
   parent: progressFloor.getAsterionResonatorFieldFrame(),

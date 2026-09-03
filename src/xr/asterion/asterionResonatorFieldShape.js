@@ -1,3 +1,5 @@
+import { ASTERION_METAL_CONTROL_TUNING } from './asterionMetalControlConfig.js';
+
 const DEPTH_PLANES = Object.freeze([10, 50, 90, 130]);
 const SIDE_PROFILES = Object.freeze([
   Object.freeze({ lateralHalfExtent: 23, verticalHalfExtent: 7 }),
@@ -15,12 +17,23 @@ export function resolveAsterionResonatorFieldShape(descriptor) {
   if (descriptor?.fullActiveCore !== true) return null;
 
   const { alpha, beta, gamma } = descriptor.levels;
-  const zNear = DEPTH_PLANES[gamma - 1];
-  const zFar = DEPTH_PLANES[gamma];
+  const metalAngleLevel = descriptor.metal?.angleLevel ?? 0;
+  const metalTiltLevel = descriptor.metal?.tiltLevel ?? 0;
+  const metalActive = descriptor.metal?.active === true;
+  const angleDimension = ASTERION_METAL_CONTROL_TUNING.dofs.ANGLE.gameplayDimension;
+  const tiltDimension = ASTERION_METAL_CONTROL_TUNING.dofs.TILT.gameplayDimension;
+  const lateralExpansion = metalActive
+    ? ASTERION_METAL_CONTROL_TUNING.expansionMeters[angleDimension][metalAngleLevel] ?? 0 : 0;
+  const depthExpansion = metalActive
+    ? ASTERION_METAL_CONTROL_TUNING.expansionMeters[tiltDimension][metalTiltLevel] ?? 0 : 0;
+  const zNear = Math.max(ASTERION_METAL_CONTROL_TUNING.depthDomain.near,
+    DEPTH_PLANES[gamma - 1] - depthExpansion);
+  const zFar = Math.min(ASTERION_METAL_CONTROL_TUNING.depthDomain.far,
+    DEPTH_PLANES[gamma] + depthExpansion);
   const leftProfile = SIDE_PROFILES[alpha - 1];
   const rightProfile = SIDE_PROFILES[beta - 1];
-  const leftX = -leftProfile.lateralHalfExtent;
-  const rightX = rightProfile.lateralHalfExtent;
+  const leftX = -leftProfile.lateralHalfExtent - lateralExpansion;
+  const rightX = rightProfile.lateralHalfExtent + lateralExpansion;
   const leftTopY = leftProfile.verticalHalfExtent;
   const leftBottomY = -leftProfile.verticalHalfExtent;
   const rightTopY = rightProfile.verticalHalfExtent;
@@ -38,11 +51,22 @@ export function resolveAsterionResonatorFieldShape(descriptor) {
     farBottomLeft: createCorner(leftX, leftBottomY, zFar),
     farBottomRight: createCorner(rightX, rightBottomY, zFar)
   });
+  let roundingMultiplier = 1;
+  if (metalActive && metalAngleLevel > 0 && metalTiltLevel > 0) {
+    const offCenterCount = Number(metalAngleLevel !== 2) + Number(metalTiltLevel !== 2);
+    roundingMultiplier = offCenterCount === 0
+      ? ASTERION_METAL_CONTROL_TUNING.rounding.harmonicCenterMultiplier
+      : offCenterCount === 1
+        ? ASTERION_METAL_CONTROL_TUNING.rounding.oneOffCenterMultiplier
+        : ASTERION_METAL_CONTROL_TUNING.rounding.bothOffCenterMultiplier;
+  }
   const deformation = Object.freeze({
     leftMismatch,
     rightMismatch,
-    leftFillet: FILLETS_BY_MISMATCH[leftMismatch],
-    rightFillet: FILLETS_BY_MISMATCH[rightMismatch],
+    leftFillet: Math.min(ASTERION_METAL_CONTROL_TUNING.rounding.maximumFilletFraction,
+      FILLETS_BY_MISMATCH[leftMismatch] * roundingMultiplier),
+    rightFillet: Math.min(ASTERION_METAL_CONTROL_TUNING.rounding.maximumFilletFraction,
+      FILLETS_BY_MISMATCH[rightMismatch] * roundingMultiplier),
     leftBowSign: Math.sign(alpha - gamma),
     rightBowSign: Math.sign(beta - gamma)
   });
@@ -51,7 +75,14 @@ export function resolveAsterionResonatorFieldShape(descriptor) {
     levels,
     depthBand: descriptor.depthBand,
     corners,
-    deformation
+    deformation,
+    metal: Object.freeze({
+      angleLevel: metalAngleLevel,
+      tiltLevel: metalTiltLevel,
+      lateralExpansion,
+      depthExpansion,
+      harmonicCenter: metalAngleLevel === 2 && metalTiltLevel === 2
+    })
   });
 }
 
