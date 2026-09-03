@@ -19,7 +19,7 @@ export function createVrAstrolabiumTuningActor({
   runeStoneProgressionController
 }) {
   requireSourceApi(furnaceProgressionController, 'furnaceProgressionController', [
-    'getAbsorbedShellIds', 'subscribe'
+    'getAbsorbedShellIds', 'getAsterionSphereProgress', 'subscribe'
   ]);
   requireSourceApi(protoAstroTuningController, 'protoAstroTuningController', [
     'getExtractedFamilyCodes', 'subscribe'
@@ -45,6 +45,7 @@ export function createVrAstrolabiumTuningActor({
     }).filter((familyCode) => naturalFamilies.has(familyCode)));
     const processedNaturalShellFamilyCodes = canonicalNaturalFamilies(processedFamilies);
     const specialShellUnlocked = processedNaturalShellFamilyCodes.length === PROTO_ASTRO_NATURAL_FAMILY_CODES.length;
+    const asterionSphereComplete = furnaceProgressionController.getAsterionSphereProgress().complete === true;
     const shellFamilyCodes = Object.freeze([
       ...PROTO_ASTRO_NATURAL_FAMILY_CODES,
       ...(specialShellUnlocked ? [PROTO_ASTRO_FAMILIES.V.code] : [])
@@ -53,7 +54,10 @@ export function createVrAstrolabiumTuningActor({
     return Object.freeze({
       shellFamilyCodes,
       processedNaturalShellFamilyCodes,
-      smallGlyphFamilyCodes: processedNaturalShellFamilyCodes,
+      smallGlyphFamilyCodes: Object.freeze([
+        ...processedNaturalShellFamilyCodes,
+        ...(asterionSphereComplete ? [PROTO_ASTRO_FAMILIES.V.code] : [])
+      ]),
       largeGlyphFamilyCodes: canonicalNaturalFamilies(protoAstroTuningController.getExtractedFamilyCodes()),
       runeStoneFamilyCodes: canonicalNaturalFamilies(runeStoneProgressionController.getTunedFamilyCodes()),
       specialShellUnlocked
