@@ -1,6 +1,6 @@
 # Experience VR — Gameplay Roadmap
 
-Status: **CURRENT roadmap**, synchronized on 2026-09-01. Technical models remain runtime authority.
+Status: **CURRENT roadmap**, synchronized on 2026-09-02. Technical models remain runtime authority.
 
 ## Implemented through the current boundary
 
@@ -17,10 +17,12 @@ Authority for active Resonator work is [`VR_ASTERION_RESONATOR_MODEL.md`](../tec
 
 ## Future
 
-- physical Resonator target selection, scoring and response actor/path;
-- glyph reacquisition through Resonator;
-- Metal/Water expansion, Water special override and Ether intervention;
-- final Water hunt, world dissolution and remaining late-act/finale Scenario authoring after `5.10`;
-- field presentation/audio, Rune-install VFX/audio and other explicitly open presentation work.
+- immediate selection of all four Astrolabium bands after tool acquisition and a future non-duplicating Astrolabium Tuning Domain interpreting per-family Shell → Small Glyph, Small Glyph → Large Glyph, and Wu Xing → Rune knowledge;
+- V Shell eligibility after all five natural Shells are processed;
+- corrected early/late Large Glyph policy: learned family suffices ordinarily, while late escaped targets additionally need transient `PULL_READY`;
+- late `20–110 m` depth oscillation and faster angular motion (`~135 s` period is initial tuning);
+- Metal angle/tilt wing for depth bandwidth and Water angle/tilt wing for frequency synchronization;
+- balanced `222 / M(2,2) / W(2,2)` BLUE lock and Water-target slowdown, replacing the power-to-white concept;
+- Water special override/Ether intervention, final Water hunt, world dissolution, field/target audio, and remaining Scenario authoring after `5.10`.
 
 The implemented sandbox core does not make the future target-response/finale path implemented.

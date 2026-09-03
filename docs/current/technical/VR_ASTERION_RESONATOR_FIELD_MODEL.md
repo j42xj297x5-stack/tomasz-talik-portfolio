@@ -108,7 +108,7 @@ The approved read-only presentation remains one lightweight translucent deformab
 
 A registered supported distant target accumulates resonance only while its canonical detection anchor is inside the nominal active field of a fully active configuration. Containment uses nominal field geometry. Presentation-only fillets, bow, skin morphing, skeleton geometry, opacity, and other visual tuning never alter the containment result. This mechanism is generic and is not hardcoded to Large Glyphs.
 
-On first detection the target's Proto-Astro sign becomes visible. Acquisition resumes from retained completed stages and completes one stage per continuous `2.0 s` of containment: sign at `0 s`, ring 1 at `2 s`, ring 2 at `4 s`, and ring 3 plus full acquisition / `PULL_READY` at `6 s`. Only completed stages persist; leaving containment discards fractional progress toward the next stage. Exactly three rings mean `PULL_READY`, and all three rings then pulse slowly. Only a `PULL_READY` target is eligible to become targetable/pullable by Astrolabium Więzi; Astrolabium remains the sole owner of attraction.
+On first detection the target's Proto-Astro sign becomes visible. Acquisition resumes from retained completed stages and completes one stage per continuous `2.0 s` of containment: sign at `0 s`, ring 1 at `2 s`, ring 2 at `4 s`, and ring 3 plus full acquisition / `PULL_READY` at `6 s`. Only completed stages persist; leaving containment discards fractional progress toward the next stage. Exactly three rings mean `PULL_READY`, and all three rings then pulse slowly. `PULL_READY` is the transient additional physical-pull grant for late escaped/reacquisition targets. Persistent Astrolabium family knowledge remains separate and is sufficient for ordinary earlier Large Glyph attraction. Runtime currently gates Large Glyph eligibility more broadly; that is an explicit **NOT IMPLEMENTED** policy correction, not target architecture. Astrolabium remains the sole owner of attraction.
 
 Leaving the field stops acquisition and begins decay. One completed stage is lost after each continuous `20 s` outside: `3 → 2 → 1 → 0`, so three rings take `60 s` to disappear. The target remains `PULL_READY` while three rings remain; `3 → 2` removes eligibility. Re-entry stops decay, resets the current outside-field interval, and resumes from retained rings: three rings are already ready, while two/one/zero rings require `2 / 4 / 6 s`. A later exit starts a fresh 20-second interval from the then-retained state. Exact fade curves within decay intervals remain **TUNING**.
 
@@ -116,11 +116,17 @@ The Proto-Astro sign remains visible throughout acquisition, `PULL_READY`, and r
 
 The response consists only of the target's Proto-Astro sign and up to three thin target-centered resonance rings, using that target's Proto-Astro family presentation color. The sign always faces the player's current head position and keeps an approximately constant apparent size across target depth. Exact angular size, world-scale calculation, scale clamps, ring dimensions, line thickness, spacing, pulse values, and fade curves are **TUNING**, not canon. The runtime presentation is a read-only projection of acquisition truth. Its exact angular sizes, opacity, ring thickness, palette, pulse amplitude/period, and scale calculations remain **TUNING**, not architectural law.
 
+## 8a. Advanced field extension — CURRENT TARGET / NOT IMPLEMENTED
+
+The implemented EARTH/WOOD/FIRE geometry remains unchanged. FIRE continues to choose the base depth region/center. Future METAL broadens effective FORWARD depth bandwidth around that choice; balanced `M(2,2)` aims at about 80% of `10–130 m` (approximately `20–115 m` only as an initial illustration). Future WATER tunes resonance frequency/phase rather than widening an ordinary containment dimension. Field hue communicates frequency; BLUE is Water lock at balanced `222 / M(2,2) / W(2,2)`.
+
+Metal and Water refine the same field, not separate fields. Their angle/tilt use conceptual levels `0..3`, but exact hinges, gestures, interpolation, all-combination geometry, slowdown response, and advanced descriptor mathematics remain future tuning. Water synchronization truth is consumed by Large Glyph motion/presentation; Target Acquisition continues to own only containment, stages, decay, sign memory, and `PULL_READY`.
+
 ## 9. Remaining runtime gaps and validation boundary
 
 The revised nominal shape, depth planes, side profiles, dedicated Field Frame/alignment, containment, per-target acquisition/decay/sign memory, sign-and-ring response, and Astrolabium eligibility are **IMPLEMENTED**. The active shape result no longer carries the superseded `coherentPreset` or `largeGlyphRevealEligible` fields.
 
-Genuine **FUTURE / NOT IMPLEMENTED** scope is limited here to Resonator field/target audio, METAL/WATER contribution and advanced amplification, registration of later supported target classes beyond the currently composed five Large Glyph nodes, and later Scenario/finale systems.
+Genuine **FUTURE / NOT IMPLEMENTED** scope includes corrected early/late pull policy, Resonator field/target audio, late depth oscillation, METAL bandwidth, WATER frequency/hue and slowdown, registration of later supported target classes beyond the currently composed five Large Glyph nodes, and later Scenario/finale systems.
 
 **HARDWARE QA OUTSTANDING:** this synchronization does not validate Quest comfort, perceptual sign size, ring or family-color readability, pulse comfort, ease of maintaining containment, or the practical feel of `6 s` acquisition and `20 s` decay. This validation gap does not regress implemented architecture.
 
@@ -134,7 +140,7 @@ Genuine **FUTURE / NOT IMPLEMENTED** scope is limited here to Resonator field/ta
 | Resonator Target Acquisition | generic registered-target canonical-anchor containment in Field Frame local coordinates; per-target completed stages, acquisition/decay, sign memory and `PULL_READY` | raycasting, scene traversal, physics, presentation geometry, attraction/pull, Scenario meaning |
 | Target Response Presentation | read-only Proto-Astro sign and ring projection from acquisition truth | containment, timing, eligibility, pull |
 | Field Presentation | read-only projection of descriptor into skin and skeleton | gameplay/containment/resonance truth, sector motion |
-| Astrolabium Więzi | targetability and attraction/pull after `PULL_READY` eligibility | containment and resonance eligibility truth |
+| Astrolabium Więzi | selected band and attraction/pull after family and context eligibility | family truth, containment and resonance eligibility truth |
 | `PlatformEnergyVfxActor` | procedural platform/Zwornik energy | field skin, field skeleton, target response |
 | Scenario / Guidance | narrative meaning, guidance, crystal-acquisition gates | containment and resonance truth |
 

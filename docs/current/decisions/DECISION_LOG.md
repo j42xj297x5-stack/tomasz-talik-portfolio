@@ -2,6 +2,16 @@
 
 Status: current binding decisions with preserved history. Synchronized on 2026-09-02 through shared XR spatial audio and sustained Rune Binder VFX.
 
+## 2026-09-02 — CURRENT Astrolabium learning and advanced Resonator canon (SUPERSEDING)
+
+1. After physical acquisition, all four existing Astrolabium bands are selectable; band availability is independent of learned families and current pull eligibility. The five natural Shell families are initial vocabulary. Per-family processed Shell teaches its Small Glyph; processed/extracted Small Glyph teaches its Large Glyph; successful canonical Wu Xing completion teaches/tunes the resulting Rune Stone family.
+2. Special `V/VO` remains outside natural families and becomes a legal Shell target only after all five natural Shells are processed; it completes the Shell sequence and creates no `VA`.
+3. Learned Large Glyph families are normally pullable without Resonator. Late escaped/reacquisition targets retain that knowledge but additionally require transient Resonator `PULL_READY` for physical pull. The current broad runtime gate is an implementation mismatch.
+4. Late Large Glyphs target slightly faster angular motion plus approximately `20–110 m` sinusoidal depth motion. About `20 s` useful base-band dwell is the gameplay target; about `135 s` period is initial tuning.
+5. METAL is the future depth-bandwidth wing; WATER is the future frequency-synchronization wing. Balanced `222 / M(2,2) / W(2,2)` produces BLUE Water synchronization and slows, but does not stop, the Water target. Symmetry, not a password/scoring preset, communicates the solution.
+6. Field hue means frequency/tuning, superseding the linear power-to-WHITE scale and white-as-maximum finale requirement. Strength presentation and exact advanced mathematics, motion, slowdown, interpolation, hinges, and gestures remain future tuning.
+7. A future Astrolabium Tuning Domain interprets authoritative Furnace, Proto-Astro, Rune, and Resonator facts without duplicating them. This decision performs no runtime implementation; immediate-all-band behavior, unified interpretation, early/late gate correction, motion, Metal, Water, frequency/color, slowdown, and post-`5.10` Scenario continuation remain **NOT IMPLEMENTED**.
+
 ## 2026-09-02 — CURRENT shared spatial audio and sustained Binder reveal (SUPERSEDING)
 
 1. Experience composition performs exactly one listener update per VR frame through `getXrHeadWorldPose(...) → VrAudioBridge.setSpatialListenerPose(...)`; spatial projections update only their emitter positions. The prepared detached XR camera `matrixWorld` is authoritative so listener and emitters share real Experience VR world space.

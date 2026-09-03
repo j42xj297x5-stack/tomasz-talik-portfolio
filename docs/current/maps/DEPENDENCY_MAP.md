@@ -31,6 +31,26 @@ SphericalLayerRegistry.RUNE_STONES (50–75 m) → RuneStoneActor natural collec
 
 Large Glyph is not a spherical layer.
 
+## Astrolabium knowledge and late pull eligibility
+
+```text
+Astrolabium acquired → all four class bands selectable (TARGET; runtime gap)
+Furnace processed natural Shell truth → matching Small Glyph family knowledge
+Proto-Astro Small Glyph extraction truth → matching Large Glyph family knowledge
+Rune Wu Xing tuning truth → matching Rune Stone family knowledge
+
+ordinary Large Glyph: learned family → normal pull eligibility
+late escaped Large Glyph: learned family + late state + Resonator PULL_READY
+→ additional transient physical-pull grant
+
+advanced Resonator (FUTURE / NOT IMPLEMENTED)
+├→ METAL angle/tilt → expanded depth bandwidth
+└→ WATER angle/tilt → frequency synchronization / BLUE lock
+    → Large Glyph Actor motion response / Water slowdown
+```
+
+The future Astrolabium Tuning Domain interprets these owners; it does not copy their persistence. Band UI owns selected class, Target Acquisition owns containment/stages/decay/sign memory/`PULL_READY`, advanced Resonator owns Metal/Water truth, Large Glyph Actor owns motion, and Attractor owns legal selection/pull/capture.
+
 ## Rune tuning, transport and installation
 
 ```text
@@ -87,7 +107,7 @@ The physical core contains `4 × 4 × 4 = 64` states and 27 fully active configu
 
 The semantic axes are FORWARD / LATERAL / VERTICAL, mapped for the current Three.js target to platform-local `+Z / X / Y`. The progress-floor sector layout must author FIRE's outward radial axis along canonical `entryDirection / FORWARD`; fixtures and player passengers do not join that layout alignment. A reusable rounded 16-corner cage uses depth planes `10 / 50 / 90 / 130 m`, nominal independent side apertures, a translucent skin, and a brighter curved skeleton; bow is only secondary tuning. Runtime implements the dedicated Field Frame, aligned FIRE/entryDirection composition and revised nominal cage. Implemented nominal-geometry containment feeds independent per-target resonance: family-colored Proto-Astro sign on detection, rings at `2 / 4 / 6 s`, and exactly three rings as `PULL_READY`. Rings decay outside at one per `20 s`; the sign persists through decay plus `60 s` sign-only memory. Field visuals never affect containment; Astrolabium owns pull after eligibility.
 
-Resonator Target Acquisition owns generic canonical-anchor containment against the Field Domain nominal shape plus per-target completed stages, timing, decay, sign memory and `PULL_READY`. Target Response Presentation reads that truth only. `Target Acquisition.PULL_READY → Large Glyph Astrolabium eligibility → existing Astrolabium pull owner`; Astrolabium checks readiness during candidate legality, before pull start and continuously during pull, but owns selection, attraction, capture and cancellation/return. Scenario/Guidance only interprets meaning.
+Resonator Target Acquisition owns generic canonical-anchor containment against the Field Domain nominal shape plus per-target completed stages, timing, decay, sign memory and `PULL_READY`. Target Response Presentation reads that truth only. For late escaped targets only, `Target Acquisition.PULL_READY → additional Large Glyph physical-pull grant → existing Astrolabium pull owner`; Astrolabium checks readiness during candidate legality, before pull start and continuously during pull, but owns selection, attraction, capture and cancellation/return. Scenario/Guidance only interprets meaning.
 
 ## Resonator semantic join and read-only Guidance
 

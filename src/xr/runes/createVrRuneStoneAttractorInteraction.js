@@ -10,7 +10,7 @@ const clamp01 = (value) => Math.min(1, Math.max(0, value));
 export const RUNE_STONE_PLATFORM_MIN_RADIUS_M = 9.0;
 
 export function createVrRuneStoneAttractorInteraction({ controllers, runeStoneActor,
-  runeStoneAttractorBandProjection, handModeController, semanticInput, attractorTool,
+  isFamilyTargetable = () => false, handModeController, semanticInput, attractorTool,
   maxTargetDistance, settings, haloSettings, platformCenter, getPlayerWorldPosition,
   tryBeginInstallationHandoff = () => false,
   onPullStart = () => {}, onPullCancel = () => {}, onHandoff = () => {},
@@ -21,9 +21,7 @@ export function createVrRuneStoneAttractorInteraction({ controllers, runeStoneAc
     || !runeStoneActor?.releaseFromAstro || !runeStoneActor?.isPresentationVisible) {
     throw new TypeError('runeStoneActor must expose physical records, live bounds and Astro transport commands.');
   }
-  if (!runeStoneAttractorBandProjection?.isFamilyTargetable) {
-    throw new TypeError('runeStoneAttractorBandProjection must expose target permission.');
-  }
+  if (typeof isFamilyTargetable !== 'function') throw new TypeError('isFamilyTargetable must be a function.');
   if (!Number.isFinite(maxTargetDistance) || maxTargetDistance <= 0) {
     throw new TypeError('maxTargetDistance must be positive.');
   }
@@ -71,8 +69,7 @@ export function createVrRuneStoneAttractorInteraction({ controllers, runeStoneAc
   const rightRecord = () => controllers.find(({ handedness }) => handedness === 'right') ?? null;
   const ownsBand = () => handModeController.getRightMode() === VR_RIGHT_HAND_MODES.ASTRO_ATTRACTOR
     && handModeController.getAttractorBand() === VR_ATTRACTOR_BANDS.RUNESTONES;
-  const isTargetableFamily = (record) => runeStoneAttractorBandProjection
-    .isFamilyTargetable(record.familyCode) === true;
+  const isTargetableFamily = (record) => isFamilyTargetable(record.familyCode) === true;
   const isPhysical = (record) => runeStoneActor.isPresentationVisible() === true
     && record?.descriptor?.natural === true && record.root?.parent
     && record.root.visible !== false;
