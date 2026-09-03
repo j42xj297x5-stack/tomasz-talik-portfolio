@@ -376,7 +376,7 @@ const asterionSphere = createVrAsterionSphere({
 });
 let monkeyGuide = null;
 const asterionGyroInteraction = createVrAsterionGyroInteraction({
-  sphere: asterionSphere, controllers: vrControllers.controllers, progressFloor, worldRoot: worldStableRoot, renderer,
+  sphere: asterionSphere, controllers: vrControllers.controllers, progressFloor, playerRig, worldRoot: worldStableRoot, renderer,
   settings: settings.asterionSphere, enabled: settings.asterionSphere.enabled,
   isInteractionBlocked: (record) => monkeyGuide?.hasCurrentHit(record) === true
 });
@@ -1457,7 +1457,6 @@ function renderFrame() {
   introCrystalTutorial.update(delta);
   crystalReliquary.update(delta);
   portalDisplay.update(delta);
-  locomotion.setLeftYawLocked(playerGuidePanel.isOpen());
   astroFurnace.update(delta);
   astroFurnaceOptionInteraction.update(delta);
   astroFurnaceOpenInteraction.update(delta);
@@ -1523,6 +1522,8 @@ function renderFrame() {
     hovered: glyphInteraction.hoveredGlyphs,
     exhausted: new Set(nodes.filter((node) => !isGlyphActive(node)))
   });
+  locomotion.setLeftYawLocked(playerGuidePanel.isOpen() || asterionGyroInteraction.isDriveActive()
+    || asterionSectorControlInteraction.isDriveActive());
   locomotion.update(delta);
   portalCanvas.update(delta);
   renderer.render(scene, camera);

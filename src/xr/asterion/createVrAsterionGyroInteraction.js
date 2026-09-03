@@ -1,5 +1,5 @@
 import * as THREE from '../../vendor/three.js';
-import { ASTERION_GYRO_STATES, computeClutchedTargetQuaternion, computeQuaternionError, neutralizeControllerQuaternionAgainstFloor, resolveGyroState, steerAngularVelocity } from './asterionGyroMath.js';
+import { ASTERION_GYRO_STATES, computeClutchedTargetQuaternion, computeQuaternionError, resolveGyroState, steerAngularVelocity } from './asterionGyroMath.js';
 
 const TRIGGER_THRESHOLD = 0.1;
 const HARD_SETTLE_THRESHOLD_DEGREES = 0.05;
@@ -16,7 +16,7 @@ function getLeftPrimaryAction(renderer) {
   return Math.min(1, Math.max(0, Number.isFinite(value) ? value : 0));
 }
 
-export function createVrAsterionGyroInteraction({ sphere, controllers, progressFloor, worldRoot, renderer, settings,
+export function createVrAsterionGyroInteraction({ sphere, controllers, progressFloor, playerRig, worldRoot, renderer, settings,
   enabled = false, isInteractionBlocked = () => false }) {
   const previewQuaternion = new THREE.Quaternion();
   const commandQuaternion = new THREE.Quaternion();
@@ -29,7 +29,7 @@ export function createVrAsterionGyroInteraction({ sphere, controllers, progressF
   const handReferenceQuaternion = new THREE.Quaternion();
   const controllerQuaternionNow = new THREE.Quaternion();
   const parentWorldQuaternion = new THREE.Quaternion();
-  const floorWorldQuaternion = new THREE.Quaternion();
+  const playerRigWorldQuaternion = new THREE.Quaternion();
   const gripWorldQuaternion = new THREE.Quaternion();
   const angularVelocity = new THREE.Vector3();
   const errorAxis = new THREE.Vector3();
@@ -95,25 +95,10 @@ export function createVrAsterionGyroInteraction({ sphere, controllers, progressF
     hideLeftRayIfEquipped(leftRecord);
     const equipped = Boolean(sphere?.isEquipped?.());
     if (equipped && !wasEquipped) {
-      const floorParent = progressFloor?.object?.parent ?? worldRoot ?? null;
-      floorParent?.updateWorldMatrix?.(true, false);
-      floorParent?.getWorldQuaternion?.(parentWorldQuaternion) ?? parentWorldQuaternion.identity();
-      progressFloor?.object?.updateWorldMatrix?.(true, false);
-      progressFloor?.object?.getWorldQuaternion?.(floorWorldQuaternion) ?? floorWorldQuaternion.identity();
-      if (leftRecord?.grip) {
-        leftRecord.grip.updateWorldMatrix(true, false);
-        leftRecord.grip.getWorldQuaternion(gripWorldQuaternion);
-        neutralizeControllerQuaternionAgainstFloor({
-          gripWorldQuaternion, floorWorldQuaternion, floorParentWorldQuaternion: parentWorldQuaternion
-        }, controllerQuaternionNow);
-        handReferenceQuaternion.copy(controllerQuaternionNow);
-        handReferenceValid = true;
-      } else {
-        handReferenceValid = false;
-      }
       controlBaseQuaternion.copy(currentQuaternion);
       previewQuaternion.copy(currentQuaternion);
       displayPreviewQuaternion.copy(currentQuaternion);
+      handReferenceValid = false;
     }
     if (!equipped && wasEquipped) {
       driveActive = false;
@@ -126,31 +111,33 @@ export function createVrAsterionGyroInteraction({ sphere, controllers, progressF
     const floorParent = progressFloor?.object?.parent ?? worldRoot ?? null;
     floorParent?.updateWorldMatrix?.(true, false);
     floorParent?.getWorldQuaternion?.(parentWorldQuaternion) ?? parentWorldQuaternion.identity();
-    progressFloor?.object?.updateWorldMatrix?.(true, false);
-    progressFloor?.object?.getWorldQuaternion?.(floorWorldQuaternion) ?? floorWorldQuaternion.identity();
 
-    if (leftRecord?.grip && equipped) {
+    if (triggerDown && !driveActive && leftRecord?.grip) {
+      playerRig?.updateWorldMatrix?.(true, false);
+      playerRig?.getWorldQuaternion?.(playerRigWorldQuaternion) ?? playerRigWorldQuaternion.identity();
       leftRecord.grip.updateWorldMatrix(true, false);
       leftRecord.grip.getWorldQuaternion(gripWorldQuaternion);
-      neutralizeControllerQuaternionAgainstFloor({
-        gripWorldQuaternion, floorWorldQuaternion, floorParentWorldQuaternion: parentWorldQuaternion
-      }, controllerQuaternionNow);
-      if (!handReferenceValid) {
-        handReferenceQuaternion.copy(controllerQuaternionNow);
-        controlBaseQuaternion.copy(currentQuaternion);
-        previewQuaternion.copy(controlBaseQuaternion);
-        handReferenceValid = true;
-      } else {
-        computeClutchedTargetQuaternion({
-          controllerQuaternionNow,
-          grabStartControllerQuaternion: handReferenceQuaternion,
-          grabStartTargetQuaternion: controlBaseQuaternion,
-          parentWorldQuaternion
-        }, previewQuaternion);
-      }
+      controllerQuaternionNow.copy(playerRigWorldQuaternion).invert().multiply(gripWorldQuaternion).normalize();
+      handReferenceQuaternion.copy(controllerQuaternionNow);
+      controlBaseQuaternion.copy(commandQuaternion);
+      previewQuaternion.copy(controlBaseQuaternion);
+      handReferenceValid = true;
+    } else if (triggerDown && handReferenceValid && leftRecord?.grip) {
+      playerRig?.updateWorldMatrix?.(true, false);
+      playerRig?.getWorldQuaternion?.(playerRigWorldQuaternion) ?? playerRigWorldQuaternion.identity();
+      leftRecord.grip.updateWorldMatrix(true, false);
+      leftRecord.grip.getWorldQuaternion(gripWorldQuaternion);
+      controllerQuaternionNow.copy(playerRigWorldQuaternion).invert().multiply(gripWorldQuaternion).normalize();
+      computeClutchedTargetQuaternion({
+        controllerQuaternionNow,
+        grabStartControllerQuaternion: handReferenceQuaternion,
+        grabStartTargetQuaternion: controlBaseQuaternion,
+        parentWorldQuaternion,
+        controllerFrameWorldQuaternion: playerRigWorldQuaternion
+      }, previewQuaternion);
     }
 
-    driveActive = triggerDown;
+    driveActive = triggerDown && handReferenceValid && Boolean(leftRecord?.grip);
     if (driveActive) {
       commandQuaternion.copy(previewQuaternion);
       maneuverPendingLock = true;
@@ -203,17 +190,8 @@ export function createVrAsterionGyroInteraction({ sphere, controllers, progressF
       angularVelocity.set(0, 0, 0);
       if (progressFloor?.object?.quaternion) progressFloor.object.quaternion.copy(currentQuaternion);
       progressFloor?.object?.updateWorldMatrix?.(true, false);
-      progressFloor?.object?.getWorldQuaternion?.(floorWorldQuaternion) ?? floorWorldQuaternion.identity();
-      if (leftRecord?.grip && handReferenceValid) {
-        leftRecord.grip.updateWorldMatrix(true, false);
-        leftRecord.grip.getWorldQuaternion(gripWorldQuaternion);
-        neutralizeControllerQuaternionAgainstFloor({
-          gripWorldQuaternion, floorWorldQuaternion, floorParentWorldQuaternion: parentWorldQuaternion
-        }, controllerQuaternionNow);
-      }
       angularError = 0;
       controlBaseQuaternion.copy(currentQuaternion);
-      if (handReferenceValid) handReferenceQuaternion.copy(controllerQuaternionNow);
       previewQuaternion.copy(currentQuaternion).normalize();
       visualOffsetStartQuaternion.copy(displayPreviewBeforeRebase).multiply(previewQuaternion.clone().invert()).normalize();
       visualOffsetQuaternion.copy(visualOffsetStartQuaternion);
