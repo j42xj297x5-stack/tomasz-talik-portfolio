@@ -26,7 +26,8 @@ export const VR_MONKEY_COMMUNICATION_COPY_PL = Object.freeze({
     'progression.p3.firstRuneInstalled': { blocks: ['O.', 'Sam wiedział, gdzie ma trafić.', 'Teraz możesz kontrolować jedną część.\nŻeby znaleźć glify, potrzebujesz trzech.', 'Teraz odpowiada na Kulę.', 'Przytrzymaj chwyt nad sektorem.\nNie puszczaj od razu.', 'Gdy już go przywiążesz, możesz nim sterować.\nJak całą platformą.', 'No prawie...'] },
     'progression.p3.firstSectorLock': { blocks: ['No.', 'Teraz ruszasz częścią świata.'] },
     'progression.p3.resonator': { blocks: ['No dobrze.', 'Trzy razem zaczynają słuchać.', 'Chyba zbudowałeś Rezonator Asterionowy.', 'Radar mówiłby ci, gdzie coś jest.', 'To jest bardziej uparte.', 'Musisz zapytać przestrzeń we właściwym kierunku.', 'A teraz zapytaj świat.\nMoże ci odpowie.'] },
-    'progression.p4.etherIntervention': { blocks: ['Cztery.', 'Została Woda.', 'Tylko że jej sektor nie ma jak się domknąć.', 'Normalnie powiedziałbym, że utknęliśmy.', 'Na szczęście normalnie już dawno przestało tu działać.', 'Jest jeszcze jeden kamień.', 'Nie należy do tej piątki.', 'Eter.', 'Może właśnie dlatego się przyda.'] }
+    'progression.p4.etherIntervention': { blocks: ['Cztery.', 'Została Woda.', 'Tylko że jej sektor nie ma jak się domknąć.', 'Normalnie powiedziałbym, że utknęliśmy.', 'Na szczęście normalnie już dawno przestało tu działać.', 'Jest jeszcze jeden kamień.', 'Nie należy do tej piątki.', 'Eter.', 'Może właśnie dlatego się przyda.'] },
+    'progression.p4.waterPathOpen': { blocks: ['No.', 'To powinno wystarczyć.', 'Spójrz na Wodę.', 'Teraz ma się czego trzymać.'] }
   }),
   tutorial: Object.freeze({ crystal: Object.freeze({
     pointerLearned: ['Widzisz?\nJuż nauczyłeś świat, gdzie patrzysz.'],

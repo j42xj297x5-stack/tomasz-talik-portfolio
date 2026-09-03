@@ -6,6 +6,10 @@ import { resolveRuneStoneByFamilyCode } from './vrRuneStoneRegistry.js';
 const ETHER_FAMILY_CODE = 'V';
 const ETHER_SLOT_COUNT = 6;
 const ETHER_SLOT_INDEX = 5;
+export const VR_ETHER_RUNE_STONE_STATE = Object.freeze({
+  MONKEY_CAPTURE: 'MONKEY_CAPTURE',
+  CAPTURED: 'CAPTURED'
+});
 
 export function createVrEtherRuneStoneActor({ parent, assetManager, layer }) {
   if (!parent?.add || !assetManager?.getGltf || !assetManager?.cloneGltfScene) {
@@ -103,6 +107,13 @@ export function createVrEtherRuneStoneActor({ parent, assetManager, layer }) {
     lockByAstro: () => record.state === VR_RUNE_STONE_STATE.LOCKED_BY_ASTRO
       || commandState(VR_RUNE_STONE_STATE.FREE, VR_RUNE_STONE_STATE.LOCKED_BY_ASTRO),
     beginCarriedOrbit: () => commandState(VR_RUNE_STONE_STATE.LOCKED_BY_ASTRO, VR_RUNE_STONE_STATE.CARRIED_ORBIT),
+    beginMonkeyCapture: () => commandState(VR_RUNE_STONE_STATE.CARRIED_ORBIT,
+      VR_ETHER_RUNE_STONE_STATE.MONKEY_CAPTURE),
+    completeMonkeyCapture: () => {
+      if (!commandState(VR_ETHER_RUNE_STONE_STATE.MONKEY_CAPTURE, VR_ETHER_RUNE_STONE_STATE.CAPTURED)) return false;
+      setPresentationVisible(false);
+      return true;
+    },
     releaseFromAstro: () => record.state === VR_RUNE_STONE_STATE.FREE
       || commandState(VR_RUNE_STONE_STATE.LOCKED_BY_ASTRO, VR_RUNE_STONE_STATE.FREE)
       || commandState(VR_RUNE_STONE_STATE.CARRIED_ORBIT, VR_RUNE_STONE_STATE.FREE),
