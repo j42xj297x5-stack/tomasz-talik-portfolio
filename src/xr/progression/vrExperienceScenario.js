@@ -788,7 +788,14 @@ const points = Object.freeze([
     settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
     entryEffects: Object.freeze([]),
     label: 'Third ring + Resonator stable join', capabilities: P2_SMALL_GLYPH_TARGETING_CAPABILITIES,
-    transitions: Object.freeze([])
+    transitions: Object.freeze([
+      Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.STAY, event: VR_SCENARIO_EVENT.CRYSTAL_ACTIVATED, milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.PRESENT_ACTIVE_CARD_PREVIEW]) }),
+      Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.STAY, event: VR_SCENARIO_EVENT.CARD_COMMITTED, milestonesToAdd: Object.freeze([VR_SCENARIO_MILESTONE.CARD_COMMITTED]), effects: Object.freeze([
+        VR_SCENARIO_EFFECT.UPDATE_COMMITTED_CARD_PRESENTATION,
+        VR_SCENARIO_EFFECT.PLAY_CARD_COMMIT_FEEDBACK
+      ]) }),
+      Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.STAY, event: VR_SCENARIO_EVENT.TIER_COMPLETED, milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.APPLY_TIER_COMPLETE_FEEDBACK]) })
+    ])
   }),
   Object.freeze({
     id: VR_EXPERIENCE_POINT['100.10'],
