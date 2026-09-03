@@ -46,6 +46,7 @@ import { createVrShellAttractorInteraction } from './xr/shells/createVrShellAttr
 import { createVrSemanticInput } from './xr/input/createVrSemanticInput.js';
 import { createVrHandModeController, VR_ATTRACTOR_BANDS } from './xr/input/createVrHandModeController.js';
 import { createVrAttractorTool } from './xr/tools/createVrAttractorTool.js';
+import { createVrAstrolabiumTuningActor } from './xr/tools/createVrAstrolabiumTuningActor.js';
 import { ASTRO_ATTRACTOR_CONSTRUCTION, createVrAstroAttractorProductionController } from './xr/tools/createVrAstroAttractorProductionController.js';
 import { createVrAstroFurnace } from './xr/furnace/createVrAstroFurnace.js';
 import { createVrAstroFurnaceOpenInteraction } from './xr/furnace/createVrAstroFurnaceOpenInteraction.js';
@@ -476,6 +477,7 @@ function synchronizeReconstructionDerivedState() {
   asterionResonatorFieldActor.synchronize();
   furnacePanel?.redraw();
   shellSystem.applyAbsorbedShellIds(furnaceProgressionController.getAbsorbedShellIds());
+  astrolabiumTuningActor.synchronize();
 }
 const firstRingFlow = createVrFirstRingFlow({
   progressFloor,
@@ -514,6 +516,11 @@ const attractorBandPresentations = Object.freeze({
 });
 const semanticInput = createVrSemanticInput({ renderer });
 const runeStoneProgressionController = createVrRuneStoneProgressionController();
+const astrolabiumTuningActor = createVrAstrolabiumTuningActor({
+  furnaceProgressionController,
+  protoAstroTuningController,
+  runeStoneProgressionController
+});
 let previousRuneProgressionSnapshot = runeStoneProgressionController.getSnapshot();
 const runeInstalledStateProjection = createVrRuneInstalledStateProjection({
   runeStoneProgressionController, runeStoneActor, runeBridgeActor
@@ -530,23 +537,22 @@ let runeStoneAudioProjection = null;
 let runeStoneInstallationInteraction = null;
 let runeResonatorGuidance = null;
 let monkeyKnowledgeResolver = null;
+const isAstrolabiumAcquired = () => introQaBypass
+  || runtimeExperience.can(VR_SCENARIO_CAPABILITY.CAN_EQUIP_ASTRO);
 const handModeController = createVrHandModeController({
   controllers: vrControllers.controllers,
   semanticInput,
   attractorTool,
   getAttractorBandPresentation: (band) => attractorBandPresentations[band] ?? attractorBandPresentations.SHELLS,
   asterionSphere,
-  isUnlocked: () => introQaBypass || runtimeExperience.can(VR_SCENARIO_CAPABILITY.CAN_EQUIP_ASTRO),
-  canSwitchAttractorBand: () => runtimeExperience?.can(
-    VR_SCENARIO_CAPABILITY.CAN_SWITCH_ASTRO_BAND
-  ) === true,
-  getAvailableAttractorBands: () => {
-    const bands = [VR_ATTRACTOR_BANDS.SHELLS, VR_ATTRACTOR_BANDS.SMALL_GLYPHS];
-    if (runtimeExperience?.can(VR_SCENARIO_CAPABILITY.CAN_SCAN_LARGE_GLYPHS) === true
-      && protoAstroTuningController.getExtractedFamilyCodes().length > 0) bands.push(VR_ATTRACTOR_BANDS.LARGE_GLYPHS);
-    if (runeStoneAttractorBandProjection.isAvailable()) bands.push(VR_ATTRACTOR_BANDS.RUNESTONES);
-    return bands;
-  },
+  isUnlocked: isAstrolabiumAcquired,
+  canSwitchAttractorBand: isAstrolabiumAcquired,
+  getAvailableAttractorBands: () => [
+    VR_ATTRACTOR_BANDS.SHELLS,
+    VR_ATTRACTOR_BANDS.SMALL_GLYPHS,
+    VR_ATTRACTOR_BANDS.LARGE_GLYPHS,
+    VR_ATTRACTOR_BANDS.RUNESTONES
+  ],
   isAsterionAvailable: () => asterionProductionController.isEarned() || asterionSphereQa,
   isLeftToolToggleBlocked: () => {
     const leftRecord = vrControllers.controllers.find(({ handedness }) => handedness === 'left') ?? null;
@@ -1712,6 +1718,7 @@ window.addEventListener('pagehide', () => {
   earlyExperienceGuidance.reset();
   monkeyGuide.dispose();
   furnacePanel.dispose();
+  astrolabiumTuningActor.dispose();
   furnaceProgressionController.dispose();
   astroFurnace.dispose();
   shellAttractorInteraction.dispose();
