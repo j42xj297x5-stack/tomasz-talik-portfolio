@@ -36,7 +36,7 @@ export function createVrRuneTuningController({ runeRecipeInteraction, runeRecipe
       && frozen.expectedRecipe?.targetFamilyCode === frozen.targetFamilyCode
       && frozen.expectedRecipe?.kind === (natural ? 'NATURAL' : 'SPECIAL')
       && glyphIdentity?.descriptor?.syllable === frozen.expectedRecipe.smallGlyphDescriptor?.syllable
-      && shellIdentity?.descriptor?.syllable === frozen.expectedRecipe.shellDescriptor?.syllable
+      && shellIdentity?.syllable === frozen.expectedRecipe.shellDescriptor?.syllable
       && glyphIdentity?.descriptor?.familyCode === frozen.expectedRecipe.smallGlyphFamilyCode
       && shellIdentity?.familyCode === frozen.expectedRecipe.shellFamilyCode
       && runeRecipeInteraction.canConsumeInsertedIngredients(frozen);

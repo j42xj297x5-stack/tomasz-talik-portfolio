@@ -99,7 +99,7 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
     y: FAMILY_GRID.y + Math.floor(index / FAMILY_GRID.columns) * (FAMILY_GRID.cellHeight + FAMILY_GRID.rowGap),
     width: FAMILY_GRID.cellWidth, height: FAMILY_GRID.cellHeight, enabled });
   const smallGlyphByFamily = new Map(smallGlyphEntries.map((entry) => [entry.protoAstro.descriptor.familyCode, entry]));
-  const shellPatchByFamily = new Map(ASTERION_SHELL_PATCHES.map((patch) => [resolveAttractorShellGlyph(patch.assetId)?.descriptor?.familyCode, patch]));
+  const shellPatchByFamily = new Map(ASTERION_SHELL_PATCHES.map((patch) => [resolveAttractorShellGlyph(patch.assetId)?.familyCode, patch]));
   const runeStoneWireframeByFamily = new Map(FAMILY_GRID_CODES.map((familyCode) => [familyCode,
     createAsterionModelWireframeMap(resolveVrRuneStonePreviewModel(familyCode), { maxSegments: 420, minLength: .006, thresholdAngle: 20 })]));
   const protoAstroImageCache = new Map();
@@ -375,7 +375,7 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
     text('SFERA ASTERIONOWA', 90, 190, 48); text('Rdzeń żyroskopowy sterowania kręgiem', 90, 238, 24, '#88b8cf');
     const currentAssetId = contentSource?.getInsertedShellAssetId?.();
     const currentState = contentSource?.getState?.() ?? 'EMPTY';
-    const shellsByFamily = new Map(progress.shells.map((shell) => [resolveAttractorShellGlyph(shell.assetId)?.descriptor?.familyCode, shell]));
+    const shellsByFamily = new Map(progress.shells.map((shell) => [resolveAttractorShellGlyph(shell.assetId)?.familyCode, shell]));
     FAMILY_GRID_CODES.forEach((familyCode, index) => {
       const shell = shellsByFamily.get(familyCode) ?? progress.shells[index];
       if (!shell) return;
