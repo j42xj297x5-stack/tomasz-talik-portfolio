@@ -2,11 +2,11 @@
 
 ## 1. Status, authority, and scope
 
-Status: **CURRENT / BINDING — REVISED FIELD, TARGET ACQUISITION, TARGET RESPONSE AND ASTROLABIUM ELIGIBILITY IMPLEMENTED; HARDWARE QA OUTSTANDING**.
+Status: **CURRENT / BINDING — CORE FIELD, METAL EXTENSION, TARGET ACQUISITION/RESPONSE AND ASTROLABIUM ELIGIBILITY IMPLEMENTED; HARDWARE QA OUTSTANDING**.
 
 This subordinate model is the binding authority for Resonator field geometry, nominal containment, resonance acquisition, and read-only presentation. Runtime derives the immutable `FieldDescriptor`, resolves the revised nominal aperture geometry in a dedicated Resonator Field Frame, evaluates registered targets, projects their response, and exposes bounded `PULL_READY` eligibility to Astrolabium.
 
-Sector motion remains `0° / 13° / 23° / 36°`. Sector control, FieldActor, Rune, Scenario, Guidance, and platform-energy ownership do not change. This model does not define a runtime transform/registry/rendering API, shader constants, numerical presentation tuning, or METAL/WATER contribution.
+Sector motion remains `0° / 13° / 23° / 36°`. Sector control, FieldActor, Rune, Scenario, Guidance, and platform-energy ownership do not change. This model does not define a general runtime transform/registry/rendering API or shader constants; concrete Metal axes, expansion values and rounding multipliers are explicitly **TUNING / HARDWARE QA**.
 
 ## 2. Powered and field-active sectors
 
@@ -116,11 +116,13 @@ The Proto-Astro sign remains visible throughout acquisition, `PULL_READY`, and r
 
 The response consists only of the target's Proto-Astro sign and up to three thin target-centered resonance rings, using that target's Proto-Astro family presentation color. The sign always faces the player's current head position and keeps an approximately constant apparent size across target depth. Exact angular size, world-scale calculation, scale clamps, ring dimensions, line thickness, spacing, pulse values, and fade curves are **TUNING**, not canon. The runtime presentation is a read-only projection of acquisition truth. Its exact angular sizes, opacity, ring thickness, palette, pulse amplitude/period, and scale calculations remain **TUNING**, not architectural law.
 
-## 8a. Advanced field extension — CURRENT TARGET / NOT IMPLEMENTED
+## 8a. Metal advanced field extension — CURRENT / IMPLEMENTED
 
-The implemented EARTH/WOOD/FIRE geometry remains unchanged. Future METAL adds two independent expansion components to that result: one LATERAL and one FORWARD/depth, with no VERTICAL expansion. The exact angle-versus-tilt assignment is not yet proven and remains future tuning. Each Metal DOF has `0 = OFF` and active values `1/2/3`; `2` is neutral, while `1` and `3` expand that DOF's dimension. Thus `M(2,2)` uniquely adds zero nominal range among active pairs, every other active pair expands at least one dimension, and pairs off-center on both DOFs expand both. Exact meter extents, maximum size and curves remain tuning after hardware QA against the implemented moving Large Glyphs.
+The implemented EARTH/WOOD/FIRE geometry remains unchanged. Installed Metal plus `CAN_USE_ADVANCED_RESONATOR` enables the existing acquisition path and two independent physical detented DOFs, `M(angle, tilt)`, each with `0 = OFF` and active values `1/2/3`. Their state is transient Resonator control truth and resets to `M00`; it is not Scenario or Rune progression truth. The provisional implementation maps `angle → LATERAL` and `tilt → FORWARD/depth`, with no VERTICAL expansion. The semantic assignment and sector-local gesture/motion axes are **TUNING / HARDWARE QA**.
 
-Metal also drives a strong read-only presentation response: `M(2,2)` has maximum fillet/edge rounding, while extremes `1` and `3` contribute much less. Moving off center therefore enlarges the relevant gameplay extent while reducing visual rounding. At `M22`, containment remains exactly the nominal EARTH/WOOD/FIRE extent even if the balanced cage appears almost spherical as a strongly rounded cuboid. Presentation fillet/bow/skin never changes containment; exact radii, percentages and cross-axis math remain tuning.
+Angle levels `1/3` add `8 m` per LATERAL side; `0/2` add zero. Tilt levels `1/3` expand the selected FIRE band by up to `10 m` at both ends, clamped to the global `10–130 m` depth domain; `0/2` preserve the exact original band. Therefore NEAR becomes `10–60 m`, MID `40–100 m`, and FAR `80–130 m`. These values are **TUNING / HARDWARE QA**. `M22` preserves compact gameplay range while retaining its distinct active midpoint state. The resolved shape carries Metal levels, expansions and descriptive `harmonicCenter`; no harmonic recognition is implemented.
+
+Metal also drives a read-only presentation response through existing field morphing. When both DOFs are active, mismatch fillet is multiplied by `1.50` at `M22`, `0.90` with exactly one off-center DOF, or `0.60` with both off center, then clamped to `0.32`. These values are **TUNING / HARDWARE QA**. If either DOF is OFF, pre-Metal mismatch fillet is unchanged. Bow amplitude is unchanged, and presentation fillet/bow/skin never changes containment.
 
 Future WATER does not widen ordinary containment. Its active angle maps `1 → GREEN`, `2 → BLUE`, `3 → VIOLET/PURPLE`; active tilt maps `1 → very dark`, `2 → medium luminance`, `3 → very bright`; `0` is OFF. Hue and luminance express Water frequency state, not a generic power ladder. `W(2,2)` is medium BLUE. At `222 / M22 / W22`, the compact balanced field gains maximum rounding and a gentle coherent BLUE breathing pulse; exact color, luminance, pulse and deformation values remain tuning.
 
@@ -130,7 +132,7 @@ Installed Water plus `222 / M22 / W22` derives future WATER SYNC LOCK. Lock plus
 
 The revised nominal shape, depth planes, side profiles, dedicated Field Frame/alignment, containment, per-target acquisition/decay/sign memory, sign-and-ring response, and Astrolabium eligibility are **IMPLEMENTED**. The active shape result no longer carries the superseded `coherentPreset` or `largeGlyphRevealEligible` fields.
 
-Genuine **FUTURE / NOT IMPLEMENTED** scope includes Resonator field/target audio, Metal control/expansion/maximum harmonic fillet, Water control and hue/luminance/pulse presentation, Ether-triggered Water installation exception, Water Sync Lock/Contact, Haiku damping and the Water-specific final anti-bypass gate, plus later Scenario/finale systems. The late-only `PULL_READY` policy and Large Glyph angular plus `20–110 m` radial motion are implemented; their numeric tuning and hardware QA remain outstanding.
+Genuine **FUTURE / NOT IMPLEMENTED** scope includes Resonator field/target audio, Water control and hue/luminance/pulse presentation, Water Sync Lock/Contact, harmonic recognition, Haiku damping and the Water-specific final anti-bypass gate, plus later Scenario/finale systems. The late-only `PULL_READY` policy and Large Glyph angular plus `20–110 m` radial motion are implemented; their numeric tuning and hardware QA remain outstanding.
 
 **HARDWARE QA OUTSTANDING:** this synchronization does not validate Quest comfort, perceptual sign size, ring or family-color readability, pulse comfort, ease of maintaining containment, or the practical feel of `6 s` acquisition and `20 s` decay. This validation gap does not regress implemented architecture.
 
@@ -144,11 +146,11 @@ Genuine **FUTURE / NOT IMPLEMENTED** scope includes Resonator field/target audio
 | Resonator Target Acquisition | generic registered-target canonical-anchor containment in Field Frame local coordinates; per-target completed stages, acquisition/decay, sign memory and `PULL_READY` | raycasting, scene traversal, physics, presentation geometry, attraction/pull, Scenario meaning |
 | Target Response Presentation | read-only Proto-Astro sign and ring projection from acquisition truth | containment, timing, eligibility, pull |
 | Field Presentation | read-only projection of descriptor into skin and skeleton | gameplay/containment/resonance truth, sector motion |
-| future Metal advanced domain | LATERAL/FORWARD expansion parameters and harmonic-center state | target family, `PULL_READY`, Haiku motion |
+| Metal advanced domain / sector control | transient `M(angle, tilt)`, sector-local dual-DOF motion, LATERAL/FORWARD tuning and descriptive harmonic-center state | target family, `PULL_READY`, Scenario truth, harmonic recognition, Haiku motion |
 | future Water advanced domain | hue/luminance settings, Water Sync Lock and bounded Sync Contact truth | acquisition timers, physical motion, Scenario truth |
 | Large Glyph Actor | physical angular/radial motion and future damped response | Water lock/contact truth, pull eligibility |
 | Astrolabium Więzi | selected band and attraction/pull after family and context eligibility | family truth, containment and resonance eligibility truth |
 | `PlatformEnergyVfxActor` | procedural platform/Zwornik energy | field skin, field skeleton, target response |
 | Scenario / Guidance | narrative meaning, guidance, crystal-acquisition gates | containment and resonance truth |
 
-METAL/WATER contribution, Resonator field/target audio, later supported target registrations, and later finale systems remain **FUTURE / NOT IMPLEMENTED**.
+Water contribution, Resonator field/target audio, later supported target registrations, harmonic synchronization and later finale systems remain **FUTURE / NOT IMPLEMENTED**.
