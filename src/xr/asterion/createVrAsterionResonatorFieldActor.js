@@ -21,7 +21,7 @@ function readCoreState(runeStoneProgressionController, sectorControlInteraction)
   return { powered, levels };
 }
 
-function createDescriptor(runeStoneProgressionController, sectorControlInteraction, canUseAdvancedResonator) {
+function createDescriptor(runeStoneProgressionController, sectorControlInteraction) {
   const { powered, levels } = readCoreState(runeStoneProgressionController, sectorControlInteraction);
   const frozenPowered = Object.freeze(powered);
   const frozenLevels = Object.freeze(levels);
@@ -42,8 +42,7 @@ function createDescriptor(runeStoneProgressionController, sectorControlInteracti
     powered: metalPowered,
     angleLevel,
     tiltLevel,
-    active: metalPowered && canUseAdvancedResonator() === true
-      && (angleLevel > 0 || tiltLevel > 0)
+    active: metalPowered && (angleLevel > 0 || tiltLevel > 0)
   });
 
   return Object.freeze({
@@ -68,17 +67,16 @@ function createDescriptor(runeStoneProgressionController, sectorControlInteracti
 
 export function createVrAsterionResonatorFieldActor({
   runeStoneProgressionController,
-  sectorControlInteraction,
-  canUseAdvancedResonator = () => false
+  sectorControlInteraction
 }) {
   const listeners = new Set();
-  let descriptor = createDescriptor(runeStoneProgressionController, sectorControlInteraction, canUseAdvancedResonator);
+  let descriptor = createDescriptor(runeStoneProgressionController, sectorControlInteraction);
   let signature = JSON.stringify(descriptor);
   let disposed = false;
 
   function synchronize() {
     if (disposed) return descriptor;
-    const nextDescriptor = createDescriptor(runeStoneProgressionController, sectorControlInteraction, canUseAdvancedResonator);
+    const nextDescriptor = createDescriptor(runeStoneProgressionController, sectorControlInteraction);
     const nextSignature = JSON.stringify(nextDescriptor);
     if (nextSignature === signature) return descriptor;
     descriptor = nextDescriptor;

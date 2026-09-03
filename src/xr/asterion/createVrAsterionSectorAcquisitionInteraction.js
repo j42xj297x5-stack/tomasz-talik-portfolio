@@ -17,7 +17,6 @@ export function createVrAsterionSectorAcquisitionInteraction({
   semanticInput,
   progressFloor,
   runeStoneProgressionController,
-  canUseAdvancedResonator = () => false,
   isInteractionBlocked = () => false
 }) {
   const raycaster = new THREE.Raycaster();
@@ -58,9 +57,7 @@ export function createVrAsterionSectorAcquisitionInteraction({
     const hit = progressFloor.raycastAsterionSectorTarget(raycaster);
     if (hit) {
       const runeStone = resolveRuneStoneByBranchId(hit.branchId);
-      const advancedAllowed = hit.branchId !== 'metal' || canUseAdvancedResonator() === true;
-      if (runeStone && advancedAllowed
-        && runeStoneProgressionController.isFamilyInstalled(runeStone.familyCode)) {
+      if (runeStone && runeStoneProgressionController.isFamilyInstalled(runeStone.familyCode)) {
         return { glyphId: hit.glyphId, branchId: hit.branchId };
       }
     }
