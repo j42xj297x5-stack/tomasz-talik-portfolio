@@ -20,5 +20,11 @@ export function createVrProgressionSemanticHandoff({ dispatch }) {
     if (descriptor?.resonatorExists === true) dispatch(VR_SCENARIO_EVENT.RESONATOR_READY);
   }
 
-  return { onPageCommitted, onResonatorStateChanged };
+  function onRuneProgressionChanged(previous, current) {
+    const before = previous?.installedRuneFamilies?.length ?? 0;
+    const after = current?.installedRuneFamilies?.length ?? 0;
+    if (before < 4 && after === 4) dispatch(VR_SCENARIO_EVENT.FOURTH_RUNE_INSTALLED);
+  }
+
+  return { onPageCommitted, onResonatorStateChanged, onRuneProgressionChanged };
 }
