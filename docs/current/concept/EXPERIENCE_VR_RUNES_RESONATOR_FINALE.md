@@ -2,7 +2,7 @@
 
 ## Status i reguła nadrzędna
 
-Status: **CURRENT WORKING CANON / SPLIT IMPLEMENTATION STATUS**. Rune tuning/transport/install, Binder readiness/materialization, powered-sector acquisition/control, Resonator core/descriptor, discovery Guidance through first Resonator and Scenario join through `5.10` are **CURRENT / IMPLEMENTED** under their technical owners. Physical Resonator containment/resonance response and the current broad Large Glyph pull integration are **IMPLEMENTED** sandbox mechanics. Correct early/late reacquisition policy, late motion, the authored search beat after `5.10`, Metal/Water/Ether expansion and the finale continuation are **FUTURE / NOT IMPLEMENTED**.
+Status: **CURRENT WORKING CANON / SPLIT IMPLEMENTATION STATUS**. Rune tuning/transport/install, Binder readiness/materialization, powered-sector acquisition/control, Resonator core/descriptor, discovery Guidance through first Resonator and Scenario join through `5.10` are **CURRENT / IMPLEMENTED** under their technical owners. Physical containment/resonance response, late-only `SPHERE_FAR` `PULL_READY` eligibility and late Large Glyph angular/radial motion are also **IMPLEMENTED**. The authored search beat after `5.10`, Metal/Water advanced control, Ether intervention, synchronization, Haiku damping/anti-bypass gate and finale continuation are **FUTURE / NOT IMPLEMENTED**.
 
 Ten przebieg zastępuje wcześniejszą wersję, w której trzy sektory tworzyły pełną antenę przed etapem kamieni runicznych:
 
@@ -25,10 +25,10 @@ Dokładne receptury strojenia pozostają kontraktem receptur i nie są definiowa
 | Binder readiness/materialization | CURRENT / IMPLEMENTED |
 | Powered-sector acquisition/control i Resonator core/descriptor | CURRENT / IMPLEMENTED |
 | Rune/Binder/Sector/Resonator Guidance oraz `4.80 → 5.10` | CURRENT / IMPLEMENTED |
-| Resonator containment/resonance response i Large Glyph reacquisition | CURRENT / IMPLEMENTED (sandbox mechanic) |
+| Resonator containment/resonance response, late-only eligibility and late motion | CURRENT / IMPLEMENTED (sandbox mechanic) |
 | Metal/Water, Water override, Ether, final Water hunt, dissolution/finale after `5.10` | FUTURE |
 
-The physical target-response core is implemented runtime. Its corrected late-only pull policy, escaped-target motion, authored dramaturgical continuation after `5.10`, advanced wings and later finale remain binding design canon / FUTURE / NOT IMPLEMENTED.
+The physical target-response core, corrected late-only pull policy and escaped-target motion are implemented runtime. Authored dramaturgical continuation after `5.10`, advanced wings, Water synchronization and later finale remain binding design canon / FUTURE / NOT IMPLEMENTED.
 
 ## 1. Glify znikają
 
@@ -158,25 +158,31 @@ Spust Kuli nadal orientuje całą platformę, zachowując istniejący ownership 
 
 Panel Y przechowuje instrukcję; Małpa nie powtarza jej stale.
 
-## 8. Late reacquisition — **FUTURE / NOT AUTHORED AFTER `5.10`**
+## 8. Late reacquisition — runtime mechanics implemented; continuation not authored after `5.10`
 
-Earlier Large Glyph attraction needs learned family knowledge, not Resonator. In the late fourth-crystal/escaped phase the family remains known, but physical pull additionally needs the target's transient `PULL_READY`. Resonator finds/stabilizes; Astrolabium still selects and pulls. The existing runtime's universal Large Glyph readiness gate is broader than this target and remains to be corrected without inventing a Scenario point.
+Earlier Large Glyph attraction needs learned family knowledge, not Resonator. At late `SPHERE_FAR`, physical pull additionally needs transient `PULL_READY`. This early/late distinction is **IMPLEMENTED CURRENT**; Resonator finds/stabilizes and Astrolabium still owns selection and pull.
 
-Escaped targets move slightly faster angularly than their earlier slow character and independently oscillate in depth approximately `20–110 m`: `65 m + 45 m × sin(2πt/T + phase)`. The design aims for about `20 s` useful dwell in the shortest ordinary depth band; `T ≈ 135 s` is initial tuning. Thus one fixed FIRE band cannot hold a target forever.
+Large Glyph Actor also **implements** the late challenge: approximately `0.02 rad/s` angular motion plus independent deterministic radial oscillation over approximately `20–110 m`, with approximately `135 s` period and stable phase offsets. These values remain runtime tuning and require hardware QA. One fixed FIRE band therefore cannot hold a target forever.
 
 ## 9. Why the first Resonator becomes difficult
 
 EARTH/WOOD/FIRE remains functional and all 27 fully active core configurations retain equal detection authority. Difficulty comes from angular motion, depth oscillation, and one FIRE depth band at a time. A skilled player can still acquire a target for the existing six-second mechanic, but retention is demanding. This motivates expansion rather than a fiction that the core is broken or underpowered.
 
-## 10. METAL — advanced depth-bandwidth wing
+## 10. METAL — range versus harmony — **BINDING TARGET / NOT IMPLEMENTED**
 
-METAL adds one controllable wing to the same field. FIRE selects the primary depth region/center; Metal broadens effective FORWARD depth coverage. Metal angle and tilt each use conceptual `0..3` levels. At balanced `M(2,2)`, the target is roughly 80% of the `10–130 m` domain; `20–115 m` is an initial illustration, not immutable geometry. Exact hinges, gestures, mapping for all 16 pairs, and interval boundaries remain tuning.
+METAL adds angle and tilt with `0 = OFF` and active levels `1/2/3`. On each DOF, `2` is the neutral midpoint while `1` and `3` are off-center expansion states. One DOF expands LATERAL width and the other expands FORWARD depth; exact angle/tilt-to-axis assignment remains future tuning, and Metal never expands VERTICAL.
 
-## 11. WATER — advanced frequency wing
+Among active pairs, `M(2,2)` uniquely adds zero range. Every other `M(a,b)` expands at least one Metal-controlled dimension, and pairs with both values off center expand both. Off-center Metal therefore creates a larger acquisition volume for hunting and retention. Exact extents and curves remain tuning after hardware QA.
 
-WATER adds a second controllable wing to the same field, with conceptual angle and tilt `0..3`. It tunes resonance frequency/phase rather than another ordinary geometric dimension. Field hue communicates frequency. When Water frequency matches and the Water Large Glyph participates in the field, its movement slows toward the earlier pre-final character but never stops. Exact slowdown and transition remain tuning and belong to Large Glyph motion/presentation, not Target Acquisition.
+Metal simultaneously drives presentation-only rounding: `M22` gives maximum edge fillet, while `1/3` extremes give much less. Large off-center fields are broader and relatively sharp; harmonic `M22` is compact, softened and strongly rounded. Fillet/bow/skin never enlarges gameplay containment.
 
-## 12. Balanced full array and BLUE lock
+## 11. ETHER → Monkey → WATER — **BINDING TARGET / NOT IMPLEMENTED**
+
+Ether remains special and is not a sixth natural Wu Xing family. The player recovers Ether; this success permits Monkey's one canonical intervention that temporarily bends a world rule; Water then becomes legally recoverable/installable despite its former block. After the player pulls and installs the Water Rune Stone, the Water sector and advanced Water control become available. Exact owner, visual effect, Monkey copy and Scenario point remain future; no dialogue is frozen here.
+
+Water uses angle and tilt levels `0..3` and does not widen containment. Angle selects hue: `1 → GREEN`, `2 → BLUE`, `3 → VIOLET/PURPLE`. Tilt selects luminance: `1 → very dark`, `2 → medium`, `3 → very bright`. `0` is OFF. `W(2,2)` is medium BLUE, the Haiku Cosmos synchronization frequency. Luminance is frequency-state presentation, not generic power; exact colors and luminance remain tuning.
+
+## 12. Full harmonic array, Water Sync Lock and contact
 
 The discoverable full-array solution is:
 
@@ -187,15 +193,28 @@ WATER angle = 2 / tilt = 2
 = 222 / M(2,2) / W(2,2)
 ```
 
-Symmetry communicates the solution: balanced geometry → stable broad field → correct BLUE frequency → Water synchronization. `2` is the balanced active midpoint. This is not a hidden numerical password, family scoring preset, or revival of special `111 / 222 / 333` authority.
+This is the **FULL HARMONIC ARRAY / WATER SYNCHRONIZATION CONFIGURATION**. It is compact rather than maximum-range: the balanced square EARTH/WOOD core and nominal FIRE band gain zero Metal expansion, maximum rounding, medium BLUE Water frequency and a gentle coherent BLUE breathing pulse. It remains box-derived containment even though it reads almost spherical/rounded-cuboid. Exact pulse parameters remain tuning.
 
-## 13. Frequency color supersedes power-to-white
+Installed Water + `222 / M22 / W22` derives future **WATER SYNC LOCK** in the advanced Resonator domain. Lock alone has no global target effect. **WATER SYNC CONTACT** exists only while Haiku Cosmos's canonical anchor is inside the active synchronized field. Contact strongly damps both angular and radial late motion, without requiring a literal stop; Large Glyph Actor remains physical motion owner.
 
-Field hue means resonance frequency/tuning state. BLUE is canonical Water synchronization. The former `RED → YELLOW → ORANGE → GREEN → BLUE → VIOLET → WHITE` increasing-power scale, mandatory white maximum, and final-white field requirement are **SUPERSEDED**. If field strength later needs presentation, brightness, emission, density, activity, audio, or another dimension remains open; this document does not invent it. Target-family sign/ring colors remain separate from global field-frequency hue.
+## 13. Frequency color and final anti-bypass rule
+
+Field hue means Water resonance frequency; target-family sign/ring colors remain separate. The former red-to-white power ladder and white maximum are **SUPERSEDED**.
+
+Final Haiku Cosmos physical pull requires all four truths: learned Haiku/Water family + late context + current `PULL_READY` + current WATER SYNC CONTACT. This is a hard anti-bypass rule. Generic acquisition remains generic: before Water, an expanded Metal field may detect Haiku, show its sign, accumulate rings and even retain `PULL_READY`. Without synchronized contact the physical pull remains illegal. Water/platform completion is therefore the only valid final resonance language, not an optional assist.
 
 ## 14. Final Water hunt
 
-At balanced `222 / M(2,2) / W(2,2)`, Metal provides a broad useful depth envelope, Water locks BLUE, and the Water target slows. The player recognizes structural balance rather than solving a password, keeps the moving target contained to obtain `PULL_READY`, and then uses already learned family knowledge plus Astrolabium for late physical reacquisition. Exact Scenario beats after `5.10`, copy, advanced controls, color interpolation, slowdown, and motion tuning remain **FUTURE / NOT IMPLEMENTED**.
+```text
+late moving targets → off-center Metal hunt → Ether recovered
+→ Monkey Water exception → Water recovered and installed
+→ 222 / M22 / W22 → compact rounded medium-BLUE pulsating field
+→ Haiku enters field → WATER SYNC CONTACT → strong motion damping
+→ stable resonance / PULL_READY → Astrolabium final pull
+→ final Haiku Cosmos crystal / remaining portfolio completion
+```
+
+The puzzle reverses “largest field = best”: Metal range helps interception, but centered balance completes harmony. Exact advanced controls, expansion, pulse, slowdown/recovery easing, Monkey copy and post-`5.10` Scenario points remain **FUTURE / NOT IMPLEMENTED**.
 
 ## 15. Ostatnia karta
 

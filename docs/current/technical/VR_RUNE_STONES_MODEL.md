@@ -331,12 +331,13 @@ Po instalacji `installedRuneFamilies` zawiera pięć naturalnych rodzin. Eter ni
 
 ## 11. Kompletna platforma i finalna Woda
 
-`FIVE_ELEMENTAL_RUNES_INSTALLED` ujawnia lub umożliwia finalne odnalezienie ostatniego Water Large Glyph. Może on następnie zostać targetowany i przyciągnięty istniejącą późną mechaniką platformy/anteny.
+`FIVE_ELEMENTAL_RUNES_INSTALLED` makes the Water sector physically available for future advanced control. It does not by itself authorize the final Haiku Cosmos pull. Final recovery requires installed Water, harmonic `222 / M22 / W22`, synchronized field contact, late context, family knowledge and `PULL_READY`, as owned by the Resonator/finale models.
 
 ```text
 FIVE_ELEMENTAL_RUNES_INSTALLED
 → FINAL_WATER_HUNT (180 s, TUNING)
-→ finalny Water Large Glyph: find / pull
+→ harmonic Water Sync Lock + Haiku field contact
+→ finalny Water Large Glyph: damp / resonate / legal pull
 → ostatni Water Crystal
 → Reliquary
 → ostatni panel Water
