@@ -18,8 +18,8 @@ const RAD_TO_DEG = 180 / Math.PI;
 const EPSILON = 1e-6;
 
 const SECTOR_DEFINITIONS = Object.freeze({
-  'ethics-life-protection': Object.freeze({ branchId: 'earth', motionAxis: Object.freeze({ x: Math.sin(HALF_SECTOR_ANGLE), y: 0, z: Math.cos(HALF_SECTOR_ANGLE) }), gestureAxis: Object.freeze({ x: 0, y: 0, z: 1 }), gestureSign: 1, motionSign: 1, hinge: 'ORIGIN' }),
-  'ai-guide': Object.freeze({ branchId: 'wood', motionAxis: Object.freeze({ x: -Math.sin(HALF_SECTOR_ANGLE), y: 0, z: Math.cos(HALF_SECTOR_ANGLE) }), gestureAxis: Object.freeze({ x: 0, y: 0, z: 1 }), gestureSign: -1, motionSign: -1, hinge: 'ORIGIN' }),
+  'ethics-life-protection': Object.freeze({ branchId: 'earth', motionAxis: Object.freeze({ x: Math.sin(HALF_SECTOR_ANGLE), y: 0, z: Math.cos(HALF_SECTOR_ANGLE) }), gestureAxis: Object.freeze({ x: 0, y: 0, z: 1 }), gestureSign: -1, motionSign: 1, hinge: 'ORIGIN' }),
+  'ai-guide': Object.freeze({ branchId: 'wood', motionAxis: Object.freeze({ x: -Math.sin(HALF_SECTOR_ANGLE), y: 0, z: Math.cos(HALF_SECTOR_ANGLE) }), gestureAxis: Object.freeze({ x: 0, y: 0, z: 1 }), gestureSign: 1, motionSign: -1, hinge: 'ORIGIN' }),
   'creative-ai': Object.freeze({ branchId: 'fire', motionAxis: Object.freeze({ x: 1, y: 0, z: 0 }), gestureAxis: Object.freeze({ x: 1, y: 0, z: 0 }), gestureSign: -1, motionSign: 1, hinge: 'MIN_Z' })
 });
 
@@ -307,6 +307,7 @@ export function createVrAsterionSectorControlInteraction({
     }))),
     getMotionPhase: () => phase,
     getMovingGlyphId: () => movingGlyphId,
+    isDriveActive: () => driveActivityActive,
     supportsGlyph: (glyphId) => Boolean(SECTORS[glyphId]),
     isMoving: () => phase === VR_ASTERION_SECTOR_CONTROL_PHASES.DRIVING
       || phase === VR_ASTERION_SECTOR_CONTROL_PHASES.SETTLING,

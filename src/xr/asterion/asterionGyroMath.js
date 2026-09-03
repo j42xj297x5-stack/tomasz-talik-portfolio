@@ -76,8 +76,12 @@ export function neutralizeControllerQuaternionAgainstFloor({ gripWorldQuaternion
   return target.copy(floorParentWorldQuaternion).multiply(gripRelativeToFloor).normalize();
 }
 
-export function computeClutchedTargetQuaternion({ controllerQuaternionNow, grabStartControllerQuaternion, grabStartTargetQuaternion, parentWorldQuaternion }, target = new THREE.Quaternion()) {
-  const controllerDeltaWorld = computeControllerDeltaWorld(controllerQuaternionNow, grabStartControllerQuaternion);
+export function computeClutchedTargetQuaternion({ controllerQuaternionNow, grabStartControllerQuaternion,
+  grabStartTargetQuaternion, parentWorldQuaternion, controllerFrameWorldQuaternion = null }, target = new THREE.Quaternion()) {
+  const controllerDelta = computeControllerDeltaWorld(controllerQuaternionNow, grabStartControllerQuaternion);
+  const controllerDeltaWorld = controllerFrameWorldQuaternion
+    ? controllerFrameWorldQuaternion.clone().multiply(controllerDelta).multiply(controllerFrameWorldQuaternion.clone().invert()).normalize()
+    : controllerDelta;
   const deltaLocal = convertWorldDeltaToParentLocal(controllerDeltaWorld, parentWorldQuaternion);
   return target.copy(deltaLocal).multiply(grabStartTargetQuaternion).normalize();
 }
