@@ -16,7 +16,8 @@ import { createVrGlyphInteraction } from './xr/createVrGlyphInteraction.js';
 import { createVrSmallGlyphSystem } from './xr/glyphs/createVrSmallGlyphSystem.js';
 import { createVrSmallGlyphAttractorInteraction } from './xr/glyphs/createVrSmallGlyphAttractorInteraction.js';
 import { createVrLargeGlyphAttractorInteraction } from './xr/glyphs/createVrLargeGlyphAttractorInteraction.js';
-import { createVrLargeGlyphActor } from './xr/glyphs/createVrLargeGlyphActor.js';
+import { createVrLargeGlyphActor,
+  VR_LARGE_GLYPH_SPHERE_STAGE } from './xr/glyphs/createVrLargeGlyphActor.js';
 import { createVrGlyphLights } from './xr/createVrGlyphLights.js';
 import { createVrSpatialPlaque } from './xr/createVrSpatialPlaque.js';
 import { createVrPortalDisplay } from './xr/createVrPortalDisplay.js';
@@ -1055,6 +1056,7 @@ largeGlyphAttractorInteraction = createVrLargeGlyphAttractorInteraction({
   isFamilyTargetable: (familyCode) => astrolabiumTuningActor.isFamilyTargetable(
     VR_ATTRACTOR_BANDS.LARGE_GLYPHS, familyCode
   ),
+  requiresResonatorPullReady: (_node) => largeGlyphActor.getStage() === VR_LARGE_GLYPH_SPHERE_STAGE,
   isTargetPullReady: (node) => asterionResonatorTargetAcquisitionActor.isPullReady(node.userData.id),
   onPullStart: ({ target }) => vrAudio.startAttractor(target.userData.id, 'largeGlyph'),
   onPullCancel: ({ target }) => vrAudio.cancelAttractor(target.userData.id),

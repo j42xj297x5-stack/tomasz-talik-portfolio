@@ -10,7 +10,7 @@ const clamp01 = (value) => Math.min(1, Math.max(0, value));
 
 export function createVrLargeGlyphAttractorInteraction({ controllers, largeGlyphActor, handModeController,
   semanticInput, attractorTool, isFamilyTargetable = () => false, maxTargetDistance, settings,
-  isTargetPullReady = () => false,
+  isTargetPullReady = () => false, requiresResonatorPullReady = () => false,
   isHigherPriorityInteractionActive = () => false, onPullStart = () => {}, onPullCancel = () => {} }) {
   if (!Array.isArray(controllers)) throw new TypeError('controllers must be an array.');
   if (!Array.isArray(largeGlyphActor?.nodes) || !largeGlyphActor?.beginTransient
@@ -41,9 +41,11 @@ export function createVrLargeGlyphAttractorInteraction({ controllers, largeGlyph
   const ownsBand = () => handModeController.getAttractorBand() === VR_ATTRACTOR_BANDS.LARGE_GLYPHS
     && handModeController.getRightMode() === VR_RIGHT_HAND_MODES.ASTRO_ATTRACTOR;
   const isFamilyEligible = (node) => isFamilyTargetable(familyCodes.get(node)) === true;
+  const hasRequiredPullReadiness = (node) => requiresResonatorPullReady(node) !== true
+    || isTargetPullReady(node) === true;
   const legal = (node) => states.get(node) === STATE.ORBIT && node?.visible !== false && node.parent
     && isFamilyEligible(node)
-    && isTargetPullReady(node) === true;
+    && hasRequiredPullReadiness(node);
   function setTarget(next) { target = next; }
   function setWorldPosition(node, world) { local.copy(world); node.parent.worldToLocal(local); node.position.copy(local); }
   function updateCaptureAnchor(record, node) { record.controller.getWorldQuaternion(quaternion);
@@ -83,7 +85,7 @@ export function createVrLargeGlyphAttractorInteraction({ controllers, largeGlyph
     if (scanCone.object.parent !== right.controller) right.controller.add(scanCone.object); scanCone.update(delta, true);
     if (active) {
       if (primaryAction <= settings.triggerThreshold || !isFamilyEligible(active) || !ownsBand()
-        || isTargetPullReady(active) !== true) { beginReturn(active); return; }
+        || !hasRequiredPullReadiness(active)) { beginReturn(active); return; }
       updateCaptureAnchor(right, active); active.getWorldPosition(position); const distance = position.distanceTo(anchor);
       if (states.get(active) === STATE.CAPTURED || distance <= settings.captureRadius) {
         states.set(active, STATE.CAPTURED); setWorldPosition(active, anchor);
@@ -105,7 +107,7 @@ export function createVrLargeGlyphAttractorInteraction({ controllers, largeGlyph
       proximity: clamp01(1 - hit.distance / maxTargetDistance) } : null); attractorTool.setPullStrength(0);
     attractorTool.setState(hit ? VR_ATTRACTOR_STATES.TARGETING : VR_ATTRACTOR_STATES.IDLE);
     if (target && primaryAction > settings.triggerThreshold && isFamilyEligible(target)
-      && isTargetPullReady(target) === true) {
+      && hasRequiredPullReadiness(target)) {
       active = target; setTarget(null); largeGlyphActor.beginTransient(active);
       states.set(active, STATE.PULLING); active.getWorldPosition(position); updateCaptureAnchor(right, active);
       pullStartDistance = Math.max(position.distanceTo(anchor), 1e-6); pullSpeed = 0;
