@@ -9,7 +9,7 @@
 - **Scenario authoring:** Water natural installation now projects `FIVE_ELEMENTAL_RUNES_INSTALLED` and reaches the implemented `5.60` full-Resonator semantic boundary.
 - **Canonical authored Scenario/runtime progression boundary:** `5.60`; `FOURTH_RUNE_INSTALLED → Monkey Ether reveal → CAN_TUNE_ETHER_RUNE → ETHER_RUNE_TUNED → ETHER_MONKEY_CAPTURED → FIVE_ELEMENTAL_RUNES_INSTALLED → full-array Monkey acknowledgement → CAN_USE_ADVANCED_RESONATOR` is implemented/authored after the `4.80 → 5.10` join.
 - Dokument jest kanonicznym źródłem prawdy Rune Stone Act: strojenia Astrolabium, targetability, pięciu naturalnych pair-specific par, mostów, transportu, instalacji, specjalnego flow Eteru i finalnego polowania Wody.
-- A1–A9.6 są foundations/domain behavior bez rozszerzenia authored Scenario spine. A9 foundation jest zamknięty; dalszy authored Scenario, Director i literalna komunikacja gracza wymagają osobnego projektu, bez arbitralnego etykietowania ich jako kolejny krok A9.
+- A1–A9.6 remain the completed natural-domain foundation. The separately owned authored Scenario/Director continuation through `5.60`, including literal Monkey communication, is implemented and is not relabeled as another A9 step.
 
 `KANON` oznacza wiążący kontrakt, `TUNING` wartość dobieraną w prototypie/Quest 3S, a `OPEN DESIGN DECISION` świadomie nierozstrzygnięty warunek.
 
@@ -19,7 +19,7 @@ Po `4.80` pięć naturalnych Large Glyph zachowuje Proto-Astro tuning `K/T/S/L/R
 
 Pięć naturalnych Rune Stones — Earth, Fire, Wood, Metal i Water — jest fizycznie materializowanych jako niezależne obiekty świata w już zarezerwowanym world-stable layer `RUNE_STONES = 50–75 m`; nie powstał nowy radius, drugi spherical layer ani drugi registry. Deterministyczny placement używa pięciu naturalnych slotów po pełnej sferze, jest niezależny od kierunku sektora platformy i nie ma Earth-first semantics.
 
-**Canonical presentation:** pięć naturalnych Rune Stones jest widocznych od pierwszego pełnego odsłonięcia świata po wejściu gracza do kręgu / settled Monkey arrival, razem z gwiazdami, słońcem i pozostałym nieboskłonem. Od tego momentu istnieją jako odległe, animowane elementy świata, lecz interaction pozostaje disabled do czasu przyznania późniejszych capabilities. Ether nie podlega temu early reveal: osobny owner `SPECIAL` utrzymuje go hidden aż entry effect `REVEAL_ETHER_RUNE` punktu `5.40` ujawni `stone_06 / VU`.
+**Canonical presentation:** pięć naturalnych Rune Stones jest widocznych od pierwszego pełnego odsłonięcia świata po wejściu gracza do kręgu / settled Monkey arrival, razem z gwiazdami, słońcem i pozostałym nieboskłonem. Od tego momentu istnieją jako odległe, animowane elementy świata, lecz targetability pozostaje disabled do uzyskania odpowiedniego domain truth `tunedRuneFamilies`, a nie późniejszej Scenario capability. Ether nie podlega temu early reveal: osobny owner `SPECIAL` utrzymuje go hidden aż entry effect `REVEAL_ETHER_RUNE` punktu `5.40` ujawni `stone_06 / VU`.
 
 **VISIBILITY ≠ TARGETABILITY ≠ INSTALLATION READINESS.** Wizualna obecność, tuning i targetability są niezależnymi prawami. Po fizycznym pozyskaniu Astrolabium pasmo `RUNESTONES` jest selectable nawet przy `tuned = false` i pustym zbiorze legalnych celów; dopiero późniejszy tuning nadaje rodzinie prawo targetowania. Immediate-all-band behavior pozostaje **CURRENT TARGET / NOT IMPLEMENTED**, ponieważ runtime nadal filtruje pasma. Platform installation readiness pozostaje trzecim, osobnym prawem gameplayowym opisanym poniżej.
 
@@ -203,7 +203,7 @@ Prezentacyjna transformacja geometrii Zwornika jest niezależna od stabilnego In
 
 ## 8. Transport i instalacja
 
-**A9.1–A9.6 są IMPLEMENTED foundations. NATURAL RUNE A9 FOUNDATION = COMPLETE.** Nie oznacza to ukończenia target-response ani późnego authoringu po `5.10`.
+**A9.1–A9.6 są IMPLEMENTED foundations. NATURAL RUNE A9 FOUNDATION = COMPLETE.** Resonator target response and authored late progression through stable `5.60` are also implemented by their respective owners.
 
 ```text
 FREE → LOCKED_BY_ASTRO                 IMPLEMENTED
@@ -289,6 +289,8 @@ Obowiązkowy beat Małpy po `FOURTH_RUNE_INSTALLED` jest zaimplementowany przez 
 
 ### 10.2. Special Ether tuning i targetability
 
+Asterion Sphere completion independently makes special Small Glyph family `V` targetable in the `SMALL_GLYPHS` band, so `small-glyph-relic-6 / VI` is legal before the later Ether intervention. This eligibility is derived read-only by `createVrAstrolabiumTuningActor` from `furnaceProgressionController.getAsterionSphereProgress().complete`; it creates no Scenario event, capability or duplicate persistence. It does not make `VU` tuning legal: the special recipe still separately requires `CAN_TUNE_ETHER_RUNE`, and physical `VU` remains hidden until `REVEAL_ETHER_RUNE`.
+
 ```text
 Ether Shell + Ether Small Glyph
 → Astrolabium tuned for special Ether Rune Stone
@@ -331,7 +333,7 @@ Po instalacji `installedRuneFamilies` zawiera pięć naturalnych rodzin. Eter ni
 
 ## 11. Kompletna platforma i finalna Woda
 
-`FIVE_ELEMENTAL_RUNES_INSTALLED` semantically permits the future advanced/full Resonator phase through `CAN_USE_ADVANCED_RESONATOR`; it does not implement Metal or Water controls and does not by itself authorize the final Haiku Cosmos pull. Final recovery requires installed Water, harmonic `222 / M22 / W22`, synchronized field contact, late context, family knowledge and `PULL_READY`, as owned by the Resonator/finale models.
+`FIVE_ELEMENTAL_RUNES_INSTALLED` semantically permits the future advanced/full Resonator phase through `CAN_USE_ADVANCED_RESONATOR`; the capability does not own Metal or Water physical eligibility and does not by itself authorize the final Haiku Cosmos pull. Metal control is already implemented and becomes legal from installed Metal Rune truth. Future final recovery requires installed Water, harmonic `222 / M22 / W22`, synchronized field contact, late context, family knowledge and `PULL_READY`, as owned by the Resonator/finale models.
 
 ```text
 FIVE_ELEMENTAL_RUNES_INSTALLED
@@ -355,7 +357,7 @@ Obowiązuje architektura:
 SPINE → SCENARIO → DIRECTOR → RuntimeExperience → ACTORS / DOMAIN OWNERS
 ```
 
-Authored Scenario contains the bounded semantic join `4.80 → 5.10` and continuation `5.10 → 5.20 → 5.30 → 5.40 → 5.50 → 5.60 → 100.10`. The live Rune snapshot crossing from fewer than four to exactly four installed natural families projects `FOURTH_RUNE_INSTALLED`; `5.20` owns the mandatory Monkey Ether reveal, and its completion grants `CAN_TUNE_ETHER_RUNE` at `5.30`; live `etherRuneTuned: false → true` projects `ETHER_RUNE_TUNED` and reaches stable `5.40`. Hydration restores the complete settled Rune truth silently. Physical Ether reveal, targetability, SPECIAL transport, Monkey capture, persistent Water readiness override and Water Binder readiness are implemented. The normal Water installation crossing commits natural family `S`, projects `FIVE_ELEMENTAL_RUNES_INSTALLED`, records its milestone, and advances to `5.60`; that target owns the mandatory full-array Monkey acknowledgement and exposes semantic permission `CAN_USE_ADVANCED_RESONATOR`. Reconstruction restores `R/T/K/L/S` as tuned and installed, with Ether still special and absent from those arrays. Physical Metal/Water advanced controls, `222 / M22 / W22`, Water Sync, the final Water hunt and finale remain future.
+Authored Scenario contains the bounded semantic join `4.80 → 5.10` and continuation `5.10 → 5.20 → 5.30 → 5.40 → 5.50 → 5.60 → 100.10`. The live Rune snapshot crossing from fewer than four to exactly four installed natural families projects `FOURTH_RUNE_INSTALLED`; `5.20` owns the mandatory Monkey Ether reveal, and its completion grants `CAN_TUNE_ETHER_RUNE` at `5.30`; live `etherRuneTuned: false → true` projects `ETHER_RUNE_TUNED` and reaches stable `5.40`. Hydration restores the complete settled Rune truth silently. Physical Ether reveal, targetability, SPECIAL transport, Monkey capture, persistent Water readiness override and Water Binder readiness are implemented. The normal Water installation crossing commits natural family `S`, projects `FIVE_ELEMENTAL_RUNES_INSTALLED`, records its milestone, and advances to `5.60`; that target owns the mandatory full-array Monkey acknowledgement and exposes semantic permission `CAN_USE_ADVANCED_RESONATOR`. Reconstruction restores `R/T/K/L/S` as tuned and installed, with Ether still special and absent from those arrays. Physical Metal control/expansion/rounding is implemented from installed Metal truth. Water advanced controls, `222 / M22 / W22` recognition, Water Sync, the final Water hunt and finale remain future.
 
 Canonical debug aliases are `P5 → 4.80` and `P6 → 5.10`. Both are QA/debug entry conveniences, not Scenario points, capabilities, gameplay owners or sources of settled consequences.
 
@@ -414,11 +416,11 @@ Early natural Rune Stone presentation jest **IMPLEMENTED**. Pięć naturalnych a
 - **Panel 2 — IMPLEMENTED:** task `d7e026fe565cf44b20f158564316c814a0e910e0`, merge `5dd2c59080f0501accb4cea546ee5ef68a5811e0`.
 - **Panel 1 Rune U projection — IMPLEMENTED:** task `b04605cb01b395ec188b153cd901941a446076ff`, merge `5510e78062dd0a3309be2e5f22e528ee2ed532ed`.
 
-R3 implementuje runtime Zwornika, a R3b implementuje `RUNE_BINDER_REVEAL`: live materialization, pooled sector-local lightning, final pulse, trwały `DOCKED`/`BOUND`, presentation-only scale/offset i reconstruction bez replayu. Nadal nie implementuje Rune install energy VFX, detent spark/audio i grip beam; sector-drive audio jest wdrożone osobno, Field Actor ani field lensing. A9.6 nie implementuje Water override trigger ani fizycznego Ether/final Water flow; installed spatial audio jest wdrożone przez osobną projekcję. R4 Resonator core, Guidance through first Resonator and physical Ether tuning through `5.40` is implemented by their respective owners.
+R3 implementuje runtime Zwornika, a R3b implementuje `RUNE_BINDER_REVEAL`: live materialization, pooled sector-local lightning, final pulse, trwały `DOCKED`/`BOUND`, presentation-only scale/offset i reconstruction bez replayu. Nadal nie implementuje Rune install energy VFX, detent spark/audio i grip beam; sector-drive audio jest wdrożone osobno, Field Actor ani field lensing. A9.6 itself does not own the later Water override or Ether flow; those are now implemented by their dedicated late-progression owners, while installed spatial audio remains a separate projection. R4 Resonator core, target response, Metal extension, Guidance and Scenario through `5.60` are implemented by their respective owners.
 
 ## 14. Remaining target
 
-**Carried Rune Stone ↔ installed Rune Stone collision = SUPERSEDED / REMOVED FROM TARGET.** Physical Ether reveal, targetability and shared Astro transport through SPECIAL `CARRIED_ORBIT` are implemented at `5.40`; Monkey capture, Water readiness override and normal Water installation through the `5.60` semantic unlock are implemented. Advanced Metal/Water control, harmonic/Water Sync logic and the final hunt remain deferred. Zwornik spin jest usunięty z target canon.
+**Carried Rune Stone ↔ installed Rune Stone collision = SUPERSEDED / REMOVED FROM TARGET.** Physical Ether reveal, targetability and shared Astro transport through SPECIAL `CARRIED_ORBIT` are implemented at `5.40`; Monkey capture, Water readiness override and normal Water installation through the `5.60` semantic unlock are implemented. Metal control/expansion/rounding is implemented; advanced Water control, harmonic/Water Sync logic and the final hunt remain deferred. Zwornik spin jest usunięty z target canon.
 
 ## 15. Current implementation checkpoint
 
@@ -433,7 +435,7 @@ R3b RUNE_BINDER_REVEAL: IMPLEMENTED
 INSTALLATION HANDOFF + APPROACH / BRIDGE_OPEN / DESCENT: IMPLEMENTED
 AUTHORED SCENARIO BOUNDARY: 5.60 — FIVE NATURAL RUNES INSTALLED / FULL RESONATOR SEMANTICALLY UNLOCKED
 SCENARIO `FOURTH_RUNE_INSTALLED → MONKEY ETHER REVEAL → CAN_TUNE_ETHER_RUNE`: IMPLEMENTED
-RESONATOR TARGET RESPONSE: FUTURE; NOT IMPLIED BY THE 5.10 JOIN
+RESONATOR TARGET RESPONSE AND METAL EXTENSION: IMPLEMENTED; OWNED BY PHYSICAL DOMAIN TRUTH
 ```
 
 ## 16. Closed runtime reconciliation gaps

@@ -1,38 +1,43 @@
 # Experience VR — Current Handoff
 
-Status: **CURRENT operational snapshot — 2026-09-01**. Authorities: [`VR_RUNTIME_MODEL.md`](../technical/VR_RUNTIME_MODEL.md), [`VR_SCENARIO_DIRECTOR_MODEL.md`](../technical/VR_SCENARIO_DIRECTOR_MODEL.md), [`VR_RUNE_STONES_MODEL.md`](../technical/VR_RUNE_STONES_MODEL.md) and [`VR_ASTERION_RESONATOR_MODEL.md`](../technical/VR_ASTERION_RESONATOR_MODEL.md).
+Status: **CURRENT operational snapshot — 2026-09-03**. Authorities: [`VR_RUNTIME_MODEL.md`](../technical/VR_RUNTIME_MODEL.md), [`VR_SCENARIO_DIRECTOR_MODEL.md`](../technical/VR_SCENARIO_DIRECTOR_MODEL.md), [`VR_PROTO_ASTRO_MODEL.md`](../technical/VR_PROTO_ASTRO_MODEL.md), [`VR_RUNE_STONES_MODEL.md`](../technical/VR_RUNE_STONES_MODEL.md), and [`VR_ASTERION_RESONATOR_MODEL.md`](../technical/VR_ASTERION_RESONATOR_MODEL.md).
 
 ## Canonical checkpoint
 
-- Scenario is implemented through `4.40 → 4.50 → 4.60 → 4.70 → 4.80 → 5.10`; `5.10` is the stable authored/runtime boundary.
-- `P5 → 4.80` and `P6 → 5.10` are debug/QA aliases only and own no gameplay/capability truth or Scenario consequences.
-- Natural Rune A9 foundation is complete. Tuning, transport, installation, persistent installed truth and reconstruction remain independent domain mechanics.
-- R2A powered-sector acquisition, R2B EARTH/WOOD/FIRE sector control and R4 Resonator core/descriptor are implemented.
-- Rune/Binder/Sector/Resonator Guidance through first Resonator and Player Y `WIEDZA` are implemented.
-- Physical Resonator target response and later finale remain future.
+- The authored late path is `4.80 → 5.10 → 5.20 → 5.30 → 5.40 → 5.50 → 5.60 → 100.10`; stable implemented late-game boundary is `5.60 — Five elemental Runes installed / full Resonator unlocked`.
+- The implemented semantic sequence is `FOURTH_RUNE_INSTALLED → mandatory Monkey Ether intervention → CAN_TUNE_ETHER_RUNE → ETHER_RUNE_TUNED → physical Ether reveal/transport → ETHER_MONKEY_CAPTURED → Water installation readiness override → Water natural installation → FIVE_ELEMENTAL_RUNES_INSTALLED → full-Resonator Monkey acknowledgement → CAN_USE_ADVANCED_RESONATOR → 5.60`.
+- All five natural families `K/T/S/L/R` can be persistently tuned and installed. Ether `V` remains SPECIAL and never enters `tunedRuneFamilies` or `installedRuneFamilies`.
+- Generic Resonator containment, response, late `PULL_READY`, and moving-target reacquisition are implemented.
+- Metal `M(angle, tilt)` dual-DOF physical control, composed sector motion, descriptor contribution, gameplay field extension, morph and presentation rounding are implemented.
+- Astrolabium's tuning actor derives per-band eligibility read-only. Asterion Sphere completion makes `small-glyph-relic-6 / VI` legal in `SMALL_GLYPHS` without new Scenario or persistence truth.
 
-## Resonator join
+## Ownership checkpoint
 
 ```text
-Resonator Field Domain.resonatorExists === true
-→ semantic RESONATOR_READY
-→ Scenario 4.80 → 5.10
+installed natural Rune
+→ corresponding sector POWERED
+→ targetable / acquisition beam legal
+→ lockable / controllable
 ```
 
-`4.80` also runs `CHECK_RESONATOR_JOIN`, covering a Resonator that existed before Scenario arrived. Scenario does not gate Resonator creation. `5.10` has no entry effects, objective, transition or blocking dialogue and does not directly continue to `100.10`.
+This law applies to Metal. `M00` is powered but inactive and adds no range; any positive Metal DOF activates its extension. `CAN_USE_ADVANCED_RESONATOR` remains the implemented semantic capability at `5.60`, but does not own Metal beam availability, lock, control, or field response. Scenario interprets physical achievement and owns dramaturgy/crystal progression; it does not gate already-legal sandbox mechanics.
 
-## Guidance and Y
+## Late special-family checkpoint
 
-Strict communication arbitration is `MANDATORY > ACQUISITION > OPTIONAL`; started playback is non-preemptible, while obsolete pending/attention work can be cancelled. Early Experience and Rune/Resonator Guidance observe semantic/domain seams without owning gameplay truth. Live discoveries are armed only after activation, so hydration/direct activation/reset does not replay them.
+`VO`, `VI`, and `VU` are separate truths: five processed natural Shells expose `VO`; processing all six Shells completes Asterion Sphere and therefore derives `VI` targetability; later `CAN_TUNE_ETHER_RUNE` permits `VI + VO → VU`; `REVEAL_ETHER_RUNE` separately materializes `stone_06 / VU`. Ether transport ends in Monkey capture rather than a bridge slot. The capture persists only `waterInstallationReadinessOverride`, after which Water follows the ordinary natural installation lifecycle.
 
-Y contains `STEROWANIE`, `AKTUALNE ZADANIE`, conditional `NARZĘDZIA` and conditional `WIEDZA`. Current session knowledge is `SKORUPY`, `KAMIENIE RUNICZNE`, `ZWORNIKI` and `SEKTOR`; baseline reset clears it and there is no durable game save.
+## Hardware evidence and next technical boundary
 
-## Rune/sector operational truth
+Hardware smoke confirms that Metal Rune tuning completes after the flat Shell identity fix, an installed Metal sector exposes a working acquisition beam, and `VI` becomes targetable after Asterion Sphere completion. This is not complete Metal hardware QA.
 
-Natural targetability equals tuned Rune families; installation readiness alone reads sector completeness. First Binder `HIDDEN → DOCKED` persists through later `BOUND` and unlocks knowledge without automatic Monkey playback. First installed Rune, first live sector `LOCKED`, and first Resonator feed bounded Guidance reactions. These reactions can precede `4.80` when physical domain state permits.
+Outstanding Metal QA covers ANGLE/TILT gesture separation, signs/local axes, dominance margin, composed-motion comfort, `+8 m` lateral and `+10 m` forward adequacy, M22/off-center rounding readability, and general perceptual tuning.
 
-Reconstruction remains `restoreBaseline → stateAt(X) → hydrate owners → synchronize derived state → Director at X → activate X`. It restores stable domain state without replaying transient movement, attention or discovery one-shots.
+The explicit next boundary is:
 
-## Explicit future boundary
+```text
+Metal hardware tuning
+→ Water advanced control
+→ harmonic-array / Water Sync implementation
+```
 
-Not implemented: target selection/scoring/response, glyph reacquisition through Resonator, later Metal/Water contribution and special Water/Ether flow, final Water hunt, world dissolution/finale continuation, and explicitly open presentation/audio work.
+Water dual-DOF hue/luminance control, W22 presentation, harmonic recognition, Water Sync Lock/Contact, Haiku damping and anti-bypass pull, final Water hunt/card, dissolution, and XR finale remain **FUTURE / NOT IMPLEMENTED**.
