@@ -4,6 +4,7 @@ import { calculateAttractorCapturePosition, createVrAttractorScanCone,
   selectAttractorConeTarget } from '../tools/createVrAttractorScanCone.js';
 import { VR_ATTRACTOR_STATES } from '../tools/createVrAttractorTool.js';
 import { VR_ATTRACTOR_BANDS } from '../input/createVrHandModeController.js';
+import { resolveAttractorShellGlyph } from '../tools/vrAttractorShellGlyphs.js';
 
 const LOCAL_DIRECTION = new THREE.Vector3(0, 0, -1);
 const clamp01 = (value) => Math.min(1, Math.max(0, value));
@@ -26,7 +27,7 @@ export function createVrShellAttractorInteraction({ controllers, shellSystem, ha
   attractorTool, settings, haloSettings, settledParent = shellSystem.object.parent,
   crystalHeldByController = new Map(), isHigherPriorityInteractionActive = () => false,
   isControllerOccupiedByOtherInteraction = () => false,
-  canScanShells = () => true, canTargetShells = () => true,
+  isFamilyTargetable = () => false,
   onPullStart = () => {}, onPullCancel = () => {}, onHandoff = () => {} }) {
   if (typeof isControllerOccupiedByOtherInteraction !== 'function') {
     throw new TypeError('isControllerOccupiedByOtherInteraction must be a function.');
@@ -42,6 +43,11 @@ export function createVrShellAttractorInteraction({ controllers, shellSystem, ha
   function getLeftRecord() { return controllers.find((record) => record.handedness === 'left') ?? null; }
   const scanCone = createVrAttractorScanCone({ parent: null, length: maxTargetDistance, settings: settings.scanCone });
   const halos = new Map(shellSystem.instances.map((shell) => [shell, createVrTargetHalo({ root: shell, settings: haloSettings })]));
+  const familyCodes = new Map(shellSystem.records.map((record) => {
+    const descriptor = resolveAttractorShellGlyph(record.object);
+    if (!descriptor) throw new Error(`Cannot resolve canonical Shell identity: ${record.object?.name ?? 'unknown'}`);
+    return [record.object, descriptor.familyCode];
+  }));
   const candidates = shellSystem.records.map((record) => ({ shell: record.object, radius: record.boundingRadius,
     getWorldCenter(result) { result.set(0, 0, 0); record.object.localToWorld(result); record.object.getWorldScale(scale);
       this.radius = record.boundingRadius * Math.max(scale.x, scale.y, scale.z); return result; } }));
@@ -51,8 +57,10 @@ export function createVrShellAttractorInteraction({ controllers, shellSystem, ha
   let disposed = false;
   const isEquipped = () => handModeController.getMode() === 'ASTRO_ATTRACTOR';
   const ownsAttractorBand = () => handModeController.getAttractorBand() === VR_ATTRACTOR_BANDS.SHELLS;
-  const isValidCandidate = ({ shell }) => shell.visible !== false && shell.userData.attractorTarget === true
-    && shell.userData.attractorType === 'shell' && ['orbiting', 'targeted'].includes(shell.userData.shellState);
+  const isFamilyEligible = (shell) => isFamilyTargetable(familyCodes.get(shell)) === true;
+  const isValidCandidate = ({ shell }) => shell.visible !== false
+    && shell.userData.attractorType === 'shell' && ['orbiting', 'targeted'].includes(shell.userData.shellState)
+    && isFamilyEligible(shell);
   function syncHalo(shell) { halos.get(shell)?.setVisible(shell === target || shell === leftRayTarget || placedRayTargets.has(shell)); }
   function clearTarget() { const previous = target; if (target?.userData.shellState === 'targeted') target.userData.shellState = 'orbiting';
     target = null; if (previous) syncHalo(previous); }
@@ -66,7 +74,7 @@ export function createVrShellAttractorInteraction({ controllers, shellSystem, ha
   function currentInput() { return semanticInput.getState?.() ?? { primaryAction: 0, grabAction: 0 }; }
   function handIsFree(leftRecord = getLeftRecord()) { return Boolean(leftRecord?.isConnected && !heldShell
     && !crystalHeldByController.has(leftRecord) && isControllerOccupiedByOtherInteraction(leftRecord) !== true); }
-  function findTarget(rightRecord = getRightRecord()) { if (!canTargetShells() || !rightRecord?.controller || !rightRecord.isConnected) return null;
+  function findTarget(rightRecord = getRightRecord()) { if (!rightRecord?.controller || !rightRecord.isConnected) return null;
     rightRecord.controller.getWorldPosition(origin); rightRecord.controller.getWorldQuaternion(worldQuaternion);
     direction.copy(LOCAL_DIRECTION).applyQuaternion(worldQuaternion).normalize();
     return selectConeTarget({ candidates: candidates.filter(isValidCandidate), origin, direction,
@@ -177,11 +185,13 @@ export function createVrShellAttractorInteraction({ controllers, shellSystem, ha
     if (captureAnchor.parent !== settledParent) settledParent.add(captureAnchor);
     updateCaptureAnchor(rightRecord); updateLeftRayHit(leftRecord);
     const { primaryAction = 0, grabAction = 0 } = currentInput();
-    const scanning = shellSystem.active && rightRecord.isConnected && isEquipped() && canScanShells() === true
+    const scanning = shellSystem.active && rightRecord.isConnected && isEquipped()
       && grabAction > settings.scanThreshold;
     scanCone.update(delta, scanning);
     if (activePull) {
-      if (!scanning || primaryAction <= settings.triggerThreshold) { beginReturn(activePull); return; }
+      if (!scanning || primaryAction <= settings.triggerThreshold || !isFamilyEligible(activePull)) {
+        beginReturn(activePull); return;
+      }
       if (activePull.userData.shellState === 'capture_ready') { setWorldPosition(activePull, anchorWorldPosition);
         attractorTool.setState(VR_ATTRACTOR_STATES.CAPTURED); return; }
       captureAnchor.getWorldPosition(anchorWorldPosition); activePull.getWorldPosition(shellWorldPosition);
@@ -200,7 +210,8 @@ export function createVrShellAttractorInteraction({ controllers, shellSystem, ha
     halos.get(target)?.update(delta); attractorTool.setTarget({ target, distance: hit.distance,
       proximity: clamp01(1 - hit.distance / maxTargetDistance) }); attractorTool.setPullStrength(0);
     attractorTool.setState(VR_ATTRACTOR_STATES.TARGETING);
-    if (primaryAction > settings.triggerThreshold && handIsFree(leftRecord)) { activePull = target; activePull.userData.shellState = 'pulling';
+    if (primaryAction > settings.triggerThreshold && handIsFree(leftRecord) && isFamilyEligible(target)) {
+      activePull = target; activePull.userData.shellState = 'pulling';
       onPullStart({ target: activePull, targetClass: activePull.userData.attractorType });
       activePull.getWorldPosition(shellWorldPosition); captureAnchor.getWorldPosition(anchorWorldPosition);
       pullStartDistance = Math.max(shellWorldPosition.distanceTo(anchorWorldPosition), 1e-6); shellSystem.setEmission(activePull, 0);

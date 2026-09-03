@@ -4,6 +4,7 @@ import { VR_ATTRACTOR_BANDS, VR_RIGHT_HAND_MODES } from '../input/createVrHandMo
 import { calculateAttractorCapturePosition, createVrAttractorScanCone,
   selectAttractorConeTarget } from '../tools/createVrAttractorScanCone.js';
 import { VR_ATTRACTOR_STATES } from '../tools/createVrAttractorTool.js';
+import { resolveVrSmallGlyphProtoAstro } from '../protoAstro/resolveVrSmallGlyphProtoAstro.js';
 
 const LOCAL_DIRECTION = new THREE.Vector3(0, 0, -1);
 const INTERACTION_STATE = Object.freeze({ FIELD: 'FIELD', PULLING: 'PULLING',
@@ -12,7 +13,7 @@ const clamp01 = (value) => Math.min(1, Math.max(0, value));
 
 export function createVrSmallGlyphAttractorInteraction({ controllers, smallGlyphSystem, handModeController,
   semanticInput, attractorTool, maxTargetDistance, settings, haloSettings, settledParent,
-  canScanSmallGlyphs = () => false, canTargetSmallGlyphs = () => false, canPullSmallGlyphs = () => false,
+  isFamilyTargetable = () => false,
   isHigherPriorityInteractionActive = () => false,
   isControllerOccupiedByOtherInteraction = () => false,
   onPullStart = () => {}, onPullCancel = () => {}, onHandoff = () => {} }) {
@@ -40,13 +41,18 @@ export function createVrSmallGlyphAttractorInteraction({ controllers, smallGlyph
     if (!Number.isFinite(settings?.[key]) || settings[key] <= 0) throw new TypeError(`settings.${key} must be positive.`);
   });
   if (!settings?.scanCone || typeof settings.scanCone !== 'object') throw new TypeError('settings.scanCone must be an object.');
-  [canScanSmallGlyphs, canTargetSmallGlyphs, canPullSmallGlyphs, isHigherPriorityInteractionActive,
+  [isFamilyTargetable, isHigherPriorityInteractionActive,
     isControllerOccupiedByOtherInteraction, onPullStart, onPullCancel, onHandoff].forEach((dependency) => { if (typeof dependency !== 'function')
     throw new TypeError('Small glyph interaction dependencies must be functions.'); });
 
   const instances = smallGlyphSystem.getInstances();
   if (!Array.isArray(instances) || instances.some((instance) => !instance?.isObject3D))
     throw new TypeError('smallGlyphSystem.getInstances() must return Three.js objects.');
+  const familyCodes = new Map(instances.map((instance) => {
+    const protoAstro = resolveVrSmallGlyphProtoAstro(instance);
+    if (!protoAstro) throw new Error(`Cannot resolve canonical Small Glyph identity: ${instance.name || 'unknown'}`);
+    return [instance, protoAstro.descriptor.familyCode];
+  }));
   const states = new Map(instances.map((instance) => [instance, INTERACTION_STATE.FIELD]));
   const scanCone = createVrAttractorScanCone({ parent: null, length: maxTargetDistance, settings: settings.scanCone });
   const captureAnchor = new THREE.Object3D(); captureAnchor.name = 'VrSmallGlyphAttractorCaptureAnchor'; settledParent.add(captureAnchor);
@@ -67,6 +73,7 @@ export function createVrSmallGlyphAttractorInteraction({ controllers, smallGlyph
   const ownsEquippedBand = () => ownsBand() && isEquipped();
   function ensureHalos() { instances.forEach((instance) => { if (!halos.has(instance))
     halos.set(instance, createVrTargetHalo({ root: instance, settings: haloSettings })); }); }
+  const isFamilyEligible = (instance) => isFamilyTargetable(familyCodes.get(instance)) === true;
   function isFieldCandidate(instance) { if (states.get(instance) !== INTERACTION_STATE.FIELD
     || instance.userData.smallGlyphState !== 'FIELD' || !instance.parent) return false;
     let belongsToField = false;
@@ -74,7 +81,7 @@ export function createVrSmallGlyphAttractorInteraction({ controllers, smallGlyph
       if (current.visible === false) return false;
       if (current === smallGlyphSystem.object) belongsToField = true;
     }
-    return belongsToField; }
+    return belongsToField && isFamilyEligible(instance); }
   function syncHalo(glyph) { halos.get(glyph)?.setVisible(glyph === target || glyph === handoffRayTarget
     || placedRayTargets.has(glyph)); }
   function setTarget(next) { if (target === next) return; const previous = target;
@@ -203,7 +210,7 @@ export function createVrSmallGlyphAttractorInteraction({ controllers, smallGlyph
     record.controller.addEventListener('squeezestart', onSqueezeStart); record.controller.addEventListener('squeezeend', onSqueezeEnd);
     return { record, onSqueezeStart, onSqueezeEnd }; });
   function update(deltaSeconds = 0) { if (disposed) return; const delta = Math.max(0, Number.isFinite(deltaSeconds) ? deltaSeconds : 0);
-    updateReturn(delta); if (heldGlyph && canPullSmallGlyphs() !== true) beginReturn(heldGlyph);
+    updateReturn(delta);
     if (!captureReady) updatePlacedHits(); else clearAllSmallGlyphHits();
     const right = getRightRecord(); if (!ownsEquippedBand()) { scanCone.update(delta, false); setTarget(null);
       if (activePull || captureReady) beginReturn(activePull || captureReady); return; }
@@ -212,9 +219,9 @@ export function createVrSmallGlyphAttractorInteraction({ controllers, smallGlyph
     if (scanCone.object.parent !== right.controller) right.controller.add(scanCone.object); updateCaptureAnchor(right);
     if (smallGlyphSystem.getState() === 'MATERIALIZED') ensureHalos();
     const { primaryAction = 0, grabAction = 0 } = semanticInput.getState();
-    const scanning = smallGlyphSystem.getState() === 'MATERIALIZED' && isEquipped() && canScanSmallGlyphs() === true
+    const scanning = smallGlyphSystem.getState() === 'MATERIALIZED' && isEquipped()
       && grabAction > settings.scanThreshold; scanCone.update(delta, scanning);
-    if (activePull) { if (!scanning || primaryAction <= settings.triggerThreshold || canPullSmallGlyphs() !== true) {
+    if (activePull) { if (!scanning || primaryAction <= settings.triggerThreshold || !isFamilyEligible(activePull)) {
       beginReturn(activePull); return; }
       if (captureReady) { setWorldPosition(captureReady, anchorWorld); updateLeftHit(); halos.get(captureReady)?.update(delta);
         attractorTool.setPullStrength(1); attractorTool.setState(VR_ATTRACTOR_STATES.CAPTURED); return; }
@@ -227,7 +234,7 @@ export function createVrSmallGlyphAttractorInteraction({ controllers, smallGlyph
       movement.subVectors(anchorWorld, worldPosition).normalize().multiplyScalar(Math.min(distance, pullSpeed * delta));
       setWorldPosition(activePull, worldPosition.add(movement)); const progress = clamp01(1 - distance / pullStartDistance);
       halos.get(activePull)?.update(delta); attractorTool.setPullStrength(progress); attractorTool.setState(VR_ATTRACTOR_STATES.PULLING); return; }
-    if (!scanning || isHigherPriorityInteractionActive(right) === true || canTargetSmallGlyphs() !== true) {
+    if (!scanning || isHigherPriorityInteractionActive(right) === true) {
       setTarget(null); attractorTool.setTarget(null); attractorTool.setPullStrength(0); attractorTool.setState(VR_ATTRACTOR_STATES.IDLE); return; }
     right.controller.getWorldPosition(origin); right.controller.getWorldQuaternion(quaternion);
     direction.copy(LOCAL_DIRECTION).applyQuaternion(quaternion).normalize();
@@ -238,7 +245,7 @@ export function createVrSmallGlyphAttractorInteraction({ controllers, smallGlyph
     halos.get(target)?.update(delta); attractorTool.setTarget({ target, distance: hit.distance,
       proximity: clamp01(1 - hit.distance / maxTargetDistance) }); attractorTool.setPullStrength(0);
     attractorTool.setState(VR_ATTRACTOR_STATES.TARGETING);
-    if (!returning && primaryAction > settings.triggerThreshold && canPullSmallGlyphs() === true && leftHandIsFree()) {
+    if (!returning && primaryAction > settings.triggerThreshold && isFamilyEligible(target) && leftHandIsFree()) {
       activePull = target; states.set(activePull, INTERACTION_STATE.PULLING); pullSpeed = 0;
       activePull.userData.smallGlyphState = INTERACTION_STATE.PULLING;
       activePull.getWorldPosition(worldPosition); captureAnchor.getWorldPosition(anchorWorld);

@@ -993,8 +993,9 @@ shellAttractorInteraction = createVrShellAttractorInteraction({
   haloSettings: settings.targetHalo, settledParent: worldStableRoot,
   crystalHeldByController: crystalCollection.heldByController,
   isControllerOccupiedByOtherInteraction: (record) => smallGlyphAttractorInteraction?.isHeldBy(record) === true,
-  canScanShells: () => runtimeExperience?.can(VR_SCENARIO_CAPABILITY.CAN_SCAN_SHELLS) === true,
-  canTargetShells: () => runtimeExperience?.can(VR_SCENARIO_CAPABILITY.CAN_TARGET_SHELLS) === true,
+  isFamilyTargetable: (familyCode) => astrolabiumTuningActor.isFamilyTargetable(
+    VR_ATTRACTOR_BANDS.SHELLS, familyCode
+  ),
   onPullStart: ({ target }) => vrAudio.startAttractor(target.userData.attractorId, 'shell'),
   onPullCancel: ({ target }) => vrAudio.cancelAttractor(target.userData.attractorId),
   onHandoff: ({ target }) => vrAudio.handoffAttractor(target.userData.attractorId),
@@ -1023,15 +1024,9 @@ smallGlyphAttractorInteraction = createVrSmallGlyphAttractorInteraction({
   },
   haloSettings: settings.targetHalo,
   settledParent: worldStableRoot,
-  canScanSmallGlyphs: () => runtimeExperience?.can(
-    VR_SCENARIO_CAPABILITY.CAN_SCAN_SMALL_GLYPHS
-  ) === true,
-  canTargetSmallGlyphs: () => runtimeExperience?.can(
-    VR_SCENARIO_CAPABILITY.CAN_TARGET_SMALL_GLYPHS
-  ) === true,
-  canPullSmallGlyphs: () => runtimeExperience?.can(
-    VR_SCENARIO_CAPABILITY.CAN_PULL_SMALL_GLYPHS
-  ) === true,
+  isFamilyTargetable: (familyCode) => astrolabiumTuningActor.isFamilyTargetable(
+    VR_ATTRACTOR_BANDS.SMALL_GLYPHS, familyCode
+  ),
   onPullStart: ({ target }) => vrAudio.startAttractor(target.userData.attractorId, 'smallGlyph'),
   onPullCancel: ({ target }) => vrAudio.cancelAttractor(target.userData.attractorId),
   onHandoff: ({ target }) => vrAudio.handoffAttractor(target.userData.attractorId),
@@ -1050,16 +1045,16 @@ smallGlyphAttractorInteraction = createVrSmallGlyphAttractorInteraction({
 });
 largeGlyphAttractorInteraction = createVrLargeGlyphAttractorInteraction({
   controllers: vrControllers.controllers, largeGlyphActor, handModeController, semanticInput, attractorTool,
-  protoAstroTuningController, maxTargetDistance: largeGlyphMaxTargetDistance,
+  maxTargetDistance: largeGlyphMaxTargetDistance,
   settings: { scanThreshold: settings.shellAttractor.scanThreshold,
     triggerThreshold: settings.shellAttractor.triggerThreshold,
     pullAcceleration: settings.shellAttractor.pullAcceleration, maxPullSpeed: settings.shellAttractor.maxPullSpeed,
     captureRadius: settings.shellAttractor.captureRadius, returnDuration: settings.shellAttractor.returnDuration,
     minimumClearance: settings.largeGlyphAttractor.minimumClearance,
     scanCone: { ...settings.shellAttractor.scanCone, color: settings.attractorPresentation.bandColors.largeGlyphs } },
-  canScanLargeGlyphs: () => runtimeExperience?.can(VR_SCENARIO_CAPABILITY.CAN_SCAN_LARGE_GLYPHS) === true,
-  canTargetLargeGlyphs: () => runtimeExperience?.can(VR_SCENARIO_CAPABILITY.CAN_TARGET_LARGE_GLYPHS) === true,
-  canPullLargeGlyphs: () => runtimeExperience?.can(VR_SCENARIO_CAPABILITY.CAN_PULL_LARGE_GLYPHS) === true,
+  isFamilyTargetable: (familyCode) => astrolabiumTuningActor.isFamilyTargetable(
+    VR_ATTRACTOR_BANDS.LARGE_GLYPHS, familyCode
+  ),
   isTargetPullReady: (node) => asterionResonatorTargetAcquisitionActor.isPullReady(node.userData.id),
   onPullStart: ({ target }) => vrAudio.startAttractor(target.userData.id, 'largeGlyph'),
   onPullCancel: ({ target }) => vrAudio.cancelAttractor(target.userData.id),
@@ -1090,7 +1085,10 @@ const unsubscribeRuneStoneInstallAudioCue = runeStoneInstallationInteraction
 const unsubscribeRuneStoneInstalledAudio = runeStoneInstallationInteraction
   .subscribeInstalled((event) => runeStoneAudioProjection.presentInstalled(event));
 runeStoneAttractorInteraction = createVrRuneStoneAttractorInteraction({
-  controllers: vrControllers.controllers, runeStoneActor, runeStoneAttractorBandProjection,
+  controllers: vrControllers.controllers, runeStoneActor,
+  isFamilyTargetable: (familyCode) => astrolabiumTuningActor.isFamilyTargetable(
+    VR_ATTRACTOR_BANDS.RUNESTONES, familyCode
+  ),
   handModeController, semanticInput, attractorTool, maxTargetDistance: runeStoneMaxTargetDistance,
   settings: { scanThreshold: settings.shellAttractor.scanThreshold,
     triggerThreshold: settings.shellAttractor.triggerThreshold,
