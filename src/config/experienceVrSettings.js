@@ -266,7 +266,12 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
     rotation: { enabled: true, angularSpeed: 0.14, direction: 1 },
     elevation: { offset: 2.4, durationSeconds: 2.5 },
     expansion: { radius: 46, durationSeconds: 2.5 },
-    sphere: { radius: 80, durationSeconds: 2.5, angularSpeed: 0.01 }
+    sphere: {
+      radius: 80,
+      durationSeconds: 2.5,
+      angularSpeed: 0.02,
+      depthOscillation: { enabled: true, minRadius: 20, maxRadius: 110, periodSeconds: 135 }
+    }
   },
   postRingPresentation: {
     shellRevealDuration: 1.5
@@ -414,6 +419,20 @@ export function normalizeExperienceVrSettings(candidate) {
     ? candidateLargeGlyphInitialRadius : defaults.largeGlyphs.initialRadius;
   const largeGlyphExpandedRadius = hasValidLargeGlyphRadii
     ? candidateLargeGlyphExpandedRadius : defaults.largeGlyphs.expansion.radius;
+  const candidateDepthOscillationMinRadius = candidate.largeGlyphs?.sphere?.depthOscillation?.minRadius;
+  const candidateDepthOscillationMaxRadius = candidate.largeGlyphs?.sphere?.depthOscillation?.maxRadius;
+  const hasValidDepthOscillationRadii = candidateDepthOscillationMaxRadius
+    > candidateDepthOscillationMinRadius
+    && Number.isFinite(candidateDepthOscillationMinRadius)
+    && candidateDepthOscillationMinRadius > 0
+    && Number.isFinite(candidateDepthOscillationMaxRadius);
+  const depthOscillationMinRadius = hasValidDepthOscillationRadii
+    ? Math.min(200, candidateDepthOscillationMinRadius)
+    : defaults.largeGlyphs.sphere.depthOscillation.minRadius;
+  const depthOscillationMaxRadius = hasValidDepthOscillationRadii
+    ? Math.min(200, candidateDepthOscillationMaxRadius)
+    : defaults.largeGlyphs.sphere.depthOscillation.maxRadius;
+  const hasValidBoundedDepthOscillationRadii = depthOscillationMaxRadius > depthOscillationMinRadius;
   const platformEnergyWidthVariationMin = finiteNumber(candidate.platformEnergyVfx?.widthVariationMin,
     defaults.platformEnergyVfx.widthVariationMin, { min: 0.1, max: 3 });
   const platformEnergyBrightnessVariationMin = finiteNumber(candidate.platformEnergyVfx?.brightnessVariationMin,
@@ -935,7 +954,20 @@ export function normalizeExperienceVrSettings(candidate) {
         durationSeconds: finiteNumber(candidate.largeGlyphs?.sphere?.durationSeconds,
           defaults.largeGlyphs.sphere.durationSeconds, { min: 0.1, max: 60 }),
         angularSpeed: finiteNumber(candidate.largeGlyphs?.sphere?.angularSpeed,
-          defaults.largeGlyphs.sphere.angularSpeed, { min: 0, max: 2 })
+          defaults.largeGlyphs.sphere.angularSpeed, { min: 0, max: 2 }),
+        depthOscillation: {
+          enabled: typeof candidate.largeGlyphs?.sphere?.depthOscillation?.enabled === 'boolean'
+            ? candidate.largeGlyphs.sphere.depthOscillation.enabled
+            : defaults.largeGlyphs.sphere.depthOscillation.enabled,
+          minRadius: hasValidBoundedDepthOscillationRadii
+            ? depthOscillationMinRadius : defaults.largeGlyphs.sphere.depthOscillation.minRadius,
+          maxRadius: hasValidBoundedDepthOscillationRadii
+            ? depthOscillationMaxRadius : defaults.largeGlyphs.sphere.depthOscillation.maxRadius,
+          periodSeconds: Number.isFinite(candidate.largeGlyphs?.sphere?.depthOscillation?.periodSeconds)
+            && candidate.largeGlyphs.sphere.depthOscillation.periodSeconds > 0
+            ? Math.min(3600, candidate.largeGlyphs.sphere.depthOscillation.periodSeconds)
+            : defaults.largeGlyphs.sphere.depthOscillation.periodSeconds
+        }
       }
     },
     postRingPresentation: {
