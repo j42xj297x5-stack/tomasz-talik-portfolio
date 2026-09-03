@@ -27,6 +27,10 @@ export function createVrProgressionSemanticHandoff({ dispatch }) {
     if (previous?.etherRuneTuned === false && current?.etherRuneTuned === true) {
       dispatch(VR_SCENARIO_EVENT.ETHER_RUNE_TUNED);
     }
+    if (previous?.waterInstallationReadinessOverride === false
+      && current?.waterInstallationReadinessOverride === true) {
+      dispatch(VR_SCENARIO_EVENT.ETHER_MONKEY_CAPTURED);
+    }
   }
 
   return { onPageCommitted, onResonatorStateChanged, onRuneProgressionChanged };

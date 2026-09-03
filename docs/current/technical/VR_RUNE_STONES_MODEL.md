@@ -7,7 +7,7 @@
 - **Foundation correction:** natural Rune tuning sector gate — **RESOLVED**; task `d0f9a17e414f3ea8c386cde87bdd46dba6dad16c`, merge `c862b9bde2e717918e56d21d7f1cbbc0ad741d53`.
 - **RUNE A9:** **A9.1–A9.6 IMPLEMENTED; NATURAL RUNE A9 FOUNDATION = COMPLETE**. Końcowy transport i instalacja używają platform-centered handoff sphere oraz automatycznej choreografii, a hydration odtwarza settled physical installation. Collision carried Rune Stone ↔ installed Rune Stone jest **SUPERSEDED / REMOVED FROM TARGET**.
 - **Scenario authoring:** **DEFERRED TO SEPARATE THREAD**.
-- **Canonical authored Scenario/runtime progression boundary:** `5.40`; `FOURTH_RUNE_INSTALLED → Monkey Ether reveal → CAN_TUNE_ETHER_RUNE → ETHER_RUNE_TUNED` is implemented/authored after the `4.80 → 5.10` join.
+- **Canonical authored Scenario/runtime progression boundary:** `5.50`; `FOURTH_RUNE_INSTALLED → Monkey Ether reveal → CAN_TUNE_ETHER_RUNE → ETHER_RUNE_TUNED → ETHER_MONKEY_CAPTURED` is implemented/authored after the `4.80 → 5.10` join.
 - Dokument jest kanonicznym źródłem prawdy Rune Stone Act: strojenia Astrolabium, targetability, pięciu naturalnych pair-specific par, mostów, transportu, instalacji, specjalnego flow Eteru i finalnego polowania Wody.
 - A1–A9.6 są foundations/domain behavior bez rozszerzenia authored Scenario spine. A9 foundation jest zamknięty; dalszy authored Scenario, Director i literalna komunikacja gracza wymagają osobnego projektu, bez arbitralnego etykietowania ich jako kolejny krok A9.
 
@@ -279,7 +279,7 @@ Po hydration reconstruction wykonuje kolejno readiness `HIDDEN/DOCKED`, następn
 
 Eter nie jest szóstą naturalną `familyCode`, szóstą standardową Rune Stone pair, szóstym sektorem, vessel/socketem ani installed elemental slotem. Nie należy do `PROTO_ASTRO_NATURAL_FAMILY_CODES`. `VU` istnieje jako kanoniczna sylaba Proto-Astro: `V` (Astro/Ether) + `U` (Rune Stone), pozostając formą **SPECIAL**, a nie naturalnym kodem rodziny.
 
-`stone_06.glb` ma canonical physical asset identity ETHER / `V` / `astro` / **SPECIAL** z `branchId: null` i odpowiada sylabie Proto-Astro `VU`, której kanonicznym assetem prezentacyjnym jest `public/svg/VU.svg`. Osobny `VrEtherRuneStoneActor` materializuje go na tej samej definicji warstwy `RUNE_STONES`, lecz w niezależnej sześcioslotowej dystrybucji na zarezerwowanym slocie `5`; naturalny actor i jego pięć transformów pozostają nietknięte. SPECIAL owner ma presentation, live bounds, animation, Astro lock/transport, reset i dispose oraz wyłącznie stany `FREE`, `LOCKED_BY_ASTRO`, `CARRIED_ORBIT` — bez bridge, sektora, socketu i installed slotu.
+`stone_06.glb` ma canonical physical asset identity ETHER / `V` / `astro` / **SPECIAL** z `branchId: null` i odpowiada sylabie Proto-Astro `VU`, której kanonicznym assetem prezentacyjnym jest `public/svg/VU.svg`. Osobny `VrEtherRuneStoneActor` materializuje go na tej samej definicji warstwy `RUNE_STONES`, lecz w niezależnej sześcioslotowej dystrybucji na zarezerwowanym slocie `5`; naturalny actor i jego pięć transformów pozostają nietknięte. SPECIAL owner ma presentation, live bounds, animation, Astro lock/transport, capture, reset i dispose oraz stany `FREE`, `LOCKED_BY_ASTRO`, `CARRIED_ORBIT`, `MONKEY_CAPTURE`, `CAPTURED` — bez bridge, sektora, socketu i installed slotu.
 
 ### 10.1. Trigger i Monkey beat contract
 
@@ -305,7 +305,7 @@ A7 natural target set nadal wynika dokładnie z `tunedRuneFamilies`. Projekcja R
 
 ### 10.3. Ether transport, Monkey capture i rezultat
 
-Ether Rune Stone nie należy do pięciu początkowych naturalnych kamieni platformy. Jego presentation pojawia się przez `REVEAL_ETHER_RUNE` przy wejściu w `5.40`. Po special tuning gracz targetuje i przyciąga Ether wspólną mechaniką Astrolabium aż do platformowego safety radius, gdzie pozostaje legalnym `CARRIED_ORBIT` podczas trzymania pull. Handoff instalacyjny jest wywoływany wyłącznie dla `descriptor.natural === true`, więc Ether nie pyta o Binder/frame, nie wchodzi w socket capture i nie może trafić do `installedRuneFamilies`. Zwykłe release przywraca `FREE` w bieżącej pozycji; reset/reconstruction przywraca ukryty canonical slot. Monkey capture pozostaje przyszłym osobnym beatem.
+Ether Rune Stone nie należy do pięciu początkowych naturalnych kamieni platformy. Jego presentation pojawia się przez `REVEAL_ETHER_RUNE` przy wejściu w `5.40`. Po special tuning gracz targetuje i przyciąga Ether wspólną mechaniką Astrolabium aż do istniejącego handoff radius. Dedykowany SPECIAL handoff przenosi ownership z Astrolabium do `VrEtherMonkeyCaptureInteraction`, przechodzi `CARRIED_ORBIT → MONKEY_CAPTURE`, interpoluje przez 1,5 s do bieżącego `monkeyActor.characterAnchor`, a następnie ukrywa Ether jako `CAPTURED`. Nie używa naturalnego installation callbacku, Bindera, frame ani `installedRuneFamilies`. Jedyny trwały commit ustawia monotoniczne `waterInstallationReadinessOverride: true`; live projection uruchamia istniejące Water `HIDDEN → ARRIVING → DOCKED`, a hydration synchronizuje bez replayu.
 
 Monkey capture nie nadaje prawa do Water tuning. Jego jedynym trwałym rezultatem jest:
 
@@ -355,7 +355,7 @@ Obowiązuje architektura:
 SPINE → SCENARIO → DIRECTOR → RuntimeExperience → ACTORS / DOMAIN OWNERS
 ```
 
-Authored Scenario contains the bounded semantic join `4.80 → 5.10` and continuation `5.10 → 5.20 → 5.30 → 5.40 → 100.10`. The live Rune snapshot crossing from fewer than four to exactly four installed natural families projects `FOURTH_RUNE_INSTALLED`; `5.20` owns the mandatory Monkey Ether reveal, and its completion grants `CAN_TUNE_ETHER_RUNE` at `5.30`; live `etherRuneTuned: false → true` projects `ETHER_RUNE_TUNED` and reaches stable `5.40`. Hydration restores the complete settled Rune truth silently. Physical Ether reveal, targetability and Astro transport through SPECIAL `CARRIED_ORBIT` are implemented. Monkey capture, Water override and later finale remain future.
+Authored Scenario contains the bounded semantic join `4.80 → 5.10` and continuation `5.10 → 5.20 → 5.30 → 5.40 → 5.50 → 100.10`. The live Rune snapshot crossing from fewer than four to exactly four installed natural families projects `FOURTH_RUNE_INSTALLED`; `5.20` owns the mandatory Monkey Ether reveal, and its completion grants `CAN_TUNE_ETHER_RUNE` at `5.30`; live `etherRuneTuned: false → true` projects `ETHER_RUNE_TUNED` and reaches stable `5.40`. Hydration restores the complete settled Rune truth silently. Physical Ether reveal, targetability, SPECIAL transport, Monkey capture, persistent Water readiness override, Water Binder readiness and Scenario `5.50` are implemented. Water installation completion and the later finale remain future.
 
 Canonical debug aliases are `P5 → 4.80` and `P6 → 5.10`. Both are QA/debug entry conveniences, not Scenario points, capabilities, gameplay owners or sources of settled consequences.
 
@@ -431,7 +431,7 @@ CARRIED RUNE STONE ↔ INSTALLED RUNE STONE COLLISION: SUPERSEDED / NO GAMEPLAY 
 PHYSICAL BRIDGE EXTENSION: IMPLEMENTED
 R3b RUNE_BINDER_REVEAL: IMPLEMENTED
 INSTALLATION HANDOFF + APPROACH / BRIDGE_OPEN / DESCENT: IMPLEMENTED
-AUTHORED SCENARIO BOUNDARY: 5.40 — ETHER REVEALED / SPECIAL TRANSPORT AVAILABLE
+AUTHORED SCENARIO BOUNDARY: 5.50 — ETHER CAPTURED / WATER INSTALLATION PATH OPEN
 SCENARIO `FOURTH_RUNE_INSTALLED → MONKEY ETHER REVEAL → CAN_TUNE_ETHER_RUNE`: IMPLEMENTED
 RESONATOR TARGET RESPONSE: FUTURE; NOT IMPLIED BY THE 5.10 JOIN
 ```

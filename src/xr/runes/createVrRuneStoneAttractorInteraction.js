@@ -13,6 +13,7 @@ export function createVrRuneStoneAttractorInteraction({ controllers, runeStoneAc
   isFamilyTargetable = () => false, handModeController, semanticInput, attractorTool,
   maxTargetDistance, settings, haloSettings, platformCenter, getPlayerWorldPosition,
   tryBeginInstallationHandoff = () => false,
+  tryBeginSpecialHandoff = () => false,
   onPullStart = () => {}, onPullCancel = () => {}, onHandoff = () => {},
   isHigherPriorityInteractionActive = () => false }) {
   if (!Array.isArray(controllers)) throw new TypeError('controllers must be an array.');
@@ -161,9 +162,12 @@ export function createVrRuneStoneAttractorInteraction({ controllers, runeStoneAc
       familyCode: active.familyCode, distance, proximity: 1 });
     attractorTool.setPullStrength(clamp01(pullSpeed / settings.maxPullSpeed));
     attractorTool.setState(VR_ATTRACTOR_STATES.PULLING);
-    if (active.descriptor.natural === true
-      && candidatePosition.distanceTo(centerPosition) <= settings.handoffRadiusMeters
-      && tryBeginInstallationHandoff(active) === true) handoffActive();
+    if (candidatePosition.distanceTo(centerPosition) <= settings.handoffRadiusMeters) {
+      const accepted = active.descriptor.natural === true
+        ? tryBeginInstallationHandoff(active) === true
+        : active.descriptor.special === true && tryBeginSpecialHandoff(active) === true;
+      if (accepted) handoffActive();
+    }
   }
   function update(deltaSeconds = 0) {
     if (disposed) return;

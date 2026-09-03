@@ -35,6 +35,7 @@ import { createVrAsterionPlatformEnergyVfxProjection } from './xr/vfx/createVrAs
 import { createVrRuneInstalledStateProjection } from './xr/runes/createVrRuneInstalledStateProjection.js';
 import { createVrRuneStoneActor } from './xr/runes/createVrRuneStoneActor.js';
 import { createVrEtherRuneStoneActor } from './xr/runes/createVrEtherRuneStoneActor.js';
+import { createVrEtherMonkeyCaptureInteraction } from './xr/runes/createVrEtherMonkeyCaptureInteraction.js';
 import { createVrRuneStoneAttractorInteraction } from './xr/runes/createVrRuneStoneAttractorInteraction.js';
 import { createVrRuneStoneInstallationInteraction } from './xr/runes/createVrRuneStoneInstallationInteraction.js';
 import { createVrProgressionController } from './xr/progression/createVrProgressionController.js';
@@ -451,7 +452,9 @@ const locomotion = createVrLocomotion({
 });
 const progressionController = createVrProgressionController({ pages: experienceVrPages });
 const runeInstallationReadinessProjection = createVrRuneInstallationReadinessProjection({
-  isBranchComplete: (branchId) => progressionController.isBranchComplete(branchId)
+  isBranchComplete: (branchId) => progressionController.isBranchComplete(branchId),
+  getWaterInstallationReadinessOverride: () => runeStoneProgressionController
+    .hasWaterInstallationReadinessOverride()
 });
 const platformEnergyVfxActor = createVrPlatformEnergyVfxActor({
   getSectorMount: (branchId) => progressFloor.getSectorEnergyVfxMount(branchId),
@@ -1098,6 +1101,11 @@ const unsubscribeRuneStoneInstallAudioCue = runeStoneInstallationInteraction
   .subscribeInstallAudioCue((event) => runeStoneAudioProjection.presentInstallAudioCue(event));
 const unsubscribeRuneStoneInstalledAudio = runeStoneInstallationInteraction
   .subscribeInstalled((event) => runeStoneAudioProjection.presentInstalled(event));
+const etherMonkeyCaptureInteraction = createVrEtherMonkeyCaptureInteraction({
+  etherRuneStoneActor, monkeyActor, runeStoneProgressionController,
+  durationSeconds: 1.5,
+  onCompleted: () => presentLiveRuneBridgeReadinessTransitions()
+});
 runeStoneAttractorInteraction = createVrRuneStoneAttractorInteraction({
   controllers: vrControllers.controllers, runeStoneActor, etherRuneStoneActor,
   isFamilyTargetable: (familyCode) => runeStoneAttractorBandProjection.isFamilyTargetable(familyCode),
@@ -1113,6 +1121,7 @@ runeStoneAttractorInteraction = createVrRuneStoneAttractorInteraction({
   platformCenter: progressFloor.object,
   getPlayerWorldPosition: (target) => getXrHeadWorldPosition({ renderer, camera, playerRig, target }),
   tryBeginInstallationHandoff: (record) => runeStoneInstallationInteraction.tryBeginHandoff(record),
+  tryBeginSpecialHandoff: (record) => etherMonkeyCaptureInteraction.tryBeginSpecialHandoff(record),
   onPullStart: (record) => {
     if (record.descriptor.natural) vrAudio.startAttractor(record.descriptor.assetIdentity,
       `runeStone${record.descriptor.assetIdentity.slice(-2).replace(/^0/, '')}`);
@@ -1120,7 +1129,9 @@ runeStoneAttractorInteraction = createVrRuneStoneAttractorInteraction({
   onPullCancel: (record) => {
     if (record.descriptor.natural) vrAudio.cancelAttractor(record.descriptor.assetIdentity);
   },
-  onHandoff: (record) => vrAudio.handoffAttractor(record.descriptor.assetIdentity),
+  onHandoff: (record) => {
+    if (record.descriptor.natural) vrAudio.handoffAttractor(record.descriptor.assetIdentity);
+  },
   isHigherPriorityInteractionActive: (record) => Boolean(activateButton.hits.get(record)
     || releaseButton.hits.get(record) || astroFurnaceOpenInteraction.hasCurrentHit(record)
     || astroFurnaceActivateInteraction.hasCurrentHit(record) || astroFurnaceOptionInteraction.hasCurrentHit(record)
@@ -1209,6 +1220,12 @@ const p2MonkeyDialogue = createVrMandatoryMonkeyCommunication({ monkeyGuide,
   onTriggered: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.MONKEY_TRIGGERED),
   onCompleted: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.P2_MONKEY_DIALOGUE_COMPLETED)
 });
+const waterPathOpenCommunication = createVrMandatoryMonkeyCommunication({ monkeyGuide,
+  blocks: VR_MONKEY_COMMUNICATION_COPY_PL.progression['progression.p4.waterPathOpen'].blocks,
+  secondsPerLine: settings.intro.messageDisplayDuration,
+  openMenuOnCompleted: false,
+  onTriggered: () => waterPathOpenCommunication.beginPlayback()
+});
 const furnaceIntro = createVrFurnaceIntro({
   monkeyGuide,
   secondsPerLine: settings.intro.messageDisplayDuration,
@@ -1243,6 +1260,11 @@ runtimeExperience = new RuntimeExperience({
     [VR_SCENARIO_EFFECT.BEGIN_ETHER_INTERVENTION]: () => {
       if (!runeResonatorGuidance.beginEtherIntervention()) {
         throw new Error('BEGIN_ETHER_INTERVENTION rejected by Rune/Resonator Guidance actor');
+      }
+    },
+    [VR_SCENARIO_EFFECT.BEGIN_WATER_PATH_OPEN_COMMUNICATION]: () => {
+      if (!waterPathOpenCommunication.beginAttention()) {
+        throw new Error('BEGIN_WATER_PATH_OPEN_COMMUNICATION rejected by Monkey communication actor');
       }
     },
     [VR_SCENARIO_EFFECT.BEGIN_CELESTIAL_REVEAL]: () => { celestialActor.beginReveal(); },
@@ -1498,6 +1520,7 @@ function renderFrame() {
   runeStoneActor.update(delta);
   etherRuneStoneActor.update(delta);
   runeStoneAttractorInteraction.update(delta);
+  etherMonkeyCaptureInteraction.update(delta);
   runeBridgeActor.update(delta);
   platformEnergyVfxActor.update(delta);
   runeStoneInstallationInteraction.update(delta);
@@ -1516,6 +1539,7 @@ function renderFrame() {
   p2ObservationWindow.update(delta);
   postRingMonkeyDialogue.update(delta);
   p2MonkeyDialogue.update(delta);
+  waterPathOpenCommunication.update(delta);
   furnaceIntro.update(delta);
   shellSystem.update(delta);
   largeGlyphActor.object.updateMatrixWorld(true);
@@ -1588,6 +1612,7 @@ function restoreVrScenarioBaseline() {
   astroFurnaceOpenInteraction.reset();
   astroFurnaceActivateInteraction.reset();
   runeTuningController.reset();
+  etherMonkeyCaptureInteraction.reset();
   astroFurnaceContentInteraction.reset();
   astroFurnaceRuneRecipeInteraction.resetBaseline();
   runeRecipeSelectionController.reset();
@@ -1750,6 +1775,7 @@ window.addEventListener('pagehide', () => {
   smallGlyphAttractorInteraction.dispose();
   largeGlyphAttractorInteraction.dispose();
   runeStoneAttractorInteraction.dispose();
+  etherMonkeyCaptureInteraction.dispose();
   runeStoneInstallationInteraction.dispose();
   runeStoneProgressionController.dispose();
   handModeController.dispose();
@@ -1769,6 +1795,7 @@ window.addEventListener('pagehide', () => {
   postRingPresentation.dispose();
   p2ObservationWindow.reset();
   p2MonkeyDialogue.reset();
+  waterPathOpenCommunication.reset();
   largeGlyphActor.dispose();
   smallGlyphSystem.dispose();
   shellSystem.dispose();

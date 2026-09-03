@@ -79,6 +79,7 @@ export const VR_SCENARIO_EVENT = immutableIdentifiers([
   'FOURTH_RUNE_INSTALLED',
   'ETHER_INTERVENTION_COMPLETED',
   'ETHER_RUNE_TUNED',
+  'ETHER_MONKEY_CAPTURED',
   'XR_SESSION_ENDING',
   'XR_SESSION_ENDED',
   'XR_SESSION_START_FAILED'
@@ -111,7 +112,8 @@ export const VR_SCENARIO_CAPABILITY = immutableIdentifiers([
   'CAN_CLAIM_ASTERION',
   'CAN_EQUIP_ASTERION',
   'CAN_CONTROL_PLATFORM',
-  'CAN_TUNE_ETHER_RUNE'
+  'CAN_TUNE_ETHER_RUNE',
+  'CAN_INSTALL_WATER_RUNE'
 ]);
 
 export const VR_SCENARIO_MILESTONE = immutableIdentifiers([
@@ -129,7 +131,8 @@ export const VR_SCENARIO_MILESTONE = immutableIdentifiers([
   'ASTERION_EARNED',
   'FOURTH_RUNE_INSTALLED',
   'ETHER_TUNING_UNLOCKED',
-  'ETHER_RUNE_TUNED'
+  'ETHER_RUNE_TUNED',
+  'ETHER_MONKEY_CAPTURED'
 ]);
 
 export const VR_SCENARIO_EFFECT = immutableIdentifiers([
@@ -190,7 +193,8 @@ export const VR_SCENARIO_EFFECT = immutableIdentifiers([
   'PRESENT_ASTERION',
   'SHOW_ASTERION_EARNED_CUE',
   'CHECK_RESONATOR_JOIN',
-  'BEGIN_ETHER_INTERVENTION'
+  'BEGIN_ETHER_INTERVENTION',
+  'BEGIN_WATER_PATH_OPEN_COMMUNICATION'
 ]);
 
 export const VR_EXPERIENCE_POINT = immutableIdentifiers([
@@ -231,6 +235,7 @@ export const VR_EXPERIENCE_POINT = immutableIdentifiers([
   '5.20',
   '5.30',
   '5.40',
+  '5.50',
   '100.10'
 ]);
 
@@ -284,21 +289,32 @@ const CORE_RESONATOR_READY_SETTLED_CONSEQUENCES = Object.freeze({
   runeProgression: Object.freeze({
     tunedRuneFamilies: Object.freeze(['R', 'K', 'L']),
     installedRuneFamilies: Object.freeze(['R', 'K', 'L']),
-    etherRuneTuned: false
+    etherRuneTuned: false,
+    waterInstallationReadinessOverride: false
   })
 });
 const FOURTH_RUNE_INSTALLED_SETTLED_CONSEQUENCES = Object.freeze({
   runeProgression: Object.freeze({
     tunedRuneFamilies: Object.freeze(['R', 'T', 'K', 'L']),
     installedRuneFamilies: Object.freeze(['R', 'T', 'K', 'L']),
-    etherRuneTuned: false
+    etherRuneTuned: false,
+    waterInstallationReadinessOverride: false
   })
 });
 const ETHER_RUNE_TUNED_SETTLED_CONSEQUENCES = Object.freeze({
   runeProgression: Object.freeze({
     tunedRuneFamilies: Object.freeze(['R', 'T', 'K', 'L']),
     installedRuneFamilies: Object.freeze(['R', 'T', 'K', 'L']),
-    etherRuneTuned: true
+    etherRuneTuned: true,
+    waterInstallationReadinessOverride: false
+  })
+});
+const ETHER_MONKEY_CAPTURED_SETTLED_CONSEQUENCES = Object.freeze({
+  runeProgression: Object.freeze({
+    tunedRuneFamilies: Object.freeze(['R', 'T', 'K', 'L']),
+    installedRuneFamilies: Object.freeze(['R', 'T', 'K', 'L']),
+    etherRuneTuned: true,
+    waterInstallationReadinessOverride: true
   })
 });
 const SECOND_RING_COMPLETE_SETTLED_CONSEQUENCES = Object.freeze({
@@ -848,7 +864,7 @@ const points = Object.freeze([
   }),
   Object.freeze({
     id: VR_EXPERIENCE_POINT['5.30'], canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['5.40'] }),
-    settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
+    settledConsequences: ETHER_RUNE_TUNED_SETTLED_CONSEQUENCES,
     entryEffects: Object.freeze([]),
     label: 'Ether tuning unlocked / stable boundary',
     capabilities: Object.freeze([...P2_SMALL_GLYPH_TARGETING_CAPABILITIES,
@@ -861,12 +877,26 @@ const points = Object.freeze([
     ])
   }),
   Object.freeze({
-    id: VR_EXPERIENCE_POINT['5.40'], canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['100.10'] }),
-    settledConsequences: ETHER_RUNE_TUNED_SETTLED_CONSEQUENCES,
+    id: VR_EXPERIENCE_POINT['5.40'], canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['5.50'] }),
+    settledConsequences: ETHER_MONKEY_CAPTURED_SETTLED_CONSEQUENCES,
     entryEffects: Object.freeze([VR_SCENARIO_EFFECT.REVEAL_ETHER_RUNE]),
     label: 'Ether Rune tuned / transport available',
     capabilities: Object.freeze([...P2_SMALL_GLYPH_TARGETING_CAPABILITIES,
       VR_SCENARIO_CAPABILITY.CAN_TUNE_ETHER_RUNE]),
+    transitions: Object.freeze([
+      ...TIER_4_CARD_LIFECYCLE_TRANSITIONS,
+      Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.COMPLETE,
+        event: VR_SCENARIO_EVENT.ETHER_MONKEY_CAPTURED,
+        milestonesToAdd: Object.freeze([VR_SCENARIO_MILESTONE.ETHER_MONKEY_CAPTURED]) })
+    ])
+  }),
+  Object.freeze({
+    id: VR_EXPERIENCE_POINT['5.50'], canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['100.10'] }),
+    settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
+    entryEffects: Object.freeze([VR_SCENARIO_EFFECT.BEGIN_WATER_PATH_OPEN_COMMUNICATION]),
+    label: 'Ether captured / Water installation path open',
+    capabilities: Object.freeze([...P2_SMALL_GLYPH_TARGETING_CAPABILITIES,
+      VR_SCENARIO_CAPABILITY.CAN_TUNE_ETHER_RUNE, VR_SCENARIO_CAPABILITY.CAN_INSTALL_WATER_RUNE]),
     transitions: TIER_4_CARD_LIFECYCLE_TRANSITIONS
   }),
   Object.freeze({
