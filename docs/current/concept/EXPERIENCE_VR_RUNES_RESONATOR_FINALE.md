@@ -32,7 +32,9 @@ Dokładne receptury strojenia pozostają kontraktem receptur i nie są definiowa
 | Physical Metal `M(angle, tilt)` control, gameplay expansion and presentation rounding | CURRENT / IMPLEMENTED |
 | Water advanced controls, harmonic/Water Sync logic, final Water hunt, dissolution/finale | FUTURE |
 
-The physical target-response core, corrected late-only pull policy, escaped-target motion and physical Ether tuning through `5.40` are implemented runtime. Physical Ether reveal, targetability and transport through SPECIAL `CARRIED_ORBIT` are implemented. Monkey capture and the bounded Water readiness result through `5.50` are implemented. Advanced wings, Water synchronization and later finale remain binding design canon / FUTURE / NOT IMPLEMENTED.
+The physical target-response core, corrected late-only pull policy, escaped-target motion and physical Ether tuning through `5.40` are implemented runtime. Physical Ether reveal, targetability and transport through SPECIAL `CARRIED_ORBIT` are implemented. Monkey capture and the bounded Water readiness result through `5.50` are implemented. Metal's advanced physical wing is implemented; Water advanced control, synchronization and the later finale remain binding design canon / FUTURE / NOT IMPLEMENTED.
+
+Asterion Sphere completion independently makes special Ether Small Glyph `VI` targetable through Astrolabium Więzi. The implemented tuning actor derives this from Furnace Sphere-complete truth without a Scenario event or new persistence. This does not permit `VU` tuning: `VO` Shell eligibility, `VI` Small Glyph eligibility, later `CAN_TUNE_ETHER_RUNE`, and physical `VU` reveal are separate contracts; `V` remains SPECIAL throughout.
 
 ## 1. Glify znikają
 
@@ -162,7 +164,7 @@ Spust Kuli nadal orientuje całą platformę, zachowując istniejący ownership 
 
 Panel Y przechowuje instrukcję; Małpa nie powtarza jej stale.
 
-## 8. Late reacquisition — runtime mechanics implemented; continuation not authored after `5.10`
+## 8. Late reacquisition — runtime mechanics and authored continuation through `5.60` implemented
 
 Earlier Large Glyph attraction needs learned family knowledge, not Resonator. At late `SPHERE_FAR`, physical pull additionally needs transient `PULL_READY`. This early/late distinction is **IMPLEMENTED CURRENT**; Resonator finds/stabilizes and Astrolabium still owns selection and pull.
 
@@ -174,7 +176,7 @@ EARTH/WOOD/FIRE remains functional and all 27 fully active core configurations r
 
 ## 10. METAL — range versus harmony — **CURRENT / IMPLEMENTED**
 
-METAL adds angle and tilt with `0 = OFF` and active levels `1/2/3`. On each DOF, `2` is the neutral midpoint while `1` and `3` are off-center expansion states. The implemented provisional mapping is `angle → LATERAL` and `tilt → FORWARD`; the sector-local gesture/motion axes and this semantic assignment are **TUNING / HARDWARE QA**, not immutable semantics. Metal never expands VERTICAL.
+An installed Metal Rune—not `CAN_USE_ADVANCED_RESONATOR` or point `5.60`—powers the Metal sector and makes its acquisition beam, lock and control legal. `M00` is powered but field-inactive. METAL adds angle and tilt with `0 = OFF` and active levels `1/2/3`; any positive DOF activates its field contribution. On each DOF, `2` is the neutral midpoint while `1` and `3` are off-center expansion states. The implemented provisional mapping is `angle → LATERAL` and `tilt → FORWARD`; the sector-local gesture/motion axes and this semantic assignment are **TUNING / HARDWARE QA**, not immutable semantics. Metal never expands VERTICAL.
 
 Among active pairs, `M(2,2)` uniquely adds zero range. Levels `1/3` add `8 m` per LATERAL side for angle and `10 m` on each available side of the selected FIRE depth band for tilt, clamped to the global `10–130 m` domain. These numeric values are **TUNING / HARDWARE QA**. Off-center Metal therefore creates a genuinely larger nominal acquisition volume while `M22` preserves the compact core range.
 
@@ -218,7 +220,7 @@ late moving targets → off-center Metal hunt → Ether recovered
 → final Haiku Cosmos crystal / remaining portfolio completion
 ```
 
-The puzzle reverses “largest field = best”: Metal range helps interception, but centered balance completes harmony. Exact advanced controls, expansion, pulse, slowdown/recovery easing, harmonic/Water Sync logic, final Water hunt and post-`5.60` finale beats remain **FUTURE / NOT IMPLEMENTED**.
+The puzzle reverses “largest field = best”: Metal range helps interception, but centered balance completes harmony. Metal control and expansion are implemented, while their exact gesture feel and numeric tuning remain outstanding. Water control, pulse, slowdown/recovery easing, harmonic/Water Sync logic, final Water hunt and post-`5.60` finale beats remain **FUTURE / NOT IMPLEMENTED**.
 
 ## 15. Ostatnia karta
 

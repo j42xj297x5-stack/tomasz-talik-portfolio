@@ -1,6 +1,21 @@
 # Decision Log
 
-Status: current binding decisions with preserved history. Synchronized on 2026-09-03 through the final Metal/Water resonance canon.
+Status: current binding decisions with preserved history. Synchronized on 2026-09-03 through the implemented `5.60` late Rune/Resonator boundary and binding future Water/finale canon.
+
+## 2026-09-03 — CURRENT late Resonator runtime ownership and eligibility correction (SUPERSEDING)
+
+This entry supersedes conflicting CURRENT status or ownership claims below that stop Scenario at `5.10`, make Astrolabium interpretation/Ether/Metal wholly future, or gate Metal behind `CAN_USE_ADVANCED_RESONATOR`. Older entries remain historical evidence.
+
+1. Installed natural Rune truth is the physical `POWERED` gate for the corresponding sector, making its acquisition beam legal and the sector lockable/controllable. Scenario interprets physical achievement and controls dramaturgy/crystal progression; it does not gate already-legal physical mechanics.
+2. An installed Metal Rune powers Metal. `M00` is powered but inactive and adds no range; any positive Metal DOF activates Metal field response. Metal beam, lock, control and extension do **not** require `CAN_USE_ADVANCED_RESONATOR` or point `5.60`.
+3. `CAN_USE_ADVANCED_RESONATOR` remains implemented semantic Scenario truth at stable boundary `5.60`; it is not physical Metal ownership. The authored path is `4.80 → 5.10 → 5.20 → 5.30 → 5.40 → 5.50 → 5.60 → 100.10`.
+4. Metal `M(angle, tilt)` dual-DOF control, composed motion, descriptor/resolved-shape contribution, gameplay containment extension, morph and presentation rounding are implemented. Provisional axes, dominant-gesture threshold, `+8 m` lateral, nominal `+10 m` forward and `1.50/0.90/0.60` rounding multipliers remain **TUNING / HARDWARE QA**.
+5. Asterion Sphere completion derives special Small Glyph family `V / VI` targetability from `furnaceProgressionController.getAsterionSphereProgress().complete`. This creates no new persistence, Scenario event, milestone or capability and works through live synchronization/hydration.
+6. `createVrAstrolabiumTuningActor` is implemented as a derived/read-only interpreter of Furnace processed-Shell truth, Proto-Astro extracted natural Small Glyph essence truth, Rune tuning truth and bounded eligibility. It does not duplicate persistence.
+7. `VO`, `VI` and `VU` remain independent: natural-Shell completion exposes `VO`; Sphere completion exposes `VI`; later `CAN_TUNE_ETHER_RUNE` permits `VI + VO → VU`; later reveal materializes `VU`. `V` remains SPECIAL and outside `PROTO_ASTRO_NATURAL_FAMILY_CODES`, `tunedRuneFamilies` and `installedRuneFamilies`.
+8. Ether reveal/transport/Monkey capture, persistent Water readiness override, ordinary Water natural installation, five-natural-Rune crossing and Scenario through `5.60` are implemented.
+9. Water advanced control/hue/luminance/W22, harmonic recognition, Water Sync, Haiku damping and anti-bypass pull, final Water hunt/card, dissolution and XR finale remain **FUTURE / NOT IMPLEMENTED**.
+10. Hardware smoke confirms corrected Metal tuning completion, Metal acquisition after installation and `VI` targetability after Sphere completion. Detailed Metal gesture feel, axes/signs, dominance, composed-motion comfort, expansion adequacy, rounding readability and perceptual tuning remain outstanding.
 
 ## 2026-09-03 — CURRENT final Metal/Water resonance and Haiku anti-bypass canon (SUPERSEDING)
 
