@@ -28,16 +28,25 @@ export function createVrRuneTuningController({ runeRecipeInteraction, runeRecipe
     const frozen = transaction;
     const glyphIdentity = resolveVrSmallGlyphProtoAstro(frozen.smallGlyph);
     const shellIdentity = resolveAttractorShellGlyph(frozen.shell);
-    const valid = PROTO_ASTRO_NATURAL_FAMILY_CODES.includes(frozen.targetFamilyCode)
-      && !runeStoneProgressionController.isFamilyTuned(frozen.targetFamilyCode)
+    const natural = PROTO_ASTRO_NATURAL_FAMILY_CODES.includes(frozen.targetFamilyCode);
+    const specialEther = frozen.targetFamilyCode === 'V';
+    const valid = (natural || specialEther)
+      && (natural ? !runeStoneProgressionController.isFamilyTuned(frozen.targetFamilyCode)
+        : runeRecipeSelectionController.isEtherTunable())
       && frozen.expectedRecipe?.targetFamilyCode === frozen.targetFamilyCode
+      && frozen.expectedRecipe?.kind === (natural ? 'NATURAL' : 'SPECIAL')
+      && glyphIdentity?.descriptor?.syllable === frozen.expectedRecipe.smallGlyphDescriptor?.syllable
+      && shellIdentity?.descriptor?.syllable === frozen.expectedRecipe.shellDescriptor?.syllable
       && glyphIdentity?.descriptor?.familyCode === frozen.expectedRecipe.smallGlyphFamilyCode
       && shellIdentity?.familyCode === frozen.expectedRecipe.shellFamilyCode
       && runeRecipeInteraction.canConsumeInsertedIngredients(frozen);
     if (!valid) throw new Error('Cannot complete Rune tuning: frozen transaction pre-flight failed.');
     if (!runeRecipeInteraction.consumeInsertedIngredients(frozen))
       throw new Error('Rune recipe interaction rejected a pre-flighted ingredient transaction.');
-    if (!runeStoneProgressionController.commitTunedFamily(frozen.targetFamilyCode))
+    const committed = specialEther
+      ? runeStoneProgressionController.commitEtherRuneTuned()
+      : runeStoneProgressionController.commitTunedFamily(frozen.targetFamilyCode);
+    if (!committed)
       throw new Error('Rune progression rejected a newly consumed tuning transaction.');
     transaction = null;
     runeRecipeSelectionController.clearSelection();

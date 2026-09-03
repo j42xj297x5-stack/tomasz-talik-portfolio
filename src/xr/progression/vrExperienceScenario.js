@@ -76,6 +76,9 @@ export const VR_SCENARIO_EVENT = immutableIdentifiers([
   'ASTERION_UNEQUIPPED',
   'ASTERION_DRIVE_STARTED',
   'ASTERION_DRIVE_STOPPED',
+  'FOURTH_RUNE_INSTALLED',
+  'ETHER_INTERVENTION_COMPLETED',
+  'ETHER_RUNE_TUNED',
   'XR_SESSION_ENDING',
   'XR_SESSION_ENDED',
   'XR_SESSION_START_FAILED'
@@ -107,7 +110,8 @@ export const VR_SCENARIO_CAPABILITY = immutableIdentifiers([
   'CAN_BUILD_ASTERION',
   'CAN_CLAIM_ASTERION',
   'CAN_EQUIP_ASTERION',
-  'CAN_CONTROL_PLATFORM'
+  'CAN_CONTROL_PLATFORM',
+  'CAN_TUNE_ETHER_RUNE'
 ]);
 
 export const VR_SCENARIO_MILESTONE = immutableIdentifiers([
@@ -122,7 +126,10 @@ export const VR_SCENARIO_MILESTONE = immutableIdentifiers([
   'SHELL_SET_COMPLETED',
   'ASTERION_BUILD_STARTED',
   'ASTERION_BUILT',
-  'ASTERION_EARNED'
+  'ASTERION_EARNED',
+  'FOURTH_RUNE_INSTALLED',
+  'ETHER_TUNING_UNLOCKED',
+  'ETHER_RUNE_TUNED'
 ]);
 
 export const VR_SCENARIO_EFFECT = immutableIdentifiers([
@@ -181,7 +188,8 @@ export const VR_SCENARIO_EFFECT = immutableIdentifiers([
   'REVEAL_FURNACE',
   'PRESENT_ASTERION',
   'SHOW_ASTERION_EARNED_CUE',
-  'CHECK_RESONATOR_JOIN'
+  'CHECK_RESONATOR_JOIN',
+  'BEGIN_ETHER_INTERVENTION'
 ]);
 
 export const VR_EXPERIENCE_POINT = immutableIdentifiers([
@@ -219,6 +227,9 @@ export const VR_EXPERIENCE_POINT = immutableIdentifiers([
   '4.70',
   '4.80',
   '5.10',
+  '5.20',
+  '5.30',
+  '5.40',
   '100.10'
 ]);
 
@@ -271,7 +282,22 @@ const THIRD_RING_COMPLETE_SETTLED_CONSEQUENCES = Object.freeze({
 const CORE_RESONATOR_READY_SETTLED_CONSEQUENCES = Object.freeze({
   runeProgression: Object.freeze({
     tunedRuneFamilies: Object.freeze(['R', 'K', 'L']),
-    installedRuneFamilies: Object.freeze(['R', 'K', 'L'])
+    installedRuneFamilies: Object.freeze(['R', 'K', 'L']),
+    etherRuneTuned: false
+  })
+});
+const FOURTH_RUNE_INSTALLED_SETTLED_CONSEQUENCES = Object.freeze({
+  runeProgression: Object.freeze({
+    tunedRuneFamilies: Object.freeze(['R', 'T', 'K', 'L']),
+    installedRuneFamilies: Object.freeze(['R', 'T', 'K', 'L']),
+    etherRuneTuned: false
+  })
+});
+const ETHER_RUNE_TUNED_SETTLED_CONSEQUENCES = Object.freeze({
+  runeProgression: Object.freeze({
+    tunedRuneFamilies: Object.freeze(['R', 'T', 'K', 'L']),
+    installedRuneFamilies: Object.freeze(['R', 'T', 'K', 'L']),
+    etherRuneTuned: true
   })
 });
 const SECOND_RING_COMPLETE_SETTLED_CONSEQUENCES = Object.freeze({
@@ -335,6 +361,18 @@ const ASTERION_EARNED_SETTLED_CONSEQUENCES = Object.freeze({
   ]) }),
   asterionProduction: Object.freeze({ state: 'EARNED' })
 });
+
+const TIER_4_CARD_LIFECYCLE_TRANSITIONS = Object.freeze([
+  Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.STAY, event: VR_SCENARIO_EVENT.CRYSTAL_ACTIVATED,
+    milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.PRESENT_ACTIVE_CARD_PREVIEW]) }),
+  Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.STAY, event: VR_SCENARIO_EVENT.CARD_COMMITTED,
+    milestonesToAdd: Object.freeze([VR_SCENARIO_MILESTONE.CARD_COMMITTED]), effects: Object.freeze([
+      VR_SCENARIO_EFFECT.UPDATE_COMMITTED_CARD_PRESENTATION,
+      VR_SCENARIO_EFFECT.PLAY_CARD_COMMIT_FEEDBACK
+    ]) }),
+  Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.STAY, event: VR_SCENARIO_EVENT.TIER_COMPLETED,
+    milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.APPLY_TIER_COMPLETE_FEEDBACK]) })
+]);
 
 const points = Object.freeze([
   Object.freeze({
@@ -784,11 +822,51 @@ const points = Object.freeze([
       event: VR_SCENARIO_EVENT.RESONATOR_READY, milestonesToAdd: Object.freeze([]) })])
   }),
   Object.freeze({
-    id: VR_EXPERIENCE_POINT['5.10'], canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['100.10'] }),
-    settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
+    id: VR_EXPERIENCE_POINT['5.10'], canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['5.20'] }),
+    settledConsequences: FOURTH_RUNE_INSTALLED_SETTLED_CONSEQUENCES,
     entryEffects: Object.freeze([]),
     label: 'Third ring + Resonator stable join', capabilities: P2_SMALL_GLYPH_TARGETING_CAPABILITIES,
-    transitions: Object.freeze([])
+    transitions: Object.freeze([
+      ...TIER_4_CARD_LIFECYCLE_TRANSITIONS,
+      Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.COMPLETE,
+        event: VR_SCENARIO_EVENT.FOURTH_RUNE_INSTALLED,
+        milestonesToAdd: Object.freeze([VR_SCENARIO_MILESTONE.FOURTH_RUNE_INSTALLED]) })
+    ])
+  }),
+  Object.freeze({
+    id: VR_EXPERIENCE_POINT['5.20'], canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['5.30'] }),
+    settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
+    entryEffects: Object.freeze([VR_SCENARIO_EFFECT.BEGIN_ETHER_INTERVENTION]),
+    label: 'Fourth Rune installed / Ether intervention', capabilities: P2_SMALL_GLYPH_TARGETING_CAPABILITIES,
+    transitions: Object.freeze([
+      ...TIER_4_CARD_LIFECYCLE_TRANSITIONS,
+      Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.COMPLETE,
+        event: VR_SCENARIO_EVENT.ETHER_INTERVENTION_COMPLETED,
+        milestonesToAdd: Object.freeze([VR_SCENARIO_MILESTONE.ETHER_TUNING_UNLOCKED]) })
+    ])
+  }),
+  Object.freeze({
+    id: VR_EXPERIENCE_POINT['5.30'], canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['5.40'] }),
+    settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
+    entryEffects: Object.freeze([]),
+    label: 'Ether tuning unlocked / stable boundary',
+    capabilities: Object.freeze([...P2_SMALL_GLYPH_TARGETING_CAPABILITIES,
+      VR_SCENARIO_CAPABILITY.CAN_TUNE_ETHER_RUNE]),
+    transitions: Object.freeze([
+      ...TIER_4_CARD_LIFECYCLE_TRANSITIONS,
+      Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.COMPLETE,
+        event: VR_SCENARIO_EVENT.ETHER_RUNE_TUNED,
+        milestonesToAdd: Object.freeze([VR_SCENARIO_MILESTONE.ETHER_RUNE_TUNED]) })
+    ])
+  }),
+  Object.freeze({
+    id: VR_EXPERIENCE_POINT['5.40'], canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['100.10'] }),
+    settledConsequences: ETHER_RUNE_TUNED_SETTLED_CONSEQUENCES,
+    entryEffects: Object.freeze([]),
+    label: 'Ether Rune tuned / transport pending',
+    capabilities: Object.freeze([...P2_SMALL_GLYPH_TARGETING_CAPABILITIES,
+      VR_SCENARIO_CAPABILITY.CAN_TUNE_ETHER_RUNE]),
+    transitions: TIER_4_CARD_LIFECYCLE_TRANSITIONS
   }),
   Object.freeze({
     id: VR_EXPERIENCE_POINT['100.10'],
@@ -823,7 +901,7 @@ export const vrExperienceScenario = Object.freeze({
     effects: Object.freeze(Object.values(VR_SCENARIO_EFFECT))
   }),
   metadata: Object.freeze({
-    stage: 'P2_THIRD_RING_STABLE_BOUNDARY',
+    stage: 'ETHER_TUNING_SEMANTICALLY_UNLOCKED',
     authoritativeForLiveGameplay: true,
     // Canonical routing topology lives on authored point graph edges.
   })

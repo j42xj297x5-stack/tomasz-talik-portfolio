@@ -7,7 +7,7 @@
 - **Foundation correction:** natural Rune tuning sector gate — **RESOLVED**; task `d0f9a17e414f3ea8c386cde87bdd46dba6dad16c`, merge `c862b9bde2e717918e56d21d7f1cbbc0ad741d53`.
 - **RUNE A9:** **A9.1–A9.6 IMPLEMENTED; NATURAL RUNE A9 FOUNDATION = COMPLETE**. Końcowy transport i instalacja używają platform-centered handoff sphere oraz automatycznej choreografii, a hydration odtwarza settled physical installation. Collision carried Rune Stone ↔ installed Rune Stone jest **SUPERSEDED / REMOVED FROM TARGET**.
 - **Scenario authoring:** **DEFERRED TO SEPARATE THREAD**.
-- **Canonical authored Scenario/runtime progression boundary:** `5.10`; the bounded semantic join is `4.80 → 5.10`.
+- **Canonical authored Scenario/runtime progression boundary:** `5.40`; `FOURTH_RUNE_INSTALLED → Monkey Ether reveal → CAN_TUNE_ETHER_RUNE → ETHER_RUNE_TUNED` is implemented/authored after the `4.80 → 5.10` join.
 - Dokument jest kanonicznym źródłem prawdy Rune Stone Act: strojenia Astrolabium, targetability, pięciu naturalnych pair-specific par, mostów, transportu, instalacji, specjalnego flow Eteru i finalnego polowania Wody.
 - A1–A9.6 są foundations/domain behavior bez rozszerzenia authored Scenario spine. A9 foundation jest zamknięty; dalszy authored Scenario, Director i literalna komunikacja gracza wymagają osobnego projektu, bez arbitralnego etykietowania ich jako kolejny krok A9.
 
@@ -285,7 +285,7 @@ Eter nie jest szóstą naturalną `familyCode`, szóstą standardową Rune Stone
 
 Ścieżka Eteru jest niedostępna na początku aktu. Jej stabilnym triggerem jest `FOURTH_RUNE_INSTALLED`, czyli ukończona instalacja Metal Rune Stone, nie chwilowe przyciągnięcie Metalu. Po czwartej instalacji ujawnia się, że Water sector nadal nie może zostać normalnie ukończony.
 
-Przyszły, lekko żartobliwy beat Małpy ma semantyczny rezultat **UNLOCK ETHER RUNE TUNING**. Przed nim Ether tuning nie może się rozpocząć. Ten dokument określa wyłącznie gameplay contract: nie authoruje dialogu, Scenario pointów, events/effects, Director transitions ani literalnych hintów.
+Obowiązkowy beat Małpy po `FOURTH_RUNE_INSTALLED` jest zaimplementowany przez Scenario `5.20`; jego ukończenie prowadzi do `5.30` i semantycznego `CAN_TUNE_ETHER_RUNE`. Permission odblokowuje istniejący panel: specjalna receptura `VI + VO → VU` używa tego samego procesu `RUNE_TUNING` 18 s i zapisuje osobny fakt `etherRuneTuned`.
 
 ### 10.2. Special Ether tuning i targetability
 
@@ -355,7 +355,7 @@ Obowiązuje architektura:
 SPINE → SCENARIO → DIRECTOR → RuntimeExperience → ACTORS / DOMAIN OWNERS
 ```
 
-Authored Scenario now contains the bounded semantic join `4.80 → 5.10`. Existing `resonatorExists === true` projects `RESONATOR_READY`; `CHECK_RESONATOR_JOIN` handles a Resonator that already exists on entry. The join observes domain truth and does not gate Rune, Binder, sector or Resonator mechanics. `5.10` is the current authored boundary; physical target response and later Metal/Water/Ether/finale authoring remain future.
+Authored Scenario contains the bounded semantic join `4.80 → 5.10` and continuation `5.10 → 5.20 → 5.30 → 5.40 → 100.10`. The live Rune snapshot crossing from fewer than four to exactly four installed natural families projects `FOURTH_RUNE_INSTALLED`; `5.20` owns the mandatory Monkey Ether reveal, and its completion grants `CAN_TUNE_ETHER_RUNE` at `5.30`; live `etherRuneTuned: false → true` projects `ETHER_RUNE_TUNED` and reaches stable `5.40`. Hydration restores the complete settled Rune truth silently. Physical Ether materialization, targetability, transport/capture, Water override and later finale remain future.
 
 Canonical debug aliases are `P5 → 4.80` and `P6 → 5.10`. Both are QA/debug entry conveniences, not Scenario points, capabilities, gameplay owners or sources of settled consequences.
 
@@ -414,11 +414,11 @@ Early natural Rune Stone presentation jest **IMPLEMENTED**. Pięć naturalnych a
 - **Panel 2 — IMPLEMENTED:** task `d7e026fe565cf44b20f158564316c814a0e910e0`, merge `5dd2c59080f0501accb4cea546ee5ef68a5811e0`.
 - **Panel 1 Rune U projection — IMPLEMENTED:** task `b04605cb01b395ec188b153cd901941a446076ff`, merge `5510e78062dd0a3309be2e5f22e528ee2ed532ed`.
 
-R3 implementuje runtime Zwornika, a R3b implementuje `RUNE_BINDER_REVEAL`: live materialization, pooled sector-local lightning, final pulse, trwały `DOCKED`/`BOUND`, presentation-only scale/offset i reconstruction bez replayu. Nadal nie implementuje Rune install energy VFX, detent spark/audio i grip beam; sector-drive audio jest wdrożone osobno, Field Actor ani field lensing. A9.6 nie implementuje Water override trigger ani Ether/final Water flow; installed spatial audio jest wdrożone przez osobną projekcję. R4 Resonator core, Guidance through first Resonator and Scenario join through `5.10` are implemented by their respective owners.
+R3 implementuje runtime Zwornika, a R3b implementuje `RUNE_BINDER_REVEAL`: live materialization, pooled sector-local lightning, final pulse, trwały `DOCKED`/`BOUND`, presentation-only scale/offset i reconstruction bez replayu. Nadal nie implementuje Rune install energy VFX, detent spark/audio i grip beam; sector-drive audio jest wdrożone osobno, Field Actor ani field lensing. A9.6 nie implementuje Water override trigger ani fizycznego Ether/final Water flow; installed spatial audio jest wdrożone przez osobną projekcję. R4 Resonator core, Guidance through first Resonator and physical Ether tuning through `5.40` is implemented by their respective owners.
 
 ## 14. Remaining target
 
-**Carried Rune Stone ↔ installed Rune Stone collision = SUPERSEDED / REMOVED FROM TARGET.** Special Ether flow, Water readiness override, target response, final Water flow and authored Scenario after `5.10` remain deferred. Zwornik spin jest usunięty z target canon.
+**Carried Rune Stone ↔ installed Rune Stone collision = SUPERSEDED / REMOVED FROM TARGET.** Physical Ether materialization, targetability, transport/capture, Water readiness override and final Water flow after the authored `5.40` boundary remain deferred. Zwornik spin jest usunięty z target canon.
 
 ## 15. Current implementation checkpoint
 
@@ -431,8 +431,8 @@ CARRIED RUNE STONE ↔ INSTALLED RUNE STONE COLLISION: SUPERSEDED / NO GAMEPLAY 
 PHYSICAL BRIDGE EXTENSION: IMPLEMENTED
 R3b RUNE_BINDER_REVEAL: IMPLEMENTED
 INSTALLATION HANDOFF + APPROACH / BRIDGE_OPEN / DESCENT: IMPLEMENTED
-AUTHORED SCENARIO BOUNDARY: 5.10
-SCENARIO JOIN 4.80 → 5.10: IMPLEMENTED; CONTINUATION AFTER 5.10: FUTURE
+AUTHORED SCENARIO BOUNDARY: 5.40 — ETHER TUNING COMPLETE / TRANSPORT PENDING
+SCENARIO `FOURTH_RUNE_INSTALLED → MONKEY ETHER REVEAL → CAN_TUNE_ETHER_RUNE`: IMPLEMENTED
 RESONATOR TARGET RESPONSE: FUTURE; NOT IMPLIED BY THE 5.10 JOIN
 ```
 

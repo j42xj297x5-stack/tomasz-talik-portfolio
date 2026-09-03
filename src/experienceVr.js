@@ -472,6 +472,7 @@ const ambientScenarioOwner = Object.freeze({
   }
 });
 function synchronizeReconstructionDerivedState() {
+  previousRuneProgressionSnapshot = runeStoneProgressionController.getSnapshot();
   synchronizeRuneBridgeReadiness();
   runeInstalledStateProjection.synchronize();
   runeStoneAudioProjection?.synchronizeInstalledEmitters();
@@ -626,6 +627,7 @@ const unsubscribeResonatorScenarioHandoff = runeStoneProgressionController.subsc
   progressionSemanticHandoff.onResonatorStateChanged(asterionResonatorFieldActor.getDescriptor());
 });
 const unsubscribeRuneGuidance = runeStoneProgressionController.subscribe((snapshot) => {
+  progressionSemanticHandoff.onRuneProgressionChanged(previousRuneProgressionSnapshot, snapshot);
   runeResonatorGuidance?.notifyRuneProgression(previousRuneProgressionSnapshot, snapshot);
   previousRuneProgressionSnapshot = snapshot;
 });
@@ -724,7 +726,10 @@ runeResonatorGuidance = createVrRuneResonatorGuidance({
       && runeInstallationReadinessProjection.isInstallationReady(stone.branchId) !== true
       ? stone.branchId : null;
   },
-  knowledgeResolver: monkeyKnowledgeResolver
+  knowledgeResolver: monkeyKnowledgeResolver,
+  onEtherInterventionCompleted: () => runtimeExperience.dispatch(
+    VR_SCENARIO_EVENT.ETHER_INTERVENTION_COMPLETED
+  )
 });
 toolGuidanceLifecycle = createVrToolGuidanceLifecycle({
   monkeyGuide,
@@ -766,6 +771,7 @@ const astroFurnaceRuneRecipeInteraction = createVrAstroFurnaceRuneRecipeInteract
 runeRecipeSelectionController = createVrRuneRecipeSelectionController({
   runeRecipeInteraction: astroFurnaceRuneRecipeInteraction,
   runeStoneProgressionController,
+  canTuneEtherRune: () => runtimeExperience?.can(VR_SCENARIO_CAPABILITY.CAN_TUNE_ETHER_RUNE) === true,
   prepareRecipeChange: () => astroFurnaceRuneRecipeInteraction.ejectInsertedIngredients()
 });
 const runeTuningController = createVrRuneTuningController({
@@ -1225,6 +1231,11 @@ runtimeExperience = new RuntimeExperience({
     [VR_SCENARIO_EFFECT.SET_MAIN_AMBIENT_04]: () => { ambientSequencer.setProgram(VR_MAIN_AMBIENT_PROGRAMS.ambient04); },
     [VR_SCENARIO_EFFECT.CHECK_RESONATOR_JOIN]: () => {
       progressionSemanticHandoff.onResonatorStateChanged(asterionResonatorFieldActor.getDescriptor());
+    },
+    [VR_SCENARIO_EFFECT.BEGIN_ETHER_INTERVENTION]: () => {
+      if (!runeResonatorGuidance.beginEtherIntervention()) {
+        throw new Error('BEGIN_ETHER_INTERVENTION rejected by Rune/Resonator Guidance actor');
+      }
     },
     [VR_SCENARIO_EFFECT.BEGIN_CELESTIAL_REVEAL]: () => { celestialActor.beginReveal(); },
     [VR_SCENARIO_EFFECT.REVEAL_NATURAL_RUNE_STONES]: () => {

@@ -4,7 +4,8 @@ import { VR_MONKEY_DIALOGUE_PRIORITY } from './createVrMonkeyGuide.js';
 const DELAY_SECONDS = 5;
 
 export function createVrRuneResonatorGuidance({ monkeyGuide, copy, secondsPerLine,
-  getCurrentPointId, getUnresolvedRuneBranchId, knowledgeResolver }) {
+  getCurrentPointId, getUnresolvedRuneBranchId, knowledgeResolver,
+  onEtherInterventionCompleted = () => {} }) {
   let armed = false;
   let previousPointId = getCurrentPointId();
   let glyphsGoneDue = null;
@@ -25,11 +26,17 @@ export function createVrRuneResonatorGuidance({ monkeyGuide, copy, secondsPerLin
   const installed = makeCommunication(copy.progression['progression.p3.firstRuneInstalled'].blocks);
   const sectorLock = makeCommunication(copy.progression['progression.p3.firstSectorLock'].blocks, false);
   const resonator = makeCommunication(copy.progression['progression.p3.resonator'].blocks);
+  const etherIntervention = makeCommunication(
+    copy.progression['progression.p4.etherIntervention'].blocks,
+    true,
+    onEtherInterventionCompleted
+  );
   const noBinderMedium = makeCommunication(copy.hints['hint.rune.noBinder.medium'].blocks);
   const noBinderSoft = makeCommunication(copy.hints['hint.rune.noBinder.soft'].blocks, true, () => {
     if (getUnresolvedRuneBranchId()) { unresolvedSeconds = 0; mediumDue = true; }
   });
-  const communications = [glyphsGone, installed, sectorLock, resonator, noBinderSoft, noBinderMedium];
+  const communications = [glyphsGone, installed, sectorLock, resonator, etherIntervention,
+    noBinderSoft, noBinderMedium];
 
   function schedule(communication) { communication.beginAttention(); }
   function notifyBridgeTransitions(transitions) {
@@ -60,6 +67,7 @@ export function createVrRuneResonatorGuidance({ monkeyGuide, copy, secondsPerLin
     firstResonator = true;
     resonator._due = DELAY_SECONDS;
   }
+  function beginEtherIntervention() { return etherIntervention.beginAttention(); }
   function update(deltaSeconds = 0) {
     const delta = Math.max(0, Number.isFinite(deltaSeconds) ? deltaSeconds : 0);
     const pointId = getCurrentPointId();
@@ -93,5 +101,5 @@ export function createVrRuneResonatorGuidance({ monkeyGuide, copy, secondsPerLin
     communications.forEach((communication) => { delete communication._due; communication.reset(); });
   }
   return { update, reset, notifyThirdRingCompleted, notifyBridgeTransitions, notifyRuneProgression,
-    notifySectorLocked, notifyResonatorChanged };
+    notifySectorLocked, notifyResonatorChanged, beginEtherIntervention };
 }

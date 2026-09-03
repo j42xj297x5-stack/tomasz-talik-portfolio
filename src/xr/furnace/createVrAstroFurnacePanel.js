@@ -197,12 +197,12 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
     text('WYBIERZ DOCELOWĄ RODZINĘ KAMIENIA', 90, 225, 22, '#b89dd0');
     FAMILY_GRID_CODES.forEach((familyCode, index) => {
       const natural = PROTO_ASTRO_NATURAL_FAMILY_CODES.includes(familyCode);
-      const available = snapshot.availableFamilyCodes.includes(familyCode);
-      const tuned = snapshot.tunedFamilyCodes?.includes(familyCode) === true;
-      const tunable = snapshot.tunableFamilyCodes?.includes(familyCode) === true;
+      const available = natural ? snapshot.availableFamilyCodes.includes(familyCode) : snapshot.etherAvailable === true;
+      const tuned = natural ? snapshot.tunedFamilyCodes?.includes(familyCode) === true : snapshot.etherTuned === true;
+      const tunable = natural ? snapshot.tunableFamilyCodes?.includes(familyCode) === true : snapshot.etherTunable === true;
       const selected = snapshot.selectedFamilyCode === familyCode;
-      const rect = familyGridRect(index, 'rune-family', natural && tunable && !tuning.processing);
-      if (natural) interactiveRegions.push(rect);
+      const rect = familyGridRect(index, 'rune-family', tunable && !tuning.processing);
+      interactiveRegions.push(rect);
       panelRect(rect.x, rect.y, rect.width, rect.height, { hovered: hoveredRegion === rect.id, active: selected || available,
         locked: !available, accentColor: accents.emanation });
       const runeDescriptor = resolveProtoAstroDescriptor(familyCode, 'U');
@@ -212,7 +212,7 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
       context.restore();
       text(`${runeLabel(familyCode)} // ${runeDescriptor?.syllable ?? familyCode}`, rect.x + 20, rect.y + 52, 27,
         available ? '#f1eaff' : '#78909d');
-      text(!natural ? 'SPECJALNY' : tuned ? 'ZESTROJONA' : selected ? 'WYBRANA' : 'DOSTĘPNA', rect.x + 20, rect.y + 118, 18,
+      text(tuned ? 'ZESTROJONA' : selected ? 'WYBRANA' : !natural ? 'SPECJALNY' : 'DOSTĘPNA', rect.x + 20, rect.y + 118, 18,
         tuned || selected ? accents.complete : available ? '#cdb5e4' : '#70828d');
     });
 
