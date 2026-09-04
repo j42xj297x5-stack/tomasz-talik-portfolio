@@ -1,5 +1,11 @@
 import * as THREE from '../../vendor/three.js';
 import { createVrTargetHalo } from '../createVrTargetHalo.js';
+import {
+  getObjectWorldScale,
+  resolveVrFurnaceContentWorldScale,
+  setObjectWorldScale,
+  VR_FURNACE_CONTENT_SIZE_CLASS
+} from '../furnace/vrFurnaceContentSizing.js';
 import { centerPresentationInProductVolume, productBoundsFitVolume, resolveProductVolumeBounds } from '../furnace/vrFurnaceProductVolume.js';
 
 export const VR_ASTERION_PRODUCTION_STATES = Object.freeze({
@@ -28,6 +34,12 @@ export function createVrAsterionProductionController({
   let presentedProductBounds = null, effectiveLevitationAmplitude = 0;
   if (!productVolume) throw new TypeError('VR_FURNACE_PRODUCT_VOLUME is required');
   const productVolumeBounds = resolveProductVolumeBounds(productVolume);
+  const canonicalSocketWorldScale = getObjectWorldScale(sphere.socket);
+  const furnacePresentationWorldScale = resolveVrFurnaceContentWorldScale({
+    contentClass: VR_FURNACE_CONTENT_SIZE_CLASS.ASTERION_SPHERE,
+    baselineWorldScale: canonicalSocketWorldScale
+  });
+  const inheritedWorldScale = new THREE.Vector3();
   const sphereWasVisible = sphere?.object?.visible;
   if (sphere?.object) sphere.object.visible = true;
   const halo = sphere?.object ? createVrTargetHalo({ root: sphere.object, settings: haloSettings }) : null;
@@ -45,11 +57,10 @@ export function createVrAsterionProductionController({
     && getContentState() === 'EMPTY' && processDriver?.canStartConstruction?.() === true; }
   function presentInProductVolume() {
     if (!sphere?.presentAt?.(productVolume, 1, new THREE.Vector3())) return false;
+    // presentAt owns attachment; canonical WORLD size is restored through the actual Furnace parent transform.
+    setObjectWorldScale(sphere.socket, furnacePresentationWorldScale, inheritedWorldScale);
     presentedProductBounds = centerPresentationInProductVolume({ presentationRoot: sphere.socket,
       visibleRoot: sphere.object, productVolume, volumeBounds: productVolumeBounds });
-    if (!productBoundsFitVolume(presentedProductBounds, productVolumeBounds)) {
-      throw new Error('Asterion presentation at scale 1 does not fit VR_FURNACE_PRODUCT_VOLUME');
-    }
     presentationTarget = sphere.socket.position.clone();
     const verticalClearance = Math.min(productVolumeBounds.max.y - presentedProductBounds.max.y,
       presentedProductBounds.min.y - productVolumeBounds.min.y);
@@ -140,5 +151,7 @@ export function createVrAsterionProductionController({
       productCenterInsideVolume: presentedProductBounds
         ? productVolumeBounds.containsPoint(presentedProductBounds.getCenter(new THREE.Vector3())) : null,
       productFitsVolume: presentedProductBounds ? productBoundsFitVolume(presentedProductBounds, productVolumeBounds) : null,
+      canonicalSocketWorldScale: canonicalSocketWorldScale.toArray(),
+      furnacePresentationWorldScale: furnacePresentationWorldScale.toArray(),
       effectiveLevitationAmplitude, ...sphere?.getDiagnostics?.() }) };
 }
