@@ -1,14 +1,20 @@
 import * as THREE from '../../vendor/three.js';
 import { createVrTargetHalo } from '../createVrTargetHalo.js';
-import { centerPresentationInProductVolume, productBoundsFitVolume, resolveProductVolumeBounds,
-  resolveVisibleBoundsInProductVolume } from '../furnace/vrFurnaceProductVolume.js';
+import { VR_ATTRACTOR_VISUAL_CONFIG } from './createVrAttractorTool.js';
+import {
+  getObjectWorldScale,
+  resolveVrFurnaceContentWorldScale,
+  setObjectWorldScale,
+  VR_FURNACE_CONTENT_SIZE_CLASS
+} from '../furnace/vrFurnaceContentSizing.js';
+import { centerPresentationInProductVolume, productBoundsFitVolume,
+  resolveProductVolumeBounds } from '../furnace/vrFurnaceProductVolume.js';
 
 export const VR_ASTRO_ATTRACTOR_PRODUCTION_STATES = Object.freeze({
   READY: 'READY', BUILDING: 'BUILDING', AVAILABLE: 'AVAILABLE', CLAIMING: 'CLAIMING', EARNED: 'EARNED'
 });
 export const ASTRO_ATTRACTOR_CONSTRUCTION = 'ASTRO_ATTRACTOR_CONSTRUCTION';
 const clamp01 = (value) => THREE.MathUtils.clamp(value, 0, 1);
-const PRODUCT_VOLUME_FILL = .90;
 const MODEL_AIM_AXIS = new THREE.Vector3(0, 1, 0);
 const XR_AIM_AXIS = new THREE.Vector3(0, 0, -1);
 const HORIZONTAL_QUATERNION = new THREE.Quaternion().setFromUnitVectors(MODEL_AIM_AXIS, XR_AIM_AXIS);
@@ -24,7 +30,14 @@ export function createVrAstroAttractorProductionController({ model, productVolum
   authoritativeVisualRoot.removeFromParent();
   const object = new THREE.Group(); object.name = 'vr-astro-attractor-production'; object.add(authoritativeVisualRoot);
   authoredTransform.decompose(authoritativeVisualRoot.position, authoritativeVisualRoot.quaternion, authoritativeVisualRoot.scale);
-  object.visible = false; productVolume.add(object);
+  object.scale.setScalar(VR_ATTRACTOR_VISUAL_CONFIG.modelScale);
+  const canonicalBaselineWorldScale = getObjectWorldScale(object);
+  const furnacePresentationWorldScale = resolveVrFurnaceContentWorldScale({
+    contentClass: VR_FURNACE_CONTENT_SIZE_CLASS.ASTRO_ATTRACTOR,
+    baselineWorldScale: canonicalBaselineWorldScale
+  });
+  const inheritedWorldScale = new THREE.Vector3();
+  object.visible = false;
   const ownedMaterials = new Set();
   object.traverse((node) => { if (!node.isMesh || !node.material) return; const source = Array.isArray(node.material) ? node.material : [node.material];
     const clones = source.map((material) => { const clone = material.clone(); ownedMaterials.add(clone); return clone; });
@@ -32,27 +45,18 @@ export function createVrAstroAttractorProductionController({ model, productVolum
   const halo = createVrTargetHalo({ root: object, settings: haloSettings });
   const raycaster = new THREE.Raycaster(), origin = new THREE.Vector3(), direction = new THREE.Vector3(), quaternion = new THREE.Quaternion();
   const hits = new Map(controllers.map((record) => [record, false]));
-  const subscribers = new Set(); let presentationScale = null, presentedProductBounds = null;
+  const subscribers = new Set(); let presentedProductBounds = null;
   let state = 'READY', progress = 0, handoffElapsed = 0, disposed = false, claimedCount = 0, producedCount = 0;
   const handoffDuration = Math.max(.01, settings.handoffDurationSeconds ?? .4);
   function snapshot() { return { state, buildProgress: state === 'BUILDING' ? progress : 0, constructionProgress: progress,
     available: state === 'AVAILABLE', earned: state === 'EARNED' }; }
   function emit() { const value = snapshot(); subscribers.forEach((listener) => listener(value)); }
-  function setFormation(value) { const t = clamp01(value); object.visible = t > 0; object.scale.setScalar(presentationScale * Math.max(.001, t));
+  function setFormation(value) { const t = clamp01(value); object.visible = t > 0;
     ownedMaterials.forEach((material) => { if ('transparent' in material) material.transparent = t < 1; if ('opacity' in material) material.opacity = t; }); }
   function place() {
     if (object.parent !== productVolume) productVolume.add(object);
-    object.position.set(0, 0, 0); object.quaternion.copy(HORIZONTAL_QUATERNION); object.scale.setScalar(1);
-    const orientedBounds = resolveVisibleBoundsInProductVolume(authoritativeVisualRoot, productVolume);
-    if (orientedBounds.isEmpty()) throw new Error('VR_ATTRACTOR_ROOT must contain visible bounded geometry');
-    const productSize = orientedBounds.getSize(new THREE.Vector3());
-    const volumeSize = productVolumeBounds.getSize(new THREE.Vector3());
-    presentationScale = PRODUCT_VOLUME_FILL * Math.min(volumeSize.x / productSize.x,
-      volumeSize.y / productSize.y, volumeSize.z / productSize.z);
-    if (!(Number.isFinite(presentationScale) && presentationScale > 0)) {
-      throw new Error('Cannot fit VR_ATTRACTOR_ROOT within VR_FURNACE_PRODUCT_VOLUME');
-    }
-    object.scale.setScalar(presentationScale);
+    object.position.set(0, 0, 0); object.quaternion.copy(HORIZONTAL_QUATERNION);
+    setObjectWorldScale(object, furnacePresentationWorldScale, inheritedWorldScale);
     presentedProductBounds = centerPresentationInProductVolume({ presentationRoot: object,
       visibleRoot: authoritativeVisualRoot, productVolume, volumeBounds: productVolumeBounds });
   }
@@ -106,7 +110,9 @@ export function createVrAstroAttractorProductionController({ model, productVolum
     isEarned: () => state === 'EARNED', hasCurrentHit: (record) => hits.get(record) === true,
     subscribe(listener) { subscribers.add(listener); return () => subscribers.delete(listener); },
     getDiagnostics: () => ({ state, producedCount, claimedCount, visualRootName: authoritativeVisualRoot.name,
-      presentationScale, horizontalPresentation: MODEL_AIM_AXIS.clone().applyQuaternion(object.quaternion).distanceTo(XR_AIM_AXIS) < 1e-8,
+      canonicalBaselineWorldScale: canonicalBaselineWorldScale.toArray(),
+      furnacePresentationWorldScale: furnacePresentationWorldScale.toArray(),
+      horizontalPresentation: MODEL_AIM_AXIS.clone().applyQuaternion(object.quaternion).distanceTo(XR_AIM_AXIS) < 1e-8,
       parentIsProductVolume: object.parent === productVolume, productVolumeName: productVolume.name,
       productVolumeBounds: productVolumeBounds ? { min: productVolumeBounds.min.toArray(), max: productVolumeBounds.max.toArray(),
         size: productVolumeBounds.getSize(new THREE.Vector3()).toArray() } : null,
