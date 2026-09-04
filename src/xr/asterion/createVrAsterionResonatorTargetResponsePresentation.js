@@ -86,9 +86,11 @@ export function createVrAsterionResonatorTargetResponsePresentation({
       const { texture, aspect } = createSignTexture(signImage);
       const group = new THREE.Group();
       group.name = `VrAsterionTargetResponse:${id}:${protoAstro.descriptor.syllable}`;
-      const sign = new THREE.Sprite(new THREE.SpriteMaterial({ map: texture, color, transparent: true, opacity: settings.signOpacity, depthWrite: false }));
+      const sign = new THREE.Sprite(new THREE.SpriteMaterial({
+        map: texture, color, transparent: true, opacity: settings.signOpacity, depthTest: false, depthWrite: false
+      }));
       const rings = settings.ringAngularDiametersDegrees.map(() => new THREE.Sprite(new THREE.SpriteMaterial({
-        map: ringTexture, color, transparent: true, opacity: settings.ringOpacity, depthWrite: false
+        map: ringTexture, color, transparent: true, opacity: settings.ringOpacity, depthTest: false, depthWrite: false
       })));
       sign.visible = false;
       rings.forEach((ring) => { ring.visible = false; group.add(ring); });
