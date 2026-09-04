@@ -4,7 +4,7 @@ Status: **CURRENT / BINDING**, living technical model for Experience VR audio sy
 
 ## SUMMARY DLA ARCHITEKTA
 
-The bounded Experience VR Astro Attractor lifecycle, spatial Astro Furnace physical sounds and spatial installed Rune Stone loops are **IMPLEMENTED**. One composition-level XR listener update serves every spatial projection. The Asterion sector acquisition/drive choreography, four-second Rune Binder arrival and anticipatory Rune installation one-shots are also **IMPLEMENTED** under the observer-only audio architecture below. The main background contract remains Scenario-driven but **NOT YET FULLY IMPLEMENTED**. Both Asterion Sphere DEVICE loops remain independent and **IMPLEMENTED**.
+The bounded Experience VR Astro Attractor lifecycle, spatial Astro Furnace physical sounds, Resonator target audio and Rune Stone spatial audio are **IMPLEMENTED**. One composition-level XR listener update serves every spatial projection. The Asterion sector acquisition/drive choreography, four-second Rune Binder arrival and anticipatory Rune installation one-shots are also **IMPLEMENTED** under the observer-only audio architecture below. The main background contract remains Scenario-driven but **NOT YET FULLY IMPLEMENTED**. Both Asterion Sphere DEVICE loops remain independent and **IMPLEMENTED**.
 
 ## Status vocabulary and authority
 
@@ -29,7 +29,7 @@ The VR mixer has five **IMPLEMENTED**, independently tunable gain buses:
 | --- | --- | --- |
 | `SPACE` | lowest cosmic background | `noise_quiete_loop_*`, `noise_loop_*` |
 | `AMBIENT` | ambients and main musical threads | `ambient_01–05`, `ambient_loop_01–04` |
-| `DEVICE` | loud device operation | `astro_piec_*`, `noise_laud_loop_01–08`, `asterion_sphere_*` |
+| `DEVICE` | loud device operation | `astro_piec_*`, `noise_laud_loop_01–09`, `asterion_sphere_*`, `resonator_aim_*`, `resonator_lock_*` |
 | `WORLD` | short world sounds | `creating_*`, `floor_panel_activate`, `glif_*`, `reliquiary_consume`, `monkey_thinking_01` |
 | `UI` | panels | `bell_*`, `click_panel_01`, `click_short_01`, `panel_sound_*`, `panel_sound_long_*` |
 
@@ -179,7 +179,7 @@ Each physical source uses `panningModel = HRTF`, `distanceModel = linear`, `roll
 
 ### Rune Stone Attractor and installed spatial audio — CURRENT / IMPLEMENTED
 
-The Rune Stone identities are physical and shared by two independent DEVICE lifecycles: FIRE / `stone_01` → `noise_laud_loop_04.mp3`, METAL / `stone_02` → `05`, EARTH / `stone_03` → `06`, WOOD / `stone_04` → `07`, WATER / `stone_05` → `08`.
+The natural Rune Stone identities are physical and shared by two independent DEVICE lifecycles: FIRE / `stone_01` → `noise_laud_loop_04.mp3`, METAL / `stone_02` → `05`, EARTH / `stone_03` → `06`, WOOD / `stone_04` → `07`, WATER / `stone_05` → `08`. SPECIAL Ether / `stone_06` / `V` uses `noise_laud_loop_09.mp3` only for the same accepted Astro Attractor pull/cancel/handoff lifecycle; it is not an installed emitter or natural pair.
 
 The Astro Attractor process loop starts only when a physical Rune Stone pull is actually accepted. Scan-cone hover, targeting and rejected pull attempts are silent. The interaction exposes separate presentation seams for accepted pull start, pull cancel and successful installation handoff; handoff uses the established handoff fade rather than generic cancel semantics. The general Attractor source/recovery contract remains: true source looping, no per-frame restart, `1.0 s` target-loss fade with same-source recovery, about `0.1 s` recovery ramp, and `0.5 s` successful handoff fade. Audio observes the accepted lifecycle and physical identity; it never grants targetability or handoff.
 
@@ -234,7 +234,7 @@ runeStoneSpatialAudio: {
 
 The source uses `loop = true`, `panningModel = HRTF`, `distanceModel = linear` and `rolloffFactor = 1`. At distance `>= 4.0 m`, source gain is exactly zero; attenuation inside that range is presentation **TUNING**, never gameplay-distance logic. The shared listener follows the actual XR head world pose, while this projection updates only the fixed sector-local emitter anchor.
 
-All audio reachable in Experience VR is prepared and decoded before READY; gameplay is cache-only. For this implemented package the relevant set includes `electricity_short_01–06`, `electricity_long_01–04`, `zwornik_01–04`, `creating_01–05`, `noise_laud_loop_04–08`, and the reachable physical Furnace set `astro_piec_open`, `astro_piec_close`, `astro_piec_work_01`, `astro_piec_work_03`, `astro_piec_work_create_01`. Reserved `electricity_short_07–08` and unassigned `creating_06–08` are not reachable runtime behavior.
+All audio reachable in Experience VR is prepared and decoded before READY; gameplay is cache-only. For this implemented package the relevant set includes `electricity_short_01–06`, `electricity_long_01–04`, `zwornik_01–04`, `creating_01–05`, `noise_laud_loop_04–09`, `resonator_aim_01–04`, `resonator_lock_01–04`, `stone_landing_01–04`, `zwornik_dokowanie`, and the reachable physical Furnace set `astro_piec_open`, `astro_piec_close`, `astro_piec_work_01`, `astro_piec_work_03`, `astro_piec_work_create_01`. The former unused `glif_hover_on_loop.mp3` identity is removed and replaced by Ether-specific `noise_laud_loop_09.mp3`. Reserved `electricity_short_07–08` and unassigned `creating_06–08` are not reachable runtime behavior.
 
 ### Asterion Sphere / floor
 
@@ -326,6 +326,7 @@ The inventory below contains every existing `public/audio/*.mp3` as of 2026-08-2
 | `noise_laud_loop_06.mp3` | seamless loop | DEVICE | EARTH / stone_03 Attractor + INSTALLED spatial emitter | **IMPLEMENTED** | Installed audible range exactly 4.0 m. |
 | `noise_laud_loop_07.mp3` | seamless loop | DEVICE | WOOD / stone_04 Attractor + INSTALLED spatial emitter | **IMPLEMENTED** | Installed audible range exactly 4.0 m. |
 | `noise_laud_loop_08.mp3` | seamless loop | DEVICE | WATER / stone_05 Attractor + INSTALLED spatial emitter | **IMPLEMENTED** | Installed audible range exactly 4.0 m. |
+| `noise_laud_loop_09.mp3` | seamless loop | DEVICE | SPECIAL ETHER / stone_06 Astro Attractor | **IMPLEMENTED** | Pull lifecycle only; never installed or docked. |
 | `noise_loop_01.mp3` | seamless loop | SPACE | — | **UNASSIGNED** | Dostępny; przyszłe użycie pozostaje otwarte. |
 | `noise_loop_02.mp3` | seamless loop | SPACE | — | **UNASSIGNED** | Dostępny; przyszłe użycie pozostaje otwarte. |
 | `noise_loop_03.mp3` | seamless loop | SPACE | — | **UNASSIGNED** | Dostępny; przyszłe użycie pozostaje otwarte. |
@@ -403,3 +404,10 @@ Każdy asset ma authored około 5 s fade na początku i końcu. Powtórzenia teg
 Główny sequencer jest transientnie disabled podczas Intro. Canonical entry `2.10` emituje handoff: Intro wygasza się przez 5 s, a CURRENT / BINDING target rozpoczyna `ambient_01`. Obecna implementacja uruchamia gate, lecz wybiera asset z aktualnego tieru i nie realizuje jeszcze pełnego Scenario-driven kontraktu. Reset wyłącza main gate i natychmiast czyści Intro. Audio nie należy do reconstruction/hydration.
 
 `ambient_intro_06.mp3`, `ambient_intro_07.mp3` i `ambient_intro_08.mp3` mają status **RESERVED / UNASSIGNED** i nie posiadają Scenario mappingu.
+
+
+### Resonator target and Rune docking spatial audio — CURRENT / IMPLEMENTED
+
+Each semantic Large Glyph `insideField: false → true` transition consumes the next item from one global `resonator_aim_01–04` cursor and starts a true-looping DEVICE spatial source at that moving target. Exit fades that lifecycle for exactly `0.1 s`; re-entry always consumes a new family item. Independently, the first `ringCount < 3 → 3` crossing consumes the next item from a separate global `resonator_lock_01–04` cursor. LOCK survives field exit, ring decay to two or one, and an overlaid re-entry AIM; only `ringCount > 0 → 0` fades it for exactly `0.5 s`. Sign-only memory is silent. Both families use HRTF, linear distance, rolloff `1`, reference distance `0.25 m`, and zero gain at `140 m`. The projection observes acquisition truth and moving anchors; it does not calculate containment or rings.
+
+Accepted natural automatic handoff emits one docking-start event. The Rune audio projection immediately starts a WORLD spatial one-shot at the physical moving stone: WOOD/WATER → `stone_landing_01`, FIRE → `02`, EARTH → `03`, METAL → `04`. Exactly `3.0 s` later it reads that same stone's then-current transform and starts `zwornik_dokowanie.mp3`. Both use HRTF, linear distance, rolloff `1`, reference distance `0.25 m`, and zero gain at `13 m`. Reset/disposal cancels delayed cues. This is additional to the existing `creating_01–05` DESCENT anticipation. SPECIAL Ether never emits either docking cue and never gains an installed source.

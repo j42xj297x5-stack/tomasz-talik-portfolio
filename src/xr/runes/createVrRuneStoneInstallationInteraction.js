@@ -46,6 +46,7 @@ export function createVrRuneStoneInstallationInteraction({
   let active = null;
   let disposed = false;
   const installAudioCueListeners = new Set();
+  const dockingStartedListeners = new Set();
   const installedListeners = new Set();
 
   function createInstallationEvent(record) {
@@ -102,6 +103,11 @@ export function createVrRuneStoneInstallationInteraction({
       startPosition: root.getWorldPosition(new THREE.Vector3()),
       startQuaternion: root.getWorldQuaternion(new THREE.Quaternion())
     };
+    const event = createInstallationEvent(record);
+    dockingStartedListeners.forEach((listener) => {
+      try { listener(event); }
+      catch (error) { console.warn('[VrRuneStoneInstallationInteraction] Docking-start observer failed.', error); }
+    });
     return true;
   }
 
@@ -178,10 +184,16 @@ export function createVrRuneStoneInstallationInteraction({
     });
     disposed = true;
     installAudioCueListeners.clear();
+    dockingStartedListeners.clear();
     installedListeners.clear();
   }
 
   return { tryBeginHandoff, update, reset, dispose,
+    subscribeDockingStarted(listener) {
+      if (typeof listener !== 'function') throw new TypeError('Docking-start listener must be a function.');
+      dockingStartedListeners.add(listener);
+      return () => dockingStartedListeners.delete(listener);
+    },
     subscribeInstallAudioCue(listener) {
       if (typeof listener !== 'function') throw new TypeError('Install audio cue listener must be a function.');
       installAudioCueListeners.add(listener);

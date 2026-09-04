@@ -152,6 +152,8 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
     pullReadyPulseOpacityMax: 0.88,
     pullReadyPulseScaleAmplitude: 0.035
   },
+  asterionTargetAudio: { maxDistanceMeters: 140, refDistanceMeters: 0.25,
+    aimFadeOutSeconds: 0.1, lockFadeOutSeconds: 0.5 },
   playerGuidePanel: {
     enabled: true,
     width: 0.34,
@@ -233,6 +235,7 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
   },
   furnaceSpatialAudio: { maxDistanceMeters: 4.0, refDistanceMeters: 0.25 },
   runeStoneSpatialAudio: { maxDistanceMeters: 4.0, refDistanceMeters: 0.25, platformRadiusMeters: 8.0 },
+  runeStoneDockingAudio: { maxDistanceMeters: 13, refDistanceMeters: 0.25, followupDelaySeconds: 3 },
   runeBridge: { presentationScale: 2, radialPresentationOffsetMeters: 1,
     arrivalDistanceMeters: 130, arrivalDurationSeconds: 4.0 },
   platformEnergyVfx: {
@@ -682,6 +685,19 @@ export function normalizeExperienceVrSettings(candidate) {
       pullReadyPulseOpacityMax: finiteNumber(candidate.asterionTargetResponse?.pullReadyPulseOpacityMax, defaults.asterionTargetResponse.pullReadyPulseOpacityMax, { min: 0, max: 1 }),
       pullReadyPulseScaleAmplitude: finiteNumber(candidate.asterionTargetResponse?.pullReadyPulseScaleAmplitude, defaults.asterionTargetResponse.pullReadyPulseScaleAmplitude, { min: 0, max: 0.5 })
     },
+    asterionTargetAudio: (() => {
+      const maxDistanceMeters = finiteNumber(candidate.asterionTargetAudio?.maxDistanceMeters,
+        defaults.asterionTargetAudio.maxDistanceMeters, { min: 0.01, max: 1000 });
+      return {
+        maxDistanceMeters,
+        refDistanceMeters: finiteNumber(candidate.asterionTargetAudio?.refDistanceMeters,
+          defaults.asterionTargetAudio.refDistanceMeters, { min: Number.EPSILON, max: maxDistanceMeters - Number.EPSILON }),
+        aimFadeOutSeconds: finiteNumber(candidate.asterionTargetAudio?.aimFadeOutSeconds,
+          defaults.asterionTargetAudio.aimFadeOutSeconds, { min: 0, max: 10 }),
+        lockFadeOutSeconds: finiteNumber(candidate.asterionTargetAudio?.lockFadeOutSeconds,
+          defaults.asterionTargetAudio.lockFadeOutSeconds, { min: 0, max: 10 })
+      };
+    })(),
     playerGuidePanel: {
       enabled: typeof candidate.playerGuidePanel?.enabled === 'boolean' ? candidate.playerGuidePanel.enabled : defaults.playerGuidePanel.enabled,
       width: finiteNumber(candidate.playerGuidePanel?.width, defaults.playerGuidePanel.width, { min: 0.1, max: 1 }),
@@ -834,6 +850,17 @@ export function normalizeExperienceVrSettings(candidate) {
       const platformRadiusMeters = finiteNumber(candidate.runeStoneSpatialAudio?.platformRadiusMeters,
         defaults.runeStoneSpatialAudio.platformRadiusMeters, { min: Number.EPSILON, max: 1000 });
       return { maxDistanceMeters, refDistanceMeters, platformRadiusMeters };
+    })(),
+    runeStoneDockingAudio: (() => {
+      const maxDistanceMeters = finiteNumber(candidate.runeStoneDockingAudio?.maxDistanceMeters,
+        defaults.runeStoneDockingAudio.maxDistanceMeters, { min: 0.01, max: 1000 });
+      return {
+        maxDistanceMeters,
+        refDistanceMeters: finiteNumber(candidate.runeStoneDockingAudio?.refDistanceMeters,
+          defaults.runeStoneDockingAudio.refDistanceMeters, { min: Number.EPSILON, max: maxDistanceMeters - Number.EPSILON }),
+        followupDelaySeconds: finiteNumber(candidate.runeStoneDockingAudio?.followupDelaySeconds,
+          defaults.runeStoneDockingAudio.followupDelaySeconds, { min: 0, max: 60 })
+      };
     })(),
     runeBridge: {
       presentationScale: finiteNumber(candidate.runeBridge?.presentationScale,
