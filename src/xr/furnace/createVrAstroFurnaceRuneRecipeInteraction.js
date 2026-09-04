@@ -2,6 +2,8 @@ import * as THREE from '../../vendor/three.js';
 import { resolveVrSmallGlyphProtoAstro } from '../protoAstro/resolveVrSmallGlyphProtoAstro.js';
 import { resolveAttractorShellGlyph } from '../tools/vrAttractorShellGlyphs.js';
 import { isWorldPointInsideChamberCylinder, resolveChamberCylinder } from './vrAstroFurnaceChamberCylinder.js';
+import { getObjectWorldScale, resolveVrFurnaceContentWorldScale, setObjectWorldScale,
+  VR_FURNACE_CONTENT_SIZE_CLASS } from './vrFurnaceContentSizing.js';
 
 export const ASTRO_FURNACE_RUNE_RECIPE_SLOT_STATES = Object.freeze({
   EMPTY: 'EMPTY',
@@ -59,17 +61,19 @@ export function createVrAstroFurnaceRuneRecipeInteraction({
   let reportedHeldSmallGlyph = null;
   let disposed = false;
 
-  const smallGlyph = createSlot(furnace?.nodes?.RUNE_RECIPE_SMALL_GLYPH_SLOT, (content) => {
+  const smallGlyph = createSlot(furnace?.nodes?.RUNE_RECIPE_SMALL_GLYPH_SLOT,
+    VR_FURNACE_CONTENT_SIZE_CLASS.SMALL_GLYPH, (content) => {
     if (!smallGlyphSystem.restoreInstanceToField(content))
       throw new Error('Small glyph system rejected rune recipe ingredient restoration.');
   });
-  const shell = createSlot(furnace?.nodes?.RUNE_RECIPE_SHELL_SLOT, (content) => {
+  const shell = createSlot(furnace?.nodes?.RUNE_RECIPE_SHELL_SLOT,
+    VR_FURNACE_CONTENT_SIZE_CLASS.SHELL, (content) => {
     if (!shellSystem.restoreInstanceToOrbit(content))
       throw new Error('Shell system rejected rune recipe ingredient restoration.');
   });
 
-  function createSlot(anchor, restore) {
-    return { anchor, restore, state: states.EMPTY, content: null, elapsed: 0,
+  function createSlot(anchor, contentClass, restore) {
+    return { anchor, contentClass, restore, state: states.EMPTY, content: null, baselineWorldScale: null, elapsed: 0,
       startPosition: new THREE.Vector3(), startQuaternion: new THREE.Quaternion() };
   }
   function slotSnapshot(slot) {
@@ -104,7 +108,13 @@ export function createVrAstroFurnaceRuneRecipeInteraction({
   function accept(slot, content, takeHeld, resolveFamilyCode, expectedFamilyKey) {
     if (!canAccept(slot, content, resolveFamilyCode, expectedFamilyKey) || takeHeld(content) !== true) return false;
     slot.content = content;
+    slot.baselineWorldScale = getObjectWorldScale(content);
+    const desiredWorldScale = resolveVrFurnaceContentWorldScale({
+      contentClass: slot.contentClass,
+      baselineWorldScale: slot.baselineWorldScale
+    });
     slot.anchor.attach(content);
+    setObjectWorldScale(content, desiredWorldScale);
     slot.startPosition.copy(content.position);
     slot.startQuaternion.copy(content.quaternion);
     slot.elapsed = 0;
@@ -175,8 +185,11 @@ export function createVrAstroFurnaceRuneRecipeInteraction({
     ejectLateral.set(-ejectDirection.z, 0, ejectDirection.x);
     occupied.forEach(({ slot, kind }, index) => {
       const content = slot.content;
+      const baselineWorldScale = slot.baselineWorldScale;
       slot.content = null; slot.state = states.EMPTY; slot.elapsed = 0;
+      slot.baselineWorldScale = null;
       settledParent.attach(content);
+      setObjectWorldScale(content, baselineWorldScale);
       const lateralOffset = occupied.length > 1
         ? (index === 0 ? -.5 : .5) * config.ejectSeparation : 0;
       ejections.push({ content, kind, elapsed: 0, startPosition: content.position.clone(),
@@ -189,6 +202,7 @@ export function createVrAstroFurnaceRuneRecipeInteraction({
   function restoreSlot(slot) {
     const content = slot.content;
     slot.content = null;
+    slot.baselineWorldScale = null;
     slot.state = states.EMPTY;
     slot.elapsed = 0;
     if (content) slot.restore(content);
@@ -227,8 +241,8 @@ export function createVrAstroFurnaceRuneRecipeInteraction({
       throw new Error('Small glyph system rejected a known rune recipe ingredient.');
     if (!shellSystem.consumeInstance(insertedShell))
       throw new Error('Shell system rejected a known rune recipe ingredient.');
-    smallGlyph.content = null; smallGlyph.state = states.EMPTY; smallGlyph.elapsed = 0;
-    shell.content = null; shell.state = states.EMPTY; shell.elapsed = 0;
+    smallGlyph.content = null; smallGlyph.baselineWorldScale = null; smallGlyph.state = states.EMPTY; smallGlyph.elapsed = 0;
+    shell.content = null; shell.baselineWorldScale = null; shell.state = states.EMPTY; shell.elapsed = 0;
     emitChange();
     return true;
   }
