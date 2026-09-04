@@ -308,18 +308,26 @@ function installRendererSessionDiagnostics(renderer, gl) {
   if (installed) instrumentedXrManagers.add(xrManager);
 }
 
-export function installXrBootstrapDiagnostics({ renderer }) {
-  if (new URLSearchParams(window.location.search).get('xrdebug') !== '1') return;
-
-  let gl;
-  try {
-    gl = renderer?.getContext?.();
-  } catch (error) {
-    logFailure('webgl-context:unavailable', error);
+export function installXrBootstrapDiagnostics() {
+  if (new URLSearchParams(window.location.search).get('xrdebug') !== '1') {
+    return { attachRenderer() {} };
   }
 
   installRequestSessionDiagnostics();
-  installCanvasContextDiagnostics(renderer?.domElement, gl);
-  installMakeXrCompatibleDiagnostics(gl);
-  installRendererSessionDiagnostics(renderer, gl);
+
+  return {
+    attachRenderer(renderer) {
+      let gl;
+      try {
+        gl = renderer?.getContext?.();
+      } catch (error) {
+        logFailure('webgl-context:unavailable', error);
+      }
+
+      log('webgl-context:available', webGlSnapshot(gl));
+      installCanvasContextDiagnostics(renderer?.domElement, gl);
+      installMakeXrCompatibleDiagnostics(gl);
+      installRendererSessionDiagnostics(renderer, gl);
+    }
+  };
 }

@@ -185,7 +185,7 @@ app.innerHTML = `
   </main>
 `;
 
-const canvas = app.querySelector('#vr-scene-canvas');
+let canvas = app.querySelector('#vr-scene-canvas');
 const status = app.querySelector('[data-vr-status]');
 const enterButton = app.querySelector('[data-vr-enter]');
 const exitButton = app.querySelector('[data-vr-exit]');
@@ -194,6 +194,10 @@ const audioControl = document.querySelector('[data-audio-control]');
 let runtimeExperience = null;
 let toolGuidanceLifecycle = null;
 let earlyExperienceGuidance = null;
+let renderer = null;
+let vrControllers = null;
+let activeSession = null;
+let hasEnteredSession = false;
 if (audioControl) app.querySelector('[data-vr-audio-slot]').append(audioControl);
 const loadedSettings = await loadExperienceVrSettings({ debug: new URLSearchParams(location.search).has('debug') });
 const settings = loadedSettings.settings;
@@ -203,10 +207,7 @@ const postP1Qa = searchParams.has('p1');
 const furnaceProcessQa = searchParams.has('furnaceProcess');
 const introQaBypass = ['p1', 'asterionSphere', 'furnaceProcess', 'furnace']
   .some((key) => searchParams.has(key));
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: settings.renderer.antialias });
-renderer.setPixelRatio(Math.min(devicePixelRatio || 1, settings.renderer.pixelRatioCap));
-renderer.xr.enabled = true;
-installXrBootstrapDiagnostics({ renderer });
+const xrDiagnostics = installXrBootstrapDiagnostics();
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(VR_BACKGROUND_COLOR);
@@ -226,8 +227,6 @@ playerRig.position.copy(entryDirection).multiplyScalar(settings.spatial.playerSt
 camera.position.set(0, 1.6, 0);
 playerRig.add(camera);
 orientPlayerRig(playerRig, settings.spatial.monkeyFinal);
-const vrControllers = createVrControllers({ renderer, playerRig, settings: settings.controllers });
-
 const sceneLights = addLights(scene);
 const centralPlaceholder = createCentralObject();
 worldStableRoot.add(centralPlaceholder);
@@ -251,6 +250,90 @@ await preloadAssets(vrAssets, {
 });
 await vrAudio.prepareRuntimeAudio(REQUIRED_VR_AUDIO);
 unsubscribe();
+
+function waitForInitialSessionRequest() {
+  controls.hidden = false;
+  status.textContent = copy.ready;
+  enterButton.textContent = copy.enter;
+  enterButton.disabled = false;
+  exitButton.hidden = true;
+  return new Promise((resolve) => {
+    const request = async () => {
+      enterButton.disabled = true;
+      status.textContent = copy.entering;
+      try {
+        const session = await navigator.xr.requestSession('immersive-vr', { optionalFeatures: ['local-floor'] });
+        resolve(session);
+      } catch (error) {
+        console.warn('[experience-vr] Session request failed.', error);
+        status.textContent = copy.error;
+        enterButton.disabled = false;
+        enterButton.addEventListener('click', request, { once: true });
+      }
+    };
+    enterButton.addEventListener('click', request, { once: true });
+  });
+}
+
+async function bootstrapInitialRenderer() {
+  while (renderer === null) {
+    const requestedSession = await waitForInitialSessionRequest();
+    let temporaryRenderer = null;
+    let temporaryControllers = null;
+    try {
+      let referenceSpaceType = settings.referenceSpaceType;
+      if (referenceSpaceType === 'local-floor') {
+        try { await requestedSession.requestReferenceSpace('local-floor'); }
+        catch { referenceSpaceType = 'local'; }
+      }
+
+      const context = canvas.getContext('webgl2', {
+        alpha: true,
+        depth: true,
+        stencil: false,
+        antialias: settings.renderer.antialias,
+        premultipliedAlpha: true,
+        preserveDrawingBuffer: false,
+        powerPreference: 'default',
+        failIfMajorPerformanceCaveat: false,
+        xrCompatible: true
+      });
+      if (context === null) throw new Error('Experience VR could not create the required WebGL2 context.');
+
+      temporaryRenderer = new THREE.WebGLRenderer({ canvas, context });
+      temporaryRenderer.setPixelRatio(Math.min(devicePixelRatio || 1, settings.renderer.pixelRatioCap));
+      const width = canvas.clientWidth || innerWidth || 1;
+      const height = canvas.clientHeight || innerHeight || 1;
+      camera.aspect = width / height;
+      camera.updateProjectionMatrix();
+      temporaryRenderer.setSize(width, height, false);
+      temporaryRenderer.xr.enabled = true;
+      xrDiagnostics.attachRenderer(temporaryRenderer);
+      temporaryControllers = createVrControllers({
+        renderer: temporaryRenderer,
+        playerRig,
+        settings: settings.controllers
+      });
+      temporaryRenderer.xr.setReferenceSpaceType(referenceSpaceType);
+      await temporaryRenderer.xr.setSession(requestedSession);
+
+      renderer = temporaryRenderer;
+      vrControllers = temporaryControllers;
+      return requestedSession;
+    } catch (error) {
+      console.warn('[experience-vr] Renderer bootstrap failed.', error);
+      temporaryControllers?.dispose();
+      temporaryRenderer?.dispose();
+      try { await requestedSession.end(); } catch { /* Session may already be ending. */ }
+      const replacementCanvas = canvas.cloneNode(false);
+      canvas.replaceWith(replacementCanvas);
+      canvas = replacementCanvas;
+      status.textContent = copy.error;
+    }
+  }
+  return null;
+}
+
 const progressFloor = createVrProgressFloor({
   parent: experienceRoot,
   forwardDirection: settings.spatial.entryDirection,
@@ -386,6 +469,25 @@ const asterionSphere = createVrAsterionSphere({
   enabled: settings.asterionSphere.enabled,
   debug: searchParams.has('debug') || asterionSphereQa
 });
+let runtimeCompositionReady = false;
+window.addEventListener('pagehide', () => {
+  if (runtimeCompositionReady) return;
+  celestialActor.dispose();
+  asterionSphere.dispose();
+  runeBridgeActor.dispose();
+  runeStoneActor.dispose();
+  etherRuneStoneActor.dispose();
+  progressFloor.dispose();
+  largeGlyphActor.dispose();
+  smallGlyphSystem.dispose();
+  shellSystem.dispose();
+  protoAstroTuningController.dispose();
+  vrControllers?.dispose();
+  renderer?.dispose();
+  vrAudio.dispose();
+}, { once: true });
+const initialSession = await bootstrapInitialRenderer();
+try {
 let monkeyGuide = null;
 const asterionGyroInteraction = createVrAsterionGyroInteraction({
   sphere: asterionSphere, controllers: vrControllers.controllers, progressFloor, playerRig, worldRoot: worldStableRoot, renderer,
@@ -1491,12 +1593,7 @@ function resize() {
   camera.updateProjectionMatrix();
   renderer.setSize(width, height, false);
 }
-resize();
 window.addEventListener('resize', resize);
-renderer.render(scene, camera);
-
-let activeSession = null;
-let hasEnteredSession = false;
 const clock = new THREE.Clock(false);
 const readTrackedXrHead = () => getXrHeadWorldPosition({ renderer, camera, playerRig });
 const xrStartCalibration = createCanonicalXrStartCalibration({
@@ -1831,5 +1928,27 @@ window.addEventListener('pagehide', () => {
   smallGlyphSystem.dispose();
   shellSystem.dispose();
   protoAstroTuningController.dispose();
+  vrControllers?.dispose();
+  renderer?.dispose();
 }, { once: true });
-showReadyState();
+runtimeCompositionReady = true;
+initialSession.addEventListener('end', handleSessionEnd, { once: true });
+runtimeExperience.activateCurrentPoint();
+xrStartCalibration.request();
+activeSession = initialSession;
+hasEnteredSession = true;
+status.textContent = copy.ready;
+exitButton.hidden = false;
+controls.hidden = true;
+clock.start();
+renderer.setAnimationLoop(renderFrame);
+} catch (error) {
+  console.error('[experience-vr] Post-commit runtime composition failed.', error);
+  renderer?.setAnimationLoop(null);
+  try { await initialSession?.end(); } catch { /* Session may already be ending. */ }
+  activeSession = null;
+  controls.hidden = false;
+  status.textContent = copy.error;
+  enterButton.disabled = true;
+  exitButton.hidden = true;
+}
