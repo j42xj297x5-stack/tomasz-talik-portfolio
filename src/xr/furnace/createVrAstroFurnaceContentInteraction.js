@@ -2,6 +2,8 @@ import * as THREE from '../../vendor/three.js';
 import { resolveVrSmallGlyphProtoAstro } from '../protoAstro/resolveVrSmallGlyphProtoAstro.js';
 import { isWorldPointInsideChamberCylinder, resolveChamberCylinder, resolveFurnaceContentSnapTarget } from './vrAstroFurnaceChamberCylinder.js';
 import { ASTRO_FURNACE_PROCESS_KINDS, processRotationPulse01 } from './createVrAstroFurnaceActivateInteraction.js';
+import { getObjectWorldScale, resolveVrFurnaceContentWorldScale, setObjectWorldScale,
+  VR_FURNACE_CONTENT_SIZE_CLASS } from './vrFurnaceContentSizing.js';
 
 export const ASTRO_FURNACE_CONTENT_STATES = Object.freeze({
   EMPTY: 'EMPTY', CANDIDATE_VALID: 'CANDIDATE_VALID', CANDIDATE_INVALID: 'CANDIDATE_INVALID',
@@ -13,11 +15,6 @@ const VALID_ASSET_IDS = new Set(Array.from({ length: 6 }, (_, index) => `shell-r
 const clamp01 = (value) => THREE.MathUtils.clamp(value, 0, 1);
 const smoothstep = (value) => { const t = clamp01(value); return t * t * (3 - 2 * t); };
 export function processRotationPulse(angle) { return 3 * processRotationPulse01(angle); }
-export function setObjectWorldScale(object, desired, target = new THREE.Vector3()) {
-  object.scale.set(1, 1, 1); object.updateWorldMatrix(true, false); object.getWorldScale(target);
-  object.scale.set(desired.x / Math.max(Math.abs(target.x), 1e-8), desired.y / Math.max(Math.abs(target.y), 1e-8),
-    desired.z / Math.max(Math.abs(target.z), 1e-8)); object.updateWorldMatrix(false, false); return object.scale;
-}
 export function constrainHeldShellToDeviceSurfaces({ shell, shellCenter, origin, radius, deviceRoots = [],
   excludedRoots = [], clearance = 0.006, raycaster = new THREE.Raycaster() }) {
   const axis = new THREE.Vector3().subVectors(shellCenter, origin), targetDistance = axis.length();
@@ -65,10 +62,10 @@ export function createVrAstroFurnaceContentInteraction({
   if (feedback) { feedback.name = 'VrAstroFurnaceInsertFeedback'; feedback.visible = false; furnace.object.add(feedback); }
 
   const position = new THREE.Vector3(), local = new THREE.Vector3(), worldScale = new THREE.Vector3();
-  const baselines = new WeakMap(), materialBases = [], listeners = new Set();
+  const materialBases = [], listeners = new Set();
   let state = states.EMPTY, insertedContent = null, insertedKind = null, pendingShellAssetId = null;
   let reportedHeldShell = null, reportedHeldSmallGlyph = null, snapElapsed = 0, elapsed = 0, disposed = false;
-  let baseScale = null, snapStartPosition = null, snapStartQuaternion = null, snapStartScale = null;
+  let snapStartPosition = null, snapStartQuaternion = null;
   let snapTarget = null, desiredWorldScale = null;
   function setState(next) { if (state === next) return; state = next; listeners.forEach((listener) => listener(next)); }
   function shellAssetId(shell) { return shell?.userData?.shellAssetId ?? null; }
@@ -107,17 +104,16 @@ export function createVrAstroFurnaceContentInteraction({
     const take = kind === kinds.SHELL ? takeHeldShell : takeHeldSmallGlyph;
     if (!content || !canEvaluate(kind) || !valid || take(content) !== true) return false;
     insertedContent = content; insertedKind = kind; pendingShellAssetId = null;
-    baseScale = baselines.get(content) ?? content.getWorldScale(new THREE.Vector3()); baselines.set(content, baseScale.clone());
+    const contentClass = kind === kinds.SHELL
+      ? VR_FURNACE_CONTENT_SIZE_CLASS.SHELL : VR_FURNACE_CONTENT_SIZE_CLASS.SMALL_GLYPH;
+    const baselineWorldScale = getObjectWorldScale(content);
+    desiredWorldScale = resolveVrFurnaceContentWorldScale({ contentClass, baselineWorldScale });
     if (kind === kinds.SHELL) ownShellMaterials(content); else materialBases.length = 0;
-    anchor.attach(content); snapStartPosition = content.position.clone(); snapStartQuaternion = content.quaternion.clone(); snapStartScale = content.scale.clone();
-    const size = new THREE.Box3().setFromObject(content).getSize(new THREE.Vector3());
-    const available = new THREE.Vector3(chamberCylinder.radius * 2, chamberCylinder.height, chamberCylinder.radius * 2);
-    const fit = Math.min(1, ...['x', 'y', 'z'].map((axis) => size[axis] > 1e-6 ? available[axis] / size[axis] : 1));
-    desiredWorldScale = baseScale.clone().multiplyScalar(fit);
+    anchor.attach(content);
     setObjectWorldScale(content, desiredWorldScale, worldScale);
+    snapStartPosition = content.position.clone(); snapStartQuaternion = content.quaternion.clone();
     snapTarget = resolveFurnaceContentSnapTarget({ object: content, anchor,
       energyCell: furnace?.nodes?.energy_cell ?? furnace?.nodes?.fire_cell, contentClearance: config.contentClearance,
-      desiredWorldScale,
       localGeometryCenter: kind === kinds.SHELL ? shellRecord(content)?.boundingCenter ?? null : null });
     if (kind === kinds.SHELL) { content.userData.furnaceDesiredWorldScale = desiredWorldScale;
       content.userData.furnaceSnapTarget = snapTarget; content.userData.shellState = 'inserted'; content.userData.attractorTarget = false; }
@@ -138,10 +134,7 @@ export function createVrAstroFurnaceContentInteraction({
   function updateSnap(delta) { if (state !== states.INSERTED || !insertedContent || snapElapsed >= config.snapDuration) return;
     snapElapsed = Math.min(config.snapDuration, snapElapsed + delta); const t = smoothstep(snapElapsed / Math.max(config.snapDuration, 1e-6));
     insertedContent.position.lerpVectors(snapStartPosition, snapTarget, t);
-    insertedContent.quaternion.slerpQuaternions(snapStartQuaternion, new THREE.Quaternion(), t);
-    const targetScale = desiredWorldScale.clone(); insertedContent.parent.getWorldScale(worldScale);
-    targetScale.set(targetScale.x / Math.abs(worldScale.x), targetScale.y / Math.abs(worldScale.y), targetScale.z / Math.abs(worldScale.z));
-    insertedContent.scale.lerpVectors(snapStartScale, targetScale, t); }
+    insertedContent.quaternion.slerpQuaternions(snapStartQuaternion, new THREE.Quaternion(), t); }
   function consumeInsertedContent() { if (state !== states.INSERTED || !insertedContent) return false;
     pendingShellAssetId = insertedKind === kinds.SHELL ? shellAssetId(insertedContent) : null;
     if (insertedKind === kinds.SHELL) { insertedContent.userData.shellState = 'consuming'; insertedContent.userData.attractorTarget = false; }
