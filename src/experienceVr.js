@@ -1933,6 +1933,7 @@ window.addEventListener('pagehide', () => {
 }, { once: true });
 runtimeCompositionReady = true;
 initialSession.addEventListener('end', handleSessionEnd, { once: true });
+restoreVrScenarioBaseline();
 runtimeExperience.activateCurrentPoint();
 xrStartCalibration.request();
 activeSession = initialSession;
