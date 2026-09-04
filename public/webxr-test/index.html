@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WebXR Native Isolation Test</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        font-family: system-ui, sans-serif;
+      }
+
+      body {
+        max-width: 60rem;
+        margin: 2rem auto;
+        padding: 0 1rem;
+        background: #11151b;
+        color: #eef3f8;
+      }
+
+      button {
+        margin: 0 0.5rem 1rem 0;
+        padding: 0.6rem 1rem;
+      }
+
+      #log {
+        height: 20rem;
+        overflow: auto;
+        padding: 0.75rem;
+        border: 1px solid #52606d;
+        background: #080b0f;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+
+      canvas {
+        display: block;
+        width: min(100%, 640px);
+        height: auto;
+        margin-top: 1rem;
+        border: 1px solid #52606d;
+        background: #000;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>WebXR Native Isolation Test</h1>
+    <button id="start" type="button">Start WebXR Test</button>
+    <button id="end" type="button" disabled>End Session</button>
+    <div id="log" role="log" aria-live="polite"></div>
+    <canvas id="xr-canvas" width="640" height="360"></canvas>
+    <script src="./webxr-test.js"></script>
+  </body>
+</html>
