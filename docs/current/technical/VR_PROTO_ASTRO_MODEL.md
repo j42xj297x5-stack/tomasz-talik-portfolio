@@ -1,22 +1,32 @@
 # Experience VR — Proto-Astro Model
 
-Status: **CURRENT / BINDING** for Proto-Astro identity, Furnace essence truth, Astro bands and panel projections. Rune detail routes to [`VR_RUNE_STONES_MODEL.md`](VR_RUNE_STONES_MODEL.md).
+Status: **CURRENT / BINDING** for Proto-Astro identity, Furnace essence truth, Astrolabium bands and eligibility projections. Rune detail routes to [`VR_RUNE_STONES_MODEL.md`](VR_RUNE_STONES_MODEL.md).
 
 ## Ownership
 
-- `ProtoAstroTuningController` exclusively owns natural Large Glyph essences `K/T/S/L/R`.
-- Furnace progression exclusively owns successfully processed/absorbed Shell truth.
-- `RuneStoneProgressionController` is implemented and separately owns `tunedRuneFamilies`; future installed truth remains in the Rune domain.
-- `RuneRecipeInteraction` is implemented as the rune-mode owner of two typed Furnace slots.
-- sector progression owns panel/sector completeness; it does not gate natural tuning.
-- Attractor band UI owns only the selected object class. Attractor/panels are projections, not family-learning truth owners.
-- A future **Astrolabium Tuning Domain / Actor** will interpret existing owner facts as family knowledge and bounded pull eligibility. It must not duplicate recipes, Furnace/extraction/Rune truth, Resonator timers, Scenario progress, or sector state; its exact API/name is not frozen and it is **NOT IMPLEMENTED**.
+- `ProtoAstroTuningController` owns extracted natural Large Glyph essences `K/T/S/L/R`.
+- Furnace progression owns processed/absorbed Shell truth and `getAsterionSphereProgress().complete`.
+- `RuneStoneProgressionController` owns natural `tunedRuneFamilies` and `installedRuneFamilies`.
+- `RuneRecipeInteraction` owns the two typed Furnace slots; sector progression does not gate natural tuning.
+- `createVrAstrolabiumTuningActor` is **IMPLEMENTED** as a derived, read-only interpreter. It observes Furnace processed-Shell truth, Proto-Astro extracted natural Small Glyph essence truth, Rune tuning truth, and bounded Resonator eligibility; it derives targetable family sets per band without duplicating persistence.
+- Band UI owns the selected object class. The broader immediate-all-four-band policy remains a **BINDING DESIGN TARGET / NOT IMPLEMENTED**; current eligibility derivation must not be confused with completion of that future UI policy.
 
-## Identity and tuning
+## Identity and flat Shell adapter contract
 
-Natural family codes are Earth `K`, Metal `T`, Water `S`, Wood `L`, Fire `R`. The Astro/Ether family `V` is special and is not in `PROTO_ASTRO_NATURAL_FAMILY_CODES`. Its canonical forms are `VO` (Shell), `VI` (Small Glyph) and `VU` (Rune Stone); `VA` does not exist because no Large Glyph form has been approved for this family. `VU` uses the canonical presentation asset `public/svg/VU.svg`.
+Natural families are Earth `K`, Metal `T`, Water `S`, Wood `L`, and Fire `R`. Astro/Ether `V` remains SPECIAL and never enters `PROTO_ASTRO_NATURAL_FAMILY_CODES`.
 
-Existing Proto-Astro essence extraction remains distinct from Rune tuning. Natural Rune recipes are:
+```text
+VO = Ether Shell
+VI = Ether Small Glyph
+VU = Ether Rune Stone
+VA = nonexistent
+```
+
+`resolveAttractorShellGlyph()` exposes the resolved identity flat: `syllable`, `familyCode`, Proto-Astro form/family fields, `identity`, and `url`. Consumers must not assume `shellIdentity.descriptor.*` and no nested compatibility descriptor is part of the contract. Rune tuning frozen pre-flight reads `shellIdentity.syllable`; panel family lookup reads `shellIdentity.familyCode`.
+
+## Tuning transaction
+
+Natural recipes remain the Wu Xing cycle:
 
 | Small Glyph | Shell | Tuned Rune family |
 | --- | --- | --- |
@@ -26,55 +36,64 @@ Existing Proto-Astro essence extraction remains distinct from Rune tuning. Natur
 | Wood | Fire | Fire |
 | Fire | Earth | Earth |
 
-All five natural recipes are available independently of sector completion. A valid selected recipe uses two typed slots and one `18 s` `RUNE_TUNING` cycle with `astro_piec_work_03.mp3`; ingredients are consumed only on successful completion. Persistent result is `RuneStoneProgressionController.tunedRuneFamilies`, not a physical Furnace item.
+All five natural recipes remain independent of sector completion. The committed transaction law is:
 
-Implemented corrections: slot acceptance validates the selected recipe's expected family before ownership transfer, and changing to a different selected recipe ejects snapping/inserted ingredients player-facing around `1 m` without consuming them. Final recipe transaction validation remains a separate safety layer.
+```text
+frozen recipe pre-flight
+→ consume exact frozen Small Glyph + Shell
+→ commit tuning truth
+→ clear transaction
+→ clear selected recipe
+```
 
-## Astro bands
+Slot acceptance validates expected family before transfer, recipe change ejects inserted ingredients player-facing, and ingredients are consumed only after successful completion. Hardware smoke confirms the previously frozen Metal completion path now succeeds after corrected flat Shell identity access; this is narrow hardware evidence, not broad automated validation.
 
-The canonical progression separates three questions:
+## Band and eligibility laws
 
 ```text
 BAND EXISTS ≠ TARGET FAMILY IS UNDERSTOOD ≠ TARGET MAY CURRENTLY BE PULLED
 ```
 
-After Astrolabium Więzi is physically acquired, all four implemented class bands — `SHELLS`, `SMALL_GLYPHS`, `LARGE_GLYPHS`, and `RUNESTONES` — are selectable. A band can legally contain zero known targets. It asks which object class to search; it does not promise that every family is understood. World visibility likewise grants no targetability. Stars remain celestial environment, not a fifth band.
-
-This immediate-all-band policy is a **CURRENT / BINDING DESIGN TARGET, NOT IMPLEMENTED**: runtime still progression-filters the switchable list, including `RUNESTONES`. That behavior is an implementation gap and no longer canon.
-
-## Progressive family knowledge — CURRENT TARGET / NOT IMPLEMENTED AS A UNIFIED DOMAIN
-
-Astrolabium begins with five natural Shell families: Earth/K, Metal/T, Water/S, Wood/L, and Fire/R. Each is a legal `SHELLS` target immediately after tool acquisition. Per-family learning then deepens that vocabulary:
+The implemented tuning actor derives:
 
 ```text
-processed natural Shell K/T/S/L/R → matching Small Glyph family becomes attractable
-processed natural Small Glyph K/T/S/L/R → matching Large Glyph family becomes normally attractable
-successful canonical Wu Xing recipe → resulting Rune Stone family becomes a legal RUNESTONES target
+processed natural Shell K/T/S/L/R
+→ matching natural Small Glyph family eligibility
+
+extracted natural Small Glyph essence K/T/S/L/R
+→ matching ordinary Large Glyph family knowledge
+
+successful natural Rune recipe
+→ matching natural RUNESTONES eligibility
+
+Asterion Sphere progression complete
+→ special family V eligibility in SMALL_GLYPHS
+→ small-glyph-relic-6 / VI is targetable
 ```
 
-These rules are family-specific. Small Glyph extraction remains persistent learned Large Glyph-family knowledge; Resonator discovery does not replace or teach it. The existing recipe mapping and `tunedRuneFamilies` remain authoritative.
+`VI` eligibility reads only `furnaceProgressionController.getAsterionSphereProgress().complete`, live and after hydration. It creates no Scenario capability, milestone, point, or duplicated persistent boolean. Targetable `VI` does not permit Ether Rune tuning: `VU` tuning separately requires later `CAN_TUNE_ETHER_RUNE`, and physical `VU` reveal separately belongs to `REVEAL_ETHER_RUNE`.
 
-After all five natural Shell families have been successfully processed, special Shell `V / VO` becomes a legal next Shell target. It is not initial vocabulary. Processing it completes the six-Shell sequence toward Asterion Sphere creation. Its reveal-versus-recognition presentation remains open. `V` remains special, never enters `PROTO_ASTRO_NATURAL_FAMILY_CODES`, and does not create `VA`.
+After all five natural Shells have been processed, special Shell `V / VO` becomes a legal `SHELLS` target. Processing the six required Shells completes Asterion Sphere progression. `VO` unlock, `VI` eligibility, and `VU` tuning are deliberately not one Ether-unlocked flag.
 
-For ordinary early Large Glyph play, learned family knowledge is sufficient for attraction subject to ordinary legality. In the late escaped/reacquisition state it remains required, but transient Resonator `PULL_READY` is additionally required for physical pull. `PULL_READY` neither unlocks the band nor becomes permanent family knowledge. Runtime currently applies this gate too broadly; the corrected early/late policy and its exact late-state predicate are **NOT IMPLEMENTED** and must not invent a Scenario point.
+Ordinary early Large Glyph pull uses learned family knowledge. A late `SPHERE_FAR` target additionally requires transient Resonator `PULL_READY`. This early/late policy is **IMPLEMENTED**; `PULL_READY` is neither band unlock nor persistent family knowledge.
 
-## Four-panel contract
+## Four-panel status
 
 | Panel | Current semantics | Status |
 | --- | --- | --- |
-| 1 | current target glyph: Shell `?O`, Small Glyph `?I`, Large Glyph `?A` only where that syllable exists, Rune Stone `?U` (`RU/TU/KU/LU/SU/VU`) | IMPLEMENTED for the current natural target flow; `VU` is canonical even though special `stone_06` target/display flow is not implemented |
-| 2 | current band authored `band_01.svg`–`band_04.svg` plus presentation color | IMPLEMENTED |
-| 3 | available targets for current band | FUTURE / NOT IMPLEMENTED |
-| 4 | current-target distance | FUTURE / NOT IMPLEMENTED |
+| 1 | selected target syllable: Shell `?O`, Small Glyph `?I`, Large Glyph `?A` only where defined, Rune Stone `?U` | IMPLEMENTED, including special `VI`/`VU` identities |
+| 2 | selected band asset/color | IMPLEMENTED |
+| 3 | available targets for selected band | FUTURE UI policy; eligibility set derivation is implemented |
+| 4 | selected-target distance | FUTURE / NOT IMPLEMENTED |
 
-## Scenario boundary and spatial context
+## Current progression boundary and Rune laws
 
-The implemented authored tail is `4.40 → 4.50 → 4.60 → 4.70 → 4.80`. `4.80` is stable; continuation is deferred. At Tier 3 Large Glyph moves to implemented `SPHERE_FAR = 80 m`. Physical natural Rune Stones occupy the implemented `RUNE_STONES = 50–75 m` layer. They begin hidden and the separate `REVEAL_NATURAL_RUNE_STONES` effect at `2.10` reveals them with the celestial world without granting targetability.
+The authored tail is `4.80 → 5.10 → 5.20 → 5.30 → 5.40 → 5.50 → 5.60 → 100.10`, with stable implemented boundary `5.60`. All five natural Rune families may be persistently installed. Ether reveal/transport/Monkey capture and the Water readiness override followed by ordinary Water installation are implemented.
 
-## Three independent Rune laws
+Three natural Rune laws remain independent:
 
-1. **Natural tuning:** all five families; no sector-completion read.
-2. **Natural targetability:** exactly `tunedRuneFamilies`.
-3. **Installation readiness:** normally sector completeness, projected separately to Rune bridges. After `4.80`: Earth/Fire/Wood ready, Metal/Water not ready. Future Water override affects readiness only.
+1. **Tuning:** all five natural families; no sector-completeness read.
+2. **Targetability:** exactly natural `tunedRuneFamilies` for RUNESTONES; special `VI` eligibility belongs to SMALL_GLYPHS and does not contaminate this set.
+3. **Installation readiness:** normally corresponding sector completeness; Water can additionally become ready through persistent `waterInstallationReadinessOverride`.
 
-Ether `V`, including its `VU` Rune Stone form, remains special: no sixth natural family, sector, bridge, slot or standard tuning path.
+At the completed late state, `tunedRuneFamilies` and `installedRuneFamilies` contain exactly `K/T/S/L/R`; `V` remains SPECIAL with no sector, bridge/platform installation slot, or membership in either natural set.
