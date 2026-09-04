@@ -27,7 +27,8 @@ export function createVrAudioBridge({ manager = audioManager, warn = console.war
     runeStone2: '/audio/noise_laud_loop_05.mp3',
     runeStone3: '/audio/noise_laud_loop_06.mp3',
     runeStone4: '/audio/noise_laud_loop_07.mp3',
-    runeStone5: '/audio/noise_laud_loop_08.mp3'
+    runeStone5: '/audio/noise_laud_loop_08.mp3',
+    runeStoneEther: '/audio/noise_laud_loop_09.mp3'
   });
   let attractorState = 'idle', attractorId = null, attractorClass = null, attractorHandle = null;
   let attractorToken = 0, attractorTimer = null;

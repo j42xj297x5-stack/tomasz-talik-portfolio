@@ -76,6 +76,8 @@ import { createVrAsterionResonatorFieldActor } from './xr/asterion/createVrAster
 import { createVrAsterionResonatorFieldPresentation } from './xr/asterion/createVrAsterionResonatorFieldPresentation.js';
 import { createVrAsterionResonatorTargetAcquisitionActor } from './xr/asterion/createVrAsterionResonatorTargetAcquisitionActor.js';
 import { createVrAsterionResonatorTargetResponsePresentation } from './xr/asterion/createVrAsterionResonatorTargetResponsePresentation.js';
+import { createVrAsterionResonatorTargetAudioProjection,
+  VR_ASTERION_RESONATOR_TARGET_AUDIO } from './xr/audio/createVrAsterionResonatorTargetAudioProjection.js';
 import { resolveVrPageProtoAstro } from './xr/protoAstro/resolveVrPageProtoAstro.js';
 import { createVrAsterionProductionController } from './xr/asterion/createVrAsterionProductionController.js';
 import { createVrPlayerGuidePanel } from './xr/guidance/createVrPlayerGuidePanel.js';
@@ -163,6 +165,7 @@ const REQUIRED_VR_AUDIO = Object.freeze([
   ...Object.values(ASTERION_SECTOR_ACQUISITION_AUDIO),
   ...new Set(Object.values(ASTERION_SECTOR_DRIVE_AUDIO))
   , ...VR_RUNE_STONE_INSTALL_AUDIO
+  , ...VR_ASTERION_RESONATOR_TARGET_AUDIO
 ]);
 const playVrUi = (path) => vrAudio.playOneShot(path, 'UI');
 const playVrWorld = (path) => vrAudio.playOneShot(path, 'WORLD');
@@ -617,6 +620,14 @@ const asterionResonatorTargetAcquisitionActor = createVrAsterionResonatorTargetA
 });
 largeGlyphActor.nodes.forEach((node) => {
   asterionResonatorTargetAcquisitionActor.registerTarget({ id: node.userData.id, anchor: node });
+});
+const asterionResonatorTargetAudioProjection = createVrAsterionResonatorTargetAudioProjection({
+  audioBridge: vrAudio,
+  acquisitionActor: asterionResonatorTargetAcquisitionActor,
+  settings: settings.asterionTargetAudio
+});
+largeGlyphActor.nodes.forEach((node) => {
+  asterionResonatorTargetAudioProjection.registerTarget({ id: node.userData.id, anchor: node });
 });
 const asterionResonatorTargetResponsePresentation = createVrAsterionResonatorTargetResponsePresentation({
   parent: scene,
@@ -1095,8 +1106,11 @@ const listenerPose = Object.freeze({ position: listenerPosition, forward: listen
 runeStoneAudioProjection = createVrRuneStoneAudioProjection({
   audioBridge: vrAudio, runeStoneActor, runeStoneProgressionController,
   getEmitterAnchor: (branchId) => progressFloor.getRuneStoneSpatialAudioAnchor(branchId),
-  spatialSettings: settings.runeStoneSpatialAudio
+  spatialSettings: settings.runeStoneSpatialAudio,
+  dockingSpatialSettings: settings.runeStoneDockingAudio
 });
+const unsubscribeRuneStoneDockingAudio = runeStoneInstallationInteraction
+  .subscribeDockingStarted((event) => runeStoneAudioProjection.presentDockingStarted(event));
 const unsubscribeRuneStoneInstallAudioCue = runeStoneInstallationInteraction
   .subscribeInstallAudioCue((event) => runeStoneAudioProjection.presentInstallAudioCue(event));
 const unsubscribeRuneStoneInstalledAudio = runeStoneInstallationInteraction
@@ -1123,14 +1137,20 @@ runeStoneAttractorInteraction = createVrRuneStoneAttractorInteraction({
   tryBeginInstallationHandoff: (record) => runeStoneInstallationInteraction.tryBeginHandoff(record),
   tryBeginSpecialHandoff: (record) => etherMonkeyCaptureInteraction.tryBeginSpecialHandoff(record),
   onPullStart: (record) => {
-    if (record.descriptor.natural) vrAudio.startAttractor(record.descriptor.assetIdentity,
-      `runeStone${record.descriptor.assetIdentity.slice(-2).replace(/^0/, '')}`);
+    const soundClass = record.descriptor.natural
+      ? `runeStone${record.descriptor.assetIdentity.slice(-2).replace(/^0/, '')}`
+      : record.descriptor.special && record.descriptor.familyCode === 'V' ? 'runeStoneEther' : null;
+    if (soundClass) vrAudio.startAttractor(record.descriptor.assetIdentity, soundClass);
   },
   onPullCancel: (record) => {
-    if (record.descriptor.natural) vrAudio.cancelAttractor(record.descriptor.assetIdentity);
+    if (record.descriptor.natural || (record.descriptor.special && record.descriptor.familyCode === 'V')) {
+      vrAudio.cancelAttractor(record.descriptor.assetIdentity);
+    }
   },
   onHandoff: (record) => {
-    if (record.descriptor.natural) vrAudio.handoffAttractor(record.descriptor.assetIdentity);
+    if (record.descriptor.natural || (record.descriptor.special && record.descriptor.familyCode === 'V')) {
+      vrAudio.handoffAttractor(record.descriptor.assetIdentity);
+    }
   },
   isHigherPriorityInteractionActive: (record) => Boolean(activateButton.hits.get(record)
     || releaseButton.hits.get(record) || astroFurnaceOpenInteraction.hasCurrentHit(record)
@@ -1518,6 +1538,7 @@ function renderFrame() {
   astroFurnaceRuneRecipeInteraction.update(delta);
   largeGlyphActor.update(delta);
   asterionResonatorTargetAcquisitionActor.update(delta);
+  asterionResonatorTargetAudioProjection.update();
   asterionResonatorTargetResponsePresentation.update(delta);
   largeGlyphAttractorInteraction.update(delta);
   postRingPresentation.update(delta);
@@ -1623,6 +1644,7 @@ function restoreVrScenarioBaseline() {
   runeRecipeSelectionController.reset();
   runeStoneProgressionController.reset();
   runeStoneAudioProjection.reset();
+  asterionResonatorTargetAudioProjection.reset();
   asterionResonatorFieldActor.reset();
   asterionResonatorTargetAcquisitionActor.reset();
   asterionResonatorTargetResponsePresentation.reset();
@@ -1739,6 +1761,7 @@ window.addEventListener('pagehide', () => {
   ambientSequencer.dispose();
   introAmbientSequencer.dispose();
   unsubscribeRuneStoneInstallAudioCue();
+  unsubscribeRuneStoneDockingAudio();
   unsubscribeRuneStoneInstalledAudio();
   runeStoneAudioProjection.dispose();
   furnaceAudioProjection.dispose();
@@ -1756,6 +1779,7 @@ window.addEventListener('pagehide', () => {
   unsubscribeRuneBridgeGuidance();
   asterionResonatorFieldPresentation.dispose();
   asterionResonatorTargetResponsePresentation.dispose();
+  asterionResonatorTargetAudioProjection.dispose();
   asterionResonatorTargetAcquisitionActor.dispose();
   asterionResonatorFieldActor.dispose();
   asterionProductionController.dispose();
