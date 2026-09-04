@@ -203,7 +203,11 @@ const postP1Qa = searchParams.has('p1');
 const furnaceProcessQa = searchParams.has('furnaceProcess');
 const introQaBypass = ['p1', 'asterionSphere', 'furnaceProcess', 'furnace']
   .some((key) => searchParams.has(key));
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: settings.renderer.antialias });
+const renderer = new THREE.WebGLRenderer({
+  canvas,
+  antialias: settings.renderer.antialias,
+  xrCompatible: true
+});
 renderer.setPixelRatio(Math.min(devicePixelRatio || 1, settings.renderer.pixelRatioCap));
 renderer.xr.enabled = true;
 installXrBootstrapDiagnostics({ renderer });
