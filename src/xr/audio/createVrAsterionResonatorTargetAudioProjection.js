@@ -22,20 +22,41 @@ export function createVrAsterionResonatorTargetAudioProjection({ audioBridge, ac
   function retire(entry, kind, fadeSeconds) {
     const slot = entry[kind];
     slot.token += 1;
+    slot.pending = false;
     const handle = slot.handle;
     slot.handle = null;
-    if (slot.timer !== null) clearTimer(slot.timer);
+    if (slot.timer !== null) {
+      clearTimer(slot.timer);
+      stopHandle(slot.retiringHandle);
+    }
     slot.timer = null;
+    slot.retiringHandle = null;
     try { handle?.rampTo?.(0, fadeSeconds); } catch (_) { /* Optional audio is fail-soft. */ }
-    if (handle) slot.timer = setTimer(() => { slot.timer = null; stopHandle(handle); }, fadeSeconds * 1000);
+    if (handle && fadeSeconds > 0) {
+      slot.retiringHandle = handle;
+      if (kind !== 'lock') slot.owned = false;
+      slot.timer = setTimer(() => {
+        slot.timer = null;
+        slot.retiringHandle = null;
+        stopHandle(handle);
+        if (kind === 'lock') slot.owned = false;
+      }, fadeSeconds * 1000);
+    } else {
+      stopHandle(handle);
+      slot.owned = false;
+    }
   }
   function start(entry, kind, path) {
     const slot = entry[kind];
+    if (slot.pending || slot.handle || (kind === 'lock' && (slot.owned || slot.retiringHandle))) return false;
+    slot.owned = true;
+    slot.pending = true;
     const token = ++slot.token, expectedGeneration = generation;
     void audioBridge.startSpatialProcessSource(path, 'DEVICE', {
       loop: true, maxDistanceMeters, refDistanceMeters,
       panningModel: 'HRTF', distanceModel: 'linear', rolloffFactor: 1
     }).then((handle) => {
+      if (slot.token === token) slot.pending = false;
       if (!handle) return;
       if (disposed || generation !== expectedGeneration || slot.token !== token) { stopHandle(handle); return; }
       entry.anchor.updateWorldMatrix(true, false);
@@ -44,14 +65,18 @@ export function createVrAsterionResonatorTargetAudioProjection({ audioBridge, ac
       slot.handle = handle;
       handle.onEnded?.(() => { if (slot.handle === handle) slot.handle = null; });
     });
+    return true;
   }
   function observe(state) {
     if (disposed) return;
     const entry = targets.get(state?.id);
     if (!entry) return;
-    if (!entry.state.insideField && state.insideField) start(entry, 'aim', AIM_PATHS[aimCursor++ % AIM_PATHS.length]);
-    else if (entry.state.insideField && !state.insideField) retire(entry, 'aim', aimFadeOutSeconds);
-    if (entry.state.ringCount < 3 && state.ringCount === 3) start(entry, 'lock', LOCK_PATHS[lockCursor++ % LOCK_PATHS.length]);
+    if (!entry.state.insideField && state.insideField && state.ringCount < 3
+      && start(entry, 'aim', AIM_PATHS[aimCursor % AIM_PATHS.length])) aimCursor += 1;
+    if ((entry.state.insideField && !state.insideField)
+      || (entry.state.ringCount < 3 && state.ringCount === 3)) retire(entry, 'aim', aimFadeOutSeconds);
+    if (entry.state.ringCount < 3 && state.ringCount === 3
+      && start(entry, 'lock', LOCK_PATHS[lockCursor % LOCK_PATHS.length])) lockCursor += 1;
     else if (entry.state.ringCount > 0 && state.ringCount === 0) retire(entry, 'lock', lockFadeOutSeconds);
     entry.state = state;
   }
@@ -67,7 +92,8 @@ export function createVrAsterionResonatorTargetAudioProjection({ audioBridge, ac
     registerTarget({ id, anchor } = {}) {
       if (disposed || !id || !anchor?.getWorldPosition || targets.has(id)) throw new TypeError('Unique target id and anchor are required.');
       targets.set(id, { id, anchor, state: acquisitionActor.getTargetState(id) ?? { id, insideField: false, ringCount: 0 },
-        aim: { handle: null, token: 0, timer: null }, lock: { handle: null, token: 0, timer: null } });
+        aim: { handle: null, token: 0, timer: null, retiringHandle: null, pending: false, owned: false },
+        lock: { handle: null, token: 0, timer: null, retiringHandle: null, pending: false, owned: false } });
     },
     update() {
       if (disposed) return;
