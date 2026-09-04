@@ -1638,7 +1638,6 @@ function renderFrame() {
   largeGlyphActor.update(delta);
   asterionResonatorTargetAcquisitionActor.update(delta);
   asterionResonatorTargetAudioProjection.update();
-  asterionResonatorTargetResponsePresentation.update(delta);
   largeGlyphAttractorInteraction.update(delta);
   postRingPresentation.update(delta);
   smallGlyphSystem.update(delta);
@@ -1698,6 +1697,7 @@ function renderFrame() {
     || asterionSectorControlInteraction.isDriveActive());
   locomotion.update(delta);
   portalCanvas.update(delta);
+  asterionResonatorTargetResponsePresentation.update(delta);
   renderer.render(scene, camera);
 }
 
