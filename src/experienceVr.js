@@ -203,7 +203,19 @@ const postP1Qa = searchParams.has('p1');
 const furnaceProcessQa = searchParams.has('furnaceProcess');
 const introQaBypass = ['p1', 'asterionSphere', 'furnaceProcess', 'furnace']
   .some((key) => searchParams.has(key));
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: settings.renderer.antialias });
+const context = canvas.getContext('webgl2', {
+  alpha: true,
+  depth: true,
+  stencil: false,
+  antialias: settings.renderer.antialias,
+  premultipliedAlpha: true,
+  preserveDrawingBuffer: false,
+  powerPreference: 'default',
+  failIfMajorPerformanceCaveat: false,
+  xrCompatible: true
+});
+if (!context) throw new Error('Unable to create an XR-compatible WebGL2 context for Experience VR.');
+const renderer = new THREE.WebGLRenderer({ canvas, context });
 renderer.setPixelRatio(Math.min(devicePixelRatio || 1, settings.renderer.pixelRatioCap));
 renderer.xr.enabled = true;
 installXrBootstrapDiagnostics({ renderer });
