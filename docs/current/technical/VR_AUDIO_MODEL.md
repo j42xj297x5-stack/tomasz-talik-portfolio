@@ -164,12 +164,12 @@ VrTiltableFloorRoot
 
 ```js
 furnaceSpatialAudio: {
-  maxDistanceMeters: 4.0,
+  maxDistanceMeters: 6.0,
   refDistanceMeters: 0.25
 }
 ```
 
-Each physical source uses `panningModel = HRTF`, `distanceModel = linear`, `rolloffFactor = 1` and the `DEVICE` bus. At distance `>= 4.0 m`, its gain is zero under this model.
+Each physical source uses `panningModel = HRTF`, `distanceModel = linear`, `rolloffFactor = 1` and the `DEVICE` bus. At distance `>= 6.0 m`, its gain is zero under this model.
 
 ### Monkey and panels
 
