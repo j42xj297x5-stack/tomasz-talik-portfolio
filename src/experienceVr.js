@@ -109,6 +109,7 @@ import { stateAtVrScenarioPoint } from './xr/progression/reconstructVrScenarioSt
 import { hydrateVrScenarioState } from './xr/progression/hydrateVrScenarioState.js';
 import { createVrDebugCheckpointController } from './xr/progression/enterVrDebugCheckpoint.js';
 import { VR_DEBUG_CHECKPOINTS } from './xr/progression/vrDebugCheckpoints.js';
+import { installXrBootstrapDiagnostics } from './xr/debug/installXrBootstrapDiagnostics.js';
 import { createVrPostRingPresentation } from './xr/progression/createVrPostRingPresentation.js';
 import { createVrObservationWindow } from './xr/progression/createVrObservationWindow.js';
 import { VR_SCENARIO_CAPABILITY, VR_SCENARIO_EFFECT, VR_SCENARIO_EVENT, vrExperienceScenario } from './xr/progression/vrExperienceScenario.js';
@@ -205,6 +206,7 @@ const introQaBypass = ['p1', 'asterionSphere', 'furnaceProcess', 'furnace']
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: settings.renderer.antialias });
 renderer.setPixelRatio(Math.min(devicePixelRatio || 1, settings.renderer.pixelRatioCap));
 renderer.xr.enabled = true;
+installXrBootstrapDiagnostics({ renderer });
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(VR_BACKGROUND_COLOR);
