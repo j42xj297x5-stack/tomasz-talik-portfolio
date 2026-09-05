@@ -16,6 +16,20 @@ SPINE → SCENARIO → DIRECTOR → RuntimeExperience → actors / domain owners
 
 Scenario owns dramaturgy, required beats, Guidance/hints, revealed knowledge, crystal progression and semantic capabilities. It observes domain truth; it does not gate already-legal Rune tuning/pull/installation, powered-sector acquisition/control, or Resonator response through `currentPoint` or capability checks.
 
+
+## Experience VR launch and diagnostic sidecars
+
+```text
+Quest Browser OR Chromium + Virtual Desktop / VDXR
+→ normal Experience VR entry → request immersive session
+→ late WebGL2 / renderer bootstrap → committed Experience VR runtime
+
+?debug → pre-runtime diagnostic gate → recording ON → selected scopes
+→ scope sidecar → dev diagnostic transport → Vite recorder → .debug/*.jsonl
+```
+
+The first line names external validated execution environments, not an application dependency on Virtual Desktop. Diagnostics are read-only/fail-soft evidence and do not feed back into Scenario, Director, gameplay or runtime truth. Recording defaults OFF; only explicitly selected scopes are composed.
+
 ## Astrolabium family interpretation
 
 ```text

@@ -9,6 +9,7 @@
 - Concept/product direction → `docs/current/concept/`
 - Technical architecture and runtime model → `docs/current/technical/`
 - Process/workflow docs → `docs/current/operations/`
+- Browser/headset runtime operations and local diagnostic recording → `docs/current/operations/EXPERIENCE_VR_RUNTIME_OPERATIONS.md`
 - Decision records → `docs/current/decisions/`
 - Current implementation handoffs → `docs/current/handoffs/`
 - Navigation/meta docs → `docs/current/maps/`
