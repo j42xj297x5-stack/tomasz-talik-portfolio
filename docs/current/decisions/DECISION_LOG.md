@@ -1,6 +1,20 @@
 # Decision Log
 
-Status: current binding decisions with preserved history. Synchronized on 2026-09-03 through the implemented `5.60` late Rune/Resonator boundary and binding future Water/finale canon.
+Status: current binding decisions with preserved history. Synchronized on 2026-09-05 through the binding future Monkey communication contract, the implemented `5.60` late Rune/Resonator boundary and binding future Water/finale canon.
+
+## 2026-09-05 — BINDING TARGET Monkey authored communication and automatic hints (NOT YET IMPLEMENTED)
+
+This is a documentation-only product decision and performs no runtime implementation. CURRENT communication behavior remains the implemented baseline documented separately; the complete contract below is binding target behavior and is not yet implemented. `ATTENTION_REQUIRED`, `AUTO_HINT`, `SPEAKING` and `IDLE` are documentation concepts here, not assertions of existing runtime symbols.
+
+1. Required Scenario/progression communication that needs conscious acknowledgement uses `ATTENTION_REQUIRED`: play the Monkey attention sound, show the existing visual attention arcs, wait for a Monkey press, and use that press only to begin the pending authored communication. Existing authored choices inside that narrative communication remain part of it, not part of the ordinary Monkey menu.
+2. Required communication has the clean boundary `attention cue → player presses Monkey → authored speech → silent idle`. Ordinary Monkey conversation is unavailable during speech, and completion never automatically opens `CO TERAZ?`, `JAK MI IDZIE?`, history, knowledge or another ordinary menu. Opening the ordinary menu afterwards requires a new Monkey press from idle.
+3. Corrective or situational guidance uses `AUTO_HINT`: do not show visual attention arcs; play the existing attention sound; wait exactly `1.0 s`; then automatically display the authored hint blocks without requiring a Monkey press. The Rune-without-Binder `hint.rune.noBinder.soft` and `hint.rune.noBinder.medium` messages are concrete examples of this class rather than required Scenario acknowledgement beats.
+4. From the `AUTO_HINT` cue through hint playback, ordinary Monkey conversation is unavailable. The hint ends in silent idle and never automatically opens the ordinary menu.
+5. Every automatically presented `AUTO_HINT` also makes the same existing authored hint blocks available as a one-time readable fallback under the Monkey's `CO TERAZ?` knowledge surface. No alternate copy is created. This supports deliberate recovery when the player looked elsewhere or was too far away to read the complete automatic message.
+6. Communication class is determined by semantic role, not by a copy-key prefix such as `hint.*` or `progression.*`.
+7. Authored Monkey speech exclusively owns the Monkey interaction surface: pressing Monkey cannot open ordinary conversation, and ordinary `CO TERAZ?`, `JAK MI IDZIE?`, history or knowledge navigation cannot coexist with unfinished speech. This also applies to Intro and other authored sequences.
+8. This exclusivity does not block the surrounding game. The player may ignore Monkey and continue locomotion, object collection, tool use and other world interactions while Monkey speaks.
+9. Ordering of simultaneous transient hints, stacking versus replacement, expiry after the originating condition resolves, and interaction with an already-open ordinary Monkey menu are deliberately not decided here.
 
 ## 2026-09-03 — CURRENT late Resonator runtime ownership and eligibility correction (SUPERSEDING)
 
