@@ -110,6 +110,7 @@ import { hydrateVrScenarioState } from './xr/progression/hydrateVrScenarioState.
 import { createVrDebugCheckpointController } from './xr/progression/enterVrDebugCheckpoint.js';
 import { VR_DEBUG_CHECKPOINTS } from './xr/progression/vrDebugCheckpoints.js';
 import { installXrBootstrapDiagnostics } from './xr/debug/installXrBootstrapDiagnostics.js';
+import { createVrRuneTuningDiagnosticCapture } from './xr/debug/createVrRuneTuningDiagnosticCapture.js';
 import { createVrPostRingPresentation } from './xr/progression/createVrPostRingPresentation.js';
 import { createVrObservationWindow } from './xr/progression/createVrObservationWindow.js';
 import { VR_SCENARIO_CAPABILITY, VR_SCENARIO_EFFECT, VR_SCENARIO_EVENT, vrExperienceScenario } from './xr/progression/vrExperienceScenario.js';
@@ -184,6 +185,7 @@ app.innerHTML = `
     </section>
   </main>
 `;
+const runeTuningDiagnostics = createVrRuneTuningDiagnosticCapture({ surfaceRoot: app });
 
 let canvas = app.querySelector('#vr-scene-canvas');
 const status = app.querySelector('[data-vr-status]');
@@ -901,6 +903,11 @@ runeRecipeSelectionController = createVrRuneRecipeSelectionController({
 const runeTuningController = createVrRuneTuningController({
   runeRecipeInteraction: astroFurnaceRuneRecipeInteraction,
   runeRecipeSelectionController,
+  runeStoneProgressionController,
+  diagnostics: runeTuningDiagnostics
+});
+runeTuningDiagnostics.configureSources({
+  runeRecipeInteraction: astroFurnaceRuneRecipeInteraction,
   runeStoneProgressionController
 });
 const furnaceContentSource = createVrAstroFurnaceContentSource({
@@ -1853,6 +1860,7 @@ async function enterVr() {
 enterButton.addEventListener('click', enterVr);
 exitButton.addEventListener('click', () => { void activeSession?.end(); });
 window.addEventListener('pagehide', () => {
+  runeTuningDiagnostics.dispose();
   runtimeExperience.dispose();
   celestialActor.dispose();
   introCrystalTutorial.dispose();
