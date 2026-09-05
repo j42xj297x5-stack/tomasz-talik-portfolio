@@ -1,6 +1,13 @@
 # Experience VR — Current Handoff
 
-Status: **CURRENT operational snapshot — 2026-09-03**. Authorities: [`VR_RUNTIME_MODEL.md`](../technical/VR_RUNTIME_MODEL.md), [`VR_SCENARIO_DIRECTOR_MODEL.md`](../technical/VR_SCENARIO_DIRECTOR_MODEL.md), [`VR_PROTO_ASTRO_MODEL.md`](../technical/VR_PROTO_ASTRO_MODEL.md), [`VR_RUNE_STONES_MODEL.md`](../technical/VR_RUNE_STONES_MODEL.md), and [`VR_ASTERION_RESONATOR_MODEL.md`](../technical/VR_ASTERION_RESONATOR_MODEL.md).
+Status: **CURRENT operational snapshot — 2026-09-05**. Authorities: [`VR_RUNTIME_MODEL.md`](../technical/VR_RUNTIME_MODEL.md), [`VR_SCENARIO_DIRECTOR_MODEL.md`](../technical/VR_SCENARIO_DIRECTOR_MODEL.md), [`VR_PROTO_ASTRO_MODEL.md`](../technical/VR_PROTO_ASTRO_MODEL.md), [`VR_RUNE_STONES_MODEL.md`](../technical/VR_RUNE_STONES_MODEL.md), and [`VR_ASTERION_RESONATOR_MODEL.md`](../technical/VR_ASTERION_RESONATOR_MODEL.md).
+
+## Runtime operations checkpoint
+
+- Quest Browser and Chromium + Virtual Desktop / VDXR are manually validated paths; Chromium was validated with hardware acceleration enabled.
+- Both use the CURRENT unified late WebGL2/renderer bootstrap, with no special query flag required for normal execution.
+- The reusable `?debug` preload diagnostic workflow is IMPLEMENTED, defaults recording OFF and activates only selected scopes.
+- `RUNE_TUNING_COMPLETION` is the first implemented scope; future bounded scopes may address other hard-to-reproduce runtime problems.
 
 ## Canonical checkpoint
 

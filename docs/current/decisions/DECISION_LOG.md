@@ -2,6 +2,18 @@
 
 Status: current binding decisions with preserved history. Synchronized on 2026-09-03 through the implemented `5.60` late Rune/Resonator boundary and binding future Water/finale canon.
 
+
+## 2026-09-05 — CURRENT unified Experience VR bootstrap and scoped diagnostic recording
+
+1. Quest Browser and Chromium + Virtual Desktop / VDXR use the same normal Experience VR bootstrap; neither normal path requires a special debug query parameter.
+2. Late WebGL2 and `THREE.WebGLRenderer` creation after a successful immersive-session request is permanent production architecture, not an experimental workaround.
+3. Chromium hardware acceleration is required for the currently validated PCVR path. Microsoft Basic Render Driver was observed as the failing state; the observed NVIDIA GPU is evidence, not a required model.
+4. `?debug` is the CURRENT entry to the opt-in pre-runtime diagnostic workflow and does not change production WebXR bootstrap.
+5. Recording defaults OFF and requires explicit enablement plus one or more selected registered scopes; only selected sidecars are composed.
+6. Diagnostic scopes are bounded, read-only and fail-soft; they own no Scenario, Director, gameplay or runtime truth.
+7. `RUNE_TUNING_COMPLETION` is the first implemented scope and proved the architecture on a real difficult runtime failure. The framework is extensible for future hard-to-reproduce problems without permanent broad logging.
+8. Development transport persists structured records through Vite into local `.debug/*.jsonl`; each line is one JSON record. Production and GitHub Pages expose no local write path.
+
 ## 2026-09-03 — CURRENT late Resonator runtime ownership and eligibility correction (SUPERSEDING)
 
 This entry supersedes conflicting CURRENT status or ownership claims below that stop Scenario at `5.10`, make Astrolabium interpretation/Ether/Metal wholly future, or gate Metal behind `CAN_USE_ADVANCED_RESONATOR`. Older entries remain historical evidence.

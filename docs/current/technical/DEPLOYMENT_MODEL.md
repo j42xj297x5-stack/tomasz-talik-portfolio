@@ -14,6 +14,9 @@ The portfolio now has a documented first working dual-runtime deployment model:
 
 Snapshot reference: `docs/current/audits/snapshots/2026-05-29_19-59-42__snapshot__dual-runtime-github-pages-deployment.md`.
 
+
+Browser/headset execution and local diagnostic recording are owned by [`EXPERIENCE_VR_RUNTIME_OPERATIONS.md`](../operations/EXPERIENCE_VR_RUNTIME_OPERATIONS.md). Its diagnostic Vite middleware is serve-only local-development infrastructure; GitHub Pages and production builds do not expose or persist that local write path.
+
 ## Commands
 
 - Local development: `npm run dev`

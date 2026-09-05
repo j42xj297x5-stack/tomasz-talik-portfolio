@@ -1,6 +1,6 @@
 # Experience VR Runtime Model
 
-Status: canonical description of the implemented runtime synchronized through the `5.10` Scenario boundary and the implemented Resonator target-runtime slice on 2026-09-02. Future authored gameplay is documented in the [gameplay roadmap](../concept/EXPERIENCE_VR_GAMEPLAY_ROADMAP.md).
+Status: canonical description of the implemented runtime, including the CURRENT unified WebXR bootstrap synchronized on 2026-09-05. Future authored gameplay is documented in the [gameplay roadmap](../concept/EXPERIENCE_VR_GAMEPLAY_ROADMAP.md).
 
 ## Scenario composition boundary
 
@@ -10,7 +10,24 @@ WHERE, BEYOND, FOLLOW pause and hints are local `STAY` reactions. Crossing exist
 
 ## Runtime boundary and lifecycle
 
-`src/experienceVr.js` is the composition root of an independent, dynamically imported WebXR runtime. It owns its renderer, scene, base camera, `playerRig`, two controllers and `renderer.setAnimationLoop`; it does not start Experience 3D. Runtime preparation precedes the direct **Enter VR** gesture. The requested reference space is `local-floor`, with `local` fallback.
+`src/experienceVr.js` is the composition root of an independent, dynamically imported WebXR runtime. It owns its renderer, scene, base camera, `playerRig`, two controllers and `renderer.setAnimationLoop`; it does not start Experience 3D. CPU-side preparation/preload precedes the direct **Enter VR** gesture, but no WebGL renderer is required before the first immersive-session request. The requested reference space is `local-floor`, with `local` fallback.
+
+The **CURRENT / IMPLEMENTED** first-start lifecycle is permanent production architecture:
+
+```text
+CPU-side preparation / preload → user selects Experience VR → user Enter VR gesture
+→ navigator.xr.requestSession('immersive-vr', ...) → reference-space resolution
+→ create WebGL2 context → create THREE.WebGLRenderer
+→ create minimal XR controller/grip spaces → renderer.xr.setSession()
+→ successful renderer bootstrap commit
+→ finish renderer/controller-dependent runtime composition
+→ restore canonical Scenario baseline → activate current Scenario point
+→ request XR-start head calibration → start clock and XR animation loop
+```
+
+After successful bootstrap, renderer/controllers are persistent page-runtime resources and later session re-entry reuses that committed runtime. Normal Quest Browser and Chromium through Virtual Desktop / VDXR use the same lifecycle; no debug query parameter enables it. Operational launch, hardware acceleration and diagnostic details belong to [`EXPERIENCE_VR_RUNTIME_OPERATIONS.md`](../operations/EXPERIENCE_VR_RUNTIME_OPERATIONS.md).
+
+Diagnostic recording is external, selected-scope sidecar observability. It is read-only and fail-soft, owns no gameplay truth, and cannot feed evidence back into Scenario, Director, actors or domain state.
 
 The composition root owns the small `VrAudioBridge` lifecycle. Optional VR audio requests cross its fail-soft boundary, which contains both synchronous exceptions and Promise rejections and reports them as `[vr-audio]` warnings. Calls are fire-and-forget side effects after gameplay transitions; they are never awaited by session, input, progression, state-machine or render-frame flows. The bridge delegates Web Audio ownership to the shared `audioManager`, stores no gameplay state and is disposed idempotently on `pagehide`. Five unity-gain VR buses (`SPACE`, `AMBIENT`, `DEVICE`, `WORLD`, `UI`) feed the existing Master Volume/mute. UI and world/device one-shots, glyph acquisition, the shell-pull loop and both Asterion Sphere loops are **IMPLEMENTED**.
 
