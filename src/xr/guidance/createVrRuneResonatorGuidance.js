@@ -18,7 +18,7 @@ export function createVrRuneResonatorGuidance({ monkeyGuide, copy, secondsPerLin
   const makeCommunication = (blocks, requiresAttention = true, onCompleted = () => {}) => {
     let communication;
     communication = createVrMandatoryMonkeyCommunication({ monkeyGuide, blocks, secondsPerLine,
-      priority: VR_MONKEY_DIALOGUE_PRIORITY.ACQUISITION, requiresAttention, openMenuOnCompleted: false,
+      priority: VR_MONKEY_DIALOGUE_PRIORITY.ACQUISITION, requiresAttention,
       onTriggered: () => communication.beginPlayback(), onCompleted });
     return communication;
   };

@@ -49,7 +49,6 @@ export function createVrToolGuidanceLifecycle({ monkeyGuide, copy, canStartAstro
       blocks: descriptor.blocks,
       secondsPerLine: VR_MONKEY_MESSAGE_TIMING.secondsPerLine,
       priority: descriptor.priority,
-      openMenuOnCompleted: false,
       onTriggered() { actor.beginPlayback(); },
       onCompleted() { if (activeMessage?.actor === actor) activeMessage = null; }
     });
