@@ -109,7 +109,6 @@ import { stateAtVrScenarioPoint } from './xr/progression/reconstructVrScenarioSt
 import { hydrateVrScenarioState } from './xr/progression/hydrateVrScenarioState.js';
 import { createVrDebugCheckpointController } from './xr/progression/enterVrDebugCheckpoint.js';
 import { VR_DEBUG_CHECKPOINTS } from './xr/progression/vrDebugCheckpoints.js';
-import { installXrBootstrapDiagnostics } from './xr/debug/installXrBootstrapDiagnostics.js';
 import { createVrRuneTuningDiagnosticCapture } from './xr/debug/createVrRuneTuningDiagnosticCapture.js';
 import { getVrDebugLaunchConfig } from './xr/debug/vrDebugLaunchConfig.js';
 import { VR_DIAGNOSTIC_SCOPE } from './xr/debug/vrDiagnosticScopes.js';
@@ -218,8 +217,6 @@ const postP1Qa = searchParams.has('p1');
 const furnaceProcessQa = searchParams.has('furnaceProcess');
 const introQaBypass = ['p1', 'asterionSphere', 'furnaceProcess', 'furnace']
   .some((key) => searchParams.has(key));
-const xrDiagnostics = installXrBootstrapDiagnostics();
-
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(VR_BACKGROUND_COLOR);
 const experienceRoot = new THREE.Group();
@@ -319,7 +316,6 @@ async function bootstrapInitialRenderer() {
       camera.updateProjectionMatrix();
       temporaryRenderer.setSize(width, height, false);
       temporaryRenderer.xr.enabled = true;
-      xrDiagnostics.attachRenderer(temporaryRenderer);
       temporaryControllers = createVrControllers({
         renderer: temporaryRenderer,
         playerRig,
