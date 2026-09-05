@@ -6,6 +6,8 @@ export const VR_MONKEY_KNOWLEDGE_LIFECYCLE = Object.freeze({
   LOCKED: 'LOCKED', NEW: 'NEW', READ: 'READ', ARCHIVED: 'ARCHIVED'
 });
 
+const RUNE_NO_BINDER_HINT_IDS = new Set(['hint.rune.noBinder.soft', 'hint.rune.noBinder.medium']);
+
 export function createVrMonkeyKnowledgeResolver({ locale, getCurrentObjective, isPostRingStoneGuidance = () => false }) {
   if (typeof getCurrentObjective !== 'function') throw new TypeError('getCurrentObjective must be a function.');
   const category = Object.freeze({ id: 'category.whatNow', ...VR_MONKEY_KNOWLEDGE_CATEGORIES_PL['category.whatNow'],
@@ -15,6 +17,7 @@ export function createVrMonkeyKnowledgeResolver({ locale, getCurrentObjective, i
   let stonesRead = false;
   let stonesLeadRead = false;
   let bindersUnlocked = false;
+  let unreadNoBinderFallback = null;
 
   function getTopic() {
     if (locale === 'pl' && isPostRingStoneGuidance()) {
@@ -31,24 +34,37 @@ export function createVrMonkeyKnowledgeResolver({ locale, getCurrentObjective, i
     type: VR_MONKEY_KNOWLEDGE_ITEM_TYPE.TOPIC,
     lifecycle: id === 'knowledge.p3.stones' && !stonesRead ? VR_MONKEY_KNOWLEDGE_LIFECYCLE.NEW : VR_MONKEY_KNOWLEDGE_LIFECYCLE.READ }); };
   function topics(groupId) {
-    if (groupId === category.groupId) return getTopic() ? [getTopic()] : [];
+    if (groupId === category.groupId) {
+      const ordinaryTopic = getTopic();
+      return [...(unreadNoBinderFallback ? [unreadNoBinderFallback] : []), ...(ordinaryTopic ? [ordinaryTopic] : [])];
+    }
     if (groupId === whatIsIt.groupId && bindersUnlocked) return [topicFromCopy('knowledge.p3.binders')];
     return [];
   }
-  const hasObjective = () => getTopic() !== null;
+  const hasWhatNowContent = () => unreadNoBinderFallback !== null || getTopic() !== null;
   return Object.freeze({
-    getRootItems: () => [...(hasObjective() ? [category] : []), ...(bindersUnlocked ? [whatIsIt] : [])],
+    getRootItems: () => [...(hasWhatNowContent() ? [category] : []), ...(bindersUnlocked ? [whatIsIt] : [])],
     getGroupTopics: topics,
     getCategory: (categoryId) => [category, whatIsIt].find(({ id }) => id === categoryId && topics(id === category.id ? category.groupId : whatIsIt.groupId).length) ?? null,
     getTopic: (topicId) => [...topics(category.groupId), ...topics(whatIsIt.groupId)].find(({ id }) => id === topicId) ?? null,
     getLifecycle: (topicId) => [...topics(category.groupId), ...topics(whatIsIt.groupId)].find(({ id }) => id === topicId)?.lifecycle ?? VR_MONKEY_KNOWLEDGE_LIFECYCLE.LOCKED,
     completeTopic(topicId) {
+      if (topicId === unreadNoBinderFallback?.id) unreadNoBinderFallback = null;
       if (topicId === 'knowledge.p3.stonesLead') stonesLeadRead = true;
       if (topicId === 'knowledge.p3.stones') stonesRead = true;
+    },
+    publishNoBinderFallback(hintId) {
+      if (!RUNE_NO_BINDER_HINT_IDS.has(hintId)) return false;
+      const source = VR_MONKEY_COMMUNICATION_COPY_PL.hints[hintId];
+      const finalBlock = source.blocks.at(-1);
+      unreadNoBinderFallback = Object.freeze({ id: `fallback:${hintId}`, groupId: category.groupId,
+        label: finalBlock, question: finalBlock, blocks: source.blocks,
+        type: VR_MONKEY_KNOWLEDGE_ITEM_TYPE.TOPIC, lifecycle: VR_MONKEY_KNOWLEDGE_LIFECYCLE.NEW });
+      return true;
     },
     unlockBinders() { bindersUnlocked = true; },
     hasReadStones: () => stonesRead,
     hasDiscoveredBinders: () => bindersUnlocked,
-    reset() { stonesRead = false; stonesLeadRead = false; bindersUnlocked = false; }
+    reset() { stonesRead = false; stonesLeadRead = false; bindersUnlocked = false; unreadNoBinderFallback = null; }
   });
 }
