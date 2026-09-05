@@ -4,7 +4,7 @@ import { VR_MONKEY_DIALOGUE_PRIORITY } from './createVrMonkeyGuide.js';
 const PHASE = Object.freeze({ IDLE: 'IDLE', WAITING: 'WAITING', ATTENTION: 'ATTENTION', PLAYBACK: 'PLAYBACK', COMPLETE: 'COMPLETE' });
 
 export function createVrMandatoryMonkeyCommunication({ monkeyGuide, blocks, secondsPerLine,
-  onTriggered = () => {}, onCompleted = () => {}, openMenuOnCompleted = true,
+  onTriggered = () => {}, onCompleted = () => {},
   priority = VR_MONKEY_DIALOGUE_PRIORITY.MANDATORY, requiresAttention = true }) {
   const owner = Symbol('VrMonkeyCommunication');
   let phase = PHASE.IDLE;
@@ -12,7 +12,6 @@ export function createVrMandatoryMonkeyCommunication({ monkeyGuide, blocks, seco
     onCompleted() {
       phase = PHASE.COMPLETE;
       monkeyGuide.releaseDialogue(owner);
-      if (openMenuOnCompleted) monkeyGuide.open();
       onCompleted();
     }
   });

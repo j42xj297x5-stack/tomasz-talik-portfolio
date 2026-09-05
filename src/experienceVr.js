@@ -1345,21 +1345,18 @@ const p2ObservationWindow = createVrObservationWindow({
 const postRingMonkeyDialogue = createVrMandatoryMonkeyCommunication({ monkeyGuide,
   blocks: VR_MONKEY_COMMUNICATION_COPY_PL.progression['progression.postRing.changedWorld'].blocks,
   secondsPerLine: settings.intro.messageDisplayDuration,
-  openMenuOnCompleted: false,
   onTriggered: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.MONKEY_TRIGGERED),
   onCompleted: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.POST_RING_MONKEY_DIALOGUE_COMPLETED)
 });
 const p2MonkeyDialogue = createVrMandatoryMonkeyCommunication({ monkeyGuide,
   blocks: VR_MONKEY_COMMUNICATION_COPY_PL.progression['progression.p2.smallGlyphsIntro'].blocks,
   secondsPerLine: settings.intro.messageDisplayDuration,
-  openMenuOnCompleted: false,
   onTriggered: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.MONKEY_TRIGGERED),
   onCompleted: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.P2_MONKEY_DIALOGUE_COMPLETED)
 });
 const waterPathOpenCommunication = createVrMandatoryMonkeyCommunication({ monkeyGuide,
   blocks: VR_MONKEY_COMMUNICATION_COPY_PL.progression['progression.p4.waterPathOpen'].blocks,
   secondsPerLine: settings.intro.messageDisplayDuration,
-  openMenuOnCompleted: false,
   onTriggered: () => waterPathOpenCommunication.beginPlayback()
 });
 const furnaceIntro = createVrFurnaceIntro({

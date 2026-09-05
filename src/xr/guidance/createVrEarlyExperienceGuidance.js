@@ -48,7 +48,7 @@ export function createVrEarlyExperienceGuidance({ monkeyGuide, copy, getCurrentP
     let actor;
     actor = createVrMandatoryMonkeyCommunication({ monkeyGuide, blocks: descriptor.blocks,
       secondsPerLine: VR_MONKEY_MESSAGE_TIMING.secondsPerLine, priority: descriptor.priority,
-      requiresAttention: descriptor.requiresAttention, openMenuOnCompleted: false,
+      requiresAttention: descriptor.requiresAttention,
       onTriggered: () => actor.beginPlayback(), onCompleted: () => {
         descriptor.onCompleted?.();
         if (active?.actor === actor) active = null;
