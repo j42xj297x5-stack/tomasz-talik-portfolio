@@ -42,8 +42,11 @@ export function createVrRuneResonatorGuidance({ monkeyGuide, copy, secondsPerLin
     onEtherInterventionCompleted
   );
   const fullResonator = makeCommunication(copy.progression['progression.p4.fullResonator'].blocks);
-  const noBinderMedium = makeAutoHint(copy.hints['hint.rune.noBinder.medium'].blocks);
+  const noBinderMedium = makeAutoHint(copy.hints['hint.rune.noBinder.medium'].blocks, () => {
+    knowledgeResolver.publishNoBinderFallback('hint.rune.noBinder.medium');
+  });
   const noBinderSoft = makeAutoHint(copy.hints['hint.rune.noBinder.soft'].blocks, () => {
+    knowledgeResolver.publishNoBinderFallback('hint.rune.noBinder.soft');
     if (getUnresolvedRuneBranchId()) { unresolvedSeconds = 0; mediumDue = true; }
   });
   const communications = [glyphsGone, installed, sectorLock, resonator, etherIntervention, fullResonator,
