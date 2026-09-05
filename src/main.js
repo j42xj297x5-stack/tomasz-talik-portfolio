@@ -3,6 +3,8 @@ import { startClassic2D } from './classic2d.js';
 import { audioManager } from './audio/audioManager.js';
 import { createAudioControl } from './ui/audioControl.js';
 import { detectVrCapability } from './xr/vrCapability.js';
+import { createVrDebugPreloadGate } from './xr/debug/createVrDebugPreloadGate.js';
+import { setVrDebugLaunchConfig } from './xr/debug/vrDebugLaunchConfig.js';
 
 const app = document.querySelector('#app');
 if (!app) throw new Error('Missing #app mount element.');
@@ -254,6 +256,12 @@ async function startExperienceVr() {
   saveSelection();
 
   const copy = COPY[state.language || 'en'];
+  const debugMode = new URLSearchParams(window.location.search).has('debug');
+  const launchConfig = debugMode
+    ? await createVrDebugPreloadGate({ root: app, language: state.language || 'en' })
+    : { debugMode: false, recording: { enabled: false, scopes: [] } };
+  setVrDebugLaunchConfig(launchConfig);
+
   renderEntryShell(`
     <p class="entry-shell__eyebrow">${copy.modeEyebrow}</p>
     <h1 class="entry-shell__title" id="entry-title">${copy.vrButton}</h1>

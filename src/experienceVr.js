@@ -111,6 +111,8 @@ import { createVrDebugCheckpointController } from './xr/progression/enterVrDebug
 import { VR_DEBUG_CHECKPOINTS } from './xr/progression/vrDebugCheckpoints.js';
 import { installXrBootstrapDiagnostics } from './xr/debug/installXrBootstrapDiagnostics.js';
 import { createVrRuneTuningDiagnosticCapture } from './xr/debug/createVrRuneTuningDiagnosticCapture.js';
+import { getVrDebugLaunchConfig } from './xr/debug/vrDebugLaunchConfig.js';
+import { VR_DIAGNOSTIC_SCOPE } from './xr/debug/vrDiagnosticScopes.js';
 import { createVrPostRingPresentation } from './xr/progression/createVrPostRingPresentation.js';
 import { createVrObservationWindow } from './xr/progression/createVrObservationWindow.js';
 import { VR_SCENARIO_CAPABILITY, VR_SCENARIO_EFFECT, VR_SCENARIO_EVENT, vrExperienceScenario } from './xr/progression/vrExperienceScenario.js';
@@ -185,7 +187,14 @@ app.innerHTML = `
     </section>
   </main>
 `;
-const runeTuningDiagnostics = createVrRuneTuningDiagnosticCapture({ surfaceRoot: app });
+const launchConfig = getVrDebugLaunchConfig();
+const runeRecordingEnabled = launchConfig.recording.enabled
+  && launchConfig.recording.scopes.includes(VR_DIAGNOSTIC_SCOPE.RUNE_TUNING_COMPLETION);
+const runeRecoveryRequested = new URLSearchParams(location.search).get('vrDebug') === 'rune';
+const runeDiagnosticCapture = runeRecordingEnabled || runeRecoveryRequested
+  ? createVrRuneTuningDiagnosticCapture({ surfaceRoot: app, recordingEnabled: runeRecordingEnabled })
+  : null;
+const runeTuningDiagnostics = runeRecordingEnabled ? runeDiagnosticCapture : null;
 
 let canvas = app.querySelector('#vr-scene-canvas');
 const status = app.querySelector('[data-vr-status]');
@@ -906,7 +915,7 @@ const runeTuningController = createVrRuneTuningController({
   runeStoneProgressionController,
   diagnostics: runeTuningDiagnostics
 });
-runeTuningDiagnostics.configureSources({
+runeTuningDiagnostics?.configureSources({
   runeRecipeInteraction: astroFurnaceRuneRecipeInteraction,
   runeStoneProgressionController
 });
@@ -1860,7 +1869,7 @@ async function enterVr() {
 enterButton.addEventListener('click', enterVr);
 exitButton.addEventListener('click', () => { void activeSession?.end(); });
 window.addEventListener('pagehide', () => {
-  runeTuningDiagnostics.dispose();
+  runeDiagnosticCapture?.dispose();
   runtimeExperience.dispose();
   celestialActor.dispose();
   introCrystalTutorial.dispose();

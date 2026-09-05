@@ -128,6 +128,83 @@ body {
   transition: border-color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
 }
 
+.vr-debug-gate {
+  width: min(620px, 100%);
+  text-align: left;
+}
+
+.vr-debug-gate .entry-shell__sigil,
+.vr-debug-gate .entry-shell__eyebrow,
+.vr-debug-gate .entry-shell__title {
+  text-align: center;
+}
+
+.vr-debug-gate__recording {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 1.6rem;
+}
+
+.vr-debug-gate__toggle {
+  min-width: 8rem;
+  padding: 0.8rem 1rem;
+  border: 1px solid rgba(107, 198, 255, 0.56);
+  border-radius: 999px;
+  background: rgba(14, 22, 35, 0.9);
+  color: #edf4ff;
+  cursor: pointer;
+  font: inherit;
+}
+
+.vr-debug-gate__toggle[aria-pressed="true"] {
+  border-color: rgba(213, 190, 121, 0.8);
+  background: rgba(45, 48, 38, 0.95);
+}
+
+.vr-debug-gate__scopes {
+  margin: 1.4rem 0 0;
+  padding: 0;
+  border: 0;
+}
+
+.vr-debug-gate__scopes legend {
+  margin-bottom: 0.7rem;
+  color: rgba(181, 200, 226, 0.76);
+}
+
+.vr-debug-gate__scope {
+  display: flex;
+  gap: 0.85rem;
+  align-items: flex-start;
+  padding: 1rem;
+  border: 1px solid rgba(151, 171, 202, 0.28);
+  border-radius: 14px;
+  cursor: pointer;
+}
+
+.vr-debug-gate__scope input {
+  width: 1.4rem;
+  height: 1.4rem;
+  flex: 0 0 auto;
+  margin: 0;
+}
+
+.vr-debug-gate__scope small {
+  display: block;
+  margin-top: 0.35rem;
+  color: rgba(220, 232, 248, 0.7);
+  line-height: 1.4;
+}
+
+.vr-debug-gate__validation {
+  min-height: 1.4em;
+  margin: 0.8rem 0;
+  color: #ffbdad;
+  font-size: 0.9rem;
+}
+
 .entry-choice {
   width: 100%;
   padding: 0.95rem 1.2rem;

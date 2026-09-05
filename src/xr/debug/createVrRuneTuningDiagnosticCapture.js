@@ -36,8 +36,10 @@ function formatFilename(timestamp) {
 }
 
 export function createVrRuneTuningDiagnosticCapture({ windowRef = globalThis.window,
-  surfaceRoot = null } = {}) {
-  const transport = createVrDevDiagnosticTransport({ windowRef });
+  surfaceRoot = null, recordingEnabled = true } = {}) {
+  const transport = recordingEnabled
+    ? createVrDevDiagnosticTransport({ windowRef })
+    : Object.freeze({ sendBreadcrumb() {}, sendFailure() {} });
   let eventSequence = 0;
   let storage = null;
   try { storage = windowRef?.localStorage ?? null; } catch { storage = null; }
@@ -120,6 +122,7 @@ export function createVrRuneTuningDiagnosticCapture({ windowRef = globalThis.win
   }
 
   function begin({ targetFamilyCode, expectedRecipe, smallGlyph, shell } = {}) {
+    if (!recordingEnabled) return;
     try {
       if (journal.current && !['COMPLETE', 'FAIL'].includes(journal.current.kind)) {
         archive({ ...journal.current, kind: 'INTERRUPTED', interruptedAt: now() });
@@ -151,6 +154,7 @@ export function createVrRuneTuningDiagnosticCapture({ windowRef = globalThis.win
   }
 
   function stage(stageName) {
+    if (!recordingEnabled) return;
     try {
       const record = ensureCurrent();
       record.kind = 'STAGE'; record.stage = stageName; record.timestamp = now();
@@ -161,6 +165,7 @@ export function createVrRuneTuningDiagnosticCapture({ windowRef = globalThis.win
   }
 
   function preflight({ glyphIdentity, shellIdentity, predicates } = {}) {
+    if (!recordingEnabled) return;
     try {
       const record = ensureCurrent();
       record.stage = 'PRE_FLIGHT';
@@ -186,6 +191,7 @@ export function createVrRuneTuningDiagnosticCapture({ windowRef = globalThis.win
   }
 
   function failure(error, { stage: failedStage, predicates } = {}) {
+    if (!recordingEnabled) return;
     try {
       const record = ensureCurrent();
       record.kind = 'FAIL'; record.stage = failedStage ?? record.stage; record.timestamp = now();
@@ -215,6 +221,7 @@ export function createVrRuneTuningDiagnosticCapture({ windowRef = globalThis.win
   }
 
   function complete() {
+    if (!recordingEnabled) return;
     try {
       const record = ensureCurrent();
       record.kind = 'COMPLETE'; record.stage = 'COMPLETE'; record.timestamp = now();
@@ -225,6 +232,7 @@ export function createVrRuneTuningDiagnosticCapture({ windowRef = globalThis.win
   }
 
   function abort() {
+    if (!recordingEnabled) return;
     try {
       if (!journal.current) return;
       const record = { ...journal.current, kind: 'ABORT', stage: 'ABORT', timestamp: now() };
@@ -247,10 +255,12 @@ export function createVrRuneTuningDiagnosticCapture({ windowRef = globalThis.win
 
   const onError = (event) => captureGlobalError(event?.error ?? event?.message, 'error');
   const onUnhandledRejection = (event) => captureGlobalError(event?.reason, 'unhandledrejection');
-  try {
-    windowRef?.addEventListener?.('error', onError);
-    windowRef?.addEventListener?.('unhandledrejection', onUnhandledRejection);
-  } catch { /* Diagnostics must stay fail-soft. */ }
+  if (recordingEnabled) {
+    try {
+      windowRef?.addEventListener?.('error', onError);
+      windowRef?.addEventListener?.('unhandledrejection', onUnhandledRejection);
+    } catch { /* Diagnostics must stay fail-soft. */ }
+  }
 
   function report() {
     try { return JSON.stringify({ ...journal, exportedAt: now() }, null, 2); }
@@ -292,6 +302,7 @@ export function createVrRuneTuningDiagnosticCapture({ windowRef = globalThis.win
     getJournal: () => journal,
     exportJson: report,
     dispose() {
+      if (!recordingEnabled) return;
       try {
         windowRef?.removeEventListener?.('error', onError);
         windowRef?.removeEventListener?.('unhandledrejection', onUnhandledRejection);
