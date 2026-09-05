@@ -62,14 +62,13 @@ export function resolveFurnaceContentSnapTarget({
   const contentBounds = boundsInAnchor(visibleRoot, anchor);
   const energyBounds = energyCell ? boundsInAnchor(energyCell, anchor) : new THREE.Box3().makeEmpty();
   const target = new THREE.Vector3();
-  if (!contentBounds.isEmpty() && !energyBounds.isEmpty()) {
+  if (centerVisibleBounds && !contentBounds.isEmpty()) {
+    target.sub(contentBounds.getCenter(new THREE.Vector3()));
+  } else if (!contentBounds.isEmpty() && !energyBounds.isEmpty()) {
     target.y = energyBounds.min.y - Math.max(0, contentClearance) - contentBounds.max.y;
   }
   if (localGeometryCenter) {
     const center = localGeometryCenter.clone().applyMatrix4(object.matrixWorld); anchor.worldToLocal(center);
-    target.x -= center.x; target.z -= center.z;
-  } else if (centerVisibleBounds && !contentBounds.isEmpty()) {
-    const center = contentBounds.getCenter(new THREE.Vector3());
     target.x -= center.x; target.z -= center.z;
   }
   object.position.copy(savedPosition); object.quaternion.copy(savedQuaternion); object.scale.copy(savedScale);

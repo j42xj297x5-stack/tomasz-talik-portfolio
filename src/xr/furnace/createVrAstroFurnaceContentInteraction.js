@@ -114,7 +114,8 @@ export function createVrAstroFurnaceContentInteraction({
     snapStartPosition = content.position.clone(); snapStartQuaternion = content.quaternion.clone();
     snapTarget = resolveFurnaceContentSnapTarget({ object: content, anchor,
       energyCell: furnace?.nodes?.energy_cell ?? furnace?.nodes?.fire_cell, contentClearance: config.contentClearance,
-      localGeometryCenter: kind === kinds.SHELL ? shellRecord(content)?.boundingCenter ?? null : null });
+      localGeometryCenter: kind === kinds.SHELL ? shellRecord(content)?.boundingCenter ?? null : null,
+      centerVisibleBounds: kind === kinds.SMALL_GLYPH });
     if (kind === kinds.SHELL) { content.userData.furnaceDesiredWorldScale = desiredWorldScale;
       content.userData.furnaceSnapTarget = snapTarget; content.userData.shellState = 'inserted'; content.userData.attractorTarget = false; }
     snapElapsed = 0; setState(states.INSERTED); hideFeedback(); return true;
