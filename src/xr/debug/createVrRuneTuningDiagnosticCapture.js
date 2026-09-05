@@ -1,3 +1,5 @@
+import { createVrDevDiagnosticTransport } from './createVrDevDiagnosticTransport.js';
+
 const SCHEMA_VERSION = 1;
 const STORAGE_KEY = 'experienceVr.runeTuningDiagnostics.v1';
 const MAX_RECORDS = 5;
@@ -35,6 +37,8 @@ function formatFilename(timestamp) {
 
 export function createVrRuneTuningDiagnosticCapture({ windowRef = globalThis.window,
   surfaceRoot = null } = {}) {
+  const transport = createVrDevDiagnosticTransport({ windowRef });
+  let eventSequence = 0;
   let storage = null;
   try { storage = windowRef?.localStorage ?? null; } catch { storage = null; }
   let journal = createEmptyJournal();
@@ -50,6 +54,31 @@ export function createVrRuneTuningDiagnosticCapture({ windowRef = globalThis.win
 
   function persist() {
     try { storage?.setItem(STORAGE_KEY, JSON.stringify(journal)); } catch { /* Diagnostics must stay fail-soft. */ }
+  }
+
+  function remoteRecord(record, kind = record.kind, full = false) {
+    eventSequence += 1;
+    const payload = {
+      schemaVersion: record.schemaVersion,
+      sessionId: record.sessionId,
+      completionSequence: record.sequence,
+      eventSequence,
+      clientTimestamp: now(),
+      kind,
+      stage: record.stage,
+      targetFamilyCode: record.targetFamilyCode,
+      failedPredicates: record.failedPredicates
+    };
+    if (full) Object.assign(payload, {
+      recipe: record.recipe,
+      identities: record.identities,
+      predicates: record.predicates,
+      slots: record.slots,
+      progression: record.progression,
+      error: record.error,
+      globalError: record.globalError ?? null
+    });
+    return payload;
   }
 
   function recipeSnapshot() {
@@ -117,6 +146,7 @@ export function createVrRuneTuningDiagnosticCapture({ windowRef = globalThis.win
         progression: progressionSnapshot(), error: null
       };
       persist();
+      transport.sendBreadcrumb(remoteRecord(journal.current));
     } catch { /* Diagnostics must stay fail-soft. */ }
   }
 
@@ -126,6 +156,7 @@ export function createVrRuneTuningDiagnosticCapture({ windowRef = globalThis.win
       record.kind = 'STAGE'; record.stage = stageName; record.timestamp = now();
       record.slots = recipeSnapshot(); record.progression = progressionSnapshot();
       persist();
+      transport.sendBreadcrumb(remoteRecord(record));
     } catch { /* Diagnostics must stay fail-soft. */ }
   }
 
@@ -150,6 +181,7 @@ export function createVrRuneTuningDiagnosticCapture({ windowRef = globalThis.win
         .filter(([, passed]) => passed !== true).map(([name]) => name);
       record.slots = recipeSnapshot(); record.progression = progressionSnapshot();
       persist();
+      transport.sendBreadcrumb(remoteRecord(record, 'PRE_FLIGHT', true));
     } catch { /* Diagnostics must stay fail-soft. */ }
   }
 
@@ -167,6 +199,7 @@ export function createVrRuneTuningDiagnosticCapture({ windowRef = globalThis.win
       journal.lastFailure = { ...record };
       archive({ ...record });
       persist();
+      transport.sendFailure(remoteRecord(record, 'FAIL', true));
       console.error('[Experience VR][RuneTuningCompletion] Failed', {
         stage: record.stage,
         targetFamilyCode: record.targetFamilyCode,
@@ -187,6 +220,7 @@ export function createVrRuneTuningDiagnosticCapture({ windowRef = globalThis.win
       record.kind = 'COMPLETE'; record.stage = 'COMPLETE'; record.timestamp = now();
       record.slots = recipeSnapshot(); record.progression = progressionSnapshot();
       archive({ ...record }); journal.current = null; persist();
+      transport.sendBreadcrumb(remoteRecord(record));
     } catch { /* Diagnostics must stay fail-soft. */ }
   }
 
@@ -195,6 +229,7 @@ export function createVrRuneTuningDiagnosticCapture({ windowRef = globalThis.win
       if (!journal.current) return;
       const record = { ...journal.current, kind: 'ABORT', stage: 'ABORT', timestamp: now() };
       archive(record); journal.current = null; persist();
+      transport.sendBreadcrumb(remoteRecord(record));
     } catch { /* Diagnostics must stay fail-soft. */ }
   }
 
@@ -206,6 +241,7 @@ export function createVrRuneTuningDiagnosticCapture({ windowRef = globalThis.win
       if (!record.error) record.error = serializeError(error);
       record.kind = 'FAIL'; journal.lastFailure = { ...record };
       archive({ ...record }); persist();
+      transport.sendFailure(remoteRecord(record, 'FAIL', true));
     } catch { /* Black-box capture must stay fail-soft. */ }
   }
 
