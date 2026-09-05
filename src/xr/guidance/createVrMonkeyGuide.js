@@ -502,12 +502,17 @@ export function createVrMonkeyGuide({
     attentionRoot.visible = false;
     arcMaterials.forEach((material) => { material.opacity = 0; });
   }
+  function playAttentionCue() {
+    if (disposed) return false;
+    onAttentionStart();
+    return true;
+  }
   function notifyAttention() {
     if (disposed || attentionPending) return;
     attentionPending = true;
     elapsed = 0;
     attentionRoot.visible = true;
-    onAttentionStart();
+    playAttentionCue();
   }
   function notifyOwnedAttention(owner) {
     if (dialogueOwner !== owner) return false;
@@ -697,7 +702,7 @@ export function createVrMonkeyGuide({
   drawDialogue();
   const api = {
     object: root, messagePanel, dialoguePanel, attentionRoot, arcs, halo, hits,
-    update, notifyAttention, cancelAttention: clearAttention, showMessage,
+    update, notifyAttention, playAttentionCue, cancelAttention: clearAttention, showMessage,
     open: openDialogue, close, isOpen: () => open,
     hasCurrentHit: (record) => Boolean(hits.get(record)), reset, dispose, press,
     isAttentionPending: () => attentionPending,

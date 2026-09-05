@@ -2,6 +2,7 @@ import { createVrMandatoryMonkeyCommunication } from './createVrMandatoryMonkeyC
 import { VR_MONKEY_DIALOGUE_PRIORITY } from './createVrMonkeyGuide.js';
 
 const DELAY_SECONDS = 5;
+const AUTO_HINT_CUE_SECONDS = 1;
 
 export function createVrRuneResonatorGuidance({ monkeyGuide, copy, secondsPerLine,
   getCurrentPointId, getUnresolvedRuneBranchId, knowledgeResolver,
@@ -22,6 +23,15 @@ export function createVrRuneResonatorGuidance({ monkeyGuide, copy, secondsPerLin
       onTriggered: () => communication.beginPlayback(), onCompleted });
     return communication;
   };
+  const makeAutoHint = (blocks, onCompleted = () => {}) => {
+    let communication;
+    communication = createVrMandatoryMonkeyCommunication({ monkeyGuide, blocks, secondsPerLine,
+      priority: VR_MONKEY_DIALOGUE_PRIORITY.ACQUISITION, requiresAttention: false,
+      autoPlaybackDelaySeconds: AUTO_HINT_CUE_SECONDS,
+      onAutoPlaybackCue: () => monkeyGuide.playAttentionCue(),
+      onTriggered: () => communication.beginPlayback(), onCompleted });
+    return communication;
+  };
   const glyphsGone = makeCommunication(copy.progression['progression.p3.glyphsGone'].blocks);
   const installed = makeCommunication(copy.progression['progression.p3.firstRuneInstalled'].blocks);
   const sectorLock = makeCommunication(copy.progression['progression.p3.firstSectorLock'].blocks, false);
@@ -32,8 +42,8 @@ export function createVrRuneResonatorGuidance({ monkeyGuide, copy, secondsPerLin
     onEtherInterventionCompleted
   );
   const fullResonator = makeCommunication(copy.progression['progression.p4.fullResonator'].blocks);
-  const noBinderMedium = makeCommunication(copy.hints['hint.rune.noBinder.medium'].blocks);
-  const noBinderSoft = makeCommunication(copy.hints['hint.rune.noBinder.soft'].blocks, true, () => {
+  const noBinderMedium = makeAutoHint(copy.hints['hint.rune.noBinder.medium'].blocks);
+  const noBinderSoft = makeAutoHint(copy.hints['hint.rune.noBinder.soft'].blocks, () => {
     if (getUnresolvedRuneBranchId()) { unresolvedSeconds = 0; mediumDue = true; }
   });
   const communications = [glyphsGone, installed, sectorLock, resonator, etherIntervention, fullResonator,
