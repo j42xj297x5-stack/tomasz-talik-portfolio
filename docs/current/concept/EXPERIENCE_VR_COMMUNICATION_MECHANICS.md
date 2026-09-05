@@ -1,6 +1,8 @@
 # Experience VR — Communication Mechanics
 
-Status: **CURRENT / BINDING**, synchronized on 2026-09-01. Literal Polish text is owned by [`EXPERIENCE_VR_PLAYER_COMMUNICATION_COPY.md`](EXPERIENCE_VR_PLAYER_COMMUNICATION_COPY.md).
+Status: **CURRENT runtime baseline + BINDING TARGET / NOT YET IMPLEMENTED**, synchronized on 2026-09-05. Literal Polish text is owned by [`EXPERIENCE_VR_PLAYER_COMMUNICATION_COPY.md`](EXPERIENCE_VR_PLAYER_COMMUNICATION_COPY.md).
+
+This document deliberately separates observed runtime behavior from the approved communication target. The target below is binding product direction, but the runtime does not yet implement its complete contract. `ATTENTION_REQUIRED`, `AUTO_HINT`, `SPEAKING` and `IDLE` are documentation concepts here, not claims about existing runtime symbols.
 
 ## Surfaces and ownership
 
@@ -49,6 +51,50 @@ Physical Astro acquisition grants `CAN_EQUIP_ASTRO` and `CAN_SWITCH_ASTRO_BAND`;
 5. `resonatorExists false → true` → `5 s` → attention → `progression.p3.resonator`.
 
 First Binder discovery unlocks knowledge without Monkey attention or automatic speech. All these beats react to domain truth, are not mechanic gates and can happen before `4.80`.
+
+## BINDING TARGET / NOT YET IMPLEMENTED — two attention models
+
+Classification follows the semantic role of a communication, never merely a copy-key prefix such as `hint.*` or `progression.*`.
+
+### Required authored communication — `ATTENTION_REQUIRED`
+
+Important Scenario/progression communication that requires conscious acknowledgement follows this target sequence:
+
+`attention sound + existing visual attention arcs → player presses Monkey → pending authored communication only → silent idle`
+
+- The press starts only the pending authored communication. It must not open the ordinary Monkey conversation/menu.
+- Existing authored choices belonging to the active narrative communication remain part of that communication; they are not the ordinary Monkey menu.
+- Ordinary Monkey conversation remains unavailable throughout the authored speech.
+- Completion after the final authored block returns Monkey to silent idle. It must not automatically open `CO TERAZ?`, `JAK MI IDZIE?`, history, knowledge or any other ordinary Monkey menu.
+- To open the ordinary menu afterwards, the player must press Monkey again from idle.
+
+The target explicitly rejects an implicit `authored speech → ordinary Monkey menu` transition.
+
+### Situational guidance — `AUTO_HINT`
+
+Corrective or situational guidance—such as timeout guidance, an unresolved legal player action, or a corrective hint after reaching a state that cannot currently be completed—follows this target sequence:
+
+`attention sound, without visual attention arcs → exactly 1.0 s → automatic authored hint playback → silent idle`
+
+- No Monkey press is required.
+- Ordinary Monkey conversation remains unavailable from the cue through completion of hint playback.
+- Completion must not automatically open the ordinary Monkey menu.
+- `hint.rune.noBinder.soft` and `hint.rune.noBinder.medium` are concrete situational `AUTO_HINT` examples, not required Scenario acknowledgement beats.
+
+Whenever an `AUTO_HINT` is presented automatically, the same existing authored hint blocks must become available under the Monkey's `CO TERAZ?` knowledge surface as a one-time readable fallback. This lets a player deliberately recover information missed while looking elsewhere or standing too far away. The fallback reuses the authoritative copy blocks; this mechanics document creates no alternate or duplicate literal text.
+
+This decision does not define ordering of simultaneous transient hints, stacking versus replacement, expiry after the originating condition resolves, or interaction with an already-open ordinary Monkey menu. Those policies remain unresolved.
+
+## BINDING TARGET / NOT YET IMPLEMENTED — Monkey surface exclusivity
+
+Whenever Monkey is speaking authored communication, that speech exclusively owns the Monkey interaction surface:
+
+- pressing Monkey must not open the ordinary conversation/menu;
+- `CO TERAZ?`, `JAK MI IDZIE?`, history and knowledge navigation must not appear over or alongside unfinished authored speech;
+- the same rule applies to Intro and every other authored sequence;
+- this exclusivity ends at the authored communication's clean completion boundary, when Monkey returns to silent idle.
+
+The exclusivity is local to the Monkey communication surface, not a gameplay-wide lock. The player may ignore Monkey and continue locomotion, collecting objects, using tools and other normal world interactions while Monkey speaks.
 
 ## Copy representation
 
