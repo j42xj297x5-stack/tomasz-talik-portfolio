@@ -9,7 +9,7 @@ Status: **CURRENT / BINDING** for Proto-Astro identity, Furnace essence truth, A
 - `RuneStoneProgressionController` owns natural `tunedRuneFamilies` and `installedRuneFamilies`.
 - `RuneRecipeInteraction` owns the two typed Furnace slots; sector progression does not gate natural tuning.
 - `createVrAstrolabiumTuningActor` is **IMPLEMENTED** as a derived, read-only interpreter. It observes Furnace processed-Shell truth, Proto-Astro extracted natural Small Glyph essence truth, Rune tuning truth, and bounded Resonator eligibility; it derives targetable family sets per band without duplicating persistence.
-- Band UI owns the selected object class. Immediate all-four-band availability after physical `EARNED` ownership is a **BINDING DESIGN TARGET / NOT IMPLEMENTED** defined by [`VR_ASTROLABIUM_SANDBOX_MIGRATION.md`](VR_ASTROLABIUM_SANDBOX_MIGRATION.md); current eligibility derivation must not be confused with implementation of that migration contract.
+- Band UI owns the selected object class. Immediate all-four-band availability after physical `EARNED` ownership is **CURRENT / IMPLEMENTED (S1)** as defined by [`VR_ASTROLABIUM_SANDBOX_MIGRATION.md`](VR_ASTROLABIUM_SANDBOX_MIGRATION.md). Band existence remains independent from the eligibility sets derived below.
 
 ## Identity and flat Shell adapter contract
 
@@ -53,6 +53,8 @@ Slot acceptance validates expected family before transfer, recipe change ejects 
 ```text
 BAND EXISTS ≠ TARGET FAMILY IS UNDERSTOOD ≠ TARGET MAY CURRENTLY BE PULLED
 ```
+
+After physical Astrolabium ownership, `SHELLS`, `SMALL_GLYPHS`, `LARGE_GLYPHS` and `RUNESTONES` all exist and their selected scan beam may display even with an empty legal candidate set. This does not make Small Glyphs targetable before their existing `MATERIALIZED` / `FIELD` boundary; that physical-field migration remains S2.
 
 The implemented tuning actor derives:
 
