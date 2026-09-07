@@ -18,10 +18,7 @@ export const ASTERION_METAL_CONTROL_TUNING = Object.freeze({
       gameplayDimension: 'FORWARD'
     })
   }),
-  expansionMeters: Object.freeze({
-    LATERAL: Object.freeze([0, 8, 0, 8]),
-    FORWARD: Object.freeze([0, 10, 0, 10])
-  }),
+  expansionFractions: Object.freeze([0, 0.2, 0.5, 0.75]),
   depthDomain: Object.freeze({ near: 10, far: 130 }),
   rounding: Object.freeze({
     harmonicCenterMultiplier: 1.5,

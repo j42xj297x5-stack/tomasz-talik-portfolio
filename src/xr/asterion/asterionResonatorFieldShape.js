@@ -20,20 +20,21 @@ export function resolveAsterionResonatorFieldShape(descriptor) {
   const metalAngleLevel = descriptor.metal?.angleLevel ?? 0;
   const metalTiltLevel = descriptor.metal?.tiltLevel ?? 0;
   const metalActive = descriptor.metal?.active === true;
-  const angleDimension = ASTERION_METAL_CONTROL_TUNING.dofs.ANGLE.gameplayDimension;
-  const tiltDimension = ASTERION_METAL_CONTROL_TUNING.dofs.TILT.gameplayDimension;
-  const lateralExpansion = metalActive
-    ? ASTERION_METAL_CONTROL_TUNING.expansionMeters[angleDimension][metalAngleLevel] ?? 0 : 0;
-  const depthExpansion = metalActive
-    ? ASTERION_METAL_CONTROL_TUNING.expansionMeters[tiltDimension][metalTiltLevel] ?? 0 : 0;
-  const zNear = Math.max(ASTERION_METAL_CONTROL_TUNING.depthDomain.near,
-    DEPTH_PLANES[gamma - 1] - depthExpansion);
-  const zFar = Math.min(ASTERION_METAL_CONTROL_TUNING.depthDomain.far,
-    DEPTH_PLANES[gamma] + depthExpansion);
+  const lateralExpansionFraction = metalActive
+    ? ASTERION_METAL_CONTROL_TUNING.expansionFractions[metalAngleLevel] ?? 0 : 0;
+  const depthExpansionFraction = metalActive
+    ? ASTERION_METAL_CONTROL_TUNING.expansionFractions[metalTiltLevel] ?? 0 : 0;
+  const baseNear = DEPTH_PLANES[gamma - 1];
+  const baseFar = DEPTH_PLANES[gamma];
+  const zNear = baseNear + ((ASTERION_METAL_CONTROL_TUNING.depthDomain.near - baseNear)
+    * depthExpansionFraction);
+  const zFar = baseFar + ((ASTERION_METAL_CONTROL_TUNING.depthDomain.far - baseFar)
+    * depthExpansionFraction);
   const leftProfile = SIDE_PROFILES[alpha - 1];
   const rightProfile = SIDE_PROFILES[beta - 1];
-  const leftX = -leftProfile.lateralHalfExtent - lateralExpansion;
-  const rightX = rightProfile.lateralHalfExtent + lateralExpansion;
+  const lateralScale = 1 + lateralExpansionFraction;
+  const leftX = -leftProfile.lateralHalfExtent * lateralScale;
+  const rightX = rightProfile.lateralHalfExtent * lateralScale;
   const leftTopY = leftProfile.verticalHalfExtent;
   const leftBottomY = -leftProfile.verticalHalfExtent;
   const rightTopY = rightProfile.verticalHalfExtent;
@@ -79,8 +80,8 @@ export function resolveAsterionResonatorFieldShape(descriptor) {
     metal: Object.freeze({
       angleLevel: metalAngleLevel,
       tiltLevel: metalTiltLevel,
-      lateralExpansion,
-      depthExpansion,
+      lateralExpansionFraction,
+      depthExpansionFraction,
       harmonicCenter: metalAngleLevel === 2 && metalTiltLevel === 2
     })
   });
