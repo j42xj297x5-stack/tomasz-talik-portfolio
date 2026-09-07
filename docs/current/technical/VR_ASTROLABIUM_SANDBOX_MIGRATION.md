@@ -2,6 +2,14 @@
 
 Status: **BINDING DESIGN TARGET / MIGRATION CONTRACT / NOT YET FULLY IMPLEMENTED**.
 
+```text
+S1 = IMPLEMENTED
+S2 = IMPLEMENTED
+S3 = IMPLEMENTED
+S4 = IMPLEMENTED
+S5 = NOT IMPLEMENTED
+```
+
 This document freezes the migration from Scenario-gated Astrolabium progression to domain-owned sandbox behavior. `CURRENT` describes observed runtime facts. `TARGET` and `KANON` are binding implementation requirements, not claims about the current runtime.
 
 ## Canonical separation of rights
@@ -86,7 +94,7 @@ AND ProtoAstroTuningController.canExtractSmallGlyph(glyph)
 → natural Small Glyph essence extraction allowed
 ```
 
-Scenario progression is not required, and `CAN_EXTRACT_SMALL_GLYPH_ESSENCE` is no longer a runtime extraction permission. `ProtoAstroTuningController` remains authoritative for whether the natural family was already extracted and for committing extracted-family truth.
+Scenario progression is not required. `ProtoAstroTuningController` remains authoritative for whether the natural family was already extracted and for committing extracted-family truth.
 
 ## Large Glyph and portfolio separation
 
@@ -149,23 +157,9 @@ Installation readiness must not become a prerequisite for targeting.
 
 Scenario must not act as an indirect permission registry for ordinary sandbox Astrolabium actions.
 
-## CURRENT Scenario capability debt
+## RESOLVED Scenario capability debt
 
-The following historical capability family belongs to migration review:
-
-- `CAN_EQUIP_ASTRO`
-- `CAN_SCAN_SHELLS`
-- `CAN_TARGET_SHELLS`
-- `CAN_SWITCH_ASTRO_BAND`
-- `CAN_SCAN_SMALL_GLYPHS`
-- `CAN_TARGET_SMALL_GLYPHS`
-- `CAN_PULL_SMALL_GLYPHS`
-- `CAN_SCAN_LARGE_GLYPHS`
-- `CAN_TARGET_LARGE_GLYPHS`
-- `CAN_PULL_LARGE_GLYPHS`
-- `CAN_EXTRACT_SMALL_GLYPH_ESSENCE`
-
-Their presence is **MIGRATION GAP**, not proof that each identifier currently has a runtime consumer. They are not removed by this documentation task. Implementation must first remove consumers and prove replacement ownership; only then may obsolete capabilities be removed. Narrative events remain.
+**RESOLVED IN S4:** after the repository-wide precondition audit proved that S1-S3 and the Player Guide ownership migration had eliminated every active runtime consumer, the 11 historical Astro equip, band-switch, Shell/Small Glyph/Large Glyph scan-target-pull, and natural Small Glyph extraction capability identifiers were removed from Scenario. Their obsolete targeting bundles were collapsed into `P2_MAIN_GLYPH_CAPABILITIES`. Narrative events and genuinely story-owned capabilities remain unchanged.
 
 ## CURRENT known runtime gaps
 
@@ -175,8 +169,8 @@ Their presence is **MIGRATION GAP**, not proof that each identifier currently ha
 4. **RESOLVED IN S2:** Small Glyph physical gameplay uses the `fieldReady` projection from Astrolabium production `EARNED`, while candidates still require glyph `FIELD`, visibility, and family eligibility.
 5. **RESOLVED IN S2:** Scenario point `4.30` records authored presentation completion only and does not establish physical `FIELD` permission.
 6. **RESOLVED IN S3:** Furnace Small Glyph essence extraction requires physical Astrolabium ownership and Proto-Astro extraction legality instead of consuming `CAN_EXTRACT_SMALL_GLYPH_ESSENCE`.
-7. **RESOLVED BEFORE S4:** the S4 precondition audit found the remaining Player Guide consumers of `CAN_EQUIP_ASTRO` and `CAN_SWITCH_ASTRO_BAND`. Player Guide Astrolabium tool and A/B control visibility now project physical production `EARNED`; S4 capability cleanup remains not implemented.
-8. Scenario still carries the historical Astro equip/scan/target/pull capability family.
+7. **RESOLVED BEFORE S4:** Player Guide Astrolabium tool and A/B control visibility project physical production `EARNED`.
+8. **RESOLVED IN S4:** Scenario no longer carries the historical Astro equip/scan/target/pull/extract capability family.
 9. Large Glyph family targetability is already primarily domain-owned through Proto-Astro tuning and must not regress.
 10. Rune Stone targetability and installation readiness are already separate domain laws and must not regress.
 
@@ -206,7 +200,7 @@ Remove the runtime `CAN_EQUIP_ASTRO` dependency, always return all four bands af
 
 ### MIGRATION S4 — SCENARIO CAPABILITY CLEANUP
 
-**NOT IMPLEMENTED.**
+**IMPLEMENTED.**
 
 **Goal:** after consumers migrate, audit and remove obsolete Astro equip/scan/target/pull/extraction capabilities. Do not remove narrative events or capabilities genuinely consumed by unrelated systems.
 

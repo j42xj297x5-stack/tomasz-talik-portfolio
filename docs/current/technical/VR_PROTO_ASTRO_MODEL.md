@@ -74,6 +74,8 @@ essence extracted
 
 `ProtoAstroTuningController` remains the authoritative owner of extracted-family truth; Furnace completion commits through it, and the tuning actor derives Large Glyph family targetability from that truth.
 
+Scenario carries no current Small/Large Glyph Astrolabium targeting or natural Small Glyph extraction capability vocabulary; the physical/domain chain above is authoritative.
+
 The implemented tuning actor derives:
 
 ```text
