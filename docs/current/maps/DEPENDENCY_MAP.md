@@ -93,7 +93,7 @@ installed Metal Rune + any Metal DOF > 0
 
 `CAN_USE_ADVANCED_RESONATOR` is implemented semantic Scenario truth at `5.60`; it does not own Metal beam availability, lock, dual-DOF control, sector motion, descriptor state, field extension, containment, morph, or rounding.
 
-Metal `M(angle, tilt)` uses independent transient levels `0/1/2/3` at provisional detents `0°/13°/23°/36°`, dominant-axis gesture arbitration, and composed physical motion. Provisional `angle → LATERAL` adds `+8 m` per side for levels `1/3`; `tilt → FORWARD` adds nominal `+10 m`, clamped to `10–130 m`; `0/2` add no range. `M22` adds zero range and maximum Metal rounding. Exact mapping, signs/axes, dominance, distances and rounding values remain **TUNING / HARDWARE QA**.
+Metal `M(angle, tilt)` uses independent transient levels `0/1/2/3` at detents `0°/13°/23°/36°`, dominant-axis gesture arbitration, and composed physical motion. Canonical `angle → LATERAL` and `tilt → FORWARD` map those levels monotonically to `0 / 20% / 50% / 75%` expansion. Angle scales the existing LEFT/RIGHT half-extents independently; tilt interpolates the FIRE band toward the global `10–130 m` boundaries. `M22` is the harmonic center and contributes `50%` expansion while retaining maximum Metal rounding. Physical control and rounding are implemented; percentage expansion is **TARGET / NOT YET RUNTIME-SYNCHRONIZED**. Exact signs/gesture axes, dominance and rounding values remain **TUNING / HARDWARE QA**.
 
 ## Single Resonator field truth
 

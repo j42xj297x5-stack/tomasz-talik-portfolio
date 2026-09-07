@@ -21,10 +21,10 @@ Authority for active Resonator work is [`VR_ASTERION_RESONATOR_MODEL.md`](../tec
 
 - immediate selection of all four Astrolabium bands after tool acquisition and a future non-duplicating Astrolabium Tuning Domain interpreting per-family Shell → Small Glyph, Small Glyph → Large Glyph, and Wu Xing → Rune knowledge;
 - V Shell eligibility after all five natural Shells are processed;
-- Metal angle/tilt control where `M22` adds zero range and maximum presentation fillet, while every other active pair expands LATERAL, FORWARD or both for hunting;
+- Metal angle/tilt control with monotonic `0 / 20% / 50% / 75%` LATERAL/FORWARD expansion; `M22` remains the harmonic center with `50%` expansion and maximum presentation fillet (canonical target pending runtime synchronization);
 - Ether recovery → Monkey's one exceptional Water intervention → Water recovery/installation and advanced control;
 - Water angle hue (`GREEN / BLUE / VIOLET`) and tilt luminance (`dark / medium / bright`);
-- installed Water + compact, highly rounded, medium-BLUE pulsating `222 / M22 / W22` → Water Sync Lock;
+- installed Water + harmonic-center, highly rounded, medium-BLUE pulsating `222 / M22 / W22` → Water Sync Lock;
 - Water Sync Lock + Haiku Cosmos field containment → Water Sync Contact → strong angular/radial damping;
 - hard final Haiku gate: family knowledge + late context + `PULL_READY` + Water Sync Contact; generic acquisition and retained rings cannot bypass Water;
 - world dissolution, field/target audio, and remaining Scenario authoring after `5.10`.
