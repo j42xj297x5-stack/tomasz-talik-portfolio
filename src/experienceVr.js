@@ -874,7 +874,7 @@ toolGuidanceLifecycle = createVrToolGuidanceLifecycle({
   getAstroProductionState: () => astroAttractorProductionController.getState()
 });
 earlyExperienceGuidance = createVrEarlyExperienceGuidance({
-  monkeyGuide,
+  monkeyGuide, knowledgeResolver: monkeyKnowledgeResolver,
   copy: VR_MONKEY_COMMUNICATION_COPY_PL,
   getCurrentPointId: () => runtimeExperience?.getCurrentPointId?.() ?? null,
   hasProtoAstroTuning: () => protoAstroTuningController.getExtractedFamilyCodes().length > 0,
@@ -1091,7 +1091,8 @@ const releaseButton = createVrReliquaryReleaseButton({
   onReleaseComplete: () => activateButton.reset()
 });
 const reliquaryHints = createVrReliquaryHints({
-  monkeyGuide, locale: language, getInsertedInstance: () => crystalCollection.getInsertedInstance(),
+  monkeyGuide, knowledgeResolver: monkeyKnowledgeResolver, locale: language,
+  getInsertedInstance: () => crystalCollection.getInsertedInstance(),
   onHintTimeout: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.RELIQUARY_HINT_TIMEOUT)
 });
 function getNextCrystalTier(node) {

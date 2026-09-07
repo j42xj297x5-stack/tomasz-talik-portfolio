@@ -43,10 +43,14 @@ export function createVrRuneResonatorGuidance({ monkeyGuide, copy, secondsPerLin
   );
   const fullResonator = makeCommunication(copy.progression['progression.p4.fullResonator'].blocks);
   const noBinderMedium = makeAutoHint(copy.hints['hint.rune.noBinder.medium'].blocks, () => {
-    knowledgeResolver.publishNoBinderFallback('hint.rune.noBinder.medium');
+    if (knowledgeResolver.publishTransientHintFallback('rune-no-binder', 'hint.rune.noBinder.medium')) {
+      monkeyGuide.refreshKnowledge();
+    }
   });
   const noBinderSoft = makeAutoHint(copy.hints['hint.rune.noBinder.soft'].blocks, () => {
-    knowledgeResolver.publishNoBinderFallback('hint.rune.noBinder.soft');
+    if (knowledgeResolver.publishTransientHintFallback('rune-no-binder', 'hint.rune.noBinder.soft')) {
+      monkeyGuide.refreshKnowledge();
+    }
     if (getUnresolvedRuneBranchId()) { unresolvedSeconds = 0; mediumDue = true; }
   });
   const communications = [glyphsGone, installed, sectorLock, resonator, etherIntervention, fullResonator,
@@ -101,6 +105,7 @@ export function createVrRuneResonatorGuidance({ monkeyGuide, copy, secondsPerLin
     const unresolved = getUnresolvedRuneBranchId();
     if (!unresolved) {
       unresolvedSeconds = 0; mediumDue = false; noBinderSoft.reset(); noBinderMedium.reset();
+      if (knowledgeResolver.withdrawTransientHintFallback('rune-no-binder')) monkeyGuide.refreshKnowledge();
     } else if (noBinderSoft.getPhase() === 'IDLE' && !mediumDue) {
       unresolvedSeconds += delta;
       if (unresolvedSeconds >= DELAY_SECONDS) { unresolvedSeconds = 0; schedule(noBinderSoft); }

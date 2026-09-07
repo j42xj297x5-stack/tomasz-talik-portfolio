@@ -2,7 +2,7 @@ import { createVrMandatoryMonkeyCommunication } from './createVrMandatoryMonkeyC
 import { VR_MONKEY_DIALOGUE_PRIORITY } from './createVrMonkeyGuide.js';
 import { VR_MONKEY_MESSAGE_TIMING } from './vrMonkeyCommunicationCopy.js';
 
-export function createVrEarlyExperienceGuidance({ monkeyGuide, copy, getCurrentPointId,
+export function createVrEarlyExperienceGuidance({ monkeyGuide, knowledgeResolver, copy, getCurrentPointId,
   hasProtoAstroTuning, onFirstCrystalResponseCompleted = () => {} }) {
   const pending = [];
   let active = null;
@@ -67,6 +67,11 @@ export function createVrEarlyExperienceGuidance({ monkeyGuide, copy, getCurrentP
   const crystalUnclaimed = () => firstCrystal?.state === 'available';
   const crystalFlowUnadvanced = () => Boolean(firstCrystal
     && !['inserted', 'active', 'released', 'consuming'].includes(firstCrystal.state));
+  const mutateFallback = (method, ...args) => {
+    const changed = knowledgeResolver?.[method]?.(...args) === true;
+    if (changed) monkeyGuide.refreshKnowledge();
+    return changed;
+  };
 
   function notifyGlyphFreeExploreStarted() {
     if (!thresholdShown) {
@@ -110,17 +115,23 @@ export function createVrEarlyExperienceGuidance({ monkeyGuide, copy, getCurrentP
         const key = stage === 0 ? 'hint.crystal.whatNow.soft' : 'hint.crystal.grab.medium';
         autoHint(id, copy.hints[key].blocks, crystalUnclaimed, () => {
           pickupHintPending = false; pickupHintStage += 1;
+          mutateFallback('publishTransientHintFallback', 'first-crystal-pickup', key);
         });
       }
-    } else if (!crystalUnclaimed()) crystalPickupElapsed = 0;
+    } else if (!crystalUnclaimed()) {
+      crystalPickupElapsed = 0;
+      mutateFallback('withdrawTransientHintFallback', 'first-crystal-pickup');
+    }
     if (revealElapsed !== null) {
       if (!crystalFlowUnadvanced()) revealElapsed = null;
       else if ((revealElapsed += step) >= 60) {
         revealElapsed = null;
         autoHint('first-crystal-reliquary', copy.hints['hint.reliquary.firstCrystal'].blocks,
-          crystalFlowUnadvanced);
+          crystalFlowUnadvanced, () => mutateFallback('publishTransientHintFallback',
+            'first-crystal-reliquary', 'hint.reliquary.firstCrystal'));
       }
     }
+    if (!crystalFlowUnadvanced()) mutateFallback('withdrawTransientHintFallback', 'first-crystal-reliquary');
     if (cardElapsed !== null && (cardElapsed += step) >= 5) {
       cardElapsed = null; firstCardShown = true;
       automatic('first-card', copy.progression['progression.card.first'].blocks);

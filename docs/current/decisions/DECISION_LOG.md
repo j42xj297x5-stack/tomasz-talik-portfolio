@@ -1,6 +1,17 @@
 # Decision Log
 
-Status: current binding decisions with preserved history. Synchronized on 2026-09-05 through the binding future Monkey communication contract, the implemented `5.60` late Rune/Resonator boundary and binding future Water/finale canon.
+Status: current binding decisions with preserved history. Synchronized on 2026-09-07 through the implemented Monkey transient `CO TERAZ?` fallback contract, the implemented `5.60` late Rune/Resonator boundary and binding future Water/finale canon.
+
+## 2026-09-07 — CURRENT transient AUTO_HINT fallback lifecycle (SUPERSEDING)
+
+This entry resolves and supersedes the open fallback-policy points in the 2026-09-05 Monkey communication decision below.
+
+1. Successful `AUTO_HINT` playback publishes the same authoritative blocks as a session-local, one-time `NEW` topic under `CO TERAZ?`; cancelled or merely scheduled hints publish nothing.
+2. Full deliberate knowledge playback consumes the fallback. Independently, resolution of the originating gameplay condition withdraws it. Opening or selecting without completed playback does not consume it, and transient fallback memory enters neither history nor Player Y.
+3. Escalations of one unresolved problem replace the earlier unread stage in the same bounded slot. Unrelated active slots coexist in deterministic runtime projection order, without a global semantic ranking or latest-hint-wins rule.
+4. Publication or withdrawal refreshes an already-open ordinary Monkey surface without close/reopen. It does not open a surface, change ownership or expose ordinary content during authored speech.
+5. Gameplay resolution does not interrupt a deliberate fallback sequence already in progress. The topic disappears from future availability, the started reading may finish, and its completion cannot resurrect the withdrawn entry.
+6. Canonical session reset clears every transient fallback; no durable reconstruction is defined.
 
 ## 2026-09-05 — BINDING TARGET Monkey authored communication and automatic hints (NOT YET IMPLEMENTED)
 
@@ -14,7 +25,7 @@ This is a documentation-only product decision and performs no runtime implementa
 6. Communication class is determined by semantic role, not by a copy-key prefix such as `hint.*` or `progression.*`.
 7. Authored Monkey speech exclusively owns the Monkey interaction surface: pressing Monkey cannot open ordinary conversation, and ordinary `CO TERAZ?`, `JAK MI IDZIE?`, history or knowledge navigation cannot coexist with unfinished speech. This also applies to Intro and other authored sequences.
 8. This exclusivity does not block the surrounding game. The player may ignore Monkey and continue locomotion, object collection, tool use and other world interactions while Monkey speaks.
-9. Ordering of simultaneous transient hints, stacking versus replacement, expiry after the originating condition resolves, and interaction with an already-open ordinary Monkey menu are deliberately not decided here.
+9. **SUPERSEDED BY 2026-09-07:** transient expiry, same-problem replacement, unrelated-slot coexistence and already-open menu synchronization are defined by the CURRENT entry above.
 
 
 ## 2026-09-05 — CURRENT unified Experience VR bootstrap and scoped diagnostic recording
