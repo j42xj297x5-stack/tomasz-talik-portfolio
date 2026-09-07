@@ -238,11 +238,16 @@ export function createVrSmallGlyphSystem({
     if (disposed) return;
     const safeDelta = Math.max(0, Number.isFinite(delta) ? delta : 0);
     elapsed += safeDelta;
-    if (state === SYSTEM_STATE.MATERIALIZED) fieldElapsed += safeDelta;
-    layerActor.update(state === SYSTEM_STATE.MATERIALIZED ? safeDelta : 0);
+    const fieldMotionActive = presentationVisible || state === SYSTEM_STATE.MATERIALIZED;
+    if (fieldMotionActive) fieldElapsed += safeDelta;
+    layerActor.update(fieldMotionActive ? safeDelta : 0);
     records.forEach((record) => {
       updateCanonicalFieldTransform(record);
-      if (record.instance.userData.smallGlyphState !== GLYPH_STATE.FIELD) return;
+      const glyphState = record.instance.userData.smallGlyphState;
+      const followsField = glyphState === GLYPH_STATE.FIELD
+        || glyphState === GLYPH_STATE.MATERIALIZING
+        || (glyphState === GLYPH_STATE.HIDDEN && presentationVisible);
+      if (!followsField) return;
       record.instance.position.copy(record.fieldPosition);
       record.instance.quaternion.copy(record.fieldQuaternion);
     });
