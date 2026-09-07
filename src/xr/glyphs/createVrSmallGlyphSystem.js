@@ -26,6 +26,7 @@ export function createVrSmallGlyphSystem({
   direction,
   materializeDurationSeconds,
   staggerSeconds,
+  revealDurationSeconds,
   idleMotionSettings = {},
   onPresentationCompleted = () => {}
 }) {
@@ -50,6 +51,9 @@ export function createVrSmallGlyphSystem({
   if (!Number.isFinite(staggerSeconds) || staggerSeconds < 0) {
     throw new TypeError('staggerSeconds must be finite and greater than or equal to 0');
   }
+  if (!Number.isFinite(revealDurationSeconds) || revealDurationSeconds <= 0) {
+    throw new TypeError('revealDurationSeconds must be finite and greater than 0');
+  }
   if (typeof onPresentationCompleted !== 'function') throw new TypeError('onPresentationCompleted must be a function');
 
   const instanceCount = assetIds.length * copiesPerVisualVariant;
@@ -60,6 +64,7 @@ export function createVrSmallGlyphSystem({
   layerActor.object.add(object);
 
   const records = [];
+  const ownedMaterials = new Set();
   const goldenAngle = Math.PI * (3 - Math.sqrt(5));
   const idleAmplitude = idleMotionSettings.verticalAmplitude ?? 0.20;
   const idleAngularSpeed = Math.PI * 2 / (idleMotionSettings.verticalCycleDuration ?? 4.8);
@@ -72,6 +77,18 @@ export function createVrSmallGlyphSystem({
       if (!visualModel || !visualModel.position || !visualModel.quaternion || !visualModel.scale) {
         throw new Error(`Unable to clone small glyph visual variant: ${assetId}`);
       }
+      const opacityBaselines = [];
+      visualModel.traverse((node) => {
+        if (!node.isMesh || !node.material) return;
+        const cloneMaterial = (material) => {
+          const clone = material.clone();
+          ownedMaterials.add(clone);
+          opacityBaselines.push({ material: clone, opacity: clone.opacity ?? 1, transparent: clone.transparent });
+          return clone;
+        };
+        node.material = Array.isArray(node.material)
+          ? node.material.map(cloneMaterial) : cloneMaterial(node.material);
+      });
       const instance = new THREE.Group();
       instance.add(visualModel);
       object.add(instance);
@@ -99,6 +116,7 @@ export function createVrSmallGlyphSystem({
       instance.visible = false;
       records.push({
         instance,
+        opacityBaselines,
         authoredQuaternion: instance.quaternion.clone(),
         authoredScale: instance.scale.clone(),
         slotIndex: index,
@@ -119,6 +137,9 @@ export function createVrSmallGlyphSystem({
   let elapsed = 0;
   let fieldElapsed = 0;
   let completionSent = false;
+  let presentationVisible = false;
+  let revealOpacity = 0;
+  let revealTransition = null;
   let disposed = false;
   const idleQuaternion = new THREE.Quaternion();
   const fieldRotationQuaternion = new THREE.Quaternion();
@@ -132,6 +153,24 @@ export function createVrSmallGlyphSystem({
   }
 
   records.forEach(updateCanonicalFieldTransform);
+
+  function applyRevealOpacity(value) {
+    revealOpacity = THREE.MathUtils.clamp(value, 0, 1);
+    records.forEach((record) => record.opacityBaselines.forEach((baseline) => {
+      baseline.material.transparent = revealOpacity < 1 || baseline.transparent;
+      baseline.material.opacity = baseline.opacity * revealOpacity;
+    }));
+  }
+
+  function beginWorldReveal() {
+    if (disposed || revealTransition || presentationVisible) return false;
+    presentationVisible = true;
+    object.visible = true;
+    records.forEach((record) => restoreRecord(record, GLYPH_STATE.HIDDEN));
+    applyRevealOpacity(0);
+    revealTransition = { elapsed: 0 };
+    return true;
+  }
 
   function restoreRecord(record, glyphState, visible = true) {
     if (record.instance.parent !== object) object.add(record.instance);
@@ -179,7 +218,7 @@ export function createVrSmallGlyphSystem({
     state = SYSTEM_STATE.MATERIALIZING;
     records.forEach((record) => {
       record.instance.visible = true;
-      record.instance.scale.copy(record.authoredScale).multiplyScalar(0);
+      if (!presentationVisible) record.instance.scale.copy(record.authoredScale).multiplyScalar(0);
       record.instance.userData.smallGlyphState = GLYPH_STATE.MATERIALIZING;
     });
     return true;
@@ -208,6 +247,11 @@ export function createVrSmallGlyphSystem({
       record.instance.quaternion.copy(record.fieldQuaternion);
     });
     updatePlacedRecords();
+    if (revealTransition) {
+      revealTransition.elapsed += safeDelta;
+      applyRevealOpacity(revealTransition.elapsed / revealDurationSeconds);
+      if (revealOpacity >= 1) revealTransition = null;
+    }
     if (state !== SYSTEM_STATE.MATERIALIZING) return;
     let allComplete = true;
     records.forEach((record, index) => {
@@ -216,8 +260,10 @@ export function createVrSmallGlyphSystem({
         0,
         1
       );
-      const eased = progress * progress * (3 - 2 * progress);
-      record.instance.scale.copy(record.authoredScale).multiplyScalar(eased);
+      if (!presentationVisible) {
+        const eased = progress * progress * (3 - 2 * progress);
+        record.instance.scale.copy(record.authoredScale).multiplyScalar(eased);
+      }
       if (progress !== 1) allComplete = false;
     });
     if (!allComplete) return;
@@ -239,38 +285,47 @@ export function createVrSmallGlyphSystem({
   function reset() {
     if (disposed) return;
     state = SYSTEM_STATE.HIDDEN;
+    presentationVisible = false;
+    revealOpacity = 0;
+    revealTransition = null;
     elapsed = 0;
     fieldElapsed = 0;
     layerActor.reset();
     completionSent = false;
     object.visible = false;
     records.forEach((record) => restoreRecord(record, GLYPH_STATE.HIDDEN, false));
+    applyRevealOpacity(0);
   }
 
   function hydrateScenarioState(hydratedState) {
     if (!hydratedState || typeof hydratedState !== 'object'
-      || Object.keys(hydratedState).length !== 1 || hydratedState.materialized !== true) {
-      throw new TypeError('smallGlyphField state must be exactly { materialized: true }');
+      || hydratedState.presentationVisible !== true || typeof hydratedState.materialized !== 'boolean') {
+      throw new TypeError('smallGlyphField state must include presentationVisible true and boolean materialized');
     }
     if (disposed) throw new Error('Cannot hydrate a disposed small glyph system');
     object.visible = true;
-    state = SYSTEM_STATE.MATERIALIZED;
-    elapsed = fullPresentationDuration;
+    presentationVisible = true;
+    revealTransition = null;
+    state = hydratedState.materialized ? SYSTEM_STATE.MATERIALIZED : SYSTEM_STATE.HIDDEN;
+    elapsed = hydratedState.materialized ? fullPresentationDuration : 0;
     fieldElapsed = 0;
     layerActor.reset();
-    completionSent = true;
-    records.forEach((record) => restoreRecord(record, GLYPH_STATE.FIELD));
+    completionSent = hydratedState.materialized;
+    applyRevealOpacity(1);
+    records.forEach((record) => restoreRecord(record,
+      hydratedState.materialized ? GLYPH_STATE.FIELD : GLYPH_STATE.HIDDEN));
   }
 
   function dispose() {
     if (disposed) return;
-    object.clear(); layerActor.dispose();
+    object.clear(); layerActor.dispose(); ownedMaterials.forEach((material) => material.dispose()); ownedMaterials.clear();
     records.length = 0;
     disposed = true;
   }
 
   return {
     object, layerActor,
+    beginWorldReveal,
     beginPresentation,
     update,
     reset,

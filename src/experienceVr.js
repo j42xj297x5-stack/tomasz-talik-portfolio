@@ -414,7 +414,8 @@ const sphericalLayer = (id) => sphericalLayerRanges.find((range) => range.id ===
 const runeStoneActor = createVrRuneStoneActor({
   parent: worldStableRoot,
   assetManager,
-  layer: sphericalLayer(VR_SPHERICAL_LAYER_IDS.RUNE_STONES)
+  layer: sphericalLayer(VR_SPHERICAL_LAYER_IDS.RUNE_STONES),
+  revealDurationSeconds: settings.celestial.revealDurationSeconds
 });
 const etherRuneStoneActor = createVrEtherRuneStoneActor({
   parent: worldStableRoot,
@@ -439,7 +440,8 @@ const shellSystem = createVrShellSystem({ parent: worldStableRoot, assetManager,
   angularSpeed: settings.sphericalLayers.shells.angularSpeed,
   emissionSettings: settings.shellAttractor,
   idleMotionSettings: settings.placedObjectIdleMotion,
-  direction: settings.shellFieldMotion.direction });
+  direction: settings.shellFieldMotion.direction,
+  revealDurationSeconds: settings.celestial.revealDurationSeconds });
 const smallGlyphLayer = sphericalLayer(VR_SPHERICAL_LAYER_IDS.SMALL_GLYPHS);
 const smallGlyphMaxTargetDistance = smallGlyphLayer.outerRadius;
 const largeGlyphMaxTargetDistance = largeGlyphActor.getTargetingRange() + floorWalkRadius;
@@ -462,6 +464,7 @@ const smallGlyphSystem = createVrSmallGlyphSystem({
   direction: settings.smallGlyphField.direction,
   materializeDurationSeconds: settings.smallGlyphField.materializeDurationSeconds,
   staggerSeconds: settings.smallGlyphField.staggerSeconds,
+  revealDurationSeconds: settings.celestial.revealDurationSeconds,
   idleMotionSettings: settings.placedObjectIdleMotion,
   onPresentationCompleted: () => runtimeExperience.dispatch(
     VR_SCENARIO_EVENT.SMALL_GLYPH_FIELD_PRESENTATION_COMPLETED
@@ -1407,7 +1410,13 @@ runtimeExperience = new RuntimeExperience({
     },
     [VR_SCENARIO_EFFECT.BEGIN_CELESTIAL_REVEAL]: () => { celestialActor.beginReveal(); },
     [VR_SCENARIO_EFFECT.REVEAL_NATURAL_RUNE_STONES]: () => {
-      runeStoneActor.setPresentationVisible(true);
+      runeStoneActor.beginPresentationReveal();
+    },
+    [VR_SCENARIO_EFFECT.BEGIN_SHELL_FIELD_WORLD_REVEAL]: () => {
+      shellSystem.beginPresentationReveal();
+    },
+    [VR_SCENARIO_EFFECT.BEGIN_SMALL_GLYPH_WORLD_REVEAL]: () => {
+      smallGlyphSystem.beginWorldReveal();
     },
     [VR_SCENARIO_EFFECT.REVEAL_ETHER_RUNE]: () => {
       etherRuneStoneActor.setPresentationVisible(true);
@@ -1575,7 +1584,8 @@ const scenarioOwners = Object.freeze({
   monkey: monkeyActor, intro: introSequence, locomotion, reliquary: crystalReliquary,
   portal: portalDisplay,
   progression: progressionController, progressFloor, crystals: crystalCollection,
-  postRing: postRingPresentation, largeGlyphs: largeGlyphActor, smallGlyphField: smallGlyphSystem,
+  shellField: shellSystem, postRing: postRingPresentation, largeGlyphs: largeGlyphActor,
+  smallGlyphField: smallGlyphSystem,
   furnace: astroFurnace, furnaceProgression: furnaceProgressionController,
   astroProduction: astroAttractorProductionController, asterionProduction: asterionProductionController,
   protoAstroTuning: protoAstroTuningController,

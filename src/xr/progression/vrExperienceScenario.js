@@ -150,6 +150,8 @@ export const VR_SCENARIO_EFFECT = immutableIdentifiers([
   'SET_MAIN_AMBIENT_04',
   'BEGIN_CELESTIAL_REVEAL',
   'REVEAL_NATURAL_RUNE_STONES',
+  'BEGIN_SHELL_FIELD_WORLD_REVEAL',
+  'BEGIN_SMALL_GLYPH_WORLD_REVEAL',
   'REVEAL_ETHER_RUNE',
   'BEGIN_INTRO_REVEAL',
   'BEGIN_POST_REVEAL_SILENCE',
@@ -346,10 +348,12 @@ const P2_RADIAL_PRESENTED_SETTLED_CONSEQUENCES = Object.freeze({
 const GLYPH_FREE_EXPLORE_SETTLED_CONSEQUENCES = Object.freeze({
   audio: Object.freeze({ mainAmbientActive: true }),
   celestial: Object.freeze({ active: true }),
-  runeStones: Object.freeze({ presentationVisible: true })
+  runeStones: Object.freeze({ presentationVisible: true }),
+  shellField: Object.freeze({ presentationVisible: true, interactionEnabled: false }),
+  smallGlyphField: Object.freeze({ presentationVisible: true, materialized: false })
 });
 const SMALL_GLYPH_FIELD_PRESENTED_SETTLED_CONSEQUENCES = Object.freeze({
-  smallGlyphField: Object.freeze({ materialized: true })
+  smallGlyphField: Object.freeze({ presentationVisible: true, materialized: true })
 });
 const P2_MAIN_GLYPH_CAPABILITIES = Object.freeze([
   VR_SCENARIO_CAPABILITY.CAN_USE_GLYPHS, VR_SCENARIO_CAPABILITY.CAN_USE_RELIQUARY,
@@ -598,6 +602,7 @@ const points = Object.freeze([
     label: 'GLYPH_FREE_EXPLORE rozpoczęte',
     entryEffects: Object.freeze([VR_SCENARIO_EFFECT.SET_MAIN_AMBIENT_01,
       VR_SCENARIO_EFFECT.BEGIN_CELESTIAL_REVEAL, VR_SCENARIO_EFFECT.REVEAL_NATURAL_RUNE_STONES,
+      VR_SCENARIO_EFFECT.BEGIN_SHELL_FIELD_WORLD_REVEAL, VR_SCENARIO_EFFECT.BEGIN_SMALL_GLYPH_WORLD_REVEAL,
       VR_SCENARIO_EFFECT.BEGIN_GLYPH_FREE_EXPLORE]),
     capabilities: Object.freeze([VR_SCENARIO_CAPABILITY.CAN_USE_GLYPHS]),
     transitions: Object.freeze([

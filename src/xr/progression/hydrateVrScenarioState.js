@@ -1,5 +1,5 @@
 const OWNER_SECTIONS = Object.freeze(['monkey', 'intro', 'locomotion', 'reliquary', 'portal', 'progression',
-  'progressFloor', 'crystals', 'postRing', 'largeGlyphs', 'smallGlyphField', 'furnace', 'furnaceProgression', 'astroProduction',
+  'progressFloor', 'crystals', 'shellField', 'postRing', 'largeGlyphs', 'smallGlyphField', 'furnace', 'furnaceProgression', 'astroProduction',
   'asterionProduction', 'protoAstroTuning', 'audio', 'celestial', 'runeStones', 'runeProgression']);
 
 // Canonical baseline restoration is an explicit precondition. This seam only
