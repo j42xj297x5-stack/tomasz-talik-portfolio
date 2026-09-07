@@ -4,6 +4,7 @@ import { createVrTargetHalo } from './createVrTargetHalo.js';
 const LOCAL_RAY_DIRECTION = new THREE.Vector3(0, 0, -1);
 
 export function createVrGlyphInteraction({ controllers, nodes, settings = {}, haloSettings = {}, isGlyphActive = () => true,
+  isGlyphRayTargetable = null,
   onGlyphHoldStart = () => {}, onGlyphHitLost = () => {}, onGlyphHitResumed = () => {},
   onGlyphHoldCancelled = () => {}, onGlyphHoldComplete = () => {} }) {
   const raycaster = new THREE.Raycaster();
@@ -14,6 +15,7 @@ export function createVrGlyphInteraction({ controllers, nodes, settings = {}, ha
   const holds = new Map();
   const holdDuration = settings.holdDurationSeconds ?? 0.5;
   const holdLostGrace = settings.holdLostGraceSeconds ?? 0.15;
+  const canTargetGlyphWithRay = isGlyphRayTargetable ?? isGlyphActive;
   let disposed = false;
   const targets = nodes.map((glyphRoot) => {
     const raycastObjects = [];
@@ -60,7 +62,7 @@ export function createVrGlyphInteraction({ controllers, nodes, settings = {}, ha
         const hit = raycaster.intersectObjects(allRaycastObjects, true)[0];
         let object = hit?.object; while (object && !objectToGlyph.has(object)) object = object.parent;
         const node = object ? objectToGlyph.get(object) ?? null : null;
-        record.currentHit = node && isGlyphActive(node) ? node : null;
+        record.currentHit = node && canTargetGlyphWithRay(node) ? node : null;
         if (record.currentHit && hit.object.name !== 'VrGlyphFallbackCollider') record.reportRayHit?.(hit.distance);
       }
       const hold = holds.get(record);

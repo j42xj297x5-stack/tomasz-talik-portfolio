@@ -735,6 +735,11 @@ const asterionResonatorTargetAcquisitionActor = createVrAsterionResonatorTargetA
 largeGlyphActor.nodes.forEach((node) => {
   asterionResonatorTargetAcquisitionActor.registerTarget({ id: node.userData.id, anchor: node });
 });
+const largeGlyphByTargetId = new Map(largeGlyphActor.nodes.map((node) => [node.userData.id, node]));
+const unsubscribeLargeGlyphResonatorPresentation = asterionResonatorTargetAcquisitionActor.subscribe((state) => {
+  const node = largeGlyphByTargetId.get(state.id);
+  if (node) largeGlyphActor.setResonatorPullReady(node, state.pullReady);
+});
 const asterionResonatorTargetAudioProjection = createVrAsterionResonatorTargetAudioProjection({
   audioBridge: vrAudio,
   acquisitionActor: asterionResonatorTargetAcquisitionActor,
@@ -1108,12 +1113,17 @@ function isGlyphActive(node) {
   const introAllowsGameplay = introQaBypass || runtimeExperience.can(VR_SCENARIO_CAPABILITY.CAN_USE_GLYPHS);
   return introAllowsGameplay && getNextCrystalTier(node) !== null;
 }
+function isGlyphRayFeedbackActive(node) {
+  return isGlyphActive(node) || (largeGlyphActor.getStage() === VR_LARGE_GLYPH_SPHERE_STAGE
+    && asterionResonatorTargetAcquisitionActor.isPullReady(node.userData.id));
+}
 const glyphInteraction = createVrGlyphInteraction({
   controllers: vrControllers.controllers,
   nodes,
   settings: settings.glyphInteraction,
   haloSettings: settings.targetHalo,
   isGlyphActive: (node) => isGlyphActive(node),
+  isGlyphRayTargetable: (node) => isGlyphRayFeedbackActive(node),
   onGlyphHoldStart: ({ node }) => vrAudio.startGlyphAcquisition(node.userData.id),
   onGlyphHitLost: ({ node }) => vrAudio.missGlyphAcquisition(node.userData.id),
   onGlyphHitResumed: ({ node }) => vrAudio.startGlyphAcquisition(node.userData.id),
@@ -1711,7 +1721,7 @@ function renderFrame() {
   vrControllers.resolveVisualRayLength();
   glyphLights.update({
     hovered: glyphInteraction.hoveredGlyphs,
-    exhausted: new Set(nodes.filter((node) => !isGlyphActive(node)))
+    exhausted: new Set(nodes.filter((node) => !isGlyphRayFeedbackActive(node)))
   });
   locomotion.setLeftYawLocked(playerGuidePanel.isOpen() || asterionGyroInteraction.isDriveActive()
     || asterionSectorControlInteraction.isDriveActive());
@@ -1893,6 +1903,7 @@ window.addEventListener('pagehide', () => {
   asterionSectorAcquisitionPresentation.dispose();
   asterionPlatformEnergyVfxProjection.dispose();
   unsubscribeResonatorScenarioHandoff();
+  unsubscribeLargeGlyphResonatorPresentation();
   unsubscribeRuneGuidance();
   unsubscribeResonatorGuidance();
   unsubscribeSectorLockGuidance();

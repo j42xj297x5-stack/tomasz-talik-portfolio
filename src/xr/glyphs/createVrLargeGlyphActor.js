@@ -74,6 +74,7 @@ export function createVrLargeGlyphActor({
 
   const slots = [];
   const canonicalSlots = new Map();
+  const resonatorPullReadiness = new Map();
   const transientLeases = new Set();
   const canonicalNodeLocalMatrix = new THREE.Matrix4().compose(
     new THREE.Vector3(),
@@ -106,6 +107,7 @@ export function createVrLargeGlyphActor({
     node.userData.baseScale = scaleMultiplier;
     slot.add(node);
     canonicalSlots.set(node, slot);
+    resonatorPullReadiness.set(node, false);
     return node;
   });
 
@@ -130,7 +132,7 @@ export function createVrLargeGlyphActor({
         material.visible = authoredMaterials[materialIndex].visible;
       });
       child.material = Array.isArray(child.material) ? authoredMaterials : authoredMaterials[0];
-      presentationEntries.push({ child, authoredMaterials, authoredBaselines, farMaterials });
+      presentationEntries.push({ node, child, authoredMaterials, authoredBaselines, farMaterials });
     });
     const authoredHoverUpdate = node.userData.updateHoverEffects;
     node.userData.updateHoverEffects = (...args) => {
@@ -155,13 +157,14 @@ export function createVrLargeGlyphActor({
   let disposed = false;
   function applyStagePresentation(nextStage) {
     const isFar = nextStage === VR_LARGE_GLYPH_SPHERE_STAGE;
-    presentationEntries.forEach(({ child, authoredMaterials, authoredBaselines, farMaterials }) => {
+    presentationEntries.forEach(({ node, child, authoredMaterials, authoredBaselines, farMaterials }) => {
       if (!isFar) {
         authoredMaterials.forEach((material, index) => material.copy(authoredBaselines[index]));
       }
+      const useFarMaterials = isFar && resonatorPullReadiness.get(node) !== true;
       child.material = Array.isArray(child.material)
-        ? (isFar ? farMaterials : authoredMaterials)
-        : (isFar ? farMaterials[0] : authoredMaterials[0]);
+        ? (useFarMaterials ? farMaterials : authoredMaterials)
+        : (useFarMaterials ? farMaterials[0] : authoredMaterials[0]);
     });
     nodes.forEach((node) => {
       const light = node.userData.hoverPointLight;
@@ -222,6 +225,7 @@ export function createVrLargeGlyphActor({
     expansionElapsed = null;
     sphereElapsed = null;
     lateMotionElapsed = 0;
+    nodes.forEach((node) => resonatorPullReadiness.set(node, false));
     if (state.stage === VR_LARGE_GLYPH_SPHERE_STAGE) setSphereLayout();
     else
     setCanonicalRadius(state.stage === VR_LARGE_GLYPH_EXPANDED_STAGE
@@ -257,6 +261,15 @@ export function createVrLargeGlyphActor({
     const slot = canonicalSlots.get(node);
     if (!slot) throw new TypeError('Large Glyph node does not belong to this actor.');
     return slot;
+  }
+  function setResonatorPullReady(node, ready) {
+    requireOwnedNode(node);
+    if (disposed) throw new Error('Cannot change Resonator readiness of a disposed Large Glyph actor.');
+    if (typeof ready !== 'boolean') throw new TypeError('Large Glyph Resonator readiness must be a boolean.');
+    if (resonatorPullReadiness.get(node) === ready) return false;
+    resonatorPullReadiness.set(node, ready);
+    applyStagePresentation(stage);
+    return true;
   }
   function setCanonicalNodeTransform(node) {
     node.position.set(0, 0, 0);
@@ -359,6 +372,7 @@ export function createVrLargeGlyphActor({
     object.quaternion.identity();
     object.scale.set(1, 1, 1);
     object.visible = true;
+    nodes.forEach((node) => resonatorPullReadiness.set(node, false));
     settleStage(VR_LARGE_GLYPH_INITIAL_STAGE);
     rotationRoot.position.set(0, 0, 0);
     rotationRoot.quaternion.identity();
@@ -382,6 +396,7 @@ export function createVrLargeGlyphActor({
     getSpatialExtent: () => currentRadius,
     getTargetingRange: () => depthOscillation.enabled ? depthOscillation.maxRadius : sphere.radius,
     setPresentationVisible,
+    setResonatorPullReady,
     beginElevation,
     beginExpansion,
     beginSphereDistribution,
