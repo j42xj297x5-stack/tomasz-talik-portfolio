@@ -6,8 +6,7 @@ const TOOLS = Object.freeze([
     id: 'furnace'
   }),
   Object.freeze({
-    id: 'astro',
-    capability: VR_SCENARIO_CAPABILITY.CAN_EQUIP_ASTRO
+    id: 'astro'
   }),
   Object.freeze({
     id: 'asterion',
@@ -16,10 +15,11 @@ const TOOLS = Object.freeze([
 ]);
 
 export function createVrPlayerGuideProjection({ locale, can, getCurrentObjective, isFurnaceRevealed,
-  isShellFieldRevealed, hasReadRuneStones = () => false, hasDiscoveredBinders = () => false,
+  isShellFieldRevealed, isAstrolabiumOwned, hasReadRuneStones = () => false, hasDiscoveredBinders = () => false,
   hasInstalledRune = () => false }) {
   if (typeof can !== 'function' || typeof getCurrentObjective !== 'function'
-    || typeof isFurnaceRevealed !== 'function' || typeof isShellFieldRevealed !== 'function') {
+    || typeof isFurnaceRevealed !== 'function' || typeof isShellFieldRevealed !== 'function'
+    || typeof isAstrolabiumOwned !== 'function') {
     throw new TypeError('Player guide projection dependencies must be functions.');
   }
 
@@ -39,12 +39,13 @@ export function createVrPlayerGuideProjection({ locale, can, getCurrentObjective
   function getTools() {
     if (locale !== 'pl') return [];
     const content = resolveVrPlayerGuideContent(locale);
-    return TOOLS.filter(({ id, capability }) => id === 'furnace' ? isFurnaceRevealed() : can(capability))
+    return TOOLS.filter(({ id, capability }) => id === 'furnace'
+      ? isFurnaceRevealed()
+      : id === 'astro' ? isAstrolabiumOwned() : can(capability))
       .map(({ id }) => ({
         id,
         label: content.tools[id].label,
         body: `${content.tools[id].description}\n\n${id === 'astro'
-          && can(VR_SCENARIO_CAPABILITY.CAN_SWITCH_ASTRO_BAND)
           ? `${content.tools[id].controls}\n${content.tools[id].bandSwitchControl}`
           : content.tools[id].controls}`
       }));
@@ -52,9 +53,9 @@ export function createVrPlayerGuideProjection({ locale, can, getCurrentObjective
 
   function getVisibleControlIds() {
     const ids = ['trigger', 'grab', 'rotate', 'move', 'Y'];
-    if (can(VR_SCENARIO_CAPABILITY.CAN_EQUIP_ASTRO)) ids.push('A');
+    if (isAstrolabiumOwned()) ids.push('A');
     if (can(VR_SCENARIO_CAPABILITY.CAN_EQUIP_ASTERION)) ids.push('X');
-    if (can(VR_SCENARIO_CAPABILITY.CAN_SWITCH_ASTRO_BAND)) ids.push('B');
+    if (isAstrolabiumOwned()) ids.push('B');
     return ids;
   }
 

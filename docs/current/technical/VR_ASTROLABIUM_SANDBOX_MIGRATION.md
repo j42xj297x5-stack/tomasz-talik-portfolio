@@ -175,9 +175,10 @@ Their presence is **MIGRATION GAP**, not proof that each identifier currently ha
 4. **RESOLVED IN S2:** Small Glyph physical gameplay uses the `fieldReady` projection from Astrolabium production `EARNED`, while candidates still require glyph `FIELD`, visibility, and family eligibility.
 5. **RESOLVED IN S2:** Scenario point `4.30` records authored presentation completion only and does not establish physical `FIELD` permission.
 6. **RESOLVED IN S3:** Furnace Small Glyph essence extraction requires physical Astrolabium ownership and Proto-Astro extraction legality instead of consuming `CAN_EXTRACT_SMALL_GLYPH_ESSENCE`.
-7. Scenario still carries the historical Astro equip/scan/target/pull capability family.
-8. Large Glyph family targetability is already primarily domain-owned through Proto-Astro tuning and must not regress.
-9. Rune Stone targetability and installation readiness are already separate domain laws and must not regress.
+7. **RESOLVED BEFORE S4:** the S4 precondition audit found the remaining Player Guide consumers of `CAN_EQUIP_ASTRO` and `CAN_SWITCH_ASTRO_BAND`. Player Guide Astrolabium tool and A/B control visibility now project physical production `EARNED`; S4 capability cleanup remains not implemented.
+8. Scenario still carries the historical Astro equip/scan/target/pull capability family.
+9. Large Glyph family targetability is already primarily domain-owned through Proto-Astro tuning and must not regress.
+10. Rune Stone targetability and installation readiness are already separate domain laws and must not regress.
 
 ## Ordered implementation plan
 
