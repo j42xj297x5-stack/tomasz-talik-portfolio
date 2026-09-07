@@ -67,6 +67,7 @@ export function createVrRuneStoneActor({ parent, assetManager, layer, revealDura
       root.add(visualRoot);
       layerActor.object.add(root);
 
+      root.scale.setScalar(descriptor.physicalPresentationScale);
       root.updateMatrixWorld(true);
       const placementClearanceRadius = new THREE.Box3()
         .setFromObject(visualRoot)
