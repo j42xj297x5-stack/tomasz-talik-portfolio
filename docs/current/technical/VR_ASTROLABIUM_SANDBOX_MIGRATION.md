@@ -21,7 +21,7 @@ TOOL OWNED
 
 ## Physical ownership and bands
 
-**TARGET:** physical ownership derives from `AstroAttractorProductionController.EARNED` after the player physically claims the Furnace product. It is permanent for the rest of the session:
+**CURRENT / IMPLEMENTED (S1):** physical ownership derives from `AstroAttractorProductionController.EARNED` after the player physically claims the Furnace product. It is permanent for the rest of the session:
 
 ```text
 Astrolabium physically EARNED
@@ -40,7 +40,7 @@ band selectable
 + zero legal Rune Stone targets
 ```
 
-It does not mean `band unavailable`. **MIGRATION GAP:** runtime still conditionally exposes this band through `RuneStoneAttractorBandProjection.isAvailable()`.
+It does not mean `band unavailable`. Runtime exposes the band independently of `RuneStoneAttractorBandProjection.isAvailable()`; that projection continues to describe family targetability.
 
 ## Natural-family knowledge chain
 
@@ -157,13 +157,13 @@ Their presence is **MIGRATION GAP**, not proof that each identifier currently ha
 
 ## CURRENT known runtime gaps
 
-1. `experienceVr.js` derives Astrolabium availability from `CAN_EQUIP_ASTRO`.
-2. Band availability appends `RUNESTONES` only when `RuneStoneAttractorBandProjection.isAvailable()` is true.
-3. Small Glyph scanning requires `smallGlyphSystem.getState() === 'MATERIALIZED'`.
-4. Small Glyph physical candidate logic expects `smallGlyphState === 'FIELD'`.
+1. **RESOLVED IN S1:** physical `EARNED`, rather than Scenario `CAN_EQUIP_ASTRO` or the intro QA bypass, owns Astrolabium equip and band switching.
+2. **RESOLVED IN S1:** all four bands exist after ownership; `RUNESTONES` no longer requires a non-empty tuned-family set.
+3. **RESOLVED IN S1:** every selected-band beam, including `SMALL_GLYPHS`, may display after ownership without requiring a legal target.
+4. Small Glyph physical gameplay and candidate acquisition remain bound to `MATERIALIZED` and glyph `FIELD` truth.
 5. Scenario point `4.30` still establishes Small Glyph semantic materialization.
 6. Furnace Small Glyph essence extraction still consumes `CAN_EXTRACT_SMALL_GLYPH_ESSENCE`.
-7. Scenario still carries the historical Astro scan/target/pull capability family.
+7. Scenario still carries the historical Astro equip/scan/target/pull capability family.
 8. Large Glyph family targetability is already primarily domain-owned through Proto-Astro tuning and must not regress.
 9. Rune Stone targetability and installation readiness are already separate domain laws and must not regress.
 
@@ -177,21 +177,29 @@ Their presence is **MIGRATION GAP**, not proof that each identifier currently ha
 EARNED → equip → all four bands → all four scan beams usable
 ```
 
-Remove the runtime `CAN_EQUIP_ASTRO` dependency, always return all four bands after physical ownership, and stop deriving `RUNESTONES` existence from a non-empty family set. **NOT IMPLEMENTED:** S1 does not change Small Glyph semantic field ownership.
+Remove the runtime `CAN_EQUIP_ASTRO` dependency, always return all four bands after physical ownership, and stop deriving `RUNESTONES` existence from a non-empty family set. **IMPLEMENTED:** scan-beam activation is independent from family targetability, while Small Glyph semantic field ownership remains unchanged for S2.
 
 ### MIGRATION S2 — SMALL GLYPH SANDBOX FIELD
+
+**NOT IMPLEMENTED.**
 
 **Goal:** allow physically present Small Glyphs to participate after tool ownership instead of waiting for Scenario `4.30`. This is the highest-risk lifecycle migration. It must preserve world reveal, motion, materialization presentation, interaction states, reset, and hydration. This contract specifies ownership, not implementation mechanics.
 
 ### MIGRATION S3 — DOMAIN-OWNED SMALL GLYPH EXTRACTION
 
+**NOT IMPLEMENTED.**
+
 **Goal:** remove natural Small Glyph essence extraction dependency on `CAN_EXTRACT_SMALL_GLYPH_ESSENCE`. Gate extraction through physical Furnace state, Astrolabium ownership, and Proto-Astro domain truth.
 
 ### MIGRATION S4 — SCENARIO CAPABILITY CLEANUP
 
+**NOT IMPLEMENTED.**
+
 **Goal:** after consumers migrate, audit and remove obsolete Astro equip/scan/target/pull/extraction capabilities. Do not remove narrative events or capabilities genuinely consumed by unrelated systems.
 
 ### MIGRATION S5 — CANON / RUNTIME SYNC
+
+**NOT IMPLEMENTED.**
 
 **Goal:** perform the final static ownership audit:
 

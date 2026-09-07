@@ -665,21 +665,21 @@ let runeStoneAudioProjection = null;
 let runeStoneInstallationInteraction = null;
 let runeResonatorGuidance = null;
 let monkeyKnowledgeResolver = null;
-const isAstrolabiumAcquired = () => introQaBypass
-  || runtimeExperience.can(VR_SCENARIO_CAPABILITY.CAN_EQUIP_ASTRO);
+let astroAttractorProductionController = null;
+const isAstrolabiumOwned = () => astroAttractorProductionController?.isEarned() === true;
 const handModeController = createVrHandModeController({
   controllers: vrControllers.controllers,
   semanticInput,
   attractorTool,
   getAttractorBandPresentation: (band) => attractorBandPresentations[band] ?? attractorBandPresentations.SHELLS,
   asterionSphere,
-  isUnlocked: isAstrolabiumAcquired,
-  canSwitchAttractorBand: isAstrolabiumAcquired,
+  isUnlocked: isAstrolabiumOwned,
+  canSwitchAttractorBand: isAstrolabiumOwned,
   getAvailableAttractorBands: () => [
     VR_ATTRACTOR_BANDS.SHELLS,
     VR_ATTRACTOR_BANDS.SMALL_GLYPHS,
     VR_ATTRACTOR_BANDS.LARGE_GLYPHS,
-    ...(runeStoneAttractorBandProjection.isAvailable() ? [VR_ATTRACTOR_BANDS.RUNESTONES] : [])
+    VR_ATTRACTOR_BANDS.RUNESTONES
   ],
   isAsterionAvailable: () => asterionProductionController.isEarned() || asterionSphereQa,
   isLeftToolToggleBlocked: () => {
@@ -782,7 +782,7 @@ const unsubscribeRuneBridgeGuidance = runeBridgeActor.subscribe((event) => {
   if (event?.type === 'ARRIVAL_COMPLETED') runeResonatorGuidance?.notifyBridgeTransitions([event]);
 });
 asterionProductionController.setHandModeController(handModeController);
-const astroAttractorProductionController = createVrAstroAttractorProductionController({
+astroAttractorProductionController = createVrAstroAttractorProductionController({
   model: assetManager.cloneGltfScene('vr-astro-attractor-model'),
   productVolume: astroFurnace.nodes.VR_FURNACE_PRODUCT_VOLUME,
   controllers: vrControllers.controllers,

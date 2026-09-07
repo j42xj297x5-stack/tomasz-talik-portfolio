@@ -219,9 +219,11 @@ export function createVrSmallGlyphAttractorInteraction({ controllers, smallGlyph
     if (scanCone.object.parent !== right.controller) right.controller.add(scanCone.object); updateCaptureAnchor(right);
     if (smallGlyphSystem.getState() === 'MATERIALIZED') ensureHalos();
     const { primaryAction = 0, grabAction = 0 } = semanticInput.getState();
-    const scanning = smallGlyphSystem.getState() === 'MATERIALIZED' && isEquipped()
-      && grabAction > settings.scanThreshold; scanCone.update(delta, scanning);
-    if (activePull) { if (!scanning || primaryAction <= settings.triggerThreshold || !isFamilyEligible(activePull)) {
+    const scanning = isEquipped() && grabAction > settings.scanThreshold;
+    const fieldTargetingReady = smallGlyphSystem.getState() === 'MATERIALIZED';
+    const targeting = scanning && fieldTargetingReady;
+    scanCone.update(delta, scanning);
+    if (activePull) { if (!targeting || primaryAction <= settings.triggerThreshold || !isFamilyEligible(activePull)) {
       beginReturn(activePull); return; }
       if (captureReady) { setWorldPosition(captureReady, anchorWorld); updateLeftHit(); halos.get(captureReady)?.update(delta);
         attractorTool.setPullStrength(1); attractorTool.setState(VR_ATTRACTOR_STATES.CAPTURED); return; }
@@ -234,7 +236,7 @@ export function createVrSmallGlyphAttractorInteraction({ controllers, smallGlyph
       movement.subVectors(anchorWorld, worldPosition).normalize().multiplyScalar(Math.min(distance, pullSpeed * delta));
       setWorldPosition(activePull, worldPosition.add(movement)); const progress = clamp01(1 - distance / pullStartDistance);
       halos.get(activePull)?.update(delta); attractorTool.setPullStrength(progress); attractorTool.setState(VR_ATTRACTOR_STATES.PULLING); return; }
-    if (!scanning || isHigherPriorityInteractionActive(right) === true) {
+    if (!targeting || isHigherPriorityInteractionActive(right) === true) {
       setTarget(null); attractorTool.setTarget(null); attractorTool.setPullStrength(0); attractorTool.setState(VR_ATTRACTOR_STATES.IDLE); return; }
     right.controller.getWorldPosition(origin); right.controller.getWorldQuaternion(quaternion);
     direction.copy(LOCAL_DIRECTION).applyQuaternion(quaternion).normalize();
