@@ -6,6 +6,21 @@ Status: canonical description of the implemented runtime, including the CURRENT 
 
 The implemented composition follows `Spine → Scenario → Director → Runtime / actors / domain owners`. Spine owns authored mainline order, Scenario defines points and accepted events, and Director owns `currentPointId` and interprets `STAY`, `COMPLETE`, `EXPLICIT` and the crossing-only `COMPLETE_IF`. Runtime remains the symbolic-effect execution boundary. Actors and domain controllers retain physical, transient and committed domain state; Director does not use technical point IDs as memory for that state.
 
+The completed Astrolabium sandbox migration preserves independent rights rather than a generic unlock:
+
+```text
+TOOL OWNED
+≠ BAND EXISTS
+≠ SCAN BEAM MAY DISPLAY
+≠ FAMILY UNDERSTOOD
+≠ TARGET ACQUIRED
+≠ TARGET PULLED
+≠ RESULT USED
+≠ INSTALLATION READY
+```
+
+Physical ownership belongs to `AstroAttractorProductionController.EARNED`; equipment and selected band belong to `HandModeController`; family understanding is read-only projected by `AstrolabiumTuningActor` from the relevant domain owners. Candidate state, visibility, Furnace state, bridge state and Resonator readiness are later physical guards. Scenario capabilities do not grant ordinary Astrolabium sandbox rights.
+
 WHERE, BEYOND, FOLLOW pause and hints are local `STAY` reactions. Crossing exists only at `1.130`: the Intro actor owns `playerEnteredRing` and `monkeySettled`, reports `crossingComplete`, and Director advances only after that combined fact resolves completion. The implemented tail is `4.40 → 4.50 → 4.60 → 4.70 → 4.80 → 5.10`; `5.10` is the stable authored/runtime boundary. Existing `resonatorExists` joins `4.80 → 5.10` through `RESONATOR_READY`, with `CHECK_RESONATOR_JOIN` covering either event order. This observes rather than gates physical Resonator creation. `5.10` has no transition to `100.10`.
 
 ## Runtime boundary and lifecycle
@@ -85,7 +100,7 @@ Large Glyph radii `8.5 / 46 / 80 m` are independent from `worldBaseRadius = 7.6 
 
 The composed Resonator resolves the revised `10 / 50 / 90 / 130 m` nominal field through a dedicated Field Frame aligned with FIRE outward / canonical `entryDirection`. Its target-acquisition actor evaluates registered canonical anchors against nominal geometry, independently tracks completed resonance stages, decay, sign memory and `PULL_READY`, and does not derive gameplay truth from presentation meshes. The five existing Large Glyph nodes are the currently registered supported targets; this does not claim registration of every future object class.
 
-A read-only target response presents each detected target's family-colored Proto-Astro sign and up to three rings. Large Glyph Astrolabium selection consumes `PULL_READY` during candidate legality, immediately before pull start and throughout active pull, while retaining existing Scenario capability and Proto-Astro tuning gates. Loss of readiness uses existing cancellation/return choreography; Astrolabium does not compute containment or acquisition and does not reset/freeze Resonator state. Detailed geometry and timing remain canonical in [`VR_ASTERION_RESONATOR_FIELD_MODEL.md`](VR_ASTERION_RESONATOR_FIELD_MODEL.md). Scenario remains authored only through `5.10`; Resonator audio and hardware/perceptual QA are not completed by this runtime implementation.
+A read-only target response presents each detected target's family-colored Proto-Astro sign and up to three rings. Large Glyph Astrolabium selection consumes natural-family knowledge plus `PULL_READY` during candidate legality, immediately before pull start and throughout active pull; it has no Scenario permission gate and does not consult ordinary crystal eligibility. Loss of readiness uses existing cancellation/return choreography; Astrolabium does not compute containment or acquisition and does not reset/freeze Resonator state. Detailed geometry and timing remain canonical in [`VR_ASTERION_RESONATOR_FIELD_MODEL.md`](VR_ASTERION_RESONATOR_FIELD_MODEL.md). Scenario remains authored only through `5.10`; Resonator audio and hardware/perceptual QA are not completed by this runtime implementation.
 
 ## Glyphs, crystals and reliquary
 
