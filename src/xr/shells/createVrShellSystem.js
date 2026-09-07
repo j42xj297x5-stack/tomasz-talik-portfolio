@@ -8,9 +8,11 @@ const SUFFIXES = Object.freeze(['a', 'b', 'c']);
 const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5));
 
 export function createVrShellSystem({ parent, assetManager, layer, angularSpeed = 0, emissionSettings = {},
-  idleMotionSettings = {}, direction = 1 }) {
+  idleMotionSettings = {}, direction = 1, revealDurationSeconds }) {
   if (!parent?.add || !assetManager?.cloneGltfScene) throw new Error('VrShellSystem requires parent and assetManager.');
   if (direction !== 1 && direction !== -1) throw new Error('VrShellSystem direction must be 1 or -1.');
+  if (!Number.isFinite(revealDurationSeconds) || revealDurationSeconds <= 0)
+    throw new TypeError('VrShellSystem revealDurationSeconds must be positive and finite.');
   const claimedMin = emissionSettings.claimedEmissionMin ?? 1;
   const claimedMax = emissionSettings.claimedEmissionMax ?? 2;
   const claimedDuration = emissionSettings.claimedEmissionPulseDuration ?? 1.4;
@@ -21,6 +23,7 @@ export function createVrShellSystem({ parent, assetManager, layer, angularSpeed 
     angularSpeed, direction });
   const object = new THREE.Group(); object.name = 'VrShellSystem'; object.visible = false; layerActor.object.add(object);
   let active = false, interactionEnabled = false, elapsed = 0, disposed = false, currentDelta = 0;
+  let revealOpacity = 0, revealTransition = null;
   const instances = [], records = [], ownedMaterials = new Set(), panelWireframes = new Map();
   const scratchQuaternion = new THREE.Quaternion();
 
@@ -94,11 +97,19 @@ export function createVrShellSystem({ parent, assetManager, layer, angularSpeed 
     if (['orbiting', 'targeted'].includes(record.object.userData.shellState)) record.object.userData.attractorTarget = interactionEnabled;
   }); }
   function setPresentationVisible(value) { if (!disposed) { active = Boolean(value); object.visible = active; } }
+  function applyRevealOpacity(value) { revealOpacity = THREE.MathUtils.clamp(value, 0, 1); records.forEach((record) => {
+    record.materialBaselines.forEach((baseline) => { baseline.material.transparent = revealOpacity < 1 || baseline.transparent;
+      baseline.material.opacity = baseline.opacity * revealOpacity; });
+  }); }
+  function beginPresentationReveal() { if (disposed || revealTransition || (active && revealOpacity >= 1)) return false;
+    setPresentationVisible(true); setInteractionEnabled(false); applyRevealOpacity(0); revealTransition = { elapsed: 0 }; return true; }
   function setInteractionEnabled(value) { if (!disposed) { interactionEnabled = Boolean(value); syncTargetEligibility(); } }
   // Compatibility seam used by the explicit post-P1 QA path.
   function setActive(value) { setPresentationVisible(value); setInteractionEnabled(value); }
   function update(deltaSeconds) { if (disposed || !active) return; currentDelta = Math.max(0, Number.isFinite(deltaSeconds) ? deltaSeconds : 0);
-    elapsed += currentDelta; layerActor.update(currentDelta); applyPositions(); }
+    elapsed += currentDelta; layerActor.update(currentDelta); applyPositions();
+    if (revealTransition) { revealTransition.elapsed += currentDelta; applyRevealOpacity(revealTransition.elapsed / revealDurationSeconds);
+      if (revealOpacity >= 1) revealTransition = null; } }
   function returnToOrbit(shell, duration = 0.8) { const record = getRecord(shell); if (!record || disposed || shell.userData.shellState === 'placed') return false;
     object.attach(shell); record.returnStart.copy(shell.position); record.returnElapsed = 0; record.returnDuration = Math.max(0.001, duration);
     record.returnEmissionStart = record.emissiveMaterials[0]?.emissiveIntensity ?? 0; record.returning = true;
@@ -121,9 +132,12 @@ export function createVrShellSystem({ parent, assetManager, layer, angularSpeed 
     if (shell.parent !== object) object.attach(shell);
     record.returning = false; shell.userData.shellState = 'consumed'; shell.userData.attractorTarget = false;
     shell.visible = false; return true; }
-  function reset() { if (disposed) return; active = false; interactionEnabled = false; object.visible = false; elapsed = 0; currentDelta = 0; layerActor.reset(); records.forEach((record) => {
+  function reset() { if (disposed) return; active = false; interactionEnabled = false; object.visible = false; elapsed = 0; currentDelta = 0; revealTransition = null; layerActor.reset(); records.forEach((record) => {
     restoreInstanceToOrbit(record.object);
-  }); applyPositions(); }
+  }); applyRevealOpacity(0); applyPositions(); }
+  function hydrateScenarioState(state) { if (state?.presentationVisible !== true || typeof state.interactionEnabled !== 'boolean')
+    throw new TypeError('shellField state must include presentationVisible true and boolean interactionEnabled');
+    revealTransition = null; setPresentationVisible(true); setInteractionEnabled(state.interactionEnabled); applyRevealOpacity(1); }
   function applyAbsorbedShellIds(absorbedShellIds) {
     if (!absorbedShellIds || typeof absorbedShellIds[Symbol.iterator] !== 'function')
       throw new TypeError('absorbedShellIds must be iterable');
@@ -143,6 +157,6 @@ export function createVrShellSystem({ parent, assetManager, layer, angularSpeed 
   return { object, layerActor, instances, records, innerRadius: layer.innerRadius, outerRadius: layer.outerRadius,
     panelWireframes, getPanelWireframe: (assetId) => panelWireframes.get(assetId) ?? null,
     get active() { return active; }, get interactionEnabled() { return interactionEnabled; }, getRecord, setEmission, setActive,
-    setPresentationVisible, setInteractionEnabled, update, returnToOrbit, placeInstance, consumeInstance,
-    restoreInstanceToOrbit, applyAbsorbedShellIds, reset, dispose };
+    setPresentationVisible, beginPresentationReveal, setInteractionEnabled, update, returnToOrbit, placeInstance, consumeInstance,
+    restoreInstanceToOrbit, applyAbsorbedShellIds, hydrateScenarioState, reset, dispose };
 }

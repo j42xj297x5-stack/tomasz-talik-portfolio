@@ -16,7 +16,7 @@ export function resolveVrRuneStonePreviewModel(familyCode) {
   return previewModelsByFamilyCode.get(String(familyCode ?? '').toUpperCase()) ?? null;
 }
 
-export function createVrRuneStoneActor({ parent, assetManager, layer }) {
+export function createVrRuneStoneActor({ parent, assetManager, layer, revealDurationSeconds }) {
   if (!parent?.add || !assetManager?.getGltf || !assetManager?.cloneGltfScene) {
     throw new Error('[VrRuneStoneActor] Parent and preloaded AssetManager are required.');
   }
@@ -33,6 +33,10 @@ export function createVrRuneStoneActor({ parent, assetManager, layer }) {
   });
   layerActor.object.name = 'VrRuneStoneField';
   const records = new Map();
+  const ownedMaterials = new Set();
+  if (!Number.isFinite(revealDurationSeconds) || revealDurationSeconds <= 0) {
+    throw new TypeError('[VrRuneStoneActor] revealDurationSeconds must be positive and finite.');
+  }
   let disposed = false;
 
   try {
@@ -42,6 +46,18 @@ export function createVrRuneStoneActor({ parent, assetManager, layer }) {
       if (!gltf?.scene || !visualModel) {
         throw new Error(`[VrRuneStoneActor] Missing preloaded asset: ${descriptor.assetId}.`);
       }
+      const opacityBaselines = [];
+      visualModel.traverse((node) => {
+        if (!node.isMesh || !node.material) return;
+        const cloneMaterial = (material) => {
+          const clone = material.clone();
+          ownedMaterials.add(clone);
+          opacityBaselines.push({ material: clone, opacity: clone.opacity ?? 1, transparent: clone.transparent });
+          return clone;
+        };
+        node.material = Array.isArray(node.material)
+          ? node.material.map(cloneMaterial) : cloneMaterial(node.material);
+      });
 
       const root = new THREE.Group();
       root.name = `RuneStoneActorRoot_${descriptor.branchId.toUpperCase()}`;
@@ -82,6 +98,7 @@ export function createVrRuneStoneActor({ parent, assetManager, layer }) {
         visualRoot,
         animationMixer,
         actions,
+        opacityBaselines,
         placementClearanceRadius,
         initialTransform,
         state: VR_RUNE_STONE_STATE.FREE
@@ -89,8 +106,27 @@ export function createVrRuneStoneActor({ parent, assetManager, layer }) {
     });
   } catch (error) {
     VR_RUNE_STONE_ASSETS.forEach(({ familyCode }) => previewModelsByFamilyCode.delete(familyCode));
+    ownedMaterials.forEach((material) => material.dispose());
+    ownedMaterials.clear();
     layerActor.dispose();
     throw error;
+  }
+
+  let revealOpacity = 0;
+  let revealTransition = null;
+  function applyRevealOpacity(value) {
+    revealOpacity = THREE.MathUtils.clamp(value, 0, 1);
+    records.forEach((record) => record.opacityBaselines.forEach((baseline) => {
+      baseline.material.transparent = revealOpacity < 1 || baseline.transparent;
+      baseline.material.opacity = baseline.opacity * revealOpacity;
+    }));
+  }
+  function beginPresentationReveal() {
+    if (disposed || revealTransition || (isPresentationVisible() && revealOpacity >= 1)) return false;
+    setPresentationVisible(true);
+    applyRevealOpacity(0);
+    revealTransition = { elapsed: 0 };
+    return true;
   }
 
   const setPresentationVisible = (value) => {
@@ -101,6 +137,8 @@ export function createVrRuneStoneActor({ parent, assetManager, layer }) {
   const isPresentationVisible = () => layerActor.object.visible === true;
   const hydrateScenarioState = (state) => {
     setPresentationVisible(state?.presentationVisible === true);
+    revealTransition = null;
+    applyRevealOpacity(state?.presentationVisible === true ? 1 : 0);
   };
   const getRecord = (branchId) => records.get(String(branchId ?? '').toLowerCase()) ?? null;
   const lockByAstro = (branchId) => {
@@ -163,10 +201,17 @@ export function createVrRuneStoneActor({ parent, assetManager, layer }) {
     if (disposed) return;
     const delta = Number.isFinite(deltaSeconds) ? Math.max(0, deltaSeconds) : 0;
     records.forEach(({ animationMixer }) => animationMixer?.update(delta));
+    if (revealTransition) {
+      revealTransition.elapsed += delta;
+      applyRevealOpacity(revealTransition.elapsed / revealDurationSeconds);
+      if (revealOpacity >= 1) revealTransition = null;
+    }
   }
   function reset() {
     if (disposed) return;
     layerActor.reset();
+    revealTransition = null;
+    applyRevealOpacity(0);
     setPresentationVisible(false);
     records.forEach((record) => {
       if (record.root.parent !== layerActor.object) layerActor.object.add(record.root);
@@ -187,11 +232,14 @@ export function createVrRuneStoneActor({ parent, assetManager, layer }) {
       record.root.removeFromParent();
     });
     records.clear();
+    ownedMaterials.forEach((material) => material.dispose());
+    ownedMaterials.clear();
     VR_RUNE_STONE_ASSETS.forEach(({ familyCode }) => previewModelsByFamilyCode.delete(familyCode));
     layerActor.dispose();
   }
 
   setPresentationVisible(false);
+  applyRevealOpacity(0);
 
   return {
     object: layerActor.object,
@@ -205,6 +253,7 @@ export function createVrRuneStoneActor({ parent, assetManager, layer }) {
     getInteractionRadius: (branchId) => getBoundingSphere(branchId)?.radius ?? null,
     getFamilyCode: (branchId) => getRecord(branchId)?.familyCode ?? null,
     setPresentationVisible,
+    beginPresentationReveal,
     isPresentationVisible,
     hydrateScenarioState,
     lockByAstro,
