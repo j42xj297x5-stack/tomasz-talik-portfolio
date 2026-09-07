@@ -350,10 +350,10 @@ const GLYPH_FREE_EXPLORE_SETTLED_CONSEQUENCES = Object.freeze({
   celestial: Object.freeze({ active: true }),
   runeStones: Object.freeze({ presentationVisible: true }),
   shellField: Object.freeze({ presentationVisible: true, interactionEnabled: false }),
-  smallGlyphField: Object.freeze({ presentationVisible: true, materialized: false })
+  smallGlyphField: Object.freeze({ presentationVisible: true, presentationCompleted: false })
 });
 const SMALL_GLYPH_FIELD_PRESENTED_SETTLED_CONSEQUENCES = Object.freeze({
-  smallGlyphField: Object.freeze({ presentationVisible: true, materialized: true })
+  smallGlyphField: Object.freeze({ presentationVisible: true, presentationCompleted: true })
 });
 const P2_MAIN_GLYPH_CAPABILITIES = Object.freeze([
   VR_SCENARIO_CAPABILITY.CAN_USE_GLYPHS, VR_SCENARIO_CAPABILITY.CAN_USE_RELIQUARY,

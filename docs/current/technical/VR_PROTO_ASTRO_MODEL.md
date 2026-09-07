@@ -54,7 +54,7 @@ Slot acceptance validates expected family before transfer, recipe change ejects 
 BAND EXISTS ≠ TARGET FAMILY IS UNDERSTOOD ≠ TARGET MAY CURRENTLY BE PULLED
 ```
 
-After physical Astrolabium ownership, `SHELLS`, `SMALL_GLYPHS`, `LARGE_GLYPHS` and `RUNESTONES` all exist and their selected scan beam may display even with an empty legal candidate set. This does not make Small Glyphs targetable before their existing `MATERIALIZED` / `FIELD` boundary; that physical-field migration remains S2.
+After physical Astrolabium ownership, `SHELLS`, `SMALL_GLYPHS`, `LARGE_GLYPHS` and `RUNESTONES` all exist and their selected scan beam may display even with an empty legal candidate set. For Small Glyphs, physical field readiness is projected from Astrolabium production `EARNED`, while family eligibility is derived independently from processed Shell truth. Both `fieldReady` and matching family eligibility are required, together with the candidate's visible `FIELD` state. Scenario `4.30` is presentation completion only. Essence extraction remains Scenario-gated until S3.
 
 The implemented tuning actor derives:
 

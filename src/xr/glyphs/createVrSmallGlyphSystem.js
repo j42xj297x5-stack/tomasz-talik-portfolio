@@ -1,15 +1,14 @@
 import * as THREE from '../../vendor/three.js';
 import { createVrSphericalLayerActor } from '../world/createVrSphericalLayerActor.js';
 
-const SYSTEM_STATE = Object.freeze({
-  HIDDEN: 'HIDDEN',
-  MATERIALIZING: 'MATERIALIZING',
-  MATERIALIZED: 'MATERIALIZED'
+const PRESENTATION_STATE = Object.freeze({
+  IDLE: 'IDLE',
+  PRESENTING: 'PRESENTING',
+  PRESENTED: 'PRESENTED'
 });
 
 const GLYPH_STATE = Object.freeze({
   HIDDEN: 'HIDDEN',
-  MATERIALIZING: 'MATERIALIZING',
   FIELD: 'FIELD',
   PLACED: 'PLACED',
   CONSUMED: 'CONSUMED'
@@ -133,8 +132,10 @@ export function createVrSmallGlyphSystem({
     }
   });
 
-  let state = SYSTEM_STATE.HIDDEN;
+  let presentationState = PRESENTATION_STATE.IDLE;
+  let fieldReady = false;
   let elapsed = 0;
+  let presentationElapsed = 0;
   let fieldElapsed = 0;
   let completionSent = false;
   let presentationVisible = false;
@@ -166,7 +167,12 @@ export function createVrSmallGlyphSystem({
     if (disposed || revealTransition || presentationVisible) return false;
     presentationVisible = true;
     object.visible = true;
-    records.forEach((record) => restoreRecord(record, GLYPH_STATE.HIDDEN));
+    records.forEach((record) => {
+      const glyphState = record.instance.userData.smallGlyphState;
+      if (glyphState === GLYPH_STATE.HIDDEN || glyphState === GLYPH_STATE.FIELD) {
+        restoreRecord(record, fieldReady ? GLYPH_STATE.FIELD : GLYPH_STATE.HIDDEN);
+      }
+    });
     applyRevealOpacity(0);
     revealTransition = { elapsed: 0 };
     return true;
@@ -194,10 +200,19 @@ export function createVrSmallGlyphSystem({
     if (disposed) return false;
     const record = records.find((candidate) => candidate.instance === instance);
     if (!record) return false;
-    const materialized = state === SYSTEM_STATE.MATERIALIZED;
-    const glyphState = materialized ? GLYPH_STATE.FIELD
-      : state === SYSTEM_STATE.MATERIALIZING ? GLYPH_STATE.MATERIALIZING : GLYPH_STATE.HIDDEN;
-    restoreRecord(record, glyphState, materialized || state === SYSTEM_STATE.MATERIALIZING);
+    restoreRecord(record, fieldReady ? GLYPH_STATE.FIELD : GLYPH_STATE.HIDDEN, presentationVisible);
+    return true;
+  }
+
+  function setFieldReady(ready) {
+    if (disposed || typeof ready !== 'boolean') return false;
+    if (fieldReady === ready) return true;
+    fieldReady = ready;
+    records.forEach((record) => {
+      const glyphState = record.instance.userData.smallGlyphState;
+      if (glyphState !== GLYPH_STATE.HIDDEN && glyphState !== GLYPH_STATE.FIELD) return;
+      restoreRecord(record, fieldReady ? GLYPH_STATE.FIELD : GLYPH_STATE.HIDDEN, presentationVisible);
+    });
     return true;
   }
 
@@ -212,15 +227,9 @@ export function createVrSmallGlyphSystem({
   }
 
   function beginPresentation() {
-    if (disposed || state !== SYSTEM_STATE.HIDDEN) return false;
-    object.visible = true;
-    elapsed = 0;
-    state = SYSTEM_STATE.MATERIALIZING;
-    records.forEach((record) => {
-      record.instance.visible = true;
-      if (!presentationVisible) record.instance.scale.copy(record.authoredScale).multiplyScalar(0);
-      record.instance.userData.smallGlyphState = GLYPH_STATE.MATERIALIZING;
-    });
+    if (disposed || presentationState !== PRESENTATION_STATE.IDLE) return false;
+    presentationElapsed = 0;
+    presentationState = PRESENTATION_STATE.PRESENTING;
     return true;
   }
 
@@ -238,14 +247,13 @@ export function createVrSmallGlyphSystem({
     if (disposed) return;
     const safeDelta = Math.max(0, Number.isFinite(delta) ? delta : 0);
     elapsed += safeDelta;
-    const fieldMotionActive = presentationVisible || state === SYSTEM_STATE.MATERIALIZED;
+    const fieldMotionActive = presentationVisible;
     if (fieldMotionActive) fieldElapsed += safeDelta;
     layerActor.update(fieldMotionActive ? safeDelta : 0);
     records.forEach((record) => {
       updateCanonicalFieldTransform(record);
       const glyphState = record.instance.userData.smallGlyphState;
       const followsField = glyphState === GLYPH_STATE.FIELD
-        || glyphState === GLYPH_STATE.MATERIALIZING
         || (glyphState === GLYPH_STATE.HIDDEN && presentationVisible);
       if (!followsField) return;
       record.instance.position.copy(record.fieldPosition);
@@ -257,23 +265,10 @@ export function createVrSmallGlyphSystem({
       applyRevealOpacity(revealTransition.elapsed / revealDurationSeconds);
       if (revealOpacity >= 1) revealTransition = null;
     }
-    if (state !== SYSTEM_STATE.MATERIALIZING) return;
-    let allComplete = true;
-    records.forEach((record, index) => {
-      const progress = THREE.MathUtils.clamp(
-        (elapsed - index * staggerSeconds) / materializeDurationSeconds,
-        0,
-        1
-      );
-      if (!presentationVisible) {
-        const eased = progress * progress * (3 - 2 * progress);
-        record.instance.scale.copy(record.authoredScale).multiplyScalar(eased);
-      }
-      if (progress !== 1) allComplete = false;
-    });
-    if (!allComplete) return;
-    records.forEach((record) => restoreRecord(record, GLYPH_STATE.FIELD));
-    state = SYSTEM_STATE.MATERIALIZED;
+    if (presentationState !== PRESENTATION_STATE.PRESENTING) return;
+    presentationElapsed += safeDelta;
+    if (presentationElapsed < fullPresentationDuration) return;
+    presentationState = PRESENTATION_STATE.PRESENTED;
     if (!completionSent) {
       completionSent = true;
       onPresentationCompleted();
@@ -281,7 +276,7 @@ export function createVrSmallGlyphSystem({
   }
 
   function placeInstance(instance) {
-    if (disposed || state !== SYSTEM_STATE.MATERIALIZED) return false;
+    if (disposed || !fieldReady) return false;
     const record = records.find((candidate) => candidate.instance === instance); if (!record) return false;
     record.placedPosition.copy(instance.position); record.placedQuaternion.copy(instance.quaternion); record.placedAt = elapsed;
     instance.userData.smallGlyphState = GLYPH_STATE.PLACED; instance.visible = true; return true;
@@ -289,11 +284,13 @@ export function createVrSmallGlyphSystem({
 
   function reset() {
     if (disposed) return;
-    state = SYSTEM_STATE.HIDDEN;
+    presentationState = PRESENTATION_STATE.IDLE;
+    fieldReady = false;
     presentationVisible = false;
     revealOpacity = 0;
     revealTransition = null;
     elapsed = 0;
+    presentationElapsed = 0;
     fieldElapsed = 0;
     layerActor.reset();
     completionSent = false;
@@ -304,21 +301,25 @@ export function createVrSmallGlyphSystem({
 
   function hydrateScenarioState(hydratedState) {
     if (!hydratedState || typeof hydratedState !== 'object'
-      || hydratedState.presentationVisible !== true || typeof hydratedState.materialized !== 'boolean') {
-      throw new TypeError('smallGlyphField state must include presentationVisible true and boolean materialized');
+      || hydratedState.presentationVisible !== true || typeof hydratedState.presentationCompleted !== 'boolean') {
+      throw new TypeError('smallGlyphField state must include presentationVisible true and boolean presentationCompleted');
     }
     if (disposed) throw new Error('Cannot hydrate a disposed small glyph system');
     object.visible = true;
     presentationVisible = true;
     revealTransition = null;
-    state = hydratedState.materialized ? SYSTEM_STATE.MATERIALIZED : SYSTEM_STATE.HIDDEN;
-    elapsed = hydratedState.materialized ? fullPresentationDuration : 0;
+    presentationState = hydratedState.presentationCompleted ? PRESENTATION_STATE.PRESENTED : PRESENTATION_STATE.IDLE;
+    presentationElapsed = hydratedState.presentationCompleted ? fullPresentationDuration : 0;
     fieldElapsed = 0;
     layerActor.reset();
-    completionSent = hydratedState.materialized;
+    completionSent = hydratedState.presentationCompleted;
     applyRevealOpacity(1);
-    records.forEach((record) => restoreRecord(record,
-      hydratedState.materialized ? GLYPH_STATE.FIELD : GLYPH_STATE.HIDDEN));
+    records.forEach((record) => {
+      const glyphState = record.instance.userData.smallGlyphState;
+      if (glyphState === GLYPH_STATE.HIDDEN || glyphState === GLYPH_STATE.FIELD) {
+        restoreRecord(record, glyphState, true);
+      }
+    });
   }
 
   function dispose() {
@@ -336,7 +337,9 @@ export function createVrSmallGlyphSystem({
     reset,
     hydrateScenarioState,
     dispose,
-    getState: () => state,
+    getPresentationState: () => presentationState,
+    setFieldReady,
+    isFieldReady: () => fieldReady,
     getFieldTransform,
     restoreInstanceToField,
     consumeInstance,

@@ -57,9 +57,16 @@ Natural Shells therefore permit immediate sandbox experimentation after ownershi
 
 ## Small Glyph physical/domain readiness
 
-**CURRENT:** Small Glyph visuals participate in the first world reveal, but gameplay state remains `HIDDEN` until the Scenario-controlled `4.30` materialization boundary. `SmallGlyphAttractorInteraction` requires the system to be `MATERIALIZED`; its physical candidate logic requires glyph state `FIELD`.
+**CURRENT / IMPLEMENTED (S2):** Small Glyph visuals participate in the first world reveal independently of physical gameplay. Astrolabium production `EARNED` is projected into `fieldReady`; on that transition passive canonical glyphs become `FIELD`. Processed natural Shell families independently determine matching family targetability.
 
-**TARGET:** point `4.30` must no longer own whether physically present Small Glyphs participate in Astrolabium sandbox gameplay. After Astrolabium ownership, physical field gameplay must be available independently of that authored narrative beat.
+Point `4.30` owns only its authored presentation lifecycle and completion event. It neither creates `FIELD` permission nor rewrites transient glyph state. The runtime separation is:
+
+```text
+Small Glyph world presentation
+≠ fieldReady (Astrolabium EARNED projection)
+≠ family targetability (processed Shell families)
+≠ 4.30 authored presentation completion
+```
 
 This is not permission to treat `HIDDEN` as `FIELD`. The implementation must establish a clean physical/domain readiness boundary and preserve `FIELD`, `PULLING`, `CAPTURE_READY`, `HELD`, `PLACED`, `RETURNING`, `CONSUMED`, reset, hydration, and world-reveal presentation. Hybrid semantic states are forbidden.
 
@@ -160,8 +167,8 @@ Their presence is **MIGRATION GAP**, not proof that each identifier currently ha
 1. **RESOLVED IN S1:** physical `EARNED`, rather than Scenario `CAN_EQUIP_ASTRO` or the intro QA bypass, owns Astrolabium equip and band switching.
 2. **RESOLVED IN S1:** all four bands exist after ownership; `RUNESTONES` no longer requires a non-empty tuned-family set.
 3. **RESOLVED IN S1:** every selected-band beam, including `SMALL_GLYPHS`, may display after ownership without requiring a legal target.
-4. Small Glyph physical gameplay and candidate acquisition remain bound to `MATERIALIZED` and glyph `FIELD` truth.
-5. Scenario point `4.30` still establishes Small Glyph semantic materialization.
+4. **RESOLVED IN S2:** Small Glyph physical gameplay uses the `fieldReady` projection from Astrolabium production `EARNED`, while candidates still require glyph `FIELD`, visibility, and family eligibility.
+5. **RESOLVED IN S2:** Scenario point `4.30` records authored presentation completion only and does not establish physical `FIELD` permission.
 6. Furnace Small Glyph essence extraction still consumes `CAN_EXTRACT_SMALL_GLYPH_ESSENCE`.
 7. Scenario still carries the historical Astro equip/scan/target/pull capability family.
 8. Large Glyph family targetability is already primarily domain-owned through Proto-Astro tuning and must not regress.
@@ -181,9 +188,9 @@ Remove the runtime `CAN_EQUIP_ASTRO` dependency, always return all four bands af
 
 ### MIGRATION S2 — SMALL GLYPH SANDBOX FIELD
 
-**NOT IMPLEMENTED.**
+**IMPLEMENTED.**
 
-**Goal:** allow physically present Small Glyphs to participate after tool ownership instead of waiting for Scenario `4.30`. This is the highest-risk lifecycle migration. It must preserve world reveal, motion, materialization presentation, interaction states, reset, and hydration. This contract specifies ownership, not implementation mechanics.
+**Goal:** allow physically present Small Glyphs to participate after tool ownership instead of waiting for Scenario `4.30`. World reveal, physical field readiness, family targetability, transient state, and authored presentation completion are separate runtime facts. Scenario hydration restores presentation facts only; post-hydration synchronization projects production ownership into field readiness.
 
 ### MIGRATION S3 — DOMAIN-OWNED SMALL GLYPH EXTRACTION
 

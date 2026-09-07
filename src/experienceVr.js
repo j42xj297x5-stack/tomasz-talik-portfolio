@@ -606,6 +606,7 @@ function synchronizeReconstructionDerivedState() {
   furnacePanel?.redraw();
   shellSystem.applyAbsorbedShellIds(furnaceProgressionController.getAbsorbedShellIds());
   astrolabiumTuningActor.synchronize();
+  synchronizeSmallGlyphFieldReadiness();
 }
 const firstRingFlow = createVrFirstRingFlow({
   progressFloor,
@@ -804,6 +805,13 @@ astroAttractorProductionController = createVrAstroAttractorProductionController(
     toolGuidanceLifecycle?.notifyAstroClaimed();
     handModeController.equipRightAstro(); }
 });
+function synchronizeSmallGlyphFieldReadiness() {
+  smallGlyphSystem.setFieldReady(astroAttractorProductionController?.isEarned() === true);
+}
+const unsubscribeSmallGlyphFieldReadiness = astroAttractorProductionController.subscribe(
+  synchronizeSmallGlyphFieldReadiness
+);
+synchronizeSmallGlyphFieldReadiness();
 const currentObjectiveProjection = createVrCurrentObjectiveProjection({
   locale: language,
   getCurrentPointId: () => runtimeExperience?.getCurrentPointId(),
@@ -1815,6 +1823,7 @@ function restoreVrScenarioBaseline() {
   asterionSphere.reset();
   asterionProductionController.resetBaseline();
   astroAttractorProductionController.resetBaseline();
+  synchronizeSmallGlyphFieldReadiness();
   handModeController.reset();
   postRingMonkeyDialogue.reset();
   p2MonkeyDialogue.reset();
@@ -1908,6 +1917,7 @@ window.addEventListener('pagehide', () => {
   unsubscribeResonatorGuidance();
   unsubscribeSectorLockGuidance();
   unsubscribeRuneBridgeGuidance();
+  unsubscribeSmallGlyphFieldReadiness();
   asterionResonatorFieldPresentation.dispose();
   asterionResonatorTargetResponsePresentation.dispose();
   asterionResonatorTargetAudioProjection.dispose();
