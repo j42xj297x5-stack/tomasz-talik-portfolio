@@ -1,5 +1,6 @@
 import * as THREE from '../../vendor/three.js';
 import { ASTERION_METAL_CONTROL_TUNING } from './asterionMetalControlConfig.js';
+import { ASTERION_WATER_CONTROL_TUNING } from './asterionWaterControlConfig.js';
 
 export const VR_ASTERION_SECTOR_CONTROL_PHASES = Object.freeze({
   IDLE: 'IDLE', DRIVING: 'DRIVING', DETENT_HOLD: 'DETENT_HOLD', SETTLING: 'SETTLING'
@@ -20,6 +21,13 @@ const SECTOR_DEFINITIONS = Object.freeze({
   [ASTERION_METAL_CONTROL_TUNING.glyphId]: Object.freeze({
     branchId: ASTERION_METAL_CONTROL_TUNING.branchId,
     dofs: ASTERION_METAL_CONTROL_TUNING.dofs,
+    dominanceMarginDegrees: ASTERION_METAL_CONTROL_TUNING.dominanceMarginDegrees,
+    hinge: 'ORIGIN'
+  }),
+  [ASTERION_WATER_CONTROL_TUNING.glyphId]: Object.freeze({
+    branchId: ASTERION_WATER_CONTROL_TUNING.branchId,
+    dofs: ASTERION_WATER_CONTROL_TUNING.dofs,
+    dominanceMarginDegrees: ASTERION_WATER_CONTROL_TUNING.dominanceMarginDegrees,
     hinge: 'ORIGIN'
   })
 });
@@ -44,7 +52,7 @@ export function createVrAsterionSectorControlInteraction({
     gestureReleaseDegrees: Math.max(0, Number(settings.gestureReleaseDegrees) || 10)
   };
   const sectorStates = new Map(Object.keys(SECTOR_DEFINITIONS).map((glyphId) => [glyphId,
-    glyphId === ASTERION_METAL_CONTROL_TUNING.glyphId
+    SECTOR_DEFINITIONS[glyphId].dofs
       ? { dofs: { ANGLE: createDofState(), TILT: createDofState() } }
       : createDofState()]));
   const listeners = new Set();
@@ -165,7 +173,7 @@ export function createVrAsterionSectorControlInteraction({
     if (!measurements.length) return null;
     if (measurements[1]
       && Math.abs(measurements[0].degrees) - Math.abs(measurements[1].degrees)
-        < ASTERION_METAL_CONTROL_TUNING.dominanceMarginDegrees) return null;
+        < descriptor.dominanceMarginDegrees) return null;
     return { direction: Math.sign(measurements[0].degrees), dof: measurements[0].dof };
   }
 
