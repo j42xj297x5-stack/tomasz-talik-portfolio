@@ -1,3 +1,4 @@
+import { createVrMandatoryMonkeyCommunication } from './createVrMandatoryMonkeyCommunication.js';
 import { VR_MONKEY_COMMUNICATION_COPY_PL } from './vrMonkeyCommunicationCopy.js';
 import { VR_MONKEY_DIALOGUE_PRIORITY } from './createVrMonkeyGuide.js';
 
@@ -7,56 +8,71 @@ export const VR_RELIQUARY_HINT_COPY = Object.freeze({
   en: Object.freeze({ inserted: 'Activate the Crystal and reveal its meaning.', active: 'It can now be released. It has fulfilled its purpose.' })
 });
 
+const PRE_PLAYBACK_PHASES = Object.freeze(['WAITING', 'ATTENTION', 'AUTO_DELAY']);
+
 export function createVrReliquaryHints({ monkeyGuide, getInsertedInstance, onHintTimeout, locale = 'en', delay = 15 }) {
   const copy = VR_RELIQUARY_HINT_COPY[locale === 'pl' ? 'pl' : 'en'];
-  const owner = Symbol('VrReliquaryHint');
   let instance = null, phase = null, elapsed = 0, fired = false, shown = false, pending = false;
-  function clearOverride() {
-    monkeyGuide.cancelDialogueAttention(owner);
-    monkeyGuide.releaseDialogue(owner);
+  let communication = null;
+
+  function cancelPrePlaybackCommunication() {
+    if (!PRE_PLAYBACK_PHASES.includes(communication?.getPhase())) return;
+    communication.reset();
+    communication = null;
   }
-  function reset() { clearOverride(); instance = null; phase = null; elapsed = 0; fired = false; shown = false; pending = false; }
-  function acquireHint() {
-    if (!pending || !fired || shown || !phase) return false;
+  function clearPhase() {
+    cancelPrePlaybackCommunication();
+    instance = null; phase = null; elapsed = 0; fired = false; shown = false; pending = false;
+  }
+  function beginCommunication() {
+    if (!pending || !fired || shown || !phase || communication) return false;
     const hintPhase = phase;
-    const override = { onMonkeyPress() {
-      if (!monkeyGuide.ownsDialogue(owner)) return true;
-      shown = true; pending = false;
-      monkeyGuide.showDialogueMessage(owner, copy[hintPhase]);
-      monkeyGuide.releaseDialogue(owner);
-      return true;
-    } };
-    const acquired = monkeyGuide.tryAcquireDialogue(owner, override, {
+    let actor;
+    actor = createVrMandatoryMonkeyCommunication({
+      monkeyGuide,
+      blocks: [copy[hintPhase]],
       priority: VR_MONKEY_DIALOGUE_PRIORITY.OPTIONAL,
-      onPreempt() {
-        if (!monkeyGuide.ownsDialogue(owner)) return;
-        monkeyGuide.cancelDialogueAttention(owner);
-        monkeyGuide.releaseDialogue(owner);
+      requiresAttention: false,
+      autoPlaybackDelaySeconds: 1.0,
+      onAutoPlaybackCue: () => monkeyGuide.playAttentionCue(),
+      onTriggered() {
+        shown = true;
+        pending = false;
+        actor.beginPlayback();
+      },
+      onCompleted() {
+        if (communication === actor) communication = null;
       }
     });
-    if (!acquired) return false;
-    monkeyGuide.notifyDialogueAttention(owner);
+    communication = actor;
+    actor.beginAttention();
     return true;
   }
   function update(delta = 0) {
     const current = getInsertedInstance?.() ?? null;
     const currentPhase = ['inserted', 'active'].includes(current?.state) ? current.state : null;
-    if (!currentPhase) { reset(); return; }
+    if (!currentPhase) { clearPhase(); return; }
     if (current !== instance || currentPhase !== phase) {
-      clearOverride(); instance = current; phase = currentPhase; elapsed = 0; fired = false; shown = false; pending = false;
+      cancelPrePlaybackCommunication();
+      instance = current; phase = currentPhase; elapsed = 0; fired = false; shown = false; pending = false;
     }
-    if (fired) { acquireHint(); return; }
+    communication?.update(delta);
+    if (fired) { beginCommunication(); return; }
     elapsed += Math.max(0, delta);
     if (elapsed < delay) return;
     fired = true;
     onHintTimeout?.();
-    acquireHint();
   }
   function showHint() {
     if (!fired || shown || !phase) return false;
     pending = true;
-    acquireHint();
+    beginCommunication();
     return true;
+  }
+  function reset() {
+    communication?.reset();
+    communication = null;
+    clearPhase();
   }
   return { update, showHint, reset, getSnapshot: () => ({ instance, phase, elapsed, fired, shown, pending }) };
 }
