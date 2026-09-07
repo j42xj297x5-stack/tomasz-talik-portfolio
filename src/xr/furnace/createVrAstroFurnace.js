@@ -111,6 +111,10 @@ export function createVrAstroFurnace({
   const authoredModelRootPosition = modelRoot.position.clone();
   const resolvedWorldPosition = new THREE.Vector3();
   const localVisibleCenter = new THREE.Vector3();
+  const revealMaterials = new Map();
+  let revealElapsed = 0;
+  let revealDuration = 3;
+  let revealActive = false;
 
   function calculateVisibleBounds() {
     visibleBounds.makeEmpty();
@@ -170,7 +174,6 @@ export function createVrAstroFurnace({
     return object.visible;
   }
 
-  function update() {}
   function ensureRuntimeMaterials(root) {
     if (!root) return [];
     const existing = runtimeMaterialBranches.get(root);
@@ -187,9 +190,60 @@ export function createVrAstroFurnace({
     runtimeMaterialBranches.set(root, materials);
     return materials;
   }
+  // The loaded scene may still share cache-owned materials even though its nodes were cloned.
+  // Establish the Furnace's material boundary before interaction actors retain branch references.
+  ensureRuntimeMaterials(model);
   ensureRuntimeMaterials(nodes[PRODUCT_VOLUME_NODE_NAME]).forEach((material) => {
     material.visible = false;
   });
+  function captureRevealMaterials() {
+    const currentMaterials = new Set();
+    model?.traverse((node) => {
+      if (!isVisibleGeometry(node, model) || !node.material) return;
+      const materials = Array.isArray(node.material) ? node.material : [node.material];
+      materials.filter((material) => material?.visible !== false).forEach((material) => {
+        currentMaterials.add(material);
+        if (!revealMaterials.has(material)) revealMaterials.set(material, {
+          opacity: material.opacity,
+          transparent: material.transparent
+        });
+      });
+    });
+    revealMaterials.forEach((_baseline, material) => {
+      if (!currentMaterials.has(material)) revealMaterials.delete(material);
+    });
+  }
+  function applyRevealProgress(progress) {
+    const amount = THREE.MathUtils.clamp(progress, 0, 1);
+    revealMaterials.forEach((baseline, material) => {
+      material.opacity = baseline.opacity * amount;
+      material.transparent = amount < 1 || baseline.transparent;
+      material.needsUpdate = true;
+    });
+  }
+  function finishReveal() {
+    revealElapsed = revealDuration;
+    revealActive = false;
+    applyRevealProgress(1);
+  }
+  function reveal(duration = 3) {
+    if (disposed) return false;
+    if (revealMaterials.size) applyRevealProgress(1);
+    revealMaterials.clear();
+    captureRevealMaterials();
+    place();
+    revealDuration = Math.max(0, duration);
+    revealElapsed = 0;
+    revealActive = revealDuration > 0;
+    applyRevealProgress(revealActive ? 0 : 1);
+    return true;
+  }
+  function update(delta) {
+    if (!revealActive) return;
+    revealElapsed = Math.min(revealDuration, revealElapsed + Math.max(0, delta));
+    applyRevealProgress(revealDuration <= 0 ? 1 : revealElapsed / revealDuration);
+    if (revealElapsed >= revealDuration) finishReveal();
+  }
   function refreshVisibleBounds() {
     const bounds = calculateVisibleBounds();
     diagnostics.visibleBounds = bounds.isEmpty() ? null : {
@@ -197,11 +251,29 @@ export function createVrAstroFurnace({
     };
     return diagnostics.visibleBounds;
   }
-  function reset() { return place(); }
-  function resetBaseline() { place(); object.visible = false; }
+  function reset() {
+    const placed = place();
+    captureRevealMaterials();
+    finishReveal();
+    return placed;
+  }
+  function resetBaseline() {
+    place();
+    captureRevealMaterials();
+    revealElapsed = 0;
+    revealActive = false;
+    applyRevealProgress(0);
+    object.visible = false;
+  }
   function hydrateScenarioState(state) {
     if (!state || typeof state.revealed !== 'boolean') throw new TypeError('furnace.revealed must be a boolean');
-    object.visible = state.revealed;
+    if (state.revealed) {
+      place();
+      captureRevealMaterials();
+      finishReveal();
+    } else {
+      resetBaseline();
+    }
   }
   function dispose() {
     if (disposed) return;
@@ -233,7 +305,7 @@ export function createVrAstroFurnace({
     console.groupEnd();
   }
 
-  return { object, model, nodes, clips, capabilities, place, update, reset, resetBaseline, hydrateScenarioState, dispose, diagnostics, refreshVisibleBounds,
+  return { object, model, nodes, clips, capabilities, place, reveal, update, reset, resetBaseline, hydrateScenarioState, dispose, diagnostics, refreshVisibleBounds,
     ensureRuntimeMaterials,
     getSpatialAudioAnchor() { return spatialAudioAnchor; },
     subscribePlacement(listener) { placementListeners.add(listener); return () => placementListeners.delete(listener); } };

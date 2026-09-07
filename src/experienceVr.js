@@ -1366,7 +1366,7 @@ const waterPathOpenCommunication = createVrMandatoryMonkeyCommunication({ monkey
 const furnaceIntro = createVrFurnaceIntro({
   monkeyGuide,
   secondsPerLine: settings.intro.messageDisplayDuration,
-  revealFurnace: () => { astroFurnace.object.visible = true; return true; },
+  revealFurnace: () => astroFurnace.reveal(3),
   onCompleted: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.FURNACE_INTRO_COMPLETED)
 });
 runtimeExperience = new RuntimeExperience({
