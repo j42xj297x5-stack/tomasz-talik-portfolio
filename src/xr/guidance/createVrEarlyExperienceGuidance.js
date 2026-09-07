@@ -34,11 +34,18 @@ export function createVrEarlyExperienceGuidance({ monkeyGuide, copy, getCurrentP
     id, blocks, isStillRelevant, onCompleted, requiresAttention: true,
     priority: VR_MONKEY_DIALOGUE_PRIORITY.OPTIONAL
   });
+  const autoHint = (id, blocks, isStillRelevant, onCompleted = () => {}) => enqueue({
+    id, blocks, isStillRelevant, onCompleted, requiresAttention: false,
+    autoPlaybackDelaySeconds: 1.0,
+    onAutoPlaybackCue: () => monkeyGuide.playAttentionCue(),
+    priority: VR_MONKEY_DIALOGUE_PRIORITY.OPTIONAL
+  });
   function discardIrrelevant() {
     for (let index = pending.length - 1; index >= 0; index -= 1) {
       if (!pending[index].isStillRelevant()) pending.splice(index, 1);
     }
-    if (['WAITING', 'ATTENTION'].includes(active?.actor.getPhase()) && !active.descriptor.isStillRelevant()) {
+    if (['WAITING', 'ATTENTION', 'AUTO_DELAY'].includes(active?.actor.getPhase())
+      && !active.descriptor.isStillRelevant()) {
       active.actor.reset(); active = null;
     }
   }
@@ -49,6 +56,8 @@ export function createVrEarlyExperienceGuidance({ monkeyGuide, copy, getCurrentP
     actor = createVrMandatoryMonkeyCommunication({ monkeyGuide, blocks: descriptor.blocks,
       secondsPerLine: VR_MONKEY_MESSAGE_TIMING.secondsPerLine, priority: descriptor.priority,
       requiresAttention: descriptor.requiresAttention,
+      autoPlaybackDelaySeconds: descriptor.autoPlaybackDelaySeconds,
+      onAutoPlaybackCue: descriptor.onAutoPlaybackCue,
       onTriggered: () => actor.beginPlayback(), onCompleted: () => {
         descriptor.onCompleted?.();
         if (active?.actor === actor) active = null;
@@ -99,7 +108,7 @@ export function createVrEarlyExperienceGuidance({ monkeyGuide, copy, getCurrentP
         crystalPickupElapsed = 0; pickupHintPending = true;
         const id = stage === 0 ? 'first-crystal-pickup-soft' : 'first-crystal-pickup-medium';
         const key = stage === 0 ? 'hint.crystal.whatNow.soft' : 'hint.crystal.grab.medium';
-        optional(id, copy.hints[key].blocks, crystalUnclaimed, () => {
+        autoHint(id, copy.hints[key].blocks, crystalUnclaimed, () => {
           pickupHintPending = false; pickupHintStage += 1;
         });
       }
@@ -108,7 +117,8 @@ export function createVrEarlyExperienceGuidance({ monkeyGuide, copy, getCurrentP
       if (!crystalFlowUnadvanced()) revealElapsed = null;
       else if ((revealElapsed += step) >= 60) {
         revealElapsed = null;
-        optional('first-crystal-reliquary', copy.hints['hint.reliquary.firstCrystal'].blocks, crystalFlowUnadvanced);
+        autoHint('first-crystal-reliquary', copy.hints['hint.reliquary.firstCrystal'].blocks,
+          crystalFlowUnadvanced);
       }
     }
     if (cardElapsed !== null && (cardElapsed += step) >= 5) {
