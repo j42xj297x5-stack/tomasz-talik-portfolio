@@ -94,17 +94,6 @@ export const VR_SCENARIO_CAPABILITY = immutableIdentifiers([
   'CAN_TALK_TO_MONKEY',
   'CAN_MOVE',
   'CAN_YAW',
-  'CAN_EQUIP_ASTRO',
-  'CAN_SCAN_SHELLS',
-  'CAN_TARGET_SHELLS',
-  'CAN_SWITCH_ASTRO_BAND',
-  'CAN_SCAN_SMALL_GLYPHS',
-  'CAN_TARGET_SMALL_GLYPHS',
-  'CAN_PULL_SMALL_GLYPHS',
-  'CAN_SCAN_LARGE_GLYPHS',
-  'CAN_TARGET_LARGE_GLYPHS',
-  'CAN_PULL_LARGE_GLYPHS',
-  'CAN_EXTRACT_SMALL_GLYPH_ESSENCE',
   'CAN_USE_FURNACE',
   'CAN_OPEN_FURNACE',
   'CAN_INSERT_FURNACE_MATERIAL',
@@ -358,24 +347,10 @@ const SMALL_GLYPH_FIELD_PRESENTED_SETTLED_CONSEQUENCES = Object.freeze({
 const P2_MAIN_GLYPH_CAPABILITIES = Object.freeze([
   VR_SCENARIO_CAPABILITY.CAN_USE_GLYPHS, VR_SCENARIO_CAPABILITY.CAN_USE_RELIQUARY,
   VR_SCENARIO_CAPABILITY.CAN_ACTIVATE_RELIQUARY, VR_SCENARIO_CAPABILITY.CAN_RELEASE_RELIQUARY,
-  VR_SCENARIO_CAPABILITY.CAN_EQUIP_ASTRO, VR_SCENARIO_CAPABILITY.CAN_SCAN_SHELLS,
-  VR_SCENARIO_CAPABILITY.CAN_TARGET_SHELLS, VR_SCENARIO_CAPABILITY.CAN_USE_FURNACE,
+  VR_SCENARIO_CAPABILITY.CAN_USE_FURNACE,
   VR_SCENARIO_CAPABILITY.CAN_OPEN_FURNACE, VR_SCENARIO_CAPABILITY.CAN_INSERT_FURNACE_MATERIAL,
   VR_SCENARIO_CAPABILITY.CAN_START_FURNACE_PROCESS, VR_SCENARIO_CAPABILITY.CAN_EQUIP_ASTERION,
-  VR_SCENARIO_CAPABILITY.CAN_CONTROL_PLATFORM, VR_SCENARIO_CAPABILITY.CAN_SWITCH_ASTRO_BAND
-]);
-const P2_SMALL_GLYPH_TARGETING_CAPABILITIES = Object.freeze([
-  ...P2_MAIN_GLYPH_CAPABILITIES,
-  VR_SCENARIO_CAPABILITY.CAN_SCAN_SMALL_GLYPHS,
-  VR_SCENARIO_CAPABILITY.CAN_TARGET_SMALL_GLYPHS,
-  VR_SCENARIO_CAPABILITY.CAN_PULL_SMALL_GLYPHS,
-  VR_SCENARIO_CAPABILITY.CAN_EXTRACT_SMALL_GLYPH_ESSENCE
-]);
-const P2_LARGE_GLYPH_TARGETING_CAPABILITIES = Object.freeze([
-  ...P2_SMALL_GLYPH_TARGETING_CAPABILITIES,
-  VR_SCENARIO_CAPABILITY.CAN_SCAN_LARGE_GLYPHS,
-  VR_SCENARIO_CAPABILITY.CAN_TARGET_LARGE_GLYPHS,
-  VR_SCENARIO_CAPABILITY.CAN_PULL_LARGE_GLYPHS
+  VR_SCENARIO_CAPABILITY.CAN_CONTROL_PLATFORM
 ]);
 const ACT_TWO_ENTRY_SETTLED_CONSEQUENCES = Object.freeze({
   postRing: Object.freeze({ shellFieldVisible: true, shellInteractionEnabled: false }),
@@ -756,9 +731,7 @@ const points = Object.freeze([
     canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['4.10'] }), settledConsequences: ASTERION_EARNED_SETTLED_CONSEQUENCES,
     entryEffects: Object.freeze([VR_SCENARIO_EFFECT.ENABLE_SHELL_FIELD_INTERACTION]),
     label: 'Astro Attractor physically claimed / EARNED',
-    capabilities: Object.freeze([VR_SCENARIO_CAPABILITY.CAN_EQUIP_ASTRO, VR_SCENARIO_CAPABILITY.CAN_SCAN_SHELLS,
-      VR_SCENARIO_CAPABILITY.CAN_TARGET_SHELLS, VR_SCENARIO_CAPABILITY.CAN_SWITCH_ASTRO_BAND,
-      VR_SCENARIO_CAPABILITY.CAN_USE_FURNACE,
+    capabilities: Object.freeze([VR_SCENARIO_CAPABILITY.CAN_USE_FURNACE,
       VR_SCENARIO_CAPABILITY.CAN_OPEN_FURNACE, VR_SCENARIO_CAPABILITY.CAN_INSERT_FURNACE_MATERIAL,
       VR_SCENARIO_CAPABILITY.CAN_START_FURNACE_PROCESS]), transitions: Object.freeze([
       Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.COMPLETE,
@@ -840,7 +813,7 @@ const points = Object.freeze([
   Object.freeze({
     id: VR_EXPERIENCE_POINT['4.70'], canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['4.80'] }),
     settledConsequences: THIRD_RING_COMPLETE_SETTLED_CONSEQUENCES,
-    label: 'P2 tuning loop / third ring', capabilities: P2_LARGE_GLYPH_TARGETING_CAPABILITIES,
+    label: 'P2 tuning loop / third ring', capabilities: P2_MAIN_GLYPH_CAPABILITIES,
     transitions: Object.freeze([
       Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.STAY, event: VR_SCENARIO_EVENT.RELIQUARY_HINT_TIMEOUT, milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.SHOW_RELIQUARY_CONTEXT_HINT]) }),
       Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.STAY, event: VR_SCENARIO_EVENT.CRYSTAL_ACTIVATED, milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.PRESENT_ACTIVE_CARD_PREVIEW]) }),
@@ -852,7 +825,7 @@ const points = Object.freeze([
     id: VR_EXPERIENCE_POINT['4.80'], canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['5.10'] }),
     settledConsequences: CORE_RESONATOR_READY_SETTLED_CONSEQUENCES,
     entryEffects: Object.freeze([VR_SCENARIO_EFFECT.SET_MAIN_AMBIENT_04, VR_SCENARIO_EFFECT.CHECK_RESONATOR_JOIN]),
-    label: 'Third ring complete / waiting for Resonator join', capabilities: P2_SMALL_GLYPH_TARGETING_CAPABILITIES,
+    label: 'Third ring complete / waiting for Resonator join', capabilities: P2_MAIN_GLYPH_CAPABILITIES,
     transitions: Object.freeze([Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.COMPLETE,
       event: VR_SCENARIO_EVENT.RESONATOR_READY, milestonesToAdd: Object.freeze([]) })])
   }),
@@ -860,7 +833,7 @@ const points = Object.freeze([
     id: VR_EXPERIENCE_POINT['5.10'], canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['5.20'] }),
     settledConsequences: FOURTH_RUNE_INSTALLED_SETTLED_CONSEQUENCES,
     entryEffects: Object.freeze([]),
-    label: 'Third ring + Resonator stable join', capabilities: P2_SMALL_GLYPH_TARGETING_CAPABILITIES,
+    label: 'Third ring + Resonator stable join', capabilities: P2_MAIN_GLYPH_CAPABILITIES,
     transitions: Object.freeze([
       ...TIER_4_CARD_LIFECYCLE_TRANSITIONS,
       Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.COMPLETE,
@@ -872,7 +845,7 @@ const points = Object.freeze([
     id: VR_EXPERIENCE_POINT['5.20'], canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['5.30'] }),
     settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
     entryEffects: Object.freeze([VR_SCENARIO_EFFECT.BEGIN_ETHER_INTERVENTION]),
-    label: 'Fourth Rune installed / Ether intervention', capabilities: P2_SMALL_GLYPH_TARGETING_CAPABILITIES,
+    label: 'Fourth Rune installed / Ether intervention', capabilities: P2_MAIN_GLYPH_CAPABILITIES,
     transitions: Object.freeze([
       ...TIER_4_CARD_LIFECYCLE_TRANSITIONS,
       Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.COMPLETE,
@@ -885,7 +858,7 @@ const points = Object.freeze([
     settledConsequences: ETHER_RUNE_TUNED_SETTLED_CONSEQUENCES,
     entryEffects: Object.freeze([]),
     label: 'Ether tuning unlocked / stable boundary',
-    capabilities: Object.freeze([...P2_SMALL_GLYPH_TARGETING_CAPABILITIES,
+    capabilities: Object.freeze([...P2_MAIN_GLYPH_CAPABILITIES,
       VR_SCENARIO_CAPABILITY.CAN_TUNE_ETHER_RUNE]),
     transitions: Object.freeze([
       ...TIER_4_CARD_LIFECYCLE_TRANSITIONS,
@@ -899,7 +872,7 @@ const points = Object.freeze([
     settledConsequences: ETHER_MONKEY_CAPTURED_SETTLED_CONSEQUENCES,
     entryEffects: Object.freeze([VR_SCENARIO_EFFECT.REVEAL_ETHER_RUNE]),
     label: 'Ether Rune tuned / transport available',
-    capabilities: Object.freeze([...P2_SMALL_GLYPH_TARGETING_CAPABILITIES,
+    capabilities: Object.freeze([...P2_MAIN_GLYPH_CAPABILITIES,
       VR_SCENARIO_CAPABILITY.CAN_TUNE_ETHER_RUNE]),
     transitions: Object.freeze([
       ...TIER_4_CARD_LIFECYCLE_TRANSITIONS,
@@ -913,7 +886,7 @@ const points = Object.freeze([
     settledConsequences: FIVE_ELEMENTAL_RUNES_INSTALLED_SETTLED_CONSEQUENCES,
     entryEffects: Object.freeze([VR_SCENARIO_EFFECT.BEGIN_WATER_PATH_OPEN_COMMUNICATION]),
     label: 'Ether captured / Water installation path open',
-    capabilities: Object.freeze([...P2_SMALL_GLYPH_TARGETING_CAPABILITIES,
+    capabilities: Object.freeze([...P2_MAIN_GLYPH_CAPABILITIES,
       VR_SCENARIO_CAPABILITY.CAN_TUNE_ETHER_RUNE, VR_SCENARIO_CAPABILITY.CAN_INSTALL_WATER_RUNE]),
     transitions: Object.freeze([
       ...TIER_4_CARD_LIFECYCLE_TRANSITIONS,
@@ -927,7 +900,7 @@ const points = Object.freeze([
     settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
     entryEffects: Object.freeze([VR_SCENARIO_EFFECT.BEGIN_FULL_RESONATOR_COMMUNICATION]),
     label: 'Five elemental Runes installed / full Resonator unlocked',
-    capabilities: Object.freeze([...P2_SMALL_GLYPH_TARGETING_CAPABILITIES,
+    capabilities: Object.freeze([...P2_MAIN_GLYPH_CAPABILITIES,
       VR_SCENARIO_CAPABILITY.CAN_TUNE_ETHER_RUNE, VR_SCENARIO_CAPABILITY.CAN_INSTALL_WATER_RUNE,
       VR_SCENARIO_CAPABILITY.CAN_USE_ADVANCED_RESONATOR]),
     transitions: TIER_4_CARD_LIFECYCLE_TRANSITIONS

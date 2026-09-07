@@ -4,7 +4,7 @@ Status: **CURRENT / BINDING**, synchronized on 2026-09-01. Runtime graph and rec
 
 ## Ownership
 
-`Spine → Scenario → Director → Runtime / domain owners`. Scenario owns authored dramaturgy, accepted semantic events, entry effects and capabilities. Director owns the current point and graph interpretation. Runtime/domain owners retain physical and committed gameplay truth; point IDs and debug aliases never replace that truth.
+`Spine → Scenario → Director → Runtime / domain owners`. Scenario owns authored dramaturgy, accepted semantic events, entry effects and genuinely story-owned capabilities; its capabilities are not a generic gameplay permission registry. Director owns the current point and graph interpretation. Runtime/domain owners retain physical and committed gameplay truth; point IDs and debug aliases never replace that truth. In particular, ordinary Astrolabium equip, band switching, scan, target, pull and natural Small Glyph extraction rights remain physical/domain laws rather than Scenario capabilities.
 
 ## Authored spine
 
