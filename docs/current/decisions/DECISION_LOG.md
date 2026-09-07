@@ -54,7 +54,19 @@ This entry supersedes conflicting CURRENT status or ownership claims below that 
 9. Water advanced control/hue/luminance/W22, harmonic recognition, Water Sync, Haiku damping and anti-bypass pull, final Water hunt/card, dissolution and XR finale remain **FUTURE / NOT IMPLEMENTED**.
 10. Hardware smoke confirms corrected Metal tuning completion, Metal acquisition after installation and `VI` targetability after Sphere completion. Detailed Metal gesture feel, axes/signs, dominance, composed-motion comfort, expansion adequacy, rounding readability and perceptual tuning remain outstanding.
 
-## 2026-09-03 — CURRENT final Metal/Water resonance and Haiku anti-bypass canon (SUPERSEDING)
+## 2026-09-07 — CURRENT monotonic Metal field expansion canon (SUPERSEDING)
+
+This entry supersedes the 2026-09-03 zero-range-M22 and fixed-meter Metal expansion rules while preserving its Water synchronization, Haiku anti-bypass and presentation-rounding decisions.
+
+1. Both Metal DOFs retain levels `0/1/2/3` at `0°/13°/23°/36°` and map monotonically to expansion fractions `0.00/0.20/0.50/0.75`.
+2. Metal angle controls LATERAL expansion by independently multiplying the existing EARTH LEFT and WOOD RIGHT half-extents by `(1 + p)`; it preserves asymmetry and never changes VERTICAL extent.
+3. Metal tilt controls FORWARD expansion by interpolating the selected FIRE band's near/far boundaries toward the global `10–130 m` limits by `p`.
+4. Percentage expansion changes authoritative nominal geometry and therefore both visible field geometry and actual target containment. Fillet, bow, skin and morph remain read-only presentation.
+5. `M22` remains the future harmonic center in control-space/synchronization semantics, but contributes `+50%` LATERAL expansion and `50%` depth-domain interpolation. `222 / M22 / W22` remains the synchronization target.
+6. Existing `1.50/0.90/0.60` Metal rounding multipliers remain unchanged and do not determine containment.
+7. Metal physical control and presentation rounding are implemented. Runtime percentage expansion is **NOT YET SYNCHRONIZED** and still follows the superseded fixed-meter/zero-M22 behavior pending a separate code task.
+
+## 2026-09-03 — SUPERSEDED Metal/Water resonance and Haiku anti-bypass canon
 
 1. `M(2,2)` adds no field expansion.
 2. Every other active Metal pair expands at least one controlled dimension.

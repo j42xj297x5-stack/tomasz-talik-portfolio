@@ -2,7 +2,7 @@
 
 ## Status i reguła nadrzędna
 
-Status: **CURRENT WORKING CANON / SPLIT IMPLEMENTATION STATUS**. Rune tuning/transport/install, Binder readiness/materialization, powered-sector acquisition/control, Resonator core/descriptor, discovery Guidance and `FOURTH_RUNE_INSTALLED → Monkey Ether reveal → CAN_TUNE_ETHER_RUNE` and physical Ether tuning through Scenario `5.40` are **CURRENT / IMPLEMENTED** under their technical owners. Physical containment/resonance response, late-only `SPHERE_FAR` `PULL_READY` eligibility and late Large Glyph angular/radial motion are also **IMPLEMENTED**. Physical Ether reveal, SPECIAL Astro transport, Monkey capture, persistent Water installation-readiness override, Water natural installation and Scenario `5.60` with the full-array Monkey acknowledgement and `CAN_USE_ADVANCED_RESONATOR` are **CURRENT / IMPLEMENTED**. Metal `M(angle, tilt)` dual-DOF physical control, gameplay field expansion and Metal-dependent presentation rounding are **CURRENT / IMPLEMENTED**. Water advanced control, synchronization, Haiku damping/anti-bypass gate and later finale remain **FUTURE / NOT IMPLEMENTED**.
+Status: **CURRENT WORKING CANON / SPLIT IMPLEMENTATION STATUS**. Rune tuning/transport/install, Binder readiness/materialization, powered-sector acquisition/control, Resonator core/descriptor, discovery Guidance and `FOURTH_RUNE_INSTALLED → Monkey Ether reveal → CAN_TUNE_ETHER_RUNE` and physical Ether tuning through Scenario `5.40` are **CURRENT / IMPLEMENTED** under their technical owners. Physical containment/resonance response, late-only `SPHERE_FAR` `PULL_READY` eligibility and late Large Glyph angular/radial motion are also **IMPLEMENTED**. Physical Ether reveal, SPECIAL Astro transport, Monkey capture, persistent Water installation-readiness override, Water natural installation and Scenario `5.60` with the full-array Monkey acknowledgement and `CAN_USE_ADVANCED_RESONATOR` are **CURRENT / IMPLEMENTED**. Metal `M(angle, tilt)` dual-DOF physical control and Metal-dependent presentation rounding are **CURRENT / IMPLEMENTED**; monotonic `0 / 20% / 50% / 75%` gameplay field expansion is the **CURRENT CANONICAL TARGET / NOT YET RUNTIME-SYNCHRONIZED**. Water advanced control, synchronization, Haiku damping/anti-bypass gate and later finale remain **FUTURE / NOT IMPLEMENTED**.
 
 Ten przebieg zastępuje wcześniejszą wersję, w której trzy sektory tworzyły pełną antenę przed etapem kamieni runicznych:
 
@@ -174,11 +174,13 @@ Large Glyph Actor also **implements** the late challenge: approximately `0.02 ra
 
 EARTH/WOOD/FIRE remains functional and all 27 fully active core configurations retain equal detection authority. Difficulty comes from angular motion, depth oscillation, and one FIRE depth band at a time. A skilled player can still acquire a target for the existing six-second mechanic, but retention is demanding. This motivates expansion rather than a fiction that the core is broken or underpowered.
 
-## 10. METAL — range versus harmony — **CURRENT / IMPLEMENTED**
+## 10. METAL — monotonic range and harmonic center — **CANONICAL TARGET / RUNTIME SYNCHRONIZATION PENDING**
 
-An installed Metal Rune—not `CAN_USE_ADVANCED_RESONATOR` or point `5.60`—powers the Metal sector and makes its acquisition beam, lock and control legal. `M00` is powered but field-inactive. METAL adds angle and tilt with `0 = OFF` and active levels `1/2/3`; any positive DOF activates its field contribution. On each DOF, `2` is the neutral midpoint while `1` and `3` are off-center expansion states. The implemented provisional mapping is `angle → LATERAL` and `tilt → FORWARD`; the sector-local gesture/motion axes and this semantic assignment are **TUNING / HARDWARE QA**, not immutable semantics. Metal never expands VERTICAL.
+An installed Metal Rune—not `CAN_USE_ADVANCED_RESONATOR` or point `5.60`—powers the Metal sector and makes its acquisition beam, lock and control legal. `M00` is powered but field-inactive. METAL adds angle and tilt with `0 = OFF` and active levels `1/2/3`; any positive DOF activates its field contribution. The physical detents `0° / 13° / 23° / 36°` map monotonically to expansion fractions `0.00 / 0.20 / 0.50 / 0.75`. The canonical mapping is `angle → LATERAL` and `tilt → FORWARD`; Metal never expands VERTICAL.
 
-Among active pairs, `M(2,2)` uniquely adds zero range. Levels `1/3` add `8 m` per LATERAL side for angle and `10 m` on each available side of the selected FIRE depth band for tilt, clamped to the global `10–130 m` domain. These numeric values are **TUNING / HARDWARE QA**. Off-center Metal therefore creates a genuinely larger nominal acquisition volume while `M22` preserves the compact core range.
+Angle scales the current EARTH/WOOD LEFT and RIGHT half-extents independently by `(1 + p)`, preserving their asymmetry. Tilt interpolates the FIRE-selected band's near and far boundaries by `p` toward the global `10 m` and `130 m` depth limits. These percentages alter authoritative nominal geometry and therefore both the visible field and actual target containment; they are not presentation-only scaling. The result is player-readable: small movement gives modest coverage, medium movement clearly more, and maximum movement approaches most of the available domain. No move from Metal level `1` to `2` can reduce the field.
+
+`M22` remains the designated future harmonic-center state in control-space and synchronization semantics, but it no longer means zero expansion: angle contributes `+50%` LATERAL coverage and tilt contributes `50%` interpolation toward the global depth boundaries. The runtime still uses the superseded fixed-meter/zero-M22 behavior pending a separate synchronization task.
 
 Metal simultaneously drives presentation-only rounding through the existing field morph: with both DOFs active, `M22` multiplies mismatch fillet by `1.50`, one off-center DOF by `0.90`, and two by `0.60`, with final fractions clamped to `0.32`. These values are **TUNING / HARDWARE QA**. If either DOF is OFF, pre-Metal mismatch rounding is unchanged. Fillet/bow/skin never enlarges gameplay containment.
 
@@ -199,7 +201,7 @@ WATER angle = 2 / tilt = 2
 = 222 / M(2,2) / W(2,2)
 ```
 
-This is the **FULL HARMONIC ARRAY / WATER SYNCHRONIZATION CONFIGURATION**. It is compact rather than maximum-range: the balanced square EARTH/WOOD core and nominal FIRE band gain zero Metal expansion, maximum rounding, medium BLUE Water frequency and a gentle coherent BLUE breathing pulse. It remains box-derived containment even though it reads almost spherical/rounded-cuboid. Exact pulse parameters remain tuning.
+This is the **FULL HARMONIC ARRAY / WATER SYNCHRONIZATION CONFIGURATION**. `M22` denotes the harmonic center in control-space, not minimum range: the balanced square EARTH/WOOD core gains `+50%` LATERAL expansion and the MID FIRE band expands by `50%` toward the global depth boundaries, resolving to `30–110 m`. The field also gains maximum rounding, medium BLUE Water frequency and a gentle coherent BLUE breathing pulse. It remains box-derived containment even though it reads almost spherical/rounded-cuboid. Exact pulse parameters remain tuning.
 
 Installed Water + `222 / M22 / W22` derives future **WATER SYNC LOCK** in the advanced Resonator domain. Lock alone has no global target effect. **WATER SYNC CONTACT** exists only while Haiku Cosmos's canonical anchor is inside the active synchronized field. Contact strongly damps both angular and radial late motion, without requiring a literal stop; Large Glyph Actor remains physical motion owner.
 
@@ -214,13 +216,13 @@ Final Haiku Cosmos physical pull requires all four truths: learned Haiku/Water f
 ```text
 late moving targets → off-center Metal hunt → Ether recovered
 → Monkey Water exception → Water recovered and installed
-→ 222 / M22 / W22 → compact rounded medium-BLUE pulsating field
+→ 222 / M22 / W22 → harmonic-center, rounded medium-BLUE pulsating field
 → Haiku enters field → WATER SYNC CONTACT → strong motion damping
 → stable resonance / PULL_READY → Astrolabium final pull
 → final Haiku Cosmos crystal / remaining portfolio completion
 ```
 
-The puzzle reverses “largest field = best”: Metal range helps interception, but centered balance completes harmony. Metal control and expansion are implemented, while their exact gesture feel and numeric tuning remain outstanding. Water control, pulse, slowdown/recovery easing, harmonic/Water Sync logic, final Water hunt and post-`5.60` finale beats remain **FUTURE / NOT IMPLEMENTED**.
+The puzzle distinguishes maximum coverage from harmonic-center synchronization: greater Metal deflection always increases range, while `M22` supplies the required control-space center with substantial `50%` expansion. Metal control is implemented, while percentage expansion awaits runtime synchronization and exact gesture feel remains outstanding. Water control, pulse, slowdown/recovery easing, harmonic/Water Sync logic, final Water hunt and post-`5.60` finale beats remain **FUTURE / NOT IMPLEMENTED**.
 
 ## 15. Ostatnia karta
 
