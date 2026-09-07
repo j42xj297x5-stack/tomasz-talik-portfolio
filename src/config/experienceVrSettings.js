@@ -209,7 +209,9 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
     rayRadialSegments: 6
   },
   targetHalo: { color: 0xbfe9ff, opacity: 0.28, thicknessPixels: 3, pulseDuration: 1.45 },
-  attractorPresentation: { bandColors: { shells: 0xff0000, smallGlyphs: 0xffff00, largeGlyphs: 0x78ff9c } },
+  attractorPresentation: {
+    bandColors: { shells: 0xff0000, smallGlyphs: 0xffff00, largeGlyphs: 0x78ff9c, runeStones: 0x35a9ff }
+  },
   placedObjectIdleMotion: {
     verticalAmplitude: 0.20,
     verticalCycleDuration: 4.8,
@@ -770,7 +772,9 @@ export function normalizeExperienceVrSettings(candidate) {
         smallGlyphs: Math.round(finiteNumber(candidate.attractorPresentation?.bandColors?.smallGlyphs,
           defaults.attractorPresentation.bandColors.smallGlyphs, { min: 0, max: 0xffffff })),
         largeGlyphs: Math.round(finiteNumber(candidate.attractorPresentation?.bandColors?.largeGlyphs,
-          defaults.attractorPresentation.bandColors.largeGlyphs, { min: 0, max: 0xffffff }))
+          defaults.attractorPresentation.bandColors.largeGlyphs, { min: 0, max: 0xffffff })),
+        runeStones: Math.round(finiteNumber(candidate.attractorPresentation?.bandColors?.runeStones,
+          defaults.attractorPresentation.bandColors.runeStones, { min: 0, max: 0xffffff }))
       }
     },
     placedObjectIdleMotion: {

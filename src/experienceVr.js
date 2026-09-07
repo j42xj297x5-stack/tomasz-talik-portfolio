@@ -640,7 +640,7 @@ const attractorBandPresentations = Object.freeze({
   [VR_ATTRACTOR_BANDS.LARGE_GLYPHS]: { url: publicPath('/svg/band_03.svg'),
     presentationColor: settings.attractorPresentation.bandColors.largeGlyphs },
   [VR_ATTRACTOR_BANDS.RUNESTONES]: { url: publicPath('/svg/band_04.svg'),
-    presentationColor: settings.attractorPresentation.bandColors.shells }
+    presentationColor: settings.attractorPresentation.bandColors.runeStones }
 });
 const semanticInput = createVrSemanticInput({ renderer });
 const runeStoneProgressionController = createVrRuneStoneProgressionController();
@@ -1260,7 +1260,7 @@ runeStoneAttractorInteraction = createVrRuneStoneAttractorInteraction({
     maxPullSpeed: settings.shellAttractor.maxPullSpeed,
     handoffRadiusMeters: settings.runeStoneInstallation.handoffRadiusMeters,
     scanCone: { ...settings.shellAttractor.scanCone,
-      color: settings.attractorPresentation.bandColors.shells } },
+      color: settings.attractorPresentation.bandColors.runeStones } },
   haloSettings: settings.targetHalo,
   platformCenter: progressFloor.object,
   getPlayerWorldPosition: (target) => getXrHeadWorldPosition({ renderer, camera, playerRig, target }),

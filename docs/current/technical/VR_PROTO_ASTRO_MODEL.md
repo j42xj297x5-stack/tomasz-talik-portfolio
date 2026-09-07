@@ -86,6 +86,8 @@ Ordinary early Large Glyph pull uses learned family knowledge. A late `SPHERE_FA
 | 3 | available targets for selected band | FUTURE UI policy; eligibility set derivation is implemented |
 | 4 | selected-target distance | FUTURE / NOT IMPLEMENTED |
 
+The current band presentation palette is `SHELLS` — red, `SMALL_GLYPHS` — yellow, `LARGE_GLYPHS` — green, and `RUNESTONES` — blue. The Panel 2 selected-band symbol and the corresponding Astrolabium scan beam use the same band presentation color.
+
 ## Current progression boundary and Rune laws
 
 The authored tail is `4.80 → 5.10 → 5.20 → 5.30 → 5.40 → 5.50 → 5.60 → 100.10`, with stable implemented boundary `5.60`. All five natural Rune families may be persistently installed. Ether reveal/transport/Monkey capture and the Water readiness override followed by ordinary Water installation are implemented.
