@@ -6,8 +6,8 @@ export const ASTERION_METAL_CONTROL_TUNING = Object.freeze({
     ANGLE: Object.freeze({
       gestureAxis: Object.freeze({ x: 0, y: 0, z: 1 }),
       gestureSign: 1,
-      motionAxis: Object.freeze({ x: 0, y: 0, z: 1 }),
-      motionSign: 1,
+      motionAxis: Object.freeze({ x: -Math.sin(Math.PI / 5), y: 0, z: Math.cos(Math.PI / 5) }),
+      motionSign: -1,
       gameplayDimension: 'LATERAL'
     }),
     TILT: Object.freeze({
