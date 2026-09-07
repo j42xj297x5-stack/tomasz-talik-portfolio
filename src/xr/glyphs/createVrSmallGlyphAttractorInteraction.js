@@ -19,7 +19,7 @@ export function createVrSmallGlyphAttractorInteraction({ controllers, smallGlyph
   onPullStart = () => {}, onPullCancel = () => {}, onHandoff = () => {} }) {
   if (!Array.isArray(controllers)) throw new TypeError('controllers must be an array.');
   if (!smallGlyphSystem?.object?.isObject3D || typeof smallGlyphSystem.object.add !== 'function'
-    || typeof smallGlyphSystem.getInstances !== 'function' || typeof smallGlyphSystem.getState !== 'function'
+    || typeof smallGlyphSystem.getInstances !== 'function' || typeof smallGlyphSystem.isFieldReady !== 'function'
     || typeof smallGlyphSystem.getFieldTransform !== 'function'
     || typeof smallGlyphSystem.restoreInstanceToField !== 'function'
     || typeof smallGlyphSystem.placeInstance !== 'function') {
@@ -217,10 +217,10 @@ export function createVrSmallGlyphAttractorInteraction({ controllers, smallGlyph
     if (!right?.controller || !right.isConnected) { scanCone.update(delta, false); setTarget(null);
       if (activePull || captureReady) beginReturn(activePull || captureReady); else { attractorTool.setTarget(null); attractorTool.setPullStrength(0); attractorTool.setState(VR_ATTRACTOR_STATES.IDLE); } return; }
     if (scanCone.object.parent !== right.controller) right.controller.add(scanCone.object); updateCaptureAnchor(right);
-    if (smallGlyphSystem.getState() === 'MATERIALIZED') ensureHalos();
+    if (smallGlyphSystem.isFieldReady()) ensureHalos();
     const { primaryAction = 0, grabAction = 0 } = semanticInput.getState();
     const scanning = isEquipped() && grabAction > settings.scanThreshold;
-    const fieldTargetingReady = smallGlyphSystem.getState() === 'MATERIALIZED';
+    const fieldTargetingReady = smallGlyphSystem.isFieldReady();
     const targeting = scanning && fieldTargetingReady;
     scanCone.update(delta, scanning);
     if (activePull) { if (!targeting || primaryAction <= settings.triggerThreshold || !isFamilyEligible(activePull)) {
