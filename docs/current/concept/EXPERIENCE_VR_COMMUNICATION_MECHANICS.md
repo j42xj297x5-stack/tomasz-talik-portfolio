@@ -1,6 +1,6 @@
 # Experience VR — Communication Mechanics
 
-Status: **CURRENT runtime baseline + BINDING TARGET / NOT YET IMPLEMENTED**, synchronized on 2026-09-05. Literal Polish text is owned by [`EXPERIENCE_VR_PLAYER_COMMUNICATION_COPY.md`](EXPERIENCE_VR_PLAYER_COMMUNICATION_COPY.md).
+Status: **CURRENT runtime baseline**, synchronized on 2026-09-07. Literal Polish text is owned by [`EXPERIENCE_VR_PLAYER_COMMUNICATION_COPY.md`](EXPERIENCE_VR_PLAYER_COMMUNICATION_COPY.md).
 
 This document deliberately separates observed runtime behavior from the approved communication target. The target below is binding product direction, but the runtime does not yet implement its complete contract. `ATTENTION_REQUIRED`, `AUTO_HINT`, `SPEAKING` and `IDLE` are documentation concepts here, not claims about existing runtime symbols.
 
@@ -52,13 +52,13 @@ Physical Astro acquisition grants `CAN_EQUIP_ASTRO` and `CAN_SWITCH_ASTRO_BAND`;
 
 First Binder discovery unlocks knowledge without Monkey attention or automatic speech. All these beats react to domain truth, are not mechanic gates and can happen before `4.80`.
 
-## BINDING TARGET / NOT YET IMPLEMENTED — two attention models
+## Two attention models
 
 Classification follows the semantic role of a communication, never merely a copy-key prefix such as `hint.*` or `progression.*`.
 
 ### Required authored communication — `ATTENTION_REQUIRED`
 
-Important Scenario/progression communication that requires conscious acknowledgement follows this target sequence:
+Important Scenario/progression communication that requires conscious acknowledgement follows this sequence:
 
 `attention sound + existing visual attention arcs → player presses Monkey → pending authored communication only → silent idle`
 
@@ -72,7 +72,7 @@ The target explicitly rejects an implicit `authored speech → ordinary Monkey m
 
 ### Situational guidance — `AUTO_HINT`
 
-Corrective or situational guidance—such as timeout guidance, an unresolved legal player action, or a corrective hint after reaching a state that cannot currently be completed—follows this target sequence:
+Corrective or situational guidance—such as timeout guidance, an unresolved legal player action, or a corrective hint after reaching a state that cannot currently be completed—follows this sequence:
 
 `attention sound, without visual attention arcs → exactly 1.0 s → automatic authored hint playback → silent idle`
 
@@ -83,9 +83,13 @@ Corrective or situational guidance—such as timeout guidance, an unresolved leg
 
 Whenever an `AUTO_HINT` is presented automatically, the same existing authored hint blocks must become available under the Monkey's `CO TERAZ?` knowledge surface as a one-time readable fallback. This lets a player deliberately recover information missed while looking elsewhere or standing too far away. The fallback reuses the authoritative copy blocks; this mechanics document creates no alternate or duplicate literal text.
 
-This decision does not define ordering of simultaneous transient hints, stacking versus replacement, expiry after the originating condition resolves, or interaction with an already-open ordinary Monkey menu. Those policies remain unresolved.
+Publication occurs only after successful automatic playback completion. Each fallback is session-local presentation memory with lifecycle `NEW`, not Scenario truth, gameplay truth, Player Y knowledge, card history or durable persistence. It remains available until the first of two boundaries: the player completes its full deliberate Monkey knowledge playback, or gameplay resolves the originating condition. Opening `CO TERAZ?` or selecting a topic without completing playback does not consume it.
 
-## BINDING TARGET / NOT YET IMPLEMENTED — Monkey surface exclusivity
+Escalations of the same unresolved problem share one bounded transient slot, so a newly completed escalation replaces the previous unread stage in that slot. Unrelated currently relevant slots may coexist. Their projection is deterministic, but no global semantic priority or ranking between unrelated simultaneous transient hints is established.
+
+Publication and withdrawal redraw an already-open ordinary Monkey menu or `CO TERAZ?` list without requiring close/reopen. Mutation never opens the menu or overlays ordinary content on authored speech. If deliberate fallback playback has already started when gameplay resolves the condition, that playback may finish normally; withdrawal only removes the entry from future menu availability and completion never resurrects it. Canonical session reset clears every transient slot.
+
+## Monkey surface exclusivity
 
 Whenever Monkey is speaking authored communication, that speech exclusively owns the Monkey interaction surface:
 

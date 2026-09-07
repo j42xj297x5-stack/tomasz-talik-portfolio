@@ -10,10 +10,15 @@ export const VR_RELIQUARY_HINT_COPY = Object.freeze({
 
 const PRE_PLAYBACK_PHASES = Object.freeze(['WAITING', 'ATTENTION', 'AUTO_DELAY']);
 
-export function createVrReliquaryHints({ monkeyGuide, getInsertedInstance, onHintTimeout, locale = 'en', delay = 15 }) {
+export function createVrReliquaryHints({ monkeyGuide, knowledgeResolver, getInsertedInstance, onHintTimeout,
+  locale = 'en', delay = 15 }) {
   const copy = VR_RELIQUARY_HINT_COPY[locale === 'pl' ? 'pl' : 'en'];
   let instance = null, phase = null, elapsed = 0, fired = false, shown = false, pending = false;
   let communication = null;
+  const mutateFallback = (method, ...args) => {
+    const changed = knowledgeResolver?.[method]?.(...args) === true;
+    if (changed) monkeyGuide.refreshKnowledge();
+  };
 
   function cancelPrePlaybackCommunication() {
     if (!PRE_PLAYBACK_PHASES.includes(communication?.getPhase())) return;
@@ -41,6 +46,7 @@ export function createVrReliquaryHints({ monkeyGuide, getInsertedInstance, onHin
         actor.beginPlayback();
       },
       onCompleted() {
+        mutateFallback('publishTransientHintFallback', 'reliquary-context', `hint.reliquary.${hintPhase}`);
         if (communication === actor) communication = null;
       }
     });
@@ -51,8 +57,12 @@ export function createVrReliquaryHints({ monkeyGuide, getInsertedInstance, onHin
   function update(delta = 0) {
     const current = getInsertedInstance?.() ?? null;
     const currentPhase = ['inserted', 'active'].includes(current?.state) ? current.state : null;
-    if (!currentPhase) { clearPhase(); return; }
+    if (!currentPhase) {
+      mutateFallback('withdrawTransientHintFallback', 'reliquary-context');
+      clearPhase(); return;
+    }
     if (current !== instance || currentPhase !== phase) {
+      mutateFallback('withdrawTransientHintFallback', 'reliquary-context');
       cancelPrePlaybackCommunication();
       instance = current; phase = currentPhase; elapsed = 0; fired = false; shown = false; pending = false;
     }

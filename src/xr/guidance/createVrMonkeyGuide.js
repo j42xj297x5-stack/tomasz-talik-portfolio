@@ -712,6 +712,11 @@ export function createVrMonkeyGuide({
     getHistoryPage: () => historyPage, getCardPage: () => cardPage, getCardPageCount: () => cardPages().length,
     getUnreadPageIds: () => [...unreadPageIds],
     getInteractiveRegions: () => interactiveRegions.map((region) => ({ ...region })),
+    refreshKnowledge() {
+      if (!open || dialogueOverride) return false;
+      drawDialogue();
+      return true;
+    },
     setInteractionEnabled(enabled) {
       interactionEnabled = Boolean(enabled);
       if (!interactionEnabled) {
