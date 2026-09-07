@@ -35,9 +35,9 @@ export function constrainHeldShellToDeviceSurfaces({ shell, shellCenter, origin,
 export function createVrAstroFurnaceContentInteraction({
   furnace, shellSystem, smallGlyphSystem, protoAstroTuningController, openInteraction, activateInteraction,
   progressionController, settings = {}, takeHeldShell = () => true, takeHeldSmallGlyph = () => false,
-  isModeActive = () => true, isSmallGlyphModeActive = () => false, canExtractSmallGlyphEssence = () => false
+  isModeActive = () => true, isSmallGlyphModeActive = () => false, isAstrolabiumOwned = () => false
 }) {
-  [takeHeldShell, takeHeldSmallGlyph, isModeActive, isSmallGlyphModeActive, canExtractSmallGlyphEssence].forEach((dependency) => {
+  [takeHeldShell, takeHeldSmallGlyph, isModeActive, isSmallGlyphModeActive, isAstrolabiumOwned].forEach((dependency) => {
     if (typeof dependency !== 'function') throw new TypeError('Astro furnace content dependencies must be functions.');
   });
   if (!smallGlyphSystem || typeof smallGlyphSystem.restoreInstanceToField !== 'function')
@@ -82,7 +82,7 @@ export function createVrAstroFurnaceContentInteraction({
   function validateShell(shell) { const id = shellAssetId(shell); return isModeActive() && VALID_ASSET_IDS.has(id)
     && progressionController?.canAbsorbShell?.(id) === true; }
   function resolveSmallGlyph(glyph) { return resolveVrSmallGlyphProtoAstro(glyph); }
-  function validateSmallGlyph(glyph) { return isSmallGlyphModeActive() && canExtractSmallGlyphEssence() === true
+  function validateSmallGlyph(glyph) { return isSmallGlyphModeActive() && isAstrolabiumOwned() === true
     && Boolean(resolveSmallGlyph(glyph)) && protoAstroTuningController.canExtractSmallGlyph(glyph) === true; }
   function canEvaluate(kind) { return insertionReady && !disposed && !insertedContent
     && (kind === kinds.SHELL ? isModeActive() : isSmallGlyphModeActive())

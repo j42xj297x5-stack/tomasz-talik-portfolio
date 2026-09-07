@@ -946,9 +946,7 @@ const furnacePanel = createVrAstroFurnacePanel({
   canUseAstroProduction: () => runtimeExperience?.can(
     VR_SCENARIO_CAPABILITY.CAN_START_FURNACE_PROCESS
   ) === true,
-  canUseAstroTuning: () => runtimeExperience?.can(
-    VR_SCENARIO_CAPABILITY.CAN_EXTRACT_SMALL_GLYPH_ESSENCE
-  ) === true && astroAttractorProductionController?.getState?.() === 'EARNED',
+  canUseAstroTuning: isAstrolabiumOwned,
   requestAstroProduction: () => runtimeExperience.dispatch(
     VR_SCENARIO_EVENT.ASTRO_ATTRACTOR_PRODUCTION_REQUESTED
   ) !== null,
@@ -1024,9 +1022,7 @@ astroFurnaceContentInteraction = createVrAstroFurnaceContentInteraction({
   takeHeldShell: (shell) => shellAttractorInteraction?.transferHeldShell(shell) === true,
   takeHeldSmallGlyph: (glyph) => smallGlyphAttractorInteraction?.transferHeldGlyph(glyph) === true,
   isSmallGlyphModeActive: () => astroFurnaceOptionInteraction?.getActiveMode?.() === ASTRO_FURNACE_ASTRO_ATTRACTOR_MODE,
-  canExtractSmallGlyphEssence: () => runtimeExperience?.can(
-    VR_SCENARIO_CAPABILITY.CAN_EXTRACT_SMALL_GLYPH_ESSENCE
-  ) === true
+  isAstrolabiumOwned
 });
 astroFurnaceContentInteraction.subscribe(() => furnacePanel.redraw());
 astroFurnaceOptionInteraction = createVrAstroFurnaceOptionInteraction({

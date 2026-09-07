@@ -72,16 +72,21 @@ This is not permission to treat `HIDDEN` as `FIELD`. The implementation must est
 
 ## Furnace extraction
 
-**CURRENT:** Furnace panel composition and Furnace content interaction still gate Small Glyph essence extraction with Scenario capability `CAN_EXTRACT_SMALL_GLYPH_ESSENCE`.
-
-**TARGET:** natural Small Glyph essence extraction is a domain operation when all are true:
+**CURRENT / IMPLEMENTED (S3):** natural Small Glyph essence extraction is a physical/domain operation when all are true:
 
 - Astrolabium is physically `EARNED`;
 - the player possesses a legal Small Glyph;
 - Furnace physical interaction requirements are satisfied;
 - `ProtoAstroTuningController.canExtractSmallGlyph()` returns true.
 
-Scenario progression is not required. `ProtoAstroTuningController` remains authoritative for whether the natural family was already extracted and for committing extracted-family truth.
+```text
+Astrolabium EARNED
+AND legal physical Furnace state
+AND ProtoAstroTuningController.canExtractSmallGlyph(glyph)
+→ natural Small Glyph essence extraction allowed
+```
+
+Scenario progression is not required, and `CAN_EXTRACT_SMALL_GLYPH_ESSENCE` is no longer a runtime extraction permission. `ProtoAstroTuningController` remains authoritative for whether the natural family was already extracted and for committing extracted-family truth.
 
 ## Large Glyph and portfolio separation
 
@@ -169,7 +174,7 @@ Their presence is **MIGRATION GAP**, not proof that each identifier currently ha
 3. **RESOLVED IN S1:** every selected-band beam, including `SMALL_GLYPHS`, may display after ownership without requiring a legal target.
 4. **RESOLVED IN S2:** Small Glyph physical gameplay uses the `fieldReady` projection from Astrolabium production `EARNED`, while candidates still require glyph `FIELD`, visibility, and family eligibility.
 5. **RESOLVED IN S2:** Scenario point `4.30` records authored presentation completion only and does not establish physical `FIELD` permission.
-6. Furnace Small Glyph essence extraction still consumes `CAN_EXTRACT_SMALL_GLYPH_ESSENCE`.
+6. **RESOLVED IN S3:** Furnace Small Glyph essence extraction requires physical Astrolabium ownership and Proto-Astro extraction legality instead of consuming `CAN_EXTRACT_SMALL_GLYPH_ESSENCE`.
 7. Scenario still carries the historical Astro equip/scan/target/pull capability family.
 8. Large Glyph family targetability is already primarily domain-owned through Proto-Astro tuning and must not regress.
 9. Rune Stone targetability and installation readiness are already separate domain laws and must not regress.
@@ -194,7 +199,7 @@ Remove the runtime `CAN_EQUIP_ASTRO` dependency, always return all four bands af
 
 ### MIGRATION S3 — DOMAIN-OWNED SMALL GLYPH EXTRACTION
 
-**NOT IMPLEMENTED.**
+**IMPLEMENTED.**
 
 **Goal:** remove natural Small Glyph essence extraction dependency on `CAN_EXTRACT_SMALL_GLYPH_ESSENCE`. Gate extraction through physical Furnace state, Astrolabium ownership, and Proto-Astro domain truth.
 

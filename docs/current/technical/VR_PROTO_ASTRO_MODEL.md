@@ -54,7 +54,25 @@ Slot acceptance validates expected family before transfer, recipe change ejects 
 BAND EXISTS ≠ TARGET FAMILY IS UNDERSTOOD ≠ TARGET MAY CURRENTLY BE PULLED
 ```
 
-After physical Astrolabium ownership, `SHELLS`, `SMALL_GLYPHS`, `LARGE_GLYPHS` and `RUNESTONES` all exist and their selected scan beam may display even with an empty legal candidate set. For Small Glyphs, physical field readiness is projected from Astrolabium production `EARNED`, while family eligibility is derived independently from processed Shell truth. Both `fieldReady` and matching family eligibility are required, together with the candidate's visible `FIELD` state. Scenario `4.30` is presentation completion only. Essence extraction remains Scenario-gated until S3.
+After physical Astrolabium ownership, `SHELLS`, `SMALL_GLYPHS`, `LARGE_GLYPHS` and `RUNESTONES` all exist and their selected scan beam may display even with an empty legal candidate set. For Small Glyphs, physical field readiness is projected from Astrolabium production `EARNED`, while family eligibility is derived independently from processed Shell truth. Both `fieldReady` and matching family eligibility are required, together with the candidate's visible `FIELD` state. Scenario `4.30` is presentation completion only.
+
+The current natural tuning chain is:
+
+```text
+processed Shell family
+→ matching Small Glyph targetable
+
+physical Small Glyph obtained
++ Astrolabium EARNED
++ legal Furnace interaction
++ ProtoAstroTuningController.canExtractSmallGlyph(glyph)
+→ essence extracted
+
+essence extracted
+→ matching Large Glyph family targetable
+```
+
+`ProtoAstroTuningController` remains the authoritative owner of extracted-family truth; Furnace completion commits through it, and the tuning actor derives Large Glyph family targetability from that truth.
 
 The implemented tuning actor derives:
 
