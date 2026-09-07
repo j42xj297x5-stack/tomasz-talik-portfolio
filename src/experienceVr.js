@@ -828,6 +828,7 @@ const playerGuideProjection = createVrPlayerGuideProjection({
   getCurrentObjective: () => currentObjectiveProjection.getCurrentObjective(),
   isFurnaceRevealed: () => astroFurnace.object.visible === true,
   isShellFieldRevealed: () => shellSystem.active === true,
+  isAstrolabiumOwned,
   hasReadRuneStones: () => monkeyKnowledgeResolver?.hasReadStones() === true,
   hasDiscoveredBinders: () => monkeyKnowledgeResolver?.hasDiscoveredBinders() === true,
   hasInstalledRune: () => runeStoneProgressionController.getInstalledFamilyCodes().length > 0
