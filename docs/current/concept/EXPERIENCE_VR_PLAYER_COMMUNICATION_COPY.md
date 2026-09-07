@@ -1,6 +1,6 @@
 # Experience VR — kanoniczne teksty komunikacji
 
-**Status:** CURRENT / canonical copy PL synchronized on 2026-09-01  
+**Status:** CURRENT / canonical copy PL synchronized on 2026-09-07  
 **Mechanika:** [`EXPERIENCE_VR_COMMUNICATION_MECHANICS.md`](EXPERIENCE_VR_COMMUNICATION_MECHANICS.md)
 
 Runtime Monkey copy is authored as `blocks[]`. Each quotation below preserves one block as one bubble. `--- BLOCK ---` occurs only between separate array elements; a line break without that separator is an authored `\n` inside the same block.
@@ -137,9 +137,13 @@ Runtime Monkey copy is authored as `blocks[]`. Each quotation below preserves on
 ## Timed / situational hints
 
 ### `hint.crystal.whatNow.soft`
+Runtime: `AUTO_HINT → transient CO TERAZ? fallback`; shared issue slot: `first-crystal-pickup`.
+
 > Najpierw go weź.
 
 ### `hint.crystal.grab.medium`
+Runtime: `AUTO_HINT → transient CO TERAZ? fallback`; shared issue slot: `first-crystal-pickup`.
+
 > Chwyt.
 
 ### `hint.glyphs.how.soft`
@@ -158,11 +162,23 @@ Runtime Monkey copy is authored as `blocks[]`. Each quotation below preserves on
 > Wydobądź kryształ.
 
 ### `hint.reliquary.firstCrystal`
+Runtime: `AUTO_HINT → transient CO TERAZ? fallback`; issue slot: `first-crystal-reliquary`.
+
 > Co możemy z tym zrobić…
 >
 > --- BLOCK ---
 >
 > Może potrzebuje naczynia.
+
+### `hint.reliquary.inserted`
+Runtime: `AUTO_HINT → transient CO TERAZ? fallback`; shared issue slot: `reliquary-context`.
+
+> Aktywuj Kryształ, odsłoń jego znaczenie.
+
+### `hint.reliquary.active`
+Runtime: `AUTO_HINT → transient CO TERAZ? fallback`; shared issue slot: `reliquary-context`.
+
+> Można już go uwolnić. Spełnił swoją rolę.
 
 ### `hint.protoAstro.tuning`
 > Małe glify są związane z dużymi.
@@ -175,7 +191,31 @@ Runtime Monkey copy is authored as `blocks[]`. Each quotation below preserves on
 >
 > Gdy wie czego szukać.
 
+### `hint.furnace.astroStart`
+> Otwórz panel informacyjny Pieca.
+>
+> --- BLOCK ---
+>
+> Wybierz moduł Astrolabium Więzi.
+>
+> --- BLOCK ---
+>
+> Zamknij komorę i użyj środkowego przycisku, gdy Piec jest poprawnie przygotowany.
+>
+> --- BLOCK ---
+>
+> Jeśli Piec odpycha obiekt, najpierw sprawdź wybraną operację.
+
+### `hint.furnace.astroAvailable`
+> Otwórz komorę i wyciągnij swoje narzędzie.
+>
+> --- BLOCK ---
+>
+> Złap je.
+
 ### `hint.rune.noBinder.soft`
+Runtime: `AUTO_HINT → transient CO TERAZ? fallback`; shared issue slot: `rune-no-binder`.
+
 > Działa.
 >
 > --- BLOCK ---
@@ -183,6 +223,8 @@ Runtime Monkey copy is authored as `blocks[]`. Each quotation below preserves on
 > Tylko nie ma gdzie go przywiązać.
 
 ### `hint.rune.noBinder.medium`
+Runtime: `AUTO_HINT → transient CO TERAZ? fallback`; shared issue slot: `rune-no-binder`.
+
 > Spójrz na sektory.
 > Ukończone posiadają zwornik.
 >

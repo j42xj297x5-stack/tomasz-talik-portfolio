@@ -2,103 +2,114 @@
 
 Status: **CURRENT runtime baseline**, synchronized on 2026-09-07. Literal Polish text is owned by [`EXPERIENCE_VR_PLAYER_COMMUNICATION_COPY.md`](EXPERIENCE_VR_PLAYER_COMMUNICATION_COPY.md).
 
-This document deliberately separates observed runtime behavior from the approved communication target. The target below is binding product direction, but the runtime does not yet implement its complete contract. `ATTENTION_REQUIRED`, `AUTO_HINT`, `SPEAKING` and `IDLE` are documentation concepts here, not claims about existing runtime symbols.
+This document describes the implemented communication model. `ATTENTION_REQUIRED`, `AUTO_HINT`, `SPEAKING` and `IDLE` are semantic classifications used by the documentation; runtime actors may expose more detailed phases.
 
-## Surfaces and ownership
+## Surfaces and truth ownership
 
-**Monkey first teacher** owns mandatory progression communication, situational hints, one-shot acquisition teaching, ordinary questions and discovered-card history. **Player Y persistent memory** owns controls, current task, practical tool reference and read-only discovered-world `WIEDZA`. Neither surface owns gameplay progression truth.
+**Monkey first teacher** owns authored progression communication, situational hints, one-shot acquisition teaching, ordinary questions and discovered-card history. **Player Y persistent memory** owns controls, the current task, practical tool reference and read-only discovered-world `WIEDZA`. Communication actors only observe and project Scenario and domain state; they do not own gameplay truth.
 
-Two bounded Guidance lifecycles are implemented: early Experience Guidance and Rune/Resonator Guidance. They observe existing Scenario semantics and domain transitions. Hydration, direct activation and reset establish a baseline and must not replay live discovery one-shots.
+The implemented communication composition includes Intro authored communication, Early Experience Guidance, Reliquary context Guidance, Rune/Resonator Guidance and Tool Guidance. They share Monkey dialogue arbitration and, where applicable, the shared authored-communication actor.
 
-## Arbitration
+## Shared authored-communication lifecycle and arbitration
 
-Priority is strictly `MANDATORY > ACQUISITION > OPTIONAL`. One lease plays at a time. A higher priority can preempt lower pending/attention work, but started playback is non-preemptible. Pending or attention work is cancelled when no longer relevant; cancelled discoveries do not mutate domain truth.
+`createVrMandatoryMonkeyCommunication` is the shared actor for authored communication. Its detailed phases are `WAITING`, `ATTENTION`, `AUTO_DELAY`, `PLAYBACK` and `COMPLETE` (with actor-local idle before scheduling/reset). Conceptually, attention-required work passes from `ATTENTION_REQUIRED` to `SPEAKING` and then `IDLE`; situational `AUTO_HINT` passes through the cue delay to `SPEAKING` and then `IDLE`.
 
-## CURRENT OBJECTIVE
+Monkey dialogue uses one owner lease with priority `MANDATORY > ACQUISITION > OPTIONAL`. Higher-priority work may preempt lower work only before playback. Pending/pre-playback communication may also be cancelled when its originating condition becomes irrelevant. Once playback starts it is non-preemptible.
 
-`createVrCurrentObjectiveProjection` is the only objective owner. It is a stateless, read-only projection of Scenario point plus live owners. Y shows it under `AKTUALNE ZADANIE`.
-
-Normally Monkey `CO TERAZ?` projects that same objective. At `4.80`, while Resonator does not exist, it instead uses the authored discovery flow: first stone lead, then `KAMIENIE`. At `5.10` there is no objective. Therefore ordinary Monkey is not universally an exact generic-objective mirror.
-
-After first live Binder `HIDDEN → DOCKED`, ordinary Monkey additionally exposes `CO TO JEST? → ZWORNIKI`. This is discovered-world knowledge, not a persistent tool manual. Removed Astro/Asterion contextual manuals and legacy categories remain absent.
-
-## Player Y
-
-The hierarchy is:
-
-- `STEROWANIE`;
-- `AKTUALNE ZADANIE`;
-- `NARZĘDZIA`, when at least one tool entry exists;
-- `WIEDZA`, when at least one knowledge item exists.
-
-Navigation is `MAIN_MENU → SECTION_DETAIL`, `MAIN_MENU → TOOL_LIST → TOOL_DETAIL` and `MAIN_MENU → KNOWLEDGE_LIST → KNOWLEDGE_DETAIL`.
-
-`WIEDZA` is runtime-session communication memory cleared by canonical baseline reset; there is no durable save. Unlocks are read-only projections:
-
-- `SKORUPY` from Shell field presentation truth;
-- `KAMIENIE RUNICZNE` after the player reads Monkey `KAMIENIE`;
-- `ZWORNIKI` after the first live Binder `HIDDEN → DOCKED`, remaining available after `BOUND`;
-- `SEKTOR` after first installed Rune discovery.
-
-Physical Astro acquisition grants `CAN_EQUIP_ASTRO` and `CAN_SWITCH_ASTRO_BAND`; the base bands already include `SHELLS` and `SMALL_GLYPHS`, so B may cycle them immediately. `LARGE_GLYPHS` and `RUNESTONES` retain their later domain/tuning conditions. This does not move Small Glyph materialization or Large Glyph/Rune targetability earlier.
-
-## Implemented Rune/Resonator reactions
-
-1. Live third-ring completion → `5 s` → attention → `progression.p3.glyphsGone`.
-2. Failed legal Rune transport without readiness: `5 s` unresolved → soft hint; after soft completion and another unresolved `5 s` → medium hint. Pending work cancels when resolved.
-3. `installedRuneFamilies 0 → 1` → `5 s` → attention → one-shot `progression.p3.firstRuneInstalled`.
-4. Live-only sector `LOCKED` notification → `5 s` → automatic playback without attention → `progression.p3.firstSectorLock`.
-5. `resonatorExists false → true` → `5 s` → attention → `progression.p3.resonator`.
-
-First Binder discovery unlocks knowledge without Monkey attention or automatic speech. All these beats react to domain truth, are not mechanic gates and can happen before `4.80`.
-
-## Two attention models
-
-Classification follows the semantic role of a communication, never merely a copy-key prefix such as `hint.*` or `progression.*`.
+Successful completion releases dialogue ownership and returns Monkey to silent idle. Completion never opens the ordinary Monkey menu automatically.
 
 ### Required authored communication — `ATTENTION_REQUIRED`
 
-Important Scenario/progression communication that requires conscious acknowledgement follows this sequence:
+Required communication may use full attention:
 
-`attention sound + existing visual attention arcs → player presses Monkey → pending authored communication only → silent idle`
+`attention sound + visual attention arcs (once) → player presses Monkey → authored playback → silent idle`
 
-- The press starts only the pending authored communication. It must not open the ordinary Monkey conversation/menu.
-- Existing authored choices belonging to the active narrative communication remain part of that communication; they are not the ordinary Monkey menu.
-- Ordinary Monkey conversation remains unavailable throughout the authored speech.
-- Completion after the final authored block returns Monkey to silent idle. It must not automatically open `CO TERAZ?`, `JAK MI IDZIE?`, history, knowledge or any other ordinary Monkey menu.
-- To open the ordinary menu afterwards, the player must press Monkey again from idle.
-
-The target explicitly rejects an implicit `authored speech → ordinary Monkey menu` transition.
+The press starts only the pending authored communication, not the ordinary menu. Existing authored choices remain part of that communication.
 
 ### Situational guidance — `AUTO_HINT`
 
-Corrective or situational guidance—such as timeout guidance, an unresolved legal player action, or a corrective hint after reaching a state that cannot currently be completed—follows this sequence:
+Semantic `AUTO_HINT` follows exactly:
 
-`attention sound, without visual attention arcs → exactly 1.0 s → automatic authored hint playback → silent idle`
+```text
+sound-only Monkey cue
+→ exactly 1.0 s AUTO_DELAY
+→ automatic authored playback
+→ silent idle
+```
 
-- No Monkey press is required.
-- Ordinary Monkey conversation remains unavailable from the cue through completion of hint playback.
-- Completion must not automatically open the ordinary Monkey menu.
-- `hint.rune.noBinder.soft` and `hint.rune.noBinder.medium` are concrete situational `AUTO_HINT` examples, not required Scenario acknowledgement beats.
+It needs no Monkey press and shows no visual attention arcs. `MonkeyGuide.playAttentionCue()` invokes the same existing sound callback as full attention, but does not mutate `attentionPending`, attention ownership, arc visibility or arc opacity. Full attention continues to combine that sound with the visual arcs exactly once.
 
-Whenever an `AUTO_HINT` is presented automatically, the same existing authored hint blocks must become available under the Monkey's `CO TERAZ?` knowledge surface as a one-time readable fallback. This lets a player deliberately recover information missed while looking elsewhere or standing too far away. The fallback reuses the authoritative copy blocks; this mechanics document creates no alternate or duplicate literal text.
-
-Publication occurs only after successful automatic playback completion. Each fallback is session-local presentation memory with lifecycle `NEW`, not Scenario truth, gameplay truth, Player Y knowledge, card history or durable persistence. It remains available until the first of two boundaries: the player completes its full deliberate Monkey knowledge playback, or gameplay resolves the originating condition. Opening `CO TERAZ?` or selecting a topic without completing playback does not consume it.
-
-Escalations of the same unresolved problem share one bounded transient slot, so a newly completed escalation replaces the previous unread stage in that slot. Unrelated currently relevant slots may coexist. Their projection is deterministic, but no global semantic priority or ranking between unrelated simultaneous transient hints is established.
-
-Publication and withdrawal redraw an already-open ordinary Monkey menu or `CO TERAZ?` list without requiring close/reopen. Mutation never opens the menu or overlays ordinary content on authored speech. If deliberate fallback playback has already started when gameplay resolves the condition, that playback may finish normally; withdrawal only removes the entry from future menu availability and completion never resurrects it. Canonical session reset clears every transient slot.
+Classification is semantic. Neither a `hint.*` key nor `requiresAttention: false` alone makes communication an `AUTO_HINT`.
 
 ## Monkey surface exclusivity
 
-Whenever Monkey is speaking authored communication, that speech exclusively owns the Monkey interaction surface:
+Intro speech and every shared authored communication sequence exclusively own the Monkey communication surface until completion. While authored speech owns it, pressing Monkey cannot open ordinary conversation, and `CO TERAZ?`, `JAK MI IDZIE?`, history and knowledge cannot appear alongside unfinished speech.
 
-- pressing Monkey must not open the ordinary conversation/menu;
-- `CO TERAZ?`, `JAK MI IDZIE?`, history and knowledge navigation must not appear over or alongside unfinished authored speech;
-- the same rule applies to Intro and every other authored sequence;
-- this exclusivity ends at the authored communication's clean completion boundary, when Monkey returns to silent idle.
+This is not a gameplay-wide lock: locomotion, tools, object collection and other world interaction remain available while Monkey speaks.
 
-The exclusivity is local to the Monkey communication surface, not a gameplay-wide lock. The player may ignore Monkey and continue locomotion, collecting objects, using tools and other normal world interactions while Monkey speaks.
+## CURRENT AUTO_HINT runtime matrix
+
+Exactly seven keys currently have the semantic `AUTO_HINT` behavior. Unrelated hints must not be inferred into this set from their key prefix.
+
+| Owner / condition | Transient slot | Key | Existing trigger and flow | Withdrawal / replacement |
+| --- | --- | --- | --- | --- |
+| Early Experience: first crystal remains `available` | `first-crystal-pickup` | `hint.crystal.whatNow.soft` | first `30 s` stage → sound-only cue → `1.0 s` → automatic playback | successful playback publishes the soft fallback; leaving `available` withdraws the whole slot |
+| Early Experience: pickup remains unresolved | `first-crystal-pickup` | `hint.crystal.grab.medium` | second existing `30 s` stage → sound-only cue → `1.0 s` → automatic playback | successful medium replaces unread soft in this slot; leaving `available` withdraws it |
+| Early Experience: Reliquary reveal completed and first-crystal flow remains unadvanced | `first-crystal-reliquary` | `hint.reliquary.firstCrystal` | existing `60 s` → sound-only cue → `1.0 s` → automatic playback | successful playback publishes the fallback; `inserted`, `active`, `released` or `consuming` withdraw it |
+| Reliquary context: crystal remains `inserted` | `reliquary-context` | `hint.reliquary.inserted` | `15 s` phase timeout → `RELIQUARY_HINT_TIMEOUT` → `SHOW_RELIQUARY_CONTEXT_HINT` → sound-only cue → `1.0 s` → automatic playback | leaving `inserted` withdraws the stale stage |
+| Reliquary context: crystal remains `active` | `reliquary-context` | `hint.reliquary.active` | a new phase-local `15 s` timer from zero, then the same Scenario route, cue, `1.0 s` and playback | successful active replaces unread inserted; leaving `active` withdraws the slot |
+| Rune transport has an unresolved branch without Binder | `rune-no-binder` | `hint.rune.noBinder.soft` | `5 s` unresolved → sound-only cue → `1.0 s` → automatic playback | successful playback publishes soft and starts the next unresolved stage |
+| Same Rune condition remains unresolved | `rune-no-binder` | `hint.rune.noBinder.medium` | another `5 s` unresolved → sound-only cue → `1.0 s` → automatic playback | successful medium replaces unread soft; falsy `getUnresolvedRuneBranchId()` resets communication/timers and withdraws the slot |
+
+The four bounded slots are therefore `first-crystal-pickup`, `first-crystal-reliquary`, `reliquary-context` and `rune-no-binder`.
+
+## Transient `CO TERAZ?` fallback memory
+
+The Monkey knowledge resolver owns a generic session-local collection mapping a bounded issue slot to its current fallback topic. A successfully completed automatic `AUTO_HINT` may publish an entry with lifecycle `NEW`. It reuses the exact authoritative hint `blocks`; no alternate copy exists, and its question/menu label is derived at runtime from the final authored block.
+
+This collection is ordinary Monkey `CO TERAZ?` presentation memory only. It is neither Scenario or gameplay truth, Player Y knowledge, card history, permanent knowledge nor durable save data.
+
+### Publication and deliberate-read boundaries
+
+Publication happens **only after successful automatic authored playback completion**—never at timer trigger, scheduling, sound cue, `AUTO_DELAY` or playback start. A cancelled pre-playback hint publishes nothing.
+
+Opening `CO TERAZ?` and selecting a transient entry do not consume it. Only successful completion of its full deliberate ordinary-knowledge playback consumes it. Consumed transient knowledge disappears instead of becoming a permanent `READ` entry and never enters history.
+
+### Gameplay expiry and started reading
+
+The first applicable boundary wins: full deliberate read or resolution of the originating gameplay condition. Each owner withdraws its slot according to the matrix above. Withdrawal removes future menu availability but does not interrupt a deliberate fallback sentence sequence that has already started. That sequence may finish normally, and its completion cannot resurrect the withdrawn entry.
+
+### Slot replacement and coexistence
+
+Escalations of the same issue share one bounded slot:
+
+- crystal pickup soft → crystal pickup medium;
+- Rune noBinder soft → Rune noBinder medium;
+- Reliquary inserted → Reliquary active.
+
+A newer successfully completed escalation replaces only the older unread stage in its own slot. Different unresolved slots may coexist. Deterministic runtime projection is not a global latest-wins rule, semantic ranking or cross-slot `AUTO_HINT` priority ordering.
+
+### Projection, live refresh and reset
+
+Transient topics appear before the existing ordinary current-guidance topic; they do not replace CURRENT OBJECTIVE or the special stone guidance. `CO TERAZ?` exists when at least one transient fallback or the ordinary current topic exists, and the ordinary topic remains available.
+
+`MonkeyGuide.refreshKnowledge()` redraws an already-open ordinary menu or `CO TERAZ?` view after publication/withdrawal, so close/reopen is unnecessary. Refresh does not open or close Monkey, change dialogue ownership, or expose ordinary content during authored speech.
+
+Canonical Monkey/session reset clears every transient slot. There is no durable reconstruction.
+
+## Ordinary objective and discovered-world knowledge
+
+`createVrCurrentObjectiveProjection` remains the stateless read-only CURRENT OBJECTIVE owner. Player Y shows it under `AKTUALNE ZADANIE`; ordinary Monkey normally projects it through `CO TERAZ?`. At `4.80`, while Resonator does not exist, Monkey instead preserves the authored first-stone lead / `KAMIENIE` discovery flow. At `5.10` there is no objective. Transient fallbacks do not replace these semantics.
+
+After first live Binder `HIDDEN → DOCKED`, ordinary Monkey additionally exposes `CO TO JEST? → ZWORNIKI`. Player Y `WIEDZA` remains a separate read-only projection of discovered-world knowledge and is not populated by transient fallback hints.
+
+## Automatic communication that is not AUTO_HINT
+
+Automatic authored progression reactions may play without attention but do not become corrective `AUTO_HINT` or publish a transient fallback merely because playback is automatic. Current examples include `progression.threshold.crossed`, `progression.crystal.firstCreated`, `progression.card.first` and `progression.p3.firstSectorLock`.
+
+Current acquisition teaching also remains distinct: it waits after physical claim, uses full attention and a Monkey press, plays once, then returns to idle.
+
+The following current click-required / attention guidance was **not** migrated and retains its current behavior: `hint.glyphs.how.soft`, `hint.glyphs.how.strong`, `hint.protoAstro.tuning`, `hint.furnace.astroStart` and `hint.furnace.astroAvailable`.
 
 ## Copy representation
 
