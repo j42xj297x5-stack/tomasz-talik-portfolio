@@ -4,7 +4,7 @@ Status: **CURRENT / BINDING** for Proto-Astro identity, Furnace essence truth, A
 
 ## Ownership
 
-- `ProtoAstroTuningController` owns extracted natural Large Glyph essences `K/T/S/L/R`.
+- `ProtoAstroTuningController` owns extracted natural Small Glyph family truth `K/T/S/L/R`, which is the knowledge source for matching Large Glyph targetability.
 - Furnace progression owns processed/absorbed Shell truth and `getAsterionSphereProgress().complete`.
 - `RuneStoneProgressionController` owns natural `tunedRuneFamilies` and `installedRuneFamilies`.
 - `RuneRecipeInteraction` owns the two typed Furnace slots; sector progression does not gate natural tuning.
@@ -72,7 +72,7 @@ essence extracted
 → matching Large Glyph family targetable
 ```
 
-`ProtoAstroTuningController` remains the authoritative owner of extracted-family truth; Furnace completion commits through it, and the tuning actor derives Large Glyph family targetability from that truth.
+`ProtoAstroTuningController` remains the authoritative owner of extracted-family truth; Furnace completion commits through it, and the tuning actor derives Large Glyph family targetability from that truth. That Astrolabium target/pull law does not consult `ProgressionController.getNextCrystalTier()`: portfolio progression may independently reject ordinary crystal creation while the known Large Glyph remains pullable.
 
 Scenario carries no current Small/Large Glyph Astrolabium targeting or natural Small Glyph extraction capability vocabulary; the physical/domain chain above is authoritative.
 

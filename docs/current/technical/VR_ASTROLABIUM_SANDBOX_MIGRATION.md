@@ -1,16 +1,16 @@
 # Experience VR — Astrolabium Sandbox Migration
 
-Status: **BINDING DESIGN TARGET / MIGRATION CONTRACT / NOT YET FULLY IMPLEMENTED**.
+Status: **CURRENT / BINDING / MIGRATION COMPLETE**.
 
 ```text
 S1 = IMPLEMENTED
 S2 = IMPLEMENTED
 S3 = IMPLEMENTED
 S4 = IMPLEMENTED
-S5 = NOT IMPLEMENTED
+S5 = IMPLEMENTED
 ```
 
-This document freezes the migration from Scenario-gated Astrolabium progression to domain-owned sandbox behavior. `CURRENT` describes observed runtime facts. `TARGET` and `KANON` are binding implementation requirements, not claims about the current runtime.
+This document records the completed migration from Scenario-gated Astrolabium progression to domain-owned sandbox behavior. `CURRENT` and `KANON` describe the implemented runtime; the S1-S4 notes below are retained as migration history.
 
 ## Canonical separation of rights
 
@@ -157,6 +157,25 @@ Installation readiness must not become a prerequisite for targeting.
 
 Scenario must not act as an indirect permission registry for ordinary sandbox Astrolabium actions.
 
+### Final current ownership map
+
+| Runtime owner | Current responsibility | Classification |
+| --- | --- | --- |
+| Scenario | Dramaturgy, authored presentation and genuinely story-specific permissions | Story observer / story permission |
+| `AstroAttractorProductionController` | Physical Astrolabium ownership at `EARNED` | Authoritative owner |
+| `HandModeController` | Equipped state and selected band, constrained by ownership | Physical guard |
+| `FurnaceProgressionController` | Absorbed/processed Shell truth | Authoritative owner |
+| `AstrolabiumTuningActor` | Natural-family targetability derived from domain owners | Read-only projection |
+| `SmallGlyphSystem` | Physical Small Glyph field lifecycle; `fieldReady` synchronized from `EARNED` | Physical owner / read-only ownership projection |
+| `ProtoAstroTuningController` | Extracted natural Small Glyph family truth | Authoritative owner |
+| `RuneStoneProgressionController` | Tuned and installed Rune truth, including special Rune progression | Authoritative owner |
+| `RuneStoneAttractorBandProjection` | Rune targetability derived from Rune progression, including the existing Ether `V` law | Read-only projection |
+| `ProgressionController` | Portfolio page, tier and crystal truth | Authoritative owner |
+| `RuneInstallationReadinessProjection` | Branch-completion readiness plus the explicit Water override | Read-only projection |
+| `AsterionResonatorTargetAcquisitionActor` | Transient `SPHERE_FAR` ring acquisition and `PULL_READY` | Authoritative transient owner |
+
+The S5 static audit found no alternate gameplay eligibility owner for the ordinary natural-family Astrolabium sandbox path. Reconstruction hydrates the authoritative owners, presentations only observe their state, and physical guards do not create persistent knowledge. The result is one authoritative truth per responsibility, not one object for all responsibilities.
+
 ## RESOLVED Scenario capability debt
 
 **RESOLVED IN S4:** after the repository-wide precondition audit proved that S1-S3 and the Player Guide ownership migration had eliminated every active runtime consumer, the 11 historical Astro equip, band-switch, Shell/Small Glyph/Large Glyph scan-target-pull, and natural Small Glyph extraction capability identifiers were removed from Scenario. Their obsolete targeting bundles were collapsed into `P2_MAIN_GLYPH_CAPABILITIES`. Narrative events and genuinely story-owned capabilities remain unchanged.
@@ -206,7 +225,7 @@ Remove the runtime `CAN_EQUIP_ASTRO` dependency, always return all four bands af
 
 ### MIGRATION S5 — CANON / RUNTIME SYNC
 
-**NOT IMPLEMENTED.**
+**IMPLEMENTED.**
 
 **Goal:** perform the final static ownership audit:
 
@@ -221,7 +240,7 @@ RuneInstallationReadinessProjection = installation truth
 Resonator Target Acquisition = late PULL_READY truth
 ```
 
-No alternate gameplay eligibility owner may remain.
+The final static audit confirmed that no alternate gameplay eligibility owner remains for the ordinary natural-family Astrolabium sandbox path. The canonical documentation now describes the current runtime ownership graph.
 
 ## Reference sandbox walkthrough — Fire
 

@@ -61,6 +61,8 @@ legal RuneStoneActor candidate
 
 `RuneStoneAttractorInteraction` nie posiada własnej kopii tuned truth. Legalny physical candidate musi jednocześnie mieć `descriptor.natural === true`, istniejący i widoczny physical `ActorRoot`, transient state `FREE` oraz potwierdzoną przez projekcję A7 family targetability. Sector completeness, platform installation readiness, bridge state i Scenario point nie uczestniczą w tym rozstrzygnięciu.
 
+`RuneStoneAttractorBandProjection` jest bezstanową, read-only projekcją `RuneStoneProgressionController`: nie przechowuje własnego zbioru rodzin i nie dokłada gate'u Scenario ani portfolio. Dla rodzin naturalnych deleguje bezpośrednio do `isFamilyTuned()`, a istniejący specjalny przypadek Ether `V` deleguje do `isEtherRuneTuned()`. Dlatego `Rune tuned → targetable/pullable`, natomiast installation readiness pozostaje późniejszym i niezależnym rozstrzygnięciem.
+
 ### 3.3. Platform installation readiness
 
 Installation readiness jest osobnym prawem, normalnie pochodzącym wyłącznie z ukończenia wszystkich paneli właściwego sektora. Rune domain czyta istniejącego ownera progresji sektora i nie tworzy drugiej listy ukończonych paneli. Readiness nie jest kopią progression.
@@ -68,6 +70,8 @@ Installation readiness jest osobnym prawem, normalnie pochodzącym wyłącznie z
 Ukończenie sektora materializuje trwały **Zwornik Runiczny** (techniczny asset może pozostać `bridge.glb`) i dopiero istniejący właściwy Zwornik daje miejsce późniejszej instalacji. Reveal Zwornika nie jest skutkiem instalacji Rune Stone. EARTH, FIRE i WOOD mogą mieć Zworniki przed ukończeniem pełnego trzeciego kręgu.
 
 `ProgressionController.isBranchComplete()` zasila `RuneInstallationReadinessProjection`. Obecny live runtime synchronizuje Zwornik jako `HIDDEN → ARRIVING → DOCKED`: dokładnie 4.0 s z pozycji 130 m dalej radialnie do canonical final position. Dopiero settled `DOCKED` nadaje installation readiness. Reconstruction/hydration/debug restore omija ARRIVING i odtwarza bezgłośnie finalny `DOCKED`. Sector completeness jest źródłem platform installation readiness, lecz nigdy natural Rune tuning ani targetability.
+
+`RuneInstallationReadinessProjection` jest read-only: wylicza readiness z `ProgressionController.isBranchComplete()` oraz jawnego specjalnego override Water. Dopiero handoff instalacji łączy tę projekcję z tuned/not-installed Rune, stanem `CARRIED_ORBIT` i fizycznym `DOCKED` mostu/socketu. Fałszywe readiness odrzuca handoff, ale nie cofa legalności wcześniejszego targetowania ani pull.
 
 | Naturalna para | Installation readiness po `4.80` |
 | --- | --- |
