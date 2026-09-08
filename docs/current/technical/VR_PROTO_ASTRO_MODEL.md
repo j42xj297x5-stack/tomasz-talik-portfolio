@@ -74,6 +74,8 @@ essence extracted
 
 `ProtoAstroTuningController` remains the authoritative owner of extracted-family truth; Furnace completion commits through it, and the tuning actor derives Large Glyph family targetability from that truth. That Astrolabium target/pull law does not consult `ProgressionController.getNextCrystalTier()`: portfolio progression may independently reject ordinary crystal creation while the known Large Glyph remains pullable.
 
+Ordinary Large Glyph ray permission is a separate Intro boundary: `CAN_USE_GLYPHS` is continuous from `2.10` onward. Learned family knowledge therefore expresses neither ordinary crystal eligibility nor physical ray reach; a known glyph may remain ineligible for a next crystal through `getNextCrystalTier(node)`, or simply sit beyond the ordinary `2.3 m` ray.
+
 Scenario carries no current Small/Large Glyph Astrolabium targeting or natural Small Glyph extraction capability vocabulary; the physical/domain chain above is authoritative.
 
 The implemented tuning actor derives:

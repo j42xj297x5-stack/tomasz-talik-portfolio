@@ -109,6 +109,8 @@ Fire Large Glyph known
 
 Astrolabium family knowledge must not create portfolio progress. Crystal creation remains owned by progression and `getNextCrystalTier()` truth.
 
+`CAN_USE_GLYPHS` is a separate Scenario Intro boundary for the ordinary Large Glyph ray and remains continuous from `2.10` onward. Ordinary physical ray reach is likewise separate from Astrolabium pull eligibility: being known and pullable does not put a glyph inside the ray, while a physically reachable glyph still needs independent portfolio eligibility to create a crystal.
+
 For ordinary earlier stages:
 
 ```text
