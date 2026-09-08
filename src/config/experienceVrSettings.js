@@ -269,7 +269,7 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
     scaleMultiplier: 3,
     initialRadius: 8.5,
     rotation: { enabled: true, angularSpeed: 0.14, direction: 1 },
-    elevation: { offset: 2.4, durationSeconds: 2.5 },
+    elevation: { offset: 4.0, durationSeconds: 2.5 },
     expansion: { radius: 46, durationSeconds: 2.5 },
     sphere: {
       radius: 80,

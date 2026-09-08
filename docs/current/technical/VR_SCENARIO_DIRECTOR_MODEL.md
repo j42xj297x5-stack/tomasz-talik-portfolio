@@ -6,6 +6,8 @@ Status: **CURRENT / BINDING**, synchronized on 2026-09-01. Runtime graph and rec
 
 `Spine → Scenario → Director → Runtime / domain owners`. Scenario owns authored dramaturgy, accepted semantic events, entry effects and genuinely story-owned capabilities. **Scenario capabilities are not a generic sandbox permission registry.** Director owns the current point and graph interpretation. Runtime/domain owners retain physical and committed gameplay truth; point IDs and debug aliases never replace that truth. In particular, ordinary Astrolabium equip, band switching, scan, target, pull and natural Small Glyph extraction rights remain physical/domain laws rather than Scenario capabilities. Genuine story permissions, including Ether tuning, the Water special path and advanced Resonator use, remain Scenario-owned and do not recreate ordinary natural-family eligibility.
 
+`CAN_USE_GLYPHS` is the Intro boundary for ordinary Large Glyph ray interaction. It first appears at `2.10 — GLYPH_FREE_EXPLORE` and remains continuous at every later canonical mainline point, including transitional and production choreography. It does not express Astrolabium Large Glyph family knowledge, Resonator `PULL_READY`, or portfolio crystal eligibility: after `2.10`, physical ray reach and `getNextCrystalTier(node)` remain the independent restrictions on ordinary crystal acquisition.
+
 ## Authored spine
 
 ```text
