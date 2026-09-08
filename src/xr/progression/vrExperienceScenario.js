@@ -591,7 +591,7 @@ const points = Object.freeze([
     settledConsequences: RELIQUARY_REVEALED_SETTLED_CONSEQUENCES,
     label: 'Pierwszy kryształ odkryty / oczekiwanie na aktywację Monkey i reliquary reveal',
     entryEffects: Object.freeze([VR_SCENARIO_EFFECT.REVEAL_RELIQUARY]),
-    capabilities: Object.freeze([]),
+    capabilities: Object.freeze([VR_SCENARIO_CAPABILITY.CAN_USE_GLYPHS]),
     transitions: Object.freeze([
       Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.STAY, event: VR_SCENARIO_EVENT.MONKEY_TRIGGERED, milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.BEGIN_RELIQUARY_REVEAL]) }),
       Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.COMPLETE, event: VR_SCENARIO_EVENT.RELIQUARY_REVEAL_COMPLETED, milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.COMPLETE_RELIQUARY_REVEAL]) })
@@ -627,7 +627,7 @@ const points = Object.freeze([
     label: 'Pierwszy ring / pierwszy globalny poziom ukończony 5/5',
     entryEffects: Object.freeze([VR_SCENARIO_EFFECT.SET_MAIN_AMBIENT_02,
       VR_SCENARIO_EFFECT.BEGIN_FIRST_RING_PRESENTATION]),
-    capabilities: Object.freeze([]),
+    capabilities: Object.freeze([VR_SCENARIO_CAPABILITY.CAN_USE_GLYPHS]),
     transitions: Object.freeze([
       Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.COMPLETE,
         event: VR_SCENARIO_EVENT.FIRST_RING_PRESENTATION_COMPLETED,
@@ -645,7 +645,7 @@ const points = Object.freeze([
       VR_SCENARIO_EFFECT.ELEVATE_MAIN_GLYPHS
     ]),
     label: 'Post-ring world transition / prezentacja pola Muszli i elevacja głównych glyphów',
-    capabilities: Object.freeze([]),
+    capabilities: Object.freeze([VR_SCENARIO_CAPABILITY.CAN_USE_GLYPHS]),
     transitions: Object.freeze([
       Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.COMPLETE,
         event: VR_SCENARIO_EVENT.POST_RING_WORLD_PRESENTATION_COMPLETED,
@@ -660,7 +660,7 @@ const points = Object.freeze([
     settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
     entryEffects: Object.freeze([VR_SCENARIO_EFFECT.BEGIN_OBSERVATION_WINDOW]),
     label: 'Observation window / około 10 sekund',
-    capabilities: Object.freeze([]),
+    capabilities: Object.freeze([VR_SCENARIO_CAPABILITY.CAN_USE_GLYPHS]),
     transitions: Object.freeze([
       Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.COMPLETE,
         event: VR_SCENARIO_EVENT.OBSERVATION_WINDOW_COMPLETED,
@@ -675,7 +675,7 @@ const points = Object.freeze([
     settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
     entryEffects: Object.freeze([VR_SCENARIO_EFFECT.BEGIN_MONKEY_ATTENTION]),
     label: 'Monkey post-ring dialogue / attention, świadoma interakcja i obowiązkowa wiadomość',
-    capabilities: Object.freeze([]),
+    capabilities: Object.freeze([VR_SCENARIO_CAPABILITY.CAN_USE_GLYPHS]),
     transitions: Object.freeze([
       Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.STAY,
         event: VR_SCENARIO_EVENT.MONKEY_TRIGGERED,
@@ -695,7 +695,7 @@ const points = Object.freeze([
     settledConsequences: FURNACE_REVEALED_SETTLED_CONSEQUENCES,
     entryEffects: Object.freeze([VR_SCENARIO_EFFECT.BEGIN_FURNACE_INTRO]),
     label: 'Monkey → Furnace intro',
-    capabilities: Object.freeze([]),
+    capabilities: Object.freeze([VR_SCENARIO_CAPABILITY.CAN_USE_GLYPHS]),
     transitions: Object.freeze([
       Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.COMPLETE,
         event: VR_SCENARIO_EVENT.FURNACE_INTRO_COMPLETED, milestonesToAdd: Object.freeze([]), effects: Object.freeze([]) })
@@ -705,7 +705,8 @@ const points = Object.freeze([
     id: VR_EXPERIENCE_POINT['3.50'],
     canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['3.60'] }), settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
     label: 'Furnace available / Astro production ready',
-    capabilities: Object.freeze([VR_SCENARIO_CAPABILITY.CAN_USE_FURNACE, VR_SCENARIO_CAPABILITY.CAN_OPEN_FURNACE,
+    capabilities: Object.freeze([VR_SCENARIO_CAPABILITY.CAN_USE_GLYPHS,
+      VR_SCENARIO_CAPABILITY.CAN_USE_FURNACE, VR_SCENARIO_CAPABILITY.CAN_OPEN_FURNACE,
       VR_SCENARIO_CAPABILITY.CAN_START_FURNACE_PROCESS]),
     transitions: Object.freeze([Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.COMPLETE,
       event: VR_SCENARIO_EVENT.ASTRO_ATTRACTOR_PRODUCTION_REQUESTED, milestonesToAdd: Object.freeze([]), effects: Object.freeze([]) })])
@@ -714,7 +715,8 @@ const points = Object.freeze([
     id: VR_EXPERIENCE_POINT['3.60'],
     canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['3.70'] }), settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
     entryEffects: Object.freeze([VR_SCENARIO_EFFECT.BEGIN_ASTRO_ATTRACTOR_CONSTRUCTION]),
-    label: 'Astro Attractor construction', capabilities: Object.freeze([VR_SCENARIO_CAPABILITY.CAN_USE_FURNACE]),
+    label: 'Astro Attractor construction', capabilities: Object.freeze([VR_SCENARIO_CAPABILITY.CAN_USE_GLYPHS,
+      VR_SCENARIO_CAPABILITY.CAN_USE_FURNACE]),
     transitions: Object.freeze([Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.COMPLETE,
       event: VR_SCENARIO_EVENT.ASTRO_ATTRACTOR_PRODUCED, milestonesToAdd: Object.freeze([]), effects: Object.freeze([]) })])
   }),
@@ -722,7 +724,8 @@ const points = Object.freeze([
     id: VR_EXPERIENCE_POINT['3.70'],
     canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['3.80'] }), settledConsequences: ASTRO_EARNED_SETTLED_CONSEQUENCES,
     label: 'Physical Astro available / waiting for claim',
-    capabilities: Object.freeze([VR_SCENARIO_CAPABILITY.CAN_USE_FURNACE, VR_SCENARIO_CAPABILITY.CAN_OPEN_FURNACE]),
+    capabilities: Object.freeze([VR_SCENARIO_CAPABILITY.CAN_USE_GLYPHS,
+      VR_SCENARIO_CAPABILITY.CAN_USE_FURNACE, VR_SCENARIO_CAPABILITY.CAN_OPEN_FURNACE]),
     transitions: Object.freeze([Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.COMPLETE,
       event: VR_SCENARIO_EVENT.ASTRO_ATTRACTOR_CLAIMED, milestonesToAdd: Object.freeze([]), effects: Object.freeze([]) })])
   }),
@@ -731,7 +734,7 @@ const points = Object.freeze([
     canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['4.10'] }), settledConsequences: ASTERION_EARNED_SETTLED_CONSEQUENCES,
     entryEffects: Object.freeze([VR_SCENARIO_EFFECT.ENABLE_SHELL_FIELD_INTERACTION]),
     label: 'Astro Attractor physically claimed / EARNED',
-    capabilities: Object.freeze([VR_SCENARIO_CAPABILITY.CAN_USE_FURNACE,
+    capabilities: Object.freeze([VR_SCENARIO_CAPABILITY.CAN_USE_GLYPHS, VR_SCENARIO_CAPABILITY.CAN_USE_FURNACE,
       VR_SCENARIO_CAPABILITY.CAN_OPEN_FURNACE, VR_SCENARIO_CAPABILITY.CAN_INSERT_FURNACE_MATERIAL,
       VR_SCENARIO_CAPABILITY.CAN_START_FURNACE_PROCESS]), transitions: Object.freeze([
       Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.COMPLETE,
