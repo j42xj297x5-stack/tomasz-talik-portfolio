@@ -19,7 +19,7 @@ These are explicit world-space ranges. They are not derived from `worldBaseRadiu
 Large Glyph is not a spherical layer and is not registered under `VR_SPHERICAL_LAYER_IDS`. Its actor owns:
 
 - `RING_INITIAL = 8.5 m`;
-- `RING_ELEVATED = 8.5 m + 2.4 m elevation`;
+- `RING_ELEVATED = 8.5 m radius + 4.0 m elevation` (approximately `5.05 m` orbit-center height from `worldStableCenterY = 1.05 m`);
 - `RING_EXPANDED = 46 m`;
 - `SPHERE_FAR = 80 m` — **IMPLEMENTED**.
 

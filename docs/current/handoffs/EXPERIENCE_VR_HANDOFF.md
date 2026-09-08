@@ -1,6 +1,6 @@
 # Experience VR — Current Handoff
 
-Status: **CURRENT operational snapshot — 2026-09-05**. Authorities: [`VR_RUNTIME_MODEL.md`](../technical/VR_RUNTIME_MODEL.md), [`VR_SCENARIO_DIRECTOR_MODEL.md`](../technical/VR_SCENARIO_DIRECTOR_MODEL.md), [`VR_PROTO_ASTRO_MODEL.md`](../technical/VR_PROTO_ASTRO_MODEL.md), [`VR_RUNE_STONES_MODEL.md`](../technical/VR_RUNE_STONES_MODEL.md), and [`VR_ASTERION_RESONATOR_MODEL.md`](../technical/VR_ASTERION_RESONATOR_MODEL.md).
+Status: **CURRENT operational snapshot — 2026-09-08**. Authorities: [`VR_RUNTIME_MODEL.md`](../technical/VR_RUNTIME_MODEL.md), [`VR_SCENARIO_DIRECTOR_MODEL.md`](../technical/VR_SCENARIO_DIRECTOR_MODEL.md), [`VR_PROTO_ASTRO_MODEL.md`](../technical/VR_PROTO_ASTRO_MODEL.md), [`VR_RUNE_STONES_MODEL.md`](../technical/VR_RUNE_STONES_MODEL.md), and [`VR_ASTERION_RESONATOR_MODEL.md`](../technical/VR_ASTERION_RESONATOR_MODEL.md).
 
 ## Runtime operations checkpoint
 
@@ -17,6 +17,8 @@ Status: **CURRENT operational snapshot — 2026-09-05**. Authorities: [`VR_RUNTI
 - Generic Resonator containment, response, late `PULL_READY`, and moving-target reacquisition are implemented.
 - Metal `M(angle, tilt)` dual-DOF physical control, composed sector motion, descriptor contribution, gameplay field extension, morph and presentation rounding are implemented.
 - Astrolabium's tuning actor derives per-band eligibility read-only. Asterion Sphere completion makes `small-glyph-relic-6 / VI` legal in `SMALL_GLYPHS` without new Scenario or persistence truth.
+- Large Glyph ordinary-ray permission begins at `2.10` and remains continuous. Post-first-ring elevation is `+4.0 m`, producing an approximately `5.05 m` orbit center; this is CURRENT tuning without established hardware/perceptual QA evidence.
+- Large Glyph Astrolabium pull uses family knowledge in ordinary stages and family knowledge plus transient Resonator `PULL_READY` in `SPHERE_FAR`. Ordinary physical ray reach and portfolio `getNextCrystalTier(node)` eligibility remain independent from both laws.
 
 ## Ownership checkpoint
 
