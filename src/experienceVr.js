@@ -1038,7 +1038,7 @@ const crystalCollection = createVrCrystalCollection({
   scene, assetManager, controllers: vrControllers.controllers, portalDisplay, insertionTarget: crystalReliquary,
   settings: settings.crystals, haloSettings: settings.targetHalo, insertFeedbackSettings: settings.reliquary.insertFeedback,
   pages: experienceVrPages, progressionController,
-  canUseReliquary: () => runtimeExperience.can(VR_SCENARIO_CAPABILITY.CAN_USE_RELIQUARY),
+  canUseReliquary: () => crystalReliquary.isInteractionEnabled(),
   onInsertAccepted: () => playVrWorld(VR_AUDIO.reliquaryInsert),
   canGrabController: (record) => {
     if (record.handedness === 'right' && handModeController.getRightMode() === 'ASTRO_ATTRACTOR') return false;
@@ -1071,9 +1071,7 @@ const activateButton = createVrReliquaryActivateButton({
   reliquary: crystalReliquary,
   controllers: vrControllers.controllers,
   settings: settings.reliquary.activateButton,
-  canActivate: () => (introQaBypass
-    || runtimeExperience.can(VR_SCENARIO_CAPABILITY.CAN_ACTIVATE_RELIQUARY))
-    && crystalReliquary.isInteractionEnabled()
+  canActivate: () => crystalReliquary.isInteractionEnabled()
     && crystalCollection.getInsertedInstance()?.state === 'inserted',
   onActivate: () => {
     const accepted = crystalCollection.activateInserted();
@@ -1091,9 +1089,7 @@ const releaseButton = createVrReliquaryReleaseButton({
   reliquary: crystalReliquary,
   controllers: vrControllers.controllers,
   settings: settings.reliquary.releaseButton,
-  canRelease: () => (introQaBypass
-    || runtimeExperience.can(VR_SCENARIO_CAPABILITY.CAN_RELEASE_RELIQUARY))
-    && crystalReliquary.isInteractionEnabled()
+  canRelease: () => crystalReliquary.isInteractionEnabled()
     && crystalCollection.getInsertedInstance()?.state === 'active',
   onRelease: () => {
     return crystalCollection.releaseInserted();
