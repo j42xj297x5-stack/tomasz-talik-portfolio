@@ -2,6 +2,8 @@
 
 Status: **CURRENT operational snapshot — 2026-09-08**. Authorities: [`VR_RUNTIME_MODEL.md`](../technical/VR_RUNTIME_MODEL.md), [`VR_SCENARIO_DIRECTOR_MODEL.md`](../technical/VR_SCENARIO_DIRECTOR_MODEL.md), [`VR_PROTO_ASTRO_MODEL.md`](../technical/VR_PROTO_ASTRO_MODEL.md), [`VR_RUNE_STONES_MODEL.md`](../technical/VR_RUNE_STONES_MODEL.md), and [`VR_ASTERION_RESONATOR_MODEL.md`](../technical/VR_ASTERION_RESONATOR_MODEL.md).
 
+> **CANONICAL TARGET / IMPLEMENTATION PENDING — next architectural migration target:** Scenario sandbox reconciliation for ordinary portfolio Rings 1–3, persistent Reliquary gameplay after reveal, Large Glyph stage catch-up, and Asterion as the post-third-ring mechanical frontier. See [`VR_SCENARIO_SANDBOX_RECONCILIATION.md`](../technical/VR_SCENARIO_SANDBOX_RECONCILIATION.md).
+
 ## Runtime operations checkpoint
 
 - Quest Browser and Chromium + Virtual Desktop / VDXR are manually validated paths; Chromium was validated with hardware acceleration enabled.
