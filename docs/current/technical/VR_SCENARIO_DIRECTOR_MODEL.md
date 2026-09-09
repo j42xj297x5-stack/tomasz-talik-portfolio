@@ -2,6 +2,8 @@
 
 Status: **CURRENT / BINDING**, synchronized on 2026-09-01. Runtime graph and reconstruction are implemented through stable `5.10`.
 
+> **Cross-reference — CANONICAL TARGET / IMPLEMENTATION PENDING:** Live sandbox catch-up/reconciliation is defined in [`VR_SCENARIO_SANDBOX_RECONCILIATION.md`](VR_SCENARIO_SANDBOX_RECONCILIATION.md). The reconciliation runtime is not yet implemented.
+
 ## Ownership
 
 `Spine → Scenario → Director → Runtime / domain owners`. Scenario owns authored dramaturgy, accepted semantic events, entry effects and genuinely story-owned capabilities. **Scenario capabilities are not a generic sandbox permission registry.** Director owns the current point and graph interpretation. Runtime/domain owners retain physical and committed gameplay truth; point IDs and debug aliases never replace that truth. In particular, ordinary Astrolabium equip, band switching, scan, target, pull and natural Small Glyph extraction rights remain physical/domain laws rather than Scenario capabilities. Genuine story permissions, including Ether tuning, the Water special path and advanced Resonator use, remain Scenario-owned and do not recreate ordinary natural-family eligibility.
