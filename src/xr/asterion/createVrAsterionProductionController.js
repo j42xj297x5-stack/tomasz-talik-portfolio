@@ -117,8 +117,8 @@ export function createVrAsterionProductionController({
   }
   function claim(record) { if (disposed || state !== 'AVAILABLE' || getChamberState() !== 'OPEN'
     || !hasNormalHandMode(record) || !hits.get(record)) return false;
-    state = 'EARNED'; earnedCommits += 1; clearHits(); sphere.restorePresentationMaterials?.(); clearPresentation(); emit();
-    modeController?.equipLeftAsterion?.(); onClaimed(); return true; }
+    state = 'EARNED'; earnedCommits += 1; clearHits(); sphere.restorePresentationMaterials?.(); clearPresentation();
+    modeController?.equipLeftAsterion?.(); onClaimed(); emit(); return true; }
   const listeners = controllers.map((record) => { const listener = () => claim(record); record.controller.addEventListener?.('squeezestart', listener); return { record, listener }; });
   function resetSession() { clearHits(); if (state === 'BUILDING') { sphere.restorePresentationMaterials?.(); clearPresentation(); constructionProgress = 0;
       state = 'READY'; onBuildStop(true); emit(); }
