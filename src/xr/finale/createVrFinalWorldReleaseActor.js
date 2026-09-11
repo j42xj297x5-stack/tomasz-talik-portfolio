@@ -16,7 +16,6 @@ const SECTORS = Object.freeze([
   { glyphId: 'spotify-digger', branchId: 'metal', axis: [-0.06, 0.15, -0.09] },
   { glyphId: 'haiku-cosmos', branchId: 'water', axis: [0.13, 0.08, 0.12] }
 ]);
-const smoothstep = (value) => value * value * (3 - 2 * value);
 const clamp01 = (value) => Math.max(0, Math.min(1, value));
 
 function captureTransform(object) {
@@ -91,9 +90,13 @@ export function createVrFinalWorldReleaseActor({
   }
 
   function motionFactor(time) {
-    if (time <= RELEASE_SECONDS) return smoothstep(clamp01(time / RELEASE_SECONDS));
+    if (time <= RELEASE_SECONDS) {
+      const releaseProgress = clamp01(time / RELEASE_SECONDS);
+      return releaseProgress * releaseProgress * (1.5 - 0.5 * releaseProgress);
+    }
     const whiteoutProgress = clamp01((time - RELEASE_SECONDS) / WHITEOUT_SECONDS);
-    return 1 + (FINAL_DISTANCE_FACTOR - 1) * whiteoutProgress * whiteoutProgress;
+    return 1 + 1.5 * whiteoutProgress
+      + (FINAL_DISTANCE_FACTOR - 2.5) * whiteoutProgress * whiteoutProgress;
   }
 
   function apply(time) {
