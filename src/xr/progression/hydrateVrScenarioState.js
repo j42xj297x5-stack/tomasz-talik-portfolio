@@ -1,6 +1,7 @@
 const OWNER_SECTIONS = Object.freeze(['monkey', 'intro', 'locomotion', 'reliquary', 'portal', 'progression',
   'progressFloor', 'crystals', 'shellField', 'postRing', 'largeGlyphs', 'smallGlyphField', 'furnace', 'furnaceProgression', 'astroProduction',
-  'asterionProduction', 'protoAstroTuning', 'audio', 'celestial', 'runeStones', 'runeProgression']);
+  'asterionProduction', 'protoAstroTuning', 'audio', 'celestial', 'runeStones', 'runeProgression',
+  'finalMonkeyFarewell']);
 
 // Canonical baseline restoration is an explicit precondition. This seam only
 // delegates owner-scoped facts; it never creates owners or emits story events.
