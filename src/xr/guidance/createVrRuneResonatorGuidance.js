@@ -6,7 +6,9 @@ const AUTO_HINT_CUE_SECONDS = 1;
 
 export function createVrRuneResonatorGuidance({ monkeyGuide, copy, secondsPerLine,
   getCurrentPointId, getUnresolvedRuneBranchId, knowledgeResolver,
+  isAsterionEarned,
   onEtherInterventionCompleted = () => {} }) {
+  if (typeof isAsterionEarned !== 'function') throw new TypeError('isAsterionEarned must be a function');
   let armed = false;
   let previousPointId = getCurrentPointId();
   let glyphsGoneDue = null;
@@ -16,9 +18,9 @@ export function createVrRuneResonatorGuidance({ monkeyGuide, copy, secondsPerLin
   let firstSectorLock = false;
   let firstResonator = false;
 
-  const makeCommunication = (blocks, requiresAttention = true, onCompleted = () => {}) => {
+  const makeCommunication = (blocks, requiresAttention = true, onCompleted = () => {}, resolveBlocks) => {
     let communication;
-    communication = createVrMandatoryMonkeyCommunication({ monkeyGuide, blocks, secondsPerLine,
+    communication = createVrMandatoryMonkeyCommunication({ monkeyGuide, blocks, resolveBlocks, secondsPerLine,
       priority: VR_MONKEY_DIALOGUE_PRIORITY.ACQUISITION, requiresAttention,
       onTriggered: () => communication.beginPlayback(), onCompleted });
     return communication;
@@ -33,7 +35,9 @@ export function createVrRuneResonatorGuidance({ monkeyGuide, copy, secondsPerLin
     return communication;
   };
   const glyphsGone = makeCommunication(copy.progression['progression.p3.glyphsGone'].blocks);
-  const installed = makeCommunication(copy.progression['progression.p3.firstRuneInstalled'].blocks);
+  const installed = makeCommunication(null, true, () => {}, () => isAsterionEarned()
+    ? copy.progression['progression.p3.firstRuneInstalledWithAsterion'].blocks
+    : copy.progression['progression.p3.firstRuneInstalledWithoutAsterion'].blocks);
   const sectorLock = makeCommunication(copy.progression['progression.p3.firstSectorLock'].blocks, false);
   const resonator = makeCommunication(copy.progression['progression.p3.resonator'].blocks);
   const etherIntervention = makeCommunication(
