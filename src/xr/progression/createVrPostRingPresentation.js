@@ -20,7 +20,7 @@ export function createVrPostRingPresentation({ largeGlyphActor, shellSystem, set
     return true;
   }
   function enableShellFieldInteraction() {
-    if (disposed || canceled) return false;
+    if (disposed) return false;
     shellSystem.setPresentationVisible(true);
     shellSystem.setInteractionEnabled(true);
     return true;

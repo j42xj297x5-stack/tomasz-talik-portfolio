@@ -33,7 +33,8 @@ export function createVrLargeGlyphActor({
   },
   onElevationCompleted = () => {},
   onExpansionCompleted = () => {},
-  onSphereDistributionCompleted = () => {}
+  onSphereDistributionCompleted = () => {},
+  onTransientCleared = () => {}
 }) {
   if (!Array.isArray(items) || items.length !== LARGE_GLYPH_COUNT) {
     throw new TypeError('VrLargeGlyphActor requires exactly five Large Glyph identities.');
@@ -65,6 +66,9 @@ export function createVrLargeGlyphActor({
   }
   if (typeof onSphereDistributionCompleted !== 'function') {
     throw new TypeError('VrLargeGlyphActor onSphereDistributionCompleted must be a function.');
+  }
+  if (typeof onTransientCleared !== 'function') {
+    throw new TypeError('VrLargeGlyphActor onTransientCleared must be a function.');
   }
 
   const object = new THREE.Group();
@@ -288,7 +292,7 @@ export function createVrLargeGlyphActor({
     const slot = requireOwnedNode(node);
     if (disposed) throw new Error('Cannot lease a node from a disposed Large Glyph actor.');
     if (transientLeases.has(node)) throw new Error('Large Glyph node already has a transient lease.');
-    if (elevationElapsed !== null || expansionElapsed !== null) {
+    if (elevationElapsed !== null || expansionElapsed !== null || sphereElapsed !== null) {
       throw new Error('Cannot lease a Large Glyph node during an actor transition.');
     }
     if (node.parent !== slot) throw new Error('Large Glyph node is outside its canonical slot.');
@@ -306,14 +310,18 @@ export function createVrLargeGlyphActor({
     matrix.decompose(position, quaternion, scale);
     return { position, quaternion, scale };
   }
-  function restoreToSlot(node) {
+  function restoreTransientToSlot(node, notify) {
     const slot = requireOwnedNode(node);
     if (!transientLeases.has(node)) throw new Error('Large Glyph node has no transient lease.');
     if (node.parent !== transientRoot) throw new Error('Leased Large Glyph node left the actor TransientRoot.');
     slot.add(node);
     setCanonicalNodeTransform(node);
     transientLeases.delete(node);
+    if (notify && transientLeases.size === 0) onTransientCleared();
     return true;
+  }
+  function restoreToSlot(node) {
+    return restoreTransientToSlot(node, true);
   }
   function update(deltaSeconds = 0) {
     if (disposed) return;
@@ -380,7 +388,7 @@ export function createVrLargeGlyphActor({
     return Object.freeze({ stage, transition, transientActive: transientLeases.size > 0 });
   }
   function reset() {
-    [...transientLeases].forEach(restoreToSlot);
+    [...transientLeases].forEach((node) => restoreTransientToSlot(node, false));
     elevationElapsed = null;
     expansionElapsed = null;
     sphereElapsed = null;
@@ -425,7 +433,7 @@ export function createVrLargeGlyphActor({
     reset,
     dispose() {
       if (disposed) return;
-      [...transientLeases].forEach(restoreToSlot);
+      [...transientLeases].forEach((node) => restoreTransientToSlot(node, false));
       disposed = true;
       object.removeFromParent();
       nodes.forEach((node) => {

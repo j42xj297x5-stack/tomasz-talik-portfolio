@@ -1382,6 +1382,13 @@ const furnaceIntro = createVrFurnaceIntro({
   revealFurnace: () => astroFurnace.reveal(3),
   onCompleted: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.FURNACE_INTRO_COMPLETED)
 });
+function ensureProgressFloorTierCompleted(tier) {
+  if (progressFloor.getCompletedTiers().includes(tier)) return;
+  if (!progressFloor.completeTier(tier)) {
+    throw new Error(`Progress floor could not ensure canonical Tier ${tier} completion`);
+  }
+}
+
 runtimeExperience = new RuntimeExperience({
   director: experienceDirector,
   pointLifecycle: {
@@ -1549,7 +1556,15 @@ runtimeExperience = new RuntimeExperience({
         throw new Error(`Progress floor rejected accepted canonical Tier ${payload.tier} completion`);
       }
       playVrWorld(VR_AUDIO.tierComplete);
-      if (change.currentPointId === '4.75') runeResonatorGuidance.notifyThirdRingCompleted();
+    },
+    [VR_SCENARIO_EFFECT.APPLY_SECOND_RING_COMPLETE_FEEDBACK]: () => {
+      ensureProgressFloorTierCompleted(2);
+      playVrWorld(VR_AUDIO.tierComplete);
+    },
+    [VR_SCENARIO_EFFECT.APPLY_THIRD_RING_COMPLETE_FEEDBACK]: () => {
+      ensureProgressFloorTierCompleted(3);
+      playVrWorld(VR_AUDIO.tierComplete);
+      runeResonatorGuidance.notifyThirdRingCompleted();
     },
     [VR_SCENARIO_EFFECT.BEGIN_P2_RADIAL_PRESENTATION]: () => {
       if (!largeGlyphActor.beginExpansion()) {
