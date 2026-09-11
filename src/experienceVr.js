@@ -745,7 +745,14 @@ const asterionResonatorFieldPresentation = createVrAsterionResonatorFieldPresent
 });
 const asterionResonatorTargetAcquisitionActor = createVrAsterionResonatorTargetAcquisitionActor({
   fieldActor: asterionResonatorFieldActor,
-  fieldFrame: progressFloor.getAsterionResonatorFieldFrame()
+  fieldFrame: progressFloor.getAsterionResonatorFieldFrame(),
+  resolveTargetPolicy: (targetId) => {
+    const isFinalWaterTarget = targetId === 'haiku-cosmos' && progressionController.isTierComplete(4);
+    if (!isFinalWaterTarget || asterionResonatorFieldActor.getDescriptor().waterSyncLock) {
+      return { maximumRingCount: 3, cycleAtCeiling: false, retainCompletedStagesOutside: false };
+    }
+    return { maximumRingCount: 2, cycleAtCeiling: true, retainCompletedStagesOutside: true };
+  }
 });
 largeGlyphActor.nodes.forEach((node) => {
   asterionResonatorTargetAcquisitionActor.registerTarget({ id: node.userData.id, anchor: node });
