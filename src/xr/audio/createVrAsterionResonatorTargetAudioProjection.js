@@ -71,13 +71,27 @@ export function createVrAsterionResonatorTargetAudioProjection({ audioBridge, ac
     if (disposed) return;
     const entry = targets.get(state?.id);
     if (!entry) return;
-    if (!entry.state.insideField && state.insideField && state.ringCount < 3
-      && start(entry, 'aim', AIM_PATHS[aimCursor % AIM_PATHS.length])) aimCursor += 1;
+    if (!entry.state.insideField && state.insideField && state.ringCount < 3) {
+      const path = AIM_PATHS[aimCursor % AIM_PATHS.length];
+      if (start(entry, 'aim', path)) {
+        entry.aimPath = path;
+        aimCursor += 1;
+      }
+    }
     if ((entry.state.insideField && !state.insideField)
       || (entry.state.ringCount < 3 && state.ringCount === 3)) retire(entry, 'aim', aimFadeOutSeconds);
     if (entry.state.ringCount < 3 && state.ringCount === 3
       && start(entry, 'lock', LOCK_PATHS[lockCursor % LOCK_PATHS.length])) lockCursor += 1;
     else if (entry.state.ringCount > 0 && state.ringCount === 0) retire(entry, 'lock', lockFadeOutSeconds);
+    if (entry.state.insideField && state.insideField && entry.state.ringCount === 2 && state.ringCount === 0) {
+      retire(entry, 'aim', 0);
+      start(entry, 'aim', entry.aimPath ?? AIM_PATHS[0]);
+    }
+    if (entry.state.insideField && state.insideField && entry.state.ringCount === 3 && state.ringCount === 2) {
+      retire(entry, 'lock', lockFadeOutSeconds);
+      retire(entry, 'aim', 0);
+      start(entry, 'aim', entry.aimPath ?? AIM_PATHS[0]);
+    }
     entry.state = state;
   }
   const unsubscribe = acquisitionActor.subscribe(observe);
@@ -91,7 +105,8 @@ export function createVrAsterionResonatorTargetAudioProjection({ audioBridge, ac
   return {
     registerTarget({ id, anchor } = {}) {
       if (disposed || !id || !anchor?.getWorldPosition || targets.has(id)) throw new TypeError('Unique target id and anchor are required.');
-      targets.set(id, { id, anchor, state: acquisitionActor.getTargetState(id) ?? { id, insideField: false, ringCount: 0 },
+      targets.set(id, { id, anchor, aimPath: null,
+        state: acquisitionActor.getTargetState(id) ?? { id, insideField: false, ringCount: 0 },
         aim: { handle: null, token: 0, timer: null, retiringHandle: null, pending: false, owned: false },
         lock: { handle: null, token: 0, timer: null, retiringHandle: null, pending: false, owned: false } });
     },

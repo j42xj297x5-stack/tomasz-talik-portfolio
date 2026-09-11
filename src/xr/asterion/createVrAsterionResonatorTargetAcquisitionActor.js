@@ -7,6 +7,11 @@ import {
 const ACQUISITION_SECONDS_PER_RING = 2;
 const DECAY_SECONDS_PER_RING = 20;
 const SIGN_MEMORY_SECONDS = 60;
+const DEFAULT_TARGET_POLICY = Object.freeze({
+  maximumRingCount: 3,
+  cycleAtCeiling: false,
+  retainCompletedStagesOutside: false
+});
 
 function createInternalTarget(id, anchor) {
   return {
@@ -17,7 +22,8 @@ function createInternalTarget(id, anchor) {
     signVisible: false,
     acquisitionSeconds: 0,
     outsideSeconds: 0,
-    signMemorySeconds: 0
+    signMemorySeconds: 0,
+    ceilingPendingReset: false
   };
 }
 
@@ -35,13 +41,17 @@ function semanticSignature(target) {
   return `${Number(target.insideField)}:${target.ringCount}:${Number(target.signVisible)}`;
 }
 
-export function createVrAsterionResonatorTargetAcquisitionActor({ fieldActor, fieldFrame }) {
+export function createVrAsterionResonatorTargetAcquisitionActor({ fieldActor, fieldFrame,
+  resolveTargetPolicy = () => DEFAULT_TARGET_POLICY }) {
   if (!fieldActor || typeof fieldActor.getDescriptor !== 'function'
     || typeof fieldActor.subscribe !== 'function') {
     throw new TypeError('fieldActor must expose getDescriptor() and subscribe().');
   }
   if (!fieldFrame || typeof fieldFrame.updateWorldMatrix !== 'function') {
     throw new TypeError('fieldFrame must be a Three.js Object3D.');
+  }
+  if (typeof resolveTargetPolicy !== 'function') {
+    throw new TypeError('resolveTargetPolicy must be a function.');
   }
 
   const targets = new Map();
@@ -67,25 +77,62 @@ export function createVrAsterionResonatorTargetAcquisitionActor({ fieldActor, fi
     });
   }
 
-  function updateInside(target, deltaSeconds) {
+  function readPolicy(target) {
+    const resolved = resolveTargetPolicy(target.id) ?? DEFAULT_TARGET_POLICY;
+    const maximumRingCount = Number.isInteger(resolved.maximumRingCount)
+      ? Math.min(3, Math.max(0, resolved.maximumRingCount))
+      : DEFAULT_TARGET_POLICY.maximumRingCount;
+    return {
+      maximumRingCount,
+      cycleAtCeiling: resolved.cycleAtCeiling === true,
+      retainCompletedStagesOutside: resolved.retainCompletedStagesOutside === true
+    };
+  }
+
+  function applyPolicy(target, policy) {
+    if (target.ringCount <= policy.maximumRingCount) return;
+    target.ringCount = policy.maximumRingCount;
+    target.acquisitionSeconds = 0;
+    target.ceilingPendingReset = policy.cycleAtCeiling;
+  }
+
+  function updateInside(target, deltaSeconds, policy) {
     target.outsideSeconds = 0;
     target.signMemorySeconds = 0;
     target.signVisible = true;
-    if (target.ringCount >= 3) {
+    if (target.ceilingPendingReset && policy.cycleAtCeiling
+      && target.ringCount >= policy.maximumRingCount) {
+      target.ringCount = 0;
+      target.acquisitionSeconds = 0;
+      target.ceilingPendingReset = false;
+      return;
+    }
+    if (!policy.cycleAtCeiling) target.ceilingPendingReset = false;
+    if (target.ringCount >= policy.maximumRingCount) {
       target.acquisitionSeconds = 0;
       return;
     }
 
     target.acquisitionSeconds += deltaSeconds;
-    while (target.acquisitionSeconds >= ACQUISITION_SECONDS_PER_RING && target.ringCount < 3) {
+    while (target.acquisitionSeconds >= ACQUISITION_SECONDS_PER_RING
+      && target.ringCount < policy.maximumRingCount) {
       target.acquisitionSeconds -= ACQUISITION_SECONDS_PER_RING;
       target.ringCount += 1;
     }
-    if (target.ringCount === 3) target.acquisitionSeconds = 0;
+    if (target.ringCount === policy.maximumRingCount) {
+      target.acquisitionSeconds = 0;
+      target.ceilingPendingReset = policy.cycleAtCeiling;
+    }
   }
 
-  function updateOutside(target, deltaSeconds) {
+  function updateOutside(target, deltaSeconds, policy) {
     target.acquisitionSeconds = 0;
+    if (policy.retainCompletedStagesOutside) {
+      target.outsideSeconds = 0;
+      target.signMemorySeconds = 0;
+      return;
+    }
+    target.ceilingPendingReset = false;
     let remainingSeconds = deltaSeconds;
 
     while (target.ringCount > 0 && remainingSeconds > 0) {
@@ -119,6 +166,7 @@ export function createVrAsterionResonatorTargetAcquisitionActor({ fieldActor, fi
     target.acquisitionSeconds = 0;
     target.outsideSeconds = 0;
     target.signMemorySeconds = 0;
+    target.ceilingPendingReset = false;
   }
 
   return {
@@ -143,7 +191,9 @@ export function createVrAsterionResonatorTargetAcquisitionActor({ fieldActor, fi
       return target ? exposeState(target) : null;
     },
     isPullReady(id) {
-      return targets.get(id)?.ringCount === 3;
+      const target = targets.get(id);
+      if (!target) return false;
+      return readPolicy(target).maximumRingCount === 3 && target.ringCount === 3;
     },
     subscribe(listener) {
       if (disposed || typeof listener !== 'function') return () => {};
@@ -156,6 +206,8 @@ export function createVrAsterionResonatorTargetAcquisitionActor({ fieldActor, fi
       fieldFrameInverse.copy(fieldFrame.matrixWorld).invert();
       targets.forEach((target) => {
         const previousSignature = semanticSignature(target);
+        const policy = readPolicy(target);
+        applyPolicy(target, policy);
         target.anchor.getWorldPosition(worldPosition);
         localPosition.copy(worldPosition).applyMatrix4(fieldFrameInverse);
         const insideField = containsPointInAsterionResonatorField(fieldShape, localPosition);
@@ -165,7 +217,7 @@ export function createVrAsterionResonatorTargetAcquisitionActor({ fieldActor, fi
             target.outsideSeconds = 0;
             target.signMemorySeconds = 0;
           }
-          updateInside(target, deltaSeconds);
+          updateInside(target, deltaSeconds, policy);
         } else {
           if (target.insideField) {
             target.insideField = false;
@@ -173,7 +225,7 @@ export function createVrAsterionResonatorTargetAcquisitionActor({ fieldActor, fi
             target.outsideSeconds = 0;
             if (target.ringCount === 0) target.signMemorySeconds = 0;
           }
-          updateOutside(target, deltaSeconds);
+          updateOutside(target, deltaSeconds, policy);
         }
         if (semanticSignature(target) !== previousSignature) notify(target);
       });

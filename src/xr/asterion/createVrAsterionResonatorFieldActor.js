@@ -55,6 +55,16 @@ function createDescriptor(runeStoneProgressionController, sectorControlInteracti
     tiltLevel: waterTiltLevel,
     active: waterPowered && (waterAngleLevel > 0 || waterTiltLevel > 0)
   });
+  const waterSyncLock = fullActiveCore
+    && levels.alpha === 2
+    && levels.beta === 2
+    && levels.gamma === 2
+    && metal.powered
+    && metal.angleLevel === 2
+    && metal.tiltLevel === 2
+    && water.powered
+    && water.angleLevel === 2
+    && water.tiltLevel === 2;
 
   return Object.freeze({
     resonatorExists,
@@ -73,7 +83,8 @@ function createDescriptor(runeStoneProgressionController, sectorControlInteracti
     fieldAsymmetry: levels.alpha - levels.beta,
     depthBand: DEPTH_BANDS[levels.gamma],
     metal,
-    water
+    water,
+    waterSyncLock
   });
 }
 
