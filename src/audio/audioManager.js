@@ -56,6 +56,7 @@ class AudioManager {
     this.effectsBusNode = null;
     this.vrBusNodes = new Map();
     this.activeVrSources = new Set();
+    this.vrCreditsIsolation = null;
     this.ambientChannels = [];
     this.introChannel = null;
     this.buffers = new Map();
@@ -195,12 +196,39 @@ class AudioManager {
     return true;
   }
 
-  async playVrOneShot(path, bus = 'UI') {
+  isVrSourceAllowed(sourceTag) {
+    return !this.vrCreditsIsolation || sourceTag === this.vrCreditsIsolation.preserveTag;
+  }
+
+  enterVrCreditsIsolation({ preserveTag, fadeSeconds = 3 } = {}) {
+    if (!preserveTag) return false;
+    this.resetVrCreditsIsolation();
+    const isolation = { preserveTag, stopTimers: new Set() };
+    this.vrCreditsIsolation = isolation;
+    const seconds = Math.max(0, Number(fadeSeconds) || 0);
+    this.activeVrSources.forEach((handle) => {
+      if (handle.sourceTag === preserveTag) return;
+      try { handle.rampTo?.(0, seconds); } catch (_) { /* Terminal cleanup remains fail-soft. */ }
+      const timer = setTimeout(() => {
+        isolation.stopTimers.delete(timer);
+        try { (handle.source ? handle.source.stop() : handle.stop?.()); } catch (_) { /* Already stopped. */ }
+      }, seconds * 1000);
+      isolation.stopTimers.add(timer);
+    });
+    return true;
+  }
+
+  resetVrCreditsIsolation() {
+    this.vrCreditsIsolation?.stopTimers.forEach((timer) => clearTimeout(timer));
+    this.vrCreditsIsolation = null;
+  }
+
+  async playVrOneShot(path, bus = 'UI', { sourceTag } = {}) {
     if (!VR_AUDIO_BUSES.includes(bus)) {
       console.warn(`[audio] Unknown VR audio bus: ${bus}`);
       return;
     }
-    if (!await this.unlock()) return;
+    if (!this.isVrSourceAllowed(sourceTag) || !await this.unlock() || !this.isVrSourceAllowed(sourceTag)) return;
     const buffer = this.buffers.get(path);
     const busNode = this.vrBusNodes.get(bus);
     if (!buffer || !this.context || !busNode) return;
@@ -209,7 +237,15 @@ class AudioManager {
     source.buffer = buffer;
     sourceGain.gain.value = 1;
     source.connect(sourceGain).connect(busNode);
-    const handle = { source, sourceGain };
+    const handle = {
+      source, sourceGain, sourceTag,
+      rampTo: (target, duration) => {
+        const now = this.context.currentTime;
+        sourceGain.gain.cancelScheduledValues(now);
+        sourceGain.gain.setValueAtTime(sourceGain.gain.value, now);
+        sourceGain.gain.linearRampToValueAtTime(clamp01(target), now + Math.max(0, duration));
+      }
+    };
     this.activeVrSources.add(handle);
     source.onended = () => {
       this.activeVrSources.delete(handle);
@@ -219,9 +255,9 @@ class AudioManager {
     source.start();
   }
 
-  async startVrProcessSource(path, bus = 'WORLD', { loop = false } = {}) {
+  async startVrProcessSource(path, bus = 'WORLD', { loop = false, sourceTag } = {}) {
     if (!VR_AUDIO_BUSES.includes(bus)) return null;
-    if (!await this.unlock()) return null;
+    if (!this.isVrSourceAllowed(sourceTag) || !await this.unlock() || !this.isVrSourceAllowed(sourceTag)) return null;
     const buffer = this.buffers.get(path);
     const busNode = this.vrBusNodes.get(bus);
     if (!buffer || !this.context || !busNode) return null;
@@ -234,7 +270,7 @@ class AudioManager {
     let endedCallback = null;
     let cleaned = false;
     let ramp = null;
-    const handle = {
+    const handle = { sourceTag,
       rampTo: (target, duration) => {
         if (cleaned) return;
         const now = this.context.currentTime;
@@ -271,10 +307,11 @@ class AudioManager {
     return handle;
   }
 
-  async startVrSpatialProcessSource(path, bus = 'WORLD', { loop = false,
+  async startVrSpatialProcessSource(path, bus = 'WORLD', { loop = false, sourceTag,
     maxDistanceMeters = 2, refDistanceMeters = 0.25, panningModel = 'HRTF',
     distanceModel = 'linear', rolloffFactor = 1 } = {}) {
-    if (!VR_AUDIO_BUSES.includes(bus) || !await this.unlock()) return null;
+    if (!VR_AUDIO_BUSES.includes(bus) || !this.isVrSourceAllowed(sourceTag)
+      || !await this.unlock() || !this.isVrSourceAllowed(sourceTag)) return null;
     const buffer = this.buffers.get(path), context = this.context, busNode = this.vrBusNodes.get(bus);
     if (!buffer || !context || !busNode) return null;
     const source = context.createBufferSource(), sourceGain = context.createGain(), panner = context.createPanner();
@@ -283,7 +320,7 @@ class AudioManager {
     panner.maxDistance = maxDistanceMeters; panner.refDistance = refDistanceMeters; panner.rolloffFactor = rolloffFactor;
     source.connect(sourceGain).connect(panner).connect(busNode);
     let endedCallback = null, cleaned = false, ramp = null;
-    const handle = {
+    const handle = { sourceTag,
       setPosition(x, y, z) {
         if (cleaned) return;
         const now = context.currentTime;
@@ -334,9 +371,10 @@ class AudioManager {
   }
 
   async startVrFiniteSource(path, bus = 'AMBIENT', { repetitions = 1, fadeIn = 0, fadeOut = 0,
-    seamGuard = path.endsWith('.mp3') ? VR_MP3_SEAM_GUARD_SECONDS : 0, signal } = {}) {
+    seamGuard = path.endsWith('.mp3') ? VR_MP3_SEAM_GUARD_SECONDS : 0, signal, sourceTag } = {}) {
     if (!VR_AUDIO_BUSES.includes(bus)) return null;
-    if (signal?.aborted || !await this.unlock() || signal?.aborted) return null;
+    if (signal?.aborted || !this.isVrSourceAllowed(sourceTag) || !await this.unlock()
+      || signal?.aborted || !this.isVrSourceAllowed(sourceTag)) return null;
     const buffer = this.buffers.get(path);
     const context = this.context, busNode = this.vrBusNodes.get(bus);
     if (!buffer || !context || !busNode) return null;
@@ -358,7 +396,7 @@ class AudioManager {
     const finished = new Promise((resolve) => { resolveFinished = resolve; });
     let stopped = false, remaining = count;
     const owner = this;
-    const handle = { finished,
+    const handle = { finished, sourceTag,
       rampTo(target, duration) {
         const now = context.currentTime, parameter = output.gain;
         parameter.cancelScheduledValues(now); parameter.setValueAtTime(parameter.value, now);
@@ -400,9 +438,10 @@ class AudioManager {
     return handle;
   }
 
-  async startVrOverlappingLoopSource(path, bus = 'AMBIENT', { overlapSeconds = 5, signal } = {}) {
+  async startVrOverlappingLoopSource(path, bus = 'AMBIENT', { overlapSeconds = 5, signal, sourceTag } = {}) {
     if (!VR_AUDIO_BUSES.includes(bus)) return null;
-    if (signal?.aborted || !await this.unlock() || signal?.aborted) return null;
+    if (signal?.aborted || !this.isVrSourceAllowed(sourceTag) || !await this.unlock()
+      || signal?.aborted || !this.isVrSourceAllowed(sourceTag)) return null;
     const buffer = this.buffers.get(path);
     const context = this.context, busNode = this.vrBusNodes.get(bus);
     if (!buffer || !context || !busNode) return null;
@@ -422,7 +461,7 @@ class AudioManager {
       const milliseconds = Math.max(20, (nextAt - stride - context.currentTime) * 500);
       timer = setTimeout(schedule, milliseconds);
     }
-    const handle = {
+    const handle = { sourceTag,
       buffer,
       rampTo(target, duration) {
         const now = context.currentTime, parameter = output.gain;

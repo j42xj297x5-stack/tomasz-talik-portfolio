@@ -5,6 +5,7 @@ const FINAL_AMBIENT_PATHS = Object.freeze({
 });
 const OVERLAP_SECONDS = 5;
 const FINAL_LOOP_AT_SECONDS = 20;
+export const FINAL_CREDITS_AMBIENT = 'FINAL_CREDITS_AMBIENT';
 
 export function createVrFinalAmbientSequencer({ bridge, onWaitingStarted = () => {},
   setTimer = setTimeout, clearTimer = clearTimeout } = {}) {
@@ -63,7 +64,9 @@ export function createVrFinalAmbientSequencer({ bridge, onWaitingStarted = () =>
   function ensureFinalLoop() {
     if (disposed || finalLoop || finalRequested) return false;
     finalRequested = true; finalPending = true;
-    request(FINAL_AMBIENT_PATHS.final, 'loop', { overlapSeconds: OVERLAP_SECONDS }, (handle) => {
+    request(FINAL_AMBIENT_PATHS.final, 'loop', {
+      overlapSeconds: OVERLAP_SECONDS, sourceTag: FINAL_CREDITS_AMBIENT
+    }, (handle) => {
       finalLoop = handle;
     }, () => { finalPending = false; });
     return true;

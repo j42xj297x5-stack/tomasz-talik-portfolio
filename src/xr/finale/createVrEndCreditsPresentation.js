@@ -26,8 +26,9 @@ const CREDIT_SECTIONS = Object.freeze([
 const PHASE = Object.freeze({ IDLE: 'IDLE', CREDITS: 'CREDITS', BRAND: 'BRAND', COMPLETE: 'COMPLETE' });
 const clamp01 = (value) => Math.max(0, Math.min(1, value));
 
-export function createVrEndCreditsPresentation({ camera, onCreditsCompleted, onBrandCompleted }) {
-  if (!camera?.add || typeof onCreditsCompleted !== 'function' || typeof onBrandCompleted !== 'function') {
+export function createVrEndCreditsPresentation({ worldRoot, getViewingPose, onCreditsCompleted, onBrandCompleted }) {
+  if (!worldRoot?.add || typeof getViewingPose !== 'function'
+    || typeof onCreditsCompleted !== 'function' || typeof onBrandCompleted !== 'function') {
     throw new TypeError('[VrEndCreditsPresentation] Required presentation seams are unavailable.');
   }
 
@@ -42,10 +43,9 @@ export function createVrEndCreditsPresentation({ camera, onCreditsCompleted, onB
   });
   const object = new THREE.Mesh(new THREE.PlaneGeometry(8, 5), material);
   object.name = 'VrEndCreditsPresentation';
-  object.position.set(0, 0, -8);
   object.renderOrder = 100001;
   object.visible = false;
-  camera.add(object);
+  worldRoot.add(object);
 
   const logo = new Image();
   let logoLoaded = false;
@@ -59,6 +59,22 @@ export function createVrEndCreditsPresentation({ camera, onCreditsCompleted, onB
   let elapsed = 0;
   let completionSent = false;
   let disposed = false;
+  let anchored = false;
+  const viewPosition = new THREE.Vector3();
+  const viewQuaternion = new THREE.Quaternion();
+  const forward = new THREE.Vector3();
+
+  function ensureWorldAnchor() {
+    if (anchored) return;
+    getViewingPose(viewPosition, viewQuaternion);
+    forward.set(0, 0, -1).applyQuaternion(viewQuaternion);
+    forward.y = 0;
+    if (forward.lengthSq() < 0.0001) forward.set(0, 0, -1);
+    forward.normalize();
+    object.position.copy(viewPosition).addScaledVector(forward, 5);
+    object.rotation.set(0, Math.atan2(-forward.x, -forward.z), 0);
+    anchored = true;
+  }
 
   function prepareCanvas() {
     context.clearRect(0, 0, canvas.width, canvas.height);
@@ -119,6 +135,7 @@ export function createVrEndCreditsPresentation({ camera, onCreditsCompleted, onB
     phase = PHASE.CREDITS;
     elapsed = 0;
     completionSent = false;
+    ensureWorldAnchor();
     material.opacity = 1;
     drawCredits();
     object.visible = true;
@@ -130,6 +147,7 @@ export function createVrEndCreditsPresentation({ camera, onCreditsCompleted, onB
     phase = PHASE.BRAND;
     elapsed = 0;
     completionSent = false;
+    ensureWorldAnchor();
     material.opacity = 1;
     drawBrand(0);
     object.visible = true;
@@ -182,6 +200,7 @@ export function createVrEndCreditsPresentation({ camera, onCreditsCompleted, onB
     elapsed = 0;
     completionSent = false;
     phase = PHASE.IDLE;
+    anchored = false;
     prepareCanvas();
     texture.needsUpdate = true;
   }

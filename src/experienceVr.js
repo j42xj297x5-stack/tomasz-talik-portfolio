@@ -106,7 +106,7 @@ import { ASTERION_SECTOR_ACQUISITION_AUDIO, ASTERION_SECTOR_DRIVE_AUDIO,
   createVrAsterionSectorAudioProjection } from './xr/audio/createVrAsterionSectorAudioProjection.js';
 import { createVrAmbientSequencer, VR_MAIN_AMBIENT_PROGRAMS } from './xr/audio/createVrAmbientSequencer.js';
 import { createVrIntroAmbientSequencer } from './xr/audio/createVrIntroAmbientSequencer.js';
-import { createVrFinalAmbientSequencer } from './xr/audio/createVrFinalAmbientSequencer.js';
+import { createVrFinalAmbientSequencer, FINAL_CREDITS_AMBIENT } from './xr/audio/createVrFinalAmbientSequencer.js';
 import { ExperienceDirector } from './xr/progression/ExperienceDirector.js';
 import { RuntimeExperience } from './xr/progression/RuntimeExperience.js';
 import { stateAtVrScenarioPoint } from './xr/progression/reconstructVrScenarioState.js';
@@ -213,6 +213,7 @@ let earlyExperienceGuidance = null;
 let renderer = null;
 let vrControllers = null;
 let activeSession = null;
+let terminalXrEndRequested = false;
 let hasEnteredSession = false;
 if (audioControl) app.querySelector('[data-vr-audio-slot]').append(audioControl);
 const loadedSettings = await loadExperienceVrSettings({ debug: new URLSearchParams(location.search).has('debug') });
@@ -1467,7 +1468,10 @@ const finalWorldRelease = createVrFinalWorldReleaseActor({
   onCompleted: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.FINAL_WORLD_RELEASE_COMPLETED)
 });
 const endCreditsPresentation = createVrEndCreditsPresentation({
-  camera,
+  worldRoot: scene,
+  getViewingPose: (positionTarget, quaternionTarget) => getXrHeadWorldPose({
+    renderer, camera, playerRig, positionTarget, quaternionTarget
+  }),
   onCreditsCompleted: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.END_CREDITS_COMPLETED),
   onBrandCompleted: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.END_BRAND_SLATE_COMPLETED)
 });
@@ -1543,6 +1547,15 @@ runtimeExperience = new RuntimeExperience({
       finalAmbientSequencer.synchronizeAfterFarewell(15);
     },
     [VR_SCENARIO_EFFECT.ENSURE_FINAL_AMBIENT_08]: () => { finalAmbientSequencer.ensureFinalLoop(); },
+    [VR_SCENARIO_EFFECT.ENTER_CREDITS_AUDIO_ISOLATION]: () => {
+      vrAudio.enterCreditsIsolation({ preserveTag: FINAL_CREDITS_AMBIENT, fadeSeconds: 3 });
+    },
+    [VR_SCENARIO_EFFECT.END_XR_SESSION]: () => {
+      const session = renderer.xr.getSession();
+      if (!session || terminalXrEndRequested) return;
+      terminalXrEndRequested = true;
+      void session.end().catch(() => {});
+    },
     [VR_SCENARIO_EFFECT.BEGIN_FINAL_WORLD_RELEASE]: () => {
       if (!finalWorldRelease.begin()) {
         throw new Error('BEGIN_FINAL_WORLD_RELEASE rejected by final world release actor');
@@ -1942,6 +1955,7 @@ function showReadyState({ ended = false } = {}) {
 // Keep lifecycle teardown (XR session, render loop, clock and UI) outside this function:
 // restoring the Scenario baseline must never recreate or dispose application objects.
 function restoreVrScenarioBaseline() {
+  terminalXrEndRequested = false;
   runtimeExperience.resetSession();
   endCreditsPresentation.reset();
   finalWorldRelease.reset();
@@ -1957,6 +1971,7 @@ function restoreVrScenarioBaseline() {
   ambientSequencer.reset();
   introAmbientSequencer.reset();
   finalAmbientSequencer.reset();
+  vrAudio.resetCreditsIsolation();
   vrAudio.resetAsterionSphereAudio();
   astroFurnace.resetBaseline();
   furnaceAudioProjection.reset();
