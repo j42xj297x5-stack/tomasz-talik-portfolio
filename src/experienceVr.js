@@ -618,6 +618,9 @@ function synchronizeReconstructionDerivedState() {
   shellSystem.applyAbsorbedShellIds(furnaceProgressionController.getAbsorbedShellIds());
   astrolabiumTuningActor.synchronize();
   synchronizeSmallGlyphFieldReadiness();
+  earlyExperienceGuidance.synchronizeReconstructedProgression({
+    hasActivatedPages: progressionController.getActivatedPageIds().length > 0
+  });
 }
 const firstRingFlow = createVrFirstRingFlow({
   progressFloor,

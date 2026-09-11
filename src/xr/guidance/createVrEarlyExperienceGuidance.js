@@ -95,6 +95,14 @@ export function createVrEarlyExperienceGuidance({ monkeyGuide, knowledgeResolver
   function notifyFirstCrystalRevealDue() { firstCrystalRevealDue = true; }
   function notifyReliquaryRevealCompleted() { if (firstCrystal && crystalFlowUnadvanced()) revealElapsed = 0; }
   function notifyCardCommitted() { if (!firstCardShown && cardElapsed === null) cardElapsed = 0; }
+  function synchronizeReconstructedProgression({ hasActivatedPages }) {
+    if (typeof hasActivatedPages !== 'boolean') {
+      throw new TypeError('Early Experience Guidance synchronization requires activated-page truth');
+    }
+    if (!hasActivatedPages) return;
+    firstCardShown = true;
+    cardElapsed = null;
+  }
 
   function update(delta = 0) {
     const step = Math.max(0, Number.isFinite(delta) ? delta : 0);
@@ -154,5 +162,5 @@ export function createVrEarlyExperienceGuidance({ monkeyGuide, knowledgeResolver
     firstCrystalRevealDue = false;
   }
   return { update, reset, notifyGlyphFreeExploreStarted, notifyCrystalCreated, notifyFirstCrystalRevealDue,
-    notifyReliquaryRevealCompleted, notifyCardCommitted };
+    notifyReliquaryRevealCompleted, notifyCardCommitted, synchronizeReconstructedProgression };
 }

@@ -398,6 +398,17 @@ const TIER_4_CARD_LIFECYCLE_TRANSITIONS = Object.freeze([
   Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.STAY, event: VR_SCENARIO_EVENT.TIER_COMPLETED,
     milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.APPLY_TIER_COMPLETE_FEEDBACK]) })
 ]);
+const TIER_5_CARD_LIFECYCLE_TRANSITIONS = Object.freeze([
+  Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.STAY, event: VR_SCENARIO_EVENT.CRYSTAL_ACTIVATED,
+    milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.PRESENT_ACTIVE_CARD_PREVIEW]) }),
+  Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.STAY, event: VR_SCENARIO_EVENT.CARD_COMMITTED,
+    milestonesToAdd: Object.freeze([VR_SCENARIO_MILESTONE.CARD_COMMITTED]), effects: Object.freeze([
+      VR_SCENARIO_EFFECT.UPDATE_COMMITTED_CARD_PRESENTATION,
+      VR_SCENARIO_EFFECT.PLAY_CARD_COMMIT_FEEDBACK
+    ]) }),
+  Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.STAY, event: VR_SCENARIO_EVENT.TIER_COMPLETED,
+    milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.APPLY_TIER_COMPLETE_FEEDBACK]) })
+]);
 
 const points = Object.freeze([
   Object.freeze({
@@ -952,7 +963,7 @@ const points = Object.freeze([
     capabilities: Object.freeze([...P2_MAIN_GLYPH_CAPABILITIES,
       VR_SCENARIO_CAPABILITY.CAN_TUNE_ETHER_RUNE, VR_SCENARIO_CAPABILITY.CAN_INSTALL_WATER_RUNE,
       VR_SCENARIO_CAPABILITY.CAN_USE_ADVANCED_RESONATOR]),
-    transitions: Object.freeze([])
+    transitions: TIER_5_CARD_LIFECYCLE_TRANSITIONS
   }),
   Object.freeze({
     id: VR_EXPERIENCE_POINT['100.10'],
