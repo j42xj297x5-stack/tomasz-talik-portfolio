@@ -4,10 +4,10 @@ export const ASTERION_WATER_CONTROL_TUNING = Object.freeze({
   dominanceMarginDegrees: 1,
   presentation: Object.freeze({
     hues: Object.freeze([0xffffff, 0x66ff99, 0x5aa7ff, 0xb875ff]),
-    skinOpacities: Object.freeze([0.055, 0.062, 0.072, 0.088]),
-    skeletonOpacities: Object.freeze([0.30, 0.34, 0.40, 0.48]),
-    haloOpacities: Object.freeze([0, 0.08, 0.16, 0.26]),
-    haloNormalExpansion: 0.037
+    skinOpacities: Object.freeze([0.055, 0.066, 0.078, 0.095]),
+    skeletonOpacities: Object.freeze([0.30, 0.38, 0.48, 0.60]),
+    haloOpacities: Object.freeze([0, 0.18, 0.32, 0.50]),
+    haloNormalExpansion: 0.085
   }),
   dofs: Object.freeze({
     ANGLE: Object.freeze({
