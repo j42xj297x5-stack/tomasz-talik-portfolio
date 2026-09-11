@@ -292,7 +292,16 @@ const CORE_RESONATOR_READY_SETTLED_CONSEQUENCES = Object.freeze({
     waterInstallationReadinessOverride: false
   })
 });
-const FOURTH_RUNE_INSTALLED_SETTLED_CONSEQUENCES = Object.freeze({
+const TIER_4_AND_FOURTH_RUNE_JOIN_SETTLED_CONSEQUENCES = Object.freeze({
+  progression: Object.freeze({ tier: 5, completedTier: 4,
+    activatedPageIds: Object.freeze([
+      ...experienceVrPageIdsByTier[1],
+      ...experienceVrPageIdsByTier[2],
+      ...experienceVrPageIdsByTier[3],
+      ...experienceVrPageIdsByTier[4]
+    ]) }),
+  progressFloor: Object.freeze({ completedTier: 4, activatedPages: completedMainGlyphPagesThroughTier(4) }),
+  crystals: Object.freeze({ consumedTier: 4 }),
   runeProgression: Object.freeze({
     tunedRuneFamilies: Object.freeze(['R', 'T', 'K', 'L']),
     installedRuneFamilies: Object.freeze(['R', 'T', 'K', 'L']),
@@ -845,7 +854,7 @@ const points = Object.freeze([
   }),
   Object.freeze({
     id: VR_EXPERIENCE_POINT['5.10'], canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['5.20'] }),
-    settledConsequences: FOURTH_RUNE_INSTALLED_SETTLED_CONSEQUENCES,
+    settledConsequences: TIER_4_AND_FOURTH_RUNE_JOIN_SETTLED_CONSEQUENCES,
     entryEffects: Object.freeze([VR_SCENARIO_EFFECT.CHECK_ETHER_INTERVENTION_JOIN]),
     label: 'Third ring + Resonator stable join', capabilities: P2_MAIN_GLYPH_CAPABILITIES,
     transitions: Object.freeze([
