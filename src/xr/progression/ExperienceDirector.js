@@ -119,6 +119,7 @@ export class ExperienceDirector {
     }
     this.scenario = scenario;
     this.pointsById = pointsById;
+    this.spine = spine;
     this.initialPointId = initialPointId;
     this.sessionStartPointId = sessionStartPointId;
     this.bootstrapInitialMilestones = new Set(hydrated);
@@ -168,6 +169,28 @@ export class ExperienceDirector {
         ...(transition.effects ?? []),
         ...(changedPoint ? (this.pointsById.get(this.currentPointId).point.entryEffects ?? []) : [])
       ] : []) });
+    for (const listener of [...this.listeners]) listener(change);
+    return change;
+  }
+
+  catchUpToPoint(targetPointId, { includeDestinationEntryEffects = false } = {}) {
+    if (this.disposed) return null;
+    if (!this.pointsById.has(targetPointId)) throw new Error(`unknown target point: ${String(targetPointId)}`);
+    const currentPointIndex = this.spine.indexOf(this.currentPointId);
+    const targetPointIndex = this.spine.indexOf(targetPointId);
+    if (targetPointIndex === -1) throw new Error(`target point "${targetPointId}" does not belong to the Scenario spine`);
+    if (targetPointIndex === currentPointIndex) return null;
+    if (targetPointIndex < currentPointIndex) {
+      throw new Error(`target point "${targetPointId}" is behind current point "${this.currentPointId}" on the Scenario spine`);
+    }
+    const previousPointId = this.currentPointId;
+    this.currentPointId = targetPointId;
+    this.currentPointActivated = true;
+    const change = Object.freeze({ event: null, transitionKind: null,
+      previousPointId, currentPointId: this.currentPointId,
+      addedMilestones: Object.freeze([]), effects: Object.freeze(includeDestinationEntryEffects
+        ? [...(this.pointsById.get(this.currentPointId).point.entryEffects ?? [])]
+        : []) });
     for (const listener of [...this.listeners]) listener(change);
     return change;
   }

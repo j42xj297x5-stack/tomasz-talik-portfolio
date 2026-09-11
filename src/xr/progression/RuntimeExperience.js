@@ -13,6 +13,13 @@ export class RuntimeExperience {
     this.#executeEffects(change, payload);
     return change;
   }
+  catchUpToPoint(targetPointId, options = {}) {
+    if (this.disposed) return null;
+    const change = this.director.catchUpToPoint(targetPointId, options);
+    if (!change) return null;
+    this.#executeEffects(change);
+    return change;
+  }
   activateCurrentPoint() {
     if (this.disposed) return null;
     const change = this.director.activateCurrentPoint();
