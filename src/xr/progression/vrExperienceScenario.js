@@ -86,6 +86,8 @@ export const VR_SCENARIO_EVENT = immutableIdentifiers([
   'FULL_RESONATOR_COMMUNICATION_COMPLETED',
   'FINAL_MONKEY_FAREWELL_COMPLETED',
   'FINAL_WORLD_RELEASE_COMPLETED',
+  'END_CREDITS_COMPLETED',
+  'END_BRAND_SLATE_COMPLETED',
   'XR_SESSION_ENDING',
   'XR_SESSION_ENDED',
   'XR_SESSION_START_FAILED'
@@ -197,6 +199,8 @@ export const VR_SCENARIO_EFFECT = immutableIdentifiers([
   'BEGIN_FULL_RESONATOR_COMMUNICATION',
   'BEGIN_FINAL_MONKEY_FAREWELL',
   'BEGIN_FINAL_WORLD_RELEASE',
+  'BEGIN_END_CREDITS',
+  'BEGIN_END_BRAND_SLATE',
   'BEGIN_FINAL_AMBIENT_WAIT',
   'SYNC_FINAL_AMBIENT_AFTER_FAREWELL',
   'ENSURE_FINAL_AMBIENT_08'
@@ -247,6 +251,7 @@ export const VR_EXPERIENCE_POINT = immutableIdentifiers([
   '5.80',
   '6.10',
   '6.20',
+  '6.30',
   '100.10'
 ]);
 
@@ -336,6 +341,9 @@ const FINAL_MONKEY_FAREWELL_SETTLED_CONSEQUENCES = Object.freeze({
 });
 const FINAL_WORLD_RELEASE_SETTLED_CONSEQUENCES = Object.freeze({
   finale: Object.freeze({ completed: true })
+});
+const END_CREDITS_SETTLED_CONSEQUENCES = Object.freeze({
+  endCredits: Object.freeze({ completed: true })
 });
 const ETHER_RUNE_TUNED_SETTLED_CONSEQUENCES = Object.freeze({
   runeProgression: Object.freeze({
@@ -1013,11 +1021,23 @@ const points = Object.freeze([
       event: VR_SCENARIO_EVENT.FINAL_WORLD_RELEASE_COMPLETED, milestonesToAdd: Object.freeze([]) })])
   }),
   Object.freeze({
-    id: VR_EXPERIENCE_POINT['6.20'], canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['100.10'] }),
-    settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
-    entryEffects: Object.freeze([VR_SCENARIO_EFFECT.ENSURE_FINAL_AMBIENT_08]),
+    id: VR_EXPERIENCE_POINT['6.20'], canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['6.30'] }),
+    settledConsequences: END_CREDITS_SETTLED_CONSEQUENCES,
+    entryEffects: Object.freeze([VR_SCENARIO_EFFECT.ENSURE_FINAL_AMBIENT_08,
+      VR_SCENARIO_EFFECT.BEGIN_END_CREDITS]),
     label: 'Whiteout complete / credits ready',
-    capabilities: Object.freeze([]), transitions: Object.freeze([])
+    capabilities: Object.freeze([]),
+    transitions: Object.freeze([Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.COMPLETE,
+      event: VR_SCENARIO_EVENT.END_CREDITS_COMPLETED, milestonesToAdd: Object.freeze([]) })])
+  }),
+  Object.freeze({
+    id: VR_EXPERIENCE_POINT['6.30'], canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['100.10'] }),
+    settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
+    entryEffects: Object.freeze([VR_SCENARIO_EFFECT.BEGIN_END_BRAND_SLATE]),
+    label: 'Final Orange Monkey VR slate',
+    capabilities: Object.freeze([]),
+    transitions: Object.freeze([Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.COMPLETE,
+      event: VR_SCENARIO_EVENT.END_BRAND_SLATE_COMPLETED, milestonesToAdd: Object.freeze([]) })])
   }),
   Object.freeze({
     id: VR_EXPERIENCE_POINT['100.10'],

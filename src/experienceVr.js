@@ -88,6 +88,7 @@ import { createVrMonkeyKnowledgeResolver } from './xr/guidance/createVrMonkeyKno
 import { createVrMandatoryMonkeyCommunication } from './xr/guidance/createVrMandatoryMonkeyCommunication.js';
 import { createVrFinalMonkeyFarewell } from './xr/guidance/createVrFinalMonkeyFarewell.js';
 import { createVrFinalWorldReleaseActor } from './xr/finale/createVrFinalWorldReleaseActor.js';
+import { createVrEndCreditsPresentation } from './xr/finale/createVrEndCreditsPresentation.js';
 import { createVrToolGuidanceLifecycle } from './xr/guidance/createVrToolGuidanceLifecycle.js';
 import { createVrEarlyExperienceGuidance } from './xr/guidance/createVrEarlyExperienceGuidance.js';
 import { createVrRuneResonatorGuidance } from './xr/guidance/createVrRuneResonatorGuidance.js';
@@ -1465,6 +1466,11 @@ const finalWorldRelease = createVrFinalWorldReleaseActor({
   },
   onCompleted: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.FINAL_WORLD_RELEASE_COMPLETED)
 });
+const endCreditsPresentation = createVrEndCreditsPresentation({
+  camera,
+  onCreditsCompleted: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.END_CREDITS_COMPLETED),
+  onBrandCompleted: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.END_BRAND_SLATE_COMPLETED)
+});
 const furnaceIntro = createVrFurnaceIntro({
   monkeyGuide,
   secondsPerLine: settings.intro.messageDisplayDuration,
@@ -1540,6 +1546,16 @@ runtimeExperience = new RuntimeExperience({
     [VR_SCENARIO_EFFECT.BEGIN_FINAL_WORLD_RELEASE]: () => {
       if (!finalWorldRelease.begin()) {
         throw new Error('BEGIN_FINAL_WORLD_RELEASE rejected by final world release actor');
+      }
+    },
+    [VR_SCENARIO_EFFECT.BEGIN_END_CREDITS]: () => {
+      if (!endCreditsPresentation.beginCredits()) {
+        throw new Error('BEGIN_END_CREDITS rejected by end credits presentation owner');
+      }
+    },
+    [VR_SCENARIO_EFFECT.BEGIN_END_BRAND_SLATE]: () => {
+      if (!endCreditsPresentation.beginBrandSlate()) {
+        throw new Error('BEGIN_END_BRAND_SLATE rejected by end credits presentation owner');
       }
     },
     [VR_SCENARIO_EFFECT.BEGIN_CELESTIAL_REVEAL]: () => { celestialActor.beginReveal(); },
@@ -1760,7 +1776,8 @@ const scenarioOwners = Object.freeze({
   runeStones: runeStoneActor,
   runeProgression: runeStoneProgressionController,
   finalMonkeyFarewell,
-  finale: finalWorldRelease
+  finale: finalWorldRelease,
+  endCredits: endCreditsPresentation
 });
 const activateVrDebugCheckpoint = createVrDebugCheckpointController({
   scenario: vrExperienceScenario,
@@ -1811,6 +1828,7 @@ function renderFrame() {
   if (finaleInteractionLocked) {
     platformEnergyVfxActor.update(delta);
     finalWorldRelease.update(delta);
+    endCreditsPresentation.update(delta);
     if (renderer.xr.isPresenting) {
       getXrHeadWorldPose({
         renderer, camera, playerRig, positionTarget: listenerPosition, quaternionTarget: listenerQuaternion
@@ -1925,6 +1943,7 @@ function showReadyState({ ended = false } = {}) {
 // restoring the Scenario baseline must never recreate or dispose application objects.
 function restoreVrScenarioBaseline() {
   runtimeExperience.resetSession();
+  endCreditsPresentation.reset();
   finalWorldRelease.reset();
   celestialActor.reset();
   // The gyro owns the platform quaternion. Neutralize it before platform fixtures
@@ -2116,6 +2135,7 @@ window.addEventListener('pagehide', () => {
   runeRecipeSelectionController.dispose();
   astroFurnaceOptionInteraction.dispose();
   playerGuidePanel.dispose();
+  endCreditsPresentation.dispose();
   toolGuidanceLifecycle.dispose();
   earlyExperienceGuidance.reset();
   monkeyGuide.dispose();

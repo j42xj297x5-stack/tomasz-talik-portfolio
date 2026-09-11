@@ -1,0 +1,201 @@
+import * as THREE from '../../vendor/three.js';
+import { publicPath } from '../../utils/publicPath.js';
+
+const CREDITS_SECONDS = 12;
+const BRAND_HOLD_SECONDS = 4;
+const LOGO_SPIN_SECONDS = 0.8;
+const BRAND_FADE_SECONDS = 2;
+const BRAND_TOTAL_SECONDS = BRAND_HOLD_SECONDS + LOGO_SPIN_SECONDS + BRAND_FADE_SECONDS;
+const ORANGE = '#f28c18';
+const DARK = '#111111';
+
+const CREDIT_SECTIONS = Object.freeze([
+  ['Wizja', 'Tomasz Talik'],
+  ['Architekt', 'ChatGPT'],
+  ['Wykonawca', 'Codex'],
+  ['Siatki 3D', 'Meshy AI'],
+  ['Dźwięki', 'Adobe Firefly, ElevenLabs'],
+  ['Silnik 3D', 'Three.js'],
+  ['Obróbka 2D / 3D', 'Blender, Inkscape, GIMP'],
+  ['Audio mix / master', 'Ableton Live'],
+  ['Efekty wizualne / VFX', 'Autorskie implementacje w Three.js'],
+  ['VR', 'Virtual Desktop'],
+  ['Licencja publicznej edycji', 'Creative Commons Attribution-ShareAlike']
+]);
+
+const PHASE = Object.freeze({ IDLE: 'IDLE', CREDITS: 'CREDITS', BRAND: 'BRAND', COMPLETE: 'COMPLETE' });
+const clamp01 = (value) => Math.max(0, Math.min(1, value));
+
+export function createVrEndCreditsPresentation({ camera, onCreditsCompleted, onBrandCompleted }) {
+  if (!camera?.add || typeof onCreditsCompleted !== 'function' || typeof onBrandCompleted !== 'function') {
+    throw new TypeError('[VrEndCreditsPresentation] Required presentation seams are unavailable.');
+  }
+
+  const canvas = document.createElement('canvas');
+  canvas.width = 1600;
+  canvas.height = 1000;
+  const context = canvas.getContext('2d');
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  const material = new THREE.MeshBasicMaterial({
+    map: texture, transparent: true, opacity: 1, depthTest: false, depthWrite: false, toneMapped: false
+  });
+  const object = new THREE.Mesh(new THREE.PlaneGeometry(8, 5), material);
+  object.name = 'VrEndCreditsPresentation';
+  object.position.set(0, 0, -8);
+  object.renderOrder = 100001;
+  object.visible = false;
+  camera.add(object);
+
+  const logo = new Image();
+  let logoLoaded = false;
+  logo.onload = () => {
+    logoLoaded = true;
+    if (phase === PHASE.BRAND) drawBrand(currentLogoRotation());
+  };
+  logo.src = publicPath('/png/orange_monkey.webp');
+
+  let phase = PHASE.IDLE;
+  let elapsed = 0;
+  let completionSent = false;
+  let disposed = false;
+
+  function prepareCanvas() {
+    context.clearRect(0, 0, canvas.width, canvas.height);
+    context.textAlign = 'center';
+    context.textBaseline = 'middle';
+  }
+
+  function drawCredits() {
+    prepareCanvas();
+    context.fillStyle = DARK;
+    context.font = '700 66px sans-serif';
+    context.fillText('ORANGE MONKEY VR', canvas.width / 2, 72);
+    const startY = 164;
+    const sectionStep = 74;
+    CREDIT_SECTIONS.forEach(([label, value], index) => {
+      const y = startY + index * sectionStep;
+      context.font = '700 29px sans-serif';
+      context.fillText(label, canvas.width / 2, y);
+      context.font = '32px sans-serif';
+      context.fillText(value, canvas.width / 2, y + 34);
+    });
+    texture.needsUpdate = true;
+  }
+
+  function drawBrand(rotation = 0) {
+    prepareCanvas();
+    const centerY = canvas.height / 2;
+    const logoSize = 270;
+    const gap = 58;
+    const wordmarkFont = 112;
+    context.font = `700 ${wordmarkFont}px sans-serif`;
+    const orangeWidth = context.measureText('ORANGE').width;
+    const blackWidth = context.measureText(' MONKEY VR').width;
+    const groupWidth = logoSize + gap + orangeWidth + blackWidth;
+    const logoCenterX = (canvas.width - groupWidth) / 2 + logoSize / 2;
+    if (logoLoaded) {
+      context.save();
+      context.translate(logoCenterX, centerY);
+      context.rotate(rotation);
+      context.drawImage(logo, -logoSize / 2, -logoSize / 2, logoSize, logoSize);
+      context.restore();
+    }
+    const textX = logoCenterX + logoSize / 2 + gap;
+    context.textAlign = 'left';
+    context.fillStyle = ORANGE;
+    context.fillText('ORANGE', textX, centerY);
+    context.fillStyle = DARK;
+    context.fillText(' MONKEY VR', textX + orangeWidth, centerY);
+    texture.needsUpdate = true;
+  }
+
+  function currentLogoRotation() {
+    return Math.PI * 2 * clamp01((elapsed - BRAND_HOLD_SECONDS) / LOGO_SPIN_SECONDS);
+  }
+
+  function beginCredits() {
+    if (disposed || phase !== PHASE.IDLE) return false;
+    phase = PHASE.CREDITS;
+    elapsed = 0;
+    completionSent = false;
+    material.opacity = 1;
+    drawCredits();
+    object.visible = true;
+    return true;
+  }
+
+  function beginBrandSlate() {
+    if (disposed || phase === PHASE.BRAND) return false;
+    phase = PHASE.BRAND;
+    elapsed = 0;
+    completionSent = false;
+    material.opacity = 1;
+    drawBrand(0);
+    object.visible = true;
+    return true;
+  }
+
+  function update(delta = 0) {
+    if (disposed || phase === PHASE.IDLE || phase === PHASE.COMPLETE) return;
+    elapsed += Math.max(0, Number.isFinite(delta) ? delta : 0);
+    if (phase === PHASE.CREDITS) {
+      if (elapsed < CREDITS_SECONDS) return;
+      object.visible = false;
+      phase = PHASE.COMPLETE;
+      if (!completionSent) {
+        completionSent = true;
+        onCreditsCompleted();
+      }
+      return;
+    }
+    if (elapsed >= BRAND_HOLD_SECONDS && elapsed < BRAND_HOLD_SECONDS + LOGO_SPIN_SECONDS) {
+      drawBrand(currentLogoRotation());
+    } else if (elapsed >= BRAND_HOLD_SECONDS + LOGO_SPIN_SECONDS) {
+      drawBrand(Math.PI * 2);
+      material.opacity = 1 - clamp01((elapsed - BRAND_HOLD_SECONDS - LOGO_SPIN_SECONDS) / BRAND_FADE_SECONDS);
+    }
+    if (elapsed < BRAND_TOTAL_SECONDS) return;
+    object.visible = false;
+    phase = PHASE.COMPLETE;
+    if (!completionSent) {
+      completionSent = true;
+      onBrandCompleted();
+    }
+  }
+
+  function hydrateScenarioState(state) {
+    if (!state || Object.keys(state).length !== 1 || state.completed !== true) {
+      throw new TypeError('endCredits state must be exactly { completed: true }');
+    }
+    object.visible = false;
+    material.opacity = 1;
+    elapsed = 0;
+    completionSent = true;
+    phase = PHASE.COMPLETE;
+  }
+
+  function reset() {
+    if (disposed) return;
+    object.visible = false;
+    material.opacity = 1;
+    elapsed = 0;
+    completionSent = false;
+    phase = PHASE.IDLE;
+    prepareCanvas();
+    texture.needsUpdate = true;
+  }
+
+  function dispose() {
+    if (disposed) return;
+    reset();
+    disposed = true;
+    object.removeFromParent();
+    object.geometry.dispose();
+    material.dispose();
+    texture.dispose();
+    logo.onload = null;
+  }
+
+  return { object, beginCredits, beginBrandSlate, update, reset, hydrateScenarioState, dispose };
+}
