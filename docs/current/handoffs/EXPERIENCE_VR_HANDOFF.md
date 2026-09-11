@@ -2,16 +2,18 @@
 
 Status: **CURRENT operational snapshot — 2026-09-11**. Authorities: [`VR_RUNTIME_MODEL.md`](../technical/VR_RUNTIME_MODEL.md), [`VR_SCENARIO_DIRECTOR_MODEL.md`](../technical/VR_SCENARIO_DIRECTOR_MODEL.md), [`VR_PROTO_ASTRO_MODEL.md`](../technical/VR_PROTO_ASTRO_MODEL.md), [`VR_RUNE_STONES_MODEL.md`](../technical/VR_RUNE_STONES_MODEL.md), and [`VR_ASTERION_RESONATOR_MODEL.md`](../technical/VR_ASTERION_RESONATOR_MODEL.md).
 
-> **RECONCILIATION FOUNDATION PARTIALLY IMPLEMENTED / ORCHESTRATION PENDING:** ordinary portfolio Rings 1–3 now have reconciliation-safe topology, live Director movement and actor seams, but the Scenario Progress Reconciler, snapshot routing and automatic catch-up remain NOT IMPLEMENTED. See [`VR_SCENARIO_SANDBOX_RECONCILIATION.md`](../technical/VR_SCENARIO_SANDBOX_RECONCILIATION.md).
+> **BOUNDED RINGS 1–3 SCENARIO PROGRESS RECONCILER IMPLEMENTED:** production orchestration now reconciles domain truth through mandatory authored sequences, Astro production, Asterion and first-Resonator join, bounded from `2.30` through stable `5.10`. See [`VR_SCENARIO_SANDBOX_RECONCILIATION.md`](../technical/VR_SCENARIO_SANDBOX_RECONCILIATION.md).
 
-## Pre-reconciler architecture checkpoint
+## Scenario reconciliation checkpoint
 
 - Mandatory Ring completion entry semantics are self-contained at `2.40`, `4.20` and `4.75`; they do not require predecessor event payload, and hydrated Progress Floor tiers are tolerated without repeating their mutation.
 - Ring 2 and Ring 3 no longer require Asterion. The canonical frontier is `4.70 → 4.75 → 3.80 → 4.80`, with `4.75` owning mandatory Ring 3 completion and Large Glyph settlement.
 - Ordinary Reliquary lifecycle remains domain/physical after legitimate reveal.
 - Bounded `ExperienceDirector.catchUpToPoint()` and reconciliation-safe actor observation, cancellation and Large Glyph transient-clear seams are implemented.
-- Reconciliation orchestration is still pending: no Scenario Progress Reconciler, snapshot-to-point resolver, automatic live catch-up or automatic Large Glyph stage sequencing exists.
-- A future reconciler must also synchronize missing Progress Floor card/panel presentation from `ProgressionController.getActivatedPageIds()` without replaying historical card feedback.
+- The event-driven reconciler selects the earliest still-required canonical boundary, preserves every mandatory Ring sequence, and waits for Large Glyph transitions/transients rather than projecting tier directly into actor stage.
+- Astro production is reconciled from its exact snapshot; Asterion remains independent at `3.80`; Resonator existence is projected through the existing semantic handoff at `4.80`.
+- Missing ordinary Ring 1–3 Progress Floor panels are synchronized from `ProgressionController.getActivatedPageIds()` without replaying historical card feedback or audio.
+- Reconstruction/debug activation suspends reconciliation and discards reconstruction-only wake-ups. Tier 4/5, Ether, Water, Rune installation, advanced Resonator and finale reconciliation remain outside this bounded patch.
 
 ## Runtime operations checkpoint
 
