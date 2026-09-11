@@ -87,6 +87,7 @@ import { createVrMonkeyGuide } from './xr/guidance/createVrMonkeyGuide.js';
 import { createVrMonkeyKnowledgeResolver } from './xr/guidance/createVrMonkeyKnowledgeResolver.js';
 import { createVrMandatoryMonkeyCommunication } from './xr/guidance/createVrMandatoryMonkeyCommunication.js';
 import { createVrFinalMonkeyFarewell } from './xr/guidance/createVrFinalMonkeyFarewell.js';
+import { createVrFinalWorldReleaseActor } from './xr/finale/createVrFinalWorldReleaseActor.js';
 import { createVrToolGuidanceLifecycle } from './xr/guidance/createVrToolGuidanceLifecycle.js';
 import { createVrEarlyExperienceGuidance } from './xr/guidance/createVrEarlyExperienceGuidance.js';
 import { createVrRuneResonatorGuidance } from './xr/guidance/createVrRuneResonatorGuidance.js';
@@ -492,6 +493,7 @@ const asterionSphere = createVrAsterionSphere({
   debug: searchParams.has('debug') || asterionSphereQa
 });
 let runtimeCompositionReady = false;
+let finaleInteractionLocked = false;
 window.addEventListener('pagehide', () => {
   if (runtimeCompositionReady) return;
   celestialActor.dispose();
@@ -1424,6 +1426,39 @@ const finalMonkeyFarewell = createVrFinalMonkeyFarewell({
   blocks: VR_MONKEY_COMMUNICATION_COPY_PL.progression['progression.final.monkeyFarewell'].blocks,
   onCompleted: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.FINAL_MONKEY_FAREWELL_COMPLETED)
 });
+const finalWorldRelease = createVrFinalWorldReleaseActor({
+  scene,
+  camera,
+  progressFloor,
+  portalObject: portalDisplay.object,
+  reliquaryObject: crystalReliquary.object,
+  furnaceObject: astroFurnace.object,
+  monkeyVisualRoot,
+  monkeyStoneRoot,
+  shellObjects: shellSystem.instances,
+  smallGlyphObjects: smallGlyphSystem.getInstances(),
+  platformEnergyVfxActor,
+  audioBridge: vrAudio,
+  sectorDriveAudio: ASTERION_SECTOR_DRIVE_AUDIO,
+  setInteractionLocked: (locked) => {
+    finaleInteractionLocked = Boolean(locked);
+    if (finaleInteractionLocked) vrControllers.setRaysEnabled(false);
+  },
+  cancelActiveInteractions: () => {
+    asterionSectorAcquisitionInteraction.reset();
+    glyphInteraction.reset();
+    largeGlyphAttractorInteraction.reset();
+    shellAttractorInteraction.reset();
+    smallGlyphAttractorInteraction.reset();
+    runeStoneAttractorInteraction.reset();
+    runeStoneInstallationInteraction.reset();
+    etherMonkeyCaptureInteraction.reset();
+    astroFurnaceOpenInteraction.reset();
+    astroFurnaceActivateInteraction.reset();
+    astroFurnaceOptionInteraction.reset();
+  },
+  onCompleted: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.FINAL_WORLD_RELEASE_COMPLETED)
+});
 const furnaceIntro = createVrFurnaceIntro({
   monkeyGuide,
   secondsPerLine: settings.intro.messageDisplayDuration,
@@ -1489,6 +1524,11 @@ runtimeExperience = new RuntimeExperience({
     [VR_SCENARIO_EFFECT.BEGIN_FINAL_MONKEY_FAREWELL]: () => {
       if (!finalMonkeyFarewell.begin()) {
         throw new Error('BEGIN_FINAL_MONKEY_FAREWELL rejected by final Monkey farewell actor');
+      }
+    },
+    [VR_SCENARIO_EFFECT.BEGIN_FINAL_WORLD_RELEASE]: () => {
+      if (!finalWorldRelease.begin()) {
+        throw new Error('BEGIN_FINAL_WORLD_RELEASE rejected by final world release actor');
       }
     },
     [VR_SCENARIO_EFFECT.BEGIN_CELESTIAL_REVEAL]: () => { celestialActor.beginReveal(); },
@@ -1708,7 +1748,8 @@ const scenarioOwners = Object.freeze({
   celestial: celestialActor,
   runeStones: runeStoneActor,
   runeProgression: runeStoneProgressionController,
-  finalMonkeyFarewell
+  finalMonkeyFarewell,
+  finale: finalWorldRelease
 });
 const activateVrDebugCheckpoint = createVrDebugCheckpointController({
   scenario: vrExperienceScenario,
@@ -1752,6 +1793,20 @@ const xrStartCalibration = createCanonicalXrStartCalibration({
 function renderFrame() {
   const delta = clock.getDelta();
   if (xrStartCalibration.processFrame()) {
+    renderer.render(scene, camera);
+    return;
+  }
+  if (finaleInteractionLocked) {
+    platformEnergyVfxActor.update(delta);
+    finalWorldRelease.update(delta);
+    if (renderer.xr.isPresenting) {
+      getXrHeadWorldPose({
+        renderer, camera, playerRig, positionTarget: listenerPosition, quaternionTarget: listenerQuaternion
+      });
+      listenerForward.set(0, 0, -1).applyQuaternion(listenerQuaternion).normalize();
+      listenerUp.set(0, 1, 0).applyQuaternion(listenerQuaternion).normalize();
+      vrAudio.setSpatialListenerPose(listenerPose);
+    }
     renderer.render(scene, camera);
     return;
   }
@@ -1858,6 +1913,7 @@ function showReadyState({ ended = false } = {}) {
 // restoring the Scenario baseline must never recreate or dispose application objects.
 function restoreVrScenarioBaseline() {
   runtimeExperience.resetSession();
+  finalWorldRelease.reset();
   celestialActor.reset();
   // The gyro owns the platform quaternion. Neutralize it before platform fixtures
   // reconstruct their authored local transforms.
@@ -2005,6 +2061,7 @@ window.addEventListener('pagehide', () => {
   unsubscribeAsterionScenarioReconciliation();
   unsubscribeResonatorScenarioReconciliation();
   runtimeExperience.dispose();
+  finalWorldRelease.dispose();
   celestialActor.dispose();
   introCrystalTutorial.dispose();
   introFogReveal.dispose();
