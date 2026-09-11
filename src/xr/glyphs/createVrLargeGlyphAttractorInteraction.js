@@ -14,6 +14,7 @@ export function createVrLargeGlyphAttractorInteraction({ controllers, largeGlyph
   isHigherPriorityInteractionActive = () => false, onPullStart = () => {}, onPullCancel = () => {} }) {
   if (!Array.isArray(controllers)) throw new TypeError('controllers must be an array.');
   if (!Array.isArray(largeGlyphActor?.nodes) || !largeGlyphActor?.beginTransient
+    || !largeGlyphActor?.getTransitionState
     || !largeGlyphActor?.getSlotWorldTransform || !largeGlyphActor?.restoreToSlot) {
     throw new TypeError('largeGlyphActor must expose nodes and transient ownership API.');
   }
@@ -44,6 +45,7 @@ export function createVrLargeGlyphAttractorInteraction({ controllers, largeGlyph
   const hasRequiredPullReadiness = (node) => requiresResonatorPullReady(node) !== true
     || isTargetPullReady(node) === true;
   const legal = (node) => states.get(node) === STATE.ORBIT && node?.visible !== false && node.parent
+    && largeGlyphActor.getTransitionState().transition === null
     && isFamilyEligible(node)
     && hasRequiredPullReadiness(node);
   function setTarget(next) { target = next; }
@@ -106,8 +108,7 @@ export function createVrLargeGlyphAttractorInteraction({ controllers, largeGlyph
     setTarget(hit?.target ?? null); attractorTool.setTarget(hit ? { target, distance: hit.distance,
       proximity: clamp01(1 - hit.distance / maxTargetDistance) } : null); attractorTool.setPullStrength(0);
     attractorTool.setState(hit ? VR_ATTRACTOR_STATES.TARGETING : VR_ATTRACTOR_STATES.IDLE);
-    if (target && primaryAction > settings.triggerThreshold && isFamilyEligible(target)
-      && hasRequiredPullReadiness(target)) {
+    if (target && primaryAction > settings.triggerThreshold && legal(target)) {
       active = target; setTarget(null); largeGlyphActor.beginTransient(active);
       states.set(active, STATE.PULLING); active.getWorldPosition(position); updateCaptureAnchor(right, active);
       pullStartDistance = Math.max(position.distanceTo(anchor), 1e-6); pullSpeed = 0;

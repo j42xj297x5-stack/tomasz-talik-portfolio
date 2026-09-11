@@ -166,6 +166,8 @@ export const VR_SCENARIO_EFFECT = immutableIdentifiers([
   'BEGIN_FIRST_RING_PRESENTATION',
   'PLAY_FIRST_RING_COMPLETE_FEEDBACK',
   'APPLY_TIER_COMPLETE_FEEDBACK',
+  'APPLY_SECOND_RING_COMPLETE_FEEDBACK',
+  'APPLY_THIRD_RING_COMPLETE_FEEDBACK',
   'BEGIN_P2_RADIAL_PRESENTATION',
   'DISTRIBUTE_LARGE_GLYPHS_ON_SPHERE',
   'BEGIN_SMALL_GLYPH_FIELD_PRESENTATION',
@@ -608,9 +610,7 @@ const points = Object.freeze([
         VR_SCENARIO_EFFECT.UPDATE_COMMITTED_CARD_PRESENTATION,
         VR_SCENARIO_EFFECT.PLAY_CARD_COMMIT_FEEDBACK
       ]) }),
-      Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.COMPLETE, event: VR_SCENARIO_EVENT.FIRST_RING_COMPLETED, milestonesToAdd: Object.freeze([]), effects: Object.freeze([
-        VR_SCENARIO_EFFECT.PLAY_FIRST_RING_COMPLETE_FEEDBACK
-      ]) })
+      Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.COMPLETE, event: VR_SCENARIO_EVENT.FIRST_RING_COMPLETED, milestonesToAdd: Object.freeze([]), effects: Object.freeze([]) })
     ])
   }),
   Object.freeze({
@@ -618,7 +618,8 @@ const points = Object.freeze([
     canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['3.10'] }),
     settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
     label: 'Pierwszy ring / pierwszy globalny poziom ukończony 5/5',
-    entryEffects: Object.freeze([VR_SCENARIO_EFFECT.SET_MAIN_AMBIENT_02,
+    entryEffects: Object.freeze([VR_SCENARIO_EFFECT.PLAY_FIRST_RING_COMPLETE_FEEDBACK,
+      VR_SCENARIO_EFFECT.SET_MAIN_AMBIENT_02,
       VR_SCENARIO_EFFECT.BEGIN_FIRST_RING_PRESENTATION]),
     capabilities: Object.freeze([VR_SCENARIO_CAPABILITY.CAN_USE_GLYPHS]),
     transitions: Object.freeze([
@@ -749,16 +750,15 @@ const points = Object.freeze([
           VR_SCENARIO_EFFECT.PLAY_CARD_COMMIT_FEEDBACK
         ]) }),
       Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.COMPLETE, event: VR_SCENARIO_EVENT.TIER_COMPLETED,
-        milestonesToAdd: Object.freeze([]), effects: Object.freeze([
-          VR_SCENARIO_EFFECT.APPLY_TIER_COMPLETE_FEEDBACK
-        ]) })
+        milestonesToAdd: Object.freeze([]), effects: Object.freeze([]) })
     ])
   }),
   Object.freeze({
     id: VR_EXPERIENCE_POINT['4.20'],
     canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['4.30'] }),
     settledConsequences: P2_RADIAL_PRESENTED_SETTLED_CONSEQUENCES,
-    entryEffects: Object.freeze([VR_SCENARIO_EFFECT.SET_MAIN_AMBIENT_03,
+    entryEffects: Object.freeze([VR_SCENARIO_EFFECT.APPLY_SECOND_RING_COMPLETE_FEEDBACK,
+      VR_SCENARIO_EFFECT.SET_MAIN_AMBIENT_03,
       VR_SCENARIO_EFFECT.BEGIN_P2_RADIAL_PRESENTATION]),
     label: 'Tier 2 complete / P2 radial world presentation',
     capabilities: P2_MAIN_GLYPH_CAPABILITIES,
@@ -820,7 +820,7 @@ const points = Object.freeze([
     id: VR_EXPERIENCE_POINT['4.75'], canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['3.80'] }),
     settledConsequences: THIRD_RING_COMPLETE_SETTLED_CONSEQUENCES,
     entryEffects: Object.freeze([
-      VR_SCENARIO_EFFECT.APPLY_TIER_COMPLETE_FEEDBACK,
+      VR_SCENARIO_EFFECT.APPLY_THIRD_RING_COMPLETE_FEEDBACK,
       VR_SCENARIO_EFFECT.DISTRIBUTE_LARGE_GLYPHS_ON_SPHERE
     ]),
     label: 'Mandatory third ring completion presentation', capabilities: P2_MAIN_GLYPH_CAPABILITIES,
