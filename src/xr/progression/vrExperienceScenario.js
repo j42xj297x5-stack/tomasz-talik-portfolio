@@ -83,6 +83,7 @@ export const VR_SCENARIO_EVENT = immutableIdentifiers([
   'ETHER_RUNE_TUNED',
   'ETHER_MONKEY_CAPTURED',
   'FIVE_ELEMENTAL_RUNES_INSTALLED',
+  'FULL_RESONATOR_COMMUNICATION_COMPLETED',
   'XR_SESSION_ENDING',
   'XR_SESSION_ENDED',
   'XR_SESSION_START_FAILED'
@@ -235,6 +236,7 @@ export const VR_EXPERIENCE_POINT = immutableIdentifiers([
   '5.40',
   '5.50',
   '5.60',
+  '5.70',
   '100.10'
 ]);
 
@@ -928,14 +930,29 @@ const points = Object.freeze([
     ])
   }),
   Object.freeze({
-    id: VR_EXPERIENCE_POINT['5.60'], canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['100.10'] }),
+    id: VR_EXPERIENCE_POINT['5.60'], canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['5.70'] }),
     settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
     entryEffects: Object.freeze([VR_SCENARIO_EFFECT.BEGIN_FULL_RESONATOR_COMMUNICATION]),
     label: 'Five elemental Runes installed / full Resonator unlocked',
     capabilities: Object.freeze([...P2_MAIN_GLYPH_CAPABILITIES,
       VR_SCENARIO_CAPABILITY.CAN_TUNE_ETHER_RUNE, VR_SCENARIO_CAPABILITY.CAN_INSTALL_WATER_RUNE,
       VR_SCENARIO_CAPABILITY.CAN_USE_ADVANCED_RESONATOR]),
-    transitions: TIER_4_CARD_LIFECYCLE_TRANSITIONS
+    transitions: Object.freeze([
+      ...TIER_4_CARD_LIFECYCLE_TRANSITIONS,
+      Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.COMPLETE,
+        event: VR_SCENARIO_EVENT.FULL_RESONATOR_COMMUNICATION_COMPLETED,
+        milestonesToAdd: Object.freeze([]) })
+    ])
+  }),
+  Object.freeze({
+    id: VR_EXPERIENCE_POINT['5.70'], canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['100.10'] }),
+    settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
+    entryEffects: Object.freeze([]),
+    label: 'Final Water Glyph hunt ready / full Resonator communication completed',
+    capabilities: Object.freeze([...P2_MAIN_GLYPH_CAPABILITIES,
+      VR_SCENARIO_CAPABILITY.CAN_TUNE_ETHER_RUNE, VR_SCENARIO_CAPABILITY.CAN_INSTALL_WATER_RUNE,
+      VR_SCENARIO_CAPABILITY.CAN_USE_ADVANCED_RESONATOR]),
+    transitions: Object.freeze([])
   }),
   Object.freeze({
     id: VR_EXPERIENCE_POINT['100.10'],

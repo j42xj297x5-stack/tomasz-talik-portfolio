@@ -7,7 +7,8 @@ const AUTO_HINT_CUE_SECONDS = 1;
 export function createVrRuneResonatorGuidance({ monkeyGuide, copy, secondsPerLine,
   getCurrentPointId, getUnresolvedRuneBranchId, knowledgeResolver,
   isAsterionEarned,
-  onEtherInterventionCompleted = () => {} }) {
+  onEtherInterventionCompleted = () => {},
+  onFullResonatorCommunicationCompleted = () => {} }) {
   if (typeof isAsterionEarned !== 'function') throw new TypeError('isAsterionEarned must be a function');
   let armed = false;
   let previousPointId = getCurrentPointId();
@@ -45,7 +46,11 @@ export function createVrRuneResonatorGuidance({ monkeyGuide, copy, secondsPerLin
     true,
     onEtherInterventionCompleted
   );
-  const fullResonator = makeCommunication(copy.progression['progression.p4.fullResonator'].blocks);
+  const fullResonator = makeCommunication(
+    copy.progression['progression.p4.fullResonator'].blocks,
+    true,
+    onFullResonatorCommunicationCompleted
+  );
   const noBinderMedium = makeAutoHint(copy.hints['hint.rune.noBinder.medium'].blocks, () => {
     if (knowledgeResolver.publishTransientHintFallback('rune-no-binder', 'hint.rune.noBinder.medium')) {
       monkeyGuide.refreshKnowledge();
