@@ -107,10 +107,9 @@ przyciągnięcie → przejęcie przez Zwornik → lot do pozycji
 
 Gracz nie wkłada kamienia ręcznie do uchwytu. W finalnej fazie `DESCENT` family-specific `creating_01–05` zaczyna się prezentacyjnie na pierwszej klatce z `<= 1.0 s` do końca (albo przy starcie `DESCENT`, gdy cała faza jest krótsza). Nie jest to wcześniejszy commit: dopiero exact dock i udane operacje Actor/Bridge/progression ustanawiają `INSTALLED`/`BOUND`. Wtedy staje się legalny persistent spatial loop, emitowany z płaskiego sector-local anchoru 8.0 m od środka platformy, a nie z fizycznego rootu kamienia; jego audible range kończy się dokładnie przy 2.0 m.
 
-### `progression.p3.firstRuneInstalled` — **IMPLEMENTED**
+### First-Rune communication — **IMPLEMENTED / CONTEXTUAL**
 
-> O.  
-> Sam wiedział, gdzie ma trafić.
+The authored keys are `progression.p3.firstRuneInstalledWithAsterion` and `progression.p3.firstRuneInstalledWithoutAsterion`. The variant is selected from current Asterion ownership at actual playback start; exact canonical blocks are owned by [`EXPERIENCE_VR_PLAYER_COMMUNICATION_COPY.md`](EXPERIENCE_VR_PLAYER_COMMUNICATION_COPY.md). Rune installation may legally precede Asterion, and this Guidance branch changes no gameplay or Scenario truth.
 
 ## 5. Kula i lokalna kontrola sektora
 

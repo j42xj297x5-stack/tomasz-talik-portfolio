@@ -1,6 +1,6 @@
 # Experience VR — Communication Mechanics
 
-Status: **CURRENT runtime baseline**, synchronized on 2026-09-07. Literal Polish text is owned by [`EXPERIENCE_VR_PLAYER_COMMUNICATION_COPY.md`](EXPERIENCE_VR_PLAYER_COMMUNICATION_COPY.md).
+Status: **CURRENT runtime baseline**, synchronized on 2026-09-11. Literal Polish text is owned by [`EXPERIENCE_VR_PLAYER_COMMUNICATION_COPY.md`](EXPERIENCE_VR_PLAYER_COMMUNICATION_COPY.md).
 
 This document describes the implemented communication model. `ATTENTION_REQUIRED`, `AUTO_HINT`, `SPEAKING` and `IDLE` are semantic classifications used by the documentation; runtime actors may expose more detailed phases.
 
@@ -17,6 +17,12 @@ The implemented communication composition includes Intro authored communication,
 Monkey dialogue uses one owner lease with priority `MANDATORY > ACQUISITION > OPTIONAL`. Higher-priority work may preempt lower work only before playback. Pending/pre-playback communication may also be cancelled when its originating condition becomes irrelevant. Once playback starts it is non-preemptible.
 
 Successful completion releases dialogue ownership and returns Monkey to silent idle. Completion never opens the ordinary Monkey menu automatically.
+
+### Playback-time block resolution
+
+Static `blocks` retain unchanged behavior. A communication may instead provide dynamic `resolveBlocks`: the resolver runs only at actual playback start—not when scheduled and not when attention is acquired—then its result is validated as blocks and frozen for that playback. Playback remains one dialogue-owner lifecycle, and resolved copy never changes mid-message.
+
+The current concrete use is first-Rune Guidance: after the delayed attention lifecycle, it reads current Asterion ownership at playback start and selects the matching authored variant. This capability does not imply that other communication is dynamic.
 
 ### Required authored communication — `ATTENTION_REQUIRED`
 

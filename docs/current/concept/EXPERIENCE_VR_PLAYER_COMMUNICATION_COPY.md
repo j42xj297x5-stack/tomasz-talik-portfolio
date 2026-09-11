@@ -1,6 +1,6 @@
 # Experience VR — kanoniczne teksty komunikacji
 
-**Status:** CURRENT / canonical copy PL synchronized on 2026-09-07  
+**Status:** CURRENT / canonical copy PL synchronized on 2026-09-11
 **Mechanika:** [`EXPERIENCE_VR_COMMUNICATION_MECHANICS.md`](EXPERIENCE_VR_COMMUNICATION_MECHANICS.md)
 
 Runtime Monkey copy is authored as `blocks[]`. Each quotation below preserves one block as one bubble. `--- BLOCK ---` occurs only between separate array elements; a line break without that separator is an authored `\n` inside the same block.
@@ -69,7 +69,9 @@ Runtime Monkey copy is authored as `blocks[]`. Each quotation below preserves on
 >
 > Nie widać ich. Nie słychać.
 
-### `progression.p3.firstRuneInstalled`
+### `progression.p3.firstRuneInstalledWithAsterion` — WITH ASTERION
+Variant is selected at actual playback start from current Asterion ownership.
+
 > O.
 >
 > --- BLOCK ---
@@ -98,6 +100,36 @@ Runtime Monkey copy is authored as `blocks[]`. Each quotation below preserves on
 > --- BLOCK ---
 >
 > No prawie...
+
+### `progression.p3.firstRuneInstalledWithoutAsterion` — WITHOUT ASTERION
+Variant is selected at actual playback start from current Asterion ownership.
+
+> O.
+>
+> --- BLOCK ---
+>
+> Sam wiedział, gdzie ma trafić.
+>
+> --- BLOCK ---
+>
+> Teraz możesz kontrolować jedną część.
+> Żeby znaleźć glify, potrzebujesz trzech.
+>
+> --- BLOCK ---
+>
+> Tylko jeszcze nie masz czym jej poruszyć.
+>
+> --- BLOCK ---
+>
+> Potrzebujesz Kuli Asterionowej.
+>
+> --- BLOCK ---
+>
+> Zbuduj ją w Piecu.
+>
+> --- BLOCK ---
+>
+> Wtedy ten sektor zacznie odpowiadać na twoje ruchy.
 
 ### `progression.p3.firstSectorLock`
 > No.

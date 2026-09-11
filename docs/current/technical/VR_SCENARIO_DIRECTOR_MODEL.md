@@ -1,8 +1,8 @@
 # Experience VR Scenario and Director Model
 
-Status: **CURRENT / BINDING**, synchronized on 2026-09-11. Runtime graph and reconstruction are implemented through stable `5.10`.
+Status: **CURRENT / BINDING**, synchronized on 2026-09-11. Runtime graph, reconstruction and bounded live reconciliation are implemented through stable `5.10`.
 
-> **Cross-reference — CANONICAL TARGET / IMPLEMENTATION PENDING:** Live sandbox catch-up/reconciliation is defined in [`VR_SCENARIO_SANDBOX_RECONCILIATION.md`](VR_SCENARIO_SANDBOX_RECONCILIATION.md). The reconciliation runtime is not yet implemented.
+> **Cross-reference — CURRENT / IMPLEMENTED / MIGRATION COMPLETE:** [`VR_SCENARIO_SANDBOX_RECONCILIATION.md`](VR_SCENARIO_SANDBOX_RECONCILIATION.md) is the primary authority for Rings 1–3 domain-ahead sandbox reconciliation. `ExperienceDirector` supplies the bounded, forward-only `catchUpToPoint()` primitive; `RuntimeExperience` remains the existing effect-execution boundary; production `ScenarioProgressReconciler` provides event-driven orchestration.
 
 ## Ownership
 
@@ -47,6 +47,8 @@ The read-only Guidance projection derives these exact live strings:
 `stateAt(X)` folds settled consequences strictly before `X` and never recreates transient interactions. Thus `stateAt(4.70)` remains pre-completion, `stateAt(4.75)` enters rather than pre-settles the completion presentation, and later points reconstruct the settled Ring 3 / `SPHERE_FAR` result. Hydration/direct activation/reset must not replay live-only discovery Guidance.
 
 `P5 → 4.80` and `P6 → 5.10` are implemented debug/QA aliases only. Neither owns gameplay truth, capability truth or Scenario consequences; canonical hydration remains `stateAt → reconstruction → activate`.
+
+Live catch-up is not reconstruction: it follows canonical-spine ordering—including the forward `4.75 → 3.80` edge—on the existing Director, while `stateAt()` retains settled reconstruction semantics. Debug aliases remain reconstruction/QA entrypoints only.
 
 ## Boundary
 

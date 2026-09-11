@@ -1,6 +1,21 @@
 # Decision Log
 
-Status: current binding decisions with preserved history. Synchronized on 2026-09-07 through the implemented Monkey transient `CO TERAZ?` fallback contract, the implemented `5.60` late Rune/Resonator boundary and binding future Water/finale canon.
+Status: current binding decisions with preserved history. Synchronized on 2026-09-11 through the completed bounded Rings 1–3 sandbox migration, implemented Monkey communication contracts, the implemented `5.60` late Rune/Resonator boundary and binding future Water/finale canon.
+
+## 2026-09-11 — CURRENT Rings 1–3 sandbox progression and reconciliation closure (SUPERSEDING)
+
+This entry supersedes conflicting CURRENT implementation-status and prerequisite claims below for the bounded Rings 1–3 migration. Older decisions remain historical evidence.
+
+1. Domain truth may advance ahead of Scenario.
+2. Scenario reconciles forward to domain truth and never moves authoritative domain truth backward.
+3. Mandatory authored Ring 1–3 completion dramaturgy remains mandatory.
+4. After physical `EARNED`, ordinary Astrolabium sandbox rights are physical/domain-owned; Scenario continues to own dramaturgy rather than targeting or pull permission.
+5. Asterion is not a prerequisite for Ring 2, Ring 3, Rune tuning or legal Rune installation where domain readiness exists.
+6. Asterion becomes the authored Scenario frontier only after Ring 3 mandatory completion.
+7. Normal semantic events have the first opportunity to move Scenario; reconciliation is fallback for domain-ahead or missed-event state and fabricates no truth.
+8. Contextual Guidance may branch from current authoritative domain truth without becoming gameplay ownership.
+9. First-Rune Guidance selects its Asterion-dependent copy at actual playback start, after scheduling and attention acquisition.
+10. The bounded migration—ordinary Rings 1–3, mandatory completion beats, Astrolabium/Rune sandbox interaction, Asterion frontier and first Resonator join—is **CURRENT / IMPLEMENTED / MIGRATION COMPLETE** through stable `5.10`. Tier 4/5, Ether, Water, late Rune progression, advanced Resonator, Water advanced control/Sync and finale reconciliation remain separate.
 
 ## 2026-09-07 — CURRENT transient AUTO_HINT fallback lifecycle (SUPERSEDING)
 
@@ -93,7 +108,7 @@ This entry supersedes the 2026-09-03 zero-range-M22 and fixed-meter Metal expans
 4. Late Large Glyphs use slightly faster angular motion plus approximately `20–110 m` sinusoidal depth motion and approximately `135 s` initial period tuning. **IMPLEMENTED CURRENT.**
 5. **SUPERSEDED BY 2026-09-03:** the former broad/bandwidth `M22` reading is no longer current; the entry above owns Metal expansion, Water synchronization and the full harmonic array.
 6. Field hue means frequency/tuning, superseding the linear power-to-WHITE scale and white-as-maximum finale requirement. Strength presentation and exact advanced mathematics, motion, slowdown, interpolation, hinges, and gestures remain future tuning.
-7. A future Astrolabium Tuning Domain interprets authoritative Furnace, Proto-Astro, Rune, and Resonator facts without duplicating them. Immediate-all-band behavior, unified interpretation, Metal, Water, slowdown and post-`5.10` Scenario continuation remain **NOT IMPLEMENTED**; early/late gate correction and late motion are now implemented.
+7. **SUPERSEDED BY 2026-09-11 for Astrolabium status:** the derived/read-only Astrolabium interpreter and immediate-all-four-band behavior after physical ownership are implemented. Water advanced control, slowdown and broader later progression remain outside that completed migration.
 
 ## 2026-09-02 — CURRENT shared spatial audio and sustained Binder reveal (SUPERSEDING)
 
