@@ -1,6 +1,6 @@
 # Experience VR — Scenario sandbox reconciliation
 
-Status: **CURRENT / BINDING target, foundation partially implemented — 2026-09-11**. This document defines reconciliation law for ordinary portfolio Rings 1–3. Runtime orchestration by a Scenario Progress Reconciler remains **NOT IMPLEMENTED**.
+Status: **CURRENT / IMPLEMENTED — 2026-09-11**. The bounded Rings 1–3 Scenario Progress Reconciler is implemented through the stable `5.10` boundary.
 
 ## 1. Core canon and ownership
 
@@ -29,7 +29,7 @@ Point `4.75` is the explicit mandatory Ring 3 completion point. Its self-contain
 
 Sandbox freedom exists between these mandatory completion beats. The mandatory sequence is not optional merely because portfolio truth can advance early.
 
-## 3. Current implemented reconciliation foundation
+## 3. Current implemented reconciliation
 
 The runtime now provides bounded primitives and seams required by later orchestration:
 
@@ -40,11 +40,11 @@ The runtime now provides bounded primitives and seams required by later orchestr
 - active presentation owners expose bounded live cancellation without destructively resetting their physical world state;
 - Large Glyph exposes stage/transition/transient observation, rejects transient leases during canonical transitions, and provides a final-transient-clear wake-up callback.
 
-These are reconciliation-safe foundations only. There is no snapshot resolver, destination mapping, automatic catch-up, domain subscription, polling loop or Scenario Progress Reconciler.
+The event-driven reconciler now reads every authoritative snapshot on demand, coalesces reentrant requests and converges only while an immediate legal catch-up succeeds. It prioritizes the mandatory Ring 1 sequence, Astro acquisition, mandatory Ring 2 sequence, mandatory Ring 3 sequence, Asterion frontier and Resonator join in that order. Actor completion, production, portfolio, Resonator and Large Glyph transient-clear seams wake it; there is no polling.
 
-## 4. Binding future reconciler responsibility
+## 4. Implemented reconciler responsibility
 
-The future reconciler reads authoritative domain and physical snapshots and determines whether the current Scenario point is still semantically relevant. If not, it resolves the nearest still-relevant mandatory checkpoint and uses bounded live catch-up.
+The reconciler reads authoritative domain and physical snapshots and determines whether the current Scenario point is still semantically relevant. If not, it resolves the earliest still-required mandatory checkpoint and uses bounded live catch-up.
 
 ```text
 DOMAIN TRUTH CHANGES
@@ -77,7 +77,9 @@ It must wait for an active actor transition or transient lease to clear rather t
 
 `CARD_COMMITTED` and `TIER_COMPLETED` are immediate observations, not the sole evidence of persistent achievement. If Scenario did not accept a one-shot event, later reconciliation must use authoritative snapshots rather than requiring the achievement again or replaying the missed event.
 
-A missed `CARD_COMMITTED` can also leave Progress Floor card/panel presentation behind authoritative `ProgressionController.getActivatedPageIds()`, because `UPDATE_COMMITTED_CARD_PRESENTATION` is currently a Scenario transition effect. The future reconciler must audit domain portfolio snapshot against Progress Floor presentation and synchronize only missing presentation state. It must not replay historical card feedback or missed card audio, and Progress Floor ownership must not move into `ProgressionController`. This synchronization is **NOT IMPLEMENTED**.
+A missed `CARD_COMMITTED` can also leave Progress Floor card/panel presentation behind authoritative `ProgressionController.getActivatedPageIds()`. The reconciler compares stable `glyphId + order` identities and activates only missing ordinary Ring 1–3 panels (`page.order <= 3`), without historical Scenario events, card feedback or audio.
+
+Astro production maps exactly as follows: `READY` stays, `BUILDING` advances stale `3.50` to `3.60` without entry effects, `AVAILABLE`/`CLAIMING` advances to `3.70` without entry effects, and `EARNED` first enters `4.10` with entry effects. At `3.80`, only Asterion's own `EARNED` snapshot permits entry to `4.80`; at `4.80`, current Resonator existence is projected through the existing semantic handoff.
 
 ## 6. Live catch-up contract
 
@@ -124,13 +126,6 @@ poll actor state waiting for reconciliation
 make Scenario own portfolio, Reliquary or Astrolabium domain truth
 ```
 
-## 10. Still pending / explicitly not implemented
+## 10. Suppression and bounded exclusions
 
-- Scenario Progress Reconciler and its orchestration;
-- authoritative snapshot → Scenario destination mapping;
-- automatic calls to `catchUpToPoint()`;
-- stale-point, Asterion-branch or Resonator-branch resolution;
-- automatic Large Glyph desired-stage sequencing;
-- reconciliation subscriptions or polling;
-- Progress Floor snapshot/presentation synchronization;
-- replay of missed `CARD_COMMITTED` or `TIER_COMPLETED` events.
+Debug/reconstruction activation suspends reconciliation and discards wake-ups emitted by baseline restoration, hydration and synchronization; resume does not catch the reconstructed point forward. The implemented scope begins at `2.30`, ends at stable `5.10`, and does not reconcile Tier 4/5, Ether, Water, Rune installation, advanced Resonator or finale progression. Missed `CARD_COMMITTED` and `TIER_COMPLETED` events are not replayed.

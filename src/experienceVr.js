@@ -108,6 +108,7 @@ import { RuntimeExperience } from './xr/progression/RuntimeExperience.js';
 import { stateAtVrScenarioPoint } from './xr/progression/reconstructVrScenarioState.js';
 import { hydrateVrScenarioState } from './xr/progression/hydrateVrScenarioState.js';
 import { createVrDebugCheckpointController } from './xr/progression/enterVrDebugCheckpoint.js';
+import { createVrScenarioProgressReconciler } from './xr/progression/createVrScenarioProgressReconciler.js';
 import { VR_DEBUG_CHECKPOINTS } from './xr/progression/vrDebugCheckpoints.js';
 import { createVrRuneTuningDiagnosticCapture } from './xr/debug/createVrRuneTuningDiagnosticCapture.js';
 import { getVrDebugLaunchConfig } from './xr/debug/vrDebugLaunchConfig.js';
@@ -202,6 +203,7 @@ const exitButton = app.querySelector('[data-vr-exit]');
 const controls = app.querySelector('.vr-runtime__controls');
 const audioControl = document.querySelector('[data-audio-control]');
 let runtimeExperience = null;
+let scenarioProgressReconciler = null;
 let toolGuidanceLifecycle = null;
 let earlyExperienceGuidance = null;
 let renderer = null;
@@ -392,10 +394,16 @@ const largeGlyphActor = createVrLargeGlyphActor({
   elevation: settings.largeGlyphs.elevation,
   expansion: settings.largeGlyphs.expansion,
   sphere: settings.largeGlyphs.sphere,
-  onExpansionCompleted: () => runtimeExperience.dispatch(
-    VR_SCENARIO_EVENT.P2_RADIAL_PRESENTATION_COMPLETED),
-  onSphereDistributionCompleted: () => runtimeExperience.dispatch(
-    VR_SCENARIO_EVENT.THIRD_RING_COMPLETION_PRESENTATION_COMPLETED)
+  onElevationCompleted: () => scenarioProgressReconciler?.request(),
+  onExpansionCompleted: () => {
+    runtimeExperience.dispatch(VR_SCENARIO_EVENT.P2_RADIAL_PRESENTATION_COMPLETED);
+    scenarioProgressReconciler?.request();
+  },
+  onSphereDistributionCompleted: () => {
+    runtimeExperience.dispatch(VR_SCENARIO_EVENT.THIRD_RING_COMPLETION_PRESENTATION_COMPLETED);
+    scenarioProgressReconciler?.request();
+  },
+  onTransientCleared: () => scenarioProgressReconciler?.request()
 });
 const { nodes } = largeGlyphActor;
 worldStableRoot.add(largeGlyphActor.object);
@@ -468,9 +476,10 @@ const smallGlyphSystem = createVrSmallGlyphSystem({
   staggerSeconds: settings.smallGlyphField.staggerSeconds,
   revealDurationSeconds: settings.celestial.revealDurationSeconds,
   idleMotionSettings: settings.placedObjectIdleMotion,
-  onPresentationCompleted: () => runtimeExperience.dispatch(
-    VR_SCENARIO_EVENT.SMALL_GLYPH_FIELD_PRESENTATION_COMPLETED
-  )
+  onPresentationCompleted: () => {
+    runtimeExperience.dispatch(VR_SCENARIO_EVENT.SMALL_GLYPH_FIELD_PRESENTATION_COMPLETED);
+    scenarioProgressReconciler?.request();
+  }
 });
 const protoAstroTuningController = createVrProtoAstroTuningController();
 const asterionSphereGltf = assetManager.getGltf('vr-asterion-sphere-model');
@@ -612,7 +621,10 @@ function synchronizeReconstructionDerivedState() {
 }
 const firstRingFlow = createVrFirstRingFlow({
   progressFloor,
-  dispatch: (event, payload) => runtimeExperience.dispatch(event, payload)
+  dispatch: (event, payload) => {
+    runtimeExperience.dispatch(event, payload);
+    scenarioProgressReconciler?.request();
+  }
 });
 const progressionSemanticHandoff = createVrProgressionSemanticHandoff({
   dispatch: (event, payload) => runtimeExperience.dispatch(event, payload)
@@ -1058,6 +1070,7 @@ const crystalCollection = createVrCrystalCollection({
   onCommit: (page, meta) => {
     earlyExperienceGuidance.notifyCardCommitted();
     progressionSemanticHandoff.onPageCommitted(page, meta);
+    scenarioProgressReconciler?.request();
     presentLiveRuneBridgeReadinessTransitions();
   }
 });
@@ -1349,27 +1362,42 @@ introCrystalTutorial = createVrIntroCrystalTutorial({
 const experienceDirector = new ExperienceDirector({ scenario: vrExperienceScenario });
 const postRingPresentation = createVrPostRingPresentation({ largeGlyphActor, shellSystem,
   settings: settings.postRingPresentation,
-  onCompleted: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.POST_RING_WORLD_PRESENTATION_COMPLETED)
+  onCompleted: () => {
+    runtimeExperience.dispatch(VR_SCENARIO_EVENT.POST_RING_WORLD_PRESENTATION_COMPLETED);
+    scenarioProgressReconciler?.request();
+  }
 });
 const observationWindow = createVrObservationWindow({
   durationSeconds: settings.observationWindow.durationSeconds,
-  onCompleted: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.OBSERVATION_WINDOW_COMPLETED)
+  onCompleted: () => {
+    runtimeExperience.dispatch(VR_SCENARIO_EVENT.OBSERVATION_WINDOW_COMPLETED);
+    scenarioProgressReconciler?.request();
+  }
 });
 const p2ObservationWindow = createVrObservationWindow({
   durationSeconds: settings.observationWindow.durationSeconds,
-  onCompleted: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.P2_OBSERVATION_WINDOW_COMPLETED)
+  onCompleted: () => {
+    runtimeExperience.dispatch(VR_SCENARIO_EVENT.P2_OBSERVATION_WINDOW_COMPLETED);
+    scenarioProgressReconciler?.request();
+  }
 });
 const postRingMonkeyDialogue = createVrMandatoryMonkeyCommunication({ monkeyGuide,
   blocks: VR_MONKEY_COMMUNICATION_COPY_PL.progression['progression.postRing.changedWorld'].blocks,
   secondsPerLine: settings.intro.messageDisplayDuration,
   onTriggered: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.MONKEY_TRIGGERED),
-  onCompleted: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.POST_RING_MONKEY_DIALOGUE_COMPLETED)
+  onCompleted: () => {
+    runtimeExperience.dispatch(VR_SCENARIO_EVENT.POST_RING_MONKEY_DIALOGUE_COMPLETED);
+    scenarioProgressReconciler?.request();
+  }
 });
 const p2MonkeyDialogue = createVrMandatoryMonkeyCommunication({ monkeyGuide,
   blocks: VR_MONKEY_COMMUNICATION_COPY_PL.progression['progression.p2.smallGlyphsIntro'].blocks,
   secondsPerLine: settings.intro.messageDisplayDuration,
   onTriggered: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.MONKEY_TRIGGERED),
-  onCompleted: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.P2_MONKEY_DIALOGUE_COMPLETED)
+  onCompleted: () => {
+    runtimeExperience.dispatch(VR_SCENARIO_EVENT.P2_MONKEY_DIALOGUE_COMPLETED);
+    scenarioProgressReconciler?.request();
+  }
 });
 const waterPathOpenCommunication = createVrMandatoryMonkeyCommunication({ monkeyGuide,
   blocks: VR_MONKEY_COMMUNICATION_COPY_PL.progression['progression.p4.waterPathOpen'].blocks,
@@ -1380,7 +1408,10 @@ const furnaceIntro = createVrFurnaceIntro({
   monkeyGuide,
   secondsPerLine: settings.intro.messageDisplayDuration,
   revealFurnace: () => astroFurnace.reveal(3),
-  onCompleted: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.FURNACE_INTRO_COMPLETED)
+  onCompleted: () => {
+    runtimeExperience.dispatch(VR_SCENARIO_EVENT.FURNACE_INTRO_COMPLETED);
+    scenarioProgressReconciler?.request();
+  }
 });
 function ensureProgressFloorTierCompleted(tier) {
   if (progressFloor.getCompletedTiers().includes(tier)) return;
@@ -1609,6 +1640,30 @@ runtimeExperience = new RuntimeExperience({
   }
 });
 
+scenarioProgressReconciler = createVrScenarioProgressReconciler({
+  scenario: vrExperienceScenario,
+  runtimeExperience,
+  progressionController,
+  progressFloor,
+  pages: experienceVrPages,
+  astroAttractorProductionController,
+  asterionProductionController,
+  asterionResonatorFieldActor,
+  largeGlyphActor,
+  postRingPresentation,
+  reliquaryHints,
+  progressionSemanticHandoff
+});
+const unsubscribeAstroScenarioReconciliation = astroAttractorProductionController.subscribe(
+  () => scenarioProgressReconciler?.request()
+);
+const unsubscribeAsterionScenarioReconciliation = asterionProductionController.subscribe(
+  () => scenarioProgressReconciler?.request()
+);
+const unsubscribeResonatorScenarioReconciliation = asterionResonatorFieldActor.subscribe(
+  () => scenarioProgressReconciler?.request()
+);
+
 const scenarioOwners = Object.freeze({
   monkey: monkeyActor, intro: introSequence, locomotion, reliquary: crystalReliquary,
   portal: portalDisplay,
@@ -1623,7 +1678,7 @@ const scenarioOwners = Object.freeze({
   runeStones: runeStoneActor,
   runeProgression: runeStoneProgressionController
 });
-const enterVrDebugCheckpoint = createVrDebugCheckpointController({
+const activateVrDebugCheckpoint = createVrDebugCheckpointController({
   scenario: vrExperienceScenario,
   owners: scenarioOwners,
   restoreBaseline: restoreVrScenarioBaseline,
@@ -1633,6 +1688,14 @@ const enterVrDebugCheckpoint = createVrDebugCheckpointController({
   spawnRing: spawnPlayerInsideRingFacingMonkey,
   requestCanonicalXrStartCalibration: () => xrStartCalibration.request()
 });
+const enterVrDebugCheckpoint = (checkpointId) => {
+  scenarioProgressReconciler.suspend();
+  try {
+    return activateVrDebugCheckpoint(checkpointId);
+  } finally {
+    scenarioProgressReconciler.resume();
+  }
+};
 
 function resize() {
   const width = canvas.clientWidth || innerWidth || 1;
@@ -1903,6 +1966,10 @@ enterButton.addEventListener('click', enterVr);
 exitButton.addEventListener('click', () => { void activeSession?.end(); });
 window.addEventListener('pagehide', () => {
   runeDiagnosticCapture?.dispose();
+  scenarioProgressReconciler.dispose();
+  unsubscribeAstroScenarioReconciliation();
+  unsubscribeAsterionScenarioReconciliation();
+  unsubscribeResonatorScenarioReconciliation();
   runtimeExperience.dispose();
   celestialActor.dispose();
   introCrystalTutorial.dispose();
