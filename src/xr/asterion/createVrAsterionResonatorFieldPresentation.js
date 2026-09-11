@@ -1,5 +1,6 @@
 import * as THREE from '../../vendor/three.js';
 import { resolveAsterionResonatorFieldShape } from './asterionResonatorFieldShape.js';
+import { ASTERION_WATER_CONTROL_TUNING } from './asterionWaterControlConfig.js';
 
 const PERIMETER_POINTS = 16;
 const DEPTH_STATIONS = 5;
@@ -27,6 +28,20 @@ void main() {
   float rim = pow(1.0 - abs(dot(normalize(vViewNormal), normalize(-vViewPosition))), 1.7);
   float strength = 0.12 + 0.88 * rim;
   gl_FragColor = vec4(color * strength, opacity * strength);
+}`;
+
+const haloVertexShader = `
+uniform float normalExpansion;
+void main() {
+  vec3 expandedPosition = position + normal * normalExpansion;
+  gl_Position = projectionMatrix * modelViewMatrix * vec4(expandedPosition, 1.0);
+}`;
+
+const haloFragmentShader = `
+uniform vec3 color;
+uniform float opacity;
+void main() {
+  gl_FragColor = vec4(color, opacity);
 }`;
 
 const CORNER_KEYS = Object.freeze([
@@ -185,6 +200,26 @@ export function createVrAsterionResonatorFieldPresentation({ parent, fieldActor 
   skeleton.frustumCulled = false;
   owner.add(skeleton);
 
+  const haloMaterial = new THREE.ShaderMaterial({
+    uniforms: {
+      color: { value: new THREE.Color(0xffffff) },
+      opacity: { value: 0 },
+      normalExpansion: {
+        value: ASTERION_WATER_CONTROL_TUNING.presentation.haloNormalExpansion
+      }
+    },
+    vertexShader: haloVertexShader,
+    fragmentShader: haloFragmentShader,
+    transparent: true,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+    side: THREE.DoubleSide
+  });
+  const halo = new THREE.Mesh(skeletonGeometry, haloMaterial);
+  halo.name = 'VrAsterionResonatorFieldWaterHalo';
+  halo.frustumCulled = false;
+  owner.add(halo);
+
   function rewriteTubePath(pointOffset, pointCount, closed) {
     for (let point = 0; point < pointCount; point += 1) {
       const previous = closed ? (point + pointCount - 1) % pointCount : Math.max(0, point - 1);
@@ -297,6 +332,37 @@ export function createVrAsterionResonatorFieldPresentation({ parent, fieldActor 
 
   let morphElapsed = 0;
   let morphActive = false;
+  const currentColor = new THREE.Color(0xffffff);
+  const sourceColor = new THREE.Color(0xffffff);
+  const targetColor = new THREE.Color(0xffffff);
+  const currentOpacities = { skin: 0.055, skeleton: 0.30, halo: 0 };
+  const sourceOpacities = { ...currentOpacities };
+  const targetOpacities = { ...currentOpacities };
+
+  function resolveWaterVisual(descriptor) {
+    const presentation = ASTERION_WATER_CONTROL_TUNING.presentation;
+    const angleLevel = descriptor.water?.powered ? descriptor.water.angleLevel : 0;
+    const tiltLevel = descriptor.water?.powered ? descriptor.water.tiltLevel : 0;
+    const safeAngleLevel = Number.isInteger(angleLevel) && angleLevel >= 0 && angleLevel <= 3
+      ? angleLevel : 0;
+    const safeTiltLevel = Number.isInteger(tiltLevel) && tiltLevel >= 0 && tiltLevel <= 3
+      ? tiltLevel : 0;
+    return {
+      color: presentation.hues[safeAngleLevel],
+      skin: presentation.skinOpacities[safeTiltLevel],
+      skeleton: presentation.skeletonOpacities[safeTiltLevel],
+      halo: presentation.haloOpacities[safeTiltLevel]
+    };
+  }
+
+  function applyWaterVisual() {
+    skinMaterial.uniforms.color.value.copy(currentColor);
+    skinMaterial.uniforms.opacity.value = currentOpacities.skin;
+    skeletonMaterial.color.copy(currentColor);
+    skeletonMaterial.opacity = currentOpacities.skeleton;
+    haloMaterial.uniforms.color.value.copy(currentColor);
+    haloMaterial.uniforms.opacity.value = currentOpacities.halo;
+  }
 
   function present(descriptor, immediate = false) {
     const shape = resolveAsterionResonatorFieldShape(descriptor);
@@ -305,17 +371,27 @@ export function createVrAsterionResonatorFieldPresentation({ parent, fieldActor 
       owner.visible = false;
       return;
     }
+    const waterVisual = resolveWaterVisual(descriptor);
+    targetColor.setHex(waterVisual.color);
+    targetOpacities.skin = waterVisual.skin;
+    targetOpacities.skeleton = waterVisual.skeleton;
+    targetOpacities.halo = waterVisual.halo;
     buildTarget(shape);
     if (!owner.visible || immediate) {
       morphActive = false;
       skinPositions.set(skinTargetPositions);
       tubeCenters.set(tubeTargetCenters);
+      currentColor.copy(targetColor);
+      Object.assign(currentOpacities, targetOpacities);
+      applyWaterVisual();
       owner.visible = true;
       uploadGeometry();
       return;
     }
     skinSourcePositions.set(skinPositions);
     tubeSourceCenters.set(tubeCenters);
+    sourceColor.copy(currentColor);
+    Object.assign(sourceOpacities, currentOpacities);
     morphElapsed = 0;
     morphActive = true;
   }
@@ -325,6 +401,14 @@ export function createVrAsterionResonatorFieldPresentation({ parent, fieldActor 
     morphElapsed += Math.max(0, deltaSeconds || 0);
     const p = Math.min(1, morphElapsed / MORPH_DURATION_SECONDS);
     const smooth = p * p * (3 - 2 * p);
+    currentColor.copy(sourceColor).lerp(targetColor, smooth);
+    currentOpacities.skin = sourceOpacities.skin
+      + (targetOpacities.skin - sourceOpacities.skin) * smooth;
+    currentOpacities.skeleton = sourceOpacities.skeleton
+      + (targetOpacities.skeleton - sourceOpacities.skeleton) * smooth;
+    currentOpacities.halo = sourceOpacities.halo
+      + (targetOpacities.halo - sourceOpacities.halo) * smooth;
+    applyWaterVisual();
     if (p === 1) {
       skinPositions.set(skinTargetPositions);
       tubeCenters.set(tubeTargetCenters);
@@ -358,6 +442,7 @@ export function createVrAsterionResonatorFieldPresentation({ parent, fieldActor 
     skinMaterial.dispose();
     skeletonGeometry.dispose();
     skeletonMaterial.dispose();
+    haloMaterial.dispose();
   }
   return { object: owner, update, reset, dispose };
 }

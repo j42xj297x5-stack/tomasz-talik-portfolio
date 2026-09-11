@@ -338,12 +338,15 @@ export function createVrAsterionSectorControlInteraction({
   }
 
   const metalState = sectorStates.get(ASTERION_METAL_CONTROL_TUNING.glyphId);
+  const waterState = sectorStates.get(ASTERION_WATER_CONTROL_TUNING.glyphId);
   return {
     update, reset, dispose,
     getSectorLevel: (glyphId) => sectorStates.get(glyphId)?.committedLevel ?? null,
     getSectorAngleDegrees: (glyphId) => sectorStates.get(glyphId)?.currentAngleDegrees ?? null,
     getMetalAngleLevel: () => metalState.dofs.ANGLE.committedLevel,
     getMetalTiltLevel: () => metalState.dofs.TILT.committedLevel,
+    getWaterAngleLevel: () => waterState.dofs.ANGLE.committedLevel,
+    getWaterTiltLevel: () => waterState.dofs.TILT.committedLevel,
     getSectorControlSnapshot: () => Object.freeze([...sectorStates].map(([glyphId, state]) => Object.freeze(
       state.dofs ? {
         glyphId, branchId: SECTOR_DEFINITIONS[glyphId].branchId,

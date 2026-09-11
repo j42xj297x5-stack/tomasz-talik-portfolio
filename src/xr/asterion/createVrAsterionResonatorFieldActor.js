@@ -44,6 +44,17 @@ function createDescriptor(runeStoneProgressionController, sectorControlInteracti
     tiltLevel,
     active: metalPowered && (angleLevel > 0 || tiltLevel > 0)
   });
+  const waterRune = resolveRuneStoneByBranchId('water');
+  const waterPowered = Boolean(waterRune
+    && runeStoneProgressionController.isFamilyInstalled(waterRune.familyCode));
+  const waterAngleLevel = sectorControlInteraction.getWaterAngleLevel?.() ?? 0;
+  const waterTiltLevel = sectorControlInteraction.getWaterTiltLevel?.() ?? 0;
+  const water = Object.freeze({
+    powered: waterPowered,
+    angleLevel: waterAngleLevel,
+    tiltLevel: waterTiltLevel,
+    active: waterPowered && (waterAngleLevel > 0 || waterTiltLevel > 0)
+  });
 
   return Object.freeze({
     resonatorExists,
@@ -61,7 +72,8 @@ function createDescriptor(runeStoneProgressionController, sectorControlInteracti
     lateralStrength: (levels.alpha + levels.beta) / 2,
     fieldAsymmetry: levels.alpha - levels.beta,
     depthBand: DEPTH_BANDS[levels.gamma],
-    metal
+    metal,
+    water
   });
 }
 
