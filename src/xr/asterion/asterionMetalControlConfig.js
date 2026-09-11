@@ -21,7 +21,7 @@ export const ASTERION_METAL_CONTROL_TUNING = Object.freeze({
   expansionFractions: Object.freeze([0, 0.2, 0.5, 0.75]),
   depthDomain: Object.freeze({ near: 10, far: 130 }),
   rounding: Object.freeze({
-    harmonicCenterMultiplier: 1.5,
+    harmonicCenterMultiplier: 4.0,
     oneOffCenterMultiplier: 0.9,
     bothOffCenterMultiplier: 0.6,
     maximumFilletFraction: 0.32
