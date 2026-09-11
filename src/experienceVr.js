@@ -892,6 +892,9 @@ runeResonatorGuidance = createVrRuneResonatorGuidance({
   knowledgeResolver: monkeyKnowledgeResolver,
   onEtherInterventionCompleted: () => runtimeExperience.dispatch(
     VR_SCENARIO_EVENT.ETHER_INTERVENTION_COMPLETED
+  ),
+  onFullResonatorCommunicationCompleted: () => runtimeExperience.dispatch(
+    VR_SCENARIO_EVENT.FULL_RESONATOR_COMMUNICATION_COMPLETED
   )
 });
 toolGuidanceLifecycle = createVrToolGuidanceLifecycle({
