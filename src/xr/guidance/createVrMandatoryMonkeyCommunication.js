@@ -6,20 +6,24 @@ const PHASE = Object.freeze({
   PLAYBACK: 'PLAYBACK', COMPLETE: 'COMPLETE'
 });
 
-export function createVrMandatoryMonkeyCommunication({ monkeyGuide, blocks, secondsPerLine,
+export function createVrMandatoryMonkeyCommunication({ monkeyGuide, blocks, resolveBlocks, secondsPerLine,
   onTriggered = () => {}, onCompleted = () => {},
   priority = VR_MONKEY_DIALOGUE_PRIORITY.MANDATORY, requiresAttention = true,
   autoPlaybackDelaySeconds = 0, onAutoPlaybackCue = () => {} }) {
   const owner = Symbol('VrMonkeyCommunication');
   let phase = PHASE.IDLE;
   let autoPlaybackDelayRemaining = 0;
-  const playback = createVrMonkeyProgressionMessage({ monkeyGuide, owner, blocks, secondsPerLine,
-    onCompleted() {
+  if (resolveBlocks !== undefined && typeof resolveBlocks !== 'function') {
+    throw new TypeError('resolveBlocks must be a function');
+  }
+  const createPlayback = (playbackBlocks) => createVrMonkeyProgressionMessage({
+    monkeyGuide, owner, blocks: playbackBlocks, secondsPerLine, onCompleted() {
       phase = PHASE.COMPLETE;
       monkeyGuide.releaseDialogue(owner);
       onCompleted();
     }
   });
+  let playback = resolveBlocks ? null : createPlayback(blocks);
   const override = { options: [], onMonkeyPress() {
     if (phase !== PHASE.ATTENTION) return true;
     phase = PHASE.PLAYBACK;
@@ -64,6 +68,10 @@ export function createVrMandatoryMonkeyCommunication({ monkeyGuide, blocks, seco
   function beginPlayback() {
     if (phase !== PHASE.PLAYBACK) return false;
     monkeyGuide.updateDialogue(owner, override, { preemptible: false });
+    if (!playback) {
+      const resolvedBlocks = resolveBlocks();
+      playback = createPlayback(Array.isArray(resolvedBlocks) ? [...resolvedBlocks] : resolvedBlocks);
+    }
     return playback.begin();
   }
   function update(delta) {
@@ -82,10 +90,11 @@ export function createVrMandatoryMonkeyCommunication({ monkeyGuide, blocks, seco
         }
       }
     }
-    playback.update(delta);
+    playback?.update(delta);
   }
   function reset() {
-    playback.reset();
+    playback?.reset();
+    if (resolveBlocks) playback = null;
     monkeyGuide.cancelDialogueAttention(owner);
     monkeyGuide.releaseDialogue(owner);
     autoPlaybackDelayRemaining = 0;

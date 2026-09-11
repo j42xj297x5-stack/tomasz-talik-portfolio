@@ -882,6 +882,7 @@ runeResonatorGuidance = createVrRuneResonatorGuidance({
   monkeyGuide, copy: VR_MONKEY_COMMUNICATION_COPY_PL,
   secondsPerLine: settings.intro.messageDisplayDuration,
   getCurrentPointId: () => runtimeExperience?.getCurrentPointId?.() ?? null,
+  isAsterionEarned: () => asterionProductionController.isEarned(),
   getUnresolvedRuneBranchId: () => {
     const stone = runeStoneAttractorInteraction?.getLockedStone?.();
     return stone && runeStoneActor.getState(stone.branchId) === 'CARRIED_ORBIT'
