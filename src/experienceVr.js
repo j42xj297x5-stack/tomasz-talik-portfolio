@@ -86,6 +86,7 @@ import { createVrPlayerGuideProjection } from './xr/guidance/createVrPlayerGuide
 import { createVrMonkeyGuide } from './xr/guidance/createVrMonkeyGuide.js';
 import { createVrMonkeyKnowledgeResolver } from './xr/guidance/createVrMonkeyKnowledgeResolver.js';
 import { createVrMandatoryMonkeyCommunication } from './xr/guidance/createVrMandatoryMonkeyCommunication.js';
+import { createVrFinalMonkeyFarewell } from './xr/guidance/createVrFinalMonkeyFarewell.js';
 import { createVrToolGuidanceLifecycle } from './xr/guidance/createVrToolGuidanceLifecycle.js';
 import { createVrEarlyExperienceGuidance } from './xr/guidance/createVrEarlyExperienceGuidance.js';
 import { createVrRuneResonatorGuidance } from './xr/guidance/createVrRuneResonatorGuidance.js';
@@ -1418,6 +1419,11 @@ const waterPathOpenCommunication = createVrMandatoryMonkeyCommunication({ monkey
   secondsPerLine: settings.intro.messageDisplayDuration,
   onTriggered: () => waterPathOpenCommunication.beginPlayback()
 });
+const finalMonkeyFarewell = createVrFinalMonkeyFarewell({
+  monkeyGuide,
+  blocks: VR_MONKEY_COMMUNICATION_COPY_PL.progression['progression.final.monkeyFarewell'].blocks,
+  onCompleted: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.FINAL_MONKEY_FAREWELL_COMPLETED)
+});
 const furnaceIntro = createVrFurnaceIntro({
   monkeyGuide,
   secondsPerLine: settings.intro.messageDisplayDuration,
@@ -1478,6 +1484,11 @@ runtimeExperience = new RuntimeExperience({
     [VR_SCENARIO_EFFECT.BEGIN_FULL_RESONATOR_COMMUNICATION]: () => {
       if (!runeResonatorGuidance.beginFullResonatorCommunication()) {
         throw new Error('BEGIN_FULL_RESONATOR_COMMUNICATION rejected by Rune/Resonator Guidance actor');
+      }
+    },
+    [VR_SCENARIO_EFFECT.BEGIN_FINAL_MONKEY_FAREWELL]: () => {
+      if (!finalMonkeyFarewell.begin()) {
+        throw new Error('BEGIN_FINAL_MONKEY_FAREWELL rejected by final Monkey farewell actor');
       }
     },
     [VR_SCENARIO_EFFECT.BEGIN_CELESTIAL_REVEAL]: () => { celestialActor.beginReveal(); },
@@ -1696,7 +1707,8 @@ const scenarioOwners = Object.freeze({
   audio: ambientScenarioOwner,
   celestial: celestialActor,
   runeStones: runeStoneActor,
-  runeProgression: runeStoneProgressionController
+  runeProgression: runeStoneProgressionController,
+  finalMonkeyFarewell
 });
 const activateVrDebugCheckpoint = createVrDebugCheckpointController({
   scenario: vrExperienceScenario,
@@ -1795,6 +1807,7 @@ function renderFrame() {
   postRingMonkeyDialogue.update(delta);
   p2MonkeyDialogue.update(delta);
   waterPathOpenCommunication.update(delta);
+  finalMonkeyFarewell.update(delta);
   furnaceIntro.update(delta);
   shellSystem.update(delta);
   largeGlyphActor.object.updateMatrixWorld(true);
@@ -1920,6 +1933,7 @@ function restoreVrScenarioBaseline() {
   handModeController.reset();
   postRingMonkeyDialogue.reset();
   p2MonkeyDialogue.reset();
+  finalMonkeyFarewell.reset();
   furnaceIntro.reset();
   toolGuidanceLifecycle.reset();
   earlyExperienceGuidance.reset();

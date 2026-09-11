@@ -9,6 +9,7 @@ export function createVrMonkeyProgressionMessage({
   gapSeconds = VR_MONKEY_MESSAGE_TIMING.gapSeconds,
   notifyAttention = false,
   beforeShow = () => true,
+  onLastBlockHidden = () => {},
   onCompleted = () => {}
 }) {
   if (!monkeyGuide) throw new TypeError('monkeyGuide is required');
@@ -17,6 +18,7 @@ export function createVrMonkeyProgressionMessage({
     throw new TypeError('secondsPerLine must be a positive finite number');
   }
   if (typeof beforeShow !== 'function') throw new TypeError('beforeShow must be a function');
+  if (typeof onLastBlockHidden !== 'function') throw new TypeError('onLastBlockHidden must be a function');
   if (typeof onCompleted !== 'function') throw new TypeError('onCompleted must be a function');
   if (!Number.isFinite(gapSeconds) || gapSeconds < 0) throw new TypeError('gapSeconds must be a non-negative finite number');
 
@@ -48,6 +50,7 @@ export function createVrMonkeyProgressionMessage({
     elapsed -= duration;
     if (state === STATE.DISPLAY) {
       if (owner) monkeyGuide.showDialogueMessage(owner, ''); else monkeyGuide.showMessage('');
+      if (blockIndex === blocks.length - 1) onLastBlockHidden();
       state = STATE.GAP; return;
     }
     blockIndex += 1;

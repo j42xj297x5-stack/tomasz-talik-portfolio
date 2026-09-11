@@ -84,6 +84,7 @@ export const VR_SCENARIO_EVENT = immutableIdentifiers([
   'ETHER_MONKEY_CAPTURED',
   'FIVE_ELEMENTAL_RUNES_INSTALLED',
   'FULL_RESONATOR_COMMUNICATION_COMPLETED',
+  'FINAL_MONKEY_FAREWELL_COMPLETED',
   'XR_SESSION_ENDING',
   'XR_SESSION_ENDED',
   'XR_SESSION_START_FAILED'
@@ -192,7 +193,8 @@ export const VR_SCENARIO_EFFECT = immutableIdentifiers([
   'CHECK_ETHER_INTERVENTION_JOIN',
   'BEGIN_ETHER_INTERVENTION',
   'BEGIN_WATER_PATH_OPEN_COMMUNICATION',
-  'BEGIN_FULL_RESONATOR_COMMUNICATION'
+  'BEGIN_FULL_RESONATOR_COMMUNICATION',
+  'BEGIN_FINAL_MONKEY_FAREWELL'
 ]);
 
 export const VR_EXPERIENCE_POINT = immutableIdentifiers([
@@ -237,6 +239,8 @@ export const VR_EXPERIENCE_POINT = immutableIdentifiers([
   '5.50',
   '5.60',
   '5.70',
+  '5.80',
+  '6.10',
   '100.10'
 ]);
 
@@ -310,6 +314,19 @@ const TIER_4_AND_FOURTH_RUNE_JOIN_SETTLED_CONSEQUENCES = Object.freeze({
     etherRuneTuned: false,
     waterInstallationReadinessOverride: false
   })
+});
+const FINAL_PORTFOLIO_COMPLETE_SETTLED_CONSEQUENCES = Object.freeze({
+  progression: Object.freeze({ tier: 5,
+    activatedPageIds: Object.freeze([
+      ...experienceVrPageIdsByTier[1], ...experienceVrPageIdsByTier[2],
+      ...experienceVrPageIdsByTier[3], ...experienceVrPageIdsByTier[4],
+      ...experienceVrPageIdsByTier[5]
+    ]) }),
+  progressFloor: Object.freeze({ completedTier: 5, activatedPages: completedMainGlyphPagesThroughTier(5) }),
+  crystals: Object.freeze({ consumedTier: 5 })
+});
+const FINAL_MONKEY_FAREWELL_SETTLED_CONSEQUENCES = Object.freeze({
+  finalMonkeyFarewell: Object.freeze({ completed: true })
 });
 const ETHER_RUNE_TUNED_SETTLED_CONSEQUENCES = Object.freeze({
   runeProgression: Object.freeze({
@@ -406,7 +423,7 @@ const TIER_5_CARD_LIFECYCLE_TRANSITIONS = Object.freeze([
       VR_SCENARIO_EFFECT.UPDATE_COMMITTED_CARD_PRESENTATION,
       VR_SCENARIO_EFFECT.PLAY_CARD_COMMIT_FEEDBACK
     ]) }),
-  Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.STAY, event: VR_SCENARIO_EVENT.TIER_COMPLETED,
+  Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.COMPLETE, event: VR_SCENARIO_EVENT.TIER_COMPLETED,
     milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.APPLY_TIER_COMPLETE_FEEDBACK]) })
 ]);
 
@@ -956,14 +973,31 @@ const points = Object.freeze([
     ])
   }),
   Object.freeze({
-    id: VR_EXPERIENCE_POINT['5.70'], canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['100.10'] }),
-    settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
+    id: VR_EXPERIENCE_POINT['5.70'], canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['5.80'] }),
+    settledConsequences: FINAL_PORTFOLIO_COMPLETE_SETTLED_CONSEQUENCES,
     entryEffects: Object.freeze([]),
     label: 'Final Water Glyph hunt ready / full Resonator communication completed',
     capabilities: Object.freeze([...P2_MAIN_GLYPH_CAPABILITIES,
       VR_SCENARIO_CAPABILITY.CAN_TUNE_ETHER_RUNE, VR_SCENARIO_CAPABILITY.CAN_INSTALL_WATER_RUNE,
       VR_SCENARIO_CAPABILITY.CAN_USE_ADVANCED_RESONATOR]),
     transitions: TIER_5_CARD_LIFECYCLE_TRANSITIONS
+  }),
+  Object.freeze({
+    id: VR_EXPERIENCE_POINT['5.80'], canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['6.10'] }),
+    settledConsequences: FINAL_MONKEY_FAREWELL_SETTLED_CONSEQUENCES,
+    entryEffects: Object.freeze([VR_SCENARIO_EFFECT.BEGIN_FINAL_MONKEY_FAREWELL]),
+    label: 'Final portfolio complete / waiting for final Monkey farewell',
+    capabilities: P2_MAIN_GLYPH_CAPABILITIES,
+    transitions: Object.freeze([Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.COMPLETE,
+      event: VR_SCENARIO_EVENT.FINAL_MONKEY_FAREWELL_COMPLETED,
+      milestonesToAdd: Object.freeze([]) })])
+  }),
+  Object.freeze({
+    id: VR_EXPERIENCE_POINT['6.10'], canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['100.10'] }),
+    settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
+    entryEffects: Object.freeze([]),
+    label: 'Finale ready / world release boundary',
+    capabilities: Object.freeze([]), transitions: Object.freeze([])
   }),
   Object.freeze({
     id: VR_EXPERIENCE_POINT['100.10'],

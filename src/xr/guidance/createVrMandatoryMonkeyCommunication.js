@@ -7,7 +7,7 @@ const PHASE = Object.freeze({
 });
 
 export function createVrMandatoryMonkeyCommunication({ monkeyGuide, blocks, resolveBlocks, secondsPerLine,
-  onTriggered = () => {}, onCompleted = () => {},
+  onTriggered = () => {}, onCompleted = () => {}, onLastBlockHidden = () => {},
   priority = VR_MONKEY_DIALOGUE_PRIORITY.MANDATORY, requiresAttention = true,
   autoPlaybackDelaySeconds = 0, onAutoPlaybackCue = () => {} }) {
   const owner = Symbol('VrMonkeyCommunication');
@@ -17,7 +17,7 @@ export function createVrMandatoryMonkeyCommunication({ monkeyGuide, blocks, reso
     throw new TypeError('resolveBlocks must be a function');
   }
   const createPlayback = (playbackBlocks) => createVrMonkeyProgressionMessage({
-    monkeyGuide, owner, blocks: playbackBlocks, secondsPerLine, onCompleted() {
+    monkeyGuide, owner, blocks: playbackBlocks, secondsPerLine, onLastBlockHidden, onCompleted() {
       phase = PHASE.COMPLETE;
       monkeyGuide.releaseDialogue(owner);
       onCompleted();
