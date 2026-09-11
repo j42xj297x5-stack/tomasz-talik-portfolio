@@ -208,6 +208,14 @@ export function createVrAudioBridge({ manager = audioManager, warn = console.war
 
   function prepareAttractorLoops() { prepareOneShots(Object.values(ATTRACTOR_PATHS)); }
 
+  function enterCreditsIsolation(options) {
+    runOptional('enter credits audio isolation', (audio) => audio.enterVrCreditsIsolation(options));
+  }
+
+  function resetCreditsIsolation() {
+    runOptional('reset credits audio isolation', (audio) => audio.resetVrCreditsIsolation());
+  }
+
   function clearAttractorTimer() { if (attractorTimer !== null) clearTimeout(attractorTimer); attractorTimer = null; }
   function stopAttractorHandle(handle = attractorHandle) {
     if (!handle) return;
@@ -441,6 +449,6 @@ export function createVrAudioBridge({ manager = audioManager, warn = console.war
     startGlyphAcquisition, missGlyphAcquisition, setAsterionSphereState, resetAsterionSphereAudio,
     cancelGlyphAcquisition, completeGlyphAcquisition, startSectorDrive, fadeSectorDrive, resetSectorDriveAudio, dispose,
     startAttractor, missAttractor, cancelAttractor, handoffAttractor,
-    startSpatialProcessSource, setSpatialListenerPose,
+    startSpatialProcessSource, setSpatialListenerPose, enterCreditsIsolation, resetCreditsIsolation,
     get glyphAcquisitionState() { return glyphState; }, get attractorState() { return attractorState; } };
 }

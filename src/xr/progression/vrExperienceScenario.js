@@ -201,6 +201,8 @@ export const VR_SCENARIO_EFFECT = immutableIdentifiers([
   'BEGIN_FINAL_WORLD_RELEASE',
   'BEGIN_END_CREDITS',
   'BEGIN_END_BRAND_SLATE',
+  'ENTER_CREDITS_AUDIO_ISOLATION',
+  'END_XR_SESSION',
   'BEGIN_FINAL_AMBIENT_WAIT',
   'SYNC_FINAL_AMBIENT_AFTER_FAREWELL',
   'ENSURE_FINAL_AMBIENT_08'
@@ -1024,6 +1026,7 @@ const points = Object.freeze([
     id: VR_EXPERIENCE_POINT['6.20'], canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['6.30'] }),
     settledConsequences: END_CREDITS_SETTLED_CONSEQUENCES,
     entryEffects: Object.freeze([VR_SCENARIO_EFFECT.ENSURE_FINAL_AMBIENT_08,
+      VR_SCENARIO_EFFECT.ENTER_CREDITS_AUDIO_ISOLATION,
       VR_SCENARIO_EFFECT.BEGIN_END_CREDITS]),
     label: 'Whiteout complete / credits ready',
     capabilities: Object.freeze([]),
@@ -1033,7 +1036,8 @@ const points = Object.freeze([
   Object.freeze({
     id: VR_EXPERIENCE_POINT['6.30'], canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['100.10'] }),
     settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
-    entryEffects: Object.freeze([VR_SCENARIO_EFFECT.BEGIN_END_BRAND_SLATE]),
+    entryEffects: Object.freeze([VR_SCENARIO_EFFECT.ENSURE_FINAL_AMBIENT_08,
+      VR_SCENARIO_EFFECT.ENTER_CREDITS_AUDIO_ISOLATION, VR_SCENARIO_EFFECT.BEGIN_END_BRAND_SLATE]),
     label: 'Final Orange Monkey VR slate',
     capabilities: Object.freeze([]),
     transitions: Object.freeze([Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.COMPLETE,
@@ -1042,6 +1046,7 @@ const points = Object.freeze([
   Object.freeze({
     id: VR_EXPERIENCE_POINT['100.10'],
     settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
+    entryEffects: Object.freeze([VR_SCENARIO_EFFECT.END_XR_SESSION]),
     label: 'EXIT EXPERIENCE VR',
     capabilities: Object.freeze([]), transitions: Object.freeze([])
   })
