@@ -196,7 +196,10 @@ export const VR_SCENARIO_EFFECT = immutableIdentifiers([
   'BEGIN_WATER_PATH_OPEN_COMMUNICATION',
   'BEGIN_FULL_RESONATOR_COMMUNICATION',
   'BEGIN_FINAL_MONKEY_FAREWELL',
-  'BEGIN_FINAL_WORLD_RELEASE'
+  'BEGIN_FINAL_WORLD_RELEASE',
+  'BEGIN_FINAL_AMBIENT_WAIT',
+  'SYNC_FINAL_AMBIENT_AFTER_FAREWELL',
+  'ENSURE_FINAL_AMBIENT_08'
 ]);
 
 export const VR_EXPERIENCE_POINT = immutableIdentifiers([
@@ -991,7 +994,8 @@ const points = Object.freeze([
   Object.freeze({
     id: VR_EXPERIENCE_POINT['5.80'], canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['6.10'] }),
     settledConsequences: FINAL_MONKEY_FAREWELL_SETTLED_CONSEQUENCES,
-    entryEffects: Object.freeze([VR_SCENARIO_EFFECT.BEGIN_FINAL_MONKEY_FAREWELL]),
+    entryEffects: Object.freeze([VR_SCENARIO_EFFECT.BEGIN_FINAL_MONKEY_FAREWELL,
+      VR_SCENARIO_EFFECT.BEGIN_FINAL_AMBIENT_WAIT]),
     label: 'Final portfolio complete / waiting for final Monkey farewell',
     capabilities: P2_MAIN_GLYPH_CAPABILITIES,
     transitions: Object.freeze([Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.COMPLETE,
@@ -1001,7 +1005,8 @@ const points = Object.freeze([
   Object.freeze({
     id: VR_EXPERIENCE_POINT['6.10'], canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['6.20'] }),
     settledConsequences: FINAL_WORLD_RELEASE_SETTLED_CONSEQUENCES,
-    entryEffects: Object.freeze([VR_SCENARIO_EFFECT.BEGIN_FINAL_WORLD_RELEASE]),
+    entryEffects: Object.freeze([VR_SCENARIO_EFFECT.BEGIN_FINAL_WORLD_RELEASE,
+      VR_SCENARIO_EFFECT.SYNC_FINAL_AMBIENT_AFTER_FAREWELL]),
     label: 'Final Monkey farewell completed / world release',
     capabilities: Object.freeze([]),
     transitions: Object.freeze([Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.COMPLETE,
@@ -1010,7 +1015,7 @@ const points = Object.freeze([
   Object.freeze({
     id: VR_EXPERIENCE_POINT['6.20'], canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['100.10'] }),
     settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
-    entryEffects: Object.freeze([]),
+    entryEffects: Object.freeze([VR_SCENARIO_EFFECT.ENSURE_FINAL_AMBIENT_08]),
     label: 'Whiteout complete / credits ready',
     capabilities: Object.freeze([]), transitions: Object.freeze([])
   }),
