@@ -337,7 +337,9 @@ Ring 2 complete
 
 RING 3 complete
 → currentTier = 4
+→ Scenario enters mandatory completion point 4.75
 → Large Glyph world reaches SPHERE_FAR
+→ Scenario enters the Asterion frontier at 3.80
 
 Asterion not earned
 → Scenario catches up to Asterion-required boundary

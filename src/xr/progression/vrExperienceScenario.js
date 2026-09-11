@@ -54,6 +54,7 @@ export const VR_SCENARIO_EVENT = immutableIdentifiers([
   'ASTRO_ATTRACTOR_PRODUCED',
   'ASTRO_ATTRACTOR_CLAIMED',
   'TIER_COMPLETED',
+  'THIRD_RING_COMPLETION_PRESENTATION_COMPLETED',
   'P2_RADIAL_PRESENTATION_COMPLETED',
   'SMALL_GLYPH_FIELD_PRESENTATION_COMPLETED',
   'ASTRO_UNLOCKED',
@@ -222,6 +223,7 @@ export const VR_EXPERIENCE_POINT = immutableIdentifiers([
   '4.50',
   '4.60',
   '4.70',
+  '4.75',
   '4.80',
   '5.10',
   '5.20',
@@ -803,14 +805,29 @@ const points = Object.freeze([
       event: VR_SCENARIO_EVENT.P2_MONKEY_DIALOGUE_COMPLETED, milestonesToAdd: Object.freeze([]) })])
   }),
   Object.freeze({
-    id: VR_EXPERIENCE_POINT['4.70'], canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['3.80'] }),
-    settledConsequences: THIRD_RING_COMPLETE_SETTLED_CONSEQUENCES,
+    id: VR_EXPERIENCE_POINT['4.70'], canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['4.75'] }),
+    settledConsequences: EMPTY_SETTLED_CONSEQUENCES,
     label: 'P2 tuning loop / third ring', capabilities: P2_MAIN_GLYPH_CAPABILITIES,
     transitions: Object.freeze([
       Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.STAY, event: VR_SCENARIO_EVENT.RELIQUARY_HINT_TIMEOUT, milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.SHOW_RELIQUARY_CONTEXT_HINT]) }),
       Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.STAY, event: VR_SCENARIO_EVENT.CRYSTAL_ACTIVATED, milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.PRESENT_ACTIVE_CARD_PREVIEW]) }),
       Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.STAY, event: VR_SCENARIO_EVENT.CARD_COMMITTED, milestonesToAdd: Object.freeze([VR_SCENARIO_MILESTONE.CARD_COMMITTED]), effects: Object.freeze([VR_SCENARIO_EFFECT.UPDATE_COMMITTED_CARD_PRESENTATION, VR_SCENARIO_EFFECT.PLAY_CARD_COMMIT_FEEDBACK]) }),
-      Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.COMPLETE, event: VR_SCENARIO_EVENT.TIER_COMPLETED, milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.APPLY_TIER_COMPLETE_FEEDBACK, VR_SCENARIO_EFFECT.DISTRIBUTE_LARGE_GLYPHS_ON_SPHERE]) })
+      Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.COMPLETE, event: VR_SCENARIO_EVENT.TIER_COMPLETED,
+        milestonesToAdd: Object.freeze([]), effects: Object.freeze([]) })
+    ])
+  }),
+  Object.freeze({
+    id: VR_EXPERIENCE_POINT['4.75'], canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['3.80'] }),
+    settledConsequences: THIRD_RING_COMPLETE_SETTLED_CONSEQUENCES,
+    entryEffects: Object.freeze([
+      VR_SCENARIO_EFFECT.APPLY_TIER_COMPLETE_FEEDBACK,
+      VR_SCENARIO_EFFECT.DISTRIBUTE_LARGE_GLYPHS_ON_SPHERE
+    ]),
+    label: 'Mandatory third ring completion presentation', capabilities: P2_MAIN_GLYPH_CAPABILITIES,
+    transitions: Object.freeze([
+      Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.COMPLETE,
+        event: VR_SCENARIO_EVENT.THIRD_RING_COMPLETION_PRESENTATION_COMPLETED,
+        milestonesToAdd: Object.freeze([]), effects: Object.freeze([]) })
     ])
   }),
   Object.freeze({

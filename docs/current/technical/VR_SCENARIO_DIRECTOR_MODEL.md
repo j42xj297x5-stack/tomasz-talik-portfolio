@@ -1,6 +1,6 @@
 # Experience VR Scenario and Director Model
 
-Status: **CURRENT / BINDING**, synchronized on 2026-09-01. Runtime graph and reconstruction are implemented through stable `5.10`.
+Status: **CURRENT / BINDING**, synchronized on 2026-09-11. Runtime graph and reconstruction are implemented through stable `5.10`.
 
 > **Cross-reference — CANONICAL TARGET / IMPLEMENTATION PENDING:** Live sandbox catch-up/reconciliation is defined in [`VR_SCENARIO_SANDBOX_RECONCILIATION.md`](VR_SCENARIO_SANDBOX_RECONCILIATION.md). The reconciliation runtime is not yet implemented.
 
@@ -13,14 +13,18 @@ Status: **CURRENT / BINDING**, synchronized on 2026-09-01. Runtime graph and rec
 ## Authored spine
 
 ```text
-1.10 → … → 4.10 → 4.20 → 4.30 → 4.40 → 4.50 → 4.60 → 4.70 → 4.80 → 5.10
+1.10 → … → 4.10 → 4.20 → 4.30 → 4.40 → 4.50 → 4.60 → 4.70 → 4.75 → 3.80 → 4.80 → 5.10
 ```
 
 | Point | CURRENT role |
 | --- | --- |
-| `4.70` | Proto-Astro tuning and third-ring completion |
+| `4.70` | Proto-Astro tuning and third-ring sandbox gameplay |
+| `4.75` | mandatory third-ring completion presentation; waits for Large Glyph `SPHERE_FAR` settlement |
+| `3.80` | post-third-ring Asterion frontier; waits for the real Asterion claim |
 | `4.80` | third ring complete; waiting for the existing physical Resonator result |
 | `5.10` | stable third-ring + Resonator join; current authored/runtime boundary |
+
+`4.70` accepts the real `TIER_COMPLETED` result and enters `4.75`. On entry, `4.75` executes the authored tier-completion feedback and begins the legal Large Glyph distribution to `SPHERE_FAR`; only `THIRD_RING_COMPLETION_PRESENTATION_COMPLETED` advances it to `3.80`. Point ordering follows these authored graph edges, not numeric point-ID comparison.
 
 `4.80` targets `5.10`, enters with `SET_MAIN_AMBIENT_04` and `CHECK_RESONATOR_JOIN`, and accepts `RESONATOR_READY`. The check covers the event order in which Resonator already exists on entry. Otherwise `resonatorExists === true` is projected as `RESONATOR_READY`. This semantic join does not gate or own Resonator creation.
 
@@ -40,7 +44,7 @@ The read-only Guidance projection derives these exact live strings:
 
 ## Reconstruction and debug aliases
 
-`stateAt(X)` folds settled consequences strictly before `X` and never recreates transient interactions. Hydration/direct activation/reset must not replay live-only discovery Guidance.
+`stateAt(X)` folds settled consequences strictly before `X` and never recreates transient interactions. Thus `stateAt(4.70)` remains pre-completion, `stateAt(4.75)` enters rather than pre-settles the completion presentation, and later points reconstruct the settled Ring 3 / `SPHERE_FAR` result. Hydration/direct activation/reset must not replay live-only discovery Guidance.
 
 `P5 → 4.80` and `P6 → 5.10` are implemented debug/QA aliases only. Neither owns gameplay truth, capability truth or Scenario consequences; canonical hydration remains `stateAt → reconstruction → activate`.
 

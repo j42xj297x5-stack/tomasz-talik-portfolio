@@ -31,7 +31,8 @@ export function createVrLargeGlyphActor({
     angularSpeed: 0.02,
     depthOscillation: { enabled: true, minRadius: 20, maxRadius: 110, periodSeconds: 135 }
   },
-  onExpansionCompleted = () => {}
+  onExpansionCompleted = () => {},
+  onSphereDistributionCompleted = () => {}
 }) {
   if (!Array.isArray(items) || items.length !== LARGE_GLYPH_COUNT) {
     throw new TypeError('VrLargeGlyphActor requires exactly five Large Glyph identities.');
@@ -57,6 +58,9 @@ export function createVrLargeGlyphActor({
   }
   if (typeof onExpansionCompleted !== 'function') {
     throw new TypeError('VrLargeGlyphActor onExpansionCompleted must be a function.');
+  }
+  if (typeof onSphereDistributionCompleted !== 'function') {
+    throw new TypeError('VrLargeGlyphActor onSphereDistributionCompleted must be a function.');
   }
 
   const object = new THREE.Group();
@@ -348,6 +352,7 @@ export function createVrLargeGlyphActor({
         sphereElapsed = null;
         setSphereLayout();
         settleStage(VR_LARGE_GLYPH_SPHERE_STAGE);
+        onSphereDistributionCompleted();
       }
     } else if (stage === VR_LARGE_GLYPH_SPHERE_STAGE) {
       lateMotionElapsed += delta;

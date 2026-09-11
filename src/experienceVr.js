@@ -393,7 +393,9 @@ const largeGlyphActor = createVrLargeGlyphActor({
   expansion: settings.largeGlyphs.expansion,
   sphere: settings.largeGlyphs.sphere,
   onExpansionCompleted: () => runtimeExperience.dispatch(
-    VR_SCENARIO_EVENT.P2_RADIAL_PRESENTATION_COMPLETED)
+    VR_SCENARIO_EVENT.P2_RADIAL_PRESENTATION_COMPLETED),
+  onSphereDistributionCompleted: () => runtimeExperience.dispatch(
+    VR_SCENARIO_EVENT.THIRD_RING_COMPLETION_PRESENTATION_COMPLETED)
 });
 const { nodes } = largeGlyphActor;
 worldStableRoot.add(largeGlyphActor.object);
@@ -1547,7 +1549,7 @@ runtimeExperience = new RuntimeExperience({
         throw new Error(`Progress floor rejected accepted canonical Tier ${payload.tier} completion`);
       }
       playVrWorld(VR_AUDIO.tierComplete);
-      if (change.previousPointId === '4.70') runeResonatorGuidance.notifyThirdRingCompleted();
+      if (change.currentPointId === '4.75') runeResonatorGuidance.notifyThirdRingCompleted();
     },
     [VR_SCENARIO_EFFECT.BEGIN_P2_RADIAL_PRESENTATION]: () => {
       if (!largeGlyphActor.beginExpansion()) {
