@@ -1446,6 +1446,12 @@ runtimeExperience = new RuntimeExperience({
     [VR_SCENARIO_EFFECT.CHECK_RESONATOR_JOIN]: () => {
       progressionSemanticHandoff.onResonatorStateChanged(asterionResonatorFieldActor.getDescriptor());
     },
+    [VR_SCENARIO_EFFECT.CHECK_ETHER_INTERVENTION_JOIN]: () => {
+      progressionSemanticHandoff.onEtherInterventionJoinChecked({
+        tier4Complete: progressionController.isTierComplete(4),
+        installedNaturalRuneCount: runeStoneProgressionController.getInstalledFamilyCodes().length
+      });
+    },
     [VR_SCENARIO_EFFECT.BEGIN_ETHER_INTERVENTION]: () => {
       if (!runeResonatorGuidance.beginEtherIntervention()) {
         throw new Error('BEGIN_ETHER_INTERVENTION rejected by Rune/Resonator Guidance actor');

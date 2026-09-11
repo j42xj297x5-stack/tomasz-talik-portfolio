@@ -78,6 +78,7 @@ export const VR_SCENARIO_EVENT = immutableIdentifiers([
   'ASTERION_DRIVE_STARTED',
   'ASTERION_DRIVE_STOPPED',
   'FOURTH_RUNE_INSTALLED',
+  'ETHER_INTERVENTION_READY',
   'ETHER_INTERVENTION_COMPLETED',
   'ETHER_RUNE_TUNED',
   'ETHER_MONKEY_CAPTURED',
@@ -187,6 +188,7 @@ export const VR_SCENARIO_EFFECT = immutableIdentifiers([
   'PRESENT_ASTERION',
   'SHOW_ASTERION_EARNED_CUE',
   'CHECK_RESONATOR_JOIN',
+  'CHECK_ETHER_INTERVENTION_JOIN',
   'BEGIN_ETHER_INTERVENTION',
   'BEGIN_WATER_PATH_OPEN_COMMUNICATION',
   'BEGIN_FULL_RESONATOR_COMMUNICATION'
@@ -371,14 +373,17 @@ const ASTERION_EARNED_SETTLED_CONSEQUENCES = Object.freeze({
   asterionProduction: Object.freeze({ state: 'EARNED' })
 });
 
-const TIER_4_CARD_LIFECYCLE_TRANSITIONS = Object.freeze([
+const TIER_4_CARD_INTERACTION_TRANSITIONS = Object.freeze([
   Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.STAY, event: VR_SCENARIO_EVENT.CRYSTAL_ACTIVATED,
     milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.PRESENT_ACTIVE_CARD_PREVIEW]) }),
   Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.STAY, event: VR_SCENARIO_EVENT.CARD_COMMITTED,
     milestonesToAdd: Object.freeze([VR_SCENARIO_MILESTONE.CARD_COMMITTED]), effects: Object.freeze([
       VR_SCENARIO_EFFECT.UPDATE_COMMITTED_CARD_PRESENTATION,
       VR_SCENARIO_EFFECT.PLAY_CARD_COMMIT_FEEDBACK
-    ]) }),
+    ]) })
+]);
+const TIER_4_CARD_LIFECYCLE_TRANSITIONS = Object.freeze([
+  ...TIER_4_CARD_INTERACTION_TRANSITIONS,
   Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.STAY, event: VR_SCENARIO_EVENT.TIER_COMPLETED,
     milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.APPLY_TIER_COMPLETE_FEEDBACK]) })
 ]);
@@ -841,13 +846,22 @@ const points = Object.freeze([
   Object.freeze({
     id: VR_EXPERIENCE_POINT['5.10'], canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['5.20'] }),
     settledConsequences: FOURTH_RUNE_INSTALLED_SETTLED_CONSEQUENCES,
-    entryEffects: Object.freeze([]),
+    entryEffects: Object.freeze([VR_SCENARIO_EFFECT.CHECK_ETHER_INTERVENTION_JOIN]),
     label: 'Third ring + Resonator stable join', capabilities: P2_MAIN_GLYPH_CAPABILITIES,
     transitions: Object.freeze([
-      ...TIER_4_CARD_LIFECYCLE_TRANSITIONS,
-      Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.COMPLETE,
+      ...TIER_4_CARD_INTERACTION_TRANSITIONS,
+      Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.STAY, event: VR_SCENARIO_EVENT.TIER_COMPLETED,
+        milestonesToAdd: Object.freeze([]), effects: Object.freeze([
+          VR_SCENARIO_EFFECT.APPLY_TIER_COMPLETE_FEEDBACK,
+          VR_SCENARIO_EFFECT.CHECK_ETHER_INTERVENTION_JOIN
+        ]) }),
+      Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.STAY,
         event: VR_SCENARIO_EVENT.FOURTH_RUNE_INSTALLED,
-        milestonesToAdd: Object.freeze([VR_SCENARIO_MILESTONE.FOURTH_RUNE_INSTALLED]) })
+        milestonesToAdd: Object.freeze([VR_SCENARIO_MILESTONE.FOURTH_RUNE_INSTALLED]),
+        effects: Object.freeze([VR_SCENARIO_EFFECT.CHECK_ETHER_INTERVENTION_JOIN]) }),
+      Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.COMPLETE,
+        event: VR_SCENARIO_EVENT.ETHER_INTERVENTION_READY,
+        milestonesToAdd: Object.freeze([]), effects: Object.freeze([]) })
     ])
   }),
   Object.freeze({
