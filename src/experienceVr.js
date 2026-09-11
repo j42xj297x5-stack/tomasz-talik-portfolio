@@ -105,6 +105,7 @@ import { ASTERION_SECTOR_ACQUISITION_AUDIO, ASTERION_SECTOR_DRIVE_AUDIO,
   createVrAsterionSectorAudioProjection } from './xr/audio/createVrAsterionSectorAudioProjection.js';
 import { createVrAmbientSequencer, VR_MAIN_AMBIENT_PROGRAMS } from './xr/audio/createVrAmbientSequencer.js';
 import { createVrIntroAmbientSequencer } from './xr/audio/createVrIntroAmbientSequencer.js';
+import { createVrFinalAmbientSequencer } from './xr/audio/createVrFinalAmbientSequencer.js';
 import { ExperienceDirector } from './xr/progression/ExperienceDirector.js';
 import { RuntimeExperience } from './xr/progression/RuntimeExperience.js';
 import { stateAtVrScenarioPoint } from './xr/progression/reconstructVrScenarioState.js';
@@ -602,6 +603,10 @@ function presentLiveRuneBridgeReadinessTransitions() {
 }
 const ambientSequencer = createVrAmbientSequencer({ bridge: vrAudio });
 const introAmbientSequencer = createVrIntroAmbientSequencer({ bridge: vrAudio });
+const finalAmbientSequencer = createVrFinalAmbientSequencer({
+  bridge: vrAudio,
+  onWaitingStarted: () => ambientSequencer.stop({ fadeSeconds: 5 })
+});
 const ambientScenarioOwner = Object.freeze({
   hydrateScenarioState(state) {
     if (!state || typeof state !== 'object' || Array.isArray(state)
@@ -1424,6 +1429,7 @@ const waterPathOpenCommunication = createVrMandatoryMonkeyCommunication({ monkey
 const finalMonkeyFarewell = createVrFinalMonkeyFarewell({
   monkeyGuide,
   blocks: VR_MONKEY_COMMUNICATION_COPY_PL.progression['progression.final.monkeyFarewell'].blocks,
+  onTriggered: () => finalAmbientSequencer.beginFarewell(),
   onCompleted: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.FINAL_MONKEY_FAREWELL_COMPLETED)
 });
 const finalWorldRelease = createVrFinalWorldReleaseActor({
@@ -1526,6 +1532,11 @@ runtimeExperience = new RuntimeExperience({
         throw new Error('BEGIN_FINAL_MONKEY_FAREWELL rejected by final Monkey farewell actor');
       }
     },
+    [VR_SCENARIO_EFFECT.BEGIN_FINAL_AMBIENT_WAIT]: () => { finalAmbientSequencer.beginWaitingForFarewell(); },
+    [VR_SCENARIO_EFFECT.SYNC_FINAL_AMBIENT_AFTER_FAREWELL]: () => {
+      finalAmbientSequencer.synchronizeAfterFarewell(15);
+    },
+    [VR_SCENARIO_EFFECT.ENSURE_FINAL_AMBIENT_08]: () => { finalAmbientSequencer.ensureFinalLoop(); },
     [VR_SCENARIO_EFFECT.BEGIN_FINAL_WORLD_RELEASE]: () => {
       if (!finalWorldRelease.begin()) {
         throw new Error('BEGIN_FINAL_WORLD_RELEASE rejected by final world release actor');
@@ -1792,6 +1803,7 @@ const xrStartCalibration = createCanonicalXrStartCalibration({
 
 function renderFrame() {
   const delta = clock.getDelta();
+  finalAmbientSequencer.update(delta);
   if (xrStartCalibration.processFrame()) {
     renderer.render(scene, camera);
     return;
@@ -1925,6 +1937,7 @@ function restoreVrScenarioBaseline() {
   asterionPlatformEnergyVfxProjection.reset();
   ambientSequencer.reset();
   introAmbientSequencer.reset();
+  finalAmbientSequencer.reset();
   vrAudio.resetAsterionSphereAudio();
   astroFurnace.resetBaseline();
   furnaceAudioProjection.reset();
@@ -2067,6 +2080,7 @@ window.addEventListener('pagehide', () => {
   introFogReveal.dispose();
   ambientSequencer.dispose();
   introAmbientSequencer.dispose();
+  finalAmbientSequencer.dispose();
   unsubscribeRuneStoneInstallAudioCue();
   unsubscribeRuneStoneDockingAudio();
   unsubscribeRuneStoneInstalledAudio();

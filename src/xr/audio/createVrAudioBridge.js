@@ -5,7 +5,7 @@ const STARTED = 'started';
 const FAILED = 'failed';
 const CANCELLED = 'cancelled';
 const REQUIRED_LONG_FORM_PATHS = Object.freeze([
-  ...Array.from({ length: 5 }, (_, index) => `/audio/ambient_intro_0${index + 1}.mp3`),
+  ...Array.from({ length: 8 }, (_, index) => `/audio/ambient_intro_0${index + 1}.mp3`),
   ...Array.from({ length: 4 }, (_, index) => `/audio/ambient_0${index + 1}.mp3`),
   ...Array.from({ length: 13 }, (_, index) => `/audio/noise_quiete_loop_${String(index + 1).padStart(2, '0')}.mp3`)
 ]);

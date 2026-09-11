@@ -16,6 +16,14 @@ export function createVrAmbientSequencer({ bridge, setTimer = setTimeout, clearT
   let generation = 0, requestGeneration = 0, quietCursor = 0, disposed = false;
   let committedProgram = null, activeHandle = null, timer = null, timerResolve = null;
   let pendingController = null, candidateController = null, state = 'idle';
+  const retiring = new Set();
+
+  function stopRetiring(lifecycle) {
+    if (!lifecycle) return;
+    if (lifecycle.timer !== null) clearTimer(lifecycle.timer);
+    retiring.delete(lifecycle);
+    try { lifecycle.handle?.stop?.(); } catch (_) { /* optional audio remains fail-soft */ }
+  }
 
   function cancelPlayback() {
     generation += 1;
@@ -121,12 +129,28 @@ export function createVrAmbientSequencer({ bridge, setTimer = setTimeout, clearT
     });
     return true;
   }
+  function stop({ fadeSeconds = 0 } = {}) {
+    if (disposed) return;
+    requestGeneration += 1; candidateController?.abort(); candidateController = null;
+    generation += 1; pendingController?.abort(); pendingController = null;
+    if (timer !== null) clearTimer(timer);
+    timer = null; timerResolve?.(false); timerResolve = null;
+    committedProgram = null; state = 'idle';
+    const handle = activeHandle; activeHandle = null;
+    const duration = Math.max(0, Number(fadeSeconds) || 0);
+    if (!handle || duration === 0) { try { handle?.stop?.(); } catch (_) {} return; }
+    const lifecycle = { handle, timer: null };
+    retiring.add(lifecycle);
+    try { handle.rampTo?.(0, duration); } catch (_) { /* cleanup still runs */ }
+    lifecycle.timer = setTimer(() => stopRetiring(lifecycle), duration * 1000);
+  }
   function reset() {
     if (disposed) return;
     requestGeneration += 1; candidateController?.abort(); candidateController = null;
-    cancelPlayback(); committedProgram = null; quietCursor = 0; state = 'idle';
+    cancelPlayback(); [...retiring].forEach(stopRetiring);
+    committedProgram = null; quietCursor = 0; state = 'idle';
   }
   function dispose() { if (disposed) return; reset(); disposed = true; }
-  return { setProgram, reset, dispose, get state() { return state; },
+  return { setProgram, stop, reset, dispose, get state() { return state; },
     get committedProgram() { return committedProgram; }, get quietCursor() { return quietCursor; } };
 }

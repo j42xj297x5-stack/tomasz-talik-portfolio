@@ -358,7 +358,13 @@ class AudioManager {
     const finished = new Promise((resolve) => { resolveFinished = resolve; });
     let stopped = false, remaining = count;
     const owner = this;
-    const handle = { finished, stop() {
+    const handle = { finished,
+      rampTo(target, duration) {
+        const now = context.currentTime, parameter = output.gain;
+        parameter.cancelScheduledValues(now); parameter.setValueAtTime(parameter.value, now);
+        parameter.linearRampToValueAtTime(clamp01(target), now + Math.max(0, duration));
+      },
+      stop() {
       if (stopped) return;
       stopped = true;
       output.gain.cancelScheduledValues(context.currentTime);
