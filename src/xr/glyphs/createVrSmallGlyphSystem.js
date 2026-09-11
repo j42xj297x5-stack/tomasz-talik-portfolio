@@ -299,6 +299,14 @@ export function createVrSmallGlyphSystem({
     applyRevealOpacity(0);
   }
 
+  function cancelPresentation() {
+    if (disposed || presentationState !== PRESENTATION_STATE.PRESENTING) return false;
+    presentationState = PRESENTATION_STATE.IDLE;
+    presentationElapsed = 0;
+    completionSent = false;
+    return true;
+  }
+
   function hydrateScenarioState(hydratedState) {
     if (!hydratedState || typeof hydratedState !== 'object'
       || hydratedState.presentationVisible !== true || typeof hydratedState.presentationCompleted !== 'boolean') {
@@ -333,6 +341,7 @@ export function createVrSmallGlyphSystem({
     object, layerActor,
     beginWorldReveal,
     beginPresentation,
+    cancelPresentation,
     update,
     reset,
     hydrateScenarioState,
