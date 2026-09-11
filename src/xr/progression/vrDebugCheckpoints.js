@@ -8,7 +8,9 @@ export const VR_DEBUG_CHECKPOINTS = Object.freeze([
   Object.freeze({ id: 'P3', pointId: '4.10', label: 'P3', spawn: VR_DEBUG_CHECKPOINT_SPAWN.RING }),
   Object.freeze({ id: 'P4', pointId: '4.30', label: 'P4', spawn: VR_DEBUG_CHECKPOINT_SPAWN.RING }),
   Object.freeze({ id: 'P5', pointId: '4.80', label: 'P5', spawn: VR_DEBUG_CHECKPOINT_SPAWN.RING }),
-  Object.freeze({ id: 'P6', pointId: '5.10', label: 'P6', spawn: VR_DEBUG_CHECKPOINT_SPAWN.RING })
+  Object.freeze({ id: 'P6', pointId: '5.10', label: 'P6', spawn: VR_DEBUG_CHECKPOINT_SPAWN.RING }),
+  Object.freeze({ id: 'P7', pointId: '5.60', label: 'P7', spawn: VR_DEBUG_CHECKPOINT_SPAWN.RING }),
+  Object.freeze({ id: 'P8', pointId: '5.70', label: 'P8', spawn: VR_DEBUG_CHECKPOINT_SPAWN.RING })
 ]);
 
 const CHECKPOINTS_BY_ID = new Map(VR_DEBUG_CHECKPOINTS.map((checkpoint) => [checkpoint.id, checkpoint]));
