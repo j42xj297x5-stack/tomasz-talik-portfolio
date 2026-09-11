@@ -713,7 +713,7 @@ const points = Object.freeze([
   }),
   Object.freeze({
     id: VR_EXPERIENCE_POINT['3.70'],
-    canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['3.80'] }), settledConsequences: ASTRO_EARNED_SETTLED_CONSEQUENCES,
+    canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['4.10'] }), settledConsequences: ASTRO_EARNED_SETTLED_CONSEQUENCES,
     label: 'Physical Astro available / waiting for claim',
     capabilities: Object.freeze([VR_SCENARIO_CAPABILITY.CAN_USE_GLYPHS,
       VR_SCENARIO_CAPABILITY.CAN_USE_FURNACE, VR_SCENARIO_CAPABILITY.CAN_OPEN_FURNACE]),
@@ -722,12 +722,9 @@ const points = Object.freeze([
   }),
   Object.freeze({
     id: VR_EXPERIENCE_POINT['3.80'],
-    canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['4.10'] }), settledConsequences: ASTERION_EARNED_SETTLED_CONSEQUENCES,
-    entryEffects: Object.freeze([VR_SCENARIO_EFFECT.ENABLE_SHELL_FIELD_INTERACTION]),
-    label: 'Astro Attractor physically claimed / EARNED',
-    capabilities: Object.freeze([VR_SCENARIO_CAPABILITY.CAN_USE_GLYPHS, VR_SCENARIO_CAPABILITY.CAN_USE_FURNACE,
-      VR_SCENARIO_CAPABILITY.CAN_OPEN_FURNACE, VR_SCENARIO_CAPABILITY.CAN_INSERT_FURNACE_MATERIAL,
-      VR_SCENARIO_CAPABILITY.CAN_START_FURNACE_PROCESS]), transitions: Object.freeze([
+    canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['4.80'] }), settledConsequences: ASTERION_EARNED_SETTLED_CONSEQUENCES,
+    label: 'Third ring presentation complete / waiting for Asterion claim',
+    capabilities: P2_MAIN_GLYPH_CAPABILITIES, transitions: Object.freeze([
       Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.COMPLETE,
         event: VR_SCENARIO_EVENT.ASTERION_CLAIMED, milestonesToAdd: Object.freeze([]), effects: Object.freeze([]) })
     ])
@@ -736,7 +733,8 @@ const points = Object.freeze([
     id: VR_EXPERIENCE_POINT['4.10'],
     canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['4.20'] }),
     settledConsequences: SECOND_RING_COMPLETE_SETTLED_CONSEQUENCES,
-    label: 'Asterion physically claimed / second crystal cycle active',
+    entryEffects: Object.freeze([VR_SCENARIO_EFFECT.ENABLE_SHELL_FIELD_INTERACTION]),
+    label: 'Astro Attractor physically claimed / second crystal cycle active',
     capabilities: P2_MAIN_GLYPH_CAPABILITIES,
     transitions: Object.freeze([
       Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.STAY, event: VR_SCENARIO_EVENT.RELIQUARY_HINT_TIMEOUT,
@@ -805,7 +803,7 @@ const points = Object.freeze([
       event: VR_SCENARIO_EVENT.P2_MONKEY_DIALOGUE_COMPLETED, milestonesToAdd: Object.freeze([]) })])
   }),
   Object.freeze({
-    id: VR_EXPERIENCE_POINT['4.70'], canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['4.80'] }),
+    id: VR_EXPERIENCE_POINT['4.70'], canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['3.80'] }),
     settledConsequences: THIRD_RING_COMPLETE_SETTLED_CONSEQUENCES,
     label: 'P2 tuning loop / third ring', capabilities: P2_MAIN_GLYPH_CAPABILITIES,
     transitions: Object.freeze([
