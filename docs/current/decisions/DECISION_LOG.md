@@ -2,6 +2,19 @@
 
 Status: current binding decisions with preserved history. Synchronized on 2026-09-11 through the completed bounded Rings 1–3 sandbox migration, implemented Monkey communication contracts, the implemented `5.60` late Rune/Resonator boundary and binding future Water/finale canon.
 
+## 2026-09-11 — CURRENT WATER field hue/luminance presentation (SUPERSEDING)
+
+This documentation-only decision supersedes only conflicting WATER luminance/presentation clauses in the 2026-09-03 Metal/Water resonance decision. It preserves that decision's hue mapping, `W22` synchronization identity, Water Sync, Haiku damping, and anti-bypass rules; WATER advanced presentation remains **FUTURE / NOT IMPLEMENTED**.
+
+1. WATER never changes nominal field geometry, dimensions, aperture, Metal expansion, target containment, acquisition authority, or resonance timing. ANGLE and TILT are independent, composable presentation/frequency DOFs.
+2. ANGLE maps `0 → no WATER hue contribution`, `1 → GREEN`, `2 → BLUE`, and `3 → VIOLET/PURPLE`. Level `0` preserves the current neutral field color; hue represents frequency state, not power.
+3. TILT maps `0 → no WATER luminance contribution`, preserving baseline presentation, followed by three strictly increasing visible contributions: `baseline < level 1 < level 2 < level 3`. Level `1` must already be unambiguously brighter in VR at ANGLE `0`.
+4. Positive TILT is communicated primarily by a lightweight additive halo following the existing curved field-skeleton path. TILT `0` has no WATER halo; levels `1/2/3` increase halo intensity monotonically. Smaller monotonic skeleton and translucent-skin increases may support it. This read-only field-local layer never owns gameplay geometry; post-processing blur, volumetric rendering, and a new gameplay field volume are not mandatory.
+5. A positive ANGLE hue applies coherently to the WATER halo and affected existing presentation. At ANGLE `0`, positive TILT remains neutral/baseline-white. Legal combinations therefore include `W10`, `W01`, `W21`, `W22`, and `W23` without coupling either DOF to the other.
+6. Exact RGB, halo radius/thickness/opacity/intensity, skeleton/skin intensity, and transition timing remain **TUNING / HARDWARE QA**, not architectural constants.
+7. `W22` remains the BLUE WATER harmonic-center control state used by future `222 / M22 / W22` synchronization. Its coherent BLUE breathing pulse is a separate harmonic response; ordinary TILT levels are not pulsing states and the pulse is not part of the luminance ladder.
+8. Water Sync Lock/Contact, harmonic recognition, Haiku damping, final anti-bypass pull eligibility, and finale behavior remain unchanged and **FUTURE / NOT IMPLEMENTED**.
+
 ## 2026-09-11 — CURRENT Rings 1–3 sandbox progression and reconciliation closure (SUPERSEDING)
 
 This entry supersedes conflicting CURRENT implementation-status and prerequisite claims below for the bounded Rings 1–3 migration. Older decisions remain historical evidence.
