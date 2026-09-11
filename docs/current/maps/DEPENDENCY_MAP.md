@@ -14,6 +14,20 @@ SPINE → SCENARIO → DIRECTOR → RuntimeExperience → actors / domain owners
 
 `5.60 — Five elemental Runes installed / full Resonator unlocked` is the stable implemented late-game boundary. `P6 → 5.10` remains a debug/QA alias only.
 
+The completed Rings 1–3 live reconciliation branch is:
+
+```text
+domain owners
+  ↓ authoritative snapshots / semantic callbacks
+ScenarioProgressReconciler
+  ↓ bounded catchUpToPoint
+RuntimeExperience
+  ↓
+existing Director / authored destination effects
+```
+
+These arrows coordinate observation and forward Scenario movement; they do **not** transfer domain ownership into Scenario. Normal semantic events retain first opportunity to advance Scenario, while reconciliation handles domain-ahead or missed-event truth.
+
 Scenario owns dramaturgy, required beats, Guidance/hints, revealed knowledge, crystal progression and semantic capabilities. It observes domain truth; it does not gate already-legal Rune tuning/pull/installation, powered-sector acquisition/control, or Resonator response through `currentPoint` or capability checks.
 
 
@@ -50,11 +64,21 @@ Furnace Asterion Sphere progression complete
 → special V / VI SMALL_GLYPHS eligibility
 ```
 
-`createVrAstrolabiumTuningActor` is an **IMPLEMENTED**, derived/read-only interpreter and owns no duplicate persistence. `VI` eligibility works live and after hydration from `getAsterionSphereProgress().complete`; it creates no Scenario event or boolean. The immediate-all-four-band UI policy remains a future UI target.
+`createVrAstrolabiumTuningActor` is an **IMPLEMENTED**, derived/read-only interpreter and owns no duplicate persistence. `VI` eligibility works live and after hydration from `getAsterionSphereProgress().complete`; it creates no Scenario event or boolean. Immediate availability of all four bands after physical Astrolabium `EARNED` is **CURRENT / IMPLEMENTED**; family targetability remains independently derived.
 
 Special identities remain separate: five processed natural Shells expose `VO`; completed six-Shell Sphere progression exposes `VI`; later `CAN_TUNE_ETHER_RUNE` permits `VI + VO → VU`; later `REVEAL_ETHER_RUNE` materializes `stone_06 / VU`. `V` never enters natural family collections.
 
 Ordinary Large Glyph pull requires learned family knowledge. Late `SPHERE_FAR` reacquisition additionally requires transient Resonator `PULL_READY`; the early/late policy is implemented.
+
+## Contextual Rune Guidance
+
+```text
+first Rune installation fact
++ current Asterion ownership at playback start
+→ Rune/Resonator Guidance copy branch
+```
+
+Guidance observes both facts and freezes the selected blocks for that playback; it owns neither Rune installation nor Asterion truth.
 
 ## Rune tuning, transport, installation and reconstruction
 

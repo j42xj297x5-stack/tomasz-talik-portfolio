@@ -12,6 +12,8 @@ S5 = IMPLEMENTED
 
 This document records the completed migration from Scenario-gated Astrolabium progression to domain-owned sandbox behavior. `CURRENT` and `KANON` describe the implemented runtime; the S1-S4 notes below are retained as migration history.
 
+The completed Rings 1–3 architecture consumes these ownership laws through the separately implemented [`VR_SCENARIO_SANDBOX_RECONCILIATION.md`](VR_SCENARIO_SANDBOX_RECONCILIATION.md). Rune installation before Asterion is a legitimate sandbox order, and contextual Guidance now reflects current Asterion ownership without changing these domain rights.
+
 ## Canonical separation of rights
 
 **KANON:** these rights are independent and must not be collapsed into one generic eligibility flag:

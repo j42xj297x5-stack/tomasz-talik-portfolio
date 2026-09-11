@@ -13,7 +13,16 @@ Status: **CURRENT operational snapshot — 2026-09-11**. Authorities: [`VR_RUNTI
 - The event-driven reconciler selects the earliest still-required canonical boundary, preserves every mandatory Ring sequence, and waits for Large Glyph transitions/transients rather than projecting tier directly into actor stage.
 - Astro production is reconciled from its exact snapshot; Asterion remains independent at `3.80`; Resonator existence is projected through the existing semantic handoff at `4.80`.
 - Missing ordinary Ring 1–3 Progress Floor panels are synchronized from `ProgressionController.getActivatedPageIds()` without replaying historical card feedback or audio.
-- Reconstruction/debug activation suspends reconciliation and discards reconstruction-only wake-ups. Tier 4/5, Ether, Water, Rune installation, advanced Resonator and finale reconciliation remain outside this bounded patch.
+- Reconstruction/debug activation suspends reconciliation and discards reconstruction-only wake-ups. Tier 4/5, Ether, Water, late Rune progression, advanced Resonator and finale reconciliation remain outside this bounded migration.
+
+## Sandbox migration closure checkpoint
+
+- **Astrolabium sandbox migration: COMPLETE.** Ordinary post-`EARNED` rights are domain/physical, and the completed Rings 1–3 Scenario reconciliation consumes that ownership without taking it over.
+- **Rings 1–3 reconciliation: IMPLEMENTED / COMPLETE through stable `5.10`.** Domain truth may advance ahead, Scenario catches forward, and mandatory completion beats remain mandatory.
+- A normal live Asterion claim dispatches its semantic `ASTERION_CLAIMED` route before generic domain subscribers wake; reconciliation remains the domain-ahead/missed-event fallback.
+- First-Rune communication supports both legal orders and selects its Asterion-dependent copy from current ownership at actual playback start.
+- Reported manual runtime/hardware sandbox smoke demonstrated that a player can progress sandbox-style without first building Asterion and reach at least the first Rune sector installation. This is bounded evidence, not exhaustive hardware or perceptual validation.
+- Broader runtime/perceptual QA may continue independently of migration completion.
 
 ## Runtime operations checkpoint
 

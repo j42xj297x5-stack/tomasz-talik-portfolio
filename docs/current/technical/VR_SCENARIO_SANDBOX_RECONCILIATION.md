@@ -1,15 +1,16 @@
 # Experience VR — Scenario sandbox reconciliation
 
-Status: **CURRENT / IMPLEMENTED — 2026-09-11**. The bounded Rings 1–3 Scenario Progress Reconciler is implemented through the stable `5.10` boundary.
+Status: **CURRENT / IMPLEMENTED / MIGRATION COMPLETE — 2026-09-11**. The bounded Rings 1–3 Scenario Progress Reconciler is implemented through the stable `5.10` boundary.
 
 ## 1. Core canon and ownership
 
 ```text
 DOMAIN TRUTH MAY ADVANCE AHEAD OF SCENARIO
-SCENARIO MUST RECONCILE TO DOMAIN TRUTH
+SCENARIO RECONCILES FORWARD TO DOMAIN TRUTH
+MANDATORY AUTHORED COMPLETION BEATS REMAIN MANDATORY
 ```
 
-`ProgressionController` owns committed pages and `currentTier`. Scenario owns mandatory dramaturgy, authored presentation and story-only permissions. Actors retain physical state. Monkey guides and interprets; it is not a permission broker for mechanics the player has already legitimately solved.
+`ProgressionController` owns committed pages and `currentTier`. Scenario owns dramaturgy, mandatory authored presentation and story-only permissions. Domain owners own persistent/physical gameplay truth. Guidance observes current truth. The reconciler coordinates these owners; it does not fabricate truth.
 
 After legitimate reveal, the ordinary Reliquary lifecycle is governed by domain and physical legality, not by the current Scenario capability set. The first three portfolio rings are sandbox-progressible, with mandatory completion beats between sandbox intervals.
 
@@ -81,6 +82,21 @@ A missed `CARD_COMMITTED` can also leave Progress Floor card/panel presentation 
 
 Astro production maps exactly as follows: `READY` stays, `BUILDING` advances stale `3.50` to `3.60` without entry effects, `AVAILABLE`/`CLAIMING` advances to `3.70` without entry effects, and `EARNED` first enters `4.10` with entry effects. At `3.80`, only Asterion's own `EARNED` snapshot permits entry to `4.80`; at `4.80`, current Resonator existence is projected through the existing semantic handoff.
 
+For a normal live Asterion claim, semantic ordering is:
+
+```text
+physical Asterion EARNED
+→ physical cleanup / equip
+→ onClaimed
+→ ASTERION_CLAIMED settles through Scenario
+→ generic domain subscribers wake
+→ reconciler acts only as fallback
+```
+
+The normal live semantic event gets the first opportunity to move Scenario. Reconciliation is the fallback for domain-ahead or missed-event state, not a replacement for that event.
+
+Rune installation may legitimately precede Asterion ownership. First-Rune Guidance therefore schedules one authored beat and, after its delayed attention lifecycle, reads **current** Asterion ownership at actual playback start. With Asterion `EARNED`, the copy teaches sector control; without it, the copy explains that the sector is armed and directs the player to build the Asterion Sphere. This branch belongs only to Guidance and changes neither gameplay truth nor Scenario topology.
+
 ## 6. Live catch-up contract
 
 Live catch-up is not reconstruction:
@@ -109,7 +125,9 @@ Skipped points do not play rapidly. Reconciliation must not replay obsolete Monk
 
 After Ring 3, Large Glyphs reach `SPHERE_FAR`. Ordinary pull then requires both extracted family knowledge and Resonator `PULL_READY`; operating that path requires legitimately earned Asterion platform control. This is a physical/domain frontier, not a retroactive prerequisite for Rings 2–3.
 
-This contract is bounded to ordinary portfolio Rings 1–3, their mandatory completion beats, ordinary Reliquary lifecycle, Large Glyph stages and the Asterion frontier. It does not alter Tier 4/5, Ether, Water, Rune installation, advanced Resonator or finale law.
+The Rings 1–3 sandbox reconciliation migration is **IMPLEMENTED / COMPLETE**. Its boundary is ordinary Rings 1–3 → mandatory completion beats → Astrolabium and Rune sandbox interaction → Asterion frontier → first Resonator join → stable `5.10` reconciliation.
+
+Later progression reconciliation is outside this migration. Tier 4/5, Ether, Water, late Rune progression, advanced Resonator, Water advanced control/Sync, finale reconciliation, world dissolution and XR finale are not promoted by this closure.
 
 ## 9. Forbidden anti-patterns
 
@@ -128,4 +146,4 @@ make Scenario own portfolio, Reliquary or Astrolabium domain truth
 
 ## 10. Suppression and bounded exclusions
 
-Debug/reconstruction activation suspends reconciliation and discards wake-ups emitted by baseline restoration, hydration and synchronization; resume does not catch the reconstructed point forward. The implemented scope begins at `2.30`, ends at stable `5.10`, and does not reconcile Tier 4/5, Ether, Water, Rune installation, advanced Resonator or finale progression. Missed `CARD_COMMITTED` and `TIER_COMPLETED` events are not replayed.
+Debug/reconstruction activation suspends reconciliation and discards wake-ups emitted by baseline restoration, hydration and synchronization; resume does not catch the reconstructed point forward. The implemented scope begins at `2.30`, ends at stable `5.10`, and does not reconcile Tier 4/5, Ether, Water, late Rune installation/progression, advanced Resonator or finale progression. Missed `CARD_COMMITTED` and `TIER_COMPLETED` events are not replayed.
