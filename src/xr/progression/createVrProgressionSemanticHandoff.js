@@ -20,6 +20,12 @@ export function createVrProgressionSemanticHandoff({ dispatch }) {
     if (descriptor?.resonatorExists === true) dispatch(VR_SCENARIO_EVENT.RESONATOR_READY);
   }
 
+  function onEtherInterventionJoinChecked({ tier4Complete, installedNaturalRuneCount }) {
+    if (tier4Complete === true && installedNaturalRuneCount >= 4) {
+      dispatch(VR_SCENARIO_EVENT.ETHER_INTERVENTION_READY);
+    }
+  }
+
   function onRuneProgressionChanged(previous, current) {
     const before = previous?.installedRuneFamilies?.length ?? 0;
     const after = current?.installedRuneFamilies?.length ?? 0;
@@ -34,5 +40,10 @@ export function createVrProgressionSemanticHandoff({ dispatch }) {
     }
   }
 
-  return { onPageCommitted, onResonatorStateChanged, onRuneProgressionChanged };
+  return {
+    onPageCommitted,
+    onResonatorStateChanged,
+    onEtherInterventionJoinChecked,
+    onRuneProgressionChanged
+  };
 }
