@@ -31,6 +31,7 @@ export function createVrLargeGlyphActor({
     angularSpeed: 0.02,
     depthOscillation: { enabled: true, minRadius: 20, maxRadius: 110, periodSeconds: 135 }
   },
+  onElevationCompleted = () => {},
   onExpansionCompleted = () => {},
   onSphereDistributionCompleted = () => {}
 }) {
@@ -55,6 +56,9 @@ export function createVrLargeGlyphActor({
     || depthOscillation.maxRadius <= depthOscillation.minRadius
     || !Number.isFinite(depthOscillation.periodSeconds) || depthOscillation.periodSeconds <= 0) {
     throw new TypeError('VrLargeGlyphActor requires valid depth oscillation settings.');
+  }
+  if (typeof onElevationCompleted !== 'function') {
+    throw new TypeError('VrLargeGlyphActor onElevationCompleted must be a function.');
   }
   if (typeof onExpansionCompleted !== 'function') {
     throw new TypeError('VrLargeGlyphActor onExpansionCompleted must be a function.');
@@ -329,6 +333,7 @@ export function createVrLargeGlyphActor({
       if (progress === 1) {
         elevationElapsed = null;
         settleStage(VR_LARGE_GLYPH_ELEVATED_STAGE);
+        onElevationCompleted();
       }
     }
     if (expansionElapsed !== null) {
@@ -367,6 +372,13 @@ export function createVrLargeGlyphActor({
     object.visible = value;
     return true;
   }
+  function getTransitionState() {
+    let transition = null;
+    if (elevationElapsed !== null) transition = 'ELEVATION';
+    else if (expansionElapsed !== null) transition = 'EXPANSION';
+    else if (sphereElapsed !== null) transition = 'SPHERE_DISTRIBUTION';
+    return Object.freeze({ stage, transition, transientActive: transientLeases.size > 0 });
+  }
   function reset() {
     [...transientLeases].forEach(restoreToSlot);
     elevationElapsed = null;
@@ -398,6 +410,7 @@ export function createVrLargeGlyphActor({
     nodes: Object.freeze(nodes),
     update,
     getStage: () => stage,
+    getTransitionState,
     getSpatialExtent: () => currentRadius,
     getTargetingRange: () => depthOscillation.enabled ? depthOscillation.maxRadius : sphere.radius,
     setPresentationVisible,

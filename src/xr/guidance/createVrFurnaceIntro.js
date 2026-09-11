@@ -5,11 +5,13 @@ export const VR_FURNACE_INTRO_COPY = VR_MONKEY_COMMUNICATION_COPY_PL.progression
 
 export function createVrFurnaceIntro({ monkeyGuide, revealFurnace, secondsPerLine, onCompleted = () => {} }) {
   if (typeof revealFurnace !== 'function') throw new TypeError('revealFurnace is required');
-  return createVrMonkeyProgressionMessage({
+  const messageActor = createVrMonkeyProgressionMessage({
     monkeyGuide,
+    owner: Symbol('VrFurnaceIntro'),
     blocks: VR_FURNACE_INTRO_COPY,
     secondsPerLine,
     beforeShow: revealFurnace,
     onCompleted
   });
+  return { ...messageActor, cancel: messageActor.reset };
 }
