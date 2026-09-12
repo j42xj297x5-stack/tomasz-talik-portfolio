@@ -120,6 +120,12 @@ export function createVrAsterionResonatorTargetAudioProjection({ audioBridge, ac
         entry.lock.handle?.setPosition(worldPosition.x, worldPosition.y, worldPosition.z);
       });
     },
+    retireTarget(id, fadeSeconds = 3) {
+      const entry = targets.get(id);
+      if (disposed || !entry) return;
+      retire(entry, 'aim', fadeSeconds);
+      retire(entry, 'lock', fadeSeconds);
+    },
     reset,
     dispose() { if (disposed) return; reset(); unsubscribe(); targets.clear(); disposed = true; }
   };

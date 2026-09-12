@@ -106,7 +106,7 @@ import { ASTERION_SECTOR_ACQUISITION_AUDIO, ASTERION_SECTOR_DRIVE_AUDIO,
   createVrAsterionSectorAudioProjection } from './xr/audio/createVrAsterionSectorAudioProjection.js';
 import { createVrAmbientSequencer, VR_MAIN_AMBIENT_PROGRAMS } from './xr/audio/createVrAmbientSequencer.js';
 import { createVrIntroAmbientSequencer } from './xr/audio/createVrIntroAmbientSequencer.js';
-import { createVrFinalAmbientSequencer, FINAL_CREDITS_AMBIENT } from './xr/audio/createVrFinalAmbientSequencer.js';
+import { createVrFinalAmbientSequencer } from './xr/audio/createVrFinalAmbientSequencer.js';
 import { ExperienceDirector } from './xr/progression/ExperienceDirector.js';
 import { RuntimeExperience } from './xr/progression/RuntimeExperience.js';
 import { stateAtVrScenarioPoint } from './xr/progression/reconstructVrScenarioState.js';
@@ -157,7 +157,8 @@ const VR_AUDIO = Object.freeze({
   furnaceProcess: '/audio/astro_piec_work_01.mp3',
   runeTuningProcess: '/audio/astro_piec_work_03.mp3',
   asterionCreate: '/audio/astro_piec_work_create_01.mp3',
-  glyphProcess: '/audio/glif_hover_loop.mp3'
+  glyphProcess: '/audio/glif_hover_loop.mp3',
+  releaseBell: '/audio/bell_03.mp3'
 });
 const GLYPH_COMPLETION_AUDIO = Object.freeze({
   'ethics-life-protection': ['/audio/glif_earth_4s_01.mp3', '/audio/glif_earth_4s_02.mp3', '/audio/glif_earth_4s_03.mp3'],
@@ -605,10 +606,7 @@ function presentLiveRuneBridgeReadinessTransitions() {
 }
 const ambientSequencer = createVrAmbientSequencer({ bridge: vrAudio });
 const introAmbientSequencer = createVrIntroAmbientSequencer({ bridge: vrAudio });
-const finalAmbientSequencer = createVrFinalAmbientSequencer({
-  bridge: vrAudio,
-  onWaitingStarted: () => ambientSequencer.stop({ fadeSeconds: 5 })
-});
+const finalAmbientSequencer = createVrFinalAmbientSequencer({ bridge: vrAudio });
 const ambientScenarioOwner = Object.freeze({
   hydrateScenarioState(state) {
     if (!state || typeof state !== 'object' || Array.isArray(state)
@@ -1448,6 +1446,7 @@ const finalWorldRelease = createVrFinalWorldReleaseActor({
   platformEnergyVfxActor,
   audioBridge: vrAudio,
   sectorDriveAudio: ASTERION_SECTOR_DRIVE_AUDIO,
+  releaseBellAudio: VR_AUDIO.releaseBell,
   setInteractionLocked: (locked) => {
     finaleInteractionLocked = Boolean(locked);
     if (finaleInteractionLocked) vrControllers.setRaysEnabled(false);
@@ -1542,14 +1541,16 @@ runtimeExperience = new RuntimeExperience({
         throw new Error('BEGIN_FINAL_MONKEY_FAREWELL rejected by final Monkey farewell actor');
       }
     },
-    [VR_SCENARIO_EFFECT.BEGIN_FINAL_AMBIENT_WAIT]: () => { finalAmbientSequencer.beginWaitingForFarewell(); },
+    [VR_SCENARIO_EFFECT.BEGIN_FINAL_AMBIENT_WAIT]: () => {
+      ambientSequencer.stop({ fadeSeconds: 5 });
+      vrAudio.cancelGlyphAcquisition('haiku-cosmos');
+      asterionResonatorTargetAudioProjection.retireTarget('haiku-cosmos', 3);
+      finalAmbientSequencer.beginWaitingForFarewell();
+    },
     [VR_SCENARIO_EFFECT.SYNC_FINAL_AMBIENT_AFTER_FAREWELL]: () => {
       finalAmbientSequencer.synchronizeAfterFarewell(15);
     },
     [VR_SCENARIO_EFFECT.ENSURE_FINAL_AMBIENT_08]: () => { finalAmbientSequencer.ensureFinalLoop(); },
-    [VR_SCENARIO_EFFECT.ENTER_CREDITS_AUDIO_ISOLATION]: () => {
-      vrAudio.enterCreditsIsolation({ preserveTag: FINAL_CREDITS_AMBIENT, fadeSeconds: 3 });
-    },
     [VR_SCENARIO_EFFECT.END_XR_SESSION]: () => {
       const session = renderer.xr.getSession();
       if (!session || terminalXrEndRequested) return;
@@ -1971,7 +1972,6 @@ function restoreVrScenarioBaseline() {
   ambientSequencer.reset();
   introAmbientSequencer.reset();
   finalAmbientSequencer.reset();
-  vrAudio.resetCreditsIsolation();
   vrAudio.resetAsterionSphereAudio();
   astroFurnace.resetBaseline();
   furnaceAudioProjection.reset();

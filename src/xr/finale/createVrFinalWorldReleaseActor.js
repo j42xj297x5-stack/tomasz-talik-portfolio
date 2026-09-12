@@ -30,7 +30,7 @@ function restoreTransform(object, state) {
 export function createVrFinalWorldReleaseActor({
   scene, camera, progressFloor, portalObject, reliquaryObject, furnaceObject,
   monkeyVisualRoot, monkeyStoneRoot, shellObjects, smallGlyphObjects,
-  platformEnergyVfxActor, audioBridge, sectorDriveAudio,
+  platformEnergyVfxActor, audioBridge, sectorDriveAudio, releaseBellAudio,
   setInteractionLocked, cancelActiveInteractions, onCompleted
 }) {
   if (!scene?.add || !camera?.add || !progressFloor?.setSectorMotion
@@ -130,6 +130,7 @@ export function createVrFinalWorldReleaseActor({
 
   function startReleasePresentation() {
     const generation = ++audioGeneration;
+    if (releaseBellAudio) audioBridge?.playOneShot?.(releaseBellAudio, 'WORLD');
     SECTORS.forEach(({ glyphId, branchId }) => {
       platformEnergyVfxActor?.setFloorDriveEnergy(branchId, true);
       const path = sectorDriveAudio?.[branchId];
