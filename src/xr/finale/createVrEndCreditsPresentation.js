@@ -67,9 +67,6 @@ export function createVrEndCreditsPresentation({ worldRoot, getViewingPose, onCr
   const viewQuaternion = new THREE.Quaternion();
   const forward = new THREE.Vector3();
   const anchorPosition = new THREE.Vector3();
-  const anchorQuaternion = new THREE.Quaternion();
-  const parentQuaternion = new THREE.Quaternion();
-  const worldUp = new THREE.Vector3(0, 1, 0);
 
   function ensureWorldAnchor() {
     if (anchored) return;
@@ -79,12 +76,8 @@ export function createVrEndCreditsPresentation({ worldRoot, getViewingPose, onCr
     if (forward.lengthSq() < 0.0001) forward.set(0, 0, -1);
     forward.normalize();
     anchorPosition.copy(viewPosition).addScaledVector(forward, 8);
-    anchorQuaternion.setFromAxisAngle(worldUp, Math.atan2(-forward.x, -forward.z));
-    worldRoot.updateWorldMatrix(true, false);
     object.position.copy(anchorPosition);
-    worldRoot.worldToLocal(object.position);
-    worldRoot.getWorldQuaternion(parentQuaternion);
-    object.quaternion.copy(parentQuaternion.invert()).multiply(anchorQuaternion);
+    object.lookAt(viewPosition);
     anchored = true;
   }
 
