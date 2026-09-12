@@ -200,12 +200,37 @@ class AudioManager {
     return !this.vrCreditsIsolation || sourceTag === this.vrCreditsIsolation.preserveTag;
   }
 
+  fadeAndStopLegacyHandle(handle, seconds) {
+    if (!handle || handle.cleaned || !this.context || !handle.source || !handle.gain) return;
+    try {
+      const now = this.context.currentTime;
+      const fadeEndsAt = now + seconds;
+      const parameter = handle.gain.gain;
+      if (typeof parameter.cancelAndHoldAtTime === 'function') parameter.cancelAndHoldAtTime(now);
+      else {
+        const currentGain = clamp01(parameter.value);
+        parameter.cancelScheduledValues(now);
+        parameter.setValueAtTime(currentGain, now);
+      }
+      parameter.linearRampToValueAtTime(0, fadeEndsAt);
+      handle.stopping = true;
+      handle.source.stop(fadeEndsAt);
+    } catch (_) {
+      try { handle.source?.stop(); } catch (_) { /* Already stopped. */ }
+      this.cleanupGlyphHover(handle);
+    }
+  }
+
   enterVrCreditsIsolation({ preserveTag, fadeSeconds = 3 } = {}) {
     if (!preserveTag) return false;
     this.resetVrCreditsIsolation();
     const isolation = { preserveTag, stopTimers: new Set() };
     this.vrCreditsIsolation = isolation;
     const seconds = Math.max(0, Number(fadeSeconds) || 0);
+    this.glyphHoverRequestVersion += 1;
+    new Set([this.activeGlyphHover, this.fadingGlyphHover]).forEach((handle) => {
+      this.fadeAndStopLegacyHandle(handle, seconds);
+    });
     this.activeVrSources.forEach((handle) => {
       if (handle.sourceTag === preserveTag) return;
       try { handle.rampTo?.(0, seconds); } catch (_) { /* Terminal cleanup remains fail-soft. */ }
@@ -602,14 +627,15 @@ class AudioManager {
   }
 
   async startGlyphHover() {
-    if (this.pendingGlyphHoverStart || this.activeGlyphHover || this.fadingGlyphHover) return;
+    if (this.vrCreditsIsolation || this.pendingGlyphHoverStart || this.activeGlyphHover || this.fadingGlyphHover) return;
     this.pendingGlyphHoverStart = true;
     const requestVersion = ++this.glyphHoverRequestVersion;
     try {
-      if (!await this.unlock() || requestVersion !== this.glyphHoverRequestVersion) return;
+      if (!await this.unlock() || this.vrCreditsIsolation || requestVersion !== this.glyphHoverRequestVersion) return;
       const path = EFFECT_PATHS.glyphHover[0];
       const buffer = this.buffers.get(path) || await this.loadBuffer(path);
-      if (requestVersion !== this.glyphHoverRequestVersion || !buffer || !this.context || !this.effectsBusNode) return;
+      if (this.vrCreditsIsolation || requestVersion !== this.glyphHoverRequestVersion
+        || !buffer || !this.context || !this.effectsBusNode) return;
 
       const source = this.context.createBufferSource();
       const gain = this.context.createGain();

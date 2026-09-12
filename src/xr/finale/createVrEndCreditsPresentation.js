@@ -78,7 +78,7 @@ export function createVrEndCreditsPresentation({ worldRoot, getViewingPose, onCr
     forward.y = 0;
     if (forward.lengthSq() < 0.0001) forward.set(0, 0, -1);
     forward.normalize();
-    anchorPosition.copy(viewPosition).addScaledVector(forward, 5);
+    anchorPosition.copy(viewPosition).addScaledVector(forward, 8);
     anchorQuaternion.setFromAxisAngle(worldUp, Math.atan2(-forward.x, -forward.z));
     worldRoot.updateWorldMatrix(true, false);
     object.position.copy(anchorPosition);
