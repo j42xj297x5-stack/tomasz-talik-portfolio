@@ -8,6 +8,9 @@ const BRAND_FADE_SECONDS = 2;
 const BRAND_TOTAL_SECONDS = BRAND_HOLD_SECONDS + LOGO_SPIN_SECONDS + BRAND_FADE_SECONDS;
 const ORANGE = '#f28c18';
 const DARK = '#111111';
+const PRESENTATION_SCALE = 1.5;
+const CANVAS_WIDTH = 1600;
+const CANVAS_HEIGHT = 1000;
 
 const CREDIT_SECTIONS = Object.freeze([
   ['Wizja', 'Tomasz Talik'],
@@ -33,15 +36,15 @@ export function createVrEndCreditsPresentation({ worldRoot, getViewingPose, onCr
   }
 
   const canvas = document.createElement('canvas');
-  canvas.width = 1600;
-  canvas.height = 1000;
+  canvas.width = CANVAS_WIDTH * PRESENTATION_SCALE;
+  canvas.height = CANVAS_HEIGHT * PRESENTATION_SCALE;
   const context = canvas.getContext('2d');
   const texture = new THREE.CanvasTexture(canvas);
   texture.colorSpace = THREE.SRGBColorSpace;
   const material = new THREE.MeshBasicMaterial({
     map: texture, transparent: true, opacity: 1, depthTest: false, depthWrite: false, toneMapped: false
   });
-  const object = new THREE.Mesh(new THREE.PlaneGeometry(8, 5), material);
+  const object = new THREE.Mesh(new THREE.PlaneGeometry(12, 7.5), material);
   object.name = 'VrEndCreditsPresentation';
   object.renderOrder = 100001;
   object.visible = false;
@@ -63,6 +66,10 @@ export function createVrEndCreditsPresentation({ worldRoot, getViewingPose, onCr
   const viewPosition = new THREE.Vector3();
   const viewQuaternion = new THREE.Quaternion();
   const forward = new THREE.Vector3();
+  const anchorPosition = new THREE.Vector3();
+  const anchorQuaternion = new THREE.Quaternion();
+  const parentQuaternion = new THREE.Quaternion();
+  const worldUp = new THREE.Vector3(0, 1, 0);
 
   function ensureWorldAnchor() {
     if (anchored) return;
@@ -71,13 +78,20 @@ export function createVrEndCreditsPresentation({ worldRoot, getViewingPose, onCr
     forward.y = 0;
     if (forward.lengthSq() < 0.0001) forward.set(0, 0, -1);
     forward.normalize();
-    object.position.copy(viewPosition).addScaledVector(forward, 5);
-    object.rotation.set(0, Math.atan2(-forward.x, -forward.z), 0);
+    anchorPosition.copy(viewPosition).addScaledVector(forward, 5);
+    anchorQuaternion.setFromAxisAngle(worldUp, Math.atan2(-forward.x, -forward.z));
+    worldRoot.updateWorldMatrix(true, false);
+    object.position.copy(anchorPosition);
+    worldRoot.worldToLocal(object.position);
+    worldRoot.getWorldQuaternion(parentQuaternion);
+    object.quaternion.copy(parentQuaternion.invert()).multiply(anchorQuaternion);
     anchored = true;
   }
 
   function prepareCanvas() {
+    context.setTransform(1, 0, 0, 1, 0, 0);
     context.clearRect(0, 0, canvas.width, canvas.height);
+    context.setTransform(PRESENTATION_SCALE, 0, 0, PRESENTATION_SCALE, 0, 0);
     context.textAlign = 'center';
     context.textBaseline = 'middle';
   }
@@ -86,22 +100,22 @@ export function createVrEndCreditsPresentation({ worldRoot, getViewingPose, onCr
     prepareCanvas();
     context.fillStyle = DARK;
     context.font = '700 66px sans-serif';
-    context.fillText('ORANGE MONKEY VR', canvas.width / 2, 72);
+    context.fillText('ORANGE MONKEY VR', CANVAS_WIDTH / 2, 72);
     const startY = 164;
     const sectionStep = 74;
     CREDIT_SECTIONS.forEach(([label, value], index) => {
       const y = startY + index * sectionStep;
       context.font = '700 29px sans-serif';
-      context.fillText(label, canvas.width / 2, y);
+      context.fillText(label, CANVAS_WIDTH / 2, y);
       context.font = '32px sans-serif';
-      context.fillText(value, canvas.width / 2, y + 34);
+      context.fillText(value, CANVAS_WIDTH / 2, y + 34);
     });
     texture.needsUpdate = true;
   }
 
   function drawBrand(rotation = 0) {
     prepareCanvas();
-    const centerY = canvas.height / 2;
+    const centerY = CANVAS_HEIGHT / 2;
     const logoSize = 270;
     const gap = 58;
     const wordmarkFont = 112;
@@ -109,7 +123,7 @@ export function createVrEndCreditsPresentation({ worldRoot, getViewingPose, onCr
     const orangeWidth = context.measureText('ORANGE').width;
     const blackWidth = context.measureText(' MONKEY VR').width;
     const groupWidth = logoSize + gap + orangeWidth + blackWidth;
-    const logoCenterX = (canvas.width - groupWidth) / 2 + logoSize / 2;
+    const logoCenterX = (CANVAS_WIDTH - groupWidth) / 2 + logoSize / 2;
     if (logoLoaded) {
       context.save();
       context.translate(logoCenterX, centerY);
