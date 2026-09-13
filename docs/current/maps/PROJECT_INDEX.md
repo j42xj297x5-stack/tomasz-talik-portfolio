@@ -34,6 +34,7 @@ The entry shell exposes three modes: Classic 2D, Experience 3D, and capability-g
 
 ## Canonical navigation
 
+- [`audits/localization/ORANGE_MONKEY_LOCALIZATION_INVENTORY_2026-09-12.md`](../audits/localization/ORANGE_MONKEY_LOCALIZATION_INVENTORY_2026-09-12.md) — repository-wide Polish localization inventory for the entry shell, all three presentation modes, accessibility surfaces and canonical Experience VR communication.
 - [`README.md`](../README.md) — active documentation hub.
 - [`maps/DOCUMENTATION_MAP.md`](DOCUMENTATION_MAP.md) — placement and lifecycle rules.
 - [`maps/DEPENDENCY_MAP.md`](DEPENDENCY_MAP.md) — current high-level dependency graph.
