@@ -12,7 +12,7 @@ const PRESENTATION_SCALE = 1.5;
 const CANVAS_WIDTH = 1600;
 const CANVAS_HEIGHT = 1000;
 
-const CREDIT_SECTIONS = Object.freeze([
+const CREDIT_SECTIONS_PL = Object.freeze([
   ['Wizja', 'Tomasz Talik'],
   ['Architekt', 'ChatGPT'],
   ['Wykonawca', 'Codex'],
@@ -25,11 +25,24 @@ const CREDIT_SECTIONS = Object.freeze([
   ['VR', 'Virtual Desktop'],
   ['Licencja publicznej edycji', 'Creative Commons Attribution-ShareAlike']
 ]);
+const CREDIT_SECTIONS_EN = Object.freeze([
+  ['Vision', 'Tomasz Talik'],
+  ['Architect', 'ChatGPT'],
+  ['Developer', 'Codex'],
+  ['3D Models', 'Meshy AI'],
+  ['Sound Design', 'Adobe Firefly, ElevenLabs'],
+  ['3D Engine', 'Three.js'],
+  ['2D / 3D Editing', 'Blender, Inkscape, GIMP'],
+  ['Audio Mix / Mastering', 'Ableton Live'],
+  ['Visual Effects / VFX', 'Custom Three.js Implementations'],
+  ['VR', 'Virtual Desktop'],
+  ['Public Edition License', 'Creative Commons Attribution-ShareAlike']
+]);
 
 const PHASE = Object.freeze({ IDLE: 'IDLE', CREDITS: 'CREDITS', BRAND: 'BRAND', COMPLETE: 'COMPLETE' });
 const clamp01 = (value) => Math.max(0, Math.min(1, value));
 
-export function createVrEndCreditsPresentation({ worldRoot, getViewingPose, onCreditsCompleted, onBrandCompleted }) {
+export function createVrEndCreditsPresentation({ worldRoot, getViewingPose, locale = 'en', onCreditsCompleted, onBrandCompleted }) {
   if (!worldRoot?.add || typeof getViewingPose !== 'function'
     || typeof onCreditsCompleted !== 'function' || typeof onBrandCompleted !== 'function') {
     throw new TypeError('[VrEndCreditsPresentation] Required presentation seams are unavailable.');
@@ -63,6 +76,7 @@ export function createVrEndCreditsPresentation({ worldRoot, getViewingPose, onCr
   let completionSent = false;
   let disposed = false;
   let anchored = false;
+  const creditSections = locale === 'pl' ? CREDIT_SECTIONS_PL : CREDIT_SECTIONS_EN;
   const viewPosition = new THREE.Vector3();
   const viewQuaternion = new THREE.Quaternion();
   const forward = new THREE.Vector3();
@@ -96,7 +110,7 @@ export function createVrEndCreditsPresentation({ worldRoot, getViewingPose, onCr
     context.fillText('ORANGE MONKEY VR', CANVAS_WIDTH / 2, 72);
     const startY = 164;
     const sectionStep = 74;
-    CREDIT_SECTIONS.forEach(([label, value], index) => {
+    creditSections.forEach(([label, value], index) => {
       const y = startY + index * sectionStep;
       context.font = '700 29px sans-serif';
       context.fillText(label, CANVAS_WIDTH / 2, y);

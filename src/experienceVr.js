@@ -92,7 +92,7 @@ import { createVrEndCreditsPresentation } from './xr/finale/createVrEndCreditsPr
 import { createVrToolGuidanceLifecycle } from './xr/guidance/createVrToolGuidanceLifecycle.js';
 import { createVrEarlyExperienceGuidance } from './xr/guidance/createVrEarlyExperienceGuidance.js';
 import { createVrRuneResonatorGuidance } from './xr/guidance/createVrRuneResonatorGuidance.js';
-import { VR_MONKEY_COMMUNICATION_COPY_PL } from './xr/guidance/vrMonkeyCommunicationCopy.js';
+import { resolveVrMonkeyCommunicationCopy } from './xr/guidance/vrMonkeyCommunicationCopy.js';
 import { createVrFurnaceIntro } from './xr/guidance/createVrFurnaceIntro.js';
 import { createVrIntroSequence } from './xr/guidance/createVrIntroSequence.js';
 import { createVrIntroCrystalTutorial } from './xr/guidance/createVrIntroCrystalTutorial.js';
@@ -128,14 +128,14 @@ if (!app) throw new Error('Missing #app mount element.');
 
 const COPY = {
   pl: {
-    title: 'Doświadczenie VR', loading: 'Przygotowywanie minimalnej sceny VR…', ready: 'Scena jest gotowa.',
+    title: 'Orange Monkey VR', loading: 'Przygotowywanie minimalnej sceny VR…', ready: 'Scena jest gotowa.',
     enter: 'Wejdź do VR', entering: 'Uruchamianie sesji…', exit: 'Zakończ VR', retry: 'Wejdź ponownie do VR',
     error: 'Nie udało się uruchomić sesji VR. Możesz spróbować ponownie.',
     controllersAlt: 'Instrukcja sterowania kontrolerami VR',
     crystalInstructionTitle: 'Portal czeka', crystalInstructionBody: 'Osadź kryształ w naczyniu.'
   },
   en: {
-    title: 'Experience VR', loading: 'Preparing the minimal VR scene…', ready: 'The scene is ready.',
+    title: 'Orange Monkey VR', loading: 'Preparing the minimal VR scene…', ready: 'The scene is ready.',
     enter: 'Enter VR', entering: 'Starting session…', exit: 'Exit VR', retry: 'Enter VR again',
     error: 'The VR session could not be started. You can try again.',
     controllersAlt: 'VR controller instructions',
@@ -145,6 +145,7 @@ const COPY = {
 
 const language = document.documentElement.lang === 'pl' ? 'pl' : 'en';
 const copy = COPY[language];
+const monkeyCommunicationCopy = resolveVrMonkeyCommunicationCopy(language);
 const vrAudio = createVrAudioBridge();
 const VR_AUDIO = Object.freeze({
   playerOpen: '/audio/bell_01.mp3', playerClose: '/audio/bell_02.mp3', click: '/audio/click_panel_01.mp3',
@@ -897,7 +898,7 @@ monkeyGuide = createVrMonkeyGuide({
   onAttentionStart: () => playVrWorld(VR_AUDIO.monkeyThinking)
 });
 runeResonatorGuidance = createVrRuneResonatorGuidance({
-  monkeyGuide, copy: VR_MONKEY_COMMUNICATION_COPY_PL,
+  monkeyGuide, copy: monkeyCommunicationCopy,
   secondsPerLine: settings.intro.messageDisplayDuration,
   getCurrentPointId: () => runtimeExperience?.getCurrentPointId?.() ?? null,
   isAsterionEarned: () => asterionProductionController.isEarned(),
@@ -917,15 +918,15 @@ runeResonatorGuidance = createVrRuneResonatorGuidance({
 });
 toolGuidanceLifecycle = createVrToolGuidanceLifecycle({
   monkeyGuide,
-  copy: VR_MONKEY_COMMUNICATION_COPY_PL,
-  canStartAstroProduction: () => language === 'pl' && runtimeExperience?.can(
+  copy: monkeyCommunicationCopy,
+  canStartAstroProduction: () => runtimeExperience?.can(
     VR_SCENARIO_CAPABILITY.CAN_START_FURNACE_PROCESS
   ) === true,
   getAstroProductionState: () => astroAttractorProductionController.getState()
 });
 earlyExperienceGuidance = createVrEarlyExperienceGuidance({
   monkeyGuide, knowledgeResolver: monkeyKnowledgeResolver,
-  copy: VR_MONKEY_COMMUNICATION_COPY_PL,
+  copy: monkeyCommunicationCopy,
   getCurrentPointId: () => runtimeExperience?.getCurrentPointId?.() ?? null,
   hasProtoAstroTuning: () => protoAstroTuningController.getExtractedFamilyCodes().length > 0,
   onFirstCrystalResponseCompleted: () => introSequence?.beginFirstCrystalDiscovery()
@@ -973,7 +974,7 @@ const furnaceContentSource = createVrAstroFurnaceContentSource({
   getChamberState: () => astroFurnaceOpenInteraction?.getState?.() ?? 'CLOSED'
 });
 const furnacePanel = createVrAstroFurnacePanel({
-  parent: platformFixturesRoot, furnace: astroFurnace, controllers: vrControllers.controllers,
+  parent: platformFixturesRoot, furnace: astroFurnace, controllers: vrControllers.controllers, locale: language,
   progressionController: furnaceProgressionController, productionController: asterionProductionController,
   astroProductionController: astroAttractorProductionController,
   protoAstroTuningController,
@@ -1404,7 +1405,7 @@ const p2ObservationWindow = createVrObservationWindow({
   }
 });
 const postRingMonkeyDialogue = createVrMandatoryMonkeyCommunication({ monkeyGuide,
-  blocks: VR_MONKEY_COMMUNICATION_COPY_PL.progression['progression.postRing.changedWorld'].blocks,
+  blocks: monkeyCommunicationCopy.progression['progression.postRing.changedWorld'].blocks,
   secondsPerLine: settings.intro.messageDisplayDuration,
   onTriggered: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.MONKEY_TRIGGERED),
   onCompleted: () => {
@@ -1413,7 +1414,7 @@ const postRingMonkeyDialogue = createVrMandatoryMonkeyCommunication({ monkeyGuid
   }
 });
 const p2MonkeyDialogue = createVrMandatoryMonkeyCommunication({ monkeyGuide,
-  blocks: VR_MONKEY_COMMUNICATION_COPY_PL.progression['progression.p2.smallGlyphsIntro'].blocks,
+  blocks: monkeyCommunicationCopy.progression['progression.p2.smallGlyphsIntro'].blocks,
   secondsPerLine: settings.intro.messageDisplayDuration,
   onTriggered: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.MONKEY_TRIGGERED),
   onCompleted: () => {
@@ -1422,13 +1423,13 @@ const p2MonkeyDialogue = createVrMandatoryMonkeyCommunication({ monkeyGuide,
   }
 });
 const waterPathOpenCommunication = createVrMandatoryMonkeyCommunication({ monkeyGuide,
-  blocks: VR_MONKEY_COMMUNICATION_COPY_PL.progression['progression.p4.waterPathOpen'].blocks,
+  blocks: monkeyCommunicationCopy.progression['progression.p4.waterPathOpen'].blocks,
   secondsPerLine: settings.intro.messageDisplayDuration,
   onTriggered: () => waterPathOpenCommunication.beginPlayback()
 });
 const finalMonkeyFarewell = createVrFinalMonkeyFarewell({
   monkeyGuide,
-  blocks: VR_MONKEY_COMMUNICATION_COPY_PL.progression['progression.final.monkeyFarewell'].blocks,
+  blocks: monkeyCommunicationCopy.progression['progression.final.monkeyFarewell'].blocks,
   onTriggered: () => finalAmbientSequencer.beginFarewell(),
   onCompleted: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.FINAL_MONKEY_FAREWELL_COMPLETED)
 });
@@ -1468,6 +1469,7 @@ const finalWorldRelease = createVrFinalWorldReleaseActor({
 });
 const endCreditsPresentation = createVrEndCreditsPresentation({
   worldRoot: scene,
+  locale: language,
   getViewingPose: (positionTarget, quaternionTarget) => getXrHeadWorldPose({
     renderer, camera, playerRig, positionTarget, quaternionTarget
   }),
@@ -1476,6 +1478,7 @@ const endCreditsPresentation = createVrEndCreditsPresentation({
 });
 const furnaceIntro = createVrFurnaceIntro({
   monkeyGuide,
+  blocks: monkeyCommunicationCopy.progression['progression.furnace.look'].blocks,
   secondsPerLine: settings.intro.messageDisplayDuration,
   revealFurnace: () => astroFurnace.reveal(3),
   onCompleted: () => {

@@ -4,14 +4,19 @@ const KNOWN_STATES = new Set(['IDLE', ...ACTIVE_PROCESS_STATES, 'COMPLETE']);
 const clamp01 = (value) => Math.min(1, Math.max(0, Number.isFinite(value) ? value : 0));
 
 export function resolveProcessTelemetry({ state = 'IDLE', overallProgress = 0, extractionProgress = 0, angularSpeed = 0, processAngle = 0, completed = false,
-  contentState = 'EMPTY', chamberState = 'CLOSED' } = {}) {
+  contentState = 'EMPTY', chamberState = 'CLOSED', locale = 'pl' } = {}) {
   const phase = completed ? 'COMPLETE' : KNOWN_STATES.has(state) ? state : 'IDLE';
   const labels = { IDLE: 'GOTOWY — OCZEKIWANIE NA WKŁAD', PRESSING: 'INICJALIZACJA', SPINUP: 'ROZRUCH',
     STEADY: 'STABILIZACJA', EXTRACTION: 'EKSTRAKCJA', COOLDOWN: 'WYGASZANIE',
     COMPLETE: 'ESENCJA ZAPISANA W PAMIĘCI PIECA' };
-  let label = labels[phase];
+  const englishLabels = { IDLE: 'READY — WAITING FOR INPUT', PRESSING: 'INITIALIZATION', SPINUP: 'STARTUP',
+    STEADY: 'STABILIZATION', EXTRACTION: 'EXTRACTION', COOLDOWN: 'SHUTDOWN',
+    COMPLETE: 'ESSENCE STORED IN FURNACE MEMORY' };
+  const activeLabels = locale === 'pl' ? labels : englishLabels;
+  let label = activeLabels[phase];
   if (phase === 'IDLE' && contentState === 'INSERTED') label = chamberState === 'OPEN'
-    ? 'ZAMKNIJ POKRYWĘ\nI ROZPOCZNIJ EKSTRAKCJĘ' : 'GOTOWY DO EKSTRAKCJI';
+    ? (locale === 'pl' ? 'ZAMKNIJ POKRYWĘ\nI ROZPOCZNIJ EKSTRAKCJĘ' : 'CLOSE THE LID\nAND START EXTRACTION')
+    : (locale === 'pl' ? 'GOTOWY DO EKSTRAKCJI' : 'READY FOR EXTRACTION');
   return { phase, label, overallProgress: phase === 'IDLE' ? 0 : clamp01(overallProgress),
     extractionProgress: clamp01(extractionProgress),
     angularSpeed: Math.abs(angularSpeed || 0), processAngle: processAngle || 0,

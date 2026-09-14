@@ -1,8 +1,5 @@
 import * as THREE from '../../vendor/three.js';
-import { VR_MONKEY_COMMUNICATION_COPY_PL } from './vrMonkeyCommunicationCopy.js';
-
-const PL_INTRO_DECISION = VR_MONKEY_COMMUNICATION_COPY_PL.decisions['decision.intro.go'];
-const PL_THRESHOLD_DECISION = VR_MONKEY_COMMUNICATION_COPY_PL.decisions['decision.threshold.enter'];
+import { resolveVrMonkeyCommunicationCopy } from './vrMonkeyCommunicationCopy.js';
 
 export const VR_INTRO_STATE = Object.freeze({
   XR_CALIBRATING: 'XR_CALIBRATING', FOG_REVEAL: 'FOG_REVEAL', WAIT_RUNTIME_AFTER_REVEAL: 'WAIT_RUNTIME_AFTER_REVEAL',
@@ -22,27 +19,31 @@ export const VR_INTRO_STATE = Object.freeze({
   WAIT_RUNTIME_AFTER_RELIQUARY_REVEAL: 'WAIT_RUNTIME_AFTER_RELIQUARY_REVEAL', ENDING: 'ENDING', BYPASSED: 'BYPASSED'
 });
 
-export const VR_INTRO_COPY = Object.freeze({
-  pl: { opening: [...VR_MONKEY_COMMUNICATION_COPY_PL.progression['progression.intro.firstPresence'].blocks,
-      ...VR_MONKEY_COMMUNICATION_COPY_PL.progression['progression.intro.openPlayerGuide'].blocks], panelPrompt: 'Naciśnij Y, żeby wejść do menu.',
-    panelDone: VR_MONKEY_COMMUNICATION_COPY_PL.progression['progression.intro.afterPlayerGuide'].blocks, trigger: 'Teraz spust.',
-    seen: VR_MONKEY_COMMUNICATION_COPY_PL.progression['progression.intro.pointerLearned'].blocks, going: PL_INTRO_DECISION.question,
-    invitation: ['go', 'where', 'no'].map((id, index) => ({ id, label: PL_INTRO_DECISION.options[index] })),
-    where: VR_MONKEY_COMMUNICATION_COPY_PL.knowledge['knowledge.intro.where'].blocks, no: ['Dobrze.\nNie każda droga musi być twoja.'],
-    threshold: [...PL_THRESHOLD_DECISION.blocks, PL_THRESHOLD_DECISION.question],
-    thresholdOptions: ['cross', 'beyond', 'return'].map((id, index) => ({ id, label: PL_THRESHOLD_DECISION.options[index] })),
-    beyond: ['Po tej stronie pytasz.\nPo tamtej będziesz sprawdzał.'], returning: ['Mądra decyzja.', 'Albo tchórzliwa.', 'Czasem to ta sama decyzja.\nDopiero później wiadomo.'],
-    glyphHint: ['Pięć znaków.', 'Nie pytaj jeszcze, co znaczą.\nDotknij jednego Szpilą.'], glyphDiscovered: 'O, wydaje mi się, że można tego użyć.' },
-  en: { opening: ['Good.', 'You have hands.', 'Let us make sure you know where everything is.'], panelPrompt: 'Press Y to open the menu.',
-    panelDone: ["If you forget — I'll remind you.", 'First, let us see if the world listens to you.', 'Point at me.'], trigger: 'Now pull the trigger.',
-    seen: ['See?', 'You have already taught the world where you are looking.'], going: 'Will you walk?',
-    invitation: [{ id: 'go', label: "I'LL GO" }, { id: 'where', label: 'WHERE TO?' }, { id: 'no', label: 'NO' }],
-    where: ['If I told you, you would walk toward the answer.', 'I am asking whether you will follow me.'], no: ['Good.', 'Not every road has to be yours.'],
-    threshold: ['There is a threshold ahead.', 'You do not have to cross it.', 'If you cross it, you will return only when the road is over.', 'Will you enter?'],
-    thresholdOptions: [{ id: 'cross', label: 'I CROSS THE THRESHOLD' }, { id: 'beyond', label: 'WHAT IS ON THE OTHER SIDE?' }, { id: 'return', label: 'I TURN BACK' }],
-    beyond: ['On this side, you ask.', 'On the other, you will find out.'], returning: ['A wise decision.', 'Or a cowardly one.', 'Sometimes they are the same decision. You only know later.'],
-    glyphHint: ['Five signs.', 'Do not ask what they mean yet.', 'Touch one with the Spike.'], glyphDiscovered: 'Oh, I think this can be used.' }
-});
+function resolveIntroCopy(locale) {
+  const source = resolveVrMonkeyCommunicationCopy(locale);
+  const introDecision = source.decisions['decision.intro.go'];
+  const thresholdDecision = source.decisions['decision.threshold.enter'];
+  return Object.freeze({
+    opening: [...source.progression['progression.intro.firstPresence'].blocks,
+      ...source.progression['progression.intro.openPlayerGuide'].blocks],
+    panelPrompt: source.progression['progression.intro.openPlayerGuide'].prompt,
+    panelDone: source.progression['progression.intro.afterPlayerGuide'].blocks,
+    trigger: source.progression['progression.intro.triggerMonkey'].blocks[0],
+    seen: source.progression['progression.intro.pointerLearned'].blocks,
+    going: introDecision.question,
+    invitation: ['go', 'where', 'no'].map((id, index) => ({ id, label: introDecision.options[index] })),
+    where: source.knowledge['knowledge.intro.where'].blocks,
+    no: source.decisions['decision.intro.no'].blocks,
+    threshold: [...thresholdDecision.blocks, thresholdDecision.question],
+    thresholdOptions: ['cross', 'beyond', 'return'].map((id, index) => ({ id, label: thresholdDecision.options[index] })),
+    beyond: source.knowledge['knowledge.threshold.otherSide'].blocks,
+    returning: source.decisions['decision.threshold.return'].blocks,
+    glyphHint: source.progression['progression.glyphs.firstInstruction'].blocks,
+    glyphDiscovered: source.progression['progression.glyphs.firstDiscovery'].blocks[0]
+  });
+}
+
+export const VR_INTRO_COPY = Object.freeze({ pl: resolveIntroCopy('pl'), en: resolveIntroCopy('en') });
 
 export function createVrIntroSequence({ monkeyGuide, monkeyMotionRoot, monkeyVisualRoot, monkeyStoneRoot = null, playerRig,
   getHeadPosition = () => playerRig.getWorldPosition(new THREE.Vector3()), playerGuidePanel = null, fogReveal = null,

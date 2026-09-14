@@ -33,7 +33,7 @@ export const furnacePanelAnimationActive = ({ panelState, screen }) => panelStat
 const smoothstep = (value) => value * value * (3 - 2 * value);
 export const wireframeDissolveVisible = (segment, progress) => progress < 1 && segment.dissolveOrder >= Math.max(0, progress);
 
-export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], progressionController, processSource, contentSource,
+export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], progressionController, processSource, contentSource, locale = 'en',
   productionController = null, astroProductionController = null, protoAstroTuningController = null, canUseAstroProduction = () => false,
   canUseAstroTuning = () => false,
   runeRecipeInteraction = null, runeRecipeSelectionController = null, runeTuningController = null,
@@ -103,12 +103,61 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
   const runeStoneWireframeByFamily = new Map(FAMILY_GRID_CODES.map((familyCode) => [familyCode,
     createAsterionModelWireframeMap(resolveVrRuneStonePreviewModel(familyCode), { maxSegments: 420, minLength: .006, thresholdAngle: 20 })]));
   const protoAstroImageCache = new Map();
+  const englishCopy = Object.freeze({
+    'ASTRO PIEC': 'ASTRO FURNACE', 'MODUŁY TRANSFORMACJI': 'MODULES OF TRANSFORMATION',
+    'SFERA ASTERIONOWA': 'ASTERION SPHERE', 'Rdzeń żyroskopowy sterowania kręgiem': 'Gyroscopic ring-control core',
+    'SKORUPY': 'SHELLS', 'ASTROLABIUM WIĘZI': 'ASTROLABE OF BONDING',
+    'Narzędzie przyciągania i synchronizacji': 'Attraction and synchronization tool',
+    'GOTOWE // ODBIERZ': 'READY // COLLECT', 'STROJENIE': 'TUNING', 'WEJDŹ DO MODUŁU': 'ENTER MODULE',
+    '← MODUŁY': '← MODULES', 'NARZĘDZIA SYNCHRONIZACJI': 'SYNCHRONIZATION TOOLS',
+    'UTWÓRZ ASTROLABIUM WIĘZI': 'BUILD THE ASTROLABE OF BONDING',
+    'Materializacja narzędzia w Astro Piecu': 'Materialize the tool in the Astro Furnace',
+    'STROJENIE GLIFÓW': 'GLYPH TUNING', 'Trwała konfiguracja Małych Glifów': 'Permanent Small Glyph configuration',
+    'STROJENIE KAMIENI RUNICZNYCH': 'TUNE THE RUNE STONES', 'Receptury rodzin Wu Xing': 'Wu Xing family recipes',
+    'WYBIERZ DOCELOWĄ RODZINĘ KAMIENIA': 'SELECT TARGET STONE FAMILY', 'ZESTROJONA': 'TUNED',
+    'WYBRANA': 'SELECTED', 'SPECJALNY': 'SPECIAL', 'DOSTĘPNA': 'AVAILABLE', 'MAŁY GLIF': 'SMALL GLYPH',
+    'SKORUPA': 'SHELL', 'OCZEKIWANIE NA SKŁADNIKI': 'WAITING FOR INGREDIENTS',
+    'GOTOWA DO STROJENIA': 'READY FOR TUNING', 'NIEPRAWIDŁOWA RECEPTURA': 'INVALID RECIPE',
+    'STAN PRODUKCJI': 'PRODUCTION STATUS', 'GOTOWE DO UTWORZENIA': 'READY TO CREATE',
+    'Rozpocznij świadomie proces w Piecu.': 'Consciously begin the process in the Furnace.',
+    'MATERIALIZACJA': 'MATERIALIZATION', 'Proces konstrukcji trwa w komorze.': 'Construction is underway in the chamber.',
+    'ASTROLABIUM GOTOWE': 'ASTROLABE READY', 'Otwórz komorę i odbierz obiekt.': 'Open the chamber and collect the object.',
+    'PRZEKAZYWANIE': 'TRANSFER', 'Fizyczny odbiór Astrolabium trwa.': 'Physical retrieval of the Astrolabe is underway.',
+    'NIEDOSTĘPNE': 'UNAVAILABLE', 'Stan produkcji jest poza kontraktem modułu.': 'Production state is outside the module contract.',
+    'UTWÓRZ': 'CREATE', 'STROJENIE ASTROLABIUM': 'ASTROLABE TUNING',
+    'Trwała konfiguracja Astrolabium Więzi': 'Permanent Astrolabe of Bonding configuration',
+    'MAŁE GLIFY': 'SMALL GLYPHS', 'DOSTROJONY': 'TUNED', 'PRZETWARZANIE': 'PROCESSING',
+    'GOTOWY': 'READY', 'NIEAKTYWNY': 'INACTIVE', 'PRZEBIEG EKSTRAKCJI': 'EXTRACTION PROGRESS',
+    'OCZEKIWANIE': 'WAITING', 'EKSTRAKCJA': 'EXTRACTION', 'ZABEZPIECZONO': 'CONTAINED',
+    'KULA GOTOWA': 'SPHERE READY', 'OTWÓRZ KOMORĘ': 'OPEN CHAMBER', 'AKTYWNA': 'ACTIVE',
+    'X // KULA ASTERIONOWA': 'X // ASTERION SPHERE', 'MATERIALIZACJA KULI': 'SPHERE MATERIALIZATION',
+    'PRZEBIEG ABSORPCJI': 'ABSORPTION PROGRESS', 'INICJACJA': 'INITIALIZATION',
+    'STABILIZACJA POLA': 'FIELD STABILIZATION', 'FORMOWANIE': 'FORMING', 'KONDENSACJA': 'CONDENSATION',
+    'ABSORPCJA': 'ABSORPTION'
+  });
+  const translate = (value) => {
+    if (locale === 'pl') return value;
+    if (englishCopy[value]) return englishCopy[value];
+    return String(value)
+      .replace('DOSTĘPNE', 'AVAILABLE')
+      .replace('KULA ASTERIONOWA', 'ASTERION SPHERE')
+      .replace('MAŁY GLIF', 'SMALL GLYPH')
+      .replace('MATERIAŁ', 'MATERIAL')
+      .replace('GOTOWY', 'PREPARED')
+      .replace('EKSTRAKCJA', 'EXTRACTION')
+      .replace('ABSORPCJA', 'ABSORPTION')
+      .replace('ZABEZPIECZONO', 'CONTAINED')
+      .replace('STROJENIE', 'TUNING')
+      .replace('OCZEKIWANIE NA SKŁADNIKI', 'WAITING FOR INGREDIENTS')
+      .replace('GOTOWA DO STROJENIA', 'READY FOR TUNING')
+      .replace('NIEPRAWIDŁOWA RECEPTURA', 'INVALID RECIPE');
+  };
 
   function panelRect(x, y, width, height, options = {}) {
     drawFurnaceFrame(context, { x, y, width, height, cornerSize: options.cornerSize ?? config.frameCornerSizePx, ...options });
   }
   function text(value, x, y, size = 34, color = '#e8f7ff') {
-    context.fillStyle = color; context.font = `${size}px sans-serif`; context.fillText(value, x, y);
+    context.fillStyle = color; context.font = `${size}px sans-serif`; context.fillText(translate(value), x, y);
   }
   function getProtoAstroImage(descriptor) {
     if (!descriptor?.syllable) return null;
@@ -185,7 +234,9 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
       text(detail, rect.x + 38, rect.y + 122, 22, enabled ? '#91afbe' : '#667681');
     });
   }
-  const runeFamilyLabels = Object.freeze({ earth: 'ZIEMIA', metal: 'METAL', water: 'WODA', tree: 'DREWNO', fire: 'OGIEŃ', astro: 'ETER' });
+  const runeFamilyLabels = locale === 'pl'
+    ? Object.freeze({ earth: 'ZIEMIA', metal: 'METAL', water: 'WODA', tree: 'DREWNO', fire: 'OGIEŃ', astro: 'ETER' })
+    : Object.freeze({ earth: 'EARTH', metal: 'METAL', water: 'WATER', tree: 'WOOD', fire: 'FIRE', astro: 'ETHER' });
   const runeLabel = (familyCode) => runeFamilyLabels[PROTO_ASTRO_FAMILIES[familyCode]?.id] ?? familyCode ?? '—';
   function drawRuneTuning() {
     const snapshot = runeRecipeSelectionController?.getSnapshot?.() ?? { availableFamilyCodes: [] };
@@ -333,7 +384,7 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
     const presentationTail = Boolean(presentationAssetId && telemetry.phase === 'COMPLETE');
     const concernsSmallGlyph = Boolean(currentAssetId || smallGlyphProcess || presentationTail);
     const protoAstro = concernsSmallGlyph ? resolveVrSmallGlyphProtoAstro(presentationAssetId) : null;
-    const shownTelemetry = concernsSmallGlyph ? telemetry : resolveProcessTelemetry({ contentState: 'EMPTY' });
+    const shownTelemetry = concernsSmallGlyph ? telemetry : resolveProcessTelemetry({ contentState: 'EMPTY', locale });
     const color = accents[shownTelemetry.colorKey];
     panelRect(x, y, width, height, { variant: 'monitor', active: concernsSmallGlyph && shownTelemetry.active,
       completed: concernsSmallGlyph && shownTelemetry.phase === 'COMPLETE', accentColor: color });
@@ -412,7 +463,7 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
     return resolveProcessTelemetry({ state: rawState === 'COMPLETE' && !completed ? 'IDLE' : rawState,
       overallProgress: processSource?.getProgress?.() ?? 0, extractionProgress: processSource?.getExtractionProgress?.() ?? 0,
       angularSpeed: processSource?.getAngularSpeed?.() ?? 0, processAngle: processSource?.getProcessAngle?.() ?? 0, completed,
-      contentState: contentSource?.getState?.() ?? 'EMPTY', chamberState: contentSource?.getChamberState?.() ?? 'CLOSED' });
+      contentState: contentSource?.getState?.() ?? 'EMPTY', chamberState: contentSource?.getChamberState?.() ?? 'CLOSED', locale });
   }
   function drawProcessMonitor() {
     const telemetry = readTelemetry(), x = 58, y = 675, width = 1420, height = 295;

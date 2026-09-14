@@ -1,4 +1,5 @@
-import { VR_MONKEY_COMMUNICATION_COPY_PL, VR_MONKEY_KNOWLEDGE_CATEGORIES_PL } from './vrMonkeyCommunicationCopy.js';
+import { VR_MONKEY_KNOWLEDGE_CATEGORIES_EN, VR_MONKEY_KNOWLEDGE_CATEGORIES_PL,
+  resolveVrMonkeyCommunicationCopy } from './vrMonkeyCommunicationCopy.js';
 
 export const VR_MONKEY_KNOWLEDGE_ITEM_TYPE = Object.freeze({ CATEGORY: 'CATEGORY', TOPIC: 'TOPIC' });
 
@@ -8,9 +9,11 @@ export const VR_MONKEY_KNOWLEDGE_LIFECYCLE = Object.freeze({
 
 export function createVrMonkeyKnowledgeResolver({ locale, getCurrentObjective, isPostRingStoneGuidance = () => false }) {
   if (typeof getCurrentObjective !== 'function') throw new TypeError('getCurrentObjective must be a function.');
-  const category = Object.freeze({ id: 'category.whatNow', ...VR_MONKEY_KNOWLEDGE_CATEGORIES_PL['category.whatNow'],
+  const categories = locale === 'pl' ? VR_MONKEY_KNOWLEDGE_CATEGORIES_PL : VR_MONKEY_KNOWLEDGE_CATEGORIES_EN;
+  const communicationCopy = resolveVrMonkeyCommunicationCopy(locale);
+  const category = Object.freeze({ id: 'category.whatNow', ...categories['category.whatNow'],
     type: VR_MONKEY_KNOWLEDGE_ITEM_TYPE.CATEGORY });
-  const whatIsIt = Object.freeze({ id: 'category.whatIsIt', ...VR_MONKEY_KNOWLEDGE_CATEGORIES_PL['category.whatIsIt'],
+  const whatIsIt = Object.freeze({ id: 'category.whatIsIt', ...categories['category.whatIsIt'],
     type: VR_MONKEY_KNOWLEDGE_ITEM_TYPE.CATEGORY });
   let stonesRead = false;
   let stonesLeadRead = false;
@@ -18,15 +21,15 @@ export function createVrMonkeyKnowledgeResolver({ locale, getCurrentObjective, i
   const transientHintFallbacks = new Map();
 
   function getTopic() {
-    if (locale === 'pl' && isPostRingStoneGuidance()) {
+    if (isPostRingStoneGuidance()) {
       return topicFromCopy(stonesLeadRead ? 'knowledge.p3.stones' : 'knowledge.p3.stonesLead');
     }
-    const current = locale === 'pl' ? getCurrentObjective() : null;
+    const current = getCurrentObjective();
     return current ? Object.freeze({ id: `objective:${current.id}`, groupId: category.groupId,
       label: current.body, question: current.body, blocks: Object.freeze([current.body]),
       type: VR_MONKEY_KNOWLEDGE_ITEM_TYPE.TOPIC, lifecycle: VR_MONKEY_KNOWLEDGE_LIFECYCLE.READ }) : null;
   }
-  const copyById = (id) => VR_MONKEY_COMMUNICATION_COPY_PL.knowledge[id];
+  const copyById = (id) => communicationCopy.knowledge[id];
   const topicFromCopy = (id) => { const source = copyById(id); return Object.freeze({ id, groupId: source.groupId,
     label: source.question, question: source.question, blocks: Object.freeze(source.blocks),
     type: VR_MONKEY_KNOWLEDGE_ITEM_TYPE.TOPIC,
@@ -54,7 +57,7 @@ export function createVrMonkeyKnowledgeResolver({ locale, getCurrentObjective, i
       if (topicId === 'knowledge.p3.stones') stonesRead = true;
     },
     publishTransientHintFallback(slotId, hintId) {
-      const source = VR_MONKEY_COMMUNICATION_COPY_PL.hints[hintId];
+      const source = communicationCopy.hints[hintId];
       if (!slotId || !source) return false;
       const finalBlock = source.blocks.at(-1);
       const topic = Object.freeze({ id: `fallback:${hintId}`, groupId: category.groupId,
