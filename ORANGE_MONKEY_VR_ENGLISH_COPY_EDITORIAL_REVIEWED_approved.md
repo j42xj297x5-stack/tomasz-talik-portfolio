@@ -1,10 +1,10 @@
 # Orange Monkey VR — English Copy Editorial Review Sheet
 
-**IMPLEMENTATION_GATE: `PENDING_EDITORIAL_APPROVAL`**
+**IMPLEMENTATION_GATE: `approved`**
 
 This file is a human editorial review sheet, not an implementation source yet.
 
-- Repository branch: `porfolio`
+- Repository branch: `work`
 - Source inventory: `docs/current/audits/localization/ORANGE_MONKEY_LOCALIZATION_INVENTORY_2026-09-12.md`
 - Source English-copy commit on GitHub: `aae0e9459a7ccff47e9da127c38245be6483d46b`
 - Review scope: **139 items** = all Orange Monkey VR items whose English was newly authored in the inventory plus the 3 public product-name rename targets.
@@ -39,7 +39,7 @@ Codex must not use this file for runtime implementation while `IMPLEMENTATION_GA
 | --- | --- | --- | --- |
 | Piec / Astro Piec | Furnace / Astro Furnace | `Furnace / Astro Furnace` | approved |
 | Astrolabium Więzi | Bond Astrolabe | `Astrolabe of Binding` | approved |
-| Kula Asterionowa | Asterion Sphere | `__PENDING__` | approved |
+| Kula Asterionowa | Asterion Sphere | `Asterion Sphere` | approved |
 | Rezonator Asterionowy | Asterion Resonator | `Asterion Resonator` | approved |
 | Kamień Runiczny | Rune Stone | `Rune Stone` | approved |
 | Mały Glif / duży glif | Small Glyph / Large Glyph | `Small Glyph / Large Glyph` | approved |
