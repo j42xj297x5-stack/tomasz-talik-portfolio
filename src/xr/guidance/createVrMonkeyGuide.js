@@ -98,6 +98,7 @@ function createTwoSidedCanvasPlane({ name, width, height, canvasWidth, canvasHei
 export function createVrMonkeyGuide({
   actorRoot, visualRoot, floorRoot = actorRoot, interactionRoot = visualRoot, controllers = [], progressionController,
   locale = 'en', settings = {}, knowledgeResolver = null,
+  diagnostics = null,
   onOpenChange = () => {}, onPanelClick = () => {},
   onAttentionStart = () => {}
 }) {
@@ -616,7 +617,30 @@ export function createVrMonkeyGuide({
       hits.set(record, hit);
     });
     halo.setVisible(monkeyHovered);
-    if (monkeyHovered && !monkeyWasHovered) dialogueOverride?.onMonkeyHover?.();
+    if (monkeyHovered !== monkeyWasHovered) {
+      const controllerIndex = monkeyHovered
+        ? controllers.findIndex((record) => hits.get(record)?.kind === 'monkey')
+        : null;
+      const controller = controllerIndex === null ? null : controllers[controllerIndex];
+      diagnostics?.record?.('MONKEY_HIT_STATE', {
+        controllerIndex: controllerIndex >= 0 ? controllerIndex : null,
+        controllerHand: controller?.handedness ?? controller?.controller?.userData?.handedness ?? null,
+        acceptedMonkeyTarget: monkeyHovered,
+        previousMonkeyWasHovered: monkeyWasHovered,
+        resultingHover: monkeyHovered
+      });
+    }
+    if (monkeyHovered && !monkeyWasHovered) {
+      diagnostics?.record?.('MONKEY_HOVER_EDGE', {
+        previousHover: monkeyWasHovered,
+        currentHover: monkeyHovered,
+        onMonkeyHoverOverrideExists: typeof dialogueOverride?.onMonkeyHover === 'function'
+      });
+      if (typeof dialogueOverride?.onMonkeyHover === 'function') {
+        diagnostics?.record?.('ON_MONKEY_HOVER_INVOKE');
+        try { dialogueOverride.onMonkeyHover(); } catch (error) { diagnostics?.failure?.(error); throw error; }
+      }
+    }
     monkeyWasHovered = monkeyHovered;
     if (hoveredOption !== nextHoveredOption) { hoveredOption = nextHoveredOption; drawDialogue(); }
   }

@@ -3,16 +3,16 @@ import { join, resolve } from 'node:path';
 
 const BODY_LIMIT = 128 * 1024;
 
-export function viteVrRuneDiagnosticPlugin({ base }) {
-  const endpoint = `${base.replace(/\/?$/, '/')}__vr-debug/rune`;
-  const outputPath = resolve('.debug/vr-rune-completion.jsonl');
+export function viteVrDiagnosticPlugin({ base, channel, output, label }) {
+  const endpoint = `${base.replace(/\/?$/, '/')}__vr-debug/${channel}`;
+  const outputPath = resolve(output);
   let writeQueue = Promise.resolve();
 
   return {
-    name: 'vr-rune-diagnostic-flight-recorder',
+    name: `vr-${channel}-diagnostic-flight-recorder`,
     apply: 'serve',
     configureServer(server) {
-      console.info(`[VR diagnostic] Rune flight recorder: ${outputPath}`);
+      console.info(`[VR diagnostic] ${label} flight recorder: ${outputPath}`);
       server.middlewares.use((req, res, next) => {
         const requestPath = req.url?.split('?')[0];
         if (requestPath !== endpoint) {
@@ -66,7 +66,7 @@ export function viteVrRuneDiagnosticPlugin({ base }) {
             res.statusCode = 204;
             res.end();
           }).catch((error) => {
-            console.error('[VR diagnostic] Could not append Rune flight recorder.', error);
+            console.error(`[VR diagnostic] Could not append ${label} flight recorder.`, error);
             res.statusCode = 500;
             res.end();
           });
@@ -80,4 +80,10 @@ export function viteVrRuneDiagnosticPlugin({ base }) {
       });
     }
   };
+}
+
+export function viteVrRuneDiagnosticPlugin({ base }) {
+  return viteVrDiagnosticPlugin({
+    base, channel: 'rune', output: '.debug/vr-rune-completion.jsonl', label: 'Rune'
+  });
 }

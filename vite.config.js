@@ -4,7 +4,7 @@ import { fileURLToPath, URL } from 'node:url';
 import { copyFile, mkdir, readdir, stat } from 'node:fs/promises';
 import { createReadStream } from 'node:fs';
 import { extname, join, relative } from 'node:path';
-import { viteVrRuneDiagnosticPlugin } from './dev/viteVrRuneDiagnosticPlugin.js';
+import { viteVrDiagnosticPlugin, viteVrRuneDiagnosticPlugin } from './dev/viteVrRuneDiagnosticPlugin.js';
 
 const base = '/tomasz-talik-portfolio/';
 const vendoredThreeDir = fileURLToPath(new URL('./vendor/three', import.meta.url));
@@ -84,7 +84,10 @@ function vendoredThreeRuntimePlugin() {
 
 export default defineConfig({
   base,
-  plugins: [basicSsl(), vendoredThreeRuntimePlugin(), viteVrRuneDiagnosticPlugin({ base })],
+  plugins: [basicSsl(), vendoredThreeRuntimePlugin(), viteVrRuneDiagnosticPlugin({ base }),
+    viteVrDiagnosticPlugin({
+      base, channel: 'intro', output: '.debug/vr-intro-progression.jsonl', label: 'Intro progression'
+    })],
   server: {
     host: true,
     port: 5173,

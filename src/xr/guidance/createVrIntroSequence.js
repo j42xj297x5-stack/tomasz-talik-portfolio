@@ -48,6 +48,7 @@ export const VR_INTRO_COPY = Object.freeze({ pl: resolveIntroCopy('pl'), en: res
 export function createVrIntroSequence({ monkeyGuide, monkeyMotionRoot, monkeyVisualRoot, monkeyStoneRoot = null, playerRig,
   getHeadPosition = () => playerRig.getWorldPosition(new THREE.Vector3()), playerGuidePanel = null, fogReveal = null,
   largeGlyphActor, progressFloor, platformFixturesRoot, locomotion, spatial, settings,
+  diagnostics = null,
   onOpeningRaysReady = () => {}, onIntroRevealComplete = () => {}, onPostRevealSilenceComplete = () => {}, onPlayerOpenedGuide = () => {}, onPlayerViewedControls = () => {}, onPlayerClosedGuide = () => {}, onMonkeyHovered = () => {}, onMonkeyTriggered = () => {}, onInvitationSelected = () => {}, onFollowPauseChanged = () => {}, onMonkeyReachedThreshold = () => {}, onThresholdSelected = () => {}, onPlayerEnteredRing = () => {}, onMonkeySettled = () => {}, onGlyphHintTimeout = () => {}, onEndSession = () => {}, onReliquaryReveal = () => {},
   onReliquaryRevealCompleted = () => {}, bypass = false }) {
   const copy = VR_INTRO_COPY[settings.locale === 'pl' ? 'pl' : 'en'];
@@ -84,7 +85,28 @@ export function createVrIntroSequence({ monkeyGuide, monkeyMotionRoot, monkeyVis
   const thresholdChoices = Object.freeze({ cross: 1, beyond: 2, return: 3 });
   const invitation = () => { state = VR_INTRO_STATE.INVITATION; options(copy.invitation, selectInvitation); };
   function beginPanelTutorial() { state = VR_INTRO_STATE.CONTROLLER_ONBOARDING; monkeyGuide.setInteractionEnabled?.(true); onOpeningRaysReady(); show(copy.opening, () => { state = VR_INTRO_STATE.WAIT_PLAYER_PANEL_OPEN; capture(); monkeyGuide.showMessage(copy.panelPrompt); }); }
-  function beginPointerTutorial() { state = VR_INTRO_STATE.CONTROLLER_ONBOARDING; show(copy.panelDone, () => { state = VR_INTRO_STATE.WAIT_HOVER; monkeyGuide.setDialogueOverride({ onMonkeyHover() { if (state === VR_INTRO_STATE.WAIT_HOVER) { state = VR_INTRO_STATE.WAIT_RUNTIME_AFTER_MONKEY_HOVERED; onMonkeyHovered(); } }, onMonkeyPress() { if (state !== VR_INTRO_STATE.WAIT_TRIGGER) return true; state = VR_INTRO_STATE.WAIT_RUNTIME_AFTER_MONKEY_TRIGGERED; onMonkeyTriggered(); return true; } }); }); }
+  function beginPointerTutorial() {
+    state = VR_INTRO_STATE.CONTROLLER_ONBOARDING;
+    diagnostics?.begin?.();
+    diagnostics?.record?.('AFTER_PLAYER_GUIDE_PLAYBACK_BEGIN', {
+      copyId: 'progression.intro.afterPlayerGuide', blockCount: copy.panelDone.length
+    });
+    show(copy.panelDone, () => {
+      diagnostics?.record?.('AFTER_PLAYER_GUIDE_PLAYBACK_COMPLETE', { introStateBeforeArmingHover: state });
+      state = VR_INTRO_STATE.WAIT_HOVER;
+      monkeyGuide.setDialogueOverride({ onMonkeyHover() {
+        if (state === VR_INTRO_STATE.WAIT_HOVER) {
+          state = VR_INTRO_STATE.WAIT_RUNTIME_AFTER_MONKEY_HOVERED;
+          diagnostics?.record?.('INTRO_WAIT_RUNTIME_AFTER_MONKEY_HOVERED');
+          onMonkeyHovered();
+        }
+      }, onMonkeyPress() { if (state !== VR_INTRO_STATE.WAIT_TRIGGER) return true; state = VR_INTRO_STATE.WAIT_RUNTIME_AFTER_MONKEY_TRIGGERED; onMonkeyTriggered(); return true; } });
+      diagnostics?.record?.('WAIT_HOVER_ARMED', {
+        interactionEnabled: monkeyGuide.isInteractionEnabled?.() ?? null,
+        onMonkeyHoverInstalled: true
+      });
+    });
+  }
   function selectInvitation(id) { const choice = invitationChoices[id]; if (state !== VR_INTRO_STATE.INVITATION || !choice) return true; state = VR_INTRO_STATE.WAIT_RUNTIME_AFTER_INVITATION_SELECTED; onInvitationSelected(choice); return true; }
   function continueInvitation(choice) {
     if (state !== VR_INTRO_STATE.WAIT_RUNTIME_AFTER_INVITATION_SELECTED || ![2, 3].includes(choice)) return false;
@@ -203,7 +225,13 @@ export function createVrIntroSequence({ monkeyGuide, monkeyMotionRoot, monkeyVis
     if (state === VR_INTRO_STATE.WAIT_RUNTIME_AFTER_PLAYER_GUIDE_OPEN) { state = VR_INTRO_STATE.WAIT_CONTROLS_VIEW; return true; }
     if (state === VR_INTRO_STATE.WAIT_RUNTIME_AFTER_CONTROLS_VIEWED) { state = VR_INTRO_STATE.WAIT_PANEL_CLOSE; return true; }
     if (state === VR_INTRO_STATE.WAIT_RUNTIME_AFTER_PLAYER_GUIDE_CLOSED) { beginPointerTutorial(); return true; }
-    if (state === VR_INTRO_STATE.WAIT_RUNTIME_AFTER_MONKEY_HOVERED) { state = VR_INTRO_STATE.WAIT_TRIGGER; monkeyGuide.showMessage(copy.trigger); return true; }
+    if (state === VR_INTRO_STATE.WAIT_RUNTIME_AFTER_MONKEY_HOVERED) {
+      state = VR_INTRO_STATE.WAIT_TRIGGER;
+      diagnostics?.record?.('WAIT_TRIGGER_ENTERED');
+      monkeyGuide.showMessage(copy.trigger);
+      diagnostics?.record?.('TRIGGER_INSTRUCTION_SHOWN', { copyId: 'progression.intro.triggerMonkey' });
+      return true;
+    }
     return false;
   }
   function beginInvitation() {

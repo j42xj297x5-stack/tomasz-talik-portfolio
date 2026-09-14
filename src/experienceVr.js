@@ -115,6 +115,7 @@ import { createVrDebugCheckpointController } from './xr/progression/enterVrDebug
 import { createVrScenarioProgressReconciler } from './xr/progression/createVrScenarioProgressReconciler.js';
 import { VR_DEBUG_CHECKPOINTS } from './xr/progression/vrDebugCheckpoints.js';
 import { createVrRuneTuningDiagnosticCapture } from './xr/debug/createVrRuneTuningDiagnosticCapture.js';
+import { createVrIntroProgressionDiagnosticCapture } from './xr/debug/createVrIntroProgressionDiagnosticCapture.js';
 import { getVrDebugLaunchConfig } from './xr/debug/vrDebugLaunchConfig.js';
 import { VR_DIAGNOSTIC_SCOPE } from './xr/debug/vrDiagnosticScopes.js';
 import { createVrPostRingPresentation } from './xr/progression/createVrPostRingPresentation.js';
@@ -201,6 +202,11 @@ const runeDiagnosticCapture = runeRecordingEnabled || runeRecoveryRequested
   ? createVrRuneTuningDiagnosticCapture({ surfaceRoot: app, recordingEnabled: runeRecordingEnabled })
   : null;
 const runeTuningDiagnostics = runeRecordingEnabled ? runeDiagnosticCapture : null;
+const introRecordingEnabled = launchConfig.debugMode === true && launchConfig.recording.enabled
+  && launchConfig.recording.scopes.includes(VR_DIAGNOSTIC_SCOPE.INTRO_MONKEY_HOVER_PROGRESSION);
+const introProgressionDiagnostics = introRecordingEnabled
+  ? createVrIntroProgressionDiagnosticCapture({ locale: language })
+  : null;
 
 let canvas = app.querySelector('#vr-scene-canvas');
 const status = app.querySelector('[data-vr-status]');
@@ -893,6 +899,7 @@ monkeyGuide = createVrMonkeyGuide({
   knowledgeResolver: monkeyKnowledgeResolver,
   locale: language,
   settings: settings.monkeyGuide,
+  diagnostics: introProgressionDiagnostics,
   onOpenChange: (open) => playVrUi(open ? VR_AUDIO.monkeyOpen : VR_AUDIO.monkeyClose),
   onPanelClick: () => playVrUi(VR_AUDIO.click),
   onAttentionStart: () => playVrWorld(VR_AUDIO.monkeyThinking)
@@ -1339,6 +1346,7 @@ introSequence = createVrIntroSequence({
   monkeyGuide, monkeyMotionRoot, monkeyVisualRoot, monkeyStoneRoot, playerRig, largeGlyphActor, progressFloor,
   platformFixturesRoot, locomotion, playerGuidePanel, fogReveal: introFogReveal,
   spatial: settings.spatial,
+  diagnostics: introProgressionDiagnostics,
   settings: { ...settings.intro, locale: language }, bypass: introQaBypass,
   onIntroRevealComplete: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.INTRO_REVEAL_COMPLETE),
   onPostRevealSilenceComplete: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.POST_REVEAL_SILENCE_COMPLETE),
@@ -1493,8 +1501,30 @@ function ensureProgressFloorTierCompleted(tier) {
   }
 }
 
+introProgressionDiagnostics?.configureSources({
+  getIntroState: () => introSequence?.getState?.() ?? null,
+  getScenarioPoint: () => runtimeExperience?.getCurrentPointId?.() ?? experienceDirector.getCurrentPointId()
+});
 runtimeExperience = new RuntimeExperience({
   director: experienceDirector,
+  dispatchObserver: introProgressionDiagnostics ? {
+    beforeDispatch(eventType, scenarioPoint) {
+      if (eventType === VR_SCENARIO_EVENT.MONKEY_HOVERED) {
+        introProgressionDiagnostics.record('RUNTIME_DISPATCH_BEGIN', { event: eventType, sourcePoint: scenarioPoint });
+      }
+    },
+    afterDirectorDispatch(eventType, change) {
+      if (eventType === VR_SCENARIO_EVENT.MONKEY_HOVERED) {
+        introProgressionDiagnostics.record('DIRECTOR_DISPATCH_RESULT', {
+          event: eventType,
+          accepted: Boolean(change),
+          sourcePoint: change?.previousPointId ?? runtimeExperience?.getCurrentPointId?.() ?? null,
+          resultingPoint: change?.currentPointId ?? runtimeExperience?.getCurrentPointId?.() ?? null,
+          effects: change?.effects ? [...change.effects] : []
+        });
+      }
+    }
+  } : null,
   pointLifecycle: {
     stateAt: (pointId) => stateAtVrScenarioPoint(vrExperienceScenario, pointId),
     hydrate: (state) => hydrateVrScenarioState(state, scenarioOwners),
@@ -1605,8 +1635,18 @@ runtimeExperience = new RuntimeExperience({
       }
     },
     [VR_SCENARIO_EFFECT.CONTINUE_CONTROLLER_ONBOARDING]: () => {
-      if (!introSequence.continueControllerOnboarding()) {
-        throw new Error('CONTINUE_CONTROLLER_ONBOARDING rejected by Intro actor after accepted Scenario transition');
+      introProgressionDiagnostics?.record('CONTINUE_CONTROLLER_ONBOARDING_BEGIN', {
+        introStateBeforeCall: introSequence.getState()
+      });
+      try {
+        const result = introSequence.continueControllerOnboarding();
+        introProgressionDiagnostics?.record('CONTINUE_CONTROLLER_ONBOARDING_RESULT', {
+          result, introStateAfterCall: introSequence.getState()
+        });
+        if (!result) throw new Error('CONTINUE_CONTROLLER_ONBOARDING rejected by Intro actor after accepted Scenario transition');
+      } catch (error) {
+        introProgressionDiagnostics?.failure(error);
+        throw error;
       }
     },
     [VR_SCENARIO_EFFECT.BEGIN_INTRO_CRYSTAL_TUTORIAL]: () => {

@@ -45,7 +45,7 @@ Recording defaults **OFF**. If it remains off, no scope is recorded, transport r
 
 ## Scope architecture
 
-The **CURRENT / IMPLEMENTED** registry is `src/xr/debug/vrDiagnosticScopes.js`. Its first implemented and successfully used scope is `RUNE_TUNING_COMPLETION`, player/developer-facing as **„Freeze po zakończeniu strojenia Kamienia Runicznego”**.
+The **CURRENT / IMPLEMENTED** registry is `src/xr/debug/vrDiagnosticScopes.js`. Its independently selectable scopes are `RUNE_TUNING_COMPLETION`, player/developer-facing as **„Freeze po zakończeniu strojenia Kamienia Runicznego”**, and `INTRO_MONKEY_HOVER_PROGRESSION`, player/developer-facing as **„Intro — zatrzymanie po „Wskaż mnie””**.
 
 That bounded sidecar records Rune tuning finalization evidence around begin, pre-flight, ingredient identity/consumption boundaries, progression commit, transaction stages, completion, abort/failure and related global errors while recording is active. The framework is not Rune-specific and does not capture all gameplay events.
 
@@ -55,7 +55,7 @@ new difficult runtime problem → define a bounded diagnostic scope
 → emit structured evidence → keep normal runtime unaffected when disabled
 ```
 
-Additional scopes are **EXTENSIBLE / FUTURE SCOPE**. Sidecars own no Scenario, Director, gameplay or runtime truth and remain read-only and fail-soft.
+The Intro sidecar records only transition breadcrumbs from completion of the pointer instruction through Monkey hit/hover edges, the bounded `MONKEY_HOVERED` Runtime/Director dispatch, Scenario `1.70 → 1.80`, the onboarding continuation effect and actual `WAIT_TRIGGER` instruction presentation. Sidecars own no Scenario, Director, gameplay or runtime truth and remain read-only and fail-soft.
 
 ## Local Vite flight recorder
 
@@ -74,3 +74,12 @@ Run the ordinary local server (`npm run dev`), enter Experience VR with `?debug`
 The client transport is a no-op outside `import.meta.env.DEV`, while the plugin uses `apply: 'serve'`. GitHub Pages and production builds therefore expose no local write endpoint; these files are not production telemetry, no remote analytics service exists, and gameplay does not depend on delivery succeeding.
 
 The Rune capture also retains a bounded local browser journal and recovery/export evidence. This is secondary support; the primary durable local-development path is Vite transport to `.debug/vr-rune-completion.jsonl`.
+
+The Intro scope uses the same fail-soft, base-aware transport architecture but a separate endpoint and append-only output:
+
+```text
+Intro progression capture → __vr-debug/intro
+→ .debug/vr-intro-progression.jsonl
+```
+
+Run the ordinary local server, enter Experience VR with `?debug`, enable diagnostic recording, select **„Intro — zatrzymanie po „Wskaż mnie””**, continue into VR and reproduce the stall. Each breadcrumb is appended as a separate JSON object with server timestamp, remote address and user agent; Rune records remain isolated in their existing file.
