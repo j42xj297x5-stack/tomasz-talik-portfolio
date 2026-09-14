@@ -35,26 +35,26 @@ export function createVrCurrentObjectiveProjection({ locale, getCurrentPointId, 
   }
   const objective = (id, body) => Object.freeze({ id, body });
   function getCurrentObjective() {
-    if (locale !== 'pl') return null;
+    const pl = locale === 'pl';
     const pointId = getCurrentPointId();
     if (pointId === VR_EXPERIENCE_POINT['2.30']) return objective('first-ring-progress',
-      `UKOŃCZ PIERWSZY KRĄG — ${countActivatedPages(1)}/${experienceVrPageIdsByTier[1].length}`);
+      `${pl ? 'UKOŃCZ PIERWSZY KRĄG' : 'COMPLETE THE FIRST RING'} — ${countActivatedPages(1)}/${experienceVrPageIdsByTier[1].length}`);
     if (pointId === VR_EXPERIENCE_POINT['3.80']) {
       const progress = getAsterionSphereProgress(); const state = getAsterionProductionState();
-      if (!progress.complete) return objective('asterion-shell-collection', `ZGROMADŹ SKORUPY — ${progress.absorbed}/${progress.required}`);
-      if (state === VR_ASTERION_PRODUCTION_STATES.READY) return objective('asterion-build', 'ZBUDUJ KULĘ ASTERIONOWĄ');
-      if (state === VR_ASTERION_PRODUCTION_STATES.BUILDING) return objective('asterion-production', 'KULA ASTERIONOWA — PRODUKCJA');
-      if (state === VR_ASTERION_PRODUCTION_STATES.AVAILABLE) return objective('asterion-claim', 'ODBIERZ KULĘ ASTERIONOWĄ');
+      if (!progress.complete) return objective('asterion-shell-collection', `${pl ? 'ZGROMADŹ SKORUPY' : 'COLLECT SHELLS'} — ${progress.absorbed}/${progress.required}`);
+      if (state === VR_ASTERION_PRODUCTION_STATES.READY) return objective('asterion-build', pl ? 'ZBUDUJ KULĘ ASTERIONOWĄ' : 'BUILD THE ASTERION SPHERE');
+      if (state === VR_ASTERION_PRODUCTION_STATES.BUILDING) return objective('asterion-production', pl ? 'KULA ASTERIONOWA — PRODUKCJA' : 'ASTERION SPHERE — FORGING');
+      if (state === VR_ASTERION_PRODUCTION_STATES.AVAILABLE) return objective('asterion-claim', pl ? 'ODBIERZ KULĘ ASTERIONOWĄ' : 'COLLECT THE ASTERION SPHERE');
       return null;
     }
     if (pointId === VR_EXPERIENCE_POINT['4.10']) return objective('second-ring-progress',
-      `UKOŃCZ DRUGI KRĄG — ${countActivatedPages(2)}/${experienceVrPageIdsByTier[2].length}`);
+      `${pl ? 'UKOŃCZ DRUGI KRĄG' : 'COMPLETE THE SECOND RING'} — ${countActivatedPages(2)}/${experienceVrPageIdsByTier[2].length}`);
     if (pointId === VR_EXPERIENCE_POINT['4.70']) {
       const tunedCount = getExtractedFamilyCodes().length; const tunedTotal = PROTO_ASTRO_NATURAL_FAMILY_CODES.length;
       const ringCount = countActivatedPages(3); const ringTotal = experienceVrPageIdsByTier[3].length;
       return tunedCount < tunedTotal
-        ? objective('astro-tuning-and-third-ring', `DOSTRÓJ ASTROLABIUM — ${tunedCount}/${tunedTotal} · UKOŃCZ TRZECI KRĄG — ${ringCount}/${ringTotal}`)
-        : objective('third-ring-progress', `UKOŃCZ TRZECI KRĄG — ${ringCount}/${ringTotal}`);
+        ? objective('astro-tuning-and-third-ring', `${pl ? 'DOSTRÓJ ASTROLABIUM' : 'TUNE THE ASTROLABE'} — ${tunedCount}/${tunedTotal} · ${pl ? 'UKOŃCZ TRZECI KRĄG' : 'COMPLETE THE THIRD RING'} — ${ringCount}/${ringTotal}`)
+        : objective('third-ring-progress', `${pl ? 'UKOŃCZ TRZECI KRĄG' : 'COMPLETE THE THIRD RING'} — ${ringCount}/${ringTotal}`);
     }
     if (pointId === VR_EXPERIENCE_POINT['4.80']) {
       if (getResonatorDescriptor().resonatorExists) return null;
@@ -63,10 +63,10 @@ export function createVrCurrentObjectiveProjection({ locale, getCurrentPointId, 
       const tuned = coreFamilies.filter((family) => tunedRuneFamilies.includes(family)).length;
       const installed = coreFamilies.filter((family) => installedRuneFamilies.includes(family)).length;
       return objective('resonator-core',
-        `PRZYGOTUJ REZONATOR — STROJENIE ${tuned}/3 · INSTALACJA ${installed}/3`);
+        `${pl ? 'PRZYGOTUJ REZONATOR — STROJENIE' : 'AWAKEN THE RESONATOR — ATTUNEMENT'} ${tuned}/3 · ${pl ? 'INSTALACJA' : 'INSTALLATION'} ${installed}/3`);
     }
     const body = OBJECTIVE_BODY_BY_POINT[pointId];
-    return body ? objective(`scenario-${pointId}`, body) : null;
+    return pl && body ? objective(`scenario-${pointId}`, body) : null;
   }
   return Object.freeze({ getCurrentObjective });
 }

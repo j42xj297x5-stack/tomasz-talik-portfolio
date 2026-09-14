@@ -53,7 +53,9 @@ export function resolveVrPlaqueContent(glyphData) {
   return {
     title: cleanText(glyphData?.title || glyphData?.eyebrow) || 'Brama',
     body: cleanText(glyphData?.leadText || glyphData?.draftText || glyphData?.shortLabel)
-      || 'Pierwszy znak otwiera drogę do wnętrza kręgu.'
+      || (document.documentElement.lang === 'pl'
+        ? 'Pierwszy znak otwiera drogę do wnętrza kręgu.'
+        : 'The first sign opens a path into the heart of the circle.')
   };
 }
 

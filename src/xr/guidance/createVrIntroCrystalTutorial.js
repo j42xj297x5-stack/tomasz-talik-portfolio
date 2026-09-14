@@ -1,20 +1,9 @@
 import * as THREE from '../../vendor/three.js';
 import { createVrMonkeyProgressionMessage } from './createVrMonkeyProgressionMessage.js';
-import { VR_MONKEY_COMMUNICATION_COPY_PL, VR_MONKEY_MESSAGE_TIMING } from './vrMonkeyCommunicationCopy.js';
+import { resolveVrMonkeyCommunicationCopy, VR_MONKEY_MESSAGE_TIMING } from './vrMonkeyCommunicationCopy.js';
 
-export const VR_INTRO_CRYSTAL_TUTORIAL_COPY = Object.freeze({
-  pl: Object.freeze({
-    seen: VR_MONKEY_COMMUNICATION_COPY_PL.tutorial.crystal.pointerLearned,
-    instruction: 'A teraz złap kryształ i podaj go mnie.',
-    handoff: VR_MONKEY_COMMUNICATION_COPY_PL.tutorial.crystal.handoff
-  }),
-  en: Object.freeze({
-    seen: Object.freeze(['See?', 'You have already taught the world where you are looking.']),
-    instruction: 'Now grab the crystal and hand it to me.',
-    unavailable: 'Yes, we cannot use this yet.',
-    complete: 'You have learned the basics.'
-  })
-});
+const tutorialCopy = (locale) => resolveVrMonkeyCommunicationCopy(locale).tutorial.crystal;
+export const VR_INTRO_CRYSTAL_TUTORIAL_COPY = Object.freeze({ pl: tutorialCopy('pl'), en: tutorialCopy('en') });
 
 export function createVrIntroCrystalTutorial({ monkeyGuide, monkeyRoot, getWorldPointAtRadius, crystalCollection,
   crystalDefinition, settings, locale = 'en', onHandoffRequested = () => {}, onCompleted = () => {},

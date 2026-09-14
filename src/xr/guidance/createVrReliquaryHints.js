@@ -1,12 +1,11 @@
 import { createVrMandatoryMonkeyCommunication } from './createVrMandatoryMonkeyCommunication.js';
-import { VR_MONKEY_COMMUNICATION_COPY_PL } from './vrMonkeyCommunicationCopy.js';
+import { resolveVrMonkeyCommunicationCopy } from './vrMonkeyCommunicationCopy.js';
 import { VR_MONKEY_DIALOGUE_PRIORITY } from './createVrMonkeyGuide.js';
 
-export const VR_RELIQUARY_HINT_COPY = Object.freeze({
-  pl: Object.freeze({ inserted: VR_MONKEY_COMMUNICATION_COPY_PL.hints['hint.reliquary.inserted'].blocks[0],
-    active: VR_MONKEY_COMMUNICATION_COPY_PL.hints['hint.reliquary.active'].blocks[0] }),
-  en: Object.freeze({ inserted: 'Activate the Crystal and reveal its meaning.', active: 'It can now be released. It has fulfilled its purpose.' })
-});
+const hintCopy = (locale) => { const copy = resolveVrMonkeyCommunicationCopy(locale).hints; return Object.freeze({
+  inserted: copy['hint.reliquary.inserted'].blocks[0], active: copy['hint.reliquary.active'].blocks[0]
+}); };
+export const VR_RELIQUARY_HINT_COPY = Object.freeze({ pl: hintCopy('pl'), en: hintCopy('en') });
 
 const PRE_PLAYBACK_PHASES = Object.freeze(['WAITING', 'ATTENTION', 'AUTO_DELAY']);
 

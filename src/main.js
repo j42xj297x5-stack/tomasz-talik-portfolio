@@ -24,11 +24,11 @@ const COPY = {
     classicDescription: 'Lekka, płaska, retro-symboliczna wersja portfolio z pięcioma bramami treści.',
     classicButton: 'Klasyczne 2D',
     experienceButton: 'Doświadczenie 3D',
-    vrButton: 'Doświadczenie VR',
+    vrButton: 'Orange Orange Monkey VR',
     vrChecking: 'Sprawdzanie obsługi WebXR…',
     vrUnavailable: 'Tryb immersive VR nie jest dostępny na tym urządzeniu.',
     vrSecureContext: 'VR wymaga bezpiecznego połączenia HTTPS.',
-    vrLaunchStatus: 'Przygotowywanie doświadczenia VR…',
+    vrLaunchStatus: 'Przygotowywanie Orange Monkey VR…',
     placeholderBack: 'Wróć do wyboru trybu',
     launchStatus: 'Uruchamianie doświadczenia 3D…'
   },
@@ -44,11 +44,11 @@ const COPY = {
     classicDescription: 'A lightweight, flat, retro-symbolic version of the portfolio with five content gates.',
     classicButton: 'Classic 2D',
     experienceButton: 'Experience 3D',
-    vrButton: 'Experience VR',
+    vrButton: 'Orange Monkey VR',
     vrChecking: 'Checking WebXR support…',
     vrUnavailable: 'Immersive VR is not available on this device.',
     vrSecureContext: 'VR requires a secure HTTPS connection.',
-    vrLaunchStatus: 'Preparing Experience VR…',
+    vrLaunchStatus: 'Preparing Orange Monkey VR…',
     placeholderBack: 'Back to mode selection',
     launchStatus: 'Starting Experience 3D…'
   }
