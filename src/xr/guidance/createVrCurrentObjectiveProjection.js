@@ -35,6 +35,7 @@ export function createVrCurrentObjectiveProjection({ locale, getCurrentPointId, 
   }
   const objective = (id, body) => Object.freeze({ id, body });
   function getCurrentObjective() {
+    if (locale !== 'pl') return null;
     const pl = locale === 'pl';
     const pointId = getCurrentPointId();
     if (pointId === VR_EXPERIENCE_POINT['2.30']) return objective('first-ring-progress',

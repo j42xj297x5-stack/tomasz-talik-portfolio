@@ -23,7 +23,7 @@ function resolveIntroCopy(locale) {
   const source = resolveVrMonkeyCommunicationCopy(locale);
   const introDecision = source.decisions['decision.intro.go'];
   const thresholdDecision = source.decisions['decision.threshold.enter'];
-  return Object.freeze({
+  return {
     opening: [...source.progression['progression.intro.firstPresence'].blocks,
       ...source.progression['progression.intro.openPlayerGuide'].blocks],
     panelPrompt: source.progression['progression.intro.openPlayerGuide'].prompt,
@@ -40,7 +40,7 @@ function resolveIntroCopy(locale) {
     returning: source.decisions['decision.threshold.return'].blocks,
     glyphHint: source.progression['progression.glyphs.firstInstruction'].blocks,
     glyphDiscovered: source.progression['progression.glyphs.firstDiscovery'].blocks[0]
-  });
+  };
 }
 
 export const VR_INTRO_COPY = Object.freeze({ pl: resolveIntroCopy('pl'), en: resolveIntroCopy('en') });

@@ -919,7 +919,7 @@ runeResonatorGuidance = createVrRuneResonatorGuidance({
 toolGuidanceLifecycle = createVrToolGuidanceLifecycle({
   monkeyGuide,
   copy: monkeyCommunicationCopy,
-  canStartAstroProduction: () => runtimeExperience?.can(
+  canStartAstroProduction: () => language === 'pl' && runtimeExperience?.can(
     VR_SCENARIO_CAPABILITY.CAN_START_FURNACE_PROCESS
   ) === true,
   getAstroProductionState: () => astroAttractorProductionController.getState()

@@ -21,10 +21,10 @@ export function createVrMonkeyKnowledgeResolver({ locale, getCurrentObjective, i
   const transientHintFallbacks = new Map();
 
   function getTopic() {
-    if (isPostRingStoneGuidance()) {
+    if (locale === 'pl' && isPostRingStoneGuidance()) {
       return topicFromCopy(stonesLeadRead ? 'knowledge.p3.stones' : 'knowledge.p3.stonesLead');
     }
-    const current = getCurrentObjective();
+    const current = locale === 'pl' ? getCurrentObjective() : null;
     return current ? Object.freeze({ id: `objective:${current.id}`, groupId: category.groupId,
       label: current.body, question: current.body, blocks: Object.freeze([current.body]),
       type: VR_MONKEY_KNOWLEDGE_ITEM_TYPE.TOPIC, lifecycle: VR_MONKEY_KNOWLEDGE_LIFECYCLE.READ }) : null;

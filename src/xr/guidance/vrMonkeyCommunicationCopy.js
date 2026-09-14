@@ -1,12 +1,11 @@
 export const VR_MONKEY_MESSAGE_TIMING = Object.freeze({ secondsPerLine: 2, gapSeconds: 0.5 });
 
-function deepFreeze(value) {
+function shallowFreeze(value) {
   if (!value || typeof value !== 'object' || Object.isFrozen(value)) return value;
-  Object.values(value).forEach(deepFreeze);
   return Object.freeze(value);
 }
 
-export const VR_MONKEY_KNOWLEDGE_CATEGORIES_PL = deepFreeze({
+export const VR_MONKEY_KNOWLEDGE_CATEGORIES_PL = shallowFreeze({
   "category.whatNow": {
     "label": "CO TERAZ?",
     "groupId": "currentGuidance"
@@ -17,7 +16,7 @@ export const VR_MONKEY_KNOWLEDGE_CATEGORIES_PL = deepFreeze({
   }
 });
 
-export const VR_MONKEY_KNOWLEDGE_CATEGORIES_EN = deepFreeze({
+export const VR_MONKEY_KNOWLEDGE_CATEGORIES_EN = shallowFreeze({
   "category.whatNow": {
     "label": "WHAT COMES NEXT?",
     "groupId": "currentGuidance"
@@ -28,7 +27,7 @@ export const VR_MONKEY_KNOWLEDGE_CATEGORIES_EN = deepFreeze({
   }
 });
 
-export const VR_MONKEY_COMMUNICATION_COPY_PL = deepFreeze({
+export const VR_MONKEY_COMMUNICATION_COPY_PL = shallowFreeze({
   "progression": {
     "progression.intro.firstPresence": {
       "blocks": [
@@ -404,7 +403,7 @@ export const VR_MONKEY_COMMUNICATION_COPY_PL = deepFreeze({
   }
 });
 
-export const VR_MONKEY_COMMUNICATION_COPY_EN = deepFreeze({
+export const VR_MONKEY_COMMUNICATION_COPY_EN = shallowFreeze({
   "progression": {
     "progression.intro.firstPresence": {
       "blocks": [
