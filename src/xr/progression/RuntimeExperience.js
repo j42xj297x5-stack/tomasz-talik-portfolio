@@ -1,14 +1,19 @@
 export class RuntimeExperience {
-  constructor({ director, effectHandlers = {}, pointLifecycle = null }) {
+  constructor({ director, effectHandlers = {}, pointLifecycle = null, dispatchObserver = null }) {
     if (!director) throw new TypeError('director is required');
     this.director = director;
     this.effectHandlers = effectHandlers instanceof Map ? new Map(effectHandlers) : new Map(Object.entries(effectHandlers));
     this.pointLifecycle = pointLifecycle;
+    this.dispatchObserver = dispatchObserver;
     this.disposed = false;
   }
   dispatch(eventType, payload) {
     if (this.disposed) return null;
+    try { this.dispatchObserver?.beforeDispatch?.(eventType, this.director.getCurrentPointId()); }
+    catch { /* Observability must never affect progression. */ }
     const change = this.director.dispatch(eventType, payload);
+    try { this.dispatchObserver?.afterDirectorDispatch?.(eventType, change); }
+    catch { /* Observability must never affect progression. */ }
     if (!change) return null;
     this.#executeEffects(change, payload);
     return change;

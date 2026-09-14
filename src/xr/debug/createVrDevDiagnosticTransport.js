@@ -1,6 +1,4 @@
-const DIAGNOSTIC_PATH = '__vr-debug/rune';
-
-export function createVrDevDiagnosticTransport({ windowRef = globalThis.window } = {}) {
+export function createVrDevDiagnosticTransport({ windowRef = globalThis.window, channel = 'rune' } = {}) {
   if (import.meta.env.DEV !== true) {
     return Object.freeze({ sendBreadcrumb() {}, sendFailure() {} });
   }
@@ -8,7 +6,7 @@ export function createVrDevDiagnosticTransport({ windowRef = globalThis.window }
   function prepare(record) {
     try {
       const baseUrl = import.meta.env.BASE_URL ?? '/';
-      const endpoint = new URL(`${baseUrl.replace(/\/?$/, '/')}${DIAGNOSTIC_PATH}`, windowRef.location.origin);
+      const endpoint = new URL(`${baseUrl.replace(/\/?$/, '/')}__vr-debug/${channel}`, windowRef.location.origin);
       return { endpoint: endpoint.href, body: JSON.stringify(record) };
     } catch {
       return null;
