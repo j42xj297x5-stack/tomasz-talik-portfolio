@@ -2,39 +2,6 @@
 
 **IMPLEMENTATION_GATE: `approved`**
 
-This file is a human editorial review sheet, not an implementation source yet.
-
-- Repository branch: `work`
-- Source inventory: `docs/current/audits/localization/ORANGE_MONKEY_LOCALIZATION_INVENTORY_2026-09-12.md`
-- Source English-copy commit on GitHub: `aae0e9459a7ccff47e9da127c38245be6483d46b`
-- Review scope: **139 items** = all Orange Monkey VR items whose English was newly authored in the inventory plus the 3 public product-name rename targets.
-- Existing bilingual copy that was already implemented before this translation pass is intentionally not duplicated here.
-- Experience 3D mixed-language copy is intentionally excluded: this sheet is Orange Monkey VR only.
-
-## How to review
-
-For each item:
-
-1. `PL_SOURCE` is the Polish source truth. Do not edit it here.
-2. `EN_DRAFT_FROM_CODEX` is copied from the current inventory only for comparison. It is **not approved** and must never be implemented merely because it is present.
-3. Put the accepted wording into `FINAL_EN` and change `REVIEW_STATUS` to `APPROVED`.
-4. Every ordinary line break inside a text block is significant. A literal line `--- BLOCK ---` is a presentation/message block boundary and must remain distinguishable from an ordinary line break.
-5. Runtime placeholders such as `{family}`, `{progress}`, `{syllable}`, `{processStatus}`, `{absorbed}`, `n/5`, `n/6`, `n/3`, `%`, controller letters and `//` are structural tokens. Do not alter them accidentally.
-
-## Codex implementation contract — binding after approval
-
-Codex must not use this file for runtime implementation while `IMPLEMENTATION_GATE` is `PENDING_EDITORIAL_APPROVAL`. After the human review is complete, implementation must obey all of the following:
-
-- Implement **only** `FINAL_EN` from entries whose `REVIEW_STATUS` is `APPROVED`.
-- Never translate, paraphrase, improve, normalize, or infer missing wording.
-- Match each change by exact `ID` and `SOURCE_FILE`.
-- Preserve Polish runtime copy unchanged.
-- Preserve block boundaries, line breaks, placeholders, counters, punctuation tokens and controller-button names exactly as approved.
-- `EN_DRAFT_FROM_CODEX` is reference material only and is forbidden as a fallback.
-- If an `ID`, source owner, placeholder, or runtime shape no longer matches the repository, stop that item and report the mismatch. Do not guess.
-
-## Terminology — current Codex draft, all pending human decision
-
 | Polish | EN_DRAFT_FROM_CODEX | FINAL_TERM | REVIEW_STATUS |
 | --- | --- | --- | --- |
 | Piec / Astro Piec | Furnace / Astro Furnace | `Furnace / Astro Furnace` | approved |
@@ -4123,12 +4090,4 @@ MATERIAL // CONTAINED
 
 ---
 
-# Completion gate
 
-Before this sheet can become an implementation source:
-
-- all 139 entries must have `REVIEW_STATUS: APPROVED`;
-- no `FINAL_EN` may contain `__PENDING__`;
-- all terminology rows used by approved copy must have an approved `FINAL_TERM`;
-- placeholders and block boundaries must be compared against `PL_SOURCE` / runtime shape;
-- only then may `IMPLEMENTATION_GATE` become `APPROVED_FOR_IMPLEMENTATION`.
