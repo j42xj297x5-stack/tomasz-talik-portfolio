@@ -3,22 +3,36 @@ import { VR_ASTERION_PRODUCTION_STATES } from '../asterion/createVrAsterionProdu
 import { PROTO_ASTRO_NATURAL_FAMILY_CODES } from '../protoAstro/protoAstroRegistry.js';
 import { VR_EXPERIENCE_POINT } from '../progression/vrExperienceScenario.js';
 
-const OBJECTIVE_BODY_BY_POINT = Object.freeze({
-  [VR_EXPERIENCE_POINT['1.10']]: 'KALIBRACJA XR',
-  [VR_EXPERIENCE_POINT['1.20']]: 'OBSERWUJ ŚWIAT', [VR_EXPERIENCE_POINT['1.30']]: 'OBSERWUJ ŚWIAT',
-  [VR_EXPERIENCE_POINT['1.40']]: 'OTWÓRZ PANEL Y', [VR_EXPERIENCE_POINT['1.50']]: 'OTWÓRZ: STEROWANIE',
-  [VR_EXPERIENCE_POINT['1.60']]: 'ZAMKNIJ PANEL Y', [VR_EXPERIENCE_POINT['1.70']]: 'WSKAŻ MAŁPĘ',
-  [VR_EXPERIENCE_POINT['1.80']]: 'SPUST — MAŁPA', [VR_EXPERIENCE_POINT['1.90']]: 'PODAJ KRYSZTAŁ MAŁPIE',
-  [VR_EXPERIENCE_POINT['1.100']]: 'WYBIERZ ODPOWIEDŹ', [VR_EXPERIENCE_POINT['1.110']]: 'IDŹ ZA MAŁPĄ',
-  [VR_EXPERIENCE_POINT['1.120']]: 'PRÓG — WYBIERZ', [VR_EXPERIENCE_POINT['1.130']]: 'WEJDŹ DO KRĘGU',
-  [VR_EXPERIENCE_POINT['2.10']]: 'ZDOBĄDŹ PIERWSZY KRYSZTAŁ', [VR_EXPERIENCE_POINT['2.20']]: 'POROZMAWIAJ Z MAŁPĄ',
-  [VR_EXPERIENCE_POINT['2.40']]: 'OBSERWUJ ZMIANĘ ŚWIATA', [VR_EXPERIENCE_POINT['3.10']]: 'OBSERWUJ ZMIANĘ ŚWIATA',
-  [VR_EXPERIENCE_POINT['3.20']]: 'OBSERWUJ ZMIANĘ ŚWIATA', [VR_EXPERIENCE_POINT['3.30']]: 'MAŁPA',
-  [VR_EXPERIENCE_POINT['3.40']]: 'PIEC', [VR_EXPERIENCE_POINT['3.50']]: 'ASTROLABIUM WIĘZI — UTWÓRZ W PIECU',
-  [VR_EXPERIENCE_POINT['3.60']]: 'ASTROLABIUM WIĘZI — PRODUKCJA', [VR_EXPERIENCE_POINT['3.70']]: 'ASTROLABIUM WIĘZI — ODBIERZ Z PIECA',
-  [VR_EXPERIENCE_POINT['4.20']]: 'OBSERWUJ ZMIANĘ ŚWIATA', [VR_EXPERIENCE_POINT['4.30']]: 'OBSERWUJ ZMIANĘ ŚWIATA',
-  [VR_EXPERIENCE_POINT['4.40']]: 'OBSERWUJ ZMIANĘ ŚWIATA', [VR_EXPERIENCE_POINT['4.50']]: 'MAŁPA',
-  [VR_EXPERIENCE_POINT['4.60']]: 'MAŁPA', [VR_EXPERIENCE_POINT['100.10']]: 'KONIEC DOŚWIADCZENIA'
+const STATIC_OBJECTIVES_BY_POINT = Object.freeze({
+  [VR_EXPERIENCE_POINT['1.10']]: Object.freeze({ pl: 'KALIBRACJA XR', en: null }),
+  [VR_EXPERIENCE_POINT['1.20']]: Object.freeze({ pl: 'OBSERWUJ ŚWIAT', en: null }),
+  [VR_EXPERIENCE_POINT['1.30']]: Object.freeze({ pl: 'OBSERWUJ ŚWIAT', en: null }),
+  [VR_EXPERIENCE_POINT['1.40']]: Object.freeze({ pl: 'OTWÓRZ PANEL Y', en: null }),
+  [VR_EXPERIENCE_POINT['1.50']]: Object.freeze({ pl: 'OTWÓRZ: STEROWANIE', en: null }),
+  [VR_EXPERIENCE_POINT['1.60']]: Object.freeze({ pl: 'ZAMKNIJ PANEL Y', en: null }),
+  [VR_EXPERIENCE_POINT['1.70']]: Object.freeze({ pl: 'WSKAŻ MAŁPĘ', en: null }),
+  [VR_EXPERIENCE_POINT['1.80']]: Object.freeze({ pl: 'SPUST — MAŁPA', en: null }),
+  [VR_EXPERIENCE_POINT['1.90']]: Object.freeze({ pl: 'PODAJ KRYSZTAŁ MAŁPIE', en: null }),
+  [VR_EXPERIENCE_POINT['1.100']]: Object.freeze({ pl: 'WYBIERZ ODPOWIEDŹ', en: null }),
+  [VR_EXPERIENCE_POINT['1.110']]: Object.freeze({ pl: 'IDŹ ZA MAŁPĄ', en: null }),
+  [VR_EXPERIENCE_POINT['1.120']]: Object.freeze({ pl: 'PRÓG — WYBIERZ', en: null }),
+  [VR_EXPERIENCE_POINT['1.130']]: Object.freeze({ pl: 'WEJDŹ DO KRĘGU', en: null }),
+  [VR_EXPERIENCE_POINT['2.10']]: Object.freeze({ pl: 'ZDOBĄDŹ PIERWSZY KRYSZTAŁ', en: null }),
+  [VR_EXPERIENCE_POINT['2.20']]: Object.freeze({ pl: 'POROZMAWIAJ Z MAŁPĄ', en: null }),
+  [VR_EXPERIENCE_POINT['2.40']]: Object.freeze({ pl: 'OBSERWUJ ZMIANĘ ŚWIATA', en: null }),
+  [VR_EXPERIENCE_POINT['3.10']]: Object.freeze({ pl: 'OBSERWUJ ZMIANĘ ŚWIATA', en: null }),
+  [VR_EXPERIENCE_POINT['3.20']]: Object.freeze({ pl: 'OBSERWUJ ZMIANĘ ŚWIATA', en: null }),
+  [VR_EXPERIENCE_POINT['3.30']]: Object.freeze({ pl: 'MAŁPA', en: null }),
+  [VR_EXPERIENCE_POINT['3.40']]: Object.freeze({ pl: 'PIEC', en: null }),
+  [VR_EXPERIENCE_POINT['3.50']]: Object.freeze({ pl: 'ASTROLABIUM WIĘZI — UTWÓRZ W PIECU', en: null }),
+  [VR_EXPERIENCE_POINT['3.60']]: Object.freeze({ pl: 'ASTROLABIUM WIĘZI — PRODUKCJA', en: null }),
+  [VR_EXPERIENCE_POINT['3.70']]: Object.freeze({ pl: 'ASTROLABIUM WIĘZI — ODBIERZ Z PIECA', en: null }),
+  [VR_EXPERIENCE_POINT['4.20']]: Object.freeze({ pl: 'OBSERWUJ ZMIANĘ ŚWIATA', en: null }),
+  [VR_EXPERIENCE_POINT['4.30']]: Object.freeze({ pl: 'OBSERWUJ ZMIANĘ ŚWIATA', en: null }),
+  [VR_EXPERIENCE_POINT['4.40']]: Object.freeze({ pl: 'OBSERWUJ ZMIANĘ ŚWIATA', en: null }),
+  [VR_EXPERIENCE_POINT['4.50']]: Object.freeze({ pl: 'MAŁPA', en: null }),
+  [VR_EXPERIENCE_POINT['4.60']]: Object.freeze({ pl: 'MAŁPA', en: null }),
+  [VR_EXPERIENCE_POINT['100.10']]: Object.freeze({ pl: 'KONIEC DOŚWIADCZENIA', en: null })
 });
 
 const APPROVED_OBJECTIVE_BODY_BY_LOCALE = Object.freeze({
@@ -105,8 +119,8 @@ export function createVrCurrentObjectiveProjection({ locale, getCurrentPointId, 
       const installed = coreFamilies.filter((family) => installedRuneFamilies.includes(family)).length;
       return objective('resonator-core', { tuned, installed, total: coreFamilies.length });
     }
-    const body = OBJECTIVE_BODY_BY_POINT[pointId];
-    return locale === 'pl' && body ? Object.freeze({ id: `scenario-${pointId}`, body }) : null;
+    const body = STATIC_OBJECTIVES_BY_POINT[pointId]?.[locale];
+    return body ? Object.freeze({ id: `scenario-${pointId}`, body }) : null;
   }
   return Object.freeze({ getCurrentObjective });
 }
