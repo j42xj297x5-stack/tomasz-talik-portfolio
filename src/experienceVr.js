@@ -694,6 +694,7 @@ let runeResonatorGuidance = null;
 let monkeyKnowledgeResolver = null;
 let astroAttractorProductionController = null;
 const isAstrolabiumOwned = () => astroAttractorProductionController?.isEarned() === true;
+const isAsterionOwned = () => asterionProductionController.isEarned() === true;
 const handModeController = createVrHandModeController({
   controllers: vrControllers.controllers,
   semanticInput,
@@ -857,11 +858,11 @@ const currentObjectiveProjection = createVrCurrentObjectiveProjection({
 });
 const playerGuideProjection = createVrPlayerGuideProjection({
   locale: language,
-  can: (capability) => runtimeExperience?.can(capability) === true,
   getCurrentObjective: () => currentObjectiveProjection.getCurrentObjective(),
   isFurnaceRevealed: () => astroFurnace.object.visible === true,
   isShellFieldRevealed: () => shellSystem.active === true,
   isAstrolabiumOwned,
+  isAsterionOwned,
   hasReadRuneStones: () => monkeyKnowledgeResolver?.hasReadStones() === true,
   hasDiscoveredBinders: () => monkeyKnowledgeResolver?.hasDiscoveredBinders() === true,
   hasInstalledRune: () => runeStoneProgressionController.getInstalledFamilyCodes().length > 0
@@ -880,6 +881,8 @@ const playerGuidePanel = createVrPlayerGuidePanel({
 monkeyKnowledgeResolver = createVrMonkeyKnowledgeResolver({
   locale: language,
   getCurrentObjective: () => currentObjectiveProjection.getCurrentObjective(),
+  isAstrolabiumOwned,
+  isAsterionOwned,
   isPostRingStoneGuidance: () => runtimeExperience?.getCurrentPointId() === '4.80'
     && asterionResonatorFieldActor.getDescriptor().resonatorExists === false
 });

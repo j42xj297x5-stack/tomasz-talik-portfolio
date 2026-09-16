@@ -309,6 +309,28 @@ Question: `ZWORNIKI`
 >
 > Wygląda na to, że nie są ozdobą.
 
+### `knowledge.asterion.build` — `CO TERAZ?`
+Question: `ZBUDUJ KULĘ ASTERIONOWĄ`
+
+> Teraz zbieraj Skorupy.
+> Potrzebujesz sześciu. Każdą przetwórz w Piecu.
+> Gdy Piec przyjmie komplet, zbuduj Kulę Asterionową.
+
+Available after physical Astrolabe ownership and before physical Asterion ownership. It is parallel to, rather than a replacement for, the ordinary Current Objective. Player Y `AKTUALNE ZADANIE` appends the same block as a secondary task during that interval.
+
+### `knowledge.asterion.sphere` — `CO TO JEST?`
+Question: `KULA ASTERIONOWA`
+
+> To narzędzie do zmiany horyzontu.
+> Nie przybliża tego, co jest daleko.
+>
+> --- BLOCK ---
+>
+> Zmienia to, skąd patrzysz.
+> Dzięki temu dosięgniesz tego, czego wcześniej nie mogłeś.
+
+Lifecycle: `NEW` after physical Astrolabe ownership, `READ` only after deliberate full playback, then persistently available.
+
 ## Acquisition — one-shot teaching
 
 ### Astro
@@ -326,6 +348,38 @@ Question: `ZWORNIKI`
 > --- BLOCK ---
 >
 > Szpila i chwyt drugiej ręki pozwalają przejąć obiekt.
+>
+> --- BLOCK ---
+>
+> Glify są dalej, niż możesz sięgnąć.
+>
+> --- BLOCK ---
+>
+> Czy odległość jest problemem?
+>
+> --- BLOCK ---
+>
+> Może nie trzeba przyciągać świata,
+> tylko zmienić miejsce, z którego patrzysz.
+>
+> --- BLOCK ---
+>
+> Zmienić horyzont.
+>
+> --- BLOCK ---
+>
+> Piec może ci pomóc.
+> Kula Asterionowa.
+>
+> --- BLOCK ---
+>
+> Nie przyciągnie glifów.
+>
+> --- BLOCK ---
+>
+> Pozwoli ci znów ich dotknąć.
+
+The seven poetic blocks follow the unchanged Astrolabe control teaching in the same post-claim playback, without another attention gate.
 
 ### Asterion
 > To narzędzie do zmiany horyzontu.
@@ -374,6 +428,8 @@ Question: `ZWORNIKI`
 > X — wyposaż / schowaj
 > Spust — zmieniaj orientację platformy
 > Chwyt - przywiąż sektor i zmień jego położenie
+
+This tool card and the `X` control reference are visible only after physical Asterion Sphere ownership (`EARNED`), not merely after equipment capability unlock.
 
 ## Player Y — exact WIEDZA copy
 

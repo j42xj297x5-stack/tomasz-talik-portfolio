@@ -7,7 +7,8 @@ export const VR_MONKEY_KNOWLEDGE_LIFECYCLE = Object.freeze({
   LOCKED: 'LOCKED', NEW: 'NEW', READ: 'READ', ARCHIVED: 'ARCHIVED'
 });
 
-export function createVrMonkeyKnowledgeResolver({ locale, getCurrentObjective, isPostRingStoneGuidance = () => false }) {
+export function createVrMonkeyKnowledgeResolver({ locale, getCurrentObjective, isPostRingStoneGuidance = () => false,
+  isAstrolabiumOwned = () => false, isAsterionOwned = () => false }) {
   if (typeof getCurrentObjective !== 'function') throw new TypeError('getCurrentObjective must be a function.');
   const copy = locale === 'pl' ? VR_MONKEY_COMMUNICATION_COPY_PL : VR_MONKEY_COMMUNICATION_COPY_EN;
   const categories = locale === 'pl' ? VR_MONKEY_KNOWLEDGE_CATEGORIES_PL : VR_MONKEY_KNOWLEDGE_CATEGORIES_EN;
@@ -18,6 +19,7 @@ export function createVrMonkeyKnowledgeResolver({ locale, getCurrentObjective, i
   let stonesRead = false;
   let stonesLeadRead = false;
   let bindersUnlocked = false;
+  let asterionRead = false;
   const transientHintFallbacks = new Map();
 
   function getTopic() {
@@ -33,18 +35,28 @@ export function createVrMonkeyKnowledgeResolver({ locale, getCurrentObjective, i
   const topicFromCopy = (id) => { const source = copyById(id); return Object.freeze({ id, groupId: source.groupId,
     label: source.question, question: source.question, blocks: Object.freeze(source.blocks),
     type: VR_MONKEY_KNOWLEDGE_ITEM_TYPE.TOPIC,
-    lifecycle: id === 'knowledge.p3.stones' && !stonesRead ? VR_MONKEY_KNOWLEDGE_LIFECYCLE.NEW : VR_MONKEY_KNOWLEDGE_LIFECYCLE.READ }); };
+    lifecycle: (id === 'knowledge.p3.stones' && !stonesRead)
+      || (id === 'knowledge.asterion.sphere' && !asterionRead)
+      ? VR_MONKEY_KNOWLEDGE_LIFECYCLE.NEW : VR_MONKEY_KNOWLEDGE_LIFECYCLE.READ }); };
   function topics(groupId) {
     if (groupId === category.groupId) {
       const ordinaryTopic = getTopic();
-      return [...transientHintFallbacks.values(), ...(ordinaryTopic ? [ordinaryTopic] : [])];
+      const asterionBuild = isAstrolabiumOwned() && !isAsterionOwned()
+        ? topicFromCopy('knowledge.asterion.build') : null;
+      return [...transientHintFallbacks.values(), ...(asterionBuild ? [asterionBuild] : []),
+        ...(ordinaryTopic ? [ordinaryTopic] : [])];
     }
-    if (groupId === whatIsIt.groupId && bindersUnlocked) return [topicFromCopy('knowledge.p3.binders')];
+    if (groupId === whatIsIt.groupId) return [
+      ...(isAstrolabiumOwned() ? [topicFromCopy('knowledge.asterion.sphere')] : []),
+      ...(bindersUnlocked ? [topicFromCopy('knowledge.p3.binders')] : [])
+    ];
     return [];
   }
-  const hasWhatNowContent = () => transientHintFallbacks.size > 0 || getTopic() !== null;
+  const hasWhatNowContent = () => transientHintFallbacks.size > 0
+    || (isAstrolabiumOwned() && !isAsterionOwned()) || getTopic() !== null;
   return Object.freeze({
-    getRootItems: () => [...(hasWhatNowContent() ? [category] : []), ...(bindersUnlocked ? [whatIsIt] : [])],
+    getRootItems: () => [...(hasWhatNowContent() ? [category] : []),
+      ...(bindersUnlocked || isAstrolabiumOwned() ? [whatIsIt] : [])],
     getGroupTopics: topics,
     getCategory: (categoryId) => [category, whatIsIt].find(({ id }) => id === categoryId && topics(id === category.id ? category.groupId : whatIsIt.groupId).length) ?? null,
     getTopic: (topicId) => [...topics(category.groupId), ...topics(whatIsIt.groupId)].find(({ id }) => id === topicId) ?? null,
@@ -55,6 +67,7 @@ export function createVrMonkeyKnowledgeResolver({ locale, getCurrentObjective, i
       }
       if (topicId === 'knowledge.p3.stonesLead') stonesLeadRead = true;
       if (topicId === 'knowledge.p3.stones') stonesRead = true;
+      if (topicId === 'knowledge.asterion.sphere') asterionRead = true;
     },
     publishTransientHintFallback(slotId, hintId) {
       const source = copy.hints[hintId];
@@ -71,6 +84,7 @@ export function createVrMonkeyKnowledgeResolver({ locale, getCurrentObjective, i
     unlockBinders() { bindersUnlocked = true; },
     hasReadStones: () => stonesRead,
     hasDiscoveredBinders: () => bindersUnlocked,
-    reset() { stonesRead = false; stonesLeadRead = false; bindersUnlocked = false; transientHintFallbacks.clear(); }
+    reset() { stonesRead = false; stonesLeadRead = false; bindersUnlocked = false; asterionRead = false;
+      transientHintFallbacks.clear(); }
   });
 }
