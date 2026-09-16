@@ -12,28 +12,52 @@ const PRESENTATION_SCALE = 1.5;
 const CANVAS_WIDTH = 1600;
 const CANVAS_HEIGHT = 1000;
 
-const CREDIT_SECTIONS = Object.freeze([
-  ['Wizja', 'Tomasz Talik'],
-  ['Architekt', 'ChatGPT'],
-  ['Wykonawca', 'Codex'],
-  ['Siatki 3D', 'Meshy AI'],
-  ['Dźwięki', 'Adobe Firefly, ElevenLabs'],
-  ['Silnik 3D', 'Three.js'],
-  ['Obróbka 2D / 3D', 'Blender, Inkscape, GIMP'],
-  ['Audio mix / master', 'Ableton Live'],
-  ['Efekty wizualne / VFX', 'Autorskie implementacje w Three.js'],
-  ['VR', 'Virtual Desktop'],
-  ['Licencja publicznej edycji', 'Creative Commons Attribution-ShareAlike']
-]);
+const CREDITS_COPY = Object.freeze({
+  pl: Object.freeze({
+    title: 'ORANGE MONKEY VR',
+    sections: Object.freeze([
+      ['Wizja', 'Tomasz Talik'],
+      ['Architekt', 'ChatGPT'],
+      ['Wykonawca', 'Codex'],
+      ['Siatki 3D', 'Meshy AI'],
+      ['Dźwięki', 'Adobe Firefly, ElevenLabs'],
+      ['Silnik 3D', 'Three.js'],
+      ['Obróbka 2D / 3D', 'Blender, Inkscape, GIMP'],
+      ['Audio mix / master', 'Ableton Live'],
+      ['Efekty wizualne / VFX', 'Autorskie implementacje w Three.js'],
+      ['VR', 'Virtual Desktop'],
+      ['Licencja publicznej edycji', 'Creative Commons Attribution-ShareAlike']
+    ])
+  }),
+  en: Object.freeze({
+    title: 'ORANGE MONKEY VR',
+    sections: Object.freeze([
+      ['Vision', 'Tomasz Talik'],
+      ['Architect', 'ChatGPT'],
+      ['Developer', 'Codex'],
+      ['3D Models', 'Meshy AI'],
+      ['Sound Design', 'Adobe Firefly, ElevenLabs'],
+      ['3D Engine', 'Three.js'],
+      ['2D / 3D Editing', 'Blender, Inkscape, GIMP'],
+      ['Audio Mix / Mastering', 'Ableton Live'],
+      ['Visual Effects / VFX', 'Custom Three.js Implementations'],
+      ['VR', 'Virtual Desktop'],
+      ['Public Edition License', 'Creative Commons Attribution-ShareAlike']
+    ])
+  })
+});
 
 const PHASE = Object.freeze({ IDLE: 'IDLE', CREDITS: 'CREDITS', BRAND: 'BRAND', COMPLETE: 'COMPLETE' });
 const clamp01 = (value) => Math.max(0, Math.min(1, value));
 
-export function createVrEndCreditsPresentation({ worldRoot, getViewingPose, onCreditsCompleted, onBrandCompleted }) {
+export function createVrEndCreditsPresentation({
+  worldRoot, getViewingPose, onCreditsCompleted, onBrandCompleted, locale = 'pl'
+}) {
   if (!worldRoot?.add || typeof getViewingPose !== 'function'
     || typeof onCreditsCompleted !== 'function' || typeof onBrandCompleted !== 'function') {
     throw new TypeError('[VrEndCreditsPresentation] Required presentation seams are unavailable.');
   }
+  const copy = CREDITS_COPY[locale] ?? CREDITS_COPY.pl;
 
   const canvas = document.createElement('canvas');
   canvas.width = CANVAS_WIDTH * PRESENTATION_SCALE;
@@ -93,10 +117,10 @@ export function createVrEndCreditsPresentation({ worldRoot, getViewingPose, onCr
     prepareCanvas();
     context.fillStyle = DARK;
     context.font = '700 66px sans-serif';
-    context.fillText('ORANGE MONKEY VR', CANVAS_WIDTH / 2, 72);
+    context.fillText(copy.title, CANVAS_WIDTH / 2, 72);
     const startY = 164;
     const sectionStep = 74;
-    CREDIT_SECTIONS.forEach(([label, value], index) => {
+    copy.sections.forEach(([label, value], index) => {
       const y = startY + index * sectionStep;
       context.font = '700 29px sans-serif';
       context.fillText(label, CANVAS_WIDTH / 2, y);

@@ -1,6 +1,8 @@
 const VR_PLAYER_GUIDE_CONTENT = Object.freeze({
   pl: Object.freeze({
     title: 'Panel gracza',
+    toolsSectionLabel: 'NARZĘDZIA',
+    knowledgeSectionLabel: 'WIEDZA',
     items: Object.freeze([
       Object.freeze({ id: 'controls', label: 'STEROWANIE', body: 'Mapa podstawowych wejść kontrolerów.' }),
       Object.freeze({ id: 'current-task', label: 'AKTUALNE ZADANIE', body: 'Dokonaj wyboru.' })
@@ -39,6 +41,8 @@ const VR_PLAYER_GUIDE_CONTENT = Object.freeze({
   }),
   en: Object.freeze({
     title: 'Player panel',
+    toolsSectionLabel: 'TOOLS',
+    knowledgeSectionLabel: 'KNOWLEDGE',
     items: Object.freeze([
       Object.freeze({ id: 'controls', label: 'CONTROLS', body: 'Basic controller input map.' }),
       Object.freeze({ id: 'current-task', label: 'CURRENT TASK', body: 'Make a choice.' })
