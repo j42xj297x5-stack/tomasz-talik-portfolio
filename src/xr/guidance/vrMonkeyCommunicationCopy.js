@@ -135,7 +135,7 @@ export const VR_MONKEY_COMMUNICATION_COPY_EN = Object.freeze({
     'hint.protoAstro.tuning': { blocks: ['The small glyphs are connected to the large ones.', 'The Astrolabe can pull the large ones in.', 'Once it knows what to look for.'] },
     'hint.reliquary.inserted': { blocks: ['Activate the Crystal. Reveal its meaning.'] },
     'hint.reliquary.active': { blocks: ['It may be set free now. \nIt has fulfilled its purpose.'] },
-    'hint.furnace.astroStart': { blocks: ['Open the Furnace information panel.', 'Choose the Astrolabe of Bonding module.', 'Seal the chamber, then use the middle button once the Furnace is properly prepared.', 'If the Furnace rejects the object, first check which operation you have chosen.'] },
+    'hint.furnace.astroStart': { blocks: ['Open the Furnace information panel.', 'Choose the Astrolabe of Binding module.', 'Seal the chamber, then use the middle button once the Furnace is properly prepared.', 'If the Furnace rejects the object, first check which operation you have chosen.'] },
     'hint.furnace.astroAvailable': { blocks: ['Open the chamber. Take your tool out.', 'Grab it.'] },
     'hint.rune.noBinder.soft': { blocks: ['It works.', 'It just has nowhere to bind.'] },
     'hint.rune.noBinder.medium': { blocks: ['Look at the Sectors.\nCompleted ones have a Keystone.', 'It will let you bind the stone.'] }
