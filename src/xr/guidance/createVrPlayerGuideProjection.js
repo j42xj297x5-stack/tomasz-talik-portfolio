@@ -1,4 +1,3 @@
-import { VR_SCENARIO_CAPABILITY } from '../progression/vrExperienceScenario.js';
 import { resolveVrPlayerGuideContent } from './vrPlayerGuideContent.js';
 
 const TOOLS = Object.freeze([
@@ -9,17 +8,16 @@ const TOOLS = Object.freeze([
     id: 'astro'
   }),
   Object.freeze({
-    id: 'asterion',
-    capability: VR_SCENARIO_CAPABILITY.CAN_EQUIP_ASTERION
+    id: 'asterion'
   })
 ]);
 
-export function createVrPlayerGuideProjection({ locale, can, getCurrentObjective, isFurnaceRevealed,
+export function createVrPlayerGuideProjection({ locale, getCurrentObjective, isFurnaceRevealed,
   isShellFieldRevealed, isAstrolabiumOwned, hasReadRuneStones = () => false, hasDiscoveredBinders = () => false,
-  hasInstalledRune = () => false }) {
-  if (typeof can !== 'function' || typeof getCurrentObjective !== 'function'
-    || typeof isFurnaceRevealed !== 'function' || typeof isShellFieldRevealed !== 'function'
-    || typeof isAstrolabiumOwned !== 'function') {
+  hasInstalledRune = () => false, isAsterionOwned = () => false }) {
+  if (typeof getCurrentObjective !== 'function' || typeof isFurnaceRevealed !== 'function'
+    || typeof isShellFieldRevealed !== 'function' || typeof isAstrolabiumOwned !== 'function'
+    || typeof isAsterionOwned !== 'function') {
     throw new TypeError('Player guide projection dependencies must be functions.');
   }
 
@@ -34,13 +32,19 @@ export function createVrPlayerGuideProjection({ locale, can, getCurrentObjective
     ];
   }
 
-  const getCurrentTask = () => getCurrentObjective();
+  const getCurrentTask = () => {
+    const current = getCurrentObjective();
+    if (!isAstrolabiumOwned() || isAsterionOwned()) return current;
+    const secondary = resolveVrPlayerGuideContent(locale).asterionBuildTask;
+    return Object.freeze({ id: current ? `${current.id}+asterion-build` : 'asterion-build',
+      body: current ? `${current.body}\n\n${secondary}` : secondary });
+  };
 
   function getTools() {
     const content = resolveVrPlayerGuideContent(locale);
-    return TOOLS.filter(({ id, capability }) => id === 'furnace'
+    return TOOLS.filter(({ id }) => id === 'furnace'
       ? isFurnaceRevealed()
-      : id === 'astro' ? isAstrolabiumOwned() : can(capability))
+      : id === 'astro' ? isAstrolabiumOwned() : isAsterionOwned())
       .map(({ id }) => ({
         id,
         label: content.tools[id].label,
@@ -53,7 +57,7 @@ export function createVrPlayerGuideProjection({ locale, can, getCurrentObjective
   function getVisibleControlIds() {
     const ids = ['trigger', 'grab', 'rotate', 'move', 'Y'];
     if (isAstrolabiumOwned()) ids.push('A');
-    if (can(VR_SCENARIO_CAPABILITY.CAN_EQUIP_ASTERION)) ids.push('X');
+    if (isAsterionOwned()) ids.push('X');
     if (isAstrolabiumOwned()) ids.push('B');
     return ids;
   }

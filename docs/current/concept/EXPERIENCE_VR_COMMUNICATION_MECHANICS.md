@@ -105,15 +105,17 @@ Canonical Monkey/session reset clears every transient slot. There is no durable 
 
 ## Ordinary objective and discovered-world knowledge
 
-`createVrCurrentObjectiveProjection` remains the stateless read-only CURRENT OBJECTIVE owner. Player Y shows it under `AKTUALNE ZADANIE`; ordinary Monkey normally projects it through `CO TERAZ?`. At `4.80`, while Resonator does not exist, Monkey instead preserves the authored first-stone lead / `KAMIENIE` discovery flow. At `5.10` there is no objective. Transient fallbacks do not replace these semantics.
+`createVrCurrentObjectiveProjection` remains the stateless read-only CURRENT OBJECTIVE owner. Player Y shows it under `AKTUALNE ZADANIE`; ordinary Monkey normally projects it through `CO TERAZ?`. After physical Astrolabe ownership and until physical Asterion ownership, both surfaces additionally compose the practical Shell → Furnace → Asterion build path without replacing the ordinary objective. In Monkey ordering it follows transient corrective fallbacks and precedes the ordinary objective or special stone guidance. Player Y composes it as a secondary current task. Both projections read the production controllers directly and remove the path when `asterionProductionController.isEarned()` becomes true. At `4.80`, while Resonator does not exist, Monkey preserves the authored first-stone lead / `KAMIENIE` discovery flow alongside that build path. At `5.10` there is no ordinary objective. Transient fallbacks do not replace these semantics.
 
-After first live Binder `HIDDEN → DOCKED`, ordinary Monkey additionally exposes `CO TO JEST? → ZWORNIKI`. Player Y `WIEDZA` remains a separate read-only projection of discovered-world knowledge and is not populated by transient fallback hints.
+Physical Astrolabe ownership exposes persistent `CO TO JEST? → KULA ASTERIONOWA` as `NEW`; only deliberate full playback marks it `READ`, and it remains available afterward. After first live Binder `HIDDEN → DOCKED`, ordinary Monkey additionally exposes `CO TO JEST? → ZWORNIKI`. Player Y `WIEDZA` remains a separate read-only projection of discovered-world knowledge and is not populated by transient fallback hints.
 
 ## Automatic communication that is not AUTO_HINT
 
 Automatic authored progression reactions may play without attention but do not become corrective `AUTO_HINT` or publish a transient fallback merely because playback is automatic. Current examples include `progression.threshold.crossed`, `progression.crystal.firstCreated`, `progression.card.first` and `progression.p3.firstSectorLock`.
 
-Current acquisition teaching also remains distinct: it waits after physical claim, uses full attention and a Monkey press, plays once, then returns to idle.
+Astrolabe acquisition teaching remains distinct: after physical claim it keeps the existing five-second delay, full attention and Monkey press. Its unchanged control-teaching blocks are followed, within the same uninterrupted playback and without another attention gate, by the poetic Asterion Sphere introduction. The practical build path is not spoken in this progression beat; it lives in `CO TERAZ?` and Player Y `AKTUALNE ZADANIE`.
+
+Player Y tool cards represent physical ownership rather than equipment permission. The Asterion Sphere card and its `X` controller reference therefore appear only when `asterionProductionController.isEarned()` is true; Furnace and Astrolabe presentation remains unchanged.
 
 The following current click-required / attention guidance was **not** migrated and retains its current behavior: `hint.glyphs.how.soft`, `hint.glyphs.how.strong`, `hint.protoAstro.tuning`, `hint.furnace.astroStart` and `hint.furnace.astroAvailable`.
 

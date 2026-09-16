@@ -7,6 +7,7 @@ const VR_PLAYER_GUIDE_CONTENT = Object.freeze({
       Object.freeze({ id: 'controls', label: 'STEROWANIE', body: 'Mapa podstawowych wejść kontrolerów.' }),
       Object.freeze({ id: 'current-task', label: 'AKTUALNE ZADANIE', body: 'Dokonaj wyboru.' })
     ]),
+    asterionBuildTask: 'Teraz zbieraj Skorupy.\nPotrzebujesz sześciu. Każdą przetwórz w Piecu.\nGdy Piec przyjmie komplet, zbuduj Kulę Asterionową.',
     tools: Object.freeze({
       furnace: Object.freeze({
         label: 'PIEC',
@@ -47,6 +48,7 @@ const VR_PLAYER_GUIDE_CONTENT = Object.freeze({
       Object.freeze({ id: 'controls', label: 'CONTROLS', body: 'Basic controller input map.' }),
       Object.freeze({ id: 'current-task', label: 'CURRENT TASK', body: 'Make a choice.' })
     ]),
+    asterionBuildTask: 'Now collect Shells.\nYou need six. Process each one in the Furnace.\nOnce the Furnace has taken the full set, build the Asterion Sphere.',
     tools: Object.freeze({
       furnace: Object.freeze({
         label: 'FURNACE',
