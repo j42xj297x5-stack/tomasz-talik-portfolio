@@ -28,7 +28,7 @@ Status: **CURRENT / BINDING**, synchronized on 2026-09-11. Runtime graph, recons
 
 `4.80` targets `5.10`, enters with `SET_MAIN_AMBIENT_04` and `CHECK_RESONATOR_JOIN`, and accepts `RESONATOR_READY`. The check covers the event order in which Resonator already exists on entry. Otherwise `resonatorExists === true` is projected as `RESONATOR_READY`. This semantic join does not gate or own Resonator creation.
 
-`5.10` has no entry effects, CURRENT OBJECTIVE, transitions or blocking entry dialogue. It has no direct transition to `100.10`; the latter remains a separate story terminal used by an earlier explicit Intro choice.
+`5.10` has no entry effects, CURRENT OBJECTIVE, transitions or blocking entry dialogue. It has no direct transition to `100.10`; the latter remains a separate story terminal used by the authored Intro exit branches. At `1.100` choice 3 and at `1.120` choice 3 remain at their current point while the existing continuation effect plays the full Monkey exit reaction. Only the actor's `INTRO_EXIT_REACTION_COMPLETED` semantic event explicitly advances either point to `100.10`, whose `END_XR_SESSION` entry effect remains the sole owner of terminal XR exit.
 
 ## CURRENT OBJECTIVE
 
