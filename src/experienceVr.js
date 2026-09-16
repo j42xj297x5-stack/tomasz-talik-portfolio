@@ -128,14 +128,14 @@ if (!app) throw new Error('Missing #app mount element.');
 
 const COPY = {
   pl: {
-    title: 'Doświadczenie VR', loading: 'Przygotowywanie minimalnej sceny VR…', ready: 'Scena jest gotowa.',
+    title: 'Orange Monkey VR', loading: 'Przygotowywanie minimalnej sceny VR…', ready: 'Scena jest gotowa.',
     enter: 'Wejdź do VR', entering: 'Uruchamianie sesji…', exit: 'Zakończ VR', retry: 'Wejdź ponownie do VR',
     error: 'Nie udało się uruchomić sesji VR. Możesz spróbować ponownie.',
     controllersAlt: 'Instrukcja sterowania kontrolerami VR',
     crystalInstructionTitle: 'Portal czeka', crystalInstructionBody: 'Osadź kryształ w naczyniu.'
   },
   en: {
-    title: 'Experience VR', loading: 'Preparing the minimal VR scene…', ready: 'The scene is ready.',
+    title: 'Orange Monkey VR', loading: 'Preparing the minimal VR scene…', ready: 'The scene is ready.',
     enter: 'Enter VR', entering: 'Starting session…', exit: 'Exit VR', retry: 'Enter VR again',
     error: 'The VR session could not be started. You can try again.',
     controllersAlt: 'VR controller instructions',
@@ -1468,6 +1468,7 @@ const finalWorldRelease = createVrFinalWorldReleaseActor({
 });
 const endCreditsPresentation = createVrEndCreditsPresentation({
   worldRoot: scene,
+  locale: language,
   getViewingPose: (positionTarget, quaternionTarget) => getXrHeadWorldPose({
     renderer, camera, playerRig, positionTarget, quaternionTarget
   }),

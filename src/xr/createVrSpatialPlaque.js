@@ -49,11 +49,16 @@ export function wrapCanvasText(context, text, maxWidth, maxLines) {
   return lines;
 }
 
-export function resolveVrPlaqueContent(glyphData) {
+const PLAQUE_FALLBACK_BODY = Object.freeze({
+  pl: 'Pierwszy znak otwiera drogę do wnętrza kręgu.',
+  en: 'The first sign opens a path into the heart of the circle.'
+});
+
+export function resolveVrPlaqueContent(glyphData, locale = 'pl') {
   return {
     title: cleanText(glyphData?.title || glyphData?.eyebrow) || 'Brama',
     body: cleanText(glyphData?.leadText || glyphData?.draftText || glyphData?.shortLabel)
-      || 'Pierwszy znak otwiera drogę do wnętrza kręgu.'
+      || (PLAQUE_FALLBACK_BODY[locale] ?? PLAQUE_FALLBACK_BODY.pl)
   };
 }
 

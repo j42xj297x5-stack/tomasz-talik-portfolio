@@ -288,8 +288,8 @@ export function createVrPlayerGuidePanel({ leftGrip, semanticInput, locale = 'en
     return content.items.map((item) => item.id === 'current-task' && currentTask
       ? { ...item, body: currentTask.body }
       : item)
-      .concat(tools.length ? [{ id: 'tools', label: 'NARZĘDZIA', tools }] : [])
-      .concat(knowledge.length ? [{ id: 'knowledge', label: 'WIEDZA', knowledge }] : []);
+      .concat(tools.length ? [{ id: 'tools', label: content.toolsSectionLabel, tools }] : [])
+      .concat(knowledge.length ? [{ id: 'knowledge', label: content.knowledgeSectionLabel, knowledge }] : []);
   }
 
   function reconcileDynamicSections(items) {
