@@ -480,14 +480,22 @@ export function createVrMonkeyGuide({
       { backId: 'back-knowledge', backLabel: '←', previousId: 'knowledge-previous', nextId: 'knowledge-next' });
   }
 
+  function measureMessage(text) {
+    const normalizedMessage = String(text ?? '').trim();
+    if (!normalizedMessage) return { lineCount: 0 };
+    messagePanel.context.save();
+    messagePanel.context.font = `${settings.message.fontWeight} ${settings.message.fontSize}px sans-serif`;
+    const maxTextWidth = settings.message.maxBubbleWidthPx - settings.message.paddingX * 2;
+    const lineCount = wrapText(messagePanel.context, normalizedMessage, maxTextWidth).length;
+    messagePanel.context.restore();
+    return { lineCount };
+  }
+
   function showMessage(text) {
     message = String(text ?? '').trim();
     messagePanel.group.visible = Boolean(message);
     drawMessage();
-    if (!message) return { lineCount: 0 };
-    messagePanel.context.font = `${settings.message.fontWeight} ${settings.message.fontSize}px sans-serif`;
-    const maxTextWidth = settings.message.maxBubbleWidthPx - settings.message.paddingX * 2;
-    return { lineCount: wrapText(messagePanel.context, message, maxTextWidth).length };
+    return measureMessage(message);
   }
   let dialogueOwner = null;
   const legacyDialogueOwner = Symbol('VrMonkeyGuideSequencedDialogue');
@@ -702,7 +710,7 @@ export function createVrMonkeyGuide({
   drawDialogue();
   const api = {
     object: root, messagePanel, dialoguePanel, attentionRoot, arcs, halo, hits,
-    update, notifyAttention, playAttentionCue, cancelAttention: clearAttention, showMessage,
+    update, notifyAttention, playAttentionCue, cancelAttention: clearAttention, showMessage, measureMessage,
     open: openDialogue, close, isOpen: () => open,
     hasCurrentHit: (record) => Boolean(hits.get(record)), reset, dispose, press,
     isAttentionPending: () => attentionPending,

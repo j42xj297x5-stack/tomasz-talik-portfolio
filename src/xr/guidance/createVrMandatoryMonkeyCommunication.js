@@ -6,7 +6,8 @@ const PHASE = Object.freeze({
   PLAYBACK: 'PLAYBACK', COMPLETE: 'COMPLETE'
 });
 
-export function createVrMandatoryMonkeyCommunication({ monkeyGuide, blocks, resolveBlocks, secondsPerLine,
+export function createVrMandatoryMonkeyCommunication({ monkeyGuide, blocks, resolveBlocks, timingBlocks,
+  resolveTimingBlocks, secondsPerLine,
   onTriggered = () => {}, onCompleted = () => {}, onLastBlockHidden = () => {},
   priority = VR_MONKEY_DIALOGUE_PRIORITY.MANDATORY, requiresAttention = true,
   autoPlaybackDelaySeconds = 0, onAutoPlaybackCue = () => {} }) {
@@ -16,14 +17,18 @@ export function createVrMandatoryMonkeyCommunication({ monkeyGuide, blocks, reso
   if (resolveBlocks !== undefined && typeof resolveBlocks !== 'function') {
     throw new TypeError('resolveBlocks must be a function');
   }
-  const createPlayback = (playbackBlocks) => createVrMonkeyProgressionMessage({
-    monkeyGuide, owner, blocks: playbackBlocks, secondsPerLine, onLastBlockHidden, onCompleted() {
+  if (resolveTimingBlocks !== undefined && typeof resolveTimingBlocks !== 'function') {
+    throw new TypeError('resolveTimingBlocks must be a function');
+  }
+  const createPlayback = (playbackBlocks, playbackTimingBlocks = null) => createVrMonkeyProgressionMessage({
+    monkeyGuide, owner, blocks: playbackBlocks, timingBlocks: playbackTimingBlocks,
+    secondsPerLine, onLastBlockHidden, onCompleted() {
       phase = PHASE.COMPLETE;
       monkeyGuide.releaseDialogue(owner);
       onCompleted();
     }
   });
-  let playback = resolveBlocks ? null : createPlayback(blocks);
+  let playback = resolveBlocks || resolveTimingBlocks ? null : createPlayback(blocks, timingBlocks);
   const override = { options: [], onMonkeyPress() {
     if (phase !== PHASE.ATTENTION) return true;
     phase = PHASE.PLAYBACK;
@@ -69,8 +74,12 @@ export function createVrMandatoryMonkeyCommunication({ monkeyGuide, blocks, reso
     if (phase !== PHASE.PLAYBACK) return false;
     monkeyGuide.updateDialogue(owner, override, { preemptible: false });
     if (!playback) {
-      const resolvedBlocks = resolveBlocks();
-      playback = createPlayback(Array.isArray(resolvedBlocks) ? [...resolvedBlocks] : resolvedBlocks);
+      const resolvedBlocks = resolveBlocks ? resolveBlocks() : blocks;
+      const resolvedTimingBlocks = resolveTimingBlocks ? resolveTimingBlocks() : timingBlocks;
+      playback = createPlayback(
+        Array.isArray(resolvedBlocks) ? [...resolvedBlocks] : resolvedBlocks,
+        Array.isArray(resolvedTimingBlocks) ? [...resolvedTimingBlocks] : resolvedTimingBlocks
+      );
     }
     return playback.begin();
   }
@@ -94,7 +103,7 @@ export function createVrMandatoryMonkeyCommunication({ monkeyGuide, blocks, reso
   }
   function reset() {
     playback?.reset();
-    if (resolveBlocks) playback = null;
+    if (resolveBlocks || resolveTimingBlocks) playback = null;
     monkeyGuide.cancelDialogueAttention(owner);
     monkeyGuide.releaseDialogue(owner);
     autoPlaybackDelayRemaining = 0;
