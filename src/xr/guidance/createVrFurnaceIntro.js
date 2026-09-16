@@ -4,14 +4,16 @@ import { VR_MONKEY_COMMUNICATION_COPY_PL } from './vrMonkeyCommunicationCopy.js'
 
 export const VR_FURNACE_INTRO_COPY = VR_MONKEY_COMMUNICATION_COPY_PL.progression['progression.furnace.look'].blocks;
 
-export function createVrFurnaceIntro({ monkeyGuide, revealFurnace, secondsPerLine, onCompleted = () => {} }) {
+export function createVrFurnaceIntro({ monkeyGuide, revealFurnace, secondsPerLine,
+  blocks = VR_FURNACE_INTRO_COPY, timingBlocks = null, onCompleted = () => {} }) {
   if (typeof revealFurnace !== 'function') throw new TypeError('revealFurnace is required');
   const owner = Symbol('VrFurnaceIntro');
   let active = false;
   const messageActor = createVrMonkeyProgressionMessage({
     monkeyGuide,
     owner,
-    blocks: VR_FURNACE_INTRO_COPY,
+    blocks,
+    timingBlocks,
     secondsPerLine,
     beforeShow: revealFurnace,
     onCompleted() {

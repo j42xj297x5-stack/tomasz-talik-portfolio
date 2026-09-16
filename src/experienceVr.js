@@ -900,8 +900,8 @@ monkeyGuide = createVrMonkeyGuide({
 const monkeyLocaleCopy = language === 'pl'
   ? VR_MONKEY_COMMUNICATION_COPY_PL
   : VR_MONKEY_COMMUNICATION_COPY_EN;
-const phaseSevenMonkeyCopy = Object.freeze({
-  progression: VR_MONKEY_COMMUNICATION_COPY_PL.progression,
+const phaseEightMonkeyCopy = Object.freeze({
+  progression: monkeyLocaleCopy.progression,
   tutorial: VR_MONKEY_COMMUNICATION_COPY_PL.tutorial,
   decisions: VR_MONKEY_COMMUNICATION_COPY_PL.decisions,
   hints: monkeyLocaleCopy.hints,
@@ -909,7 +909,8 @@ const phaseSevenMonkeyCopy = Object.freeze({
   knowledge: monkeyLocaleCopy.knowledge
 });
 runeResonatorGuidance = createVrRuneResonatorGuidance({
-  monkeyGuide, copy: phaseSevenMonkeyCopy,
+  monkeyGuide, copy: phaseEightMonkeyCopy,
+  progressionTiming: VR_MONKEY_COMMUNICATION_COPY_PL.progression,
   secondsPerLine: settings.intro.messageDisplayDuration,
   getCurrentPointId: () => runtimeExperience?.getCurrentPointId?.() ?? null,
   isAsterionEarned: () => asterionProductionController.isEarned(),
@@ -929,7 +930,7 @@ runeResonatorGuidance = createVrRuneResonatorGuidance({
 });
 toolGuidanceLifecycle = createVrToolGuidanceLifecycle({
   monkeyGuide,
-  copy: phaseSevenMonkeyCopy,
+  copy: phaseEightMonkeyCopy,
   canStartAstroProduction: () => runtimeExperience?.can(
     VR_SCENARIO_CAPABILITY.CAN_START_FURNACE_PROCESS
   ) === true,
@@ -937,7 +938,8 @@ toolGuidanceLifecycle = createVrToolGuidanceLifecycle({
 });
 earlyExperienceGuidance = createVrEarlyExperienceGuidance({
   monkeyGuide, knowledgeResolver: monkeyKnowledgeResolver,
-  copy: phaseSevenMonkeyCopy,
+  copy: phaseEightMonkeyCopy,
+  progressionTiming: VR_MONKEY_COMMUNICATION_COPY_PL.progression,
   getCurrentPointId: () => runtimeExperience?.getCurrentPointId?.() ?? null,
   hasProtoAstroTuning: () => protoAstroTuningController.getExtractedFamilyCodes().length > 0,
   onFirstCrystalResponseCompleted: () => introSequence?.beginFirstCrystalDiscovery()
@@ -1416,7 +1418,8 @@ const p2ObservationWindow = createVrObservationWindow({
   }
 });
 const postRingMonkeyDialogue = createVrMandatoryMonkeyCommunication({ monkeyGuide,
-  blocks: VR_MONKEY_COMMUNICATION_COPY_PL.progression['progression.postRing.changedWorld'].blocks,
+  blocks: monkeyLocaleCopy.progression['progression.postRing.changedWorld'].blocks,
+  timingBlocks: VR_MONKEY_COMMUNICATION_COPY_PL.progression['progression.postRing.changedWorld'].blocks,
   secondsPerLine: settings.intro.messageDisplayDuration,
   onTriggered: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.MONKEY_TRIGGERED),
   onCompleted: () => {
@@ -1425,7 +1428,8 @@ const postRingMonkeyDialogue = createVrMandatoryMonkeyCommunication({ monkeyGuid
   }
 });
 const p2MonkeyDialogue = createVrMandatoryMonkeyCommunication({ monkeyGuide,
-  blocks: VR_MONKEY_COMMUNICATION_COPY_PL.progression['progression.p2.smallGlyphsIntro'].blocks,
+  blocks: monkeyLocaleCopy.progression['progression.p2.smallGlyphsIntro'].blocks,
+  timingBlocks: VR_MONKEY_COMMUNICATION_COPY_PL.progression['progression.p2.smallGlyphsIntro'].blocks,
   secondsPerLine: settings.intro.messageDisplayDuration,
   onTriggered: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.MONKEY_TRIGGERED),
   onCompleted: () => {
@@ -1434,13 +1438,15 @@ const p2MonkeyDialogue = createVrMandatoryMonkeyCommunication({ monkeyGuide,
   }
 });
 const waterPathOpenCommunication = createVrMandatoryMonkeyCommunication({ monkeyGuide,
-  blocks: VR_MONKEY_COMMUNICATION_COPY_PL.progression['progression.p4.waterPathOpen'].blocks,
+  blocks: monkeyLocaleCopy.progression['progression.p4.waterPathOpen'].blocks,
+  timingBlocks: VR_MONKEY_COMMUNICATION_COPY_PL.progression['progression.p4.waterPathOpen'].blocks,
   secondsPerLine: settings.intro.messageDisplayDuration,
   onTriggered: () => waterPathOpenCommunication.beginPlayback()
 });
 const finalMonkeyFarewell = createVrFinalMonkeyFarewell({
   monkeyGuide,
-  blocks: VR_MONKEY_COMMUNICATION_COPY_PL.progression['progression.final.monkeyFarewell'].blocks,
+  blocks: monkeyLocaleCopy.progression['progression.final.monkeyFarewell'].blocks,
+  timingBlocks: VR_MONKEY_COMMUNICATION_COPY_PL.progression['progression.final.monkeyFarewell'].blocks,
   onTriggered: () => finalAmbientSequencer.beginFarewell(),
   onCompleted: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.FINAL_MONKEY_FAREWELL_COMPLETED)
 });
@@ -1489,6 +1495,8 @@ const endCreditsPresentation = createVrEndCreditsPresentation({
 });
 const furnaceIntro = createVrFurnaceIntro({
   monkeyGuide,
+  blocks: monkeyLocaleCopy.progression['progression.furnace.look'].blocks,
+  timingBlocks: VR_MONKEY_COMMUNICATION_COPY_PL.progression['progression.furnace.look'].blocks,
   secondsPerLine: settings.intro.messageDisplayDuration,
   revealFurnace: () => astroFurnace.reveal(3),
   onCompleted: () => {
