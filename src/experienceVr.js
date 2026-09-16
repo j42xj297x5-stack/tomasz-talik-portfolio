@@ -920,6 +920,8 @@ runeResonatorGuidance = createVrRuneResonatorGuidance({
       && runeInstallationReadinessProjection.isInstallationReady(stone.branchId) !== true
       ? stone.branchId : null;
   },
+  isRuneBranchInstallationReady: (branchId) =>
+    runeInstallationReadinessProjection.isInstallationReady(branchId) === true,
   knowledgeResolver: monkeyKnowledgeResolver,
   onEtherInterventionCompleted: () => runtimeExperience.dispatch(
     VR_SCENARIO_EVENT.ETHER_INTERVENTION_COMPLETED

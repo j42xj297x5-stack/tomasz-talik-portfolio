@@ -5,16 +5,21 @@ const DELAY_SECONDS = 5;
 const AUTO_HINT_CUE_SECONDS = 1;
 
 export function createVrRuneResonatorGuidance({ monkeyGuide, copy, secondsPerLine,
-  getCurrentPointId, getUnresolvedRuneBranchId, knowledgeResolver, progressionTiming = null,
+  getCurrentPointId, getUnresolvedRuneBranchId, isRuneBranchInstallationReady,
+  knowledgeResolver, progressionTiming = null,
   isAsterionEarned,
   onEtherInterventionCompleted = () => {},
   onFullResonatorCommunicationCompleted = () => {} }) {
   if (typeof isAsterionEarned !== 'function') throw new TypeError('isAsterionEarned must be a function');
+  if (typeof isRuneBranchInstallationReady !== 'function') {
+    throw new TypeError('isRuneBranchInstallationReady must be a function');
+  }
   let armed = false;
   let previousPointId = getCurrentPointId();
   let glyphsGoneDue = null;
   let unresolvedSeconds = 0;
   let mediumDue = false;
+  let noBinderBranchId = null;
   let firstRuneInstalled = false;
   let firstSectorLock = false;
   let firstResonator = false;
@@ -70,7 +75,10 @@ export function createVrRuneResonatorGuidance({ monkeyGuide, copy, secondsPerLin
     if (knowledgeResolver.publishTransientHintFallback('rune-no-binder', 'hint.rune.noBinder.soft')) {
       monkeyGuide.refreshKnowledge();
     }
-    if (getUnresolvedRuneBranchId()) { unresolvedSeconds = 0; mediumDue = true; }
+    if (noBinderBranchId && !isRuneBranchInstallationReady(noBinderBranchId)) {
+      unresolvedSeconds = 0;
+      mediumDue = true;
+    }
   });
   const communications = [glyphsGone, installed, sectorLock, resonator, etherIntervention, fullResonator,
     noBinderSoft, noBinderMedium];
@@ -122,13 +130,15 @@ export function createVrRuneResonatorGuidance({ monkeyGuide, copy, secondsPerLin
       if (communication._due <= 0) { delete communication._due; schedule(communication); }
     });
     const unresolved = getUnresolvedRuneBranchId();
-    if (!unresolved) {
+    if (!noBinderBranchId && unresolved) noBinderBranchId = unresolved;
+    if (noBinderBranchId && isRuneBranchInstallationReady(noBinderBranchId)) {
+      noBinderBranchId = null;
       unresolvedSeconds = 0; mediumDue = false; noBinderSoft.reset(); noBinderMedium.reset();
       if (knowledgeResolver.withdrawTransientHintFallback('rune-no-binder')) monkeyGuide.refreshKnowledge();
-    } else if (noBinderSoft.getPhase() === 'IDLE' && !mediumDue) {
+    } else if (noBinderBranchId && noBinderSoft.getPhase() === 'IDLE' && !mediumDue) {
       unresolvedSeconds += delta;
       if (unresolvedSeconds >= DELAY_SECONDS) { unresolvedSeconds = 0; schedule(noBinderSoft); }
-    } else if (mediumDue && noBinderMedium.getPhase() === 'IDLE') {
+    } else if (noBinderBranchId && mediumDue && noBinderMedium.getPhase() === 'IDLE') {
       unresolvedSeconds += delta;
       if (unresolvedSeconds >= DELAY_SECONDS) { unresolvedSeconds = 0; mediumDue = false; schedule(noBinderMedium); }
     }
@@ -136,8 +146,10 @@ export function createVrRuneResonatorGuidance({ monkeyGuide, copy, secondsPerLin
   }
   function reset() {
     armed = false; previousPointId = getCurrentPointId(); glyphsGoneDue = null;
-    unresolvedSeconds = 0; mediumDue = false; firstRuneInstalled = false; firstSectorLock = false; firstResonator = false;
+    unresolvedSeconds = 0; mediumDue = false; noBinderBranchId = null;
+    firstRuneInstalled = false; firstSectorLock = false; firstResonator = false;
     communications.forEach((communication) => { delete communication._due; communication.reset(); });
+    if (knowledgeResolver.withdrawTransientHintFallback('rune-no-binder')) monkeyGuide.refreshKnowledge();
   }
   return { update, reset, notifyThirdRingCompleted, notifyBridgeTransitions, notifyRuneProgression,
     notifySectorLocked, notifyResonatorChanged, beginEtherIntervention, beginFullResonatorCommunication };
