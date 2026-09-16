@@ -92,7 +92,8 @@ import { createVrEndCreditsPresentation } from './xr/finale/createVrEndCreditsPr
 import { createVrToolGuidanceLifecycle } from './xr/guidance/createVrToolGuidanceLifecycle.js';
 import { createVrEarlyExperienceGuidance } from './xr/guidance/createVrEarlyExperienceGuidance.js';
 import { createVrRuneResonatorGuidance } from './xr/guidance/createVrRuneResonatorGuidance.js';
-import { VR_MONKEY_COMMUNICATION_COPY_PL } from './xr/guidance/vrMonkeyCommunicationCopy.js';
+import { VR_MONKEY_COMMUNICATION_COPY_EN,
+  VR_MONKEY_COMMUNICATION_COPY_PL } from './xr/guidance/vrMonkeyCommunicationCopy.js';
 import { createVrFurnaceIntro } from './xr/guidance/createVrFurnaceIntro.js';
 import { createVrIntroSequence } from './xr/guidance/createVrIntroSequence.js';
 import { createVrIntroCrystalTutorial } from './xr/guidance/createVrIntroCrystalTutorial.js';
@@ -896,8 +897,19 @@ monkeyGuide = createVrMonkeyGuide({
   onPanelClick: () => playVrUi(VR_AUDIO.click),
   onAttentionStart: () => playVrWorld(VR_AUDIO.monkeyThinking)
 });
+const monkeyLocaleCopy = language === 'pl'
+  ? VR_MONKEY_COMMUNICATION_COPY_PL
+  : VR_MONKEY_COMMUNICATION_COPY_EN;
+const phaseSevenMonkeyCopy = Object.freeze({
+  progression: VR_MONKEY_COMMUNICATION_COPY_PL.progression,
+  tutorial: VR_MONKEY_COMMUNICATION_COPY_PL.tutorial,
+  decisions: VR_MONKEY_COMMUNICATION_COPY_PL.decisions,
+  hints: monkeyLocaleCopy.hints,
+  acquisition: monkeyLocaleCopy.acquisition,
+  knowledge: monkeyLocaleCopy.knowledge
+});
 runeResonatorGuidance = createVrRuneResonatorGuidance({
-  monkeyGuide, copy: VR_MONKEY_COMMUNICATION_COPY_PL,
+  monkeyGuide, copy: phaseSevenMonkeyCopy,
   secondsPerLine: settings.intro.messageDisplayDuration,
   getCurrentPointId: () => runtimeExperience?.getCurrentPointId?.() ?? null,
   isAsterionEarned: () => asterionProductionController.isEarned(),
@@ -917,15 +929,15 @@ runeResonatorGuidance = createVrRuneResonatorGuidance({
 });
 toolGuidanceLifecycle = createVrToolGuidanceLifecycle({
   monkeyGuide,
-  copy: VR_MONKEY_COMMUNICATION_COPY_PL,
-  canStartAstroProduction: () => language === 'pl' && runtimeExperience?.can(
+  copy: phaseSevenMonkeyCopy,
+  canStartAstroProduction: () => runtimeExperience?.can(
     VR_SCENARIO_CAPABILITY.CAN_START_FURNACE_PROCESS
   ) === true,
   getAstroProductionState: () => astroAttractorProductionController.getState()
 });
 earlyExperienceGuidance = createVrEarlyExperienceGuidance({
   monkeyGuide, knowledgeResolver: monkeyKnowledgeResolver,
-  copy: VR_MONKEY_COMMUNICATION_COPY_PL,
+  copy: phaseSevenMonkeyCopy,
   getCurrentPointId: () => runtimeExperience?.getCurrentPointId?.() ?? null,
   hasProtoAstroTuning: () => protoAstroTuningController.getExtractedFamilyCodes().length > 0,
   onFirstCrystalResponseCompleted: () => introSequence?.beginFirstCrystalDiscovery()
