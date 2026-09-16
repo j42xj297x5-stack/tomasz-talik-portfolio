@@ -24,7 +24,7 @@ export function createVrPlayerGuideProjection({ locale, can, getCurrentObjective
   }
 
   function getKnowledge() {
-    if (locale !== 'pl' || !isShellFieldRevealed()) return [];
+    if (!isShellFieldRevealed()) return [];
     const knowledge = resolveVrPlayerGuideContent(locale).knowledge;
     return [
       { id: 'shells', ...knowledge.shells },
@@ -37,7 +37,6 @@ export function createVrPlayerGuideProjection({ locale, can, getCurrentObjective
   const getCurrentTask = () => getCurrentObjective();
 
   function getTools() {
-    if (locale !== 'pl') return [];
     const content = resolveVrPlayerGuideContent(locale);
     return TOOLS.filter(({ id, capability }) => id === 'furnace'
       ? isFurnaceRevealed()
