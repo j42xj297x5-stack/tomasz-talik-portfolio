@@ -1,19 +1,18 @@
 import * as THREE from '../../vendor/three.js';
 import { createVrMonkeyProgressionMessage } from './createVrMonkeyProgressionMessage.js';
-import { VR_MONKEY_COMMUNICATION_COPY_PL, VR_MONKEY_MESSAGE_TIMING } from './vrMonkeyCommunicationCopy.js';
+import { VR_MONKEY_COMMUNICATION_COPY_EN, VR_MONKEY_COMMUNICATION_COPY_PL, VR_MONKEY_MESSAGE_TIMING } from './vrMonkeyCommunicationCopy.js';
+
+const createIntroCrystalTutorialCopy = (catalog) => Object.freeze({
+  seen: catalog.tutorial.crystal.pointerLearned,
+  instruction: catalog.tutorial.crystal.instruction,
+  handoff: catalog.tutorial.crystal.handoff,
+  unavailable: catalog.tutorial.crystal.handoff[1],
+  complete: catalog.tutorial.crystal.handoff[2]
+});
 
 export const VR_INTRO_CRYSTAL_TUTORIAL_COPY = Object.freeze({
-  pl: Object.freeze({
-    seen: VR_MONKEY_COMMUNICATION_COPY_PL.tutorial.crystal.pointerLearned,
-    instruction: 'A teraz złap kryształ i podaj go mnie.',
-    handoff: VR_MONKEY_COMMUNICATION_COPY_PL.tutorial.crystal.handoff
-  }),
-  en: Object.freeze({
-    seen: Object.freeze(['See?', 'You have already taught the world where you are looking.']),
-    instruction: 'Now grab the crystal and hand it to me.',
-    unavailable: 'Yes, we cannot use this yet.',
-    complete: 'You have learned the basics.'
-  })
+  pl: createIntroCrystalTutorialCopy(VR_MONKEY_COMMUNICATION_COPY_PL),
+  en: createIntroCrystalTutorialCopy(VR_MONKEY_COMMUNICATION_COPY_EN)
 });
 
 export function createVrIntroCrystalTutorial({ monkeyGuide, monkeyRoot, getWorldPointAtRadius, crystalCollection,
@@ -36,6 +35,7 @@ export function createVrIntroCrystalTutorial({ monkeyGuide, monkeyRoot, getWorld
     monkeyGuide.setInteractionEnabled?.(false);
     monkeyGuide.setDialogueOverride(null);
     sequence = createVrMonkeyProgressionMessage({ monkeyGuide, blocks: copy.seen,
+      timingBlocks: VR_INTRO_CRYSTAL_TUTORIAL_COPY.pl.seen,
       secondsPerLine: settings.messageDisplayDuration ?? VR_MONKEY_MESSAGE_TIMING.secondsPerLine,
       gapSeconds: settings.messageGapDuration ?? VR_MONKEY_MESSAGE_TIMING.gapSeconds, onCompleted: spawnAndInstruct });
     sequence.begin();
@@ -53,7 +53,8 @@ export function createVrIntroCrystalTutorial({ monkeyGuide, monkeyRoot, getWorld
     handoffAccepted = true;
     playConsume();
     monkeyGuide.showMessage('');
-    sequence = createVrMonkeyProgressionMessage({ monkeyGuide, blocks: copy.handoff ?? [copy.unavailable, copy.complete],
+    sequence = createVrMonkeyProgressionMessage({ monkeyGuide, blocks: copy.handoff,
+      timingBlocks: VR_INTRO_CRYSTAL_TUTORIAL_COPY.pl.handoff,
       secondsPerLine: settings.messageDisplayDuration ?? VR_MONKEY_MESSAGE_TIMING.secondsPerLine,
       gapSeconds: settings.messageGapDuration ?? VR_MONKEY_MESSAGE_TIMING.gapSeconds, onCompleted: () => {
       if (!completionEmitted) { completionEmitted = true; active = false; monkeyGuide.setInteractionEnabled?.(true); onCompleted(); }
