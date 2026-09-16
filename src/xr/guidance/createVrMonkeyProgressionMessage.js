@@ -4,7 +4,7 @@ const STATE = Object.freeze({ IDLE: 'IDLE', DISPLAY: 'DISPLAY', GAP: 'GAP', COMP
 export function createVrMonkeyProgressionMessage({
   monkeyGuide,
   owner = null,
-  message, blocks = message ? [message] : null,
+  message, blocks = message ? [message] : null, timingBlocks = null,
   secondsPerLine = VR_MONKEY_MESSAGE_TIMING.secondsPerLine,
   gapSeconds = VR_MONKEY_MESSAGE_TIMING.gapSeconds,
   notifyAttention = false,
@@ -14,6 +14,10 @@ export function createVrMonkeyProgressionMessage({
 }) {
   if (!monkeyGuide) throw new TypeError('monkeyGuide is required');
   if (!Array.isArray(blocks) || !blocks.length || blocks.some((block) => typeof block !== 'string' || !block.trim())) throw new TypeError('blocks must contain non-empty strings');
+  if (timingBlocks !== null && (!Array.isArray(timingBlocks) || timingBlocks.length !== blocks.length
+    || timingBlocks.some((block) => typeof block !== 'string' || !block.trim()))) {
+    throw new TypeError('timingBlocks must contain one non-empty string for each block');
+  }
   if (!Number.isFinite(secondsPerLine) || secondsPerLine <= 0) {
     throw new TypeError('secondsPerLine must be a positive finite number');
   }
@@ -30,7 +34,8 @@ export function createVrMonkeyProgressionMessage({
 
   function displayBlock() {
     const metrics = owner ? monkeyGuide.showDialogueMessage(owner, blocks[blockIndex]) : monkeyGuide.showMessage(blocks[blockIndex]);
-    displayDuration = secondsPerLine * Math.max(1, metrics?.lineCount ?? 1);
+    const timingMetrics = timingBlocks === null ? metrics : monkeyGuide.measureMessage(timingBlocks[blockIndex]);
+    displayDuration = secondsPerLine * Math.max(1, timingMetrics?.lineCount ?? 1);
     elapsed = 0; state = STATE.DISPLAY;
   }
 
