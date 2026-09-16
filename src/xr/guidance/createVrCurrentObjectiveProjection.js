@@ -32,6 +32,18 @@ const STATIC_OBJECTIVES_BY_POINT = Object.freeze({
   [VR_EXPERIENCE_POINT['4.40']]: Object.freeze({ pl: 'OBSERWUJ ZMIANĘ ŚWIATA', en: 'WATCH THE WORLD CHANGE' }),
   [VR_EXPERIENCE_POINT['4.50']]: Object.freeze({ pl: 'MAŁPA', en: 'MONKEY' }),
   [VR_EXPERIENCE_POINT['4.60']]: Object.freeze({ pl: 'MAŁPA', en: 'MONKEY' }),
+  [VR_EXPERIENCE_POINT['4.75']]: Object.freeze({ pl: 'Utwórz Rezonator Astrolabium', en: 'BUILD THE ASTERION RESONATOR' }),
+  [VR_EXPERIENCE_POINT['5.10']]: Object.freeze({ pl: 'Zdobądź ostatni kryształ', en: 'GET THE LAST CRYSTAL' }),
+  [VR_EXPERIENCE_POINT['5.20']]: Object.freeze({ pl: 'Zhakuj system', en: 'HACK THE SYSTEM' }),
+  [VR_EXPERIENCE_POINT['5.30']]: Object.freeze({ pl: 'Wykonaj strojenie kamienia Etheru', en: 'TUNE THE ETHER STONE' }),
+  [VR_EXPERIENCE_POINT['5.40']]: Object.freeze({ pl: 'Zdobądź kamień Etheru', en: 'GET THE ETHER STONE' }),
+  [VR_EXPERIENCE_POINT['5.50']]: Object.freeze({ pl: 'Zainstaluj ostatni kamień wody', en: 'INSTALL THE LAST WATER STONE' }),
+  [VR_EXPERIENCE_POINT['5.60']]: Object.freeze({ pl: 'Ściągnij glif wody', en: 'PULL THE WATER GLYPH' }),
+  [VR_EXPERIENCE_POINT['5.70']]: Object.freeze({ pl: 'Skonfiguruj Rezonator aby ściągnąć glif wody', en: 'CONFIGURE THE RESONATOR TO PULL THE WATER GLYPH' }),
+  [VR_EXPERIENCE_POINT['5.80']]: Object.freeze({ pl: 'Dzięki', en: 'THX' }),
+  [VR_EXPERIENCE_POINT['6.10']]: Object.freeze({ pl: 'Do zobaczenia', en: 'CU' }),
+  [VR_EXPERIENCE_POINT['6.20']]: Object.freeze({ pl: 'Dalej patrzysz do instrukcji ? ;)', en: 'ARE YOU STILL CHECKING THE INSTRUCTIONS? ;)' }),
+  [VR_EXPERIENCE_POINT['6.30']]: Object.freeze({ pl: 'Koniec', en: 'FIN' }),
   [VR_EXPERIENCE_POINT['100.10']]: Object.freeze({ pl: 'KONIEC DOŚWIADCZENIA', en: 'EXPERIENCE COMPLETE' })
 });
 
