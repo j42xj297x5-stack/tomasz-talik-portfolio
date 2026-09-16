@@ -987,7 +987,7 @@ const furnacePanel = createVrAstroFurnacePanel({
   requestAstroProduction: () => runtimeExperience.dispatch(
     VR_SCENARIO_EVENT.ASTRO_ATTRACTOR_PRODUCTION_REQUESTED
   ) !== null,
-  asterionModel: asterionSphere.object, settings: settings.furnace.panel,
+  asterionModel: asterionSphere.object, settings: settings.furnace.panel, locale: language,
   processSource: createVrAstroFurnaceProcessSource(() => astroFurnaceActivateInteraction),
   contentSource: furnaceContentSource,
   onEnterModule: () => playVrUi(VR_AUDIO.furnaceDeeper),

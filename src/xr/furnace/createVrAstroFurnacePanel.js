@@ -2,6 +2,7 @@ import * as THREE from '../../vendor/three.js';
 import { applyWorldTransform } from '../applyWorldTransform.js';
 import { drawFurnaceFrame } from './drawVrFurnaceFrame.js';
 import { resolveProcessTelemetry, shouldRefreshTelemetry } from './vrFurnaceTelemetry.js';
+import { resolveVrFurnaceCopy } from './vrFurnaceCopy.js';
 import { ASTERION_SHELL_PATCHES } from './asterionShellPatchData.js';
 import { assemblySegmentVisible, createAsterionModelWireframeMap, createAsterionPatchGeometry, resolvePatchVisualStates } from './asterionSphereWireframe.js';
 import { drawMaterialCardVisual } from './drawVrMaterialCard.js';
@@ -38,7 +39,8 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
   canUseAstroTuning = () => false,
   runeRecipeInteraction = null, runeRecipeSelectionController = null, runeTuningController = null,
   requestAstroProduction = () => false,
-  asterionModel = null, settings = {}, onEnterModule = () => {}, onReturnHome = () => {}, onCreate = () => {} }) {
+  asterionModel = null, settings = {}, locale = 'pl', onEnterModule = () => {}, onReturnHome = () => {}, onCreate = () => {} }) {
+  const copy = resolveVrFurnaceCopy(locale);
   const config = { width: 1.55, height: 1.05, gapFromFurnace: 0.10, verticalOffset: 0.15, yawDegrees: -12,
     canvasWidth: 1536, canvasHeight: 1024, appearDuration: 0.32, disappearDuration: 0.20,
     telemetryRefreshHz: 12, frameCornerSizePx: 28, spherePatchVisualScaleMultiplier: 1.10, accents: {}, ...settings };
@@ -141,13 +143,13 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
     context.stroke(); context.restore();
   }
   function drawHome(progress) {
-    text('ASTRO PIEC', 90, 100, 52); text('MODUŁY TRANSFORMACJI', 90, 152, 25, '#83b8d1');
+    text(copy.home.title, 90, 100, 52); text(copy.home.eyebrow, 90, 152, 25, '#83b8d1');
     const astroProductionState = astroProductionController?.getState?.() ?? 'READY';
     const astroModuleAvailable = canUseAstroProduction() || canUseAstroTuning() || astroProductionState !== 'READY';
     const cards = [
-      ['module-asterion-sphere', 'SFERA ASTERIONOWA', 'Rdzeń żyroskopowy sterowania kręgiem', 'SKORUPY', `${progress.absorbed} / 6   DOSTĘPNE`, true],
-      ['module-astro-attractor', 'ASTROLABIUM WIĘZI', 'Narzędzie przyciągania i synchronizacji', 'STATUS',
-        astroProductionState === 'AVAILABLE' ? 'GOTOWE // ODBIERZ' : astroProductionState === 'EARNED' ? 'STROJENIE' : 'WEJDŹ DO MODUŁU',
+      ['module-asterion-sphere', copy.asterion.title, copy.asterion.detail, copy.home.asterionMetric, copy.home.asterionAvailable(progress.absorbed), true],
+      ['module-astro-attractor', copy.astrolabium.title, copy.astrolabium.detail, copy.home.astrolabiumMetric,
+        copy.home.astrolabiumStates[astroProductionState] ?? copy.home.astrolabiumStates.DEFAULT,
         astroModuleAvailable]
     ];
     interactiveRegions = cards.map((card, index) => {
@@ -168,12 +170,12 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
   function drawAstrolabiumMenu() {
     interactiveRegions = [{ id: 'back-modules', x: 90, y: 55, width: 260, height: 70, enabled: true }];
     panelRect(90, 55, 260, 70, { hovered: hoveredRegion === 'back-modules', accentColor: accents.attractor });
-    text('← MODUŁY', 120, 102, 27); text('ASTROLABIUM WIĘZI', 90, 190, 48);
-    text('NARZĘDZIA SYNCHRONIZACJI', 90, 238, 24, '#b9a779');
+    text(copy.navigation.backModules, 120, 102, 27); text(copy.astrolabium.title, 90, 190, 48);
+    text(copy.astrolabium.menuEyebrow, 90, 238, 24, '#b9a779');
     const entries = [
-      ['astrolabium-create', 'UTWÓRZ ASTROLABIUM WIĘZI', 'Materializacja narzędzia w Astro Piecu'],
-      ['astrolabium-glyph-tuning', 'STROJENIE GLIFÓW', 'Trwała konfiguracja Małych Glifów'],
-      ['astrolabium-rune-tuning', 'STROJENIE KAMIENI RUNICZNYCH', 'Receptury rodzin Wu Xing']
+      ['astrolabium-create', ...copy.astrolabium.menu.create],
+      ['astrolabium-glyph-tuning', ...copy.astrolabium.menu.glyphTuning],
+      ['astrolabium-rune-tuning', ...copy.astrolabium.menu.runeTuning]
     ];
     entries.forEach(([id, title, detail], index) => {
       const enabled = id !== 'astrolabium-rune-tuning' || (furnace?.capabilities?.runeRecipeAnchorsReady === true
@@ -185,16 +187,16 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
       text(detail, rect.x + 38, rect.y + 122, 22, enabled ? '#91afbe' : '#667681');
     });
   }
-  const runeFamilyLabels = Object.freeze({ earth: 'ZIEMIA', metal: 'METAL', water: 'WODA', tree: 'DREWNO', fire: 'OGIEŃ', astro: 'ETER' });
+  const runeFamilyLabels = copy.runeTuning.families;
   const runeLabel = (familyCode) => runeFamilyLabels[PROTO_ASTRO_FAMILIES[familyCode]?.id] ?? familyCode ?? '—';
   function drawRuneTuning() {
     const snapshot = runeRecipeSelectionController?.getSnapshot?.() ?? { availableFamilyCodes: [] };
     const tuning = runeTuningController?.getSnapshot?.() ?? { processing: false, targetFamilyCode: null };
     interactiveRegions = [{ id: 'back-modules', x: 90, y: 55, width: 260, height: 70, enabled: true }];
     panelRect(90, 55, 260, 70, { hovered: hoveredRegion === 'back-modules', accentColor: accents.emanation });
-    text('← MODUŁY', 120, 102, 27);
-    text('STROJENIE KAMIENI RUNICZNYCH', 90, 180, 43);
-    text('WYBIERZ DOCELOWĄ RODZINĘ KAMIENIA', 90, 225, 22, '#b89dd0');
+    text(copy.navigation.backModules, 120, 102, 27);
+    text(copy.runeTuning.title, 90, 180, 43);
+    text(copy.runeTuning.instruction, 90, 225, 22, '#b89dd0');
     FAMILY_GRID_CODES.forEach((familyCode, index) => {
       const natural = PROTO_ASTRO_NATURAL_FAMILY_CODES.includes(familyCode);
       const available = natural ? snapshot.availableFamilyCodes.includes(familyCode) : snapshot.etherAvailable === true;
@@ -210,15 +212,15 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
       context.save(); context.beginPath(); context.rect(rect.x + 8, rect.y + 8, rect.width - 16, rect.height - 16); context.clip();
       drawRuneStoneWireframe(familyCode, rect.x + rect.width - 88, rect.y + rect.height / 2, 62, color, natural ? .94 : .55);
       context.restore();
-      text(`${runeLabel(familyCode)} // ${runeDescriptor?.syllable ?? familyCode}`, rect.x + 20, rect.y + 52, 27,
+      text(copy.runeTuning.familyCard(runeLabel(familyCode), runeDescriptor?.syllable ?? familyCode), rect.x + 20, rect.y + 52, 27,
         available ? '#f1eaff' : '#78909d');
-      text(tuned ? 'ZESTROJONA' : selected ? 'WYBRANA' : !natural ? 'SPECJALNY' : 'DOSTĘPNA', rect.x + 20, rect.y + 118, 18,
+      text(tuned ? copy.runeTuning.familyStates.tuned : selected ? copy.runeTuning.familyStates.selected : !natural ? copy.runeTuning.familyStates.special : copy.runeTuning.familyStates.available, rect.x + 20, rect.y + 118, 18,
         tuned || selected ? accents.complete : available ? '#cdb5e4' : '#70828d');
     });
 
     const recipe = snapshot.expectedRecipe;
-    text('MAŁY GLIF', 90, 666, 19, '#a990c0');
-    text('SKORUPA', 785, 666, 19, '#a990c0');
+    text(copy.runeTuning.slots.glyph, 90, 666, 19, '#a990c0');
+    text(copy.runeTuning.slots.shell, 785, 666, 19, '#a990c0');
     const glyphField = { x: 90, y: 675, width: 650, height: 270 };
     const shellField = { x: 785, y: 675, width: 620, height: 270 };
     panelRect(glyphField.x, glyphField.y, glyphField.width, glyphField.height, { variant: 'monitor', active: Boolean(recipe), accentColor: accents.emanation });
@@ -240,18 +242,18 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
       const glyphInserted = snapshot.slots?.smallGlyph?.state === 'INSERTED';
       const shellInserted = snapshot.slots?.shell?.state === 'INSERTED';
       const tuningProgress = Math.round((processSource?.getProgress?.() ?? 0) * 100);
-      const status = tuning.processing ? `STROJENIE ${runeLabel(tuning.targetFamilyCode)} // ${tuningProgress}%`
-        : !glyphInserted || !shellInserted ? 'OCZEKIWANIE NA SKŁADNIKI'
-        : snapshot.readyForTuning ? 'GOTOWA DO STROJENIA' : 'NIEPRAWIDŁOWA RECEPTURA';
-      text(`STATUS // ${status}`, 90, 978, 19, snapshot.readyForTuning ? accents.complete : '#d6b3c3');
+      const status = tuning.processing ? copy.runeTuning.tuningStatus(runeLabel(tuning.targetFamilyCode), tuningProgress)
+        : !glyphInserted || !shellInserted ? copy.runeTuning.status.waiting
+        : snapshot.readyForTuning ? copy.runeTuning.status.ready : copy.runeTuning.status.invalid;
+      text(status, 90, 978, 19, snapshot.readyForTuning ? accents.complete : '#d6b3c3');
     }
   }
   function drawAstrolabiumProduction() {
     interactiveRegions = [{ id: 'back-modules', x: 90, y: 55, width: 260, height: 70, enabled: true }];
     panelRect(90, 55, 260, 70, { hovered: hoveredRegion === 'back-modules', accentColor: accents.attractor });
-    text('← MODUŁY', 120, 102, 27);
-    text('ASTROLABIUM WIĘZI', 90, 190, 48);
-    text('Narzędzie przyciągania i synchronizacji', 90, 238, 24, '#b9a779');
+    text(copy.navigation.backModules, 120, 102, 27);
+    text(copy.astrolabium.title, 90, 190, 48);
+    text(copy.astrolabium.detail, 90, 238, 24, '#b9a779');
 
     const production = astroProductionController?.getSnapshot?.() ?? { state: 'READY', constructionProgress: 0 };
     const previewX = 470, previewY = 525;
@@ -262,38 +264,32 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
 
     panelRect(900, 285, 505, 515, { variant: 'monitor', active: production.state === 'BUILDING',
       completed: ['AVAILABLE', 'EARNED'].includes(production.state), accentColor: accents.attractor });
-    text('STAN PRODUKCJI', 940, 350, 22, '#8fb1c1');
-    const labels = {
-      READY: ['GOTOWE DO UTWORZENIA', 'Rozpocznij świadomie proces w Piecu.'],
-      BUILDING: ['MATERIALIZACJA', 'Proces konstrukcji trwa w komorze.'],
-      AVAILABLE: ['ASTROLABIUM GOTOWE', 'Otwórz komorę i odbierz obiekt.'],
-      CLAIMING: ['PRZEKAZYWANIE', 'Fizyczny odbiór Astrolabium trwa.']
-    };
-    const [title, detail] = labels[production.state] ?? ['NIEDOSTĘPNE', 'Stan produkcji jest poza kontraktem modułu.'];
+    text(copy.production.heading, 940, 350, 22, '#8fb1c1');
+    const [title, detail] = copy.production.states[production.state] ?? copy.production.states.DEFAULT;
     text(title, 940, 425, 29, production.state === 'AVAILABLE' ? accents.complete : accents.attractor);
     text(detail, 940, 470, 19, '#91afbe');
     if (production.state === 'BUILDING') {
       const progress = Math.max(0, Math.min(1, production.constructionProgress ?? production.buildProgress ?? 0));
       context.fillStyle = '#18303c'; context.fillRect(940, 525, 420, 18);
       context.fillStyle = accents.process; context.fillRect(940, 525, 420 * progress, 18);
-      text(`${Math.round(progress * 100)}%`, 940, 580, 25, accents.process);
+      text(copy.production.progress(Math.round(progress * 100)), 940, 580, 25, accents.process);
     }
     if (astroProductionController?.canCreate?.() === true) {
       const create = { id: 'create-astro-attractor', x: 995, y: 670, width: 315, height: 82, enabled: true };
       interactiveRegions.push(create);
       panelRect(create.x, create.y, create.width, create.height, { hovered: hoveredRegion === create.id,
         active: true, accentColor: accents.complete });
-      text('UTWÓRZ', create.x + 76, create.y + 53, 32, accents.complete);
+      text(copy.action.create, create.x + 76, create.y + 53, 32, accents.complete);
     }
   }
   function drawAstrolabiumTuning() {
     interactiveRegions = [{ id: 'back-modules', x: 90, y: 55, width: 260, height: 70, enabled: true }];
     panelRect(90, 55, 260, 70, { hovered: hoveredRegion === 'back-modules', accentColor: accents.attractor });
-    text('← MODUŁY', 120, 102, 27);
-    text('STROJENIE ASTROLABIUM', 90, 190, 48);
-    text('Trwała konfiguracja Astrolabium Więzi', 90, 238, 24, '#b9a779');
+    text(copy.navigation.backModules, 120, 102, 27);
+    text(copy.glyphTuning.title, 90, 190, 48);
+    text(copy.glyphTuning.detail, 90, 238, 24, '#b9a779');
 
-    text('MAŁE GLIFY', 90, 282, 31, canUseAstroTuning() ? '#f1fbff' : '#78909d');
+    text(copy.glyphTuning.section, 90, 282, 31, canUseAstroTuning() ? '#f1fbff' : '#78909d');
     const tuningSnapshot = protoAstroTuningController?.getSnapshot?.() ?? { families: [] };
     const families = new Map(tuningSnapshot.families.map((family) => [family.familyCode, family]));
     const insertedAssetId = contentSource?.getInsertedSmallGlyphAssetId?.() ?? null;
@@ -314,7 +310,7 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
         glyphRatio: .68, glyphScale: 2.75, padding: 3, glyphImage: image, color,
         drawPreview: ({ cx, cy, scale }) => drawSmallGlyphWireframe(context,
           { assetId, cx, cy, scale, color, alpha: supported ? .95 : .34 }) });
-      text(extracted ? 'DOSTROJONY' : processing ? 'PRZETWARZANIE' : supported ? 'GOTOWY' : 'NIEAKTYWNY',
+      text(extracted ? copy.glyphTuning.states.tuned : processing ? copy.glyphTuning.states.processing : supported ? copy.glyphTuning.states.ready : copy.glyphTuning.states.inactive,
         x + 20, y + height - 12, 16, color);
     });
     drawSmallGlyphExtractionMonitor();
@@ -333,23 +329,23 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
     const presentationTail = Boolean(presentationAssetId && telemetry.phase === 'COMPLETE');
     const concernsSmallGlyph = Boolean(currentAssetId || smallGlyphProcess || presentationTail);
     const protoAstro = concernsSmallGlyph ? resolveVrSmallGlyphProtoAstro(presentationAssetId) : null;
-    const shownTelemetry = concernsSmallGlyph ? telemetry : resolveProcessTelemetry({ contentState: 'EMPTY' });
+    const shownTelemetry = concernsSmallGlyph ? telemetry : resolveProcessTelemetry({ contentState: 'EMPTY' }, copy.telemetry);
     const color = accents[shownTelemetry.colorKey];
     panelRect(x, y, width, height, { variant: 'monitor', active: concernsSmallGlyph && shownTelemetry.active,
       completed: concernsSmallGlyph && shownTelemetry.phase === 'COMPLETE', accentColor: color });
-    text('PRZEBIEG EKSTRAKCJI', x + 28, y + 42, 22, color);
+    text(copy.extraction.heading, x + 28, y + 42, 22, color);
     drawInsertedSmallGlyphWireframe(protoAstro, shownTelemetry, x + 300, y + 145, 112);
-    text(protoAstro && concernsSmallGlyph ? `MAŁY GLIF // ${protoAstro.descriptor.syllable}` : 'MAŁY GLIF // OCZEKIWANIE',
+    text(protoAstro && concernsSmallGlyph ? copy.extraction.glyph(protoAstro.descriptor.syllable) : copy.extraction.glyphWaiting,
       x + 610, y + 92, 23, protoAstro && concernsSmallGlyph ? color : accents.idle);
-    shownTelemetry.label.split('\n').forEach((line, index) => text(`${index ? '' : 'STATUS // '}${line}`,
+    shownTelemetry.label.split('\n').forEach((line, index) => text(index ? line : copy.extraction.status(line),
       x + 610, y + 137 + index * 28, 20, color));
     const progress = shownTelemetry.showProgress ? shownTelemetry.extractionProgress : 0;
     const barX = x + 610, barY = y + 232, barWidth = 560;
     context.fillStyle = '#18303c'; context.fillRect(barX, barY, barWidth, 16);
     context.fillStyle = color; context.fillRect(barX, barY, barWidth * progress, 16);
-    text(`${Math.round(progress * 100)}%`, barX + barWidth + 18, barY + 17, 20, '#b9dce8');
-    const contentLabels = { INSERTED: 'GOTOWY', CONSUMING: 'EKSTRAKCJA', CONSUMED: 'ZABEZPIECZONO' };
-    if (concernsSmallGlyph && contentLabels[contentState]) text(`MATERIAŁ // ${contentLabels[contentState]}`, x + 610, y + 277, 18, '#88b8cf');
+    text(copy.extraction.progress(Math.round(progress * 100)), barX + barWidth + 18, barY + 17, 20, '#b9dce8');
+    const contentLabels = copy.extraction.materialStates;
+    if (concernsSmallGlyph && contentLabels[contentState]) text(contentLabels[contentState], x + 610, y + 277, 18, '#88b8cf');
   }
   function drawInsertedSmallGlyphWireframe(protoAstro, telemetry, cx, cy, scale) {
     const segments = protoAstro ? SMALL_GLYPH_WIREFRAME_DATA.byAssetId[protoAstro.assetId]?.segments3d : null;
@@ -371,8 +367,8 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
   }
   function drawSphere(progress) {
     interactiveRegions = [{ id: 'back-modules', x: 90, y: 55, width: 260, height: 70, enabled: true }];
-    panelRect(90, 55, 260, 70, { hovered: hoveredRegion === 'back-modules', accentColor: accents.asterion }); text('← MODUŁY', 120, 102, 27);
-    text('SFERA ASTERIONOWA', 90, 190, 48); text('Rdzeń żyroskopowy sterowania kręgiem', 90, 238, 24, '#88b8cf');
+    panelRect(90, 55, 260, 70, { hovered: hoveredRegion === 'back-modules', accentColor: accents.asterion }); text(copy.navigation.backModules, 120, 102, 27);
+    text(copy.asterion.title, 90, 190, 48); text(copy.asterion.detail, 90, 238, 24, '#88b8cf');
     const currentAssetId = contentSource?.getInsertedShellAssetId?.();
     const currentState = contentSource?.getState?.() ?? 'EMPTY';
     const shellsByFamily = new Map(progress.shells.map((shell) => [resolveAttractorShellGlyph(shell.assetId)?.familyCode, shell]));
@@ -392,10 +388,10 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
     if (productionState === 'READY' && productionController?.canCreate?.() === true) {
       const create = { id: 'create-asterion', x: 930, y: 858, width: 410, height: 82, enabled: true };
       interactiveRegions.push(create); panelRect(create.x, create.y, create.width, create.height, { hovered: hoveredRegion === create.id, active: true, accentColor: accents.complete });
-      text('UTWÓRZ', create.x + 118, create.y + 53, 32, accents.complete);
-    } else if (productionState === 'BUILDING') text('MATERIALIZACJA', 1030, 918, 27, accents.process);
-    else if (productionState === 'AVAILABLE') { text('KULA GOTOWA', 1050, 892, 28, accents.complete); text('OTWÓRZ KOMORĘ', 1030, 928, 19, '#88b8cf'); }
-    else if (productionState === 'EARNED') { text('AKTYWNA', 1110, 892, 28, accents.complete); text('X // KULA ASTERIONOWA', 1015, 928, 19, '#88b8cf'); }
+      text(copy.action.create, create.x + 118, create.y + 53, 32, accents.complete);
+    } else if (productionState === 'BUILDING') text(copy.sphere.productionStates.BUILDING, 1030, 918, 27, accents.process);
+    else if (productionState === 'AVAILABLE') { text(copy.sphere.productionStates.AVAILABLE[0], 1050, 892, 28, accents.complete); text(copy.sphere.productionStates.AVAILABLE[1], 1030, 928, 19, '#88b8cf'); }
+    else if (productionState === 'EARNED') { text(copy.sphere.productionStates.EARNED[0], 1110, 892, 28, accents.complete); text(copy.sphere.productionStates.EARNED[1], 1015, 928, 19, '#88b8cf'); }
   }
   function drawShellMiniature(patch, cx, cy, scale, color, bright) {
     if (!patch) return;
@@ -412,28 +408,28 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
     return resolveProcessTelemetry({ state: rawState === 'COMPLETE' && !completed ? 'IDLE' : rawState,
       overallProgress: processSource?.getProgress?.() ?? 0, extractionProgress: processSource?.getExtractionProgress?.() ?? 0,
       angularSpeed: processSource?.getAngularSpeed?.() ?? 0, processAngle: processSource?.getProcessAngle?.() ?? 0, completed,
-      contentState: contentSource?.getState?.() ?? 'EMPTY', chamberState: contentSource?.getChamberState?.() ?? 'CLOSED' });
+      contentState: contentSource?.getState?.() ?? 'EMPTY', chamberState: contentSource?.getChamberState?.() ?? 'CLOSED' }, copy.telemetry);
   }
   function drawProcessMonitor() {
     const telemetry = readTelemetry(), x = 58, y = 675, width = 1420, height = 295;
     const production = productionController?.getSnapshot?.() ?? { state: 'LOCKED', constructionProgress: 0, formationProgress: 0 };
     const constructing = production.state === 'BUILDING';
     panelRect(x, y, width, height, { variant: 'monitor', active: telemetry.active || constructing, completed: telemetry.phase === 'COMPLETE', accentColor: accents[telemetry.colorKey] });
-    text(constructing ? 'MATERIALIZACJA KULI' : 'PRZEBIEG ABSORPCJI', x + 28, y + 42, 22, accents[telemetry.colorKey]);
+    text(constructing ? copy.sphere.monitorHeading.constructing : copy.sphere.monitorHeading.absorbing, x + 28, y + 42, 22, accents[telemetry.colorKey]);
     drawInsertedShellWireframe(telemetry, x + 300, y + 136, 108);
-    const constructionLabel = production.constructionProgress < 1 / 6 ? 'INICJACJA' : production.constructionProgress < 1 / 3
-      ? 'STABILIZACJA POLA' : production.constructionProgress < 5 / 6 ? 'FORMOWANIE' : 'KONDENSACJA';
-    (constructing ? [constructionLabel] : telemetry.label.split('\n')).forEach((line, index) => text(`${index ? '' : 'STATUS // '}${line}`, x + 28, y + 212 + index * 28, 21, accents[telemetry.colorKey]));
+    const constructionLabel = production.constructionProgress < 1 / 6 ? copy.sphere.constructionStates[0] : production.constructionProgress < 1 / 3
+      ? copy.sphere.constructionStates[1] : production.constructionProgress < 5 / 6 ? copy.sphere.constructionStates[2] : copy.sphere.constructionStates[3];
+    (constructing ? [constructionLabel] : telemetry.label.split('\n')).forEach((line, index) => text(constructing || index ? line : copy.sphere.monitorStatus(line), x + 28, y + 212 + index * 28, 21, accents[telemetry.colorKey]));
     if (telemetry.showProgress || constructing) {
       const barX = x + 28, barY = y + 255, barWidth = 555; context.fillStyle = '#18303c'; context.fillRect(barX, barY, barWidth, 16);
       const shownProgress = constructing ? production.constructionProgress : telemetry.extractionProgress;
       context.fillStyle = accents[telemetry.colorKey]; context.fillRect(barX, barY, barWidth * shownProgress, 16);
-      text(`${Math.round(shownProgress * 100)}%`, barX + barWidth + 18, barY + 17, 20, '#b9dce8');
+      text(copy.sphere.progress(Math.round(shownProgress * 100)), barX + barWidth + 18, barY + 17, 20, '#b9dce8');
     }
     drawAsterionPreview(progressSnapshot(), telemetry, x + 855, y + 140, 112);
     const contentState = contentSource?.getState?.() ?? 'EMPTY';
-    const contentLabels = { INSERTED: 'GOTOWY', CONSUMING: 'ABSORPCJA', CONSUMED: 'ZABEZPIECZONO' };
-    if (contentLabels[contentState]) { context.textAlign = 'right'; text(`MATERIAŁ // ${contentLabels[contentState]}`, x + width - 28, y + 278, 19, '#88b8cf'); context.textAlign = 'left'; }
+    const contentLabels = copy.sphere.materialStates;
+    if (contentLabels[contentState]) { context.textAlign = 'right'; text(contentLabels[contentState], x + width - 28, y + 278, 19, '#88b8cf'); context.textAlign = 'left'; }
   }
   function drawInsertedShellWireframe(telemetry, cx, cy, scale) {
     const data = contentSource?.getInsertedShellWireframe?.();
@@ -478,7 +474,7 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
       }));
       context.stroke(); context.restore();
     };
-    text(`KULA ASTERIONOWA  ${progress.absorbed}/6`, cx - 190, cy - 108, 20, accents.asterion);
+    text(copy.sphere.preview(progress.absorbed), cx - 190, cy - 108, 20, accents.asterion);
     const production = productionController?.getSnapshot?.() ?? { state: 'LOCKED', constructionProgress: 0, formationProgress: 0 };
     const building = production.state === 'BUILDING';
     const available = production.state === 'AVAILABLE';
