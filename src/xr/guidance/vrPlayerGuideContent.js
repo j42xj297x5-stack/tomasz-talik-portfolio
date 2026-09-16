@@ -54,7 +54,7 @@ const VR_PLAYER_GUIDE_CONTENT = Object.freeze({
         controls: 'Open the chamber when inserting or retrieving an object.\nThe middle button starts the process only when the Furnace is prepared correctly.\nIf the Furnace rejects an inserted object, check the selected operation first.'
       }),
       astro: Object.freeze({
-        label: 'ASTROLABE OF BONDING',
+        label: 'ASTROLABE OF BINDING',
         description: "A tool for things beyond your reach,\nwhen you'd rather draw them nearer.",
         controls: 'A — equip / stow\nGrip — target\nTrigger — pull\nPin + other hand’s Grip — take control of object',
         bandSwitchControl: 'B — change target band'
