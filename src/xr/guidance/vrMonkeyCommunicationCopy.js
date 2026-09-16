@@ -5,6 +5,11 @@ export const VR_MONKEY_KNOWLEDGE_CATEGORIES_PL = Object.freeze({
   'category.whatIsIt': Object.freeze({ label: 'CO TO JEST?', groupId: 'discoveredWorld' })
 });
 
+export const VR_MONKEY_KNOWLEDGE_CATEGORIES_EN = Object.freeze({
+  'category.whatNow': Object.freeze({ label: 'WHAT COMES NEXT?', groupId: 'currentGuidance' }),
+  'category.whatIsIt': Object.freeze({ label: "WHAT'S THAT?", groupId: 'discoveredWorld' })
+});
+
 export const VR_MONKEY_COMMUNICATION_COPY_PL = Object.freeze({
   progression: Object.freeze({
     'progression.intro.firstPresence': { blocks: ['Dobrze.', 'Masz ręce.\nTo już więcej, niż ma większość problemów.'] },
@@ -74,5 +79,77 @@ export const VR_MONKEY_COMMUNICATION_COPY_PL = Object.freeze({
     'knowledge.p3.stonesLead': { groupId: 'currentGuidance', question: 'Zostały jeszcze kamienie.', blocks: ['Możemy patrzeć w niebo.', 'Albo sprawić, żeby to miejsce patrzyło dalej niż my.', 'Zostały jeszcze kamienie.'] },
     'knowledge.p3.stones': { groupId: 'currentGuidance', question: 'KAMIENIE', blocks: ['Są daleko.', 'Piec potrafi stroić rzeczy.', 'Astrolabium potrafi je sprowadzać.', 'Sprawdźmy, czy to wystarczy.'] },
     'knowledge.p3.binders': { groupId: 'discoveredWorld', question: 'ZWORNIKI', blocks: ['Zworniki.', 'Pojawiały się, kiedy domykałeś te części platformy.', 'Wygląda na to, że nie są ozdobą.'] }
+  })
+});
+
+export const VR_MONKEY_COMMUNICATION_COPY_EN = Object.freeze({
+  progression: Object.freeze({
+    'progression.intro.firstPresence': { blocks: ['Good.', 'You have hands.\nThat is already more than most problems have.'] },
+    'progression.intro.openPlayerGuide': { blocks: ['Let’s check where everything is'], prompt: 'Press Y to open the menu.' },
+    'progression.intro.afterPlayerGuide': { blocks: ["If you forget — I'll remind you.", 'Let’s see if the world hears you', 'Point at me.'] },
+    'progression.intro.triggerMonkey': { blocks: ['Now the Trigger.'] },
+    'progression.intro.pointerLearned': { blocks: ["See?\nYou've already taught the world where you're looking."] },
+    'progression.intro.followPause': { blocks: ['Are you coming?'] },
+    'progression.threshold.crossed': { blocks: ['Well. That makes things easier.'] },
+    'progression.glyphs.firstInstruction': { blocks: ['Five signs.', "Don't ask what they mean yet.\nTouch one with the Pin."] },
+    'progression.glyphs.firstDiscovery': { blocks: ['Oh, I think we can use this.'] },
+    'progression.crystal.firstCreated': { blocks: ['It answered.'] },
+    'progression.reliquary.idea': { blocks: ['What can we do with this…', 'Maybe it needs a vessel.'] },
+    'progression.card.first': { blocks: ['One.'] },
+    'progression.postRing.changedWorld': { blocks: ['Well, the world has stopped being kind.', 'What you need now lies beyond your reach.', 'Fortunately, only for a little while.'] },
+    'progression.furnace.look': { blocks: ['Look at the Furnace.', 'Something is waiting for you there.'] },
+    'progression.p2.smallGlyphsIntro': { blocks: ['Again.', "The world moved what you're looking for farther away.", "The world likes moving things out of reach.\nYou don't have to chase them.", 'Sometimes you just need to tune what you already have.', 'The Astrolabe has bands.\nB changes what it listens for.', 'See those little glyphs?', 'Small things can sometimes take you farther than big ones.', 'The Furnace will help you tune the Astrolabe.', 'Then the large glyphs will be able to answer again.', 'And so will the next cards.'] },
+    'progression.p3.glyphsGone': { blocks: ['Well.', "This time they're truly gone.", 'They cannot be seen. Or heard.'] },
+    'progression.p3.firstRuneInstalledWithAsterion': { blocks: ['Oh.', 'It knew where it belonged.', "Now you can control one section.\nTo find the glyphs, you'll need three.", 'Now it answers to the Sphere.', 'Hold the grip over the sector.\nKeep holding it for a moment.', "Once you've bound it, you can guide it.\nJust like the whole platform.", 'Almost, anyway...'] },
+    'progression.p3.firstRuneInstalledWithoutAsterion': { blocks: ['Oh.', 'It knew where it belonged.', "Now you can control one section.\nTo find the glyphs, you'll need three.", 'But you still have nothing to move it with.', 'You need the Asterion Sphere.', 'Build it in the Furnace.', 'Then this sector will begin to respond to your movements.'] },
+    'progression.p3.firstSectorLock': { blocks: ['All Right.', 'Now you are moving part of the world.'] },
+    'progression.p3.resonator': { blocks: ['Well then.', 'Three together begin to listen.', "It seems you've built the Asterion Resonator.", 'A radar would simply tell you where to look.', 'This is a little more stubborn.', 'You have to ask space in the right direction.', 'Now ask the world.\nPerhaps it will answer.'] },
+    'progression.p4.etherIntervention': { blocks: ['Four.', 'Only Water remains.', 'But its sector has no way to complete the circle.', "Normally, I'd say we've reached a dead end.", 'Fortunately, normal stopped applying here a long time ago.', 'There is one more stone.', 'It belongs to none of the five.', 'Ether.', "Perhaps that's precisely why we need it."] },
+    'progression.p4.waterPathOpen': { blocks: ['Well then.', 'That should be enough.', 'Look at Water.', 'Now it has something to anchor itself to.'] },
+    'progression.p4.fullResonator': { blocks: ['Five.', 'Now the entire platform answers.', 'Metal and Water have joined the pattern as well.', "The Resonator can move in ways it couldn't before.", 'See what it can do.'] },
+    'progression.final.monkeyFarewell': { blocks: [
+      "You've reached the end of the path.",
+      "You won't need this world anymore.",
+      'Thank you for all the effort you put in.',
+      "And for wanting to see what I've been creating.",
+      'Until next time.',
+      'In the real world... perhaps. :)'
+    ] }
+  }),
+  tutorial: Object.freeze({ crystal: Object.freeze({
+    pointerLearned: ['See?\nThe world has already learned where your gaze falls.'],
+    instruction: 'Now take the crystal and bring it to me.',
+    handoff: ['Yes...', "We're not ready to use that yet.", "You've learned the fundamentals."]
+  }) }),
+  decisions: Object.freeze({
+    'decision.intro.go': { question: 'Coming?', options: ["I'M COMING", 'WHERE TO?', 'NO'] },
+    'decision.intro.no': { blocks: ['Very well.\nNot every path is meant to be yours.'] },
+    'decision.threshold.enter': { blocks: ['A threshold lies ahead.', 'You may choose not to cross it.', "If you do cross it, you won't return until the path has run its course."], question: 'Will you cross?', options: ["I'LL CROSS THE THRESHOLD", 'WHAT LIES BEYOND?', "I'LL TURN BACK"] },
+    'decision.threshold.return': { blocks: ['A wise choice.', 'Or a cowardly one.', "Sometimes they're one and the same.\nOnly later do you find out."] }
+  }),
+  hints: Object.freeze({
+    'hint.crystal.whatNow.soft': { blocks: ['First, take it.'] }, 'hint.crystal.grab.medium': { blocks: ['Grip.'] },
+    'hint.glyphs.how.soft': { blocks: ['Point at the symbol.\nPull the trigger. Hold it until you receive the crystal.'] },
+    'hint.glyphs.how.strong': { blocks: ['Bring the Pin to the glyph.', 'Hold the trigger.', 'Draw the crystal out.'] },
+    'hint.reliquary.firstCrystal': { blocks: ['What can we do with this...', 'Maybe it needs a vessel.'] },
+    'hint.protoAstro.tuning': { blocks: ['The small glyphs are connected to the large ones.', 'The Astrolabe can pull the large ones in.', 'Once it knows what to look for.'] },
+    'hint.reliquary.inserted': { blocks: ['Activate the Crystal. Reveal its meaning.'] },
+    'hint.reliquary.active': { blocks: ['It may be set free now. \nIt has fulfilled its purpose.'] },
+    'hint.furnace.astroStart': { blocks: ['Open the Furnace information panel.', 'Choose the Astrolabe of Bonding module.', 'Seal the chamber, then use the middle button once the Furnace is properly prepared.', 'If the Furnace rejects the object, first check which operation you have chosen.'] },
+    'hint.furnace.astroAvailable': { blocks: ['Open the chamber. Take your tool out.', 'Grab it.'] },
+    'hint.rune.noBinder.soft': { blocks: ['It works.', 'It just has nowhere to bind.'] },
+    'hint.rune.noBinder.medium': { blocks: ['Look at the Sectors.\nCompleted ones have a Keystone.', 'It will let you bind the stone.'] }
+  }),
+  acquisition: Object.freeze({
+    astro: Object.freeze({ blocks: ["A tool for things beyond your reach,\nwhen you'd rather bring them closer.", 'Grip chooses what you seek.', 'The Trigger draws it toward you.', 'With the Pin and the Grip of your other hand, you can take hold of its movement.'] }),
+    asterion: Object.freeze({ blocks: ['This is a tool for shifting the horizon.\nIt does not draw distant things nearer.', 'It changes the place from which you look.\nAnd from there, what was once beyond your reach may no longer be.'] })
+  }),
+  knowledge: Object.freeze({
+    'knowledge.intro.where': { groupId: 'intro', policy: 'CONTEXTUAL', question: 'WHERE?', blocks: ['If I told you, you would follow the answer.', "But I'm asking whether you'll follow me."] },
+    'knowledge.threshold.otherSide': { groupId: 'threshold', policy: 'CONTEXTUAL', question: 'WHAT IS ON THE OTHER SIDE?', blocks: ['On this side, you ask.\nBeyond it, you will discover for yourself.'] },
+    'knowledge.threshold.easier': { groupId: 'threshold', policy: 'CONTEXTUAL', question: 'WHY IS IT EASIER?', blocks: ['You no longer need to decide whether to cross.'] },
+    'knowledge.p3.stonesLead': { groupId: 'currentGuidance', question: 'There are still stones left.', blocks: ['We can gaze into the sky.', 'Or teach this place to see farther than we ever could.', 'There are still stones waiting.'] },
+    'knowledge.p3.stones': { groupId: 'currentGuidance', question: 'STONES', blocks: ['They lie far beyond our reach.', 'The Furnace knows how to tune things.', 'The Astrolabe knows how to draw them near.', "Let's see whether that is enough."] },
+    'knowledge.p3.binders': { groupId: 'discoveredWorld', question: 'KEYSTONES', blocks: ['Keystones.', 'They appeared when you completed those parts of the platform.', 'It seems they were never merely ornaments.'] }
   })
 });
