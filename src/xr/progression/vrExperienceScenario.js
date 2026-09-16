@@ -24,6 +24,7 @@ export const VR_SCENARIO_EVENT = immutableIdentifiers([
   'INTRO_CRYSTAL_HANDOFF_REQUESTED',
   'INTRO_CRYSTAL_TUTORIAL_COMPLETED',
   'INTRO_INVITATION_SELECTED',
+  'INTRO_EXIT_REACTION_COMPLETED',
   'FOLLOW_PAUSE_CHANGED',
   'MONKEY_REACHED_THRESHOLD',
   'THRESHOLD_SELECTED',
@@ -585,7 +586,8 @@ const points = Object.freeze([
     transitions: Object.freeze([
       Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.COMPLETE, event: VR_SCENARIO_EVENT.INTRO_INVITATION_SELECTED, choice: 1, milestonesToAdd: Object.freeze([]) }),
       Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.STAY, event: VR_SCENARIO_EVENT.INTRO_INVITATION_SELECTED, choice: 2, milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.CONTINUE_INTRO_INVITATION]) }),
-      Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.EXPLICIT, event: VR_SCENARIO_EVENT.INTRO_INVITATION_SELECTED, choice: 3, target: VR_EXPERIENCE_POINT['100.10'], milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.CONTINUE_INTRO_INVITATION]) })
+      Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.STAY, event: VR_SCENARIO_EVENT.INTRO_INVITATION_SELECTED, choice: 3, milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.CONTINUE_INTRO_INVITATION]) }),
+      Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.EXPLICIT, event: VR_SCENARIO_EVENT.INTRO_EXIT_REACTION_COMPLETED, target: VR_EXPERIENCE_POINT['100.10'], milestonesToAdd: Object.freeze([]) })
     ])
   }),
   Object.freeze({
@@ -617,7 +619,8 @@ const points = Object.freeze([
     transitions: Object.freeze([
       Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.COMPLETE, event: VR_SCENARIO_EVENT.THRESHOLD_SELECTED, choice: 1, milestonesToAdd: Object.freeze([]) }),
       Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.STAY, event: VR_SCENARIO_EVENT.THRESHOLD_SELECTED, choice: 2, milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.CONTINUE_THRESHOLD_CHOICE]) }),
-      Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.EXPLICIT, event: VR_SCENARIO_EVENT.THRESHOLD_SELECTED, choice: 3, target: VR_EXPERIENCE_POINT['100.10'], milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.CONTINUE_THRESHOLD_CHOICE]) })
+      Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.STAY, event: VR_SCENARIO_EVENT.THRESHOLD_SELECTED, choice: 3, milestonesToAdd: Object.freeze([]), effects: Object.freeze([VR_SCENARIO_EFFECT.CONTINUE_THRESHOLD_CHOICE]) }),
+      Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.EXPLICIT, event: VR_SCENARIO_EVENT.INTRO_EXIT_REACTION_COMPLETED, target: VR_EXPERIENCE_POINT['100.10'], milestonesToAdd: Object.freeze([]) })
     ])
   }),
   Object.freeze({

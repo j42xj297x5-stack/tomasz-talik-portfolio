@@ -1366,6 +1366,7 @@ introSequence = createVrIntroSequence({
   onFollowPauseChanged: (paused) => runtimeExperience.dispatch(VR_SCENARIO_EVENT.FOLLOW_PAUSE_CHANGED, { paused }),
   onMonkeyReachedThreshold: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.MONKEY_REACHED_THRESHOLD),
   onThresholdSelected: (choice) => runtimeExperience.dispatch(VR_SCENARIO_EVENT.THRESHOLD_SELECTED, { choice }),
+  onExitReactionCompleted: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.INTRO_EXIT_REACTION_COMPLETED),
   onPlayerEnteredRing: (crossing) => runtimeExperience.dispatch(VR_SCENARIO_EVENT.PLAYER_ENTERED_RING, crossing),
   onMonkeySettled: (crossing) => runtimeExperience.dispatch(VR_SCENARIO_EVENT.MONKEY_SETTLED, crossing),
   onGlyphHintTimeout: () => {},
@@ -1381,8 +1382,7 @@ introSequence = createVrIntroSequence({
   },
   getHeadPosition: () => {
     return getXrHeadWorldPosition({ renderer, camera, playerRig });
-  },
-  onEndSession: () => { void activeSession?.end(); }
+  }
 });
 introCrystalTutorial = createVrIntroCrystalTutorial({
   monkeyGuide,
