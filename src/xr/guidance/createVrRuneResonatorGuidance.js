@@ -5,7 +5,7 @@ const DELAY_SECONDS = 5;
 const AUTO_HINT_CUE_SECONDS = 1;
 
 export function createVrRuneResonatorGuidance({ monkeyGuide, copy, secondsPerLine,
-  getCurrentPointId, getUnresolvedRuneBranchId, knowledgeResolver,
+  getCurrentPointId, getUnresolvedRuneBranchId, knowledgeResolver, progressionTiming = null,
   isAsterionEarned,
   onEtherInterventionCompleted = () => {},
   onFullResonatorCommunicationCompleted = () => {} }) {
@@ -19,9 +19,11 @@ export function createVrRuneResonatorGuidance({ monkeyGuide, copy, secondsPerLin
   let firstSectorLock = false;
   let firstResonator = false;
 
-  const makeCommunication = (blocks, requiresAttention = true, onCompleted = () => {}, resolveBlocks) => {
+  const makeCommunication = (blocks, timingBlocks, requiresAttention = true, onCompleted = () => {},
+    resolveBlocks, resolveTimingBlocks) => {
     let communication;
-    communication = createVrMandatoryMonkeyCommunication({ monkeyGuide, blocks, resolveBlocks, secondsPerLine,
+    communication = createVrMandatoryMonkeyCommunication({ monkeyGuide, blocks, timingBlocks,
+      resolveBlocks, resolveTimingBlocks, secondsPerLine,
       priority: VR_MONKEY_DIALOGUE_PRIORITY.ACQUISITION, requiresAttention,
       onTriggered: () => communication.beginPlayback(), onCompleted });
     return communication;
@@ -35,19 +37,27 @@ export function createVrRuneResonatorGuidance({ monkeyGuide, copy, secondsPerLin
       onTriggered: () => communication.beginPlayback(), onCompleted });
     return communication;
   };
-  const glyphsGone = makeCommunication(copy.progression['progression.p3.glyphsGone'].blocks);
-  const installed = makeCommunication(null, true, () => {}, () => isAsterionEarned()
+  const glyphsGone = makeCommunication(copy.progression['progression.p3.glyphsGone'].blocks,
+    progressionTiming?.['progression.p3.glyphsGone']?.blocks);
+  const installed = makeCommunication(null, null, true, () => {}, () => isAsterionEarned()
     ? copy.progression['progression.p3.firstRuneInstalledWithAsterion'].blocks
-    : copy.progression['progression.p3.firstRuneInstalledWithoutAsterion'].blocks);
-  const sectorLock = makeCommunication(copy.progression['progression.p3.firstSectorLock'].blocks, false);
-  const resonator = makeCommunication(copy.progression['progression.p3.resonator'].blocks);
+    : copy.progression['progression.p3.firstRuneInstalledWithoutAsterion'].blocks,
+  () => isAsterionEarned()
+    ? progressionTiming?.['progression.p3.firstRuneInstalledWithAsterion']?.blocks
+    : progressionTiming?.['progression.p3.firstRuneInstalledWithoutAsterion']?.blocks);
+  const sectorLock = makeCommunication(copy.progression['progression.p3.firstSectorLock'].blocks,
+    progressionTiming?.['progression.p3.firstSectorLock']?.blocks, false);
+  const resonator = makeCommunication(copy.progression['progression.p3.resonator'].blocks,
+    progressionTiming?.['progression.p3.resonator']?.blocks);
   const etherIntervention = makeCommunication(
     copy.progression['progression.p4.etherIntervention'].blocks,
+    progressionTiming?.['progression.p4.etherIntervention']?.blocks,
     true,
     onEtherInterventionCompleted
   );
   const fullResonator = makeCommunication(
     copy.progression['progression.p4.fullResonator'].blocks,
+    progressionTiming?.['progression.p4.fullResonator']?.blocks,
     true,
     onFullResonatorCommunicationCompleted
   );

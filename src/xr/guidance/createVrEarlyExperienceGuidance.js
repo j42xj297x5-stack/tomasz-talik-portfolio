@@ -3,7 +3,7 @@ import { VR_MONKEY_DIALOGUE_PRIORITY } from './createVrMonkeyGuide.js';
 import { VR_MONKEY_MESSAGE_TIMING } from './vrMonkeyCommunicationCopy.js';
 
 export function createVrEarlyExperienceGuidance({ monkeyGuide, knowledgeResolver, copy, getCurrentPointId,
-  hasProtoAstroTuning, onFirstCrystalResponseCompleted = () => {} }) {
+  hasProtoAstroTuning, progressionTiming = null, onFirstCrystalResponseCompleted = () => {} }) {
   const pending = [];
   let active = null;
   let glyphElapsed = null;
@@ -26,8 +26,8 @@ export function createVrEarlyExperienceGuidance({ monkeyGuide, knowledgeResolver
     pending.push(descriptor);
     pending.sort((a, b) => b.priority - a.priority);
   };
-  const automatic = (id, blocks, isStillRelevant = () => true) => enqueue({
-    id, blocks, isStillRelevant, requiresAttention: false,
+  const automatic = (id, blocks, timingBlocks, isStillRelevant = () => true) => enqueue({
+    id, blocks, timingBlocks, isStillRelevant, requiresAttention: false,
     priority: VR_MONKEY_DIALOGUE_PRIORITY.ACQUISITION
   });
   const optional = (id, blocks, isStillRelevant, onCompleted = () => {}) => enqueue({
@@ -54,6 +54,7 @@ export function createVrEarlyExperienceGuidance({ monkeyGuide, knowledgeResolver
     const descriptor = pending.shift();
     let actor;
     actor = createVrMandatoryMonkeyCommunication({ monkeyGuide, blocks: descriptor.blocks,
+      timingBlocks: descriptor.timingBlocks,
       secondsPerLine: VR_MONKEY_MESSAGE_TIMING.secondsPerLine, priority: descriptor.priority,
       requiresAttention: descriptor.requiresAttention,
       autoPlaybackDelaySeconds: descriptor.autoPlaybackDelaySeconds,
@@ -76,7 +77,8 @@ export function createVrEarlyExperienceGuidance({ monkeyGuide, knowledgeResolver
   function notifyGlyphFreeExploreStarted() {
     if (!thresholdShown) {
       thresholdShown = true;
-      automatic('threshold-crossed', copy.progression['progression.threshold.crossed'].blocks);
+      automatic('threshold-crossed', copy.progression['progression.threshold.crossed'].blocks,
+        progressionTiming?.['progression.threshold.crossed']?.blocks);
     }
     if (!firstCrystalExtracted && glyphElapsed === null) glyphElapsed = 0;
   }
@@ -87,6 +89,7 @@ export function createVrEarlyExperienceGuidance({ monkeyGuide, knowledgeResolver
       firstCrystalResponseShown = true;
       enqueue({ id: 'first-crystal-response',
         blocks: copy.progression['progression.crystal.firstCreated'].blocks,
+        timingBlocks: progressionTiming?.['progression.crystal.firstCreated']?.blocks,
         isStillRelevant: () => true, requiresAttention: false,
         priority: VR_MONKEY_DIALOGUE_PRIORITY.ACQUISITION,
         onCompleted: () => { if (firstCrystalRevealDue) onFirstCrystalResponseCompleted(); } });
@@ -142,7 +145,8 @@ export function createVrEarlyExperienceGuidance({ monkeyGuide, knowledgeResolver
     if (!crystalFlowUnadvanced()) mutateFallback('withdrawTransientHintFallback', 'first-crystal-reliquary');
     if (cardElapsed !== null && (cardElapsed += step) >= 5) {
       cardElapsed = null; firstCardShown = true;
-      automatic('first-card', copy.progression['progression.card.first'].blocks);
+      automatic('first-card', copy.progression['progression.card.first'].blocks,
+        progressionTiming?.['progression.card.first']?.blocks);
     }
     if (!tuningResolved && getCurrentPointId() === '4.70') {
       if (hasProtoAstroTuning()) tuningResolved = true;
