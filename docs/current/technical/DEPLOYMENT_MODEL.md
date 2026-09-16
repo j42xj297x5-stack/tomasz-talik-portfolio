@@ -121,15 +121,25 @@ PNG backgrounds and panel assets are also manually managed public assets and mus
 
 ## GitHub Pages workflow
 
-The current workflow is `.github/workflows/deploy.yml`. It:
+The current production path is deliberately separated from normal development:
 
-- runs on pushes to the `porfolio` branch and manual `workflow_dispatch`,
-- installs dependencies with `npm ci`,
-- builds with `npm run build`,
-- uploads `./dist`,
-- deploys with the official GitHub Pages actions.
+```text
+work
+→ deliberate promotion to orange_monkey_vr
+→ manual GitHub Actions run targeting orange_monkey_vr
+→ npm ci
+→ npm run build
+→ dist
+→ GitHub Pages
+```
 
-The branch name is intentionally documented as observed. Do not rename it unless the repository's real deployment branch changes.
+- `work` is the active development and repository default branch.
+- `orange_monkey_vr` is the production/deployment branch, promoted deliberately from `work`; it is not a general development branch.
+- Pushes to any branch do not deploy production. Deployment is a conscious manual action through `workflow_dispatch` in `.github/workflows/deploy.yml`.
+- The build job accepts only the exact production ref `refs/heads/orange_monkey_vr`; a manual run targeting `work`, a tag, or any other branch cannot build or deploy.
+- The production workflow installs dependencies with `npm ci`, builds through `npm run build`, uploads only the generated `./dist` artifact, and deploys it with the official GitHub Pages actions.
+- A failed dependency installation or Vite build prevents creation and publication of a new Pages deployment.
+- In repository settings, **Settings → Pages → Build and deployment → Source** must be configured as **GitHub Actions**.
 
 ## Manual deployment QA
 
