@@ -146,10 +146,14 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
   }
   function drawHome(progress) {
     text(copy.home.title, 90, 100, 52); text(copy.home.eyebrow, 90, 152, 25, '#83b8d1');
+    const asterionProductionState = productionController?.getState?.() ?? 'LOCKED';
+    const asterionFinalState = copy.home.asterionStates[asterionProductionState];
     const astroProductionState = astroProductionController?.getState?.() ?? 'READY';
     const astroModuleAvailable = canUseAstroProduction() || canUseAstroTuning() || astroProductionState !== 'READY';
     const cards = [
-      ['module-asterion-sphere', copy.asterion.title, copy.asterion.detail, copy.home.asterionMetric, copy.home.asterionAvailable(progress.absorbed), true],
+      ['module-asterion-sphere', copy.asterion.title, copy.asterion.detail,
+        asterionFinalState ? copy.home.asterionStatusMetric : copy.home.asterionMetric,
+        asterionFinalState ?? copy.home.asterionAvailable(progress.absorbed), true],
       ['module-astro-attractor', copy.astrolabium.title, copy.astrolabium.detail, copy.home.astrolabiumMetric,
         copy.home.astrolabiumStates[astroProductionState] ?? copy.home.astrolabiumStates.DEFAULT,
         astroModuleAvailable]
@@ -428,13 +432,18 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
     const telemetry = readTelemetry(), x = 58, y = 675, width = 1420, height = 295;
     const production = productionController?.getSnapshot?.() ?? { state: 'LOCKED', constructionProgress: 0, formationProgress: 0 };
     const constructing = production.state === 'BUILDING';
-    panelRect(x, y, width, height, { variant: 'monitor', active: telemetry.active || constructing, completed: telemetry.phase === 'COMPLETE', accentColor: accents[telemetry.colorKey] });
-    text(constructing ? copy.sphere.monitorHeading.constructing : copy.sphere.monitorHeading.absorbing, x + 28, y + 42, 22, accents[telemetry.colorKey]);
-    drawInsertedShellWireframe(telemetry, x + 300, y + 136, 108);
+    const earned = production.state === 'EARNED';
+    panelRect(x, y, width, height, { variant: 'monitor', active: telemetry.active || constructing,
+      completed: earned || telemetry.phase === 'COMPLETE', accentColor: earned ? accents.complete : accents[telemetry.colorKey] });
+    text(earned ? copy.sphere.completed[0] : constructing ? copy.sphere.monitorHeading.constructing : copy.sphere.monitorHeading.absorbing,
+      x + 28, y + 42, 22, earned ? accents.complete : accents[telemetry.colorKey]);
+    if (!earned) drawInsertedShellWireframe(telemetry, x + 300, y + 136, 108);
     const constructionLabel = production.constructionProgress < 1 / 6 ? copy.sphere.constructionStates[0] : production.constructionProgress < 1 / 3
       ? copy.sphere.constructionStates[1] : production.constructionProgress < 5 / 6 ? copy.sphere.constructionStates[2] : copy.sphere.constructionStates[3];
-    (constructing ? [constructionLabel] : telemetry.label.split('\n')).forEach((line, index) => text(constructing || index ? line : copy.sphere.monitorStatus(line), x + 28, y + 212 + index * 28, 21, accents[telemetry.colorKey]));
-    if (telemetry.showProgress || constructing) {
+    (earned ? [copy.sphere.completed[1]] : constructing ? [constructionLabel] : telemetry.label.split('\n')).forEach((line, index) =>
+      text(earned || constructing || index ? line : copy.sphere.monitorStatus(line), x + 28, y + 212 + index * 28, 21,
+        earned ? accents.complete : accents[telemetry.colorKey]));
+    if (!earned && (telemetry.showProgress || constructing)) {
       const barX = x + 28, barY = y + 255, barWidth = 555; context.fillStyle = '#18303c'; context.fillRect(barX, barY, barWidth, 16);
       const shownProgress = constructing ? production.constructionProgress : telemetry.extractionProgress;
       context.fillStyle = accents[telemetry.colorKey]; context.fillRect(barX, barY, barWidth * shownProgress, 16);
@@ -443,7 +452,7 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
     drawAsterionPreview(progressSnapshot(), telemetry, x + 855, y + 140, 112);
     const contentState = contentSource?.getState?.() ?? 'EMPTY';
     const contentLabels = copy.sphere.materialStates;
-    if (contentLabels[contentState]) { context.textAlign = 'right'; text(contentLabels[contentState], x + width - 28, y + 278, 19, '#88b8cf'); context.textAlign = 'left'; }
+    if (!earned && contentLabels[contentState]) { context.textAlign = 'right'; text(contentLabels[contentState], x + width - 28, y + 278, 19, '#88b8cf'); context.textAlign = 'left'; }
   }
   function drawInsertedShellWireframe(telemetry, cx, cy, scale) {
     const data = contentSource?.getInsertedShellWireframe?.();
@@ -492,18 +501,20 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
     const production = productionController?.getSnapshot?.() ?? { state: 'LOCKED', constructionProgress: 0, formationProgress: 0 };
     const building = production.state === 'BUILDING';
     const available = production.state === 'AVAILABLE';
+    const earned = production.state === 'EARNED';
+    const finalProduct = available || earned;
     const formationProgress = Math.max(0, Math.min(1, production.formationProgress ?? 0));
     const extracting = telemetry.phase === 'EXTRACTION';
 
-    if (!building && !available && !extracting) drawPatches(() => true, '#6aa6b8', .1);
+    if (!building && !finalProduct && !extracting) drawPatches(() => true, '#6aa6b8', .1);
     drawPatches((id, fragment) => states[id]?.committed
       && (!building || fragment.assemblyOrder <= 1 - formationProgress), accents.complete,
-      available ? 0 : (progress.complete ? .94 + Math.sin(telemetryElapsed * 2) * .04 : .9), 9);
-    drawPatches((id, fragment) => states[id]?.pending
+      finalProduct ? 0 : (progress.complete ? .94 + Math.sin(telemetryElapsed * 2) * .04 : .9), 9);
+    if (!finalProduct) drawPatches((id, fragment) => states[id]?.pending
       && assemblySegmentVisible(fragment, states[id].assemblyProgress), accents.process, .9, 10);
 
     context.save(); context.strokeStyle = '#588797'; context.globalAlpha = .22; context.lineWidth = 1.2; context.beginPath(); context.arc(cx, cy, radius, 0, Math.PI * 2); context.stroke(); context.restore();
-    if (building || available) drawAsterionModelContour(cx, cy, radius, available ? 1 : formationProgress);
+    if (building || finalProduct) drawAsterionModelContour(cx, cy, radius, finalProduct ? 1 : formationProgress);
   }
   function drawAsterionModelContour(cx, cy, radius, reveal) {
     drawVrFurnaceCurvePresentation(context, asterionCurvePresentation, {
