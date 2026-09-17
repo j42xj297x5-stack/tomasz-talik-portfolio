@@ -56,8 +56,10 @@ export function createVrFinalWaterHintLifecycle({ monkeyGuide, knowledgeResolver
     ]),
     onSelect(optionId) {
       if (optionId !== 'keep-trying' && optionId !== 'show-me') return false;
-      monkeyGuide.releaseDialogue(decisionOwner);
-      monkeyGuide.showMessage('');
+      if (monkeyGuide.ownsDialogue(decisionOwner)) {
+        monkeyGuide.showDialogueMessage(decisionOwner, '');
+        monkeyGuide.releaseDialogue(decisionOwner);
+      }
       decisionPending = false;
       automaticEscalationStopped = true;
       if (optionId === 'keep-trying') {
@@ -101,16 +103,19 @@ export function createVrFinalWaterHintLifecycle({ monkeyGuide, knowledgeResolver
     active = false;
     automaticEscalationStopped = true;
     decisionPending = false;
-    monkeyGuide.releaseDialogue(decisionOwner);
-    monkeyGuide.showMessage('');
-    for (const communication of [hint1, hint2, hint3]) {
+    if (monkeyGuide.ownsDialogue(decisionOwner)) {
+      monkeyGuide.showDialogueMessage(decisionOwner, '');
+      monkeyGuide.releaseDialogue(decisionOwner);
+    }
+    for (const communication of [hint1, hint2]) {
       if (['IDLE', 'WAITING', 'ATTENTION', 'AUTO_DELAY'].includes(communication.getPhase())) communication.reset();
     }
+    hint3.reset();
     if (knowledgeResolver.resolveFinalWaterGuidance()) monkeyGuide.refreshKnowledge();
   }
   function update(deltaSeconds = 0) {
     const delta = Math.max(0, Number.isFinite(deltaSeconds) ? deltaSeconds : 0);
-    if (!solved && isWaterSyncLocked() === true) resolveSolved();
+    if (active && !solved && isWaterSyncLocked() === true) resolveSolved();
     if (active && !solved) {
       elapsedSeconds += delta;
       if (elapsedSeconds >= VR_FINAL_WATER_HINT_THRESHOLDS_SECONDS.HINT_1 && hint1.getPhase() === 'IDLE') {
