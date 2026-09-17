@@ -19,6 +19,7 @@ export function createVrMonkeyKnowledgeResolver({ locale, getCurrentObjective, i
   let stonesRead = false;
   let stonesLeadRead = false;
   let bindersUnlocked = false;
+  let bindersRead = false;
   let asterionRead = false;
   const transientHintFallbacks = new Map();
 
@@ -36,6 +37,7 @@ export function createVrMonkeyKnowledgeResolver({ locale, getCurrentObjective, i
     label: source.question, question: source.question, blocks: Object.freeze(source.blocks),
     type: VR_MONKEY_KNOWLEDGE_ITEM_TYPE.TOPIC,
     lifecycle: (id === 'knowledge.p3.stones' && !stonesRead)
+      || (id === 'knowledge.p3.binders' && !bindersRead)
       || (id === 'knowledge.asterion.sphere' && !asterionRead)
       ? VR_MONKEY_KNOWLEDGE_LIFECYCLE.NEW : VR_MONKEY_KNOWLEDGE_LIFECYCLE.READ }); };
   function topics(groupId) {
@@ -48,7 +50,7 @@ export function createVrMonkeyKnowledgeResolver({ locale, getCurrentObjective, i
     }
     if (groupId === whatIsIt.groupId) return [
       ...(isAstrolabiumOwned() ? [topicFromCopy('knowledge.asterion.sphere')] : []),
-      ...(bindersUnlocked ? [topicFromCopy('knowledge.p3.binders')] : [])
+      ...(bindersUnlocked && !bindersRead ? [topicFromCopy('knowledge.p3.binders')] : [])
     ];
     return [];
   }
@@ -56,7 +58,7 @@ export function createVrMonkeyKnowledgeResolver({ locale, getCurrentObjective, i
     || (isAstrolabiumOwned() && !isAsterionOwned()) || getTopic() !== null;
   return Object.freeze({
     getRootItems: () => [...(hasWhatNowContent() ? [category] : []),
-      ...(bindersUnlocked || isAstrolabiumOwned() ? [whatIsIt] : [])],
+      ...((bindersUnlocked && !bindersRead) || isAstrolabiumOwned() ? [whatIsIt] : [])],
     getGroupTopics: topics,
     getCategory: (categoryId) => [category, whatIsIt].find(({ id }) => id === categoryId && topics(id === category.id ? category.groupId : whatIsIt.groupId).length) ?? null,
     getTopic: (topicId) => [...topics(category.groupId), ...topics(whatIsIt.groupId)].find(({ id }) => id === topicId) ?? null,
@@ -67,6 +69,7 @@ export function createVrMonkeyKnowledgeResolver({ locale, getCurrentObjective, i
       }
       if (topicId === 'knowledge.p3.stonesLead') stonesLeadRead = true;
       if (topicId === 'knowledge.p3.stones') stonesRead = true;
+      if (topicId === 'knowledge.p3.binders' && bindersUnlocked) bindersRead = true;
       if (topicId === 'knowledge.asterion.sphere') asterionRead = true;
     },
     markPostRingStoneGuidanceTaught() {
@@ -90,7 +93,8 @@ export function createVrMonkeyKnowledgeResolver({ locale, getCurrentObjective, i
     unlockBinders() { bindersUnlocked = true; },
     hasReadStones: () => stonesRead,
     hasDiscoveredBinders: () => bindersUnlocked,
-    reset() { stonesRead = false; stonesLeadRead = false; bindersUnlocked = false; asterionRead = false;
+    hasReadBinders: () => bindersRead,
+    reset() { stonesRead = false; stonesLeadRead = false; bindersUnlocked = false; bindersRead = false; asterionRead = false;
       transientHintFallbacks.clear(); }
   });
 }

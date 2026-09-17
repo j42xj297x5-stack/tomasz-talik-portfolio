@@ -13,7 +13,7 @@ const TOOLS = Object.freeze([
 ]);
 
 export function createVrPlayerGuideProjection({ locale, getCurrentObjective, isFurnaceRevealed,
-  isShellFieldRevealed, isAstrolabiumOwned, hasReadRuneStones = () => false, hasDiscoveredBinders = () => false,
+  isShellFieldRevealed, isAstrolabiumOwned, hasReadRuneStones = () => false, hasReadBinders = () => false,
   hasInstalledRune = () => false, isAsterionOwned = () => false }) {
   if (typeof getCurrentObjective !== 'function' || typeof isFurnaceRevealed !== 'function'
     || typeof isShellFieldRevealed !== 'function' || typeof isAstrolabiumOwned !== 'function'
@@ -27,7 +27,7 @@ export function createVrPlayerGuideProjection({ locale, getCurrentObjective, isF
     return [
       { id: 'shells', ...knowledge.shells },
       ...(hasReadRuneStones() ? [{ id: 'runeStones', ...knowledge.runeStones }] : []),
-      ...(hasDiscoveredBinders() ? [{ id: 'binders', ...knowledge.binders }] : []),
+      ...(hasReadBinders() ? [{ id: 'binders', ...knowledge.binders }] : []),
       ...(hasInstalledRune() ? [{ id: 'sector', ...knowledge.sector }] : [])
     ];
   }

@@ -563,7 +563,18 @@ export function createVrMonkeyGuide({
       knowledgeSequence?.reset(); selectedKnowledgeTopicId = topic.id;
       knowledgeSequence = createVrMonkeyProgressionMessage({ monkeyGuide: api, blocks: topic.blocks,
         secondsPerLine: VR_MONKEY_MESSAGE_TIMING.secondsPerLine, gapSeconds: VR_MONKEY_MESSAGE_TIMING.gapSeconds,
-        onCompleted() { knowledgeResolver?.completeTopic?.(topic.id); knowledgeSequence = null; drawDialogue(); } });
+        onCompleted() {
+          knowledgeResolver?.completeTopic?.(topic.id);
+          knowledgeSequence = null;
+          selectedKnowledgeTopicId = null;
+          if (!(knowledgeResolver?.getGroupTopics?.(selectedKnowledgeGroupId) ?? []).length) {
+            screen = VR_MONKEY_GUIDE_SCREEN.MENU;
+            selectedKnowledgeGroupId = null;
+            knowledgePage = 0;
+            showMessage('');
+          }
+          drawDialogue();
+        } });
       knowledgeSequence.begin(); drawDialogue(); return true;
     }
     if (id === 'back-knowledge') { knowledgeSequence?.reset(); knowledgeSequence = null; screen = VR_MONKEY_GUIDE_SCREEN.MENU;
