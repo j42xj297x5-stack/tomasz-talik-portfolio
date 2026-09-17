@@ -507,7 +507,8 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
     if (!context) return; redrawCount += 1; context.clearRect(0, 0, canvas.width, canvas.height);
     if (screen === ASTRO_FURNACE_PANEL_SCREENS.ASTROLABIUM_PRODUCTION
       && astroProductionController?.getState?.() === 'EARNED') {
-      screen = ASTRO_FURNACE_PANEL_SCREENS.ASTROLABIUM_TUNING;
+      screen = ASTRO_FURNACE_PANEL_SCREENS.HOME;
+      returnScreen = ASTRO_FURNACE_PANEL_SCREENS.HOME;
       hoveredRegion = null;
     }
     context.fillStyle = 'rgba(3,9,17,.96)'; context.fillRect(0, 0, canvas.width, canvas.height);
