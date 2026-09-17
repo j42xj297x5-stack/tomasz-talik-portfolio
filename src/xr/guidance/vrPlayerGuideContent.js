@@ -30,7 +30,8 @@ const VR_PLAYER_GUIDE_CONTENT = Object.freeze({
       shells: Object.freeze({ label: 'SKORUPY', body: 'Małe elementy tego świata' }),
       runeStones: Object.freeze({ label: 'KAMIENIE RUNICZNE', body: 'Są daleko.\nPiec potrafi stroić rzeczy.\nAstrolabium potrafi je sprowadzać.\nSprawdźmy, czy to wystarczy.' }),
       binders: Object.freeze({ label: 'ZWORNIKI', body: 'Zworniki.\nPojawiały się, kiedy domykałeś te części platformy.\nWygląda na to, że nie są ozdobą.' }),
-      sector: Object.freeze({ label: 'SEKTOR', body: 'Spust — orientacja całej platformy\nChwyt — połącz się z aktywnym sektorem\nPrzytrzymaj strumień — zablokuj sektor\nRuch dłoni — zmieniaj jego ustawienie' })
+      sector: Object.freeze({ label: 'SEKTOR', body: 'Spust — orientacja całej platformy\nChwyt — połącz się z aktywnym sektorem\nPrzytrzymaj strumień — zablokuj sektor\nRuch dłoni — zmieniaj jego ustawienie' }),
+      resonator: Object.freeze({ label: 'REZONATOR ASTERIONOWY', body: 'Rezonator Asterionowy odnajduje Duże Glify.\nWyposaż Kulę. Przytrzymaj Chwyt i celuj w zasilony sektor przez 1 s.\nPo blokadzie nie puszczaj Chwytu. Ułożenie dłoni staje się punktem neutralnym.\nZIEMIA — skręt dłoni · lewa część pola.\nDRZEWO — skręt dłoni · prawa część pola.\nOGIEŃ — pochylenie dłoni · odległość pola.\nKażdy z trzech sektorów musi być ustawiony powyżej 0.\nJeśli choć jeden pozostaje na 0, Rezonator nie namierza.\nGlif w polu pokazuje znak i kolejne kręgi.\n3 kręgi — gotowy do ściągnięcia Astrolabium Więzi.' })
     }),
     mainMenuHint: 'Lewy drążek — wybór · X — otwórz · Y — zamknij',
     toolListHint: 'Lewy drążek — wybór · X — otwórz · Y — wróć',
@@ -71,7 +72,8 @@ const VR_PLAYER_GUIDE_CONTENT = Object.freeze({
       shells: Object.freeze({ label: 'SHELLS', body: 'Small pieces of this world' }),
       runeStones: Object.freeze({ label: 'RUNE STONES', body: 'They are far away.\nThe Furnace can tune things.\nThe Astrolabe can bring them in.\nLet us see if that is enough.' }),
       binders: Object.freeze({ label: 'KEYSTONES', body: 'Keystones.\nThey appeared when you completed those parts of the platform.\nIt seems they are not decoration.' }),
-      sector: Object.freeze({ label: 'SECTOR', body: 'Trigger — orient the whole platform\nGrip — connect to the active Sector\nHold the beam — lock the Sector\nHand movement — change its position' })
+      sector: Object.freeze({ label: 'SECTOR', body: 'Trigger — orient the whole platform\nGrip — connect to the active Sector\nHold the beam — lock the Sector\nHand movement — change its position' }),
+      resonator: Object.freeze({ label: 'ASTERION RESONATOR', body: 'The Asterion Resonator finds Large Glyphs.\nEquip the Sphere. Hold Grip and aim at a powered Sector for 1 s.\nOnce it locks, keep holding Grip. Your hand pose becomes the neutral point.\nEARTH — twist your wrist · left side of the field.\nWOOD — twist your wrist · right side of the field.\nFIRE — tilt your hand · field depth.\nAll three Sectors must be set above 0.\nIf even one stays at 0, the Resonator cannot acquire targets.\nA glyph inside the field reveals its sign and builds rings.\n3 rings — ready to pull with the Astrolabe of Binding.' })
     }),
     mainMenuHint: 'Left stick — select · X — open · Y — close',
     toolListHint: 'Left stick — select · X — open · Y — back',

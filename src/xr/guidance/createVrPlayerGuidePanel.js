@@ -51,6 +51,32 @@ function drawWrappedText(context, text, x, y, maxWidth, lineHeight, maxLines = I
   return y;
 }
 
+function drawAuthoredWrappedText(context, text, x, y, maxWidth, lineHeight, maxY) {
+  for (const authoredLine of String(text).split('\n')) {
+    if (!authoredLine) {
+      y += lineHeight;
+      continue;
+    }
+    const words = authoredLine.split(/\s+/).filter(Boolean);
+    let line = '';
+    for (const word of words) {
+      const candidate = line ? `${line} ${word}` : word;
+      if (context.measureText(candidate).width > maxWidth && line) {
+        if (y > maxY) return y;
+        context.fillText(line, x, y);
+        y += lineHeight;
+        line = word;
+      } else line = candidate;
+    }
+    if (line) {
+      if (y > maxY) return y;
+      context.fillText(line, x, y);
+      y += lineHeight;
+    }
+  }
+  return y;
+}
+
 export function createVrPlayerGuidePanel({ leftGrip, semanticInput, locale = 'en', settings = {},
   onOpenChange = () => {}, onPanelClick = () => {}, debugCheckpoints = [],
   onDebugCheckpoint = () => {}, projection = null }) {
@@ -100,6 +126,7 @@ export function createVrPlayerGuidePanel({ leftGrip, semanticInput, locale = 'en
   let visibleControlIds = normalizeVisibleControlIds(INITIAL_VISIBLE_CONTROL_IDS);
   let controllerObjectUrl = null;
   let loadVersion = 0;
+  let projectionSignature = '';
 
   function releaseControllerObjectUrl() {
     if (controllerObjectUrl) URL.revokeObjectURL(controllerObjectUrl);
@@ -252,9 +279,15 @@ export function createVrPlayerGuidePanel({ leftGrip, semanticInput, locale = 'en
     const boxHeight = 104;
     const gap = 20;
     const startY = 126;
-    rows.forEach((knowledge, index) => {
+    const visibleRowCount = 4;
+    const firstVisibleIndex = Math.min(
+      Math.max(0, selectedKnowledgeIndex - visibleRowCount + 1),
+      Math.max(0, rows.length - visibleRowCount)
+    );
+    rows.slice(firstVisibleIndex, firstVisibleIndex + visibleRowCount).forEach((knowledge, visibleIndex) => {
+      const index = firstVisibleIndex + visibleIndex;
       const x = 36;
-      const y = startY + index * (boxHeight + gap);
+      const y = startY + visibleIndex * (boxHeight + gap);
       if (index === selectedKnowledgeIndex) {
         context.fillStyle = config.colors.selected;
         context.fillRect(x, y, boxWidth, boxHeight);
@@ -274,11 +307,11 @@ export function createVrPlayerGuidePanel({ leftGrip, semanticInput, locale = 'en
 
   function drawKnowledgeDetail(knowledge) {
     context.fillStyle = config.colors.text;
-    context.font = '700 31px sans-serif';
-    context.fillText(knowledge.label, 36, 186);
+    context.font = '700 27px sans-serif';
+    context.fillText(knowledge.label, 36, 132);
     context.fillStyle = config.colors.muted;
-    context.font = '27px sans-serif';
-    drawWrappedText(context, knowledge.body, 36, 230, canvas.width - 72, 38, 5);
+    context.font = '20px sans-serif';
+    drawAuthoredWrappedText(context, knowledge.body, 36, 174, canvas.width - 72, 27, canvas.height - 72);
   }
 
   function resolveItems() {
@@ -362,6 +395,7 @@ export function createVrPlayerGuidePanel({ leftGrip, semanticInput, locale = 'en
 
   function draw() {
     const items = resolveItems();
+    projectionSignature = JSON.stringify(items);
     reconcileDynamicSections(items);
     const { width, height } = canvas;
     drawFrame(width, height);
@@ -397,7 +431,7 @@ export function createVrPlayerGuidePanel({ leftGrip, semanticInput, locale = 'en
     if (disposed) return;
     setVisibleControlIds(projection?.getVisibleControlIds?.() ?? INITIAL_VISIBLE_CONTROL_IDS);
     const items = resolveItems();
-    if (reconcileDynamicSections(items)) draw();
+    if (reconcileDynamicSections(items) || JSON.stringify(items) !== projectionSignature) draw();
     const input = semanticInput.getState?.() ?? {};
     if (input.togglePlayerGuidePanel) {
       if (open && viewState === VIEW_STATE.TOOL_DETAIL) {

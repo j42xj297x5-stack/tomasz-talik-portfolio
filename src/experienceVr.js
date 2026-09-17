@@ -865,6 +865,7 @@ const playerGuideProjection = createVrPlayerGuideProjection({
   isAsterionOwned,
   hasReadRuneStones: () => monkeyKnowledgeResolver?.hasReadStones() === true,
   hasReadBinders: () => monkeyKnowledgeResolver?.hasReadBinders() === true,
+  hasLearnedResonator: () => monkeyKnowledgeResolver?.hasLearnedResonator() === true,
   hasInstalledRune: () => runeStoneProgressionController.getInstalledFamilyCodes().length > 0
 });
 const playerGuidePanel = createVrPlayerGuidePanel({

@@ -55,7 +55,9 @@ export function createVrRuneResonatorGuidance({ monkeyGuide, copy, secondsPerLin
   const sectorLock = makeCommunication(copy.progression['progression.p3.firstSectorLock'].blocks,
     progressionTiming?.['progression.p3.firstSectorLock']?.blocks, false);
   const resonator = makeCommunication(copy.progression['progression.p3.resonator'].blocks,
-    progressionTiming?.['progression.p3.resonator']?.blocks);
+    progressionTiming?.['progression.p3.resonator']?.blocks, true, () => {
+      knowledgeResolver.markResonatorGuidanceTaught();
+    });
   const etherIntervention = makeCommunication(
     copy.progression['progression.p4.etherIntervention'].blocks,
     progressionTiming?.['progression.p4.etherIntervention']?.blocks,

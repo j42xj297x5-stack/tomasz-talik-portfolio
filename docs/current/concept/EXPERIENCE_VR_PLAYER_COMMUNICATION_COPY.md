@@ -490,3 +490,19 @@ This entry becomes available only after successful deliberate completion of Monk
 > Chwyt — połącz się z aktywnym sektorem
 > Przytrzymaj strumień — zablokuj sektor
 > Ruch dłoni — zmieniaj jego ustawienie
+
+This generic entry is available after the first Rune installation only until successful full completion of `progression.p3.resonator`. It is then replaced, not supplemented, by the Resonator entry below.
+
+### REZONATOR ASTERIONOWY
+> Rezonator Asterionowy odnajduje Duże Glify.
+> Wyposaż Kulę. Przytrzymaj Chwyt i celuj w zasilony sektor przez 1 s.
+> Po blokadzie nie puszczaj Chwytu. Ułożenie dłoni staje się punktem neutralnym.
+> ZIEMIA — skręt dłoni · lewa część pola.
+> DRZEWO — skręt dłoni · prawa część pola.
+> OGIEŃ — pochylenie dłoni · odległość pola.
+> Każdy z trzech sektorów musi być ustawiony powyżej 0.
+> Jeśli choć jeden pozostaje na 0, Rezonator nie namierza.
+> Glif w polu pokazuje znak i kolejne kręgi.
+> 3 kręgi — gotowy do ściągnięcia Astrolabium Więzi.
+
+The first physical Resonator appearance triggers the existing `progression.p3.resonator` first-teacher communication. Only successful full playback records `resonator taught` and replaces Player Y `SEKTOR` with this persistent entry. Its core gate is `ZIEMIA > 0 AND DRZEWO > 0 AND OGIEŃ > 0`; any core sector at `0` means no target acquisition.
