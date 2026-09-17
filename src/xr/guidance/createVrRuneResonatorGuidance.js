@@ -43,7 +43,9 @@ export function createVrRuneResonatorGuidance({ monkeyGuide, copy, secondsPerLin
     return communication;
   };
   const glyphsGone = makeCommunication(copy.progression['progression.p3.glyphsGone'].blocks,
-    progressionTiming?.['progression.p3.glyphsGone']?.blocks);
+    progressionTiming?.['progression.p3.glyphsGone']?.blocks, true, () => {
+      if (knowledgeResolver.markPostRingStoneGuidanceTaught()) monkeyGuide.refreshKnowledge();
+    });
   const installed = makeCommunication(null, null, true, () => {}, () => isAsterionEarned()
     ? copy.progression['progression.p3.firstRuneInstalledWithAsterion'].blocks
     : copy.progression['progression.p3.firstRuneInstalledWithoutAsterion'].blocks,

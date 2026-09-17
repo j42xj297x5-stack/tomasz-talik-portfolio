@@ -68,6 +68,36 @@ Runtime Monkey copy is authored as `blocks[]`. Each quotation below preserves on
 > --- BLOCK ---
 >
 > Nie widać ich. Nie słychać.
+>
+> --- BLOCK ---
+>
+> Możemy patrzeć w niebo.
+>
+> --- BLOCK ---
+>
+> Albo sprawić, żeby to miejsce patrzyło dalej niż my.
+>
+> --- BLOCK ---
+>
+> Zostały jeszcze kamienie.
+>
+> --- BLOCK ---
+>
+> Są daleko.
+>
+> --- BLOCK ---
+>
+> Piec potrafi stroić rzeczy.
+>
+> --- BLOCK ---
+>
+> Astrolabium potrafi je sprowadzać.
+>
+> --- BLOCK ---
+>
+> Sprawdźmy, czy to wystarczy.
+
+The ten blocks form one uninterrupted attention-required progression communication after the existing delay. Successful completion marks the stone lead and practical Rune Stone direction taught/read; scheduling, attention and partial playback do not.
 
 ### `progression.p3.firstRuneInstalledWithAsterion` — WITH ASTERION
 Variant is selected at actual playback start from current Asterion ownership.
@@ -269,6 +299,8 @@ Runtime: `AUTO_HINT → transient CO TERAZ? fallback`; shared issue slot: `rune-
 ### `knowledge.p3.stonesLead` — `CO TERAZ?`
 Question: `Zostały jeszcze kamienie.`
 
+This copy remains catalogued as communication memory, but is not a required menu first-teaching gate after the post-Third-Ring progression speech completes.
+
 > Możemy patrzeć w niebo.
 >
 > --- BLOCK ---
@@ -281,6 +313,8 @@ Question: `Zostały jeszcze kamienie.`
 
 ### `knowledge.p3.stones` — `CO TERAZ?`
 Question: `KAMIENIE`
+
+Lifecycle: `READ` after successful completion of `progression.p3.glyphsGone`, persistently available as practical reference while its existing post-ring condition applies. The same completed-teaching state may expose Player Y `WIEDZA → KAMIENIE RUNICZNE`.
 
 > Są daleko.
 >
