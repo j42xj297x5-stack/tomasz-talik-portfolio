@@ -28,9 +28,8 @@ export const ASTRO_FURNACE_PANEL_SCREENS = Object.freeze({
 export const asterionPreviewAnimationActive = ({ panelState, screen }) =>
   panelState === ASTRO_FURNACE_PANEL_STATES.VISIBLE && screen === ASTRO_FURNACE_PANEL_SCREENS.ASTERION_SPHERE;
 export const furnacePanelAnimationActive = ({ panelState, screen }) => panelState === ASTRO_FURNACE_PANEL_STATES.VISIBLE
-  && [ASTRO_FURNACE_PANEL_SCREENS.HOME, ASTRO_FURNACE_PANEL_SCREENS.ASTERION_SPHERE, ASTRO_FURNACE_PANEL_SCREENS.ASTROLABIUM_MENU,
-    ASTRO_FURNACE_PANEL_SCREENS.ASTROLABIUM_PRODUCTION, ASTRO_FURNACE_PANEL_SCREENS.ASTROLABIUM_TUNING,
-    ASTRO_FURNACE_PANEL_SCREENS.RUNE_TUNING].includes(screen);
+  && [ASTRO_FURNACE_PANEL_SCREENS.HOME, ASTRO_FURNACE_PANEL_SCREENS.ASTERION_SPHERE,
+    ASTRO_FURNACE_PANEL_SCREENS.ASTROLABIUM_PRODUCTION].includes(screen);
 const smoothstep = (value) => value * value * (3 - 2 * value);
 export const wireframeDissolveVisible = (segment, progress) => progress < 1 && segment.dissolveOrder >= Math.max(0, progress);
 
@@ -80,6 +79,7 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
   const patchDataByAssetId = Object.fromEntries(ASTERION_SHELL_PATCHES.map((patch) => [patch.assetId, patch]));
   const asterionCurvePresentation = createVrFurnaceCurvePresentation(asterionPreviewModel);
   const astrolabiumCurvePresentation = createVrFurnaceCurvePresentation(astrolabiumPreviewModel);
+  const astrolabiumHomeCurvePresentation = astrolabiumCurvePresentation.home;
   const shellGlyphImages = Object.fromEntries(ASTERION_SHELL_PATCHES.map(({ assetId }) => {
     const glyph = resolveAttractorShellGlyph(assetId);
     const image = new Image();
@@ -161,7 +161,7 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
       text(card[2], rect.x + 42, rect.y + 128, 25, '#91afbe'); text(card[3], rect.x + 42, rect.y + 190, 21, '#6f9db5');
       const statusRight = card[0] === 'module-astro-attractor' ? rect.x + rect.width - 385 : rect.x + rect.width - 42;
       context.textAlign = 'right'; text(card[4], statusRight, rect.y + 190, 22, card[5] ? '#bdefff' : '#91afbe'); context.textAlign = 'left';
-      if (card[0] === 'module-astro-attractor') drawVrFurnaceCurvePresentation(context, astrolabiumCurvePresentation, {
+      if (card[0] === 'module-astro-attractor') drawVrFurnaceCurvePresentation(context, astrolabiumHomeCurvePresentation, {
         cx: rect.x + rect.width - 210, cy: rect.y + 118, scale: 88, elapsed: telemetryElapsed,
         color: accents.attractor, bright: hoveredRegion === rect.id
       });

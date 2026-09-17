@@ -51,7 +51,7 @@ function extractMeshCurves(node, matrix, tolerance, thresholdAngle) {
   return curves;
 }
 
-export function createVrFurnaceCurvePresentation(model, { thresholdAngle = 24, groupCount = 6 } = {}) {
+export function createVrFurnaceCurvePresentation(model, { thresholdAngle = 24, groupCount = 6, homeCurveLimit = 100 } = {}) {
   if (!model) throw new Error('A simplified GLB model is required for a Furnace curve presentation.');
   if (curvePresentationCache.has(model)) return curvePresentationCache.get(model);
   model.updateWorldMatrix(true, true);
@@ -85,21 +85,24 @@ export function createVrFurnaceCurvePresentation(model, { thresholdAngle = 24, g
   const resolvedGroupCount = Math.max(1, Math.min(groupCount, curves.length));
   const groups = Array.from({ length: resolvedGroupCount }, () => []);
   curves.forEach((curve, index) => groups[Math.min(resolvedGroupCount - 1, Math.floor(index * resolvedGroupCount / curves.length))].push(curve));
+  const resolvedHomeCurveLimit = Math.max(1, Math.floor(homeCurveLimit));
+  const homeCurveSet = curves.length <= resolvedHomeCurveLimit ? null : new Set(
+    [...curves].sort((left, right) => right.length - left.length).slice(0, resolvedHomeCurveLimit)
+  );
+  const homeCurves = Object.freeze(homeCurveSet ? curves.filter((curve) => homeCurveSet.has(curve)) : [...curves]);
+  const homePresentation = Object.freeze({
+    curves: homeCurves,
+    groups: Object.freeze([homeCurves]),
+    sourceCurveCount: rawCurves.length
+  });
   const presentation = Object.freeze({
     curves: Object.freeze(curves),
     groups: Object.freeze(groups.map((group) => Object.freeze(group))),
+    home: homePresentation,
     sourceCurveCount: rawCurves.length
   });
   curvePresentationCache.set(model, presentation);
   return presentation;
-}
-
-function project([x, y, z], cx, cy, scale, yaw, pitch) {
-  const cosineY = Math.cos(yaw), sineY = Math.sin(yaw), cosineX = Math.cos(pitch), sineX = Math.sin(pitch);
-  const rotatedX = x * cosineY + z * sineY, rotatedZ = -x * sineY + z * cosineY;
-  const rotatedY = y * cosineX - rotatedZ * sineX;
-  const perspective = 1 / Math.max(.72, 1 + (y * sineX + rotatedZ * cosineX) * .16);
-  return [cx + rotatedX * scale * perspective, cy - rotatedY * scale * perspective];
 }
 
 export function drawVrFurnaceCurvePresentation(context, presentation, {
@@ -107,33 +110,42 @@ export function drawVrFurnaceCurvePresentation(context, presentation, {
 }) {
   if (!presentation?.groups?.length || progress <= 0) return;
   const yaw = elapsed * rotationSpeed, groupPosition = clamp01(progress) * presentation.groups.length;
+  const cosineY = Math.cos(yaw), sineY = Math.sin(yaw), cosineX = Math.cos(pitch), sineX = Math.sin(pitch);
   context.save(); context.strokeStyle = color; context.lineCap = 'round'; context.lineJoin = 'round';
   context.globalAlpha = bright ? .98 : .82; context.lineWidth = bright ? 3.5 : 2.7;
-  context.shadowColor = color; context.shadowBlur = bright ? 20 : 10;
+  context.beginPath();
   presentation.groups.forEach((group, groupIndex) => {
     const reveal = clamp01(groupPosition - groupIndex);
     if (reveal <= 0) return;
     group.forEach((curve) => {
       const visibleLength = curve.length * reveal;
-      context.beginPath();
-      const start = project(curve.points[0], cx, cy, scale, yaw, pitch);
-      context.moveTo(start[0], start[1]);
+      const start = curve.points[0];
+      let x = start[0], y = start[1], z = start[2];
+      let rotatedX = x * cosineY + z * sineY, rotatedZ = -x * sineY + z * cosineY;
+      let rotatedY = y * cosineX - rotatedZ * sineX;
+      let perspective = 1 / Math.max(.72, 1 + (y * sineX + rotatedZ * cosineX) * .16);
+      context.moveTo(cx + rotatedX * scale * perspective, cy - rotatedY * scale * perspective);
       for (let index = 1; index < curve.points.length; index += 1) {
         const segmentStart = curve.cumulativeLengths[index - 1];
         if (segmentStart >= visibleLength) break;
         const segmentEnd = curve.cumulativeLengths[index];
-        let target = curve.points[index];
+        const previous = curve.points[index - 1], target = curve.points[index];
+        x = target[0]; y = target[1]; z = target[2];
         if (segmentEnd > visibleLength) {
           const local = (visibleLength - segmentStart) / Math.max(segmentEnd - segmentStart, Number.EPSILON);
-          target = curve.points[index - 1].map((value, axis) => value + (curve.points[index][axis] - value) * local);
+          x = previous[0] + (x - previous[0]) * local;
+          y = previous[1] + (y - previous[1]) * local;
+          z = previous[2] + (z - previous[2]) * local;
         }
-        const projected = project(target, cx, cy, scale, yaw, pitch);
-        context.lineTo(projected[0], projected[1]);
+        rotatedX = x * cosineY + z * sineY; rotatedZ = -x * sineY + z * cosineY;
+        rotatedY = y * cosineX - rotatedZ * sineX;
+        perspective = 1 / Math.max(.72, 1 + (y * sineX + rotatedZ * cosineX) * .16);
+        context.lineTo(cx + rotatedX * scale * perspective, cy - rotatedY * scale * perspective);
         if (segmentEnd > visibleLength) break;
       }
-      context.stroke();
     });
   });
+  context.stroke();
   context.restore();
 }
 
