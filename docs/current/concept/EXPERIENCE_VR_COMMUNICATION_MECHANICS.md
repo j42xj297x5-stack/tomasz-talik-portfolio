@@ -115,6 +115,10 @@ The first physical Resonator appearance continues to trigger the existing delaye
 
 The practical reference reflects the target-acquisition gate: `EARTH > 0 AND WOOD > 0 AND FIRE > 0` makes target acquisition available. If any core channel remains at `0`, the Resonator performs no target acquisition. EARTH controls the left field profile, WOOD the right field profile, and FIRE field depth.
 
+After the Resonator has been taught and the physical Metal Rune (`T`) is installed, Player Y additionally exposes `WIEDZA → SEKTOR METALU / METAL SECTOR` immediately after the Resonator entry. Both conditions are required: installation alone does not move Metal ahead of its Resonator context, while taught Resonator knowledge alone does not claim an unavailable extension. This presentation gate reads authoritative physical Rune installation truth directly and does not use Scenario points, milestones, objectives, control levels or visibility. The existing projection-signature refresh makes the row appear while Player Y is already open.
+
+Metal supplements rather than replaces the EARTH/WOOD/FIRE core. Wrist twist extends the existing field's LATERAL reach, hand tilt extends its FORWARD/depth reach, and the two axes act independently. Level `0` contributes no Metal extension; higher active levels provide progressively greater extension. Metal does not activate the Resonator by itself and does not remove the requirement that all three core Sectors remain above `0`.
+
 ## Automatic communication that is not AUTO_HINT
 
 Automatic authored progression reactions may play without attention but do not become corrective `AUTO_HINT` or publish a transient fallback merely because playback is automatic. Current examples include `progression.threshold.crossed`, `progression.crystal.firstCreated`, `progression.card.first` and `progression.p3.firstSectorLock`.

@@ -168,7 +168,7 @@ The boundary already coincident with the domain edge remains fixed for NEAR and 
 
 `M22` remains the designated future harmonic center in control-space and synchronization semantics, and the resolved shape may retain descriptive `harmonicCenter`. It is not a zero-range state: angle applies `+50%` LATERAL expansion and tilt applies `50%` interpolation toward the global depth boundaries. No harmonic recognition is implemented.
 
-**Runtime synchronization status:** the current runtime still uses the superseded fixed-meter behavior in which active off-center levels expand while level `2` does not. Runtime code must be synchronized in a separate implementation task; this document's percentage model is the CURRENT canonical target.
+**Runtime synchronization status:** the current runtime uses the canonical percentage-based LATERAL/FORWARD expansion model through the shared `expansionFractions` tuning.
 
 Metal also drives a read-only presentation response through existing field morphing. When both DOFs are active, mismatch fillet is multiplied by `1.50` at `M22`, `0.90` with exactly one off-center DOF, or `0.60` with both off center, then clamped to `0.32`. These values are **TUNING / HARDWARE QA**. If either DOF is OFF, pre-Metal mismatch fillet is unchanged. Bow amplitude is unchanged, and presentation fillet/bow/skin never changes containment.
 
@@ -184,7 +184,7 @@ Installed Water plus `222 / M22 / W22` derives future WATER SYNC LOCK. Lock plus
 
 ## 9. Remaining runtime gaps and validation boundary
 
-The core nominal shape, depth planes, side profiles, dedicated Field Frame/alignment, containment, per-target acquisition/decay/sign memory, sign-and-ring response, Metal physical control/presentation rounding, and Astrolabium eligibility are **IMPLEMENTED**. The canonical Metal percentage expansion is **TARGET / NOT YET RUNTIME-SYNCHRONIZED**. The active shape result no longer carries the superseded `coherentPreset` or `largeGlyphRevealEligible` fields.
+The core nominal shape, depth planes, side profiles, dedicated Field Frame/alignment, containment, per-target acquisition/decay/sign memory, sign-and-ring response, Metal physical control, percentage expansion, presentation rounding, and Astrolabium eligibility are **IMPLEMENTED**. The active shape result no longer carries the superseded `coherentPreset` or `largeGlyphRevealEligible` fields.
 
 Genuine **FUTURE / NOT IMPLEMENTED** scope includes Resonator field/target audio, Water control and hue/luminance/pulse presentation, Water Sync Lock/Contact, harmonic recognition, Haiku damping and the Water-specific final anti-bypass gate, plus later Scenario/finale systems. The late-only `PULL_READY` policy and Large Glyph angular plus `20–110 m` radial motion are implemented; their numeric tuning and hardware QA remain outstanding.
 
