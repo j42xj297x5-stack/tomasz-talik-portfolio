@@ -29,7 +29,8 @@ export const asterionPreviewAnimationActive = ({ panelState, screen }) =>
   panelState === ASTRO_FURNACE_PANEL_STATES.VISIBLE && screen === ASTRO_FURNACE_PANEL_SCREENS.ASTERION_SPHERE;
 export const furnacePanelAnimationActive = ({ panelState, screen }) => panelState === ASTRO_FURNACE_PANEL_STATES.VISIBLE
   && [ASTRO_FURNACE_PANEL_SCREENS.HOME, ASTRO_FURNACE_PANEL_SCREENS.ASTERION_SPHERE,
-    ASTRO_FURNACE_PANEL_SCREENS.ASTROLABIUM_PRODUCTION].includes(screen);
+    ASTRO_FURNACE_PANEL_SCREENS.ASTROLABIUM_PRODUCTION, ASTRO_FURNACE_PANEL_SCREENS.ASTROLABIUM_TUNING,
+    ASTRO_FURNACE_PANEL_SCREENS.RUNE_TUNING].includes(screen);
 const smoothstep = (value) => value * value * (3 - 2 * value);
 export const wireframeDissolveVisible = (segment, progress) => progress < 1 && segment.dissolveOrder >= Math.max(0, progress);
 
@@ -317,7 +318,7 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
       drawMaterialCardVisual(context, { x: x + 5, y: y + 25, width: width - 10, height: height - 34,
         glyphRatio: .68, glyphScale: 2.75, padding: 3, glyphImage: image, color,
         drawPreview: ({ cx, cy, scale }) => drawSmallGlyphWireframe(context,
-          { assetId, cx, cy, scale, color, alpha: supported ? .95 : .34 }) });
+          { assetId, cx, cy, scale, color, alpha: supported ? .95 : .34, yaw: telemetryElapsed * .20, pitch: -.24 }) });
       text(extracted ? copy.glyphTuning.states.tuned : processing ? copy.glyphTuning.states.processing : supported ? copy.glyphTuning.states.ready : copy.glyphTuning.states.inactive,
         x + 20, y + height - 12, 16, color);
     });
