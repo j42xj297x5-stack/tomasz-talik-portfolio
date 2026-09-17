@@ -22,6 +22,7 @@ export function createVrMonkeyKnowledgeResolver({ locale, getCurrentObjective, i
   let bindersRead = false;
   let asterionRead = false;
   let resonatorTaught = false;
+  let fullResonatorTaught = false;
   const transientHintFallbacks = new Map();
 
   function getTopic() {
@@ -84,6 +85,11 @@ export function createVrMonkeyKnowledgeResolver({ locale, getCurrentObjective, i
       resonatorTaught = true;
       return changed;
     },
+    markFullResonatorGuidanceTaught() {
+      const changed = !fullResonatorTaught;
+      fullResonatorTaught = true;
+      return changed;
+    },
     publishTransientHintFallback(slotId, hintId) {
       const source = copy.hints[hintId];
       if (!slotId || !source) return false;
@@ -101,8 +107,9 @@ export function createVrMonkeyKnowledgeResolver({ locale, getCurrentObjective, i
     hasDiscoveredBinders: () => bindersUnlocked,
     hasReadBinders: () => bindersRead,
     hasLearnedResonator: () => resonatorTaught,
+    hasLearnedFullResonator: () => fullResonatorTaught,
     reset() { stonesRead = false; stonesLeadRead = false; bindersUnlocked = false; bindersRead = false; asterionRead = false;
-      resonatorTaught = false;
+      resonatorTaught = false; fullResonatorTaught = false;
       transientHintFallbacks.clear(); }
   });
 }
