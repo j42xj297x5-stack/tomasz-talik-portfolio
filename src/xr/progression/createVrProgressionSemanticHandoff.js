@@ -20,10 +20,14 @@ export function createVrProgressionSemanticHandoff({ dispatch }) {
     if (descriptor?.resonatorExists === true) dispatch(VR_SCENARIO_EVENT.RESONATOR_READY);
   }
 
-  function onEtherInterventionJoinChecked({ tier4Complete, installedNaturalRuneCount }) {
+  function onFinalWaterAttemptJoinChecked({ tier4Complete, installedNaturalRuneCount }) {
     if (tier4Complete === true && installedNaturalRuneCount >= 4) {
-      dispatch(VR_SCENARIO_EVENT.ETHER_INTERVENTION_READY);
+      dispatch(VR_SCENARIO_EVENT.FINAL_WATER_ATTEMPT_READY);
     }
+  }
+
+  function onFinalWaterAcquisitionRejected() {
+    dispatch(VR_SCENARIO_EVENT.FINAL_WATER_ACQUISITION_REJECTED);
   }
 
   function onRuneProgressionChanged(previous, current) {
@@ -43,7 +47,8 @@ export function createVrProgressionSemanticHandoff({ dispatch }) {
   return {
     onPageCommitted,
     onResonatorStateChanged,
-    onEtherInterventionJoinChecked,
+    onFinalWaterAttemptJoinChecked,
+    onFinalWaterAcquisitionRejected,
     onRuneProgressionChanged
   };
 }

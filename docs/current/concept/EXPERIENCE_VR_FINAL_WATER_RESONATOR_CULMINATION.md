@@ -10,7 +10,7 @@ Ten dokument jest wiążącym celem architektonicznym i narracyjnym dla końcowe
 - **BINDING DESIGN TARGET** — zatwierdzone zachowanie do następnej implementacji, jeszcze nie runtime;
 - **FUTURE** — kierunek poza bezpośrednim zakresem, dopóki ten dokument nie promuje go do celu.
 
-Nie wolno interpretować celu jako istniejącej funkcji. Ten freeze nie zmienia runtime ani nie zastępuje technicznych właścicieli mechanik. W razie konfliktu jest nadrzędny dla kolejności i Guidance tej kulminacji; modele techniczne zachowują autorytet nad aktualną mechaniką.
+Nie wolno interpretować całego celu jako istniejącej funkcji. Pierwszy pionowy wycinek jest zaimplementowany: generic `CEILING_CYCLED`, semantic handoff odrzucenia, point `5.15`, przejście do Eteru dopiero po zaobserwowanym cyklu oraz zrewidowane PL/EN `progression.p4.etherIntervention`. Harmonic pulse, finalna prezentacja balance puzzle, hint ladder i końcowa eskalacja Guidance pozostają pending. W razie konfliktu jest nadrzędny dla kolejności i Guidance tej kulminacji; modele techniczne zachowują autorytet nad aktualną mechaniką.
 
 ## Already implemented facts
 
@@ -79,13 +79,13 @@ Po ukończeniu Fourth Ring, instalacji Metalu i udostępnieniu czterorunowego Re
 
 Gracz może znaleźć i utrzymywać Haiku Cosmos. Istniejący cap daje ring 1, ring 2, a następnie uniemożliwia ring 3.
 
-Kontrolowana porażka nie oznacza wyjścia celu z pola, decay, utraty containment ani upływu czasu. Oznacza dokładnie osiągnięcie intencjonalnego dwuringowego sufitu i cykl spowodowany aktywnym late-Water cap. Target Acquisition Domain ma wykryć ten fakt z własnej acquisition truth i wyemitować semantic signal, roboczo `FINAL_WATER_ACQUISITION_REJECTED`. Dokładna nazwa może zostać ustalona podczas implementacji. Guidance nie wnioskuje z obrazu; Scenario konsumuje wyłącznie semantic event.
+Kontrolowana porażka nie oznacza wyjścia celu z pola, decay, utraty containment ani upływu czasu. Oznacza dokładnie osiągnięcie intencjonalnego dwuringowego sufitu i cykl spowodowany aktywnym late-Water cap. Target Acquisition Domain wykrywa ten fakt z własnej acquisition truth i emituje generic `CEILING_CYCLED`. Composition rozpoznaje wyłącznie cykl `haiku-cosmos` przy ukończonym Tier 4 i bez `waterSyncLock`, a handoff przekłada go na `FINAL_WATER_ACQUISITION_REJECTED`. Scenario w `5.15` konsumuje ten event i przechodzi do `5.20`; Guidance nie wnioskuje z obrazu.
 
 ### Faza 2 — interwencja Eteru dopiero po porażce
 
-Dopiero po kontrolowanym odrzuceniu Małpa wyjaśnia, że Metal nie wystarcza, i wprowadza Eter. `progression.p4.etherIntervention` wymaga reworku tak, aby wynikał z doświadczenia gracza.
+Dopiero po kontrolowanym odrzuceniu Małpa wyjaśnia, że Metal nie wystarcza, i wprowadza Eter. `progression.p4.etherIntervention` jest uruchamiane dopiero przez wejście Scenario do `5.20`, po odrzuceniu. Zachowuje istniejący mandatory attention i completion callback.
 
-**PL master — APPROVED DESIGN COPY; EN editorial translation — IMPLEMENTATION PENDING:**
+**PL/EN copy — IMPLEMENTED:**
 
 1. `Nie.`
 2. `Odpowiada.\nAle nie pozwala się uchwycić.`
