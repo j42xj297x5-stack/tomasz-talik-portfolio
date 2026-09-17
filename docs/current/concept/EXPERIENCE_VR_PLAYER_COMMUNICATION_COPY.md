@@ -506,3 +506,15 @@ This generic entry is available after the first Rune installation only until suc
 > 3 kręgi — gotowy do ściągnięcia Astrolabium Więzi.
 
 The first physical Resonator appearance triggers the existing `progression.p3.resonator` first-teacher communication. Only successful full playback records `resonator taught` and replaces Player Y `SEKTOR` with this persistent entry. Its core gate is `ZIEMIA > 0 AND DRZEWO > 0 AND OGIEŃ > 0`; any core sector at `0` means no target acquisition.
+
+### SEKTOR METALU
+> Metal rozszerza pole Rezonatora.
+> Skręt dłoni — rozszerza pole na boki.
+> Pochylenie dłoni — rozszerza pole w głąb.
+> Obie osie działają niezależnie.
+> Poziom 0 — brak rozszerzenia.
+> Im wyższy poziom, tym większy zasięg.
+> Metal nie zastępuje Ziemi, Drzewa ani Ognia.
+> Rozszerza pole, które już tworzą.
+
+This entry appears immediately after `REZONATOR ASTERIONOWY` only when the Resonator has been taught and the physical Metal Rune (`T`) is installed. It coexists with the Resonator entry. Wrist twist extends LATERAL reach, hand tilt extends FORWARD/depth reach, and both axes are independent. Level `0` contributes nothing; higher active levels extend farther. Metal supplements rather than replaces the ZIEMIA/DRZEWO/OGIEŃ core and never activates the Resonator by itself.
