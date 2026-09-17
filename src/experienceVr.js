@@ -867,6 +867,8 @@ const playerGuideProjection = createVrPlayerGuideProjection({
   hasReadBinders: () => monkeyKnowledgeResolver?.hasReadBinders() === true,
   hasLearnedResonator: () => monkeyKnowledgeResolver?.hasLearnedResonator() === true,
   isMetalInstalled: () => runeStoneProgressionController.isFamilyInstalled('T'),
+  hasLearnedFullResonator: () => monkeyKnowledgeResolver?.hasLearnedFullResonator() === true,
+  isWaterInstalled: () => runeStoneProgressionController.isFamilyInstalled('S'),
   hasInstalledRune: () => runeStoneProgressionController.getInstalledFamilyCodes().length > 0
 });
 const playerGuidePanel = createVrPlayerGuidePanel({

@@ -15,6 +15,7 @@ const TOOLS = Object.freeze([
 export function createVrPlayerGuideProjection({ locale, getCurrentObjective, isFurnaceRevealed,
   isShellFieldRevealed, isAstrolabiumOwned, hasReadRuneStones = () => false, hasReadBinders = () => false,
   hasInstalledRune = () => false, hasLearnedResonator = () => false, isMetalInstalled = () => false,
+  hasLearnedFullResonator = () => false, isWaterInstalled = () => false,
   isAsterionOwned = () => false }) {
   if (typeof getCurrentObjective !== 'function' || typeof isFurnaceRevealed !== 'function'
     || typeof isShellFieldRevealed !== 'function' || typeof isAstrolabiumOwned !== 'function'
@@ -32,7 +33,9 @@ export function createVrPlayerGuideProjection({ locale, getCurrentObjective, isF
       ...(hasLearnedResonator()
         ? [
             { id: 'resonator', ...knowledge.resonator },
-            ...(isMetalInstalled() ? [{ id: 'metalSector', ...knowledge.metalSector }] : [])
+            ...(isMetalInstalled() ? [{ id: 'metalSector', ...knowledge.metalSector }] : []),
+            ...(hasLearnedFullResonator() && isWaterInstalled()
+              ? [{ id: 'waterSector', ...knowledge.waterSector }] : [])
           ]
         : hasInstalledRune() ? [{ id: 'sector', ...knowledge.sector }] : [])
     ];

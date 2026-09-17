@@ -68,7 +68,10 @@ export function createVrRuneResonatorGuidance({ monkeyGuide, copy, secondsPerLin
     copy.progression['progression.p4.fullResonator'].blocks,
     progressionTiming?.['progression.p4.fullResonator']?.blocks,
     true,
-    onFullResonatorCommunicationCompleted
+    () => {
+      knowledgeResolver.markFullResonatorGuidanceTaught();
+      onFullResonatorCommunicationCompleted();
+    }
   );
   const noBinderMedium = makeAutoHint(copy.hints['hint.rune.noBinder.medium'].blocks, () => {
     if (knowledgeResolver.publishTransientHintFallback('rune-no-binder', 'hint.rune.noBinder.medium')) {

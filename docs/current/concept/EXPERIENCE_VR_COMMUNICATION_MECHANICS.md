@@ -119,6 +119,12 @@ After the Resonator has been taught and the physical Metal Rune (`T`) is install
 
 Metal supplements rather than replaces the EARTH/WOOD/FIRE core. Wrist twist extends the existing field's LATERAL reach, hand tilt extends its FORWARD/depth reach, and the two axes act independently. Level `0` contributes no Metal extension; higher active levels provide progressively greater extension. Metal does not activate the Resonator by itself and does not remove the requirement that all three core Sectors remain above `0`.
 
+Installation of all five elemental Runes leads to the existing `progression.p4.fullResonator` Monkey first-teacher communication. Only successful full playback records the bounded session-local communication-memory fact `full Resonator taught`; installation, scheduling, attention, playback start and partial playback do not. Canonical Monkey/session reset clears the fact. This is communication memory, not Resonator gameplay truth.
+
+After that full-Resonator teaching has completed and the physical Water Rune (`S`) is installed, Player Y exposes `WIEDZA → SEKTOR WODY / WATER SECTOR` after `SEKTOR METALU / METAL SECTOR`. Both conditions are required and the installation gate reads authoritative Rune installation truth directly. Water installation without completed teaching exposes no entry, and taught memory without physical Water exposes no entry. The existing projection-signature refresh makes the row appear while Player Y is already open.
+
+Water contributes two independent presentation/frequency controls. Wrist twist selects green, blue or violet frequency hue, with level `0` neutral; hand tilt independently increases field brightness and halo from the level-`0` baseline. Hue is not a power ladder. Water does not change field geometry, reach or containment and does not currently select or filter a Glyph family.
+
 ## Automatic communication that is not AUTO_HINT
 
 Automatic authored progression reactions may play without attention but do not become corrective `AUTO_HINT` or publish a transient fallback merely because playback is automatic. Current examples include `progression.threshold.crossed`, `progression.crystal.firstCreated`, `progression.card.first` and `progression.p3.firstSectorLock`.

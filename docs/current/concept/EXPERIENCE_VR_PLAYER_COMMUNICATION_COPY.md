@@ -518,3 +518,15 @@ The first physical Resonator appearance triggers the existing `progression.p3.re
 > Rozszerza pole, które już tworzą.
 
 This entry appears immediately after `REZONATOR ASTERIONOWY` only when the Resonator has been taught and the physical Metal Rune (`T`) is installed. It coexists with the Resonator entry. Wrist twist extends LATERAL reach, hand tilt extends FORWARD/depth reach, and both axes are independent. Level `0` contributes nothing; higher active levels extend farther. Metal supplements rather than replaces the ZIEMIA/DRZEWO/OGIEŃ core and never activates the Resonator by itself.
+
+### SEKTOR WODY
+> Woda stroi barwę i intensywność pola Rezonatora.
+> Skręt dłoni — wybiera częstotliwość: zieloną, niebieską lub fioletową.
+> Poziom 0 — barwa neutralna.
+> Pochylenie dłoni — zwiększa jasność i halo pola.
+> Obie osie działają niezależnie.
+> Barwa nie jest poziomem mocy.
+> Woda nie zmienia kształtu ani zasięgu pola.
+> Barwa nie wybiera obecnie rodziny Glifu.
+
+Installation of all five elemental Runes leads to the existing `progression.p4.fullResonator` Monkey first-teacher communication. Only successful full playback records the session-local `full Resonator taught` memory. When that memory exists and the physical Water Rune (`S`) is installed, this entry appears after `SEKTOR METALU`; either condition alone exposes nothing. Player Y is the persistent practical reference. Water's two axes are independent: wrist twist chooses the active frequency hue and hand tilt increases luminance/halo. Level `0` is neutral/baseline. Water does not change field geometry, reach or containment, and hue does not currently select or filter a Glyph family.
