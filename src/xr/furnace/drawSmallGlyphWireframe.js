@@ -45,7 +45,33 @@ function createTintedCanvas(assetId, color) {
   return canvas;
 }
 
-export function drawSmallGlyphWireframe(context, { assetId, cx, cy, scale, color = '#e8f7ff', alpha = 1 }) {
+export function drawSmallGlyphWireframe(context, {
+  assetId, cx, cy, scale, color = '#e8f7ff', alpha = 1, yaw, pitch = -.24
+}) {
+  if (yaw !== undefined) {
+    const segments = SMALL_GLYPH_WIREFRAME_DATA.byAssetId[assetId]?.segments3d;
+    if (!segments?.length) return false;
+    const cosY = Math.cos(yaw), sinY = Math.sin(yaw);
+    const cosX = Math.cos(pitch), sinX = Math.sin(pitch);
+    context.save();
+    context.globalAlpha = alpha;
+    context.strokeStyle = color;
+    context.lineWidth = 1.35;
+    context.beginPath();
+    segments.forEach(({ ax, ay, az, bx, by, bz }) => {
+      const arx = ax * cosY + az * sinY, arz = -ax * sinY + az * cosY;
+      const ary = ay * cosX - arz * sinX;
+      const aDepth = 1 / Math.max(.65, 1 + (ay * sinX + arz * cosX) * .16);
+      const brx = bx * cosY + bz * sinY, brz = -bx * sinY + bz * cosY;
+      const bry = by * cosX - brz * sinX;
+      const bDepth = 1 / Math.max(.65, 1 + (by * sinX + brz * cosX) * .16);
+      context.moveTo(cx + arx * scale * aDepth, cy - ary * scale * aDepth);
+      context.lineTo(cx + brx * scale * bDepth, cy - bry * scale * bDepth);
+    });
+    context.stroke();
+    context.restore();
+    return true;
+  }
   const canvas = createTintedCanvas(assetId, color);
   if (!canvas) return false;
   const size = scale * 2;
