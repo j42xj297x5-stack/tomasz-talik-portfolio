@@ -381,13 +381,18 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
     FAMILY_GRID_CODES.forEach((familyCode, index) => {
       const shell = shellsByFamily.get(familyCode) ?? progress.shells[index];
       if (!shell) return;
-      const { x, y, width, height } = familyGridRect(index, 'shell', false);
+      const rect = familyGridRect(index, 'shell', false);
+      const { x, y, width, height } = rect;
       const processing = shell.assetId === currentAssetId && !shell.absorbed && ['CONSUMING', 'CONSUMED'].includes(currentState);
       panelRect(x, y, width, height, { active: shell.absorbed || processing, completed: shell.absorbed, accentColor: shell.absorbed ? accents.asterion : processing ? accents.process : accents.idle });
       const color = shell.absorbed ? accents.complete : processing ? accents.process : accents.idle;
-      drawMaterialCardVisual(context, { x, y, width, height, glyphRatio: .66, glyphScale: 2.35, padding: 4,
+      const shellDescriptor = resolveAttractorShellGlyph(shell.assetId);
+      text(copy.runeTuning.familyCard(runeLabel(shellDescriptor?.familyCode), shellDescriptor?.syllable ?? familyCode),
+        rect.x + 20, rect.y + 52, 27, shell.absorbed || processing ? '#f1eaff' : '#78909d');
+      drawMaterialCardVisual(context, { x: rect.x + 8, y: rect.y + 58, width: rect.width - 16, height: rect.height - 66,
+        glyphRatio: .58, glyphScale: .72, padding: 2,
         glyphImage: shellGlyphImages[shell.assetId], color,
-        drawPreview: ({ cx, cy, scale }) => drawShellMiniature(patchDataByAssetId[shell.assetId], cx, cy, scale, color, shell.absorbed || processing) });
+        drawPreview: ({ cx, cy, scale }) => drawShellMiniature(patchDataByAssetId[shell.assetId], cx, cy, scale * .82, color, shell.absorbed || processing) });
     });
     drawProcessMonitor();
     const productionState = productionController?.getState?.() ?? 'LOCKED';
