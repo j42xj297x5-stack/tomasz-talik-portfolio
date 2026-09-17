@@ -391,7 +391,7 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
       text(copy.runeTuning.familyCard(runeLabel(shellDescriptor?.familyCode), shellDescriptor?.syllable ?? familyCode),
         rect.x + 20, rect.y + 32, 22, shell.absorbed || processing ? '#f1eaff' : '#78909d');
       drawMaterialCardVisual(context, { x: rect.x + 5, y: rect.y + 25, width: rect.width - 10, height: rect.height - 34,
-        glyphRatio: .68, glyphScale: .72, padding: 3,
+        glyphRatio: .68, padding: 3,
         glyphImage: shellGlyphImages[shell.assetId], color,
         drawPreview: ({ cx, cy, scale }) => drawShellMiniature(patchDataByAssetId[shell.assetId], cx, cy, scale, color, shell.absorbed || processing) });
     });
