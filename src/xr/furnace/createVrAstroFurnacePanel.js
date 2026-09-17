@@ -389,11 +389,11 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
       const color = shell.absorbed ? accents.complete : processing ? accents.process : accents.idle;
       const shellDescriptor = resolveAttractorShellGlyph(shell.assetId);
       text(copy.runeTuning.familyCard(runeLabel(shellDescriptor?.familyCode), shellDescriptor?.syllable ?? familyCode),
-        rect.x + 20, rect.y + 52, 27, shell.absorbed || processing ? '#f1eaff' : '#78909d');
-      drawMaterialCardVisual(context, { x: rect.x + 8, y: rect.y + 58, width: rect.width - 16, height: rect.height - 66,
-        glyphRatio: .58, glyphScale: .72, padding: 2,
+        rect.x + 20, rect.y + 32, 22, shell.absorbed || processing ? '#f1eaff' : '#78909d');
+      drawMaterialCardVisual(context, { x: rect.x + 5, y: rect.y + 25, width: rect.width - 10, height: rect.height - 34,
+        glyphRatio: .68, glyphScale: .72, padding: 3,
         glyphImage: shellGlyphImages[shell.assetId], color,
-        drawPreview: ({ cx, cy, scale }) => drawShellMiniature(patchDataByAssetId[shell.assetId], cx, cy, scale * .82, color, shell.absorbed || processing) });
+        drawPreview: ({ cx, cy, scale }) => drawShellMiniature(patchDataByAssetId[shell.assetId], cx, cy, scale, color, shell.absorbed || processing) });
     });
     drawProcessMonitor();
     const productionState = productionController?.getState?.() ?? 'LOCKED';
