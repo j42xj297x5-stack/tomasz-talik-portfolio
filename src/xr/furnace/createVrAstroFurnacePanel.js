@@ -211,13 +211,11 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
       const runeDescriptor = resolveProtoAstroDescriptor(familyCode, 'U');
       const runeImage = getProtoAstroImage(runeDescriptor);
       const color = selected || tuned ? accents.complete : available ? accents.emanation : accents.idle;
-      context.save(); context.beginPath(); context.rect(rect.x + 8, rect.y + 8, rect.width - 16, rect.height - 16); context.clip();
-      drawRuneStoneWireframe(familyCode, rect.x + rect.width - 88, rect.y + rect.height / 2, 62, color, natural ? .94 : .55);
-      context.restore();
-      text(copy.runeTuning.familyCard(runeLabel(familyCode), runeDescriptor?.syllable ?? familyCode), rect.x + 20, rect.y + 52, 27,
+      text(copy.runeTuning.familyCard(runeLabel(familyCode), runeDescriptor?.syllable ?? familyCode), rect.x + 20, rect.y + 32, 22,
         available ? '#f1eaff' : '#78909d');
-      drawMaterialCardVisual(context, { x: rect.x + 20, y: rect.y + 58, width: 170, height: 40,
-        glyphRatio: 1, padding: 0, glyphImage: runeImage, color });
+      drawMaterialCardVisual(context, { x: rect.x + 5, y: rect.y + 25, width: rect.width - 10, height: rect.height - 52,
+        glyphRatio: .62, padding: 3, glyphImage: runeImage, color,
+        drawPreview: ({ cx, cy, scale }) => drawRuneStoneWireframe(familyCode, cx, cy, scale, color, natural ? .94 : .55) });
       text(tuned ? copy.runeTuning.familyStates.tuned : selected ? copy.runeTuning.familyStates.selected : !natural ? copy.runeTuning.familyStates.special : copy.runeTuning.familyStates.available, rect.x + 20, rect.y + 118, 18,
         tuned || selected ? accents.complete : available ? '#cdb5e4' : '#70828d');
     });
