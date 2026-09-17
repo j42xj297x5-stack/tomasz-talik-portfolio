@@ -93,6 +93,7 @@ import { createVrEndCreditsPresentation } from './xr/finale/createVrEndCreditsPr
 import { createVrToolGuidanceLifecycle } from './xr/guidance/createVrToolGuidanceLifecycle.js';
 import { createVrEarlyExperienceGuidance } from './xr/guidance/createVrEarlyExperienceGuidance.js';
 import { createVrRuneResonatorGuidance } from './xr/guidance/createVrRuneResonatorGuidance.js';
+import { createVrFinalWaterHintLifecycle } from './xr/guidance/createVrFinalWaterHintLifecycle.js';
 import { VR_MONKEY_COMMUNICATION_COPY_EN,
   VR_MONKEY_COMMUNICATION_COPY_PL } from './xr/guidance/vrMonkeyCommunicationCopy.js';
 import { createVrFurnaceIntro } from './xr/guidance/createVrFurnaceIntro.js';
@@ -693,6 +694,7 @@ let runeStoneAudioProjection = null;
 let runeStoneInstallationInteraction = null;
 let runeResonatorGuidance = null;
 let monkeyKnowledgeResolver = null;
+let finalWaterHintLifecycle = null;
 let astroAttractorProductionController = null;
 const isAstrolabiumOwned = () => astroAttractorProductionController?.isEarned() === true;
 const isAsterionOwned = () => asterionProductionController.isEarned() === true;
@@ -877,7 +879,8 @@ const playerGuideProjection = createVrPlayerGuideProjection({
   isMetalInstalled: () => runeStoneProgressionController.isFamilyInstalled('T'),
   hasLearnedFullResonator: () => monkeyKnowledgeResolver?.hasLearnedFullResonator() === true,
   isWaterInstalled: () => runeStoneProgressionController.isFamilyInstalled('S'),
-  hasInstalledRune: () => runeStoneProgressionController.getInstalledFamilyCodes().length > 0
+  hasInstalledRune: () => runeStoneProgressionController.getInstalledFamilyCodes().length > 0,
+  getFinalWaterGuidanceLevel: () => monkeyKnowledgeResolver?.getFinalWaterGuidanceLevel?.() ?? 'NONE'
 });
 const playerGuidePanel = createVrPlayerGuidePanel({
   leftGrip: vrControllers.controllers[0]?.grip,
@@ -923,6 +926,17 @@ const phaseEightMonkeyCopy = Object.freeze({
   acquisition: monkeyLocaleCopy.acquisition,
   knowledge: monkeyLocaleCopy.knowledge
 });
+finalWaterHintLifecycle = createVrFinalWaterHintLifecycle({
+  monkeyGuide,
+  knowledgeResolver: monkeyKnowledgeResolver,
+  copy: phaseEightMonkeyCopy,
+  locale: language,
+  secondsPerLine: settings.intro.messageDisplayDuration,
+  isFinalWaterPuzzleActive: () => runtimeExperience?.getCurrentPointId?.() === '5.70',
+  isWaterInstalled: () => runeStoneProgressionController.isFamilyInstalled('S'),
+  hasLearnedFullResonator: () => monkeyKnowledgeResolver.hasLearnedFullResonator(),
+  isWaterSyncLocked: () => asterionResonatorFieldActor.getDescriptor().waterSyncLock === true
+});
 runeResonatorGuidance = createVrRuneResonatorGuidance({
   monkeyGuide, copy: phaseEightMonkeyCopy,
   progressionTiming: VR_MONKEY_COMMUNICATION_COPY_PL.progression,
@@ -941,9 +955,10 @@ runeResonatorGuidance = createVrRuneResonatorGuidance({
   onEtherInterventionCompleted: () => runtimeExperience.dispatch(
     VR_SCENARIO_EVENT.ETHER_INTERVENTION_COMPLETED
   ),
-  onFullResonatorCommunicationCompleted: () => runtimeExperience.dispatch(
-    VR_SCENARIO_EVENT.FULL_RESONATOR_COMMUNICATION_COMPLETED
-  )
+  onFullResonatorCommunicationCompleted: () => {
+    runtimeExperience.dispatch(VR_SCENARIO_EVENT.FULL_RESONATOR_COMMUNICATION_COMPLETED);
+    finalWaterHintLifecycle.begin();
+  }
 });
 toolGuidanceLifecycle = createVrToolGuidanceLifecycle({
   monkeyGuide,
@@ -1962,6 +1977,7 @@ function renderFrame() {
   toolGuidanceLifecycle.update(delta);
   earlyExperienceGuidance.update(delta);
   runeResonatorGuidance.update(delta);
+  finalWaterHintLifecycle.update(delta);
   furnacePanel.update(delta);
   asterionSphere.update(delta);
   asterionGyroInteraction.update(delta);
@@ -2017,6 +2033,7 @@ function restoreVrScenarioBaseline() {
   furnacePanel.reset();
   playerGuidePanel.reset();
   runeResonatorGuidance.reset();
+  finalWaterHintLifecycle.reset();
   monkeyKnowledgeResolver.reset();
   astroFurnaceOptionInteraction.reset();
   astroFurnaceOpenInteraction.reset();
@@ -2192,6 +2209,7 @@ window.addEventListener('pagehide', () => {
   endCreditsPresentation.dispose();
   toolGuidanceLifecycle.dispose();
   earlyExperienceGuidance.reset();
+  finalWaterHintLifecycle.dispose();
   monkeyGuide.dispose();
   furnacePanel.dispose();
   astrolabiumTuningActor.dispose();

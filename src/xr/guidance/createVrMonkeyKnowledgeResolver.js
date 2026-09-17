@@ -6,6 +6,7 @@ export const VR_MONKEY_KNOWLEDGE_ITEM_TYPE = Object.freeze({ CATEGORY: 'CATEGORY
 export const VR_MONKEY_KNOWLEDGE_LIFECYCLE = Object.freeze({
   LOCKED: 'LOCKED', NEW: 'NEW', READ: 'READ', ARCHIVED: 'ARCHIVED'
 });
+export const VR_FINAL_WATER_GUIDANCE_LEVEL = Object.freeze({ NONE: 'NONE', BALANCE: 'BALANCE', SOLUTION: 'SOLUTION' });
 
 export function createVrMonkeyKnowledgeResolver({ locale, getCurrentObjective, isPostRingStoneGuidance = () => false,
   isAstrolabiumOwned = () => false, isAsterionOwned = () => false }) {
@@ -23,6 +24,10 @@ export function createVrMonkeyKnowledgeResolver({ locale, getCurrentObjective, i
   let asterionRead = false;
   let resonatorTaught = false;
   let fullResonatorTaught = false;
+  let finalWaterBalanceHintTaught = false;
+  let finalWaterSolutionOfferAvailable = false;
+  let finalWaterSolutionRevealed = false;
+  let finalWaterGuidanceResolved = false;
   const transientHintFallbacks = new Map();
 
   function getTopic() {
@@ -41,13 +46,21 @@ export function createVrMonkeyKnowledgeResolver({ locale, getCurrentObjective, i
     lifecycle: (id === 'knowledge.p3.stones' && !stonesRead)
       || (id === 'knowledge.p3.binders' && !bindersRead)
       || (id === 'knowledge.asterion.sphere' && !asterionRead)
+      || (id === 'knowledge.finalWater.solution' && !finalWaterSolutionRevealed)
       ? VR_MONKEY_KNOWLEDGE_LIFECYCLE.NEW : VR_MONKEY_KNOWLEDGE_LIFECYCLE.READ }); };
   function topics(groupId) {
     if (groupId === category.groupId) {
       const ordinaryTopic = getTopic();
       const asterionBuild = isAstrolabiumOwned() && !isAsterionOwned()
         ? topicFromCopy('knowledge.asterion.build') : null;
+      const finalWaterTopics = finalWaterGuidanceResolved ? [] : finalWaterSolutionRevealed
+        ? [topicFromCopy('knowledge.finalWater.solution')]
+        : [
+            ...(finalWaterBalanceHintTaught ? [topicFromCopy('knowledge.finalWater.balance')] : []),
+            ...(finalWaterSolutionOfferAvailable ? [topicFromCopy('knowledge.finalWater.solution')] : [])
+          ];
       return [...transientHintFallbacks.values(), ...(asterionBuild ? [asterionBuild] : []),
+        ...finalWaterTopics,
         ...(ordinaryTopic ? [ordinaryTopic] : [])];
     }
     if (groupId === whatIsIt.groupId) return [
@@ -57,7 +70,10 @@ export function createVrMonkeyKnowledgeResolver({ locale, getCurrentObjective, i
     return [];
   }
   const hasWhatNowContent = () => transientHintFallbacks.size > 0
-    || (isAstrolabiumOwned() && !isAsterionOwned()) || getTopic() !== null;
+    || (isAstrolabiumOwned() && !isAsterionOwned())
+    || (!finalWaterGuidanceResolved && (finalWaterBalanceHintTaught || finalWaterSolutionOfferAvailable
+      || finalWaterSolutionRevealed))
+    || getTopic() !== null;
   return Object.freeze({
     getRootItems: () => [...(hasWhatNowContent() ? [category] : []),
       ...((bindersUnlocked && !bindersRead) || isAstrolabiumOwned() ? [whatIsIt] : [])],
@@ -73,6 +89,10 @@ export function createVrMonkeyKnowledgeResolver({ locale, getCurrentObjective, i
       if (topicId === 'knowledge.p3.stones') stonesRead = true;
       if (topicId === 'knowledge.p3.binders' && bindersUnlocked) bindersRead = true;
       if (topicId === 'knowledge.asterion.sphere') asterionRead = true;
+      if (topicId === 'knowledge.finalWater.solution' && finalWaterSolutionOfferAvailable) {
+        finalWaterSolutionRevealed = true;
+        finalWaterSolutionOfferAvailable = false;
+      }
     },
     markPostRingStoneGuidanceTaught() {
       const changed = !stonesLeadRead || !stonesRead;
@@ -90,6 +110,35 @@ export function createVrMonkeyKnowledgeResolver({ locale, getCurrentObjective, i
       fullResonatorTaught = true;
       return changed;
     },
+    markFinalWaterBalanceHintTaught() {
+      if (finalWaterGuidanceResolved || finalWaterBalanceHintTaught) return false;
+      finalWaterBalanceHintTaught = true;
+      return true;
+    },
+    makeFinalWaterSolutionOfferAvailable() {
+      if (finalWaterGuidanceResolved || finalWaterSolutionRevealed || finalWaterSolutionOfferAvailable) return false;
+      finalWaterSolutionOfferAvailable = true;
+      return true;
+    },
+    markFinalWaterSolutionRevealed() {
+      if (finalWaterGuidanceResolved || finalWaterSolutionRevealed) return false;
+      finalWaterSolutionRevealed = true;
+      finalWaterSolutionOfferAvailable = false;
+      return true;
+    },
+    resolveFinalWaterGuidance() {
+      const changed = !finalWaterGuidanceResolved;
+      finalWaterGuidanceResolved = true;
+      finalWaterSolutionOfferAvailable = false;
+      return changed;
+    },
+    getFinalWaterGuidanceLevel() {
+      if (finalWaterGuidanceResolved) return VR_FINAL_WATER_GUIDANCE_LEVEL.NONE;
+      if (finalWaterSolutionRevealed) return VR_FINAL_WATER_GUIDANCE_LEVEL.SOLUTION;
+      return finalWaterBalanceHintTaught ? VR_FINAL_WATER_GUIDANCE_LEVEL.BALANCE : VR_FINAL_WATER_GUIDANCE_LEVEL.NONE;
+    },
+    isFinalWaterSolutionOfferAvailable: () => !finalWaterGuidanceResolved && finalWaterSolutionOfferAvailable,
+    hasFinalWaterSolutionRevealed: () => finalWaterSolutionRevealed,
     publishTransientHintFallback(slotId, hintId) {
       const source = copy.hints[hintId];
       if (!slotId || !source) return false;
@@ -110,6 +159,8 @@ export function createVrMonkeyKnowledgeResolver({ locale, getCurrentObjective, i
     hasLearnedFullResonator: () => fullResonatorTaught,
     reset() { stonesRead = false; stonesLeadRead = false; bindersUnlocked = false; bindersRead = false; asterionRead = false;
       resonatorTaught = false; fullResonatorTaught = false;
+      finalWaterBalanceHintTaught = false; finalWaterSolutionOfferAvailable = false;
+      finalWaterSolutionRevealed = false; finalWaterGuidanceResolved = false;
       transientHintFallbacks.clear(); }
   });
 }

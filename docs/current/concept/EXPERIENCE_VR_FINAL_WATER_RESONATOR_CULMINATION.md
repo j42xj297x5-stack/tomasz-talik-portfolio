@@ -2,7 +2,7 @@
 
 ## Status i zakres autorytetu
 
-**Status: CURRENT / BINDING DESIGN TARGET / IMPLEMENTATION PENDING.**
+**Status: CURRENT / IMPLEMENTED GUIDANCE LIFECYCLE; FUTURE Water Sync Contact / damping remains outside scope.**
 
 Ten dokument jest wiążącym celem architektonicznym i narracyjnym dla końcowego polowania na Glif Wody. Rozdziela trzy klasy stwierdzeń:
 
@@ -10,7 +10,7 @@ Ten dokument jest wiążącym celem architektonicznym i narracyjnym dla końcowe
 - **BINDING DESIGN TARGET** — zatwierdzone zachowanie do następnej implementacji, jeszcze nie runtime;
 - **FUTURE** — kierunek poza bezpośrednim zakresem, dopóki ten dokument nie promuje go do celu.
 
-Nie wolno interpretować całego celu jako istniejącej funkcji. Zaimplementowane są: generic `CEILING_CYCLED`, semantic handoff odrzucenia, point `5.15`, przejście do Eteru dopiero po zaobserwowanym cyklu, zrewidowane PL/EN `progression.p4.etherIntervention` oraz harmoniczny oddech pola. Hint ladder, pełna finalna prezentacja balance puzzle i końcowa eskalacja Guidance pozostają pending. W razie konfliktu jest nadrzędny dla kolejności i Guidance tej kulminacji; modele techniczne zachowują autorytet nad aktualną mechaniką.
+Nie wolno interpretować całego celu jako istniejącej funkcji. Zaimplementowane są: generic `CEILING_CYCLED`, semantic handoff odrzucenia, point `5.15`, przejście do Eteru dopiero po zaobserwowanym cyklu, zrewidowane PL/EN `progression.p4.etherIntervention` oraz harmoniczny oddech pola. Dedykowany hint ladder `3 / 6 / 9`, consent-based solution reveal, persistent Monkey / Player Y guidance i permanent stop na `waterSyncLock` są zaimplementowane. W razie konfliktu jest nadrzędny dla kolejności i Guidance tej kulminacji; modele techniczne zachowują autorytet nad aktualną mechaniką.
 
 ## Already implemented facts
 
@@ -139,7 +139,7 @@ Przy `222 / M22 / W22` całe pole rozpoczyna powolny, spójny oddech/puls:
 
 Znaczenie: **`THE RESONATOR IS BALANCED`**. Pulse jest zaimplementowaną, read-only projekcją Field Presentation uruchamianą wyłącznie przez `waterSyncLock === true`; domain truth pozostaje `waterSyncLock`, a prezentacja nie definiuje ani nie potwierdza truth z powrotem do domeny. Moduluje bieżące bazowe opacity skin, skeleton i Water halo bez zmiany Water hue, geometrii ani containment. Sukcesu nie wolno wnioskować z widocznego pulsu; prezentacja zawsze podąża za domain truth. Dokładne amplitudy pozostają **HARDWARE QA / TUNING**.
 
-## Binding design target — hint ladder 3 / 6 / 9 minut
+## IMPLEMENTED — hint ladder 3 / 6 / 9 minut
 
 Timer zaczyna się tylko raz, gdy Woda jest fizycznie zainstalowana, full-Resonator first-teacher communication zakończyła się sukcesem, a final Water objective pozostaje nierozwiązany. Nie działa podczas Eteru ani instalacji Wody. Due hint czeka, jeżeli mandatory Monkey channel jest zajęty. Ladder kończy się na zawsze co najmniej przy `waterSyncLock === true` lub silniejszym przyszłym semantic balanced-state truth.
 
@@ -147,7 +147,7 @@ Zwykłe eksperymenty nie resetują czasu: zmiana levelu/locku, odnalezienie Haik
 
 ### Hint 1 — 3 minuty — poetycki/koncepcyjny
 
-Nie ujawnia levelu 2, symetrii wprost ani ustawień. **PL master — APPROVED DESIGN COPY; EN — IMPLEMENTATION PENDING:**
+Nie ujawnia levelu 2, symetrii wprost ani ustawień. **PL/EN copy — IMPLEMENTED:**
 
 1. `Glify nie lubią, kiedy patrzysz na nie przez zbyt wiele rzeczy.`
 2. `Na początku wystarczyło, że patrzyłeś.\n\nPotem zbudowałeś Portal.\n\nSektory.\n\nPiec.\n\nAstrolabium.\n\nRezonator.`
@@ -161,7 +161,7 @@ Nie ujawnia levelu 2, symetrii wprost ani ustawień. **PL master — APPROVED DE
 
 ### Hint 2 — 6 minut — balance/symmetry
 
-Ujawnia klasę rozwiązania, nie liczbę. **PL master — APPROVED DESIGN COPY; EN — IMPLEMENTATION PENDING:**
+Ujawnia klasę rozwiązania, nie liczbę. **PL/EN copy — IMPLEMENTED:**
 
 1. `Chyba próbujesz znaleźć wiele odpowiedzi.`
 2. `A może jest tylko jedna.`
@@ -191,7 +191,7 @@ Zatrzymać wszystkie przyszłe automatyczne eskalacje i nie powtarzać Hint 3. M
 
 #### `POKAŻ MI`
 
-**PL master — APPROVED DESIGN COPY; EN — IMPLEMENTATION PENDING:**
+**PL/EN copy — IMPLEMENTED:**
 
 1. `Dobrze.`
 2. `Wszystkie sektory ustaw na poziom 2.`
@@ -203,15 +203,15 @@ Zatrzymać wszystkie przyszłe automatyczne eskalacje i nie powtarzać Hint 3. M
 
 Po tym reveal ta sama praktyczna odpowiedź pozostaje persistent w Monkey → CO TERAZ? i Player Y → AKTUALNE ZADANIE. Dokładnej odpowiedzi nie wolno ujawnić przed świadomą zgodą w Hint 3.
 
-## Player Y — wymagany copy refinement
+## Player Y — IMPLEMENTED positive copy refinement
 
-W implementacji usunąć release-note wording typu `Barwa nie wybiera obecnie rodziny Glifu.`. Player-facing kierunek ma mówić pozytywnie:
+Runtime usuwa release-note wording typu `Barwa nie wybiera obecnie rodziny Glifu.`. Player-facing kierunek ma mówić pozytywnie:
 
 - Water stroi hue/frequency oraz intensywność pola;
 - Water stroi pole, zamiast zmieniać jego zasięg;
 - ustawienia uczestniczą w strojeniu pełnego Rezonatora.
 
-Preferowane zdanie: `Woda stroi pole, zamiast zmieniać jego zasięg.` To wymagany copy refinement, nie zmiana runtime w tym freeze.
+Preferowane zdanie: `Woda stroi pole, zamiast zmieniać jego zasięg.` To zaimplementowany copy refinement, bez zmiany mechaniki gameplay.
 
 ## Ownership
 

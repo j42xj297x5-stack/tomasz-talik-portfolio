@@ -8,6 +8,8 @@ const VR_PLAYER_GUIDE_CONTENT = Object.freeze({
       Object.freeze({ id: 'current-task', label: 'AKTUALNE ZADANIE', body: 'Dokonaj wyboru.' })
     ]),
     asterionBuildTask: 'Teraz zbieraj Skorupy.\nPotrzebujesz sześciu. Każdą przetwórz w Piecu.\nGdy Piec przyjmie komplet, zbuduj Kulę Asterionową.',
+    finalWaterBalanceTask: 'Zestrój sektory podobnie.\nSzukaj środka i symetrii.\nObserwuj reakcję pola.',
+    finalWaterSolutionTask: 'USTAW REZONATOR:\nZiemia, Drzewo, Ogień — poziom 2.\nMetal — oba ustawienia 2.\nWoda — oba ustawienia 2.\nObserwuj pole. Gdy zacznie pulsować, namierz Wodę ponownie.',
     tools: Object.freeze({
       furnace: Object.freeze({
         label: 'PIEC',
@@ -33,7 +35,7 @@ const VR_PLAYER_GUIDE_CONTENT = Object.freeze({
       sector: Object.freeze({ label: 'SEKTOR', body: 'Spust — orientacja całej platformy\nChwyt — połącz się z aktywnym sektorem\nPrzytrzymaj strumień — zablokuj sektor\nRuch dłoni — zmieniaj jego ustawienie' }),
       resonator: Object.freeze({ label: 'REZONATOR ASTERIONOWY', body: 'Rezonator Asterionowy odnajduje Duże Glify.\nWyposaż Kulę. Przytrzymaj Chwyt i celuj w zasilony sektor przez 1 s.\nPo blokadzie nie puszczaj Chwytu. Ułożenie dłoni staje się punktem neutralnym.\nZIEMIA — skręt dłoni · lewa część pola.\nDRZEWO — skręt dłoni · prawa część pola.\nOGIEŃ — pochylenie dłoni · odległość pola.\nKażdy z trzech sektorów musi być ustawiony powyżej 0.\nJeśli choć jeden pozostaje na 0, Rezonator nie namierza.\nGlif w polu pokazuje znak i kolejne kręgi.\n3 kręgi — gotowy do ściągnięcia Astrolabium Więzi.' }),
       metalSector: Object.freeze({ label: 'SEKTOR METALU', body: 'Metal rozszerza pole Rezonatora.\nSkręt dłoni — rozszerza pole na boki.\nPochylenie dłoni — rozszerza pole w głąb.\nObie osie działają niezależnie.\nPoziom 0 — brak rozszerzenia.\nIm wyższy poziom, tym większy zasięg.\nMetal nie zastępuje Ziemi, Drzewa ani Ognia.\nRozszerza pole, które już tworzą.' }),
-      waterSector: Object.freeze({ label: 'SEKTOR WODY', body: 'Woda stroi barwę i intensywność pola Rezonatora.\nSkręt dłoni — wybiera częstotliwość: zieloną, niebieską lub fioletową.\nPoziom 0 — barwa neutralna.\nPochylenie dłoni — zwiększa jasność i halo pola.\nObie osie działają niezależnie.\nBarwa nie jest poziomem mocy.\nWoda nie zmienia kształtu ani zasięgu pola.\nBarwa nie wybiera obecnie rodziny Glifu.' })
+      waterSector: Object.freeze({ label: 'SEKTOR WODY', body: 'Woda stroi barwę i intensywność pola Rezonatora.\nSkręt dłoni — wybiera częstotliwość: zieloną, niebieską lub fioletową.\nPoziom 0 — barwa neutralna.\nPochylenie dłoni — zwiększa jasność i halo pola.\nObie osie działają niezależnie.\nBarwa nie jest poziomem mocy.\nWoda stroi pole, zamiast zmieniać jego zasięg.\nJej ustawienia uczestniczą w strojeniu pełnego Rezonatora.' })
     }),
     mainMenuHint: 'Lewy drążek — wybór · X — otwórz · Y — zamknij',
     toolListHint: 'Lewy drążek — wybór · X — otwórz · Y — wróć',
@@ -52,6 +54,8 @@ const VR_PLAYER_GUIDE_CONTENT = Object.freeze({
       Object.freeze({ id: 'current-task', label: 'CURRENT TASK', body: 'Make a choice.' })
     ]),
     asterionBuildTask: 'Now collect Shells.\nYou need six. Process each one in the Furnace.\nOnce the Furnace has taken the full set, build the Asterion Sphere.',
+    finalWaterBalanceTask: 'Tune the Sectors similarly.\nLook for the middle and symmetry.\nWatch how the field responds.',
+    finalWaterSolutionTask: 'SET THE RESONATOR:\nEarth, Wood, Fire — level 2.\nMetal — both settings at 2.\nWater — both settings at 2.\nWatch the field. When it starts to pulse, acquire Water again.',
     tools: Object.freeze({
       furnace: Object.freeze({
         label: 'FURNACE',
@@ -77,7 +81,7 @@ const VR_PLAYER_GUIDE_CONTENT = Object.freeze({
       sector: Object.freeze({ label: 'SECTOR', body: 'Trigger — orient the whole platform\nGrip — connect to the active Sector\nHold the beam — lock the Sector\nHand movement — change its position' }),
       resonator: Object.freeze({ label: 'ASTERION RESONATOR', body: 'The Asterion Resonator finds Large Glyphs.\nEquip the Sphere. Hold Grip and aim at a powered Sector for 1 s.\nOnce it locks, keep holding Grip. Your hand pose becomes the neutral point.\nEARTH — twist your wrist · left side of the field.\nWOOD — twist your wrist · right side of the field.\nFIRE — tilt your hand · field depth.\nAll three Sectors must be set above 0.\nIf even one stays at 0, the Resonator cannot acquire targets.\nA glyph inside the field reveals its sign and builds rings.\n3 rings — ready to pull with the Astrolabe of Binding.' }),
       metalSector: Object.freeze({ label: 'METAL SECTOR', body: 'Metal extends the Resonator field.\nTwist your wrist — extend the field sideways.\nTilt your hand — extend the field in depth.\nThe two axes work independently.\nLevel 0 — no extension.\nHigher levels give greater reach.\nMetal does not replace Earth, Wood, or Fire.\nIt extends the field they already create.' }),
-      waterSector: Object.freeze({ label: 'WATER SECTOR', body: "Water tunes the Resonator field's hue and intensity.\nTwist your wrist — choose the frequency state: green, blue, or violet.\nLevel 0 — neutral hue.\nTilt your hand — increase the field's brightness and halo.\nThe two axes work independently.\nHue is not a power level.\nWater does not change the field's shape or reach.\nHue does not currently select a Glyph family." })
+      waterSector: Object.freeze({ label: 'WATER SECTOR', body: "Water tunes the Resonator field's hue and intensity.\nTwist your wrist — choose the frequency: green, blue, or violet.\nLevel 0 — neutral hue.\nTilt your hand — increase the field's brightness and halo.\nThe two axes work independently.\nHue is not a power level.\nWater tunes the field instead of changing its reach.\nIts settings are part of tuning the complete Resonator." })
     }),
     mainMenuHint: 'Left stick — select · X — open · Y — close',
     toolListHint: 'Left stick — select · X — open · Y — back',
