@@ -2,7 +2,9 @@
 
 ## Status i reguła nadrzędna
 
-Status: **CURRENT WORKING CANON / SPLIT IMPLEMENTATION STATUS**. Rune tuning/transport/install, Binder readiness/materialization, powered-sector acquisition/control, Resonator core/descriptor, discovery Guidance and `FOURTH_RUNE_INSTALLED → Monkey Ether reveal → CAN_TUNE_ETHER_RUNE` and physical Ether tuning through Scenario `5.40` are **CURRENT / IMPLEMENTED** under their technical owners. Physical containment/resonance response, late-only `SPHERE_FAR` `PULL_READY` eligibility and late Large Glyph angular/radial motion are also **IMPLEMENTED**. Physical Ether reveal, SPECIAL Astro transport, Monkey capture, persistent Water installation-readiness override, Water natural installation and Scenario `5.60` with the full-array Monkey acknowledgement and `CAN_USE_ADVANCED_RESONATOR` are **CURRENT / IMPLEMENTED**. Metal `M(angle, tilt)` dual-DOF physical control and Metal-dependent presentation rounding are **CURRENT / IMPLEMENTED**; monotonic `0 / 20% / 50% / 75%` gameplay field expansion is the **CURRENT CANONICAL TARGET / NOT YET RUNTIME-SYNCHRONIZED**. Water advanced control, synchronization, Haiku damping/anti-bypass gate and later finale remain **FUTURE / NOT IMPLEMENTED**.
+> **Final-Water authority:** [`EXPERIENCE_VR_FINAL_WATER_RESONATOR_CULMINATION.md`](EXPERIENCE_VR_FINAL_WATER_RESONATOR_CULMINATION.md) is the **CURRENT / BINDING DESIGN TARGET / IMPLEMENTATION PENDING** authority for the final Water hunt. It supersedes this document wherever the old flow introduces Ether before an observed two-ring Water rejection or marks Water control/`waterSyncLock`/the two-ring cap as wholly future. Runtime facts and unrelated finale systems remain under their existing owners.
+
+Status: **CURRENT WORKING CANON / SPLIT IMPLEMENTATION STATUS**. The authored runtime ordering through `5.60` remains **FACT / IMPLEMENTED**, but is explicitly the progression weakness to revise: the binding target inserts an experienced two-ring Water rejection before Ether. Water dual-DOF control, `waterSyncLock === 222 / M22 / W22`, and the final-Water two-ring cycling cap are **FACT / IMPLEMENTED**. Harmonic breathing, semantic rejection handoff, revised ordering and final hint lifecycle are **BINDING DESIGN TARGET / IMPLEMENTATION PENDING**.
 
 Ten przebieg zastępuje wcześniejszą wersję, w której trzy sektory tworzyły pełną antenę przed etapem kamieni runicznych:
 
@@ -214,7 +216,9 @@ Field hue means Water resonance frequency; target-family sign/ring colors remain
 
 Final Haiku Cosmos physical pull requires all four truths: learned Haiku/Water family + late context + current `PULL_READY` + current WATER SYNC CONTACT. This is a hard anti-bypass rule. Generic acquisition remains generic: before Water, an expanded Metal field may detect Haiku, show its sign, accumulate rings and even retain `PULL_READY`. Without synchronized contact the physical pull remains illegal. Water/platform completion is therefore the only valid final resonance language, not an optional assist.
 
-## 14. Final Water hunt
+## 14. Final Water hunt — superseded ordering
+
+The sequence below is retained as historical context for the surrounding finale. Its ordering and any claim that all Water Sync mechanics are future are superseded by the binding final-Water freeze. The required order is controlled two-ring rejection → Ether → Water installation → balanced puzzle → final pull.
 
 ```text
 late moving targets → off-center Metal hunt → Ether recovered
