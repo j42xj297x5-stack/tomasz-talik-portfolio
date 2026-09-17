@@ -311,7 +311,8 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
       const color = extracted ? accents.complete : processing ? accents.process : supported ? accents.attractor : accents.idle;
       panelRect(x, y, width, height, { variant: 'monitor', active: supported && !extracted,
         completed: extracted, locked: !supported, accentColor: color });
-      text(protoAstro.descriptor.syllable, x + 20, y + 32, 22, color);
+      text(copy.runeTuning.familyCard(runeLabel(protoAstro.descriptor.familyCode), protoAstro.descriptor.syllable),
+        x + 20, y + 32, 22, color);
       drawMaterialCardVisual(context, { x: x + 5, y: y + 25, width: width - 10, height: height - 34,
         glyphRatio: .68, glyphScale: 2.75, padding: 3, glyphImage: image, color,
         drawPreview: ({ cx, cy, scale }) => drawSmallGlyphWireframe(context,
