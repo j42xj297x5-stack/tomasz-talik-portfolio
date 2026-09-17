@@ -74,7 +74,8 @@ import { createVrAsterionSectorControlInteraction } from './xr/asterion/createVr
 import { createVrAsterionSectorAcquisitionPresentation } from './xr/asterion/createVrAsterionSectorAcquisitionPresentation.js';
 import { createVrAsterionResonatorFieldActor } from './xr/asterion/createVrAsterionResonatorFieldActor.js';
 import { createVrAsterionResonatorFieldPresentation } from './xr/asterion/createVrAsterionResonatorFieldPresentation.js';
-import { createVrAsterionResonatorTargetAcquisitionActor } from './xr/asterion/createVrAsterionResonatorTargetAcquisitionActor.js';
+import { createVrAsterionResonatorTargetAcquisitionActor,
+  VR_ASTERION_RESONATOR_TARGET_ACQUISITION_EVENTS } from './xr/asterion/createVrAsterionResonatorTargetAcquisitionActor.js';
 import { createVrAsterionResonatorTargetResponsePresentation } from './xr/asterion/createVrAsterionResonatorTargetResponsePresentation.js';
 import { createVrAsterionResonatorTargetAudioProjection,
   VR_ASTERION_RESONATOR_TARGET_AUDIO } from './xr/audio/createVrAsterionResonatorTargetAudioProjection.js';
@@ -774,6 +775,13 @@ const largeGlyphByTargetId = new Map(largeGlyphActor.nodes.map((node) => [node.u
 const unsubscribeLargeGlyphResonatorPresentation = asterionResonatorTargetAcquisitionActor.subscribe((state) => {
   const node = largeGlyphByTargetId.get(state.id);
   if (node) largeGlyphActor.setResonatorPullReady(node, state.pullReady);
+});
+const unsubscribeFinalWaterRejection = asterionResonatorTargetAcquisitionActor.subscribeEvents((event) => {
+  if (event.type !== VR_ASTERION_RESONATOR_TARGET_ACQUISITION_EVENTS.CEILING_CYCLED
+    || event.id !== 'haiku-cosmos'
+    || progressionController.isTierComplete(4) !== true
+    || asterionResonatorFieldActor.getDescriptor().waterSyncLock === true) return;
+  progressionSemanticHandoff.onFinalWaterAcquisitionRejected();
 });
 const asterionResonatorTargetAudioProjection = createVrAsterionResonatorTargetAudioProjection({
   audioBridge: vrAudio,
@@ -1545,8 +1553,8 @@ runtimeExperience = new RuntimeExperience({
     [VR_SCENARIO_EFFECT.CHECK_RESONATOR_JOIN]: () => {
       progressionSemanticHandoff.onResonatorStateChanged(asterionResonatorFieldActor.getDescriptor());
     },
-    [VR_SCENARIO_EFFECT.CHECK_ETHER_INTERVENTION_JOIN]: () => {
-      progressionSemanticHandoff.onEtherInterventionJoinChecked({
+    [VR_SCENARIO_EFFECT.CHECK_FINAL_WATER_ATTEMPT_JOIN]: () => {
+      progressionSemanticHandoff.onFinalWaterAttemptJoinChecked({
         tier4Complete: progressionController.isTierComplete(4),
         installedNaturalRuneCount: runeStoneProgressionController.getInstalledFamilyCodes().length
       });
@@ -2159,6 +2167,7 @@ window.addEventListener('pagehide', () => {
   asterionPlatformEnergyVfxProjection.dispose();
   unsubscribeResonatorScenarioHandoff();
   unsubscribeLargeGlyphResonatorPresentation();
+  unsubscribeFinalWaterRejection();
   unsubscribeRuneGuidance();
   unsubscribeResonatorGuidance();
   unsubscribeSectorLockGuidance();

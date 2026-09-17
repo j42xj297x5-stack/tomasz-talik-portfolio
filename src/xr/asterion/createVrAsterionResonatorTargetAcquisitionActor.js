@@ -13,6 +13,10 @@ const DEFAULT_TARGET_POLICY = Object.freeze({
   retainCompletedStagesOutside: false
 });
 
+export const VR_ASTERION_RESONATOR_TARGET_ACQUISITION_EVENTS = Object.freeze({
+  CEILING_CYCLED: 'CEILING_CYCLED'
+});
+
 function createInternalTarget(id, anchor) {
   return {
     id,
@@ -56,6 +60,7 @@ export function createVrAsterionResonatorTargetAcquisitionActor({ fieldActor, fi
 
   const targets = new Map();
   const listeners = new Set();
+  const eventListeners = new Set();
   const worldPosition = new THREE.Vector3();
   const localPosition = new THREE.Vector3();
   const fieldFrameInverse = new THREE.Matrix4();
@@ -73,6 +78,16 @@ export function createVrAsterionResonatorTargetAcquisitionActor({ fieldActor, fi
         listener(state);
       } catch (error) {
         console.warn('[VrAsterionResonatorTargetAcquisitionActor] Target listener failed.', error);
+      }
+    });
+  }
+
+  function emitEvent(event) {
+    [...eventListeners].forEach((listener) => {
+      try {
+        listener(event);
+      } catch (error) {
+        console.warn('[VrAsterionResonatorTargetAcquisitionActor] Event listener failed.', error);
       }
     });
   }
@@ -102,6 +117,12 @@ export function createVrAsterionResonatorTargetAcquisitionActor({ fieldActor, fi
     target.signVisible = true;
     if (target.ceilingPendingReset && policy.cycleAtCeiling
       && target.ringCount >= policy.maximumRingCount) {
+      emitEvent(Object.freeze({
+        type: VR_ASTERION_RESONATOR_TARGET_ACQUISITION_EVENTS.CEILING_CYCLED,
+        id: target.id,
+        previousRingCount: target.ringCount,
+        maximumRingCount: policy.maximumRingCount
+      }));
       target.ringCount = 0;
       target.acquisitionSeconds = 0;
       target.ceilingPendingReset = false;
@@ -200,6 +221,11 @@ export function createVrAsterionResonatorTargetAcquisitionActor({ fieldActor, fi
       listeners.add(listener);
       return () => listeners.delete(listener);
     },
+    subscribeEvents(listener) {
+      if (disposed || typeof listener !== 'function') return () => {};
+      eventListeners.add(listener);
+      return () => eventListeners.delete(listener);
+    },
     update(deltaSeconds) {
       if (disposed || !Number.isFinite(deltaSeconds) || deltaSeconds < 0) return;
       fieldFrame.updateWorldMatrix(true, false);
@@ -243,6 +269,7 @@ export function createVrAsterionResonatorTargetAcquisitionActor({ fieldActor, fi
       unsubscribeField();
       targets.clear();
       listeners.clear();
+      eventListeners.clear();
       fieldShape = null;
       disposed = true;
     }

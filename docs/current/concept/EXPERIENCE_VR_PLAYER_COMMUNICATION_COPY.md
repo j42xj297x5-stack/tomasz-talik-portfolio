@@ -426,6 +426,24 @@ The seven poetic blocks follow the unchanged Astrolabe control teaching in the s
 > Zmienia to, skąd patrzysz.
 > Dzięki temu dosięgniesz tego, czego wcześniej nie mogłeś.
 
+## Ether intervention after controlled Water rejection — implemented exact copy
+
+`progression.p4.etherIntervention` keeps its mandatory attention lifecycle and completion callback. Each numbered item below is one block; embedded line breaks remain within their block.
+
+| # | PL | EN |
+| --- | --- | --- |
+| 1 | `Nie.` | `No.` |
+| 2 | `Odpowiada.\nAle nie pozwala się uchwycić.` | `It responds.\nBut it won't let itself be caught.` |
+| 3 | `Metal poszerzył twoje spojrzenie.\nWidocznie to nie wystarczy.` | `Metal widened your view.\nApparently that isn't enough.` |
+| 4 | `Została Woda.\nTylko jej sektor nie ma jak się domknąć.` | `Water remains.\nBut its Sector has no way to close.` |
+| 5 | `Normalnie powiedziałbym, że utknęliśmy.` | `Normally, I'd say we're stuck.` |
+| 6 | `Na szczęście normalnie już dawno przestało tu działać.` | `Fortunately, normal stopped working here a long time ago.` |
+| 7 | `Jest jeszcze jeden kamień.` | `There is one more stone.` |
+| 8 | `Nie należy do tej piątki.` | `It doesn't belong to those five.` |
+| 9 | `Eter.` | `Ether.` |
+| 10 | `Nie ma własnego miejsca pomiędzy nimi.\nMoże właśnie dlatego potrafi je połączyć.` | `It has no place of its own among them.\nMaybe that's why it can connect them.` |
+| 11 | `Spróbujmy.` | `Let's try.` |
+
 ## CURRENT OBJECTIVE — exact dynamic strings
 
 - `2.30`: `UKOŃCZ PIERWSZY KRĄG — n/5`
@@ -435,6 +453,7 @@ The seven poetic blocks follow the unchanged Astrolabe control teaching in the s
 - `4.70`, full tuning: `UKOŃCZ TRZECI KRĄG — n/5`
 - `4.80`, no Resonator: `PRZYGOTUJ REZONATOR — STROJENIE n/3 · INSTALACJA n/3`
 - `4.80`, Resonator exists, and `5.10`: no objective.
+- `5.15`: PL `NAMIERZ GLIF WODY`; EN `ACQUIRE THE WATER GLYPH`.
 
 ## Player Y — exact persistent tool copy
 

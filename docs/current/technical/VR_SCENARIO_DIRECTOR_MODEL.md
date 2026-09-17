@@ -1,6 +1,6 @@
 # Experience VR Scenario and Director Model
 
-Status: **CURRENT / BINDING**, synchronized on 2026-09-11. Runtime graph, reconstruction and bounded live reconciliation are implemented through stable `5.10`.
+Status: **CURRENT / BINDING**, synchronized on 2026-09-11. Runtime graph, reconstruction and bounded live reconciliation are implemented through the controlled Water attempt at `5.15` and its rejection transition into `5.20`.
 
 > **Cross-reference — CURRENT / IMPLEMENTED / MIGRATION COMPLETE:** [`VR_SCENARIO_SANDBOX_RECONCILIATION.md`](VR_SCENARIO_SANDBOX_RECONCILIATION.md) is the primary authority for Rings 1–3 domain-ahead sandbox reconciliation. `ExperienceDirector` supplies the bounded, forward-only `catchUpToPoint()` primitive; `RuntimeExperience` remains the existing effect-execution boundary; production `ScenarioProgressReconciler` provides event-driven orchestration.
 
@@ -13,7 +13,7 @@ Status: **CURRENT / BINDING**, synchronized on 2026-09-11. Runtime graph, recons
 ## Authored spine
 
 ```text
-1.10 → … → 4.10 → 4.20 → 4.30 → 4.40 → 4.50 → 4.60 → 4.70 → 4.75 → 3.80 → 4.80 → 5.10
+1.10 → … → 4.10 → 4.20 → 4.30 → 4.40 → 4.50 → 4.60 → 4.70 → 4.75 → 3.80 → 4.80 → 5.10 → 5.15 → 5.20
 ```
 
 | Point | CURRENT role |
@@ -22,13 +22,15 @@ Status: **CURRENT / BINDING**, synchronized on 2026-09-11. Runtime graph, recons
 | `4.75` | mandatory third-ring completion presentation; waits for Large Glyph `SPHERE_FAR` settlement |
 | `3.80` | post-third-ring Asterion frontier; waits for the real Asterion claim |
 | `4.80` | third ring complete; waiting for the existing physical Resonator result |
-| `5.10` | stable third-ring + Resonator join; current authored/runtime boundary |
+| `5.10` | Tier 4 / fourth natural Rune join; `FINAL_WATER_ATTEMPT_READY` advances only to `5.15` |
+| `5.15` | four-Rune Resonator ready; controlled final Water attempt; only `FINAL_WATER_ACQUISITION_REJECTED` advances to `5.20` |
+| `5.20` | Ether intervention entry after observed Water rejection |
 
 `4.70` accepts the real `TIER_COMPLETED` result and enters `4.75`. On entry, `4.75` executes the authored tier-completion feedback and begins the legal Large Glyph distribution to `SPHERE_FAR`; only `THIRD_RING_COMPLETION_PRESENTATION_COMPLETED` advances it to `3.80`. Point ordering follows these authored graph edges, not numeric point-ID comparison.
 
 `4.80` targets `5.10`, enters with `SET_MAIN_AMBIENT_04` and `CHECK_RESONATOR_JOIN`, and accepts `RESONATOR_READY`. The check covers the event order in which Resonator already exists on entry. Otherwise `resonatorExists === true` is projected as `RESONATOR_READY`. This semantic join does not gate or own Resonator creation.
 
-`5.10` has no entry effects, CURRENT OBJECTIVE, transitions or blocking entry dialogue. It has no direct transition to `100.10`; the latter remains a separate story terminal used by the authored Intro exit branches. At `1.100` choice 3 and at `1.120` choice 3 remain at their current point while the existing continuation effect plays the full Monkey exit reaction. Only the actor's `INTRO_EXIT_REACTION_COMPLETED` semantic event explicitly advances either point to `100.10`, whose `END_XR_SESSION` entry effect remains the sole owner of terminal XR exit.
+`5.10` checks the Tier 4 + four-natural-Rune join and advances via `FINAL_WATER_ATTEMPT_READY` to `5.15`. `5.15` owns `NAMIERZ GLIF WODY` / `ACQUIRE THE WATER GLYPH` and advances only on `FINAL_WATER_ACQUISITION_REJECTED`; `5.20` retains `BEGIN_ETHER_INTERVENTION`. It has no direct transition to `100.10`; the latter remains a separate story terminal used by the authored Intro exit branches. At `1.100` choice 3 and at `1.120` choice 3 remain at their current point while the existing continuation effect plays the full Monkey exit reaction. Only the actor's `INTRO_EXIT_REACTION_COMPLETED` semantic event explicitly advances either point to `100.10`, whose `END_XR_SESSION` entry effect remains the sole owner of terminal XR exit.
 
 ## CURRENT OBJECTIVE
 
@@ -41,6 +43,7 @@ The read-only Guidance projection derives these exact live strings:
 - `4.70`, full tuning: `UKOŃCZ TRZECI KRĄG — n/5`
 - `4.80`, while Resonator does not exist: `PRZYGOTUJ REZONATOR — STROJENIE n/3 · INSTALACJA n/3`
 - `4.80`, when Resonator exists, and `5.10`: no objective.
+- `5.15`: `NAMIERZ GLIF WODY` / `ACQUIRE THE WATER GLYPH`.
 
 ## Reconstruction and debug aliases
 

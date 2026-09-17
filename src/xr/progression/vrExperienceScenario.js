@@ -79,7 +79,8 @@ export const VR_SCENARIO_EVENT = immutableIdentifiers([
   'ASTERION_DRIVE_STARTED',
   'ASTERION_DRIVE_STOPPED',
   'FOURTH_RUNE_INSTALLED',
-  'ETHER_INTERVENTION_READY',
+  'FINAL_WATER_ATTEMPT_READY',
+  'FINAL_WATER_ACQUISITION_REJECTED',
   'ETHER_INTERVENTION_COMPLETED',
   'ETHER_RUNE_TUNED',
   'ETHER_MONKEY_CAPTURED',
@@ -194,7 +195,7 @@ export const VR_SCENARIO_EFFECT = immutableIdentifiers([
   'PRESENT_ASTERION',
   'SHOW_ASTERION_EARNED_CUE',
   'CHECK_RESONATOR_JOIN',
-  'CHECK_ETHER_INTERVENTION_JOIN',
+  'CHECK_FINAL_WATER_ATTEMPT_JOIN',
   'BEGIN_ETHER_INTERVENTION',
   'BEGIN_WATER_PATH_OPEN_COMMUNICATION',
   'BEGIN_FULL_RESONATOR_COMMUNICATION',
@@ -244,6 +245,7 @@ export const VR_EXPERIENCE_POINT = immutableIdentifiers([
   '4.75',
   '4.80',
   '5.10',
+  '5.15',
   '5.20',
   '5.30',
   '5.40',
@@ -904,25 +906,35 @@ const points = Object.freeze([
       event: VR_SCENARIO_EVENT.RESONATOR_READY, milestonesToAdd: Object.freeze([]) })])
   }),
   Object.freeze({
-    id: VR_EXPERIENCE_POINT['5.10'], canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['5.20'] }),
-    settledConsequences: TIER_4_AND_FOURTH_RUNE_JOIN_SETTLED_CONSEQUENCES,
-    entryEffects: Object.freeze([VR_SCENARIO_EFFECT.CHECK_ETHER_INTERVENTION_JOIN]),
+    id: VR_EXPERIENCE_POINT['5.10'], canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['5.15'] }),
+    settledConsequences: CORE_RESONATOR_READY_SETTLED_CONSEQUENCES,
+    entryEffects: Object.freeze([VR_SCENARIO_EFFECT.CHECK_FINAL_WATER_ATTEMPT_JOIN]),
     label: 'Third ring + Resonator stable join', capabilities: P2_MAIN_GLYPH_CAPABILITIES,
     transitions: Object.freeze([
       ...TIER_4_CARD_INTERACTION_TRANSITIONS,
       Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.STAY, event: VR_SCENARIO_EVENT.TIER_COMPLETED,
         milestonesToAdd: Object.freeze([]), effects: Object.freeze([
           VR_SCENARIO_EFFECT.APPLY_TIER_COMPLETE_FEEDBACK,
-          VR_SCENARIO_EFFECT.CHECK_ETHER_INTERVENTION_JOIN
+          VR_SCENARIO_EFFECT.CHECK_FINAL_WATER_ATTEMPT_JOIN
         ]) }),
       Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.STAY,
         event: VR_SCENARIO_EVENT.FOURTH_RUNE_INSTALLED,
         milestonesToAdd: Object.freeze([VR_SCENARIO_MILESTONE.FOURTH_RUNE_INSTALLED]),
-        effects: Object.freeze([VR_SCENARIO_EFFECT.CHECK_ETHER_INTERVENTION_JOIN]) }),
+        effects: Object.freeze([VR_SCENARIO_EFFECT.CHECK_FINAL_WATER_ATTEMPT_JOIN]) }),
       Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.COMPLETE,
-        event: VR_SCENARIO_EVENT.ETHER_INTERVENTION_READY,
+        event: VR_SCENARIO_EVENT.FINAL_WATER_ATTEMPT_READY,
         milestonesToAdd: Object.freeze([]), effects: Object.freeze([]) })
     ])
+  }),
+  Object.freeze({
+    id: VR_EXPERIENCE_POINT['5.15'], canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['5.20'] }),
+    settledConsequences: TIER_4_AND_FOURTH_RUNE_JOIN_SETTLED_CONSEQUENCES,
+    entryEffects: Object.freeze([]),
+    label: 'Fourth Ring + Metal complete / final Water acquisition attempt',
+    capabilities: P2_MAIN_GLYPH_CAPABILITIES,
+    transitions: Object.freeze([Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.COMPLETE,
+      event: VR_SCENARIO_EVENT.FINAL_WATER_ACQUISITION_REJECTED,
+      milestonesToAdd: Object.freeze([]), effects: Object.freeze([]) })])
   }),
   Object.freeze({
     id: VR_EXPERIENCE_POINT['5.20'], canonicalMainline: Object.freeze({ target: VR_EXPERIENCE_POINT['5.30'] }),

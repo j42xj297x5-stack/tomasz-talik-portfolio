@@ -34,6 +34,7 @@ const STATIC_OBJECTIVES_BY_POINT = Object.freeze({
   [VR_EXPERIENCE_POINT['4.60']]: Object.freeze({ pl: 'MAŁPA', en: 'MONKEY' }),
   [VR_EXPERIENCE_POINT['4.75']]: Object.freeze({ pl: 'Utwórz Rezonator Astrolabium', en: 'BUILD THE ASTERION RESONATOR' }),
   [VR_EXPERIENCE_POINT['5.10']]: Object.freeze({ pl: 'Zdobądź ostatni kryształ', en: 'GET THE LAST CRYSTAL' }),
+  [VR_EXPERIENCE_POINT['5.15']]: Object.freeze({ pl: 'NAMIERZ GLIF WODY', en: 'ACQUIRE THE WATER GLYPH' }),
   [VR_EXPERIENCE_POINT['5.20']]: Object.freeze({ pl: 'Zhakuj system', en: 'HACK THE SYSTEM' }),
   [VR_EXPERIENCE_POINT['5.30']]: Object.freeze({ pl: 'Wykonaj strojenie kamienia Etheru', en: 'TUNE THE ETHER STONE' }),
   [VR_EXPERIENCE_POINT['5.40']]: Object.freeze({ pl: 'Zdobądź kamień Etheru', en: 'GET THE ETHER STONE' }),
