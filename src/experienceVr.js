@@ -864,7 +864,7 @@ const playerGuideProjection = createVrPlayerGuideProjection({
   isAstrolabiumOwned,
   isAsterionOwned,
   hasReadRuneStones: () => monkeyKnowledgeResolver?.hasReadStones() === true,
-  hasDiscoveredBinders: () => monkeyKnowledgeResolver?.hasDiscoveredBinders() === true,
+  hasReadBinders: () => monkeyKnowledgeResolver?.hasReadBinders() === true,
   hasInstalledRune: () => runeStoneProgressionController.getInstalledFamilyCodes().length > 0
 });
 const playerGuidePanel = createVrPlayerGuidePanel({

@@ -333,6 +333,8 @@ Lifecycle: `READ` after successful completion of `progression.p3.glyphsGone`, pe
 ### `knowledge.p3.binders` — `CO TO JEST?`
 Question: `ZWORNIKI`
 
+Lifecycle: the first live Keystone `ARRIVING → DOCKED` discovery exposes this topic as `NEW` only in Monkey. Successful deliberate playback of every block marks it read/taught, removes it from Monkey, and makes the same entry permanently available under Player Y `WIEDZA` for the remainder of the session. Physical discovery, selection, playback start and interrupted playback do not unlock the Player Y entry.
+
 > Zworniki.
 >
 > --- BLOCK ---
@@ -480,6 +482,8 @@ This tool card and the `X` control reference are visible only after physical Ast
 > Zworniki.
 > Pojawiały się, kiedy domykałeś te części platformy.
 > Wygląda na to, że nie są ozdobą.
+
+This entry becomes available only after successful deliberate completion of Monkey `CO TO JEST? → ZWORNIKI`; physical Keystone discovery alone does not expose it. Monkey is the first teacher, and Player Y is persistent memory for the remainder of the session.
 
 ### SEKTOR
 > Spust — orientacja całej platformy
