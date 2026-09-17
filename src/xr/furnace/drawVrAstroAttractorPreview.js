@@ -1,65 +1,140 @@
-const TAU = Math.PI * 2;
+import * as THREE from '../../vendor/three.js';
 
-// A light, authored curve model derived from the Astro Grabber's dominant silhouette:
-// grip, outer cage, calibration rings and the five energy guides. It deliberately
-// contains no triangulated/mesh edges, so rotation cannot expose a broken polygon grid.
-export const ASTRO_ATTRACTOR_PANEL_CURVES = Object.freeze([
-  { id: 'spine', points: [[0, -.92, -.04], [-.10, -.42, .02], [.10, .38, .08], [0, .98, .04]] },
-  { id: 'grip-left', points: [[-.18, -.92, .02], [-.34, -.72, .06], [-.31, -.42, .08], [-.23, -.20, .03]] },
-  { id: 'grip-right', points: [[.18, -.92, .02], [.34, -.72, .06], [.31, -.42, .08], [.23, -.20, .03]] },
-  { id: 'cage-left', points: [[-.23, -.20, .03], [-.72, -.02, .12], [-.78, .54, .02], [-.38, .78, -.02]] },
-  { id: 'cage-right', points: [[.23, -.20, .03], [.72, -.02, .12], [.78, .54, .02], [.38, .78, -.02]] },
-  { id: 'crown', points: [[-.38, .78, -.02], [-.18, .98, .04], [.18, .98, .04], [.38, .78, -.02]] },
-  { id: 'shoulders', points: [[-.72, -.02, .12], [-.38, .18, .28], [.38, .18, .28], [.72, -.02, .12]] },
-  { id: 'fuel-earth', points: [[-.20, -.15, .11], [-.50, .10, .26], [-.47, .54, .18], [-.22, .70, .08]] },
-  { id: 'fuel-water', points: [[.20, -.15, .11], [.50, .10, .26], [.47, .54, .18], [.22, .70, .08]] },
-  { id: 'fuel-fire', points: [[-.12, -.20, -.10], [-.24, .12, -.30], [-.20, .52, -.25], [-.08, .72, -.10]] },
-  { id: 'fuel-tree', points: [[.12, -.20, -.10], [.24, .12, -.30], [.20, .52, -.25], [.08, .72, -.10]] },
-  { id: 'fuel-metal', points: [[0, -.18, .20], [-.08, .12, .38], [.08, .48, .38], [0, .73, .18]] }
-]);
+const curvePresentationCache = new WeakMap();
+const clamp01 = (value) => Math.max(0, Math.min(1, value));
 
-export const ASTRO_ATTRACTOR_PANEL_RINGS = Object.freeze([
-  { y: .30, radius: .54, depth: .04 }, { y: .36, radius: .42, depth: .02 },
-  { y: .42, radius: .30, depth: 0 }, { y: .46, radius: .18, depth: -.01 }
-]);
+function extractMeshCurves(node, matrix, tolerance, thresholdAngle) {
+  const edgesGeometry = new THREE.EdgesGeometry(node.geometry, thresholdAngle);
+  const positions = edgesGeometry.getAttribute('position');
+  const vertices = new Map(), edges = [], adjacency = new Map();
+  const point = new THREE.Vector3();
+  const keyFor = ({ x, y, z }) => `${Math.round(x / tolerance)},${Math.round(y / tolerance)},${Math.round(z / tolerance)}`;
+  const addVertex = (index) => {
+    point.fromBufferAttribute(positions, index).applyMatrix4(matrix);
+    const key = keyFor(point);
+    if (!vertices.has(key)) vertices.set(key, point.clone());
+    return key;
+  };
+  for (let index = 0; index + 1 < positions.count; index += 2) {
+    const a = addVertex(index), b = addVertex(index + 1);
+    if (a === b) continue;
+    const edgeIndex = edges.length;
+    edges.push({ a, b });
+    if (!adjacency.has(a)) adjacency.set(a, []);
+    if (!adjacency.has(b)) adjacency.set(b, []);
+    adjacency.get(a).push(edgeIndex); adjacency.get(b).push(edgeIndex);
+  }
+  edgesGeometry.dispose();
+  adjacency.forEach((edgeIndexes) => edgeIndexes.sort((left, right) => {
+    const leftEdge = edges[left], rightEdge = edges[right];
+    return `${leftEdge.a}|${leftEdge.b}`.localeCompare(`${rightEdge.a}|${rightEdge.b}`);
+  }));
 
-function rotate([x, y, z], yaw, pitch) {
-  const cy = Math.cos(yaw), sy = Math.sin(yaw), cp = Math.cos(pitch), sp = Math.sin(pitch);
-  const rx = x * cy + z * sy, rz = -x * sy + z * cy;
-  return [rx, y * cp - rz * sp, y * sp + rz * cp];
+  const used = new Set(), curves = [];
+  const follow = (startKey, firstEdgeIndex) => {
+    const keys = [startKey];
+    let currentKey = startKey, edgeIndex = firstEdgeIndex;
+    while (edgeIndex !== undefined && !used.has(edgeIndex)) {
+      used.add(edgeIndex);
+      const edge = edges[edgeIndex];
+      currentKey = edge.a === currentKey ? edge.b : edge.a;
+      keys.push(currentKey);
+      if ((adjacency.get(currentKey)?.length ?? 0) !== 2) break;
+      edgeIndex = adjacency.get(currentKey).find((candidate) => !used.has(candidate));
+    }
+    if (keys.length > 1) curves.push(keys.map((key) => vertices.get(key).clone()));
+  };
+  [...adjacency.keys()].sort().filter((key) => adjacency.get(key).length !== 2).forEach((key) => {
+    adjacency.get(key).forEach((edgeIndex) => { if (!used.has(edgeIndex)) follow(key, edgeIndex); });
+  });
+  edges.forEach((edge, edgeIndex) => { if (!used.has(edgeIndex)) follow([edge.a, edge.b].sort()[0], edgeIndex); });
+  return curves;
 }
 
-function project(point, cx, cy, scale, yaw, pitch) {
-  const [x, y, z] = rotate(point, yaw, pitch);
-  const perspective = 1 / Math.max(.72, 1 + z * .16);
-  return [cx + x * scale * perspective, cy - y * scale * perspective];
+export function createVrFurnaceCurvePresentation(model, { thresholdAngle = 24, groupCount = 6 } = {}) {
+  if (!model) throw new Error('A simplified GLB model is required for a Furnace curve presentation.');
+  if (curvePresentationCache.has(model)) return curvePresentationCache.get(model);
+  model.updateWorldMatrix(true, true);
+  const inverseRoot = model.matrixWorld.clone().invert();
+  const bounds = new THREE.Box3().setFromObject(model), size = bounds.getSize(new THREE.Vector3());
+  const tolerance = Math.max(size.length() * 1e-5, 1e-7);
+  const rawCurves = [];
+  model.traverse((node) => {
+    if (!node.isMesh || node.visible === false || !node.geometry) return;
+    const matrix = inverseRoot.clone().multiply(node.matrixWorld);
+    rawCurves.push(...extractMeshCurves(node, matrix, tolerance, thresholdAngle));
+  });
+  if (!rawCurves.length) throw new Error('The simplified GLB did not yield connected Furnace preview curves.');
+
+  const curveBounds = new THREE.Box3();
+  rawCurves.forEach((curve) => curve.forEach((entry) => curveBounds.expandByPoint(entry)));
+  const center = curveBounds.getCenter(new THREE.Vector3()), curveSize = curveBounds.getSize(new THREE.Vector3());
+  const radius = Math.max(curveSize.x, curveSize.y, curveSize.z) * .5 || 1;
+  const curves = rawCurves.map((curve) => {
+    const points = curve.map((entry) => Object.freeze(entry.sub(center).multiplyScalar(1 / radius).toArray()));
+    const cumulativeLengths = [0];
+    for (let index = 1; index < points.length; index += 1) {
+      cumulativeLengths.push(cumulativeLengths[index - 1] + Math.hypot(
+        points[index][0] - points[index - 1][0], points[index][1] - points[index - 1][1], points[index][2] - points[index - 1][2]
+      ));
+    }
+    const centroid = points.reduce((sum, entry) => sum.map((value, axis) => value + entry[axis]), [0, 0, 0]).map((value) => value / points.length);
+    return { points: Object.freeze(points), cumulativeLengths: Object.freeze(cumulativeLengths), length: cumulativeLengths.at(-1), centroid };
+  }).sort((left, right) => left.centroid[1] - right.centroid[1] || left.centroid[0] - right.centroid[0]
+    || left.centroid[2] - right.centroid[2] || left.length - right.length);
+  const resolvedGroupCount = Math.max(1, Math.min(groupCount, curves.length));
+  const groups = Array.from({ length: resolvedGroupCount }, () => []);
+  curves.forEach((curve, index) => groups[Math.min(resolvedGroupCount - 1, Math.floor(index * resolvedGroupCount / curves.length))].push(curve));
+  const presentation = Object.freeze({
+    curves: Object.freeze(curves),
+    groups: Object.freeze(groups.map((group) => Object.freeze(group))),
+    sourceCurveCount: rawCurves.length
+  });
+  curvePresentationCache.set(model, presentation);
+  return presentation;
 }
 
-export function drawVrAstroAttractorPreview(context, { cx, cy, scale, elapsed = 0, color = '#c8ac70', bright = false }) {
-  const yaw = elapsed * .34, pitch = -.16;
+function project([x, y, z], cx, cy, scale, yaw, pitch) {
+  const cosineY = Math.cos(yaw), sineY = Math.sin(yaw), cosineX = Math.cos(pitch), sineX = Math.sin(pitch);
+  const rotatedX = x * cosineY + z * sineY, rotatedZ = -x * sineY + z * cosineY;
+  const rotatedY = y * cosineX - rotatedZ * sineX;
+  const perspective = 1 / Math.max(.72, 1 + (y * sineX + rotatedZ * cosineX) * .16);
+  return [cx + rotatedX * scale * perspective, cy - rotatedY * scale * perspective];
+}
+
+export function drawVrFurnaceCurvePresentation(context, presentation, {
+  cx, cy, scale, elapsed = 0, progress = 1, color = '#c8ac70', bright = false, rotationSpeed = .34, pitch = -.16
+}) {
+  if (!presentation?.groups?.length || progress <= 0) return;
+  const yaw = elapsed * rotationSpeed, groupPosition = clamp01(progress) * presentation.groups.length;
   context.save(); context.strokeStyle = color; context.lineCap = 'round'; context.lineJoin = 'round';
   context.globalAlpha = bright ? .98 : .82; context.lineWidth = bright ? 3.5 : 2.7;
   context.shadowColor = color; context.shadowBlur = bright ? 20 : 10;
-  ASTRO_ATTRACTOR_PANEL_CURVES.forEach(({ points }) => {
-    const [start, controlA, controlB, end] = points.map((point) => project(point, cx, cy, scale, yaw, pitch));
-    context.beginPath(); context.moveTo(...start); context.bezierCurveTo(...controlA, ...controlB, ...end); context.stroke();
+  presentation.groups.forEach((group, groupIndex) => {
+    const reveal = clamp01(groupPosition - groupIndex);
+    if (reveal <= 0) return;
+    group.forEach((curve) => {
+      const visibleLength = curve.length * reveal;
+      context.beginPath();
+      const start = project(curve.points[0], cx, cy, scale, yaw, pitch);
+      context.moveTo(start[0], start[1]);
+      for (let index = 1; index < curve.points.length; index += 1) {
+        const segmentStart = curve.cumulativeLengths[index - 1];
+        if (segmentStart >= visibleLength) break;
+        const segmentEnd = curve.cumulativeLengths[index];
+        let target = curve.points[index];
+        if (segmentEnd > visibleLength) {
+          const local = (visibleLength - segmentStart) / Math.max(segmentEnd - segmentStart, Number.EPSILON);
+          target = curve.points[index - 1].map((value, axis) => value + (curve.points[index][axis] - value) * local);
+        }
+        const projected = project(target, cx, cy, scale, yaw, pitch);
+        context.lineTo(projected[0], projected[1]);
+        if (segmentEnd > visibleLength) break;
+      }
+      context.stroke();
+    });
   });
-  ASTRO_ATTRACTOR_PANEL_RINGS.forEach(({ y, radius, depth }) => {
-    context.beginPath();
-    for (let step = 0; step <= 48; step += 1) {
-      const angle = step / 48 * TAU;
-      const point = project([Math.cos(angle) * radius, y + Math.sin(angle) * radius * .22, depth + Math.sin(angle) * radius], cx, cy, scale, yaw, pitch);
-      if (step === 0) context.moveTo(...point); else context.lineTo(...point);
-    }
-    context.stroke();
-  });
-  const core = project([0, .38, .02], cx, cy, scale, yaw, pitch);
-  const gradient = context.createRadialGradient(core[0] - 5, core[1] - 7, 2, core[0], core[1], scale * .22);
-  gradient.addColorStop(0, '#fff8d4'); gradient.addColorStop(.32, color); gradient.addColorStop(1, 'rgba(200,172,112,0)');
-  context.globalAlpha = bright ? .92 : .72; context.fillStyle = gradient; context.beginPath(); context.arc(core[0], core[1], scale * .22, 0, TAU); context.fill();
-  context.globalAlpha = .82; context.lineWidth = 1.4;
-  for (let layer = 0; layer < 3; layer += 1) {
-    context.beginPath(); context.arc(core[0] + (layer - 1) * 4, core[1] + layer * 3, scale * (.13 + layer * .025), layer * .7, Math.PI + layer * .9); context.stroke();
-  }
   context.restore();
 }
+
+export const drawVrAstroAttractorPreview = drawVrFurnaceCurvePresentation;

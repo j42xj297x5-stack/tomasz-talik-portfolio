@@ -7,7 +7,7 @@ import { ASTERION_SHELL_PATCHES } from './asterionShellPatchData.js';
 import { assemblySegmentVisible, createAsterionModelWireframeMap, createAsterionPatchGeometry, resolvePatchVisualStates } from './asterionSphereWireframe.js';
 import { drawMaterialCardVisual } from './drawVrMaterialCard.js';
 import { resolveAttractorShellGlyph } from '../tools/vrAttractorShellGlyphs.js';
-import { drawVrAstroAttractorPreview } from './drawVrAstroAttractorPreview.js';
+import { createVrFurnaceCurvePresentation, drawVrFurnaceCurvePresentation } from './drawVrAstroAttractorPreview.js';
 import { SMALL_GLYPH_WIREFRAME_DATA } from './smallGlyphWireframeData.js';
 import { drawSmallGlyphWireframe } from './drawSmallGlyphWireframe.js';
 import { resolveVrSmallGlyphProtoAstro } from '../protoAstro/resolveVrSmallGlyphProtoAstro.js';
@@ -39,7 +39,7 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
   canUseAstroTuning = () => false,
   runeRecipeInteraction = null, runeRecipeSelectionController = null, runeTuningController = null,
   requestAstroProduction = () => false,
-  asterionModel = null, settings = {}, locale = 'pl', onEnterModule = () => {}, onReturnHome = () => {}, onCreate = () => {} }) {
+  asterionPreviewModel, astrolabiumPreviewModel, settings = {}, locale = 'pl', onEnterModule = () => {}, onReturnHome = () => {}, onCreate = () => {} }) {
   const copy = resolveVrFurnaceCopy(locale);
   const config = { width: 1.55, height: 1.05, gapFromFurnace: 0.10, verticalOffset: 0.15, yawDegrees: -12,
     canvasWidth: 1536, canvasHeight: 1024, appearDuration: 0.32, disappearDuration: 0.20,
@@ -78,7 +78,8 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
     scaleMultiplier: config.spherePatchVisualScaleMultiplier
   });
   const patchDataByAssetId = Object.fromEntries(ASTERION_SHELL_PATCHES.map((patch) => [patch.assetId, patch]));
-  const asterionWireframeMap = createAsterionModelWireframeMap(asterionModel);
+  const asterionCurvePresentation = createVrFurnaceCurvePresentation(asterionPreviewModel);
+  const astrolabiumCurvePresentation = createVrFurnaceCurvePresentation(astrolabiumPreviewModel);
   const shellGlyphImages = Object.fromEntries(ASTERION_SHELL_PATCHES.map(({ assetId }) => {
     const glyph = resolveAttractorShellGlyph(assetId);
     const image = new Image();
@@ -160,7 +161,7 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
       text(card[2], rect.x + 42, rect.y + 128, 25, '#91afbe'); text(card[3], rect.x + 42, rect.y + 190, 21, '#6f9db5');
       const statusRight = card[0] === 'module-astro-attractor' ? rect.x + rect.width - 385 : rect.x + rect.width - 42;
       context.textAlign = 'right'; text(card[4], statusRight, rect.y + 190, 22, card[5] ? '#bdefff' : '#91afbe'); context.textAlign = 'left';
-      if (card[0] === 'module-astro-attractor') drawVrAstroAttractorPreview(context, {
+      if (card[0] === 'module-astro-attractor') drawVrFurnaceCurvePresentation(context, astrolabiumCurvePresentation, {
         cx: rect.x + rect.width - 210, cy: rect.y + 118, scale: 88, elapsed: telemetryElapsed,
         color: accents.attractor, bright: hoveredRegion === rect.id
       });
@@ -259,8 +260,13 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
     const previewX = 470, previewY = 525;
     panelRect(90, 285, 760, 515, { variant: 'monitor', active: production.state === 'BUILDING',
       completed: ['AVAILABLE', 'EARNED'].includes(production.state), accentColor: accents.attractor });
-    drawVrAstroAttractorPreview(context, { cx: previewX, cy: previewY, scale: 235, elapsed: telemetryElapsed,
-      color: accents.attractor, bright: production.state !== 'READY' });
+    const constructionProgress = production.state === 'BUILDING'
+      ? Math.max(0, Math.min(1, production.constructionProgress ?? 0))
+      : ['AVAILABLE', 'EARNED'].includes(production.state) ? 1 : 0;
+    drawVrFurnaceCurvePresentation(context, astrolabiumCurvePresentation, {
+      cx: previewX, cy: previewY, scale: 235, elapsed: telemetryElapsed, progress: constructionProgress,
+      color: accents.attractor, bright: production.state !== 'READY'
+    });
 
     panelRect(900, 285, 505, 515, { variant: 'monitor', active: production.state === 'BUILDING',
       completed: ['AVAILABLE', 'EARNED'].includes(production.state), accentColor: accents.attractor });
@@ -492,15 +498,10 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
     if (building || available) drawAsterionModelContour(cx, cy, radius, available ? 1 : formationProgress);
   }
   function drawAsterionModelContour(cx, cy, radius, reveal) {
-    if (!asterionWireframeMap.segments.length || reveal <= 0) return;
-    const yaw = telemetryElapsed * .18, pitch = -.24, cyaw = Math.cos(yaw), syaw = Math.sin(yaw), cp = Math.cos(pitch), sp = Math.sin(pitch);
-    const project = ([x, y, z]) => { const rx = x * cyaw + z * syaw, rz = -x * syaw + z * cyaw;
-      const ry = y * cp - rz * sp, depth = 1 / Math.max(.7, 1 + (y * sp + rz * cp) * .14); return [cx + rx * radius * depth, cy - ry * radius * depth]; };
-    context.save(); context.strokeStyle = accents.process; context.globalAlpha = .3 + .7 * reveal; context.lineWidth = 2.05;
-    context.shadowColor = accents.process; context.shadowBlur = 11; context.beginPath();
-    asterionWireframeMap.segments.forEach((segment) => { if (!assemblySegmentVisible(segment, reveal)) return;
-      const a = project(segment.a), b = project(segment.b); context.moveTo(a[0], a[1]); context.lineTo(b[0], b[1]); });
-    context.stroke(); context.restore();
+    drawVrFurnaceCurvePresentation(context, asterionCurvePresentation, {
+      cx, cy, scale: radius, elapsed: telemetryElapsed, progress: reveal, color: accents.process,
+      bright: true, rotationSpeed: .18, pitch: -.24
+    });
   }
   function draw() {
     if (!context) return; redrawCount += 1; context.clearRect(0, 0, canvas.width, canvas.height);
@@ -608,5 +609,5 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
     isVisible: () => state !== ASTRO_FURNACE_PANEL_STATES.HIDDEN && state !== ASTRO_FURNACE_PANEL_STATES.DISAPPEARING,
     hasCurrentHit: (record) => Boolean(hits.get(record)?.intersection), getState: () => state, getScreen: () => screen,
     getInteractiveRegions: () => interactiveRegions.map((region) => ({ ...region })), getRedrawCount: () => redrawCount,
-    getAsterionWireframeMap: () => asterionWireframeMap };
+    getAsterionCurvePresentation: () => asterionCurvePresentation };
 }

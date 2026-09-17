@@ -252,7 +252,7 @@ worldStableRoot.add(centralPlaceholder);
 
 const asterionSphereQa = settings.asterionSphere.enabled && searchParams.has(settings.asterionSphere.qaQueryParam);
 const vrAssets = getPreloadAssets([...INITIAL_PRELOAD_GROUPS, ...DEFERRED_PRELOAD_GROUPS])
-  .filter(({ id }) => id === 'sun-model' || id === 'vr-asterion-sphere-model' || id === 'vr-rune-bridge-model' || id === 'gltf-loader-module' || id === 'monkey-model' || id === 'monkey-silhouette-model' || id === 'monkey-stone-model' || id === 'vr-portal-model' || id === 'vr-astro-attractor-model' || id === 'vr-astro-furnace-model' || id.startsWith('vr-progress-floor-') || id === 'vr-crystal-reliquary-model' || id.startsWith('vr-crystal-reliquary-button-') || id.startsWith('glyph-') || id.startsWith('vr-crystal-') || id.startsWith('vr-rune-stone-') || id.startsWith('shell-relic-') || id.startsWith('small-glyph-relic-') || id.startsWith('proto-astro-'))
+  .filter(({ id }) => id === 'sun-model' || id === 'vr-asterion-sphere-model' || id === 'vr-asterion-preview-model' || id === 'vr-astrolabium-preview-model' || id === 'vr-rune-bridge-model' || id === 'gltf-loader-module' || id === 'monkey-model' || id === 'monkey-silhouette-model' || id === 'monkey-stone-model' || id === 'vr-portal-model' || id === 'vr-astro-attractor-model' || id === 'vr-astro-furnace-model' || id.startsWith('vr-progress-floor-') || id === 'vr-crystal-reliquary-model' || id.startsWith('vr-crystal-reliquary-button-') || id.startsWith('glyph-') || id.startsWith('vr-crystal-') || id.startsWith('vr-rune-stone-') || id.startsWith('shell-relic-') || id.startsWith('small-glyph-relic-') || id.startsWith('proto-astro-'))
   .map((asset) => ({ ...asset, critical: asset.id === 'gltf-loader-module' }));
 const loadingDiagnostics = createLoadingDiagnostics(vrAssets);
 const assetManager = createAssetManager({ diagnostics: loadingDiagnostics });
@@ -1033,7 +1033,9 @@ const furnacePanel = createVrAstroFurnacePanel({
   requestAstroProduction: () => runtimeExperience.dispatch(
     VR_SCENARIO_EVENT.ASTRO_ATTRACTOR_PRODUCTION_REQUESTED
   ) !== null,
-  asterionModel: asterionSphere.object, settings: settings.furnace.panel, locale: language,
+  asterionPreviewModel: assetManager.cloneGltfScene('vr-asterion-preview-model'),
+  astrolabiumPreviewModel: assetManager.cloneGltfScene('vr-astrolabium-preview-model'),
+  settings: settings.furnace.panel, locale: language,
   processSource: createVrAstroFurnaceProcessSource(() => astroFurnaceActivateInteraction),
   contentSource: furnaceContentSource,
   onEnterModule: () => playVrUi(VR_AUDIO.furnaceDeeper),
