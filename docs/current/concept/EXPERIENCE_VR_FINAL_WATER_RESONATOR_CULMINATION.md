@@ -10,7 +10,7 @@ Ten dokument jest wiążącym celem architektonicznym i narracyjnym dla końcowe
 - **BINDING DESIGN TARGET** — zatwierdzone zachowanie do następnej implementacji, jeszcze nie runtime;
 - **FUTURE** — kierunek poza bezpośrednim zakresem, dopóki ten dokument nie promuje go do celu.
 
-Nie wolno interpretować całego celu jako istniejącej funkcji. Pierwszy pionowy wycinek jest zaimplementowany: generic `CEILING_CYCLED`, semantic handoff odrzucenia, point `5.15`, przejście do Eteru dopiero po zaobserwowanym cyklu oraz zrewidowane PL/EN `progression.p4.etherIntervention`. Harmonic pulse, finalna prezentacja balance puzzle, hint ladder i końcowa eskalacja Guidance pozostają pending. W razie konfliktu jest nadrzędny dla kolejności i Guidance tej kulminacji; modele techniczne zachowują autorytet nad aktualną mechaniką.
+Nie wolno interpretować całego celu jako istniejącej funkcji. Zaimplementowane są: generic `CEILING_CYCLED`, semantic handoff odrzucenia, point `5.15`, przejście do Eteru dopiero po zaobserwowanym cyklu, zrewidowane PL/EN `progression.p4.etherIntervention` oraz harmoniczny oddech pola. Hint ladder, pełna finalna prezentacja balance puzzle i końcowa eskalacja Guidance pozostają pending. W razie konfliktu jest nadrzędny dla kolejności i Guidance tej kulminacji; modele techniczne zachowują autorytet nad aktualną mechaniką.
 
 ## Already implemented facts
 
@@ -127,17 +127,17 @@ Wiążące semantic stages, niezależne od przyszłych ID pointów:
 4. przyciągnij Glif Wody;
 5. zdobądź ostatni kryształ.
 
-## Binding design target — harmonic feedback
+## Implemented fact — harmonic feedback
 
 Przy `222 / M22 / W22` całe pole rozpoczyna powolny, spójny oddech/puls:
 
 - read-only presentation wyprowadzona z istniejącej synchronization truth;
 - nie tworzy nowej gameplay truth;
 - łagodna i spójna w całym polu, wyraźnie inna od zwykłej luminancji Water;
-- orientacyjny rytm oddechu `2–3 s`;
+- początkowy rytm oddechu około `2.4 s`;
 - bez flash/strobe i bez eksplozji power-up.
 
-Znaczenie: **`THE RESONATOR IS BALANCED`**. Pulse jest **BINDING DESIGN TARGET / IMPLEMENTATION PENDING**. Sukcesu nie wolno wnioskować z widocznego pulsu; prezentacja zawsze podąża za domain truth.
+Znaczenie: **`THE RESONATOR IS BALANCED`**. Pulse jest zaimplementowaną, read-only projekcją Field Presentation uruchamianą wyłącznie przez `waterSyncLock === true`; domain truth pozostaje `waterSyncLock`, a prezentacja nie definiuje ani nie potwierdza truth z powrotem do domeny. Moduluje bieżące bazowe opacity skin, skeleton i Water halo bez zmiany Water hue, geometrii ani containment. Sukcesu nie wolno wnioskować z widocznego pulsu; prezentacja zawsze podąża za domain truth. Dokładne amplitudy pozostają **HARDWARE QA / TUNING**.
 
 ## Binding design target — hint ladder 3 / 6 / 9 minut
 
@@ -238,7 +238,6 @@ Preferowane zdanie: `Woda stroi pole, zamiast zmieniać jego zasięg.` To wymaga
 - deliberate answer choice Hint 3;
 - persistent `CO TERAZ?` fallbacks;
 - eskalacja clue w Player Y;
-- harmonic balanced-field pulse;
 - Water Player Y copy refinement.
 
 Żaden z tych punktów nie jest ukończony przez ten dokument.

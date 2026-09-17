@@ -8,6 +8,12 @@ const RADIAL_SEGMENTS = 4;
 const TUBE_RADIUS = 0.018;
 const BOW_FRACTION = 0.08;
 const MORPH_DURATION_SECONDS = 0.32;
+const HARMONIC_BREATH = Object.freeze({
+  periodSeconds: 2.4,
+  skinAmplitude: 0.15,
+  skeletonAmplitude: 0.18,
+  haloAmplitude: 0.22
+});
 
 const skinVertexShader = `
 varying vec3 vViewNormal;
@@ -332,6 +338,8 @@ export function createVrAsterionResonatorFieldPresentation({ parent, fieldActor 
 
   let morphElapsed = 0;
   let morphActive = false;
+  let harmonicActive = false;
+  let harmonicElapsed = 0;
   const currentColor = new THREE.Color(0xffffff);
   const sourceColor = new THREE.Color(0xffffff);
   const targetColor = new THREE.Color(0xffffff);
@@ -355,16 +363,23 @@ export function createVrAsterionResonatorFieldPresentation({ parent, fieldActor 
     };
   }
 
-  function applyWaterVisual() {
+  function applyWaterVisual(breath = 0) {
     skinMaterial.uniforms.color.value.copy(currentColor);
-    skinMaterial.uniforms.opacity.value = currentOpacities.skin;
+    skinMaterial.uniforms.opacity.value = Math.min(1,
+      currentOpacities.skin * (1 + breath * HARMONIC_BREATH.skinAmplitude));
     skeletonMaterial.color.copy(currentColor);
-    skeletonMaterial.opacity = currentOpacities.skeleton;
+    skeletonMaterial.opacity = Math.min(1,
+      currentOpacities.skeleton * (1 + breath * HARMONIC_BREATH.skeletonAmplitude));
     haloMaterial.uniforms.color.value.copy(currentColor);
-    haloMaterial.uniforms.opacity.value = currentOpacities.halo;
+    haloMaterial.uniforms.opacity.value = Math.min(1,
+      currentOpacities.halo * (1 + breath * HARMONIC_BREATH.haloAmplitude));
   }
 
   function present(descriptor, immediate = false) {
+    const nextHarmonicActive = descriptor.waterSyncLock === true;
+    if (immediate || nextHarmonicActive !== harmonicActive) harmonicElapsed = 0;
+    harmonicActive = nextHarmonicActive;
+    if (!harmonicActive) applyWaterVisual();
     const shape = resolveAsterionResonatorFieldShape(descriptor);
     if (!shape) {
       morphActive = false;
@@ -397,33 +412,43 @@ export function createVrAsterionResonatorFieldPresentation({ parent, fieldActor 
   }
 
   function update(deltaSeconds) {
-    if (!morphActive) return;
-    morphElapsed += Math.max(0, deltaSeconds || 0);
-    const p = Math.min(1, morphElapsed / MORPH_DURATION_SECONDS);
-    const smooth = p * p * (3 - 2 * p);
-    currentColor.copy(sourceColor).lerp(targetColor, smooth);
-    currentOpacities.skin = sourceOpacities.skin
-      + (targetOpacities.skin - sourceOpacities.skin) * smooth;
-    currentOpacities.skeleton = sourceOpacities.skeleton
-      + (targetOpacities.skeleton - sourceOpacities.skeleton) * smooth;
-    currentOpacities.halo = sourceOpacities.halo
-      + (targetOpacities.halo - sourceOpacities.halo) * smooth;
-    applyWaterVisual();
-    if (p === 1) {
-      skinPositions.set(skinTargetPositions);
-      tubeCenters.set(tubeTargetCenters);
-    } else {
-      for (let index = 0; index < skinPositions.length; index += 1) {
-        skinPositions[index] = skinSourcePositions[index]
-          + (skinTargetPositions[index] - skinSourcePositions[index]) * smooth;
+    if (!morphActive && !harmonicActive) return;
+    const safeDeltaSeconds = Math.max(0, deltaSeconds || 0);
+    if (morphActive) {
+      morphElapsed += safeDeltaSeconds;
+      const p = Math.min(1, morphElapsed / MORPH_DURATION_SECONDS);
+      const smooth = p * p * (3 - 2 * p);
+      currentColor.copy(sourceColor).lerp(targetColor, smooth);
+      currentOpacities.skin = sourceOpacities.skin
+        + (targetOpacities.skin - sourceOpacities.skin) * smooth;
+      currentOpacities.skeleton = sourceOpacities.skeleton
+        + (targetOpacities.skeleton - sourceOpacities.skeleton) * smooth;
+      currentOpacities.halo = sourceOpacities.halo
+        + (targetOpacities.halo - sourceOpacities.halo) * smooth;
+      if (p === 1) {
+        skinPositions.set(skinTargetPositions);
+        tubeCenters.set(tubeTargetCenters);
+      } else {
+        for (let index = 0; index < skinPositions.length; index += 1) {
+          skinPositions[index] = skinSourcePositions[index]
+            + (skinTargetPositions[index] - skinSourcePositions[index]) * smooth;
+        }
+        for (let index = 0; index < tubeCenters.length; index += 1) {
+          tubeCenters[index] = tubeSourceCenters[index]
+            + (tubeTargetCenters[index] - tubeSourceCenters[index]) * smooth;
+        }
       }
-      for (let index = 0; index < tubeCenters.length; index += 1) {
-        tubeCenters[index] = tubeSourceCenters[index]
-          + (tubeTargetCenters[index] - tubeSourceCenters[index]) * smooth;
-      }
+      uploadGeometry();
+      if (p === 1) morphActive = false;
     }
-    uploadGeometry();
-    if (p === 1) morphActive = false;
+    let breath = 0;
+    if (harmonicActive) {
+      harmonicElapsed += safeDeltaSeconds;
+      const phase = (harmonicElapsed % HARMONIC_BREATH.periodSeconds)
+        / HARMONIC_BREATH.periodSeconds;
+      breath = 0.5 - 0.5 * Math.cos(phase * Math.PI * 2);
+    }
+    applyWaterVisual(breath);
   }
 
   owner.visible = false;
