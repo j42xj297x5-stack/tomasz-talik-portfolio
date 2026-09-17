@@ -56,6 +56,10 @@ export const VR_MONKEY_COMMUNICATION_COPY_PL = Object.freeze({
     'decision.threshold.return': { blocks: ['Mądra decyzja.', 'Albo tchórzliwa.', 'Czasem to ta sama decyzja.\nDopiero później wiadomo.'] }
   }),
   hints: Object.freeze({
+    'hint.finalWater.balance.soft': { blocks: ['Glify nie lubią, kiedy patrzysz na nie przez zbyt wiele rzeczy.', 'Na początku wystarczyło, że patrzyłeś.\n\nPotem zbudowałeś Portal.\n\nSektory.\n\nPiec.\n\nAstrolabium.\n\nRezonator.', 'Im więcej miałeś sposobów, żeby je dosięgnąć,\n\ntym dalej uciekały.', 'Woda robi to najlepiej.\n\nZbliża się.\n\nOddala.\n\nNie chce zostać tam, gdzie ją znalazłeś.', 'Trochę jakby pokazywała ci, czym jest.', 'Ale teraz masz wszystkie części.\n\nI Eter.', 'On sam nie ma jednej formy.\n\nDlatego może łączyć pozostałe.', 'Nie próbuj tylko złapać Wody.\n\nDostrój do niej całe miejsce.', 'Obserwuj pole.\n\nOno też potrafi odpowiedzieć.'] },
+    'hint.finalWater.balance.direct': { blocks: ['Chyba próbujesz znaleźć wiele odpowiedzi.', 'A może jest tylko jedna.', 'Nie stroisz pięciu osobnych sektorów.\n\nStroisz jeden Rezonator.', 'Niech odpowiedzą podobnie.', 'Szukaj środka.\n\nSymetrii.\n\nRównowagi.', 'Pomyśl o Wodzie.\n\nPrzyjmuje każdy kształt.\n\nAle sama zawsze szuka poziomu.', 'Nie patrz tylko na sektory.\n\nPatrz na pole.'] },
+    'hint.finalWater.solution.offer': { blocks: ['Chcesz dostać odpowiedź?\n\nCzy chcesz jeszcze znaleźć ją sam?'] },
+    'hint.finalWater.solution.exact': { blocks: ['Dobrze.', 'Wszystkie sektory ustaw na poziom 2.', 'Ziemia, Drzewo i Ogień — 2.', 'Metal — oba ustawienia 2.', 'Woda — oba ustawienia 2.', 'Obserwuj pole.', 'Kiedy zacznie pulsować, spróbuj namierzyć Wodę ponownie.'] },
     'hint.crystal.whatNow.soft': { blocks: ['Najpierw go weź.'] }, 'hint.crystal.grab.medium': { blocks: ['Chwyt.'] },
     'hint.glyphs.how.soft': { blocks: ['Wskaż znak.\nSpust. Przytrzymaj aż otrzymasz kryształ'] },
     'hint.glyphs.how.strong': { blocks: ['Dotknij glif Szpilą.', 'Przytrzymaj spust.', 'Wydobądź kryształ.'] },
@@ -73,6 +77,8 @@ export const VR_MONKEY_COMMUNICATION_COPY_PL = Object.freeze({
     asterion: Object.freeze({ blocks: ['To narzędzie do zmiany horyzontu.\nNie przybliża tego, co jest daleko.', 'Zmienia to, skąd patrzysz.\nDzięki temu dosięgniesz tego, czego wcześniej nie mogłeś.'] })
   }),
   knowledge: Object.freeze({
+    'knowledge.finalWater.balance': { groupId: 'currentGuidance', question: 'ZRÓWNOWAŻ REZONATOR', blocks: ['Nie szukaj różnych skrajnych ustawień.\nZestrój wszystkie sektory podobnie.\nSzukaj środka i obserwuj pole.'] },
+    'knowledge.finalWater.solution': { groupId: 'currentGuidance', question: 'CHCESZ POZNAĆ WŁAŚCIWE UŁOŻENIE REZONATORA?', blocks: ['Dobrze.', 'Wszystkie sektory ustaw na poziom 2.', 'Ziemia, Drzewo i Ogień — 2.', 'Metal — oba ustawienia 2.', 'Woda — oba ustawienia 2.', 'Obserwuj pole.', 'Kiedy zacznie pulsować, spróbuj namierzyć Wodę ponownie.'] },
     'knowledge.intro.where': { groupId: 'intro', policy: 'CONTEXTUAL', question: 'DOKĄD?', blocks: ['Gdybym ci powiedział, poszedłbyś do odpowiedzi.', 'A ja pytam, czy pójdziesz za mną.'] },
     'knowledge.threshold.otherSide': { groupId: 'threshold', policy: 'CONTEXTUAL', question: 'CO JEST PO DRUGIEJ STRONIE?', blocks: ['Po tej stronie pytasz.\nPo tamtej będziesz sprawdzał.'] },
     'knowledge.threshold.easier': { groupId: 'threshold', policy: 'CONTEXTUAL', question: 'DLACZEGO ŁATWIEJ?', blocks: ['Nie musisz już wybierać, czy wejść.'] },
@@ -130,6 +136,10 @@ export const VR_MONKEY_COMMUNICATION_COPY_EN = Object.freeze({
     'decision.threshold.return': { blocks: ['A wise choice.', 'Or a cowardly one.', "Sometimes they're one and the same.\nOnly later do you find out."] }
   }),
   hints: Object.freeze({
+    'hint.finalWater.balance.soft': { blocks: ["Glyphs don't like it when you look at them through too many things.", 'At first, all you had to do was look.\n\nThen you built the Portal.\n\nSectors.\n\nThe Furnace.\n\nThe Astrolabe.\n\nThe Resonator.', 'The more ways you found to reach them,\n\nthe farther they fled.', 'Water does it best.\n\nIt comes closer.\n\nMoves away.\n\nIt refuses to stay where you found it.', "Almost as if it's showing you what it is.", 'But now you have all the pieces.\n\nAnd Ether.', "It has no single form of its own.\n\nThat's why it can connect the others.", "Don't just try to catch Water.\n\nTune this whole place to it.", 'Watch the field.\n\nIt can answer too.'] },
+    'hint.finalWater.balance.direct': { blocks: ["I think you're trying to find many answers.", "Maybe there's only one.", "You're not tuning five separate Sectors.\n\nYou're tuning one Resonator.", 'Let them answer in the same way.', 'Look for the middle.\n\nSymmetry.\n\nBalance.', 'Think about Water.\n\nIt takes every shape.\n\nBut it always seeks its level.', "Don't just watch the Sectors.\n\nWatch the field."] },
+    'hint.finalWater.solution.offer': { blocks: ['Do you want the answer?\n\nOr do you want to keep looking for it yourself?'] },
+    'hint.finalWater.solution.exact': { blocks: ['All right.', 'Set every Sector to level 2.', 'Earth, Wood, and Fire — 2.', 'Metal — both settings at 2.', 'Water — both settings at 2.', 'Watch the field.', 'When it starts to pulse, try acquiring Water again.'] },
     'hint.crystal.whatNow.soft': { blocks: ['First, take it.'] }, 'hint.crystal.grab.medium': { blocks: ['Grip.'] },
     'hint.glyphs.how.soft': { blocks: ['Point at the symbol.\nPull the trigger. Hold it until you receive the crystal.'] },
     'hint.glyphs.how.strong': { blocks: ['Bring the Pin to the glyph.', 'Hold the trigger.', 'Draw the crystal out.'] },
@@ -147,6 +157,8 @@ export const VR_MONKEY_COMMUNICATION_COPY_EN = Object.freeze({
     asterion: Object.freeze({ blocks: ['This is a tool for shifting the horizon.\nIt does not draw distant things nearer.', 'It changes the place from which you look.\nAnd from there, what was once beyond your reach may no longer be.'] })
   }),
   knowledge: Object.freeze({
+    'knowledge.finalWater.balance': { groupId: 'currentGuidance', question: 'BALANCE THE RESONATOR', blocks: ["Don't look for different extreme settings.\nTune all Sectors similarly.\nLook for the middle and watch the field."] },
+    'knowledge.finalWater.solution': { groupId: 'currentGuidance', question: 'DO YOU WANT THE CORRECT RESONATOR CONFIGURATION?', blocks: ['All right.', 'Set every Sector to level 2.', 'Earth, Wood, and Fire — 2.', 'Metal — both settings at 2.', 'Water — both settings at 2.', 'Watch the field.', 'When it starts to pulse, try acquiring Water again.'] },
     'knowledge.intro.where': { groupId: 'intro', policy: 'CONTEXTUAL', question: 'WHERE?', blocks: ['If I told you, you would follow the answer.', "But I'm asking whether you'll follow me."] },
     'knowledge.threshold.otherSide': { groupId: 'threshold', policy: 'CONTEXTUAL', question: 'WHAT IS ON THE OTHER SIDE?', blocks: ['On this side, you ask.\nBeyond it, you will discover for yourself.'] },
     'knowledge.threshold.easier': { groupId: 'threshold', policy: 'CONTEXTUAL', question: 'WHY IS IT EASIER?', blocks: ['You no longer need to decide whether to cross.'] },

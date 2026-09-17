@@ -1,8 +1,8 @@
 # Experience VR — Communication Mechanics
 
-Status: **CURRENT runtime baseline**, synchronized on 2026-09-11. Literal Polish text is owned by [`EXPERIENCE_VR_PLAYER_COMMUNICATION_COPY.md`](EXPERIENCE_VR_PLAYER_COMMUNICATION_COPY.md).
+Status: **CURRENT runtime baseline**, synchronized on 2026-09-17. Literal Polish text is owned by [`EXPERIENCE_VR_PLAYER_COMMUNICATION_COPY.md`](EXPERIENCE_VR_PLAYER_COMMUNICATION_COPY.md).
 
-> The complete final-Water lifecycle remains **BINDING DESIGN TARGET / IMPLEMENTATION PENDING** in [`EXPERIENCE_VR_FINAL_WATER_RESONATOR_CULMINATION.md`](EXPERIENCE_VR_FINAL_WATER_RESONATOR_CULMINATION.md). Its first slice is implemented: point `5.15` presents the Water objective, acquisition truth emits the controlled ceiling cycle, Scenario enters `5.20` only after semantic rejection, and the revised 11-block Ether communication retains mandatory attention and its existing completion boundary.
+> The complete final-Water Guidance lifecycle is **IMPLEMENTED** in [`EXPERIENCE_VR_FINAL_WATER_RESONATOR_CULMINATION.md`](EXPERIENCE_VR_FINAL_WATER_RESONATOR_CULMINATION.md). Its preserved gameplay foundation remains implemented: point `5.15` presents the Water objective, acquisition truth emits the controlled ceiling cycle, Scenario enters `5.20` only after semantic rejection, and the revised 11-block Ether communication retains mandatory attention and its existing completion boundary.
 
 This document describes the implemented communication model. `ATTENTION_REQUIRED`, `AUTO_HINT`, `SPEAKING` and `IDLE` are semantic classifications used by the documentation; runtime actors may expose more detailed phases.
 
@@ -141,6 +141,6 @@ The following current click-required / attention guidance was **not** migrated a
 
 Runtime Monkey copy is authored as `blocks[]`: one element is one bubble; `\n` inside an element is a mandatory line break in that bubble. Documentation must neither merge nor split blocks and uses `--- BLOCK ---` only between elements.
 
-## Final Water delayed guidance — binding target, not runtime
+## Final Water delayed guidance — IMPLEMENTED
 
-The final puzzle adds a single unresolved-time ladder at `3 / 6 / 9` minutes, beginning only after physical Water installation and successful full-Resonator first-teacher completion. Mandatory Monkey communication defers due hints. Ordinary Sector changes, target contact, one/two rings and lost containment do not reset it; balanced synchronization resolves it. Hint 2 publishes persistent `CO TERAZ?` and Player Y reminders only after successful teaching. Hint 3 first asks consent: declining stops automatic escalation but publishes an optional answer topic; accepting (then or later) publishes the exact answer persistently. Presentation pulse is never used as solve truth. Exact approved PL blocks and ownership are canonical in the final-Water freeze.
+The implemented final puzzle Guidance lifecycle owns a single unresolved-time ladder at `3 / 6 / 9` minutes, beginning only after physical Water installation and successful full-Resonator first-teacher completion. Mandatory Monkey communication defers due hints. Ordinary Sector changes, target contact, one/two rings and lost containment do not reset it; balanced synchronization resolves it. Hint 2 publishes persistent `CO TERAZ?` and Player Y reminders only after successful teaching. Hint 3 first asks consent: declining stops automatic escalation but publishes an optional answer topic; accepting (then or later) publishes the exact answer persistently. Presentation pulse is never used as solve truth. Exact approved PL blocks and ownership are canonical in the final-Water freeze.

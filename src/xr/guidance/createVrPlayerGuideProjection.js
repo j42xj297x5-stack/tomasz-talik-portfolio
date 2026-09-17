@@ -16,7 +16,7 @@ export function createVrPlayerGuideProjection({ locale, getCurrentObjective, isF
   isShellFieldRevealed, isAstrolabiumOwned, hasReadRuneStones = () => false, hasReadBinders = () => false,
   hasInstalledRune = () => false, hasLearnedResonator = () => false, isMetalInstalled = () => false,
   hasLearnedFullResonator = () => false, isWaterInstalled = () => false,
-  isAsterionOwned = () => false }) {
+  isAsterionOwned = () => false, getFinalWaterGuidanceLevel = () => 'NONE' }) {
   if (typeof getCurrentObjective !== 'function' || typeof isFurnaceRevealed !== 'function'
     || typeof isShellFieldRevealed !== 'function' || typeof isAstrolabiumOwned !== 'function'
     || typeof isAsterionOwned !== 'function') {
@@ -43,10 +43,20 @@ export function createVrPlayerGuideProjection({ locale, getCurrentObjective, isF
 
   const getCurrentTask = () => {
     const current = getCurrentObjective();
-    if (!isAstrolabiumOwned() || isAsterionOwned()) return current;
-    const secondary = resolveVrPlayerGuideContent(locale).asterionBuildTask;
-    return Object.freeze({ id: current ? `${current.id}+asterion-build` : 'asterion-build',
-      body: current ? `${current.body}\n\n${secondary}` : secondary });
+    const content = resolveVrPlayerGuideContent(locale);
+    const secondaryTasks = [];
+    const secondaryIds = [];
+    if (isAstrolabiumOwned() && !isAsterionOwned()) {
+      secondaryTasks.push(content.asterionBuildTask);
+      secondaryIds.push('asterion-build');
+    }
+    const finalWaterGuidanceLevel = getFinalWaterGuidanceLevel();
+    if (finalWaterGuidanceLevel === 'BALANCE') { secondaryTasks.push(content.finalWaterBalanceTask); secondaryIds.push('final-water-balance'); }
+    if (finalWaterGuidanceLevel === 'SOLUTION') { secondaryTasks.push(content.finalWaterSolutionTask); secondaryIds.push('final-water-solution'); }
+    if (!secondaryTasks.length) return current;
+    const bodies = [...(current ? [current.body] : []), ...secondaryTasks];
+    return Object.freeze({ id: `${current?.id ?? 'current-task'}+${secondaryIds.join('+')}`,
+      body: bodies.join('\n\n') });
   };
 
   function getTools() {
