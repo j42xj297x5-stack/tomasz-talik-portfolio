@@ -2,6 +2,8 @@
 
 Status: **CURRENT runtime baseline**, synchronized on 2026-09-11. Literal Polish text is owned by [`EXPERIENCE_VR_PLAYER_COMMUNICATION_COPY.md`](EXPERIENCE_VR_PLAYER_COMMUNICATION_COPY.md).
 
+> The final-Water communication lifecycle is frozen separately in [`EXPERIENCE_VR_FINAL_WATER_RESONATOR_CULMINATION.md`](EXPERIENCE_VR_FINAL_WATER_RESONATOR_CULMINATION.md) as **BINDING DESIGN TARGET / IMPLEMENTATION PENDING**. Nothing in that target is part of this implemented baseline yet.
+
 This document describes the implemented communication model. `ATTENTION_REQUIRED`, `AUTO_HINT`, `SPEAKING` and `IDLE` are semantic classifications used by the documentation; runtime actors may expose more detailed phases.
 
 ## Surfaces and truth ownership
@@ -138,3 +140,7 @@ The following current click-required / attention guidance was **not** migrated a
 ## Copy representation
 
 Runtime Monkey copy is authored as `blocks[]`: one element is one bubble; `\n` inside an element is a mandatory line break in that bubble. Documentation must neither merge nor split blocks and uses `--- BLOCK ---` only between elements.
+
+## Final Water delayed guidance — binding target, not runtime
+
+The final puzzle adds a single unresolved-time ladder at `3 / 6 / 9` minutes, beginning only after physical Water installation and successful full-Resonator first-teacher completion. Mandatory Monkey communication defers due hints. Ordinary Sector changes, target contact, one/two rings and lost containment do not reset it; balanced synchronization resolves it. Hint 2 publishes persistent `CO TERAZ?` and Player Y reminders only after successful teaching. Hint 3 first asks consent: declining stops automatic escalation but publishes an optional answer topic; accepting (then or later) publishes the exact answer persistently. Presentation pulse is never used as solve truth. Exact approved PL blocks and ownership are canonical in the final-Water freeze.
