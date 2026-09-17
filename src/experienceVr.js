@@ -462,7 +462,7 @@ const shellSystem = createVrShellSystem({ parent: worldStableRoot, assetManager,
   direction: settings.shellFieldMotion.direction,
   revealDurationSeconds: settings.celestial.revealDurationSeconds });
 const smallGlyphLayer = sphericalLayer(VR_SPHERICAL_LAYER_IDS.SMALL_GLYPHS);
-const smallGlyphMaxTargetDistance = smallGlyphLayer.outerRadius;
+const smallGlyphMaxTargetDistance = smallGlyphLayer.outerRadius + floorWalkRadius;
 const largeGlyphMaxTargetDistance = largeGlyphActor.getTargetingRange() + floorWalkRadius;
 const runeStoneMaxTargetDistance = sphericalLayer(VR_SPHERICAL_LAYER_IDS.RUNE_STONES).outerRadius;
 const smallGlyphSystem = createVrSmallGlyphSystem({
