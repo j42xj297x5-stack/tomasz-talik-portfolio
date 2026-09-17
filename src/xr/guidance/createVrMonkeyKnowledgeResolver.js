@@ -69,6 +69,12 @@ export function createVrMonkeyKnowledgeResolver({ locale, getCurrentObjective, i
       if (topicId === 'knowledge.p3.stones') stonesRead = true;
       if (topicId === 'knowledge.asterion.sphere') asterionRead = true;
     },
+    markPostRingStoneGuidanceTaught() {
+      const changed = !stonesLeadRead || !stonesRead;
+      stonesLeadRead = true;
+      stonesRead = true;
+      return changed;
+    },
     publishTransientHintFallback(slotId, hintId) {
       const source = copy.hints[hintId];
       if (!slotId || !source) return false;
