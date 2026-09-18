@@ -273,16 +273,17 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
       completed: completing, accentColor: processColor });
     text(copy.runeTuning.monitorHeading, x + 28, y + 38, 21, processColor);
 
-    const drawIngredient = ({ descriptor, familyCode, kind, signX, previewX, segments, inserted }) => {
+    const drawIngredient = ({ descriptor, familyCode, kind, identityX, signX, previewX, segments, inserted }) => {
       const image = getProtoAstroImage(descriptor);
-      text(kind, signX, y + 76, 18, recipe ? '#f1eaff' : '#78909d');
-      text(recipe ? copy.runeTuning.familyCard(runeLabel(familyCode), descriptor?.syllable ?? familyCode) : '—',
-        signX, y + 101, 17, recipe ? '#b89dd0' : '#667681');
-      if (recipe) drawMaterialCardVisual(context, { x: signX, y: y + 110, width: 126, height: 96,
+      const identity = recipe
+        ? `${kind} — ${copy.runeTuning.familyCard(runeLabel(familyCode), descriptor?.syllable ?? familyCode)}`
+        : `${kind} — —`;
+      text(identity, identityX, y + 38, 17, recipe ? '#b89dd0' : '#667681');
+      if (recipe) drawMaterialCardVisual(context, { x: signX, y: y + 58, width: 164, height: 125,
         glyphRatio: 1, padding: 5, glyphImage: image, color: inserted ? processColor : accents.emanation });
       if (!recipe || !showWireframes || !segments?.length) return;
       const pulse = inserted || processing ? .78 + .22 * Math.sin(telemetryElapsed * (processing ? 5 : 3)) : .38;
-      drawProcessWireframe({ segments, cx: previewX, cy: y + 158, scale: 70,
+      drawProcessWireframe({ segments, cx: previewX, cy: y + 151, scale: 105,
         yaw: telemetryElapsed * (processing ? .38 : .16), pitch: -.28, dissolve,
         color: processColor, alpha: pulse, lineWidth: processing || inserted ? 3.2 : 2.2,
         shadowBlur: processing || inserted ? 12 : 5 });
@@ -292,10 +293,10 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
     const shellWireframe = showWireframes && recipe
       ? runeRecipeInteraction?.getInsertedShell?.()?.userData?.panelWireframe : null;
     drawIngredient({ descriptor: recipe?.smallGlyphDescriptor, familyCode: recipe?.smallGlyphFamilyCode,
-      kind: copy.runeTuning.slots.glyph, signX: x + 28, previewX: x + 450,
+      kind: copy.runeTuning.slots.glyph, identityX: x + 310, signX: x + 28, previewX: x + 450,
       segments: glyph ? SMALL_GLYPH_WIREFRAME_DATA.byAssetId[glyph.assetId]?.segments3d : null, inserted: glyphInserted });
     drawIngredient({ descriptor: recipe?.shellDescriptor, familyCode: recipe?.shellFamilyCode,
-      kind: copy.runeTuning.slots.shell, signX: x + 730, previewX: x + 1150,
+      kind: copy.runeTuning.slots.shell, identityX: x + 1010, signX: x + 730, previewX: x + 1150,
       segments: shellWireframe?.segments, inserted: shellInserted });
 
     const status = completing ? copy.runeTuning.status.complete
