@@ -80,6 +80,7 @@ import { createVrAsterionResonatorTargetResponsePresentation } from './xr/asteri
 import { createVrAsterionResonatorTargetAudioProjection,
   VR_ASTERION_RESONATOR_TARGET_AUDIO } from './xr/audio/createVrAsterionResonatorTargetAudioProjection.js';
 import { resolveVrPageProtoAstro } from './xr/protoAstro/resolveVrPageProtoAstro.js';
+import { PROTO_ASTRO_SYLLABLES, resolveProtoAstroSyllable } from './xr/protoAstro/protoAstroRegistry.js';
 import { createVrAsterionProductionController } from './xr/asterion/createVrAsterionProductionController.js';
 import { createVrPlayerGuidePanel } from './xr/guidance/createVrPlayerGuidePanel.js';
 import { createVrCurrentObjectiveProjection } from './xr/guidance/createVrCurrentObjectiveProjection.js';
@@ -267,6 +268,18 @@ await preloadAssets(vrAssets, {
   stage: ASSET_STAGES.CRITICAL_INITIAL,
   markComplete: true
 });
+const requirePreparedProtoAstroImage = (descriptor) => {
+  const canonicalDescriptor = resolveProtoAstroSyllable(descriptor?.syllable);
+  if (!canonicalDescriptor || canonicalDescriptor !== descriptor) {
+    throw new Error(`[ExperienceVR] Invalid canonical Proto-Astro descriptor (${descriptor?.syllable ?? 'unknown'}: ${descriptor?.path ?? 'unknown'}).`);
+  }
+  const image = assetManager.getAssetByPath(canonicalDescriptor.path)?.image;
+  if (!image) {
+    throw new Error(`[ExperienceVR] Required prepared Proto-Astro image is unavailable (${canonicalDescriptor.syllable}: ${canonicalDescriptor.path}).`);
+  }
+  return image;
+};
+PROTO_ASTRO_SYLLABLES.forEach(requirePreparedProtoAstroImage);
 await vrAudio.prepareRuntimeAudio(REQUIRED_VR_AUDIO);
 unsubscribe();
 
@@ -663,7 +676,7 @@ function spawnPlayerInsideRingFacingMonkey() {
 const attractorTool = createVrAttractorTool({
   model: assetManager.cloneGltfScene('vr-astro-attractor-model'),
   getPlayerWorldPosition: (target) => getXrHeadWorldPosition({ renderer, camera, playerRig, target }),
-  getPreparedProtoAstroImage: (descriptor) => assetManager.getAssetByPath(descriptor.path)?.image
+  getPreparedProtoAstroImage: requirePreparedProtoAstroImage
 });
 const requirePreparedBandImage = (assetId) => {
   const image = assetManager.getImage(assetId);
@@ -811,8 +824,8 @@ const asterionResonatorTargetResponsePresentation = createVrAsterionResonatorTar
 largeGlyphActor.nodes.forEach((node) => {
   const id = node.userData.id;
   const protoAstro = resolveVrPageProtoAstro({ glyphId: id });
-  const signImage = protoAstro ? assetManager.getAssetByPath(protoAstro.descriptor.path)?.image : null;
-  if (!protoAstro || !signImage) throw new Error(`Missing prepared canonical Proto-Astro sign image for target: ${id}`);
+  if (!protoAstro) throw new Error(`Missing canonical Proto-Astro descriptor for target: ${id}`);
+  const signImage = requirePreparedProtoAstroImage(protoAstro.descriptor);
   const color = settings.asterionTargetResponse.familyColors[protoAstro.descriptor.familyCode];
   asterionResonatorTargetResponsePresentation.registerTarget({ id, anchor: node, protoAstro, signImage, color });
 });
