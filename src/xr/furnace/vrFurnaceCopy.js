@@ -6,7 +6,8 @@ const createCopy = (copy) => Object.freeze({
   runeTuning: Object.freeze({
     ...copy.runeTuning,
     familyCard: (family, syllable) => format(copy.runeTuning.familyCard, { family, syllable }),
-    tuningStatus: (family, progress) => format(copy.runeTuning.tuningStatus, { family, progress })
+    tuningStatus: (family, progress) => format(copy.runeTuning.tuningStatus, { family, progress }),
+    progress: (progress) => format(copy.runeTuning.progress, { progress })
   }),
   production: Object.freeze({ ...copy.production, progress: (progress) => format(copy.production.progress, { progress }) }),
   extraction: Object.freeze({
@@ -36,7 +37,7 @@ export const VR_FURNACE_COPY = Object.freeze({
     runeTuning: { title: 'STROJENIE KAMIENI RUNICZNYCH', instruction: 'WYBIERZ DOCELOWĄ RODZINĘ KAMIENIA',
       families: { earth: 'ZIEMIA', metal: 'METAL', water: 'WODA', tree: 'DREWNO', fire: 'OGIEŃ', astro: 'ETER' },
       familyCard: '{family} // {syllable}', familyStates: { tuned: 'ZESTROJONA', selected: 'WYBRANA', special: 'SPECJALNY', available: 'DOSTĘPNA' },
-      slots: { glyph: 'MAŁY GLIF', shell: 'SKORUPA' }, tuningStatus: 'STATUS // STROJENIE {family} // {progress}%',
+      slots: { glyph: 'MAŁY GLIF', shell: 'SKORUPA' }, monitorHeading: 'PRZEBIEG STROJENIA', progress: '{progress}%', tuningStatus: 'STATUS // STROJENIE {family} // {progress}%',
       status: { waiting: 'STATUS // OCZEKIWANIE NA SKŁADNIKI', ready: 'STATUS // GOTOWA DO STROJENIA', invalid: 'STATUS // NIEPRAWIDŁOWA RECEPTURA' } },
     production: { heading: 'STAN PRODUKCJI', states: { READY: ['GOTOWE DO UTWORZENIA', 'Rozpocznij świadomie proces w Piecu.'], BUILDING: ['MATERIALIZACJA', 'Proces konstrukcji trwa w komorze.'], AVAILABLE: ['ASTROLABIUM GOTOWE', 'Otwórz komorę i odbierz obiekt.'], CLAIMING: ['PRZEKAZYWANIE', 'Fizyczny odbiór Astrolabium trwa.'], DEFAULT: ['NIEDOSTĘPNE', 'Stan produkcji jest poza kontraktem modułu.'] }, progress: '{progress}%' },
     action: { create: 'UTWÓRZ' },
@@ -51,7 +52,7 @@ export const VR_FURNACE_COPY = Object.freeze({
       astrolabiumMetric: 'STATUS', astrolabiumStates: { AVAILABLE: 'READY // COLLECT', EARNED: 'TUNING', DEFAULT: 'ENTER MODULE' } },
     navigation: { backModules: '← MODULES' }, asterion: { title: 'ASTERION SPHERE', detail: 'Gyroscopic ring-control core' },
     astrolabium: { title: 'ASTROLABE OF BINDING', detail: 'Attraction and synchronization tool', menuEyebrow: 'SYNCHRONIZATION TOOLS', menu: { create: ['BUILD THE ASTROLABE OF BINDING', 'Materialize the tool in the Astro Furnace'], glyphTuning: ['GLYPH TUNING', 'Permanent Small Glyph configuration'], runeTuning: ['TUNE THE RUNE STONES', 'Wu Xing family recipes'] } },
-    runeTuning: { title: 'TUNE THE RUNE STONES', instruction: 'SELECT TARGET STONE FAMILY', families: { earth: 'EARTH', metal: 'METAL', water: 'WATER', tree: 'WOOD', fire: 'FIRE', astro: 'ETHER' }, familyCard: '{family} // {syllable}', familyStates: { tuned: 'TUNED', selected: 'SELECTED', special: 'SPECIAL', available: 'AVAILABLE' }, slots: { glyph: 'SMALL GLYPH', shell: 'SHELL' }, tuningStatus: 'STATUS // TUNING {family} // {progress}%', status: { waiting: 'STATUS // WAITING FOR INGREDIENTS', ready: 'STATUS // READY FOR TUNING', invalid: 'STATUS // INVALID RECIPE' } },
+    runeTuning: { title: 'TUNE THE RUNE STONES', instruction: 'SELECT TARGET STONE FAMILY', families: { earth: 'EARTH', metal: 'METAL', water: 'WATER', tree: 'WOOD', fire: 'FIRE', astro: 'ETHER' }, familyCard: '{family} // {syllable}', familyStates: { tuned: 'TUNED', selected: 'SELECTED', special: 'SPECIAL', available: 'AVAILABLE' }, slots: { glyph: 'SMALL GLYPH', shell: 'SHELL' }, monitorHeading: 'TUNING PROGRESS', progress: '{progress}%', tuningStatus: 'STATUS // TUNING {family} // {progress}%', status: { waiting: 'STATUS // WAITING FOR INGREDIENTS', ready: 'STATUS // READY FOR TUNING', invalid: 'STATUS // INVALID RECIPE' } },
     production: { heading: 'PRODUCTION STATUS', states: { READY: ['READY TO CREATE', 'Consciously begin the process in the Furnace.'], BUILDING: ['MATERIALIZATION', 'Construction is underway in the chamber.'], AVAILABLE: ['ASTROLABE READY', 'Open the chamber and collect the object.'], CLAIMING: ['TRANSFER', 'Physical retrieval of the Astrolabe is underway.'], DEFAULT: ['UNAVAILABLE', 'Production state is outside the module contract.'] }, progress: '{progress}%' }, action: { create: 'CREATE' },
     glyphTuning: { title: 'ASTROLABE TUNING', detail: 'Permanent Astrolabe of Binding configuration', section: 'SMALL GLYPHS', states: { tuned: 'TUNED', processing: 'PROCESSING', ready: 'READY', inactive: 'INACTIVE' } },
     extraction: { heading: 'EXTRACTION PROGRESS', glyph: 'SMALL GLYPH // {syllable}', glyphWaiting: 'SMALL GLYPH // WAITING', status: 'STATUS // {processStatus}', progress: '{progress}%', materialStates: { INSERTED: 'MATERIAL // PREPARED', CONSUMING: 'MATERIAL // EXTRACTION', CONSUMED: 'MATERIAL // CONTAINED' } },
