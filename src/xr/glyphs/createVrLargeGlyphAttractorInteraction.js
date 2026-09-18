@@ -50,9 +50,10 @@ export function createVrLargeGlyphAttractorInteraction({ controllers, largeGlyph
     && largeGlyphActor.getTransitionState().transition === null
     && isFamilyEligible(node)
     && hasRequiredPullReadiness(node);
+  function syncHalo(node) { if (!node) return; halos.get(node)?.setVisible(node === target || node === active); }
   function setTarget(next) { if (target === next) return; const previous = target; target = next;
-    if (previous) halos.get(previous)?.setVisible(false);
-    if (target) halos.get(target)?.setVisible(true); }
+    if (previous) syncHalo(previous);
+    if (target) syncHalo(target); }
   function setWorldPosition(node, world) { local.copy(world); node.parent.worldToLocal(local); node.position.copy(local); }
   function updateCaptureAnchor(record, node) { record.controller.getWorldQuaternion(quaternion);
     direction.copy(LOCAL_DIRECTION).applyQuaternion(quaternion).normalize();
@@ -63,7 +64,7 @@ export function createVrLargeGlyphAttractorInteraction({ controllers, largeGlyph
     returning = { node, startPosition: node.getWorldPosition(new THREE.Vector3()),
       startQuaternion: node.getWorldQuaternion(new THREE.Quaternion()),
       startScale: node.getWorldScale(new THREE.Vector3()), elapsed: 0 };
-    active = null; pullSpeed = 0; attractorTool.setTarget(null); attractorTool.setPullStrength(0);
+    active = null; syncHalo(node); pullSpeed = 0; attractorTool.setTarget(null); attractorTool.setPullStrength(0);
     if (ownsBand()) attractorTool.setState(VR_ATTRACTOR_STATES.IDLE);
   }
   function updateReturn(delta) { if (!returning) return;
@@ -90,6 +91,7 @@ export function createVrLargeGlyphAttractorInteraction({ controllers, largeGlyph
       if (active) beginReturn(active); return; }
     if (scanCone.object.parent !== right.controller) right.controller.add(scanCone.object); scanCone.update(delta, true);
     if (active) {
+      halos.get(active)?.update(delta);
       if (primaryAction <= settings.triggerThreshold || !isFamilyEligible(active) || !ownsBand()
         || !hasRequiredPullReadiness(active)) { beginReturn(active); return; }
       updateCaptureAnchor(right, active); active.getWorldPosition(position); const distance = position.distanceTo(anchor);
@@ -120,7 +122,7 @@ export function createVrLargeGlyphAttractorInteraction({ controllers, largeGlyph
     }
   }
   function reset() { const leased = active ?? returning?.node; if (leased) { onPullCancel({ target: leased }); largeGlyphActor.restoreToSlot(leased);
-      states.set(leased, STATE.ORBIT); } active = null; returning = null; pullSpeed = 0; setTarget(null);
+      states.set(leased, STATE.ORBIT); } active = null; returning = null; syncHalo(leased); pullSpeed = 0; setTarget(null);
     scanCone.update(0, false); attractorTool.setTarget(null);
     attractorTool.setPullStrength(0); }
   function dispose() { if (disposed) return; reset(); scanCone.dispose(); halos.forEach((halo) => halo.dispose()); disposed = true; }
