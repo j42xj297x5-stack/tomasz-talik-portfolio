@@ -76,6 +76,12 @@ const criticalInitialAssets = Object.freeze([
 ]);
 
 const deferredWarmAssets = Object.freeze([
+  ...Array.from({ length: 4 }, (_, index) => withStage({
+    id: `vr-attractor-band-${index + 1}-image`,
+    label: `VR Astrolabium band ${index + 1} symbol`,
+    path: `/svg/band_0${index + 1}.svg`,
+    type: 'image'
+  }, ASSET_STAGES.DEFERRED_WARM)),
   ...['KA', 'TA', 'SA', 'LA', 'RA'].map((syllable) => withStage({
     id: `proto-astro-${syllable.toLowerCase()}-image`,
     label: `${syllable} Proto-Astro sign`,

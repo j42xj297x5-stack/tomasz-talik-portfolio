@@ -252,7 +252,7 @@ worldStableRoot.add(centralPlaceholder);
 
 const asterionSphereQa = settings.asterionSphere.enabled && searchParams.has(settings.asterionSphere.qaQueryParam);
 const vrAssets = getPreloadAssets([...INITIAL_PRELOAD_GROUPS, ...DEFERRED_PRELOAD_GROUPS])
-  .filter(({ id }) => id === 'sun-model' || id === 'vr-asterion-sphere-model' || id === 'vr-asterion-preview-model' || id === 'vr-astrolabium-preview-model' || id === 'vr-rune-bridge-model' || id === 'gltf-loader-module' || id === 'monkey-model' || id === 'monkey-silhouette-model' || id === 'monkey-stone-model' || id === 'vr-portal-model' || id === 'vr-astro-attractor-model' || id === 'vr-astro-furnace-model' || id.startsWith('vr-progress-floor-') || id === 'vr-crystal-reliquary-model' || id.startsWith('vr-crystal-reliquary-button-') || id.startsWith('glyph-') || id.startsWith('vr-crystal-') || id.startsWith('vr-rune-stone-') || id.startsWith('shell-relic-') || id.startsWith('small-glyph-relic-') || id.startsWith('proto-astro-'))
+  .filter(({ id }) => id === 'sun-model' || id === 'vr-asterion-sphere-model' || id === 'vr-asterion-preview-model' || id === 'vr-astrolabium-preview-model' || id === 'vr-rune-bridge-model' || id === 'gltf-loader-module' || id === 'monkey-model' || id === 'monkey-silhouette-model' || id === 'monkey-stone-model' || id === 'vr-portal-model' || id === 'vr-astro-attractor-model' || id === 'vr-astro-furnace-model' || id.startsWith('vr-attractor-band-') || id.startsWith('vr-progress-floor-') || id === 'vr-crystal-reliquary-model' || id.startsWith('vr-crystal-reliquary-button-') || id.startsWith('glyph-') || id.startsWith('vr-crystal-') || id.startsWith('vr-rune-stone-') || id.startsWith('shell-relic-') || id.startsWith('small-glyph-relic-') || id.startsWith('proto-astro-'))
   .map((asset) => ({ ...asset, critical: asset.id === 'gltf-loader-module' }));
 const loadingDiagnostics = createLoadingDiagnostics(vrAssets);
 const assetManager = createAssetManager({ diagnostics: loadingDiagnostics });
@@ -661,14 +661,19 @@ function spawnPlayerInsideRingFacingMonkey() {
   locomotion.teleportLocal(spawnLocal, monkeyLocal);
 }
 const attractorTool = createVrAttractorTool({ model: assetManager.cloneGltfScene('vr-astro-attractor-model') });
+const requirePreparedBandImage = (assetId) => {
+  const image = assetManager.getImage(assetId);
+  if (!image) throw new Error(`[ExperienceVR] Required prepared Astrolabium band image is unavailable: ${assetId}`);
+  return image;
+};
 const attractorBandPresentations = Object.freeze({
-  [VR_ATTRACTOR_BANDS.SHELLS]: { url: publicPath('/svg/band_01.svg'),
+  [VR_ATTRACTOR_BANDS.SHELLS]: { image: requirePreparedBandImage('vr-attractor-band-1-image'),
     presentationColor: settings.attractorPresentation.bandColors.shells },
-  [VR_ATTRACTOR_BANDS.SMALL_GLYPHS]: { url: publicPath('/svg/band_02.svg'),
+  [VR_ATTRACTOR_BANDS.SMALL_GLYPHS]: { image: requirePreparedBandImage('vr-attractor-band-2-image'),
     presentationColor: settings.attractorPresentation.bandColors.smallGlyphs },
-  [VR_ATTRACTOR_BANDS.LARGE_GLYPHS]: { url: publicPath('/svg/band_03.svg'),
+  [VR_ATTRACTOR_BANDS.LARGE_GLYPHS]: { image: requirePreparedBandImage('vr-attractor-band-3-image'),
     presentationColor: settings.attractorPresentation.bandColors.largeGlyphs },
-  [VR_ATTRACTOR_BANDS.RUNESTONES]: { url: publicPath('/svg/band_04.svg'),
+  [VR_ATTRACTOR_BANDS.RUNESTONES]: { image: requirePreparedBandImage('vr-attractor-band-4-image'),
     presentationColor: settings.attractorPresentation.bandColors.runeStones }
 });
 const semanticInput = createVrSemanticInput({ renderer });
