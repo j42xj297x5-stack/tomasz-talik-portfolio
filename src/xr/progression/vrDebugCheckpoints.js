@@ -2,12 +2,33 @@ import { VR_EXPERIENCE_SCENARIO_SPINE } from './vrExperienceScenario.js';
 
 export const VR_DEBUG_CHECKPOINT_SPAWN = Object.freeze({ INTRO: 'INTRO', RING: 'RING' });
 
+const P3_RECONSTRUCTION_OVERLAY = Object.freeze({
+  furnaceProgression: Object.freeze({
+    absorbedShellIds: Object.freeze([
+      'shell-relic-1',
+      'shell-relic-2',
+      'shell-relic-3',
+      'shell-relic-4',
+      'shell-relic-5',
+      'shell-relic-6'
+    ])
+  })
+});
+
+const P5_RECONSTRUCTION_OVERLAY = Object.freeze({
+  protoAstroTuning: Object.freeze({
+    extractedFamilyCodes: Object.freeze(['K', 'T', 'S', 'L', 'R'])
+  })
+});
+
 export const VR_DEBUG_CHECKPOINTS = Object.freeze([
   Object.freeze({ id: 'P1', pointId: '2.10', label: 'P1', spawn: VR_DEBUG_CHECKPOINT_SPAWN.RING }),
   Object.freeze({ id: 'P2', pointId: '3.10', label: 'P2', spawn: VR_DEBUG_CHECKPOINT_SPAWN.RING }),
-  Object.freeze({ id: 'P3', pointId: '4.10', label: 'P3', spawn: VR_DEBUG_CHECKPOINT_SPAWN.RING }),
+  Object.freeze({ id: 'P3', pointId: '4.10', label: 'P3', spawn: VR_DEBUG_CHECKPOINT_SPAWN.RING,
+    reconstructionOverlay: P3_RECONSTRUCTION_OVERLAY }),
   Object.freeze({ id: 'P4', pointId: '4.30', label: 'P4', spawn: VR_DEBUG_CHECKPOINT_SPAWN.RING }),
-  Object.freeze({ id: 'P5', pointId: '4.80', label: 'P5', spawn: VR_DEBUG_CHECKPOINT_SPAWN.RING }),
+  Object.freeze({ id: 'P5', pointId: '4.70', label: 'P5', spawn: VR_DEBUG_CHECKPOINT_SPAWN.RING,
+    reconstructionOverlay: P5_RECONSTRUCTION_OVERLAY }),
   Object.freeze({ id: 'P6', pointId: '5.10', label: 'P6', spawn: VR_DEBUG_CHECKPOINT_SPAWN.RING }),
   Object.freeze({ id: 'P7', pointId: '5.60', label: 'P7', spawn: VR_DEBUG_CHECKPOINT_SPAWN.RING }),
   Object.freeze({ id: 'P8', pointId: '5.70', label: 'P8', spawn: VR_DEBUG_CHECKPOINT_SPAWN.RING })
@@ -17,6 +38,10 @@ const CHECKPOINTS_BY_ID = new Map(VR_DEBUG_CHECKPOINTS.map((checkpoint) => [chec
 for (const checkpoint of VR_DEBUG_CHECKPOINTS) {
   if (!VR_EXPERIENCE_SCENARIO_SPINE.includes(checkpoint.pointId)) {
     throw new Error(`Debug checkpoint ${checkpoint.id} targets a point outside the canonical Spine`);
+  }
+  if (checkpoint.reconstructionPointId
+    && !VR_EXPERIENCE_SCENARIO_SPINE.includes(checkpoint.reconstructionPointId)) {
+    throw new Error(`Debug checkpoint ${checkpoint.id} reconstructs from a point outside the canonical Spine`);
   }
 }
 
