@@ -72,6 +72,7 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
   let returnScreen = ASTRO_FURNACE_PANEL_SCREENS.HOME;
   let elapsed = 0, telemetryElapsed = 0, lastTelemetryRedraw = 0, completedUntil = 0, previousProcessState = 'IDLE';
   let lastSmallGlyphProcessAssetId = null;
+  let lastRuneProcessRecipe = null, runeCompletedUntil = 0, previousRuneProcessState = 'IDLE';
   let hoveredRegion = null, interactiveRegions = [], disposed = false, redrawCount = 0;
   const moduleListeners = new Set();
   const patchGeometryByAssetId = createAsterionPatchGeometry(ASTERION_SHELL_PATCHES, {
@@ -243,20 +244,33 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
   }
   function drawRuneTuningProcessMonitor(snapshot, tuning) {
     const x = 58, y = 675, width = 1420, height = 295;
-    const recipe = snapshot.expectedRecipe;
+    const liveRecipe = snapshot.expectedRecipe;
     const glyphInserted = snapshot.slots?.smallGlyph?.state === 'INSERTED';
     const shellInserted = snapshot.slots?.shell?.state === 'INSERTED';
     const runeProcess = processSource?.getProcessKind?.() === ASTRO_FURNACE_PROCESS_KINDS.RUNE_TUNING;
+    const rawProcessState = processSource?.getState?.() ?? 'IDLE';
+    if (liveRecipe && liveRecipe !== lastRuneProcessRecipe) {
+      lastRuneProcessRecipe = liveRecipe;
+      runeCompletedUntil = 0;
+    }
+    if (runeProcess && !liveRecipe && rawProcessState === 'COMPLETE' && previousRuneProcessState !== 'COMPLETE') {
+      runeCompletedUntil = telemetryElapsed + 1.6;
+    }
+    previousRuneProcessState = runeProcess ? rawProcessState : 'IDLE';
+    const completing = runeProcess && !liveRecipe && rawProcessState === 'COMPLETE'
+      && runeCompletedUntil > telemetryElapsed && Boolean(lastRuneProcessRecipe);
+    if (!runeProcess || (rawProcessState === 'COMPLETE' && !completing && !liveRecipe)) lastRuneProcessRecipe = null;
+    const recipe = liveRecipe ?? (completing ? lastRuneProcessRecipe : null);
     const processing = runeProcess && tuning.processing === true;
     const telemetry = processing ? readTelemetry() : null;
-    const phase = telemetry?.phase ?? 'IDLE';
-    const processColor = processing ? accents.process : accents.emanation;
-    const progress = processing ? Math.max(0, Math.min(1, processSource?.getProgress?.() ?? 0)) : 0;
+    const phase = completing ? 'COMPLETE' : telemetry?.phase ?? 'IDLE';
+    const processColor = completing ? accents.complete : processing ? accents.process : accents.emanation;
+    const progress = completing ? 1 : processing ? Math.max(0, Math.min(1, processSource?.getProgress?.() ?? 0)) : 0;
     const dissolve = phase === 'EXTRACTION'
       ? Math.max(0, Math.min(1, processSource?.getExtractionProgress?.() ?? 0)) : 0;
     const showWireframes = !['COOLDOWN', 'COMPLETE'].includes(phase);
-    panelRect(x, y, width, height, { variant: 'monitor', active: processing || snapshot.readyForTuning,
-      accentColor: processing ? accents.process : accents.emanation });
+    panelRect(x, y, width, height, { variant: 'monitor', active: !completing && (processing || snapshot.readyForTuning),
+      completed: completing, accentColor: processColor });
     text(copy.runeTuning.monitorHeading, x + 28, y + 38, 21, processColor);
 
     const drawIngredient = ({ descriptor, familyCode, kind, signX, previewX, segments, inserted }) => {
@@ -275,7 +289,8 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
     };
 
     const glyph = recipe ? smallGlyphByFamily.get(recipe.smallGlyphFamilyCode) : null;
-    const shellWireframe = runeRecipeInteraction?.getInsertedShell?.()?.userData?.panelWireframe;
+    const shellWireframe = showWireframes && recipe
+      ? runeRecipeInteraction?.getInsertedShell?.()?.userData?.panelWireframe : null;
     drawIngredient({ descriptor: recipe?.smallGlyphDescriptor, familyCode: recipe?.smallGlyphFamilyCode,
       kind: copy.runeTuning.slots.glyph, signX: x + 28, previewX: x + 450,
       segments: glyph ? SMALL_GLYPH_WIREFRAME_DATA.byAssetId[glyph.assetId]?.segments3d : null, inserted: glyphInserted });
@@ -283,14 +298,17 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
       kind: copy.runeTuning.slots.shell, signX: x + 730, previewX: x + 1150,
       segments: shellWireframe?.segments, inserted: shellInserted });
 
-    const status = processing ? copy.extraction.status(telemetry.label)
+    const status = completing ? copy.runeTuning.status.complete
+      : processing ? copy.extraction.status(telemetry.label)
       : !recipe || !glyphInserted || !shellInserted ? copy.runeTuning.status.waiting
       : snapshot.readyForTuning ? copy.runeTuning.status.ready : copy.runeTuning.status.invalid;
-    text(status, x + 28, y + 235, 19, processing ? accents.process : snapshot.readyForTuning ? accents.complete : '#d6b3c3');
+    text(status, x + 28, y + 235, 19, completing ? accents.complete
+      : processing ? accents.process : snapshot.readyForTuning ? accents.complete : '#d6b3c3');
     const barX = x + 28, barY = y + 256, barWidth = width - 135;
     context.fillStyle = '#18303c'; context.fillRect(barX, barY, barWidth, 16);
     context.fillStyle = processColor; context.fillRect(barX, barY, barWidth * progress, 16);
-    text(copy.runeTuning.progress(Math.round(progress * 100)), barX + barWidth + 18, barY + 17, 19, '#b9dce8');
+    text(copy.runeTuning.progress(Math.round(progress * 100)), barX + barWidth + 18, barY + 17, 19,
+      completing ? accents.complete : '#b9dce8');
   }
   function drawAstrolabiumProduction() {
     interactiveRegions = [{ id: 'back-modules', x: 90, y: 55, width: 260, height: 70, enabled: true }];
@@ -629,7 +647,7 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
     const previewAnimating = furnacePanelAnimationActive({ panelState: state, screen });
     if (shouldRefreshTelemetry({ active: previewAnimating, elapsed: telemetryElapsed, lastRedraw: lastTelemetryRedraw, refreshHz: config.telemetryRefreshHz })) { lastTelemetryRedraw = telemetryElapsed; draw(); }
   }
-  function reset() { state = ASTRO_FURNACE_PANEL_STATES.HIDDEN; screen = ASTRO_FURNACE_PANEL_SCREENS.HOME; elapsed = 0; telemetryElapsed = 0; lastTelemetryRedraw = 0; completedUntil = 0; previousProcessState = 'IDLE'; hoveredRegion = null; renderPlanes.forEach((plane) => { plane.material.opacity = 0; }); hits.forEach((_, record) => hits.set(record, null)); place(); root.visible = false; draw(); }
+  function reset() { state = ASTRO_FURNACE_PANEL_STATES.HIDDEN; screen = ASTRO_FURNACE_PANEL_SCREENS.HOME; elapsed = 0; telemetryElapsed = 0; lastTelemetryRedraw = 0; completedUntil = 0; previousProcessState = 'IDLE'; lastRuneProcessRecipe = null; runeCompletedUntil = 0; previousRuneProcessState = 'IDLE'; hoveredRegion = null; renderPlanes.forEach((plane) => { plane.material.opacity = 0; }); hits.forEach((_, record) => hits.set(record, null)); place(); root.visible = false; draw(); }
   const unsubscribe = progressionController.subscribe(() => draw());
   const unsubscribeProduction = productionController?.subscribe?.(() => draw()) ?? (() => {});
   const unsubscribeAstroProduction = astroProductionController?.subscribe?.(() => draw()) ?? (() => {});
@@ -637,7 +655,7 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
   const unsubscribeRuneSelection = runeRecipeSelectionController?.subscribe?.(() => draw()) ?? (() => {});
   const unsubscribeRuneRecipe = runeRecipeInteraction?.subscribe?.(() => draw()) ?? (() => {});
   const unsubscribePlacement = furnace.subscribePlacement?.(() => place()) ?? (() => {});
-  function dispose() { if (disposed) return; disposed = true; unsubscribe(); unsubscribeProduction(); unsubscribeAstroProduction(); unsubscribeProtoAstroTuning(); unsubscribeRuneSelection(); unsubscribeRuneRecipe(); unsubscribePlacement(); moduleListeners.clear(); listeners.forEach(({ record, listener }) => record.controller.removeEventListener('selectstart', listener)); root.removeFromParent(); renderPlanes.forEach((plane) => { plane.geometry.dispose(); plane.material.dispose(); }); texture.dispose(); canvas.width = 0; canvas.height = 0; hits.clear(); protoAstroImageCache.clear(); }
+  function dispose() { if (disposed) return; disposed = true; lastRuneProcessRecipe = null; runeCompletedUntil = 0; previousRuneProcessState = 'IDLE'; unsubscribe(); unsubscribeProduction(); unsubscribeAstroProduction(); unsubscribeProtoAstroTuning(); unsubscribeRuneSelection(); unsubscribeRuneRecipe(); unsubscribePlacement(); moduleListeners.clear(); listeners.forEach(({ record, listener }) => record.controller.removeEventListener('selectstart', listener)); root.removeFromParent(); renderPlanes.forEach((plane) => { plane.geometry.dispose(); plane.material.dispose(); }); texture.dispose(); canvas.width = 0; canvas.height = 0; hits.clear(); protoAstroImageCache.clear(); }
   reset();
   return { object: root, mesh: frontPlane, renderPlanes, canvas, texture, hits, show, hide, toggle, place, update, press, reset, dispose, activateRegion, redraw: draw,
     subscribeModuleActivation(listener) { moduleListeners.add(listener); return () => moduleListeners.delete(listener); },
