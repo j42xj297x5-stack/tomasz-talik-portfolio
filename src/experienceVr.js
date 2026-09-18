@@ -1289,6 +1289,7 @@ smallGlyphAttractorInteraction = createVrSmallGlyphAttractorInteraction({
 largeGlyphAttractorInteraction = createVrLargeGlyphAttractorInteraction({
   controllers: vrControllers.controllers, largeGlyphActor, handModeController, semanticInput, attractorTool,
   maxTargetDistance: largeGlyphMaxTargetDistance,
+  haloSettings: settings.targetHalo,
   settings: { scanThreshold: settings.shellAttractor.scanThreshold,
     triggerThreshold: settings.shellAttractor.triggerThreshold,
     pullAcceleration: settings.shellAttractor.pullAcceleration, maxPullSpeed: settings.shellAttractor.maxPullSpeed,
