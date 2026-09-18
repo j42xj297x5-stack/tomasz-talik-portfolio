@@ -231,13 +231,18 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
       const runeDescriptor = resolveProtoAstroDescriptor(familyCode, 'U');
       const runeImage = getProtoAstroImage(runeDescriptor);
       const color = selected || tuned ? accents.complete : available ? accents.emanation : accents.idle;
-      text(copy.runeTuning.familyCard(runeLabel(familyCode), runeDescriptor?.syllable ?? familyCode), rect.x + 20, rect.y + 32, 22,
-        available ? '#f1eaff' : '#78909d');
-      drawMaterialCardVisual(context, { x: rect.x + 5, y: rect.y + 25, width: rect.width - 10, height: rect.height - 52,
+      context.textAlign = 'center';
+      text(copy.runeTuning.familyCard(runeLabel(familyCode), runeDescriptor?.syllable ?? familyCode),
+        rect.x + rect.width / 2, rect.y + 30, 22, available ? '#f1eaff' : '#78909d');
+      context.textAlign = 'left';
+      drawMaterialCardVisual(context, { x: rect.x + 5, y: rect.y + 34, width: rect.width - 10, height: rect.height - 57,
         glyphRatio: .62, padding: 3, glyphImage: runeImage, color,
-        drawPreview: ({ cx, cy, scale }) => drawRuneStoneWireframe(familyCode, cx, cy, scale, color, natural ? .94 : .55) });
-      text(tuned ? copy.runeTuning.familyStates.tuned : selected ? copy.runeTuning.familyStates.selected : !natural ? copy.runeTuning.familyStates.special : copy.runeTuning.familyStates.available, rect.x + 20, rect.y + 118, 18,
+        drawPreview: ({ cx, cy, scale }) => drawRuneStoneWireframe(familyCode, cx, cy, scale * 1.2, color, natural ? .94 : .55) });
+      context.textAlign = 'center';
+      text(tuned ? copy.runeTuning.familyStates.tuned : selected ? copy.runeTuning.familyStates.selected : !natural ? copy.runeTuning.familyStates.special : copy.runeTuning.familyStates.available,
+        rect.x + rect.width / 2, rect.y + rect.height - 11, 18,
         tuned || selected ? accents.complete : available ? '#cdb5e4' : '#70828d');
+      context.textAlign = 'left';
     });
 
     drawRuneTuningProcessMonitor(snapshot, tuning);
