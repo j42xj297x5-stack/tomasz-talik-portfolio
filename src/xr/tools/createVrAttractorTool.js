@@ -60,6 +60,37 @@ const pointIndex = (point) => Number.isFinite(point.userData?.vr_path_index)
 
 const FUEL_PATH_EPSILON = 1e-5;
 const DISTANCE_SYNC_INTERVAL_SECONDS = 0.1;
+const ALL_FUEL_STREAM_IDS = Object.freeze(['earth', 'metal', 'water', 'tree', 'fire']);
+const FUEL_PARTICLE_SIZE = Object.freeze({ SMALL: 'SMALL', LARGE: 'LARGE' });
+const FUEL_FORM_PRESENTATION = Object.freeze({
+  O: Object.freeze({ sizePattern: Object.freeze([
+    FUEL_PARTICLE_SIZE.SMALL, FUEL_PARTICLE_SIZE.SMALL, FUEL_PARTICLE_SIZE.SMALL, FUEL_PARTICLE_SIZE.LARGE
+  ]), speedMultiplier: 1.10 }),
+  I: Object.freeze({ sizePattern: Object.freeze([
+    FUEL_PARTICLE_SIZE.SMALL, FUEL_PARTICLE_SIZE.SMALL, FUEL_PARTICLE_SIZE.LARGE
+  ]), speedMultiplier: 1.20 }),
+  A: Object.freeze({ sizePattern: Object.freeze([
+    FUEL_PARTICLE_SIZE.SMALL, FUEL_PARTICLE_SIZE.LARGE
+  ]), speedMultiplier: 1.35 }),
+  U: Object.freeze({ sizePattern: Object.freeze([FUEL_PARTICLE_SIZE.LARGE]), speedMultiplier: 1.50 })
+});
+
+function projectFuelSignature(descriptor) {
+  const formPresentation = FUEL_FORM_PRESENTATION[descriptor?.formCode];
+  if (!formPresentation) return null;
+  const allStreams = descriptor.familyCode === 'V';
+  return Object.freeze({
+    syllable: descriptor.syllable,
+    familyCode: descriptor.familyCode,
+    familyId: descriptor.familyId,
+    formCode: descriptor.formCode,
+    formId: descriptor.formId,
+    activeStreamIds: allStreams ? ALL_FUEL_STREAM_IDS : Object.freeze([descriptor.familyId]),
+    allStreams,
+    sizePattern: formPresentation.sizePattern,
+    speedMultiplier: formPresentation.speedMultiplier
+  });
+}
 
 function createFuelParticleTexture(canvasFactory) {
   const canvas = canvasFactory?.() ?? document.createElement('canvas');
@@ -220,6 +251,7 @@ export function createVrAttractorTool({ model, config = VR_ATTRACTOR_VISUAL_CONF
   let target = null;
   let physicalTarget = null;
   let canonicalGlyphPresentation = null;
+  let fuelSignature = null;
   let distanceSyncElapsed = 0;
   let targetProximity = 0;
   let level = 0;
@@ -244,25 +276,27 @@ export function createVrAttractorTool({ model, config = VR_ATTRACTOR_VISUAL_CONF
     if (previewTarget !== physicalTarget) {
       physicalTarget = previewTarget ?? null;
       canonicalGlyphPresentation = null;
+      fuelSignature = null;
       distanceSyncElapsed = 0;
       panelSystem.setDistanceMeters(null);
-    }
-    if (previewTarget && !canonicalGlyphPresentation) {
-      const isRuneStone = value?.targetClass === 'runeStone';
-      const shellGlyph = isRuneStone ? null : resolveAttractorShellGlyph(previewTarget);
-      const smallGlyph = isRuneStone || shellGlyph ? null : resolveVrSmallGlyphProtoAstro(previewTarget);
-      const largeGlyph = isRuneStone || shellGlyph || smallGlyph
-        ? null : resolveVrPageProtoAstro({ glyphId: previewTarget.userData?.id });
-      const descriptor = isRuneStone
-        ? resolveProtoAstroDescriptor(value.familyCode, 'U')
-        : (shellGlyph
-          ? resolveProtoAstroDescriptor(shellGlyph.familyCode, 'O')
-          : smallGlyph?.descriptor ?? largeGlyph?.descriptor ?? null);
-      if (descriptor) {
-        canonicalGlyphPresentation = {
-          syllable: descriptor.syllable,
-          image: getPreparedProtoAstroImage(descriptor)
-        };
+      if (previewTarget) {
+        const isRuneStone = value?.targetClass === 'runeStone';
+        const shellGlyph = isRuneStone ? null : resolveAttractorShellGlyph(previewTarget);
+        const smallGlyph = isRuneStone || shellGlyph ? null : resolveVrSmallGlyphProtoAstro(previewTarget);
+        const largeGlyph = isRuneStone || shellGlyph || smallGlyph
+          ? null : resolveVrPageProtoAstro({ glyphId: previewTarget.userData?.id });
+        const descriptor = isRuneStone
+          ? resolveProtoAstroDescriptor(value.familyCode, 'U')
+          : (shellGlyph
+            ? resolveProtoAstroDescriptor(shellGlyph.familyCode, 'O')
+            : smallGlyph?.descriptor ?? largeGlyph?.descriptor ?? null);
+        if (descriptor) {
+          canonicalGlyphPresentation = {
+            syllable: descriptor.syllable,
+            image: getPreparedProtoAstroImage(descriptor)
+          };
+          fuelSignature = projectFuelSignature(descriptor);
+        }
       }
     }
     panelSystem.setPrimaryGlyph(canonicalGlyphPresentation).catch((error) => logger.warn(error.message));
@@ -349,6 +383,7 @@ export function createVrAttractorTool({ model, config = VR_ATTRACTOR_VISUAL_CONF
 
   function reset() {
     state = VR_ATTRACTOR_STATES.UNEQUIPPED; trigger = 0; target = null; physicalTarget = null;
+    canonicalGlyphPresentation = null; fuelSignature = null;
     distanceSyncElapsed = 0; targetProximity = 0; pullStrength = 0;
     elapsed = 0; innerRPM = 0; aimRoot.visible = false;
     initialPivotTransforms.forEach((transform, pivot) => {
@@ -373,6 +408,7 @@ export function createVrAttractorTool({ model, config = VR_ATTRACTOR_VISUAL_CONF
     setEquipped, setUnlocked, setTrigger, setTarget, setPullStrength, setLevel, setState, setGlyphPanelState,
     setBandPresentation, setObjectiveText,
     attachToTargetRay, getMasterRingWorldPosition, update, reset, dispose, getState: () => state, getInnerRPM: () => innerRPM,
+    getFuelSignature: () => fuelSignature,
     diagnostics: { missingRequiredNodes: missing, glyphPanelCount: glyphPanels.length,
       fuelPointCounts: Object.fromEntries(fuelPathData.map((data) => [data.element, data.controlPoints.length])),
       fuelPathSources: Object.fromEntries(fuelPathData.map((data) => [data.element, data.source])),
