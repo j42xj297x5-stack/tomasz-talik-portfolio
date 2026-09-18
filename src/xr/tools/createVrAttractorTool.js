@@ -184,7 +184,7 @@ export function createVrAttractorTool({ model, config = VR_ATTRACTOR_VISUAL_CONF
     geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(settings.particleCount * 3), 3));
     const material = new THREE.PointsMaterial({ color: settings.color, size: config.fuelPointSize, transparent: true,
       opacity: settings.brightness * config.fuelBrightnessMultiplier, blending: THREE.AdditiveBlending,
-      depthWrite: false, depthTest: false, sizeAttenuation: true });
+      depthWrite: false, depthTest: true, sizeAttenuation: true });
     const points = new THREE.Points(geometry, material);
     points.name = `VrAttractorFuelParticles_${element}`;
     nodes.VR_ATTRACTOR_ROOT.add(points);
