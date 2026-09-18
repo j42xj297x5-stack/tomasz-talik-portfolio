@@ -248,14 +248,16 @@ export function createVrAttractorTool({ model, config = VR_ATTRACTOR_VISUAL_CONF
     const large = createBucket('large', config.fuelPointSize * config.fuelLargePointScale);
     small.geometry.setDrawRange(0, settings.particleCount);
     large.geometry.setDrawRange(0, 0);
-    return { element, settings, curve, source, markersDegenerate, small, large, elapsed: 0,
+    return { element, settings, curve, source, markersDegenerate, small, large, elapsed: 0, fuelSpeedMultiplier: 1,
       particleBuckets: new Uint8Array(settings.particleCount),
       particleSlots: new Uint16Array(settings.particleCount), sample: new THREE.Vector3() };
   });
 
   function configureFuelParticleRoutes(signature) {
     fuelStreams.forEach((stream) => {
-      const pattern = signature?.activeStreamIds.includes(stream.element) ? signature.sizePattern : null;
+      const isActive = signature?.activeStreamIds.includes(stream.element) ?? false;
+      stream.fuelSpeedMultiplier = isActive ? signature.speedMultiplier : 1;
+      const pattern = isActive ? signature.sizePattern : null;
       let smallCount = 0;
       let largeCount = 0;
       for (let index = 0; index < stream.settings.particleCount; index += 1) {
@@ -393,7 +395,7 @@ export function createVrAttractorTool({ model, config = VR_ATTRACTOR_VISUAL_CONF
         + config.energyCell.pulseIntensity * pulse + level * 0.12 + trigger * 0.5 + pullStrength * 0.7;
     });
     fuelStreams.forEach((stream) => {
-      stream.elapsed += deltaSeconds * stream.settings.speed * activity;
+      stream.elapsed += deltaSeconds * stream.settings.speed * stream.fuelSpeedMultiplier;
       const smallPositions = stream.small.geometry.attributes.position;
       const largePositions = stream.large.geometry.attributes.position;
       for (let index = 0; index < stream.settings.particleCount; index += 1) {
