@@ -103,7 +103,6 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
     y: FAMILY_GRID.y + Math.floor(index / FAMILY_GRID.columns) * (FAMILY_GRID.cellHeight + FAMILY_GRID.rowGap),
     width: FAMILY_GRID.cellWidth, height: FAMILY_GRID.cellHeight, enabled });
   const smallGlyphByFamily = new Map(smallGlyphEntries.map((entry) => [entry.protoAstro.descriptor.familyCode, entry]));
-  const shellPatchByFamily = new Map(ASTERION_SHELL_PATCHES.map((patch) => [resolveAttractorShellGlyph(patch.assetId)?.familyCode, patch]));
   const runeStoneWireframeByFamily = new Map(FAMILY_GRID_CODES.map((familyCode) => [familyCode,
     createAsterionModelWireframeMap(resolveVrRuneStonePreviewModel(familyCode), { maxSegments: 420, minLength: .006, thresholdAngle: 20 })]));
   const protoAstroImageCache = new Map();
@@ -240,35 +239,58 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
         tuned || selected ? accents.complete : available ? '#cdb5e4' : '#70828d');
     });
 
+    drawRuneTuningProcessMonitor(snapshot, tuning);
+  }
+  function drawRuneTuningProcessMonitor(snapshot, tuning) {
+    const x = 58, y = 675, width = 1420, height = 295;
     const recipe = snapshot.expectedRecipe;
-    text(copy.runeTuning.slots.glyph, 90, 666, 19, '#a990c0');
-    text(copy.runeTuning.slots.shell, 785, 666, 19, '#a990c0');
-    const glyphField = { x: 90, y: 675, width: 650, height: 270 };
-    const shellField = { x: 785, y: 675, width: 620, height: 270 };
-    panelRect(glyphField.x, glyphField.y, glyphField.width, glyphField.height, { variant: 'monitor', active: Boolean(recipe), accentColor: accents.emanation });
-    panelRect(shellField.x, shellField.y, shellField.width, shellField.height, { variant: 'monitor', active: Boolean(recipe), accentColor: accents.emanation });
-    if (recipe) {
-      const glyph = smallGlyphByFamily.get(recipe.smallGlyphFamilyCode);
-      const shellPatch = shellPatchByFamily.get(recipe.shellFamilyCode);
-      const glyphSyllableImage = getProtoAstroImage(recipe.smallGlyphDescriptor);
-      const shellSyllableImage = getProtoAstroImage(recipe.shellDescriptor);
-      drawMaterialCardVisual(context, { x: glyphField.x + 24, y: glyphField.y + 34, width: 270, height: 190,
-        glyphRatio: 1, padding: 6, glyphImage: glyphSyllableImage, color: accents.emanation });
-      if (glyph) drawSmallGlyphWireframe(context, { assetId: glyph.assetId, cx: glyphField.x + 485, cy: glyphField.y + 132,
-        scale: 86, color: accents.emanation, alpha: .96 });
-      drawMaterialCardVisual(context, { x: shellField.x + 24, y: shellField.y + 34, width: 260, height: 190,
-        glyphRatio: 1, padding: 6, glyphImage: shellSyllableImage, color: accents.emanation });
-      drawShellMiniature(shellPatch, shellField.x + 465, shellField.y + 132, 88, accents.emanation, true);
-      text(recipe.smallGlyphDescriptor?.syllable ?? '', glyphField.x + 26, glyphField.y + 244, 18, '#b89dd0');
-      text(recipe.shellDescriptor?.syllable ?? '', shellField.x + 26, shellField.y + 244, 18, '#b89dd0');
-      const glyphInserted = snapshot.slots?.smallGlyph?.state === 'INSERTED';
-      const shellInserted = snapshot.slots?.shell?.state === 'INSERTED';
-      const tuningProgress = Math.round((processSource?.getProgress?.() ?? 0) * 100);
-      const status = tuning.processing ? copy.runeTuning.tuningStatus(runeLabel(tuning.targetFamilyCode), tuningProgress)
-        : !glyphInserted || !shellInserted ? copy.runeTuning.status.waiting
-        : snapshot.readyForTuning ? copy.runeTuning.status.ready : copy.runeTuning.status.invalid;
-      text(status, 90, 978, 19, snapshot.readyForTuning ? accents.complete : '#d6b3c3');
-    }
+    const glyphInserted = snapshot.slots?.smallGlyph?.state === 'INSERTED';
+    const shellInserted = snapshot.slots?.shell?.state === 'INSERTED';
+    const runeProcess = processSource?.getProcessKind?.() === ASTRO_FURNACE_PROCESS_KINDS.RUNE_TUNING;
+    const processing = runeProcess && tuning.processing === true;
+    const telemetry = processing ? readTelemetry() : null;
+    const phase = telemetry?.phase ?? 'IDLE';
+    const processColor = processing ? accents.process : accents.emanation;
+    const progress = processing ? Math.max(0, Math.min(1, processSource?.getProgress?.() ?? 0)) : 0;
+    const dissolve = phase === 'EXTRACTION'
+      ? Math.max(0, Math.min(1, processSource?.getExtractionProgress?.() ?? 0)) : 0;
+    const showWireframes = !['COOLDOWN', 'COMPLETE'].includes(phase);
+    panelRect(x, y, width, height, { variant: 'monitor', active: processing || snapshot.readyForTuning,
+      accentColor: processing ? accents.process : accents.emanation });
+    text(copy.runeTuning.monitorHeading, x + 28, y + 38, 21, processColor);
+
+    const drawIngredient = ({ descriptor, familyCode, kind, signX, previewX, segments, inserted }) => {
+      const image = getProtoAstroImage(descriptor);
+      text(kind, signX, y + 76, 18, recipe ? '#f1eaff' : '#78909d');
+      text(recipe ? copy.runeTuning.familyCard(runeLabel(familyCode), descriptor?.syllable ?? familyCode) : '—',
+        signX, y + 101, 17, recipe ? '#b89dd0' : '#667681');
+      if (recipe) drawMaterialCardVisual(context, { x: signX, y: y + 110, width: 126, height: 96,
+        glyphRatio: 1, padding: 5, glyphImage: image, color: inserted ? processColor : accents.emanation });
+      if (!recipe || !showWireframes || !segments?.length) return;
+      const pulse = inserted || processing ? .78 + .22 * Math.sin(telemetryElapsed * (processing ? 5 : 3)) : .38;
+      drawProcessWireframe({ segments, cx: previewX, cy: y + 158, scale: 70,
+        yaw: telemetryElapsed * (processing ? .38 : .16), pitch: -.28, dissolve,
+        color: processColor, alpha: pulse, lineWidth: processing || inserted ? 3.2 : 2.2,
+        shadowBlur: processing || inserted ? 12 : 5 });
+    };
+
+    const glyph = recipe ? smallGlyphByFamily.get(recipe.smallGlyphFamilyCode) : null;
+    const shellWireframe = runeRecipeInteraction?.getInsertedShell?.()?.userData?.panelWireframe;
+    drawIngredient({ descriptor: recipe?.smallGlyphDescriptor, familyCode: recipe?.smallGlyphFamilyCode,
+      kind: copy.runeTuning.slots.glyph, signX: x + 28, previewX: x + 450,
+      segments: glyph ? SMALL_GLYPH_WIREFRAME_DATA.byAssetId[glyph.assetId]?.segments3d : null, inserted: glyphInserted });
+    drawIngredient({ descriptor: recipe?.shellDescriptor, familyCode: recipe?.shellFamilyCode,
+      kind: copy.runeTuning.slots.shell, signX: x + 730, previewX: x + 1150,
+      segments: shellWireframe?.segments, inserted: shellInserted });
+
+    const status = processing ? copy.extraction.status(telemetry.label)
+      : !recipe || !glyphInserted || !shellInserted ? copy.runeTuning.status.waiting
+      : snapshot.readyForTuning ? copy.runeTuning.status.ready : copy.runeTuning.status.invalid;
+    text(status, x + 28, y + 235, 19, processing ? accents.process : snapshot.readyForTuning ? accents.complete : '#d6b3c3');
+    const barX = x + 28, barY = y + 256, barWidth = width - 135;
+    context.fillStyle = '#18303c'; context.fillRect(barX, barY, barWidth, 16);
+    context.fillStyle = processColor; context.fillRect(barX, barY, barWidth * progress, 16);
+    text(copy.runeTuning.progress(Math.round(progress * 100)), barX + barWidth + 18, barY + 17, 19, '#b9dce8');
   }
   function drawAstrolabiumProduction() {
     interactiveRegions = [{ id: 'back-modules', x: 90, y: 55, width: 260, height: 70, enabled: true }];
