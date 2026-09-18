@@ -12,7 +12,7 @@ export const VR_ATTRACTOR_STATES = Object.freeze({
 
 export const VR_ATTRACTOR_VISUAL_CONFIG = Object.freeze({
   modelScale: 1 / 3,
-  fuelPointSize: 0.0035,
+  fuelPointSize: 0.0042,
   fuelBrightnessMultiplier: 1.2,
   aimOffset: [0, 0, 0],
   ringLocalPositionOffsets: {
@@ -60,6 +60,22 @@ const pointIndex = (point) => Number.isFinite(point.userData?.vr_path_index)
 
 const FUEL_PATH_EPSILON = 1e-5;
 const DISTANCE_SYNC_INTERVAL_SECONDS = 0.1;
+
+function createFuelParticleTexture(canvasFactory) {
+  const canvas = canvasFactory?.() ?? document.createElement('canvas');
+  canvas.width = 64;
+  canvas.height = 64;
+  const context = canvas.getContext('2d');
+  const center = canvas.width / 2;
+  const gradient = context.createRadialGradient(center, center, 0, center, center, center);
+  gradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
+  gradient.addColorStop(0.35, 'rgba(255, 255, 255, 0.92)');
+  gradient.addColorStop(0.7, 'rgba(255, 255, 255, 0.35)');
+  gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+  context.fillStyle = gradient;
+  context.fillRect(0, 0, canvas.width, canvas.height);
+  return new THREE.CanvasTexture(canvas);
+}
 
 export function isDegenerateFuelPath(points, tolerance = FUEL_PATH_EPSILON) {
   if (points.length < 2) return true;
@@ -179,13 +195,15 @@ export function createVrAttractorTool({ model, config = VR_ATTRACTOR_VISUAL_CONF
     const materials = Array.isArray(child.material) ? child.material : [child.material];
     materials.filter(Boolean).forEach((material) => energyMaterials.push(material));
   });
+  const fuelParticleTexture = createFuelParticleTexture(canvasFactory);
   const fuelStreams = fuelPathData.filter(({ source }) => source !== 'disabled').map(({
     element, settings, source, markersDegenerate, controlPoints
   }) => {
     const curve = new THREE.CatmullRomCurve3(controlPoints, false);
     const geometry = new THREE.BufferGeometry();
     geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(settings.particleCount * 3), 3));
-    const material = new THREE.PointsMaterial({ color: settings.color, size: config.fuelPointSize, transparent: true,
+    const material = new THREE.PointsMaterial({ color: settings.color, map: fuelParticleTexture,
+      size: config.fuelPointSize, transparent: true,
       opacity: settings.brightness * config.fuelBrightnessMultiplier, blending: THREE.AdditiveBlending,
       depthWrite: false, depthTest: true, sizeAttenuation: true });
     const points = new THREE.Points(geometry, material);
@@ -346,6 +364,7 @@ export function createVrAttractorTool({ model, config = VR_ATTRACTOR_VISUAL_CONF
     reset(); disposed = true;
     modelScale.remove(nodes.VR_ATTRACTOR_ROOT); aimRoot.parent?.remove(aimRoot);
     fuelStreams.forEach(({ points, geometry, material }) => { points.parent?.remove(points); geometry.dispose(); material.dispose(); });
+    fuelParticleTexture.dispose();
     panelSystem.dispose();
     ownedMaterials.forEach((material) => material.dispose());
   }
