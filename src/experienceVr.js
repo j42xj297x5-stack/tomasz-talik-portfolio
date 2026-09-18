@@ -662,7 +662,8 @@ function spawnPlayerInsideRingFacingMonkey() {
 }
 const attractorTool = createVrAttractorTool({
   model: assetManager.cloneGltfScene('vr-astro-attractor-model'),
-  getPlayerWorldPosition: (target) => getXrHeadWorldPosition({ renderer, camera, playerRig, target })
+  getPlayerWorldPosition: (target) => getXrHeadWorldPosition({ renderer, camera, playerRig, target }),
+  getPreparedProtoAstroImage: (descriptor) => assetManager.getAssetByPath(descriptor.path)?.image
 });
 const requirePreparedBandImage = (assetId) => {
   const image = assetManager.getImage(assetId);
