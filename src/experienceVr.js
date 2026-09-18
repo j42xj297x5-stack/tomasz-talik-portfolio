@@ -660,7 +660,10 @@ function spawnPlayerInsideRingFacingMonkey() {
   const spawnLocal = monkeyLocal.clone().addScaledVector(towardCenter.normalize(), 3);
   locomotion.teleportLocal(spawnLocal, monkeyLocal);
 }
-const attractorTool = createVrAttractorTool({ model: assetManager.cloneGltfScene('vr-astro-attractor-model') });
+const attractorTool = createVrAttractorTool({
+  model: assetManager.cloneGltfScene('vr-astro-attractor-model'),
+  getPlayerWorldPosition: (target) => getXrHeadWorldPosition({ renderer, camera, playerRig, target })
+});
 const requirePreparedBandImage = (assetId) => {
   const image = assetManager.getImage(assetId);
   if (!image) throw new Error(`[ExperienceVR] Required prepared Astrolabium band image is unavailable: ${assetId}`);

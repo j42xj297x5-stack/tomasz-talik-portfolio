@@ -4,10 +4,11 @@ export const VR_ATTRACTOR_PANEL_NAMES = Object.freeze(
   Array.from({ length: 4 }, (_, index) => `glyph_panel_0${index + 1}`)
 );
 
-const DEFAULT_CONTENTS = Object.freeze(['', '', '', '04']);
+const DEFAULT_CONTENTS = Object.freeze(['', '', '', '']);
 const MAX_CANVAS_EDGE = 512;
 const PROXIMITY_BUCKETS = 28;
 const OBJECTIVE_PANEL_INDEX = 2;
+const DISTANCE_PANEL_INDEX = 3;
 const OBJECTIVE_TEXT_MARGIN_RATIO = 0.09;
 const OBJECTIVE_LINE_HEIGHT_RATIO = 1.18;
 const OBJECTIVE_MAX_FONT_RATIO = 0.2;
@@ -265,6 +266,11 @@ export function createVrAttractorPanelSystem({ panels, canvasFactory, imageFacto
     record.content = nextContent; record.glyph = null; draw(record); return true;
   }
   function setObjectiveText(body) { return setPanelContent(OBJECTIVE_PANEL_INDEX, body); }
+  function setDistanceMeters(distanceMeters) {
+    const content = Number.isFinite(distanceMeters) && distanceMeters >= 0
+      ? String(Math.round(distanceMeters)) : '';
+    return setPanelContent(DISTANCE_PANEL_INDEX, content);
+  }
   function setPanelContents(contents) {
     if (!Array.isArray(contents)) throw new TypeError('[VrAttractorPanels] Panel contents must be an array.');
     records.forEach((record, index) => setPanelContent(index, contents[index] ?? ''));
@@ -294,6 +300,6 @@ export function createVrAttractorPanelSystem({ panels, canvasFactory, imageFacto
 
   reset();
   return { panels: records, setPanelContent, setPanelContents, setPanelGlyph, setPrimaryGlyph, setPrimaryPresentation,
-    setObjectiveText,
+    setObjectiveText, setDistanceMeters,
     setVisualState, reset, dispose, glyphImages };
 }
