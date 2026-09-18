@@ -114,6 +114,21 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
   function text(value, x, y, size = 34, color = '#e8f7ff') {
     context.fillStyle = color; context.font = `${size}px sans-serif`; context.fillText(value, x, y);
   }
+  function drawProcessWireframe({ segments, cx, cy, scale, yaw, pitch, dissolve, color, alpha, lineWidth, shadowBlur }) {
+    const cosY = Math.cos(yaw), sinY = Math.sin(yaw), cosX = Math.cos(pitch), sinX = Math.sin(pitch);
+    context.save(); context.globalAlpha = alpha; context.strokeStyle = color; context.lineWidth = lineWidth;
+    context.shadowColor = color; context.shadowBlur = shadowBlur; context.beginPath();
+    segments.forEach((segment) => {
+      if (!wireframeDissolveVisible(segment, dissolve)) return;
+      const arx = segment.ax * cosY + segment.az * sinY, arz = -segment.ax * sinY + segment.az * cosY;
+      const ary = segment.ay * cosX - arz * sinX, ad = 1 / Math.max(.65, 1 + (segment.ay * sinX + arz * cosX) * .16);
+      const brx = segment.bx * cosY + segment.bz * sinY, brz = -segment.bx * sinY + segment.bz * cosY;
+      const bry = segment.by * cosX - brz * sinX, bd = 1 / Math.max(.65, 1 + (segment.by * sinX + brz * cosX) * .16);
+      context.moveTo(cx + arx * scale * ad, cy - ary * scale * ad);
+      context.lineTo(cx + brx * scale * bd, cy - bry * scale * bd);
+    });
+    context.stroke(); context.restore();
+  }
   function getProtoAstroImage(descriptor) {
     if (!descriptor?.syllable) return null;
     let image = protoAstroImageCache.get(descriptor.syllable);
@@ -365,18 +380,9 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
     if (!segments?.length || ['COOLDOWN', 'COMPLETE'].includes(telemetry.phase)) return;
     const dissolve = telemetry.phase === 'EXTRACTION' ? telemetry.extractionProgress : 0;
     const processing = telemetry.active || (contentSource?.getState?.() ?? 'EMPTY') !== 'INSERTED';
-    const yaw = telemetryElapsed * (processing ? .38 : .16), cosY = Math.cos(yaw), sinY = Math.sin(yaw);
-    const tilt = -.28, cosX = Math.cos(tilt), sinX = Math.sin(tilt);
-    const project = (x, y, z) => { const rx = x * cosY + z * sinY, rz = -x * sinY + z * cosY;
-      const ry = y * cosX - rz * sinX, depth = 1 / Math.max(.65, 1 + (y * sinX + rz * cosX) * .16);
-      return [cx + rx * scale * depth, cy - ry * scale * depth]; };
-    context.save(); context.globalAlpha = .78 + .22 * Math.sin(telemetryElapsed * (processing ? 5 : 3));
-    context.strokeStyle = accents[telemetry.colorKey]; context.lineWidth = processing ? 2.2 : 1.7;
-    context.shadowColor = accents[telemetry.colorKey]; context.shadowBlur = processing ? 12 : 7; context.beginPath();
-    segments.forEach((segment) => { if (!wireframeDissolveVisible(segment, dissolve)) return;
-      const a = project(segment.ax, segment.ay, segment.az), b = project(segment.bx, segment.by, segment.bz);
-      context.moveTo(a[0], a[1]); context.lineTo(b[0], b[1]); });
-    context.stroke(); context.restore();
+    drawProcessWireframe({ segments, cx, cy, scale, yaw: telemetryElapsed * (processing ? .38 : .16), pitch: -.28,
+      dissolve, color: accents[telemetry.colorKey], alpha: .78 + .22 * Math.sin(telemetryElapsed * (processing ? 5 : 3)),
+      lineWidth: processing ? 2.2 : 1.7, shadowBlur: processing ? 12 : 7 });
   }
   function drawSphere(progress) {
     interactiveRegions = [{ id: 'back-modules', x: 90, y: 55, width: 260, height: 70, enabled: true }];
@@ -461,23 +467,10 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
     if (!['INSERTED', 'CONSUMING', 'CONSUMED'].includes(contentState)) return;
     const processing = telemetry.active || contentState !== 'INSERTED';
     const dissolve = telemetry.phase === 'EXTRACTION' ? telemetry.extractionProgress : 0;
-    const rotation = telemetryElapsed * (processing ? .38 : .16);
-    const cosY = Math.cos(rotation), sinY = Math.sin(rotation);
-    const tilt = -.28, cosX = Math.cos(tilt), sinX = Math.sin(tilt);
     const pulse = .78 + .22 * Math.sin(telemetryElapsed * (processing ? 5 : 3));
-    context.save(); context.globalAlpha = pulse; context.strokeStyle = accents[telemetry.colorKey];
-    context.lineWidth = processing ? 4.5 : 3.5; context.shadowColor = accents[telemetry.colorKey]; context.shadowBlur = processing ? 15 : 8;
-    context.beginPath();
-    data.segments.forEach((segment) => {
-      if (!wireframeDissolveVisible(segment, dissolve)) return;
-      const arx = segment.ax * cosY + segment.az * sinY, arz = -segment.ax * sinY + segment.az * cosY;
-      const ary = segment.ay * cosX - arz * sinX, ad = 1 / Math.max(.65, 1 + (segment.ay * sinX + arz * cosX) * .16);
-      const brx = segment.bx * cosY + segment.bz * sinY, brz = -segment.bx * sinY + segment.bz * cosY;
-      const bry = segment.by * cosX - brz * sinX, bd = 1 / Math.max(.65, 1 + (segment.by * sinX + brz * cosX) * .16);
-      context.moveTo(cx + arx * scale * ad, cy - ary * scale * ad);
-      context.lineTo(cx + brx * scale * bd, cy - bry * scale * bd);
-    });
-    context.stroke(); context.restore();
+    drawProcessWireframe({ segments: data.segments, cx, cy, scale, yaw: telemetryElapsed * (processing ? .38 : .16), pitch: -.28,
+      dissolve, color: accents[telemetry.colorKey], alpha: pulse, lineWidth: processing ? 4.5 : 3.5,
+      shadowBlur: processing ? 15 : 8 });
   }
   function progressSnapshot() { return progressionController.getAsterionSphereProgress(); }
   function drawAsterionPreview(progress, telemetry, cx, cy, radius) {
