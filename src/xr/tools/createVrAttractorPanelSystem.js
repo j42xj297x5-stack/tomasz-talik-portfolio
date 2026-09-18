@@ -86,7 +86,8 @@ export function createVrAttractorPanelSystem({ panels, canvasFactory, imageFacto
     const originalMaterial = panel.material;
     panel.material = material;
     return { panel, canvas, context, maskCanvas, maskContext, texture, material, originalMaterial,
-      content: DEFAULT_CONTENTS[index], glyph: null, syllable: null, presentationColor: null, drawCount: 0 };
+      content: DEFAULT_CONTENTS[index], glyph: null, syllable: null, presentationColor: null,
+      glyphRequestId: 0, drawCount: 0 };
   });
 
   const glyphImages = new Map();
@@ -153,9 +154,11 @@ export function createVrAttractorPanelSystem({ panels, canvasFactory, imageFacto
     if (disposed) return false;
     const descriptor = typeof glyph === 'string' ? { url: glyph } : glyph;
     const url = descriptor?.url ?? null;
+    const preparedImage = descriptor?.image ?? null;
     const record = records[index];
     if (!record) throw new RangeError(`[VrAttractorPanels] Panel index ${index} is outside 0..3.`);
-    if (url && record.requestedGlyphUrl === url && record.glyph) {
+    if ((preparedImage && record.glyph === preparedImage)
+      || (url && record.requestedGlyphUrl === url && record.glyph)) {
       const nextSyllable = descriptor?.syllable ?? null;
       const nextColor = descriptor?.presentationColor ?? null;
       if (nextSyllable !== record.syllable || nextColor !== record.presentationColor) {
@@ -163,12 +166,14 @@ export function createVrAttractorPanelSystem({ panels, canvasFactory, imageFacto
       }
       return true;
     }
+    const requestId = ++record.glyphRequestId;
     record.requestedGlyphUrl = url; record.syllable = descriptor?.syllable ?? null;
     record.presentationColor = descriptor?.presentationColor ?? null;
-    record.content = ''; record.glyph = null; draw(record);
+    record.content = ''; record.glyph = preparedImage; draw(record);
+    if (preparedImage) return true;
     if (!url) return true;
     const image = await loadGlyph(url);
-    if (disposed || record.requestedGlyphUrl !== url) return false;
+    if (disposed || record.glyphRequestId !== requestId) return false;
     record.glyph = image; draw(record); return true;
   }
 
@@ -187,6 +192,7 @@ export function createVrAttractorPanelSystem({ panels, canvasFactory, imageFacto
     if (disposed) return false;
     const record = records[index];
     if (!record) throw new RangeError(`[VrAttractorPanels] Panel index ${index} is outside 0..3.`);
+    record.glyphRequestId += 1; record.requestedGlyphUrl = null;
     record.content = String(content ?? ''); record.glyph = null; draw(record); return true;
   }
   function setPanelContents(contents) {
@@ -201,7 +207,8 @@ export function createVrAttractorPanelSystem({ panels, canvasFactory, imageFacto
     if (disposed) return;
     state = 'idle'; pulling = false; proximityBucket = 0;
     records.forEach((record, index) => { record.content = DEFAULT_CONTENTS[index]; record.glyph = null;
-      record.syllable = null; record.presentationColor = null; record.requestedGlyphUrl = null; draw(record); });
+      record.syllable = null; record.presentationColor = null; record.requestedGlyphUrl = null;
+      record.glyphRequestId += 1; draw(record); });
   }
   function dispose() {
     if (disposed) return;
