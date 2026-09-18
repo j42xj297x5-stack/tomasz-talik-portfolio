@@ -12,7 +12,7 @@ export const VR_ATTRACTOR_STATES = Object.freeze({
 
 export const VR_ATTRACTOR_VISUAL_CONFIG = Object.freeze({
   modelScale: 1 / 3,
-  fuelPointSize: 0.0042,
+  fuelPointSize: 0.0084,
   fuelLargePointScale: 1.7,
   fuelBrightnessMultiplier: 1.2,
   aimOffset: [0, 0, 0],
