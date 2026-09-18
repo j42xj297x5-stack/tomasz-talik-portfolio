@@ -13,6 +13,7 @@ export const VR_ATTRACTOR_STATES = Object.freeze({
 export const VR_ATTRACTOR_VISUAL_CONFIG = Object.freeze({
   modelScale: 1 / 3,
   fuelPointSize: 0.0042,
+  fuelLargePointScale: 1.7,
   fuelBrightnessMultiplier: 1.2,
   aimOffset: [0, 0, 0],
   ringLocalPositionOffsets: {
@@ -231,18 +232,42 @@ export function createVrAttractorTool({ model, config = VR_ATTRACTOR_VISUAL_CONF
     element, settings, source, markersDegenerate, controlPoints
   }) => {
     const curve = new THREE.CatmullRomCurve3(controlPoints, false);
-    const geometry = new THREE.BufferGeometry();
-    geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(settings.particleCount * 3), 3));
-    const material = new THREE.PointsMaterial({ color: settings.color, map: fuelParticleTexture,
-      size: config.fuelPointSize, transparent: true,
-      opacity: settings.brightness * config.fuelBrightnessMultiplier, blending: THREE.AdditiveBlending,
-      depthWrite: false, depthTest: true, sizeAttenuation: true });
-    const points = new THREE.Points(geometry, material);
-    points.name = `VrAttractorFuelParticles_${element}`;
-    nodes.VR_ATTRACTOR_ROOT.add(points);
-    return { element, settings, curve, source, markersDegenerate, geometry, material, points, elapsed: 0,
-      sample: new THREE.Vector3() };
+    const createBucket = (name, size) => {
+      const geometry = new THREE.BufferGeometry();
+      geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(settings.particleCount * 3), 3));
+      const material = new THREE.PointsMaterial({ color: settings.color, map: fuelParticleTexture,
+        size, transparent: true,
+        opacity: settings.brightness * config.fuelBrightnessMultiplier, blending: THREE.AdditiveBlending,
+        depthWrite: false, depthTest: true, sizeAttenuation: true });
+      const points = new THREE.Points(geometry, material);
+      points.name = `VrAttractorFuelParticles_${element}_${name}`;
+      nodes.VR_ATTRACTOR_ROOT.add(points);
+      return { geometry, material, points };
+    };
+    const small = createBucket('small', config.fuelPointSize);
+    const large = createBucket('large', config.fuelPointSize * config.fuelLargePointScale);
+    small.geometry.setDrawRange(0, settings.particleCount);
+    large.geometry.setDrawRange(0, 0);
+    return { element, settings, curve, source, markersDegenerate, small, large, elapsed: 0,
+      particleBuckets: new Uint8Array(settings.particleCount),
+      particleSlots: new Uint16Array(settings.particleCount), sample: new THREE.Vector3() };
   });
+
+  function configureFuelParticleRoutes(signature) {
+    fuelStreams.forEach((stream) => {
+      const pattern = signature?.activeStreamIds.includes(stream.element) ? signature.sizePattern : null;
+      let smallCount = 0;
+      let largeCount = 0;
+      for (let index = 0; index < stream.settings.particleCount; index += 1) {
+        const isLarge = pattern?.[index % pattern.length] === FUEL_PARTICLE_SIZE.LARGE;
+        stream.particleBuckets[index] = isLarge ? 1 : 0;
+        stream.particleSlots[index] = isLarge ? largeCount++ : smallCount++;
+      }
+      stream.small.geometry.setDrawRange(0, smallCount);
+      stream.large.geometry.setDrawRange(0, largeCount);
+    });
+  }
+  configureFuelParticleRoutes(null);
 
   let state = VR_ATTRACTOR_STATES.UNEQUIPPED;
   let unlocked = false;
@@ -298,6 +323,7 @@ export function createVrAttractorTool({ model, config = VR_ATTRACTOR_VISUAL_CONF
           fuelSignature = projectFuelSignature(descriptor);
         }
       }
+      configureFuelParticleRoutes(fuelSignature);
     }
     panelSystem.setPrimaryGlyph(canonicalGlyphPresentation).catch((error) => logger.warn(error.message));
     panelSystem.setPrimaryPresentation({ isPulling: state === VR_ATTRACTOR_STATES.PULLING, targetProximity });
@@ -368,16 +394,21 @@ export function createVrAttractorTool({ model, config = VR_ATTRACTOR_VISUAL_CONF
     });
     fuelStreams.forEach((stream) => {
       stream.elapsed += deltaSeconds * stream.settings.speed * activity;
-      const positions = stream.geometry.attributes.position;
+      const smallPositions = stream.small.geometry.attributes.position;
+      const largePositions = stream.large.geometry.attributes.position;
       for (let index = 0; index < stream.settings.particleCount; index += 1) {
         const irregularity = Math.sin(elapsed * 3.1 + index * 2.17 + stream.settings.phase * 9) * stream.settings.pulseAmount * 0.02;
         const t = (stream.elapsed + stream.settings.phase + index / stream.settings.particleCount + irregularity + 1) % 1;
         stream.curve.getPointAt(t, stream.sample);
-        positions.setXYZ(index, stream.sample.x, stream.sample.y, stream.sample.z);
+        const positions = stream.particleBuckets[index] ? largePositions : smallPositions;
+        positions.setXYZ(stream.particleSlots[index], stream.sample.x, stream.sample.y, stream.sample.z);
       }
-      positions.needsUpdate = true;
-      stream.material.opacity = stream.settings.brightness * config.fuelBrightnessMultiplier
+      if (stream.small.geometry.drawRange.count) smallPositions.needsUpdate = true;
+      if (stream.large.geometry.drawRange.count) largePositions.needsUpdate = true;
+      const opacity = stream.settings.brightness * config.fuelBrightnessMultiplier
         * (0.88 + 0.12 * Math.sin(elapsed * 2 + stream.settings.phase * 7));
+      stream.small.material.opacity = opacity;
+      stream.large.material.opacity = opacity;
     });
   }
 
@@ -391,6 +422,7 @@ export function createVrAttractorTool({ model, config = VR_ATTRACTOR_VISUAL_CONF
       const offset = config.ringLocalPositionOffsets[pivot.name];
       if (offset) pivot.position.add(new THREE.Vector3().fromArray(offset));
     });
+    configureFuelParticleRoutes(null);
     fuelStreams.forEach((stream) => { stream.elapsed = 0; });
     panelSystem.reset();
   }
@@ -398,7 +430,11 @@ export function createVrAttractorTool({ model, config = VR_ATTRACTOR_VISUAL_CONF
     if (disposed) return;
     reset(); disposed = true;
     modelScale.remove(nodes.VR_ATTRACTOR_ROOT); aimRoot.parent?.remove(aimRoot);
-    fuelStreams.forEach(({ points, geometry, material }) => { points.parent?.remove(points); geometry.dispose(); material.dispose(); });
+    fuelStreams.forEach(({ small, large }) => {
+      [small, large].forEach(({ points, geometry, material }) => {
+        points.parent?.remove(points); geometry.dispose(); material.dispose();
+      });
+    });
     fuelParticleTexture.dispose();
     panelSystem.dispose();
     ownedMaterials.forEach((material) => material.dispose());
