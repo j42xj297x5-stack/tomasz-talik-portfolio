@@ -274,6 +274,7 @@ export function createVrAstroFurnaceRuneRecipeInteraction({
     hasBothIngredients: () => smallGlyph.content !== null && shell.content !== null,
     getInsertedSmallGlyph: () => smallGlyph.content,
     getInsertedShell: () => shell.content,
+    getShellPanelWireframe: (assetId) => shellSystem.getPanelWireframe?.(assetId) ?? null,
     diagnostics: {
       enabled,
       anchorsReady,

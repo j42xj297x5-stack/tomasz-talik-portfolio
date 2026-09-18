@@ -104,6 +104,8 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
     y: FAMILY_GRID.y + Math.floor(index / FAMILY_GRID.columns) * (FAMILY_GRID.cellHeight + FAMILY_GRID.rowGap),
     width: FAMILY_GRID.cellWidth, height: FAMILY_GRID.cellHeight, enabled });
   const smallGlyphByFamily = new Map(smallGlyphEntries.map((entry) => [entry.protoAstro.descriptor.familyCode, entry]));
+  const shellAssetIdByFamily = new Map(ASTERION_SHELL_PATCHES.map(({ assetId }) =>
+    [resolveAttractorShellGlyph(assetId)?.familyCode, assetId]));
   const runeStoneWireframeByFamily = new Map(FAMILY_GRID_CODES.map((familyCode) => [familyCode,
     createAsterionModelWireframeMap(resolveVrRuneStonePreviewModel(familyCode), { maxSegments: 420, minLength: .006, thresholdAngle: 20 })]));
   const protoAstroImageCache = new Map();
@@ -235,8 +237,10 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
       text(copy.runeTuning.familyCard(runeLabel(familyCode), runeDescriptor?.syllable ?? familyCode),
         rect.x + rect.width / 2, rect.y + 30, 22, available ? '#f1eaff' : '#78909d');
       context.textAlign = 'left';
+      drawMaterialCardVisual(context, { x: rect.x - 15, y: rect.y + 34, width: rect.width - 10, height: rect.height - 57,
+        glyphRatio: .62, padding: 3, glyphImage: runeImage, color });
       drawMaterialCardVisual(context, { x: rect.x + 5, y: rect.y + 34, width: rect.width - 10, height: rect.height - 57,
-        glyphRatio: .62, padding: 3, glyphImage: runeImage, color,
+        glyphRatio: .62, padding: 3, color,
         drawPreview: ({ cx, cy, scale }) => drawRuneStoneWireframe(familyCode, cx, cy, scale * 1.2, color, natural ? .94 : .55) });
       context.textAlign = 'center';
       text(tuned ? copy.runeTuning.familyStates.tuned : selected ? copy.runeTuning.familyStates.selected : !natural ? copy.runeTuning.familyStates.special : copy.runeTuning.familyStates.available,
@@ -284,7 +288,7 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
         ? `${kind} — ${copy.runeTuning.familyCard(runeLabel(familyCode), descriptor?.syllable ?? familyCode)}`
         : `${kind} — —`;
       text(identity, identityX, y + 38, 17, recipe ? '#b89dd0' : '#667681');
-      if (recipe) drawMaterialCardVisual(context, { x: signX, y: y + 58, width: 164, height: 125,
+      if (recipe) drawMaterialCardVisual(context, { x: signX - 25, y: y + 39, width: 214, height: 163,
         glyphRatio: 1, padding: 5, glyphImage: image, color: inserted ? processColor : accents.emanation });
       if (!recipe || !showWireframes || !segments?.length) return;
       const pulse = inserted || processing ? .78 + .22 * Math.sin(telemetryElapsed * (processing ? 5 : 3)) : .38;
@@ -295,8 +299,10 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
     };
 
     const glyph = recipe ? smallGlyphByFamily.get(recipe.smallGlyphFamilyCode) : null;
+    const insertedShellWireframe = runeRecipeInteraction?.getInsertedShell?.()?.userData?.panelWireframe;
+    const previewShellAssetId = recipe ? shellAssetIdByFamily.get(recipe.shellFamilyCode) : null;
     const shellWireframe = showWireframes && recipe
-      ? runeRecipeInteraction?.getInsertedShell?.()?.userData?.panelWireframe : null;
+      ? insertedShellWireframe ?? runeRecipeInteraction?.getShellPanelWireframe?.(previewShellAssetId) : null;
     drawIngredient({ descriptor: recipe?.smallGlyphDescriptor, familyCode: recipe?.smallGlyphFamilyCode,
       kind: copy.runeTuning.slots.glyph, identityX: x + 310, signX: x + 28, previewX: x + 450,
       segments: glyph ? SMALL_GLYPH_WIREFRAME_DATA.byAssetId[glyph.assetId]?.segments3d : null, inserted: glyphInserted });
