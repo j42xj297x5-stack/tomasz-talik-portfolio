@@ -59,6 +59,7 @@ const pointIndex = (point) => Number.isFinite(point.userData?.vr_path_index)
   ? point.userData.vr_path_index : Number(point.name.match(/P(\d+)$/)?.[1] ?? Number.MAX_SAFE_INTEGER);
 
 const FUEL_PATH_EPSILON = 1e-5;
+const DISTANCE_SYNC_INTERVAL_SECONDS = 0.1;
 
 export function isDegenerateFuelPath(points, tolerance = FUEL_PATH_EPSILON) {
   if (points.length < 2) return true;
@@ -97,8 +98,12 @@ function debugFuelControlPoints(debugMesh, root, targetCount = 12) {
   return controls;
 }
 
-export function createVrAttractorTool({ model, config = VR_ATTRACTOR_VISUAL_CONFIG, logger = console, canvasFactory, imageFactory }) {
+export function createVrAttractorTool({ model, config = VR_ATTRACTOR_VISUAL_CONFIG, logger = console, canvasFactory,
+  imageFactory, getPlayerWorldPosition }) {
   if (!model) throw new Error('[VrAttractor] Cached astro_grabber GLB instance is required.');
+  if (typeof getPlayerWorldPosition !== 'function') {
+    throw new TypeError('[VrAttractor] getPlayerWorldPosition must be a function.');
+  }
   const missing = REQUIRED_NODES.filter((name) => !model.getObjectByName(name));
   if (missing.length) throw new Error(`[VrAttractor] Invalid astro_grabber.glb; missing required nodes: ${missing.join(', ')}`);
 
@@ -192,11 +197,15 @@ export function createVrAttractorTool({ model, config = VR_ATTRACTOR_VISUAL_CONF
   let trigger = 0;
   let pullStrength = 0;
   let target = null;
+  let physicalTarget = null;
+  let distanceSyncElapsed = 0;
   let targetProximity = 0;
   let level = 0;
   let elapsed = 0;
   let innerRPM = 0;
   let disposed = false;
+  const targetWorldPosition = new THREE.Vector3();
+  const playerWorldPosition = new THREE.Vector3();
   aimRoot.visible = false;
 
   function setEquipped(equipped) {
@@ -210,6 +219,11 @@ export function createVrAttractorTool({ model, config = VR_ATTRACTOR_VISUAL_CONF
   function setTarget(value) {
     target = value ?? null; targetProximity = clamp01(value?.proximity);
     const previewTarget = value?.target ?? value;
+    if (previewTarget !== physicalTarget) {
+      physicalTarget = previewTarget ?? null;
+      distanceSyncElapsed = 0;
+      panelSystem.setDistanceMeters(null);
+    }
     const isRuneStone = value?.targetClass === 'runeStone';
     const runeStoneDescriptor = isRuneStone
       ? resolveProtoAstroDescriptor(value.familyCode, 'U') : null;
@@ -253,9 +267,24 @@ export function createVrAttractorTool({ model, config = VR_ATTRACTOR_VISUAL_CONF
     return panelSystem.setObjectiveText(body);
   }
 
+  function syncTargetDistance(deltaSeconds) {
+    if (!physicalTarget) return;
+    distanceSyncElapsed += deltaSeconds;
+    if (distanceSyncElapsed < DISTANCE_SYNC_INTERVAL_SECONDS) return;
+    distanceSyncElapsed %= DISTANCE_SYNC_INTERVAL_SECONDS;
+    if (typeof physicalTarget.getWorldPosition !== 'function') {
+      panelSystem.setDistanceMeters(null);
+      return;
+    }
+    physicalTarget.getWorldPosition(targetWorldPosition);
+    getPlayerWorldPosition(playerWorldPosition);
+    panelSystem.setDistanceMeters(targetWorldPosition.distanceTo(playerWorldPosition));
+  }
+
   function update(deltaSeconds) {
     if (disposed || state === VR_ATTRACTOR_STATES.UNEQUIPPED || !Number.isFinite(deltaSeconds) || deltaSeconds <= 0) return;
     elapsed += deltaSeconds;
+    syncTargetDistance(deltaSeconds);
     panelSystem.setPrimaryPresentation({ isPulling: state === VR_ATTRACTOR_STATES.PULLING, targetProximity });
     const activity = 1 + trigger * 0.35 + pullStrength * 0.45 + (state === VR_ATTRACTOR_STATES.PULLING ? 0.35 : 0);
     nodes.PIVOT_BASE_MOLEKULAR.rotateY(rpmToRadians(config.baseMolecular.idleRPM * config.baseMolecular.direction, deltaSeconds));
@@ -293,7 +322,8 @@ export function createVrAttractorTool({ model, config = VR_ATTRACTOR_VISUAL_CONF
   }
 
   function reset() {
-    state = VR_ATTRACTOR_STATES.UNEQUIPPED; trigger = 0; target = null; targetProximity = 0; pullStrength = 0;
+    state = VR_ATTRACTOR_STATES.UNEQUIPPED; trigger = 0; target = null; physicalTarget = null;
+    distanceSyncElapsed = 0; targetProximity = 0; pullStrength = 0;
     elapsed = 0; innerRPM = 0; aimRoot.visible = false;
     initialPivotTransforms.forEach((transform, pivot) => {
       pivot.position.copy(transform.position); pivot.quaternion.copy(transform.quaternion); pivot.scale.copy(transform.scale);
