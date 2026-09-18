@@ -249,6 +249,9 @@ export function createVrAttractorTool({ model, config = VR_ATTRACTOR_VISUAL_CONF
   function setBandPresentation(presentation) {
     panelSystem.setPanelGlyph(1, presentation).catch((error) => logger.warn(error.message));
   }
+  function setObjectiveText(body) {
+    return panelSystem.setObjectiveText(body);
+  }
 
   function update(deltaSeconds) {
     if (disposed || state === VR_ATTRACTOR_STATES.UNEQUIPPED || !Number.isFinite(deltaSeconds) || deltaSeconds <= 0) return;
@@ -311,7 +314,7 @@ export function createVrAttractorTool({ model, config = VR_ATTRACTOR_VISUAL_CONF
 
   return { object: aimRoot, modelScale, aimCorrection, energyCellAnchor, panelSystem,
     setEquipped, setUnlocked, setTrigger, setTarget, setPullStrength, setLevel, setState, setGlyphPanelState,
-    setBandPresentation,
+    setBandPresentation, setObjectiveText,
     attachToTargetRay, getMasterRingWorldPosition, update, reset, dispose, getState: () => state, getInnerRPM: () => innerRPM,
     diagnostics: { missingRequiredNodes: missing, glyphPanelCount: glyphPanels.length,
       fuelPointCounts: Object.fromEntries(fuelPathData.map((data) => [data.element, data.controlPoints.length])),

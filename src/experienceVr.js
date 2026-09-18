@@ -871,6 +871,14 @@ const currentObjectiveProjection = createVrCurrentObjectiveProjection({
   getRuneProgressionSnapshot: () => runeStoneProgressionController.getSnapshot(),
   getResonatorDescriptor: () => asterionResonatorFieldActor.getDescriptor()
 });
+const ATTRACTOR_OBJECTIVE_SYNC_INTERVAL_SECONDS = 0.25;
+let attractorObjectiveSyncElapsed = 0;
+function synchronizeAttractorObjective(deltaSeconds) {
+  attractorObjectiveSyncElapsed += Number.isFinite(deltaSeconds) ? Math.max(0, deltaSeconds) : 0;
+  if (attractorObjectiveSyncElapsed < ATTRACTOR_OBJECTIVE_SYNC_INTERVAL_SECONDS) return;
+  attractorObjectiveSyncElapsed %= ATTRACTOR_OBJECTIVE_SYNC_INTERVAL_SECONDS;
+  attractorTool.setObjectiveText(currentObjectiveProjection.getCurrentObjective()?.body ?? '');
+}
 const playerGuideProjection = createVrPlayerGuideProjection({
   locale: language,
   getCurrentObjective: () => currentObjectiveProjection.getCurrentObjective(),
@@ -1896,6 +1904,7 @@ const xrStartCalibration = createCanonicalXrStartCalibration({
 function renderFrame() {
   const delta = clock.getDelta();
   finalAmbientSequencer.update(delta);
+  synchronizeAttractorObjective(delta);
   if (xrStartCalibration.processFrame()) {
     renderer.render(scene, camera);
     return;
