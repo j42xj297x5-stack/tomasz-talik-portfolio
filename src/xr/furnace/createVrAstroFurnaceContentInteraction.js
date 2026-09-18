@@ -12,9 +12,17 @@ export const ASTRO_FURNACE_CONTENT_STATES = Object.freeze({
 export const ASTRO_FURNACE_CONTENT_KINDS = Object.freeze({ SHELL: 'SHELL', SMALL_GLYPH: 'SMALL_GLYPH' });
 
 const VALID_ASSET_IDS = new Set(Array.from({ length: 6 }, (_, index) => `shell-relic-${index + 1}`));
+const SMALL_GLYPH_WORLD_OFFSET = new THREE.Vector3(0, -0.20, 0);
 const clamp01 = (value) => THREE.MathUtils.clamp(value, 0, 1);
 const smoothstep = (value) => { const t = clamp01(value); return t * t * (3 - 2 * t); };
 export function processRotationPulse(angle) { return 3 * processRotationPulse01(angle); }
+function addWorldOffsetInLocalSpace(target, parent, worldOffset) {
+  parent.updateWorldMatrix(true, false);
+  const worldOrigin = parent.getWorldPosition(new THREE.Vector3());
+  const localOrigin = parent.worldToLocal(worldOrigin.clone());
+  const localOffset = parent.worldToLocal(worldOrigin.add(worldOffset)).sub(localOrigin);
+  return target.add(localOffset);
+}
 export function constrainHeldShellToDeviceSurfaces({ shell, shellCenter, origin, radius, deviceRoots = [],
   excludedRoots = [], clearance = 0.006, raycaster = new THREE.Raycaster() }) {
   const axis = new THREE.Vector3().subVectors(shellCenter, origin), targetDistance = axis.length();
@@ -116,6 +124,7 @@ export function createVrAstroFurnaceContentInteraction({
       energyCell: furnace?.nodes?.energy_cell ?? furnace?.nodes?.fire_cell, contentClearance: config.contentClearance,
       localGeometryCenter: kind === kinds.SHELL ? shellRecord(content)?.boundingCenter ?? null : null,
       centerVisibleBounds: kind === kinds.SMALL_GLYPH });
+    if (kind === kinds.SMALL_GLYPH) addWorldOffsetInLocalSpace(snapTarget, anchor, SMALL_GLYPH_WORLD_OFFSET);
     if (kind === kinds.SHELL) { content.userData.furnaceDesiredWorldScale = desiredWorldScale;
       content.userData.furnaceSnapTarget = snapTarget; content.userData.shellState = 'inserted'; content.userData.attractorTarget = false; }
     snapElapsed = 0; setState(states.INSERTED); hideFeedback(); return true;
