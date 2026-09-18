@@ -15,7 +15,22 @@ const P3_RECONSTRUCTION_OVERLAY = Object.freeze({
   })
 });
 
+const COMPLETED_SHELL_ASTERION_RECONSTRUCTION = Object.freeze({
+  furnaceProgression: Object.freeze({
+    absorbedShellIds: Object.freeze([
+      'shell-relic-1',
+      'shell-relic-2',
+      'shell-relic-3',
+      'shell-relic-4',
+      'shell-relic-5',
+      'shell-relic-6'
+    ])
+  }),
+  asterionProduction: Object.freeze({ state: 'EARNED' })
+});
+
 const P5_RECONSTRUCTION_OVERLAY = Object.freeze({
+  ...COMPLETED_SHELL_ASTERION_RECONSTRUCTION,
   protoAstroTuning: Object.freeze({
     extractedFamilyCodes: Object.freeze(['K', 'T', 'S', 'L', 'R'])
   })
@@ -26,7 +41,8 @@ export const VR_DEBUG_CHECKPOINTS = Object.freeze([
   Object.freeze({ id: 'P2', pointId: '3.10', label: 'P2', spawn: VR_DEBUG_CHECKPOINT_SPAWN.RING }),
   Object.freeze({ id: 'P3', pointId: '4.10', label: 'P3', spawn: VR_DEBUG_CHECKPOINT_SPAWN.RING,
     reconstructionOverlay: P3_RECONSTRUCTION_OVERLAY }),
-  Object.freeze({ id: 'P4', pointId: '4.30', label: 'P4', spawn: VR_DEBUG_CHECKPOINT_SPAWN.RING }),
+  Object.freeze({ id: 'P4', pointId: '4.30', label: 'P4', spawn: VR_DEBUG_CHECKPOINT_SPAWN.RING,
+    reconstructionOverlay: COMPLETED_SHELL_ASTERION_RECONSTRUCTION }),
   Object.freeze({ id: 'P5', pointId: '4.70', label: 'P5', spawn: VR_DEBUG_CHECKPOINT_SPAWN.RING,
     reconstructionOverlay: P5_RECONSTRUCTION_OVERLAY }),
   Object.freeze({ id: 'P6', pointId: '5.10', label: 'P6', spawn: VR_DEBUG_CHECKPOINT_SPAWN.RING }),
