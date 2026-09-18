@@ -1,6 +1,7 @@
 import { portfolioNodes } from '../content/portfolioNodes.js';
 import { experienceVrPages } from '../content/experienceVrPages.js';
 import { VR_RUNE_STONE_ASSETS } from '../xr/runes/vrRuneStoneRegistry.js';
+import { PROTO_ASTRO_SYLLABLES } from '../xr/protoAstro/protoAstroRegistry.js';
 
 export const ASSET_STAGES = Object.freeze({
   CRITICAL_INITIAL: 'criticalInitial',
@@ -82,10 +83,10 @@ const deferredWarmAssets = Object.freeze([
     path: `/svg/band_0${index + 1}.svg`,
     type: 'image'
   }, ASSET_STAGES.DEFERRED_WARM)),
-  ...['KA', 'TA', 'SA', 'LA', 'RA'].map((syllable) => withStage({
+  ...PROTO_ASTRO_SYLLABLES.map(({ syllable, path }) => withStage({
     id: `proto-astro-${syllable.toLowerCase()}-image`,
     label: `${syllable} Proto-Astro sign`,
-    path: `/svg/${syllable}.svg`,
+    path,
     type: 'image'
   }, ASSET_STAGES.DEFERRED_WARM)),
   withStage({ id: 'vr-astro-attractor-model', label: 'VR Astro attractor tool', path: '/glb/astro_grabber.glb', type: 'model' }, ASSET_STAGES.DEFERRED_WARM),

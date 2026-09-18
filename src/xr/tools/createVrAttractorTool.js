@@ -4,7 +4,7 @@ import { createVrAttractorPanelSystem, resolveAttractorGlyphFamilyColors,
 import { resolveAttractorShellGlyph } from './vrAttractorShellGlyphs.js';
 import { resolveVrSmallGlyphProtoAstro } from '../protoAstro/resolveVrSmallGlyphProtoAstro.js';
 import { resolveVrPageProtoAstro } from '../protoAstro/resolveVrPageProtoAstro.js';
-import { resolveProtoAstroAssetUrl, resolveProtoAstroDescriptor } from '../protoAstro/protoAstroRegistry.js';
+import { resolveProtoAstroDescriptor } from '../protoAstro/protoAstroRegistry.js';
 
 export const VR_ATTRACTOR_STATES = Object.freeze({
   UNEQUIPPED: 'UNEQUIPPED', IDLE: 'IDLE', TARGETING: 'TARGETING', PULLING: 'PULLING', CAPTURED: 'CAPTURED'
@@ -104,6 +104,9 @@ export function createVrAttractorTool({ model, config = VR_ATTRACTOR_VISUAL_CONF
   if (typeof getPlayerWorldPosition !== 'function') {
     throw new TypeError('[VrAttractor] getPlayerWorldPosition must be a function.');
   }
+  if (typeof getPreparedProtoAstroImage !== 'function') {
+    throw new TypeError('[VrAttractor] getPreparedProtoAstroImage must be a function.');
+  }
   const missing = REQUIRED_NODES.filter((name) => !model.getObjectByName(name));
   if (missing.length) throw new Error(`[VrAttractor] Invalid astro_grabber.glb; missing required nodes: ${missing.join(', ')}`);
 
@@ -198,7 +201,7 @@ export function createVrAttractorTool({ model, config = VR_ATTRACTOR_VISUAL_CONF
   let pullStrength = 0;
   let target = null;
   let physicalTarget = null;
-  let largeGlyphPresentation = null;
+  let canonicalGlyphPresentation = null;
   let distanceSyncElapsed = 0;
   let targetProximity = 0;
   let level = 0;
@@ -222,35 +225,29 @@ export function createVrAttractorTool({ model, config = VR_ATTRACTOR_VISUAL_CONF
     const previewTarget = value?.target ?? value;
     if (previewTarget !== physicalTarget) {
       physicalTarget = previewTarget ?? null;
-      largeGlyphPresentation = null;
+      canonicalGlyphPresentation = null;
       distanceSyncElapsed = 0;
       panelSystem.setDistanceMeters(null);
     }
-    const isRuneStone = value?.targetClass === 'runeStone';
-    const runeStoneDescriptor = isRuneStone
-      ? resolveProtoAstroDescriptor(value.familyCode, 'U') : null;
-    const shellGlyph = isRuneStone ? null : resolveAttractorShellGlyph(previewTarget);
-    const smallGlyph = isRuneStone || shellGlyph ? null : resolveVrSmallGlyphProtoAstro(previewTarget);
-    const largeGlyph = isRuneStone || shellGlyph || smallGlyph
-      ? null : resolveVrPageProtoAstro({ glyphId: previewTarget?.userData?.id });
-    if (largeGlyph && !largeGlyphPresentation) {
-      if (typeof getPreparedProtoAstroImage !== 'function') {
-        throw new Error(`[VrAttractor] Prepared Proto-Astro image resolver is required for Large Glyph ${previewTarget.userData.id}.`);
+    if (previewTarget && !canonicalGlyphPresentation) {
+      const isRuneStone = value?.targetClass === 'runeStone';
+      const shellGlyph = isRuneStone ? null : resolveAttractorShellGlyph(previewTarget);
+      const smallGlyph = isRuneStone || shellGlyph ? null : resolveVrSmallGlyphProtoAstro(previewTarget);
+      const largeGlyph = isRuneStone || shellGlyph || smallGlyph
+        ? null : resolveVrPageProtoAstro({ glyphId: previewTarget.userData?.id });
+      const descriptor = isRuneStone
+        ? resolveProtoAstroDescriptor(value.familyCode, 'U')
+        : (shellGlyph
+          ? resolveProtoAstroDescriptor(shellGlyph.familyCode, 'O')
+          : smallGlyph?.descriptor ?? largeGlyph?.descriptor ?? null);
+      if (descriptor) {
+        canonicalGlyphPresentation = {
+          syllable: descriptor.syllable,
+          image: getPreparedProtoAstroImage(descriptor)
+        };
       }
-      const image = getPreparedProtoAstroImage(largeGlyph.descriptor);
-      if (!image) {
-        throw new Error(`[VrAttractor] Missing prepared Proto-Astro image for Large Glyph ${previewTarget.userData.id} (${largeGlyph.descriptor.syllable}: ${largeGlyph.descriptor.path}).`);
-      }
-      largeGlyphPresentation = { syllable: largeGlyph.descriptor.syllable, image };
     }
-    const glyph = runeStoneDescriptor ? {
-      syllable: runeStoneDescriptor.syllable,
-      url: resolveProtoAstroAssetUrl(runeStoneDescriptor)
-    } : shellGlyph ?? (smallGlyph ? {
-      syllable: smallGlyph.descriptor.syllable,
-      url: smallGlyph.assetUrl
-    } : largeGlyphPresentation);
-    panelSystem.setPrimaryGlyph(glyph).catch((error) => logger.warn(error.message));
+    panelSystem.setPrimaryGlyph(canonicalGlyphPresentation).catch((error) => logger.warn(error.message));
     panelSystem.setPrimaryPresentation({ isPulling: state === VR_ATTRACTOR_STATES.PULLING, targetProximity });
   }
   function setPullStrength(value) { pullStrength = clamp01(value); }
