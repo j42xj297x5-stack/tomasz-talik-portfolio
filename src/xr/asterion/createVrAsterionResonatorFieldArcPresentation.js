@@ -9,17 +9,23 @@ export const ASTERION_RESONATOR_FIELD_ARC_TUNING = Object.freeze({
   segmentsPerBolt: 12,
   maxBranchesPerBolt: 0,
   color: 0xa9ddff,
-  boltWidth: 0.027,
+  boltWidth: 0.081,
   opacity: 0.48,
   coreWidthFactor: 0.2,
   haloOpacityFactor: 0.3,
-  maximumDisplacementMeters: 0.55
+  maximumDisplacementMeters: 0.55,
+  impulsesPerBurst: Object.freeze({ minimum: 3, maximum: 7 }),
+  impulseLifetimeSeconds: Object.freeze({ minimum: 0.025, maximum: 0.055 }),
+  interImpulseDelaySeconds: Object.freeze({ minimum: 0.008, maximum: 0.025 }),
+  impulseWidthFactor: Object.freeze({ minimum: 0.82, maximum: 1.18 })
 });
 
 const TARGET_ID = 'haiku-cosmos';
 const STATE = Object.freeze({ NORMAL: 'NORMAL', IDLE: 'BALANCED_IDLE', TARGET: 'BALANCED_TARGET' });
 const clamp01 = (value) => Math.max(0, Math.min(1, value));
 const randomBetween = (range) => THREE.MathUtils.lerp(range.minimum, range.maximum, Math.random());
+const randomInteger = (range) => range.minimum
+  + Math.floor(Math.random() * (range.maximum - range.minimum + 1));
 const vertexShader = `
 attribute vec3 previous; attribute vec3 next; attribute float side; attribute float width;
 varying float lateral;
@@ -73,7 +79,10 @@ function createBoltSlot(segments, tuning) {
   return {
     mesh, geometry, material, attributes,
     points: Array.from({ length: segments + 1 }, () => new THREE.Vector3()),
-    widths: new Float32Array(segments + 1), active: false, age: 0, lifetime: 0, seed: 0
+    widths: new Float32Array(segments + 1),
+    start: new THREE.Vector3(), end: new THREE.Vector3(),
+    active: false, age: 0, lifetime: 0, seed: 0,
+    impulseIndex: 0, impulseCount: 0, nextImpulseDelay: 0, shape: null
   };
 }
 
@@ -112,6 +121,22 @@ function verticalBoundsAt(shape, x) {
   };
 }
 
+const WALLS = Object.freeze(['LEFT', 'RIGHT', 'TOP', 'BOTTOM']);
+
+function writeRandomWallPoint(target, shape, wall) {
+  const { nearTopLeft, nearTopRight, farTopLeft } = shape.corners;
+  const depth = THREE.MathUtils.lerp(nearTopLeft.z, farTopLeft.z, Math.random());
+  if (wall === 'LEFT' || wall === 'RIGHT') {
+    const x = wall === 'LEFT' ? nearTopLeft.x : nearTopRight.x;
+    const vertical = verticalBoundsAt(shape, x);
+    target.set(x, THREE.MathUtils.lerp(vertical.minimum, vertical.maximum, Math.random()), depth);
+    return;
+  }
+  const x = THREE.MathUtils.lerp(nearTopLeft.x, nearTopRight.x, Math.random());
+  const vertical = verticalBoundsAt(shape, x);
+  target.set(x, wall === 'TOP' ? vertical.maximum : vertical.minimum, depth);
+}
+
 export function createVrAsterionResonatorFieldArcPresentation({ parent, fieldActor,
   acquisitionActor, targetAnchor, tuning = ASTERION_RESONATOR_FIELD_ARC_TUNING }) {
   if (!parent?.add || !parent?.worldToLocal || !fieldActor?.getDescriptor
@@ -145,6 +170,7 @@ export function createVrAsterionResonatorFieldArcPresentation({ parent, fieldAct
   }
 
   function generatePath(slot, shape, start, end) {
+    const widthFactor = randomBetween(tuning.impulseWidthFactor);
     for (let index = 0; index <= segments; index += 1) {
       const t = index / segments;
       const point = slot.points[index].copy(start).lerp(end, t);
@@ -156,36 +182,39 @@ export function createVrAsterionResonatorFieldArcPresentation({ parent, fieldAct
         constrainToShape(point, shape);
       }
       const widthEnvelope = 0.32 + 0.68 * Math.sin(Math.PI * t);
-      slot.widths[index] = tuning.boltWidth * widthEnvelope;
+      slot.widths[index] = tuning.boltWidth * widthFactor * widthEnvelope;
     }
     slot.points[0].copy(start);
     slot.points[segments].copy(end);
     updateRibbon(slot, segments);
   }
 
+  function beginImpulse(slot) {
+    generatePath(slot, slot.shape, slot.start, slot.end);
+    slot.age = 0;
+    slot.lifetime = randomBetween(tuning.impulseLifetimeSeconds);
+    slot.seed = Math.random() * 1000;
+    slot.nextImpulseDelay = 0;
+    slot.mesh.visible = true;
+  }
+
   function spawn(shape, state) {
     const slot = pool.find((candidate) => !candidate.active);
     if (!slot) return;
-    const { nearTopLeft, nearTopRight, farTopLeft } = shape.corners;
-    const start = slot.points[0]; const end = slot.points[segments];
-    const depth = state === STATE.TARGET
-      ? THREE.MathUtils.clamp(targetLocalPosition.z, nearTopLeft.z, farTopLeft.z)
-      : THREE.MathUtils.lerp(nearTopLeft.z, farTopLeft.z, Math.random());
+    const startWallIndex = Math.floor(Math.random() * WALLS.length);
+    const startWall = WALLS[startWallIndex];
+    writeRandomWallPoint(slot.start, shape, startWall);
     if (state === STATE.TARGET) {
-      const fromLeft = Math.random() < 0.5;
-      const x = fromLeft ? nearTopLeft.x : nearTopRight.x;
-      const bounds = verticalBoundsAt(shape, x);
-      start.set(x, THREE.MathUtils.clamp(targetLocalPosition.y, bounds.minimum, bounds.maximum), depth);
-      end.copy(targetLocalPosition);
+      slot.end.copy(targetLocalPosition);
     } else {
-      const leftBounds = verticalBoundsAt(shape, nearTopLeft.x);
-      const rightBounds = verticalBoundsAt(shape, nearTopRight.x);
-      start.set(nearTopLeft.x, THREE.MathUtils.lerp(leftBounds.minimum, leftBounds.maximum, Math.random()), depth);
-      end.set(nearTopRight.x, THREE.MathUtils.lerp(rightBounds.minimum, rightBounds.maximum, Math.random()), depth);
+      const endWallOffset = 1 + Math.floor(Math.random() * (WALLS.length - 1));
+      writeRandomWallPoint(slot.end, shape, WALLS[(startWallIndex + endWallOffset) % WALLS.length]);
     }
-    generatePath(slot, shape, start, end);
-    slot.active = true; slot.age = 0; slot.lifetime = randomBetween(tuning.boltLifetimeSeconds);
-    slot.seed = Math.random() * 1000; slot.mesh.visible = true;
+    slot.shape = shape;
+    slot.active = true;
+    slot.impulseIndex = 0;
+    slot.impulseCount = randomInteger(tuning.impulsesPerBurst);
+    beginImpulse(slot);
   }
 
   function reset() {
@@ -201,11 +230,22 @@ export function createVrAsterionResonatorFieldArcPresentation({ parent, fieldAct
     pool.forEach((slot) => {
       if (!slot.active) return;
       slot.age += delta;
+      if (slot.nextImpulseDelay > 0) {
+        slot.nextImpulseDelay -= delta;
+        if (slot.nextImpulseDelay <= 0) beginImpulse(slot);
+        return;
+      }
       const life = clamp01(slot.age / slot.lifetime);
       const flicker = 0.9 + 0.07 * Math.sin(slot.age * 89 + slot.seed)
         + 0.03 * Math.sin(slot.age * 149 + slot.seed * 1.7);
       slot.material.uniforms.boltOpacity.value = tuning.opacity * Math.sin(Math.PI * life) * flicker;
-      if (life >= 1) release(slot);
+      if (life >= 1) {
+        slot.impulseIndex += 1;
+        slot.mesh.visible = false;
+        slot.material.uniforms.boltOpacity.value = 0;
+        if (slot.impulseIndex >= slot.impulseCount) release(slot);
+        else slot.nextImpulseDelay = randomBetween(tuning.interImpulseDelaySeconds);
+      }
     });
     const descriptor = fieldActor.getDescriptor();
     const targetInside = acquisitionActor.getTargetState(TARGET_ID)?.insideField === true;
