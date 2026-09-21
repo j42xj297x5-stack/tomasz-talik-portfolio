@@ -391,6 +391,10 @@ platformFixturesRoot.position.set(0, 0, 0);
 platformFixturesRoot.quaternion.identity();
 platformFixturesRoot.scale.set(1, 1, 1);
 progressFloor.object.add(platformFixturesRoot);
+const etherMonkeyHoverAnchor = new THREE.Group();
+etherMonkeyHoverAnchor.name = 'VrEtherMonkeyHoverAnchor';
+etherMonkeyHoverAnchor.position.set(0, 3.0, 0);
+platformFixturesRoot.add(etherMonkeyHoverAnchor);
 const floorPassengerRoot = new THREE.Group();
 floorPassengerRoot.name = 'VrFloorPassengerRoot';
 floorPassengerRoot.position.set(0, 0, 0);
@@ -634,6 +638,9 @@ const ambientScenarioOwner = Object.freeze({
 });
 function synchronizeReconstructionDerivedState() {
   previousRuneProgressionSnapshot = runeStoneProgressionController.getSnapshot();
+  if (runeStoneProgressionController.hasWaterInstallationReadinessOverride()) {
+    etherRuneStoneActor.reconstructCaptured(etherMonkeyHoverAnchor);
+  }
   synchronizeRuneBridgeReadiness();
   runeInstalledStateProjection.synchronize();
   runeStoneAudioProjection?.synchronizeInstalledEmitters();
@@ -1363,7 +1370,7 @@ const unsubscribeRuneStoneInstallAudioCue = runeStoneInstallationInteraction
 const unsubscribeRuneStoneInstalledAudio = runeStoneInstallationInteraction
   .subscribeInstalled((event) => runeStoneAudioProjection.presentInstalled(event));
 const etherMonkeyCaptureInteraction = createVrEtherMonkeyCaptureInteraction({
-  etherRuneStoneActor, monkeyActor, runeStoneProgressionController,
+  etherRuneStoneActor, hoverAnchor: etherMonkeyHoverAnchor, runeStoneProgressionController,
   durationSeconds: 1.5,
   onCompleted: () => presentLiveRuneBridgeReadinessTransitions()
 });
@@ -2269,6 +2276,7 @@ window.addEventListener('pagehide', () => {
   runeBridgeActor.dispose();
   runeStoneActor.dispose();
   etherRuneStoneActor.dispose();
+  etherMonkeyHoverAnchor.removeFromParent();
   progressFloor.dispose();
   postRingPresentation.dispose();
   p2ObservationWindow.reset();

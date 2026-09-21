@@ -2,13 +2,13 @@ import * as THREE from '../../vendor/three.js';
 
 const smoothstep = (value) => value * value * (3 - 2 * value);
 
-export function createVrEtherMonkeyCaptureInteraction({ etherRuneStoneActor, monkeyActor,
+export function createVrEtherMonkeyCaptureInteraction({ etherRuneStoneActor, hoverAnchor,
   runeStoneProgressionController, durationSeconds = 1.5, onCompleted = () => {} }) {
   if (!etherRuneStoneActor?.beginMonkeyCapture || !etherRuneStoneActor?.completeMonkeyCapture) {
     throw new TypeError('Ether actor must expose Monkey capture commands.');
   }
-  if (!monkeyActor?.characterAnchor?.getWorldPosition) {
-    throw new TypeError('Monkey characterAnchor is required as the capture target.');
+  if (!hoverAnchor?.getWorldPosition || !hoverAnchor?.getWorldQuaternion) {
+    throw new TypeError('Ether Monkey hoverAnchor must expose world pose accessors.');
   }
   if (!runeStoneProgressionController?.commitWaterInstallationReadinessOverride) {
     throw new TypeError('Rune progression Water readiness override owner is required.');
@@ -40,15 +40,15 @@ export function createVrEtherMonkeyCaptureInteraction({ etherRuneStoneActor, mon
     elapsedSeconds = 0;
     candidate.root.getWorldPosition(startPosition);
     candidate.root.getWorldQuaternion(startQuaternion);
-    monkeyActor.characterAnchor.getWorldQuaternion(targetQuaternion);
+    hoverAnchor.getWorldQuaternion(targetQuaternion);
     return true;
   }
   function update(deltaSeconds = 0) {
     if (disposed || !record) return;
     elapsedSeconds = Math.min(durationSeconds, elapsedSeconds
       + Math.max(0, Number.isFinite(deltaSeconds) ? deltaSeconds : 0));
-    monkeyActor.characterAnchor.getWorldPosition(targetPosition);
-    monkeyActor.characterAnchor.getWorldQuaternion(targetQuaternion);
+    hoverAnchor.getWorldPosition(targetPosition);
+    hoverAnchor.getWorldQuaternion(targetQuaternion);
     const progress = smoothstep(elapsedSeconds / durationSeconds);
     const position = startPosition.clone().lerp(targetPosition, progress);
     const quaternion = startQuaternion.clone().slerp(targetQuaternion, progress);
@@ -56,7 +56,7 @@ export function createVrEtherMonkeyCaptureInteraction({ etherRuneStoneActor, mon
     if (elapsedSeconds < durationSeconds) return;
     const completedRecord = record;
     record = null;
-    if (!etherRuneStoneActor.completeMonkeyCapture()) {
+    if (!etherRuneStoneActor.completeMonkeyCapture(hoverAnchor)) {
       throw new Error('Ether Monkey capture completion was rejected.');
     }
     if (!runeStoneProgressionController.commitWaterInstallationReadinessOverride()) {
