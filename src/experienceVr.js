@@ -36,6 +36,7 @@ import { createVrRuneInstalledStateProjection } from './xr/runes/createVrRuneIns
 import { createVrRuneStoneActor } from './xr/runes/createVrRuneStoneActor.js';
 import { createVrEtherRuneStoneActor } from './xr/runes/createVrEtherRuneStoneActor.js';
 import { createVrEtherMonkeyCaptureInteraction } from './xr/runes/createVrEtherMonkeyCaptureInteraction.js';
+import { createVrEtherMonkeyPresentation } from './xr/runes/createVrEtherMonkeyPresentation.js';
 import { createVrRuneStoneAttractorInteraction } from './xr/runes/createVrRuneStoneAttractorInteraction.js';
 import { createVrRuneStoneInstallationInteraction } from './xr/runes/createVrRuneStoneInstallationInteraction.js';
 import { createVrProgressionController } from './xr/progression/createVrProgressionController.js';
@@ -458,6 +459,13 @@ const etherRuneStoneActor = createVrEtherRuneStoneActor({
   assetManager,
   layer: sphericalLayer(VR_SPHERICAL_LAYER_IDS.RUNE_STONES)
 });
+const etherMonkeyPresentation = createVrEtherMonkeyPresentation({
+  parent: platformFixturesRoot,
+  etherRuneStoneActor,
+  hoverAnchor: etherMonkeyHoverAnchor,
+  idleMotionSettings: settings.placedObjectIdleMotion,
+  color: settings.attractorPresentation.bandColors.runeStones
+});
 const starLayer = sphericalLayer(VR_SPHERICAL_LAYER_IDS.STARS);
 const celestialActor = createVrCelestialActor({
   parent: worldStableRoot,
@@ -524,6 +532,7 @@ window.addEventListener('pagehide', () => {
   asterionSphere.dispose();
   runeBridgeActor.dispose();
   runeStoneActor.dispose();
+  etherMonkeyPresentation.dispose();
   etherRuneStoneActor.dispose();
   progressFloor.dispose();
   largeGlyphActor.dispose();
@@ -1981,6 +1990,7 @@ function renderFrame() {
   etherRuneStoneActor.update(delta);
   runeStoneAttractorInteraction.update(delta);
   etherMonkeyCaptureInteraction.update(delta);
+  etherMonkeyPresentation.update(delta);
   runeBridgeActor.update(delta);
   platformEnergyVfxActor.update(delta);
   runeStoneInstallationInteraction.update(delta);
@@ -2081,6 +2091,7 @@ function restoreVrScenarioBaseline() {
   astroFurnaceActivateInteraction.reset();
   runeTuningController.reset();
   etherMonkeyCaptureInteraction.reset();
+  etherMonkeyPresentation.reset();
   astroFurnaceContentInteraction.reset();
   astroFurnaceRuneRecipeInteraction.resetBaseline();
   runeRecipeSelectionController.reset();
@@ -2275,6 +2286,7 @@ window.addEventListener('pagehide', () => {
   platformEnergyVfxActor.dispose();
   runeBridgeActor.dispose();
   runeStoneActor.dispose();
+  etherMonkeyPresentation.dispose();
   etherRuneStoneActor.dispose();
   etherMonkeyHoverAnchor.removeFromParent();
   progressFloor.dispose();
