@@ -180,6 +180,10 @@ body {
   color: rgba(255, 255, 255, 0.68);
 }
 
+.vr-launch-overlay {
+  z-index: 300;
+}
+
 .vr-debug-gate {
   width: min(620px, 100%);
   text-align: left;
@@ -374,6 +378,23 @@ body {
   color: rgba(220, 232, 248, 0.82);
 }
 
+.vr-runtime__status-dots {
+  display: inline-block;
+  width: 1.5em;
+  text-align: left;
+}
+
+.vr-runtime__status-dots::after {
+  content: '.';
+  animation: vr-loading-dots 1.2s steps(1, end) infinite;
+}
+
+@keyframes vr-loading-dots {
+  0% { content: '.'; }
+  33.333% { content: '..'; }
+  66.666% { content: '...'; }
+}
+
 .vr-runtime__loading {
   display: flex;
   align-items: center;
@@ -454,6 +475,11 @@ body {
   .entry-choice,
   .entry-shell__back {
     transition: none;
+  }
+
+  .vr-runtime__status-dots::after {
+    content: '...';
+    animation: none;
   }
 }
 

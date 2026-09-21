@@ -133,7 +133,7 @@ if (!app) throw new Error('Missing #app mount element.');
 
 const COPY = {
   pl: {
-    title: 'Orange Monkey VR', loading: 'Przygotowywanie minimalnej sceny VR…', ready: 'Scena jest gotowa.',
+    title: 'Orange Monkey VR', loading: 'Przygotowywanie sceny VR', preparingAudio: 'Przygotowywanie dźwięku', ready: 'Scena jest gotowa.',
     enter: 'Wejdź do VR', entering: 'Uruchamianie sesji…', exit: 'Zakończ VR', retry: 'Wejdź ponownie do VR',
     error: 'Nie udało się uruchomić sesji VR. Możesz spróbować ponownie.',
     controllersAlt: 'Instrukcja sterowania kontrolerami VR',
@@ -141,7 +141,7 @@ const COPY = {
     crystalInstructionTitle: 'Portal czeka', crystalInstructionBody: 'Osadź kryształ w naczyniu.'
   },
   en: {
-    title: 'Orange Monkey VR', loading: 'Preparing the minimal VR scene…', ready: 'The scene is ready.',
+    title: 'Orange Monkey VR', loading: 'Preparing the VR scene', preparingAudio: 'Preparing audio', ready: 'The scene is ready.',
     enter: 'Enter VR', entering: 'Starting session…', exit: 'Exit VR', retry: 'Enter VR again',
     error: 'The VR session could not be started. You can try again.',
     controllersAlt: 'VR controller instructions',
@@ -207,7 +207,7 @@ app.innerHTML = `
           </span>
         </div>
         <div class="vr-runtime__loading-copy">
-          <p class="vr-runtime__status" data-vr-status aria-live="polite">${copy.loading}</p>
+          <p class="vr-runtime__status" data-vr-status aria-live="polite"><span data-vr-status-text>${copy.loading}</span><span class="vr-runtime__status-dots" data-vr-status-dots aria-hidden="true"></span></p>
           <p class="vr-runtime__loading-meta" data-vr-assets>${copy.assetsLoaded}: 0 / 0</p>
           <p class="vr-runtime__loading-meta" data-vr-bytes>${formatBytes(0)} ${copy.mbLoaded}</p>
           <p class="vr-runtime__loading-current" data-vr-current></p>
@@ -221,6 +221,7 @@ app.innerHTML = `
     </section>
   </main>
 `;
+window.dispatchEvent(new CustomEvent('orange-monkey-vr:start-screen-mounted'));
 const launchConfig = getVrDebugLaunchConfig();
 const runeRecordingEnabled = launchConfig.recording.enabled
   && launchConfig.recording.scopes.includes(VR_DIAGNOSTIC_SCOPE.RUNE_TUNING_COMPLETION);
@@ -231,7 +232,8 @@ const runeDiagnosticCapture = runeRecordingEnabled || runeRecoveryRequested
 const runeTuningDiagnostics = runeRecordingEnabled ? runeDiagnosticCapture : null;
 
 let canvas = app.querySelector('#vr-scene-canvas');
-const status = app.querySelector('[data-vr-status]');
+const statusText = app.querySelector('[data-vr-status-text]');
+const statusDots = app.querySelector('[data-vr-status-dots]');
 const loadingFill = app.querySelector('[data-vr-loading-fill]');
 const assetProgress = app.querySelector('[data-vr-assets]');
 const byteProgress = app.querySelector('[data-vr-bytes]');
@@ -249,6 +251,24 @@ let vrControllers = null;
 let activeSession = null;
 let terminalXrEndRequested = false;
 let hasEnteredSession = false;
+const PRESENTATION_PHASE = Object.freeze({
+  SCENE_PREPARATION: 'scene-preparation',
+  AUDIO_PREPARATION: 'audio-preparation',
+  READY: 'ready',
+  ENTERING: 'entering',
+  ERROR: 'error'
+});
+let presentationPhase = PRESENTATION_PHASE.SCENE_PREPARATION;
+function setPresentationPhase(phase) {
+  presentationPhase = phase;
+  const loading = phase === PRESENTATION_PHASE.SCENE_PREPARATION
+    || phase === PRESENTATION_PHASE.AUDIO_PREPARATION;
+  statusDots.hidden = !loading;
+  statusText.textContent = phase === PRESENTATION_PHASE.SCENE_PREPARATION ? copy.loading
+    : phase === PRESENTATION_PHASE.AUDIO_PREPARATION ? copy.preparingAudio
+      : phase === PRESENTATION_PHASE.READY ? copy.ready
+        : phase === PRESENTATION_PHASE.ENTERING ? copy.entering : copy.error;
+}
 if (audioControl) app.querySelector('[data-vr-audio-slot]').append(audioControl);
 const loadedSettings = await loadExperienceVrSettings({ debug: new URLSearchParams(location.search).has('debug') });
 const settings = loadedSettings.settings;
@@ -291,7 +311,9 @@ const unsubscribe = loadingDiagnostics.subscribe((snapshot) => {
     ? Math.max(0, Math.min(1, snapshot.completedAssets / snapshot.totalAssets))
     : 0;
   loadingFill.style.height = `${ratio * 100}%`;
-  status.textContent = copy.loading;
+  if (presentationPhase === PRESENTATION_PHASE.SCENE_PREPARATION) {
+    setPresentationPhase(PRESENTATION_PHASE.SCENE_PREPARATION);
+  }
   assetProgress.textContent = `${copy.assetsLoaded}: ${snapshot.completedAssets} / ${snapshot.totalAssets}`;
   byteProgress.textContent = snapshot.knownTotalBytes > 0 && snapshot.unknownTotalAssets === 0
     ? `${formatBytes(snapshot.loadedBytes)} / ${formatBytes(snapshot.knownTotalBytes)}`
@@ -303,13 +325,6 @@ const unsubscribe = loadingDiagnostics.subscribe((snapshot) => {
     : '';
 });
 
-await preloadAssets(vrAssets, {
-  diagnostics: loadingDiagnostics,
-  assetManager,
-  concurrency: 2,
-  stage: ASSET_STAGES.CRITICAL_INITIAL,
-  markComplete: true
-});
 const requirePreparedProtoAstroImage = (descriptor) => {
   const canonicalDescriptor = resolveProtoAstroSyllable(descriptor?.syllable);
   if (!canonicalDescriptor || canonicalDescriptor !== descriptor) {
@@ -321,26 +336,41 @@ const requirePreparedProtoAstroImage = (descriptor) => {
   }
   return image;
 };
-PROTO_ASTRO_SYLLABLES.forEach(requirePreparedProtoAstroImage);
-await vrAudio.prepareRuntimeAudio(REQUIRED_VR_AUDIO);
+try {
+  await preloadAssets(vrAssets, {
+    diagnostics: loadingDiagnostics,
+    assetManager,
+    concurrency: 2,
+    stage: ASSET_STAGES.CRITICAL_INITIAL,
+    markComplete: true
+  });
+  PROTO_ASTRO_SYLLABLES.forEach(requirePreparedProtoAstroImage);
+  setPresentationPhase(PRESENTATION_PHASE.AUDIO_PREPARATION);
+  await vrAudio.prepareRuntimeAudio(REQUIRED_VR_AUDIO);
+} catch (error) {
+  unsubscribe();
+  setPresentationPhase(PRESENTATION_PHASE.ERROR);
+  enterButton.disabled = true;
+  throw error;
+}
 unsubscribe();
 
 function waitForInitialSessionRequest() {
   controls.hidden = false;
-  status.textContent = copy.ready;
+  setPresentationPhase(PRESENTATION_PHASE.READY);
   enterButton.textContent = copy.enter;
   enterButton.disabled = false;
   exitButton.hidden = true;
   return new Promise((resolve) => {
     const request = async () => {
       enterButton.disabled = true;
-      status.textContent = copy.entering;
+      setPresentationPhase(PRESENTATION_PHASE.ENTERING);
       try {
         const session = await navigator.xr.requestSession('immersive-vr', { optionalFeatures: ['local-floor'] });
         resolve(session);
       } catch (error) {
         console.warn('[experience-vr] Session request failed.', error);
-        status.textContent = copy.error;
+        setPresentationPhase(PRESENTATION_PHASE.ERROR);
         enterButton.disabled = false;
         enterButton.addEventListener('click', request, { once: true });
       }
@@ -401,7 +431,7 @@ async function bootstrapInitialRenderer() {
       const replacementCanvas = canvas.cloneNode(false);
       canvas.replaceWith(replacementCanvas);
       canvas = replacementCanvas;
-      status.textContent = copy.error;
+      setPresentationPhase(PRESENTATION_PHASE.ERROR);
     }
   }
   return null;
@@ -2099,7 +2129,7 @@ function renderFrame() {
 
 function showReadyState({ ended = false } = {}) {
   controls.hidden = false;
-  status.textContent = copy.ready;
+  setPresentationPhase(PRESENTATION_PHASE.READY);
   enterButton.textContent = ended ? copy.retry : copy.enter;
   enterButton.disabled = false;
   exitButton.hidden = true;
@@ -2216,7 +2246,7 @@ async function enterVr() {
   if (activeSession) return;
   restoreVrScenarioBaseline();
   enterButton.disabled = true;
-  status.textContent = copy.entering;
+  setPresentationPhase(PRESENTATION_PHASE.ENTERING);
   let requestedSession = null;
   try {
     requestedSession = await navigator.xr.requestSession('immersive-vr', { optionalFeatures: ['local-floor'] });
@@ -2232,7 +2262,7 @@ async function enterVr() {
     xrStartCalibration.request();
     activeSession = requestedSession;
     hasEnteredSession = true;
-    status.textContent = copy.ready;
+    setPresentationPhase(PRESENTATION_PHASE.READY);
     exitButton.hidden = false;
     controls.hidden = true;
     clock.start();
@@ -2248,7 +2278,7 @@ async function enterVr() {
     clock.stop();
     restoreVrScenarioBaseline();
     controls.hidden = false;
-    status.textContent = copy.error;
+    setPresentationPhase(PRESENTATION_PHASE.ERROR);
     enterButton.disabled = false;
     exitButton.hidden = true;
   }
@@ -2356,7 +2386,7 @@ runtimeExperience.activateCurrentPoint();
 xrStartCalibration.request();
 activeSession = initialSession;
 hasEnteredSession = true;
-status.textContent = copy.ready;
+setPresentationPhase(PRESENTATION_PHASE.READY);
 exitButton.hidden = false;
 controls.hidden = true;
 clock.start();
@@ -2367,7 +2397,7 @@ renderer.setAnimationLoop(renderFrame);
   try { await initialSession?.end(); } catch { /* Session may already be ending. */ }
   activeSession = null;
   controls.hidden = false;
-  status.textContent = copy.error;
+  setPresentationPhase(PRESENTATION_PHASE.ERROR);
   enterButton.disabled = true;
   exitButton.hidden = true;
 }
