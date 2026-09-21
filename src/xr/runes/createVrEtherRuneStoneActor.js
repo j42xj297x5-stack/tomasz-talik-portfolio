@@ -53,11 +53,14 @@ export function createVrEtherRuneStoneActor({ parent, assetManager, layer }) {
     assetIdentity: descriptor.assetIdentity, assetId: descriptor.assetId, descriptor, root, visualRoot,
     animationMixer, actions, placementClearanceRadius, initialTransform, state: VR_RUNE_STONE_STATE.FREE };
   let disposed = false;
+  let presentationVisible = false;
 
   const getStone = (familyCode) => String(familyCode ?? '').toUpperCase() === ETHER_FAMILY_CODE ? record : null;
   const setPresentationVisible = (value) => {
     if (disposed) return false;
-    layerActor.object.visible = value === true;
+    presentationVisible = value === true;
+    layerActor.object.visible = presentationVisible;
+    root.visible = presentationVisible;
     return true;
   };
   const commandState = (from, to) => {
@@ -70,6 +73,16 @@ export function createVrEtherRuneStoneActor({ parent, assetManager, layer }) {
     root.updateWorldMatrix(true, true);
     return new THREE.Box3().setFromObject(visualRoot);
   };
+  function settleCaptured(hoverAnchor) {
+    if (!hoverAnchor?.attach) {
+      throw new TypeError('Ether capture hoverAnchor must support attachment.');
+    }
+    if (root.parent !== hoverAnchor) hoverAnchor.attach(root);
+    root.position.set(0, 0, 0);
+    root.quaternion.identity();
+    root.scale.copy(initialTransform.scale);
+    setPresentationVisible(true);
+  }
   function reset() {
     if (disposed) return;
     layerActor.reset();
@@ -103,15 +116,23 @@ export function createVrEtherRuneStoneActor({ parent, assetManager, layer }) {
     getInteractionRadius: () => getBoundingBox()?.getBoundingSphere(new THREE.Sphere()).radius ?? null,
     getFamilyCode: () => ETHER_FAMILY_CODE,
     setPresentationVisible,
-    isPresentationVisible: () => !disposed && layerActor.object.visible === true,
+    isPresentationVisible: () => !disposed && presentationVisible,
     lockByAstro: () => record.state === VR_RUNE_STONE_STATE.LOCKED_BY_ASTRO
       || commandState(VR_RUNE_STONE_STATE.FREE, VR_RUNE_STONE_STATE.LOCKED_BY_ASTRO),
     beginCarriedOrbit: () => commandState(VR_RUNE_STONE_STATE.LOCKED_BY_ASTRO, VR_RUNE_STONE_STATE.CARRIED_ORBIT),
     beginMonkeyCapture: () => commandState(VR_RUNE_STONE_STATE.CARRIED_ORBIT,
       VR_ETHER_RUNE_STONE_STATE.MONKEY_CAPTURE),
-    completeMonkeyCapture: () => {
+    completeMonkeyCapture: (hoverAnchor) => {
       if (!commandState(VR_ETHER_RUNE_STONE_STATE.MONKEY_CAPTURE, VR_ETHER_RUNE_STONE_STATE.CAPTURED)) return false;
-      setPresentationVisible(false);
+      settleCaptured(hoverAnchor);
+      return true;
+    },
+    reconstructCaptured: (hoverAnchor) => {
+      if (disposed) return false;
+      if (record.state !== VR_ETHER_RUNE_STONE_STATE.CAPTURED) {
+        record.state = VR_ETHER_RUNE_STONE_STATE.CAPTURED;
+      }
+      settleCaptured(hoverAnchor);
       return true;
     },
     releaseFromAstro: () => record.state === VR_RUNE_STONE_STATE.FREE
