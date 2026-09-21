@@ -2345,6 +2345,54 @@ body {
   --ornament-content-gap: clamp(12px, 2vh, 24px);
 }
 
+.overlay__panel[data-panel-theme="ether"] .overlay__case-study {
+  border-color: rgba(255, 143, 216, 0.32);
+  background:
+    radial-gradient(circle at top left, rgba(214, 91, 190, 0.2), transparent 44%),
+    linear-gradient(145deg, rgba(28, 13, 44, 0.9), rgba(52, 20, 58, 0.72));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 208, 241, 0.12),
+    0 18px 44px rgba(4, 0, 10, 0.34),
+    0 0 34px rgba(214, 91, 190, 0.14);
+  color: #f4eafa;
+}
+
+.overlay__panel[data-panel-theme="ether"] .overlay__case-study :is(h3, h4) {
+  color: #ffd0f1;
+}
+
+.overlay__panel[data-panel-theme="ether"] .overlay__case-study h5 {
+  color: #f8dff2;
+}
+
+.overlay__panel[data-panel-theme="ether"] .overlay__case-study :is(p, .overlay__case-shot figcaption) {
+  color: rgba(244, 234, 250, 0.88);
+}
+
+.overlay__panel[data-panel-theme="ether"] .overlay__case-study :is(.overlay__case-title, .overlay__case-shot figcaption strong) {
+  color: #ff8fd8;
+}
+
+.overlay__panel[data-panel-theme="ether"] .overlay__case-process-item {
+  border-color: rgba(255, 143, 216, 0.22);
+  background: linear-gradient(145deg, rgba(73, 29, 78, 0.48), rgba(24, 10, 39, 0.58));
+}
+
+.overlay__panel[data-panel-theme="ether"] .overlay__case-shot-button {
+  border-color: rgba(255, 143, 216, 0.32);
+  background:
+    linear-gradient(145deg, rgba(34, 13, 51, 0.92), rgba(83, 31, 77, 0.58)),
+    #13091f;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 208, 241, 0.12),
+    0 14px 30px rgba(4, 0, 10, 0.3),
+    0 0 24px rgba(214, 91, 190, 0.14);
+}
+
+.overlay__panel[data-panel-theme="ether"] .overlay__case-shot-button:focus-visible {
+  outline-color: #ff8fd8;
+}
+
 .overlay__panel[data-panel-theme="ether"] .overlay__content {
   bottom: calc(max(12px, env(safe-area-inset-bottom)) + 64px);
   display: flex;
