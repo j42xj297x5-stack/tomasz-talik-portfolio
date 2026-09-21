@@ -3,6 +3,8 @@ import { publicPath } from '../utils/publicPath.js';
 
 const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const transitionDuration = (reverse) => reducedMotion() ? 120 : reverse ? 360 : 720;
+const PORTAL_FORWARD_OFFSET = 0.9;
+const PORTAL_MAX_TEXTURE_SIZE = 1024;
 
 function findCanvasSurface(root) {
   let surface = null;
@@ -21,6 +23,21 @@ function loadImage(path) {
     image.onerror = () => reject(new Error(`Logo image unavailable: ${path}`));
     image.src = publicPath(path);
   });
+}
+
+function getSurfaceCanvasSize(surface) {
+  surface.geometry.computeBoundingBox();
+  const size = surface.geometry.boundingBox?.getSize(new THREE.Vector3());
+  if (!size || size.x <= 0 || size.y <= 0) return { width: 1024, height: 640 };
+  surface.updateWorldMatrix(true, false);
+  const scale = surface.getWorldScale(new THREE.Vector3());
+  const width = Math.abs(size.x * scale.x);
+  const height = Math.abs(size.y * scale.y);
+  const fit = PORTAL_MAX_TEXTURE_SIZE / Math.max(width, height);
+  return {
+    width: Math.max(1, Math.round(width * fit)),
+    height: Math.max(1, Math.round(height * fit))
+  };
 }
 
 export function createOrangeMonkeyPortalTransition({ scene, assetManager }) {
@@ -64,18 +81,17 @@ export function createOrangeMonkeyPortalTransition({ scene, assetManager }) {
       });
       const canvas = document.createElement('canvas');
       ownedCanvas = canvas;
-      canvas.width = 1024;
-      canvas.height = 640;
+      const canvasSize = getSurfaceCanvasSize(surface);
+      canvas.width = canvasSize.width;
+      canvas.height = canvasSize.height;
       const context = canvas.getContext('2d');
       if (!context) throw new Error('2D canvas context is unavailable.');
       const logo = await loadImage('/png/orange_monkey.webp');
       context.fillStyle = '#000000';
       context.fillRect(0, 0, canvas.width, canvas.height);
       const margin = 0.16;
-      const scale = Math.min(canvas.width * (1 - margin * 2) / logo.naturalWidth, canvas.height * (1 - margin * 2) / logo.naturalHeight);
-      const width = logo.naturalWidth * scale;
-      const height = logo.naturalHeight * scale;
-      context.drawImage(logo, (canvas.width - width) / 2, (canvas.height - height) / 2, width, height);
+      const logoSize = Math.min(canvas.width, canvas.height) * (1 - margin * 2);
+      context.drawImage(logo, (canvas.width - logoSize) / 2, (canvas.height - logoSize) / 2, logoSize, logoSize);
       const texture = new THREE.CanvasTexture(canvas);
       ownedTexture = texture;
       texture.colorSpace = THREE.SRGBColorSpace;
@@ -121,7 +137,11 @@ export function createOrangeMonkeyPortalTransition({ scene, assetManager }) {
     const portal = await ensure();
     if (!portal) return null;
     const monkeyPosition = monkeyRoot.getWorldPosition(new THREE.Vector3());
-    portal.wrapper.position.copy(monkeyPosition);
+    const cameraPosition = camera.getWorldPosition(new THREE.Vector3());
+    const towardCamera = cameraPosition.sub(monkeyPosition);
+    towardCamera.y = 0;
+    if (towardCamera.lengthSq() > 0) towardCamera.normalize();
+    portal.wrapper.position.copy(monkeyPosition).addScaledVector(towardCamera, PORTAL_FORWARD_OFFSET);
     portal.wrapper.position.y += 1.25;
     portal.wrapper.lookAt(camera.position);
     portal.wrapper.visible = true;

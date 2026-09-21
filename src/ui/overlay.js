@@ -52,6 +52,7 @@ export function createOverlay({ language, onClose } = {}) {
   `;
 
   const panelEl = root.querySelector('.overlay__panel');
+  const scrollEl = root.querySelector('.overlay__scroll');
   const statusEl = root.querySelector('.overlay__status');
   const titleEl = root.querySelector('.overlay__title');
   const subtitleEl = root.querySelector('.overlay__subtitle');
@@ -389,6 +390,7 @@ export function createOverlay({ language, onClose } = {}) {
       const isEthics = gateId === 'ethics-life-protection';
       const isHaikuCosmos = gateId === 'haiku-cosmos';
       const isSpotifyDigger = gateId === 'spotify-digger';
+      const isOrangeMonkeyVr = gateId === 'orange-monkey-vr';
       const hasStructuredCopy = Boolean(nodeData.leadText || nodeData.bodyText || nodeData.closingText || nodeData.featureText);
 
       panelEl.dataset.gateId = gateId;
@@ -419,7 +421,24 @@ export function createOverlay({ language, onClose } = {}) {
       statusEl.hidden = Boolean(subtitle);
       statusEl.textContent = subtitle ? '' : (nodeData.eyebrow ?? (isAIGuide ? nodeData.shortLabel : copy.draftStatus));
 
-      titleEl.textContent = nodeData.title;
+      if (isOrangeMonkeyVr) {
+        titleEl.setAttribute('aria-label', nodeData.title);
+        const brandLogo = document.createElement('img');
+        brandLogo.className = 'overlay__brand-logo';
+        brandLogo.src = publicPath('/png/orange_monkey.webp');
+        brandLogo.alt = '';
+        brandLogo.setAttribute('aria-hidden', 'true');
+        const brandName = document.createElement('span');
+        brandName.className = 'overlay__brand-name';
+        brandName.textContent = 'ORANGE MONKEY';
+        const brandVr = document.createElement('span');
+        brandVr.className = 'overlay__brand-vr';
+        brandVr.textContent = 'VR';
+        titleEl.replaceChildren(brandLogo, brandName, brandVr);
+      } else {
+        titleEl.removeAttribute('aria-label');
+        titleEl.textContent = nodeData.title;
+      }
       subtitleEl.hidden = !subtitle;
       subtitleEl.textContent = subtitle;
 
@@ -477,6 +496,7 @@ export function createOverlay({ language, onClose } = {}) {
       }
 
       root.hidden = false;
+      if (scrollEl) scrollEl.scrollTop = 0;
       document.body.classList.add('overlay-open');
     },
     close,
