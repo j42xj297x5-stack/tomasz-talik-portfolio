@@ -12,7 +12,8 @@ const HARMONIC_BREATH = Object.freeze({
   periodSeconds: 2.4,
   skinAmplitude: 0.15,
   skeletonAmplitude: 0.18,
-  haloAmplitude: 0.22
+  haloAmplitude: 0.22,
+  skeletonPeakThicknessFactor: 3
 });
 
 const skinVertexShader = `
@@ -226,6 +227,8 @@ export function createVrAsterionResonatorFieldPresentation({ parent, fieldActor 
   halo.frustumCulled = false;
   owner.add(halo);
 
+  let currentTubeRadius = TUBE_RADIUS;
+
   function rewriteTubePath(pointOffset, pointCount, closed) {
     for (let point = 0; point < pointCount; point += 1) {
       const previous = closed ? (point + pointCount - 1) % pointCount : Math.max(0, point - 1);
@@ -257,9 +260,9 @@ export function createVrAsterionResonatorFieldPresentation({ parent, fieldActor 
         skeletonNormals[vertexOffset] = rx;
         skeletonNormals[vertexOffset + 1] = ry;
         skeletonNormals[vertexOffset + 2] = rz;
-        skeletonPositions[vertexOffset] = tubeCenters[centerOffset] + rx * TUBE_RADIUS;
-        skeletonPositions[vertexOffset + 1] = tubeCenters[centerOffset + 1] + ry * TUBE_RADIUS;
-        skeletonPositions[vertexOffset + 2] = tubeCenters[centerOffset + 2] + rz * TUBE_RADIUS;
+        skeletonPositions[vertexOffset] = tubeCenters[centerOffset] + rx * currentTubeRadius;
+        skeletonPositions[vertexOffset + 1] = tubeCenters[centerOffset + 1] + ry * currentTubeRadius;
+        skeletonPositions[vertexOffset + 2] = tubeCenters[centerOffset + 2] + rz * currentTubeRadius;
       }
     }
   }
@@ -373,6 +376,18 @@ export function createVrAsterionResonatorFieldPresentation({ parent, fieldActor 
     haloMaterial.uniforms.color.value.copy(currentColor);
     haloMaterial.uniforms.opacity.value = Math.min(1,
       currentOpacities.halo * (1 + breath * HARMONIC_BREATH.haloAmplitude));
+    const nextTubeRadius = TUBE_RADIUS * (1 + breath
+      * (HARMONIC_BREATH.skeletonPeakThicknessFactor - 1));
+    if (Math.abs(nextTubeRadius - currentTubeRadius) > 0.000001) {
+      currentTubeRadius = nextTubeRadius;
+      let pointOffset = 0;
+      pathPointCounts.forEach((pointCount, pathIndex) => {
+        rewriteTubePath(pointOffset, pointCount, pathIndex < 2);
+        pointOffset += pointCount;
+      });
+      skeletonGeometry.attributes.position.needsUpdate = true;
+      skeletonGeometry.attributes.normal.needsUpdate = true;
+    }
   }
 
   function present(descriptor, immediate = false) {
