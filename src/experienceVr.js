@@ -75,6 +75,7 @@ import { createVrAsterionSectorControlInteraction } from './xr/asterion/createVr
 import { createVrAsterionSectorAcquisitionPresentation } from './xr/asterion/createVrAsterionSectorAcquisitionPresentation.js';
 import { createVrAsterionResonatorFieldActor } from './xr/asterion/createVrAsterionResonatorFieldActor.js';
 import { createVrAsterionResonatorFieldPresentation } from './xr/asterion/createVrAsterionResonatorFieldPresentation.js';
+import { createVrAsterionResonatorFieldArcPresentation } from './xr/asterion/createVrAsterionResonatorFieldArcPresentation.js';
 import { createVrAsterionResonatorTargetAcquisitionActor,
   VR_ASTERION_RESONATOR_TARGET_ACQUISITION_EVENTS } from './xr/asterion/createVrAsterionResonatorTargetAcquisitionActor.js';
 import { createVrAsterionResonatorTargetResponsePresentation } from './xr/asterion/createVrAsterionResonatorTargetResponsePresentation.js';
@@ -883,6 +884,12 @@ largeGlyphActor.nodes.forEach((node) => {
   asterionResonatorTargetAcquisitionActor.registerTarget({ id: node.userData.id, anchor: node });
 });
 const largeGlyphByTargetId = new Map(largeGlyphActor.nodes.map((node) => [node.userData.id, node]));
+const asterionResonatorFieldArcPresentation = createVrAsterionResonatorFieldArcPresentation({
+  parent: progressFloor.getAsterionResonatorFieldFrame(),
+  fieldActor: asterionResonatorFieldActor,
+  acquisitionActor: asterionResonatorTargetAcquisitionActor,
+  targetAnchor: largeGlyphByTargetId.get('haiku-cosmos')
+});
 const unsubscribeLargeGlyphResonatorPresentation = asterionResonatorTargetAcquisitionActor.subscribe((state) => {
   const node = largeGlyphByTargetId.get(state.id);
   if (node) largeGlyphActor.setResonatorPullReady(node, state.pullReady);
@@ -2060,6 +2067,7 @@ function renderFrame() {
   astroFurnaceRuneRecipeInteraction.update(delta);
   largeGlyphActor.update(delta);
   asterionResonatorTargetAcquisitionActor.update(delta);
+  asterionResonatorFieldArcPresentation.update(delta);
   asterionResonatorTargetAudioProjection.update();
   largeGlyphAttractorInteraction.update(delta);
   postRingPresentation.update(delta);
@@ -2180,6 +2188,7 @@ function restoreVrScenarioBaseline() {
   asterionResonatorTargetAcquisitionActor.reset();
   asterionResonatorTargetResponsePresentation.reset();
   asterionResonatorFieldPresentation.reset();
+  asterionResonatorFieldArcPresentation.reset();
   protoAstroTuningController.resetBaseline();
   crystalCollection.reset();
   reliquaryHints.reset();
@@ -2321,6 +2330,7 @@ window.addEventListener('pagehide', () => {
   unsubscribeRuneBridgeGuidance();
   unsubscribeSmallGlyphFieldReadiness();
   asterionResonatorFieldPresentation.dispose();
+  asterionResonatorFieldArcPresentation.dispose();
   asterionResonatorTargetResponsePresentation.dispose();
   asterionResonatorTargetAudioProjection.dispose();
   asterionResonatorTargetAcquisitionActor.dispose();
