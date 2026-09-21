@@ -2909,6 +2909,7 @@ body {
 
 .classic-2d__orbit-layer {
   z-index: 2;
+  pointer-events: none;
 }
 
 .classic-2d-gate {
@@ -2929,6 +2930,7 @@ body {
   background: transparent;
   text-align: center;
   transform: translate(-50%, -50%);
+  pointer-events: auto;
 }
 
 .classic-2d-gate:hover,
