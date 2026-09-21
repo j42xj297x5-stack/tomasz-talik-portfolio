@@ -28,7 +28,9 @@ const EFFECT_PATHS = Object.freeze({
   glyphWaterOpen: ['/audio/glif_water_4s_01.mp3'],
   glyphWaterClose: ['/audio/glif_water_4s_02.mp3'],
   glyphMetalOpen: ['/audio/glif_metal_4s_01.mp3'],
-  glyphMetalClose: ['/audio/glif_metal_4s_02.mp3']
+  glyphMetalClose: ['/audio/glif_metal_4s_02.mp3'],
+  orangeMonkeyEntry: ['/audio/electricity_short_01.mp3'],
+  orangeMonkeyExit: ['/audio/electricity_short_02.mp3']
 });
 const GLYPH_EFFECTS = Object.freeze({
   'ethics-life-protection': Object.freeze({ open: 'glyphEarthOpen', close: 'glyphEarthClose' }),
@@ -170,7 +172,7 @@ class AudioManager {
   }
 
   preloadEntryEffects() { return this.preloadPools(['click', 'caseOpen', 'caseClose']); }
-  preloadExperienceEffects() { return this.preloadPools(['glyphHover', ...new Set(Object.values(GLYPH_EFFECTS).flatMap(Object.values))]); }
+  preloadExperienceEffects() { return this.preloadPools(['glyphHover', 'orangeMonkeyEntry', 'orangeMonkeyExit', ...new Set(Object.values(GLYPH_EFFECTS).flatMap(Object.values))]); }
 
   prepareExperienceAudio() {
     this.ensureContext();
@@ -567,6 +569,10 @@ class AudioManager {
     const poolName = GLYPH_EFFECTS[glyphId]?.[action];
     if (poolName) return this.playEffect(poolName);
     return undefined;
+  }
+
+  playOrangeMonkeyTransition(action) {
+    return this.playEffect(action === 'exit' ? 'orangeMonkeyExit' : 'orangeMonkeyEntry');
   }
 
   async playEffect(poolName) {

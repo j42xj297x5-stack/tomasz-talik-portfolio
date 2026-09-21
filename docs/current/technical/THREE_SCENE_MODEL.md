@@ -29,6 +29,8 @@ Shader warm-up may temporarily expose plaques, atmosphere layers, galaxy sprites
 
 Only `idle` accepts normal hover and click/tap interaction. Clicking a glyph locks interaction and pauses orbit, then follows this guarded sequence:
 
+The central monkey is a separate Experience 3D project entry and is never added to the five-glyph node list or atmosphere progression. Its authored silhouette proxy is raycast on `VR_MONKEY_INTERACTION_LAYER`, with the character geometry retained as the missing-proxy fallback. A click/tap focuses the monkey, reveals an independently cloned `vr-portal-model` at the monkey with `/png/orange_monkey.webp` centered on the validated `PORTAL_CANVAS_SURFACE`, safely dollies toward it, and opens the localized Orange Monkey VR record in the common overlay. Closing plays a distinct exit effect, reverses the Portal and camera sequence, and restores orbit and pointer control. Missing or invalid Portal assets fall back to the same overlay without blocking interaction; the Portal owns its cloned materials and canvas texture and never mutates the Experience VR instance or glyph materials.
+
 `idle → focusing → revealingPlaque → plaqueHold → dollyIn → panelOpen → dollyOut → restoringGlyph → returning → idle`.
 
 1. `cameraRig.focusOnNode(...)` moves on an eased azimuth arc around the fixed monkey pivot and targets the selected frozen glyph.
