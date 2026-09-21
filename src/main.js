@@ -272,7 +272,40 @@ async function startExperienceVr() {
     <p class="vr-launch__status">${copy.vrLaunchStatus}</p>
   `, 'entry-shell--vr-launch');
 
-  await import('./experienceVr.js');
+  const launchOverlay = app.firstElementChild;
+  launchOverlay.classList.add('vr-launch-overlay');
+  document.body.append(launchOverlay);
+
+  let minimumExposureTimer;
+  const minimumExposure = new Promise((resolve) => {
+    minimumExposureTimer = window.setTimeout(resolve, 2000);
+  });
+  let resolveStartScreenMounted;
+  const startScreenMounted = new Promise((resolve) => { resolveStartScreenMounted = resolve; });
+  const handleStartScreenMounted = () => resolveStartScreenMounted();
+  window.addEventListener('orange-monkey-vr:start-screen-mounted', handleStartScreenMounted, { once: true });
+
+  const runtimeImport = import('./experienceVr.js');
+  try {
+    await Promise.all([
+      minimumExposure,
+      Promise.race([
+        startScreenMounted,
+        runtimeImport.then(() => {
+          throw new Error('Orange Monkey VR initialized without mounting its start screen.');
+        })
+      ])
+    ]);
+    launchOverlay.remove();
+  } catch (error) {
+    launchOverlay.remove();
+    throw error;
+  } finally {
+    window.clearTimeout(minimumExposureTimer);
+    window.removeEventListener('orange-monkey-vr:start-screen-mounted', handleStartScreenMounted);
+  }
+
+  await runtimeImport;
 }
 
 loadStoredSelection();
