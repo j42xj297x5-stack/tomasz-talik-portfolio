@@ -128,6 +128,58 @@ body {
   transition: border-color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
 }
 
+.entry-shell--vr-launch {
+  background: #050505;
+}
+
+.entry-shell--vr-launch::before,
+.entry-shell--vr-launch .entry-shell__sigil {
+  display: none;
+}
+
+.entry-shell--vr-launch .entry-shell__panel {
+  width: min(760px, 100%);
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+.vr-launch__brand,
+.vr-runtime__brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(0.55rem, 2vw, 1rem);
+  margin: 0;
+  white-space: nowrap;
+}
+
+.vr-launch__brand-logo {
+  width: clamp(4rem, 14vw, 7rem);
+  height: clamp(4rem, 14vw, 7rem);
+  object-fit: contain;
+}
+
+.vr-launch__wordmark-main,
+.vr-launch__wordmark-vr,
+.vr-runtime__brand-wordmark {
+  font-size: clamp(1.2rem, 5vw, 3rem);
+  font-weight: 800;
+  letter-spacing: 0.035em;
+}
+
+.vr-launch__wordmark-main,
+.vr-runtime__brand-wordmark-main { color: #fff; }
+
+.vr-launch__wordmark-vr,
+.vr-runtime__brand-wordmark-vr { color: #f28c18; }
+
+.vr-launch__status {
+  margin: 1rem 0 0;
+  color: rgba(255, 255, 255, 0.68);
+}
+
 .vr-debug-gate {
   width: min(620px, 100%);
   text-align: left;
@@ -280,12 +332,24 @@ body {
   position: absolute;
   inset: 0;
   display: grid;
-  grid-template-rows: minmax(0, 1fr) auto auto auto auto;
+  grid-template-rows: auto minmax(0, 1fr) auto auto auto;
   justify-items: center;
   gap: clamp(0.35rem, 1.2vh, 0.75rem);
   padding: max(0.75rem, env(safe-area-inset-top)) max(0.75rem, env(safe-area-inset-right)) max(0.75rem, env(safe-area-inset-bottom)) max(0.75rem, env(safe-area-inset-left));
   background: #05070b;
   text-align: center;
+}
+
+.vr-runtime__brand-logo {
+  width: clamp(2.75rem, 7vh, 4.5rem);
+  height: clamp(2.75rem, 7vh, 4.5rem);
+  object-fit: contain;
+}
+
+.vr-runtime__brand-wordmark {
+  display: flex;
+  gap: 0.35em;
+  font-size: clamp(1rem, 3.2vw, 1.8rem);
 }
 
 .vr-runtime__controls[hidden] {
@@ -310,6 +374,62 @@ body {
   color: rgba(220, 232, 248, 0.82);
 }
 
+.vr-runtime__loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(0.75rem, 2vw, 1.25rem);
+}
+
+.vr-runtime__loading-monkey {
+  position: relative;
+  width: clamp(3.5rem, 9vh, 5.5rem);
+  aspect-ratio: 1;
+  flex: 0 0 auto;
+}
+
+.vr-runtime__loading-monkey-base,
+.vr-runtime__loading-monkey-fill img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.vr-runtime__loading-monkey-fill {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+.vr-runtime__loading-monkey-fill img {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: auto;
+}
+
+.vr-runtime__loading-copy { text-align: left; }
+
+.vr-runtime__loading-meta,
+.vr-runtime__loading-current {
+  margin: 0.15rem 0 0;
+  color: rgba(220, 232, 248, 0.66);
+  font-size: 0.82rem;
+}
+
+.vr-runtime__loading-current {
+  max-width: min(52vw, 26rem);
+  overflow: hidden;
+  font-size: 0.7rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .vr-runtime__audio-slot {
   min-height: 48px;
 }
@@ -317,6 +437,17 @@ body {
 .vr-runtime__audio-slot .audio-control {
   position: static;
   transform: none;
+}
+
+.vr-runtime__actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.vr-runtime__enter {
+  width: fit-content;
+  min-width: 10rem;
 }
 
 @media (prefers-reduced-motion: reduce) {

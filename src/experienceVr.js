@@ -4,7 +4,7 @@ import { createCentralObject } from './scene/centralObject.js';
 import { addLights } from './scene/lights.js';
 import { loadMonkeyModel } from './scene/monkeyModel.js';
 import { createAssetManager } from './assets/assetManager.js';
-import { createLoadingDiagnostics, preloadAssets } from './assets/preloadAssets.js';
+import { createLoadingDiagnostics, formatBytes, preloadAssets } from './assets/preloadAssets.js';
 import { ASSET_STAGES, getPreloadAssets, INITIAL_PRELOAD_GROUPS, DEFERRED_PRELOAD_GROUPS } from './assets/assetManifest.js';
 import { loadExperienceVrSettings, VR_BACKGROUND_COLOR } from './config/experienceVrSettings.js';
 import { orientPlayerRig } from './xr/playerRigOrientation.js';
@@ -137,6 +137,7 @@ const COPY = {
     enter: 'Wejdź do VR', entering: 'Uruchamianie sesji…', exit: 'Zakończ VR', retry: 'Wejdź ponownie do VR',
     error: 'Nie udało się uruchomić sesji VR. Możesz spróbować ponownie.',
     controllersAlt: 'Instrukcja sterowania kontrolerami VR',
+    assetsLoaded: 'Zasoby', mbLoaded: 'pobrano', currentAsset: 'Teraz',
     crystalInstructionTitle: 'Portal czeka', crystalInstructionBody: 'Osadź kryształ w naczyniu.'
   },
   en: {
@@ -144,6 +145,7 @@ const COPY = {
     enter: 'Enter VR', entering: 'Starting session…', exit: 'Exit VR', retry: 'Enter VR again',
     error: 'The VR session could not be started. You can try again.',
     controllersAlt: 'VR controller instructions',
+    assetsLoaded: 'Assets', mbLoaded: 'loaded', currentAsset: 'Now',
     crystalInstructionTitle: 'The portal is waiting', crystalInstructionBody: 'Place the crystal in the vessel.'
   }
 };
@@ -187,13 +189,35 @@ app.innerHTML = `
   <main class="vr-runtime" aria-label="${copy.title}">
     <canvas id="vr-scene-canvas" class="vr-runtime__canvas"></canvas>
     <section class="vr-runtime__controls">
+      <header class="vr-runtime__brand">
+        <img class="vr-runtime__brand-logo" src="${publicPath('/png/orange_monkey.webp')}" alt="">
+        <span class="vr-runtime__brand-wordmark">
+          <span class="vr-runtime__brand-wordmark-main">ORANGE MONKEY</span>
+          <span class="vr-runtime__brand-wordmark-vr">VR</span>
+        </span>
+      </header>
       <div class="vr-runtime__controllers-visual">
         <img src="${publicPath(`/svg/controllers_${language}.svg`)}" alt="${copy.controllersAlt}">
       </div>
-      <p class="vr-runtime__status" data-vr-status aria-live="polite">${copy.loading}</p>
+      <div class="vr-runtime__loading">
+        <div class="vr-runtime__loading-monkey" data-vr-loading-monkey>
+          <img class="vr-runtime__loading-monkey-base" src="${publicPath('/png/orange_monkey_small_loading.webp')}" alt="">
+          <span class="vr-runtime__loading-monkey-fill" data-vr-loading-fill>
+            <img src="${publicPath('/png/orange_monkey_small.webp')}" alt="">
+          </span>
+        </div>
+        <div class="vr-runtime__loading-copy">
+          <p class="vr-runtime__status" data-vr-status aria-live="polite">${copy.loading}</p>
+          <p class="vr-runtime__loading-meta" data-vr-assets>${copy.assetsLoaded}: 0 / 0</p>
+          <p class="vr-runtime__loading-meta" data-vr-bytes>${formatBytes(0)} ${copy.mbLoaded}</p>
+          <p class="vr-runtime__loading-current" data-vr-current></p>
+        </div>
+      </div>
       <div class="vr-runtime__audio-slot" data-vr-audio-slot></div>
-      <button class="entry-choice entry-choice--primary" type="button" data-vr-enter disabled>${copy.enter}</button>
-      <button class="entry-shell__back" type="button" data-vr-exit hidden>${copy.exit}</button>
+      <div class="vr-runtime__actions">
+        <button class="entry-choice entry-choice--primary vr-runtime__enter" type="button" data-vr-enter disabled>${copy.enter}</button>
+        <button class="entry-shell__back" type="button" data-vr-exit hidden>${copy.exit}</button>
+      </div>
     </section>
   </main>
 `;
@@ -208,6 +232,10 @@ const runeTuningDiagnostics = runeRecordingEnabled ? runeDiagnosticCapture : nul
 
 let canvas = app.querySelector('#vr-scene-canvas');
 const status = app.querySelector('[data-vr-status]');
+const loadingFill = app.querySelector('[data-vr-loading-fill]');
+const assetProgress = app.querySelector('[data-vr-assets]');
+const byteProgress = app.querySelector('[data-vr-bytes]');
+const currentAsset = app.querySelector('[data-vr-current]');
 const enterButton = app.querySelector('[data-vr-enter]');
 const exitButton = app.querySelector('[data-vr-exit]');
 const controls = app.querySelector('.vr-runtime__controls');
@@ -259,7 +287,20 @@ const vrAssets = getPreloadAssets([...INITIAL_PRELOAD_GROUPS, ...DEFERRED_PRELOA
 const loadingDiagnostics = createLoadingDiagnostics(vrAssets);
 const assetManager = createAssetManager({ diagnostics: loadingDiagnostics });
 const unsubscribe = loadingDiagnostics.subscribe((snapshot) => {
-  status.textContent = `${copy.loading} ${snapshot.completedAssets}/${snapshot.totalAssets}`;
+  const ratio = snapshot.totalAssets > 0
+    ? Math.max(0, Math.min(1, snapshot.completedAssets / snapshot.totalAssets))
+    : 0;
+  loadingFill.style.height = `${ratio * 100}%`;
+  status.textContent = copy.loading;
+  assetProgress.textContent = `${copy.assetsLoaded}: ${snapshot.completedAssets} / ${snapshot.totalAssets}`;
+  byteProgress.textContent = snapshot.knownTotalBytes > 0 && snapshot.unknownTotalAssets === 0
+    ? `${formatBytes(snapshot.loadedBytes)} / ${formatBytes(snapshot.knownTotalBytes)}`
+    : `${formatBytes(snapshot.loadedBytes)} ${copy.mbLoaded}`;
+  const activeStage = snapshot.runtimeStats?.activeStage;
+  const activeAsset = snapshot.currentAsset?.id ?? snapshot.currentAsset?.path;
+  currentAsset.textContent = activeAsset
+    ? `${copy.currentAsset}: ${activeAsset}${activeStage ? ` · ${activeStage}` : ''}`
+    : '';
 });
 
 await preloadAssets(vrAssets, {
