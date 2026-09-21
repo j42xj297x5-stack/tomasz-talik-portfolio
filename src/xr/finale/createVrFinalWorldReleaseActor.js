@@ -30,10 +30,16 @@ function restoreTransform(object, state) {
 export function createVrFinalWorldReleaseActor({
   scene, camera, progressFloor, portalObject, reliquaryObject, furnaceObject,
   monkeyVisualRoot, monkeyStoneRoot, shellObjects, smallGlyphObjects,
+  etherMonkeyHoverAnchor, etherRuneStoneActor, etherMonkeyPresentation,
   platformEnergyVfxActor, audioBridge, sectorDriveAudio, releaseBellAudio,
   setInteractionLocked, cancelActiveInteractions, onCompleted
 }) {
-  if (!scene?.add || !camera?.add || !progressFloor?.setSectorMotion
+  if (!scene?.add || !scene?.attach || !scene?.worldToLocal || !camera?.add
+    || !progressFloor?.setSectorMotion || !etherMonkeyHoverAnchor?.position
+    || !etherMonkeyHoverAnchor?.updateWorldMatrix || !etherMonkeyHoverAnchor?.getWorldPosition
+    || !etherRuneStoneActor?.getRoot
+    || !etherRuneStoneActor?.getState || typeof etherMonkeyPresentation?.beginRelease !== 'function'
+    || typeof etherMonkeyPresentation?.setReleaseProgress !== 'function'
     || typeof setInteractionLocked !== 'function' || typeof onCompleted !== 'function') {
     throw new TypeError('[VrFinalWorldReleaseActor] Required presentation and lifecycle seams are unavailable.');
   }
@@ -65,6 +71,7 @@ export function createVrFinalWorldReleaseActor({
   let audioGeneration = 0;
   const audioSources = new Map();
   const emitterPosition = new THREE.Vector3();
+  const etherTargetWorldPosition = new THREE.Vector3();
   let disposed = false;
 
   function capture() {
@@ -72,7 +79,8 @@ export function createVrFinalWorldReleaseActor({
     captured = {
       sectors: new Map(SECTORS.map(({ glyphId }) => [glyphId, progressFloor.getSectorMotionTransform(glyphId)])),
       groups: groupTargets.map(({ root, objects }) => ({ motionRoot: root, rootState: captureTransform(root), objects: objects.map((object) => [object, captureTransform(object)]) })),
-      orbits: orbitObjects.filter((object) => object?.visible).map((object) => [object, captureTransform(object)])
+      orbits: orbitObjects.filter((object) => object?.visible).map((object) => [object, captureTransform(object)]),
+      ether: null
     };
     groupTargets.forEach(({ root, objects }) => {
       root.position.set(0, 0, 0); root.quaternion.identity(); root.scale.set(1, 1, 1);
@@ -87,6 +95,16 @@ export function createVrFinalWorldReleaseActor({
         opacities: clones.map((material) => material.opacity) });
       child.material = Array.isArray(child.material) ? clones : clones[0];
     }));
+    const etherRoot = etherRuneStoneActor.getRoot('V');
+    if (etherRuneStoneActor.getState('V') === 'CAPTURED' && etherRoot?.parent === etherMonkeyHoverAnchor) {
+      etherMonkeyHoverAnchor.updateWorldMatrix(true, false);
+      captured.ether = {
+        anchorState: captureTransform(etherMonkeyHoverAnchor),
+        worldPosition: etherMonkeyHoverAnchor.getWorldPosition(new THREE.Vector3())
+      };
+      scene.attach(etherMonkeyHoverAnchor);
+      etherMonkeyPresentation.beginRelease();
+    }
   }
 
   function motionFactor(time) {
@@ -119,6 +137,13 @@ export function createVrFinalWorldReleaseActor({
     captured.orbits.forEach(([object, baseline]) => {
       if (object.parent === baseline.parent) object.position.copy(baseline.position).multiplyScalar(1 + factor * 0.7);
     });
+    if (captured.ether) {
+      etherTargetWorldPosition.copy(captured.ether.worldPosition);
+      etherTargetWorldPosition.y += RELEASE_DISTANCE * factor;
+      etherMonkeyHoverAnchor.parent?.worldToLocal(etherTargetWorldPosition);
+      etherMonkeyHoverAnchor.position.copy(etherTargetWorldPosition);
+      etherMonkeyPresentation.setReleaseProgress(clamp01(time / RELEASE_SECONDS));
+    }
     const whiteoutProgress = clamp01((time - RELEASE_SECONDS) / WHITEOUT_SECONDS);
     whiteout.visible = whiteoutProgress > 0;
     whiteoutMaterial.opacity = whiteoutProgress;
@@ -191,6 +216,7 @@ export function createVrFinalWorldReleaseActor({
         objects.forEach(([object, state]) => restoreTransform(object, state)); restoreTransform(motionRoot, rootState);
       });
       captured.orbits.forEach(([object, state]) => restoreTransform(object, state));
+      if (captured.ether) restoreTransform(etherMonkeyHoverAnchor, captured.ether.anchorState);
     }
     fadeMaterials.forEach(({ child, original, clones }) => { child.material = original; clones.forEach((material) => material.dispose()); });
     fadeRoots.forEach((root) => { root.visible = true; });
