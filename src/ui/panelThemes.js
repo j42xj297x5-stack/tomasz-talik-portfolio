@@ -3,7 +3,8 @@ export const PANEL_THEME_BY_GATE_ID = {
   'creative-ai': 'creative-ai',
   'ethics-life-protection': 'ethics',
   'haiku-cosmos': 'haiku-cosmos',
-  'spotify-digger': 'spotify-digger'
+  'spotify-digger': 'spotify-digger',
+  'orange-monkey-vr': 'ether'
 };
 
 export const GATE_ACCENT_COLOR_BY_GATE_ID = {
