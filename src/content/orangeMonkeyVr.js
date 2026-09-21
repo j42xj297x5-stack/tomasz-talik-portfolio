@@ -47,7 +47,7 @@ Orange Monkey VR pokazuje, jak z autorskiej wizji można zbudować spójny, inte
 Zamiast umieszczać całą logikę w jednym, rozbudowanym kontrolerze, opracowaliśmy architekturę opartą na kilku współpracujących warstwach:`,
         processSections: [
           {
-            title: '01. Scenariusz, reżyseria i architektura rozgrywki',
+            title: 'Scenariusz, reżyseria i architektura rozgrywki',
             text: `Scenario definiuje przebieg doświadczenia: punkty narracyjne, zdarzenia, warunki przejść oraz efekty, które powinny pojawić się w kolejnych momentach gry.
 
 Experience Director odpowiada za aktualną pozycję w scenariuszu i rozstrzyga, kiedy możliwe jest przejście do następnego punktu.
@@ -63,7 +63,7 @@ W trakcie produkcji architektura przechodziła kolejne migracje. Uporządkowali�
 Szczególną rolę odgrywa małpa — przewodnik gracza. Jej komunikaty, podpowiedzi i obowiązkowe momenty narracyjne są związane z konkretnymi zdarzeniami. Dzięki temu historia może prowadzić gracza, nie przejmując bezpośredniej kontroli nad wszystkimi mechanikami świata.`,
           },
           {
-            title: '02. Sandbox — swoboda działania bez utraty narracji',
+            title: 'Sandbox — swoboda działania bez utraty narracji',
             text: `Jednym z istotnych problemów projektowych było pogodzenie liniowego scenariusza z możliwością swobodnego wykonywania działań.
 
 Gracz może odkrywać obiekty, przetwarzać materię, stroić narzędzia i instalować kamienie runiczne. Nie wszystkie te czynności muszą następować dokładnie w momencie przewidzianym przez narrację.
@@ -79,7 +79,7 @@ System obserwuje fakty utrzymywane przez właścicieli poszczególnych mechanik 
 Rozwiązanie pozwoliło zachować niezależność rozgrywki, a jednocześnie utrzymać kontrolę nad obowiązkowymi etapami narracji.`
           },
           {
-            title: '03. Własne mechaniki gameplayowe i interakcje VR',
+            title: 'Własne mechaniki gameplayowe i interakcje VR',
             text: `Orange Monkey VR wykorzystuje WebXR i kontrolery ruchowe jako podstawowy interfejs gracza.
 
 Poruszanie się odbywa się względem platformy, której orientacja może zmieniać się podczas rozgrywki. System lokomocji uwzględnia jej lokalną płaszczyznę, a gracz może niezależnie korzystać z narzędzi przypisanych do lewej i prawej ręki.
@@ -98,7 +98,7 @@ Każda mechanika ma własne warunki działania i odpowiedzialność za stan, dzi
 Nie korzystaliśmy z gotowego silnika fizycznego ani standardowego zestawu mechanik gry. Interakcje zaprojektowaliśmy bezpośrednio dla potrzeb tego świata, wykorzystując matematykę przestrzenną, transformacje obiektów, raycasting i własne maszyny stanów.`
           },
           {
-            title: '04. Świat, który rozwija się wraz z graczem',
+            title: 'Świat, który rozwija się wraz z graczem',
             text: `Świat gry jest zorganizowany wokół pięciu rodzin żywiołów: Ziemi, Ognia, Drzewa, Metalu i Wody.
 
 Odkrywanie odpowiadających im glifów prowadzi do zdobywania kolejnych kryształów, rozwijania platformy i poznawania mechaniki świata. W miarę postępu gracz uzyskuje dostęp do skorup, małych glifów, nowych narzędzi oraz kamieni runicznych.
@@ -116,7 +116,7 @@ Logika wykrywania pozostaje oddzielona od geometrii prezentacyjnej. Dzięki temu
 Rezonator łączy kilka niezależnych systemów w jedną mechaniczną całość: ruch sektorów, geometrię przestrzenną, wykrywanie celów, progresję i informację zwrotną dla gracza.`
           },
           {
-            title: '05. Technical art, animacje i dźwięk przestrzenny',
+            title: 'Technical art, animacje i dźwięk przestrzenny',
             text: `Warstwa wizualna Orange Monkey VR wykorzystuje modele GLB, materiały, mapy emisji, animacje oraz efekty proceduralne.
 
 Modele i elementy świata przygotowywałem z wykorzystaniem Meshy AI, Blendera, Inkscape i GIMP-a. Ważną częścią procesu było również dostosowanie geometrii, pivotów, kotwic i hierarchii transformacji do działania w środowisku VR.
@@ -192,7 +192,7 @@ Orange Monkey VR shows how an original creative vision can become a coherent, in
 Instead of placing all the logic in a single, extensive controller, we developed an architecture built around several cooperating layers:`,
         processSections: [
           {
-            title: '01. Scenario, direction, and gameplay architecture',
+            title: 'Scenario, direction, and gameplay architecture',
             text: `Scenario defines the course of the experience: narrative points, events, transition conditions, and effects that should occur at successive moments in the game.
 
 Experience Director tracks the current position in the Scenario and decides when it is possible to advance to the next point.
@@ -208,7 +208,7 @@ During production, the architecture underwent successive migrations. We refined 
 The monkey — the player's guide — plays a special role. Its messages, hints, and mandatory narrative moments are tied to specific events. This allows the story to guide the player without directly taking control of every world mechanic.`,
           },
           {
-            title: '02. Sandbox — freedom of action without losing the narrative',
+            title: 'Sandbox — freedom of action without losing the narrative',
             text: `One of the major design challenges was reconciling a linear Scenario with the freedom to act.
 
 The player can discover objects, process matter, tune tools, and install Rune Stones. Not all of these actions have to occur at precisely the moment anticipated by the narrative.
@@ -224,7 +224,7 @@ The system observes facts maintained by the owners of individual mechanics and u
 This solution preserved gameplay independence while maintaining control over mandatory narrative stages.`
           },
           {
-            title: '03. Custom gameplay mechanics and VR interactions',
+            title: 'Custom gameplay mechanics and VR interactions',
             text: `Orange Monkey VR uses WebXR and motion controllers as the player's primary interface.
 
 Movement is relative to the platform, whose orientation can change during gameplay. The locomotion system accounts for its local plane, and the player can use tools assigned to the left and right hands independently.
@@ -234,7 +234,7 @@ The mechanics we developed include:
 • spatial object pointing, raycast interactions, and crystal grabbing;
 • a reliquary with a card insertion, activation, and confirmation sequence;
 • the Astro Furnace for processing matter and constructing items;
-• the Astro Attractor (Astrolabium Więzi), with band selection, targeting, and object pulling;
+• the Astro Attractor (Astrolab of Binding), with band selection, targeting, and object pulling;
 • the Asterion Sphere, which allows control of the platform and its sectors;
 • acquiring, tuning, transporting, and installing Rune Stones.
 
@@ -243,7 +243,7 @@ Each mechanic has its own operating conditions and state ownership, allowing it 
 We did not use a ready-made physics engine or a standard set of game mechanics. The interactions were designed specifically for the needs of this world, using spatial mathematics, object transformations, raycasting, and custom state machines.`
           },
           {
-            title: '04. A world that evolves with the player',
+            title: 'A world that evolves with the player',
             text: `The game world is organized around five elemental families: Earth, Fire, Wood, Metal, and Water.
 
 Discovering their corresponding glyphs leads to acquiring successive crystals, expanding the platform, and learning the world's mechanics. As the player progresses, they gain access to shells, small glyphs, new tools, and Rune Stones.
@@ -261,7 +261,7 @@ Detection logic remains separate from presentation geometry. As a result, the fi
 The Resonator combines several independent systems into a single mechanical whole: sector movement, spatial geometry, target detection, progression, and player feedback.`
           },
           {
-            title: '05. Technical art, animation, and spatial audio',
+            title: 'Technical art, animation, and spatial audio',
             text: `The visual layer of Orange Monkey VR uses GLB models, materials, emission maps, animations, and procedural effects.
 
 I created the models and world elements using Meshy AI, Blender, Inkscape, and GIMP. An important part of the process was adapting geometry, pivots, anchors, and transformation hierarchies for use in a VR environment.
