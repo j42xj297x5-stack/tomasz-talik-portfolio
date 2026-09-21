@@ -1570,6 +1570,8 @@ const finalWorldRelease = createVrFinalWorldReleaseActor({
 });
 const endCreditsPresentation = createVrEndCreditsPresentation({
   worldRoot: scene,
+  playerFrame: progressFloor.object,
+  principalAxis: settings.spatial.entryDirection,
   locale: language,
   getViewingPose: (positionTarget, quaternionTarget) => getXrHeadWorldPose({
     renderer, camera, playerRig, positionTarget, quaternionTarget
