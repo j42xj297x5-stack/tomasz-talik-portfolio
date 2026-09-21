@@ -2,7 +2,7 @@ import * as THREE from '../../vendor/three.js';
 
 // Presentation tuning only. These values do not encode capture or progression truth.
 const BEAM_COUNT = 6;
-const SOURCE_HEIGHT_M = 1.10;
+const SOURCE_HEIGHT_M = 1.40;
 const SOURCE_RADIUS_M = 0.25;
 const SPHERE_BULGE_RADIUS_M = 0.80;
 const TOTAL_TWIST_RADIANS = Math.PI;
@@ -141,12 +141,15 @@ export function createVrEtherMonkeyPresentation({ parent, etherRuneStoneActor, h
         normal.crossVectors(tangent, reference).normalize();
         binormal.crossVectors(tangent, normal).normalize();
         const s = segment / PATH_SEGMENTS;
+        const thicknessEnvelope = Math.sin(Math.PI * s);
+        const localTubeRadius = (2 * TUBE_RADIUS_M) * thicknessEnvelope;
+        const brightnessEnvelope = Math.sin(Math.PI * s);
         const longitudinal = 0.92 + 0.08 * Math.sin(TAU * s - pulseAngle + phase);
-        const intensity = pulse * longitudinal;
+        const intensity = pulse * longitudinal * brightnessEnvelope;
         for (let side = 0; side < TUBE_RADIAL_SEGMENTS; side += 1) {
           const ringAngle = TAU * side / TUBE_RADIAL_SEGMENTS;
-          const normalWeight = Math.cos(ringAngle) * TUBE_RADIUS_M;
-          const binormalWeight = Math.sin(ringAngle) * TUBE_RADIUS_M;
+          const normalWeight = Math.cos(ringAngle) * localTubeRadius;
+          const binormalWeight = Math.sin(ringAngle) * localTubeRadius;
           const vertexOffset = (beam * VERTICES_PER_BEAM
             + segment * TUBE_RADIAL_SEGMENTS + side) * 3;
           positions[vertexOffset] = centerlines[centerOffset]
