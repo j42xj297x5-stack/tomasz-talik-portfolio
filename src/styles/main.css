@@ -3080,8 +3080,25 @@ body {
   place-items: center;
   width: 100%;
   max-height: inherit;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  pointer-events: auto;
   filter: drop-shadow(0 0 28px rgba(211, 190, 121, 0.1));
   transition: filter 0.18s ease;
+}
+
+.classic-2d__monkey-rotation:hover,
+.classic-2d__monkey-rotation:focus-visible {
+  filter: drop-shadow(0 0 34px rgba(213, 190, 121, 0.24));
+}
+
+.classic-2d__monkey-rotation:focus-visible {
+  outline: 2px solid rgba(244, 232, 168, 0.9);
+  outline-offset: 0.35rem;
+  border-radius: 44%;
 }
 
 .classic-2d__monkey-rotation::before {

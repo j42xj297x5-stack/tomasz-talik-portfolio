@@ -12,9 +12,9 @@ const CLASSIC_COPY = {
     role: 'Creative Technologist & Game Systems Designer',
     title: 'Interaktywne światy, gry i systemy',
     lead: 'Łączę technologię, mechanikę, obraz i dźwięk, przekładając złożone pomysły na modularne, działające systemy.',
-    intro: 'Wybierz jeden z pięciu symboli, aby poznać projekty i obszary mojej pracy.',
+    intro: 'Wybierz jeden z pięciu symboli, aby poznać projekty i obszary mojej pracy, lub kliknij małpę, aby odkryć Orange Monkey VR.',
     returnToModes: 'Wróć do wyboru trybu',
-    centralLabel: 'Symboliczna kotwica 2D',
+    centralLabel: 'Otwórz projekt Orange Monkey VR',
     gateHelp: 'Otwórz panel'
   },
   en: {
@@ -23,9 +23,9 @@ const CLASSIC_COPY = {
     role: 'Creative Technologist & Game Systems Designer',
     title: 'Interactive worlds, games and systems',
     lead: 'I combine technology, mechanics, visuals, and sound, translating complex ideas into modular, functional systems.',
-    intro: 'Choose one of the five symbols to explore my projects and areas of work.',
+    intro: 'Choose one of the five symbols to explore my projects and areas of work, or select the monkey to discover Orange Monkey VR.',
     returnToModes: 'Back to mode selection',
-    centralLabel: 'Symbolic 2D anchor',
+    centralLabel: 'Open Orange Monkey VR project',
     gateHelp: 'Open panel'
   }
 };
@@ -283,7 +283,7 @@ export function startClassic2D({ container, language = 'en', onBackToModes }) {
   const titleLines = copy.title.split(', ');
   let activeGateId = null;
   let activePanelContent = null;
-  let lastFocusedGate = null;
+  let lastFocusedControl = null;
 
   container.innerHTML = `
     <main class="classic-2d" aria-labelledby="classic-2d-title">
@@ -303,7 +303,7 @@ export function startClassic2D({ container, language = 'en', onBackToModes }) {
         <div class="classic-2d__orbit-layer" data-classic-orbit></div>
         <div class="classic-2d__center-layer">
           <div class="classic-2d__monkey-optical">
-            <div class="classic-2d__monkey-rotation" data-classic-monkey aria-label="${escapeHtml(copy.centralLabel)}" role="img">
+            <button class="classic-2d__monkey-rotation" type="button" data-classic-monkey aria-label="${escapeHtml(copy.centralLabel)}">
               <img
                 class="classic-2d__monkey-image"
                 src="${publicPath(CLASSIC_MONKEY_IMAGE_PATH)}"
@@ -322,7 +322,7 @@ export function startClassic2D({ container, language = 'en', onBackToModes }) {
                   <span class="classic-2d__monkey-mark"></span>
                 </span>
               </span>
-            </div>
+            </button>
           </div>
         </div>
       </section>
@@ -357,6 +357,29 @@ export function startClassic2D({ container, language = 'en', onBackToModes }) {
 
   monkeyImage?.addEventListener('error', () => {
     monkey?.classList.add('classic-2d__monkey--image-error');
+  });
+
+  const setActiveGate = (gateId) => {
+    activeGateId = gateId;
+    orbit.querySelectorAll('.classic-2d-gate').forEach((gate) => {
+      const isActive = gate.dataset.gateId === activeGateId;
+      gate.classList.toggle('classic-2d-gate--active', isActive);
+      gate.setAttribute('aria-pressed', String(isActive));
+    });
+  };
+
+  const openProject = (projectId) => {
+    if (projectId !== orangeMonkeyVr.id) return false;
+    lastFocusedControl = monkey;
+    setActiveGate(null);
+    monkey.classList.add('classic-2d__monkey--active');
+    activePanelContent = orangeMonkeyVr;
+    renderPanel(panel, orangeMonkeyVr, copy, interfaceCopy);
+    return true;
+  };
+
+  monkey.addEventListener('click', () => {
+    openProject('orange-monkey-vr');
   });
 
   localizedPortfolioNodes.forEach((node, index) => {
@@ -407,13 +430,8 @@ export function startClassic2D({ container, language = 'en', onBackToModes }) {
     });
 
     button.addEventListener('click', () => {
-      lastFocusedGate = button;
-      activeGateId = node.id;
-      orbit.querySelectorAll('.classic-2d-gate').forEach((gate) => {
-        const isActive = gate.dataset.gateId === activeGateId;
-        gate.classList.toggle('classic-2d-gate--active', isActive);
-        gate.setAttribute('aria-pressed', String(isActive));
-      });
+      lastFocusedControl = button;
+      setActiveGate(node.id);
       monkey.classList.add('classic-2d__monkey--active');
       activePanelContent = node;
       renderPanel(panel, node, copy, interfaceCopy);
@@ -438,8 +456,8 @@ export function startClassic2D({ container, language = 'en', onBackToModes }) {
       gate.setAttribute('aria-pressed', 'false');
     });
 
-    if (restoreFocus && lastFocusedGate?.isConnected) {
-      lastFocusedGate.focus();
+    if (restoreFocus && lastFocusedControl?.isConnected) {
+      lastFocusedControl.focus();
     }
   };
 
@@ -550,13 +568,7 @@ export function startClassic2D({ container, language = 'en', onBackToModes }) {
   window.addEventListener('keydown', handleKeydown);
 
   return {
-    openProject(projectId) {
-      if (projectId !== orangeMonkeyVr.id) return false;
-      lastFocusedGate = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-      activePanelContent = orangeMonkeyVr;
-      renderPanel(panel, orangeMonkeyVr, copy, interfaceCopy);
-      return true;
-    },
+    openProject,
     destroy() {
       releaseYouTubeIframe(panel.querySelector('[data-classic-youtube-player]'));
       stageResizeObserver?.disconnect();
