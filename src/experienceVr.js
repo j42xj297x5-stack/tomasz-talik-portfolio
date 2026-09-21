@@ -1540,6 +1540,9 @@ const finalWorldRelease = createVrFinalWorldReleaseActor({
   furnaceObject: astroFurnace.object,
   monkeyVisualRoot,
   monkeyStoneRoot,
+  etherMonkeyHoverAnchor,
+  etherRuneStoneActor,
+  etherMonkeyPresentation,
   shellObjects: shellSystem.instances,
   smallGlyphObjects: smallGlyphSystem.getInstances(),
   platformEnergyVfxActor,
@@ -1945,6 +1948,8 @@ function renderFrame() {
   if (finaleInteractionLocked) {
     platformEnergyVfxActor.update(delta);
     finalWorldRelease.update(delta);
+    etherRuneStoneActor.update(delta);
+    etherMonkeyPresentation.update(delta);
     endCreditsPresentation.update(delta);
     if (renderer.xr.isPresenting) {
       getXrHeadWorldPose({

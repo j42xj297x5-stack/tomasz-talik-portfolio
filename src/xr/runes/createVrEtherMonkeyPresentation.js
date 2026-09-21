@@ -23,6 +23,7 @@ const RINGS_PER_BEAM = PATH_SEGMENTS + 1;
 const VERTICES_PER_BEAM = RINGS_PER_BEAM * TUBE_RADIAL_SEGMENTS;
 
 const smoothstep = (value) => value * value * (3 - 2 * value);
+const clamp01 = (value) => Math.max(0, Math.min(1, value));
 
 export function createVrEtherMonkeyPresentation({ parent, etherRuneStoneActor, hoverAnchor,
   idleMotionSettings, color }) {
@@ -91,6 +92,8 @@ export function createVrEtherMonkeyPresentation({ parent, etherRuneStoneActor, h
   const upAxis = new THREE.Vector3(0, 1, 0);
   let elapsedSeconds = 0;
   let active = false;
+  let releaseActive = false;
+  let releaseOpacity = 1;
   let disposed = false;
 
   function restorePresentationPose(root) {
@@ -98,6 +101,22 @@ export function createVrEtherMonkeyPresentation({ parent, etherRuneStoneActor, h
       || etherRuneStoneActor.getState(ETHER_FAMILY_CODE) !== CAPTURED_STATE) return;
     root.position.set(0, 0, 0);
     root.quaternion.copy(initialLocalQuaternion);
+  }
+
+  function beginRelease() {
+    if (disposed || releaseActive) return false;
+    releaseActive = true;
+    releaseOpacity = 1;
+    material.opacity = 1;
+    return true;
+  }
+
+  function setReleaseProgress(progress) {
+    if (disposed || !releaseActive) return false;
+    releaseOpacity = 1 - clamp01(Number.isFinite(progress) ? progress : 0);
+    material.opacity = releaseOpacity;
+    if (releaseOpacity <= 0) tendrils.visible = false;
+    return true;
   }
 
   function updateCenterlines() {
@@ -197,6 +216,11 @@ export function createVrEtherMonkeyPresentation({ parent, etherRuneStoneActor, h
     );
     root.quaternion.copy(initialLocalQuaternion).multiply(
       idleRotation.setFromAxisAngle(upAxis, rotationSpeed * elapsedSeconds));
+    material.opacity = releaseOpacity;
+    if (releaseActive && releaseOpacity <= 0) {
+      tendrils.visible = false;
+      return;
+    }
     root.updateWorldMatrix(true, false);
     root.getWorldPosition(endpoint);
     parent.worldToLocal(endpoint);
@@ -210,6 +234,9 @@ export function createVrEtherMonkeyPresentation({ parent, etherRuneStoneActor, h
     restorePresentationPose(etherRuneStoneActor.getRoot(ETHER_FAMILY_CODE));
     elapsedSeconds = 0;
     active = false;
+    releaseActive = false;
+    releaseOpacity = 1;
+    material.opacity = 1;
     tendrils.visible = false;
   }
 
@@ -222,5 +249,5 @@ export function createVrEtherMonkeyPresentation({ parent, etherRuneStoneActor, h
     material.dispose();
   }
 
-  return { update, reset, dispose };
+  return { beginRelease, setReleaseProgress, update, reset, dispose };
 }
