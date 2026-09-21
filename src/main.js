@@ -5,6 +5,7 @@ import { createAudioControl } from './ui/audioControl.js';
 import { detectVrCapability } from './xr/vrCapability.js';
 import { createVrDebugPreloadGate } from './xr/debug/createVrDebugPreloadGate.js';
 import { setVrDebugLaunchConfig } from './xr/debug/vrDebugLaunchConfig.js';
+import { publicPath } from './utils/publicPath.js';
 
 const app = document.querySelector('#app');
 if (!app) throw new Error('Missing #app mount element.');
@@ -24,11 +25,11 @@ const COPY = {
     classicDescription: 'Lekka, płaska, retro-symboliczna wersja portfolio z pięcioma bramami treści.',
     classicButton: 'Klasyczne 2D',
     experienceButton: 'Doświadczenie 3D',
-    vrButton: 'Doświadczenie VR',
+    vrButton: 'Orange Monkey VR',
     vrChecking: 'Sprawdzanie obsługi WebXR…',
     vrUnavailable: 'Tryb immersive VR nie jest dostępny na tym urządzeniu.',
     vrSecureContext: 'VR wymaga bezpiecznego połączenia HTTPS.',
-    vrLaunchStatus: 'Przygotowywanie doświadczenia VR…',
+    vrLaunchStatus: 'Przygotowywanie Orange Monkey VR…',
     placeholderBack: 'Wróć do wyboru trybu',
     launchStatus: 'Uruchamianie doświadczenia 3D…'
   },
@@ -44,11 +45,11 @@ const COPY = {
     classicDescription: 'A lightweight, flat, retro-symbolic version of the portfolio with five content gates.',
     classicButton: 'Classic 2D',
     experienceButton: 'Experience 3D',
-    vrButton: 'Experience VR',
+    vrButton: 'Orange Monkey VR',
     vrChecking: 'Checking WebXR support…',
     vrUnavailable: 'Immersive VR is not available on this device.',
     vrSecureContext: 'VR requires a secure HTTPS connection.',
-    vrLaunchStatus: 'Preparing Experience VR…',
+    vrLaunchStatus: 'Preparing Orange Monkey VR…',
     placeholderBack: 'Back to mode selection',
     launchStatus: 'Starting Experience 3D…'
   }
@@ -110,9 +111,9 @@ function setLanguage(language) {
   renderModeSelection();
 }
 
-function renderEntryShell(content) {
+function renderEntryShell(content, modifier = '') {
   app.innerHTML = `
-    <main class="entry-shell" aria-live="polite">
+    <main class="entry-shell ${modifier}" aria-live="polite">
       <section class="entry-shell__panel" aria-labelledby="entry-title">
         <div class="entry-shell__sigil" aria-hidden="true"></div>
         ${content}
@@ -263,12 +264,48 @@ async function startExperienceVr() {
   setVrDebugLaunchConfig(launchConfig);
 
   renderEntryShell(`
-    <p class="entry-shell__eyebrow">${copy.modeEyebrow}</p>
-    <h1 class="entry-shell__title" id="entry-title">${copy.vrButton}</h1>
-    <p class="entry-shell__text">${copy.vrLaunchStatus}</p>
-  `);
+    <h1 class="vr-launch__brand" id="entry-title">
+      <img class="vr-launch__brand-logo" src="${publicPath('/png/orange_monkey.webp')}" alt="">
+      <span class="vr-launch__wordmark-main">ORANGE MONKEY</span>
+      <span class="vr-launch__wordmark-vr">VR</span>
+    </h1>
+    <p class="vr-launch__status">${copy.vrLaunchStatus}</p>
+  `, 'entry-shell--vr-launch');
 
-  await import('./experienceVr.js');
+  const launchOverlay = app.firstElementChild;
+  launchOverlay.classList.add('vr-launch-overlay');
+  document.body.append(launchOverlay);
+
+  let minimumExposureTimer;
+  const minimumExposure = new Promise((resolve) => {
+    minimumExposureTimer = window.setTimeout(resolve, 2000);
+  });
+  let resolveStartScreenMounted;
+  const startScreenMounted = new Promise((resolve) => { resolveStartScreenMounted = resolve; });
+  const handleStartScreenMounted = () => resolveStartScreenMounted();
+  window.addEventListener('orange-monkey-vr:start-screen-mounted', handleStartScreenMounted, { once: true });
+
+  const runtimeImport = import('./experienceVr.js');
+  try {
+    await Promise.all([
+      minimumExposure,
+      Promise.race([
+        startScreenMounted,
+        runtimeImport.then(() => {
+          throw new Error('Orange Monkey VR initialized without mounting its start screen.');
+        })
+      ])
+    ]);
+    launchOverlay.remove();
+  } catch (error) {
+    launchOverlay.remove();
+    throw error;
+  } finally {
+    window.clearTimeout(minimumExposureTimer);
+    window.removeEventListener('orange-monkey-vr:start-screen-mounted', handleStartScreenMounted);
+  }
+
+  await runtimeImport;
 }
 
 loadStoredSelection();

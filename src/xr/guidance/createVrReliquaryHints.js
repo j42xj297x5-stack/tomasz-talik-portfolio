@@ -1,18 +1,19 @@
 import { createVrMandatoryMonkeyCommunication } from './createVrMandatoryMonkeyCommunication.js';
-import { VR_MONKEY_COMMUNICATION_COPY_PL } from './vrMonkeyCommunicationCopy.js';
+import { VR_MONKEY_COMMUNICATION_COPY_EN, VR_MONKEY_COMMUNICATION_COPY_PL } from './vrMonkeyCommunicationCopy.js';
 import { VR_MONKEY_DIALOGUE_PRIORITY } from './createVrMonkeyGuide.js';
 
 export const VR_RELIQUARY_HINT_COPY = Object.freeze({
   pl: Object.freeze({ inserted: VR_MONKEY_COMMUNICATION_COPY_PL.hints['hint.reliquary.inserted'].blocks[0],
     active: VR_MONKEY_COMMUNICATION_COPY_PL.hints['hint.reliquary.active'].blocks[0] }),
-  en: Object.freeze({ inserted: 'Activate the Crystal and reveal its meaning.', active: 'It can now be released. It has fulfilled its purpose.' })
+  en: Object.freeze({ inserted: VR_MONKEY_COMMUNICATION_COPY_EN.hints['hint.reliquary.inserted'].blocks[0],
+    active: VR_MONKEY_COMMUNICATION_COPY_EN.hints['hint.reliquary.active'].blocks[0] })
 });
 
 const PRE_PLAYBACK_PHASES = Object.freeze(['WAITING', 'ATTENTION', 'AUTO_DELAY']);
 
 export function createVrReliquaryHints({ monkeyGuide, knowledgeResolver, getInsertedInstance, onHintTimeout,
   locale = 'en', delay = 15 }) {
-  const copy = VR_RELIQUARY_HINT_COPY[locale === 'pl' ? 'pl' : 'en'];
+  const copy = locale === 'pl' ? VR_MONKEY_COMMUNICATION_COPY_PL : VR_MONKEY_COMMUNICATION_COPY_EN;
   let instance = null, phase = null, elapsed = 0, fired = false, shown = false, pending = false;
   let communication = null;
   const mutateFallback = (method, ...args) => {
@@ -35,7 +36,7 @@ export function createVrReliquaryHints({ monkeyGuide, knowledgeResolver, getInse
     let actor;
     actor = createVrMandatoryMonkeyCommunication({
       monkeyGuide,
-      blocks: [copy[hintPhase]],
+      blocks: copy.hints[`hint.reliquary.${hintPhase}`].blocks,
       priority: VR_MONKEY_DIALOGUE_PRIORITY.OPTIONAL,
       requiresAttention: false,
       autoPlaybackDelaySeconds: 1.0,

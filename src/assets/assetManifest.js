@@ -1,6 +1,7 @@
 import { portfolioNodes } from '../content/portfolioNodes.js';
 import { experienceVrPages } from '../content/experienceVrPages.js';
 import { VR_RUNE_STONE_ASSETS } from '../xr/runes/vrRuneStoneRegistry.js';
+import { PROTO_ASTRO_SYLLABLES } from '../xr/protoAstro/protoAstroRegistry.js';
 
 export const ASSET_STAGES = Object.freeze({
   CRITICAL_INITIAL: 'criticalInitial',
@@ -76,15 +77,23 @@ const criticalInitialAssets = Object.freeze([
 ]);
 
 const deferredWarmAssets = Object.freeze([
-  ...['KA', 'TA', 'SA', 'LA', 'RA'].map((syllable) => withStage({
+  ...Array.from({ length: 4 }, (_, index) => withStage({
+    id: `vr-attractor-band-${index + 1}-image`,
+    label: `VR Astrolabium band ${index + 1} symbol`,
+    path: `/svg/band_0${index + 1}.svg`,
+    type: 'image'
+  }, ASSET_STAGES.DEFERRED_WARM)),
+  ...PROTO_ASTRO_SYLLABLES.map(({ syllable, path }) => withStage({
     id: `proto-astro-${syllable.toLowerCase()}-image`,
     label: `${syllable} Proto-Astro sign`,
-    path: `/svg/${syllable}.svg`,
+    path,
     type: 'image'
   }, ASSET_STAGES.DEFERRED_WARM)),
   withStage({ id: 'vr-astro-attractor-model', label: 'VR Astro attractor tool', path: '/glb/astro_grabber.glb', type: 'model' }, ASSET_STAGES.DEFERRED_WARM),
+  withStage({ id: 'vr-astrolabium-preview-model', label: 'VR Astrolabium Furnace preview', path: '/glb/astrolabium_binding_small.glb', type: 'model' }, ASSET_STAGES.DEFERRED_WARM),
   withStage({ id: 'vr-astro-furnace-model', label: 'VR Astro furnace', path: '/glb/astral_stove.glb', type: 'model' }, ASSET_STAGES.DEFERRED_WARM),
   withStage({ id: 'vr-asterion-sphere-model', label: 'VR Asterion Sphere physical prototype', path: '/glb/asterion_sphere.glb', type: 'model' }, ASSET_STAGES.DEFERRED_WARM),
+  withStage({ id: 'vr-asterion-preview-model', label: 'VR Asterion Sphere Furnace preview', path: '/glb/astrolabium_sphere_small.glb', type: 'model' }, ASSET_STAGES.DEFERRED_WARM),
   withStage({ id: 'vr-progress-floor-creative-model', label: 'VR Creative progress floor sector model', path: '/glb/floor_creative.glb', type: 'model' }, ASSET_STAGES.DEFERRED_WARM),
   withStage({ id: 'vr-progress-floor-ethics-model', label: 'VR Ethics progress floor sector model', path: '/glb/floor_ethic.glb', type: 'model' }, ASSET_STAGES.DEFERRED_WARM),
   withStage({ id: 'vr-progress-floor-haiku-model', label: 'VR Haiku Cosmos progress floor sector model', path: '/glb/floor_haiku_cosmos.glb', type: 'model' }, ASSET_STAGES.DEFERRED_WARM),

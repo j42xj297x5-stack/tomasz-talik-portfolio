@@ -12,28 +12,54 @@ const PRESENTATION_SCALE = 1.5;
 const CANVAS_WIDTH = 1600;
 const CANVAS_HEIGHT = 1000;
 
-const CREDIT_SECTIONS = Object.freeze([
-  ['Wizja', 'Tomasz Talik'],
-  ['Architekt', 'ChatGPT'],
-  ['Wykonawca', 'Codex'],
-  ['Siatki 3D', 'Meshy AI'],
-  ['Dźwięki', 'Adobe Firefly, ElevenLabs'],
-  ['Silnik 3D', 'Three.js'],
-  ['Obróbka 2D / 3D', 'Blender, Inkscape, GIMP'],
-  ['Audio mix / master', 'Ableton Live'],
-  ['Efekty wizualne / VFX', 'Autorskie implementacje w Three.js'],
-  ['VR', 'Virtual Desktop'],
-  ['Licencja publicznej edycji', 'Creative Commons Attribution-ShareAlike']
-]);
+const CREDITS_COPY = Object.freeze({
+  pl: Object.freeze({
+    title: 'ORANGE MONKEY VR',
+    sections: Object.freeze([
+      ['Wizja', 'Tomasz Talik'],
+      ['Architekt', 'ChatGPT'],
+      ['Wykonawca', 'Codex'],
+      ['Siatki 3D', 'Meshy AI'],
+      ['Dźwięki', 'Adobe Firefly, ElevenLabs'],
+      ['Silnik 3D', 'Three.js'],
+      ['Obróbka 2D / 3D', 'Blender, Inkscape, GIMP'],
+      ['Audio mix / master', 'Ableton Live'],
+      ['Efekty wizualne / VFX', 'Autorskie implementacje w Three.js'],
+      ['VR', 'Virtual Desktop'],
+      ['Licencja publicznej edycji', 'Creative Commons Attribution-ShareAlike']
+    ])
+  }),
+  en: Object.freeze({
+    title: 'ORANGE MONKEY VR',
+    sections: Object.freeze([
+      ['Vision', 'Tomasz Talik'],
+      ['Architect', 'ChatGPT'],
+      ['Developer', 'Codex'],
+      ['3D Models', 'Meshy AI'],
+      ['Sound Design', 'Adobe Firefly, ElevenLabs'],
+      ['3D Engine', 'Three.js'],
+      ['2D / 3D Editing', 'Blender, Inkscape, GIMP'],
+      ['Audio Mix / Mastering', 'Ableton Live'],
+      ['Visual Effects / VFX', 'Custom Three.js Implementations'],
+      ['VR', 'Virtual Desktop'],
+      ['Public Edition License', 'Creative Commons Attribution-ShareAlike']
+    ])
+  })
+});
 
 const PHASE = Object.freeze({ IDLE: 'IDLE', CREDITS: 'CREDITS', BRAND: 'BRAND', COMPLETE: 'COMPLETE' });
 const clamp01 = (value) => Math.max(0, Math.min(1, value));
 
-export function createVrEndCreditsPresentation({ worldRoot, getViewingPose, onCreditsCompleted, onBrandCompleted }) {
-  if (!worldRoot?.add || typeof getViewingPose !== 'function'
+export function createVrEndCreditsPresentation({
+  worldRoot, playerFrame, principalAxis, getViewingPose, onCreditsCompleted, onBrandCompleted, locale = 'pl'
+}) {
+  const principalLength = Math.hypot(principalAxis?.x, principalAxis?.z);
+  if (!worldRoot?.add || !playerFrame?.getWorldQuaternion || !Number.isFinite(principalLength) || principalLength <= 1e-8
+    || typeof getViewingPose !== 'function'
     || typeof onCreditsCompleted !== 'function' || typeof onBrandCompleted !== 'function') {
     throw new TypeError('[VrEndCreditsPresentation] Required presentation seams are unavailable.');
   }
+  const copy = CREDITS_COPY[locale] ?? CREDITS_COPY.pl;
 
   const canvas = document.createElement('canvas');
   canvas.width = CANVAS_WIDTH * PRESENTATION_SCALE;
@@ -65,19 +91,37 @@ export function createVrEndCreditsPresentation({ worldRoot, getViewingPose, onCr
   let anchored = false;
   const viewPosition = new THREE.Vector3();
   const viewQuaternion = new THREE.Quaternion();
+  const playerFrameQuaternion = new THREE.Quaternion();
+  const parentWorldQuaternion = new THREE.Quaternion();
+  const anchorWorldQuaternion = new THREE.Quaternion();
+  const anchorLocalQuaternion = new THREE.Quaternion();
+  const canvasRight = new THREE.Vector3();
+  const canvasUp = new THREE.Vector3();
+  const canvasNormal = new THREE.Vector3();
+  const canonicalNormal = new THREE.Vector3(principalAxis.x / principalLength, 0, principalAxis.z / principalLength);
+  const orientationMatrix = new THREE.Matrix4();
   const forward = new THREE.Vector3();
   const anchorPosition = new THREE.Vector3();
 
   function ensureWorldAnchor() {
     if (anchored) return;
     getViewingPose(viewPosition, viewQuaternion);
-    forward.set(0, 0, -1).applyQuaternion(viewQuaternion);
-    forward.y = 0;
-    if (forward.lengthSq() < 0.0001) forward.set(0, 0, -1);
-    forward.normalize();
+    playerFrame.updateWorldMatrix(true, false);
+    playerFrame.getWorldQuaternion(playerFrameQuaternion);
+    canvasUp.set(0, 1, 0).applyQuaternion(playerFrameQuaternion).normalize();
+    canvasNormal.copy(canonicalNormal).applyQuaternion(playerFrameQuaternion).normalize();
+    canvasRight.crossVectors(canvasUp, canvasNormal).normalize();
+    orientationMatrix.makeBasis(canvasRight, canvasUp, canvasNormal);
+    anchorWorldQuaternion.setFromRotationMatrix(orientationMatrix).normalize();
+
+    forward.copy(canvasNormal).negate();
     anchorPosition.copy(viewPosition).addScaledVector(forward, 8);
+    object.parent.updateWorldMatrix(true, false);
     object.position.copy(anchorPosition);
-    object.lookAt(viewPosition);
+    object.parent.worldToLocal(object.position);
+    object.parent.getWorldQuaternion(parentWorldQuaternion);
+    anchorLocalQuaternion.copy(parentWorldQuaternion).invert().multiply(anchorWorldQuaternion).normalize();
+    object.quaternion.copy(anchorLocalQuaternion);
     anchored = true;
   }
 
@@ -93,10 +137,10 @@ export function createVrEndCreditsPresentation({ worldRoot, getViewingPose, onCr
     prepareCanvas();
     context.fillStyle = DARK;
     context.font = '700 66px sans-serif';
-    context.fillText('ORANGE MONKEY VR', CANVAS_WIDTH / 2, 72);
+    context.fillText(copy.title, CANVAS_WIDTH / 2, 72);
     const startY = 164;
     const sectionStep = 74;
-    CREDIT_SECTIONS.forEach(([label, value], index) => {
+    copy.sections.forEach(([label, value], index) => {
       const y = startY + index * sectionStep;
       context.font = '700 29px sans-serif';
       context.fillText(label, CANVAS_WIDTH / 2, y);

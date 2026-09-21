@@ -2,7 +2,8 @@ import { createVrMandatoryMonkeyCommunication } from './createVrMandatoryMonkeyC
 
 const SILENCE_SECONDS = 3;
 
-export function createVrFinalMonkeyFarewell({ monkeyGuide, blocks, onTriggered = () => {}, onCompleted = () => {} }) {
+export function createVrFinalMonkeyFarewell({ monkeyGuide, blocks, timingBlocks,
+  onTriggered = () => {}, onCompleted = () => {} }) {
   let silenceRemaining = null;
   let completed = false;
   let silenceStartedThisUpdate = false;
@@ -10,6 +11,7 @@ export function createVrFinalMonkeyFarewell({ monkeyGuide, blocks, onTriggered =
   const communication = createVrMandatoryMonkeyCommunication({
     monkeyGuide,
     blocks,
+    timingBlocks,
     secondsPerLine: 2,
     onTriggered: () => {
       onTriggered();

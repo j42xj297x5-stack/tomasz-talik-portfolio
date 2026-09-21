@@ -4,9 +4,15 @@ export const VR_ATTRACTOR_PANEL_NAMES = Object.freeze(
   Array.from({ length: 4 }, (_, index) => `glyph_panel_0${index + 1}`)
 );
 
-const DEFAULT_CONTENTS = Object.freeze(['', '', '03', '04']);
+const DEFAULT_CONTENTS = Object.freeze(['', '', '', '']);
 const MAX_CANVAS_EDGE = 512;
 const PROXIMITY_BUCKETS = 28;
+const OBJECTIVE_PANEL_INDEX = 2;
+const DISTANCE_PANEL_INDEX = 3;
+const OBJECTIVE_TEXT_MARGIN_RATIO = 0.09;
+const OBJECTIVE_LINE_HEIGHT_RATIO = 1.18;
+const OBJECTIVE_MAX_FONT_RATIO = 0.2;
+const OBJECTIVE_MIN_FONT_PX = 1;
 const STATE_STYLES = Object.freeze({
   idle: { accent: '#8fd8ff', brightness: 1 },
   'target-valid': { accent: '#76ffac', brightness: 1.12 },
@@ -54,6 +60,56 @@ function canvasSize(aspect) {
     : { width: Math.max(1, Math.round(MAX_CANVAS_EDGE * aspect)), height: MAX_CANVAS_EDGE };
 }
 
+function wrapMeasuredLine(context, line, maxWidth) {
+  if (line === '') return [''];
+  const segments = line.match(/\S+\s*|\s+/g) ?? [line];
+  const wrapped = [];
+  let current = '';
+
+  for (const segment of segments) {
+    if (context.measureText(current + segment).width <= maxWidth) {
+      current += segment;
+      continue;
+    }
+    if (current) {
+      wrapped.push(current.trimEnd());
+      current = '';
+    }
+    if (context.measureText(segment).width <= maxWidth) {
+      current = segment.trimStart();
+      continue;
+    }
+    let fragment = '';
+    for (const character of segment) {
+      if (fragment && context.measureText(fragment + character).width > maxWidth) {
+        wrapped.push(fragment);
+        fragment = '';
+      }
+      fragment += character;
+    }
+    current = fragment;
+  }
+  if (current || wrapped.length === 0) wrapped.push(current.trimEnd());
+  return wrapped;
+}
+
+function layoutObjectiveText(context, text, maxWidth, maxHeight, maxFontSize) {
+  for (let fontSize = maxFontSize; fontSize >= OBJECTIVE_MIN_FONT_PX; fontSize -= 1) {
+    context.font = `600 ${fontSize}px system-ui, sans-serif`;
+    const lines = text.split('\n').flatMap((line) => wrapMeasuredLine(context, line, maxWidth));
+    const lineHeight = fontSize * OBJECTIVE_LINE_HEIGHT_RATIO;
+    if (lines.length * lineHeight <= maxHeight) return { lines, fontSize, lineHeight };
+  }
+  context.font = `600 ${OBJECTIVE_MIN_FONT_PX}px system-ui, sans-serif`;
+  const minimumLines = text.split('\n').flatMap((line) => wrapMeasuredLine(context, line, maxWidth));
+  const fittedFontSize = maxHeight / (minimumLines.length * OBJECTIVE_LINE_HEIGHT_RATIO);
+  context.font = `600 ${fittedFontSize}px system-ui, sans-serif`;
+  const lines = text.split('\n').flatMap((line) => wrapMeasuredLine(context, line, maxWidth));
+  const fontSize = Math.min(fittedFontSize, maxHeight / (lines.length * OBJECTIVE_LINE_HEIGHT_RATIO));
+  context.font = `600 ${fontSize}px system-ui, sans-serif`;
+  return { lines, fontSize, lineHeight: fontSize * OBJECTIVE_LINE_HEIGHT_RATIO };
+}
+
 export function createVrAttractorPanelSystem({ panels, canvasFactory, imageFactory, familyColors = {} } = {}) {
   if (!Array.isArray(panels) || panels.length !== VR_ATTRACTOR_PANEL_NAMES.length) {
     throw new Error('[VrAttractorPanels] Exactly four authored glyph panels are required.');
@@ -86,7 +142,8 @@ export function createVrAttractorPanelSystem({ panels, canvasFactory, imageFacto
     const originalMaterial = panel.material;
     panel.material = material;
     return { panel, canvas, context, maskCanvas, maskContext, texture, material, originalMaterial,
-      content: DEFAULT_CONTENTS[index], glyph: null, syllable: null, presentationColor: null, drawCount: 0 };
+      content: DEFAULT_CONTENTS[index], glyph: null, syllable: null, presentationColor: null,
+      glyphRequestId: 0, drawCount: 0 };
   });
 
   const glyphImages = new Map();
@@ -142,8 +199,20 @@ export function createVrAttractorPanelSystem({ panels, canvasFactory, imageFacto
       context.fillStyle = '#071019'; context.fillRect(0, 0, canvas.width, canvas.height);
       context.globalAlpha = style.brightness; context.fillStyle = style.accent;
       context.textAlign = 'center'; context.textBaseline = 'middle';
-      context.font = `600 ${Math.round(Math.min(canvas.width, canvas.height) * 0.46)}px system-ui, sans-serif`;
-      context.fillText(record.content, canvas.width / 2, canvas.height / 2);
+      if (record === records[OBJECTIVE_PANEL_INDEX] && record.content) {
+        const margin = Math.min(canvas.width, canvas.height) * OBJECTIVE_TEXT_MARGIN_RATIO;
+        const availableWidth = canvas.width - margin * 2;
+        const availableHeight = canvas.height - margin * 2;
+        const layout = layoutObjectiveText(context, record.content, availableWidth, availableHeight,
+          Math.max(OBJECTIVE_MIN_FONT_PX,
+            Math.floor(Math.min(canvas.width, canvas.height) * OBJECTIVE_MAX_FONT_RATIO)));
+        const top = canvas.height / 2 - ((layout.lines.length - 1) * layout.lineHeight) / 2;
+        layout.lines.forEach((line, index) => context.fillText(line, canvas.width / 2,
+          top + index * layout.lineHeight, availableWidth));
+      } else {
+        context.font = `600 ${Math.round(Math.min(canvas.width, canvas.height) * 0.46)}px system-ui, sans-serif`;
+        context.fillText(record.content, canvas.width / 2, canvas.height / 2);
+      }
       context.globalAlpha = 1;
     }
     record.drawCount += 1; texture.needsUpdate = true;
@@ -153,9 +222,11 @@ export function createVrAttractorPanelSystem({ panels, canvasFactory, imageFacto
     if (disposed) return false;
     const descriptor = typeof glyph === 'string' ? { url: glyph } : glyph;
     const url = descriptor?.url ?? null;
+    const preparedImage = descriptor?.image ?? null;
     const record = records[index];
     if (!record) throw new RangeError(`[VrAttractorPanels] Panel index ${index} is outside 0..3.`);
-    if (url && record.requestedGlyphUrl === url && record.glyph) {
+    if ((preparedImage && record.glyph === preparedImage)
+      || (url && record.requestedGlyphUrl === url && record.glyph)) {
       const nextSyllable = descriptor?.syllable ?? null;
       const nextColor = descriptor?.presentationColor ?? null;
       if (nextSyllable !== record.syllable || nextColor !== record.presentationColor) {
@@ -163,12 +234,14 @@ export function createVrAttractorPanelSystem({ panels, canvasFactory, imageFacto
       }
       return true;
     }
+    const requestId = ++record.glyphRequestId;
     record.requestedGlyphUrl = url; record.syllable = descriptor?.syllable ?? null;
     record.presentationColor = descriptor?.presentationColor ?? null;
-    record.content = ''; record.glyph = null; draw(record);
+    record.content = ''; record.glyph = preparedImage; draw(record);
+    if (preparedImage) return true;
     if (!url) return true;
     const image = await loadGlyph(url);
-    if (disposed || record.requestedGlyphUrl !== url) return false;
+    if (disposed || record.glyphRequestId !== requestId) return false;
     record.glyph = image; draw(record); return true;
   }
 
@@ -187,7 +260,16 @@ export function createVrAttractorPanelSystem({ panels, canvasFactory, imageFacto
     if (disposed) return false;
     const record = records[index];
     if (!record) throw new RangeError(`[VrAttractorPanels] Panel index ${index} is outside 0..3.`);
-    record.content = String(content ?? ''); record.glyph = null; draw(record); return true;
+    const nextContent = String(content ?? '');
+    if (!record.glyph && record.content === nextContent) return false;
+    record.glyphRequestId += 1; record.requestedGlyphUrl = null;
+    record.content = nextContent; record.glyph = null; draw(record); return true;
+  }
+  function setObjectiveText(body) { return setPanelContent(OBJECTIVE_PANEL_INDEX, body); }
+  function setDistanceMeters(distanceMeters) {
+    const content = Number.isFinite(distanceMeters) && distanceMeters >= 0
+      ? String(Math.round(distanceMeters)) : '';
+    return setPanelContent(DISTANCE_PANEL_INDEX, content);
   }
   function setPanelContents(contents) {
     if (!Array.isArray(contents)) throw new TypeError('[VrAttractorPanels] Panel contents must be an array.');
@@ -201,7 +283,8 @@ export function createVrAttractorPanelSystem({ panels, canvasFactory, imageFacto
     if (disposed) return;
     state = 'idle'; pulling = false; proximityBucket = 0;
     records.forEach((record, index) => { record.content = DEFAULT_CONTENTS[index]; record.glyph = null;
-      record.syllable = null; record.presentationColor = null; record.requestedGlyphUrl = null; draw(record); });
+      record.syllable = null; record.presentationColor = null; record.requestedGlyphUrl = null;
+      record.glyphRequestId += 1; draw(record); });
   }
   function dispose() {
     if (disposed) return;
@@ -217,5 +300,6 @@ export function createVrAttractorPanelSystem({ panels, canvasFactory, imageFacto
 
   reset();
   return { panels: records, setPanelContent, setPanelContents, setPanelGlyph, setPrimaryGlyph, setPrimaryPresentation,
+    setObjectiveText, setDistanceMeters,
     setVisualState, reset, dispose, glyphImages };
 }

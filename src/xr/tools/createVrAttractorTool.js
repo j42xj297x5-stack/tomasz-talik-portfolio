@@ -4,7 +4,7 @@ import { createVrAttractorPanelSystem, resolveAttractorGlyphFamilyColors,
 import { resolveAttractorShellGlyph } from './vrAttractorShellGlyphs.js';
 import { resolveVrSmallGlyphProtoAstro } from '../protoAstro/resolveVrSmallGlyphProtoAstro.js';
 import { resolveVrPageProtoAstro } from '../protoAstro/resolveVrPageProtoAstro.js';
-import { resolveProtoAstroAssetUrl, resolveProtoAstroDescriptor } from '../protoAstro/protoAstroRegistry.js';
+import { resolveProtoAstroDescriptor } from '../protoAstro/protoAstroRegistry.js';
 
 export const VR_ATTRACTOR_STATES = Object.freeze({
   UNEQUIPPED: 'UNEQUIPPED', IDLE: 'IDLE', TARGETING: 'TARGETING', PULLING: 'PULLING', CAPTURED: 'CAPTURED'
@@ -12,7 +12,8 @@ export const VR_ATTRACTOR_STATES = Object.freeze({
 
 export const VR_ATTRACTOR_VISUAL_CONFIG = Object.freeze({
   modelScale: 1 / 3,
-  fuelPointSize: 0.0035,
+  fuelPointSize: 0.0084,
+  fuelLargePointScale: 1.7,
   fuelBrightnessMultiplier: 1.2,
   aimOffset: [0, 0, 0],
   ringLocalPositionOffsets: {
@@ -59,6 +60,54 @@ const pointIndex = (point) => Number.isFinite(point.userData?.vr_path_index)
   ? point.userData.vr_path_index : Number(point.name.match(/P(\d+)$/)?.[1] ?? Number.MAX_SAFE_INTEGER);
 
 const FUEL_PATH_EPSILON = 1e-5;
+const DISTANCE_SYNC_INTERVAL_SECONDS = 0.1;
+const ALL_FUEL_STREAM_IDS = Object.freeze(['earth', 'metal', 'water', 'tree', 'fire']);
+const FUEL_PARTICLE_SIZE = Object.freeze({ SMALL: 'SMALL', LARGE: 'LARGE' });
+const FUEL_FORM_PRESENTATION = Object.freeze({
+  O: Object.freeze({ sizePattern: Object.freeze([
+    FUEL_PARTICLE_SIZE.SMALL, FUEL_PARTICLE_SIZE.SMALL, FUEL_PARTICLE_SIZE.SMALL, FUEL_PARTICLE_SIZE.LARGE
+  ]), speedMultiplier: 1.10 }),
+  I: Object.freeze({ sizePattern: Object.freeze([
+    FUEL_PARTICLE_SIZE.SMALL, FUEL_PARTICLE_SIZE.SMALL, FUEL_PARTICLE_SIZE.LARGE
+  ]), speedMultiplier: 1.20 }),
+  A: Object.freeze({ sizePattern: Object.freeze([
+    FUEL_PARTICLE_SIZE.SMALL, FUEL_PARTICLE_SIZE.LARGE
+  ]), speedMultiplier: 1.35 }),
+  U: Object.freeze({ sizePattern: Object.freeze([FUEL_PARTICLE_SIZE.LARGE]), speedMultiplier: 1.50 })
+});
+
+function projectFuelSignature(descriptor) {
+  const formPresentation = FUEL_FORM_PRESENTATION[descriptor?.formCode];
+  if (!formPresentation) return null;
+  const allStreams = descriptor.familyCode === 'V';
+  return Object.freeze({
+    syllable: descriptor.syllable,
+    familyCode: descriptor.familyCode,
+    familyId: descriptor.familyId,
+    formCode: descriptor.formCode,
+    formId: descriptor.formId,
+    activeStreamIds: allStreams ? ALL_FUEL_STREAM_IDS : Object.freeze([descriptor.familyId]),
+    allStreams,
+    sizePattern: formPresentation.sizePattern,
+    speedMultiplier: formPresentation.speedMultiplier
+  });
+}
+
+function createFuelParticleTexture(canvasFactory) {
+  const canvas = canvasFactory?.() ?? document.createElement('canvas');
+  canvas.width = 64;
+  canvas.height = 64;
+  const context = canvas.getContext('2d');
+  const center = canvas.width / 2;
+  const gradient = context.createRadialGradient(center, center, 0, center, center, center);
+  gradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
+  gradient.addColorStop(0.35, 'rgba(255, 255, 255, 0.92)');
+  gradient.addColorStop(0.7, 'rgba(255, 255, 255, 0.35)');
+  gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+  context.fillStyle = gradient;
+  context.fillRect(0, 0, canvas.width, canvas.height);
+  return new THREE.CanvasTexture(canvas);
+}
 
 export function isDegenerateFuelPath(points, tolerance = FUEL_PATH_EPSILON) {
   if (points.length < 2) return true;
@@ -97,8 +146,15 @@ function debugFuelControlPoints(debugMesh, root, targetCount = 12) {
   return controls;
 }
 
-export function createVrAttractorTool({ model, config = VR_ATTRACTOR_VISUAL_CONFIG, logger = console, canvasFactory, imageFactory }) {
+export function createVrAttractorTool({ model, config = VR_ATTRACTOR_VISUAL_CONFIG, logger = console, canvasFactory,
+  imageFactory, getPlayerWorldPosition, getPreparedProtoAstroImage }) {
   if (!model) throw new Error('[VrAttractor] Cached astro_grabber GLB instance is required.');
+  if (typeof getPlayerWorldPosition !== 'function') {
+    throw new TypeError('[VrAttractor] getPlayerWorldPosition must be a function.');
+  }
+  if (typeof getPreparedProtoAstroImage !== 'function') {
+    throw new TypeError('[VrAttractor] getPreparedProtoAstroImage must be a function.');
+  }
   const missing = REQUIRED_NODES.filter((name) => !model.getObjectByName(name));
   if (missing.length) throw new Error(`[VrAttractor] Invalid astro_grabber.glb; missing required nodes: ${missing.join(', ')}`);
 
@@ -171,32 +227,66 @@ export function createVrAttractorTool({ model, config = VR_ATTRACTOR_VISUAL_CONF
     const materials = Array.isArray(child.material) ? child.material : [child.material];
     materials.filter(Boolean).forEach((material) => energyMaterials.push(material));
   });
+  const fuelParticleTexture = createFuelParticleTexture(canvasFactory);
   const fuelStreams = fuelPathData.filter(({ source }) => source !== 'disabled').map(({
     element, settings, source, markersDegenerate, controlPoints
   }) => {
     const curve = new THREE.CatmullRomCurve3(controlPoints, false);
-    const geometry = new THREE.BufferGeometry();
-    geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(settings.particleCount * 3), 3));
-    const material = new THREE.PointsMaterial({ color: settings.color, size: config.fuelPointSize, transparent: true,
-      opacity: settings.brightness * config.fuelBrightnessMultiplier, blending: THREE.AdditiveBlending,
-      depthWrite: false, depthTest: false, sizeAttenuation: true });
-    const points = new THREE.Points(geometry, material);
-    points.name = `VrAttractorFuelParticles_${element}`;
-    nodes.VR_ATTRACTOR_ROOT.add(points);
-    return { element, settings, curve, source, markersDegenerate, geometry, material, points, elapsed: 0,
-      sample: new THREE.Vector3() };
+    const createBucket = (name, size) => {
+      const geometry = new THREE.BufferGeometry();
+      geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(settings.particleCount * 3), 3));
+      const material = new THREE.PointsMaterial({ color: settings.color, map: fuelParticleTexture,
+        size, transparent: true,
+        opacity: settings.brightness * config.fuelBrightnessMultiplier, blending: THREE.AdditiveBlending,
+        depthWrite: false, depthTest: true, sizeAttenuation: true });
+      const points = new THREE.Points(geometry, material);
+      points.name = `VrAttractorFuelParticles_${element}_${name}`;
+      nodes.VR_ATTRACTOR_ROOT.add(points);
+      return { geometry, material, points };
+    };
+    const small = createBucket('small', config.fuelPointSize);
+    const large = createBucket('large', config.fuelPointSize * config.fuelLargePointScale);
+    small.geometry.setDrawRange(0, settings.particleCount);
+    large.geometry.setDrawRange(0, 0);
+    return { element, settings, curve, source, markersDegenerate, small, large, elapsed: 0, fuelSpeedMultiplier: 1,
+      particleBuckets: new Uint8Array(settings.particleCount),
+      particleSlots: new Uint16Array(settings.particleCount), sample: new THREE.Vector3() };
   });
+
+  function configureFuelParticleRoutes(signature) {
+    fuelStreams.forEach((stream) => {
+      const isActive = signature?.activeStreamIds.includes(stream.element) ?? false;
+      stream.fuelSpeedMultiplier = isActive ? signature.speedMultiplier : 1;
+      const pattern = isActive ? signature.sizePattern : null;
+      let smallCount = 0;
+      let largeCount = 0;
+      for (let index = 0; index < stream.settings.particleCount; index += 1) {
+        const isLarge = pattern?.[index % pattern.length] === FUEL_PARTICLE_SIZE.LARGE;
+        stream.particleBuckets[index] = isLarge ? 1 : 0;
+        stream.particleSlots[index] = isLarge ? largeCount++ : smallCount++;
+      }
+      stream.small.geometry.setDrawRange(0, smallCount);
+      stream.large.geometry.setDrawRange(0, largeCount);
+    });
+  }
+  configureFuelParticleRoutes(null);
 
   let state = VR_ATTRACTOR_STATES.UNEQUIPPED;
   let unlocked = false;
   let trigger = 0;
   let pullStrength = 0;
   let target = null;
+  let physicalTarget = null;
+  let canonicalGlyphPresentation = null;
+  let fuelSignature = null;
+  let distanceSyncElapsed = 0;
   let targetProximity = 0;
   let level = 0;
   let elapsed = 0;
   let innerRPM = 0;
   let disposed = false;
+  const targetWorldPosition = new THREE.Vector3();
+  const playerWorldPosition = new THREE.Vector3();
   aimRoot.visible = false;
 
   function setEquipped(equipped) {
@@ -210,22 +300,34 @@ export function createVrAttractorTool({ model, config = VR_ATTRACTOR_VISUAL_CONF
   function setTarget(value) {
     target = value ?? null; targetProximity = clamp01(value?.proximity);
     const previewTarget = value?.target ?? value;
-    const isRuneStone = value?.targetClass === 'runeStone';
-    const runeStoneDescriptor = isRuneStone
-      ? resolveProtoAstroDescriptor(value.familyCode, 'U') : null;
-    const shellGlyph = isRuneStone ? null : resolveAttractorShellGlyph(previewTarget);
-    const smallGlyph = isRuneStone || shellGlyph ? null : resolveVrSmallGlyphProtoAstro(previewTarget);
-    const largeGlyph = isRuneStone || shellGlyph || smallGlyph
-      ? null : resolveVrPageProtoAstro(previewTarget?.userData ?? previewTarget);
-    const resolvedGlyph = smallGlyph ?? largeGlyph;
-    const glyph = runeStoneDescriptor ? {
-      syllable: runeStoneDescriptor.syllable,
-      url: resolveProtoAstroAssetUrl(runeStoneDescriptor)
-    } : shellGlyph ?? (resolvedGlyph ? {
-      syllable: resolvedGlyph.descriptor.syllable,
-      url: resolvedGlyph.assetUrl
-    } : null);
-    panelSystem.setPrimaryGlyph(glyph).catch((error) => logger.warn(error.message));
+    if (previewTarget !== physicalTarget) {
+      physicalTarget = previewTarget ?? null;
+      canonicalGlyphPresentation = null;
+      fuelSignature = null;
+      distanceSyncElapsed = 0;
+      panelSystem.setDistanceMeters(null);
+      if (previewTarget) {
+        const isRuneStone = value?.targetClass === 'runeStone';
+        const shellGlyph = isRuneStone ? null : resolveAttractorShellGlyph(previewTarget);
+        const smallGlyph = isRuneStone || shellGlyph ? null : resolveVrSmallGlyphProtoAstro(previewTarget);
+        const largeGlyph = isRuneStone || shellGlyph || smallGlyph
+          ? null : resolveVrPageProtoAstro({ glyphId: previewTarget.userData?.id });
+        const descriptor = isRuneStone
+          ? resolveProtoAstroDescriptor(value.familyCode, 'U')
+          : (shellGlyph
+            ? resolveProtoAstroDescriptor(shellGlyph.familyCode, 'O')
+            : smallGlyph?.descriptor ?? largeGlyph?.descriptor ?? null);
+        if (descriptor) {
+          canonicalGlyphPresentation = {
+            syllable: descriptor.syllable,
+            image: getPreparedProtoAstroImage(descriptor)
+          };
+          fuelSignature = projectFuelSignature(descriptor);
+        }
+      }
+      configureFuelParticleRoutes(fuelSignature);
+    }
+    panelSystem.setPrimaryGlyph(canonicalGlyphPresentation).catch((error) => logger.warn(error.message));
     panelSystem.setPrimaryPresentation({ isPulling: state === VR_ATTRACTOR_STATES.PULLING, targetProximity });
   }
   function setPullStrength(value) { pullStrength = clamp01(value); }
@@ -249,10 +351,28 @@ export function createVrAttractorTool({ model, config = VR_ATTRACTOR_VISUAL_CONF
   function setBandPresentation(presentation) {
     panelSystem.setPanelGlyph(1, presentation).catch((error) => logger.warn(error.message));
   }
+  function setObjectiveText(body) {
+    return panelSystem.setObjectiveText(body);
+  }
+
+  function syncTargetDistance(deltaSeconds) {
+    if (!physicalTarget) return;
+    distanceSyncElapsed += deltaSeconds;
+    if (distanceSyncElapsed < DISTANCE_SYNC_INTERVAL_SECONDS) return;
+    distanceSyncElapsed %= DISTANCE_SYNC_INTERVAL_SECONDS;
+    if (typeof physicalTarget.getWorldPosition !== 'function') {
+      panelSystem.setDistanceMeters(null);
+      return;
+    }
+    physicalTarget.getWorldPosition(targetWorldPosition);
+    getPlayerWorldPosition(playerWorldPosition);
+    panelSystem.setDistanceMeters(targetWorldPosition.distanceTo(playerWorldPosition));
+  }
 
   function update(deltaSeconds) {
     if (disposed || state === VR_ATTRACTOR_STATES.UNEQUIPPED || !Number.isFinite(deltaSeconds) || deltaSeconds <= 0) return;
     elapsed += deltaSeconds;
+    syncTargetDistance(deltaSeconds);
     panelSystem.setPrimaryPresentation({ isPulling: state === VR_ATTRACTOR_STATES.PULLING, targetProximity });
     const activity = 1 + trigger * 0.35 + pullStrength * 0.45 + (state === VR_ATTRACTOR_STATES.PULLING ? 0.35 : 0);
     nodes.PIVOT_BASE_MOLEKULAR.rotateY(rpmToRadians(config.baseMolecular.idleRPM * config.baseMolecular.direction, deltaSeconds));
@@ -275,28 +395,36 @@ export function createVrAttractorTool({ model, config = VR_ATTRACTOR_VISUAL_CONF
         + config.energyCell.pulseIntensity * pulse + level * 0.12 + trigger * 0.5 + pullStrength * 0.7;
     });
     fuelStreams.forEach((stream) => {
-      stream.elapsed += deltaSeconds * stream.settings.speed * activity;
-      const positions = stream.geometry.attributes.position;
+      stream.elapsed += deltaSeconds * stream.settings.speed * stream.fuelSpeedMultiplier;
+      const smallPositions = stream.small.geometry.attributes.position;
+      const largePositions = stream.large.geometry.attributes.position;
       for (let index = 0; index < stream.settings.particleCount; index += 1) {
         const irregularity = Math.sin(elapsed * 3.1 + index * 2.17 + stream.settings.phase * 9) * stream.settings.pulseAmount * 0.02;
         const t = (stream.elapsed + stream.settings.phase + index / stream.settings.particleCount + irregularity + 1) % 1;
         stream.curve.getPointAt(t, stream.sample);
-        positions.setXYZ(index, stream.sample.x, stream.sample.y, stream.sample.z);
+        const positions = stream.particleBuckets[index] ? largePositions : smallPositions;
+        positions.setXYZ(stream.particleSlots[index], stream.sample.x, stream.sample.y, stream.sample.z);
       }
-      positions.needsUpdate = true;
-      stream.material.opacity = stream.settings.brightness * config.fuelBrightnessMultiplier
+      if (stream.small.geometry.drawRange.count) smallPositions.needsUpdate = true;
+      if (stream.large.geometry.drawRange.count) largePositions.needsUpdate = true;
+      const opacity = stream.settings.brightness * config.fuelBrightnessMultiplier
         * (0.88 + 0.12 * Math.sin(elapsed * 2 + stream.settings.phase * 7));
+      stream.small.material.opacity = opacity;
+      stream.large.material.opacity = opacity;
     });
   }
 
   function reset() {
-    state = VR_ATTRACTOR_STATES.UNEQUIPPED; trigger = 0; target = null; targetProximity = 0; pullStrength = 0;
+    state = VR_ATTRACTOR_STATES.UNEQUIPPED; trigger = 0; target = null; physicalTarget = null;
+    canonicalGlyphPresentation = null; fuelSignature = null;
+    distanceSyncElapsed = 0; targetProximity = 0; pullStrength = 0;
     elapsed = 0; innerRPM = 0; aimRoot.visible = false;
     initialPivotTransforms.forEach((transform, pivot) => {
       pivot.position.copy(transform.position); pivot.quaternion.copy(transform.quaternion); pivot.scale.copy(transform.scale);
       const offset = config.ringLocalPositionOffsets[pivot.name];
       if (offset) pivot.position.add(new THREE.Vector3().fromArray(offset));
     });
+    configureFuelParticleRoutes(null);
     fuelStreams.forEach((stream) => { stream.elapsed = 0; });
     panelSystem.reset();
   }
@@ -304,15 +432,21 @@ export function createVrAttractorTool({ model, config = VR_ATTRACTOR_VISUAL_CONF
     if (disposed) return;
     reset(); disposed = true;
     modelScale.remove(nodes.VR_ATTRACTOR_ROOT); aimRoot.parent?.remove(aimRoot);
-    fuelStreams.forEach(({ points, geometry, material }) => { points.parent?.remove(points); geometry.dispose(); material.dispose(); });
+    fuelStreams.forEach(({ small, large }) => {
+      [small, large].forEach(({ points, geometry, material }) => {
+        points.parent?.remove(points); geometry.dispose(); material.dispose();
+      });
+    });
+    fuelParticleTexture.dispose();
     panelSystem.dispose();
     ownedMaterials.forEach((material) => material.dispose());
   }
 
   return { object: aimRoot, modelScale, aimCorrection, energyCellAnchor, panelSystem,
     setEquipped, setUnlocked, setTrigger, setTarget, setPullStrength, setLevel, setState, setGlyphPanelState,
-    setBandPresentation,
+    setBandPresentation, setObjectiveText,
     attachToTargetRay, getMasterRingWorldPosition, update, reset, dispose, getState: () => state, getInnerRPM: () => innerRPM,
+    getFuelSignature: () => fuelSignature,
     diagnostics: { missingRequiredNodes: missing, glyphPanelCount: glyphPanels.length,
       fuelPointCounts: Object.fromEntries(fuelPathData.map((data) => [data.element, data.controlPoints.length])),
       fuelPathSources: Object.fromEntries(fuelPathData.map((data) => [data.element, data.source])),

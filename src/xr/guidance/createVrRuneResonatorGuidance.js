@@ -5,23 +5,30 @@ const DELAY_SECONDS = 5;
 const AUTO_HINT_CUE_SECONDS = 1;
 
 export function createVrRuneResonatorGuidance({ monkeyGuide, copy, secondsPerLine,
-  getCurrentPointId, getUnresolvedRuneBranchId, knowledgeResolver,
+  getCurrentPointId, getUnresolvedRuneBranchId, isRuneBranchInstallationReady,
+  knowledgeResolver, progressionTiming = null,
   isAsterionEarned,
   onEtherInterventionCompleted = () => {},
   onFullResonatorCommunicationCompleted = () => {} }) {
   if (typeof isAsterionEarned !== 'function') throw new TypeError('isAsterionEarned must be a function');
+  if (typeof isRuneBranchInstallationReady !== 'function') {
+    throw new TypeError('isRuneBranchInstallationReady must be a function');
+  }
   let armed = false;
   let previousPointId = getCurrentPointId();
   let glyphsGoneDue = null;
   let unresolvedSeconds = 0;
   let mediumDue = false;
+  let noBinderBranchId = null;
   let firstRuneInstalled = false;
   let firstSectorLock = false;
   let firstResonator = false;
 
-  const makeCommunication = (blocks, requiresAttention = true, onCompleted = () => {}, resolveBlocks) => {
+  const makeCommunication = (blocks, timingBlocks, requiresAttention = true, onCompleted = () => {},
+    resolveBlocks, resolveTimingBlocks) => {
     let communication;
-    communication = createVrMandatoryMonkeyCommunication({ monkeyGuide, blocks, resolveBlocks, secondsPerLine,
+    communication = createVrMandatoryMonkeyCommunication({ monkeyGuide, blocks, timingBlocks,
+      resolveBlocks, resolveTimingBlocks, secondsPerLine,
       priority: VR_MONKEY_DIALOGUE_PRIORITY.ACQUISITION, requiresAttention,
       onTriggered: () => communication.beginPlayback(), onCompleted });
     return communication;
@@ -35,21 +42,36 @@ export function createVrRuneResonatorGuidance({ monkeyGuide, copy, secondsPerLin
       onTriggered: () => communication.beginPlayback(), onCompleted });
     return communication;
   };
-  const glyphsGone = makeCommunication(copy.progression['progression.p3.glyphsGone'].blocks);
-  const installed = makeCommunication(null, true, () => {}, () => isAsterionEarned()
+  const glyphsGone = makeCommunication(copy.progression['progression.p3.glyphsGone'].blocks,
+    progressionTiming?.['progression.p3.glyphsGone']?.blocks, true, () => {
+      if (knowledgeResolver.markPostRingStoneGuidanceTaught()) monkeyGuide.refreshKnowledge();
+    });
+  const installed = makeCommunication(null, null, true, () => {}, () => isAsterionEarned()
     ? copy.progression['progression.p3.firstRuneInstalledWithAsterion'].blocks
-    : copy.progression['progression.p3.firstRuneInstalledWithoutAsterion'].blocks);
-  const sectorLock = makeCommunication(copy.progression['progression.p3.firstSectorLock'].blocks, false);
-  const resonator = makeCommunication(copy.progression['progression.p3.resonator'].blocks);
+    : copy.progression['progression.p3.firstRuneInstalledWithoutAsterion'].blocks,
+  () => isAsterionEarned()
+    ? progressionTiming?.['progression.p3.firstRuneInstalledWithAsterion']?.blocks
+    : progressionTiming?.['progression.p3.firstRuneInstalledWithoutAsterion']?.blocks);
+  const sectorLock = makeCommunication(copy.progression['progression.p3.firstSectorLock'].blocks,
+    progressionTiming?.['progression.p3.firstSectorLock']?.blocks, false);
+  const resonator = makeCommunication(copy.progression['progression.p3.resonator'].blocks,
+    progressionTiming?.['progression.p3.resonator']?.blocks, true, () => {
+      knowledgeResolver.markResonatorGuidanceTaught();
+    });
   const etherIntervention = makeCommunication(
     copy.progression['progression.p4.etherIntervention'].blocks,
+    progressionTiming?.['progression.p4.etherIntervention']?.blocks,
     true,
     onEtherInterventionCompleted
   );
   const fullResonator = makeCommunication(
     copy.progression['progression.p4.fullResonator'].blocks,
+    progressionTiming?.['progression.p4.fullResonator']?.blocks,
     true,
-    onFullResonatorCommunicationCompleted
+    () => {
+      knowledgeResolver.markFullResonatorGuidanceTaught();
+      onFullResonatorCommunicationCompleted();
+    }
   );
   const noBinderMedium = makeAutoHint(copy.hints['hint.rune.noBinder.medium'].blocks, () => {
     if (knowledgeResolver.publishTransientHintFallback('rune-no-binder', 'hint.rune.noBinder.medium')) {
@@ -60,7 +82,10 @@ export function createVrRuneResonatorGuidance({ monkeyGuide, copy, secondsPerLin
     if (knowledgeResolver.publishTransientHintFallback('rune-no-binder', 'hint.rune.noBinder.soft')) {
       monkeyGuide.refreshKnowledge();
     }
-    if (getUnresolvedRuneBranchId()) { unresolvedSeconds = 0; mediumDue = true; }
+    if (noBinderBranchId && !isRuneBranchInstallationReady(noBinderBranchId)) {
+      unresolvedSeconds = 0;
+      mediumDue = true;
+    }
   });
   const communications = [glyphsGone, installed, sectorLock, resonator, etherIntervention, fullResonator,
     noBinderSoft, noBinderMedium];
@@ -112,13 +137,15 @@ export function createVrRuneResonatorGuidance({ monkeyGuide, copy, secondsPerLin
       if (communication._due <= 0) { delete communication._due; schedule(communication); }
     });
     const unresolved = getUnresolvedRuneBranchId();
-    if (!unresolved) {
+    if (!noBinderBranchId && unresolved) noBinderBranchId = unresolved;
+    if (noBinderBranchId && isRuneBranchInstallationReady(noBinderBranchId)) {
+      noBinderBranchId = null;
       unresolvedSeconds = 0; mediumDue = false; noBinderSoft.reset(); noBinderMedium.reset();
       if (knowledgeResolver.withdrawTransientHintFallback('rune-no-binder')) monkeyGuide.refreshKnowledge();
-    } else if (noBinderSoft.getPhase() === 'IDLE' && !mediumDue) {
+    } else if (noBinderBranchId && noBinderSoft.getPhase() === 'IDLE' && !mediumDue) {
       unresolvedSeconds += delta;
       if (unresolvedSeconds >= DELAY_SECONDS) { unresolvedSeconds = 0; schedule(noBinderSoft); }
-    } else if (mediumDue && noBinderMedium.getPhase() === 'IDLE') {
+    } else if (noBinderBranchId && mediumDue && noBinderMedium.getPhase() === 'IDLE') {
       unresolvedSeconds += delta;
       if (unresolvedSeconds >= DELAY_SECONDS) { unresolvedSeconds = 0; mediumDue = false; schedule(noBinderMedium); }
     }
@@ -126,8 +153,10 @@ export function createVrRuneResonatorGuidance({ monkeyGuide, copy, secondsPerLin
   }
   function reset() {
     armed = false; previousPointId = getCurrentPointId(); glyphsGoneDue = null;
-    unresolvedSeconds = 0; mediumDue = false; firstRuneInstalled = false; firstSectorLock = false; firstResonator = false;
+    unresolvedSeconds = 0; mediumDue = false; noBinderBranchId = null;
+    firstRuneInstalled = false; firstSectorLock = false; firstResonator = false;
     communications.forEach((communication) => { delete communication._due; communication.reset(); });
+    if (knowledgeResolver.withdrawTransientHintFallback('rune-no-binder')) monkeyGuide.refreshKnowledge();
   }
   return { update, reset, notifyThirdRingCompleted, notifyBridgeTransitions, notifyRuneProgression,
     notifySectorLocked, notifyResonatorChanged, beginEtherIntervention, beginFullResonatorCommunication };

@@ -1,4 +1,3 @@
-import { VR_SCENARIO_CAPABILITY } from '../progression/vrExperienceScenario.js';
 import { resolveVrPlayerGuideContent } from './vrPlayerGuideContent.js';
 
 const TOOLS = Object.freeze([
@@ -9,39 +8,62 @@ const TOOLS = Object.freeze([
     id: 'astro'
   }),
   Object.freeze({
-    id: 'asterion',
-    capability: VR_SCENARIO_CAPABILITY.CAN_EQUIP_ASTERION
+    id: 'asterion'
   })
 ]);
 
-export function createVrPlayerGuideProjection({ locale, can, getCurrentObjective, isFurnaceRevealed,
-  isShellFieldRevealed, isAstrolabiumOwned, hasReadRuneStones = () => false, hasDiscoveredBinders = () => false,
-  hasInstalledRune = () => false }) {
-  if (typeof can !== 'function' || typeof getCurrentObjective !== 'function'
-    || typeof isFurnaceRevealed !== 'function' || typeof isShellFieldRevealed !== 'function'
-    || typeof isAstrolabiumOwned !== 'function') {
+export function createVrPlayerGuideProjection({ locale, getCurrentObjective, isFurnaceRevealed,
+  isShellFieldRevealed, isAstrolabiumOwned, hasReadRuneStones = () => false, hasReadBinders = () => false,
+  hasInstalledRune = () => false, hasLearnedResonator = () => false, isMetalInstalled = () => false,
+  hasLearnedFullResonator = () => false, isWaterInstalled = () => false,
+  isAsterionOwned = () => false, getFinalWaterGuidanceLevel = () => 'NONE' }) {
+  if (typeof getCurrentObjective !== 'function' || typeof isFurnaceRevealed !== 'function'
+    || typeof isShellFieldRevealed !== 'function' || typeof isAstrolabiumOwned !== 'function'
+    || typeof isAsterionOwned !== 'function') {
     throw new TypeError('Player guide projection dependencies must be functions.');
   }
 
   function getKnowledge() {
-    if (locale !== 'pl' || !isShellFieldRevealed()) return [];
+    if (!isShellFieldRevealed()) return [];
     const knowledge = resolveVrPlayerGuideContent(locale).knowledge;
     return [
       { id: 'shells', ...knowledge.shells },
       ...(hasReadRuneStones() ? [{ id: 'runeStones', ...knowledge.runeStones }] : []),
-      ...(hasDiscoveredBinders() ? [{ id: 'binders', ...knowledge.binders }] : []),
-      ...(hasInstalledRune() ? [{ id: 'sector', ...knowledge.sector }] : [])
+      ...(hasReadBinders() ? [{ id: 'binders', ...knowledge.binders }] : []),
+      ...(hasLearnedResonator()
+        ? [
+            { id: 'resonator', ...knowledge.resonator },
+            ...(isMetalInstalled() ? [{ id: 'metalSector', ...knowledge.metalSector }] : []),
+            ...(hasLearnedFullResonator() && isWaterInstalled()
+              ? [{ id: 'waterSector', ...knowledge.waterSector }] : [])
+          ]
+        : hasInstalledRune() ? [{ id: 'sector', ...knowledge.sector }] : [])
     ];
   }
 
-  const getCurrentTask = () => getCurrentObjective();
+  const getCurrentTask = () => {
+    const current = getCurrentObjective();
+    const content = resolveVrPlayerGuideContent(locale);
+    const secondaryTasks = [];
+    const secondaryIds = [];
+    if (isAstrolabiumOwned() && !isAsterionOwned()) {
+      secondaryTasks.push(content.asterionBuildTask);
+      secondaryIds.push('asterion-build');
+    }
+    const finalWaterGuidanceLevel = getFinalWaterGuidanceLevel();
+    if (finalWaterGuidanceLevel === 'BALANCE') { secondaryTasks.push(content.finalWaterBalanceTask); secondaryIds.push('final-water-balance'); }
+    if (finalWaterGuidanceLevel === 'SOLUTION') { secondaryTasks.push(content.finalWaterSolutionTask); secondaryIds.push('final-water-solution'); }
+    if (!secondaryTasks.length) return current;
+    const bodies = [...(current ? [current.body] : []), ...secondaryTasks];
+    return Object.freeze({ id: `${current?.id ?? 'current-task'}+${secondaryIds.join('+')}`,
+      body: bodies.join('\n\n') });
+  };
 
   function getTools() {
-    if (locale !== 'pl') return [];
     const content = resolveVrPlayerGuideContent(locale);
-    return TOOLS.filter(({ id, capability }) => id === 'furnace'
+    return TOOLS.filter(({ id }) => id === 'furnace'
       ? isFurnaceRevealed()
-      : id === 'astro' ? isAstrolabiumOwned() : can(capability))
+      : id === 'astro' ? isAstrolabiumOwned() : isAsterionOwned())
       .map(({ id }) => ({
         id,
         label: content.tools[id].label,
@@ -54,7 +76,7 @@ export function createVrPlayerGuideProjection({ locale, can, getCurrentObjective
   function getVisibleControlIds() {
     const ids = ['trigger', 'grab', 'rotate', 'move', 'Y'];
     if (isAstrolabiumOwned()) ids.push('A');
-    if (can(VR_SCENARIO_CAPABILITY.CAN_EQUIP_ASTERION)) ids.push('X');
+    if (isAsterionOwned()) ids.push('X');
     if (isAstrolabiumOwned()) ids.push('B');
     return ids;
   }

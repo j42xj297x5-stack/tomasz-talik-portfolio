@@ -1,6 +1,8 @@
 # Experience VR — Communication Mechanics
 
-Status: **CURRENT runtime baseline**, synchronized on 2026-09-11. Literal Polish text is owned by [`EXPERIENCE_VR_PLAYER_COMMUNICATION_COPY.md`](EXPERIENCE_VR_PLAYER_COMMUNICATION_COPY.md).
+Status: **CURRENT runtime baseline**, synchronized on 2026-09-17. Literal Polish text is owned by [`EXPERIENCE_VR_PLAYER_COMMUNICATION_COPY.md`](EXPERIENCE_VR_PLAYER_COMMUNICATION_COPY.md).
+
+> The complete final-Water Guidance lifecycle is **IMPLEMENTED** in [`EXPERIENCE_VR_FINAL_WATER_RESONATOR_CULMINATION.md`](EXPERIENCE_VR_FINAL_WATER_RESONATOR_CULMINATION.md). Its preserved gameplay foundation remains implemented: point `5.15` presents the Water objective, acquisition truth emits the controlled ceiling cycle, Scenario enters `5.20` only after semantic rejection, and the revised 11-block Ether communication retains mandatory attention and its existing completion boundary.
 
 This document describes the implemented communication model. `ATTENTION_REQUIRED`, `AUTO_HINT`, `SPEAKING` and `IDLE` are semantic classifications used by the documentation; runtime actors may expose more detailed phases.
 
@@ -64,8 +66,8 @@ Exactly seven keys currently have the semantic `AUTO_HINT` behavior. Unrelated h
 | Early Experience: Reliquary reveal completed and first-crystal flow remains unadvanced | `first-crystal-reliquary` | `hint.reliquary.firstCrystal` | existing `60 s` → sound-only cue → `1.0 s` → automatic playback | successful playback publishes the fallback; `inserted`, `active`, `released` or `consuming` withdraw it |
 | Reliquary context: crystal remains `inserted` | `reliquary-context` | `hint.reliquary.inserted` | `15 s` phase timeout → `RELIQUARY_HINT_TIMEOUT` → `SHOW_RELIQUARY_CONTEXT_HINT` → sound-only cue → `1.0 s` → automatic playback | leaving `inserted` withdraws the stale stage |
 | Reliquary context: crystal remains `active` | `reliquary-context` | `hint.reliquary.active` | a new phase-local `15 s` timer from zero, then the same Scenario route, cue, `1.0 s` and playback | successful active replaces unread inserted; leaving `active` withdraws the slot |
-| Rune transport has an unresolved branch without Binder | `rune-no-binder` | `hint.rune.noBinder.soft` | `5 s` unresolved → sound-only cue → `1.0 s` → automatic playback | successful playback publishes soft and starts the next unresolved stage |
-| Same Rune condition remains unresolved | `rune-no-binder` | `hint.rune.noBinder.medium` | another `5 s` unresolved → sound-only cue → `1.0 s` → automatic playback | successful medium replaces unread soft; falsy `getUnresolvedRuneBranchId()` resets communication/timers and withdraws the slot |
+| Carried Rune reveals an unresolved branch without Binder and latches that bounded Guidance issue | `rune-no-binder` | `hint.rune.noBinder.soft` | `5 s` unresolved → sound-only cue → `1.0 s` → automatic playback | successful playback publishes soft and starts the next unresolved stage; releasing the Astrolabe does not clear the latch |
+| Same latched Rune branch remains without installation readiness | `rune-no-binder` | `hint.rune.noBinder.medium` | another `5 s` unresolved → sound-only cue → `1.0 s` → automatic playback | successful medium replaces unread soft; installation readiness for the latched branch resets communication/timers and withdraws the slot |
 
 The four bounded slots are therefore `first-crystal-pickup`, `first-crystal-reliquary`, `reliquary-context` and `rune-no-binder`.
 
@@ -105,18 +107,40 @@ Canonical Monkey/session reset clears every transient slot. There is no durable 
 
 ## Ordinary objective and discovered-world knowledge
 
-`createVrCurrentObjectiveProjection` remains the stateless read-only CURRENT OBJECTIVE owner. Player Y shows it under `AKTUALNE ZADANIE`; ordinary Monkey normally projects it through `CO TERAZ?`. At `4.80`, while Resonator does not exist, Monkey instead preserves the authored first-stone lead / `KAMIENIE` discovery flow. At `5.10` there is no objective. Transient fallbacks do not replace these semantics.
+`createVrCurrentObjectiveProjection` remains the stateless read-only CURRENT OBJECTIVE owner. Player Y shows it under `AKTUALNE ZADANIE`; ordinary Monkey normally projects it through `CO TERAZ?`. After physical Astrolabe ownership and until physical Asterion ownership, both surfaces additionally compose the practical Shell → Furnace → Asterion build path without replacing the ordinary objective. In Monkey ordering it follows transient corrective fallbacks and precedes the ordinary objective or special stone guidance. Player Y composes it as a secondary current task. Both projections read the production controllers directly and remove the path when `asterionProductionController.isEarned()` becomes true. At `4.80`, while Resonator does not exist, Monkey retains practical `KAMIENIE / STONES` guidance alongside that build path as persistent reference after the authored post-Third-Ring teaching. At `5.10` there is no ordinary objective. At `5.15`, the authored objective is `NAMIERZ GLIF WODY` / `ACQUIRE THE WATER GLYPH`; it invites a sincere attempt and does not disclose the controlled failure. Transient fallbacks do not replace these semantics.
 
-After first live Binder `HIDDEN → DOCKED`, ordinary Monkey additionally exposes `CO TO JEST? → ZWORNIKI`. Player Y `WIEDZA` remains a separate read-only projection of discovered-world knowledge and is not populated by transient fallback hints.
+After Third Ring completion and the existing five-second delay, Monkey delivers glyph loss, the horizon/stone lead and practical Rune Stone direction as one attention-required authored progression speech with no second attention gate. Only successful completion marks the lead and practical stone guidance taught/read. Ordinary `CO TERAZ?` then retains `KAMIENIE / STONES` as persistent practical reference, while Player Y may project `KAMIENIE RUNICZNE / RUNE STONES` from that same communication-memory discovery state. Scheduling, attention or partial playback do not establish this knowledge.
+
+Physical Astrolabe ownership exposes persistent `CO TO JEST? → KULA ASTERIONOWA` as `NEW`; only deliberate full playback marks it `READ`, and it remains available afterward. After the first live Binder `ARRIVING → DOCKED`, Monkey exposes `CO TO JEST? → ZWORNIKI` as `NEW`, while Player Y does not yet expose that knowledge. Only successful completion of the deliberate full topic playback marks the bounded session-local Keystone knowledge read/taught, archives it from Monkey, and makes Player Y `WIEDZA → ZWORNIKI` permanently available for the remainder of the session. Selection, playback start and interrupted playback do not complete the handoff. Canonical Monkey/session reset clears both Binder discovery and read memory. Player Y `WIEDZA` remains a separate read-only projection and is not populated by physical Binder discovery alone or by transient fallback hints: Monkey is the first teacher, and Player Y is persistent memory.
+
+The first physical Resonator appearance continues to trigger the existing delayed, attention-required `progression.p3.resonator` communication. Only successful full playback records the bounded session-local communication-memory fact `resonator taught`; scheduling, attention, Monkey press, playback start, and partial playback do not. That fact upgrades Player Y's generic `SEKTOR / SECTOR` entry to the persistent `REZONATOR ASTERIONOWY / ASTERION RESONATOR` entry without showing both. Canonical Monkey/session reset clears the fact. This is communication memory, not Resonator gameplay truth.
+
+The practical reference reflects the target-acquisition gate: `EARTH > 0 AND WOOD > 0 AND FIRE > 0` makes target acquisition available. If any core channel remains at `0`, the Resonator performs no target acquisition. EARTH controls the left field profile, WOOD the right field profile, and FIRE field depth.
+
+After the Resonator has been taught and the physical Metal Rune (`T`) is installed, Player Y additionally exposes `WIEDZA → SEKTOR METALU / METAL SECTOR` immediately after the Resonator entry. Both conditions are required: installation alone does not move Metal ahead of its Resonator context, while taught Resonator knowledge alone does not claim an unavailable extension. This presentation gate reads authoritative physical Rune installation truth directly and does not use Scenario points, milestones, objectives, control levels or visibility. The existing projection-signature refresh makes the row appear while Player Y is already open.
+
+Metal supplements rather than replaces the EARTH/WOOD/FIRE core. Wrist twist extends the existing field's LATERAL reach, hand tilt extends its FORWARD/depth reach, and the two axes act independently. Level `0` contributes no Metal extension; higher active levels provide progressively greater extension. Metal does not activate the Resonator by itself and does not remove the requirement that all three core Sectors remain above `0`.
+
+Installation of all five elemental Runes leads to the existing `progression.p4.fullResonator` Monkey first-teacher communication. Only successful full playback records the bounded session-local communication-memory fact `full Resonator taught`; installation, scheduling, attention, playback start and partial playback do not. Canonical Monkey/session reset clears the fact. This is communication memory, not Resonator gameplay truth.
+
+After that full-Resonator teaching has completed and the physical Water Rune (`S`) is installed, Player Y exposes `WIEDZA → SEKTOR WODY / WATER SECTOR` after `SEKTOR METALU / METAL SECTOR`. Both conditions are required and the installation gate reads authoritative Rune installation truth directly. Water installation without completed teaching exposes no entry, and taught memory without physical Water exposes no entry. The existing projection-signature refresh makes the row appear while Player Y is already open.
+
+Water contributes two independent presentation/frequency controls. Wrist twist selects green, blue or violet frequency hue, with level `0` neutral; hand tilt independently increases field brightness and halo from the level-`0` baseline. Hue is not a power ladder. Water does not change field geometry, reach or containment and does not currently select or filter a Glyph family.
 
 ## Automatic communication that is not AUTO_HINT
 
 Automatic authored progression reactions may play without attention but do not become corrective `AUTO_HINT` or publish a transient fallback merely because playback is automatic. Current examples include `progression.threshold.crossed`, `progression.crystal.firstCreated`, `progression.card.first` and `progression.p3.firstSectorLock`.
 
-Current acquisition teaching also remains distinct: it waits after physical claim, uses full attention and a Monkey press, plays once, then returns to idle.
+Astrolabe acquisition teaching remains distinct: after physical claim it keeps the existing five-second delay, full attention and Monkey press. Its unchanged control-teaching blocks are followed, within the same uninterrupted playback and without another attention gate, by the poetic Asterion Sphere introduction. The practical build path is not spoken in this progression beat; it lives in `CO TERAZ?` and Player Y `AKTUALNE ZADANIE`.
+
+Player Y tool cards represent physical ownership rather than equipment permission. The Asterion Sphere card and its `X` controller reference therefore appear only when `asterionProductionController.isEarned()` is true; Furnace and Astrolabe presentation remains unchanged.
 
 The following current click-required / attention guidance was **not** migrated and retains its current behavior: `hint.glyphs.how.soft`, `hint.glyphs.how.strong`, `hint.protoAstro.tuning`, `hint.furnace.astroStart` and `hint.furnace.astroAvailable`.
 
 ## Copy representation
 
 Runtime Monkey copy is authored as `blocks[]`: one element is one bubble; `\n` inside an element is a mandatory line break in that bubble. Documentation must neither merge nor split blocks and uses `--- BLOCK ---` only between elements.
+
+## Final Water delayed guidance — IMPLEMENTED
+
+The implemented final puzzle Guidance lifecycle owns a single unresolved-time ladder at `3 / 6 / 9` minutes, beginning only after physical Water installation and successful full-Resonator first-teacher completion. Mandatory Monkey communication defers due hints. Ordinary Sector changes, target contact, one/two rings and lost containment do not reset it; balanced synchronization resolves it. Hint 2 publishes persistent `CO TERAZ?` and Player Y reminders only after successful teaching. Hint 3 first asks consent: declining stops automatic escalation but publishes an optional answer topic; accepting (then or later) publishes the exact answer persistently. Presentation pulse is never used as solve truth. Exact approved PL blocks and ownership are canonical in the final-Water freeze.
