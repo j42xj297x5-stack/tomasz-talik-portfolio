@@ -2,6 +2,8 @@ import { resolvePortfolioNodes } from './content/resolvePortfolioNodes.js';
 import { publicPath } from './utils/publicPath.js';
 import { getGateAccentColor, getPanelThemeForGate } from './ui/panelThemes.js';
 import { getInterfaceCopy } from './i18n/interfaceCopy.js';
+import { resolveOrangeMonkeyVr } from './content/resolveOrangeMonkeyVr.js';
+import { getConfiguredYouTubeVideo, loadYouTubeIframe, releaseYouTubeIframe } from './ui/youtubeVideo.js';
 
 const CLASSIC_COPY = {
   pl: {
@@ -101,6 +103,38 @@ function renderDemoMarkup(node, interfaceCopy) {
   `;
 }
 
+function renderVideoMarkup(node, interfaceCopy) {
+  const video = getConfiguredYouTubeVideo(node.video);
+  if (!video) return '';
+  const posterStyle = video.posterPath
+    ? ` style="background-image:url('${escapeHtml(publicPath(video.posterPath))}')"`
+    : '';
+  return `
+    <section class="classic-2d-panel__video">
+      <h3>${escapeHtml(interfaceCopy.videoTitle)}</h3>
+      <div class="classic-2d-panel__video-player" data-classic-youtube-player${posterStyle}>
+        <button class="classic-2d-panel__video-play" type="button" data-classic-youtube-play aria-label="${escapeHtml(interfaceCopy.playVideoAria)}: ${escapeHtml(node.title)}">${escapeHtml(interfaceCopy.playVideo)}</button>
+      </div>
+      <a class="classic-2d-panel__video-link" href="${escapeHtml(video.watchUrl)}" target="_blank" rel="noopener noreferrer" aria-label="${escapeHtml(interfaceCopy.openOnYouTube)} — ${escapeHtml(interfaceCopy.opensInNewTab)}">${escapeHtml(interfaceCopy.openOnYouTube)}</a>
+    </section>
+  `;
+}
+
+function renderProjectLinksMarkup(projectLinks, interfaceCopy) {
+  if (!Array.isArray(projectLinks)) return '';
+  const links = projectLinks.flatMap((link) => {
+    if (!link || typeof link.label !== 'string' || typeof link.url !== 'string') return [];
+    try {
+      const url = new URL(link.url);
+      if (!['http:', 'https:'].includes(url.protocol)) return [];
+    } catch {
+      return [];
+    }
+    return `<a class="classic-2d-panel__project-link" href="${escapeHtml(link.url)}" target="_blank" rel="noopener noreferrer" aria-label="${escapeHtml(link.label)} — ${escapeHtml(interfaceCopy.opensInNewTab)}">${escapeHtml(link.label)}</a>`;
+  });
+  return links.length ? `<nav class="classic-2d-panel__project-links" aria-label="${escapeHtml(interfaceCopy.projectLinksLabel)}">${links.join('')}</nav>` : '';
+}
+
 function renderCaseBlockMarkup(title, value) {
   const hasContent = Array.isArray(value)
     ? value.some((item) => String(item ?? '').trim())
@@ -194,6 +228,7 @@ function renderPanel(panel, node, copy, interfaceCopy) {
   const bodyParagraphs = createParagraphs(getNodeText(node));
   const demoMarkup = renderDemoMarkup(node, interfaceCopy);
   const caseStudyMarkup = renderCaseStudyMarkup(node.caseStudy, interfaceCopy);
+  const videoMarkup = renderVideoMarkup(node, interfaceCopy);
   const subtitle = getNodeSubtitle(node);
 
   panel.dataset.panelTheme = getPanelThemeForGate(node.id);
@@ -204,6 +239,7 @@ function renderPanel(panel, node, copy, interfaceCopy) {
       <h2 class="classic-2d-panel__title" id="classic-2d-panel-title">${escapeHtml(node.title)}</h2>
       ${subtitle ? `<p class="classic-2d-panel__label">${escapeHtml(subtitle)}</p>` : ''}
       ${lead ? `<p class="classic-2d-panel__lead">${escapeHtml(lead)}</p>` : ''}
+      ${videoMarkup}
       ${demoMarkup}
       <div class="classic-2d-panel__body">
         ${bodyParagraphs.map((paragraph) => `<p>${escapeHtml(paragraph)}</p>`).join('')}
@@ -215,6 +251,7 @@ function renderPanel(panel, node, copy, interfaceCopy) {
           ${node.featureText ? `<span>${escapeHtml(node.featureText)}</span>` : ''}
         </p>
       ` : ''}
+      ${renderProjectLinksMarkup(node.projectLinks, interfaceCopy)}
       ${caseStudyMarkup}
         <button class="classic-2d-panel__close" type="button" data-classic-panel-close aria-label="${escapeHtml(interfaceCopy.closePanelAria)}">${escapeHtml(interfaceCopy.closePanel)}</button>
       </div>
@@ -242,8 +279,10 @@ export function startClassic2D({ container, language = 'en', onBackToModes }) {
   const copy = resolveCopy(language);
   const interfaceCopy = getInterfaceCopy(language);
   const localizedPortfolioNodes = resolvePortfolioNodes(language);
+  const orangeMonkeyVr = resolveOrangeMonkeyVr(language);
   const titleLines = copy.title.split(', ');
   let activeGateId = null;
+  let activePanelContent = null;
   let lastFocusedGate = null;
 
   container.innerHTML = `
@@ -376,6 +415,7 @@ export function startClassic2D({ container, language = 'en', onBackToModes }) {
         gate.setAttribute('aria-pressed', String(isActive));
       });
       monkey.classList.add('classic-2d__monkey--active');
+      activePanelContent = node;
       renderPanel(panel, node, copy, interfaceCopy);
     });
 
@@ -384,12 +424,14 @@ export function startClassic2D({ container, language = 'en', onBackToModes }) {
 
   const closePanel = ({ restoreFocus = true } = {}) => {
     if (panel.hidden) return;
+    releaseYouTubeIframe(panel.querySelector('[data-classic-youtube-player]'));
     panel.hidden = true;
     panel.innerHTML = '';
     panel.removeAttribute('data-panel-theme');
     panel.removeAttribute('data-gate-id');
     document.body.classList.remove('classic-2d-panel-open', 'demo-lightbox-open');
     activeGateId = null;
+    activePanelContent = null;
     monkey.classList.remove('classic-2d__monkey--active');
     orbit.querySelectorAll('.classic-2d-gate').forEach((gate) => {
       gate.classList.remove('classic-2d-gate--active');
@@ -409,6 +451,13 @@ export function startClassic2D({ container, language = 'en', onBackToModes }) {
   });
 
   panel.addEventListener('click', (event) => {
+    const playVideoButton = event.target.closest('[data-classic-youtube-play]');
+    if (playVideoButton) {
+      const player = panel.querySelector('[data-classic-youtube-player]');
+      loadYouTubeIframe(player, activePanelContent?.video, `${activePanelContent?.title ?? ''} — ${interfaceCopy.videoTitle}`);
+      return;
+    }
+
     const closeDemoButton = event.target.closest('[data-classic-demo-close]');
     if (closeDemoButton) {
       closeClassicDemoLightbox(panel);
@@ -501,7 +550,15 @@ export function startClassic2D({ container, language = 'en', onBackToModes }) {
   window.addEventListener('keydown', handleKeydown);
 
   return {
+    openProject(projectId) {
+      if (projectId !== orangeMonkeyVr.id) return false;
+      lastFocusedGate = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+      activePanelContent = orangeMonkeyVr;
+      renderPanel(panel, orangeMonkeyVr, copy, interfaceCopy);
+      return true;
+    },
     destroy() {
+      releaseYouTubeIframe(panel.querySelector('[data-classic-youtube-player]'));
       stageResizeObserver?.disconnect();
       window.removeEventListener('keydown', handleKeydown);
       document.body.classList.remove('classic-2d-panel-open', 'demo-lightbox-open');

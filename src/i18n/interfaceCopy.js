@@ -23,7 +23,11 @@ const INTERFACE_COPY = {
     result: 'Rezultat',
     nextSteps: 'Następne kroki',
     screenshotGallery: 'Galeria screenshotów',
-    enlargeScreenshot: 'Powiększ screenshot'
+    enlargeScreenshot: 'Powiększ screenshot',
+    videoTitle: 'Materiał wideo',
+    playVideo: 'Odtwórz wideo',
+    playVideoAria: 'Odtwórz materiał wideo z YouTube',
+    openOnYouTube: 'Otwórz w YouTube'
   },
   en: {
     experienceIntro: [
@@ -49,7 +53,11 @@ const INTERFACE_COPY = {
     result: 'Result',
     nextSteps: 'Next steps',
     screenshotGallery: 'Screenshot gallery',
-    enlargeScreenshot: 'Enlarge screenshot'
+    enlargeScreenshot: 'Enlarge screenshot',
+    videoTitle: 'Video',
+    playVideo: 'Play video',
+    playVideoAria: 'Play the video from YouTube',
+    openOnYouTube: 'Open on YouTube'
   }
 };
 
