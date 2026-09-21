@@ -5,11 +5,13 @@ import { createFogRevealController } from './scene/fogRevealController.js';
 import { addLights } from './scene/lights.js';
 import { createCentralObject } from './scene/centralObject.js';
 import { createBackgroundAtmosphere } from './scene/atmosphere.js';
-import { loadMonkeyModel } from './scene/monkeyModel.js';
+import { loadMonkeyModel, VR_MONKEY_INTERACTION_LAYER } from './scene/monkeyModel.js';
 import { createOrbitNodes, fadeNodeTransitionLight, resetNodeTransitionLight, setNodeHoverState, startNodeTransitionLight, triggerNodeHoverAnimation, updateOrbitNodes } from './scene/orbitNodes.js';
-import { pickNode } from './scene/raycaster.js';
+import { pickInteractionRoot, pickNode } from './scene/raycaster.js';
 import { createCameraRig } from './scene/cameraRig.js';
 import { createPlaqueTransition } from './scene/plaqueTransition.js';
+import { createOrangeMonkeyPortalTransition } from './scene/orangeMonkeyPortalTransition.js';
+import { resolveOrangeMonkeyVr } from './content/resolveOrangeMonkeyVr.js';
 import { createOverlay } from './ui/overlay.js';
 import { createHoverLabel } from './ui/hoverLabel.js';
 import { createOptionsPanel } from './ui/optionsPanel.js';
@@ -127,6 +129,8 @@ monkeyActor.dockStoneToCharacter();
 const { group: orbitGroup, nodes, orbit } = createOrbitNodes(portfolioNodes, { assetManager });
 scene.add(orbitGroup);
 const plaqueTransition = createPlaqueTransition({ scene, assetManager });
+const orangeMonkeyPortal = createOrangeMonkeyPortalTransition({ scene, assetManager });
+const orangeMonkeyRecord = resolveOrangeMonkeyVr(document.documentElement.lang);
 const atmosphereProgression = createAtmosphereProgression({ gateIds: portfolioNodes.map((node) => node.id) });
 let lastAudioProgressLevel = atmosphereProgression.state.progressLevel;
 atmosphereProgression.onStateChange(() => {
@@ -168,6 +172,10 @@ runtimeDiagnostics.census('sceneAttach');
 const overlay = createOverlay({
   language: document.documentElement.lang,
   onClose: () => {
+    if (activeOrangeMonkeyPanel) {
+      void closeOrangeMonkeyPanel();
+      return;
+    }
     if (activePanelNode?.userData?.plaqueTransitionReady) {
       void audioManager.playGlyphPanel(activePanelNode.userData?.id, 'close');
     }
@@ -219,6 +227,9 @@ const optionsPanel = createOptionsPanel({
 
 let hoveredNode = null;
 let activePanelNode = null;
+let activeOrangeMonkeyPanel = false;
+let orangeMonkeyPortalShown = false;
+let monkeyHovered = false;
 let hoverExitTimer = null;
 const HOVER_RAYCAST_GRACE_MS = 100;
 
@@ -274,6 +285,11 @@ function syncHoverState(nextHoveredNode, event = null, { immediateExit = false }
   document.body.style.cursor = hoveredNode ? 'pointer' : 'default';
 }
 
+function syncMonkeyHover(hovered) {
+  monkeyHovered = Boolean(hovered);
+  document.body.style.cursor = monkeyHovered ? 'pointer' : hoveredNode ? 'pointer' : 'default';
+}
+
 const cameraRig = createCameraRig(canvas);
 const TAP_MOVE_THRESHOLD_PX = 10;
 const MAX_TAP_DURATION_MS = 500;
@@ -303,7 +319,81 @@ function clearInteractiveHover() {
   if (hoverExitTimer) window.clearTimeout(hoverExitTimer);
   hoverExitTimer = null;
   syncHoverState(null, null, { immediateExit: true });
+  syncMonkeyHover(false);
   document.body.style.cursor = 'default';
+}
+
+function pickMonkey(event) {
+  const usesProxy = monkeyActor.interactionRoot !== monkeyActor.characterRoot;
+  return pickInteractionRoot(event, canvas, camera, monkeyActor.interactionRoot, usesProxy ? VR_MONKEY_INTERACTION_LAYER : 0);
+}
+
+async function openOrangeMonkeyPanel() {
+  if (interactionState !== 'idle') return;
+  try {
+    interactionState = 'monkeyFocusing';
+    clearInteractiveHover();
+    releaseActivePointer();
+    orbit.pauseOrbit();
+    cameraRig.pauseMouseControl();
+    cameraRig.setInteractionLocked(true);
+    void audioManager.playOrangeMonkeyTransition('entry');
+    await cameraRig.focusOnNode(camera, monkeyActor.motionRoot);
+    if (interactionState !== 'monkeyFocusing') return;
+    interactionState = 'monkeyPortalReveal';
+    const portal = await orangeMonkeyPortal.reveal(monkeyActor.motionRoot, camera);
+    orangeMonkeyPortalShown = Boolean(portal);
+    if (portal) {
+      interactionState = 'monkeyPortalHold';
+      await new Promise((resolve) => window.setTimeout(resolve, window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 80 : 350));
+      if (interactionState !== 'monkeyPortalHold') return;
+      interactionState = 'monkeyDollyIn';
+      await cameraRig.dollyToPlaque(camera, portal, { cover: 0.92 });
+    }
+    activeOrangeMonkeyPanel = true;
+    overlay.open(orangeMonkeyRecord);
+    interactionState = 'monkeyPanelOpen';
+  } catch (error) {
+    console.warn('[interaction] Failed to open Orange Monkey VR presentation.', error);
+    orangeMonkeyPortal.reset();
+    orangeMonkeyPortalShown = false;
+    activeOrangeMonkeyPanel = false;
+    cameraRig.resetHomePose(camera);
+    cameraRig.setInteractionLocked(false);
+    orbit.resumeOrbit();
+    cameraRig.resumeMouseControl(lastFinePointerPosition);
+    interactionState = 'idle';
+  }
+}
+
+async function closeOrangeMonkeyPanel() {
+  if (interactionState !== 'monkeyPanelOpen' || !activeOrangeMonkeyPanel) return;
+  activeOrangeMonkeyPanel = false;
+  interactionState = 'monkeyClosing';
+  void audioManager.playOrangeMonkeyTransition('exit');
+  clearInteractiveHover();
+  try {
+    if (orangeMonkeyPortalShown) {
+      await cameraRig.dollyOut(camera);
+      await orangeMonkeyPortal.hide();
+    }
+    orangeMonkeyPortalShown = false;
+    interactionState = 'monkeyReturning';
+    await cameraRig.returnHome(camera);
+    orbit.resumeOrbit();
+    cameraRig.setInteractionLocked(false);
+    cameraRig.resumeMouseControl(lastFinePointerPosition);
+    interactionState = 'idle';
+  } catch (error) {
+    console.warn('[interaction] Failed to restore scene after Orange Monkey VR panel.', error);
+    orangeMonkeyPortal.reset();
+    orangeMonkeyPortalShown = false;
+    cameraRig.resetHomePose(camera);
+    cameraRig.setInteractionLocked(false);
+    orbit.resumeOrbit();
+    cameraRig.resumeMouseControl(lastFinePointerPosition);
+    interactionState = 'idle';
+  }
 }
 
 function releaseActivePointer() {
@@ -469,8 +559,9 @@ function handlePointerMove(event) {
   }
 
   if (event.pointerType === 'mouse' && fineHoverQuery.matches && !activePointer?.dragged) {
-    const hit = pickNode(event, canvas, camera, nodes);
-    syncHoverState(hit, event);
+    const monkeyHit = pickMonkey(event);
+    syncHoverState(monkeyHit ? null : pickNode(event, canvas, camera, nodes), event);
+    syncMonkeyHover(monkeyHit);
   }
 }
 
@@ -492,7 +583,8 @@ function finishPointer(event, { cancelled = false } = {}) {
 
   if (isTap) {
     debugInteraction('tap detected', { pointerType: activePointer.pointerType, distance, duration });
-    openNodePanel(pickNode(event, canvas, camera, nodes));
+    if (pickMonkey(event)) void openOrangeMonkeyPanel();
+    else openNodePanel(pickNode(event, canvas, camera, nodes));
   } else {
     debugInteraction(cancelled ? 'pointer cancelled' : 'drag detected', {
       pointerType: activePointer.pointerType,
@@ -525,12 +617,20 @@ canvas.addEventListener('pointercancel', (event) => finishPointer(event, { cance
 
 window.addEventListener('pointerleave', () => {
   cameraRig.onPointerLeave();
-  if (interactionState === 'idle') syncHoverState(null, null, { immediateExit: true });
+  if (interactionState === 'idle') {
+    syncHoverState(null, null, { immediateExit: true });
+    syncMonkeyHover(false);
+  }
 });
 
 canvas.addEventListener('pointerleave', () => {
-  if (interactionState === 'idle') syncHoverState(null, null, { immediateExit: true });
+  if (interactionState === 'idle') {
+    syncHoverState(null, null, { immediateExit: true });
+    syncMonkeyHover(false);
+  }
 });
+
+window.addEventListener('pagehide', () => orangeMonkeyPortal.dispose(), { once: true });
 
 window.addEventListener('pointermove', rememberFinePointerPosition);
 window.addEventListener('pointerdown', rememberFinePointerPosition);
@@ -599,6 +699,7 @@ function tick(timestamp) {
   const orbitPhase = orbit.update(delta);
   updateOrbitNodes(nodes, elapsed, orbitGroup.getWorldPosition(orbitCenterWorldPosition), orbitPhase);
   plaqueTransition.update();
+  orangeMonkeyPortal.update();
   cameraRig.update(camera, elapsed);
   atmosphereProgression.updateAtmosphereProgression(delta);
   const progressionMultipliers = atmosphereProgression.getProgressionMultipliers();
