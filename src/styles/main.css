@@ -2341,6 +2341,72 @@ body {
   --panel-muted: #c9acd4;
   --panel-link: #ff8fd8;
   --panel-frame: #8d5a9d;
+  --ornament-max-height: 0px;
+  --ornament-content-gap: clamp(12px, 2vh, 24px);
+}
+
+.overlay__panel[data-panel-theme="ether"] .overlay__content {
+  bottom: calc(max(12px, env(safe-area-inset-bottom)) + 64px);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.overlay__panel[data-panel-theme="ether"] .overlay__title {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: clamp(0.25rem, 0.8vw, 0.65rem);
+  white-space: nowrap;
+  font-family: system-ui, sans-serif;
+  font-size: clamp(1rem, 3.4vw, 2rem);
+  font-weight: 800;
+  letter-spacing: 0.025em;
+  line-height: 1;
+}
+
+.overlay__panel[data-panel-theme="ether"] .overlay__brand-logo {
+  align-self: center;
+  width: 1em;
+  height: 1em;
+  object-fit: contain;
+  border-radius: 50%;
+}
+
+.overlay__panel[data-panel-theme="ether"] .overlay__brand-name { color: #fff; }
+.overlay__panel[data-panel-theme="ether"] .overlay__brand-vr { color: #f28c18; }
+
+.overlay__panel[data-panel-theme="ether"] .overlay__actions {
+  flex: 0 0 auto;
+  padding-top: clamp(12px, 2vh, 20px);
+  margin-top: 0;
+}
+
+.overlay__panel[data-panel-theme="ether"] .overlay__actions > :is(.overlay__case-toggle, .overlay__close) {
+  min-height: 44px;
+  padding: 0.68rem 1.1rem;
+  border: 1px solid color-mix(in srgb, var(--panel-link) 68%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--panel-frame) 24%, #100b1c);
+  color: var(--panel-text);
+  font-family: inherit;
+  font-size: 0.88rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  box-shadow: 0 0 16px color-mix(in srgb, var(--panel-link) 14%, transparent);
+  cursor: pointer;
+}
+
+.overlay__panel[data-panel-theme="ether"] .overlay__actions > :is(.overlay__case-toggle, .overlay__close):is(:hover, :focus-visible) {
+  border-color: #f28c18;
+  background: color-mix(in srgb, #f28c18 24%, #100b1c);
+  color: #fff;
+}
+
+.overlay__panel[data-panel-theme="ether"] .overlay__actions > :is(.overlay__case-toggle, .overlay__close):focus-visible {
+  outline: 3px solid color-mix(in srgb, #f28c18 72%, transparent);
+  outline-offset: 3px;
 }
 
 .overlay__video,
@@ -2610,6 +2676,9 @@ body {
     padding: 0;
     overflow-x: hidden;
   }
+  .overlay__panel[data-panel-theme="ether"] .overlay__content {
+    bottom: calc(max(8px, env(safe-area-inset-bottom)) + 62px);
+  }
   .overlay__panel[data-panel-theme] .overlay__scroll { width: 100%; padding-right: 0.25rem; overflow-x: hidden; }
   .overlay__panel[data-panel-theme] :is(.overlay__lead, .overlay__text, .overlay__closing, .overlay__feature-text, .overlay__case-study, .overlay__case-study p) {
     margin-inline: 0;
@@ -2623,6 +2692,10 @@ body {
   .overlay__panel[data-panel-theme] .overlay__content {
     top: clamp(72px, 14vh, 82px);
     bottom: 22px;
+  }
+  .overlay__panel[data-panel-theme="ether"] .overlay__content {
+    top: 12px;
+    bottom: calc(max(8px, env(safe-area-inset-bottom)) + 62px);
   }
   .overlay__panel[data-panel-theme] .overlay__ornament:not([hidden]) { max-height: 64px; }
 }
