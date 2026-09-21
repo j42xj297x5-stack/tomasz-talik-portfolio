@@ -28,11 +28,16 @@ function loadImage(path) {
 function getSurfaceCanvasSize(surface) {
   surface.geometry.computeBoundingBox();
   const size = surface.geometry.boundingBox?.getSize(new THREE.Vector3());
-  if (!size || size.x <= 0 || size.y <= 0) return { width: 1024, height: 640 };
+  if (!size) return { width: 1024, height: 640 };
   surface.updateWorldMatrix(true, false);
   const scale = surface.getWorldScale(new THREE.Vector3());
-  const width = Math.abs(size.x * scale.x);
-  const height = Math.abs(size.y * scale.y);
+  const dimensions = [
+    Math.abs(size.x * scale.x),
+    Math.abs(size.y * scale.y),
+    Math.abs(size.z * scale.z)
+  ].filter((dimension) => dimension > Number.EPSILON);
+  if (dimensions.length < 2) return { width: 1024, height: 640 };
+  const [width, height] = dimensions;
   const fit = PORTAL_MAX_TEXTURE_SIZE / Math.max(width, height);
   return {
     width: Math.max(1, Math.round(width * fit)),
