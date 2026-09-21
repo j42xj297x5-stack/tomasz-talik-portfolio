@@ -51,9 +51,11 @@ const PHASE = Object.freeze({ IDLE: 'IDLE', CREDITS: 'CREDITS', BRAND: 'BRAND', 
 const clamp01 = (value) => Math.max(0, Math.min(1, value));
 
 export function createVrEndCreditsPresentation({
-  worldRoot, getViewingPose, onCreditsCompleted, onBrandCompleted, locale = 'pl'
+  worldRoot, playerFrame, principalAxis, getViewingPose, onCreditsCompleted, onBrandCompleted, locale = 'pl'
 }) {
-  if (!worldRoot?.add || typeof getViewingPose !== 'function'
+  const principalLength = Math.hypot(principalAxis?.x, principalAxis?.z);
+  if (!worldRoot?.add || !playerFrame?.getWorldQuaternion || !Number.isFinite(principalLength) || principalLength <= 1e-8
+    || typeof getViewingPose !== 'function'
     || typeof onCreditsCompleted !== 'function' || typeof onBrandCompleted !== 'function') {
     throw new TypeError('[VrEndCreditsPresentation] Required presentation seams are unavailable.');
   }
@@ -89,19 +91,37 @@ export function createVrEndCreditsPresentation({
   let anchored = false;
   const viewPosition = new THREE.Vector3();
   const viewQuaternion = new THREE.Quaternion();
+  const playerFrameQuaternion = new THREE.Quaternion();
+  const parentWorldQuaternion = new THREE.Quaternion();
+  const anchorWorldQuaternion = new THREE.Quaternion();
+  const anchorLocalQuaternion = new THREE.Quaternion();
+  const canvasRight = new THREE.Vector3();
+  const canvasUp = new THREE.Vector3();
+  const canvasNormal = new THREE.Vector3();
+  const canonicalNormal = new THREE.Vector3(principalAxis.x / principalLength, 0, principalAxis.z / principalLength);
+  const orientationMatrix = new THREE.Matrix4();
   const forward = new THREE.Vector3();
   const anchorPosition = new THREE.Vector3();
 
   function ensureWorldAnchor() {
     if (anchored) return;
     getViewingPose(viewPosition, viewQuaternion);
-    forward.set(0, 0, -1).applyQuaternion(viewQuaternion);
-    forward.y = 0;
-    if (forward.lengthSq() < 0.0001) forward.set(0, 0, -1);
-    forward.normalize();
+    playerFrame.updateWorldMatrix(true, false);
+    playerFrame.getWorldQuaternion(playerFrameQuaternion);
+    canvasUp.set(0, 1, 0).applyQuaternion(playerFrameQuaternion).normalize();
+    canvasNormal.copy(canonicalNormal).applyQuaternion(playerFrameQuaternion).normalize();
+    canvasRight.crossVectors(canvasUp, canvasNormal).normalize();
+    orientationMatrix.makeBasis(canvasRight, canvasUp, canvasNormal);
+    anchorWorldQuaternion.setFromRotationMatrix(orientationMatrix).normalize();
+
+    forward.copy(canvasNormal).negate();
     anchorPosition.copy(viewPosition).addScaledVector(forward, 8);
+    object.parent.updateWorldMatrix(true, false);
     object.position.copy(anchorPosition);
-    object.lookAt(viewPosition);
+    object.parent.worldToLocal(object.position);
+    object.parent.getWorldQuaternion(parentWorldQuaternion);
+    anchorLocalQuaternion.copy(parentWorldQuaternion).invert().multiply(anchorWorldQuaternion).normalize();
+    object.quaternion.copy(anchorLocalQuaternion);
     anchored = true;
   }
 
