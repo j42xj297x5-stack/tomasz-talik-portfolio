@@ -141,6 +141,15 @@ export function createOrangeMonkeyPortalTransition({ scene, assetManager }) {
   async function reveal(monkeyRoot, camera) {
     const portal = await ensure();
     if (!portal) return null;
+    placePortal(portal, monkeyRoot, camera);
+    portal.wrapper.visible = true;
+    portal.wrapper.scale.setScalar(0.88);
+    setOpacity(0);
+    active = { reverse: false, startedAt: performance.now(), duration: transitionDuration(false), resolve: null };
+    return new Promise((resolve) => { active.resolve = () => resolve(portal.wrapper); });
+  }
+
+  function placePortal(portal, monkeyRoot, camera) {
     const monkeyPosition = monkeyRoot.getWorldPosition(new THREE.Vector3());
     const cameraPosition = camera.getWorldPosition(new THREE.Vector3());
     const towardCamera = cameraPosition.sub(monkeyPosition);
@@ -149,11 +158,16 @@ export function createOrangeMonkeyPortalTransition({ scene, assetManager }) {
     portal.wrapper.position.copy(monkeyPosition).addScaledVector(towardCamera, PORTAL_FORWARD_OFFSET);
     portal.wrapper.position.y += 1.25;
     portal.wrapper.lookAt(camera.position);
+  }
+
+  async function prepareWarmup(monkeyRoot, camera) {
+    const portal = await ensure();
+    if (!portal) return null;
+    placePortal(portal, monkeyRoot, camera);
+    portal.wrapper.scale.setScalar(1);
+    setOpacity(1);
     portal.wrapper.visible = true;
-    portal.wrapper.scale.setScalar(0.88);
-    setOpacity(0);
-    active = { reverse: false, startedAt: performance.now(), duration: transitionDuration(false), resolve: null };
-    return new Promise((resolve) => { active.resolve = () => resolve(portal.wrapper); });
+    return portal.wrapper;
   }
 
   function hide() {
@@ -198,5 +212,5 @@ export function createOrangeMonkeyPortalTransition({ scene, assetManager }) {
     instance = null;
   }
 
-  return { ensure, reveal, hide, reset, update, dispose };
+  return { ensure, prepareWarmup, reveal, hide, reset, update, dispose };
 }

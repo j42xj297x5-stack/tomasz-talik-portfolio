@@ -659,6 +659,10 @@ runtimeDiagnostics.census('deferredHydration');
 loadingDiagnostics.markEvent('plaquePrewarmStart');
 runtimeDiagnostics.count('plaquePrewarm');
 await plaqueTransition.prewarm(nodes, camera);
+// The optional portal is also constructed here so its canvas/logo texture and
+// owned materials exist before the first monkey interaction. Failure remains
+// the transition owner's controlled direct-to-overlay fallback.
+const portalWarmupTarget = await orangeMonkeyPortal.prepareWarmup(monkeyActor.motionRoot, camera);
 loadingDiagnostics.markEvent('plaquePrewarmEnd');
 runtimeDiagnostics.census('plaquePrewarm');
 loadingDiagnostics.markEvent('rendererCompileStart');
@@ -667,11 +671,43 @@ plaqueTransition.setWarmupVisibility(true);
 const restoreAtmosphereWarmup = atmosphere.showAllForWarmup();
 const restoreGalaxyWarmup = galaxyLayer.showForWarmup();
 const restoreMilkyWayWarmup = milkyWayBackground.showForWarmup();
+const warmupCameraState = {
+  position: camera.position.clone(),
+  quaternion: camera.quaternion.clone(),
+  fov: camera.fov,
+  near: camera.near,
+  far: camera.far
+};
+const lightStates = nodes.map((node) => ({
+  light: node.userData.hoverPointLight,
+  visible: node.userData.hoverPointLight.visible,
+  intensity: node.userData.hoverPointLight.intensity
+}));
+const warmupTargets = [...plaqueTransition.getWarmupTargets(), portalWarmupTarget].filter(Boolean);
+function renderWarmupTarget(target) {
+  const bounds = new THREE.Box3().setFromObject(target);
+  const sphere = bounds.getBoundingSphere(new THREE.Sphere());
+  if (bounds.isEmpty() || !Number.isFinite(sphere.radius)) return;
+  const radius = Math.max(sphere.radius, 0.1);
+  camera.position.copy(sphere.center).add(new THREE.Vector3(0, radius * 0.15, radius * 3));
+  camera.near = Math.max(0.01, radius * 0.01);
+  camera.far = Math.max(100, radius * 10);
+  camera.lookAt(sphere.center);
+  camera.updateProjectionMatrix();
+  renderScenePasses(renderer, galaxyBackgroundScene, scene, camera);
+}
 try {
   plaqueTransition.setWarmupMaterialMode('fade');
   runtimeDiagnostics.count('shaderCompile:fade');
   if (typeof renderer.compileAsync === 'function') await Promise.all([renderer.compileAsync(galaxyBackgroundScene, camera), renderer.compileAsync(scene, camera)]);
   else { renderer.compile(galaxyBackgroundScene, camera); renderer.compile(scene, camera); }
+  for (const { light } of lightStates) {
+    light.visible = true;
+    light.intensity = 3;
+    warmupTargets.forEach(renderWarmupTarget);
+    light.visible = false;
+    light.intensity = 0;
+  }
   plaqueTransition.setWarmupMaterialMode('stable');
   runtimeDiagnostics.count('shaderCompile:stable');
   if (typeof renderer.compileAsync === 'function') await Promise.all([renderer.compileAsync(galaxyBackgroundScene, camera), renderer.compileAsync(scene, camera)]);
@@ -682,6 +718,17 @@ try {
 } finally {
   plaqueTransition.setWarmupMaterialMode('stable');
   plaqueTransition.setWarmupVisibility(false);
+  orangeMonkeyPortal.reset();
+  lightStates.forEach(({ light, visible, intensity }) => {
+    light.visible = visible;
+    light.intensity = intensity;
+  });
+  camera.position.copy(warmupCameraState.position);
+  camera.quaternion.copy(warmupCameraState.quaternion);
+  camera.fov = warmupCameraState.fov;
+  camera.near = warmupCameraState.near;
+  camera.far = warmupCameraState.far;
+  camera.updateProjectionMatrix();
   restoreAtmosphereWarmup();
   restoreGalaxyWarmup();
   restoreMilkyWayWarmup();
