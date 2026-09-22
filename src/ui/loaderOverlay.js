@@ -1,4 +1,5 @@
 import { formatBytes } from '../assets/preloadAssets.js';
+import { publicPath } from '../utils/publicPath.js';
 
 function progressPercent(snapshot) {
   const critical = snapshot?.stageStats?.criticalInitial;
@@ -14,12 +15,13 @@ export function createLoaderOverlay({ debug = false } = {}) {
   root.setAttribute('aria-live', 'polite');
   root.innerHTML = `
     <div class="loader-overlay__panel">
-      <div class="loader-overlay__sigil" aria-hidden="true"></div>
+      <img class="loader-overlay__logo" src="${publicPath('/png/orange_monkey.webp')}" alt="" aria-hidden="true">
       <p class="loader-overlay__eyebrow">Portfolio runtime</p>
       <h1 class="loader-overlay__title">Ładowanie świata...</h1>
       <div class="loader-overlay__bar" aria-hidden="true"><span></span></div>
       <p class="loader-overlay__progress">0%</p>
-      <p class="loader-overlay__bytes">Przygotowuję zasoby...</p>
+      <p class="loader-overlay__assets">assets 0/0</p>
+      <p class="loader-overlay__bytes">0 B / unknown total</p>
       <p class="loader-overlay__debug" ${debug ? '' : 'hidden'}></p>
       <p class="loader-overlay__error" hidden></p>
     </div>
@@ -27,6 +29,7 @@ export function createLoaderOverlay({ debug = false } = {}) {
 
   const barEl = root.querySelector('.loader-overlay__bar span');
   const progressEl = root.querySelector('.loader-overlay__progress');
+  const assetsEl = root.querySelector('.loader-overlay__assets');
   const bytesEl = root.querySelector('.loader-overlay__bytes');
   const debugEl = root.querySelector('.loader-overlay__debug');
   const errorEl = root.querySelector('.loader-overlay__error');
@@ -43,8 +46,8 @@ export function createLoaderOverlay({ debug = false } = {}) {
       const critical = snapshot.stageStats?.criticalInitial;
       const deferred = snapshot.stageStats?.deferredWarm;
       const criticalBytes = critical ? `${formatBytes(critical.loadedBytes)} / ${critical.knownTotalBytes > 0 ? formatBytes(critical.knownTotalBytes) : 'unknown total'}` : `${formatBytes(snapshot.loadedBytes)} / ${snapshot.knownTotalBytes > 0 ? formatBytes(snapshot.knownTotalBytes) : 'unknown total'}`;
-      const deferredText = deferred ? ` · deferred ${deferred.loaded}/${deferred.total}` : '';
-      bytesEl.textContent = `critical ${critical?.loaded ?? snapshot.completedAssets}/${critical?.total ?? snapshot.totalAssets} · ${criticalBytes}${deferredText}`;
+      assetsEl.textContent = `assets ${deferred?.loaded ?? snapshot.completedAssets}/${deferred?.total ?? snapshot.totalAssets}`;
+      bytesEl.textContent = criticalBytes;
       if (debug && debugEl) {
         const current = snapshot.currentAsset ?? snapshot.lastLoaded;
         const stats = snapshot.runtimeStats ?? {};
