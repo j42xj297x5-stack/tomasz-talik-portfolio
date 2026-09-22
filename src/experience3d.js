@@ -95,6 +95,7 @@ try {
   throw error;
 }
 
+loaderOverlay.setPhase('Preparing scene…');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
 renderer.autoClear = false;
 renderer.info.autoReset = false;
@@ -657,6 +658,7 @@ runtimeDiagnostics.count('galaxyHydration');
 await Promise.all([atmosphere.hydrateDeferredRelics?.(), galaxyLayer.hydrateDeferred?.()]);
 loadingDiagnostics.markEvent('sceneHydrationEnd');
 runtimeDiagnostics.census('deferredHydration');
+loaderOverlay.setPhase('Preparing portals…');
 loadingDiagnostics.markEvent('plaquePrewarmStart');
 runtimeDiagnostics.count('plaquePrewarm');
 await plaqueTransition.prewarm(nodes, camera);
@@ -666,6 +668,7 @@ await plaqueTransition.prewarm(nodes, camera);
 const portalWarmupTarget = await orangeMonkeyPortal.prepareWarmup(monkeyActor.motionRoot, camera);
 loadingDiagnostics.markEvent('plaquePrewarmEnd');
 runtimeDiagnostics.census('plaquePrewarm');
+loaderOverlay.setPhase('Warming up graphics…');
 loadingDiagnostics.markEvent('rendererCompileStart');
 const compileStartedAt = performance.now();
 plaqueTransition.setWarmupVisibility(true);
@@ -780,6 +783,7 @@ function tick(timestamp) {
 
 // The attempt is bounded by the optional fetch/decode operations; every failure
 // settles inside the manager and therefore cannot block interaction readiness.
+loaderOverlay.setPhase('Preparing audio…');
 await audioManager.preloadExperienceEffects();
 loadingDiagnostics.markEvent('loaderFadeStart');
 runtimeDiagnostics.count('loaderComplete');
