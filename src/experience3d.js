@@ -340,8 +340,9 @@ async function openOrangeMonkeyPanel() {
     orbit.pauseOrbit();
     cameraRig.pauseMouseControl();
     cameraRig.setInteractionLocked(true);
-    void audioManager.playOrangeMonkeyTransition('entry');
-    await cameraRig.focusOnNode(camera, monkeyActor.motionRoot);
+    await cameraRig.focusOnNode(camera, monkeyActor.motionRoot, {
+      onAccepted: () => { void audioManager.playOrangeMonkeyTransition('entry'); }
+    });
     if (interactionState !== 'monkeyFocusing') return;
     interactionState = 'monkeyPortalReveal';
     const portal = await orangeMonkeyPortal.reveal(monkeyActor.motionRoot, camera);
