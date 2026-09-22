@@ -5,11 +5,13 @@ import { createFogRevealController } from './scene/fogRevealController.js';
 import { addLights } from './scene/lights.js';
 import { createCentralObject } from './scene/centralObject.js';
 import { createBackgroundAtmosphere } from './scene/atmosphere.js';
-import { loadMonkeyModel } from './scene/monkeyModel.js';
+import { loadMonkeyModel, VR_MONKEY_INTERACTION_LAYER } from './scene/monkeyModel.js';
 import { createOrbitNodes, fadeNodeTransitionLight, resetNodeTransitionLight, setNodeHoverState, startNodeTransitionLight, triggerNodeHoverAnimation, updateOrbitNodes } from './scene/orbitNodes.js';
-import { pickNode } from './scene/raycaster.js';
+import { pickInteractionRoot, pickNode } from './scene/raycaster.js';
 import { createCameraRig } from './scene/cameraRig.js';
 import { createPlaqueTransition } from './scene/plaqueTransition.js';
+import { createOrangeMonkeyPortalTransition } from './scene/orangeMonkeyPortalTransition.js';
+import { resolveOrangeMonkeyVr } from './content/resolveOrangeMonkeyVr.js';
 import { createOverlay } from './ui/overlay.js';
 import { createHoverLabel } from './ui/hoverLabel.js';
 import { createOptionsPanel } from './ui/optionsPanel.js';
@@ -19,7 +21,7 @@ import { createAtmosphereProgression } from './scene/atmosphere/atmosphereProgre
 import { createGalaxySpritesLayer } from './scene/galaxySprites.js';
 import { createMilkyWayBackground } from './scene/milkyWayBackground.js';
 import { EXPERIENCE_BACKGROUND_COLOR, renderScenePasses } from './scene/renderScenePasses.js';
-import { ASSET_STAGES, INITIAL_PRELOAD_GROUPS, DEFERRED_PRELOAD_GROUPS, OPTIONAL_PRELOAD_GROUPS, getPreloadAssets, getAllPreloadAssets } from './assets/assetManifest.js';
+import { ASSET_STAGES, INITIAL_PRELOAD_GROUPS, DEFERRED_PRELOAD_GROUPS, OPTIONAL_PRELOAD_GROUPS, getExperience3dPreloadAssets, getAllExperience3dPreloadAssets } from './assets/assetManifest.js';
 import { createLoadingDiagnostics, preloadAssets } from './assets/preloadAssets.js';
 import { createAssetManager } from './assets/assetManager.js';
 import { createLoaderOverlay } from './ui/loaderOverlay.js';
@@ -44,10 +46,10 @@ const canvas = document.querySelector('#scene-canvas');
 const shell = document.querySelector('.runtime-shell');
 const debugLoading = new URLSearchParams(window.location.search).has('debug');
 const debugInput = debugLoading;
-const criticalAssetsList = getPreloadAssets(INITIAL_PRELOAD_GROUPS);
-const deferredWarmAssetsList = getPreloadAssets(DEFERRED_PRELOAD_GROUPS);
-const optionalLateAssetsList = getPreloadAssets(OPTIONAL_PRELOAD_GROUPS);
-const loadingDiagnostics = createLoadingDiagnostics(getAllPreloadAssets());
+const criticalAssetsList = getExperience3dPreloadAssets(INITIAL_PRELOAD_GROUPS);
+const deferredWarmAssetsList = getExperience3dPreloadAssets(DEFERRED_PRELOAD_GROUPS);
+const optionalLateAssetsList = getExperience3dPreloadAssets(OPTIONAL_PRELOAD_GROUPS);
+const loadingDiagnostics = createLoadingDiagnostics(getAllExperience3dPreloadAssets());
 loadingDiagnostics.markEvent('appStart');
 const mobileQuery = window.matchMedia('(pointer: coarse), (max-width: 767px)');
 const fineHoverQuery = window.matchMedia('(hover: hover) and (pointer: fine)');
@@ -93,6 +95,7 @@ try {
   throw error;
 }
 
+loaderOverlay.setPhase('Preparing scene…');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
 renderer.autoClear = false;
 renderer.info.autoReset = false;
@@ -127,6 +130,8 @@ monkeyActor.dockStoneToCharacter();
 const { group: orbitGroup, nodes, orbit } = createOrbitNodes(portfolioNodes, { assetManager });
 scene.add(orbitGroup);
 const plaqueTransition = createPlaqueTransition({ scene, assetManager });
+const orangeMonkeyPortal = createOrangeMonkeyPortalTransition({ scene, assetManager });
+const orangeMonkeyRecord = resolveOrangeMonkeyVr(document.documentElement.lang);
 const atmosphereProgression = createAtmosphereProgression({ gateIds: portfolioNodes.map((node) => node.id) });
 let lastAudioProgressLevel = atmosphereProgression.state.progressLevel;
 atmosphereProgression.onStateChange(() => {
@@ -168,6 +173,10 @@ runtimeDiagnostics.census('sceneAttach');
 const overlay = createOverlay({
   language: document.documentElement.lang,
   onClose: () => {
+    if (activeOrangeMonkeyPanel) {
+      void closeOrangeMonkeyPanel();
+      return;
+    }
     if (activePanelNode?.userData?.plaqueTransitionReady) {
       void audioManager.playGlyphPanel(activePanelNode.userData?.id, 'close');
     }
@@ -219,6 +228,9 @@ const optionsPanel = createOptionsPanel({
 
 let hoveredNode = null;
 let activePanelNode = null;
+let activeOrangeMonkeyPanel = false;
+let orangeMonkeyPortalShown = false;
+let monkeyHovered = false;
 let hoverExitTimer = null;
 const HOVER_RAYCAST_GRACE_MS = 100;
 
@@ -261,6 +273,7 @@ function syncHoverState(nextHoveredNode, event = null, { immediateExit = false }
   if (hoveredNode) {
     setNodeHoverState(hoveredNode, true);
     if (hoveredNode !== previousHoveredNode) {
+      runtimeDiagnostics.markGlyphHover(hoveredNode.userData?.id);
       triggerNodeHoverAnimation(hoveredNode);
       void audioManager.startGlyphHover();
     }
@@ -272,6 +285,12 @@ function syncHoverState(nextHoveredNode, event = null, { immediateExit = false }
   }
 
   document.body.style.cursor = hoveredNode ? 'pointer' : 'default';
+}
+
+function syncMonkeyHover(hovered) {
+  if (hovered && !monkeyHovered) runtimeDiagnostics.markMonkeyHover();
+  monkeyHovered = Boolean(hovered);
+  document.body.style.cursor = monkeyHovered ? 'pointer' : hoveredNode ? 'pointer' : 'default';
 }
 
 const cameraRig = createCameraRig(canvas);
@@ -303,7 +322,84 @@ function clearInteractiveHover() {
   if (hoverExitTimer) window.clearTimeout(hoverExitTimer);
   hoverExitTimer = null;
   syncHoverState(null, null, { immediateExit: true });
+  syncMonkeyHover(false);
   document.body.style.cursor = 'default';
+}
+
+function pickMonkey(event) {
+  const usesProxy = monkeyActor.interactionRoot !== monkeyActor.characterRoot;
+  return pickInteractionRoot(event, canvas, camera, monkeyActor.interactionRoot, usesProxy ? VR_MONKEY_INTERACTION_LAYER : 0);
+}
+
+async function openOrangeMonkeyPanel() {
+  if (interactionState !== 'idle') return;
+  runtimeDiagnostics.markPortalOpen();
+  try {
+    interactionState = 'monkeyFocusing';
+    clearInteractiveHover();
+    releaseActivePointer();
+    orbit.pauseOrbit();
+    cameraRig.pauseMouseControl();
+    cameraRig.setInteractionLocked(true);
+    await cameraRig.focusOnNode(camera, monkeyActor.motionRoot, {
+      onAccepted: () => { void audioManager.playOrangeMonkeyTransition('entry'); }
+    });
+    if (interactionState !== 'monkeyFocusing') return;
+    interactionState = 'monkeyPortalReveal';
+    const portal = await orangeMonkeyPortal.reveal(monkeyActor.motionRoot, camera);
+    orangeMonkeyPortalShown = Boolean(portal);
+    if (portal) {
+      interactionState = 'monkeyPortalHold';
+      await new Promise((resolve) => window.setTimeout(resolve, window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 80 : 350));
+      if (interactionState !== 'monkeyPortalHold') return;
+      interactionState = 'monkeyDollyIn';
+      await cameraRig.dollyToPlaque(camera, portal, { cover: 0.92 });
+    }
+    activeOrangeMonkeyPanel = true;
+    overlay.open(orangeMonkeyRecord);
+    interactionState = 'monkeyPanelOpen';
+    runtimeDiagnostics.markPortalOpenComplete();
+  } catch (error) {
+    console.warn('[interaction] Failed to open Orange Monkey VR presentation.', error);
+    orangeMonkeyPortal.reset();
+    orangeMonkeyPortalShown = false;
+    activeOrangeMonkeyPanel = false;
+    cameraRig.resetHomePose(camera);
+    cameraRig.setInteractionLocked(false);
+    orbit.resumeOrbit();
+    cameraRig.resumeMouseControl(lastFinePointerPosition);
+    interactionState = 'idle';
+  }
+}
+
+async function closeOrangeMonkeyPanel() {
+  if (interactionState !== 'monkeyPanelOpen' || !activeOrangeMonkeyPanel) return;
+  activeOrangeMonkeyPanel = false;
+  interactionState = 'monkeyClosing';
+  void audioManager.playOrangeMonkeyTransition('exit');
+  clearInteractiveHover();
+  try {
+    if (orangeMonkeyPortalShown) {
+      await cameraRig.dollyOut(camera);
+      await orangeMonkeyPortal.hide();
+    }
+    orangeMonkeyPortalShown = false;
+    interactionState = 'monkeyReturning';
+    await cameraRig.returnHome(camera);
+    orbit.resumeOrbit();
+    cameraRig.setInteractionLocked(false);
+    cameraRig.resumeMouseControl(lastFinePointerPosition);
+    interactionState = 'idle';
+  } catch (error) {
+    console.warn('[interaction] Failed to restore scene after Orange Monkey VR panel.', error);
+    orangeMonkeyPortal.reset();
+    orangeMonkeyPortalShown = false;
+    cameraRig.resetHomePose(camera);
+    cameraRig.setInteractionLocked(false);
+    orbit.resumeOrbit();
+    cameraRig.resumeMouseControl(lastFinePointerPosition);
+    interactionState = 'idle';
+  }
 }
 
 function releaseActivePointer() {
@@ -327,6 +423,7 @@ function restoreInteractionSafely() {
 }
 
 async function focusNodePanel(node) {
+  runtimeDiagnostics.markGlyphOpen(node.userData?.id);
   try {
     interactionState = 'focusing';
     clearInteractiveHover();
@@ -360,6 +457,7 @@ async function focusNodePanel(node) {
     if (!activePanelNode) return;
     overlay.open(node.userData);
     interactionState = 'panelOpen';
+    runtimeDiagnostics.markGlyphOpenComplete();
     runtimeDiagnostics.markPlaqueOpen(node.userData?.id ?? 'unknown');
   } catch (error) {
     console.warn('[interaction] Failed to focus selected glyph.', error);
@@ -469,8 +567,9 @@ function handlePointerMove(event) {
   }
 
   if (event.pointerType === 'mouse' && fineHoverQuery.matches && !activePointer?.dragged) {
-    const hit = pickNode(event, canvas, camera, nodes);
-    syncHoverState(hit, event);
+    const monkeyHit = pickMonkey(event);
+    syncHoverState(monkeyHit ? null : pickNode(event, canvas, camera, nodes), event);
+    syncMonkeyHover(monkeyHit);
   }
 }
 
@@ -492,7 +591,8 @@ function finishPointer(event, { cancelled = false } = {}) {
 
   if (isTap) {
     debugInteraction('tap detected', { pointerType: activePointer.pointerType, distance, duration });
-    openNodePanel(pickNode(event, canvas, camera, nodes));
+    if (pickMonkey(event)) void openOrangeMonkeyPanel();
+    else openNodePanel(pickNode(event, canvas, camera, nodes));
   } else {
     debugInteraction(cancelled ? 'pointer cancelled' : 'drag detected', {
       pointerType: activePointer.pointerType,
@@ -525,12 +625,20 @@ canvas.addEventListener('pointercancel', (event) => finishPointer(event, { cance
 
 window.addEventListener('pointerleave', () => {
   cameraRig.onPointerLeave();
-  if (interactionState === 'idle') syncHoverState(null, null, { immediateExit: true });
+  if (interactionState === 'idle') {
+    syncHoverState(null, null, { immediateExit: true });
+    syncMonkeyHover(false);
+  }
 });
 
 canvas.addEventListener('pointerleave', () => {
-  if (interactionState === 'idle') syncHoverState(null, null, { immediateExit: true });
+  if (interactionState === 'idle') {
+    syncHoverState(null, null, { immediateExit: true });
+    syncMonkeyHover(false);
+  }
 });
+
+window.addEventListener('pagehide', () => orangeMonkeyPortal.dispose(), { once: true });
 
 window.addEventListener('pointermove', rememberFinePointerPosition);
 window.addEventListener('pointerdown', rememberFinePointerPosition);
@@ -550,22 +658,60 @@ runtimeDiagnostics.count('galaxyHydration');
 await Promise.all([atmosphere.hydrateDeferredRelics?.(), galaxyLayer.hydrateDeferred?.()]);
 loadingDiagnostics.markEvent('sceneHydrationEnd');
 runtimeDiagnostics.census('deferredHydration');
+loaderOverlay.setPhase('Preparing portals…');
 loadingDiagnostics.markEvent('plaquePrewarmStart');
 runtimeDiagnostics.count('plaquePrewarm');
 await plaqueTransition.prewarm(nodes, camera);
+// The optional portal is also constructed here so its canvas/logo texture and
+// owned materials exist before the first monkey interaction. Failure remains
+// the transition owner's controlled direct-to-overlay fallback.
+const portalWarmupTarget = await orangeMonkeyPortal.prepareWarmup(monkeyActor.motionRoot, camera);
 loadingDiagnostics.markEvent('plaquePrewarmEnd');
 runtimeDiagnostics.census('plaquePrewarm');
+loaderOverlay.setPhase('Warming up graphics…');
 loadingDiagnostics.markEvent('rendererCompileStart');
 const compileStartedAt = performance.now();
 plaqueTransition.setWarmupVisibility(true);
 const restoreAtmosphereWarmup = atmosphere.showAllForWarmup();
 const restoreGalaxyWarmup = galaxyLayer.showForWarmup();
 const restoreMilkyWayWarmup = milkyWayBackground.showForWarmup();
+const warmupCameraState = {
+  position: camera.position.clone(),
+  quaternion: camera.quaternion.clone(),
+  fov: camera.fov,
+  near: camera.near,
+  far: camera.far
+};
+const lightStates = nodes.map((node) => ({
+  light: node.userData.hoverPointLight,
+  visible: node.userData.hoverPointLight.visible,
+  intensity: node.userData.hoverPointLight.intensity
+}));
+const warmupTargets = [...plaqueTransition.getWarmupTargets(), portalWarmupTarget].filter(Boolean);
+function renderWarmupTarget(target) {
+  const bounds = new THREE.Box3().setFromObject(target);
+  const sphere = bounds.getBoundingSphere(new THREE.Sphere());
+  if (bounds.isEmpty() || !Number.isFinite(sphere.radius)) return;
+  const radius = Math.max(sphere.radius, 0.1);
+  camera.position.copy(sphere.center).add(new THREE.Vector3(0, radius * 0.15, radius * 3));
+  camera.near = Math.max(0.01, radius * 0.01);
+  camera.far = Math.max(100, radius * 10);
+  camera.lookAt(sphere.center);
+  camera.updateProjectionMatrix();
+  renderScenePasses(renderer, galaxyBackgroundScene, scene, camera);
+}
 try {
   plaqueTransition.setWarmupMaterialMode('fade');
   runtimeDiagnostics.count('shaderCompile:fade');
   if (typeof renderer.compileAsync === 'function') await Promise.all([renderer.compileAsync(galaxyBackgroundScene, camera), renderer.compileAsync(scene, camera)]);
   else { renderer.compile(galaxyBackgroundScene, camera); renderer.compile(scene, camera); }
+  for (const { light } of lightStates) {
+    light.visible = true;
+    light.intensity = 3;
+    warmupTargets.forEach(renderWarmupTarget);
+    light.visible = false;
+    light.intensity = 0;
+  }
   plaqueTransition.setWarmupMaterialMode('stable');
   runtimeDiagnostics.count('shaderCompile:stable');
   if (typeof renderer.compileAsync === 'function') await Promise.all([renderer.compileAsync(galaxyBackgroundScene, camera), renderer.compileAsync(scene, camera)]);
@@ -576,6 +722,17 @@ try {
 } finally {
   plaqueTransition.setWarmupMaterialMode('stable');
   plaqueTransition.setWarmupVisibility(false);
+  orangeMonkeyPortal.reset();
+  lightStates.forEach(({ light, visible, intensity }) => {
+    light.visible = visible;
+    light.intensity = intensity;
+  });
+  camera.position.copy(warmupCameraState.position);
+  camera.quaternion.copy(warmupCameraState.quaternion);
+  camera.fov = warmupCameraState.fov;
+  camera.near = warmupCameraState.near;
+  camera.far = warmupCameraState.far;
+  camera.updateProjectionMatrix();
   restoreAtmosphereWarmup();
   restoreGalaxyWarmup();
   restoreMilkyWayWarmup();
@@ -599,6 +756,7 @@ function tick(timestamp) {
   const orbitPhase = orbit.update(delta);
   updateOrbitNodes(nodes, elapsed, orbitGroup.getWorldPosition(orbitCenterWorldPosition), orbitPhase);
   plaqueTransition.update();
+  orangeMonkeyPortal.update();
   cameraRig.update(camera, elapsed);
   atmosphereProgression.updateAtmosphereProgression(delta);
   const progressionMultipliers = atmosphereProgression.getProgressionMultipliers();
@@ -625,6 +783,7 @@ function tick(timestamp) {
 
 // The attempt is bounded by the optional fetch/decode operations; every failure
 // settles inside the manager and therefore cannot block interaction readiness.
+loaderOverlay.setPhase('Preparing audio…');
 await audioManager.preloadExperienceEffects();
 loadingDiagnostics.markEvent('loaderFadeStart');
 runtimeDiagnostics.count('loaderComplete');

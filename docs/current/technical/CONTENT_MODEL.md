@@ -2,6 +2,10 @@
 
 Current active content modules are mode-specific: `src/content/portfolioNodes.js` supplies Classic 2D and Experience 3D, while `src/content/portalCards.js` supplies Experience VR crystal-card content.
 
+`src/content/orangeMonkeyVr.js` defines the separate bilingual Orange Monkey VR project record. It is intentionally outside `portfolioNodes`, so the five glyph records and their progression remain unchanged. `src/content/resolveOrangeMonkeyVr.js` resolves its complete Polish or English nested content with the same primary-language normalization and English fallback convention used by the shared portfolio resolver. Both Classic 2D and Experience 3D can consume this record without owning duplicate copy; presentation integration is intentionally deferred.
+
+The `orange-monkey-vr` record keeps shared identity metadata at record level and supplies complete `translations.pl` and `translations.en` main-panel fields, repository link metadata, and independent case-study objects. Each localized case study uses `title`, `heading`, `intro`, `problem`, `solution`, `processSections`, `aiWorkflow`, and `result`. The record does not declare glyph, media, or asset-manifest metadata.
+
 ## Portal card registry contract
 
 - `src/content/portalCards.js` is the canonical content registry for the 18 bilingual portal cards across five glyph branches.

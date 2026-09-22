@@ -1,6 +1,7 @@
 import { publicPath } from '../utils/publicPath.js';
 import { getPanelThemeForGate } from './panelThemes.js';
 import { getInterfaceCopy } from '../i18n/interfaceCopy.js';
+import { getConfiguredYouTubeVideo, loadYouTubeIframe, releaseYouTubeIframe } from './youtubeVideo.js';
 
 export function createOverlay({ language, onClose } = {}) {
   const copy = getInterfaceCopy(language);
@@ -25,6 +26,7 @@ export function createOverlay({ language, onClose } = {}) {
             </figcaption>
           </figure>
           <p class="overlay__lead" hidden></p>
+          <section class="overlay__video" hidden></section>
           <p class="overlay__text"></p>
           <div class="overlay__feature" hidden>
             <p class="overlay__feature-label"></p>
@@ -50,10 +52,12 @@ export function createOverlay({ language, onClose } = {}) {
   `;
 
   const panelEl = root.querySelector('.overlay__panel');
+  const scrollEl = root.querySelector('.overlay__scroll');
   const statusEl = root.querySelector('.overlay__status');
   const titleEl = root.querySelector('.overlay__title');
   const subtitleEl = root.querySelector('.overlay__subtitle');
   const leadEl = root.querySelector('.overlay__lead');
+  const videoEl = root.querySelector('.overlay__video');
   const textEl = root.querySelector('.overlay__text');
   const closingEl = root.querySelector('.overlay__closing');
   const projectLinksEl = root.querySelector('.overlay__project-links');
@@ -72,6 +76,44 @@ export function createOverlay({ language, onClose } = {}) {
   const ornamentEl = root.querySelector('.overlay__ornament');
 
   let demoLightboxOpener = null;
+
+  const releaseVideo = () => {
+    releaseYouTubeIframe(videoEl?.querySelector('[data-youtube-player]'));
+    videoEl?.replaceChildren();
+    if (videoEl) videoEl.hidden = true;
+  };
+
+  const renderVideo = (video, projectTitle) => {
+    releaseVideo();
+    const configuredVideo = getConfiguredYouTubeVideo(video);
+    if (!videoEl || !configuredVideo) return;
+
+    const heading = document.createElement('h3');
+    heading.textContent = copy.videoTitle;
+    const player = document.createElement('div');
+    player.className = 'overlay__video-player';
+    player.dataset.youtubePlayer = '';
+    if (configuredVideo.posterPath) {
+      player.style.backgroundImage = `url("${publicPath(configuredVideo.posterPath).replaceAll('"', '%22')}")`;
+    }
+    const playButton = document.createElement('button');
+    playButton.className = 'overlay__video-play';
+    playButton.type = 'button';
+    playButton.textContent = copy.playVideo;
+    playButton.setAttribute('aria-label', `${copy.playVideoAria}: ${projectTitle}`);
+    playButton.addEventListener('click', () => loadYouTubeIframe(player, video, `${projectTitle} — ${copy.videoTitle}`), { once: true });
+    player.append(playButton);
+
+    const directLink = document.createElement('a');
+    directLink.className = 'overlay__video-link';
+    directLink.href = configuredVideo.watchUrl;
+    directLink.target = '_blank';
+    directLink.rel = 'noopener noreferrer';
+    directLink.textContent = copy.openOnYouTube;
+    directLink.setAttribute('aria-label', `${copy.openOnYouTube} — ${copy.opensInNewTab}`);
+    videoEl.append(heading, player, directLink);
+    videoEl.hidden = false;
+  };
 
   const appendParagraphs = (parent, paragraphs) => {
     const normalized = Array.isArray(paragraphs) ? paragraphs : [paragraphs];
@@ -286,6 +328,7 @@ export function createOverlay({ language, onClose } = {}) {
 
   const close = () => {
     if (root.hidden) return;
+    releaseVideo();
     closeDemoLightbox();
     root.hidden = true;
     panelEl.removeAttribute('data-gate-id');
@@ -340,12 +383,14 @@ export function createOverlay({ language, onClose } = {}) {
 
   return {
     open(nodeData) {
+      releaseVideo();
       const gateId = nodeData.id;
       const isAIGuide = gateId === 'ai-guide';
       const isCreativeAI = gateId === 'creative-ai';
       const isEthics = gateId === 'ethics-life-protection';
       const isHaikuCosmos = gateId === 'haiku-cosmos';
       const isSpotifyDigger = gateId === 'spotify-digger';
+      const isOrangeMonkeyVr = gateId === 'orange-monkey-vr';
       const hasStructuredCopy = Boolean(nodeData.leadText || nodeData.bodyText || nodeData.closingText || nodeData.featureText);
 
       panelEl.dataset.gateId = gateId;
@@ -376,9 +421,28 @@ export function createOverlay({ language, onClose } = {}) {
       statusEl.hidden = Boolean(subtitle);
       statusEl.textContent = subtitle ? '' : (nodeData.eyebrow ?? (isAIGuide ? nodeData.shortLabel : copy.draftStatus));
 
-      titleEl.textContent = nodeData.title;
+      if (isOrangeMonkeyVr) {
+        titleEl.setAttribute('aria-label', nodeData.title);
+        const brandLogo = document.createElement('img');
+        brandLogo.className = 'overlay__brand-logo';
+        brandLogo.src = publicPath('/png/orange_monkey.webp');
+        brandLogo.alt = '';
+        brandLogo.setAttribute('aria-hidden', 'true');
+        const brandName = document.createElement('span');
+        brandName.className = 'overlay__brand-name';
+        brandName.textContent = 'ORANGE MONKEY';
+        const brandVr = document.createElement('span');
+        brandVr.className = 'overlay__brand-vr';
+        brandVr.textContent = 'VR';
+        titleEl.replaceChildren(brandLogo, brandName, brandVr);
+      } else {
+        titleEl.removeAttribute('aria-label');
+        titleEl.textContent = nodeData.title;
+      }
       subtitleEl.hidden = !subtitle;
       subtitleEl.textContent = subtitle;
+
+      renderVideo(nodeData.video, nodeData.title);
 
       renderProjectLinks(nodeData.projectLinks);
       renderCaseStudy(nodeData.caseStudy);
@@ -432,8 +496,15 @@ export function createOverlay({ language, onClose } = {}) {
       }
 
       root.hidden = false;
+      if (scrollEl) scrollEl.scrollTop = 0;
       document.body.classList.add('overlay-open');
     },
-    close
+    close,
+    destroy() {
+      releaseVideo();
+      closeDemoLightbox();
+      document.body.classList.remove('overlay-open');
+      root.remove();
+    }
   };
 }

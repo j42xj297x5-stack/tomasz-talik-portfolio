@@ -2,6 +2,8 @@ import { resolvePortfolioNodes } from './content/resolvePortfolioNodes.js';
 import { publicPath } from './utils/publicPath.js';
 import { getGateAccentColor, getPanelThemeForGate } from './ui/panelThemes.js';
 import { getInterfaceCopy } from './i18n/interfaceCopy.js';
+import { resolveOrangeMonkeyVr } from './content/resolveOrangeMonkeyVr.js';
+import { getConfiguredYouTubeVideo, loadYouTubeIframe, releaseYouTubeIframe } from './ui/youtubeVideo.js';
 
 const CLASSIC_COPY = {
   pl: {
@@ -10,9 +12,9 @@ const CLASSIC_COPY = {
     role: 'Creative Technologist & Game Systems Designer',
     title: 'Interaktywne światy, gry i systemy',
     lead: 'Łączę technologię, mechanikę, obraz i dźwięk, przekładając złożone pomysły na modularne, działające systemy.',
-    intro: 'Wybierz jeden z pięciu symboli, aby poznać projekty i obszary mojej pracy.',
+    intro: 'Wybierz jeden z pięciu symboli, aby poznać projekty i obszary mojej pracy, lub kliknij małpę, aby odkryć Orange Monkey VR.',
     returnToModes: 'Wróć do wyboru trybu',
-    centralLabel: 'Symboliczna kotwica 2D',
+    centralLabel: 'Otwórz projekt Orange Monkey VR',
     gateHelp: 'Otwórz panel'
   },
   en: {
@@ -21,9 +23,9 @@ const CLASSIC_COPY = {
     role: 'Creative Technologist & Game Systems Designer',
     title: 'Interactive worlds, games and systems',
     lead: 'I combine technology, mechanics, visuals, and sound, translating complex ideas into modular, functional systems.',
-    intro: 'Choose one of the five symbols to explore my projects and areas of work.',
+    intro: 'Choose one of the five symbols to explore my projects and areas of work, or select the monkey to discover Orange Monkey VR.',
     returnToModes: 'Back to mode selection',
-    centralLabel: 'Symbolic 2D anchor',
+    centralLabel: 'Open Orange Monkey VR project',
     gateHelp: 'Open panel'
   }
 };
@@ -99,6 +101,38 @@ function renderDemoMarkup(node, interfaceCopy) {
       </figcaption>
     </figure>
   `;
+}
+
+function renderVideoMarkup(node, interfaceCopy) {
+  const video = getConfiguredYouTubeVideo(node.video);
+  if (!video) return '';
+  const posterStyle = video.posterPath
+    ? ` style="background-image:url('${escapeHtml(publicPath(video.posterPath))}')"`
+    : '';
+  return `
+    <section class="classic-2d-panel__video">
+      <h3>${escapeHtml(interfaceCopy.videoTitle)}</h3>
+      <div class="classic-2d-panel__video-player" data-classic-youtube-player${posterStyle}>
+        <button class="classic-2d-panel__video-play" type="button" data-classic-youtube-play aria-label="${escapeHtml(interfaceCopy.playVideoAria)}: ${escapeHtml(node.title)}">${escapeHtml(interfaceCopy.playVideo)}</button>
+      </div>
+      <a class="classic-2d-panel__video-link" href="${escapeHtml(video.watchUrl)}" target="_blank" rel="noopener noreferrer" aria-label="${escapeHtml(interfaceCopy.openOnYouTube)} — ${escapeHtml(interfaceCopy.opensInNewTab)}">${escapeHtml(interfaceCopy.openOnYouTube)}</a>
+    </section>
+  `;
+}
+
+function renderProjectLinksMarkup(projectLinks, interfaceCopy) {
+  if (!Array.isArray(projectLinks)) return '';
+  const links = projectLinks.flatMap((link) => {
+    if (!link || typeof link.label !== 'string' || typeof link.url !== 'string') return [];
+    try {
+      const url = new URL(link.url);
+      if (!['http:', 'https:'].includes(url.protocol)) return [];
+    } catch {
+      return [];
+    }
+    return `<a class="classic-2d-panel__project-link" href="${escapeHtml(link.url)}" target="_blank" rel="noopener noreferrer" aria-label="${escapeHtml(link.label)} — ${escapeHtml(interfaceCopy.opensInNewTab)}">${escapeHtml(link.label)}</a>`;
+  });
+  return links.length ? `<nav class="classic-2d-panel__project-links" aria-label="${escapeHtml(interfaceCopy.projectLinksLabel)}">${links.join('')}</nav>` : '';
 }
 
 function renderCaseBlockMarkup(title, value) {
@@ -194,6 +228,7 @@ function renderPanel(panel, node, copy, interfaceCopy) {
   const bodyParagraphs = createParagraphs(getNodeText(node));
   const demoMarkup = renderDemoMarkup(node, interfaceCopy);
   const caseStudyMarkup = renderCaseStudyMarkup(node.caseStudy, interfaceCopy);
+  const videoMarkup = renderVideoMarkup(node, interfaceCopy);
   const subtitle = getNodeSubtitle(node);
 
   panel.dataset.panelTheme = getPanelThemeForGate(node.id);
@@ -204,6 +239,7 @@ function renderPanel(panel, node, copy, interfaceCopy) {
       <h2 class="classic-2d-panel__title" id="classic-2d-panel-title">${escapeHtml(node.title)}</h2>
       ${subtitle ? `<p class="classic-2d-panel__label">${escapeHtml(subtitle)}</p>` : ''}
       ${lead ? `<p class="classic-2d-panel__lead">${escapeHtml(lead)}</p>` : ''}
+      ${videoMarkup}
       ${demoMarkup}
       <div class="classic-2d-panel__body">
         ${bodyParagraphs.map((paragraph) => `<p>${escapeHtml(paragraph)}</p>`).join('')}
@@ -215,6 +251,7 @@ function renderPanel(panel, node, copy, interfaceCopy) {
           ${node.featureText ? `<span>${escapeHtml(node.featureText)}</span>` : ''}
         </p>
       ` : ''}
+      ${renderProjectLinksMarkup(node.projectLinks, interfaceCopy)}
       ${caseStudyMarkup}
         <button class="classic-2d-panel__close" type="button" data-classic-panel-close aria-label="${escapeHtml(interfaceCopy.closePanelAria)}">${escapeHtml(interfaceCopy.closePanel)}</button>
       </div>
@@ -242,9 +279,11 @@ export function startClassic2D({ container, language = 'en', onBackToModes }) {
   const copy = resolveCopy(language);
   const interfaceCopy = getInterfaceCopy(language);
   const localizedPortfolioNodes = resolvePortfolioNodes(language);
+  const orangeMonkeyVr = resolveOrangeMonkeyVr(language);
   const titleLines = copy.title.split(', ');
   let activeGateId = null;
-  let lastFocusedGate = null;
+  let activePanelContent = null;
+  let lastFocusedControl = null;
 
   container.innerHTML = `
     <main class="classic-2d" aria-labelledby="classic-2d-title">
@@ -264,7 +303,7 @@ export function startClassic2D({ container, language = 'en', onBackToModes }) {
         <div class="classic-2d__orbit-layer" data-classic-orbit></div>
         <div class="classic-2d__center-layer">
           <div class="classic-2d__monkey-optical">
-            <div class="classic-2d__monkey-rotation" data-classic-monkey aria-label="${escapeHtml(copy.centralLabel)}" role="img">
+            <button class="classic-2d__monkey-rotation" type="button" data-classic-monkey aria-label="${escapeHtml(copy.centralLabel)}">
               <img
                 class="classic-2d__monkey-image"
                 src="${publicPath(CLASSIC_MONKEY_IMAGE_PATH)}"
@@ -283,7 +322,7 @@ export function startClassic2D({ container, language = 'en', onBackToModes }) {
                   <span class="classic-2d__monkey-mark"></span>
                 </span>
               </span>
-            </div>
+            </button>
           </div>
         </div>
       </section>
@@ -318,6 +357,29 @@ export function startClassic2D({ container, language = 'en', onBackToModes }) {
 
   monkeyImage?.addEventListener('error', () => {
     monkey?.classList.add('classic-2d__monkey--image-error');
+  });
+
+  const setActiveGate = (gateId) => {
+    activeGateId = gateId;
+    orbit.querySelectorAll('.classic-2d-gate').forEach((gate) => {
+      const isActive = gate.dataset.gateId === activeGateId;
+      gate.classList.toggle('classic-2d-gate--active', isActive);
+      gate.setAttribute('aria-pressed', String(isActive));
+    });
+  };
+
+  const openProject = (projectId) => {
+    if (projectId !== orangeMonkeyVr.id) return false;
+    lastFocusedControl = monkey;
+    setActiveGate(null);
+    monkey.classList.add('classic-2d__monkey--active');
+    activePanelContent = orangeMonkeyVr;
+    renderPanel(panel, orangeMonkeyVr, copy, interfaceCopy);
+    return true;
+  };
+
+  monkey.addEventListener('click', () => {
+    openProject('orange-monkey-vr');
   });
 
   localizedPortfolioNodes.forEach((node, index) => {
@@ -368,14 +430,10 @@ export function startClassic2D({ container, language = 'en', onBackToModes }) {
     });
 
     button.addEventListener('click', () => {
-      lastFocusedGate = button;
-      activeGateId = node.id;
-      orbit.querySelectorAll('.classic-2d-gate').forEach((gate) => {
-        const isActive = gate.dataset.gateId === activeGateId;
-        gate.classList.toggle('classic-2d-gate--active', isActive);
-        gate.setAttribute('aria-pressed', String(isActive));
-      });
+      lastFocusedControl = button;
+      setActiveGate(node.id);
       monkey.classList.add('classic-2d__monkey--active');
+      activePanelContent = node;
       renderPanel(panel, node, copy, interfaceCopy);
     });
 
@@ -384,20 +442,22 @@ export function startClassic2D({ container, language = 'en', onBackToModes }) {
 
   const closePanel = ({ restoreFocus = true } = {}) => {
     if (panel.hidden) return;
+    releaseYouTubeIframe(panel.querySelector('[data-classic-youtube-player]'));
     panel.hidden = true;
     panel.innerHTML = '';
     panel.removeAttribute('data-panel-theme');
     panel.removeAttribute('data-gate-id');
     document.body.classList.remove('classic-2d-panel-open', 'demo-lightbox-open');
     activeGateId = null;
+    activePanelContent = null;
     monkey.classList.remove('classic-2d__monkey--active');
     orbit.querySelectorAll('.classic-2d-gate').forEach((gate) => {
       gate.classList.remove('classic-2d-gate--active');
       gate.setAttribute('aria-pressed', 'false');
     });
 
-    if (restoreFocus && lastFocusedGate?.isConnected) {
-      lastFocusedGate.focus();
+    if (restoreFocus && lastFocusedControl?.isConnected) {
+      lastFocusedControl.focus();
     }
   };
 
@@ -409,6 +469,13 @@ export function startClassic2D({ container, language = 'en', onBackToModes }) {
   });
 
   panel.addEventListener('click', (event) => {
+    const playVideoButton = event.target.closest('[data-classic-youtube-play]');
+    if (playVideoButton) {
+      const player = panel.querySelector('[data-classic-youtube-player]');
+      loadYouTubeIframe(player, activePanelContent?.video, `${activePanelContent?.title ?? ''} — ${interfaceCopy.videoTitle}`);
+      return;
+    }
+
     const closeDemoButton = event.target.closest('[data-classic-demo-close]');
     if (closeDemoButton) {
       closeClassicDemoLightbox(panel);
@@ -501,7 +568,9 @@ export function startClassic2D({ container, language = 'en', onBackToModes }) {
   window.addEventListener('keydown', handleKeydown);
 
   return {
+    openProject,
     destroy() {
+      releaseYouTubeIframe(panel.querySelector('[data-classic-youtube-player]'));
       stageResizeObserver?.disconnect();
       window.removeEventListener('keydown', handleKeydown);
       document.body.classList.remove('classic-2d-panel-open', 'demo-lightbox-open');

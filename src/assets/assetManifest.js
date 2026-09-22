@@ -66,17 +66,20 @@ const milkyWayBackgroundAsset = withStage({
   type: 'texture'
 }, ASSET_STAGES.DEFERRED_WARM);
 
-const criticalInitialAssets = Object.freeze([
+const sharedCriticalInitialAssets = Object.freeze([
   withStage({ id: 'gltf-loader-module', label: 'Vendored GLTFLoader module', path: '/vendor/three/examples/jsm/loaders/GLTFLoader.js', type: 'script' }, ASSET_STAGES.CRITICAL_INITIAL),
   withStage({ id: 'monkey-model', label: 'Central monkey model', path: '/glb/monkey.glb', type: 'model' }, ASSET_STAGES.CRITICAL_INITIAL),
   withStage({ id: 'monkey-silhouette-model', label: 'Monkey interaction silhouette model', path: '/glb/monkey_silhuette.glb', type: 'model' }, ASSET_STAGES.CRITICAL_INITIAL),
   withStage({ id: 'monkey-stone-model', label: 'Monkey stone model', path: '/glb/monkey_stone.glb', type: 'model' }, ASSET_STAGES.CRITICAL_INITIAL),
   ...glyphModelAssets,
-  withStage({ id: 'sun-model', label: 'Sun model', path: '/glb/sun.glb', type: 'model' }, ASSET_STAGES.CRITICAL_INITIAL),
+  withStage({ id: 'sun-model', label: 'Sun model', path: '/glb/sun.glb', type: 'model' }, ASSET_STAGES.CRITICAL_INITIAL)
+]);
+
+const experience3dCriticalInitialAssets = Object.freeze([
   withStage({ id: 'moon-model', label: 'Moon model', path: '/glb/moon.glb', type: 'model' }, ASSET_STAGES.CRITICAL_INITIAL)
 ]);
 
-const deferredWarmAssets = Object.freeze([
+const experienceVrDeferredWarmAssetsBeforePortal = Object.freeze([
   ...Array.from({ length: 4 }, (_, index) => withStage({
     id: `vr-attractor-band-${index + 1}-image`,
     label: `VR Astrolabium band ${index + 1} symbol`,
@@ -99,8 +102,17 @@ const deferredWarmAssets = Object.freeze([
   withStage({ id: 'vr-progress-floor-haiku-model', label: 'VR Haiku Cosmos progress floor sector model', path: '/glb/floor_haiku_cosmos.glb', type: 'model' }, ASSET_STAGES.DEFERRED_WARM),
   withStage({ id: 'vr-progress-floor-dig-model', label: 'VR DIG Engine progress floor sector model', path: '/glb/floor_dig_engine.glb', type: 'model' }, ASSET_STAGES.DEFERRED_WARM),
   withStage({ id: 'vr-progress-floor-ai-guide-model', label: 'VR AI Guide progress floor sector model', path: '/glb/floor_ai_guide.glb', type: 'model' }, ASSET_STAGES.DEFERRED_WARM),
-  withStage({ id: 'vr-rune-bridge-model', label: 'VR rune bridge model', path: '/glb/bridge.glb', type: 'model' }, ASSET_STAGES.DEFERRED_WARM),
-  withStage({ id: 'vr-portal-model', label: 'VR arrival portal model', path: '/glb/portal.glb', type: 'model' }, ASSET_STAGES.DEFERRED_WARM),
+  withStage({ id: 'vr-rune-bridge-model', label: 'VR rune bridge model', path: '/glb/bridge.glb', type: 'model' }, ASSET_STAGES.DEFERRED_WARM)
+]);
+
+const sharedPortalAsset = withStage({
+  id: 'vr-portal-model',
+  label: 'VR arrival portal model',
+  path: '/glb/portal.glb',
+  type: 'model'
+}, ASSET_STAGES.DEFERRED_WARM);
+
+const experienceVrDeferredWarmAssetsAfterPortal = Object.freeze([
   withStage({ id: 'vr-crystal-reliquary-model', label: 'VR crystal reliquary model', path: '/glb/portal_crystal_reliquary.glb', type: 'model' }, ASSET_STAGES.DEFERRED_WARM),
   withStage({ id: 'vr-crystal-reliquary-button-activate-model', label: 'VR crystal reliquary activate button', path: '/glb/portal_crystal_reliquary_button_activate.glb', type: 'model' }, ASSET_STAGES.DEFERRED_WARM),
   withStage({ id: 'vr-crystal-reliquary-button-release-model', label: 'VR crystal reliquary release button', path: '/glb/portal_crystal_reliquary_button_release.glb', type: 'model' }, ASSET_STAGES.DEFERRED_WARM),
@@ -109,16 +121,47 @@ const deferredWarmAssets = Object.freeze([
     label: `${page.glyphId} VR crystal page ${page.order}`,
     path: page.crystalModelPath,
     type: 'model'
-  }, ASSET_STAGES.DEFERRED_WARM)),
-  ...portfolioNodes.filter((node) => node.plaqueModelPath).map((node) => withStage({
+  }, ASSET_STAGES.DEFERRED_WARM))
+]);
+
+const experience3dPlaqueAssets = Object.freeze(
+  portfolioNodes.filter((node) => node.plaqueModelPath).map((node) => withStage({
     id: `plaque-${node.id}`,
     label: `${node.title} plaque model`,
     path: node.plaqueModelPath,
     type: 'model'
-  }, ASSET_STAGES.DEFERRED_WARM)),
-    ...atmosphereRelicAssets,
-    ...galaxySpriteAssets,
-    milkyWayBackgroundAsset
+  }, ASSET_STAGES.DEFERRED_WARM))
+);
+
+const sharedDeferredWarmAssets = Object.freeze([
+  sharedPortalAsset,
+  ...atmosphereRelicAssets
+]);
+
+const experience3dDeferredWarmAssets = Object.freeze([
+  ...experience3dPlaqueAssets,
+  ...galaxySpriteAssets,
+  milkyWayBackgroundAsset
+]);
+
+const experienceVrDeferredWarmAssets = Object.freeze([
+  ...experienceVrDeferredWarmAssetsBeforePortal,
+  ...experienceVrDeferredWarmAssetsAfterPortal
+]);
+
+const criticalInitialAssets = Object.freeze([
+  ...sharedCriticalInitialAssets,
+  ...experience3dCriticalInitialAssets
+]);
+
+const deferredWarmAssets = Object.freeze([
+  ...experienceVrDeferredWarmAssetsBeforePortal,
+  sharedPortalAsset,
+  ...experienceVrDeferredWarmAssetsAfterPortal,
+  ...experience3dPlaqueAssets,
+  ...atmosphereRelicAssets,
+  ...galaxySpriteAssets,
+  milkyWayBackgroundAsset
 ]);
 
 const optionalLateAssets = Object.freeze([]);
@@ -131,6 +174,24 @@ export const assetManifest = Object.freeze({
   // Backwards-compatible group aliases. Prefer stage names for new preload code.
   coreScene: criticalInitialAssets,
   atmosphere: atmosphereRelicAssets
+});
+
+export const assetOwnership = Object.freeze({
+  shared: Object.freeze({
+    criticalInitial: sharedCriticalInitialAssets,
+    deferredWarm: sharedDeferredWarmAssets,
+    optionalLate: optionalLateAssets
+  }),
+  experience3d: Object.freeze({
+    criticalInitial: experience3dCriticalInitialAssets,
+    deferredWarm: experience3dDeferredWarmAssets,
+    optionalLate: optionalLateAssets
+  }),
+  experienceVr: Object.freeze({
+    criticalInitial: optionalLateAssets,
+    deferredWarm: experienceVrDeferredWarmAssets,
+    optionalLate: optionalLateAssets
+  })
 });
 
 export const INITIAL_PRELOAD_GROUPS = Object.freeze([ASSET_STAGES.CRITICAL_INITIAL]);
@@ -151,4 +212,27 @@ export function getPreloadAssets(groupNames = INITIAL_PRELOAD_GROUPS) {
 
 export function getAllPreloadAssets() {
   return getPreloadAssets([ASSET_STAGES.CRITICAL_INITIAL, ASSET_STAGES.DEFERRED_WARM, ASSET_STAGES.OPTIONAL_LATE]);
+}
+
+export function getExperience3dPreloadAssets(groupNames = INITIAL_PRELOAD_GROUPS) {
+  const seen = new Set();
+  return groupNames
+    .flatMap((groupName) => [
+      ...(assetOwnership.shared[groupName] ?? []),
+      ...(assetOwnership.experience3d[groupName] ?? [])
+    ])
+    .filter((asset) => {
+      const key = `${asset.type}:${asset.path}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+}
+
+export function getAllExperience3dPreloadAssets() {
+  return getExperience3dPreloadAssets([
+    ASSET_STAGES.CRITICAL_INITIAL,
+    ASSET_STAGES.DEFERRED_WARM,
+    ASSET_STAGES.OPTIONAL_LATE
+  ]);
 }

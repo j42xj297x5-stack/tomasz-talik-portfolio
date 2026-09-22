@@ -235,7 +235,25 @@ export function createOptionsPanel({ runtimeState, onChange, onSettingsImported 
   const performanceTimer = setInterval(() => {
     const snapshot = getPerformanceSnapshot?.(); if (!snapshot) return;
     const r = snapshot.renderer ?? {}; const built = snapshot.builtObjects ?? {}; const visibility = snapshot.layerVisibility ?? {};
-    performanceText.textContent = `FPS ${snapshot.averageFps} · avg ${snapshot.averageFrameMs}ms · p95 ${snapshot.p95FrameMs}ms\nDraw calls ${r.calls} · triangles ${r.triangles} · geometries ${r.geometries} · textures ${r.textures} · programs ${r.programs ?? 'n/a'}\nBuilt: ${JSON.stringify(built)}\nVisible: ${JSON.stringify(visibility)}`;
+    const frames = snapshot.frameIntervals ?? {};
+    const interactions = snapshot.firstInteractions ?? {};
+    const marker = (name, label) => {
+      const value = interactions.markers?.[name];
+      if (!value) return `${label}: not yet measured`;
+      return `${label}: measured${value.glyphId ? ` (${value.glyphId})` : ''}`;
+    };
+    const interactionWindow = (name, label) => {
+      const value = interactions.windows?.[name];
+      if (!value || value.status === 'not-yet-measured') return `${label}: not yet measured`;
+      if (value.status === 'collecting') return `${label}: collecting (${value.sampleCount ?? 0} samples)`;
+      if (value.status === 'unavailable') return `${label}: unavailable (no frame intervals)`;
+      return `${label}: avg ${value.averageFrameMs}ms · p95 ${value.p95FrameMs}ms · max ${value.maxFrameMs}ms · n ${value.sampleCount}`;
+    };
+    const currentFrames = frames.status === 'measured'
+      ? `FPS ${frames.averageFps} · avg ${frames.averageFrameMs}ms · p95 ${frames.p95FrameMs}ms · max ${frames.maxFrameMs}ms · n ${frames.sampleCount}`
+      : `Collecting frame intervals… (${frames.sampleCount ?? 0} samples)`;
+    const programs = snapshot.programs ?? {};
+    performanceText.textContent = `CURRENT FRAME INTERVALS\n${currentFrames}\n\nFIRST INTERACTIONS\n${marker('firstRenderedGameplayFrame', 'First gameplay frame')}\n${marker('firstMonkeyHover', 'First monkey hover')}\n${marker('firstGlyphHover', 'First glyph hover')}\n${marker('firstGlyphOpen', 'First glyph opening')}\n${interactionWindow('firstGlyphOpen', 'Glyph 2s window')}\n${marker('firstPortalOpen', 'First Portal opening')}\n${interactionWindow('firstPortalOpen', 'Portal 2s window')}\n\nRENDERER / RESOURCES\nDraw calls ${r.calls} · triangles ${r.triangles}\nGeometries ${r.geometries} · textures ${r.textures} · programs ${r.programs ?? 'n/a'}\nPrograms after warm-up ${programs.warmupComplete ?? 'not yet measured'} · first glyph ${programs.afterFirstGlyphOpen ?? 'not yet measured'} · first Portal ${programs.afterFirstPortalOpen ?? 'not yet measured'}\nBuilt: ${JSON.stringify(built)}\nVisible: ${JSON.stringify(visibility)}\n\nFrame intervals indicate jank, not its CPU/GPU/shader/texture/audio cause.`;
   }, 1250);
 
   const transfer = section('Import / Export');
