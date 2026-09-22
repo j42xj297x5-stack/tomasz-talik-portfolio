@@ -115,6 +115,9 @@ export function createPlaqueTransition({ scene, assetManager }) {
       try {
         const plaque = await ensure(node);
         if (!plaque) continue;
+        // The fade uses owned clones of the real glyph materials. Create them
+        // while the loader is still present rather than on the first reveal.
+        plaque.glyphMaterials ??= glyphMaterials(node);
         plaque.wrapper.position.copy(node.getWorldPosition(new THREE.Vector3()));
         plaque.wrapper.lookAt(camera.position);
         plaque.wrapper.rotateY(node.userData.plaqueVisual?.frontYawOffset ?? 0);
@@ -129,6 +132,9 @@ export function createPlaqueTransition({ scene, assetManager }) {
   function setWarmupVisibility(visible) {
     instances.forEach((plaque) => {
       plaque.wrapper.visible = visible;
+      if (plaque.glyphMaterials) {
+        plaque.glyphMaterials.visualModel.visible = visible ? true : plaque.glyphMaterials.visible;
+      }
       plaque.glow.material.opacity = 0;
       plaque.warmLight.intensity = 0;
     });
@@ -136,8 +142,13 @@ export function createPlaqueTransition({ scene, assetManager }) {
 
   function setWarmupMaterialMode(mode) {
     instances.forEach((plaque) => {
-      if (mode === 'fade') setFadeMode(plaque.materials);
-      else setStableMode(plaque.materials);
+      if (mode === 'fade') {
+        setFadeMode(plaque.materials);
+        if (plaque.glyphMaterials) setGlyphFade(plaque.glyphMaterials, 0.5);
+      } else {
+        setStableMode(plaque.materials);
+        if (plaque.glyphMaterials) restoreGlyphMaterials(plaque.glyphMaterials);
+      }
     });
   }
 
@@ -266,5 +277,16 @@ export function createPlaqueTransition({ scene, assetManager }) {
     if (active?.node === node) active = null;
   }
 
-  return { prewarm, setWarmupVisibility, setWarmupMaterialMode, reveal, restore, reset, update, hasInstance: (node) => instances.has(nodeIdFor(node)), getInstanceCount: () => instances.size };
+  return {
+    prewarm,
+    setWarmupVisibility,
+    setWarmupMaterialMode,
+    getWarmupTargets: () => [...instances.values()].flatMap((plaque) => [plaque.glyphMaterials?.visualModel, plaque.wrapper]).filter(Boolean),
+    reveal,
+    restore,
+    reset,
+    update,
+    hasInstance: (node) => instances.has(nodeIdFor(node)),
+    getInstanceCount: () => instances.size
+  };
 }
