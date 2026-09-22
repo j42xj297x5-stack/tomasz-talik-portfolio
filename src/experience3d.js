@@ -272,6 +272,7 @@ function syncHoverState(nextHoveredNode, event = null, { immediateExit = false }
   if (hoveredNode) {
     setNodeHoverState(hoveredNode, true);
     if (hoveredNode !== previousHoveredNode) {
+      runtimeDiagnostics.markGlyphHover(hoveredNode.userData?.id);
       triggerNodeHoverAnimation(hoveredNode);
       void audioManager.startGlyphHover();
     }
@@ -286,6 +287,7 @@ function syncHoverState(nextHoveredNode, event = null, { immediateExit = false }
 }
 
 function syncMonkeyHover(hovered) {
+  if (hovered && !monkeyHovered) runtimeDiagnostics.markMonkeyHover();
   monkeyHovered = Boolean(hovered);
   document.body.style.cursor = monkeyHovered ? 'pointer' : hoveredNode ? 'pointer' : 'default';
 }
@@ -330,6 +332,7 @@ function pickMonkey(event) {
 
 async function openOrangeMonkeyPanel() {
   if (interactionState !== 'idle') return;
+  runtimeDiagnostics.markPortalOpen();
   try {
     interactionState = 'monkeyFocusing';
     clearInteractiveHover();
@@ -353,6 +356,7 @@ async function openOrangeMonkeyPanel() {
     activeOrangeMonkeyPanel = true;
     overlay.open(orangeMonkeyRecord);
     interactionState = 'monkeyPanelOpen';
+    runtimeDiagnostics.markPortalOpenComplete();
   } catch (error) {
     console.warn('[interaction] Failed to open Orange Monkey VR presentation.', error);
     orangeMonkeyPortal.reset();
@@ -417,6 +421,7 @@ function restoreInteractionSafely() {
 }
 
 async function focusNodePanel(node) {
+  runtimeDiagnostics.markGlyphOpen(node.userData?.id);
   try {
     interactionState = 'focusing';
     clearInteractiveHover();
@@ -450,6 +455,7 @@ async function focusNodePanel(node) {
     if (!activePanelNode) return;
     overlay.open(node.userData);
     interactionState = 'panelOpen';
+    runtimeDiagnostics.markGlyphOpenComplete();
     runtimeDiagnostics.markPlaqueOpen(node.userData?.id ?? 'unknown');
   } catch (error) {
     console.warn('[interaction] Failed to focus selected glyph.', error);
