@@ -2,10 +2,16 @@ import { formatBytes } from '../assets/preloadAssets.js';
 import { publicPath } from '../utils/publicPath.js';
 
 function progressPercent(snapshot) {
-  const critical = snapshot?.stageStats?.criticalInitial;
-  if (critical?.total) return Math.round(((critical.loaded + critical.failed) / critical.total) * 100);
   if (!snapshot?.totalAssets) return 0;
   return Math.round(((snapshot.completedAssets + snapshot.failedAssets) / snapshot.totalAssets) * 100);
+}
+
+function byteProgress(snapshot) {
+  const loaded = formatBytes(snapshot.loadedBytes);
+  if (snapshot.unknownTotalAssets > 0) {
+    return `${loaded} loaded / ${formatBytes(snapshot.knownTotalBytes)} known + ${snapshot.unknownTotalAssets} unknown`;
+  }
+  return `${loaded} / ${formatBytes(snapshot.knownTotalBytes)}`;
 }
 
 export function createLoaderOverlay({ debug = false } = {}) {
@@ -36,24 +42,27 @@ export function createLoaderOverlay({ debug = false } = {}) {
 
   document.body.append(root);
   let completed = false;
+  let phase = null;
 
   return {
     update(snapshot) {
       if (completed) return;
       const percent = progressPercent(snapshot);
       barEl.style.width = `${percent}%`;
-      progressEl.textContent = `${percent}%`;
-      const critical = snapshot.stageStats?.criticalInitial;
-      const deferred = snapshot.stageStats?.deferredWarm;
-      const criticalBytes = critical ? `${formatBytes(critical.loadedBytes)} / ${critical.knownTotalBytes > 0 ? formatBytes(critical.knownTotalBytes) : 'unknown total'}` : `${formatBytes(snapshot.loadedBytes)} / ${snapshot.knownTotalBytes > 0 ? formatBytes(snapshot.knownTotalBytes) : 'unknown total'}`;
-      assetsEl.textContent = `assets ${deferred?.loaded ?? snapshot.completedAssets}/${deferred?.total ?? snapshot.totalAssets}`;
-      bytesEl.textContent = criticalBytes;
+      progressEl.textContent = phase ?? (percent === 100 ? 'Assets loaded' : `${percent}%`);
+      assetsEl.textContent = `assets ${snapshot.completedAssets + snapshot.failedAssets}/${snapshot.totalAssets}`;
+      bytesEl.textContent = byteProgress(snapshot);
       if (debug && debugEl) {
         const current = snapshot.currentAsset ?? snapshot.lastLoaded;
         const stats = snapshot.runtimeStats ?? {};
         const phase = current ? `${current.status}: ${current.path}` : `${snapshot.completedAssets}/${snapshot.totalAssets} assets`;
         debugEl.textContent = `${phase} · stage=${stats.activeStage ?? 'idle'} · queue=${stats.queueLength ?? 0}/${stats.activeLoads ?? 0} · c=${stats.concurrency ?? 0} · runtime=${stats.runtimeLoadedAssets ?? 0} · gltf=${stats.parsedGltfCount ?? 0} · textures=${stats.textureLoadedCount ?? 0} · images=${stats.decodedImageCount ?? 0} · hits/misses=${stats.cacheHits ?? 0}/${stats.cacheMisses ?? 0} · compile=${stats.shaderCompileComplete ? 'yes' : 'no'} · mobileReduced=${stats.mobileWarmupReduced ? 'yes' : 'no'} · load=${Math.round(stats.networkLoadMs ?? 0)}ms · hydrate=${Math.round(stats.parseHydrateMs ?? 0)}ms · warm=${Math.round(stats.compileWarmupMs ?? 0)}ms`;
       }
+    },
+    setPhase(label) {
+      if (completed) return;
+      phase = label;
+      progressEl.textContent = label;
     },
     showError(message) {
       root.classList.add('loader-overlay--error');
@@ -63,6 +72,7 @@ export function createLoaderOverlay({ debug = false } = {}) {
     async complete() {
       if (completed) return;
       completed = true;
+      progressEl.textContent = 'Ready';
       root.classList.add('loader-overlay--complete');
       await new Promise((resolve) => setTimeout(resolve, 420));
       root.hidden = true;
