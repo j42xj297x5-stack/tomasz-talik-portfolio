@@ -653,14 +653,13 @@ body {
   backdrop-filter: blur(14px);
 }
 
-.loader-overlay__sigil {
-  width: 58px;
+.loader-overlay__logo {
+  display: block;
+  width: auto;
   height: 58px;
   margin: 0 auto 1.1rem;
-  border: 1px solid rgba(213, 190, 121, 0.45);
-  border-radius: 999px;
-  background: radial-gradient(circle, rgba(211, 190, 121, 0.28), transparent 62%);
-  box-shadow: 0 0 30px rgba(211, 190, 121, 0.16);
+  max-width: min(96px, 32vw);
+  object-fit: contain;
 }
 
 .loader-overlay__eyebrow {
@@ -697,12 +696,17 @@ body {
 }
 
 .loader-overlay__progress,
+.loader-overlay__assets,
 .loader-overlay__bytes,
 .loader-overlay__debug,
 .loader-overlay__error {
   margin: 0.75rem 0 0;
   color: rgba(220, 232, 248, 0.84);
   font-size: 0.84rem;
+}
+
+.loader-overlay__assets {
+  margin-bottom: -0.35rem;
 }
 
 .loader-overlay__debug {
