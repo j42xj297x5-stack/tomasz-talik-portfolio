@@ -103,6 +103,14 @@ export function createCameraRig(pointerElement = document.documentElement) {
 
   function pauseMouseControl() {
     state.mouseControlPaused = true;
+    if (state.mode === 'resume') {
+      state.currentYaw = pose.yaw;
+      state.currentPitch = pose.pitch;
+      state.targetYaw = pose.yaw;
+      state.targetPitch = pose.pitch;
+      state.mode = 'interactive';
+      state.suppressInteractiveStep = false;
+    }
     state.resume = null;
   }
 
@@ -115,20 +123,21 @@ export function createCameraRig(pointerElement = document.documentElement) {
     state.mode = 'resume';
   }
 
-  function startTransition(kind, targetPose, duration) {
+  function startTransition(kind, targetPose, duration, onAccepted) {
     if (state.transition || state.mode === 'resume') return Promise.reject(new Error('Camera transition already in progress.'));
     const startPose = { yaw: pose.yaw, pitch: pose.pitch, radius: pose.radius, pivot: pose.pivot.clone(), lookAt: pose.lookAt.clone() };
     return new Promise((resolve) => {
       state.mode = kind;
       state.transition = { startedAt: performance.now(), duration: prefersReducedMotion ? Math.min(duration, 150) : duration, startPose, targetPose, yawDelta: shortestAngularDelta(startPose.yaw, targetPose.yaw), resolve };
+      onAccepted?.();
     });
   }
 
-  function focusOnNode(camera, node, { duration = supportsFinePointer ? 1050 : 550 } = {}) {
+  function focusOnNode(camera, node, { duration = supportsFinePointer ? 1050 : 550, onAccepted } = {}) {
     if (!node) return Promise.reject(new Error('Cannot focus camera without a node.'));
     const nodePosition = node.getWorldPosition(new THREE.Vector3());
     const yaw = Math.atan2(nodePosition.x - PIVOT.x, nodePosition.z - PIVOT.z);
-    return startTransition('focus', { yaw, pitch: 0, radius: CAMERA_RADIUS, pivot: PIVOT, lookAt: nodePosition }, duration);
+    return startTransition('focus', { yaw, pitch: 0, radius: CAMERA_RADIUS, pivot: PIVOT, lookAt: nodePosition }, duration, onAccepted);
   }
 
   function returnHome(camera, { duration = supportsFinePointer ? 600 : 550 } = {}) {
