@@ -1444,6 +1444,8 @@ const listenerQuaternion = new THREE.Quaternion();
 const listenerForward = new THREE.Vector3();
 const listenerUp = new THREE.Vector3();
 const listenerPose = Object.freeze({ position: listenerPosition, forward: listenerForward, up: listenerUp });
+const celestialViewerPosition = new THREE.Vector3();
+const celestialViewerQuaternion = new THREE.Quaternion();
 runeStoneAudioProjection = createVrRuneStoneAudioProjection({
   audioBridge: vrAudio, runeStoneActor, runeStoneProgressionController,
   getEmitterAnchor: (branchId) => progressFloor.getRuneStoneSpatialAudioAnchor(branchId),
@@ -2022,6 +2024,14 @@ function renderFrame() {
   finalAmbientSequencer.update(delta);
   synchronizeAttractorObjective(delta);
   if (xrStartCalibration.processFrame()) {
+    if (renderer.xr.isPresenting) {
+      getXrHeadWorldPose({
+        renderer, camera, playerRig,
+        positionTarget: celestialViewerPosition,
+        quaternionTarget: celestialViewerQuaternion
+      });
+      celestialActor.updateOrientation(celestialViewerPosition, celestialViewerQuaternion);
+    }
     renderer.render(scene, camera);
     return;
   }
@@ -2038,6 +2048,7 @@ function renderFrame() {
       listenerForward.set(0, 0, -1).applyQuaternion(listenerQuaternion).normalize();
       listenerUp.set(0, 1, 0).applyQuaternion(listenerQuaternion).normalize();
       vrAudio.setSpatialListenerPose(listenerPose);
+      celestialActor.updateOrientation(listenerPosition, listenerQuaternion);
     }
     renderer.render(scene, camera);
     return;
@@ -2132,6 +2143,14 @@ function renderFrame() {
   locomotion.update(delta);
   portalCanvas.update(delta);
   asterionResonatorTargetResponsePresentation.update(delta);
+  if (renderer.xr.isPresenting) {
+    getXrHeadWorldPose({
+      renderer, camera, playerRig,
+      positionTarget: celestialViewerPosition,
+      quaternionTarget: celestialViewerQuaternion
+    });
+    celestialActor.updateOrientation(celestialViewerPosition, celestialViewerQuaternion);
+  }
   renderer.render(scene, camera);
 }
 
