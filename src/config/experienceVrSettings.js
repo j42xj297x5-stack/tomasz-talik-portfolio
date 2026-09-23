@@ -68,7 +68,12 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
     },
     optionButton: {
       enabled: true, rayMaxDistance: 3, emissionInactive: 0, emissionHover: 7, emissionActive: 3,
-      selectionDuration: 0.48, moduleAnglesDegrees: { floor_gyroscope_sphere: 90 },
+      selectionDuration: 0.48, moduleAnglesDegrees: {
+        ASTERION_SPHERE: 90,
+        ASTROLABIUM_PRODUCTION: 45,
+        ASTROLABIUM_TUNING: -45,
+        RUNE_TUNING: -90
+      },
       halo: { opacity: 0.52, thicknessPixels: 5, pulseDuration: 1.1 }
     },
     panel: {
