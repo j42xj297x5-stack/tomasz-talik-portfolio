@@ -173,20 +173,82 @@ export function createVrPlayerGuidePanel({ leftGrip, semanticInput, locale = 'en
     context.fillStyle = config.colors.text;
     context.font = '700 40px sans-serif';
     context.fillText(content.title, 28, 60);
-    context.fillStyle = config.colors.muted;
-    context.font = '23px sans-serif';
-    const footerByViewState = {
-      [VIEW_STATE.MAIN_MENU]: content.mainMenuHint,
-      [VIEW_STATE.TOOL_LIST]: content.toolListHint,
-      [VIEW_STATE.SECTION_DETAIL]: content.sectionDetailHint,
-      [VIEW_STATE.CONTROLS_SETTINGS]: content.controlsSettingsHint,
-      [VIEW_STATE.TOOL_DETAIL]: content.toolDetailHint,
-      [VIEW_STATE.KNOWLEDGE_LIST]: content.knowledgeListHint,
-      [VIEW_STATE.KNOWLEDGE_DETAIL]: content.knowledgeDetailHint
+    const footerActionsByViewState = {
+      [VIEW_STATE.MAIN_MENU]: content.footerActions.mainMenu,
+      [VIEW_STATE.TOOL_LIST]: content.footerActions.list,
+      [VIEW_STATE.SECTION_DETAIL]: content.footerActions.detail,
+      [VIEW_STATE.CONTROLS_SETTINGS]: content.footerActions.controlsSettings,
+      [VIEW_STATE.TOOL_DETAIL]: content.footerActions.detail,
+      [VIEW_STATE.KNOWLEDGE_LIST]: content.footerActions.list,
+      [VIEW_STATE.KNOWLEDGE_DETAIL]: content.footerActions.detail
     };
-    const footer = viewState === VIEW_STATE.SECTION_DETAIL && activeSectionId === 'controls'
-      ? content.controlsDetailHint : footerByViewState[viewState];
-    context.fillText(footer, 28, canvas.height - 30);
+    const actions = viewState === VIEW_STATE.SECTION_DETAIL && activeSectionId === 'controls'
+      ? content.footerActions.controls : footerActionsByViewState[viewState];
+    drawFooterActions(actions);
+  }
+
+  function drawFooterActions(actions) {
+    const fontSize = 25;
+    const circleDiameter = 38;
+    const controlGap = 10;
+    const actionGap = 28;
+    const maxWidth = canvas.width - 72;
+    context.font = `${fontSize}px sans-serif`;
+
+    const measured = actions.map((action) => {
+      const labelWidth = action.control === 'button'
+        ? circleDiameter : context.measureText(action.label).width;
+      return { ...action, labelWidth, width: labelWidth + controlGap + context.measureText(action.description).width };
+    });
+    const lines = [[]];
+    let lineWidth = 0;
+    for (const action of measured) {
+      const nextWidth = lineWidth + (lines.at(-1).length ? actionGap : 0) + action.width;
+      if (nextWidth > maxWidth && lines.at(-1).length) {
+        lines.push([action]);
+        lineWidth = action.width;
+      } else {
+        lines.at(-1).push(action);
+        lineWidth = nextWidth;
+      }
+    }
+
+    const lineSpacing = 42;
+    const bottomCenter = canvas.height - 31;
+    const firstCenter = bottomCenter - (lines.length - 1) * lineSpacing;
+    lines.forEach((line, lineIndex) => {
+      const totalWidth = line.reduce((sum, action) => sum + action.width, 0)
+        + actionGap * Math.max(0, line.length - 1);
+      let x = (canvas.width - totalWidth) / 2;
+      const centerY = firstCenter + lineIndex * lineSpacing;
+      for (const action of line) {
+        if (action.control === 'button') {
+          context.fillStyle = '#f28c00';
+          context.beginPath();
+          context.arc(x + circleDiameter / 2, centerY, circleDiameter / 2, 0, Math.PI * 2);
+          context.fill();
+          context.fillStyle = '#000000';
+          context.font = `700 ${fontSize}px sans-serif`;
+          context.textAlign = 'center';
+          context.textBaseline = 'middle';
+          context.fillText(action.label, x + circleDiameter / 2, centerY + 1);
+        } else {
+          context.fillStyle = config.colors.text;
+          context.font = `700 ${fontSize}px sans-serif`;
+          context.textAlign = 'start';
+          context.textBaseline = 'middle';
+          context.fillText(action.label, x, centerY);
+        }
+        context.fillStyle = config.colors.text;
+        context.font = `${fontSize}px sans-serif`;
+        context.textAlign = 'start';
+        context.textBaseline = 'middle';
+        context.fillText(action.description, x + action.labelWidth + controlGap, centerY);
+        x += action.width + actionGap;
+      }
+    });
+    context.textAlign = 'start';
+    context.textBaseline = 'alphabetic';
   }
 
   function drawMainMenu(items) {
