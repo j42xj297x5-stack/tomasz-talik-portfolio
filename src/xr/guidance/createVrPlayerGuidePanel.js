@@ -79,7 +79,8 @@ function drawAuthoredWrappedText(context, text, x, y, maxWidth, lineHeight, maxY
 
 export function createVrPlayerGuidePanel({ leftGrip, semanticInput, locale = 'en', settings = {},
   onOpenChange = () => {}, onPanelClick = () => {}, debugCheckpoints = [],
-  onDebugCheckpoint = () => {}, projection = null }) {
+  onDebugCheckpoint = () => {}, projection = null, getTurnSettings = () => ({}),
+  onTurnModeChange = () => {}, onSnapAngleChange = () => {} }) {
   const config = normalizeSettings(settings);
   const content = resolveVrPlayerGuideContent(locale);
   const canvas = document.createElement('canvas');
@@ -102,6 +103,7 @@ export function createVrPlayerGuidePanel({ leftGrip, semanticInput, locale = 'en
   const VIEW_STATE = Object.freeze({
     MAIN_MENU: 'MAIN_MENU',
     SECTION_DETAIL: 'SECTION_DETAIL',
+    CONTROLS_SETTINGS: 'CONTROLS_SETTINGS',
     TOOL_LIST: 'TOOL_LIST',
     TOOL_DETAIL: 'TOOL_DETAIL',
     KNOWLEDGE_LIST: 'KNOWLEDGE_LIST',
@@ -113,6 +115,7 @@ export function createVrPlayerGuidePanel({ leftGrip, semanticInput, locale = 'en
   let selectedToolIndex = 0;
   let activeKnowledgeId = null;
   let selectedKnowledgeIndex = 0;
+  let selectedControlsSettingIndex = 0;
   let previousNavDirection = 0;
   let previousHorizontalDirection = 0;
   let selectedDebugIndex = 0;
@@ -176,11 +179,14 @@ export function createVrPlayerGuidePanel({ leftGrip, semanticInput, locale = 'en
       [VIEW_STATE.MAIN_MENU]: content.mainMenuHint,
       [VIEW_STATE.TOOL_LIST]: content.toolListHint,
       [VIEW_STATE.SECTION_DETAIL]: content.sectionDetailHint,
+      [VIEW_STATE.CONTROLS_SETTINGS]: content.controlsSettingsHint,
       [VIEW_STATE.TOOL_DETAIL]: content.toolDetailHint,
       [VIEW_STATE.KNOWLEDGE_LIST]: content.knowledgeListHint,
       [VIEW_STATE.KNOWLEDGE_DETAIL]: content.knowledgeDetailHint
     };
-    context.fillText(footerByViewState[viewState], 28, canvas.height - 30);
+    const footer = viewState === VIEW_STATE.SECTION_DETAIL && activeSectionId === 'controls'
+      ? content.controlsDetailHint : footerByViewState[viewState];
+    context.fillText(footer, 28, canvas.height - 30);
   }
 
   function drawMainMenu(items) {
@@ -393,6 +399,29 @@ export function createVrPlayerGuidePanel({ leftGrip, semanticInput, locale = 'en
     }
   }
 
+  function drawControlsSettings(item) {
+    const { turnMode = 'SMOOTH', snapAngleDegrees = 45 } = getTurnSettings() ?? {};
+    context.fillStyle = config.colors.text;
+    context.font = '700 30px sans-serif';
+    context.fillText(item.label, 34, 112);
+    const rows = [
+      { label: content.turnModeLabel, value: content.turnModeValues[turnMode] ?? content.turnModeValues.SMOOTH },
+      { label: content.snapAngleLabel, value: `${snapAngleDegrees}°`, disabled: turnMode !== 'SNAP' }
+    ];
+    rows.forEach((row, index) => {
+      const x = 36; const y = 164 + index * 150; const width = canvas.width - 72; const height = 118;
+      if (index === selectedControlsSettingIndex) {
+        context.fillStyle = config.colors.selected; context.fillRect(x, y, width, height);
+      }
+      context.strokeStyle = index === selectedControlsSettingIndex ? config.colors.border : 'rgba(117, 215, 255, 0.35)';
+      context.lineWidth = 4; context.strokeRect(x, y, width, height);
+      context.fillStyle = row.disabled ? config.colors.muted : config.colors.text;
+      context.font = '700 25px sans-serif'; context.fillText(row.label, x + 24, y + 44);
+      context.font = '700 34px sans-serif'; context.textAlign = 'right';
+      context.fillText(row.value, x + width - 24, y + 80); context.textAlign = 'start';
+    });
+  }
+
   function draw() {
     const items = resolveItems();
     projectionSignature = JSON.stringify(items);
@@ -413,6 +442,8 @@ export function createVrPlayerGuidePanel({ leftGrip, semanticInput, locale = 'en
       const knowledge = items.find((item) => item.id === 'knowledge')?.knowledge
         .find(({ id }) => id === activeKnowledgeId);
       if (knowledge) drawKnowledgeDetail(knowledge);
+    } else if (viewState === VIEW_STATE.CONTROLS_SETTINGS) {
+      drawControlsSettings(items.find((item) => item.id === 'controls'));
     } else {
       const activeItem = items.find((item) => item.id === activeSectionId) ?? items[0];
       if (activeItem?.id === 'controls') drawControlsCard(activeItem);
@@ -454,6 +485,10 @@ export function createVrPlayerGuidePanel({ leftGrip, semanticInput, locale = 'en
         activeSectionId = null;
         draw();
         onPanelClick();
+      } else if (open && viewState === VIEW_STATE.CONTROLS_SETTINGS) {
+        viewState = VIEW_STATE.SECTION_DETAIL;
+        draw();
+        onPanelClick();
       } else if (open && viewState === VIEW_STATE.SECTION_DETAIL) {
         viewState = VIEW_STATE.MAIN_MENU;
         activeSectionId = null;
@@ -483,6 +518,11 @@ export function createVrPlayerGuidePanel({ leftGrip, semanticInput, locale = 'en
       selectedKnowledgeIndex = (selectedKnowledgeIndex + (direction > 0 ? 1 : -1) + rowCount) % rowCount;
       draw();
       onPanelClick();
+    } else if (viewState === VIEW_STATE.CONTROLS_SETTINGS && direction && direction !== previousNavDirection) {
+      const { turnMode = 'SMOOTH' } = getTurnSettings() ?? {};
+      selectedControlsSettingIndex = turnMode === 'SNAP'
+        ? (selectedControlsSettingIndex + (direction > 0 ? 1 : -1) + 2) % 2 : 0;
+      draw(); onPanelClick();
     }
     previousNavDirection = direction;
     const horizontalAxis = input.leftStickX ?? 0;
@@ -529,11 +569,24 @@ export function createVrPlayerGuidePanel({ leftGrip, semanticInput, locale = 'en
           activeSectionId = null;
         }
         draw(); onPanelClick();
+      } else if (viewState === VIEW_STATE.SECTION_DETAIL && activeSectionId === 'controls') {
+        selectedControlsSettingIndex = 0;
+        viewState = VIEW_STATE.CONTROLS_SETTINGS;
+        draw(); onPanelClick();
+      } else if (viewState === VIEW_STATE.CONTROLS_SETTINGS) {
+        const { turnMode = 'SMOOTH', snapAngleDegrees = 45 } = getTurnSettings() ?? {};
+        if (selectedControlsSettingIndex === 0) {
+          onTurnModeChange(turnMode === 'SNAP' ? 'SMOOTH' : 'SNAP');
+        } else if (turnMode === 'SNAP') {
+          const angles = [30, 45, 60];
+          onSnapAngleChange(angles[(angles.indexOf(snapAngleDegrees) + 1) % angles.length]);
+        }
+        draw(); onPanelClick();
       }
     }
     previousConfirmPressed = confirmPressed;
   }
-  function reset() { selectedIndex = 0; selectedDebugIndex = 0; selectedToolIndex = 0; selectedKnowledgeIndex = 0; viewState = VIEW_STATE.MAIN_MENU; activeSectionId = null; activeToolId = null; activeKnowledgeId = null; previousNavDirection = 0; previousHorizontalDirection = 0; previousConfirmPressed = false;
+  function reset() { selectedIndex = 0; selectedDebugIndex = 0; selectedToolIndex = 0; selectedKnowledgeIndex = 0; selectedControlsSettingIndex = 0; viewState = VIEW_STATE.MAIN_MENU; activeSectionId = null; activeToolId = null; activeKnowledgeId = null; previousNavDirection = 0; previousHorizontalDirection = 0; previousConfirmPressed = false;
     suppressOpenNotification = true; setOpen(false); suppressOpenNotification = false; }
   function dispose() {
     if (disposed) return;
