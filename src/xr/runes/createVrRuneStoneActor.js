@@ -11,6 +11,8 @@ export const VR_RUNE_STONE_STATE = Object.freeze({
 });
 
 const previewModelsByFamilyCode = new Map();
+const FIRE_PULSE_DURATION_SECONDS = 6.0;
+const FIRE_PULSE_PEAK_MULTIPLIER = 1.5;
 
 export function resolveVrRuneStonePreviewModel(familyCode) {
   return previewModelsByFamilyCode.get(String(familyCode ?? '').toUpperCase()) ?? null;
@@ -34,6 +36,7 @@ export function createVrRuneStoneActor({ parent, assetManager, layer, revealDura
   layerActor.object.name = 'VrRuneStoneField';
   const records = new Map();
   const ownedMaterials = new Set();
+  const fireEmissiveBaselines = [];
   if (!Number.isFinite(revealDurationSeconds) || revealDurationSeconds <= 0) {
     throw new TypeError('[VrRuneStoneActor] revealDurationSeconds must be positive and finite.');
   }
@@ -53,6 +56,16 @@ export function createVrRuneStoneActor({ parent, assetManager, layer, revealDura
           const clone = material.clone();
           ownedMaterials.add(clone);
           opacityBaselines.push({ material: clone, opacity: clone.opacity ?? 1, transparent: clone.transparent });
+          if (descriptor.branchId === 'fire'
+            && Number.isFinite(clone.emissiveIntensity)
+            && clone.emissiveIntensity !== 0
+            && clone.emissive?.isColor
+            && (clone.emissive.r !== 0 || clone.emissive.g !== 0 || clone.emissive.b !== 0)) {
+            fireEmissiveBaselines.push({
+              material: clone,
+              emissiveIntensity: clone.emissiveIntensity
+            });
+          }
           return clone;
         };
         node.material = Array.isArray(node.material)
@@ -113,8 +126,23 @@ export function createVrRuneStoneActor({ parent, assetManager, layer, revealDura
     throw error;
   }
 
+  if (fireEmissiveBaselines.length === 0) {
+    console.warn('[VrRuneStoneActor] FIRE stone has no eligible emissive materials for its pulse.');
+  }
+
   let revealOpacity = 0;
   let revealTransition = null;
+  let firePulseElapsedSeconds = 0;
+  function applyFirePulse() {
+    const pulse = 0.5 - 0.5 * Math.cos(
+      2 * Math.PI * (firePulseElapsedSeconds % FIRE_PULSE_DURATION_SECONDS) / FIRE_PULSE_DURATION_SECONDS
+    );
+    fireEmissiveBaselines.forEach((baseline) => {
+      baseline.material.emissiveIntensity = baseline.emissiveIntensity
+        * FIRE_PULSE_PEAK_MULTIPLIER
+        * pulse;
+    });
+  }
   function applyRevealOpacity(value) {
     revealOpacity = THREE.MathUtils.clamp(value, 0, 1);
     records.forEach((record) => record.opacityBaselines.forEach((baseline) => {
@@ -202,6 +230,8 @@ export function createVrRuneStoneActor({ parent, assetManager, layer, revealDura
     if (disposed) return;
     const delta = Number.isFinite(deltaSeconds) ? Math.max(0, deltaSeconds) : 0;
     records.forEach(({ animationMixer }) => animationMixer?.update(delta));
+    firePulseElapsedSeconds = (firePulseElapsedSeconds + delta) % FIRE_PULSE_DURATION_SECONDS;
+    applyFirePulse();
     if (revealTransition) {
       revealTransition.elapsed += delta;
       applyRevealOpacity(revealTransition.elapsed / revealDurationSeconds);
@@ -214,6 +244,8 @@ export function createVrRuneStoneActor({ parent, assetManager, layer, revealDura
     revealTransition = null;
     applyRevealOpacity(0);
     setPresentationVisible(false);
+    firePulseElapsedSeconds = 0;
+    applyFirePulse();
     records.forEach((record) => {
       if (record.root.parent !== layerActor.object) layerActor.object.add(record.root);
       record.state = VR_RUNE_STONE_STATE.FREE;
@@ -241,6 +273,7 @@ export function createVrRuneStoneActor({ parent, assetManager, layer, revealDura
 
   setPresentationVisible(false);
   applyRevealOpacity(0);
+  applyFirePulse();
 
   return {
     object: layerActor.object,
