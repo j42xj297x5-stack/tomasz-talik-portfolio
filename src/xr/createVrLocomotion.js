@@ -1,4 +1,5 @@
 import * as THREE from '../vendor/three.js';
+import { getXrHeadWorldPosition } from './getXrHeadWorldPosition.js';
 
 const EPSILON = 1e-9;
 const PLATFORM_UP_LOCAL = new THREE.Vector3(0, 1, 0);
@@ -95,6 +96,8 @@ export function createVrLocomotion({ playerRig, renderer, camera, settings, surf
   const movementLocal = new THREE.Vector3();
   const parentWorldQuaternion = new THREE.Quaternion();
   const constrainedDelta = new THREE.Vector3();
+  const headPositionBeforeTurn = new THREE.Vector3();
+  const headPositionAfterTurn = new THREE.Vector3();
   const initialLocalY = playerRig.position.y;
   const initialWalkRadius = walkRadius;
   let activeWalkRadius = walkRadius;
@@ -112,7 +115,21 @@ export function createVrLocomotion({ playerRig, renderer, camera, settings, surf
     if (disposed || !settings.enabled || !Number.isFinite(delta) || delta <= 0) return;
     const y = playerRig.position.y;
     const left = axesFor('left');
-    if (!leftYawLocked) playerRig.rotateY(-left.x * settings.turnSpeed * delta);
+    const yaw = leftYawLocked ? 0 : -left.x * settings.turnSpeed * delta;
+    if (yaw !== 0) {
+      const parent = playerRig.parent;
+      getXrHeadWorldPosition({ renderer, camera, playerRig, target: headPositionBeforeTurn });
+      parent?.updateWorldMatrix?.(true, false);
+      if (parent) parent.worldToLocal(headPositionBeforeTurn);
+
+      playerRig.rotateY(yaw);
+
+      getXrHeadWorldPosition({ renderer, camera, playerRig, target: headPositionAfterTurn });
+      parent?.updateWorldMatrix?.(true, false);
+      if (parent) parent.worldToLocal(headPositionAfterTurn);
+      playerRig.position.x += headPositionBeforeTurn.x - headPositionAfterTurn.x;
+      playerRig.position.z += headPositionBeforeTurn.z - headPositionAfterTurn.z;
+    }
 
     const rightStick = axesFor('right');
     const xrCamera = renderer.xr.getCamera(camera);
@@ -129,10 +146,12 @@ export function createVrLocomotion({ playerRig, renderer, camera, settings, surf
     parent?.getWorldQuaternion?.(parentWorldQuaternion) ?? parentWorldQuaternion.identity();
     movementLocal.copy(movementWorld).applyQuaternion(parentWorldQuaternion.invert());
     movementLocal.y = 0;
-    constrainRadialStep(playerRig.position, movementLocal, activeWalkRadius, constrainedDelta);
-    playerRig.position.addScaledVector(constrainedDelta, 1);
-    playerRig.position.y = y;
-    clampPositionToWalkRadius(playerRig.position, activeWalkRadius);
+    if (movementLocal.lengthSq() > EPSILON) {
+      constrainRadialStep(playerRig.position, movementLocal, activeWalkRadius, constrainedDelta);
+      playerRig.position.addScaledVector(constrainedDelta, 1);
+      playerRig.position.y = y;
+      clampPositionToWalkRadius(playerRig.position, activeWalkRadius);
+    }
     playerRig.position.y = y;
   }
 
