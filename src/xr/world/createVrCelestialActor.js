@@ -130,9 +130,28 @@ export function createVrCelestialActor({ parent, assetManager, keyLight, layer, 
   sunRoot.position.copy(root.worldToLocal(sunWorld));
   sunRoot.lookAt(centerWorld);
   const correction = settings.sun.facingCorrectionDegrees;
-  sunRoot.rotateX(THREE.MathUtils.degToRad(correction.x));
-  sunRoot.rotateY(THREE.MathUtils.degToRad(correction.y));
-  sunRoot.rotateZ(THREE.MathUtils.degToRad(correction.z));
+  const facingCorrectionQuaternion = new THREE.Quaternion().setFromEuler(new THREE.Euler(
+    THREE.MathUtils.degToRad(correction.x),
+    THREE.MathUtils.degToRad(correction.y),
+    THREE.MathUtils.degToRad(correction.z),
+    'XYZ'
+  ));
+  sunRoot.quaternion.multiply(facingCorrectionQuaternion);
+  const initialSunQuaternion = sunRoot.quaternion.clone();
+  const sunWorldPosition = new THREE.Vector3();
+  const facingDirection = new THREE.Vector3();
+  const desiredUp = new THREE.Vector3();
+  const previousBasisUp = new THREE.Vector3(0, 1, 0);
+  const basisRight = new THREE.Vector3();
+  const basisUp = new THREE.Vector3();
+  const fallbackAxis = new THREE.Vector3();
+  const orientationMatrix = new THREE.Matrix4();
+  const targetWorldQuaternion = new THREE.Quaternion();
+  const parentWorldQuaternion = new THREE.Quaternion();
+  const inverseParentWorldQuaternion = new THREE.Quaternion();
+  const localYAxis = new THREE.Vector3(0, 1, 0);
+  sunRoot.getWorldQuaternion(targetWorldQuaternion);
+  previousBasisUp.copy(localYAxis).applyQuaternion(targetWorldQuaternion);
 
   const sunMaterials = [];
   sunModel.traverse((node) => {
@@ -205,6 +224,40 @@ export function createVrCelestialActor({ parent, assetManager, keyLight, layer, 
     transition = { from: opacity, to: 0, elapsed: 0, duration: durationSeconds };
     return true;
   }
+  function updateOrientation(viewerWorldPosition, viewerWorldQuaternion) {
+    if (disposed || !viewerWorldPosition?.isVector3 || !viewerWorldQuaternion?.isQuaternion) {
+      return false;
+    }
+    root.updateWorldMatrix(true, false);
+    sunRoot.getWorldPosition(sunWorldPosition);
+    facingDirection.subVectors(viewerWorldPosition, sunWorldPosition);
+    if (facingDirection.lengthSq() < 1e-12) return false;
+    facingDirection.normalize();
+
+    desiredUp.copy(localYAxis).applyQuaternion(viewerWorldQuaternion);
+    desiredUp.addScaledVector(facingDirection, -desiredUp.dot(facingDirection));
+    if (desiredUp.lengthSq() < 1e-10) {
+      desiredUp.copy(previousBasisUp)
+        .addScaledVector(facingDirection, -previousBasisUp.dot(facingDirection));
+    }
+    if (desiredUp.lengthSq() < 1e-10) {
+      fallbackAxis.set(Math.abs(facingDirection.y) < 0.9 ? 0 : 1,
+        Math.abs(facingDirection.y) < 0.9 ? 1 : 0, 0);
+      desiredUp.copy(fallbackAxis)
+        .addScaledVector(facingDirection, -fallbackAxis.dot(facingDirection));
+    }
+    desiredUp.normalize();
+    basisRight.crossVectors(desiredUp, facingDirection).normalize();
+    basisUp.crossVectors(facingDirection, basisRight).normalize();
+    previousBasisUp.copy(basisUp);
+    orientationMatrix.makeBasis(basisRight, basisUp, facingDirection);
+    targetWorldQuaternion.setFromRotationMatrix(orientationMatrix)
+      .multiply(facingCorrectionQuaternion);
+    root.getWorldQuaternion(parentWorldQuaternion);
+    inverseParentWorldQuaternion.copy(parentWorldQuaternion).invert();
+    sunRoot.quaternion.copy(inverseParentWorldQuaternion.multiply(targetWorldQuaternion));
+    return true;
+  }
   function update(delta = 0) {
     if (disposed || !transition) return;
     transition.elapsed += Math.max(0, Number.isFinite(delta) ? delta : 0);
@@ -212,7 +265,14 @@ export function createVrCelestialActor({ parent, assetManager, keyLight, layer, 
     applyOpacity(THREE.MathUtils.lerp(transition.from, transition.to, progress));
     if (progress >= 1) transition = null;
   }
-  function reset() { transition = null; revealStarted = false; applyOpacity(0); }
+  function reset() {
+    transition = null;
+    revealStarted = false;
+    sunRoot.quaternion.copy(initialSunQuaternion);
+    sunRoot.getWorldQuaternion(targetWorldQuaternion);
+    previousBasisUp.copy(localYAxis).applyQuaternion(targetWorldQuaternion);
+    applyOpacity(0);
+  }
   function hydrateScenarioState(state) {
     if (state?.active === true) { transition = null; revealStarted = true; applyOpacity(1); }
   }
@@ -232,6 +292,7 @@ export function createVrCelestialActor({ parent, assetManager, keyLight, layer, 
     requiredCameraFar: settings.sun.distanceFromWorldCenter + boundingRadius + 5,
     beginReveal,
     beginFadeOut,
+    updateOrientation,
     update,
     reset,
     hydrateScenarioState,
