@@ -12,7 +12,7 @@ export const ASTRO_FURNACE_CONTENT_STATES = Object.freeze({
 export const ASTRO_FURNACE_CONTENT_KINDS = Object.freeze({ SHELL: 'SHELL', SMALL_GLYPH: 'SMALL_GLYPH' });
 
 const VALID_ASSET_IDS = new Set(Array.from({ length: 6 }, (_, index) => `shell-relic-${index + 1}`));
-const SMALL_GLYPH_WORLD_OFFSET = new THREE.Vector3(0, -0.20, 0);
+const SMALL_GLYPH_WORLD_OFFSET = new THREE.Vector3(0, -0.30, 0);
 const clamp01 = (value) => THREE.MathUtils.clamp(value, 0, 1);
 const smoothstep = (value) => { const t = clamp01(value); return t * t * (3 - 2 * t); };
 export function processRotationPulse(angle) { return 3 * processRotationPulse01(angle); }
