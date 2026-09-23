@@ -189,7 +189,7 @@ export function createVrPlayerGuidePanel({ leftGrip, semanticInput, locale = 'en
 
   function drawFooterActions(actions) {
     const fontSize = 25;
-    const circleDiameter = 38;
+    const circleDiameter = 38 * 0.9;
     const controlGap = 10;
     const actionGap = 28;
     const maxWidth = canvas.width - 72;
@@ -214,7 +214,7 @@ export function createVrPlayerGuidePanel({ leftGrip, semanticInput, locale = 'en
     }
 
     const lineSpacing = 42;
-    const bottomCenter = canvas.height - 31;
+    const bottomCenter = canvas.height - 32;
     const firstCenter = bottomCenter - (lines.length - 1) * lineSpacing;
     lines.forEach((line, lineIndex) => {
       const totalWidth = line.reduce((sum, action) => sum + action.width, 0)
