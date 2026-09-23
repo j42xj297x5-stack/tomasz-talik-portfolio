@@ -1012,6 +1012,12 @@ const playerGuidePanel = createVrPlayerGuidePanel({
   locale: language,
   settings: settings.playerGuidePanel,
   projection: playerGuideProjection,
+  getTurnSettings: () => ({
+    turnMode: locomotion.getTurnMode(),
+    snapAngleDegrees: locomotion.getSnapAngleDegrees()
+  }),
+  onTurnModeChange: (mode) => locomotion.setTurnMode(mode),
+  onSnapAngleChange: (angle) => locomotion.setSnapAngleDegrees(angle),
   onOpenChange: (open) => playVrUi(open ? VR_AUDIO.playerOpen : VR_AUDIO.playerClose),
   onPanelClick: () => playVrUi(VR_AUDIO.click),
   debugCheckpoints: debugCheckpointsEnabled ? VR_DEBUG_CHECKPOINTS : [],
