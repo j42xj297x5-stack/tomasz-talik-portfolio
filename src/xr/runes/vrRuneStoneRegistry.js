@@ -19,7 +19,7 @@ const descriptor = (
 
 export const VR_RUNE_STONE_ASSETS = Object.freeze([
   descriptor('stone_01', 'R', 'fire', 'fire', true, 1.20),
-  descriptor('stone_02', 'T', 'metal', 'metal', true, 1.00),
+  descriptor('stone_02', 'T', 'metal', 'metal', true, 1.50),
   descriptor('stone_03', 'K', 'earth', 'earth', true, 1.80),
   descriptor('stone_04', 'L', 'tree', 'wood', true, 1.30),
   descriptor('stone_05', 'S', 'water', 'water', true, 2.30),

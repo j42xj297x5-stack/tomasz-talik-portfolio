@@ -389,7 +389,7 @@ Każdy nowy canonical Experience VR Scenario point musi spełniać [`VR_SCENARIO
 
 ## Explicit current exclusions
 
-`RUNESTONES`, radar/sector gameplay, final radar, teleport, jump, snap turn and rigid-body physics are outside the current implemented Experience VR contract. Current Meta Quest 3S defects in physical Sphere placement and contour continuity are implementation QA issues, not exclusions or future features.
+`RUNESTONES`, radar/sector gameplay, final radar, teleport, jump and rigid-body physics are outside the current implemented Experience VR contract. Optional 30°/45°/60° snap turning is implemented alongside default smooth turning. Current Meta Quest 3S defects in physical Sphere placement and contour continuity are implementation QA issues, not exclusions or future features.
 
 ## 2026-08-27 — CURRENT Asterion Resonator analytic field model
 

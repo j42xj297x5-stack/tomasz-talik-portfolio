@@ -37,12 +37,33 @@ const VR_PLAYER_GUIDE_CONTENT = Object.freeze({
       metalSector: Object.freeze({ label: 'SEKTOR METALU', body: 'Metal rozszerza pole Rezonatora.\nSkręt dłoni — rozszerza pole na boki.\nPochylenie dłoni — rozszerza pole w głąb.\nObie osie działają niezależnie.\nPoziom 0 — brak rozszerzenia.\nIm wyższy poziom, tym większy zasięg.\nMetal nie zastępuje Ziemi, Drzewa ani Ognia.\nRozszerza pole, które już tworzą.' }),
       waterSector: Object.freeze({ label: 'SEKTOR WODY', body: 'Woda stroi barwę i intensywność pola Rezonatora.\nSkręt dłoni — wybiera częstotliwość: zieloną, niebieską lub fioletową.\nPoziom 0 — barwa neutralna.\nPochylenie dłoni — zwiększa jasność i halo pola.\nObie osie działają niezależnie.\nBarwa nie jest poziomem mocy.\nWoda stroi pole, zamiast zmieniać jego zasięg.\nJej ustawienia uczestniczą w strojeniu pełnego Rezonatora.' })
     }),
-    mainMenuHint: 'Lewy drążek — wybór · X — otwórz · Y — zamknij',
-    toolListHint: 'Lewy drążek — wybór · X — otwórz · Y — wróć',
-    sectionDetailHint: 'Y — wróć',
-    toolDetailHint: 'Y — wróć',
-    knowledgeListHint: 'Lewy drążek — wybór · X — otwórz · Y — wróć',
-    knowledgeDetailHint: 'Y — wróć',
+    footerActions: Object.freeze({
+      mainMenu: Object.freeze([
+        Object.freeze({ control: 'stick', label: 'Lewy drążek', description: 'wybór' }),
+        Object.freeze({ control: 'button', label: 'X', description: 'otwórz' }),
+        Object.freeze({ control: 'button', label: 'Y', description: 'zamknij' })
+      ]),
+      list: Object.freeze([
+        Object.freeze({ control: 'stick', label: 'Lewy drążek', description: 'wybór' }),
+        Object.freeze({ control: 'button', label: 'X', description: 'otwórz' }),
+        Object.freeze({ control: 'button', label: 'Y', description: 'wróć' })
+      ]),
+      detail: Object.freeze([
+        Object.freeze({ control: 'button', label: 'Y', description: 'wróć' })
+      ]),
+      controls: Object.freeze([
+        Object.freeze({ control: 'button', label: 'X', description: 'ustawienia obrotu' }),
+        Object.freeze({ control: 'button', label: 'Y', description: 'wróć' })
+      ]),
+      controlsSettings: Object.freeze([
+        Object.freeze({ control: 'stick', label: 'Lewy drążek', description: 'wybór' }),
+        Object.freeze({ control: 'button', label: 'X', description: 'zmień' }),
+        Object.freeze({ control: 'button', label: 'Y', description: 'wróć' })
+      ])
+    }),
+    turnModeLabel: 'TRYB OBROTU',
+    snapAngleLabel: 'KĄT SKOKU',
+    turnModeValues: Object.freeze({ SMOOTH: 'PŁYNNY', SNAP: 'SKOKOWY' }),
     controllersFallback: 'Schemat kontrolerów niedostępny.'
   }),
   en: Object.freeze({
@@ -83,12 +104,33 @@ const VR_PLAYER_GUIDE_CONTENT = Object.freeze({
       metalSector: Object.freeze({ label: 'METAL SECTOR', body: 'Metal extends the Resonator field.\nTwist your wrist — extend the field sideways.\nTilt your hand — extend the field in depth.\nThe two axes work independently.\nLevel 0 — no extension.\nHigher levels give greater reach.\nMetal does not replace Earth, Wood, or Fire.\nIt extends the field they already create.' }),
       waterSector: Object.freeze({ label: 'WATER SECTOR', body: "Water tunes the Resonator field's hue and intensity.\nTwist your wrist — choose the frequency: green, blue, or violet.\nLevel 0 — neutral hue.\nTilt your hand — increase the field's brightness and halo.\nThe two axes work independently.\nHue is not a power level.\nWater tunes the field instead of changing its reach.\nIts settings are part of tuning the complete Resonator." })
     }),
-    mainMenuHint: 'Left stick — select · X — open · Y — close',
-    toolListHint: 'Left stick — select · X — open · Y — back',
-    sectionDetailHint: 'Y — back',
-    toolDetailHint: 'Y — back',
-    knowledgeListHint: 'Left stick — select · X — open · Y — back',
-    knowledgeDetailHint: 'Y — back',
+    footerActions: Object.freeze({
+      mainMenu: Object.freeze([
+        Object.freeze({ control: 'stick', label: 'Left stick', description: 'select' }),
+        Object.freeze({ control: 'button', label: 'X', description: 'open' }),
+        Object.freeze({ control: 'button', label: 'Y', description: 'close' })
+      ]),
+      list: Object.freeze([
+        Object.freeze({ control: 'stick', label: 'Left stick', description: 'select' }),
+        Object.freeze({ control: 'button', label: 'X', description: 'open' }),
+        Object.freeze({ control: 'button', label: 'Y', description: 'back' })
+      ]),
+      detail: Object.freeze([
+        Object.freeze({ control: 'button', label: 'Y', description: 'back' })
+      ]),
+      controls: Object.freeze([
+        Object.freeze({ control: 'button', label: 'X', description: 'turn settings' }),
+        Object.freeze({ control: 'button', label: 'Y', description: 'back' })
+      ]),
+      controlsSettings: Object.freeze([
+        Object.freeze({ control: 'stick', label: 'Left stick', description: 'select' }),
+        Object.freeze({ control: 'button', label: 'X', description: 'change' }),
+        Object.freeze({ control: 'button', label: 'Y', description: 'back' })
+      ])
+    }),
+    turnModeLabel: 'TURN MODE',
+    snapAngleLabel: 'SNAP ANGLE',
+    turnModeValues: Object.freeze({ SMOOTH: 'SMOOTH', SNAP: 'SNAP' }),
     controllersFallback: 'Controller diagram unavailable.'
   })
 });

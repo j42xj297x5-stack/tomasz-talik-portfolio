@@ -1,7 +1,10 @@
 import * as THREE from '../vendor/three.js';
+import { getXrHeadWorldPosition } from './getXrHeadWorldPosition.js';
 
 const EPSILON = 1e-9;
 const PLATFORM_UP_LOCAL = new THREE.Vector3(0, 1, 0);
+const TURN_MODES = Object.freeze(['SMOOTH', 'SNAP']);
+const SNAP_ANGLES = Object.freeze([30, 45, 60]);
 
 export function applyDeadzone(value, deadzone) {
   if (!Number.isFinite(value) || Math.abs(value) <= deadzone) return 0;
@@ -95,24 +98,54 @@ export function createVrLocomotion({ playerRig, renderer, camera, settings, surf
   const movementLocal = new THREE.Vector3();
   const parentWorldQuaternion = new THREE.Quaternion();
   const constrainedDelta = new THREE.Vector3();
+  const headPositionBeforeTurn = new THREE.Vector3();
+  const headPositionAfterTurn = new THREE.Vector3();
   const initialLocalY = playerRig.position.y;
   const initialWalkRadius = walkRadius;
   let activeWalkRadius = walkRadius;
   let disposed = false;
   let leftYawLocked = false;
+  let yawInputReady = false;
+  let turnMode = TURN_MODES.includes(settings.turnMode) ? settings.turnMode : 'SMOOTH';
+  let snapAngleDegrees = SNAP_ANGLES.includes(settings.snapAngleDegrees) ? settings.snapAngleDegrees : 45;
 
   function axesFor(handedness) {
     const sources = renderer.xr.getSession()?.inputSources ?? [];
     const source = Array.from(sources).find((item) => item.handedness === handedness && item.gamepad);
     const axes = source?.gamepad?.axes ?? [];
-    return { x: applyDeadzone(axes[2] ?? axes[0] ?? 0, settings.deadzone), y: applyDeadzone(axes[3] ?? axes[1] ?? 0, settings.deadzone) };
+    const rawX = axes[2] ?? axes[0] ?? 0;
+    const rawY = axes[3] ?? axes[1] ?? 0;
+    return { rawX, rawY, x: applyDeadzone(rawX, settings.deadzone), y: applyDeadzone(rawY, settings.deadzone) };
+  }
+
+  function applyYaw(yaw) {
+    if (yaw === 0) return;
+    const parent = playerRig.parent;
+    getXrHeadWorldPosition({ renderer, camera, playerRig, target: headPositionBeforeTurn });
+    parent?.updateWorldMatrix?.(true, false);
+    if (parent) parent.worldToLocal(headPositionBeforeTurn);
+    playerRig.rotateY(yaw);
+    getXrHeadWorldPosition({ renderer, camera, playerRig, target: headPositionAfterTurn });
+    parent?.updateWorldMatrix?.(true, false);
+    if (parent) parent.worldToLocal(headPositionAfterTurn);
+    playerRig.position.x += headPositionBeforeTurn.x - headPositionAfterTurn.x;
+    playerRig.position.z += headPositionBeforeTurn.z - headPositionAfterTurn.z;
   }
 
   function update(delta) {
     if (disposed || !settings.enabled || !Number.isFinite(delta) || delta <= 0) return;
     const y = playerRig.position.y;
     const left = axesFor('left');
-    if (!leftYawLocked) playerRig.rotateY(-left.x * settings.turnSpeed * delta);
+    if (leftYawLocked) yawInputReady = false;
+    else if (!yawInputReady && Math.abs(left.rawX) <= settings.snapRearmThreshold) yawInputReady = true;
+    if (yawInputReady) {
+      if (turnMode === 'SNAP' && Math.abs(left.rawX) >= settings.snapActivationThreshold) {
+        applyYaw(-Math.sign(left.rawX) * THREE.MathUtils.degToRad(snapAngleDegrees));
+        yawInputReady = false;
+      } else if (turnMode === 'SMOOTH') {
+        applyYaw(-left.x * settings.turnSpeed * delta);
+      }
+    }
 
     const rightStick = axesFor('right');
     const xrCamera = renderer.xr.getCamera(camera);
@@ -129,21 +162,37 @@ export function createVrLocomotion({ playerRig, renderer, camera, settings, surf
     parent?.getWorldQuaternion?.(parentWorldQuaternion) ?? parentWorldQuaternion.identity();
     movementLocal.copy(movementWorld).applyQuaternion(parentWorldQuaternion.invert());
     movementLocal.y = 0;
-    constrainRadialStep(playerRig.position, movementLocal, activeWalkRadius, constrainedDelta);
-    playerRig.position.addScaledVector(constrainedDelta, 1);
-    playerRig.position.y = y;
-    clampPositionToWalkRadius(playerRig.position, activeWalkRadius);
+    if (movementLocal.lengthSq() > EPSILON) {
+      constrainRadialStep(playerRig.position, movementLocal, activeWalkRadius, constrainedDelta);
+      playerRig.position.addScaledVector(constrainedDelta, 1);
+      playerRig.position.y = y;
+      clampPositionToWalkRadius(playerRig.position, activeWalkRadius);
+    }
     playerRig.position.y = y;
   }
 
-  function setLeftYawLocked(locked) { leftYawLocked = Boolean(locked); }
+  function setLeftYawLocked(locked) {
+    const nextLocked = Boolean(locked);
+    if (nextLocked !== leftYawLocked) yawInputReady = false;
+    leftYawLocked = nextLocked;
+  }
+  function setTurnMode(nextMode) {
+    turnMode = TURN_MODES.includes(nextMode) ? nextMode : 'SMOOTH';
+    yawInputReady = false;
+    return turnMode;
+  }
+  function setSnapAngleDegrees(nextAngle) {
+    snapAngleDegrees = SNAP_ANGLES.includes(nextAngle) ? nextAngle : 45;
+    yawInputReady = false;
+    return snapAngleDegrees;
+  }
   function setWalkRadius(nextRadius, { clamp = false } = {}) {
     activeWalkRadius = nextRadius === Infinity || (Number.isFinite(nextRadius) && nextRadius > 0)
       ? nextRadius : initialWalkRadius;
     if (clamp) clampPositionToWalkRadius(playerRig.position, activeWalkRadius);
   }
-  function reset() { playerRig.position.y = initialLocalY; leftYawLocked = false; activeWalkRadius = initialWalkRadius; }
-  function resetScenarioBaseline() { playerRig.position.y = initialLocalY; leftYawLocked = false; activeWalkRadius = Infinity; }
+  function reset() { playerRig.position.y = initialLocalY; leftYawLocked = false; yawInputReady = false; activeWalkRadius = initialWalkRadius; }
+  function resetScenarioBaseline() { playerRig.position.y = initialLocalY; leftYawLocked = false; yawInputReady = false; activeWalkRadius = Infinity; }
   function hydrateScenarioState(state) {
     if (state?.boundary !== 'GLYPH_RING' || !Number.isFinite(scenarioGlyphRingRadius) || scenarioGlyphRingRadius <= 0) {
       throw new Error('GLYPH_RING scenario boundary requires scenarioGlyphRingRadius');
@@ -159,5 +208,6 @@ export function createVrLocomotion({ playerRig, renderer, camera, settings, surf
   }
   function dispose() { disposed = true; }
   return { update, reset, resetScenarioBaseline, dispose, setLeftYawLocked, setWalkRadius, hydrateScenarioState, teleportLocal,
+    setTurnMode, setSnapAngleDegrees, getTurnMode: () => turnMode, getSnapAngleDegrees: () => snapAngleDegrees,
     getWalkRadius: () => activeWalkRadius };
 }

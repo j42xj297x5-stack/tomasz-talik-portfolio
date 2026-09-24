@@ -571,9 +571,10 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
     if (!context) return; redrawCount += 1; context.clearRect(0, 0, canvas.width, canvas.height);
     if (screen === ASTRO_FURNACE_PANEL_SCREENS.ASTROLABIUM_PRODUCTION
       && astroProductionController?.getState?.() === 'EARNED') {
-      screen = ASTRO_FURNACE_PANEL_SCREENS.HOME;
-      returnScreen = ASTRO_FURNACE_PANEL_SCREENS.HOME;
+      screen = ASTRO_FURNACE_PANEL_SCREENS.ASTROLABIUM_TUNING;
+      returnScreen = ASTRO_FURNACE_PANEL_SCREENS.ASTROLABIUM_MENU;
       hoveredRegion = null;
+      moduleListeners.forEach((listener) => listener('astro_attractor', screen));
     }
     context.fillStyle = 'rgba(3,9,17,.96)'; context.fillRect(0, 0, canvas.width, canvas.height);
     drawFurnaceFrame(context, { x: 18, y: 18, width: canvas.width - 36, height: canvas.height - 36, variant: 'panel', cornerSize: config.frameCornerSizePx * 1.5, accentColor: '#4d89a5', opacity: .8 });
@@ -609,7 +610,7 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
   function activateRegion(id) { if (id === 'module-asterion-sphere') {
     screen = ASTRO_FURNACE_PANEL_SCREENS.ASTERION_SPHERE;
     returnScreen = ASTRO_FURNACE_PANEL_SCREENS.HOME;
-    moduleListeners.forEach((listener) => listener('floor_gyroscope_sphere'));
+    moduleListeners.forEach((listener) => listener('floor_gyroscope_sphere', screen));
     onEnterModule();
   } else if (id === 'module-astro-attractor') {
     screen = ASTRO_FURNACE_PANEL_SCREENS.ASTROLABIUM_MENU;
@@ -617,11 +618,13 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
     onEnterModule();
   } else if (id === 'astrolabium-create') {
     screen = ASTRO_FURNACE_PANEL_SCREENS.ASTROLABIUM_PRODUCTION; returnScreen = ASTRO_FURNACE_PANEL_SCREENS.ASTROLABIUM_MENU;
+    moduleListeners.forEach((listener) => listener('astro_attractor', screen));
   } else if (id === 'astrolabium-glyph-tuning') {
     screen = ASTRO_FURNACE_PANEL_SCREENS.ASTROLABIUM_TUNING; returnScreen = ASTRO_FURNACE_PANEL_SCREENS.ASTROLABIUM_MENU;
+    moduleListeners.forEach((listener) => listener('astro_attractor', screen));
   } else if (id === 'astrolabium-rune-tuning') {
     screen = ASTRO_FURNACE_PANEL_SCREENS.RUNE_TUNING; returnScreen = ASTRO_FURNACE_PANEL_SCREENS.ASTROLABIUM_MENU;
-    moduleListeners.forEach((listener) => listener(ASTRO_FURNACE_RUNE_TUNING_MODE)); onEnterModule();
+    moduleListeners.forEach((listener) => listener(ASTRO_FURNACE_RUNE_TUNING_MODE, screen)); onEnterModule();
   } else if (id.startsWith('rune-family-')) {
     if (runeRecipeSelectionController?.selectFamily(id.slice('rune-family-'.length)) !== true) return false;
   } else if (id === 'back-modules') {

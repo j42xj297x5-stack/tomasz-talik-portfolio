@@ -21,7 +21,8 @@ export function createVrAstroFurnaceOptionInteraction({ furnace, panel, controll
   const localOptionAxis = new THREE.Vector3(0, 1, 0);
   const optionRotation = new THREE.Quaternion();
   const moduleAngles = settings.moduleAnglesDegrees;
-  let activeMode = null, tweenElapsed = 0, tweenStart = 0, tweenTarget = 0, currentAngle = 0;
+  let activeMode = null, activePresentation = null;
+  let tweenElapsed = 0, tweenStart = 0, tweenTarget = 0, currentAngle = 0;
   const capabilityReady = settings.enabled !== false && meshes.length > 0 && Boolean(furnace?.nodes?.PIVOT_BUTTON_OPTION);
   const setEmission = (value) => emissive.forEach((material) => { material.emissiveIntensity = value; });
   function updateHits() { let any = false; controllers.forEach((record) => { let hit = false;
@@ -38,11 +39,12 @@ export function createVrAstroFurnaceOptionInteraction({ furnace, panel, controll
   }
   function press(record) { if (disposed || !hits.get(record) || !isOrdinaryRayAvailable(record)) return false;
     const opening = !panel.isVisible(); panel.toggle(); if (opening) onPanelOpen(); return true; }
-  function selectMode(mode) {
+  function selectMode(mode, presentationTarget = null) {
     if (![ASTRO_FURNACE_ACTIVE_MODE, ASTRO_FURNACE_ASTRO_ATTRACTOR_MODE, ASTRO_FURNACE_RUNE_TUNING_MODE].includes(mode)) return false;
-    const angle = moduleAngles?.[mode] ?? (mode === ASTRO_FURNACE_ASTRO_ATTRACTOR_MODE ? 0 : undefined);
     activeMode = mode;
+    const angle = moduleAngles?.[presentationTarget];
     if (pivot && Number.isFinite(angle)) {
+      activePresentation = presentationTarget;
       tweenStart = currentAngle; tweenTarget = THREE.MathUtils.degToRad(angle); tweenElapsed = 0;
     }
     return true;
@@ -54,8 +56,9 @@ export function createVrAstroFurnaceOptionInteraction({ furnace, panel, controll
       const t = raw < .5 ? 4 * raw ** 3 : 1 - ((-2 * raw + 2) ** 3) / 2; currentAngle = THREE.MathUtils.lerp(tweenStart, tweenTarget, t);
       optionRotation.setFromAxisAngle(localOptionAxis, currentAngle); pivot.quaternion.copy(baseQuaternion).multiply(optionRotation); }
   } }
-  function reset() { hits.forEach((_, record) => hits.set(record, false)); halo?.setVisible(false); setEmission(settings.emissionInactive ?? 0); activeMode = null; tweenElapsed = 0; tweenStart = 0; tweenTarget = 0; currentAngle = 0; if (pivot && baseQuaternion) pivot.quaternion.copy(baseQuaternion); }
+  function reset() { hits.forEach((_, record) => hits.set(record, false)); halo?.setVisible(false); setEmission(settings.emissionInactive ?? 0); activeMode = null; activePresentation = null; tweenElapsed = 0; tweenStart = 0; tweenTarget = 0; currentAngle = 0; if (pivot && baseQuaternion) pivot.quaternion.copy(baseQuaternion); }
   function dispose() { if (disposed) return; reset(); disposed = true; unsubscribeModule(); listeners.forEach(({ record, listener }) => record.controller.removeEventListener('selectstart', listener)); ownedMaterials.forEach((material) => material.dispose()); ownedMaterials.clear(); hits.clear(); halo?.dispose(); }
   reset(); return { hits, halo, capabilityReady, update, press, selectMode, reset, dispose,
-    getActiveMode: () => activeMode, getTargetAngle: () => tweenTarget, hasCurrentHit: (record) => hits.get(record) === true };
+    getActiveMode: () => activeMode, getActivePresentation: () => activePresentation,
+    getTargetAngle: () => tweenTarget, hasCurrentHit: (record) => hits.get(record) === true };
 }

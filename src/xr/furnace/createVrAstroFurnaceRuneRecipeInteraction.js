@@ -13,6 +13,15 @@ export const ASTRO_FURNACE_RUNE_RECIPE_SLOT_STATES = Object.freeze({
 
 const clamp01 = (value) => THREE.MathUtils.clamp(value, 0, 1);
 const smoothstep = (value) => { const t = clamp01(value); return t * t * (3 - 2 * t); };
+const SMALL_GLYPH_WORLD_OFFSET = new THREE.Vector3(0, -0.10, 0);
+
+function addWorldOffsetInLocalSpace(target, parent, worldOffset) {
+  parent.updateWorldMatrix(true, false);
+  const worldOrigin = parent.getWorldPosition(new THREE.Vector3());
+  const localOrigin = parent.worldToLocal(worldOrigin.clone());
+  const localOffset = parent.worldToLocal(worldOrigin.add(worldOffset)).sub(localOrigin);
+  return target.add(localOffset);
+}
 
 export function createVrAstroFurnaceRuneRecipeInteraction({
   furnace,
@@ -65,16 +74,17 @@ export function createVrAstroFurnaceRuneRecipeInteraction({
     VR_FURNACE_CONTENT_SIZE_CLASS.SMALL_GLYPH, (content) => {
     if (!smallGlyphSystem.restoreInstanceToField(content))
       throw new Error('Small glyph system rejected rune recipe ingredient restoration.');
-  });
+  }, SMALL_GLYPH_WORLD_OFFSET);
   const shell = createSlot(furnace?.nodes?.RUNE_RECIPE_SHELL_SLOT,
     VR_FURNACE_CONTENT_SIZE_CLASS.SHELL, (content) => {
     if (!shellSystem.restoreInstanceToOrbit(content))
       throw new Error('Shell system rejected rune recipe ingredient restoration.');
   });
 
-  function createSlot(anchor, contentClass, restore) {
+  function createSlot(anchor, contentClass, restore, worldOffset = null) {
     return { anchor, contentClass, restore, state: states.EMPTY, content: null, baselineWorldScale: null, elapsed: 0,
-      startPosition: new THREE.Vector3(), startQuaternion: new THREE.Quaternion() };
+      startPosition: new THREE.Vector3(), targetPosition: new THREE.Vector3(),
+      startQuaternion: new THREE.Quaternion(), worldOffset };
   }
   function slotSnapshot(slot) {
     return { state: slot.state, occupied: slot.content !== null, content: slot.content };
@@ -116,11 +126,13 @@ export function createVrAstroFurnaceRuneRecipeInteraction({
     slot.anchor.attach(content);
     setObjectWorldScale(content, desiredWorldScale);
     slot.startPosition.copy(content.position);
+    slot.targetPosition.set(0, 0, 0);
+    if (slot.worldOffset) addWorldOffsetInLocalSpace(slot.targetPosition, slot.anchor, slot.worldOffset);
     slot.startQuaternion.copy(content.quaternion);
     slot.elapsed = 0;
     slot.state = config.snapDuration > 0 ? states.SNAPPING : states.INSERTED;
     if (slot.state === states.INSERTED) {
-      content.position.set(0, 0, 0);
+      content.position.copy(slot.targetPosition);
       content.quaternion.identity();
     }
     emitChange();
@@ -130,10 +142,10 @@ export function createVrAstroFurnaceRuneRecipeInteraction({
     if (slot.state !== states.SNAPPING || !slot.content) return;
     slot.elapsed = Math.min(config.snapDuration, slot.elapsed + delta);
     const progress = smoothstep(slot.elapsed / Math.max(config.snapDuration, 1e-6));
-    slot.content.position.lerpVectors(slot.startPosition, new THREE.Vector3(), progress);
+    slot.content.position.lerpVectors(slot.startPosition, slot.targetPosition, progress);
     slot.content.quaternion.slerpQuaternions(slot.startQuaternion, new THREE.Quaternion(), progress);
     if (slot.elapsed < config.snapDuration) return;
-    slot.content.position.set(0, 0, 0);
+    slot.content.position.copy(slot.targetPosition);
     slot.content.quaternion.identity();
     slot.state = states.INSERTED;
     emitChange();
