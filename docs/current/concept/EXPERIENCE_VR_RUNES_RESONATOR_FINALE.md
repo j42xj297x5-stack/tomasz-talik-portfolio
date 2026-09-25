@@ -1,273 +1,51 @@
-# Experience VR — kamienie runiczne, Rezonator Asterionowy i finał
+# Experience VR — Runes, Asterion Resonator and finale
 
-## Status i reguła nadrzędna
+## Status and concept boundary
 
-> **Final-Water authority:** [`EXPERIENCE_VR_FINAL_WATER_RESONATOR_CULMINATION.md`](EXPERIENCE_VR_FINAL_WATER_RESONATOR_CULMINATION.md) is the **CURRENT / BINDING DESIGN TARGET / IMPLEMENTATION PENDING** authority for the final Water hunt. It supersedes this document wherever the old flow introduces Ether before an observed two-ring Water rejection or marks Water control/`waterSyncLock`/the two-ring cap as wholly future. Runtime facts and unrelated finale systems remain under their existing owners.
+Status: **CURRENT / IMPLEMENTED PRODUCT CONCEPT**. This document describes the late-game experience at conceptual level. Scenario owns the exact point graph; Rune, Resonator, portfolio and finale models own their mechanics.
 
-Status: **CURRENT WORKING CANON / SPLIT IMPLEMENTATION STATUS**. The authored runtime ordering through `5.60` remains **FACT / IMPLEMENTED**, but is explicitly the progression weakness to revise: the binding target inserts an experienced two-ring Water rejection before Ether. Water dual-DOF control, `waterSyncLock === 222 / M22 / W22`, and the final-Water two-ring cycling cap are **FACT / IMPLEMENTED**. Harmonic breathing, semantic rejection handoff, revised ordering and final hint lifecycle are **BINDING DESIGN TARGET / IMPLEMENTATION PENDING**.
+## From Runes to the Resonator
 
-Ten przebieg zastępuje wcześniejszą wersję, w której trzy sektory tworzyły pełną antenę przed etapem kamieni runicznych:
+Natural Rune Stones turn completed portfolio sectors into a physical instrument. Tuning makes a Rune targetable; transport brings it to the platform; an available Binder accepts it and completes installation. The Asterion Sphere then lets the player acquire and move that powered sector. Metal expands and rounds the shared field. Water tunes its frequency and intensity.
 
-```text
-kamienie runiczne
-→ budzą funkcje sektorów
-→ sektory tworzą Rezonator Asterionowy
-→ Rezonator pozwala ponownie odnaleźć glify
-```
+The Rune domain hands off at installed truth. It does not own the Resonator solution or finale.
 
-Dokładne receptury strojenia pozostają kontraktem receptur i nie są definiowane tutaj. Runtime pozostaje źródłem prawdy o tym, co jest już zaimplementowane.
+## Failure before Ether
 
-**Reguła sandboxu:** poniższa kolejność jest dramaturgią i ścieżką Guidance, nie fizycznym gate'em mechanik. Rune tuning, legalny pull, instalacja przy istniejącym Zworniku, sector control i powstanie Rezonatora wynikają z narzędzi oraz stanu świata i mogą zajść wcześniej. Scenario nadal ogranicza obowiązkowe beaty i pozyskanie kolejnych kryształów, a wiedzę ujawnia zgodnie z tym, co gracz już odkrył. Nie stosuje się gate'u `currentPoint >= X` dla tych mechanik.
+Tier 4 and the fourth natural Rune open a real attempt at the final Water Glyph. `haiku-cosmos` can be found and held, but the incomplete Resonator cycles at two rings and refuses the final acquisition. The player experiences the limitation before the Monkey explains it.
 
-## Granica implementacji
+That controlled rejection begins Ether's late-boundary role. Ether is not a sixth natural element or another ordinary socketed collectible: it is the connector that lets the five natural sectors become one instrument. The player tunes and transports Ether to the Monkey; capture opens Water's Binder. Water then follows the normal natural Rune installation path.
 
-| Zakres | Status |
-| --- | --- |
-| Rune tuning/transport/install i persistent truth | CURRENT / IMPLEMENTED |
-| Binder readiness/materialization | CURRENT / IMPLEMENTED |
-| Powered-sector acquisition/control i Resonator core/descriptor | CURRENT / IMPLEMENTED |
-| Rune/Binder/Sector/Resonator Guidance oraz Scenario i fizyczne strojenie Eteru do `5.40` | CURRENT / IMPLEMENTED |
-| Resonator containment/resonance response, late-only eligibility and late motion | CURRENT / IMPLEMENTED (sandbox mechanic) |
-| Fizyczna materializacja/targetability/transport Eteru przez SPECIAL `CARRIED_ORBIT` | CURRENT / IMPLEMENTED |
-| Monkey capture Eteru, Water readiness override i Binder reveal przez `5.50` | CURRENT / IMPLEMENTED |
-| Water natural installation, `FIVE_ELEMENTAL_RUNES_INSTALLED`, full-array acknowledgement and semantic advanced-Resonator unlock at `5.60` | CURRENT / IMPLEMENTED |
-| Physical Metal `M(angle, tilt)` control, gameplay expansion and presentation rounding | CURRENT / IMPLEMENTED |
-| Water advanced controls, harmonic/Water Sync logic, final Water hunt, dissolution/finale | FUTURE |
+## Full Resonator and final Water hunt
 
-The physical target-response core, corrected late-only pull policy, escaped-target motion and physical Ether tuning through `5.40` are implemented runtime. Physical Ether reveal, targetability and transport through SPECIAL `CARRIED_ORBIT` are implemented. Monkey capture and the bounded Water readiness result through `5.50` are implemented. Metal's advanced physical wing is implemented; Water advanced control, synchronization and the later finale remain binding design canon / FUTURE / NOT IMPLEMENTED.
-
-Asterion Sphere completion independently makes special Ether Small Glyph `VI` targetable through Astrolabium Więzi. The implemented tuning actor derives this from Furnace Sphere-complete truth without a Scenario event or new persistence. This does not permit `VU` tuning: `VO` Shell eligibility, `VI` Small Glyph eligibility, later `CAN_TUNE_ETHER_RUNE`, and physical `VU` reveal are separate contracts; `V` remains SPECIAL throughout.
-
-## 1. Glify znikają
-
-Po ukończeniu strojenia Astrolabium Więzi duże glify ponownie się oddalają. Tym razem nie są widoczne ani słyszalne, Astrolabium ich nie wykrywa i nie pozostaje nawet cień celu. Świat nie wystawia markera ani nowego obiektu; przez chwilę oferuje wyłącznie nocne niebo. Małpa może tylko zasygnalizować dostępność rozmowy łukami komunikacyjnymi.
-
-### `progression.p3.glyphsGone` — **IMPLEMENTED** — `PROGRESSION_MESSAGE`
-
-> No.  
-> Tym razem naprawdę uciekły.  
-> Nie widać ich. Nie słychać.
-
-### `knowledge.p3.stonesLead` — **IMPLEMENTED**
-
-**CO TERAZ?**
-
-> Możemy patrzeć w niebo.  
-> Albo sprawić, żeby to miejsce patrzyło dalej niż my.  
-> Zostały jeszcze kamienie.
-
-### `knowledge.p3.stones` — **IMPLEMENTED**
-
-**KAMIENIE?**
-
-> Są daleko.  
-> Piec potrafi stroić rzeczy.  
-> Astrolabium potrafi je sprowadzać.  
-> Sprawdźmy, czy to wystarczy.
-
-Małpa przedstawia hipotezę, nie gotowe rozwiązanie, i nie nazywa jeszcze żadnej anteny.
-
-## 2. Strojenie kamieni i pierwsza nieudana próba
-
-Piec otrzymuje funkcję strojenia Astrolabium pod rodzinę kamienia. Proces ma cięższy, niższy rezonans niż wcześniejsze operacje. Po zakończeniu Astrolabium rozpoznaje rodzinę, pokazuje właściwy znak i może obrać kamień za cel. Nie uruchamia to automatycznej wypowiedzi Małpy.
-
-Przyciągnięcie kamienia bez istniejącego właściwego Zwornika jest legalnym stanem sandboxowym: cel dociera w pobliże platformy, pozostaje poza nią i czeka na miejsce związania. Nie jest to obowiązkowy Scenario point. Narzędzie nie może wyglądać na uszkodzone, a hint jest sytuacyjny i pomijalny, jeżeli gracz rozumie już stan.
-
-### `hint.rune.noBinder.soft` — **IMPLEMENTED**
-
-> Działa.  
-> Tylko nie ma gdzie go przywiązać.
-
-### `hint.rune.noBinder.medium` — **IMPLEMENTED**
-
-> Spójrz na krawędzie sektorów.
-
-## 3. Zworniki Runiczne
-
-Struktury materializujące się wcześniej przy ukończonych częściach platformy noszą narracyjną nazwę **ZWORNIKI RUNICZNE**; asset techniczny może nadal nazywać się `bridge.glb`.
-
-Każdy Zwornik materializuje się dokładnie z ukończenia wszystkich paneli swojego sektora, nie z instalacji kamienia. Po reveal pozostaje trwały; dlatego Zworniki EARTH, WOOD i FIRE mogą istnieć przed ukończeniem pełnego trzeciego kręgu. Instalacja później wiąże kamień w niezależnej finalnej kotwicy. Prezentacyjna skala i radialne odsunięcie geometrii Zwornika nie mogą przesuwać tej kotwicy. Spin Zwornika nie należy do przyszłego kanonu. Live reveal ma jednoznaczny rytm: `HIDDEN → ARRIVING → DOCKED`; w `t=0` Zwornik pojawia się 130 m dalej radialnie i wraz z `electricity_short_06` rozpoczyna lot, a po 4.0 s osiąga canonical dock, odtwarza family-specific `zwornik_*` i dopiero wtedy udostępnia instalację. Translację posiada wyłącznie `RuneBridgeActor`, nie Platform Energy VFX. Reconstruction już ukończonej gałęzi przywraca cichy, finalny `DOCKED` bez lotu i obu one-shotów.
-
-### `knowledge.p3.binders` — **IMPLEMENTED**
-
-**CO TO JEST?**
-
-> Zworniki.  
-> Pojawiały się, kiedy domykałeś te części platformy.  
-> Wygląda na to, że nie były ozdobą.
-
-Zainstalować można tylko kamień odpowiadający sektorowi z aktywnym Zwornikiem. Brak Zwornika nie unieważnia strojenia ani przyciągnięcia kamienia w pobliże platformy. Gra nie pokazuje listy: informacją jest widoczna geometria platformy.
-
-## 4. Instalacja pierwszego kamienia
-
-Po nastrojeniu, namierzeniu i przyciągnięciu kamienia do przestrzeni platformy instalacja zachodzi automatycznie:
+Five installed natural Runes establish the full Resonator at `5.60`. After its teaching completes, the final hunt at `5.70` asks the player to balance the whole system rather than maximize it:
 
 ```text
-przyciągnięcie → przejęcie przez Zwornik → lot do pozycji
-→ osadzenie → energia → stabilizacja
+Earth 2 / Wood 2 / Fire 2 / Metal 2+2 / Water 2+2
+= 222 / M22 / W22
 ```
 
-Gracz nie wkłada kamienia ręcznie do uchwytu. W finalnej fazie `DESCENT` family-specific `creating_01–05` zaczyna się prezentacyjnie na pierwszej klatce z `<= 1.0 s` do końca (albo przy starcie `DESCENT`, gdy cała faza jest krótsza). Nie jest to wcześniejszy commit: dopiero exact dock i udane operacje Actor/Bridge/progression ustanawiają `INSTALLED`/`BOUND`. Wtedy staje się legalny persistent spatial loop, emitowany z płaskiego sector-local anchoru 8.0 m od środka platformy, a nie z fizycznego rootu kamienia; jego audible range kończy się dokładnie przy 2.0 m.
+The synchronized field becomes blue, breathes coherently and carries its tuned-field lightning. `waterSyncLock` removes the final target's two-ring cap so the ordinary three-ring readiness and Astrolabium pull path can finish the hunt.
 
-### First-Rune communication — **IMPLEMENTED / CONTEXTUAL**
+The target itself supplies the intended challenge: it rotates slowly, is black before readiness, and oscillates in depth/scale. There is no additional acceleration, Water Sync Contact state or strong Haiku damping. Those ideas were rejected, not deferred.
 
-The authored keys are `progression.p3.firstRuneInstalledWithAsterion` and `progression.p3.firstRuneInstalledWithoutAsterion`. The variant is selected from current Asterion ownership at actual playback start; exact canonical blocks are owned by [`EXPERIENCE_VR_PLAYER_COMMUNICATION_COPY.md`](EXPERIENCE_VR_PLAYER_COMMUNICATION_COPY.md). Rune installation may legally precede Asterion, and this Guidance branch changes no gameplay or Scenario truth.
+If the puzzle remains unsolved, the Monkey's final-Water Guidance progresses at 3, 6 and 9 minutes. It moves from poetic observation to balance/symmetry, then asks whether the player wants to keep trying or see the answer. Choosing to continue stops automatic escalation but leaves a persistent voluntary solution offer; choosing the answer reveals the all-level-2 arrangement. Solving the lock ends the lifecycle.
 
-## 5. Kula i lokalna kontrola sektora
+## Final card and farewell
 
-Od fizycznego stworzenia Kuli Asterionowej grip może tworzyć szeroki, lekko łukowaty, wielobarwny strumień. Odpowiadają wyłącznie sektory **powered** przez zainstalowany kamień. Powered sector jest lockable nawet przy `LEVEL 0 / 0° / OFF`; **field-active** staje się dopiero po ustawieniu poziomu większego od zera. Strumień musi trafiać ten sam legalny, zasilony sektor nieprzerwanie przez pełne **1.0 s**; dopiero wtedy powstaje **SECTOR LOCK** i ruch dłoni może wpływać na sektor. Zmiana celu albo utrata legalnego trafienia przed upływem 1.0 s zeruje acquisition timer. Pierwsza valid klatka nowego `ACQUIRING` odtwarza `electricity_short_*` natychmiast jako kontakt elektryczny; dźwięk nie czeka na późniejsze `LOCKED`. Przed lockiem Kula nie steruje lokalnym sektorem, a po locku ruch jest interpretowany względem przejętego sektora, nie całej platformy.
+The final Water acquisition completes Tier 5 through the existing crystal and card lifecycle. The final card is the direct author-to-player closure rather than another Monkey instruction. Committing it moves the experience to `5.80`.
 
-### `progression.p3.firstSectorLock` — **IMPLEMENTED**
+The Monkey then gives its authored farewell. Once the last block disappears, Monkey interaction is disabled and a short three-second silence completes the farewell. The ending does not ask the player for another gameplay action.
 
-> Teraz odpowiada na Kulę.  
-> Przytrzymaj chwyt nad sektorem.  
-> Nie puszczaj od razu.
+## World release, credits and exit
 
-Po pierwszym locku:
+At `6.10`, interaction locks and the world releases rather than exploding from one center. The five sectors rotate and separate; portal/reliquary, Furnace, visible Shells and Small Glyphs, Ether and Monkey presentation follow independent release/fade paths. Sector energy and finale audio accompany the release. A camera-bound white enclosure then rises to full opacity while the player viewpoint remains the stable reference.
 
-> No.  
-> Teraz ruszasz częścią świata.
+At `6.20`, a world-anchored localized credits canvas is presented against the whiteout. At `6.30`, the same presentation owner shows the Orange Monkey VR brand slate, including the logo/wordmark animation and fade. Completion reaches terminal `100.10`; its one-time `END_XR_SESSION` effect requests `renderer.xr.getSession().end()` and returns the player from immersive VR.
 
-## 6. Pierwszy Rezonator Asterionowy
+## Product decisions
 
-Gdy trzy wymagane sektory są zasilone przez zainstalowane kamienie i mogą współpracować, fizyczny stan świata tworzy pierwszy układ poszukiwawczy: **REZONATOR ASTERIONOWY**. Nie powstaje on z wejścia w Scenario point i może istnieć przed tym beatem. Nie jest radarem ani klasyczną anteną; stroi przestrzeń i wykrywa odpowiedź legalnych odległych celów wspieranych przez właściwe domeny. Jeśli gracz utworzył go wcześniej, późniejsza dramaturgia uznaje ten fakt zamiast wymuszać ponowne odkrycie lub budowę.
-
-### `progression.p3.resonator` — **IMPLEMENTED**
-
-> No dobrze.  
-> Trzy razem zaczynają słuchać.  
-> Chyba zbudowaliśmy Rezonator Asterionowy.
-
-### `knowledge.resonator.what`
-
-**REZONATOR?**
-
-> Radar mówiłby ci, gdzie coś jest.  
-> To jest bardziej uparte.  
-> Musisz zapytać przestrzeń we właściwym kierunku.
-
-## 7. Sterowanie Rezonatorem
-
-The first Resonator has a discrete `(α, β, γ)` core. Every channel uses `LEVEL 0 / 0° / OFF` and the one-direction positions `13° / 23° / 36°`. EARTH/`α` independently controls the LEFT aperture half-profile, WOOD/`β` the RIGHT half-profile, and FIRE/`γ` controls depth only: `NONE`, `NEAR 10–50 m`, `MID 50–90 m`, or `FAR 90–130 m` (`0 / 1 / 2 / 3`). Side-profile half-extents from the center axis are level 1 `23 m` lateral / `7 m` vertical, level 2 `13 / 13 m`, and level 3 `7 / 23 m`.
-
-The core has 64 physical states and 27 fully active configurations. All 27 have equal target-detection authority; `α`, `β`, and `γ` define geometry only, with no family, scoring, revelation, or Large Glyph privilege for `111`, `222`, or `333`. The Resonator exists from three powered sectors even at `(0,0,0)`, where the field is OFF. Unequal active sides create intentionally asymmetric apertures, but any partial configuration containing a core LEVEL 0 performs no target acquisition.
-
-Canonical field semantics are FORWARD, LATERAL, and VERTICAL; the current Three.js target maps them to platform-local `+Z`, `X`, and `Y`. The authored floor/sector layout aligns FIRE's outward radial axis and field FORWARD with canonical `entryDirection`, independently of Monkey head rotation and without rotating unrelated fixtures or the player passenger hierarchy. The visible field retains a rounded 16-corner cage, translucent deformable skin, brighter curved skeleton, and morphing; nominal aperture coordinates create the primary shape while bow remains secondary tuning. Binding details are defined by [`VR_ASTERION_RESONATOR_FIELD_MODEL.md`](../technical/VR_ASTERION_RESONATOR_FIELD_MODEL.md). Runtime implements this revised nominal shape through the dedicated Resonator Field Frame and current progress-floor FIRE/entryDirection alignment; skin morphing and bow remain presentation tuning.
-
-Spust Kuli nadal orientuje całą platformę, zachowując istniejący ownership globalnego obrotu. Grip służy lokalnej kontroli wybranego zasilonego sektora. Tryby są wzajemnie wykluczające i nigdy nie sterują równocześnie. Jeżeli TRIGGER i GRIP są fizycznie aktywne jednocześnie, **TRIGGER ma bezwzględne pierwszeństwo**: działa klasyczna Kula i globalny owner orientacji platformy, a lokalna ścieżka sector-control pozostaje nieaktywna. Dopiero po zwolnieniu TRIGGER wejście GRIP może prowadzić acquisition i SECTOR LOCK. Interpolacja i mapowanie gestu pozostają otwarte; `0° / 13° / 23° / 36°` są CURRENT TARGET.
-
-### `tool.asterion.resonator` — Panel Y / Kula Asterionowa
-
-> Spust — orientacja całej platformy  
-> Chwyt — połącz się z aktywnym sektorem  
-> Przytrzymaj strumień — zablokuj sektor  
-> Ruch dłoni — zmieniaj jego ustawienie
-
-Panel Y przechowuje instrukcję; Małpa nie powtarza jej stale.
-
-## 8. Late reacquisition — runtime mechanics and authored continuation through `5.60` implemented
-
-Earlier Large Glyph attraction needs learned family knowledge, not Resonator. At late `SPHERE_FAR`, physical pull additionally needs transient `PULL_READY`. This early/late distinction is **IMPLEMENTED CURRENT**; Resonator finds/stabilizes and Astrolabium still owns selection and pull.
-
-Large Glyph Actor also **implements** the late challenge: approximately `0.02 rad/s` angular motion plus independent deterministic radial oscillation over approximately `20–110 m`, with approximately `135 s` period and stable phase offsets. These values remain runtime tuning and require hardware QA. One fixed FIRE band therefore cannot hold a target forever.
-
-## 9. Why the first Resonator becomes difficult
-
-EARTH/WOOD/FIRE remains functional and all 27 fully active core configurations retain equal detection authority. Difficulty comes from angular motion, depth oscillation, and one FIRE depth band at a time. A skilled player can still acquire a target for the existing six-second mechanic, but retention is demanding. This motivates expansion rather than a fiction that the core is broken or underpowered.
-
-## 10. METAL — monotonic range and harmonic center — **CANONICAL TARGET / RUNTIME SYNCHRONIZATION PENDING**
-
-An installed Metal Rune—not `CAN_USE_ADVANCED_RESONATOR` or point `5.60`—powers the Metal sector and makes its acquisition beam, lock and control legal. `M00` is powered but field-inactive. METAL adds angle and tilt with `0 = OFF` and active levels `1/2/3`; any positive DOF activates its field contribution. The physical detents `0° / 13° / 23° / 36°` map monotonically to expansion fractions `0.00 / 0.20 / 0.50 / 0.75`. The canonical mapping is `angle → LATERAL` and `tilt → FORWARD`; Metal never expands VERTICAL.
-
-Angle scales the current EARTH/WOOD LEFT and RIGHT half-extents independently by `(1 + p)`, preserving their asymmetry. Tilt interpolates the FIRE-selected band's near and far boundaries by `p` toward the global `10 m` and `130 m` depth limits. These percentages alter authoritative nominal geometry and therefore both the visible field and actual target containment; they are not presentation-only scaling. The result is player-readable: small movement gives modest coverage, medium movement clearly more, and maximum movement approaches most of the available domain. No move from Metal level `1` to `2` can reduce the field.
-
-`M22` remains the designated future harmonic-center state in control-space and synchronization semantics, but it no longer means zero expansion: angle contributes `+50%` LATERAL coverage and tilt contributes `50%` interpolation toward the global depth boundaries. The runtime still uses the superseded fixed-meter/zero-M22 behavior pending a separate synchronization task.
-
-Metal simultaneously drives presentation-only rounding through the existing field morph: with both DOFs active, `M22` multiplies mismatch fillet by `1.50`, one off-center DOF by `0.90`, and two by `0.60`, with final fractions clamped to `0.32`. These values are **TUNING / HARDWARE QA**. If either DOF is OFF, pre-Metal mismatch rounding is unchanged. Fillet/bow/skin never enlarges gameplay containment.
-
-## 11. ETHER → Monkey → WATER — **NATURAL INSTALLATION AND 5.60 UNLOCK IMPLEMENTED**
-
-Ether remains special and is not a sixth natural Wu Xing family. The canonical `FOURTH_RUNE_INSTALLED` crossing now advances `5.10 → 5.20`, starts the mandatory Monkey Ether reveal from the target point entry effect, and completion reaches `5.30` with `CAN_TUNE_ETHER_RUNE`. The special `VI + VO → VU` recipe then reuses the 18 s Rune transaction, persists `etherRuneTuned`, and advances on the live crossing to stable `5.40`. At `5.40`, an entry effect reveals physical `stone_06 / VU`; it then uses RUNESTONES scan/lock/pull through SPECIAL `CARRIED_ORBIT`, without installation handoff. At the existing handoff radius, the SPECIAL path transfers motion ownership to the Monkey capture interaction, flies Ether over 1.5 s to the live platform-local hover anchor at `(0, 3, 0)`, and leaves the same animated stone visibly resting there in non-targetable `CAPTURED` state while committing only `waterInstallationReadinessOverride: true`. Reconstruction derives this settled physical capture directly from that persistent fact without replay or events. The existing readiness projection reveals the Water Binder live and restores it silently on hydration; `ETHER_MONKEY_CAPTURED` advances `5.40 → 5.50`, where mandatory Monkey communication explains the opened path and `CAN_INSTALL_WATER_RUNE` is exposed. Water then uses the existing natural target, Astro pull, installation handoff, `SOCKET_CAPTURE` and `INSTALLED` lifecycle, committing family `S` normally. The live installed-family crossing `<5 → 5` projects `FIVE_ELEMENTAL_RUNES_INSTALLED`, advances `5.50 → 5.60`, records the milestone, and restores the settled `R/T/K/L/S` natural array without replay on reconstruction. Entry to `5.60` owns the mandatory full-array Monkey acknowledgement and exposes `CAN_USE_ADVANCED_RESONATOR`; Ether remains special and absent from natural arrays. Physical Metal control/expansion/rounding is implemented. Water advanced controls and all harmonic, Water Sync and finale mechanics remain future / not implemented.
-
-Water uses independent, composable angle and tilt presentation/frequency DOFs at levels `0..3`. It never changes nominal field geometry, dimensions, aperture, Metal expansion, containment, acquisition authority, or resonance timing. ANGLE selects hue: `0 → no WATER hue contribution`, preserving the neutral field color; `1 → GREEN`; `2 → BLUE`; `3 → VIOLET/PURPLE`. TILT contributes luminance: level `0` preserves the baseline field presentation, while levels `1/2/3` are strictly increasing (`baseline < 1 < 2 < 3`); level `1` must already be unambiguously brighter in VR even when ANGLE remains `0`.
-
-The primary positive-TILT cue is a lightweight additive halo following the existing curved field skeleton, absent at level `0` and monotonically stronger at levels `1/2/3`. Smaller monotonic increases on the skeleton and translucent skin may support it. With positive ANGLE, the selected hue applies coherently to this WATER presentation; with ANGLE `0`, positive TILT remains neutral/baseline-white. The halo is read-only field-local presentation, not gameplay geometry, and does not require post-processing blur, volumetric rendering, or a new field volume. Exact RGB, halo radius/thickness/opacity/intensity, skeleton/skin intensity, and transition timing remain **TUNING / HARDWARE QA**.
-
-`W22` remains the BLUE harmonic-center control state and Haiku Cosmos synchronization frequency. Its future coherent breathing pulse at `222 / M22 / W22` is a separate harmonic response, not an ordinary TILT level or part of the luminance ladder.
-
-## 12. Full harmonic array, Water Sync Lock and contact
-
-The discoverable full-array solution is:
-
-```text
-EARTH = 2 / WOOD = 2 / FIRE = 2
-METAL angle = 2 / tilt = 2
-WATER angle = 2 / tilt = 2
-= 222 / M(2,2) / W(2,2)
-```
-
-This is the **FULL HARMONIC ARRAY / WATER SYNCHRONIZATION CONFIGURATION**. `M22` denotes the harmonic center in control-space, not minimum range: the balanced square EARTH/WOOD core gains `+50%` LATERAL expansion and the MID FIRE band expands by `50%` toward the global depth boundaries, resolving to `30–110 m`. The field also gains maximum rounding, medium BLUE Water frequency and a gentle coherent BLUE breathing pulse. It remains box-derived containment even though it reads almost spherical/rounded-cuboid. Exact pulse parameters remain tuning.
-
-Installed Water + `222 / M22 / W22` derives future **WATER SYNC LOCK** in the advanced Resonator domain. Lock alone has no global target effect. **WATER SYNC CONTACT** exists only while Haiku Cosmos's canonical anchor is inside the active synchronized field. Contact strongly damps both angular and radial late motion, without requiring a literal stop; Large Glyph Actor remains physical motion owner.
-
-## 13. Frequency color and final anti-bypass rule
-
-Field hue means Water resonance frequency; target-family sign/ring colors remain separate. The former red-to-white power ladder and white maximum are **SUPERSEDED**.
-
-Final Haiku Cosmos physical pull requires all four truths: learned Haiku/Water family + late context + current `PULL_READY` + current WATER SYNC CONTACT. This is a hard anti-bypass rule. Generic acquisition remains generic: before Water, an expanded Metal field may detect Haiku, show its sign, accumulate rings and even retain `PULL_READY`. Without synchronized contact the physical pull remains illegal. Water/platform completion is therefore the only valid final resonance language, not an optional assist.
-
-## 14. Final Water hunt — superseded ordering
-
-The sequence below is retained as historical context for the surrounding finale. Its ordering and any claim that all Water Sync mechanics are future are superseded by the binding final-Water freeze. The required order is controlled two-ring rejection → Ether → Water installation → balanced puzzle → final pull.
-
-```text
-late moving targets → off-center Metal hunt → Ether recovered
-→ Monkey Water exception → Water recovered and installed
-→ 222 / M22 / W22 → harmonic-center, rounded BLUE field with a separate coherent breathing pulse
-→ Haiku enters field → WATER SYNC CONTACT → strong motion damping
-→ stable resonance / PULL_READY → Astrolabium final pull
-→ final Haiku Cosmos crystal / remaining portfolio completion
-```
-
-The puzzle distinguishes maximum coverage from harmonic-center synchronization: greater Metal deflection always increases range, while `M22` supplies the required control-space center with substantial `50%` expansion. Metal control is implemented, while percentage expansion awaits runtime synchronization and exact gesture feel remains outstanding. Water control, pulse, slowdown/recovery easing, harmonic/Water Sync logic, final Water hunt and post-`5.60` finale beats remain **FUTURE / NOT IMPLEMENTED**.
-
-## 15. Ostatnia karta
-
-Ostatni kryształ ujawnia finalną treść portfolio. Nie jest to głos Małpy, lecz jedyny bezpośredni zwrot autora do odbiorcy.
-
-> Ukończyłeś drogę.  
-> Ten świat nie będzie ci już potrzebny.
->
-> Dzięki za twój wysiłek.  
-> I za to, że chciałeś zobaczyć, co robię.
->
-> Do zobaczenia.  
-> W realu… może. :)
-
-Nie ma komunikatu „GRATULACJE”, `100%`, `THE END` ani przycisku „DALEJ”. Po chwili zaczyna się finał.
-
-## 16. Finał — utrata więzi świata
-
-Po krótkiej ciszy wszystkie systemy energii reagują jednocześnie:
-
-- Zworniki emitują wyładowania, błyskawice i przeciążoną energię;
-- kamienie tracą stabilizację, wzmacniają energię i wysyłają impulsy;
-- elementy platformy tracą wspólną strukturę, obracają się, odsuwają, wchodzą na osobne trajektorie i w szeroki ruch wirowy.
-
-Nie jest to eksplozja z jednego punktu, lecz wrażenie, że przestrzeń przestała utrzymywać rzeczy razem. Do ruchu kolejno dołączają sektory, kamienie, Piec, Naczynie, portal, pozostałe konstrukcje i drobne elementy świata. Każdy obiekt ma własną trajektorię. Kamera i głowa gracza pozostają nieruchome; to świat odlatuje.
-
-## 17. Biel i zakończenie sesji
-
-Wraz z rozpadem niebo rozświetla się zamiast pogrążać w pustce. Najpierw wzmacniają się gwiazdy i tło, potem spada kontrast, światła przybywa, a obiekty zmieniają się w sylwetki i znikają.
-
-Na końcu pozostaje wyłącznie pełna biel: bez Małpy, panelu, platformy i innych obiektów. Po krótkiej chwili następuje **END XR SESSION**, a gracz wraca do zwykłego portfolio. W VR nie pojawia się dodatkowa plansza `THE END`.
-
-## 18. Reguła dramaturgiczna ostatniego aktu
-
-```text
-początek: nie wiem co robić → pytam Małpę
-środek:   rozumiem narzędzia → czasem pytam Małpę
-koniec:   największy problem → sam składam poznane systemy w rozwiązanie
-```
-
-Dlatego podczas ostatniego poszukiwania Małpa prawie milczy. Jej zadanie zostało wykonane; gracz nie potrzebuje już przewodnika.
+- Current Water control, synchronization, `waterSyncLock`, rejection, hint lifecycle and finale are implemented behavior, not future targets.
+- Current keystone, sector-motion and synchronized-field lightning is final product behavior; no extra lightning complexity is backlog.
+- Hidden Glyphs use the actor-owned black/nearly invisible late presentation; no dedicated spherical layer is planned.
+- Finale ownership remains downstream of Rune and Resonator domains, coordinated by Scenario through semantic completion events.

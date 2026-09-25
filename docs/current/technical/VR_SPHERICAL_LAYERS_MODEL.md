@@ -1,30 +1,26 @@
 # Experience VR — Spherical Layers Model
 
-Status: **CURRENT / BINDING** for world-stable spherical volume allocation.
+Status: **CURRENT**. This model owns world-stable concentric allocation ranges; it does not own Large Glyph gameplay stages.
 
 ## Canonical world-space registry
 
-| Layer | World-space range | Status | Runtime content |
-| --- | ---: | --- | --- |
-| `SHELLS` | `13–25 m` | IMPLEMENTED | Shell field and interaction |
-| `SMALL_GLYPHS` | `30–45 m` | IMPLEMENTED | Small Glyph field and interaction |
-| `RUNE_STONES` | `50–75 m` | IMPLEMENTED | five natural Rune Stone actors, scan/target and transport foundation |
-| `STARS` | `85–130 m` | IMPLEMENTED | stars |
-| `HIDDEN_GLYPHS` | `133.25–140.85 m` | RESERVED / NOT IMPLEMENTED | no current gameplay content |
+| Layer | Range | Current use |
+| --- | ---: | --- |
+| `SHELLS` | `13–25 m` | implemented Shell field |
+| `SMALL_GLYPHS` | `30–45 m` | implemented Small Glyph field |
+| `RUNE_STONES` | `50–75 m` | implemented natural and Ether Rune placement |
+| `STARS` | `85–130 m` | implemented celestial field |
 
-These are explicit world-space ranges. They are not derived from `worldBaseRadius = 7.6 m`; that value remains a separate platform/locomotion contract. Each layer owns deterministic placement bounds, while its domain actor owns identity, interaction and state.
+Ranges are world-space and independent of the platform's `worldBaseRadius`. The registry resolves deterministic non-overlap and gives each consuming actor its bounded range.
+
+## Hidden Glyph decision
+
+A dedicated `HIDDEN_GLYPHS` world/spherical gameplay layer is intentionally not used in the final product and will not be implemented. The retained configuration/resolver reservation is not an implementation target and owns no content. Large Glyphs instead remain under their actor: at the late `SPHERE_FAR` stage they use black, light-insensitive materials and are nearly invisible until acquisition reaches `PULL_READY`, which restores the target's authored materials. That presentation is the intended hidden-glyph behavior.
 
 ## Large Glyph exclusion
 
-Large Glyph is not a spherical layer and is not registered under `VR_SPHERICAL_LAYER_IDS`. Its actor owns:
-
-- `RING_INITIAL = 8.5 m`;
-- `RING_ELEVATED = 8.5 m radius + 4.0 m elevation` (approximately `5.05 m` orbit-center height from `worldStableCenterY = 1.05 m`);
-- `RING_EXPANDED = 46 m`;
-- `SPHERE_FAR = 80 m` — **IMPLEMENTED**.
-
-After Tier 3, five Large Glyph slots use deterministic full-sphere directions, black/unlit presentation and very slow `0.01 rad/s` motion.
+Large Glyph stages (`RING_INITIAL`, `RING_ELEVATED`, `RING_EXPANDED`, `SPHERE_FAR`) are actor-owned semantic positions, not entries in this registry. Their late angular/radial motion and material changes must not be modeled as spherical-layer allocation.
 
 ## Rune layer contract
 
-`RUNE_STONES` contains exactly five natural physical actors (`earth`, `fire`, `wood`, `metal`, `water`). Ether has a descriptor but is not part of this natural collection or its early reveal. The actors begin hidden; at `2.10` a separate Scenario effect reveals them with the celestial world. Visibility does not grant targetability: availability and legal targets come from `tunedRuneFamilies`, hidden presentation blocks physical candidate legality, and installation readiness does not participate in scan, lock or transport.
+Rune actors receive the `RUNE_STONES` range for deterministic world-stable placement. Transport, carried orbit, installation and Ether capture can leave that allocation; their domain actors then own the live transform. The layer never owns Rune progression or reconstruction truth.

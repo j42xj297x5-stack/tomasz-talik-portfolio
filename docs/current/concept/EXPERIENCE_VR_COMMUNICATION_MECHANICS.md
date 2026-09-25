@@ -2,7 +2,7 @@
 
 Status: **CURRENT runtime baseline**, synchronized on 2026-09-17. Literal Polish text is owned by [`EXPERIENCE_VR_PLAYER_COMMUNICATION_COPY.md`](EXPERIENCE_VR_PLAYER_COMMUNICATION_COPY.md).
 
-> The complete final-Water Guidance lifecycle is **IMPLEMENTED** in [`EXPERIENCE_VR_FINAL_WATER_RESONATOR_CULMINATION.md`](EXPERIENCE_VR_FINAL_WATER_RESONATOR_CULMINATION.md). Its preserved gameplay foundation remains implemented: point `5.15` presents the Water objective, acquisition truth emits the controlled ceiling cycle, Scenario enters `5.20` only after semantic rejection, and the revised 11-block Ether communication retains mandatory attention and its existing completion boundary.
+> The complete final-Water Guidance lifecycle is **IMPLEMENTED**; its [completed implementation plan](../../legacy/concept/EXPERIENCE_VR_FINAL_WATER_RESONATOR_CULMINATION.md) is historical evidence. Its preserved gameplay foundation remains implemented: point `5.15` presents the Water objective, acquisition truth emits the controlled ceiling cycle, Scenario enters `5.20` only after semantic rejection, and the revised 11-block Ether communication retains mandatory attention and its existing completion boundary.
 
 This document describes the implemented communication model. `ATTENTION_REQUIRED`, `AUTO_HINT`, `SPEAKING` and `IDLE` are semantic classifications used by the documentation; runtime actors may expose more detailed phases.
 
