@@ -12,7 +12,7 @@ export const ASTERION_WATER_CONTROL_TUNING = Object.freeze({
   dofs: Object.freeze({
     ANGLE: Object.freeze({
       gestureAxis: Object.freeze({ x: 0, y: 0, z: 1 }),
-      gestureSign: 1,
+      gestureSign: -1,
       motionAxis: Object.freeze({ x: Math.sin(Math.PI / 5), y: 0, z: Math.cos(Math.PI / 5) }),
       motionSign: 1
     }),
