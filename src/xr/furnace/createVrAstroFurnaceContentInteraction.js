@@ -4,6 +4,7 @@ import { isWorldPointInsideChamberCylinder, resolveChamberCylinder, resolveFurna
 import { ASTRO_FURNACE_PROCESS_KINDS, processRotationPulse01 } from './createVrAstroFurnaceActivateInteraction.js';
 import { getObjectWorldScale, resolveVrFurnaceContentWorldScale, setObjectWorldScale,
   VR_FURNACE_CONTENT_SIZE_CLASS } from './vrFurnaceContentSizing.js';
+import { createVrFurnaceExtractionMaterialEffect } from './vrFurnaceExtractionMaterialEffect.js';
 
 export const ASTRO_FURNACE_CONTENT_STATES = Object.freeze({
   EMPTY: 'EMPTY', CANDIDATE_VALID: 'CANDIDATE_VALID', CANDIDATE_INVALID: 'CANDIDATE_INVALID',
@@ -70,11 +71,12 @@ export function createVrAstroFurnaceContentInteraction({
   if (feedback) { feedback.name = 'VrAstroFurnaceInsertFeedback'; feedback.visible = false; furnace.object.add(feedback); }
 
   const position = new THREE.Vector3(), local = new THREE.Vector3(), worldScale = new THREE.Vector3();
-  const materialBases = [], listeners = new Set();
+  const listeners = new Set();
   let state = states.EMPTY, insertedContent = null, insertedKind = null, pendingShellAssetId = null;
   let reportedHeldShell = null, reportedHeldSmallGlyph = null, snapElapsed = 0, elapsed = 0, disposed = false;
   let snapStartPosition = null, snapStartQuaternion = null;
   let snapTarget = null, desiredWorldScale = null;
+  let extractionMaterialEffect = null;
   function setState(next) { if (state === next) return; state = next; listeners.forEach((listener) => listener(next)); }
   function shellAssetId(shell) { return shell?.userData?.shellAssetId ?? null; }
   function shellRecord(shell) { return shellSystem?.getRecord?.(shell) ?? shellSystem?.records?.find((record) => record.object === shell) ?? null; }
@@ -103,10 +105,6 @@ export function createVrAstroFurnaceContentInteraction({
     const matrix = new THREE.Matrix4().multiplyMatrices(furnace.object.matrixWorld.clone().invert(), chamber.matrixWorld);
     matrix.decompose(feedback.position, feedback.quaternion, feedback.scale);
     feedback.position.add(chamberCylinder.center.clone().multiply(feedback.scale).applyQuaternion(feedback.quaternion)); }
-  function ownShellMaterials(shell) { materialBases.length = 0; shell.traverse((node) => {
-    if (!node.isMesh || !node.material) return; (Array.isArray(node.material) ? node.material : [node.material]).forEach((material) =>
-      materialBases.push({ material, color: material.color?.clone(), emissive: material.emissive?.clone(),
-        emissiveIntensity: material.emissiveIntensity ?? 0, opacity: material.opacity ?? 1, transparent: material.transparent ?? false })); }); }
   function accept(content, kind) {
     const valid = kind === kinds.SHELL ? validateShell(content) : validateSmallGlyph(content);
     const take = kind === kinds.SHELL ? takeHeldShell : takeHeldSmallGlyph;
@@ -116,7 +114,7 @@ export function createVrAstroFurnaceContentInteraction({
       ? VR_FURNACE_CONTENT_SIZE_CLASS.SHELL : VR_FURNACE_CONTENT_SIZE_CLASS.SMALL_GLYPH;
     const baselineWorldScale = getObjectWorldScale(content);
     desiredWorldScale = resolveVrFurnaceContentWorldScale({ contentClass, baselineWorldScale });
-    if (kind === kinds.SHELL) ownShellMaterials(content); else materialBases.length = 0;
+    extractionMaterialEffect = createVrFurnaceExtractionMaterialEffect(content);
     anchor.attach(content);
     setObjectWorldScale(content, desiredWorldScale, worldScale);
     snapStartPosition = content.position.clone(); snapStartQuaternion = content.quaternion.clone();
@@ -151,12 +149,7 @@ export function createVrAstroFurnaceContentInteraction({
     setState(states.CONSUMING); return true; }
   function updateConsumption() { if (state !== states.CONSUMING || !insertedContent) return;
     const progress = activateInteraction?.getExtractionProgress?.() ?? 0;
-    if (insertedKind === kinds.SHELL) { const t = smoothstep(progress), pulse = processRotationPulse(activateInteraction?.getProcessAngle?.() ?? 0);
-      materialBases.forEach(({ material, color, emissive, emissiveIntensity, opacity }) => {
-        if (material.color && color) material.color.copy(color).lerp(new THREE.Color(1, 1, 1), t * .35);
-        if (material.emissive) material.emissive.copy(emissive ?? new THREE.Color()).lerp(new THREE.Color(1, 1, 1), t);
-        if ('emissiveIntensity' in material) material.emissiveIntensity = THREE.MathUtils.lerp(emissiveIntensity + pulse, 7, t);
-        material.transparent = true; material.opacity = THREE.MathUtils.lerp(opacity, 0, t); }); }
+    extractionMaterialEffect?.apply(progress);
     if (progress >= 1) { if (insertedKind === kinds.SHELL) { insertedContent.visible = false; insertedContent.userData.shellState = 'consumed'; }
       setState(states.CONSUMED); } }
   function commitConsumedContent() { if (state !== states.CONSUMED || activateInteraction?.getState?.() !== 'COMPLETE' || !insertedContent) return false;
@@ -167,10 +160,12 @@ export function createVrAstroFurnaceContentInteraction({
         throw new Error('Small glyph content completed with an invalid furnace process kind.');
       if (!protoAstroTuningController.commitExtractedSmallGlyph(insertedContent))
         throw new Error('Proto-Astro tuning controller rejected an accepted small glyph extraction.');
+      extractionMaterialEffect?.restore();
       if (!smallGlyphSystem.restoreInstanceToField(insertedContent))
         throw new Error('Small glyph system rejected restoration after essence extraction.'); }
+    extractionMaterialEffect?.release(); extractionMaterialEffect = null;
     insertedContent = null; insertedKind = null; pendingShellAssetId = null; snapTarget = null; desiredWorldScale = null;
-    materialBases.length = 0; setState(states.EMPTY); return true; }
+    setState(states.EMPTY); return true; }
   function update(delta = 0) { if (disposed) return; const step = Math.max(0, Number.isFinite(delta) ? delta : 0); elapsed += step;
     if (!insertedContent) updateCandidate();
     if (state === states.INSERTED) { updateSnap(step); if (['SPINUP', 'STEADY', 'EXTRACTION', 'COOLDOWN'].includes(activateInteraction?.getState?.())) consumeInsertedContent(); }
@@ -181,11 +176,13 @@ export function createVrAstroFurnaceContentInteraction({
     syncFeedbackTransform(); if (![states.CANDIDATE_VALID, states.CANDIDATE_INVALID].includes(state)) hideFeedback();
     updateConsumption(); commitConsumedContent(); reportedHeldShell = null; reportedHeldSmallGlyph = null; }
   function reset() { hideFeedback(); if (insertedContent) {
+      extractionMaterialEffect?.restore();
       if (insertedKind === kinds.SMALL_GLYPH) smallGlyphSystem.restoreInstanceToField(insertedContent);
       else shellSystem.restoreInstanceToOrbit?.(insertedContent); }
+    extractionMaterialEffect?.release(); extractionMaterialEffect = null;
     insertedContent = null; insertedKind = null; pendingShellAssetId = null; snapTarget = null; desiredWorldScale = null;
     reportedHeldShell = null; reportedHeldSmallGlyph = null;
-    materialBases.length = 0; setState(states.EMPTY); }
+    setState(states.EMPTY); }
   function dispose() { if (disposed) return; reset(); disposed = true; listeners.clear(); feedback?.removeFromParent(); feedbackGeometry?.dispose(); feedbackMaterial?.dispose(); }
   return { update, reset, dispose, getInsertedContentKind: () => insertedKind,
     getInsertedShell: () => insertedKind === kinds.SHELL ? insertedContent : null,
