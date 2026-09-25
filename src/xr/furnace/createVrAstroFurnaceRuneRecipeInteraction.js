@@ -15,15 +15,8 @@ export const ASTRO_FURNACE_RUNE_RECIPE_SLOT_STATES = Object.freeze({
 
 const clamp01 = (value) => THREE.MathUtils.clamp(value, 0, 1);
 const smoothstep = (value) => { const t = clamp01(value); return t * t * (3 - 2 * t); };
-const SMALL_GLYPH_WORLD_OFFSET = new THREE.Vector3(0, -0.10, 0);
-
-function addWorldOffsetInLocalSpace(target, parent, worldOffset) {
-  parent.updateWorldMatrix(true, false);
-  const worldOrigin = parent.getWorldPosition(new THREE.Vector3());
-  const localOrigin = parent.worldToLocal(worldOrigin.clone());
-  const localOffset = parent.worldToLocal(worldOrigin.add(worldOffset)).sub(localOrigin);
-  return target.add(localOffset);
-}
+const SMALL_GLYPH_SLOT_LOCAL_OFFSET = new THREE.Vector3(0, -0.20, 0);
+const SHELL_SLOT_LOCAL_OFFSET = new THREE.Vector3(0, -0.30, 0);
 
 export function createVrAstroFurnaceRuneRecipeInteraction({
   furnace,
@@ -76,18 +69,18 @@ export function createVrAstroFurnaceRuneRecipeInteraction({
     VR_FURNACE_CONTENT_SIZE_CLASS.SMALL_GLYPH, (content) => {
     if (!smallGlyphSystem.restoreInstanceToField(content))
       throw new Error('Small glyph system rejected rune recipe ingredient restoration.');
-  }, SMALL_GLYPH_WORLD_OFFSET);
+  }, SMALL_GLYPH_SLOT_LOCAL_OFFSET);
   const shell = createSlot(furnace?.nodes?.RUNE_RECIPE_SHELL_SLOT,
     VR_FURNACE_CONTENT_SIZE_CLASS.SHELL, (content) => {
     if (!shellSystem.restoreInstanceToOrbit(content))
       throw new Error('Shell system rejected rune recipe ingredient restoration.');
-  });
+  }, SHELL_SLOT_LOCAL_OFFSET);
 
-  function createSlot(anchor, contentClass, restore, worldOffset = null) {
+  function createSlot(anchor, contentClass, restore, localOffset = null) {
     return { anchor, contentClass, restore, state: states.EMPTY, content: null, baselineWorldScale: null,
       extractionMaterialEffect: null, elapsed: 0,
       startPosition: new THREE.Vector3(), targetPosition: new THREE.Vector3(),
-      startQuaternion: new THREE.Quaternion(), worldOffset };
+      startQuaternion: new THREE.Quaternion(), localOffset };
   }
   function slotSnapshot(slot) {
     return { state: slot.state, occupied: slot.content !== null, content: slot.content };
@@ -131,7 +124,7 @@ export function createVrAstroFurnaceRuneRecipeInteraction({
     setObjectWorldScale(content, desiredWorldScale);
     slot.startPosition.copy(content.position);
     slot.targetPosition.set(0, 0, 0);
-    if (slot.worldOffset) addWorldOffsetInLocalSpace(slot.targetPosition, slot.anchor, slot.worldOffset);
+    if (slot.localOffset) slot.targetPosition.add(slot.localOffset);
     slot.startQuaternion.copy(content.quaternion);
     slot.elapsed = 0;
     slot.state = config.snapDuration > 0 ? states.SNAPPING : states.INSERTED;
