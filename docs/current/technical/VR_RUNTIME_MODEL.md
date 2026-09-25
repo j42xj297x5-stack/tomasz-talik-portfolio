@@ -303,7 +303,7 @@ Proto-Astro essence truth remains owned by `ProtoAstroTuningController`; Rune tu
 
 The implemented semantic bands are `SHELLS`, `SMALL_GLYPHS`, `LARGE_GLYPHS` and `RUNESTONES`. `RUNESTONES` becomes available after at least one natural family is tuned and exposes exactly `tunedRuneFamilies`; Ether is excluded.
 
-**MIGRATION GAP / NOT IMPLEMENTED:** current Scenario equip/scan/target/pull gates and conditional band exposure are known technical debt. The binding target moves permanent physical rights to Astrolabium `EARNED` ownership while retaining domain-derived family legality; see [`VR_ASTROLABIUM_SANDBOX_MIGRATION.md`](VR_ASTROLABIUM_SANDBOX_MIGRATION.md). The preceding paragraph remains the truthful `CURRENT` runtime description.
+Astrolabium `EARNED` ownership provides permanent physical equip/scan/target/pull rights, while family legality remains derived from its owning domain. All four semantic bands are exposed after physical ownership; their eligibility sets remain domain-derived.
 
 The physical four-panel Astrolabium system has these boundaries:
 
