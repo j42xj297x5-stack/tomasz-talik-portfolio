@@ -4,6 +4,8 @@ import { resolveAttractorShellGlyph } from '../tools/vrAttractorShellGlyphs.js';
 import { isWorldPointInsideChamberCylinder, resolveChamberCylinder } from './vrAstroFurnaceChamberCylinder.js';
 import { getObjectWorldScale, resolveVrFurnaceContentWorldScale, setObjectWorldScale,
   VR_FURNACE_CONTENT_SIZE_CLASS } from './vrFurnaceContentSizing.js';
+import { ASTRO_FURNACE_PROCESS_KINDS } from './createVrAstroFurnaceActivateInteraction.js';
+import { createVrFurnaceExtractionMaterialEffect } from './vrFurnaceExtractionMaterialEffect.js';
 
 export const ASTRO_FURNACE_RUNE_RECIPE_SLOT_STATES = Object.freeze({
   EMPTY: 'EMPTY',
@@ -82,7 +84,8 @@ export function createVrAstroFurnaceRuneRecipeInteraction({
   });
 
   function createSlot(anchor, contentClass, restore, worldOffset = null) {
-    return { anchor, contentClass, restore, state: states.EMPTY, content: null, baselineWorldScale: null, elapsed: 0,
+    return { anchor, contentClass, restore, state: states.EMPTY, content: null, baselineWorldScale: null,
+      extractionMaterialEffect: null, elapsed: 0,
       startPosition: new THREE.Vector3(), targetPosition: new THREE.Vector3(),
       startQuaternion: new THREE.Quaternion(), worldOffset };
   }
@@ -118,6 +121,7 @@ export function createVrAstroFurnaceRuneRecipeInteraction({
   function accept(slot, content, takeHeld, resolveFamilyCode, expectedFamilyKey) {
     if (!canAccept(slot, content, resolveFamilyCode, expectedFamilyKey) || takeHeld(content) !== true) return false;
     slot.content = content;
+    slot.extractionMaterialEffect = createVrFurnaceExtractionMaterialEffect(content);
     slot.baselineWorldScale = getObjectWorldScale(content);
     const desiredWorldScale = resolveVrFurnaceContentWorldScale({
       contentClass: slot.contentClass,
@@ -174,6 +178,10 @@ export function createVrAstroFurnaceRuneRecipeInteraction({
       (content) => resolveVrSmallGlyphProtoAstro(content)?.descriptor?.familyCode ?? null, 'smallGlyphFamilyCode');
     updateSlot(shell, step);
     updateSlot(smallGlyph, step);
+    const extractionProgress = activateInteraction?.getProcessKind?.() === ASTRO_FURNACE_PROCESS_KINDS.RUNE_TUNING
+      ? activateInteraction?.getExtractionProgress?.() ?? 0 : 0;
+    shell.extractionMaterialEffect?.apply(extractionProgress);
+    smallGlyph.extractionMaterialEffect?.apply(extractionProgress);
     updateEjections(step);
     reportedHeldShell = null;
     reportedHeldSmallGlyph = null;
@@ -198,6 +206,9 @@ export function createVrAstroFurnaceRuneRecipeInteraction({
     occupied.forEach(({ slot, kind }, index) => {
       const content = slot.content;
       const baselineWorldScale = slot.baselineWorldScale;
+      slot.extractionMaterialEffect?.restore();
+      slot.extractionMaterialEffect?.release();
+      slot.extractionMaterialEffect = null;
       slot.content = null; slot.state = states.EMPTY; slot.elapsed = 0;
       slot.baselineWorldScale = null;
       settledParent.attach(content);
@@ -213,6 +224,9 @@ export function createVrAstroFurnaceRuneRecipeInteraction({
   }
   function restoreSlot(slot) {
     const content = slot.content;
+    slot.extractionMaterialEffect?.restore();
+    slot.extractionMaterialEffect?.release();
+    slot.extractionMaterialEffect = null;
     slot.content = null;
     slot.baselineWorldScale = null;
     slot.state = states.EMPTY;
@@ -253,6 +267,8 @@ export function createVrAstroFurnaceRuneRecipeInteraction({
       throw new Error('Small glyph system rejected a known rune recipe ingredient.');
     if (!shellSystem.consumeInstance(insertedShell))
       throw new Error('Shell system rejected a known rune recipe ingredient.');
+    smallGlyph.extractionMaterialEffect?.release(); smallGlyph.extractionMaterialEffect = null;
+    shell.extractionMaterialEffect?.release(); shell.extractionMaterialEffect = null;
     smallGlyph.content = null; smallGlyph.baselineWorldScale = null; smallGlyph.state = states.EMPTY; smallGlyph.elapsed = 0;
     shell.content = null; shell.baselineWorldScale = null; shell.state = states.EMPTY; shell.elapsed = 0;
     emitChange();
