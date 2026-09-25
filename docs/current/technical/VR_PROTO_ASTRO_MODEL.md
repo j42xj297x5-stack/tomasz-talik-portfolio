@@ -9,7 +9,7 @@ Status: **CURRENT / BINDING** for Proto-Astro identity, Furnace essence truth, A
 - `RuneStoneProgressionController` owns natural `tunedRuneFamilies` and `installedRuneFamilies`.
 - `RuneRecipeInteraction` owns the two typed Furnace slots; sector progression does not gate natural tuning.
 - `createVrAstrolabiumTuningActor` is **IMPLEMENTED** as a derived, read-only interpreter. It observes Furnace processed-Shell truth, Proto-Astro extracted natural Small Glyph essence truth, Rune tuning truth, and bounded Resonator eligibility; it derives targetable family sets per band without duplicating persistence.
-- Band UI owns the selected object class. Immediate all-four-band availability after physical `EARNED` ownership is **CURRENT / IMPLEMENTED (S1)** as defined by [`VR_ASTROLABIUM_SANDBOX_MIGRATION.md`](VR_ASTROLABIUM_SANDBOX_MIGRATION.md). Band existence remains independent from the eligibility sets derived below.
+- Band UI owns the selected object class. Immediate all-four-band availability after physical `EARNED` ownership is **CURRENT / IMPLEMENTED**. Band existence remains independent from the eligibility sets derived below.
 
 ## Identity and flat Shell adapter contract
 
