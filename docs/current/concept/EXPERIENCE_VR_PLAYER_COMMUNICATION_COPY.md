@@ -1,9 +1,11 @@
 # Experience VR — kanoniczne teksty komunikacji
 
-**Status:** CURRENT / canonical PL/EN final-Water copy synchronized on 2026-09-17
+**Status:** CURRENT / canonical communication reference synchronized with the implemented PL/EN runtime on 2026-09-25
 **Mechanika:** [`EXPERIENCE_VR_COMMUNICATION_MECHANICS.md`](EXPERIENCE_VR_COMMUNICATION_MECHANICS.md)
 
-Runtime Monkey copy is authored as `blocks[]`. Each quotation below preserves one block as one bubble. `--- BLOCK ---` occurs only between separate array elements; a line break without that separator is an authored `\n` inside the same block.
+The PL/EN localization migration is complete. Runtime Monkey copy is owned by the paired `VR_MONKEY_COMMUNICATION_COPY_PL` and `VR_MONKEY_COMMUNICATION_COPY_EN` catalogs and selected by the locale passed from Experience VR composition. Player Guide, objectives, Furnace, finale/credits and portfolio-card copy remain with their own localized runtime owners; Scenario events and effects are language-agnostic.
+
+This document remains communication/copy authority rather than a duplicate runtime catalog. Its quoted Polish blocks are the canonical editorial reference; the corresponding approved English runtime copy is implemented, not a separate future task. Each quotation below preserves one `blocks[]` item as one bubble. `--- BLOCK ---` occurs only between separate array elements; a line break without that separator is an authored `\n` inside the same block.
 
 ## Progression — implemented early and Rune/Resonator entries
 

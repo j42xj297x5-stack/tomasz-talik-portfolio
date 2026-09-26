@@ -1,51 +1,44 @@
-# Interaction Model (Planned Entry + Dual Modes)
+# Interaction Model — Current Entry and Three Experiences
 
-Planned expanded core loop:
-1. User enters the lightweight entry shell.
-2. User chooses language: `Polski` or `English`.
-3. User chooses mode: `Classic 2D` / `Experience 3D` in English, or `Klasyczne 2D` / `Doświadczenie 3D` in Polish.
-4. The selected experience attracts attention through its symbolic monkey-and-glyph loop.
-5. User explores portfolio gates.
-6. Panel explains the selected gate in readable HTML/UI space.
-7. Case study deepens and confirms value.
-8. User returns to the experience loop and explores the next gate.
+## Implemented entry loop
 
-Principle: entry chooses language and mode, experience attracts, panel explains, case study deepens.
+1. The lightweight entry shell opens before any presentation runtime.
+2. The user selects `Polski` or `English`; the selection sets `document.documentElement.lang` and is persisted.
+3. The localized mode screen exposes three distinct experiences: `Classic 2D`, `Experience 3D`, and `Orange Monkey VR` (the product-facing identity of the internal Experience VR runtime).
+4. Classic 2D starts directly. Experience 3D is dynamically imported only after selection. Orange Monkey VR remains disabled while WebXR capability is checked and is enabled only in a secure context when `immersive-vr` is supported.
+5. Each selected experience attracts attention through its own symbolic monkey-and-glyph language, exposes portfolio gates, and provides readable project/case-study content.
+
+Principle: entry chooses language and experience; the selected experience attracts, the presentation explains, and the case study deepens. Lack of VR capability never blocks the other two experiences.
 
 ## Experience 3D loop
 
-This is the current implemented Three.js portfolio runtime.
+Experience 3D is the implemented atmospheric Three.js portfolio runtime.
 
-Loop:
-1. Loader starts after the future `Experience 3D` selection.
-2. Current 3D assets load.
-3. Central meditating monkey anchors the scene.
-4. Five glyphs orbit around the monkey.
-5. Hover reveals a label or atmospheric visual response.
-6. Click opens the readable overlay panel for the matching portfolio gate.
-7. User closes or leaves the panel and returns to the 3D glyph orbit.
-
-The current Three.js runtime, scene atmosphere, glyph gates, hover/click overlay behavior, and deployment-safe asset model remain intact.
+1. Selection begins its loader and dynamically boots the runtime.
+2. The central meditating monkey anchors five orbiting glyphs.
+3. Hover provides a label/atmospheric response.
+4. Selection opens the localized readable overlay for the matching portfolio gate.
+5. Closing the panel returns to the glyph orbit.
 
 ## Classic 2D loop
 
-This is a planned lightweight, flat, symbolic second experience. It is not a degraded fallback and not a broken copy of the 3D scene.
+Classic 2D is the implemented lightweight HTML/CSS/JavaScript experience, not a degraded fallback.
 
-Loop:
-1. `Classic 2D` starts without booting the heavy Three.js scene.
-2. A front-facing meditating monkey becomes the flat symbolic anchor.
-3. Five glyphs orbit around the monkey on a flat circle.
-4. Clicking a glyph subtly rotates or tilts the monkey.
-5. A readable panel opens or slides out.
-6. The panel reads from the same portfolio gate content as the matching 3D gate.
-7. User returns to the flat glyph circle and explores the next gate.
+1. It starts without booting Three.js.
+2. A front-facing monkey and five glyphs form the flat symbolic navigation.
+3. A selected glyph opens localized shared portfolio content and case-study surfaces.
+4. The user returns to the glyph circle or back to mode selection.
 
-The visual tone should be retro mystic and atmospheric, inspired by old Atari/Commodore-era interfaces, but calm, readable, non-comedic, non-meme-like, and not noisy. The monkey remains an archetypal symbolic anchor rather than a joke mascot.
+Its tone remains retro-mystic, calm, readable, non-comedic and non-meme-like.
+
+## Orange Monkey VR / Experience VR
+
+Orange Monkey VR is the portfolio-facing name; Experience VR is the internal/runtime name. After the capability-gated mode selection, its module prepares an independent WebXR scene and presents a separate `Enter VR` user gesture before requesting an immersive session. Its embodied interaction, Guidance, Scenario, Rune, Resonator and finale details remain owned by the dedicated Experience VR models.
 
 ## Shared interaction rules
 
-- Both modes should use the same gate IDs and content records.
-- Language and mode choices must be readable and keyboard-accessible in future implementation.
-- Reduced motion should be respected.
-- `Experience` must be spelled correctly in English mode labels.
-- Final bilingual copy remains draft until a separate copy-locking pass.
+- The three experiences use stable portfolio identities and localized content where their presentation requires it.
+- Language and mode controls are ordinary readable buttons and remain usable without audio.
+- Classic 2D and Experience 3D remain available independently of WebXR support.
+- Reduced-motion and accessibility behavior belongs to each presentation owner; this concept model does not override their runtime contracts.
+- `Experience` remains the canonical spelling in English labels.
