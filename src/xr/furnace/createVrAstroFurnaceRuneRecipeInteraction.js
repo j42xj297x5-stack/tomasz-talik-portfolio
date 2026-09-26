@@ -31,10 +31,11 @@ export function createVrAstroFurnaceRuneRecipeInteraction({
   getExpectedRecipe,
   settledParent,
   getPlayerWorldPosition,
-  settleEjectedSmallGlyph
+  settleEjectedSmallGlyph,
+  onAcceptedInsertion = () => {}
 }) {
   [takeHeldShell, takeHeldSmallGlyph, isModeActive, getExpectedRecipe,
-    getPlayerWorldPosition, settleEjectedSmallGlyph].forEach((dependency) => {
+    getPlayerWorldPosition, settleEjectedSmallGlyph, onAcceptedInsertion].forEach((dependency) => {
     if (typeof dependency !== 'function') throw new TypeError('Rune recipe interaction dependencies must be functions.');
   });
   if (!settledParent?.isObject3D || typeof settledParent.attach !== 'function')
@@ -111,7 +112,7 @@ export function createVrAstroFurnaceRuneRecipeInteraction({
     return expectedRecipe !== null
       && resolveFamilyCode(content) === expectedRecipe[expectedFamilyKey];
   }
-  function accept(slot, content, takeHeld, resolveFamilyCode, expectedFamilyKey) {
+  function accept(slot, content, takeHeld, resolveFamilyCode, expectedFamilyKey, ingredientKind) {
     if (!canAccept(slot, content, resolveFamilyCode, expectedFamilyKey) || takeHeld(content) !== true) return false;
     slot.content = content;
     slot.extractionMaterialEffect = createVrFurnaceExtractionMaterialEffect(content);
@@ -133,6 +134,7 @@ export function createVrAstroFurnaceRuneRecipeInteraction({
       content.quaternion.identity();
     }
     emitChange();
+    onAcceptedInsertion(ingredientKind);
     return true;
   }
   function updateSlot(slot, delta) {
@@ -166,9 +168,9 @@ export function createVrAstroFurnaceRuneRecipeInteraction({
     if (disposed) return;
     const step = Math.max(0, Number.isFinite(delta) ? delta : 0);
     accept(shell, reportedHeldShell, takeHeldShell,
-      (content) => resolveAttractorShellGlyph(content)?.familyCode ?? null, 'shellFamilyCode');
+      (content) => resolveAttractorShellGlyph(content)?.familyCode ?? null, 'shellFamilyCode', 'SHELL');
     accept(smallGlyph, reportedHeldSmallGlyph, takeHeldSmallGlyph,
-      (content) => resolveVrSmallGlyphProtoAstro(content)?.descriptor?.familyCode ?? null, 'smallGlyphFamilyCode');
+      (content) => resolveVrSmallGlyphProtoAstro(content)?.descriptor?.familyCode ?? null, 'smallGlyphFamilyCode', 'SMALL_GLYPH');
     updateSlot(shell, step);
     updateSlot(smallGlyph, step);
     const extractionProgress = activateInteraction?.getProcessKind?.() === ASTRO_FURNACE_PROCESS_KINDS.RUNE_TUNING

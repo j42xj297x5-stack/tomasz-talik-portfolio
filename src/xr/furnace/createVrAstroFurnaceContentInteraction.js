@@ -44,9 +44,11 @@ export function constrainHeldShellToDeviceSurfaces({ shell, shellCenter, origin,
 export function createVrAstroFurnaceContentInteraction({
   furnace, shellSystem, smallGlyphSystem, protoAstroTuningController, openInteraction, activateInteraction,
   progressionController, settings = {}, takeHeldShell = () => true, takeHeldSmallGlyph = () => false,
-  isModeActive = () => true, isSmallGlyphModeActive = () => false, isAstrolabiumOwned = () => false
+  isModeActive = () => true, isSmallGlyphModeActive = () => false, isAstrolabiumOwned = () => false,
+  onAcceptedInsertion = () => {}
 }) {
-  [takeHeldShell, takeHeldSmallGlyph, isModeActive, isSmallGlyphModeActive, isAstrolabiumOwned].forEach((dependency) => {
+  [takeHeldShell, takeHeldSmallGlyph, isModeActive, isSmallGlyphModeActive, isAstrolabiumOwned,
+    onAcceptedInsertion].forEach((dependency) => {
     if (typeof dependency !== 'function') throw new TypeError('Astro furnace content dependencies must be functions.');
   });
   if (!smallGlyphSystem || typeof smallGlyphSystem.restoreInstanceToField !== 'function')
@@ -125,7 +127,7 @@ export function createVrAstroFurnaceContentInteraction({
     if (kind === kinds.SMALL_GLYPH) addWorldOffsetInLocalSpace(snapTarget, anchor, SMALL_GLYPH_WORLD_OFFSET);
     if (kind === kinds.SHELL) { content.userData.furnaceDesiredWorldScale = desiredWorldScale;
       content.userData.furnaceSnapTarget = snapTarget; content.userData.shellState = 'inserted'; content.userData.attractorTarget = false; }
-    snapElapsed = 0; setState(states.INSERTED); hideFeedback(); return true;
+    snapElapsed = 0; setState(states.INSERTED); hideFeedback(); onAcceptedInsertion(kind); return true;
   }
   function updateCandidate() {
     const candidateKind = isSmallGlyphModeActive() ? kinds.SMALL_GLYPH : kinds.SHELL;
