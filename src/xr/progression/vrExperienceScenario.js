@@ -143,6 +143,7 @@ export const VR_SCENARIO_EFFECT = immutableIdentifiers([
   'SET_MAIN_AMBIENT_02',
   'SET_MAIN_AMBIENT_03',
   'SET_MAIN_AMBIENT_04',
+  'SET_MAIN_AMBIENT_05',
   'BEGIN_CELESTIAL_REVEAL',
   'REVEAL_NATURAL_RUNE_STONES',
   'BEGIN_SHELL_FIELD_WORLD_REVEAL',
@@ -915,6 +916,7 @@ const points = Object.freeze([
       Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.STAY, event: VR_SCENARIO_EVENT.TIER_COMPLETED,
         milestonesToAdd: Object.freeze([]), effects: Object.freeze([
           VR_SCENARIO_EFFECT.APPLY_TIER_COMPLETE_FEEDBACK,
+          VR_SCENARIO_EFFECT.SET_MAIN_AMBIENT_05,
           VR_SCENARIO_EFFECT.CHECK_FINAL_WATER_ATTEMPT_JOIN
         ]) }),
       Object.freeze({ kind: VR_SCENARIO_TRANSITION_KIND.STAY,

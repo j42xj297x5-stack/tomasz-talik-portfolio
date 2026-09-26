@@ -1705,6 +1705,7 @@ runtimeExperience = new RuntimeExperience({
     [VR_SCENARIO_EFFECT.SET_MAIN_AMBIENT_02]: () => { ambientSequencer.setProgram(VR_MAIN_AMBIENT_PROGRAMS.ambient02); },
     [VR_SCENARIO_EFFECT.SET_MAIN_AMBIENT_03]: () => { ambientSequencer.setProgram(VR_MAIN_AMBIENT_PROGRAMS.ambient03); },
     [VR_SCENARIO_EFFECT.SET_MAIN_AMBIENT_04]: () => { ambientSequencer.setProgram(VR_MAIN_AMBIENT_PROGRAMS.ambient04); },
+    [VR_SCENARIO_EFFECT.SET_MAIN_AMBIENT_05]: () => { ambientSequencer.setProgram(VR_MAIN_AMBIENT_PROGRAMS.ambient05); },
     [VR_SCENARIO_EFFECT.CHECK_RESONATOR_JOIN]: () => {
       progressionSemanticHandoff.onResonatorStateChanged(asterionResonatorFieldActor.getDescriptor());
     },
