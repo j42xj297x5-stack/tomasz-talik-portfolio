@@ -651,10 +651,11 @@ export function createVrMonkeyGuide({
     }
     if (!hit.region) return false;
     const closesPanel = hit.region.id === 'close';
+    const navigationClass = screen === VR_MONKEY_GUIDE_SCREEN.MENU ? 'MAIN_MENU' : 'DEEPER';
     const activated = dialogueOverride
       ? dialogueOverride.onSelect?.(hit.region.id, record) !== false
       : activateOption(hit.region.id);
-    if (activated && !closesPanel) onPanelClick();
+    if (activated && !closesPanel) onPanelClick(navigationClass);
     return activated;
   }
   const listeners = controllers.map((record) => {

@@ -73,7 +73,7 @@ export function getVrCrystalLayout(pageIds, settings) {
 
 export function createVrCrystalCollection({ scene, assetManager, controllers, portalDisplay, insertionTarget, settings,
   haloSettings = {}, insertFeedbackSettings = {}, pages = [], progressionController, onPreview, onCommit,
-  onInsertAccepted = () => {}, canGrabController = () => true, canUseReliquary = () => true }) {
+  onGrabAccepted = () => {}, onInsertAccepted = () => {}, canGrabController = () => true, canUseReliquary = () => true }) {
   const instances = [];
   const listeners = [];
   const heldByController = new Map();
@@ -194,6 +194,7 @@ export function createVrCrystalCollection({ scene, assetManager, controllers, po
     instance.pullStartPosition = instance.object.position.clone();
     instance.pullStartQuaternion = instance.object.quaternion.clone();
     clearControllerHit(controllerRecord);
+    onGrabAccepted(instance);
     return instance;
   }
 

@@ -156,7 +156,10 @@ const copy = COPY[language];
 const vrAudio = createVrAudioBridge();
 const VR_AUDIO = Object.freeze({
   playerOpen: '/audio/bell_01.mp3', playerClose: '/audio/bell_02.mp3', click: '/audio/click_panel_01.mp3',
+  monkeyDeeper: '/audio/turn_page_02.mp3',
   monkeyOpen: '/audio/panel_sound_long_01.mp3', monkeyClose: '/audio/panel_sound_long_02.mp3',
+  monkeyFinalTurn: '/audio/panel_sound_long_03.mp3', portalReveal: '/audio/panel_sound_03.mp3',
+  furnaceReveal: '/audio/panel_sound_04.mp3',
   furnaceOpen: '/audio/panel_sound_01.mp3', furnaceDeeper: '/audio/panel_sound_02.mp3',
   reliquaryInsert: '/audio/turn_page_01.mp3', reliquaryActivate: '/audio/creating_short_01.mp3',
   reliquaryConsume: '/audio/reliquiary_consume.mp3',
@@ -171,6 +174,9 @@ const VR_AUDIO = Object.freeze({
   glyphProcess: '/audio/glif_hover_loop.mp3',
   releaseBell: '/audio/bell_03.mp3'
 });
+const CRYSTAL_GRAB_AUDIO = Object.freeze([
+  '/audio/creating_06.mp3', '/audio/creating_07.mp3', '/audio/creating_08.mp3'
+]);
 const GLYPH_COMPLETION_AUDIO = Object.freeze({
   'ethics-life-protection': ['/audio/glif_earth_4s_01.mp3', '/audio/glif_earth_4s_02.mp3', '/audio/glif_earth_4s_03.mp3'],
   'creative-ai': ['/audio/glif_fire_4s_01.mp3', '/audio/glif_fire_4s_02.mp3', '/audio/glif_fire_4s_03.mp3'],
@@ -180,6 +186,7 @@ const GLYPH_COMPLETION_AUDIO = Object.freeze({
 });
 const REQUIRED_VR_AUDIO = Object.freeze([
   ...Object.values(VR_AUDIO),
+  ...CRYSTAL_GRAB_AUDIO,
   ...Object.values(GLYPH_COMPLETION_AUDIO).flat(),
   ...BINDER_REVEAL_AUDIO,
   ...Object.values(ASTERION_SECTOR_ACQUISITION_AUDIO),
@@ -189,6 +196,11 @@ const REQUIRED_VR_AUDIO = Object.freeze([
 ]);
 const playVrUi = (path) => vrAudio.playOneShot(path, 'UI');
 const playVrWorld = (path) => vrAudio.playOneShot(path, 'WORLD');
+let crystalGrabAudioCursor = 0;
+const playCrystalGrabAudio = () => {
+  playVrWorld(CRYSTAL_GRAB_AUDIO[crystalGrabAudioCursor]);
+  crystalGrabAudioCursor = (crystalGrabAudioCursor + 1) % CRYSTAL_GRAB_AUDIO.length;
+};
 app.innerHTML = `
   <main class="vr-runtime" aria-label="${copy.title}">
     <canvas id="vr-scene-canvas" class="vr-runtime__canvas"></canvas>
@@ -1045,7 +1057,9 @@ monkeyGuide = createVrMonkeyGuide({
   locale: language,
   settings: settings.monkeyGuide,
   onOpenChange: (open) => playVrUi(open ? VR_AUDIO.monkeyOpen : VR_AUDIO.monkeyClose),
-  onPanelClick: () => playVrUi(VR_AUDIO.click),
+  onPanelClick: (navigationClass) => playVrUi(
+    navigationClass === 'DEEPER' ? VR_AUDIO.monkeyDeeper : VR_AUDIO.click
+  ),
   onAttentionStart: () => playVrWorld(VR_AUDIO.monkeyThinking)
 });
 const monkeyLocaleCopy = language === 'pl'
@@ -1266,6 +1280,7 @@ const crystalCollection = createVrCrystalCollection({
   settings: settings.crystals, haloSettings: settings.targetHalo, insertFeedbackSettings: settings.reliquary.insertFeedback,
   pages: experienceVrPages, progressionController,
   canUseReliquary: () => crystalReliquary.isInteractionEnabled(),
+  onGrabAccepted: playCrystalGrabAudio,
   onInsertAccepted: () => playVrWorld(VR_AUDIO.reliquaryInsert),
   canGrabController: (record) => {
     if (record.handedness === 'right' && handModeController.getRightMode() === 'ASTRO_ATTRACTOR') return false;
@@ -1546,11 +1561,13 @@ introSequence = createVrIntroSequence({
   onThresholdSelected: (choice) => runtimeExperience.dispatch(VR_SCENARIO_EVENT.THRESHOLD_SELECTED, { choice }),
   onExitReactionCompleted: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.INTRO_EXIT_REACTION_COMPLETED),
   onPlayerEnteredRing: (crossing) => runtimeExperience.dispatch(VR_SCENARIO_EVENT.PLAYER_ENTERED_RING, crossing),
+  onMonkeyFinalTurn: () => playVrWorld(VR_AUDIO.monkeyFinalTurn),
   onMonkeySettled: (crossing) => runtimeExperience.dispatch(VR_SCENARIO_EVENT.MONKEY_SETTLED, crossing),
   onGlyphHintTimeout: () => {},
   onReliquaryRevealCompleted: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.RELIQUARY_REVEAL_COMPLETED),
   onOpeningRaysReady: () => vrControllers.setRaysEnabled(true),
   onReliquaryReveal: (duration) => {
+    playVrWorld(VR_AUDIO.portalReveal);
     portalDisplay.reveal(duration);
     crystalReliquary.reveal(duration);
     portalCanvas.show(
@@ -1683,7 +1700,10 @@ const furnaceIntro = createVrFurnaceIntro({
   blocks: monkeyLocaleCopy.progression['progression.furnace.look'].blocks,
   timingBlocks: VR_MONKEY_COMMUNICATION_COPY_PL.progression['progression.furnace.look'].blocks,
   secondsPerLine: settings.intro.messageDisplayDuration,
-  revealFurnace: () => astroFurnace.reveal(3),
+  revealFurnace: () => {
+    playVrWorld(VR_AUDIO.furnaceReveal);
+    astroFurnace.reveal(3);
+  },
   onCompleted: () => {
     runtimeExperience.dispatch(VR_SCENARIO_EVENT.FURNACE_INTRO_COMPLETED);
     scenarioProgressReconciler?.request();
@@ -2187,6 +2207,7 @@ function showReadyState({ ended = false } = {}) {
 // restoring the Scenario baseline must never recreate or dispose application objects.
 function restoreVrScenarioBaseline() {
   terminalXrEndRequested = false;
+  crystalGrabAudioCursor = 0;
   runtimeExperience.resetSession();
   endCreditsPresentation.reset();
   finalWorldRelease.reset();
