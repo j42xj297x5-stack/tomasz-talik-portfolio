@@ -162,7 +162,10 @@ const VR_AUDIO = Object.freeze({
   reliquaryConsume: '/audio/reliquiary_consume.mp3',
   tierComplete: '/audio/floor_panel_activate.mp3', monkeyThinking: '/audio/monkey_thinking_01.mp3',
   chamberOpen: '/audio/astro_piec_open.mp3', chamberClose: '/audio/astro_piec_close.mp3',
+  furnaceShellInsert: '/audio/glif_earth_4s_04.mp3', furnaceSmallGlyphInsert: '/audio/glif_fire_4s_04.mp3',
+  furnaceClick: '/audio/click_short_01.mp3',
   furnaceProcess: '/audio/astro_piec_work_01.mp3',
+  asterionProcess: '/audio/astro_piec_work_02.mp3',
   runeTuningProcess: '/audio/astro_piec_work_03.mp3',
   asterionCreate: '/audio/astro_piec_work_create_01.mp3',
   glyphProcess: '/audio/glif_hover_loop.mp3',
@@ -1126,7 +1129,9 @@ const astroFurnaceRuneRecipeInteraction = createVrAstroFurnaceRuneRecipeInteract
   getPlayerWorldPosition: (target) => getXrHeadWorldPosition({ renderer, camera, playerRig, target }),
   settleEjectedSmallGlyph: (glyph) => smallGlyphAttractorInteraction?.settleTransferredGlyph(glyph) === true,
   takeHeldShell: (shell) => shellAttractorInteraction?.transferHeldShell(shell) === true,
-  takeHeldSmallGlyph: (glyph) => smallGlyphAttractorInteraction?.transferHeldGlyph(glyph) === true
+  takeHeldSmallGlyph: (glyph) => smallGlyphAttractorInteraction?.transferHeldGlyph(glyph) === true,
+  onAcceptedInsertion: (kind) => furnaceAudioProjection.playPhysicalOneShot(
+    kind === 'SHELL' ? VR_AUDIO.furnaceShellInsert : VR_AUDIO.furnaceSmallGlyphInsert)
 });
 runeRecipeSelectionController = createVrRuneRecipeSelectionController({
   runeRecipeInteraction: astroFurnaceRuneRecipeInteraction,
@@ -1169,7 +1174,9 @@ const furnacePanel = createVrAstroFurnacePanel({
   processSource: createVrAstroFurnaceProcessSource(() => astroFurnaceActivateInteraction),
   contentSource: furnaceContentSource,
   onEnterModule: () => playVrUi(VR_AUDIO.furnaceDeeper),
-  onReturnHome: () => playVrUi(VR_AUDIO.click)
+  onReturnHome: () => playVrUi(VR_AUDIO.click),
+  onBackNavigation: () => playVrUi(VR_AUDIO.click),
+  onAcceptedAction: () => playVrUi(VR_AUDIO.furnaceClick)
 });
 const ordinaryFurnaceRayAvailable = (record) => !(record.handedness === 'right'
   && handModeController.getRightMode() === 'ASTRO_ATTRACTOR')
@@ -1213,8 +1220,10 @@ astroFurnaceActivateInteraction = createVrAstroFurnaceActivateInteraction({
     if (processKind === ASTRO_FURNACE_PROCESS_KINDS.RUNE_TUNING) {
       runeTuningController.beginTuning(); furnaceAudioProjection.startProcess('runeTuning'); return;
     }
-    if ([ASTRO_FURNACE_PROCESS_KINDS.ASTERION_CONSTRUCTION, ASTRO_ATTRACTOR_CONSTRUCTION].includes(processKind))
-      furnaceAudioProjection.startProcess('construction');
+    if (processKind === ASTRO_FURNACE_PROCESS_KINDS.ASTERION_CONSTRUCTION)
+      furnaceAudioProjection.startProcess('asterionConstruction');
+    else if (processKind === ASTRO_ATTRACTOR_CONSTRUCTION)
+      furnaceAudioProjection.startProcess('astroAttractorConstruction');
     else furnaceAudioProjection.startProcess('ordinary');
   },
   onProcessStop: ({ completed, processKind }) => {
@@ -1223,8 +1232,10 @@ astroFurnaceActivateInteraction = createVrAstroFurnaceActivateInteraction({
       if (completed) runeTuningController.completeTuning(); else runeTuningController.abortTuning();
       return;
     }
-    if ([ASTRO_FURNACE_PROCESS_KINDS.ASTERION_CONSTRUCTION, ASTRO_ATTRACTOR_CONSTRUCTION].includes(processKind))
-      furnaceAudioProjection.stopProcess('construction');
+    if (processKind === ASTRO_FURNACE_PROCESS_KINDS.ASTERION_CONSTRUCTION)
+      furnaceAudioProjection.stopProcess('asterionConstruction');
+    else if (processKind === ASTRO_ATTRACTOR_CONSTRUCTION)
+      furnaceAudioProjection.stopProcess('astroAttractorConstruction');
     else furnaceAudioProjection.stopProcess('ordinary');
   }
 });
@@ -1237,7 +1248,9 @@ astroFurnaceContentInteraction = createVrAstroFurnaceContentInteraction({
   takeHeldShell: (shell) => shellAttractorInteraction?.transferHeldShell(shell) === true,
   takeHeldSmallGlyph: (glyph) => smallGlyphAttractorInteraction?.transferHeldGlyph(glyph) === true,
   isSmallGlyphModeActive: () => astroFurnaceOptionInteraction?.getActiveMode?.() === ASTRO_FURNACE_ASTRO_ATTRACTOR_MODE,
-  isAstrolabiumOwned
+  isAstrolabiumOwned,
+  onAcceptedInsertion: (kind) => furnaceAudioProjection.playPhysicalOneShot(
+    kind === 'SHELL' ? VR_AUDIO.furnaceShellInsert : VR_AUDIO.furnaceSmallGlyphInsert)
 });
 astroFurnaceContentInteraction.subscribe(() => furnacePanel.redraw());
 astroFurnaceOptionInteraction = createVrAstroFurnaceOptionInteraction({

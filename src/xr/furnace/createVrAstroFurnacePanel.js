@@ -39,7 +39,8 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
   canUseAstroTuning = () => false,
   runeRecipeInteraction = null, runeRecipeSelectionController = null, runeTuningController = null,
   requestAstroProduction = () => false,
-  asterionPreviewModel, astrolabiumPreviewModel, settings = {}, locale = 'pl', onEnterModule = () => {}, onReturnHome = () => {}, onCreate = () => {} }) {
+  asterionPreviewModel, astrolabiumPreviewModel, settings = {}, locale = 'pl', onEnterModule = () => {},
+  onReturnHome = () => {}, onBackNavigation = () => {}, onAcceptedAction = () => {} }) {
   const copy = resolveVrFurnaceCopy(locale);
   const config = { width: 1.55, height: 1.05, gapFromFurnace: 0.10, verticalOffset: 0.15, yawDegrees: -12,
     canvasWidth: 1536, canvasHeight: 1024, appearDuration: 0.32, disappearDuration: 0.20,
@@ -618,22 +619,23 @@ export function createVrAstroFurnacePanel({ parent, furnace, controllers = [], p
     onEnterModule();
   } else if (id === 'astrolabium-create') {
     screen = ASTRO_FURNACE_PANEL_SCREENS.ASTROLABIUM_PRODUCTION; returnScreen = ASTRO_FURNACE_PANEL_SCREENS.ASTROLABIUM_MENU;
-    moduleListeners.forEach((listener) => listener('astro_attractor', screen));
+    moduleListeners.forEach((listener) => listener('astro_attractor', screen)); onEnterModule();
   } else if (id === 'astrolabium-glyph-tuning') {
     screen = ASTRO_FURNACE_PANEL_SCREENS.ASTROLABIUM_TUNING; returnScreen = ASTRO_FURNACE_PANEL_SCREENS.ASTROLABIUM_MENU;
-    moduleListeners.forEach((listener) => listener('astro_attractor', screen));
+    moduleListeners.forEach((listener) => listener('astro_attractor', screen)); onEnterModule();
   } else if (id === 'astrolabium-rune-tuning') {
     screen = ASTRO_FURNACE_PANEL_SCREENS.RUNE_TUNING; returnScreen = ASTRO_FURNACE_PANEL_SCREENS.ASTROLABIUM_MENU;
     moduleListeners.forEach((listener) => listener(ASTRO_FURNACE_RUNE_TUNING_MODE, screen)); onEnterModule();
   } else if (id.startsWith('rune-family-')) {
     if (runeRecipeSelectionController?.selectFamily(id.slice('rune-family-'.length)) !== true) return false;
+    onAcceptedAction();
   } else if (id === 'back-modules') {
     if (screen === ASTRO_FURNACE_PANEL_SCREENS.ASTROLABIUM_MENU) { screen = ASTRO_FURNACE_PANEL_SCREENS.HOME; onReturnHome(); }
-    else { screen = returnScreen; if (returnScreen === ASTRO_FURNACE_PANEL_SCREENS.HOME) onReturnHome(); }
+    else { screen = returnScreen; if (returnScreen === ASTRO_FURNACE_PANEL_SCREENS.HOME) onReturnHome(); else onBackNavigation(); }
   }
-  else if (id === 'create-asterion') { if (!productionController?.requestCreate?.()) return false; onCreate(); }
+  else if (id === 'create-asterion') { if (!productionController?.requestCreate?.()) return false; onAcceptedAction(); }
   else if (id === 'create-astro-attractor') { if (astroProductionController?.canCreate?.() !== true
-    || requestAstroProduction() !== true) return false; onCreate(); }
+    || requestAstroProduction() !== true) return false; onAcceptedAction(); }
   else return false; hoveredRegion = null; draw(); return true; }
   function updateHits() {
     let nextHover = null;
