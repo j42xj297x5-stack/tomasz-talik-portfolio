@@ -158,8 +158,8 @@ const VR_AUDIO = Object.freeze({
   playerOpen: '/audio/bell_01.mp3', playerClose: '/audio/bell_02.mp3', click: '/audio/click_panel_01.mp3',
   monkeyDeeper: '/audio/turn_page_02.mp3',
   monkeyOpen: '/audio/panel_sound_long_01.mp3', monkeyClose: '/audio/panel_sound_long_02.mp3',
-  monkeyFinalTurn: '/audio/panel_sound_long_03.mp3', portalReveal: '/audio/panel_sound_03.mp3',
-  furnaceReveal: '/audio/panel_sound_04.mp3',
+  monkeyFinalTurn: '/audio/panel_sound_long_03.mp3', portalReveal: '/audio/creating_06.mp3',
+  furnaceReveal: '/audio/creating_07.mp3',
   furnaceOpen: '/audio/panel_sound_01.mp3', furnaceDeeper: '/audio/panel_sound_02.mp3',
   reliquaryInsert: '/audio/turn_page_01.mp3', reliquaryActivate: '/audio/creating_short_01.mp3',
   reliquaryConsume: '/audio/reliquiary_consume.mp3',
@@ -175,7 +175,7 @@ const VR_AUDIO = Object.freeze({
   releaseBell: '/audio/bell_03.mp3'
 });
 const CRYSTAL_GRAB_AUDIO = Object.freeze([
-  '/audio/creating_06.mp3', '/audio/creating_07.mp3', '/audio/creating_08.mp3'
+  '/audio/panel_sound_03.mp3', '/audio/panel_sound_04.mp3'
 ]);
 const GLYPH_COMPLETION_AUDIO = Object.freeze({
   'ethics-life-protection': ['/audio/glif_earth_4s_01.mp3', '/audio/glif_earth_4s_02.mp3', '/audio/glif_earth_4s_03.mp3'],
