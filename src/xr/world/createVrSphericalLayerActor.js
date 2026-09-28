@@ -24,7 +24,7 @@ function canonicalizeAxisOrientation(axis) {
 
 export const VR_SPHERICAL_LAYER_IDS = Object.freeze({
   SHELLS: 'SHELLS', SMALL_GLYPHS: 'SMALL_GLYPHS', RUNE_STONES: 'RUNE_STONES',
-  STARS: 'STARS', HIDDEN_GLYPHS: 'HIDDEN_GLYPHS'
+  STARS: 'STARS', FAR_STARS: 'FAR_STARS', HIDDEN_GLYPHS: 'HIDDEN_GLYPHS'
 });
 
 export function resolveVrSphericalLayerRanges({ baseRadius, defaultGapRadiusMultiplier, layers }) {

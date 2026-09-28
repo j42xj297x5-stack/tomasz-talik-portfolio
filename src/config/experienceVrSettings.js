@@ -38,6 +38,13 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
       clusterRadialSpreadMeters: 11,
       pointSizeMinPx: 1.4,
       pointSizeMaxPx: 3.6
+    },
+    farStars: {
+      count: 10000,
+      pointSizeMinPx: 0.85,
+      pointSizeMaxPx: 1.5,
+      brightnessMin: 0.1,
+      brightnessMax: 0.55
     }
   },
   furnace: {
@@ -293,7 +300,8 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
     shells: { thickness: 3, gapAfterMultiplier: 2 / 10, angularSpeed: 0.05 },
     smallGlyphs: { thickness: 5, gapAfterMultiplier: 30 / 10, angularSpeed: 0.05 },
     runeStones: { thickness: 25, gapAfterMultiplier: 10 / 10 },
-    stars: { thickness: 45 },
+    stars: { thickness: 45, gapAfterMultiplier: 2 / 10 },
+    farStars: { thickness: 8 },
     hiddenGlyphs: { thickness: 7.6, gapAfterMultiplier: 0 }
   },
   smallGlyphField: {
@@ -523,6 +531,18 @@ export function normalizeExperienceVrSettings(candidate) {
           defaults.celestial.stars.pointSizeMinPx, { min: 0.1, max: 32 }),
         pointSizeMaxPx: finiteNumber(candidate.celestial?.stars?.pointSizeMaxPx,
           defaults.celestial.stars.pointSizeMaxPx, { min: 0.1, max: 32 })
+      },
+      farStars: {
+        count: Math.max(1, Math.round(finiteNumber(candidate.celestial?.farStars?.count,
+          defaults.celestial.farStars.count, { min: 1, max: 100000 }))),
+        pointSizeMinPx: finiteNumber(candidate.celestial?.farStars?.pointSizeMinPx,
+          defaults.celestial.farStars.pointSizeMinPx, { min: 0.1, max: 32 }),
+        pointSizeMaxPx: finiteNumber(candidate.celestial?.farStars?.pointSizeMaxPx,
+          defaults.celestial.farStars.pointSizeMaxPx, { min: 0.1, max: 32 }),
+        brightnessMin: finiteNumber(candidate.celestial?.farStars?.brightnessMin,
+          defaults.celestial.farStars.brightnessMin, { min: 0, max: 1 }),
+        brightnessMax: finiteNumber(candidate.celestial?.farStars?.brightnessMax,
+          defaults.celestial.farStars.brightnessMax, { min: 0, max: 1 })
       }
     },
     furnace: {
