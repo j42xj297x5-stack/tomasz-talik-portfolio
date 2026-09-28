@@ -1,6 +1,9 @@
 import * as THREE from '../../vendor/three.js';
 import { VR_RUNE_STONE_STATE } from '../runes/createVrRuneStoneActor.js';
+import { VR_ETHER_RUNE_STONE_STATE } from '../runes/createVrEtherRuneStoneActor.js';
 import { VR_NATURAL_RUNE_STONE_ASSETS } from '../runes/vrRuneStoneRegistry.js';
+
+const ETHER_LOOP_PATH = '/audio/noise_laud_loop_09.mp3';
 
 const AUDIO_BY_BRANCH = Object.freeze({
   fire: Object.freeze({ loop: '/audio/noise_laud_loop_04.mp3', install: '/audio/creating_02.mp3', landing: '/audio/stone_landing_02.mp3' }),
@@ -13,6 +16,64 @@ const AUDIO_BY_BRANCH = Object.freeze({
 export const VR_RUNE_STONE_INSTALL_AUDIO = Object.freeze(
   [...Object.values(AUDIO_BY_BRANCH).flatMap(({ install, landing }) => [install, landing]), '/audio/zwornik_dokowanie.mp3']
 );
+
+export function createVrEtherRuneStoneAudioProjection({ audioBridge, etherRuneStoneActor,
+  getEmitterAnchor, spatialSettings }) {
+  if (!audioBridge?.startSpatialProcessSource) {
+    throw new TypeError('Ether Rune Stone audio projection requires the VR audio bridge.');
+  }
+  if (!etherRuneStoneActor?.getState || typeof getEmitterAnchor !== 'function') {
+    throw new TypeError('Ether Rune Stone audio projection requires capture truth and an emitter anchor accessor.');
+  }
+  const maxDistanceMeters = spatialSettings?.maxDistanceMeters;
+  const refDistanceMeters = spatialSettings?.refDistanceMeters;
+  if (!(maxDistanceMeters > 0) || !(refDistanceMeters > 0 && refDistanceMeters < maxDistanceMeters)) {
+    throw new TypeError('Ether Rune Stone spatial distances must satisfy 0 < ref < max.');
+  }
+
+  const emitterPosition = new THREE.Vector3();
+  let handle = null, pending = false, token = 0, disposed = false;
+  const isCaptured = () => etherRuneStoneActor.getState('V') === VR_ETHER_RUNE_STONE_STATE.CAPTURED;
+  function readEmitterPosition() {
+    const anchor = getEmitterAnchor();
+    if (!anchor?.getWorldPosition) return false;
+    anchor.updateWorldMatrix(true, false);
+    anchor.getWorldPosition(emitterPosition);
+    return true;
+  }
+  function stop() {
+    token += 1; pending = false;
+    try { handle?.stop?.(); } catch (_) { /* Optional audio is fail-soft. */ }
+    handle = null;
+  }
+  function synchronizeCapturedEmitter() {
+    if (disposed || handle || pending || !isCaptured() || !readEmitterPosition()) return;
+    const requestToken = ++token;
+    pending = true;
+    void audioBridge.startSpatialProcessSource(ETHER_LOOP_PATH, 'DEVICE', {
+      loop: true, maxDistanceMeters, refDistanceMeters,
+      panningModel: 'HRTF', distanceModel: 'linear', rolloffFactor: 1
+    }).then((nextHandle) => {
+      if (requestToken === token) pending = false;
+      if (!nextHandle) return;
+      if (disposed || requestToken !== token || !isCaptured() || !readEmitterPosition()) {
+        try { nextHandle.stop?.(); } catch (_) { /* Late optional source. */ }
+        return;
+      }
+      nextHandle.setPosition(emitterPosition.x, emitterPosition.y, emitterPosition.z);
+      handle = nextHandle;
+      nextHandle.onEnded(() => { if (handle === nextHandle) handle = null; });
+    });
+  }
+  function update() {
+    if (!handle) return;
+    if (!isCaptured() || !readEmitterPosition()) { stop(); return; }
+    handle.setPosition(emitterPosition.x, emitterPosition.y, emitterPosition.z);
+  }
+  function reset() { stop(); }
+  function dispose() { if (disposed) return; reset(); disposed = true; }
+  return { synchronizeCapturedEmitter, update, reset, dispose };
+}
 
 export function createVrRuneStoneAudioProjection({ audioBridge, runeStoneActor,
   runeStoneProgressionController, getEmitterAnchor, spatialSettings, dockingSpatialSettings,
