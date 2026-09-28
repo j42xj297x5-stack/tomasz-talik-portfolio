@@ -2,6 +2,7 @@ import * as THREE from '../../vendor/three.js';
 
 const STAR_COLORS = Object.freeze(['#ffffff', '#dce9ff', '#bfd5ff', '#ffedcf', '#ffd8a6']);
 const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5));
+const FAR_STAR_SIZE_BIAS_EXPONENT = 2;
 
 function validateLayer(layer) {
   if (!layer || !Number.isFinite(layer.innerRadius) || !Number.isFinite(layer.outerRadius)
@@ -120,7 +121,7 @@ function createFarStarField(layer, settings) {
     colors[index * 3 + 1] = color.g;
     colors[index * 3 + 2] = color.b;
     sizes[index] = THREE.MathUtils.lerp(
-      settings.pointSizeMinPx, settings.pointSizeMaxPx, random() ** 2
+      settings.pointSizeMinPx, settings.pointSizeMaxPx, random() ** FAR_STAR_SIZE_BIAS_EXPONENT
     );
     brightness[index] = THREE.MathUtils.lerp(
       settings.brightnessMin, settings.brightnessMax, random() ** 2.6

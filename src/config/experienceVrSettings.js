@@ -40,9 +40,9 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
       pointSizeMaxPx: 3.6
     },
     farStars: {
-      count: 10000,
-      pointSizeMinPx: 0.85,
-      pointSizeMaxPx: 1.5,
+      count: 20000,
+      pointSizeMinPx: 1.7,
+      pointSizeMaxPx: 3,
       brightnessMin: 0.1,
       brightnessMax: 0.55
     }
