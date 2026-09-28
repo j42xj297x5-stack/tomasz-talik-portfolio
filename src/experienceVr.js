@@ -166,6 +166,7 @@ const VR_AUDIO = Object.freeze({
   reliquaryConsume: '/audio/reliquiary_consume.mp3',
   tierComplete: '/audio/floor_panel_activate.mp3', monkeyThinking: '/audio/monkey_thinking_01.mp3',
   chamberOpen: '/audio/astro_piec_open.mp3', chamberClose: '/audio/astro_piec_close.mp3',
+  shellHandoff: '/audio/panel_sound_03.mp3', smallGlyphHandoff: '/audio/panel_sound_04.mp3',
   furnaceShellInsert: '/audio/glif_earth_4s_04.mp3', furnaceSmallGlyphInsert: '/audio/glif_fire_4s_04.mp3',
   furnaceClick: '/audio/click_short_01.mp3',
   furnaceProcess: '/audio/astro_piec_work_01.mp3',
@@ -1407,7 +1408,10 @@ shellAttractorInteraction = createVrShellAttractorInteraction({
   ),
   onPullStart: ({ target }) => vrAudio.startAttractor(target.userData.attractorId, 'shell'),
   onPullCancel: ({ target }) => vrAudio.cancelAttractor(target.userData.attractorId),
-  onHandoff: ({ target }) => vrAudio.handoffAttractor(target.userData.attractorId),
+  onHandoff: ({ target }) => {
+    vrAudio.handoffAttractor(target.userData.attractorId);
+    playVrWorld(VR_AUDIO.shellHandoff);
+  },
   isHigherPriorityInteractionActive: (record) => Boolean(activateButton.hits.get(record)
     || releaseButton.hits.get(record) || astroFurnaceOpenInteraction.hasCurrentHit(record)
     || astroFurnaceActivateInteraction.hasCurrentHit(record) || astroFurnaceOptionInteraction.hasCurrentHit(record)
@@ -1438,7 +1442,10 @@ smallGlyphAttractorInteraction = createVrSmallGlyphAttractorInteraction({
   ),
   onPullStart: ({ target }) => vrAudio.startAttractor(target.userData.attractorId, 'smallGlyph'),
   onPullCancel: ({ target }) => vrAudio.cancelAttractor(target.userData.attractorId),
-  onHandoff: ({ target }) => vrAudio.handoffAttractor(target.userData.attractorId),
+  onHandoff: ({ target }) => {
+    vrAudio.handoffAttractor(target.userData.attractorId);
+    playVrWorld(VR_AUDIO.smallGlyphHandoff);
+  },
   isControllerOccupiedByOtherInteraction: (record) => crystalCollection.heldByController.has(record)
     || shellAttractorInteraction?.isHeldBy(record) === true,
   isHigherPriorityInteractionActive: (record) => Boolean(
