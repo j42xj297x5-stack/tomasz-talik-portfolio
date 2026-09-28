@@ -106,7 +106,8 @@ import { createVrIntroFogReveal } from './xr/guidance/createVrIntroFogReveal.js'
 import { createVrReliquaryHints } from './xr/guidance/createVrReliquaryHints.js';
 import { createVrAudioBridge } from './xr/audio/createVrAudioBridge.js';
 import { createVrAstroFurnaceAudioProjection } from './xr/audio/createVrAstroFurnaceAudioProjection.js';
-import { createVrRuneStoneAudioProjection, VR_RUNE_STONE_INSTALL_AUDIO } from './xr/audio/createVrRuneStoneAudioProjection.js';
+import { createVrEtherRuneStoneAudioProjection, createVrRuneStoneAudioProjection,
+  VR_RUNE_STONE_INSTALL_AUDIO } from './xr/audio/createVrRuneStoneAudioProjection.js';
 import { BINDER_REVEAL_AUDIO, createVrRuneBinderRevealAudioProjection } from './xr/audio/createVrRuneBinderRevealAudioProjection.js';
 import { ASTERION_SECTOR_ACQUISITION_AUDIO, ASTERION_SECTOR_DRIVE_AUDIO,
   createVrAsterionSectorAudioProjection } from './xr/audio/createVrAsterionSectorAudioProjection.js';
@@ -740,6 +741,7 @@ function synchronizeReconstructionDerivedState() {
   synchronizeRuneBridgeReadiness();
   runeInstalledStateProjection.synchronize();
   runeStoneAudioProjection?.synchronizeInstalledEmitters();
+  etherRuneStoneAudioProjection?.synchronizeCapturedEmitter();
   asterionResonatorFieldActor.synchronize();
   furnacePanel?.redraw();
   shellSystem.applyAbsorbedShellIds(furnaceProgressionController.getAbsorbedShellIds());
@@ -816,6 +818,7 @@ let smallGlyphAttractorInteraction = null;
 let largeGlyphAttractorInteraction = null;
 let runeStoneAttractorInteraction = null;
 let runeStoneAudioProjection = null;
+let etherRuneStoneAudioProjection = null;
 let runeStoneInstallationInteraction = null;
 let runeResonatorGuidance = null;
 let monkeyKnowledgeResolver = null;
@@ -1486,6 +1489,11 @@ runeStoneAudioProjection = createVrRuneStoneAudioProjection({
   spatialSettings: settings.runeStoneSpatialAudio,
   dockingSpatialSettings: settings.runeStoneDockingAudio
 });
+etherRuneStoneAudioProjection = createVrEtherRuneStoneAudioProjection({
+  audioBridge: vrAudio, etherRuneStoneActor,
+  getEmitterAnchor: () => etherMonkeyHoverAnchor,
+  spatialSettings: settings.runeStoneSpatialAudio
+});
 const unsubscribeRuneStoneDockingAudio = runeStoneInstallationInteraction
   .subscribeDockingStarted((event) => runeStoneAudioProjection.presentDockingStarted(event));
 const unsubscribeRuneStoneInstallAudioCue = runeStoneInstallationInteraction
@@ -1495,7 +1503,10 @@ const unsubscribeRuneStoneInstalledAudio = runeStoneInstallationInteraction
 const etherMonkeyCaptureInteraction = createVrEtherMonkeyCaptureInteraction({
   etherRuneStoneActor, hoverAnchor: etherMonkeyHoverAnchor, runeStoneProgressionController,
   durationSeconds: 1.5,
-  onCompleted: () => presentLiveRuneBridgeReadinessTransitions()
+  onCompleted: () => {
+    presentLiveRuneBridgeReadinessTransitions();
+    etherRuneStoneAudioProjection.synchronizeCapturedEmitter();
+  }
 });
 runeStoneAttractorInteraction = createVrRuneStoneAttractorInteraction({
   controllers: vrControllers.controllers, runeStoneActor, etherRuneStoneActor,
@@ -2140,6 +2151,7 @@ function renderFrame() {
     vrAudio.setSpatialListenerPose(listenerPose);
   }
   runeStoneAudioProjection.update();
+  etherRuneStoneAudioProjection.update();
   furnaceAudioProjection.update();
   celestialActor.update(delta);
   observationWindow.update(delta);
@@ -2243,6 +2255,7 @@ function restoreVrScenarioBaseline() {
   runeRecipeSelectionController.reset();
   runeStoneProgressionController.reset();
   runeStoneAudioProjection.reset();
+  etherRuneStoneAudioProjection.reset();
   asterionResonatorTargetAudioProjection.reset();
   asterionResonatorFieldActor.reset();
   asterionResonatorTargetAcquisitionActor.reset();
@@ -2373,6 +2386,7 @@ window.addEventListener('pagehide', () => {
   unsubscribeRuneStoneDockingAudio();
   unsubscribeRuneStoneInstalledAudio();
   runeStoneAudioProjection.dispose();
+  etherRuneStoneAudioProjection.dispose();
   furnaceAudioProjection.dispose();
   vrAudio.dispose();
   asterionGyroInteraction.dispose();
