@@ -533,6 +533,7 @@ const sphericalLayerRanges = resolveVrSphericalLayerRanges({
     { id: VR_SPHERICAL_LAYER_IDS.SMALL_GLYPHS, ...settings.sphericalLayers.smallGlyphs, status: 'IMPLEMENTED' },
     { id: VR_SPHERICAL_LAYER_IDS.RUNE_STONES, ...settings.sphericalLayers.runeStones, status: 'IMPLEMENTED' },
     { id: VR_SPHERICAL_LAYER_IDS.STARS, ...settings.sphericalLayers.stars, status: 'IMPLEMENTED' },
+    { id: VR_SPHERICAL_LAYER_IDS.FAR_STARS, ...settings.sphericalLayers.farStars, status: 'IMPLEMENTED' },
     { id: VR_SPHERICAL_LAYER_IDS.HIDDEN_GLYPHS, ...settings.sphericalLayers.hiddenGlyphs, status: 'RESERVED' }
   ]
 });
@@ -556,14 +557,17 @@ const etherMonkeyPresentation = createVrEtherMonkeyPresentation({
   color: settings.attractorPresentation.bandColors.runeStones
 });
 const starLayer = sphericalLayer(VR_SPHERICAL_LAYER_IDS.STARS);
+const farStarLayer = sphericalLayer(VR_SPHERICAL_LAYER_IDS.FAR_STARS);
 const celestialActor = createVrCelestialActor({
   parent: worldStableRoot,
   assetManager,
   keyLight: sceneLights.key,
   layer: starLayer,
+  farStarLayer,
   settings: settings.celestial
 });
-camera.far = Math.max(camera.far, starLayer.outerRadius + 5, celestialActor.requiredCameraFar);
+const requiredFarStarCameraDistance = farStarLayer.outerRadius + worldBaseRadius + 5;
+camera.far = Math.max(camera.far, requiredFarStarCameraDistance, celestialActor.requiredCameraFar);
 camera.updateProjectionMatrix();
 const playerRigSpawnLocalPosition = playerRig.position.clone();
 const playerRigSpawnLocalQuaternion = playerRig.quaternion.clone();

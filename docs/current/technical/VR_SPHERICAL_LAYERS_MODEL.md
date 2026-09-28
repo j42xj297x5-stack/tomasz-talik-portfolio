@@ -10,8 +10,11 @@ Status: **CURRENT**. This model owns world-stable concentric allocation ranges; 
 | `SMALL_GLYPHS` | `30–45 m` | implemented Small Glyph field |
 | `RUNE_STONES` | `50–75 m` | implemented natural and Ether Rune placement |
 | `STARS` | `85–130 m` | implemented celestial field |
+| `FAR_STARS` | `132–140 m` | implemented distant procedural celestial background |
 
 Ranges are world-space and independent of the platform's `worldBaseRadius`. The registry resolves deterministic non-overlap and gives each consuming actor its bounded range.
+
+`FAR_STARS` is a presentation-only celestial background. It participates in the celestial reveal lifecycle but owns no gameplay allocation, interaction or progression state.
 
 ## Hidden Glyph decision
 
