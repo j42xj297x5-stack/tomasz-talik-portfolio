@@ -160,7 +160,7 @@ const VR_AUDIO = Object.freeze({
   monkeyDeeper: '/audio/turn_page_02.mp3',
   monkeyOpen: '/audio/panel_sound_long_01.mp3', monkeyClose: '/audio/panel_sound_long_02.mp3',
   monkeyFinalTurn: '/audio/panel_sound_long_03.mp3', portalReveal: '/audio/creating_06.mp3',
-  furnaceReveal: '/audio/creating_07.mp3',
+  furnaceReveal: '/audio/creating_08.mp3',
   furnaceOpen: '/audio/panel_sound_01.mp3', furnaceDeeper: '/audio/panel_sound_02.mp3',
   reliquaryInsert: '/audio/turn_page_01.mp3', reliquaryActivate: '/audio/creating_short_01.mp3',
   reliquaryConsume: '/audio/reliquiary_consume.mp3',
