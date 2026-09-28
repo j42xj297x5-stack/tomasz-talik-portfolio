@@ -176,7 +176,8 @@ const VR_AUDIO = Object.freeze({
   releaseBell: '/audio/bell_03.mp3'
 });
 const CRYSTAL_GRAB_AUDIO = Object.freeze([
-  '/audio/panel_sound_03.mp3', '/audio/panel_sound_04.mp3'
+  '/audio/cristal_grab_01.mp3', '/audio/cristal_grab_02.mp3',
+  '/audio/cristal_grab_03.mp3', '/audio/cristal_grab_04.mp3'
 ]);
 const GLYPH_COMPLETION_AUDIO = Object.freeze({
   'ethics-life-protection': ['/audio/glif_earth_4s_01.mp3', '/audio/glif_earth_4s_02.mp3', '/audio/glif_earth_4s_03.mp3'],
