@@ -17,7 +17,7 @@ export const ASTRO_FURNACE_RUNE_RECIPE_SLOT_STATES = Object.freeze({
 const clamp01 = (value) => THREE.MathUtils.clamp(value, 0, 1);
 const smoothstep = (value) => { const t = clamp01(value); return t * t * (3 - 2 * t); };
 const SMALL_GLYPH_SLOT_LOCAL_OFFSET = new THREE.Vector3(0, -0.20, 0);
-const RUNE_RECIPE_SHELL_WORLD_LIFT = 0.10;
+const RUNE_RECIPE_SHELL_WORLD_LIFT = 0.20;
 
 export function createVrAstroFurnaceRuneRecipeInteraction({
   furnace,
@@ -140,6 +140,8 @@ export function createVrAstroFurnaceRuneRecipeInteraction({
       shellTargetWorld.addScaledVector(chamberWorldUp, RUNE_RECIPE_SHELL_WORLD_LIFT);
       slot.anchor.attach(content);
       setObjectWorldScale(content, desiredWorldScale);
+      content.userData.shellState = 'inserted';
+      content.userData.attractorTarget = false;
     } else {
       slot.anchor.attach(content);
       setObjectWorldScale(content, desiredWorldScale);
