@@ -166,7 +166,6 @@ const VR_AUDIO = Object.freeze({
   reliquaryConsume: '/audio/reliquiary_consume.mp3',
   tierComplete: '/audio/floor_panel_activate.mp3', monkeyThinking: '/audio/monkey_thinking_01.mp3',
   chamberOpen: '/audio/astro_piec_open.mp3', chamberClose: '/audio/astro_piec_close.mp3',
-  shellHandoff: '/audio/panel_sound_03.mp3', smallGlyphHandoff: '/audio/panel_sound_04.mp3',
   furnaceShellInsert: '/audio/glif_earth_4s_04.mp3', furnaceSmallGlyphInsert: '/audio/glif_fire_4s_04.mp3',
   furnaceClick: '/audio/click_short_01.mp3',
   furnaceProcess: '/audio/astro_piec_work_01.mp3',
@@ -180,6 +179,12 @@ const CRYSTAL_GRAB_AUDIO = Object.freeze([
   '/audio/cristal_grab_01.mp3', '/audio/cristal_grab_02.mp3',
   '/audio/cristal_grab_03.mp3', '/audio/cristal_grab_04.mp3'
 ]);
+const SHELL_HANDOFF_AUDIO = Object.freeze([
+  '/audio/put_into_01.mp3', '/audio/put_into_03.mp3'
+]);
+const SMALL_GLYPH_HANDOFF_AUDIO = Object.freeze([
+  '/audio/put_into_02.mp3', '/audio/put_into_04.mp3'
+]);
 const GLYPH_COMPLETION_AUDIO = Object.freeze({
   'ethics-life-protection': ['/audio/glif_earth_4s_01.mp3', '/audio/glif_earth_4s_02.mp3', '/audio/glif_earth_4s_03.mp3'],
   'creative-ai': ['/audio/glif_fire_4s_01.mp3', '/audio/glif_fire_4s_02.mp3', '/audio/glif_fire_4s_03.mp3'],
@@ -190,6 +195,8 @@ const GLYPH_COMPLETION_AUDIO = Object.freeze({
 const REQUIRED_VR_AUDIO = Object.freeze([
   ...Object.values(VR_AUDIO),
   ...CRYSTAL_GRAB_AUDIO,
+  ...SHELL_HANDOFF_AUDIO,
+  ...SMALL_GLYPH_HANDOFF_AUDIO,
   ...Object.values(GLYPH_COMPLETION_AUDIO).flat(),
   ...BINDER_REVEAL_AUDIO,
   ...Object.values(ASTERION_SECTOR_ACQUISITION_AUDIO),
@@ -200,9 +207,19 @@ const REQUIRED_VR_AUDIO = Object.freeze([
 const playVrUi = (path) => vrAudio.playOneShot(path, 'UI');
 const playVrWorld = (path) => vrAudio.playOneShot(path, 'WORLD');
 let crystalGrabAudioCursor = 0;
+let shellHandoffAudioCursor = 0;
+let smallGlyphHandoffAudioCursor = 0;
 const playCrystalGrabAudio = () => {
   playVrWorld(CRYSTAL_GRAB_AUDIO[crystalGrabAudioCursor]);
   crystalGrabAudioCursor = (crystalGrabAudioCursor + 1) % CRYSTAL_GRAB_AUDIO.length;
+};
+const playShellHandoffAudio = () => {
+  playVrWorld(SHELL_HANDOFF_AUDIO[shellHandoffAudioCursor]);
+  shellHandoffAudioCursor = (shellHandoffAudioCursor + 1) % SHELL_HANDOFF_AUDIO.length;
+};
+const playSmallGlyphHandoffAudio = () => {
+  playVrWorld(SMALL_GLYPH_HANDOFF_AUDIO[smallGlyphHandoffAudioCursor]);
+  smallGlyphHandoffAudioCursor = (smallGlyphHandoffAudioCursor + 1) % SMALL_GLYPH_HANDOFF_AUDIO.length;
 };
 app.innerHTML = `
   <main class="vr-runtime" aria-label="${copy.title}">
@@ -1416,7 +1433,7 @@ shellAttractorInteraction = createVrShellAttractorInteraction({
   onPullCancel: ({ target }) => vrAudio.cancelAttractor(target.userData.attractorId),
   onHandoff: ({ target }) => {
     vrAudio.handoffAttractor(target.userData.attractorId);
-    playVrWorld(VR_AUDIO.shellHandoff);
+    playShellHandoffAudio();
   },
   isHigherPriorityInteractionActive: (record) => Boolean(activateButton.hits.get(record)
     || releaseButton.hits.get(record) || astroFurnaceOpenInteraction.hasCurrentHit(record)
@@ -1450,7 +1467,7 @@ smallGlyphAttractorInteraction = createVrSmallGlyphAttractorInteraction({
   onPullCancel: ({ target }) => vrAudio.cancelAttractor(target.userData.attractorId),
   onHandoff: ({ target }) => {
     vrAudio.handoffAttractor(target.userData.attractorId);
-    playVrWorld(VR_AUDIO.smallGlyphHandoff);
+    playSmallGlyphHandoffAudio();
   },
   isControllerOccupiedByOtherInteraction: (record) => crystalCollection.heldByController.has(record)
     || shellAttractorInteraction?.isHeldBy(record) === true,
@@ -2238,6 +2255,8 @@ function showReadyState({ ended = false } = {}) {
 function restoreVrScenarioBaseline() {
   terminalXrEndRequested = false;
   crystalGrabAudioCursor = 0;
+  shellHandoffAudioCursor = 0;
+  smallGlyphHandoffAudioCursor = 0;
   runtimeExperience.resetSession();
   endCreditsPresentation.reset();
   finalWorldRelease.reset();
