@@ -49,6 +49,13 @@ export function createVrAstroFurnaceOptionInteraction({ furnace, panel, controll
     }
     return true;
   }
+  function clearSelectedModule() {
+    activeMode = null;
+    activePresentation = null;
+    tweenStart = currentAngle;
+    tweenTarget = 0;
+    tweenElapsed = 0;
+  }
   const unsubscribeModule = panel.subscribeModuleActivation?.(selectMode) ?? (() => {});
   controllers.forEach((record) => { const listener = () => press(record); record.controller.addEventListener('selectstart', listener); listeners.push({ record, listener }); });
   function update(delta = 0) { if (!disposed) { updateHits(); halo?.update(Math.max(0, delta));
@@ -58,7 +65,7 @@ export function createVrAstroFurnaceOptionInteraction({ furnace, panel, controll
   } }
   function reset() { hits.forEach((_, record) => hits.set(record, false)); halo?.setVisible(false); setEmission(settings.emissionInactive ?? 0); activeMode = null; activePresentation = null; tweenElapsed = 0; tweenStart = 0; tweenTarget = 0; currentAngle = 0; if (pivot && baseQuaternion) pivot.quaternion.copy(baseQuaternion); }
   function dispose() { if (disposed) return; reset(); disposed = true; unsubscribeModule(); listeners.forEach(({ record, listener }) => record.controller.removeEventListener('selectstart', listener)); ownedMaterials.forEach((material) => material.dispose()); ownedMaterials.clear(); hits.clear(); halo?.dispose(); }
-  reset(); return { hits, halo, capabilityReady, update, press, selectMode, reset, dispose,
+  reset(); return { hits, halo, capabilityReady, update, press, selectMode, clearSelectedModule, reset, dispose,
     getActiveMode: () => activeMode, getActivePresentation: () => activePresentation,
     getTargetAngle: () => tweenTarget, hasCurrentHit: (record) => hits.get(record) === true };
 }

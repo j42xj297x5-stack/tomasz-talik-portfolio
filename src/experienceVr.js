@@ -677,7 +677,8 @@ const asterionProductionController = createVrAsterionProductionController({
     getProcessKind: () => astroFurnaceActivateInteraction?.getProcessKind?.() ?? null
   },
   onClaimed: () => { runtimeExperience.dispatch(VR_SCENARIO_EVENT.ASTERION_CLAIMED);
-    toolGuidanceLifecycle?.notifyAsterionClaimed(); },
+    toolGuidanceLifecycle?.notifyAsterionClaimed();
+    returnFurnaceToPostClaimHome(); },
   getChamberState: () => astroFurnaceOpenInteraction?.getState?.() ?? 'CLOSED',
   getContentState: () => astroFurnaceContentInteraction?.getState?.() ?? 'EMPTY'
 });
@@ -987,7 +988,8 @@ astroAttractorProductionController = createVrAstroAttractorProductionController(
     toolGuidanceLifecycle?.notifyAstroAvailable(); },
   onClaimed: () => { runtimeExperience.dispatch(VR_SCENARIO_EVENT.ASTRO_ATTRACTOR_CLAIMED);
     toolGuidanceLifecycle?.notifyAstroClaimed();
-    handModeController.equipRightAstro(); }
+    handModeController.equipRightAstro();
+    returnFurnaceToPostClaimHome(); }
 });
 function synchronizeSmallGlyphFieldReadiness() {
   smallGlyphSystem.setFieldReady(astroAttractorProductionController?.isEarned() === true);
@@ -1284,6 +1286,10 @@ astroFurnaceOptionInteraction = createVrAstroFurnaceOptionInteraction({
   isHigherPriorityInteractionActive: (record) => furnacePanel.hasCurrentHit(record),
   onPanelOpen: () => playVrUi(VR_AUDIO.furnaceOpen)
 });
+function returnFurnaceToPostClaimHome() {
+  furnacePanel.returnHome();
+  astroFurnaceOptionInteraction?.clearSelectedModule();
+}
 const crystalCollection = createVrCrystalCollection({
   scene, assetManager, controllers: vrControllers.controllers, portalDisplay, insertionTarget: crystalReliquary,
   settings: settings.crystals, haloSettings: settings.targetHalo, insertFeedbackSettings: settings.reliquary.insertFeedback,
