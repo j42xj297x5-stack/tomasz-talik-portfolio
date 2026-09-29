@@ -42,7 +42,10 @@ export function createVrAstroAttractorProductionController({ model, productVolum
   object.traverse((node) => { if (!node.isMesh || !node.material) return; const source = Array.isArray(node.material) ? node.material : [node.material];
     const clones = source.map((material) => { const clone = material.clone(); ownedMaterials.add(clone); return clone; });
     node.material = Array.isArray(node.material) ? clones : clones[0]; });
+  const objectWasVisible = object.visible;
+  object.visible = true;
   const halo = createVrTargetHalo({ root: object, settings: haloSettings });
+  object.visible = objectWasVisible;
   const raycaster = new THREE.Raycaster(), origin = new THREE.Vector3(), direction = new THREE.Vector3(), quaternion = new THREE.Quaternion();
   const hits = new Map(controllers.map((record) => [record, false]));
   const subscribers = new Set(); let presentedProductBounds = null;
