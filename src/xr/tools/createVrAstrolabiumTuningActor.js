@@ -44,11 +44,11 @@ export function createVrAstrolabiumTuningActor({
       return descriptor.familyCode;
     }).filter((familyCode) => naturalFamilies.has(familyCode)));
     const processedNaturalShellFamilyCodes = canonicalNaturalFamilies(processedFamilies);
-    const specialShellUnlocked = processedNaturalShellFamilyCodes.length === PROTO_ASTRO_NATURAL_FAMILY_CODES.length;
+    const specialShellUnlocked = true;
     const asterionSphereComplete = furnaceProgressionController.getAsterionSphereProgress().complete === true;
     const shellFamilyCodes = Object.freeze([
       ...PROTO_ASTRO_NATURAL_FAMILY_CODES,
-      ...(specialShellUnlocked ? [PROTO_ASTRO_FAMILIES.V.code] : [])
+      PROTO_ASTRO_FAMILIES.V.code
     ]);
 
     return Object.freeze({
