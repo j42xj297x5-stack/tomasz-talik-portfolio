@@ -2,11 +2,11 @@
 
 Status: CURRENT / CANONICAL MASTER CONTENT SOURCE / RUNTIME INTEGRATION PENDING
 
-This document owns the semantic and bilingual source content for Orange Monkey VR world knowledge. The bilingual PL/EN body is intentional product content and remains bilingual even though repository documentation prose is normally English.
+This document owns the semantic and bilingual source content for Orange Monkey VR world knowledge. The bilingual PL/EN body is intentional product content and remains bilingual even though repository documentation prose is normally English. Its subordinate [`EXPERIENCE_VR_WORLD_KNOWLEDGE_PROGRESSION.md`](EXPERIENCE_VR_WORLD_KNOWLEDGE_PROGRESSION.md) owns the binding future discovery-stage, lifecycle and inheritance contract without changing this master content.
 
 Knowledge fragments are intended to support future progressive discovery through Monkey and abbreviated inheritance into Player Y knowledge.
 
-Exact runtime availability, READ state, inheritance rules, UI structure and progression bindings are intentionally not defined by this document yet. It does not define runtime unlock conditions, Scenario transitions, persistence, Monkey menu UI, Player Y projection rules or concrete presentation assets.
+Exact runtime availability, `READ` state, inheritance rules and progression bindings are defined only by the subordinate progression contract where resolved. This master source does not define runtime unlock conditions, Scenario transitions, persistence, Monkey menu UI, Player Y projection implementation or concrete presentation assets.
 
 Existing runtime communication and copy authorities remain authoritative for delivery, lifecycle behavior and implemented copy until a dedicated implementation/synchronization task explicitly maps this content into runtime. Existing Proto-Astro technical models remain authoritative for actual Proto-Astro identity and gameplay-domain behavior.
 
