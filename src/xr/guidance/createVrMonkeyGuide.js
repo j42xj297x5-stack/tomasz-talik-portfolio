@@ -1049,6 +1049,10 @@ export function createVrMonkeyGuide({
     isInteractionEnabled: () => interactionEnabled,
     setDialogueOverride(override) {
       if (!override) { api.releaseDialogue(legacyDialogueOwner); return; }
+      if (api.ownsDialogue(legacyDialogueOwner)) {
+        api.updateDialogue(legacyDialogueOwner, override, { preemptible: false });
+        return;
+      }
       api.tryAcquireDialogue(legacyDialogueOwner, override, {
         priority: VR_MONKEY_DIALOGUE_PRIORITY.MANDATORY,
         preemptible: false
