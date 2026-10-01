@@ -215,7 +215,7 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
       width: 1.7, height: 0.20, canvasWidth: 1280, canvasHeight: 150, gapFromMessage: 0.025,
       padding: 22, buttonSize: 104, buttonGap: 18, cornerRadius: 24, fontSize: 58
     },
-    worldKnowledge: { maxLinesPerPage: 4 }
+    worldKnowledge: { maxLinesPerPage: 6 }
   },
   controllers: {
     enabled: true,
