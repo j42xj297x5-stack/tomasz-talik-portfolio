@@ -10,13 +10,14 @@ import { VR_WORLD_KNOWLEDGE_CONTENT, resolveVrWorldKnowledgeStage } from '../src
 
 const drawnText = [];
 const drawnTextPositions = [];
+const drawnImagePositions = [];
 const roundedRectStarts = [];
 const fillStyles = [];
 const strokeStyles = [];
 const textAlignments = [];
 let createdCanvasCount = 0;
 globalThis.Image = class {
-  complete = false; naturalWidth = 0;
+  complete = true; naturalWidth = 256;
   set src(value) { this.url = value; }
 };
 globalThis.document = {
@@ -39,7 +40,10 @@ globalThis.document = {
               activeRoundedRect.x = activeRoundedRect.moveX - radius;
               activeRoundedRect.width = x - activeRoundedRect.x;
             } else if (activeRoundedRect.arcCount === 2) activeRoundedRect.height = y - activeRoundedRect.y;
-          }, closePath() {}, fill() {}, stroke() {}, fillRect() {}, drawImage() {},
+          }, closePath() {}, fill() {}, stroke() {}, fillRect() {},
+          drawImage(image, x, y, width, height) {
+            drawnImagePositions.push({ canvasIndex, image, x, y, width, height });
+          },
           measureText(text) { return { width: String(text).length * 24 }; },
           fillText(text, x, y) { drawnText.push(String(text)); drawnTextPositions.push({ canvasIndex, text: String(text), x, y }); },
           set fillStyle(value) { fillStyles.push(value); }, set strokeStyle(value) { strokeStyles.push(value); },
@@ -89,6 +93,8 @@ assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.monkeyGuide.card.maxLinesPerPage, 6,
   'portfolio retains six body lines per technical page');
 assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.monkeyGuide.worldKnowledge.maxLinesPerPage, 6,
   'World Knowledge matches the six-line reader capacity');
+assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.monkeyGuide.dialogue.categoryFrameWidthScale, 0.80);
+assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.monkeyGuide.dialogue.categoryIconVerticalOffsetFraction, 0.05);
 
 function createFixture(locale = 'en', configure = () => {}, worldKnowledgeModel = null) {
   const floorRoot = new THREE.Group();
@@ -289,6 +295,26 @@ assert.deepEqual(guide.getHistoryEntries().find(({ glyphId }) => glyphId === 'cr
   [creative1.id, creative2.id], 'activated category stages are sorted by page.order');
 assert.equal(guide.getInteractiveRegions().filter(({ id }) => id.startsWith('portfolio-category:')).length, 2,
   'multiple activated pages do not duplicate their category icon');
+const historyRegion = guide.getInteractiveRegions().find(({ id }) => id === 'portfolio-category:creative-ai');
+const historyFrame = roundedRectStarts.findLast(({ canvasIndex, y, width }) =>
+  canvasIndex === guide.dialoguePanel.canvas._testCanvasIndex && y === historyRegion.y
+    && Math.abs(width - historyRegion.width * 0.80) < 1e-12);
+assert.ok(historyFrame, 'HISTORY visual frame is 80% of the unchanged category interaction width');
+assert.ok(Math.abs(historyFrame.x + historyFrame.width / 2 - (historyRegion.x + historyRegion.width / 2)) < 1e-12,
+  'HISTORY visual frame remains horizontally centered in its interaction region');
+const historyGlyph = drawnImagePositions.findLast(({ canvasIndex, width }) =>
+  canvasIndex === guide.dialoguePanel.canvas._testCanvasIndex
+    && width === DEFAULT_EXPERIENCE_VR_SETTINGS.monkeyGuide.dialogue.historyGlyphSize);
+assert.equal(historyGlyph.y, historyRegion.y + DEFAULT_EXPERIENCE_VR_SETTINGS.monkeyGuide.dialogue.historyItemPadding
+  + DEFAULT_EXPERIENCE_VR_SETTINGS.monkeyGuide.dialogue.historyGlyphSize * 0.05,
+'HISTORY artwork receives the shared 5% vertical offset');
+const historyStars = drawnTextPositions.findLast(({ canvasIndex, text }) =>
+  canvasIndex === guide.dialoguePanel.canvas._testCanvasIndex && text === '★★');
+assert.equal(historyStars.y, historyRegion.y + DEFAULT_EXPERIENCE_VR_SETTINGS.monkeyGuide.dialogue.historyItemPadding
+  + DEFAULT_EXPERIENCE_VR_SETTINGS.monkeyGuide.dialogue.historyGlyphSize
+  + DEFAULT_EXPERIENCE_VR_SETTINGS.monkeyGuide.dialogue.historyGlyphStarGap
+  + DEFAULT_EXPERIENCE_VR_SETTINGS.monkeyGuide.dialogue.historyStarFontSize / 2,
+'HISTORY compact stars retain their original position');
 assert.equal(guide.getHistoryPage(), 0);
 
 guide.hits.set(record, { kind: 'panel', region: { id: 'portfolio-category:creative-ai' } });
@@ -473,6 +499,19 @@ assert.match(experienceVrSource, /getPreparedKnowledgeImage: requirePreparedBand
   knowledgeFixture.guide.press(knowledgeFixture.record);
   assert.equal(knowledgeFixture.guide.getScreen(), VR_MONKEY_GUIDE_SCREEN.WORLD_KNOWLEDGE,
     'category selection keeps the flat World Knowledge grid state');
+  const worldRegion = knowledgeFixture.guide.getInteractiveRegions()
+    .find(({ id }) => id === 'world-category:world.five_transformations');
+  const worldFrame = roundedRectStarts.findLast(({ canvasIndex, y, width }) =>
+    canvasIndex === knowledgeFixture.guide.dialoguePanel.canvas._testCanvasIndex && y === worldRegion.y + 4
+      && Math.abs(width - worldRegion.width * 0.80) < 1e-12);
+  assert.ok(worldFrame, 'World Knowledge visual frame is 80% of the unchanged category interaction width');
+  assert.ok(Math.abs(worldFrame.x + worldFrame.width / 2 - (worldRegion.x + worldRegion.width / 2)) < 1e-12,
+    'World Knowledge visual frame remains horizontally centered in its interaction region');
+  const worldIconSize = Math.min(worldRegion.width * 0.58, worldRegion.height * 0.68);
+  const worldIcon = drawnImagePositions.findLast(({ canvasIndex, width }) =>
+    canvasIndex === knowledgeFixture.guide.dialoguePanel.canvas._testCanvasIndex && width === worldIconSize);
+  assert.equal(worldIcon.y, worldRegion.y + worldIconSize * 0.05,
+    'World Knowledge artwork receives the shared 5% vertical offset');
   assert.equal(knowledgeFixture.guide.messagePanel.group.visible, true, 'selection presents World Knowledge in messagePanel');
   assert.equal(knowledgeFixture.guide.readerControlsPanel.group.visible, true, 'selection reveals the separate reader controls');
   const knowledgeRect = latestMessageRect(knowledgeFixture.guide.messagePanel.canvas);

@@ -526,15 +526,19 @@ export function createVrMonkeyGuide({
         y: padding + row * cellHeight, width: cellWidth, height: cellHeight });
       const selected = entry.categoryId === selectedWorldKnowledgeCategoryId;
       if (selected || hoveredOption === region.id) {
+        const frameWidth = region.width * settings.dialogue.categoryFrameWidthScale;
+        const frameX = region.x + (region.width - frameWidth) / 2;
         context.strokeStyle = selected ? settings.colors.accent : settings.colors.hover;
         context.lineWidth = 6;
-        roundedRect(context, region.x + 4, region.y + 4, region.width - 8, region.height - 8,
+        roundedRect(context, frameX, region.y + 4, frameWidth, region.height - 8,
           settings.dialogue.optionCornerRadius);
         context.stroke();
       }
       const color = selected || hoveredOption === region.id ? settings.colors.hover : settings.colors.dialogueButtonText;
       context.globalAlpha = entry.unread ? 0.75 + unreadPulseAlpha(elapsed) * 0.25 : 1;
-      drawKnowledgeIcon(context, entry.icon, region.x + (cellWidth - iconSize) / 2, region.y, iconSize, color);
+      const iconOffsetY = iconSize * settings.dialogue.categoryIconVerticalOffsetFraction;
+      drawKnowledgeIcon(context, entry.icon, region.x + (cellWidth - iconSize) / 2,
+        region.y + iconOffsetY, iconSize, color);
       context.globalAlpha = 1; drawWorldKnowledgeStars(context, entry, region.x, region.y + cellHeight - 16, cellWidth);
     });
     const back = addRegion({ id: 'back-world-menu', x: padding, y: navTop,
@@ -638,23 +642,26 @@ export function createVrMonkeyGuide({
         y: padding + row * (itemHeight + settings.dialogue.historyRowGap),
         width: itemWidth, height: itemHeight });
       const selected = entry.glyphId === selectedHistoryGlyphId;
-      const contentColor = drawInteractiveRegion(context, region, hoveredOption === region.id || selected);
+      const frameWidth = region.width * settings.dialogue.categoryFrameWidthScale;
+      const visualFrame = { ...region, x: region.x + (region.width - frameWidth) / 2, width: frameWidth };
+      const contentColor = drawInteractiveRegion(context, visualFrame, hoveredOption === region.id || selected);
       if (selected) {
         context.strokeStyle = settings.colors.accent; context.lineWidth = 6;
-        roundedRect(context, region.x + 4, region.y + 4, region.width - 8, region.height - 8,
+        roundedRect(context, visualFrame.x + 4, visualFrame.y + 4, visualFrame.width - 8, visualFrame.height - 8,
           settings.dialogue.optionCornerRadius);
         context.stroke();
       }
       const image = requestGlyphImage(entry);
       const glyphX = region.x + settings.dialogue.historyItemPadding;
       const glyphY = region.y + settings.dialogue.historyItemPadding;
+      const glyphOffsetY = glyphSize * settings.dialogue.categoryIconVerticalOffsetFraction;
       const contentAlpha = entry.pages.some(({ id }) => unreadPageIds.has(id)) ? unreadPulseAlpha(elapsed) : 1;
       context.globalAlpha = contentAlpha;
       if (image?.complete && image.naturalWidth && context.drawImage) drawTintedGlyph(context, image,
-        glyphX, glyphY, glyphSize, contentColor);
+        glyphX, glyphY + glyphOffsetY, glyphSize, contentColor);
       else { context.fillStyle = contentColor; context.font = `${settings.dialogue.fontWeight} ${glyphSize * 0.55}px sans-serif`;
         context.textAlign = 'left'; context.textBaseline = 'middle'; context.fillText(entry.descriptor.syllable,
-          glyphX, region.y + region.height / 2); }
+          glyphX, region.y + region.height / 2 + glyphOffsetY); }
       context.fillStyle = contentColor;
       context.font = `${settings.dialogue.historyStarFontSize}px sans-serif`; context.textAlign = 'center';
       context.textBaseline = 'middle';
