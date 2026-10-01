@@ -16,6 +16,7 @@ const roundedRectStarts = [];
 const fillStyles = [];
 const strokeStyles = [];
 const textAlignments = [];
+const fills = [];
 let createdCanvasCount = 0;
 globalThis.Image = class {
   complete = true; naturalWidth = 256;
@@ -31,6 +32,9 @@ globalThis.document = {
       getContext(type) {
         assert.equal(type, '2d');
         let activeRoundedRect = null;
+        let activeFillStyle = null;
+        let activeGlobalAlpha = 1;
+        let activeFont = '';
         return {
           clearRect() {}, save() {}, restore() {}, beginPath() { activeRoundedRect = null; },
           moveTo(x, y) { activeRoundedRect = { canvasIndex, moveX: x, y, arcCount: 0 }; roundedRectStarts.push(activeRoundedRect); }, lineTo() {},
@@ -41,16 +45,18 @@ globalThis.document = {
               activeRoundedRect.x = activeRoundedRect.moveX - radius;
               activeRoundedRect.width = x - activeRoundedRect.x;
             } else if (activeRoundedRect.arcCount === 2) activeRoundedRect.height = y - activeRoundedRect.y;
-          }, closePath() {}, fill() {}, stroke() {}, fillRect() {},
+          }, closePath() {}, fill() { fills.push({ canvasIndex, fillStyle: activeFillStyle,
+            globalAlpha: activeGlobalAlpha, rect: activeRoundedRect && { ...activeRoundedRect } }); }, stroke() {}, fillRect() {},
           drawImage(image, x, y, width, height) {
             drawnImagePositions.push({ canvasIndex, image, x, y, width, height });
           },
           measureText(text) { return { width: String(text).length * 24 }; },
-          fillText(text, x, y) { drawnText.push(String(text)); drawnTextPositions.push({ canvasIndex, text: String(text), x, y }); },
-          set fillStyle(value) { fillStyles.push(value); }, set strokeStyle(value) { strokeStyles.push(value); },
-          set lineWidth(value) {}, set globalCompositeOperation(value) {}, set font(value) {},
+          fillText(text, x, y) { drawnText.push(String(text));
+            drawnTextPositions.push({ canvasIndex, text: String(text), x, y, font: activeFont }); },
+          set fillStyle(value) { activeFillStyle = value; fillStyles.push(value); }, set strokeStyle(value) { strokeStyles.push(value); },
+          set lineWidth(value) {}, set globalCompositeOperation(value) {}, set font(value) { activeFont = value; },
           set textAlign(value) { textAlignments.push(value); },
-          set textBaseline(value) {}, set globalAlpha(value) {}
+          set textBaseline(value) {}, set globalAlpha(value) { activeGlobalAlpha = value; }
         };
       }
     };
@@ -179,6 +185,9 @@ fixture.visualRoot.scale.set(1, 1, 1);
 actorRoot.position.set(0, 0, 0);
 actorRoot.updateMatrixWorld(true);
 assert.equal(guide.messagePanel.planes.length, 2);
+assert.equal(guide.messagePanel.planes[0].geometry.parameters.width, 1.9,
+  'message panel is exactly 20 cm wider than its former 1.7 m width');
+assert.equal(guide.messagePanel.canvas.width, 1431, 'message canvas width preserves the wider panel text capacity');
 assert.equal(guide.dialoguePanel.planes.length, 2);
 assert.equal(guide.readerControlsPanel.planes.length, 2, 'reader controls use a separate two-sided plane');
 assert.equal(guide.readerControlsPanel.canvas.width, 1280);
@@ -205,6 +214,11 @@ assert.equal(guide.messagePanel.group.position.y,
 assert.deepEqual(guide.dialoguePanel.group.position.toArray(), [1.20, 0.80, 0.50]);
 assert.ok(Math.abs(guide.dialoguePanel.group.rotation.x - (-7.5 * Math.PI / 180)) < 1e-12);
 assert.ok(fillStyles.includes('#090909'), 'dialogue controls use an almost-black background');
+const dialogueBackdrop = fills.find(({ canvasIndex, fillStyle, globalAlpha, rect }) =>
+  canvasIndex === guide.dialoguePanel.canvas._testCanvasIndex && fillStyle === '#000000'
+    && globalAlpha === 0.23 && rect?.x === 0 && rect?.y === 0
+    && rect.width === guide.dialoguePanel.canvas.width && rect.height === guide.dialoguePanel.canvas.height);
+assert.ok(dialogueBackdrop, 'dialogue panel draws one unified black backdrop at 23% opacity');
 assert.ok(strokeStyles.includes('#ffaa63'), 'dialogue controls use an orange border');
 assert.ok(textAlignments.includes('left'), 'MENU labels are left aligned');
 assert.equal(guide.attentionRoot.visible, false);
@@ -365,13 +379,23 @@ assert.ok(drawnText.includes(content.title));
 const firstCardRect = { ...latestMessageRect(guide.messagePanel.canvas) };
 const firstCardText = latestMessageTextBlock(guide.messagePanel.canvas, content.title);
 const expectedReaderHeight = Math.min(guide.messagePanel.canvas.height,
-  DEFAULT_EXPERIENCE_VR_SETTINGS.monkeyGuide.message.paddingY * 3
+  DEFAULT_EXPERIENCE_VR_SETTINGS.monkeyGuide.message.paddingY * 2
+  + DEFAULT_EXPERIENCE_VR_SETTINGS.monkeyGuide.card.eyebrowLineHeight
+  + DEFAULT_EXPERIENCE_VR_SETTINGS.monkeyGuide.card.headingLevelGap
   + DEFAULT_EXPERIENCE_VR_SETTINGS.monkeyGuide.card.titleFontSize * 1.15
+  + DEFAULT_EXPERIENCE_VR_SETTINGS.monkeyGuide.card.headingBodyGap
   + DEFAULT_EXPERIENCE_VR_SETTINGS.monkeyGuide.card.lineHeight
     * DEFAULT_EXPERIENCE_VR_SETTINGS.monkeyGuide.card.maxLinesPerPage);
 assert.deepEqual({ x: firstCardRect.x, y: firstCardRect.y, width: firstCardRect.width, height: firstCardRect.height },
-  { x: (guide.messagePanel.canvas.width - 1150) / 2, y: guide.messagePanel.canvas.height - expectedReaderHeight,
-    width: 1150, height: expectedReaderHeight }, 'HISTORY reader uses the fixed six-line bounding rectangle');
+  { x: (guide.messagePanel.canvas.width - 1301) / 2, y: guide.messagePanel.canvas.height - expectedReaderHeight,
+    width: 1301, height: expectedReaderHeight }, 'HISTORY reader uses the fixed six-line bounding rectangle');
+const historyEyebrow = drawnTextPositions.findLast(({ canvasIndex, text }) =>
+  canvasIndex === guide.messagePanel.canvas._testCanvasIndex && text === 'HOW AM I DOING?');
+assert.ok(historyEyebrow.y < firstCardText.title.y, 'HISTORY context is a separate uppercase eyebrow above its primary title');
+assert.ok(Number.parseFloat(historyEyebrow.font.match(/[\d.]+px/)?.[0])
+  < Number.parseFloat(firstCardText.title.font.match(/[\d.]+px/)?.[0]),
+'HISTORY eyebrow is visually secondary to the primary title');
+assert.ok(firstCardText.firstBodyLine.y > firstCardText.title.y, 'HISTORY body begins below both heading levels');
 const cardPageCount = guide.getCardPageCount();
 assert.ok(cardPageCount > 1, 'long content is split instead of shrinking or truncating');
 assert.ok(guide.getReaderControlRegions().some(({ id }) => id === 'card-page-next'));
@@ -464,7 +488,8 @@ polish.guide.dispose(); polish.monkeyGeometry.dispose(); polish.monkeyMaterial.d
 
 const source = await readFile(new URL('../src/xr/guidance/createVrMonkeyGuide.js', import.meta.url), 'utf8');
 assert.doesNotMatch(source, /['"`]svg\/(?:KA|TA|SA|LA|RA)\.svg/, 'guide owns no Proto-Astro asset paths');
-assert.doesNotMatch(source, /fillStyle = settings\.colors\.dialoguePanel/, 'dialogue canvas has no full-panel background');
+assert.match(source, /globalAlpha = 0\.23[\s\S]*fillStyle = '#000000'/,
+  'dialogue canvas owns a subtle unified black backdrop');
 assert.match(source, /globalCompositeOperation = 'source-in'/, 'history glyphs are recolored through one mask canvas');
 assert.match(source, /'★'\.repeat\(entry\.pages\.length\)/, 'history marker reflects activated pages only');
 assert.doesNotMatch(source, /worldKnowledgeModel\.markStageRead\([^)]*selectedPageId/,
@@ -545,13 +570,19 @@ assert.match(experienceVrSource, /getPreparedKnowledgeImage: requirePreparedBand
   assert.equal(knowledgeFixture.guide.messagePanel.group.visible, true, 'selection presents World Knowledge in messagePanel');
   assert.equal(knowledgeFixture.guide.readerControlsPanel.group.visible, true, 'selection reveals the separate reader controls');
   const knowledgeRect = latestMessageRect(knowledgeFixture.guide.messagePanel.canvas);
-  const knowledgeHeadingText = drawnTextPositions.findLast(({ canvasIndex, text }) =>
+  const knowledgeEyebrow = drawnTextPositions.findLast(({ canvasIndex, text }) =>
     canvasIndex === knowledgeFixture.guide.messagePanel.canvas._testCanvasIndex
-      && text.includes('FIVE TRANSFORMATIONS')).text;
+      && text === 'FIVE TRANSFORMATIONS');
+  const knowledgeHeadingText = resolveVrWorldKnowledgeStage('01.1', 'en').title;
   const knowledgeText = latestMessageTextBlock(knowledgeFixture.guide.messagePanel.canvas, knowledgeHeadingText);
   assert.deepEqual({ x: knowledgeRect.x, y: knowledgeRect.y, width: knowledgeRect.width, height: knowledgeRect.height },
     { x: firstCardRect.x, y: firstCardRect.y, width: firstCardRect.width, height: firstCardRect.height },
     'WORLD_KNOWLEDGE uses the same fixed reader rectangle as HISTORY');
+  assert.ok(knowledgeEyebrow.y < knowledgeText.title.y,
+    'WORLD_KNOWLEDGE renders its uppercase category eyebrow above the mixed-case stage title');
+  assert.ok(Number.parseFloat(knowledgeEyebrow.font.match(/[\d.]+px/)?.[0])
+    < Number.parseFloat(knowledgeText.title.font.match(/[\d.]+px/)?.[0]),
+  'WORLD_KNOWLEDGE eyebrow uses the smaller heading level');
   assert.equal(knowledgeText.title.y, firstCardText.title.y, 'reader title Y is shared across both information browsers');
   assert.equal(knowledgeText.firstBodyLine.y, firstCardText.firstBodyLine.y,
     'reader first body-line Y is shared across both information browsers');
