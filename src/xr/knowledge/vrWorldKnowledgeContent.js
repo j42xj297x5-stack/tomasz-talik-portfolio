@@ -51,8 +51,8 @@ export const VR_WORLD_KNOWLEDGE_CONTENT = Object.freeze(
       "en": "Forms"
     },
     "body": {
-      "pl": "Drugi znak określa formę:\n\nO — skorupa\nI — mały glif\nA — duży glif\nU — kamień runiczny\n\nDlatego KO jest skorupą Ziemi, KI małym glifem Ziemi, KA dużym glifem Ziemi, a KU kamieniem runicznym Ziemi.\n\nTen sam porządek działa dla pozostałych naturalnych rodzin.",
-      "en": "The second symbol identifies the form:\n\nO — Shell\nI — Small Glyph\nA — Large Glyph\nU — Rune Stone\n\nThis makes KO an Earth Shell, KI an Earth Small Glyph, KA an Earth Large Glyph and KU an Earth Rune Stone.\n\nThe same structure applies to every natural family."
+      "pl": "Drugi znak określa formę: O — skorupa, I — mały glif, A — duży glif, U — kamień runiczny.\n\nDlatego KO jest skorupą Ziemi, KI małym glifem Ziemi, KA dużym glifem Ziemi, a KU kamieniem runicznym Ziemi.\n\nTen sam porządek działa dla pozostałych naturalnych rodzin.",
+      "en": "The second symbol identifies the form: O — Shell, I — Small Glyph, A — Large Glyph, U — Rune Stone.\n\nThis makes KO an Earth Shell, KI an Earth Small Glyph, KA an Earth Large Glyph and KU an Earth Rune Stone.\n\nThe same structure applies to every natural family."
     }
   },
   {

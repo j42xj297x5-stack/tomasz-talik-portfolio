@@ -410,6 +410,20 @@ export function createVrMonkeyGuide({
     context.fill(); context.stroke();
     return hovered ? settings.colors.dialogueButtonHoverText : settings.colors.dialogueButtonText;
   }
+  function drawCategoryVisualFrame(context, region, { selected, hovered, verticalInset = 0 }) {
+    const frameWidth = region.width * settings.dialogue.categoryFrameWidthScale;
+    const visualFrame = { ...region,
+      x: region.x + (region.width - frameWidth) / 2, y: region.y + verticalInset,
+      width: frameWidth, height: region.height - verticalInset * 2 };
+    const contentColor = drawInteractiveRegion(context, visualFrame, hovered || selected);
+    if (selected) {
+      context.strokeStyle = settings.colors.accent; context.lineWidth = 6;
+      roundedRect(context, visualFrame.x + 4, visualFrame.y + 4, visualFrame.width - 8, visualFrame.height - 8,
+        settings.dialogue.optionCornerRadius);
+      context.stroke();
+    }
+    return { visualFrame, contentColor };
+  }
   function drawButton(context, region, label) {
     context.fillStyle = drawInteractiveRegion(context, region, hoveredOption === region.id);
     context.font = `${settings.dialogue.fontWeight} ${settings.dialogue.fontSize}px sans-serif`;
@@ -533,7 +547,7 @@ export function createVrMonkeyGuide({
     if (prepared?.image.complete && prepared.image.naturalWidth) drawTintedGlyph(context, prepared.drawable,
       x, y, size, color);
   }
-  function drawWorldKnowledgeStars(context, entry, x, y, width, interactive = false) {
+  function drawWorldKnowledgeStars(context, entry, x, y, width, color, interactive = false) {
     const starSize = settings.dialogue.historyStarFontSize * (interactive ? 1.5 : 1);
     const gap = starSize * 1.35; const rowWidth = Math.max(0, (entry.stages.length - 1) * gap);
     entry.stages.forEach((stage, index) => {
@@ -541,8 +555,8 @@ export function createVrMonkeyGuide({
       if (interactive) addRegion({ id: `world-stage:${stage.id}`, x: starX - starSize, y: y - starSize,
         width: starSize * 2, height: starSize * 2 });
       context.globalAlpha = stage.unread ? unreadPulseAlpha(elapsed) : 1;
-      context.fillStyle = stage.id === selectedWorldKnowledgeStageId || hoveredOption === `world-stage:${stage.id}`
-        ? settings.colors.hover : settings.colors.dialogueButtonText;
+      context.fillStyle = interactive && (stage.id === selectedWorldKnowledgeStageId
+        || hoveredOption === `world-stage:${stage.id}`) ? settings.colors.hover : color;
       context.font = `${starSize}px sans-serif`; context.textAlign = 'center'; context.textBaseline = 'middle';
       context.fillText('★', starX, y); context.globalAlpha = 1;
     });
@@ -558,21 +572,14 @@ export function createVrMonkeyGuide({
       const region = addRegion({ id: `world-category:${entry.categoryId}`, x: padding + column * cellWidth,
         y: padding + row * cellHeight, width: cellWidth, height: cellHeight });
       const selected = entry.categoryId === selectedWorldKnowledgeCategoryId;
-      if (selected || hoveredOption === region.id) {
-        const frameWidth = region.width * settings.dialogue.categoryFrameWidthScale;
-        const frameX = region.x + (region.width - frameWidth) / 2;
-        context.strokeStyle = selected ? settings.colors.accent : settings.colors.hover;
-        context.lineWidth = 6;
-        roundedRect(context, frameX, region.y + 4, frameWidth, region.height - 8,
-          settings.dialogue.optionCornerRadius);
-        context.stroke();
-      }
-      const color = selected || hoveredOption === region.id ? settings.colors.hover : settings.colors.dialogueButtonText;
+      const { contentColor } = drawCategoryVisualFrame(context, region,
+        { selected, hovered: hoveredOption === region.id, verticalInset: 4 });
       context.globalAlpha = entry.unread ? 0.75 + unreadPulseAlpha(elapsed) * 0.25 : 1;
       const iconOffsetY = iconSize * settings.dialogue.categoryIconVerticalOffsetFraction;
       drawKnowledgeIcon(context, entry.icon, region.x + (cellWidth - iconSize) / 2,
-        region.y + iconOffsetY, iconSize, color);
-      context.globalAlpha = 1; drawWorldKnowledgeStars(context, entry, region.x, region.y + cellHeight - 16, cellWidth);
+        region.y + iconOffsetY, iconSize, contentColor);
+      context.globalAlpha = 1; drawWorldKnowledgeStars(context, entry, region.x,
+        region.y + cellHeight - 16, cellWidth, contentColor);
     });
     const back = addRegion({ id: 'back-world-menu', x: padding, y: navTop,
       width: navigationWidth(context, '←'), height: navHeight }); drawButton(context, back, '←');
@@ -675,15 +682,8 @@ export function createVrMonkeyGuide({
         y: padding + row * (itemHeight + settings.dialogue.historyRowGap),
         width: itemWidth, height: itemHeight });
       const selected = entry.glyphId === selectedHistoryGlyphId;
-      const frameWidth = region.width * settings.dialogue.categoryFrameWidthScale;
-      const visualFrame = { ...region, x: region.x + (region.width - frameWidth) / 2, width: frameWidth };
-      const contentColor = drawInteractiveRegion(context, visualFrame, hoveredOption === region.id || selected);
-      if (selected) {
-        context.strokeStyle = settings.colors.accent; context.lineWidth = 6;
-        roundedRect(context, visualFrame.x + 4, visualFrame.y + 4, visualFrame.width - 8, visualFrame.height - 8,
-          settings.dialogue.optionCornerRadius);
-        context.stroke();
-      }
+      const { contentColor } = drawCategoryVisualFrame(context, region,
+        { selected, hovered: hoveredOption === region.id });
       const image = requestGlyphImage(entry);
       const glyphX = region.x + settings.dialogue.historyItemPadding;
       const glyphY = region.y + settings.dialogue.historyItemPadding;
