@@ -4,6 +4,8 @@ import * as THREE from '../src/vendor/three.js';
 import { DEFAULT_EXPERIENCE_VR_SETTINGS } from '../src/config/experienceVrSettings.js';
 import { experienceVrPages, resolveExperienceVrPage } from '../src/content/experienceVrPages.js';
 import { resolveVrPageProtoAstro } from '../src/xr/protoAstro/resolveVrPageProtoAstro.js';
+import { VR_WORLD_KNOWLEDGE_PRESENTATION, projectVrWorldKnowledge } from '../src/xr/knowledge/vrWorldKnowledgePresentation.js';
+import { VR_WORLD_KNOWLEDGE_CATEGORIES, VR_WORLD_KNOWLEDGE_STAGE_STATE } from '../src/xr/knowledge/createVrWorldKnowledgeModel.js';
 
 const drawnText = [];
 const roundedRectStarts = [];
@@ -22,7 +24,7 @@ globalThis.document = {
       getContext(type) {
         assert.equal(type, '2d');
         return {
-          clearRect() {}, beginPath() {}, moveTo(x, y) { roundedRectStarts.push({ x, y }); }, lineTo() {},
+          clearRect() {}, save() {}, restore() {}, beginPath() {}, moveTo(x, y) { roundedRectStarts.push({ x, y }); }, lineTo() {},
           arcTo() {}, closePath() {}, fill() {}, stroke() {}, fillRect() {}, drawImage() {},
           measureText(text) { return { width: String(text).length * 24 }; },
           fillText(text) { drawnText.push(String(text)); },
@@ -53,7 +55,7 @@ for (const [glyphId, syllable] of Object.entries(expectedFamilies)) {
 }
 assert.equal(resolveVrPageProtoAstro({ glyphId: 'unknown' }), null);
 
-function createFixture(locale = 'en', configure = () => {}) {
+function createFixture(locale = 'en', configure = () => {}, worldKnowledgeModel = null) {
   const floorRoot = new THREE.Group();
   const actorRoot = new THREE.Group();
   floorRoot.add(actorRoot);
@@ -70,7 +72,7 @@ function createFixture(locale = 'en', configure = () => {}) {
   const settings = structuredClone(DEFAULT_EXPERIENCE_VR_SETTINGS.monkeyGuide);
   configure(settings);
   const guide = createVrMonkeyGuide({ actorRoot, visualRoot, floorRoot, controllers: [record],
-    progressionController: { getActivatedPageIds: () => [...pageIds] }, locale,
+    progressionController: { getActivatedPageIds: () => [...pageIds] }, locale, worldKnowledgeModel,
     settings, onAttentionStart: () => { attentionStarts += 1; } });
   return { floorRoot, actorRoot, visualRoot, monkeyGeometry, monkeyMaterial, controller, record, pageIds, guide,
     getRayDistance: () => rayDistance, getAttentionStarts: () => attentionStarts };
@@ -319,4 +321,57 @@ assert.doesNotMatch(source, /['"`]svg\/(?:KA|TA|SA|LA|RA)\.svg/, 'guide owns no 
 assert.doesNotMatch(source, /fillStyle = settings\.colors\.dialoguePanel/, 'dialogue canvas has no full-panel background');
 assert.match(source, /globalCompositeOperation = 'source-in'/, 'history glyphs are recolored through one mask canvas');
 assert.match(source, /'★'\.repeat\(entry\.page\.order\)/, 'history marker is generated from order stars');
+
+assert.equal(VR_WORLD_KNOWLEDGE_PRESENTATION.length, 15, 'all canonical categories have presentation metadata');
+assert.deepEqual(VR_WORLD_KNOWLEDGE_PRESENTATION.map(({ categoryId }) => categoryId),
+  VR_WORLD_KNOWLEDGE_CATEGORIES.map(({ id }) => id), 'presentation catalog preserves canonical category order');
+const composites = VR_WORLD_KNOWLEDGE_PRESENTATION.filter(({ icon }) => icon.type === 'COMPOSITE');
+assert.equal(composites.length, 4, 'only the four natural categories use composites');
+for (const { icon } of composites) {
+  assert.equal(icon.symbols.length, 5);
+  assert.deepEqual(icon.symbols.map((symbol) => symbol[0]), ['K', 'T', 'S', 'L', 'R']);
+  assert.equal(icon.symbols.some((symbol) => symbol.startsWith('E')), false, 'Ether is absent from natural composites');
+}
+
+{
+  const states = new Map(VR_WORLD_KNOWLEDGE_CATEGORIES.flatMap((category) =>
+    category.stageIds.map((id) => [id, VR_WORLD_KNOWLEDGE_STAGE_STATE.LOCKED])));
+  const listeners = new Set(); let markReadCalls = 0;
+  const model = {
+    getCategories: () => VR_WORLD_KNOWLEDGE_CATEGORIES,
+    isCategoryDiscovered: (id) => states.get(VR_WORLD_KNOWLEDGE_CATEGORIES.find((category) => category.id === id).stageIds[0])
+      !== VR_WORLD_KNOWLEDGE_STAGE_STATE.LOCKED,
+    getStagesForCategory: (id) => VR_WORLD_KNOWLEDGE_CATEGORIES.find((category) => category.id === id)?.stageIds
+      .map((stageId, index) => ({ id: stageId, categoryId: id, order: index + 1 })) ?? [],
+    getStageState: (id) => states.get(id),
+    markStageRead() { markReadCalls += 1; },
+    subscribe(listener) { listeners.add(listener); return () => listeners.delete(listener); }
+  };
+  states.set('01.1', VR_WORLD_KNOWLEDGE_STAGE_STATE.AVAILABLE);
+  states.set('01.2', VR_WORLD_KNOWLEDGE_STAGE_STATE.READ);
+  const initial = projectVrWorldKnowledge(model, 'en');
+  assert.deepEqual(initial.map(({ categoryId }) => categoryId), ['world.five_transformations'],
+    'overview exposes discovered categories without future placeholders');
+  assert.deepEqual(initial[0].stages.map(({ id }) => id), ['01.1', '01.2'], 'locked stars are hidden in canonical order');
+  assert.deepEqual(initial[0].stages.map(({ unread }) => unread), [true, false], 'unread and READ stars are distinguishable');
+
+  const knowledgeFixture = createFixture('en', () => {}, model);
+  knowledgeFixture.guide.open();
+  knowledgeFixture.guide.hits.set(knowledgeFixture.record, { kind: 'panel', region: { id: 'world-knowledge' } });
+  knowledgeFixture.guide.press(knowledgeFixture.record);
+  assert.equal(knowledgeFixture.guide.getScreen(), VR_MONKEY_GUIDE_SCREEN.WORLD_KNOWLEDGE);
+  assert.equal(knowledgeFixture.guide.getInteractiveRegions().filter(({ id }) => id.startsWith('world-category:')).length, 1);
+  knowledgeFixture.guide.hits.set(knowledgeFixture.record, { kind: 'panel', region: { id: 'world-category:world.five_transformations' } });
+  knowledgeFixture.guide.press(knowledgeFixture.record);
+  knowledgeFixture.guide.hits.set(knowledgeFixture.record, { kind: 'panel', region: { id: 'world-stage:01.2' } });
+  knowledgeFixture.guide.press(knowledgeFixture.record);
+  assert.equal(knowledgeFixture.guide.getSelectedWorldKnowledgeStageId(), '01.2');
+  assert.equal(markReadCalls, 0, 'category and star navigation never marks World Knowledge READ');
+  states.set('02.1', VR_WORLD_KNOWLEDGE_STAGE_STATE.AVAILABLE); [...listeners].forEach((listener) => listener());
+  knowledgeFixture.guide.hits.set(knowledgeFixture.record, { kind: 'panel', region: { id: 'back-world-overview' } });
+  knowledgeFixture.guide.press(knowledgeFixture.record);
+  assert.equal(knowledgeFixture.guide.getWorldKnowledgeOverview().length, 2,
+    'a subscribed model update reveals a category without rebuilding gameplay state');
+  knowledgeFixture.guide.dispose(); knowledgeFixture.monkeyGeometry.dispose(); knowledgeFixture.monkeyMaterial.dispose();
+}
 console.log('VR monkey guide assertions passed');

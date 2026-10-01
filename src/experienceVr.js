@@ -1095,6 +1095,7 @@ monkeyGuide = createVrMonkeyGuide({
   controllers: vrControllers.controllers,
   progressionController,
   knowledgeResolver: monkeyKnowledgeResolver,
+  worldKnowledgeModel,
   locale: language,
   settings: settings.monkeyGuide,
   onOpenChange: (open) => playVrUi(open ? VR_AUDIO.monkeyOpen : VR_AUDIO.monkeyClose),
