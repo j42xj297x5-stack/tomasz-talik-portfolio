@@ -1,58 +1,72 @@
 # Experience VR Scenario and Director Model
 
-Status: **CURRENT / BINDING**, synchronized on 2026-09-11. Runtime graph, reconstruction and bounded live reconciliation are implemented through the controlled Water attempt at `5.15` and its rejection transition into `5.20`.
+Status: **CURRENT / BINDING**, synchronized on 2026-09-25 with the implemented canonical graph through terminal point `100.10`.
 
-> **Cross-reference — CURRENT / IMPLEMENTED / MIGRATION COMPLETE:** [`VR_SCENARIO_SANDBOX_RECONCILIATION.md`](VR_SCENARIO_SANDBOX_RECONCILIATION.md) is the primary authority for Rings 1–3 domain-ahead sandbox reconciliation. `ExperienceDirector` supplies the bounded, forward-only `catchUpToPoint()` primitive; `RuntimeExperience` remains the existing effect-execution boundary; production `ScenarioProgressReconciler` provides event-driven orchestration.
+> **Cross-reference — CURRENT / IMPLEMENTED / MIGRATION COMPLETE:** [`VR_SCENARIO_SANDBOX_RECONCILIATION.md`](VR_SCENARIO_SANDBOX_RECONCILIATION.md) remains the primary authority for Rings 1–3 domain-ahead sandbox reconciliation. `ExperienceDirector` supplies the bounded, forward-only `catchUpToPoint()` primitive; `RuntimeExperience` remains the effect-execution boundary; production `ScenarioProgressReconciler` provides event-driven orchestration.
 
 ## Ownership
 
-`Spine → Scenario → Director → Runtime / domain owners`. Scenario owns authored dramaturgy, accepted semantic events, entry effects and genuinely story-owned capabilities. **Scenario capabilities are not a generic sandbox permission registry.** Director owns the current point and graph interpretation. Runtime/domain owners retain physical and committed gameplay truth; point IDs and debug aliases never replace that truth. In particular, ordinary Astrolabium equip, band switching, scan, target, pull and natural Small Glyph extraction rights remain physical/domain laws rather than Scenario capabilities. Genuine story permissions, including Ether tuning, the Water special path and advanced Resonator use, remain Scenario-owned and do not recreate ordinary natural-family eligibility.
+`Spine → Scenario → Director → RuntimeExperience / actors / domain owners`. Scenario owns the authored graph: point definitions, canonical mainline edges, accepted semantic events, transition kinds, milestones, capabilities, settled consequences and symbolic entry effects. Director owns the current point, validates transition legality, commits Scenario milestones and ensures point activation occurs once. `RuntimeExperience` executes the symbolic effects returned by Director and exposes the canonical direct-activation lifecycle. Physical, transient and committed gameplay truth remains with actors/domain controllers; neither point IDs nor debug aliases replace it.
 
-`CAN_USE_GLYPHS` is the Intro boundary for ordinary Large Glyph ray interaction. It first appears at `2.10 — GLYPH_FREE_EXPLORE` and remains continuous at every later canonical mainline point, including transitional and production choreography. It does not express Astrolabium Large Glyph family knowledge, Resonator `PULL_READY`, or portfolio crystal eligibility: after `2.10`, physical ray reach and `getNextCrystalTier(node)` remain the independent restrictions on ordinary crystal acquisition.
+Scenario capabilities are not a generic sandbox permission registry. Ordinary Astrolabium equip, band switching, scan, target, pull and natural Small Glyph extraction remain physical/domain laws. Genuine story permissions—including Ether tuning, the Water special path and advanced Resonator use—remain Scenario-owned without recreating ordinary natural-family eligibility.
 
-## Authored spine
+`CAN_USE_GLYPHS` is the Intro boundary for ordinary Large Glyph ray interaction. It first appears at `2.10 — GLYPH_FREE_EXPLORE` and remains continuous through the late gameplay points where glyph interaction is meaningful. It does not express Astrolabium Large Glyph family knowledge, Resonator `PULL_READY`, or portfolio crystal eligibility: physical reach and `getNextCrystalTier(node)` remain independent restrictions.
+
+## Authored spine and transition semantics
 
 ```text
-1.10 → … → 4.10 → 4.20 → 4.30 → 4.40 → 4.50 → 4.60 → 4.70 → 4.75 → 3.80 → 4.80 → 5.10 → 5.15 → 5.20
+1.10 → … → 4.10 → 4.20 → 4.30 → 4.40 → 4.50 → 4.60 → 4.70 → 4.75
+→ 3.80 → 4.80 → 5.10 → 5.15 → 5.20 → 5.30 → 5.40 → 5.50 → 5.60
+→ 5.70 → 5.80 → 6.10 → 6.20 → 6.30 → 100.10
 ```
 
-| Point | CURRENT role |
+Point order follows authored graph edges rather than numeric ID comparison. `STAY` accepts an event without moving; `COMPLETE` follows the point's canonical mainline edge; crossing-only `COMPLETE_IF` completes only when `crossingComplete === true`; `EXPLICIT` follows its named target. An accepted transition applies its own effects and, when the point changes, the destination's entry effects. `100.10` has no outgoing transitions.
+
+| Point | CURRENT Scenario role and completion condition |
 | --- | --- |
-| `4.70` | Proto-Astro tuning and third-ring sandbox gameplay |
-| `4.75` | mandatory third-ring completion presentation; waits for Large Glyph `SPHERE_FAR` settlement |
-| `3.80` | post-third-ring Asterion frontier; waits for the real Asterion claim |
-| `4.80` | third ring complete; waiting for the existing physical Resonator result |
-| `5.10` | Tier 4 / fourth natural Rune join; `FINAL_WATER_ATTEMPT_READY` advances only to `5.15` |
-| `5.15` | four-Rune Resonator ready; controlled final Water attempt; only `FINAL_WATER_ACQUISITION_REJECTED` advances to `5.20` |
-| `5.20` | Ether intervention entry after observed Water rejection |
+| `4.70` | Proto-Astro tuning and third-ring sandbox gameplay; real `TIER_COMPLETED` enters `4.75`. |
+| `4.75` | Mandatory third-ring completion presentation; `THIRD_RING_COMPLETION_PRESENTATION_COMPLETED` enters `3.80`. |
+| `3.80` | Post-third-ring Asterion frontier; waits for the real Asterion claim. |
+| `4.80` | Waits for the physical Resonator result; `RESONATOR_READY` enters `5.10`. |
+| `5.10` | Joins Tier 4 completion with the fourth natural Rune; `FINAL_WATER_ATTEMPT_READY` enters `5.15`. |
+| `5.15` | Controlled final Water acquisition attempt; rejection alone enters `5.20`. |
+| `5.20` | Begins Ether intervention; `ETHER_INTERVENTION_COMPLETED` unlocks Ether tuning and enters `5.30`. |
+| `5.30` | Ether tuning is permitted; `ETHER_RUNE_TUNED` enters `5.40`. |
+| `5.40` | Reveals the tuned Ether Rune for transport; `ETHER_MONKEY_CAPTURED` enters `5.50`. |
+| `5.50` | Opens and communicates the Water installation path; five installed elemental Runes enter `5.60`. |
+| `5.60` | Announces the full Resonator and enables advanced Resonator use; communication completion enters `5.70`. |
+| `5.70` | Final Water Glyph/portfolio hunt; Tier 5 completion enters `5.80`. |
+| `5.80` | Begins the final Monkey farewell and ambient wait; farewell completion enters `6.10`. |
+| `6.10` | Begins final world release; completion enters `6.20`. |
+| `6.20` | Begins end credits after ensuring final ambient; credits completion enters `6.30`. |
+| `6.30` | Begins the final Orange Monkey VR brand slate; slate completion enters `100.10`. |
+| `100.10` | Canonical terminal exit; its one-time entry effect requests XR session end. |
 
-`4.70` accepts the real `TIER_COMPLETED` result and enters `4.75`. On entry, `4.75` executes the authored tier-completion feedback and begins the legal Large Glyph distribution to `SPHERE_FAR`; only `THIRD_RING_COMPLETION_PRESENTATION_COMPLETED` advances it to `3.80`. Point ordering follows these authored graph edges, not numeric point-ID comparison.
+`4.80` enters with `SET_MAIN_AMBIENT_04` and `CHECK_RESONATOR_JOIN`; the check handles a Resonator that already exists. `5.10` similarly uses `CHECK_FINAL_WATER_ATTEMPT_JOIN` so Tier 4 and fourth-Rune results may arrive in either order. These semantic joins observe domain truth rather than creating or owning it.
 
-`4.80` targets `5.10`, enters with `SET_MAIN_AMBIENT_04` and `CHECK_RESONATOR_JOIN`, and accepts `RESONATOR_READY`. The check covers the event order in which Resonator already exists on entry. Otherwise `resonatorExists === true` is projected as `RESONATOR_READY`. This semantic join does not gate or own Resonator creation.
+The Intro's authored early-exit choices remain explicit branches to the same terminal. At `1.100` and `1.120`, choice 3 first stays while the Monkey exit reaction runs; only `INTRO_EXIT_REACTION_COMPLETED` explicitly targets `100.10`. The canonical mainline also reaches `100.10` from `6.30` by `COMPLETE`.
 
-`5.10` checks the Tier 4 + four-natural-Rune join and advances via `FINAL_WATER_ATTEMPT_READY` to `5.15`. `5.15` owns `NAMIERZ GLIF WODY` / `ACQUIRE THE WATER GLYPH` and advances only on `FINAL_WATER_ACQUISITION_REJECTED`; `5.20` retains `BEGIN_ETHER_INTERVENTION`. It has no direct transition to `100.10`; the latter remains a separate story terminal used by the authored Intro exit branches. At `1.100` choice 3 and at `1.120` choice 3 remain at their current point while the existing continuation effect plays the full Monkey exit reaction. Only the actor's `INTRO_EXIT_REACTION_COMPLETED` semantic event explicitly advances either point to `100.10`, whose `END_XR_SESSION` entry effect remains the sole owner of terminal XR exit.
+## Reconstruction, activation and entry effects
 
-## CURRENT OBJECTIVE
+`stateAt(X)` folds settled consequences strictly before `X`. It describes state implied by Scenario history at `X`; it does not pre-apply `X`'s settled consequence or replay transient interactions. Thus `stateAt(4.75)` enters rather than pre-settles the third-ring completion presentation, while later points reconstruct its settled `SPHERE_FAR` result. The same history-derived rule applies to late portfolio, Rune/Ether, farewell, world-release and credits state.
 
-The read-only Guidance projection derives these exact live strings:
+Canonical direct activation is:
 
-- `2.30`: `UKOŃCZ PIERWSZY KRĄG — n/5`
-- `3.80`: `ZGROMADŹ SKORUPY — n/6`, `ZBUDUJ KULĘ ASTERIONOWĄ`, `KULA ASTERIONOWA — PRODUKCJA` or `ODBIERZ KULĘ ASTERIONOWĄ`
-- `4.10`: `UKOŃCZ DRUGI KRĄG — n/5`
-- `4.70`, incomplete Proto-Astro tuning: `DOSTRÓJ ASTROLABIUM — n/5 · UKOŃCZ TRZECI KRĄG — n/5`
-- `4.70`, full tuning: `UKOŃCZ TRZECI KRĄG — n/5`
-- `4.80`, while Resonator does not exist: `PRZYGOTUJ REZONATOR — STROJENIE n/3 · INSTALACJA n/3`
-- `4.80`, when Resonator exists, and `5.10`: no objective.
-- `5.15`: `NAMIERZ GLIF WODY` / `ACQUIRE THE WATER GLYPH`.
+```text
+restore baseline → stateAt(X) → hydrate domain owners → synchronize derived state
+→ replace Director at X → activateCurrentPoint()
+```
 
-## Reconstruction and debug aliases
+Activation places the Director at `X` and executes `X`'s entry effects exactly once. Repeating `activateCurrentPoint()` for that Director is a no-op. This keeps reconstruction separate from entry choreography and prevents live-only discovery Guidance or transient effects from replaying during hydration. Reset clears the activation flag so the session start point can be activated again after its baseline is restored.
 
-`stateAt(X)` folds settled consequences strictly before `X` and never recreates transient interactions. Thus `stateAt(4.70)` remains pre-completion, `stateAt(4.75)` enters rather than pre-settles the completion presentation, and later points reconstruct the settled Ring 3 / `SPHERE_FAR` result. Hydration/direct activation/reset must not replay live-only discovery Guidance.
+Live catch-up is not reconstruction: `catchUpToPoint()` moves only forward in canonical-spine order and optionally includes the destination entry effects. It does not synthesize settled history. The existing sandbox reconciliation contract determines when domain-ahead truth may request this bounded catch-up.
 
-`P5 → 4.80` and `P6 → 5.10` are implemented debug/QA aliases only. Neither owns gameplay truth, capability truth or Scenario consequences; canonical hydration remains `stateAt → reconstruction → activate`.
+`P5 → 4.80` and `P6 → 5.10` are implemented debug/QA aliases only. Neither owns gameplay truth, capabilities or Scenario consequences; canonical hydration remains `stateAt → hydrate/synchronize → activate`.
 
-Live catch-up is not reconstruction: it follows canonical-spine ordering—including the forward `4.75 → 3.80` edge—on the existing Director, while `stateAt()` retains settled reconstruction semantics. Debug aliases remain reconstruction/QA entrypoints only.
+## Runtime boundary
 
-## Boundary
+`RuntimeExperience.dispatch()` asks Director to interpret an event and executes effects only for an accepted change. `RuntimeExperience.activatePoint(X)` owns the full canonical baseline/reconstruction/Director-replacement/activation sequence above. Missing symbolic effect handlers are runtime composition errors, not implicit Scenario behavior.
 
-Rune tuning, transport, installation, Binder readiness, sector control and Resonator creation are independent domain laws. Scenario observes their semantic results. Discovery Guidance through the first Resonator is implemented; physical Resonator target response, Metal/Water/Ether progression and later finale authoring remain future. Rune authority: [`VR_RUNE_STONES_MODEL.md`](VR_RUNE_STONES_MODEL.md). Resonator authority: [`VR_ASTERION_RESONATOR_MODEL.md`](VR_ASTERION_RESONATOR_MODEL.md).
+`experienceVr.js` composes the Scenario, Director lifecycle, reconstruction/hydration owners and effect handlers, including the late Ether, Water-path, full-Resonator, farewell, world-release, credits, brand-slate and XR-exit owners. Scenario orchestrates those owners through semantic events and effects; it does not duplicate their detailed mechanics.
+
+Rune tuning, transport, installation, Binder readiness, sector control and Resonator operation remain independent domain laws observed by Scenario. Detailed Rune, Resonator, Water, audio and finale presentation behavior belongs to their dedicated canonical documents. The implemented Scenario/Director boundary itself is the complete graph through `100.10`; only additions beyond that graph are genuine future Scenario extensions.

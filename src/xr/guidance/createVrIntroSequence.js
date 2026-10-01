@@ -51,7 +51,7 @@ export const VR_INTRO_COPY = Object.freeze({
 export function createVrIntroSequence({ monkeyGuide, monkeyMotionRoot, monkeyVisualRoot, monkeyStoneRoot = null, playerRig,
   getHeadPosition = () => playerRig.getWorldPosition(new THREE.Vector3()), playerGuidePanel = null, fogReveal = null,
   largeGlyphActor, progressFloor, platformFixturesRoot, locomotion, spatial, settings,
-  onOpeningRaysReady = () => {}, onIntroRevealComplete = () => {}, onPostRevealSilenceComplete = () => {}, onPlayerOpenedGuide = () => {}, onPlayerViewedControls = () => {}, onPlayerClosedGuide = () => {}, onMonkeyHovered = () => {}, onMonkeyTriggered = () => {}, onInvitationSelected = () => {}, onFollowPauseChanged = () => {}, onMonkeyReachedThreshold = () => {}, onThresholdSelected = () => {}, onPlayerEnteredRing = () => {}, onMonkeySettled = () => {}, onGlyphHintTimeout = () => {}, onExitReactionCompleted = () => {}, onReliquaryReveal = () => {},
+  onOpeningRaysReady = () => {}, onIntroRevealComplete = () => {}, onPostRevealSilenceComplete = () => {}, onPlayerOpenedGuide = () => {}, onPlayerViewedControls = () => {}, onPlayerClosedGuide = () => {}, onMonkeyHovered = () => {}, onMonkeyTriggered = () => {}, onInvitationSelected = () => {}, onFollowPauseChanged = () => {}, onMonkeyReachedThreshold = () => {}, onThresholdSelected = () => {}, onPlayerEnteredRing = () => {}, onMonkeyFinalTurn = () => {}, onMonkeySettled = () => {}, onGlyphHintTimeout = () => {}, onExitReactionCompleted = () => {}, onReliquaryReveal = () => {},
   onReliquaryRevealCompleted = () => {}, bypass = false }) {
   const copy = VR_INTRO_COPY[settings.locale === 'pl' ? 'pl' : 'en'];
   const timingCopy = VR_INTRO_COPY.pl;
@@ -81,7 +81,8 @@ export function createVrIntroSequence({ monkeyGuide, monkeyMotionRoot, monkeyVis
   };
   const capture = () => monkeyGuide.setDialogueOverride({ onMonkeyPress: () => true });
   const completeSpeech = () => { phase = null; const callback = done; done = null; monkeyGuide.setDialogueOverride(null); callback?.(); };
-  const displayNext = () => { const item = queue.shift(); if (!item) return; monkeyGuide.showMessage(item.text); if (item.question) completeSpeech(); else { const metrics = monkeyGuide.measureMessage(item.timingText) ?? {}; messageDuration = settings.messageDisplayDuration * Math.max(0, metrics.lineCount ?? 1); phase = 'DISPLAY'; } };
+  const presentQuestion = () => { phase = null; const callback = done; done = null; callback?.(); };
+  const displayNext = () => { const item = queue.shift(); if (!item) return; monkeyGuide.showMessage(item.text); if (item.question) presentQuestion(); else { const metrics = monkeyGuide.measureMessage(item.timingText) ?? {}; messageDuration = settings.messageDisplayDuration * Math.max(0, metrics.lineCount ?? 1); phase = 'DISPLAY'; } };
   const show = (lines, callback, question = null, timingLines = lines) => {
     if (!Array.isArray(timingLines) || timingLines.length !== lines.length) throw new TypeError('Intro timing lines must match presentation lines');
     capture(); queue = lines.map((text, index) => ({ text, timingText: timingLines[index] }));
@@ -249,7 +250,11 @@ export function createVrIntroSequence({ monkeyGuide, monkeyMotionRoot, monkeyVis
       }
     } else if ([VR_INTRO_STATE.CROSSING, VR_INTRO_STATE.ENTERING_RING].includes(state)) {
       updatePlayerRingEntry();
-      if (moveTowardCanonical(delta)) { state = VR_INTRO_STATE.MONKEY_SETTLING; finalTurnElapsed = 0; }
+      if (moveTowardCanonical(delta)) {
+        state = VR_INTRO_STATE.MONKEY_SETTLING;
+        finalTurnElapsed = 0;
+        onMonkeyFinalTurn();
+      }
       const crossingRadius = radiusOf(monkeyMotionRoot);
       fogReveal?.setRadius(THREE.MathUtils.lerp(6, 0, THREE.MathUtils.clamp(1 - crossingRadius / (worldBaseRadius + spatial.thresholdOutsideDistance), 0, 1)));
       if (state === VR_INTRO_STATE.CROSSING && radiusOf(monkeyMotionRoot) <= worldBaseRadius) state = VR_INTRO_STATE.ENTERING_RING;

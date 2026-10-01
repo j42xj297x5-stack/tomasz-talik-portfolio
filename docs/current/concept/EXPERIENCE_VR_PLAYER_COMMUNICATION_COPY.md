@@ -1,9 +1,11 @@
 # Experience VR — kanoniczne teksty komunikacji
 
-**Status:** CURRENT / canonical PL/EN final-Water copy synchronized on 2026-09-17
+**Status:** CURRENT / canonical communication reference synchronized with the implemented PL/EN runtime on 2026-09-25
 **Mechanika:** [`EXPERIENCE_VR_COMMUNICATION_MECHANICS.md`](EXPERIENCE_VR_COMMUNICATION_MECHANICS.md)
 
-Runtime Monkey copy is authored as `blocks[]`. Each quotation below preserves one block as one bubble. `--- BLOCK ---` occurs only between separate array elements; a line break without that separator is an authored `\n` inside the same block.
+The PL/EN localization migration is complete. Runtime Monkey copy is owned by the paired `VR_MONKEY_COMMUNICATION_COPY_PL` and `VR_MONKEY_COMMUNICATION_COPY_EN` catalogs and selected by the locale passed from Experience VR composition. Player Guide, objectives, Furnace, finale/credits and portfolio-card copy remain with their own localized runtime owners; Scenario events and effects are language-agnostic.
+
+This document remains communication/copy authority rather than a duplicate runtime catalog. Its quoted Polish blocks are the canonical editorial reference; the corresponding approved English runtime copy is implemented, not a separate future task. Each quotation below preserves one `blocks[]` item as one bubble. `--- BLOCK ---` occurs only between separate array elements; a line break without that separator is an authored `\n` inside the same block.
 
 ## Progression — implemented early and Rune/Resonator entries
 
@@ -552,4 +554,4 @@ This entry appears immediately after `REZONATOR ASTERIONOWY` only when the Reson
 
 Installation of all five elemental Runes leads to the existing `progression.p4.fullResonator` Monkey first-teacher communication. Only successful full playback records the session-local `full Resonator taught` memory. When that memory exists and the physical Water Rune (`S`) is installed, this entry appears after `SEKTOR METALU`; either condition alone exposes nothing. Player Y is the persistent practical reference. Water's two axes are independent: wrist twist chooses the active frequency hue and hand tilt increases luminance/halo. Level `0` is neutral/baseline. Water positively explains field tuning without release-note language or any Glyph-family-filtering implication.
 
-**IMPLEMENTED:** Player Y now uses positive practical Water knowledge in exact PL/EN copy. The target meaning is: Water tunes hue/frequency and field intensity; `Woda stroi pole, zamiast zmieniać jego zasięg.`; these settings participate in tuning the complete Resonator. Do not tell the player which unimplemented family-filtering feature does not exist. The full final-Water PL master copy, consent boundary and persistence rules are frozen in [`EXPERIENCE_VR_FINAL_WATER_RESONATOR_CULMINATION.md`](EXPERIENCE_VR_FINAL_WATER_RESONATOR_CULMINATION.md); the approved EN editorial translation is implemented.
+**IMPLEMENTED:** Player Y now uses positive practical Water knowledge in exact PL/EN copy. The target meaning is: Water tunes hue/frequency and field intensity; `Woda stroi pole, zamiast zmieniać jego zasięg.`; these settings participate in tuning the complete Resonator. Do not tell the player which unimplemented family-filtering feature does not exist. The full final-Water PL master copy, consent boundary and persistence rules are preserved in the [completed historical implementation plan](../../legacy/concept/EXPERIENCE_VR_FINAL_WATER_RESONATOR_CULMINATION.md); the approved EN editorial translation is implemented.

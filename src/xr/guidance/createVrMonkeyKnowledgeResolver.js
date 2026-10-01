@@ -15,13 +15,9 @@ export function createVrMonkeyKnowledgeResolver({ locale, getCurrentObjective, i
   const categories = locale === 'pl' ? VR_MONKEY_KNOWLEDGE_CATEGORIES_PL : VR_MONKEY_KNOWLEDGE_CATEGORIES_EN;
   const category = Object.freeze({ id: 'category.whatNow', ...categories['category.whatNow'],
     type: VR_MONKEY_KNOWLEDGE_ITEM_TYPE.CATEGORY });
-  const whatIsIt = Object.freeze({ id: 'category.whatIsIt', ...categories['category.whatIsIt'],
-    type: VR_MONKEY_KNOWLEDGE_ITEM_TYPE.CATEGORY });
   let stonesRead = false;
   let stonesLeadRead = false;
   let bindersUnlocked = false;
-  let bindersRead = false;
-  let asterionRead = false;
   let resonatorTaught = false;
   let fullResonatorTaught = false;
   let finalWaterBalanceHintTaught = false;
@@ -44,8 +40,6 @@ export function createVrMonkeyKnowledgeResolver({ locale, getCurrentObjective, i
     label: source.question, question: source.question, blocks: Object.freeze(source.blocks),
     type: VR_MONKEY_KNOWLEDGE_ITEM_TYPE.TOPIC,
     lifecycle: (id === 'knowledge.p3.stones' && !stonesRead)
-      || (id === 'knowledge.p3.binders' && !bindersRead)
-      || (id === 'knowledge.asterion.sphere' && !asterionRead)
       || (id === 'knowledge.finalWater.solution' && !finalWaterSolutionRevealed)
       ? VR_MONKEY_KNOWLEDGE_LIFECYCLE.NEW : VR_MONKEY_KNOWLEDGE_LIFECYCLE.READ }); };
   function topics(groupId) {
@@ -63,10 +57,6 @@ export function createVrMonkeyKnowledgeResolver({ locale, getCurrentObjective, i
         ...finalWaterTopics,
         ...(ordinaryTopic ? [ordinaryTopic] : [])];
     }
-    if (groupId === whatIsIt.groupId) return [
-      ...(isAstrolabiumOwned() ? [topicFromCopy('knowledge.asterion.sphere')] : []),
-      ...(bindersUnlocked && !bindersRead ? [topicFromCopy('knowledge.p3.binders')] : [])
-    ];
     return [];
   }
   const hasWhatNowContent = () => transientHintFallbacks.size > 0
@@ -75,20 +65,18 @@ export function createVrMonkeyKnowledgeResolver({ locale, getCurrentObjective, i
       || finalWaterSolutionRevealed))
     || getTopic() !== null;
   return Object.freeze({
-    getRootItems: () => [...(hasWhatNowContent() ? [category] : []),
-      ...((bindersUnlocked && !bindersRead) || isAstrolabiumOwned() ? [whatIsIt] : [])],
+    getRootItems: () => hasWhatNowContent() ? [category] : [],
     getGroupTopics: topics,
-    getCategory: (categoryId) => [category, whatIsIt].find(({ id }) => id === categoryId && topics(id === category.id ? category.groupId : whatIsIt.groupId).length) ?? null,
-    getTopic: (topicId) => [...topics(category.groupId), ...topics(whatIsIt.groupId)].find(({ id }) => id === topicId) ?? null,
-    getLifecycle: (topicId) => [...topics(category.groupId), ...topics(whatIsIt.groupId)].find(({ id }) => id === topicId)?.lifecycle ?? VR_MONKEY_KNOWLEDGE_LIFECYCLE.LOCKED,
+    getCategory: (categoryId) => categoryId === category.id && topics(category.groupId).length ? category : null,
+    getTopic: (topicId) => topics(category.groupId).find(({ id }) => id === topicId) ?? null,
+    getLifecycle: (topicId) => topics(category.groupId).find(({ id }) => id === topicId)?.lifecycle
+      ?? VR_MONKEY_KNOWLEDGE_LIFECYCLE.LOCKED,
     completeTopic(topicId) {
       for (const [slotId, topic] of transientHintFallbacks) {
         if (topic.id === topicId) transientHintFallbacks.delete(slotId);
       }
       if (topicId === 'knowledge.p3.stonesLead') stonesLeadRead = true;
       if (topicId === 'knowledge.p3.stones') stonesRead = true;
-      if (topicId === 'knowledge.p3.binders' && bindersUnlocked) bindersRead = true;
-      if (topicId === 'knowledge.asterion.sphere') asterionRead = true;
       if (topicId === 'knowledge.finalWater.solution' && finalWaterSolutionOfferAvailable) {
         finalWaterSolutionRevealed = true;
         finalWaterSolutionOfferAvailable = false;
@@ -154,10 +142,10 @@ export function createVrMonkeyKnowledgeResolver({ locale, getCurrentObjective, i
     unlockBinders() { bindersUnlocked = true; },
     hasReadStones: () => stonesRead,
     hasDiscoveredBinders: () => bindersUnlocked,
-    hasReadBinders: () => bindersRead,
+    hasReadBinders: () => bindersUnlocked,
     hasLearnedResonator: () => resonatorTaught,
     hasLearnedFullResonator: () => fullResonatorTaught,
-    reset() { stonesRead = false; stonesLeadRead = false; bindersUnlocked = false; bindersRead = false; asterionRead = false;
+    reset() { stonesRead = false; stonesLeadRead = false; bindersUnlocked = false;
       resonatorTaught = false; fullResonatorTaught = false;
       finalWaterBalanceHintTaught = false; finalWaterSolutionOfferAvailable = false;
       finalWaterSolutionRevealed = false; finalWaterGuidanceResolved = false;

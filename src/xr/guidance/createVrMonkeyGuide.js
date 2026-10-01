@@ -2,18 +2,23 @@ import * as THREE from '../../vendor/three.js';
 import { experienceVrPages, resolveExperienceVrPage } from '../../content/experienceVrPages.js';
 import { createVrTargetHalo } from '../createVrTargetHalo.js';
 import { VR_MONKEY_INTERACTION_LAYER } from '../../scene/monkeyModel.js';
-import { resolveVrPageProtoAstro } from '../protoAstro/resolveVrPageProtoAstro.js';
+import { resolveVrPageProtoAstro, VR_PAGE_PROTO_ASTRO_FAMILY_BY_GLYPH_ID } from '../protoAstro/resolveVrPageProtoAstro.js';
 import { createVrMonkeyProgressionMessage } from './createVrMonkeyProgressionMessage.js';
 import { VR_MONKEY_MESSAGE_TIMING } from './vrMonkeyCommunicationCopy.js';
+import { projectVrWorldKnowledge } from '../knowledge/vrWorldKnowledgePresentation.js';
+import { resolveVrWorldKnowledgeStage } from '../knowledge/vrWorldKnowledgeContent.js';
 
 const COPY = Object.freeze({
-  pl: Object.freeze({ progress: 'JAK MI IDZIE?', close: 'ZAMKNIJ',
+  pl: Object.freeze({ progress: 'JAK MI IDZIE?', knowledge: 'WIEDZA', close: 'ZAMKNIJ',
+    protoAstroFamilies: Object.freeze({ earth: 'ZIEMIA', metal: 'METAL', water: 'WODA', tree: 'DRZEWO', fire: 'OGIEŃ' }),
     history: (count) => `Odkryte karty: ${count}.${count > 0 ? ' Wybierz znak.' : ''}` }),
-  en: Object.freeze({ progress: 'HOW AM I DOING?', close: 'CLOSE',
+  en: Object.freeze({ progress: 'HOW AM I DOING?', knowledge: 'KNOWLEDGE', close: 'CLOSE',
+    protoAstroFamilies: Object.freeze({ earth: 'EARTH', metal: 'METAL', water: 'WATER', tree: 'WOOD', fire: 'FIRE' }),
     history: (count) => `Discovered cards: ${count}.${count > 0 ? ' Select a sign.' : ''}` })
 });
 
-export const VR_MONKEY_GUIDE_SCREEN = Object.freeze({ MENU: 'MENU', HISTORY: 'HISTORY', CARD: 'CARD', KNOWLEDGE: 'KNOWLEDGE' });
+export const VR_MONKEY_GUIDE_SCREEN = Object.freeze({ MENU: 'MENU', HISTORY: 'HISTORY', KNOWLEDGE: 'KNOWLEDGE',
+  WORLD_KNOWLEDGE: 'WORLD_KNOWLEDGE' });
 export const VR_MONKEY_DIALOGUE_PRIORITY = Object.freeze({ OPTIONAL: 1, ACQUISITION: 2, MANDATORY: 3 });
 export const unreadPulseAlpha = (seconds) => 0.5 - 0.5 * Math.cos(Math.PI * Math.max(0, seconds));
 const degToRad = (degrees) => degrees * Math.PI / 180;
@@ -46,21 +51,28 @@ function wrapText(context, text, maxWidth) {
 }
 
 function paginateText(context, text, maxWidth, maxLines) {
-  const words = String(text ?? '').split(/\s+/).filter(Boolean);
   const pages = [];
   let lines = [];
-  let line = '';
-  words.forEach((word) => {
-    const candidate = line ? `${line} ${word}` : word;
-    if (line && context.measureText(candidate).width > maxWidth) {
-      lines.push(line);
-      line = word;
-      if (lines.length === maxLines) { pages.push(lines); lines = []; }
-    } else line = candidate;
+  const pushLine = (line) => {
+    lines.push(line);
+    if (lines.length === maxLines) { pages.push(lines); lines = []; }
+  };
+  String(text ?? '').split('\n').forEach((authoredLine) => {
+    const words = authoredLine.trim().split(/\s+/).filter(Boolean);
+    let line = '';
+    words.forEach((word) => {
+      const candidate = line ? `${line} ${word}` : word;
+      if (line && context.measureText(candidate).width > maxWidth) { pushLine(line); line = word; }
+      else line = candidate;
+    });
+    if (line) pushLine(line);
   });
-  if (line) lines.push(line);
   if (lines.length) pages.push(lines);
   return pages.length ? pages : [[]];
+}
+
+export function compactWorldKnowledgeForReader(text) {
+  return String(text ?? '').replace(/\r\n?/g, '\n').replace(/\n[ \t]*\n+/g, ' ');
 }
 
 function createTwoSidedCanvasPlane({ name, width, height, canvasWidth, canvasHeight }) {
@@ -97,7 +109,7 @@ function createTwoSidedCanvasPlane({ name, width, height, canvasWidth, canvasHei
 
 export function createVrMonkeyGuide({
   actorRoot, visualRoot, floorRoot = actorRoot, interactionRoot = visualRoot, controllers = [], progressionController,
-  locale = 'en', settings = {}, knowledgeResolver = null,
+  locale = 'en', settings = {}, knowledgeResolver = null, worldKnowledgeModel = null, getPreparedKnowledgeImage = null,
   onOpenChange = () => {}, onPanelClick = () => {},
   onAttentionStart = () => {}
 }) {
@@ -145,11 +157,24 @@ export function createVrMonkeyGuide({
   const attentionTop = settings.attention.position.y + Math.max(...settings.attention.radii);
   messagePanel.group.position.set(
     0,
-    attentionTop + settings.message.gapFromAttention + settings.message.height / 2,
+    attentionTop + settings.message.gapFromAttention + settings.readerControls.height
+      + settings.readerControls.gapFromMessage + settings.message.height / 2
+      + settings.message.packageVerticalOffset,
     settings.attention.position.z
   );
   messagePanel.group.visible = false;
   root.add(messagePanel.group);
+
+  const readerControlsPanel = createTwoSidedCanvasPlane({
+    name: 'VrMonkeyReaderControlsPanel', width: settings.readerControls.width, height: settings.readerControls.height,
+    canvasWidth: settings.readerControls.canvasWidth, canvasHeight: settings.readerControls.canvasHeight
+  });
+  readerControlsPanel.group.position.set(0,
+    messagePanel.group.position.y - settings.message.height / 2 - settings.readerControls.gapFromMessage
+      - settings.readerControls.height / 2,
+    messagePanel.group.position.z);
+  readerControlsPanel.group.visible = false;
+  root.add(readerControlsPanel.group);
 
   const dialoguePanel = createTwoSidedCanvasPlane({
     name: 'VrMonkeyDialoguePanel', width: settings.dialogue.width, height: settings.dialogue.height,
@@ -200,15 +225,20 @@ export function createVrMonkeyGuide({
   let hoveredOption = null;
   let message = '';
   let disposed = false;
-  let interactiveRegions = [];
+  let dialogueInteractiveRegions = [];
+  let readerControlRegions = [];
   let screen = VR_MONKEY_GUIDE_SCREEN.MENU;
   let menuPage = 0;
   let historyPage = 0;
+  let selectedHistoryGlyphId = null;
   let selectedPageId = null;
   let cardPage = 0;
   let selectedKnowledgeGroupId = null;
   let knowledgePage = 0;
   let selectedKnowledgeTopicId = null;
+  let selectedWorldKnowledgeCategoryId = null;
+  let selectedWorldKnowledgeStageId = null;
+  let worldKnowledgeTextPage = 0;
   let historyPulseRedrawElapsed = 0;
   let dialogueOverride = null;
   let monkeyWasHovered = false;
@@ -220,41 +250,60 @@ export function createVrMonkeyGuide({
   const glyphImages = new Map();
   const glyphMaskCanvas = document.createElement('canvas');
   const glyphMaskContext = glyphMaskCanvas.getContext('2d');
+  const knowledgeImages = new Map();
+  const unsubscribeWorldKnowledge = worldKnowledgeModel?.subscribe?.(() => {
+    if (disposed) return;
+    const categories = projectVrWorldKnowledge(worldKnowledgeModel, locale);
+    const selected = categories.find(({ categoryId }) => categoryId === selectedWorldKnowledgeCategoryId);
+    if (screen === VR_MONKEY_GUIDE_SCREEN.WORLD_KNOWLEDGE && selectedWorldKnowledgeCategoryId) {
+      if (!selected) {
+        selectedWorldKnowledgeCategoryId = null; selectedWorldKnowledgeStageId = null; worldKnowledgeTextPage = 0;
+        messagePanel.group.visible = false; readerControlsPanel.group.visible = false;
+      } else if (!selected.stages.some(({ id }) => id === selectedWorldKnowledgeStageId)) {
+        selectedWorldKnowledgeStageId = selected.stages.find(({ unread }) => unread)?.id ?? selected.stages[0]?.id ?? null;
+        worldKnowledgeTextPage = 0;
+        messagePanel.group.visible = Boolean(selectedWorldKnowledgeStageId);
+      }
+    }
+    if (open && !dialogueOverride && screen === VR_MONKEY_GUIDE_SCREEN.WORLD_KNOWLEDGE) {
+      drawMessage(); drawDialogue(); drawReaderControls();
+    }
+  }) ?? (() => {});
 
   function progressCount() { return progressionController.getActivatedPageIds().length; }
 
   function drawMessage() {
     const { canvas, context, texture } = messagePanel;
     context.clearRect(0, 0, canvas.width, canvas.height);
-    if (!message) { texture.needsUpdate = true; return; }
-    const selectedPage = pagesById.get(selectedPageId);
-    if (screen === VR_MONKEY_GUIDE_SCREEN.CARD && selectedPage) {
-      const resolved = resolveExperienceVrPage(selectedPage, locale);
-      context.font = `${settings.message.fontWeight} ${settings.card.titleFontSize}px sans-serif`;
-      const titleWidth = context.measureText(resolved.title).width;
-      context.font = `${settings.card.bodyFontSize}px sans-serif`;
-      const pages = paginateText(context, resolved.body, settings.message.maxBubbleWidthPx - settings.message.paddingX * 2,
-        settings.card.maxLinesPerPage);
-      cardPage = Math.min(cardPage, pages.length - 1);
-      const lines = pages[cardPage];
-      const bodyWidth = Math.max(...lines.map((line) => context.measureText(line).width), 0);
-      const titleLineHeight = settings.card.titleFontSize * 1.15;
-      const titleGap = settings.message.paddingY;
-      const boxWidth = Math.min(settings.message.maxBubbleWidthPx,
-        Math.max(titleWidth, bodyWidth) + settings.message.paddingX * 2);
-      const boxHeight = Math.min(canvas.height, settings.message.paddingY * 2 + titleLineHeight + titleGap
-        + lines.length * settings.card.lineHeight);
-      const x = (canvas.width - boxWidth) / 2; const y = canvas.height - boxHeight;
-      drawBubble(context, x, y, boxWidth, boxHeight);
-      context.fillStyle = settings.colors.text; context.textAlign = 'center'; context.textBaseline = 'middle';
-      context.font = `${settings.message.fontWeight} ${settings.card.titleFontSize}px sans-serif`;
-      context.fillText(resolved.title, canvas.width / 2, y + settings.message.paddingY + titleLineHeight / 2);
-      context.font = `${settings.card.bodyFontSize}px sans-serif`;
-      lines.forEach((line, index) => context.fillText(line, canvas.width / 2,
-        y + settings.message.paddingY + titleLineHeight + titleGap + settings.card.lineHeight * (index + 0.5)));
+    if (dialogueOwner) {
+      messagePanel.group.visible = Boolean(message);
+      if (!message) { texture.needsUpdate = true; return; }
+    } else if (screen === VR_MONKEY_GUIDE_SCREEN.WORLD_KNOWLEDGE && selectedWorldKnowledgeStageId) {
+      const presentation = worldKnowledgePresentation();
+      messagePanel.group.visible = Boolean(presentation);
+      if (!presentation) { texture.needsUpdate = true; return; }
+      drawFixedReaderMessage(context, canvas, presentation.heading, presentation.pages[presentation.page]);
       texture.needsUpdate = true;
       return;
+    } else {
+      const selectedPage = pagesById.get(selectedPageId);
+      if (screen === VR_MONKEY_GUIDE_SCREEN.HISTORY && selectedPage) {
+        const resolved = resolveExperienceVrPage(selectedPage, locale);
+        const historyEntry = historyEntries().find(({ glyphId }) => glyphId === selectedHistoryGlyphId);
+        const familyLabel = copy.protoAstroFamilies[historyEntry?.descriptor.familyId];
+        context.font = `${settings.card.bodyFontSize}px sans-serif`;
+        const pages = paginateText(context, resolved.body, settings.message.maxBubbleWidthPx - settings.message.paddingX * 2,
+          settings.card.maxLinesPerPage);
+        cardPage = Math.min(cardPage, pages.length - 1);
+        messagePanel.group.visible = true;
+        drawFixedReaderMessage(context, canvas,
+          { context: `${familyLabel} · ${historyEntry.descriptor.syllable}`, title: resolved.title }, pages[cardPage]);
+        texture.needsUpdate = true;
+        return;
+      }
+      messagePanel.group.visible = Boolean(message);
     }
+    if (!message) { texture.needsUpdate = true; return; }
     context.font = `${settings.message.fontWeight} ${settings.message.fontSize}px sans-serif`;
     const maxTextWidth = settings.message.maxBubbleWidthPx - settings.message.paddingX * 2;
     const lines = wrapText(context, message, maxTextWidth);
@@ -272,6 +321,43 @@ export function createVrMonkeyGuide({
     texture.needsUpdate = true;
   }
 
+  function fitHeadingFontSize(context, text, preferredSize, maxWidth) {
+    let fontSize = preferredSize;
+    context.font = `${settings.message.fontWeight} ${fontSize}px sans-serif`;
+    if (context.measureText(text).width > maxWidth) {
+      fontSize = Math.max(preferredSize * 0.9, preferredSize * maxWidth / context.measureText(text).width);
+      context.font = `${settings.message.fontWeight} ${fontSize}px sans-serif`;
+    }
+    return fontSize;
+  }
+
+  function drawFixedReaderMessage(context, canvas, heading, lines) {
+    const contextLineHeight = settings.card.eyebrowLineHeight;
+    const titleLineHeight = settings.card.titleFontSize * 1.15;
+    const bodyLineCapacity = Math.max(settings.card.maxLinesPerPage,
+      settings.worldKnowledge?.maxLinesPerPage ?? settings.card.maxLinesPerPage);
+    const boxWidth = Math.min(canvas.width, settings.message.maxBubbleWidthPx);
+    const boxHeight = Math.min(canvas.height, settings.message.paddingY * 2 + contextLineHeight
+      + settings.card.headingLevelGap + titleLineHeight + settings.card.headingBodyGap
+      + bodyLineCapacity * settings.card.lineHeight);
+    const x = (canvas.width - boxWidth) / 2; const y = canvas.height - boxHeight;
+    drawBubble(context, x, y, boxWidth, boxHeight);
+    context.fillStyle = settings.colors.text; context.textAlign = 'center'; context.textBaseline = 'middle';
+    const maxHeadingWidth = boxWidth - settings.message.paddingX * 2;
+    const contextTitle = heading.context.toUpperCase();
+    fitHeadingFontSize(context, contextTitle, settings.card.eyebrowFontSize, maxHeadingWidth);
+    context.fillText(contextTitle, canvas.width / 2,
+      y + settings.message.paddingY + contextLineHeight / 2);
+    fitHeadingFontSize(context, heading.title, settings.card.titleFontSize, maxHeadingWidth);
+    const titleY = y + settings.message.paddingY + contextLineHeight + settings.card.headingLevelGap
+      + titleLineHeight / 2;
+    context.fillText(heading.title, canvas.width / 2, titleY);
+    context.font = `${settings.card.bodyFontSize}px sans-serif`;
+    lines.forEach((line, index) => context.fillText(line, canvas.width / 2,
+      y + settings.message.paddingY + contextLineHeight + settings.card.headingLevelGap + titleLineHeight
+      + settings.card.headingBodyGap + settings.card.lineHeight * (index + 0.5)));
+  }
+
   function drawBubble(context, x, y, width, height) {
     context.globalAlpha = settings.colors.panelOpacity;
     context.fillStyle = settings.colors.messagePanel ?? settings.colors.panel;
@@ -282,25 +368,30 @@ export function createVrMonkeyGuide({
   function drawDialogue() {
     const { canvas, context, texture } = dialoguePanel;
     context.clearRect(0, 0, canvas.width, canvas.height);
+    context.globalAlpha = settings.dialogue.backdropOpacity;
+    context.fillStyle = '#000000';
+    roundedRect(context, 0, 0, canvas.width, canvas.height, settings.dialogue.cornerRadius); context.fill();
+    context.globalAlpha = 1;
     if (dialogueOverride) {
       const options = dialogueOverride.options ?? [];
       const gap = settings.dialogue.gap; const padding = settings.dialogue.padding;
       context.font = `${settings.dialogue.fontWeight} ${settings.dialogue.fontSize}px sans-serif`;
       const height = settings.dialogue.fontSize + settings.dialogue.menuPaddingY * 2;
-      interactiveRegions = options.map((option, index) => ({ ...option, x: padding,
+      dialogueInteractiveRegions = options.map((option, index) => ({ ...option, x: padding,
         y: padding + index * (height + gap), width: Math.min(canvas.width - padding * 2,
           context.measureText(option.label).width + settings.dialogue.menuPaddingX * 2), height }));
       context.textAlign = 'left'; context.textBaseline = 'middle';
-      interactiveRegions.forEach((region) => { context.fillStyle = drawInteractiveRegion(context, region,
+      dialogueInteractiveRegions.forEach((region) => { context.fillStyle = drawInteractiveRegion(context, region,
         hoveredOption === region.id); context.fillText(region.label, region.x + settings.dialogue.menuPaddingX,
         region.y + region.height / 2); });
       texture.needsUpdate = true; return;
     }
     if (screen === VR_MONKEY_GUIDE_SCREEN.HISTORY) { drawHistory(context, canvas); texture.needsUpdate = true; return; }
-    if (screen === VR_MONKEY_GUIDE_SCREEN.CARD) { drawCardNavigation(context, canvas); texture.needsUpdate = true; return; }
     if (screen === VR_MONKEY_GUIDE_SCREEN.KNOWLEDGE) { drawKnowledge(context, canvas); texture.needsUpdate = true; return; }
+    if (screen === VR_MONKEY_GUIDE_SCREEN.WORLD_KNOWLEDGE) { drawWorldKnowledgeOverview(context, canvas); texture.needsUpdate = true; return; }
     const options = [
-      { id: 'progress', label: copy.progress },
+      ...(progressCount() > 0 ? [{ id: 'progress', label: copy.progress }] : []),
+      { id: 'world-knowledge', label: copy.knowledge },
       ...(knowledgeResolver?.getRootItems?.() ?? []).map((item) => ({
         id: item.type === 'CATEGORY' ? `category:${item.id}` : `knowledge:${item.id}`, label: item.label
       })),
@@ -311,7 +402,7 @@ export function createVrMonkeyGuide({
     texture.needsUpdate = true;
   }
 
-  function addRegion(region) { interactiveRegions.push(region); return region; }
+  function addRegion(region) { dialogueInteractiveRegions.push(region); return region; }
   function drawInteractiveRegion(context, region, hovered) {
     context.fillStyle = hovered ? settings.colors.dialogueButtonHoverBackground : settings.colors.dialogueButtonBackground;
     context.strokeStyle = settings.colors.dialogueButtonBorder;
@@ -319,6 +410,22 @@ export function createVrMonkeyGuide({
     roundedRect(context, region.x, region.y, region.width, region.height, settings.dialogue.optionCornerRadius);
     context.fill(); context.stroke();
     return hovered ? settings.colors.dialogueButtonHoverText : settings.colors.dialogueButtonText;
+  }
+  function drawCategoryVisualFrame(context, region,
+    { selected, hovered, verticalInset = 0, bottomTrim = 0,
+      widthScale = settings.dialogue.categoryFrameWidthScale }) {
+    const frameWidth = region.width * widthScale;
+    const visualFrame = { ...region,
+      x: region.x + (region.width - frameWidth) / 2, y: region.y + verticalInset,
+      width: frameWidth, height: region.height - verticalInset * 2 - bottomTrim };
+    const contentColor = drawInteractiveRegion(context, visualFrame, hovered || selected);
+    if (selected) {
+      context.strokeStyle = settings.colors.accent; context.lineWidth = 6;
+      roundedRect(context, visualFrame.x + 4, visualFrame.y + 4, visualFrame.width - 8, visualFrame.height - 8,
+        settings.dialogue.optionCornerRadius);
+      context.stroke();
+    }
+    return { visualFrame, contentColor };
   }
   function drawButton(context, region, label) {
     context.fillStyle = drawInteractiveRegion(context, region, hoveredOption === region.id);
@@ -333,7 +440,7 @@ export function createVrMonkeyGuide({
   }
   function drawPagedList(context, canvas, items, pageIndex, setPageIndex,
     { backId, backLabel, previousId, nextId }) {
-    interactiveRegions = [];
+    dialogueInteractiveRegions = [];
     const padding = settings.dialogue.padding; const gap = settings.dialogue.gap;
     const navHeight = settings.dialogue.historyNavigationHeight;
     const navTop = canvas.height - padding - navHeight;
@@ -379,10 +486,12 @@ export function createVrMonkeyGuide({
       y: navTop, width: 140, height: navHeight }); drawButton(context, next, '›'); }
   }
   function historyEntries() {
-    return progressionController.getActivatedPageIds().map((pageId) => {
-      const page = pagesById.get(pageId);
-      const protoAstro = resolveVrPageProtoAstro(page);
-      return page && protoAstro ? { pageId, page, ...protoAstro } : null;
+    const activatedIds = new Set(progressionController.getActivatedPageIds());
+    return Object.keys(VR_PAGE_PROTO_ASTRO_FAMILY_BY_GLYPH_ID).map((glyphId) => {
+      const pages = experienceVrPages.filter((page) => page.glyphId === glyphId && activatedIds.has(page.id))
+        .sort((left, right) => left.order - right.order);
+      const protoAstro = resolveVrPageProtoAstro(pages[0]);
+      return pages.length && protoAstro ? { glyphId, pages, page: pages[0], ...protoAstro } : null;
     }).filter(Boolean);
   }
   function requestGlyphImage(entry) {
@@ -405,54 +514,201 @@ export function createVrMonkeyGuide({
     glyphMaskContext.globalCompositeOperation = 'source-over';
     context.drawImage(glyphMaskCanvas, x, y, size, size);
   }
+  function prepareKnowledgeImage(image) {
+    const canvas = document.createElement('canvas');
+    canvas.width = image.naturalWidth || 256; canvas.height = image.naturalHeight || 256;
+    const context = canvas.getContext('2d'); context.drawImage(image, 0, 0, canvas.width, canvas.height);
+    if (typeof context.getImageData === 'function') {
+      const pixels = context.getImageData(0, 0, canvas.width, canvas.height);
+      for (let index = 0; index < pixels.data.length; index += 4) {
+        pixels.data[index + 3] = Math.round(pixels.data[index + 3]
+          * Math.max(pixels.data[index], pixels.data[index + 1], pixels.data[index + 2]) / 255);
+        pixels.data[index] = 255; pixels.data[index + 1] = 255; pixels.data[index + 2] = 255;
+      }
+      context.putImageData(pixels, 0, 0); return canvas;
+    }
+    return image;
+  }
+  function requestKnowledgeImage(source) {
+    if (knowledgeImages.has(source) || typeof Image === 'undefined') return knowledgeImages.get(source);
+    const image = new Image(); const prepared = { image, drawable: image }; knowledgeImages.set(source, prepared);
+    image.onload = () => {
+      prepared.drawable = prepareKnowledgeImage(image);
+      if (!disposed && screen === VR_MONKEY_GUIDE_SCREEN.WORLD_KNOWLEDGE) drawDialogue(); };
+    image.src = source; return prepared;
+  }
+  function resolveKnowledgeImage(icon) {
+    if (!icon.assetId) return requestKnowledgeImage(icon.sources[0]);
+    if (knowledgeImages.has(icon.assetId)) return knowledgeImages.get(icon.assetId);
+    const image = getPreparedKnowledgeImage?.(icon.assetId) ?? null;
+    if (!image) return null;
+    const prepared = { image, drawable: prepareKnowledgeImage(image) };
+    knowledgeImages.set(icon.assetId, prepared); return prepared;
+  }
+  function drawKnowledgeIcon(context, icon, x, y, size, color) {
+    const prepared = resolveKnowledgeImage(icon);
+    if (prepared?.image.complete && prepared.image.naturalWidth) drawTintedGlyph(context, prepared.drawable,
+      x, y, size, color);
+  }
+  function drawWorldKnowledgeStars(context, entry, x, y, width, color, interactive = false) {
+    const starSize = settings.dialogue.historyStarFontSize * (interactive ? 1.5 : 1);
+    const gap = starSize * 1.35; const rowWidth = Math.max(0, (entry.stages.length - 1) * gap);
+    entry.stages.forEach((stage, index) => {
+      const starX = x + width / 2 - rowWidth / 2 + index * gap;
+      if (interactive) addRegion({ id: `world-stage:${stage.id}`, x: starX - starSize, y: y - starSize,
+        width: starSize * 2, height: starSize * 2 });
+      context.globalAlpha = stage.unread ? unreadPulseAlpha(elapsed) : 1;
+      context.fillStyle = interactive && (stage.id === selectedWorldKnowledgeStageId
+        || hoveredOption === `world-stage:${stage.id}`) ? settings.colors.hover : color;
+      context.font = `${starSize}px sans-serif`; context.textAlign = 'center'; context.textBaseline = 'middle';
+      context.fillText('★', starX, y); context.globalAlpha = 1;
+    });
+  }
+  function drawWorldKnowledgeOverview(context, canvas) {
+    dialogueInteractiveRegions = []; const entries = projectVrWorldKnowledge(worldKnowledgeModel, locale);
+    const columns = 5; const padding = settings.dialogue.padding; const navHeight = settings.dialogue.historyNavigationHeight;
+    const navTop = canvas.height - padding - navHeight; const cellWidth = (canvas.width - padding * 2) / columns;
+    const gridBottom = navTop - settings.dialogue.gap;
+    const cellHeight = (gridBottom - padding) / 3; const iconSize = Math.min(cellWidth * 0.58, cellHeight * 0.68);
+    const verticalTrim = cellHeight * settings.dialogue.worldKnowledgeCategoryVerticalTrimFraction;
+    entries.forEach((entry, index) => {
+      const column = index % columns; const row = Math.floor(index / columns);
+      const region = addRegion({ id: `world-category:${entry.categoryId}`, x: padding + column * cellWidth,
+        y: padding + row * cellHeight, width: cellWidth, height: cellHeight });
+      const selected = entry.categoryId === selectedWorldKnowledgeCategoryId;
+      const { contentColor } = drawCategoryVisualFrame(context, region,
+        { selected, hovered: hoveredOption === region.id, verticalInset: 4, bottomTrim: verticalTrim,
+          widthScale: settings.dialogue.worldKnowledgeCategoryFrameWidthScale });
+      context.globalAlpha = entry.unread ? 0.75 + unreadPulseAlpha(elapsed) * 0.25 : 1;
+      const iconOffsetY = iconSize * settings.dialogue.categoryIconVerticalOffsetFraction;
+      drawKnowledgeIcon(context, entry.icon, region.x + (cellWidth - iconSize) / 2,
+        region.y + iconOffsetY, iconSize, contentColor);
+      context.globalAlpha = 1; drawWorldKnowledgeStars(context, entry, region.x,
+        region.y + cellHeight - 16 - verticalTrim, cellWidth, contentColor);
+    });
+    const back = addRegion({ id: 'back-world-menu', x: padding, y: navTop,
+      width: navigationWidth(context, '←'), height: navHeight }); drawButton(context, back, '←');
+  }
+  function drawReaderControls() {
+    const { canvas, context, texture } = readerControlsPanel;
+    context.clearRect(0, 0, canvas.width, canvas.height);
+    readerControlRegions = [];
+    if (dialogueOwner) {
+      readerControlsPanel.group.visible = false;
+      texture.needsUpdate = true;
+      return;
+    }
+    const portfolioEntry = screen === VR_MONKEY_GUIDE_SCREEN.HISTORY
+      ? historyEntries().find(({ glyphId }) => glyphId === selectedHistoryGlyphId) : null;
+    const presentation = worldKnowledgePresentation();
+    const entry = projectVrWorldKnowledge(worldKnowledgeModel, locale)
+      .find(({ categoryId }) => categoryId === selectedWorldKnowledgeCategoryId);
+    const portfolioVisible = open && screen === VR_MONKEY_GUIDE_SCREEN.HISTORY
+      && portfolioEntry?.pages.some(({ id }) => id === selectedPageId);
+    readerControlsPanel.group.visible = Boolean(portfolioVisible
+      || (open && screen === VR_MONKEY_GUIDE_SCREEN.WORLD_KNOWLEDGE && presentation && entry));
+    if (!readerControlsPanel.group.visible) { texture.needsUpdate = true; return; }
+    const config = settings.readerControls; let x = config.padding;
+    if (portfolioVisible) {
+      portfolioEntry.pages.forEach((page) => {
+        const region = { id: `portfolio-page:${page.id}`, x, y: (canvas.height - config.buttonSize) / 2,
+          width: config.buttonSize, height: config.buttonSize };
+        readerControlRegions.push(region);
+        const active = page.id === selectedPageId;
+        context.globalAlpha = unreadPageIds.has(page.id) && !active ? unreadPulseAlpha(elapsed) : 1;
+        context.fillStyle = drawInteractiveRegion(context, region, hoveredOption === region.id || active);
+        context.font = `${config.fontSize}px sans-serif`; context.textAlign = 'center'; context.textBaseline = 'middle';
+        context.fillText('★', region.x + region.width / 2, region.y + region.height / 2);
+        context.globalAlpha = 1; x += config.buttonSize + config.buttonGap;
+      });
+      const pages = cardPages();
+      if (pages.length > 1) {
+        const nextX = canvas.width - config.padding - config.buttonSize;
+        const previous = { id: 'card-page-previous', x: nextX - config.buttonSize * 2 - config.buttonGap * 2,
+          y: (canvas.height - config.buttonSize) / 2, width: config.buttonSize, height: config.buttonSize };
+        const next = { id: 'card-page-next', x: nextX, y: previous.y,
+          width: config.buttonSize, height: config.buttonSize };
+        readerControlRegions.push(previous, next);
+        context.fillStyle = drawInteractiveRegion(context, previous, hoveredOption === previous.id);
+        context.font = `${config.fontSize}px sans-serif`; context.textAlign = 'center'; context.textBaseline = 'middle';
+        context.fillText('‹', previous.x + previous.width / 2, canvas.height / 2);
+        context.fillStyle = settings.colors.dialogueButtonText;
+        context.fillText(`${cardPage + 1} / ${pages.length}`, nextX - config.buttonGap - config.buttonSize / 2, canvas.height / 2);
+        context.fillStyle = drawInteractiveRegion(context, next, hoveredOption === next.id);
+        context.fillText('›', next.x + next.width / 2, canvas.height / 2);
+      }
+      texture.needsUpdate = true; return;
+    }
+    entry.stages.forEach((stage) => {
+      const region = { id: `world-stage:${stage.id}`, x, y: (canvas.height - config.buttonSize) / 2,
+        width: config.buttonSize, height: config.buttonSize };
+      readerControlRegions.push(region);
+      const active = stage.id === selectedWorldKnowledgeStageId;
+      context.globalAlpha = stage.unread && !active ? unreadPulseAlpha(elapsed) : 1;
+      context.fillStyle = drawInteractiveRegion(context, region, hoveredOption === region.id || active);
+      context.font = `${config.fontSize}px sans-serif`; context.textAlign = 'center'; context.textBaseline = 'middle';
+      context.fillText('★', region.x + region.width / 2, region.y + region.height / 2);
+      context.globalAlpha = 1; x += config.buttonSize + config.buttonGap;
+    });
+    if (presentation.pages.length > 1) {
+      const nextX = canvas.width - config.padding - config.buttonSize;
+      const previous = { id: 'world-knowledge-page-previous', x: nextX - config.buttonSize * 2 - config.buttonGap * 2,
+        y: (canvas.height - config.buttonSize) / 2, width: config.buttonSize, height: config.buttonSize };
+      const next = { id: 'world-knowledge-page-next', x: nextX,
+        y: previous.y, width: config.buttonSize, height: config.buttonSize };
+      readerControlRegions.push(previous, next);
+      context.fillStyle = drawInteractiveRegion(context, previous, hoveredOption === previous.id); context.font = `${config.fontSize}px sans-serif`;
+      context.textAlign = 'center'; context.textBaseline = 'middle'; context.fillText('‹', previous.x + previous.width / 2, canvas.height / 2);
+      context.fillStyle = settings.colors.dialogueButtonText;
+      context.fillText(`${presentation.page + 1} / ${presentation.pages.length}`, nextX - config.buttonGap - config.buttonSize / 2, canvas.height / 2);
+      context.fillStyle = drawInteractiveRegion(context, next, hoveredOption === next.id);
+      context.fillText('›', next.x + next.width / 2, canvas.height / 2);
+    }
+    texture.needsUpdate = true;
+  }
   function drawHistory(context, canvas) {
-    interactiveRegions = [];
+    dialogueInteractiveRegions = [];
     const entries = historyEntries();
-    const size = settings.dialogue.historyPageSize;
-    const totalPages = Math.max(1, Math.ceil(entries.length / size));
-    historyPage = Math.min(historyPage, totalPages - 1);
-    const visible = entries.slice(historyPage * size, (historyPage + 1) * size);
-    const padding = settings.dialogue.padding; const columns = settings.dialogue.historyColumns;
+    const padding = settings.dialogue.padding; const columns = Math.max(1, entries.length);
     const navHeight = settings.dialogue.historyNavigationHeight;
     const navTop = canvas.height - padding - navHeight;
     const glyphSize = settings.dialogue.historyGlyphSize;
     const itemWidth = glyphSize + settings.dialogue.historyItemPadding * 2;
     const itemHeight = glyphSize + settings.dialogue.historyGlyphStarGap + settings.dialogue.historyStarFontSize
       + settings.dialogue.historyItemPadding * 2;
-    const columnGap = settings.dialogue.historyColumnGap;
+    const columnGap = Math.min(settings.dialogue.historyColumnGap,
+      (canvas.width - padding * 2 - columns * itemWidth) / Math.max(1, columns - 1));
     const gridWidth = columns * itemWidth + (columns - 1) * columnGap;
     const gridLeft = (canvas.width - gridWidth) / 2;
-    visible.forEach((entry, index) => {
-      const column = index % columns; const row = Math.floor(index / columns);
-      const region = addRegion({ id: `page:${entry.pageId}`, pageId: entry.pageId,
+    entries.forEach((entry, index) => {
+      const column = index; const row = 0;
+      const region = addRegion({ id: `portfolio-category:${entry.glyphId}`, glyphId: entry.glyphId,
         x: gridLeft + column * (itemWidth + columnGap),
         y: padding + row * (itemHeight + settings.dialogue.historyRowGap),
         width: itemWidth, height: itemHeight });
-      const contentColor = drawInteractiveRegion(context, region, hoveredOption === region.id);
+      const selected = entry.glyphId === selectedHistoryGlyphId;
+      const { contentColor } = drawCategoryVisualFrame(context, region,
+        { selected, hovered: hoveredOption === region.id });
       const image = requestGlyphImage(entry);
       const glyphX = region.x + settings.dialogue.historyItemPadding;
       const glyphY = region.y + settings.dialogue.historyItemPadding;
-      const contentAlpha = unreadPageIds.has(entry.pageId) ? unreadPulseAlpha(elapsed) : 1;
+      const glyphOffsetY = glyphSize * settings.dialogue.categoryIconVerticalOffsetFraction;
+      const contentAlpha = entry.pages.some(({ id }) => unreadPageIds.has(id)) ? unreadPulseAlpha(elapsed) : 1;
       context.globalAlpha = contentAlpha;
       if (image?.complete && image.naturalWidth && context.drawImage) drawTintedGlyph(context, image,
-        glyphX, glyphY, glyphSize, contentColor);
+        glyphX, glyphY + glyphOffsetY, glyphSize, contentColor);
       else { context.fillStyle = contentColor; context.font = `${settings.dialogue.fontWeight} ${glyphSize * 0.55}px sans-serif`;
         context.textAlign = 'left'; context.textBaseline = 'middle'; context.fillText(entry.descriptor.syllable,
-          glyphX, region.y + region.height / 2); }
+          glyphX, region.y + region.height / 2 + glyphOffsetY); }
       context.fillStyle = contentColor;
       context.font = `${settings.dialogue.historyStarFontSize}px sans-serif`; context.textAlign = 'center';
       context.textBaseline = 'middle';
-      context.fillText('★'.repeat(entry.page.order), glyphX + glyphSize / 2,
+      context.fillText('★'.repeat(entry.pages.length), glyphX + glyphSize / 2,
         glyphY + glyphSize + settings.dialogue.historyGlyphStarGap + settings.dialogue.historyStarFontSize / 2);
       context.globalAlpha = 1;
     });
     const back = addRegion({ id: 'back-menu', x: padding, y: navTop,
       width: navigationWidth(context, '←'), height: navHeight }); drawButton(context, back, '←');
-    const nextX = canvas.width - padding - 140;
-    if (totalPages > 1 && historyPage > 0) { const previous = addRegion({ id: 'history-previous', x: nextX - 152,
-      y: navTop, width: 140, height: navHeight }); drawButton(context, previous, '‹'); }
-    if (totalPages > 1 && historyPage < totalPages - 1) { const next = addRegion({ id: 'history-next', x: nextX,
-      y: navTop, width: 140, height: navHeight }); drawButton(context, next, '›'); }
   }
   function cardPages() {
     const page = pagesById.get(selectedPageId); if (!page) return [[]];
@@ -460,17 +716,25 @@ export function createVrMonkeyGuide({
     return paginateText(dialoguePanel.context, resolveExperienceVrPage(page, locale).body,
       settings.message.maxBubbleWidthPx - settings.message.paddingX * 2, settings.card.maxLinesPerPage);
   }
-  function drawCardNavigation(context, canvas) {
-    interactiveRegions = []; const padding = settings.dialogue.padding;
-    const height = settings.dialogue.historyNavigationHeight;
-    const navTop = canvas.height - padding - height;
-    const back = addRegion({ id: 'back-history', x: padding, y: navTop,
-      width: navigationWidth(context, '←'), height });
-    drawButton(context, back, '←'); const pages = cardPages();
-    if (pages.length > 1 && cardPage > 0) { const previous = addRegion({ id: 'card-previous', x: canvas.width / 2 - 190,
-      y: navTop, width: 150, height }); drawButton(context, previous, '‹'); }
-    if (pages.length > 1 && cardPage < pages.length - 1) { const next = addRegion({ id: 'card-next', x: canvas.width - padding - 150,
-      y: navTop, width: 150, height }); drawButton(context, next, '›'); }
+  function worldKnowledgePresentation() {
+    const entry = projectVrWorldKnowledge(worldKnowledgeModel, locale)
+      .find(({ categoryId }) => categoryId === selectedWorldKnowledgeCategoryId);
+    if (!entry?.stages.some(({ id }) => id === selectedWorldKnowledgeStageId)) return null;
+    const stage = resolveVrWorldKnowledgeStage(selectedWorldKnowledgeStageId, locale);
+    if (!stage) return null;
+    messagePanel.context.font = `${settings.card.bodyFontSize}px sans-serif`;
+    const pages = paginateText(messagePanel.context, compactWorldKnowledgeForReader(stage.body),
+      settings.message.maxBubbleWidthPx - settings.message.paddingX * 2,
+      settings.worldKnowledge?.maxLinesPerPage ?? settings.card.maxLinesPerPage);
+    const page = Math.max(0, Math.min(worldKnowledgeTextPage, pages.length - 1));
+    return { heading: { context: entry.title, title: stage.title },
+      pages, page, stage };
+  }
+  function presentWorldKnowledgeSelection() {
+    const presentation = worldKnowledgePresentation();
+    messagePanel.group.visible = Boolean(presentation);
+    drawMessage(); drawDialogue(); drawReaderControls();
+    if (presentation?.pages.length === 1) worldKnowledgeModel.markStageRead(presentation.stage.id);
   }
   function drawKnowledge(context, canvas) {
     const topics = knowledgeResolver?.getGroupTopics?.(selectedKnowledgeGroupId) ?? [];
@@ -541,14 +805,39 @@ export function createVrMonkeyGuide({
     hoveredOption = null;
     hits.forEach((_, record) => hits.set(record, null));
     if (open) clearAttention();
-    else { knowledgeSequence?.reset(); knowledgeSequence = null; screen = VR_MONKEY_GUIDE_SCREEN.MENU; selectedPageId = null; cardPage = 0; historyPage = 0; menuPage = 0;
-      selectedKnowledgeGroupId = null; selectedKnowledgeTopicId = null; knowledgePage = 0; showMessage(''); }
+    else { knowledgeSequence?.reset(); knowledgeSequence = null; screen = VR_MONKEY_GUIDE_SCREEN.MENU; selectedPageId = null;
+      selectedHistoryGlyphId = null; cardPage = 0; historyPage = 0; menuPage = 0;
+      selectedKnowledgeGroupId = null; selectedKnowledgeTopicId = null; knowledgePage = 0;
+      selectedWorldKnowledgeCategoryId = null; selectedWorldKnowledgeStageId = null; worldKnowledgeTextPage = 0;
+      readerControlsPanel.group.visible = false; showMessage(''); }
     drawDialogue();
+    if (open && !dialogueOwner) { drawMessage(); drawReaderControls(); }
     if (notify && open !== previous) onOpenChange(open);
   }
   function close() { setOpen(false); }
   function openDialogue() { setOpen(true); }
   function activateOption(id) {
+    if (id === 'world-knowledge') { screen = VR_MONKEY_GUIDE_SCREEN.WORLD_KNOWLEDGE;
+      selectedWorldKnowledgeCategoryId = null; selectedWorldKnowledgeStageId = null; worldKnowledgeTextPage = 0;
+      showMessage(''); drawDialogue(); drawReaderControls(); return true; }
+    if (id?.startsWith('world-category:')) {
+      const categoryId = id.slice('world-category:'.length);
+      const entry = projectVrWorldKnowledge(worldKnowledgeModel, locale).find((candidate) => candidate.categoryId === categoryId);
+      if (!entry) return false;
+      selectedWorldKnowledgeCategoryId = categoryId;
+      selectedWorldKnowledgeStageId = entry.stages.find(({ unread }) => unread)?.id ?? entry.stages[0]?.id ?? null;
+      worldKnowledgeTextPage = 0;
+      presentWorldKnowledgeSelection(); return true;
+    }
+    if (id?.startsWith('world-stage:')) {
+      const stageId = id.slice('world-stage:'.length);
+      const entry = projectVrWorldKnowledge(worldKnowledgeModel, locale).find(({ categoryId }) => categoryId === selectedWorldKnowledgeCategoryId);
+      if (!entry?.stages.some(({ id: candidateId }) => candidateId === stageId)) return false;
+      selectedWorldKnowledgeStageId = stageId; worldKnowledgeTextPage = 0; presentWorldKnowledgeSelection(); return true;
+    }
+    if (id === 'back-world-menu') { screen = VR_MONKEY_GUIDE_SCREEN.MENU;
+      selectedWorldKnowledgeCategoryId = null; selectedWorldKnowledgeStageId = null; worldKnowledgeTextPage = 0;
+      readerControlsPanel.group.visible = false; showMessage(''); drawDialogue(); drawReaderControls(); return true; }
     if (id?.startsWith('category:')) {
       const category = knowledgeResolver?.getCategory?.(id.slice('category:'.length));
       if (!category) return false;
@@ -581,20 +870,52 @@ export function createVrMonkeyGuide({
       selectedKnowledgeGroupId = null; selectedKnowledgeTopicId = null; knowledgePage = 0;
       showMessage(''); drawDialogue(); return true; }
     if (id === 'progress') { screen = VR_MONKEY_GUIDE_SCREEN.HISTORY; historyPage = 0;
-      showMessage(copy.history(progressCount())); drawDialogue(); return true; }
-    if (id?.startsWith('page:')) { selectedPageId = id.slice(5); unreadPageIds.delete(selectedPageId);
-      screen = VR_MONKEY_GUIDE_SCREEN.CARD; cardPage = 0;
-      showMessage('card'); drawDialogue(); return true; }
-    if (id === 'back-history') { screen = VR_MONKEY_GUIDE_SCREEN.HISTORY; showMessage(copy.history(progressCount())); drawDialogue(); return true; }
-    if (id === 'back-menu') { screen = VR_MONKEY_GUIDE_SCREEN.MENU; showMessage(''); drawDialogue(); return true; }
-    if (id === 'history-previous') { historyPage -= 1; drawDialogue(); return true; }
-    if (id === 'history-next') { historyPage += 1; drawDialogue(); return true; }
+      selectedHistoryGlyphId = null; selectedPageId = null; cardPage = 0;
+      showMessage(''); drawDialogue(); drawReaderControls(); return true; }
+    if (id?.startsWith('portfolio-category:')) {
+      const glyphId = id.slice('portfolio-category:'.length);
+      const entry = historyEntries().find((candidate) => candidate.glyphId === glyphId);
+      if (!entry) return false;
+      selectedHistoryGlyphId = glyphId;
+      selectedPageId = entry.pages.find(({ id: pageId }) => unreadPageIds.has(pageId))?.id ?? entry.pages[0]?.id ?? null;
+      if (!selectedPageId) return false;
+      unreadPageIds.delete(selectedPageId); cardPage = 0; message = '';
+      messagePanel.group.visible = true; drawMessage(); drawDialogue(); drawReaderControls(); return true;
+    }
+    if (id?.startsWith('portfolio-page:')) {
+      const pageId = id.slice('portfolio-page:'.length);
+      const entry = historyEntries().find(({ glyphId }) => glyphId === selectedHistoryGlyphId);
+      if (!entry?.pages.some(({ id: candidateId }) => candidateId === pageId)) return false;
+      selectedPageId = pageId; unreadPageIds.delete(pageId); cardPage = 0;
+      messagePanel.group.visible = true; drawMessage(); drawDialogue(); drawReaderControls(); return true;
+    }
+    if (id === 'back-menu') { screen = VR_MONKEY_GUIDE_SCREEN.MENU; selectedHistoryGlyphId = null;
+      selectedPageId = null; cardPage = 0; readerControlsPanel.group.visible = false;
+      showMessage(''); drawDialogue(); drawReaderControls(); return true; }
     if (id === 'menu-previous') { menuPage -= 1; drawDialogue(); return true; }
     if (id === 'menu-next') { menuPage += 1; drawDialogue(); return true; }
     if (id === 'knowledge-previous') { knowledgePage -= 1; drawDialogue(); return true; }
     if (id === 'knowledge-next') { knowledgePage += 1; drawDialogue(); return true; }
-    if (id === 'card-previous') { cardPage -= 1; drawMessage(); drawDialogue(); return true; }
-    if (id === 'card-next') { cardPage += 1; drawMessage(); drawDialogue(); return true; }
+    if (id === 'card-page-previous') {
+      if (cardPage <= 0) return false;
+      cardPage -= 1; drawMessage(); drawReaderControls(); return true;
+    }
+    if (id === 'card-page-next') {
+      if (cardPage >= cardPages().length - 1) return false;
+      cardPage += 1; drawMessage(); drawReaderControls(); return true;
+    }
+    if (id === 'world-knowledge-page-previous') {
+      if (worldKnowledgeTextPage <= 0) return false;
+      worldKnowledgeTextPage -= 1; drawMessage(); drawReaderControls(); return true;
+    }
+    if (id === 'world-knowledge-page-next') {
+      const presentation = worldKnowledgePresentation();
+      if (!presentation || presentation.page >= presentation.pages.length - 1) return false;
+      worldKnowledgeTextPage += 1; drawMessage(); drawReaderControls();
+      const advanced = worldKnowledgePresentation();
+      if (advanced.page === advanced.pages.length - 1) worldKnowledgeModel.markStageRead(advanced.stage.id);
+      return true;
+    }
     if (id === 'close') { close(); return true; }
     return false;
   }
@@ -615,16 +936,21 @@ export function createVrMonkeyGuide({
         const monkeyHit = raycaster.intersectObjects(monkeyTargets, false)[0] ?? null;
         raycaster.layers.set(0);
         const panelHit = open ? raycaster.intersectObjects(dialoguePanel.planes, false)[0] ?? null : null;
+        const controlsHit = readerControlsPanel.group.visible
+          ? raycaster.intersectObjects(readerControlsPanel.planes, false)[0] ?? null : null;
         const nearest = [monkeyHit && { kind: 'monkey', intersection: monkeyHit },
-          panelHit && { kind: 'panel', intersection: panelHit }]
+          panelHit && { kind: 'panel', intersection: panelHit },
+          controlsHit && { kind: 'reader-controls', intersection: controlsHit }]
           .filter(Boolean).sort((a, b) => a.intersection.distance - b.intersection.distance)[0] ?? null;
         if (nearest) {
           record.reportRayHit?.(nearest.intersection.distance);
           if (nearest.kind === 'monkey') monkeyHovered = true;
           else {
-            const x = nearest.intersection.uv.x * dialoguePanel.canvas.width;
-            const y = (1 - nearest.intersection.uv.y) * dialoguePanel.canvas.height;
-            const region = interactiveRegions.find((candidate) => x >= candidate.x && x <= candidate.x + candidate.width
+            const surface = nearest.kind === 'reader-controls' ? readerControlsPanel : dialoguePanel;
+            const regions = nearest.kind === 'reader-controls' ? readerControlRegions : dialogueInteractiveRegions;
+            const x = nearest.intersection.uv.x * surface.canvas.width;
+            const y = (1 - nearest.intersection.uv.y) * surface.canvas.height;
+            const region = regions.find((candidate) => x >= candidate.x && x <= candidate.x + candidate.width
               && y >= candidate.y && y <= candidate.y + candidate.height) ?? null;
             nearest.region = region;
             if (region) nextHoveredOption = region.id;
@@ -637,7 +963,7 @@ export function createVrMonkeyGuide({
     halo.setVisible(monkeyHovered);
     if (monkeyHovered && !monkeyWasHovered) dialogueOverride?.onMonkeyHover?.();
     monkeyWasHovered = monkeyHovered;
-    if (hoveredOption !== nextHoveredOption) { hoveredOption = nextHoveredOption; drawDialogue(); }
+    if (hoveredOption !== nextHoveredOption) { hoveredOption = nextHoveredOption; drawDialogue(); drawReaderControls(); }
   }
 
   function press(record) {
@@ -651,10 +977,11 @@ export function createVrMonkeyGuide({
     }
     if (!hit.region) return false;
     const closesPanel = hit.region.id === 'close';
+    const navigationClass = screen === VR_MONKEY_GUIDE_SCREEN.MENU ? 'MAIN_MENU' : 'DEEPER';
     const activated = dialogueOverride
       ? dialogueOverride.onSelect?.(hit.region.id, record) !== false
       : activateOption(hit.region.id);
-    if (activated && !closesPanel) onPanelClick();
+    if (activated && !closesPanel) onPanelClick(navigationClass);
     return activated;
   }
   const listeners = controllers.map((record) => {
@@ -670,10 +997,13 @@ export function createVrMonkeyGuide({
       if (!knownActivatedPageIds.has(pageId)) { knownActivatedPageIds.add(pageId); unreadPageIds.add(pageId); }
     }
     historyPulseRedrawElapsed += Math.max(0, delta);
+    if (screen === VR_MONKEY_GUIDE_SCREEN.WORLD_KNOWLEDGE
+      && historyPulseRedrawElapsed >= 1 / 30 && projectVrWorldKnowledge(worldKnowledgeModel, locale).some(({ unread }) => unread)) {
+      historyPulseRedrawElapsed = 0; drawDialogue(); drawReaderControls();
+    }
     if (screen === VR_MONKEY_GUIDE_SCREEN.HISTORY && historyPulseRedrawElapsed >= 1 / 30
-      && historyEntries().slice(historyPage * settings.dialogue.historyPageSize,
-        (historyPage + 1) * settings.dialogue.historyPageSize).some(({ pageId }) => unreadPageIds.has(pageId))) {
-      historyPulseRedrawElapsed = 0; drawDialogue();
+      && historyEntries().some(({ pages }) => pages.some(({ id }) => unreadPageIds.has(id)))) {
+      historyPulseRedrawElapsed = 0; drawDialogue(); drawReaderControls();
     }
     if (attentionPending) {
       const phase = (elapsed % settings.attention.cycleDuration) / settings.attention.cycleDuration * arcs.length;
@@ -710,8 +1040,10 @@ export function createVrMonkeyGuide({
     listeners.forEach(({ record, listener }) => record.controller.removeEventListener('selectstart', listener));
     reset();
     halo.dispose();
+    unsubscribeWorldKnowledge();
     arcs.forEach((arc) => { arc.geometry.dispose(); arc.material.dispose(); });
     messagePanel.dispose();
+    readerControlsPanel.dispose();
     dialoguePanel.dispose();
     root.removeFromParent();
     hits.clear();
@@ -719,18 +1051,26 @@ export function createVrMonkeyGuide({
 
   drawMessage();
   drawDialogue();
+  drawReaderControls();
   const api = {
-    object: root, messagePanel, dialoguePanel, attentionRoot, arcs, halo, hits,
+    object: root, messagePanel, dialoguePanel, readerControlsPanel, attentionRoot, arcs, halo, hits,
     update, notifyAttention, playAttentionCue, cancelAttention: clearAttention, showMessage, measureMessage,
     open: openDialogue, close, isOpen: () => open,
     hasCurrentHit: (record) => Boolean(hits.get(record)), reset, dispose, press,
     isAttentionPending: () => attentionPending,
     getScreen: () => screen, getHistoryEntries: historyEntries, getSelectedPageId: () => selectedPageId,
+    getSelectedHistoryGlyphId: () => selectedHistoryGlyphId,
     getSelectedKnowledgeGroupId: () => selectedKnowledgeGroupId,
     getSelectedKnowledgeTopicId: () => selectedKnowledgeTopicId,
+    getSelectedWorldKnowledgeCategoryId: () => selectedWorldKnowledgeCategoryId,
+    getSelectedWorldKnowledgeStageId: () => selectedWorldKnowledgeStageId,
+    getWorldKnowledgeTextPage: () => worldKnowledgeTextPage,
+    getWorldKnowledgeTextPageCount: () => worldKnowledgePresentation()?.pages.length ?? 0,
+    getWorldKnowledgeOverview: () => worldKnowledgeModel ? projectVrWorldKnowledge(worldKnowledgeModel, locale) : [],
     getHistoryPage: () => historyPage, getCardPage: () => cardPage, getCardPageCount: () => cardPages().length,
     getUnreadPageIds: () => [...unreadPageIds],
-    getInteractiveRegions: () => interactiveRegions.map((region) => ({ ...region })),
+    getInteractiveRegions: () => dialogueInteractiveRegions.map((region) => ({ ...region })),
+    getReaderControlRegions: () => readerControlRegions.map((region) => ({ ...region })),
     refreshKnowledge() {
       if (!open || dialogueOverride) return false;
       drawDialogue();
@@ -747,6 +1087,10 @@ export function createVrMonkeyGuide({
     isInteractionEnabled: () => interactionEnabled,
     setDialogueOverride(override) {
       if (!override) { api.releaseDialogue(legacyDialogueOwner); return; }
+      if (api.ownsDialogue(legacyDialogueOwner)) {
+        api.updateDialogue(legacyDialogueOwner, override, { preemptible: false });
+        return;
+      }
       api.tryAcquireDialogue(legacyDialogueOwner, override, {
         priority: VR_MONKEY_DIALOGUE_PRIORITY.MANDATORY,
         preemptible: false
@@ -761,6 +1105,7 @@ export function createVrMonkeyGuide({
     hoveredOption = null; monkeyWasHovered = false;
     hits.forEach((_, record) => hits.set(record, null));
     drawDialogue();
+    if (dialogueOwner) { messagePanel.group.visible = false; drawMessage(); drawReaderControls(); }
   }
   api.tryAcquireDialogue = (owner, override, options = {}) => {
     if (!owner) throw new TypeError('Dialogue owner is required.');
@@ -775,6 +1120,7 @@ export function createVrMonkeyGuide({
     dialoguePriority = priority;
     dialoguePreemptible = options.preemptible !== false;
     onDialoguePreempt = options.onPreempt ?? null;
+    message = '';
     applyDialogueOverride(override);
     return true;
   };
@@ -788,6 +1134,7 @@ export function createVrMonkeyGuide({
     if (dialogueOwner !== owner) return false;
     cancelOwnedAttention(owner);
     dialogueOwner = null; dialoguePriority = 0; dialoguePreemptible = true; onDialoguePreempt = null;
+    message = ''; messagePanel.group.visible = false; readerControlsPanel.group.visible = false;
     applyDialogueOverride(null);
     return true;
   };

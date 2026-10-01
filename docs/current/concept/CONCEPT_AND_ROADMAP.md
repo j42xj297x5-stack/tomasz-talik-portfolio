@@ -4,11 +4,9 @@
 
 ## Status dokumentu
 
-Roboczy dokument koncepcyjny.
-Nie jest jeszcze finalną treścią strony.
-Jego celem jest zebranie myśli, nazw, kierunków, symboli, funkcji i możliwej drogi technicznej dla przyszłego interaktywnego portfolio opartego na Three.js.
+CURRENT dokument koncepcyjny opisujący intencję i ukształtowany produkt. Portfolio jest wdrożone jako wspólne wejście językowe prowadzące do trzech doświadczeń: Classic 2D, Experience 3D i Orange Monkey VR.
 
-Na tym etapie nie wybieramy jeszcze ostatecznych tekstów do strony. Treści manifestu, opisów projektów i nazw sekcji zostaną dobrane dopiero wtedy, gdy będzie istnieć pierwszy działający prototyp, który pokaże klimat, rytm i sposób odbioru całości.
+Dokument nie jest runtime authority ani aktywną listą wdrożeniową. Zachowuje kierunek artystyczny, narracyjny i produktowy; szczegóły wykonania należą do modeli technicznych i kodu. Propozycje nazw oraz hasła pozostają materiałem redakcyjnym, ale nie oznaczają, że wdrożone tryby lub lokalizacja czekają na MVP.
 
 ---
 
@@ -145,35 +143,23 @@ Kolorystyczne kierunki:
 
 ---
 
-# 4A. Planowany przepływ wejścia: język → tryb → doświadczenie
+# 4A. Aktualny przepływ wejścia: język → trzy doświadczenia
 
-Portfolio ewoluuje z założenia pojedynczego wejścia 3D-first w świadomy model dwóch doświadczeń. Poprzedni koncept sceny 3D pozostaje ważny jako pełne, atmosferyczne `Experience 3D`, ale przyszła strona nie powinna zakładać, że każdy użytkownik od razu uruchamia ciężką scenę 3D.
+Lekka warstwa wejściowa jest wdrożona przed runtime'ami prezentacji. Użytkownik najpierw wybiera `Polski` lub `English`, a następnie otrzymuje trzy odrębne kategorie doświadczenia:
 
-Planowany przepływ wejścia:
+- `Classic 2D` — lekki, płaski i retro-symboliczny interfejs portfolio;
+- `Experience 3D` — atmosferyczna scena Three.js z centralną małpą, orbitującymi glifami i panelami;
+- `Orange Monkey VR` — portfolio-facing nazwa niezależnego runtime'u Experience VR/WebXR.
 
-1. Najpierw użytkownik wybiera język:
-   - `Polski`,
-   - `English`.
-2. Następnie użytkownik wybiera tryb doświadczenia:
-   - po polsku: `Klasyczne 2D` albo `Doświadczenie 3D`,
-   - po angielsku: `Classic 2D` albo `Experience 3D`.
-3. Dopiero potem uruchamia się właściwa ścieżka:
-   - `Classic 2D` — przyszły lekki, płaski, retro-symboliczny tryb portfolio,
-   - `Experience 3D` — obecna scena Three.js z loaderem, centralną małpą, orbitującymi glifami i panelami.
+Classic 2D i Experience 3D są zawsze dostępnymi wyborami. Orange Monkey VR pozostaje nieaktywne podczas sprawdzania możliwości i jest udostępniane tylko wtedy, gdy bezpieczny kontekst oraz `immersive-vr` są obsługiwane. Brak WebXR nie blokuje pozostałych doświadczeń. Każdy runtime uruchamia się dopiero po wyborze.
 
-`Classic 2D` nie jest awaryjnym fallbackiem ani uboższą kopią sceny 3D. To celowo zaprojektowane drugie doświadczenie: szybkie, czytelne, spokojne, symboliczne i inspirowane dawnymi interfejsami Atari/Commodore bez memiczności, hałasu i żartu. Powinno odpowiadać wersji 3D przez centralną medytującą małpę widzianą z przodu, pięć glifów na płaskim okręgu oraz czytelne panele otwierane z tych samych bram portfolio.
-
-`Experience 3D` zachowuje dotychczasowy kierunek: pełna scena Three.js pozostaje głównym doświadczeniem atmosferycznym, ale w przyszłej architekturze jej boot powinien nastąpić dopiero po wyborze tego trybu.
-
-Model treści powinien ewoluować w stronę wspólnego źródła prawdy dla obu trybów i przyszłej struktury PL/EN. Nie należy dublować tekstów między 2D i 3D, a finalna kopia pozostaje na tym etapie niezamknięta.
+PL/EN jest bieżącą funkcją produktu, nie przyszłą strategią migracji. Entry shell przekazuje wybrane locale do prezentacji, a współdzielone rekordy portfolio i ograniczone właściciele copy rozwiązują właściwy wariant językowy.
 
 ---
 
 # 5. Model interakcji
 
-W dotychczasowym koncepcie strona startowała jako scena 3D. W przyszłym modelu scena 3D pozostaje trybem `Experience 3D`, uruchamianym po wyborze języka i trybu w lekkiej warstwie wejściowej.
-
-Proponowany przebieg wejścia:
+Po wyborze języka i doświadczenia entry shell uruchamia wskazany runtime. Poniższy przebieg opisuje zachowany model interakcji Experience 3D, a nie wejście całego produktu:
 
 1. Ciemność.
 2. Delikatne światło z góry.
@@ -186,7 +172,7 @@ Proponowany przebieg wejścia:
 9. Po kliknięciu kamera lub fokus przesuwa się w stronę wybranego modułu.
 10. Otwiera się mini okno — myśl / hologram / wizualizacja.
 
-Ważne: teksty, linki i panele powinny być najprawdopodobniej realizowane jako HTML/CSS overlay, a nie jako tekst renderowany bezpośrednio w 3D.
+Teksty, linki i panele Experience 3D są realizowane jako czytelna warstwa HTML/CSS overlay, a nie jako tekst renderowany bezpośrednio w 3D.
 
 Powód:
 
@@ -683,365 +669,17 @@ Nie jestem tylko użytkownikiem AI. Umiem uczyć się systemów, rozumieć je od
 
 ---
 
-# 11. Minimalny pierwszy prototyp — MVP
+# 11–16. Zrealizowany kształt produktu
 
-Nie zaczynać od pełnego doświadczenia audiowizualnego.
+Pierwotne checklisty MVP, startowego stacku, struktury repozytorium, publikacji i etapów budowy zostały wykonane i nie stanowią aktywnego backlogu. Obecny produkt ma:
 
-Pierwszy prototyp powinien sprawdzić, czy sama koncepcja działa.
+- działającą lekką warstwę wejściową z wyborem PL/EN;
+- trzy wdrożone doświadczenia: Classic 2D, Experience 3D i Orange Monkey VR;
+- wspólne tożsamości treści portfolio z lokalizowanymi prezentacjami;
+- scenę 3D oraz niezależny runtime WebXR ładowane dopiero po wyborze;
+- czytelne panele i case studies podtrzymujące warstwowy model odbioru.
 
-## MVP 1: Scena główna
-
-Zakres:
-
-* jedna strona,
-* Three.js,
-* ciemne tło,
-* centralny obiekt placeholder zamiast małpy,
-* podstawowe światła,
-* delikatny ruch kamery,
-* 5 orbitujących punktów,
-* hover na punktach,
-* klik otwierający panel HTML,
-* zamykanie panelu,
-* podstawowy responsive fallback.
-
-Cel:
-
-```text
-Sprawdzić rytm: centrum → orbity → klik → myśl/panel → powrót.
-```
-
----
-
-## MVP 2: Małpa 3D
-
-Zakres:
-
-* znalezienie lub przygotowanie modelu GLB,
-* osadzenie modelu,
-* ustawienie skali,
-* ustawienie światła,
-* test wydajności,
-* ewentualnie aura / cząsteczki.
-
-Warianty modelu:
-
-* darmowy model GLB,
-* uproszczona stylizowana małpa,
-* posąg / totem,
-* maska / sylwetka,
-* model wygenerowany lub przerobiony później.
-
----
-
-## MVP 3: Mini okna / myśli
-
-Zakres:
-
-* osobny panel dla każdej bramy,
-* tytuł,
-* krótki opis roboczy,
-* placeholder animacji,
-* przycisk „zobacz więcej”,
-* link do case study lub placeholder.
-
-Na tym etapie treści mogą być robocze.
-Nie wybieramy jeszcze finalnych sformułowań.
-
----
-
-## MVP 4: Case studies
-
-Dopiero po potwierdzeniu klimatu i interakcji dodajemy głębsze podstrony / sekcje:
-
-* DIG Engine,
-* Haiku Cosmos,
-* AI Workflow,
-* Creative AI,
-* Manifest.
-
----
-
-# 12. Techniczna droga wykonania
-
-## 12.1. Prosty stack startowy
-
-Najbezpieczniej zacząć od:
-
-```text
-HTML + CSS + JavaScript modules + Three.js + Vite
-```
-
-Dlaczego:
-
-* prosty start,
-* dobra kontrola,
-* łatwe hostowanie na GitHub Pages,
-* brak ciężkiego frameworka,
-* łatwa integracja z Three.js,
-* dobra baza dla Codexa,
-* czytelna struktura projektu.
-
-## 12.2. Alternatywa
-
-Można rozważyć:
-
-```text
-React + React Three Fiber
-```
-
-Ale to może być drugi etap, niekoniecznie start.
-
-Ryzyko React Three Fiber:
-
-* dodatkowa abstrakcja,
-* więcej zależności,
-* trudniejsze debugowanie dla małego portfolio,
-* większe ryzyko utknięcia w frameworku zamiast w doświadczeniu.
-
-Na start preferowany kierunek:
-
-```text
-Vanilla Three.js + Vite
-```
-
----
-
-# 13. Proponowana struktura repozytorium
-
-Robocza struktura:
-
-```text
-interactive-ai-portfolio/
-  README.md
-  package.json
-  index.html
-  vite.config.js
-  src/
-    main.js
-    scene/
-      createScene.js
-      cameraRig.js
-      lights.js
-      particles.js
-      monkey.js
-      nodes.js
-    ui/
-      overlay.js
-      panels.js
-      navigation.js
-    content/
-      portfolioNodes.js
-      draftTexts.js
-    styles/
-      main.css
-  public/
-    assets/
-      models/
-        monkey-placeholder.glb
-      textures/
-      images/
-      audio/
-  docs/
-    ROADMAP.md
-    CONCEPT.md
-    CONTENT_NOTES.md
-    DEPLOYMENT.md
-```
-
-Możliwa zasada:
-
-* `src/` — działający kod,
-* `public/assets/` — modele, tekstury, obrazy,
-* `docs/` — dokumentacja koncepcji i decyzji,
-* `README.md` — krótki opis projektu i instrukcja uruchomienia.
-
----
-
-# 14. GitHub i publikacja
-
-Całość powinna zostać zainstalowana / utrzymywana na GitHubie.
-
-## Pierwszy krok GitHub
-
-1. Utworzyć repozytorium, np.:
-
-```text
-interactive-ai-portfolio
-```
-
-albo jeśli zostanie wybrana nazwa:
-
-```text
-przeskok-portfolio
-monkey-mind-ai
-ai-crossing-portfolio
-```
-
-2. Dodać README z opisem celu.
-3. Dodać dokumenty koncepcyjne.
-4. Zainicjować prosty projekt Vite.
-5. Wrzucić pierwszy prototyp sceny.
-6. Ustawić GitHub Pages.
-
-## GitHub Pages
-
-Docelowo strona może działać jako statyczna strona hostowana przez GitHub Pages.
-
-Warianty:
-
-* deploy z gałęzi `main` przez folder `dist`,
-* deploy przez GitHub Actions,
-* deploy przez Vite build.
-
-Preferowany kierunek:
-
-```text
-Vite build → GitHub Pages przez GitHub Actions
-```
-
----
-
-# 15. Dokumenty, które warto utworzyć w repo
-
-## README.md
-
-Krótki opis projektu:
-
-* czym jest portfolio,
-* jak uruchomić lokalnie,
-* jak zbudować,
-* link do live demo,
-* status projektu.
-
-## docs/CONCEPT.md
-
-Opis idei:
-
-* medytująca małpa,
-* orbity,
-* portfolio jako doświadczenie,
-* AI jako przejście,
-* etyka.
-
-## docs/ROADMAP.md
-
-Etapy:
-
-* MVP 1 scena,
-* MVP 2 małpa,
-* MVP 3 panele,
-* MVP 4 case studies,
-* MVP 5 polish / mobile / deploy.
-
-## docs/CONTENT_NOTES.md
-
-Zbiór roboczych tekstów:
-
-* hasła,
-* opisy projektów,
-* manifest,
-* notatki o rolach zawodowych,
-* wersje PL/EN.
-
-## docs/DEPLOYMENT.md
-
-Instrukcja publikacji:
-
-* lokalne uruchomienie,
-* build,
-* GitHub Pages,
-* struktura assetów,
-* uwagi o modelach GLB.
-
----
-
-# 16. Etapowanie pracy
-
-## Etap 0: Dokument drogi
-
-Ten dokument.
-
-Cel:
-
-* zebrać koncepcję,
-* nie wybierać jeszcze finalnej treści,
-* mieć bazę do repozytorium i pierwszego promptu dla Codexa.
-
-## Etap 1: Repozytorium
-
-Cel:
-
-* założyć repo,
-* dodać README,
-* dodać dokumenty koncepcyjne,
-* przygotować Vite + Three.js.
-
-## Etap 2: Scena techniczna
-
-Cel:
-
-* czarne/ciemne tło,
-* kamera,
-* światła,
-* placeholder centralny,
-* 5 punktów.
-
-## Etap 3: Interakcja
-
-Cel:
-
-* hover,
-* klik,
-* panel HTML,
-* powrót,
-* proste przejścia.
-
-## Etap 4: Klimat
-
-Cel:
-
-* cząsteczki,
-* aura,
-* delikatne ruchy,
-* lepsze światło,
-* test pierwszego klimatu.
-
-## Etap 5: Model małpy
-
-Cel:
-
-* znaleźć / przygotować model,
-* wstawić GLB,
-* ustawić światło,
-* zoptymalizować.
-
-## Etap 6: Treść robocza
-
-Cel:
-
-* dodać tymczasowe opisy pięciu bram,
-* bez finalnej redakcji,
-* sprawdzić, jak tekst działa w przestrzeni.
-
-## Etap 7: Case studies
-
-Cel:
-
-* DIG Engine,
-* Haiku Cosmos,
-* Creative AI,
-* AI Guide,
-* Ethics.
-
-## Etap 8: Publikacja
-
-Cel:
-
-* GitHub Pages,
-* live link,
-* test desktop/mobile,
-* pierwszy pokaz światu lub wybranym osobom.
+Dalsze zmiany wymagają osobnych, aktualnych decyzji produktowych lub modeli technicznych. Ten dokument nie rekonstruuje historycznego planu implementacji ani nie tworzy nowych zadań.
 
 ---
 
@@ -1094,91 +732,14 @@ Nie każdy odbiorca będzie chciał albo mógł używać ciężkiej sceny 3D.
 Zasada:
 
 ```text
-Musi istnieć prosty fallback: tekstowa / mobilna wersja portfolio.
+Classic 2D zapewnia lekką, czytelną ścieżkę niezależną od cięższych runtime’ów 3D i VR.
 ```
 
 ---
 
-# 18. Pierwszy prompt dla Codexa — szkic
+# 18–19. Granica aktualnych decyzji
 
-Nie jest to jeszcze finalny prompt. To baza do dalszego dopracowania.
-
-```text
-Create a new Vite + vanilla JavaScript + Three.js project for an interactive AI portfolio prototype.
-
-Goal:
-Build the first MVP scene for an interactive portfolio centered around a meditating monkey concept. Do not implement final content or final art. Use placeholders and clean architecture.
-
-Requirements:
-- Use Vite.
-- Use Three.js.
-- Create a single-page app.
-- Add a dark atmospheric 3D scene.
-- Add a central placeholder object representing the future meditating monkey.
-- Add soft lights and a subtle camera drift.
-- Add 5 interactive orbiting nodes around the central object.
-- Each node represents a portfolio gate:
-  1. AI Guide
-  2. DIG Engine
-  3. Haiku Cosmos
-  4. Creative AI
-  5. Ethics / Life Protection
-- On hover, highlight the node and show a short label.
-- On click, open an HTML/CSS overlay panel with placeholder title and text.
-- The overlay panel must be readable and easy to edit.
-- Keep text content in a separate content module.
-- Keep scene code modular.
-- Add basic responsive fallback for small screens.
-- Add README with local run/build instructions.
-- Add docs/CONCEPT.md and docs/ROADMAP.md based on the initial concept.
-
-Suggested file structure:
-- src/main.js
-- src/scene/createScene.js
-- src/scene/cameraRig.js
-- src/scene/lights.js
-- src/scene/nodes.js
-- src/scene/particles.js
-- src/ui/overlay.js
-- src/content/portfolioNodes.js
-- src/styles/main.css
-- docs/CONCEPT.md
-- docs/ROADMAP.md
-
-Do not:
-- Do not add React.
-- Do not add backend.
-- Do not use final portfolio texts.
-- Do not search for external 3D assets yet.
-- Do not overbuild animations.
-
-Expected result:
-A working local prototype where the user sees a central 3D placeholder, five interactive nodes, and readable overlay panels.
-
-After implementation, provide:
-- summary of changed files,
-- how to run locally,
-- known limitations,
-- suggested next steps.
-```
-
----
-
-# 19. Decyzje zostawione na później
-
-Nie decydujemy jeszcze:
-
-* finalnej nazwy portfolio,
-* finalnego języka strony: PL, EN czy oba,
-* finalnych tekstów,
-* finalnego modelu małpy,
-* stylu graficznego paneli,
-* muzyki / audio,
-* animacji wejściowej,
-* tego, czy strona będzie bardziej zawodowa, artystyczna czy manifestacyjna,
-* tego, czy case studies będą na tej samej stronie czy jako osobne podstrony.
-
-Najpierw trzeba zobaczyć działający prototyp.
+Pierwszy prompt implementacyjny i lista decyzji sprzed prototypu są zakończonym kontekstem historycznym, a nie instrukcją dla CURRENT. Aktualne fakty produktu to wdrożone trzy doświadczenia i kompletne PL/EN na wspieranych powierzchniach. Nadal otwarte mogą być wyłącznie przyszłe decyzje redakcyjne dotyczące nadrzędnej nazwy lub haseł; nie podważają one istniejących nazw trybów ani lokalizacji runtime.
 
 ---
 
@@ -1196,15 +757,9 @@ Nie CV. Przejście.
 
 ---
 
-# 21. Następny praktyczny krok
+# 21. Granica dalszych zmian
 
-Najbliższy sensowny krok:
-
-1. Utworzyć repozytorium GitHub.
-2. Wrzucić ten dokument jako `docs/ROADMAP.md` albo `docs/CONCEPT_AND_ROADMAP.md`.
-3. Utworzyć prosty projekt Vite + Three.js.
-4. Zbudować MVP sceny z centralnym placeholderem i pięcioma punktami.
-5. Dopiero po zobaczeniu prototypu wybierać teksty, nazwy i finalny klimat.
+Produkt nie potrzebuje ponownego wykonywania historycznego MVP. Kolejny krok istnieje dopiero wtedy, gdy aktualne zadanie produktowe, redakcyjne lub techniczne określi nowy zakres. Niniejszy dokument nie ustanawia takiego backlogu.
 
 ---
 
@@ -1217,7 +772,7 @@ Instead of presenting work as a static list of links, it creates an interactive 
 
 The project explores AI guidance, workflow design, creative AI, software systems, game design and responsible technology.
 
-Current status: early concept / MVP prototype.
+Current status: implemented bilingual portfolio with Classic 2D, Experience 3D and capability-gated Orange Monkey VR.
 ```
 
 Wersja polska:

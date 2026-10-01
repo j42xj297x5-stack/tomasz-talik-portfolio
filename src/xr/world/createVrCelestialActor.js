@@ -2,6 +2,7 @@ import * as THREE from '../../vendor/three.js';
 
 const STAR_COLORS = Object.freeze(['#ffffff', '#dce9ff', '#bfd5ff', '#ffedcf', '#ffd8a6']);
 const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5));
+const FAR_STAR_SIZE_BIAS_EXPONENT = 2;
 
 function validateLayer(layer) {
   if (!layer || !Number.isFinite(layer.innerRadius) || !Number.isFinite(layer.outerRadius)
@@ -100,7 +101,55 @@ function createStarField(layer, settings) {
   return { points, geometry, material };
 }
 
-export function createVrCelestialActor({ parent, assetManager, keyLight, layer, settings }) {
+function createFarStarField(layer, settings) {
+  const random = createGenerator(0xa17f4c3d);
+  const positions = new Float32Array(settings.count * 3);
+  const colors = new Float32Array(settings.count * 3);
+  const sizes = new Float32Array(settings.count);
+  const brightness = new Float32Array(settings.count);
+  const direction = new THREE.Vector3();
+  const color = new THREE.Color();
+
+  for (let index = 0; index < settings.count; index += 1) {
+    sampleDirection(random, direction);
+    const radius = sampleVolumeRadius(random, layer.innerRadius, layer.outerRadius);
+    positions[index * 3] = direction.x * radius;
+    positions[index * 3 + 1] = direction.y * radius;
+    positions[index * 3 + 2] = direction.z * radius;
+    color.set(STAR_COLORS[Math.floor(random() * STAR_COLORS.length)]);
+    colors[index * 3] = color.r;
+    colors[index * 3 + 1] = color.g;
+    colors[index * 3 + 2] = color.b;
+    sizes[index] = THREE.MathUtils.lerp(
+      settings.pointSizeMinPx, settings.pointSizeMaxPx, random() ** FAR_STAR_SIZE_BIAS_EXPONENT
+    );
+    brightness[index] = THREE.MathUtils.lerp(
+      settings.brightnessMin, settings.brightnessMax, random() ** 2.6
+    );
+  }
+
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+  geometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
+  geometry.setAttribute('brightness', new THREE.BufferAttribute(brightness, 1));
+  const material = new THREE.ShaderMaterial({
+    uniforms: { opacity: { value: 0 } },
+    vertexShader: 'attribute float size; attribute float brightness; varying vec3 vColor; varying float vBrightness; void main(){ vColor=color; vBrightness=brightness; vec4 mvPosition=modelViewMatrix*vec4(position,1.0); gl_PointSize=size; gl_Position=projectionMatrix*mvPosition; }',
+    fragmentShader: 'uniform float opacity; varying vec3 vColor; varying float vBrightness; void main(){ vec2 p=gl_PointCoord-vec2(0.5); float alpha=smoothstep(0.25,0.0,dot(p,p))*opacity*vBrightness; if(alpha<=0.0) discard; gl_FragColor=vec4(vColor,alpha); }',
+    vertexColors: true,
+    transparent: true,
+    depthTest: true,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending
+  });
+  const points = new THREE.Points(geometry, material);
+  points.name = 'VrCelestialFarStarField';
+  points.frustumCulled = false;
+  return { points, geometry, material };
+}
+
+export function createVrCelestialActor({ parent, assetManager, keyLight, layer, farStarLayer, settings }) {
   if (!parent?.add || !assetManager?.cloneGltfScene || !keyLight?.isDirectionalLight || !settings) {
     throw new TypeError('VrCelestialActor requires parent, assetManager, keyLight and settings');
   }
@@ -108,6 +157,7 @@ export function createVrCelestialActor({ parent, assetManager, keyLight, layer, 
     throw new TypeError('VrCelestialActor requires settings.sun.scale to be positive and finite');
   }
   validateLayer(layer);
+  validateLayer(farStarLayer);
   const sunModel = assetManager.cloneGltfScene('sun-model');
   if (!sunModel) throw new Error('VrCelestialActor requires cached sun-model');
   const root = new THREE.Group();
@@ -198,7 +248,8 @@ export function createVrCelestialActor({ parent, assetManager, keyLight, layer, 
   sunLightRig.add(sunLight, lightTarget);
   root.add(sunLightRig);
   const starField = createStarField(layer, settings.stars);
-  root.add(starField.points);
+  const farStarField = createFarStarField(farStarLayer, settings.farStars);
+  root.add(starField.points, farStarField.points);
   let opacity = 0;
   let transition = null;
   let revealStarted = false;
@@ -209,6 +260,7 @@ export function createVrCelestialActor({ parent, assetManager, keyLight, layer, 
     for (const entry of sunMaterials) entry.material.opacity = entry.baseOpacity * opacity;
     sunLight.intensity = settings.sun.light.intensity * opacity;
     starField.material.uniforms.opacity.value = opacity;
+    farStarField.material.uniforms.opacity.value = opacity;
   }
   function beginReveal() {
     if (disposed || revealStarted) return false;
@@ -283,6 +335,8 @@ export function createVrCelestialActor({ parent, assetManager, keyLight, layer, 
     parent.remove(root);
     starField.geometry.dispose();
     starField.material.dispose();
+    farStarField.geometry.dispose();
+    farStarField.material.dispose();
     for (const entry of sunMaterials) entry.material.dispose();
     root.clear();
   }

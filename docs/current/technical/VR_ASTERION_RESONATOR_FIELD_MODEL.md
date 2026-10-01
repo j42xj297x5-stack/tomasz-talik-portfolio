@@ -1,214 +1,49 @@
 # Experience VR — Asterion Resonator Field Model
 
-## 1. Status, authority, and scope
+## Status and scope
 
-Status: **CURRENT / BINDING — CORE FIELD, TARGET ACQUISITION/RESPONSE, METAL CONTROL/ROUNDING, WATER CONTROL/PRESENTATION AND ASTROLABIUM ELIGIBILITY IMPLEMENTED; CANONICAL METAL PERCENTAGE EXTENSION TARGET / NOT YET RUNTIME-SYNCHRONIZED; HARDWARE QA OUTSTANDING**.
+Status: **CURRENT / IMPLEMENTED**. This subordinate model owns the field descriptor, containment and read-only presentation. The primary system boundary is [VR_ASTERION_RESONATOR_MODEL.md](VR_ASTERION_RESONATOR_MODEL.md).
 
-This subordinate model is the binding authority for Resonator field geometry, nominal containment, resonance acquisition, and read-only presentation. Runtime derives the immutable `FieldDescriptor`, resolves the revised nominal aperture geometry in a dedicated Resonator Field Frame, evaluates registered targets, projects their response, and exposes bounded `PULL_READY` eligibility to Astrolabium.
+## Field truth
 
-Sector motion remains `0° / 13° / 23° / 36°`. Sector control, FieldActor, Rune, Scenario, Guidance, and platform-energy ownership do not change. This model does not define a general runtime transform/registry/rendering API or shader constants. The Metal axes and `0 / 20% / 50% / 75%` expansion progression below are canonical target behavior; gesture feel and rounding multipliers remain **TUNING / HARDWARE QA**.
+The field is derived from installed/powered sectors and their current controls. It remains a box-derived rounded containment volume aligned to the platform/entry frame. Earth, Wood and Fire establish the base bands; Metal's two controls expand lateral and forward/depth coverage and alter rounding. Equal containment rules apply to registered targets; field visuals never become gameplay truth.
 
-## 2. Powered and field-active sectors
+The field actor exposes a descriptor and `containsWorldPoint()`. Target acquisition consumes those seams and owns ring accumulation/decay, ceiling policy and `PULL_READY`. Field presentation consumes the descriptor to morph a translucent skin and skeleton. No owner reconstructs another owner's truth from visible pixels.
 
-A **POWERED SECTOR** has its correct Rune Stone installed and is responsive and lockable. A **FIELD-ACTIVE SECTOR** is powered and has a committed level above `0`. Rune installation alone is not `fieldActive`.
+## Water control and presentation
 
-```text
-Rune installed → powered → lockable → LEVEL 0 / 0° → field contribution OFF
-```
+Installed Water provides two discrete levels `0..3`:
 
-Each core channel retains four stable levels: `LEVEL 0 / 0° / OFF`, then active levels `1 / 13°`, `2 / 23°`, and `3 / 36°`.
+- ANGLE maps the Water frequency/hue: 0 neutral, 1 green, 2 blue, 3 violet/purple;
+- TILT maps monotonically increasing skin/skeleton luminance and additive halo strength.
 
-## 3. Semantic axes and canonical forward alignment
+The control interaction owns input mapping; the Field Actor records the resulting descriptor; Field Presentation smoothly applies hue, opacity and halo. Water does not select a target family and does not independently change generic field coverage or containment.
 
-The semantic field axes are authoritative:
+## Synchronization and final Water policy
 
-- **FORWARD** — the direction in which the Resonator scans away from the platform, aligned with the canonical world entry direction;
-- **LATERAL** — left ↔ right across the field;
-- **VERTICAL** — down ↔ up.
-
-In the current Three.js implementation, `FORWARD → platform-local +Z`, `LATERAL → platform-local X`, and `VERTICAL → platform-local Y`. Engine-axis letters are implementation detail and do not redefine the semantic contract.
-
-Current settings expose `spatial.entryDirection = (0, 0, +1)`. FIRE is the central Resonator sector. The implemented progress-floor composition aligns the authored geometry / sector layout so FIRE's outward radial axis points along canonical `FORWARD / entryDirection`, and the Resonator field forward axis follows it:
+The synchronized array is:
 
 ```text
-Monkey / player reference direction
-        ↓
-canonical entryDirection / FORWARD
-        ↓
-FIRE outward radial axis
-        ↓
-Resonator field forward axis
+EARTH=2 / WOOD=2 / FIRE=2 / METAL angle=2 / METAL tilt=2 / WATER angle=2 / WATER tilt=2
+= 222 / M22 / W22
 ```
 
-This is a fixed authored layout relationship, not a live dependency on Monkey head rotation. Only progress-floor geometry / sector layout participates in this alignment. Astro Furnace, Portal, Crystal Reliquary, their controls/buttons, and the player passenger hierarchy retain their independent authored positions, orientations, and ownership outside this layout rotation.
+With Water powered, the field actor derives `waterSyncLock === true` only for that balanced state. Field Presentation projects lock as a slow coherent blue breath across skin, skeleton thickness/opacity and halo. `createVrAsterionResonatorFieldArcPresentation` separately projects lightning while the Resonator is correctly tuned. Both are read-only effects and do not confirm lock back into the domain.
 
-## 4. Field start, depth bands, and control cage
+For final `haiku-cosmos` after Tier 4, composition maps unlocked state to `maximumRingCount: 2`, `cycleAtCeiling: true`, and retained completed stages outside. The target cycles at the two-ring ceiling and emits generic `CEILING_CYCLED`; the bounded semantic handoff turns that into controlled final-Water rejection. When `waterSyncLock` becomes true, composition restores the normal three-ring, non-cycling policy so the existing acquisition and pull path can complete.
 
-The first visible/effective boundary is `10 m` from platform center along FORWARD; maximum target depth is `130 m`. Four depth planes retain a lightweight 16-corner control cage:
+There is intentionally no extra Water Sync Contact state, no strong motion damping and no additional Water acceleration. These are closed abandoned ideas, not missing Field work. The existing final target already rotates slowly, remains black before readiness, and oscillates in depth/scale.
 
-| Plane | FORWARD coordinate |
-| --- | ---: |
-| `D0` | `10 m` |
-| `D1` | `50 m` |
-| `D2` | `90 m` |
-| `D3` | `130 m` |
+## Final hint lifecycle boundary
 
-FIRE / `γ` controls depth only:
+`createVrFinalWaterHintLifecycle` belongs to Guidance, not the Field. It begins only at active point `5.70` when Water is installed, full-Resonator teaching is learned, and lock is still false. Elapsed puzzle time triggers ordered hints at 180/360/540 seconds. Mandatory-channel contention delays presentation without changing the semantic clock.
 
-| `γ` | Meaning | Near → far planes | Depth band |
-| --- | --- | --- | --- |
-| `0` | `NONE / OFF` | none | none |
-| `1` | `NEAR` | `D0 → D1` | `10–50 m` |
-| `2` | `MID` | `D1 → D2` | `50–90 m` |
-| `3` | `FAR` | `D2 → D3` | `90–130 m` |
+The third hint asks for consent: keep trying or show the exact solution. Keep-trying stops automatic escalation and publishes a persistent optional solution offer; show-me teaches the exact all-level-2 configuration. Acquiring `waterSyncLock` permanently resolves this lifecycle. Ordinary experimentation, target loss or partial rings do not reset it.
 
-Gamma does not control aperture width, aperture height, left profile, or right profile. The previous `S0–S3` fixed width/height cage and `0 / 43.333333 / 86.666667 / 130 m` slices are superseded and are not CURRENT design geometry.
+## Boundaries
 
-## 5. Independent side-wing aperture profiles
-
-EARTH / `α` controls the **LEFT half** of the aperture. WOOD / `β` independently controls the **RIGHT half**. Every value below is a **half-extent measured from the field center axis**, not a complete width or height.
-
-| Level | Profile | LATERAL half-extent | VERTICAL half-extent |
-| --- | --- | ---: | ---: |
-| `1` | WIDE / LOW | `23 m` | `7 m` |
-| `2` | BALANCED | `13 m` | `13 m` |
-| `3` | NARROW / HIGH | `7 m` | `23 m` |
-
-Consequently, symmetric apertures measure `46 × 14 m` for `1-1`, `26 × 26 m` for `2-2`, and `14 × 46 m` for `3-3` (complete width × complete height).
-
-At each active band's near and far planes, the LEFT corners derive from `α` and the RIGHT corners derive from `β`, using the same selected side profiles at both boundaries. Gamma supplies only the two FORWARD coordinates. This yields nominal eight-corner active geometry without 27 separately authored meshes.
-
-Left and right profiles are intentionally independent. For example, `α=1, β=3` creates a far-out, low LEFT side and a close-in, high RIGHT side. Legal configurations therefore include balanced squares, wide/low rectangles, narrow/high rectangles, and asymmetric intermediate apertures. Their primary difference comes from nominal aperture coordinates, not a cosmetic bow around one common box.
-
-## 6. State space and equal detection authority
-
-The physical core has `4 × 4 × 4 = 64` states including LEVEL 0. Its fully active subset has:
-
-```text
-3 LEFT profiles × 3 RIGHT profiles × 3 depth bands = 27 configurations
-```
-
-All 27 fully active configurations have identical target-detection authority. `α`, `β`, and `γ` define only field geometry: LEFT aperture profile, RIGHT aperture profile, and depth band respectively. No configuration has a target-family mapping, revelation password, scoring privilege, or Large Glyph privilege; `111`, `222`, and `333` are ordinary members of the 27-state set. A partial configuration containing any core channel at LEVEL 0 performs no target acquisition.
-
-## 7. Fillet, bow, and presentation architecture
-
-The nominal aperture corners define a rounded deformable cage, never a sharp rectangular box. The existing mismatch-driven fillet tuning may remain:
-
-| Difference | Fillet strength |
-| ---: | ---: |
-| `0` | `8%` |
-| `1` | `15%` |
-| `2` | `22%` |
-
-Rounded corners and Bézier-style fillets remain part of the target. Presentation wall bow is allowed only as a secondary electromagnetic deformation cue: it does not create the principal level-dependent width/height differences. Exact bow amplitude is **TUNING**, and the runtime `bowFraction` must not become canonical gameplay geometry.
-
-The approved read-only presentation remains one lightweight translucent deformable skin plus one brighter curved geometric skeleton, with fixed/reusable topology and morphing between committed configurations. CSG, boolean geometry, raymarching, mandatory volumetric textures, and 27 authored meshes are excluded. Exact opacity, skeleton radius, morph duration, and bow amplitude remain **TUNING**.
-
-## 8. Target containment and resonance — IMPLEMENTED
-
-A registered supported distant target accumulates resonance only while its canonical detection anchor is inside the nominal active field of a fully active configuration. Containment uses nominal field geometry. Presentation-only fillets, bow, skin morphing, skeleton geometry, opacity, and other visual tuning never alter the containment result. This mechanism is generic and is not hardcoded to Large Glyphs.
-
-When Large Glyphs escape to `SPHERE_FAR`, ordinary `CAN_USE_GLYPHS` remains available; physical distance, not a Scenario lock, normally keeps them outside the ordinary `2.3 m` controller ray. Resonator `PULL_READY` adds only the late Astrolabium pull eligibility required alongside persistent family knowledge. Once Astrolabium pulls a glyph back into ray range, ordinary ray interaction resumes naturally without a special late permission, while crystal creation still independently requires `getNextCrystalTier(node) !== null`.
-
-On first detection the target's Proto-Astro sign becomes visible. Acquisition resumes from retained completed stages and completes one stage per continuous `2.0 s` of containment: sign at `0 s`, ring 1 at `2 s`, ring 2 at `4 s`, and ring 3 plus full acquisition / `PULL_READY` at `6 s`. Only completed stages persist; leaving containment discards fractional progress toward the next stage. Exactly three rings mean `PULL_READY`, and all three rings then pulse slowly. `PULL_READY` is the transient additional physical-pull grant for late `SPHERE_FAR` escaped/reacquisition targets. Persistent Astrolabium family knowledge remains separate and is sufficient for ordinary earlier Large Glyph attraction. This early/late policy is **IMPLEMENTED CURRENT**. Astrolabium remains the sole owner of attraction.
-
-Leaving the field stops acquisition and begins decay. One completed stage is lost after each continuous `20 s` outside: `3 → 2 → 1 → 0`, so three rings take `60 s` to disappear. The target remains `PULL_READY` while three rings remain; `3 → 2` removes eligibility. Re-entry stops decay, resets the current outside-field interval, and resumes from retained rings: three rings are already ready, while two/one/zero rings require `2 / 4 / 6 s`. A later exit starts a fresh 20-second interval from the then-retained state. Exact fade curves within decay intervals remain **TUNING**.
-
-The Proto-Astro sign remains visible throughout acquisition, `PULL_READY`, and ring decay. After the final ring disappears it persists for an additional `60 s`; during this sign-only memory the target is not ready and needs the full `6 s` to reacquire. After that additional minute outside the field, the sign disappears and the target returns to its undiscovered presentation state.
-
-The response consists only of the target's Proto-Astro sign and up to three thin target-centered resonance rings, using that target's Proto-Astro family presentation color. The sign always faces the player's current head position and keeps an approximately constant apparent size across target depth. Exact angular size, world-scale calculation, scale clamps, ring dimensions, line thickness, spacing, pulse values, and fade curves are **TUNING**, not canon. The runtime presentation is a read-only projection of acquisition truth. Its exact angular sizes, opacity, ring thickness, palette, pulse amplitude/period, and scale calculations remain **TUNING**, not architectural law.
-
-## 8a. Metal advanced field extension — CANONICAL TARGET / RUNTIME SYNCHRONIZATION PENDING
-
-The implemented EARTH/WOOD/FIRE geometry remains unchanged. An installed Metal Rune powers Metal and enables the existing acquisition path plus two independent physical detented DOFs, `M(angle, tilt)`, each with `0 = OFF` and active values `1/2/3`. `M00` is powered but inactive and adds no field expansion; any positive Metal DOF makes Metal field-active and applies the resolved extension. Their state is transient Resonator control truth and resets to `M00`; it is not Scenario or Rune progression truth. `CAN_USE_ADVANCED_RESONATOR` is semantic Scenario truth at `5.60`, not a gate for the Metal beam, lock, control or field response. The canonical mapping is `angle → LATERAL` and `tilt → FORWARD/depth`, with no VERTICAL expansion. Gesture axes, dominance threshold and sector-local motion remain **TUNING / HARDWARE QA**.
-
-Both Metal channels map their physical levels to the same monotonic expansion fraction `p`:
-
-| Metal level | Physical detent | `p` |
-| ---: | ---: | ---: |
-| `0` | `0° / OFF` | `0.00` |
-| `1` | `13°` | `0.20` |
-| `2` | `23°` | `0.50` |
-| `3` | `36°` | `0.75` |
-
-Greater Metal deflection therefore always produces greater field coverage; no active midpoint reduces expansion.
-
-### LATERAL / angle resolution
-
-Metal angle scales each EARTH/WOOD half-extent independently away from the field center axis:
-
-```text
-resolvedLeftHalfExtent  = baseLeftHalfExtent  × (1 + p)
-resolvedRightHalfExtent = baseRightHalfExtent × (1 + p)
-
-leftX  = -baseLeftHalfExtent  × (1 + p)
-rightX =  baseRightHalfExtent × (1 + p)
-```
-
-This changes the authoritative nominal field shape, so both visible geometry and actual target containment use the expanded coordinates. It preserves EARTH/WOOD asymmetry rather than replacing independent sides with a symmetric width, and it never changes VERTICAL half-extents.
-
-For the balanced `EARTH 2 / WOOD 2` core (`13 m + 13 m = 26 m` base width), Metal angle resolves to `26.0 m`, `31.2 m`, `39.0 m`, and `45.5 m` at levels `0`, `1`, `2`, and `3` respectively.
-
-### FORWARD / tilt resolution
-
-Metal tilt expands the FIRE-selected nominal band toward the fixed global `10–130 m` depth-domain boundaries. It does not scale the selected `40 m` band by its own length:
-
-```text
-resolvedNear = lerp(baseNear, 10 m, p)
-resolvedFar  = lerp(baseFar, 130 m, p)
-```
-
-| FIRE band | Tilt `0` / `0%` | Tilt `1` / `20%` | Tilt `2` / `50%` | Tilt `3` / `75%` |
-| --- | --- | --- | --- | --- |
-| `NEAR` | `10–50 m` | `10–66 m` | `10–90 m` | `10–110 m` |
-| `MID` | `50–90 m` | `42–98 m` | `30–110 m` | `20–120 m` |
-| `FAR` | `90–130 m` | `74–130 m` | `50–130 m` | `30–130 m` |
-
-The boundary already coincident with the domain edge remains fixed for NEAR and FAR; MID expands in both directions. These resolved boundaries are authoritative nominal geometry for both presentation and containment.
-
-`M22` is the Metal component of the implemented `waterSyncLock` configuration in control-space. It is not a zero-range state: angle applies `+50%` LATERAL expansion and tilt applies `50%` interpolation toward the global depth boundaries. The descriptor recognizes the full `222 / M22 / W22` balance; Field Presentation now reads that descriptor truth to render the coherent harmonic breathing presentation.
-
-**Runtime synchronization status:** the current runtime uses the canonical percentage-based LATERAL/FORWARD expansion model through the shared `expansionFractions` tuning.
-
-Metal also drives a read-only presentation response through existing field morphing. When both DOFs are active, mismatch fillet is multiplied by `1.50` at `M22`, `0.90` with exactly one off-center DOF, or `0.60` with both off center, then clamped to `0.32`. These values are **TUNING / HARDWARE QA**. If either DOF is OFF, pre-Metal mismatch fillet is unchanged. Bow amplitude is unchanged, and presentation fillet/bow/skin never changes containment.
-
-Implemented WATER control never changes nominal field geometry, dimensions, aperture, Metal expansion, containment, acquisition authority, or resonance timing. Its angle and tilt are independent, composable physical presentation/frequency DOFs provided by the shared Sector control interaction. ANGLE maps `0 → no WATER hue contribution`, `1 → GREEN`, `2 → BLUE`, and `3 → VIOLET/PURPLE`; level `0` preserves the current neutral field color. This hue identifies frequency state, not a power ladder and does not select or filter Glyph families.
-
-TILT maps `0 → no WATER luminance contribution`, preserving the current baseline field presentation, followed by three strictly increasing visible luminance contributions: `baseline < level 1 < level 2 < level 3`. Level `1` is already brighter than baseline even at ANGLE `0`, so tilt movement does not depend on hue for readability. Positive TILT is communicated by the implemented lightweight additive halo that follows the existing curved field-skeleton path: level `0` has no WATER halo, while levels `1/2/3` increase its opacity monotonically. The skeleton and translucent skin also receive monotonic opacity increases. The halo is a read-only field-local layer and never defines gameplay geometry; post-processing blur, volumetric rendering, and a new gameplay field volume are not required.
-
-When ANGLE is positive, its selected hue applies coherently to the WATER halo and affected existing field presentation. With ANGLE `0` and positive TILT, the response remains neutral/baseline-white in hue. Thus legal states include `W10` GREEN at baseline WATER luminance, `W01` neutral with level-1 luminance/halo, and `W21 / W22 / W23` BLUE with respective level-1/2/3 luminance/halo. The descriptor projects installed/powered Water, both committed levels and active state, while presentation smoothly morphs color and opacity between descriptors. Exact RGB, halo radius/thickness/opacity/intensity, skeleton and skin intensity, and transition timing remain **TUNING / HARDWARE QA**.
-
-`W22` is the WATER harmonic-center control state. At `222 / M22 / W22`, current Field Domain truth sets `waterSyncLock === true`. The gentle, coherent BLUE breathing response is **IMPLEMENTED** as a read-only Field Presentation projection of that truth; ordinary WATER TILT levels are not pulsing states, and the pulse is not part of the luminance ladder. It multiplicatively modulates the current skin, skeleton and halo opacity baselines at an initial approximately `2.4 s` cadence, while the same pulse phase expands the skeleton from its normal baseline thickness to approximately `3×` thickness at the peak. This presentation-only thickness change does not replace the Water hue or change nominal geometry or containment. The pulse does not define or confirm gameplay truth back to the domain, and its precise amplitudes, thickness factor and cadence remain **HARDWARE QA / TUNING**. The field retains M22's `+50%` LATERAL expansion and `50%` depth-domain interpolation plus maximum rounding.
-
-The balanced Field Presentation also includes **IMPLEMENTED** lightweight electrostatic discharges. While `waterSyncLock !== true`, it schedules no arcs. A balanced field without final Water containment occasionally renders a short-lived angular burst between legal points on two different randomly selected LEFT / RIGHT / TOP / BOTTOM walls. Start and end depths are selected independently, so channels traverse the resolved volume instead of sharing one depth plane. While Target Acquisition reports `haiku-cosmos.insideField === true`, the cadence increases and each new burst runs from a randomly selected legal wall point to the Glyph's current field-local detection anchor. State changes cancel the previous cadence immediately, while an already visible burst may complete its brief envelope. Paths use the resolved authoritative field shape, remain inside its actual lateral/vertical profile, preserve exact endpoints, and are frozen for their visual lifetime under the existing Field Frame.
-
-Each scheduled discharge is one bounded stroboscopic burst of `3–7` rapid impulses along the same endpoints and general trajectory. Successive impulses perturb the interior path and width without moving either endpoint, producing electrical flicker without recursive spawning or extra geometry. The stronger initial ribbon width, impulse count, impulse timing, width variance, opacity, irregularity, `2.5–3.5 s` idle cadence and `0.5–1.0 s` target cadence are presentation **TUNING / HARDWARE QA**, not domain truth. This discharge layer owns only its fixed two-slot pool, reusable ribbon geometry/materials, transient paths and scheduling lifecycle. It reads Field Domain, Target Acquisition and the registered Large Glyph anchor without changing containment, acquisition, `PULL_READY`, Scenario or harmonic breathing. It is separate from `PlatformEnergyVfxActor`, reusing only that presentation's narrow-core/additive-halo angular ribbon language rather than its platform effect framework.
-
-Installed Water plus `222 / M22 / W22` currently derives `waterSyncLock`. For final `haiku-cosmos` after Tier 4, composition currently maps false lock to `maximumRingCount: 2`, `cycleAtCeiling: true`, `retainCompletedStagesOutside: true`, and true lock back to the normal three-ring policy. Thus the target cycles `0 → 1 → 2 → reset` until balanced, then may reach ring 3 / `PULL_READY`. Future Water Sync Contact/damping and any stronger anti-bypass rule remain separate from this implemented cap.
-
-## 9. Remaining runtime gaps and validation boundary
-
-The core nominal shape, depth planes, side profiles, dedicated Field Frame/alignment, containment, per-target acquisition/decay/sign memory, sign-and-ring response, Metal physical control, percentage expansion, presentation rounding, and Astrolabium eligibility are **IMPLEMENTED**. The active shape result no longer carries the superseded `coherentPreset` or `largeGlyphRevealEligible` fields.
-
-Water dual-DOF physical control, descriptor state, hue mapping, monotonic skin/skeleton luminance, additive halo, smooth presentation morphing, derived `waterSyncLock`, read-only coherent breathing pulse, and the composition-owned final-Water two-ring cap are **IMPLEMENTED**. The generic acquisition `CEILING_CYCLED` signal and composition-owned final-Water rejection mapping are **IMPLEMENTED**. Water Sync Contact/damping and actual Glyph-family filtering are not implemented; family filtering is not part of the frozen immediate target. The `3 / 6 / 9` hint ladder remains **BINDING DESIGN TARGET / IMPLEMENTATION PENDING**. The late-only generic `PULL_READY` policy and Large Glyph angular plus `20–110 m` radial motion are implemented; numeric tuning and hardware QA remain outstanding. See [`EXPERIENCE_VR_FINAL_WATER_RESONATOR_CULMINATION.md`](../concept/EXPERIENCE_VR_FINAL_WATER_RESONATOR_CULMINATION.md).
-
-**HARDWARE QA OUTSTANDING:** this synchronization does not validate Quest comfort, perceptual sign size, ring or family-color readability, pulse comfort, ease of maintaining containment, or the practical feel of `6 s` acquisition and `20 s` decay. This validation gap does not regress implemented architecture.
-
-## 10. Ownership and boundaries
-
-| Owner | Owns | Does not own |
-| --- | --- | --- |
-| progress-floor geometry / sector layout | implemented FIRE-radial-to-FORWARD relationship and dedicated Resonator Field Frame | fixture positions/orientations, player passenger hierarchy, live Monkey tracking |
-| sector control | lock, local sector setting, bounded motion commands | field geometry, descriptor interpretation, response |
-| Resonator Field Domain / R4 actor | authoritative active field state, nominal field shape, immutable descriptor and Field Frame | MotionRoot, resonance memory, Scenario truth, presentation geometry |
-| Resonator Target Acquisition | generic registered-target containment; per-target stages, acquisition/decay, final-Water cap policy and future semantic ceiling-rejection signal | raycasting, presentation geometry, attraction/pull, Scenario meaning |
-| Target Response Presentation | read-only Proto-Astro sign and ring projection from acquisition truth | containment, timing, eligibility, pull |
-| Field Presentation | read-only projection of descriptor into skin/skeleton/halo, implemented balanced-field breathing, and fixed-pool balanced electrostatic discharges | gameplay/containment/synchronization truth, target detection/acquisition, sector motion |
-| Metal advanced domain / sector control | transient `M(angle, tilt)`, sector-local dual-DOF motion, LATERAL/FORWARD tuning and descriptive harmonic-center state | target family, `PULL_READY`, Scenario truth, harmonic recognition, Haiku motion |
-| Water advanced domain / sector control / Field Presentation | transient dual-DOF level state, sector-local motion, descriptor projection, hue/luminance/halo presentation and descriptive `waterSyncLock` | acquisition timers, Glyph-family filtering, Water Sync Contact gameplay, Haiku damping, pull eligibility, Scenario truth |
-| Large Glyph Actor | physical angular/radial motion and future damped response | Water lock/contact truth, pull eligibility |
-| Astrolabium Więzi | selected band and attraction/pull after family and context eligibility | family truth, containment and resonance eligibility truth |
-| `PlatformEnergyVfxActor` | procedural platform/Zwornik energy | field skin, field skeleton, target response |
-| Scenario / Guidance | narrative meaning, guidance, crystal-acquisition gates | containment and resonance truth |
-
-The Water-specific balanced-field breathing pulse and controlled rejection semantic signal are **IMPLEMENTED**. The pulse reads `waterSyncLock` without feeding any presentation state back into gameplay and does not alter nominal geometry or containment. Sync Contact gameplay, Haiku damping, Water-specific pull eligibility beyond the current cap, Resonator field/target audio and later supported target registrations remain **FUTURE / NOT IMPLEMENTED**; the finale remains **CURRENT / BINDING DESIGN TARGET / IMPLEMENTATION PENDING** while the hint ladder is pending.
+- Scenario owns when the rejection, Ether intervention and final hunt occur.
+- Rune owners own Water installation; the Field only reads powered-sector truth.
+- Large Glyph owns physical motion and dark/ready materials.
+- Astrolabium owns the legal physical pull once acquisition makes it ready.
+- Numeric tuning may be adjusted only against runtime evidence; it is not an architectural backlog for new mechanics.

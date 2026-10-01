@@ -502,9 +502,9 @@ body {
 }
 
 .vr-runtime__loading {
-  display: flex;
+  display: grid;
+  grid-template-columns: clamp(3.5rem, 9vh, 5.5rem) minmax(0, min(52vw, 26rem));
   align-items: center;
-  justify-content: center;
   gap: clamp(0.75rem, 2vw, 1.25rem);
 }
 
@@ -540,7 +540,10 @@ body {
   height: auto;
 }
 
-.vr-runtime__loading-copy { text-align: left; }
+.vr-runtime__loading-copy {
+  min-width: 0;
+  text-align: left;
+}
 
 .vr-runtime__loading-meta,
 .vr-runtime__loading-current {
@@ -550,7 +553,7 @@ body {
 }
 
 .vr-runtime__loading-current {
-  max-width: min(52vw, 26rem);
+  max-width: 100%;
   overflow: hidden;
   font-size: 0.7rem;
   text-overflow: ellipsis;

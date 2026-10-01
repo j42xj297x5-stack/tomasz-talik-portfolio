@@ -38,6 +38,13 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
       clusterRadialSpreadMeters: 11,
       pointSizeMinPx: 1.4,
       pointSizeMaxPx: 3.6
+    },
+    farStars: {
+      count: 20000,
+      pointSizeMinPx: 1.7,
+      pointSizeMaxPx: 3,
+      brightnessMin: 0.1,
+      brightnessMax: 0.55
     }
   },
   furnace: {
@@ -185,25 +192,35 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
       verticalGap: 0, cycleDuration: 1.35, opacityMin: 0.12, opacityMax: 0.95, scalePulse: 0.025
     },
     message: {
-      position: { x: 0, y: 0, z: 0 }, width: 1.7, height: 0.72, gapFromAttention: 0.03,
-      canvasWidth: 1280, canvasHeight: 540, paddingX: 44, paddingY: 31, maxBubbleWidthPx: 1150, cornerRadius: 64,
+      position: { x: 0, y: 0, z: 0 }, width: 1.9, height: 0.80, gapFromAttention: 0.03,
+      packageVerticalOffset: -0.20,
+      canvasWidth: 1431, canvasHeight: 600, paddingX: 44, paddingY: 31, maxBubbleWidthPx: 1301, cornerRadius: 64,
       fontSize: 64, fontWeight: 600, lineHeight: 78, maxLines: 4
     },
     dialogue: {
       position: { x: 1.20, y: 0.80, z: 0.50 }, rotationDegrees: { x: -7.5, y: 0, z: 0 },
       floorClearance: 0.02,
-      width: 1.65, height: 0.76,
-      canvasWidth: 1280, canvasHeight: 590, padding: 42, gap: 24, cornerRadius: 58,
+      width: 1.65, height: 1.06,
+      canvasWidth: 1280, canvasHeight: 823, padding: 42, gap: 24, cornerRadius: 58,
+      backdropOpacity: 0.30,
       optionCornerRadius: 36, fontSize: 58, fontWeight: 700,
       menuPaddingX: 24, menuPaddingY: 16,
       historyPageSize: 8, historyColumns: 4, historyGlyphSize: 136, historyStarFontSize: 24,
       historyItemPadding: 9, historyGlyphStarGap: 8, historyColumnGap: 112, historyRowGap: 12,
       historyNavigationHeight: 100, historyNavigationGap: 12,
-      navigationWidth: 150
+      navigationWidth: 150,
+      categoryFrameWidthScale: 0.85, worldKnowledgeCategoryFrameWidthScale: 0.68,
+      worldKnowledgeCategoryVerticalTrimFraction: 0.03, categoryIconVerticalOffsetFraction: 0.05
     },
     card: {
+      eyebrowFontSize: 38, eyebrowLineHeight: 44, headingLevelGap: 4, headingBodyGap: 24,
       titleFontSize: 58, bodyFontSize: 43, lineHeight: 56, maxLinesPerPage: 6
-    }
+    },
+    readerControls: {
+      width: 1.7, height: 0.20, canvasWidth: 1280, canvasHeight: 150, gapFromMessage: 0.025,
+      padding: 22, buttonSize: 104, buttonGap: 18, cornerRadius: 24, fontSize: 58
+    },
+    worldKnowledge: { maxLinesPerPage: 7 }
   },
   controllers: {
     enabled: true,
@@ -293,7 +310,8 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
     shells: { thickness: 3, gapAfterMultiplier: 2 / 10, angularSpeed: 0.05 },
     smallGlyphs: { thickness: 5, gapAfterMultiplier: 30 / 10, angularSpeed: 0.05 },
     runeStones: { thickness: 25, gapAfterMultiplier: 10 / 10 },
-    stars: { thickness: 45 },
+    stars: { thickness: 45, gapAfterMultiplier: 2 / 10 },
+    farStars: { thickness: 8 },
     hiddenGlyphs: { thickness: 7.6, gapAfterMultiplier: 0 }
   },
   smallGlyphField: {
@@ -523,6 +541,18 @@ export function normalizeExperienceVrSettings(candidate) {
           defaults.celestial.stars.pointSizeMinPx, { min: 0.1, max: 32 }),
         pointSizeMaxPx: finiteNumber(candidate.celestial?.stars?.pointSizeMaxPx,
           defaults.celestial.stars.pointSizeMaxPx, { min: 0.1, max: 32 })
+      },
+      farStars: {
+        count: Math.max(1, Math.round(finiteNumber(candidate.celestial?.farStars?.count,
+          defaults.celestial.farStars.count, { min: 1, max: 100000 }))),
+        pointSizeMinPx: finiteNumber(candidate.celestial?.farStars?.pointSizeMinPx,
+          defaults.celestial.farStars.pointSizeMinPx, { min: 0.1, max: 32 }),
+        pointSizeMaxPx: finiteNumber(candidate.celestial?.farStars?.pointSizeMaxPx,
+          defaults.celestial.farStars.pointSizeMaxPx, { min: 0.1, max: 32 }),
+        brightnessMin: finiteNumber(candidate.celestial?.farStars?.brightnessMin,
+          defaults.celestial.farStars.brightnessMin, { min: 0, max: 1 }),
+        brightnessMax: finiteNumber(candidate.celestial?.farStars?.brightnessMax,
+          defaults.celestial.farStars.brightnessMax, { min: 0, max: 1 })
       }
     },
     furnace: {
@@ -754,7 +784,9 @@ export function normalizeExperienceVrSettings(candidate) {
         rotationDegrees: normalizeVector(candidate.monkeyGuide?.dialogue?.rotationDegrees,
           defaults.monkeyGuide.dialogue.rotationDegrees)
       },
-      card: { ...defaults.monkeyGuide.card, ...(candidate.monkeyGuide?.card ?? {}) }
+      card: { ...defaults.monkeyGuide.card, ...(candidate.monkeyGuide?.card ?? {}) },
+      readerControls: { ...defaults.monkeyGuide.readerControls, ...(candidate.monkeyGuide?.readerControls ?? {}) },
+      worldKnowledge: { ...defaults.monkeyGuide.worldKnowledge, ...(candidate.monkeyGuide?.worldKnowledge ?? {}) }
     },
     controllers: {
       enabled: typeof candidate.controllers?.enabled === 'boolean'

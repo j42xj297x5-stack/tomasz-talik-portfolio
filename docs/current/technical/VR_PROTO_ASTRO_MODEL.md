@@ -9,7 +9,7 @@ Status: **CURRENT / BINDING** for Proto-Astro identity, Furnace essence truth, A
 - `RuneStoneProgressionController` owns natural `tunedRuneFamilies` and `installedRuneFamilies`.
 - `RuneRecipeInteraction` owns the two typed Furnace slots; sector progression does not gate natural tuning.
 - `createVrAstrolabiumTuningActor` is **IMPLEMENTED** as a derived, read-only interpreter. It observes Furnace processed-Shell truth, Proto-Astro extracted natural Small Glyph essence truth, Rune tuning truth, and bounded Resonator eligibility; it derives targetable family sets per band without duplicating persistence.
-- Band UI owns the selected object class. Immediate all-four-band availability after physical `EARNED` ownership is **CURRENT / IMPLEMENTED (S1)** as defined by [`VR_ASTROLABIUM_SANDBOX_MIGRATION.md`](VR_ASTROLABIUM_SANDBOX_MIGRATION.md). Band existence remains independent from the eligibility sets derived below.
+- Band UI owns the selected object class. Immediate all-four-band availability after physical `EARNED` ownership is **CURRENT / IMPLEMENTED**. Band existence remains independent from the eligibility sets derived below.
 
 ## Identity and flat Shell adapter contract
 
@@ -97,7 +97,7 @@ Asterion Sphere progression complete
 
 `VI` eligibility reads only `furnaceProgressionController.getAsterionSphereProgress().complete`, live and after hydration. It creates no Scenario capability, milestone, point, or duplicated persistent boolean. Targetable `VI` does not permit Ether Rune tuning: `VU` tuning separately requires later `CAN_TUNE_ETHER_RUNE`, and physical `VU` reveal separately belongs to `REVEAL_ETHER_RUNE`.
 
-After all five natural Shells have been processed, special Shell `V / VO` becomes a legal `SHELLS` target. Processing the six required Shells completes Asterion Sphere progression. `VO` unlock, `VI` eligibility, and `VU` tuning are deliberately not one Ether-unlocked flag.
+After physical Astrolabium ownership, all six Shell families are legal `SHELLS` targets: the five natural families and special `V / VO`. The six required Asterion Shell materials may be processed in arbitrary order, and each contributes one ordinary slot to the same `6/6` completion state. Processed natural Shells alone unlock their matching natural Small Glyph families; processing `VO` early neither adds natural-family knowledge nor makes `VI` targetable. Special Small Glyph `VI` still requires complete Asterion Sphere Shell progress `6/6`. Ether Rune Stone `VU` remains governed by its later, independent `CAN_TUNE_ETHER_RUNE` tuning and `REVEAL_ETHER_RUNE` reveal progression.
 
 Ordinary early Large Glyph pull uses learned family knowledge. A late `SPHERE_FAR` target additionally requires transient Resonator `PULL_READY`. This early/late policy is **IMPLEMENTED**; `PULL_READY` is neither band unlock nor persistent family knowledge.
 

@@ -2,8 +2,9 @@ import * as THREE from '../../vendor/three.js';
 
 const PROCESS_PATHS = Object.freeze({
   ordinary: '/audio/astro_piec_work_01.mp3',
+  asterionConstruction: '/audio/astro_piec_work_02.mp3',
   runeTuning: '/audio/astro_piec_work_03.mp3',
-  construction: '/audio/astro_piec_work_create_01.mp3'
+  astroAttractorConstruction: '/audio/astro_piec_work_create_01.mp3'
 });
 
 export function createVrAstroFurnaceAudioProjection({ audioBridge, getEmitterAnchor, spatialSettings }) {

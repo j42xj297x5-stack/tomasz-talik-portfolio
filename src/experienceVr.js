@@ -42,6 +42,7 @@ import { createVrRuneStoneInstallationInteraction } from './xr/runes/createVrRun
 import { createVrProgressionController } from './xr/progression/createVrProgressionController.js';
 import { createVrFirstRingFlow } from './xr/progression/createVrFirstRingFlow.js';
 import { createVrProgressionSemanticHandoff } from './xr/progression/createVrProgressionSemanticHandoff.js';
+import { createVrWorldKnowledgeModel } from './xr/knowledge/createVrWorldKnowledgeModel.js';
 import { createVrProgressionShortcut } from './xr/progression/applyVrProgressionShortcut.js';
 import { createVrShellSystem } from './xr/shells/createVrShellSystem.js';
 import { resolveVrSphericalLayerRanges, VR_SPHERICAL_LAYER_IDS } from './xr/world/createVrSphericalLayerActor.js';
@@ -106,7 +107,8 @@ import { createVrIntroFogReveal } from './xr/guidance/createVrIntroFogReveal.js'
 import { createVrReliquaryHints } from './xr/guidance/createVrReliquaryHints.js';
 import { createVrAudioBridge } from './xr/audio/createVrAudioBridge.js';
 import { createVrAstroFurnaceAudioProjection } from './xr/audio/createVrAstroFurnaceAudioProjection.js';
-import { createVrRuneStoneAudioProjection, VR_RUNE_STONE_INSTALL_AUDIO } from './xr/audio/createVrRuneStoneAudioProjection.js';
+import { createVrEtherRuneStoneAudioProjection, createVrRuneStoneAudioProjection,
+  VR_RUNE_STONE_INSTALL_AUDIO } from './xr/audio/createVrRuneStoneAudioProjection.js';
 import { BINDER_REVEAL_AUDIO, createVrRuneBinderRevealAudioProjection } from './xr/audio/createVrRuneBinderRevealAudioProjection.js';
 import { ASTERION_SECTOR_ACQUISITION_AUDIO, ASTERION_SECTOR_DRIVE_AUDIO,
   createVrAsterionSectorAudioProjection } from './xr/audio/createVrAsterionSectorAudioProjection.js';
@@ -156,18 +158,34 @@ const copy = COPY[language];
 const vrAudio = createVrAudioBridge();
 const VR_AUDIO = Object.freeze({
   playerOpen: '/audio/bell_01.mp3', playerClose: '/audio/bell_02.mp3', click: '/audio/click_panel_01.mp3',
+  monkeyDeeper: '/audio/turn_page_02.mp3',
   monkeyOpen: '/audio/panel_sound_long_01.mp3', monkeyClose: '/audio/panel_sound_long_02.mp3',
+  monkeyFinalTurn: '/audio/panel_sound_long_03.mp3', portalReveal: '/audio/creating_06.mp3',
+  furnaceReveal: '/audio/creating_08.mp3',
   furnaceOpen: '/audio/panel_sound_01.mp3', furnaceDeeper: '/audio/panel_sound_02.mp3',
   reliquaryInsert: '/audio/turn_page_01.mp3', reliquaryActivate: '/audio/creating_short_01.mp3',
   reliquaryConsume: '/audio/reliquiary_consume.mp3',
   tierComplete: '/audio/floor_panel_activate.mp3', monkeyThinking: '/audio/monkey_thinking_01.mp3',
   chamberOpen: '/audio/astro_piec_open.mp3', chamberClose: '/audio/astro_piec_close.mp3',
+  furnaceShellInsert: '/audio/glif_earth_4s_04.mp3', furnaceSmallGlyphInsert: '/audio/glif_fire_4s_04.mp3',
+  furnaceClick: '/audio/click_short_01.mp3',
   furnaceProcess: '/audio/astro_piec_work_01.mp3',
+  asterionProcess: '/audio/astro_piec_work_02.mp3',
   runeTuningProcess: '/audio/astro_piec_work_03.mp3',
   asterionCreate: '/audio/astro_piec_work_create_01.mp3',
   glyphProcess: '/audio/glif_hover_loop.mp3',
   releaseBell: '/audio/bell_03.mp3'
 });
+const CRYSTAL_GRAB_AUDIO = Object.freeze([
+  '/audio/cristal_grab_01.mp3', '/audio/cristal_grab_02.mp3',
+  '/audio/cristal_grab_03.mp3', '/audio/cristal_grab_04.mp3'
+]);
+const SHELL_HANDOFF_AUDIO = Object.freeze([
+  '/audio/put_into_01.mp3', '/audio/put_into_03.mp3'
+]);
+const SMALL_GLYPH_HANDOFF_AUDIO = Object.freeze([
+  '/audio/put_into_02.mp3', '/audio/put_into_04.mp3'
+]);
 const GLYPH_COMPLETION_AUDIO = Object.freeze({
   'ethics-life-protection': ['/audio/glif_earth_4s_01.mp3', '/audio/glif_earth_4s_02.mp3', '/audio/glif_earth_4s_03.mp3'],
   'creative-ai': ['/audio/glif_fire_4s_01.mp3', '/audio/glif_fire_4s_02.mp3', '/audio/glif_fire_4s_03.mp3'],
@@ -177,6 +195,9 @@ const GLYPH_COMPLETION_AUDIO = Object.freeze({
 });
 const REQUIRED_VR_AUDIO = Object.freeze([
   ...Object.values(VR_AUDIO),
+  ...CRYSTAL_GRAB_AUDIO,
+  ...SHELL_HANDOFF_AUDIO,
+  ...SMALL_GLYPH_HANDOFF_AUDIO,
   ...Object.values(GLYPH_COMPLETION_AUDIO).flat(),
   ...BINDER_REVEAL_AUDIO,
   ...Object.values(ASTERION_SECTOR_ACQUISITION_AUDIO),
@@ -186,6 +207,21 @@ const REQUIRED_VR_AUDIO = Object.freeze([
 ]);
 const playVrUi = (path) => vrAudio.playOneShot(path, 'UI');
 const playVrWorld = (path) => vrAudio.playOneShot(path, 'WORLD');
+let crystalGrabAudioCursor = 0;
+let shellHandoffAudioCursor = 0;
+let smallGlyphHandoffAudioCursor = 0;
+const playCrystalGrabAudio = () => {
+  playVrWorld(CRYSTAL_GRAB_AUDIO[crystalGrabAudioCursor]);
+  crystalGrabAudioCursor = (crystalGrabAudioCursor + 1) % CRYSTAL_GRAB_AUDIO.length;
+};
+const playShellHandoffAudio = () => {
+  playVrWorld(SHELL_HANDOFF_AUDIO[shellHandoffAudioCursor]);
+  shellHandoffAudioCursor = (shellHandoffAudioCursor + 1) % SHELL_HANDOFF_AUDIO.length;
+};
+const playSmallGlyphHandoffAudio = () => {
+  playVrWorld(SMALL_GLYPH_HANDOFF_AUDIO[smallGlyphHandoffAudioCursor]);
+  smallGlyphHandoffAudioCursor = (smallGlyphHandoffAudioCursor + 1) % SMALL_GLYPH_HANDOFF_AUDIO.length;
+};
 app.innerHTML = `
   <main class="vr-runtime" aria-label="${copy.title}">
     <canvas id="vr-scene-canvas" class="vr-runtime__canvas"></canvas>
@@ -516,6 +552,7 @@ const sphericalLayerRanges = resolveVrSphericalLayerRanges({
     { id: VR_SPHERICAL_LAYER_IDS.SMALL_GLYPHS, ...settings.sphericalLayers.smallGlyphs, status: 'IMPLEMENTED' },
     { id: VR_SPHERICAL_LAYER_IDS.RUNE_STONES, ...settings.sphericalLayers.runeStones, status: 'IMPLEMENTED' },
     { id: VR_SPHERICAL_LAYER_IDS.STARS, ...settings.sphericalLayers.stars, status: 'IMPLEMENTED' },
+    { id: VR_SPHERICAL_LAYER_IDS.FAR_STARS, ...settings.sphericalLayers.farStars, status: 'IMPLEMENTED' },
     { id: VR_SPHERICAL_LAYER_IDS.HIDDEN_GLYPHS, ...settings.sphericalLayers.hiddenGlyphs, status: 'RESERVED' }
   ]
 });
@@ -539,14 +576,17 @@ const etherMonkeyPresentation = createVrEtherMonkeyPresentation({
   color: settings.attractorPresentation.bandColors.runeStones
 });
 const starLayer = sphericalLayer(VR_SPHERICAL_LAYER_IDS.STARS);
+const farStarLayer = sphericalLayer(VR_SPHERICAL_LAYER_IDS.FAR_STARS);
 const celestialActor = createVrCelestialActor({
   parent: worldStableRoot,
   assetManager,
   keyLight: sceneLights.key,
   layer: starLayer,
+  farStarLayer,
   settings: settings.celestial
 });
-camera.far = Math.max(camera.far, starLayer.outerRadius + 5, celestialActor.requiredCameraFar);
+const requiredFarStarCameraDistance = farStarLayer.outerRadius + worldBaseRadius + 5;
+camera.far = Math.max(camera.far, requiredFarStarCameraDistance, celestialActor.requiredCameraFar);
 camera.updateProjectionMatrix();
 const playerRigSpawnLocalPosition = playerRig.position.clone();
 const playerRigSpawnLocalQuaternion = playerRig.quaternion.clone();
@@ -655,7 +695,8 @@ const asterionProductionController = createVrAsterionProductionController({
     getProcessKind: () => astroFurnaceActivateInteraction?.getProcessKind?.() ?? null
   },
   onClaimed: () => { runtimeExperience.dispatch(VR_SCENARIO_EVENT.ASTERION_CLAIMED);
-    toolGuidanceLifecycle?.notifyAsterionClaimed(); },
+    toolGuidanceLifecycle?.notifyAsterionClaimed();
+    returnFurnaceToPostClaimHome(); },
   getChamberState: () => astroFurnaceOpenInteraction?.getState?.() ?? 'CLOSED',
   getContentState: () => astroFurnaceContentInteraction?.getState?.() ?? 'EMPTY'
 });
@@ -725,6 +766,7 @@ function synchronizeReconstructionDerivedState() {
   synchronizeRuneBridgeReadiness();
   runeInstalledStateProjection.synchronize();
   runeStoneAudioProjection?.synchronizeInstalledEmitters();
+  etherRuneStoneAudioProjection?.synchronizeCapturedEmitter();
   asterionResonatorFieldActor.synchronize();
   furnacePanel?.redraw();
   shellSystem.applyAbsorbedShellIds(furnaceProgressionController.getAbsorbedShellIds());
@@ -733,6 +775,7 @@ function synchronizeReconstructionDerivedState() {
   earlyExperienceGuidance.synchronizeReconstructedProgression({
     hasActivatedPages: progressionController.getActivatedPageIds().length > 0
   });
+  worldKnowledgeModel.synchronize();
 }
 const firstRingFlow = createVrFirstRingFlow({
   progressFloor,
@@ -801,6 +844,7 @@ let smallGlyphAttractorInteraction = null;
 let largeGlyphAttractorInteraction = null;
 let runeStoneAttractorInteraction = null;
 let runeStoneAudioProjection = null;
+let etherRuneStoneAudioProjection = null;
 let runeStoneInstallationInteraction = null;
 let runeResonatorGuidance = null;
 let monkeyKnowledgeResolver = null;
@@ -963,7 +1007,8 @@ astroAttractorProductionController = createVrAstroAttractorProductionController(
     toolGuidanceLifecycle?.notifyAstroAvailable(); },
   onClaimed: () => { runtimeExperience.dispatch(VR_SCENARIO_EVENT.ASTRO_ATTRACTOR_CLAIMED);
     toolGuidanceLifecycle?.notifyAstroClaimed();
-    handModeController.equipRightAstro(); }
+    handModeController.equipRightAstro();
+    returnFurnaceToPostClaimHome(); }
 });
 function synchronizeSmallGlyphFieldReadiness() {
   smallGlyphSystem.setFieldReady(astroAttractorProductionController?.isEarned() === true);
@@ -972,6 +1017,17 @@ const unsubscribeSmallGlyphFieldReadiness = astroAttractorProductionController.s
   synchronizeSmallGlyphFieldReadiness
 );
 synchronizeSmallGlyphFieldReadiness();
+const worldKnowledgeModel = createVrWorldKnowledgeModel({
+  progressionController,
+  furnaceProgressionController,
+  protoAstroTuningController,
+  astroAttractorProductionController,
+  asterionProductionController,
+  runeStoneProgressionController,
+  runeBridgeActor,
+  asterionResonatorFieldActor,
+  pages: experienceVrPages
+});
 const currentObjectiveProjection = createVrCurrentObjectiveProjection({
   locale: language,
   getCurrentPointId: () => runtimeExperience?.getCurrentPointId(),
@@ -1039,10 +1095,14 @@ monkeyGuide = createVrMonkeyGuide({
   controllers: vrControllers.controllers,
   progressionController,
   knowledgeResolver: monkeyKnowledgeResolver,
+  worldKnowledgeModel,
+  getPreparedKnowledgeImage: requirePreparedBandImage,
   locale: language,
   settings: settings.monkeyGuide,
   onOpenChange: (open) => playVrUi(open ? VR_AUDIO.monkeyOpen : VR_AUDIO.monkeyClose),
-  onPanelClick: () => playVrUi(VR_AUDIO.click),
+  onPanelClick: (navigationClass) => playVrUi(
+    navigationClass === 'DEEPER' ? VR_AUDIO.monkeyDeeper : VR_AUDIO.click
+  ),
   onAttentionStart: () => playVrWorld(VR_AUDIO.monkeyThinking)
 });
 const monkeyLocaleCopy = language === 'pl'
@@ -1126,7 +1186,9 @@ const astroFurnaceRuneRecipeInteraction = createVrAstroFurnaceRuneRecipeInteract
   getPlayerWorldPosition: (target) => getXrHeadWorldPosition({ renderer, camera, playerRig, target }),
   settleEjectedSmallGlyph: (glyph) => smallGlyphAttractorInteraction?.settleTransferredGlyph(glyph) === true,
   takeHeldShell: (shell) => shellAttractorInteraction?.transferHeldShell(shell) === true,
-  takeHeldSmallGlyph: (glyph) => smallGlyphAttractorInteraction?.transferHeldGlyph(glyph) === true
+  takeHeldSmallGlyph: (glyph) => smallGlyphAttractorInteraction?.transferHeldGlyph(glyph) === true,
+  onAcceptedInsertion: (kind) => furnaceAudioProjection.playPhysicalOneShot(
+    kind === 'SHELL' ? VR_AUDIO.furnaceShellInsert : VR_AUDIO.furnaceSmallGlyphInsert)
 });
 runeRecipeSelectionController = createVrRuneRecipeSelectionController({
   runeRecipeInteraction: astroFurnaceRuneRecipeInteraction,
@@ -1169,7 +1231,9 @@ const furnacePanel = createVrAstroFurnacePanel({
   processSource: createVrAstroFurnaceProcessSource(() => astroFurnaceActivateInteraction),
   contentSource: furnaceContentSource,
   onEnterModule: () => playVrUi(VR_AUDIO.furnaceDeeper),
-  onReturnHome: () => playVrUi(VR_AUDIO.click)
+  onReturnHome: () => playVrUi(VR_AUDIO.click),
+  onBackNavigation: () => playVrUi(VR_AUDIO.click),
+  onAcceptedAction: () => playVrUi(VR_AUDIO.furnaceClick)
 });
 const ordinaryFurnaceRayAvailable = (record) => !(record.handedness === 'right'
   && handModeController.getRightMode() === 'ASTRO_ATTRACTOR')
@@ -1213,8 +1277,10 @@ astroFurnaceActivateInteraction = createVrAstroFurnaceActivateInteraction({
     if (processKind === ASTRO_FURNACE_PROCESS_KINDS.RUNE_TUNING) {
       runeTuningController.beginTuning(); furnaceAudioProjection.startProcess('runeTuning'); return;
     }
-    if ([ASTRO_FURNACE_PROCESS_KINDS.ASTERION_CONSTRUCTION, ASTRO_ATTRACTOR_CONSTRUCTION].includes(processKind))
-      furnaceAudioProjection.startProcess('construction');
+    if (processKind === ASTRO_FURNACE_PROCESS_KINDS.ASTERION_CONSTRUCTION)
+      furnaceAudioProjection.startProcess('asterionConstruction');
+    else if (processKind === ASTRO_ATTRACTOR_CONSTRUCTION)
+      furnaceAudioProjection.startProcess('astroAttractorConstruction');
     else furnaceAudioProjection.startProcess('ordinary');
   },
   onProcessStop: ({ completed, processKind }) => {
@@ -1223,8 +1289,10 @@ astroFurnaceActivateInteraction = createVrAstroFurnaceActivateInteraction({
       if (completed) runeTuningController.completeTuning(); else runeTuningController.abortTuning();
       return;
     }
-    if ([ASTRO_FURNACE_PROCESS_KINDS.ASTERION_CONSTRUCTION, ASTRO_ATTRACTOR_CONSTRUCTION].includes(processKind))
-      furnaceAudioProjection.stopProcess('construction');
+    if (processKind === ASTRO_FURNACE_PROCESS_KINDS.ASTERION_CONSTRUCTION)
+      furnaceAudioProjection.stopProcess('asterionConstruction');
+    else if (processKind === ASTRO_ATTRACTOR_CONSTRUCTION)
+      furnaceAudioProjection.stopProcess('astroAttractorConstruction');
     else furnaceAudioProjection.stopProcess('ordinary');
   }
 });
@@ -1237,7 +1305,9 @@ astroFurnaceContentInteraction = createVrAstroFurnaceContentInteraction({
   takeHeldShell: (shell) => shellAttractorInteraction?.transferHeldShell(shell) === true,
   takeHeldSmallGlyph: (glyph) => smallGlyphAttractorInteraction?.transferHeldGlyph(glyph) === true,
   isSmallGlyphModeActive: () => astroFurnaceOptionInteraction?.getActiveMode?.() === ASTRO_FURNACE_ASTRO_ATTRACTOR_MODE,
-  isAstrolabiumOwned
+  isAstrolabiumOwned,
+  onAcceptedInsertion: (kind) => furnaceAudioProjection.playPhysicalOneShot(
+    kind === 'SHELL' ? VR_AUDIO.furnaceShellInsert : VR_AUDIO.furnaceSmallGlyphInsert)
 });
 astroFurnaceContentInteraction.subscribe(() => furnacePanel.redraw());
 astroFurnaceOptionInteraction = createVrAstroFurnaceOptionInteraction({
@@ -1248,11 +1318,16 @@ astroFurnaceOptionInteraction = createVrAstroFurnaceOptionInteraction({
   isHigherPriorityInteractionActive: (record) => furnacePanel.hasCurrentHit(record),
   onPanelOpen: () => playVrUi(VR_AUDIO.furnaceOpen)
 });
+function returnFurnaceToPostClaimHome() {
+  furnacePanel.returnHome();
+  astroFurnaceOptionInteraction?.clearSelectedModule();
+}
 const crystalCollection = createVrCrystalCollection({
   scene, assetManager, controllers: vrControllers.controllers, portalDisplay, insertionTarget: crystalReliquary,
   settings: settings.crystals, haloSettings: settings.targetHalo, insertFeedbackSettings: settings.reliquary.insertFeedback,
   pages: experienceVrPages, progressionController,
   canUseReliquary: () => crystalReliquary.isInteractionEnabled(),
+  onGrabAccepted: playCrystalGrabAudio,
   onInsertAccepted: () => playVrWorld(VR_AUDIO.reliquaryInsert),
   canGrabController: (record) => {
     if (record.handedness === 'right' && handModeController.getRightMode() === 'ASTRO_ATTRACTOR') return false;
@@ -1272,10 +1347,12 @@ const crystalCollection = createVrCrystalCollection({
     progressionSemanticHandoff.onPageCommitted(page, meta);
     scenarioProgressReconciler?.request();
     presentLiveRuneBridgeReadinessTransitions();
+    worldKnowledgeModel.synchronize();
   }
 });
 createVrProgressionShortcut({ search: location.search, pages: experienceVrPages, progressionController,
   progressFloor, syncQaPostP1WorldState })();
+worldKnowledgeModel.synchronize();
 const activateButtonGltf = assetManager.getGltf('vr-crystal-reliquary-button-activate-model');
 const activateButtonModel = assetManager.cloneGltfScene('vr-crystal-reliquary-button-activate-model');
 const activateCompanion = crystalReliquary.attachCompanion({ id: 'activate', model: activateButtonModel, settings: settings.reliquary.buttons,
@@ -1371,7 +1448,10 @@ shellAttractorInteraction = createVrShellAttractorInteraction({
   ),
   onPullStart: ({ target }) => vrAudio.startAttractor(target.userData.attractorId, 'shell'),
   onPullCancel: ({ target }) => vrAudio.cancelAttractor(target.userData.attractorId),
-  onHandoff: ({ target }) => vrAudio.handoffAttractor(target.userData.attractorId),
+  onHandoff: ({ target }) => {
+    vrAudio.handoffAttractor(target.userData.attractorId);
+    playShellHandoffAudio();
+  },
   isHigherPriorityInteractionActive: (record) => Boolean(activateButton.hits.get(record)
     || releaseButton.hits.get(record) || astroFurnaceOpenInteraction.hasCurrentHit(record)
     || astroFurnaceActivateInteraction.hasCurrentHit(record) || astroFurnaceOptionInteraction.hasCurrentHit(record)
@@ -1402,7 +1482,10 @@ smallGlyphAttractorInteraction = createVrSmallGlyphAttractorInteraction({
   ),
   onPullStart: ({ target }) => vrAudio.startAttractor(target.userData.attractorId, 'smallGlyph'),
   onPullCancel: ({ target }) => vrAudio.cancelAttractor(target.userData.attractorId),
-  onHandoff: ({ target }) => vrAudio.handoffAttractor(target.userData.attractorId),
+  onHandoff: ({ target }) => {
+    vrAudio.handoffAttractor(target.userData.attractorId);
+    playSmallGlyphHandoffAudio();
+  },
   isControllerOccupiedByOtherInteraction: (record) => crystalCollection.heldByController.has(record)
     || shellAttractorInteraction?.isHeldBy(record) === true,
   isHigherPriorityInteractionActive: (record) => Boolean(
@@ -1458,6 +1541,11 @@ runeStoneAudioProjection = createVrRuneStoneAudioProjection({
   spatialSettings: settings.runeStoneSpatialAudio,
   dockingSpatialSettings: settings.runeStoneDockingAudio
 });
+etherRuneStoneAudioProjection = createVrEtherRuneStoneAudioProjection({
+  audioBridge: vrAudio, etherRuneStoneActor,
+  getEmitterAnchor: () => etherMonkeyHoverAnchor,
+  spatialSettings: settings.runeStoneSpatialAudio
+});
 const unsubscribeRuneStoneDockingAudio = runeStoneInstallationInteraction
   .subscribeDockingStarted((event) => runeStoneAudioProjection.presentDockingStarted(event));
 const unsubscribeRuneStoneInstallAudioCue = runeStoneInstallationInteraction
@@ -1467,7 +1555,10 @@ const unsubscribeRuneStoneInstalledAudio = runeStoneInstallationInteraction
 const etherMonkeyCaptureInteraction = createVrEtherMonkeyCaptureInteraction({
   etherRuneStoneActor, hoverAnchor: etherMonkeyHoverAnchor, runeStoneProgressionController,
   durationSeconds: 1.5,
-  onCompleted: () => presentLiveRuneBridgeReadinessTransitions()
+  onCompleted: () => {
+    presentLiveRuneBridgeReadinessTransitions();
+    etherRuneStoneAudioProjection.synchronizeCapturedEmitter();
+  }
 });
 runeStoneAttractorInteraction = createVrRuneStoneAttractorInteraction({
   controllers: vrControllers.controllers, runeStoneActor, etherRuneStoneActor,
@@ -1533,11 +1624,13 @@ introSequence = createVrIntroSequence({
   onThresholdSelected: (choice) => runtimeExperience.dispatch(VR_SCENARIO_EVENT.THRESHOLD_SELECTED, { choice }),
   onExitReactionCompleted: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.INTRO_EXIT_REACTION_COMPLETED),
   onPlayerEnteredRing: (crossing) => runtimeExperience.dispatch(VR_SCENARIO_EVENT.PLAYER_ENTERED_RING, crossing),
+  onMonkeyFinalTurn: () => playVrWorld(VR_AUDIO.monkeyFinalTurn),
   onMonkeySettled: (crossing) => runtimeExperience.dispatch(VR_SCENARIO_EVENT.MONKEY_SETTLED, crossing),
   onGlyphHintTimeout: () => {},
   onReliquaryRevealCompleted: () => runtimeExperience.dispatch(VR_SCENARIO_EVENT.RELIQUARY_REVEAL_COMPLETED),
   onOpeningRaysReady: () => vrControllers.setRaysEnabled(true),
   onReliquaryReveal: (duration) => {
+    playVrWorld(VR_AUDIO.portalReveal);
     portalDisplay.reveal(duration);
     crystalReliquary.reveal(duration);
     portalCanvas.show(
@@ -1670,7 +1763,10 @@ const furnaceIntro = createVrFurnaceIntro({
   blocks: monkeyLocaleCopy.progression['progression.furnace.look'].blocks,
   timingBlocks: VR_MONKEY_COMMUNICATION_COPY_PL.progression['progression.furnace.look'].blocks,
   secondsPerLine: settings.intro.messageDisplayDuration,
-  revealFurnace: () => astroFurnace.reveal(3),
+  revealFurnace: () => {
+    playVrWorld(VR_AUDIO.furnaceReveal);
+    astroFurnace.reveal(3);
+  },
   onCompleted: () => {
     runtimeExperience.dispatch(VR_SCENARIO_EVENT.FURNACE_INTRO_COMPLETED);
     scenarioProgressReconciler?.request();
@@ -1705,6 +1801,7 @@ runtimeExperience = new RuntimeExperience({
     [VR_SCENARIO_EFFECT.SET_MAIN_AMBIENT_02]: () => { ambientSequencer.setProgram(VR_MAIN_AMBIENT_PROGRAMS.ambient02); },
     [VR_SCENARIO_EFFECT.SET_MAIN_AMBIENT_03]: () => { ambientSequencer.setProgram(VR_MAIN_AMBIENT_PROGRAMS.ambient03); },
     [VR_SCENARIO_EFFECT.SET_MAIN_AMBIENT_04]: () => { ambientSequencer.setProgram(VR_MAIN_AMBIENT_PROGRAMS.ambient04); },
+    [VR_SCENARIO_EFFECT.SET_MAIN_AMBIENT_05]: () => { ambientSequencer.setProgram(VR_MAIN_AMBIENT_PROGRAMS.ambient05); },
     [VR_SCENARIO_EFFECT.CHECK_RESONATOR_JOIN]: () => {
       progressionSemanticHandoff.onResonatorStateChanged(asterionResonatorFieldActor.getDescriptor());
     },
@@ -2106,6 +2203,7 @@ function renderFrame() {
     vrAudio.setSpatialListenerPose(listenerPose);
   }
   runeStoneAudioProjection.update();
+  etherRuneStoneAudioProjection.update();
   furnaceAudioProjection.update();
   celestialActor.update(delta);
   observationWindow.update(delta);
@@ -2173,6 +2271,9 @@ function showReadyState({ ended = false } = {}) {
 // restoring the Scenario baseline must never recreate or dispose application objects.
 function restoreVrScenarioBaseline() {
   terminalXrEndRequested = false;
+  crystalGrabAudioCursor = 0;
+  shellHandoffAudioCursor = 0;
+  smallGlyphHandoffAudioCursor = 0;
   runtimeExperience.resetSession();
   endCreditsPresentation.reset();
   finalWorldRelease.reset();
@@ -2208,6 +2309,7 @@ function restoreVrScenarioBaseline() {
   runeRecipeSelectionController.reset();
   runeStoneProgressionController.reset();
   runeStoneAudioProjection.reset();
+  etherRuneStoneAudioProjection.reset();
   asterionResonatorTargetAudioProjection.reset();
   asterionResonatorFieldActor.reset();
   asterionResonatorTargetAcquisitionActor.reset();
@@ -2215,6 +2317,7 @@ function restoreVrScenarioBaseline() {
   asterionResonatorFieldPresentation.reset();
   asterionResonatorFieldArcPresentation.reset();
   protoAstroTuningController.resetBaseline();
+  worldKnowledgeModel.resetBaseline();
   crystalCollection.reset();
   reliquaryHints.reset();
   activateButton.reset();
@@ -2338,6 +2441,7 @@ window.addEventListener('pagehide', () => {
   unsubscribeRuneStoneDockingAudio();
   unsubscribeRuneStoneInstalledAudio();
   runeStoneAudioProjection.dispose();
+  etherRuneStoneAudioProjection.dispose();
   furnaceAudioProjection.dispose();
   vrAudio.dispose();
   asterionGyroInteraction.dispose();
@@ -2359,6 +2463,7 @@ window.addEventListener('pagehide', () => {
   asterionResonatorTargetResponsePresentation.dispose();
   asterionResonatorTargetAudioProjection.dispose();
   asterionResonatorTargetAcquisitionActor.dispose();
+  worldKnowledgeModel.dispose();
   asterionResonatorFieldActor.dispose();
   asterionProductionController.dispose();
   astroAttractorProductionController.dispose();

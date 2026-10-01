@@ -6,8 +6,8 @@ export const VR_MAIN_AMBIENT_PROGRAMS = Object.freeze({
   ambient05: Object.freeze({ id: 'ambient05', path: '/audio/ambient_05.mp3', tail: true })
 });
 const POST_MAIN_TAIL = Object.freeze([
-  '/audio/ambient_loop_01.mp3', '/audio/ambient_loop_02.mp3',
-  '/audio/ambient_loop_03.mp3', '/audio/ambient_loop_04.mp3'
+  '/audio/ambient_loop_01.mp3', '/audio/ambient_loop_03.mp3',
+  '/audio/ambient_loop_04.mp3'
 ]);
 export const VR_QUIET_QUEUE = Object.freeze(Array.from({ length: 13 }, (_, index) => String(index + 1).padStart(2, '0'))
   .map((id) => `/audio/noise_quiete_loop_${id}.mp3`));

@@ -1,9 +1,12 @@
 import * as THREE from '../../vendor/three.js';
 import { resolveVrSmallGlyphProtoAstro } from '../protoAstro/resolveVrSmallGlyphProtoAstro.js';
 import { resolveAttractorShellGlyph } from '../tools/vrAttractorShellGlyphs.js';
-import { isWorldPointInsideChamberCylinder, resolveChamberCylinder } from './vrAstroFurnaceChamberCylinder.js';
+import { isWorldPointInsideChamberCylinder, resolveChamberCylinder,
+  resolveFurnaceContentSnapTarget } from './vrAstroFurnaceChamberCylinder.js';
 import { getObjectWorldScale, resolveVrFurnaceContentWorldScale, setObjectWorldScale,
   VR_FURNACE_CONTENT_SIZE_CLASS } from './vrFurnaceContentSizing.js';
+import { ASTRO_FURNACE_PROCESS_KINDS } from './createVrAstroFurnaceActivateInteraction.js';
+import { createVrFurnaceExtractionMaterialEffect } from './vrFurnaceExtractionMaterialEffect.js';
 
 export const ASTRO_FURNACE_RUNE_RECIPE_SLOT_STATES = Object.freeze({
   EMPTY: 'EMPTY',
@@ -13,15 +16,8 @@ export const ASTRO_FURNACE_RUNE_RECIPE_SLOT_STATES = Object.freeze({
 
 const clamp01 = (value) => THREE.MathUtils.clamp(value, 0, 1);
 const smoothstep = (value) => { const t = clamp01(value); return t * t * (3 - 2 * t); };
-const SMALL_GLYPH_WORLD_OFFSET = new THREE.Vector3(0, -0.10, 0);
-
-function addWorldOffsetInLocalSpace(target, parent, worldOffset) {
-  parent.updateWorldMatrix(true, false);
-  const worldOrigin = parent.getWorldPosition(new THREE.Vector3());
-  const localOrigin = parent.worldToLocal(worldOrigin.clone());
-  const localOffset = parent.worldToLocal(worldOrigin.add(worldOffset)).sub(localOrigin);
-  return target.add(localOffset);
-}
+const SMALL_GLYPH_SLOT_LOCAL_OFFSET = new THREE.Vector3(0, -0.20, 0);
+const RUNE_RECIPE_SHELL_WORLD_LIFT = 0.20;
 
 export function createVrAstroFurnaceRuneRecipeInteraction({
   furnace,
@@ -36,10 +32,11 @@ export function createVrAstroFurnaceRuneRecipeInteraction({
   getExpectedRecipe,
   settledParent,
   getPlayerWorldPosition,
-  settleEjectedSmallGlyph
+  settleEjectedSmallGlyph,
+  onAcceptedInsertion = () => {}
 }) {
   [takeHeldShell, takeHeldSmallGlyph, isModeActive, getExpectedRecipe,
-    getPlayerWorldPosition, settleEjectedSmallGlyph].forEach((dependency) => {
+    getPlayerWorldPosition, settleEjectedSmallGlyph, onAcceptedInsertion].forEach((dependency) => {
     if (typeof dependency !== 'function') throw new TypeError('Rune recipe interaction dependencies must be functions.');
   });
   if (!settledParent?.isObject3D || typeof settledParent.attach !== 'function')
@@ -52,19 +49,22 @@ export function createVrAstroFurnaceRuneRecipeInteraction({
     throw new TypeError('Rune recipe domain systems must expose consumeInstance.');
 
   const states = ASTRO_FURNACE_RUNE_RECIPE_SLOT_STATES;
-  const config = { enabled: true, snapDuration: .42, chamberClearance: .012,
+  const config = { enabled: true, snapDuration: .42, chamberClearance: .012, contentClearance: .012,
     ejectDistance: 1, ejectDuration: .45, ejectSeparation: .22, ...settings };
   const volume = furnace?.nodes?.VR_FURNACE_INSERT_VOLUME;
+  const contentAnchor = furnace?.nodes?.VR_FURNACE_CONTENT_ANCHOR;
   const chamber = furnace?.nodes?.komora;
   const chamberCylinder = resolveChamberCylinder(chamber, config.chamberClearance);
   const anchorsReady = furnace?.capabilities?.runeRecipeAnchorsReady === true;
-  const enabled = config.enabled !== false && anchorsReady && Boolean(volume && chamberCylinder);
+  const enabled = config.enabled !== false && anchorsReady && Boolean(volume && contentAnchor && chamberCylinder);
   const listeners = new Set();
   const local = new THREE.Vector3();
   const center = new THREE.Vector3();
   const player = new THREE.Vector3();
   const ejectDirection = new THREE.Vector3();
   const ejectLateral = new THREE.Vector3();
+  const shellTargetWorld = new THREE.Vector3();
+  const chamberWorldUp = new THREE.Vector3();
   const ejections = [];
   let reportedHeldShell = null;
   let reportedHeldSmallGlyph = null;
@@ -74,17 +74,18 @@ export function createVrAstroFurnaceRuneRecipeInteraction({
     VR_FURNACE_CONTENT_SIZE_CLASS.SMALL_GLYPH, (content) => {
     if (!smallGlyphSystem.restoreInstanceToField(content))
       throw new Error('Small glyph system rejected rune recipe ingredient restoration.');
-  }, SMALL_GLYPH_WORLD_OFFSET);
+  }, SMALL_GLYPH_SLOT_LOCAL_OFFSET);
   const shell = createSlot(furnace?.nodes?.RUNE_RECIPE_SHELL_SLOT,
     VR_FURNACE_CONTENT_SIZE_CLASS.SHELL, (content) => {
     if (!shellSystem.restoreInstanceToOrbit(content))
       throw new Error('Shell system rejected rune recipe ingredient restoration.');
   });
 
-  function createSlot(anchor, contentClass, restore, worldOffset = null) {
-    return { anchor, contentClass, restore, state: states.EMPTY, content: null, baselineWorldScale: null, elapsed: 0,
+  function createSlot(anchor, contentClass, restore, localOffset = null) {
+    return { anchor, contentClass, restore, state: states.EMPTY, content: null, baselineWorldScale: null,
+      extractionMaterialEffect: null, elapsed: 0,
       startPosition: new THREE.Vector3(), targetPosition: new THREE.Vector3(),
-      startQuaternion: new THREE.Quaternion(), worldOffset };
+      startQuaternion: new THREE.Quaternion(), localOffset };
   }
   function slotSnapshot(slot) {
     return { state: slot.state, occupied: slot.content !== null, content: slot.content };
@@ -115,19 +116,44 @@ export function createVrAstroFurnaceRuneRecipeInteraction({
     return expectedRecipe !== null
       && resolveFamilyCode(content) === expectedRecipe[expectedFamilyKey];
   }
-  function accept(slot, content, takeHeld, resolveFamilyCode, expectedFamilyKey) {
+  function accept(slot, content, takeHeld, resolveFamilyCode, expectedFamilyKey, ingredientKind) {
     if (!canAccept(slot, content, resolveFamilyCode, expectedFamilyKey) || takeHeld(content) !== true) return false;
     slot.content = content;
+    slot.extractionMaterialEffect = createVrFurnaceExtractionMaterialEffect(content);
     slot.baselineWorldScale = getObjectWorldScale(content);
     const desiredWorldScale = resolveVrFurnaceContentWorldScale({
       contentClass: slot.contentClass,
       baselineWorldScale: slot.baselineWorldScale
     });
-    slot.anchor.attach(content);
-    setObjectWorldScale(content, desiredWorldScale);
+    if (slot === shell) {
+      contentAnchor.attach(content);
+      setObjectWorldScale(content, desiredWorldScale);
+      const canonicalTarget = resolveFurnaceContentSnapTarget({ object: content, anchor: contentAnchor,
+        energyCell: furnace?.nodes?.energy_cell ?? furnace?.nodes?.fire_cell,
+        contentClearance: config.contentClearance,
+        desiredWorldScale,
+        localGeometryCenter: shellSystem.getRecord(content)?.boundingCenter ?? null });
+      shellTargetWorld.copy(canonicalTarget);
+      contentAnchor.localToWorld(shellTargetWorld);
+      chamber.updateWorldMatrix(true, false);
+      chamberWorldUp.setFromMatrixColumn(chamber.matrixWorld, 1).normalize();
+      shellTargetWorld.addScaledVector(chamberWorldUp, RUNE_RECIPE_SHELL_WORLD_LIFT);
+      slot.anchor.attach(content);
+      setObjectWorldScale(content, desiredWorldScale);
+      content.userData.shellState = 'inserted';
+      content.userData.attractorTarget = false;
+    } else {
+      slot.anchor.attach(content);
+      setObjectWorldScale(content, desiredWorldScale);
+    }
     slot.startPosition.copy(content.position);
-    slot.targetPosition.set(0, 0, 0);
-    if (slot.worldOffset) addWorldOffsetInLocalSpace(slot.targetPosition, slot.anchor, slot.worldOffset);
+    if (slot === shell) {
+      slot.targetPosition.copy(shellTargetWorld);
+      slot.anchor.worldToLocal(slot.targetPosition);
+    } else {
+      slot.targetPosition.set(0, 0, 0);
+      if (slot.localOffset) slot.targetPosition.add(slot.localOffset);
+    }
     slot.startQuaternion.copy(content.quaternion);
     slot.elapsed = 0;
     slot.state = config.snapDuration > 0 ? states.SNAPPING : states.INSERTED;
@@ -136,6 +162,7 @@ export function createVrAstroFurnaceRuneRecipeInteraction({
       content.quaternion.identity();
     }
     emitChange();
+    onAcceptedInsertion(ingredientKind);
     return true;
   }
   function updateSlot(slot, delta) {
@@ -169,11 +196,15 @@ export function createVrAstroFurnaceRuneRecipeInteraction({
     if (disposed) return;
     const step = Math.max(0, Number.isFinite(delta) ? delta : 0);
     accept(shell, reportedHeldShell, takeHeldShell,
-      (content) => resolveAttractorShellGlyph(content)?.familyCode ?? null, 'shellFamilyCode');
+      (content) => resolveAttractorShellGlyph(content)?.familyCode ?? null, 'shellFamilyCode', 'SHELL');
     accept(smallGlyph, reportedHeldSmallGlyph, takeHeldSmallGlyph,
-      (content) => resolveVrSmallGlyphProtoAstro(content)?.descriptor?.familyCode ?? null, 'smallGlyphFamilyCode');
+      (content) => resolveVrSmallGlyphProtoAstro(content)?.descriptor?.familyCode ?? null, 'smallGlyphFamilyCode', 'SMALL_GLYPH');
     updateSlot(shell, step);
     updateSlot(smallGlyph, step);
+    const extractionProgress = activateInteraction?.getProcessKind?.() === ASTRO_FURNACE_PROCESS_KINDS.RUNE_TUNING
+      ? activateInteraction?.getExtractionProgress?.() ?? 0 : 0;
+    shell.extractionMaterialEffect?.apply(extractionProgress);
+    smallGlyph.extractionMaterialEffect?.apply(extractionProgress);
     updateEjections(step);
     reportedHeldShell = null;
     reportedHeldSmallGlyph = null;
@@ -198,6 +229,9 @@ export function createVrAstroFurnaceRuneRecipeInteraction({
     occupied.forEach(({ slot, kind }, index) => {
       const content = slot.content;
       const baselineWorldScale = slot.baselineWorldScale;
+      slot.extractionMaterialEffect?.restore();
+      slot.extractionMaterialEffect?.release();
+      slot.extractionMaterialEffect = null;
       slot.content = null; slot.state = states.EMPTY; slot.elapsed = 0;
       slot.baselineWorldScale = null;
       settledParent.attach(content);
@@ -213,6 +247,9 @@ export function createVrAstroFurnaceRuneRecipeInteraction({
   }
   function restoreSlot(slot) {
     const content = slot.content;
+    slot.extractionMaterialEffect?.restore();
+    slot.extractionMaterialEffect?.release();
+    slot.extractionMaterialEffect = null;
     slot.content = null;
     slot.baselineWorldScale = null;
     slot.state = states.EMPTY;
@@ -253,6 +290,8 @@ export function createVrAstroFurnaceRuneRecipeInteraction({
       throw new Error('Small glyph system rejected a known rune recipe ingredient.');
     if (!shellSystem.consumeInstance(insertedShell))
       throw new Error('Shell system rejected a known rune recipe ingredient.');
+    smallGlyph.extractionMaterialEffect?.release(); smallGlyph.extractionMaterialEffect = null;
+    shell.extractionMaterialEffect?.release(); shell.extractionMaterialEffect = null;
     smallGlyph.content = null; smallGlyph.baselineWorldScale = null; smallGlyph.state = states.EMPTY; smallGlyph.elapsed = 0;
     shell.content = null; shell.baselineWorldScale = null; shell.state = states.EMPTY; shell.elapsed = 0;
     emitChange();
