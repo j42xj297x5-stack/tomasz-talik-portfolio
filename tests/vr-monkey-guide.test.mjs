@@ -256,34 +256,61 @@ guide.hits.set(record, { kind: 'panel', region: { id: 'progress' } });
 assert.equal(guide.press(record), true);
 assert.equal(guide.getScreen(), VR_MONKEY_GUIDE_SCREEN.HISTORY, 'MENU -> HISTORY');
 assert.deepEqual(guide.getUnreadPageIds(), pageIds, 'opening history does not mark cards read');
-assert.ok(drawnText.includes('★') && drawnText.includes('★★'), 'history uses order stars instead of numeric markers');
-assert.ok(drawnText.includes('Discovered cards: 3. Select a sign.'));
-assert.deepEqual(guide.getHistoryEntries().map(({ pageId }) => pageId), pageIds, 'only activated pages retain activation order');
-assert.deepEqual(guide.getHistoryEntries().map(({ descriptor }) => descriptor.syllable), ['RA', 'RA', 'SA']);
+assert.equal(guide.messagePanel.group.visible, false, 'entering HISTORY does not show stale card text');
+assert.equal(guide.readerControlsPanel.group.visible, false, 'reader controls stay hidden until category selection');
+assert.deepEqual(guide.getHistoryEntries().map(({ glyphId }) => glyphId), ['haiku-cosmos', 'creative-ai'],
+  'categories follow the canonical Proto-Astro family order and omit undiscovered glyphs');
+assert.deepEqual(guide.getHistoryEntries().map(({ descriptor }) => descriptor.syllable), ['SA', 'RA'],
+  'one existing A-form icon resolves for each discovered category');
+assert.deepEqual(guide.getHistoryEntries().find(({ glyphId }) => glyphId === 'creative-ai').pages.map(({ id }) => id),
+  [creative1.id, creative2.id], 'activated category stages are sorted by page.order');
+assert.equal(guide.getInteractiveRegions().filter(({ id }) => id.startsWith('portfolio-category:')).length, 2,
+  'multiple activated pages do not duplicate their category icon');
 assert.equal(guide.getHistoryPage(), 0);
-guide.hits.set(record, { kind: 'panel', region: { id: 'history-next' } }); guide.press(record);
-assert.equal(guide.getHistoryPage(), 1, 'history overflow uses configured pagination');
-guide.hits.set(record, { kind: 'panel', region: { id: 'history-previous' } }); guide.press(record);
 
-guide.hits.set(record, { kind: 'panel', region: { id: `page:${creative1.id}` } });
+guide.hits.set(record, { kind: 'panel', region: { id: 'portfolio-category:creative-ai' } });
 guide.press(record);
-assert.equal(guide.getScreen(), VR_MONKEY_GUIDE_SCREEN.CARD, 'HISTORY -> CARD');
-assert.equal(guide.getSelectedPageId(), creative1.id, 'duplicate rune opens its concrete pageId');
-assert.deepEqual(guide.getUnreadPageIds().sort(), [creative2.id, haiku1.id].sort(), 'CARD marks only its page read');
+assert.equal(guide.getScreen(), VR_MONKEY_GUIDE_SCREEN.HISTORY, 'category selection preserves flat HISTORY state');
+assert.equal(guide.getSelectedHistoryGlyphId(), 'creative-ai');
+assert.equal(guide.getSelectedPageId(), creative1.id, 'category auto-selects its first unread activated page in page order');
+assert.deepEqual(guide.getUnreadPageIds().sort(), [creative2.id, haiku1.id].sort(), 'selection consumes only its page unread state');
+assert.equal(guide.getInteractiveRegions().filter(({ id }) => id.startsWith('portfolio-category:')).length, 2,
+  'category grid remains interactive after selection');
+assert.equal(guide.messagePanel.group.visible, true);
+assert.equal(guide.readerControlsPanel.group.visible, true);
+assert.deepEqual(guide.getReaderControlRegions().filter(({ id }) => id.startsWith('portfolio-page:')).map(({ id }) => id),
+  [`portfolio-page:${creative1.id}`, `portfolio-page:${creative2.id}`],
+  'reader controls expose exactly the activated category pages');
 const content = resolveExperienceVrPage(creative1, 'en');
 assert.ok(drawnText.includes(content.title));
 const cardPageCount = guide.getCardPageCount();
 assert.ok(cardPageCount > 1, 'long content is split instead of shrinking or truncating');
+assert.ok(guide.getReaderControlRegions().some(({ id }) => id === 'card-page-next'));
 for (let index = 1; index < cardPageCount; index += 1) {
-  guide.hits.set(record, { kind: 'panel', region: { id: 'card-next' } }); guide.press(record);
+  guide.hits.set(record, { kind: 'reader-controls', region: { id: 'card-page-next' } }); guide.press(record);
 }
 assert.equal(guide.getCardPage(), cardPageCount - 1);
 assert.ok(content.body.split(/\s+/).every((word) => drawnText.join(' ').includes(word)), 'all paginated body words are rendered');
 
-guide.hits.set(record, { kind: 'panel', region: { id: 'back-history' } }); guide.press(record);
-assert.equal(guide.getScreen(), VR_MONKEY_GUIDE_SCREEN.HISTORY, 'CARD -> HISTORY');
+guide.hits.set(record, { kind: 'reader-controls', region: { id: `portfolio-page:${creative2.id}` } }); guide.press(record);
+assert.equal(guide.getSelectedPageId(), creative2.id);
+assert.equal(guide.getCardPage(), 0, 'star selection resets technical pagination');
+assert.deepEqual(guide.getUnreadPageIds(), [haiku1.id], 'sibling selection leaves unrelated unread state intact');
+guide.hits.set(record, { kind: 'panel', region: { id: 'portfolio-category:haiku-cosmos' } }); guide.press(record);
+assert.equal(guide.getScreen(), VR_MONKEY_GUIDE_SCREEN.HISTORY);
+assert.equal(guide.getSelectedPageId(), haiku1.id, 'another category switches content directly');
+const selectedBeforeActivation = guide.getSelectedPageId();
+const haiku2 = experienceVrPages.find((page) => page.glyphId === 'haiku-cosmos' && page.order === 2);
+pageIds.push(haiku2.id); guide.update(0.04);
+assert.equal(guide.getSelectedPageId(), selectedBeforeActivation, 'live activation does not replace a valid selection');
+assert.ok(guide.getUnreadPageIds().includes(haiku2.id));
+assert.ok(guide.getReaderControlRegions().some(({ id }) => id === `portfolio-page:${haiku2.id}`),
+  'live activation adds a reader star without rebuilding the browser');
 guide.hits.set(record, { kind: 'panel', region: { id: 'back-menu' } }); guide.press(record);
 assert.equal(guide.getScreen(), VR_MONKEY_GUIDE_SCREEN.MENU, 'HISTORY -> MENU');
+assert.equal(guide.getSelectedPageId(), null);
+assert.equal(guide.messagePanel.group.visible, false);
+assert.equal(guide.readerControlsPanel.group.visible, false);
 
 const attentionStartsBeforeSignal = fixture.getAttentionStarts();
 guide.notifyAttention(); guide.notifyAttention();
@@ -299,50 +326,22 @@ guide.dispose(); assert.equal(guide.object.parent, null);
 assert.equal(controller._listeners?.selectstart?.length ?? 0, 0, 'dispose removes trigger listener');
 monkeyGeometry.dispose(); monkeyMaterial.dispose();
 
-{
-  const historyLayout = createFixture('en');
-  const validPageIds = experienceVrPages.filter((page) => resolveVrPageProtoAstro(page)).map((page) => page.id);
-  assert.ok(validPageIds.length >= 9, 'fixture has enough cards to exercise 8-item pagination');
-  historyLayout.pageIds.push(...validPageIds.slice(0, 9));
-  historyLayout.guide.open();
-  historyLayout.guide.hits.set(historyLayout.record, { kind: 'panel', region: { id: 'progress' } });
-  historyLayout.guide.press(historyLayout.record);
-  const regions = historyLayout.guide.getInteractiveRegions();
-  const contentRegions = regions.filter(({ id }) => id.startsWith('page:'));
-  const navigationRegions = regions.filter(({ id }) => !id.startsWith('page:'));
-  assert.equal(contentRegions.length, 8, 'HISTORY renders at most eight cards per page');
-  assert.equal(new Set(contentRegions.map(({ x }) => x)).size, 4, 'HISTORY uses four columns');
-  assert.equal(new Set(contentRegions.map(({ y }) => y)).size, 2, 'HISTORY uses at most two rows');
-  assert.equal(contentRegions[1].x - contentRegions[0].x - contentRegions[0].width, 112);
-  assert.equal(contentRegions[4].y - contentRegions[0].y - contentRegions[0].height, 12);
-  const navTop = 590 - 42 - 100;
-  assert.ok(contentRegions.every((region) => region.y + region.height <= navTop - 12),
-    'history content ends above the reserved navigation band');
-  assert.ok(contentRegions.every((content) => navigationRegions.every((nav) =>
-    content.y + content.height <= nav.y || nav.y + nav.height <= content.y)),
-  'content interactive regions do not intersect navigation controls');
-  const back = regions.find(({ id }) => id === 'back-menu');
-  const next = regions.find(({ id }) => id === 'history-next');
-  assert.ok(back.x < 1280 / 2 && next.x > 1280 / 2, 'Back is left-aligned and Next is right-aligned');
-  historyLayout.guide.hits.set(historyLayout.record, { kind: 'panel', region: next });
-  historyLayout.guide.press(historyLayout.record);
-  assert.equal(historyLayout.guide.getHistoryPage(), 1, 'the ninth history item remains reachable by pagination');
-  assert.equal(historyLayout.guide.getInteractiveRegions().filter(({ id }) => id.startsWith('page:')).length, 1);
-  historyLayout.guide.dispose(); historyLayout.monkeyGeometry.dispose(); historyLayout.monkeyMaterial.dispose();
-}
-
 const polish = createFixture('pl');
 polish.pageIds.push(creative1.id); polish.guide.open();
 polish.guide.hits.set(polish.record, { kind: 'panel', region: { id: 'progress' } }); polish.guide.press(polish.record);
-polish.guide.hits.set(polish.record, { kind: 'panel', region: { id: `page:${creative1.id}` } }); polish.guide.press(polish.record);
+polish.guide.hits.set(polish.record, { kind: 'panel', region: { id: 'portfolio-category:creative-ai' } }); polish.guide.press(polish.record);
 assert.ok(drawnText.includes(resolveExperienceVrPage(creative1, 'pl').title), 'selected card uses Polish localization');
+assert.equal(polish.guide.getReaderControlRegions().some(({ id }) => id.startsWith('card-page-')), false,
+  'single-page cards omit the complete pagination group');
 polish.guide.dispose(); polish.monkeyGeometry.dispose(); polish.monkeyMaterial.dispose();
 
 const source = await readFile(new URL('../src/xr/guidance/createVrMonkeyGuide.js', import.meta.url), 'utf8');
 assert.doesNotMatch(source, /['"`]svg\/(?:KA|TA|SA|LA|RA)\.svg/, 'guide owns no Proto-Astro asset paths');
 assert.doesNotMatch(source, /fillStyle = settings\.colors\.dialoguePanel/, 'dialogue canvas has no full-panel background');
 assert.match(source, /globalCompositeOperation = 'source-in'/, 'history glyphs are recolored through one mask canvas');
-assert.match(source, /'★'\.repeat\(entry\.page\.order\)/, 'history marker is generated from order stars');
+assert.match(source, /'★'\.repeat\(entry\.pages\.length\)/, 'history marker reflects activated pages only');
+assert.doesNotMatch(source, /worldKnowledgeModel\.markStageRead\([^)]*selectedPageId/,
+  'portfolio unread consumption does not call World Knowledge lifecycle APIs');
 
 assert.equal(VR_WORLD_KNOWLEDGE_PRESENTATION.length, 15, 'all canonical categories have presentation metadata');
 assert.deepEqual(VR_WORLD_KNOWLEDGE_PRESENTATION.map(({ categoryId }) => categoryId),
