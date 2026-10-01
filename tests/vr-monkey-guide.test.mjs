@@ -270,9 +270,14 @@ record.controller.dispatchEvent({ type: 'selectstart' }); assert.equal(guide.isO
 assert.equal(guide.isInteractionEnabled(), false);
 guide.setInteractionEnabled(true); guide.update(0.016); assert.equal(guide.isInteractionEnabled(), true);
 let overridePresses = 0; let overrideChoice = null; let overrideHovers = 0;
+guide.setDialogueOverride({ onMonkeyPress: () => true });
+guide.showMessage('Legacy question');
 guide.setDialogueOverride({ options: [{ id: 'intro-go', label: 'GO' }],
   onMonkeyHover: () => { overrideHovers += 1; }, onMonkeyPress: () => { overridePresses += 1; },
   onSelect: (id) => { overrideChoice = id; } });
+assert.equal(guide.messagePanel.group.visible, true, 'same legacy owner update preserves its question');
+assert.equal(drawnTextPositions.at(-1).text, 'Legacy question',
+  'changing the legacy override to options does not clear its speech');
 guide.update(0.016);
 guide.notifyAttention();
 record.controller.dispatchEvent({ type: 'selectstart' });
@@ -290,6 +295,7 @@ assert.equal(guide.press(record), false, 'override return semantics remain uncha
 assert.equal(guide.isAttentionPending(), false, 'even an override returning false cannot retain attention');
 assert.ok(overrideHovers <= 1, 'hover callback is edge-triggered');
 guide.setDialogueOverride(null);
+assert.equal(guide.messagePanel.group.visible, false, 'releasing the legacy owner still clears its message');
 guide.update(0.016);
 record.controller.dispatchEvent({ type: 'selectstart' });
 assert.equal(guide.isOpen(), true);

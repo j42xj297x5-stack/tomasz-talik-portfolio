@@ -81,7 +81,8 @@ export function createVrIntroSequence({ monkeyGuide, monkeyMotionRoot, monkeyVis
   };
   const capture = () => monkeyGuide.setDialogueOverride({ onMonkeyPress: () => true });
   const completeSpeech = () => { phase = null; const callback = done; done = null; monkeyGuide.setDialogueOverride(null); callback?.(); };
-  const displayNext = () => { const item = queue.shift(); if (!item) return; monkeyGuide.showMessage(item.text); if (item.question) completeSpeech(); else { const metrics = monkeyGuide.measureMessage(item.timingText) ?? {}; messageDuration = settings.messageDisplayDuration * Math.max(0, metrics.lineCount ?? 1); phase = 'DISPLAY'; } };
+  const presentQuestion = () => { phase = null; const callback = done; done = null; callback?.(); };
+  const displayNext = () => { const item = queue.shift(); if (!item) return; monkeyGuide.showMessage(item.text); if (item.question) presentQuestion(); else { const metrics = monkeyGuide.measureMessage(item.timingText) ?? {}; messageDuration = settings.messageDisplayDuration * Math.max(0, metrics.lineCount ?? 1); phase = 'DISPLAY'; } };
   const show = (lines, callback, question = null, timingLines = lines) => {
     if (!Array.isArray(timingLines) || timingLines.length !== lines.length) throw new TypeError('Intro timing lines must match presentation lines');
     capture(); queue = lines.map((text, index) => ({ text, timingText: timingLines[index] }));
