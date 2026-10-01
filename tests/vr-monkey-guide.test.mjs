@@ -127,6 +127,9 @@ actorRoot.position.set(0, 0, 0);
 actorRoot.updateMatrixWorld(true);
 assert.equal(guide.messagePanel.planes.length, 2);
 assert.equal(guide.dialoguePanel.planes.length, 2);
+assert.equal(guide.readerControlsPanel.planes.length, 2, 'reader controls use a separate two-sided plane');
+assert.equal(guide.readerControlsPanel.canvas.width, 1280);
+assert.equal(guide.readerControlsPanel.canvas.height, 150);
 assert.equal(guide.dialoguePanel.planes[0].geometry.parameters.width, 1.65);
 assert.equal(guide.dialoguePanel.planes[0].geometry.parameters.height, 0.96);
 assert.equal(guide.dialoguePanel.canvas.width, 1280);
@@ -141,8 +144,11 @@ assert.ok(guide.arcs.every(({ rotation }) => rotation.z === Math.PI), 'attention
 assert.equal(guide.attentionRoot.position.z, -0.05);
 assert.equal(guide.attentionRoot.position.y, 1.5);
 assert.equal(guide.messagePanel.group.position.z, guide.attentionRoot.position.z);
-assert.equal(guide.messagePanel.group.position.y, 1.5 + 0.17 + 0.03 + 0.72 / 2,
-  'technical envelope bottom is derived from the largest attention arc');
+assert.ok(Math.abs(guide.readerControlsPanel.group.position.y - (1.5 + 0.17 + 0.03 + 0.20 / 2)) < 1e-12,
+  'reader strip preserves the former lower envelope above the attention arcs');
+assert.equal(guide.messagePanel.group.position.y,
+  guide.readerControlsPanel.group.position.y + 0.20 / 2 + 0.025 + 0.72 / 2,
+  'message panel shifts upward and retains the configured gap above reader controls');
 assert.deepEqual(guide.dialoguePanel.group.position.toArray(), [1.20, 0.80, 0.50]);
 assert.ok(Math.abs(guide.dialoguePanel.group.rotation.x - (-7.5 * Math.PI / 180)) < 1e-12);
 assert.ok(fillStyles.includes('#090909'), 'dialogue controls use an almost-black background');
@@ -395,41 +401,56 @@ assert.match(experienceVrSource, /getPreparedKnowledgeImage: requirePreparedBand
   assert.equal(knowledgeFixture.guide.getInteractiveRegions().filter(({ id }) => id.startsWith('world-category:')).length, 1);
   knowledgeFixture.guide.hits.set(knowledgeFixture.record, { kind: 'panel', region: { id: 'world-category:world.five_transformations' } });
   knowledgeFixture.guide.press(knowledgeFixture.record);
-  assert.equal(knowledgeFixture.guide.messagePanel.group.visible, true, 'detail presents World Knowledge in messagePanel');
+  assert.equal(knowledgeFixture.guide.getScreen(), VR_MONKEY_GUIDE_SCREEN.WORLD_KNOWLEDGE,
+    'category selection keeps the flat World Knowledge grid state');
+  assert.equal(knowledgeFixture.guide.messagePanel.group.visible, true, 'selection presents World Knowledge in messagePanel');
+  assert.equal(knowledgeFixture.guide.readerControlsPanel.group.visible, true, 'selection reveals the separate reader controls');
   assert.ok(knowledgeFixture.guide.getWorldKnowledgeTextPageCount() > 1, 'long World Knowledge copy paginates');
-  assert.ok(knowledgeFixture.guide.getInteractiveRegions().every(({ id }) => id.startsWith('world-stage:')
-    || ['back-world-overview', 'world-knowledge-page-previous', 'world-knowledge-page-next'].includes(id)),
-  'World Knowledge detail dialoguePanel contains controls only');
-  assert.ok(knowledgeFixture.guide.getInteractiveRegions().some(({ id }) => id === 'world-knowledge-page-next'));
+  assert.equal(knowledgeFixture.guide.getInteractiveRegions().filter(({ id }) => id.startsWith('world-category:')).length, 1,
+    'the same category grid remains interactive after category selection');
+  assert.equal(knowledgeFixture.guide.getInteractiveRegions().some(({ id }) => id === 'back-world-overview'), false,
+    'flat navigation has no detail back control');
+  assert.deepEqual(knowledgeFixture.guide.getReaderControlRegions().filter(({ id }) => id.startsWith('world-stage:'))
+    .map(({ id }) => id), ['world-stage:01.1', 'world-stage:01.2'],
+  'reader controls expose one large button per discovered stage and no locked stage');
+  assert.ok(knowledgeFixture.guide.getReaderControlRegions().some(({ id }) => id === 'world-knowledge-page-next'));
   assert.deepEqual(markedStageIds, [], 'opening a multi-page stage does not mark it READ');
   const selectedStage = knowledgeFixture.guide.getSelectedWorldKnowledgeStageId();
   knowledgeFixture.guide.hits.set(knowledgeFixture.record,
-    { kind: 'panel', region: { id: 'world-knowledge-page-next' } }); knowledgeFixture.guide.press(knowledgeFixture.record);
+    { kind: 'reader-controls', region: { id: 'world-knowledge-page-next' } }); knowledgeFixture.guide.press(knowledgeFixture.record);
   assert.equal(knowledgeFixture.guide.getWorldKnowledgeTextPage(), 1);
   knowledgeFixture.guide.hits.set(knowledgeFixture.record,
-    { kind: 'panel', region: { id: 'world-knowledge-page-previous' } }); knowledgeFixture.guide.press(knowledgeFixture.record);
+    { kind: 'reader-controls', region: { id: 'world-knowledge-page-previous' } }); knowledgeFixture.guide.press(knowledgeFixture.record);
   assert.equal(knowledgeFixture.guide.getWorldKnowledgeTextPage(), 0,
     'previous and next change only the technical page');
   assert.deepEqual(markedStageIds, ['01.1'], 'previous never duplicates or reverses a final-page READ commit');
   while (knowledgeFixture.guide.getWorldKnowledgeTextPage() < knowledgeFixture.guide.getWorldKnowledgeTextPageCount() - 1) {
     knowledgeFixture.guide.hits.set(knowledgeFixture.record,
-      { kind: 'panel', region: { id: 'world-knowledge-page-next' } });
+      { kind: 'reader-controls', region: { id: 'world-knowledge-page-next' } });
     knowledgeFixture.guide.press(knowledgeFixture.record);
   }
   assert.equal(knowledgeFixture.guide.getSelectedWorldKnowledgeStageId(), selectedStage,
     'technical page navigation does not change the semantic stage');
   assert.deepEqual(markedStageIds, ['01.1'], 'reaching the final technical page marks only the selected stage READ');
-  knowledgeFixture.guide.hits.set(knowledgeFixture.record, { kind: 'panel', region: { id: 'world-stage:01.2' } });
+  knowledgeFixture.guide.hits.set(knowledgeFixture.record, { kind: 'reader-controls', region: { id: 'world-stage:01.2' } });
   knowledgeFixture.guide.press(knowledgeFixture.record);
   assert.equal(knowledgeFixture.guide.getSelectedWorldKnowledgeStageId(), '01.2');
   assert.equal(knowledgeFixture.guide.getWorldKnowledgeTextPage(), 0, 'selecting another star resets its technical page');
   assert.deepEqual(markedStageIds, ['01.1'], 'selecting a multi-page sibling does not mark it READ');
   states.set('02.1', VR_WORLD_KNOWLEDGE_STAGE_STATE.AVAILABLE); [...listeners].forEach((listener) => listener());
-  knowledgeFixture.guide.hits.set(knowledgeFixture.record, { kind: 'panel', region: { id: 'back-world-overview' } });
+  assert.equal(knowledgeFixture.guide.getSelectedWorldKnowledgeStageId(), '01.2',
+    'unrelated model updates preserve a still-valid current selection');
+  knowledgeFixture.guide.hits.set(knowledgeFixture.record, { kind: 'panel', region: { id: 'world-category:world.proto_astro' } });
   knowledgeFixture.guide.press(knowledgeFixture.record);
-  assert.equal(knowledgeFixture.guide.messagePanel.group.visible, false, 'back from detail clears World Knowledge message content');
+  assert.equal(knowledgeFixture.guide.getSelectedWorldKnowledgeCategoryId(), 'world.proto_astro',
+    'another category can be selected directly from the persistent grid');
+  assert.equal(knowledgeFixture.guide.getSelectedWorldKnowledgeStageId(), '02.1');
   assert.equal(knowledgeFixture.guide.getWorldKnowledgeOverview().length, 2,
     'a subscribed model update reveals a category without rebuilding gameplay state');
+  knowledgeFixture.guide.hits.set(knowledgeFixture.record, { kind: 'panel', region: { id: 'back-world-menu' } });
+  knowledgeFixture.guide.press(knowledgeFixture.record);
+  assert.equal(knowledgeFixture.guide.messagePanel.group.visible, false, 'leaving WIEDZA clears World Knowledge content');
+  assert.equal(knowledgeFixture.guide.readerControlsPanel.group.visible, false, 'leaving WIEDZA hides reader controls');
   knowledgeFixture.guide.dispose(); knowledgeFixture.monkeyGeometry.dispose(); knowledgeFixture.monkeyMaterial.dispose();
 }
 
@@ -456,8 +477,16 @@ assert.match(experienceVrSource, /getPreparedKnowledgeImage: requirePreparedBand
   single.guide.press(single.record);
   assert.equal(single.guide.getWorldKnowledgeTextPageCount(), 1, 'short stage resolves to one technical page');
   assert.deepEqual(marked, ['11.1'], 'deliberately opening a single-page stage marks only that stage READ');
+  assert.equal(single.guide.getReaderControlRegions().some(({ id }) => id.startsWith('world-knowledge-page-')), false,
+    'one-page stages omit the complete pagination group');
   single.guide.close();
   assert.equal(single.guide.messagePanel.group.visible, false, 'closing Monkey clears World Knowledge presentation state');
+  assert.equal(single.guide.readerControlsPanel.group.visible, false, 'closing Monkey hides reader controls');
+  single.guide.reset();
+  assert.equal(single.guide.getSelectedWorldKnowledgeCategoryId(), null, 'reset clears the World Knowledge category');
+  assert.equal(single.guide.getSelectedWorldKnowledgeStageId(), null, 'reset clears the World Knowledge stage');
+  const controlsCanvas = single.guide.readerControlsPanel.canvas;
   single.guide.dispose(); single.monkeyGeometry.dispose(); single.monkeyMaterial.dispose();
+  assert.equal(controlsCanvas.width, 0, 'dispose releases the reader-controls canvas');
 }
 console.log('VR monkey guide assertions passed');
