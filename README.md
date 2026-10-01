@@ -34,9 +34,9 @@ Production deployment currently uses GitHub Pages.
 
 The repository contains a maintained technical and design documentation system.
 
-Start with [`docs/README.md`](https://chatgpt.com/g/g-p-6a0f37d78b1c8191bbc63db82b7b70fa-portfolio/c/docs/README.md).
+Start with [`docs/README.md`](docs/README.md).
 
-The current documentation hub is [`docs/current/README.md`](https://chatgpt.com/g/g-p-6a0f37d78b1c8191bbc63db82b7b70fa-portfolio/c/docs/current/README.md), while [`docs/current/maps/PROJECT_INDEX.md`](https://chatgpt.com/g/g-p-6a0f37d78b1c8191bbc63db82b7b70fa-portfolio/c/docs/current/maps/PROJECT_INDEX.md) acts as the main map of the current architecture.
+The current documentation hub is [`docs/current/README.md`](docs/current/README.md), while [`docs/current/maps/PROJECT_INDEX.md`](docs/current/maps/PROJECT_INDEX.md) acts as the main map of the current architecture.
 
 Historical implementation plans and superseded designs are kept separately from the current project model.
 
@@ -46,19 +46,19 @@ The project combines manual design and implementation work with generative and A
 
 AI tools have been used in parts of the software implementation, concept development, 3D asset production and sound design. Generated material is subsequently integrated, edited and adapted as part of the project.
 
-Specific third-party tools, assets and licensing information will be documented separately.
+Specific third-party tools, assets and licensing information are documented in [CREDITS.md](CREDITS.md) and [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
 ## Licensing
 
-The repository is intended to use a mixed-license model.
+This repository uses a mixed-license model.
 
-Original source code authored for this project is intended to be released under the **MIT License**.
+Original project source code is licensed under the **MIT License**.
 
-Original audiovisual material and creative assets for which the author holds the necessary rights are intended to be released under **Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)** unless otherwise noted.
+Original project-specific creative assets and documentation are licensed under **Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)** only to the extent that the relevant rights exist and are held or licensable by the project author.
 
-Third-party libraries, generated assets and other materials subject to separate licensing terms will retain their respective licenses.
+Third-party libraries and provider-restricted generated material retain their applicable licenses or service restrictions and are excluded from those blanket grants where noted.
 
-Exact licensing scope and third-party notices will be added in a separate licensing task.
+See [LICENSE.md](LICENSE.md), [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) and [CREDITS.md](CREDITS.md) for the exact scope.
 
 ## Author
 
