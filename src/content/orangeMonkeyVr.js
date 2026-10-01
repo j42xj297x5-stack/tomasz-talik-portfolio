@@ -5,7 +5,7 @@ export const orangeMonkeyVr = {
   title: 'Orange Monkey VR',
   shortLabel: 'Orange Monkey VR',
   video: {
-    youtubeId: 'UUfgQpF66SQ',
+    youtubeId: 'zdlkHXKwGw0',
     posterPath: ''
   },
   translations: {
