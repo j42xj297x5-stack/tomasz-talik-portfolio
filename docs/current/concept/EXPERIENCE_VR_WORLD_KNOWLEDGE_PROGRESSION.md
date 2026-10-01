@@ -4,29 +4,19 @@ Status: **CURRENT / BINDING DESIGN TARGET / IMPLEMENTATION PENDING**
 
 ## Authority and scope
 
-This document is the subordinate progression contract for the Orange Monkey VR world knowledge authored in [`EXPERIENCE_VR_WORLD_KNOWLEDGE.md`](EXPERIENCE_VR_WORLD_KNOWLEDGE.md). The master document remains authoritative for knowledge categories, language-independent IDs, semantic meaning and approved bilingual PL/EN content. This document owns only the future discovery stages, lifecycle rules, inheritance boundary and the progression bindings explicitly resolved below.
+This document is the subordinate progression contract for the Orange Monkey VR world knowledge authored in [`EXPERIENCE_VR_WORLD_KNOWLEDGE.md`](EXPERIENCE_VR_WORLD_KNOWLEDGE.md). The master document remains authoritative for knowledge categories, language-independent IDs, semantic meaning, approved bilingual PL/EN content and approved `KIEDY:` annotations. The completed [`AUDYT_MAPOWANIA_WIEDZY_RUNTIME_2026-10-01.md`](../audits/technical/AUDYT_MAPOWANIA_WIEDZY_RUNTIME_2026-10-01.md) is the implementation evidence for the runtime predicates bound here.
 
-When a task requires delivery or presentation mechanics, consult [`EXPERIENCE_VR_COMMUNICATION_MECHANICS.md`](EXPERIENCE_VR_COMMUNICATION_MECHANICS.md). When it requires gameplay-domain identity or committed progression truth, consult [`VR_PROTO_ASTRO_MODEL.md`](../technical/VR_PROTO_ASTRO_MODEL.md) and [`VR_RUNE_STONES_MODEL.md`](../technical/VR_RUNE_STONES_MODEL.md) as applicable. Those documents do not replace the semantic content authority or the progression rules defined here.
+When a task requires delivery or presentation mechanics, consult [`EXPERIENCE_VR_COMMUNICATION_MECHANICS.md`](EXPERIENCE_VR_COMMUNICATION_MECHANICS.md). When it requires gameplay-domain identity or committed progression truth, consult [`VR_PROTO_ASTRO_MODEL.md`](../technical/VR_PROTO_ASTRO_MODEL.md) and [`VR_RUNE_STONES_MODEL.md`](../technical/VR_RUNE_STONES_MODEL.md) as applicable. Those documents do not replace this progression contract or the semantic content authority.
 
-This is a design contract, not an implemented runtime claim. It does not implement the Monkey Knowledge surface, Player Y projection, counters, persistence, presentation assets, Scenario points or Scenario transitions.
+This is a design contract, not an implemented runtime claim. It does not implement the World Knowledge model, Monkey Knowledge surface, Player Y projection, counters, persistence, presentation assets, Scenario points or Scenario transitions.
 
-## Three-star discovery model
+## Authored-stage model
 
-Every knowledge category presented through the future Monkey Knowledge surface has exactly three progressive discovery stages:
-
-```text
-STAR 1
-STAR 2
-STAR 3
-```
-
-Runtime star stages do not have to map one-to-one to the numbered semantic fragments in the master content source. One star may expose one or more source fragments. A category may therefore have more or fewer than three numbered source subsections without changing the invariant of exactly three runtime stages.
-
-The approved canonical source text must not be split, merged, rewritten or otherwise reshaped merely to obtain three source subsections per category. A later integration task must map source fragments to stars while preserving their approved bilingual wording, IDs and semantics.
+Every numbered subsection `XX.Y` in the master content is one independent knowledge stage and one star. Categories therefore contain **2, 3 or 4 stages**, according to their authored content. The complete current master contains **45 stages**. Stages must not be split, merged or regrouped to force a fixed category size, and the approved bilingual wording, IDs, semantics and `KIEDY:` annotations must not be rewritten by progression integration.
 
 ## Independent stage lifecycle
 
-Each star has its own lifecycle:
+Each of the 45 stages independently follows:
 
 ```text
 LOCKED → AVAILABLE → READ
@@ -36,7 +26,7 @@ LOCKED → AVAILABLE → READ
 - **AVAILABLE** — the player can deliberately open the stage through the Monkey Knowledge surface. Availability does not mean that the knowledge has been read or inherited by Player Y.
 - **READ** — committed only after the complete deliberate presentation of that stage finishes successfully.
 
-Selecting a category or star, opening a topic, starting playback, or interrupting a presentation does not establish `READ`. Each stage advances independently: making a later stage `AVAILABLE` does not implicitly mark an earlier or later stage `READ`.
+Selecting a category or star, opening a topic, starting playback, or interrupting a presentation does not establish `READ`. Making a later stage `AVAILABLE` does not implicitly mark any other stage `AVAILABLE` or `READ`. Availability is monotonic: once a predicate has made a stage `AVAILABLE`, later changes in transient domain state cannot return it to `LOCKED`.
 
 ## Monkey first, Player Y inheritance second
 
@@ -46,58 +36,72 @@ A specific knowledge stage may be inherited by Player Y only after that stage re
 
 Player Y copy is an abbreviated projection rather than a replacement for the canonical bilingual source. Its exact copy is not authored by this contract and remains future integration work.
 
-## Resolved progression bindings
+## Complete audited availability bindings
 
-Only Shells, natural Small Glyphs and natural Rune Stones receive concrete star thresholds in this contract. Counts use authoritative committed domain truth rather than attempts, presentation state or inferred visibility.
+The predicates below read authoritative runtime truth; they do not create parallel gameplay counters or new Scenario semantics. `totalTunedRuneCount` means `runeStoneProgressionController.getTunedFamilyCodes().length + Number(runeStoneProgressionController.isEtherRuneTuned())`. “Committed Tier-1 pages” means IDs from `progressionController.getActivatedPageIds()` resolved through `experienceVrPages` and filtered to `page.order === 1`; `CRYSTAL_ACTIVATED` is preview only and must never count.
 
-### Shells
-
-Shell knowledge counts the six canonical Shell identities processed by the Furnace.
-
-| Stage | Availability threshold |
+| Stage | Approved availability predicate |
 | --- | --- |
-| `STAR 1` | 2 unique Shell identities processed by the Furnace |
-| `STAR 2` | 4 unique Shell identities processed by the Furnace |
-| `STAR 3` | 6 unique Shell identities processed by the Furnace |
+| `01.1` | `progressionController.isTierComplete(1) === true` |
+| `01.2` | `progressionController.isTierComplete(2) === true` |
+| `01.3` | `progressionController.isTierComplete(3) === true` |
+| `02.1` | `progressionController.isTierComplete(1) === true` |
+| `02.2` | `progressionController.isTierComplete(2) === true` |
+| `02.3` | `progressionController.isTierComplete(4) === true` |
+| `03.1` | `furnaceProgressionController.getAbsorbedShellIds().length >= 2` |
+| `03.2` | `furnaceProgressionController.getAbsorbedShellIds().length >= 4` |
+| `03.3` | `furnaceProgressionController.getAsterionSphereProgress().complete === true` (six processed Shells) |
+| `04.1` | `protoAstroTuningController.getExtractedFamilyCodes().length >= 2` |
+| `04.2` | `protoAstroTuningController.getExtractedFamilyCodes().length >= 4` |
+| `04.3` | `protoAstroTuningController.getExtractedFamilyCodes().length >= 5` |
+| `05.1` | `progressionController.isTierComplete(2) === true` |
+| `05.2` | `progressionController.isTierComplete(2) === true` |
+| `05.3` | `progressionController.isTierComplete(3) === true` |
+| `05.4` | `progressionController.isTierComplete(4) === true` |
+| `06.1` | committed Tier-1 page count `>= 1` |
+| `06.2` | committed Tier-1 page count `>= 3` |
+| `06.3` | committed Tier-1 page count `>= 5` |
+| `07.1` | committed Tier-1 page count `>= 2` |
+| `07.2` | committed Tier-1 page count `>= 4` |
+| `07.3` | committed Tier-1 page count `>= 5` |
+| `08.1` | `astroAttractorProductionController.isEarned() === true` (production state `EARNED`) |
+| `08.2` | `asterionProductionController.getState() === 'EARNED'` |
+| `08.3` | `protoAstroTuningController.getExtractedFamilyCodes().length >= 1` |
+| `09.1` | `astroAttractorProductionController.isEarned() === true` (production state `EARNED`) |
+| `09.2` | `furnaceProgressionController.getAsterionSphereProgress().complete === true` |
+| `09.3` | `progressionController.isTierComplete(2) === true` |
+| `10.1` | `totalTunedRuneCount >= 1` |
+| `10.2` | `totalTunedRuneCount >= 3` |
+| `10.3` | `totalTunedRuneCount >= 5` |
+| `10.4` | `totalTunedRuneCount >= 6` |
+| `11.1` | `progressionController.isTierComplete(2) === true` |
+| `11.2` | `progressionController.isTierComplete(3) === true` |
+| `12.1` | first Rune Bridge completes `ARRIVING → DOCKED`; reconstruction accepts `DOCKED`, `EXTENDING`, `EXTENDED` or `BOUND` as post-arrival truth |
+| `12.2` | at least three Rune Bridges have completed arrival; reconstruction uses the same post-arrival states and does not count `ARRIVING` |
+| `13.1` | `asterionProductionController.getState() === 'EARNED'` |
+| `13.2` | first `asterionResonatorFieldActor.descriptor.fullActiveCore === true`; historical trigger requiring a persistent availability latch |
+| `14.1` | first `asterionResonatorFieldActor.descriptor.fullActiveCore === true`; shared historical trigger requiring the same latch |
+| `14.2` | `progressionController.isTierComplete(4) === true` |
+| `14.3` | Ether functional integration semantic alias `ETHER_MONKEY_CAPTURED`, reconstructable as `runeStoneProgressionController.hasWaterInstallationReadinessOverride() === true`; there is no `ETHER_INSTALLED` |
+| `14.4` | `runeStoneProgressionController.isFamilyInstalled('S') === true` (direct natural Water-family truth) |
+| `15.1` | `furnaceProgressionController.hasAbsorbedShell('shell-relic-6') === true` |
+| `15.2` | `runeStoneProgressionController.isEtherRuneTuned() === true` |
+| `15.3` | `ETHER_MONKEY_CAPTURED`, reconstructable as `runeStoneProgressionController.hasWaterInstallationReadinessOverride() === true` |
 
-The count is based on authoritative processed-Shell truth. Raw collection attempts, repeated processing and duplicate operations do not increase it. This contract specifies the rule only and does not implement or own a counter.
+### Binding constraints
 
-### Small Glyphs
-
-Small Glyph knowledge progression counts only the five natural extracted Small Glyph family essences (`K / T / S / L / R`).
-
-| Stage | Availability threshold |
-| --- | --- |
-| `STAR 1` | 2 unique natural Small Glyph families extracted |
-| `STAR 2` | 4 unique natural Small Glyph families extracted |
-| `STAR 3` | all 5 unique natural Small Glyph families extracted |
-
-The authoritative fact is committed natural family-essence extraction, not physical visibility, targeting, transport, possession or an extraction attempt. Special Ether Small Glyph `VI` is outside this five-family threshold sequence. This contract specifies the rule only and does not implement or own a counter.
-
-### Rune Stones
-
-Natural Rune Stone knowledge progression counts only committed installation of the five natural Rune families (`K / T / S / L / R`).
-
-| Stage | Availability threshold |
-| --- | --- |
-| `STAR 1` | 2 unique natural Rune families installed |
-| `STAR 2` | 4 unique natural Rune families installed |
-| `STAR 3` | all 5 unique natural Rune families installed |
-
-Tuning, physical visibility, targeting, transport, readiness and installation attempts do not count. Ether is special and never counts as a sixth natural Rune family.
-
-The Ether Rune identity and all Ether-specific Rune knowledge remain unavailable until the authored Monkey Ether explanation has completed successfully. Physical visibility, tuning, targeting or transport of the Ether Rune cannot reveal or imply that knowledge. This teaching gate is independent of the natural `2 / 4 / 5` installation thresholds.
+- Shell stages use committed Furnace processing truth, not collection or attempted processing.
+- Small Glyph stages use committed natural-family extraction truth from `protoAstroTuningController`; Ether `VI` is outside the five-family thresholds.
+- Portal stages count committed Tier-1 pages only. Preview event `CRYSTAL_ACTIVATED` does not count.
+- Astrolabium Więzi and Asterion Sphere ownership require their production state `EARNED`, not an earlier available, building or claim state.
+- Rune Stone stages count tuning, not installation, at **1 / 3 / 5 / 6** total tuned Runes. The total includes Ether when it has been tuned and does not assume a fixed tuning order.
+- Keystone arrival means completed Rune Bridge arrival or reconstructable post-arrival state, never readiness or an in-progress arrival.
+- First complete Resonator activation is the first `fullActiveCore === true`. `fieldActive` is insufficient because it becomes true with only one active channel. Because sectors can later return to zero, future runtime implementation must latch the first complete activation historically.
+- Ether functional integration uses the audited semantic alias `ETHER_MONKEY_CAPTURED` / `waterInstallationReadinessOverride === true`. Runtime must not invent `ETHER_INSTALLED`.
+- Water Rune availability uses direct natural-family truth `isFamilyInstalled('S')`, rather than assuming an event order.
 
 ## Terminal knowledge boundary
 
-The final Water Crystal extraction marks the end of ordinary Monkey knowledge discovery. Before the player begins that final Water Crystal extraction, every world-knowledge stage belonging to the completed experience must already be at least `AVAILABLE`.
+Every authored knowledge stage must be at least `AVAILABLE` before the experience enters the final Water Glyph/Crystal end sequence in which normal Monkey interaction is no longer available.
 
-The player is not required to have completed the deliberate presentation of every stage or to have every stage at `READ`. This boundary prevents new world-knowledge content from first becoming discoverable after the experience has entered its final guided exit sequence.
-
-This is a deadline invariant, not a new Scenario point or transition. A future integration must satisfy it using authoritative domain events without adding progression semantics here.
-
-## Explicitly unresolved bindings
-
-All master-source knowledge categories retain the global exactly-three-star model. Apart from Shells, Small Glyphs and Rune Stones, their concrete unlock triggers and fragment-to-star mappings are explicitly unresolved.
-
-Future work must author those bindings separately. It must not guess them from fragment numbering, physical visibility, current Scenario points, nearby communications or analogous domain events. Any completed-experience stages authored later remain subject to the final-Water availability deadline.
+The player is not required to have completed the deliberate presentation of every stage or to have every stage at `READ`. This boundary prevents knowledge from first becoming discoverable after the ordinary Monkey teaching surface is unavailable. It is a safety/deadline invariant only, not a new Scenario point, event, milestone, capability or transition.
