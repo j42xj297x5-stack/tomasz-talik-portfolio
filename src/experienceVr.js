@@ -1096,6 +1096,7 @@ monkeyGuide = createVrMonkeyGuide({
   progressionController,
   knowledgeResolver: monkeyKnowledgeResolver,
   worldKnowledgeModel,
+  getPreparedKnowledgeImage: requirePreparedBandImage,
   locale: language,
   settings: settings.monkeyGuide,
   onOpenChange: (open) => playVrUi(open ? VR_AUDIO.monkeyOpen : VR_AUDIO.monkeyClose),
