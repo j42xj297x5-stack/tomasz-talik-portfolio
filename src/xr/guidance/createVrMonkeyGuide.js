@@ -71,6 +71,10 @@ function paginateText(context, text, maxWidth, maxLines) {
   return pages.length ? pages : [[]];
 }
 
+export function compactWorldKnowledgeForReader(text) {
+  return String(text ?? '').replace(/\r\n?/g, '\n').replace(/\n[ \t]*\n+/g, ' ');
+}
+
 function createTwoSidedCanvasPlane({ name, width, height, canvasWidth, canvasHeight }) {
   const canvas = document.createElement('canvas');
   canvas.width = canvasWidth;
@@ -363,7 +367,7 @@ export function createVrMonkeyGuide({
   function drawDialogue() {
     const { canvas, context, texture } = dialoguePanel;
     context.clearRect(0, 0, canvas.width, canvas.height);
-    context.globalAlpha = 0.23;
+    context.globalAlpha = settings.dialogue.backdropOpacity;
     context.fillStyle = '#000000';
     roundedRect(context, 0, 0, canvas.width, canvas.height, settings.dialogue.cornerRadius); context.fill();
     context.globalAlpha = 1;
@@ -547,7 +551,8 @@ export function createVrMonkeyGuide({
     dialogueInteractiveRegions = []; const entries = projectVrWorldKnowledge(worldKnowledgeModel, locale);
     const columns = 5; const padding = settings.dialogue.padding; const navHeight = settings.dialogue.historyNavigationHeight;
     const navTop = canvas.height - padding - navHeight; const cellWidth = (canvas.width - padding * 2) / columns;
-    const cellHeight = (navTop - padding) / 3; const iconSize = Math.min(cellWidth * 0.58, cellHeight * 0.68);
+    const gridBottom = navTop - settings.dialogue.gap;
+    const cellHeight = (gridBottom - padding) / 3; const iconSize = Math.min(cellWidth * 0.58, cellHeight * 0.68);
     entries.forEach((entry, index) => {
       const column = index % columns; const row = Math.floor(index / columns);
       const region = addRegion({ id: `world-category:${entry.categoryId}`, x: padding + column * cellWidth,
@@ -713,7 +718,7 @@ export function createVrMonkeyGuide({
     const stage = resolveVrWorldKnowledgeStage(selectedWorldKnowledgeStageId, locale);
     if (!stage) return null;
     messagePanel.context.font = `${settings.card.bodyFontSize}px sans-serif`;
-    const pages = paginateText(messagePanel.context, stage.body,
+    const pages = paginateText(messagePanel.context, compactWorldKnowledgeForReader(stage.body),
       settings.message.maxBubbleWidthPx - settings.message.paddingX * 2,
       settings.worldKnowledge?.maxLinesPerPage ?? settings.card.maxLinesPerPage);
     const page = Math.max(0, Math.min(worldKnowledgeTextPage, pages.length - 1));
