@@ -126,6 +126,31 @@ function createFixture(locale = 'en', configure = () => {}, worldKnowledgeModel 
     getRayDistance: () => rayDistance, getAttentionStarts: () => attentionStarts };
 }
 
+for (const [locale, rootLabel, familyLabels] of [
+  ['pl', 'JAK MI IDZIE?', { KA: 'ZIEMIA · KA', TA: 'METAL · TA', SA: 'WODA · SA', LA: 'DRZEWO · LA', RA: 'OGIEŃ · RA' }],
+  ['en', 'HOW AM I DOING?', { KA: 'EARTH · KA', TA: 'METAL · TA', SA: 'WATER · SA', LA: 'WOOD · LA', RA: 'FIRE · RA' }]
+]) {
+  for (const [glyphId, syllable] of Object.entries(expectedFamilies)) {
+    const localized = createFixture(locale);
+    const selectedPage = experienceVrPages.find((page) => page.glyphId === glyphId && page.order === 1);
+    localized.pageIds.push(selectedPage.id);
+    const textBeforeOpen = drawnText.length;
+    localized.guide.open();
+    assert.ok(drawnText.slice(textBeforeOpen).includes(rootLabel), `${locale} root menu keeps its progress label`);
+    localized.guide.hits.set(localized.record, { kind: 'panel', region: { id: 'progress' } });
+    localized.guide.press(localized.record);
+    localized.guide.hits.set(localized.record, { kind: 'panel', region: { id: `portfolio-category:${glyphId}` } });
+    localized.guide.press(localized.record);
+    const resolved = resolveExperienceVrPage(selectedPage, locale);
+    const readerText = drawnTextPositions.filter(({ canvasIndex }) =>
+      canvasIndex === localized.guide.messagePanel.canvas._testCanvasIndex).map(({ text }) => text);
+    assert.ok(readerText.includes(familyLabels[syllable]), `${locale} ${glyphId} reader uses its localized family and canonical syllable`);
+    assert.ok(readerText.includes(resolved.title), `${locale} ${glyphId} reader preserves the selected card title`);
+    assert.equal(readerText.includes(rootLabel), false, `${locale} ${glyphId} reader no longer uses the root progress label`);
+    localized.guide.dispose(); localized.monkeyGeometry.dispose(); localized.monkeyMaterial.dispose();
+  }
+}
+
 for (const [locale, whatNowLabel, removedLabel, worldKnowledgeLabel] of [
   ['pl', 'CO TERAZ?', 'CO TO JEST?', 'WIEDZA'],
   ['en', 'WHAT COMES NEXT?', "WHAT'S THAT?", 'KNOWLEDGE']
@@ -390,7 +415,7 @@ assert.deepEqual({ x: firstCardRect.x, y: firstCardRect.y, width: firstCardRect.
   { x: (guide.messagePanel.canvas.width - 1301) / 2, y: guide.messagePanel.canvas.height - expectedReaderHeight,
     width: 1301, height: expectedReaderHeight }, 'HISTORY reader uses the fixed six-line bounding rectangle');
 const historyEyebrow = drawnTextPositions.findLast(({ canvasIndex, text }) =>
-  canvasIndex === guide.messagePanel.canvas._testCanvasIndex && text === 'HOW AM I DOING?');
+  canvasIndex === guide.messagePanel.canvas._testCanvasIndex && text === 'FIRE · RA');
 assert.ok(historyEyebrow.y < firstCardText.title.y, 'HISTORY context is a separate uppercase eyebrow above its primary title');
 assert.ok(Number.parseFloat(historyEyebrow.font.match(/[\d.]+px/)?.[0])
   < Number.parseFloat(firstCardText.title.font.match(/[\d.]+px/)?.[0]),
@@ -482,6 +507,7 @@ polish.pageIds.push(creative1.id); polish.guide.open();
 polish.guide.hits.set(polish.record, { kind: 'panel', region: { id: 'progress' } }); polish.guide.press(polish.record);
 polish.guide.hits.set(polish.record, { kind: 'panel', region: { id: 'portfolio-category:creative-ai' } }); polish.guide.press(polish.record);
 assert.ok(drawnText.includes(resolveExperienceVrPage(creative1, 'pl').title), 'selected card uses Polish localization');
+assert.ok(drawnText.includes('OGIEŃ · RA'), 'selected card uses the Polish family eyebrow and canonical syllable');
 assert.equal(polish.guide.getReaderControlRegions().some(({ id }) => id.startsWith('card-page-')), false,
   'single-page cards omit the complete pagination group');
 polish.guide.dispose(); polish.monkeyGeometry.dispose(); polish.monkeyMaterial.dispose();
