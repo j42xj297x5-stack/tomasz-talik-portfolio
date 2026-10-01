@@ -2,7 +2,7 @@ import * as THREE from '../../vendor/three.js';
 import { experienceVrPages, resolveExperienceVrPage } from '../../content/experienceVrPages.js';
 import { createVrTargetHalo } from '../createVrTargetHalo.js';
 import { VR_MONKEY_INTERACTION_LAYER } from '../../scene/monkeyModel.js';
-import { resolveVrPageProtoAstro } from '../protoAstro/resolveVrPageProtoAstro.js';
+import { resolveVrPageProtoAstro, VR_PAGE_PROTO_ASTRO_FAMILY_BY_GLYPH_ID } from '../protoAstro/resolveVrPageProtoAstro.js';
 import { createVrMonkeyProgressionMessage } from './createVrMonkeyProgressionMessage.js';
 import { VR_MONKEY_MESSAGE_TIMING } from './vrMonkeyCommunicationCopy.js';
 import { projectVrWorldKnowledge } from '../knowledge/vrWorldKnowledgePresentation.js';
@@ -15,7 +15,7 @@ const COPY = Object.freeze({
     history: (count) => `Discovered cards: ${count}.${count > 0 ? ' Select a sign.' : ''}` })
 });
 
-export const VR_MONKEY_GUIDE_SCREEN = Object.freeze({ MENU: 'MENU', HISTORY: 'HISTORY', CARD: 'CARD', KNOWLEDGE: 'KNOWLEDGE',
+export const VR_MONKEY_GUIDE_SCREEN = Object.freeze({ MENU: 'MENU', HISTORY: 'HISTORY', KNOWLEDGE: 'KNOWLEDGE',
   WORLD_KNOWLEDGE: 'WORLD_KNOWLEDGE' });
 export const VR_MONKEY_DIALOGUE_PRIORITY = Object.freeze({ OPTIONAL: 1, ACQUISITION: 2, MANDATORY: 3 });
 export const unreadPulseAlpha = (seconds) => 0.5 - 0.5 * Math.cos(Math.PI * Math.max(0, seconds));
@@ -223,6 +223,7 @@ export function createVrMonkeyGuide({
   let screen = VR_MONKEY_GUIDE_SCREEN.MENU;
   let menuPage = 0;
   let historyPage = 0;
+  let selectedHistoryGlyphId = null;
   let selectedPageId = null;
   let cardPage = 0;
   let selectedKnowledgeGroupId = null;
@@ -274,9 +275,8 @@ export function createVrMonkeyGuide({
       texture.needsUpdate = true;
       return;
     }
-    if (!message) { texture.needsUpdate = true; return; }
     const selectedPage = pagesById.get(selectedPageId);
-    if (screen === VR_MONKEY_GUIDE_SCREEN.CARD && selectedPage) {
+    if (screen === VR_MONKEY_GUIDE_SCREEN.HISTORY && selectedPage) {
       const resolved = resolveExperienceVrPage(selectedPage, locale);
       context.font = `${settings.message.fontWeight} ${settings.card.titleFontSize}px sans-serif`;
       const titleWidth = context.measureText(resolved.title).width;
@@ -303,6 +303,7 @@ export function createVrMonkeyGuide({
       texture.needsUpdate = true;
       return;
     }
+    if (!message) { texture.needsUpdate = true; return; }
     context.font = `${settings.message.fontWeight} ${settings.message.fontSize}px sans-serif`;
     const maxTextWidth = settings.message.maxBubbleWidthPx - settings.message.paddingX * 2;
     const lines = wrapText(context, message, maxTextWidth);
@@ -366,7 +367,6 @@ export function createVrMonkeyGuide({
       texture.needsUpdate = true; return;
     }
     if (screen === VR_MONKEY_GUIDE_SCREEN.HISTORY) { drawHistory(context, canvas); texture.needsUpdate = true; return; }
-    if (screen === VR_MONKEY_GUIDE_SCREEN.CARD) { drawCardNavigation(context, canvas); texture.needsUpdate = true; return; }
     if (screen === VR_MONKEY_GUIDE_SCREEN.KNOWLEDGE) { drawKnowledge(context, canvas); texture.needsUpdate = true; return; }
     if (screen === VR_MONKEY_GUIDE_SCREEN.WORLD_KNOWLEDGE) { drawWorldKnowledgeOverview(context, canvas); texture.needsUpdate = true; return; }
     const options = [
@@ -450,10 +450,12 @@ export function createVrMonkeyGuide({
       y: navTop, width: 140, height: navHeight }); drawButton(context, next, '›'); }
   }
   function historyEntries() {
-    return progressionController.getActivatedPageIds().map((pageId) => {
-      const page = pagesById.get(pageId);
-      const protoAstro = resolveVrPageProtoAstro(page);
-      return page && protoAstro ? { pageId, page, ...protoAstro } : null;
+    const activatedIds = new Set(progressionController.getActivatedPageIds());
+    return Object.keys(VR_PAGE_PROTO_ASTRO_FAMILY_BY_GLYPH_ID).map((glyphId) => {
+      const pages = experienceVrPages.filter((page) => page.glyphId === glyphId && activatedIds.has(page.id))
+        .sort((left, right) => left.order - right.order);
+      const protoAstro = resolveVrPageProtoAstro(pages[0]);
+      return pages.length && protoAstro ? { glyphId, pages, page: pages[0], ...protoAstro } : null;
     }).filter(Boolean);
   }
   function requestGlyphImage(entry) {
@@ -555,13 +557,47 @@ export function createVrMonkeyGuide({
     const { canvas, context, texture } = readerControlsPanel;
     context.clearRect(0, 0, canvas.width, canvas.height);
     readerControlRegions = [];
+    const portfolioEntry = screen === VR_MONKEY_GUIDE_SCREEN.HISTORY
+      ? historyEntries().find(({ glyphId }) => glyphId === selectedHistoryGlyphId) : null;
     const presentation = worldKnowledgePresentation();
     const entry = projectVrWorldKnowledge(worldKnowledgeModel, locale)
       .find(({ categoryId }) => categoryId === selectedWorldKnowledgeCategoryId);
-    readerControlsPanel.group.visible = Boolean(open && screen === VR_MONKEY_GUIDE_SCREEN.WORLD_KNOWLEDGE
-      && presentation && entry);
+    const portfolioVisible = open && screen === VR_MONKEY_GUIDE_SCREEN.HISTORY
+      && portfolioEntry?.pages.some(({ id }) => id === selectedPageId);
+    readerControlsPanel.group.visible = Boolean(portfolioVisible
+      || (open && screen === VR_MONKEY_GUIDE_SCREEN.WORLD_KNOWLEDGE && presentation && entry));
     if (!readerControlsPanel.group.visible) { texture.needsUpdate = true; return; }
     const config = settings.readerControls; let x = config.padding;
+    if (portfolioVisible) {
+      portfolioEntry.pages.forEach((page) => {
+        const region = { id: `portfolio-page:${page.id}`, x, y: (canvas.height - config.buttonSize) / 2,
+          width: config.buttonSize, height: config.buttonSize };
+        readerControlRegions.push(region);
+        const active = page.id === selectedPageId;
+        context.globalAlpha = unreadPageIds.has(page.id) && !active ? unreadPulseAlpha(elapsed) : 1;
+        context.fillStyle = drawInteractiveRegion(context, region, hoveredOption === region.id || active);
+        context.font = `${config.fontSize}px sans-serif`; context.textAlign = 'center'; context.textBaseline = 'middle';
+        context.fillText('★', region.x + region.width / 2, region.y + region.height / 2);
+        context.globalAlpha = 1; x += config.buttonSize + config.buttonGap;
+      });
+      const pages = cardPages();
+      if (pages.length > 1) {
+        const nextX = canvas.width - config.padding - config.buttonSize;
+        const previous = { id: 'card-page-previous', x: nextX - config.buttonSize * 2 - config.buttonGap * 2,
+          y: (canvas.height - config.buttonSize) / 2, width: config.buttonSize, height: config.buttonSize };
+        const next = { id: 'card-page-next', x: nextX, y: previous.y,
+          width: config.buttonSize, height: config.buttonSize };
+        readerControlRegions.push(previous, next);
+        context.fillStyle = drawInteractiveRegion(context, previous, hoveredOption === previous.id);
+        context.font = `${config.fontSize}px sans-serif`; context.textAlign = 'center'; context.textBaseline = 'middle';
+        context.fillText('‹', previous.x + previous.width / 2, canvas.height / 2);
+        context.fillStyle = settings.colors.dialogueButtonText;
+        context.fillText(`${cardPage + 1} / ${pages.length}`, nextX - config.buttonGap - config.buttonSize / 2, canvas.height / 2);
+        context.fillStyle = drawInteractiveRegion(context, next, hoveredOption === next.id);
+        context.fillText('›', next.x + next.width / 2, canvas.height / 2);
+      }
+      texture.needsUpdate = true; return;
+    }
     entry.stages.forEach((stage) => {
       const region = { id: `world-stage:${stage.id}`, x, y: (canvas.height - config.buttonSize) / 2,
         width: config.buttonSize, height: config.buttonSize };
@@ -592,31 +628,35 @@ export function createVrMonkeyGuide({
   function drawHistory(context, canvas) {
     dialogueInteractiveRegions = [];
     const entries = historyEntries();
-    const size = settings.dialogue.historyPageSize;
-    const totalPages = Math.max(1, Math.ceil(entries.length / size));
-    historyPage = Math.min(historyPage, totalPages - 1);
-    const visible = entries.slice(historyPage * size, (historyPage + 1) * size);
-    const padding = settings.dialogue.padding; const columns = settings.dialogue.historyColumns;
+    const padding = settings.dialogue.padding; const columns = Math.max(1, entries.length);
     const navHeight = settings.dialogue.historyNavigationHeight;
     const navTop = canvas.height - padding - navHeight;
     const glyphSize = settings.dialogue.historyGlyphSize;
     const itemWidth = glyphSize + settings.dialogue.historyItemPadding * 2;
     const itemHeight = glyphSize + settings.dialogue.historyGlyphStarGap + settings.dialogue.historyStarFontSize
       + settings.dialogue.historyItemPadding * 2;
-    const columnGap = settings.dialogue.historyColumnGap;
+    const columnGap = Math.min(settings.dialogue.historyColumnGap,
+      (canvas.width - padding * 2 - columns * itemWidth) / Math.max(1, columns - 1));
     const gridWidth = columns * itemWidth + (columns - 1) * columnGap;
     const gridLeft = (canvas.width - gridWidth) / 2;
-    visible.forEach((entry, index) => {
-      const column = index % columns; const row = Math.floor(index / columns);
-      const region = addRegion({ id: `page:${entry.pageId}`, pageId: entry.pageId,
+    entries.forEach((entry, index) => {
+      const column = index; const row = 0;
+      const region = addRegion({ id: `portfolio-category:${entry.glyphId}`, glyphId: entry.glyphId,
         x: gridLeft + column * (itemWidth + columnGap),
         y: padding + row * (itemHeight + settings.dialogue.historyRowGap),
         width: itemWidth, height: itemHeight });
-      const contentColor = drawInteractiveRegion(context, region, hoveredOption === region.id);
+      const selected = entry.glyphId === selectedHistoryGlyphId;
+      const contentColor = drawInteractiveRegion(context, region, hoveredOption === region.id || selected);
+      if (selected) {
+        context.strokeStyle = settings.colors.accent; context.lineWidth = 6;
+        roundedRect(context, region.x + 4, region.y + 4, region.width - 8, region.height - 8,
+          settings.dialogue.optionCornerRadius);
+        context.stroke();
+      }
       const image = requestGlyphImage(entry);
       const glyphX = region.x + settings.dialogue.historyItemPadding;
       const glyphY = region.y + settings.dialogue.historyItemPadding;
-      const contentAlpha = unreadPageIds.has(entry.pageId) ? unreadPulseAlpha(elapsed) : 1;
+      const contentAlpha = entry.pages.some(({ id }) => unreadPageIds.has(id)) ? unreadPulseAlpha(elapsed) : 1;
       context.globalAlpha = contentAlpha;
       if (image?.complete && image.naturalWidth && context.drawImage) drawTintedGlyph(context, image,
         glyphX, glyphY, glyphSize, contentColor);
@@ -626,17 +666,12 @@ export function createVrMonkeyGuide({
       context.fillStyle = contentColor;
       context.font = `${settings.dialogue.historyStarFontSize}px sans-serif`; context.textAlign = 'center';
       context.textBaseline = 'middle';
-      context.fillText('★'.repeat(entry.page.order), glyphX + glyphSize / 2,
+      context.fillText('★'.repeat(entry.pages.length), glyphX + glyphSize / 2,
         glyphY + glyphSize + settings.dialogue.historyGlyphStarGap + settings.dialogue.historyStarFontSize / 2);
       context.globalAlpha = 1;
     });
     const back = addRegion({ id: 'back-menu', x: padding, y: navTop,
       width: navigationWidth(context, '←'), height: navHeight }); drawButton(context, back, '←');
-    const nextX = canvas.width - padding - 140;
-    if (totalPages > 1 && historyPage > 0) { const previous = addRegion({ id: 'history-previous', x: nextX - 152,
-      y: navTop, width: 140, height: navHeight }); drawButton(context, previous, '‹'); }
-    if (totalPages > 1 && historyPage < totalPages - 1) { const next = addRegion({ id: 'history-next', x: nextX,
-      y: navTop, width: 140, height: navHeight }); drawButton(context, next, '›'); }
   }
   function cardPages() {
     const page = pagesById.get(selectedPageId); if (!page) return [[]];
@@ -663,18 +698,6 @@ export function createVrMonkeyGuide({
     messagePanel.group.visible = Boolean(presentation);
     drawMessage(); drawDialogue(); drawReaderControls();
     if (presentation?.pages.length === 1) worldKnowledgeModel.markStageRead(presentation.stage.id);
-  }
-  function drawCardNavigation(context, canvas) {
-    dialogueInteractiveRegions = []; const padding = settings.dialogue.padding;
-    const height = settings.dialogue.historyNavigationHeight;
-    const navTop = canvas.height - padding - height;
-    const back = addRegion({ id: 'back-history', x: padding, y: navTop,
-      width: navigationWidth(context, '←'), height });
-    drawButton(context, back, '←'); const pages = cardPages();
-    if (pages.length > 1 && cardPage > 0) { const previous = addRegion({ id: 'card-previous', x: canvas.width / 2 - 190,
-      y: navTop, width: 150, height }); drawButton(context, previous, '‹'); }
-    if (pages.length > 1 && cardPage < pages.length - 1) { const next = addRegion({ id: 'card-next', x: canvas.width - padding - 150,
-      y: navTop, width: 150, height }); drawButton(context, next, '›'); }
   }
   function drawKnowledge(context, canvas) {
     const topics = knowledgeResolver?.getGroupTopics?.(selectedKnowledgeGroupId) ?? [];
@@ -745,7 +768,8 @@ export function createVrMonkeyGuide({
     hoveredOption = null;
     hits.forEach((_, record) => hits.set(record, null));
     if (open) clearAttention();
-    else { knowledgeSequence?.reset(); knowledgeSequence = null; screen = VR_MONKEY_GUIDE_SCREEN.MENU; selectedPageId = null; cardPage = 0; historyPage = 0; menuPage = 0;
+    else { knowledgeSequence?.reset(); knowledgeSequence = null; screen = VR_MONKEY_GUIDE_SCREEN.MENU; selectedPageId = null;
+      selectedHistoryGlyphId = null; cardPage = 0; historyPage = 0; menuPage = 0;
       selectedKnowledgeGroupId = null; selectedKnowledgeTopicId = null; knowledgePage = 0;
       selectedWorldKnowledgeCategoryId = null; selectedWorldKnowledgeStageId = null; worldKnowledgeTextPage = 0;
       readerControlsPanel.group.visible = false; showMessage(''); }
@@ -808,20 +832,40 @@ export function createVrMonkeyGuide({
       selectedKnowledgeGroupId = null; selectedKnowledgeTopicId = null; knowledgePage = 0;
       showMessage(''); drawDialogue(); return true; }
     if (id === 'progress') { screen = VR_MONKEY_GUIDE_SCREEN.HISTORY; historyPage = 0;
-      showMessage(copy.history(progressCount())); drawDialogue(); return true; }
-    if (id?.startsWith('page:')) { selectedPageId = id.slice(5); unreadPageIds.delete(selectedPageId);
-      screen = VR_MONKEY_GUIDE_SCREEN.CARD; cardPage = 0;
-      showMessage('card'); drawDialogue(); return true; }
-    if (id === 'back-history') { screen = VR_MONKEY_GUIDE_SCREEN.HISTORY; showMessage(copy.history(progressCount())); drawDialogue(); return true; }
-    if (id === 'back-menu') { screen = VR_MONKEY_GUIDE_SCREEN.MENU; showMessage(''); drawDialogue(); return true; }
-    if (id === 'history-previous') { historyPage -= 1; drawDialogue(); return true; }
-    if (id === 'history-next') { historyPage += 1; drawDialogue(); return true; }
+      selectedHistoryGlyphId = null; selectedPageId = null; cardPage = 0;
+      showMessage(''); drawDialogue(); drawReaderControls(); return true; }
+    if (id?.startsWith('portfolio-category:')) {
+      const glyphId = id.slice('portfolio-category:'.length);
+      const entry = historyEntries().find((candidate) => candidate.glyphId === glyphId);
+      if (!entry) return false;
+      selectedHistoryGlyphId = glyphId;
+      selectedPageId = entry.pages.find(({ id: pageId }) => unreadPageIds.has(pageId))?.id ?? entry.pages[0]?.id ?? null;
+      if (!selectedPageId) return false;
+      unreadPageIds.delete(selectedPageId); cardPage = 0; message = '';
+      messagePanel.group.visible = true; drawMessage(); drawDialogue(); drawReaderControls(); return true;
+    }
+    if (id?.startsWith('portfolio-page:')) {
+      const pageId = id.slice('portfolio-page:'.length);
+      const entry = historyEntries().find(({ glyphId }) => glyphId === selectedHistoryGlyphId);
+      if (!entry?.pages.some(({ id: candidateId }) => candidateId === pageId)) return false;
+      selectedPageId = pageId; unreadPageIds.delete(pageId); cardPage = 0;
+      messagePanel.group.visible = true; drawMessage(); drawDialogue(); drawReaderControls(); return true;
+    }
+    if (id === 'back-menu') { screen = VR_MONKEY_GUIDE_SCREEN.MENU; selectedHistoryGlyphId = null;
+      selectedPageId = null; cardPage = 0; readerControlsPanel.group.visible = false;
+      showMessage(''); drawDialogue(); drawReaderControls(); return true; }
     if (id === 'menu-previous') { menuPage -= 1; drawDialogue(); return true; }
     if (id === 'menu-next') { menuPage += 1; drawDialogue(); return true; }
     if (id === 'knowledge-previous') { knowledgePage -= 1; drawDialogue(); return true; }
     if (id === 'knowledge-next') { knowledgePage += 1; drawDialogue(); return true; }
-    if (id === 'card-previous') { cardPage -= 1; drawMessage(); drawDialogue(); return true; }
-    if (id === 'card-next') { cardPage += 1; drawMessage(); drawDialogue(); return true; }
+    if (id === 'card-page-previous') {
+      if (cardPage <= 0) return false;
+      cardPage -= 1; drawMessage(); drawReaderControls(); return true;
+    }
+    if (id === 'card-page-next') {
+      if (cardPage >= cardPages().length - 1) return false;
+      cardPage += 1; drawMessage(); drawReaderControls(); return true;
+    }
     if (id === 'world-knowledge-page-previous') {
       if (worldKnowledgeTextPage <= 0) return false;
       worldKnowledgeTextPage -= 1; drawMessage(); drawReaderControls(); return true;
@@ -920,9 +964,8 @@ export function createVrMonkeyGuide({
       historyPulseRedrawElapsed = 0; drawDialogue(); drawReaderControls();
     }
     if (screen === VR_MONKEY_GUIDE_SCREEN.HISTORY && historyPulseRedrawElapsed >= 1 / 30
-      && historyEntries().slice(historyPage * settings.dialogue.historyPageSize,
-        (historyPage + 1) * settings.dialogue.historyPageSize).some(({ pageId }) => unreadPageIds.has(pageId))) {
-      historyPulseRedrawElapsed = 0; drawDialogue();
+      && historyEntries().some(({ pages }) => pages.some(({ id }) => unreadPageIds.has(id)))) {
+      historyPulseRedrawElapsed = 0; drawDialogue(); drawReaderControls();
     }
     if (attentionPending) {
       const phase = (elapsed % settings.attention.cycleDuration) / settings.attention.cycleDuration * arcs.length;
@@ -978,6 +1021,7 @@ export function createVrMonkeyGuide({
     hasCurrentHit: (record) => Boolean(hits.get(record)), reset, dispose, press,
     isAttentionPending: () => attentionPending,
     getScreen: () => screen, getHistoryEntries: historyEntries, getSelectedPageId: () => selectedPageId,
+    getSelectedHistoryGlyphId: () => selectedHistoryGlyphId,
     getSelectedKnowledgeGroupId: () => selectedKnowledgeGroupId,
     getSelectedKnowledgeTopicId: () => selectedKnowledgeTopicId,
     getSelectedWorldKnowledgeCategoryId: () => selectedWorldKnowledgeCategoryId,
