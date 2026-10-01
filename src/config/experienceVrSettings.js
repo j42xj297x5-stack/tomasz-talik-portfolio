@@ -211,6 +211,10 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
     card: {
       titleFontSize: 58, bodyFontSize: 43, lineHeight: 56, maxLinesPerPage: 6
     },
+    readerControls: {
+      width: 1.7, height: 0.20, canvasWidth: 1280, canvasHeight: 150, gapFromMessage: 0.025,
+      padding: 22, buttonSize: 104, buttonGap: 18, cornerRadius: 24, fontSize: 58
+    },
     worldKnowledge: { maxLinesPerPage: 4 }
   },
   controllers: {
@@ -776,6 +780,7 @@ export function normalizeExperienceVrSettings(candidate) {
           defaults.monkeyGuide.dialogue.rotationDegrees)
       },
       card: { ...defaults.monkeyGuide.card, ...(candidate.monkeyGuide?.card ?? {}) },
+      readerControls: { ...defaults.monkeyGuide.readerControls, ...(candidate.monkeyGuide?.readerControls ?? {}) },
       worldKnowledge: { ...defaults.monkeyGuide.worldKnowledge, ...(candidate.monkeyGuide?.worldKnowledge ?? {}) }
     },
     controllers: {

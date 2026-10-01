@@ -16,7 +16,7 @@ const COPY = Object.freeze({
 });
 
 export const VR_MONKEY_GUIDE_SCREEN = Object.freeze({ MENU: 'MENU', HISTORY: 'HISTORY', CARD: 'CARD', KNOWLEDGE: 'KNOWLEDGE',
-  WORLD_KNOWLEDGE: 'WORLD_KNOWLEDGE', WORLD_KNOWLEDGE_DETAIL: 'WORLD_KNOWLEDGE_DETAIL' });
+  WORLD_KNOWLEDGE: 'WORLD_KNOWLEDGE' });
 export const VR_MONKEY_DIALOGUE_PRIORITY = Object.freeze({ OPTIONAL: 1, ACQUISITION: 2, MANDATORY: 3 });
 export const unreadPulseAlpha = (seconds) => 0.5 - 0.5 * Math.cos(Math.PI * Math.max(0, seconds));
 const degToRad = (degrees) => degrees * Math.PI / 180;
@@ -151,11 +151,23 @@ export function createVrMonkeyGuide({
   const attentionTop = settings.attention.position.y + Math.max(...settings.attention.radii);
   messagePanel.group.position.set(
     0,
-    attentionTop + settings.message.gapFromAttention + settings.message.height / 2,
+    attentionTop + settings.message.gapFromAttention + settings.readerControls.height
+      + settings.readerControls.gapFromMessage + settings.message.height / 2,
     settings.attention.position.z
   );
   messagePanel.group.visible = false;
   root.add(messagePanel.group);
+
+  const readerControlsPanel = createTwoSidedCanvasPlane({
+    name: 'VrMonkeyReaderControlsPanel', width: settings.readerControls.width, height: settings.readerControls.height,
+    canvasWidth: settings.readerControls.canvasWidth, canvasHeight: settings.readerControls.canvasHeight
+  });
+  readerControlsPanel.group.position.set(0,
+    messagePanel.group.position.y - settings.message.height / 2 - settings.readerControls.gapFromMessage
+      - settings.readerControls.height / 2,
+    messagePanel.group.position.z);
+  readerControlsPanel.group.visible = false;
+  root.add(readerControlsPanel.group);
 
   const dialoguePanel = createTwoSidedCanvasPlane({
     name: 'VrMonkeyDialoguePanel', width: settings.dialogue.width, height: settings.dialogue.height,
@@ -206,7 +218,8 @@ export function createVrMonkeyGuide({
   let hoveredOption = null;
   let message = '';
   let disposed = false;
-  let interactiveRegions = [];
+  let dialogueInteractiveRegions = [];
+  let readerControlRegions = [];
   let screen = VR_MONKEY_GUIDE_SCREEN.MENU;
   let menuPage = 0;
   let historyPage = 0;
@@ -234,14 +247,19 @@ export function createVrMonkeyGuide({
     if (disposed) return;
     const categories = projectVrWorldKnowledge(worldKnowledgeModel, locale);
     const selected = categories.find(({ categoryId }) => categoryId === selectedWorldKnowledgeCategoryId);
-    if (screen === VR_MONKEY_GUIDE_SCREEN.WORLD_KNOWLEDGE_DETAIL
-      && (!selected || (selectedWorldKnowledgeStageId && !selected.stages.some(({ id }) => id === selectedWorldKnowledgeStageId)))) {
-      screen = VR_MONKEY_GUIDE_SCREEN.WORLD_KNOWLEDGE;
-      selectedWorldKnowledgeCategoryId = null; selectedWorldKnowledgeStageId = null; worldKnowledgeTextPage = 0;
-      messagePanel.group.visible = false;
+    if (screen === VR_MONKEY_GUIDE_SCREEN.WORLD_KNOWLEDGE && selectedWorldKnowledgeCategoryId) {
+      if (!selected) {
+        selectedWorldKnowledgeCategoryId = null; selectedWorldKnowledgeStageId = null; worldKnowledgeTextPage = 0;
+        messagePanel.group.visible = false; readerControlsPanel.group.visible = false;
+      } else if (!selected.stages.some(({ id }) => id === selectedWorldKnowledgeStageId)) {
+        selectedWorldKnowledgeStageId = selected.stages.find(({ unread }) => unread)?.id ?? selected.stages[0]?.id ?? null;
+        worldKnowledgeTextPage = 0;
+        messagePanel.group.visible = Boolean(selectedWorldKnowledgeStageId);
+      }
     }
-    if (open && !dialogueOverride && (screen === VR_MONKEY_GUIDE_SCREEN.WORLD_KNOWLEDGE
-      || screen === VR_MONKEY_GUIDE_SCREEN.WORLD_KNOWLEDGE_DETAIL)) { drawMessage(); drawDialogue(); }
+    if (open && !dialogueOverride && screen === VR_MONKEY_GUIDE_SCREEN.WORLD_KNOWLEDGE) {
+      drawMessage(); drawDialogue(); drawReaderControls();
+    }
   }) ?? (() => {});
 
   function progressCount() { return progressionController.getActivatedPageIds().length; }
@@ -249,7 +267,7 @@ export function createVrMonkeyGuide({
   function drawMessage() {
     const { canvas, context, texture } = messagePanel;
     context.clearRect(0, 0, canvas.width, canvas.height);
-    if (screen === VR_MONKEY_GUIDE_SCREEN.WORLD_KNOWLEDGE_DETAIL) {
+    if (screen === VR_MONKEY_GUIDE_SCREEN.WORLD_KNOWLEDGE && selectedWorldKnowledgeStageId) {
       const presentation = worldKnowledgePresentation();
       if (!presentation) { texture.needsUpdate = true; return; }
       drawTitledMessage(context, canvas, presentation.heading, presentation.pages[presentation.page]);
@@ -338,11 +356,11 @@ export function createVrMonkeyGuide({
       const gap = settings.dialogue.gap; const padding = settings.dialogue.padding;
       context.font = `${settings.dialogue.fontWeight} ${settings.dialogue.fontSize}px sans-serif`;
       const height = settings.dialogue.fontSize + settings.dialogue.menuPaddingY * 2;
-      interactiveRegions = options.map((option, index) => ({ ...option, x: padding,
+      dialogueInteractiveRegions = options.map((option, index) => ({ ...option, x: padding,
         y: padding + index * (height + gap), width: Math.min(canvas.width - padding * 2,
           context.measureText(option.label).width + settings.dialogue.menuPaddingX * 2), height }));
       context.textAlign = 'left'; context.textBaseline = 'middle';
-      interactiveRegions.forEach((region) => { context.fillStyle = drawInteractiveRegion(context, region,
+      dialogueInteractiveRegions.forEach((region) => { context.fillStyle = drawInteractiveRegion(context, region,
         hoveredOption === region.id); context.fillText(region.label, region.x + settings.dialogue.menuPaddingX,
         region.y + region.height / 2); });
       texture.needsUpdate = true; return;
@@ -351,7 +369,6 @@ export function createVrMonkeyGuide({
     if (screen === VR_MONKEY_GUIDE_SCREEN.CARD) { drawCardNavigation(context, canvas); texture.needsUpdate = true; return; }
     if (screen === VR_MONKEY_GUIDE_SCREEN.KNOWLEDGE) { drawKnowledge(context, canvas); texture.needsUpdate = true; return; }
     if (screen === VR_MONKEY_GUIDE_SCREEN.WORLD_KNOWLEDGE) { drawWorldKnowledgeOverview(context, canvas); texture.needsUpdate = true; return; }
-    if (screen === VR_MONKEY_GUIDE_SCREEN.WORLD_KNOWLEDGE_DETAIL) { drawWorldKnowledgeDetail(context, canvas); texture.needsUpdate = true; return; }
     const options = [
       ...(progressCount() > 0 ? [{ id: 'progress', label: copy.progress }] : []),
       { id: 'world-knowledge', label: copy.knowledge },
@@ -365,7 +382,7 @@ export function createVrMonkeyGuide({
     texture.needsUpdate = true;
   }
 
-  function addRegion(region) { interactiveRegions.push(region); return region; }
+  function addRegion(region) { dialogueInteractiveRegions.push(region); return region; }
   function drawInteractiveRegion(context, region, hovered) {
     context.fillStyle = hovered ? settings.colors.dialogueButtonHoverBackground : settings.colors.dialogueButtonBackground;
     context.strokeStyle = settings.colors.dialogueButtonBorder;
@@ -387,7 +404,7 @@ export function createVrMonkeyGuide({
   }
   function drawPagedList(context, canvas, items, pageIndex, setPageIndex,
     { backId, backLabel, previousId, nextId }) {
-    interactiveRegions = [];
+    dialogueInteractiveRegions = [];
     const padding = settings.dialogue.padding; const gap = settings.dialogue.gap;
     const navHeight = settings.dialogue.historyNavigationHeight;
     const navTop = canvas.height - padding - navHeight;
@@ -479,8 +496,7 @@ export function createVrMonkeyGuide({
     const image = new Image(); const prepared = { image, drawable: image }; knowledgeImages.set(source, prepared);
     image.onload = () => {
       prepared.drawable = prepareKnowledgeImage(image);
-      if (!disposed && (screen === VR_MONKEY_GUIDE_SCREEN.WORLD_KNOWLEDGE
-      || screen === VR_MONKEY_GUIDE_SCREEN.WORLD_KNOWLEDGE_DETAIL)) drawDialogue(); };
+      if (!disposed && screen === VR_MONKEY_GUIDE_SCREEN.WORLD_KNOWLEDGE) drawDialogue(); };
     image.src = source; return prepared;
   }
   function resolveKnowledgeImage(icon) {
@@ -511,7 +527,7 @@ export function createVrMonkeyGuide({
     });
   }
   function drawWorldKnowledgeOverview(context, canvas) {
-    interactiveRegions = []; const entries = projectVrWorldKnowledge(worldKnowledgeModel, locale);
+    dialogueInteractiveRegions = []; const entries = projectVrWorldKnowledge(worldKnowledgeModel, locale);
     const columns = 5; const padding = settings.dialogue.padding; const navHeight = settings.dialogue.historyNavigationHeight;
     const navTop = canvas.height - padding - navHeight; const cellWidth = (canvas.width - padding * 2) / columns;
     const cellHeight = (navTop - padding) / 3; const iconSize = Math.min(cellWidth * 0.58, cellHeight * 0.68);
@@ -519,7 +535,15 @@ export function createVrMonkeyGuide({
       const column = index % columns; const row = Math.floor(index / columns);
       const region = addRegion({ id: `world-category:${entry.categoryId}`, x: padding + column * cellWidth,
         y: padding + row * cellHeight, width: cellWidth, height: cellHeight });
-      const color = hoveredOption === region.id ? settings.colors.hover : settings.colors.dialogueButtonText;
+      const selected = entry.categoryId === selectedWorldKnowledgeCategoryId;
+      if (selected || hoveredOption === region.id) {
+        context.strokeStyle = selected ? settings.colors.accent : settings.colors.hover;
+        context.lineWidth = 6;
+        roundedRect(context, region.x + 4, region.y + 4, region.width - 8, region.height - 8,
+          settings.dialogue.optionCornerRadius);
+        context.stroke();
+      }
+      const color = selected || hoveredOption === region.id ? settings.colors.hover : settings.colors.dialogueButtonText;
       context.globalAlpha = entry.unread ? 0.75 + unreadPulseAlpha(elapsed) * 0.25 : 1;
       drawKnowledgeIcon(context, entry.icon, region.x + (cellWidth - iconSize) / 2, region.y, iconSize, color);
       context.globalAlpha = 1; drawWorldKnowledgeStars(context, entry, region.x, region.y + cellHeight - 16, cellWidth);
@@ -527,24 +551,46 @@ export function createVrMonkeyGuide({
     const back = addRegion({ id: 'back-world-menu', x: padding, y: navTop,
       width: navigationWidth(context, '←'), height: navHeight }); drawButton(context, back, '←');
   }
-  function drawWorldKnowledgeDetail(context, canvas) {
-    interactiveRegions = []; const entry = projectVrWorldKnowledge(worldKnowledgeModel, locale)
-      .find(({ categoryId }) => categoryId === selectedWorldKnowledgeCategoryId);
-    if (!entry) return;
-    const padding = settings.dialogue.padding; const navHeight = settings.dialogue.historyNavigationHeight;
-    drawWorldKnowledgeStars(context, entry, padding, padding + 55, canvas.width - padding * 2, true);
-    const navTop = canvas.height - padding - navHeight;
-    const back = addRegion({ id: 'back-world-overview', x: padding, y: navTop,
-      width: navigationWidth(context, '←'), height: navHeight }); drawButton(context, back, '←');
+  function drawReaderControls() {
+    const { canvas, context, texture } = readerControlsPanel;
+    context.clearRect(0, 0, canvas.width, canvas.height);
+    readerControlRegions = [];
     const presentation = worldKnowledgePresentation();
-    if (!presentation) return;
-    if (presentation.page > 0) { const previous = addRegion({ id: 'world-knowledge-page-previous',
-      x: canvas.width / 2 - 190, y: navTop, width: 150, height: navHeight }); drawButton(context, previous, '‹'); }
-    if (presentation.page < presentation.pages.length - 1) { const next = addRegion({ id: 'world-knowledge-page-next',
-      x: canvas.width - padding - 150, y: navTop, width: 150, height: navHeight }); drawButton(context, next, '›'); }
+    const entry = projectVrWorldKnowledge(worldKnowledgeModel, locale)
+      .find(({ categoryId }) => categoryId === selectedWorldKnowledgeCategoryId);
+    readerControlsPanel.group.visible = Boolean(open && screen === VR_MONKEY_GUIDE_SCREEN.WORLD_KNOWLEDGE
+      && presentation && entry);
+    if (!readerControlsPanel.group.visible) { texture.needsUpdate = true; return; }
+    const config = settings.readerControls; let x = config.padding;
+    entry.stages.forEach((stage) => {
+      const region = { id: `world-stage:${stage.id}`, x, y: (canvas.height - config.buttonSize) / 2,
+        width: config.buttonSize, height: config.buttonSize };
+      readerControlRegions.push(region);
+      const active = stage.id === selectedWorldKnowledgeStageId;
+      context.globalAlpha = stage.unread && !active ? unreadPulseAlpha(elapsed) : 1;
+      context.fillStyle = drawInteractiveRegion(context, region, hoveredOption === region.id || active);
+      context.font = `${config.fontSize}px sans-serif`; context.textAlign = 'center'; context.textBaseline = 'middle';
+      context.fillText('★', region.x + region.width / 2, region.y + region.height / 2);
+      context.globalAlpha = 1; x += config.buttonSize + config.buttonGap;
+    });
+    if (presentation.pages.length > 1) {
+      const nextX = canvas.width - config.padding - config.buttonSize;
+      const previous = { id: 'world-knowledge-page-previous', x: nextX - config.buttonSize * 2 - config.buttonGap * 2,
+        y: (canvas.height - config.buttonSize) / 2, width: config.buttonSize, height: config.buttonSize };
+      const next = { id: 'world-knowledge-page-next', x: nextX,
+        y: previous.y, width: config.buttonSize, height: config.buttonSize };
+      readerControlRegions.push(previous, next);
+      context.fillStyle = drawInteractiveRegion(context, previous, hoveredOption === previous.id); context.font = `${config.fontSize}px sans-serif`;
+      context.textAlign = 'center'; context.textBaseline = 'middle'; context.fillText('‹', previous.x + previous.width / 2, canvas.height / 2);
+      context.fillStyle = settings.colors.dialogueButtonText;
+      context.fillText(`${presentation.page + 1} / ${presentation.pages.length}`, nextX - config.buttonGap - config.buttonSize / 2, canvas.height / 2);
+      context.fillStyle = drawInteractiveRegion(context, next, hoveredOption === next.id);
+      context.fillText('›', next.x + next.width / 2, canvas.height / 2);
+    }
+    texture.needsUpdate = true;
   }
   function drawHistory(context, canvas) {
-    interactiveRegions = [];
+    dialogueInteractiveRegions = [];
     const entries = historyEntries();
     const size = settings.dialogue.historyPageSize;
     const totalPages = Math.max(1, Math.ceil(entries.length / size));
@@ -615,11 +661,11 @@ export function createVrMonkeyGuide({
   function presentWorldKnowledgeSelection() {
     const presentation = worldKnowledgePresentation();
     messagePanel.group.visible = Boolean(presentation);
-    drawMessage(); drawDialogue();
+    drawMessage(); drawDialogue(); drawReaderControls();
     if (presentation?.pages.length === 1) worldKnowledgeModel.markStageRead(presentation.stage.id);
   }
   function drawCardNavigation(context, canvas) {
-    interactiveRegions = []; const padding = settings.dialogue.padding;
+    dialogueInteractiveRegions = []; const padding = settings.dialogue.padding;
     const height = settings.dialogue.historyNavigationHeight;
     const navTop = canvas.height - padding - height;
     const back = addRegion({ id: 'back-history', x: padding, y: navTop,
@@ -701,7 +747,8 @@ export function createVrMonkeyGuide({
     if (open) clearAttention();
     else { knowledgeSequence?.reset(); knowledgeSequence = null; screen = VR_MONKEY_GUIDE_SCREEN.MENU; selectedPageId = null; cardPage = 0; historyPage = 0; menuPage = 0;
       selectedKnowledgeGroupId = null; selectedKnowledgeTopicId = null; knowledgePage = 0;
-      selectedWorldKnowledgeCategoryId = null; selectedWorldKnowledgeStageId = null; worldKnowledgeTextPage = 0; showMessage(''); }
+      selectedWorldKnowledgeCategoryId = null; selectedWorldKnowledgeStageId = null; worldKnowledgeTextPage = 0;
+      readerControlsPanel.group.visible = false; showMessage(''); }
     drawDialogue();
     if (notify && open !== previous) onOpenChange(open);
   }
@@ -710,13 +757,14 @@ export function createVrMonkeyGuide({
   function activateOption(id) {
     if (id === 'world-knowledge') { screen = VR_MONKEY_GUIDE_SCREEN.WORLD_KNOWLEDGE;
       selectedWorldKnowledgeCategoryId = null; selectedWorldKnowledgeStageId = null; worldKnowledgeTextPage = 0;
-      showMessage(''); drawDialogue(); return true; }
+      showMessage(''); drawDialogue(); drawReaderControls(); return true; }
     if (id?.startsWith('world-category:')) {
       const categoryId = id.slice('world-category:'.length);
       const entry = projectVrWorldKnowledge(worldKnowledgeModel, locale).find((candidate) => candidate.categoryId === categoryId);
       if (!entry) return false;
-      selectedWorldKnowledgeCategoryId = categoryId; selectedWorldKnowledgeStageId = entry.stages[0]?.id ?? null;
-      worldKnowledgeTextPage = 0; screen = VR_MONKEY_GUIDE_SCREEN.WORLD_KNOWLEDGE_DETAIL;
+      selectedWorldKnowledgeCategoryId = categoryId;
+      selectedWorldKnowledgeStageId = entry.stages.find(({ unread }) => unread)?.id ?? entry.stages[0]?.id ?? null;
+      worldKnowledgeTextPage = 0;
       presentWorldKnowledgeSelection(); return true;
     }
     if (id?.startsWith('world-stage:')) {
@@ -725,10 +773,9 @@ export function createVrMonkeyGuide({
       if (!entry?.stages.some(({ id: candidateId }) => candidateId === stageId)) return false;
       selectedWorldKnowledgeStageId = stageId; worldKnowledgeTextPage = 0; presentWorldKnowledgeSelection(); return true;
     }
-    if (id === 'back-world-overview') { screen = VR_MONKEY_GUIDE_SCREEN.WORLD_KNOWLEDGE;
+    if (id === 'back-world-menu') { screen = VR_MONKEY_GUIDE_SCREEN.MENU;
       selectedWorldKnowledgeCategoryId = null; selectedWorldKnowledgeStageId = null; worldKnowledgeTextPage = 0;
-      showMessage(''); drawDialogue(); return true; }
-    if (id === 'back-world-menu') { screen = VR_MONKEY_GUIDE_SCREEN.MENU; showMessage(''); drawDialogue(); return true; }
+      readerControlsPanel.group.visible = false; showMessage(''); drawDialogue(); drawReaderControls(); return true; }
     if (id?.startsWith('category:')) {
       const category = knowledgeResolver?.getCategory?.(id.slice('category:'.length));
       if (!category) return false;
@@ -775,11 +822,14 @@ export function createVrMonkeyGuide({
     if (id === 'knowledge-next') { knowledgePage += 1; drawDialogue(); return true; }
     if (id === 'card-previous') { cardPage -= 1; drawMessage(); drawDialogue(); return true; }
     if (id === 'card-next') { cardPage += 1; drawMessage(); drawDialogue(); return true; }
-    if (id === 'world-knowledge-page-previous') { worldKnowledgeTextPage -= 1; drawMessage(); drawDialogue(); return true; }
+    if (id === 'world-knowledge-page-previous') {
+      if (worldKnowledgeTextPage <= 0) return false;
+      worldKnowledgeTextPage -= 1; drawMessage(); drawReaderControls(); return true;
+    }
     if (id === 'world-knowledge-page-next') {
       const presentation = worldKnowledgePresentation();
       if (!presentation || presentation.page >= presentation.pages.length - 1) return false;
-      worldKnowledgeTextPage += 1; drawMessage(); drawDialogue();
+      worldKnowledgeTextPage += 1; drawMessage(); drawReaderControls();
       const advanced = worldKnowledgePresentation();
       if (advanced.page === advanced.pages.length - 1) worldKnowledgeModel.markStageRead(advanced.stage.id);
       return true;
@@ -804,16 +854,21 @@ export function createVrMonkeyGuide({
         const monkeyHit = raycaster.intersectObjects(monkeyTargets, false)[0] ?? null;
         raycaster.layers.set(0);
         const panelHit = open ? raycaster.intersectObjects(dialoguePanel.planes, false)[0] ?? null : null;
+        const controlsHit = readerControlsPanel.group.visible
+          ? raycaster.intersectObjects(readerControlsPanel.planes, false)[0] ?? null : null;
         const nearest = [monkeyHit && { kind: 'monkey', intersection: monkeyHit },
-          panelHit && { kind: 'panel', intersection: panelHit }]
+          panelHit && { kind: 'panel', intersection: panelHit },
+          controlsHit && { kind: 'reader-controls', intersection: controlsHit }]
           .filter(Boolean).sort((a, b) => a.intersection.distance - b.intersection.distance)[0] ?? null;
         if (nearest) {
           record.reportRayHit?.(nearest.intersection.distance);
           if (nearest.kind === 'monkey') monkeyHovered = true;
           else {
-            const x = nearest.intersection.uv.x * dialoguePanel.canvas.width;
-            const y = (1 - nearest.intersection.uv.y) * dialoguePanel.canvas.height;
-            const region = interactiveRegions.find((candidate) => x >= candidate.x && x <= candidate.x + candidate.width
+            const surface = nearest.kind === 'reader-controls' ? readerControlsPanel : dialoguePanel;
+            const regions = nearest.kind === 'reader-controls' ? readerControlRegions : dialogueInteractiveRegions;
+            const x = nearest.intersection.uv.x * surface.canvas.width;
+            const y = (1 - nearest.intersection.uv.y) * surface.canvas.height;
+            const region = regions.find((candidate) => x >= candidate.x && x <= candidate.x + candidate.width
               && y >= candidate.y && y <= candidate.y + candidate.height) ?? null;
             nearest.region = region;
             if (region) nextHoveredOption = region.id;
@@ -826,7 +881,7 @@ export function createVrMonkeyGuide({
     halo.setVisible(monkeyHovered);
     if (monkeyHovered && !monkeyWasHovered) dialogueOverride?.onMonkeyHover?.();
     monkeyWasHovered = monkeyHovered;
-    if (hoveredOption !== nextHoveredOption) { hoveredOption = nextHoveredOption; drawDialogue(); }
+    if (hoveredOption !== nextHoveredOption) { hoveredOption = nextHoveredOption; drawDialogue(); drawReaderControls(); }
   }
 
   function press(record) {
@@ -860,9 +915,9 @@ export function createVrMonkeyGuide({
       if (!knownActivatedPageIds.has(pageId)) { knownActivatedPageIds.add(pageId); unreadPageIds.add(pageId); }
     }
     historyPulseRedrawElapsed += Math.max(0, delta);
-    if ((screen === VR_MONKEY_GUIDE_SCREEN.WORLD_KNOWLEDGE || screen === VR_MONKEY_GUIDE_SCREEN.WORLD_KNOWLEDGE_DETAIL)
+    if (screen === VR_MONKEY_GUIDE_SCREEN.WORLD_KNOWLEDGE
       && historyPulseRedrawElapsed >= 1 / 30 && projectVrWorldKnowledge(worldKnowledgeModel, locale).some(({ unread }) => unread)) {
-      historyPulseRedrawElapsed = 0; drawDialogue();
+      historyPulseRedrawElapsed = 0; drawDialogue(); drawReaderControls();
     }
     if (screen === VR_MONKEY_GUIDE_SCREEN.HISTORY && historyPulseRedrawElapsed >= 1 / 30
       && historyEntries().slice(historyPage * settings.dialogue.historyPageSize,
@@ -907,6 +962,7 @@ export function createVrMonkeyGuide({
     unsubscribeWorldKnowledge();
     arcs.forEach((arc) => { arc.geometry.dispose(); arc.material.dispose(); });
     messagePanel.dispose();
+    readerControlsPanel.dispose();
     dialoguePanel.dispose();
     root.removeFromParent();
     hits.clear();
@@ -914,8 +970,9 @@ export function createVrMonkeyGuide({
 
   drawMessage();
   drawDialogue();
+  drawReaderControls();
   const api = {
-    object: root, messagePanel, dialoguePanel, attentionRoot, arcs, halo, hits,
+    object: root, messagePanel, dialoguePanel, readerControlsPanel, attentionRoot, arcs, halo, hits,
     update, notifyAttention, playAttentionCue, cancelAttention: clearAttention, showMessage, measureMessage,
     open: openDialogue, close, isOpen: () => open,
     hasCurrentHit: (record) => Boolean(hits.get(record)), reset, dispose, press,
@@ -930,7 +987,8 @@ export function createVrMonkeyGuide({
     getWorldKnowledgeOverview: () => worldKnowledgeModel ? projectVrWorldKnowledge(worldKnowledgeModel, locale) : [],
     getHistoryPage: () => historyPage, getCardPage: () => cardPage, getCardPageCount: () => cardPages().length,
     getUnreadPageIds: () => [...unreadPageIds],
-    getInteractiveRegions: () => interactiveRegions.map((region) => ({ ...region })),
+    getInteractiveRegions: () => dialogueInteractiveRegions.map((region) => ({ ...region })),
+    getReaderControlRegions: () => readerControlRegions.map((region) => ({ ...region })),
     refreshKnowledge() {
       if (!open || dialogueOverride) return false;
       drawDialogue();
