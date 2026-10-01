@@ -12,15 +12,15 @@ This includes the project-specific implementation of Classic 2D, Experience 3D a
 
 The complete MIT License text is provided in:
 
-`LICENSES/MIT.txt`
+[LICENSES/MIT.txt](LICENSES/MIT.txt)
 
-Third-party software is not relicensed by this grant and remains subject to its original license. See `THIRD_PARTY_NOTICES.md`.
+Third-party software is not relicensed by this grant and remains subject to its original license. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
 ## Creative assets and documentation — CC BY-SA 4.0
 
 Unless explicitly stated otherwise, original project-specific creative material made available in this repository is licensed under the Creative Commons Attribution-ShareAlike 4.0 International License.
 
-This includes, to the extent applicable:
+This includes, to the extent that the relevant rights exist and are held or licensable by the project author:
 
 - original visual artwork and graphic assets;
 - original audio and sound-design material;
@@ -33,23 +33,27 @@ The license permits sharing and adaptation, including commercial use, provided t
 The complete license is identified as:
 
 Creative Commons Attribution-ShareAlike 4.0 International  
-SPDX identifier: `CC-BY-SA-4.0`
+SPDX identifier: CC-BY-SA-4.0
 
 The canonical license text is provided in:
 
-`LICENSES/CC-BY-SA-4.0.txt`
+[LICENSES/CC-BY-SA-4.0.txt](LICENSES/CC-BY-SA-4.0.txt)
 
 ## AI-assisted and generated material
 
 Parts of the project were produced with generative or AI-assisted tools.
 
-Where the applicable service terms give the project author rights to use, modify, distribute or license generated output, project-specific creative material derived from that output is included in the CC BY-SA 4.0 grant above to the extent that copyright or similar rights exist and are held or licensable by the project author.
+Where the applicable service terms give the project author rights that may be licensed onward, project-specific creative material derived from those outputs is included in the CC BY-SA 4.0 grant above only to the extent that copyright or similar rights exist and are held or licensable by the project author.
+
+Outputs or source material subject to provider-specific restrictions, including restrictions on standalone redistribution or sublicensing, are excluded from the blanket CC BY-SA 4.0 grant. Those exceptions are identified in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+
+In particular, output generated with ElevenLabs Sound Effects is not covered by the repository-wide CC BY-SA 4.0 grant where ElevenLabs' applicable terms restrict standalone redistribution or licensing.
 
 The CC BY-SA 4.0 grant does not imply ownership of, or grant any rights to, the underlying AI models, software, services or technologies used to produce the material.
 
 AI-assisted source code is included in the MIT grant only to the extent that the project author is entitled to license the relevant rights. Any identifiable third-party code or separately licensed material retains its own license.
 
-Production provenance is documented in `CREDITS.md`.
+Production provenance is documented in [CREDITS.md](CREDITS.md).
 
 ## Third-party material
 
@@ -57,11 +61,7 @@ Third-party libraries, software, assets and other material are not automatically
 
 Where third-party material is distributed with the repository, its original copyright and license remain in force.
 
-See:
-
-`THIRD_PARTY_NOTICES.md`
-
-and any license or copyright notice distributed alongside the relevant component.
+See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) and any license or copyright notice distributed alongside the relevant component.
 
 ## Trademarks, names and identity
 
