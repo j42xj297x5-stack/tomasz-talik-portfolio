@@ -268,23 +268,30 @@ export function createVrMonkeyGuide({
   function drawMessage() {
     const { canvas, context, texture } = messagePanel;
     context.clearRect(0, 0, canvas.width, canvas.height);
-    if (screen === VR_MONKEY_GUIDE_SCREEN.WORLD_KNOWLEDGE && selectedWorldKnowledgeStageId) {
+    if (dialogueOwner) {
+      messagePanel.group.visible = Boolean(message);
+      if (!message) { texture.needsUpdate = true; return; }
+    } else if (screen === VR_MONKEY_GUIDE_SCREEN.WORLD_KNOWLEDGE && selectedWorldKnowledgeStageId) {
       const presentation = worldKnowledgePresentation();
+      messagePanel.group.visible = Boolean(presentation);
       if (!presentation) { texture.needsUpdate = true; return; }
       drawFixedReaderMessage(context, canvas, presentation.heading, presentation.pages[presentation.page]);
       texture.needsUpdate = true;
       return;
-    }
-    const selectedPage = pagesById.get(selectedPageId);
-    if (screen === VR_MONKEY_GUIDE_SCREEN.HISTORY && selectedPage) {
-      const resolved = resolveExperienceVrPage(selectedPage, locale);
-      context.font = `${settings.card.bodyFontSize}px sans-serif`;
-      const pages = paginateText(context, resolved.body, settings.message.maxBubbleWidthPx - settings.message.paddingX * 2,
-        settings.card.maxLinesPerPage);
-      cardPage = Math.min(cardPage, pages.length - 1);
-      drawFixedReaderMessage(context, canvas, resolved.title, pages[cardPage]);
-      texture.needsUpdate = true;
-      return;
+    } else {
+      const selectedPage = pagesById.get(selectedPageId);
+      if (screen === VR_MONKEY_GUIDE_SCREEN.HISTORY && selectedPage) {
+        const resolved = resolveExperienceVrPage(selectedPage, locale);
+        context.font = `${settings.card.bodyFontSize}px sans-serif`;
+        const pages = paginateText(context, resolved.body, settings.message.maxBubbleWidthPx - settings.message.paddingX * 2,
+          settings.card.maxLinesPerPage);
+        cardPage = Math.min(cardPage, pages.length - 1);
+        messagePanel.group.visible = true;
+        drawFixedReaderMessage(context, canvas, resolved.title, pages[cardPage]);
+        texture.needsUpdate = true;
+        return;
+      }
+      messagePanel.group.visible = Boolean(message);
     }
     if (!message) { texture.needsUpdate = true; return; }
     context.font = `${settings.message.fontWeight} ${settings.message.fontSize}px sans-serif`;
@@ -537,6 +544,11 @@ export function createVrMonkeyGuide({
     const { canvas, context, texture } = readerControlsPanel;
     context.clearRect(0, 0, canvas.width, canvas.height);
     readerControlRegions = [];
+    if (dialogueOwner) {
+      readerControlsPanel.group.visible = false;
+      texture.needsUpdate = true;
+      return;
+    }
     const portfolioEntry = screen === VR_MONKEY_GUIDE_SCREEN.HISTORY
       ? historyEntries().find(({ glyphId }) => glyphId === selectedHistoryGlyphId) : null;
     const presentation = worldKnowledgePresentation();
@@ -754,6 +766,7 @@ export function createVrMonkeyGuide({
       selectedWorldKnowledgeCategoryId = null; selectedWorldKnowledgeStageId = null; worldKnowledgeTextPage = 0;
       readerControlsPanel.group.visible = false; showMessage(''); }
     drawDialogue();
+    if (open && !dialogueOwner) { drawMessage(); drawReaderControls(); }
     if (notify && open !== previous) onOpenChange(open);
   }
   function close() { setOpen(false); }
@@ -1043,6 +1056,7 @@ export function createVrMonkeyGuide({
     hoveredOption = null; monkeyWasHovered = false;
     hits.forEach((_, record) => hits.set(record, null));
     drawDialogue();
+    if (dialogueOwner) { messagePanel.group.visible = false; drawMessage(); drawReaderControls(); }
   }
   api.tryAcquireDialogue = (owner, override, options = {}) => {
     if (!owner) throw new TypeError('Dialogue owner is required.');
@@ -1057,6 +1071,7 @@ export function createVrMonkeyGuide({
     dialoguePriority = priority;
     dialoguePreemptible = options.preemptible !== false;
     onDialoguePreempt = options.onPreempt ?? null;
+    message = '';
     applyDialogueOverride(override);
     return true;
   };
@@ -1070,6 +1085,7 @@ export function createVrMonkeyGuide({
     if (dialogueOwner !== owner) return false;
     cancelOwnedAttention(owner);
     dialogueOwner = null; dialoguePriority = 0; dialoguePreemptible = true; onDialoguePreempt = null;
+    message = ''; messagePanel.group.visible = false; readerControlsPanel.group.visible = false;
     applyDialogueOverride(null);
     return true;
   };

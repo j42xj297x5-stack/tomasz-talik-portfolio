@@ -347,6 +347,36 @@ assert.equal(guide.getSelectedPageId(), selectedBeforeActivation, 'live activati
 assert.ok(guide.getUnreadPageIds().includes(haiku2.id));
 assert.ok(guide.getReaderControlRegions().some(({ id }) => id === `portfolio-page:${haiku2.id}`),
   'live activation adds a reader star without rebuilding the browser');
+const historyOwner = Symbol('history-interruption');
+const historySelectionBeforeInterruption = {
+  glyphId: guide.getSelectedHistoryGlyphId(), pageId: guide.getSelectedPageId(), cardPage: guide.getCardPage()
+};
+const historyUnreadBeforeInterruption = guide.getUnreadPageIds();
+assert.equal(guide.tryAcquireDialogue(historyOwner, {}, { priority: 100 }), true);
+assert.equal(guide.messagePanel.group.visible, false, 'HISTORY reader disappears as soon as dialogue is acquired');
+assert.equal(guide.readerControlsPanel.group.visible, false, 'HISTORY controls are preempted by dialogue ownership');
+assert.equal(guide.dialoguePanel.group.visible, false, 'owned dialogue without options hides the optional HISTORY grid');
+guide.showDialogueMessage(historyOwner, 'Owned history interruption');
+assert.equal(guide.messagePanel.group.visible, true);
+assert.equal(drawnTextPositions.at(-1).text, 'Owned history interruption',
+  'owned Monkey speech wins over the selected HISTORY card');
+guide.showDialogueMessage(historyOwner, '');
+assert.equal(guide.messagePanel.group.visible, false, 'an owned HISTORY communication gap stays blank');
+assert.equal(guide.readerControlsPanel.group.visible, false);
+guide.showDialogueMessage(historyOwner, 'Owned history follow-up');
+assert.equal(drawnTextPositions.at(-1).text, 'Owned history follow-up');
+assert.equal(guide.releaseDialogue(historyOwner), true);
+assert.equal(guide.messagePanel.group.visible, false, 'HISTORY reader does not reappear when dialogue is released');
+assert.equal(guide.readerControlsPanel.group.visible, false);
+assert.deepEqual({ glyphId: guide.getSelectedHistoryGlyphId(), pageId: guide.getSelectedPageId(), cardPage: guide.getCardPage() },
+  historySelectionBeforeInterruption, 'HISTORY selection and technical page survive presentation suspension');
+assert.deepEqual(guide.getUnreadPageIds(), historyUnreadBeforeInterruption,
+  'HISTORY interruption and release do not consume unread cards');
+guide.open();
+assert.equal(guide.messagePanel.group.visible, true, 'deliberate reopen restores the preserved HISTORY reader');
+assert.equal(guide.readerControlsPanel.group.visible, true, 'deliberate reopen restores HISTORY controls');
+assert.deepEqual(guide.getUnreadPageIds(), historyUnreadBeforeInterruption,
+  'resuming HISTORY presentation does not consume unread cards');
 guide.hits.set(record, { kind: 'panel', region: { id: 'back-menu' } }); guide.press(record);
 assert.equal(guide.getScreen(), VR_MONKEY_GUIDE_SCREEN.MENU, 'HISTORY -> MENU');
 assert.equal(guide.getSelectedPageId(), null);
@@ -467,6 +497,45 @@ assert.match(experienceVrSource, /getPreparedKnowledgeImage: requirePreparedBand
   assert.ok(knowledgeFixture.guide.getReaderControlRegions().some(({ id }) => id === 'world-knowledge-page-next'));
   assert.deepEqual(markedStageIds, [], 'opening a multi-page stage does not mark it READ');
   const selectedStage = knowledgeFixture.guide.getSelectedWorldKnowledgeStageId();
+  const knowledgeOwner = Symbol('world-knowledge-interruption');
+  const knowledgeSelectionBeforeInterruption = {
+    categoryId: knowledgeFixture.guide.getSelectedWorldKnowledgeCategoryId(),
+    stageId: selectedStage,
+    textPage: knowledgeFixture.guide.getWorldKnowledgeTextPage()
+  };
+  assert.equal(knowledgeFixture.guide.tryAcquireDialogue(knowledgeOwner, {}, { priority: 100 }), true);
+  assert.equal(knowledgeFixture.guide.messagePanel.group.visible, false,
+    'World Knowledge reader disappears as soon as dialogue is acquired');
+  assert.equal(knowledgeFixture.guide.readerControlsPanel.group.visible, false,
+    'World Knowledge controls are preempted by dialogue ownership');
+  assert.equal(knowledgeFixture.guide.dialoguePanel.group.visible, false,
+    'owned dialogue without options hides the optional World Knowledge grid');
+  knowledgeFixture.guide.showDialogueMessage(knowledgeOwner, 'Owned knowledge interruption');
+  assert.equal(knowledgeFixture.guide.messagePanel.group.visible, true);
+  assert.equal(drawnTextPositions.at(-1).text, 'Owned knowledge interruption',
+    'owned Monkey speech wins over the selected World Knowledge stage');
+  knowledgeFixture.guide.showDialogueMessage(knowledgeOwner, '');
+  assert.equal(knowledgeFixture.guide.messagePanel.group.visible, false,
+    'an owned World Knowledge communication gap stays blank instead of exposing the reader');
+  assert.equal(knowledgeFixture.guide.readerControlsPanel.group.visible, false);
+  knowledgeFixture.guide.showDialogueMessage(knowledgeOwner, 'Owned knowledge follow-up');
+  assert.equal(drawnTextPositions.at(-1).text, 'Owned knowledge follow-up');
+  assert.equal(knowledgeFixture.guide.releaseDialogue(knowledgeOwner), true);
+  assert.equal(knowledgeFixture.guide.messagePanel.group.visible, false,
+    'World Knowledge reader does not reappear when dialogue is released');
+  assert.equal(knowledgeFixture.guide.readerControlsPanel.group.visible, false);
+  assert.deepEqual({
+    categoryId: knowledgeFixture.guide.getSelectedWorldKnowledgeCategoryId(),
+    stageId: knowledgeFixture.guide.getSelectedWorldKnowledgeStageId(),
+    textPage: knowledgeFixture.guide.getWorldKnowledgeTextPage()
+  }, knowledgeSelectionBeforeInterruption, 'World Knowledge selection and technical page survive presentation suspension');
+  assert.deepEqual(markedStageIds, [], 'World Knowledge interruption and release do not mutate READ state');
+  knowledgeFixture.guide.open();
+  assert.equal(knowledgeFixture.guide.messagePanel.group.visible, true,
+    'deliberate reopen restores the preserved World Knowledge reader');
+  assert.equal(knowledgeFixture.guide.readerControlsPanel.group.visible, true,
+    'deliberate reopen restores World Knowledge controls');
+  assert.deepEqual(markedStageIds, [], 'resuming World Knowledge presentation does not mutate READ state');
   knowledgeFixture.guide.hits.set(knowledgeFixture.record,
     { kind: 'reader-controls', region: { id: 'world-knowledge-page-next' } }); knowledgeFixture.guide.press(knowledgeFixture.record);
   assert.equal(knowledgeFixture.guide.getWorldKnowledgeTextPage(), 1);
