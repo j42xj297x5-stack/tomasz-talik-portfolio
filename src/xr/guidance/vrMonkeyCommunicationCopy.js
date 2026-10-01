@@ -1,13 +1,11 @@
 export const VR_MONKEY_MESSAGE_TIMING = Object.freeze({ secondsPerLine: 2, gapSeconds: 0.5 });
 
 export const VR_MONKEY_KNOWLEDGE_CATEGORIES_PL = Object.freeze({
-  'category.whatNow': Object.freeze({ label: 'CO TERAZ?', groupId: 'currentGuidance' }),
-  'category.whatIsIt': Object.freeze({ label: 'CO TO JEST?', groupId: 'discoveredWorld' })
+  'category.whatNow': Object.freeze({ label: 'CO TERAZ?', groupId: 'currentGuidance' })
 });
 
 export const VR_MONKEY_KNOWLEDGE_CATEGORIES_EN = Object.freeze({
-  'category.whatNow': Object.freeze({ label: 'WHAT COMES NEXT?', groupId: 'currentGuidance' }),
-  'category.whatIsIt': Object.freeze({ label: "WHAT'S THAT?", groupId: 'discoveredWorld' })
+  'category.whatNow': Object.freeze({ label: 'WHAT COMES NEXT?', groupId: 'currentGuidance' })
 });
 
 export const VR_MONKEY_COMMUNICATION_COPY_PL = Object.freeze({
@@ -84,9 +82,7 @@ export const VR_MONKEY_COMMUNICATION_COPY_PL = Object.freeze({
     'knowledge.threshold.easier': { groupId: 'threshold', policy: 'CONTEXTUAL', question: 'DLACZEGO ŁATWIEJ?', blocks: ['Nie musisz już wybierać, czy wejść.'] },
     'knowledge.p3.stonesLead': { groupId: 'currentGuidance', question: 'Zostały jeszcze kamienie.', blocks: ['Możemy patrzeć w niebo.', 'Albo sprawić, żeby to miejsce patrzyło dalej niż my.', 'Zostały jeszcze kamienie.'] },
     'knowledge.p3.stones': { groupId: 'currentGuidance', question: 'KAMIENIE', blocks: ['Są daleko.', 'Piec potrafi stroić rzeczy.', 'Astrolabium potrafi je sprowadzać.', 'Sprawdźmy, czy to wystarczy.'] },
-    'knowledge.p3.binders': { groupId: 'discoveredWorld', question: 'ZWORNIKI', blocks: ['Zworniki.', 'Pojawiały się, kiedy domykałeś te części platformy.', 'Wygląda na to, że nie są ozdobą.'] },
     'knowledge.asterion.build': { groupId: 'currentGuidance', question: 'ZBUDUJ KULĘ ASTERIONOWĄ', blocks: ['Teraz zbieraj Skorupy.\nPotrzebujesz sześciu. Każdą przetwórz w Piecu.\nGdy Piec przyjmie komplet, zbuduj Kulę Asterionową.'] },
-    'knowledge.asterion.sphere': { groupId: 'discoveredWorld', question: 'KULA ASTERIONOWA', blocks: ['To narzędzie do zmiany horyzontu.\nNie przybliża tego, co jest daleko.', 'Zmienia to, skąd patrzysz.\nDzięki temu dosięgniesz tego, czego wcześniej nie mogłeś.'] }
   })
 });
 
@@ -164,8 +160,6 @@ export const VR_MONKEY_COMMUNICATION_COPY_EN = Object.freeze({
     'knowledge.threshold.easier': { groupId: 'threshold', policy: 'CONTEXTUAL', question: 'WHY IS IT EASIER?', blocks: ['You no longer need to decide whether to cross.'] },
     'knowledge.p3.stonesLead': { groupId: 'currentGuidance', question: 'There are still stones left.', blocks: ['We can gaze into the sky.', 'Or teach this place to see farther than we ever could.', 'There are still stones waiting.'] },
     'knowledge.p3.stones': { groupId: 'currentGuidance', question: 'STONES', blocks: ['They lie far beyond our reach.', 'The Furnace knows how to tune things.', 'The Astrolabe knows how to draw them near.', "Let's see whether that is enough."] },
-    'knowledge.p3.binders': { groupId: 'discoveredWorld', question: 'KEYSTONES', blocks: ['Keystones.', 'They appeared when you completed those parts of the platform.', 'It seems they were never merely ornaments.'] },
     'knowledge.asterion.build': { groupId: 'currentGuidance', question: 'BUILD THE ASTERION SPHERE', blocks: ['Now collect Shells.\nYou need six. Process each one in the Furnace.\nOnce the Furnace has taken the full set, build the Asterion Sphere.'] },
-    'knowledge.asterion.sphere': { groupId: 'discoveredWorld', question: 'ASTERION SPHERE', blocks: ['A tool for changing the horizon.\nIt does not bring distant things closer.', 'It changes where you look from.\nThat lets you reach what you could not before.'] }
   })
 });

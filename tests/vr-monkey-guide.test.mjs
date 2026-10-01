@@ -4,6 +4,7 @@ import * as THREE from '../src/vendor/three.js';
 import { DEFAULT_EXPERIENCE_VR_SETTINGS } from '../src/config/experienceVrSettings.js';
 import { experienceVrPages, resolveExperienceVrPage } from '../src/content/experienceVrPages.js';
 import { resolveVrPageProtoAstro } from '../src/xr/protoAstro/resolveVrPageProtoAstro.js';
+import { createVrMonkeyKnowledgeResolver } from '../src/xr/guidance/createVrMonkeyKnowledgeResolver.js';
 import { VR_WORLD_KNOWLEDGE_PRESENTATION, projectVrWorldKnowledge } from '../src/xr/knowledge/vrWorldKnowledgePresentation.js';
 import { VR_WORLD_KNOWLEDGE_CATEGORIES, VR_WORLD_KNOWLEDGE_STAGE_STATE } from '../src/xr/knowledge/createVrWorldKnowledgeModel.js';
 import { VR_WORLD_KNOWLEDGE_CONTENT, resolveVrWorldKnowledgeStage } from '../src/xr/knowledge/vrWorldKnowledgeContent.js';
@@ -96,7 +97,7 @@ assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.monkeyGuide.worldKnowledge.maxLinesP
 assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.monkeyGuide.dialogue.categoryFrameWidthScale, 0.80);
 assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.monkeyGuide.dialogue.categoryIconVerticalOffsetFraction, 0.05);
 
-function createFixture(locale = 'en', configure = () => {}, worldKnowledgeModel = null) {
+function createFixture(locale = 'en', configure = () => {}, worldKnowledgeModel = null, knowledgeResolver = null) {
   const floorRoot = new THREE.Group();
   const actorRoot = new THREE.Group();
   floorRoot.add(actorRoot);
@@ -113,10 +114,33 @@ function createFixture(locale = 'en', configure = () => {}, worldKnowledgeModel 
   const settings = structuredClone(DEFAULT_EXPERIENCE_VR_SETTINGS.monkeyGuide);
   configure(settings);
   const guide = createVrMonkeyGuide({ actorRoot, visualRoot, floorRoot, controllers: [record],
-    progressionController: { getActivatedPageIds: () => [...pageIds] }, locale, worldKnowledgeModel,
+    progressionController: { getActivatedPageIds: () => [...pageIds] }, locale, worldKnowledgeModel, knowledgeResolver,
     settings, onAttentionStart: () => { attentionStarts += 1; } });
   return { floorRoot, actorRoot, visualRoot, monkeyGeometry, monkeyMaterial, controller, record, pageIds, guide,
     getRayDistance: () => rayDistance, getAttentionStarts: () => attentionStarts };
+}
+
+for (const [locale, whatNowLabel, removedLabel, worldKnowledgeLabel] of [
+  ['pl', 'CO TERAZ?', 'CO TO JEST?', 'WIEDZA'],
+  ['en', 'WHAT COMES NEXT?', "WHAT'S THAT?", 'KNOWLEDGE']
+]) {
+  const resolver = createVrMonkeyKnowledgeResolver({ locale,
+    getCurrentObjective: () => ({ id: 'current', body: 'Current objective' }),
+    isAstrolabiumOwned: () => true });
+  resolver.unlockBinders();
+  const rootIds = resolver.getRootItems().map(({ id }) => id);
+  assert.deepEqual(rootIds, ['category.whatNow'], `${locale} root exposes only contextual Monkey guidance`);
+  const localized = createFixture(locale, () => {}, null, resolver);
+  const drawnBeforeOpen = drawnText.length;
+  localized.guide.open();
+  const rootLabels = drawnText.slice(drawnBeforeOpen);
+  assert.ok(rootLabels.includes(whatNowLabel), `${locale} UI keeps the contextual guidance category`);
+  assert.ok(rootLabels.includes(worldKnowledgeLabel), `${locale} UI keeps World Knowledge`);
+  assert.equal(rootLabels.includes(removedLabel), false, `${locale} UI omits the obsolete category`);
+  localized.guide.hits.set(localized.record,
+    { kind: 'panel', region: { id: 'category:category.whatIsIt' } });
+  assert.equal(localized.guide.press(localized.record), false, 'stale navigation cannot enter the removed category');
+  localized.guide.dispose(); localized.monkeyGeometry.dispose(); localized.monkeyMaterial.dispose();
 }
 
 {
