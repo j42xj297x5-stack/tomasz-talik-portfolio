@@ -47,7 +47,7 @@ Where the applicable service terms give the project author rights that may be li
 
 Outputs or source material subject to provider-specific restrictions, including restrictions on standalone redistribution or sublicensing, are excluded from the blanket CC BY-SA 4.0 grant. Those exceptions are identified in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
-In particular, output generated with ElevenLabs Sound Effects is not covered by the repository-wide CC BY-SA 4.0 grant where ElevenLabs' applicable terms restrict standalone redistribution or licensing.
+In particular, the ElevenLabs Sound Effects files `public/audio/ambient_01.mp3` through `public/audio/ambient_05.mp3` are excluded from the repository-wide CC BY-SA 4.0 grant and remain subject to the applicable ElevenLabs restrictions on standalone redistribution or licensing.
 
 The CC BY-SA 4.0 grant does not imply ownership of, or grant any rights to, the underlying AI models, software, services or technologies used to produce the material.
 
