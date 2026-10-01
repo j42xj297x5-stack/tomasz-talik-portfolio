@@ -192,8 +192,8 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
       verticalGap: 0, cycleDuration: 1.35, opacityMin: 0.12, opacityMax: 0.95, scalePulse: 0.025
     },
     message: {
-      position: { x: 0, y: 0, z: 0 }, width: 1.9, height: 0.72, gapFromAttention: 0.03,
-      canvasWidth: 1431, canvasHeight: 540, paddingX: 44, paddingY: 31, maxBubbleWidthPx: 1301, cornerRadius: 64,
+      position: { x: 0, y: 0, z: 0 }, width: 1.9, height: 0.80, gapFromAttention: 0.03,
+      canvasWidth: 1431, canvasHeight: 600, paddingX: 44, paddingY: 31, maxBubbleWidthPx: 1301, cornerRadius: 64,
       fontSize: 64, fontWeight: 600, lineHeight: 78, maxLines: 4
     },
     dialogue: {
@@ -218,7 +218,7 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
       width: 1.7, height: 0.20, canvasWidth: 1280, canvasHeight: 150, gapFromMessage: 0.025,
       padding: 22, buttonSize: 104, buttonGap: 18, cornerRadius: 24, fontSize: 58
     },
-    worldKnowledge: { maxLinesPerPage: 6 }
+    worldKnowledge: { maxLinesPerPage: 7 }
   },
   controllers: {
     enabled: true,

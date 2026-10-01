@@ -40,8 +40,8 @@ export const VR_WORLD_KNOWLEDGE_CONTENT = Object.freeze(
       "en": "Families"
     },
     "body": {
-      "pl": "Proto Astro jest sposobem zapisywania rodzin i form należących do pięciu przemian.\n\nPierwszy znak określa rodzinę:\n\nK — Ziemia\nT — Metal\nS — Woda\nL — Drzewo\nR — Ogień",
-      "en": "Proto Astro is a way of recording the families and forms belonging to the Five Transformations.\n\nThe first symbol identifies the family:\n\nK — Earth\nT — Metal\nS — Water\nL — Wood\nR — Fire"
+      "pl": "Proto Astro jest sposobem zapisywania rodzin i form należących do pięciu przemian.\n\nPierwszy znak określa rodzinę: K — Ziemia, T — Metal, S — Woda, L — Drzewo, R — Ogień.",
+      "en": "Proto Astro is a way of recording the families and forms belonging to the Five Transformations.\n\nThe first symbol identifies the family: K — Earth, T — Metal, S — Water, L — Wood, R — Fire."
     }
   },
   {
@@ -326,8 +326,8 @@ export const VR_WORLD_KNOWLEDGE_CONTENT = Object.freeze(
       "en": "Cycle of Creation"
     },
     "body": {
-      "pl": "Dlatego naturalne kamienie runiczne należą do cyklu tworzenia:\n\nZiemia wzmacnia Metal.\nMetal prowadzi ku Wodzie.\nWoda odżywia Drzewo.\nDrzewo podtrzymuje Ogień.\nOgień powraca do Ziemi.\n\nKamień przechowuje więc zarówno informację o określonym żywiole, jak i informację o jego miejscu w większej strukturze.",
-      "en": "This is why natural Rune Stones belong to the cycle of creation:\n\nEarth strengthens Metal.\nMetal leads toward Water.\nWater nourishes Wood.\nWood sustains Fire.\nFire returns to Earth.\n\nA Rune Stone therefore carries both information about a particular element and information about its place within a larger structure."
+      "pl": "Dlatego naturalne kamienie runiczne należą do cyklu tworzenia: Ziemia wzmacnia Metal. Metal prowadzi ku Wodzie. Woda odżywia Drzewo. Drzewo podtrzymuje Ogień. Ogień powraca do Ziemi.\n\nKamień przechowuje więc zarówno informację o określonym żywiole, jak i informację o jego miejscu w większej strukturze.",
+      "en": "This is why natural Rune Stones belong to the cycle of creation: Earth strengthens Metal. Metal leads toward Water. Water nourishes Wood. Wood sustains Fire. Fire returns to Earth.\n\nA Rune Stone therefore carries both information about a particular element and information about its place within a larger structure."
     }
   },
   {
