@@ -10,8 +10,10 @@ import { resolveVrWorldKnowledgeStage } from '../knowledge/vrWorldKnowledgeConte
 
 const COPY = Object.freeze({
   pl: Object.freeze({ progress: 'JAK MI IDZIE?', knowledge: 'WIEDZA', close: 'ZAMKNIJ',
+    protoAstroFamilies: Object.freeze({ earth: 'ZIEMIA', metal: 'METAL', water: 'WODA', tree: 'DRZEWO', fire: 'OGIEŃ' }),
     history: (count) => `Odkryte karty: ${count}.${count > 0 ? ' Wybierz znak.' : ''}` }),
   en: Object.freeze({ progress: 'HOW AM I DOING?', knowledge: 'KNOWLEDGE', close: 'CLOSE',
+    protoAstroFamilies: Object.freeze({ earth: 'EARTH', metal: 'METAL', water: 'WATER', tree: 'WOOD', fire: 'FIRE' }),
     history: (count) => `Discovered cards: ${count}.${count > 0 ? ' Select a sign.' : ''}` })
 });
 
@@ -282,13 +284,15 @@ export function createVrMonkeyGuide({
       const selectedPage = pagesById.get(selectedPageId);
       if (screen === VR_MONKEY_GUIDE_SCREEN.HISTORY && selectedPage) {
         const resolved = resolveExperienceVrPage(selectedPage, locale);
+        const historyEntry = historyEntries().find(({ glyphId }) => glyphId === selectedHistoryGlyphId);
+        const familyLabel = copy.protoAstroFamilies[historyEntry?.descriptor.familyId];
         context.font = `${settings.card.bodyFontSize}px sans-serif`;
         const pages = paginateText(context, resolved.body, settings.message.maxBubbleWidthPx - settings.message.paddingX * 2,
           settings.card.maxLinesPerPage);
         cardPage = Math.min(cardPage, pages.length - 1);
         messagePanel.group.visible = true;
         drawFixedReaderMessage(context, canvas,
-          { context: copy.progress, title: resolved.title }, pages[cardPage]);
+          { context: `${familyLabel} · ${historyEntry.descriptor.syllable}`, title: resolved.title }, pages[cardPage]);
         texture.needsUpdate = true;
         return;
       }
