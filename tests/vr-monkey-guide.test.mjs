@@ -102,7 +102,7 @@ assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.monkeyGuide.card.maxLinesPerPage, 6,
   'portfolio retains six body lines per technical page');
 assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.monkeyGuide.worldKnowledge.maxLinesPerPage, 7,
   'World Knowledge uses seven body lines per technical page');
-assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.monkeyGuide.dialogue.categoryFrameWidthScale, 0.80);
+assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.monkeyGuide.dialogue.categoryFrameWidthScale, 0.85);
 assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.monkeyGuide.dialogue.categoryIconVerticalOffsetFraction, 0.05);
 assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.monkeyGuide.dialogue.backdropOpacity, 0.30);
 assert.equal(compactWorldKnowledgeForReader('One.\r\n\r\nTwo.\n \t\n\nThree.'), 'One. Two. Three.',
@@ -112,8 +112,15 @@ assert.equal(compactWorldKnowledgeForReader('O — shell\nI — small glyph\nA �
 assert.equal(compactWorldKnowledgeForReader('Earth strengthens Metal.\nMetal leads to Water.\nWater nourishes Wood.'),
   'Earth strengthens Metal.\nMetal leads to Water.\nWater nourishes Wood.', 'elemental cycle lines remain intact');
 const formsBody = resolveVrWorldKnowledgeStage('02.2', 'en').body;
-assert.match(compactWorldKnowledgeForReader(formsBody), /O — Shell\nI — Small Glyph\nA — Large Glyph\nU — Rune Stone/,
-  '02.2 retains its one-form-per-line structure');
+assert.match(compactWorldKnowledgeForReader(formsBody),
+  /O — Shell, I — Small Glyph, A — Large Glyph, U — Rune Stone\./,
+  '02.2 keeps its English forms inline and comma-separated');
+assert.match(compactWorldKnowledgeForReader(resolveVrWorldKnowledgeStage('02.2', 'pl').body),
+  /O — skorupa, I — mały glif, A — duży glif, U — kamień runiczny\./,
+  '02.2 keeps its Polish forms inline and comma-separated');
+assert.doesNotMatch(`${formsBody}\n${resolveVrWorldKnowledgeStage('02.2', 'pl').body}`,
+  /O — (?:Shell|skorupa)\n|I — (?:Small Glyph|mały glif)\n|A — (?:Large Glyph|duży glif)\n/,
+  '02.2 has no hard line break between forms');
 const cycleBody = resolveVrWorldKnowledgeStage('10.2', 'en').body;
 assert.equal(resolveVrWorldKnowledgeStage('02.1', 'pl').body,
   'Proto Astro jest sposobem zapisywania rodzin i form należących do pięciu przemian.\n\nPierwszy znak określa rodzinę: K — Ziemia, T — Metal, S — Woda, L — Drzewo, R — Ogień.');
@@ -432,8 +439,8 @@ assert.equal(guide.getInteractiveRegions().filter(({ id }) => id.startsWith('por
 const historyRegion = guide.getInteractiveRegions().find(({ id }) => id === 'portfolio-category:creative-ai');
 const historyFrame = roundedRectStarts.findLast(({ canvasIndex, y, width }) =>
   canvasIndex === guide.dialoguePanel.canvas._testCanvasIndex && y === historyRegion.y
-    && Math.abs(width - historyRegion.width * 0.80) < 1e-12);
-assert.ok(historyFrame, 'HISTORY visual frame is 80% of the unchanged category interaction width');
+    && Math.abs(width - historyRegion.width * 0.85) < 1e-12);
+assert.ok(historyFrame, 'HISTORY visual frame is 85% of the unchanged category interaction width');
 assert.ok(Math.abs(historyFrame.x + historyFrame.width / 2 - (historyRegion.x + historyRegion.width / 2)) < 1e-12,
   'HISTORY visual frame remains horizontally centered in its interaction region');
 const historyGlyph = drawnImagePositions.findLast(({ canvasIndex, width }) =>
@@ -666,8 +673,8 @@ assert.match(experienceVrSource, /getPreparedKnowledgeImage: requirePreparedBand
     .find(({ id }) => id === 'world-category:world.five_transformations');
   const worldFrame = roundedRectStarts.findLast(({ canvasIndex, y, width }) =>
     canvasIndex === knowledgeFixture.guide.dialoguePanel.canvas._testCanvasIndex && y === worldRegion.y + 4
-      && Math.abs(width - worldRegion.width * 0.80) < 1e-12);
-  assert.ok(worldFrame, 'World Knowledge visual frame is 80% of the unchanged category interaction width');
+      && Math.abs(width - worldRegion.width * 0.85) < 1e-12);
+  assert.ok(worldFrame, 'World Knowledge visual frame is 85% of the unchanged category interaction width');
   assert.ok(Math.abs(worldFrame.x + worldFrame.width / 2 - (worldRegion.x + worldRegion.width / 2)) < 1e-12,
     'World Knowledge visual frame remains horizontally centered in its interaction region');
   const worldIconSize = Math.min(worldRegion.width * 0.58, worldRegion.height * 0.68);

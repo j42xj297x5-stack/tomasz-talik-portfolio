@@ -208,7 +208,7 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
       historyItemPadding: 9, historyGlyphStarGap: 8, historyColumnGap: 112, historyRowGap: 12,
       historyNavigationHeight: 100, historyNavigationGap: 12,
       navigationWidth: 150,
-      categoryFrameWidthScale: 0.80, categoryIconVerticalOffsetFraction: 0.05
+      categoryFrameWidthScale: 0.85, categoryIconVerticalOffsetFraction: 0.05
     },
     card: {
       eyebrowFontSize: 38, eyebrowLineHeight: 44, headingLevelGap: 4, headingBodyGap: 24,
