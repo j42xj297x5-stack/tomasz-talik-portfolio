@@ -199,8 +199,9 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
     dialogue: {
       position: { x: 1.20, y: 0.80, z: 0.50 }, rotationDegrees: { x: -7.5, y: 0, z: 0 },
       floorClearance: 0.02,
-      width: 1.65, height: 0.96,
-      canvasWidth: 1280, canvasHeight: 745, padding: 42, gap: 24, cornerRadius: 58,
+      width: 1.65, height: 1.06,
+      canvasWidth: 1280, canvasHeight: 823, padding: 42, gap: 24, cornerRadius: 58,
+      backdropOpacity: 0.30,
       optionCornerRadius: 36, fontSize: 58, fontWeight: 700,
       menuPaddingX: 24, menuPaddingY: 16,
       historyPageSize: 8, historyColumns: 4, historyGlyphSize: 136, historyStarFontSize: 24,

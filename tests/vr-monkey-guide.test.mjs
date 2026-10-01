@@ -63,7 +63,8 @@ globalThis.document = {
   }
 };
 
-const { createVrMonkeyGuide, VR_MONKEY_GUIDE_SCREEN, unreadPulseAlpha } = await import('../src/xr/guidance/createVrMonkeyGuide.js');
+const { compactWorldKnowledgeForReader, createVrMonkeyGuide, VR_MONKEY_GUIDE_SCREEN, unreadPulseAlpha } =
+  await import('../src/xr/guidance/createVrMonkeyGuide.js');
 const latestMessageRect = (canvas) => roundedRectStarts.findLast(({ canvasIndex }) => canvasIndex === canvas._testCanvasIndex);
 function latestMessageTextBlock(canvas, title) {
   const titleIndex = drawnTextPositions.findLastIndex(({ canvasIndex, text }) =>
@@ -102,6 +103,24 @@ assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.monkeyGuide.worldKnowledge.maxLinesP
   'World Knowledge matches the six-line reader capacity');
 assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.monkeyGuide.dialogue.categoryFrameWidthScale, 0.80);
 assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.monkeyGuide.dialogue.categoryIconVerticalOffsetFraction, 0.05);
+assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.monkeyGuide.dialogue.backdropOpacity, 0.30);
+assert.equal(compactWorldKnowledgeForReader('One.\r\n\r\nTwo.\n \t\n\nThree.'), 'One. Two. Three.',
+  'blank-line paragraph separators compact to spaces after line-ending normalization');
+assert.equal(compactWorldKnowledgeForReader('O — shell\nI — small glyph\nA — large glyph\nU — rune stone'),
+  'O — shell\nI — small glyph\nA — large glyph\nU — rune stone', 'single structured line breaks remain intact');
+assert.equal(compactWorldKnowledgeForReader('Earth strengthens Metal.\nMetal leads to Water.\nWater nourishes Wood.'),
+  'Earth strengthens Metal.\nMetal leads to Water.\nWater nourishes Wood.', 'elemental cycle lines remain intact');
+const formsBody = resolveVrWorldKnowledgeStage('02.2', 'en').body;
+assert.match(compactWorldKnowledgeForReader(formsBody), /O — Shell\nI — Small Glyph\nA — Large Glyph\nU — Rune Stone/,
+  '02.2 retains its one-form-per-line structure');
+const cycleBody = resolveVrWorldKnowledgeStage('10.2', 'en').body;
+assert.match(compactWorldKnowledgeForReader(cycleBody),
+  /Earth strengthens Metal\.\nMetal leads toward Water\.\nWater nourishes Wood\.\nWood sustains Fire\.\nFire returns to Earth\./,
+  '10.2 retains its one-relation-per-line elemental cycle');
+assert.equal(resolveVrWorldKnowledgeStage('02.2', 'en').body, formsBody,
+  'the resolver continues to return unchanged canonical copy');
+assert.equal(resolveVrWorldKnowledgeStage('10.2', 'en').body, cycleBody,
+  'presentation compaction does not mutate the source catalog');
 
 function createFixture(locale = 'en', configure = () => {}, worldKnowledgeModel = null, knowledgeResolver = null) {
   const floorRoot = new THREE.Group();
@@ -218,9 +237,9 @@ assert.equal(guide.readerControlsPanel.planes.length, 2, 'reader controls use a 
 assert.equal(guide.readerControlsPanel.canvas.width, 1280);
 assert.equal(guide.readerControlsPanel.canvas.height, 150);
 assert.equal(guide.dialoguePanel.planes[0].geometry.parameters.width, 1.65);
-assert.equal(guide.dialoguePanel.planes[0].geometry.parameters.height, 0.96);
+assert.equal(guide.dialoguePanel.planes[0].geometry.parameters.height, 1.06);
 assert.equal(guide.dialoguePanel.canvas.width, 1280);
-assert.equal(guide.dialoguePanel.canvas.height, 745);
+assert.equal(guide.dialoguePanel.canvas.height, 823);
 assert.ok(guide.messagePanel.planes.every(({ material }) => material.side === THREE.FrontSide));
 assert.equal(guide.messagePanel.planes[1].rotation.y, Math.PI, 'back uses its own rotated FrontSide plane');
 assert.equal(guide.arcs.length, 3);
@@ -241,9 +260,9 @@ assert.ok(Math.abs(guide.dialoguePanel.group.rotation.x - (-7.5 * Math.PI / 180)
 assert.ok(fillStyles.includes('#090909'), 'dialogue controls use an almost-black background');
 const dialogueBackdrop = fills.find(({ canvasIndex, fillStyle, globalAlpha, rect }) =>
   canvasIndex === guide.dialoguePanel.canvas._testCanvasIndex && fillStyle === '#000000'
-    && globalAlpha === 0.23 && rect?.x === 0 && rect?.y === 0
+    && globalAlpha === 0.30 && rect?.x === 0 && rect?.y === 0
     && rect.width === guide.dialoguePanel.canvas.width && rect.height === guide.dialoguePanel.canvas.height);
-assert.ok(dialogueBackdrop, 'dialogue panel draws one unified black backdrop at 23% opacity');
+assert.ok(dialogueBackdrop, 'dialogue panel draws one unified black backdrop at 30% opacity');
 assert.ok(strokeStyles.includes('#ffaa63'), 'dialogue controls use an orange border');
 assert.ok(textAlignments.includes('left'), 'MENU labels are left aligned');
 assert.equal(guide.attentionRoot.visible, false);
@@ -514,8 +533,8 @@ polish.guide.dispose(); polish.monkeyGeometry.dispose(); polish.monkeyMaterial.d
 
 const source = await readFile(new URL('../src/xr/guidance/createVrMonkeyGuide.js', import.meta.url), 'utf8');
 assert.doesNotMatch(source, /['"`]svg\/(?:KA|TA|SA|LA|RA)\.svg/, 'guide owns no Proto-Astro asset paths');
-assert.match(source, /globalAlpha = 0\.23[\s\S]*fillStyle = '#000000'/,
-  'dialogue canvas owns a subtle unified black backdrop');
+assert.match(source, /globalAlpha = settings\.dialogue\.backdropOpacity[\s\S]*fillStyle = '#000000'/,
+  'dialogue canvas takes its unified black backdrop opacity from presentation settings');
 assert.match(source, /globalCompositeOperation = 'source-in'/, 'history glyphs are recolored through one mask canvas');
 assert.match(source, /'★'\.repeat\(entry\.pages\.length\)/, 'history marker reflects activated pages only');
 assert.doesNotMatch(source, /worldKnowledgeModel\.markStageRead\([^)]*selectedPageId/,
@@ -570,7 +589,21 @@ assert.match(experienceVrSource, /getPreparedKnowledgeImage: requirePreparedBand
   assert.deepEqual(initial[0].stages.map(({ id }) => id), ['01.1', '01.2'], 'locked stars are hidden in canonical order');
   assert.deepEqual(initial[0].stages.map(({ unread }) => unread), [true, false], 'unread and READ stars are distinguishable');
 
-  const knowledgeFixture = createFixture('en', () => {}, model);
+  const compactFixture = createFixture('en', () => {}, model);
+  compactFixture.guide.open();
+  compactFixture.guide.hits.set(compactFixture.record, { kind: 'panel', region: { id: 'world-knowledge' } });
+  compactFixture.guide.press(compactFixture.record);
+  compactFixture.guide.hits.set(compactFixture.record,
+    { kind: 'panel', region: { id: 'world-category:world.five_transformations' } });
+  compactFixture.guide.press(compactFixture.record);
+  assert.equal(compactFixture.guide.getWorldKnowledgeTextPageCount(), 1,
+    'paragraph compaction lets the formerly multi-page 01.1 prose fit one technical page');
+  assert.equal(compactFixture.guide.getReaderControlRegions().some(({ id }) => id.startsWith('world-knowledge-page-')), false,
+    'pagination controls disappear naturally when compacted prose fits one page');
+  compactFixture.guide.dispose(); compactFixture.monkeyGeometry.dispose(); compactFixture.monkeyMaterial.dispose();
+  states.set('01.1', VR_WORLD_KNOWLEDGE_STAGE_STATE.AVAILABLE); markedStageIds.length = 0;
+
+  const knowledgeFixture = createFixture('en', (settings) => { settings.worldKnowledge.maxLinesPerPage = 3; }, model);
   knowledgeFixture.guide.open();
   knowledgeFixture.guide.hits.set(knowledgeFixture.record, { kind: 'panel', region: { id: 'world-knowledge' } });
   knowledgeFixture.guide.press(knowledgeFixture.record);
@@ -693,6 +726,19 @@ assert.match(experienceVrSource, /getPreparedKnowledgeImage: requirePreparedBand
   assert.equal(knowledgeFixture.guide.getSelectedWorldKnowledgeStageId(), '02.1');
   assert.equal(knowledgeFixture.guide.getWorldKnowledgeOverview().length, 2,
     'a subscribed model update reveals a category without rebuilding gameplay state');
+  for (const category of VR_WORLD_KNOWLEDGE_CATEGORIES) {
+    for (const stageId of category.stageIds) states.set(stageId, VR_WORLD_KNOWLEDGE_STAGE_STATE.READ);
+  }
+  [...listeners].forEach((listener) => listener());
+  const worldRegions = knowledgeFixture.guide.getInteractiveRegions()
+    .filter(({ id }) => id.startsWith('world-category:'));
+  const worldBack = knowledgeFixture.guide.getInteractiveRegions().find(({ id }) => id === 'back-world-menu');
+  assert.equal(worldRegions.length, 15, 'all three overview rows retain valid category ray regions');
+  assert.ok(Math.max(...worldRegions.map(({ y, height }) => y + height)) < worldBack.y,
+    'the third World Knowledge row ends before the Back navigation row');
+  assert.equal(worldBack.y - Math.max(...worldRegions.map(({ y, height }) => y + height)),
+    DEFAULT_EXPERIENCE_VR_SETTINGS.monkeyGuide.dialogue.gap,
+    'the overview reserves the configured 24 px navigation gap');
   knowledgeFixture.guide.hits.set(knowledgeFixture.record, { kind: 'panel', region: { id: 'back-world-menu' } });
   knowledgeFixture.guide.press(knowledgeFixture.record);
   assert.equal(knowledgeFixture.guide.messagePanel.group.visible, false, 'leaving WIEDZA clears World Knowledge content');
