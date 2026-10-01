@@ -65,11 +65,20 @@ ElevenLabs states that content generated on paid plans receives commercial-use r
 
 **Important Sound Effects exception:** ElevenLabs' current Prohibited Use Policy restricts selling, licensing, sublicensing, distributing or otherwise exploiting output generated using its Sound Effects product on a standalone basis, including as isolated sound files, samples, libraries or collections.
 
+The ElevenLabs Sound Effects output used in this repository is limited to the following five files:
+
+- `public/audio/ambient_01.mp3`
+- `public/audio/ambient_02.mp3`
+- `public/audio/ambient_03.mp3`
+- `public/audio/ambient_04.mp3`
+- `public/audio/ambient_05.mp3`
+
 Accordingly:
 
-- ElevenLabs-generated Sound Effects output is **not** covered by this repository's blanket CC BY-SA 4.0 grant;
-- no permission is granted by this repository to extract, reuse, redistribute, sublicense or republish ElevenLabs Sound Effects output as standalone audio;
-- its inclusion in the project is intended only within the project/game context and remains subject to ElevenLabs' applicable terms.
+- these five files are **not** covered by this repository's blanket CC BY-SA 4.0 grant;
+- no permission is granted by this repository to extract, reuse, redistribute, sublicense or republish these five files as standalone audio;
+- their inclusion in the project is intended only within the project/game context and remains subject to ElevenLabs' applicable terms;
+- no other project audio file is excluded from CC BY-SA 4.0 merely because of this ElevenLabs Sound Effects restriction.
 
 References:  
 https://elevenlabs.io/docs/overview/administration/billing  
