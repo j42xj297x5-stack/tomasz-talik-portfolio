@@ -6,6 +6,7 @@ import { experienceVrPages, resolveExperienceVrPage } from '../src/content/exper
 import { resolveVrPageProtoAstro } from '../src/xr/protoAstro/resolveVrPageProtoAstro.js';
 import { VR_WORLD_KNOWLEDGE_PRESENTATION, projectVrWorldKnowledge } from '../src/xr/knowledge/vrWorldKnowledgePresentation.js';
 import { VR_WORLD_KNOWLEDGE_CATEGORIES, VR_WORLD_KNOWLEDGE_STAGE_STATE } from '../src/xr/knowledge/createVrWorldKnowledgeModel.js';
+import { VR_WORLD_KNOWLEDGE_CONTENT, resolveVrWorldKnowledgeStage } from '../src/xr/knowledge/vrWorldKnowledgeContent.js';
 
 const drawnText = [];
 const roundedRectStarts = [];
@@ -54,6 +55,17 @@ for (const [glyphId, syllable] of Object.entries(expectedFamilies)) {
   assert.match(resolved.assetUrl, new RegExp(`/svg/${syllable}\\.svg$`));
 }
 assert.equal(resolveVrPageProtoAstro({ glyphId: 'unknown' }), null);
+assert.equal(VR_WORLD_KNOWLEDGE_CONTENT.length, 45, 'runtime catalog contains all 45 World Knowledge stages');
+assert.deepEqual(VR_WORLD_KNOWLEDGE_CONTENT.map(({ id }) => id),
+  VR_WORLD_KNOWLEDGE_CATEGORIES.flatMap(({ stageIds }) => stageIds), 'content IDs exactly match the model catalog');
+VR_WORLD_KNOWLEDGE_CONTENT.forEach((entry) => {
+  assert.ok(entry.title.pl && entry.body.pl && entry.title.en && entry.body.en, `${entry.id} has complete PL/EN copy`);
+  assert.doesNotMatch(`${entry.body.pl}\n${entry.body.en}`, /KIEDY:/, `${entry.id} exposes no progression annotation`);
+  assert.ok(Object.isFrozen(entry) && Object.isFrozen(entry.title) && Object.isFrozen(entry.body));
+});
+assert.equal(resolveVrWorldKnowledgeStage('08.2', 'pl').title, 'Dziedzictwo badaczy');
+assert.equal(resolveVrWorldKnowledgeStage('08.2', 'en').title, 'Legacy of the Researchers');
+assert.equal(resolveVrWorldKnowledgeStage('99.9', 'en'), null);
 
 function createFixture(locale = 'en', configure = () => {}, worldKnowledgeModel = null) {
   const floorRoot = new THREE.Group();
@@ -350,7 +362,7 @@ assert.match(experienceVrSource, /getPreparedKnowledgeImage: requirePreparedBand
 {
   const states = new Map(VR_WORLD_KNOWLEDGE_CATEGORIES.flatMap((category) =>
     category.stageIds.map((id) => [id, VR_WORLD_KNOWLEDGE_STAGE_STATE.LOCKED])));
-  const listeners = new Set(); let markReadCalls = 0;
+  const listeners = new Set(); const markedStageIds = [];
   const model = {
     getCategories: () => VR_WORLD_KNOWLEDGE_CATEGORIES,
     isCategoryDiscovered: (id) => states.get(VR_WORLD_KNOWLEDGE_CATEGORIES.find((category) => category.id === id).stageIds[0])
@@ -358,7 +370,13 @@ assert.match(experienceVrSource, /getPreparedKnowledgeImage: requirePreparedBand
     getStagesForCategory: (id) => VR_WORLD_KNOWLEDGE_CATEGORIES.find((category) => category.id === id)?.stageIds
       .map((stageId, index) => ({ id: stageId, categoryId: id, order: index + 1 })) ?? [],
     getStageState: (id) => states.get(id),
-    markStageRead() { markReadCalls += 1; },
+    markStageRead(id) {
+      if (states.get(id) === VR_WORLD_KNOWLEDGE_STAGE_STATE.READ) return true;
+      markedStageIds.push(id);
+      states.set(id, VR_WORLD_KNOWLEDGE_STAGE_STATE.READ);
+      [...listeners].forEach((listener) => listener());
+      return true;
+    },
     subscribe(listener) { listeners.add(listener); return () => listeners.delete(listener); }
   };
   states.set('01.1', VR_WORLD_KNOWLEDGE_STAGE_STATE.AVAILABLE);
@@ -377,15 +395,69 @@ assert.match(experienceVrSource, /getPreparedKnowledgeImage: requirePreparedBand
   assert.equal(knowledgeFixture.guide.getInteractiveRegions().filter(({ id }) => id.startsWith('world-category:')).length, 1);
   knowledgeFixture.guide.hits.set(knowledgeFixture.record, { kind: 'panel', region: { id: 'world-category:world.five_transformations' } });
   knowledgeFixture.guide.press(knowledgeFixture.record);
+  assert.equal(knowledgeFixture.guide.messagePanel.group.visible, true, 'detail presents World Knowledge in messagePanel');
+  assert.ok(knowledgeFixture.guide.getWorldKnowledgeTextPageCount() > 1, 'long World Knowledge copy paginates');
+  assert.ok(knowledgeFixture.guide.getInteractiveRegions().every(({ id }) => id.startsWith('world-stage:')
+    || ['back-world-overview', 'world-knowledge-page-previous', 'world-knowledge-page-next'].includes(id)),
+  'World Knowledge detail dialoguePanel contains controls only');
+  assert.ok(knowledgeFixture.guide.getInteractiveRegions().some(({ id }) => id === 'world-knowledge-page-next'));
+  assert.deepEqual(markedStageIds, [], 'opening a multi-page stage does not mark it READ');
+  const selectedStage = knowledgeFixture.guide.getSelectedWorldKnowledgeStageId();
+  knowledgeFixture.guide.hits.set(knowledgeFixture.record,
+    { kind: 'panel', region: { id: 'world-knowledge-page-next' } }); knowledgeFixture.guide.press(knowledgeFixture.record);
+  assert.equal(knowledgeFixture.guide.getWorldKnowledgeTextPage(), 1);
+  knowledgeFixture.guide.hits.set(knowledgeFixture.record,
+    { kind: 'panel', region: { id: 'world-knowledge-page-previous' } }); knowledgeFixture.guide.press(knowledgeFixture.record);
+  assert.equal(knowledgeFixture.guide.getWorldKnowledgeTextPage(), 0,
+    'previous and next change only the technical page');
+  assert.deepEqual(markedStageIds, ['01.1'], 'previous never duplicates or reverses a final-page READ commit');
+  while (knowledgeFixture.guide.getWorldKnowledgeTextPage() < knowledgeFixture.guide.getWorldKnowledgeTextPageCount() - 1) {
+    knowledgeFixture.guide.hits.set(knowledgeFixture.record,
+      { kind: 'panel', region: { id: 'world-knowledge-page-next' } });
+    knowledgeFixture.guide.press(knowledgeFixture.record);
+  }
+  assert.equal(knowledgeFixture.guide.getSelectedWorldKnowledgeStageId(), selectedStage,
+    'technical page navigation does not change the semantic stage');
+  assert.deepEqual(markedStageIds, ['01.1'], 'reaching the final technical page marks only the selected stage READ');
   knowledgeFixture.guide.hits.set(knowledgeFixture.record, { kind: 'panel', region: { id: 'world-stage:01.2' } });
   knowledgeFixture.guide.press(knowledgeFixture.record);
   assert.equal(knowledgeFixture.guide.getSelectedWorldKnowledgeStageId(), '01.2');
-  assert.equal(markReadCalls, 0, 'category and star navigation never marks World Knowledge READ');
+  assert.equal(knowledgeFixture.guide.getWorldKnowledgeTextPage(), 0, 'selecting another star resets its technical page');
+  assert.deepEqual(markedStageIds, ['01.1'], 'selecting a multi-page sibling does not mark it READ');
   states.set('02.1', VR_WORLD_KNOWLEDGE_STAGE_STATE.AVAILABLE); [...listeners].forEach((listener) => listener());
   knowledgeFixture.guide.hits.set(knowledgeFixture.record, { kind: 'panel', region: { id: 'back-world-overview' } });
   knowledgeFixture.guide.press(knowledgeFixture.record);
+  assert.equal(knowledgeFixture.guide.messagePanel.group.visible, false, 'back from detail clears World Knowledge message content');
   assert.equal(knowledgeFixture.guide.getWorldKnowledgeOverview().length, 2,
     'a subscribed model update reveals a category without rebuilding gameplay state');
   knowledgeFixture.guide.dispose(); knowledgeFixture.monkeyGeometry.dispose(); knowledgeFixture.monkeyMaterial.dispose();
+}
+
+{
+  const states = new Map(VR_WORLD_KNOWLEDGE_CATEGORIES.flatMap((category) =>
+    category.stageIds.map((id) => [id, VR_WORLD_KNOWLEDGE_STAGE_STATE.LOCKED])));
+  states.set('11.1', VR_WORLD_KNOWLEDGE_STAGE_STATE.AVAILABLE);
+  states.set('11.2', VR_WORLD_KNOWLEDGE_STAGE_STATE.AVAILABLE);
+  const marked = [];
+  const model = {
+    getCategories: () => VR_WORLD_KNOWLEDGE_CATEGORIES,
+    isCategoryDiscovered: (id) => states.get(VR_WORLD_KNOWLEDGE_CATEGORIES.find((category) => category.id === id).stageIds[0])
+      !== VR_WORLD_KNOWLEDGE_STAGE_STATE.LOCKED,
+    getStagesForCategory: (id) => VR_WORLD_KNOWLEDGE_CATEGORIES.find((category) => category.id === id)?.stageIds
+      .map((stageId, index) => ({ id: stageId, categoryId: id, order: index + 1 })) ?? [],
+    getStageState: (id) => states.get(id),
+    markStageRead(id) { marked.push(id); states.set(id, VR_WORLD_KNOWLEDGE_STAGE_STATE.READ); return true; },
+    subscribe() { return () => {}; }
+  };
+  const single = createFixture('en', (settings) => { settings.worldKnowledge.maxLinesPerPage = 20; }, model);
+  single.guide.open();
+  single.guide.hits.set(single.record, { kind: 'panel', region: { id: 'world-knowledge' } }); single.guide.press(single.record);
+  single.guide.hits.set(single.record, { kind: 'panel', region: { id: 'world-category:platform.sectors' } });
+  single.guide.press(single.record);
+  assert.equal(single.guide.getWorldKnowledgeTextPageCount(), 1, 'short stage resolves to one technical page');
+  assert.deepEqual(marked, ['11.1'], 'deliberately opening a single-page stage marks only that stage READ');
+  single.guide.close();
+  assert.equal(single.guide.messagePanel.group.visible, false, 'closing Monkey clears World Knowledge presentation state');
+  single.guide.dispose(); single.monkeyGeometry.dispose(); single.monkeyMaterial.dispose();
 }
 console.log('VR monkey guide assertions passed');

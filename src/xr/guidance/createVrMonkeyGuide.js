@@ -6,6 +6,7 @@ import { resolveVrPageProtoAstro } from '../protoAstro/resolveVrPageProtoAstro.j
 import { createVrMonkeyProgressionMessage } from './createVrMonkeyProgressionMessage.js';
 import { VR_MONKEY_MESSAGE_TIMING } from './vrMonkeyCommunicationCopy.js';
 import { projectVrWorldKnowledge } from '../knowledge/vrWorldKnowledgePresentation.js';
+import { resolveVrWorldKnowledgeStage } from '../knowledge/vrWorldKnowledgeContent.js';
 
 const COPY = Object.freeze({
   pl: Object.freeze({ progress: 'JAK MI IDZIE?', knowledge: 'WIEDZA', close: 'ZAMKNIJ',
@@ -48,19 +49,22 @@ function wrapText(context, text, maxWidth) {
 }
 
 function paginateText(context, text, maxWidth, maxLines) {
-  const words = String(text ?? '').split(/\s+/).filter(Boolean);
   const pages = [];
   let lines = [];
-  let line = '';
-  words.forEach((word) => {
-    const candidate = line ? `${line} ${word}` : word;
-    if (line && context.measureText(candidate).width > maxWidth) {
-      lines.push(line);
-      line = word;
-      if (lines.length === maxLines) { pages.push(lines); lines = []; }
-    } else line = candidate;
+  const pushLine = (line) => {
+    lines.push(line);
+    if (lines.length === maxLines) { pages.push(lines); lines = []; }
+  };
+  String(text ?? '').split('\n').forEach((authoredLine) => {
+    const words = authoredLine.trim().split(/\s+/).filter(Boolean);
+    let line = '';
+    words.forEach((word) => {
+      const candidate = line ? `${line} ${word}` : word;
+      if (line && context.measureText(candidate).width > maxWidth) { pushLine(line); line = word; }
+      else line = candidate;
+    });
+    if (line) pushLine(line);
   });
-  if (line) lines.push(line);
   if (lines.length) pages.push(lines);
   return pages.length ? pages : [[]];
 }
@@ -213,6 +217,7 @@ export function createVrMonkeyGuide({
   let selectedKnowledgeTopicId = null;
   let selectedWorldKnowledgeCategoryId = null;
   let selectedWorldKnowledgeStageId = null;
+  let worldKnowledgeTextPage = 0;
   let historyPulseRedrawElapsed = 0;
   let dialogueOverride = null;
   let monkeyWasHovered = false;
@@ -232,10 +237,11 @@ export function createVrMonkeyGuide({
     if (screen === VR_MONKEY_GUIDE_SCREEN.WORLD_KNOWLEDGE_DETAIL
       && (!selected || (selectedWorldKnowledgeStageId && !selected.stages.some(({ id }) => id === selectedWorldKnowledgeStageId)))) {
       screen = VR_MONKEY_GUIDE_SCREEN.WORLD_KNOWLEDGE;
-      selectedWorldKnowledgeCategoryId = null; selectedWorldKnowledgeStageId = null;
+      selectedWorldKnowledgeCategoryId = null; selectedWorldKnowledgeStageId = null; worldKnowledgeTextPage = 0;
+      messagePanel.group.visible = false;
     }
     if (open && !dialogueOverride && (screen === VR_MONKEY_GUIDE_SCREEN.WORLD_KNOWLEDGE
-      || screen === VR_MONKEY_GUIDE_SCREEN.WORLD_KNOWLEDGE_DETAIL)) drawDialogue();
+      || screen === VR_MONKEY_GUIDE_SCREEN.WORLD_KNOWLEDGE_DETAIL)) { drawMessage(); drawDialogue(); }
   }) ?? (() => {});
 
   function progressCount() { return progressionController.getActivatedPageIds().length; }
@@ -243,6 +249,13 @@ export function createVrMonkeyGuide({
   function drawMessage() {
     const { canvas, context, texture } = messagePanel;
     context.clearRect(0, 0, canvas.width, canvas.height);
+    if (screen === VR_MONKEY_GUIDE_SCREEN.WORLD_KNOWLEDGE_DETAIL) {
+      const presentation = worldKnowledgePresentation();
+      if (!presentation) { texture.needsUpdate = true; return; }
+      drawTitledMessage(context, canvas, presentation.heading, presentation.pages[presentation.page]);
+      texture.needsUpdate = true;
+      return;
+    }
     if (!message) { texture.needsUpdate = true; return; }
     const selectedPage = pagesById.get(selectedPageId);
     if (screen === VR_MONKEY_GUIDE_SCREEN.CARD && selectedPage) {
@@ -287,6 +300,27 @@ export function createVrMonkeyGuide({
     lines.forEach((line, index) => context.fillText(line, canvas.width / 2,
       y + settings.message.paddingY + settings.message.lineHeight * (index + 0.5)));
     texture.needsUpdate = true;
+  }
+
+  function drawTitledMessage(context, canvas, title, lines) {
+    context.font = `${settings.message.fontWeight} ${settings.card.titleFontSize}px sans-serif`;
+    const titleWidth = context.measureText(title).width;
+    context.font = `${settings.card.bodyFontSize}px sans-serif`;
+    const bodyWidth = Math.max(...lines.map((line) => context.measureText(line).width), 0);
+    const titleLineHeight = settings.card.titleFontSize * 1.15;
+    const titleGap = settings.message.paddingY;
+    const boxWidth = Math.min(settings.message.maxBubbleWidthPx,
+      Math.max(titleWidth, bodyWidth) + settings.message.paddingX * 2);
+    const boxHeight = Math.min(canvas.height, settings.message.paddingY * 2 + titleLineHeight + titleGap
+      + lines.length * settings.card.lineHeight);
+    const x = (canvas.width - boxWidth) / 2; const y = canvas.height - boxHeight;
+    drawBubble(context, x, y, boxWidth, boxHeight);
+    context.fillStyle = settings.colors.text; context.textAlign = 'center'; context.textBaseline = 'middle';
+    context.font = `${settings.message.fontWeight} ${settings.card.titleFontSize}px sans-serif`;
+    context.fillText(title, canvas.width / 2, y + settings.message.paddingY + titleLineHeight / 2);
+    context.font = `${settings.card.bodyFontSize}px sans-serif`;
+    lines.forEach((line, index) => context.fillText(line, canvas.width / 2,
+      y + settings.message.paddingY + titleLineHeight + titleGap + settings.card.lineHeight * (index + 0.5)));
   }
 
   function drawBubble(context, x, y, width, height) {
@@ -498,11 +532,16 @@ export function createVrMonkeyGuide({
       .find(({ categoryId }) => categoryId === selectedWorldKnowledgeCategoryId);
     if (!entry) return;
     const padding = settings.dialogue.padding; const navHeight = settings.dialogue.historyNavigationHeight;
-    context.fillStyle = settings.colors.dialogueButtonText; context.font = `${settings.dialogue.fontWeight} ${settings.card.titleFontSize}px sans-serif`;
-    context.textAlign = 'center'; context.textBaseline = 'middle'; context.fillText(entry.title, canvas.width / 2, padding + 30);
-    drawWorldKnowledgeStars(context, entry, padding, padding + 105, canvas.width - padding * 2, true);
-    const back = addRegion({ id: 'back-world-overview', x: padding, y: canvas.height - padding - navHeight,
+    drawWorldKnowledgeStars(context, entry, padding, padding + 55, canvas.width - padding * 2, true);
+    const navTop = canvas.height - padding - navHeight;
+    const back = addRegion({ id: 'back-world-overview', x: padding, y: navTop,
       width: navigationWidth(context, '←'), height: navHeight }); drawButton(context, back, '←');
+    const presentation = worldKnowledgePresentation();
+    if (!presentation) return;
+    if (presentation.page > 0) { const previous = addRegion({ id: 'world-knowledge-page-previous',
+      x: canvas.width / 2 - 190, y: navTop, width: 150, height: navHeight }); drawButton(context, previous, '‹'); }
+    if (presentation.page < presentation.pages.length - 1) { const next = addRegion({ id: 'world-knowledge-page-next',
+      x: canvas.width - padding - 150, y: navTop, width: 150, height: navHeight }); drawButton(context, next, '›'); }
   }
   function drawHistory(context, canvas) {
     interactiveRegions = [];
@@ -558,6 +597,26 @@ export function createVrMonkeyGuide({
     dialoguePanel.context.font = `${settings.card.bodyFontSize}px sans-serif`;
     return paginateText(dialoguePanel.context, resolveExperienceVrPage(page, locale).body,
       settings.message.maxBubbleWidthPx - settings.message.paddingX * 2, settings.card.maxLinesPerPage);
+  }
+  function worldKnowledgePresentation() {
+    const entry = projectVrWorldKnowledge(worldKnowledgeModel, locale)
+      .find(({ categoryId }) => categoryId === selectedWorldKnowledgeCategoryId);
+    if (!entry?.stages.some(({ id }) => id === selectedWorldKnowledgeStageId)) return null;
+    const stage = resolveVrWorldKnowledgeStage(selectedWorldKnowledgeStageId, locale);
+    if (!stage) return null;
+    messagePanel.context.font = `${settings.card.bodyFontSize}px sans-serif`;
+    const pages = paginateText(messagePanel.context, stage.body,
+      settings.message.maxBubbleWidthPx - settings.message.paddingX * 2,
+      settings.worldKnowledge?.maxLinesPerPage ?? 4);
+    const page = Math.max(0, Math.min(worldKnowledgeTextPage, pages.length - 1));
+    return { heading: `${entry.title.toUpperCase()} — ${stage.title.toUpperCase()}`,
+      pages, page, stage };
+  }
+  function presentWorldKnowledgeSelection() {
+    const presentation = worldKnowledgePresentation();
+    messagePanel.group.visible = Boolean(presentation);
+    drawMessage(); drawDialogue();
+    if (presentation?.pages.length === 1) worldKnowledgeModel.markStageRead(presentation.stage.id);
   }
   function drawCardNavigation(context, canvas) {
     interactiveRegions = []; const padding = settings.dialogue.padding;
@@ -642,7 +701,7 @@ export function createVrMonkeyGuide({
     if (open) clearAttention();
     else { knowledgeSequence?.reset(); knowledgeSequence = null; screen = VR_MONKEY_GUIDE_SCREEN.MENU; selectedPageId = null; cardPage = 0; historyPage = 0; menuPage = 0;
       selectedKnowledgeGroupId = null; selectedKnowledgeTopicId = null; knowledgePage = 0;
-      selectedWorldKnowledgeCategoryId = null; selectedWorldKnowledgeStageId = null; showMessage(''); }
+      selectedWorldKnowledgeCategoryId = null; selectedWorldKnowledgeStageId = null; worldKnowledgeTextPage = 0; showMessage(''); }
     drawDialogue();
     if (notify && open !== previous) onOpenChange(open);
   }
@@ -650,23 +709,26 @@ export function createVrMonkeyGuide({
   function openDialogue() { setOpen(true); }
   function activateOption(id) {
     if (id === 'world-knowledge') { screen = VR_MONKEY_GUIDE_SCREEN.WORLD_KNOWLEDGE;
-      selectedWorldKnowledgeCategoryId = null; selectedWorldKnowledgeStageId = null; showMessage(''); drawDialogue(); return true; }
+      selectedWorldKnowledgeCategoryId = null; selectedWorldKnowledgeStageId = null; worldKnowledgeTextPage = 0;
+      showMessage(''); drawDialogue(); return true; }
     if (id?.startsWith('world-category:')) {
       const categoryId = id.slice('world-category:'.length);
       const entry = projectVrWorldKnowledge(worldKnowledgeModel, locale).find((candidate) => candidate.categoryId === categoryId);
       if (!entry) return false;
       selectedWorldKnowledgeCategoryId = categoryId; selectedWorldKnowledgeStageId = entry.stages[0]?.id ?? null;
-      screen = VR_MONKEY_GUIDE_SCREEN.WORLD_KNOWLEDGE_DETAIL; drawDialogue(); return true;
+      worldKnowledgeTextPage = 0; screen = VR_MONKEY_GUIDE_SCREEN.WORLD_KNOWLEDGE_DETAIL;
+      presentWorldKnowledgeSelection(); return true;
     }
     if (id?.startsWith('world-stage:')) {
       const stageId = id.slice('world-stage:'.length);
       const entry = projectVrWorldKnowledge(worldKnowledgeModel, locale).find(({ categoryId }) => categoryId === selectedWorldKnowledgeCategoryId);
       if (!entry?.stages.some(({ id: candidateId }) => candidateId === stageId)) return false;
-      selectedWorldKnowledgeStageId = stageId; drawDialogue(); return true;
+      selectedWorldKnowledgeStageId = stageId; worldKnowledgeTextPage = 0; presentWorldKnowledgeSelection(); return true;
     }
     if (id === 'back-world-overview') { screen = VR_MONKEY_GUIDE_SCREEN.WORLD_KNOWLEDGE;
-      selectedWorldKnowledgeCategoryId = null; selectedWorldKnowledgeStageId = null; drawDialogue(); return true; }
-    if (id === 'back-world-menu') { screen = VR_MONKEY_GUIDE_SCREEN.MENU; drawDialogue(); return true; }
+      selectedWorldKnowledgeCategoryId = null; selectedWorldKnowledgeStageId = null; worldKnowledgeTextPage = 0;
+      showMessage(''); drawDialogue(); return true; }
+    if (id === 'back-world-menu') { screen = VR_MONKEY_GUIDE_SCREEN.MENU; showMessage(''); drawDialogue(); return true; }
     if (id?.startsWith('category:')) {
       const category = knowledgeResolver?.getCategory?.(id.slice('category:'.length));
       if (!category) return false;
@@ -713,6 +775,15 @@ export function createVrMonkeyGuide({
     if (id === 'knowledge-next') { knowledgePage += 1; drawDialogue(); return true; }
     if (id === 'card-previous') { cardPage -= 1; drawMessage(); drawDialogue(); return true; }
     if (id === 'card-next') { cardPage += 1; drawMessage(); drawDialogue(); return true; }
+    if (id === 'world-knowledge-page-previous') { worldKnowledgeTextPage -= 1; drawMessage(); drawDialogue(); return true; }
+    if (id === 'world-knowledge-page-next') {
+      const presentation = worldKnowledgePresentation();
+      if (!presentation || presentation.page >= presentation.pages.length - 1) return false;
+      worldKnowledgeTextPage += 1; drawMessage(); drawDialogue();
+      const advanced = worldKnowledgePresentation();
+      if (advanced.page === advanced.pages.length - 1) worldKnowledgeModel.markStageRead(advanced.stage.id);
+      return true;
+    }
     if (id === 'close') { close(); return true; }
     return false;
   }
@@ -854,6 +925,8 @@ export function createVrMonkeyGuide({
     getSelectedKnowledgeTopicId: () => selectedKnowledgeTopicId,
     getSelectedWorldKnowledgeCategoryId: () => selectedWorldKnowledgeCategoryId,
     getSelectedWorldKnowledgeStageId: () => selectedWorldKnowledgeStageId,
+    getWorldKnowledgeTextPage: () => worldKnowledgeTextPage,
+    getWorldKnowledgeTextPageCount: () => worldKnowledgePresentation()?.pages.length ?? 0,
     getWorldKnowledgeOverview: () => worldKnowledgeModel ? projectVrWorldKnowledge(worldKnowledgeModel, locale) : [],
     getHistoryPage: () => historyPage, getCardPage: () => cardPage, getCardPageCount: () => cardPages().length,
     getUnreadPageIds: () => [...unreadPageIds],
