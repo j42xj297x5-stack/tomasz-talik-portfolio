@@ -5,15 +5,17 @@ import { VR_MONKEY_INTERACTION_LAYER } from '../../scene/monkeyModel.js';
 import { resolveVrPageProtoAstro } from '../protoAstro/resolveVrPageProtoAstro.js';
 import { createVrMonkeyProgressionMessage } from './createVrMonkeyProgressionMessage.js';
 import { VR_MONKEY_MESSAGE_TIMING } from './vrMonkeyCommunicationCopy.js';
+import { projectVrWorldKnowledge } from '../knowledge/vrWorldKnowledgePresentation.js';
 
 const COPY = Object.freeze({
-  pl: Object.freeze({ progress: 'JAK MI IDZIE?', close: 'ZAMKNIJ',
+  pl: Object.freeze({ progress: 'JAK MI IDZIE?', knowledge: 'WIEDZA', close: 'ZAMKNIJ',
     history: (count) => `Odkryte karty: ${count}.${count > 0 ? ' Wybierz znak.' : ''}` }),
-  en: Object.freeze({ progress: 'HOW AM I DOING?', close: 'CLOSE',
+  en: Object.freeze({ progress: 'HOW AM I DOING?', knowledge: 'KNOWLEDGE', close: 'CLOSE',
     history: (count) => `Discovered cards: ${count}.${count > 0 ? ' Select a sign.' : ''}` })
 });
 
-export const VR_MONKEY_GUIDE_SCREEN = Object.freeze({ MENU: 'MENU', HISTORY: 'HISTORY', CARD: 'CARD', KNOWLEDGE: 'KNOWLEDGE' });
+export const VR_MONKEY_GUIDE_SCREEN = Object.freeze({ MENU: 'MENU', HISTORY: 'HISTORY', CARD: 'CARD', KNOWLEDGE: 'KNOWLEDGE',
+  WORLD_KNOWLEDGE: 'WORLD_KNOWLEDGE', WORLD_KNOWLEDGE_DETAIL: 'WORLD_KNOWLEDGE_DETAIL' });
 export const VR_MONKEY_DIALOGUE_PRIORITY = Object.freeze({ OPTIONAL: 1, ACQUISITION: 2, MANDATORY: 3 });
 export const unreadPulseAlpha = (seconds) => 0.5 - 0.5 * Math.cos(Math.PI * Math.max(0, seconds));
 const degToRad = (degrees) => degrees * Math.PI / 180;
@@ -97,7 +99,7 @@ function createTwoSidedCanvasPlane({ name, width, height, canvasWidth, canvasHei
 
 export function createVrMonkeyGuide({
   actorRoot, visualRoot, floorRoot = actorRoot, interactionRoot = visualRoot, controllers = [], progressionController,
-  locale = 'en', settings = {}, knowledgeResolver = null,
+  locale = 'en', settings = {}, knowledgeResolver = null, worldKnowledgeModel = null,
   onOpenChange = () => {}, onPanelClick = () => {},
   onAttentionStart = () => {}
 }) {
@@ -209,6 +211,8 @@ export function createVrMonkeyGuide({
   let selectedKnowledgeGroupId = null;
   let knowledgePage = 0;
   let selectedKnowledgeTopicId = null;
+  let selectedWorldKnowledgeCategoryId = null;
+  let selectedWorldKnowledgeStageId = null;
   let historyPulseRedrawElapsed = 0;
   let dialogueOverride = null;
   let monkeyWasHovered = false;
@@ -220,6 +224,19 @@ export function createVrMonkeyGuide({
   const glyphImages = new Map();
   const glyphMaskCanvas = document.createElement('canvas');
   const glyphMaskContext = glyphMaskCanvas.getContext('2d');
+  const knowledgeImages = new Map();
+  const unsubscribeWorldKnowledge = worldKnowledgeModel?.subscribe?.(() => {
+    if (disposed) return;
+    const categories = projectVrWorldKnowledge(worldKnowledgeModel, locale);
+    const selected = categories.find(({ categoryId }) => categoryId === selectedWorldKnowledgeCategoryId);
+    if (screen === VR_MONKEY_GUIDE_SCREEN.WORLD_KNOWLEDGE_DETAIL
+      && (!selected || (selectedWorldKnowledgeStageId && !selected.stages.some(({ id }) => id === selectedWorldKnowledgeStageId)))) {
+      screen = VR_MONKEY_GUIDE_SCREEN.WORLD_KNOWLEDGE;
+      selectedWorldKnowledgeCategoryId = null; selectedWorldKnowledgeStageId = null;
+    }
+    if (open && !dialogueOverride && (screen === VR_MONKEY_GUIDE_SCREEN.WORLD_KNOWLEDGE
+      || screen === VR_MONKEY_GUIDE_SCREEN.WORLD_KNOWLEDGE_DETAIL)) drawDialogue();
+  }) ?? (() => {});
 
   function progressCount() { return progressionController.getActivatedPageIds().length; }
 
@@ -299,8 +316,11 @@ export function createVrMonkeyGuide({
     if (screen === VR_MONKEY_GUIDE_SCREEN.HISTORY) { drawHistory(context, canvas); texture.needsUpdate = true; return; }
     if (screen === VR_MONKEY_GUIDE_SCREEN.CARD) { drawCardNavigation(context, canvas); texture.needsUpdate = true; return; }
     if (screen === VR_MONKEY_GUIDE_SCREEN.KNOWLEDGE) { drawKnowledge(context, canvas); texture.needsUpdate = true; return; }
+    if (screen === VR_MONKEY_GUIDE_SCREEN.WORLD_KNOWLEDGE) { drawWorldKnowledgeOverview(context, canvas); texture.needsUpdate = true; return; }
+    if (screen === VR_MONKEY_GUIDE_SCREEN.WORLD_KNOWLEDGE_DETAIL) { drawWorldKnowledgeDetail(context, canvas); texture.needsUpdate = true; return; }
     const options = [
-      { id: 'progress', label: copy.progress },
+      ...(progressCount() > 0 ? [{ id: 'progress', label: copy.progress }] : []),
+      { id: 'world-knowledge', label: copy.knowledge },
       ...(knowledgeResolver?.getRootItems?.() ?? []).map((item) => ({
         id: item.type === 'CATEGORY' ? `category:${item.id}` : `knowledge:${item.id}`, label: item.label
       })),
@@ -404,6 +424,76 @@ export function createVrMonkeyGuide({
     glyphMaskContext.fillRect(0, 0, size, size);
     glyphMaskContext.globalCompositeOperation = 'source-over';
     context.drawImage(glyphMaskCanvas, x, y, size, size);
+  }
+  function requestKnowledgeImage(source) {
+    if (knowledgeImages.has(source) || typeof Image === 'undefined') return knowledgeImages.get(source);
+    const image = new Image(); const prepared = { image, drawable: image }; knowledgeImages.set(source, prepared);
+    image.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = image.naturalWidth || 256; canvas.height = image.naturalHeight || 256;
+      const context = canvas.getContext('2d'); context.drawImage(image, 0, 0, canvas.width, canvas.height);
+      if (typeof context.getImageData === 'function') {
+        const pixels = context.getImageData(0, 0, canvas.width, canvas.height);
+        for (let index = 0; index < pixels.data.length; index += 4) {
+          pixels.data[index + 3] = Math.round(pixels.data[index + 3]
+            * Math.max(pixels.data[index], pixels.data[index + 1], pixels.data[index + 2]) / 255);
+          pixels.data[index] = 255; pixels.data[index + 1] = 255; pixels.data[index + 2] = 255;
+        }
+        context.putImageData(pixels, 0, 0); prepared.drawable = canvas;
+      }
+      if (!disposed && (screen === VR_MONKEY_GUIDE_SCREEN.WORLD_KNOWLEDGE
+      || screen === VR_MONKEY_GUIDE_SCREEN.WORLD_KNOWLEDGE_DETAIL)) drawDialogue(); };
+    image.src = source; return prepared;
+  }
+  function drawKnowledgeIcon(context, icon, x, y, size, color) {
+    const sources = icon.sources; const cell = icon.type === 'COMPOSITE' ? size / sources.length : size;
+    sources.forEach((source, index) => {
+      const prepared = requestKnowledgeImage(source);
+      if (prepared?.image.complete && prepared.image.naturalWidth) drawTintedGlyph(context, prepared.drawable,
+        x + index * cell, y, cell, color);
+    });
+  }
+  function drawWorldKnowledgeStars(context, entry, x, y, width, interactive = false) {
+    const starSize = settings.dialogue.historyStarFontSize * (interactive ? 1.5 : 1);
+    const gap = starSize * 1.35; const rowWidth = Math.max(0, (entry.stages.length - 1) * gap);
+    entry.stages.forEach((stage, index) => {
+      const starX = x + width / 2 - rowWidth / 2 + index * gap;
+      if (interactive) addRegion({ id: `world-stage:${stage.id}`, x: starX - starSize, y: y - starSize,
+        width: starSize * 2, height: starSize * 2 });
+      context.globalAlpha = stage.unread ? unreadPulseAlpha(elapsed) : 1;
+      context.fillStyle = stage.id === selectedWorldKnowledgeStageId || hoveredOption === `world-stage:${stage.id}`
+        ? settings.colors.hover : settings.colors.dialogueButtonText;
+      context.font = `${starSize}px sans-serif`; context.textAlign = 'center'; context.textBaseline = 'middle';
+      context.fillText('★', starX, y); context.globalAlpha = 1;
+    });
+  }
+  function drawWorldKnowledgeOverview(context, canvas) {
+    interactiveRegions = []; const entries = projectVrWorldKnowledge(worldKnowledgeModel, locale);
+    const columns = 5; const padding = settings.dialogue.padding; const navHeight = settings.dialogue.historyNavigationHeight;
+    const navTop = canvas.height - padding - navHeight; const cellWidth = (canvas.width - padding * 2) / columns;
+    const cellHeight = (navTop - padding) / 3; const iconSize = Math.min(cellWidth * 0.58, cellHeight * 0.68);
+    entries.forEach((entry, index) => {
+      const column = index % columns; const row = Math.floor(index / columns);
+      const region = addRegion({ id: `world-category:${entry.categoryId}`, x: padding + column * cellWidth,
+        y: padding + row * cellHeight, width: cellWidth, height: cellHeight });
+      const color = hoveredOption === region.id ? settings.colors.hover : settings.colors.dialogueButtonText;
+      context.globalAlpha = entry.unread ? 0.75 + unreadPulseAlpha(elapsed) * 0.25 : 1;
+      drawKnowledgeIcon(context, entry.icon, region.x + (cellWidth - iconSize) / 2, region.y, iconSize, color);
+      context.globalAlpha = 1; drawWorldKnowledgeStars(context, entry, region.x, region.y + cellHeight - 16, cellWidth);
+    });
+    const back = addRegion({ id: 'back-world-menu', x: padding, y: navTop,
+      width: navigationWidth(context, '←'), height: navHeight }); drawButton(context, back, '←');
+  }
+  function drawWorldKnowledgeDetail(context, canvas) {
+    interactiveRegions = []; const entry = projectVrWorldKnowledge(worldKnowledgeModel, locale)
+      .find(({ categoryId }) => categoryId === selectedWorldKnowledgeCategoryId);
+    if (!entry) return;
+    const padding = settings.dialogue.padding; const navHeight = settings.dialogue.historyNavigationHeight;
+    context.fillStyle = settings.colors.dialogueButtonText; context.font = `${settings.dialogue.fontWeight} ${settings.card.titleFontSize}px sans-serif`;
+    context.textAlign = 'center'; context.textBaseline = 'middle'; context.fillText(entry.title, canvas.width / 2, padding + 30);
+    drawWorldKnowledgeStars(context, entry, padding, padding + 105, canvas.width - padding * 2, true);
+    const back = addRegion({ id: 'back-world-overview', x: padding, y: canvas.height - padding - navHeight,
+      width: navigationWidth(context, '←'), height: navHeight }); drawButton(context, back, '←');
   }
   function drawHistory(context, canvas) {
     interactiveRegions = [];
@@ -542,13 +632,32 @@ export function createVrMonkeyGuide({
     hits.forEach((_, record) => hits.set(record, null));
     if (open) clearAttention();
     else { knowledgeSequence?.reset(); knowledgeSequence = null; screen = VR_MONKEY_GUIDE_SCREEN.MENU; selectedPageId = null; cardPage = 0; historyPage = 0; menuPage = 0;
-      selectedKnowledgeGroupId = null; selectedKnowledgeTopicId = null; knowledgePage = 0; showMessage(''); }
+      selectedKnowledgeGroupId = null; selectedKnowledgeTopicId = null; knowledgePage = 0;
+      selectedWorldKnowledgeCategoryId = null; selectedWorldKnowledgeStageId = null; showMessage(''); }
     drawDialogue();
     if (notify && open !== previous) onOpenChange(open);
   }
   function close() { setOpen(false); }
   function openDialogue() { setOpen(true); }
   function activateOption(id) {
+    if (id === 'world-knowledge') { screen = VR_MONKEY_GUIDE_SCREEN.WORLD_KNOWLEDGE;
+      selectedWorldKnowledgeCategoryId = null; selectedWorldKnowledgeStageId = null; showMessage(''); drawDialogue(); return true; }
+    if (id?.startsWith('world-category:')) {
+      const categoryId = id.slice('world-category:'.length);
+      const entry = projectVrWorldKnowledge(worldKnowledgeModel, locale).find((candidate) => candidate.categoryId === categoryId);
+      if (!entry) return false;
+      selectedWorldKnowledgeCategoryId = categoryId; selectedWorldKnowledgeStageId = entry.stages[0]?.id ?? null;
+      screen = VR_MONKEY_GUIDE_SCREEN.WORLD_KNOWLEDGE_DETAIL; drawDialogue(); return true;
+    }
+    if (id?.startsWith('world-stage:')) {
+      const stageId = id.slice('world-stage:'.length);
+      const entry = projectVrWorldKnowledge(worldKnowledgeModel, locale).find(({ categoryId }) => categoryId === selectedWorldKnowledgeCategoryId);
+      if (!entry?.stages.some(({ id: candidateId }) => candidateId === stageId)) return false;
+      selectedWorldKnowledgeStageId = stageId; drawDialogue(); return true;
+    }
+    if (id === 'back-world-overview') { screen = VR_MONKEY_GUIDE_SCREEN.WORLD_KNOWLEDGE;
+      selectedWorldKnowledgeCategoryId = null; selectedWorldKnowledgeStageId = null; drawDialogue(); return true; }
+    if (id === 'back-world-menu') { screen = VR_MONKEY_GUIDE_SCREEN.MENU; drawDialogue(); return true; }
     if (id?.startsWith('category:')) {
       const category = knowledgeResolver?.getCategory?.(id.slice('category:'.length));
       if (!category) return false;
@@ -671,6 +780,10 @@ export function createVrMonkeyGuide({
       if (!knownActivatedPageIds.has(pageId)) { knownActivatedPageIds.add(pageId); unreadPageIds.add(pageId); }
     }
     historyPulseRedrawElapsed += Math.max(0, delta);
+    if ((screen === VR_MONKEY_GUIDE_SCREEN.WORLD_KNOWLEDGE || screen === VR_MONKEY_GUIDE_SCREEN.WORLD_KNOWLEDGE_DETAIL)
+      && historyPulseRedrawElapsed >= 1 / 30 && projectVrWorldKnowledge(worldKnowledgeModel, locale).some(({ unread }) => unread)) {
+      historyPulseRedrawElapsed = 0; drawDialogue();
+    }
     if (screen === VR_MONKEY_GUIDE_SCREEN.HISTORY && historyPulseRedrawElapsed >= 1 / 30
       && historyEntries().slice(historyPage * settings.dialogue.historyPageSize,
         (historyPage + 1) * settings.dialogue.historyPageSize).some(({ pageId }) => unreadPageIds.has(pageId))) {
@@ -711,6 +824,7 @@ export function createVrMonkeyGuide({
     listeners.forEach(({ record, listener }) => record.controller.removeEventListener('selectstart', listener));
     reset();
     halo.dispose();
+    unsubscribeWorldKnowledge();
     arcs.forEach((arc) => { arc.geometry.dispose(); arc.material.dispose(); });
     messagePanel.dispose();
     dialoguePanel.dispose();
@@ -729,6 +843,9 @@ export function createVrMonkeyGuide({
     getScreen: () => screen, getHistoryEntries: historyEntries, getSelectedPageId: () => selectedPageId,
     getSelectedKnowledgeGroupId: () => selectedKnowledgeGroupId,
     getSelectedKnowledgeTopicId: () => selectedKnowledgeTopicId,
+    getSelectedWorldKnowledgeCategoryId: () => selectedWorldKnowledgeCategoryId,
+    getSelectedWorldKnowledgeStageId: () => selectedWorldKnowledgeStageId,
+    getWorldKnowledgeOverview: () => worldKnowledgeModel ? projectVrWorldKnowledge(worldKnowledgeModel, locale) : [],
     getHistoryPage: () => historyPage, getCardPage: () => cardPage, getCardPageCount: () => cardPages().length,
     getUnreadPageIds: () => [...unreadPageIds],
     getInteractiveRegions: () => interactiveRegions.map((region) => ({ ...region })),
