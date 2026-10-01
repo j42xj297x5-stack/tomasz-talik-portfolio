@@ -16,7 +16,9 @@ Identyfikatory fragmentów pozostają niezależne od języka.
 
 ID: world.five_transformations
 
-## 01.1 — Natura przemian / Nature of the Transformations
+## 01.1 — Natura przemian / Nature of the Transformations  
+
+KIEDY: Gdy pierwszy ring jest ukończony
 
 PL
 
@@ -36,6 +38,8 @@ Each element has its own nature, but none of them truly exists in isolation.
 
 ## 01.2 — Cykl / The Cycle
 
+KIEDY: Gdy drugi ring jest ukończony
+
 PL
 
 Tworzą cykl, w którym jedna przemiana przygotowuje warunki dla następnej:
@@ -53,6 +57,8 @@ Earth → Metal → Water → Wood → Fire → Earth.
 A second network of relationships limits excess and allows the whole system to remain balanced.
 
 ## 01.3 — Równowaga / Balance
+
+KIEDY: Gdy trzeci ring jest ukończony
 
 PL
 
@@ -82,6 +88,8 @@ ID: world.proto_astro
 
 ## 02.1 — Rodziny / Families
 
+KIEDY: Gdy pierwszy ring jest ukończony
+
 PL
 
 Proto Astro jest sposobem zapisywania rodzin i form należących do pięciu przemian.
@@ -107,6 +115,8 @@ L — Wood
 R — Fire
 
 ## 02.2 — Formy / Forms
+
+KIEDY: Gdy drugi ring jest ukończony
 
 PL
 
@@ -135,6 +145,8 @@ This makes KO an Earth Shell, KI an Earth Small Glyph, KA an Earth Large Glyph a
 The same structure applies to every natural family.
 
 ## 02.3 — Wyjątek V / The V Exception
+
+KIEDY: Gdy czwarty ring jests ukończony
 
 PL
 
@@ -171,6 +183,8 @@ PROTO ASTRO: ?O
 
 PL
 
+KIEDY: po dwóch zebranych skorupach (przetworzonych w piecu)
+
 Skorupy są odłamkami informacji rozproszonymi po świecie.
 
 To najbardziej pospolite ślady pięciu przemian. Można odnaleźć je niemal wszędzie i właśnie na nie najczęściej natrafiają ci, którzy próbują badać przeszłość.
@@ -186,6 +200,8 @@ They are the most common traces of the Five Transformations. They can be found a
 To most observers they appear to be little more than unusual fossils or remnants of unknown origin.
 
 ## 03.2 — Rozpoznanie / Recognition
+
+KIEDY: po 4 zebranych skorupach (przetworzonych w piecu)
 
 PL
 
@@ -204,6 +220,8 @@ On the surface of a Shell, the Seeker can recognize the sign of its family and t
 This is the first unusual step: not merely finding a trace, but knowing what one is looking at.
 
 ## 03.3 — Zmiana horyzontu / Changing the Horizon
+
+KIEDY: Po zebraniu 6 skorup (przetworzonych w piecu)
 
 PL
 
@@ -238,6 +256,7 @@ PROTO ASTRO: ?I
 
 ## 04.1 — Bliżej źródła / Closer to the Source
 
+KIEDY: po 2 zebranych małych glifach (przetworzonych w piecu)
 PL
 
 Małe glify są artefaktami położonymi znacznie bliżej źródła niż skorupy.
@@ -256,6 +275,7 @@ The difficulty lies elsewhere: you need to know what you are looking for.
 
 ## 04.2 — Widzieć to, co już istnieje / Seeing What Is Already There
 
+KIEDY: Po zebraniu 4 glifów (przetworzonych w piecu)
 PL
 
 Jadalny grzyb może rosnąć kilka kroków od człowieka i pozostać niewidoczny pośród jesiennych liści.
@@ -277,6 +297,8 @@ Small Glyphs work in much the same way.
 The world does not hide them. At first, the observer simply lacks the category needed to perceive them.
 
 ## 04.3 — Wzorzec / Pattern
+
+KIEDY: Po zebraniu 5 glifów (przetworzonych w piecu)
 
 PL
 
@@ -307,6 +329,7 @@ PROTO ASTRO: ?A
 
 ## 05.1 — Początek / The Beginning
 
+KIEDY: Po ukończeniu drugiego ringu
 PL
 
 Duże glify nie są po prostu większymi wersjami małych glifów.
@@ -329,6 +352,8 @@ They represent the way an element acts.
 
 ## 05.2 — Ruch / Motion
 
+KIEDY: Po ukończeniu drugiego ringu
+
 PL
 
 Ziemia, Metal, Woda, Drzewo i Ogień pozostają w ciągłym ruchu.
@@ -347,6 +372,7 @@ A Large Glyph is a place where this principle can be observed almost directly.
 
 ## 05.3 — Fundament / Foundation
 
+KIEDY: Po ukończeniu 3 ringu
 PL
 
 Pięć zasad razem tworzy strukturę zdolną podtrzymywać niekończące się cykle powstawania, przemiany i zanikania.
@@ -365,6 +391,7 @@ The same order permeates matter, energy, information and the processes taking pl
 
 ## 05.4 — Reguła świata / A Rule of the World
 
+KIEDY: Po ukończeniu 4 ringu
 PL
 
 Równowaga nie jest tu pojęciem moralnym.
@@ -393,6 +420,8 @@ ID: world.crystals
 
 ## 06.1 — Odczyt / A Reading
 
+KIEDY: Po pierwszym odczytanym w Portalu krysztale  (zaraz po wejściu do ringu - 1 akt)
+
 PL
 
 Kryształ jest skondensowaną informacją pochodzącą z dużego glifu.
@@ -411,6 +440,7 @@ Obtaining a Crystal is closer to reading than to extraction.
 
 ## 06.2 — Bez szkody / Without Harm
 
+KIEDY: Po trzecim odczytanym w portalu krysztale (zaraz po wejściu do ringu - 1 akt)
 PL
 
 Można przeczytać książkę, nie niszcząc jej papieru.
@@ -429,6 +459,7 @@ In the same way, part of the information carried by a Large Glyph can be read an
 
 ## 06.3 — Bliskość / Proximity
 
+KIEDY: Po piątym przeczytanym w portalu krysztale (zaraz po wejściu do ringu - 1 akt)
 PL
 
 Istnieje jednak warunek: trzeba znaleźć się dostatecznie blisko źródła.
@@ -457,6 +488,7 @@ ID: tools.portal_reliquary
 
 ## 07.1 — Tłumacz / Translator
 
+KIEDY: Po drugim przeczytanym w portalu krysztale (zaraz po wejściu do ringu - 1 akt)
 PL
 
 Kryształ zawiera informację, ale posiadanie informacji nie oznacza jeszcze jej rozumienia.
@@ -475,6 +507,7 @@ It converts a record originating from an element into a form that a Seeker can u
 
 ## 07.2 — Interpretacja / Interpretation
 
+KIEDY: Po czwartym przeczytanym w portalu krysztale (zaraz po wejściu do ringu - 1 akt)
 PL
 
 Każde tłumaczenie ma jednak swoją cenę.
@@ -492,7 +525,7 @@ A translator is never completely transparent.
 The Portal was built by someone who also tried to understand the Five Transformations. Its construction therefore carries not only knowledge of the source, but also the way in which its creator interpreted that knowledge.
 
 ## 07.3 — Przekład / Translation
-
+KIEDY: Po piątym przeczytanym w portalu krysztale (zaraz po wejściu do ringu - 1 akt)
 PL
 
 To, co pokazuje Portal, nie jest czystym głosem glifu.
@@ -525,6 +558,7 @@ ID: tools.furnace
 
 ## 08.1 — Transformacja / Transformation
 
+KIEDY: Po utworzeniu i wyciągnięciu z pieca Astrolabium więzi
 PL
 
 Piec jest narzędziem transformacji informacji.
@@ -542,6 +576,8 @@ The first researchers had to perform this work themselves.
 Recognizing structures, comparing relationships and transforming fragmentary knowledge required time, experience and exceptional concentration.
 
 ## 08.2 — Dziedzictwo badaczy / Legacy of the Researchers
+
+KIEDY: Po ukończeniu i wyciągnięciu z pieca Kuli asterionowej
 
 PL
 
@@ -565,6 +601,8 @@ It organizes, purifies and transforms what is placed inside it.
 
 ## 08.3 — Rozszerzenie poznania / Extending Perception
 
+KIEDY: Po pierwszym przetworzonynm małym glifie w piecu
+
 PL
 
 Piec pozwala wydobywać esencję z małych glifów, przetwarzać skorupy i łączyć informacje należące do różnych poziomów rzeczywistości.
@@ -587,11 +625,13 @@ It allows the mind to work with information it could not previously grasp.
 
 ---
 
-# 09 — ASTROLABIUM WIĘZI / BOND ASTROLABE
+# 09 — ASTROLABIUM WIĘZI / ASTROLABE of BINDING
 
 ID: tools.bond_astrolabe
 
 ## 09.1 — Kierunek / Direction
+
+KIEDY: Po utworzeniu i wyciągnięciu z pieca Astrolabium Więzi
 
 PL
 
@@ -615,6 +655,8 @@ The Astrolabe gives this process direction.
 
 ## 09.2 — Kierownica / The Steering Wheel
 
+KIEDY: Po ukończeniu zbierania skorup
+
 PL
 
 Można porównać je do kierownicy.
@@ -632,6 +674,8 @@ A vehicle may have an engine, energy and the ability to move, but without a way 
 At its simplest, the Astrolabe can find Shells — fragments so common that they almost belong to the background of the world.
 
 ## 09.3 — Strojenie uwagi / Tuning Attention
+
+KIEDY: Po ukończeniu drugiego ringu
 
 PL
 
@@ -674,6 +718,7 @@ PROTO ASTRO: ?U
 
 ## 10.1 — Relacja / Relationship
 
+KIEDY: Po zestrojeniu w piecu pierwszego kamienia runicznego 
 PL
 
 Kamień runiczny nie jest czystą esencją jednego żywiołu.
@@ -692,6 +737,7 @@ It emerges when knowledge of one process is joined with knowledge of the process
 
 ## 10.2 — Cykl tworzenia / Cycle of Creation
 
+KIEDY: Po zestrojeniu w piecu trzeciego kamienia runicznego 
 PL
 
 Dlatego naturalne kamienie runiczne należą do cyklu tworzenia:
@@ -718,6 +764,7 @@ A Rune Stone therefore carries both information about a particular element and i
 
 ## 10.3 — Wiele perspektyw / Many Perspectives
 
+KIEDY: Po zestrojeniu w piecu piątego kamienia runicznego 
 PL
 
 Kamienie można wykorzystać do zaawansowanego badania rzeczywistości, ale dopiero wtedy, gdy istnieje odpowiednia podstawa wiedzy.
@@ -740,6 +787,7 @@ Each additional Stone removes part of the shadow.
 
 ## 10.4 — Słoń / The Elephant
 
+KIEDY: Po zestrojeniu w piecu szóstego kamienia runicznego 
 PL
 
 Przypomina to opowieść o ślepcach badających słonia.
@@ -776,6 +824,7 @@ ID: platform.sectors
 
 ## 11.1 — Zgromadzona wiedza / Accumulated Knowledge
 
+KIEDY: Po ukończonym drugim ringu
 PL
 
 Sektory są materialnym obrazem wiedzy gromadzonej podczas drogi.
@@ -802,6 +851,7 @@ They represent a field in which enough pieces have begun to form a coherent whol
 
 ## 11.2 — Podstawa / Foundation
 
+KIEDY: Po ukończonym trzecim ringu
 PL
 
 Dopiero tak przygotowany sektor może zostać związany z kamieniem runicznym.
@@ -826,6 +876,8 @@ ID: platform.keystone
 
 ## 12.1 — Pieczęć / Seal
 
+KIEDY:  Po pierwszym zainstalowanym zworniku
+
 PL
 
 Zwornik zamyka określony etap poznania.
@@ -848,6 +900,8 @@ Loose pages may contain all the necessary information, but only once they are or
 
 ## 12.2 — Tytuł / Title
 
+
+KIEDY:  Po trzecim zainstalowanym zworniku
 PL
 
 Kamień runiczny staje się wtedy czymś w rodzaju tytułu tej książki.
@@ -876,6 +930,7 @@ ID: tools.asterion_sphere
 
 ## 13.1 — Perspektywa / Perspective
 
+KIEDY:  Po odebraniu kuli z pieca 
 PL
 
 Kula Asterionowa zmienia perspektywę.
@@ -902,6 +957,7 @@ When the object of study is nearby, looking straight ahead is enough.
 
 ## 13.2 — Gdzie patrzeć / Where to Look
 
+KIEDY: Po pierwszym uruchomieniu Rezonatora asterionowego (3 sektory w pozycji innej niż 0 - pole rezonatora widoczne i działające)
 PL
 
 Jeżeli jednak chcemy obserwować coś rozległego, odległego albo niezwykle precyzyjnie położonego, samo patrzenie przestaje wystarczać.
@@ -934,6 +990,8 @@ ID: tools.asterion_resonator
 
 ## 14.1 — Głębokie poszukiwanie / Deep Search
 
+KIEDY: Po pierwszym uruchomieniu Rezonatora asterionowego (3 sektory w pozycji innej niż 0 - pole rezonatora widoczne i działające)
+
 PL
 
 Rezonator Asterionowy jest narzędziem głębokiego poszukiwania.
@@ -952,6 +1010,8 @@ For it to become useful, a Seeker must first learn to recognize fragments, extra
 
 ## 14.2 — Pole świadomości / Field of Awareness
 
+KIEDY:  Po ukończeniu 4 ringu
+
 PL
 
 Dopiero wtedy można próbować objąć znacznie większy obszar naraz.
@@ -969,6 +1029,8 @@ The Resonator combines many points of view into a single field of focused awaren
 Four natural elements are enough for the structure to begin operating and to reveal both the extent of its potential and the limits that still remain.
 
 ## 14.3 — Pełny układ / Complete System
+
+KIEDY:  Po instalacji kamienia runicznego eteru
 
 PL
 
@@ -1000,6 +1062,8 @@ The Resonator determines how deeply that place can be examined.
 
 ## 14.4 — Równowaga / Balance
 
+KIEDY:  Po instalacji kamienia runicznego wody
+
 PL
 
 Największa moc systemu nie pojawia się wtedy, gdy jeden z żywiołów zostanie maksymalnie wzmocniony.
@@ -1024,6 +1088,8 @@ ID: world.ether
 PROTO ASTRO: V
 
 ## 15.1 — Nie jest szóstym żywiołem / Not a Sixth Element
+
+KIEDY: Po zebraniu i przetworzeniu w piecu skorupy Eteru (podczas tworzenia kuli asterionowej)
 
 PL
 
@@ -1051,6 +1117,7 @@ It carries traces of them, but it has no primordial source of its own.
 
 ## 15.2 — Pomost / Bridge
 
+KIEDY: Po zestrojeniu w piecu kamienia runicznego eteru
 PL
 
 Eter jest konstruktem powstałym przez połączenie tego, co wcześniej istniało osobno.
@@ -1069,6 +1136,7 @@ In exceptional circumstances it can temporarily fill a missing place in a system
 
 ## 15.3 — Połączenie wiedzy / Joining Knowledge
 
+KIEDY: Po przejęciu przez małpę kamienia runicznego Eteru
 PL
 
 Eter nie zastępuje naturalnego żywiołu w pełnym znaczeniu tego słowa.
