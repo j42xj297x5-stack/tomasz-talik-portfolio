@@ -206,7 +206,8 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
       historyPageSize: 8, historyColumns: 4, historyGlyphSize: 136, historyStarFontSize: 24,
       historyItemPadding: 9, historyGlyphStarGap: 8, historyColumnGap: 112, historyRowGap: 12,
       historyNavigationHeight: 100, historyNavigationGap: 12,
-      navigationWidth: 150
+      navigationWidth: 150,
+      categoryFrameWidthScale: 0.80, categoryIconVerticalOffsetFraction: 0.05
     },
     card: {
       titleFontSize: 58, bodyFontSize: 43, lineHeight: 56, maxLinesPerPage: 6
