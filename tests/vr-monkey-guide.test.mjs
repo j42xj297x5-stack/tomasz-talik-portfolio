@@ -115,6 +115,10 @@ actorRoot.position.set(0, 0, 0);
 actorRoot.updateMatrixWorld(true);
 assert.equal(guide.messagePanel.planes.length, 2);
 assert.equal(guide.dialoguePanel.planes.length, 2);
+assert.equal(guide.dialoguePanel.planes[0].geometry.parameters.width, 1.65);
+assert.equal(guide.dialoguePanel.planes[0].geometry.parameters.height, 0.96);
+assert.equal(guide.dialoguePanel.canvas.width, 1280);
+assert.equal(guide.dialoguePanel.canvas.height, 745);
 assert.ok(guide.messagePanel.planes.every(({ material }) => material.side === THREE.FrontSide));
 assert.equal(guide.messagePanel.planes[1].rotation.y, Math.PI, 'back uses its own rotated FrontSide plane');
 assert.equal(guide.arcs.length, 3);
@@ -325,13 +329,23 @@ assert.match(source, /'★'\.repeat\(entry\.page\.order\)/, 'history marker is g
 assert.equal(VR_WORLD_KNOWLEDGE_PRESENTATION.length, 15, 'all canonical categories have presentation metadata');
 assert.deepEqual(VR_WORLD_KNOWLEDGE_PRESENTATION.map(({ categoryId }) => categoryId),
   VR_WORLD_KNOWLEDGE_CATEGORIES.map(({ id }) => id), 'presentation catalog preserves canonical category order');
-const composites = VR_WORLD_KNOWLEDGE_PRESENTATION.filter(({ icon }) => icon.type === 'COMPOSITE');
-assert.equal(composites.length, 4, 'only the four natural categories use composites');
-for (const { icon } of composites) {
-  assert.equal(icon.symbols.length, 5);
-  assert.deepEqual(icon.symbols.map((symbol) => symbol[0]), ['K', 'T', 'S', 'L', 'R']);
-  assert.equal(icon.symbols.some((symbol) => symbol.startsWith('E')), false, 'Ether is absent from natural composites');
-}
+const presentationByCategory = new Map(VR_WORLD_KNOWLEDGE_PRESENTATION.map((entry) => [entry.categoryId, entry]));
+assert.equal(VR_WORLD_KNOWLEDGE_PRESENTATION.some(({ icon }) => icon.type === 'COMPOSITE'), false,
+  'natural-family categories no longer use five-symbol composites');
+assert.deepEqual([
+  presentationByCategory.get('world.shells').icon.assetId,
+  presentationByCategory.get('world.small_glyphs').icon.assetId,
+  presentationByCategory.get('world.large_glyphs').icon.assetId,
+  presentationByCategory.get('world.rune_stones').icon.assetId
+], [
+  'vr-attractor-band-1-image',
+  'vr-attractor-band-2-image',
+  'vr-attractor-band-3-image',
+  'vr-attractor-band-4-image'
+], 'the four natural categories reuse the canonical prepared Astrolabium bands');
+const experienceVrSource = await readFile(new URL('../src/experienceVr.js', import.meta.url), 'utf8');
+assert.match(experienceVrSource, /getPreparedKnowledgeImage: requirePreparedBandImage/,
+  'Monkey Knowledge receives the same prepared band images as the Astrolabium');
 
 {
   const states = new Map(VR_WORLD_KNOWLEDGE_CATEGORIES.flatMap((category) =>

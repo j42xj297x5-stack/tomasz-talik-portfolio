@@ -99,7 +99,7 @@ function createTwoSidedCanvasPlane({ name, width, height, canvasWidth, canvasHei
 
 export function createVrMonkeyGuide({
   actorRoot, visualRoot, floorRoot = actorRoot, interactionRoot = visualRoot, controllers = [], progressionController,
-  locale = 'en', settings = {}, knowledgeResolver = null, worldKnowledgeModel = null,
+  locale = 'en', settings = {}, knowledgeResolver = null, worldKnowledgeModel = null, getPreparedKnowledgeImage = null,
   onOpenChange = () => {}, onPanelClick = () => {},
   onAttentionStart = () => {}
 }) {
@@ -425,33 +425,42 @@ export function createVrMonkeyGuide({
     glyphMaskContext.globalCompositeOperation = 'source-over';
     context.drawImage(glyphMaskCanvas, x, y, size, size);
   }
+  function prepareKnowledgeImage(image) {
+    const canvas = document.createElement('canvas');
+    canvas.width = image.naturalWidth || 256; canvas.height = image.naturalHeight || 256;
+    const context = canvas.getContext('2d'); context.drawImage(image, 0, 0, canvas.width, canvas.height);
+    if (typeof context.getImageData === 'function') {
+      const pixels = context.getImageData(0, 0, canvas.width, canvas.height);
+      for (let index = 0; index < pixels.data.length; index += 4) {
+        pixels.data[index + 3] = Math.round(pixels.data[index + 3]
+          * Math.max(pixels.data[index], pixels.data[index + 1], pixels.data[index + 2]) / 255);
+        pixels.data[index] = 255; pixels.data[index + 1] = 255; pixels.data[index + 2] = 255;
+      }
+      context.putImageData(pixels, 0, 0); return canvas;
+    }
+    return image;
+  }
   function requestKnowledgeImage(source) {
     if (knowledgeImages.has(source) || typeof Image === 'undefined') return knowledgeImages.get(source);
     const image = new Image(); const prepared = { image, drawable: image }; knowledgeImages.set(source, prepared);
     image.onload = () => {
-      const canvas = document.createElement('canvas');
-      canvas.width = image.naturalWidth || 256; canvas.height = image.naturalHeight || 256;
-      const context = canvas.getContext('2d'); context.drawImage(image, 0, 0, canvas.width, canvas.height);
-      if (typeof context.getImageData === 'function') {
-        const pixels = context.getImageData(0, 0, canvas.width, canvas.height);
-        for (let index = 0; index < pixels.data.length; index += 4) {
-          pixels.data[index + 3] = Math.round(pixels.data[index + 3]
-            * Math.max(pixels.data[index], pixels.data[index + 1], pixels.data[index + 2]) / 255);
-          pixels.data[index] = 255; pixels.data[index + 1] = 255; pixels.data[index + 2] = 255;
-        }
-        context.putImageData(pixels, 0, 0); prepared.drawable = canvas;
-      }
+      prepared.drawable = prepareKnowledgeImage(image);
       if (!disposed && (screen === VR_MONKEY_GUIDE_SCREEN.WORLD_KNOWLEDGE
       || screen === VR_MONKEY_GUIDE_SCREEN.WORLD_KNOWLEDGE_DETAIL)) drawDialogue(); };
     image.src = source; return prepared;
   }
+  function resolveKnowledgeImage(icon) {
+    if (!icon.assetId) return requestKnowledgeImage(icon.sources[0]);
+    if (knowledgeImages.has(icon.assetId)) return knowledgeImages.get(icon.assetId);
+    const image = getPreparedKnowledgeImage?.(icon.assetId) ?? null;
+    if (!image) return null;
+    const prepared = { image, drawable: prepareKnowledgeImage(image) };
+    knowledgeImages.set(icon.assetId, prepared); return prepared;
+  }
   function drawKnowledgeIcon(context, icon, x, y, size, color) {
-    const sources = icon.sources; const cell = icon.type === 'COMPOSITE' ? size / sources.length : size;
-    sources.forEach((source, index) => {
-      const prepared = requestKnowledgeImage(source);
-      if (prepared?.image.complete && prepared.image.naturalWidth) drawTintedGlyph(context, prepared.drawable,
-        x + index * cell, y, cell, color);
-    });
+    const prepared = resolveKnowledgeImage(icon);
+    if (prepared?.image.complete && prepared.image.naturalWidth) drawTintedGlyph(context, prepared.drawable,
+      x, y, size, color);
   }
   function drawWorldKnowledgeStars(context, entry, x, y, width, interactive = false) {
     const starSize = settings.dialogue.historyStarFontSize * (interactive ? 1.5 : 1);
