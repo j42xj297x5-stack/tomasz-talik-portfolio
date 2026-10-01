@@ -287,7 +287,8 @@ export function createVrMonkeyGuide({
           settings.card.maxLinesPerPage);
         cardPage = Math.min(cardPage, pages.length - 1);
         messagePanel.group.visible = true;
-        drawFixedReaderMessage(context, canvas, resolved.title, pages[cardPage]);
+        drawFixedReaderMessage(context, canvas,
+          { context: copy.progress, title: resolved.title }, pages[cardPage]);
         texture.needsUpdate = true;
         return;
       }
@@ -311,22 +312,41 @@ export function createVrMonkeyGuide({
     texture.needsUpdate = true;
   }
 
-  function drawFixedReaderMessage(context, canvas, title, lines) {
+  function fitHeadingFontSize(context, text, preferredSize, maxWidth) {
+    let fontSize = preferredSize;
+    context.font = `${settings.message.fontWeight} ${fontSize}px sans-serif`;
+    if (context.measureText(text).width > maxWidth) {
+      fontSize = Math.max(preferredSize * 0.9, preferredSize * maxWidth / context.measureText(text).width);
+      context.font = `${settings.message.fontWeight} ${fontSize}px sans-serif`;
+    }
+    return fontSize;
+  }
+
+  function drawFixedReaderMessage(context, canvas, heading, lines) {
+    const contextLineHeight = settings.card.eyebrowLineHeight;
     const titleLineHeight = settings.card.titleFontSize * 1.15;
-    const titleGap = settings.message.paddingY;
     const bodyLineCapacity = Math.max(settings.card.maxLinesPerPage,
       settings.worldKnowledge?.maxLinesPerPage ?? settings.card.maxLinesPerPage);
     const boxWidth = Math.min(canvas.width, settings.message.maxBubbleWidthPx);
-    const boxHeight = Math.min(canvas.height, settings.message.paddingY * 2 + titleLineHeight + titleGap
+    const boxHeight = Math.min(canvas.height, settings.message.paddingY * 2 + contextLineHeight
+      + settings.card.headingLevelGap + titleLineHeight + settings.card.headingBodyGap
       + bodyLineCapacity * settings.card.lineHeight);
     const x = (canvas.width - boxWidth) / 2; const y = canvas.height - boxHeight;
     drawBubble(context, x, y, boxWidth, boxHeight);
     context.fillStyle = settings.colors.text; context.textAlign = 'center'; context.textBaseline = 'middle';
-    context.font = `${settings.message.fontWeight} ${settings.card.titleFontSize}px sans-serif`;
-    context.fillText(title, canvas.width / 2, y + settings.message.paddingY + titleLineHeight / 2);
+    const maxHeadingWidth = boxWidth - settings.message.paddingX * 2;
+    const contextTitle = heading.context.toUpperCase();
+    fitHeadingFontSize(context, contextTitle, settings.card.eyebrowFontSize, maxHeadingWidth);
+    context.fillText(contextTitle, canvas.width / 2,
+      y + settings.message.paddingY + contextLineHeight / 2);
+    fitHeadingFontSize(context, heading.title, settings.card.titleFontSize, maxHeadingWidth);
+    const titleY = y + settings.message.paddingY + contextLineHeight + settings.card.headingLevelGap
+      + titleLineHeight / 2;
+    context.fillText(heading.title, canvas.width / 2, titleY);
     context.font = `${settings.card.bodyFontSize}px sans-serif`;
     lines.forEach((line, index) => context.fillText(line, canvas.width / 2,
-      y + settings.message.paddingY + titleLineHeight + titleGap + settings.card.lineHeight * (index + 0.5)));
+      y + settings.message.paddingY + contextLineHeight + settings.card.headingLevelGap + titleLineHeight
+      + settings.card.headingBodyGap + settings.card.lineHeight * (index + 0.5)));
   }
 
   function drawBubble(context, x, y, width, height) {
@@ -339,6 +359,10 @@ export function createVrMonkeyGuide({
   function drawDialogue() {
     const { canvas, context, texture } = dialoguePanel;
     context.clearRect(0, 0, canvas.width, canvas.height);
+    context.globalAlpha = 0.23;
+    context.fillStyle = '#000000';
+    roundedRect(context, 0, 0, canvas.width, canvas.height, settings.dialogue.cornerRadius); context.fill();
+    context.globalAlpha = 1;
     if (dialogueOverride) {
       const options = dialogueOverride.options ?? [];
       const gap = settings.dialogue.gap; const padding = settings.dialogue.padding;
@@ -689,7 +713,7 @@ export function createVrMonkeyGuide({
       settings.message.maxBubbleWidthPx - settings.message.paddingX * 2,
       settings.worldKnowledge?.maxLinesPerPage ?? settings.card.maxLinesPerPage);
     const page = Math.max(0, Math.min(worldKnowledgeTextPage, pages.length - 1));
-    return { heading: `${entry.title.toUpperCase()} — ${stage.title.toUpperCase()}`,
+    return { heading: { context: entry.title, title: stage.title },
       pages, page, stage };
   }
   function presentWorldKnowledgeSelection() {
