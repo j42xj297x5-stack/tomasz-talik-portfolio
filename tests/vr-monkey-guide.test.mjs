@@ -18,6 +18,7 @@ const strokeStyles = [];
 const textAlignments = [];
 const fills = [];
 let createdCanvasCount = 0;
+let measuredCharacterWidth = 24;
 globalThis.Image = class {
   complete = true; naturalWidth = 256;
   set src(value) { this.url = value; }
@@ -50,7 +51,7 @@ globalThis.document = {
           drawImage(image, x, y, width, height) {
             drawnImagePositions.push({ canvasIndex, image, x, y, width, height });
           },
-          measureText(text) { return { width: String(text).length * 24 }; },
+          measureText(text) { return { width: String(text).length * measuredCharacterWidth }; },
           fillText(text, x, y) { drawnText.push(String(text));
             drawnTextPositions.push({ canvasIndex, text: String(text), x, y, font: activeFont }); },
           set fillStyle(value) { activeFillStyle = value; fillStyles.push(value); }, set strokeStyle(value) { strokeStyles.push(value); },
@@ -99,8 +100,8 @@ assert.equal(resolveVrWorldKnowledgeStage('08.2', 'en').title, 'Legacy of the Re
 assert.equal(resolveVrWorldKnowledgeStage('99.9', 'en'), null);
 assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.monkeyGuide.card.maxLinesPerPage, 6,
   'portfolio retains six body lines per technical page');
-assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.monkeyGuide.worldKnowledge.maxLinesPerPage, 6,
-  'World Knowledge matches the six-line reader capacity');
+assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.monkeyGuide.worldKnowledge.maxLinesPerPage, 7,
+  'World Knowledge uses seven body lines per technical page');
 assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.monkeyGuide.dialogue.categoryFrameWidthScale, 0.80);
 assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.monkeyGuide.dialogue.categoryIconVerticalOffsetFraction, 0.05);
 assert.equal(DEFAULT_EXPERIENCE_VR_SETTINGS.monkeyGuide.dialogue.backdropOpacity, 0.30);
@@ -114,13 +115,25 @@ const formsBody = resolveVrWorldKnowledgeStage('02.2', 'en').body;
 assert.match(compactWorldKnowledgeForReader(formsBody), /O — Shell\nI — Small Glyph\nA — Large Glyph\nU — Rune Stone/,
   '02.2 retains its one-form-per-line structure');
 const cycleBody = resolveVrWorldKnowledgeStage('10.2', 'en').body;
-assert.match(compactWorldKnowledgeForReader(cycleBody),
-  /Earth strengthens Metal\.\nMetal leads toward Water\.\nWater nourishes Wood\.\nWood sustains Fire\.\nFire returns to Earth\./,
-  '10.2 retains its one-relation-per-line elemental cycle');
+assert.equal(resolveVrWorldKnowledgeStage('02.1', 'pl').body,
+  'Proto Astro jest sposobem zapisywania rodzin i form należących do pięciu przemian.\n\nPierwszy znak określa rodzinę: K — Ziemia, T — Metal, S — Woda, L — Drzewo, R — Ogień.');
+assert.equal(resolveVrWorldKnowledgeStage('02.1', 'en').body,
+  'Proto Astro is a way of recording the families and forms belonging to the Five Transformations.\n\nThe first symbol identifies the family: K — Earth, T — Metal, S — Water, L — Wood, R — Fire.');
+assert.equal(compactWorldKnowledgeForReader(cycleBody),
+  'This is why natural Rune Stones belong to the cycle of creation: Earth strengthens Metal. Metal leads toward Water. Water nourishes Wood. Wood sustains Fire. Fire returns to Earth. A Rune Stone therefore carries both information about a particular element and information about its place within a larger structure.',
+  '10.2 retains its cycle order in continuous prose');
+assert.match(resolveVrWorldKnowledgeStage('10.2', 'pl').body,
+  /tworzenia: Ziemia wzmacnia Metal\. Metal prowadzi ku Wodzie\. Woda odżywia Drzewo\. Drzewo podtrzymuje Ogień\. Ogień powraca do Ziemi\./);
 assert.equal(resolveVrWorldKnowledgeStage('02.2', 'en').body, formsBody,
   'the resolver continues to return unchanged canonical copy');
 assert.equal(resolveVrWorldKnowledgeStage('10.2', 'en').body, cycleBody,
   'presentation compaction does not mutate the source catalog');
+assert.equal(resolveVrWorldKnowledgeStage('10.4', 'pl').body,
+  'Przypomina to opowieść o ślepcach badających słonia.\n\nJeden dotyka trąby i opisuje węża. Drugi bada nogę i znajduje kolumnę. Trzeci trzyma ogon i mówi o linie.\n\nKażdy opisuje prawdę.\n\nKażdy jednocześnie się myli.\n\nDopiero możliwość zobaczenia całego zwierzęcia pozwala zrozumieć, w jaki sposób wszystkie opisy mogą być prawdziwe naraz.\n\nKamienie runiczne służą właśnie takiemu widzeniu.',
+  '10.4 Polish Elephant copy remains unchanged');
+assert.equal(resolveVrWorldKnowledgeStage('10.4', 'en').body,
+  'It resembles the story of blind people examining an elephant.\n\nOne touches the trunk and describes a snake. Another examines a leg and finds a pillar. A third holds the tail and speaks of a rope.\n\nEach describes something true.\n\nEach is also mistaken.\n\nOnly by seeing the whole animal can one understand how all of these descriptions may be true at the same time.\n\nRune Stones enable this kind of seeing.',
+  '10.4 English Elephant copy remains unchanged');
 
 function createFixture(locale = 'en', configure = () => {}, worldKnowledgeModel = null, knowledgeResolver = null) {
   const floorRoot = new THREE.Group();
@@ -144,6 +157,35 @@ function createFixture(locale = 'en', configure = () => {}, worldKnowledgeModel 
   return { floorRoot, actorRoot, visualRoot, monkeyGeometry, monkeyMaterial, controller, record, pageIds, guide,
     getRayDistance: () => rayDistance, getAttentionStarts: () => attentionStarts };
 }
+
+measuredCharacterWidth = 18;
+for (const locale of ['pl', 'en']) {
+  const runeCategory = VR_WORLD_KNOWLEDGE_CATEGORIES.find(({ id }) => id === 'world.rune_stones');
+  const marked = [];
+  const elephantModel = {
+    getCategories: () => VR_WORLD_KNOWLEDGE_CATEGORIES,
+    isCategoryDiscovered: (id) => id === runeCategory.id,
+    getStagesForCategory: (id) => id === runeCategory.id
+      ? runeCategory.stageIds.map((stageId, index) => ({ id: stageId, categoryId: id, order: index + 1 })) : [],
+    getStageState: (id) => id === '10.4' ? VR_WORLD_KNOWLEDGE_STAGE_STATE.AVAILABLE : VR_WORLD_KNOWLEDGE_STAGE_STATE.LOCKED,
+    markStageRead(id) { marked.push(id); return true; },
+    subscribe() { return () => {}; }
+  };
+  const elephant = createFixture(locale, () => {}, elephantModel);
+  elephant.guide.open();
+  elephant.guide.hits.set(elephant.record, { kind: 'panel', region: { id: 'world-knowledge' } });
+  elephant.guide.press(elephant.record);
+  elephant.guide.hits.set(elephant.record, { kind: 'panel', region: { id: `world-category:${runeCategory.id}` } });
+  elephant.guide.press(elephant.record);
+  assert.equal(elephant.guide.getSelectedWorldKnowledgeStageId(), '10.4');
+  assert.equal(elephant.guide.getWorldKnowledgeTextPageCount(), 1,
+    `10.4 resolves to one technical page in ${locale}`);
+  assert.deepEqual(marked, ['10.4'], `single-page READ semantics mark 10.4 immediately in ${locale}`);
+  assert.equal(elephant.guide.getReaderControlRegions().some(({ id }) => id.startsWith('world-knowledge-page-')), false,
+    `single-page 10.4 omits pagination controls in ${locale}`);
+  elephant.guide.dispose(); elephant.monkeyGeometry.dispose(); elephant.monkeyMaterial.dispose();
+}
+measuredCharacterWidth = 24;
 
 for (const [locale, rootLabel, familyLabels] of [
   ['pl', 'JAK MI IDZIE?', { KA: 'ZIEMIA · KA', TA: 'METAL · TA', SA: 'WODA · SA', LA: 'DRZEWO · LA', RA: 'OGIEŃ · RA' }],
@@ -232,6 +274,9 @@ assert.equal(guide.messagePanel.planes.length, 2);
 assert.equal(guide.messagePanel.planes[0].geometry.parameters.width, 1.9,
   'message panel is exactly 20 cm wider than its former 1.7 m width');
 assert.equal(guide.messagePanel.canvas.width, 1431, 'message canvas width preserves the wider panel text capacity');
+assert.equal(guide.messagePanel.canvas.height, 600, 'message canvas safely accommodates seven reader body lines');
+assert.equal(guide.messagePanel.planes[0].geometry.parameters.height, 0.80,
+  'message panel expands vertically to 0.80 m');
 assert.equal(guide.dialoguePanel.planes.length, 2);
 assert.equal(guide.readerControlsPanel.planes.length, 2, 'reader controls use a separate two-sided plane');
 assert.equal(guide.readerControlsPanel.canvas.width, 1280);
@@ -253,7 +298,7 @@ assert.equal(guide.messagePanel.group.position.z, guide.attentionRoot.position.z
 assert.ok(Math.abs(guide.readerControlsPanel.group.position.y - (1.5 + 0.17 + 0.03 + 0.20 / 2)) < 1e-12,
   'reader strip preserves the former lower envelope above the attention arcs');
 assert.equal(guide.messagePanel.group.position.y,
-  guide.readerControlsPanel.group.position.y + 0.20 / 2 + 0.025 + 0.72 / 2,
+  guide.readerControlsPanel.group.position.y + 0.20 / 2 + 0.025 + 0.80 / 2,
   'message panel shifts upward and retains the configured gap above reader controls');
 assert.deepEqual(guide.dialoguePanel.group.position.toArray(), [1.20, 0.80, 0.50]);
 assert.ok(Math.abs(guide.dialoguePanel.group.rotation.x - (-7.5 * Math.PI / 180)) < 1e-12);
@@ -293,7 +338,8 @@ roundedRectStarts.length = 0;
 const oneLineMetrics = guide.showMessage('Short message');
 assert.equal(oneLineMetrics.lineCount, 1, 'showMessage reports the lines produced by the renderer wrap');
 const oneLineBoxY = roundedRectStarts.at(-1).y;
-assert.equal(oneLineBoxY, 540 - (78 + 31 * 2), 'one-line message box is anchored to canvas bottom');
+assert.equal(oneLineBoxY, guide.messagePanel.canvas.height - (78 + 31 * 2),
+  'one-line message box is anchored to canvas bottom');
 roundedRectStarts.length = 0;
 const wrappedMetrics = guide.showMessage('This message contains enough words to wrap onto a second line in the panel');
 assert.ok(wrappedMetrics.lineCount > 1, 'metrics use actual measured wrapping');
@@ -429,10 +475,10 @@ const expectedReaderHeight = Math.min(guide.messagePanel.canvas.height,
   + DEFAULT_EXPERIENCE_VR_SETTINGS.monkeyGuide.card.titleFontSize * 1.15
   + DEFAULT_EXPERIENCE_VR_SETTINGS.monkeyGuide.card.headingBodyGap
   + DEFAULT_EXPERIENCE_VR_SETTINGS.monkeyGuide.card.lineHeight
-    * DEFAULT_EXPERIENCE_VR_SETTINGS.monkeyGuide.card.maxLinesPerPage);
+    * DEFAULT_EXPERIENCE_VR_SETTINGS.monkeyGuide.worldKnowledge.maxLinesPerPage);
 assert.deepEqual({ x: firstCardRect.x, y: firstCardRect.y, width: firstCardRect.width, height: firstCardRect.height },
   { x: (guide.messagePanel.canvas.width - 1301) / 2, y: guide.messagePanel.canvas.height - expectedReaderHeight,
-    width: 1301, height: expectedReaderHeight }, 'HISTORY reader uses the fixed six-line bounding rectangle');
+    width: 1301, height: expectedReaderHeight }, 'HISTORY reader shares the fixed seven-slot bounding rectangle');
 const historyEyebrow = drawnTextPositions.findLast(({ canvasIndex, text }) =>
   canvasIndex === guide.messagePanel.canvas._testCanvasIndex && text === 'FIRE · RA');
 assert.ok(historyEyebrow.y < firstCardText.title.y, 'HISTORY context is a separate uppercase eyebrow above its primary title');
@@ -603,7 +649,10 @@ assert.match(experienceVrSource, /getPreparedKnowledgeImage: requirePreparedBand
   compactFixture.guide.dispose(); compactFixture.monkeyGeometry.dispose(); compactFixture.monkeyMaterial.dispose();
   states.set('01.1', VR_WORLD_KNOWLEDGE_STAGE_STATE.AVAILABLE); markedStageIds.length = 0;
 
-  const knowledgeFixture = createFixture('en', (settings) => { settings.worldKnowledge.maxLinesPerPage = 3; }, model);
+  const knowledgeFixture = createFixture('en', (settings) => {
+    settings.worldKnowledge.maxLinesPerPage = 3;
+    settings.card.maxLinesPerPage = 7;
+  }, model);
   knowledgeFixture.guide.open();
   knowledgeFixture.guide.hits.set(knowledgeFixture.record, { kind: 'panel', region: { id: 'world-knowledge' } });
   knowledgeFixture.guide.press(knowledgeFixture.record);
