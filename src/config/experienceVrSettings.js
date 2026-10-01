@@ -210,7 +210,8 @@ export const DEFAULT_EXPERIENCE_VR_SETTINGS = Object.freeze({
     },
     card: {
       titleFontSize: 58, bodyFontSize: 43, lineHeight: 56, maxLinesPerPage: 6
-    }
+    },
+    worldKnowledge: { maxLinesPerPage: 4 }
   },
   controllers: {
     enabled: true,
@@ -774,7 +775,8 @@ export function normalizeExperienceVrSettings(candidate) {
         rotationDegrees: normalizeVector(candidate.monkeyGuide?.dialogue?.rotationDegrees,
           defaults.monkeyGuide.dialogue.rotationDegrees)
       },
-      card: { ...defaults.monkeyGuide.card, ...(candidate.monkeyGuide?.card ?? {}) }
+      card: { ...defaults.monkeyGuide.card, ...(candidate.monkeyGuide?.card ?? {}) },
+      worldKnowledge: { ...defaults.monkeyGuide.worldKnowledge, ...(candidate.monkeyGuide?.worldKnowledge ?? {}) }
     },
     controllers: {
       enabled: typeof candidate.controllers?.enabled === 'boolean'
